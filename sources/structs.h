@@ -788,10 +788,50 @@ struct P_const {
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
 };
+/*[12dec2003 mt]:*/
+
+/*Here it is assumed that there are exactly 8 bits in one 
+byte and character occupies exactly one byte.*/
+
+/*Structure used to store character sets. Introduced in such a 
+way to be more portable:*/
+struct  bit_field {
+	UINT bit_0        : 1;
+	UINT bit_1        : 1;
+	UINT bit_2        : 1;
+	UINT bit_3        : 1;
+	UINT bit_4        : 1;
+	UINT bit_5        : 1;
+	UINT bit_6        : 1;
+	UINT bit_7        : 1;
+};
+
+typedef struct bit_field set_of_char[32];
+typedef struct bit_field *one_byte;
+/*:[12dec2003 mt]*/
+
 /*
 	The C struct defines objects changed by the compiler
 */
 struct C_const {
+	/*[12dec2003 mt]:*/
+	/*separators used to delimit arguments in #call and #do:*/
+	set_of_char separators;	
+	/*:[12dec2003 mt]*/
+	/*[06nov2003 mt]:*/
+#ifdef PARALLEL
+	WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
+	/*[28nov2003 mt]:*/
+	WORD NumberOfRedefsInModule;  /* (C) Number of redefined variables in the module*/
+	/*:[28nov2003 mt]*/
+#endif
+	/*:[06nov2003 mt]*/
+	/*[19nov2003 mt]:*/
+	/*Note, here is better to use explicit c-type 'unsigned long' instead e.g. ULONG
+	since this field will be converted by sprintf, see PreProcessor in pre.c*/
+	unsigned long CModule;  /* (C) Counter of current module
+									 incremented in IniModule (pre.c)*/
+	/*:[19nov2003 mt]*/
     NAMETREE *dollarnames;         /* (C) Names of dollar variables */
     NAMETREE *exprnames;           /* (C) Names of expressions */
     NAMETREE *varnames;            /* (C) Names of regular variables */

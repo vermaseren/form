@@ -145,7 +145,10 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 					*t++ = *s++;
 				}
 				*t = 0;
-				sp->value = (long)strDup1(s2,(char *)s1);
+				/*[01dec2003 mt]: A nonsense!:*/
+				/*sp->value = (long)strDup1(s2,(char *)s1);*/
+				sp->value = (long)strDup1(s2,"Process option");
+				/*:[01dec2003 mt]*/
 				sp->flags = USEDFLAG;
 				return(0);
 			case PATHVALUE:

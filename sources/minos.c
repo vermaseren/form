@@ -8,7 +8,10 @@
 
 #include "form3.h"
 #include "minos.h"
-#include "zlib.h"
+/*[15dec2003 mt]:*/
+/*#include "zlib.h"*/
+#include <zlib.h>
+/*:[15dec2003 mt]*/
 int withoutflush = 0;
 
 #define WITHZLIB

@@ -315,6 +315,25 @@ DoExecute ARG2(WORD,par,WORD,skip)
 {
 	WORD RetCode = 0;
 	int i, j;
+
+	/*[30jan2004 mt]:*/
+	/*AC.mparallelflag was set to PARALLELFLAG in IniModule. It can be set to 
+		NOPARALLEL_MOPT or PARALLEL_MOPT (module option) by compiler. If 
+		AC.mparallelflag contains PARALLEL_MOPT, it must be set to PARALLELFLAG, if
+		AM.hparallelflag is PARALLELFLAG:*/
+	if( (AC.parallelflag == PARALLELFLAG) || (AC.mparallelflag & PARALLEL_MOPT) ){
+		if(!(AC.mparallelflag & NOPARALLEL_MOPT)){
+			if(AM.hparallelflag != PARALLELFLAG){
+				AC.mparallelflag |=(AC.parallelflag=AM.hparallelflag);
+				MesPrint("WARNING!: $ use in table - the module %d is forced to run in sequential mode.", AC.CModule);
+			}else
+				AC.mparallelflag = PARALLELFLAG;
+		}/*if(!(AC.mparallelflag & NOPARALLEL_MOPT))*/
+	}else{/*AC.parallelflag != PARALLELFLAG*/
+		AC.mparallelflag |= AC.parallelflag;
+	}
+	/*:[30jan2004 mt]*/
+
 	if ( skip ) goto skipexec;
 	if ( AC.IfLevel > 0 ) {
 		MesPrint(" %d endif statement(s) missing",AC.IfLevel);
@@ -354,8 +373,10 @@ DoExecute ARG2(WORD,par,WORD,skip)
 */
 
 #ifdef PARALLEL /* [04dec2002 df] */
-
-	if (AC.parallelflag != NOPARALLELFLAG) {
+	/*[30jan2004 mt]:*/
+	/*if (AC.parallelflag != NOPARALLELFLAG) {*/
+	if (AC.mparallelflag == PARALLELFLAG) {
+	/*:[30jan2004 mt]*/
 	  if (PF.me == 0) {	 
 	    /* maybe they are not needed at all for the moment or 
 	       should be combined from all slaves and again distributed */
@@ -375,23 +396,62 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	Now we compare whether all elements of PotModdollars are contained in
 	ModOptdollars. If not, we may not run parallel.
 */
-	if ( NumPotModdollars > 0 && AC.parallelflag != NOPARALLELFLAG ) {
+	/*[30jan2004 mt:*/
+/*	if ( NumPotModdollars > 0 && AC.parallelflag != NOPARALLELFLAG ) {*/
+	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
+	/*:[30jan2004 mt*/
 	  if ( NumPotModdollars > NumModOptdollars ) 
-	    AC.parallelflag = NOPARALLELFLAG;
+		/*[30jan2004 mt]:*/		
+	    /*AC.parallelflag = NOPARALLELFLAG;*/
+	    AC.mparallelflag = NOPARALLEL_DOLLAR;
+		/*:[30jan2004 mt]*/
 	  else 
 	    for ( i = 0; i < NumPotModdollars; i++ ) {
 	      for ( j = 0; j < NumModOptdollars; j++ ) 
 		if ( PotModdollars[i] == ModOptdollars[j].number ) break;
 	      if ( j >= NumModOptdollars ) {
-		AC.parallelflag = NOPARALLELFLAG;
+		/*[30jan2004 mt]:*/
+		/*AC.parallelflag = NOPARALLELFLAG;*/
+		AC.parallelflag = NOPARALLEL_DOLLAR;
+		/*:[30jan2004 mt]*/
 		break;
 	      }
 	    }
 	}
-
-/*  #ifdef PARALLEL */ 
-	if ( par == STOREMODULE ) AC.parallelflag = NOPARALLELFLAG;
+	/*[30jan2004 mt:*/
+#ifdef PARALLEL 
+ 	if(AC.mparallelflag & NOPARALLEL_DOLLAR){
+		/*If the only bit is NOPARALLEL_DOLLAR, then the user wants this module
+			to run in parallel.: */
+		if(AC.mparallelflag == NOPARALLEL_DOLLAR)	
+			MesPrint("WARNING!: dollar variables - the module %d is forced to run in sequential mode.", AC.CModule);
+	}/*if(AC.mparallelflag & NOPARALLEL_DOLLAR)*/
+	/*:[30jan2004 mt]*/
+#endif
+/*  #ifdef PARALLEL */
+	/*[07nov2003 mt]: ??? -Why? Should be AC.mparallelflag? */
+	/*if ( par == STOREMODULE ) AC.parallelflag = NOPARALLELFLAG; */
+	/*[30jan2004 mt]:*/ /*Detailed flags here*/
+	if ( par == STOREMODULE ){
+		if(AC.mparallelflag == PARALLELFLAG)
+			MesPrint("WARNING!: store module - the module %d is forced to run in sequential mode.", AC.CModule);
+		AC.mparallelflag = NOPARALLEL_STORE;
+	}/*if ( par == STOREMODULE )*/
+	/*:[30jan2004 mt]*/
+	/*:[07nov2003 mt]*/
 /*  #endif */
+
+	/*[07nov2003 mt]:*/
+#ifdef PARALLEL
+	if( (AC.NumberOfRhsExprInModule>0) && (AC.mparallelflag == PARALLELFLAG) ){
+		MesPrint("WARNING!: RHS expression names - the module %d is forced to run in sequential mode.", AC.CModule);
+		/*[30jan2004 mt]:*/
+		/*AC.mparallelflag = NOPARALLELFLAG;*/
+		AC.mparallelflag = NOPARALLEL_RHS;
+		/*:[30jan2004 mt]*/
+	}/*if( (AC.NumberOfRhsExprInModule>0) && (AC.mparallelflag == PARALLELFLAG) )*/
+#endif
+	/*:[07nov2003 mt]*/
 
 	if ( AC.SetupFlag ) WriteSetup();
 	if ( AC.NamesFlag || AC.CodesFlag ) WriteLists();
@@ -445,7 +505,12 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	    }
 	  }
 	}
+	/*[30jan2004 mt]:*/
+	/*
 	if (AC.mparallelflag != NOPARALLELFLAG && NumModOptdollars > 0 && NumPotModdollars > 0) {
+	*/
+	if (AC.mparallelflag == PARALLELFLAG && NumModOptdollars > 0 && NumPotModdollars > 0) {
+	/*:[30jan2004 mt]*/
 	  int attach = 0, error;
 	  int source, src, tag, index, namesize;
 	  UBYTE *name, *p, *textdoll;

@@ -68,7 +68,10 @@ static KEYWORD onoffoptions[] = {
 	,{"codes",			(TFUN)&(AC.CodesFlag),	1,	0}
 	,{"tokens",		    (TFUN)&(AC.TokensWriteFlag),1,0}
 	,{"properorder",    (TFUN)&(AC.properorderflag),1,0}
-	,{"parallel",	    (TFUN)&(AC.parallelflag),0,1}
+	/*[30jan2004 mt]:*/
+	/*,{"parallel",	    (TFUN)&(AC.parallelflag),0,1}*/
+	,{"parallel",	    (TFUN)&(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
+	/*:[30jan2004 mt]*/
 };
 
 static WORD one = 1;
@@ -188,7 +191,26 @@ int CoOff ARG1(UBYTE *,s)
 			*s = c; return(-1);
 		}
 		*s = c;
-		*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags;
+		/*[30jan2004 mt]:*/
+		/* Change this a bit: AC.mparallelflag is set to 
+			PARALLELFLAG in IniModule. It may be changed in DoExecute according to
+			 AC.parallelflag
+		*/
+#ifdef REMOVEDBY_MT
+		/*[17sep2003 mt]: */
+		/* *((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; */
+		{/*Block*/
+			/*mparallelflag must be changed, too, or else on/off parallel
+			  directive will take effect only at the next module.*/
+         int parallelflag=AC.parallelflag;
+		 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
+			if(parallelflag!=AC.parallelflag)
+				AC.mparallelflag=AC.parallelflag;	
+      }/*Block*/
+		/*:[17sep2003 mt] */
+#endif
+	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
+		/*:[30jan2004 mt]*/
 	}
 }
 
@@ -218,7 +240,30 @@ int CoOn ARG1(UBYTE *,s)
 			*s = c; return(-1);
 		}
 		*s = c;
-		*((int *)(onoffoptions[i].func)) = onoffoptions[i].type;
+		/*[30jan2004 mt]:*/
+		/* Change this a bit: AC.mparallelflag is set to 
+			PARALLELFLAG in IniModule. It may be changed in DoExecute according to
+			 AC.parallelflag
+		*/
+#ifdef REMOVEDBY_MT
+		/*[17sep2003 mt]: */
+		/*	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; */
+			/*mparallelflag must be changed, too, or else on/off parallel
+			  directive will take effect only at the next module.*/
+		{/*Block*/
+         int parallelflag=AC.parallelflag;
+		 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
+			if(parallelflag!=AC.parallelflag){
+				if ( AM.hparallelflag == PARALLELFLAG )
+					AC.mparallelflag = AC.parallelflag;
+				else 
+					Warning("Sorry: Parallel execution switched off by $ use in table definition");
+			}/*if(parallelflag!=AC.parallelflag)*/
+      }/*Block*/
+		/*:[17sep2003 mt] */
+#endif
+	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
+		/*:[30jan2004 mt]*/
 	}
 }
 

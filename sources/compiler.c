@@ -46,6 +46,7 @@ static KEYWORD com1commands[] = {
 	,{"ntensors",       (TFUN)CoNTensor,          DECLARATION,  PARTEST|WITHAUTO}
 	,{"nwrite",         (TFUN)CoNWrite,           DECLARATION,  PARTEST}
 	,{"print",          (TFUN)CoPrint,            MIXED,        0}
+	/*[28nov2003 mt] I use the fact CoRedefine is bound to "redefine", don't change!:*/
 	,{"redefine",       (TFUN)CoRedefine,         STATEMENT,    0}
 	,{"rcyclesymmetrize",(TFUN)CoRCycleSymmetrize,STATEMENT,    PARTEST}
 	,{"symbols",        (TFUN)CoSymbol,           DECLARATION,  PARTEST|WITHAUTO}
@@ -457,6 +458,14 @@ CompileStatement ARG1(UBYTE *,in)
 			if ( s > in && *s == '[' && s[1] == ']' ) s += 2;
 			if ( *s == '+' || *s == '-' ) s++;
 			if ( *s == ',' ) s++;
+/*[28nov2003 mt]:*/
+#ifdef PARALLEL
+			/*The flag AC.NumberOfRedefsInModule will be used in IniModule to synchronize
+			redefined preVars:*/
+			if(   (k->func) == CoRedefine  )
+				AC.NumberOfRedefsInModule++;
+#endif
+/*:[28nov2003 mt]*/
 		}
 	}
 /*

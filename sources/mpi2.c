@@ -106,6 +106,7 @@ PF_Terminate ARG1(int,error)
   General Send and Receive Function for packed buffers
   #[ int  PF_Probe(int)
 */
+/*[02nov2003 mt] Look at PF_Probe in mpi.c:*/
 int 
 PF_Probe ARG1(int,src)
 {

@@ -534,6 +534,10 @@ EndSort ARG2(WORD *,buffer,int,par)
 		WriteStats(&pp,2);
 	}
 RetRetval:
+/*[25nov2003 mt]:*/
+/*For parallel sorting S->TermsLeft is 0, so we have to use PF.goutterms instead:*/
+
+#ifdef REMOVEDBY_MT
 #ifdef PARALLEL /* [11mar1998 ar] */
 	if ( AR.sLevel == 0 && PF.me == MASTER) {
 #else
@@ -541,6 +545,21 @@ RetRetval:
 #endif /* PARALLEL [11mar1998 ar] */
 		Expressions[AS.CurExpr].counter = S->TermsLeft;
 	}
+#endif
+
+#ifdef PARALLEL
+	if ( AR.sLevel == 0 && PF.me == MASTER) {
+		if(AC.mparallelflag == PARALLELFLAG)
+			Expressions[AS.CurExpr].counter = PF.goutterms;
+		else
+			Expressions[AS.CurExpr].counter = S->TermsLeft;
+	}/*if ( AR.sLevel == 0 && PF.me == MASTER)*/
+#else
+	if ( AR.sLevel == 0 ) {
+		Expressions[AS.CurExpr].counter = S->TermsLeft;
+	}/*if ( AR.sLevel == 0 )*/
+#endif
+/*:[25nov2003 mt]*/
 	if ( S->file.handle >= 0 && ( par != 1 ) && ( par != 2 ) ) {
 				/* sortfile is still open */
 		CloseFile(S->file.handle);

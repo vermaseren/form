@@ -92,6 +92,12 @@ dovariable:		c = *in; *in = 0;
 						                    if ( !error ) error = 1;
 											MesPrint("&Expression not allowed in LH-side of substitution: %s",s);
 										}
+/*[06nov2003 mt]:*/
+#ifdef PARALLEL
+										else/*RHSide*/
+											AC.NumberOfRhsExprInModule++;
+#endif
+/*:[06nov2003 mt]*/
 										break;
 					case CDELTA:        *out++ = TDELTA;      *in = c;
 										object = 1; continue;

@@ -58,6 +58,12 @@ CFLAGS = -O3 -fomit-frame-pointer -mcpu=i586 -D_FILE_OFFSET_BITS=64
 CPPFLAGS = -DLINUX
 endif
 
+ifeq ($(HOSTTYPE),i386)
+CC = gcc
+CFLAGS = -O3 -fomit-frame-pointer -mcpu=i586 -D_FILE_OFFSET_BITS=64
+CPPFLAGS = -DLINUX
+endif
+
 ifeq ($(HOSTTYPE),next)
 CC = cc
 CFLAGS = -fomit-frame-pointer

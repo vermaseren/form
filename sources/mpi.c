@@ -67,7 +67,14 @@ PF_Terminate ARG1(int,error)
 }
 /*
   #] int  PF_Terminate(int) 
+*/
 
+#ifdef REMOVEDBY_MT
+/*[02nov2003 mt]:
+I have canged the function PF_Probe : it must return the actual source, and blocks 
+if source == PF_ANY_SOURCE
+*/
+/*
   General Send and Receive Function for packed buffers
   #[ int  PF_Probe(int)
 */
@@ -84,6 +91,31 @@ PF_Probe ARG1(int,src)
 }
 /*
   #] int  PF_Probe(int)
+*/
+#endif
+/*
+  
+   #[ int  PF_Probe(int*):
+*/
+int 
+PF_Probe ARG1(int*,src)
+{
+	int ret,flag,tag;
+	if(*src == PF_ANY_SOURCE){/*Blocking call*/
+		ret = MPI_Probe(*src,MPI_ANY_TAG,PF_COMM,&PF_status);
+      flag=1;
+   }else/*Non-blocking call*/
+		ret = MPI_Iprobe(*src,MPI_ANY_TAG,PF_COMM,&flag,&PF_status);
+	*src=PF_status.MPI_SOURCE;
+	if(ret != MPI_SUCCESS) { if(ret > 0) ret *= -1; return(ret); }
+	if(!flag) return(0);
+	return(PF_status.MPI_TAG);
+}
+/*
+   #] int  PF_Probe(int):
+*/
+/*
+:[02nov2003 mt]
   #[ the  packbuffer
 */
 static UBYTE *PF_packbuf;
@@ -156,14 +188,33 @@ int
 PF_BroadCast ARG1(int,par)
 {
   int ret;
-
+/*[02dec2003 mt]:*/
+/*If SHORTBROADCAST, then instead of the whole bubber broadcasting 
+will be performed in 2 steps. First, the size of buffer is broadcasted, 
+then the buffer of exactly used size. This should be faster with slow 
+connections, but slower on SMP shmem MPI.*/
+#ifdef SHORTBROADCAST
+int pos=PF_packpos;
+#endif
+/*:[02dec2003 mt]*/
   if(!par){
-	if( ret = PF_InitPackBuf() ) return(ret);
+   /*Comment[28oct2003 mt] initializes PF_packbuf,PF_packstop,PF_packpos:*/
+	if( ret = PF_InitPackBuf() ) 
+   	return(ret);
   }
   else{
 	if( PF.me != MASTER ) if ( ret = PF_InitPackBuf() )	return(ret);
 	/* for MPI_Bcast, size must be equal on all processes ! */
+/*[02dec2003 mt]:*/
+#ifndef SHORTBROADCAST
 	ret = MPI_Bcast(PF_packbuf,(int)PF.packsize,MPI_PACKED,MASTER,PF_COMM);
+#else
+   ret = MPI_Bcast(&pos,1,MPI_INT,MASTER,PF_COMM);
+	if( ret != MPI_SUCCESS) return(ret);
+	ret = MPI_Bcast(PF_packbuf,pos,MPI_PACKED,MASTER,PF_COMM);
+#endif
+/*:[02dec2003 mt]*/
+
 	if( ret != MPI_SUCCESS) return(ret);
   }
   return(0);

@@ -1407,7 +1407,7 @@ DoTable ARG2(UBYTE *,s,int,par)
 				Warning("The use of $-variable assignments in tables disables parallel\
  execution for the whole program.");
 				AM.gparallelflag = AC.mparallelflag = AC.parallelflag =
-				AM.hparallelflag = NOPARALLELFLAG;
+				AM.hparallelflag = NOPARALLEL_TBLDOLLAR;
 				for ( imd = 0; imd < NumPotModdollars; i++ ) {
 					if ( tw[2] == PotModdollars[imd] ) break;
 				}

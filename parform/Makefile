@@ -30,6 +30,12 @@ CFLAGS = -O3 -mcpu=i586
 CPPFLAGS = -DPARALLEL -DMPI -DLINUX -DPF_WITHGETENV -DPF_WITHLOG
 endif
 
+ifeq ($(HOSTTYPE),i386)
+CC = mpicc
+CFLAGS = -O3
+CPPFLAGS = -DPARALLEL -DMPI -DLINUX -DPF_WITHGETENV -DPF_WITHLOG
+endif
+
 
 HFILES = declare.h form3.h fsizes.h ftypes.h inivar.h minos.h \
 	parallel.h structs.h unix.h variable.h windows.h zconf.h
@@ -50,3 +56,10 @@ parform: $(HFILES) $(OBJS)
 
 clean:
 	rm -f *.o parform
+MKFILEDIR=$(PWD)
+
+MAKEDEPENDNAME = makedepend $(CPPFLAGS) $(CFLAGS) -w20 -Y -f$(PWD)/Makefile -s
+dep: depend
+
+depend:
+	cd ../sources ; $(MAKEDEPENDNAME) '# ******** DEPENDENCIES: *********' $(OBJS:.o=.c)

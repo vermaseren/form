@@ -2171,3 +2171,103 @@ LONG Timer()
  		#] Timer : 
  	#] Mixed :
 */
+/*[12dec2003 mt]:*/
+/*Four functions to manipulate character sets*/
+
+/*Here it is assumed that there are exactly 8 bits in one 
+byte and character occupies exactly one byte.*/
+
+/*
+ 		#[ set_in :
+         Returns 1 if ch is in set ; 0 if ch is not in set:
+*/
+int 
+set_in ARG2(UBYTE, ch, set_of_char, set)
+{
+	set += ch/8;
+	switch (ch % 8){
+		case 0: return(set->bit_0);
+		case 1: return(set->bit_1);
+		case 2: return(set->bit_2);
+		case 3: return(set->bit_3);
+		case 4: return(set->bit_4);
+		case 5: return(set->bit_5);
+		case 6: return(set->bit_6);
+		case 7: return(set->bit_7);
+	}/*switch (ch % 8)*/
+	return(-1);
+}/*set_in*/
+/*
+ 		#] set_in :
+ 		#[ set_set :
+			sets ch into set; returns *set:
+*/
+one_byte 
+set_set ARG2(UBYTE, ch, set_of_char, set)
+{
+	one_byte tmp=(one_byte)set;
+	set += ch/8;
+	switch (ch % 8){
+		case 0: set->bit_0=1;break;
+		case 1: set->bit_1=1;break;
+		case 2: set->bit_2=1;break;
+		case 3: set->bit_3=1;break;
+		case 4: set->bit_4=1;break;
+		case 5: set->bit_5=1;break;
+		case 6: set->bit_6=1;break;
+		case 7: set->bit_7=1;break;
+	}
+	return(tmp);
+}/*set_set*/
+/*
+ 		#] set_set :
+ 		#[ set_del :
+			deletes ch from set; returns *set:
+*/
+one_byte 
+set_del ARG2(UBYTE, ch, set_of_char, set)
+{
+	one_byte tmp=(one_byte)set;
+	set += ch/8;
+	switch (ch % 8){
+		case 0: set->bit_0=0;break;
+		case 1: set->bit_1=0;break;
+		case 2: set->bit_2=0;break;
+		case 3: set->bit_3=0;break;
+		case 4: set->bit_4=0;break;
+		case 5: set->bit_5=0;break;
+		case 6: set->bit_6=0;break;
+		case 7: set->bit_7=0;break;
+	}
+	return(tmp);
+}/*set_del*/
+/*
+ 		#] set_del :
+ 		#[ set_sub :
+			returns *set = set1\set2. This function may be usd for initialising,
+				set_sub(a,a,a) => now a is empty set :
+*/
+one_byte 
+set_sub ARG3(set_of_char, set, set_of_char, set1, set_of_char, set2)
+{
+	one_byte tmp=(one_byte)set;
+	int i=0,j=0;
+	while(j=0,i++<32)
+	while(j<9)
+		switch (j++){
+			case 0: set->bit_0=(set1->bit_0&&(!set2->bit_0));break;
+			case 1: set->bit_1=(set1->bit_1&&(!set2->bit_1));break;
+			case 2: set->bit_2=(set1->bit_2&&(!set2->bit_2));break;
+			case 3: set->bit_3=(set1->bit_3&&(!set2->bit_3));break;
+			case 4: set->bit_4=(set1->bit_4&&(!set2->bit_4));break;
+			case 5: set->bit_5=(set1->bit_5&&(!set2->bit_5));break;
+			case 6: set->bit_6=(set1->bit_6&&(!set2->bit_6));break;
+			case 7: set->bit_7=(set1->bit_7&&(!set2->bit_7));break;
+			case 8: set++;set1++;set2++;
+     };
+	return(tmp);
+}/*set_sub*/
+/*
+ 		#] set_sub :
+*/
+/*:[12dec2003 mt]*/

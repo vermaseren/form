@@ -131,8 +131,18 @@ Processor()
 			switch ( e->status ) {
 			case UNHIDELEXPRESSION:
 			case UNHIDEGEXPRESSION:
+/*[13nov2003 mt]:*/
+#ifdef PARALLEL
+            if ( PF.me == MASTER ) {
+#endif
+/*:[13nov2003 mt]*/
 				AR.GetFile = 2;
 				SetScratch(AS.hidefile,&(e->onfile));
+/*[13nov2003 mt]:*/
+#ifdef PARALLEL
+				}/*if ( PF.me == MASTER )*/
+#endif
+/*:[13nov2003 mt]*/
 				goto commonread;
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
@@ -201,6 +211,11 @@ commonread:
 				break;
 			case SKIPLEXPRESSION:
 			case SKIPGEXPRESSION:
+/*[13nov2003 mt]:*/
+#ifdef PARALLEL
+            if ( PF.me != MASTER ) break;
+#endif
+/*:[13nov2003 mt]*/
 				AR.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(term) <= 0 ) {
@@ -236,6 +251,11 @@ commonread:
 				break;
 			case HIDELEXPRESSION:
 			case HIDEGEXPRESSION:
+/*[13nov2003 mt]:*/
+#ifdef PARALLEL
+            if ( PF.me != MASTER ) break;
+#endif
+/*:[13nov2003 mt]*/
 				AR.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(term) <= 0 ) {
@@ -1941,7 +1961,10 @@ SkipCount:	level++;
 			if ( level > C->numlhs ) {
 				if ( AR.DeferFlag ) {
 #ifdef PARALLEL
-				  if ( PF.me != MASTER && AC.parallelflag == PARALLELFLAG ){
+					/*[17sen2003 mt]: */
+					/*if ( PF.me != MASTER && AC.parallelflag == PARALLELFLAG ){*/
+					if ( PF.me != MASTER && AC.mparallelflag == PARALLELFLAG ){
+					/*:[17sen2003 mt] */
 					if ( PF_Deferred(term,level) ) goto GenCall;
 				  }
 				  else

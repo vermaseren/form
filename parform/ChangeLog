@@ -1,0 +1,102 @@
+30 January 2004 Mikhail Tentyukov:
+
+Here I summarize all changes I have made before this date.
+All the code fragments I removed are encased in 
+#ifdef REMOVEDBY_MT
+...
+#endif
+All my changes are enclosed with marks 
+[date mt]:
+...
+:[date mt]
+e.g.
+   /*[25nov2003 mt]:*/
+   /* PF_outterms++;*/
+   PF.goutterms++;
+   /*:[25nov2003 mt]*/
+
+The most important:
+
+[17sep2003 mt]: Bugfix: on/off parallel takes effect only starting from the 
+next module. The reason: flag AC.mparallelflag was set according to 
+AC.parallelflag in the function IniModule. The solution: see comments 
+[17sep2003 mt] in functions CoOff and CoOn, file compcomm.c
+
+[05nov2003 mt]: Bugfix: after some expression was processed in parallel, 
+there is no possibility to compile module with another expression. The reason:
+after a flag PF.parallel is set to 1, functions  FlushOut and PutOut in slaves 
+invoked at compile time send a mess to the master. The solution: PF.parallel=0
+in IniModule, see pre.c
+
+[06nov2003 mt]: To allow usage of RHS expressions I force ParFORM to switch to
+sequential execution of moduli with RHS expressions. I introduced a counter 
+AC.NumberOfRhsExprInModule which counts hom many times RHS expressions occur.
+The counter is incremented in the function tokenize in the file token.c
+
+[13nov2003 mt]: Bugfix: The function Processor worked incorrectly
+with the following values of e->status:
+UNHIDELEXPRESSION UNHIDEGEXPRESSION SKIPLEXPRESSION
+SKIPGEXPRESSION HIDELEXPRESSION HIDEGEXPRESSION
+see file proces.c
+
+[18nov2003 mt]: 2 preprocessor variables are defined: 1) PARALLELTASK_ as
+a process number, 0 is the master; 2) NPARALLELTASKS_ as a total
+number of processes. These variables allow ParFORM to interact with
+the operational system via #system and #pipe
+
+[19nov2003 mt]: preprocessor variable is defined: CMODULE_ is a
+current module number, starting from 1.
+
+[26nov2003 mt]: bagfixes:
+1) Broadcasting from MASTER to SLAVES of PreProcessor variables that
+have changed is moved to the beginning of each block. The
+corresponding procedure is PF_InitRedefinedPreVars in
+parallel.c. Note, compilation is performed INDEPENDENTLY on
+AC.mparallelflag, so No if(AC.mparallelflag==PARALLELFLAG)!
+ATTENTION! In the previous version there was an error! Variables must
+be broadcasted independently on mparallelflag!!!  The procedure is
+used to broadcast number of terms in expression for preprocessor
+if-expression 'termsin',
+2) Number of terms in the expression is broadcasted from the master
+to slaves for preprocessor if-expression 'termsin'. The problem here
+is that only the master process can decide how many terms the
+expression contains. So we have to broadcast from master to all others
+this value. The corresponding procedure PF_BroadcastNumberOfTerms
+is in the file 'parallel.c'.
+
+[28nov2003 mt]: if the environment variable PF_SYNC is set, the
+beginning of each module will be synchronized compulsory. This is done
+via invocation PF_InitRedefinedPreVars() even if AC.NumberOfRedefsInModule==0.
+This feature is useful only for debugging.
+
+[02dec2003]: Bagfix: the structure of attachment of PreProcessor variables that
+have changed in slave was wrong, see strings 02dec2003 in parallel.c.
+
+[12dec2003 mt] Preprocessor directives "addseparator" and
+"rmseparator" adds/removes separator characters used to separate
+function arguments.  Example
+#define QQ "a|g|a"
+#addseparator %
+*Comma must be quoted!:
+#rmseparator ","
+#rmseparator |
+#call H(a,a%`QQ')
+
+[30jan2004 mt]
+Conception of on/off parallel is changed: instead of two flags, PARALLELFLAG 
+and NOPARLLELFALG, I introduce several bit falgs:
+
+#define NOPARALLEL_DOLLAR 1
+#define NOPARALLEL_STORE 2
+#define NOPARALLEL_RHS 4
+#define NOPARALLEL_MOPT 8
+#define NOPARALLEL_USER 16 
+#define NOPARALLEL_TBLDOLLAR 32
+#define PARALLEL_MOPT 64
+
+#define PARALLELFLAG 0
+
+So, now the resaon why execution can't be done in parallel will be reported 
+to the user.
+
+*************** Start further ChangeLog *****************

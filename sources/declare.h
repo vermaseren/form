@@ -1062,5 +1062,12 @@ char *SkipString(char *);
 int ModulusGCD1(WORD modu,WORD fun1,WORD fun2,WORD *term,WORD sym);
 int MakeMono(WORD modu,WORD *t,WORD whichbuffer,WORD sym);
 
-
+/*[12dec2003 mt]:*/
+DECLARE(int set_in,(UBYTE, set_of_char))
+DECLARE(one_byte set_set,(UBYTE, set_of_char))
+DECLARE(one_byte set_del,(UBYTE, set_of_char))
+DECLARE(one_byte set_sub, (set_of_char, set_of_char, set_of_char))
+DECLARE(int DoPreAddSeparator,(UBYTE *))
+DECLARE(int DoPreRmSeparator,(UBYTE *))
+/*:[12dec2003 mt]*/
 /* temporary commentary for forcing cvs merge */

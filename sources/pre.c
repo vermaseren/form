@@ -17,6 +17,18 @@ static UBYTE underscore[2] = {'_',0};
 static PREVAR *ThePreVar = 0;
 
 static KEYWORD precommands[] = {
+	/*[12dec2003 mt]:*/
+	/* Preprocessor directives "addseparator" and "rmseparator" adds/removes 
+		separator characters used to separate function arguments. Example:
+	#define QQ "a|g|a"
+	#addseparator %
+	*Comma must be quoted!:
+	#rmseparator ","
+	#rmseparator |
+	#call H(a,a%`QQ')
+	*/
+	{"addseparator"      , DoPreAddSeparator    , 0, 0},
+	/*:[12dec2003 mt]*/
 	 {"append"      , DoPreAppend    , 0, 0}
 	,{"assign"      , DoPreAssign    , 0, 0}
 	,{"break"       , DoPreBreak     , 0, 0}
@@ -48,6 +60,10 @@ static KEYWORD precommands[] = {
 	,{"procedure"   , DoProcedure    , 0, 0}
 	,{"redefine"    , DoRedefine     , 0, 0}
 	,{"remove"      , DoPreRemove    , 0, 0}
+	/*[12dec2003 mt]:*/
+	/*See comment to "addseparator" above:*/
+	,{"rmseparator"      , DoPreRmSeparator    , 0, 0}
+	/*:[12dec2003 mt]*/
 	,{"show"        , DoPreShow      , 0, 0}
 	,{"switch"      , DoPreSwitch    , 0, 0}
 	,{"system"      , DoSystem       , 0, 0}
@@ -554,8 +570,33 @@ IniModule ARG1(int,type)
 {
 	WORD **w, i;
 	CBUF *C = cbuf+AR.cbufnum;
+	/*[05nov2003 mt]:*/ 
+#ifdef PARALLEL
+	/*To prevent FlushOut and PutOut in slaves to send a mess to a master
+		compiling a module:*/
+	PF.parallel=0;
+	/*BTW, this was the bug preventing usage of more than 1 expression!*/
+#endif
+/*:[05nov2003 mt]*/ 
+	/*[30jan2004 mt]:*/
+	AC.mparallelflag=PARALLELFLAG;
+	/*:[30jan2004 mt]*/
+
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
+
+/*[06nov2003 mt]:*/
+#ifdef PARALLEL
+	/*the counter will be incremented in the procedure tokenize:*/
+	AC.NumberOfRhsExprInModule=0;
+#endif
+/*:[06nov2003 mt]*/
+
+	/*[19nov2003 mt]:*/
+	/*The module counter:*/
+	(AC.CModule)++;
+	/*:[19nov2003 mt]*/
+
 	if ( !type ) {
 		if ( C->rhs ) {
 			w = C->rhs; i = C->maxrhs;
@@ -613,6 +654,12 @@ IniSpecialModule ARG1(int,type)
  		#[ PreProcessor :
 */
 
+/*[26nov2003 mt]:*/
+#ifdef PARALLEL
+LONG PF_BroadcastNumberOfTerms ARG1 (LONG,x); 
+#endif
+/*:[26nov2003 mt]*/
+
 VOID
 PreProcessor ARG0
 {
@@ -624,8 +671,31 @@ PreProcessor ARG0
 	AC.PreContinuation = 0;
 	for(;;) {
 /*		if ( A.StatisticsFlag ) CharOut(LINEFEED); */
+
 		IniModule(moduletype);
+
+		/*[19nov2003 mt]:*/
+		/*Re-define preprocessor variable CMODULE_ as a current module 
+		number, starting from 1*/
+		/*The module counter is AC.CModule, it is incremented in IniModule*/
+		{/*Block:*/
+			UBYTE buf[21];/*64/Log_2[10] = 19.3, this is enough for any integer*/
+      	sprintf(buf,"%lu",AC.CModule);
+			PutPreVar((UBYTE *)"CMODULE_",buf,0,1);
+		}/*:Block*/
+		/*:[19nov2003 mt]*/
+
 		if ( specialtype ) IniSpecialModule(specialtype);
+/*[28nov2003 mt]:*/
+#ifdef PARALLEL
+		if( (PF.synchro!=0)||(AC.NumberOfRedefsInModule!=0) ){
+			/*synchronize redefined preVars:*/
+			PF_InitRedefinedPreVars();
+			/*We can't put AC.NumberOfRedefsInModule=0 to IniModule():*/
+			AC.NumberOfRedefsInModule=0;
+		}/*if(AC.NumberOfRedefsInModule!=0)*/
+#endif
+/*:[28nov2003 mt]*/
 		numstatement = 0;
 		for(;;) {	/* Read a single line/statement */
 			c = GetChar(0);
@@ -2034,7 +2104,11 @@ DoCall ARG1(UBYTE *,s)
 				if ( wildargs && narg1 == nwildargs ) wild = s;
 			}
 		}
-		else if ( *s == ',' || *s == '|' ) {
+		/*[12dec2003 mt]:*/
+		/*else if ( *s == ',' || *s == '|' ) {*/
+		else if (set_in(*s,AC.separators)) {/*Function set_in see in
+															file tools.c*/
+		/*:[12dec2003 mt]*/
 			*s = 0; narg1++;
 			if ( wildargs && narg1 == nwildargs ) wild = s;
 		}
@@ -3871,6 +3945,15 @@ illend:
 					else {
 						*tt = c;
 						x = TermsInExpression(numexp);
+/*[26nov2003 mt]:*/
+#ifdef PARALLEL
+/*The problem here is that only the master process can decide how many
+ terms the expression contains. So we have to broadcast from master to all others
+ the value of x. The corresponding procedure PF_BroadcastNumberOfTerms is in the file 
+ 'parallel.c':*/
+						x = PF_BroadcastNumberOfTerms(x);
+#endif
+/*:[26nov2003 mt]*/
 					}
 				} 
 				while ( *tt == ' ' || *tt == '\t'
@@ -4242,3 +4325,50 @@ void MessPreNesting ARG1(int,par)
  		#] MessPreNesting : 
  	# ] PreProcessor :
 */
+
+/*[12dec2003 mt]:*/
+/*
+ 		#[ DoPreAddSeparator :
+*/
+
+/*Characters ' ', '\t' and '"' are ignored!*/
+
+int
+DoPreAddSeparator ARG1(UBYTE *,s)
+{
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	for(;*s != '\0';s++){
+		while ( *s == ' ' || *s == '\t' || *s == '"') s++;
+		/* Todo: 
+		if ( set_in(*s,invalidseparators) ) {
+			MesPrint("@Invalid separator specified");
+			return(-1);
+		}
+		*/
+		set_set(*s,AC.separators);
+	}/*for(;*s != '\0';s++)*/
+	return(0);
+}/*DoPreAddSeparator*/
+
+/*
+ 		#] DoPreAddSeparator :
+ 		#[ DoPreRmSeparator 
+*/
+
+/*Characters ' ', '\t' and '"' are ignored!*/
+int
+DoPreRmSeparator ARG1(UBYTE *,s)
+{
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	for(;*s != '\0';s++){
+		while ( *s == ' ' || *s == '\t' || *s == '"') s++;
+		set_del(*s,AC.separators);
+	}/*for(;*s != '\0';s++)*/
+	return(0);
+}/*DoPreRmSeparator*/
+/*
+ 		#] DoPreRmSeparator 
+*/
+/*:[12dec2003 mt]*/

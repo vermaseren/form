@@ -17,6 +17,14 @@ PARALLELVARS PF;
 WORD *PF_shared_buff;
 #endif
 
+/*[04nov2003 mt]:*/
+/*This will work well only under Linux, see #ifdef PF_WITH_SCHED_YIELD below
+in PF_WaitAllSlaves().*/
+#ifdef PF_WITH_SCHED_YIELD
+#include <sched.h>
+#endif
+/*:[04nov2003 mt]*/
+
 #ifdef PF_WITHLOG
 #define PRINTFBUF(TEXT,TERM,SIZE)  { if(PF.log){ WORD iii;\
   fprintf(stderr,"[%d|%d] %s : ",PF.me,PF.module,TEXT);\
@@ -37,7 +45,12 @@ WORD *PF_shared_buff;
 static LONG PF_maxinterms;   /* maximum number of terms in one inputpatch */ 
 static LONG PF_linterms;     /* local interms on this proces: PF_Proces */
 static LONG PF_outterms;     /* total output terms ("on master"): PF_EndSort */
-
+/*[25nov2003 mt]:*/
+	/*Here the global variable should be used since the number of 
+	outterms must be known for EndSort routine, so PF.goutterms will be used instead of 
+	PF_outterms:*/
+/*static LONG PF_outterms;*/     /* total output terms ("on master"): PF_EndSort */
+/*:[25nov2003 mt]*/
 #define PF_STATS_SIZE 5 
 static LONG **PF_stats=0;    /* space for collecting statistics of all procs */
 static LONG PF_laststat;     /* last realtime when statistics were printed */
@@ -89,8 +102,13 @@ PF_Statistics ARG2(LONG**,stats,int,proc)
 	  }
 	  else if(AC.StatsFlag){
 		MesPrint("proc          CPU         in        gen       out        byte");
-		MesPrint("%3d  : %7l.%2i %10l %10l %10l",
+		/*[25nov2003 mt]:*/
+		/*MesPrint("%3d  : %7l.%2i %10l %10l %10l",
 				 0,cpu,cpart,PF.ginterms,0,PF_outterms);
+		*/
+		MesPrint("%3d  : %7l.%2i %10l %10l %10l",
+				 0,cpu,cpart,PF.ginterms,0,PF.goutterms);
+		/*[25nov2003 mt]:*/
 	  }
 
 	  for(i=1;i<PF.numtasks;i++){
@@ -656,8 +674,10 @@ PF_EndSort ARG0
   WORD i,j,cc,next;
   WORD newcoeff;
   int tag;
-
-  if( AR.SS != AM.S0 || AC.mparallelflag == NOPARALLELFLAG) return(0);
+	/*[30jan2004 mt]:*/
+  /*if( AR.SS != AM.S0 || AC.mparallelflag == NOPARALLELFLAG) return(0);*/
+  if( AR.SS != AM.S0 || (AC.mparallelflag != PARALLELFLAG) ) return(0);
+	/*:[30jan2004 mt]*/
 
   if( PF.me != MASTER){
 	/* 
@@ -693,7 +713,12 @@ PF_EndSort ARG0
 	return(0);
   }
   /* this waits for all slaves to be ready to send terms back */
-  PF_Wait4Slave(1);
+
+  /*[02nov2003 mt]:*/
+  /*PF_Wait4Slave(1);*/
+  PF_WaitAllSlaves();/*Note, the returned value should be 0 on success.*/
+  /*:[02nov2003 mt]*/
+
   /* 
 	 Now collect the terms of all slaves and merge them.
 	 PF_GetLoser gives the position of the smallest term, which is the real 
@@ -703,13 +728,22 @@ PF_EndSort ARG0
   S->PolyFlag = AC.PolyFun ? 1: 0;
   *AR.CompressPointer = 0;
   PUTZERO(position);
-  PF_outterms = 0;
-
+/*[25nov2003 mt]:*/
+	/*Here the global variable should be used since the number of 
+	outterms must be known for EndSort routine*/
+	/*PF_outterms = 0;*/
+	PF.goutterms=0;
+/*:[25nov2003 mt]*/
 
   while(PF_loser >= 0){
 	if(!(PF_loser = PF_GetLoser(PF_root))) break;
 	outterm = PF_term[PF_loser];
-	PF_outterms++;
+
+	/*[25nov2003 mt]:*/
+	/*	PF_outterms++;*/
+	PF.goutterms++;
+	/*:[25nov2003 mt]*/
+
 	if(PF_newclen[PF_loser]!=0){
 	  /*		  
 		#[ this is only when new coeff was too long
@@ -835,7 +869,20 @@ ReceiveNew:
 
 	  fi->POfill = fi->PObuffer;
 	  /* get PF.ginterms which sits in the first 2 WORDS */
-	  PF.ginterms = (LONG)(fi->POfill[0])*(LONG)WORDMASK + (LONG)(fi->POfill[1]);
+		/*[21nov2003 mt]:*/
+		/*Bugfix:*/
+		/* There is some problem with (LONG)(fi->POfill[1]): it can be negative!
+			Indeed, the  most significant bit of WORDMASK is set while fi->POfill[1] is
+			signed WORD:
+
+			PF.ginterms = (LONG)(fi->POfill[0])*(LONG)WORDMASK + (LONG)(fi->POfill[1]);
+
+				Note, there are no problems with (LONG)(fi->POfill[0])*(LONG)WORDMASK:
+			anyway, it is signed.
+				This should work out:
+		*/
+		PF.ginterms = (LONG)(fi->POfill[0])*(LONG)WORDMASK +(LONG)*((UWORD*)(fi->POfill+1));
+		/*:[21nov2003 mt]*/
 	  fi->POfill += 2;
 	  fi->POfull = fi->PObuffer + size;
 	  if(tag == PF_ENDSORT_MSGTAG) *fi->POfull++ = 0;
@@ -1019,8 +1066,19 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
 
 /*
  	 #] Deferred : 
-     #[ int        PF_Wait4Slave(int)
+*/
 
+/*[02nov2003 mt]:*/
+#ifdef REMOVEDBY_MT
+     #[ int        PF_Wait4Slave(int)
+/* mt: This function for par=1 is a complete nonsense. Moreover, 
+  the structure of this function consists of two independent algorithms, one
+  for par=0 and the other for par=1.
+  I split it into 2 different functions: int PF_Wait4Slave(int src) corresponds 
+  to former PF_Wait4Slave(0), and int PF_WaitAllSlaves(void) which does the job
+  corresponding to former PF_Wait4Slave(1).
+*/
+/*
   Waiting for the next slave to accept terms, it returns the number of that 
   slave. 
   for par = 0 it receives a message, provides services until it receives a
@@ -1062,7 +1120,7 @@ recv:
 		if(tag == PF_BUFFER_MSGTAG || tag == PF_ENDBUFFER_MSGTAG){
 		  has_sent[next] = 1;
 		  j = 0;
-		  for(i=1;i<PF.numtasks;i++) j += has_sent[i];  
+		  for(i=1;i<PF.numtasks;i++) j += has_sent[i];
 		  if(j < PF.numtasks-1) goto recv;
 		  else{
 			for(i=0;i<PF.numtasks;i++) has_sent[i] = 0;	
@@ -1124,7 +1182,150 @@ recv:
   goto recv;
 }
 /*
-     #] int        PF_Wait4Slave
+      #] int        PF_Wait4Slave
+*/
+#endif
+
+/*
+     #[ int        PF_Wait4Slave(int):
+  Waiting for the slave src to accept terms, it returns the number of that 
+  slave.*/
+static LONG **PF_W4Sstats=0;
+
+int 
+PF_Wait4Slave ARG1(int,src)
+{
+  int j,tag,next;
+
+  PF_Receive(src,PF_ANY_MSGTAG,&next,&tag);
+
+  if(tag != PF_READY_MSGTAG){
+	MesPrint("[%d] PF_Wait4Slave: received MSGTAG %d",(WORD)PF.me,(WORD)tag);
+	return(-1);
+  }
+  if(!PF_W4Sstats){
+	PF_W4Sstats = (LONG**)Malloc1(sizeof(LONG*),"");
+	PF_W4Sstats[0] = (LONG*)Malloc1(PF_STATS_SIZE*sizeof(LONG),"");
+  }
+  PF_UnPack(PF_W4Sstats[0],PF_STATS_SIZE,PF_LONG);
+  PF_Statistics(PF_W4Sstats,next);
+
+  PF_UnPack(&j,1,PF_INT);
+  
+  if(j){
+	/* actions depending on rest of information in last message */
+  }
+  
+	return(next);
+}
+/*
+   #] int        PF_Wait4Slave(int):
+*/
+
+/*
+   #[ int   PF_Wait4Slave(void):
+		This function waits until all slaves are ready to send terms back to the master.
+		If some slave is not working, it sends PF_ENDSORT_MSGTAG and waits for the answer.
+		Messages from slaves will be read only after all slaves are ready, 
+      further in caller function.
+*/
+int 
+PF_WaitAllSlaves ARG0
+{
+	int i,readySlaves,tag,next=PF_ANY_SOURCE;
+	UBYTE *has_sent=0;
+	int checkbottleneck=0;
+
+	has_sent = (UBYTE*)Malloc1(sizeof(UBYTE)*PF.numtasks,"PF_WaitAllSlaves");
+	for(i=0;i<PF.numtasks;i++) has_sent[i] = 0;
+
+	for(readySlaves=1;readySlaves<PF.numtasks;){
+
+		if(next!=PF_ANY_SOURCE)/*Go to the next slave:*/
+			do{/*Note, here readySlaves<PF.numtasks, so this loop can't be infinite*/
+				if(++next >= PF.numtasks)
+					next=1;
+			}while(has_sent[next] == 1);
+
+		/*Here PF_Probe is BLOCKING function if next=PF_ANY_SOURCE:*/
+		tag = PF_Probe(&next);
+		/*Here next!=PF_ANY_SOURCE*/
+
+		switch(tag){
+			case PF_BUFFER_MSGTAG:
+			case PF_ENDBUFFER_MSGTAG:
+            /*Slaves are ready to send their results back*/
+				if(has_sent[next] == 0){
+					has_sent[next]=1;
+					readySlaves++;
+				}else{
+					/*error?*/
+					fprintf(stderr,"ERROR next=%d tag=%d\n",next,tag);
+				}/*if(has_sent[next] == 0)*/
+				/*Note, we do NOT read results here! Messages from these slaves will be read
+					only after all slaves are ready, further in caller function */
+            break;
+			case 0:
+				/*The slave is not ready. Just go to  the next slave.
+					It may appear that there are no more ready slaves, and the master
+					will wait them in infinite loop. Stupid situation - the master can
+					receive buffers from ready slaves!*/
+				if(++checkbottleneck>=PF.numtasks){
+					if(readySlaves == 1){/*Nothing is ready, may wait any source:*/
+						/*This code is meaningfull only for 2-processor boxes*/
+						checkbottleneck = 0;
+						next=PF_ANY_SOURCE;
+					}/*if(readySlaves == 1)*/
+					/*[04nov2003 mt]:*/
+#ifdef PF_WITH_SCHED_YIELD
+               /*Relinquish the processor:*/
+					sched_yield();
+#endif
+					/*:[04nov2003 mt]*/
+				}/*if(++checkbottleneck>=PF.numtasks)*/
+				break;
+			case PF_READY_MSGTAG:/*idle slave*/
+				/*May be only PF_READY_MSGTAG:*/
+				next=PF_Wait4Slave(next);
+				if(next == -1)
+					return (next);/*Cannot be!*/
+				if(!has_sent[0]){/*Send the last chunk to the slave*/
+					PF.sbuf->active = 0;
+					has_sent[0] = 1;
+				}else{/*Last chunk was sent, so just send to slave ENDSORT*/
+					/*Number of  PF.ginterms must be sent because the slave expects it:*/
+					*(PF.sbuf->fill[next])++ = (UWORD)((PF.ginterms+1)/(LONG)WORDMASK);
+					*(PF.sbuf->fill[next])++ = (UWORD)((PF.ginterms+1)%(LONG)WORDMASK);
+					/*This will tell to the slave that there are no more terms:*/
+					*(PF.sbuf->fill[next])++ = 0;
+					PF.sbuf->active = next;
+				}/*if(!has_sent[0]) ... else*/
+				/*Send ENDSORT:*/
+				PF_Send(next,PF_ENDSORT_MSGTAG,0);
+				PF_Send(next,PF_ENDSORT_MSGTAG,1);
+				/*Send the buffer:*/
+				PF_ISendSbuf(next,PF_ENDSORT_MSGTAG);
+				break;
+			default:
+				/*Error?*/
+				/*Indicates the error. This will force exit from the main loop:*/
+				readySlaves=PF.numtasks+1;
+				break;
+		}/*switch(tag)*/
+	}/*for(readySlaves=1;readySlaves<PF.numtasks;)*/
+
+	if(has_sent) M_free(has_sent,"PF_WaitAllSlaves");
+
+	/*0 on sucess (exit from the main loop by loop condition), or -1 if fails
+		(exit from the main loop since readySlaves=PF.numtasks+1):*/
+	return(PF.numtasks-readySlaves);
+}/*PF_WaitAllSlaves*/
+/*
+   #] int   PF_Wait4Slave(void):
+*/
+/*:[02nov2003 mt]*/
+
+/*
 	 #[ int        PF_Processor(EXPRESSION,WORD)
 
   replaces parts of Processor on the masters and slaves.
@@ -1164,6 +1365,9 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	PF.numredefs = (LONG)NumPre;
 	PF.redef = (LONG*)Malloc1(PF.numredefs*sizeof(LONG),"PF.redef");
   }
+  /*[26nov2003 mt]:*/
+	PF.mnumredefs = 0;
+  /*:[26nov2003 mt]*/
   for(ll = 0;ll < PF.numredefs; ll++) PF.redef[ll] = 0;
 
   if(PF.me == MASTER){
@@ -1235,7 +1439,10 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	  if(AC.mparallelflag == PARALLELFLAG){
 		PRINTFBUF("PF_Processor gets",term,*term);
 		if(termsinpatch >= PF_maxinterms || sb->fill[0] + *term >= sb->stop[0]){
-		  next = PF_Wait4Slave(0);
+		/*[02nov2003 mt]:*/
+		  /*next = PF_Wait4Slave(0);*/
+		  next = PF_Wait4Slave(PF_ANY_SOURCE);
+		/*:[02nov2003 mt]*/
 		  sb->fill[next] = sb->fill[0]; sb->full[next] = sb->full[0];
 		  s = sb->stop[next]; sb->stop[next] = sb->stop[0]; sb->stop[0] = s;
 		  s = sb->buff[next]; sb->buff[next] = sb->buff[0]; 
@@ -1316,42 +1523,93 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 		  case PF_ATTACH_REDEF:
 			{
 			  int ll,kk,ii;
+/*[02dec2003 mt]:*/
+#ifdef REMOVEDBY_MT
 			  UBYTE *value,*name;
+#endif
+				UBYTE *value;
+/*:[02dec2003 mt]*/
 			  LONG redef;
 
 			  PF_UnPack(&kk,1,PF_INT);
 			  while ( --kk >= 0) {
+/*[02dec2003 mt]:*/
+#ifdef REMOVEDBY_MT
 				PF_UnPack(&ll,1,PF_INT);
 				name = (UBYTE*)Malloc1(ll,"redef name");
 				PF_UnPack(name,ll,PF_BYTE);
+#endif
+				PF_UnPack(&ii,1,PF_INT);
+/*:[02dec2003 mt]*/
 				PF_UnPack(&ll,1,PF_INT);
 				value = (UBYTE*)Malloc1(ll,"redef value");
 				PF_UnPack(value,ll,PF_BYTE);
 				PF_UnPack(&redef,1,PF_LONG);
+/*[02dec2003 mt]:*/
+#ifdef REMOVEDBY_MT
+				/*Strange code...*/
 				if( redef > PF.redef[kk]){
-				  for(ii=NumPre-1;ii>=0;ii--) 
-					if(StrCmp(name,PreVar[ii].name)== 0) break;
+					for(ii=NumPre-1;ii>=0;ii--) 
+						if(StrCmp(name,PreVar[ii].name)== 0) break;
+					/*[26nov2003 mt]:*/
+					if(PF.redef[ii] == 0)/*This term was not counted yet*/
+						PF.mnumredefs++;/*Count it!*/
+					/*:[26nov2003 mt]*/
 				  PF.redef[ii] = redef;
 				  PutPreVar(name,value,0,1); /* I reduced the possibility to transfer prepro variables with args for the moment */
 				}
-			  }
+#endif
+#ifdef REMOVEDBY_MT
+				/*Try to find the variable:*/
+				for(ii=NumPre-1;ii>=0;ii--) 
+					if(StrCmp(name,PreVar[ii].name)== 0) break;
+#endif
+				if( redef > PF.redef[ii]){
+					if(PF.redef[ii] == 0)/*This term was not counted yet*/
+						PF.mnumredefs++;/*Count it!*/
+					PF.redef[ii] = redef;/*Store the latest term number*/
+					PutPreVar(PreVar[ii].name,value,0,1);/*Redefine preVar*/
+					/* I reduced the possibility to transfer prepro var
+							iables with args for the moment */
+				}/*if( redef > PF.redef[ii])*/					
+/*:[02dec2003 mt]*/
+           }/*while ( --kk >= 0)*/
 			  /* here we should free the allocated memory of value & name ??*/
-			}
+				/*[26nov2003 mt]:*/
+				/*Of course!*/
+/*[02dec2003 mt]:*/
+#ifdef REMOVEDBY_MT
+					M_free(name,"redef name");
+#endif
+/*:[02dec2003 mt]*/
+					M_free(value,"redef value");
+				/*:[26nov2003 mt]*/
+			}/*case PF_ATTACH_REDEF:...*/
 			break;
 		  default:
 			/* here should go an error message */
 			break;
-		  }
+		  
 		  /* end of switch */
-		}
-	  }
+		
+	    }/*switch(attach)*/
+      }/*if(attach)*/
+	  }/*for(k=1;k<PF.numtasks;k++)*/
 	  PF_Statistics(PF_stats,0);
-	}
+   }/*if(AC.mparallelflag == PARALLELFLAG)*/	
 	/*
 	     #] Collect (stats,prepro,...)
+	*/
+/*[26nov2003 mt]:*/
+/*This operation is moved to the beginning of each block, see PreProcessor 
+in pre.c.*/
+#ifdef REMOVEDBY_MT
+   /*
 		 #[ BroadCast PreProcessor variables that have changed
 	*/
+/*mt: An error! Variables must be broadcasted independently on mparallelflag!!!:*/
 	if(AC.mparallelflag == PARALLELFLAG){
+/* mt: It seems, this must be done in the beginnig of the next block...*/
 	  int l=0;
 	  UBYTE *value,*name,*p;
 
@@ -1384,11 +1642,18 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	}
 	/*
 		 #] BroadCast 
+	*/
+#endif 
+/*:[26nov2003 mt]*/
+	/*
 	   #] Master
 	*/
   }
   else{ 
-	if ( AC.mparallelflag == NOPARALLELFLAG ) return(0);
+	/*[30jan2004 mt]:*/
+	/*if ( AC.mparallelflag == NOPARALLELFLAG ) return(0);*/
+	if ( AC.mparallelflag != PARALLELFLAG ) return(0);
+	/*:[30jan2004 mt]*/
 	/* 
 	   #[ Slave 
 		 #[ Generator Loop & EndSort
@@ -1448,13 +1713,24 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	  k = NumPre;
 	  while ( --k >= 0) {
 		if(PF.redef[k]){
+/*[02dec2003 mt]:*/
+#ifdef REMOVEDBY_MT
 		  l = 1;
 		  p = name = PreVar[k].name;
 		  while(*p++) l++;
 		  PF_Pack(&l,1,PF_INT);
 		  PF_Pack(name,l,PF_BYTE);
+#endif
+/*:[02dec2003 mt]*/
+			PF_Pack(&k,1,PF_INT);
+
 		  l = 1;
+/*[02dec2003 mt]:*/
+#ifdef REMOVEDBY_MT
 		  p = value = GetPreVar(name,WITHERROR);
+#endif
+			p = value = PreVar[k].value;
+/*:[02dec2003 mt]*/
 		  while(*p++) l++;
 		  PF_Pack(&l,1,PF_INT);
 		  PF_Pack(value,l,PF_BYTE);
@@ -1465,6 +1741,11 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	PF_Send(MASTER,PF_ENDSORT_MSGTAG,1);
 	/* 
 		 #] Collect (stats,prepro,...)
+/*[26nov2003 mt]:*/
+/*This operation is moved to the beginning of each block, see PreProcessor
+in pre.c.*/
+#ifdef REMOVEDBY_MT
+	/*
 		 #[ BroadCast (only necessary when slaves run PreProcessor)	
 	*/
 	{
@@ -1499,6 +1780,10 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	}
 	/*
 		 #] BroadCast 
+	*/
+#endif
+/*:[26nov2003 mt]*/
+	/*
 	   #] Slave 
 	*/				  
     if(PF.log){
@@ -1529,6 +1814,12 @@ int PF_Init ARG2(int*,argc,char ***,argv){
   PF.numsbufs = 2; /* might be changed by LibInit ! */
   PF.numrbufs = 2; /* might be changed by LibInit ! */
 
+  /*[26nov2003 mt]:*/
+  PF.numredefs = 0;
+  PF.redef = 0;
+  PF.mnumredefs = 0;
+  /*:[26nov2003 mt]*/
+
   PF_LibInit(argc,argv);
   PF_RealTime(PF_RESET);
 
@@ -1538,9 +1829,21 @@ int PF_Init ARG2(int*,argc,char ***,argv){
   PF.module = 0;
   PF_statsinterval = 10;
 
+  /*[28nov2003 mt]:*/
+  /*If !=0, start of each module will be synchronized between all slaves and master*/
+  PF.synchro = 0;
+  /*:[28nov2003 mt]*/
+
   if(PF.me == MASTER){
 
 #ifdef PF_WITHGETENV
+  /*[28nov2003 mt]:*/
+	if( getenv("PF_SYNC")!=NULL ){
+      PF.synchro = 1;
+     fprintf(stderr,"Start of each module is synchronized\n");
+     fflush(stderr);
+   }/*if( getenv("PF_SYNC")!=NULL )*/
+  /*:[28nov2003 mt]*/
 	/* get these from the environment at the moment sould be in setfile/tail */
 	if( c =  getenv("PF_LOG") ){
 	  if (*c) PF.log = (int)atoi(c);
@@ -1594,6 +1897,9 @@ int PF_Init ARG2(int*,argc,char ***,argv){
   if(PF.me == MASTER){
 	PF_BroadCast(0);
 	PF_Pack(&PF.log,1,PF_INT);
+   /*[28nov2003 mt]:*/
+   PF_Pack(&PF.synchro,1,PF_WORD);
+   /*:[28nov2003 mt]*/
 	PF_Pack(&PF.numrbufs,1,PF_WORD);
 	PF_Pack(&PF.numsbufs,1,PF_WORD);
 	PF_Pack(&PF_maxinterms,1,PF_LONG);
@@ -1603,6 +1909,9 @@ int PF_Init ARG2(int*,argc,char ***,argv){
   PF_BroadCast(1);
   if(PF.me != MASTER){
 	PF_UnPack(&PF.log,1,PF_INT);
+   /*[28nov2003 mt]:*/
+   PF_UnPack(&PF.synchro,1,PF_WORD);
+   /*:[28nov2003 mt]*/
 	PF_UnPack(&PF.numrbufs,1,PF_WORD);
 	PF_UnPack(&PF.numsbufs,1,PF_WORD);
 	PF_UnPack(&PF_maxinterms,1,PF_LONG);
@@ -1625,3 +1934,124 @@ int PF_Init ARG2(int*,argc,char ***,argv){
      #] int         PF_Init(int*,char***)
   #] startup, prepro & compile
 */
+
+/*[26nov2003 mt]:*/
+/*
+ 		#[ LONG PF_BroadcastNumberOfTerms
+*/
+/* The procedure is used to broadcast number of terms in expression for
+preprocessor if-expression 'termsin', see pre.c. The procedure assumes that 
+x is the value obtained my the master and simply broadcasts it to all slaves.
+*/
+LONG
+PF_BroadcastNumberOfTerms ARG1 (LONG,x)
+{
+/*		 Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+       No if(AC.mparallelflag==PARALLELFLAG) !!
+*/
+	if(MASTER == PF.me){/*Pack the value of x*/
+		if(PF_BroadCast(0)!=0)/*initialize buffers*/
+			Terminate(-1);
+		if(PF_Pack(&x,1,PF_LONG)!=0)
+			Terminate(-1);
+	}/*if(MASTER == PF.me)*/
+
+	PF_BroadCast(1);/*Broadcasting - no buffer initilisation for slaves!*/
+
+	if(MASTER != PF.me){/*Slave - unpack received x*/
+		/*For slaves buffers are initialised automatically.*/
+		if(PF_UnPack(&x,1,PF_LONG)!=0)
+			Terminate(-1);
+	}/*if(MASTER != PF.me)*/
+	return (x);
+}/*PF_BroadcastNumberOfTerms*/
+/*
+ 		#] LONG PF_BroadcastNumberOfTerms
+ 		#[ int PF_InitRedefinedPreVars
+*/
+int
+PF_InitRedefinedPreVars ARG0
+{
+/*		 Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+       No if(AC.mparallelflag==PARALLELFLAG) !!
+*/
+	UBYTE *value,*name,*p;
+	int i,l;
+
+	if(MASTER == PF.me){/*Pack information about redefined PreVars*/
+		PF_BroadCast(0);/*Initialize buffers*/
+		/*Pack number of redefined variables:*/
+		PF_Pack(&(PF.mnumredefs),1,PF_INT);
+
+		/* now pack for each of the changed preprovariables the length of the 
+		name, the name, the length of the value and the value into the 
+		sendbuffer:*/
+		if(0 < PF.mnumredefs)for(i=0;i < NumPre;i++)if(PF.redef[i]){
+			l = 1;
+			p = name = PreVar[i].name;
+			while(*p++) l++;
+
+			PF_Pack(&l,1,PF_INT);
+			PF_Pack(name,l,PF_BYTE);
+			l = 1;
+			/*			p = value = GetPreVar(name,WITHERROR);*/
+			value=PreVar[i].value;
+			while(*p++) l++;
+
+			PF_Pack(&l,1,PF_INT);
+			PF_Pack(value,l,PF_BYTE);
+		}/*if(0 < PF.mnumredefs)for(i=0;i < NumPre;i++)if(PF.redef[i])*/
+	}/*if(MASTER == PF.me)*/
+
+	PF_BroadCast(1);
+
+	if(MASTER != PF.me){/*Unpack information about redefined PreVars*/
+		int l,nl=0,vl=0;
+
+		/*Extract number of redefined variables:*/
+		PF_UnPack(&(PF.mnumredefs),1,PF_INT);
+
+ 		/*Initialize name and values by empty strings:*/
+		*(name =  (UBYTE*)Malloc1(1,"PreVar name"))='\0';
+		*(value =  (UBYTE*)Malloc1(1,"PreVar value"))='\0';
+
+		for(i=0;i < PF.mnumredefs;i++){
+			/*extract name:*/
+			PF_UnPack(&l,1,PF_INT);/*Extract the name length*/
+			if(l > nl){/*Expand the buffer:*/
+				M_free(name,"PreVar name");
+				name =  (UBYTE*)Malloc1((int)l,"PreVar name"); 
+				nl = l; 
+			}/*if(l > nl)*/
+			/*exitact the value of the name:*/
+			PF_UnPack(name,l,PF_BYTE);/*l>=1!*/
+
+			/*exitact value:*/
+			PF_UnPack(&l,1,PF_INT);/*Extract the value length*/
+			if(l > vl){/*Expand the buffer:*/
+				M_free(value,"PreVar val");
+				value = (UBYTE*)Malloc1((int)l,"PreVar value"); 
+				vl = l; 
+			}/*if(l > vl)*/
+			/*exitact the value of the value:*/
+			PF_UnPack(value,l,PF_BYTE);
+
+			if(PF.log) 
+				printf("[%d] module %d: PutPreVar(\"%s\",\"%s\",1);\n",
+					PF.me,PF.module,name,value);
+
+			/*Re-define the variable:*/
+			PutPreVar(name,value,NULL,1);
+			/*mt: samebody made the following remark here:*/
+			/* I reduced the possibility to transfer prepro variables 
+				with args for the moment */
+	  }/*for(i=0;i < PF.mnumredefs);i++)*/
+	  M_free(name,"PreVar name");
+	  M_free(value,"PreVar value");
+	}/*if(MASTER != PF.me)*/
+	return (0);
+}/*PF_InitRedefinedPreVars*/
+/*
+ 		#] int PF_InitRedefinedPreVars
+*/
+/*:[26nov2003 mt]*/

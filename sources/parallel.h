@@ -134,18 +134,26 @@ typedef struct ParallelVars{
   int me;               /* Internal number of task: master is 0 */
   int numtasks;         /* total number of tasks */
   int parallel;          /* flags telling the slaves to do the sorting parallel */
-
+                         /*[05nov2003 mt] This flag must be set to 0 in iniModule!*/
   /* special buffers for nonblocking, unbuffered send/receives */
   PF_BUFFER *sbuf;     /* set of cyclic send buffers for master _and_ slave */
   PF_BUFFER **rbufs;   /* array of sets of cyclic receive buffers for master */
   WORD numsbufs;       /* number of cyclic send buffers */
   WORD numrbufs;       /* number of cyclic receive buffers */
-  
+  /*[25nov2003 mt]:*/
+  LONG goutterms; /* total output terms ("on master"): PF_EndSort  */
+  /*:[25nov2003 mt]*/
+  /*[28nov2003 mt]:*/
+  /*If !=0, start of each module will be synchronized between all slaves and master:*/
+  WORD synchro;  
+  /*:[28nov2003 mt]*/
   LONG module;   /* for counting the modules done so far */        
   LONG ginterms; /* total interms ("on master"): PF_Proces */
   LONG numredefs; /* size of PF.redefs */
   LONG *redef;  /* number of term of last redef for each PreProVar */
-
+  /*[26nov2003 mt]:*/
+  int mnumredefs; /* number of redefined PreProVar in current module*/
+  /*:[26nov2003 mt]*/
   LONG packsize; /* this is only for the packbuffer of the MPI routines */
 
   int log;              /* flag for logging mode */

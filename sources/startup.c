@@ -49,7 +49,10 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 							AM.qError = 1;   break;
 				case 'D':
 				case 'd': /* Next arg is define preprocessor var. */
-							t = copy = strDup1(*argv,(char *)(*argv));
+							/*[01dec2003 mt]: A nonsense!:*/
+							/*t = copy = strDup1(*argv,(char *)(*argv));*/
+							t = copy = strDup1(*argv,"PreProVar from cmdline");
+							/*:[01dec2003 mt]*/
 							while ( *t && *t != '=' ) t++;
 							if ( *t == 0 ) {
 								if ( PutPreVar(copy,(UBYTE *)"1",0,0) < 0 ) return(-1);
@@ -279,11 +282,20 @@ ReserveTempFiles ARG0
 	  /* Very dirty quick-hack for the qcm smp machine at TTP */
 	  M_free(FG.fname,"name for temporary files");
 	  if(PF.me == 0){
-		FG.fname = "/formswap/xxxxxxxxxxxxxxxxxxxxx";
+      /*[04nov2003 mt] To avoid segfault with -fast optimization option*/
+		/*[04nov2003 mt]:*/ /*NOTE, this is only a temporary stub!*/
+		/*FG.fname = "/formswap/xxxxxxxxxxxxxxxxxxxxx";*/
+		FG.fname = calloc(128,1);
+		strcpy(FG.fname,"/formswap/xxxxxxxxxxxxxxxxxxxxx");
+		/*:[04nov2003 mt]*/
 		t = (UBYTE *)FG.fname + 10;
 	  }
 	  else{
-		FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";
+		/*[04nov2003 mt]:*/
+		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
+		FG.fname = calloc(128,1);
+		strcpy(FG.fname,"/formswapx/xxxxxxxxxxxxxxxxxxxxx");
+		/*:[04nov2003 mt]*/
 		FG.fname[9] = '0' + PF.me;
 		t = (UBYTE *)FG.fname + 11;
 	  }
@@ -365,6 +377,26 @@ StartVariables ARG0
 	int i, ii;
 	PUTZERO(AM.zeropos);
 	StartPrepro();
+	/*[19nov2003 mt]:*/
+	/*The module counter:*/
+	AC.CModule=0;
+	/*:[19nov2003 mt]*/
+/*[28nov2003 mt]:*/   
+	AP.ChDollarList.lijst = NULL;
+#ifdef PARALLEL
+	/*Note, this variable can't be initialized in IniModule!:*/
+	AC.NumberOfRedefsInModule=0;
+#endif
+/*:[28nov2003 mt]*/
+
+	/*[12dec2003 mt]:*/
+	/*separators used to delimit arguments in #call and #do, by default ',' and '|':*/
+	/*Be sure, it is en empty set:*/
+	set_sub(AC.separators,AC.separators,AC.separators);
+	set_set(',',AC.separators);
+	set_set('|',AC.separators);
+	/*:[12dec2003 mt]*/
+
 	AM.SkipClears = 0;
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
@@ -683,6 +715,20 @@ main ARG2(int,argc,char **,argv)
 #endif
 	StartFiles();
 	StartVariables();
+
+/*[18nov2003 mt]:*/
+#ifdef PARALLEL
+	/*Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master*/
+	/*Define preprocessor variable NPARALLELTASKS_ as a total number of processes*/
+   {/*Block:*/
+	UBYTE buf[21];/*64/Log_2[10] = 19.3, this is enough for any integer*/
+      sprintf(buf,"%d",PF.me);
+		PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
+		sprintf(buf,"%d",PF.numtasks);
+		PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
+   }/*:Block*/
+#endif
+/*:[18nov2003 mt]*/
 
 	if ( DoTail(argc,(UBYTE **)argv) ) Terminate(-1);
 	if ( DoSetups() ) Terminate(-2);
