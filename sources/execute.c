@@ -362,7 +362,8 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	  } 
 	  else {
 	    M_free(PPchangeddollars, "kill PPchangeddollars list");
-	    PPchangeddollars = NULL;
+            /* PPchangeddollars changed to AP.ChDollarList.lijst because AIX C compiler complained. MF 30/07/2003 */
+	    AP.ChDollarList.lijst = NULL;
 	    NumPPchangeddollars = 0; 	 	 	 
 	  } 
 	}  
@@ -700,8 +701,10 @@ DoExecute ARG2(WORD,par,WORD,skip)
         if(ModOptdollars) M_free(ModOptdollars, "ModOptdollars pointer");
 	if(PotModdollars) M_free(PotModdollars, "PotModdollars pointer");
 	
-	ModOptdollars = NULL;
-	PotModdollars = NULL;
+	/* ModOptdollars changed to AC.ModOptDolList.lijst because AIX C compiler complained. MF 30/07/2003. */
+	AC.ModOptDolList.lijst = NULL;
+	/* PotModdollars changed to AC.PotModDolList.lijst because AIX C compiler complained. MF 30/07/2003. */
+	AC.PotModDolList.lijst = NULL;
 
 	NumPotModdollars = 0;
 	NumModOptdollars = 0;

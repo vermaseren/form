@@ -1332,7 +1332,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 				  for(ii=NumPre-1;ii>=0;ii--) 
 					if(StrCmp(name,PreVar[ii].name)== 0) break;
 				  PF.redef[ii] = redef;
-				  PutPreVar(name,value,0,1); // I reduced the possibility to transfer prepro variables with args for the moment
+				  PutPreVar(name,value,0,1); /* I reduced the possibility to transfer prepro variables with args for the moment */
 				}
 			  }
 			  /* here we should free the allocated memory of value & name ??*/
@@ -1492,7 +1492,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 		if(PF.log) 
 		  printf("[%d] module %d: PutPreVar(\"%s\",\"%s\",1);\n",
 				 PF.me,PF.module,name,val);
-		PutPreVar(name,val,0,1); // I reduced the possibility to transfer prepro variables with args for the moment
+		PutPreVar(name,val,NULL,1); /* I reduced the possibility to transfer prepro variables with args for the moment */
 	  }
 	  if(name) M_free(name,"PreVar name");
 	  if(val) M_free(val,"PreVar value");

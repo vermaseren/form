@@ -2033,6 +2033,20 @@ LONG Timer()
 }
 
 #else
+
+#ifdef RS6K
+#include <sys/time.h>
+#include <sys/resource.h>
+
+LONG Timer()
+{
+        struct rusage rusage;
+        getrusage(0,&rusage);
+        return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+}
+
+#else
+
 #ifdef ANSI
 LONG
 Timer ARG0
@@ -2146,6 +2160,7 @@ LONG Timer()
 #endif
 }
 
+#endif
 #endif
 #endif
 #endif
