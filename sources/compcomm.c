@@ -83,18 +83,32 @@ static WORD one = 1;
 int
 CoCollect ARG1(UBYTE *,s)
 {
+/*	--------------change 17-feb-2003 Added percentage */
 	WORD numfun;
-	int type;
-	UBYTE *t = SkipAName(s), *t1, *t2, c;
+	int type,x = 0;
+	UBYTE *t = SkipAName(s), *t1, *t2;
 	AC.AltCollectFun = 0;
 	if ( t == 0 ) goto syntaxerror;
-	if ( *t ) {
-		t1 = t; while ( *t1 == ',' || *t1 == ' ' || *t1 == '\t' ) t1++;
-		c = *t; *t = 0;
+	t1 = t; while ( *t1 == ',' || *t1 == ' ' || *t1 == '\t' ) t1++;
+	*t = 0; t = t1;
+	if ( *t1 && ( FG.cTable[*t1] == 0 || *t1 == '[' ) ) {
 		t2 = SkipAName(t1);
-		if ( t2 == 0 || *t2 != 0 ) goto syntaxerror;
+		if ( t2 == 0 ) goto syntaxerror;
+		t = t2;
+		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+		*t2 = 0;
 	}
 	else t1 = 0;
+	if ( *t && FG.cTable[*t] == 1 ) {
+		while ( *t >= '0' && *t <= '9' ) x = 10*x + *t++ - '0';
+		if ( x > 100 ) x = 100;
+		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+		if ( *t ) goto syntaxerror;
+	}
+	else {
+		if ( *t ) goto syntaxerror;
+		x = 100;
+	}
 	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
 	|| ( functions[numfun].spec != 0 ) ) {
 		MesPrint("&%s should be a regular function",s);
@@ -105,6 +119,7 @@ CoCollect ARG1(UBYTE *,s)
 		return(1);
 	}
 	AC.CollectFun = numfun+FUNCTION;
+	AC.CollectPercentage = (WORD)x;
 	if ( t1 ) {
 		if ( ( ( type = GetName(AC.varnames,t1,&numfun,WITHAUTO) ) != CFUNCTION )
 		|| ( functions[numfun].spec != 0 ) ) {
@@ -119,12 +134,12 @@ CoCollect ARG1(UBYTE *,s)
 	}
 	return(0);
 syntaxerror:
-	MesPrint("&Collect statement needs one or two functions for its argument(s)");
+	MesPrint("&Collect statement needs one or two functions (and a percentage) for its argument(s)");
 	return(1);
 }
 
 /*
-  	#] CoCollect : 
+  	#] CoCollect :
   	#[ setonoff :
 */
 
@@ -912,7 +927,7 @@ AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
 }
 
 /*
-  	#] AddComString :
+  	#] AddComString : 
   	#[ CoDiscard :
 */
 

@@ -1020,7 +1020,10 @@ WORD
 GetMoreTerms ARG1(WORD *,term)
 {
 	WORD *t, *r, *m, *h, *tstop, i, inc, same;
-	WORD extra = 23;
+	WORD extra;
+/*	-------------change 17-feb-2003 */
+	extra = ((AM.MaxTer/sizeof(WORD))*((long)100-AC.CollectPercentage))/100;
+	if ( extra < 23 ) extra = 23;
 /*
 	First find the bracket pointer
 */
@@ -1100,7 +1103,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms : 
+ 		#] GetMoreTerms :
  		#[ GetMoreFromMem :
 
 */

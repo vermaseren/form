@@ -1121,12 +1121,13 @@ LongCopy ARG2(LONG,x,char *,to)
  		#[ LongLongCopy :
 
 	Adds the decimal representation of a number to a string.
-
+	Bugfix feb 2003. y was not pointer!
 */
 
 char *
-LongLongCopy ARG2(off_t,x,char *,to)
+LongLongCopy ARG2(off_t *,y,char *,to)
 {
+	off_t x = *y;
 	char *s;
 	WORD i = 0, j;
 	if ( x < 0 ) { x = -x; *to++ = '-'; }
@@ -1141,7 +1142,7 @@ LongLongCopy ARG2(off_t,x,char *,to)
 }
 
 /*
- 		#] LongLongCopy : 
+ 		#] LongLongCopy :
  		#[ MakeDate :
 
 		Routine produces a string with the date and time of the run

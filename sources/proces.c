@@ -2249,6 +2249,7 @@ CommonEnd:
 						goto ReStart;
 					}
 					AR.WorkPointer = term + *term;
+					break;
 /*
 				  case TYPEAPPLYRESET:
 					AR.WorkPointer = term + *term;

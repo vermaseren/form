@@ -356,7 +356,7 @@ CompGroup ARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 }
 
 /*
- 		#] CompGroup : 
+ 		#] CompGroup :
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -646,7 +646,10 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 		while ( t < ts ) {
 			ws = w;
 			for ( i = 0; i < FUNHEAD; i++ ) *w++ = tt[i];
-			if ( *t < 0 ) {
+			if ( functions[*t-FUNCTION].spec >= TENSORFUNCTION ) {
+				*w++ = *t++;
+			}
+			else if ( *t < 0 ) {
 				if ( *t <= -FUNCTION ) *w++ = *t++;
 				else { *w++ = *t++; *w++ = *t++; }
 			}

@@ -947,6 +947,8 @@ struct C_const {
 	WORD	lPolyFun;              /* (C) local value of PolyFun */
     WORD    SymChangeFlag;         /* (C) */
 	WORD	inusedtables;          /* (C) Number of elements in usedtables */
+/* --------change 17-feb-2003  */
+    WORD    CollectPercentage;     /* (C) Collect function percentage */
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
 };
 /*

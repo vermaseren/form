@@ -36,7 +36,7 @@
 	The next quantities should still be eliminated from the program
 	This should be together with changes in setfile!
 */
-#define COMPRESSBUFFER 30000
+#define COMPRESSBUFFER 90000
 #define FORTRANCONTINUATIONLINES 15
 #define MAXLEVELS 2000
 #define MAXLHS 400

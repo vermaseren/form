@@ -164,16 +164,17 @@ va_dcl
 				if ( ( y = va_arg(ap, LONG) ) < 0 ) { *t++ = '-'; y = -y; }
 				t = LongCopy(y,t);
 			}
-#ifdef __GLIBC_HAVE_LONG_LONG
+/*	#ifdef __GLIBC_HAVE_LONG_LONG */
 			else if ( *s == 'p' ) {
 				POSITION *pp;
 				off_t ly;
 				pp = va_arg(ap, POSITION *);
 				ly = BASEPOSITION(*pp);
 				if ( ly < 0 ) { *t++ = '-'; ly = -ly; }
-				t = LongLongCopy(ly,t);
+/*----change 10-feb-2003 did not have & */
+				t = LongLongCopy(&(ly),t);
 			}
-#endif
+/*  #endif  */
 			else if ( *s == 'c' ) {
 				c = va_arg(ap, int);
 				*t++ = c; *t = 0;
@@ -428,11 +429,13 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 				}
 				else if ( *s == 'p' ) {
 					POSITION *pp;
-#ifdef __GLIBC_HAVE_LONG_LONG
+/*#ifdef __GLIBC_HAVE_LONG_LONG */
 					off_t ly;
+/*
 #else
 					LONG ly;
 #endif
+*/
 					pp = va_arg(ap,POSITION *);
 					ly = BASEPOSITION(*pp);
 					u = t + x;
