@@ -64,6 +64,12 @@ CFLAGS = -fomit-frame-pointer
 CPPFLAGS = -DNEXT
 endif
 
+ifeq ($(USERNAME),jos)
+CC = icc
+CFLAGS = -O3 -D_FILE_OFFSET_BITS=64 -march=pentiumiii -Wall
+CPPFLAGS = -DLINUX
+endif
+
 
 HFILES = declare.h form3.h fsizes.h ftypes.h inivar.h minos.h \
 	structs.h unix.h variable.h windows.h zconf.h
