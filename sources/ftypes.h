@@ -8,6 +8,9 @@
 #define PRECALCSTREAM 4
 #define DOLLARSTREAM 5
 #define PREREADSTREAM2 6
+/*[14apr2004 mt]:*/
+#define EXTERNALCHANNELSTREAM 7
+/*:[14apr2004 mt]*/
 #define SUBROUTINEFILE 0
 #define PROCEDUREFILE 1
 #define HEADERFILE 2
@@ -71,6 +74,10 @@
 #define EXPRSOUT 3
 #define WRITEOUT 4
 
+/*[15apr2004 mt]:*/
+#define EXTERNALCHANNELOUT 5
+/*:[15apr2004 mt]*/
+
 #define NUMERICALLOOP 0
 #define LISTEDLOOP 1
 
@@ -88,8 +95,21 @@
 #define ATENDOFMODULE 6
 #define MIXED         9
 
+
+/*[13apr2004 mt]:*/
+#ifdef __INTEL_COMPILER
+/*icc doesn't like this
+typedef void VOID;*/
+#define VOID void
+#endif
+/*:[13apr2004 mt]*/
+
 #ifndef ALPHA
+/*[13apr2004 mt]:*/
+#ifndef VOID
 typedef void VOID;
+#endif
+/*:[13apr2004 mt]*/
 #ifdef HP
 typedef char SBYTE;
 #else

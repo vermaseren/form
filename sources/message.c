@@ -107,6 +107,10 @@ va_dcl
 	LONG num, y;
 	WORD *array;
 	UBYTE *oldoutfill = AO.OutputLine;
+	/*[19apr2004 mt]:*/
+   LONG	
+	(*OldWrite) ARG3(int,handle,UBYTE *,buffer,LONG,size) = WriteFile;
+	/*:[19apr2004 mt]*/
 	va_list ap;
 #ifdef ANSI
 	va_start(ap,fmt);
@@ -119,6 +123,10 @@ va_dcl
 	if(PF.me != MASTER) return(0);
 #endif
 	FLUSHCONSOLE;
+	/*[19apr2004 mt]:*/
+	/*MesPrint never prints a message to an external channel!*/
+	WriteFile=&WriteFileToFile;
+	/*:[19apr2004 mt]*/
 	AO.OutputLine = extrabuffer;
 	t = Out;
 	stopper = Out + AC.LineLength;
@@ -488,6 +496,9 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 		MesPrint("!!!Object encountered is of a different type as in the format specifier");
 	}
 	AO.OutputLine = oldoutfill;
+	/*[19apr2004 mt]:*/
+	WriteFile=OldWrite;
+	/*:[19apr2004 mt]*/
 	return(-1);
 }
 

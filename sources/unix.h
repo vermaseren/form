@@ -13,6 +13,11 @@
 #define WITHPIPE
 #define WITHSYSTEM
 
+/*[29apr2004 mt]:*/
+#define WITHEXTERNALCHANNEL
+#define TRAPSIGNALS
+/*:[29apr2004 mt]*/
+
 #define P_term(code)    exit((int)(code<0?-code:code))
 
 #define SEPARATOR '/'

@@ -155,7 +155,12 @@ PopVariables()
 
 	retval = CleanExpr(1);
 	ResetVariables(1);
-	if ( AC.DidClean ) CompactifyTree(AC.exprnames);
+
+	/*[06apr2004 mt]:*/
+	/*if ( AC.DidClean ) CompactifyTree(AC.exprnames);*/
+	if ( AC.DidClean ) CompactifyTree(AC.exprnames,0);
+	/*:[06apr2004 mt]*/
+
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
 	AC.StatsFlag = AM.gStatsFlag;
@@ -325,7 +330,10 @@ DoExecute ARG2(WORD,par,WORD,skip)
 		if(!(AC.mparallelflag & NOPARALLEL_MOPT)){
 			if(AM.hparallelflag != PARALLELFLAG){
 				AC.mparallelflag |=(AC.parallelflag=AM.hparallelflag);
+/*[19feb2004 mt] - to prevent warnins in sequential mode I inseret this #ifdef PARALLEL:*/
+#ifdef PARALLEL 
 				MesPrint("WARNING!: $ use in table - the module %d is forced to run in sequential mode.", AC.CModule);
+#endif
 			}else
 				AC.mparallelflag = PARALLELFLAG;
 		}/*if(!(AC.mparallelflag & NOPARALLEL_MOPT))*/
@@ -433,8 +441,11 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	/*if ( par == STOREMODULE ) AC.parallelflag = NOPARALLELFLAG; */
 	/*[30jan2004 mt]:*/ /*Detailed flags here*/
 	if ( par == STOREMODULE ){
+/*[19feb2004 mt] - to prevent warnins in sequential mode I inseret this #ifdef PARALLEL:*/
+#ifdef PARALLEL
 		if(AC.mparallelflag == PARALLELFLAG)
 			MesPrint("WARNING!: store module - the module %d is forced to run in sequential mode.", AC.CModule);
+#endif
 		AC.mparallelflag = NOPARALLEL_STORE;
 	}/*if ( par == STOREMODULE )*/
 	/*:[30jan2004 mt]*/
@@ -819,7 +830,10 @@ skipexec:
 	}
 	else {
 		if ( CleanExpr(0) ) RetCode = -1;
-		if ( AC.DidClean ) CompactifyTree(AC.exprnames);
+		/*[06apr2004 mt]:*/
+		/*if ( AC.DidClean ) CompactifyTree(AC.exprnames);*/
+		if ( AC.DidClean ) CompactifyTree(AC.exprnames,0);
+		/*:[06apr2004 mt]*/
 		ResetVariables(0);
 		CleanUpSort(-1);
 	}

@@ -3,6 +3,7 @@
 #define MALLOCDEBUG 1
 */
 
+
 #include "form3.h"
  
 FILES **filelist;
@@ -76,6 +77,19 @@ ReadFromStream ARG1(STREAM *,stream)
 		return(c);
 	}
 #endif
+/*[14apr2004 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+	if ( stream->type == EXTERNALCHANNELSTREAM ) {
+		int cc;
+		cc = getcFromExtChannel();
+		if ( cc == EOF ) return(ENDOFSTREAM);
+		c = cc;
+		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
+		if ( c == LINEFEED ) stream->eqnum = 1;
+		return(c);
+	}
+#endif /*ifdef WITHEXTERNALCHANNEL*/
+/*:[14apr2004 mt]*/
 	if ( stream->pointer >= stream->top ) {
 		if ( stream->type != FILESTREAM ) return(ENDOFSTREAM);
 		if ( stream->fileposition != stream->bufferposition+stream->inbuffer ) {
@@ -242,6 +256,28 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
 			stream->eqnum = 0;
 			break;
 #endif
+/*[14apr2004 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+		case EXTERNALCHANNELSTREAM:
+			{/*Block*/
+			int n;
+			if( (n=getCurrentExternalChannel()) == 0 )
+				Error0("@No current extrenal channel");
+			stream = CreateStream((UBYTE *)"externalchannel");
+			stream->handle = CreateHandle();
+			*( (int*)(filelist[stream->handle] = 
+				Malloc1(sizeof(int),"external channel handle")
+			         ) 
+			 )=n;
+			}/*Block*/
+			stream->buffer = stream->top = 0;
+			stream->inbuffer = 0;
+			stream->name = strDup1((UBYTE *)"externalchannel","externalchannel");
+			stream->prevline = stream->linenumber = 1;
+			stream->eqnum = 0;
+			break;
+#endif /*ifdef WITHEXTERNALCHANNEL*/
+/*:[14apr2004 mt]*/
 		default:
 			return(0);
 	}
@@ -365,6 +401,15 @@ CloseStream ARG1(STREAM *,stream)
 		numinfilelist--;
 	}
 #endif
+/*[14apr2004 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+	else if ( stream->type == EXTERNALCHANNELSTREAM ) {
+      M_free(filelist[stream->handle],"external channel handle");
+		filelist[stream->handle] = 0;
+		numinfilelist--;
+	}
+#endif /*ifdef WITHEXTERNALCHANNEL*/
+/*:[14apr2004 mt]*/
 	else if ( stream->type == PREVARSTREAM && (
 	stream->afterwards == PRERAISEAFTER || stream->afterwards == PRELOWERAFTER ) ) {
 		t = stream->buffer; x = 0; sgn = 1;
@@ -669,13 +714,16 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
  		#] ReadFile : 
  		#[ WriteFile :
 */
-
+/*[15apr2004 mt]:*/
+/*This routine (WriteFile) is used too often. I introduced the pointer
+to it - this permits me to override it in some routines.*/
 LONG
-WriteFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
+WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	return(Uwrite((char *)buffer,1,size,filelist[handle]));
 }
-
+LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/)=&WriteFileToFile;
+/*:[15apr2004 mt]*/
 /*
  		#] WriteFile : 
  		#[ SeekFile :
@@ -924,15 +972,20 @@ NumToStr ARG2(UBYTE *,s,LONG,x)
 		The type of output is given by type, the string by str and the
 		number of characters in it by num
 */
-
 VOID
 WriteString ARG3(int,type,UBYTE *,str,int,num)
 {
 	int error = 0;
+
 	if ( num > 0 && str[num-1] == 0 ) { num--; }
 	else if ( num <= 0 || str[num-1] != LINEFEED ) {
 		AddLineFeed(str,num);
 	}
+	/*[15apr2004 mt]:*/
+	if(type == EXTERNALCHANNELOUT){
+		if(WriteFile(0,str,num) != num) error = 1;
+	}else
+	/*:[15apr2004 mt]*/
 	if ( AM.silent == 0 || type == ERROROUT ) {
 		if ( type == INPUTOUT ) {
 			if ( !AM.FileOnlyFlag && WriteFile(AM.StdOut,(UBYTE *)"    ",4) != 4 ) error = 1;
@@ -958,6 +1011,12 @@ VOID
 WriteUnfinString ARG3(int,type,UBYTE *,str,int,num)
 {
 	int error = 0;
+
+	/*[15apr2004 mt]:*/
+	if(type == EXTERNALCHANNELOUT){
+		if(WriteFile(0,str,num) != num) error = 1;
+	}else
+	/*:[15apr2004 mt]*/
 	if ( AM.silent == 0 || type == ERROROUT ) {
 		if ( type == INPUTOUT ) {
 			if ( !AM.FileOnlyFlag && WriteFile(AM.StdOut,(UBYTE *)"    ",4) != 4 ) error = 1;

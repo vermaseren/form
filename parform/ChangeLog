@@ -1,102 +1,173 @@
-30 January 2004 Mikhail Tentyukov:
+[19feb2004 mt]:
+After introducing a differentiation in PARALLEL modes, sometimes extra 
+warnings in sequential mode occur. To prevent such warnins I inserted
+#ifdef PARALLEL in execute.c.
 
-Here I summarize all changes I have made before this date.
-All the code fragments I removed are encased in 
-#ifdef REMOVEDBY_MT
-...
-#endif
-All my changes are enclosed with marks 
-[date mt]:
-...
-:[date mt]
-e.g.
-   /*[25nov2003 mt]:*/
-   /* PF_outterms++;*/
-   PF.goutterms++;
-   /*:[25nov2003 mt]*/
+[19mar2004 mt]:
+Large file support  is repaired (it was broken!), see comments in the file 
+declare.h
 
-The most important:
+[05apr2004 mt] - [07apr2004 mt] New directive:
+cleartable thetable;
+removes an existing table. If there is no such a table, the warning is generated:
+"should be a table! -- Ignored".
+And, [07apr2004 mt] -- memory leak is fixed in names.c:ResetVariables.
 
-[17sep2003 mt]: Bugfix: on/off parallel takes effect only starting from the 
-next module. The reason: flag AC.mparallelflag was set according to 
-AC.parallelflag in the function IniModule. The solution: see comments 
-[17sep2003 mt] in functions CoOff and CoOn, file compcomm.c
+[28apr2004 mt]: 
+signals SIGSEGV SIGFPE SIGILL SIGEMT SIGSYS SIGPIPE
+SIGLOST SIGXCPU SIGXFSZ SIGTERM SIGINT SIGHUP SIGALRM SIGVTALRM
+SIGPROF are captured in order to invoke Terminate(-1) on these signals.
+To allow it at compile time, a macro
+#define TRAPSIGNALS
+should be defined in the file unix.h
 
-[05nov2003 mt]: Bugfix: after some expression was processed in parallel, 
-there is no possibility to compile module with another expression. The reason:
-after a flag PF.parallel is set to 1, functions  FlushOut and PutOut in slaves 
-invoked at compile time send a mess to the master. The solution: PF.parallel=0
-in IniModule, see pre.c
+[14apr2004 mt] - [27jul2004 mt] A new mechanism:
+A new mechanism of interaction with external commands is implemented,
+see an example below.
 
-[06nov2003 mt]: To allow usage of RHS expressions I force ParFORM to switch to
-sequential execution of moduli with RHS expressions. I introduced a counter 
-AC.NumberOfRhsExprInModule which counts hom many times RHS expressions occur.
-The counter is incremented in the function tokenize in the file token.c
+To allow the mechanism at compile time, a macro
+#define WITHEXTERNALCHANNEL
+should be defined in the file unix.h
 
-[13nov2003 mt]: Bugfix: The function Processor worked incorrectly
-with the following values of e->status:
-UNHIDELEXPRESSION UNHIDEGEXPRESSION SKIPLEXPRESSION
-SKIPGEXPRESSION HIDELEXPRESSION HIDEGEXPRESSION
-see file proces.c
+INTRODUCTION
 
-[18nov2003 mt]: 2 preprocessor variables are defined: 1) PARALLELTASK_ as
-a process number, 0 is the master; 2) NPARALLELTASKS_ as a total
-number of processes. These variables allow ParFORM to interact with
-the operational system via #system and #pipe
+The preprocessor directives #system and #pipe execute the external
+command synchronously i.e. they wait for the command to be completed.
 
-[19nov2003 mt]: preprocessor variable is defined: CMODULE_ is a
-current module number, starting from 1.
+The new directive #external starts the external command opening an
+input-output channel for it, and can be used in order to extend FORM
+in the spirit of a component model.
 
-[26nov2003 mt]: bagfixes:
-1) Broadcasting from MASTER to SLAVES of PreProcessor variables that
-have changed is moved to the beginning of each block. The
-corresponding procedure is PF_InitRedefinedPreVars in
-parallel.c. Note, compilation is performed INDEPENDENTLY on
-AC.mparallelflag, so No if(AC.mparallelflag==PARALLELFLAG)!
-ATTENTION! In the previous version there was an error! Variables must
-be broadcasted independently on mparallelflag!!!  The procedure is
-used to broadcast number of terms in expression for preprocessor
-if-expression 'termsin',
-2) Number of terms in the expression is broadcasted from the master
-to slaves for preprocessor if-expression 'termsin'. The problem here
-is that only the master process can decide how many terms the
-expression contains. So we have to broadcast from master to all others
-this value. The corresponding procedure PF_BroadcastNumberOfTerms
-is in the file 'parallel.c'.
+After the directive #external returns the control to the FORM program,
+the external program initiated by the directive continues to run. Its
+standard input and output references are stored by FORM. Both input
+and output are not connected with any terminal device.
 
-[28nov2003 mt]: if the environment variable PF_SYNC is set, the
-beginning of each module will be synchronized compulsory. This is done
-via invocation PF_InitRedefinedPreVars() even if AC.NumberOfRedefsInModule==0.
-This feature is useful only for debugging.
+The directive #rmexternal terminates the external program. It
+closes the programs' IO channels, sends to the program a KILL
+signal and waits for the external program to be finished.                
 
-[02dec2003]: Bagfix: the structure of attachment of PreProcessor variables that
-have changed in slave was wrong, see strings 02dec2003 in parallel.c.
+The directive #toexternal is used to send some text to the running 
+external program, the synthax is similar to the #write directive.
 
-[12dec2003 mt] Preprocessor directives "addseparator" and
-"rmseparator" adds/removes separator characters used to separate
-function arguments.  Example
-#define QQ "a|g|a"
-#addseparator %
-*Comma must be quoted!:
-#rmseparator ","
-#rmseparator |
-#call H(a,a%`QQ')
+The directive #fromexternal is used to read the text from the running
+external program, the synthax is similar to the #include directive.
+FORM continues to read the running external program output until the
+extrenal program outputs a prompt.
 
-[30jan2004 mt]
-Conception of on/off parallel is changed: instead of two flags, PARALLELFLAG 
-and NOPARLLELFALG, I introduce several bit falgs:
+The prompt is the line consisting of a single string. By default, this
+is an empty string.  The prompt can be changed by means of the
+directive #prompt
 
-#define NOPARALLEL_DOLLAR 1
-#define NOPARALLEL_STORE 2
-#define NOPARALLEL_RHS 4
-#define NOPARALLEL_MOPT 8
-#define NOPARALLEL_USER 16 
-#define NOPARALLEL_TBLDOLLAR 32
-#define PARALLEL_MOPT 64
+THE EXACT SYNTHAX
 
-#define PARALLELFLAG 0
+#external ["prevar"] command
+starts command in the background, swallowing its standard input and
+output. The external program has no controlling terminal, the stderr
+is redirected to /dev/null, the program becomes the leader of the new
+session and the process group leader of the new process.
 
-So, now the resaon why execution can't be done in parallel will be reported 
-to the user.
+The optional parameter "prevar" is the (quoted) name of the
+preprocessor variables. If it is present, "descriptor" (small positive
+integer number) of the external command is stored into this variable
+and can be used for referencies to this external program (if there are
+more than one external program running simultaneously).
 
-*************** Start further ChangeLog *****************
+The last started external program becomes the "current" (active)
+external program.  All further directives #fromexternal and
+#toexternal deal with the current external program.
+
+#toexternal "formatstring" [,variables]
+sends the output to the current external program. The semantics of
+"formatstring" [,variables] is the same as for the #write directive,
+except the trailing end-of-line symbol: in contrast to the #write
+directive, the #toexternal directive does not append any new line
+symbol to the end of the format string.
+
+#fromexternal appends the output of the current external program to
+the FORM program.  The semantics is similar to the #include
+directive. Folders are not supported. After the external program sends
+the prompt, the input stream returns back to the current file
+(containing the #fromexternal directive).  The prompt string is not
+appended.
+
+The prompt is the line consisting of a single string. By default, this
+is an empty string.  The prompt can be changed by means of the
+directive #prompt:
+
+#prompt [newprompt]
+Sets a new prompt for the current external program (if present) and
+all further (newly started) external programs.
+
+If newprompt is an empty string, the default prompt (the empty line) 
+will be used.
+
+#setexternal n
+where n is the positive integer -- sets the "current" external
+program.  Directives #toexternal and #fromexternal deal with the
+"current" external program.  The number is the descriptor of the
+running external program.
+
+#rmexternal [n]
+terminates the external program. n must be the descriptor of one of
+the running external programs, or 0.
+
+If n is 0, then all external pograms will be terminated.
+
+If n is not specified, the current external program will be terminated.
+
+The directive closes the programs' IO channels, sends a KILL signal to
+every process in its process group and waits for the external program
+to be finished.
+
+The example:
+
+s a,b;
+
+#external "n1" cat
+
+#external "n2" cat
+
+*cat simply repeats its input. The default prompt is an empty line.
+*So we use "\n\n" here -- one "\n" is to finish the line, and the next "\n"
+*is the prompt:
+#toexternal "(a+b)^2\n\n"
+
+#setexternal `n1'
+*For this channel the prompt will be "READY\n":
+#toexternal "(a+b)^3\nREADY\n"
+
+#setexternal `n2'
+*Set the default prompt:
+#prompt
+l aPLUSbTO2=
+#fromexternal
+ ;
+
+#setexternal `n1'
+#prompt READY
+l aPLUSbTO3=
+#fromexternal
+ ;
+
+#rmexternal `n1'
+#rmexternal `n2'
+
+print;
+.end
+
+The low-level code is placed into a new file extcmd.c, see comments in
+the beginning of the file extcmd.c.
+
+PARALLEL MODE
+
+In parallel mode, the external program is started and killed only by
+the master.  The master writes to external channel, slaves just ignore
+these operations.  The master reads the answer from the external
+program and broadcasts it to slaves.
+
+All switches concerning the parallel mode are made at a low level, in
+the file extcmd.c.
+
+[29jul2004 mt]:
+Support of pipes in parallel mode temporary switched off.

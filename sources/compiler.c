@@ -67,6 +67,9 @@ static KEYWORD com2commands[] = {
 	,{"chainin",        (TFUN)CoChainin,          STATEMENT,    PARTEST}
 	,{"chainout",       (TFUN)CoChainout,         STATEMENT,    PARTEST}
 	,{"chisholm",       (TFUN)CoChisholm,         STATEMENT,    PARTEST}
+	/*[05apr2004 mt]:*/
+	,{"cleartable",     (TFUN)CoClearTable,       DECLARATION,  PARTEST}
+	/*:[05apr2004 mt]*/
 	,{"collect",        (TFUN)CoCollect,          SPECIFICATION,PARTEST}
 	,{"contract",       (TFUN)CoContract,         STATEMENT,    PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}

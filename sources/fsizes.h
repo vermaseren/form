@@ -6,7 +6,15 @@
 	The following variables are default sizes. They can be changed
 	into values read from the setup file
 */
+
+/*[16apr2004 mt]:*/
+#ifdef CUSTOM_MAXPOWER
+#define MAXPOWER CUSTOM_MAXPOWER
+#else
 #define MAXPOWER 10000
+#endif
+/*:[16apr2004 mt]*/
+
 #define MAXVARIABLES 6050
 #define WILDOFFSET 6100
 #define MAXINNAMETREE 32768

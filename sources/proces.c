@@ -776,7 +776,13 @@ Important: we may not have enough spots here
 				|| ( t[2] & DIRTYFLAG ) != 0 ) funflag = 1;
 			}
 			else if ( *t >= FUNCTION + WILDOFFSET ) {
-				if ( functions[funnum-FUNCTION-WILDOFFSET].spec == 0
+/*!!!
+if(funnum-FUNCTION-WILDOFFSET < 0){
+fprintf(stdout, "!!!!!!!!WARNING!!!!!!!!!!!!! %d\n",funnum-FUNCTION-WILDOFFSET);
+}
+!!!*/
+/*				if ( functions[funnum-FUNCTION-WILDOFFSET].spec == 0*/
+				if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & DIRTYFLAG ) ) funflag = 1;
 			}
 			if ( *t <= MAXBUILTINFUNCTION ) {
@@ -2357,9 +2363,13 @@ AutoGen:	i = *AR.TMout;
 	}
 	if ( applyflag ) { TableReset(); applyflag = 0; }
 /*	DumNow = AR.CurDum; */
+
+/*!!!*/
+/*
 #ifdef PARALLEL
 	A.NewLeaf = 0;
 #endif
+*/
 
 	if ( AR.TeInFun ) {	/* Match in function argument */
 		if ( AR.TeInFun < 0 && !AR.TeSuOut ) {
@@ -2376,9 +2386,12 @@ AutoGen:	i = *AR.TMout;
 			AR.WorkPointer = termout + *termout;
 			*AR.RepPoint = 1;
 			AR.expchanged = 1;
+/*!!!*/
+/*
 #ifdef PARALLEL
 			A.NewLeaf = -1;
 #endif
+*/
 			if ( *termout && Generator(termout,level) < 0 ) goto GenCall;
 			AR.WorkPointer = termout;
 		}
@@ -2404,9 +2417,12 @@ AutoGen:	i = *AR.TMout;
 				*AR.RepPoint = 1;
 				AR.expchanged = 1;
 				posisub += cbuf[extractbuff].Buffer[posisub];
+/*!!!*/
+/*
 #ifdef PARALLEL
 				if ( *posisub == 0 ) A.NewLeaf = -1;
 #endif
+*/
 				if ( Generator(termout,level) < 0 ) goto GenCall;
 			}
 			AR.WorkPointer = termout;

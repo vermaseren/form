@@ -196,28 +196,34 @@
 #define SETERROR(x) { Terminate(-1); return(-1); }
 #endif
 
+
+/*[19mar2004 mt]:*/
+/*Nobody knows what does it mean! 
+  Setting _FILE_OFFSET_BITS to 64 (NOT D_FILE_OFFSET_BITS) tells glibc to switch
+  on transparent LFS support (all off_t will be replaced by off64_t an so on), 
+  #if D_FILE_OFFSET_BITS=64 is a syntactic error.
+*/
+
+/*
 #ifdef D_FILE_OFFSET_BITS
 #if D_FILE_OFFSET_BITS=64
+*/
 
-#define ADDPOS(pp,x) (pp).p1 = (pp).p1+(x)
-#define SETBASELENGTH(ss,x) (ss).p1 = (x)
-#define SETBASEPOSITION(pp,x) (pp).p1 = (x)
-#define ISEQUALPOSINC(pp1,pp2,x) ( (pp1).p1 == ((pp2).p1+(x)) )
-#define ISGEPOSINC(pp1,pp2,x) ( (pp1).p1 >= ((pp2).p1+(x)) )
-#define DIVPOS(pp,n) ( (pp).p1/(n) )
-#define MULPOS(pp,n) (pp).p1 *= (n)
-/*
-#define ADDPOS(pp,x) (pp).p1 = (pp).p1+(off_t)(x)
+#ifdef _FILE_OFFSET_BITS
+#if _FILE_OFFSET_BITS==64
+/*:[19mar2004 mt]*/
+
+#define ADDPOS(pp,x) (pp).p1 = ((pp).p1+(off_t)(x))
 #define SETBASELENGTH(ss,x) (ss).p1 = (off_t)(x)
 #define SETBASEPOSITION(pp,x) (pp).p1 = (off_t)(x)
 #define ISEQUALPOSINC(pp1,pp2,x) ( (pp1).p1 == ((pp2).p1+(off_t)(x)) )
 #define ISGEPOSINC(pp1,pp2,x) ( (pp1).p1 >= ((pp2).p1+(off_t)(x)) )
 #define DIVPOS(pp,n) ( (pp).p1/(off_t)(n) )
-#define MULPOS(pp,n) (pp).p1 *= (n)
-*/
+#define MULPOS(pp,n) (pp).p1 *= (off_t)(n)
+
 #else
 
-#define ADDPOS(pp,x) (pp).p1 = (pp).p1+(x)
+#define ADDPOS(pp,x) (pp).p1 = ((pp).p1+(x))
 #define SETBASELENGTH(ss,x) (ss).p1 = (x)
 #define SETBASEPOSITION(pp,x) (pp).p1 = (x)
 #define ISEQUALPOSINC(pp1,pp2,x) ( (pp1).p1 == ((pp2).p1+(LONG)(x)) )
@@ -227,13 +233,13 @@
 #endif
 #else
 
-#define ADDPOS(pp,x) (pp).p1 = (pp).p1+(x)
-#define SETBASELENGTH(ss,x) (ss).p1 = (x)
-#define SETBASEPOSITION(pp,x) (pp).p1 = (x)
+#define ADDPOS(pp,x) (pp).p1 = ((pp).p1+(LONG)(x))
+#define SETBASELENGTH(ss,x) (ss).p1 = (LONG)(x)
+#define SETBASEPOSITION(pp,x) (pp).p1 = (LONG)(x)
 #define ISEQUALPOSINC(pp1,pp2,x) ( (pp1).p1 == ((pp2).p1+(LONG)(x)) )
 #define ISGEPOSINC(pp1,pp2,x) ( (pp1).p1 >= ((pp2).p1+(LONG)(x)) )
-#define DIVPOS(pp,n) ( (pp).p1/(n) )
-#define MULPOS(pp,n) (pp).p1 *= (n)
+#define DIVPOS(pp,n) ( (pp).p1/(LONG)(n) )
+#define MULPOS(pp,n) (pp).p1 *= (LONG)(n)
 
 #endif
 #define DIFPOS(ss,pp1,pp2) (ss).p1 = ((pp1).p1-(pp2).p1)
@@ -572,7 +578,12 @@ DECLARE(VOID DumpTree,(NAMETREE *))
 DECLARE(VOID DumpNode,(NAMETREE *,WORD,WORD))
 DECLARE(VOID LinkTree,(NAMETREE *,WORD,WORD))
 DECLARE(VOID CopyTree,(NAMETREE *,NAMETREE *,WORD))
-DECLARE(int CompactifyTree,(NAMETREE *))
+/*[06apr2004 mt]:*/
+/*See comments on the body of the function CompactifyTree 
+  in the file names.c*/
+/*DECLARE(int CompactifyTree,(NAMETREE *))*/
+DECLARE(int CompactifyTree,(NAMETREE *,LIST *))
+/*:[06apr2004 mt]*/
 DECLARE(NAMETREE *MakeNameTree,(VOID))
 DECLARE(VOID FreeNameTree,(NAMETREE *))
 DECLARE(int AddExpression,(UBYTE *,int,int,int))
@@ -597,7 +608,11 @@ DECLARE(int CreateLogFile,(char *))
 DECLARE(VOID CloseFile,(int))
 DECLARE(int CreateHandle,(VOID))
 DECLARE(LONG ReadFile,(int,UBYTE *,LONG))
-DECLARE(LONG WriteFile,(int,UBYTE *,LONG))
+/*[15apr2004 mt]:*/
+/*I introduced the variable WriteFile, see the file variable.h:*/
+/*DECLARE(LONG WriteFile,(int,UBYTE *,LONG))*/
+DECLARE(LONG WriteFileToFile,(int,UBYTE *,LONG))
+/*:[15apr2004 mt]*/
 DECLARE(VOID SeekFile,(int,POSITION *,int))
 DECLARE(LONG TellFile,(int))
 DECLARE(void FlushFile,(int))
@@ -657,6 +672,14 @@ DECLARE(int TheUndefine,(UBYTE *))
 DECLARE(int ClearMacro,(UBYTE *))
 DECLARE(int DoUndefine,(UBYTE *))
 DECLARE(int DoInclude,(UBYTE *))
+/*[14apr2004 mt]:*/
+DECLARE(int DoExternal,(UBYTE *))
+DECLARE(int DoToExternal,(UBYTE *))
+DECLARE(int DoFromExternal,(UBYTE *))
+DECLARE(int DoPrompt,(UBYTE *))
+DECLARE(int DoSetExternal,(UBYTE *))
+DECLARE(int DoRmExternal,(UBYTE *))
+/*:[14apr2004 mt]*/
 DECLARE(int DoMessage,(UBYTE *))
 DECLARE(int DoPreNormPoly,(UBYTE *))
 DECLARE(int DoPreOut,(UBYTE *))
@@ -777,6 +800,9 @@ DECLARE(int CoEndWhile,(UBYTE *))
 DECLARE(int CoExit,(UBYTE *))
 DECLARE(int CoFactArg,(UBYTE *))
 DECLARE(int CoFill,(UBYTE *))
+/*[05apr2004 mt]:*/
+DECLARE(int CoClearTable,(UBYTE *))
+/*:[05apr2004 mt]*/
 DECLARE(int CoFillExpression,(UBYTE *))
 DECLARE(int CoFixIndex,(UBYTE *))
 DECLARE(int CoFormat,(UBYTE *))
@@ -1071,4 +1097,14 @@ DECLARE(one_byte set_sub, (set_of_char, set_of_char, set_of_char))
 DECLARE(int DoPreAddSeparator,(UBYTE *))
 DECLARE(int DoPreRmSeparator,(UBYTE *))
 /*:[12dec2003 mt]*/
+
+/*[14apr2004 mt]:*/
+/*See the file extcmd.c*/
+DECLARE(int openExternalChannel,(char *))
+DECLARE(int closeExternalChannel,(int))
+DECLARE(int selectExternalChannel,(int))
+DECLARE(int getCurrentExternalChannel,(VOID))
+DECLARE(VOID closeAllExternalChannels,(VOID))
+/*:[14apr2004 mt]*/
+
 /* temporary commentary for forcing cvs merge */

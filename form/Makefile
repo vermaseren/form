@@ -60,7 +60,8 @@ endif
 
 ifeq ($(HOSTTYPE),i386)
 CC = gcc
-CFLAGS = -O3 -fomit-frame-pointer -mcpu=i586 -D_FILE_OFFSET_BITS=64
+#CFLAGS = -O2 -fomit-frame-pointer -mcpu=i586 -D_FILE_OFFSET_BITS=64
+CFLAGS = -g -mcpu=i586 -D_FILE_OFFSET_BITS=64
 CPPFLAGS = -DLINUX
 endif
 
@@ -76,12 +77,22 @@ CFLAGS = -O3 -D_FILE_OFFSET_BITS=64 -march=pentiumiii -w1 -static -tpp6
 CPPFLAGS = -DLINUX
 endif
 
+ifeq ($(HOSTTYPE),ALTIX)
+CC = icc
+CFLAGS = -tpp2 
+CPPFLAGS = -DLINUX -DALPHA 
+#CPPFLAGS = -D_FILE_OFFSET_BITS=64 -DLINUX 
+#CC = gcc 
+#CFLAGS = -g -DLINUX
+endif
+
+
 
 HFILES = declare.h form3.h fsizes.h ftypes.h inivar.h minos.h \
-	structs.h unix.h variable.h windows.h zconf.h
+	structs.h unix.h variable.h windows.h zconf.h portsignals.h
 
 OBJS = argument.o comexpr.o compcomm.o compiler.o comtool.o dollar.o \
-	execute.o factor.o findpat.o function.o if.o index.o lus.o message.o \
+	execute.o extcmd.o factor.o findpat.o function.o if.o index.o lus.o message.o \
 	minos.o module.o names.o normal.o opera.o optim.o \
 	pattern.o poly.o pre.o proces.o ratio.o reken.o reshuf.o sch.o setfile.o \
 	smart.o sort.o startup.o store.o symmetr.o tables.o token.o tools.o \
@@ -90,9 +101,11 @@ OBJS = argument.o comexpr.o compcomm.o compiler.o comtool.o dollar.o \
 vpath %.c ../sources
 vpath %.h ../sources
 
+.c.o:
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c  $<
+
 form: $(HFILES) $(OBJS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(OBJS) -lz -o form
-	strip form
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OBJS) -lz -o form
 
 clean:
 	rm -f *.o form

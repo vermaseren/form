@@ -257,7 +257,12 @@ FullCleanUp ARG0
 		AC.exprnames->namenode[Expressions[j].node].type = CDELETE;
 		AC.DidClean = 1;
 	}
-	CompactifyTree(AC.exprnames);
+
+
+	/*[06apr2004 mt]:*/
+	/*CompactifyTree(AC.exprnames);*/
+	CompactifyTree(AC.exprnames,0);
+	/*:[06apr2004 mt]*/
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {
 		MesPrint("@Cannot restart the storage file");

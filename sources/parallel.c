@@ -2055,3 +2055,52 @@ PF_InitRedefinedPreVars ARG0
  		#] int PF_InitRedefinedPreVars
 */
 /*:[26nov2003 mt]*/
+
+/*
+[27jul2004 mt]:
+*/
+int PF_PackString ARG1(UBYTE *,str);
+int PF_UnPackString ARG1(UBYTE *,str);
+/*
+   #[  PF_BroadcastString(UBYTE*)
+*/
+/* 
+
+*/
+int
+PF_BroadcastString ARG1 (UBYTE *,str)
+{
+int clength=0;/*If string does not fit to the PF_buffer, it 
+	will be split into chanks. Next chank is started at  str+clength*/
+UBYTE *cstr=str;
+/*		 Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+       No if(AC.mparallelflag==PARALLELFLAG) !!
+*/
+	do{
+		cstr+=clength;/*at each step for all slaves and master*/
+
+		if(MASTER == PF.me){/*Pack str*/
+			if(PF_BroadCast(0)!=0)/*initialize buffers*/
+				Terminate(-1);
+
+			if(   (clength=PF_PackString(cstr))<0  )
+				Terminate(-1);
+		}/*if(MASTER == PF.me)*/
+
+		PF_BroadCast(1);/*Broadcasting - no buffer initilisation for slaves!*/
+
+		if(MASTER != PF.me){/*Slave - unpack received string*/
+			/*For slaves buffers are initialised automatically.*/
+			if(   (clength=PF_UnPackString(cstr))<0   )
+					Terminate(-1);
+		}/*if(MASTER != PF.me)*/
+   }while(cstr[clength-1]!='\0');
+
+	return (0);
+}/*PF_BroadcastString*/
+/*
+   #[ int PF_BroadcastString(UBYTE*)
+*/
+/*
+:[27jul2004 mt]
+*/

@@ -2,6 +2,17 @@
 
 #define __VARIABLE__
 
+/*[14apr2004 mt]:*/
+/*See the file extcmd.c*/
+extern int (*writeBufToExtChannel) ARG2(char *,/**/, size_t, /**/);
+extern int (*getcFromExtChannel) ARG0 ;
+extern int (*setTerminatorForExternalChannel) ARG1 (char *, /**/);
+/*:[14apr2004 mt]*/
+
+/*[15apr2004 mt]:*/
+extern LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/);
+/*:[15apr2004 mt]*/
+
 extern ALLGLOBALS A;
 extern WORD *currentTerm;
 extern WORD *listinprint;

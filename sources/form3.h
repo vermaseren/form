@@ -98,6 +98,15 @@
 /*
    #[ Alphaversion with 32 bits per WORD 
 */
+
+/*[13apr2004 mt]:*/
+/*ALPHA is defined for 64bit systems (historically) so on Itanium LINUX
+  both ALPHA and LINUX are defined. But on GNU system
+  we need some  definitions from stdio, e.g. fpos_t*/
+#ifdef LINUX
+#include <stdio.h>
+#endif
+/*:[13apr2004 mt]*/
 #  include <ctype.h>
    typedef void VOID;
    typedef char SBYTE;
@@ -122,6 +131,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+/*[19mar2004 mt]:*/
+/*Problems with the long file support on HP-UX without this include:*/
+#ifdef UNIX
+#include <unistd.h>
+#endif
+/*:[19mar2004 mt]*/
+
 #include <ctype.h>
 #ifdef ANSI
 #include <stdarg.h>
@@ -138,8 +155,12 @@
 #include "fsizes.h"
 #include "minos.h"
 #include "structs.h"
-#include "variable.h"
+
+/*[15apr2004 mt]:*/
+/*Exchange two lines:*/
 #include "declare.h"
+#include "variable.h"
+/*:[15apr2004 mt]*/
 
 #ifdef UNIX
 #define UFILES

@@ -1,10 +1,19 @@
 #include "form3.h"
 #include "inivar.h"
+
+/*[28apr2004 mt]:*/
+#ifdef TRAPSIGNALS
+#include "portsignals.h"
+#endif
+/*:[28apr2004 mt]*/
+
 extern WORD dummysubexp[];
+
 
 #ifdef PARALLEL
 #include "parallel.h"
 #endif
+
 
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
@@ -698,6 +707,74 @@ IniVars()
 
 /*
  		#] IniVars :
+*/
+/*[28apr2004 mt]:*/
+#ifdef TRAPSIGNALS
+
+static int exitInProgress=0;
+
+#ifdef INTSIGHANDLER
+static int 
+onErrSig ARG1(int, i)
+#else
+static VOID 
+onErrSig ARG1(int, i)
+#endif
+{
+	if (exitInProgress){
+		signal(i,SIG_DFL);/* Use default behaviour*/
+		raise (i);/*reproduce trapped signal*/
+#ifdef INTSIGHANDLER
+		return(i);
+#else
+		return;
+#endif
+	}
+	Terminate(-1);
+}
+
+#ifdef INTSIGHANDLER
+static VOID 
+setNewSig ARG2( int, i, int, (*handler)(int))
+#else
+static VOID 
+setNewSig ARG2( int, i, void, (*handler)(int))
+#endif
+{
+	if(! (i<NSIG) )/* Invalid signal -- see comments in the file */
+		return;
+	if ( signal(i,SIG_IGN) !=SIG_IGN)
+	/* if compiler fails here, try to define INTSIGHANDLER):*/
+		signal(i,handler);
+}
+
+VOID
+setSignalHandlers ARG0
+{
+	/* Reset various unrecoverable error signals:*/
+	setNewSig(SIGSEGV,onErrSig);
+	setNewSig(SIGFPE,onErrSig);
+	setNewSig(SIGILL,onErrSig);
+	setNewSig(SIGEMT,onErrSig);
+	setNewSig(SIGSYS,onErrSig);
+	setNewSig(SIGPIPE,onErrSig);
+	setNewSig(SIGLOST,onErrSig);
+	setNewSig(SIGXCPU,onErrSig);
+	setNewSig(SIGXFSZ,onErrSig);
+
+	/* Reset interrupt signals:*/
+	setNewSig(SIGTERM,onErrSig);
+	setNewSig(SIGINT,onErrSig);
+	setNewSig(SIGQUIT,onErrSig);
+	setNewSig(SIGHUP,onErrSig);
+	setNewSig(SIGALRM,onErrSig);
+	setNewSig(SIGVTALRM,onErrSig);
+	setNewSig(SIGPROF,onErrSig);
+}
+
+#endif
+/*:[28apr2004 mt]*/
+/*
  		#[ main :
 */
 int
@@ -705,6 +782,13 @@ main ARG2(int,argc,char **,argv)
 {
 	char *sa;
 	int i = sizeof(A);
+
+/*[28apr2004 mt]:*/
+#ifdef TRAPSIGNALS
+	setSignalHandlers();
+#endif
+/*:[28apr2004 mt]*/
+
 	sa = (char *)(&A); while ( --i >= 0 ) *sa++ = 0;
 
 #ifdef PARALLEL
@@ -763,6 +847,7 @@ VOID
 CleanUp ARG1(WORD,par)
 {
 	int i;
+
 	if ( FG.fname ) {
 	CleanUpSort(0);
 	for ( i = 0; i < 2; i++ ) {
@@ -797,9 +882,32 @@ CleanUp ARG1(WORD,par)
  		#[ Terminate :
 */
 
+/*[19apr2004 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+extern UBYTE *currentPrompt;/*Defined in pre.c*/
+extern int currentExternalChannel;/*Defined in pre.c*/
+#endif
+/*:[19apr2004 mt]*/
+
 VOID
 Terminate ARG1(int,errorcode)
 {
+/*[19apr2004 mt]:*/
+#ifdef TRAPSIGNALS
+   exitInProgress=1;
+#endif
+#ifdef WITHEXTERNALCHANNEL
+	/*This function can be called from the error handler, so it is better to
+		clean up all started processes before any activity:*/
+	closeAllExternalChannels();
+	currentExternalChannel=0;
+	if(currentPrompt){
+		M_free(currentPrompt,"external channel prompt");
+		currentPrompt=0;
+	}
+#endif
+/*:[19apr2004 mt]*/
+
 #ifdef PARALLEL /* [27aug1997 ar] */
   PF_Terminate(errorcode);
 #endif /* PARALLEL [27aug1997 ar] */

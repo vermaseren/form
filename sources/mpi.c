@@ -118,9 +118,18 @@ PF_Probe ARG1(int*,src)
 :[02nov2003 mt]
   #[ the  packbuffer
 */
+/*
+[26jul2004 mt]:
+Better to initialize this stuff!
 static UBYTE *PF_packbuf;
 static UBYTE *PF_packstop;
 static int   PF_packpos;
+*/
+
+static UBYTE *PF_packbuf=0;
+static UBYTE *PF_packstop=0;
+static int   PF_packpos=0;
+/*:[26jul2004 mt]*/
 
 int 
 PF_InitPackBuf ARG0
@@ -189,7 +198,7 @@ PF_BroadCast ARG1(int,par)
 {
   int ret;
 /*[02dec2003 mt]:*/
-/*If SHORTBROADCAST, then instead of the whole bubber broadcasting 
+/*If SHORTBROADCAST, then instead of the whole buffer broadcasting 
 will be performed in 2 steps. First, the size of buffer is broadcasted, 
 then the buffer of exactly used size. This should be faster with slow 
 connections, but slower on SMP shmem MPI.*/
@@ -410,40 +419,109 @@ int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
 /*
   #] int  PF_WaitRbuf(PF_BUFFER *,int,LONG*); 
 */
+/*
+[27jul2004 mt]:
+   #[ int  PF_PackString(UBYTE*)
+*/
+/*
+The following function packs string str into PF_packbuf (INCLUDING the
+trailing zero!). The first element (PF_INT) is the length of the
+packed portion of the string. If the string does not fit to the buffer
+PF_packbuf, the function packs only the initial portion.  It returns
+the number of packed bytes, so if (str[length-1]=='\0') then the whole
+string fits to the buffer, if not, then the rest (str+length) bust be
+packed and send again.  On error, the function returns the negative
+error code.
 
+One exception: the string "\0!\0" is used as an image of the NULL,
+so all 3 characters will be packed.
+*/
+int 
+PF_PackString ARG1(UBYTE *,str)
+{
+	int ret,buflength,bytes,length;
 
+	/*length will be packed in the beginning.*/
+	/*Decrement buffer size by the length of the field "length":*/
+	if( (ret = MPI_Pack_size(1,PF_INT,PF_COMM,&bytes) )!=MPI_SUCCESS )
+		return(ret);
+	buflength=(int)PF.packsize-bytes;
 
+	/*Calcuate the string length (INCLUDING the trailing zero!):*/
+	for(length=0;length<buflength;length++)
+		if(str[length]=='\0'){
+			length++;/*since the trailing zero must be accounted*/
+			break;
+		}
+	/*The string "\0!\0" is used as an image of the NULL.*/
+	if(
+		(*str == '\0')	/*empty string*/
+		&&(str[1]=='!')/*Special case?*/
+      &&(str[2]=='\0')/*Yes, pass 3 initial symbols */
+	)
+      length+=2;/*all 3 characters will be packed*/
 
+	length++;/*Will be decremented in the following loop*/
 
+	/* The problem: packed size of byte may be not equal 1! So first, suppose 
+		it is 1, and if this is not the case decrease the length of the string
+		until it fits the buffer:
+	*/
+	do{
+			if(  ( ret = MPI_Pack_size(--length,PF_BYTE,PF_COMM,&bytes) )!=MPI_SUCCESS )
+				return(ret);
+	}while(bytes>buflength);
+	/* Note, now if str[length-1]=='\0' then the string fits to the buffer
+		(INCLUDING the trailing zero!);if not, the rest must be packed further!
+	*/
 
+	/*Pack the length to PF_packbuf:*/
+	if( (ret = MPI_Pack(&length,1,PF_INT,PF_packbuf,(int)PF.packsize,
+			&PF_packpos,PF_COMM) )!=MPI_SUCCESS  
+		)return(ret);
 
+	/*Pack the string to PF_packbuf:*/
+	if( (ret = MPI_Pack(str,length,PF_BYTE,PF_packbuf,(int)PF.packsize,
+			&PF_packpos,PF_COMM) )!=MPI_SUCCESS  
+		)return(ret);
 
+	return(length);
+}/*PF_PackString*/ 
+/*
+   #] int PF_PackString(UBYTE*)
+   #[ int  PF_UnPackString(UBYTE*)
+*/
+/*
+The following function unpacks string str from PF_packbuf (INCLUDING
+the trailing zero!). It returns the number of unpacked bytes, so if
+(str[length-1]=='\0') then the whole string was unpacked, , if not,
+then the rest must be appended to (str+length). On error, the function
+returns the negative error code.
+*/
+int 
+PF_UnPackString ARG1(UBYTE *,str)
+{
 
+	int ret,length;
 
+	/*Unpack the length:*/
+	if(  (ret = MPI_Unpack(PF_packbuf,(int)PF.packsize,&PF_packpos,
+			&length,1,PF_INT,PF_COMM))!= MPI_SUCCESS )
+				return(ret);
 
+	/*Unpack the string:*/
+	if(  (ret = MPI_Unpack(PF_packbuf,(int)PF.packsize,&PF_packpos,
+			str,length,PF_BYTE,PF_COMM))!= MPI_SUCCESS )
+				return(ret);
 
+	/* Now if str[length-1]=='\0' then the whole string
+		(INCLUDING the trailing zero!) was unpacked ;if not, the rest 
+		must be unpacked to str+length.
+	*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return(length);	
+}/*PF_UnPackString*/ 
+/*
+   #] int  PF_UnPackString(UBYTE*, int)
+:[27jul2004 mt]
+*/

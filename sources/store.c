@@ -603,7 +603,10 @@ DeleteStore ARG1(WORD,par)
 				e_in++;
 			} while ( --n > 0 ); }
 			NumExpressions = j;
-			if ( DidClean ) CompactifyTree(AC.exprnames);
+			/*[06apr2004 mt]:*/
+			/*if ( DidClean ) CompactifyTree(AC.exprnames);*/
+			/*if ( DidClean ) CompactifyTree(AC.exprnames.0);
+			/*:[06apr2004 mt]*/
 		}
 		AO.StoreData.Handle = -1;
 		CloseFile(AC.StoreHandle);
@@ -1217,6 +1220,9 @@ WORD
 GetFromStore ARG5(WORD *,to,POSITION *,position,RENUMBER,renumber,
 	WORD *,InCompState,WORD,nexpr)
 {
+/*!!!*/
+static cnum=0;
+/*!!!*/
 	LONG RetCode, num, first = 0;
 	WORD *from, *m;
 	STORECACHE s;
@@ -1224,6 +1230,9 @@ GetFromStore ARG5(WORD *,to,POSITION *,position,RENUMBER,renumber,
 	WORD *r, *rr = AR.CompressPointer;
 	POSITION scrpos;
 	r = rr;
+/*!!!*/
+cnum++;
+/*!!!*/
 	sold = s = (STORECACHE)(&AR.StoreCache);
 	snext = s->next;
 	while ( snext ) {
@@ -1910,11 +1919,18 @@ WORD
 TermRenumber ARG3(WORD *,term,RENUMBER,renumber,WORD,nexpr)
 {
 	WORD *stopper;
+/*!!!*/
+WORD *memterm=term;
+static long ctrap=0;
+/*!!!*/
 	WORD *t, *sarg, n;
 	stopper = term + *term - 1;
 	stopper = stopper - ABS(*stopper) + 1;
 	term++;
 	while ( term < stopper ) {
+/*!!!*/
+ctrap++;
+/*!!!*/
 		if ( *term == SYMBOL ) {
 			t = term + term[1];
 			term += 2;
