@@ -1,0 +1,1546 @@
+/*
+  	#[ Includes : compi2.c
+
+	File contains most of what has to do with compiling expressions.
+	Main supporting file: token.c
+*/
+
+#include "form3.h"
+ 
+static struct id_options {
+	UBYTE *name;
+	int code;
+} IdOptions[] = {
+	 {(UBYTE *)"multi",   SUBMULTI    }
+	,{(UBYTE *)"many",    SUBMANY     }
+	,{(UBYTE *)"only",    SUBONLY     }
+	,{(UBYTE *)"once",    SUBONCE     }
+	,{(UBYTE *)"ifmatch", SUBAFTER    }
+	,{(UBYTE *)"disorder",SUBDISORDER }
+	,{(UBYTE *)"select",  SUBSELECT   }
+};
+
+/*
+  	#] Includes : 
+  	#[ CoLocal :
+*/
+
+int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
+
+/*
+  	#] CoLocal : 
+  	#[ CoGlobal :
+*/
+
+int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
+
+/*
+  	#] CoGlobal : 
+  	#[ DoExpr:
+*/
+
+int DoExpr ARG2(UBYTE *,inp,int,type)
+{
+	int error = 0;
+	UBYTE *p, *q, c;
+	WORD *w, i, j = 0, c1, c2, *OldWork = AR.WorkPointer, osize;
+	POSITION pos;
+	EXPRESSIONS e = 0;
+	while ( *inp == ',' ) inp++;
+	p = inp;
+	while ( *p && *p != '=' ) {
+		if ( *p == '(' ) SKIPBRA4(p)
+		else if ( *p == '{' ) SKIPBRA5(p)
+		else if ( *p == '[' ) SKIPBRA1(p)
+		else p++;
+	}
+	if ( *p ) {		/* Variety with the = sign */
+		if ( ( q = SkipAName(inp) ) == 0 || q[-1] == '_' ) {
+			MesPrint("&Illegal name for expression");
+			error = 1;
+			if ( q[-1] == '-' ) {
+				while ( FG.cTable[*q] < 2 || *q == '_' ) q++;
+			}
+		}
+		else {
+			c = *q; *q = 0;
+			if ( GetVar(inp,&c1,&c2,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+				if ( c1 == CEXPRESSION ) {
+					HighWarning("Expression is replaced by new definition");
+					if ( Expressions[c2].status != DROPPEDEXPRESSION ) {
+						w = &(Expressions[c2].status);
+						if ( *w == LOCALEXPRESSION || *w == SKIPLEXPRESSION )
+							*w = DROPLEXPRESSION;
+						else if ( *w == GLOBALEXPRESSION || *w == SKIPGEXPRESSION )
+							*w = DROPGEXPRESSION;
+					}
+					AC.TransEname = Expressions[c2].name;
+					Expressions[c2].replace = j =
+						EntVar(CEXPRESSION,0,type,0,0);
+					Expressions[j].node = Expressions[c2].node;
+				}
+				else {
+					MesPrint("&name of expression is also name of a variable");
+					error = 1;
+					j = EntVar(CEXPRESSION,inp,type,0,0);
+				}
+			}
+			else j = EntVar(CEXPRESSION,inp,type,0,0);
+			*q = c;
+			e = Expressions+j;
+			OldWork = w = AR.WorkPointer;
+			*w++ = TYPEEXPRESSION;
+			*w++ = 3+SUBEXPSIZE;
+			*w++ = j;
+			AC.ProtoType = w;
+			AS.CurExpr = j;				/* Block expression j */
+			*w++ = SUBEXPRESSION;
+			*w++ = SUBEXPSIZE;
+			*w++ = j;
+			*w++ = 1;
+			*w++ = AR.cbufnum;
+			FILLSUB(w)
+
+			if ( c == '(' ) {
+				while ( *q == ',' || *q == '(' ) {
+					inp = q+1;
+					if ( ( q = SkipAName(inp) ) == 0 ) {
+						MesPrint("&Illegal name for expression argument");
+						error = 1;
+						q = p - 1;
+						break;
+					}
+					c = *q; *q = 0;
+					if ( GetVar(inp,&c1,&c2,ALLVARIABLES,WITHAUTO) < 0 ) c1 = -1;
+					switch ( c1 ) {
+						case CSYMBOL :
+							*w++ = SYMTOSYM; *w++ = 4; *w++ = c2; *w++ = 0;
+							break;
+						case CINDEX :
+							*w++ = INDTOIND; *w++ = 4;
+							*w++ = c2 + AM.OffsetIndex; *w++ = 0;
+							break;
+						case CVECTOR :
+							*w++ = VECTOVEC; *w++ = 4;
+							*w++ = c2 + AM.OffsetVector; *w++ = 0;
+							break;
+						case CFUNCTION :
+							*w++ = FUNTOFUN; *w++ = 4; *w++ = c2 + FUNCTION; *w++ = 0;
+							break;
+						default :
+							MesPrint("&Illegal expression parameter: %s",inp);
+							error = 1;
+							break;
+					}
+					*q = c;
+				}
+				if ( *q != ')' || q+1 != p ) {
+					MesPrint("&Illegal use of arguments for expression");
+					error = 1;
+				}
+				AC.ProtoType[1] = w - AC.ProtoType;
+			}
+			*w++ = 1;
+			*w++ = 1;
+			*w++ = 3;
+			*w++ = 0;
+			SeekScratch(AR.outfile,&pos);
+			Expressions[j].onfile = pos; 
+			Expressions[j].whichbuffer = 0;
+			OldWork[2] = w - OldWork - 3;
+			AR.WorkPointer = w;
+/*
+			Writing the expression prototype to disk and to the compiler
+			buffer is done only after the RHS has been compiled because
+			we don't know the number of the main level RHS yet.
+*/
+		}
+		inp = p+1;
+		ClearWildcardNames();
+		osize = AC.ProtoType[1]; AC.ProtoType[1] = SUBEXPSIZE;
+		if ( ( i = CompileAlgebra(inp,RHSIDE,AC.ProtoType) ) < 0 ) {
+			AC.ProtoType[1] = osize;
+			error = 1;
+		}
+		else if ( error == 0 ) {
+			AC.ProtoType[1] = osize;
+			AC.ProtoType[2] = i;
+/*			AR.outfile->POfill = AR.outfile->POfull; */
+			if ( PutOut(OldWork+2,&pos,AR.outfile,0) < 0 ) {
+				MesPrint("&Cannot create expression");
+				error = -1;
+			}
+			else {
+				OldWork[2] = 4+SUBEXPSIZE;
+				OldWork[4] = SUBEXPSIZE;
+				OldWork[5] = i;
+				OldWork[SUBEXPSIZE+3] = 1;
+				OldWork[SUBEXPSIZE+4] = 1;
+				OldWork[SUBEXPSIZE+5] = 3;
+				OldWork[SUBEXPSIZE+6] = 0;
+				if ( PutOut(OldWork+2,&pos,AR.outfile,0) < 0
+				|| FlushOut(&pos,AR.outfile) ) {
+					MesPrint("&Cannot create expression");
+					error = -1;
+				}
+			}
+			OldWork[2] = j;
+			AddNtoL(OldWork[1],OldWork);
+			AR.WorkPointer = OldWork;
+			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
+		}
+	}
+	else {	/* Variety in which expressions change property */
+		do {
+			if ( ( q = SkipAName(inp) ) == 0 ) {
+				MesPrint("&Illegal name(s) for expression(s)");
+				return(1);
+			}
+			c = *q; *q = 0;
+			if ( GetName(AC.exprnames,inp,&c2,NOAUTO) == NAMENOTFOUND ) {
+				MesPrint("&%s is not a valid expression",inp);
+				error = 1;
+			}
+			else {
+				w = &(Expressions[c1].status);
+				if ( type != LOCALEXPRESSION || *w != STOREDEXPRESSION )
+						*w = type;
+			}
+			*q = c; inp = q+1;
+		} while ( c == ',' );
+		if ( c ) {
+			MesPrint("&Illegal object in local or global redefinition");
+			error = 1;
+		}
+	}
+	return(error);
+}
+
+/*
+  	#] DoExpr: 
+  	#[ CoIdOld :
+*/
+
+int CoIdOld ARG1(UBYTE *,inp)
+{
+	AC.idoption = 0;
+	return(CoIdExpression(inp,TYPEIDOLD));
+}
+
+/*
+  	#] CoIdOld : 
+  	#[ CoId :
+*/
+
+int CoId ARG1(UBYTE *,inp)
+{
+	AC.idoption = 0;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoId : 
+  	#[ CoIdNew :
+*/
+
+int CoIdNew ARG1(UBYTE *,inp)
+{
+	AC.idoption = 0;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoIdNew : 
+  	#[ CoDisorder :
+*/
+
+int CoDisorder ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBDISORDER;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoDisorder : 
+  	#[ CoMany :
+*/
+
+int CoMany ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBMANY;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoMany : 
+  	#[ CoMulti :
+*/
+
+int CoMulti ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBMULTI;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoMulti : 
+  	#[ CoIfMatch :
+*/
+
+int CoIfMatch ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBAFTER;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoIfMatch : 
+  	#[ CoOnce :
+*/
+
+int CoOnce ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBONCE;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoOnce : 
+  	#[ CoOnly :
+*/
+
+int CoOnly ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBONLY;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoOnly : 
+  	#[ CoSelect :
+*/
+
+int CoSelect ARG1(UBYTE *,inp)
+{
+	AC.idoption = SUBSELECT;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoSelect : 
+  	#[ CoIdExpression :
+
+	First finish dealing with secondary keywords
+*/
+
+int CoIdExpression ARG2(UBYTE *,inp,int,type)
+{
+	int i, j, idhead, error = 0, MinusSign = 0, opt, retcode;
+	WORD *w, *s, *m, *mm, *ww, *FirstWork, *OldWork, c1, ctype, numsets = 0,
+		 oldnumrhs, *ow, oldEside;
+	UBYTE *p, *pp, c;
+	CBUF *C = cbuf+AR.cbufnum;
+	LONG oldcpointer;
+	FirstWork = OldWork = AR.WorkPointer;
+/*
+	Don't forget to change in StudyPattern if we change/add_to the
+	following setup. 
+	if ( type == TYPEIF ) idhead = IDHEAD-1;
+	else                  
+*/
+	idhead = IDHEAD;
+	AS.CurExpr = -1;
+	w = AR.WorkPointer;
+	*w++ = type;
+	*w++ = idhead + SUBEXPSIZE;
+	w++;
+	if ( idhead >= IDHEAD ) *w++ = -1;
+#if IDHEAD > 4
+	for ( i = 4; i < idhead; i++ ) *w++ = 0;
+#endif
+	while ( *inp == ',' ) inp++;
+	p = inp;
+	if ( AC.idoption == SUBSELECT ) {
+		p--;
+		goto findsets;
+	}
+	else if ( AC.idoption == SUBAFTER ) {
+		while ( *p && *p != '=' && *p != ',' ) {
+			if ( *p == '(' ) SKIPBRA4(p)
+			else if ( *p == '{' ) SKIPBRA5(p)
+			else if ( *p == '[' ) SKIPBRA1(p)
+			else p++;
+		}
+		if ( *p == '=' || *inp != '-' || inp[1] != '>' ) {
+			MesPrint("&Illegal use if ifmatch in id statement");
+			error = 1; goto AllDone;
+		}
+		if ( *p == 0 ) {
+			MesPrint("&id-statement without = sign");
+			error = 1; goto AllDone;
+		}
+		inp += 2; pp = inp;
+		goto readlabel;
+	}
+	for(;;) {
+		while ( *p && *p != '=' && *p != ',' ) {
+			if ( *p == '(' ) SKIPBRA4(p)
+			else if ( *p == '{' ) SKIPBRA5(p)
+			else if ( *p == '[' ) SKIPBRA1(p)
+			else p++;
+		}
+		if ( *p == '=' ) break;
+		if ( *p == 0 ) {
+			MesPrint("&id-statement without = sign");
+			error = 1; goto AllDone;
+		}
+/*
+		We have either a secondary option or a syntax error
+*/
+		pp = inp;
+		while ( FG.cTable[*pp] == 0 ) pp++;
+		c = *pp; *pp = 0;
+		i = sizeof(IdOptions)/sizeof(struct id_options);
+		while ( --i >= 0 ) {
+			if ( StrICmp(inp,IdOptions[i].name) == 0 ) break;
+		}
+		if ( i < 0 ) {
+			MesPrint("&Illegal option %s in id-statement",inp);
+			*pp = c; error = 1; p++; inp = p; continue;
+		}
+		opt = IdOptions[i].code;
+		*pp = c;
+		inp = pp+1;
+		switch ( opt ) {
+			case SUBDISORDER:
+				if ( pp != p ) goto IllField;
+				AC.idoption |= SUBDISORDER;
+				p++; inp = p;
+				break;
+			case SUBSELECT:
+				if ( p != pp ) goto IllField;
+				if ( ( AC.idoption & SUBMASK ) != 0 ) {
+					if ( AC.idoption == SUBMULTI && type == TYPEIF ) {}
+					else {
+						MesPrint("&Conflicting options in id-statement");
+						error = 1;
+					}
+				}
+findsets:;
+/*
+				Now we read the sets
+*/
+				numsets = 0;
+				for(;;) {
+					inp = ++p;
+					while ( *p && *p != '=' && *p != ',' ) {
+						if ( *p == '(' ) SKIPBRA4(p)
+						else if ( *p == '{' ) SKIPBRA5(p)
+						else if ( *p == '[' ) SKIPBRA1(p)
+						else p++;
+					}
+					if ( *p == '=' ) break;
+					if ( *p == 0 ) {
+						MesPrint("&id-statement without = sign");
+						error = 1; goto AllDone;
+					}
+/*
+					We have a set at inp.
+*/
+					if ( *inp == '{' ) {
+						if ( p[-1] != '}' ) {
+							c = *p; *p = 0;
+							MesPrint("&Illegal temporary set: %s",inp);
+							error = 1; *p = c;
+						}
+						else {
+							inp++;
+							c = p[-1]; p[-1] = 0;
+							c1 = DoTempSet(inp,p-1);
+							*w++ = c1;
+							p[-1] = c;
+							numsets++;
+							if ( w[-1] < 0 ) error = 1;
+						}
+					}
+					else {
+						c = *p; *p = 0;
+						if ( ( ctype = GetName(AC.varnames,inp,&c1,NOAUTO) ) != CSET ) {
+							MesPrint("&%s is not a set",inp);
+							error = 1;
+						}
+						else {
+							if ( c1 < AM.NumFixedSets ) {
+								MesPrint("&Built in sets are not allowed in the select option");
+								error = 1;
+							}
+							else if ( Sets[c1].type == CRANGE ) {
+								MesPrint("&Ranged sets are not allowed in the select option");
+								error = 1;
+							}
+							numsets++;
+							*w++ = c1;
+						}
+						*p = c;
+					}
+				}
+/*
+				Now exchange the positions a bit.
+				Regular stuff at OldWork, numsets sets at FirstWork[idhead]
+*/
+				OldWork = w;
+				for ( i = 0; i < idhead; i++ ) *w++ = FirstWork[i];
+				AC.idoption = SUBSELECT;
+				break;
+			case SUBAFTER:
+				if ( type == TYPEIF ) {
+					MesPrint("&The ifmatch->label option is not allowed in an if statement");
+					error = 1; goto AllDone;
+				}
+				if ( pp[0] != '-' || pp[1] != '>' ) goto IllField;
+				pp += 2;	/* points now at the label */
+				inp = pp;
+readlabel:
+				AC.idoption |= SUBAFTER;
+				while ( FG.cTable[*pp] <= 1 ) pp++;
+				if ( pp != p ) {
+					c = *p; *p = 0;
+					MesPrint("&Illegal label %s in ifmatch option of id-statement",inp);
+					*p = c; error = 1; inp = p+1; continue;
+				}
+				c = *p; *p = 0;
+				OldWork[3] = GetLabel(inp);
+				*p++ = c; inp = p;
+				break;
+			default:
+				if ( pp != p ) {
+IllField:			c = *p; *p = 0;
+					MesPrint("&Illegal optionfield %s in id-statement",inp);
+					*p = c; error = 1; inp = p+1; continue;
+				}
+				i = AC.idoption & SUBMASK;
+				if ( i && i != opt ) {
+					MesPrint("&Conflicting options in id-statement");
+					error = 1;  continue;
+				}
+				else AC.idoption |= opt;
+				while ( *p == ',' ) p++;
+				inp = p;
+				break;
+		}
+	}
+	if ( ( AC.idoption & SUBMASK ) == 0 ) AC.idoption |= SUBMULTI;
+	OldWork[2] = AC.idoption;
+/*
+	Now we have a field till the = sign
+	Now the subexpression prototype
+*/
+	AC.ProtoType = w;
+	*w++ = SUBEXPRESSION;
+	*w++ = SUBEXPSIZE;
+	*w++ = C->numrhs+1;
+	*w++ = 1;
+	*w++ = AR.cbufnum;
+	FILLSUB(w)
+	AC.WildC = w;
+	AC.NwildC = 0;
+	AR.WorkPointer = s = w + 4*AM.MaxWildcards + 8;
+/*
+	Now read the LHS
+*/
+	oldcpointer = AddLHS(AR.cbufnum) - C->Buffer;
+
+	*p = 0;
+	oldnumrhs = C->numrhs;
+	if ( ( retcode = CompileAlgebra(inp,LHSIDE,AC.ProtoType) ) < 0 ) { error = 1; }
+	else AC.ProtoType[2] = retcode;
+	*p = '='; inp = p+1;
+	AR.WorkPointer = s;
+	if ( AC.NwildC && SortWild(w,AC.NwildC) ) error = 1;
+
+		/* Make the LHS pointers ready */
+
+	OldWork[1] = AC.WildC-OldWork;
+	OldWork[idhead+1] = OldWork[1] - idhead;
+	w = AC.WildC;
+	AR.WorkPointer = w;
+	s = C->rhs[C->numrhs];
+/*
+	Now check whether wildcards get converted to dollars (for PARALLEL)
+*/
+	{
+		WORD *tw, *twstop, *pmd, imd;
+		tw = AC.ProtoType; twstop = tw + tw[1]; tw += SUBEXPSIZE;
+		while ( tw < twstop ) {
+			if ( *tw == LOADDOLLAR ) {
+				for ( imd = 0; imd < NumPotModdollars; imd++ ) {
+					if ( tw[2] == PotModdollars[imd] ) break;
+				}
+				if ( imd >= NumPotModdollars ) {
+					pmd = (WORD *)FromList(&AC.PotModDolList);
+					*pmd = tw[2];
+				}
+			}
+			tw += tw[1];
+		}
+	}
+/*
+	We have the expression in the compiler buffers.
+	The main level is at lhs[numlhs]
+	The partial lhs (including ProtoType) is in OldWork (in WorkSpace)
+	We need to load the result at w after the prototype
+	Because these sort routines don't use the WorkSpace
+	there should not be a conflict
+*/
+	if ( !error && *s == 0 ) {
+IllLeft:MesPrint("&Illegal LHS");
+		AR.lhdollarflag = 0;
+		return(1);
+	}
+	if ( !error && *(s+*s) != 0 ) {
+		MesPrint("&LHS should be one term only");
+		return(1);
+	}
+	if ( error == 0 ) {
+		if ( NewSort() || NewSort() ) {
+			if ( !error ) error = 1;
+			return(error);
+		}
+		AR.RepPoint = AM.RepCount + 1;
+        ow = AR.WorkPointer + AM.MaxTer;
+		mm = s; ww = ow; i = *mm;
+		while ( --i >= 0 ) *ww++ = *mm++; AR.WorkPointer = ww;
+		AR.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
+		if ( Generator(ow,C->numlhs) ) {
+			AC.Eside = oldEside;
+			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
+		}
+		AC.Eside = oldEside;
+		AR.WorkPointer = w;
+		if ( EndSort(w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
+		if ( *w == 0 || *(w+*w) != 0 ) {
+			MesPrint("&LHS must be one term");
+			AR.lhdollarflag = 0;
+			return(1);
+		}
+		LowerSortLevel();
+		if ( AR.lhdollarflag ) MarkDirty(w,1);
+	}
+	AR.WorkPointer = w + *w;
+	AC.DumNum = 0;
+/*
+	Everything is now after OldWork. We can pop the compilerbuffer.
+	Next test for illegal things like a coefficient
+	At this point we have:
+	w = the term of the LHS
+*/
+	C->Pointer = C->Buffer + oldcpointer;
+	C->numrhs = oldnumrhs;
+	C->numlhs--;
+
+	m = w + *w - 3;
+	if ( !error ) {
+	  if ( m[2] != 3 || m[1] != 1 || *m != 1 ) {
+		if ( *m == 1 && m[1] == 1 && m[2] == -3 ) {
+			MinusSign = 1;
+		}
+		else {
+			MesPrint("&Coefficient in LHS");
+			error = 1;
+			AC.DumNum = 0;
+			*w -= ABS(m[2])-3;
+		}
+	  }
+	  if ( *w == 7 && w[1] == INDEX && w[3] < 0 ) {
+		if ( ( AC.idoption & SUBMASK ) != 0 &&  ( AC.idoption & SUBMASK ) !=
+		SUBMULTI ) {
+			MesPrint("&Illegal option for substitution of a vector");
+			error = 1;
+		}
+		AC.DumNum = AM.IndDum;
+		OldWork[2] = ( OldWork[2] - ( OldWork[2] & SUBMASK ) ) | SUBALL;
+		c1 = w[3];
+			/* We overwrite the LHS */
+		*w++ = INDTOIND;
+		*w++ = 4;
+		*w++ = AC.DumNum + WILDOFFSET;
+		*w++ = 0;
+		w[0] = 5;
+		w[1] = VECTOR;
+		w[2] = 4;
+		w[3] = c1;
+		w[4] = AC.DumNum + WILDOFFSET;
+		OldWork[idhead+1] = w - OldWork - idhead;
+	  }
+	  else {
+		AC.DumNum = 0;
+		*w -= 3;
+		i = OldWork[2] & SUBMASK;
+		m = w + *w;
+		if ( i == 0 || i == SUBMULTI ) {
+			s = w+1;
+			while ( s < m ) {
+				if ( *s == SYMBOL ) {
+					j = s[1]/2; s += 2;
+					while ( --j >= 0 ) {
+						if ( ABS(s[1]) > 2*MAXPOWER ) {
+							OldWork[2] = ( OldWork[2] - i ) | SUBONCE;
+							break;
+						}
+						s += 2;
+					}
+					if ( j >= 0 ) break;
+				}
+				else if ( *s == DOTPRODUCT ) {
+					j = s[1]/3; s += 2;
+					while ( --j >= 0 ) {
+						if ( ABS(s[2]) > 2*MAXPOWER ) {
+							OldWork[2] = ( OldWork[2] - i ) | SUBONCE;
+							break;
+						}
+						else if ( s[1] >= -(2*WILDOFFSET) || s[0] >= -(2*WILDOFFSET) ) {
+							OldWork[2] = ( OldWork[2] - i ) | SUBMANY;
+							i = SUBMANY;
+						}
+						s += 3;
+					}
+					if ( j >= 0 ) break;
+				}
+				else {
+					OldWork[2] = ( OldWork[2] - i ) | SUBMANY;
+					break;
+				}
+			}
+		}
+		if ( ( OldWork[2] & SUBMASK ) == 0 ) OldWork[2] |= SUBMULTI;
+	  }
+	  if ( ( OldWork[2] & SUBMASK ) == SUBSELECT ) {
+/*
+		Paste the SETSET information after the pattern.
+		Important note: We will still get function information for the
+		smart patternmatching after it. To distinguish them we need to have
+		that SETSET != m*n+1 in which m is the number of words per function
+		and n the number of functions. Currently (29-may-1997) m = 4.
+*/
+		*m++ = SETSET;
+		*m++ = numsets+2;
+		s = FirstWork + idhead;
+		while ( --numsets >= 0 ) *m++ = *s++;
+	  }
+	  else {
+		m = w + *w;
+	  }
+	}
+/*
+	We keep the whole thing in OldWork for the moment.
+	We still have to add the number of the RHS expression.
+	There is also some opportunity now to be smart about the pattern.
+	This is needed for complicated wildcarding with symmetric functions.
+	We do this in a special routine during compile time to make sure
+	that we loose as little time as possible (during running) if there
+	is no need to be smart.
+*/
+	*m++ = 0;
+	OldWork[1] = m - OldWork;
+	AC.ProtoType = OldWork+idhead;
+	if ( !error ) StudyPattern(OldWork);
+	AR.WorkPointer = OldWork + OldWork[1];
+	OldWork[4] = AR.lhdollarflag;
+	AR.lhdollarflag = 0;
+/*
+	Now the right hand side.
+*/
+	if ( type != TYPEIF ) {
+		if ( ( retcode = CompileAlgebra(inp,RHSIDE,AC.ProtoType) ) < 0 ) error = 1;
+		else {
+			AC.ProtoType[2] = retcode;
+			AC.DumNum = 0;
+			if ( MinusSign ) {	/* Flip the sign of the RHS */
+				w = C->rhs[retcode];
+				while ( *w ) { w += *w; w[-1] = -w[-1]; }
+			}
+			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
+		}
+	}
+/*
+	Actual adding happens only now after numrhs insertion
+*/
+	/* if ( !error ) */ { AddNtoL(OldWork[1],OldWork); }
+AllDone:
+	AR.lhdollarflag = 0;
+	AR.WorkPointer = FirstWork;
+	return(error);
+}
+
+/*
+  	#] CoIdExpression : 
+  	#[ CoMultiply :
+*/
+
+static WORD mularray[13] = { TYPEMULT, SUBEXPSIZE+3, 0, SUBEXPRESSION,
+		SUBEXPSIZE, 0, 1, 0, 0, 0, 0, 0, 0 };
+
+int CoMultiply ARG1(UBYTE *,inp)
+{
+	UBYTE *p;
+	int error = 0, RetCode;
+	mularray[2] = 0;		/* right multiply is default */
+	while ( *inp == ',' ) inp++;
+	if ( inp[-1] == '-' || inp[-1] == '+' ) inp--;
+	p = SkipField(inp,0);
+	if ( *p ) {
+		*p = 0;
+		if ( StrICont(inp,(UBYTE *)"left") == 0 )       mularray[2] = 1;
+		else if ( StrICont(inp,(UBYTE *)"right") == 0 ) mularray[2] = 0;
+		else {
+			MesPrint("&Illegal option in multiply statement or ; forgotten.");
+			return(1);
+		}
+		*p = ',';
+		inp = p + 1;
+	}
+	while ( *inp == ',' ) inp++;
+	AC.ProtoType = mularray+3;
+	mularray[7] = AR.cbufnum;
+	if ( ( RetCode = CompileAlgebra(inp,RHSIDE,AC.ProtoType) ) < 0 ) error = 1;
+	else {
+		mularray[5] = RetCode;
+		AddNtoL(SUBEXPSIZE+3,mularray);
+		if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
+	}
+	return(error);
+}
+
+/*
+  	#] CoMultiply : 
+  	#[ CoFill :
+
+	Special additions for tablebase-like tables added 12-aug-2002
+*/
+
+int CoFill ARG1(UBYTE *,inp)
+{
+	WORD error = 0, x, funnum, type, *oldwp = AR.WorkPointer;
+	int i, oldcbufnum = AR.cbufnum, nofill = 0, numover, redef = 0;
+	WORD *w, *wold;
+	UBYTE *p = inp, c, *inp1;
+	TABLES T = 0, oldT;
+	LONG newreservation, sum = 0;
+	UBYTE *p1, *p2, *p3, *p4, *fake = 0;
+	int tablestub = 0;
+/*
+	Read the name of the function and test that it is in the table.
+*/
+	p1 = inp;
+	if ( ( p = SkipAName(inp) ) == 0 ) return(1);
+	p2 = p;
+	c = *p; *p = 0;
+	if ( ( GetVar(inp,&type,&funnum,CFUNCTION,WITHAUTO) == NAMENOTFOUND )
+	|| ( T = functions[funnum].tabl ) == 0 || c != '(' ) {
+		MesPrint("&%s should be a table with argument(s)",inp);
+		*p = c; return(1);
+	}
+	oldT = T;
+	*p++ = c;
+	for ( sum = 0, i = 0, w = oldwp; i < T->numind; i++ ) {
+		ParseSignedNumber(x,p);
+		if ( FG.cTable[p[-1]] != 1 || ( *p != ',' && *p != ')' ) ) {
+			MesPrint("&Table arguments in fill statement should be numbers");
+			return(1);
+		}
+		if ( T->sparse ) *w++ = x;
+		else if ( x < T->mm[i].mini || x > T->mm[i].maxi ) {
+			MesPrint("&Value %d for argument %d of table out of bounds",x,i+1);
+			error = 1; nofill = 1;
+		}
+		else sum += ( x - T->mm[i].mini ) * T->mm[i].size;
+		if ( *p == ')' ) break;
+		p++;
+	}
+	p3 = p;
+	if ( *p != ')' || i < ( T->numind - 1 ) ) {
+		MesPrint("&Incorrect number of table arguments in fill statement. Should be %d"
+		,T->numind);
+		error = 1; nofill = 1;
+	}
+	AR.WorkPointer = w;
+	if ( T->sparse == 0 ) sum *= TABLEEXTENSION;
+andagain:;
+	AR.cbufnum = T->bufnum;
+	if ( T->sparse ) {
+		i = FindTableTree(T,oldwp,1);
+		if ( i >= 0 ) {
+			sum = i + T->numind;
+			if ( tablestub == 0 && ( ( T->sparse & 2 ) == 2 ) && ( T->mode != 0 )
+			&& ( AC.vetotablebasefill == 0 ) ) {
+/*
+				This redefinition does not need a new stub
+*/
+				functions[funnum].tabl = T = T->spare;
+				tablestub = 1;
+				goto andagain;
+			}
+			redef = 1;
+			goto redef;
+		}
+		if ( T->totind >= T->reserved ) {
+			if ( T->reserved == 0 ) newreservation = 20;
+			else newreservation = T->reserved;
+/*
+			while ( T->totind >= newreservation && newreservation <
+					MAXTABLECOMBUF*(T->numind+TABLEEXTENSION) )
+			if ( newreservation > MAXTABLECOMBUF*T->numind ) newreservation =
+					5*(T->numind+TABLEEXTENSION);
+*/
+			while ( T->totind >= newreservation && newreservation < MAXTABLECOMBUF )
+					newreservation = 2*newreservation;
+			if ( newreservation > MAXTABLECOMBUF ) newreservation = MAXTABLECOMBUF;
+			if ( T->totind >= newreservation ) {
+				MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
+				AR.cbufnum = oldcbufnum;
+				Terminate(-1);
+			}
+			wold = (WORD *)Malloc1(newreservation*sizeof(WORD)*
+								(T->numind+TABLEEXTENSION),"tablepointers");
+			for ( i = T->reserved*(T->numind+TABLEEXTENSION)-1; i >= 0; i-- )
+				wold[i] = T->tablepointers[i];
+			if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
+			T->tablepointers = wold;
+			T->reserved = newreservation;
+		}
+		w = oldwp;
+		for ( sum = T->totind*(T->numind+TABLEEXTENSION), i = 0; i < T->numind; i++ ) {
+			T->tablepointers[sum++] = *w++;
+		}
+		InsTableTree(T,T->tablepointers+sum-T->numind);
+#if TABLEEXTENSION == 2
+		T->tablepointers[sum+TABLEEXTENSION-1] = -1;  /* New element! */
+#else
+		T->tablepointers[sum+1] = T->bufnum;
+		T->tablepointers[sum+2] = -1;
+		T->tablepointers[sum+3] = -1;
+		T->tablepointers[sum+4] = 0;
+		T->tablepointers[sum+5] = 0;
+#endif
+	}
+	else {
+		if ( !nofill && T->tablepointers[sum] >= 0 ) {
+redef:;
+			if ( AC.vetofilling ) nofill = 1;
+			else {
+				Warning("Table element was already defined. New definition will be used");
+			}
+		}
+#if TABLEEXTENSION == 2
+		T->tablepointers[sum+TABLEEXTENSION-1] = -1;  /* New element! */
+#else
+		T->tablepointers[sum+1] = T->bufnum;
+		T->tablepointers[sum+2] = -1;
+		T->tablepointers[sum+3] = -1;
+		T->tablepointers[sum+4] = 0;
+		T->tablepointers[sum+5] = 0;
+#endif
+	}
+	p++; if ( *p != '=' ) {
+		MesPrint("&Fill statement misses = sign after the table element");
+		AR.cbufnum = oldcbufnum;
+		AR.WorkPointer = oldwp;
+		functions[funnum].tabl = oldT;
+		return(1);
+	}
+	if ( tablestub == 0 && T->mode == 1 && AC.vetotablebasefill == 0 ) {
+/*
+		Here we construct a righthandside from the indices and the wildcards
+*/
+		int numfake;
+		tablestub = 1;
+		p4 = T->argtail;
+		while ( *p4 ) p4++;
+		numfake = (p4-T->argtail)+(p3-p1)+10;
+
+		fake = (UBYTE *)Malloc1(numfake*sizeof(UBYTE),"Fill fake rhs");
+		p = fake;
+		*p++ = 't'; *p++ = 'b'; *p++ = 'l'; *p++ = '_'; *p++ = '(';
+		p4 = p1; while ( p4 < p2 ) *p++ = *p4++; *p++ = ',';
+		p4 = p2+1; while ( p4 < p3 ) *p++ = *p4++;
+		if ( T->argtail ) {
+			p4 = T->argtail + 1;
+			while ( FG.cTable[*p4] == 1 ) p4++;
+			while ( *p4 ) {
+				if ( *p4 == '?' && p[-1] != ',' ) {
+					p4++;
+					if ( FG.cTable[*p4] == 0 || *p4 == '$' || *p4 == '[' ) {
+						p4 = SkipAName(p4);
+						if ( *p4 == '[' ) {
+							SKIPBRA1(p4);
+						}
+					}
+					else if ( *p4 == '{' ) {
+						SKIPBRA2(p4);
+					}
+					else if ( *p4 ) { *p++ = *p4++; continue; }
+				}
+				else *p++ = *p4++;
+			}
+		}
+		*p++ = ')';
+		*p = 0;
+		inp1 = fake;
+/*		AR.WorkPointer += T->numind; */
+	}
+	else
+	inp1 = ++p; c = 0;
+/*
+	Now we have the indices and p points to the rhs.
+*/
+	numover = 0;
+	AC.tablefilling = funnum;
+	while ( *inp1 ) {
+		p = SkipField(inp1,0);
+		c = *p; *p = 0;
+		if ( ( i = CompileAlgebra(inp1,RHSIDE,T->prototype) ) < 0 ) { error = 1; i = 0; }
+		if ( !nofill ) {
+			T->tablepointers[sum] = i;
+			T->tablepointers[sum+1] = T->bufnum;
+		}
+		AC.DumNum = 0;
+		*p = c;
+		if ( T->sparse || c == 0 ) break;
+		inp1 = ++p;
+#if ( TABLEEXTENSION == 2 )
+		sum++;
+#else
+		sum += 2;
+#endif
+		if ( !nofill && T->tablepointers[sum] >= 0 ) numover++;
+#if ( TABLEEXTENSION == 2 )
+		sum++;
+#else
+		sum += TABLEEXTENSION-2;
+#endif
+	}
+	AC.tablefilling = 0;
+	if ( T->sparse && c != 0 ) {
+		MesPrint("&In sparse tables one can fill only one element at a time");
+		error = 1;
+	}
+	else if ( numover ) {
+		if ( numover == 1 )
+			Warning("one element was overwritten. New definition will be used");
+		else if ( AC.WarnFlag )
+			MesPrint("&Warning: %d elements were overwritten. New definitions will be used",numover);
+	}
+	if ( T->sparse ) {
+		if ( redef == 0 ) T->totind++;
+	}
+	else T->defined++;
+/*
+	NumSets = AC.SetList.numtemp;
+	NumSetElements = AC.SetElementList.numtemp;
+*/
+	if ( fake ) {
+		M_free(fake,"Fill fake rhs");
+		fake = 0;
+		functions[funnum].tabl = T = T->spare;
+		p = p3;
+		goto andagain;
+	}
+	AR.cbufnum = oldcbufnum;
+	AC.SymChangeFlag = 1;
+	AR.WorkPointer = oldwp;
+	functions[funnum].tabl = oldT;
+	return(error);
+}
+
+/*
+  	#] CoFill :
+  	#[ CoFillExpression :
+
+	Syntax: FillExpression table = expression(x1,...,xn);
+	The arguments should have been bracketed. Each corresponds to one
+	of the dimensions of the table. Then the bracket with x1^2*x3^4
+	will fill the (2,0,4) element of the table (if n=3 of course).
+	Brackets that don't fit will be skipped. It just gives a warning.
+*/
+
+int CoFillExpression ARG1(UBYTE *,inp)
+{
+	UBYTE *p, c;
+	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AR.WorkPointer;
+	WORD *brackets, *term, brasize, *b, *m, *w, *pw, *tstop, zero = 0;
+	WORD oldcbuf = AR.cbufnum, curelement = 0;
+	int weneedit, i, j, numzero, sum, pow;
+	TABLES T = 0;
+	LONG newreservation, numcommu;
+	POSITION oldposition;
+	FILEHANDLE *fi; 
+	CBUF *C;
+
+	if ( ( p = SkipAName(inp) ) == 0 ) return(1);
+	c = *p; *p = 0;
+	if ( ( GetVar(inp,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
+	|| ( T = functions[funnum].tabl ) == 0 ) {
+		MesPrint("&%s should be a previously declared table",inp);
+		*p = c; return(1);
+	}
+	*p++ = c;
+	if ( T->spare ) T = T->spare;
+	C = cbuf + T->bufnum;
+	if ( c != '=' ) {
+		MesPrint("&No = sign in FillExpression statement");
+		return(1);
+	}
+	inp = p;
+	if ( ( p = SkipAName(inp) ) == 0 ) return(1);
+	c = *p; *p = 0;
+	if ( ( type = GetName(AC.exprnames,inp,&expnum,NOAUTO) ) == NAMENOTFOUND
+	|| c != '(' || (
+		Expressions[expnum].status != LOCALEXPRESSION &&
+		Expressions[expnum].status != SKIPLEXPRESSION &&
+		Expressions[expnum].status != DROPLEXPRESSION &&
+		Expressions[expnum].status != GLOBALEXPRESSION &&
+		Expressions[expnum].status != SKIPGEXPRESSION &&
+		Expressions[expnum].status != DROPGEXPRESSION ) ) {
+		MesPrint("&%s should be an active expression with arguments",inp);
+		*p = c; return(1);
+	}
+	if ( Expressions[expnum].inmem ) {
+		MesPrint("&%s cannot be used in a FillExpression statement in the same %n\
+        module that it has been redefined",inp);
+		*p = c; return(1);
+	}
+	*p++ = c;
+	while ( *p ) {
+		inp = p;
+		if ( ( p = SkipAName(inp) ) == 0 ) return(1);
+		c = *p; *p = 0;
+		if ( GetVar(inp,&type,&symnum,CSYMBOL,NOAUTO) == NAMENOTFOUND ) {
+			MesPrint("&%s should be a previously declared symbol",inp);
+			*p = c; return(1);
+		}
+		*p++ = c;
+		*AR.WorkPointer++ = symnum;
+		numsym++;
+		if ( c == ')' ) break;
+		if ( c != ',' ) {
+			MesPrint("&Illegal separator in FillExpression statement");
+			goto noway;
+		}
+	}
+	if ( *p ) {
+		MesPrint("&Illegal end of FillExpression statement");
+		goto noway;
+	}
+/*
+	We have the number of the table in funnum.
+	The number of the expression in expnum, the table struct in T
+	and the numbers of the symbols in oldwork. There are numsym of them.
+	We don't sort them!!!!
+*/
+	if ( T->numind != numsym ) {
+		MesPrint("&This table needs %d symbols for its array indices");
+		goto noway;
+	}
+	EXCHINOUT
+	fi = AR.infile;
+	if ( fi->handle >= 0 ) {
+		PUTZERO(oldposition);
+		SeekFile(fi->handle,&oldposition,SEEK_CUR);
+		SetScratch(fi,&(Expressions[expnum].onfile));
+/*		SeekFile(fi->handle,&(Expressions[expnum].onfile),SEEK_SET); */
+		if ( ISNEGPOS(Expressions[expnum].onfile) ) {
+			MesPrint("&File error in FillExpression");
+			BACKINOUT
+			goto noway;
+		}
+	}
+	else {
+/*
+		Note: Because everything fits inside memory we never get problems
+		with excessive file sizes.
+*/
+		SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
+		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(Expressions[expnum].onfile));
+	}
+	pw = AR.WorkPointer;
+	brackets = pw + numsym; brasize = -1; weneedit = 0;
+	term = brackets + AM.MaxTer;
+	AR.WorkPointer = term + AM.MaxTer;
+	AR.cbufnum = T->bufnum;
+	AC.tablefilling = funnum;
+	if ( GetTerm(term) > 0 ) {			/* Skip prototype */
+		while ( GetTerm(term) > 0 ) {
+			GETSTOP(term,tstop);
+			w = m = term + 1;
+			while ( m < tstop && *m != HAAKJE ) m += m[1];
+			if ( *m != HAAKJE ) {
+				MesPrint("&Illegal attempt to put an expression without brackets in a table");
+				BACKINOUT
+				goto noway;
+			}
+			if ( brasize == m - w ) {
+				b = brackets;
+				while ( *b == *w && w < m ) { b++; w++; }
+				if ( w == m ) { /* Same as current bracket. Copy. */
+					if ( weneedit ) {
+						m += m[1] - 1;
+						*m = *term - (m-term);
+						AddNtoC(*m,m);
+					}
+					continue; /* Next term */
+				}
+			}
+			if ( weneedit ) {
+				AddNtoC(1,&zero);	/* Terminate old bracket */
+				numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
+				C->CanCommu[curelement] = numcommu;
+			}
+			b = brackets; w = term + 1; pw = oldwork + numsym;
+			while ( w < m ) *b++ = *w++;
+			brasize = b - brackets;
+/*
+			Now compute the element. See whether we need it
+*/
+			if ( *brackets != SYMBOL || brackets[1] < brasize
+			|| (brackets[1]-2) > numsym*2 ) {
+				weneedit = 0; continue;	/* Cannot work! */
+			}
+			numzero = 0; sum = 0;
+			for ( i = 0; i < numsym; i++ ) {
+				b = brackets + 2; j = brackets[1]-2;
+				while ( j > 0 ) {
+					if ( *b == oldwork[i] ) break;
+					j -= 2; b += 2;
+				}
+				if ( j <= 0 ) {  /* it was not there */
+					numzero++; pow = 0;
+					if ( 2*numzero+brackets[1]-2 > numsym*2 ) {
+						weneedit = 0; goto nextterm;
+					}
+				}
+				else pow = b[1];
+				if ( T->sparse ) *pw++ = pow;
+				else if ( pow < T->mm[i].mini || pow > T->mm[i].maxi ) {
+					weneedit = 0; goto nextterm;
+				}
+				else sum += ( pow - T->mm[i].mini ) * T->mm[i].size;
+			}
+			weneedit = 1;
+			if ( T->sparse ) {
+				pw = oldwork + numsym;
+				i = FindTableTree(T,pw,1);
+				if ( i >= 0 ) {
+					sum = i+T->numind;
+					C->rhs[T->tablepointers[sum]] = C->Pointer; /*-----*/
+					goto newentry;
+				}
+				if ( T->totind >= T->reserved ) {
+					if ( T->reserved == 0 ) newreservation = 20;
+					else newreservation = T->reserved;
+					while ( T->totind >= newreservation && newreservation <
+								MAXTABLECOMBUF*(T->numind+TABLEEXTENSION) )
+							newreservation = 2*newreservation;
+					if ( newreservation > MAXTABLECOMBUF*T->numind ) newreservation =
+								MAXTABLECOMBUF*(T->numind+TABLEEXTENSION);
+					if ( T->totind >= newreservation ) {
+						MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
+						AR.cbufnum = oldcbuf;
+						AR.WorkPointer = oldwork;
+						Terminate(-1);
+					}
+					w = (WORD *)Malloc1(newreservation*sizeof(WORD)*
+							(T->numind+TABLEEXTENSION),"tablepointers");
+					for ( i = T->reserved*(T->numind+TABLEEXTENSION)-1; i >= 0; i-- )
+						w[i] = T->tablepointers[i];
+					if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
+					T->tablepointers = w;
+					T->reserved = newreservation;
+				}
+				pw = oldwork + numsym;
+				for ( sum = T->totind*(T->numind+TABLEEXTENSION), i = 0; i < T->numind; i++ ) {
+					T->tablepointers[sum++] = *pw++;
+				}
+				InsTableTree(T,T->tablepointers+sum-T->numind);
+				(T->totind)++;
+			}
+/*
+			Start a new entry. Copy the element.
+*/
+			AddRHS(T->bufnum,0);
+			T->tablepointers[sum] = C->numrhs;
+#if ( TABLEEXTENSION == 2 )
+			T->tablepointers[sum+TABLEEXTENSION-1] = -1;
+#else
+			T->tablepointers[sum+1] = T->bufnum;
+			T->tablepointers[sum+2] = -1;
+			T->tablepointers[sum+3] = -1;
+			T->tablepointers[sum+4] = 0;
+			T->tablepointers[sum+5] = 0;
+#endif
+newentry:	if ( *m == HAAKJE ) { m += m[1] - 1; }
+			else m--;
+			*m = *term - (m-term);
+			AddNtoC(*m,m);
+			curelement = T->tablepointers[sum];
+nextterm:;
+		}
+		if ( weneedit ) {
+			AddNtoC(1,&zero);	/* Terminate old bracket */
+			numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
+			C->CanCommu[curelement] = numcommu;
+		}
+	}
+	BACKINOUT
+	AR.cbufnum = oldcbuf;
+	AC.tablefilling = 0;
+	return(0);
+noway:
+	AR.cbufnum = oldcbuf;
+	AC.tablefilling = 0;
+	AR.WorkPointer = oldwork;
+	return(1);
+}
+
+/*
+  	#] CoFillExpression : 
+  	#[ CoPrintTable :
+
+	Syntax
+		PrintTable [+f] [+s] tablename [>[>] file];
+	All defined elements are written with individual Fill statements.
+	If a file is specified, the result is written to file only.
+	The flags of the print statement apply as much as possible.
+	We make use of the regular write routines.
+*/
+
+int CoPrintTable ARG1(UBYTE *,inp)
+{
+	int fflag = 0, sflag = 0, addflag = 0, error = 0, sum, i, j;
+	UBYTE *filename, *p, c, buffer[100], *s, *oldoutputline = AO.OutputLine;
+	WORD type, funnum, *expr, *m, num;
+	TABLES T = 0;
+	WORD oldSkip = AO.OutSkip, oldMode = AC.OutputMode, oldHandle = AC.LogHandle;
+	WORD oldType = AO.PrintType, *oldwork = AR.WorkPointer;
+	UBYTE *oldFill = AO.OutFill, *oldLine = AO.OutputLine;
+/*
+	First the flags
+*/
+	while ( *inp == '+' ) {
+		inp++;
+		if ( *inp == 'f' || *inp == 'F' ) { fflag = 1; inp++; }
+		else if ( *inp == 's' || *inp == 'S' ) { sflag = PRINTONETERM; inp++; }
+		else {
+			MesPrint("&Illegal + option in PrintTable statement");
+			error = 1; inp++;
+		}
+		while ( *inp != ',' && *inp && *inp != '+' ) {
+			if ( !error ) {
+				if ( *inp ) {
+					MesPrint("&Illegal + option in PrintTable statement");
+					inp++;
+				}
+				else {
+					MesPrint("&Unfinished PrintTable statement");
+					return(1);
+				}
+				error = 1;
+			}
+			inp++;
+		}
+		if ( *inp == ',' ) inp++;
+	}
+/*
+	Now the name of the table
+*/
+	if ( ( p = SkipAName(inp) ) == 0 ) return(1);
+	c = *p; *p = 0;
+	if ( ( GetVar(inp,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
+	|| ( T = functions[funnum].tabl ) == 0 ) {
+		MesPrint("&%s should be a previously declared table",inp);
+		*p = c; return(1);
+	}
+	if ( T->spare && T->mode == 1 ) T = T->spare;
+	*p++ = c;
+/*
+	Check for a filename. Runs to the end of the statement.
+*/
+	filename = 0;
+	if ( c == '>' ) {
+		if ( *p == '>' ) { addflag = 1; p++; }
+		filename = p;
+	}
+	else filename = 0;
+
+	if ( filename ) {
+		if ( addflag ) AC.LogHandle = OpenAddFile((char *)filename);
+		else           AC.LogHandle = CreateFile((char *)filename);
+		if ( AC.LogHandle < 0 ) {
+			MesPrint("&Cannot open file '%s' properly",filename);
+			error = 1; goto finally;
+		}
+		AO.PrintType = PRINTLFILE;
+	}
+	else if ( fflag && AC.LogHandle >= 0 ) {
+		AO.PrintType = PRINTLFILE;
+	}
+	AO.OutFill = AO.OutputLine = (UBYTE *)AR.WorkPointer;
+	AR.WorkPointer += 2*AC.LineLength;
+
+	AO.PrintType |= sflag;
+	AC.OutputMode = 0;
+	AO.IsBracket = 0;
+	AO.OutSkip = 0;
+	AR.DeferFlag = 0;
+	AC.outsidefun = 1;
+	if ( AC.LogHandle == oldHandle ) FiniLine();
+	AO.OutputLine = AO.OutFill = (UBYTE *)Malloc1(AC.LineLength+20,"PrintTable");
+	AO.OutStop = AO.OutFill + AC.LineLength;
+	for ( i = 0; i < T->totind; i++ ) {
+		if ( !T->sparse && T->tablepointers[i] < 0 ) continue;
+		TokenToLine((UBYTE *)"Fill ");
+		TokenToLine((UBYTE *)(VARNAME(functions,funnum)));
+		TokenToLine((UBYTE *)"(");
+		AO.OutSkip = 3;
+		if ( T->sparse ) {
+			sum = i * ( T->numind + TABLEEXTENSION );
+			for ( j = 0; j < T->numind; j++, sum++ ) {
+				if ( j > 0 ) TokenToLine((UBYTE *)",");
+				num = T->tablepointers[sum];
+				s = buffer; s = NumCopy(num,s);
+				TokenToLine(buffer);
+			}
+			expr = cbuf[T->bufnum].rhs[T->tablepointers[sum]];
+		}
+		else {
+			for ( j = 0; j < T->numind; j++ ) {
+				if ( j > 0 ) {
+					TokenToLine((UBYTE *)",");
+					num = T->mm[j].mini + ( i % T->mm[j-1].size ) / T->mm[j].size;
+				}
+				else {
+					num = T->mm[j].mini + i / T->mm[j].size;
+				}
+				s = buffer; s = NumCopy(num,s);
+				TokenToLine(buffer);
+			}
+			expr = cbuf[T->bufnum].rhs[T->tablepointers[TABLEEXTENSION*i]];
+		}
+		TOKENTOLINE(") =",")=");
+		if ( sflag ) {
+			FiniLine();
+			if ( AC.OutputSpaces != NOSPACEFORMAT ) TokenToLine((UBYTE *)"   ");
+		}
+		m = expr;
+/*
+		WORD lbrac, first;
+		lbrac = 0; first = 1;
+		while ( *m ) {
+			if ( WriteTerm(m,&lbrac,first,1,0) ) {
+				MesPrint("Error while writing table");
+				error = 1;
+				goto finally;
+			}
+			first = 0;
+			m += *m;
+		}
+		if ( first ) { TOKENTOLINE(" 0","0") }
+		else if ( lbrac ) { TOKENTOLINE(" )",")") }
+*/
+		while ( *m ) m += *m;
+		if ( WriteExpression(expr,(LONG)(m-expr)) ) { error = 1; goto finally; }
+		AO.OutSkip = 0;
+		TokenToLine((UBYTE *)";");
+		FiniLine();
+	}
+	M_free(AO.OutputLine,"PrintTable");
+	AO.OutputLine = AO.OutFill = oldoutputline;
+/*
+	Reset the file pointers and parameters if any. Close file if needed.
+*/
+finally:
+	AO.OutSkip     = oldSkip;
+	AC.OutputMode  = oldMode;
+	AC.LogHandle   = oldHandle;
+	AO.PrintType   = oldType;
+	AO.OutFill     = oldFill;
+	AO.OutputLine  = oldLine;
+	AR.WorkPointer = oldwork;
+	AC.outsidefun  = 0;
+	return(error);
+}
+
+/*
+  	#] CoPrintTable : 
+  	#[ CoAssign :
+
+	This statement has an easy syntax:
+		$name = expression
+*/
+
+static WORD AssignLHS[14] = { TYPEASSIGN, 3+SUBEXPSIZE, 0,
+							SUBEXPRESSION, SUBEXPSIZE, 0, 1, 0, 0,0,0,0,0 };
+
+int CoAssign ARG1(UBYTE *,inp)
+{
+	int error = 0, retcode, type, i;
+	UBYTE *name;
+	WORD number, *pmd;
+	if ( *inp != '$' ) {
+nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
+		return(1);
+	}
+	inp++; name = inp;
+	if ( FG.cTable[*inp] != 0 ) goto nolhs;
+	while ( FG.cTable[*inp] < 2 ) inp++;
+	if ( *inp != '=' ) {
+		MesPrint("&assign statement should have only a dollar variable in the LHS");
+		return(1);
+	}
+	*inp = 0;
+	if ( ( type = GetName(AC.dollarnames,name,&number,NOAUTO) ) == NAMENOTFOUND ) {
+		number = AddDollar(name,DOLUNDEFINED,0,0);
+		type = DOLUNDEFINED;
+	}
+	*inp++ = '=';
+/*
+	Fake a Prototype and read the RHS
+*/
+	AssignLHS[7] = AR.cbufnum;
+	retcode = CompileAlgebra(inp,RHSIDE,(AssignLHS+3));
+	if ( retcode < 0 ) error = 1;
+	AC.DumNum = 0;
+/*
+	Now add the LHS
+*/
+	AssignLHS[2] = number;
+	AssignLHS[5] = retcode;
+	AddNtoL(AssignLHS[1],AssignLHS);
+/*
+	Add to the list of potentially modified dollars (for PARALLEL)
+*/
+	for ( i = 0; i < NumPotModdollars; i++ ) {
+		if ( number == PotModdollars[i] ) break;
+	}
+	if ( i >= NumPotModdollars ) {
+		pmd = (WORD *)FromList(&AC.PotModDolList);
+		*pmd = number;
+	}
+	return(error);
+}
+
+/*
+  	#] CoAssign : 
+*/
+/* temporary commentary for forcing cvs merge */
+
+
+
+
+
+
+
+
+
+
+
+

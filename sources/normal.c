@@ -1,0 +1,2795 @@
+/*
+  	#[ Includes : normal.c
+*/
+
+#include "form3.h"
+
+WORD dummysubexp[SUBEXPSIZE+4];
+
+/*
+  	#] Includes :
+ 	#[ Normalize :
+ 		#[ Commute :
+
+	This function gets two adjacent function pointers and decides
+	whether these two functions should be exchanged to obtain a
+	natural ordering.
+
+	Currently there is only an ordering of gamma matrices belonging
+	to different spin lines.
+
+*/
+
+WORD
+Commute ARG2(WORD *,fleft,WORD *,fright)
+{
+	if ( *fleft >= GAMMA && *fleft <= GAMMASEVEN
+	  && *fright >= GAMMA && *fright <= GAMMASEVEN ) {
+		if ( fleft[FUNHEAD] < AM.OffsetIndex && fleft[FUNHEAD] > fright[FUNHEAD] )
+			return(1);
+	}
+/*
+	if other conditions will come here, keep in mind that if *fleft < 0
+	or *fright < 0 they are arguments in the exponent function as in f^2
+*/
+	return(0);
+}
+
+/*
+ 		#] Commute :
+ 		#[ Normalize :
+
+	This is the big normalization routine. It has a great need
+	to be economical.
+	There is a fixed limit to the number of objects coming in.
+	Something should be done about it.
+
+*/
+
+static UWORD *NoScrat2 = 0;
+static WORD *ReplaceScrat = 0;
+int RSsize = 0;
+static WORD *st = 0, *sm = 0, *sr = 0, *sc = 0;
+
+WORD
+Normalize ARG1(WORD *,term)
+{
+/*
+  	#[ Declarations :
+*/
+	WORD *t, *m, *r, i, j, k, l, nsym;
+	WORD shortnum, stype;
+	WORD *stop, *to = 0, *from = 0;
+/*
+	The next variables would be better off in the AM.WorkSpace (?)
+	or as static global variables. Now they make stackallocations
+	rather bothersome.
+*/
+	WORD psym[7*NORMSIZE],*ppsym;
+	WORD pvec[NORMSIZE],*ppvec,nvec;
+	WORD pdot[3*NORMSIZE],*ppdot,ndot;
+	WORD pdel[2*NORMSIZE],*ppdel,ndel;
+	WORD pind[NORMSIZE],nind;
+	WORD *pgam[NORMSIZE/2],ngam;
+	WORD *peps[NORMSIZE/3],neps;
+	WORD *pexp[NORMSIZE/3],nexp;
+	WORD *pden[NORMSIZE/3],nden;
+	WORD *pcom[NORMSIZE],ncom;
+	WORD *pnco[NORMSIZE],nnco;
+	WORD *pcon[2*NORMSIZE],ncon;		/* Pointer to contractable indices */
+	WORD ncoef;							/* Accumulator for the coefficient */
+	WORD *lnum=AM.n_llnum+1,nnum;		/* Scratch for factorials */
+	WORD *termout, oldtoprhs = 0, subtype;
+	WORD ReplaceType, didcontr, regval = 0;
+	WORD *ReplaceSub;
+	WORD nsetexp;
+	WORD *fillsetexp;
+	CBUF *C = cbuf+AR.ebufnum;
+	LONG oldcpointer = 0;
+/*
+	int termflag;
+*/
+/*
+  	#] Declarations :
+  	#[ Setup :
+*/
+Restart:
+	didcontr = 0;
+	ReplaceType = -1;
+	t = term;
+	if ( !*t ) return(regval);
+	r = t + *t;
+	ncoef = r[-1];
+	i = ABS(ncoef);
+	r -= i;
+	m = r;
+	t = AM.n_coef;
+	NCOPY(t,r,i);
+	termout = AR.WorkPointer;
+	AR.WorkPointer += AM.MaxTer;
+	fillsetexp = termout+1;
+	nsetexp = 0;
+	AR.PolyNorm = 0;
+/*
+	termflag = 0;
+*/
+/*
+  	#] Setup :
+  	#[ First scan :
+*/
+	nsym = nvec = ndot = ndel = ngam = neps = nexp = nden = 
+	nind = ncom = nnco = ncon = 0;
+	ppsym = psym;
+	ppvec = pvec;
+	ppdot = pdot;
+	ppdel = pdel;
+	t = term + 1;
+conscan:;
+	if ( t < m ) do {
+		r = t + t[1];
+		switch ( *t ) {
+			case SYMBOL :
+				t += 2;
+				from = m;
+				do {
+					if ( t[1] == 0 ) {
+						if ( *t == 0 || *t == MAXPOWER ) goto NormZZ;
+						t += 2;
+						goto NextSymbol;
+					}
+					if ( *t <= DENOMINATORSYMBOL && *t >= COEFFSYMBOL ) {
+						if ( NoScrat2 == 0 ) {
+							NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
+						}
+						if ( AR.cTerm ) m = AR.cTerm;
+						else m = term;
+						m += *m;
+						ncoef = REDLENG(ncoef);
+						if ( *t == COEFFSYMBOL ) {
+						  i = t[1];
+						  nnum = REDLENG(m[-1]);
+						  m -= ABS(m[-1]);
+						  if ( i > 0 ) {
+							while ( i > 0 ) {
+								if ( MulRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,nnum,
+								(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+								i--;
+							}
+						  }
+						  else if ( i < 0 ) {
+							while ( i < 0 ) {
+								if ( DivRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,nnum,
+								(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+								i++;
+							}
+						  }
+						}
+						else {
+						  i = m[-1];
+						  nnum = (ABS(i)-1)/2;
+						  if ( *t == NUMERATORSYMBOL ) { m -= nnum + 1; }
+						  else { m--; }
+						  while ( *m == 0 && nnum > 1 ) { m--; nnum--; }
+						  m -= nnum;
+						  if ( i < 0 && *t == NUMERATORSYMBOL ) nnum = -nnum;
+						  i = t[1];
+						  if ( i > 0 ) {
+							while ( i > 0 ) {
+								if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)m,nnum) )
+										goto FromNorm;
+								i--;
+							}
+						  }
+						  else if ( i < 0 ) {
+							while ( i < 0 ) {
+								if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)m,nnum) )
+										goto FromNorm;
+								i++;
+							}
+						  }
+						}
+						ncoef = INCLENG(ncoef);
+						t += 2;
+						goto NextSymbol;
+					}
+					if ( ( *t >= MAXPOWER && *t < 2*MAXPOWER )
+						|| ( *t < -MAXPOWER && *t > -2*MAXPOWER ) ) {
+/*
+			#[ TO SNUMBER :
+*/
+				if ( *t < 0 ) {
+					*t += MAXPOWER;
+					*t = -*t;
+					if ( t[1] & 1 ) ncoef = -ncoef;
+				}
+				else if ( *t == MAXPOWER ) {
+					if ( t[1] > 0 ) goto NormZero;
+					goto NormInf;
+				}
+				else {
+					*t -= MAXPOWER;
+				}
+				lnum[0] = *t;
+				nnum = 1;
+				if ( t[1] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[1]))) )
+					goto FromNorm;
+				ncoef = REDLENG(ncoef);
+				if ( t[1] < 0 ) {
+					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						goto FromNorm;
+				}
+				else if ( t[1] > 0 ) {
+					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						goto FromNorm;
+				}
+				ncoef = INCLENG(ncoef);
+/*
+			#] TO SNUMBER :
+*/
+						t += 2;
+						goto NextSymbol;
+					}
+					i = nsym;
+					m = ppsym;
+					if ( i > 0 ) do {
+						m -= 2;
+						if	( *t == *m ) {
+							t++; m++;
+							if	( *t > 2*MAXPOWER || *t < -2*MAXPOWER
+							||	*m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+								MesPrint("Illegal wildcard power combination.");
+								goto NormMin;
+							}
+							*m += *t;
+							if	( *m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+								MesPrint("Power overflow during normalization");
+								goto NormMin;
+							}
+							if ( !*m ) {
+								m--;
+								while ( i < nsym )
+									{ *m = m[2]; m++; *m = m[2]; m++; i++; }
+								ppsym -= 2;
+								nsym--;
+							}
+							t++;
+							goto NextSymbol;
+						}
+					} while ( *t < *m && --i > 0 );
+					m = ppsym;
+					while ( i < nsym )
+						{ m--; m[2] = *m; m--; m[2] = *m; i++; }
+					*m++ = *t++;
+					*m = *t++;
+					ppsym += 2;
+					nsym++;
+NextSymbol:;
+				} while ( t < r );
+				m = from;
+				break;
+			case VECTOR :
+				t += 2;
+				do {
+					if ( t[1] == FUNNYVEC ) {
+						pind[nind++] = *t;
+						t += 2;
+					}
+					else if ( t[1] < 0 ) {
+						if ( *t == NOINDEX && t[1] == NOINDEX ) t += 2;
+						else {
+						*ppdot++ = *t++; *ppdot++ = *t++; *ppdot++ = 1; ndot++; 
+						}
+					}
+					else { *ppvec++ = *t++; *ppvec++ = *t++; nvec += 2; }
+				} while ( t < r );
+				break;
+			case DOTPRODUCT :
+				t += 2;
+				do {
+					if ( t[2] == 0 ) t += 3;
+					else if ( ndot > 0 && t[0] == ppdot[-3]
+						&& t[1] == ppdot[-2] ) {
+						ppdot[-1] += t[2];
+						t += 3;
+						if ( ppdot[-1] == 0 ) { ppdot -= 3; ndot--; }
+					}
+					else {
+						*ppdot++ = *t++; *ppdot++ = *t++;
+						*ppdot++ = *t++; ndot++;
+					}
+				} while ( t < r );
+				break;
+			case HAAKJE :
+				break;
+			case SETSET:
+				if ( WildFill(termout,term,dummysubexp) < 0 ) goto FromNorm;
+				i = *termout;
+				t = termout; m = term;
+				NCOPY(m,t,i);
+				goto Restart;
+			case DOLLAREXPRESSION :
+/*
+				We have DOLLAREXPRESSION,4,number,power
+				Replace by SUBEXPRESSION and exit elegantly to let
+				TestSub pick it up. Of course look for special cases first.
+				Note that we have a special compiler buffer for the values.
+*/
+				if ( AC.Eside != LHSIDE ) {
+				DOLLARS d = Dollars + t[2];
+				if ( d->type == DOLZERO ) {
+					if ( t[3] == 0 ) goto NormZZ;
+					if ( t[3] < 0 ) goto NormInf;
+					goto NormZero;
+				}
+				else if ( d->type == DOLNUMBER ) {
+					nnum = d->where[0];
+					if ( nnum > 0 ) {
+						nnum = d->where[nnum-1];
+						if ( nnum < 0 ) { ncoef = -ncoef; nnum = -nnum; }
+						nnum = (nnum-1)/2;
+						for ( i = 1; i <= nnum; i++ ) lnum[i-1] = d->where[i];
+					}
+					if ( nnum == 0 || ( nnum == 1 && lnum[0] == 0 ) ) {
+						if ( t[3] < 0 ) goto NormInf;
+						else if ( t[3] == 0 ) goto NormZZ;
+						goto NormZero;
+					}
+					if ( t[3] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
+					ncoef = REDLENG(ncoef);
+					if ( t[3] < 0 ) {
+						if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+							goto FromNorm;
+					}
+					else if ( t[3] > 0 ) {
+						if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+							goto FromNorm;
+					}
+					ncoef = INCLENG(ncoef);
+				}
+				else if ( d->type == DOLINDEX ) {
+					if ( d->index == 0 ) goto NormZero;
+					if ( d->index != NOINDEX ) pind[nind++] = d->index;
+				}
+				else if ( d->type == DOLTERMS ) {
+					t[0] = SUBEXPRESSION;
+					t[4] = AM.dbufnum;
+					if ( t[3] == 0 ) break;
+					regval = 2;
+					t = r;
+					while ( t < m ) {
+						if ( *t == DOLLAREXPRESSION ) {
+							d = Dollars + t[2];
+							if ( d->type == DOLTERMS ) {
+								t[0] = SUBEXPRESSION;
+								t[4] = AM.dbufnum;
+							}
+						}
+						t += t[1];
+					}
+					goto RegEnd;
+				}
+				else {
+					MesPrint("!!!This $ variation has not been implemented yet!!!");
+					goto NormMin;
+				}
+				}
+				else {
+					pnco[nnco++] = t;
+					AR.lhdollarflag = 1;
+				}
+				break;
+			case DELTA :
+				t += 2;
+				do {
+					if ( *t < 0 ) {
+						if ( *t == SUMMEDIND ) {
+							if ( t[1] < -NMIN4SHIFT ) {
+								k = -t[1]-NMIN4SHIFT;
+								k = ExtraSymbol(k,1,nsym,ppsym);
+								nsym += k;
+								ppsym += (k << 1);
+							}
+							else if ( t[1] == 0 ) goto NormZero;
+							else {
+								if ( t[1] < 0 ) {
+									lnum[0] = -t[1];
+									nnum = -1;
+								}
+								else {
+									lnum[0] = t[1];
+									nnum = 1;
+								}
+								ncoef = REDLENG(ncoef);
+								if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+									goto FromNorm;
+								ncoef = INCLENG(ncoef);
+							}
+							t += 2;
+						}
+						else if ( *t == NOINDEX && t[1] == NOINDEX ) t += 2;
+						else if ( *t == EMPTYINDEX && t[1] == EMPTYINDEX ) {
+							*ppdel++ = *t++; *ppdel++ = *t++; ndel += 2;
+						}
+						else
+						if ( t[1] < 0 ) {
+							*ppdot++ = *t++; *ppdot++ = *t++; *ppdot++ = 1; ndot++; 
+						}
+						else {
+							*ppvec++ = *t++; *ppvec++ = *t++; nvec += 2;
+						}
+					}
+					else {
+						if ( t[1] < 0 ) {
+							*ppvec++ = t[1]; *ppvec++ = *t; t+=2; nvec += 2;
+						}
+						else { *ppdel++ = *t++; *ppdel++ = *t++; ndel += 2; }
+					}
+				} while ( t < r );
+				break;
+			case FACTORIAL :
+/*
+				(FACTORIAL,FUNHEAD+2,..,-SNUMBER,number)
+*/
+				if ( t[FUNHEAD] == -SNUMBER && t[1] == FUNHEAD+2
+											&& t[FUNHEAD+1] >= 0 ) {
+					if ( Factorial(t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
+						goto FromNorm;
+MulIn:
+					ncoef = REDLENG(ncoef);	
+					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else pcom[ncom++] = t;
+				break;
+			case BERNOULLIFUNCTION :
+/*
+				(BERNOULLIFUNCTION,FUNHEAD+2,..,-SNUMBER,number)
+*/
+				if ( ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] >= 0 )
+				&& ( t[1] == FUNHEAD+2 || ( t[1] == FUNHEAD+4 &&
+				t[FUNHEAD+2] == -SNUMBER && ABS(t[FUNHEAD+3]) == 1 ) ) ) {
+					WORD inum, mnum;
+					if ( Bernoulli(t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
+						goto FromNorm;
+					if ( nnum == 0 ) goto NormZero;
+					inum = nnum; if ( inum < 0 ) inum = -inum;
+					inum--; inum /= 2;
+					mnum = inum;
+					while ( lnum[mnum-1] == 0 ) mnum--;
+					if ( nnum < 0 ) mnum = -mnum;
+					ncoef = REDLENG(ncoef);	
+					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,mnum) ) goto FromNorm;
+					mnum = inum;
+					while ( lnum[inum+mnum-1] == 0 ) mnum--;
+					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)(lnum+inum),mnum) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+					if ( t[1] == FUNHEAD+4 && t[FUNHEAD+1] == 1
+					 && t[FUNHEAD+3] == -1 ) ncoef = -ncoef; 
+				}
+				else pcom[ncom++] = t;
+				break;
+			case NUMARGSFUN:
+/*
+				Numerical function giving the number of arguments.
+*/
+				k = 0;
+				t += FUNHEAD;
+				while ( t < r ) {
+					k++;
+					NEXTARG(t);
+				}
+				if ( k == 0 ) goto NormZero;
+				*((UWORD *)lnum) = k;
+				nnum = 1;
+				goto MulIn;
+			case NUMTERMSFUN:
+/*
+				Numerical function giving the number of terms in the single argument.
+*/
+				if ( t[FUNHEAD] < 0 ) {
+					if ( t[FUNHEAD] <= -FUNCTION && t[1] == FUNHEAD+1 ) break;
+					if ( t[FUNHEAD] > -FUNCTION && t[1] == FUNHEAD+2 ) break;
+					pcom[ncom++] = t;
+					break;
+				}
+				if ( t[FUNHEAD] > 0 && t[FUNHEAD] == t[1]-FUNHEAD ) {
+					k = 0;
+					t += FUNHEAD+ARGHEAD;
+					while ( t < r ) {
+						k++;
+						t += *t;
+					}
+					if ( k == 0 ) goto NormZero;
+					*((UWORD *)lnum) = k;
+					nnum = 1;
+					goto MulIn;
+				}
+				else pcom[ncom++] = t;
+				break;
+			case COUNTFUNCTION:
+				if ( AR.cTerm ) {
+					k = CountFun(AR.cTerm,t);
+					if ( k == 0 ) goto NormZero;
+					if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
+					else { *((UWORD *)lnum) = -k; nnum = -1; }
+					goto MulIn;
+				}
+				break;
+			case TERMFUNCTION:
+				if ( AR.cTerm ) {
+					st = t; sr = r; sm = m; sc = AR.cTerm;
+					AR.cTerm = 0;
+					t = sc + 1;
+					m = sc + *sc;
+					ncoef = REDLENG(ncoef);
+					nnum = REDLENG(m[-1]);	
+					m -= ABS(m[-1]);
+					if ( MulRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,nnum,
+					(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+					r = t;
+				}
+				break;
+			case FIRSTBRACKET:
+				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
+					if ( GetFirstBracket(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					if ( *termout > 4 ) {
+						WORD *r1, *r2, *r3;
+						while ( r < m ) *t++ = *r++;
+						r1 = term + *term;
+						r2 = termout + *termout; r2 -= ABS(r2[-1]);
+						while ( r < r1 ) *r2++ = *r++;
+						r3 = termout + 1;
+						while ( r3 < r2 ) *t++ = *r3++; *term = t - term;
+						if ( AR.WorkPointer > term && AR.WorkPointer < t )
+							AR.WorkPointer = t;
+						goto Restart;
+					}
+				}
+				break;
+			case TERMSINEXPR:
+				{ LONG x;
+				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
+					x = TermsInExpression(t[FUNHEAD+1]);
+multermnum:			if ( x == 0 ) goto NormZero;
+					if ( x < 0 ) {
+						x = -x;
+						if ( x > WORDMASK ) { lnum[0] = x & WORDMASK;
+							lnum[1] = x >> BITSINWORD; nnum = -2;
+						}
+						else { lnum[0] = x; nnum = -1; }
+					}
+					else if ( x > WORDMASK ) {
+						lnum[0] = x & WORDMASK;
+						lnum[1] = x >> BITSINWORD;
+						nnum = 2;
+					}
+					else { lnum[0] = x; nnum = 1; }
+					ncoef = REDLENG(ncoef);
+					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -DOLLAREXPRESSION ) {
+					x = TermsInDollar(t[FUNHEAD+1]);
+					goto multermnum;
+				}
+				else { pcom[ncom++] = t; }
+				}
+				break;
+			case MATCHFUNCTION:
+			case PATTERNFUNCTION:
+				break;
+			case BINOMIAL:
+/*
+				Binomial function for internal use for the moment.
+				The routine in reken.c should be more efficient.
+*/
+				if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SNUMBER
+				&& t[FUNHEAD+1] >= 0 && t[FUNHEAD+2] == -SNUMBER
+				&& t[FUNHEAD+3] >= 0 && t[FUNHEAD+1] >= t[FUNHEAD+3] ) {
+					if ( t[FUNHEAD+1] > t[FUNHEAD+3] ) {
+						if ( GetBinom((UWORD *)lnum,&nnum,
+						t[FUNHEAD+1],t[FUNHEAD+3]) ) goto FromNorm;
+						if ( nnum == 0 ) goto NormZero;
+						goto MulIn;
+					}
+				}
+				else pcom[ncom++] = t;
+				break;
+			case SIGNFUN:
+/*
+				Numerical function giving (-1)^arg
+*/
+				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
+					if ( ( t[FUNHEAD+1] & 1 ) != 0 ) ncoef = -ncoef;
+				}
+				else pcom[ncom++] = t;
+				break;
+			case SIGFUNCTION:
+/*
+				Numerical function giving the sign of the numerical argument
+				The sign of zero is 1.
+*/
+				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
+					if ( t[FUNHEAD+1] < 0 ) ncoef = -ncoef;
+				}
+				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] )
+				&& ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) ) {
+					if ( t[t[1]-1] < 0 ) ncoef = -ncoef;
+				}
+				else pcom[ncom++] = t;
+				break;
+			case ABSFUNCTION:
+/*
+				Numerical function giving the absolute value of the
+				numerical argument.
+*/
+				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
+					k = t[FUNHEAD+1];
+					if ( k < 0 ) k = -k;
+					if ( k == 0 ) goto NormZero;
+					*((UWORD *)lnum) = k; nnum = 1;
+					goto MulIn;
+
+				}
+				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] )
+				&& ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) ) {
+					WORD *ts = t + t[1] -1;
+					ncoef = REDLENG(ncoef);
+					nnum = REDLENG(*ts);	
+					if ( nnum < 0 ) nnum = -nnum;
+					if ( MulRat((UWORD *)AM.n_coef,ncoef,
+					(UWORD *)(t+FUNHEAD+ARGHEAD+1),nnum,
+					(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else pcom[ncom++] = t;
+				break;
+			case MODFUNCTION:
+/*
+				Mod function. Does work if two arguments and the
+				second argument is a positive short number
+*/
+				if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SNUMBER
+					&& t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+3] > 0 ) {
+					*((UWORD *)lnum) = t[FUNHEAD+1]%t[FUNHEAD+3];
+					if ( *lnum == 0 ) goto NormZero;
+					nnum = 1;
+					goto MulIn;
+				}
+				else if ( t[1] > t[FUNHEAD+2] && t[FUNHEAD] > 0
+				&& t[FUNHEAD+t[FUNHEAD]] == -SNUMBER
+				&& t[FUNHEAD+t[FUNHEAD]+1] > 0
+				&& t[1] == FUNHEAD+2+t[FUNHEAD] ) {
+					WORD *ttt = t+FUNHEAD, iii;
+					iii = ttt[*ttt-1];
+					if ( *ttt == ttt[ARGHEAD]+ARGHEAD &&
+						ttt[ARGHEAD] == ABS(iii)+1 ) {
+						WORD oldncmod = AC.ncmod;
+						WORD oldcmod = AC.cmod[0];
+						AC.ncmod = 1;
+						AC.cmod[0] = ttt[*ttt+1];
+						iii = REDLENG(iii);
+						if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,0) )
+							goto FromNorm;
+						AC.cmod[0] = oldcmod;
+						AC.ncmod = oldncmod;
+						*((UWORD *)lnum) = ttt[ARGHEAD+1];
+						if ( *lnum == 0 ) goto NormZero;
+						nnum = 1;
+						goto MulIn;
+					}						
+				}
+				else if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
+					*((UWORD *)lnum) = t[FUNHEAD+1];
+					if ( *lnum == 0 ) goto NormZero;
+					nnum = 1;
+					goto MulIn;
+				}
+				else pcom[ncom++] = t;
+				break;
+			case GCDFUNCTION:
+				{
+/*
+				Has two integer arguments
+				Four cases: S,S, S,L, L,S, L,L
+*/
+				WORD *num1, *num2, size1, size2, stor1, stor2, *ttt, ti;
+				if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SNUMBER
+				&& t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+1] != 0
+				&& t[FUNHEAD+3] != 0 ) {	/* Short,Short */
+					stor1 = t[FUNHEAD+1];
+					stor2 = t[FUNHEAD+3];
+					if ( stor1 < 0 ) stor1 = -stor1;
+					if ( stor2 < 0 ) stor2 = -stor2;
+					num1 = &stor1; num2 = &stor2;
+					size1 = size2 = 1;
+					goto gcdcalc;
+				}
+				else if ( t[1] > FUNHEAD+4 ) {
+					if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] != 0
+					&& t[FUNHEAD+2] == t[1]-FUNHEAD-2 &&
+					ABS(t[t[1]-1]) == t[FUNHEAD+2]-1-ARGHEAD ) { /* Short,Long */
+						num2 = t + t[1];
+						size2 = ABS(num2[-1]);
+						ttt = num2-1;
+						num2 -= size2;
+						size2 = (size2-1)/2;
+						ti = size2;
+						while ( ti > 1 && ttt[-1] == 0 ) { ttt--; ti--; }
+						if ( ti == 1 && ttt[-1] == 1 ) {
+							stor1 = t[FUNHEAD+1];
+							if ( stor1 < 0 ) stor1 = -stor1;
+							num1 = &stor1;
+							size1 = 1;
+							goto gcdcalc;
+						}
+						else pcom[ncom++] = t;
+					}
+					else if ( t[FUNHEAD] > 0 &&
+					t[FUNHEAD]-1-ARGHEAD == ABS(t[t[FUNHEAD]+FUNHEAD-1]) ) {
+						num1 = t + FUNHEAD + t[FUNHEAD];
+						size1 = ABS(num1[-1]);
+						ttt = num1-1;
+						num1 -= size1;
+						size1 = (size1-1)/2;
+						ti = size1;
+						while ( ti > 1 && ttt[-1] == 0 ) { ttt--; ti--; }
+						if ( ti == 1 && ttt[-1] == 1 ) {
+						 if ( t[1]-FUNHEAD == t[FUNHEAD]+2 && t[t[1]-2] == -SNUMBER
+						 && t[t[1]-1] != 0 ) { /* Long,Short */
+							stor2 = t[t[1]-1];
+							if ( stor2 < 0 ) stor2 = -stor2;
+							num2 = &stor2;
+							size2 = 1;
+							goto gcdcalc;
+						 }
+						 else if ( t[1]-FUNHEAD == t[FUNHEAD]+t[FUNHEAD+t[FUNHEAD]]
+						 && ABS(t[t[1]-1]) == t[FUNHEAD+t[FUNHEAD]] - ARGHEAD-1 ) {
+						  num2 = t + t[1];
+						  size2 = ABS(num2[-1]);
+						  ttt = num2-1;
+						  num2 -= size2;
+						  size2 = (size2-1)/2;
+						  ti = size2;
+						  while ( ti > 1 && ttt[-1] == 0 ) { ttt--; ti--; }
+						  if ( ti == 1 && ttt[-1] == 1 ) {
+gcdcalc:					if ( GcdLong((UWORD *)num1,size1,(UWORD *)num2,size2
+								,(UWORD *)lnum,&nnum) ) goto FromNorm;
+							goto MulIn;
+						  }
+						  else pcom[ncom++] = t;
+						 }
+						 else pcom[ncom++] = t;
+						}
+						else pcom[ncom++] = t;
+					}
+					else pcom[ncom++] = t;
+				}
+				else pcom[ncom++] = t;
+				}
+				break;
+			case MINFUNCTION:
+			case MAXFUNCTION:
+				if ( t[1] == FUNHEAD ) break;
+				{
+					WORD *ttt = t + FUNHEAD;
+					WORD *tttstop = t + t[1];
+					WORD tterm[4], iii;
+					while ( ttt < tttstop ) {
+						if ( *ttt > 0 ) {
+							if ( ttt[ARGHEAD]-1 < ABS(ttt[*ttt-1]) ) goto nospec;
+							ttt += *ttt;
+						}
+						else {
+							if ( *ttt != -SNUMBER ) goto nospec;
+							ttt += 2;
+						}
+					}
+/*
+					Function has only numerical arguments
+					Pick up the first argument.
+*/
+					ttt = t + FUNHEAD;
+					if ( *ttt > 0 ) {
+loadnew1:
+						for ( iii = 0; iii < ttt[ARGHEAD]; iii++ )
+							AM.n_llnum[iii] = ttt[ARGHEAD+iii];
+						ttt += *ttt;
+					}
+					else {
+loadnew2:
+						if ( ttt[1] == 0 ) {
+							AM.n_llnum[0] = AM.n_llnum[1] = AM.n_llnum[2] = AM.n_llnum[3] = 0;
+						}
+						else {
+							AM.n_llnum[0] = 4;
+							if ( ttt[1] > 0 ) { AM.n_llnum[1] = ttt[1]; AM.n_llnum[3] = 3; }
+							else { AM.n_llnum[1] = -ttt[1]; AM.n_llnum[3] = -3; }
+							AM.n_llnum[2] = 1;
+						}
+						ttt += 2;
+					}
+/*
+					Now loop over the other arguments
+*/
+					while ( ttt < tttstop ) {
+						if ( *ttt > 0 ) {
+							if ( AM.n_llnum[0] == 0 ) {
+								if ( ( *t == MINFUNCTION && ttt[*ttt-1] < 0 )
+								|| ( *t == MAXFUNCTION && ttt[*ttt-1] > 0 ) )
+									goto loadnew1;
+							}
+							else {
+								ttt += ARGHEAD;
+								iii = CompCoef(AM.n_llnum,ttt);
+								if ( ( iii > 0 && *t == MINFUNCTION )
+								|| ( iii < 0 && *t == MAXFUNCTION ) ) {
+									for ( iii = 0; iii < ttt[0]; iii++ )
+										AM.n_llnum[iii] = ttt[iii];
+								}
+							}
+							ttt += *ttt;
+						}
+						else {
+							if ( AM.n_llnum[0] == 0 ) {
+								if ( ( *t == MINFUNCTION && ttt[1] < 0 )
+								|| ( *t == MAXFUNCTION && ttt[1] > 0 ) )
+									goto loadnew2;
+							}
+							else if ( ttt[1] == 0 ) {
+								if ( ( *t == MINFUNCTION && AM.n_llnum[*AM.n_llnum-1] > 0 )
+								|| ( *t == MAXFUNCTION && AM.n_llnum[*AM.n_llnum-1] < 0 ) ) {
+									AM.n_llnum[0] = 0;
+								}
+							}
+							else {
+								tterm[0] = 4; tterm[2] = 1;
+								if ( ttt[1] < 0 ) { tterm[1] = -ttt[1]; tterm[3] = -3; }
+								else { tterm[1] = ttt[1]; tterm[3] = 3; }
+								iii = CompCoef(AM.n_llnum,tterm);
+								if ( ( iii > 0 && *t == MINFUNCTION )
+								|| ( iii < 0 && *t == MAXFUNCTION ) ) {
+									for ( iii = 0; iii < 4; iii++ )
+										AM.n_llnum[iii] = tterm[iii];
+								}
+							}
+							ttt += 2;
+						}
+					}
+					if ( AM.n_llnum[0] == 0 ) goto NormZero;
+					ncoef = REDLENG(ncoef);
+					nnum = REDLENG(AM.n_llnum[*AM.n_llnum-1]);	
+					if ( MulRat((UWORD *)AM.n_coef,ncoef,(UWORD *)lnum,nnum,
+					(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				break;
+			case INVERSEFACTORIAL:
+				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] >= 0 ) {
+					if ( Factorial(t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
+						goto FromNorm;
+					ncoef = REDLENG(ncoef);	
+					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else {
+nospec:				pcom[ncom++] = t;
+				}
+				break;
+			case MAXPOWEROF:
+				if ( ( t[FUNHEAD] == -SYMBOL )
+					 && ( t[FUNHEAD+1] > 0 ) && ( t[1] == FUNHEAD+2 ) ) {
+					*((UWORD *)lnum) = symbols[t[FUNHEAD+1]].maxpower;
+					nnum = 1;
+					goto MulIn;
+				}
+				else { pcom[ncom++] = t; }
+				break;
+			case MINPOWEROF:
+				if ( ( t[FUNHEAD] == -SYMBOL )
+					 && ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+2 ) ) {
+					*((UWORD *)lnum) = symbols[t[FUNHEAD+1]].minpower;
+					nnum = 1;
+					goto MulIn;
+				}
+				else { pcom[ncom++] = t; }
+				break;
+			case LNUMBER :
+				ncoef = REDLENG(ncoef);
+				if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;
+				ncoef = INCLENG(ncoef);
+				break;
+			case SNUMBER :
+				if ( t[2] < 0 ) {
+					t[2] = -t[2];
+					if ( t[3] & 1 ) ncoef = -ncoef;
+				}
+				else if ( t[2] == 0 ) {
+					if ( t[3] < 0 ) goto NormInf;
+					goto NormZero;
+				}
+				lnum[0] = t[2];
+				nnum = 1;
+				if ( t[3] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
+				ncoef = REDLENG(ncoef);
+				if ( t[3] < 0 ) {
+					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						goto FromNorm;
+				}
+				else if ( t[3] > 0 ) {
+					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						goto FromNorm;
+				}
+				ncoef = INCLENG(ncoef);
+				break;
+			case GAMMA :
+			case GAMMAI :
+			case GAMMAFIVE :
+			case GAMMASIX :
+			case GAMMASEVEN :
+				pgam[ngam++] = pnco[nnco++] = t;
+				t += FUNHEAD+1;
+				goto ScanCont;
+			case LEVICIVITA :
+				peps[neps++] = t;
+				if ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG ) {
+					t[2] &= ~DIRTYFLAG;
+					t[2] |= DIRTYSYMFLAG;
+				}
+				t += FUNHEAD;
+ScanCont:		while ( t < r ) {
+					if ( *t >= AM.OffsetIndex &&
+						( *t >= AM.DumInd || ( *t < AM.WilInd &&
+						indices[*t-AM.OffsetIndex].dimension ) ) )
+						pcon[ncon++] = t;
+					t++;
+				}
+				break;
+			case EXPONENT :
+				{
+					WORD *rr;
+					k = 1;
+					rr = t + FUNHEAD;
+					if ( *rr == ARGHEAD || ( *rr == -SNUMBER && rr[1] == 0 ) )
+						k = 0;
+					if ( *rr == -SNUMBER && rr[1] == 1 ) break;
+					if ( *rr <= -FUNCTION ) k = *rr;
+					NEXTARG(rr)
+					if ( *rr == ARGHEAD || ( *rr == -SNUMBER && rr[1] == 0 ) ) {
+						if ( k == 0 ) goto NormZZ;
+						break;
+					}
+					if ( *rr == -SNUMBER && rr[1] > 0 && k < 0 ) {
+						k = -k;
+						if ( functions[k-FUNCTION].commute ) {
+							for ( i = 0; i < rr[1]; i++ ) pnco[nnco++] = rr-1;
+						}
+						else {
+							for ( i = 0; i < rr[1]; i++ ) pcom[ncom++] = rr-1;
+						}
+						break;
+					}
+					if ( k == 0 ) goto NormZero;
+/*
+					if ( ( t[FUNHEAD] > 0 && t[FUNHEAD+1] != 0 )
+					|| ( *rr > 0 && rr[1] != 0 ) ) {}
+					else 
+*/
+					t[2] &= ~DIRTYSYMFLAG;
+
+					pexp[nexp++] = t;
+					pnco[nnco++] = t;
+				}
+				break;
+			case DENOMINATOR :
+				t[2] &= ~DIRTYSYMFLAG;
+				pden[nden++] = t;
+				pnco[nnco++] = t;
+				break;
+			case INDEX :
+				t += 2;
+				do {
+					if ( *t == 0 ) goto NormZero;
+					if ( *t == NOINDEX ) t++;
+					else pind[nind++] = *t++;
+				} while ( t < r );
+				break;
+			case SUBEXPRESSION :
+				if ( t[3] == 0 ) break;
+			case EXPRESSION :
+				goto RegEnd;
+			case ROOTFUNCTION :
+/*
+				Tries to take the n-th root inside the rationals
+				If this is not possible, it clears all flags and
+				hence tries no more.
+				Notation:
+				root_(power(=integer),(rational)number)
+*/
+				{ WORD nc;
+				if ( t[2] == 0 ) goto defaultcase;
+				if ( t[FUNHEAD] != -SNUMBER || t[FUNHEAD+1] < 0 ) goto defaultcase;
+				if ( t[FUNHEAD+2] == -SNUMBER ) {
+					if ( t[FUNHEAD+1] == 0 && t[FUNHEAD+3] == 0 ) goto NormZZ;
+					if ( t[FUNHEAD+1] == 0 ) break;
+					if ( t[FUNHEAD+3] < 0 ) {
+						AR.WorkPointer[0] = -t[FUNHEAD+3];
+						nc = -1;
+					}
+					else {
+						AR.WorkPointer[0] = t[FUNHEAD+3];
+						nc = 1;
+					}
+					AR.WorkPointer[1] = 1;
+				}
+				else if ( t[FUNHEAD+2] == t[1]-FUNHEAD-2
+				&& t[FUNHEAD+2] == t[FUNHEAD+2+ARGHEAD]+ARGHEAD
+				&& ABS(t[t[1]-1]) == t[FUNHEAD+2+ARGHEAD] - 1 ) {
+					WORD *r1, *r2;
+					if ( t[FUNHEAD+1] == 0 ) break;
+					i = t[t[1]-1]; r1 = t + FUNHEAD+ARGHEAD+3;
+					nc = REDLENG(i);
+					i = ABS(i) - 1;
+					r2 = AR.WorkPointer;
+					while ( --i >= 0 ) *r2++ = *r1++;
+				}
+				else goto defaultcase;
+				if ( TakeRatRoot((UWORD *)AR.WorkPointer,&nc,t[FUNHEAD+1]) ) {
+					t[2] = 0;
+					goto defaultcase;
+				}
+				ncoef = REDLENG(ncoef);
+				if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)AR.WorkPointer,nc) )
+						goto FromNorm;
+				if ( nc < 0 ) nc = -nc;
+				if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)(AR.WorkPointer+nc),nc) )
+						goto FromNorm;
+				ncoef = INCLENG(ncoef);
+				}
+				break;
+			case INTFUNCTION :
+/*
+				Can be resolved if the first argument is a number
+				and the second argument either doesn't exist or has
+				the value +1, 0, -1
+				+1 : rounding up
+				0  : rounding towards zero
+				-1 : rounding down (same as no argument)
+*/
+				if ( t[1] <= FUNHEAD ) break;
+				{
+					WORD *rr, den, num;
+					to = t + FUNHEAD;
+					if ( *to > 0 ) {
+						if ( *to == ARGHEAD ) goto NormZero;
+						rr = to + *to;
+						i = rr[-1];
+						j = ABS(i);
+						if ( to[ARGHEAD] != j+1 ) goto NoInteg;
+						if ( rr >= r ) k = -1;
+						else if ( *rr == ARGHEAD ) { k = 0; rr += ARGHEAD; }
+						else if ( *rr == -SNUMBER ) { k = rr[1]; rr += 2; }
+						else goto NoInteg;
+						if ( rr != r ) goto NoInteg;
+						if ( k > 1 || k < -1 ) goto NoInteg;
+						to += ARGHEAD+1;
+						j = (j-1) >> 1;
+						i = ( i < 0 ) ? -j: j;
+						UnPack((UWORD *)to,i,&den,&num);
+						if ( NoScrat2 == 0 ) {
+							NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
+						}
+						if ( DivLong((UWORD *)to,num,(UWORD *)(to+j),den
+						,(UWORD *)AR.WorkPointer,&num,NoScrat2,&den) ) goto FromNorm;
+						if ( k < 0 && den < 0 ) {
+							*NoScrat2 = 1;
+							den = -1;
+							if ( AddLong((UWORD *)AR.WorkPointer,num
+							,NoScrat2,den,(UWORD *)AR.WorkPointer,&num) )
+								goto FromNorm;
+						}
+						else if ( k > 0 && den > 0 ) {
+							*NoScrat2 = 1;
+							den = 1;
+							if ( AddLong((UWORD *)AR.WorkPointer,num,
+							NoScrat2,den,(UWORD *)AR.WorkPointer,&num) )
+								goto FromNorm;
+						}
+					}
+					else if ( *to == -SNUMBER ) {	/* No rounding needed */
+						if ( to[1] < 0 ) { *AR.WorkPointer = -to[1]; num = -1; }
+						else if ( to[1] == 0 ) goto NormZero;
+						else { *AR.WorkPointer = to[1]; num = 1; }
+					}
+					else goto NoInteg;
+					if ( num == 0 ) goto NormZero;
+					ncoef = REDLENG(ncoef);
+					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)AR.WorkPointer,num) )
+						goto FromNorm;
+					ncoef = INCLENG(ncoef);
+					break;
+				}
+NoInteg:;
+/*
+				Fall through if it cannot be resolved
+*/
+			default :
+defaultcase:;
+				if ( *t < FUNCTION ) {
+					MesPrint("Illegal code in Norm");
+#ifdef DEBUGON
+					{
+						UBYTE OutBuf[140];
+						AO.OutFill = AO.OutputLine = OutBuf;
+						t = term;
+						AO.OutSkip = 3;
+						FiniLine();
+						i = *t;
+						while ( --i >= 0 ) {
+							TalToLine((UWORD)(*t++));
+							TokenToLine((UBYTE *)"  ");
+						}
+						AO.OutSkip = 0;
+						FiniLine();
+					}
+#endif
+					goto NormMin;
+				}
+				if ( *t == REPLACEMENT && ReplaceType == -1 ) {
+					ReplaceType = 0;
+					from = t;
+					if ( RSsize < 2*t[1]+SUBEXPSIZE ) {
+						if ( ReplaceScrat ) M_free(ReplaceScrat,"ReplaceScrat");
+						RSsize = 2*t[1]+SUBEXPSIZE+40;
+						ReplaceScrat = (WORD *)Malloc1((RSsize+1)*sizeof(WORD),"ReplaceScrat");
+					}
+					t += FUNHEAD;
+					ReplaceSub = ReplaceScrat;
+					ReplaceSub += SUBEXPSIZE;
+					while ( t < r ) {
+						if ( *t > 0 ) goto NoRep;
+						if ( *t <= -FUNCTION ) {
+							*ReplaceSub++ = FUNTOFUN;
+							*ReplaceSub++ = 4;
+							*ReplaceSub++ = -*t++;
+							if ( *t > -FUNCTION ) goto NoRep;
+							*ReplaceSub++ = -*t++;
+						}
+						else if ( t+4 > r ) goto NoRep;
+						else {
+						if ( *t == -SYMBOL ) {
+							if ( t[2] == -SYMBOL && t+4 <= r )
+								*ReplaceSub++ = SYMTOSYM;
+							else if ( t[2] == -SNUMBER && t+4 <= r ) {
+								*ReplaceSub++ = SYMTONUM;
+								if ( ReplaceType == 0 ) {
+									oldtoprhs = C->numrhs;
+									oldcpointer = C->Pointer - C->Buffer;
+								}
+								ReplaceType = 1;
+							}
+							else if ( t[2] == ARGHEAD && t+2+ARGHEAD <= r ) {
+								*ReplaceSub++ = SYMTONUM;
+								*ReplaceSub++ = 4;
+								*ReplaceSub++ = t[1];
+								*ReplaceSub++ = 0;
+								t += 2+ARGHEAD;
+								continue;
+							}
+/*
+							Next is the subexpression. We have to test that
+							it isn't vector-like or index-like
+*/
+							else if ( t[2] > 0 ) {
+								WORD *ss, *sstop, *tt, *ttstop, n;
+								ss = t+2;
+								sstop = ss + *ss;
+								ss += ARGHEAD;
+								while ( ss < sstop ) {
+									tt = ss + *ss;
+									ttstop = tt - ABS(tt[-1]);
+									ss++;
+									while ( ss < ttstop ) {
+										if ( *ss == INDEX ) goto NoRep;
+										ss += ss[1];
+									}
+									ss = tt;
+								}
+								subtype = SYMTOSUB;
+								if ( ReplaceType == 0 ) {
+									oldtoprhs = C->numrhs;
+									oldcpointer = C->Pointer - C->Buffer;
+								}
+								ReplaceType = 1;
+								ss = AddRHS(AR.ebufnum,1);
+								tt = t+2;
+								n = *tt - ARGHEAD;
+								tt += ARGHEAD;
+								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AR.ebufnum,ss);
+								while ( --n >= 0 ) *ss++ = *tt++;
+								*ss++ = 0;
+								C->rhs[C->numrhs+1] = ss;
+								C->Pointer = ss;
+								*ReplaceSub++ = subtype;
+								*ReplaceSub++ = 4;
+								*ReplaceSub++ = t[1];
+								*ReplaceSub++ = C->numrhs;
+								t += 2 + t[2];
+								continue;
+							}
+							else goto NoRep;
+						}
+						else if ( *t == -VECTOR && t+4 <= r ) {
+							if ( t[2] == -VECTOR ) *ReplaceSub++ = VECTOVEC;
+							else if ( t[2] == -MINVECTOR )
+								*ReplaceSub++ = VECTOMIN;
+/*
+							Next is a vector-like subexpression
+							Search for vector nature first
+*/
+							else if ( t[2] > 0 ) {
+								WORD *ss, *sstop, *tt, *ttstop, *w, *mm, n, count;
+								WORD *v1, *v2 = 0;
+								ss = t+2;
+								sstop = ss + *ss;
+								ss += ARGHEAD;
+								while ( ss < sstop ) {
+									tt = ss + *ss;
+									ttstop = tt - ABS(tt[-1]);
+									ss++;
+									count = 0;
+									while ( ss < ttstop ) {
+										if ( *ss == INDEX ) {
+											n = ss[1] - 2; ss += 2;
+											while ( --n >= 0 ) {
+												if ( *ss < MINSPEC ) count++;
+												ss++;
+											}
+										}
+										else ss += ss[1];
+									}
+									if ( count != 1 ) goto NoRep;
+									ss = tt;
+								}
+								subtype = VECTOSUB;
+								if ( ReplaceType == 0 ) {
+									oldtoprhs = C->numrhs;
+									oldcpointer = C->Pointer - C->Buffer;
+								}
+								ReplaceType = 1;
+								mm = AddRHS(AR.ebufnum,1);
+								*ReplaceSub++ = subtype;
+								*ReplaceSub++ = 4;
+								*ReplaceSub++ = t[1];
+								*ReplaceSub++ = C->numrhs;
+								w = t+2;
+								n = *w - ARGHEAD;
+								w += ARGHEAD;
+								while ( (mm + n + 10) > C->Top )
+									mm = DoubleCbuffer(AR.ebufnum,mm);
+								while ( --n >= 0 ) *mm++ = *w++;
+								*mm++ = 0;
+								C->rhs[C->numrhs+1] = mm;
+								C->Pointer = mm;
+								mm = AddRHS(AR.ebufnum,1);
+								w = t+2;
+								n = *w - ARGHEAD;
+								w += ARGHEAD;
+								while ( (mm + n + 13) > C->Top )
+									mm = DoubleCbuffer(AR.ebufnum,mm);
+								sstop = w + n;
+								while ( w < sstop ) {
+									tt = w + *w; ttstop = tt - ABS(tt[-1]);
+									ss = mm; mm++; w++;
+									while ( w < ttstop ) {		/* Subterms */
+										if ( *w != INDEX ) {
+											n = w[1];
+											NCOPY(mm,w,n);
+										}
+										else {
+											v1 = mm;
+											*mm++ = *w++;
+											*mm++ = n = *w++;
+											n -= 2;
+											while ( --n >= 0 ) {
+												if ( *w >= MINSPEC ) *mm++ = *w++;
+												else v2 = w++;
+											}
+											n = WORDDIF(mm,v1);
+											if ( n != v1[1] ) {
+												if ( n <= 2 ) mm -= 2;
+												else v1[1] = n;
+												*mm++ = VECTOR;
+												*mm++ = 4;
+												*mm++ = *v2;
+												*mm++ = FUNNYVEC;
+											}
+										}
+									}
+									while ( w < tt ) *mm++ = *w++;
+									*ss = WORDDIF(mm,ss);
+								}
+								*mm++ = 0;
+								C->rhs[C->numrhs+1] = mm;
+								C->Pointer = mm;
+								if ( mm > C->Top ) {
+									MesPrint("Internal error in Normalize with extra compiler buffer");
+									Terminate(-1);
+								}
+								t += 2 + t[2];
+								continue;
+							}
+							else goto NoRep;
+						}
+						else if ( *t == -INDEX ) {
+							if ( ( t[2] == -INDEX || t[2] == -VECTOR )
+							&& t+4 <= r )
+								*ReplaceSub++ = INDTOIND;
+							else if ( t[1] >= AM.OffsetIndex ) {
+								if ( t[2] == -SNUMBER && t+4 <= r
+								&& t[3] >= 0 && t[3] < AM.OffsetIndex )
+									*ReplaceSub++ = INDTOIND;
+								else if ( t[2] == ARGHEAD && t+2+ARGHEAD <= r ) {
+									*ReplaceSub++ = INDTOIND;
+									*ReplaceSub++ = 4;
+									*ReplaceSub++ = t[1];
+									*ReplaceSub++ = 0;
+									t += 2+ARGHEAD;
+									continue;
+								}
+								else goto NoRep;
+							}
+							else goto NoRep;
+						}
+						else goto NoRep;
+						*ReplaceSub++ = 4;
+						*ReplaceSub++ = t[1];
+						*ReplaceSub++ = t[3];
+						t += 4;
+						}
+						
+					}
+					ReplaceScrat[1] = ReplaceSub-ReplaceScrat;
+					break;
+NoRep:
+					if ( ReplaceType > 0 ) {
+						C->numrhs = oldtoprhs;
+						C->Pointer = C->Buffer + oldcpointer;
+					}
+					ReplaceType = -1;
+					t = from;
+				}
+/*
+				if ( *t == AM.termfunnum && t[1] == FUNHEAD+2
+				&& t[FUNHEAD] == -DOLLAREXPRESSION ) termflag++;
+*/
+				if ( *t == DUMMYFUN || *t == DUMMYTEN ) {}
+				else {
+					if ( ( t[2] & DIRTYFLAG ) != 0 ) {
+						t[2] &= ~DIRTYFLAG;
+						t[2] |= DIRTYSYMFLAG;
+					}
+					if ( *t < (FUNCTION + WILDOFFSET) ) {
+						if ( functions[*t-FUNCTION].commute ) { pnco[nnco++] = t; }
+						else { pcom[ncom++] = t; }
+					}
+					else {
+						if ( functions[*t-FUNCTION-WILDOFFSET].commute ) {
+							pnco[nnco++] = t;
+						}
+						else { pcom[ncom++] = t; }
+					}
+				}
+
+				/* Now hunt for contractible indices */
+
+				if ( ( *t < (FUNCTION + WILDOFFSET)
+				 && functions[*t-FUNCTION].spec >= TENSORFUNCTION ) || (
+				 *t >= (FUNCTION + WILDOFFSET)
+				 && functions[*t-FUNCTION-WILDOFFSET].spec >= TENSORFUNCTION ) ) {
+					if ( *t >= GAMMA && *t <= GAMMASEVEN ) t++;
+					t += FUNHEAD;
+					while ( t < r ) {
+						if ( *t >= AM.OffsetIndex && ( *t >= AM.DumInd
+						|| ( *t < AM.WilInd && indices[*t-AM.OffsetIndex].dimension ) ) ) {
+							pcon[ncon++] = t;
+						}
+						else if ( *t == FUNNYWILD ) { t++; }
+						t++;
+					}
+				}
+				else {
+					t += FUNHEAD;
+					while ( t < r ) {
+						if ( *t > 0 ) {
+/*
+							Here we should worry about a recursion
+							A problem is the possibility of a construct
+							like  f(mu+nu)
+*/
+							t += *t;
+						}
+						else if ( *t <= -FUNCTION ) t++;
+						else if ( *t == -INDEX ) {
+							if ( t[1] >= AM.OffsetIndex &&
+								( t[1] >= AM.DumInd || ( t[1] < AM.WilInd
+								&& indices[t[1]-AM.OffsetIndex].dimension ) ) )
+								pcon[ncon++] = t+1;
+							t += 2;
+						}
+						else t += 2;
+					}
+				}
+				break;
+		}
+		t = r;
+	} while ( t < m );
+	if ( sc ) {
+		AR.cTerm = sc;
+		r = t = sr; m = sm;
+		sc = sm = st = sr = 0;
+		goto conscan;
+	}
+/*
+  	#] First scan :
+  	#[ Easy denominators :
+
+	Easy denominators are denominators that can be replaced by
+	negative powers of individual subterms. This may add to all
+	our sublists.
+
+*/
+	if ( nden ) {
+		for ( k = 0, i = 0; i < nden; i++ ) {
+			t = pden[i];
+			if ( ( t[2] & DIRTYFLAG ) == 0 ) continue;
+			r = t + t[1]; m = t + FUNHEAD;
+			if ( m >= r ) {
+				for ( j = i+1; j < nden; j++ ) pden[j-1] = pden[j];
+				nden--;
+				for ( j = 0; j < nnco; j++ ) if ( pnco[j] == t ) break;
+				for ( j++; j < nnco; j++ ) pnco[j-1] = pnco[j];
+				nnco--;
+				i--;
+			}
+			else {
+				NEXTARG(m);
+				if ( m >= r ) continue;
+/*
+				We have more than one argument. Split the function.
+*/
+				if ( k == 0 ) {
+					k = 1; to = termout; from = term;
+				}
+				while ( from < t ) *to++ = *from++;
+				m = t + FUNHEAD;
+				while ( m < r ) {
+					stop = to;
+					*to++ = DENOMINATOR;
+					for ( j = 1; j < FUNHEAD; j++ ) *to++ = 0;
+					if ( *m < -FUNCTION ) *to++ = *m++;
+					else if ( *m < 0 ) { *to++ = *m++; *to++ = *m++; }
+					else {
+						j = *m; while ( --j >= 0 ) *to++ = *m++;
+					}
+					stop[1] = WORDDIF(to,stop);
+				}
+				from = r;
+				if ( i == nden - 1 ) {
+					stop = term + *term;
+					while ( from < stop ) *to++ = *from++;
+					i = *termout = WORDDIF(to,termout);
+					to = term; from = termout;
+					while ( --i >= 0 ) *to++ = *from++;
+					goto Restart;
+				}
+			}
+		}
+		for ( i = 0; i < nden; i++ ) {
+			t = pden[i];
+			if ( ( t[2] & DIRTYFLAG ) == 0 ) continue;
+			t[2] = 0;
+			if ( t[FUNHEAD] == -SYMBOL ) {
+				WORD change;
+				t += FUNHEAD+1;
+				change = ExtraSymbol(*t,-1,nsym,ppsym);
+				nsym += change;
+				ppsym += change << 1;
+				goto DropDen;
+			}
+			else if ( t[FUNHEAD] == -SNUMBER ) {
+				t += FUNHEAD+1;
+				if ( *t == 0 ) goto NormInf;
+				if ( *t < 0 ) { *AR.WorkPointer = -*t; j = -1; }
+				else { *AR.WorkPointer = *t; j = 1; }
+				ncoef = REDLENG(ncoef);
+				if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)AR.WorkPointer,j) )
+					goto FromNorm;
+				ncoef = INCLENG(ncoef);
+				goto DropDen;
+			}
+			else if ( t[FUNHEAD] == ARGHEAD ) goto NormInf;
+			else if ( t[FUNHEAD] > 0 && t[FUNHEAD+ARGHEAD] == 
+			t[FUNHEAD]-ARGHEAD ) {
+				/* Only one term */
+				r = t + t[1] - 1;
+				t += FUNHEAD + ARGHEAD + 1;
+				j = *r;
+				m = r - ABS(*r) + 1;
+				if ( j != 3 || ( ( *m != 1 ) || ( m[1] != 1 ) ) ) {
+					ncoef = REDLENG(ncoef);
+					if ( DivRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,REDLENG(j),(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+					j = ABS(j) - 3;
+					t[-FUNHEAD-ARGHEAD] -= j;
+					t[-ARGHEAD-1] -= j;
+					t[-1] -= j;
+					m[0] = m[1] = 1;
+					m[2] = 3;
+				}
+				while ( t < m ) {
+					WORD *tt;
+					r = t + t[1];
+					if ( *t == SYMBOL || *t == DOTPRODUCT ) {
+						k = t[1];
+						pden[i][1] -= k;
+						pden[i][FUNHEAD] -= k;
+						pden[i][FUNHEAD+ARGHEAD] -= k;
+						m -= k;
+						stop = m + 3;
+						tt = to = t;
+						from = r;
+						if ( *t == SYMBOL ) {
+							t += 2;
+							while ( t < r ) {
+								WORD change;
+								change = ExtraSymbol(*t,-t[1],nsym,ppsym);
+								nsym += change;
+								ppsym += change << 1;
+								t += 2;
+							}
+						}
+						else {
+							t += 2;
+							while ( t < r ) {
+								*ppdot++ = *t++;
+								*ppdot++ = *t++;
+								*ppdot++ = -*t++;
+								ndot++;
+							}
+						}
+						while ( to < stop ) *to++ = *from++;
+						r = tt;
+					}
+					t = r;
+				}
+				if ( pden[i][1] == 4+FUNHEAD+ARGHEAD ) {
+DropDen:
+					for ( j = 0; j < nnco; j++ ) {
+						if ( pden[i] == pnco[j] ) {
+							--nnco;
+							while ( j < nnco ) {
+								pnco[j] = pnco[j+1];
+								j++;
+							}
+							break;
+						}
+					}
+					pden[i--] = pden[--nden];
+				}
+			}
+		}
+	}
+/*
+  	#] Easy denominators :
+  	#[ Index Contractions :
+*/
+	if ( ndel ) {
+		t = pdel;
+		for ( i = 0; i < ndel; i += 2 ) {
+			if ( t[0] == t[1] ) {
+				if ( t[0] == EMPTYINDEX ) {}
+				else if ( *t < AM.OffsetIndex ) {
+					k = AC.FixIndices[*t];
+					if ( k < 0 ) { j = -1; k = -k; }
+					else if ( k > 0 ) j = 1;
+					else goto NormZero;
+					goto WithFix;
+				}
+				else if ( *t >= AM.DumInd ) {
+					k = AC.lDefDim;
+					if ( k ) goto docontract;
+				}
+				else if ( *t >= AM.WilInd ) {
+					k = indices[*t-AM.OffsetIndex-WILDOFFSET].dimension;
+					if ( k ) goto docontract;
+				}
+				else if ( ( k = indices[*t-AM.OffsetIndex].dimension ) != 0 ) {
+docontract:
+					if ( k > 0 ) {
+						j = 1;
+WithFix:				shortnum = k;
+						ncoef = REDLENG(ncoef);
+						if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)(&shortnum),j) )
+							goto FromNorm;
+						ncoef = INCLENG(ncoef);
+					}
+					else {
+						WORD change;
+						change = ExtraSymbol((WORD)(-k),(WORD)1,nsym,ppsym);
+						nsym += change;
+						ppsym += change << 1;
+	   				}
+					t[1] = pdel[ndel-1];
+					t[0] = pdel[ndel-2];
+HaveCon:
+					ndel -= 2;
+					i -= 2;
+				}
+			}
+			else {
+				if ( *t < AM.OffsetIndex && t[1] < AM.OffsetIndex ) goto NormZero;
+				j = *t - AM.OffsetIndex;
+				if ( j >= 0 && ( ( *t >= AM.DumInd && AC.lDefDim )
+				|| ( *t < AM.WilInd && indices[j].dimension ) ) ) {
+					for ( j = i + 2, m = pdel+j; j < ndel; j += 2, m += 2 ) {
+						if ( *t == *m ) {
+							*t = m[1];
+							*m++ = pdel[ndel-2];
+							*m = pdel[ndel-1];
+							goto HaveCon;
+						}
+						else if ( *t == m[1] ) {
+							*t = *m;
+							*m++ = pdel[ndel-2];
+							*m   = pdel[ndel-1];
+							goto HaveCon;
+						}
+					}
+				}
+				j = t[1]-AM.OffsetIndex;
+				if ( j >= 0 && ( ( t[1] >= AM.DumInd && AC.lDefDim )
+				|| ( t[1] < AM.WilInd && indices[j].dimension ) ) ) {
+					for ( j = i + 2, m = pdel+j; j < ndel; j += 2, m += 2 ) {
+						if ( t[1] == *m ) {
+							t[1] = m[1];
+							*m++ = pdel[ndel-2];
+							*m   = pdel[ndel-1];
+							goto HaveCon;
+						}
+						else if ( t[1] == m[1] ) {
+							t[1] = *m;
+							*m++ = pdel[ndel-2];
+							*m   = pdel[ndel-1];
+							goto HaveCon;
+						}
+					}
+				}
+				t += 2;
+			}
+		}
+		if ( ndel > 0 ) {
+			if ( nvec ) {	
+				t = pdel;
+				for ( i = 0; i < ndel; i++ ) {
+					if ( *t >= AM.OffsetIndex && ( ( *t >= AM.DumInd && AC.lDefDim ) ||
+					( *t < AM.WilInd && indices[*t-AM.OffsetIndex].dimension ) ) ) {
+						r = pvec + 1;
+						for ( j = 1; j < nvec; j += 2 ) {
+							if ( *r == *t ) {
+								if ( i & 1 ) {
+									*r = t[-1];
+									*t-- = pdel[--ndel];
+									i -= 2;
+								}
+								else {
+									*r = t[1];
+									t[1] = pdel[--ndel];
+									i--;
+								}
+								*t-- = pdel[--ndel];
+								break;
+							}
+							r += 2;
+						}
+					}
+					t++;
+				}
+			}
+			if ( ndel > 0 && ncon ) {
+				t = pdel;
+				for ( i = 0; i < ndel; i++ ) {
+					if ( *t >= AM.OffsetIndex && ( ( *t >= AM.DumInd && AC.lDefDim ) ||
+					( *t < AM.WilInd && indices[*t-AM.OffsetIndex].dimension ) ) ) {
+						for ( j = 0; j < ncon; j++ ) {
+							if ( *pcon[j] == *t ) {
+								if ( i & 1 ) {
+									*pcon[j] = t[-1];
+									*t-- = pdel[--ndel];
+									i -= 2;
+								}
+								else {
+									*pcon[j] = t[1];
+									t[1] = pdel[--ndel];
+									i--;
+								}
+								*t-- = pdel[--ndel];
+								didcontr++;
+								r = pcon[j];
+								for ( j = 0; j < nnco; j++ ) {
+									m = pnco[j];
+									if ( r > m && r < m+m[1] ) {
+										m[2] |= DIRTYSYMFLAG;
+										break;
+									}
+								}
+								for ( j = 0; j < ncom; j++ ) {
+									m = pcom[j];
+									if ( r > m && r < m+m[1] ) {
+										m[2] |= DIRTYSYMFLAG;
+										break;
+									}
+								}
+								for ( j = 0; j < neps; j++ ) {
+									m = peps[j];
+									if ( r > m && r < m+m[1] ) {
+										m[2] |= DIRTYSYMFLAG;
+										break;
+									}
+								}
+								break;
+							}
+						}
+					}
+					t++;
+				}
+			}
+		}
+	}
+	if ( nvec ) {
+		t = pvec + 1;
+		for ( i = 3; i < nvec; i += 2 ) {
+			k = *t - AM.OffsetIndex;
+			if ( k >= 0 && ( ( *t > AM.DumInd && AC.lDefDim )
+			|| ( *t < AM.WilInd && indices[k].dimension ) ) ) {
+				r = t + 2;
+				for ( j = i; j < nvec; j += 2 ) {
+					if ( *r == *t ) {	/* Another dotproduct */
+						*ppdot++ = t[-1];
+						*ppdot++ = r[-1];
+						*ppdot++ = 1;
+						ndot++;
+						*r-- = pvec[--nvec];
+						*r   = pvec[--nvec];
+						*t-- = pvec[--nvec];
+						*t-- = pvec[--nvec];
+						i -= 2;
+						break;
+					}
+					r += 2;
+				}
+			}
+			t += 2;
+		}
+		if ( nvec > 0 && ncon ) {
+			t = pvec + 1;
+			for ( i = 1; i < nvec; i += 2 ) {
+				k = *t - AM.OffsetIndex;
+				if ( k >= 0 && ( ( *t >= AM.DumInd && AC.lDefDim )
+				|| ( *t < AM.WilInd && indices[k].dimension ) ) ) {
+					for ( j = 0; j < ncon; j++ ) {
+						if ( *pcon[j] == *t ) {
+							*pcon[j] = t[-1];
+							*t-- = pvec[--nvec];
+							*t-- = pvec[--nvec];
+							r = pcon[j];
+							pcon[j] = pcon[--ncon];
+							i -= 2;
+							for ( j = 0; j < nnco; j++ ) {
+								m = pnco[j];
+								if ( r > m && r < m+m[1] ) {
+									m[2] |= DIRTYSYMFLAG;
+									break;
+								}
+							}
+							for ( j = 0; j < ncom; j++ ) {
+								m = pcom[j];
+								if ( r > m && r < m+m[1] ) {
+									m[2] |= DIRTYSYMFLAG;
+									break;
+								}
+							}
+							for ( j = 0; j < neps; j++ ) {
+								m = peps[j];
+								if ( r > m && r < m+m[1] ) {
+									m[2] |= DIRTYSYMFLAG;
+									break;
+								}
+							}
+							break;
+						}
+					}
+				}
+				t += 2;
+			}
+		}
+	}
+/*
+  	#] Index Contractions :
+  	#[ NonCommuting Functions :
+*/
+	m = fillsetexp;
+	if ( nnco ) {
+		for ( i = 0; i < nnco; i++ ) {
+			t = pnco[i];
+			if ( ( *t >= (FUNCTION+WILDOFFSET)
+			&& functions[*t-FUNCTION-WILDOFFSET].spec == 0 )
+			|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
+			&& functions[*t-FUNCTION].spec == 0 ) ) {
+				DoRevert(t,m);
+				if ( didcontr ) {
+					r = t + FUNHEAD;
+					t += t[1];
+					while ( r < t ) {
+						if ( *r == -INDEX && r[1] >= 0 && r[1] < AM.OffsetIndex ) {
+							*r = -SNUMBER;
+							didcontr--;
+							pnco[i][2] |= DIRTYSYMFLAG;
+						}
+						NEXTARG(r)
+					}
+				}
+			}
+		}
+
+		/* First should come the code for function properties. */
+ 
+		/* First we test for symmetric properties and the DIRTYSYMFLAG */
+
+		for ( i = 0; i < nnco; i++ ) {
+			t = pnco[i];
+			if ( *t > 0 && ( t[2] & DIRTYSYMFLAG ) && *t != DOLLAREXPRESSION ) {
+				l = 0; /* to make the compiler happy */
+				if ( ( *t >= (FUNCTION+WILDOFFSET)
+				&& ( l = functions[*t-FUNCTION-WILDOFFSET].symmetric ) > 0 )
+				|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
+				&& ( l = functions[*t-FUNCTION].symmetric ) > 0 ) ) {
+					if ( *t >= (FUNCTION+WILDOFFSET) ) {
+						*t -= WILDOFFSET;
+						j = FullSymmetrize(t,l);
+						*t += WILDOFFSET;
+					}
+					else j = FullSymmetrize(t,l);
+					if ( (l & ~REVERSEORDER) == ANTISYMMETRIC ) {
+						if ( ( j & 2 ) != 0 ) goto NormZero;
+						if ( ( j & 1 ) != 0 ) ncoef = -ncoef;
+					}
+				}
+				else t[2] &= ~DIRTYSYMFLAG;
+			}
+		}
+
+		/* Non commuting functions are then tested for commutation
+		   rules. If needed their order is exchanged. */
+
+		k = nnco - 1;
+		for ( i = 0; i < k; i++ ) {
+			j = i;
+			while ( Commute(pnco[j],pnco[j+1]) ) {
+				t = pnco[j]; pnco[j] = pnco[j+1]; pnco[j+1] = t;
+				l = j-1;
+				while ( l >= 0 && Commute(pnco[l],pnco[l+1]) ) {
+					t = pnco[l]; pnco[l] = pnco[l+1]; pnco[l+1] = t;
+					l--;
+				}
+				if ( ++j >= k ) break;
+			}
+		}
+
+		/* Finally they are written to output. gamma matrices
+		   are bundled if possible */
+
+		for ( i = 0; i < nnco; i++ ) {
+			t = pnco[i];
+			if ( *t >= GAMMA && *t <= GAMMASEVEN ) {
+				WORD gtype;
+				to = m;
+				*m++ = GAMMA;
+				m++;
+				FILLFUN(m)
+				*m++ = stype = t[FUNHEAD];		/* type of string */
+				j = 0;
+				nnum = 0;
+				do {
+					r = t + t[1];
+					if ( *t == GAMMAFIVE ) {
+						gtype = GAMMA5; t += FUNHEAD; goto onegammamatrix; }
+					else if ( *t == GAMMASIX ) {
+						gtype = GAMMA6; t += FUNHEAD; goto onegammamatrix; }
+					else if ( *t == GAMMASEVEN ) {
+						gtype = GAMMA7; t += FUNHEAD; goto onegammamatrix; }
+					t += FUNHEAD+1;
+					while ( t < r ) {
+						gtype = *t;
+onegammamatrix:
+						if ( gtype == GAMMA5 ) {
+							if ( j == GAMMA1 ) j = GAMMA5;
+							else if ( j == GAMMA5 ) j = GAMMA1;
+							else if ( j == GAMMA7 ) ncoef = -ncoef;
+							if ( nnum & 1 ) ncoef = -ncoef;
+						}
+						else if ( gtype == GAMMA6 || gtype == GAMMA7 ) {
+							if ( nnum & 1 ) {
+								if ( gtype == GAMMA6 ) gtype = GAMMA7;
+								else				   gtype = GAMMA6;
+							}
+							if ( j == GAMMA1 ) j = gtype;
+							else if ( j == GAMMA5 ) {
+								j = gtype;
+								if ( j == GAMMA7 ) ncoef = -ncoef;
+							}
+							else if ( j != gtype ) goto NormZero;
+							else {
+								shortnum = 2;
+								ncoef = REDLENG(ncoef);
+								if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)(&shortnum),1) ) goto FromNorm;
+								ncoef = INCLENG(ncoef);
+							}
+						}
+						else {
+							*m++ = gtype; nnum++;
+						}
+						t++;
+					}
+					
+				} while ( ( ++i < nnco ) && ( *(t = pnco[i]) >= GAMMA
+				&& *t <= GAMMASEVEN ) && ( t[FUNHEAD] == stype ) );
+				i--;
+				if ( j ) {
+					k = WORDDIF(m,to) - FUNHEAD-1;
+					r = m;
+					from = m++;
+					while ( --k >= 0 ) *from-- = *--r;
+					*from = j;
+				}
+				to[1] = WORDDIF(m,to);
+			}
+			else if ( *t < 0 ) {
+				*m++ = -*t; *m++ = FUNHEAD; *m++ = 0;
+				FILLFUN3(m)
+			}
+			else {
+				k = t[1];
+				NCOPY(m,t,k);
+			}
+		}
+
+	}
+/*
+  	#] NonCommuting Functions :
+  	#[ Commuting Functions :
+*/
+	if ( ncom ) {
+		for ( i = 0; i < ncom; i++ ) {
+			t = pcom[i];
+			if ( ( *t >= (FUNCTION+WILDOFFSET)
+			&& functions[*t-FUNCTION-WILDOFFSET].spec == 0 )
+			|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
+			&& functions[*t-FUNCTION].spec == 0 ) ) {
+				DoRevert(t,m);
+				if ( didcontr ) {
+					r = t + FUNHEAD;
+					t += t[1];
+					while ( r < t ) {
+						if ( *r == -INDEX && r[1] >= 0 && r[1] < AM.OffsetIndex ) {
+							*r = -SNUMBER;
+							didcontr--;
+							pcom[i][2] |= DIRTYSYMFLAG;
+						}
+						NEXTARG(r)
+					}
+				}
+			}
+		}
+
+		/* Now we test for symmetric properties and the DIRTYSYMFLAG */
+
+		for ( i = 0; i < ncom; i++ ) {
+			t = pcom[i];
+			if ( *t > 0 && ( t[2] & DIRTYSYMFLAG ) ) {
+				l = 0; /* to make the compiler happy */
+				if ( ( *t >= (FUNCTION+WILDOFFSET)
+				&& ( l = functions[*t-FUNCTION-WILDOFFSET].symmetric ) > 0 )
+				|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
+				&& ( l = functions[*t-FUNCTION].symmetric ) > 0 ) ) {
+					if ( *t >= (FUNCTION+WILDOFFSET) ) {
+						*t -= WILDOFFSET;
+						j = FullSymmetrize(t,l);
+						*t += WILDOFFSET;
+					}
+					else j = FullSymmetrize(t,l);
+					if ( (l & ~REVERSEORDER) == ANTISYMMETRIC ) {
+						if ( ( j & 2 ) != 0 ) goto NormZero;
+						if ( ( j & 1 ) != 0 ) ncoef = -ncoef;
+					}
+				}
+				else t[2] &= ~DIRTYSYMFLAG;
+			}
+		}
+/*
+		Sort the functions
+		From a purists point of view this can be improved.
+		There arel slow and fast arguments and no conversions are
+		taken into account here.
+*/
+		for ( i = 1; i < ncom; i++ ) {
+			for ( j = i; j > 0; j-- ) {
+				WORD jj,kk;
+				jj = j-1;
+				t = pcom[jj];
+				r = pcom[j];
+				if ( *t < 0 ) {
+					if ( *r < 0 ) { if ( *t >= *r ) goto NextI; }
+					else { if ( -*t <= *r ) goto NextI; }
+					goto jexch;
+				}
+				else if ( *r < 0 ) {
+					if ( *t < -*r ) goto NextI;
+					goto jexch;
+				}
+				else if ( *t != *r ) {
+					if ( *t < *r ) goto NextI;
+jexch:				t = pcom[j]; pcom[j] = pcom[jj]; pcom[jj] = t;
+					continue;
+				}
+				if ( AC.properorderflag ) {
+					if ( ( *t >= (FUNCTION+WILDOFFSET)
+					&& functions[*t-FUNCTION-WILDOFFSET].spec >= TENSORFUNCTION )
+					|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
+					&& functions[*t-FUNCTION].spec >= TENSORFUNCTION ) ) {}
+					else {
+						WORD *s1, *s2, *ss1, *ss2;
+						s1 = t+FUNHEAD; s2 = r+FUNHEAD;
+						ss1 = t + t[1]; ss2 = r + r[1];
+						while ( s1 < ss1 && s2 < ss2 ) {
+							k = CompArg(s1,s2);
+							if ( k > 0 ) goto jexch;
+							if ( k < 0 ) goto NextI;
+							NEXTARG(s1)
+							NEXTARG(s2)
+						}
+						if ( s1 < ss1 ) goto jexch;
+						goto NextI;
+					}
+					k = t[1] - FUNHEAD;
+					kk = r[1] - FUNHEAD;
+					t += FUNHEAD;
+					r += FUNHEAD;
+					while ( k > 0 && kk > 0 ) {
+						if ( *t < *r ) goto NextI;
+						else if ( *t++ > *r++ ) goto jexch;
+						k--; kk--;
+					}
+					if ( k > 0 ) goto jexch;
+					goto NextI;
+				}
+				else
+				{
+					k = t[1] - FUNHEAD;
+					kk = r[1] - FUNHEAD;
+					t += FUNHEAD;
+					r += FUNHEAD;
+					while ( k > 0 && kk > 0 ) {
+						if ( *t < *r ) goto NextI;
+						else if ( *t++ > *r++ ) goto jexch;
+						k--; kk--;
+					}
+					if ( k > 0 ) goto jexch;
+					goto NextI;
+				}
+			}
+NextI:;
+		}
+		for ( i = 0; i < ncom; i++ ) {
+			t = pcom[i];
+			if ( *t == THETA || *t == THETA2 ) {
+				if ( ( k = DoTheta(t) ) == 0 ) goto NormZero;
+				else if ( k < 0 ) {
+					k = t[1];
+					NCOPY(m,t,k);
+				}
+			}
+			else if ( *t == DELTA2 || *t == DELTAP ) {
+				if ( ( k = DoDelta(t) ) == 0 ) goto NormZero;
+				else if ( k < 0 ) {
+					k = t[1];
+					NCOPY(m,t,k);
+				}
+			}
+			else if ( *t == AC.PolyFun ) {
+				if ( t[FUNHEAD+1] == 0 && AC.Eside != LHSIDE && 
+				t[1] == FUNHEAD + 2 && t[FUNHEAD] == -SNUMBER ) goto NormZero;
+				if ( i > 0 && pcom[i-1][0] == AC.PolyFun ) AR.PolyNorm = 1;
+				k = t[1];
+				NCOPY(m,t,k);
+			}
+			else if ( *t > 0 ) {
+				k = t[1];
+				NCOPY(m,t,k);
+			}
+			else {
+				*m++ = -*t; *m++ = FUNHEAD; *m++ = 0;
+				FILLFUN3(m)
+			}
+		}
+	}
+/*
+  	#] Commuting Functions :
+  	#[ LeviCivita tensors :
+*/
+	if ( neps ) {
+		to = m;
+		for ( i = 0; i < neps; i++ ) {	/* Put the indices in order */
+			t = peps[i];
+			if ( ( t[2] & DIRTYSYMFLAG ) != DIRTYSYMFLAG ) continue;
+			t[2] &= ~DIRTYSYMFLAG;
+			if ( AC.Eside == LHSIDE || AC.Eside == LHSIDEX ) {
+						/* Potential problems with FUNNYWILD */
+				WORD *tt, *u;
+/*
+				First make sure all FUNNIES are at the end.
+				Then sort separately
+*/
+				r = t + FUNHEAD;
+				m = tt = t + t[1];
+				while ( r < m ) {
+					if ( *r != FUNNYWILD ) { r++; continue; }
+					k = r[1]; u = r + 2;
+					while ( u < tt ) {
+						u[-2] = *u;
+						if ( *u != FUNNYWILD ) ncoef = -ncoef;
+						u++;
+					}
+					tt[-2] = FUNNYWILD; tt[-1] = k; m -= 2;
+				}
+				t += FUNHEAD;
+				do {
+					for ( r = t + 1; r < m; r++ ) {
+						if ( *r < *t ) { k = *r; *r = *t; *t = k; ncoef = -ncoef; }
+						else if ( *r == *t ) goto NormZero;
+					}
+					t++;
+				} while ( t < m );
+				do {
+					for ( r = t + 2; r < tt; r += 2 ) {
+						if ( r[1] < t[1] ) {
+							k = r[1]; r[1] = t[1]; t[1] = k; ncoef = -ncoef; }
+						else if ( r[1] == t[1] ) goto NormZero;
+					}
+					t += 2;
+				} while ( t < tt );
+			}
+			else {
+				m = t + t[1];
+				t += FUNHEAD;
+				do {
+					for ( r = t + 1; r < m; r++ ) {
+						if ( *r < *t ) { k = *r; *r = *t; *t = k; ncoef = -ncoef; }
+						else if ( *r == *t ) goto NormZero;
+					}
+					t++;
+				} while ( t < m );
+			}
+		}
+
+		/* Sort the tensors */
+
+		for ( i = 0; i < (neps-1); i++ ) {
+			t = peps[i];
+			for ( j = i+1; j < neps; j++ ) {
+				r = peps[j];
+				if ( t[1] > r[1] ) {
+					peps[i] = m = r; peps[j] = r = t; t = m;
+				}
+				else if ( t[1] == r[1] ) {
+					k = t[1] - FUNHEAD;
+					m = t + FUNHEAD;
+					r += FUNHEAD;
+					do {
+						if ( *r < *m ) {
+							m = peps[j]; peps[j] = t; peps[i] = t = m;
+							break;
+						}
+						else if ( *r++ > *m++ ) break;
+					} while ( --k > 0 );
+				}
+			}
+		}
+		m = to;
+		for ( i = 0; i < neps; i++ ) {
+			t = peps[i];
+			k = t[1];
+			NCOPY(m,t,k);
+		}
+	}
+/*
+  	#] LeviCivita tensors :
+  	#[ Delta :
+*/
+	if ( ndel ) {
+		r = t = pdel;
+		for ( i = 0; i < ndel; i += 2, r += 2 ) {
+			if ( r[1] < r[0] ) { k = *r; *r = r[1]; r[1] = k; }
+		}
+		for ( i = 2; i < ndel; i += 2, t += 2 ) {
+			r = t + 2;
+			for ( j = i; j < ndel; j += 2 ) {
+				if ( *r > *t ) { r += 2; }
+				else if ( *r < *t ) {
+					k = *r; *r++ = *t; *t++ = k;
+					k = *r; *r++ = *t; *t-- = k;
+				}
+				else {
+					if ( *++r < t[1] ) {
+						k = *r; *r = t[1]; t[1] = k;
+					}
+					r++;
+				}
+			}
+		}
+		t = pdel;
+		*m++ = DELTA;
+		*m++ = ndel + 2;
+		i = ndel;
+		NCOPY(m,t,i);
+	}
+/*
+  	#] Delta :
+  	#[ Loose Vectors/Indices :
+*/
+	if ( nind ) {
+		t = pind;
+		for ( i = 0; i < nind-1; i++ ) {
+			r = t + 1;
+			for ( j = i+1; j < nind; j++ ) {
+				if ( *r < *t ) {
+					k = *r; *r = *t; *t = k;
+				}
+				r++;
+			}
+			t++;
+		}
+		t = pind;
+		*m++ = INDEX;
+		*m++ = nind + 2;
+		i = nind;
+		NCOPY(m,t,i);
+	}
+/*
+  	#] Loose Vectors/Indices :
+  	#[ Vectors :
+*/
+	if ( nvec ) {
+		t = pvec;
+		for ( i = 2; i < nvec; i += 2 ) {
+			r = t + 2;
+			for ( j = i; j < nvec; j += 2 ) {
+				if ( *r == *t ) {
+					if ( *++r < t[1] ) {
+						k = *r; *r = t[1]; t[1] = k;
+					}
+					r++;
+				}
+				else if ( *r < *t ) {
+					k = *r; *r++ = *t; *t++ = k;
+					k = *r; *r++ = *t; *t-- = k;
+				}
+				else { r += 2; }
+			}
+			t += 2;
+		}
+		t = pvec;
+		*m++ = VECTOR;
+		*m++ = nvec + 2;
+		i = nvec;
+		NCOPY(m,t,i);
+	}
+/*
+  	#] Vectors :
+  	#[ Dotproducts :
+*/
+	if ( ndot ) {
+		to = m;
+		m = t = pdot;
+		i = ndot;
+		while ( --i >= 0 ) {
+			if ( *t > t[1] ) { j = *t; *t = t[1]; t[1] = j; }
+			t += 3;
+		}
+		t = m;
+		ndot *= 3;
+		m += ndot;
+		while ( t < (m-3) ) {
+			r = t + 3;
+			do {
+				if ( *r == *t ) {
+					if ( *++r == *++t ) {
+						if ( *++r < MAXPOWER && t[1] < MAXPOWER ) {
+							t++;
+							*t += *r;
+							ndot -= 3;
+							*r-- = *--m;
+							*r-- = *--m;
+							*r   = *--m;
+							if ( !*t ) {
+								ndot -= 3;
+								*t-- = *--m;
+								*t-- = *--m;
+								*t   = *--m;
+								t -= 3;
+								break;
+							}
+						}
+						else if ( *r < *++t ) {
+							k = *r; *r++ = *t; *t = k;
+						}
+						else r++;
+						t -= 2;
+					}
+					else if ( *r < *t ) {
+						k = *r; *r++ = *t; *t++ = k;
+						k = *r; *r++ = *t; *t = k;
+						t -= 2;
+					}
+					else { r += 2; t--; }
+				}
+				else if ( *r < *t ) {
+					k = *r; *r++ = *t; *t++ = k;
+					k = *r; *r++ = *t; *t++ = k;
+					k = *r; *r++ = *t; *t   = k;
+					t -= 2;
+				}
+				else { r += 3; }
+			} while ( r < m );
+			t += 3;
+		}
+		m = to;
+		t = pdot;
+		if ( ( i = ndot ) > 0 ) {
+			*m++ = DOTPRODUCT;
+			*m++ = i + 2;
+			NCOPY(m,t,i);
+		}
+	}
+/*
+  	#] Dotproducts :
+  	#[ Symbols :
+*/
+	if ( nsym ) {
+		nsym <<= 1;
+		t = psym;
+		*m++ = SYMBOL;
+		r = m;
+		*m++ = ( i = nsym ) + 2;
+		if ( i ) { do {
+			if ( !*t ) {
+				if ( t[1] < (2*MAXPOWER) ) {		/* powers of i */
+					if ( t[1] & 1 ) { *m++ = 0; *m++ = 1; }
+					else *r -= 2;
+					if ( *++t & 2 ) ncoef = -ncoef;
+					t++;
+				}
+			}
+			else if ( *t < 2*MAXPOWER && *t > -2*MAXPOWER ) {	/* Put powers in range */
+				if ( ( ( t[1] > symbols[*t].maxpower ) ||
+					   ( t[1] < symbols[*t].minpower ) ) &&
+					   ( t[1] < 2*MAXPOWER ) && ( t[1] > -2*MAXPOWER ) ) {
+					if ( i <= 2 || t[2] != *t ) goto NormZero;
+				}
+				if ( AC.ncmod == 1 ) {
+					if ( AC.cmod[0] == 1 ) t[1] = 0;
+					else if ( t[1] >= 0 ) t[1] = 1 + (t[1]-1)%(AC.cmod[0]-1);
+					else {
+						t[1] = -1 - (-t[1]-1)%(AC.cmod[0]-1);
+						if ( t[1] < 0 ) t[1] += (AC.cmod[0]-1);
+					}
+				}
+				if ( ( t[1] < (2*MAXPOWER) && t[1] >= MAXPOWER )
+				|| ( t[1] > -(2*MAXPOWER) && t[1] <= -MAXPOWER ) ) {
+					MesPrint("Exponent out of range: %d",t[1]);
+					goto NormMin;
+				}
+				if ( t[1] ) {
+					*m++ = *t++;
+					*m++ = *t++;
+				}
+				else { *r -= 2; t += 2; }
+			}
+			else {
+				*m++ = *t++; *m++ = *t++;
+			}
+		} while ( (i-=2) > 0 ); }
+		if ( *r <= 2 ) m = r-1;
+	}
+/*
+  	#] Symbols :
+  	#[ Errors and Finish :
+*/
+	stop = termout + AM.MaxTer;
+	i = ABS(ncoef);
+	if ( ( m + i ) > stop ) {
+		MesPrint("Term too complex during normalization");
+		goto NormMin;
+	}
+	if ( ReplaceType >= 0 ) {
+		t = AM.n_coef;
+		i--;
+		NCOPY(m,t,i);
+		*m++ = ncoef;
+		t = termout;
+		*t = WORDDIF(m,t);
+		if ( ReplaceType == 0 ) {
+			AR.WorkPointer = termout+*termout;
+			WildFill(term,termout,ReplaceScrat);
+			if ( termout < term + *term ) termout = term + *term;
+		}
+		else {
+			AR.WorkPointer = r = termout + *termout;
+			WildFill(r,termout,ReplaceScrat);
+			i = *r; m = term;
+			NCOPY(m,r,i);
+			if ( termout < m ) termout = m;
+		}
+		AR.WorkPointer = termout;
+		if ( ReplaceType == 0 ) {
+			regval = 1;
+			goto Restart;
+		}
+/*
+		The next 'reset' cannot be done. We still need the expression
+		in the buffer. Note though that this may cause a runaway pointer
+		if we are not very careful.
+
+		C->numrhs = oldtoprhs;
+		C->Pointer = C->Buffer + oldcpointer;
+*/
+		return(1);
+	}
+	else {
+		t = termout;
+		k = WORDDIF(m,t);
+		*t = k + i;
+		m = term;
+		NCOPY(m,t,k);
+		i--;
+		t = AM.n_coef;
+		NCOPY(m,t,i);
+		*m++ = ncoef;
+	}
+RegEnd:
+	AR.WorkPointer = termout;
+	if ( termout < term + *term && termout >= term ) AR.WorkPointer = term + *term;
+/*
+	if ( termflag ) {	We have to assign the term to $variable(s)
+		TermAssign(term);
+	}
+*/
+	return(regval);
+
+NormInf:
+	MesPrint("Division by zero during normalization");
+	goto NormMin;
+
+NormZZ:
+	MesPrint("0^0 during normalization of term");
+	goto NormMin;
+
+NormZero:
+	*term = 0;
+	AR.WorkPointer = termout;
+	return(regval);
+
+NormMin:
+	return(-1);
+
+FromNorm:
+	return(MesCall("Norm"));
+/*
+  	#] Errors and Finish :
+*/
+}
+
+/*
+ 		#] Normalize :
+ 		#[ ExtraSymbol :
+*/
+
+WORD
+ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
+{
+	WORD *m, i;
+	i = nsym;
+	m = ppsym - 2;
+	while	( i > 0 ) {
+		if ( sym == *m ) {
+			m++;
+			if	( pow > 2*MAXPOWER || pow < -2*MAXPOWER
+			||	*m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+				MesPrint("Illegal wildcard power combination.");
+				Terminate(-1);
+			}
+			*m += pow;
+			if	( *m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+				MesPrint("Power overflow during normalization");
+				return(-1);
+			}
+			if ( !*m ) {
+				m--;
+				while ( i < nsym )
+					{ *m = m[2]; m++; *m = m[2]; m++; i++; }
+				return(-1);
+			}
+			return(0);
+		}
+		else if ( sym < *m ) {
+			m -= 2;
+			i--;
+		}
+		else break;
+	}
+	m = ppsym;
+	while ( i < nsym )
+		{ m--; m[2] = *m; m--; m[2] = *m; i++; }
+	*m++ = sym;
+	*m = pow;
+	return(1);
+}
+
+/*
+ 		#] ExtraSymbol :
+ 		#[ DoTheta :
+*/
+
+WORD
+DoTheta ARG1(WORD *,t)
+{
+	WORD k, *r1, *r2, *tstop, type;
+	WORD ia, *ta, *tb, *stopa, *stopb;
+	if ( AC.BracketNormalize ) return(-1);
+	type = *t;
+	k = t[1];
+	tstop = t + k;
+	t += FUNHEAD;
+	if ( k <= FUNHEAD ) return(1);
+	r1 = t;
+	NEXTARG(r1)
+	if ( r1 == tstop ) {
+/*
+		One argument
+*/
+		if ( *t == ARGHEAD ) {
+			if ( type == THETA ) return(1);
+			else return(0);  /* THETA2 */
+		}
+		if ( *t < 0 ) {
+			if ( *t == -SNUMBER ) {
+				if ( t[1] < 0 ) return(0);
+				else {
+					if ( type == THETA2 && t[1] == 0 ) return(0);
+					else return(1);
+				}
+			}
+			return(-1);
+		}
+		k = t[*t-1];
+		if ( *t == ABS(k)+1+ARGHEAD ) {
+			if ( k > 0 ) return(1);
+			else return(0);
+		}
+		return(-1);
+	}
+/*
+	At least two arguments
+*/
+	r2 = r1;
+	NEXTARG(r2)
+	if ( r2 < tstop ) return(-1);	/* More than 2 arguments */
+/*
+	Note now that zero has to be treated specially
+	We take the criteria from the symmetrize routine
+*/
+	if ( *t == -SNUMBER && *r1 == -SNUMBER ) {
+		if ( t[1] > r1[1] ) return(0);
+		else if ( t[1] < r1[1] ) {
+			return(1);
+		}
+		else if ( type == THETA ) return(1);
+		else return(0);   /* THETA2 */
+	}
+	else if ( t[1] == 0 && *t == -SNUMBER ) {
+		if ( *r1 > 0 ) { }
+		else if ( *t < *r1 ) return(1);
+		else if ( *t > *r1 ) return(0);
+	}
+	else if ( r1[1] == 0 && *r1 == -SNUMBER ) {
+		if ( *t > 0 ) { }
+		else if ( *t < *r1 ) return(1);
+		else if ( *t > *r1 ) return(0);
+	}
+	r2 = AR.WorkPointer;
+	if ( *t < 0 ) {
+		ta = r2;
+		ToGeneral(t,ta,0);
+		r2 += *r2;
+	}
+	else ta = t;
+	if ( *r1 < 0 ) {
+		tb = r2;
+		ToGeneral(r1,tb,0);
+	}
+	else tb = r1;
+	stopa = ta + *ta;
+	stopb = tb + *tb;
+	ta += ARGHEAD; tb += ARGHEAD;
+	while ( ta < stopa ) {
+		if ( tb >= stopb ) return(0);
+		if ( ( ia = Compare(ta,tb,(WORD)1) ) < 0 ) return(0);
+		if ( ia > 0 ) return(1);
+		ta += *ta;
+		tb += *tb;
+	}
+	if ( type == THETA ) return(1);
+	else return(0); /* THETA2 */
+}
+
+/*
+ 		#] DoTheta :
+ 		#[ DoDelta :
+*/
+
+WORD
+DoDelta ARG1(WORD *,t)
+{
+	WORD k, *r1, *r2, *tstop, isnum, isnum2, type = *t;
+	if ( AC.BracketNormalize ) return(-1);
+	k = t[1];
+	if ( k <= FUNHEAD ) goto argzero;
+	if ( k == FUNHEAD+ARGHEAD && t[FUNHEAD] == ARGHEAD ) goto argzero;
+	tstop = t + k;
+	t += FUNHEAD;
+	r1 = t;
+	NEXTARG(r1)
+	if ( *t < 0 ) {
+		k = 1;
+		if ( *t == -SNUMBER ) { isnum = 1; k = t[1]; }
+		else isnum = 0;
+	}
+	else {
+		k = t[*t-1];
+		k = ABS(k);
+		if ( k == *t-ARGHEAD-1 ) isnum = 1;
+		else isnum = 0;
+		k = 1;
+	}
+	if ( r1 >= tstop ) {		/* Single argument */
+		if ( !isnum ) return(-1);
+		if ( k == 0 ) goto argzero;
+		goto argnonzero;
+	}
+	r2 = r1;
+	NEXTARG(r2)
+	if ( r2 < tstop ) return(-1);
+	if ( *r1 < 0 ) {
+		if ( *r1 == -SNUMBER ) { isnum2 = 1; }
+		else isnum2 = 0;
+	}
+	else {
+		k = r1[*r1-1];
+		k = ABS(k);
+		if ( k == *r1-ARGHEAD-1 ) isnum2 = 1;
+		else isnum2 = 0;
+	}
+	if ( isnum != isnum2 ) return(-1);
+	tstop = r1;
+	while ( t < tstop && r1 < r2 ) {
+		if ( *t != *r1 ) {
+			if ( !isnum ) return(-1);
+			goto argnonzero;
+		}
+		t++; r1++;
+	}
+	if ( t != tstop || r1 != r2 ) {
+		if ( !isnum ) return(-1);
+		goto argnonzero;
+	}
+argzero:
+	if ( type == DELTA2 ) return(1);
+	else return(0);
+argnonzero:
+	if ( type == DELTA2 ) return(0);
+	else return(1);
+}
+
+/*
+ 		#] DoDelta :
+ 		#[ DoRevert :
+*/
+
+void DoRevert ARG2(WORD *,fun,WORD *,tmp)
+{
+	WORD *t, *r, *m, *to, *tt, *mm, i, j;
+	to = fun + fun[1];
+	r = fun + FUNHEAD;
+	while ( r < to ) {
+		if ( *r <= 0 ) {
+			if ( *r == -REVERSEFUNCTION ) {
+				m = r; mm = m+1;
+				while ( mm < to ) *m++ = *mm++;
+				to--;
+				(fun[1])--;
+				fun[2] |= DIRTYSYMFLAG;
+			}
+			else if ( *r <= -FUNCTION ) r++;
+			else {
+				if ( *r == -INDEX && r[1] < MINSPEC ) *r = -VECTOR;
+				r += 2;
+			}
+		}
+		else {
+			if ( ( *r > ARGHEAD )
+			&& ( r[ARGHEAD+1] == REVERSEFUNCTION )
+			&& ( *r == (r[ARGHEAD]+ARGHEAD) )
+			&& ( r[ARGHEAD] == (r[ARGHEAD+2]+4) )
+			&& ( *(r+*r-3) == 1 )
+			&& ( *(r+*r-2) == 1 )
+			&& ( *(r+*r-1) == 3 ) ) {
+				mm = r;
+				r += ARGHEAD + 1;
+				tt = r + r[1];
+				r += FUNHEAD;
+				m = tmp;
+				t = r;
+				j = 0;
+				while ( t < tt ) {
+					NEXTARG(t)
+					j++;
+				}
+				while ( --j >= 0 ) {
+					i = j;
+					t = r;
+					while ( --i >= 0 ) {
+						NEXTARG(t)
+					}
+					if ( *t > 0 ) {
+						i = *t;
+						NCOPY(m,t,i);
+					}
+					else if ( *t <= -FUNCTION ) *m++ = *t++;
+					else { *m++ = *t++; *m++ = *t++; }
+				}
+				i = WORDDIF(m,tmp);
+				m = tmp;
+				t = mm;
+				r = t + *t;
+				NCOPY(t,m,i);
+				m = r;
+				r = t;
+				i = WORDDIF(to,m);
+				NCOPY(t,m,i);
+				fun[1] = WORDDIF(t,fun);
+				to = t;
+				fun[2] |= DIRTYSYMFLAG;
+			}
+			else r += *r;
+		}
+	}
+}
+
+/*
+ 		#] DoRevert :
+ 	#] Normalize :
+*/
+
+/* temporary commentary for forcing cvs merge */

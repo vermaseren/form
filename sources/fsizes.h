@@ -1,0 +1,86 @@
+/*
+	First the fixed variables
+*/
+#define MAXPRENAMESIZE 128
+/*
+	The following variables are default sizes. They can be changed
+	into values read from the setup file
+*/
+#define MAXPOWER 10000
+#define MAXVARIABLES 6050
+#define WILDOFFSET 6100
+#define MAXINNAMETREE 32768
+#define MAXDUMMIES 1000
+#define MAXENAME 16
+
+#define MAXPARLEVEL 100
+#define WORKBUFFER 1000000
+#define MAXNUMBERSIZE 200
+
+#define MAXREPEAT 100
+#define NORMSIZE 1000
+
+#define INITNODESIZE 10
+#define INITNAMESIZE 100
+
+#define NUMFIXED 128
+#define MAXNEST 100
+#define MAXMATCH 30
+#define MAXIF 20
+#define SIZEFACS 640L
+#define NUMFACS 50
+#define MAXLOOPS 30
+#define MAXLABELS 20
+#define COMMERCIALSIZE 20
+/*
+	The next quantities should still be eliminated from the program
+	This should be together with changes in setfile!
+*/
+#define COMPRESSBUFFER 30000
+#define FORTRANCONTINUATIONLINES 15
+#define MAXLEVELS 2000
+#define MAXLHS 400
+#define MAXTER 2000
+#define MAXWILDC 100
+#define NUMTABLEENTRIES 1000
+#define COMPILERBUFFER 20000
+
+#define SMALLBUFFER 2500000L
+#define SMALLOVERFLOW 3000000L
+#define TERMSSMALL 50000L
+#define LARGEBUFFER 10000000L
+#define MAXPATCHES 128
+#define MAXFPATCHES 128
+#define SORTIOSIZE 100000L
+
+#define SSMALLBUFFER 200000L
+#define SSMALLOVERFLOW 300000L
+#define STERMSSMALL 8000L
+#define SLARGEBUFFER 1000000L
+#define SMAXPATCHES 64
+#define SMAXFPATCHES 32
+#define SSORTIOSIZE 32768L
+
+#define SCRATCHSIZE 3000000L
+
+#define SIZESTORECACHE 4096
+#define NUMBERSTORECACHE 5
+
+#define MAXFLEVELS 30
+
+#define COMPINC 2
+ 
+#define MAXNUMSIZE 10
+
+#define MAXBRACKETBUFFERSIZE 200000
+
+#define ZIPBUFFERSIZE 32768L
+#define SFHSIZE 40
+
+#define SLAVEPATCHSIZE 10
+#define SHMWINSIZE     65536L
+
+#define TABLEEXTENSION 6
+
+#define MAXTABLECOMBUF 1000000L
+#define MAXCOMBUFRHS 32000L
