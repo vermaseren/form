@@ -73,6 +73,9 @@ Processor()
 		) break;
 	}
 	last = i;
+#ifdef FGPARALLEL
+	ModuleInvariants();
+#endif
 	for ( i = 0; i < NumExpressions; i++ ) {
 		AR.CollectOverFlag = 0;
 		e = Expressions+i;
@@ -174,6 +177,29 @@ commonread:
 				AR.DeferFlag = AC.ComDefer;
 				NewSort();
 				ninterms = 0;
+#ifdef FGPARALLEL
+				{
+					WORD *oldwork = A.WorkSpace;
+					A.WorkSpace = A.WorkPointer;
+
+					ExprInvariants(&(e->onfile));
+
+					GeneraLoop();
+					SortLoop();
+					IniSortY();
+					A.SetFlag = e->setflag;
+					if ( A.NumNodes == 1 ) {
+						if ( EndSort(A.sBuffer) ) goto ProcErr;
+					}
+					else SortYloop();
+					if ( A.TermsLeft ) e->vflags &= ~ISZERO;
+					else e->vflags |= ISZERO;
+					if ( A.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+					A.WorkPointer = A.WorkSpace;
+					A.WorkSpace = oldwork;
+				}
+/*				ShowBuffer();  */
+#else
 				while ( GetTerm(term) ) {
 				  ninterms++; dd = deferskipped;
 				  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
@@ -207,6 +233,7 @@ commonread:
 				
 				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
 				if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
+#endif
 				AR.GetFile = 0;
 				break;
 			case SKIPLEXPRESSION:
@@ -1665,8 +1692,8 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 				r++;
 				while ( r < s2 ) *m++ = *r++;
 				*m++ = 1; *m++ = 1; *m++ = 3;
-				if ( Normalize(AR.WorkPointer) ) goto PasErr;
 				m = AR.WorkPointer;
+				if ( Normalize(AR.WorkPointer) ) goto PasErr;
 				r = freeze;
 				i = *m;
 				while ( --i >= 0 && *m++ == *r++ ) {}
@@ -1708,7 +1735,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 
 		Puts the term at position in the accumulator accum at position
@@ -1935,15 +1962,23 @@ WORD
 Generator ARG2(WORD *,term,WORD,level)
 {
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0;
-	WORD *a, power, power1, DumNow, oldtoprhs, retnorm, extractbuff;
+	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, retnorm, extractbuff;
 	int *RepSto = AR.RepPoint, oldcbufnum = AR.cbufnum;
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AR.ebufnum;
 	LONG posisub, oldcpointer;
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
 
+#ifdef FGPARALLEL
+	if ( A.NewLeaf > 0 ) { A.NewLeaf = 0; goto Renormalize; }
+#endif
 ReStart:
 	if ( ( replac = TestSub(term,level) ) == 0 ) {
+#ifdef FGPARALLEL
+		if ( A.sLevel <= 0 && A.MayFoliate
+		&& A.NewLeaf == 0 && Foliate(term,level) ) goto BeGone;
+		A.NewLeaf = 0;
+#endif
 		if ( applyflag ) { TableReset(); applyflag = 0; }
 Renormalize:
 		if ( ( retnorm = Normalize(term) ) != 0 ) {
@@ -2306,6 +2341,9 @@ CommonEnd:
 			*AR.RepPoint = 1;
 			AR.expchanged = 1;
 		}
+#ifdef FGPARALLEL
+		A.NewLeaf = 0;
+#endif
 		if ( replac < 0 ) {		/* Terms come from automatic generation */
 AutoGen:	i = *AR.TMout;
 			t = termout = AR.WorkPointer;
@@ -2318,7 +2356,10 @@ AutoGen:	i = *AR.TMout;
 		}
 	}
 	if ( applyflag ) { TableReset(); applyflag = 0; }
-	DumNow = AR.CurDum;
+/*	DumNow = AR.CurDum; */
+#ifdef PARALLEL
+	A.NewLeaf = 0;
+#endif
 
 	if ( AR.TeInFun ) {	/* Match in function argument */
 		if ( AR.TeInFun < 0 && !AR.TeSuOut ) {
@@ -2335,6 +2376,9 @@ AutoGen:	i = *AR.TMout;
 			AR.WorkPointer = termout + *termout;
 			*AR.RepPoint = 1;
 			AR.expchanged = 1;
+#ifdef PARALLEL
+			A.NewLeaf = -1;
+#endif
 			if ( *termout && Generator(termout,level) < 0 ) goto GenCall;
 			AR.WorkPointer = termout;
 		}
@@ -2360,6 +2404,9 @@ AutoGen:	i = *AR.TMout;
 				*AR.RepPoint = 1;
 				AR.expchanged = 1;
 				posisub += cbuf[extractbuff].Buffer[posisub];
+#ifdef PARALLEL
+				if ( *posisub == 0 ) A.NewLeaf = -1;
+#endif
 				if ( Generator(termout,level) < 0 ) goto GenCall;
 			}
 			AR.WorkPointer = termout;
@@ -2541,8 +2588,8 @@ skippedfirst:
 			AR.WorkPointer = aa;
 		}
   	}
-	AR.CurDum = DumNow;
 Return0:
+	AR.CurDum = DumNow;
 	AR.RepPoint = RepSto;
 	AR.cbufnum = oldcbufnum;
 	CC->numrhs = oldtoprhs;
@@ -2576,7 +2623,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 
 		Routine gets one power of an expression.

@@ -13,7 +13,7 @@
 #include "parallel.h"   
 #endif /* PARALLEL [20oct1997 ar] */
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ SortVariables :
 */
 
@@ -35,7 +35,7 @@ static int MaxFunSorts = 0;
 static UWORD *SoScratC = 0;
 
 /*
-  	#] SortVariables :
+  	#] SortVariables : 
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 
@@ -258,7 +258,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats :
+ 		#] WriteStats : 
  		#[ NewSort :				WORD NewSort()
 
 		Starts a new sort.
@@ -316,7 +316,7 @@ NewSort()
 }
 
 /*
- 		#] NewSort :
+ 		#] NewSort : 
  		#[ EndSort :				WORD EndSort(buffer,par)
 
 		Finishes a sort.
@@ -635,7 +635,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take)
 
 	Reads a new patch from position in file handle.
@@ -668,7 +668,7 @@ PutIn ARG4(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take)
 }
 
 /*
- 		#] PutIn :
+ 		#] PutIn : 
  		#[ Sflush :					WORD Sflush(file)
 
 	Puts the contents of a buffer to output
@@ -700,7 +700,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 }
 
 /*
- 		#] Sflush :
+ 		#] Sflush : 
  		#[ PutOut :					WORD PutOut(term,position,file)
 
 	Routine writes one term to file handle at position. It returns
@@ -920,7 +920,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut :
+ 		#] PutOut : 
  		#[ FlushOut :				WORD Flushout(position,file)
 
 	Completes output to an output file and writes the trailing zero.
@@ -1004,7 +1004,7 @@ FlushOut ARG2(POSITION *,position,FILEHANDLE *,fi)
 }
 
 /*
- 		#] FlushOut :
+ 		#] FlushOut : 
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 
 		Adds the coefficients of the terms *ps1 and *ps2.
@@ -1105,7 +1105,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef :
+ 		#] AddCoef : 
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 
 		Routine should be called when S->PolyWise != 0. It points then
@@ -1224,7 +1224,7 @@ AddPoly ARG2(WORD **,ps1,WORD **,ps2)
 }
 
 /*
- 		#] AddPoly :
+ 		#] AddPoly : 
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
 
@@ -1481,7 +1481,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs :
+ 		#] AddArgs : 
  		#[ Compare :				WORD Compare(term1,term2,level)
 
 	Compares two terms. The answer is:
@@ -1565,12 +1565,47 @@ Compare ARG3(WORD *,term1,WORD *,term2,WORD,level)
 					}
 				}
 				while ( s1 < t1 ) {
-					if ( s2 >= t2 ) return(PREV(1));
-					if ( *s1 != *s2 ) return(PREV(*s2-*s1));
+					if ( s2 >= t2 ) {
+/*						return(PREV(1));  */
+						if ( AC.SortType==SORTLOWFIRST ) {
+							return(PREV((s1[1]>0?-1:1)));
+						}
+						else {
+							return(PREV((s1[1]<0?-1:1)));
+						}
+					}
+					if ( *s1 != *s2 ) {
+/*						return(PREV(*s2-*s1)); */
+						if ( AC.SortType==SORTLOWFIRST ) {
+							if ( *s1 < *s2 ) {
+								return(PREV((s1[1]<0?1:-1)));
+							}
+							else {
+								return(PREV((s2[1]<0?-1:1)));
+							}
+						}
+						else {
+							if ( *s1 < *s2 ) {
+								return(PREV((s1[1]<0?-1:1)));
+							}
+							else {
+								return(PREV((s2[1]<0?1:-1)));
+							}
+						}
+					}
 					s1++; s2++;
 					if ( *s1 != *s2 ) return(
 						PREV((AC.SortType==SORTLOWFIRST?*s2-*s1:*s1-*s2)));
 					s1++; s2++;
+				}
+				if ( s2 < t2 ) {
+/*					return(PREV(-1));  */
+					if ( AC.SortType==SORTLOWFIRST ) {
+						return(PREV((s2[1]<0?-1:1)));
+					}
+					else {
+						return(PREV((s2[1]<0?1:-1)));
+					}
 				}
 			}
 			else if ( c1 == DOTPRODUCT ) {
@@ -1596,6 +1631,7 @@ Compare ARG3(WORD *,term1,WORD *,term2,WORD,level)
 						PREV((AC.SortType==SORTLOWFIRST?*s2-*s1:*s1-*s2)));
 					s1++; s2++;
 				}
+				if ( s2 < t2 ) return(PREV(-1));
 			}
 			else {
 				while ( s1 < t1 ) {
@@ -1603,8 +1639,8 @@ Compare ARG3(WORD *,term1,WORD *,term2,WORD,level)
 					if ( *s1 != *s2 ) return(PREV(*s2-*s1));
 					s1++; s2++;
 				}
+				if ( s2 < t2 ) return(PREV(-1));
 			}
-			if ( s2 < t2 ) return(PREV(-1));
 		}
 		else {
 #if FUNHEAD != 2
@@ -1783,7 +1819,7 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		ss = sss;
 	}
 
-			#] debug :
+			#] debug : 
 */
 	*n = 0;
 	if ( AR.SS == AM.S0 && !AR.NoCompress ) {
@@ -1876,13 +1912,13 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		FiniLine();
 	}
 
-			#] debug :
+			#] debug : 
 */
 	return(size);
 }
 
 /*
- 		#] ComPress :
+ 		#] ComPress : 
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 
 		Algorithm by J.A.M.Vermaseren (31-7-1988)
@@ -2052,7 +2088,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 #endif
 
 /*
- 		#] SplitMerge :
+ 		#] SplitMerge : 
  		#[ GarbHand :				VOID GarbHand()
 
 		Garbage collection new style. Options:
@@ -2154,7 +2190,7 @@ GarbHand()
 }
 
 /*
- 		#] GarbHand :
+ 		#] GarbHand : 
  		#[ MergePatches :			WORD MergePatches(par)
 
 	The general merge routine. Can be used for the large buffer
@@ -2296,7 +2332,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	The following code will have to be eliminated because all output
 	should go through PutOut to facilitate set numbers
@@ -2657,7 +2693,7 @@ PatCall:
 }
 
 /*
- 		#] MergePatches :
+ 		#] MergePatches : 
  		#[ StoreTerm :				WORD StoreTerm(term)
 
 	The central routine to accept terms, store them and keep things
@@ -2763,7 +2799,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm :
+ 		#] StoreTerm : 
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 
@@ -2812,7 +2848,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 }
 
 /*
- 		#] StageSort :
+ 		#] StageSort : 
  		#[ SortWild :				WORD SortWild(w,nw)
 
 	Sorts the wildcard entries in the parameter w. Double entries
@@ -2904,7 +2940,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 }
 
 /*
- 		#] SortWild :
+ 		#] SortWild : 
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 
 		Partially or completely frees function sort buffers.
@@ -2955,7 +2991,7 @@ void CleanUpSort ARG1(int,num)
 }
 
 /*
- 		#] CleanUpSort :
+ 		#] CleanUpSort : 
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 
@@ -2968,6 +3004,6 @@ VOID LowerSortLevel ARG0
 }
 
 /*
- 		#] LowerSortLevel :
+ 		#] LowerSortLevel : 
 	#] SortUtilities :
 */

@@ -111,7 +111,7 @@ DoSetups ARG0
  		#[ ProcessOption :
 */
 
-static char *proop1[2] = { "Setup file", "Setups in .frm file" };
+static char *proop1[3] = { "Setup file", "Setups in .frm file", "Setup in environment" };
 
 int
 ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
@@ -145,10 +145,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 					*t++ = *s++;
 				}
 				*t = 0;
-				/*[01dec2003 mt]: A nonsense!:*/
-				/*sp->value = (long)strDup1(s2,(char *)s1);*/
 				sp->value = (long)strDup1(s2,"Process option");
-				/*:[01dec2003 mt]*/
 				sp->flags = USEDFLAG;
 				return(0);
 			case PATHVALUE:
@@ -735,6 +732,31 @@ int TryFileSetups()
 
 /*
  		#] TryFileSetups :
+ 		#[ TryEnvironment :
+*/
+
+int TryEnvironment()
+{
+	char *s, *t, *u, varname[100];
+	int i,imax = sizeof(setupparameters)/sizeof(SETUPPARAMETERS);
+	int error = 0;
+	varname[0] = 'F'; varname[1] = 'O'; varname[2] = 'R'; varname[3] = 'M';
+	varname[4] = '_'; varname[5] = 0;
+	for ( i = 0; i < imax; i++ ) {
+		t = s = (char *)(setupparameters[i].parameter);
+		u = varname+5;
+		while ( *s ) { *u++ = toupper(*s); s++; }
+		*u = 0;
+		s = (char *)(getenv(varname));
+		if ( s ) {
+			error += ProcessOption(t,s,2);
+		}
+	}
+	return(error);
+}
+
+/*
+ 		#] TryEnvironment :
 	#] Setups :
 */
 

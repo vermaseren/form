@@ -49,10 +49,7 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 							AM.qError = 1;   break;
 				case 'D':
 				case 'd': /* Next arg is define preprocessor var. */
-							/*[01dec2003 mt]: A nonsense!:*/
-							/*t = copy = strDup1(*argv,(char *)(*argv));*/
-							t = copy = strDup1(*argv,"PreProVar from cmdline");
-							/*:[01dec2003 mt]*/
+							t = copy = strDup1(*argv,"Dotail");
 							while ( *t && *t != '=' ) t++;
 							if ( *t == 0 ) {
 								if ( PutPreVar(copy,(UBYTE *)"1",0,0) < 0 ) return(-1);
@@ -733,6 +730,7 @@ main ARG2(int,argc,char **,argv)
 	if ( DoTail(argc,(UBYTE **)argv) ) Terminate(-1);
 	if ( DoSetups() ) Terminate(-2);
 	if ( OpenInput() ) Terminate(-3);
+	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
 	if ( MakeSetupAllocs() ) Terminate(-2);
 #ifdef PARALLEL

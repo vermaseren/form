@@ -236,8 +236,8 @@
 #define MULPOS(pp,n) (pp).p1 *= (n)
 
 #endif
-#define DIFPOS(ss,pp1,pp2) (ss).p1 = (pp1).p1-(pp2).p1
-#define DIFBASE(pp1,pp2) (pp1).p1-(pp2).p1
+#define DIFPOS(ss,pp1,pp2) (ss).p1 = ((pp1).p1-(pp2).p1)
+#define DIFBASE(pp1,pp2) ((pp1).p1-(pp2).p1)
 #define ADD2POS(pp1,pp2) (pp1).p1 += (pp2).p1
 #define PUTZERO(pp) (pp).p1 = 0
 #define BASEPOSITION(pp) ((pp).p1)
@@ -1061,6 +1061,7 @@ int LinSumFinish(int variety,char *outname);
 char *SkipString(char *);
 int ModulusGCD1(WORD modu,WORD fun1,WORD fun2,WORD *term,WORD sym);
 int MakeMono(WORD modu,WORD *t,WORD whichbuffer,WORD sym);
+int TryEnvironment();
 
 /*[12dec2003 mt]:*/
 DECLARE(int set_in,(UBYTE, set_of_char))

@@ -611,6 +611,10 @@ IllLeft:MesPrint("&Illegal LHS");
 		mm = s; ww = ow; i = *mm;
 		while ( --i >= 0 ) *ww++ = *mm++; AR.WorkPointer = ww;
 		AR.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
+#ifdef FGPARALLEL
+		A.xsortflag = 0;		/* Block foliation at this point */
+		A.MayFoliate = 0;
+#endif
 		if ( Generator(ow,C->numlhs) ) {
 			AC.Eside = oldEside;
 			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
@@ -1053,7 +1057,7 @@ redef:;
 }
 
 /*
-  	#] CoFill :
+  	#] CoFill : 
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1237,11 +1241,24 @@ int CoFillExpression ARG1(UBYTE *,inp)
 				if ( T->totind >= T->reserved ) {
 					if ( T->reserved == 0 ) newreservation = 20;
 					else newreservation = T->reserved;
+/*
 					while ( T->totind >= newreservation && newreservation <
 								MAXTABLECOMBUF*(T->numind+TABLEEXTENSION) )
 							newreservation = 2*newreservation;
 					if ( newreservation > MAXTABLECOMBUF*T->numind ) newreservation =
 								MAXTABLECOMBUF*(T->numind+TABLEEXTENSION);
+*/
+/*---Copied from Fill---------------------------*/
+					while ( T->totind >= newreservation && newreservation < MAXTABLECOMBUF )
+							newreservation = 2*newreservation;
+					if ( newreservation > MAXTABLECOMBUF ) newreservation = MAXTABLECOMBUF;
+					if ( T->totind >= newreservation ) {
+						MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
+						AR.cbufnum = oldcbuf;
+						AR.WorkPointer = oldwork;
+						Terminate(-1);
+					}
+/*---Copied from Fill---------------------------*/
 					if ( T->totind >= newreservation ) {
 						MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
 						AR.cbufnum = oldcbuf;
@@ -1293,6 +1310,7 @@ nextterm:;
 	BACKINOUT
 	AR.cbufnum = oldcbuf;
 	AC.tablefilling = 0;
+	AR.WorkPointer = oldwork;
 	return(0);
 noway:
 	AR.cbufnum = oldcbuf;
@@ -1302,7 +1320,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax

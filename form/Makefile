@@ -72,7 +72,7 @@ endif
 
 ifeq ($(USERNAME),jos)
 CC = icc
-CFLAGS = -O3 -D_FILE_OFFSET_BITS=64 -march=pentiumiii -Wall
+CFLAGS = -O3 -D_FILE_OFFSET_BITS=64 -march=pentiumiii -w1 -static -tpp6
 CPPFLAGS = -DLINUX
 endif
 

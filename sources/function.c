@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Utilities :
  		#[ MakeDirty :
 
@@ -53,7 +53,7 @@ MakeDirty ARG3(WORD *,term,WORD *,x,WORD,par)
 }
 
 /*
- 		#] MakeDirty :
+ 		#] MakeDirty : 
  		#[ MarkDirty :
 
 		Routine marks all functions dirty with the given flags.
@@ -96,7 +96,7 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 }
 
 /*
- 		#] MarkDirty :
+ 		#] MarkDirty : 
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -270,7 +270,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize :
+ 		#] Symmetrize : 
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -356,7 +356,7 @@ CompGroup ARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 }
 
 /*
- 		#] CompGroup :
+ 		#] CompGroup : 
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -403,7 +403,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 }
 
 /*
- 		#] FullSymmetrize :
+ 		#] FullSymmetrize : 
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -512,7 +512,7 @@ NextFun:
 }
 
 /*
- 		#] SymGen :
+ 		#] SymGen : 
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -575,7 +575,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind :
+ 		#] SymFind : 
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -617,7 +617,7 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainIn :
+ 		#] ChainIn : 
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
@@ -673,7 +673,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainOut :
+ 		#] ChainOut : 
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -704,7 +704,7 @@ WORD
 MatchFunction ARG3(WORD *,pattern,WORD *,interm,WORD *,wilds)
 {
 	WORD *m, *t, *r, i;
-	WORD *mstop = 0, *tstop;
+	WORD *mstop = 0, *tstop = 0;
 	WORD *argmstop, *argtstop;
 	WORD *mtrmstop, *ttrmstop;
 	WORD *msubstop, *mnextsub;
@@ -878,7 +878,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA :
+ 		#] GAMMA : 
  		#[ Tensors :
 */
 	}
@@ -1006,7 +1006,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors :
+ 		#] Tensors : 
 */
 	}
 /*
@@ -1056,6 +1056,10 @@ topofloop:
 		argtstop = oldt = t;
 		NEXTARG(argmstop)
 		NEXTARG(argtstop)
+		if ( t == tstop ) { /* This concerns a very rare bug */
+			if ( *m == -ARGWILD ) goto ArgAll;
+			goto endofloop;
+		}
 		if ( *m < 0 && *t < 0 ) {
 			if ( *t <= -FUNCTION ) {
 				if ( *t == *m ) {}
@@ -1629,7 +1633,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions :
+ 		#] ScanFunctions : 
 	#] Patterns :
 */
 

@@ -117,10 +117,10 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	Let us first look whether the expression is in memory.
 	If not we have to make a buffer to increase speed..
 */
-	if ( AR.infile->handle < 0 ) {
-		p = (WORD *)((UBYTE *)(AR.infile->PObuffer)
+	if ( fi->handle < 0 ) {
+		p = (WORD *)((UBYTE *)(fi->PObuffer)
 			 + BASEPOSITION(e->onfile) + BASEPOSITION(bi->start));
-		pstop = (WORD *)((UBYTE *)(AR.infile->PObuffer)
+		pstop = (WORD *)((UBYTE *)(fi->PObuffer)
 			 + BASEPOSITION(e->onfile) + BASEPOSITION(bi->next));
 		while ( p < pstop ) {
 /*
@@ -128,12 +128,13 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 					we have to setup the bracket again and test.
 					Otherwise, skip immediately to the next term.
 */
-			if ( *p < -bsize ) {	/* no change of bracket */
-				p++; p += *p;
+			if ( *p <= -bsize ) {	/* no change of bracket */
+				p++; p += *p + 1;
 			}
 			else if ( *p < 0 ) {	/* changes bracket */
-				AR.infile->POfill = p;
-				t2 = t1 = AR.CompressPointer - *p++ + 1;
+				fi->POfill = p;
+				t2 = AR.CompressPointer;
+				t1 = t2 - *p++ + 1;
 				j = *p++;
 				NCOPY(t1,p,j)
 				t2++; while ( *t2 != HAAKJE ) t2 += t2[1];
@@ -146,14 +147,14 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
 				else i = Compare(bracket,AR.CompressPointer,0);
 				if ( i == 0 ) {
-					SETBASEPOSITION(theposition,(AR.infile->POfill-AR.infile->PObuffer)*sizeof(WORD));
+					SETBASEPOSITION(theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */
 			}
 			else {	/* no compression. We have to check! */
 				WORD a[4];
-				AR.infile->POfill = p;
+				fi->POfill = p;
 				t2 = p + 1; while ( *t2 != HAAKJE ) t2 += t2[1];
 				a[0] = *p; a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];
 				*t2++ = 1; *t2++ = 1; *t2++ = 3;
@@ -168,7 +169,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 				*p = a[0]; t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
-					SETBASEPOSITION(theposition,(AR.infile->POfill-AR.infile->PObuffer)*sizeof(WORD));
+					SETBASEPOSITION(theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */

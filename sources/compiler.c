@@ -174,7 +174,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -707,8 +707,8 @@ int CodeGenerator ARG1(SBYTE *,tokens)
 	SBYTE *s = tokens, c;
 	int i, sign = 1, first = 1, deno = 1, error = 0, minus, n, needarg, numexp, cc;
 	int base, sumlevel = 0, sumtype = SYMTOSYM, firstsumarg, inset = 0, dflag;
-	int funflag = 0, settype;
-	WORD *t, *v, *r, *term, nnumerator, ndenominator, *oldwork, x1, x2, x3, y, nin;
+	int funflag = 0, settype, x1, x2;
+	WORD *t, *v, *r, *term, nnumerator, ndenominator, *oldwork, x3, y, nin;
 	WORD *w1, *w2, *tsize = 0, *relo = 0;
 	UWORD *numerator, *denominator, *innum;
 	CBUF *C;
