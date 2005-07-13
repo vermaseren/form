@@ -259,10 +259,8 @@ FullCleanUp ARG0
 	}
 
 
-	/*[06apr2004 mt]:*/
-	/*CompactifyTree(AC.exprnames);*/
-	CompactifyTree(AC.exprnames,0);
-	/*:[06apr2004 mt]*/
+	CompactifyTree(AC.exprnames);
+
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {
 		MesPrint("@Cannot restart the storage file");

@@ -714,7 +714,7 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
  		#] ReadFile : 
  		#[ WriteFile :
 */
-/*[15apr2004 mt]:*/
+/*[15apr2004 mt]:*/ /*[13jul2005 mt] Is this ok?:*/
 /*This routine (WriteFile) is used too often. I introduced the pointer
 to it - this permits me to override it in some routines.*/
 LONG
@@ -954,6 +954,7 @@ NumToStr ARG2(UBYTE *,s,LONG,x)
 {
 	UBYTE *t, str[24];
 	t = str;
+	/*[02dec2004 mt]: the following line may lead to integer overflow!:*/
 	if ( x < 0 ) { *s++ = '-'; x = -x; }
 	do {
 		*t++ = x % 10 + '0';

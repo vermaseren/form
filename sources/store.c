@@ -603,10 +603,7 @@ DeleteStore ARG1(WORD,par)
 				e_in++;
 			} while ( --n > 0 ); }
 			NumExpressions = j;
-			/*[06apr2004 mt]:*/
-			/*if ( DidClean ) CompactifyTree(AC.exprnames);*/
-			/*if ( DidClean ) CompactifyTree(AC.exprnames.0);
-			/*:[06apr2004 mt]*/
+			if ( DidClean ) CompactifyTree(AC.exprnames);
 		}
 		AO.StoreData.Handle = -1;
 		CloseFile(AC.StoreHandle);

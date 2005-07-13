@@ -40,6 +40,12 @@ CFLAGS = -O2
 CPPFLAGS = -DALPHA
 endif
 
+ifeq ($(HOSTTYPE),alphaev5)
+CC = cc
+CFLAGS = -O2
+CPPFLAGS = -DALPHA -I/usr/local/include
+endif
+
 ifeq ($(HOSTTYPE),decstation)
 CC = cc
 CFLAGS = -O2 -Olimit 2300
@@ -59,9 +65,11 @@ CPPFLAGS = -DLINUX
 endif
 
 ifeq ($(HOSTTYPE),i386)
+#CC = gcc -static
 CC = gcc
 #CFLAGS = -O2 -fomit-frame-pointer -mcpu=i586 -D_FILE_OFFSET_BITS=64
-CFLAGS = -g -mcpu=i586 -D_FILE_OFFSET_BITS=64
+#CFLAGS = -g -mcpu=i586 -D_FILE_OFFSET_BITS=64
+CFLAGS = -O2 -D_FILE_OFFSET_BITS=64
 CPPFLAGS = -DLINUX
 endif
 

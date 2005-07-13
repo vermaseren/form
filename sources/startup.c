@@ -713,6 +713,8 @@ IniVars()
 
 static int exitInProgress=0;
 
+/*INTSIGHANDLER : some systems require a signal handler to return an integer,
+  so define the macro INTSIGHANDLER if compiler fails:*/
 #ifdef INTSIGHANDLER
 static int 
 onErrSig ARG1(int, i)
@@ -730,6 +732,7 @@ onErrSig ARG1(int, i)
 		return;
 #endif
 	}
+	/*[13jul2005 mt]*//*Terminate(-1) on signal is here:*/
 	Terminate(-1);
 }
 

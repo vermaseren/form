@@ -156,10 +156,7 @@ PopVariables()
 	retval = CleanExpr(1);
 	ResetVariables(1);
 
-	/*[06apr2004 mt]:*/
-	/*if ( AC.DidClean ) CompactifyTree(AC.exprnames);*/
-	if ( AC.DidClean ) CompactifyTree(AC.exprnames,0);
-	/*:[06apr2004 mt]*/
+	if ( AC.DidClean ) CompactifyTree(AC.exprnames);
 
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
@@ -574,7 +571,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
               break;
 		}
 	      }
-	    }
+	    }/*for (source = 1; source < PF.numtasks; source++)*/
 
 	    for (i = 0; i < NumPotModdollars; i++) {
 	      index = PotModdollars[i];
@@ -830,10 +827,7 @@ skipexec:
 	}
 	else {
 		if ( CleanExpr(0) ) RetCode = -1;
-		/*[06apr2004 mt]:*/
-		/*if ( AC.DidClean ) CompactifyTree(AC.exprnames);*/
-		if ( AC.DidClean ) CompactifyTree(AC.exprnames,0);
-		/*:[06apr2004 mt]*/
+		if ( AC.DidClean ) CompactifyTree(AC.exprnames);
 		ResetVariables(0);
 		CleanUpSort(-1);
 	}

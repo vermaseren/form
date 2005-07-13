@@ -578,12 +578,6 @@ DECLARE(VOID DumpTree,(NAMETREE *))
 DECLARE(VOID DumpNode,(NAMETREE *,WORD,WORD))
 DECLARE(VOID LinkTree,(NAMETREE *,WORD,WORD))
 DECLARE(VOID CopyTree,(NAMETREE *,NAMETREE *,WORD))
-/*[06apr2004 mt]:*/
-/*See comments on the body of the function CompactifyTree 
-  in the file names.c*/
-/*DECLARE(int CompactifyTree,(NAMETREE *))*/
-DECLARE(int CompactifyTree,(NAMETREE *,LIST *))
-/*:[06apr2004 mt]*/
 DECLARE(NAMETREE *MakeNameTree,(VOID))
 DECLARE(VOID FreeNameTree,(NAMETREE *))
 DECLARE(int AddExpression,(UBYTE *,int,int,int))
@@ -800,9 +794,6 @@ DECLARE(int CoEndWhile,(UBYTE *))
 DECLARE(int CoExit,(UBYTE *))
 DECLARE(int CoFactArg,(UBYTE *))
 DECLARE(int CoFill,(UBYTE *))
-/*[05apr2004 mt]:*/
-DECLARE(int CoClearTable,(UBYTE *))
-/*:[05apr2004 mt]*/
 DECLARE(int CoFillExpression,(UBYTE *))
 DECLARE(int CoFixIndex,(UBYTE *))
 DECLARE(int CoFormat,(UBYTE *))

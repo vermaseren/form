@@ -34,6 +34,11 @@ CC = mpicc
 CFLAGS = -g -DPARALLEL -DMPI -DLINUX -DPF_WITHGETENV -DPF_WITHLOG -D_FILE_OFFSET_BITS=64
 endif
 
+ifeq ($(HOSTTYPE),alphaev5)
+CC = /usr/qcm/mpich/bin/mpicc
+CFLAGS = -O2 -I/usr/local/include -DPARALLEL -DMPI -DSMP -DALPHA -DPF_WITHGETENV -DPF_WITHLOG
+endif
+
 ifeq ($(HOSTTYPE),ALTIX)
 CC = icc
 CFLAGS = -tpp2 -DPARALLEL -DALPHA -DMPI -DLINUX -DPF_WITHGETENV -DPF_WITHLOG -L/usr/lib -lmpi

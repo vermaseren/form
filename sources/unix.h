@@ -13,6 +13,12 @@
 #define WITHPIPE
 #define WITHSYSTEM
 
+/*[13jul2005 mt]:*/
+/*With SAFESIGNAL defined, write() and read() syscalls are wrapped by
+the errno checkup*/
+/*#define SAFESIGNAL*/
+/*:[13jul2005 mt]*/
+
 /*[29apr2004 mt]:*/
 #define WITHEXTERNALCHANNEL
 #define TRAPSIGNALS

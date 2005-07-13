@@ -817,58 +817,6 @@ int CoMultiply ARG1(UBYTE *,inp)
 
 /*
    #] CoMultiply :
-
-   [05apr2004 mt]:
-   #[ CoClearTable :
-*/
-int CoClearTable  ARG1(UBYTE *,inp)
-{
-	WORD funnum,type;
-	UBYTE *p, *p1, *p2,c;
-	TABLES T;
-/*
-	Read the name of the function and test that it is in the table.
-*/
-	p1 = inp;
-	if ( ( p = SkipAName(inp) ) == 0 ) return(1);
-	p2 = p;
-	c = *p; *p = 0;
-	if ( ( GetVar(inp,&type,&funnum,CFUNCTION,WITHAUTO) == NAMENOTFOUND )
-	|| ( T = functions[funnum].tabl ) == 0  ) {
-		/*MesPrint("&%s should be a table",inp);*/
-      Warning(inp);
-		Warning("should be a table! -- Ignored");
-		*p = c; return(0);
-	}
-	AC.varnames->namenode[functions[funnum].node].type = CDELETE;
-				if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
-				if ( T->prototype ) M_free(T->prototype,"tableprototype");
-				if ( T->mm ) M_free(T->mm,"tableminmax");
-				if ( T->flags ) M_free(T->flags,"tableflags");
-				if ( T->argtail ) M_free(T->argtail,"table arguments");
-				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				if ( T->buffers ) M_free(T->buffers,"Table buffers");
-				finishcbuf(T->bufnum);
-				if ( T->spare ) {
-					TABLES TT = T->spare;
-					if ( TT->mm ) M_free(TT->mm,"tableminmax");
-					if ( TT->flags ) M_free(TT->flags,"tableflags");
-					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					finishcbuf(TT->bufnum);
-					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
-               if ( TT->buffers )M_free(TT->buffers,"Table buffers");
-					M_free(TT,"table");
-				}
-				M_free(T,"table");
-				functions[funnum].tabl=0;	
-				CompactifyTree(AC.varnames, AC.Functions);
-
-	return(0);
-}
-/*
-	#]CoClearTable :
-   :[05apr2004 mt]
-
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002

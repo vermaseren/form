@@ -1658,7 +1658,11 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	WORD *r, l, *m, i;
 	WORD *stop, *s1, *s2;
 	POSITION AccPos;
-	WORD InCompState, retlength;
+	/*[13jul2005 mt]:*/
+	/*	WORD InCompState, retlength;*/
+   WORD InCompState;
+   LONG retlength;
+	/*:[13jul2005 mt]*/
 	WORD *oldipointer;
 	stop = accum + 2*AM.MaxTer;
 	*accum++ = number;

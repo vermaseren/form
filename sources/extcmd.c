@@ -132,7 +132,7 @@ PF_BroadcastString ARG1 (UBYTE *,str);
 #endif
 #endif /*ifdef SELFTEST ... else*/
 
-/*Non-initialized variant of for public functions:*/
+/*Non-initialized variant of public functions:*/
 int
 writeBufToExtChannelFailure ARG2(char *,buf, size_t, count)
 {
@@ -330,7 +330,7 @@ int ret;
 #ifdef PARALLEL
    }/*if ( PF.me == MASTER */
 
-   /*Master broadcasts results to slaves, slaves read it from the master:*/
+   /*Master broadcasts result to slaves, slaves read it from the master:*/
    if( PF_BroadcastString(h->INbuf) ){/*Fail!*/
 		  MesPrint("Fail broadcasting external channel results");
 		  Terminate(-1);
@@ -716,14 +716,14 @@ pid_t childpid,fatherchildpid;
               (close(fdin[1]) == -1 )/*Close up parent's input channel*/
               ||(close(fdout[0])== -1 )/* Close up parent's output channel*/
              )/*Fail!*/
-                exit(1);
+                _exit(1);
            if(ttymode & 1){/*Reopen stdin:*/
               if(
                    (close(0) == -1 )/* Use fdin as stdin :*/
                  ||(dup(fdin[0]) == -1 )
 
                 )/*Fail!*/
-                   exit(1);
+                   _exit(1);
               close(fdin[0]);
            }/*if(ttymode & 1)*/
            if(ttymode & 2){/*Reopen stdout:*/
@@ -731,7 +731,7 @@ pid_t childpid,fatherchildpid;
                    (close(1)==-1)/* Use fdout as stdout:*/
                  ||( dup(fdout[1]) == -1 )
                 )/*Fail!*/
-                   exit(1);
+                   _exit(1);
                 close(fdout[1]);
            }/*if(ttymode & 2)*/
      }/*if(  (fdsend!=NULL)&&(fdreceive!=NULL)  )*/
@@ -767,19 +767,19 @@ pid_t childpid,fatherchildpid;
                     ( (SWSUB1*)cmd)(fdout[1],fdin[0]);
                  else
                     ( (SWSUB2*)cmd)();
-                 exit(2);/*That's all, the pipe is closed!*/
+                 _exit(2);/*That's all, the pipe is closed!*/
               }/*if(argv!=NULL)...else*/
               /*No break;*/
            case -1:
               /* Control can  reach this point only on error!*/
               writexactly(fdsig[1],"-1",2);/*Inform the father about the failure*/
-              exit(2);
+              _exit(2);
            default:/*Son of his father*/
               /*Send a grandchild pid to the grandfather:*/
               writeLong(fdsig[1],childpid);
               close(fdsig[1]);/*Close the descriptor - now it is opened only
                                 by a grandchild*/
-              exit(0);
+              _exit(0);
         }/*switch(childpid=fork())*/
      }else{/*if( ttymode & 4 )*/
 
@@ -798,11 +798,11 @@ pid_t childpid,fatherchildpid;
               ( (SWSUB1*)cmd)(fdout[1],fdin[0]);
            else
               ( (SWSUB2*)cmd)();
-           exit(2);/*Tha's all, the pipe is closed!*/
+           _exit(2);/*Tha's all, the pipe is closed!*/
         }/*if(argv!=NULL)*/
         /* Control can  reach this point only on error!*/
         writexactly(fdsig[1],"-1",2);
-        exit(2);
+        _exit(2);
      }/*if( ttymode & 4 )...else*/
   }else{/* The father*/
      char buf[2];

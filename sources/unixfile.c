@@ -5,6 +5,17 @@
 	This makes a big difference in speed!
 */
 #include "form3.h"
+
+
+/*[13jul2005 mt]:*/
+#ifdef SAFESIGNAL
+/*[15oct2004 mt]:*/
+/*To access errno variable and EINTR constant:*/
+#include <errno.h>
+/*:[15oct2004 mt]*/
+#endif
+/*:[13jul2005 mt]*/
+
 #ifdef UFILES
 
 FILES TheStdout = { 1 };
@@ -67,9 +78,27 @@ int Uclose ARG1(FILES *,f)
   	#[ Uread :
 */
 
+
 size_t Uread ARG4(char *,ptr,size_t,size,size_t,nobj,FILES *,f)
 {
+/*[13jul2005 mt]:*/
+#ifdef SAFESIGNAL
+
+/*[15oct2004 mt]:*/
+/*Operation read() can be interrupted by a signal. Note, this is rather unlikely,
+so we do not save size*nobj for future attempts*/
+size_t ret;
+	/*If the syscall is interrupted by a signal before it
+		succeeded in getting any progress, it must be repeated:*/
+	while( ( (ret=read(f->descriptor,ptr,size*nobj))<1)&&(errno == EINTR) );
+	return(ret);
+#else
+
 	return(read(f->descriptor,ptr,size*nobj));
+
+#endif
+/*:[15oct2004 mt]*/
+/*:[13jul2005 mt]*/
 }
 
 /*
@@ -79,7 +108,24 @@ size_t Uread ARG4(char *,ptr,size_t,size,size_t,nobj,FILES *,f)
 
 size_t Uwrite ARG4(char *,ptr,size_t,size,size_t,nobj,FILES *,f)
 {
+/*[13jul2005 mt]:*/
+#ifdef SAFESIGNAL
+/*[15oct2004 mt]:*/
+/*Operation write() can be interrupted by a signal. */
+size_t ret;
+size_t thesize=size*nobj;
+	/*If the syscall is interrupted by a signal before it 
+		succeeded in getting any progress, it must be repeated:*/
+	while( ( (ret=write(f->descriptor,ptr,thesize))<1 )&&(errno == EINTR) );
+
+	return(ret);
+#else
+
 	return(write(f->descriptor,ptr,size*nobj));
+
+/*:[15oct2004 mt]*/
+#endif
+/*:[13jul2005 mt]*/
 }
 
 /*

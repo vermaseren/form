@@ -1223,7 +1223,7 @@ PF_Wait4Slave ARG1(int,src)
 */
 
 /*
-   #[ int   PF_Wait4Slave(void):
+   #[ int   PF_WaitAllSlaves(void):
 		This function waits until all slaves are ready to send terms back to the master.
 		If some slave is not working, it sends PF_ENDSORT_MSGTAG and waits for the answer.
 		Messages from slaves will be read only after all slaves are ready, 
@@ -1321,7 +1321,7 @@ PF_WaitAllSlaves ARG0
 	return(PF.numtasks-readySlaves);
 }/*PF_WaitAllSlaves*/
 /*
-   #] int   PF_Wait4Slave(void):
+   #] int   PF_WaitAllSlaves(void):
 */
 /*:[02nov2003 mt]*/
 

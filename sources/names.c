@@ -453,25 +453,14 @@ DumpNode ARG3(NAMETREE *,nametree,WORD,node,WORD,depth)
   	#[ CompactifyTree :
 */
 
-/*[06apr2004 mt]:*/
-/*I added the second parameter, functionList. If it is not NULL,
-  this means that the function should correct functionList->num
-  (functionList->numglobal ?). This is done to allow to clear 
-  table by the statement "cleartable"*/
-/*
 int
 CompactifyTree ARG1(NAMETREE *,nametree)
-*/
-int
-CompactifyTree ARG2(NAMETREE *,nametree, LIST *,functionList)
-/*:[06apr2004 mt]*/
 {
 	NAMETREE newtree;
 	NAMENODE *n;
 	LONG i, j, ns, k;
 	UBYTE *s;
-	/*[06apr2004 mt]:*/
-	/*
+
 	for ( i = 0, j = 0, k = 0, n = nametree->namenode, ns = 0;
 	i < nametree->nodefill; i++, n++ ) {
 		if ( n->type != CDELETE ) {
@@ -481,31 +470,6 @@ CompactifyTree ARG2(NAMETREE *,nametree, LIST *,functionList)
 		}
 		else k++;
 	}
-	*/
-	if (functionList == 0)
-		for ( i = 0, j = 0, k = 0, n = nametree->namenode, ns = 0;
-		i < nametree->nodefill; i++, n++ ) {
-			if ( n->type != CDELETE ) {
-				s = nametree->namebuffer+n->name;
-				while ( *s ) { s++; ns++; }
-				j++;
-			}
-			else k++;
-		}
-	else
-		for ( i = 0, j = 0, k = 0, n = nametree->namenode, ns = 0;
-		i < nametree->nodefill; i++, n++ ) {
-			if ( n->type != CDELETE ) {
-				s = nametree->namebuffer+n->name;
-				while ( *s ) { s++; ns++; }
-				j++;
-			}
-			else{
-				k++;
-				functionList->num--;
-			}
-		}
-
 	if ( k == 0 ) return(0);
 	if ( j == 0 ) {
 		if ( nametree->namebuffer ) M_free(nametree->namebuffer,"nametree->namebuffer");
@@ -2109,9 +2073,9 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				/*[07apr2004 mt]:*/
+				/*[07apr2004 mt]:*/ /*memory leak*/
 				if ( T->buffers ) M_free(T->buffers,"Table buffers");
-				/*:[07apr2004 mt]*/
+				/*:[07apr2004 mt]*/ 
 				finishcbuf(T->bufnum);
 				if ( T->spare ) {
 					TABLES TT = T->spare;
@@ -2120,7 +2084,7 @@ void ResetVariables ARG1(int, par)
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
 					finishcbuf(TT->bufnum);
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
-					/*[07apr2004 mt]:*/
+					/*[07apr2004 mt]:*/ /*memory leak*/
                if ( TT->buffers )M_free(TT->buffers,"Table buffers");
 					/*:[07apr2004 mt]*/
 					M_free(TT,"table");
@@ -2139,10 +2103,7 @@ void ResetVariables ARG1(int, par)
 		AC.DubiousList.num = AC.DubiousList.numglobal = AC.DubiousList.numclear;
 		AC.SetElementList.numtemp = AC.SetElementList.num =
 			AC.SetElementList.numglobal = AC.SetElementList.numclear;
-		/*[06apr2004 mt]:*/
-		/*CompactifyTree(AC.varnames);*/
-		CompactifyTree(AC.varnames,0);
-		/*:[06apr2004 mt]*/
+		CompactifyTree(AC.varnames);
 		AC.varnames->namefill = AC.varnames->globalnamefill = AC.varnames->clearnamefill;
 		AC.varnames->nodefill = AC.varnames->globalnodefill = AC.varnames->clearnodefill;
 
@@ -2186,10 +2147,7 @@ void ResetVariables ARG1(int, par)
 		}
 		AC.AutoFunctionList.num = AC.AutoFunctionList.numglobal
 							   = AC.AutoFunctionList.numclear;
-		/*[06apr2004 mt]:*/
-		/*CompactifyTree(AC.autonames);*/
-		CompactifyTree(AC.autonames,0);
-		/*:[06apr2004 mt]*/
+		CompactifyTree(AC.autonames);
 		AC.autonames->namefill = AC.autonames->globalnamefill
 							  = AC.autonames->clearnamefill;
 		AC.autonames->nodefill = AC.autonames->globalnodefill
@@ -2214,7 +2172,7 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				/*[07apr2004 mt]:*/
+				/*[07apr2004 mt]:*/  /*memory leak*/
 				if ( T->buffers ) M_free(T->buffers,"Table buffers");
 				/*:[07apr2004 mt]*/
 				finishcbuf(T->bufnum);
@@ -2225,7 +2183,7 @@ void ResetVariables ARG1(int, par)
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
 					finishcbuf(TT->bufnum);
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
-					/*[07apr2004 mt]:*/
+					/*[07apr2004 mt]:*/ /*memory leak*/
 					if ( TT->buffers ) M_free(TT->buffers,"Table buffers");
 					/*:[07apr2004 mt]*/
 					M_free(TT,"table");
@@ -2310,10 +2268,7 @@ void ResetVariables ARG1(int, par)
 		AC.DubiousList.num = AC.DubiousList.numglobal;
 		AC.SetElementList.numtemp = AC.SetElementList.num =
 			AC.SetElementList.numglobal;
-		/*[06apr2004 mt]:*/
-		/*CompactifyTree(AC.varnames);*/
-		CompactifyTree(AC.varnames,0);
-		/*:[06apr2004 mt]*/
+		CompactifyTree(AC.varnames);
 		AC.varnames->namefill = AC.varnames->globalnamefill;
 		AC.varnames->nodefill = AC.varnames->globalnodefill;
 
@@ -2353,10 +2308,8 @@ void ResetVariables ARG1(int, par)
 			}
 		}
 		AC.AutoFunctionList.num = AC.AutoFunctionList.numglobal;
-		/*[06apr2004 mt]:*/
-		/*CompactifyTree(AC.autonames);*/
-		CompactifyTree(AC.autonames,0);
-		/*:[06apr2004 mt]*/
+
+		CompactifyTree(AC.autonames);
 
 		AC.autonames->namefill = AC.autonames->globalnamefill;
 		AC.autonames->nodefill = AC.autonames->globalnodefill;
