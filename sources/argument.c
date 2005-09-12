@@ -26,6 +26,8 @@ WORD mulpat[] = {TYPEMULT, SUBEXPSIZE+3, 0,
 						SUBEXPRESSION, SUBEXPSIZE, 0, 1, 0, 0, 0 };
 WORD locwildvalue[SUBEXPSIZE] = { SUBEXPRESSION, SUBEXPSIZE, 0, 0, 0 };
 
+static UWORD *GCDbuffer = 0, *LCMbuffer = 0, *LCMb = 0, *LCMc = 0;
+
 WORD
 execarg ARG2(WORD *,term,WORD,level)
 {
@@ -37,6 +39,7 @@ execarg ARG2(WORD *,term,WORD,level)
 	WORD oldnumrhs = CC->numrhs, size, pow, ncom, jj;
 	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AR.pWorkPointer, lp;
 	WORD *oldwork = AR.WorkPointer, *oldwork2, scale, renorm;
+	WORD kLCM = 0, kGCD = 0, kkLCM = 0, jLCM = 0, jGCD;
 	AR.WorkPointer += *term;
 	start = C->lhs[level];
 	C->numlhs = start[2];
@@ -226,7 +229,7 @@ HaveTodo:
 					}
 					continue;
 				}
-				else if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 ) {
+				else if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 					if ( *r < 0 ) {
 						if ( *r != -SNUMBER || r[1] == 1 || r[1] == 0 ) continue;
 /*
@@ -277,60 +280,175 @@ HaveTodo:
 
 					First find the magic term
 */
-					if ( factor && *factor >= 1 ) {
+					if ( type == TYPENORM4 ) {
+/*
+						For normalizing everything to integers we have to
+						determine for all elements of this argument the LCM of
+						the denominators and the GCD of the numerators.
+*/
+						if ( GCDbuffer == 0 ) {
+							GCDbuffer = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"execarg");
+							LCMbuffer = GCDbuffer + AM.MaxTal+2;
+							LCMb = LCMbuffer + AM.MaxTal+2;
+							LCMc = LCMb + AM.MaxTal+2;
+						}
 						r4 = r + *r;
 						r1 = r + ARGHEAD;
+/*
+						First take the first term to load up the LCM and the GCD
+*/
+						r2 = r1 + *r1;
+						j = r2[-1];
+						r3 = r2 - ABS(j);
+						k = REDLENG(j);
+						if ( k < 0 ) k = -k;
+						while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+						for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
+						k = REDLENG(j);
+						if ( k < 0 ) k = -k;
+						r3 += k;
+						while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+						for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
+						r1 = r2;
+/*
+						Now go through the rest of the terms in this argument.
+*/
 						while ( r1 < r4 ) {
 							r2 = r1 + *r1;
-							r3 = r2 - ABS(r2[-1]);
-							j = r3 - r1;
-							r5 = factor;
-							if ( j != *r5 ) { r1 = r2; continue; }
-							r5++; r6 = r1+1;
-							while ( --j > 0 ) {
-								if ( *r5 != *r6 ) break;
-								r5++; r6++;
+							j = r2[-1];
+							r3 = r2 - ABS(j);
+							k = REDLENG(j);
+							if ( k < 0 ) k = -k;
+							while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+							if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+/*
+								GCD is already 1
+*/
 							}
-							if ( j > 0 ) { r1 = r2; continue; }
-							break;
+							else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
+								if ( GcdLong(GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer,&kGCD) ) {
+									goto execargerr;
+								}
+							}
+							else {
+								kGCD = 1; GCDbuffer[0] = 1;
+							}
+							k = REDLENG(j);
+							if ( k < 0 ) k = -k;
+							r3 += k;
+							while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+							if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+								for ( kLCM = 0; kLCM < k; kLCM++ )
+									LCMbuffer[kLCM] = r3[kLCM];
+							}
+							else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
+								if ( GcdLong(LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
+									goto execargerr;
+								}
+								DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
+								MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
+								for ( kLCM = 0; kLCM < jLCM; kLCM++ )
+									LCMbuffer[kLCM] = LCMc[kLCM];
+							}
+							else {} /* LCM doesn't change */
+							r1 = r2;
 						}
-						if ( r1 >= r4 ) continue;
-					}
-					else {
-						r1 = r + ARGHEAD;
-						r2 = r1 + *r1;
-						r3 = r2 - ABS(r2[-1]);
-					}
-					if ( *r3 == 1 && r3[1] == 1 ) {
-						if ( r2[-1] == 3 ) continue;
-						if ( r2[-1] == -3 && type == TYPENORM3 ) continue;
-					}
-					v[2] |= DIRTYFLAG;
-					j = r2[-1];
-					k = REDLENG(j);
-					if ( j < 0 ) j = -j;
-					if ( type == TYPENORM && scale && ( factor == 0 || *factor ) ) {
-						size = term[*term-1];
-						size = REDLENG(size);
-						if ( scale > 0 ) {
-							for ( jj = 0; jj < scale; jj++ ) {
-								if ( MulRat((UWORD *)rstop,size,(UWORD *)r3,k,
-									(UWORD *)rstop,&size) ) goto execargerr;
-							}
+/*
+						Now put the factor together: GCD/LCM
+*/
+						r3 = (WORD *)(GCDbuffer);
+						if ( kGCD == kLCM ) {
+							for ( jGCD = 0; jGCD < kGCD; jGCD++ )
+								r3[jGCD+kGCD] = LCMbuffer[jGCD];
+							k = kGCD;
+						}
+						else if ( kGCD > kLCM ) {
+							for ( jGCD = 0; jGCD < kLCM; jGCD++ )
+								r3[jGCD+kGCD] = LCMbuffer[jGCD];
+							for ( jGCD = kLCM; jGCD < kGCD; jGCD++ )
+								r3[jGCD+kGCD] = 0;
+							k = kGCD;
 						}
 						else {
-							for ( jj = 0; jj > scale; jj-- ) {
-								if ( DivRat((UWORD *)rstop,size,(UWORD *)r3,k,
-									(UWORD *)rstop,&size) ) goto execargerr;
-							}
+							for ( jGCD = kGCD; jGCD < kLCM; jGCD++ )
+								r3[jGCD] = 0;
+							for ( jGCD = 0; jGCD < kLCM; jGCD++ )
+								r3[jGCD+kLCM] = LCMbuffer[jGCD];
+							k = kLCM;
 						}
+						j = 2*k+1;
+/*
+						Now we have to correct the overal factor
+*/
+						size = term[*term-1];
+						size = REDLENG(size);
+						if ( MulRat((UWORD *)rstop,size,(UWORD *)r3,k,
+								(UWORD *)rstop,&size) ) goto execargerr;
 						size = INCLENG(size);
 						k = size < 0 ? -size: size;
 						rstop[k-1] = size;
 						*term = (WORD)(rstop - term) + k;
 					}
+					else {
+						if ( factor && *factor >= 1 ) {
+							r4 = r + *r;
+							r1 = r + ARGHEAD;
+							while ( r1 < r4 ) {
+								r2 = r1 + *r1;
+								r3 = r2 - ABS(r2[-1]);
+								j = r3 - r1;
+								r5 = factor;
+								if ( j != *r5 ) { r1 = r2; continue; }
+								r5++; r6 = r1+1;
+								while ( --j > 0 ) {
+									if ( *r5 != *r6 ) break;
+									r5++; r6++;
+								}
+								if ( j > 0 ) { r1 = r2; continue; }
+								break;
+							}
+							if ( r1 >= r4 ) continue;
+						}
+						else {
+							r1 = r + ARGHEAD;
+							r2 = r1 + *r1;
+							r3 = r2 - ABS(r2[-1]);
+						}
+						if ( *r3 == 1 && r3[1] == 1 ) {
+							if ( r2[-1] == 3 ) continue;
+							if ( r2[-1] == -3 && type == TYPENORM3 ) continue;
+						}
+						v[2] |= DIRTYFLAG;
+						j = r2[-1];
+						k = REDLENG(j);
+						if ( j < 0 ) j = -j;
+						if ( type == TYPENORM && scale && ( factor == 0 || *factor ) ) {
 /*
-                  	Now we must generate a statement
+							Now we correct the overal factor
+*/
+							size = term[*term-1];
+							size = REDLENG(size);
+							if ( scale > 0 ) {
+								for ( jj = 0; jj < scale; jj++ ) {
+									if ( MulRat((UWORD *)rstop,size,(UWORD *)r3,k,
+										(UWORD *)rstop,&size) ) goto execargerr;
+								}
+							}
+							else {
+								for ( jj = 0; jj > scale; jj-- ) {
+									if ( DivRat((UWORD *)rstop,size,(UWORD *)r3,k,
+										(UWORD *)rstop,&size) ) goto execargerr;
+								}
+							}
+							size = INCLENG(size);
+							k = size < 0 ? -size: size;
+							rstop[k-1] = size;
+							*term = (WORD)(rstop - term) + k;
+						}
+					}
+/*
+                  	We generate a statement for addapting all terms in the
+					argument sucessively
 */
 					r4 = AddRHS(AR.ebufnum,1);
 					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AR.ebufnum,r4);
@@ -338,7 +456,7 @@ HaveTodo:
 					i = (j-1)>>1;
 					for ( k = 0; k < i; k++ ) *r4++ = r3[i+k];
 					for ( k = 0; k < i; k++ ) *r4++ = r3[k];
-					if ( type == TYPENORM3 ) *r4++ = j;
+					if ( ( type == TYPENORM3 ) || ( type == TYPENORM4 ) ) *r4++ = j;
 					else *r4++ = r3[j-1];
 					*r4++ = 0;
 					CC->rhs[CC->numrhs+1] = r4;
@@ -362,7 +480,7 @@ HaveTodo:
 /*
 						What to do with dummy indices?
 */
-						if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 ) {
+						if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 							if ( MultDo(r1,mulpat) ) goto execargerr;
 							AR.WorkPointer = r1 + *r1;
 						}
@@ -381,14 +499,14 @@ HaveTodo:
 /*
 					What to do with dummy indices?
 */
-					if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 ) {
+					if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 						if ( MultDo(m,mulpat) ) goto execargerr;
 						AR.WorkPointer = m + *m;
 					}
 					if ( Generator(m,level) ) goto execargerr;
 					AR.WorkPointer = r1;
 				}
-				if ( EndSort(AR.WorkPointer+ARGHEAD,0) < 0 ) goto execargerr;
+				if ( EndSort(AR.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
 				AR.DeferFlag = olddefer;
 /*
 				Now shift the sorted entity over the old argument.

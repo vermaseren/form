@@ -41,7 +41,7 @@ inicbufs ARG0
 }
 
 /*
-  	#] inicbufs : 
+  	#] inicbufs :
   	#[ finishcbuf :
 */
 
@@ -63,7 +63,7 @@ void finishcbuf ARG1(WORD,num)
 }
 
 /*
-  	#] finishcbuf : 
+  	#] finishcbuf :
   	#[ DoubleCbuffer :
 */
 

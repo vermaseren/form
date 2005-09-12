@@ -80,6 +80,7 @@
 
 #define NUMERICALLOOP 0
 #define LISTEDLOOP 1
+#define ONEEXPRESSION 2
 
 #define PRETYPENONE 0
 #define PRETYPEIF 1
@@ -105,11 +106,10 @@ typedef void VOID;*/
 /*:[13apr2004 mt]*/
 
 #ifndef ALPHA
-/*[13apr2004 mt]:*/
+#ifndef OPTERON
 #ifndef VOID
 typedef void VOID;
 #endif
-/*:[13apr2004 mt]*/
 #ifdef HP
 typedef char SBYTE;
 #else
@@ -127,13 +127,19 @@ typedef short SHORT;
 #define BITSINSHORT 16
 #define SHORTMASK 0xFFFF
 #endif
+#endif
 
 #ifdef ANSI
 typedef WORD (*WCN)(WORD *,WORD *,WORD,WORD);
 typedef WORD (*WCN2)(WORD *,WORD *);
 typedef VOID (*PVFUNWP)(WORD *);
+#ifdef INTELCOMPILER
+typedef VOID (*PVFUNV)();
+typedef int (*CFUN)();
+#else
 typedef VOID (*PVFUNV)(VOID);
 typedef int (*CFUN)(VOID);
+#endif
 typedef int (*TFUN)(UBYTE *);
 typedef int (*TFUN1)(UBYTE *,int);
 #else
@@ -416,6 +422,7 @@ typedef int (*TFUN1)();
 #define TYPEMODULUSGCD 62
 #define TYPECHAININ 63
 #define TYPECHAINOUT 64
+#define TYPENORM4 65
 
 #define TAKETRACE 1
 #define CONTRACT 2

@@ -13,9 +13,17 @@ typedef long MLONG;
 typedef short MWORD;
 
 #define MAXBASES 16 
+#ifdef WORDSIZE32
+#define NUMOBJECTS 1024
+#define MAXINDEXSIZE 1000000000L
+#define NAMETABLESIZE 1008
+#define ELEMENTSIZE 200
+#else
 #define NUMOBJECTS 100
 #define MAXINDEXSIZE 33000000L
 #define NAMETABLESIZE 1008
+#define ELEMENTSIZE 100
+#endif
 
 int minosread(FILE *f,char *buffer,MLONG size);
 int minoswrite(FILE *f,char *buffer,MLONG size);
@@ -24,7 +32,6 @@ int minoswrite(FILE *f,char *buffer,MLONG size);
 	ELEMENTSIZE should make a nice number of sizeof(OBJECTS)
 	Usually this will be much too much, but there are cases.....
 */
-#define ELEMENTSIZE 100
 
 typedef struct iniinfo {
 /* should contains only MLONG variables or convertiniinfo should be modified */

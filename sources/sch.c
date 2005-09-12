@@ -28,9 +28,10 @@ typedef UBYTE *va_list;
 static int startinline = 0;
 static char fcontchar = '&';
 static int noextralinefeed = 0;
+static int lowestlevel = 1;
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ schryf-Utilities :
  		#[ StrCopy :			UBYTE *StrCopy(from,to)
 */
@@ -554,7 +555,7 @@ WrtPower ARG2(UBYTE *,Out,WORD,Power)
  		#[ PrintTime :
 */
 
-void PrintTime(VOID)
+void PrintTime ARG0
 {
 	LONG millitime = TimeCPU(1);
 	WORD timepart = (WORD)(millitime%1000);
@@ -564,7 +565,7 @@ void PrintTime(VOID)
 }
 
 /*
- 		#] PrintTime : 
+ 		#] PrintTime :
   	#] schryf-Utilities :
  	#[ schryf-Writes :
  		#[ WriteLists :			VOID WriteLists()
@@ -931,7 +932,7 @@ WriteLists()
 }
 
 /*
- 		#] WriteLists : 
+ 		#] WriteLists :
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
@@ -944,12 +945,13 @@ WriteArgument ARG1(WORD *,t)
 	UBYTE buffer[180];
 	UBYTE *Out;
 	WORD i;
-	int oldoutsidefun;
+	int oldoutsidefun, oldlowestlevel = lowestlevel;
+	lowestlevel = 0;
 	if ( *t > 0 ) {
 		oldoutsidefun = AC.outsidefun; AC.outsidefun = 0;
 		WriteExpression(t+ARGHEAD,(LONG)(*t-ARGHEAD));
 		AC.outsidefun = oldoutsidefun;
-		return;
+		goto CleanUp;
 	}
 	Out = buffer;
 	if ( *t == -SNUMBER) {
@@ -1001,13 +1003,16 @@ WriteArgument ARG1(WORD *,t)
 	}
 	else {
 		MesPrint("Illegal function argument while writing");
-		return;
+		goto CleanUp;
 	}
 	TokenToLine(buffer);
+CleanUp:
+	lowestlevel = oldlowestlevel;
+	return;
 }
 
 /*
- 		#] WriteArgument : 
+ 		#] WriteArgument :
  		#[ WriteSubTerm :		WORD WriteSubTerm(sterm,first)
 
 	Writes a single subterm field to the output line.
@@ -1428,7 +1433,7 @@ WriteInnerTerm ARG2(WORD *,term,WORD,first)
 }
 
 /*
- 		#] WriteInnerTerm : 
+ 		#] WriteInnerTerm :
  		#[ WriteTerm :			WORD WriteTerm(term,lbrac,first,prtf,br)
 
 	Writes a term to output. It tests the bracket information first.
@@ -1457,7 +1462,8 @@ WriteTerm ARG5(WORD *,term,WORD *,lbrac,WORD,first,WORD,prtf,WORD,br)
 					b = AO.bracket + 1;
 					t = term + 1;
 					while ( n > 0 && ( *b++ == *t++ ) ) { n--; }
-					if ( n <= 0 && AO.InFbrack < AM.FortranCont ) {
+					if ( n <= 0 && ( ( AO.InFbrack < AM.FortranCont )
+					|| ( lowestlevel == 0 ) ) ) {
 						AO.IsBracket = 1;
 						if ( ( prtf & PRINTCONTENTS ) != 0 ) {
 							AO.NumInBrack++;
@@ -1589,7 +1595,7 @@ WrtTmes:				t = term;
 		}
 	}
 	if ( !br ) AO.IsBracket = 0;
-	if ( AO.InFbrack >= AM.FortranCont ) {
+	if ( ( AO.InFbrack >= AM.FortranCont ) && lowestlevel ) {
 		if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
 		FiniLine();
 		if ( AC.OutputMode == FORTRANMODE && !first ) {
@@ -1624,7 +1630,7 @@ WrtTmes:				t = term;
 }
 
 /*
- 		#] WriteTerm : 
+ 		#] WriteTerm :
  		#[ WriteExpression :	WORD WriteExpression(terms,ltot)
 
 	Writes a subexpression to output.
@@ -1644,7 +1650,7 @@ WriteExpression ARG2(WORD *,terms,LONG,ltot)
 	stopper = terms + ltot;
 	btot = -1;
 	while ( terms < stopper ) {
-		AO.IsBracket = OldIsBracket;
+   		AO.IsBracket = OldIsBracket;
 		if ( WriteTerm(terms,&btot,first,0,1) ) {
 			MesCall("WriteExpression");
 			SETERROR(-1)
@@ -1659,7 +1665,7 @@ WriteExpression ARG2(WORD *,terms,LONG,ltot)
 }
 
 /*
- 		#] WriteExpression : 
+ 		#] WriteExpression :
  		#[ WriteAll :			WORD WriteAll()
 
 		Writes all expressions that should be written
@@ -1892,7 +1898,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 			goto AboWrite;
 		first = 0;
 	}
-	if ( first ) TokenToLine((UBYTE *)" 0");
+	if ( first ) { TOKENTOLINE(" 0","0"); }
 	else if ( lbrac ) {
 /*		if ( ( prtf & PRINTCONTENTS ) != 0 ) PrtTerms(); */
 		TOKENTOLINE(" )",")");
@@ -1957,7 +1963,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteOne : 
+ 		#] WriteOne :
   	#] schryf-Writes :
 */
 

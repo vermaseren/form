@@ -1103,7 +1103,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms :
+ 		#] GetMoreTerms : 
  		#[ GetMoreFromMem :
 
 */
@@ -1389,7 +1389,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore : 
+ 		#] GetFromStore :
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.

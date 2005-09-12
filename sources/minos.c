@@ -14,10 +14,8 @@
 /*:[15dec2003 mt]*/
 int withoutflush = 0;
 
-#define WITHZLIB
-
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Variables :
 */
  
@@ -30,7 +28,7 @@ static NAMESBLOCK scratchnamesblock;
                       x>>=8;} s += sizeof(type);
 
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Utilities :
  		#[ minosread :
 */
@@ -48,7 +46,7 @@ int minosread(FILE *f,char *buffer,MLONG size)
 }
 
 /*
- 		#] minosread : 
+ 		#] minosread :
  		#[ minoswrite :
 */
 
@@ -66,7 +64,7 @@ int minoswrite(FILE *f,char *buffer,MLONG size)
 }
 
 /*
- 		#] minoswrite : 
+ 		#] minoswrite :
  		#[ str_dup :
 */
 
@@ -85,7 +83,7 @@ char *str_dup(char *str)
 }
 
 /*
- 		#] str_dup : 
+ 		#] str_dup :
  		#[ convertblock :
 */
 
@@ -134,7 +132,7 @@ void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode)
 }
 
 /*
- 		#] convertblock : 
+ 		#] convertblock :
  		#[ convertnamesblock :
 */
 
@@ -160,7 +158,7 @@ void convertnamesblock(NAMESBLOCK *in,NAMESBLOCK *out,int mode)
 }
 
 /*
- 		#] convertnamesblock : 
+ 		#] convertnamesblock :
  		#[ convertiniinfo :
 */
 
@@ -188,7 +186,7 @@ void convertiniinfo(INIINFO *in,INIINFO *out,int mode)
 }
 
 /*
- 		#] convertiniinfo : 
+ 		#] convertiniinfo :
  		#[ LocateBase :
 */
 
@@ -249,8 +247,8 @@ FILE *LocateBase ARG2(char **,name,char **,newname)
 }
 
 /*
- 		#] LocateBase : 
-  	#] Utilities : 
+ 		#] LocateBase :
+  	#] Utilities :
   	#[ ReadIndex :
 */
 
@@ -264,11 +262,13 @@ int ReadIndex(DBASE *d)
 	Allocate the pieces one by one (makes it easier to give it back)
 */
 	if ( d->info.numberofindexblocks <= 0 ) return(0);
+#ifndef WORDSIZE32
 	if ( sizeof(INDEXBLOCK)*d->info.numberofindexblocks > MAXINDEXSIZE ) {
 		MesPrint("We need more than %ld bytes for the index.\n",MAXINDEXSIZE);
 		MesPrint("The file %s may not be a proper database\n",d->name);
 		return(-1);
 	}
+#endif
 	size = sizeof(INDEXBLOCK *)*d->info.numberofindexblocks;
 	if ( ( ib = (INDEXBLOCK **)Malloc1(size,"tb,index") ) == 0 ) return(-1);
 	for ( i = 0; i < d->info.numberofindexblocks; i++ ) {
@@ -361,7 +361,7 @@ thisiswrong:
 }
 
 /*
-  	#] ReadIndex : 
+  	#] ReadIndex :
   	#[ WriteIndexBlock :
 */
 
@@ -382,7 +382,7 @@ int WriteIndexBlock(DBASE *d,MLONG num)
 }
 
 /*
-  	#] WriteIndexBlock : 
+  	#] WriteIndexBlock :
   	#[ WriteNamesBlock :
 */
 
@@ -403,7 +403,7 @@ int WriteNamesBlock(DBASE *d,MLONG num)
 }
 
 /*
-  	#] WriteNamesBlock : 
+  	#] WriteNamesBlock :
   	#[ WriteIndex :
 
 	Problem here is to get the links right.
@@ -468,7 +468,7 @@ int WriteIndex(DBASE *d)
 }
 
 /*
-  	#] WriteIndex : 
+  	#] WriteIndex :
   	#[ WriteIniInfo :
 */
 
@@ -485,7 +485,7 @@ int WriteIniInfo(DBASE *d)
 }
 
 /*
-  	#] WriteIniInfo : 
+  	#] WriteIniInfo :
   	#[ ReadIniInfo :
 */
 
@@ -508,7 +508,7 @@ int ReadIniInfo(DBASE *d)
 }
 
 /*
-  	#] ReadIniInfo : 
+  	#] ReadIniInfo :
   	#[ GetDbase :
 */
 
@@ -550,7 +550,7 @@ DBASE *GetDbase(char *filename)
 }
 
 /*
-  	#] GetDbase : 
+  	#] GetDbase :
   	#[ NewDbase :
 
 	Creates a new database with 'number' entries in the index.
@@ -714,7 +714,7 @@ void FreeTableBase(DBASE *d)
 }
 
 /*
-  	#] FreeTableBase : 
+  	#] FreeTableBase :
   	#[ ComposeTableNames :
 
 		The nameblocks are supposed to be in memory.
@@ -766,7 +766,7 @@ gotall:;
 }
 
 /*
-  	#] ComposeTableNames : 
+  	#] ComposeTableNames :
   	#[ OpenDbase :
 */
 
@@ -795,7 +795,7 @@ DBASE *OpenDbase(char *filename)
 }
 
 /*
-  	#] OpenDbase : 
+  	#] OpenDbase :
   	#[ AddTableName :
 
 	Adds a name of a table. Writes the namelist to disk.
@@ -879,7 +879,7 @@ MLONG AddTableName(DBASE *d,char *name,TABLES T)
 }
 
 /*
-  	#] AddTableName : 
+  	#] AddTableName :
   	#[ GetTableName :
 
 	Gets a name of a table.
@@ -912,7 +912,7 @@ MLONG GetTableName(DBASE *d,char *name)
 }
 
 /*
-  	#] GetTableName : 
+  	#] GetTableName :
   	#[ PutTableNames :
 
 	Takes the names string in d->tablenames and puts it in the nblocks
@@ -1009,7 +1009,7 @@ int PutTableNames(DBASE *d)
 }
 
 /*
-  	#] PutTableNames : 
+  	#] PutTableNames :
   	#[ AddToIndex :
 */
 
@@ -1095,7 +1095,7 @@ dowrite:
 }
 
 /*
-  	#] AddToIndex : 
+  	#] AddToIndex :
   	#[ AddObject :
 */
 
@@ -1109,7 +1109,7 @@ MLONG AddObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs)
 }
 
 /*
-  	#] AddObject : 
+  	#] AddObject :
   	#[ FindTableNumber :
 */
 
@@ -1137,7 +1137,7 @@ MLONG FindTableNumber(DBASE *d,char *name)
 }
 
 /*
-  	#] FindTableNumber : 
+  	#] FindTableNumber :
   	#[ WriteObject :
 */
 
@@ -1226,7 +1226,7 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 }
 
 /*
-  	#] WriteObject : 
+  	#] WriteObject :
   	#[ ReadObject :
 
 	Returns a pointer to the proper rhs
@@ -1305,7 +1305,7 @@ foundelement:;
 }
 
 /*
-  	#] ReadObject : 
+  	#] ReadObject :
   	#[ ReadijObject :
 
 	Returns a pointer to the proper rhs
@@ -1357,7 +1357,7 @@ char *ReadijObject(DBASE *d,MLONG i,MLONG j,char *arguments)
 }
 
 /*
-  	#] ReadijObject : 
+  	#] ReadijObject :
   	#[ ExistsObject :
 
 	Returns 1 if Object exists
@@ -1387,7 +1387,7 @@ int ExistsObject(DBASE *d,MLONG tablenumber,char *arguments)
 }
 
 /*
-  	#] ExistsObject : 
+  	#] ExistsObject :
   	#[ DeleteObject :
 
 	Returns 1 if Object has been deleteted.
@@ -1423,6 +1423,6 @@ int DeleteObject(DBASE *d,MLONG tablenumber,char *arguments)
 }
 
 /*
-  	#] DeleteObject : 
+  	#] DeleteObject :
 */
 

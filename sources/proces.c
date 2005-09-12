@@ -11,7 +11,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Variables :
 */
@@ -22,7 +22,7 @@ WORD *listinprint;
 WORD numlistinprint;
 
 /*
- 		#] Variables : 
+ 		#] Variables :
  		#[ Processor :			WORD Processor()
 
 	This is the central processor.
@@ -274,7 +274,7 @@ commonread:
 					AR.CompressPointer = oldipointer;
 					AM.ComprTop = comprtop;
 				} while ( GetTerm(term) );
-				if ( FlushOut(&position,AR.outfile) ) goto ProcErr;
+				if ( FlushOut(&position,AR.outfile,1) ) goto ProcErr;
 				break;
 			case HIDELEXPRESSION:
 			case HIDEGEXPRESSION:
@@ -314,7 +314,7 @@ commonread:
 					AR.CompressPointer = oldipointer;
 					AM.ComprTop = comprtop;
 				} while ( GetTerm(term) );
-				if ( FlushOut(&position,AS.hidefile) ) goto ProcErr;
+				if ( FlushOut(&position,AS.hidefile,1) ) goto ProcErr;
 				AS.hidefile->POfull = AS.hidefile->POfill;
 				break;
 			case DROPPEDEXPRESSION:
@@ -340,7 +340,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 
 	TestSub hunts for subexpression pointers.
@@ -771,9 +771,12 @@ Important: we may not have enough spots here
 					}
 				}
 			}
-			if ( *t < FUNCTION + WILDOFFSET ) {
+/*			if ( *t < FUNCTION + WILDOFFSET ) { */
 				if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & DIRTYFLAG ) != 0 ) funflag = 1;
+/*
+	Presumably a bug. WILDOFFSET was already subtracted from funnum
+	Noted by M. Tentyukov mar-2004
 			}
 			else if ( *t >= FUNCTION + WILDOFFSET ) {
 /*!!!
@@ -785,6 +788,7 @@ fprintf(stdout, "!!!!!!!!WARNING!!!!!!!!!!!!! %d\n",funnum-FUNCTION-WILDOFFSET);
 				if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & DIRTYFLAG ) ) funflag = 1;
 			}
+*/
 			if ( *t <= MAXBUILTINFUNCTION ) {
 			if ( *t == THETA || *t == THETA2 ) {
 				WORD *tstop, *t2, kk;
@@ -852,9 +856,13 @@ fprintf(stdout, "!!!!!!!!WARNING!!!!!!!!!!!!! %d\n",funnum-FUNCTION-WILDOFFSET);
 				AR.TePos = -1;
 				return(1);
 			}
-			else if ( *t == TABLEFUNCTION && t[FUNHEAD] <= -FUNCTION
+			else if ( ( *t == TABLEFUNCTION ) && ( t[FUNHEAD] <= -FUNCTION )
 			&& ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
-			&& t[1] >= FUNHEAD+1+2*T->numind ) {
+			&& ( t[1] >= FUNHEAD+1+2*T->numind )
+			&& ( t[FUNHEAD+1] == -SYMBOL ) ) {
+/*
+				The case of table_(tab,sym1,...,symn)
+*/
 				for ( isp = 0; isp < T->numind; isp++ ) {
 					if ( t[FUNHEAD+1+2*isp] != -SYMBOL ) break;
 				}
@@ -864,6 +872,18 @@ fprintf(stdout, "!!!!!!!!WARNING!!!!!!!!!!!!! %d\n",funnum-FUNCTION-WILDOFFSET);
 					AR.TePos = -1;
 					return(1);
 				}
+			}
+			else if ( *t == TABLEFUNCTION && t[FUNHEAD] <= -FUNCTION
+			&& ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
+			&& ( t[1] == FUNHEAD+2 )
+			&& ( t[FUNHEAD+1] <= -FUNCTION ) ) {
+/*
+				The case of table_(tab,fun)
+*/
+				AR.TeInFun = -3;
+				AR.TeSuOut = 0;
+				AR.TePos = -1;
+				return(1);
 			}
 			else if ( *t == AM.polyfunnum ) {
 				AR.TeInFun = -4;
@@ -1191,7 +1211,7 @@ EndTest:
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 
 		Makes the replacement of 'replac' in a function argument.
@@ -1529,7 +1549,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 
 		Puts the terms 'term' and 'position' together into a single
@@ -1642,7 +1662,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 
 		Gets a term from stored expression expr and puts it in
@@ -1664,6 +1684,7 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
    LONG retlength;
 	/*:[13jul2005 mt]*/
 	WORD *oldipointer;
+	LONG retlength;
 	stop = accum + 2*AM.MaxTer;
 	*accum++ = number;
 	while ( --number >= 0 ) accum += *accum;
@@ -1799,7 +1820,7 @@ PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 
 		Concatenates the contents of the accumulator into a single
@@ -1961,7 +1982,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(term,level)
 
 		The heart of the program
@@ -2196,6 +2217,7 @@ CommonEnd:
 				  case TYPENORM:
 				  case TYPENORM2:
 				  case TYPENORM3:
+				  case TYPENORM4:
 				  case TYPESPLITARG:
 				  case TYPESPLITARG2:
 				  case TYPESPLITFIRSTARG:
@@ -2643,7 +2665,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 
 		Routine gets one power of an expression.
@@ -2819,7 +2841,7 @@ PowCall:
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 
 		Picks up the deferred brackets.
@@ -2923,7 +2945,7 @@ DefCall:
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 
 		Routine checks whether the count of function AC.PolyFun is zero
@@ -3170,7 +3192,7 @@ PrepPoly ARG1(WORD *,term)
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyMul :			WORD PolyMul(term) 
 */
 
@@ -3365,6 +3387,6 @@ PolyCall:
 }
 
 /*
- 		#] PolyMul : 
+ 		#] PolyMul :
 	#] Processor :
 */

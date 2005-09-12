@@ -21,21 +21,21 @@ static struct id_options {
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
 int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
 int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ DoExpr:
 */
 
@@ -179,7 +179,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 				OldWork[SUBEXPSIZE+5] = 3;
 				OldWork[SUBEXPSIZE+6] = 0;
 				if ( PutOut(OldWork+2,&pos,AR.outfile,0) < 0
-				|| FlushOut(&pos,AR.outfile) ) {
+				|| FlushOut(&pos,AR.outfile,0) ) {
 					MesPrint("&Cannot create expression");
 					error = -1;
 				}
@@ -217,7 +217,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
@@ -228,7 +228,7 @@ int CoIdOld ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdOld : 
+  	#] CoIdOld :
   	#[ CoId :
 */
 
@@ -239,7 +239,7 @@ int CoId ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoId : 
+  	#] CoId :
   	#[ CoIdNew :
 */
 
@@ -250,7 +250,7 @@ int CoIdNew ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdNew : 
+  	#] CoIdNew :
   	#[ CoDisorder :
 */
 
@@ -261,7 +261,7 @@ int CoDisorder ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDisorder : 
+  	#] CoDisorder :
   	#[ CoMany :
 */
 
@@ -272,7 +272,7 @@ int CoMany ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMany : 
+  	#] CoMany :
   	#[ CoMulti :
 */
 
@@ -283,7 +283,7 @@ int CoMulti ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMulti : 
+  	#] CoMulti :
   	#[ CoIfMatch :
 */
 
@@ -294,7 +294,7 @@ int CoIfMatch ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIfMatch : 
+  	#] CoIfMatch :
   	#[ CoOnce :
 */
 
@@ -305,7 +305,7 @@ int CoOnce ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnce : 
+  	#] CoOnce :
   	#[ CoOnly :
 */
 
@@ -316,7 +316,7 @@ int CoOnly ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnly : 
+  	#] CoOnly :
   	#[ CoSelect :
 */
 
@@ -327,7 +327,7 @@ int CoSelect ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoSelect : 
+  	#] CoSelect :
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -777,8 +777,8 @@ AllDone:
 }
 
 /*
-   #] CoIdExpression : 
-	#[ CoMultiply :
+  	#] CoIdExpression :
+  	#[ CoMultiply :
 */
 
 static WORD mularray[13] = { TYPEMULT, SUBEXPSIZE+3, 0, SUBEXPRESSION,
@@ -816,7 +816,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 }
 
 /*
-   #] CoMultiply :
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1023,6 +1023,10 @@ redef:;
 		sum += TABLEEXTENSION-2;
 #endif
 	}
+	if ( AC.exprfillwarning == 1 ) {
+		AC.exprfillwarning = 2;
+		Warning("Use of expressions and/or $variables in Fill statements is potentially very dangerous.");
+	}
 	AC.tablefilling = 0;
 	if ( T->sparse && c != 0 ) {
 		MesPrint("&In sparse tables one can fill only one element at a time");
@@ -1057,7 +1061,7 @@ redef:;
 }
 
 /*
-  	#] CoFill : 
+  	#] CoFill :
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1065,6 +1069,11 @@ redef:;
 	of the dimensions of the table. Then the bracket with x1^2*x3^4
 	will fill the (2,0,4) element of the table (if n=3 of course).
 	Brackets that don't fit will be skipped. It just gives a warning.
+
+	New option (13-jul-2005)
+	Syntax: FillExpression table = expression(f);
+	The table indices are arguments of the function f which should
+	have been bracketed before.
 */
 
 int CoFillExpression ARG1(UBYTE *,inp)
@@ -1073,9 +1082,9 @@ int CoFillExpression ARG1(UBYTE *,inp)
 	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AR.WorkPointer;
 	WORD *brackets, *term, brasize, *b, *m, *w, *pw, *tstop, zero = 0;
 	WORD oldcbuf = AR.cbufnum, curelement = 0;
-	int weneedit, i, j, numzero, sum, pow;
+	int weneedit, i, j, numzero, pow;
 	TABLES T = 0;
-	LONG newreservation, numcommu;
+	LONG newreservation, numcommu, sum;
 	POSITION oldposition;
 	FILEHANDLE *fi; 
 	CBUF *C;
@@ -1119,8 +1128,25 @@ int CoFillExpression ARG1(UBYTE *,inp)
 		if ( ( p = SkipAName(inp) ) == 0 ) return(1);
 		c = *p; *p = 0;
 		if ( GetVar(inp,&type,&symnum,CSYMBOL,NOAUTO) == NAMENOTFOUND ) {
-			MesPrint("&%s should be a previously declared symbol",inp);
-			*p = c; return(1);
+			if ( numsym > 0 ) {
+				MesPrint("&%s should be a previously declared symbol",inp);
+				*p = c; return(1);
+			}
+			else {
+				if ( GetVar(inp,&type,&symnum,CFUNCTION,NOAUTO) == NAMENOTFOUND ) {
+					MesPrint("&%s should be a previously declared symbol or function",inp);
+					*p = c; return(1);
+				}
+				numsym = -1;
+				*p++ = c;
+				if ( c != ')' ) {
+					MesPrint("&Argument should be a single function or a list of symbols");
+					*p = c; return(1);
+				}
+				symnum += FUNCTION;
+				*AR.WorkPointer++ = symnum;
+				break;
+			}
 		}
 		*p++ = c;
 		*AR.WorkPointer++ = symnum;
@@ -1138,10 +1164,11 @@ int CoFillExpression ARG1(UBYTE *,inp)
 /*
 	We have the number of the table in funnum.
 	The number of the expression in expnum, the table struct in T
-	and the numbers of the symbols in oldwork. There are numsym of them.
+	and either the numbers of the symbols in oldwork (there are numsym of them)
+	or the number of the function in oldwork (just one and numsym = -1).
 	We don't sort them!!!!
 */
-	if ( T->numind != numsym ) {
+	if ( ( numsym > 0 ) && ( T->numind != numsym ) ) {
 		MesPrint("&This table needs %d symbols for its array indices");
 		goto noway;
 	}
@@ -1167,7 +1194,9 @@ int CoFillExpression ARG1(UBYTE *,inp)
 		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(Expressions[expnum].onfile));
 	}
 	pw = AR.WorkPointer;
-	brackets = pw + numsym; brasize = -1; weneedit = 0;
+	if ( numsym < 0 ) { brackets = pw + 1; }
+	else { brackets = pw + numsym; }
+	brasize = -1; weneedit = 0; /* stands for we need it */
 	term = brackets + AM.MaxTer;
 	AR.WorkPointer = term + AM.MaxTer;
 	AR.cbufnum = T->bufnum;
@@ -1199,18 +1228,39 @@ int CoFillExpression ARG1(UBYTE *,inp)
 				numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 				C->CanCommu[curelement] = numcommu;
 			}
-			b = brackets; w = term + 1; pw = oldwork + numsym;
+			b = brackets; w = term + 1;
+			if ( numsym < 0 ) pw = oldwork + 1;
+			else              pw = oldwork + numsym;
 			while ( w < m ) *b++ = *w++;
 			brasize = b - brackets;
 /*
 			Now compute the element. See whether we need it
 */
-			if ( *brackets != SYMBOL || brackets[1] < brasize
+			if ( numsym < 0 ) {
+				if ( *brackets != symnum || brasize != brackets[1] ) {
+					weneedit = 0; continue;	/* Cannot work! */
+				}
+/*
+				Now count the number of arguments and whether they are numbers
+*/
+				b = brackets + FUNHEAD;
+				i = 0;
+				while ( b < m ) {
+					if ( *b != -CNUMBER ) break;
+					i++;
+					b += 2;
+				}
+				if ( b < m || i != T->numind ) {
+					weneedit = 0; continue;	/* Cannot work! */
+				}
+			}
+			else if ( *brackets != SYMBOL || brackets[1] < brasize
 			|| (brackets[1]-2) > numsym*2 ) {
 				weneedit = 0; continue;	/* Cannot work! */
 			}
 			numzero = 0; sum = 0;
-			for ( i = 0; i < numsym; i++ ) {
+			if ( numsym > 0 ) {
+			  for ( i = 0; i < numsym; i++ ) {
 				b = brackets + 2; j = brackets[1]-2;
 				while ( j > 0 ) {
 					if ( *b == oldwork[i] ) break;
@@ -1228,10 +1278,24 @@ int CoFillExpression ARG1(UBYTE *,inp)
 					weneedit = 0; goto nextterm;
 				}
 				else sum += ( pow - T->mm[i].mini ) * T->mm[i].size;
+			  }
+			}
+			else {
+			  b = brackets + FUNHEAD;
+			  sum = 0;
+			  for ( i = 0; i < T->numind; i++ ) {
+				pow = b[1];
+				b += 2;
+				if ( T->sparse ) { *pw++ = pow; }
+				else if ( pow < T->mm[i].mini || pow > T->mm[i].maxi ) {
+					weneedit = 0; goto nextterm;
+				}
+				else sum += ( pow - T->mm[i].mini ) * T->mm[i].size;
+			  }
 			}
 			weneedit = 1;
 			if ( T->sparse ) {
-				pw = oldwork + numsym;
+				pw = oldwork + T->numind;
 				i = FindTableTree(T,pw,1);
 				if ( i >= 0 ) {
 					sum = i+T->numind;
@@ -1273,13 +1337,19 @@ int CoFillExpression ARG1(UBYTE *,inp)
 					T->tablepointers = w;
 					T->reserved = newreservation;
 				}
-				pw = oldwork + numsym;
+				if ( numsym < 0 ) pw = oldwork + 1;
+				else              pw = oldwork + numsym;
 				for ( sum = T->totind*(T->numind+TABLEEXTENSION), i = 0; i < T->numind; i++ ) {
 					T->tablepointers[sum++] = *pw++;
 				}
 				InsTableTree(T,T->tablepointers+sum-T->numind);
 				(T->totind)++;
 			}
+#if ( TABLEEXTENSION != 2 )
+			else {
+				sum *= TABLEEXTENSION;
+			}
+#endif
 /*
 			Start a new entry. Copy the element.
 */
@@ -1414,7 +1484,7 @@ int CoPrintTable ARG1(UBYTE *,inp)
 	AO.OutputLine = AO.OutFill = (UBYTE *)Malloc1(AC.LineLength+20,"PrintTable");
 	AO.OutStop = AO.OutFill + AC.LineLength;
 	for ( i = 0; i < T->totind; i++ ) {
-		if ( !T->sparse && T->tablepointers[i] < 0 ) continue;
+		if ( !T->sparse && T->tablepointers[i*TABLEEXTENSION] < 0 ) continue;
 		TokenToLine((UBYTE *)"Fill ");
 		TokenToLine((UBYTE *)(VARNAME(functions,funnum)));
 		TokenToLine((UBYTE *)"(");
@@ -1488,7 +1558,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable : 
+  	#] CoPrintTable :
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1510,6 +1580,9 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 	inp++; name = inp;
 	if ( FG.cTable[*inp] != 0 ) goto nolhs;
 	while ( FG.cTable[*inp] < 2 ) inp++;
+	if ( AC.PreAssignFlag == 2 ) {
+		if ( *inp == '_' ) inp++;
+	}
 	if ( *inp != '=' ) {
 		MesPrint("&assign statement should have only a dollar variable in the LHS");
 		return(1);
@@ -1547,9 +1620,72 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign : 
+  	#] CoAssign :
+  	#[ CoDeallocateTable :
+
+	Syntax: DeallocateTable tablename(s);
+	Should work only for sparse tables.
+	Action: Cleans all definitions of elements of a table as if there have
+	        never been any fill statements.
 */
-/* temporary commentary for forcing cvs merge */
+
+int CoDeallocateTable ARG1(UBYTE *,inp)
+{
+	UBYTE *p, c;
+	TABLES T = 0;
+	WORD type, funnum, i;
+	c = *inp;
+	while ( c ) {
+		while ( *inp == ',' ) *inp++;
+		if ( *inp == 0 ) break;
+		if ( ( p = SkipAName(inp) ) == 0 ) return(1);
+		c = *p; *p = 0;
+		if ( ( GetVar(inp,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
+		|| ( T = functions[funnum].tabl ) == 0 ) {
+			MesPrint("&%s should be a previously declared table",inp);
+			*p = c; return(1);
+		}
+		if ( T->sparse == 0 ) {
+			MesPrint("&%s should be a sparse table",inp);
+			*p = c; return(1);
+		}
+		if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
+		ClearTableTree(T);
+		for (i = 0; i <= T->buffersfill; i++ ) {
+			finishcbuf(T->buffers[i]);
+		}
+		T->bufnum = inicbufs();
+		T->buffersfill = 0;
+		T->buffers[T->buffersfill++] = T->bufnum;
+		T->tablepointers = 0;
+		T->boomlijst = 0;
+		T->totind = 0;
+		T->reserved = 0;
+
+		if ( T->spare ) {
+			TABLES TT = T->spare;
+			if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
+			ClearTableTree(TT);
+			for (i = 0; i <= TT->buffersfill; i++ ) {
+				finishcbuf(TT->buffers[i]);
+			}
+			TT->bufnum = inicbufs();
+			TT->buffersfill = 0;
+			TT->buffers[T->buffersfill++] = T->bufnum;
+			TT->tablepointers = 0;
+			TT->boomlijst = 0;
+			TT->totind = 0;
+			TT->reserved = 0;
+		}
+		*p++ = c;
+		inp = p;
+	}
+ 	return(0);
+}
+
+/*
+  	#] CoDeallocateTable :
+*/
 
 
 

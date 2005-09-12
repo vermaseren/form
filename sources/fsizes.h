@@ -6,23 +6,26 @@
 	The following variables are default sizes. They can be changed
 	into values read from the setup file
 */
-
-/*[16apr2004 mt]:*/
-#ifdef CUSTOM_MAXPOWER
-#define MAXPOWER CUSTOM_MAXPOWER
+#ifdef WORDSIZE32
+#define MAXPOWER 500000000
+#define MAXVARIABLES 200000050
+#define WILDOFFSET 200000100
+#define MAXINNAMETREE 2000000000
+#define MAXDUMMIES 100000000
+#define WORKBUFFER 20000000
+#define MAXTER 40000
 #else
 #define MAXPOWER 10000
-#endif
-/*:[16apr2004 mt]*/
-
 #define MAXVARIABLES 6050
 #define WILDOFFSET 6100
 #define MAXINNAMETREE 32768
 #define MAXDUMMIES 1000
+#define WORKBUFFER 1000000
+#define MAXTER 10000
+#endif
 #define MAXENAME 16
 
 #define MAXPARLEVEL 100
-#define WORKBUFFER 1000000
 #define MAXNUMBERSIZE 200
 
 #define MAXREPEAT 100
@@ -48,7 +51,6 @@
 #define FORTRANCONTINUATIONLINES 15
 #define MAXLEVELS 2000
 #define MAXLHS 400
-#define MAXTER 2000
 #define MAXWILDC 100
 #define NUMTABLEENTRIES 1000
 #define COMPILERBUFFER 20000
@@ -90,5 +92,12 @@
 
 #define TABLEEXTENSION 6
 
+#define GZIPDEFAULT 0
+
+#ifdef WORDSIZE32
+#define MAXTABLECOMBUF 100000000000L
+#define MAXCOMBUFRHS 1000000000L
+#else
 #define MAXTABLECOMBUF 1000000L
 #define MAXCOMBUFRHS 32000L
+#endif

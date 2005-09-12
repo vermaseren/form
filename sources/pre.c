@@ -528,6 +528,7 @@ PutPreVar ARG4(UBYTE *,name,UBYTE *,value,UBYTE *,args,int,mode)
 	if ( value ) {
 		p->value = t;
 		s = value; while ( *s ) *t++ = *s++; *t = 0;
+		if ( AM.atstartup && t[-1] == '\n' ) t[-1] = 0;
 	}
 	else p->value = 0;
 	p->wildarg = 0;
@@ -561,7 +562,7 @@ PutPreVar ARG4(UBYTE *,name,UBYTE *,value,UBYTE *,args,int,mode)
 }
 
 /*
- 		#] PutPreVar : 
+ 		#] PutPreVar :
  		#[ PopPreVars :
 */
 
@@ -696,7 +697,7 @@ PreProcessor ARG0
 		/*The module counter is AC.CModule, it is incremented in IniModule*/
 		{/*Block:*/
 			UBYTE buf[21];/*64/Log_2[10] = 19.3, this is enough for any integer*/
-      	sprintf(buf,"%lu",AC.CModule);
+      	sprintf((char *)buf,"%lu",AC.CModule);
 			PutPreVar((UBYTE *)"CMODULE_",buf,0,1);
 		}/*:Block*/
 		/*:[19nov2003 mt]*/
@@ -866,7 +867,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor : 
+ 		#] PreProcessor :
  		#[ PreProInstruction :
 */
 
@@ -2252,15 +2253,20 @@ nonumber:
 		#do i = num1,num2 [,num3]
 		#do i = {string1|string2|....|stringn}
 		In the new version the | may also be a comma.
+
+		New variety being under construction
+		#do i = expression      One by one all terms of the expression
+		Work started 11-jan-2005 JV
 */
 
 int
 DoDo ARG1(UBYTE *,s)
 {
-	UBYTE *t, c;
+	UBYTE *t, c, *u, *uu;
 	DOLOOP *loop;
+	WORD expnum;
 	long linenum  = AC.CurrentStream->linenumber;
-	int oldNoShowInput = AC.NoShowInput;
+	int oldNoShowInput = AC.NoShowInput, i;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 	AddToPreTypes(PRETYPEDO);
@@ -2324,6 +2330,58 @@ DoDo ARG1(UBYTE *,s)
 		}
 		else loop->incnum = 1;
 		loop->contents = s;
+	}
+	else if ( ( chartype[*s] == 0 ) || ( *s == '[' ) ) {
+		t = s;
+		if ( ( s = SkipAName(s) ) == 0 ) goto illdo;
+		c = *s; *s = 0;
+		if ( GetName(AC.exprnames,t,&expnum,NOAUTO) == CEXPRESSION ) {
+			loop->type = ONEEXPRESSION;
+/*
+			We should remember the expression by name for when it gets
+			renumbered!!! If it gets deleted there will be a crash or at
+			least the loop terminates.
+*/	
+			loop->vars = t;
+		}
+		else goto illdo;
+		if ( c == ',' || c == '\t' || c == ';' ) { s++; }
+		else if ( c != 0 && c != '\n' ) goto illdo;
+		while ( *s == ',' || *s == '\t' || *s == ';' ) s++;
+		if ( *s != 0 && *s != '\n' ) goto illdo;
+		loop->firstnum = 0;
+		s++;
+		loop->contents = s;
+		loop->incnum = 0;
+/*
+		Next determine size of statement and allocate space
+*/
+		while ( *t ) t++;
+		i = t - loop->vars;
+		t = loop->name;
+		while ( *t ) { t++; i++; }
+		i += 4;
+		loop->dollarname = Malloc1((LONG)i,"do-loop instruction");
+/*
+		Construct the statement
+*/
+		u = loop->dollarname;
+		*u++ = '$'; t = loop->name; while ( *t ) *u++ = *t++;
+		*u++ = '_'; uu = u; *u++ = '='; t = loop->vars;
+		while ( *t ) *u++ = *t++; *t = 0;
+/*
+		Compile and put in dollar variable.
+		Note that we remember the dollar by name and that this name ends in _
+*/
+printf ( "%s\n",loop->dollarname);
+		AC.PreAssignFlag = 2;
+        CompileStatement(loop->dollarname);
+		if ( CatchDollar(0) ) {
+			MesPrint("@Cannot load expression in do loop");
+			return(-1);
+		}
+		AC.PreAssignFlag = 0;
+		*uu = 0;
 	}
 	else goto illdo; /* Syntax problems */
 	loop->errorsinloop = 0;
@@ -2461,8 +2519,9 @@ DoEnddo ARG1(UBYTE *,s)
 			*tt++ = *value++;
 		} 
 		*tt = 0;
+		PutPreVar(loop->name,t,0,1);	/* We overwrite the definition */
 	}
-	else /* if ( loop->type == NUMERICALLOOP ) */ {
+	else if ( loop->type == NUMERICALLOOP ) {
 
 		if ( !loop->firstloopcall ) {
 /*
@@ -2495,8 +2554,39 @@ DoEnddo ARG1(UBYTE *,s)
 		NumToStr(numstr,loop->firstnum);
 		t = numstr;
 		loop->firstnum += loop->incnum;
+		PutPreVar(loop->name,t,0,1);	/* We overwrite the definition */
 	}
-	PutPreVar(loop->name,t,0,1);	/* We overwrite the definition */
+	else if ( loop->type == ONEEXPRESSION ) {
+/*
+		Find the dollar expression
+*/
+		WORD numdollar = GetDollar(loop->dollarname+1);
+		DOLLARS d = Dollars + numdollar;
+		WORD *w, *dw, v, *ww;
+		if ( (d->where) == 0 ) {
+			d->type = DOLUNDEFINED;
+			M_free(loop->dollarname,"do-loop instruction");
+			goto finish;
+		}
+		w = d->where + loop->incnum;
+		if ( *w == 0 ) {
+			M_free(d->where,"dollar");
+			d->where = 0;
+			d->type = DOLUNDEFINED;
+			M_free(loop->dollarname,"do-loop instruction");
+			goto finish;
+		}
+		loop->incnum += *w;
+/*
+		Now the term has to be converted to text.
+*/
+		ww = w + *w; v = *ww; *ww = 0;
+		dw = d->where; d->where = w;
+		t = WriteDollarToBuffer(numdollar);
+		d->where = dw; *ww = v;
+		PutPreVar(loop->name,t,0,1);	/* We overwrite the definition */
+		M_free(t,"dollar");
+	}
 	if ( loop->firstloopcall ) OpenStream(loop->contents,PREREADSTREAM2,0,PRENOACTION);
 	else OpenStream(loop->contents,PREREADSTREAM,0,PRENOACTION);
 	AC.CurrentStream->prevline   =
@@ -3205,7 +3295,7 @@ DoPreWrite ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoPreWrite :
+ 		#] DoPreWrite : 
  		#[ DoProcedure :
 
 		We have to read this procedure into a buffer.
@@ -4414,8 +4504,8 @@ DoPreAddSeparator ARG1(UBYTE *,s)
 }/*DoPreAddSeparator*/
 
 /*
- 		#] DoPreAddSeparator :
- 		#[ DoPreRmSeparator 
+ 		#] DoPreAddSeparator : 
+ 		#[ DoPreRmSeparator :
 */
 
 /*Characters ' ', '\t' and '"' are ignored!*/
@@ -4432,7 +4522,7 @@ DoPreRmSeparator ARG1(UBYTE *,s)
 }/*DoPreRmSeparator*/
 
 /*
- 		#] DoPreRmSeparator 
+ 		#] DoPreRmSeparator : 
 */
 /*:[12dec2003 mt]*/
 

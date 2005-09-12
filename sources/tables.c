@@ -303,6 +303,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 		T = functions[-t[FUNHEAD]-FUNCTION].tabl;
 		if ( T == 0 ) { t += t[1]; continue; }
 		if ( T->spare ) T = T->spare;
+		if ( t[1] == FUNHEAD+2 && t[FUNHEAD+1] <= -FUNCTION ) break;
 		if ( t[1] < FUNHEAD+1+2*T->numind ) { t += t[1]; continue; }
 		for ( i = 0; i < T->numind; i++ ) {
 			if ( t[FUNHEAD+1+2*i] != -SYMBOL ) break;
@@ -325,13 +326,25 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 */
 			m = termout + 1; mm = term + 1;
 			while ( mm < t ) *m++ = *mm++;
-			r = m; *m++ = SYMBOL; *m++ = 2+T->numind*2; mm = t + FUNHEAD+1;
-			tp = T->tablepointers + (T->numind+TABLEEXTENSION)*i;
-			for ( j = 0; j < T->numind; j++, mm += 2, tp++ ) {
-				if ( *tp != 0 ) { *m++ = mm[1]; *m++ = *tp; }
+			r = m;
+			if ( t[1] == FUNHEAD+2 && t[FUNHEAD+1] <= -FUNCTION ) {
+				*m++ = -t[FUNHEAD+1];
+				*m++ = FUNHEAD+T->numind*2;
+				for ( j = 2; j < FUNHEAD; j++ ) *m++ = 0;
+				tp = T->tablepointers + (T->numind+TABLEEXTENSION)*i;
+				for ( j = 0; j < T->numind; j++ ) {
+					*m++ = -SNUMBER; *m++ = *tp++;
+				}
 			}
-			r[1] = m-r;
-			if ( r[1] == 2 ) m = r;
+			else {
+				*m++ = SYMBOL; *m++ = 2+T->numind*2; mm = t + FUNHEAD+1;
+				tp = T->tablepointers + (T->numind+TABLEEXTENSION)*i;
+				for ( j = 0; j < T->numind; j++, mm += 2, tp++ ) {
+					if ( *tp != 0 ) { *m++ = mm[1]; *m++ = *tp; }
+				}
+				r[1] = m-r;
+				if ( r[1] == 2 ) m = r;
+			}
 /*
 			The next code replaces this old code
 
@@ -349,6 +362,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 			any risks. There is still one problem. We have not checked
 			that the prototype matches.
 */
+			r = m;
 			*m++ = -t[FUNHEAD];
 			*m++ = t[1] - 1;
 			for ( j = 2; j < FUNHEAD; j++ ) *m++ = t[j];
@@ -359,6 +373,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 			tp = t + FUNHEAD + 1 + 2*T->numind;
 			mm = t + t[1];
 			while ( tp < mm ) *m++ = *tp++;
+			r[1] = m-r;
 /*
 			From now on is old code
 */
@@ -380,18 +395,36 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 #endif
 			m = termout + 1; mm = term + 1;
 			while ( mm < t ) *m++ = *mm++;
-			r = m; *m++ = SYMBOL; *m++ = 2+T->numind*2; mm = t + FUNHEAD+1;
-			for ( j = 0; j < T->numind; j++, mm += 2 ) {
-				if ( j > 0 ) {
-					num = T->mm[j].mini + ( i % T->mm[j-1].size ) / T->mm[j].size;
+			r = m;
+			if ( t[1] == FUNHEAD+2 && t[FUNHEAD+1] <= -FUNCTION ) {
+				*m++ = -t[FUNHEAD+1];
+				*m++ = FUNHEAD+T->numind*2;
+				for ( j = 2; j < FUNHEAD; j++ ) *m++ = 0;
+				tp = T->tablepointers + (T->numind+TABLEEXTENSION)*i;
+				for ( j = 0; j < T->numind; j++ ) {
+					if ( j > 0 ) {
+						num = T->mm[j].mini + ( i % T->mm[j-1].size ) / T->mm[j].size;
+					}
+					else {
+						num = T->mm[j].mini + i / T->mm[j].size;
+					}
+					*m++ = -SNUMBER; *m++ = num;
 				}
-				else {
-					num = T->mm[j].mini + i / T->mm[j].size;
-				}
-				if ( num != 0 ) { *m++ = mm[1]; *m++ = num; }
 			}
-			r[1] = m-r;
-			if ( r[1] == 2 ) m = r;
+			else {
+				*m++ = SYMBOL; *m++ = 2+T->numind*2; mm = t + FUNHEAD+1;
+				for ( j = 0; j < T->numind; j++, mm += 2 ) {
+					if ( j > 0 ) {
+						num = T->mm[j].mini + ( i % T->mm[j-1].size ) / T->mm[j].size;
+					}
+					else {
+						num = T->mm[j].mini + i / T->mm[j].size;
+					}
+					if ( num != 0 ) { *m++ = mm[1]; *m++ = num; }
+				}
+				r[1] = m-r;
+				if ( r[1] == 2 ) m = r;
+			}
 /*
 			The next code replaces this old code
 
@@ -409,6 +442,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 			any risks. There is still one problem. We have not checked
 			that the prototype matches.
 */
+			r = m;
 			*m++ = -t[FUNHEAD];
 			*m++ = t[1] - 1;
 			for ( j = 2; j < FUNHEAD; j++ ) *m++ = t[j];
@@ -424,6 +458,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 			tp = t + FUNHEAD + 1 + 2*T->numind;
 			mm = t + t[1];
 			while ( tp < mm ) *m++ = *tp++;
+			r[1] = m - r;
 /*
 			From now on is old code
 */
@@ -440,7 +475,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] DoTableExpansion : 
+  	#] DoTableExpansion :
   	#[ TableBase :
 
 	File with all the database related things.
@@ -968,7 +1003,7 @@ int CoTBenter ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBenter :
+  	#] CoTBenter : 
   	#[ CoTestUse :
 
 	Possibly to be followed by names of tables.
@@ -1341,7 +1376,7 @@ int CoTBaudit ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBaudit :
+  	#] CoTBaudit : 
   	#[ CoTBon :
 */
 
@@ -1629,7 +1664,7 @@ int CoApply ARG1(UBYTE *,s)
 	UBYTE *tablename, c;
 	WORD type, funnum, *w;
 	TABLES T;
-	int maxtogo = MAXPOSITIVE;
+	long maxtogo = MAXPOSITIVE;
 	int error = 0;
 	w = AR.WorkPointer;
 	if ( FG.cTable[*s] == 1 ) {
@@ -1674,7 +1709,7 @@ int CoApply ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoApply : 
+  	#] CoApply :
   	#[ CoTBhelp :
 */
 

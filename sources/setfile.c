@@ -332,9 +332,17 @@ AllocSetups ARG0
 	MaxFpatches = sp->value;
 	sp = GetSetupPar((UBYTE *)"sortiosize");
 	IOsize = sp->value;
+#ifdef ZWITHZLIB
+	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize; }
+#endif
 	AM.S0 = 0;
 	AM.S0 = AllocSort(LargeSize,SmallSize,SmallEsize,TermsInSmall
 					,MaxPatches,MaxFpatches,IOsize);
+#ifdef ZWITHZLIB
+	AM.S0->file.ziosize = IOsize;
+	AR.FoStage4[0].ziosize = IOsize;
+	AR.FoStage4[1].ziosize = IOsize;
+#endif
 
 	AR.FoStage4[0].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 	AR.FoStage4[1].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
@@ -510,20 +518,20 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	problem here, we expand the size of the large buffer or the 
 	small extension
 */
-	if ( (ULONG)( LargeSize+SmallEsize ) < MaxFpatches*(IObuffersize
-		+AM.MaxTer+COMPINC)*sizeof(WORD) ) {
+	if ( (ULONG)( LargeSize+SmallEsize ) < MaxFpatches*((IObuffersize
+		+COMPINC)*sizeof(WORD)+2*AM.MaxTer) ) {
 		if ( LargeSize == 0 ) 
-			SmallEsize = MaxFpatches*(IObuffersize+AM.MaxTer+COMPINC)*sizeof(WORD);
+			SmallEsize = MaxFpatches*((IObuffersize+COMPINC)*sizeof(WORD)+2*AM.MaxTer);
 		else
-			LargeSize = MaxFpatches*(IObuffersize+AM.MaxTer+COMPINC)*sizeof(WORD)
+			LargeSize  = MaxFpatches*((IObuffersize+COMPINC)*sizeof(WORD)+2*AM.MaxTer)
 				- SmallEsize;
 	}
 
 	allocation =
-		 2*sizeof(POSITION)*(LONG)longer				/* Filepositions!! */
+		 3*sizeof(POSITION)*(LONG)longer				/* Filepositions!! */
 		+2*sizeof(WORD *)*longer
 		+2*(longerp*(sizeof(WORD *)+sizeof(WORD)))
-		+(longerp+2)*sizeof(WORD)
+		+(3*longerp+2)*sizeof(WORD)
 		+terms2insmall*sizeof(WORD *)
 		+terms2insmall*sizeof(WORD *)/2
 		+LargeSize
@@ -547,10 +555,18 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	sort->poina = sort->pStop+longer;
 	sort->poin2a = sort->poina + longerp;
 	sort->fPatches = (POSITION *)(sort->poin2a+longerp);
-	sort->inPatches = sort->fPatches + longer;
+	sort->fPatchesStop = sort->fPatches + longer;
+	sort->inPatches = sort->fPatchesStop + longer;
 	sort->tree = (WORD *)(sort->inPatches + longer);
 	sort->used = sort->tree+longerp;
+#ifdef ZWITHZLIB
+	sort->fpcompressed = sort->used+longerp;
+	sort->fpincompressed = sort->fpcompressed+longerp;
+	sort->ktoi = sort->fpincompressed+longerp;
+	sort->zsparray = 0;
+#else
 	sort->ktoi = sort->used + longerp;
+#endif
 	sort->lBuffer = (WORD *)(sort->ktoi + longerp + 2);
 	sort->lTop = sort->lBuffer+sort->LargeSize;
 	sort->sBuffer = sort->lTop;
@@ -749,7 +765,7 @@ int TryEnvironment()
 		*u = 0;
 		s = (char *)(getenv(varname));
 		if ( s ) {
-			error += ProcessOption(t,s,2);
+			error += ProcessOption((UBYTE *)t,(UBYTE *)s,2);
 		}
 	}
 	return(error);

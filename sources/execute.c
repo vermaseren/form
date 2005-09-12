@@ -15,7 +15,7 @@ PFDOLLARS *PFDollars;
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -140,7 +140,7 @@ CleanExpr ARG1(WORD,par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -200,7 +200,7 @@ PopVariables()
 }
 
 /*
- 		#] PopVariables : 
+ 		#] PopVariables :
  		#[ MakeGlobal :
 */
 
@@ -242,7 +242,7 @@ MakeGlobal ARG0
 }
 
 /*
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ TestDrop :
 */
 
@@ -308,7 +308,7 @@ TestDrop()
 }
 
 /*
- 		#] TestDrop : 
+ 		#] TestDrop :
  		#[ DoExecute :
 */
 
@@ -433,7 +433,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	}/*if(AC.mparallelflag & NOPARALLEL_DOLLAR)*/
 	/*:[30jan2004 mt]*/
 #endif
-/*  #ifdef PARALLEL */
+#ifdef PARALLEL
 	/*[07nov2003 mt]: ??? -Why? Should be AC.mparallelflag? */
 	/*if ( par == STOREMODULE ) AC.parallelflag = NOPARALLELFLAG; */
 	/*[30jan2004 mt]:*/ /*Detailed flags here*/
@@ -447,7 +447,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	}/*if ( par == STOREMODULE )*/
 	/*:[30jan2004 mt]*/
 	/*:[07nov2003 mt]*/
-/*  #endif */
+#endif
 
 	/*[07nov2003 mt]:*/
 #ifdef PARALLEL
@@ -1143,7 +1143,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket : 
+ 		#] PutBracket :
  	#] DoExecute :
  	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1218,7 +1218,7 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
 }
 
 /*
- 		#] ExchangeExpressions : 
+ 		#] ExchangeExpressions :
  		#[ GetFirstBracket :
 */
 
@@ -1314,7 +1314,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 }
 
 /*
- 		#] GetFirstBracket : 
+ 		#] GetFirstBracket :
  		#[ TermsInExpression :
 */
 
@@ -1326,7 +1326,7 @@ LONG TermsInExpression ARG1(WORD,num)
 }
 
 /*
- 		#] TermsInExpression : 
+ 		#] TermsInExpression :
  		#[ UpdatePositions :
 */
 
@@ -1357,7 +1357,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions : 
+ 		#] UpdatePositions :
  	#] Expressions :
 */
 

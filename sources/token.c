@@ -98,6 +98,8 @@ dovariable:		c = *in; *in = 0;
 											AC.NumberOfRhsExprInModule++;
 #endif
 /*:[06nov2003 mt]*/
+										if ( AC.exprfillwarning == 0 )
+												AC.exprfillwarning = 1;
 										break;
 					case CDELTA:        *out++ = TDELTA;      *in = c;
 										object = 1; continue;
@@ -204,6 +206,7 @@ donumber:		i = 0;
 					s = in;
 					if ( FG.cTable[*in] == 0 ) {
 						while ( FG.cTable[*in] == 0 || FG.cTable[*in] == 1 ) in++;
+						if ( *in == '_' && AC.PreAssignFlag == 2 ) in++;
 						c = *in; *in = 0;
 						if ( object > 0 ) {
 							if ( object != 1 || leftright == RHSIDE ) {
@@ -223,6 +226,8 @@ donumber:		i = 0;
 						}
 						*out++ = TDOLLAR;
 						object = 1;
+						if ( AC.exprfillwarning == 0 )
+								AC.exprfillwarning = 1;
 						goto donumber;
 					}
 					else {

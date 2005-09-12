@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 
   	#[ GetNode :
 */
@@ -29,7 +29,7 @@ GetNode ARG2(NAMETREE *,nametree,UBYTE *,name)
 }
 
 /*
-  	#] GetNode : 
+  	#] GetNode :
   	#[ AddName :
 */
 
@@ -205,7 +205,7 @@ AddName ARG5(NAMETREE *,nametree,UBYTE *,name,WORD,type,WORD,number,int *,nodenu
 }
 
 /*
-  	#] AddName : 
+  	#] AddName :
   	#[ GetName :
 
 	When AutoDeclare is an active statement.
@@ -267,7 +267,7 @@ NotFound:;
 }
 
 /*
-  	#] GetName : 
+  	#] GetName :
   	#[ GetOName :
 
 	Adds the proper offsets, so we do not have to do that in the calling
@@ -288,7 +288,7 @@ GetOName ARG4(NAMETREE *,nametree,UBYTE *,name,WORD *,number,int,par)
 }
 
 /*
-  	#] GetOName : 
+  	#] GetOName :
   	#[ GetAutoName :
 
 	This routine gets the automatic declarations
@@ -335,7 +335,7 @@ int GetAutoName ARG3(NAMETREE *,nametree,UBYTE *,name,WORD *,number)
 }
 
 /*
-  	#] GetAutoName : 
+  	#] GetAutoName :
   	#[ GetVar :
 */
 
@@ -370,7 +370,7 @@ GetVar ARG5(UBYTE *,name,WORD *,type,WORD *,number,int,wantedtype,int,par)
 }
 
 /*
-  	#] GetVar : 
+  	#] GetVar :
   	#[ EntVar :
 */
 
@@ -404,7 +404,7 @@ EntVar ARG5(WORD,type,UBYTE *,name,WORD,x,WORD,y,WORD,z)
 }
 
 /*
-  	#] EntVar : 
+  	#] EntVar :
   	#[ GetDollar :
 */
 
@@ -416,7 +416,7 @@ int GetDollar ARG1(UBYTE *,name)
 }
 
 /*
-  	#] GetDollar : 
+  	#] GetDollar :
   	#[ DumpTree :
 */
 
@@ -430,7 +430,7 @@ DumpTree ARG1(NAMETREE *,nametree)
 }
 
 /*
-  	#] DumpTree : 
+  	#] DumpTree :
   	#[ DumpNode :
 */
 
@@ -449,7 +449,7 @@ DumpNode ARG3(NAMETREE *,nametree,WORD,node,WORD,depth)
 }
 
 /*
-  	#] DumpNode : 
+  	#] DumpNode :
   	#[ CompactifyTree :
 */
 
@@ -512,7 +512,7 @@ CompactifyTree ARG1(NAMETREE *,nametree)
 }
 
 /*
-  	#] CompactifyTree : 
+  	#] CompactifyTree :
   	#[ CopyTree :
 */
 
@@ -573,7 +573,7 @@ CopyTree ARG3(NAMETREE *,newtree,NAMETREE *,oldtree,WORD,node)
 }
 
 /*
-  	#] CopyTree : 
+  	#] CopyTree :
   	#[ LinkTree :
 */
 
@@ -605,7 +605,7 @@ LinkTree ARG3(NAMETREE *,tree,WORD,offset,WORD,numnodes)
 }
 
 /*
-  	#] LinkTree : 
+  	#] LinkTree :
   	#[ MakeNameTree :
 */
 
@@ -625,7 +625,7 @@ MakeNameTree ARG0
 }
 
 /*
-  	#] MakeNameTree : 
+  	#] MakeNameTree :
   	#[ FreeNameTree :
 */
 
@@ -640,7 +640,7 @@ FreeNameTree ARG1(NAMETREE *,n)
 }
 
 /*
-  	#] FreeNameTree : 
+  	#] FreeNameTree :
 
   	#[ WildcardNames :
 */
@@ -708,7 +708,7 @@ int GetWildcardName ARG1(UBYTE *,name)
 }
 
 /*
-  	#] WildcardNames : 
+  	#] WildcardNames :
 
   	#[ AddSymbol :
 
@@ -732,7 +732,7 @@ AddSymbol ARG4(UBYTE *,name,int,minpow,int,maxpow,int,cplx)
 }
 
 /*
-  	#] AddSymbol : 
+  	#] AddSymbol :
   	#[ CoSymbol :
 
 	Symbol declarations.   name[#{R|I|C}][([min]:[max])]
@@ -821,7 +821,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol : 
+  	#] CoSymbol :
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -844,7 +844,7 @@ AddIndex ARG3(UBYTE *,name,int,dim,int,dim4)
 }
 
 /*
-  	#] AddIndex : 
+  	#] AddIndex :
   	#[ CoIndex :
 
 	Index declarations. name[={number|symbol[:othersymbol]}]
@@ -894,7 +894,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoIndex : 
+  	#] CoIndex :
   	#[ DoDimension :
 */
 
@@ -950,7 +950,7 @@ illeg:	MesPrint("&Illegal dimension specification. Should be number, symbol or s
 }
 
 /*
-  	#] DoDimension : 
+  	#] DoDimension :
   	#[ CoDimension :
 */
 
@@ -967,7 +967,7 @@ CoDimension ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoDimension : 
+  	#] CoDimension :
   	#[ AddVector :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -988,7 +988,7 @@ AddVector ARG2(UBYTE *,name,int,cplx)
 }
 
 /*
-  	#] AddVector : 
+  	#] AddVector :
   	#[ CoVector :
 
 	Vector declarations. The descriptor string is "(,%n)"
@@ -1024,7 +1024,7 @@ CoVector ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoVector : 
+  	#] CoVector :
   	#[ AddFunction :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1050,7 +1050,7 @@ AddFunction ARG5(UBYTE *,name,int,comm,int,istensor,int,cplx,int,symprop)
 }
 
 /*
-  	#] AddFunction : 
+  	#] AddFunction :
   	#[ CoFunction + ...:
 
 	Function declarations.
@@ -1163,7 +1163,7 @@ int CoNTensor ARG1(UBYTE *,s) { return(CoFunction(s,1,2)); }
 int CoCTensor ARG1(UBYTE *,s) { return(CoFunction(s,0,2)); }
 
 /*
-  	#] CoFunction + ...: 
+  	#] CoFunction + ...:
   	#[ DoTable :
 
         Syntax:
@@ -1439,7 +1439,7 @@ DoTable ARG2(UBYTE *,s,int,par)
 }
 
 /*
-  	#] DoTable : 
+  	#] DoTable :
   	#[ CoTable :
 */
 
@@ -1450,7 +1450,7 @@ CoTable ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTable : 
+  	#] CoTable :
   	#[ CoNTable :
 */
 
@@ -1461,7 +1461,7 @@ CoNTable ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoNTable : 
+  	#] CoNTable :
   	#[ CoCTable :
 */
 
@@ -1472,7 +1472,7 @@ CoCTable ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoCTable : 
+  	#] CoCTable :
   	#[ AddSet :
 */
 
@@ -1501,7 +1501,7 @@ AddSet ARG1(UBYTE *,name)
 }
 
 /*
-  	#] AddSet : 
+  	#] AddSet :
   	#[ DoElements :
 */
 
@@ -1649,7 +1649,7 @@ DoElements ARG3(UBYTE *,s,SETS,set,UBYTE *,name)
 }
 
 /*
-  	#] DoElements : 
+  	#] DoElements :
   	#[ CoSet :
 
 	Set declarations.
@@ -1694,7 +1694,7 @@ CoSet ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoSet : 
+  	#] CoSet :
   	#[ DoTempSet :
 
 		Gets a {} set definition and returns a set number if the set is
@@ -1789,7 +1789,7 @@ DoTempSet ARG2(UBYTE *,from,UBYTE *,to)
 }
 
 /*
-  	#] DoTempSet : 
+  	#] DoTempSet :
   	#[ CoAuto :
 
 	To prepare first:
@@ -1821,7 +1821,7 @@ int CoAuto ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoAuto : 
+  	#] CoAuto :
   	#[ AddDollar :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1855,7 +1855,7 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 }
 
 /*
-  	#] AddDollar : 
+  	#] AddDollar :
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.
@@ -1892,7 +1892,7 @@ ReplaceDollar ARG4(WORD,number,WORD,newtype,WORD *,newstart,LONG,newsize)
 }
 
 /*
-  	#] ReplaceDollar : 
+  	#] ReplaceDollar :
   	#[ AddDubious :
 
 	This adds a variable of which we do not know the proper type.
@@ -1909,7 +1909,7 @@ AddDubious ARG1(UBYTE *,name)
 }
 
 /*
-  	#] AddDubious : 
+  	#] AddDubious :
   	#[ MakeDubious :
 */
 
@@ -1941,7 +1941,7 @@ MakeDubious ARG3(NAMETREE *,nametree,UBYTE *,name,WORD *,number)
 }
 
 /*
-  	#] MakeDubious : 
+  	#] MakeDubious :
   	#[ NameConflict :
 */
 
@@ -1959,7 +1959,7 @@ NameConflict ARG2(int,type,UBYTE *,name)
 }
 
 /*
-  	#] NameConflict : 
+  	#] NameConflict :
   	#[ AddExpression :
 */
 
@@ -1996,7 +1996,7 @@ AddExpression ARG4(UBYTE *,name,int,x,int,y,int,z)
 }
 
 /*
-  	#] AddExpression : 
+  	#] AddExpression :
   	#[ GetLabel :
 */
 
@@ -2036,7 +2036,7 @@ int GetLabel ARG1(UBYTE *,name)
 }
 
 /*
-  	#] GetLabel : 
+  	#] GetLabel :
   	#[ ResetVariables :
 
 	Resets the variables.
@@ -2047,7 +2047,7 @@ int GetLabel ARG1(UBYTE *,name)
 
 void ResetVariables ARG1(int, par)
 {
-	int i;
+	int i, j;
 	TABLES T;
 	switch ( par ) {
 	case 0 : /* Only the sets without a name */
@@ -2073,6 +2073,9 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
+				for (j = 0; j <= T->buffersfill; j++ ) {
+					finishcbuf(T->buffers[j]);
+				}
 				/*[07apr2004 mt]:*/ /*memory leak*/
 				if ( T->buffers ) M_free(T->buffers,"Table buffers");
 				/*:[07apr2004 mt]*/ 
@@ -2082,10 +2085,12 @@ void ResetVariables ARG1(int, par)
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					finishcbuf(TT->bufnum);
+					for (j = 0; j <= TT->buffersfill; j++ ) {
+						finishcbuf(TT->buffers[j]);
+					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
 					/*[07apr2004 mt]:*/ /*memory leak*/
-               if ( TT->buffers )M_free(TT->buffers,"Table buffers");
+					if ( TT->buffers )M_free(TT->buffers,"Table buffers");
 					/*:[07apr2004 mt]*/
 					M_free(TT,"table");
 				}
@@ -2132,13 +2137,17 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				finishcbuf(T->bufnum);
+				for (j = 0; j <= T->buffersfill; j++ ) {
+					finishcbuf(T->buffers[j]);
+				}
 				if ( T->spare ) {
 					TABLES TT = T->spare;
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					finishcbuf(TT->bufnum);
+					for (j = 0; j <= TT->buffersfill; j++ ) {
+						finishcbuf(TT->buffers[j]);
+					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
 					M_free(TT,"table");
 				}
@@ -2172,6 +2181,9 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
+				for (j = 0; j <= T->buffersfill; j++ ) {
+					finishcbuf(T->buffers[j]);
+				}
 				/*[07apr2004 mt]:*/  /*memory leak*/
 				if ( T->buffers ) M_free(T->buffers,"Table buffers");
 				/*:[07apr2004 mt]*/
@@ -2181,7 +2193,9 @@ void ResetVariables ARG1(int, par)
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					finishcbuf(TT->bufnum);
+					for (j = 0; j <= TT->buffersfill; j++ ) {
+						finishcbuf(TT->buffers[j]);
+					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
 					/*[07apr2004 mt]:*/ /*memory leak*/
 					if ( TT->buffers ) M_free(TT->buffers,"Table buffers");
@@ -2294,13 +2308,17 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				finishcbuf(T->bufnum);
+				for (j = 0; j <= T->buffersfill; j++ ) {
+					finishcbuf(T->buffers[j]);
+				}
 				if ( T->spare ) {
 					TABLES TT = T->spare;
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					finishcbuf(TT->bufnum);
+					for (j = 0; j <= TT->buffersfill; j++ ) {
+						finishcbuf(TT->buffers[j]);
+					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
 					M_free(TT,"table");
 				}

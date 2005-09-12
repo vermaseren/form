@@ -402,11 +402,11 @@ StartVariables ARG0
 	set_set(',',AC.separators);
 	set_set('|',AC.separators);
 	/*:[12dec2003 mt]*/
-
 	AM.SkipClears = 0;
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
 	AC.LineLength = 79;
+	AC.exprfillwarning = 0;
 	AM.gLineLength = 79;
 	AM.OutBufSize = 80;
 	AM.MaxStreamSize = 1024;
@@ -531,10 +531,12 @@ StartVariables ARG0
 	AC.WildcardNames = (UBYTE *)Malloc1((LONG)AC.WildcardBufferSize,"argument list names");
 	AN.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
 				,"argument list names");
+	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)"1",0,0);
 	PutPreVar((UBYTE *)"NAMEVERSION_",(UBYTE *)nameversion,0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
+	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;
 	AP.NumPreTypes = 0;
 	AP.PreTypes = (int *)Malloc1(sizeof(int)*(AP.MaxPreTypes+1),"preprocessor types");
@@ -609,6 +611,9 @@ IniVars()
 	AM.gOutputSpaces = NORMALFORMAT;
 	AC.OutNumberType = RATIONALMODE;
 	AM.gOutNumberType = RATIONALMODE;
+#ifdef ZWITHZLIB
+	AR.gzipCompress = GZIPDEFAULT;
+#endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
 	AO.IsBracket = 0;

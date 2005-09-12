@@ -102,7 +102,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -167,7 +167,7 @@ typedef struct {
 
 typedef struct {
 	UBYTE *contents;
-	long size;				/* size of contents */
+	LONG size;				/* size of contents */
 	int next;				/* number of the element in the array */
 	int option;				/* same */
 	int nextoption;			/* for multiple occurrence of option */
@@ -255,7 +255,9 @@ typedef struct ExPrEsSiOn {
 	WORD	node;
 	WORD	whichbuffer;
 	WORD	namesize;
-	PADPOINTER(4,0,8,0);
+	WORD	compression;
+	WORD	reserved;
+	PADPOINTER(2,0,10,0);
 } *EXPRESSIONS;
 
 typedef struct SyMbOl {			/* Don't change unless altering .sav too */
@@ -314,7 +316,7 @@ typedef struct SeTs {
 	WORD	last;				/* Last element in setstore */
 	WORD	node;
 	WORD	namesize;
-	PADLONG(0,5,0);
+	PADLONG(1,5,0);
 } *SETS;
 
 typedef struct DuBiOuS {		/* Undeclared objects. Just for compiler. */
@@ -361,7 +363,7 @@ typedef struct TaBlEbAsE {
 } TABLEBASE;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
  
@@ -371,6 +373,10 @@ typedef struct FiLe {
     WORD *POfill;               /* Fill position of the buffer */
     WORD *POfull;               /* Full buffer when only cached */
 	char *name;					/* name of the file */
+#ifdef ZWITHZLIB
+	z_streamp zsp;				/* The pointer to the stream struct for gzip */
+	Bytef *ziobuffer;			/* The output buffer for compression */
+#endif
 	POSITION *blockpos;			/* Positions of blocks in the file */
 	POSITION *fPatches;			/* Positions of patches if sort file */
 	POSITION POposition;    	/* File position */
@@ -380,10 +386,17 @@ typedef struct FiLe {
 	ULONG inbuffer;				/* Block in the buffer */
 	ULONG blockpossize;			/* Size of blockpos buffer */
     LONG POsize;                /* size of the buffer */
+#ifdef ZWITHZLIB
+    LONG ziosize;               /* size of the zoutbuffer */
+#endif
     int handle;					/* Our own handle */
 	int active;					/* File is open or closed */
 	WORD fPatchN;				/* Number of patches on file */
-	PADPOINTER(3,2,1,0);
+#ifdef ZWITHZLIB
+	PADPOINTER(5,2,1,0);
+#else
+	PADPOINTER(4,2,1,0);
+#endif
 } FILEHANDLE;
  
 typedef struct StreaM {
@@ -393,12 +406,12 @@ typedef struct StreaM {
 	UBYTE *FoldName;
 	UBYTE *name;
 	UBYTE *pname;
-	long buffersize;
 	off_t fileposition;
-	long bufferposition;
-	long inbuffer;
 	off_t linenumber;
 	off_t prevline;
+	long buffersize;
+	long bufferposition;
+	long inbuffer;
 	int previous;
 	int handle;
 	int type;
@@ -409,11 +422,12 @@ typedef struct StreaM {
 	int olddelay;
 	UBYTE isnextchar;
 	UBYTE nextchar[2];
-	PADPOINTER(0,8,0,3);
+	UBYTE reserved;
+	PADPOINTER(3,8,0,4);
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -455,7 +469,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
  
@@ -484,8 +498,9 @@ typedef struct {
 typedef struct DoLoOp {
 	PRELOAD p;			/* size, name and buffer */
 	UBYTE *name;
-	UBYTE *vars;
+	UBYTE *vars;        /* for {} or name of expression */
 	UBYTE *contents;
+	UBYTE *dollarname;  /* For loop over terms in expression */
 	LONG startlinenumber;
 	LONG firstnum;
 	LONG lastnum;
@@ -498,7 +513,7 @@ typedef struct DoLoOp {
 } DOLOOP;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -598,8 +613,15 @@ typedef struct sOrT {
 	WORD **poin2a;				/*  auxiliary during actual sort */
 	WORD *ktoi;					/*  auxiliary during actual sort */
 	WORD *tree;					/*  auxiliary during actual sort */
+#ifdef ZWITHZLIB
+	WORD *fpcompressed;			/*  is output filepatch compressed? */
+	WORD *fpincompressed;		/*  is input filepatch compressed? */
+	z_streamp zsparray;			/*  the array of zstreams for decompression */
+#endif
 	POSITION *fPatches;			/* Positions of output file patches */
 	POSITION *inPatches;		/* Positions of input file patches */
+	POSITION *fPatchesStop;		/* Positions of output file patches */
+	POSITION *iPatches;			/* Input file patches, Points to fPatches or inPatches */
 	FILEHANDLE *f;				/* The actual output file */
 	FILEHANDLE file;			/* The own sort file */
 	FILEHANDLE **ff;			/* Handles for a staged sort */
@@ -628,13 +650,14 @@ typedef struct sOrT {
 	int newmaxtermsize;			/* Auxiliary for maxtermsize */
 	int outputmode;				/* Tells where the output is going */
 	int stagelevel;				/* In case we have a 'staged' sort */
-	WORD fPatchN;				/* Number of patches on file */
+	WORD fPatchN;				/* Number of patches on file (output) */
+	WORD inNum;					/* Number of patches on file (input) */
 	WORD stage4;				/* Are we using stage4? */
-	PADPOINTER(15,12,2,0);
+	PADPOINTER(15,12,3,0);
 } SORTING;
 
 /*
-  	#] Varia : 
+  	#] Varia :
   	#[ A :
 */
 
@@ -753,6 +776,7 @@ struct M_const {
 	WORD	gPolyFun;              /* (M) global value of PolyFun */
 	WORD	safetyfirst;           /* (M) for testing special versions */
 	WORD	dollarzero;            /* (M) for dollars with zero value */
+	WORD	atstartup;             /* To protect again DATE_ ending in \n */
 	UBYTE	SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
@@ -951,6 +975,7 @@ struct C_const {
 	int     vetofilling;           /* (C) vetoes overwriting in tablebase stubs */
     int     tablefilling;          /* (C) to notify AddRHS we are filling a table */
     int     vetotablebasefill;     /* (C) For the load in tablebase */
+	int		exprfillwarning;       /* (C) Warning has been printed for expressions in fill statements */
     WORD    RepLevel;              /* (C) Tracks nesting of repeat. */
     WORD    arglevel;              /* (C) level of nested argument statements */
     WORD    insidelevel;           /* (C) level of nested inside statements */
@@ -1046,7 +1071,8 @@ struct R_const {
 
     int     cbufnum;               /* (R) current compiler buffer */
     int     ebufnum;               /* (R) extra compiler buffer */
-    int     NoCompress;            /* (R) Controls compression */
+    int     NoCompress;            /* (R) Controls native compression */
+    int     gzipCompress;          /* (R) Controls gzip compression */
     int     ErrorInDollar;         /* (R) */
     int     lhdollarflag;          /* (R) left hand dollar present */
     int     lhdollarerror;         /* (R) */
@@ -1205,7 +1231,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

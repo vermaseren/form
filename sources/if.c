@@ -3,10 +3,10 @@
 */
 
 #include "form3.h"
-DECLARE(WORD ReadElIf,(VOID))
+DECLARE(WORD ReadElIf,ARG0)
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ If statement :
  		#[ Variables :
 */

@@ -6,6 +6,13 @@
 #define PRODUCTIONDATE "17-dec-2001"
 #endif
 
+#define WITHZLIB
+#define ZWITHZLIB
+
+#ifdef ZWITHZLIB
+#include <zlib.h>
+#endif
+
 #ifdef NEXT
 #define UNIX
 #define mBSD
@@ -122,11 +129,34 @@
    typedef short SHORT;
 #define BITSINSHORT 16
 #define SHORTMASK 0xFFFF
+#define WORDSIZE32 1
 /*
    #] Alphaversion with 32 bits per WORD 
 */
 # endif
 
+#endif
+
+#ifdef OPTERON
+#define UNIX
+#define mBSD
+#define ANSI
+
+#include <ctype.h>
+   typedef void VOID;
+   typedef char SBYTE;
+   typedef int WORD;
+   typedef long LONG;
+   typedef unsigned char UBYTE;
+   typedef unsigned int UWORD;
+   typedef unsigned int UINT;
+   typedef unsigned long ULONG;
+   typedef unsigned long RLONG;
+   typedef UWORD FLOAT;
+   typedef short SHORT;
+#define BITSINSHORT 16
+#define SHORTMASK 0xFFFF
+#define WORDSIZE32 1
 #endif
 
 #include <stdio.h>
@@ -162,6 +192,21 @@
 #include "variable.h"
 /*:[15apr2004 mt]*/
 
+#ifdef OPTERON
+#define FILES FILE
+#define Uopen(x,y) fopen(x,y)
+#define Uflush(x) fflush(x)
+#define Uclose(x) fclose(x)
+#define Uread(x,y,z,u) fread(x,y,z,u)
+#define Uwrite(x,y,z,u) fwrite(x,y,z,u)
+#define Usetbuf(x,y) setbuf(x,y)
+#define Useek(x,y,z) fseek(x,y,z)
+#define Utell(x) ftell(x)
+#define Ugetpos(x,y) fgetpos(x,y)
+#define Usetpos(x,y) fsetpos(x,y)
+#define Ustdout stdout
+#define MAX_OPEN_FILES FOPEN_MAX
+#else
 #ifdef UNIX
 #define UFILES
 typedef struct FiLeS {
@@ -199,4 +244,4 @@ extern FILES *Ustdout;
 #define Ustdout stdout
 #define MAX_OPEN_FILES FOPEN_MAX
 #endif
-
+#endif

@@ -13,7 +13,7 @@
 #include "parallel.h"   
 #endif /* PARALLEL [20oct1997 ar] */
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ SortVariables :
 */
 
@@ -35,7 +35,7 @@ static int MaxFunSorts = 0;
 static UWORD *SoScratC = 0;
 
 /*
-  	#] SortVariables : 
+  	#] SortVariables :
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 
@@ -258,7 +258,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats : 
+ 		#] WriteStats :
  		#[ NewSort :				WORD NewSort()
 
 		Starts a new sort.
@@ -316,7 +316,7 @@ NewSort()
 }
 
 /*
- 		#] NewSort : 
+ 		#] NewSort :
  		#[ EndSort :				WORD EndSort(buffer,par)
 
 		Finishes a sort.
@@ -327,14 +327,15 @@ NewSort()
 		it is closed.
 		The statistics are printed when AR.sLevel == 0.
 		par == 0  Output to the buffer.
-		par == 1  Output can be obtained term by term from another routine.
-		          The filehandle to that routine will be obtained from
-		          buffer which will be treated as FILEHANDLE**.
+		par == 1  Sort for function arguments.
+		          The output will be copied into the buffer.
+		          It is assumed that this is in the WorkSpace.
 		par == 2  Sort for $-variable. We return the address of the buffer
 		          that contains the output in buffer (treated like WORD **).
 		          We first catch the output in a file (unless we can
 		          intercept things after the small buffer has been sorted)
 		          Then we read from the file into a buffer.
+		Only when par == 0 data compression can be attempted at AR.SS==AM.S0.
 */
 
 LONG
@@ -377,7 +378,8 @@ EndSort ARG2(WORD *,buffer,int,par)
 			sSpace = ComPress(ss,&spare);
 			S->TermsLeft -= over - spare;
 		}
-		else if ( S != AM.S0 && ( par == 0 || par == 2 ) ) {
+		else if ( S != AM.S0 ) {
+/*		else if ( S != AM.S0 && ( par == 0 || par == 2 ) ) {  */
 			ss[over] = 0;
 			if ( par == 2 ) {
 				sSpace = 1;
@@ -419,6 +421,14 @@ EndSort ARG2(WORD *,buffer,int,par)
 			}
 			oldpos = position;
 			S->TermsLeft = 0;
+/*
+			Here we can go directly to the output.
+*/
+#ifdef ZWITHZLIB
+			{ int oldgzipCompress = AR.gzipCompress;
+				AR.gzipCompress = 0;
+				/* SetupOutputGZIP(fout); */
+#endif
 			if ( tover > 0 ) {
 				ss = S->sPointer;
 				while ( ( t = *ss++ ) != 0 ) {
@@ -428,9 +438,13 @@ EndSort ARG2(WORD *,buffer,int,par)
 					}
 				}
 			}
-			if ( FlushOut(&position,fout) ) {
+			if ( FlushOut(&position,fout,1) ) {
 				retval = -1; goto RetRetval;
 			}
+#ifdef ZWITHZLIB
+				AR.gzipCompress = oldgzipCompress;
+			}
+#endif
 			DIFPOS(oldpos,position,oldpos);
 			S->SpaceLeft = BASEPOSITION(oldpos);
 			WriteStats(&oldpos,(WORD)2);
@@ -462,9 +476,14 @@ EndSort ARG2(WORD *,buffer,int,par)
 				MesCall("EndSort"); retval = -1; goto RetRetval;
 			}
 			S->lPatch = 0;
+/*
 			pp = S->SizeInFile[1];
 			ADDPOS(pp,sSpace);
 			MULPOS(pp,sizeof(WORD));
+*/
+			SETBASEPOSITION(pp,sSpace);
+			MULPOS(pp,sizeof(WORD));
+			ADD2POS(pp,S->fPatches[S->fPatchN]);
 			if ( S == AM.S0 ) {
 				WORD oldLogHandle = AC.LogHandle;
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
@@ -497,9 +516,14 @@ EndSort ARG2(WORD *,buffer,int,par)
 			if ( MergePatches(1) ) {
 				MesCall("EndSort"); retval = -1; goto RetRetval;
 			}
+			SETBASEPOSITION(pp,sSpace);
+			MULPOS(pp,sizeof(WORD));
+			ADD2POS(pp,S->fPatches[S->fPatchN]);
+/*
 			pp = S->SizeInFile[1];
 			ADDPOS(pp,sSpace);
 			MULPOS(pp,sizeof(WORD));
+*/
 			if ( S == AM.S0 ) {
 				WORD oldLogHandle = AC.LogHandle;
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
@@ -518,7 +542,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 					retval = -1; goto RetRetval;
 				}
 			}
-			if ( FlushOut(&position,&(S->file)) ) {
+			if ( FlushOut(&position,&(S->file),0) ) {
 				retval = -1; goto RetRetval;
 			}
 			++(S->fPatchN); /* ?????????????????????*/
@@ -577,7 +601,23 @@ RetRetval:
 			}
 			M_free(newout,"FileHandle"); */
 		}
-		else *((FILEHANDLE **)buffer) = newout;
+		else {
+/*
+			Here we have to copy the contents of the 'file' into
+			the buffer. We assume that this buffer lies in the WorkSpace.
+			Hence
+*/
+			j = newout->POfill-newout->PObuffer;
+			if ( j+buffer >= AM.WorkTop ) {
+				MesWork();
+				retval = -1;
+			}
+			else {
+				to = buffer; t = newout->PObuffer;
+				while ( j-- > 0 ) *to++ = *t++;
+			}
+			DeAllocFileHandle(newout);
+		}
 	}
 	else if ( par == 2 ) {
 		if ( newout ) {
@@ -594,7 +634,6 @@ RetRetval:
 				SeekFile(newout->handle,&zeropos,SEEK_SET);
 				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)
 						,"$-buffer reading");
-/* --COMPRESS--? */
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
 				BASEPOSITION(position) ) {
 					MesPrint("Error reading information for $ variable");
@@ -635,8 +674,8 @@ RetRetval:
 }
 
 /*
- 		#] EndSort : 
- 		#[ PutIn :					LONG PutIn(handle,position,buffer,take)
+ 		#] EndSort :
+ 		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 
 	Reads a new patch from position in file handle.
 	It is put at buffer, anything after take is moved forward.
@@ -644,11 +683,10 @@ RetRetval:
 */
 
 LONG
-PutIn ARG4(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take)
+PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,npat)
 {
 	LONG i, RetCode;
 	WORD *from, *to;
-	SeekFile(file->handle,position,SEEK_SET);
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
 	if ( i > AM.MaxTer ) {
@@ -658,17 +696,26 @@ PutIn ARG4(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take)
 	to = buffer;
 	while ( --i >= 0 ) *--to = *--from;
 	*take = to;
-/* --COMPRESS-- */
+#ifdef ZWITHZLIB
+	if ( ( RetCode = FillInputGZIP(file,position,(UBYTE *)buffer
+									,file->POsize,npat) ) < 0 ) {
+		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
+			RetCode,file->POsize);
+		Terminate(-1);
+	}
+#else
+	SeekFile(file->handle,position,SEEK_SET);
 	if ( ( RetCode = ReadFile(file->handle,(UBYTE *)buffer,file->POsize) ) < 0 ) {
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
 			RetCode,file->POsize);
 		Terminate(-1);
 	}
+#endif
 	return(RetCode);
 }
 
 /*
- 		#] PutIn : 
+ 		#] PutIn :
  		#[ Sflush :					WORD Sflush(file)
 
 	Puts the contents of a buffer to output
@@ -679,6 +726,9 @@ WORD
 Sflush ARG1(FILEHANDLE *,fi)
 {
 	LONG size, RetCode;
+	int dobracketindex = 0;
+	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
+		&& ( fi == AR.outfile || fi == AS.hidefile ) ) dobracketindex = 1;
 	if ( fi->handle < 0 ) {
 		if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 			fi->handle = (WORD)RetCode;
@@ -688,20 +738,29 @@ Sflush ARG1(FILEHANDLE *,fi)
 		else return(MesPrint("Cannot create scratch file %s",fi->name));
 	}
 	else { SeekFile(fi->handle,&(fi->POposition),SEEK_SET); }
-	size = (fi->POfill-fi->PObuffer)*sizeof(WORD);
-/* --COMPRESS-- */
-	if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
-		return(MesPrint("Write error while finishing sort. Disk full?"));
+#ifdef ZWITHZLIB
+	if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+	&& dobracketindex == 0 ) {
+		if ( FlushOutputGZIP(fi) ) return(-1);
+		fi->POfill = fi->PObuffer;
 	}
-	ADDPOS(fi->filesize,size);
-	ADDPOS(fi->POposition,size);
-	fi->POfill = fi->PObuffer;
+	else
+#endif
+	{
+	  size = (fi->POfill-fi->PObuffer)*sizeof(WORD);
+	  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
+		return(MesPrint("Write error while finishing sort. Disk full?"));
+	  }
+	  ADDPOS(fi->filesize,size);
+	  ADDPOS(fi->POposition,size);
+	  fi->POfill = fi->PObuffer;
+	}
 	return(0);
 }
 
 /*
- 		#] Sflush : 
- 		#[ PutOut :					WORD PutOut(term,position,file)
+ 		#] Sflush :
+ 		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 
 	Routine writes one term to file handle at position. It returns
 	the new value of the position.
@@ -722,9 +781,13 @@ WORD
 PutOut ARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 {
 	WORD i, *p, ret, *r, *rr, j, k, first;
+	int dobracketindex = 0;
 	LONG RetCode;
 
 	if ( AR.SS != AM.S0 ) {
+/*
+		For this case no compression should be used
+*/
 		if ( ( i = *term ) <= 0 ) return(0);
 		ret = i;
 		ADDPOS(*position,i*sizeof(WORD));
@@ -742,22 +805,12 @@ PutOut ARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 					}
 				}
 				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-#ifdef WITHGZIP
-/*
-				Here we  --COMPRESS--  the fi->POsize bytes in fi->PObuffer
-				Then we write them. We have to record that block i went
-				to location fi->filesize and that the block has the compressed
-				length. We update fi->filesize and fi->POposition.
-				Note that the block sizes should be part of the fi struct.
-*/
-#else
 				if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
 					return(MesPrint("Write error during sort. Disk full?"));
 				}
 				ADDPOS(fi->filesize,fi->POsize);
 				p = fi->PObuffer;
 				ADDPOS(fi->POposition,fi->POsize);
-#endif
 			} 
 			*p++ = *term++;
 		} while ( --i > 0 );
@@ -768,6 +821,8 @@ PutOut ARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 			PrintTerm(term,"PutOut");
 			MesPrint("ncomp = %d, AR.NoCompress = %d, AR.sLevel = %d",ncomp,AR.NoCompress,AR.sLevel);
 	}
+	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
+		&& ( fi == AR.outfile || fi == AS.hidefile ) ) dobracketindex = 1;
 	r = rr = AR.CompressPointer;
 	first = j = k = ret = 0;
 	if ( ( i = *term ) != 0 ) {
@@ -779,8 +834,7 @@ PutOut ARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 			}
 		}
 		else if ( !AR.NoCompress && ( ncomp > 0 ) && AR.sLevel <= 0 ) {	/* Must compress */
-			if ( Expressions[AS.CurExpr].newbracketinfo
-			&& ( fi == AR.outfile || fi == AS.hidefile ) ) {
+			if ( dobracketindex ) {
 				PutBracketInIndex(term,position);
 			}
 			j = *r++ - 1;
@@ -829,8 +883,7 @@ nocompress:
 		}
 		else if ( !AR.NoCompress && ( ncomp < 0 ) && AR.sLevel <= 0 ) {
 				/* No compress but put in compress buffer anyway */
-			if ( Expressions[AS.CurExpr].newbracketinfo
-			&& ( fi == AR.outfile || fi == AS.hidefile ) ) {
+			if ( dobracketindex ) {
 				PutBracketInIndex(term,position);
 			}
 			j = *r++ - 1;
@@ -853,8 +906,7 @@ nocompress:
 			}
 			goto nocompress;
 		}
-		else if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
-		&& ( fi == AR.outfile || fi == AS.hidefile ) ) {
+		else if ( dobracketindex ) {
 			PutBracketInIndex(term,position);
 		}
 		ret = i;
@@ -871,8 +923,9 @@ nocompress:
 				  sbuf->buff[sbuf->active];
 				fi->POstop = sbuf->stop[sbuf->active];
 			  }
-			  else{
+			  else
 #endif /* PARALLEL [16mar1998 ar] */
+			  {
 				if ( fi->handle < 0 ) {
 					if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 						fi->handle = (WORD)RetCode;
@@ -883,18 +936,26 @@ nocompress:
 						return(-1);
 					}
 				}
-				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-/* --COMPRESS-- */
-				if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
-					return(MesPrint("Write error during sort. Disk full?"));
+#ifdef ZWITHZLIB
+				if ( !AR.NoCompress && ncomp > 0 && AR.gzipCompress > 0
+					&& dobracketindex == 0 ) {
+					fi->POfill = p;
+					if ( PutOutputGZIP(fi) ) return(-1);
+					p = fi->PObuffer;
 				}
-				ADDPOS(fi->filesize,fi->POsize);
-				p = fi->PObuffer;
+				else
+#endif
+				{
+				  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+				  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+					return(MesPrint("Write error during sort. Disk full?"));
+				  }
+				  ADDPOS(fi->filesize,fi->POsize);
+				  p = fi->PObuffer;
 
-				ADDPOS(fi->POposition,fi->POsize);
-#ifdef PARALLEL /* [16mar1998 ar] */
+				  ADDPOS(fi->POposition,fi->POsize);
+				}
 			  }
-#endif /* PARALLEL [16mar1998 ar] */
 			} 
 			if ( first ) {
 				if ( first == 2 ) *p++ = k;
@@ -920,17 +981,20 @@ nocompress:
 }
 
 /*
- 		#] PutOut : 
- 		#[ FlushOut :				WORD Flushout(position,file)
+ 		#] PutOut :
+ 		#[ FlushOut :				WORD Flushout(position,file,compr)
 
 	Completes output to an output file and writes the trailing zero.
 
 */
 
 WORD
-FlushOut ARG2(POSITION *,position,FILEHANDLE *,fi)
+FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 {
-  LONG size;
+	LONG size;
+	int dobracketindex = 0;
+	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
+		&& ( fi == AR.outfile || fi == AS.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
 
   if (PF.me != MASTER && fi == AR.outfile && PF.parallel ){
@@ -960,14 +1024,23 @@ FlushOut ARG2(POSITION *,position,FILEHANDLE *,fi)
 				return(MesPrint("Cannot create scratch file %s",fi->name));
 			}
 		}
-		SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-/* --COMPRESS-- */
-		if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
-			return(MesPrint("Write error while sorting. Disk full?"));
+#ifdef ZWITHZLIB
+		if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+		&& dobracketindex == 0 && ( compr > 0 ) ) {
+			if ( PutOutputGZIP(fi) ) return(-1);
+			fi->POfill = fi->PObuffer;
 		}
-		ADDPOS(fi->filesize,fi->POsize);
-		fi->POfill = fi->PObuffer;
-		ADDPOS(fi->POposition,fi->POsize);
+		else
+#endif
+		{
+		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+		  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+			return(MesPrint("Write error while sorting. Disk full?"));
+		  }
+		  ADDPOS(fi->filesize,fi->POsize);
+		  fi->POfill = fi->PObuffer;
+		  ADDPOS(fi->POposition,fi->POsize);
+		}
 	} 
 	*(fi->POfill)++ = 0;
 /*
@@ -984,27 +1057,46 @@ FlushOut ARG2(POSITION *,position,FILEHANDLE *,fi)
 */
 	size = (fi->POfill-fi->PObuffer)*sizeof(WORD);
 	if ( fi->handle >= 0 ) {
-		SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-/* --COMPRESS-- */
-		if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
-			return(MesPrint("Write error while finishing sorting. Disk full?"));
+#ifdef ZWITHZLIB
+		if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+		&& dobracketindex == 0 && ( compr > 0 ) ) {
+			if ( FlushOutputGZIP(fi) ) return(-1);
+			fi->POfill = fi->PObuffer;
 		}
-		ADDPOS(fi->filesize,size);
-		ADDPOS(fi->POposition,size);
-		fi->POfill = fi->PObuffer;
+		else
+#endif
+		{
+		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+		  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
+			return(MesPrint("Write error while finishing sorting. Disk full?"));
+		  }
+		  ADDPOS(fi->filesize,size);
+		  ADDPOS(fi->POposition,size);
+		  fi->POfill = fi->PObuffer;
+		}
 	}
-	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo ) {
+	if ( dobracketindex ) {
 		BRACKETINFO *b = Expressions[AS.CurExpr].newbracketinfo;
 		if ( b->indexfill > 0 ) {
 			DIFPOS(b->indexbuffer[b->indexfill-1].next,*position,Expressions[AS.CurExpr].onfile);
 		}
 	}
-	ADDPOS(*position,sizeof(WORD));
-  return(0);
+#ifdef ZWITHZLIB
+	if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+		&& dobracketindex == 0 && ( compr > 0 ) ) {
+		PUTZERO(*position);
+		SeekFile(fi->handle,position,SEEK_END);
+	}
+	else
+#endif
+	{
+		ADDPOS(*position,sizeof(WORD));
+	}
+	return(0);
 }
 
 /*
- 		#] FlushOut : 
+ 		#] FlushOut :
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 
 		Adds the coefficients of the terms *ps1 and *ps2.
@@ -1105,7 +1197,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef : 
+ 		#] AddCoef :
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 
 		Routine should be called when S->PolyWise != 0. It points then
@@ -1224,7 +1316,7 @@ AddPoly ARG2(WORD **,ps1,WORD **,ps2)
 }
 
 /*
- 		#] AddPoly : 
+ 		#] AddPoly :
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
 
@@ -1481,7 +1573,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs : 
+ 		#] AddArgs :
  		#[ Compare :				WORD Compare(term1,term2,level)
 
 	Compares two terms. The answer is:
@@ -1819,7 +1911,7 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		ss = sss;
 	}
 
-			#] debug : 
+			#] debug :
 */
 	*n = 0;
 	if ( AR.SS == AM.S0 && !AR.NoCompress ) {
@@ -1912,13 +2004,13 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		FiniLine();
 	}
 
-			#] debug : 
+			#] debug :
 */
 	return(size);
 }
 
 /*
- 		#] ComPress : 
+ 		#] ComPress :
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 
 		Algorithm by J.A.M.Vermaseren (31-7-1988)
@@ -2088,7 +2180,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 #endif
 
 /*
- 		#] SplitMerge : 
+ 		#] SplitMerge :
  		#[ GarbHand :				VOID GarbHand()
 
 		Garbage collection new style. Options:
@@ -2190,7 +2282,7 @@ GarbHand()
 }
 
 /*
- 		#] GarbHand : 
+ 		#] GarbHand :
  		#[ MergePatches :			WORD MergePatches(par)
 
 	The general merge routine. Can be used for the large buffer
@@ -2217,16 +2309,22 @@ MergePatches ARG1(WORD,par)
 	SORTING *S = AR.SS;
 	WORD **poin, **poin2, ul, k, i, im, *m1;
 	WORD *p, lpat, mpat, level, l1, l2, r1, r2, r3, c;
-	WORD *m2, *m3, r31, r33, ki, inNum, *rr;
+	WORD *m2, *m3, r31, r33, ki, *rr;
 	UWORD *coef;
 	POSITION position;
-	POSITION *inPatch = 0;
 	FILEHANDLE *fin, *fout;
 	int fhandle;
 /*
 	UBYTE *s;
 */
-	if ( AM.safetyfirst != 1 ) return(0);
+#ifdef ZWITHZLIB
+	POSITION position2;
+	int oldgzipCompress = AR.gzipCompress;
+	if ( par == 2 ) {
+		AR.gzipCompress = 0;
+	}
+#endif
+	if ( AM.safetyfirst != 1 ) goto NormalReturn;
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
 	S->PolyFlag = AC.PolyFun ? 1: 0;
@@ -2243,8 +2341,10 @@ NewMerge:
 		if ( fout->handle < 0 ) {
 FileMake:
 			PUTZERO(AR.OldPosOut);
-			if ( ( fhandle = CreateFile(fout->name) ) < 0 )
-				return(MesPrint("Cannot create file %s",fout->name));
+			if ( ( fhandle = CreateFile(fout->name) ) < 0 ) {
+				MesPrint("Cannot create file %s",fout->name);
+				goto ReturnError;
+			}
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
 			SeekFile(fout->handle,&(fout->filesize),SEEK_SET);
@@ -2255,6 +2355,13 @@ FileMake:
 		}
 ConMer:
 		StageSort(fout);
+#ifdef ZWITHZLIB
+		if ( S == AM.S0 && AR.NoCompress == 0 && AR.gzipCompress > 0 )
+			S->fpcompressed[S->fPatchN] = 1;
+		else
+			S->fpcompressed[S->fPatchN] = 0;
+		SetupOutputGZIP(fout);
+#endif
 	}
 	else if ( par == 0 && S->stage4 > 0 ) {
 /*
@@ -2268,18 +2375,40 @@ ConMer:
 		if ( AR.Stage4Name ) s[-1] += 1;
 		else                s[-1] -= 1;
 */
-		inPatch = S->fPatches;
+		S->iPatches = S->fPatches;
 		S->fPatches = S->inPatches;
-		S->inPatches = inPatch;
-		inNum = S->fPatchN;
+		S->inPatches = S->iPatches;
+		(S->inNum) = S->fPatchN;
 		AR.OldPosIn = AR.OldPosOut;
+#ifdef ZWITHZLIB
+		m1 = S->fpincompressed;
+		S->fpincompressed = S->fpcompressed;
+		S->fpcompressed = m1;
+		for ( i = 0; i < S->inNum; i++ ) {
+			S->fPatchesStop[i] = S->iPatches[i+1];
+		}
+#endif
 		S->stage4 = 0;
 		goto FileMake;
 	}
 	else {
+#ifdef ZWITHZLIB
+/*
+		The next statement is just for now
+*/
+		AR.gzipCompress = 0;
+#endif
 		if ( par == 0 ) {
-			inPatch = S->fPatches;
-			inNum = S->fPatchN;
+			S->iPatches = S->fPatches;
+			S->inNum = S->fPatchN;
+#ifdef ZWITHZLIB
+			m1 = S->fpincompressed;
+			S->fpincompressed = S->fpcompressed;
+			S->fpcompressed = m1;
+			for ( i = 0; i < S->inNum; i++ ) {
+				S->fPatchesStop[i] = S->fPatches[i+1];
+			}
+#endif
 		}
 		fout = AR.outfile;
 	}
@@ -2305,26 +2434,31 @@ ConMer:
 		}
 	}
 	else {	/* Load the patches */
-		S->lPatch = inNum;
+		S->lPatch = (S->inNum);
 #ifdef PARALLEL /* [16aug1998 ar] */
-	if ( S->lPatch > 1 || fout == AR.outfile) {
+		if ( S->lPatch > 1 || fout == AR.outfile) {
 #else
-	if ( S->lPatch > 1 ) {
+		if ( S->lPatch > 1 ) {
 #endif /* PARALLEL [16aug1998 ar] */
+#ifdef ZWITHZLIB
+			SetupAllInputGZIP(S);
+#endif
 			p = S->lBuffer;
 			for ( i = 0; i < S->lPatch; i++ ) {
 				p += AM.MaxTer + COMPINC;
 				S->Patches[i] = p;
 				p = (WORD *)(((UBYTE *)p) + fin->POsize);
 				S->pStop[i] = m2 = p;
-				ADDPOS(inPatch[i],PutIn(fin,&(inPatch[i]),S->Patches[i],&m2));
+#ifdef ZWITHZLIB
+				PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i);
+#else
+				ADDPOS(S->iPatches[i],PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i));
+#endif
 			}
 		}
 	}
 	if ( fout->handle >= 0 ) {
 		PUTZERO(position);
-/*		TELLFILE(fout->handle,&position); */
-/*		SeekFile(fout->handle,&position,SEEK_CUR); */
 		SeekFile(fout->handle,&position,SEEK_END);
 		ADDPOS(position,((fout->POfill-fout->PObuffer)*sizeof(WORD)));
 	}
@@ -2332,32 +2466,83 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
-	The following code will have to be eliminated because all output
-	should go through PutOut to facilitate set numbers
+	The old code had to be replaced because all output needs to go
+	through PutOut. For this we have to go term by term and keep
+	track of the compression.
 */
 	if ( S->lPatch == 1 ) {	/* Single patch --> direct copy. Very rare. */
 		LONG length;
 
 		if ( fout->handle < 0 ) if ( Sflush(fout) ) goto PatCall;
 		if ( par ) {		/* Memory to file */
+#ifdef ZWITHZLIB
+/*
+			We fix here the problem that the thing needs to go through PutOut
+*/
+			m2 = m1 = *S->Patches; /* The m2 is to keep the compiler from complaining */
+			while ( *m1 ) {
+				if ( *m1 < 0 ) { /* Need to uncompress */
+					i = -(*m1++); m2 += i+1; im = *m1+i;
+					while ( i > 0 ) *m1-- = *m2--;
+					*m1 = im;
+				}
+				if ( ( im = PutOut(m1,&position,fout,1) ) < 0 ) goto ReturnError;
+				ADDPOS(S->SizeInFile[par],im);
+				m2 = m1;
+				m1 += *m1;
+			}
+			if ( FlushOut(&position,fout,1) ) goto ReturnError;
+			ADDPOS(S->SizeInFile[par],1);
+#else
+/* old code */
 			length = (LONG)(*S->pStop)-(LONG)(*S->Patches)+sizeof(WORD);
-/* --COMPRESS-- */
 			if ( WriteFile(fout->handle,(UBYTE *)(*S->Patches),length) != length )
 				goto PatwCall;
 			ADDPOS(position,length);
 			ADDPOS(fout->POposition,length);
 			ADDPOS(fout->filesize,length);
 			ADDPOS(S->SizeInFile[par],length/sizeof(WORD));
+#endif
 		}
 		else {				/* File to file */
-			SeekFile(fin->handle,&(inPatch[0]),SEEK_SET); /* needed for stage4 */
-/* --COMPRESS-- */
+			SeekFile(fin->handle,&(S->iPatches[0]),SEEK_SET); /* needed for stage4 */
+#ifdef ZWITHZLIB
+			SetupOutputGZIP(fout);
+			SetupAllInputGZIP(S);
+			m1 = m2 = S->sBuffer + 2*AM.MaxTer;
+			PUTZERO(position2);
+			while ( ( length = FillInputGZIP(fin,&position2,
+					(UBYTE *)(S->sBuffer+2*AM.MaxTer),
+					(S->SmallEsize-2*AM.MaxTer)*sizeof(WORD),0) ) > 0 ) {
+				while ( *m1 && ( m1 + AM.MaxTer < S->sTop2 ) ) {
+					if ( *m1 < 0 ) { /* Need to uncompress */
+						i = -(*m1++); m2 += i+1; im = *m1+i;
+						while ( i > 0 ) *m1-- = *m2--;
+						*m1 = im;
+					}
+					if ( ( im = PutOut(m1,&position,fout,1) ) < 0 ) goto ReturnError;
+					ADDPOS(S->SizeInFile[par],im);
+					m2 = m1;
+					m1 += *m1;
+				}
+				if ( *m1 == 0 ) break;
+/*
+				Now move the remaining part 'back'
+*/
+				m3 = S->sBuffer+2*AM.MaxTer;
+				m1 = S->sTop2;
+				while ( m1 > m2 ) *--m3 = *--m1;
+				m1 = m2 + *m2;
+			}
+			if ( length < 0 ) { MesPrint("Readerror"); goto PatCall; }
+			if ( FlushOut(&position,fout,1) ) goto ReturnError;
+			ADDPOS(S->SizeInFile[par],1);
+#else
+/* old code */
 			while ( ( length = ReadFile(fin->handle,
-					(UBYTE *)(S->sBuffer),S->SmallEsize*sizeof(WORD)) ) > 0 )
-			{
-/* --COMPRESS-- */
+					(UBYTE *)(S->sBuffer),S->SmallEsize*sizeof(WORD)) ) > 0 ) {
 				if ( WriteFile(fout->handle,(UBYTE *)(S->sBuffer),length) != length )
 					goto PatwCall;
 				ADDPOS(position,length);
@@ -2366,6 +2551,7 @@ ConMer:
 				ADDPOS(S->SizeInFile[par],length/sizeof(WORD));
 			}
 			if ( length < 0 ) { MesPrint("Readerror"); goto PatCall; }
+#endif
 		}
 		goto EndOfAll;
 	}
@@ -2381,7 +2567,9 @@ ConMer:
 		/* k is the number of empty places in the tree. they will
 		   be at the even positions from 2 to 2*k */
 
-		for ( i = 1; i < lpat; i++ ) S->tree[i] = -1;
+		for ( i = 1; i < lpat; i++ ) {
+			S->tree[i] = -1;
+		}
 		for ( i = 1; i <= k; i++ ) {
 			im = ( i << 1 ) - 1;
 			poin[im] = S->Patches[i-1];
@@ -2534,8 +2722,12 @@ cancelled:
 						ki = S->ktoi[ul];
 						if ( !par && (poin[ul] + im + COMPINC) >= S->pStop[ki]
 						&& im > 0 ) {
-							ADDPOS(inPatch[ki],PutIn(fin,&(inPatch[ki]),
-							S->Patches[ki],&(poin[ul])));
+#ifdef ZWITHZLIB
+							PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[ul]),ki);
+#else
+							ADDPOS(S->iPatches[ki],PutIn(fin,&(S->iPatches[ki]),
+							S->Patches[ki],&(poin[ul]),ki));
+#endif
 							poin2[ul] = poin[ul] + im;
 						}
 						else {
@@ -2563,7 +2755,8 @@ cancelled:
 								of each patch.
 */
 							if ( (l1 + r31) > AM.MaxTer ) {
-								return(MesPrint("Coefficient overflow during sort"));
+								MesPrint("Coefficient overflow during sort");
+								goto ReturnError;
 							}
 							m2 = poin[S->tree[i]];
 							m3 = ( poin[S->tree[i]] -= r31 );
@@ -2596,8 +2789,12 @@ NextTerm:
 					ki = S->ktoi[k];
 					if ( !par && ( (poin[k] + im + COMPINC) >= S->pStop[ki] )
 					&& im > 0 ) {
-						ADDPOS(inPatch[ki],PutIn(fin,&(inPatch[ki]),
-						S->Patches[ki],&(poin[k])));
+#ifdef ZWITHZLIB
+						PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[k]),ki);
+#else
+						ADDPOS(S->iPatches[ki],PutIn(fin,&(S->iPatches[ki]),
+						S->Patches[ki],&(poin[k]),ki));
+#endif
 						poin2[k] = poin[k] + im;
 					}
 					else {
@@ -2616,18 +2813,24 @@ NextTerm:
 			found the smallest in the set. indicated by k.
 			write to its destination.
 */
-		if ( ( im = PutOut(poin[k],&position,fout,1) ) < 0 ) return(-1);
+		if ( ( im = PutOut(poin[k],&position,fout,1) ) < 0 ) {
+			MesPrint("Called from MergePatches with k = %d (stream %d)",k,S->ktoi[k]);
+			goto ReturnError;
+		}
 		ADDPOS(S->SizeInFile[par],im);
 		goto NextTerm;
 	}
 	else {
-		return(0);
+		goto NormalReturn;
 	}
 EndOfMerge:
-	if ( FlushOut(&position,fout) ) return(-1);
+	if ( FlushOut(&position,fout,1) ) goto ReturnError;
 	ADDPOS(S->SizeInFile[par],1);
 EndOfAll:
 	if ( par == 1 ) {	/* Set the fpatch pointers */
+#ifdef ZWITHZLIB
+		SeekFile(fout->handle,&position,SEEK_CUR);
+#endif
 		(S->fPatchN)++;
 		S->fPatches[S->fPatchN] = position;
 	}
@@ -2643,16 +2846,26 @@ EndOfAll:
 		S->fPatches[S->fPatchN] = position;
 		if ( ISNOTZEROPOS(AR.OldPosIn) ) {		/* We are not done */
 			SeekFile(fin->handle,&(AR.OldPosIn),SEEK_SET);
-/* --COMPRESS-- */
-			if ( (ULONG)ReadFile(fin->handle,(UBYTE *)(&inNum),(LONG)sizeof(WORD)) !=
+/*
+			We don't need extra provisions for the zlib compression here.
+			If part if an expression has been sorted, the whole has been so.
+			This means that S->fpincompressed[] will remain the same
+*/
+			if ( (ULONG)ReadFile(fin->handle,(UBYTE *)(&(S->inNum)),(LONG)sizeof(WORD)) !=
 				sizeof(WORD)
 			  || (ULONG)ReadFile(fin->handle,(UBYTE *)(&AR.OldPosIn),(LONG)sizeof(POSITION)) !=
 				sizeof(POSITION)
-			  || (ULONG)ReadFile(fin->handle,(UBYTE *)inPatch,(LONG)(inNum+1)
-					*sizeof(POSITION)) != (inNum+1)*sizeof(POSITION) ) {
-				return(MesPrint("Read error fourth stage sorting"));
+			  || (ULONG)ReadFile(fin->handle,(UBYTE *)S->iPatches,(LONG)((S->inNum)+1)
+					*sizeof(POSITION)) != ((S->inNum)+1)*sizeof(POSITION) ) {
+				MesPrint("Read error fourth stage sorting");
+				goto ReturnError;
 			}
 			*rr = 0;
+#ifdef ZWITHZLIB
+			for ( i = 0; i < S->inNum; i++ ) {
+				S->fPatchesStop[i] = S->iPatches[i+1];
+			}
+#endif
 			goto ConMer;
 		}
 		else {
@@ -2683,17 +2896,30 @@ EndOfAll:
 		remove(fin->name);
 		fin->handle = -1;
 	}
+NormalReturn:
+#ifdef ZWITHZLIB
+	AR.gzipCompress = oldgzipCompress;
+#endif
 	return(0);
-
+ReturnError:
+#ifdef ZWITHZLIB
+	AR.gzipCompress = oldgzipCompress;
+#endif
+	return(-1);
+#ifndef ZWITHZLIB
 PatwCall:
 	MesPrint("Error while writing to file.");
+#endif
 PatCall:
 	MesCall("MergePatches");
+#ifdef ZWITHZLIB
+	AR.gzipCompress = oldgzipCompress;
+#endif
 	SETERROR(-1)
 }
 
 /*
- 		#] MergePatches : 
+ 		#] MergePatches :
  		#[ StoreTerm :				WORD StoreTerm(term)
 
 	The central routine to accept terms, store them and keep things
@@ -2754,9 +2980,15 @@ StoreTerm ARG1(WORD *,term)
 			The large buffer is too full. Merge and write it
 */
 			if ( MergePatches(1) ) goto StoreCall;
+/*
 			pp = S->SizeInFile[1];
 			ADDPOS(pp,sSpace);
 			MULPOS(pp,sizeof(WORD));
+*/
+			SETBASEPOSITION(pp,sSpace);
+			MULPOS(pp,sizeof(WORD));
+			ADD2POS(pp,S->fPatches[S->fPatchN]);
+
 			if ( S == AM.S0 ) {	/* Only statistics at ground level */
 				WORD oldLogHandle = AC.LogHandle;
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
@@ -2799,7 +3031,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm : 
+ 		#] StoreTerm :
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 
@@ -2812,7 +3044,10 @@ StageSort ARG1(FILEHANDLE *,fout)
 		PUTZERO(position);
 	MesPrint("StageSort");
 		SeekFile(fout->handle,&position,SEEK_END);
-/* --COMPRESS-- */
+/*
+		No extra compression data has to be written.
+		S->fpincompressed should remain valid.
+*/
 		if ( (ULONG)WriteFile(fout->handle,(UBYTE *)(&(S->fPatchN)),(LONG)sizeof(WORD)) !=
 			sizeof(WORD)
 		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(&(AR.OldPosOut)),(LONG)sizeof(POSITION)) !=
@@ -2848,7 +3083,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 }
 
 /*
- 		#] StageSort : 
+ 		#] StageSort :
  		#[ SortWild :				WORD SortWild(w,nw)
 
 	Sorts the wildcard entries in the parameter w. Double entries
@@ -2940,7 +3175,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 }
 
 /*
- 		#] SortWild : 
+ 		#] SortWild :
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 
 		Partially or completely frees function sort buffers.
@@ -2991,7 +3226,7 @@ void CleanUpSort ARG1(int,num)
 }
 
 /*
- 		#] CleanUpSort : 
+ 		#] CleanUpSort :
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 
@@ -3004,6 +3239,6 @@ VOID LowerSortLevel ARG0
 }
 
 /*
- 		#] LowerSortLevel : 
+ 		#] LowerSortLevel :
 	#] SortUtilities :
 */

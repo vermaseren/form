@@ -70,6 +70,7 @@ static KEYWORD com2commands[] = {
 	,{"collect",        (TFUN)CoCollect,          SPECIFICATION,PARTEST}
 	,{"contract",       (TFUN)CoContract,         STATEMENT,    PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
+	,{"deallocatetable",(TFUN)CoDeallocateTable,  DECLARATION,  PARTEST}
 	,{"delete",         (TFUN)CoDelete,           SPECIFICATION,PARTEST}
 	,{"disorder",       (TFUN)CoDisorder,         STATEMENT,    PARTEST}
 	,{"drop",           (TFUN)CoDrop,             SPECIFICATION,PARTEST}
@@ -94,6 +95,7 @@ static KEYWORD com2commands[] = {
 	,{"inside",         (TFUN)CoInside,           STATEMENT,    PARTEST}
 	,{"insidefirst",    (TFUN)CoInsideFirst,      DECLARATION,  PARTEST}
 	,{"keep",           (TFUN)CoKeep,             SPECIFICATION,PARTEST}
+	,{"makeinteger",    (TFUN)CoMakeInteger,      STATEMENT,    PARTEST}
 	,{"many",           (TFUN)CoMany,             STATEMENT,    PARTEST}
 	,{"merge",          (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"metric",         (TFUN)CoMetric,           DECLARATION,  PARTEST}
@@ -546,8 +548,10 @@ int TestTables ARG0
 	WORD j;
 	int error = 0, i;
 	LONG x;
-	i = NumFunctions;
-	while ( AC.MustTestTable > 0 && i > 0 ) {
+	i = NumFunctions + FUNCTION - MAXBUILTINFUNCTION - 1;
+	f = f + MAXBUILTINFUNCTION - FUNCTION + 1;
+	if ( AC.MustTestTable > 0 ) {
+	  while ( i > 0 ) {
 		if ( ( t = f->tabl ) != 0 && t->strict > 0 && !t->sparse ) {
 			for ( x = 0, j = 0; x < t->totind; x++ ) {
 				if ( t->tablepointers[TABLEEXTENSION*x] < 0 ) j++;
@@ -563,15 +567,16 @@ int TestTables ARG0
 				}
 				error = 1;
 			}
-			AC.MustTestTable--;
 		}
 		i--; f++;
+	  }
+	  AC.MustTestTable--;
 	}
 	return(error);
 }
 
 /*
- 		#] TestTables : 
+ 		#] TestTables :
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -1255,13 +1260,15 @@ dofunction:			firstsumarg = 1;
 				*t++ = subexpbuffers[x1].subexpnum;
 				*t++ = x2*deno;
 				*t++ = subexpbuffers[x1].buffernum;
+				NCOPY(t,r,n);
+				if ( cbuf[subexpbuffers[x1].buffernum].CanCommu[subexpbuffers[x1].subexpnum] ) cc = 1;
 #else
 				*t++ = x1;
 				*t++ = x2*deno;
 				*t++ = AR.cbufnum;
-#endif
 				NCOPY(t,r,n);
 				if ( C->CanCommu[x1] ) cc = 1;
+#endif
 				deno = 1;
 				break;
 			case TMULTIPLY:
@@ -1510,7 +1517,7 @@ docoef:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term

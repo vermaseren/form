@@ -163,7 +163,47 @@ setonoff ARG4(UBYTE *,s,int *,flag,int,onvalue,int,offvalue)
   	#[ CoCompress :
 */
 
-int CoCompress ARG1(UBYTE *,s) { return(setonoff(s,&AR.NoCompress,0,1)); }
+int CoCompress ARG1(UBYTE *,s) {
+	UBYTE *t, c;
+	if ( StrICmp(s,(UBYTE *)"on") == 0 ) {
+		AR.NoCompress = 0;
+		AR.gzipCompress = GZIPDEFAULT;
+	}
+	else if ( StrICmp(s,(UBYTE *)"off") == 0 ) {
+		AR.NoCompress = 1;
+		AR.gzipCompress = 0;
+	}
+	else {
+		t = s; while ( FG.cTable[*t] <= 1 ) t++;
+		c = *t; *t = 0;
+		if ( StrICmp(s,(UBYTE *)"gzip") == 0 ) {
+#ifndef WITHZLIB
+			Warning("gzip compression not supported on this platform");
+#endif
+			s = t; *s = c;
+			if ( *s == 0 ) {
+				AR.gzipCompress = GZIPDEFAULT;  /* Normally should be 6 */
+				return(0);
+			}
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			t = s;
+			if ( FG.cTable[*s] == 1 ) {
+				AR.gzipCompress = *s - '0';
+				s++;
+				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+				if ( *s == 0 ) return(0);
+			}
+			MesPrint("&Unknown gzip option: %s, a digit was expected",t);
+			return(1);
+
+		}
+		else {
+			MesPrint("&Unknown option: %s, on, off or gzip expected",s);
+			return(1);
+		}
+	}
+	return(0);
+}
 
 /*
   	#] CoCompress :
@@ -189,6 +229,9 @@ int CoOff ARG1(UBYTE *,s)
 		if ( i >= num ) {
 			MesPrint("&Unrecognized option in OFF statement: %s",t);
 			*s = c; return(-1);
+		}
+		if ( StrICont(t,"compress") == 0 ) {
+			AR.gzipCompress = 0;
 		}
 		*s = c;
 		/*[30jan2004 mt]:*/
@@ -239,7 +282,39 @@ int CoOn ARG1(UBYTE *,s)
 			MesPrint("&Unrecognized option in ON statement: %s",t);
 			*s = c; return(-1);
 		}
-		*s = c;
+		if ( StrICont(t,"compress") == 0 ) {
+			AR.gzipCompress = GZIPDEFAULT;
+			*s = c;
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			if ( *s ) {
+			  t = s;
+			  while ( FG.cTable[*s] <= 1 ) s++;
+			  c = *s; *s = 0;
+			  if ( StrICmp(t,"gzip") == 0 ) {}
+			  else {
+				MesPrint("&Unrecognized option in ON compress statement: %s",t);
+				return(-1);
+			  }
+			  *s = c;
+			  while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+#ifndef WITHZLIB
+			  Warning("gzip compression not supported on this platform");
+#endif
+			  if ( FG.cTable[*s] == 1 ) {
+				AR.gzipCompress = *s++ - '0';
+				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+				if ( *s ) {
+					MesPrint("&Unrecognized option in ON compress gzip statement: %s",t);
+					return(-1);
+				}
+			  }
+			  else if ( *s ) {
+				MesPrint("&Unrecognized option in ON compress gzip statement: %s, single digit expected",t);
+				return(-1);
+			  }
+			}
+		}
+		else { *s = c; }
 		/*[30jan2004 mt]:*/
 		/* Change this a bit: AC.mparallelflag is set to 
 			PARALLELFLAG in IniModule. It may be changed in DoExecute according to
@@ -1100,6 +1175,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 	        *w++ = cbuf[AR.cbufnum].numlhs;
 			break;
 		case TYPENORM:
+		case TYPENORM4:
 		case TYPESPLITARG:
 		case TYPESPLITFIRSTARG:
 		case TYPESPLITLASTARG:
@@ -1143,6 +1219,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 			t++; v--;
 			if ( par == TYPESPLITARG ) oldworkpointer[0] = TYPESPLITARG2;
 			else if ( par == TYPEFACTARG ) oldworkpointer[0] = TYPEFACTARG2;
+			else if ( par == TYPENORM4 ) oldworkpointer[0] = TYPENORM4;
 			else if ( par == TYPENORM ) {
 				if ( *t == '-' ) { oldworkpointer[0] = TYPENORM3; t++; }
 				else             { oldworkpointer[0] = TYPENORM2; *scale = 0; }
@@ -1386,6 +1463,14 @@ CoNormalize ARG1(UBYTE *,s) { return(DoArgument(s,TYPENORM)); }
 
 /*
   	#] CoNormalize :
+  	#[ CoMakeInteger :
+*/
+
+int
+CoMakeInteger ARG1(UBYTE *,s) { return(DoArgument(s,TYPENORM4)); }
+
+/*
+  	#] CoMakeInteger :
   	#[ CoSplitArg :
 */
 

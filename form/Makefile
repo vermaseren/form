@@ -80,8 +80,8 @@ CPPFLAGS = -DNEXT
 endif
 
 ifeq ($(USERNAME),jos)
-CC = icc
-CFLAGS = -O3 -D_FILE_OFFSET_BITS=64 -march=pentiumiii -w1 -static -tpp6
+CC = gcc
+CFLAGS = -O3 -D_FILE_OFFSET_BITS=64 -fomit-frame-pointer -march=i586 -mcpu=i686 -w1 -static
 CPPFLAGS = -DLINUX
 endif
 
@@ -99,9 +99,9 @@ endif
 HFILES = declare.h form3.h fsizes.h ftypes.h inivar.h minos.h \
 	structs.h unix.h variable.h windows.h zconf.h portsignals.h
 
-OBJS = argument.o comexpr.o compcomm.o compiler.o comtool.o dollar.o \
-	execute.o extcmd.o factor.o findpat.o function.o if.o index.o lus.o message.o \
-	minos.o module.o names.o normal.o opera.o optim.o \
+OBJS = argument.o comexpr.o compcomm.o compiler.o compress.o comtool.o \
+	dollar.o execute.o extcmd.o factor.o findpat.o function.o if.o index.o \
+	lus.o message.o minos.o module.o names.o normal.o opera.o optim.o \
 	pattern.o poly.o pre.o proces.o ratio.o reken.o reshuf.o sch.o setfile.o \
 	smart.o sort.o startup.o store.o symmetr.o tables.o token.o tools.o \
 	unixfile.o wildcard.o

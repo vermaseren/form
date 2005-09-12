@@ -24,7 +24,7 @@ extern "C" getdtablesize();
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -668,7 +668,7 @@ CreateHandle ARG0
 	}
 	else if ( numinfilelist >= filelistsize ) {
 		i = filelistsize;
-		if ( DoubleList((VOID ***)&filelist,&filelistsize,sizeof(FILES *),
+		if ( DoubleList((VOID ***)(&filelist),(int *)&filelistsize,(int)sizeof(FILES *),
 			"list of open files") != 0 ) Terminate(-1);
 		for ( j = i; j < filelistsize; j++ ) filelist[j] = 0;
 		numinfilelist = i + 1;
@@ -732,12 +732,19 @@ LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/)=&WriteFileToFile;
 VOID
 SeekFile ARG3(int,handle,POSITION *,offset,int,origin)
 {
-	Useek(filelist[handle],BASEPOSITION(*offset),origin);
+	if ( origin == SEEK_SET ) {
+		Useek(filelist[handle],BASEPOSITION(*offset),origin);
+		SETBASEPOSITION(*offset,(Utell(filelist[handle])));
+		return;
+	}
+	else if ( origin == SEEK_END ) {
+		Useek(filelist[handle],0,origin);
+	}
 	SETBASEPOSITION(*offset,(Utell(filelist[handle])));
 }
 
 /*
- 		#] SeekFile : 
+ 		#] SeekFile :
  		#[ TellFile :
 */
 
@@ -999,7 +1006,7 @@ WriteString ARG3(int,type,UBYTE *,str,int,num)
 }
 
 /*
- 		#] WriteString :
+ 		#] WriteString : 
  		#[ WriteUnfinString :
 
 		Writes a characterstring to the various outputs.
@@ -1202,7 +1209,7 @@ LongLongCopy ARG2(off_t *,y,char *,to)
 }
 
 /*
- 		#] LongLongCopy :
+ 		#] LongLongCopy : 
  		#[ MakeDate :
 
 		Routine produces a string with the date and time of the run
@@ -1358,7 +1365,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 }
 
 /*
- 		#] Malloc1 :
+ 		#] Malloc1 : 
  		#[ M_free :
 */
 
@@ -1412,7 +1419,7 @@ void M_free ARG2(VOID *,x,char *,where)
 }
 
 /*
- 		#] M_free :
+ 		#] M_free : 
  		#[ M_check :
 */
 
@@ -1476,7 +1483,7 @@ void M_print() {}
 #endif
 
 /*
- 		#] M_check :
+ 		#] M_check : 
  		#[ FromList :
 
 	Returns the next object in a list.
@@ -2094,6 +2101,19 @@ LONG Timer()
 
 #else
 
+#ifdef OPTERON
+#include <sys/time.h>
+#include <sys/resource.h>
+
+LONG Timer()
+{
+	struct rusage rusage;
+	getrusage(0,&rusage);
+	return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+}
+
+#else
+
 #ifdef RS6K
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -2226,6 +2246,7 @@ LONG Timer()
 #endif
 #endif
 #endif
+#endif
 
 /*
  		#] Timer : 
@@ -2258,7 +2279,7 @@ set_in ARG2(UBYTE, ch, set_of_char, set)
 	return(-1);
 }/*set_in*/
 /*
- 		#] set_in :
+ 		#] set_in : 
  		#[ set_set :
 			sets ch into set; returns *set:
 */
@@ -2280,7 +2301,7 @@ set_set ARG2(UBYTE, ch, set_of_char, set)
 	return(tmp);
 }/*set_set*/
 /*
- 		#] set_set :
+ 		#] set_set : 
  		#[ set_del :
 			deletes ch from set; returns *set:
 */
@@ -2302,7 +2323,7 @@ set_del ARG2(UBYTE, ch, set_of_char, set)
 	return(tmp);
 }/*set_del*/
 /*
- 		#] set_del :
+ 		#] set_del : 
  		#[ set_sub :
 			returns *set = set1\set2. This function may be usd for initialising,
 				set_sub(a,a,a) => now a is empty set :
@@ -2328,6 +2349,6 @@ set_sub ARG3(set_of_char, set, set_of_char, set1, set_of_char, set2)
 	return(tmp);
 }/*set_sub*/
 /*
- 		#] set_sub :
+ 		#] set_sub : 
 */
 /*:[12dec2003 mt]*/
