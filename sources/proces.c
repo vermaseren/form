@@ -779,13 +779,7 @@ Important: we may not have enough spots here
 	Noted by M. Tentyukov mar-2004
 			}
 			else if ( *t >= FUNCTION + WILDOFFSET ) {
-/*!!!
-if(funnum-FUNCTION-WILDOFFSET < 0){
-fprintf(stdout, "!!!!!!!!WARNING!!!!!!!!!!!!! %d\n",funnum-FUNCTION-WILDOFFSET);
-}
-!!!*/
-/*				if ( functions[funnum-FUNCTION-WILDOFFSET].spec == 0*/
-				if ( functions[funnum-FUNCTION].spec == 0
+				if ( functions[funnum-FUNCTION-WILDOFFSET].spec == 0
 				|| ( t[2] & DIRTYFLAG ) ) funflag = 1;
 			}
 */
@@ -1678,11 +1672,7 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	WORD *r, l, *m, i;
 	WORD *stop, *s1, *s2;
 	POSITION AccPos;
-	/*[13jul2005 mt]:*/
-	/*	WORD InCompState, retlength;*/
-   WORD InCompState;
-   LONG retlength;
-	/*:[13jul2005 mt]*/
+	WORD InCompState;
 	WORD *oldipointer;
 	LONG retlength;
 	stop = accum + 2*AM.MaxTer;
