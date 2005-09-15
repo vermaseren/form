@@ -283,3 +283,8 @@ Minor bugfixes (_potential_ bugs), and:
 
 2. Checkup whether read()/write() syscalls are interrupted by a signal is
 enclosed with #ifdef SAFESIGNAL
+
+****** [15 sep 2005] intermediate release for synchronization ********
+[14sep2005 mt]:
+Bugfix (in proces.c:Generator): in "off parallel", the master itself must
+collect preprovars.

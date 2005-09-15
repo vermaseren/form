@@ -2254,6 +2254,13 @@ CommonEnd:
 					j = C->lhs[level][2];
 #ifdef PARALLEL
 					PF.redef[j] = PF.ginterms;
+					/*[14sep2005 mt]:*/
+					if(PF.me == MASTER)
+						/*off parallel. The master must collect preprovar for
+							broadcasting itself:*/
+						if(PF.redef[j] == 0)/*Not counted yet, count it:*/
+							PF.mnumredefs++;
+					/*:[14sep2005 mt]*/
 #endif
 					PutPreVar(PreVar[j].name,(UBYTE *)(C->lhs[level]+4),0,1);
 					break;

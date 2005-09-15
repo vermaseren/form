@@ -285,8 +285,6 @@ PF_ISendSbuf ARG2(int,to,int,tag){
   s->fill[a] = s->buff[a];
   if(s->numbufs == 1 ){
 	r = MPI_Ssend(s->buff[a],size,PF_WORD,MASTER,tag,PF_COMM);
-/*@@@*/
-fprintf(stderr, "%d PF_ISendSbuf,MPI_Ssend: %d\n",PF.me,size);
 	if(r != MPI_SUCCESS){
 	  fprintf(stderr,"[%d|%d] PF_ISendSbuf: MPI_Ssend returns: %d \n",
 			  PF.me,PF.module,r);
@@ -307,8 +305,6 @@ fprintf(stderr, "%d PF_ISendSbuf,MPI_Ssend: %d\n",PF.me,size);
   }
 
   r = MPI_Isend(s->buff[a],size,PF_WORD,to,tag,PF_COMM,&s->request[a]);
-/*@@@*/
-fprintf(stderr, "%d PF_ISendSbuf,MPI_Isend: %d\n",PF.me,size);
 
   if(r != MPI_SUCCESS) return(r);
 

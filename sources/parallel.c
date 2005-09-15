@@ -770,7 +770,8 @@ PF_EndSort ARG0
 	PRINTFBUF("PF_EndSort to PutOut: ",outterm,*outterm);  
 	PutOut(outterm,&position,fout,1);
   }		
-  if( FlushOut(&position,fout) ) return(-1);
+/*@@@*/
+  if( FlushOut(&position,fout,0) ) return(-1);
   return(1);
 }
 /*
