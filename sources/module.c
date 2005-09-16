@@ -28,10 +28,7 @@ static KEYWORD ModuleOptions[] = {
 	 {"maximum",			DoModMax,		MODMAX,			0}
 	,{"minimum",			DoModMin,		MODMIN,			0}
 	,{"nokeep", 			DoModNoKeep,	MODNOKEEP,		0}
-	/*[30jan2004 mt]:*/
-	/*,{"noparallel",			DoNoParallel,	NOPARALLELFLAG,	0}*/
-	,{"noparallel",			DoNoParallel,	NOPARALLEL_MOPT,	0}
-	/*:[30jan2004 mt]*/
+	,{"noparallel",			DoNoParallel,	NOPARALLEL_MOPT,0}
 	,{"parallel",			DoParallel,     PARALLELFLAG,	0}
 	,{"polyfun",			DoPolyfun,		POLYFUN,		0}
 	,{"slavepatchsize",		DoSlavePatch,	MODSLAVEPATCH,	0}
@@ -282,7 +279,7 @@ DoPolyfun ARG1(UBYTE *,s)
 	UBYTE *t, c;
 	WORD funnum;
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
-		AC.PolyFun = 0;
+		AR.PolyFun = 0;
 		return(0);
 	}
 	if ( *s != '=' ) {
@@ -299,7 +296,7 @@ DoPolyfun ARG1(UBYTE *,s)
 		*t = c;
 		return(-1);
 	}
-	AC.PolyFun = funnum+FUNCTION;
+	AR.PolyFun = funnum+FUNCTION;
 	*t = c;
 	SKIPBLANKS(t)
 	if ( *t && *t != ',' && *t != ')' ) {

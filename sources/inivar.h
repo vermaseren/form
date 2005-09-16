@@ -90,6 +90,9 @@ FIXEDGLOBALS FG = {
 };
 
 ALLGLOBALS A;
+#ifdef WITHPTHREADS
+ALLPRIVATES *AB;
+#endif
 
 static struct fixedfun {
 	char *name;
@@ -194,4 +197,6 @@ FIXEDSET fixedsets[] = {
 UBYTE BufferForOutput[260];
 
 char *setupfilename = "form.set";
+
+INILOCK(ErrorMessageLock);
 

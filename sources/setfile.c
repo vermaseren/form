@@ -39,7 +39,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
 	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (long)SCRATCHSIZE}
-        ,{(UBYTE *)"shmwinsize",            NUMERICALVALUE, 0, (long)SHMWINSIZE}
+	,{(UBYTE *)"shmwinsize",            NUMERICALVALUE, 0, (long)SHMWINSIZE}
 	,{(UBYTE *)"slavepatchsize",        NUMERICALVALUE, 0, (long)SLAVEPATCHSIZE}
 	,{(UBYTE *)"smallextension",        NUMERICALVALUE, 0, (long)SMALLOVERFLOW}
 	,{(UBYTE *)"smallsize",             NUMERICALVALUE, 0, (long)SMALLBUFFER}
@@ -54,12 +54,13 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"subtermsinsmall",       NUMERICALVALUE, 0, (long)STERMSSMALL}
 	,{(UBYTE *)"tempdir",                  STRINGVALUE, 0, (long)curdirp}
 	,{(UBYTE *)"termsinsmall",          NUMERICALVALUE, 0, (long)TERMSSMALL}
+    ,{(UBYTE *)"threads",               NUMERICALVALUE, 0, (long)DEFAULTTHREADS}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (long)WORKBUFFER}
 	,{(UBYTE *)"zipsize",               NUMERICALVALUE, 0, (long)ZIPBUFFERSIZE}
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -107,7 +108,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -178,7 +179,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -199,7 +200,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -216,7 +217,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -248,10 +249,10 @@ AllocSetups ARG0
 	Allocate workspace.
 */
 	sp = GetSetupPar((UBYTE *)"workspace");
-	AM.WorkSize = sp->value;
-	AM.WorkSpace = (WORD *)Malloc1(sp->value*sizeof(WORD),(char *)(sp->parameter));
-	AM.WorkTop = AM.WorkSpace + sp->value;
-	AR.WorkPointer = AM.WorkSpace;
+	AT.WorkSize = sp->value;
+	AT.WorkSpace = (WORD *)Malloc1(sp->value*sizeof(WORD),(char *)(sp->parameter));
+	AT.WorkTop = AT.WorkSpace + sp->value;
+	AT.WorkPointer = AT.WorkSpace;
 /*
 	Set the size of the ZipBuffers and allocate them.
 */
@@ -286,8 +287,8 @@ AllocSetups ARG0
 	size = ( sp->value + 11 ) & (-4);
 	AM.MaxTal = size - 2;
 	if ( AM.MaxTal > (AM.MaxTer-2)/2 ) AM.MaxTal = (AM.MaxTer-2)/2;
-	AM.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
-	AM.n_llnum = AM.n_coef + 2*size;
+	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
+	AT.n_llnum = AT.n_coef + 2*size;
 	AC.cmod = (WORD *)Malloc1(size*4*sizeof(UWORD),(char *)(sp->parameter));
 	AM.gcmod = AC.cmod + size;
 	AC.powmod = AM.gcmod + size;
@@ -308,7 +309,6 @@ AllocSetups ARG0
 		PUTZERO(AR.Fscr[j].POposition);
 	}
 	AR.Fscr[2].PObuffer = 0;
-
 /*
      The size for shared memory window for oneside MPI2 communications
 */
@@ -411,6 +411,9 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"slavepatchsize");
 	AM.hSlavePatchSize = AM.gSlavePatchSize =
 	AC.SlavePatchSize = AC.mSlavePatchSize = sp->value;
+
+	sp = GetSetupPar((UBYTE *)"threads");
+	AM.totalnumberofthreads = sp->value;
 /*
 	And now some order sensitive things
 */
@@ -430,7 +433,7 @@ AllocSetups ARG0
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 */
 
@@ -474,7 +477,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -602,7 +605,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocFileHandle :
 */
 
@@ -640,7 +643,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of filenum. 21-sep-2000
@@ -658,7 +661,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -669,7 +672,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -747,7 +750,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -772,7 +775,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */
 

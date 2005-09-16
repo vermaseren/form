@@ -4,15 +4,11 @@
 
 #include "form3.h"
 
-#ifdef PARALLEL /* [03dec2002 df] */
-#include "parallel.h"
-#endif /* PARALLEL [03dec2002 df] */
-
 static UWORD *IfScrat1 = 0;
 static UWORD *IfScrat2 = 0;
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CatchDollar :
 
 	Works out a dollar expression during compile type.
@@ -25,10 +21,10 @@ static UWORD *IfScrat2 = 0;
 
 int CatchDollar ARG1(int,par)
 {
-	CBUF *C = cbuf + AR.cbufnum;
+	CBUF *C = cbuf + AC.cbufnum;
 	int error = 0, numterms = 0, numdollar, sign = 1, i;
 	LONG newsize;
-	WORD *w, *t, n, nsize, *oldwork = AR.WorkPointer, *dbuffer;
+	WORD *w, *t, n, nsize, *oldwork = AT.WorkPointer, *dbuffer;
 	DOLLARS d;
 	numdollar = C->lhs[C->numlhs][2];
 /*
@@ -60,15 +56,15 @@ int CatchDollar ARG1(int,par)
 		if ( !error ) error = 1;
 		goto onerror;
 	}
-	AR.RepPoint = AM.RepCount + 1;
+	AR.RepPoint = AT.RepCount + 1;
 	w = C->rhs[C->lhs[C->numlhs][5]];
 	while ( *w ) {
 		n = *w; t = oldwork;
 		NCOPY(t,w,n)
-		AR.WorkPointer = t;
+		AT.WorkPointer = t;
 		if ( Generator(oldwork,C->numlhs) ) { error = 1; break; }
 	}
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&dbuffer),2) < 0 ) { error = 1; }
 	LowerSortLevel();
 	if ( error == 0 ) {
@@ -120,13 +116,21 @@ onerror:
 }
 
 /*
-  	#] CatchDollar : 
+  	#] CatchDollar :
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
 	This one is slightly different from CatchDollar.
 	We have no easy buffer this time.
 	We will have to hack our way using what we normally use for functions.
+
+	Note that in the threaded case we trust the user. That means that
+	we are not going to recheck whether there is a maximum, minimum or sum.
+	If the user says it is like that, we treat it like that.
+	We only check that in this centralized version MODNOKEEP isn't used.
+
+	In a later stage dtype could be used for actually checking MODMAX
+	and MODMIN cases.
 */
 
 int AssignDollar ARG2(WORD *,term,WORD,level)
@@ -138,26 +142,151 @@ int AssignDollar ARG2(WORD *,term,WORD,level)
 	WORD *w, *t, n, nsize, *rh = cbuf[C->lhs[level][7]].rhs[C->lhs[level][5]];
 	WORD *ss, *ww;
 	WORD olddefer, oldcompress;
-
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1, dw;
+	WORD numvalue;
+	if ( AS.MultiThreaded ) {
+/*
+		Here we come only when the module runs with more than one thread.
+		This must be a variable with a special module option.
+		For the multi-threaded version we only allow MODSUM, MODMAX and MODMIN.
+*/
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt >= NumModOptdollars ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Illegal attempt to change $-variable in multi-threaded module %l",AC.CModule);
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		dtype = ModOptdollars[nummodopt].type;
+	}
+#endif
 	w = rh;
 /*
 	First some shortcuts
 */
 	if ( *w == 0 ) {
-		d->type = DOLZERO;
 /*
-		if ( d->where == 0 ) {
-			d->size = 20;
-			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
-			cbuf[AM.dbufnum].rhs[numdollar] = d->where;
-		}
+ 		#[ Thread version : Zero case
 */
+#ifdef WITHPTHREADS
+		if ( dtype > 0 ) {
+			LOCK(d->pthreadslock);
+NewValIsZero:;
+			switch ( d->type ) {
+				case DOLZERO: goto NoChangeZero;
+				case DOLNUMBER:
+				case DOLTERMS:
+					if ( ( dw = d->where[0] ) > 0 && d->where[dw] != 0 ) {
+						break; /* was not a single number. Trust the user */
+					}
+					if ( dtype == MODMAX && d->where[dw-1] < 0 ) break;
+					if ( dtype == MODMIN && d->where[dw-1] > 0 ) break;
+					goto NoChangeZero;
+				default:
+					numvalue = DolToNumber(numdollar);
+					if ( AR.ErrorInDollar != 0 ) break;
+					if ( dtype == MODMAX && numvalue < 0 ) break;
+					if ( dtype == MODMIN && numvalue > 0 ) break;
+					goto NoChangeZero;
+			}
+			d->type = DOLZERO;
+			d->where[0] = 0;
+			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+			cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+NoChangeZero:;
+			UNLOCK(d->pthreadslock);
+			return(0);
+		}
+#endif
+/*
+ 		#] Thread version :
+*/
+		d->type = DOLZERO;
 		d->where[0] = 0;
 		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 		cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
 		return(0);
 	}
 	else if ( *w == 4 && w[4] == 0 && w[2] == 1 ) {
+/*
+ 		#[ Thread version : New value is 'single precision'
+*/
+#ifdef WITHPTHREADS
+		if ( dtype > 0 ) {
+			LOCK(d->pthreadslock);
+			if ( d->size < 5 ) {
+				WORD oldsize, *oldwhere, i;
+				oldsize = d->size; oldwhere = d->where;
+				d->size = 20;
+				d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
+				cbuf[AM.dbufnum].rhs[numdollar] = d->where;
+				for i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
+				if ( oldwhere && oldwhere != &(AM.dollarzero) ) M_free(oldwhere,"dollar contents");
+			}
+			switch ( d->type ) {
+				case DOLZERO:
+HandleDolZero:;
+					if ( dtype == MODMAX && w[3] >= 0 ) goto NoChangeOne;
+					if ( dtype == MODMIN && w[3] <= 0 ) goto NoChangeOne;
+					d->type = DOLZERO;
+					d->where[0] = 0;
+					cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+					cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+					UNLOCK(d->pthreadslock);
+					return(0);
+				case DOLNUMBER:
+				case DOLTERMS:
+					if ( ( dw = d->where[0] ) > 0 && d->where[dw] != 0 ) {
+						break; /* was not a single number. Trust the user */
+					}
+					if ( dtype == MODMAX && CompCoef(d->where,where) < 0 ) break;
+					if ( dtype == MODMIN && CompCoef(d->where,where) > 0 ) break;
+					goto NoChangeOne;
+				default:
+					{
+/*
+						Note that we convert the type for the next time around.
+*/
+						WORD extraterm[4];
+						numvalue = DolToNumber(numdollar);
+						if ( AR.ErrorInDollar != 0 ) break;
+						if ( numvalue == 0 ) {
+							d->type = DOLZERO;
+							d->where[0] = 0;
+							cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+							cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+							goto HandleDolZero;
+						}
+						d->where[0] = extraterm[0] = 4;
+						d->where[1] = extraterm[1] = ABS(numvalue);
+						d->where[2] = extraterm[2] = 1;
+						d->where[3] = extraterm[3] = numvalue > 0 ? 3 : -3;
+						d->where[4] = 0;
+						d->type = DOLNUMBER;
+						if ( dtype == MODMAX && CompCoef(extraterm,where) < 0 ) break;
+						if ( dtype == MODMIN && CompCoef(extraterm,where) > 0 ) break;
+						goto NoChangeOne;
+					}
+			}
+			d->where[0] = w[0];
+			d->where[1] = w[1];
+			d->where[2] = w[2];
+			d->where[3] = w[3];
+			d->where[4] = 0;
+			d->type = DOLNUMBER;
+			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+			cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
+NoChangeOne:;
+			UNLOCK(d->pthreadslock);
+			return(0);
+		}
+#endif
+/*
+ 		#] Thread version :
+*/
 		if ( d->size < 5 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
 			d->size = 20;
@@ -175,59 +304,137 @@ int AssignDollar ARG2(WORD *,term,WORD,level)
 		return(0);
 	}
 /*
-	Now the real evaluation
+	Now the real evaluation.
+	In the case of threads and MODSUM this requires an immediate lock.
+	Otherwise the lock could be placed later.
 */
+#ifdef WITHPTHREADS
+	if ( dtype == MODSUM )
+#endif
+	{ LOCK(d->pthreadslock); }
+/*
+	The following case cannot occur. We treated it already
+
 	if ( *w == 0 ) {
 		ss = 0; numterms = 0; newsize = 0;
 		olddefer = AR.DeferFlag; AR.DeferFlag = 0;
 		oldcompress = AR.NoCompress; AR.NoCompress = 1;
 	}
-	else{
+	else
+*/
+	{
+/*
+		New value is an expression that has to be evaluated first
+		This is all generic. It won't foliate due to the sort level 
+*/
 		if ( NewSort() ) return(1);
 		olddefer = AR.DeferFlag; AR.DeferFlag = 0;
 		oldcompress = AR.NoCompress; AR.NoCompress = 1;
 		while ( *w ) {
-			n = *w; t = ww = AR.WorkPointer;
+			n = *w; t = ww = AT.WorkPointer;
 			NCOPY(t,w,n);
-			AR.WorkPointer = t;
+			AT.WorkPointer = t;
 			if ( Generator(ww,C->numlhs) ) {
-				AR.WorkPointer = ww;
+				AT.WorkPointer = ww;
 				LowerSortLevel();
 				AR.DeferFlag = olddefer;
 				return(1);
 			}
-			AR.WorkPointer = ww;
+			AT.WorkPointer = ww;
 		}
 		if ( ( newsize = EndSort((WORD *)(&ss),2) ) < 0 ) return(1);
 		numterms = 0; t = ss; while ( *t ) { numterms++; t += *t; }
 	}
+#ifdef WITHPTHREADS
+	if ( dtype != MODSUM )
+#endif
+	{ LOCK(d->pthreadslock); }
 	if ( numterms == 0 ) {
 /*
-		if ( d->size > 1000 ) {
+		the new value evaluates to zero
 */
-			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-			d->where = &(AM.dollarzero);
-			d->size = 0;
-			cbuf[AM.dbufnum].rhs[numdollar] = 0;
-			d->type = DOLZERO;
-/*
+#ifdef WITHPTHREADS
+		if ( dtype == MODMAX || dtype == MODMIN ) {
+			if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
+			AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
+			goto NewValIsZero;
 		}
-		else {
-			d->type = DOLZERO;
-			d->where[0] = 0;
-			d->size = 1;
-			cbuf[AM.dbufnum].rhs[numdollar] = 0;
+		else
+#endif
+		{
+		  if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
+		  d->where = &(AM.dollarzero);
+		  d->size = 0;
+		  cbuf[AM.dbufnum].rhs[numdollar] = 0;
+		  cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+		  cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+		  d->type = DOLZERO;
 		}
-*/
 		if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
 	}
 	else {
+/*
+ 		#[ Thread version :
+*/
+#ifdef WITHPTHREADS
+		if ( dtype == MODMAX || dtype == MODMIN ) {
+			if ( numterms == 1 && ( *ss-1 == ABS(ss[*ss-1]) ) ) { /* is number */
+			  switch ( d->type ) {
+				case DOLZERO:
+HandleDolZero1:;
+					if ( dtype == MODMAX && ss[*ss-1] > 0 ) break;
+					if ( dtype == MODMIN && ss[*ss-1] < 0 ) break;
+					if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
+					AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
+					goto NoChange;
+				case DOLTERMS:
+				case DOLNUMBER:
+					if ( ( dw = d->where[0] ) > 0 && d->where[dw] != 0 ) break;
+					if ( dtype == MODMAX && CompCoef(ss,d->where) > 0 ) break;
+					if ( dtype == MODMIN && CompCoef(ss,d->where) < 0 ) break;
+					if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
+					AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
+					goto NoChange;
+				default:
+					WORD extraterm[4];
+					numvalue = DolToNumber(numdollar);
+					if ( AR.ErrorInDollar != 0 ) break;
+					if ( numvalue == 0 ) {
+						d->type = DOLZERO;
+						d->where[0] = 0;
+						cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+						cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+						goto HandleDolZero1;
+					}
+					d->where[0] = extraterm[0] = 4;
+					d->where[1] = extraterm[1] = ABS(numvalue);
+					d->where[2] = extraterm[2] = 1;
+					d->where[3] = extraterm[3] = numvalue > 0 ? 3 : -3;
+					d->where[4] = 0;
+					d->type = DOLNUMBER;
+					if ( dtype == MODMAX && CompCoef(ss,extraterm) > 0 ) break;
+					if ( dtype == MODMIN && CompCoef(ss,extraterm) < 0 ) break;
+					if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
+					AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
+					goto NoChange;
+			  }
+			}
+			else {
+				if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
+				AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
+				goto NoChange;
+			}
+		}
+#endif
+/*
+ 		#] Thread version :
+*/
 		d->type = DOLTERMS;
 		if ( d->where && d->where != &(AM.dollarzero) ) { M_free(d->where,"dollar contents"); d->where = 0; }
 		d->size = newsize + 1;
 		d->where = ss;
-	}
 		cbuf[AM.dbufnum].rhs[numdollar] = w = d->where;
+	}
 	AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
 /*
 	Now find the special cases
@@ -262,11 +469,15 @@ int AssignDollar ARG2(WORD *,term,WORD,level)
 		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 		cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
 	}
+#ifdef WITHPTHREADS
+NoChange:;
+#endif
+	UNLOCK(d->pthreadslock);
 	return(0);
 }
 
 /*
-  	#] AssignDollar : 
+  	#] AssignDollar :
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -329,7 +540,9 @@ UBYTE *WriteDollarToBuffer ARG1(WORD,numdollar)
 	}
 	AO.OutInBuffer = 0;
 	if ( error ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
+		UNLOCK(ErrorMessageLock);
 		M_free(AO.DollarOutBuffer,"DollarOutBuffer");
 		AO.DollarOutBuffer = 0;
 		AO.DollarOutSizeBuffer = 0;
@@ -339,7 +552,7 @@ UBYTE *WriteDollarToBuffer ARG1(WORD,numdollar)
 }
 
 /*
-  	#] WriteDollarToBuffer : 
+  	#] WriteDollarToBuffer :
   	#[ AddToDollarBuffer :
 */
 
@@ -372,7 +585,7 @@ void AddToDollarBuffer ARG1(UBYTE *,s)
 }
 
 /*
-  	#] AddToDollarBuffer : 
+  	#] AddToDollarBuffer :
   	#[ TermAssign :
 */
 
@@ -428,8 +641,10 @@ void TermAssign ARG1(WORD *,term)
 }
 
 /*
-  	#] TermAssign : 
+  	#] TermAssign :
   	#[ WildDollars :
+
+	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
 */
 
 void WildDollars ARG0
@@ -444,10 +659,29 @@ void WildDollars ARG0
 		t = m - 4;
 		while ( *t == LOADDOLLAR || *t == FROMSET || *t == SETTONUM ) t -= 4;
 		if ( t < AN.WildValue ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("&Serious bug in wildcard prototype. Found in WildDollars");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		numdollar = m[2];
+#ifdef WITHPTHREADS
+		{
+			int nummodopt;
+			if ( AS.MultiThreaded ) {
+				for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+					if ( t[1] == ModOptdollars[nummodopt].number ) break;
+				}
+				if ( nummodopt < NumModOptdollars ) {
+					LOCK(ErrorMessageLock);
+					MesPrint("&Illegal attempt to use $-variable %s in module %l",
+						DOLLARNAME(Dollars,numdollar),AC.CModule);
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+			}
+		}
+#endif
 /*
 		The value of this wildcard goes into our $-variable
 */
@@ -462,7 +696,7 @@ void WildDollars ARG0
 			case SYMTOSUB:
 			case VECTOSUB:
 			case INDTOSUB:
-				orig = cbuf[AR.ebufnum].rhs[t[3]];
+				orig = cbuf[AT.ebufnum].rhs[t[3]];
 				w = orig; while ( *w ) w += *w;
 				weneed = w - orig + 1;
 				break;
@@ -475,7 +709,7 @@ void WildDollars ARG0
 				weneed = FUNHEAD+5;
 				break;
 			case ARGTOARG:
-				orig = cbuf[AR.ebufnum].rhs[t[3]];
+				orig = cbuf[AT.ebufnum].rhs[t[3]];
 				if ( *orig > 0 ) weneed = *orig+2;
 				else {
 					w = orig+1; while ( *w ) { NEXTARG(w) }
@@ -558,114 +792,171 @@ void WildDollars ARG0
 }
 
 /*
-  	#] WildDollars : 
-  	#[ DolToTensor :
+  	#] WildDollars :
+  	#[ DolToTensor :    with LOCK
 */
 
 WORD DolToTensor ARG1(WORD,numdollar)
 {
 	DOLLARS d = Dollars + numdollar;
+	WORD retval;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	AR.ErrorInDollar = 0;
 	if ( d->type == DOLTERMS && d->where[0] == FUNHEAD+4 &&
 	d->where[FUNHEAD+4] == 0 && d->where[FUNHEAD+3] == 3 &&
 	d->where[FUNHEAD+2] == 1 && d->where[FUNHEAD+1] == 1 &&
 	d->where[1] >= FUNCTION && d->where[1] < FUNCTION+WILDOFFSET
 	&& functions[d->where[1]-FUNCTION].spec >= TENSORFUNCTION ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLARGUMENT &&
 	d->where[0] <= -FUNCTION && d->where[0] > -FUNCTION-WILDOFFSET
 	&& functions[-d->where[0]-FUNCTION].spec >= TENSORFUNCTION ) {
-		return(-d->where[0]);
+		retval = -d->where[0];
 	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 0
 	&& d->where[1] <= -FUNCTION && d->where[1] > -FUNCTION-WILDOFFSET
 	&& d->where[2] == 0
 	&& functions[-d->where[1]-FUNCTION].spec >= TENSORFUNCTION ) {
-		return(-d->where[1]);
+		retval = -d->where[1];
 	}
 	else if ( d->type == DOLSUBTERM &&
 	d->where[0] >= FUNCTION && d->where[0] < FUNCTION+WILDOFFSET
 	&& functions[d->where[0]-FUNCTION].spec >= TENSORFUNCTION ) {
-		return(d->where[0]);
-	} 
-	AR.ErrorInDollar = 1;
-	return(0);
+		retval = d->where[0];
+	}
+	else {
+		AR.ErrorInDollar = 1;
+		retval = 0;
+	}
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+	return(retval);
 }
 
 /*
-  	#] DolToTensor : 
-  	#[ DolToFunction :
+  	#] DolToTensor :
+  	#[ DolToFunction :  with LOCK
 */
 
 WORD DolToFunction ARG1(WORD,numdollar)
 {
 	DOLLARS d = Dollars + numdollar;
+	WORD retval;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	AR.ErrorInDollar = 0;
 	if ( d->type == DOLTERMS && d->where[0] == FUNHEAD+4 &&
 	d->where[FUNHEAD+4] == 0 && d->where[FUNHEAD+3] == 3 &&
 	d->where[FUNHEAD+2] == 1 && d->where[FUNHEAD+1] == 1 &&
 	d->where[1] >= FUNCTION && d->where[1] < FUNCTION+WILDOFFSET ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLARGUMENT &&
 	d->where[0] <= -FUNCTION && d->where[0] > -FUNCTION-WILDOFFSET ) {
-		return(-d->where[0]);
+		retval = -d->where[0];
 	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 0
 	&& d->where[1] <= -FUNCTION && d->where[1] > -FUNCTION-WILDOFFSET
 	&& d->where[2] == 0 ) {
-		return(-d->where[1]);
+		retval = -d->where[1];
 	}
 	else if ( d->type == DOLSUBTERM &&
 	d->where[0] >= FUNCTION && d->where[0] < FUNCTION+WILDOFFSET ) {
-		return(d->where[0]);
-	} 
-	AR.ErrorInDollar = 1;
-	return(0);
+		retval = d->where[0];
+	}
+	else {
+		AR.ErrorInDollar = 1;
+		retval = 0;
+	}
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+	return(retval);
 }
 
 /*
-  	#] DolToFunction : 
-  	#[ DolToVector :
+  	#] DolToFunction :
+  	#[ DolToVector :    with LOCK
 */
 
 WORD DolToVector ARG1(WORD,numdollar)
 {
 	DOLLARS d = Dollars + numdollar;
+	WORD retval;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	AR.ErrorInDollar = 0;
 	if ( d->type == DOLINDEX && d->index < 0 ) {
-		return(d->index);
+		retval = d->index;
 	}
 	else if ( d->type == DOLARGUMENT && ( d->where[0] == -VECTOR
 	|| d->where[0] == -MINVECTOR ) ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLSUBTERM && d->where[0] == INDEX
 	&& d->where[1] == 3 && d->where[2] < 0 ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
 	else if ( d->type == DOLTERMS && d->where[0] == 7 &&
 	d->where[7] == 0 && d->where[6] == 3 &&
 	d->where[5] == 1 && d->where[4] == 1 &&
 	d->where[1] >= INDEX && d->where[3] < 0 ) {
-		return(d->where[3]);
+		retval = d->where[3];
 	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 0
 	&& ( d->where[1] == -VECTOR || d->where[1] == -MINVECTOR )
 	&& d->where[3] == 0 ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 1
 	&& d->where[1] < 0 ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
-	AR.ErrorInDollar = 1;
-	return(0);
+	else {
+		AR.ErrorInDollar = 1;
+		retval = 0;
+	}
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+	return(retval);
 }
 
 /*
-  	#] DolToVector : 
+  	#] DolToVector :
   	#[ DolToNumber :
 */
 
@@ -709,83 +1000,121 @@ WORD DolToNumber ARG1(WORD,numdollar)
 }
 
 /*
-  	#] DolToNumber : 
-  	#[ DolToSymbol :
+  	#] DolToNumber :
+  	#[ DolToSymbol :    with LOCK
 */
 
 WORD DolToSymbol ARG1(WORD,numdollar)
 {
 	DOLLARS d = Dollars + numdollar;
 	AR.ErrorInDollar = 0;
+	WORD retval;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	if ( d->type == DOLTERMS && d->where[0] == 8 &&
 	d->where[8] == 0 && d->where[7] == 3 && d->where[6] == 1
 	 && d->where[5] == 1 && d->where[4] == 1 && d->where[1] == SYMBOL ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
 	else if ( d->type == DOLARGUMENT && d->where[0] == -SYMBOL ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLSUBTERM && d->where[0] == SYMBOL
 	&& d->where[1] == 4 && d->where[3] == 1 ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 0
 	&& d->where[1] == -SYMBOL && d->where[3] == 0 ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
-	AR.ErrorInDollar = 1;
-	return(0);
+	else {
+		AR.ErrorInDollar = 1;
+		retval = 0;
+	}
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+	return(retval);
 }
 
 /*
-  	#] DolToSymbol : 
-  	#[ DolToIndex :
+  	#] DolToSymbol :
+  	#[ DolToIndex :     with LOCK
 */
 
 WORD DolToIndex ARG1(WORD,numdollar)
 {
 	DOLLARS d = Dollars + numdollar;
+	WORD retval;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	AR.ErrorInDollar = 0;
 	if ( d->type == DOLTERMS && d->where[0] == 7 &&
 	d->where[7] == 0 && d->where[6] == 3 && d->where[5] == 1
 	 && d->where[4] == 1 && d->where[1] == INDEX && d->where[3] >= 0 ) {
-		return(d->where[3]);
+		retval = d->where[3];
 	}
 	else if ( d->type == DOLARGUMENT && d->where[0] == -SNUMBER
 	&& d->where[1] >= 0 && d->where[1] < AM.OffsetIndex ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLARGUMENT && d->where[0] == -INDEX
 	&& d->where[1] >= 0 ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLZERO ) return(0);
 	else if ( d->type == DOLWILDARGS && d->where[0] == 0
 	&& d->where[1] == -SNUMBER && d->where[3] == 0 && d->where[2] >= 0
 	&& d->where[2] < AM.OffsetIndex ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
 	else if ( d->type == DOLINDEX && d->index >= 0 ) {
-		return(d->index);
+		retval = d->index;
 	} 
 	else if ( d->type == DOLWILDARGS && d->where[0] == 1
 	&& d->where[1] >= 0 ) {
-		return(d->where[1]);
+		retval = d->where[1];
 	}
 	else if ( d->type == DOLSUBTERM && d->where[0] == INDEX
 	&& d->where[1] == 3 && d->where[2] >= 0 ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 0
 	&& d->where[1] == -INDEX && d->where[3] == 0 && d->where[2] >= 0 ) {
-		return(d->where[2]);
+		retval = d->where[2];
 	}
-	AR.ErrorInDollar = 1;
+	else {
+		AR.ErrorInDollar = 1;
+		retval = 0;
+	}
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 	return(0);
 }
 
 /*
-  	#] DolToIndex : 
+  	#] DolToIndex :
   	#[ DolToTerms :
 
 	Returns a struct of type DOLLARS which contains a copy of the
@@ -802,7 +1131,7 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 	switch ( d->type ) {
 		case DOLARGUMENT:
 			if ( d->where[0] < 0 ) {
-				w = AR.WorkPointer;
+				w = AT.WorkPointer;
 				if ( d->where[0] <= -FUNCTION ) {
 					*w++ = FUNHEAD+4; *w++ = -d->where[0];
 					*w++ = FUNHEAD; FILLFUN(w)
@@ -829,8 +1158,8 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 						*w++ = d->where[1]; *w++ = 1; *w++ = 3;
 					}
 				}
-				*w = 0; size = w - AR.WorkPointer;
-				w = AR.WorkPointer;
+				*w = 0; size = w - AT.WorkPointer;
+				w = AT.WorkPointer;
 				break;
 			}
 		case DOLNUMBER:
@@ -841,17 +1170,17 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 			w = d->where;
 			break;
 		case DOLSUBTERM:
-			w = AR.WorkPointer;
+			w = AT.WorkPointer;
 			size = d->where[1];
 			*w++ = size+4; t = d->where; NCOPY(w,t,size)
 			*w++ = 1; *w++ = 1; *w++ = 3;
-			w = AR.WorkPointer; size = d->where[1]+4;
+			w = AT.WorkPointer; size = d->where[1]+4;
 			break;
 		case DOLINDEX:
-			w = AR.WorkPointer;
+			w = AT.WorkPointer;
 			*w++ = 7; *w++ = INDEX; *w++ = 3; *w++ = d->index;
 			*w++ = 1; *w++ = 1; *w++ = 3; *w = 0;
-			w = AR.WorkPointer; size = 7;
+			w = AT.WorkPointer; size = 7;
 			break;
 		case DOLWILDARGS:
 		case DOLUNDEFINED:
@@ -867,13 +1196,16 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 	newd->node = d->node;
 	newd->type = DOLTERMS;
 	newd->size = size;
+#ifdef WITHPTHREADS
+	newd->pthreadslock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 	size++;
 	NCOPY(t,w,size);
 	return(newd);
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DoInside :
 */
 
@@ -883,15 +1215,17 @@ DoInside ARG1(UBYTE *,s)
 	UBYTE *t, c;
 	WORD *w, number;
 	int error = 0;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	if ( AC.insidelevel >= MAXNEST ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("@Nesting of inside statements more than %d levels",(WORD)MAXNEST);
+		UNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AC.insidesumcheck[AC.insidelevel] = AC.IfLevel + AC.RepLevel
 				+ AC.arglevel + AC.termlevel;
-	AC.insidestack[AC.insidelevel] = cbuf[AR.cbufnum].Pointer
-								 - cbuf[AR.cbufnum].Buffer + 2;
+	AC.insidestack[AC.insidelevel] = cbuf[AC.cbufnum].Pointer
+								 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.insidelevel++;
 	*w++ = TYPEINSIDE;
 	w++; w++;
@@ -901,7 +1235,9 @@ DoInside ARG1(UBYTE *,s)
 		if ( *s == '$' ) {
 			s++; t = s;
 			if ( FG.cTable[*s] != 0 ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("Illegal name for $ variable: %s",s-1);
+				UNLOCK(ErrorMessageLock);
 				goto skipdol;
 			}
 			while ( FG.cTable[*s] == 0 || FG.cTable[*s] == 1 ) s++;
@@ -913,19 +1249,21 @@ DoInside ARG1(UBYTE *,s)
 			*w++ = number;
 		}
 		else {
+			LOCK(ErrorMessageLock);
 			MesPrint("&Illegal object in Inside statement");
+			UNLOCK(ErrorMessageLock);
 skipdol:	error = 1;
 			while ( *s && *s != ',' && s[1] != '$' ) s++;
 			if ( *s == 0 ) break;
 		}
 	}
-	AR.WorkPointer[1] = w - AR.WorkPointer;
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AT.WorkPointer[1] = w - AT.WorkPointer;
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	return(error);
 }
 
 /*
-  	#] DoInside : 
+  	#] DoInside :
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -940,7 +1278,7 @@ int
 InsideDollar ARG2(WORD *,ll,WORD,level)
 {
 	int numvar = (int)(ll[1]-3), j, error = 0;
-	WORD numdol, *oldcterm, *oldwork = AR.WorkPointer, olddefer, *r, *m;
+	WORD numdol, *oldcterm, *oldwork = AT.WorkPointer, olddefer, *r, *m;
 	WORD oldnumlhs, *dbuffer;
 	DOLLARS d, newd;
 	CBUF *C = cbuf+AM.rbufnum;
@@ -950,17 +1288,30 @@ InsideDollar ARG2(WORD *,ll,WORD,level)
 	olddefer = AR.DeferFlag;
 	AR.DeferFlag = 0;
 	while ( --numvar >= 0 ) {
-		numdol = *ll++;
-		d = Dollars + numdol;
+	  numdol = *ll++;
+	  d = Dollars + numdol;
+	  {
+#ifdef WITHPTHREADS
+		int nummodopt, dtype = -1;
+		if ( AS.MultiThreaded ) {
+			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+				if ( numdol == ModOptdollars[nummodopt].number ) break;
+			}
+			if ( nummodopt < NumModOptdollars ) {
+				dtype = ModOptdollars[nummodopt].type;
+				LOCK(d->pthreadslock);
+			}
+		}
+#endif
 		newd = DolToTerms(numdol);
 		if ( newd == 0 ) continue;
 		r = newd->where;
 		NewSort();
 		while ( *r ) {	/* Sum over the terms */
-			m = AR.WorkPointer;
+			m = AT.WorkPointer;
 			j = *r;
 			while ( --j >= 0 ) *m++ = *r++;
-			AR.WorkPointer = m;
+			AT.WorkPointer = m;
 /*
 			What to do with dummy indices?
 */
@@ -968,7 +1319,7 @@ InsideDollar ARG2(WORD *,ll,WORD,level)
 				LowerSortLevel();
 				error = -1; goto idcall;
 			}
-			AR.WorkPointer = oldwork;
+			AT.WorkPointer = oldwork;
 		}
 		if ( EndSort((WORD *)(&dbuffer),2) < 0 ) { error = 1; break; }
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"old buffer of dollar");
@@ -987,18 +1338,22 @@ InsideDollar ARG2(WORD *,ll,WORD,level)
 /*
 		Now we have a little cleaning up to do
 */
+#ifdef WITHPTHREADS
+		if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 		M_free(newd,"Copy of dollar variable");
+	  }
 	}
 idcall:;
 	C->numlhs = oldnumlhs;
 	AR.DeferFlag = olddefer;
 	AR.cTerm = oldcterm;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	return(error);
 }
 
 /*
-  	#] InsideDollar : 
+  	#] InsideDollar :
   	#[ ExchangeDollars :
 */
 
@@ -1016,7 +1371,7 @@ void ExchangeDollars ARG2(int,num1,int,num2)
 }
 
 /*
-  	#] ExchangeDollars : 
+  	#] ExchangeDollars :
   	#[ TermsInDollar :
 */
 
@@ -1025,28 +1380,41 @@ LONG TermsInDollar ARG1(WORD,num)
 	DOLLARS d = Dollars + num;
 	WORD *t;
 	LONG n;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( num == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	if ( d->type == DOLTERMS ) {
 		n = 0;
 		t = d->where;
 		while ( *t ) { t += *t; n++; }
-		return(n);
 	}
 	else if ( d->type == DOLWILDARGS ) {
 		n = 0;
 		if ( d->where[0] == 0 ) {
 			t = d->where+1;
 			while ( *t != 0 ) { NEXTARG(t); n++; }
-			return(n);
 		}
-		else if ( d->where[0] == 1 ) return(1);
-		return(0);
+		else if ( d->where[0] == 1 ) n = 1;
 	}
-	else if ( d->type == DOLZERO ) return(0);
-	return(1);
+	else if ( d->type == DOLZERO ) n = 0;
+	else n = 1;
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+	return(n);
 }
 
 /*
-  	#] TermsInDollar : 
+  	#] TermsInDollar :
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.
@@ -1065,7 +1433,7 @@ PreIfDollarEval ARG2(UBYTE *,s,int *,value)
 {
 	UBYTE *s1,*s2,*s3,*s4,*s5,*t,c,c1,c2,c3;
 	int oprtr, type;
-	WORD *buf1 = 0, *buf2 = 0, numset, *oldwork = AR.WorkPointer;
+	WORD *buf1 = 0, *buf2 = 0, numset, *oldwork = AT.WorkPointer;
 	EXCHINOUT
 /*
 	Find the three composing objects (epxression, operator, expression or keyw
@@ -1077,7 +1445,9 @@ PreIfDollarEval ARG2(UBYTE *,s,int *,value)
 		else if ( *t == '{' ) { SKIPBRA2(t) }
 		else if ( *t == '(' ) { SKIPBRA3(t) }
 		else if ( *t == ']' || *t == '}' || *t == ')' ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("@Improper bracketting in #if");
+			UNLOCK(ErrorMessageLock);
 			goto onerror;
 		}
 		t++;
@@ -1090,18 +1460,25 @@ PreIfDollarEval ARG2(UBYTE *,s,int *,value)
 		else if ( *t == '{' ) { SKIPBRA2(t) }
 		else if ( *t == '(' ) { SKIPBRA3(t) }
 		else if ( *t == ']' || *t == '}' ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("@Improper brackets in #if");
+			UNLOCK(ErrorMessageLock);
 			goto onerror;
 		}
 		t++;
 	}
 	if ( *t == 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("@Missing ) to match $( in #if");
+		UNLOCK(ErrorMessageLock);
 		goto onerror;
 	}
 	s4 = t; c2 = *s4; *s4 = 0;
 	if ( s2+2 < s3 || s2 == s3 ) {
-IllOp:	MesPrint("@Illegal operator in $( option of #if");
+IllOp:;
+		LOCK(ErrorMessageLock);
+		MesPrint("@Illegal operator in $( option of #if");
+		UNLOCK(ErrorMessageLock);
 		goto onerror;
 	}
 	if ( s2+1 == s3 ) {
@@ -1127,7 +1504,10 @@ IllOp:	MesPrint("@Illegal operator in $( option of #if");
 		t++; c = *t; *t = 0;
 		if ( StrICmp(s3,(UBYTE *)"set_") == 0 ) {
 			if ( oprtr != EQUAL && oprtr != NOTEQUAL ) {
-ImpOp:			MesPrint("@Improper operator for special keyword in $( ) option");
+ImpOp:;
+				LOCK(ErrorMessageLock);
+				MesPrint("@Improper operator for special keyword in $( ) option");
+				UNLOCK(ErrorMessageLock);
 				goto onerror;
 			}
 			type = 1;
@@ -1150,7 +1530,9 @@ ImpOp:			MesPrint("@Improper operator for special keyword in $( ) option");
 		while ( *s5 != ')' ) {
 			if ( *s5 == ' ' || *s5 == '\t' || *s5 == '\n' || *s5 == '\r' ) s5--;
 			else {
+				LOCK(ErrorMessageLock);
 				MesPrint("@Improper use of special keyword in $( ) option");
+				UNLOCK(ErrorMessageLock);
 				goto onerror;
 			}
 		}
@@ -1161,7 +1543,7 @@ ImpOp:			MesPrint("@Improper operator for special keyword in $( ) option");
 	Expand the first expression.
 */
 	if ( ( buf1 = TranslateExpression(s1) ) == 0 ) {
-		AR.WorkPointer = oldwork;
+		AT.WorkPointer = oldwork;
 		goto onerror;
 	}
 	if ( type == 1 ) {	/* determine the set */
@@ -1171,7 +1553,10 @@ ImpOp:			MesPrint("@Improper operator for special keyword in $( ) option");
 			numset = DoTempSet(t,s3);
 			s3++;
 			if ( numset < 0 ) {
-noset:			MesPrint("@Argument of set_ is not a valid set");
+noset:;
+				LOCK(ErrorMessageLock);
+				MesPrint("@Argument of set_ is not a valid set");
+				UNLOCK(ErrorMessageLock);
 				goto onerror;
 			}
 		}
@@ -1209,28 +1594,28 @@ noset:			MesPrint("@Argument of set_ is not a valid set");
 	if ( buf1 ) M_free(buf1,"Buffer in $()");
 	if ( buf2 ) M_free(buf2,"Buffer in $()");
 	*s5 = c3; *s4++ = c2; *s2 = c1;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	BACKINOUT
 	return(s4);
 onerror:
 	if ( buf1 ) M_free(buf1,"Buffer in $()");
 	if ( buf2 ) M_free(buf2,"Buffer in $()");
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	BACKINOUT
 	return(0);
 }
 
 /*
-  	#] PreIfDollarEval : 
+  	#] PreIfDollarEval :
   	#[ TranslateExpression :
 */
 
 WORD *TranslateExpression ARG1(UBYTE *,s)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	WORD oldnumrhs = C->numrhs;
 	LONG oldcpointer = C->Pointer - C->Buffer;
-	WORD *w = AR.WorkPointer;
+	WORD *w = AT.WorkPointer;
 	WORD retcode, oldEside;
 	WORD *outbuffer;
 	*w++ = SUBEXPSIZE + 4;
@@ -1239,12 +1624,14 @@ WORD *TranslateExpression ARG1(UBYTE *,s)
 	*w++ = SUBEXPSIZE;
 	*w++ = C->numrhs+1;
 	*w++ = 1;
-	*w++ = AR.cbufnum;
+	*w++ = AC.cbufnum;
 	FILLSUB(w)
 	*w++ = 1; *w++ = 1; *w++ = 3; *w++ = 0;
-	AR.WorkPointer = w;
+	AT.WorkPointer = w;
 	if ( ( retcode = CompileAlgebra(s,RHSIDE,AC.ProtoType) ) < 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("@Error translating first expression in $( ) option");
+		UNLOCK(ErrorMessageLock);
 		return(0);
 	}
 	else { AC.ProtoType[2] = retcode; }
@@ -1252,24 +1639,24 @@ WORD *TranslateExpression ARG1(UBYTE *,s)
 	Evaluate this expression
 */
 	if ( NewSort() || NewSort() ) { return(0); }
-	AR.RepPoint = AM.RepCount + 1;
+	AR.RepPoint = AT.RepCount + 1;
 	oldEside = AC.Eside; AC.Eside = RHSIDE;
 	if ( Generator(AC.ProtoType-1,C->numlhs) ) {
 		AC.Eside = oldEside;
 		LowerSortLevel(); LowerSortLevel(); return(0);
 	}
 	AC.Eside = oldEside;
-	AR.WorkPointer = w;
+	AT.WorkPointer = w;
 	if ( EndSort((WORD *)(&outbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	C->Pointer = C->Buffer + oldcpointer;
 	C->numrhs = oldnumrhs;
-	AR.WorkPointer = AC.ProtoType - 1;
+	AT.WorkPointer = AC.ProtoType - 1;
 	return(outbuffer);
 }
 
 /*
-  	#] TranslateExpression : 
+  	#] TranslateExpression :
   	#[ IsSetMember :
 
 	Checks whether the expression in the buffer can be seen as an element
@@ -1427,7 +1814,7 @@ int IsSetMember ARG2(WORD *,buffer,WORD,numset)
 }
 
 /*
-  	#] IsSetMember : 
+  	#] IsSetMember :
   	#[ IsProductOf :
 
 	Checks whether the expression in buf1 is a single term multiple of 
@@ -1439,7 +1826,7 @@ int IsProductOf ARG2(WORD *,buf1,WORD *,buf2)
 }
 
 
-  	#] IsProductOf : 
+  	#] IsProductOf :
   	#[ IsMultipleOf :
 
 	Checks whether the expression in buf1 is a numerical multiple of 
@@ -1487,7 +1874,9 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 	r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 	nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
 	if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat1,&ni1) ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("@Called from MultipleOf in $( )");
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	while ( *t1 ) {
@@ -1495,7 +1884,9 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 		r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 		nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
 		if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat2,&ni2) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("@Called from MultipleOf in $( )");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		if ( ni1 != ni2 ) return(0);
@@ -1508,7 +1899,7 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 }
 
 /*
-  	#] IsMultipleOf : 
+  	#] IsMultipleOf :
   	#[ TwoExprCompare :
 
 	Compares the expressions in buf1 and buf2 according to oprtr
@@ -1574,13 +1965,15 @@ int TwoExprCompare ARG3(WORD *,buf1,WORD *,buf2,int,oprtr)
 			case LESSEQUAL: return(1);
 		}
 	}
+	LOCK(ErrorMessageLock);
 	MesPrint("@Internal problems with operator in $( )");
+	UNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(0);
 }
 
 /*
-  	#] TwoExprCompare : 
+  	#] TwoExprCompare :
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
@@ -1638,7 +2031,9 @@ int DollarRaiseLow ARG2(UBYTE *,name,LONG,value)
 		}
 		if ( AddRat((UWORD *)(d->where+1),i,
 			(UWORD *)lnum,nnum,dscrat,&ndscrat) ) {
+				LOCK(ErrorMessageLock);
 				MesCall("DollarRaiseLow");
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 		}
 		ndscrat = INCLENG(ndscrat);
@@ -1664,7 +2059,7 @@ int DollarRaiseLow ARG2(UBYTE *,name,LONG,value)
 }
 
 /*
-  	#] DollarRaiseLow : 
+  	#] DollarRaiseLow :
  		#[ MinDollar  :
 
         finds the minimum dollar variable among dollar variables 
@@ -1738,7 +2133,7 @@ int MinDollar ARG1(WORD, index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MinDollar  : 
+ 		#] MinDollar  :
  		#[ MaxDollar  :
 
         finds the maximum dollar variable among dollar variables 
@@ -1807,7 +2202,7 @@ int MaxDollar ARG1(WORD, index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MaxDollar  : 
+ 		#] MaxDollar  :
  		#[ SumDollars :
 
         sums the dollar variable content in PFDollars[number].slavebuf
@@ -1819,7 +2214,7 @@ int MaxDollar ARG1(WORD, index)
 int SumDollars ARG1(WORD, index)
 {
   int i,j, error = 0;
-  WORD *oldwork = AR.WorkPointer, *oldcterm, olddefer, *r, *m;
+  WORD *oldwork = AT.WorkPointer, *oldcterm, olddefer, *r, *m;
   DOLLARS sum;
   WORD oldnumlhs, oldnumrhs, *dbuffer;
 
@@ -1845,11 +2240,11 @@ int SumDollars ARG1(WORD, index)
 
       while (*r) 
 	{
-	  m = AR.WorkPointer;
+	  m = AT.WorkPointer;
 	  j = *r;
 	  
 	  while (--j >= 0)  *m++ = *r++;
-	  AR.WorkPointer = m;
+	  AT.WorkPointer = m;
 
 
 	  if (Generator(oldwork, 0)) 
@@ -1860,7 +2255,7 @@ int SumDollars ARG1(WORD, index)
 	      error = -1; goto cleanup;
 	    }
 
-	  AR.WorkPointer = oldwork;
+	  AT.WorkPointer = oldwork;
 	}
     }
 
@@ -1898,7 +2293,7 @@ cleanup:;
   C->numrhs = oldnumrhs;
   AR.DeferFlag = olddefer;
   AR.cTerm = oldcterm;
-  AR.WorkPointer = oldwork;
+  AT.WorkPointer = oldwork;
   
   return(error);
 
@@ -1907,6 +2302,6 @@ cleanup:;
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] SumDollars : 
+ 		#] SumDollars :
 */
 

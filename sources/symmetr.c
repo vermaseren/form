@@ -53,7 +53,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		newpat = pattern + pattern[1];
 		if ( funwild ) {
 			m = AN.WildValue;
-			t = OldWork = AR.WorkPointer;
+			t = OldWork = AT.WorkPointer;
 			nwstore = i = (m[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 			r = AN.WildMask;
 			if ( i > 0 ) {
@@ -61,8 +61,13 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 				} while ( --i > 0 );
 			}
-			if ( t >= AM.WorkTop ) { MesWork(); }
-			AR.WorkPointer = t;
+			if ( t >= AT.WorkTop ) {
+				LOCK(ErrorMessageLock);
+				MesWork();
+				UNLOCK(ErrorMessageLock);
+				return(-1);
+			}
+			AT.WorkPointer = t;
 			AddWild(*pattern-WILDOFFSET,FUNTOFUN,newfun);
 			if ( newpat >= AN.patstop ) {
 				if ( AN.UseFindOnly == 0 ) {
@@ -87,7 +92,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					} while ( --i > 0 );
 				}
 			}
-			AR.WorkPointer = OldWork;
+			AT.WorkPointer = OldWork;
 			return(retval);
 		}
 		else {
@@ -297,7 +302,7 @@ NextWV:
 			Store the current Wildcard assignments
 */
 	m = AN.WildValue;
-	t = OldWork = AR.WorkPointer;
+	t = OldWork = AT.WorkPointer;
 	nwstore = i = (m[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 	r = AN.WildMask;
 	if ( i > 0 ) {
@@ -305,8 +310,13 @@ NextWV:
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
 	}
-	if ( t >= AM.WorkTop ) { MesWork(); }
-	AR.WorkPointer = t;
+	if ( t >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	AT.WorkPointer = t;
 	while ( (first1 = Permute(&perm1,first1) ) == 0 ) {
 		first2 = 1;
 		while ( (first2 = Permute(&perm2,first2) ) == 0 ) {
@@ -359,11 +369,11 @@ NoCaseB:		m = AN.WildValue;
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --i > 0 );
 				}
-				AR.WorkPointer = t;
+				AT.WorkPointer = t;
 			}
 		}
 	}
-	AR.WorkPointer = OldWork;
+	AT.WorkPointer = OldWork;
 	return(0);
 }
 
@@ -483,12 +493,12 @@ Distribute ARG2(DISTRIBUTE *,d,WORD,first)
 
 int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AR.WorkPointer;
+	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD *thewildcards, *multiplicity, *renum, wc, newvalue, oldwilval = 0;
 	WORD *params, *lowlevel = 0;
 	int argcount = 0, funnycount = 0, tcount = fun[1] - FUNHEAD;
 	int type = 0, pnum, i, j, k, nwstore, iraise, itop, sumeat;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	int ntwa = 3*AN.NumTotWildArgs+1;
 	LONG oldcpointer = C->Pointer - C->Buffer;
 	WORD offset = fun-AN.terstart, *newpat;
@@ -500,7 +510,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		pnum -= WILDOFFSET;
 		if ( CheckWild(pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
 		oldwilval = 1;
-		t = lowlevel = AR.WorkPointer;
+		t = lowlevel = AT.WorkPointer;
 		m = AN.WildValue;
 		i = nwstore;
 		r = AN.WildMask;
@@ -508,8 +518,13 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
 		*t++ = C->numrhs;
-		if ( t >= AM.WorkTop ) { MesWork(); }
-		AR.WorkPointer = t;
+		if ( t >= AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		AT.WorkPointer = t;
 		AddWild(pnum,FUNTOFUN,newvalue);
 	}
 	if ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == RCYCLESYMMETRIC ) type = 1;
@@ -531,14 +546,14 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
 				if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-					AR.WorkPointer = oldworkpointer;
+					AT.WorkPointer = oldworkpointer;
 					AN.UsedOtherFind = 1;
 					return(1);
 				}
 				j = 0;
 			}
 			else {
-				AR.WorkPointer = oldworkpointer;
+				AT.WorkPointer = oldworkpointer;
 				return(1);
 			}
 		}
@@ -550,7 +565,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 
 	/* Store the wildcard assignments */
 
-	params = AR.WorkPointer;
+	params = AT.WorkPointer;
 	thewildcards = t = params + tcount;
 	t += ntwa;
 	if ( oldwilval ) lowlevel = oldworkpointer;
@@ -564,8 +579,13 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		} while ( --i > 0 );
 		*t++ = C->numrhs;
 	}
-	if ( t >= AM.WorkTop ) { MesWork(); }
-	AR.WorkPointer = t;
+	if ( t >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	AT.WorkPointer = t;
 /*
   	#[ Case 1: no funnies or all funnies must be empty. We just cycle through.
 */
@@ -639,20 +659,20 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
 							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-								AR.WorkPointer = oldworkpointer;
+								AT.WorkPointer = oldworkpointer;
 								AN.UsedOtherFind = 1;
 								return(1);
 							}
 							j = 0;
 						}
 						else {
-							AR.WorkPointer = oldworkpointer;
+							AT.WorkPointer = oldworkpointer;
 							return(1);
 						}
 					}
 					else j = ScanFunctions(newpat,inter,par);
 					if ( j ) {
-						AR.WorkPointer = oldworkpointer;
+						AT.WorkPointer = oldworkpointer;
 						return(j); /* Full match. Return our success */
 					}
 					AN.RepFunNum -= 2;
@@ -732,20 +752,20 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
 							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-								AR.WorkPointer = oldworkpointer;
+								AT.WorkPointer = oldworkpointer;
 								AN.UsedOtherFind = 1;
 								return(1);
 							}
 							j = 0;
 						}
 						else {
-							AR.WorkPointer = oldworkpointer;
+							AT.WorkPointer = oldworkpointer;
 							return(1);
 						}
 					}
 					else j = ScanFunctions(newpat,inter,par);
 					if ( j ) {
-						AR.WorkPointer = oldworkpointer;
+						AT.WorkPointer = oldworkpointer;
 						return(j); /* Full match. Return our success */
 					}
 					AN.RepFunNum -= 2;
@@ -888,20 +908,20 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
 							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-								AR.WorkPointer = oldworkpointer;
+								AT.WorkPointer = oldworkpointer;
 								AN.UsedOtherFind = 1;
 								return(1);
 							}
 							j = 0;
 						}
 						else {
-							AR.WorkPointer = oldworkpointer;
+							AT.WorkPointer = oldworkpointer;
 							return(1);
 						}
 					}
 					else j = ScanFunctions(newpat,inter,par);
 					if ( j ) {
-						AR.WorkPointer = oldworkpointer;
+						AT.WorkPointer = oldworkpointer;
 						return(j); /* Full match. Return our success */
 					}
 					AN.RepFunNum -= 2;
@@ -944,7 +964,7 @@ nomatch:;
 			C->Pointer = C->Buffer + oldcpointer;
 		}
 	}
-	AR.WorkPointer = oldworkpointer;
+	AT.WorkPointer = oldworkpointer;
 	return(0);
 }
 
@@ -958,13 +978,13 @@ nomatch:;
 
 int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AR.WorkPointer;
+	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, *multiplicity, *renum, wc, oldwilval = 0;
-	LONG oww = AR.pWorkPointer;
+	LONG oww = AT.pWorkPointer;
 	WORD newvalue, *lowlevel = 0;
 	int argcount = 0, funnycount = 0, tcount = 0;
 	int type = 0, pnum, i, j, k, nwstore, iraise, itop, sumeat;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	int ntwa = 3*AN.NumTotWildArgs+1;
 	LONG oldcpointer = C->Pointer - C->Buffer;
 	WORD offset = fun-AN.terstart, *newpat;
@@ -984,8 +1004,13 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
 		*t++ = C->numrhs;
-		if ( t >= AM.WorkTop ) { MesWork(); }
-		AR.WorkPointer = t;
+		if ( t >= AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		AT.WorkPointer = t;
 		AddWild(pnum,FUNTOFUN,newvalue);
 	}
 	if ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == RCYCLESYMMETRIC ) type = 1;
@@ -1011,14 +1036,14 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
 				if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-					AR.WorkPointer = oldworkpointer;
+					AT.WorkPointer = oldworkpointer;
 					AN.UsedOtherFind = 1;
 					return(1);
 				}
 				j = 0;
 			}
 			else {
-				AR.WorkPointer = oldworkpointer;
+				AT.WorkPointer = oldworkpointer;
 				return(1);
 			}
 		}
@@ -1030,8 +1055,8 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	/* Store the wildcard assignments */
 
 	WantAddPointers(tcount);
-	AR.pWorkPointer += tcount;
-	thewildcards = t = AR.WorkPointer;
+	AT.pWorkPointer += tcount;
+	thewildcards = t = AT.WorkPointer;
 	t += ntwa;
 	if ( oldwilval ) lowlevel = oldworkpointer;
 	else lowlevel = t;
@@ -1044,8 +1069,13 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		} while ( --i > 0 );
 		*t++ = C->numrhs;
 	}
-	if ( t >= AM.WorkTop ) { MesWork(); }
-	AR.WorkPointer = t;
+	if ( t >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	AT.WorkPointer = t;
 /*
   	#[ Case 1: no funnies or all funnies must be empty. We just cycle through.
 */
@@ -1064,11 +1094,11 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		}
 		for ( k = 0; k <= type; k++ ) {
 			if ( k == 0 ) {
-				a = AR.pWorkSpace+oww; t = fun + FUNHEAD;
+				a = AT.pWorkSpace+oww; t = fun + FUNHEAD;
 				while ( t < tstop ) { *a++ = t; NEXTARG(t); }
 			}
 			else {
-				a = AR.pWorkSpace+oww+tcount; t = fun + FUNHEAD;
+				a = AT.pWorkSpace+oww+tcount; t = fun + FUNHEAD;
 				while ( t < tstop ) { *--a = t; NEXTARG(t); }
 			}
 			for ( i = 0; i < tcount; i++ ) { /* The various cycles */
@@ -1076,7 +1106,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				wc = 0;
 				for ( j = 0; j < tcount; j++ ) { /* The arguments */
 					while ( *p == -ARGWILD ) p += 2;
-					t = AR.pWorkSpace[oww+((i+j)%tcount)];
+					t = AT.pWorkSpace[oww+((i+j)%tcount)];
 					if ( MatchArgument(t,p) == 0 ) break;
 					NEXTARG(p);
 				}
@@ -1101,23 +1131,23 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
 							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-								AR.WorkPointer = oldworkpointer;
-								AR.pWorkPointer = oww;
+								AT.WorkPointer = oldworkpointer;
+								AT.pWorkPointer = oww;
 								AN.UsedOtherFind = 1;
 								return(1);
 							}
 							j = 0;
 						}
 						else {
-							AR.WorkPointer = oldworkpointer;
-							AR.pWorkPointer = oww;
+							AT.WorkPointer = oldworkpointer;
+							AT.pWorkPointer = oww;
 							return(1);
 						}
 					}
 					else j = ScanFunctions(newpat,inter,par);
 					if ( j ) {
-						AR.WorkPointer = oldworkpointer;
-						AR.pWorkPointer = oww;
+						AT.WorkPointer = oldworkpointer;
+						AT.pWorkPointer = oww;
 						return(j); /* Full match. Return our success */
 					}
 					AN.RepFunNum -= 2;
@@ -1147,16 +1177,16 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		funnycount = tcount - argcount;	/* Number or arguments to be eaten */
 		for ( k = 0; k <= type; k++ ) {
 			if ( k == 0 ) {
-				a =  AR.pWorkSpace+oww; t = fun + FUNHEAD;
+				a =  AT.pWorkSpace+oww; t = fun + FUNHEAD;
 				while ( t < tstop ) { *a++ = t; NEXTARG(t); }
 			}
 			else {
-				a =  AR.pWorkSpace+oww+tcount; t = fun + FUNHEAD;
+				a =  AT.pWorkSpace+oww+tcount; t = fun + FUNHEAD;
 				while ( t < tstop ) { *--a = t; NEXTARG(t); }
 			}
 			for ( i = 0; i < tcount; i++ ) { /* The various cycles */
 				p = pattern + FUNHEAD;
-				a = AR.pWorkSpace+oww;
+				a = AT.pWorkSpace+oww;
 				wc = 0;
 				for ( j = 0; j < tcount; j++, a++ ) { /* The arguments */
 					t = *a;
@@ -1180,23 +1210,23 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
 							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-								AR.WorkPointer = oldworkpointer;
-								AR.pWorkPointer = oww;
+								AT.WorkPointer = oldworkpointer;
+								AT.pWorkPointer = oww;
 								AN.UsedOtherFind = 1;
 								return(1);
 							}
 							j = 0;
 						}
 						else {
-							AR.WorkPointer = oldworkpointer;
-							AR.pWorkPointer = oww;
+							AT.WorkPointer = oldworkpointer;
+							AT.pWorkPointer = oww;
 							return(1);
 						}
 					}
 					else j = ScanFunctions(newpat,inter,par);
 					if ( j ) {
-						AR.WorkPointer = oldworkpointer;
-						AR.pWorkPointer = oww;
+						AT.WorkPointer = oldworkpointer;
+						AT.pWorkPointer = oww;
 						return(j); /* Full match. Return our success */
 					}
 					AN.RepFunNum -= 2;
@@ -1214,7 +1244,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
-				a = AR.pWorkSpace+oww;
+				a = AT.pWorkSpace+oww;
 				t = *a;
 				for ( j = 1; j < tcount; j++ ) { *a = a[1]; a++; }
 				*a = t;
@@ -1289,16 +1319,16 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 
 		for ( k = 0; k <= type; k++ ) {
 			if ( k == 0 ) {
-				a = AR.pWorkSpace+oww; t = fun + FUNHEAD;
+				a = AT.pWorkSpace+oww; t = fun + FUNHEAD;
 				while ( t < tstop ) { *a++ = t; NEXTARG(t); }
 			}
 			else {
-				a = AR.pWorkSpace+oww+tcount; t = fun + FUNHEAD;
+				a = AT.pWorkSpace+oww+tcount; t = fun + FUNHEAD;
 				while ( t < tstop ) { *--a = t; NEXTARG(t); }
 			}
 			for ( i = 0; i < tcount; i++ ) { /* The various cycles */
 				p = pattern + FUNHEAD;
-				a = AR.pWorkSpace+oww;
+				a = AT.pWorkSpace+oww;
 				wc = 0;
 				for ( j = 0; j < tcount; j++, a++ ) { /* The arguments */
 					t = *a;
@@ -1322,23 +1352,23 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
 							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-								AR.WorkPointer = oldworkpointer;
-								AR.pWorkPointer = oww;
+								AT.WorkPointer = oldworkpointer;
+								AT.pWorkPointer = oww;
 								AN.UsedOtherFind = 1;
 								return(1);
 							}
 							j = 0;
 						}
 						else {
-							AR.WorkPointer = oldworkpointer;
-							AR.pWorkPointer = oww;
+							AT.WorkPointer = oldworkpointer;
+							AT.pWorkPointer = oww;
 							return(1);
 						}
 					}
 					else j = ScanFunctions(newpat,inter,par);
 					if ( j ) {
-						AR.WorkPointer = oldworkpointer;
-						AR.pWorkPointer = oww;
+						AT.WorkPointer = oldworkpointer;
+						AT.pWorkPointer = oww;
 						return(j); /* Full match. Return our success */
 					}
 					AN.RepFunNum -= 2;
@@ -1356,7 +1386,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
-				a = AR.pWorkSpace+oww;
+				a = AT.pWorkSpace+oww;
 				t = *a;
 				for ( j = 1; j < tcount; j++ ) { *a = a[1]; a++; }
 				*a = t;
@@ -1379,8 +1409,8 @@ nomatch:;
 		C->numrhs = *t++;
 		C->Pointer = C->Buffer + oldcpointer;
 	}
-	AR.WorkPointer = oldworkpointer;
-	AR.pWorkPointer = oww;
+	AT.WorkPointer = oldworkpointer;
+	AT.pWorkPointer = oww;
 	return(0);
 }
 
@@ -1394,14 +1424,14 @@ nomatch:;
 
 int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AR.WorkPointer;
+	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, oldwilval = 0;
 	WORD newvalue, *lowlevel = 0, num, assig;
 	WORD *cycles;
-	LONG oww = AR.pWorkPointer, lhpars, lhfunnies;
+	LONG oww = AT.pWorkPointer, lhpars, lhfunnies;
 	int argcount = 0, funnycount = 0, tcount = 0, signs = 0, signfun = 0, signo;
 	int type = 0, pnum, i, j, k, nwstore, iraise, cou2;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	int ntwa = 3*AN.NumTotWildArgs+1;
 	LONG oldcpointer = C->Pointer - C->Buffer;
 	WORD offset = fun-AN.terstart, *newpat;
@@ -1421,8 +1451,13 @@ int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
 		*t++ = C->numrhs;
-		if ( t >= AM.WorkTop ) { MesWork(); }
-		AR.WorkPointer = t;
+		if ( t >= AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		AT.WorkPointer = t;
 		AddWild(pnum,FUNTOFUN,newvalue);
 	}
 	if ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == RCYCLESYMMETRIC ) type = 1;
@@ -1457,20 +1492,20 @@ quicky:
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
 				if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-					AR.WorkPointer = oldworkpointer;
+					AT.WorkPointer = oldworkpointer;
 					AN.UsedOtherFind = 1;
 					return(1);
 				}
 				j = 0;
 			}
 			else {
-				AR.WorkPointer = oldworkpointer;
+				AT.WorkPointer = oldworkpointer;
 				return(1);
 			}
 		}
 		else j = ScanFunctions(newpat,inter,par);
 		if ( j ) {
-			AR.WorkPointer = oldworkpointer;
+			AT.WorkPointer = oldworkpointer;
 			return(j);
 		}
 		goto NoSuccess;
@@ -1479,8 +1514,8 @@ quicky:
 	/* Store the wildcard assignments */
 
 	WantAddPointers(tcount+argcount+funnycount);
-	AR.pWorkPointer += tcount+argcount+funnycount;
-	thewildcards = t = AR.WorkPointer;
+	AT.pWorkPointer += tcount+argcount+funnycount;
+	thewildcards = t = AT.WorkPointer;
 	t += ntwa;
 	if ( oldwilval ) lowlevel = oldworkpointer;
 	else lowlevel = t;
@@ -1494,20 +1529,25 @@ quicky:
 		} while ( --i > 0 );
 		*t++ = C->numrhs;
 	}
-	if ( t >= AM.WorkTop ) { MesWork(); }
-	AR.WorkPointer = t;
+	if ( t >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	AT.WorkPointer = t;
 
 	/* Store pointers to the arguments */
 
-	t = fun + FUNHEAD; a = AR.pWorkSpace+oww;
+	t = fun + FUNHEAD; a = AT.pWorkSpace+oww;
 	while ( t < tstop ) { *a++ = t; NEXTARG(t) }
-	lhpars = a-AR.pWorkSpace;
+	lhpars = a-AT.pWorkSpace;
 	t = pattern + FUNHEAD;
 	while ( t < pstop ) {
 		if ( *t != -ARGWILD ) *a++ = t;
 		NEXTARG(t)
 	}
-	lhfunnies = a-AR.pWorkSpace;
+	lhfunnies = a-AT.pWorkSpace;
 	t = pattern + FUNHEAD; cou2 = 0;
 	while ( t < pstop ) {
 		cou2++;
@@ -1528,9 +1568,11 @@ quicky:
 			|| ( (functions[fun[0]-FUNCTION].symmetric & ~REVERSEORDER) == ANTISYMMETRIC )
 			|| ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == SYMMETRIC )
 			|| ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == ANTISYMMETRIC ) ) {
-				AR.WorkPointer = oldworkpointer;
-				AR.pWorkPointer = oww;
+				AT.WorkPointer = oldworkpointer;
+				AT.pWorkPointer = oww;
+				LOCK(ErrorMessageLock);
 				MesPrint("Sorry: no argument field wildcards yet in (anti)symmetric functions");
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 		}
 	}
@@ -1543,7 +1585,7 @@ quicky:
 */
 	iraise = argcount;
 	for ( i = 0; i < iraise; i++ ) {
-		t = AR.pWorkSpace[i+lhpars];
+		t = AT.pWorkSpace[i+lhpars];
 		if ( *t > 0 ) {	/* Category 3: general argument */
 			continue; 
 		}
@@ -1586,7 +1628,7 @@ quicky:
 			m += 4; r++;
 		}
 		if ( j < 0 ) {	/* Category 4: Wildcard that was not assigned */
-			a = AR.pWorkSpace+lhpars;
+			a = AT.pWorkSpace+lhpars;
 			iraise--;
 			if ( iraise != i ) signs++;
 			m = a[iraise];
@@ -1595,7 +1637,7 @@ quicky:
 		}
 		else {	/* Category 2: Wildcard that was assigned */
 			for ( j = 0; j < tcount; j++ ) {
-				if ( MatchArgument(AR.pWorkSpace[oww+j],t) ) {
+				if ( MatchArgument(AT.pWorkSpace[oww+j],t) ) {
 					k = nwstore;
 					r = AN.WildMask;
 					num = 0;
@@ -1618,7 +1660,7 @@ quicky:
 		continue;
 cat1:
 		for ( j = 0; j < tcount; j++ ) {
-			m = AR.pWorkSpace[j+oww];
+			m = AT.pWorkSpace[j+oww];
 			if ( *t != *m ) continue;
 			if ( *t < 0 ) {
 				if ( *t <= -FUNCTION ) break;
@@ -1633,10 +1675,10 @@ cat1:
 		if ( j >= tcount ) goto NoSuccess;	/* Even the fixed ones don't match */
 oneless:
 		signs += j - i;
-		AR.pWorkSpace[oww+j] = AR.pWorkSpace[oww+(--tcount)];
+		AT.pWorkSpace[oww+j] = AT.pWorkSpace[oww+(--tcount)];
 		argcount--; j = i;
 		while ( j < argcount ) {
-			AR.pWorkSpace[lhpars+j] = AR.pWorkSpace[lhpars+j+1]; j++;
+			AT.pWorkSpace[lhpars+j] = AT.pWorkSpace[lhpars+j+1]; j++;
 		}
 		iraise--;
 	}
@@ -1647,7 +1689,7 @@ oneless:
 	test the sign!
 */
 	for ( i = 0; i < funnycount; i++ ) {
-		k = AR.pWorkSpace[lhfunnies+i][1];
+		k = AT.pWorkSpace[lhfunnies+i][1];
 		m = AN.WildValue;
 		j = nwstore;
 		r = AN.WildMask;
@@ -1656,7 +1698,7 @@ oneless:
 			m += 4; r++;
 		}
 		if ( *r == 0 ) continue; /* not assigned yet */
-		m = cbuf[AR.ebufnum].rhs[m[3]];
+		m = cbuf[AT.ebufnum].rhs[m[3]];
 		if ( *m > 0 ) {		/* Tensor arguments */
 			j = *m;
 			if ( j > tcount - argcount ) goto NoSuccess;
@@ -1665,7 +1707,7 @@ oneless:
 				if ( *m < 0 ) type = -VECTOR;
 				else if ( *m < AM.OffsetIndex ) type = -SNUMBER;
 				else type = -INDEX;
-				a = AR.pWorkSpace+oww;
+				a = AT.pWorkSpace+oww;
 				for ( k = 0; k < tcount; k++ ) {
 					if ( a[k][0] != type || a[k][1] != *m ) continue;
 					a[k] = a[--tcount];
@@ -1679,7 +1721,7 @@ nextjarg:;
 			m++;
 			while ( *m ) {
 				for ( k = 0; k < tcount; k++ ) {
-					t = AR.pWorkSpace[oww+k];
+					t = AT.pWorkSpace[oww+k];
 					if ( *t != *m ) continue;
 					r = m;
 					if ( *r < 0 ) {
@@ -1694,16 +1736,16 @@ nextjarg:;
 				}
 				goto NoSuccess;
 nextargw:;
-				AR.pWorkSpace[oww+k] = AR.pWorkSpace[oww+(--tcount)];
+				AT.pWorkSpace[oww+k] = AT.pWorkSpace[oww+(--tcount)];
 				NEXTARG(m)
 			}
 		}
-		AR.pWorkSpace[lhfunnies+i] = AR.pWorkSpace[lhfunnies+(--funnycount)];
+		AT.pWorkSpace[lhfunnies+i] = AT.pWorkSpace[lhfunnies+(--funnycount)];
 	}
 	if ( tcount == 0 ) {
 		if ( argcount > 0 ) goto NoSuccess;
 		for ( i = 0; i < funnycount; i++ ) {
-			AddWild(AR.pWorkSpace[lhfunnies+i][1],ARGTOARG,0);
+			AddWild(AT.pWorkSpace[lhfunnies+i][1],ARGTOARG,0);
 		}
 		goto quicky;
 	}
@@ -1717,17 +1759,17 @@ nextargw:;
 */
 	for ( i = 0; i < iraise; i++ ) {
 		for ( j = 0; j < tcount; j++ ) {
-			if ( MatchArgument(AR.pWorkSpace[oww+j],AR.pWorkSpace[lhpars+i]) ) {
+			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+i]) ) {
 				k = nwstore;
 				r = AN.WildMask;
 				num = 0;
 				while ( --k >= 0 ) num += *r++;
 				if ( num == assig ) { /* no wildcards were changed */
 					signs += j-i;
-					AR.pWorkSpace[oww+j] = AR.pWorkSpace[oww+(--tcount)];
+					AT.pWorkSpace[oww+j] = AT.pWorkSpace[oww+(--tcount)];
 					if ( tcount > j ) signs += tcount-j-1;
 					argcount--;
-					a = AR.pWorkSpace + lhpars;
+					a = AT.pWorkSpace + lhpars;
 					for ( j = i; j < argcount; j++ ) a[j] = a[j+1];
 					iraise--;
 					goto nextiraise;
@@ -1759,13 +1801,13 @@ nextiraise:;
 		4: make permutations of leftover arguments
 		5: try them all
 */
-	cycles = AR.WorkPointer;
+	cycles = AT.WorkPointer;
 	for ( i = 0; i < tcount; i++ ) cycles[i] = tcount-i;
-	AR.WorkPointer += tcount;
+	AT.WorkPointer += tcount;
 	signo = 0;
 	for (;;) {
 		for ( j = 0; j < argcount; j++ ) {
-			if ( MatchArgument(AR.pWorkSpace[oww+j],AR.pWorkSpace[lhpars+j]) == 0 ) {
+			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+j]) == 0 ) {
 				break;
 			}
 		}
@@ -1774,9 +1816,11 @@ nextiraise:;
 			Thus far we have a match. Now the funnies
 */
 			if ( funnycount ) {
-				AR.WorkPointer = oldworkpointer;
-				AR.pWorkPointer = oww;
+				AT.WorkPointer = oldworkpointer;
+				AT.pWorkPointer = oww;
+				LOCK(ErrorMessageLock);
 				MesPrint("Sorry: no argument field wildcards yet in (anti)symmetric functions");
+				UNLOCK(ErrorMessageLock);
 /*
 				Bugfix 31-oct-2001, reported by Kasper Peeters
 				We returned here with value -1 but that is not caught.
@@ -1799,23 +1843,23 @@ nextiraise:;
 			if ( newpat >= AN.patstop ) {
 				if ( AN.UseFindOnly == 0 ) {
 					if ( FindOnce(AN.findTerm,AN.findPattern) ) {
-						AR.WorkPointer = oldworkpointer;
-						AR.pWorkPointer = oww;
+						AT.WorkPointer = oldworkpointer;
+						AT.pWorkPointer = oww;
 						AN.UsedOtherFind = 1;
 						return(1);
 					}
 					j = 0;
 				}
 				else {
-					AR.WorkPointer = oldworkpointer;
-					AR.pWorkPointer = oww;
+					AT.WorkPointer = oldworkpointer;
+					AT.pWorkPointer = oww;
 					return(1);
 				}
 			}
 			else j = ScanFunctions(newpat,inter,par);
 			if ( j ) {
-				AR.WorkPointer = oldworkpointer;
-				AR.pWorkPointer = oww;
+				AT.WorkPointer = oldworkpointer;
+				AT.pWorkPointer = oww;
 				return(j);
 			}
 			AN.RepFunNum -= 2;
@@ -1833,7 +1877,7 @@ nextiraise:;
 /*
 		On to the next cycle
 */
-		a = AR.pWorkSpace + oww;
+		a = AT.pWorkSpace + oww;
 		for ( j = i+1, t = a[i]; j < tcount; j++ ) a[j-1] = a[j];
 		a[tcount-1] = t; cycles[i]--;
 		signo += tcount - i - 1;
@@ -1842,7 +1886,9 @@ nextiraise:;
 			i--;
 			if ( i < 0 ) goto NoSuccess;
 /*
+			LOCK(ErrorMessageLock);
 			MesPrint("Cycle i = %d",i);
+			UNLOCK(ErrorMessageLock);
 */
 			for ( j = i+1, t = a[i]; j < tcount; j++ ) a[j-1] = a[j];
 			a[tcount-1] = t; cycles[i]--;
@@ -1860,8 +1906,8 @@ NoSuccess:
 		C->numrhs = *t++;
 		C->Pointer = C->Buffer + oldcpointer;
 	}
-	AR.WorkPointer = oldworkpointer;
-	AR.pWorkPointer = oww;
+	AT.WorkPointer = oldworkpointer;
+	AT.pWorkPointer = oww;
 	return(0);
 }
 
@@ -2056,19 +2102,19 @@ IndAll:			i = m[1] - WILDOFFSET;
 			oRepFunList = AN.RepFunList;
 			oRepFunNum = AN.RepFunNum;
 			AN.RepFunNum = 0;
-			wildargtaken = AR.WorkPointer;
+			wildargtaken = AT.WorkPointer;
 			AN.RepFunList = wildargtaken + AN.NumTotWildArgs;
-			AR.WorkPointer = AN.RepFunList + ( AM.MaxTer >> 1 );
-			csav = cto = AR.WorkPointer;
+			AT.WorkPointer = AN.RepFunList + ( AM.MaxTer >> 1 );
+			csav = cto = AT.WorkPointer;
 			cfrom = t;
 			ci = *t;
 			while ( --ci >= 0 ) *cto++ = *cfrom++;
-			AR.WorkPointer = cto;
+			AT.WorkPointer = cto;
 			ci = msizcoef;
 			cfrom = mtrmstop;
 			while ( --ci >= 0 ) {
 				if ( *--cfrom != *--cto ) {
-					AR.WorkPointer = wildargtaken;
+					AT.WorkPointer = wildargtaken;
 					AN.RepFunList = oRepFunList;
 					AN.RepFunNum = oRepFunNum;
 					AN.terstart = oterstart;
@@ -2078,33 +2124,33 @@ IndAll:			i = m[1] - WILDOFFSET;
 				}
 			}
 			*m -= msizcoef;
-			wildargs = AR.WildArgs;
-			wildeat = AR.WildEat;
+			wildargs = AN.WildArgs;
+			wildeat = AN.WildEat;
 			for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AN.WildArgTaken[i];
 			AN.ForFindOnly = 0; AN.UseFindOnly = 1;
 			if ( FindRest(csav,m) && ( AN.UsedOtherFind || FindOnly(csav,m) ) ) { }
 			else {
 				*m += msizcoef;
-				AR.WorkPointer = wildargtaken;
+				AT.WorkPointer = wildargtaken;
 				AN.RepFunList = oRepFunList;
 				AN.RepFunNum = oRepFunNum;
 				AN.terstart = oterstart;
 				AN.terstop = oterstop;
 				AN.patstop = opatstop;
-				AR.WildArgs = wildargs;
-				AR.WildEat = wildeat;
+				AN.WildArgs = wildargs;
+				AN.WildEat = wildeat;
 				for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
 				return(0);
 			}
-			AR.WildArgs = wildargs;
-			AR.WildEat = wildeat;
+			AN.WildArgs = wildargs;
+			AN.WildEat = wildeat;
 			for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
 			Substitute(csav,m,1);
 			cto = csav;
 			cfrom = cto + *cto - msizcoef;
 			cto++;
 			*m += msizcoef;
-			AR.WorkPointer = wildargtaken;
+			AT.WorkPointer = wildargtaken;
 			AN.RepFunList = oRepFunList;
 			AN.RepFunNum = oRepFunNum;
 			AN.terstart = oterstart;

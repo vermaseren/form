@@ -1370,28 +1370,28 @@ DoTable ARG2(UBYTE *,s,int,par)
 	Now we redo the 'function part' and send it to the compiler.
 	The prototype has to be picked up properly.
 */
-	OldWork = AR.WorkPointer;
-	oldcbufnum = AR.cbufnum;
-	AR.cbufnum = T->bufnum;
+	OldWork = AT.WorkPointer;
+	oldcbufnum = AC.cbufnum;
+	AC.cbufnum = T->bufnum;
 	while ( s >= name ) *--inp = *s--;
-	AC.ProtoType = w = AR.WorkPointer;
+	AC.ProtoType = w = AT.WorkPointer;
 	*w++ = SUBEXPRESSION;
 	*w++ = SUBEXPSIZE;
 	*w++ = 0;
 	*w++ = 1;
-	*w++ = AR.cbufnum;
+	*w++ = AC.cbufnum;
 	FILLSUB(w)
 	AC.WildC = w;
 	AC.NwildC = 0;
-	AR.WorkPointer = w + 4*AM.MaxWildcards;
-	AddLHS(AR.cbufnum);
+	AT.WorkPointer = w + 4*AM.MaxWildcards;
+	AddLHS(AC.cbufnum);
 	if ( ( ret = CompileAlgebra(inp,LHSIDE,AC.ProtoType) ) < 0 ) error = 1;
 	else {
 		if ( AC.NwildC && SortWild(w,AC.NwildC) ) error = 1;
 		w += AC.NwildC;
 		i = w-OldWork;
 		OldWork[1] = i;
-		j = cbuf[AR.cbufnum].Pointer-cbuf[AR.cbufnum].lhs[ret] + T->numind*2-3;
+		j = cbuf[AC.cbufnum].Pointer-cbuf[AC.cbufnum].lhs[ret] + T->numind*2-3;
 		T->prototype = (WORD *)Malloc1((i+j)*sizeof(WORD),"table prototype");
 		T->pattern = T->prototype + i;
 		while ( --i >= 0 ) T->prototype[i] = OldWork[i];
@@ -1420,7 +1420,7 @@ DoTable ARG2(UBYTE *,s,int,par)
 		}
 	}
 
-		w = cbuf[AR.cbufnum].lhs[ret] + 1;
+		w = cbuf[AC.cbufnum].lhs[ret] + 1;
 		newp = T->pattern;
 		*newp++ = *w++; *newp++ = *w++ + T->numind*2;
 		for ( i = 2; i < FUNHEAD; i++ ) *newp++ = *w++;
@@ -1429,8 +1429,8 @@ DoTable ARG2(UBYTE *,s,int,par)
 		for ( i = FUNHEAD; i < j; i++ ) *newp++ = *w++;
 		if ( sparseflag ) T->pattern[1] = newp - T->pattern;
 	}
-	AR.WorkPointer = OldWork;
-	AR.cbufnum = oldcbufnum;
+	AT.WorkPointer = OldWork;
+	AC.cbufnum = oldcbufnum;
 	if ( T->sparse ) ClearTableTree(T);
 	if ( ( sparseflag & 2 ) != 0 ) {
 		if ( T->spare == 0 ) { SpareTable(T); }
@@ -1830,13 +1830,16 @@ int CoAuto ARG1(UBYTE *,inp)
 int
 AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 {
-	int nodenum, numdollar = AR.DollarList.num;
+	int nodenum, numdollar = AP.DollarList.num;
 	WORD *s, *t;
-	DOLLARS dol = (DOLLARS)FromVarList(&AR.DollarList);
+	DOLLARS dol = (DOLLARS)FromVarList(&AP.DollarList);
 	dol->name = AddName(AC.dollarnames,name,CDOLLAR,numdollar,&nodenum);
 	dol->type = type;
 	dol->node = nodenum;
 	dol->zero = 0;
+#ifdef WITHPTHREADS
+	dol->pthreadslock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 	AddRHS(AM.dbufnum,1);
 	AddLHS(AM.dbufnum);
 	if ( start && size > 0 ) {

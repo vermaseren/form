@@ -98,17 +98,17 @@ int Optimize ARG1(WORD,numexpr)
 
 int LoadOpti ARG1(WORD,numexpr)
 {
-	WORD *term, *t, *tstop, *m, *mstop, *oldwork = AR.WorkPointer, *tbuf, *w, nc;
+	WORD *term, *t, *tstop, *m, *mstop, *oldwork = AT.WorkPointer, *tbuf, *w, nc;
 	WORD pow = 0;
 	LONG objnum = 0;
 	int i;
 	tbuf = oldwork;
-	AR.WorkPointer = tbuf + 2*AM.MaxTer;
-	term = AR.WorkPointer;
+	AT.WorkPointer = tbuf + 2*AM.MaxTer;
+	term = AT.WorkPointer;
 	while ( GetTerm(term) > 0 ) {
-		AR.WorkPointer = term + *term;
+		AT.WorkPointer = term + *term;
 		Normalize(term);
-		AR.WorkPointer = term + *term;
+		AT.WorkPointer = term + *term;
 /*
 		First hunt objects. Some we don't accept!
 		We do accept symbols, dotproducts, vectors, user defined functions.
@@ -173,9 +173,11 @@ int LoadOpti ARG1(WORD,numexpr)
 				*w++ = pow;
 			}
 			else {
+				LOCK(ErrorMessageLock);
 				MesPrint("Problems with expression %s:",EXPRNAME(numexpr));
 				MesPrint(useprop);
-				AR.WorkPointer = oldwork;
+				UNLOCK(ErrorMessageLock);
+				AT.WorkPointer = oldwork;
 				return(-1);
 			}
 			t = mstop;
@@ -183,7 +185,7 @@ int LoadOpti ARG1(WORD,numexpr)
 		tbuf[0] = w-tbuf;
 		AddToOpti(tbuf,0);
 	}
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 /*
 	We sort the terms internally. This makes life easier later.
 */
@@ -502,7 +504,9 @@ int FindScratchName ARG0
 	  }
 	  }
 	}
+	LOCK(ErrorMessageLock);
 	MesPrint("Could not find a decent name for the scratch variable in Optimize");
+	UNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -690,7 +694,7 @@ WORD HuntNumFactor ARG3(LONG,number,WORD *,coef,int,par)
 	WORD *t, *tt, *ttt, *m, *mm, *coef2, ncoef, n, nn, n1, n2, nt;
 	int i;
 	LONG numnewsca, a;
-	if ( par != 1 ) { coef = AR.WorkPointer + 4; }
+	if ( par != 1 ) { coef = AT.WorkPointer + 4; }
 	t = sca->buffer;
 	m = t + 4; i = t[2]; mm = coef; ncoef = t[3];
 	NCOPY(mm,m,i);
@@ -738,15 +742,15 @@ WORD HuntNumFactor ARG3(LONG,number,WORD *,coef,int,par)
 	if ( par == 1 ) return(ncoef);
 
 	numnewsca = scanumber;
-	AR.WorkPointer[1] = LNUMBER;
-	AR.WorkPointer[2] = ncoef+2;
-	AR.WorkPointer[3] = ncoef;
-	m = AR.WorkPointer + ncoef + 3;
+	AT.WorkPointer[1] = LNUMBER;
+	AT.WorkPointer[2] = ncoef+2;
+	AT.WorkPointer[3] = ncoef;
+	m = AT.WorkPointer + ncoef + 3;
 	*m++ = (numnewsca+numobjects) >> BITSINWORD;
 	*m++ = (numnewsca+numobjects) & WORDMASK;
 	*m++ = 1;
-	AR.WorkPointer[0] = m - AR.WorkPointer;
-	AddToOpti(AR.WorkPointer,numnewsca);
+	AT.WorkPointer[0] = m - AT.WorkPointer;
+	AddToOpti(AT.WorkPointer,numnewsca);
 /*
 	Note: AddToOpti can move the scabuffer. Hence we need to redefine sca
 */
@@ -760,7 +764,9 @@ WORD HuntNumFactor ARG3(LONG,number,WORD *,coef,int,par)
 
 	return(ncoef);
 ExitHunt:
+	LOCK(ErrorMessageLock);
 	MesCall("HuntNumFactor");
+	UNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(0);
 }
@@ -789,12 +795,14 @@ WORD HuntFactor ARG3(LONG,number,WORD *,factor,int,par)
 	int i, size;
 	LONG newnum, a;
 	if ( factor == 0 && par != 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Internal error: wrong value (%d) of par in HuntFactor",
 				(WORD)par);
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( par >= 0 ) {	/* We need the coefficient also */
-		if ( factor == 0 ) factor = AR.WorkPointer;
+		if ( factor == 0 ) factor = AT.WorkPointer;
 		coef = factor + 4;
 		ncoef = HuntNumFactor(number,coef,1);
 		if ( ncoef == 0 || ( ncoef == 3 && coef[0] == 1
@@ -881,14 +889,14 @@ loosethis:		fr = fm + 3; frr = fm;
 	Now we create a term with the factor and put it as a scalar.
 	We have to exchange the order of the scalars!
 */
-	t = AR.WorkPointer;
+	t = AT.WorkPointer;
 	*t++ = size + 9; *t++ = LNUMBER; *t++ = 5; *t++ = 3; *t++ = 1; *t++ = 1;
 	t += size;
 	*t++ = ( scanumber + numobjects ) >> BITSINWORD;
 	*t++ = ( scanumber + numobjects ) & WORDMASK;
 	*t++ = 1;
 	newnum = scanumber;
-	AddToOpti(AR.WorkPointer,newnum);
+	AddToOpti(AT.WorkPointer,newnum);
 	sca = scabuffer + number;
 	scb = scabuffer + newnum;
 	t = sca->buffer; sca->buffer = scb->buffer; scb->buffer = t;
@@ -917,7 +925,7 @@ void HuntPairs ARG2(LONG,number,WORD,power)
 		 *coef, ncoef, nf, nc2, nc, *newter;
 	int patsize, i, first, pushback = 0, nons, action = 0;
 	LONG numnewsca = 0, ns;
-	pattern = AR.WorkPointer;
+	pattern = AT.WorkPointer;
 	t = sca->buffer;
 	while ( t < sca->pointer ) {
 		if ( *t < 0 ) { t -= *t; continue; }
@@ -939,7 +947,7 @@ void HuntPairs ARG2(LONG,number,WORD,power)
 				}
 				patsize = p - pattern;
 				if ( patsize == 0 ) { pushback++; goto nextm; }
-				AR.WorkPointer = patstop = p;
+				AT.WorkPointer = patstop = p;
 				first = 1;
 /*
 				Now collect all terms which contain this pattern and put
@@ -951,7 +959,7 @@ void HuntPairs ARG2(LONG,number,WORD,power)
 					if ( *tt < 0 ) { tt -= *tt; continue; }
 					w = tt; mm = tt + tt[2] + 1; tt += *tt;
 					if ( w == w1 ) continue;
-					p = pattern; pp = AR.WorkPointer + w[2] + 1;
+					p = pattern; pp = AT.WorkPointer + w[2] + 1;
 					while ( p < patstop && mm < tt ) {
 						if ( mm[0] == p[0] && mm[1] == p[1] ) {
 							if ( ( p[2] > 0 && mm[2] >= p[2] )
@@ -969,8 +977,8 @@ void HuntPairs ARG2(LONG,number,WORD,power)
 					}
 					if ( p >= patstop ) {	/* match! */
 						while ( mm < tt ) *pp++ = *mm++;
-						p = AR.WorkPointer; mm = w+1; i = mm[1];
-						*p++ = pp - AR.WorkPointer;
+						p = AT.WorkPointer; mm = w+1; i = mm[1];
+						*p++ = pp - AT.WorkPointer;
 						while ( --i >= 0 ) *p++ = *mm++;
 						if ( first ) {
 							p = pp+1; mm = w1+1; i = mm[1];
@@ -986,8 +994,8 @@ void HuntPairs ARG2(LONG,number,WORD,power)
 							first = 0;
 							*w1 = -*w1;
 						}
-						NormOpti(AR.WorkPointer);
-						AddToOpti(AR.WorkPointer,numnewsca);
+						NormOpti(AT.WorkPointer);
+						AddToOpti(AT.WorkPointer,numnewsca);
 						*w = -*w;
 						sca->numterms--;
 					}
@@ -1000,13 +1008,13 @@ nexttt:;
 /*
 				First simplify the expression
 */
-				nf = HuntFactor(numnewsca,AR.WorkPointer,1);
+				nf = HuntFactor(numnewsca,AT.WorkPointer,1);
 				SortOpti(numnewsca);
 /*
 				Check whether we have this scalar already.
 				The factor could still be a problem.
 */
-				coef = AR.WorkPointer + 4 + nf;
+				coef = AT.WorkPointer + 4 + nf;
 				ns = TestNewSca(numnewsca,coef,&ncoef);
 				if ( ns != numnewsca ) {
 					nons = 1;
@@ -1021,37 +1029,39 @@ nexttt:;
 					if ( nf ) {
 						newter = coef + 2*ABS(ncoef) + 2;
 						ncoef = REDLENG(ncoef);
-						nc2 = REDLENG(AR.WorkPointer[3]);
-						if ( MulRat((UWORD *)coef,ncoef,(UWORD *)(AR.WorkPointer+4)
+						nc2 = REDLENG(AT.WorkPointer[3]);
+						if ( MulRat((UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4)
 						,nc2,(UWORD *)(newter+4),&nc) ) {
+							LOCK(ErrorMessageLock);
 							MesCall("HuntPairs");
+							UNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						nc = INCLENG(nc);
-						p = AR.WorkPointer + AR.WorkPointer[2] + 1;
-						t = AR.WorkPointer + nf;
+						p = AT.WorkPointer + AT.WorkPointer[2] + 1;
+						t = AT.WorkPointer + nf;
 						newter[2] = ABS(nc) + 2;
 						newter[3] = nc;
 						newter[1] = LNUMBER;
 						m = newter + newter[2] + 1;
 						while ( p < t ) *m++ = *p++;
 						nf = i = newter[0] = m-newter;
-						m = newter; t = AR.WorkPointer;
+						m = newter; t = AT.WorkPointer;
 						while ( --i >= 0 ) *t++ = *m++;
 					}
 					else {
 						nf = ABS(ncoef);
-						AR.WorkPointer[0] = nf + 3;
-						AR.WorkPointer[1] = LNUMBER;
-						AR.WorkPointer[2] = nf + 2;
-						AR.WorkPointer[3] = ncoef;
+						AT.WorkPointer[0] = nf + 3;
+						AT.WorkPointer[1] = LNUMBER;
+						AT.WorkPointer[2] = nf + 2;
+						AT.WorkPointer[3] = ncoef;
 						nf += 3;
 					}
 				}
 /*
 				Compress the buffer and continue from the next term
 */
-				m = t = sca->buffer; p = AR.WorkPointer + 1;
+				m = t = sca->buffer; p = AT.WorkPointer + 1;
 				while ( t < sca->pointer ) {
 					if ( *t < 0 ) {
 						if ( t == w1 ) {
@@ -1061,15 +1071,15 @@ nexttt:;
 								*p++ = 1;
 							}
 							else {
-								p = AR.WorkPointer + nf;
+								p = AT.WorkPointer + nf;
 							}
 							mm = pattern;
 							while ( mm < patstop ) *p++ = *mm++;
 							*p++ = (ns+numobjects) >> BITSINWORD;
 							*p++ = (ns+numobjects) & WORDMASK;
 							*p++ = 1;
-							*(AR.WorkPointer) = p - AR.WorkPointer;
-							NormOpti(AR.WorkPointer);
+							*(AT.WorkPointer) = p - AT.WorkPointer;
+							NormOpti(AT.WorkPointer);
 						}
 						t -= *t;
 					}
@@ -1078,7 +1088,7 @@ nexttt:;
 					}
 					else { t += *t; m += *m; }
 				}
-				i = *(AR.WorkPointer); p = AR.WorkPointer;
+				i = *(AT.WorkPointer); p = AT.WorkPointer;
 				while ( --i >= 0 ) *m++ = *p++;
 				sca->pointer = m; *m = 0;
 				t = w;
@@ -1105,7 +1115,7 @@ nextterm:;
 	If an object simplifies completely, we adjust the power where it is
 	used so that more tricks will be possible later.
 */
-	AR.WorkPointer = pattern;
+	AT.WorkPointer = pattern;
 }
 
 /*
@@ -1170,7 +1180,7 @@ void HuntBrackets ARG1(LONG,number)
 		while ( m < t ) {
 			if ( m[0] == mostpopular[0] && m[1] == mostpopular[1] ) {
 				if ( ( neg && m[2] > 0 ) || ( !neg && m[2] < 0 ) ) break;
-				mm = AR.WorkPointer;
+				mm = AT.WorkPointer;
 				left = tt;
 				while ( tt < m ) *mm++ = *tt++;
 				if ( neg ) {
@@ -1186,9 +1196,9 @@ void HuntBrackets ARG1(LONG,number)
 					else tt += 3;
 				}
 				while ( tt < t ) *mm++ = *tt++;
-				AR.WorkPointer[0] = mm - AR.WorkPointer;
+				AT.WorkPointer[0] = mm - AT.WorkPointer;
 				sca->numterms--;
-				AddToOpti(AR.WorkPointer,newscanum);
+				AddToOpti(AT.WorkPointer,newscanum);
 				goto dorest;
 			}
 			m += 3;
@@ -1201,7 +1211,7 @@ dorest:
 		while ( m < t ) {
 			if ( m[0] == mostpopular[0] && m[1] == mostpopular[1] ) {
 				if ( ( neg && m[2] > 0 ) || ( !neg && m[2] < 0 ) ) break;
-				mm = AR.WorkPointer;
+				mm = AT.WorkPointer;
 				while ( tt < m ) *mm++ = *tt++;
 				if ( neg ) {
 					if ( m[2] < -1 ) {
@@ -1216,9 +1226,9 @@ dorest:
 					else tt += 3;
 				}
 				while ( tt < t ) *mm++ = *tt++;
-				AR.WorkPointer[0] = mm - AR.WorkPointer;
+				AT.WorkPointer[0] = mm - AT.WorkPointer;
 				sca->numterms--;
-				AddToOpti(AR.WorkPointer,newscanum);
+				AddToOpti(AT.WorkPointer,newscanum);
 				goto nextt;
 			}
 			m += 3;
@@ -1231,13 +1241,13 @@ nextt:;
 	and possibly factors from the new sca that we can take out.
 	First find the factors.
 */
-	nf = HuntFactor(newscanum,AR.WorkPointer,1);
+	nf = HuntFactor(newscanum,AT.WorkPointer,1);
 	SortOpti(newscanum);
 /*
 	Check whether we have this scalar already.
 	The factor could still be a problem.
 */
-	coef = AR.WorkPointer + 4 + nf;
+	coef = AT.WorkPointer + 4 + nf;
 	ns = TestNewSca(newscanum,coef,&ncoef);
 	if ( ns != newscanum ) {
 		nons = 1;
@@ -1252,35 +1262,37 @@ nextt:;
 		if ( nf ) {
 			newter = coef + 2*ABS(ncoef) + 2;
 			ncoef = REDLENG(ncoef);
-			nc2 = REDLENG(AR.WorkPointer[3]);
-			if ( MulRat((UWORD *)coef,ncoef,(UWORD *)(AR.WorkPointer+4),nc2
+			nc2 = REDLENG(AT.WorkPointer[3]);
+			if ( MulRat((UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4),nc2
 			,(UWORD *)(newter+4),&nc) ) {
+				LOCK(ErrorMessageLock);
 				MesCall("HuntPairs");
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			nc = INCLENG(nc);
-			tt = AR.WorkPointer + AR.WorkPointer[2] + 1;
-			t = AR.WorkPointer + nf;
+			tt = AT.WorkPointer + AT.WorkPointer[2] + 1;
+			t = AT.WorkPointer + nf;
 			newter[1] = LNUMBER;
 			newter[2] = ABS(nc) + 2;
 			newter[3] = nc;
 			m = newter + newter[2] + 1;
 			while ( tt < t ) *m++ = *tt++;
 			nf = j = newter[0] = m-newter;
-			m = newter; t = AR.WorkPointer;
+			m = newter; t = AT.WorkPointer;
 			while ( --j >= 0 ) *t++ = *m++;
 		}
 		else {
 			nf = ABS(ncoef);
-			AR.WorkPointer[0] = nf + 3;
-			AR.WorkPointer[1] = LNUMBER;
-			AR.WorkPointer[2] = nf + 2;
-			AR.WorkPointer[3] = ncoef;
+			AT.WorkPointer[0] = nf + 3;
+			AT.WorkPointer[1] = LNUMBER;
+			AT.WorkPointer[2] = nf + 2;
+			AT.WorkPointer[3] = ncoef;
 			nf += 3;
 		}
 	}
 	if ( nf == 0 ) {
-		m = AR.WorkPointer + 1;
+		m = AT.WorkPointer + 1;
 		*m++ = LNUMBER; *m++ = 5; *m++ = 3; *m++ = 1; *m++ = 1;
 		*m++ = mostpopular[0];
 		*m++ = mostpopular[1];
@@ -1288,8 +1300,8 @@ nextt:;
 		else *m++ = 1;
 	}
 	else {
-		t = AR.WorkPointer + nf;
-		m = AR.WorkPointer + AR.WorkPointer[2] + 1;
+		t = AT.WorkPointer + nf;
+		m = AT.WorkPointer + AT.WorkPointer[2] + 1;
 		while ( m < t ) {
 			if ( m[0] == mostpopular[0] && m[1] == mostpopular[1] ) {
 				if ( neg ) m[2]--;
@@ -1309,9 +1321,9 @@ nextt:;
 	*m++ = (ns+numobjects) >> BITSINWORD;
 	*m++ = (ns+numobjects) & WORDMASK;
 	*m++ = 1;
-	*(AR.WorkPointer) = m - AR.WorkPointer;
-	NormOpti(AR.WorkPointer);
-	j = *(AR.WorkPointer); m = AR.WorkPointer;
+	*(AT.WorkPointer) = m - AT.WorkPointer;
+	NormOpti(AT.WorkPointer);
+	j = *(AT.WorkPointer); m = AT.WorkPointer;
 	while ( --j >= 0 ) *left++ = *m++;
 	sca->pointer = left; *left = 0;
 	sca->numterms++;
@@ -1348,7 +1360,7 @@ void HuntPowers ARG2(LONG,number,WORD,power)
 	WORD *t1, *m1, *r1, *t2, *m2, *r2, *t3, *m3, *r3, *quotient, *extra
 	    , *q, n1, n2, n3, nq;
 	int i;
-	quotient = AR.WorkPointer;
+	quotient = AT.WorkPointer;
 	t1 = sca->buffer;
 	while ( t1 < sca->pointer ) {
 		m1 = t1 + t1[2] + 1; r1 = t1; t1 += *t1;
@@ -1467,7 +1479,9 @@ nextt2:;
 	}
 	return;
 callHP:
+	LOCK(ErrorMessageLock);
 	MesCall("HuntPowers");
+	UNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return;
 }
@@ -1692,8 +1706,10 @@ void SortOpti ARG1(LONG,number)
 	t = sca->buffer;
 	while ( t < sca->pointer ) { *p++ = t; t += *t; num++; }
 	if ( num != sca->numterms ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Help! sca->numterms = %l, actual number = %l",
 			sca->numterms, num);
+		UNLOCK(ErrorMessageLock);
 	}
 	helppointers = p;
 	SplitOpti(sortpointers,num);

@@ -26,7 +26,6 @@
 #define ENDMODULE 4
 #define POLYFUN 0
 
-/*[30jan2004 mt]:*/
 #define NOPARALLEL_DOLLAR 1
 #define NOPARALLEL_STORE 2
 #define NOPARALLEL_RHS 4
@@ -34,8 +33,6 @@
 #define NOPARALLEL_USER 16 
 #define NOPARALLEL_TBLDOLLAR 32
 #define PARALLEL_MOPT 64
-/*#define NOPARALLELFLAG 1*/
-/*:[30jan2004 mt]*/
 
 #define PARALLELFLAG 0
 
@@ -660,3 +657,20 @@ typedef int (*TFUN1)();
 
 #define ELEMENTUSED 1
 #define ELEMENTLOADED 2
+
+#ifdef WITHPTHREADS
+#define TERMINATETHREAD -1
+#define STARTNEWEXPRESSION 1
+#define LOWESTORDERDISTRIBUTION 2
+#define FINISHEXPRESSION 3
+#define THEMASTERWANTSMOREDATA 4
+#define CLEANUPEXPRESSION 5
+#define HIGHERORDERDISTRIBUTION 6
+#endif
+
+/*
+	The next variable is because there is some use of cbufnum that is
+	probably irrelevant. We use here DUMMYBUFNUM instead of AC.cbufnum
+	just in case we run into trouble later.
+*/
+#define DUMMYBUFFER 1

@@ -5,12 +5,11 @@
   explicitly need to call mpi routines. This is the only file that really 
   needs to be linked to the mpi-library!
 
-  #[ includes & variables
+  	#[ includes & variables : 
 
 */
 #include <stdio.h>
 #include "form3.h"
-#include "parallel.h"
 
 #ifdef MPICH_PROFILING
 # include "mpe.h"
@@ -19,8 +18,8 @@
 static MPI_Status PF_status;
 
 /*
-  #] includes & variables
-  #[ LONG PF_RealTime(int)
+  	#] includes & variables :
+  	#[ LONG PF_RealTime(int):
 
   returns the realtime in 1/100 sec. as a LONG
 */
@@ -36,8 +35,8 @@ PF_RealTime ARG1(int,i)
   return((LONG)( 100. * (MPI_Wtime() - PF_starttime) ) );
 }
 /*
-  #] LONG PF_RealTime(int)
-  #[ int  PF_LibInit(int*,char***)
+  	#] LONG PF_RealTime(int):
+  	#[ int  PF_LibInit(int*,char***) :
 */
 int 
 PF_LibInit ARG2(int*,argcp,char***,argvp)
@@ -54,8 +53,8 @@ PF_LibInit ARG2(int*,argcp,char***,argvp)
   return(0);
 }
 /*
-  #] int  PF_LibInit(int*,char***)				
-  #[ int  PF_Terminate(int)
+  	#] int  PF_LibInit(int*,char***) :
+  	#[ int  PF_Terminate(int) :
 
   Exits mpi, when there is an error either indicated or happening,
   returnvalue is 1, else returnvalue is 0
@@ -66,17 +65,16 @@ PF_Terminate ARG1(int,error)
   return(MPI_Finalize());
 }
 /*
-  #] int  PF_Terminate(int) 
+  	#] int  PF_Terminate(int) :
 */
-
 #ifdef REMOVEDBY_MT
-/*[02nov2003 mt]:
+/*
+  	#[ int  PF_Probe(int):
+
+[02nov2003 mt]:
 I have canged the function PF_Probe : it must return the actual source, and blocks 
 if source == PF_ANY_SOURCE
-*/
-/*
-  General Send and Receive Function for packed buffers
-  #[ int  PF_Probe(int)
+	General Send and Receive Function for packed buffers
 */
 int 
 PF_Probe ARG1(int,src)
@@ -90,12 +88,11 @@ PF_Probe ARG1(int,src)
   return(PF_status.MPI_TAG);
 }
 /*
-  #] int  PF_Probe(int)
+  	#] int  PF_Probe(int):
 */
 #endif
 /*
-  
-   #[ int  PF_Probe(int*):
+  	#[ int  PF_Probe(int*) :
 */
 int 
 PF_Probe ARG1(int*,src)
@@ -112,11 +109,8 @@ PF_Probe ARG1(int*,src)
 	return(PF_status.MPI_TAG);
 }
 /*
-   #] int  PF_Probe(int):
-*/
-/*
-:[02nov2003 mt]
-  #[ the  packbuffer
+  	#] int  PF_Probe(int*) :
+  	#[ the packbuffer :
 */
 /*
 [26jul2004 mt]:
@@ -153,8 +147,8 @@ PF_PrintPackBuf ARG2(char*,s,int,size)
   return(0);
 }
 /*
-  #] the packbuffer
-  #[ int  PF_Pack(VOID*,LONG,MPI_Datatype)
+  	#] the packbuffer :
+  	#[ int  PF_Pack(VOID*,LONG,MPI_Datatype) :
 */
 int 
 PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
@@ -172,8 +166,8 @@ PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
   return(0);
 } 
 /*
-  #] int  PF_Pack(VOID*,LONG*,MPI_DataType)
-  #[ int  PF_Send(int,int,int)
+  	#] int  PF_Pack(VOID*,LONG,MPI_Datatype) :
+  	#[ int  PF_Send(int,int,int) :
 */
 int 
 PF_Send ARG3(int,to,int,tag,int,par){  
@@ -190,8 +184,8 @@ PF_Send ARG3(int,to,int,tag,int,par){
   return(0);
 }
 /*
-  #] int  PF_Send(VOID*,LONG,int,int,int)
-  #[ int  PF_BroadCast(int)
+  	#] int  PF_Send(int,int,int) :
+  	#[ int  PF_BroadCast(int) :
 */
 int 
 PF_BroadCast ARG1(int,par)
@@ -229,8 +223,8 @@ int pos=PF_packpos;
   return(0);
 }
 /*
-  #] int  PF_BroadCast(VOID*,LONG*,int)
-  #[ int  PF_UnPack(VOID*,LONG,MPI_Datatype)
+  	#] int  PF_BroadCast(int) :
+  	#[ int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
 */
 int 
 PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
@@ -244,8 +238,8 @@ PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
   return(0);
 }
 /*
-  #] int  PF_UnPack(VOID*,LONG*,MPI_Datatype)
-  #[ int  PF_Receive(int,int,int*,int*)
+  	#] int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
+  	#[ int  PF_Receive(int,int,int*,int*):
 */
 int 
 PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
@@ -262,10 +256,10 @@ PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
   return(0);
 }
 /*
-  #] int  PF_Receive(int,int,int*,int*)
+  	#] int  PF_Receive(int,int,int*,int*):
+  	#[ int  PF_ISendSbuf(int,int) :
 
   Special Send/Receive functions for WORD buffers, also nonblocking
-  #[ int  PF_ISendSbuf(int,int)
 
   nonblocking send operation. it sends everything from buff to fill of the
   active buffer.
@@ -337,8 +331,8 @@ PF_ISendSbuf ARG2(int,to,int,tag){
   return(0);
 }
 /*
-  #] int  PF_ISendSbuf(...)
-  #[ int  PF_RecvWbuf(WORD*,LONG*,int*)
+  	#] int  PF_ISendSbuf(int,int) :
+  	#[ int  PF_RecvWbuf(WORD*,LONG*,int*) :
 
   Blocking receive of a WORD buffer
 */
@@ -358,8 +352,8 @@ PF_RecvWbuf ARG3(WORD*,b,LONG*,s,int*,src)
   return(PF_status.MPI_TAG);
 }
 /*
-  #] int  PF_RecvWbuf(WORD*,LONG*,int*)
-  #[ int  PF_IRecvRbuf(PF_BUFFER*,int,int)
+  	#] int  PF_RecvWbuf(WORD*,LONG*,int*) :
+  	#[ int  PF_IRecvRbuf(PF_BUFFER*,int,int) :
 
 	 post nonblocking receive for the active receive buffer 
 	 the buffer is filled from full to stop
@@ -382,8 +376,8 @@ PF_IRecvRbuf ARG3(PF_BUFFER*,r,int,bn,int,from)
   return(0);
 }
 /*
-  #] int  PF_IRecvRbuf(...)
-  #[ int  PF_WaitRbuf(PF_BUFFER*,int,LONG*); 
+  	#] int  PF_IRecvRbuf(PF_BUFFER*,int,int) :
+  	#[ int  PF_WaitRbuf(PF_BUFFER *,int,LONG *) :
 
   function to wait for the buffer <bn> to finish a pending nonblocking
   receive. It returns the received tag and in *size the number of field
@@ -418,25 +412,22 @@ int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
   return(r->status[bn].MPI_TAG);
 }
 /*
-  #] int  PF_WaitRbuf(PF_BUFFER *,int,LONG*); 
-*/
-/*
-[27jul2004 mt]:
-   #[ int  PF_PackString(UBYTE*)
-*/
-/*
-The following function packs string str into PF_packbuf (INCLUDING the
-trailing zero!). The first element (PF_INT) is the length of the
-packed portion of the string. If the string does not fit to the buffer
-PF_packbuf, the function packs only the initial portion.  It returns
-the number of packed bytes, so if (str[length-1]=='\0') then the whole
-string fits to the buffer, if not, then the rest (str+length) bust be
-packed and send again.  On error, the function returns the negative
-error code.
+  	#] int  PF_WaitRbuf(PF_BUFFER *,int,LONG *) :
+  	#[ int PF_PackString(UBYTE*) :
 
-One exception: the string "\0!\0" is used as an image of the NULL,
-so all 3 characters will be packed.
+	The following function packs string str into PF_packbuf (INCLUDING the
+	trailing zero!). The first element (PF_INT) is the length of the
+	packed portion of the string. If the string does not fit to the buffer
+	PF_packbuf, the function packs only the initial portion.  It returns
+	the number of packed bytes, so if (str[length-1]=='\0') then the whole
+	string fits to the buffer, if not, then the rest (str+length) bust be
+	packed and send again.  On error, the function returns the negative
+	error code.
+
+	One exception: the string "\0!\0" is used as an image of the NULL,
+	so all 3 characters will be packed.
 */
+
 int 
 PF_PackString ARG1(UBYTE *,str)
 {
@@ -489,8 +480,8 @@ PF_PackString ARG1(UBYTE *,str)
 	return(length);
 }/*PF_PackString*/ 
 /*
-   #] int PF_PackString(UBYTE*)
-   #[ int  PF_UnPackString(UBYTE*)
+  	#] int PF_PackString(UBYTE*) :
+  	#[ int  PF_UnPackString(UBYTE*) :
 */
 /*
 The following function unpacks string str from PF_packbuf (INCLUDING
@@ -523,6 +514,5 @@ PF_UnPackString ARG1(UBYTE *,str)
 	return(length);	
 }/*PF_UnPackString*/ 
 /*
-   #] int  PF_UnPackString(UBYTE*, int)
-:[27jul2004 mt]
+  	#] int  PF_UnPackString(UBYTE*) :
 */

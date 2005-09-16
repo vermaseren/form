@@ -8,13 +8,13 @@ static TRACES *tracestack = 0;
 int numtracestack = 0, intracestack = 0;
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Operations :
  		#[ EpfFind :			WORD EpfFind(term,params)
 
 		Searches for a pair of Levi-Civita tensors that should be
 		contracted.
-		If a match is found its settings are recorded in AR.TMout.
+		If a match is found its settings are recorded in AT.TMout.
 		type indicates the number of indices that is searched for,
 		unless all are searched for (type = 0).
 		number is the number of tensors that should survive contraction.
@@ -27,10 +27,15 @@ EpfFind ARG2(WORD *,term,WORD *,params)
 	WORD *t, *m, *r, n1 = 0, n2, min = -1, count, fac;
 	WORD *c1 = 0, *c2 = 0, sgn = 1;
 	WORD *tstop, *mstop;
-	UWORD *facto = (UWORD *)AR.WorkPointer;
+	UWORD *facto = (UWORD *)AT.WorkPointer;
 	WORD ncoef,nfac;
 	WORD number, type;
-	if ( ( AR.WorkPointer = (WORD *)(facto + AM.MaxTal) ) > AM.WorkTop ) return(MesWork());
+	if ( ( AT.WorkPointer = (WORD *)(facto + AM.MaxTal) ) > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	number = params[3];
 	type = params[4];
 	t = term;
@@ -89,13 +94,13 @@ AllLev:
 /*
 	We have now the two tensors that give the minimum contraction
 	in c1 and c2.
-	Prepare the AR.TMout array;
+	Prepare the AT.TMout array;
 */
 	if ( min < 0 ) return(0);	/* No matching pair! */
 	t = c1;
 	mstop = c2;
 	fac = t[1] - FUNHEAD;
-	m = AR.TMout;
+	m = AT.TMout;
 	*m++ = 3 + (min<<1);		/* The full length */
 	*m++ = CONTRACT;
 	if ( number < 0 ) *m++ = 1;
@@ -129,7 +134,7 @@ AllLev:
 	*t++ = SUBEXPSIZE;
 	*t++ = -1;
 	*t++ = 1;
-	*t++ = AR.cbufnum;
+	*t++ = DUMMYBUFFER;
 	FILLSUB(t)
 	r = term;
 	r += *r - 1;
@@ -138,7 +143,9 @@ AllLev:
 	tstop = t;
 	while ( m < mstop ) *t++ = *m++;
 	if ( Factorial(fac,facto,&nfac) || Mully((UWORD *)tstop,&ncoef,facto,nfac) ) {
+		LOCK(ErrorMessageLock);
 		MesCall("EpfFind");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	tstop += (ABS(ncoef))<<1;
@@ -150,7 +157,7 @@ AllLev:
 }
 
 /*
- 		#] EpfFind : 
+ 		#] EpfFind :
  		#[ EpfCon :				WORD EpfCon(term,params,num,level)
 
 		Contraction of two strings of indices/vectors. They come
@@ -173,11 +180,16 @@ EpfCon ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	WORD *kron, *perm, *termout, *tstop, size2;
 	WORD *m, *t, sizes, sgn = 0, i;
 	sizes = *params - 3;
-	kron = AR.WorkPointer;
-	perm = (AR.WorkPointer += sizes);
-	termout = (AR.WorkPointer += sizes);
-	AR.WorkPointer += AM.MaxTer;
-	if ( AR.WorkPointer > AM.WorkTop ) return(MesWork());
+	kron = AT.WorkPointer;
+	perm = (AT.WorkPointer += sizes);
+	termout = (AT.WorkPointer += sizes);
+	AT.WorkPointer += AM.MaxTer;
+	if ( AT.WorkPointer > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	params += 2;
 	if ( !(*params++) ) level--;
 	size2 = sizes>>1;
@@ -190,7 +202,10 @@ DoOnce:
 		tstop -= SUBEXPSIZE;
 		while ( t < tstop ) *m++ = *t++;
 		if ( t[2] != num || *t != SUBEXPRESSION ) {
-			return(MesPrint("Serious error in EpfCon"));
+			LOCK(ErrorMessageLock);
+			MesPrint("Serious error in EpfCon");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
 		}
 		tstop += SUBEXPSIZE;
 		if ( sizes ) {
@@ -208,20 +223,24 @@ DoOnce:
 		if ( sgn < 0 ) *m = - *m;
 		if ( *termout ) {
 			*AR.RepPoint = 1;
-			AR.expchanged = 1;
-			AR.WorkPointer = termout + *termout;
+			AS.expchanged = 1;
+			AT.WorkPointer = termout + *termout;
 			if ( Generator(termout,level) < 0 ) goto EpfCall;
 		}
 	}
-	AR.WorkPointer = kron;
+	AT.WorkPointer = kron;
 	return(0);
 EpfCall:
-	if ( AM.tracebackflag ) MesCall("EpfCon");
+	if ( AM.tracebackflag ) {
+		LOCK(ErrorMessageLock);
+		MesCall("EpfCon");
+		UNLOCK(ErrorMessageLock);
+	}
 	return(-1);
 }
 
 /*
- 		#] EpfCon : 
+ 		#] EpfCon :
  		#[ EpfGen :				WORD EpfGen(number,inlist,kron,perm,sgn)
 */
 
@@ -263,7 +282,7 @@ EpfGen ARG5(WORD,number,WORD *,inlist,WORD *,kron,WORD *,perm,WORD,sgn)
 }
 
 /*
- 		#] EpfGen : 
+ 		#] EpfGen :
  		#[ Trick :				WORD Trick(in,t)
 
 		This routine implements the identity:
@@ -332,7 +351,7 @@ Trick ARG2(WORD *,in,TRACES *,t)
 }
 
 /*
- 		#] Trick : 
+ 		#] Trick :
  		#[ Trace4no :			WORD Trace4no(number,kron,t)
 
 		Takes the trace of a string of gamma matrices in 4 dimensions.
@@ -612,7 +631,7 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 }
 
 /*
- 		#] Trace4no : 
+ 		#] Trace4no :
  		#[ Trace4 :				WORD Trace4(term,params,num,level)
 
 		Generates traces of the string of gamma matrices in 'instring'.
@@ -630,7 +649,7 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 		the recursion that is used here. That cleans up the variables
 		very much.
 
-		The contents of the AR.TMout array are:
+		The contents of the AT.TMout array are:
 		length,type,gamma5,gamma's
 
 		The space for the vectors in t is at most 14 * number.
@@ -647,7 +666,7 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	WORD *p, *m, number, i;
 	WORD *OldW;
 	WORD j, minimum, minimum2, *min, *stopper;
-	OldW = AR.WorkPointer;
+	OldW = AT.WorkPointer;
 	if ( numtracestack >= intracestack ) {
 		number = intracestack + 2;
 		t = (TRACES *)Malloc1(number*sizeof(TRACES),"TRACES-struct");
@@ -668,15 +687,22 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	t->finalstep = ( params[2] & 8 ) ? 1 : 0;
 	t->gamma5 = params[3];
 	if ( t->finalstep && t->gamma5 != GAMMA1 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Gamma5 not allowed in this option of the trace command");
+		UNLOCK(ErrorMessageLock);
 		numtracestack--;
 		SETERROR(-1)
 	}
-	t->inlist = AR.WorkPointer;
+	t->inlist = AT.WorkPointer;
 	t->accup = t->accu = t->inlist + number;
 	t->perm = t->accu + (number<<1);
 	t->eers = t->perm + number;
-	if ( ( AR.WorkPointer += 19 * number ) >= AM.WorkTop ) { MesWork(); }
+	if ( ( AT.WorkPointer += 19 * number ) >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	t->num = num;
 	t->level = level;
 	p = t->inlist;
@@ -709,7 +735,7 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 			}
 		}
 		p = min;
-		min = m = AR.WorkPointer;
+		min = m = AT.WorkPointer;
 		i = number;
 		while ( --i >= 0 ) {
 			*m++ = *p++;
@@ -758,13 +784,13 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 */
 	}
 	number = Trace4Gen(t,number);
-	AR.WorkPointer = OldW;
+	AT.WorkPointer = OldW;
 	numtracestack--;
 	return(number);
 }
 
 /*
- 		#] Trace4 : 
+ 		#] Trace4 :
  		#[ Trace4Gen :			WORD Trace4Gen(t,number)
 
 		The recursive breakdown of a trace in 4 dimensions.
@@ -806,7 +832,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 */
 	if ( number <= 2 ) {	/* Special cases */
 		if ( t->gamma5 == GAMMA5 ) return(0);
-		termout = AR.WorkPointer;
+		termout = AT.WorkPointer;
 		p = t->termp;
 		stop = p + *p;
 		m = termout;
@@ -846,15 +872,20 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				do { *m++ = *p++; } while ( p < stop );
 				*termout = WORDDIF(m,termout);
 				if ( t->allsign < 0 ) m[-1] = -m[-1];
-				if ( ( AR.WorkPointer = m ) > AM.WorkTop ) return(MesWork());
+				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				*AR.RepPoint = 1;
-				AR.expchanged = 1;
+				AS.expchanged = 1;
 				if ( *termout ) {
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) goto TracCall;
 				}
-				AR.WorkPointer= termout;
+				AT.WorkPointer= termout;
 				return(0);
 			}
 			p += p[1];
@@ -862,7 +893,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 		return(0);
 	}
 /*
-			#] Special cases : 
+			#] Special cases :
 			#[ Adjacent objects :
 */
 	p = t->inlist;
@@ -909,7 +940,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Adjacent objects : 
+			#] Adjacent objects :
 			#[ Odd Contraction :
 */
 	p = t->inlist;
@@ -952,7 +983,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Odd Contraction : 
+			#] Odd Contraction :
 			#[ Even Contraction :
 		First the case with two matrices inbetween.
 */
@@ -967,8 +998,8 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 			if ( m >= stop ) m -= number;
 			if ( *p == *m ) {
 				WORD oldfactor, old5;
-				oldstring = AR.WorkPointer;
-				AR.WorkPointer += number;
+				oldstring = AT.WorkPointer;
+				AT.WorkPointer += number;
 				oldfactor = t->allsign;
 				old5 = t->gamma5;
 				if ( m < p ) cp = (WORDDIF(m,t->inlist) + 1 ) & 1;
@@ -1025,7 +1056,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				if ( oldval <= 0 ) t->accup -= 2;
 				t->gamma5 = old5;
 				t->allsign = oldfactor;
-				AR.WorkPointer = p = oldstring;
+				AT.WorkPointer = p = oldstring;
 				m = t->inlist;
 				while ( m < stop ) *m++ = *p++;
 				return(0);
@@ -1093,7 +1124,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Even Contraction : 
+			#] Even Contraction :
 			#[ Same Objects :
 */
 	p = t->inlist;
@@ -1114,8 +1145,8 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					else if ( t->gamma5 == GAMMA6 ) t->gamma5 = GAMMA7;
 					else if ( t->gamma5 == GAMMA7 ) t->gamma5 = GAMMA6;
 				}
-				oldstring = AR.WorkPointer;
-				AR.WorkPointer += number;
+				oldstring = AT.WorkPointer;
+				AT.WorkPointer += number;
 				mold = m;
 				oldval = *p;
 				p = oldstring;
@@ -1152,7 +1183,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				t = tracestack + numtracestack - 1;
 				t->accup -= 2;
 				t->allsign = oldfactor;
-				AR.WorkPointer = p = oldstring;
+				AT.WorkPointer = p = oldstring;
 				m = t->inlist;
 				while ( m <= stop ) *m++ = *p++;
 				t->gamma5 = old5;
@@ -1162,14 +1193,14 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 		}
 	} while ( ++diff <= (number>>1) );
 /*
-			#] Same Objects : 
+			#] Same Objects :
 			#[ All Different :
 
 		Here we have a string with all different objects.
 
 */
 	t->sgn = 0;
-	termout = AR.WorkPointer;
+	termout = AT.WorkPointer;
 	for(;;) {
 		if ( t->finalstep == 0 ) diff = Trace4no(number,t->accup,t);
 		else                     diff = TraceNno(number,t->accup,t);
@@ -1219,12 +1250,17 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				do { *m++ = *p++; } while ( p < stop );
 				*termout = WORDDIF(m,termout);
 				if ( ( diff ^ t->allsign ) < 0 ) m[-1] = - m[-1];
-				if ( ( AR.WorkPointer = m ) > AM.WorkTop ) return(MesWork());
+				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				if ( *termout ) {
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) {
-						AR.WorkPointer = termout;
+						AT.WorkPointer = termout;
 						goto TracCall;
 					}
 					t = tracestack + numtracestack - 1;
@@ -1234,21 +1270,25 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 			p += p[1];
 		} while ( p < stop );
 	}
-	AR.WorkPointer = termout;
+	AT.WorkPointer = termout;
 	return(0);
 
 /*
-			#] All Different : 
+			#] All Different :
 */
 Trac4Call:
-	AR.WorkPointer = oldstring;
+	AT.WorkPointer = oldstring;
 TracCall:
-	if ( AM.tracebackflag ) MesCall("Trace4Gen");
+	if ( AM.tracebackflag ) {
+		LOCK(ErrorMessageLock);
+		MesCall("Trace4Gen");
+		UNLOCK(ErrorMessageLock);
+	}
 	return(-1);
 }
 
 /*
- 		#] Trace4Gen : 
+ 		#] Trace4Gen :
  		#[ TraceNno :			WORD TraceNno(number,kron,t)
 
 		Routine takes the trace in N dimensions of a string
@@ -1300,7 +1340,7 @@ TraceNno ARG3(WORD,number,WORD *,kron,TRACES *,t)
 }
 
 /*
- 		#] TraceNno : 
+ 		#] TraceNno :
  		#[ TraceN :				WORD TraceN(term,params,num,level)
 */
 
@@ -1311,10 +1351,12 @@ TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	WORD *p, *m, number, i;
 	WORD *OldW;
 	if ( params[3] != GAMMA1 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Gamma5 not allowed in n-trace");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
-	OldW = AR.WorkPointer;
+	OldW = AT.WorkPointer;
 	if ( numtracestack >= intracestack ) {
 		number = intracestack + 2;
 		t = (TRACES *)Malloc1(number*sizeof(TRACES),"TRACES-struct");
@@ -1331,11 +1373,15 @@ TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	t = tracestack + numtracestack;
 	numtracestack++;
 
-	t->inlist = AR.WorkPointer;
+	t->inlist = AT.WorkPointer;
 	t->accup = t->accu = t->inlist + number;
 	t->perm = t->accu + number;
-	if ( ( AR.WorkPointer += 3 * number ) >= AM.WorkTop ) {
-		numtracestack--; MesWork(); return(-1);
+	if ( ( AT.WorkPointer += 3 * number ) >= AT.WorkTop ) {
+		numtracestack--;
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
 	}
 	t->num = num;
 	t->level = level;
@@ -1346,13 +1392,13 @@ TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	t->factor = params[4];
 	t->allsign = params[5];
 	number = TraceNgen(t,number);
-	AR.WorkPointer = OldW;
+	AT.WorkPointer = OldW;
 	numtracestack--;
 	return(number);
 }
 
 /*
- 		#] TraceN : 
+ 		#] TraceN :
  		#[ TraceNgen :			WORD TraceNgen(t,number)
 
 		This routine is a simplified version of Trace4Gen. We know here
@@ -1372,7 +1418,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 			#[ Special cases :
 */
 	if ( number <= 2 ) {	/* Special cases */
-		termout = AR.WorkPointer;
+		termout = AT.WorkPointer;
 		p = t->termp;
 		stop = p + *p;
 		m = termout;
@@ -1412,13 +1458,18 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 				do { *m++ = *p++; } while ( p < stop );
 				*termout = WORDDIF(m,termout);
 				if ( t->allsign < 0 ) m[-1] = -m[-1];
-				if ( ( AR.WorkPointer = m ) > AM.WorkTop ) return(MesWork());
+				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				if ( *termout ) {
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) goto TracCall;
 				}
-				AR.WorkPointer= termout;
+				AT.WorkPointer= termout;
 				return(0);
 			}
 			p += p[1];
@@ -1426,7 +1477,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 		return(0);
 	}
 /*
-			#] Special cases : 
+			#] Special cases :
 			#[ Adjacent objects :
 */
 	p = t->inlist;
@@ -1463,7 +1514,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Adjacent objects : 
+			#] Adjacent objects :
 			#[ Same Objects :
 */
 	p = t->inlist;
@@ -1476,8 +1527,8 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 			if ( m > stop ) m -= number;
 			if ( *p == *m ) {
 				WORD oldfactor, c;
-				oldstring = AR.WorkPointer;
-				AR.WorkPointer += number;
+				oldstring = AT.WorkPointer;
+				AT.WorkPointer += number;
 				mold = m;
 				oldval = *p;
 				p = oldstring;
@@ -1645,7 +1696,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 				p = oldstring;
 				m = t->inlist;
 				while ( m <= stop ) *m++ = *p++;
-				AR.WorkPointer = oldstring;
+				AT.WorkPointer = oldstring;
 				return(0);
 			}
 			p++;
@@ -1653,14 +1704,14 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 		diff++;
 	} while ( diff <= (number>>1) );
 /*
-			#] Same Objects : 
+			#] Same Objects :
 			#[ All Different :
 
 		Here we have a string with all different objects.
 
 */
 	t->sgn = 0;
-	termout = AR.WorkPointer;
+	termout = AT.WorkPointer;
 	while ( ( diff = TraceNno(number,t->accup,t) ) != 0 ) {
 		p = t->termp;
 		stop = p + *p;
@@ -1696,12 +1747,17 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 				do { *m++ = *p++; } while ( p < stop );
 				*termout = WORDDIF(m,termout);
 				if ( ( diff ^ t->allsign ) < 0 ) m[-1] = - m[-1];
-				if ( ( AR.WorkPointer = m ) > AM.WorkTop ) return(MesWork());
+				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				if ( *termout ) {
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) {
-						AR.WorkPointer = termout;
+						AT.WorkPointer = termout;
 						goto TracCall;
 					}
 					t = tracestack + numtracestack - 1;
@@ -1711,24 +1767,28 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 			p += p[1];
 		} while ( p < stop );
 	}
-	AR.WorkPointer = termout;
+	AT.WorkPointer = termout;
 	return(0);
 
 /*
-			#] All Different : 
+			#] All Different :
 */
 TracnCall:
-	AR.WorkPointer = oldstring;
+	AT.WorkPointer = oldstring;
 TracCall:
-	if ( AM.tracebackflag ) MesCall("TraceNGen");
+	if ( AM.tracebackflag ) {
+		LOCK(ErrorMessageLock);
+		MesCall("TraceNGen");
+		UNLOCK(ErrorMessageLock);
+	}
 	return(-1);
 }
 
 /*
- 		#] TraceNgen : 
+ 		#] TraceNgen :
  		#[ Traces :				WORD Traces(term,params,num,level)
 
-		The contents of the AR.TMout array are:
+		The contents of the AT.TMout array are:
 		length,type,subtype,gamma5,factor,sign,gamma's
 
 */
@@ -1736,7 +1796,7 @@ TracCall:
 WORD
 Traces ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	switch ( AR.TMout[2] ) {	/* Subtype gives dimension */
+	switch ( AT.TMout[2] ) {	/* Subtype gives dimension */
 		case 0:
 			return(TraceN(term,params,num,level));
 		case 4:
@@ -1765,15 +1825,15 @@ TraceFind ARG2(WORD *,term,WORD *,params)
 	if ( spinline < 0 ) {	/* $ variable. Evaluate */
 		sp = DolToIndex(-spinline);
 		if ( AR.ErrorInDollar || sp < 0 ) {
-/*
-			MesPrint("$%s does not have an index value",
-				DOLLARNAME(Dollars,-spinline));
-*/
+			LOCK(ErrorMessageLock);
+			MesPrint("$%s does not have an index value in trace statement in module %l",
+				DOLLARNAME(Dollars,-spinline),AC.CModule);
+			UNLOCK(ErrorMessageLock);
 			return(0);
 		}
 		spinline = sp;
 	}
-	to = AR.TMout;
+	to = AT.TMout;
 	to++;
 	*to++ = TAKETRACE;
 	*to++ = type;
@@ -1783,7 +1843,7 @@ TraceFind ARG2(WORD *,term,WORD *,params)
 	p = term;
 	m = p + *p - 1;
 	stop = m - ABS(*m);
-	termout = m = AR.WorkPointer;
+	termout = m = AT.WorkPointer;
 	m++;
 	p++;
 	while ( p < stop ) {
@@ -1794,36 +1854,36 @@ TraceFind ARG2(WORD *,term,WORD *,params)
 				*m++ = SUBEXPSIZE;
 				*m++ = -1;
 				*m++ = 1;
-				*m++ = AR.cbufnum;
+				*m++ = DUMMYBUFFER;
 				FILLSUB(m)
 				first = 0;
 			}
 			p += FUNHEAD+1;
 			while ( p < stop2 ) {
 				if ( *p == GAMMA5 ) {
-					if ( AR.TMout[3] == GAMMA5 ) AR.TMout[3] = GAMMA1;
-					else if ( AR.TMout[3] == GAMMA1 ) AR.TMout[3] = GAMMA5;
-					else if ( AR.TMout[3] == GAMMA7 ) AR.TMout[5] = -AR.TMout[5];
-					if ( number & 1 ) AR.TMout[5] = - AR.TMout[5];
+					if ( AT.TMout[3] == GAMMA5 ) AT.TMout[3] = GAMMA1;
+					else if ( AT.TMout[3] == GAMMA1 ) AT.TMout[3] = GAMMA5;
+					else if ( AT.TMout[3] == GAMMA7 ) AT.TMout[5] = -AT.TMout[5];
+					if ( number & 1 ) AT.TMout[5] = - AT.TMout[5];
 					p++;
 				}
 				else if ( *p == GAMMA6 ) {
 					if ( number & 1 ) goto F7;
-F6:					if ( AR.TMout[3] == GAMMA6 ) (AR.TMout[4])++;
-					else if ( AR.TMout[3] == GAMMA1 ) AR.TMout[3] = GAMMA6;
-					else if ( AR.TMout[3] == GAMMA5 ) AR.TMout[3] = GAMMA6;
-					else if ( AR.TMout[3] == GAMMA7 ) AR.TMout[5] = 0;
+F6:					if ( AT.TMout[3] == GAMMA6 ) (AT.TMout[4])++;
+					else if ( AT.TMout[3] == GAMMA1 ) AT.TMout[3] = GAMMA6;
+					else if ( AT.TMout[3] == GAMMA5 ) AT.TMout[3] = GAMMA6;
+					else if ( AT.TMout[3] == GAMMA7 ) AT.TMout[5] = 0;
 					p++;
 				}
 				else if ( *p == GAMMA7 ) {
 					if ( number & 1 ) goto F6;
-F7:					if ( AR.TMout[3] == GAMMA7 ) (AR.TMout[4])++;
-					else if ( AR.TMout[3] == GAMMA1 ) AR.TMout[3] = GAMMA7;
-					else if ( AR.TMout[3] == GAMMA5 ) {
-						AR.TMout[3] = GAMMA7;
-						AR.TMout[5] = -AR.TMout[5];
+F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
+					else if ( AT.TMout[3] == GAMMA1 ) AT.TMout[3] = GAMMA7;
+					else if ( AT.TMout[3] == GAMMA5 ) {
+						AT.TMout[3] = GAMMA7;
+						AT.TMout[5] = -AT.TMout[5];
 					}
-					else if ( AR.TMout[3] == GAMMA6 ) AR.TMout[5] = 0;
+					else if ( AT.TMout[3] == GAMMA6 ) AT.TMout[5] = 0;
 					p++;
 				}
 				else {
@@ -1837,7 +1897,7 @@ F7:					if ( AR.TMout[3] == GAMMA7 ) (AR.TMout[4])++;
 		}
 	}
 	if ( first ) return(0);
-	AR.TMout[0] = WORDDIF(to,AR.TMout);
+	AT.TMout[0] = WORDDIF(to,AT.TMout);
 	to = term;
 	to += *to;
 	while ( p < to ) *m++ = *p++;
@@ -1845,12 +1905,12 @@ F7:					if ( AR.TMout[3] == GAMMA7 ) (AR.TMout[4])++;
 	to = term;
 	p = termout;
 	do { *to++ = *p++; } while ( p < m );
-	AR.WorkPointer = term + *term;
+	AT.WorkPointer = term + *term;
 	return(1);
 }
 
 /*
- 		#] TraceFind : 
+ 		#] TraceFind :
  		#[ Chisholm :			WORD Chisholm(term,level,num)
 
 		Routines for reorganizing traces.
@@ -1874,7 +1934,7 @@ Chisholm ARG2(WORD *,term,WORD,level)
 /*
   	#[ Find : Find possible matrices
 */
-	mat = matpoint = AR.WorkPointer;
+	mat = matpoint = AT.WorkPointer;
 	t = term;
 	r = t + *t - 1; r -= ABS(*r);
 	t++;
@@ -1900,7 +1960,7 @@ Chisholm ARG2(WORD *,term,WORD,level)
 	}
 	if ( ( i & 1 ) != 0 ) return(0);	/* odd trace */
 /*
-  	#] Find : 
+  	#] Find :
   	#[ Test : Test for contracted index
 
 	This code should be modified.
@@ -2034,19 +2094,19 @@ Chisholm ARG2(WORD *,term,WORD,level)
 							t = termout;
 							j = *termout;
 							NCOPY(m,t,j);
-							AR.WorkPointer = m;
+							AT.WorkPointer = m;
 							if ( Generator(t,level) ) goto ChisCall;
 
 							j = WORDDIF(termout,mat)-1;
 							t = matpoint;
 							m = t + j;
-							AR.WorkPointer = rr;
+							AT.WorkPointer = rr;
 							while ( m > t ) {
 								i = *--m; *m = *t; *t++ = i;
 							}
 
 							if ( Generator(termout,level) ) goto ChisCall;
-							AR.WorkPointer = mat;
+							AT.WorkPointer = mat;
 
 							goto NextK;
 						}
@@ -2064,7 +2124,11 @@ NextK:;
   	#] Do :
 */
 ChisCall:
-	if ( AM.tracebackflag ) MesCall("Chisholm");
+	if ( AM.tracebackflag ) {
+		LOCK(ErrorMessageLock);
+		MesCall("Chisholm");
+		UNLOCK(ErrorMessageLock);
+	}
 	return(-1);
 }
 
@@ -2087,20 +2151,26 @@ TenVecFind ARG2(WORD *,term,WORD *,params)
 			if ( thevector > 0 ) {
 				thetensor = DolToTensor(thevector);
 				if ( thetensor < FUNCTION ) {
-					MesPrint("$%s should have been a tensor"
-					,AC.dollarnames->namebuffer+Dollars[params[4]].name);
+					LOCK(ErrorMessageLock);
+					MesPrint("$%s should have been a tensor in module %l"
+						,DOLLARNAME(Dollars,params[4]),AC.CModule);
+					UNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				thevector = DolToVector(-params[3]);
 				if ( thevector >= 0 ) {
-					MesPrint("$%s should have been a vector"
-					,AC.dollarnames->namebuffer+Dollars[-params[3]].name);
+					LOCK(ErrorMessageLock);
+					MesPrint("$%s should have been a vector in module %l"
+						,DOLLARNAME(Dollars,-params[3]),AC.CModule);
+					UNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 			}
 			else {
-				MesPrint("$%s should have been a tensor"
-				,AC.dollarnames->namebuffer+Dollars[-params[3]].name);
+				LOCK(ErrorMessageLock);
+				MesPrint("$%s should have been a tensor in module %l"
+					,DOLLARNAME(Dollars,-params[3]),AC.CModule);
+				UNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 		}
@@ -2108,8 +2178,10 @@ TenVecFind ARG2(WORD *,term,WORD *,params)
 	if ( thevector > 0 ) {	/* $-expression */
 		thevector = DolToVector(thevector);
 		if ( thevector >= 0 ) {
-			MesPrint("$%s should have been a vector"
-			,AC.dollarnames->namebuffer+Dollars[params[4]].name);
+			LOCK(ErrorMessageLock);
+			MesPrint("$%s should have been a vector in module %l"
+				,DOLLARNAME(Dollars,params[4]),AC.CModule);
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -2184,18 +2256,18 @@ TenVecFind ARG2(WORD *,term,WORD *,params)
 	}
 	return(0);
 match:
-	AR.TMout[0] = 5;
-	AR.TMout[1] = TENVEC;
-	AR.TMout[2] = thetensor;
-	AR.TMout[3] = thevector;
-	AR.TMout[4] = mode;
-	if ( ( mode & 8 ) != 0 ) { AR.TMout[0] = 6; AR.TMout[5] = params[6]; }
+	AT.TMout[0] = 5;
+	AT.TMout[1] = TENVEC;
+	AT.TMout[2] = thetensor;
+	AT.TMout[3] = thevector;
+	AT.TMout[4] = mode;
+	if ( ( mode & 8 ) != 0 ) { AT.TMout[0] = 6; AT.TMout[5] = params[6]; }
 	return(1);
 
 }
 
 /*
- 		#] TenVecFind : 
+ 		#] TenVecFind :
  		#[ TenVec :				WORD TenVec(term,params,num,level)
 */
 
@@ -2207,11 +2279,11 @@ TenVec ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	thetensor = params[2];
 	thevector = params[3];
 	mode = params[4];
-	termout = AR.WorkPointer;
+	termout = AT.WorkPointer;
 	DumNow = AR.CurDum = DetCurDum(term);
 	if ( ( mode & 1 ) != 0 ) {  /* Vector to tensor */
-		AR.WorkPointer += *term;
-		ou = outlist = AR.WorkPointer;
+		AT.WorkPointer += *term;
+		ou = outlist = AT.WorkPointer;
 		GETSTOP(term,tstop);
 		t = term + 1;
 		m = termout + 1;
@@ -2374,19 +2446,23 @@ docopy:
 		while ( t < w ) *m++ = *t++;
 	}
 	*termout = WORDDIF(m,termout);
-	AR.WorkPointer = m;
-	*AR.TMout = 0;
+	AT.WorkPointer = m;
+	*AT.TMout = 0;
 	if ( Generator(termout,level) ) goto fromTenVec;
 	AR.CurDum = DumNow;
-	AR.WorkPointer = termout;
+	AT.WorkPointer = termout;
 	return(0);
 fromTenVec:
-	if ( AM.tracebackflag ) MesCall("TenVec");
+	if ( AM.tracebackflag ) {
+		LOCK(ErrorMessageLock);
+		MesCall("TenVec");
+		UNLOCK(ErrorMessageLock);
+	}
 	return(-1);
 }
 
 /*
- 		#] TenVec : 
+ 		#] TenVec :
   	#] Operations :
 */
 

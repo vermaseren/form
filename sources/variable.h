@@ -14,6 +14,9 @@ extern LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/);
 /*:[15apr2004 mt]*/
 
 extern ALLGLOBALS A;
+#ifdef WITHPTHREADS
+extern ALLPRIVATES *AB;
+#endif
 extern WORD *currentTerm;
 extern WORD *listinprint;
 extern WORD numlistinprint;
@@ -22,6 +25,8 @@ extern FIXEDGLOBALS FG;
 extern FIXEDSET fixedsets[];
 
 extern char *setupfilename;
+
+EXTERNLOCK(ErrorMessageLock);
 
 #ifdef VMS
 #include <stdio.h>
@@ -36,9 +41,9 @@ extern FILE **FileStructs;
 #define DoLoops ((DOLOOP *)(AP.LoopList.lijst))
 #define NumDoLoops AP.LoopList.num
 #define MaxDoLoops AP.LoopList.maxnum
-#define PreVar ((PREVAR *)(AR.PreVarList.lijst))
-#define NumPre AR.PreVarList.num
-#define MaxNumPre AR.PreVarList.maxnum
+#define PreVar ((PREVAR *)(AP.PreVarList.lijst))
+#define NumPre AP.PreVarList.num
+#define MaxNumPre AP.PreVarList.maxnum
 /*
 #define Descriptor ((DESCRIPTORLIST *)(A.DescriptorList.lijst))
 #define NumDescr A.DescriptorList.num
@@ -67,8 +72,8 @@ extern FILE **FileStructs;
 #define cbuf ((CBUF *)(AC.cbufList.lijst))
 #define channels ((CHANNEL *)(AC.ChannelList.lijst))
 #define NumOutputChannels AC.ChannelList.num
-#define Dollars ((DOLLARS)(AR.DollarList.lijst))
-#define NumDollars AR.DollarList.num
+#define Dollars ((DOLLARS)(AP.DollarList.lijst))
+#define NumDollars AP.DollarList.num
 #define Dubious ((DUBIOUSV)(AC.DubiousList.lijst))
 #define NumDubious AC.DubiousList.num
 #define Expressions ((EXPRESSIONS)(AC.ExpressionList.lijst))
@@ -83,30 +88,24 @@ extern FILE **FileStructs;
 
 #define BUG A.bug;
 
-#define AB A.B
+#ifdef WITHPTHREADS
 #define AC A.C
-#define AD A.D
-#define AE A.E
-#define AF A.F
-#define AG A.G
-#define AH A.H
-#define AI A.I
-#define AJ A.J
-#define AK A.K
-#define AL A.L
 #define AM A.M
 #define AN A.N
 #define AO A.O
 #define AP A.P
-#define AQ A.Q
+#define AR AB[identity].R
+#define AS A.S
+#define AT AB[identity].T
+#else
+#define AC A.C
+#define AM A.M
+#define AN A.N
+#define AO A.O
+#define AP A.P
 #define AR A.R
 #define AS A.S
 #define AT A.T
-#define AU A.U
-#define AV A.V
-#define AW A.W
-#define AX A.X
-#define AY A.Y
-#define AZ A.Z
+#endif
 
 #endif

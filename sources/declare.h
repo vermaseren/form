@@ -1,6 +1,9 @@
 #ifndef __FDECLARE__
 
 #define __FDECLARE__
+/*
+  	#[ ARG definitions :
+*/
 
 #ifdef ANSI
 /*
@@ -58,9 +61,9 @@
 #define DECLARE(x,y) x();
 
 #endif
-
 /*
-		First the macros
+  	#] ARG definitions :
+  	#[ Macro's :
 */
 
 #define MaX(x,y) ((x) > (y) ? (x): (y))
@@ -194,11 +197,7 @@
  
 #define PREV(x) prevorder?prevorder:x
 
-#ifdef DEBUGVERSION
-#define SETERROR(x) { AR.ErrorCondition = 1; if ( x ) return(x); }
-#else
 #define SETERROR(x) { Terminate(-1); return(-1); }
-#endif
 
 #ifdef _FILE_OFFSET_BITS
 #if _FILE_OFFSET_BITS==64
@@ -260,12 +259,40 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #define Add5Com(x1,x2,x3,x4) { WORD cod[5]; cod[0] = x1; cod[1] = 5; \
    cod[2] = x2; cod[3] = x3; cod[4] = x4; AddNtoL(5,cod); }
 
-#define WantAddPointers(x) while((AR.pWorkPointer+(x))>AR.pWorkSize)\
-	ExpandBuffer((void **)(&AR.pWorkSpace),&AR.pWorkSize,sizeof(WORD *))
-#define WantAddLongs(x) while((AR.lWorkPointer+(x))>AR.lWorkSize)\
-	ExpandBuffer((void **)(&AR.lWorkSpace),&AR.lWorkSize,sizeof(LONG))
-#define WantAddPositions(x) while((AR.posWorkPointer+(x))>AR.posWorkSize)\
-	ExpandBuffer((void **)(&AR.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
+#define WantAddPointers(x) while((AT.pWorkPointer+(x))>AT.pWorkSize)\
+	ExpandBuffer((void **)(&AT.pWorkSpace),&AT.pWorkSize,sizeof(WORD *))
+#define WantAddLongs(x) while((AT.lWorkPointer+(x))>AT.lWorkSize)\
+	ExpandBuffer((void **)(&AT.lWorkSpace),&AT.lWorkSize,sizeof(LONG))
+#define WantAddPositions(x) while((AT.posWorkPointer+(x))>AT.posWorkSize)\
+	ExpandBuffer((void **)(&AT.posWorkSpace),&AT.posWorkSize,sizeof(POSITION))
+
+/*
+  	#] Macro's :
+  	#[ Thread objects :
+*/
+
+#ifdef WITHPTHREADS
+
+#define EXTERNLOCK(x) extern pthread_mutex_t x
+#define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER
+#define LOCK(x)       pthread_mutex_lock(&(x))
+#define UNLOCK(x)     pthread_mutex_unlock(&(x))
+#define GETIDENTITY   int identity = WhoAmI()
+
+#else
+
+#define EXTERNLOCK(x)
+#define INILOCK(x)
+#define LOCK(x) 
+#define UNLOCK(x)
+#define GETIDENTITY
+
+#endif
+
+/*
+  	#] Thread objects :
+  	#[ Declarations :
+*/
 
 DECLARE(UBYTE *CodeToLine,(WORD,UBYTE *))
 DECLARE(INDEXENTRY *FindInIndex,(WORD,FILEDATA *,WORD))
@@ -1026,7 +1053,6 @@ DECLARE(int DoSlavePatch,(UBYTE *))
 DECLARE(int FlipTable,(FUNCTIONS,int))
 DECLARE(int ChainIn,(WORD *,WORD,WORD))
 DECLARE(int ChainOut,(WORD *,WORD,WORD))
-#endif
 
 void *mmalloc(size_t size,char *message);
 char *str_dup(char *str);
@@ -1084,6 +1110,14 @@ DECLARE(LONG GetInputGZIP,(FILEHANDLE *,int))
 DECLARE(LONG FillInputGZIP,(FILEHANDLE *,POSITION *,UBYTE *,LONG,int))
 #endif
 
+#ifdef WITHPTHREADS
+DECLARE(int WhoAmI,ARG0)
+DECLARE(int StartAllThreads,(int))
+DECLARE(int GetAvailable,ARG0)
+DECLARE(void WakeupThread,(int,int))
+DECLARE(int MasterWait,ARG0)
+#endif
+
 /*[12dec2003 mt]:*/
 DECLARE(int set_in,(UBYTE, set_of_char))
 DECLARE(one_byte set_set,(UBYTE, set_of_char))
@@ -1101,6 +1135,13 @@ DECLARE(int selectExternalChannel,(int))
 DECLARE(int getCurrentExternalChannel,(VOID))
 DECLARE(VOID closeAllExternalChannels,(VOID))
 /*:[14apr2004 mt]*/
+
+DECLARE(int writexactly,(int,char *,size_t))
+
+/*
+  	#] Declarations :
+*/
+#endif
 
 /* temporary commentary for forcing cvs merge */
 

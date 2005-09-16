@@ -69,7 +69,7 @@ We have to revise the code for the second case.
 				*m++ = SUBEXPSIZE;
 				*m++ = -1;
 				*m++ = 1;
-				*m++ = AR.cbufnum;
+				*m++ = DUMMYBUFFER;
 				FILLSUB(m)
 				*term += SUBEXPSIZE-4;
 			}
@@ -79,7 +79,7 @@ We have to revise the code for the second case.
 				*m++ = SUBEXPSIZE;
 				*m++ = -1;
 				*m++ = 1;
-				*m++ = AR.cbufnum;
+				*m++ = DUMMYBUFFER;
 				FILLSUB(m)
 				t = term;
 				t += *t;
@@ -87,7 +87,7 @@ We have to revise the code for the second case.
 				r = m + 6-SUBEXPSIZE;
 				do { *m++ = *r++; } while ( r < t );
 			}
-			t = AR.TMout;			/* Load up the TM out array for the generator */
+			t = AT.TMout;			/* Load up the TM out array for the generator */
 			*t++ = 7;
 			*t++ = RATIO;
 			*t++ = x1;
@@ -129,7 +129,7 @@ We have to revise the code for the second case.
 						}
 		x1^n1*x2^-n2:	Same but x3 -> -x3.
 
-		The contents of the AR.TMout/params array are:
+		The contents of the AT.TMout/params array are:
 		length,type,x1,x2,x3,n1,n2
 
 */
@@ -143,7 +143,7 @@ RatioGen ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	WORD x1,x2,x3;
 	UWORD *coef;
 	WORD ncoef, sign = 0;
-	coef = (UWORD *)AR.WorkPointer;
+	coef = (UWORD *)AT.WorkPointer;
 	t = term;
 	tstops[2] = m = t + *t;
 	m -= ABS(m[-1]);
@@ -180,7 +180,7 @@ PosNeg:
 		if ( n2 <= n1 ) {	/* x1 -> x2 + x3 */
 			*coef = 1;
 			ncoef = 1;
-			AR.WorkPointer = (WORD *)(coef + 1);
+			AT.WorkPointer = (WORD *)(coef + 1);
 			j = n2;
 			for ( i = 0; i <= n2; i++ ) {
 				if ( BinomGen(term,level,tstops,x1,x3,n2-n1-i,i,sign&i
@@ -189,10 +189,10 @@ PosNeg:
 					if ( Product(coef,&ncoef,j) ) goto RatioCall;
 					if ( Quotient(coef,&ncoef,i+1) ) goto RatioCall;
 					j--;
-					AR.WorkPointer = (WORD *)(coef + ABS(ncoef));
+					AT.WorkPointer = (WORD *)(coef + ABS(ncoef));
 				}
 			}
-			AR.WorkPointer = (WORD *)(coef);
+			AT.WorkPointer = (WORD *)(coef);
 			return(0);
 		}
 		else {
@@ -202,7 +202,7 @@ PosNeg:
 */
 			*coef = 1;
 			ncoef = 1;
-			AR.WorkPointer = (WORD *)(coef + 1);
+			AT.WorkPointer = (WORD *)(coef + 1);
 			j = n2 - n1;
 			for ( i = 0; i <= j; i++ ) {
 				if ( BinomGen(term,level,tstops,x2,x3,n2-n1-i,i,sign&i
@@ -210,12 +210,12 @@ PosNeg:
 				if ( i < j ) {
 					if ( Product(coef,&ncoef,n1+i) ) goto RatioCall;
 					if ( Quotient(coef,&ncoef,i+1) ) goto RatioCall;
-					AR.WorkPointer = (WORD *)(coef + ABS(ncoef));
+					AT.WorkPointer = (WORD *)(coef + ABS(ncoef));
 				}
 			}
 			*coef = 1;
 			ncoef = 1;
-			AR.WorkPointer = (WORD *)(coef + 1);
+			AT.WorkPointer = (WORD *)(coef + 1);
 			j = n1-1;
 			for ( i = 0; i <= j; i++ ) {
 				if ( BinomGen(term,level,tstops,x1,x3,i-n1,n2-i,sign&(n2-i)
@@ -223,10 +223,10 @@ PosNeg:
 				if ( i < j ) {
 					if ( Product(coef,&ncoef,n2-i) ) goto RatioCall;
 					if ( Quotient(coef,&ncoef,i+1) ) goto RatioCall;
-					AR.WorkPointer = (WORD *)(coef + ABS(ncoef));
+					AT.WorkPointer = (WORD *)(coef + ABS(ncoef));
 				}
 			}
-			AR.WorkPointer = (WORD *)(coef);
+			AT.WorkPointer = (WORD *)(coef);
 			return(0);
 		}
 	}
@@ -241,7 +241,7 @@ PosNeg:
 */
 		*coef = 1;
 		ncoef = 1;
-		AR.WorkPointer = (WORD *)(coef + 1);
+		AT.WorkPointer = (WORD *)(coef + 1);
 		j = n1-1;
 		for ( i = 0; i <= j; i++ ) {
 			if ( BinomGen(term,level,tstops,x1,x3,i-n1,-n2-i,i&1
@@ -249,12 +249,12 @@ PosNeg:
 			if ( i < j ) {
 				if ( Product(coef,&ncoef,n2+i) ) goto RatioCall;
 				if ( Quotient(coef,&ncoef,i+1) ) goto RatioCall;
-				AR.WorkPointer = (WORD *)(coef + ABS(ncoef));
+				AT.WorkPointer = (WORD *)(coef + ABS(ncoef));
 			}
 		}
 		*coef = 1;
 		ncoef = 1;
-		AR.WorkPointer = (WORD *)(coef + 1);
+		AT.WorkPointer = (WORD *)(coef + 1);
 		j = n2-1;
 		for ( i = 0; i <= j; i++ ) {
 			if ( BinomGen(term,level,tstops,x2,x3,i-n2,-n1-i,n1&1
@@ -262,15 +262,17 @@ PosNeg:
 			if ( i < j ) {
 				if ( Product(coef,&ncoef,n1+i) ) goto RatioCall;
 				if ( Quotient(coef,&ncoef,i+1) ) goto RatioCall;
-				AR.WorkPointer = (WORD *)(coef + ABS(ncoef));
+				AT.WorkPointer = (WORD *)(coef + ABS(ncoef));
 			}
 		}
-		AR.WorkPointer = (WORD *)(coef);
+		AT.WorkPointer = (WORD *)(coef);
 		return(0);
 	}
 
 RatioCall:
+	LOCK(ErrorMessageLock);
 	MesCall("RatioGen");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -290,7 +292,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 	WORD *t, *r;
 	WORD *termout;
 	WORD k;
-	termout = AR.WorkPointer;
+	termout = AT.WorkPointer;
 	t = termout;
 	r = term;
 	do { *t++ = *r++; } while ( r < tstops[0] );
@@ -315,15 +317,22 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 	r = tstops[1];
 	do { *t++ = *r++; } while ( r < tstops[2] );
 	*termout = WORDDIF(t,termout);
-	AR.WorkPointer = t;
-	if ( AR.WorkPointer > AM.WorkTop ) return(MesWork());
+	AT.WorkPointer = t;
+	if ( AT.WorkPointer > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		return(-1);
+		UNLOCK(ErrorMessageLock);
+	}
 	*AR.RepPoint = 1;
-	AR.expchanged = 1;
+	AS.expchanged = 1;
 	if ( Generator(termout,level) ) {
+		LOCK(ErrorMessageLock);
 		MesCall("BinomGen");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
-	AR.WorkPointer = termout;
+	AT.WorkPointer = termout;
 	return(0);
 }
 
@@ -352,8 +361,8 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 WORD
 DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
-	WORD *termout, *t, extractbuff = AR.TMbuff;
-	WORD isum, ival, iinc, oldcbufnum = AR.cbufnum;
+	WORD *termout, *t, extractbuff = AT.TMbuff;
+	WORD isum, ival, iinc;
 	LONG from;
 	CBUF *C;
 	ival = params[3];
@@ -363,8 +372,13 @@ DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		isum = (params[4] - ival)/iinc + 1;
 	}
 	else return(0);
-	termout = AR.WorkPointer;
-	if ( ( AR.WorkPointer += AM.MaxTer ) > AM.WorkTop ) return(MesWork());
+	termout = AT.WorkPointer;
+	if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	t = term + 1;
 	while ( *t != SUBEXPRESSION || t[2] != replac || t[4] != extractbuff )
 					t += t[1];
@@ -383,17 +397,18 @@ DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		from = C->rhs[replac] - C->Buffer;
 		while ( C->Buffer[from] ) {
 			if ( InsertTerm(term,replac,extractbuff,C->Buffer+from,termout,0) < 0 ) goto SumF1Call;
-			AR.WorkPointer = termout + *termout;
+			AT.WorkPointer = termout + *termout;
 			if ( Generator(termout,level) < 0 ) goto SumF1Call;
 			from += C->Buffer[from];
 		}
 		ival += iinc;
 	} while ( --isum > 0 );
-	AR.WorkPointer = termout;
-	AR.cbufnum = oldcbufnum;
+	AT.WorkPointer = termout;
 	return(0);
 SumF1Call:
+	LOCK(ErrorMessageLock);
 	MesCall("DoSumF1");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -437,7 +452,9 @@ Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 	t -= ABS(nc2);
 	newer = WORDDIF(t,term1);
 	if ( MulRat((UWORD *)t,REDLENG(nc2),coef,ncoef,(UWORD *)t,&nc3) ) {
+		LOCK(ErrorMessageLock);
 		MesCall("Glue");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	i = (ABS(nc3))<<1;
@@ -470,8 +487,8 @@ Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 WORD
 DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
-	WORD *termout, *t, *from, *sub, *to, extractbuff = AR.TMbuff;
-	WORD isum, ival, iinc, insert, i, oldcbufnum = AR.cbufnum;
+	WORD *termout, *t, *from, *sub, *to, extractbuff = AT.TMbuff;
+	WORD isum, ival, iinc, insert, i;
 	CBUF *C;
 	ival = params[3];
 	iinc = params[5];
@@ -480,8 +497,13 @@ DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		isum = (params[4] - ival)/iinc + 1;
 	}
 	else return(0);
-	termout = AR.WorkPointer;
-	if ( ( AR.WorkPointer += AM.MaxTer ) > AM.WorkTop ) return(MesWork());
+	termout = AT.WorkPointer;
+	if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	t = term + 1;
 	while ( *t != SUBEXPRESSION || t[2] != replac || t[4] != extractbuff ) t += t[1];
 	insert = WORDDIF(t,term);
@@ -507,25 +529,31 @@ DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 	}
 	t[3] = ival;
 	for(;;) {
-		AR.WorkPointer = termout + *termout;
-		to = AR.WorkPointer;
-		if ( ( to + *termout ) > AM.WorkTop ) return(MesWork());
+		AT.WorkPointer = termout + *termout;
+		to = AT.WorkPointer;
+		if ( ( to + *termout ) > AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
 		from = termout;
 		i = *termout;
 		NCOPY(to,from,i);
-		from = AR.WorkPointer;
-		AR.WorkPointer = to;
+		from = AT.WorkPointer;
+		AT.WorkPointer = to;
 		if ( Generator(from,level) < 0 ) goto SumF2Call;
 		if ( --isum <= 0 ) break;
 		ival += iinc;
 		t[3] = ival;
 		if ( Glue(termout,C->rhs[replac],sub,insert) < 0 ) goto SumF2Call;
 	}
-	AR.WorkPointer = termout;
-	AR.cbufnum = oldcbufnum;
+	AT.WorkPointer = termout;
 	return(0);
 SumF2Call:
+	LOCK(ErrorMessageLock);
 	MesCall("DoSumF2");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 

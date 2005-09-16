@@ -36,7 +36,7 @@ DECLARE(int CheckTableDeclarations,(DBASE *))
 static UBYTE *tablebase = (UBYTE *)"tablebase";
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ ClearTableTree :
 */
 
@@ -59,7 +59,7 @@ void ClearTableTree ARG1(TABLES,T)
 }
 
 /*
-  	#] ClearTableTree : 
+  	#] ClearTableTree :
   	#[ InsTableTree :
 
 	int InsTableTree(TABLES T,WORD *,arglist)
@@ -215,7 +215,7 @@ balance:;
 }
 
 /*
-  	#] InsTableTree : 
+  	#] InsTableTree :
   	#[ RedoTableTree :
 
 	To be used when a sparse table is trimmed due to a .store
@@ -240,7 +240,7 @@ void RedoTableTree ARG2(TABLES,T,int,newsize)
 }
 
 /*
-  	#] RedoTableTree : 
+  	#] RedoTableTree :
   	#[ FindTableTree :
 
 	int FindTableTree(TABLES T,WORD *,arglist,int,inc)
@@ -284,7 +284,7 @@ int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
 }
 
 /*
-  	#] FindTableTree : 
+  	#] FindTableTree :
   	#[ DoTableExpansion :
 */
 
@@ -318,7 +318,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 /*
 	Table in T. Now collect the numbers of the symbols;
 */
-	termout = AR.WorkPointer;
+	termout = AT.WorkPointer;
 	if ( T->sparse ) {
 		for ( i = 0; i < T->totind; i++ ) {
 /*
@@ -379,7 +379,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 */
 			while ( mm < tstop ) *m++ = *mm++;
 			*termout = m - termout;
-			AR.WorkPointer = m;
+			AT.WorkPointer = m;
 			if ( Generator(termout,level) ) {
 				MesCall("DoTableExpand");
 				return(-1);
@@ -464,7 +464,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 */
 			while ( mm < tstop ) *m++ = *mm++;
 			*termout = m - termout;
-			AR.WorkPointer = m;
+			AT.WorkPointer = m;
 			if ( Generator(termout,level) ) {
 				MesCall("DoTableExpand");
 				return(-1);
@@ -514,7 +514,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 	If we put all our diagrams inside, we have to go outside the concept
 	of tables.
 
-  	#] TableBase : 
+  	#] TableBase :
   	#[ CoTableBase :
 
 	To be followed by ,subkey
@@ -574,7 +574,7 @@ proper:;
 }
 
 /*
-  	#] CoTableBase : 
+  	#] CoTableBase :
   	#[ FlipTable :
 
 	Flips the table between use as 'stub' and regular use
@@ -593,7 +593,7 @@ int FlipTable ARG2(FUNCTIONS,f,int,type)
 }
 
 /*
-  	#] FlipTable : 
+  	#] FlipTable :
   	#[ SpareTable :
 
 	Creates a spare element for a table. This is used in the table bases.
@@ -636,7 +636,7 @@ int SpareTable ARG1(TABLES,TT)
 }
 
 /*
-  	#] SpareTable : 
+  	#] SpareTable :
   	#[ FindTB :
 
 	Looks for a tablebase with the given name in the active tablebases.
@@ -654,7 +654,7 @@ DBASE *FindTB ARG1(UBYTE *,name)
 }
 
 /*
-  	#] FindTB : 
+  	#] FindTB :
   	#[ CoTBcreate :
 
 	Creates a new tablebase.
@@ -676,7 +676,7 @@ int CoTBcreate ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBcreate : 
+  	#] CoTBcreate :
   	#[ CoTBopen :
 */
 
@@ -693,7 +693,7 @@ int CoTBopen ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBopen : 
+  	#] CoTBopen :
   	#[ CoTBaddto :
 */
 
@@ -737,7 +737,7 @@ int CoTBaddto ARG1(UBYTE *,s)
 		*s = c;
 		if ( *s == '(' ) { /* Addition of single element */
 			s++; es = s;
-			for ( i = 0, w = AR.WorkPointer; i < T->numind; i++ ) {
+			for ( i = 0, w = AT.WorkPointer; i < T->numind; i++ ) {
 			  ParseSignedNumber(x,s);
 		      if ( FG.cTable[s[-1]] != 1 || ( *s != ',' && *s != ')' ) ) {
 				MesPrint("&Table arguments in TableBase addto statement should be numbers");
@@ -753,7 +753,7 @@ int CoTBaddto ARG1(UBYTE *,s)
 			  error = 1;
 			}
 			c = *s; *s = 0;
-			i = FindTableTree(T,AR.WorkPointer,1);
+			i = FindTableTree(T,AT.WorkPointer,1);
 			if ( i < 0 ) {
 				MesPrint("&Element %s has not been defined",es);
 				error = 1;
@@ -854,7 +854,7 @@ tableabort:;
 }
 
 /*
-  	#] CoTBaddto : 
+  	#] CoTBaddto :
   	#[ CoTBenter :
 
 	Loads the elements of the tables specified into memory and sends them
@@ -1003,7 +1003,7 @@ int CoTBenter ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBenter : 
+  	#] CoTBenter :
   	#[ CoTestUse :
 
 	Possibly to be followed by names of tables.
@@ -1018,7 +1018,7 @@ int CoTestUse ARG1(UBYTE *,s)
 	WORD type, funnum, *w;
 	TABLES T;
 	int error = 0;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	*w++ = TYPETESTUSE; *w++ = 2;
 	while ( *s ) {
 		tablename = s;
@@ -1037,18 +1037,18 @@ int CoTestUse ARG1(UBYTE *,s)
 		*s = c;
 		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 	}
-	AR.WorkPointer[1] = w - AR.WorkPointer;
+	AT.WorkPointer[1] = w - AT.WorkPointer;
 /*
-	if ( AR.WorkPointer[1] > 2 ) {
-		AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	if ( AT.WorkPointer[1] > 2 ) {
+		AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	}
 */
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	return(error);
 }
 
 /*
-  	#] CoTestUse : 
+  	#] CoTestUse :
   	#[ CheckTableDeclarations :
 
 		Checks that all tables in a tablebase  have identical properties to
@@ -1116,7 +1116,7 @@ int CheckTableDeclarations ARG1(DBASE *,d)
 }
 
 /*
-  	#] CheckTableDeclarations : 
+  	#] CheckTableDeclarations :
   	#[ CoTBload :
 
 		Loads the table stubbs of the specified tables in the indicated
@@ -1269,7 +1269,7 @@ finishup:;
 }
 
 /*
-  	#] CoTBload : 
+  	#] CoTBload :
   	#[ TestUse :
 
 	Look for tbl_(tablename,arguments)
@@ -1336,7 +1336,7 @@ WORD TestUse ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] TestUse : 
+  	#] TestUse :
   	#[ CoTBaudit :
 */
 
@@ -1376,7 +1376,7 @@ int CoTBaudit ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBaudit : 
+  	#] CoTBaudit :
   	#[ CoTBon :
 */
 
@@ -1407,7 +1407,7 @@ int CoTBon ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBon : 
+  	#] CoTBon :
   	#[ CoTBoff :
 */
 
@@ -1438,7 +1438,7 @@ int CoTBoff ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBoff : 
+  	#] CoTBoff :
   	#[ CoTBcleanup :
 */
 
@@ -1449,7 +1449,7 @@ int CoTBcleanup ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBcleanup : 
+  	#] CoTBcleanup :
   	#[ CoTBreplace :
 */
 
@@ -1460,7 +1460,7 @@ int CoTBreplace ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBreplace : 
+  	#] CoTBreplace :
   	#[ CoTBuse :
 
 	Here the actual table use as determined in TestUse causes the needed
@@ -1506,11 +1506,11 @@ int CoTBuse ARG1(UBYTE *,s)
 					Now translate the arguments and see whether we need
 					this one....
 */
-					for ( k = 0, w = AR.WorkPointer; k < T->numind; k++ ) {
+					for ( k = 0, w = AT.WorkPointer; k < T->numind; k++ ) {
 						ParseSignedNumber(x,p);
 						*w++ = x; p++;
 					}
-					sum = FindTableTree(T,AR.WorkPointer,1);
+					sum = FindTableTree(T,AT.WorkPointer,1);
 					if ( sum < 0 ) {
 						MesPrint("Table %s in tablebase %s has not been loaded properly"
 								,tablename,tablebasename);
@@ -1590,11 +1590,11 @@ int CoTBuse ARG1(UBYTE *,s)
 					Now translate the arguments and see whether we need
 					this one....
 */
-					for ( k = 0, w = AR.WorkPointer; k < T->numind; k++ ) {
+					for ( k = 0, w = AT.WorkPointer; k < T->numind; k++ ) {
 						ParseSignedNumber(x,p);
 						*w++ = x; p++;
 					}
-					sum = FindTableTree(T,AR.WorkPointer,1);
+					sum = FindTableTree(T,AT.WorkPointer,1);
 					if ( sum < 0 ) {
 						MesPrint("Table %s in tablebase %s has not been loaded properly"
 								,tablename,tablebasename);
@@ -1653,7 +1653,7 @@ int CoTBuse ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBuse : 
+  	#] CoTBuse :
   	#[ CoApply :
 
 	Possibly to be followed by names of tables.
@@ -1666,7 +1666,7 @@ int CoApply ARG1(UBYTE *,s)
 	TABLES T;
 	long maxtogo = MAXPOSITIVE;
 	int error = 0;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	if ( FG.cTable[*s] == 1 ) {
 		maxtogo = 0;
 		while ( FG.cTable[*s] == 1 ) {
@@ -1694,16 +1694,16 @@ int CoApply ARG1(UBYTE *,s)
 		*s = c;
 		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 	}
-	AR.WorkPointer[1] = w - AR.WorkPointer;
+	AT.WorkPointer[1] = w - AT.WorkPointer;
 /*
-	if ( AR.WorkPointer[1] > 2 ) {
-		AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	if ( AT.WorkPointer[1] > 2 ) {
+		AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	}
 */
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 /*
-	AR.WorkPointer[0] = TYPEAPPLYRESET;
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AT.WorkPointer[0] = TYPEAPPLYRESET;
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 */
 	return(error);
 }
@@ -1753,7 +1753,7 @@ int CoTBhelp ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBhelp : 
+  	#] CoTBhelp :
   	#[ ReWorkT :
 
 	Replaces the STUBBS of the functions in the list.
@@ -1837,7 +1837,7 @@ inc:		j = t[1];
 }
 
 /*
-  	#] ReWorkT : 
+  	#] ReWorkT :
   	#[ Apply :
 */
 
@@ -1882,7 +1882,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] Apply : 
+  	#] Apply :
   	#[ ApplyExec :
 
 	Replaces occurrences of tbl_(table,indices,pattern) by the proper
@@ -2020,22 +2020,22 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		ClearWild();
 		AN.RepFunNum = 0;
 		AN.RepFunList = AR.EndNest;
-		oldwork = AR.WorkPointer;
-		AR.WorkPointer = AR.EndNest + (AM.MaxTer >> 1);
+		oldwork = AT.WorkPointer;
+		AT.WorkPointer = AR.EndNest + (AM.MaxTer >> 1);
 /*
 		The RepFunList is after the term but not very relevant.
 		We need because MatchFunction uses it
 */
-		if ( AR.WorkPointer + t1[1] >= AM.WorkTop ) { MesWork(); }
+		if ( AT.WorkPointer + t1[1] >= AT.WorkTop ) { MesWork(); }
 		wilds = 0;
-		w = AR.WorkPointer;
+		w = AT.WorkPointer;
 		*w++ = -t1[FUNHEAD];
 		*w++ = t1[1] - 1;
 		for ( i = 2; i < FUNHEAD; i++ ) *w++ = t1[i];
 		t = t1 + FUNHEAD+1;
 		while ( t < r ) *w++ = *t++;
-		t = AR.WorkPointer;
-		AR.WorkPointer = w;
+		t = AT.WorkPointer;
+		AT.WorkPointer = w;
 		if ( MatchFunction(T->pattern,t,&wilds) > 0 ) {
 /*
 			Here we caught one. Now we should worry about:
@@ -2092,18 +2092,18 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 			r = t1 + t1[1];
 			maxtogo--;
 			if ( maxtogo <= 0 ) {
-				AR.WorkPointer = oldwork;
+				AT.WorkPointer = oldwork;
 				return(maxtogo);
 			}
 		}
-		AR.WorkPointer = oldwork;
+		AT.WorkPointer = oldwork;
 		t = r;
 	}
 	return(maxtogo);
 }
 
 /*
-  	#] ApplyExec : 
+  	#] ApplyExec :
   	#[ ApplyReset :
 */
 
@@ -2139,7 +2139,7 @@ WORD ApplyReset ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] ApplyReset : 
+  	#] ApplyReset :
   	#[ TableReset :
 */
 
@@ -2157,12 +2157,12 @@ WORD TableReset ARG0
 }
 
 /*
-  	#] TableReset : 
+  	#] TableReset :
   	#[ LoadTableElement :
 ?????
 int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 {
 }
 
-  	#] LoadTableElement : 
+  	#] LoadTableElement :
 */

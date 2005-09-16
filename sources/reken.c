@@ -19,8 +19,18 @@ Pack ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
 	WORD c, sgn = 1, i;
 	UWORD *to,*from;
-	if ( (c = *na) == 0 ) { MesPrint("Caught a zero in Pack"); return; }
-	if ( nb == 0 ) { MesPrint("Division by zero in Pack"); return; }
+	if ( (c = *na) == 0 ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Caught a zero in Pack");
+		UNLOCK(ErrorMessageLock);
+		return;
+	}
+	if ( nb == 0 ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Division by zero in Pack");
+		UNLOCK(ErrorMessageLock);
+		return;
+	}
 	if ( *na < 0 ) { sgn = -sgn; c = -c; }
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
 	*na = MaX(c,nb);
@@ -106,7 +116,9 @@ Mully ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	if ( sgn < 0 ) *na = -*na;
 	return(0);
 MullyEr:
+	LOCK(ErrorMessageLock);
 	MesCall("Mully");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -132,7 +144,12 @@ Divvy ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	}
 	d = Dyscrat1;
 	e = Dyscrat2;
-	if ( !nb ) return(MesPrint("Division by zero in Divvy"));
+	if ( !nb ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Division by zero in Divvy");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
 	if ( *na < 0 ) { sgn = -sgn; *na = -*na; }
 	UnPack(a,*na,&adenom,&anumer);
@@ -145,7 +162,9 @@ Divvy ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	if ( sgn < 0 ) *na = -*na;
 	return(0);
 DivvyEr:
+	LOCK(ErrorMessageLock);
 	MesCall("Divvy");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -295,7 +314,9 @@ AddRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	Pack(c,nc,d,nd);
 	return(0);
 AddRer:
+	LOCK(ErrorMessageLock);
 	MesCall("AddRat");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -424,7 +445,9 @@ MulRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	if ( sgn < 0 ) *nc = -*nc;
 	return(0);
 MulRer:
+	LOCK(ErrorMessageLock);
 	MesCall("MulRat");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -441,7 +464,12 @@ DivRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
 	WORD i, j;
 	UWORD *xd,*xe,xx;
-	if ( !nb ) return(MesPrint("Rational division by zero"));
+	if ( !nb ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Rational division by zero");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	j = i = (nb >= 0)? nb: -nb;
 	xd = b; xe = b + i;
 	do { xx = *xd; *xd++ = *xe; *xe++ = xx; } while ( --j > 0 );
@@ -542,7 +570,9 @@ Simplify ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 	if ( sgn < 0 ) *na = -*na;
 	return(0);
 SimpErr:
+	LOCK(ErrorMessageLock);
 	MesCall("Simplify");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -569,7 +599,9 @@ WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	*na = INCLENG(numa);
 	return(0);
 AccErr:
+	LOCK(ErrorMessageLock);
 	MesCall("AccumLong");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -678,7 +710,12 @@ AddPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,UWORD *,nc)
 	}
 	if ( carry ) {
 		nd++;
-		if ( nd > (UWORD)AM.MaxTal ) return(MesPrint("Overflow in addition"));
+		if ( nd > (UWORD)AM.MaxTal ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Overflow in addition");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
 		*c++ = carry;
 	}
 	*nc = nd;
@@ -764,7 +801,10 @@ MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	if ( sgn < 0 ) *nc = -(*nc);
 	return(0);
 MulLov:
-	return(MesPrint("Overflow in Multiplication"));
+	LOCK(ErrorMessageLock);
+	MesPrint("Overflow in Multiplication");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 }
 
 /*
@@ -816,7 +856,12 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 	RLONG t, v;
 	UWORD *e, *f, *g, norm, estim;
 	RLONG esthelp;
-	if ( !nb ) return(MesPrint("Division by zero"));
+	if ( !nb ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Division by zero");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	if ( !na ) { *nc = *nd = 0; return(0); }
 	if ( na < 0 ) { sgn = -sgn; na = -na; }
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
@@ -917,6 +962,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 					estim++;
 					SubPLon(f+ni,nh,e,ne,f+ni,&nh);
 					if ( BigLong(f+ni,nh,e,ne) >= 0 ) {
+						LOCK(ErrorMessageLock);
 						MesPrint("Problems in DivLong");
 						AO.OutSkip = 3;
 						FiniLine();
@@ -927,6 +973,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 						while ( --i >= 0 ) { TalToLine((UWORD)(*b++)); TokenToLine((UBYTE *)"  "); }
 						AO.OutSkip = 0;
 						FiniLine();
+						UNLOCK(ErrorMessageLock);
 						return(-1);
 					}
 				}
@@ -959,7 +1006,10 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 					}
 				}
 				if ( t ) {
-					return(MesPrint("Error in DivLong"));
+					LOCK(ErrorMessageLock);
+					MesPrint("Error in DivLong");
+					UNLOCK(ErrorMessageLock);
+					return(-1);
 				}
 				if ( !*(d+nh-1) ) (*nd)--;
 			}
@@ -1023,7 +1073,9 @@ RaisPow ARG3(UWORD *,a,WORD *,na,UWORD,b)
 	if ( ( *na = i = ns ) > 0 ) NCOPY(a,is,i);
 	return(0);
 RaisOvl:
+	LOCK(ErrorMessageLock);
 	MesCall("RaisPow");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1050,7 +1102,12 @@ Product ARG3(UWORD *,a,WORD *,na,WORD,b)
 		t >>= BITSINWORD;
 	}
 	if ( t > 0 ) {
-		if ( ++(*na) > AM.MaxTal ) return(MesPrint("Overflow in Product"));
+		if ( ++(*na) > AM.MaxTal ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Overflow in Product");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
 		*a = (UWORD)t;
 	}
 	if ( sgn < 0 ) *na = -(*na);
@@ -1340,6 +1397,7 @@ out:
 	}
 /*
 	{
+		LOCK(ErrorMessageLock);
 		MesPrint("Ordered input, ja = %d",(WORD)ja);
 		AO.OutSkip = 3;
 		FiniLine();
@@ -1350,6 +1408,7 @@ out:
 		while ( --j >= 0 ) { TalToLine((UWORD)(*r++)); TokenToLine((UBYTE *)"  "); }
 		AO.OutSkip = 0;
 		FiniLine();
+		UNLOCK(ErrorMessageLock);
 	}
 */
 /*
@@ -1450,7 +1509,10 @@ WORD
 GcdLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
 	if ( !na || !nb ) {
-		return(MesPrint("Cannot take gcd"));
+		LOCK(ErrorMessageLock);
+		MesPrint("Cannot take gcd");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
@@ -1639,7 +1701,9 @@ lastbig:
 	}
 	return(0);
 GcdErr:
+	LOCK(ErrorMessageLock);
 	MesCall("GcdLong");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1665,12 +1729,16 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 	for ( j = 2; j <= i2; j++ ) {
 		GBscrat3[0] = i1+1-j;
 		if ( MulLong(a,*na,GBscrat3,(WORD)1,GBscrat4,&k) ) {
+			LOCK(ErrorMessageLock);
 			MesCall("GetBinom");
+			UNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 		GBscrat3[0] = j;
 		if ( DivLong(GBscrat4,k,GBscrat3,(WORD)1,a,na,GBscrat3,&l) ) {
+			LOCK(ErrorMessageLock);
 			MesCall("GetBinom");
+			UNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 	}
@@ -1780,7 +1848,9 @@ int TakeLongRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 	else          *n =  nb;
 	return(0);
 TLcall:
+	LOCK(ErrorMessageLock);
 	MesCall("TakeLongRoot");
+	UNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
 }
@@ -1794,9 +1864,9 @@ TLcall:
 	Compares the coefficients of term1 and term2 by subtracting them.
 	This does more work than needed but this routine is only called
 	when sorting functions and function arguments.
-
+	(and comparing values 
 */
-/* #define 64SAVE													  */
+/* #define 64SAVE */
 
 static UWORD *CCscratE = 0;
 
@@ -1839,14 +1909,16 @@ CompCoef ARG2(WORD *,term1,WORD *,term2)
 	strictly needed. Also more attention should be given to overflow.
 */
 	if ( AddRat((UWORD *)term1,n1,(UWORD *)term2,-n2,c,&n3) ) {
+		LOCK(ErrorMessageLock);
 		MesCall("CompCoef");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	return(n3);
 }
 
 /*
- 		#] CompCoef : 
+ 		#] CompCoef :
  		#[ Modulus :		WORD Modulus(term)
 
 	Routine takes the coefficient of term modulus b. The answer
@@ -1862,7 +1934,9 @@ Modulus ARG1(WORD *,term)
 	t = term;
 	GETCOEF(t,n1);
 	if ( TakeModulus((UWORD *)t,&n1,0) ) {
+		LOCK(ErrorMessageLock);
 		MesCall("Modulus");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	if ( !n1 ) {
@@ -1889,9 +1963,6 @@ Modulus ARG1(WORD *,term)
 
 */
 
-static UWORD *TMscrat1 = 0, *TMscrat2 = 0, *TMscrat3 = 0, *TMscrat4 = 0,
-		*TMscrat5 = 0, *TMscrat6 = 0;
-
 WORD
 TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 {
@@ -1906,21 +1977,22 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 	n1 = *na;
 	if ( !par ) UnPack(a,n1,&tdenom,&tnumer);
 	else { tnumer = n1; }
-	if ( TMscrat1 == 0 ) {
-		TMscrat1 = (UWORD *)Malloc1(6*(AM.MaxTal+2)*sizeof(UWORD),"TakeModulus");
-		TMscrat2 = TMscrat1 + AM.MaxTal+2;
-		TMscrat3 = TMscrat2 + AM.MaxTal+2;
-		TMscrat4 = TMscrat3 + AM.MaxTal+2;
-		TMscrat5 = TMscrat4 + AM.MaxTal+2;
-		TMscrat6 = TMscrat5 + AM.MaxTal+2;
+	if ( AT.TMscrat1 == 0 ) {
+		AT.TMscrat1 = (UWORD *)Malloc1(6*(AM.MaxTal+2)*sizeof(UWORD),"TakeModulus");
+		AT.TMscrat2 = AT.TMscrat1 + AM.MaxTal+2;
+		AT.TMscrat3 = AT.TMscrat2 + AM.MaxTal+2;
+		AT.TMscrat4 = AT.TMscrat3 + AM.MaxTal+2;
+		AT.TMscrat5 = AT.TMscrat4 + AM.MaxTal+2;
+		AT.TMscrat6 = AT.TMscrat5 + AM.MaxTal+2;
 	}
-	c = TMscrat1; d = TMscrat2; e = TMscrat3; f = TMscrat4; g = TMscrat5; h = TMscrat6;
+	c = AT.TMscrat1; d = AT.TMscrat2; e = AT.TMscrat3; f = AT.TMscrat4; g = AT.TMscrat5; h = AT.TMscrat6;
 	n1 = ABS(n1);
 	if ( DivLong(a,tnumer,(UWORD *)AC.cmod,nmod,
 		c,&nh,a,&tnumer) ) goto ModErr;
 	if ( par ) { *na = tnumer; return(0); }
 	if ( DivLong(a+n1,tdenom,(UWORD *)AC.cmod,nmod,c,&nh,a+n1,&tdenom) ) goto ModErr;
 	if ( !tdenom ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Division by zero in modulus arithmetic");
 		if ( AP.DebugFlag ) {
 			AO.OutSkip = 3;
@@ -1935,6 +2007,7 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 			AO.OutSkip = 0;
 			FiniLine();
 		}
+		UNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	x2 = (UWORD *)AC.cmod; x1 = c; i = nmod; while ( --i >= 0 ) *x1++ = *x2++;
@@ -1946,8 +2019,10 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 		if ( AddLong(x4,y4,x6,-y6,x6,&y6) ) goto ModErr;
 		if ( !y3 ) {
 			if ( y2 != 1 || *x2 != 1 ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("Inverse in modulus arithmetic doesn't exist");
 				MesPrint("Denominator and modulus are not relative prime");
+				UNLOCK(ErrorMessageLock);
 				goto ModErr;
 			}
 			break;
@@ -1966,7 +2041,9 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 	while ( --i > 0 ) *a++ = 0;
 	return(0);
 ModErr:
+	LOCK(ErrorMessageLock);
 	MesCall("TakeModulus");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1984,7 +2061,9 @@ MakeModTable()
 	n = ABS(AC.ncmod);
 	if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
 	if ( n > 2 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("&No memory for modulus generator power table");
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( n == 0 ) return(0);
@@ -2001,7 +2080,9 @@ MakeModTable()
 		}
 		for ( i = 2; i < size; i++ ) {
 			if ( AC.modpowers[i] == 0 ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("&improper generator for this modulus");
+				UNLOCK(ErrorMessageLock);
 				M_free(AC.modpowers,"AC.modpowers");
 				return(-1);
 			}
@@ -2031,7 +2112,9 @@ MakeModTable()
 		j = size << 1;
 		for ( i = 4; i < j; i+=2 ) {
 			if ( AC.modpowers[i] == 0 && AC.modpowers[i+1] == 0 ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("&improper generator for this modulus");
+				UNLOCK(ErrorMessageLock);
 				M_free(AC.modpowers,"AC.modpowers");
 				return(-1);
 			}
@@ -2043,7 +2126,7 @@ MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms : 
+  	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
@@ -2077,8 +2160,11 @@ Factorial ARG3(WORD,n,UWORD *,a,WORD *,na)
 		for ( j = AT.nfac+1; j <= n; j++ ) {
 			Product(a,&nc,j);
 			if ( nc > AM.MaxTal ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("Overflow in factorial. MaxTal = %d",AM.MaxTal);
-				return(MesPrint("Increase MaxTerm in %s",setupfilename));
+				MesPrint("Increase MaxTerm in %s",setupfilename);
+				UNLOCK(ErrorMessageLock);
+				return(-1);
 			}
 			if ( j > AT.mfac ) {  /* double the pfac buffer */
 				long *p;
@@ -2149,7 +2235,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 	if ( ( n & 1 ) != 0 ) { a[0] = a[1] = 0; *na = 0; return(0); }
 	nhalf = n/2;
 	if ( nhalf > AT.nBer ) {
-		oldworkpointer = AR.WorkPointer;
+		oldworkpointer = AT.WorkPointer;
 		if ( AT.bernoullis == 0 ) {
 			AT.nBer = 1; AT.mBer = 50; AT.sBer = 400;
 			AT.pBer = (long *)Malloc1((AT.mBer+2)*sizeof(long),"bernoullis");
@@ -2168,7 +2254,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 			M_free(AT.pBer,"factorial pointers"); AT.pBer = p; AT.mBer *= 2;
 		}
 		for ( n = AT.nBer+1; n <= nhalf; n++ ) {
-			scrib = (UWORD *)(AR.WorkPointer);
+			scrib = (UWORD *)(AT.WorkPointer);
 			nqua = n/2;
 			if ( ( n & 1 ) == 1 ) {
 				nscrib = 0; ntop = scrib;
@@ -2226,7 +2312,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 			for ( i = 1; i < i2; i++ ) *c++ = *b++;
 		}
 		AT.nBer = nhalf;
-		AR.WorkPointer = oldworkpointer;
+		AT.WorkPointer = oldworkpointer;
 	}
 	b = AT.bernoullis + AT.pBer[nhalf];
 	*na = i = (WORD)(*b++);

@@ -7,7 +7,7 @@
 static UWORD *EAscrat = 0;
 
 /*
-  	#] include : 
+  	#] include :
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -34,13 +34,13 @@ execarg ARG2(WORD *,term,WORD,level)
 	WORD *t, *r, *m, *v;
 	WORD *start, *stop, *rstop, *r1, *r2 = 0, *r3 = 0, *r4, *r5, *r6, *r7, *r8, *r9;
 	WORD *mm, *mstop, *mnext, *rnext, *rr, *factor, type, ngcd, nq;
-	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf+AT.ebufnum;
 	WORD i, j, k, oldnumlhs = C->numlhs, count, action = 0, olddefer = AR.DeferFlag;
 	WORD oldnumrhs = CC->numrhs, size, pow, ncom, jj;
-	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AR.pWorkPointer, lp;
-	WORD *oldwork = AR.WorkPointer, *oldwork2, scale, renorm;
+	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AT.pWorkPointer, lp;
+	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
 	WORD kLCM = 0, kGCD = 0, kkLCM = 0, jLCM = 0, jGCD;
-	AR.WorkPointer += *term;
+	AT.WorkPointer += *term;
 	start = C->lhs[level];
 	C->numlhs = start[2];
 	stop = start + start[1];
@@ -49,22 +49,24 @@ execarg ARG2(WORD *,term,WORD,level)
 	renorm = start[5];
 	start += TYPEARGHEADSIZE;
 	if ( renorm && start[1] != 0 ) {/* We have to evaluate $ symbols inside () */
-		t = start+1; factor = oldwork2 = v = AR.WorkPointer;
+		t = start+1; factor = oldwork2 = v = AT.WorkPointer;
 		i = *t; t++;
 		*v++ = i+3; i--; NCOPY(v,t,i);
 		*v++ = 1; *v++ = 1; *v++ = 3;
-		AR.WorkPointer = v;
+		AT.WorkPointer = v;
 		start = t; AC.Eside = LHSIDEX;
 		NewSort();
 		if ( Generator(factor,C->numlhs) ) {
 			LowerSortLevel();
-			AR.WorkPointer = oldwork;
+			AT.WorkPointer = oldwork;
 			return(-1);
 		}
-		AR.WorkPointer = v;
+		AT.WorkPointer = v;
 		if ( EndSort(factor,0) < 0 ) {}
 		if ( *factor && *(factor+*factor) != 0 ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("&$ in () does not evaluate into a single term");
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		AC.Eside = RHSIDE;
@@ -73,7 +75,7 @@ execarg ARG2(WORD *,term,WORD,level)
 			v -= ABS(v[-1]);
 			*factor = v-factor;
 		}
-		AR.WorkPointer = v;
+		AT.WorkPointer = v;
 	}
 	else {
 		if ( *start < 0 ) {
@@ -153,16 +155,16 @@ HaveTodo:
 				 || ( type == TYPESPLITLASTARG ) ) {
 					if ( *t > FUNCTION && *r > 0 ) {
 						WantAddPointers(2);
-						AR.pWorkSpace[AR.pWorkPointer++] = t;
-						AR.pWorkSpace[AR.pWorkPointer++] = r;
+						AT.pWorkSpace[AT.pWorkPointer++] = t;
+						AT.pWorkSpace[AT.pWorkPointer++] = r;
 					}
 					continue;
 				}
 				else if ( type == TYPESPLITARG2 ) {
 					if ( *t > FUNCTION && *r > 0 ) {
 						WantAddPointers(2);
-						AR.pWorkSpace[AR.pWorkPointer++] = t;
-						AR.pWorkSpace[AR.pWorkPointer++] = r;
+						AT.pWorkSpace[AT.pWorkPointer++] = t;
+						AT.pWorkSpace[AT.pWorkPointer++] = r;
 					}
 					continue;
 				}
@@ -172,58 +174,58 @@ HaveTodo:
 						mm = r + ARGHEAD; mstop = r + *r;
 						if ( mm + *mm < mstop ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						if ( *mm == 1+ABS(mstop[-1]) ) continue;
 						if ( mstop[-3] != 1 || mstop[-2] != 1
 							|| mstop[-1] != 3 ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						GETSTOP(mm,mstop); mm++;
 						if ( mm + mm[1] < mstop ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						if ( *mm == SYMBOL && ( mm[1] > 4 ||
 							( mm[3] != 1 && mm[3] != -1 ) ) ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						else if ( *mm == DOTPRODUCT && ( mm[1] > 5 ||
 							( mm[4] != 1 && mm[4] != -1 ) ) ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						else if ( ( *mm == DELTA || *mm == VECTOR )
 							 && mm[1] > 4 ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						}
 						else if ( factor && *factor == 4 && factor[2] == 1 ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 						else if ( factor && *factor == 0
 						&& *r == -SNUMBER && r[1] != 1 ) {
 							WantAddPointers(2);
-							AR.pWorkSpace[AR.pWorkPointer++] = t;
-							AR.pWorkSpace[AR.pWorkPointer++] = r;
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
 							continue;
 						}
 					}
@@ -450,8 +452,8 @@ HaveTodo:
                   	We generate a statement for addapting all terms in the
 					argument sucessively
 */
-					r4 = AddRHS(AR.ebufnum,1);
-					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AR.ebufnum,r4);
+					r4 = AddRHS(AT.ebufnum,1);
+					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4);
 					*r4++ = j+1;
 					i = (j-1)>>1;
 					for ( k = 0; k < i; k++ ) *r4++ = r3[i+k];
@@ -462,7 +464,7 @@ HaveTodo:
 					CC->rhs[CC->numrhs+1] = r4;
 					CC->Pointer = r4;
 					mulpat[5] = CC->numrhs;
-					mulpat[7] = AR.ebufnum;
+					mulpat[7] = AT.ebufnum;
 				}
 				r3 = r;
 				AR.DeferFlag = 0;
@@ -472,28 +474,28 @@ HaveTodo:
 					r2 = r + *r;
 					r += ARGHEAD;
 					while ( r < r2 ) {	/* Sum over the terms */
-						m = AR.WorkPointer;
+						m = AT.WorkPointer;
 						j = *r;
 						while ( --j >= 0 ) *m++ = *r++;
-						r1 = AR.WorkPointer;
-						AR.WorkPointer = m;
+						r1 = AT.WorkPointer;
+						AT.WorkPointer = m;
 /*
 						What to do with dummy indices?
 */
 						if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 							if ( MultDo(r1,mulpat) ) goto execargerr;
-							AR.WorkPointer = r1 + *r1;
+							AT.WorkPointer = r1 + *r1;
 						}
 						if ( Generator(r1,level) ) goto execargerr;
-						AR.WorkPointer = r1;
+						AT.WorkPointer = r1;
 					}
 				}
 				else {
 					r2 = r + (( *r <= -FUNCTION ) ? 1:2);
-					r1 = AR.WorkPointer;
+					r1 = AT.WorkPointer;
 					ToGeneral(r,r1,0);
 					m = r1 + ARGHEAD;
-					AR.WorkPointer = r1 + *r1;
+					AT.WorkPointer = r1 + *r1;
 					NewSort();
 					action = 1;
 /*
@@ -501,23 +503,23 @@ HaveTodo:
 */
 					if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 						if ( MultDo(m,mulpat) ) goto execargerr;
-						AR.WorkPointer = m + *m;
+						AT.WorkPointer = m + *m;
 					}
 					if ( Generator(m,level) ) goto execargerr;
-					AR.WorkPointer = r1;
+					AT.WorkPointer = r1;
 				}
-				if ( EndSort(AR.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
+				if ( EndSort(AT.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
 				AR.DeferFlag = olddefer;
 /*
 				Now shift the sorted entity over the old argument.
 */
-				m = AR.WorkPointer+ARGHEAD;
+				m = AT.WorkPointer+ARGHEAD;
 				while ( *m ) m += *m;
-				k = WORDDIF(m,AR.WorkPointer);
-				*AR.WorkPointer = k;
-				AR.WorkPointer[1] = 0;
-				if ( ToFast(AR.WorkPointer,AR.WorkPointer) ) {
-					if ( *AR.WorkPointer <= -FUNCTION ) k = 1;
+				k = WORDDIF(m,AT.WorkPointer);
+				*AT.WorkPointer = k;
+				AT.WorkPointer[1] = 0;
+				if ( ToFast(AT.WorkPointer,AT.WorkPointer) ) {
+					if ( *AT.WorkPointer <= -FUNCTION ) k = 1;
 					else k = 2;
 				}
 				
@@ -529,8 +531,8 @@ HaveTodo:
 				v[2] |= DIRTYFLAG;
 				if ( j > 0 ) {
 					r = m + j;
-					while ( m > AR.WorkPointer ) *--r = *--m;
-					AR.WorkPointer = r;
+					while ( m > AT.WorkPointer ) *--r = *--m;
+					AT.WorkPointer = r;
 					m = term + *term;
 					r = m + j;
 					while ( m > r2 ) *--r = *--m;
@@ -541,7 +543,7 @@ HaveTodo:
 					while ( r2 < r1 ) *r++ = *r2++;
 				}
 				r = r3;
-				m = AR.WorkPointer;
+				m = AT.WorkPointer;
 				NCOPY(r,m,k);
 				*term += j;
 				rstop += j;
@@ -553,12 +555,12 @@ HaveTodo:
 	}
 	if ( ( type == TYPESPLITARG || type == TYPESPLITARG2
 	 || type == TYPESPLITFIRSTARG || type == TYPESPLITLASTARG ) && 
-	AR.pWorkPointer > oldppointer ) {
+	AT.pWorkPointer > oldppointer ) {
 		t = term+1;
-		r1 = AR.WorkPointer + 1;
+		r1 = AT.WorkPointer + 1;
 		lp = oldppointer;
 		while ( t < rstop ) {
-			if ( lp < AR.pWorkPointer && t == AR.pWorkSpace[lp] ) {
+			if ( lp < AT.pWorkPointer && t == AT.pWorkSpace[lp] ) {
 				v = t;
 				m = t + FUNHEAD;
 				r = t + t[1];
@@ -566,7 +568,7 @@ HaveTodo:
 				while ( m < r ) {
 					t = m;
 					NEXTARG(m)
-					if ( lp >= AR.pWorkPointer || t != AR.pWorkSpace[lp+1] ) {
+					if ( lp >= AT.pWorkPointer || t != AT.pWorkSpace[lp+1] ) {
 						if ( *t > 0 ) t[1] = 0;
 						while ( t < m ) *r1++ = *t++;
 						continue;
@@ -681,9 +683,9 @@ HaveTodo:
 						for ( i = 1; i < ARGHEAD; i++ ) *r1++ = 0;
 						j = 0;
 						while ( t < r3 ) {
-							AN.UseFindOnly = 0; oldwork2 = AR.WorkPointer;
+							AN.UseFindOnly = 0; oldwork2 = AT.WorkPointer;
 							AN.RepFunList = r1;
-							AR.WorkPointer = r1+AN.RepFunNum+2;
+							AT.WorkPointer = r1+AN.RepFunNum+2;
 							i = *t;
 							if ( FindRest(t,factor) &&
 							 ( AN.UsedOtherFind || FindOnce(t,factor) ) ) {
@@ -708,7 +710,7 @@ HaveTodo:
 							else {
 								NCOPY(r1,t,i)
 							}
-							AR.WorkPointer = oldwork2;
+							AT.WorkPointer = oldwork2;
 						}
 						AN.RepFunList = oRepFunList;
 						*r4 = r1 - r4;
@@ -790,19 +792,19 @@ HaveTodo:
 		}
 		r = term + *term;
 		while ( t < r ) *r1++ = *t++;
-		m = AR.WorkPointer;
+		m = AT.WorkPointer;
 		i = m[0] = r1 - m;
 		t = term;
 		while ( --i >= 0 ) *t++ = *m++;
-		if ( AR.WorkPointer < m ) AR.WorkPointer = m;
+		if ( AT.WorkPointer < m ) AT.WorkPointer = m;
 	}
 	if ( ( type == TYPEFACTARG || type == TYPEFACTARG2 ) && 
-	AR.pWorkPointer > oldppointer ) {
+	AT.pWorkPointer > oldppointer ) {
 		t = term+1;
-		r1 = AR.WorkPointer + 1;
+		r1 = AT.WorkPointer + 1;
 		lp = oldppointer;
 		while ( t < rstop ) {
-			if ( lp < AR.pWorkPointer && AR.pWorkSpace[lp] == t ) {
+			if ( lp < AT.pWorkPointer && AT.pWorkSpace[lp] == t ) {
 				v = t;
 				m = t + FUNHEAD;
 				r = t + t[1];
@@ -810,7 +812,7 @@ HaveTodo:
 				while ( m < r ) {
 					rr = t = m;
 					NEXTARG(m)
-					if ( lp >= AR.pWorkPointer || AR.pWorkSpace[lp+1] != t ) {
+					if ( lp >= AT.pWorkPointer || AT.pWorkSpace[lp+1] != t ) {
 						if ( *t > 0 ) t[1] = 0;
 						while ( t < m ) *r1++ = *t++;
 						continue;
@@ -1337,22 +1339,25 @@ oneterm:;
 		}
 		r = term + *term;
 		while ( t < r ) *r1++ = *t++;
-		m = AR.WorkPointer;
+		m = AT.WorkPointer;
 		i = m[0] = r1 - m;
 		t = term;
 		while ( --i >= 0 ) *t++ = *m++;
-		if ( AR.WorkPointer < t ) AR.WorkPointer = t;
+		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
 	C->numlhs = oldnumlhs;
 	if ( action && Normalize(term) ) goto execargerr;
-	AR.WorkPointer = oldwork;
-	if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
-	AR.pWorkPointer = oldppointer;
+	AT.WorkPointer = oldwork;
+	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+	AT.pWorkPointer = oldppointer;
 	return(action);
 execargerr:
-	AR.WorkPointer = oldwork;
-	AR.pWorkPointer = oldppointer;
-	return(MesCall("execarg"));
+	AT.WorkPointer = oldwork;
+	AT.pWorkPointer = oldppointer;
+	LOCK(ErrorMessageLock);
+	MesCall("execarg");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 }
 
 /*
@@ -1367,7 +1372,7 @@ execterm ARG2(WORD *,term,WORD,level)
 	WORD oldnumlhs = C->numlhs;
 	WORD maxisat = C->lhs[level][2];
 	WORD *buffer1 = 0;
-	WORD *oldworkpointer = AR.WorkPointer;
+	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t1, i;
 	do {
 		C->numlhs = C->lhs[level][3];
@@ -1377,7 +1382,7 @@ execterm ARG2(WORD *,term,WORD,level)
 			while ( *term ) {
 				t1 = oldworkpointer;
 				i = *term; while ( --i >= 0 ) *t1++ = *term++;
-				AR.WorkPointer = t1;
+				AT.WorkPointer = t1;
 				if ( Generator(oldworkpointer,level) ) goto exectermerr;
 			}
 		}
@@ -1396,18 +1401,21 @@ execterm ARG2(WORD *,term,WORD,level)
 	while ( *term ) {
 		t1 = oldworkpointer;
 		i = *term; while ( --i >= 0 ) *t1++ = *term++;
-		AR.WorkPointer = t1;
+		AT.WorkPointer = t1;
 		if ( Generator(oldworkpointer,level) ) goto exectermerr;
 	}
 	M_free(buffer1,"buffer in term statement");
-	AR.WorkPointer = oldworkpointer;
+	AT.WorkPointer = oldworkpointer;
 	return(0);
 exectermerr:
-	AR.WorkPointer = oldworkpointer;
-	return(MesCall("execterm"));
+	AT.WorkPointer = oldworkpointer;
+	LOCK(ErrorMessageLock);
+	MesCall("execterm");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 }
 
 /*
-  	#] execterm : 
+  	#] execterm :
 */
 

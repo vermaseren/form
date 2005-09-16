@@ -1,5 +1,8 @@
+#ifndef __PARALLEL__
+
+#define __PARALLEL__
 /*
- #[ macros & definitions
+  	#[ macros & definitions :
 */
 #define MASTER 0 
 #define PF_RESET 0
@@ -22,8 +25,6 @@
 
 #define PF_ATTACH_REDEF       1
 #define PF_ATTACH_DOLLAR      2
-
-
 
 #ifdef PVM
 #  include "pvm3.h"
@@ -94,8 +95,8 @@
 #endif
 
 /*
- #] macros & definitions
- #[ s/r-bufs
+  	#] macros & definitions :
+  	#[ s/r-bufs :
 */
 
 /* 
@@ -125,8 +126,8 @@ typedef struct{
 }PF_BUFFER;
 
 /*
- #] s/r-bufs
- #[ global variables to PF_functions that need to be known everywhere
+  	#] s/r-bufs :
+  	#[ global variables used by the PF_functions : need to be known everywhere
 */
 
 typedef struct ParallelVars{
@@ -170,5 +171,7 @@ extern PARALLELVARS PF;
 extern PFDOLLARS *PFDollars;
 
 /*
- #] global variables used by the PF_functions 
+  	#] global variables used by the PF_functions :
 */
+
+#endif

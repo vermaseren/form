@@ -9,7 +9,7 @@ static WORD *PoinScratch[300];
 static WORD *FunScratch[300];
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -85,7 +85,7 @@ ReNumber ARG1(WORD *,term)
 }
 
 /*
- 		#] Renumber : 
+ 		#] Renumber :
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -147,7 +147,9 @@ FunLevel ARG1(WORD *,term)
 				break;
 			default:
 				if ( *t < FUNCTION ) {
+				  LOCK(ErrorMessageLock);
 				  MesPrint("Unexpected code in ReNumber");
+				  UNLOCK(ErrorMessageLock);
 				  Terminate(-1);
 				}
 				fun = t+2;
@@ -201,7 +203,7 @@ FunLevel ARG1(WORD *,term)
 }
 
 /*
- 		#] FunLevel : 
+ 		#] FunLevel :
  		#[ DetCurDum :
 */
 
@@ -267,7 +269,7 @@ Singles:
 }
 
 /*
- 		#] DetCurDum : 
+ 		#] DetCurDum :
  		#[ FullRenumber :
 
 		Does a full renumbering. May be slow if there are many indices.
@@ -281,7 +283,7 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 {
 	WORD *d, **p, **f, *w, *t, *best, *stac, *perm, a, *termtry;
 	WORD n, i, j, k, ii;
-	WORD *oldworkpointer = AR.WorkPointer;
+	WORD *oldworkpointer = AT.WorkPointer;
 	n = ReNumber(term) - AM.IndDum;
 	if ( n <= 1 ) return(0);
 	Normalize(term);
@@ -290,13 +292,13 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 	d = RenumScratch;
 	p = PoinScratch;
 	f = FunScratch;
-	if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
+	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	k = AN.NumFound;
-	best = w = AR.WorkPointer; t = term;
+	best = w = AT.WorkPointer; t = term;
 	for ( i = *term; i > 0; i-- ) *w++ = *t++;
-	AR.WorkPointer = w;
+	AT.WorkPointer = w;
 	Normalize(best);
-	AR.WorkPointer = w = best + *best;
+	AT.WorkPointer = w = best + *best;
 	stac = w+100;
 	perm = stac + n + 1;
 	termtry = perm + n + 1;
@@ -313,7 +315,7 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 				}
 				t = term; w = termtry;
 				for ( ii = 0; ii < *term; ii++ ) *w++ = *t++;
-				AR.WorkPointer = w;
+				AT.WorkPointer = w;
 				if ( Normalize(termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
 					if ( ( ii = Compare(termtry,best,0) ) > 0 ) {
@@ -351,7 +353,7 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 				}
 				t = term; w = termtry;
 				for ( i = 0; i < *term; i++ ) *w++ = *t++;
-				AR.WorkPointer = w;
+				AT.WorkPointer = w;
 				if ( Normalize(termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
 					if ( ( ii = Compare(termtry,best,0) ) > 0 ) {
@@ -368,17 +370,17 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 	t = term; w = best;
 	n = *best;
 	for ( i = 0; i < n; i++ ) *t++ = *w++;
-	AR.WorkPointer = oldworkpointer;
+	AT.WorkPointer = oldworkpointer;
 	return(0);
 Return0:
 	*term = 0;
-	AR.WorkPointer = oldworkpointer;
+	AT.WorkPointer = oldworkpointer;
 	return(0);
 }
 
 /*
- 		#] FullRenumber : 
-  	#] Reshuf : 
+ 		#] FullRenumber :
+  	#] Reshuf :
   	#[ Count :
  		#[ CountDo :
 
@@ -534,7 +536,7 @@ NextFF:
 }
 
 /*
- 		#] CountDo : 
+ 		#] CountDo :
  		#[ CountFun :
 
 		This is the count function.
@@ -700,8 +702,8 @@ VectInd:		i = term[1] - 2;
 }
 
 /*
- 		#] CountFun : 
-  	#] Count : 
+ 		#] CountFun :
+  	#] Count :
   	#[ Multiply Term :
  		#[ MultDo :
 */
@@ -723,13 +725,13 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
 	r = pattern + 3;
 	i = r[1];
 	while ( --i >= 0 ) *t++ = *r++;
-	AR.WorkPointer = term + *term;
+	AT.WorkPointer = term + *term;
 	return(0);
 }
 
 /*
- 		#] MultDo : 
-  	#] Multiply Term : 
+ 		#] MultDo :
+  	#] Multiply Term :
   	#[ Try Term(s) :
  		#[ TryDo :
 */
@@ -749,7 +751,7 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 	t = term + 1;
 	NCOPY(m,t,j)
 	*r = WORDDIF(m,r);
-	AR.WorkPointer = m;
+	AT.WorkPointer = m;
 	if ( ( j = Normalize(r) ) == 0 || j == 1 ) {
 		if ( *r == 0 ) return(0);
 		ReNumber(r); Normalize(r);
@@ -757,13 +759,13 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 		if ( ( i = Compare(term,r,0) ) < 0 ) return(Generator(r,level));
 		if ( i == 0 && CompCoef(term,r) != 0 ) { return(0); }
 	}
-	AR.WorkPointer = r;
+	AT.WorkPointer = r;
 	return(Generator(term,level));
 }
 
 /*
- 		#] TryDo : 
-  	#] Try Term(s) : 
+ 		#] TryDo :
+  	#] Try Term(s) :
   	#[ Distribute :
  		#[ DoDistrib :
 
@@ -809,7 +811,9 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 					m += 2;
 				}
 				if ( m < r ) {
+					LOCK(ErrorMessageLock);
 					MesPrint("Incompatible function types and arguments in distrib_");
+					UNLOCK(ErrorMessageLock);
 					SETERROR(-1)
 				}
 			}
@@ -852,8 +856,8 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 		i++;
 		NEXTARG(m);
 	}
-	oldwork = AR.WorkPointer;
-	arg = AR.WorkPointer + 1;
+	oldwork = AT.WorkPointer;
+	arg = AT.WorkPointer + 1;
 	arg[-1] = 0;
 	termout = arg + i;
 	switch ( ntype ) {
@@ -945,7 +949,9 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 */
 					if ( k2 != k1 && k2 != 0 ) {
 						if ( GetBinom((UWORD *)m+3,m+2,k1,k2) ) {
+							LOCK(ErrorMessageLock);
 							MesCall("DoDistrib");
+							UNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 						m[1] = ( m[2] < 0 ? -m[2]: m[2] ) + 3;
@@ -970,10 +976,15 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 
 			if ( sgn ) m[-1] = -m[-1];
 			*termout = WORDDIF(m,termout);
-			AR.WorkPointer = m;
-			if ( AR.WorkPointer > AM.WorkTop ) return(MesWork());
+			AT.WorkPointer = m;
+			if ( AT.WorkPointer > AT.WorkTop ) {
+				LOCK(ErrorMessageLock);
+				MesWork();
+				UNLOCK(ErrorMessageLock);
+				return(-1);
+			}
 			*AR.RepPoint = 1;
-			AR.expchanged = 1;
+			AS.expchanged = 1;
 			if ( Generator(termout,level) ) Terminate(-1);
 #ifndef NUOVO
 			{
@@ -1007,12 +1018,12 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 #endif
 		} 
 	} while ( ntype == 0 && ++n <= i );
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	return(0);
 }
 
 /*
- 		#] DoDistrib : 
+ 		#] DoDistrib :
  		#[ EqualArg :
 
 		Returns 1 if the arguments in the field are identical.
@@ -1041,7 +1052,7 @@ EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
 }
 
 /*
- 		#] EqualArg : 
+ 		#] EqualArg :
  		#[ DoDelta3 :
 */
 
@@ -1058,23 +1069,27 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 	while ( ( *t != DELTA3 || ((t[1]-FUNHEAD) & 1 ) != 0 ) && t < stopper )
 		t += t[1];
 	if ( t >= stopper ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Internal error with dd_ function");
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	m1 = t; m2 = t + t[1];
 	num = t[1] - FUNHEAD;
 	if ( num == 0 ) {
-		termout = t = AR.WorkPointer;
+		termout = t = AT.WorkPointer;
 		m = term;
 		while ( m < m1 ) *t++ = *m++;
 		m = m2; while ( m < tstop ) *t++ = *m++;
 		*termout = WORDDIF(t,termout);
-		AR.WorkPointer = t;
+		AT.WorkPointer = t;
 		if ( Generator(termout,level) ) {
+			LOCK(ErrorMessageLock);
 			MesCall("Do dd_");
+			UNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
-		AR.WorkPointer = termout;
+		AT.WorkPointer = termout;
 		return(0);
 	}
 	t += FUNHEAD;
@@ -1097,7 +1112,7 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 	In 'taken' we have the array with the number of occurrences.
 	in 'dels' is the type of object.
 */
-	m = taken = AR.WorkPointer;
+	m = taken = AT.WorkPointer;
 	for ( i = 0; i < num; i++ ) *m++ = 0;
 	dels = m; knum = 0;
 	for ( i = 0; i < num; knum++ ) {
@@ -1138,7 +1153,9 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 					}
 					if ( a > 0 ) {
 						if ( GetBinom((UWORD *)(t+3),t+2,2*j+a,a) ) {
+							LOCK(ErrorMessageLock);
 							MesCall("Do dd_");
+							UNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 						t[1] = ( t[2] < 0 ? -t[2]: t[2] ) + 3;
@@ -1161,7 +1178,9 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 				}
 				if ( a > 0 ) {
 					if ( GetBinom((UWORD *)(t+3),t+2,j+a,a) ) {
+						LOCK(ErrorMessageLock);
 						MesCall("Do dd_");
+						UNLOCK(ErrorMessageLock);
 						SETERROR(-1)
 					}
 					t[1] = ( t[2] < 0 ? -t[2]: t[2] ) + 3;
@@ -1172,9 +1191,11 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 			m = m2;
 			while ( m < tstop ) *t++ = *m++;
 			*termout = WORDDIF(t,termout);
-			AR.WorkPointer = t;
+			AT.WorkPointer = t;
 			if ( Generator(termout,level) ) {
+				LOCK(ErrorMessageLock);
 				MesCall("Do dd_");
+				UNLOCK(ErrorMessageLock);
 				SETERROR(-1)
 			}
 			k--;
@@ -1209,13 +1230,13 @@ nextj:;
 		if ( k >= 0 ) goto nextj;
 nextk:;
 	}
-	AR.WorkPointer = taken;
+	AT.WorkPointer = taken;
 	return(0);
 }
 
 /*
- 		#] DoDelta3 : 
-  	#] Distribute : 
+ 		#] DoDelta3 :
+  	#] Distribute :
   	#[ DoMerge :
 
 	Merges the arguments of all occurrences of function fun into a
@@ -1238,11 +1259,18 @@ WORD DoMerge ARG4(WORD *,term,WORD,level,WORD,fun,WORD,option)
 	LONG p, p1, p2;
 	if ( n < 0 ) {
 		if ( ( n = DolToFunction(-n) ) == 0 ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("$-variable in merge statement did not evaluate to a function.");
+			UNLOCK(ErrorMessageLock);
 			return(1);
 		}
 	}
-	if ( AR.WorkPointer + 2*(*term) + AM.MaxTal > AM.WorkTop ) 	return(MesWork());
+	if ( AT.WorkPointer + 2*(*term) + AM.MaxTal > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 /*
 	Now we have the number of a function in n.
 */
@@ -1274,21 +1302,21 @@ restart:;
 	m1 = t1; m2 = t2;
 	t1stop = t1 + t1[1]; t2stop = t2 + t2[1];
 	t1 += FUNHEAD; t2 += FUNHEAD;
-	p = p1 = AR.pWorkPointer;
+	p = p1 = AT.pWorkPointer;
 	n1 = 0;
-	while ( t1 < t1stop ) { AR.pWorkSpace[p] = t1; p++; n1++; NEXTARG(t1); }
-	AR.pWorkSpace[p] = t1stop; p++;
+	while ( t1 < t1stop ) { AT.pWorkSpace[p] = t1; p++; n1++; NEXTARG(t1); }
+	AT.pWorkSpace[p] = t1stop; p++;
 	p2 = p;
 	n2 = 0;
-	while ( t2 < t2stop ) { AR.pWorkSpace[p] = t2; p++; n2++; NEXTARG(t2); }
-	AR.pWorkSpace[p] = t2stop; p++;
-	AR.pWorkPointer = p;
+	while ( t2 < t2stop ) { AT.pWorkSpace[p] = t2; p++; n2++; NEXTARG(t2); }
+	AT.pWorkSpace[p] = t2stop; p++;
+	AT.pWorkPointer = p;
 /*
 	Now start filling
 */
-	j = AR.WorkPointer; AR.WorkPointer += n1;
+	j = AT.WorkPointer; AT.WorkPointer += n1;
 	for ( i = 0; i < n1; i++ ) j[i] = 0;
-	termout = AR.WorkPointer;
+	termout = AT.WorkPointer;
 	t = term; m = termout; while ( t < t1 ) *m++ = *t++;
 	mm = m;
 	for ( i = 0; i < FUNHEAD; i++ ) *m++ = *t++;
@@ -1310,22 +1338,22 @@ restart:;
 							 count back in 1 and forward in 2
 */
 			if ( j[k] <= k2 ) {	/* copy from 1 */
-				r1 = AR.pWorkSpace[p1+k];
-				r2 = AR.pWorkSpace[p1+k+1];
+				r1 = AT.pWorkSpace[p1+k];
+				r2 = AT.pWorkSpace[p1+k+1];
 				while ( r1 < r2 ) *m++ = *r1++;
 			}
 			else { /* copy from 2 */
 				while ( k2 < j[k] ) {
-					r1 = AR.pWorkSpace[p2+k2];
-					r2 = AR.pWorkSpace[p2+k2+1];
+					r1 = AT.pWorkSpace[p2+k2];
+					r2 = AT.pWorkSpace[p2+k2+1];
 					while ( r1 < r2 ) *m++ = *r1++;
 					k2++;
 				}
 			}
 		}
 		while ( k2 < n2 ) {
-			r1 = AR.pWorkSpace[p2+k2];
-			r2 = AR.pWorkSpace[p2+k2+1];
+			r1 = AT.pWorkSpace[p2+k2];
+			r2 = AT.pWorkSpace[p2+k2+1];
 			while ( r1 < r2 ) *m++ = *r1++;
 			k2++;
 		}
@@ -1335,7 +1363,7 @@ restart:;
 		t = t2stop;
 		while ( t < tt ) *m++ = *t;
 		*termout = m - termout;
-		AR.WorkPointer = m;
+		AT.WorkPointer = m;
 		if ( Generator(termout,level) ) goto Mergecall;
 /*
 		Raise configuration
@@ -1358,13 +1386,15 @@ restart:;
 	strings of n+m arguments.
 */
 
-	AR.WorkPointer = j;
-	AR.pWorkPointer = p1;
+	AT.WorkPointer = j;
+	AT.pWorkPointer = p1;
 	return(0);
 Mergecall:
-	AR.WorkPointer = j;
-	AR.pWorkPointer = p1;
+	AT.WorkPointer = j;
+	AT.pWorkPointer = p1;
+	LOCK(ErrorMessageLock);
 	MesCall("DoMerge");
+	UNLOCK(ErrorMessageLock);
 	return(-1);
 }
 

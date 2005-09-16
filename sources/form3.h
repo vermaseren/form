@@ -1,9 +1,11 @@
+
 #define VERSION 3
 #define MINORVERSION 1
+
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "17-dec-2001"
+#define PRODUCTIONDATE "13-sep-2005"
 #endif
 
 #define WITHZLIB
@@ -185,12 +187,8 @@
 #include "fsizes.h"
 #include "minos.h"
 #include "structs.h"
-
-/*[15apr2004 mt]:*/
-/*Exchange two lines:*/
 #include "declare.h"
 #include "variable.h"
-/*:[15apr2004 mt]*/
 
 #ifdef OPTERON
 #define FILES FILE
@@ -245,3 +243,8 @@ extern FILES *Ustdout;
 #define MAX_OPEN_FILES FOPEN_MAX
 #endif
 #endif
+ 
+#ifdef PARALLEL
+#include "parallel.h"
+#endif
+

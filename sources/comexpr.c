@@ -43,7 +43,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 {
 	int error = 0;
 	UBYTE *p, *q, c;
-	WORD *w, i, j = 0, c1, c2, *OldWork = AR.WorkPointer, osize;
+	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
 	POSITION pos;
 	EXPRESSIONS e = 0;
 	while ( *inp == ',' ) inp++;
@@ -88,7 +88,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			else j = EntVar(CEXPRESSION,inp,type,0,0);
 			*q = c;
 			e = Expressions+j;
-			OldWork = w = AR.WorkPointer;
+			OldWork = w = AT.WorkPointer;
 			*w++ = TYPEEXPRESSION;
 			*w++ = 3+SUBEXPSIZE;
 			*w++ = j;
@@ -98,7 +98,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			*w++ = SUBEXPSIZE;
 			*w++ = j;
 			*w++ = 1;
-			*w++ = AR.cbufnum;
+			*w++ = AC.cbufnum;
 			FILLSUB(w)
 
 			if ( c == '(' ) {
@@ -148,7 +148,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			Expressions[j].onfile = pos; 
 			Expressions[j].whichbuffer = 0;
 			OldWork[2] = w - OldWork - 3;
-			AR.WorkPointer = w;
+			AT.WorkPointer = w;
 /*
 			Writing the expression prototype to disk and to the compiler
 			buffer is done only after the RHS has been compiled because
@@ -186,7 +186,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			}
 			OldWork[2] = j;
 			AddNtoL(OldWork[1],OldWork);
-			AR.WorkPointer = OldWork;
+			AT.WorkPointer = OldWork;
 			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 		}
 	}
@@ -339,9 +339,9 @@ int CoIdExpression ARG2(UBYTE *,inp,int,type)
 	WORD *w, *s, *m, *mm, *ww, *FirstWork, *OldWork, c1, ctype, numsets = 0,
 		 oldnumrhs, *ow, oldEside;
 	UBYTE *p, *pp, c;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	LONG oldcpointer;
-	FirstWork = OldWork = AR.WorkPointer;
+	FirstWork = OldWork = AT.WorkPointer;
 /*
 	Don't forget to change in StudyPattern if we change/add_to the
 	following setup. 
@@ -350,7 +350,7 @@ int CoIdExpression ARG2(UBYTE *,inp,int,type)
 */
 	idhead = IDHEAD;
 	AS.CurExpr = -1;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	*w++ = type;
 	*w++ = idhead + SUBEXPSIZE;
 	w++;
@@ -540,22 +540,22 @@ IllField:			c = *p; *p = 0;
 	*w++ = SUBEXPSIZE;
 	*w++ = C->numrhs+1;
 	*w++ = 1;
-	*w++ = AR.cbufnum;
+	*w++ = AC.cbufnum;
 	FILLSUB(w)
 	AC.WildC = w;
 	AC.NwildC = 0;
-	AR.WorkPointer = s = w + 4*AM.MaxWildcards + 8;
+	AT.WorkPointer = s = w + 4*AM.MaxWildcards + 8;
 /*
 	Now read the LHS
 */
-	oldcpointer = AddLHS(AR.cbufnum) - C->Buffer;
+	oldcpointer = AddLHS(AC.cbufnum) - C->Buffer;
 
 	*p = 0;
 	oldnumrhs = C->numrhs;
 	if ( ( retcode = CompileAlgebra(inp,LHSIDE,AC.ProtoType) ) < 0 ) { error = 1; }
 	else AC.ProtoType[2] = retcode;
 	*p = '='; inp = p+1;
-	AR.WorkPointer = s;
+	AT.WorkPointer = s;
 	if ( AC.NwildC && SortWild(w,AC.NwildC) ) error = 1;
 
 		/* Make the LHS pointers ready */
@@ -563,7 +563,7 @@ IllField:			c = *p; *p = 0;
 	OldWork[1] = AC.WildC-OldWork;
 	OldWork[idhead+1] = OldWork[1] - idhead;
 	w = AC.WildC;
-	AR.WorkPointer = w;
+	AT.WorkPointer = w;
 	s = C->rhs[C->numrhs];
 /*
 	Now check whether wildcards get converted to dollars (for PARALLEL)
@@ -606,10 +606,10 @@ IllLeft:MesPrint("&Illegal LHS");
 			if ( !error ) error = 1;
 			return(error);
 		}
-		AR.RepPoint = AM.RepCount + 1;
-        ow = AR.WorkPointer + AM.MaxTer;
+		AR.RepPoint = AT.RepCount + 1;
+        ow = AT.WorkPointer + AM.MaxTer;
 		mm = s; ww = ow; i = *mm;
-		while ( --i >= 0 ) *ww++ = *mm++; AR.WorkPointer = ww;
+		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
 		AR.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
 #ifdef FGPARALLEL
 		A.xsortflag = 0;		/* Block foliation at this point */
@@ -620,7 +620,7 @@ IllLeft:MesPrint("&Illegal LHS");
 			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
 		}
 		AC.Eside = oldEside;
-		AR.WorkPointer = w;
+		AT.WorkPointer = w;
 		if ( EndSort(w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
 		if ( *w == 0 || *(w+*w) != 0 ) {
 			MesPrint("&LHS must be one term");
@@ -630,7 +630,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		LowerSortLevel();
 		if ( AR.lhdollarflag ) MarkDirty(w,1);
 	}
-	AR.WorkPointer = w + *w;
+	AT.WorkPointer = w + *w;
 	AC.DumNum = 0;
 /*
 	Everything is now after OldWork. We can pop the compilerbuffer.
@@ -748,7 +748,7 @@ IllLeft:MesPrint("&Illegal LHS");
 	OldWork[1] = m - OldWork;
 	AC.ProtoType = OldWork+idhead;
 	if ( !error ) StudyPattern(OldWork);
-	AR.WorkPointer = OldWork + OldWork[1];
+	AT.WorkPointer = OldWork + OldWork[1];
 	OldWork[4] = AR.lhdollarflag;
 	AR.lhdollarflag = 0;
 /*
@@ -772,7 +772,7 @@ IllLeft:MesPrint("&Illegal LHS");
 	/* if ( !error ) */ { AddNtoL(OldWork[1],OldWork); }
 AllDone:
 	AR.lhdollarflag = 0;
-	AR.WorkPointer = FirstWork;
+	AT.WorkPointer = FirstWork;
 	return(error);
 }
 
@@ -805,7 +805,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 	}
 	while ( *inp == ',' ) inp++;
 	AC.ProtoType = mularray+3;
-	mularray[7] = AR.cbufnum;
+	mularray[7] = AC.cbufnum;
 	if ( ( RetCode = CompileAlgebra(inp,RHSIDE,AC.ProtoType) ) < 0 ) error = 1;
 	else {
 		mularray[5] = RetCode;
@@ -824,8 +824,8 @@ int CoMultiply ARG1(UBYTE *,inp)
 
 int CoFill ARG1(UBYTE *,inp)
 {
-	WORD error = 0, x, funnum, type, *oldwp = AR.WorkPointer;
-	int i, oldcbufnum = AR.cbufnum, nofill = 0, numover, redef = 0;
+	WORD error = 0, x, funnum, type, *oldwp = AT.WorkPointer;
+	int i, oldcbufnum = AC.cbufnum, nofill = 0, numover, redef = 0;
 	WORD *w, *wold;
 	UBYTE *p = inp, c, *inp1;
 	TABLES T = 0, oldT;
@@ -867,10 +867,10 @@ int CoFill ARG1(UBYTE *,inp)
 		,T->numind);
 		error = 1; nofill = 1;
 	}
-	AR.WorkPointer = w;
+	AT.WorkPointer = w;
 	if ( T->sparse == 0 ) sum *= TABLEEXTENSION;
 andagain:;
-	AR.cbufnum = T->bufnum;
+	AC.cbufnum = T->bufnum;
 	if ( T->sparse ) {
 		i = FindTableTree(T,oldwp,1);
 		if ( i >= 0 ) {
@@ -901,7 +901,7 @@ andagain:;
 			if ( newreservation > MAXTABLECOMBUF ) newreservation = MAXTABLECOMBUF;
 			if ( T->totind >= newreservation ) {
 				MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
-				AR.cbufnum = oldcbufnum;
+				AC.cbufnum = oldcbufnum;
 				Terminate(-1);
 			}
 			wold = (WORD *)Malloc1(newreservation*sizeof(WORD)*
@@ -947,8 +947,8 @@ redef:;
 	}
 	p++; if ( *p != '=' ) {
 		MesPrint("&Fill statement misses = sign after the table element");
-		AR.cbufnum = oldcbufnum;
-		AR.WorkPointer = oldwp;
+		AC.cbufnum = oldcbufnum;
+		AT.WorkPointer = oldwp;
 		functions[funnum].tabl = oldT;
 		return(1);
 	}
@@ -990,7 +990,7 @@ redef:;
 		*p++ = ')';
 		*p = 0;
 		inp1 = fake;
-/*		AR.WorkPointer += T->numind; */
+/*		AT.WorkPointer += T->numind; */
 	}
 	else
 	inp1 = ++p; c = 0;
@@ -1053,9 +1053,9 @@ redef:;
 		p = p3;
 		goto andagain;
 	}
-	AR.cbufnum = oldcbufnum;
+	AC.cbufnum = oldcbufnum;
 	AC.SymChangeFlag = 1;
-	AR.WorkPointer = oldwp;
+	AT.WorkPointer = oldwp;
 	functions[funnum].tabl = oldT;
 	return(error);
 }
@@ -1079,9 +1079,9 @@ redef:;
 int CoFillExpression ARG1(UBYTE *,inp)
 {
 	UBYTE *p, c;
-	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AR.WorkPointer;
+	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AT.WorkPointer;
 	WORD *brackets, *term, brasize, *b, *m, *w, *pw, *tstop, zero = 0;
-	WORD oldcbuf = AR.cbufnum, curelement = 0;
+	WORD oldcbuf = AC.cbufnum, curelement = 0;
 	int weneedit, i, j, numzero, pow;
 	TABLES T = 0;
 	LONG newreservation, numcommu, sum;
@@ -1144,12 +1144,12 @@ int CoFillExpression ARG1(UBYTE *,inp)
 					*p = c; return(1);
 				}
 				symnum += FUNCTION;
-				*AR.WorkPointer++ = symnum;
+				*AT.WorkPointer++ = symnum;
 				break;
 			}
 		}
 		*p++ = c;
-		*AR.WorkPointer++ = symnum;
+		*AT.WorkPointer++ = symnum;
 		numsym++;
 		if ( c == ')' ) break;
 		if ( c != ',' ) {
@@ -1193,13 +1193,13 @@ int CoFillExpression ARG1(UBYTE *,inp)
 		SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
 		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(Expressions[expnum].onfile));
 	}
-	pw = AR.WorkPointer;
+	pw = AT.WorkPointer;
 	if ( numsym < 0 ) { brackets = pw + 1; }
 	else { brackets = pw + numsym; }
 	brasize = -1; weneedit = 0; /* stands for we need it */
 	term = brackets + AM.MaxTer;
-	AR.WorkPointer = term + AM.MaxTer;
-	AR.cbufnum = T->bufnum;
+	AT.WorkPointer = term + AM.MaxTer;
+	AC.cbufnum = T->bufnum;
 	AC.tablefilling = funnum;
 	if ( GetTerm(term) > 0 ) {			/* Skip prototype */
 		while ( GetTerm(term) > 0 ) {
@@ -1318,15 +1318,15 @@ int CoFillExpression ARG1(UBYTE *,inp)
 					if ( newreservation > MAXTABLECOMBUF ) newreservation = MAXTABLECOMBUF;
 					if ( T->totind >= newreservation ) {
 						MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
-						AR.cbufnum = oldcbuf;
-						AR.WorkPointer = oldwork;
+						AC.cbufnum = oldcbuf;
+						AT.WorkPointer = oldwork;
 						Terminate(-1);
 					}
 /*---Copied from Fill---------------------------*/
 					if ( T->totind >= newreservation ) {
 						MesPrint("@More than %ld elements in sparse table",MAXTABLECOMBUF);
-						AR.cbufnum = oldcbuf;
-						AR.WorkPointer = oldwork;
+						AC.cbufnum = oldcbuf;
+						AT.WorkPointer = oldwork;
 						Terminate(-1);
 					}
 					w = (WORD *)Malloc1(newreservation*sizeof(WORD)*
@@ -1378,14 +1378,14 @@ nextterm:;
 		}
 	}
 	BACKINOUT
-	AR.cbufnum = oldcbuf;
+	AC.cbufnum = oldcbuf;
 	AC.tablefilling = 0;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	return(0);
 noway:
-	AR.cbufnum = oldcbuf;
+	AC.cbufnum = oldcbuf;
 	AC.tablefilling = 0;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	return(1);
 }
 
@@ -1408,7 +1408,7 @@ int CoPrintTable ARG1(UBYTE *,inp)
 	WORD type, funnum, *expr, *m, num;
 	TABLES T = 0;
 	WORD oldSkip = AO.OutSkip, oldMode = AC.OutputMode, oldHandle = AC.LogHandle;
-	WORD oldType = AO.PrintType, *oldwork = AR.WorkPointer;
+	WORD oldType = AO.PrintType, *oldwork = AT.WorkPointer;
 	UBYTE *oldFill = AO.OutFill, *oldLine = AO.OutputLine;
 /*
 	First the flags
@@ -1471,8 +1471,8 @@ int CoPrintTable ARG1(UBYTE *,inp)
 	else if ( fflag && AC.LogHandle >= 0 ) {
 		AO.PrintType = PRINTLFILE;
 	}
-	AO.OutFill = AO.OutputLine = (UBYTE *)AR.WorkPointer;
-	AR.WorkPointer += 2*AC.LineLength;
+	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
+	AT.WorkPointer += 2*AC.LineLength;
 
 	AO.PrintType |= sflag;
 	AC.OutputMode = 0;
@@ -1552,7 +1552,7 @@ finally:
 	AO.PrintType   = oldType;
 	AO.OutFill     = oldFill;
 	AO.OutputLine  = oldLine;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	AC.outsidefun  = 0;
 	return(error);
 }
@@ -1596,7 +1596,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 /*
 	Fake a Prototype and read the RHS
 */
-	AssignLHS[7] = AR.cbufnum;
+	AssignLHS[7] = AC.cbufnum;
 	retcode = CompileAlgebra(inp,RHSIDE,(AssignLHS+3));
 	if ( retcode < 0 ) error = 1;
 	AC.DumNum = 0;

@@ -284,8 +284,8 @@ Success:;
 	sign2 = 1;
 	wi = funargs + i*numargs; loc = funlocs + i;
 	for ( k = 0; k < L; k++ ) *(loc[k]) = -1;
-	if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
-	w = AR.WorkPointer + 1;
+	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+	w = AT.WorkPointer + 1;
 	m = t = term + 1;
 	while ( t < tstop ) {
 		if ( *t == -1 ) break;
@@ -423,9 +423,9 @@ Success:;
 	tstop = term + *term;
 	while ( t < tstop ) *w++ = *t++;
 	if ( sign < 0 ) w[-1] = -w[-1];
-	i = w - AR.WorkPointer;
-	*AR.WorkPointer = i;
-	t = term; w = AR.WorkPointer;
+	i = w - AT.WorkPointer;
+	*AT.WorkPointer = i;
+	t = term; w = AT.WorkPointer;
 	NCOPY(t,w,i)
 	*AR.RepPoint = 1;	/* For Repeat */
 	return(1);
@@ -494,7 +494,7 @@ int FindLus ARG3(int, from, int, level, int, openindex)
 }
 
 /*
-  	#] FindLus : 
+  	#] FindLus :
   	#[ SortTheList :
 */
 
@@ -546,6 +546,6 @@ int SortTheList ARG2(int *,slist,int,num)
 }
 
 /*
-  	#] SortTheList : 
+  	#] SortTheList :
 */
 

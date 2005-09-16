@@ -5,13 +5,11 @@
   explicitly need to call mpi and mpi2 routines. This is the only file that really 
   needs to be linked to the mpi-library!
 
-  #[ includes & variables
+  	#[ includes & variables :
 
 */
 #include <stdio.h>
 #include "form3.h"
-#include "parallel.h"
-
 
 static MPI_Status PF_status;
 
@@ -23,8 +21,8 @@ static MPI_Group  PF_group_world;
 extern WORD      *PF_shared_buff;
 
 /*
-  #] includes & variables
-  #[ LONG PF_RealTime(int)
+  	#] includes & variables :
+  	#[ LONG PF_RealTime(int) :
 
   returns the realtime in 1/100 sec. as a LONG
 */
@@ -39,8 +37,8 @@ LONG PF_RealTime ARG1(int,i)
   return((LONG)( 100. * (MPI_Wtime() - PF_starttime) ) );
 }
 /*
-  #] LONG PF_RealTime(int)
-  #[ int  PF_LibInit(int*,char***)
+  	#] LONG PF_RealTime(int) :
+  	#[ int  PF_LibInit(int*,char***) :
 */
 int 
 PF_LibInit ARG2(int*,argcp,char***,argvp)
@@ -88,8 +86,8 @@ PF_LibInit ARG2(int*,argcp,char***,argvp)
   return(0);
 }
 /*
-  #] int  PF_LibInit(int*,char***)				
-  #[ int  PF_Terminate(int)
+  	#] int  PF_LibInit(int*,char***) :
+  	#[ int  PF_Terminate(int) :
 
   Exits mpi, when there is an error either indicated or happening,
   returnvalue is 1, else returnvalue is 0
@@ -101,10 +99,10 @@ PF_Terminate ARG1(int,error)
   return(MPI_Finalize());
 }
 /*
-  #] int  PF_Terminate(int) 
+  	#] int  PF_Terminate(int) :
+  	#[ int  PF_Probe(int) :
 
   General Send and Receive Function for packed buffers
-  #[ int  PF_Probe(int)
 */
 /*[02nov2003 mt] Look at PF_Probe in mpi.c:*/
 int 
@@ -119,10 +117,10 @@ PF_Probe ARG1(int,src)
   return(PF_status.MPI_TAG);
 }
 /*
-  #] int  PF_Probe(int)
+  	#] int  PF_Probe(int) :
+  	#[ WORD* PF_AllocBuf1(LONG bsize) :
  
     MPI memory allocation function for slave buffers
-  #[ WORD* PF_AllocBuf1(LONG bsize) 
 */ 
 
 WORD* PF_AllocBuf1 ARG1(LONG, bsize)
@@ -139,10 +137,10 @@ WORD* PF_AllocBuf1 ARG1(LONG, bsize)
 }
  
 /*
-  #] WORD* PF_AllocBuf1(LONG bsize)
+  	#] WORD* PF_AllocBuf1(LONG bsize) :
+  	#[ int PF_SMWin_Init() :
    
     Initialization of shared windows for all running processes
-  #[ int PF_SMWin_Init()
 */
 
 int PF_SMWin_Init ARG0
@@ -160,8 +158,9 @@ int PF_SMWin_Init ARG0
  
 }
 
-/*#] WORD* PF_SMWin_Init()  
-  #[ the  packbuffer
+/*
+  	#] int PF_SMWin_Init() :
+  	#[ the packbuffer :
 */
 static UBYTE *PF_packbuf;
 static UBYTE *PF_packstop;
@@ -189,8 +188,8 @@ PF_PrintPackBuf ARG2(char*,s,int,size)
   return(0);
 }
 /*
-  #] the packbuffer
-  #[ int  PF_Pack(VOID*,LONG,MPI_Datatype)
+  	#] the packbuffer :
+  	#[ int  PF_Pack(VOID*,LONG,MPI_Datatype) :
 */
 int 
 PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
@@ -208,8 +207,8 @@ PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
   return(0);
 } 
 /*
-  #] int  PF_Pack(VOID*,LONG*,MPI_DataType)
-  #[ int  PF_Send(int,int,int)
+  	#] int  PF_Pack(VOID*,LONG,MPI_Datatype) :
+  	#[ int  PF_Send(int,int,int) :
 */
 int 
 PF_Send ARG3(int,to,int,tag,int,par){  
@@ -226,8 +225,8 @@ PF_Send ARG3(int,to,int,tag,int,par){
   return(0);
 }
 /*
-  #] int  PF_Send(VOID*,LONG,int,int,int)
-  #[ int  PF_BroadCast(int)
+  	#] int  PF_Send(int,int,int) :
+  	#[ int  PF_BroadCast(int) :
 */
 int 
 PF_BroadCast ARG1(int,par)
@@ -246,8 +245,8 @@ PF_BroadCast ARG1(int,par)
   return(0);
 }
 /*
-  #] int  PF_BroadCast(VOID*,LONG*,int)
-  #[ int  PF_UnPack(VOID*,LONG,MPI_Datatype)
+  	#] int  PF_BroadCast(int) :
+  	#[ int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
 */
 int 
 PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
@@ -261,8 +260,8 @@ PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
   return(0);
 }
 /*
-  #] int  PF_UnPack(VOID*,LONG*,MPI_Datatype)
-  #[ int  PF_Receive(int,int,int*,int*)
+  	#] int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
+  	#[ int  PF_Receive(int,int,int*,int*):
 */
 int 
 PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
@@ -279,10 +278,10 @@ PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
   return(0);
 }
 /*
-  #] int  PF_Receive(int,int,int*,int*)
+  	#] int  PF_Receive(int,int,int*,int*):
+  	#[ int  PF_ISendSbuf(int,int) :
 
   Special Send/Receive functions for WORD buffers, also nonblocking
-  #[ int  PF_ISendSbuf(int,int)
 
   nonblocking send operation. it sends everything from buff to fill of the
   active buffer.
@@ -353,8 +352,8 @@ PF_ISendSbuf ARG2(int,to,int,tag){
   return(0);
 }
 /*
-  #] int  PF_ISendSbuf(...)
-  #[ int  PF_RecvWbuf(WORD*,LONG*,int*)
+  	#] int  PF_ISendSbuf(int,int) :
+  	#[ int  PF_RecvWbuf(WORD*,LONG*,int*):
 
   Blocking receive of a WORD buffer
 */
@@ -375,8 +374,8 @@ PF_RecvWbuf ARG3(WORD*,b,LONG*,s,int*,src)
   return(PF_status.MPI_TAG);
 }
 /*
-  #] int  PF_RecvWbuf(WORD*,LONG*,int*)
-  #[ int  PF_IRecvRbuf(PF_BUFFER*,int,int)
+  	#] int  PF_RecvWbuf(WORD*,LONG*,int*):
+  	#[ int  PF_IRecvRbuf(PF_BUFFER*,int,int) :
 
 	 post nonblocking receive for the active receive buffer 
 	 the buffer is filled from full to stop
@@ -399,8 +398,8 @@ PF_IRecvRbuf ARG3(PF_BUFFER*,r,int,bn,int,from)
   return(0);
 }
 /*
-  #] int  PF_IRecvRbuf(...)
-  #[ int  PF_WaitRbuf(PF_BUFFER*,int,LONG*); 
+  	#] int  PF_IRecvRbuf(PF_BUFFER*,int,int) :
+  	#[ int  PF_WaitRbuf(PF_BUFFER *,int,LONG*) :
 
   function to wait for the buffer <bn> to finish a pending nonblocking
   receive. It returns the received tag and in *size the number of field
@@ -435,8 +434,8 @@ int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
   return(r->status[bn].MPI_TAG);
 }
 /*
-  #] int  PF_WaitRbuf(PF_BUFFER *,int,LONG*); 
-  #[ int  PF_Put_origin(int)
+  	#] int  PF_WaitRbuf(PF_BUFFER *,int,LONG*) :
+  	#[ int  PF_Put_origin(int) :
 */
 int PF_Put_origin ARG1(int,to){  
   
@@ -468,8 +467,8 @@ int PF_Put_origin ARG1(int,to){
 	return(1);
 }
 /*
-  #] int  PF_Put_origin(int)
-  #[ int  PF_Put_target(int)
+  	#] int  PF_Put_origin(int) :
+  	#[ int  PF_Put_target(int) :
 
    Synhronization for put operation on target
 */
@@ -489,40 +488,5 @@ PF_Put_target ARG1(int,src)
   return(1);
 }
 /*
-  #] int  PF_Put_target(int src)
+  	#] int  PF_Put_target(int) :
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -4,10 +4,6 @@
 
 #include "form3.h"
 
-#ifdef PARALLEL
-#include "parallel.h"
-#endif
-
 WORD printscratch[2];
 
 /*
@@ -49,20 +45,20 @@ Processor()
 	POSITION position;
 	WORD last, LastExpression;
 	LONG dd = 0;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	int firstterm;
 
 #ifdef PARALLEL
 	PF.module++;
 #endif
 	if ( NumExpressions == 0 ) return(0);
-	AR.expflags = 0;
+	AS.expflags = 0;
 	AR.CompressPointer = AM.CompressBuffer;
-	term = AR.WorkPointer;
-	if ( ( AR.WorkPointer + AM.MaxTer ) > AM.WorkTop ) return(MesWork());
+	term = AT.WorkPointer;
+	if ( ( AT.WorkPointer + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
 	UpdatePositions();
 	C->rhs[C->numrhs+1] = C->Pointer;
-	AR.KeptInHold = 0;
+	AS.KeptInHold = 0;
 	if ( AC.CollectFun ) AR.DeferFlag = 0;
 	for ( i = NumExpressions-1; i >= 0; i-- ) {
 		e = Expressions+i;
@@ -77,16 +73,16 @@ Processor()
 	ModuleInvariants();
 #endif
 	for ( i = 0; i < NumExpressions; i++ ) {
-		AR.CollectOverFlag = 0;
+		AS.CollectOverFlag = 0;
 		e = Expressions+i;
 		e->vflags &= ~ISUNMODIFIED;
-		AR.expchanged = 0;
+		AS.expchanged = 0;
 		if ( i == last ) LastExpression = 1;
 		else             LastExpression = 0;
 		if ( e->inmem ) {	/* expression lies in memory! */
 			WORD j;
 
-			AR.GetFile = 0;
+			AS.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
 			if ( GetTerm(term) <= 0 ) {
 				MesPrint("Expression %d has problems in scratchfile",i);
@@ -111,8 +107,8 @@ Processor()
 						LowerSortLevel(); goto ProcErr;
 					}
 				}
-				AR.WorkPointer = term + *term;
-				AR.RepPoint = AM.RepCount + 1;
+				AT.WorkPointer = term + *term;
+				AR.RepPoint = AT.RepCount + 1;
 				AR.CurDum = ReNumber(term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				if ( Generator(term,0) ) {
@@ -124,10 +120,10 @@ Processor()
 			if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
 			if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 			else e->vflags |= ISZERO;
-			if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
-			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
-			AR.GetFile = 0;
+			if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
+			if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
+			AS.GetFile = 0;
 		}
 		else {
 			AS.CurExpr = i;
@@ -139,7 +135,7 @@ Processor()
             if ( PF.me == MASTER ) {
 #endif
 /*:[13nov2003 mt]*/
-				AR.GetFile = 2;
+				AS.GetFile = 2;
 				SetScratch(AS.hidefile,&(e->onfile));
 /*[13nov2003 mt]:*/
 #ifdef PARALLEL
@@ -149,7 +145,7 @@ Processor()
 				goto commonread;
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
-				AR.GetFile = 0;
+				AS.GetFile = 0;
 
 #ifdef PARALLEL
 				if ( PF.me == MASTER ) SetScratch(AR.infile,&(e->onfile));
@@ -178,7 +174,7 @@ commonread:
 				NewSort();
 				ninterms = 0;
 #ifdef FGPARALLEL
-				{
+				{  /* This old buro code. Don't use! */
 					WORD *oldwork = A.WorkSpace;
 					A.WorkSpace = A.WorkPointer;
 
@@ -207,8 +203,8 @@ commonread:
 					  LowerSortLevel(); goto ProcErr;
 					}
 				  }
-				  AR.WorkPointer = term + *term;
-				  AR.RepPoint = AM.RepCount + 1;
+				  AT.WorkPointer = term + *term;
+				  AR.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				  if ( Generator(term,0) ) {
@@ -229,12 +225,12 @@ commonread:
 				if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
 				if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 				else e->vflags |= ISZERO;
-				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
 				
-				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
-				if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
+				if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
+				if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
 #endif
-				AR.GetFile = 0;
+				AS.GetFile = 0;
 				break;
 			case SKIPLEXPRESSION:
 			case SKIPGEXPRESSION:
@@ -243,7 +239,7 @@ commonread:
             if ( PF.me != MASTER ) break;
 #endif
 /*:[13nov2003 mt]*/
-				AR.GetFile = 0;
+				AS.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
@@ -283,7 +279,7 @@ commonread:
             if ( PF.me != MASTER ) break;
 #endif
 /*:[13nov2003 mt]*/
-				AR.GetFile = 0;
+				AS.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
@@ -329,13 +325,13 @@ commonread:
 				break;
 		}
 		}
-		AR.KeptInHold = 0;
+		AS.KeptInHold = 0;
 	}
 	AR.DeferFlag = 0;
-	AR.WorkPointer = term;
+	AT.WorkPointer = term;
 	return(retval);
 ProcErr:
-	AR.WorkPointer = term;
+	AT.WorkPointer = term;
 	if ( AM.tracebackflag ) MesCall("Processor");
 	return(-1);
 }
@@ -367,11 +363,11 @@ TestSub ARG2(WORD *,term,WORD,level)
 	WORD *m, *t, *r, retvalue, funflag, j;
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum = 0;
 	NESTING n;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	LONG isp, i = 0;
 	TABLES T;
 ReStart:
-	AR.TMbuff = AM.rbufnum;
+	AT.TMbuff = AM.rbufnum;
 	funflag = 0;
 	t = term;
 	r = t + *t - 1;
@@ -482,7 +478,10 @@ ReStart:
 /*
 							We will generate more terms than we can count
 */
-TooMuch:					MesPrint("Attempt to generate more terms than FORM can count");
+TooMuch:;
+							LOCK(ErrorMessageLock);
+							MesPrint("Attempt to generate more terms than FORM can count");
+							UNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						GetBinom(BinoScrat,&nbino,(WORD)mm,t[3]);
@@ -500,15 +499,11 @@ TooMuch:					MesPrint("Attempt to generate more terms than FORM can count");
 					last3 = mm;
 					}
 				}
-/*
-currentTerm = term;
-MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmin[3],mnum1,mnum2);
-*/
 				t = tmin;
 #endif
 /*				AR.TePos = 0;  */
 				AR.TePos = WORDDIF(t,term);
-				AR.TMbuff = t[4];
+				AT.TMbuff = t[4];
 				if ( t[3] < 0 ) {
 					AR.TeInFun = 1;
 					AR.TePos = WORDDIF(t,term);
@@ -536,9 +531,9 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 			AR.TePos = 0;
 			AR.TeSuOut = t[3];
 			AR.Frozen = 0;
-			AR.TMaddr = m = AR.WorkPointer;
+			AT.TMaddr = m = AT.WorkPointer;
 			j = t[1];
-			AR.WorkPointer += j;
+			AT.WorkPointer += j;
 			r = t;
 			NCOPY(m,r,j);
 			r = t + t[1];
@@ -552,7 +547,7 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 					no wildcard substitutions are needed here.
 */
 					t += 2;
-					AR.Frozen = m = AR.WorkPointer;
+					AR.Frozen = m = AT.WorkPointer;
 /*
 					We should check now for subexpressions and if necessary
 					we substitute them. Keep in mind: only one term allowed!
@@ -570,9 +565,9 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 						just e[(a^2)*b]. In either case we should evaluate
 */
 						while ( t < tttstop ) *m++ = *t++;
-						*AR.WorkPointer = m-AR.WorkPointer;
-						m = AR.WorkPointer;
-						AR.WorkPointer = m + *m;
+						*AT.WorkPointer = m-AT.WorkPointer;
+						m = AT.WorkPointer;
+						AT.WorkPointer = m + *m;
 						NewSort();
 						if ( Generator(m,cbuf[AM.rbufnum].numlhs) ) {
 							LowerSortLevel(); goto EndTest;
@@ -583,7 +578,9 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 							*m++ = 4; *m++ = 1; *m++ = 1; *m++ = 3;
 						}
 						else if ( m[*m] != 0 ) {
+							LOCK(ErrorMessageLock);
 							MesPrint("Bracket specification in expression should be one single term");
+							UNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						else {
@@ -595,11 +592,13 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 					}
 					else {
 						while ( t < tttstop ) *m++ = *t++;
-						*AR.WorkPointer = m-AR.WorkPointer;
-						m = AR.WorkPointer;
-						AR.WorkPointer = m + *m;
+						*AT.WorkPointer = m-AT.WorkPointer;
+						m = AT.WorkPointer;
+						AT.WorkPointer = m + *m;
 						if ( Normalize(m) ) {
+							LOCK(ErrorMessageLock);
 							MesPrint("Error while picking up contents of bracket");
+							UNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						if ( !*m ) {
@@ -607,7 +606,7 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 						}
 						else m += *m;
 					}
-					AR.WorkPointer = m;
+					AT.WorkPointer = m;
 					break;
 				}
 				t += t[1];
@@ -629,18 +628,18 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 
 					/* Note that the cases ^0 and 0^ are treated in Normalize */
 
-					t1 = AddRHS(AR.ebufnum,1);
+					t1 = AddRHS(AT.ebufnum,1);
 					m = t + FUNHEAD;
 					if ( *m > 0 ) {
 						m += ARGHEAD;
 						i = t[FUNHEAD] - ARGHEAD;
 						while ( (t1 + i + 10) > C->Top )
-							t1 = DoubleCbuffer(AR.ebufnum,t1);
+							t1 = DoubleCbuffer(AT.ebufnum,t1);
 						while ( --i >= 0 ) *t1++ = *m++;
 					}
 					else {
 						if ( (t1 + 20) > C->Top )
-							t1 = DoubleCbuffer(AR.ebufnum,t1);
+							t1 = DoubleCbuffer(AT.ebufnum,t1);
 						ToGeneral(m,t1,1);
 						t1 += *t1;
 					}
@@ -655,7 +654,7 @@ MesPrint("Choose %d; minval = %l, power = %d, mnum = %d-%d",tmin-term,minval,tmi
 					*t++ = SUBEXPSIZE;
 					*t++ = C->numrhs;
 					*t++ = r[1];
-					*t++ = AR.ebufnum;
+					*t++ = AT.ebufnum;
 #if SUBEXPSIZE > 5
 Important: we may not have enough spots here
 #endif
@@ -699,24 +698,24 @@ Important: we may not have enough spots here
 					if ( r < tstop && ( ( *r > 0 && (r+*r) == tstop )
 					|| ( *r <= -FUNCTION && r+1 == tstop )
 					|| ( *r > -FUNCTION && *r < 0 && r+2 == tstop ) ) ) {
-						m = AddRHS(AR.ebufnum,1);
+						m = AddRHS(AT.ebufnum,1);
 						if ( *r > 0 ) {
 							i = *r - ARGHEAD;
 							r += ARGHEAD;
 							while ( (m + i + 10) > C->Top )
-								m = DoubleCbuffer(AR.ebufnum,m);
+								m = DoubleCbuffer(AT.ebufnum,m);
 							while ( --i >= 0 ) *m++ = *r++;
 						}
 						else {
 							while ( (m + 20) > C->Top )
-								m = DoubleCbuffer(AR.ebufnum,m);
+								m = DoubleCbuffer(AT.ebufnum,m);
 							ToGeneral(r,m,1);
 							m += *m;
 						}
 						*m++ = 0;
 						C->rhs[C->numrhs+1] = m;
 						C->Pointer = m;
-						m = AR.TMout;
+						m = AT.TMout;
 						*m++ = 6;
 						if ( *t == SUMF1 ) *m++ = SUMNUM1;
 						else			   *m++ = SUMNUM2;
@@ -738,7 +737,7 @@ Important: we may not have enough spots here
 							r++;
 							i = r[1] - 5;
 							*t++ = *r++; *t++ = *r++; *t++ = C->numrhs;
-							r++; *t++ = *r++; *t++ = AR.ebufnum; r++;
+							r++; *t++ = *r++; *t++ = AT.ebufnum; r++;
 							while ( --i >= 0 ) *t++ = *r++;
 						}
 						else {
@@ -746,7 +745,7 @@ Important: we may not have enough spots here
 							*t++ = 4+SUBEXPSIZE;
 							*t++ = C->numrhs;
 							*t++ = 1;
-							*t++ = AR.ebufnum;
+							*t++ = AT.ebufnum;
 							FILLSUB(t)
 							if ( lcounter < 0 ) {
 								*t++ = INDTOIND;
@@ -766,7 +765,7 @@ Important: we may not have enough spots here
 						AR.TeInFun = -C->numrhs;
 						AR.TePos = 0;
 						AR.TeSuOut = 0;
-						AR.TMbuff = AR.ebufnum;
+						AT.TMbuff = AT.ebufnum;
 						return(C->numrhs);
 					}
 				}
@@ -951,15 +950,15 @@ DoSpec:
 						j = *t;
 						t += ARGHEAD;
 						NewSort();
-						if ( AR.WorkPointer < term + *term )
-							AR.WorkPointer = term + *term;
+						if ( AT.WorkPointer < term + *term )
+							AT.WorkPointer = term + *term;
 
 						while ( t < AR.NestPoin->argsize+*(AR.NestPoin->argsize) ) {
-							m = AR.WorkPointer;
+							m = AT.WorkPointer;
 							r = t + *t;
 							do { *m++ = *t++; } while ( t < r );
-							r = AR.WorkPointer;
-							AR.WorkPointer = r + *r;
+							r = AT.WorkPointer;
+							AT.WorkPointer = r + *r;
 							if ( Normalize(r) ) {
 								LowerSortLevel(); goto EndTest;
 							}
@@ -967,41 +966,42 @@ DoSpec:
 								if ( *r ) {
 									if ( Modulus(r) ) {
 										LowerSortLevel();
-										AR.WorkPointer = r;
+										AT.WorkPointer = r;
 										goto EndTest;
 									}
 									if ( !*r ) {
 										LowerSortLevel();
-										AR.WorkPointer = r;
+										AT.WorkPointer = r;
 										return(0);
 									}
 								}
 							}
 							if ( *r ) StoreTerm(r);
-							AR.WorkPointer = r;
+							AT.WorkPointer = r;
 						}
 
-						if ( EndSort(AR.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
-						m = AR.WorkPointer+ARGHEAD;
+						if ( EndSort(AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
+						m = AT.WorkPointer+ARGHEAD;
 
 						while ( *m ) m += *m;
-						i = WORDDIF(m,AR.WorkPointer);
-						*AR.WorkPointer = i;
-						AR.WorkPointer[1] = 0;
-						if ( ToFast(AR.WorkPointer,AR.WorkPointer) ) {
-							m = AR.WorkPointer;
+						i = WORDDIF(m,AT.WorkPointer);
+						*AT.WorkPointer = i;
+						AT.WorkPointer[1] = 0;
+						if ( ToFast(AT.WorkPointer,AT.WorkPointer) ) {
+							m = AT.WorkPointer;
 							if ( *m <= -FUNCTION ) { m++; i = 1; }
 							else { m += 2; i = 2; }
 						}
 						j = i - j;
 						if ( j > 0 ) {
 							r = m + j;
-							if ( r > AM.WorkTop ) {
+							if ( r > AT.WorkTop ) {
+								LOCK(ErrorMessageLock);
 								MesWork();
-								goto EndTest;
+								goto EndTest2;
 							}
-							do { *--r = *--m; } while ( m > AR.WorkPointer );
-							AR.WorkPointer = r;
+							do { *--r = *--m; } while ( m > AT.WorkPointer );
+							AT.WorkPointer = r;
 							m = AR.EndNest;
 							r = m + j;
 							stop = AR.NestPoin->argsize+*(AR.NestPoin->argsize);
@@ -1013,7 +1013,7 @@ DoSpec:
 							do { *r++ = *m++; } while ( m < AR.EndNest );
 						}
 						m = AR.NestPoin->argsize;
-						r = AR.WorkPointer;
+						r = AT.WorkPointer;
 						while ( --i >= 0 ) *m++ = *r++;
 						n = AR.Nest;
 						while ( n <= AR.NestPoin ) {
@@ -1038,7 +1038,7 @@ DoSpec:
 						else {
 							if ( AC.Eside != LHSIDE ) {
 								AR.TeInFun = 1; AR.TePos = 0;
-								AR.TMbuff = AM.dbufnum; t1[2] |= DIRTYFLAG;
+								AT.TMbuff = AM.dbufnum; t1[2] |= DIRTYFLAG;
 								return(1);
 							}
 							AR.lhdollarflag = 1;
@@ -1052,7 +1052,7 @@ DoSpec:
 					Test 1: index arguments and range. i will be the number
 						of the element in the table.
 */
-					WORD rhsnumber, *oldwork = AR.WorkPointer;
+					WORD rhsnumber, *oldwork = AT.WorkPointer;
 					WORD ii, *p;
 					MINMAX *mm;
 					T = functions[funnum-FUNCTION].tabl;
@@ -1089,6 +1089,7 @@ DoSpec:
 							t++;
 							if ( *t < mm->mini || *t > mm->maxi ) {
 								if ( T->bounds ) {
+									LOCK(ErrorMessageLock);
 									MesPrint("Table boundary check. Argument %d",
 									T->numind-j);
 showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
@@ -1096,6 +1097,7 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 									IniLine();
 									WriteSubTerm(t1,1);
 									FiniLine();
+									UNLOCK(ErrorMessageLock);
 									SETERROR(-1)
 								}
 								goto NextFun;
@@ -1114,6 +1116,7 @@ teststrict:					if ( T->strict == -2 ) {
 								term[0] = 0; return(0);
 							}
 							if ( T->strict < 0 ) goto NextFun;
+							LOCK(ErrorMessageLock);
 							MesPrint("Element in table is undefined");
 							goto showtable;
 						}
@@ -1138,11 +1141,15 @@ caughttable:
 					ClearWild();
 					AN.RepFunNum = 0;
 					AN.RepFunList = AR.EndNest;
-					AR.WorkPointer = AR.EndNest + (AM.MaxTer >> 1);
-					if ( AR.WorkPointer >= AM.WorkTop ) { MesWork(); }
+					AT.WorkPointer = AR.EndNest + (AM.MaxTer >> 1);
+					if ( AT.WorkPointer >= AT.WorkTop ) {
+						LOCK(ErrorMessageLock);
+						MesWork();
+						UNLOCK(ErrorMessageLock);
+					}
 					wilds = 0;
 					if ( MatchFunction(T->pattern,t1,&wilds) > 0 ) {
-						AR.WorkPointer = oldwork;
+						AT.WorkPointer = oldwork;
 						if ( AR.NestPoin != AR.Nest ) return(1);
 
 						m = T->prototype;
@@ -1172,11 +1179,11 @@ caughttable:
 						AR.TeInFun = 0;
 						AR.TePos = 0;
 						AR.TeSuOut = -1;
-						if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
-						AR.TMbuff = tbufnum;
+						if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+						AT.TMbuff = tbufnum;
 						return(retvalue);
 					}
-					AR.WorkPointer = oldwork;
+					AT.WorkPointer = oldwork;
 				}
 NextFun:;
 			}
@@ -1187,7 +1194,7 @@ NextFun:;
 						if ( AC.Eside != LHSIDE ) {
 							AR.TeInFun = 1;
 							AR.TePos = 0;
-							AR.TMbuff = AM.dbufnum;
+							AT.TMbuff = AM.dbufnum;
 							return(1);
 						}
 						AR.lhdollarflag = 1;
@@ -1199,8 +1206,11 @@ NextFun:;
 		} while ( t < m );
 	}
 	return(0);
-EndTest:
+EndTest:;
+	LOCK(ErrorMessageLock);
+EndTest2:;
 	MesCall("TestSub");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1217,7 +1227,7 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 {
 	WORD *m, *t, *r, sign = 1;
 	WORD *u, *v, *w, *from, *to, 
-		ipp, olddefer = AR.DeferFlag, oldPolyFun = AC.PolyFun, i;
+		ipp, olddefer = AR.DeferFlag, oldPolyFun = AR.PolyFun, i;
 	from = t = term;
 	r = t + *t - 1;
 	m = r - ABS(*r) + 1;
@@ -1270,13 +1280,13 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 						*m++ = *from++;
 					}
 					to = m;
-					AC.PolyFun = 0;
+					AR.PolyFun = 0;
 					NewSort();
 					while ( t < v ) {
 						i = *t;
 						NCOPY(m,t,i);
 						m = to;
-                        if ( AR.WorkPointer < m+*m ) AR.WorkPointer = m + *m;
+                        if ( AT.WorkPointer < m+*m ) AT.WorkPointer = m + *m;
 						if ( Generator(m,cbuf[AM.rbufnum].numlhs) ) {
 							LowerSortLevel(); goto InFunc;
 						}
@@ -1288,7 +1298,7 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 
 					to -= ARGHEAD;
 					if ( EndSort(m,0) < 0 ) goto InFunc;
-					AC.PolyFun = oldPolyFun;
+					AR.PolyFun = oldPolyFun;
 					while ( *m ) m += *m;
 					*to = WORDDIF(m,to);
 					to[1] = 0;
@@ -1310,10 +1320,22 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 						AR.lhdollarflag = 1;
 					}
 					else {
+/*
+						This whole argument must be redone
+*/
 					DOLLARS d = Dollars + t[1];
-
-					/* This whole argument must be redone */
-
+#ifdef WITHPTHREADS
+					int nummodopt, dtype = -1;
+					if ( AS.MultiThreaded ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( t[1] == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							LOCK(d->pthreadslock);
+						}
+					}
+#endif
 					AR.DeferFlag = 0;
 					v = t + 2;
 					w = 0;	/* to appease the compilers warning devices */
@@ -1322,7 +1344,7 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 						*m++ = *from++;
 					}
 					to = m;
-					AC.PolyFun = 0;
+					AR.PolyFun = 0;
 					switch ( d->type ) {
 						case DOLINDEX:
 							if ( d->index >= 0 && d->index < AM.OffsetIndex ) {
@@ -1409,11 +1431,19 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 							break;
 						case DOLUNDEFINED:
 						default:
+							LOCK(ErrorMessageLock);
 							MesPrint("!!!Undefined $-variable: $%s!!!",
 							AC.dollarnames->namebuffer+d->name);
+							UNLOCK(ErrorMessageLock);
+#ifdef WITHPTHREADS
+							if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 							Terminate(-1);
 					}
-					AC.PolyFun = oldPolyFun;
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+					AR.PolyFun = oldPolyFun;
 					r = term + *term;
 					t = v;
 					while ( t < r ) *m++ = *t++;
@@ -1434,6 +1464,18 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 				if ( *t == FUNNYDOLLAR ) {
 					if ( AC.Eside != LHSIDE ) {
 					DOLLARS d = Dollars + t[1];
+#ifdef WITHPTHREADS
+					int nummodopt, dtype = -1;
+					if ( AS.MultiThreaded ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( t[1] == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							LOCK(d->pthreadslock);
+						}
+					}
+#endif
 					m = termout; w = 0;
 					while ( from < t ) {
 						if ( from == u ) w = m;
@@ -1453,8 +1495,14 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 								*m++ = d->where[1];
 							}
 							else {
-wrongtype:						MesPrint("$%s has wrong type for tensor substitution",
+wrongtype:;
+#ifdef WITHPTHREADS
+								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+								LOCK(ErrorMessageLock);
+								MesPrint("$%s has wrong type for tensor substitution",
 								AC.dollarnames->namebuffer+d->name);
+								UNLOCK(ErrorMessageLock);
 								return(-1);
 							}
 							break;
@@ -1513,10 +1561,18 @@ wrongtype:						MesPrint("$%s has wrong type for tensor substitution",
 							else goto wrongtype;
 							break;
 						case DOLUNDEFINED:
+#ifdef WITHPTHREADS
+							if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+							LOCK(ErrorMessageLock);
 							MesPrint("$%s is undefined in tensor substitution",
 							AC.dollarnames->namebuffer+d->name);
+							UNLOCK(ErrorMessageLock);
 							return(-1);
 					}
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 					w[1] = w[1] - 2 + (m-to);
 					from += 2;
 					term += *term;
@@ -1538,7 +1594,9 @@ wrongtype:						MesPrint("$%s has wrong type for tensor substitution",
 	return(1);
 
 InFunc:
+	LOCK(ErrorMessageLock);
 	MesCall("InFunction");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
  		
@@ -1560,8 +1618,13 @@ InsertTerm ARG6(WORD *,term,WORD,replac,WORD,extractbuff,WORD *,position,WORD *,
 {
 	WORD *m, *t, *r, i, l2, j;
 	WORD *u, *v, l1, *coef;
-	coef = AR.WorkPointer;
-	if ( ( AR.WorkPointer = coef + 2*AM.MaxTal ) > AM.WorkTop ) return(MesWork());
+	coef = AT.WorkPointer;
+	if ( ( AT.WorkPointer = coef + 2*AM.MaxTal ) > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	t = term;
 	r = t + *t;
 	l1 = l2 = r[-1];
@@ -1626,7 +1689,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 			}
 			*termout = WORDDIF(m,termout);
 			if (*termout > AM.MaxTer ) goto InsCall;
-			AR.WorkPointer = coef;
+			AT.WorkPointer = coef;
 			return(0);
 		}
 		t += t[1];
@@ -1651,7 +1714,9 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 	goto ComAct;
 
 InsCall:
+	LOCK(ErrorMessageLock);
 	MesCall("InsertTerm");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1706,15 +1771,15 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 				set up a struct to remember the bracket and the progress
 				status.
 */
-				m = AR.WorkPointer;
+				m = AT.WorkPointer;
 				s2 = r;
 				r = accum;
 				*m++ = WORDDIF(s2,r) + 3;
 				r++;
 				while ( r < s2 ) *m++ = *r++;
 				*m++ = 1; *m++ = 1; *m++ = 3;
-				m = AR.WorkPointer;
-				if ( Normalize(AR.WorkPointer) ) goto PasErr;
+				m = AT.WorkPointer;
+				if ( Normalize(AT.WorkPointer) ) goto PasErr;
 				r = freeze;
 				i = *m;
 				while ( --i >= 0 && *m++ == *r++ ) {}
@@ -1736,7 +1801,9 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	}
 	else {
 		if ( ( l = GetFromStore(accum,position,renumber,&InCompState,nexpr) ) < 0 ) {
+			LOCK(ErrorMessageLock);
 			MesCall("PasteFile");
+			UNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 		if ( l == 0 ) { *accum = 0; return(0); }
@@ -1744,14 +1811,18 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	}
 	accum += l;
 	if ( accum > stop ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Buffer too small in PasteFile");
+		UNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	*accum = 0;
 	*accfill = accum;
 	return(retlength);
 PasErr:
+	LOCK(ErrorMessageLock);
 	MesCall("PasteFile");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
  		
@@ -1793,7 +1864,9 @@ PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 		a[1] = divby;
 		a[0] = times;
 		if ( MulRat((UWORD *)t,REDLENG(l1),(UWORD *)a,1,(UWORD *)accum,&l1) ) {
+			LOCK(ErrorMessageLock);
 			MesCall("PasteTerm");
+			UNLOCK(ErrorMessageLock);
 			return(0);
 		}
 		x = l1;
@@ -1803,7 +1876,9 @@ PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 		*u = WORDDIF(accum,u);
 	}
 	if ( accum >= m ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Buffer too small in PasteTerm"); return(0);
+		UNLOCK(ErrorMessageLock);
 	}
 	*accum = 0;
 	return(accum);
@@ -1822,8 +1897,13 @@ WORD
 FiniTerm ARG5(WORD *,term,WORD *,accum,WORD *,termout,WORD,number,WORD,tepos)
 {
 	WORD *m, *t, *r, i, numacc, l2, ipp;
-	WORD *u, *v, l1, *coef = AR.WorkPointer, *oldaccum;
-	if ( ( AR.WorkPointer = coef + 2*AM.MaxTal ) > AM.WorkTop ) return(MesWork());
+	WORD *u, *v, l1, *coef = AT.WorkPointer, *oldaccum;
+	if ( ( AT.WorkPointer = coef + 2*AM.MaxTal ) > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	oldaccum = accum;
 	t = term;
 	m = t + *t - 1;
@@ -1958,16 +2038,18 @@ Nextr:;
 			while ( --i > 0 ) *m++ = *r++;
 			*m++ = l2;
 			*termout = WORDDIF(m,termout);
-			AR.WorkPointer = coef;
+			AT.WorkPointer = coef;
 			return(0);
 		}
 		t += t[1];
 	} while ( t < m );
-	AR.WorkPointer = coef;
+	AT.WorkPointer = coef;
 	return(1);
 
 FiniCall:
+	LOCK(ErrorMessageLock);
 	MesCall("FiniTerm");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1984,9 +2066,13 @@ Generator ARG2(WORD *,term,WORD,level)
 {
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0;
 	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, retnorm, extractbuff;
-	int *RepSto = AR.RepPoint, oldcbufnum = AR.cbufnum;
-	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AR.ebufnum;
+	int *RepSto = AR.RepPoint;
+	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum;
 	LONG posisub, oldcpointer;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	WORD
+#endif
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
 
@@ -2007,11 +2093,11 @@ Renormalize:
 			goto GenCall;
 		}
 		if ( !*term ) goto Return0;
-		if ( AR.PolyNorm ) {
+		if ( AN.PolyNorm ) {
 			if ( PolyMul(term) ) goto GenCall;
 			if ( !*term ) goto Return0;
 		}
-		if ( AR.WorkPointer < term + AM.MaxTer ) AR.WorkPointer = term + AM.MaxTer;
+		if ( AT.WorkPointer < term + AM.MaxTer ) AT.WorkPointer = term + AM.MaxTer;
 		do {
 SkipCount:	level++;
 			if ( level > C->numlhs ) {
@@ -2035,29 +2121,27 @@ SkipCount:	level++;
 				if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) {
 					ReNumber(term); Normalize(term);
 				}
-				if ( AC.PolyFun > 0 && AR.sLevel <= 0 ) {
+				if ( AR.PolyFun > 0 && AR.sLevel <= 0 ) {
 					if ( PrepPoly(term) != 0 ) goto Return0;
 				}
 				if ( AR.sLevel <= 0 && AR.BracketOn ) {
-					if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
-					termout = AR.WorkPointer;
-					if ( AR.WorkPointer + *term + 3 > AM.WorkTop ) goto OverWork;
+					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+					termout = AT.WorkPointer;
+					if ( AT.WorkPointer + *term + 3 > AT.WorkTop ) goto OverWork;
 					if ( PutBracket(term) ) return(-1);
 					AR.RepPoint = RepSto;
-					*AR.WorkPointer = 0;
+					*AT.WorkPointer = 0;
 					i = StoreTerm(termout);
-					AR.WorkPointer = termout;
-					AR.cbufnum = oldcbufnum;
+					AT.WorkPointer = termout;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
 					return(i);
 				}
 				else {
-					if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
-					*AR.WorkPointer = 0;
+					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+					*AT.WorkPointer = 0;
 					AR.RepPoint = RepSto;
 					i = StoreTerm(term);
-					AR.cbufnum = oldcbufnum;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
 					return(i);
@@ -2068,7 +2152,7 @@ SkipCount:	level++;
 				switch ( i ) {
 				  case TYPECOUNT:
 					if ( CountDo(term,C->lhs[level]) < C->lhs[level][2] ) {
-						AR.WorkPointer = term + *term;
+						AT.WorkPointer = term + *term;
 						goto Return0;
 					}
 					break;
@@ -2079,7 +2163,7 @@ SkipCount:	level++;
 					level = AC.Labels[C->lhs[level][2]];
 					break;
 				  case TYPEDISCARD:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					goto Return0;
 				  case TYPEIF:
 					while ( !DoIfStatement(C->lhs[level],term) ) {
@@ -2102,10 +2186,26 @@ SkipCount:	level++;
 						WORD *t = C->lhs[level] + 3, *m, j;
 						WORD theindex = C->lhs[level][2];
 						if ( theindex < 0 ) {	/* $-variable */
+#ifdef WITHPTHREADS
+							int nummodopt, dtype = -1;
 							theindex = -theindex;
+							if ( AS.MultiThreaded ) {
+								for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+									if ( theindex == ModOptdollars[nummodopt].number ) break;
+								}
+								if ( nummodopt < NumModOptdollars ) {
+									dtype = ModOptdollars[nummodopt].type;
+									LOCK(Dollars[theindex].pthreadslock);
+								}
+							}
+#else
+							theindex = -theindex;
+#endif
+
 							if ( Dollars[theindex].type != DOLINDEX
 							|| Dollars[theindex].index < AM.OffsetIndex
 							|| Dollars[theindex].index >= AM.OffsetIndex + WILDOFFSET ) {
+								LOCK(ErrorMessageLock);
 								MesPrint("$%s should have been an index"
 								,AC.dollarnames->namebuffer+Dollars[theindex].name);
 								currentTerm = term;
@@ -2115,9 +2215,16 @@ SkipCount:	level++;
 								printscratch[1] = theindex;
 								MesPrint("$%s = %$"
 								,AC.dollarnames->namebuffer+Dollars[theindex].name);
+								UNLOCK(ErrorMessageLock);
+#ifdef WITHPTHREADS
+							if ( dtype > 0 ) { UNLOCK(Dollars[theindex].pthreadslock); }
+#endif
 								goto GenCall;
 							}
 							theindex = Dollars[theindex].index;
+#ifdef WITHPTHREADS
+							if ( dtype > 0 ) { UNLOCK(Dollars[theindex].pthreadslock); }
+#endif
 						}
 						cp[1] = SUBEXPSIZE+4;
 						cp += SUBEXPSIZE;
@@ -2129,7 +2236,7 @@ SkipCount:	level++;
 						AR.CompressPointer = cp;
 						while ( --i >= 0 ) {
 							cp[-1] = *t++;
-							termout = AR.WorkPointer;
+							termout = AT.WorkPointer;
 							if ( ( j = WildFill(termout,term,op)) < 0 )
 								goto GenCall;
 							m = term;
@@ -2138,10 +2245,10 @@ SkipCount:	level++;
 								if ( *m++ != *termout++ ) break;
 							}
 							if ( j >= 0 ) {
-								termout = AR.WorkPointer;
-								AR.WorkPointer = termout + *termout;
+								termout = AT.WorkPointer;
+								AT.WorkPointer = termout + *termout;
 								if ( Generator(termout,level) ) goto GenCall;
-								AR.WorkPointer = termout;
+								AT.WorkPointer = termout;
 							}
 							else {
 								AR.CompressPointer = op;
@@ -2166,10 +2273,25 @@ SkipCount:	level++;
 						while ( --i >= 0 ) {
 							theindex = *wp++;
 							if ( theindex < 0 ) {	/* $-variable */
+#ifdef WITHPTHREADS
+								int nummodopt, dtype = -1;
 								theindex = -theindex;
+								if ( AS.MultiThreaded ) {
+									for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+										if ( theindex == ModOptdollars[nummodopt].number ) break;
+									}
+									if ( nummodopt < NumModOptdollars ) {
+										dtype = ModOptdollars[nummodopt].type;
+										LOCK(Dollars[theindex].pthreadslock);
+									}
+								}
+#else
+								theindex = -theindex;
+#endif
 								if ( Dollars[theindex].type != DOLINDEX
 								|| Dollars[theindex].index < AM.OffsetIndex
 								|| Dollars[theindex].index >= AM.OffsetIndex + WILDOFFSET ) {
+									LOCK(ErrorMessageLock);
 									MesPrint("$%s should have been an index"
 									,AC.dollarnames->namebuffer+Dollars[theindex].name);
 									currentTerm = term;
@@ -2179,9 +2301,16 @@ SkipCount:	level++;
 									printscratch[1] = theindex;
 									MesPrint("$%s = %$"
 									,AC.dollarnames->namebuffer+Dollars[theindex].name);
+									UNLOCK(ErrorMessageLock);
+#ifdef WITHPTHREADS
+									if ( dtype > 0 ) { UNLOCK(Dollars[theindex].pthreadslock); }
+#endif
 									goto GenCall;
 								}
 								theindex = Dollars[theindex].index;
+#ifdef WITHPTHREADS
+								if ( dtype > 0 ) { UNLOCK(Dollars[theindex].pthreadslock); }
+#endif
 							}
 							*cp++ = INDTOIND;
 							*cp++ = 4;
@@ -2197,7 +2326,7 @@ SkipCount:	level++;
 				  case TYPECHISHOLM:
 					if ( Chisholm(term,level) ) goto GenCall;
 CommonEnd:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					goto Return0;
 				  case TYPEARG:
 					if ( ( i = execarg(term,level) ) < 0 ) goto GenCall;
@@ -2223,21 +2352,27 @@ CommonEnd:
 					level = C->lhs[level][2];
 					break; }
 				  case TYPEEXIT:
+					LOCK(ErrorMessageLock);
 					MesPrint("%s",C->lhs[level]+3);
+					UNLOCK(ErrorMessageLock);
 					goto GenCall;
 				  case TYPESETEXIT:
-					AR.exitflag = 1;
+					AM.exitflag = 1; /* no danger of race conditions */
 					break;
 				  case TYPEPRINT:
 					currentTerm = term;
 					numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
 					listinprint = C->lhs[level]+3+C->lhs[level][2];
+					LOCK(ErrorMessageLock);
 					MesPrint((char *)(C->lhs[level]+3));
+					UNLOCK(ErrorMessageLock);
 					break;
 				  case TYPEFPRINT:
 					{
 					int oldFOflag = AM.FileOnlyFlag;
-					WORD oldPrintType = AO.PrintType;
+					WORD oldPrintType;
+					LOCK(ErrorMessageLock);
+					oldPrintType = AO.PrintType;
 					if ( AC.LogHandle >= 0 ) {
 						AM.FileOnlyFlag = 1;
 						AO.PrintType |= PRINTLFILE;
@@ -2248,6 +2383,7 @@ CommonEnd:
 					MesPrint((char *)(C->lhs[level]+3));
 					AO.PrintType = oldPrintType;
 					AM.FileOnlyFlag = oldFOflag;
+					UNLOCK(ErrorMessageLock);
 					}
 					break;
 				  case TYPEREDEFPRE:
@@ -2265,14 +2401,14 @@ CommonEnd:
 					PutPreVar(PreVar[j].name,(UBYTE *)(C->lhs[level]+4),0,1);
 					break;
 				  case TYPERENUMBER:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( FullRenumber(term,C->lhs[level][2]) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( *term == 0 ) goto Return0;
 					break;
 				  case TYPETRY:
 					if ( TryDo(term,C->lhs[level],level) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					goto Return0;
 				  case TYPEASSIGN:
 					{ WORD onc = AR.NoCompress;
@@ -2281,10 +2417,10 @@ CommonEnd:
 */
 					AR.NoCompress = 1;
 					AR.cTerm = currentTerm = term;
-					AR.WorkPointer = term + *term;
-					*AR.WorkPointer++ = 0;
+					AT.WorkPointer = term + *term;
+					*AT.WorkPointer++ = 0;
 					if ( AssignDollar(term,level) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					AR.cTerm = 0;
 					AR.NoCompress = onc;
 					break;
@@ -2292,7 +2428,7 @@ CommonEnd:
 				  case TYPEFINDLOOP:
 					if ( Lus(term,C->lhs[level][3],C->lhs[level][4],
 					C->lhs[level][5],C->lhs[level][6],C->lhs[level][2]) ) {
-						AR.WorkPointer = term + *term;
+						AT.WorkPointer = term + *term;
 						goto Renormalize;
 					}
 					break;
@@ -2303,7 +2439,7 @@ CommonEnd:
 				  case TYPETERM:
 					return(execterm(term,level));
 				  case TYPEDETCURDUM:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					AR.CurDum = DetCurDum(term);
 					break;
 				  case TYPEINEXPRESSION:
@@ -2318,69 +2454,69 @@ CommonEnd:
 					}
 					break;
 				  case TYPEMERGE:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( DoMerge(term,level,C->lhs[level][2],C->lhs[level][3]) )
 						goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					goto Return0;
 				  case TYPETESTUSE:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( TestUse(term,level) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					break;
 				  case TYPEAPPLY:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( ApplyExec(term,C->lhs[level][2],level) < C->lhs[level][2] ) {
-						AR.WorkPointer = term + *term;
+						AT.WorkPointer = term + *term;
 						*AR.RepPoint = 1;
 						goto ReStart;
 					}
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					break;
 /*
 				  case TYPEAPPLYRESET:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( ApplyReset(term,level) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					break;
 */
 				  case TYPEMODULUSGCD:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( ModulusGCD1(C->lhs[level][2],C->lhs[level][4],
 					C->lhs[level][5],term,C->lhs[level][3]) ) goto GenCall;
 					break;
 				  case TYPECHAININ:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( ChainIn(term,level,C->lhs[level][2]) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					break;
 				  case TYPECHAINOUT:
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					if ( ChainOut(term,level,C->lhs[level][2]) ) goto GenCall;
-					AR.WorkPointer = term + *term;
+					AT.WorkPointer = term + *term;
 					break;
 				}
 				goto SkipCount;
 			}
 		} while ( ( i = TestMatch(term,&level) ) == 0 );
-		if ( AR.WorkPointer < term + *term ) AR.WorkPointer = term + *term;
+		if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 		if ( i > 0 ) replac = TestSub(term,level);
 		else replac = i;
-		if ( replac >= 0 || AR.TMout[1] != SYMMETRIZE ) {
+		if ( replac >= 0 || AT.TMout[1] != SYMMETRIZE ) {
 			*AR.RepPoint = 1;
-			AR.expchanged = 1;
+			AS.expchanged = 1;
 		}
 #ifdef FGPARALLEL
 		A.NewLeaf = 0;
 #endif
 		if ( replac < 0 ) {		/* Terms come from automatic generation */
-AutoGen:	i = *AR.TMout;
-			t = termout = AR.WorkPointer;
-			if ( ( AR.WorkPointer += i ) > AM.WorkTop ) goto OverWork;
-			accum = AR.TMout;
+AutoGen:	i = *AT.TMout;
+			t = termout = AT.WorkPointer;
+			if ( ( AT.WorkPointer += i ) > AT.WorkTop ) goto OverWork;
+			accum = AT.TMout;
 			while ( --i >= 0 ) *t++ = *accum++;
 			if ( (*(FG.Operation[termout[1]]))(term,termout,replac,level) ) goto GenCall;
-			AR.WorkPointer = termout;
+			AT.WorkPointer = termout;
 			goto Return0;
 		}
 	}
@@ -2403,12 +2539,12 @@ AutoGen:	i = *AR.TMout;
 			else if ( AR.TeInFun == -4 && DoPolynomial(term,level) ) goto GenCall;
 		}
 		else {
-			termout = AR.WorkPointer;
-			if ( ( AR.WorkPointer += AM.MaxTer ) > AM.WorkTop ) goto OverWork;
+			termout = AT.WorkPointer;
+			if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) goto OverWork;
 			if ( InFunction(term,termout) ) goto GenCall;
-			AR.WorkPointer = termout + *termout;
+			AT.WorkPointer = termout + *termout;
 			*AR.RepPoint = 1;
-			AR.expchanged = 1;
+			AS.expchanged = 1;
 /*!!!*/
 /*
 #ifdef PARALLEL
@@ -2416,7 +2552,7 @@ AutoGen:	i = *AR.TMout;
 #endif
 */
 			if ( *termout && Generator(termout,level) < 0 ) goto GenCall;
-			AR.WorkPointer = termout;
+			AT.WorkPointer = termout;
 		}
 	}
 	else if ( replac > 0 ) {
@@ -2425,56 +2561,82 @@ AutoGen:	i = *AR.TMout;
 		if ( power < 0 ) {	/* Table expansion */
 			power = -power; tepos = 0;
 		}
-		extractbuff = AR.TMbuff;
+		extractbuff = AT.TMbuff;
+#ifdef WITHPTHREADS
+		if ( AS.MultiThreaded && extractbuff == AM.dbufnum ) {
+			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+				if ( replac == ModOptdollars[nummodopt].number ) break;
+			}
+			if ( nummodopt < NumModOptdollars ) {
+				dtype = ModOptdollars[nummodopt].type;
+				LOCK(Dollars[replac].pthreadslock);
+			}
+		}
+#endif
 		posisub = cbuf[extractbuff].rhs[replac] - cbuf[extractbuff].Buffer;
 		i = (WORD)cbuf[extractbuff].CanCommu[replac];
-		
+#ifdef WITHPTHREADS
+		if ( dtype > 0 && cbuf[extractbuff].Buffer[posisub]
+		&& cbuf[extractbuff].Buffer[cbuf[extractbuff].Buffer[posisub]] ) {
+			UNLOCK(Dollars[replac].pthreadslock);
+			LOCK(ErrorMessageLock);
+			MesPrint("A dollar variable with modoption max, min or sum can have only one term");
+			UNLOCK(ErrorMessageLock);
+			goto GenCall;
+		}
+#endif
 		if ( power == 1 ) {		/* Just a single power */
-			termout = AR.WorkPointer;
-			if ( ( AR.WorkPointer += AM.MaxTer ) > AM.WorkTop ) goto OverWork;
+			termout = AT.WorkPointer;
+			if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) goto OverWork;
 			while ( cbuf[extractbuff].Buffer[posisub] ) {
-				AR.WorkPointer = termout + AM.MaxTer;
+				AT.WorkPointer = termout + AM.MaxTer;
 				if ( InsertTerm(term,replac,extractbuff,
 					&(cbuf[extractbuff].Buffer[posisub]),termout,tepos) < 0 ) goto GenCall;
-				AR.WorkPointer = termout + *termout;
+				AT.WorkPointer = termout + *termout;
 				*AR.RepPoint = 1;
-				AR.expchanged = 1;
+				AS.expchanged = 1;
 				posisub += cbuf[extractbuff].Buffer[posisub];
+#ifdef WITHPTHREADS
+				if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
+#endif
 /*!!!*/
 /*
 #ifdef PARALLEL
-				if ( *posisub == 0 ) A.NewLeaf = -1;
+				if ( cbuf[extractbuff].Buffer[posisub] == 0 ) A.NewLeaf = -1;
 #endif
 */
 				if ( Generator(termout,level) < 0 ) goto GenCall;
+#ifdef WITHPTHREADS
+				if ( dtype > 0 ) break;
+#endif
 			}
-			AR.WorkPointer = termout;
+			AT.WorkPointer = termout;
 		}
 		else if ( i <= 1 ) {		/* Use binomials */
 			LONG posit, olw;
-			WORD *same, *ow = AR.WorkPointer;
-			LONG olpw = AR.posWorkPointer;
+			WORD *same, *ow = AT.WorkPointer;
+			LONG olpw = AT.posWorkPointer;
 			power1 = power+1;
 			WantAddLongs(power1);
-			olw = posit = AR.lWorkPointer; AR.lWorkPointer += power1;
-			same = ++AR.WorkPointer;
-			a = accum = ( AR.WorkPointer += power1+1 );
-			if ( ( AR.WorkPointer += 2 * AM.MaxTer ) > AM.WorkTop ) goto OverWork;
-			AR.lWorkSpace[posit] = posisub;
+			olw = posit = AT.lWorkPointer; AT.lWorkPointer += power1;
+			same = ++AT.WorkPointer;
+			a = accum = ( AT.WorkPointer += power1+1 );
+			if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop ) goto OverWork;
+			AT.lWorkSpace[posit] = posisub;
 			same[-1] = 0;
 			*same = 1;
 			*accum = 0;
 			tepos = AR.TePos;
 			i = 1;
 			do {
-				if ( cbuf[extractbuff].Buffer[AR.lWorkSpace[posit]] ) {
+				if ( cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]] ) {
 					if ( ( a = PasteTerm(i-1,accum,
-						&(cbuf[extractbuff].Buffer[AR.lWorkSpace[posit]]),i,*same) ) == 0 )
+						&(cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]]),i,*same) ) == 0 )
 						goto GenCall;
-					AR.lWorkSpace[posit+1] = AR.lWorkSpace[posit];
+					AT.lWorkSpace[posit+1] = AT.lWorkSpace[posit];
 					same[1] = *same + 1;
-					if ( i > 1 && AR.lWorkSpace[posit] < AR.lWorkSpace[posit-1] ) *same = 1;
-					AR.lWorkSpace[posit] += cbuf[extractbuff].Buffer[AR.lWorkSpace[posit]];
+					if ( i > 1 && AT.lWorkSpace[posit] < AT.lWorkSpace[posit-1] ) *same = 1;
+					AT.lWorkSpace[posit] += cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]];
 					i++;
 					posit++;
 					same++;
@@ -2483,57 +2645,69 @@ AutoGen:	i = *AR.TMout;
 					i--; posit--; same--;
 				}
 				if ( i > power ) {
-					termout = AR.WorkPointer = a;
-					if ( ( AR.WorkPointer += 2 * AM.MaxTer ) > AM.WorkTop )
+					termout = AT.WorkPointer = a;
+					if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
 						goto OverWork;
 					if ( FiniTerm(term,accum,termout,replac,tepos) ) goto GenCall;
-					AR.WorkPointer = termout + *termout;
+					AT.WorkPointer = termout + *termout;
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
+#endif
 					if ( Generator(termout,level) ) goto GenCall;
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) break;
+#endif
 					i--; posit--; same--;
 				}
 			} while ( i > 0 );
-			AR.WorkPointer = ow; AR.lWorkPointer = olw; AR.posWorkPointer = olpw;
+			AT.WorkPointer = ow; AT.lWorkPointer = olw; AT.posWorkPointer = olpw;
 		}
 		else {							/* No binomials */
-			LONG posit, olw, olpw = AR.posWorkPointer;
+			LONG posit, olw, olpw = AT.posWorkPointer;
 			WantAddLongs(power);
-			posit = olw = AR.lWorkPointer; AR.lWorkPointer += power;
-			a = accum = AR.WorkPointer;
-			if ( ( AR.WorkPointer += 2 * AM.MaxTer ) > AM.WorkTop )
+			posit = olw = AT.lWorkPointer; AT.lWorkPointer += power;
+			a = accum = AT.WorkPointer;
+			if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
 				goto OverWork;
-			for ( i = 0; i < power; i++ ) AR.lWorkSpace[posit++] = posisub;
+			for ( i = 0; i < power; i++ ) AT.lWorkSpace[posit++] = posisub;
 			posit = olw;
 			*accum = 0;
 			tepos = AR.TePos;
 			i = 0;
 			while ( i >= 0 ) {
-				if ( cbuf[extractbuff].Buffer[AR.lWorkSpace[posit]] ) {
+				if ( cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]] ) {
 					if ( ( a = PasteTerm(i,accum,
-						&(cbuf[extractbuff].Buffer[AR.lWorkSpace[posit]]),1,1) ) == 0 ) goto GenCall;
-					AR.lWorkSpace[posit] += cbuf[extractbuff].Buffer[AR.lWorkSpace[posit]];
+						&(cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]]),1,1) ) == 0 ) goto GenCall;
+					AT.lWorkSpace[posit] += cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]];
 					i++; posit++;
 				}
 				else {
-					AR.lWorkSpace[posit--] = posisub;
+					AT.lWorkSpace[posit--] = posisub;
 					i--;
 				}
 				if ( i >= power ) {
-					termout = AR.WorkPointer = a;
-					if ( ( AR.WorkPointer += 2 * AM.MaxTer ) > AM.WorkTop )
+					termout = AT.WorkPointer = a;
+					if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
 						goto OverWork;
 					if ( FiniTerm(term,accum,termout,replac,tepos) ) goto GenCall;
-					AR.WorkPointer = termout + *termout;
+					AT.WorkPointer = termout + *termout;
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
+#endif
 					if ( Generator(termout,level) ) goto GenCall;
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) break;
+#endif
 					i--; posit--;
 				}
 			}
-			AR.WorkPointer = accum;
-			AR.lWorkPointer = olw;
-			AR.posWorkPointer = olpw;
+			AT.WorkPointer = accum;
+			AT.lWorkPointer = olw;
+			AT.posWorkPointer = olpw;
 		}
 	}
 	else {								/* Expression from disk */
@@ -2548,7 +2722,7 @@ AutoGen:	i = *AR.TMout;
 			POSITION firstpos;
 			SETSTARTPOS(firstpos);
 
-/*			Note that AR.TMaddr is needed for GetTable just once! */
+/*			Note that AT.TMaddr is needed for GetTable just once! */
 /*
 			We need space for the previous term in the compression
 			This is made available in AM.CompressBuffer, although we may get
@@ -2559,78 +2733,77 @@ AutoGen:	i = *AR.TMout;
 			position!
 */
 			WantAddPointers(power+1);
-			comprev = opw = AR.pWorkPointer;
-			AR.pWorkPointer += power+1;
+			comprev = opw = AT.pWorkPointer;
+			AT.pWorkPointer += power+1;
 			WantAddPositions(power+1);
-			position = olpw = AR.posWorkPointer;
-			AR.posWorkPointer += power + 1;
+			position = olpw = AT.posWorkPointer;
+			AT.posWorkPointer += power + 1;
 
-			AR.pWorkSpace[comprev++] = AR.CompressPointer;
+			AT.pWorkSpace[comprev++] = AR.CompressPointer;
 
 			for ( i = 0; i < power; i++ ) {
-				PUTZERO(AR.posWorkSpace[position]); position++;
+				PUTZERO(AT.posWorkSpace[position]); position++;
 			}
 			position = olpw;
-			if ( ( renumber = GetTable(replac,&(AR.posWorkSpace[position])) ) == 0 ) goto GenCall;
-			accum = AR.WorkPointer;
-			if ( ( AR.WorkPointer += 2 * AM.MaxTer ) > AM.WorkTop )
+			if ( ( renumber = GetTable(replac,&(AT.posWorkSpace[position])) ) == 0 ) goto GenCall;
+			accum = AT.WorkPointer;
+			if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
 					goto OverWork;
-			aa = AR.WorkPointer;
+			aa = AT.WorkPointer;
 			*accum = 0;
-			i = 0; StartPos = AR.posWorkSpace[position];
+			i = 0; StartPos = AT.posWorkSpace[position];
 			while ( i >= 0 ) {
 skippedfirst:
-				AR.CompressPointer = AR.pWorkSpace[comprev-1];
-				if ( ( extra = PasteFile(i,accum,&(AR.posWorkSpace[position])
+				AR.CompressPointer = AT.pWorkSpace[comprev-1];
+				if ( ( extra = PasteFile(i,accum,&(AT.posWorkSpace[position])
 						,&a,renumber,Freeze,replac) ) < 0 ) goto GenCall;
 				if ( NOTSTARTPOS(firstpos) ) {
-					if ( ISMINPOS(firstpos) || ISEQUALPOS(firstpos,AR.posWorkSpace[position]) ) {
-						firstpos = AR.posWorkSpace[position];
-						ADDPOS(AR.posWorkSpace[position],extra * sizeof(WORD));
+					if ( ISMINPOS(firstpos) || ISEQUALPOS(firstpos,AT.posWorkSpace[position]) ) {
+						firstpos = AT.posWorkSpace[position];
+						ADDPOS(AT.posWorkSpace[position],extra * sizeof(WORD));
 						goto skippedfirst;
 					}
 				}
 				if ( extra ) { 
-					ADDPOS(AR.posWorkSpace[position],extra * sizeof(WORD));
-					i++; AR.posWorkSpace[++position] = StartPos;
-					AR.pWorkSpace[comprev++] = AR.CompressPointer;
+					ADDPOS(AT.posWorkSpace[position],extra * sizeof(WORD));
+					i++; AT.posWorkSpace[++position] = StartPos;
+					AT.pWorkSpace[comprev++] = AR.CompressPointer;
 				}
 				else {
-					PUTZERO(AR.posWorkSpace[position]); position--; i--;
+					PUTZERO(AT.posWorkSpace[position]); position--; i--;
 					comprev--;
 				}
 				if ( i >= power ) {
-					termout = AR.WorkPointer = a;
-					if ( ( AR.WorkPointer += 2*AM.MaxTer ) > AM.WorkTop ) goto OverWork;
+					termout = AT.WorkPointer = a;
+					if ( ( AT.WorkPointer += 2*AM.MaxTer ) > AT.WorkTop ) goto OverWork;
 					if ( FiniTerm(term,accum,termout,replac,0) ) goto GenCall;
 					if ( *termout ) {
-						AR.WorkPointer = termout + *termout;
+						AT.WorkPointer = termout + *termout;
 						*AR.RepPoint = 1;
-						AR.expchanged = 1;
+						AS.expchanged = 1;
 						if ( Generator(termout,level) ) goto GenCall;
 					}
 					i--; position--;
 					comprev--;
 				}
-				AR.WorkPointer = aa;
+				AT.WorkPointer = aa;
 			}
-			AR.WorkPointer = accum;
-			AR.posWorkPointer = olpw;
-			AR.pWorkPointer = opw;
+			AT.WorkPointer = accum;
+			AT.posWorkPointer = olpw;
+			AT.pWorkPointer = opw;
 		}
 		else {			/* Active expression */
-			aa = accum = AR.WorkPointer;
-			if ( ( AR.WorkPointer + 2 * AM.MaxTer + 1 ) > AM.WorkTop )
+			aa = accum = AT.WorkPointer;
+			if ( ( AT.WorkPointer + 2 * AM.MaxTer + 1 ) > AT.WorkTop )
 					goto OverWork;
-			*accum++ = -1; AR.WorkPointer++;
+			*accum++ = -1; AT.WorkPointer++;
 			if ( DoOnePow(term,power,replac,accum,aa,level,Freeze) ) goto GenCall;
-			AR.WorkPointer = aa;
+			AT.WorkPointer = aa;
 		}
   	}
 Return0:
 	AR.CurDum = DumNow;
 	AR.RepPoint = RepSto;
-	AR.cbufnum = oldcbufnum;
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
 	return(0);
@@ -2638,7 +2811,8 @@ Return0:
 GenCall:
 	if ( AM.tracebackflag ) {
 		termout = term;
-		AO.OutFill = AO.OutputLine = (UBYTE *)AR.WorkPointer;
+		LOCK(ErrorMessageLock);
+		AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 		AO.OutSkip = 3;
 		FiniLine();
 		i = *termout;
@@ -2649,16 +2823,18 @@ GenCall:
 		AO.OutSkip = 0;
 		FiniLine();
 		MesCall("Generator");
+		UNLOCK(ErrorMessageLock);
 	}
-	AR.cbufnum = oldcbufnum;
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
 	return(-1);
 OverWork:
-	AR.cbufnum = oldcbufnum;
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
-	return(MesWork());
+	LOCK(ErrorMessageLock);
+	MesWork();
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 }
 
 /*
@@ -2737,8 +2913,9 @@ DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 	if ( hand >= 0 ) {
 		SeekFile(hand,&(AS.OldOnFile[nexp]),SEEK_SET);
 		if ( ISNEGPOS(AS.OldOnFile[nexp]) < 0 ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("File error");
-			goto PowCall;
+			goto PowCall2;
 		}
 	}
 	else {
@@ -2800,17 +2977,27 @@ doterms:
 			acc += *acc;
 			if ( power <= 0 ) {
 				termout = acc;
-				if ( ( AR.WorkPointer = acc + 2*AM.MaxTer ) > AM.WorkTop ) return(MesWork());
+				if ( ( AT.WorkPointer = acc + 2*AM.MaxTer ) > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				if ( FiniTerm(term,aa,termout,nexp,0) ) goto PowCall;
 				if ( *termout ) {
-					AR.WorkPointer = termout + *termout;
+					AT.WorkPointer = termout + *termout;
 					*AR.RepPoint = 1;
-					AR.expchanged = 1;
+					AS.expchanged = 1;
 					if ( Generator(termout,level) ) goto PowCall;
 				}
 			}
 			else {
-				if ( acc > AM.WorkTop ) return(MesWork());
+				if ( acc > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				if ( DoOnePow(term,power,nexp,acc,aa,level,freeze) ) goto PowCall;
 			}
 NextTerm:;
@@ -2823,8 +3010,9 @@ EndExpr:
 	if ( hand >= 0 ) {
 		SeekFile(hand,&oldposition,SEEK_SET);
 		if ( ISNEGPOS(oldposition) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("File error");
-			goto PowCall;
+			goto PowCall2;
 		}
 	}
 	else {
@@ -2832,8 +3020,11 @@ EndExpr:
 	}
 	AR.GetOneFile = oldGetOneFile;
 	return(0);
-PowCall:
+PowCall:;
+	LOCK(ErrorMessageLock);
+PowCall2:;
 	MesCall("DoOnePow");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -2852,9 +3043,9 @@ Deferred ARG2(WORD *,term,WORD,level)
 	WORD *oldipointer = AR.CompressPointer;
 	WORD oldGetOneFile = AR.GetOneFile;
 	AR.GetOneFile = 1;
-	oldwork = AR.WorkPointer;
-	AR.WorkPointer += AM.MaxTer;
-	termout = AR.WorkPointer;
+	oldwork = AT.WorkPointer;
+	AT.WorkPointer += AM.MaxTer;
+	termout = AT.WorkPointer;
 	AR.DeferFlag = 0;
 	if ( AR.infile->handle >= 0 ) {
 		PUTZERO(oldposition);
@@ -2862,8 +3053,9 @@ Deferred ARG2(WORD *,term,WORD,level)
 		startposition = AR.DefPosition;
 		SeekFile(AR.infile->handle,&startposition,SEEK_SET);
 		if ( ISNEGPOS(startposition) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("File error");
-			goto DefCall;
+			goto DefCall2;
 		}
 	}
 	else {
@@ -2875,10 +3067,10 @@ Deferred ARG2(WORD *,term,WORD,level)
 	m++;
 	while ( *m != HAAKJE && m < mstop ) m += m[1];
 	if ( m >= mstop ) {	/* No deferred action! */
-		AR.WorkPointer = term + *term;
+		AT.WorkPointer = term + *term;
 		if ( Generator(term,level) ) goto DefCall;
 		AR.DeferFlag = 1;
-		AR.WorkPointer = oldwork;
+		AT.WorkPointer = oldwork;
 		AR.GetOneFile = oldGetOneFile;
 		return(0);
 	}
@@ -2908,11 +3100,11 @@ Deferred ARG2(WORD *,term,WORD,level)
 			goto DefCall;
 		}
 		*tstart = oldb;
-		AR.WorkPointer = termout + *termout;
+		AT.WorkPointer = termout + *termout;
 		if ( Generator(termout,level) ) goto DefCall;
 		AR.CompressPointer = oldipointer;
-		AR.WorkPointer = termout;
-		if ( GetOneTerm(AR.WorkPointer,AR.infile->handle) <= 0 ) break;
+		AT.WorkPointer = termout;
+		if ( GetOneTerm(AT.WorkPointer,AR.infile->handle) <= 0 ) break;
 		AR.CompressPointer = oldipointer;
 		t = AR.CompressPointer;
 		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
@@ -2927,7 +3119,9 @@ Thatsit:
 	if ( AR.infile->handle >= 0 ) {
 		SeekFile(AR.infile->handle,&oldposition,SEEK_SET);
 		if ( ISNEGPOS(oldposition) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("File error");
+			UNLOCK(ErrorMessageLock);
 		}
 	}
 	else {
@@ -2936,8 +3130,11 @@ Thatsit:
 	AR.DeferFlag = 1;
 	AR.GetOneFile = oldGetOneFile;
 	return(0);
-DefCall:
+DefCall:;
+	LOCK(ErrorMessageLock);
+DefCall2:;
 	MesCall("Deferred");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -2945,7 +3142,7 @@ DefCall:
  		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 
-		Routine checks whether the count of function AC.PolyFun is zero
+		Routine checks whether the count of function AR.PolyFun is zero
 		or one. If it is one and it has one scalarlike argument the
 		coefficient of the term is pulled inside the argument.
 		If the count is zero a new function is made with the coefficient
@@ -2968,13 +3165,13 @@ PrepPoly ARG1(WORD *,term)
 {
 	WORD count = 0, i, jcoef, ncoef, ofun = 0;
 	WORD *t, *m, *r, *tstop, *poly = 0, *v, *w, *vv, *ww;
-	WORD *oldworkpointer = AR.WorkPointer;
-	AR.PolyAct = 0;
+	WORD *oldworkpointer = AT.WorkPointer;
+	AT.PolyAct = 0;
 	t = term;
 	GETSTOP(t,tstop);
 	t++;
 	while ( t < tstop ) {
-		if ( *t == AC.PolyFun ) {
+		if ( *t == AR.PolyFun ) {
 			if ( count > 0 ) return(0);
 			poly = t;
 			count++;
@@ -2987,7 +3184,7 @@ PrepPoly ARG1(WORD *,term)
 		if ( ofun ) return(0);
 		poly = t = tstop;
 		if ( i == 3 && m[-2] == 1 && (m[-3]&MAXPOSITIVE) == m[-3] ) {
-			*m++ = AC.PolyFun;
+			*m++ = AR.PolyFun;
 			*m++ = FUNHEAD+2;
 #if FUNHEAD > 2
 			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
@@ -2998,7 +3195,7 @@ PrepPoly ARG1(WORD *,term)
 		}
 		else {
 			r = tstop;
-			*m++ = AC.PolyFun;
+			*m++ = AR.PolyFun;
 			*m++ = FUNHEAD+ARGHEAD+i+1;
 #if FUNHEAD > 2
 			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
@@ -3032,7 +3229,7 @@ PrepPoly ARG1(WORD *,term)
 		else if ( *t <= -FUNCTION ) {
 			if ( t+1 < r ) return(0);	/* More than one argument */
 			r = tstop;
-			*m++ = AC.PolyFun;
+			*m++ = AR.PolyFun;
 			*m++ = FUNHEAD*2+ARGHEAD+i+1;
 #if FUNHEAD > 2
 			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
@@ -3055,7 +3252,7 @@ PrepPoly ARG1(WORD *,term)
 			r = tstop;
 			if ( *t == -SNUMBER ) {
 				if ( t[1] == 0 ) return(1);	/* Term should be zero now */
-				*m = AC.PolyFun;
+				*m = AR.PolyFun;
 				w = m+1;
 				m += FUNHEAD+ARGHEAD;
 				v = m;
@@ -3065,9 +3262,9 @@ PrepPoly ARG1(WORD *,term)
 				*m++ = t[1];
 				*m++ = 1;
 				NCOPY(m,r,i);
-				AR.WorkPointer = m;
+				AT.WorkPointer = m;
 				if ( Normalize(v) ) Terminate(-1);
-				AR.WorkPointer = oldworkpointer;
+				AT.WorkPointer = oldworkpointer;
 				m = w;
 				if ( *v == 4 && v[2] == 1 && (v[1]&MAXPOSITIVE) == v[1] ) {
 					*m++ = FUNHEAD+2;
@@ -3092,7 +3289,7 @@ PrepPoly ARG1(WORD *,term)
 				}
 			}
 			else if ( *t == -SYMBOL ) {
-				*m++ = AC.PolyFun;
+				*m++ = AR.PolyFun;
 				*m++ = FUNHEAD+ARGHEAD+5+i;
 #if FUNHEAD > 2
 				{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
@@ -3115,7 +3312,7 @@ PrepPoly ARG1(WORD *,term)
 		else {
 			if ( t + *t < r ) return(0); /* More than one argument */
 			i = m[-1];
-			*m++ = AC.PolyFun;
+			*m++ = AR.PolyFun;
 			w = m;
 			m += ARGHEAD+FUNHEAD-1;
 			t += ARGHEAD;
@@ -3179,7 +3376,7 @@ PrepPoly ARG1(WORD *,term)
 		while ( t < tstop ) *poly++ = *t++;
 	}
 	r = term + *term;
-	AR.PolyAct = WORDDIF(poly,term);
+	AT.PolyAct = WORDDIF(poly,term);
 	while ( r < m ) *poly++ = *r++;
 	*poly++ = 1;
 	*poly++ = 1;
@@ -3200,11 +3397,11 @@ PolyMul ARG1(WORD *,term)
 	WORD *tstop;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
 retry:
-	AR.WorkPointer = term + *term;
+	AT.WorkPointer = term + *term;
 	GETSTOP(term,tstop);
 	t = term+1;
-	while ( *t != AC.PolyFun && t < tstop ) t += t[1];
-	while ( t < tstop && *t == AC.PolyFun ) {
+	while ( *t != AR.PolyFun && t < tstop ) t += t[1];
+	while ( t < tstop && *t == AR.PolyFun ) {
 		if ( t[1] > FUNHEAD ) {
 			if ( t[FUNHEAD] < 0 ) {
 				if ( t[FUNHEAD] <= -FUNCTION && t[1] == FUNHEAD+1 ) break;
@@ -3221,10 +3418,10 @@ retry:
 		noac = 1;
 		t += t[1];
 	}
-	if ( *t != AC.PolyFun || t >= tstop ) goto done;
+	if ( *t != AR.PolyFun || t >= tstop ) goto done;
 	fun1 = t;
 	t += t[1];
-	while ( t < tstop && *t == AC.PolyFun ) {
+	while ( t < tstop && *t == AR.PolyFun ) {
 		if ( t[1] > FUNHEAD ) {
 			if ( t[FUNHEAD] < 0 ) {
 				if ( t[FUNHEAD] <= -FUNCTION && t[1] == FUNHEAD+1 ) break;
@@ -3241,7 +3438,7 @@ retry:
 		noac = 1;
 		t += t[1];
 	}
-	if ( *t != AC.PolyFun || t >= tstop ) goto done;
+	if ( *t != AR.PolyFun || t >= tstop ) goto done;
 	fun2 = t;
 /*
 	We have two functions of the proper type.
@@ -3249,9 +3446,9 @@ retry:
 */
 	t = fun1 + FUNHEAD;
 	if ( *t < 0 ) {
-		n1 = 1; arg1 = AR.WorkPointer;
+		n1 = 1; arg1 = AT.WorkPointer;
 		ToGeneral(t,arg1,1);
-		AR.WorkPointer = arg1 + *arg1;
+		AT.WorkPointer = arg1 + *arg1;
 	}
 	else {
 		t += ARGHEAD;
@@ -3260,9 +3457,9 @@ retry:
 	}
 	t = fun2 + FUNHEAD;
 	if ( *t < 0 ) {
-		n2 = 1; arg2 = AR.WorkPointer;
+		n2 = 1; arg2 = AT.WorkPointer;
 		ToGeneral(t,arg2,1);
-		AR.WorkPointer = arg2 + *arg2;
+		AT.WorkPointer = arg2 + *arg2;
 	}
 	else {
 		t += ARGHEAD;
@@ -3277,7 +3474,7 @@ retry:
 	expensive ones.
 	Note: We may run into fun(-SNUMBER,value)
 */
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	NewSort();
 	for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
 	for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
@@ -3290,7 +3487,7 @@ retry:
 		t = t2+1;
 		while ( t < tt2 ) *m++ = *t++;
 		*m++ = 1; *m++ = 1; *m++ = 3; *w = WORDDIF(m,w);
-		AR.WorkPointer = m;
+		AT.WorkPointer = m;
 		if ( Normalize(w) ) { LowerSortLevel(); goto PolyCall; }
 		if ( *w ) {
 			m = w + *w;
@@ -3327,7 +3524,7 @@ retry:
 			m += ABS(l3);
 			m[-1] = l3;
 			*w = WORDDIF(m,w);
-			AR.WorkPointer = m;
+			AT.WorkPointer = m;
 			if ( StoreTerm(w) ) { LowerSortLevel(); goto PolyCall; }
 		}
 	}	
@@ -3339,12 +3536,12 @@ retry:
 	}
 	t = w;
 	while ( *t ) t += *t;
-	AR.WorkPointer = t;
+	AT.WorkPointer = t;
 	n1 = WORDDIF(t,w);
 	t1 = term;
 	while ( t1 < fun1 ) *t++ = *t1++;
 	t2 = t;
-	*t++ = AC.PolyFun;
+	*t++ = AR.PolyFun;
 	*t++ = FUNHEAD+ARGHEAD+n1;
 	*t++ = 0;
 	FILLFUN3(t)
@@ -3362,24 +3559,28 @@ retry:
 	t1 = fun2 + fun2[1];
 	t2 = term + *term;
 	while ( t1 < t2 ) *t++ = *t1++;
-	*AR.WorkPointer = n1 = WORDDIF(t,AR.WorkPointer);
+	*AT.WorkPointer = n1 = WORDDIF(t,AT.WorkPointer);
 	if ( n1 > AM.MaxTer ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
-		goto PolyCall;
+		goto PolyCall2;
 	}
-	m = term; t = AR.WorkPointer;
+	m = term; t = AT.WorkPointer;
 	NCOPY(m,t,n1);
 	action++;
 	goto retry;
 done:
-	AR.WorkPointer = term + *term;
+	AT.WorkPointer = term + *term;
 	if ( action && noac ) {
 		if ( Normalize(term) ) goto PolyCall;
-		AR.WorkPointer = term + *term;
+		AT.WorkPointer = term + *term;
 	}
 	return(0);
-PolyCall:
+PolyCall:;
+	LOCK(ErrorMessageLock);
+PolyCall2:;
 	MesCall("PolyMul");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 

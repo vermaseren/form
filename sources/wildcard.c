@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Wildcards :
  		#[ WildFill :			WORD WildFill(to,from,sub)
 
@@ -115,7 +115,7 @@ MakeExp:								dirty = 1;
 										*z++ = SUBEXPSIZE;
 										*z++ = s[3];
 										*z++ = 1;
-										*z++ = AR.ebufnum;
+										*z++ = AT.ebufnum;
 										FILLSUB(z)
 										*z++ = 1;
 										*z++ = 1;
@@ -138,7 +138,7 @@ MakeExp:								dirty = 1;
 								*z++ = s[3];
 								w = z;
 								*z++ = *++t;
-								*z++ = AR.ebufnum;
+								*z++ = AT.ebufnum;
 								FILLSUB(z)
 								goto DoPow;
 							}
@@ -214,7 +214,7 @@ Seven:;
 				while ( s < z ) *m++ = *s++;
 				break;
 /*
-			#] SYMBOLS : 
+			#] SYMBOLS :
 */
 			case DOTPRODUCT:
 /*
@@ -319,7 +319,7 @@ ss3:				*++m = *++t;
 										*z++ = SUBEXPSIZE;
 										*z++ = s[3];
 										*z++ = 1;
-										*z++ = AR.ebufnum;
+										*z++ = AT.ebufnum;
 										FILLSUB(z)
 									}
 									*z++ = 1; *z++ = 1;
@@ -336,7 +336,7 @@ ss3:				*++m = *++t;
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = *m + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -347,7 +347,7 @@ ss3:				*++m = *++t;
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = m[1] + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -369,7 +369,7 @@ ss3:				*++m = *++t;
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = *m + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -401,7 +401,7 @@ ss3:				*++m = *++t;
 									*z++ = SUBEXPSIZE;
 									*z++ = s[3];
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 								}
 								*z++ = 1; *z++ = 1;
@@ -434,7 +434,7 @@ RegPow:				if ( *m ) m++;
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = *m + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -444,7 +444,7 @@ RegPow:				if ( *m ) m++;
 									*z++ = 8+SUBEXPSIZE;
 									*z++ = m[1] + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -464,7 +464,7 @@ RegPow:				if ( *m ) m++;
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = *m + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -474,7 +474,7 @@ RegPow:				if ( *m ) m++;
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = m[1] + 1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -500,7 +500,7 @@ RegPow:				if ( *m ) m++;
 							*z++ = 4+SUBEXPSIZE;
 							*z++ = *m + 1;
 							*z++ = ABS(m[2]);
-							*z++ = AR.ebufnum;
+							*z++ = AT.ebufnum;
 							FILLSUB(z)
 							*z++ = INDTOIND;
 							*z++ = 4;
@@ -522,7 +522,7 @@ NextDot:;
 				}
 				break;
 /*
-			#] DOTPRODUCTS : 
+			#] DOTPRODUCTS :
 */
 			case SETSET:
 /*
@@ -566,7 +566,7 @@ NextDot:;
 								*z++ = 4+SUBEXPSIZE;
 								*z++ = s[3]+1;
 								*z++ = 1;
-								*z++ = AR.ebufnum;
+								*z++ = AT.ebufnum;
 								FILLSUB(z)
 								*z++ = VECTOVEC;
 								*z++ = 4;
@@ -586,7 +586,7 @@ NextDot:;
 											*z++ = 4+SUBEXPSIZE;
 											*z++ = s[3]+1;
 											*z++ = 1;
-											*z++ = AR.ebufnum;
+											*z++ = AT.ebufnum;
 											FILLSUB(z)
 											if ( *s == INDTOSUB ) *z++ = INDTOIND;
 											else *z++ = VECTOSUB;
@@ -606,7 +606,7 @@ NextDot:;
 								*z++ = 4+SUBEXPSIZE;
 								*z++ = s[3]+1;
 								*z++ = 1;
-								*z++ = AR.ebufnum;
+								*z++ = AT.ebufnum;
 								FILLSUB(z)
 								*z++ = INDTOIND;
 								*z++ = 4;
@@ -630,7 +630,7 @@ ss4:				m++; t++;
 				}
 				break;
 /*
-			#] VECTORS : 
+			#] VECTORS :
 */
 			case INDEX:
 /*
@@ -657,7 +657,7 @@ ss4:				m++; t++;
 								*z++ = SUBEXPSIZE;
 								*z++ = s[3];
 								*z++ = 1;
-								*z++ = AR.ebufnum;
+								*z++ = AT.ebufnum;
 								FILLSUB(z)
 								m--;
 								dirty = 1;
@@ -676,7 +676,7 @@ ss5:				m++; t++;
 				}
 				break;
 /*
-			#] INDEX : 
+			#] INDEX :
 */
 			case DELTA:
 			case LEVICIVITA:
@@ -700,7 +700,7 @@ Tensors:
 					}
 					s = subs;
 					if ( *m == FUNNYWILD ) {
-						CBUF *C = cbuf+AR.ebufnum;
+						CBUF *C = cbuf+AT.ebufnum;
 						t++;
 						for ( j = 0; j < i; j++ ) {
 							if ( *s == ARGTOARG && *t == s[2] ) {
@@ -724,7 +724,9 @@ Tensors:
 											*m++ = *w++;
 										}
 										else {
+											LOCK(ErrorMessageLock);
 											MesPrint("Illegal substitution of argument field in tensor");
+											UNLOCK(ErrorMessageLock);
 											SETERROR(-1)
 										}
 									}
@@ -748,7 +750,7 @@ Tensors:
 									*z++ = 4+SUBEXPSIZE;
 									*z++ = s[3]+1;
 									*z++ = 1;
-									*z++ = AR.ebufnum;
+									*z++ = AT.ebufnum;
 									FILLSUB(z)
 									*z++ = INDTOIND;
 									*z++ = 4;
@@ -824,7 +826,7 @@ ss7:				j = t[1];
 				}
 				break;
 /*
-			#] SUBEXPRESSION : 
+			#] SUBEXPRESSION :
 */
 			case EXPRESSION:
 /*
@@ -846,7 +848,9 @@ ss7:				j = t[1];
 							break;
 						}
 						else if ( *s <= SYMTOSUB ) {
+							LOCK(ErrorMessageLock);
 							MesPrint("Wildcard power of expression should be a number");
+							UNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 					}
@@ -871,7 +875,9 @@ ss7:				j = t[1];
 					*m++ = *t;
 					*m++ = t[1];
 					if ( WildFill(m,t+2,sub) < 0 ) {
+						LOCK(ErrorMessageLock);
 						MesCall("WildFill");
+						UNLOCK(ErrorMessageLock);
 						SETERROR(-1)
 					}
 					m += *m;
@@ -885,7 +891,7 @@ ss7:				j = t[1];
 				v[1] = m-v;
 				break;
 /*
-			#] EXPRESSION : 
+			#] EXPRESSION :
 */
 			default:
 /*
@@ -911,7 +917,9 @@ ss8:				v = m;
 					>= TENSORFUNCTION ) {
 						if ( *m < FUNCTION || functions[*m-FUNCTION].spec
 						< TENSORFUNCTION ) {
+							LOCK(ErrorMessageLock);
 							MesPrint("Illegal wildcarding of regular function to tensorfunction");
+							UNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 						m++; t++;
@@ -929,7 +937,7 @@ ss8:				v = m;
 /*
 			#[ Simple arguments :
 */
-							CBUF *C = cbuf+AR.ebufnum;
+							CBUF *C = cbuf+AT.ebufnum;
 							for ( si = 0; si < setflag; si += 2 ) {
 								if ( *t <= -FUNCTION ) {
 									if ( t == temp + setlist[si] ) {
@@ -1052,7 +1060,7 @@ ToSub:										m--;
 											*z++ = 4+SUBEXPSIZE;
 											*z++ = s[3]+1;
 											*z++ = 1;
-											*z++ = AR.ebufnum;
+											*z++ = AT.ebufnum;
 											FILLSUB(z)
 											*z++ = INDTOIND;
 											*z++ = 4;
@@ -1094,7 +1102,7 @@ ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments : 
+			#] Simple arguments :
 */
 						}
 						else {
@@ -1108,7 +1116,9 @@ ss10:							*m++ = *t++;
 							j = 0;
 							while ( t < zz ) {	/* do a term */
 								if ( ( len = WildFill(m,t,sub) ) < 0 ) {
+									LOCK(ErrorMessageLock);
 									MesCall("WildFill");
+									UNLOCK(ErrorMessageLock);
 									SETERROR(-1)
 								}
 								m += len;
@@ -1172,6 +1182,10 @@ WORD
 ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 {
 	WORD *m, *s, *w, j, i, ii, i3, flag, num;
+	DOLLARS d = 0;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+#endif
 	m = to;						/* pointer in output */
 	s = from + 2;
 	w = s + s[1];
@@ -1193,11 +1207,24 @@ ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 				if ( *s == SYMTONUM && s[2] == w[1] ) { num = s[3]; goto GotOne; }
 				s += s[1];
 			}
+			LOCK(ErrorMessageLock);
 			MesPrint(" Unresolved setelement during substitution");
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		else {	/* Dollar ! */
-			DOLLARS d = Dollars - w[1];
+			d = Dollars - w[1];
+#ifdef WITHPTHREADS
+			if ( AS.MultiThreaded ) {
+				for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+					if ( w[1] == ModOptdollars[nummodopt].number ) break;
+				}
+				if ( nummodopt < NumModOptdollars ) {
+					dtype = ModOptdollars[nummodopt].type;
+					LOCK(d->pthreadslock);
+				}
+			}
+#endif
 			if ( d->type == DOLNUMBER || d->type == DOLTERMS ) {
 				if ( d->where[0] == 4 && d->where[3] == 3 && d->where[2] == 1
 				&& d->where[1] > 0 && d->where[4] == 0 ) {
@@ -1227,19 +1254,29 @@ ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 					}
 				}
 			}
+#ifdef WITHPTHREADS
+			if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+			LOCK(ErrorMessageLock);
 			MesPrint("Unusable type of variable $%s in set substitution",
 				AC.dollarnames->namebuffer+d->name);
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
-GotOne:
+GotOne:;
+#ifdef WITHPTHREADS
+		if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 		ii = m[*w];
 		if ( ii >= 2*MAXPOWER ) i3 = ii - 2*MAXPOWER;
 		else if ( ii <= -2*MAXPOWER ) i3 = -ii - 2*MAXPOWER;
 		else i3 = ( ii >= 0 ) ? ii: -ii - 1;
 
 		if ( num > ( Sets[i3].last - Sets[i3].first ) || num <= 0 ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("Array bound check during set substitution");
 			MesPrint("    value is %d",num);
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		m[*w] = (SetElements+Sets[i3].first)[num-1];
@@ -1270,7 +1307,9 @@ GotOne:
 				if ( *m == -INDEX || *m == -VECTOR ) {}
 				else if ( *m == -ARGWILD ) { *s++ = FUNNYWILD; }
 				else {
+					LOCK(ErrorMessageLock);
 					MesPrint("Illegal argument in tensor after set substitution");
+					UNLOCK(ErrorMessageLock);
 					SETERROR(-1)
 				}
 				*s++ = m[1];
@@ -1309,7 +1348,7 @@ ClearWild()
 }
 
 /*
- 		#] ClearWild : 
+ 		#] ClearWild :
  		#[ AddWild :			WORD AddWild(oldnumber,type,newnumber)
 
  		Adds a wildcard assignment.
@@ -1321,7 +1360,7 @@ WORD
 AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 {
 	WORD *w, *m, n, k, i = -1;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	AN.WildReserve = 0;
 	m = AN.WildMask;
 	w = AN.WildValue;
@@ -1338,12 +1377,12 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 					w[3] = newnumber;
 					goto FlipOn;
 				}
-				m = AddRHS(AR.ebufnum,1);
+				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
 				w = AN.argaddress;
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AR.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
@@ -1357,7 +1396,7 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 		do {
 			if ( w[2] == oldnumber && *w == ARGTOARG ) {
 				*m = 1;
-				m = AddRHS(AR.ebufnum,1);
+				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
 				w = AN.argaddress;
 				if ( ( newnumber & EATTENSOR ) != 0 ) {
@@ -1371,7 +1410,7 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 					w = AN.argaddress;
 					*m++ = 0;
 				}
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AR.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
@@ -1386,7 +1425,7 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 			if ( w[2] == oldnumber && *w == ARGTOARG ) {
 				WORD **a;
 				*m = 1;
-				m = AddRHS(AR.ebufnum,1);
+				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
 				a = (WORD **)(AN.argaddress); n = 0; k = newnumber;
 				while ( --newnumber >= 0 ) {
@@ -1396,7 +1435,7 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 					else n += 2;
 				}
 				*m++ = 0;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AR.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
 				a = (WORD **)(AN.argaddress);
 				while ( --k >= 0 ) {
 					w = *a++;
@@ -1421,21 +1460,21 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 				if ( n > 1 && w[4] == SETTONUM ) i = w[7];
 				*w = type;
 				*m = 1;
-				m = AddRHS(AR.ebufnum,1);
+				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
 				w = AN.argaddress;
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AR.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
 				C->Pointer = m;
-				m = AddRHS(AR.ebufnum,1);
+				m = AddRHS(AT.ebufnum,1);
 				w = AN.argaddress;
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AR.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
 				sstop = w + n;
 				while ( w < sstop ) {			/* Run over terms */
 					tt = w + *w; ttstop = tt - ABS(tt[-1]);
@@ -1472,7 +1511,9 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 				C->rhs[C->numrhs+1] = m;
 				C->Pointer = m;
 				if ( m > C->Top ) {
+					LOCK(ErrorMessageLock);
 					MesPrint("Internal problems with extra compiler buffer");
+					UNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				goto FlipOn;
@@ -1494,7 +1535,10 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 			m++; w += w[1];
 		} while ( --n > 0 );
 	}
-	return(MesPrint("Bug in AddWild."));
+	LOCK(ErrorMessageLock);
+	MesPrint("Bug in AddWild.");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 FlipOn:
 	if ( i >= 0 ) {
 		m = AN.WildMask;
@@ -1507,14 +1551,16 @@ FlipOn:
 			}
 			m++; w += w[1];
 		}
+		LOCK(ErrorMessageLock);
 		MesPrint(" Bug in AddWild with passing set[i]");
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	return(0);
 }
 
 /*
- 		#] AddWild : 
+ 		#] AddWild :
  		#[ CheckWild :			WORD CheckWild(oldnumber,type,newnumber,newval)
 
  		Tests whether a wildcard assignment is allowed.
@@ -1542,7 +1588,7 @@ CheckWild ARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 {
 	WORD *w, *m, *s, n, old2;
 	WORD n2, oldval, dirty, i, j, notflag = 0, retblock = 0;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	m = AN.WildMask;
 	w = AN.WildValue;
 	n = AN.NumWild;
@@ -1845,7 +1891,10 @@ CheckWild ARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 	AN.oldtype = -1;
 	AN.oldvalue = -1;
 	AN.WildReserve = 0;
-	return(MesPrint("Inconsistency in Wildcard prototype."));
+	LOCK(ErrorMessageLock);
+	MesPrint("Inconsistency in Wildcard prototype.");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 NoMatch:
 	AN.WildReserve = 0;
 	return(1+retblock);
@@ -2168,7 +2217,7 @@ NoM:
 }
 
 /*
- 		#] CheckWild : 
+ 		#] CheckWild :
  	#] Wildcards :
 */
 

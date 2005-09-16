@@ -40,9 +40,9 @@ static WORD patternbuffersize = 0;
 	there can be more subexpression pointers. Its number is positive
 	as it corresponds to the level at which the C->rhs can be found
 	in the compiler output. The subexpression pointer contains the
-	wildcard substitution information. The power is found in *AR.TMout.
+	wildcard substitution information. The power is found in *AT.TMout.
 	For operations the subexpression pointer is negative and corresponds
-	to an address in the array AR.TMout. In this array are then the
+	to an address in the array AT.TMout. In this array are then the
 	instructions for the routine to be called and its number in
 	the array 'Operations'
 	The format is here:
@@ -77,8 +77,10 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		}
 		else {
 			AR.RepPoint--;
-			if ( AR.RepPoint < AM.RepCount ) {
+			if ( AR.RepPoint < AT.RepCount ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("Internal problems with REPEAT count");
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -96,34 +98,38 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 	AN.WildValue = w = m + SUBEXPSIZE;
 	m += m[1];
 	AN.WildStop = m;
-	OldWork = AR.WorkPointer;
+	OldWork = AT.WorkPointer;
 	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
 		AC.Eside = LHSIDEX;
-		ww = AR.WorkPointer; i = m[0]; mm = m;
+		ww = AT.WorkPointer; i = m[0]; mm = m;
 		NCOPY(ww,mm,i);
 		*OldWork += 3;
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
-		AR.WorkPointer = ww;
+		AT.WorkPointer = ww;
 		NewSort();
 		if ( Generator(OldWork,C->numlhs) ) {
 			LowerSortLevel();
-			AR.WorkPointer = OldWork;
+			AT.WorkPointer = OldWork;
 			return(-1);
 		}
-		AR.WorkPointer = ww;
+		AT.WorkPointer = ww;
 		if ( EndSort(ww,0) < 0 ) {}
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AR.lhdollarerror == 0 ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("&LHS must be one term");
+				UNLOCK(ErrorMessageLock);
 				AR.lhdollarerror = 1;
 			}
-			AR.WorkPointer = OldWork;
+			AT.WorkPointer = OldWork;
 			return(-1);
 		}
 		m = ww; ww = m + *m;
 		if ( m[*m-1] < 0 ) { msign = 1; m[*m-1] = -m[*m-1]; }
 		if ( *ww || m[*m-1] != 3 || m[*m-2] != 1 || m[*m-3] != 1 ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("Dollar variable develops into an illegal pattern in id-statement");
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		*m -= m[*m-1];
@@ -139,7 +145,7 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		m = patternbuffer;
 		AC.Eside = RHSIDE;
 	}
-	AR.WorkPointer = ww = term + *term;
+	AT.WorkPointer = ww = term + *term;
 
 	ClearWild();
 	while ( w < AN.WildStop ) {
@@ -147,9 +153,14 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		w += w[1];
 	}
 	AN.RepFunNum = 0;
-	rep = AN.RepFunList = AR.WorkPointer;
-	AR.WorkPointer += AM.MaxTer >> 1;
-	if ( AR.WorkPointer >= AM.WorkTop ) return(MesWork());
+	rep = AN.RepFunList = AT.WorkPointer;
+	AT.WorkPointer += AM.MaxTer >> 1;
+	if ( AT.WorkPointer >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	AN.DisOrderFlag = ll[2] & SUBDISORDER;
 	switch ( ll[2] & SUBMASK ) {
 		case SUBONLY :
@@ -175,12 +186,17 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 							numdollars = 0;
 						}
 						ClearWild();
-						AR.WorkPointer = ww = term + *term;
+						AT.WorkPointer = ww = term + *term;
 /*						if ( rep < ww ) {*/
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
-							AR.WorkPointer += AM.MaxTer >> 1;
-							if ( AR.WorkPointer >= AM.WorkTop ) return(MesWork());
+							AT.WorkPointer += AM.MaxTer >> 1;
+							if ( AT.WorkPointer >= AT.WorkTop ) {
+								LOCK(ErrorMessageLock);
+								MesWork();
+								UNLOCK(ErrorMessageLock);
+								return(-1);
+							}
 /*
 						}
 						else {
@@ -201,12 +217,17 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 							numdollars = 0;
 						}
 						ClearWild();
-						AR.WorkPointer = ww = term + *term;
+						AT.WorkPointer = ww = term + *term;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
-							AR.WorkPointer += AM.MaxTer >> 1;
-							if ( AR.WorkPointer >= AM.WorkTop ) return(MesWork());
+							AT.WorkPointer += AM.MaxTer >> 1;
+							if ( AT.WorkPointer >= AT.WorkTop ) {
+								LOCK(ErrorMessageLock);
+								MesWork();
+								UNLOCK(ErrorMessageLock);
+								return(-1);
+							}
 /*
 						}
 						else {
@@ -228,12 +249,17 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 							numdollars = 0;
 						}
 						ClearWild();
-						AR.WorkPointer = ww = term + *term;
+						AT.WorkPointer = ww = term + *term;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
-							AR.WorkPointer += AM.MaxTer >> 1;
-							if ( AR.WorkPointer >= AM.WorkTop ) return(MesWork());
+							AT.WorkPointer += AM.MaxTer >> 1;
+							if ( AT.WorkPointer >= AT.WorkTop ) {
+								LOCK(ErrorMessageLock);
+								MesWork();
+								UNLOCK(ErrorMessageLock);
+								return(-1);
+							}
 /*
 						}
 						else {
@@ -248,7 +274,7 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 #if IDHEAD > 3
 			if ( match && ( ll[2] & SUBAFTER ) != 0 ) *level = AC.Labels[ll[3]];
 #endif
-/*			AR.WorkPointer = AN.RepFunList;
+/*			AT.WorkPointer = AN.RepFunList;
 			return(match); */
 			goto nextlevel;
 		case SUBONCE :
@@ -331,12 +357,12 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 #endif
 	}
 	else {
-		AR.WorkPointer = AN.RepFunList;
+		AT.WorkPointer = AN.RepFunList;
 	}
 nextlevel:;
 	} while ( (*level)++ < C->numlhs && C->lhs[*level][0] == TYPEIDOLD );
 	(*level)--;
-	AR.WorkPointer = AN.RepFunList;
+	AT.WorkPointer = AN.RepFunList;
 	return(match);
 }
 
@@ -358,8 +384,13 @@ Substitute ARG3(WORD *,term,WORD *,pattern,WORD,power)
 	WORD nt, *fill, nq, mt;
 	WORD *q, *subterm, *tcoef, oldval1 = 0, newval3, i = 0;
 	WORD PutExpr = 0, sign = 0;
-	TemTerm = AR.WorkPointer;
-	if ( ( AR.WorkPointer + AM.MaxTer*2 ) > AM.WorkTop ) { MesWork(); }
+	TemTerm = AT.WorkPointer;
+	if ( ( AT.WorkPointer + AM.MaxTer*2 ) > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 	m = pattern;
 	mstop = m + *m;
 	m++;
@@ -838,7 +869,7 @@ SubCoef:
 	if ( sign ) {
 		if ( ( sign & 1 ) != 0 ) fill[-1] = -fill[-1];
 	}
-	if ( AR.WorkPointer < fill ) AR.WorkPointer = fill;
+	if ( AT.WorkPointer < fill ) AT.WorkPointer = fill;
 	AN.RepFunNum = 0;
 }
 
@@ -887,7 +918,6 @@ FindAll ARG4(WORD *,term,WORD *,pattern,WORD,level,WORD *,par)
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;
     WORD fromindex, *intens;
 	CBUF *C;
-/*	AR.cbufnum = AR.FullProto[4]; */
 	C = cbuf+AM.rbufnum;
 	v = pattern[3];		/* The vector to be found */
 	m = t = term;
@@ -929,7 +959,7 @@ InVect:
 					else goto DoVect;
 				}
 				else if ( v == *r ) {
-DoVect:				m = AR.WorkPointer;
+DoVect:				m = AT.WorkPointer;
 					tstop = t;
 					t = term;
 					mstop = t + *t;
@@ -955,11 +985,11 @@ DoVect:				m = AR.WorkPointer;
 					}
 					else t += t[1];
 					do { *m++ = *t++; } while ( t < mstop );
-					*AR.WorkPointer = nq = WORDDIF(m,AR.WorkPointer);
-					m = AR.WorkPointer;
+					*AT.WorkPointer = nq = WORDDIF(m,AT.WorkPointer);
+					m = AT.WorkPointer;
 					t = term;
 					NCOPY(t,m,nq);
-					AR.WorkPointer = t;
+					AT.WorkPointer = t;
 					return(1);
 				}
 				r += fromindex;
@@ -973,7 +1003,7 @@ DoVect:				m = AR.WorkPointer;
 				if ( *r == r[1] ) {		/* p.p */
 					oldv = *r;
 					if ( v == *r ) {	/* v.v */
-TwoVec:					m = AR.WorkPointer;
+TwoVec:					m = AT.WorkPointer;
 						tstop = t;
 						t = term;
 						mstop = t + *t;
@@ -996,11 +1026,11 @@ CopRest:				t = tstop;
 						}
 						else t += t[1];
 						do { *m++ = *t++; } while ( t < mstop );
-						*AR.WorkPointer = nq = WORDDIF(m,AR.WorkPointer);
-						m = AR.WorkPointer;
+						*AT.WorkPointer = nq = WORDDIF(m,AT.WorkPointer);
+						m = AT.WorkPointer;
 						t = term;
 						NCOPY(t,m,nq);
-						AR.WorkPointer = t;
+						AT.WorkPointer = t;
 						return(1);
 					}
 					else if ( v >= OffNum ) {   /* v?.v? */
@@ -1041,7 +1071,7 @@ CopRest:				t = tstop;
 							if ( m[-IDHEAD+2] == SUBALL ) {
 							if ( ( vv = m[m[1]+3] ) == r[1] ) {
 OnePV:							TwoProto = m;
-TwoPV:							m = AR.WorkPointer;
+TwoPV:							m = AT.WorkPointer;
 								tstop = t;
 								t = term;
 								mstop = t + *t;
@@ -1100,7 +1130,7 @@ TwoPV:							m = AR.WorkPointer;
 			not in following idold statements.
 			Notice that a following q.p? cannot match.
 */
-OneOnly:				m = AR.WorkPointer;
+OneOnly:				m = AT.WorkPointer;
 						tstop = t;
 						t = term;
 						mstop = t + *t;
@@ -1268,7 +1298,7 @@ OneVect:;
 					else goto LeVect;
 				}
 				else if ( v == *r ) {
-LeVect:				m = AR.WorkPointer;
+LeVect:				m = AT.WorkPointer;
 					mstop = term + *term;
 					t = term;
 					*r = ++AR.CurDum;
@@ -1282,11 +1312,11 @@ LeVect:				m = AR.WorkPointer;
 					m[-1] = AR.CurDum;
 					t = tstop;
 					do { *m++ = *t++; } while ( t < mstop );
-					*AR.WorkPointer = nq = WORDDIF(m,AR.WorkPointer);
-					m = AR.WorkPointer;
+					*AT.WorkPointer = nq = WORDDIF(m,AT.WorkPointer);
+					m = AT.WorkPointer;
 					t = term;
 					NCOPY(t,m,nq);
-					AR.WorkPointer = t;
+					AT.WorkPointer = t;
 					return(1);
 				}
 				r++;

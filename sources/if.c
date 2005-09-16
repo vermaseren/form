@@ -14,7 +14,7 @@ DECLARE(WORD ReadElIf,ARG0)
 DECLARE(WORD HowMany,(WORD *,WORD *))
 
 /*
- 		#] Variables : 
+ 		#] Variables :
  		#[ Syntax :
 
 		The `if' is a conglomerate of statements: if,else,endif
@@ -77,7 +77,7 @@ DECLARE(WORD HowMany,(WORD *,WORD *))
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax : 
+ 		#] Syntax :
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -127,8 +127,9 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 			case IFDOLLAR:
 				{
 					DOLLARS d = Dollars + ifp[2];
-					if ( d->type == DOLZERO ) return(0);
-					if ( d->type == DOLUNDEFINED ) {
+					int dtype = d->type;  /* We use dtype to make the operation atomic */
+					if ( dtype == DOLZERO ) return(0);
+					if ( dtype == DOLUNDEFINED ) {
 						if ( AC.UnsureDollarMode == 0 ) {
 							MesPrint("$%s is undefined",AC.dollarnames->namebuffer+d->name);
 							Terminate(-1);
@@ -223,10 +224,27 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 					with length ncoef2. What if that cannot be done?
 */
 					DOLLARS d = Dollars + ifp[2];
+#ifdef WITHPTHREADS
+					int nummodopt, dtype = -1;
+					if ( AS.MultiThreaded ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( ifp[2] == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							LOCK(d->pthreadslock);
+						}
+					}
+#endif
 					switch ( d->type ) {
 						case DOLUNDEFINED:
 							if ( AC.UnsureDollarMode == 0 ) {
+#ifdef WITHPTHREADS
+								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+								LOCK(ErrorMessageLock);
 								MesPrint("$%s is undefined",AC.dollarnames->namebuffer+d->name);
+								UNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
 							ncoef2 = 0; coef2[0] = 0; coef2[1] = 1;
@@ -238,7 +256,12 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							if ( d->where[0] != INDEX || d->where[1] != 3
 							|| d->where[2] < 0 || d->where[2] >= AM.OffsetIndex ) {
 								if ( AC.UnsureDollarMode == 0 ) {
+#ifdef WITHPTHREADS
+									if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+									LOCK(ErrorMessageLock);
 									MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
+									UNLOCK(ErrorMessageLock);
 									Terminate(-1);
 								}
 								ncoef2 = 0; coef2[0] = 0; coef2[1] = 1;
@@ -253,7 +276,12 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 								ncoef2 = 1; coef2[0] = d->index; coef2[1] = 1;
 							}
 							else if ( AC.UnsureDollarMode == 0 ) {
+#ifdef WITHPTHREADS
+								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+								LOCK(ErrorMessageLock);
 								MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
+								UNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
 							ncoef2 = coef2[0] = 0; coef2[1] = 1;
@@ -264,7 +292,12 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							|| ( d->where[0] > 0 && d->where[d->where[0]] != 0 )
 							) {
 								if ( AC.UnsureDollarMode == 0 ) {
+#ifdef WITHPTHREADS
+									if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+									LOCK(ErrorMessageLock);
 									MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
+									UNLOCK(ErrorMessageLock);
 									Terminate(-1);
 								}
 								ncoef2 = coef2[0] = 0; coef2[1] = 1;
@@ -307,7 +340,12 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							}
 							else {
 								if ( AC.UnsureDollarMode == 0 ) {
+#ifdef WITHPTHREADS
+									if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+									LOCK(ErrorMessageLock);
 									MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
+									UNLOCK(ErrorMessageLock);
 									Terminate(-1);
 								}
 								ncoef2 = 0; coef2[0] = 0; coef2[1] = 1;
@@ -327,12 +365,20 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 								}
 							}
 							if ( AC.UnsureDollarMode == 0 ) {
+#ifdef WITHPTHREADS
+								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+								LOCK(ErrorMessageLock);
 								MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
+								UNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
 							ncoef2 = 0; coef2[0] = 0; coef2[1] = 1;
 							break;
 					}
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 				}
 				break;
 			case IFEXPRESSION:
@@ -439,7 +485,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement : 
+ 		#] DoIfStatement :
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -459,39 +505,41 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 	AN.WildValue = w = m + SUBEXPSIZE;
 	m += m[1];
 	AN.WildStop = m;
-	OldWork = AR.WorkPointer;
+	OldWork = AT.WorkPointer;
 	if ( ( ifcode[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
 		CBUF *C = cbuf+AM.rbufnum;
 		AC.Eside = LHSIDEX;
-		ww = AR.WorkPointer; i = m[0]; mm = m;
+		ww = AT.WorkPointer; i = m[0]; mm = m;
 		NCOPY(ww,mm,i);
 		*OldWork += 3;
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
-		AR.WorkPointer = ww;
+		AT.WorkPointer = ww;
 		NewSort();
 		if ( Generator(OldWork,C->numlhs) ) {
 			LowerSortLevel();
-			AR.WorkPointer = OldWork;
+			AT.WorkPointer = OldWork;
 			return(-1);
 		}
-		AR.WorkPointer = ww;
+		AT.WorkPointer = ww;
 		if ( EndSort(ww,0) < 0 ) {}
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AR.lhdollarerror == 0 ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("&LHS must be one term");
+				UNLOCK(ErrorMessageLock);
 				AR.lhdollarerror = 1;
 			}
-			AR.WorkPointer = OldWork;
+			AT.WorkPointer = OldWork;
 			return(-1);
 		}
-		m = ww; AR.WorkPointer = ww = m + *m;
+		m = ww; AT.WorkPointer = ww = m + *m;
 		if ( m[*m-1] < 0 ) { m[*m-1] = -m[*m-1]; }
 		*m -= m[*m-1];
 		AC.Eside = RHSIDE;
 	}
 	else {
 		ww = term + *term;
-		if ( AR.WorkPointer < ww ) AR.WorkPointer = ww;
+		if ( AT.WorkPointer < ww ) AT.WorkPointer = ww;
 	}
 	ClearWild();
 	while ( w < AN.WildStop ) {
@@ -499,10 +547,15 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		w += w[1];
 	}
 	AN.RepFunNum = 0;
-	AN.RepFunList = AR.WorkPointer;
-	AR.WorkPointer += AM.MaxTer >> 1;
-	topje = cbuf[AR.ebufnum].numrhs;
-	if ( AR.WorkPointer >= AM.WorkTop ) { MesWork(); }
+	AN.RepFunList = AT.WorkPointer;
+	AT.WorkPointer += AM.MaxTer >> 1;
+	topje = cbuf[AT.ebufnum].numrhs;
+	if ( AT.WorkPointer >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
 	AN.DisOrderFlag = ifcode[2] & SUBDISORDER;
 	switch ( ifcode[2] & (~SUBDISORDER) ) {
 		case SUBONLY :
@@ -518,8 +571,8 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		because of the Substitute.
 */
 			i = *term;
-			t = term; newterm = r = AR.WorkPointer;
-			NCOPY(r,t,i); AR.WorkPointer = r;
+			t = term; newterm = r = AT.WorkPointer;
+			NCOPY(r,t,i); AT.WorkPointer = r;
 			RetVal = 0;
 			AN.UseFindOnly = 0;
 			if ( ( power = FindRest(newterm,m) ) > 0 ) {
@@ -586,8 +639,8 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 			RetVal = 0;
 			break;
 	}
-	AR.WorkPointer = AN.RepFunList;
-	cbuf[AR.ebufnum].numrhs = topje;
+	AT.WorkPointer = AN.RepFunList;
+	cbuf[AT.ebufnum].numrhs = topje;
 	return(RetVal);
 }
 
@@ -627,7 +680,7 @@ VOID DoubleIfBuffers ARG0
 }
 
 /*
- 		#] DoubleIfBuffers : 
+ 		#] DoubleIfBuffers :
   	#] If statement :
 */
 

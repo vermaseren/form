@@ -348,7 +348,9 @@ NextInDot:
 			#] DOTPRODUCTS :
 */
 		else {
+			LOCK(ErrorMessageLock);
 			MesPrint("Error in pattern");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 EndLoop:;
@@ -889,7 +891,9 @@ OnceL8a:						mt -= 2*MAXPOWER;
 			#] DOTPRODUCTS :
 */
 		else {
+			LOCK(ErrorMessageLock);
 			MesPrint("Error in pattern");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 EndLoop:;
@@ -1007,7 +1011,9 @@ FindMulti ARG2(WORD *,term,WORD *,pattern)
 			#] DOTPRODUCTS :
 */
 		else {
+			LOCK(ErrorMessageLock);
 			MesPrint("Error in pattern");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	} while ( m < mstop ); }
@@ -1069,7 +1075,7 @@ FindRest ARG2(WORD *,term,WORD *,pattern)
 			do {
 				m += m[1]; n++;
 			} while ( m < mstop && *m >= FUNCTION );
-			AR.WorkPointer += n;
+			AT.WorkPointer += n;
 			while ( t < tstop && *t == SUBEXPRESSION ) t += t[1];
 			xstop = t;
 			nq = 0;
@@ -1279,7 +1285,9 @@ RestL11:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
 			#] DELTAS :
 */
 		else {
+			LOCK(ErrorMessageLock);
 			MesPrint("Pattern not yet implemented");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	} while ( m < mstop );

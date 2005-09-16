@@ -3,13 +3,10 @@
 */
 
 #include "form3.h"
-#ifdef PARALLEL
-#include "parallel.h"
-#endif
 static int iswarning = 0;
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ exit :
  		#[ Error0 :
 */
@@ -22,7 +19,7 @@ Error0 ARG1(char *,s)
 }
 
 /*
- 		#] Error0 : 
+ 		#] Error0 :
  		#[ Error1 :
 */
 
@@ -34,7 +31,7 @@ Error1 ARG2(char *,s,UBYTE *,t)
 }
 
 /*
- 		#] Error1 : 
+ 		#] Error1 :
  		#[ Error2 :
 */
 
@@ -46,21 +43,21 @@ Error2 ARG3(char *,s1,char *,s2,UBYTE *,t)
 }
 
 /*
- 		#] Error2 : 
+ 		#] Error2 :
  		#[ MesWork :
 */
 
 int
 MesWork ARG0
 {
-	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
+	MesPrint("=== Workspace overflow. %l bytes is not enough.",AT.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
 	Terminate(-1);
 	return(-1);
 }
 
 /*
- 		#] MesWork : 
+ 		#] MesWork :
  		#[ MesPrint :
 
 	Kind of a printf function for simple messages.
@@ -120,12 +117,12 @@ va_dcl
 	s = va_arg(ap,char *);
 #endif
 #ifdef PARALLEL
-	if(PF.me != MASTER) return(0);
+	if ( PF.me != MASTER ) return(0);
 #endif
 	FLUSHCONSOLE;
 	/*[19apr2004 mt]:*/
 	/*MesPrint never prints a message to an external channel!*/
-	WriteFile=&WriteFileToFile;
+	WriteFile = &WriteFileToFile;
 	/*:[19apr2004 mt]*/
 	AO.OutputLine = extrabuffer;
 	t = Out;
@@ -259,6 +256,18 @@ va_dcl
 				}
 				else {
 					DOLLARS d = Dollars + listinprint[1];
+#ifdef WITHPTHREADS
+					int nummodopt, dtype = -1;
+					if ( AS.MultiThreaded ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( listinprint[1] == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							LOCK(d->pthreadslock);
+						}
+					}
+#endif
 					AO.IsBracket = 0;
 					AO.OutSkip = 0;
 					AC.OutputMode = 0;
@@ -278,7 +287,12 @@ va_dcl
 							AO.OutStop = AO.OutputLine + AC.LineLength;
 							*t = 0;
 							AddToLine((UBYTE *)Out);
-							if ( WriteInnerTerm(term,first) ) Terminate(-1);
+							if ( WriteInnerTerm(term,first) ) {
+#ifdef WITHPTHREADS
+								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+								Terminate(-1);
+							}
 							first = 0;
 							t = Out;
 							u = (char *)AO.OutputLine;
@@ -303,7 +317,12 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 						AO.OutStop = AO.OutputLine + AC.LineLength;
 						*t = 0;
 						AddToLine((UBYTE *)Out);
-						if ( WriteSubTerm(tt,1) ) Terminate(-1);
+						if ( WriteSubTerm(tt,1) ) {
+#ifdef WITHPTHREADS
+							if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+							Terminate(-1);
+						}
 						t = Out;
 						u = (char *)AO.OutputLine;
 						*(AO.OutFill) = 0;
@@ -350,29 +369,29 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					else if ( d->type == DOLWILDARGS ) {
 						tt = d->where;
 						if ( *tt == 0 ) { tt++;
-						while ( *tt ) {
-						if ( AC.LineLength > 256 ) AC.LineLength = 256;
-						AO.IsBracket = 0;
-						AO.OutSkip = 0;
-						AC.OutputMode = 0;
-						AO.OutFill = AO.OutputLine;
-						AO.OutStop = AO.OutputLine + AC.LineLength;
-						*t = 0;
-						AddToLine((UBYTE *)Out);
-						WriteArgument(tt);
-						NEXTARG(tt);
-						if ( *tt ) TokenToLine((UBYTE *)",");
-						t = Out;
-						u = (char *)AO.OutputLine;
-						*(AO.OutFill) = 0;
-						while ( u < (char *)(AO.OutFill) ) *t++ = *u++;
-						*t = 0;
-						AO.OutSkip = oldskip;
-						AC.OutputMode = oldmode;
-						AO.IsBracket = oldbracket;
-						AC.LineLength = oldlength;
-						AO.OutStop = oldStop;
-						}
+						 while ( *tt ) {
+						  if ( AC.LineLength > 256 ) AC.LineLength = 256;
+						  AO.IsBracket = 0;
+						  AO.OutSkip = 0;
+						  AC.OutputMode = 0;
+						  AO.OutFill = AO.OutputLine;
+						  AO.OutStop = AO.OutputLine + AC.LineLength;
+						  *t = 0;
+						  AddToLine((UBYTE *)Out);
+						  WriteArgument(tt);
+						  NEXTARG(tt);
+						  if ( *tt ) TokenToLine((UBYTE *)",");
+						  t = Out;
+						  u = (char *)AO.OutputLine;
+						  *(AO.OutFill) = 0;
+						  while ( u < (char *)(AO.OutFill) ) *t++ = *u++;
+						  *t = 0;
+						  AO.OutSkip = oldskip;
+						  AC.OutputMode = oldmode;
+						  AO.IsBracket = oldbracket;
+						  AC.LineLength = oldlength;
+						  AO.OutStop = oldStop;
+						 }
 						}
 						else if ( *tt > 0 ) {	/* Tensor arguments */
 							i = *tt++;
@@ -403,10 +422,13 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 							}
 						}
 					}
+#ifdef WITHPTHREADS
+					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 					listinprint += 2;
 				}
 /*
-			#] dollars : 
+			#] dollars :
 */
 			}
 			else if ( FG.cTable[(int)*s] == 1 ) {
@@ -516,7 +538,7 @@ Warning ARG1(char *,s)
 }
 
 /*
- 		#] Warning : 
+ 		#] Warning :
  		#[ HighWarning :
 */
 
@@ -529,7 +551,7 @@ HighWarning ARG1(char *,s)
 }
 
 /*
- 		#] HighWarning : 
+ 		#] HighWarning :
  		#[ MesCall :
 */
 
@@ -540,7 +562,7 @@ MesCall ARG1(char *,s)
 }
 
 /*
- 		#] MesCall : 
+ 		#] MesCall :
  		#[ MesCerr :
 */
 
@@ -560,7 +582,7 @@ MesCerr ARG2(char *,s,UBYTE *,t)
 }
 
 /*
- 		#] MesCerr : 
+ 		#] MesCerr :
  		#[ MesComp :
 */
 
@@ -575,7 +597,7 @@ MesComp ARG3(char *,s,UBYTE *,p,UBYTE *,q)
 }
 
 /*
- 		#] MesComp : 
+ 		#] MesComp :
  		#[ PrintTerm :
 */
 
@@ -598,7 +620,7 @@ PrintTerm ARG2(WORD *,term,char *,where)
 }
 
 /*
- 		#] PrintTerm : 
+ 		#] PrintTerm :
  		#[ PrintSubTerm :
 */
 
@@ -621,6 +643,6 @@ PrintSubTerm ARG2(WORD *,term,char *,where)
 }
 
 /*
- 		#] PrintSubTerm : 
+ 		#] PrintSubTerm :
 	#] exit :
 */

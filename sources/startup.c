@@ -1,19 +1,11 @@
 #include "form3.h"
 #include "inivar.h"
 
-/*[28apr2004 mt]:*/
 #ifdef TRAPSIGNALS
 #include "portsignals.h"
 #endif
-/*:[28apr2004 mt]*/
 
 extern WORD dummysubexp[];
-
-
-#ifdef PARALLEL
-#include "parallel.h"
-#endif
-
 
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
@@ -40,6 +32,7 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 {
 	int errorflag = 0;
 	UBYTE *s, *t, *copy;
+	int threadnum = 0;
 	argc--; argv++;
 	AM.LogType = -1;
 	AM.HoldFlag = AM.qError = AM.Interact = AM.FileOnlyFlag = 0;
@@ -88,6 +81,11 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 							break;
 				case 'L': /* Make log file with only final statistics */
 							AM.LogType = 1;  break;
+				case 'm': /* Read number of threads */
+							s++;
+							while ( *s >= '0' && *s <= '9' )
+								threadnum = 10*threadnum + *s++ - '0';
+							break;
 				case 'p': /* Next arg is a path variable like in environment */
 							TAKEPATH(AM.Path)  break;
 				case 'q': /* Quiet option. Only output */
@@ -126,6 +124,7 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 			errorflag++;
 		}
 	}
+	AM.totalnumberofthreads = threadnum;
 	if ( AM.InputFileName ) {
 		s = AM.InputFileName;
 		while ( *s ) s++;
@@ -428,8 +427,8 @@ StartVariables ARG0
 	AP.LoopList.size = sizeof(DOLOOP);
 	AP.ChDollarList.message = "changeddollar";
 	AP.ChDollarList.size = sizeof(WORD);
-	AR.PreVarList.message = "PreVariable";
-	AR.PreVarList.size = sizeof(PREVAR);
+	AP.PreVarList.message = "PreVariable";
+	AP.PreVarList.size = sizeof(PREVAR);
 	AC.SymbolList.message = "symbol";
 	AC.SymbolList.size = sizeof(struct SyMbOl);
 	AC.IndexList.message = "index";
@@ -448,8 +447,8 @@ StartVariables ARG0
 	AC.cbufList.size = sizeof(CBUF);
 	AC.ChannelList.message = "channel buffer";
 	AC.ChannelList.size = sizeof(CHANNEL);
-	AR.DollarList.message = "$-variable";
-	AR.DollarList.size = sizeof(struct DoLlArS);
+	AP.DollarList.message = "$-variable";
+	AP.DollarList.size = sizeof(struct DoLlArS);
 	AC.DubiousList.message = "ambiguous variable";
 	AC.DubiousList.size = sizeof(struct DuBiOuS);
 	AC.SortList.message = "list of sort buffers";
@@ -487,7 +486,7 @@ StartVariables ARG0
 */
 	inictable();
 	AM.rbufnum = inicbufs();		/* Regular compiler buffer */
-	AR.ebufnum = inicbufs();		/* Buffer for extras during execution */
+	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
 /*
 	Enter the built in objects
@@ -522,9 +521,9 @@ StartVariables ARG0
 		Sets[ii].type = fixedsets[i].type;
 	}
 	AM.RepMax = MAXREPEAT;
-	AM.RepCount = (int *)Malloc1((LONG)((MAXREPEAT+3)*sizeof(int)),"repeat buffers");
-	AR.RepPoint = AM.RepCount;
-	AM.RepTop = AM.RepCount + MAXREPEAT;
+	AT.RepCount = (int *)Malloc1((LONG)((MAXREPEAT+3)*sizeof(int)),"repeat buffers");
+	AR.RepPoint = AT.RepCount;
+	AT.RepTop = AT.RepCount + MAXREPEAT;
 
 	AC.NumWildcardNames = 0;
 	AC.WildcardBufferSize = 50;
@@ -584,7 +583,7 @@ WORD
 IniVars()
 {
 	WORD *fi, i, one = 1, *t;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s;
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
@@ -674,7 +673,7 @@ IniVars()
 
 	AP.PreOut = 0;
 	AP.ComChar = AP.cComChar;
-	AR.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
+	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AC.PreAssignFlag = 0;
 
@@ -707,16 +706,20 @@ IniVars()
 	*s++ = AM.OffsetIndex;
 	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
 	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
+
+	AS.MultiThreaded = 0;
 	return(0);
 }
 
 /*
  		#] IniVars :
+ 		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
 #ifdef TRAPSIGNALS
 
-static int exitInProgress=0;
+static int exitInProgress = 0;
+static int trappedTerminate = 0;
 
 /*INTSIGHANDLER : some systems require a signal handler to return an integer,
   so define the macro INTSIGHANDLER if compiler fails:*/
@@ -737,6 +740,7 @@ onErrSig ARG1(int, i)
 		return;
 #endif
 	}
+	trappedTerminate = 1;
 	/*[13jul2005 mt]*//*Terminate(-1) on signal is here:*/
 	Terminate(-1);
 }
@@ -783,11 +787,13 @@ setSignalHandlers ARG0
 #endif
 /*:[28apr2004 mt]*/
 /*
+ 		#] Signal handlers :
  		#[ main :
 */
 int
 main ARG2(int,argc,char **,argv)
 {
+	UBYTE buf[21]; /* long enough for 64 bit integers */
 	char *sa;
 	int i = sizeof(A);
 
@@ -805,38 +811,42 @@ main ARG2(int,argc,char **,argv)
 	StartFiles();
 	StartVariables();
 
-/*[18nov2003 mt]:*/
-#ifdef PARALLEL
-	/*Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master*/
-	/*Define preprocessor variable NPARALLELTASKS_ as a total number of processes*/
-   {/*Block:*/
-	UBYTE buf[21];/*64/Log_2[10] = 19.3, this is enough for any integer*/
-      sprintf(buf,"%d",PF.me);
-		PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
-		sprintf(buf,"%d",PF.numtasks);
-		PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
-   }/*:Block*/
-#endif
-/*:[18nov2003 mt]*/
-
 	if ( DoTail(argc,(UBYTE **)argv) ) Terminate(-1);
 	if ( DoSetups() ) Terminate(-2);
 	if ( OpenInput() ) Terminate(-3);
 	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
 	if ( MakeSetupAllocs() ) Terminate(-2);
+
 #ifdef PARALLEL
+/*
+	Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master
+	Define preprocessor variable NPARALLELTASKS_ as a total number of processes
+*/
+	sprintf(buf,"%d",PF.me);
+	PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
+	sprintf(buf,"%d",PF.numtasks);
+	PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
 	if ( PF.me == MASTER && !AM.silent )
 #else
-        if ( !AM.silent ) 
+	if ( !AM.silent ) 
 #endif
-	if ( !AM.silent ) MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
+			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
                          ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
 	ReserveTempFiles();
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
 	IniVars();
-	TimeCPU(0);
 	Globalize(1);
+	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+#ifdef WITHPTHREADS
+	if ( StartAllThreads(AM.totalnumberofthreads) ) {
+		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
+		Terminate(-1);
+	}
+#endif
+	sprintf(buf,"%d",AM.totalnumberofthreads);
+	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
+	TimeCPU(0);
 	PreProcessor();
 	Terminate(0);
 	return(0);
@@ -872,10 +882,27 @@ CleanUp ARG1(WORD,par)
 */
 	}
 	if ( AC.StoreHandle >= 0 && par <= 0 ) {
+#ifdef TRAPSIGNALS
+		if ( trappedTerminate ) { /* We don't throw .str if it has contents */
+			POSITION pos;
+			PUTZERO(pos);
+			SeekFile(AC.StoreHandle,&pos,SEEK_END);
+			if ( ISNOTZEROPOS(pos) ) {
+				CloseFile(AC.StoreHandle);
+				goto dontremove;
+			}
+		}
 		CloseFile(AC.StoreHandle);
 		if ( par >= 0 || AO.StoreData.Handle < 0 ) {
 			remove(FG.fname);
 		}
+dontremove:;
+#else
+		CloseFile(AC.StoreHandle);
+		if ( par >= 0 || AO.StoreData.Handle < 0 ) {
+			remove(FG.fname);
+		}
+#endif
 	}
 	}
 	if ( AC.LogHandle >= 0 && par <= 0 ) {
@@ -886,7 +913,7 @@ CleanUp ARG1(WORD,par)
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -933,6 +960,6 @@ Terminate ARG1(int,errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
 */
 

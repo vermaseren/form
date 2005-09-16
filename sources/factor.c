@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ ModulusGCD1 :
 
 	For experimentation
@@ -114,7 +114,7 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 }
 
 /*
-  	#] ModulusGCD1 : 
+  	#] ModulusGCD1 :
   	#[ MakeMono :
 */
 
@@ -192,13 +192,13 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 		if ( *tt == cs+1 ) { n = 0; }
 		else { n = tt[4]; }
 		rl = (cs-1)/2;
-		w1 = AR.WorkPointer; w2 = ttt - cs;
+		w1 = AT.WorkPointer; w2 = ttt - cs;
 		for ( i = 0; i < rl; i++ ) { *w1++ = *w2++; *w1++ = *w2++; }
-		if ( TakeModulus((UWORD *)(AR.WorkPointer),&rl,0) < 0 ) {
+		if ( TakeModulus((UWORD *)(AT.WorkPointer),&rl,0) < 0 ) {
 			AC.ncmod = oldncmod; AC.cmod[0] = oldcmod;
 			return(-1);
 		}
-		m[n] = *(AR.WorkPointer);
+		m[n] = *(AT.WorkPointer);
 		tt = ttt;
 	}
 	AC.ncmod = oldncmod; AC.cmod[0] = oldcmod;
@@ -206,7 +206,7 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 }
 
 /*
-  	#] MakeMono : 
+  	#] MakeMono :
   	#[ ChinRem :
 
 	We have two input arrays: pp with a list of (short) primes
@@ -267,12 +267,14 @@ ChinRem ARG6(UWORD *,pp, UWORD *,rr, WORD, npp, UWORD *,x, WORD *,nx,int,par)
 	}
 	return(0);
 ChinErr:
+	LOCK(ErrorMessageLock);
 	MesCall("ChinRem");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
 /*
-  	#] ChinRem : 
+  	#] ChinRem :
   	#[ ChinRema :
 
 	Use of the Chinese Remainder theorem.
@@ -301,7 +303,9 @@ ChinRema ARG8(UWORD*,pa,WORD,na,UWORD*,ra,WORD,nra,UWORD,pb,UWORD,rb,UWORD*,x,WO
 	pp = DivMod(pa,na,pb);
 	pd = InvMod(pp,pb);
 	if ( pd == 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Problems with inverse in modulus calculation");
+		UNLOCK(ErrorMessageLock);
 		goto ChinErr;
 	}
 	xx = ((ULONG)nn)*pd;
@@ -312,12 +316,14 @@ ChinRema ARG8(UWORD*,pa,WORD,na,UWORD*,ra,WORD,nra,UWORD,pb,UWORD,rb,UWORD*,x,WO
 	if ( MulLong(pa,na,&pd,1,x,nx) || AddLong(x,*nx,ra,nra,x,nx) ) goto ChinErr;
 	return(0);
 ChinErr:
+	LOCK(ErrorMessageLock);
 	MesCall("ChinRema");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
 /*
-  	#] ChinRema : 
+  	#] ChinRema :
   	#[ DivMod :
 
 	Takes the modulus a%b and returns it. We assume that b fits inside a word.
@@ -334,7 +340,7 @@ UWORD DivMod ARG3(UWORD *,a,WORD,na,UWORD,b)
 }
 
 /*
-  	#] DivMod : 
+  	#] DivMod :
   	#[ DivShort :
 
 	Divides the long integer a by the short word b. Result in c.
@@ -361,7 +367,7 @@ WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
 }
 
 /*
-  	#] DivShort : 
+  	#] DivShort :
   	#[ InvMod :
 
 	Takes the inverse of A mod B. Assumes of course that a has an inverse,
@@ -400,7 +406,7 @@ UWORD InvMod ARG2(UWORD,A,UWORD,B)
 }
 
 /*
-  	#] InvMod : 
+  	#] InvMod :
   	#[ MakePrimes :
 
 	Routine creates (or extends) a list of short primes, starting at the
@@ -474,13 +480,15 @@ int MakePrimes ARG2(UWORD *,a,WORD,na)
 			}
 		}
 	}
+	LOCK(ErrorMessageLock);
 	MesPrint("Input in MakePrimes too large to work with all short primes");
+	UNLOCK(ErrorMessageLock);
 	return(1);
 }
 
 #endif
 
 /*
-  	#] MakePrimes : 
+  	#] MakePrimes :
 */
 

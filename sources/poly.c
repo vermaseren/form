@@ -92,7 +92,7 @@ WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 
 WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 {
-	WORD *t, *tt, *pbuffer, *w, *t1, *tstop1, *tstop2, *oldwork = AR.WorkPointer;
+	WORD *t, *tt, *pbuffer, *w, *t1, *tstop1, *tstop2, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
 	if ( NewSort() ) { return(0); }
 	if ( NewSort() ) { LowerSortLevel(); return(0); }
@@ -100,8 +100,10 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 	while ( *t ) {
 		tt = poly2;
 		while ( *tt ) {
-			if ( AM.WorkTop < oldwork + *t + *tt + 2 ) {
+			if ( AT.WorkTop < oldwork + *t + *tt + 2 ) {
+				LOCK(ErrorMessageLock);
 				MesWork();
+				UNLOCK(ErrorMessageLock);
 				goto abortion;
 			}
 			w = oldwork;
@@ -123,16 +125,21 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 			w += ABS(ncoef3);
 			w[-1] = ncoef3;
 			*oldwork = w - oldwork;
-			AR.WorkPointer = w;
+			AT.WorkPointer = w;
 			tt += *tt;
 			if ( Normalize(oldwork) ) goto abortion;
 			if ( AC.ncmod != 0 ) {
 				if ( Modulus(oldwork) ) goto abortion;
 				if ( *oldwork == 0 ) continue;
 			}
-			AR.WorkPointer = w = oldwork + *oldwork;
+			AT.WorkPointer = w = oldwork + *oldwork;
 			if ( AR.BracketOn ) {
-				if ( w + *oldwork + 3 > AM.WorkTop ) { MesWork(); goto abortion; }
+				if ( w + *oldwork + 3 > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					UNLOCK(ErrorMessageLock);
+					goto abortion;
+				}
 				if ( PutBracket(oldwork) ) goto abortion;
 				StoreTerm(w);
 			}
@@ -140,12 +147,14 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 		}
 		t += *t;
 	}
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 abortion:
+	LOCK(ErrorMessageLock);
 	MesPrint("Called from PolynoMul");
+	UNLOCK(ErrorMessageLock);
 	LowerSortLevel(); LowerSortLevel();
 	return(0);
 }
@@ -157,14 +166,16 @@ abortion:
 
 WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 {
-	WORD *t, *t1, *t2, *t1stop, *t2stop, *oldwork = AR.WorkPointer, *w = 0;
+	WORD *t, *t1, *t2, *t1stop, *t2stop, *oldwork = AT.WorkPointer, *w = 0;
 	WORD ncoef1, ncoef2, ncoef3, *n1, *n2 = 0, *n3 = 0, *n, *n4, *n5;
 	int i1, i2, j, succ;
 	LONG outsize = 0, numterms, outpoin = 0, i;
 	t1 = n1 = poly1;
 	t2 = n2 = poly2;
 	if ( *t2 == 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Polynomial division by zero");
+		UNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	if ( *t1 == 0 ) {
@@ -240,7 +251,7 @@ nextt:		t += *t;
 			ncoef3 = INCLENG(ncoef3);
 			w += ABS(ncoef3); w[-1] = ncoef3; *oldwork = w - oldwork;
 			*w++ = 0;
-			AR.WorkPointer = w;
+			AT.WorkPointer = w;
 /*
 			we have the complete factor. The rest is easy.
 */
@@ -285,7 +296,7 @@ aborteer:
 WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 {
 	WORD *t1, *t2, *n3, *t1stop, *t2stop, *n1, *n2;
-	WORD *oldwork = AR.WorkPointer, *ow, *w, *outbuffer = 0;
+	WORD *oldwork = AT.WorkPointer, *ow, *w, *outbuffer = 0;
 	WORD ncoef1, ncoef2, ncoef3, symnum;
 	LONG outsize, outpoin = 0, coefpoin;
 	int i1, i2, j;
@@ -294,9 +305,16 @@ WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 */
 	t1 = n1 = poly1;
 	t2 = n2 = poly2;
-	if ( oldwork + 2*AM.MaxTer >= AM.WorkTop ) { MesWork(); goto aborteer; }
+	if ( oldwork + 2*AM.MaxTer >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		goto aborteer;
+	}
 	if ( *t2 == 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Polynomial division by zero");
+		UNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	if ( *t1 == 0 ) {
@@ -375,7 +393,7 @@ dosub:
 			i1 -= 6; w = oldwork; coefpoin = outpoin;
 			while ( --i1 >= 0 ) outbuffer[outpoin++] = *w++;
 			outbuffer[outpoin++] = ncoef3;
-			AR.WorkPointer = ow = w;
+			AT.WorkPointer = ow = w;
 
 			if ( NewSort() ) { goto aborteer; }
 			if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
@@ -387,8 +405,8 @@ dosub:
 			t2 = n2 + *n2;
 			ncoef3 = -ncoef3; ncoef3 = REDLENG(ncoef3);
 			while ( *t2 ) {
-				AR.WorkPointer = ow;
-				w = AR.WorkPointer + 1;
+				AT.WorkPointer = ow;
+				w = AT.WorkPointer + 1;
 				GETSTOP(t2,t2stop);
 				if ( t2+1 == t2stop ) {
 					if ( j > 0 ) {
@@ -406,26 +424,26 @@ dosub:
 				ncoef1 = INCLENG(ncoef1);
 				w += ABS(ncoef1);
 				w[-1] = ncoef1;
-				*AR.WorkPointer = w-AR.WorkPointer;
-				AR.WorkPointer = w;
+				*AT.WorkPointer = w-AT.WorkPointer;
+				AT.WorkPointer = w;
 				if ( StoreTerm(ow) ) {
 					LowerSortLevel(); LowerSortLevel(); goto aborteer;
 				};
 				t2 += *t2;
 			}
 		}
-		AR.WorkPointer = ow;
+		AT.WorkPointer = ow;
 		if ( EndSort((WORD *)(&n3),2) < 0 ) { LowerSortLevel(); goto aborteer; }
 		LowerSortLevel();
 		n1 = n3;
 	}
 	*polyrem = CopyOfPolynomial(n1);
 	outbuffer[outpoin] = 0;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( n1 != poly1 ) M_free(n1,"Polyno1Div3");
 	return(outbuffer);
 aborteer:
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( outbuffer ) M_free(outbuffer,"Polyno1Div4");
 	return(0);
 }
@@ -457,6 +475,7 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 	WORD *b, *b1 = 0, *b2 = 0, *t, *t1, *t2, *tstop, powdif;
 	LONG outsize;
 #ifdef POLYDEBUG
+	LOCK(ErrorMessageLock);
 	MesPrint("Computing GCD of the polynomials");
 	PolynoWrite(poly1);
 	MesPrint("and");
@@ -468,6 +487,7 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 #ifdef POLYDEBUG
 		MesPrint("The GCD is");
 		PolynoWrite(onepol);
+		UNLOCK(ErrorMessageLock);
 #endif
 		return(CopyOfPolynomial(onepol));
 	}
@@ -477,9 +497,13 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 #ifdef POLYDEBUG
 		MesPrint("The GCD is");
 		PolynoWrite(onepol);
+		UNLOCK(ErrorMessageLock);
 #endif
 		return(CopyOfPolynomial(onepol));
 	}
+#ifdef POLYDEBUG
+	UNLOCK(ErrorMessageLock);
+#endif
 	while ( *t1 ) {
 		t = t1; GETSTOP(t,tstop); t++;
 		while ( t < tstop ) {
@@ -640,8 +664,10 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 			M_free(n3,"PolynoGCD");
 			M_free(GA,"PolynoGCD");
 #ifdef POLYDEBUG
+			LOCK(ErrorMessageLock);
 			MesPrint("The GCD is");
 			PolynoWrite(G1);
+			UNLOCK(ErrorMessageLock);
 #endif
 			return(G1);
 		}
@@ -652,8 +678,10 @@ constnorm:;
 				M_free(n2,"PolynoGCD");
 				M_free(n3,"PolynoGCD");
 #ifdef POLYDEBUG
+				LOCK(ErrorMessageLock);
 				MesPrint("The GCD is");
 				PolynoWrite(GA);
+				UNLOCK(ErrorMessageLock);
 #endif
 				return(GA);
 			}
@@ -687,6 +715,7 @@ WORD *Polyno1GCD ARG2(WORD *,poly1,WORD *,poly2)
 {
 	WORD *n1, *n2, *n3 = 0, *n4 = 0, *t1, *t2, *t1stop, *t2stop;
 #ifdef POLYDEBUG
+	LOCK(ErrorMessageLock);
 	MesPrint("Computing 1GCD of the polynomials");
 	PolynoWrite(poly1);
 	MesPrint("and");
@@ -706,9 +735,13 @@ isone:
 #ifdef POLYDEBUG
 		MesPrint("The 1GCD is");
 		PolynoWrite(n3);
+		UNLOCK(ErrorMessageLock);
 #endif
 		return(n3);
 	}
+#ifdef POLYDEBUG
+	UNLOCK(ErrorMessageLock);
+#endif
 	t1 = n1; GETSTOP(t1,t1stop);
 	t2 = n2; GETSTOP(t2,t2stop);
 	if ( t1+1 == t1stop || t2+1 == t2stop ) {	/* Only number */
@@ -726,8 +759,10 @@ isone:
 	} while ( *n2 );
 	if ( n2 ) M_free(n2,"Polyno1GCD3");
 #ifdef POLYDEBUG
+	LOCK(ErrorMessageLock);
 	MesPrint("The 1GCD is");
 	PolynoWrite(n1);
+	UNLOCK(ErrorMessageLock);
 #endif
 	if ( n1 == poly1 || n1 == poly2 ) return(CopyOfPolynomial(n1));
 	else return(n1);
@@ -763,7 +798,9 @@ UBYTE *PolynoPrint ARG1(WORD *,poly)
 		AO.DollarOutBuffer = 0;
 		AO.DollarOutSizeBuffer = 0;
 		AO.DollarInOutBuffer = 0;
+		LOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
+		UNLOCK(ErrorMessageLock);
 		return(0);
 	}
 	else {
@@ -782,11 +819,11 @@ UBYTE *PolynoPrint ARG1(WORD *,poly)
 int PolynoWrite ARG1(WORD *,poly)
 {
 	WORD *m, j, olddefer = AR.DeferFlag, first, lbrac;
-	AO.termbuf = AR.WorkPointer;
-	AO.bracket = AR.WorkPointer + AM.MaxTer;
-	AR.WorkPointer += AM.MaxTer*2;
-	AO.OutFill = AO.OutputLine = (UBYTE *)AR.WorkPointer;
-	AR.WorkPointer += 2*AC.LineLength;
+	AO.termbuf = AT.WorkPointer;
+	AO.bracket = AT.WorkPointer + AM.MaxTer;
+	AT.WorkPointer += AM.MaxTer*2;
+	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
+	AT.WorkPointer += 2*AC.LineLength;
 	AO.IsBracket = 0;
 	AO.OutSkip = 3;
 	AR.DeferFlag = 0;
@@ -807,7 +844,7 @@ int PolynoWrite ARG1(WORD *,poly)
 	AO.OutSkip = 3;
 	FiniLine();
 	AO.IsBracket = 0;
-	AR.WorkPointer = AO.termbuf;
+	AT.WorkPointer = AO.termbuf;
 	AR.DeferFlag = olddefer;
 	return(0);
 abowrite:
@@ -867,7 +904,9 @@ void PolynoPushBracket ARG1(WORD,numofsymbol)
 void PolynoPopBracket ARG0
 {
 	if ( polyblevel == 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Internal error: PolynoBracket popped too often");
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	polybpointer = polybpstack[--polyblevel];
@@ -926,42 +965,56 @@ void PolynoFinish ARG0
 
 WORD *PolynoNormalize ARG1(WORD *,poly)
 {
-	WORD *t = poly, *oldwork = AR.WorkPointer, *w, *pbuffer;
+	WORD *t = poly, *oldwork = AT.WorkPointer, *w, *pbuffer;
 	int i;
 	if ( NewSort() ) { return(0); }
 	if ( NewSort() ) { LowerSortLevel(); return(0); }
 	while ( *t ) {
 		w = oldwork;
 		i = *t;
-		if ( w + i > AM.WorkTop ) { MesWork(); goto aborteer; }
+		if ( w + i > AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+			goto aborteer;
+		}
 		NCOPY(w,t,i);
-		AR.WorkPointer = w;
+		AT.WorkPointer = w;
 		if ( Normalize(oldwork) ) goto aborteer;
 		if ( *oldwork == 0 ) continue;
-		AR.WorkPointer = oldwork + *oldwork;
+		AT.WorkPointer = oldwork + *oldwork;
 		GETSTOP(oldwork,w);
 		if ( oldwork+1 < w && oldwork[1] != SYMBOL ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("Polynomial Normalization: There are non-symbols in the polynomial");
+			UNLOCK(ErrorMessageLock);
 			goto aborteer;
 		}
 		if ( AC.ncmod != 0 ) {
 			if ( Modulus(oldwork) ) goto aborteer;
 			if ( *oldwork == 0 ) continue;
 		}
-		AR.WorkPointer = w = oldwork + *oldwork;
+		AT.WorkPointer = w = oldwork + *oldwork;
 		if ( AR.BracketOn ) {
-			if ( w + *oldwork + 3 > AM.WorkTop ) { MesWork(); goto aborteer; }
+			if ( w + *oldwork + 3 > AT.WorkTop ) {
+				LOCK(ErrorMessageLock);
+				MesWork();
+				UNLOCK(ErrorMessageLock);
+				goto aborteer;
+			}
 			if ( PutBracket(oldwork) ) goto aborteer;
 			StoreTerm(w);
 		}
 		else if ( StoreTerm(oldwork) ) goto aborteer;
 	}
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 aborteer:
+	LOCK(ErrorMessageLock);
 	MesCall("PolynoNormalize");
+	UNLOCK(ErrorMessageLock);
 	LowerSortLevel(); LowerSortLevel();
 	return(0);
 }
@@ -985,7 +1038,7 @@ static WORD proexp[SUBEXPSIZE+5] = { SUBEXPSIZE+4, EXPRESSION, SUBEXPSIZE, -1, 1
 
 WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 {
-	WORD *t, *tstop, *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *oldwork = AR.WorkPointer;
+	WORD *t, *tstop, *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *oldwork = AT.WorkPointer;
 	int olddoing = doingpoly,par, onevar1, onevar2 = 0;
 	WORD *m, *mm, ncoef1, ncoef2, ncoef3;
 	t = term; GETSTOP(t,tstop); t++;
@@ -996,7 +1049,9 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 		if ( *t != AM.polyfunnum || t[1] != FUNHEAD+4 || t[FUNHEAD] != -SNUMBER ||
 			( t[FUNHEAD+2] != -DOLLAREXPRESSION && t[FUNHEAD+2] != -EXPRESSION )
 			|| ( t[FUNHEAD+1] != POLYNORM && t[FUNHEAD+1] != POLYINTFAC ) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("Internal error. Irregular Poly_ function");
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -1043,8 +1098,10 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 			n3 = PolynoIntFac(n1);
 			break;
 		default:
+			LOCK(ErrorMessageLock);
 			MesPrint("Internal error: illegal code in poly_ function");
 			PolynoFinish();
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 	}
 	if ( n3 == 0 ) goto aborteer;
@@ -1074,7 +1131,7 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 		m += ABS(ncoef3);
 		m[-1] = ncoef3;
 		*oldwork = m - oldwork;
-		AR.WorkPointer = m;
+		AT.WorkPointer = m;
 		if ( Generator(oldwork,level) ) goto aborteer;
 	}
 	if ( n3 ) M_free(n3,"DoPolynomial4");
@@ -1116,7 +1173,7 @@ WORD *CopyOfPolynomial ARG1(WORD *,poly)
 
 WORD *PolynoUnify ARG2(WORD *,poly,int,par)
 {
-	WORD *n, *n1, *t, *t1, *n2, *tstop, *oldwork = AR.WorkPointer;
+	WORD *n, *n1, *t, *t1, *n2, *tstop, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
 	LONG outsize, numterms;
 	int i;
@@ -1213,8 +1270,10 @@ WORD *PolynoCoefNorm ARG4(WORD *,poly,WORD,x,WORD **,factor,int,par)
 	PolynoPopBracket();
 	if ( n1 == 0 ) goto aborteer;
 #ifdef POLYDEBUG
+	LOCK(ErrorMessageLock);
 	MesPrint("PolynoCoefNorm in:");
 	PolynoWrite(n1);
+	UNLOCK(ErrorMessageLock);
 #endif
 	t1 = n1;
 	while ( *t1 ) {
@@ -1246,16 +1305,20 @@ WORD *PolynoCoefNorm ARG4(WORD *,poly,WORD,x,WORD **,factor,int,par)
 	M_free(n1,"PolynoCoefNorm4"); n1 = 0;
 	if ( ( b1 = PolynoDiv(poly,G1,&b3) ) == 0 ) goto aborteer;
 	if ( *b3 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Serious error in PolynoCoefNorm");
+		UNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	M_free(b3,"PolynoCoefNorm5");
 	b1 = PolynoUnify(b1,0);
 #ifdef POLYDEBUG
+	LOCK(ErrorMessageLock);
 	MesPrint("PolynoCoefNorm out:");
 	PolynoWrite(b1);
-		MesPrint("   with factor");
-		PolynoWrite(G1);
+	MesPrint("   with factor");
+	PolynoWrite(G1);
+	UNLOCK(ErrorMessageLock);
 #endif
 	if ( par <= 0 ) M_free(poly,"PolynoCoefNorm6");
 	if ( par == 0 || par == 1 ) { *factor = 0; M_free(G1,"PolynoCoefNorm7"); }
@@ -1282,7 +1345,7 @@ aborteer:
 WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
 {
 	WORD *n1 = 0, *m, *mstop, *mm;
-	CBUF *C = cbuf + AR.cbufnum;
+	CBUF *C = cbuf + AC.cbufnum;
 	if ( par == 1 ) {
 		proexp[1] = SUBEXPRESSION;
 		proexp[5] = AM.dbufnum;
@@ -1317,7 +1380,9 @@ WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
 	}
 	return(n1);
 onlysymbols:
+	LOCK(ErrorMessageLock);
 	MesPrint("Only symbols are allowed in polynomials. Make substitutions first");
+	UNLOCK(ErrorMessageLock);
 aborteer:
 	if ( n1 ) { M_free(n1,"DoPolynomial5"); n1 = 0; }
 	return(0);
@@ -1331,8 +1396,11 @@ aborteer:
 int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 {
 	WORD *n1, *n2, *n;
-	int onevar;
+	int onevar, retval;
 	DOLLARS d;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+#endif
 	PolynoStart();
 	if ( ( n1 = MakePolynomial(numexp,par,&onevar) ) == 0 ) {
 		PolynoFinish(); return(-1);
@@ -1344,6 +1412,17 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 	Now we have to park n1 into 'numexp' and n2 into 'numdol'
 */
 	d = Dollars+numdol;
+#ifdef WITHPTHREADS
+	if ( AS.MultiThreaded ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			LOCK(d->pthreadslock);
+		}
+	}
+#endif
 	d->type = DOLTERMS;
 	cbuf[AM.dbufnum].CanCommu[numdol] = 0;
 	cbuf[AM.dbufnum].NumTerms[numdol] = 1;
@@ -1361,16 +1440,20 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 		d->size = n - n1 + 1; d->where = n1;
 		cbuf[AM.dbufnum].rhs[numexp] = d->where;
 		cbuf[AM.dbufnum].NumTerms[numexp] = 1;
-		return(0);
+		retval = 0;
 	}
 	else if ( par == 0 ) {
 		if ( Expressions[numexp].inmem ) {
 			M_free(Expressions[numexp].inmem,"DoPolynoNorm");
 		}
 		Expressions[numexp].inmem = n1;
-		return(0);
+		retval = 0;
 	}
-	return(-1);
+	else retval = -1;
+#ifdef WITHPTHREADS
+	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
+	return(retval);
 }
 
 /*
@@ -1391,7 +1474,7 @@ static WORD PIFnscrat, PIFnscrat1, PIFnscrat2;
 
 WORD *PolynoIntFac ARG1(WORD *,poly)
 {
-	WORD *t, *w, *oldwork = AR.WorkPointer, *pbuffer;
+	WORD *t, *w, *oldwork = AT.WorkPointer, *pbuffer;
 	WORD n,n1,ncoef,i;
 	WORD *coef;
 	if ( ( poly = PolynoUnify(poly,1) ) == 0 ) goto PIFerror;
@@ -1427,7 +1510,12 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 	for ( t = poly; *t; ) {
 		w = oldwork;
 		i = *t;
-		if ( w + i + 2*PIFnscrat > AM.WorkTop ) { MesWork(); goto PIFerror1; }
+		if ( w + i + 2*PIFnscrat > AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+			goto PIFerror1;
+		}
 		NCOPY(w,t,i);
 		w = oldwork;
 		ncoef = w[*w-1];
@@ -1440,14 +1528,16 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 		*w = coef+n1-w;
 		if ( StoreTerm(oldwork) ) goto PIFerror;
 	}
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) goto PIFerror1;
 	LowerSortLevel();
 	return(pbuffer);
 PIFerror1:
 	LowerSortLevel();
 PIFerror:
+	LOCK(ErrorMessageLock);
 	MesCall("PolynoIntFac");
+	UNLOCK(ErrorMessageLock);
 	return(0);
 }
 

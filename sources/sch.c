@@ -3,9 +3,6 @@
 */
 
 #include "form3.h"
-#ifdef PARALLEL
-#include "parallel.h"
-#endif
 
 #ifdef ANSI
 #include <stdarg.h>
@@ -44,7 +41,7 @@ StrCopy ARG2(UBYTE *,from,UBYTE *,to)
 }
 
 /*
- 		#] StrCopy : 
+ 		#] StrCopy :
  		#[ AddToLine :			VOID AddToLine(s)
 
 	Puts the characters of s in the outputline. If the line becomes
@@ -127,7 +124,7 @@ AddToLine ARG1(UBYTE *,s)
 }
 
 /*
- 		#] AddToLine : 
+ 		#] AddToLine :
  		#[ FiniLine :			VOID FiniLine()
 */
 
@@ -201,7 +198,7 @@ FiniLine()
 }
 
 /*
- 		#] FiniLine : 
+ 		#] FiniLine :
  		#[ IniLine :			VOID IniLine()
 
 	Initializes the output line for the type of output
@@ -230,7 +227,7 @@ IniLine()
 }
 
 /*
- 		#] IniLine : 
+ 		#] IniLine :
  		#[ LongToLine :			VOID LongToLine(a,na)
 
 	Puts a Long integer in the output line. If it is only a single
@@ -259,7 +256,7 @@ LongToLine ARG2(UWORD *,a,WORD,na)
 }
 
 /*
- 		#] LongToLine : 
+ 		#] LongToLine :
  		#[ RatToLine :			VOID RatToLine(a,na)
 
 	Puts a rational number in the output line. The sign is ignored.
@@ -357,7 +354,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 }
 
 /*
- 		#] RatToLine : 
+ 		#] RatToLine :
  		#[ TalToLine :			VOID TalToLine(x)
 
 	Writes the unsigned number x to the output as a single token.
@@ -383,7 +380,7 @@ TalToLine ARG1(UWORD,x)
 }
 
 /*
- 		#] TalToLine : 
+ 		#] TalToLine :
  		#[ TokenToLine :		VOID TokenToLine(s)
 
 	Puts s in the output buffer. If it doesn't fit the buffer is
@@ -476,7 +473,7 @@ TokenToLine ARG1(UBYTE *,s)
 }
 
 /*
- 		#] TokenToLine : 
+ 		#] TokenToLine :
  		#[ CodeToLine :			VOID CodeToLine(name,number,mode)
 
 	Writes a name and possibly its number to output as a single token.
@@ -493,7 +490,7 @@ CodeToLine ARG2(WORD,number,UBYTE *,Out)
 }
 
 /*
- 		#] CodeToLine : 
+ 		#] CodeToLine :
  		#[ PrtTerms :			VOID PrtTerms()
 */
 
@@ -516,7 +513,7 @@ PrtTerms()
 }
 
 /*
- 		#] PrtTerms : 
+ 		#] PrtTerms :
  		#[ WrtPower :
 */
 
@@ -551,7 +548,7 @@ WrtPower ARG2(UBYTE *,Out,WORD,Power)
 }
 
 /*
- 		#] WrtPower : 
+ 		#] WrtPower :
  		#[ PrintTime :
 */
 
@@ -588,12 +585,12 @@ WriteLists()
 	int first, startvalue;
 	UBYTE *OutScr, *Out;
 	EXPRESSIONS e;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	skip = &AO.OutSkip;
 	*skip = 0;
-	AO.OutputLine = AO.OutFill = (UBYTE *)AR.WorkPointer;
+	AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
 	FiniLine();
-	OutScr = (UBYTE *)AR.WorkPointer + ( TOLONG(AM.WorkTop) - TOLONG(AR.WorkPointer) ) /2;
+	OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
 	if ( ( j = NumSymbols ) > 0 ) {
 		TokenToLine((UBYTE *)" Symbols");
 		*skip = 3;
@@ -1356,7 +1353,7 @@ WriteInnerTerm ARG2(WORD *,term,WORD,first)
 #ifdef NEWGAMMA
 		if ( *s == GAMMA ) {	/* String them up */
 			WORD *tt,*ss;
-			ss = AR.WorkPointer;
+			ss = AT.WorkPointer;
 			*ss++ = GAMMA;
 			*ss++ = s[1];
 			FILLFUN(ss)
@@ -1373,14 +1370,14 @@ WriteInnerTerm ARG2(WORD *,term,WORD,first)
 					if ( n > 0 ) break;
 				}
 			} while ( n > 0 );
-			tt = AR.WorkPointer;
-			AR.WorkPointer = ss;
+			tt = AT.WorkPointer;
+			AT.WorkPointer = ss;
 			tt[1] = WORDDIF(ss,tt);
 			if ( WriteSubTerm(tt,first) ) {
 				MesCall("WriteInnerTerm");
 				SETERROR(-1)
 			}
-			AR.WorkPointer = tt;
+			AT.WorkPointer = tt;
 		}
 		else
 #endif
@@ -1679,20 +1676,20 @@ WriteAll()
 	POSITION pos;
 	FILEHANDLE *f;
 #ifdef PARALLEL
-	if ( AR.exitflag || PF.me != MASTER ) return(0);
+	if ( AM.exitflag || PF.me != MASTER ) return(0);
 #else
-	if ( AR.exitflag ) return(0);
+	if ( AM.exitflag ) return(0);
 #endif
 	SeekScratch(AR.outfile,&pos);
 	if ( ResetScratch() ) {
 		MesCall("WriteAll");
 		SETERROR(-1)
 	}
-	AO.termbuf = AR.WorkPointer;
-	AO.bracket = AR.WorkPointer + AM.MaxTer;
-	AR.WorkPointer += AM.MaxTer*2;
-	AO.OutFill = AO.OutputLine = (UBYTE *)AR.WorkPointer;
-	AR.WorkPointer += 2*AC.LineLength;
+	AO.termbuf = AT.WorkPointer;
+	AO.bracket = AT.WorkPointer + AM.MaxTer;
+	AT.WorkPointer += AM.MaxTer*2;
+	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
+	AT.WorkPointer += 2*AC.LineLength;
 	*(AM.CompressBuffer) = 0;
 	first = 0;
 	for ( n = 0; n < NumExpressions; n++ ) {
@@ -1793,7 +1790,7 @@ EndWrite:
 		SeekFile(AR.infile->handle,&(AR.infile->filesize),SEEK_SET);
 	}
 	AO.IsBracket = 0;
-	AR.WorkPointer = AO.termbuf;
+	AT.WorkPointer = AO.termbuf;
 	SetScratch(AR.infile,&pos);
 	f = AR.outfile; AR.outfile = AR.infile; AR.infile = f;
 	return(0);
@@ -1806,7 +1803,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll : 
+ 		#] WriteAll :
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
@@ -1833,7 +1830,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		case UNHIDEGEXPRESSION:
 		case DROPHLEXPRESSION:
 		case DROPHGEXPRESSION:
-			AR.GetFile = 2;
+			AS.GetFile = 2;
 			break;
 		case LOCALEXPRESSION:
 		case GLOBALEXPRESSION:
@@ -1841,7 +1838,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		case DROPLEXPRESSION:
 		case SKIPGEXPRESSION:
 		case DROPGEXPRESSION:
-			AR.GetFile = 0;
+			AS.GetFile = 0;
 			break;
 		default:
 			MesPrint("@expressions %s is not active. It cannot be written",name);
@@ -1852,7 +1849,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		MesCall("WriteOne");
 		SETERROR(-1)
 	}
-	if ( AR.GetFile == 2 ) f = AS.hidefile;
+	if ( AS.GetFile == 2 ) f = AS.hidefile;
 	else f = AR.infile;
 /*
 		Now position the file
@@ -1864,12 +1861,12 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		f->POfill = (WORD *)((UBYTE *)(f->PObuffer)
 				 + BASEPOSITION(Expressions[number].onfile));
 	}
-	AO.termbuf = AR.WorkPointer;
-	AO.bracket = AR.WorkPointer + AM.MaxTer;
-	AR.WorkPointer += AM.MaxTer*2;
+	AO.termbuf = AT.WorkPointer;
+	AO.bracket = AT.WorkPointer + AM.MaxTer;
+	AT.WorkPointer += AM.MaxTer*2;
 
-	AO.OutFill = AO.OutputLine = (UBYTE *)AR.WorkPointer;
-	AR.WorkPointer += 2*AC.LineLength;
+	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
+	AT.WorkPointer += 2*AC.LineLength;
 	*(AM.CompressBuffer) = 0;
 
 	AO.IsBracket = 0;
@@ -1950,7 +1947,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		SeekFile(AR.infile->handle,&(AR.infile->filesize),SEEK_SET);
 	}
 	AO.IsBracket = 0;
-	AR.WorkPointer = AO.termbuf;
+	AT.WorkPointer = AO.termbuf;
 	SetScratch(AR.infile,&pos);
 	f = AR.outfile; AR.outfile = AR.infile; AR.infile = f;
 	return(0);

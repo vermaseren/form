@@ -1,4 +1,6 @@
 /*
+  	#[ Documentation :
+
 This module is written by M.Tentyukov as a part of implementation of
 interaction between FORM and external processes, first release
 09.04.2004. A part of this code is copyied from the DIANA project
@@ -91,6 +93,7 @@ this module; they are not declared outside of this file.
 */
 
 /*
+  	#] Documentation : 
   	#[ Includes :
 */
 
@@ -126,9 +129,7 @@ extern int (*setTerminatorForExternalChannel) ARG1 (char *, /**/);
 #else /*ifdef SELFTEST*/
 #include "form3.h"
 #ifdef PARALLEL
-#include "parallel.h"
-int
-PF_BroadcastString ARG1 (UBYTE *,str);
+int PF_BroadcastString ARG1 (UBYTE *,str);
 #endif
 #endif /*ifdef SELFTEST ... else*/
 
@@ -136,18 +137,18 @@ PF_BroadcastString ARG1 (UBYTE *,str);
 int
 writeBufToExtChannelFailure ARG2(char *,buf, size_t, count)
 {
-return(-1);
+	return(-1);
 }/*writeBufToExtChannelFailure*/
 
 int 
 setTerminatorForExternalChannelFailure ARG1 (char *,newTerminator)
 {
-   return(-1);
+	return(-1);
 }/*setTerminatorForExternalChannelFailure*/
 int 
 getcFromExtChannelFailure ARG0
 {
-   return(-1);
+	return(-1);
 }/*getcFromExtChannelFailure*/
 
 int (*writeBufToExtChannel) ARG2(char *,/**/, size_t, /**/)= &writeBufToExtChannelFailure;
@@ -678,7 +679,7 @@ pid_t run_cmd(
    )
 {/**/
 int fdin[2], fdout[2], fdsig[2];
-pid_t childpid,fatherchildpid;
+pid_t childpid,fatherchildpid = 0;
 
    if(  (fdsend!=NULL)&&(fdreceive!=NULL)  ){
        if(  /* Open two pipes:*/
@@ -1059,6 +1060,7 @@ int closeExternalChannel ARG1(int, n)
       setTerminatorForExternalChannel=&setTerminatorForExternalChannelFailure;
       return(0);
    }/*if(externalChannelsListTop==externalChannelsList+n)*/
+   return(-1);
 }/*closeExternalChannel*/
 
 void closeAllExternalChannels  ARG0

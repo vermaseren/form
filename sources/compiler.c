@@ -176,7 +176,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 
@@ -200,7 +200,7 @@ inictable ARG0
 }
 
 /*
- 		#] inictable : 
+ 		#] inictable :
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -253,7 +253,7 @@ findcommand ARG1(UBYTE *,in)
 }
 
 /*
- 		#] findcommand : 
+ 		#] findcommand :
  		#[ ParenthesesTest :
 */
 
@@ -297,7 +297,7 @@ int ParenthesesTest ARG1(UBYTE *,sin)
 }
 
 /*
- 		#] ParenthesesTest : 
+ 		#] ParenthesesTest :
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -332,7 +332,7 @@ SkipAName ARG1(UBYTE *,s)
 }
 
 /*
- 		#] SkipAName : 
+ 		#] SkipAName :
  		#[ IsRHS :
 */
 
@@ -379,7 +379,7 @@ IsRHS ARG2(UBYTE *,s,UBYTE,c)
 }
 
 /*
- 		#] IsRHS : 
+ 		#] IsRHS :
  		#[ IsIdStatement :
 */
 
@@ -390,7 +390,7 @@ IsIdStatement ARG1(UBYTE *,s)
 }
 
 /*
- 		#] IsIdStatement : 
+ 		#] IsIdStatement :
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -425,12 +425,12 @@ CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 	}
 	AC.ProtoType = oldproto;
 	if ( error < 0 ) return(-1);
-	else if ( leftright == LHSIDE ) return(cbuf[AR.cbufnum].numlhs);
-	else                            return(cbuf[AR.cbufnum].numrhs);
+	else if ( leftright == LHSIDE ) return(cbuf[AC.cbufnum].numlhs);
+	else                            return(cbuf[AC.cbufnum].numrhs);
 }
 
 /*
- 		#] CompileAlgebra : 
+ 		#] CompileAlgebra :
  		#[ CompileStatement :
 
 */
@@ -537,7 +537,7 @@ CompileStatement ARG1(UBYTE *,in)
 }
 
 /*
- 		#] CompileStatement : 
+ 		#] CompileStatement :
  		#[ TestTables :
 */
 
@@ -630,16 +630,16 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 			}
 			t++; *s = TENDOFIT;
 			if ( sumlevel > 0 ) { /* Inside sum. Add wildcard to prototype */
-				oldwork = w1 = AR.WorkPointer;
+				oldwork = w1 = AT.WorkPointer;
 				w2 = AC.ProtoType;
 				i = w2[1];
 				while ( --i >= 0 ) *w1++ = *w2++;
 				oldwork[1] += 4;
 				*w1++ = sumtype; *w1++ = 4; *w1++ = sumlevel; *w1++ = sumlevel;
-				w2 = AC.ProtoType; AR.WorkPointer = w1;
+				w2 = AC.ProtoType; AT.WorkPointer = w1;
 				AC.ProtoType = oldwork;
 				num = CompileSubExpressions(t);
-				AC.ProtoType = w2; AR.WorkPointer = oldwork;
+				AC.ProtoType = w2; AT.WorkPointer = oldwork;
 			}
 			else num = CompileSubExpressions(t);
 			if ( num < 0 ) return(-1);
@@ -659,7 +659,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 				DoubleBuffer((void **)&subexpbuffers,(void **)&topsubexpbuffers,sizeof(SUBBUF),"subexpbuffers");
 			}
 			subexpbuffers[insubexpbuffers].subexpnum = num;
-			subexpbuffers[insubexpbuffers].buffernum = AR.cbufnum;
+			subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
 			num = insubexpbuffers++;
 #endif
 			*fill++ = TSUBEXP;
@@ -681,7 +681,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 }
 
 /*
- 		#] CompileSubExpressions : 
+ 		#] CompileSubExpressions :
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -720,12 +720,12 @@ int CodeGenerator ARG1(SBYTE *,tokens)
 	if ( AC.TokensWriteFlag ) WriteTokens(tokens);
 	if ( CGscrat7 == 0 )
 		CGscrat7 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(WORD),"CodeGenerator");
-	AddRHS(AR.cbufnum,0);
-	C = cbuf + AR.cbufnum;
+	AddRHS(AC.cbufnum,0);
+	C = cbuf + AC.cbufnum;
 	numexp = C->numrhs;
 	C->NumTerms[numexp] = 0;
-	oldwork = AR.WorkPointer;
-	numerator = (UWORD *)(AR.WorkPointer);
+	oldwork = AT.WorkPointer;
+	numerator = (UWORD *)(AT.WorkPointer);
 	denominator = numerator + 2*AM.MaxTal;
 	innum = denominator + 2*AM.MaxTal;
 	term = (WORD *)(innum + 2*AM.MaxTal);
@@ -774,7 +774,7 @@ TryPower:		if ( *s == TPOWER ) {
 				if ( dflag ) { *t++ = AM.dbufnum; FILLSUB(t) }
 fin:			deno = 1;
 				if ( inset ) {
-					while ( relo < AM.WorkTop ) *t++ = *relo++;
+					while ( relo < AT.WorkTop ) *t++ = *relo++;
 					inset = 0; tsize[1] = t - tsize;
 				}
 				break;
@@ -802,7 +802,7 @@ dovector:		if ( inset == 0 ) x1 += AM.OffsetVector;
 						if ( settype ) x2 = -x2;
 						if ( inset == 0 ) {
 							tsize = t; *t++ = SETSET; *t++ = 0;
-							relo = AM.WorkTop;
+							relo = AT.WorkTop;
 						}
 						inset += 2;
 						*--relo = x2; *--relo = 3;
@@ -825,7 +825,7 @@ dovector:		if ( inset == 0 ) x1 += AM.OffsetVector;
 						if ( settype ) x2 = -x2;
 						if ( inset == 0 ) {
 							tsize = t; *t++ = SETSET; *t++ = 0;
-							relo = AM.WorkTop;
+							relo = AT.WorkTop;
 						}
 						inset += 2;
 						*--relo = x2; *--relo = 3;
@@ -1017,7 +1017,7 @@ dotensor:
 							if ( inset == 0 ) {
 								w1 = t; t += 2; w2 = t;
 								while ( w1 > v ) *--w2 = *--w1;
-								tsize = v; relo = AM.WorkTop;
+								tsize = v; relo = AT.WorkTop;
 								*v++ = SETSET; *v++ = 0;
 							}
 							inset = 2; *--relo = x2; *--relo = t - v;
@@ -1153,7 +1153,7 @@ dofunction:			firstsumarg = 1;
 								if ( inset == 0 ) {
 									w1 = t; t += 2; w2 = t;
 									while ( w1 > v ) *--w2 = *--w1;
-									tsize = v; relo = AM.WorkTop;
+									tsize = v; relo = AT.WorkTop;
 									*v++ = SETSET; *v++ = 0;
 									inset = 1;
 								}
@@ -1190,7 +1190,7 @@ dofunction:			firstsumarg = 1;
 								w1[ARGHEAD+5] = subexpbuffers[x2].buffernum;
 #else
 								w1[ARGHEAD+3] = x2;
-								w1[ARGHEAD+5] = AR.cbufnum;
+								w1[ARGHEAD+5] = AC.cbufnum;
 #endif
 								if ( sumlevel > 0 ) {
 									w1[0] += 4;
@@ -1265,7 +1265,7 @@ dofunction:			firstsumarg = 1;
 #else
 				*t++ = x1;
 				*t++ = x2*deno;
-				*t++ = AR.cbufnum;
+				*t++ = AC.cbufnum;
 				NCOPY(t,r,n);
 				if ( C->CanCommu[x1] ) cc = 1;
 #endif
@@ -1312,7 +1312,7 @@ dofunction:			firstsumarg = 1;
 								if ( inset == 0 ) {
 									w1 = t; t += 2; w2 = t;
 									while ( w1 > v ) *--w2 = *--w1;
-									tsize = v; relo = AM.WorkTop;
+									tsize = v; relo = AT.WorkTop;
 									*v++ = SETSET; *v++ = 0;
 									inset = 1;
 								}
@@ -1458,13 +1458,13 @@ docoef:
 				}
 				goto TryPower;
 			case TSETNUM:
-				inset = 1; tsize = t; relo = AM.WorkTop;
+				inset = 1; tsize = t; relo = AT.WorkTop;
 				*t++ = SETSET; *t++ = 0;
 				x1 = 0; while ( *s >= 0 ) x1 = x1*128 + *s++;
 				*--relo = x1; *--relo = 0;
 				break;
 			case TSETDOL:
-				inset = 1; tsize = t; relo = AM.WorkTop;
+				inset = 1; tsize = t; relo = AT.WorkTop;
 				*t++ = SETSET; *t++ = 0;
 				x1 = 0; while ( *s >= 0 ) x1 = x1*128 + *s++;
 				*--relo = -x1; *--relo = 0;
@@ -1502,7 +1502,7 @@ docoef:
 		if ( cc && sign ) C->CanCommu[numexp]++;
 		error = CompleteTerm(term,numerator,denominator,nnumerator,ndenominator,sign);
 	}
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	if ( error ) return(-1);
 	AddToCB(C,0)
 	if ( AC.CompileLevel > 0 && AC.Eside != LHSIDE ) {
@@ -1517,7 +1517,7 @@ docoef:
 }
 
 /*
- 		#] CodeGenerator : 
+ 		#] CodeGenerator :
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1543,7 +1543,7 @@ int CompleteTerm ARG6(WORD *,term,UWORD *,numer,UWORD *,denom,WORD,nnum,WORD,nde
 }
 
 /*
- 		#] CompleteTerm : 
+ 		#] CompleteTerm :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

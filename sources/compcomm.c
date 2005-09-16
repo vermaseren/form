@@ -522,7 +522,7 @@ DoPrint ARG2(UBYTE *,s,int,par)
 	UBYTE *name, c, *t;
 	EXPRESSIONS e;
 	WORD numexpr, tofile = 0;
-	CBUF *C = cbuf + AR.cbufnum;
+	CBUF *C = cbuf + AC.cbufnum;
 	while ( *s == ',' ) s++;
 	if ( s[-1] == '+' || s[-1] == '-' ) s--;
 	if ( *s == '+' && ( s[1] == 'f' || s[1] == 'F' ) ) {
@@ -982,11 +982,11 @@ int CoNoUnHide ARG1(UBYTE *,inp) { return(SetExpr(inp,0,UNHIDE)); }
 void
 AddToCom ARG2(int,n,WORD *,array)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 #ifdef COMPBUFDEBUG
 	MesPrint("  %a",n,array);
 #endif
-	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AR.cbufnum,C->Pointer);
+	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
 	while ( --n >= 0 ) *(C->Pointer)++ = *array++;
 }
 
@@ -998,7 +998,7 @@ AddToCom ARG2(int,n,WORD *,array)
 int
 AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s = thestring, *w;
 	WORD *cc;
 #ifdef COMPBUFDEBUG
@@ -1014,9 +1014,9 @@ AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
 		}
 		s++; numchars++;
 	}
-	AddLHS(AR.cbufnum);
+	AddLHS(AC.cbufnum);
 	size = numchars/sizeof(WORD)+1;
-	while ( C->Pointer+size+n+1 >= C->Top ) DoubleCbuffer(AR.cbufnum,C->Pointer);
+	while ( C->Pointer+size+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
 	cc = C->Pointer;
 	*(C->Pointer)++ = array[0];
 	*(C->Pointer)++ = size+n+2;
@@ -1136,7 +1136,7 @@ CoLabel ARG1(UBYTE *,inp)
 		return(1);
 	}
 	x = GetLabel(inp);
-	AC.Labels[x] = cbuf[AR.cbufnum].numlhs;
+	AC.Labels[x] = cbuf[AC.cbufnum].numlhs;
 	return(0);
 }
 
@@ -1153,11 +1153,11 @@ int
 DoArgument ARG2(UBYTE *,s,int,par)
 {
 	UBYTE *name, *t, *v, c;
-	WORD *oldworkpointer = AR.WorkPointer, *w, *ww, number, *scale;
+	WORD *oldworkpointer = AT.WorkPointer, *w, *ww, number, *scale;
 	int error = 0, zeroflag, type, x;
 	AR.lhdollarflag = 0;
 	while ( *s == ',' ) s++;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	*w++ = par;
 	w++;
 	switch ( par ) {
@@ -1169,10 +1169,10 @@ DoArgument ARG2(UBYTE *,s,int,par)
 	        }
     	    AC.argsumcheck[AC.arglevel] = AC.IfLevel + AC.RepLevel + AC.insidelevel
 				+ AC.termlevel;
-        	AC.argstack[AC.arglevel] = cbuf[AR.cbufnum].Pointer
-			                       - cbuf[AR.cbufnum].Buffer + 2;
+        	AC.argstack[AC.arglevel] = cbuf[AC.cbufnum].Pointer
+			                       - cbuf[AC.cbufnum].Buffer + 2;
 			AC.arglevel++;
-	        *w++ = cbuf[AR.cbufnum].numlhs;
+	        *w++ = cbuf[AC.cbufnum].numlhs;
 			break;
 		case TYPENORM:
 		case TYPENORM4:
@@ -1180,7 +1180,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 		case TYPESPLITFIRSTARG:
 		case TYPESPLITLASTARG:
 		case TYPEFACTARG:
-	        *w++ = cbuf[AR.cbufnum].numlhs+1;
+	        *w++ = cbuf[AC.cbufnum].numlhs+1;
 			break;
     }
 	*w++ = par;
@@ -1226,7 +1226,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 			}
 		}
 		if ( error == 0 ) {
-			CBUF *C = cbuf+AR.cbufnum;
+			CBUF *C = cbuf+AC.cbufnum;
 			WORD oldnumrhs = C->numrhs, oldnumlhs = C->numlhs;
 			WORD prototype[SUBEXPSIZE+40]; /* Up to 10 nested sums! */
 			WORD *m, *mm;
@@ -1237,9 +1237,9 @@ DoArgument ARG2(UBYTE *,s,int,par)
 			prototype[1] = SUBEXPSIZE;
 			prototype[2] = C->numrhs+1;
 			prototype[3] = 1;
-			prototype[4] = AR.cbufnum;
-			AR.WorkPointer += TYPEARGHEADSIZE+1;
-			AddLHS(AR.cbufnum);
+			prototype[4] = AC.cbufnum;
+			AT.WorkPointer += TYPEARGHEADSIZE+1;
+			AddLHS(AC.cbufnum);
 			if ( ( retcode = CompileAlgebra(t,LHSIDE,prototype) ) < 0 )
 				error = 1;
 			else {
@@ -1259,11 +1259,11 @@ DoArgument ARG2(UBYTE *,s,int,par)
 					if ( !error ) error = 1;
 				}
 				else {
-					AR.RepPoint = AM.RepCount + 1;
-			        m = AR.WorkPointer;
+					AR.RepPoint = AT.RepCount + 1;
+			        m = AT.WorkPointer;
 					mm = ww; i = *mm;
 					while ( --i >= 0 ) *m++ = *mm++;
-					mm = AR.WorkPointer; AR.WorkPointer = m;
+					mm = AT.WorkPointer; AT.WorkPointer = m;
 #ifdef FGPARALLEL
 					A.xsortflag = 0;		/* Block foliation at this point */
 					A.MayFoliate = 0;
@@ -1273,18 +1273,18 @@ DoArgument ARG2(UBYTE *,s,int,par)
 					}
 					else if ( EndSort(mm,0) < 0 ) {
 						error = 1;
-						AR.WorkPointer = mm;
+						AT.WorkPointer = mm;
 					}
 					else if ( *mm == 0 ) {
 						*w++ = -2; *w++ = 0;
-						AR.WorkPointer = mm;
+						AT.WorkPointer = mm;
 					}
 					else if ( mm[mm[0]] != 0 ) {
 						error = 1;
-						AR.WorkPointer = mm;
+						AT.WorkPointer = mm;
 					}
 					else {
-						AR.WorkPointer = mm;
+						AT.WorkPointer = mm;
 						m = mm+*mm;
 						if ( par == TYPEFACTARG ) {
 							if ( *mm != ABS(m[-1])+1 ) {
@@ -1373,11 +1373,11 @@ nofun:					MesPrint("&%s is not a function or a set of functions"
 	}
 	oldworkpointer[1] = w - oldworkpointer;
 	if ( par == TYPEARG ) {  /* To make sure. The Pointer might move in the future */
-       	AC.argstack[AC.arglevel-1] = cbuf[AR.cbufnum].Pointer
-			                       - cbuf[AR.cbufnum].Buffer + 2;
+       	AC.argstack[AC.arglevel-1] = cbuf[AC.cbufnum].Pointer
+			                       - cbuf[AC.cbufnum].Buffer + 2;
 	}
 	AddNtoL(oldworkpointer[1],oldworkpointer);
-	AR.WorkPointer = oldworkpointer;
+	AT.WorkPointer = oldworkpointer;
 	return(error);
 }
 
@@ -1397,7 +1397,7 @@ CoArgument ARG1(UBYTE *,s) { return(DoArgument(s,TYPEARG)); }
 int
 CoEndArgument ARG1(UBYTE *,s)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
 	if ( *s ) {
 		MesPrint("&Illegal syntax for EndArgument statement");
@@ -1408,7 +1408,7 @@ CoEndArgument ARG1(UBYTE *,s)
 		return(1);
 	}
 	AC.arglevel--;
-	cbuf[AR.cbufnum].Buffer[AC.argstack[AC.arglevel]] = C->numlhs;
+	cbuf[AC.cbufnum].Buffer[AC.argstack[AC.arglevel]] = C->numlhs;
 	if ( AC.argsumcheck[AC.arglevel] != ( AC.IfLevel + AC.RepLevel + AC.insidelevel
 		+ AC.termlevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument");
@@ -1433,7 +1433,7 @@ CoInside ARG1(UBYTE *,s) { return(DoInside(s)); }
 int
 CoEndInside ARG1(UBYTE *,s)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
 	if ( *s ) {
 		MesPrint("&Illegal syntax for EndInside statement");
@@ -1444,7 +1444,7 @@ CoEndInside ARG1(UBYTE *,s)
 		return(1);
 	}
 	AC.insidelevel--;
-	cbuf[AR.cbufnum].Buffer[AC.insidestack[AC.insidelevel]] = C->numlhs;
+	cbuf[AC.cbufnum].Buffer[AC.insidestack[AC.insidelevel]] = C->numlhs;
 	if ( AC.insidesumcheck[AC.insidelevel] != ( AC.IfLevel + AC.RepLevel
 		+ AC.arglevel + AC.termlevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, inside");
@@ -1557,7 +1557,7 @@ DoSymmetrize ARG2(UBYTE *,s,int,par)
 		}
 	}
 	else fix = 0;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	*w++ = TYPEOPERATION;
 	w++;
 	*w++ = SYMMETRIZE;
@@ -1622,8 +1622,8 @@ illarg:		MesPrint("&Illegal argument");
 		ww[-1] = groupsize;
 		ww[-2] = (w-ww)/groupsize;
 	}
-	AR.WorkPointer[1] = w - AR.WorkPointer;
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AT.WorkPointer[1] = w - AT.WorkPointer;
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	return(error);
 }
 
@@ -1825,7 +1825,7 @@ CoRenumber ARG1(UBYTE *,s)
 int
 CoSum ARG1(UBYTE *,s)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *ss = 0, c, *t;
 	int error = 0, i = 0, type, x;
 	WORD numindex,number;
@@ -2481,15 +2481,15 @@ CoInExpression ARG1(UBYTE *,s)
 	UBYTE *t, c;
 	WORD *w, number;
 	int error = 0;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	if ( AC.inexprlevel >= MAXNEST ) {
 		MesPrint("@Nesting of inexpression statements more than %d levels",(WORD)MAXNEST);
 		return(-1);
 	}
 	AC.inexprsumcheck[AC.inexprlevel] = AC.IfLevel + AC.RepLevel
 				+ AC.arglevel + AC.termlevel + AC.insidelevel;
-	AC.inexprstack[AC.inexprlevel] = cbuf[AR.cbufnum].Pointer
-								 - cbuf[AR.cbufnum].Buffer + 2;
+	AC.inexprstack[AC.inexprlevel] = cbuf[AC.cbufnum].Pointer
+								 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.inexprlevel++;
 	*w++ = TYPEINEXPRESSION;
 	w++; w++;
@@ -2519,8 +2519,8 @@ CoInExpression ARG1(UBYTE *,s)
 			if ( *s == 0 ) break;
 		}
 	}
-	AR.WorkPointer[1] = w - AR.WorkPointer;
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AT.WorkPointer[1] = w - AT.WorkPointer;
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	return(error);
 }
 
@@ -2532,7 +2532,7 @@ CoInExpression ARG1(UBYTE *,s)
 int
 CoEndInExpression ARG1(UBYTE *,s)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
 	if ( *s ) {
 		MesPrint("&Illegal syntax for EndInExpression statement");
@@ -2543,7 +2543,7 @@ CoEndInExpression ARG1(UBYTE *,s)
 		return(1);
 	}
 	AC.inexprlevel--;
-	cbuf[AR.cbufnum].Buffer[AC.inexprstack[AC.inexprlevel]] = C->numlhs;
+	cbuf[AC.cbufnum].Buffer[AC.inexprstack[AC.inexprlevel]] = C->numlhs;
 	if ( AC.inexprsumcheck[AC.inexprlevel] != ( AC.IfLevel + AC.RepLevel
 		+ AC.arglevel + AC.termlevel + AC.insidelevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, inside, inexpression");
@@ -2577,7 +2577,7 @@ int CoTryReplace ARG1(UBYTE *,p)
 {
 	UBYTE *name, c;
 	WORD *w, error = 0, i, which = -1, c1, minvec = 0;
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	*w++ = TYPETRY;
 	*w++ = 3;
 	*w++ = 0;
@@ -2652,11 +2652,11 @@ int CoTryReplace ARG1(UBYTE *,p)
 		MesPrint("&Odd number of arguments in TryReplace");
 		error = 1;
 	}
-	i = w - AR.WorkPointer;
-	AR.WorkPointer[1] = i;
-	AR.WorkPointer[2] = i - 3;
-	AR.WorkPointer[4] = i - 3;
-	AddNtoL((int)i,AR.WorkPointer);
+	i = w - AT.WorkPointer;
+	AT.WorkPointer[1] = i;
+	AT.WorkPointer[2] = i - 3;
+	AT.WorkPointer[4] = i - 3;
+	AddNtoL((int)i,AT.WorkPointer);
 	return(error);
 }
 
@@ -2743,7 +2743,7 @@ int CoRepeat ARG1(UBYTE *,inp)
 
 int CoEndRepeat ARG1(UBYTE *,inp)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	int level, error = 0, repeatlevel = 0;
 	AC.RepLevel--;
 	if ( AC.RepLevel < 0 ) {
@@ -2786,7 +2786,7 @@ int DoBrackets ARG2(UBYTE *,inp,int, par)
 	WORD c1,c2, *WorkSave;
 	int biflag;
 	p = inp;
-	WorkSave = to = AR.WorkPointer;
+	WorkSave = to = AT.WorkPointer;
 	to++;
 	if ( AR.BrackBuf == 0 ) {
 		AR.MaxBracket = 100;
@@ -2853,8 +2853,8 @@ redo:	AR.BracketOn++;
 	}
 	if ( *p ) MesCerr("separator",p);
 	*to++ = 1; *to++ = 1; *to++ = 3;
-	*AR.WorkPointer = to - AR.WorkPointer;
-	AR.WorkPointer = to;
+	*AT.WorkPointer = to - AT.WorkPointer;
+	AT.WorkPointer = to;
 	AC.BracketNormalize = 1;
 	if ( Normalize(WorkSave) ) { error = 1; AR.BracketOn = 0; }
 	else {
@@ -2879,7 +2879,7 @@ redo:	AR.BracketOn++;
 	AC.BracketNormalize = 0;
 	if ( par == 1 ) AR.BracketOn = -AR.BracketOn;
 	if ( error == 0 ) AC.bracketindexflag = biflag;
-	AR.WorkPointer = WorkSave;
+	AT.WorkPointer = WorkSave;
 	return(error);
 }
 
@@ -3116,11 +3116,11 @@ static UWORD *CIscratC = 0;
 int CoIf ARG1(UBYTE *,inp)
 {
 	int error = 0, level;
-	WORD *w, *ww, *u, *s, *OldWork, *OldSpace = AM.WorkSpace;
+	WORD *w, *ww, *u, *s, *OldWork, *OldSpace = AT.WorkSpace;
 	WORD gotexp = 0;		/* Indicates whether there can be a condition */
 	WORD lenpp, lenlev, ncoef, i, number;
 	UBYTE *p, *pp, c;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	LONG x;
 
 	if ( *inp == '(' ) inp++;	/* Usually we enter at the bracket */
@@ -3140,7 +3140,7 @@ int CoIf ARG1(UBYTE *,inp)
 */
 	AC.IfSumCheck[AC.IfLevel++] = AC.RepLevel + AC.arglevel + AC.insidelevel
 		+ AC.termlevel;
-	w = OldWork = AR.WorkPointer;
+	w = OldWork = AT.WorkPointer;
 	*w++ = TYPEIF;
 	w += 2;
 	p = inp;
@@ -3252,11 +3252,11 @@ OnlyNum:
 				Now we can call the reading of the lhs of an id statement.
 				This has to be modified in the future.
 */
-				AM.WorkSpace = AR.WorkPointer = w;
+				AT.WorkSpace = AT.WorkPointer = w;
 				AC.idoption = SUBMULTI;
 				level = CoIdExpression(inp,TYPEIF);
-				AM.WorkSpace = OldSpace;
-				AR.WorkPointer = OldWork;
+				AT.WorkSpace = OldSpace;
+				AT.WorkPointer = OldWork;
 				if ( level != 0 ) {
 					if ( level < 0 ) { error = -1; goto endofif; }
 					error = 1;
@@ -3402,8 +3402,8 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			lenlev--;
 			u[1] = w - u;
 			if ( lenlev <= 0 ) {	/* End if condition */
-				AM.WorkSpace = OldSpace;
-				AR.WorkPointer = OldWork;
+				AT.WorkSpace = OldSpace;
+				AT.WorkPointer = OldWork;
 				AddNtoL(OldWork[1],OldWork);
 				p++;
 				if ( *p == ')' ) {
@@ -3490,7 +3490,7 @@ endofif:;
 int CoElse ARG1(UBYTE *,p)
 {
 	int error = 0;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	if ( *p != 0 ) {
 		while ( *p == ',' ) p++;
 		if ( tolower(*p) == 'i' && tolower(p[1]) == 'f' && p[2] == '(' )
@@ -3514,7 +3514,7 @@ int CoElse ARG1(UBYTE *,p)
 
 int CoElseIf ARG1(UBYTE *,inp)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	if ( AC.IfLevel <= 0 ) { MesPrint("&elseif statement without if"); return(1); }
 	Add3Com(TYPEELSE,-AC.IfLevel)
 	AC.IfLevel--;
@@ -3541,7 +3541,7 @@ int CoElseIf ARG1(UBYTE *,inp)
 
 int CoEndIf ARG1(UBYTE *,inp)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	WORD i = C->numlhs, to, k = -AC.IfLevel;
 	int error = 0;
 	if ( AC.IfLevel <= 0 ) {
@@ -3582,7 +3582,7 @@ int CoEndIf ARG1(UBYTE *,inp)
 
 int CoWhile ARG1(UBYTE *,inp)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	WORD startnum = C->numlhs + 1;
 	int error;
 	AC.WhileLevel++;
@@ -3605,7 +3605,7 @@ int CoEndWhile ARG1(UBYTE *,inp)
 {
 	int error = 0;
 	WORD i;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	if ( AC.WhileLevel <= 0 ) {
 		MesPrint("&EndWhile statement without corresponding While"); return(1);
 	}
@@ -3829,7 +3829,7 @@ nogood:		MesPrint("&Value of UnitTrace should be a (positive) number or a symbol
 
 int
 CoTerm ARG1(UBYTE *,s) {
-	WORD *w = AR.WorkPointer;
+	WORD *w = AT.WorkPointer;
 	int error = 0;
 	while ( *s == ',' ) s++;
 	if ( *s ) {
@@ -3857,16 +3857,16 @@ CoTerm ARG1(UBYTE *,s) {
 	}
 	AC.termsumcheck[AC.termlevel] = AC.IfLevel + AC.RepLevel + AC.insidelevel
 								+ AC.arglevel;
-	AC.termstack[AC.termlevel] = cbuf[AR.cbufnum].Pointer
-			                 - cbuf[AR.cbufnum].Buffer + 2;
+	AC.termstack[AC.termlevel] = cbuf[AC.cbufnum].Pointer
+			                 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.termsortstack[AC.termlevel] = AC.termstack[AC.termlevel] + 1;
 	AC.termlevel++;
 	*w++ = TYPETERM;
 	w++;
-	*w++ = cbuf[AR.cbufnum].numlhs;
-	*w++ = cbuf[AR.cbufnum].numlhs;
-	AR.WorkPointer[1] = w - AR.WorkPointer;
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	*w++ = cbuf[AC.cbufnum].numlhs;
+	*w++ = cbuf[AC.cbufnum].numlhs;
+	AT.WorkPointer[1] = w - AT.WorkPointer;
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	return(error);
 }
 
@@ -3878,7 +3878,7 @@ CoTerm ARG1(UBYTE *,s) {
 int
 CoEndTerm ARG1(UBYTE *,s)
 {
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
 	if ( *s ) {
 		MesPrint("&Illegal syntax for EndTerm statement");
@@ -3889,8 +3889,8 @@ CoEndTerm ARG1(UBYTE *,s)
 		return(1);
 	}
 	AC.termlevel--;
-	cbuf[AR.cbufnum].Buffer[AC.termstack[AC.termlevel]] = C->numlhs;
-	cbuf[AR.cbufnum].Buffer[AC.termsortstack[AC.termlevel]] = C->numlhs;
+	cbuf[AC.cbufnum].Buffer[AC.termstack[AC.termlevel]] = C->numlhs;
+	cbuf[AC.cbufnum].Buffer[AC.termsortstack[AC.termlevel]] = C->numlhs;
 	if ( AC.termsumcheck[AC.termlevel] != ( AC.IfLevel + AC.RepLevel
 		 + AC.insidelevel + AC.arglevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, term");
@@ -3906,7 +3906,7 @@ CoEndTerm ARG1(UBYTE *,s)
 
 int
 CoSort ARG1(UBYTE *,s) {
-	WORD *w = AR.WorkPointer;
+	WORD *w = AT.WorkPointer;
 	int error = 0;
 	while ( *s == ',' ) s++;
 	if ( *s ) {
@@ -3921,18 +3921,18 @@ CoSort ARG1(UBYTE *,s) {
 	*w++ = TYPESORT;
 	w++;
 	w++;
-	cbuf[AR.cbufnum].Buffer[AC.termsortstack[AC.termlevel-1]] =
-										*w = cbuf[AR.cbufnum].numlhs+1;
+	cbuf[AC.cbufnum].Buffer[AC.termsortstack[AC.termlevel-1]] =
+										*w = cbuf[AC.cbufnum].numlhs+1;
 	w++;
-	AC.termsortstack[AC.termlevel-1] = cbuf[AR.cbufnum].Pointer
-			                 - cbuf[AR.cbufnum].Buffer + 3;
+	AC.termsortstack[AC.termlevel-1] = cbuf[AC.cbufnum].Pointer
+			                 - cbuf[AC.cbufnum].Buffer + 3;
 	if ( AC.termsumcheck[AC.termlevel-1] != ( AC.IfLevel + AC.RepLevel
 		 + AC.insidelevel + AC.arglevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, term");
 		return(1);
 	}
-	AR.WorkPointer[1] = w - AR.WorkPointer;
-	AddNtoL(AR.WorkPointer[1],AR.WorkPointer);
+	AT.WorkPointer[1] = w - AT.WorkPointer;
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	return(error);
 }
 
@@ -3950,7 +3950,7 @@ CoPolyFun ARG1(UBYTE *,s)
 	int type;
 	UBYTE *t;
 	if ( *s == 0 ) {
-		AC.PolyFun = AC.lPolyFun = 0;
+		AR.PolyFun = AC.lPolyFun = 0;
 		return(0);
 	}
 	t = SkipAName(s);
@@ -3967,7 +3967,7 @@ CoPolyFun ARG1(UBYTE *,s)
 		}
 		return(1);
 	}
-	AC.PolyFun = AC.lPolyFun = numfun+FUNCTION;
+	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
 	return(0);
 }
 

@@ -3,15 +3,12 @@
 */
 
 #include "form3.h"
-#ifdef PARALLEL
-#include "parallel.h"
-#endif
 
 extern LONG deferskipped;
 WORD *dummyrenumlist;
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -31,7 +28,7 @@ OpenTemp()
 }
 
 /*
- 		#] OpenTemp : 
+ 		#] OpenTemp :
  		#[ SeekScratch :
 */
 
@@ -43,7 +40,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
 }
 
 /*
- 		#] SeekScratch : 
+ 		#] SeekScratch :
  		#[ SetEndScratch :
 */
 
@@ -58,7 +55,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndScratch : 
+ 		#] SetEndScratch :
  		#[ SetEndHScratch :
 */
 
@@ -73,7 +70,7 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndHScratch : 
+ 		#] SetEndHScratch :
  		#[ SetScratch :
 */
 
@@ -126,7 +123,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch : 
+ 		#] SetScratch :
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -170,7 +167,7 @@ RevertScratch()
 }
 
 /*
- 		#] RevertScratch : 
+ 		#] RevertScratch :
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -212,7 +209,7 @@ ResetScratch()
 }
 
 /*
- 		#] ResetScratch : 
+ 		#] ResetScratch :
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -286,7 +283,7 @@ int CoSave ARG1(UBYTE *,inp)
 					TMproto[2] = number;
 					TMproto[3] = 1;
 					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
-					AR.TMaddr = TMproto;
+					AT.TMaddr = TMproto;
 					if ( ( indold = FindInIndex(number,&AO.StoreData,0) ) != 0 ) {
 						if ( i <= 0 ) {
 /*
@@ -322,7 +319,7 @@ int CoSave ARG1(UBYTE *,inp)
 						ind->position = ind->variables;
 						ADDPOS(ind->position,DIFBASE(indold->position,indold->variables));
 						SeekFile(AO.StoreData.Handle,&(indold->variables),SEEK_SET);
-						wSize = TOLONG(AM.WorkTop) - TOLONG(AR.WorkPointer);
+						wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 						scrpos = ind->length;
 						ADDPOS(scrpos,DIFBASE(ind->position,ind->variables));
 						ADD2POS(filesize,scrpos);
@@ -330,14 +327,14 @@ int CoSave ARG1(UBYTE *,inp)
 						do {
 							if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 /* --COMPRESS--? */
-							if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AR.WorkPointer,wSize)
+							if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 							!= wSize ) {
 								MesPrint("ReadError");
 								error = -1;
 								goto EndSave;
 							}
 /* --COMPRESS--? */
-							if ( WriteFile(AO.SaveData.Handle,(UBYTE *)AR.WorkPointer,wSize)
+							if ( WriteFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 							!= wSize ) goto SavWrt;
 							ADDPOS(scrpos,-wSize);
 						} while ( ISPOSPOS(scrpos) );
@@ -382,7 +379,7 @@ NextExpr:;
 			e++;
 		} while ( --n > 0 ); }
 		if ( n ) {
-			wSize = TOLONG(AM.WorkTop) - TOLONG(AR.WorkPointer);
+			wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 			PUTZERO(scrpos);
 			SeekFile(AO.StoreData.Handle,&scrpos,SEEK_SET);		/* Start at the beginning */
 			scrpos = AO.StoreData.Fill;			/* Number of bytes to be copied */
@@ -390,13 +387,13 @@ NextExpr:;
 			do {
 				if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 /* --COMPRESS--? */
-				if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AR.WorkPointer,wSize) != wSize ) {
+				if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize) != wSize ) {
 					MesPrint("ReadError");
 					error = -1;
 					goto EndSave;
 				}
 /* --COMPRESS--? */
-				if ( WriteFile(AO.SaveData.Handle,(UBYTE *)AR.WorkPointer,wSize) != wSize )
+				if ( WriteFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize) != wSize )
 					goto SavWrt;
 				ADDPOS(scrpos,-wSize);
 			} while ( ISPOSPOS(scrpos) );
@@ -412,7 +409,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave : 
+ 		#] CoSave :
  		#[ CoLoad :
 */
 
@@ -479,7 +476,7 @@ int CoLoad ARG1(UBYTE *,inp)
 					TMproto[2] = num;
 					TMproto[3] = 1;
 					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
-					AR.TMaddr = TMproto;
+					AT.TMaddr = TMproto;
 					if ( ( ind = FindInIndex(num,&AO.SaveData,1) ) != 0 ) {
 						if ( !error ) {
 							if ( PutInStore(ind,num) ) error = -1;
@@ -558,7 +555,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad : 
+ 		#] CoLoad :
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -631,7 +628,7 @@ DeleteStore ARG1(WORD,par)
 }
 
 /*
- 		#] DeleteStore : 
+ 		#] DeleteStore :
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -656,7 +653,7 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 	scrpos = ind->variables;
 	SeekFile(AO.SaveData.Handle,&scrpos,SEEK_SET);
 	if ( ISNOTEQUALPOS(scrpos,ind->variables) ) goto PutErrS;
-	wSize = TOLONG(AM.WorkTop) - TOLONG(AR.WorkPointer);
+	wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 	scrpos = ind->length;
 	ADDPOS(scrpos,DIFBASE(ind->position,ind->variables));
 	ADD2POS(AO.StoreData.Fill,scrpos);
@@ -664,10 +661,10 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 	do {
 		if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 /* --COMPRESS--? */
-		if ( ReadFile(AO.SaveData.Handle,(UBYTE *)AR.WorkPointer,wSize)
+		if ( ReadFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 		!= wSize ) goto PutErrS;
 /* --COMPRESS--? */
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)AR.WorkPointer,wSize)
+		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 		!= wSize ) goto PutErrS;
 		ADDPOS(scrpos,-wSize);
 	} while ( ISPOSPOS(scrpos) );
@@ -682,7 +679,7 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore : 
+ 		#] PutInStore :
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -700,16 +697,16 @@ GetTerm ARG1(WORD *,term)
 	WORD first, *start = 0, testing = 0;
 	FILEHANDLE *fi;
 	deferskipped = 0;
-	if ( AR.GetFile == 2 ) fi = AS.hidefile;
-	else                  fi = AR.infile;
+	if ( AS.GetFile == 2 ) fi = AS.hidefile;
+	else                   fi = AR.infile;
 	from = term;
-	if ( AR.KeptInHold ) {
+	if ( AS.KeptInHold ) {
 		r = AM.CompressBuffer;
 		i = *r;
 		if ( i <= 0 ) { *term = 0; goto RegRet; }
 		m = term;
 		NCOPY(m,r,i);
-		AR.KeptInHold = 0;
+		AS.KeptInHold = 0;
 		goto RegRet;
 	}
 	if ( AR.DeferFlag ) {
@@ -909,7 +906,7 @@ RegRet:;
 			FiniLine();
 		}
 	}
-			#] debug : 
+			#] debug :
 */
 	return(*from);
 GTerr:
@@ -919,7 +916,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm : 
+ 		#] GetTerm :
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.
@@ -938,7 +935,7 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 	WORD *r, *rr = AR.CompressPointer;
 	r = rr;
 	if ( AR.GetOneFile == 2 ) fi = AS.hidefile;
-	else                     fi = AR.infile;
+	else                      fi = AR.infile;
 	if ( par != -2 && fi->handle >= 0 ) {
 /* --COMPRESS-- */
 		if ( ReadFile(fi->handle,(UBYTE *)term,(LONG)sizeof(WORD)) == sizeof(WORD) ) {
@@ -1005,7 +1002,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm : 
+ 		#] GetOneTerm :
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1013,7 +1010,7 @@ ErrGet:
 	We can keep calling GetTerm either till a bracket is finished 
 	or till it would make the term too long (> AM.MaxTer/2)
 	In all cases this function makes that the routine GetTerm
-	has a term in 'hold', so the AR.KeptInHold flag must be turned on.
+	has a term in 'hold', so the AS.KeptInHold flag must be turned on.
 */
 
 WORD
@@ -1043,28 +1040,28 @@ GetMoreTerms ARG1(WORD *,term)
 		r = m + 1;
 		t = m + *m - 1;
 		if ( same > ( i = ( *m - ABS(*t) -1 ) ) ) { /* Must fail */
-			if ( AC.AltCollectFun && AR.CollectOverFlag == 2 ) AR.CollectOverFlag = 3;
+			if ( AC.AltCollectFun && AS.CollectOverFlag == 2 ) AS.CollectOverFlag = 3;
 			break;
 		}
 		t = term+1;
 		i = same;
 		while ( --i >= 0 ) {
 			if ( *r != *t ) {
-				if ( AC.AltCollectFun && AR.CollectOverFlag == 2 ) AR.CollectOverFlag = 3;
+				if ( AC.AltCollectFun && AS.CollectOverFlag == 2 ) AS.CollectOverFlag = 3;
 				goto FullTerm;
 			}
 			r++; t++;
 		}
 		if ( ( WORDDIF(m,term) + i + extra ) > (WORD)(AM.MaxTer/sizeof(WORD)) ) {
 /* 23 = 3 +20. The 20 is to have some extra for substitutions or whatever */
-			if ( AR.CollectOverFlag == 0 && AC.AltCollectFun == 0 ) {
+			if ( AS.CollectOverFlag == 0 && AC.AltCollectFun == 0 ) {
 				Warning("Bracket contents too long in Collect statement");
 				Warning("Contents spread over more than one term");
 				Warning("If possible: increase MaxTermSize in setfile");
-				AR.CollectOverFlag = 1;
+				AS.CollectOverFlag = 1;
 			}
 			else if ( AC.AltCollectFun ) {
-				AR.CollectOverFlag = 2;
+				AS.CollectOverFlag = 2;
 			}
 			break;
 		}
@@ -1076,9 +1073,9 @@ GetMoreTerms ARG1(WORD *,term)
 	}
 FullTerm:
 	h[1] = WORDDIF(m,h);
-	if ( AR.CollectOverFlag > 1 ) {
+	if ( AS.CollectOverFlag > 1 ) {
 		*h = AC.AltCollectFun;
-		if ( AR.CollectOverFlag == 3 ) AR.CollectOverFlag = 1;
+		if ( AS.CollectOverFlag == 3 ) AS.CollectOverFlag = 1;
 	}
 	else *h = AC.CollectFun;
 	h[2] |= DIRTYFLAG;
@@ -1098,12 +1095,12 @@ FullTerm:
 	*m++ = 1;
 	*m++ = 3;
 	*term = WORDDIF(m,term);
-	AR.KeptInHold = 1;
+	AS.KeptInHold = 1;
 	return(0);
 }
 
 /*
- 		#] GetMoreTerms : 
+ 		#] GetMoreTerms :
  		#[ GetMoreFromMem :
 
 */
@@ -1135,28 +1132,28 @@ GetMoreFromMem ARG2(WORD *,term,WORD **,tpoin)
 		r = m + 1;
 		t = m + *m - 1;
 		if ( same > ( i = ( *m - ABS(*t) -1 ) ) ) { /* Must fail */
-			if ( AC.AltCollectFun && AR.CollectOverFlag == 2 ) AR.CollectOverFlag = 3;
+			if ( AC.AltCollectFun && AS.CollectOverFlag == 2 ) AS.CollectOverFlag = 3;
 			break;
 		}
 		t = term+1;
 		i = same;
 		while ( --i >= 0 ) {
 			if ( *r != *t ) {
-				if ( AC.AltCollectFun && AR.CollectOverFlag == 2 ) AR.CollectOverFlag = 3;
+				if ( AC.AltCollectFun && AS.CollectOverFlag == 2 ) AS.CollectOverFlag = 3;
 				goto FullTerm;
 			}
 			r++; t++;
 		}
 		if ( ( WORDDIF(m,term) + i + extra ) > (AM.MaxTer>>1) ) {
 /* 23 = 3 +20. The 20 is to have some extra for substitutions or whatever */
-			if ( AR.CollectOverFlag == 0 && AC.AltCollectFun == 0 ) {
+			if ( AS.CollectOverFlag == 0 && AC.AltCollectFun == 0 ) {
 				Warning("Bracket contents too long in Collect statement");
 				Warning("Contents spread over more than one term");
 				Warning("If possible: increase MaxTermSize in setfile");
-				AR.CollectOverFlag = 1;
+				AS.CollectOverFlag = 1;
 			}
 			else if ( AC.AltCollectFun ) {
-				AR.CollectOverFlag = 2;
+				AS.CollectOverFlag = 2;
 			}
 			break;
 		}
@@ -1168,9 +1165,9 @@ GetMoreFromMem ARG2(WORD *,term,WORD **,tpoin)
 	}
 FullTerm:
 	h[1] = WORDDIF(m,h);
-	if ( AR.CollectOverFlag > 1 ) {
+	if ( AS.CollectOverFlag > 1 ) {
 		*h = AC.AltCollectFun;
-		if ( AR.CollectOverFlag == 3 ) AR.CollectOverFlag = 1;
+		if ( AS.CollectOverFlag == 3 ) AS.CollectOverFlag = 1;
 	}
 	else *h = AC.CollectFun;
 	h[2] |= DIRTYFLAG;
@@ -1190,12 +1187,12 @@ FullTerm:
 	*m++ = 1;
 	*m++ = 3;
 	*term = WORDDIF(m,term);
-	AR.KeptInHold = 1;
+	AS.KeptInHold = 1;
 	return(0);
 }
 
 /*
- 		#] GetMoreFromMem : 
+ 		#] GetMoreFromMem :
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1217,9 +1214,9 @@ WORD
 GetFromStore ARG5(WORD *,to,POSITION *,position,RENUMBER,renumber,
 	WORD *,InCompState,WORD,nexpr)
 {
-/*!!!*/
+/*!!!
 static cnum=0;
-/*!!!*/
+  !!!*/
 	LONG RetCode, num, first = 0;
 	WORD *from, *m;
 	STORECACHE s;
@@ -1227,9 +1224,9 @@ static cnum=0;
 	WORD *r, *rr = AR.CompressPointer;
 	POSITION scrpos;
 	r = rr;
-/*!!!*/
+/*!!!
 cnum++;
-/*!!!*/
+  !!!*/
 	sold = s = (STORECACHE)(&AR.StoreCache);
 	snext = s->next;
 	while ( snext ) {
@@ -1573,7 +1570,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars : 
+ 		#] DetVars :
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -1616,18 +1613,18 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 	else {
 		AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer)+BASEPOSITION(e->onfile));
 	}
-	w = AR.WorkPointer;
+	w = AT.WorkPointer;
 	AN.UsedSymbol   = w;	w += NumSymbols;
 	AN.UsedVector   = w;	w += NumVectors;
 	AN.UsedIndex    = w;	w += NumIndices;
 	AN.UsedFunction = w;	w += NumFunctions;
 	term = w;			w += AM.MaxTer;
-	if ( w > AM.WorkTop ) {
+	if ( w > AT.WorkTop ) {
 		f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 		return(MesWork());
 	}
 	AO.wpos = (UBYTE *)w;
-	AO.wlen = TOLONG(AM.WorkTop) - TOLONG(w);
+	AO.wlen = TOLONG(AT.WorkTop) - TOLONG(w);
 	w = AN.UsedSymbol;
 	i = NumSymbols + NumVectors + NumIndices + NumFunctions;
 	do { *w++ = 0; } while ( --i > 0 );
@@ -1781,7 +1778,7 @@ ErrInSto:
 }
 
 /*
- 		#] ToStorage : 
+ 		#] ToStorage :
  		#[ NextFileIndex :
 */
 
@@ -1830,7 +1827,7 @@ ErrNextS:
 }
 
 /*
- 		#] NextFileIndex : 
+ 		#] NextFileIndex :
  		#[ SetFileIndex :
 */
 
@@ -1859,7 +1856,7 @@ SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex : 
+ 		#] SetFileIndex :
  		#[ VarStore :
 */
 
@@ -1870,7 +1867,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 	if ( s ) {
 		n -= sizeof(WORD);
 		t = (UBYTE *)AO.wpoin;
-		u = (UBYTE *)AM.WorkTop;
+		u = (UBYTE *)AT.WorkTop;
 		while ( n && t < u ) { *t++ = *s++; n--; }
 		if ( t >= u ) {
 /* --COMPRESS-- */
@@ -1902,7 +1899,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 }
 
 /*
- 		#] VarStore : 
+ 		#] VarStore :
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -1916,18 +1913,18 @@ WORD
 TermRenumber ARG3(WORD *,term,RENUMBER,renumber,WORD,nexpr)
 {
 	WORD *stopper;
-/*!!!*/
+/*!!!
 WORD *memterm=term;
 static long ctrap=0;
-/*!!!*/
+  !!!*/
 	WORD *t, *sarg, n;
 	stopper = term + *term - 1;
 	stopper = stopper - ABS(*stopper) + 1;
 	term++;
 	while ( term < stopper ) {
-/*!!!*/
+/*!!!
 ctrap++;
-/*!!!*/
+  !!!*/
 		if ( *term == SYMBOL ) {
 			t = term + term[1];
 			term += 2;
@@ -2069,7 +2066,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber : 
+ 		#] TermRenumber :
  		#[ FindrNumber :
 */
 
@@ -2098,7 +2095,7 @@ ErrFindr:
 }
 
 /*
- 		#] FindrNumber : 
+ 		#] FindrNumber :
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2107,7 +2104,7 @@ ErrFindr:
 		par = 1		Search by name
 
 		When comparing parameter fields the parameters of the expression
-		to be searched are in AR.TMaddr. This includes the primary expression
+		to be searched are in AT.TMaddr. This includes the primary expression
 		and a possible FROMBRAC information. The FROMBRAC is always last.
 
 */
@@ -2121,7 +2118,7 @@ FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 	POSITION stindex, indexpos, scrpos;
 	LONG number, num;
 	stindex = f->Position;
-	m = AR.TMaddr;
+	m = AT.TMaddr;
 	stop = m + m[1];
 	m += SUBEXPSIZE;
 	start = m;
@@ -2146,15 +2143,15 @@ FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 					SeekFile(hand,&scrpos,SEEK_SET);
 					if ( ISNOTEQUALPOS(scrpos,ind->position) ) goto ErrGt2;
 /* --COMPRESS-- */
-					if ( ReadFile(hand,(UBYTE *)AR.WorkPointer,(LONG)sizeof(WORD)) != 
-					sizeof(WORD) || !*AR.WorkPointer ) goto ErrGt2;
-					num = *AR.WorkPointer - 1;
+					if ( ReadFile(hand,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+					sizeof(WORD) || !*AT.WorkPointer ) goto ErrGt2;
+					num = *AT.WorkPointer - 1;
 					num *= wsizeof(WORD);
-					if ( *AR.WorkPointer < 0 ||
+					if ( *AT.WorkPointer < 0 ||
 /* --COMPRESS-- */
-					ReadFile(hand,(UBYTE *)(AR.WorkPointer+1),num) != num ) goto ErrGt2;
+					ReadFile(hand,(UBYTE *)(AT.WorkPointer+1),num) != num ) goto ErrGt2;
 					m = start;	/* start of parameter field to be searched */
-					m2 = AR.WorkPointer + 1;
+					m2 = AT.WorkPointer + 1;
 					stop2 = m2 + m2[1];
 					m2 += SUBEXPSIZE;
 					while ( m < stop && m2 < stop2 ) {
@@ -2180,7 +2177,7 @@ FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 						m2 += m2[1];
 					}
 					if ( m >= stop && m2 >= stop2 ) {
-						AR.WorkPointer = stop2;
+						AT.WorkPointer = stop2;
 
 						return(ind);
 					}
@@ -2219,7 +2216,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex : 
+ 		#] FindInIndex :
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2243,7 +2240,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	RENUMBER r;
 	LONG num, nsize, xx;
 	WORD jsym, jind, jvec, jfun;
-	WORD k, type, error = 0, *oldw, *neww, *oldwork = AR.WorkPointer;
+	WORD k, type, error = 0, *oldw, *neww, *oldwork = AT.WorkPointer;
 	struct SyMbOl SyM;
 	struct InDeX InD;
 	struct VeCtOr VeC;
@@ -2270,7 +2267,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 			(RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
 	}
 
-	oldw = AR.WorkPointer + 1 + SUBEXPSIZE;
+	oldw = AT.WorkPointer + 1 + SUBEXPSIZE;
 /*
 	The protoype is loaded in the WorkSpace by the Index routine.
 	After all it has to find an occurrence with the proper arguments.
@@ -2333,7 +2330,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AR.WorkPointer),nsize)
+		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number;
 		if ( s->flags ) {
@@ -2342,26 +2339,26 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 			while ( *neww != SYMTOSYM || neww[2] != *w ) neww += neww[1];
 			k = neww[3];
 		}
-		else if ( GetVar((UBYTE *)AR.WorkPointer,&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+		else if ( GetVar((UBYTE *)AT.WorkPointer,&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
 			if ( type != CSYMBOL ) {
-				MesPrint("Error: Conflicting types for %s",(AR.WorkPointer));
+				MesPrint("Error: Conflicting types for %s",(AT.WorkPointer));
 				error = -1;
 			}
 			else {
 				if ( ( s->complex & (VARTYPEIMAGINARY|VARTYPECOMPLEX) ) !=
 				( symbols[k].complex & (VARTYPEIMAGINARY|VARTYPECOMPLEX) ) ) {
-					MesPrint("Warning: Conflicting complexity for %s",AR.WorkPointer);
+					MesPrint("Warning: Conflicting complexity for %s",AT.WorkPointer);
 					error = -1;
 				}
 				if ( ( s->minpower !=
 				symbols[k].minpower || s->maxpower !=
 				symbols[k].maxpower ) && AC.WarnFlag ) {
-					MesPrint("Warning: Conflicting power restrictions for %s",AR.WorkPointer);
+					MesPrint("Warning: Conflicting power restrictions for %s",AT.WorkPointer);
 				}
 			}
 		}
 		else {
-			if ( ( k = EntVar(CSYMBOL,(UBYTE *)(AR.WorkPointer),s->complex,s->minpower,
+			if ( ( k = EntVar(CSYMBOL,(UBYTE *)(AT.WorkPointer),s->complex,s->minpower,
 			s->maxpower) ) < 0 ) goto GetTcall;
 		}
 		*(w+j) = k;
@@ -2369,7 +2366,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	}
 	}
 /*
-			#] Symbols : 
+			#] Symbols :
 			#[ Indices :
 */
 	{
@@ -2382,7 +2379,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AR.WorkPointer),nsize)
+		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + AM.OffsetIndex;
 		if ( s->dimension < 0 ) {	/* Relabel the dimension */
@@ -2403,27 +2400,27 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 -------->			Here we may have to execute some renumbering
 */
 		}
-		else if ( GetVar((UBYTE *)(AR.WorkPointer),&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+		else if ( GetVar((UBYTE *)(AT.WorkPointer),&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
 			if ( type != CINDEX ) {
-				MesPrint("Error: Conflicting types for %s",(AR.WorkPointer));
+				MesPrint("Error: Conflicting types for %s",(AT.WorkPointer));
 				error = -1;
 			}
 			else {
 				if ( s->type !=
 				indices[k].type ) {
-					MesPrint("Warning: %s is also a dummy index",(AR.WorkPointer));
+					MesPrint("Warning: %s is also a dummy index",(AT.WorkPointer));
 					error = -1;
 					goto GetTb3;
 				}
 				if ( s->dimension != indices[k].dimension ) {
-					MesPrint("Warning: Conflicting dimensions for %s",(AR.WorkPointer));
+					MesPrint("Warning: Conflicting dimensions for %s",(AT.WorkPointer));
 					error = -1;
 				}
 			}
 		}
 		else {
 GetTb3:
-			if ( ( k = EntVar(CINDEX,(UBYTE *)(AR.WorkPointer),
+			if ( ( k = EntVar(CINDEX,(UBYTE *)(AT.WorkPointer),
 			s->dimension,0,0) ) < 0 ) goto GetTcall;
 
 		}
@@ -2432,7 +2429,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices : 
+			#] Indices :
 			#[ Vectors :
 */
 	{
@@ -2445,7 +2442,7 @@ GetTb3:
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS-- */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AR.WorkPointer),nsize)
+		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + AM.OffsetVector;
 		if ( s->flags ) {
@@ -2454,21 +2451,21 @@ GetTb3:
 			while ( *neww != VECTOVEC || neww[2] != *w ) neww += neww[1];
 			k = neww[3] - AM.OffsetVector;
 		}
-		else if ( GetVar((UBYTE *)(AR.WorkPointer),&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+		else if ( GetVar((UBYTE *)(AT.WorkPointer),&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
 			if ( type != CVECTOR ) {
-				MesPrint("Error: Conflicting types for %s",(AR.WorkPointer));
+				MesPrint("Error: Conflicting types for %s",(AT.WorkPointer));
 				error = -1;
 			}
 			else {
 				if ( ( s->complex & (VARTYPEIMAGINARY|VARTYPECOMPLEX) ) !=
 				( vectors[k].complex & (VARTYPEIMAGINARY|VARTYPECOMPLEX) ) ) {
-					MesPrint("Warning: Conflicting complexity for %s",(AR.WorkPointer));
+					MesPrint("Warning: Conflicting complexity for %s",(AT.WorkPointer));
 					error = -1;
 				}
 			}
 		}
 		else {
-			if ( ( k = EntVar(CVECTOR,(UBYTE *)(AR.WorkPointer),
+			if ( ( k = EntVar(CVECTOR,(UBYTE *)(AT.WorkPointer),
 			s->complex,0,0) ) < 0 ) goto GetTcall;
 		}
 		*(w+j) = k + AM.OffsetVector;
@@ -2476,7 +2473,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors : 
+			#] Vectors :
 			#[ Functions :
 */
 	{
@@ -2489,7 +2486,7 @@ GetTb3:
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS-- */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AR.WorkPointer),nsize)
+		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + FUNCTION;
 		if ( s->flags ) {
@@ -2498,24 +2495,24 @@ GetTb3:
 			while ( *neww != FUNTOFUN || neww[2] != *w ) neww += neww[1];
 			k = neww[3] - FUNCTION;
 		}
-		else if ( GetVar((UBYTE *)(AR.WorkPointer),&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+		else if ( GetVar((UBYTE *)(AT.WorkPointer),&type,&k,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
 			if ( type != CFUNCTION ) {
-				MesPrint("Error: Conflicting types for %s",(AR.WorkPointer));
+				MesPrint("Error: Conflicting types for %s",(AT.WorkPointer));
 				error = -1;
 			}
 			else {
 				if ( s->complex != functions[k].complex ) {
-					MesPrint("Warning: Conflicting complexity for %s",(AR.WorkPointer));
+					MesPrint("Warning: Conflicting complexity for %s",(AT.WorkPointer));
 					error = -1;
 				}
 				else if ( s->symmetric != functions[k].symmetric ) {
-					MesPrint("Warning: Conflicting symmetry properties for %s",(AR.WorkPointer));
+					MesPrint("Warning: Conflicting symmetry properties for %s",(AT.WorkPointer));
 					error = -1;
 				}
 			}
 		}
 		else {
-			if ( ( k = EntVar(CFUNCTION,(UBYTE *)(AR.WorkPointer),
+			if ( ( k = EntVar(CFUNCTION,(UBYTE *)(AT.WorkPointer),
 			s->complex,s->commute,s->spec) ) < 0 ) goto GetTcall;
 			functions[k].symmetric = s->symmetric;
 		}
@@ -2524,39 +2521,39 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions : 
+			#] Functions :
 
 	Now we skip the prototype. This sets the start posiion at the first term
 */
-	if ( error ) { AR.WorkPointer = oldwork; return(0); }
+	if ( error ) { AT.WorkPointer = oldwork; return(0); }
 /* --COMPRESS-- */
-	if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AR.WorkPointer,(LONG)sizeof(WORD)) != 
-	sizeof(WORD) || !*AR.WorkPointer ) { AR.WorkPointer = oldwork; return(0); }
-	num = *AR.WorkPointer - 1;
+	if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+	sizeof(WORD) || !*AT.WorkPointer ) { AT.WorkPointer = oldwork; return(0); }
+	num = *AT.WorkPointer - 1;
 	num *= sizeof(WORD);
 /* --COMPRESS-- */
-	if ( *AR.WorkPointer < 0 ||
-	ReadFile(AO.StoreData.Handle,(UBYTE *)(AR.WorkPointer+1),num) != num ) {
+	if ( *AT.WorkPointer < 0 ||
+	ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer+1),num) != num ) {
 		MesPrint("@Error in stored expressions file at position %10p",*position);
-		AR.WorkPointer = oldwork;
+		AT.WorkPointer = oldwork;
 		return(0);
 	}
 	ADDPOS(*position,num+sizeof(WORD));
 	r->startposition = *position;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	return(r);
 GetTcall:
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	MesCall("GetTable");
 	return(0);
 ErrGt2:
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	MesPrint("Readerror in GetTable");
 	return(0);
 }
 
 /*
- 		#] GetTable : 
+ 		#] GetTable :
 	#] StoreExpressions :
 */
 

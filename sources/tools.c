@@ -24,7 +24,7 @@ extern "C" getdtablesize();
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -57,7 +57,7 @@ LoadInputFile ARG2(UBYTE *,filename,int,type)
 }
 
 /*
- 		#] LoadInputFile : 
+ 		#] LoadInputFile :
  		#[ ReadFromStream :
 */
 
@@ -112,7 +112,7 @@ ReadFromStream ARG1(STREAM *,stream)
 }
 
 /*
- 		#] ReadFromStream : 
+ 		#] ReadFromStream :
  		#[ GetFromStream :
 */
 
@@ -136,7 +136,7 @@ GetFromStream ARG1(STREAM *,stream)
 }
 
 /*
- 		#] GetFromStream : 
+ 		#] GetFromStream :
  		#[ LookInStream :
 */
 
@@ -149,7 +149,7 @@ LookInStream ARG1(STREAM *,stream)
 }
 
 /*
- 		#] LookInStream : 
+ 		#] LookInStream :
  		#[ OpenStream :
 */
 
@@ -299,7 +299,7 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
 }
 
 /*
- 		#] OpenStream : 
+ 		#] OpenStream :
  		#[ LocateFile :
 */
 
@@ -379,7 +379,7 @@ LocateFile ARG2(UBYTE **,name,int,type)
 }
 
 /*
- 		#] LocateFile : 
+ 		#] LocateFile :
  		#[ CloseStream :
 */
 
@@ -467,7 +467,7 @@ CloseStream ARG1(STREAM *,stream)
 }
 
 /*
- 		#] CloseStream : 
+ 		#] CloseStream :
  		#[ CreateStream :
 */
 
@@ -498,7 +498,7 @@ STREAM *CreateStream ARG1(UBYTE *,where)
 }
 
 /*
- 		#] CreateStream : 
+ 		#] CreateStream :
  		#[ GetStreamPosition :
 */
 
@@ -509,7 +509,7 @@ GetStreamPosition ARG1(STREAM *,stream)
 }
 
 /*
- 		#] GetStreamPosition : 
+ 		#] GetStreamPosition :
  		#[ PositionStream :
 */
 
@@ -538,7 +538,7 @@ PositionStream ARG2(STREAM *,stream,LONG,position)
 }
 
 /*
- 		#] PositionStream : 
+ 		#] PositionStream :
 	#] Streams :
 	#[ Files :
  		#[ StartFiles :
@@ -566,7 +566,7 @@ StartFiles ARG0
 }
 
 /*
- 		#] StartFiles : 
+ 		#] StartFiles :
  		#[ OpenFile :
 */
 
@@ -583,7 +583,7 @@ OpenFile ARG1(char *,name)
 }
 
 /*
- 		#] OpenFile : 
+ 		#] OpenFile :
  		#[ OpenAddFile :
 */
 
@@ -603,7 +603,7 @@ OpenAddFile ARG1(char *,name)
 }
 
 /*
- 		#] OpenAddFile : 
+ 		#] OpenAddFile :
  		#[ CreateFile :
 */
 
@@ -619,7 +619,7 @@ CreateFile ARG1(char *,name)
 }
 
 /*
- 		#] CreateFile : 
+ 		#] CreateFile :
  		#[ CreateLogFile :
 */
 
@@ -636,7 +636,7 @@ CreateLogFile ARG1(char *,name)
 }
 
 /*
- 		#] CreateLogFile : 
+ 		#] CreateLogFile :
  		#[ CloseFile :
 */
 
@@ -651,7 +651,7 @@ CloseFile ARG1(int,handle)
 }
 
 /*
- 		#] CloseFile : 
+ 		#] CloseFile :
  		#[ CreateHandle :
 */
 
@@ -688,7 +688,7 @@ CreateHandle ARG0
 }
 
 /*
- 		#] CreateHandle : 
+ 		#] CreateHandle :
  		#[ ReadFile :
 */
 
@@ -711,7 +711,7 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 }
 
 /*
- 		#] ReadFile : 
+ 		#] ReadFile :
  		#[ WriteFile :
 */
 /*[15apr2004 mt]:*/ /*[13jul2005 mt] Is this ok?:*/
@@ -725,7 +725,7 @@ WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/)=&WriteFileToFile;
 /*:[15apr2004 mt]*/
 /*
- 		#] WriteFile : 
+ 		#] WriteFile :
  		#[ SeekFile :
 */
 
@@ -763,7 +763,7 @@ TELLFILE ARG2(int,handle,POSITION *,position)
 }
 
 /*
- 		#] TellFile : 
+ 		#] TellFile :
  		#[ FlushFile :
 */
 
@@ -773,7 +773,7 @@ void FlushFile ARG1(int,handle)
 }
 
 /*
- 		#] FlushFile : 
+ 		#] FlushFile :
  		#[ GetPosFile :
 */
 
@@ -784,7 +784,7 @@ GetPosFile ARG2(int,handle,fpos_t *,pospointer)
 }
 
 /*
- 		#] GetPosFile : 
+ 		#] GetPosFile :
  		#[ SetPosFile :
 */
 
@@ -795,7 +795,7 @@ SetPosFile ARG2(int,handle,fpos_t *,pospointer)
 }
 
 /*
- 		#] SetPosFile : 
+ 		#] SetPosFile :
  		#[ GetChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -823,7 +823,7 @@ GetChannel ARG1(char *,name)
 }
 
 /*
- 		#] GetChannel : 
+ 		#] GetChannel :
  		#[ GetAppendChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -851,7 +851,7 @@ GetAppendChannel ARG1(char *,name)
 }
 
 /*
- 		#] GetAppendChannel : 
+ 		#] GetAppendChannel :
  		#[ CloseChannel :
 
 		Checks whether we have this file already. If so, we close it.
@@ -875,7 +875,7 @@ CloseChannel ARG1(char *,name)
 }
 
 /*
- 		#] CloseChannel : 
+ 		#] CloseChannel :
 	#] Files :
 	#[ Strings :
  		#[ StrCmp :
@@ -889,7 +889,7 @@ StrCmp ARG2(UBYTE *,s1,UBYTE *,s2)
 }
 
 /*
- 		#] StrCmp : 
+ 		#] StrCmp :
  		#[ StrICmp :
 */
 
@@ -901,7 +901,7 @@ StrICmp ARG2(UBYTE *,s1,UBYTE *,s2)
 }
 
 /*
- 		#] StrICmp : 
+ 		#] StrICmp :
  		#[ StrHICmp :
 */
 
@@ -913,7 +913,7 @@ StrHICmp ARG2(UBYTE *,s1,UBYTE *,s2)
 }
 
 /*
- 		#] StrHICmp : 
+ 		#] StrHICmp :
  		#[ StrICont :
 */
 
@@ -926,7 +926,7 @@ StrICont ARG2(UBYTE *,s1,UBYTE *,s2)
 }
 
 /*
- 		#] StrICont : 
+ 		#] StrICont :
  		#[ ConWord :
 */
 
@@ -939,7 +939,7 @@ ConWord ARG2(UBYTE *,s1,UBYTE *,s2)
 }
 
 /*
- 		#] ConWord : 
+ 		#] ConWord :
  		#[ StrLen :
 */
 
@@ -952,7 +952,7 @@ StrLen ARG1(UBYTE *,s)
 }
 
 /*
- 		#] StrLen : 
+ 		#] StrLen :
  		#[ NumToStr :
 */
 
@@ -972,7 +972,7 @@ NumToStr ARG2(UBYTE *,s,LONG,x)
 }
 
 /*
- 		#] NumToStr : 
+ 		#] NumToStr :
  		#[ WriteString :
 
 		Writes a characterstring to the various outputs.
@@ -1006,7 +1006,7 @@ WriteString ARG3(int,type,UBYTE *,str,int,num)
 }
 
 /*
- 		#] WriteString : 
+ 		#] WriteString :
  		#[ WriteUnfinString :
 
 		Writes a characterstring to the various outputs.
@@ -1037,7 +1037,7 @@ WriteUnfinString ARG3(int,type,UBYTE *,str,int,num)
 }
 
 /*
- 		#] WriteUnfinString : 
+ 		#] WriteUnfinString :
  		#[ strDup1 :
 
 		string duplication with message passing for Malloc1, allowing
@@ -1057,7 +1057,7 @@ strDup1 ARG2(UBYTE *,instring,char *,ifwrong)
 }
 
 /*
- 		#] strDup1 : 
+ 		#] strDup1 :
  		#[ EndOfToken :
 */
 
@@ -1070,7 +1070,7 @@ EndOfToken ARG1(UBYTE *,s)
 }
 
 /*
- 		#] EndOfToken : 
+ 		#] EndOfToken :
  		#[ ToToken :
 */
 
@@ -1083,7 +1083,7 @@ ToToken ARG1(UBYTE *,s)
 }
 
 /*
- 		#] ToToken : 
+ 		#] ToToken :
  		#[ SkipField :
 
 	Skips from s to the end of a declaration field.
@@ -1109,7 +1109,7 @@ SkipField ARG2(UBYTE *,s,int,level)
 }
 
 /*
- 		#] SkipField : 
+ 		#] SkipField :
  		#[ ReadSnum :			WORD ReadSnum(p)
 
 		Reads a number that should fit in a word.
@@ -1136,7 +1136,7 @@ ReadSnum ARG1(UBYTE **,p)
 }
 
 /*
- 		#] ReadSnum : 
+ 		#] ReadSnum :
  		#[ NumCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1160,7 +1160,7 @@ NumCopy ARG2(WORD,x,UBYTE *,to)
 }
 
 /*
- 		#] NumCopy : 
+ 		#] NumCopy :
  		#[ LongCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1184,7 +1184,7 @@ LongCopy ARG2(LONG,x,char *,to)
 }
 
 /*
- 		#] LongCopy : 
+ 		#] LongCopy :
  		#[ LongLongCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1209,7 +1209,7 @@ LongLongCopy ARG2(off_t *,y,char *,to)
 }
 
 /*
- 		#] LongLongCopy : 
+ 		#] LongLongCopy :
  		#[ MakeDate :
 
 		Routine produces a string with the date and time of the run
@@ -1242,7 +1242,7 @@ MakeDate ARG0
 }
 
 /*
- 		#] MakeDate : 
+ 		#] MakeDate :
 	#] Strings :
  	#[ Mixed :
  		#[ Malloc :
@@ -1313,7 +1313,7 @@ Malloc ARG1(LONG,size)
 }
 
 /*
- 		#] Malloc : 
+ 		#] Malloc :
  		#[ Malloc1 :
 
 		Malloc with more detailed error message.
@@ -1365,7 +1365,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 }
 
 /*
- 		#] Malloc1 : 
+ 		#] Malloc1 :
  		#[ M_free :
 */
 
@@ -1419,7 +1419,7 @@ void M_free ARG2(VOID *,x,char *,where)
 }
 
 /*
- 		#] M_free : 
+ 		#] M_free :
  		#[ M_check :
 */
 
@@ -1483,7 +1483,7 @@ void M_print() {}
 #endif
 
 /*
- 		#] M_check : 
+ 		#] M_check :
  		#[ FromList :
 
 	Returns the next object in a list.
@@ -1512,7 +1512,7 @@ FromList ARG1(LIST *,L)
 }
 
 /*
- 		#] FromList : 
+ 		#] FromList :
  		#[ From0List :
 
 		Same as FromList, but we zero excess variables.
@@ -1539,7 +1539,7 @@ From0List ARG1(LIST *,L)
 }
 
 /*
- 		#] From0List : 
+ 		#] From0List :
  		#[ FromVarList :
 
 	Returns the next object in a list of variables.
@@ -1577,7 +1577,7 @@ FromVarList ARG1(LIST *,L)
 }
 
 /*
- 		#] FromVarList : 
+ 		#] FromVarList :
  		#[ DoubleList :
 */
 
@@ -1594,7 +1594,7 @@ DoubleList ARG4(VOID ***,lijst,int *,oldsize,int,objectsize,char *,nameoftype)
 }
 
 /*
- 		#] DoubleList : 
+ 		#] DoubleList :
  		#[ DoubleLList :
 */
 
@@ -1635,7 +1635,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 }
 
 /*
- 		#] DoubleLList : 
+ 		#] DoubleLList :
  		#[ DoubleBuffer :
 */
 
@@ -1662,7 +1662,7 @@ DoubleBuffer ARG4(void **,start,void **,stop,int,size,char *,text)
 }
 
 /*
- 		#] DoubleBuffer : 
+ 		#] DoubleBuffer :
  		#[ ExpandBuffer :
 */
 
@@ -1689,7 +1689,7 @@ void ExpandBuffer ARG3(void **,buffer,LONG *,oldsize,int,type)
 }
 
 /*
- 		#] ExpandBuffer : 
+ 		#] ExpandBuffer :
  		#[ iexp :
 
 		Raises the long integer y to the power p.
@@ -1719,7 +1719,7 @@ iexp ARG2(LONG,x,int,p)
 }
 
 /*
- 		#] iexp : 
+ 		#] iexp :
  		#[ ToGeneral :
 
 		Convert a fast argument to a general argument
@@ -1756,7 +1756,7 @@ MakeSize:
 }
 
 /*
- 		#] ToGeneral : 
+ 		#] ToGeneral :
  		#[ ToFast :
 
 		Checks whether an argument can be converted to fast notation
@@ -1812,7 +1812,7 @@ ToFast ARG2(WORD *,r,WORD *,m)
 }
 
 /*
- 		#] ToFast : 
+ 		#] ToFast :
  		#[ IsLikeVector :
 
 		Routine determines whether a function argument is like a vector.
@@ -1846,7 +1846,7 @@ IsLikeVector ARG1(WORD *,arg)
 }
 
 /*
- 		#] IsLikeVector : 
+ 		#] IsLikeVector :
  		#[ CompareArgs :
 */
 
@@ -1876,7 +1876,7 @@ CompareArgs ARG2(WORD *,arg1,WORD *,arg2)
 }
 
 /*
- 		#] CompareArgs : 
+ 		#] CompareArgs :
  		#[ CompArg :
 
 	returns 1 if arg1 comes first, -1 if arg2 comes first, 0 if equal
@@ -2036,20 +2036,20 @@ argerror:
 }
 
 /*
- 		#] CompArg : 
+ 		#] CompArg :
  		#[ TimeCPU :
 */
 
 LONG
 TimeCPU ARG1(WORD,par)
 {
-	if ( par ) return(Timer()-AR.OldTime);
-	AR.OldTime = Timer();
+	if ( par ) return(Timer()-AM.OldTime);
+	AM.OldTime = Timer();
 	return(0L);
 }
 
 /*
- 		#] TimeCPU : 
+ 		#] TimeCPU :
  		#[ Timer :
 */
 
@@ -2249,7 +2249,7 @@ LONG Timer()
 #endif
 
 /*
- 		#] Timer : 
+ 		#] Timer :
  	#] Mixed :
 */
 /*[12dec2003 mt]:*/
@@ -2279,7 +2279,7 @@ set_in ARG2(UBYTE, ch, set_of_char, set)
 	return(-1);
 }/*set_in*/
 /*
- 		#] set_in : 
+ 		#] set_in :
  		#[ set_set :
 			sets ch into set; returns *set:
 */
@@ -2301,7 +2301,7 @@ set_set ARG2(UBYTE, ch, set_of_char, set)
 	return(tmp);
 }/*set_set*/
 /*
- 		#] set_set : 
+ 		#] set_set :
  		#[ set_del :
 			deletes ch from set; returns *set:
 */
@@ -2323,7 +2323,7 @@ set_del ARG2(UBYTE, ch, set_of_char, set)
 	return(tmp);
 }/*set_del*/
 /*
- 		#] set_del : 
+ 		#] set_del :
  		#[ set_sub :
 			returns *set = set1\set2. This function may be usd for initialising,
 				set_sub(a,a,a) => now a is empty set :
@@ -2349,6 +2349,6 @@ set_sub ARG3(set_of_char, set, set_of_char, set1, set_of_char, set2)
 	return(tmp);
 }/*set_sub*/
 /*
- 		#] set_sub : 
+ 		#] set_sub :
 */
 /*:[12dec2003 mt]*/

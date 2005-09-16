@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -24,7 +24,7 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use : 
+  	#] syntax and use :
   	#[ FindBracket :
 */
 
@@ -103,7 +103,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	Put the bracket in the compress buffer as if it were the last term read.
 	Have a look at AR.CompressPointer. (set it right)
 */
-	term = AR.WorkPointer;
+	term = AT.WorkPointer;
 	t1 = e->bracketinfo->bracketbuffer+bi->bracket;
 	bsize = j = *t1;
 	t2 = AR.CompressPointer;
@@ -269,7 +269,9 @@ PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 			goto bracketdone;
 		}
 		if ( i > 0 ) { /* We have a problem */
+			LOCK(ErrorMessageLock);
 			MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -322,8 +324,10 @@ PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 */
 		average = DIVPOS(thepos,b->indexfill+1);
 		if ( ( average <= 0 ) || ( (average*4) <= 0 ) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("Problems with bracket buffer. Increase MaxBracketBufferSize in form.set");
 			MesPrint("Current size is %l",AM.MaxBracketBufferSize*sizeof(WORD));
+			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		average *= 4;  /* 2*2: one 2 for much longer, one 2 because we have pairs */
@@ -400,7 +404,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex : 
+  	#] PutBracketInIndex :
   	#[ ClearBracketIndex :
 */
 
@@ -418,7 +422,7 @@ ClearBracketIndex ARG1(WORD,numexp)
 }
 
 /*
-  	#] ClearBracketIndex : 
+  	#] ClearBracketIndex :
   	#[ OpenBracketIndex :
 */
 
@@ -443,7 +447,7 @@ OpenBracketIndex ARG1(WORD,nexpr)
 }
 
 /*
-  	#] OpenBracketIndex : 
+  	#] OpenBracketIndex :
 */
 
 /*

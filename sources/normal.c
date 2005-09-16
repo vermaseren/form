@@ -61,7 +61,7 @@ Normalize ARG1(WORD *,term)
 	WORD shortnum, stype;
 	WORD *stop, *to = 0, *from = 0;
 /*
-	The next variables would be better off in the AM.WorkSpace (?)
+	The next variables would be better off in the AT.WorkSpace (?)
 	or as static global variables. Now they make stackallocations
 	rather bothersome.
 */
@@ -78,13 +78,13 @@ Normalize ARG1(WORD *,term)
 	WORD *pnco[NORMSIZE],nnco;
 	WORD *pcon[2*NORMSIZE],ncon;		/* Pointer to contractable indices */
 	WORD ncoef;							/* Accumulator for the coefficient */
-	WORD *lnum=AM.n_llnum+1,nnum;		/* Scratch for factorials */
+	WORD *lnum=AT.n_llnum+1,nnum;		/* Scratch for factorials */
 	WORD *termout, oldtoprhs = 0, subtype;
 	WORD ReplaceType, didcontr, regval = 0;
 	WORD *ReplaceSub;
 	WORD nsetexp;
 	WORD *fillsetexp;
-	CBUF *C = cbuf+AR.ebufnum;
+	CBUF *C = cbuf+AT.ebufnum;
 	LONG oldcpointer = 0;
 /*
 	int termflag;
@@ -103,13 +103,13 @@ Restart:
 	i = ABS(ncoef);
 	r -= i;
 	m = r;
-	t = AM.n_coef;
+	t = AT.n_coef;
 	NCOPY(t,r,i);
-	termout = AR.WorkPointer;
-	AR.WorkPointer += AM.MaxTer;
+	termout = AT.WorkPointer;
+	AT.WorkPointer += AM.MaxTer;
 	fillsetexp = termout+1;
 	nsetexp = 0;
-	AR.PolyNorm = 0;
+	AN.PolyNorm = 0;
 /*
 	termflag = 0;
 */
@@ -151,15 +151,15 @@ conscan:;
 						  m -= ABS(m[-1]);
 						  if ( i > 0 ) {
 							while ( i > 0 ) {
-								if ( MulRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,nnum,
-								(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+								if ( MulRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
+								(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 								i--;
 							}
 						  }
 						  else if ( i < 0 ) {
 							while ( i < 0 ) {
-								if ( DivRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,nnum,
-								(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+								if ( DivRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
+								(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 								i++;
 							}
 						  }
@@ -175,14 +175,14 @@ conscan:;
 						  i = t[1];
 						  if ( i > 0 ) {
 							while ( i > 0 ) {
-								if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)m,nnum) )
+								if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)m,nnum) )
 										goto FromNorm;
 								i--;
 							}
 						  }
 						  else if ( i < 0 ) {
 							while ( i < 0 ) {
-								if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)m,nnum) )
+								if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)m,nnum) )
 										goto FromNorm;
 								i++;
 							}
@@ -215,11 +215,11 @@ conscan:;
 					goto FromNorm;
 				ncoef = REDLENG(ncoef);
 				if ( t[1] < 0 ) {
-					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				else if ( t[1] > 0 ) {
-					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				ncoef = INCLENG(ncoef);
@@ -237,12 +237,16 @@ conscan:;
 							t++; m++;
 							if	( *t > 2*MAXPOWER || *t < -2*MAXPOWER
 							||	*m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+								LOCK(ErrorMessageLock);
 								MesPrint("Illegal wildcard power combination.");
+								UNLOCK(ErrorMessageLock);
 								goto NormMin;
 							}
 							*m += *t;
 							if	( *m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+								LOCK(ErrorMessageLock);
 								MesPrint("Power overflow during normalization");
+								UNLOCK(ErrorMessageLock);
 								goto NormMin;
 							}
 							if ( !*m ) {
@@ -316,7 +320,22 @@ NextSymbol:;
 */
 				if ( AC.Eside != LHSIDE ) {
 				DOLLARS d = Dollars + t[2];
+#ifdef WITHPTHREADS
+				int nummodopt, ptype = -1;
+				if ( AS.MultiThreaded ) {
+					for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+						if ( t[2] == ModOptdollars[nummodopt].number ) break;
+					}
+					if ( nummodopt < NumModOptdollars ) {
+						ptype = ModOptdollars[nummodopt].type;
+						LOCK(d->pthreadslock);
+					}
+				}
+#endif
 				if ( d->type == DOLZERO ) {
+#ifdef WITHPTHREADS
+					if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
 					if ( t[3] == 0 ) goto NormZZ;
 					if ( t[3] < 0 ) goto NormInf;
 					goto NormZero;
@@ -330,6 +349,9 @@ NextSymbol:;
 						for ( i = 1; i <= nnum; i++ ) lnum[i-1] = d->where[i];
 					}
 					if ( nnum == 0 || ( nnum == 1 && lnum[0] == 0 ) ) {
+#ifdef WITHPTHREADS
+						if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
 						if ( t[3] < 0 ) goto NormInf;
 						else if ( t[3] == 0 ) goto NormZZ;
 						goto NormZero;
@@ -337,23 +359,41 @@ NextSymbol:;
 					if ( t[3] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
 					ncoef = REDLENG(ncoef);
 					if ( t[3] < 0 ) {
-						if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
+#ifdef WITHPTHREADS
+							if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
 							goto FromNorm;
+						}
 					}
 					else if ( t[3] > 0 ) {
-						if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+						if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
+#ifdef WITHPTHREADS
+							if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
 							goto FromNorm;
+						}
 					}
 					ncoef = INCLENG(ncoef);
 				}
 				else if ( d->type == DOLINDEX ) {
-					if ( d->index == 0 ) goto NormZero;
+					if ( d->index == 0 ) {
+#ifdef WITHPTHREADS
+						if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
+						goto NormZero;
+					}
 					if ( d->index != NOINDEX ) pind[nind++] = d->index;
 				}
 				else if ( d->type == DOLTERMS ) {
 					t[0] = SUBEXPRESSION;
 					t[4] = AM.dbufnum;
-					if ( t[3] == 0 ) break;
+					if ( t[3] == 0 ) {
+#ifdef WITHPTHREADS
+						if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
+						break;
+					}
 					regval = 2;
 					t = r;
 					while ( t < m ) {
@@ -366,10 +406,18 @@ NextSymbol:;
 						}
 						t += t[1];
 					}
+#ifdef WITHPTHREADS
+					if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
 					goto RegEnd;
 				}
 				else {
+#ifdef WITHPTHREADS
+					if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
+					LOCK(ErrorMessageLock);
 					MesPrint("!!!This $ variation has not been implemented yet!!!");
+					UNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
 				}
@@ -377,6 +425,9 @@ NextSymbol:;
 					pnco[nnco++] = t;
 					AR.lhdollarflag = 1;
 				}
+#ifdef WITHPTHREADS
+				if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+#endif
 				break;
 			case DELTA :
 				t += 2;
@@ -400,7 +451,7 @@ NextSymbol:;
 									nnum = 1;
 								}
 								ncoef = REDLENG(ncoef);
-								if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+								if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 									goto FromNorm;
 								ncoef = INCLENG(ncoef);
 							}
@@ -436,7 +487,7 @@ NextSymbol:;
 						goto FromNorm;
 MulIn:
 					ncoef = REDLENG(ncoef);	
-					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
 				else pcom[ncom++] = t;
@@ -458,10 +509,10 @@ MulIn:
 					while ( lnum[mnum-1] == 0 ) mnum--;
 					if ( nnum < 0 ) mnum = -mnum;
 					ncoef = REDLENG(ncoef);	
-					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,mnum) ) goto FromNorm;
+					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,mnum) ) goto FromNorm;
 					mnum = inum;
 					while ( lnum[inum+mnum-1] == 0 ) mnum--;
-					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)(lnum+inum),mnum) ) goto FromNorm;
+					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)(lnum+inum),mnum) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					if ( t[1] == FUNHEAD+4 && t[FUNHEAD+1] == 1
 					 && t[FUNHEAD+3] == -1 ) ncoef = -ncoef; 
@@ -524,8 +575,8 @@ MulIn:
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(m[-1]);	
 					m -= ABS(m[-1]);
-					if ( MulRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,nnum,
-					(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					if ( MulRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
+					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					r = t;
 				}
@@ -541,8 +592,8 @@ MulIn:
 						while ( r < r1 ) *r2++ = *r++;
 						r3 = termout + 1;
 						while ( r3 < r2 ) *t++ = *r3++; *term = t - term;
-						if ( AR.WorkPointer > term && AR.WorkPointer < t )
-							AR.WorkPointer = t;
+						if ( AT.WorkPointer > term && AT.WorkPointer < t )
+							AT.WorkPointer = t;
 						goto Restart;
 					}
 				}
@@ -566,7 +617,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					}
 					else { lnum[0] = x; nnum = 1; }
 					ncoef = REDLENG(ncoef);
-					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
@@ -639,9 +690,9 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(*ts);	
 					if ( nnum < 0 ) nnum = -nnum;
-					if ( MulRat((UWORD *)AM.n_coef,ncoef,
+					if ( MulRat((UWORD *)AT.n_coef,ncoef,
 					(UWORD *)(t+FUNHEAD+ARGHEAD+1),nnum,
-					(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
 				else pcom[ncom++] = t;
@@ -795,19 +846,19 @@ gcdcalc:					if ( GcdLong((UWORD *)num1,size1,(UWORD *)num2,size2
 					if ( *ttt > 0 ) {
 loadnew1:
 						for ( iii = 0; iii < ttt[ARGHEAD]; iii++ )
-							AM.n_llnum[iii] = ttt[ARGHEAD+iii];
+							AT.n_llnum[iii] = ttt[ARGHEAD+iii];
 						ttt += *ttt;
 					}
 					else {
 loadnew2:
 						if ( ttt[1] == 0 ) {
-							AM.n_llnum[0] = AM.n_llnum[1] = AM.n_llnum[2] = AM.n_llnum[3] = 0;
+							AT.n_llnum[0] = AT.n_llnum[1] = AT.n_llnum[2] = AT.n_llnum[3] = 0;
 						}
 						else {
-							AM.n_llnum[0] = 4;
-							if ( ttt[1] > 0 ) { AM.n_llnum[1] = ttt[1]; AM.n_llnum[3] = 3; }
-							else { AM.n_llnum[1] = -ttt[1]; AM.n_llnum[3] = -3; }
-							AM.n_llnum[2] = 1;
+							AT.n_llnum[0] = 4;
+							if ( ttt[1] > 0 ) { AT.n_llnum[1] = ttt[1]; AT.n_llnum[3] = 3; }
+							else { AT.n_llnum[1] = -ttt[1]; AT.n_llnum[3] = -3; }
+							AT.n_llnum[2] = 1;
 						}
 						ttt += 2;
 					}
@@ -816,53 +867,53 @@ loadnew2:
 */
 					while ( ttt < tttstop ) {
 						if ( *ttt > 0 ) {
-							if ( AM.n_llnum[0] == 0 ) {
+							if ( AT.n_llnum[0] == 0 ) {
 								if ( ( *t == MINFUNCTION && ttt[*ttt-1] < 0 )
 								|| ( *t == MAXFUNCTION && ttt[*ttt-1] > 0 ) )
 									goto loadnew1;
 							}
 							else {
 								ttt += ARGHEAD;
-								iii = CompCoef(AM.n_llnum,ttt);
+								iii = CompCoef(AT.n_llnum,ttt);
 								if ( ( iii > 0 && *t == MINFUNCTION )
 								|| ( iii < 0 && *t == MAXFUNCTION ) ) {
 									for ( iii = 0; iii < ttt[0]; iii++ )
-										AM.n_llnum[iii] = ttt[iii];
+										AT.n_llnum[iii] = ttt[iii];
 								}
 							}
 							ttt += *ttt;
 						}
 						else {
-							if ( AM.n_llnum[0] == 0 ) {
+							if ( AT.n_llnum[0] == 0 ) {
 								if ( ( *t == MINFUNCTION && ttt[1] < 0 )
 								|| ( *t == MAXFUNCTION && ttt[1] > 0 ) )
 									goto loadnew2;
 							}
 							else if ( ttt[1] == 0 ) {
-								if ( ( *t == MINFUNCTION && AM.n_llnum[*AM.n_llnum-1] > 0 )
-								|| ( *t == MAXFUNCTION && AM.n_llnum[*AM.n_llnum-1] < 0 ) ) {
-									AM.n_llnum[0] = 0;
+								if ( ( *t == MINFUNCTION && AT.n_llnum[*AT.n_llnum-1] > 0 )
+								|| ( *t == MAXFUNCTION && AT.n_llnum[*AT.n_llnum-1] < 0 ) ) {
+									AT.n_llnum[0] = 0;
 								}
 							}
 							else {
 								tterm[0] = 4; tterm[2] = 1;
 								if ( ttt[1] < 0 ) { tterm[1] = -ttt[1]; tterm[3] = -3; }
 								else { tterm[1] = ttt[1]; tterm[3] = 3; }
-								iii = CompCoef(AM.n_llnum,tterm);
+								iii = CompCoef(AT.n_llnum,tterm);
 								if ( ( iii > 0 && *t == MINFUNCTION )
 								|| ( iii < 0 && *t == MAXFUNCTION ) ) {
 									for ( iii = 0; iii < 4; iii++ )
-										AM.n_llnum[iii] = tterm[iii];
+										AT.n_llnum[iii] = tterm[iii];
 								}
 							}
 							ttt += 2;
 						}
 					}
-					if ( AM.n_llnum[0] == 0 ) goto NormZero;
+					if ( AT.n_llnum[0] == 0 ) goto NormZero;
 					ncoef = REDLENG(ncoef);
-					nnum = REDLENG(AM.n_llnum[*AM.n_llnum-1]);	
-					if ( MulRat((UWORD *)AM.n_coef,ncoef,(UWORD *)lnum,nnum,
-					(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					nnum = REDLENG(AT.n_llnum[*AT.n_llnum-1]);	
+					if ( MulRat((UWORD *)AT.n_coef,ncoef,(UWORD *)lnum,nnum,
+					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
 				break;
@@ -871,7 +922,7 @@ loadnew2:
 					if ( Factorial(t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
 						goto FromNorm;
 					ncoef = REDLENG(ncoef);	
-					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
 				else {
@@ -898,7 +949,7 @@ nospec:				pcom[ncom++] = t;
 				break;
 			case LNUMBER :
 				ncoef = REDLENG(ncoef);
-				if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;
+				if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;
 				ncoef = INCLENG(ncoef);
 				break;
 			case SNUMBER :
@@ -915,11 +966,11 @@ nospec:				pcom[ncom++] = t;
 				if ( t[3] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
 				ncoef = REDLENG(ncoef);
 				if ( t[3] < 0 ) {
-					if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				else if ( t[3] > 0 ) {
-					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				ncoef = INCLENG(ncoef);
@@ -1015,14 +1066,14 @@ ScanCont:		while ( t < r ) {
 					if ( t[FUNHEAD+1] == 0 && t[FUNHEAD+3] == 0 ) goto NormZZ;
 					if ( t[FUNHEAD+1] == 0 ) break;
 					if ( t[FUNHEAD+3] < 0 ) {
-						AR.WorkPointer[0] = -t[FUNHEAD+3];
+						AT.WorkPointer[0] = -t[FUNHEAD+3];
 						nc = -1;
 					}
 					else {
-						AR.WorkPointer[0] = t[FUNHEAD+3];
+						AT.WorkPointer[0] = t[FUNHEAD+3];
 						nc = 1;
 					}
-					AR.WorkPointer[1] = 1;
+					AT.WorkPointer[1] = 1;
 				}
 				else if ( t[FUNHEAD+2] == t[1]-FUNHEAD-2
 				&& t[FUNHEAD+2] == t[FUNHEAD+2+ARGHEAD]+ARGHEAD
@@ -1032,19 +1083,19 @@ ScanCont:		while ( t < r ) {
 					i = t[t[1]-1]; r1 = t + FUNHEAD+ARGHEAD+3;
 					nc = REDLENG(i);
 					i = ABS(i) - 1;
-					r2 = AR.WorkPointer;
+					r2 = AT.WorkPointer;
 					while ( --i >= 0 ) *r2++ = *r1++;
 				}
 				else goto defaultcase;
-				if ( TakeRatRoot((UWORD *)AR.WorkPointer,&nc,t[FUNHEAD+1]) ) {
+				if ( TakeRatRoot((UWORD *)AT.WorkPointer,&nc,t[FUNHEAD+1]) ) {
 					t[2] = 0;
 					goto defaultcase;
 				}
 				ncoef = REDLENG(ncoef);
-				if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)AR.WorkPointer,nc) )
+				if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,nc) )
 						goto FromNorm;
 				if ( nc < 0 ) nc = -nc;
-				if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)(AR.WorkPointer+nc),nc) )
+				if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)(AT.WorkPointer+nc),nc) )
 						goto FromNorm;
 				ncoef = INCLENG(ncoef);
 				}
@@ -1082,31 +1133,31 @@ ScanCont:		while ( t < r ) {
 							NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
 						}
 						if ( DivLong((UWORD *)to,num,(UWORD *)(to+j),den
-						,(UWORD *)AR.WorkPointer,&num,NoScrat2,&den) ) goto FromNorm;
+						,(UWORD *)AT.WorkPointer,&num,NoScrat2,&den) ) goto FromNorm;
 						if ( k < 0 && den < 0 ) {
 							*NoScrat2 = 1;
 							den = -1;
-							if ( AddLong((UWORD *)AR.WorkPointer,num
-							,NoScrat2,den,(UWORD *)AR.WorkPointer,&num) )
+							if ( AddLong((UWORD *)AT.WorkPointer,num
+							,NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
 								goto FromNorm;
 						}
 						else if ( k > 0 && den > 0 ) {
 							*NoScrat2 = 1;
 							den = 1;
-							if ( AddLong((UWORD *)AR.WorkPointer,num,
-							NoScrat2,den,(UWORD *)AR.WorkPointer,&num) )
+							if ( AddLong((UWORD *)AT.WorkPointer,num,
+							NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
 								goto FromNorm;
 						}
 					}
 					else if ( *to == -SNUMBER ) {	/* No rounding needed */
-						if ( to[1] < 0 ) { *AR.WorkPointer = -to[1]; num = -1; }
+						if ( to[1] < 0 ) { *AT.WorkPointer = -to[1]; num = -1; }
 						else if ( to[1] == 0 ) goto NormZero;
-						else { *AR.WorkPointer = to[1]; num = 1; }
+						else { *AT.WorkPointer = to[1]; num = 1; }
 					}
 					else goto NoInteg;
 					if ( num == 0 ) goto NormZero;
 					ncoef = REDLENG(ncoef);
-					if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)AR.WorkPointer,num) )
+					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,num) )
 						goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					break;
@@ -1118,6 +1169,7 @@ NoInteg:;
 			default :
 defaultcase:;
 				if ( *t < FUNCTION ) {
+					LOCK(ErrorMessageLock);
 					MesPrint("Illegal code in Norm");
 #ifdef DEBUGON
 					{
@@ -1135,6 +1187,7 @@ defaultcase:;
 						FiniLine();
 					}
 #endif
+					UNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
 				if ( *t == REPLACEMENT && ReplaceType == -1 ) {
@@ -1203,11 +1256,11 @@ defaultcase:;
 									oldcpointer = C->Pointer - C->Buffer;
 								}
 								ReplaceType = 1;
-								ss = AddRHS(AR.ebufnum,1);
+								ss = AddRHS(AT.ebufnum,1);
 								tt = t+2;
 								n = *tt - ARGHEAD;
 								tt += ARGHEAD;
-								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AR.ebufnum,ss);
+								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
 								while ( --n >= 0 ) *ss++ = *tt++;
 								*ss++ = 0;
 								C->rhs[C->numrhs+1] = ss;
@@ -1259,7 +1312,7 @@ defaultcase:;
 									oldcpointer = C->Pointer - C->Buffer;
 								}
 								ReplaceType = 1;
-								mm = AddRHS(AR.ebufnum,1);
+								mm = AddRHS(AT.ebufnum,1);
 								*ReplaceSub++ = subtype;
 								*ReplaceSub++ = 4;
 								*ReplaceSub++ = t[1];
@@ -1268,17 +1321,17 @@ defaultcase:;
 								n = *w - ARGHEAD;
 								w += ARGHEAD;
 								while ( (mm + n + 10) > C->Top )
-									mm = DoubleCbuffer(AR.ebufnum,mm);
+									mm = DoubleCbuffer(AT.ebufnum,mm);
 								while ( --n >= 0 ) *mm++ = *w++;
 								*mm++ = 0;
 								C->rhs[C->numrhs+1] = mm;
 								C->Pointer = mm;
-								mm = AddRHS(AR.ebufnum,1);
+								mm = AddRHS(AT.ebufnum,1);
 								w = t+2;
 								n = *w - ARGHEAD;
 								w += ARGHEAD;
 								while ( (mm + n + 13) > C->Top )
-									mm = DoubleCbuffer(AR.ebufnum,mm);
+									mm = DoubleCbuffer(AT.ebufnum,mm);
 								sstop = w + n;
 								while ( w < sstop ) {
 									tt = w + *w; ttstop = tt - ABS(tt[-1]);
@@ -1315,7 +1368,9 @@ defaultcase:;
 								C->rhs[C->numrhs+1] = mm;
 								C->Pointer = mm;
 								if ( mm > C->Top ) {
+									LOCK(ErrorMessageLock);
 									MesPrint("Internal error in Normalize with extra compiler buffer");
+									UNLOCK(ErrorMessageLock);
 									Terminate(-1);
 								}
 								t += 2 + t[2];
@@ -1502,10 +1557,10 @@ NoRep:
 			else if ( t[FUNHEAD] == -SNUMBER ) {
 				t += FUNHEAD+1;
 				if ( *t == 0 ) goto NormInf;
-				if ( *t < 0 ) { *AR.WorkPointer = -*t; j = -1; }
-				else { *AR.WorkPointer = *t; j = 1; }
+				if ( *t < 0 ) { *AT.WorkPointer = -*t; j = -1; }
+				else { *AT.WorkPointer = *t; j = 1; }
 				ncoef = REDLENG(ncoef);
-				if ( Divvy((UWORD *)AM.n_coef,&ncoef,(UWORD *)AR.WorkPointer,j) )
+				if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,j) )
 					goto FromNorm;
 				ncoef = INCLENG(ncoef);
 				goto DropDen;
@@ -1520,7 +1575,7 @@ NoRep:
 				m = r - ABS(*r) + 1;
 				if ( j != 3 || ( ( *m != 1 ) || ( m[1] != 1 ) ) ) {
 					ncoef = REDLENG(ncoef);
-					if ( DivRat((UWORD *)AM.n_coef,ncoef,(UWORD *)m,REDLENG(j),(UWORD *)AM.n_coef,&ncoef) ) goto FromNorm;
+					if ( DivRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,REDLENG(j),(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					j = ABS(j) - 3;
 					t[-FUNHEAD-ARGHEAD] -= j;
@@ -1612,7 +1667,7 @@ docontract:
 						j = 1;
 WithFix:				shortnum = k;
 						ncoef = REDLENG(ncoef);
-						if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)(&shortnum),j) )
+						if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)(&shortnum),j) )
 							goto FromNorm;
 						ncoef = INCLENG(ncoef);
 					}
@@ -1934,7 +1989,7 @@ onegammamatrix:
 							else {
 								shortnum = 2;
 								ncoef = REDLENG(ncoef);
-								if ( Mully((UWORD *)AM.n_coef,&ncoef,(UWORD *)(&shortnum),1) ) goto FromNorm;
+								if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)(&shortnum),1) ) goto FromNorm;
 								ncoef = INCLENG(ncoef);
 							}
 						}
@@ -2108,10 +2163,10 @@ NextI:;
 					NCOPY(m,t,k);
 				}
 			}
-			else if ( *t == AC.PolyFun ) {
+			else if ( *t == AR.PolyFun ) {
 				if ( t[FUNHEAD+1] == 0 && AC.Eside != LHSIDE && 
 				t[1] == FUNHEAD + 2 && t[FUNHEAD] == -SNUMBER ) goto NormZero;
-				if ( i > 0 && pcom[i-1][0] == AC.PolyFun ) AR.PolyNorm = 1;
+				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNorm = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}
@@ -2398,7 +2453,9 @@ NextI:;
 				}
 				if ( ( t[1] < (2*MAXPOWER) && t[1] >= MAXPOWER )
 				|| ( t[1] > -(2*MAXPOWER) && t[1] <= -MAXPOWER ) ) {
+					LOCK(ErrorMessageLock);
 					MesPrint("Exponent out of range: %d",t[1]);
+					UNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
 				if ( t[1] ) {
@@ -2420,29 +2477,31 @@ NextI:;
 	stop = termout + AM.MaxTer;
 	i = ABS(ncoef);
 	if ( ( m + i ) > stop ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("Term too complex during normalization");
+		UNLOCK(ErrorMessageLock);
 		goto NormMin;
 	}
 	if ( ReplaceType >= 0 ) {
-		t = AM.n_coef;
+		t = AT.n_coef;
 		i--;
 		NCOPY(m,t,i);
 		*m++ = ncoef;
 		t = termout;
 		*t = WORDDIF(m,t);
 		if ( ReplaceType == 0 ) {
-			AR.WorkPointer = termout+*termout;
+			AT.WorkPointer = termout+*termout;
 			WildFill(term,termout,ReplaceScrat);
 			if ( termout < term + *term ) termout = term + *term;
 		}
 		else {
-			AR.WorkPointer = r = termout + *termout;
+			AT.WorkPointer = r = termout + *termout;
 			WildFill(r,termout,ReplaceScrat);
 			i = *r; m = term;
 			NCOPY(m,r,i);
 			if ( termout < m ) termout = m;
 		}
-		AR.WorkPointer = termout;
+		AT.WorkPointer = termout;
 		if ( ReplaceType == 0 ) {
 			regval = 1;
 			goto Restart;
@@ -2464,13 +2523,13 @@ NextI:;
 		m = term;
 		NCOPY(m,t,k);
 		i--;
-		t = AM.n_coef;
+		t = AT.n_coef;
 		NCOPY(m,t,i);
 		*m++ = ncoef;
 	}
 RegEnd:
-	AR.WorkPointer = termout;
-	if ( termout < term + *term && termout >= term ) AR.WorkPointer = term + *term;
+	AT.WorkPointer = termout;
+	if ( termout < term + *term && termout >= term ) AT.WorkPointer = term + *term;
 /*
 	if ( termflag ) {	We have to assign the term to $variable(s)
 		TermAssign(term);
@@ -2479,23 +2538,30 @@ RegEnd:
 	return(regval);
 
 NormInf:
+	LOCK(ErrorMessageLock);
 	MesPrint("Division by zero during normalization");
+	UNLOCK(ErrorMessageLock);
 	goto NormMin;
 
 NormZZ:
+	LOCK(ErrorMessageLock);
 	MesPrint("0^0 during normalization of term");
+	UNLOCK(ErrorMessageLock);
 	goto NormMin;
 
 NormZero:
 	*term = 0;
-	AR.WorkPointer = termout;
+	AT.WorkPointer = termout;
 	return(regval);
 
 NormMin:
 	return(-1);
 
 FromNorm:
-	return(MesCall("Norm"));
+	LOCK(ErrorMessageLock);
+	MesCall("Norm");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 /*
   	#] Errors and Finish :
 */
@@ -2517,12 +2583,16 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 			m++;
 			if	( pow > 2*MAXPOWER || pow < -2*MAXPOWER
 			||	*m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("Illegal wildcard power combination.");
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			*m += pow;
 			if	( *m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("Power overflow during normalization");
+				UNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			if ( !*m ) {
@@ -2618,7 +2688,7 @@ DoTheta ARG1(WORD *,t)
 		else if ( *t < *r1 ) return(1);
 		else if ( *t > *r1 ) return(0);
 	}
-	r2 = AR.WorkPointer;
+	r2 = AT.WorkPointer;
 	if ( *t < 0 ) {
 		ta = r2;
 		ToGeneral(t,ta,0);

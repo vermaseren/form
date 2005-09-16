@@ -10,8 +10,8 @@
   #[ includes
 */
 #include "form3.h"
+
 extern LONG deferskipped; /* used in store.c ?? */
-#include "parallel.h"
 PARALLELVARS PF;
 #ifdef MPI2
 WORD *PF_shared_buff;
@@ -547,9 +547,9 @@ newright:
 		tt1 = ml;
 		ml += AR.SS->PolyWise;
 		mr += AR.SS->PolyWise;
-		w = AR.WorkPointer;
-		if ( w + ml[1] + mr[1] > AM.WorkTop ) {
-		  MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
+		w = AT.WorkPointer;
+		if ( w + ml[1] + mr[1] > AT.WorkTop ) {
+		  MesPrint("A WorkSpace of %10l is too small",AT.WorkSize);
 		  Terminate(-1);
 		}
 		AddArgs(ml,mr,w);
@@ -725,7 +725,7 @@ PF_EndSort ARG0
 	 work. The smallest term needs to be copied to the outbuf: use PutOut.
   */
   PF_InitTree();
-  S->PolyFlag = AC.PolyFun ? 1: 0;
+  S->PolyFlag = AR.PolyFun ? 1: 0;
   *AR.CompressPointer = 0;
   PUTZERO(position);
 /*[25nov2003 mt]:*/
@@ -997,10 +997,10 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   WORD *bra,*bp,*bstop;
   WORD *tstart,*tstop;
   WORD *next = AR.infile->POfill;
-  WORD *termout = AR.WorkPointer;
-  WORD *oldwork = AR.WorkPointer;
+  WORD *termout = AT.WorkPointer;
+  WORD *oldwork = AT.WorkPointer;
 
-  AR.WorkPointer += AM.MaxTer;  
+  AT.WorkPointer += AM.MaxTer;  
   AR.DeferFlag = 0;
   
   PRINTFBUF("PF_Deferred (Term)   ",term,*term);
@@ -1012,10 +1012,10 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   bra++;
   while ( *bra != HAAKJE && bra < bstop ) bra += bra[1];
   if ( bra >= bstop ) {	/* No deferred action! */
-	AR.WorkPointer = term + *term;
+	AT.WorkPointer = term + *term;
 	if ( Generator(term,level) ) goto DefCall;
 	AR.DeferFlag = 1;
-	AR.WorkPointer = oldwork;
+	AT.WorkPointer = oldwork;
 	return(0);
   }
   bstop = bra;
@@ -1035,9 +1035,9 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   	  goto DefCall;
   	}
 	/* call Generator with new composed term */
-  	AR.WorkPointer = termout + *termout;
+  	AT.WorkPointer = termout + *termout;
   	if ( Generator(termout,level) ) goto DefCall;
-  	AR.WorkPointer = termout;
+  	AT.WorkPointer = termout;
 	tstart = next + 1;
 	if( tstart >= AR.infile->POfull ) goto ThatsIt;
 	next += *next;
@@ -1056,7 +1056,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   }
 
  ThatsIt:
-  /* AR.WorkPointer = oldwork; */
+  /* AT.WorkPointer = oldwork; */
   AR.DeferFlag = 1;
   return(0);
 
@@ -1339,7 +1339,7 @@ PF_WaitAllSlaves ARG0
 int
 PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 {			
-  WORD *term = AR.WorkPointer;
+  WORD *term = AT.WorkPointer;
   LONG dd = 0,ll;
   PF_BUFFER *sb=PF.sbuf;
   WORD j,*t,*s,next;
@@ -1358,7 +1358,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 #endif
 
 
-  if ( ( AR.WorkPointer + AM.MaxTer ) > AM.WorkTop ) return(MesWork());
+  if ( ( AT.WorkPointer + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
 
   /* allocate and/or reset the variables used for the redefine */
   if ( !PF.redef || NumPre > (LONG)PF.numredefs ){
@@ -1475,8 +1475,8 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 		termsinpatch++;
 	  }
 	  else { /* not parallel */
-		AR.WorkPointer = term + *term;
-		AR.RepPoint = AM.RepCount + 1;
+		AT.WorkPointer = term + *term;
+		AR.RepPoint = AT.RepCount + 1;
 		AR.CurDum = ReNumber(term);
 		if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 		if ( Generator(term,0) ) {
@@ -1504,11 +1504,11 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	if ( EndSort(AM.S0->sBuffer,0) < 0 ) return(-1);
 	if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 	else e->vflags |= ISZERO;
-	if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+	if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
 	
-	if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
-	if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
-	AR.GetFile = 0;	
+	if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
+	if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
+	AS.GetFile = 0;	
 	/* 
 	     #] Clean up and call EndSort
 	     #[ Collect (stats,prepro,...)
@@ -1676,8 +1676,8 @@ in pre.c.*/
 
 	while ( PF_GetTerm(term) ) {
 	  PF_linterms++; dd = deferskipped;
-	  AR.WorkPointer = term + *term;
-	  AR.RepPoint = AM.RepCount + 1;
+	  AT.WorkPointer = term + *term;
+	  AR.RepPoint = AT.RepCount + 1;
 	  	  AR.CurDum = ReNumber(term);
 	  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 	  if ( Generator(term,0) ) {

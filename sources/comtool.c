@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ inicbufs :
 */
 
@@ -97,7 +97,7 @@ DoubleCbuffer ARG2(int,num,WORD *,w)
 }
 
 /*
-  	#] DoubleCbuffer : 
+  	#] DoubleCbuffer :
   	#[ AddLHS :
 */
 
@@ -115,7 +115,7 @@ WORD *AddLHS ARG1(int,num)
 }
 
 /*
-  	#] AddLHS : 
+  	#] AddLHS :
   	#[ AddRHS :
 */
 
@@ -148,7 +148,7 @@ restart:;
 					T->bufferssize = new1;
 				}
 				T->buffers[T->buffersfill++] = T->bufnum = inicbufs();
-				AR.cbufnum = num = T->bufnum;
+				AC.cbufnum = num = T->bufnum;
 				goto restart;
 			}
 			else {
@@ -176,25 +176,25 @@ restart:;
 }
 
 /*
-  	#] AddRHS : 
+  	#] AddRHS :
   	#[ AddNtoL :
 */
 
 int AddNtoL ARG2(int,n,WORD *,array)
 {
 	int i;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 #ifdef COMPBUFDEBUG
 	MesPrint("LH: %a",n,array);
 #endif
-	AddLHS(AR.cbufnum);
-	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AR.cbufnum,C->Pointer);
+	AddLHS(AC.cbufnum);
+	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
 	for ( i = 0; i < n; i++ ) *(C->Pointer)++ = *array++;
 	return(0);
 }
 
 /*
-  	#] AddNtoL : 
+  	#] AddNtoL :
   	#[ AddNtoC :
 */
 
@@ -202,11 +202,11 @@ int AddNtoC ARG2(int,n,WORD *,array)
 {
 	int i;
 	WORD *w;
-	CBUF *C = cbuf+AR.cbufnum;
+	CBUF *C = cbuf+AC.cbufnum;
 #ifdef COMPBUFDEBUG
 	MesPrint("RH: %a",n,array);
 #endif
-	while ( C->Pointer+n+1 >= C->Top ) DoubleCbuffer(AR.cbufnum,C->Pointer);
+	while ( C->Pointer+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
 	w = C->Pointer;
 	for ( i = 0; i < n; i++ ) *w++ = *array++;
 	C->Pointer = w;
@@ -214,7 +214,7 @@ int AddNtoC ARG2(int,n,WORD *,array)
 }
 
 /*
-  	#] AddNtoC : 
+  	#] AddNtoC :
   	#[ InsTree :
 
 	Routines for balanced tree searching and insertion.
@@ -234,7 +234,7 @@ int AddNtoC ARG2(int,n,WORD *,array)
 
 int InsTree ARG1(int,h)
 {
-	CBUF *C = cbuf + AR.cbufnum;
+	CBUF *C = cbuf + AC.cbufnum;
 	COMPTREE *boomlijst = C->boomlijst, *q = boomlijst + C->rootnum, *p, *s;
 	WORD *v1, *v2, *v3;
 	int ip, iq, is;
@@ -427,7 +427,7 @@ void RedoTree ARG2(CBUF *,C,int,size)
 }
 
 /*
-  	#] RedoTree : 
+  	#] RedoTree :
   	#[ ClearTree :
 */
 
@@ -446,7 +446,7 @@ void ClearTree ARG1(int,i)
 }
 
 /*
-  	#] ClearTree : 
+  	#] ClearTree :
   	#[ numcommute :
 
 	Returns the number of non-commuting terms in the expression
@@ -473,6 +473,6 @@ LONG numcommute ARG2(WORD *,terms,LONG *,numterms)
 }
 
 /*
-  	#] numcommute : 
+  	#] numcommute :
 */
 
