@@ -29,6 +29,7 @@
 WORD
 RatioFind ARG2(WORD *,term,WORD *,params)
 {
+	GETIDENTITY;
 	WORD *t, *m, *r;
 	WORD x1, x2, i;
 	WORD *y1, *y2, n1 = 0, n2 = 0;
@@ -137,6 +138,7 @@ We have to revise the code for the second case.
 WORD
 RatioGen ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *m;
 	WORD *tstops[3];
 	WORD n1, n2, i, j;
@@ -289,6 +291,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 			 ,WORD,x2,WORD,pow1,WORD,pow2
                          ,WORD,sign,UWORD *,coef,WORD,ncoef)
 {
+	GETIDENTITY;
 	WORD *t, *r;
 	WORD *termout;
 	WORD k;
@@ -324,7 +327,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 		return(-1);
 		UNLOCK(ErrorMessageLock);
 	}
-	*AR.RepPoint = 1;
+	*AN.RepPoint = 1;
 	AS.expchanged = 1;
 	if ( Generator(termout,level) ) {
 		LOCK(ErrorMessageLock);
@@ -361,6 +364,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 WORD
 DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
+	GETIDENTITY;
 	WORD *termout, *t, extractbuff = AT.TMbuff;
 	WORD isum, ival, iinc;
 	LONG from;
@@ -487,6 +491,7 @@ Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 WORD
 DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
+	GETIDENTITY;
 	WORD *termout, *t, *from, *sub, *to, extractbuff = AT.TMbuff;
 	WORD isum, ival, iinc, insert, i;
 	CBUF *C;

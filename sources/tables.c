@@ -290,10 +290,11 @@ int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
 
 WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *stopper, *termout, *m, *mm, *tp, *r;
 	TABLES T = 0;
 	int i, j, num;
-	AR.TeInFun = AR.TePos = 0;
+	AN.TeInFun = AR.TePos = 0;
 	tstop = term + *term;
 	stopper = tstop - ABS(tstop[-1]);
 	t = term+1;
@@ -699,6 +700,7 @@ int CoTBopen ARG1(UBYTE *,s)
 
 int CoTBaddto ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	DBASE *d;
 	UBYTE *tablename, c, *t, elementstring[ELEMENTSIZE+20], *ss, *es;
 	WORD type, funnum, lbrac, first, num, *expr, *w;
@@ -1014,6 +1016,7 @@ int CoTBenter ARG1(UBYTE *,s)
 
 int CoTestUse ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *tablename, c;
 	WORD type, funnum, *w;
 	TABLES T;
@@ -1469,6 +1472,7 @@ int CoTBreplace ARG1(UBYTE *,s)
 
 int CoTBuse ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	DBASE *d;
 	MLONG basenumber;
 	UBYTE *arguments, *rhs, *buffer, *t, *u, c, *tablename, *tail, *p;
@@ -1661,6 +1665,7 @@ int CoTBuse ARG1(UBYTE *,s)
 
 int CoApply ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *tablename, c;
 	WORD type, funnum, *w;
 	TABLES T;
@@ -1902,6 +1907,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 
 int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 {
+	GETIDENTITY;
 	WORD rhsnumber, *oldwork, *funs, numfuns, funnum;
 	WORD ii, *t, *t1, *w, *p, *m, *m1, *u, *r, tbufnum, csize, wilds;
 	NESTING NN;
@@ -1915,23 +1921,23 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 	m = t + *t;
 	csize = ABS(m[-1]);
 	m -= csize;
-	AR.NestPoin->termsize = t;
-	if ( AR.NestPoin == AR.Nest ) AR.EndNest = t + *t;
+	AT.NestPoin->termsize = t;
+	if ( AT.NestPoin == AT.Nest ) AN.EndNest = t + *t;
 	t++;
 /*
 	First we look inside function arguments. Also when clean!
 */
 	while ( t < m ) {
 		if ( *t < FUNCTION ) { t += t[1]; continue; }
-		AR.NestPoin->funsize = t;
+		AT.NestPoin->funsize = t;
 		r = t + t[1];
 		t += FUNHEAD;
 		while ( t < r ) {
 			if ( *t < 0 ) { NEXTARG(t); continue; }
-			AR.NestPoin->argsize = t1 = t;
+			AT.NestPoin->argsize = t1 = t;
 			u = t + *t;
 			t += ARGHEAD;
-			AR.NestPoin++;
+			AT.NestPoin++;
 			while ( t < u ) {
 /*
 				Now we loop over the terms inside a function argument
@@ -1948,7 +1954,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 				stilltogo = ApplyExec(t,maxtogo,level);
 				if ( stilltogo != maxtogo ) {
 					if ( stilltogo <= 0 ) {
-						AR.NestPoin--;
+						AT.NestPoin--;
 						return(stilltogo);
 					}
 					maxtogo = stilltogo;
@@ -1957,7 +1963,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 				}
 				t += *t;
 			}
-			AR.NestPoin--;
+			AT.NestPoin--;
 		}
 	}
 /*
@@ -1982,7 +1988,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 			if ( i >= numfuns ) { t += t[1]; continue; }
 		}
 		r = t + t[1];
-		AR.NestPoin->funsize = t + 1;
+		AT.NestPoin->funsize = t + 1;
 		t1 = t;
 		t += FUNHEAD + 1;
 /*
@@ -2014,14 +2020,14 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		pattern matching. This should be easy. We addapted the
 		pattern, so that the array indices match already.
 */
-		AR.FullProto = T->prototype;
-		AN.WildValue = AR.FullProto + SUBEXPSIZE;
-		AN.WildStop = AR.FullProto+AR.FullProto[1];
+		AN.FullProto = T->prototype;
+		AN.WildValue = AN.FullProto + SUBEXPSIZE;
+		AN.WildStop = AN.FullProto+AN.FullProto[1];
 		ClearWild();
 		AN.RepFunNum = 0;
-		AN.RepFunList = AR.EndNest;
+		AN.RepFunList = AN.EndNest;
 		oldwork = AT.WorkPointer;
-		AT.WorkPointer = AR.EndNest + (AM.MaxTer >> 1);
+		AT.WorkPointer = AN.EndNest + (AM.MaxTer >> 1);
 /*
 		The RepFunList is after the term but not very relevant.
 		We need because MatchFunction uses it
@@ -2052,12 +2058,12 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 			if ( j > i ) {
 				j = i - j;
 				NCOPY(t,m1,i);
-				m1 = AR.EndNest;
+				m1 = AN.EndNest;
 				while ( r < m1 ) *t++ = *r++;
-				AR.EndNest = t;
+				AN.EndNest = t;
 				*term += j;
-				NN = AR.NestPoin;
-				while ( NN > AR.Nest ) {
+				NN = AT.NestPoin;
+				while ( NN > AT.Nest ) {
 					NN--;
 					NN->termsize[0] += j;
 					NN->funsize[1] += j;
@@ -2069,14 +2075,14 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 			}
 			else if ( j < i ) {
 				j = i-j;
-				t = AR.EndNest;
+				t = AN.EndNest;
 				while ( t >= r ) { t[j] = *t; t--; }
 				t = t1;
 				NCOPY(t,m1,i);
-				AR.EndNest += j;
+				AN.EndNest += j;
 				*term += j;
-				NN = AR.NestPoin;
-				while ( NN > AR.Nest ) {
+				NN = AT.NestPoin;
+				while ( NN > AT.Nest ) {
 					NN--;
 					NN->termsize[0] += j;
 					NN->funsize[1] += j;

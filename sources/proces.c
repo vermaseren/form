@@ -40,6 +40,7 @@ WORD numlistinprint;
 WORD
 Processor()
 {
+	GETIDENTITY;
 	WORD *term, *t, i, retval = 0;
 	EXPRESSIONS e;
 	POSITION position;
@@ -54,6 +55,7 @@ Processor()
 	if ( NumExpressions == 0 ) return(0);
 	AS.expflags = 0;
 	AR.CompressPointer = AM.CompressBuffer;
+	AR.NoCompress = AC.NoCompress;
 	term = AT.WorkPointer;
 	if ( ( AT.WorkPointer + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
 	UpdatePositions();
@@ -108,7 +110,7 @@ Processor()
 					}
 				}
 				AT.WorkPointer = term + *term;
-				AR.RepPoint = AT.RepCount + 1;
+				AN.RepPoint = AT.RepCount + 1;
 				AR.CurDum = ReNumber(term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				if ( Generator(term,0) ) {
@@ -204,7 +206,7 @@ commonread:
 					}
 				  }
 				  AT.WorkPointer = term + *term;
-				  AR.RepPoint = AT.RepCount + 1;
+				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				  if ( Generator(term,0) ) {
@@ -340,7 +342,7 @@ ProcErr:
  		#[ TestSub :			WORD TestSub(term,level)
 
 	TestSub hunts for subexpression pointers.
-	If one is found its power is given in AR.TeSuOut.
+	If one is found its power is given in AN.TeSuOut.
 	and the returnvalue is 'expressionnumber'.
 	If the expression number is negative it is an expression on disk.
 
@@ -360,6 +362,7 @@ LONG last2 = 0, last3 = 0;
 WORD
 TestSub ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, retvalue, funflag, j;
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum = 0;
 	NESTING n;
@@ -505,16 +508,16 @@ TooMuch:;
 				AR.TePos = WORDDIF(t,term);
 				AT.TMbuff = t[4];
 				if ( t[3] < 0 ) {
-					AR.TeInFun = 1;
+					AN.TeInFun = 1;
 					AR.TePos = WORDDIF(t,term);
 					return(t[2]);
 				}
 				else {
-					AR.TeInFun = 0;
-					AR.TeSuOut = t[3];
+					AN.TeInFun = 0;
+					AN.TeSuOut = t[3];
 				}
 				if ( t[2] < 0 ) {
-					AR.TeSuOut = -t[3];
+					AN.TeSuOut = -t[3];
 					return(-t[2]);
 				}
 				return(t[2]);
@@ -523,14 +526,14 @@ TooMuch:;
 		else if ( *t == EXPRESSION ) {
 			i = -t[2] - 1;
 			if ( t[3] < 0 ) {
-				AR.TeInFun = 1;
+				AN.TeInFun = 1;
 				AR.TePos = WORDDIF(t,term);
 				return(i);
 			}
-			AR.TeInFun = 0;
+			AN.TeInFun = 0;
 			AR.TePos = 0;
-			AR.TeSuOut = t[3];
-			AR.Frozen = 0;
+			AN.TeSuOut = t[3];
+			AN.Frozen = 0;
 			AT.TMaddr = m = AT.WorkPointer;
 			j = t[1];
 			AT.WorkPointer += j;
@@ -547,7 +550,7 @@ TooMuch:;
 					no wildcard substitutions are needed here.
 */
 					t += 2;
-					AR.Frozen = m = AT.WorkPointer;
+					AN.Frozen = m = AT.WorkPointer;
 /*
 					We should check now for subexpressions and if necessary
 					we substitute them. Keep in mind: only one term allowed!
@@ -573,7 +576,7 @@ TooMuch:;
 							LowerSortLevel(); goto EndTest;
 						}
 						if ( EndSort(m,0) < 0 ) goto EndTest;
-						AR.Frozen = m;
+						AN.Frozen = m;
 						if ( *m == 0 ) {
 							*m++ = 4; *m++ = 1; *m++ = 1; *m++ = 3;
 						}
@@ -587,7 +590,7 @@ TooMuch:;
 							m += *m;
 							m -= ABS(m[-1]);
 							*m++ = 1; *m++ = 1; *m++ = 3;
-							*AR.Frozen = m - AR.Frozen;
+							*AN.Frozen = m - AN.Frozen;
 						}
 					}
 					else {
@@ -762,9 +765,9 @@ Important: we may not have enough spots here
 						t2 = term + *term;
 						while ( m < t2 ) *t++ = *m++;
 						*term = WORDDIF(t,term);
-						AR.TeInFun = -C->numrhs;
+						AN.TeInFun = -C->numrhs;
 						AR.TePos = 0;
-						AR.TeSuOut = 0;
+						AN.TeSuOut = 0;
 						AT.TMbuff = AT.ebufnum;
 						return(C->numrhs);
 					}
@@ -794,7 +797,7 @@ Important: we may not have enough spots here
 					}
 					NEXTARG(t2)
 				}
-				if ( !AR.RecFlag ) {
+				if ( !AT.RecFlag ) {
 					if ( ( kk = DoTheta(t) ) == 0 ) {
 						*term = 0;
 						return(0);
@@ -819,7 +822,7 @@ Important: we may not have enough spots here
 					}
 					NEXTARG(t2)
 				}
-				if ( !AR.RecFlag ) {
+				if ( !AT.RecFlag ) {
 					if ( ( kk = DoDelta(t) ) == 0 ) {
 						*term = 0;
 						return(0);
@@ -838,14 +841,14 @@ Important: we may not have enough spots here
 			&& t[FUNHEAD+2] == -SNUMBER
 			&& t[FUNHEAD+4] <= -FUNCTION
 			&& t[FUNHEAD+5] <= -FUNCTION ) {
-				AR.TeInFun = -1;
-				AR.TeSuOut = 0;
+				AN.TeInFun = -1;
+				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
 			}
 			else if ( *t == DELTA3 && ((t[1]-FUNHEAD) & 1 ) == 0 ) {
-				AR.TeInFun = -2;
-				AR.TeSuOut = 0;
+				AN.TeInFun = -2;
+				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
 			}
@@ -860,8 +863,8 @@ Important: we may not have enough spots here
 					if ( t[FUNHEAD+1+2*isp] != -SYMBOL ) break;
 				}
 				if ( isp >= T->numind ) {
-					AR.TeInFun = -3;
-					AR.TeSuOut = 0;
+					AN.TeInFun = -3;
+					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
 				}
@@ -873,14 +876,14 @@ Important: we may not have enough spots here
 /*
 				The case of table_(tab,fun)
 */
-				AR.TeInFun = -3;
-				AR.TeSuOut = 0;
+				AN.TeInFun = -3;
+				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
 			}
 			else if ( *t == AM.polyfunnum ) {
-				AR.TeInFun = -4;
-				AR.TeSuOut = 0;
+				AN.TeInFun = -4;
+				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
 			}
@@ -891,8 +894,8 @@ Important: we may not have enough spots here
 	if ( funflag ) {	/* Search in functions */
 DoSpec:
 		t = term;
-		AR.NestPoin->termsize = t;
-		if ( AR.NestPoin == AR.Nest ) AR.EndNest = t + *t;
+		AT.NestPoin->termsize = t;
+		if ( AT.NestPoin == AT.Nest ) AN.EndNest = t + *t;
 		t++;
 		if ( t < m ) do {
 			if ( *t < FUNCTION ) {
@@ -902,19 +905,19 @@ DoSpec:
 			funnum = *t;
 			if ( *t >= FUNCTION + WILDOFFSET ) funnum -= WILDOFFSET;
 			if ( functions[funnum-FUNCTION].spec == 0 ) {
-				AR.NestPoin->funsize = t + 1;
+				AT.NestPoin->funsize = t + 1;
 				t1 = t;
 				t += FUNHEAD;
 				while ( t < r ) {	/* Sum over arguments */
 					if ( *t > 0 && t[1] ) {	/* Argument is dirty  */
-						AR.NestPoin->argsize = t;
-						AR.NestPoin++;
+						AT.NestPoin->argsize = t;
+						AT.NestPoin++;
 /*						stop = t + *t; */
 /*						t2 = t; */
 						t += ARGHEAD;
-						while ( t < AR.NestPoin[-1].argsize+*(AR.NestPoin[-1].argsize) ) {
+						while ( t < AT.NestPoin[-1].argsize+*(AT.NestPoin[-1].argsize) ) {
 											/* Sum over terms */
-							AR.RecFlag++;
+							AT.RecFlag++;
 /*							i = *t; */
 							if ( ( retvalue = TestSub(t,level) ) != 0 ) {
 /*
@@ -931,29 +934,29 @@ DoSpec:
 									*term -= i;
 								}
 */
-								AR.RecFlag--;
-								AR.NestPoin--;
-								AR.TeInFun++;
+								AT.RecFlag--;
+								AT.NestPoin--;
+								AN.TeInFun++;
 								AR.TePos = 0;
 								return(retvalue);
 							}
-							AR.RecFlag--;
+							AT.RecFlag--;
 							t += *t;
 						}
-						AR.NestPoin--;
+						AT.NestPoin--;
 /*
 						Argument contains no subexpressions.
 						It should be normalized and sorted.
 						The main problem is the storage.
 */
-						t = AR.NestPoin->argsize;
+						t = AT.NestPoin->argsize;
 						j = *t;
 						t += ARGHEAD;
 						NewSort();
 						if ( AT.WorkPointer < term + *term )
 							AT.WorkPointer = term + *term;
 
-						while ( t < AR.NestPoin->argsize+*(AR.NestPoin->argsize) ) {
+						while ( t < AT.NestPoin->argsize+*(AT.NestPoin->argsize) ) {
 							m = AT.WorkPointer;
 							r = t + *t;
 							do { *m++ = *t++; } while ( t < r );
@@ -1002,29 +1005,29 @@ DoSpec:
 							}
 							do { *--r = *--m; } while ( m > AT.WorkPointer );
 							AT.WorkPointer = r;
-							m = AR.EndNest;
+							m = AN.EndNest;
 							r = m + j;
-							stop = AR.NestPoin->argsize+*(AR.NestPoin->argsize);
+							stop = AT.NestPoin->argsize+*(AT.NestPoin->argsize);
 							do { *--r = *--m; } while ( m >= stop );
 						}
 						else if ( j < 0 ) {
-							m = AR.NestPoin->argsize+*(AR.NestPoin->argsize);
+							m = AT.NestPoin->argsize+*(AT.NestPoin->argsize);
 							r = m + j;
-							do { *r++ = *m++; } while ( m < AR.EndNest );
+							do { *r++ = *m++; } while ( m < AN.EndNest );
 						}
-						m = AR.NestPoin->argsize;
+						m = AT.NestPoin->argsize;
 						r = AT.WorkPointer;
 						while ( --i >= 0 ) *m++ = *r++;
-						n = AR.Nest;
-						while ( n <= AR.NestPoin ) {
-							if ( *(n->argsize) > 0 && n != AR.NestPoin )
+						n = AT.Nest;
+						while ( n <= AT.NestPoin ) {
+							if ( *(n->argsize) > 0 && n != AT.NestPoin )
 								*(n->argsize) += j;
 							*(n->funsize) += j;
 							*(n->termsize) += j;
 							n++;
 						}
-						AR.EndNest += j;
-/*						(AR.NestPoin->argsize)[1] = 0;  */
+						AN.EndNest += j;
+/*						(AT.NestPoin->argsize)[1] = 0;  */
 						if ( funnum == DENOMINATOR || funnum == EXPONENT ) {
 							if ( Normalize(term) ) goto EndTest;
 /*
@@ -1037,11 +1040,11 @@ DoSpec:
 						if ( *t1 == TERMSINEXPR && t1[1] == FUNHEAD+2 ) {}
 						else {
 							if ( AC.Eside != LHSIDE ) {
-								AR.TeInFun = 1; AR.TePos = 0;
+								AN.TeInFun = 1; AR.TePos = 0;
 								AT.TMbuff = AM.dbufnum; t1[2] |= DIRTYFLAG;
 								return(1);
 							}
-							AR.lhdollarflag = 1;
+							AC.lhdollarflag = 1;
 						}
 					}
 					NEXTARG(t)
@@ -1135,13 +1138,13 @@ teststrict:					if ( T->strict == -2 ) {
 					very slow.
 */
 caughttable:
-					AR.FullProto = T->prototype;
-					AN.WildValue = AR.FullProto + SUBEXPSIZE;
-					AN.WildStop = AR.FullProto+AR.FullProto[1];
+					AN.FullProto = T->prototype;
+					AN.WildValue = AN.FullProto + SUBEXPSIZE;
+					AN.WildStop = AN.FullProto+AN.FullProto[1];
 					ClearWild();
 					AN.RepFunNum = 0;
-					AN.RepFunList = AR.EndNest;
-					AT.WorkPointer = AR.EndNest + (AM.MaxTer >> 1);
+					AN.RepFunList = AN.EndNest;
+					AT.WorkPointer = AN.EndNest + (AM.MaxTer >> 1);
 					if ( AT.WorkPointer >= AT.WorkTop ) {
 						LOCK(ErrorMessageLock);
 						MesWork();
@@ -1150,7 +1153,7 @@ caughttable:
 					wilds = 0;
 					if ( MatchFunction(T->pattern,t1,&wilds) > 0 ) {
 						AT.WorkPointer = oldwork;
-						if ( AR.NestPoin != AR.Nest ) return(1);
+						if ( AT.NestPoin != AT.Nest ) return(1);
 
 						m = T->prototype;
 						retvalue = m[2] = rhsnumber;
@@ -1176,9 +1179,9 @@ caughttable:
 						else {
 							NCOPY(t,m,j);
 						}
-						AR.TeInFun = 0;
+						AN.TeInFun = 0;
 						AR.TePos = 0;
-						AR.TeSuOut = -1;
+						AN.TeSuOut = -1;
 						if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 						AT.TMbuff = tbufnum;
 						return(retvalue);
@@ -1192,12 +1195,12 @@ NextFun:;
 				while ( t < r ) {
 					if ( *t == FUNNYDOLLAR ) {
 						if ( AC.Eside != LHSIDE ) {
-							AR.TeInFun = 1;
+							AN.TeInFun = 1;
 							AR.TePos = 0;
 							AT.TMbuff = AM.dbufnum;
 							return(1);
 						}
-						AR.lhdollarflag = 1;
+						AC.lhdollarflag = 1;
 					}
 					t++;
 				}
@@ -1225,6 +1228,7 @@ EndTest2:;
 WORD
 InFunction ARG2(WORD *,term,WORD *,termout)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, sign = 1;
 	WORD *u, *v, *w, *from, *to, 
 		ipp, olddefer = AR.DeferFlag, oldPolyFun = AR.PolyFun, i;
@@ -1317,7 +1321,7 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 				else if ( *t == -DOLLAREXPRESSION ) {
 					if ( AC.Eside == LHSIDE ) {
 						NEXTARG(t)
-						AR.lhdollarflag = 1;
+						AC.lhdollarflag = 1;
 					}
 					else {
 /*
@@ -1582,7 +1586,7 @@ wrongtype:;
 					return(0);
 				}
 				else {
-					AR.lhdollarflag = 1;
+					AC.lhdollarflag = 1;
 				}
 				}
 				t++;
@@ -1616,6 +1620,7 @@ InFunc:
 WORD
 InsertTerm ARG6(WORD *,term,WORD,replac,WORD,extractbuff,WORD *,position,WORD *,termout,WORD,tepos)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, i, l2, j;
 	WORD *u, *v, l1, *coef;
 	coef = AT.WorkPointer;
@@ -1734,6 +1739,7 @@ LONG
 PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 			  ,RENUMBER,renumber,WORD *,freeze,WORD,nexpr)
 {
+	GETIDENTITY;
 	WORD *r, l, *m, i;
 	WORD *stop, *s1, *s2;
 	POSITION AccPos;
@@ -1896,6 +1902,7 @@ PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 WORD
 FiniTerm ARG5(WORD *,term,WORD *,accum,WORD *,termout,WORD,number,WORD,tepos)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, i, numacc, l2, ipp;
 	WORD *u, *v, l1, *coef = AT.WorkPointer, *oldaccum;
 	if ( ( AT.WorkPointer = coef + 2*AM.MaxTal ) > AT.WorkTop ) {
@@ -2064,9 +2071,10 @@ FiniCall:
 WORD
 Generator ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0;
 	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, retnorm, extractbuff;
-	int *RepSto = AR.RepPoint;
+	int *RepSto = AN.RepPoint;
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum;
 	LONG posisub, oldcpointer;
 #ifdef WITHPTHREADS
@@ -2129,7 +2137,7 @@ SkipCount:	level++;
 					termout = AT.WorkPointer;
 					if ( AT.WorkPointer + *term + 3 > AT.WorkTop ) goto OverWork;
 					if ( PutBracket(term) ) return(-1);
-					AR.RepPoint = RepSto;
+					AN.RepPoint = RepSto;
 					*AT.WorkPointer = 0;
 					i = StoreTerm(termout);
 					AT.WorkPointer = termout;
@@ -2140,7 +2148,7 @@ SkipCount:	level++;
 				else {
 					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 					*AT.WorkPointer = 0;
-					AR.RepPoint = RepSto;
+					AN.RepPoint = RepSto;
 					i = StoreTerm(term);
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
@@ -2416,12 +2424,12 @@ CommonEnd:
 					Here we have to assign an expression to a $ variable.
 */
 					AR.NoCompress = 1;
-					AR.cTerm = currentTerm = term;
+					AN.cTerm = currentTerm = term;
 					AT.WorkPointer = term + *term;
 					*AT.WorkPointer++ = 0;
 					if ( AssignDollar(term,level) ) goto GenCall;
 					AT.WorkPointer = term + *term;
-					AR.cTerm = 0;
+					AN.cTerm = 0;
 					AR.NoCompress = onc;
 					break;
 					}
@@ -2468,7 +2476,7 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					if ( ApplyExec(term,C->lhs[level][2],level) < C->lhs[level][2] ) {
 						AT.WorkPointer = term + *term;
-						*AR.RepPoint = 1;
+						*AN.RepPoint = 1;
 						goto ReStart;
 					}
 					AT.WorkPointer = term + *term;
@@ -2503,7 +2511,7 @@ CommonEnd:
 		if ( i > 0 ) replac = TestSub(term,level);
 		else replac = i;
 		if ( replac >= 0 || AT.TMout[1] != SYMMETRIZE ) {
-			*AR.RepPoint = 1;
+			*AN.RepPoint = 1;
 			AS.expchanged = 1;
 		}
 #ifdef FGPARALLEL
@@ -2530,20 +2538,20 @@ AutoGen:	i = *AT.TMout;
 #endif
 */
 
-	if ( AR.TeInFun ) {	/* Match in function argument */
-		if ( AR.TeInFun < 0 && !AR.TeSuOut ) {
+	if ( AN.TeInFun ) {	/* Match in function argument */
+		if ( AN.TeInFun < 0 && !AN.TeSuOut ) {
 			if ( AR.TePos >= 0 ) goto AutoGen;
-			if ( AR.TeInFun == -1 && DoDistrib(term,level) ) goto GenCall;
-			else if ( AR.TeInFun == -2 && DoDelta3(term,level) ) goto GenCall;
-			else if ( AR.TeInFun == -3 && DoTableExpansion(term,level) ) goto GenCall;
-			else if ( AR.TeInFun == -4 && DoPolynomial(term,level) ) goto GenCall;
+			if ( AN.TeInFun == -1 && DoDistrib(term,level) ) goto GenCall;
+			else if ( AN.TeInFun == -2 && DoDelta3(term,level) ) goto GenCall;
+			else if ( AN.TeInFun == -3 && DoTableExpansion(term,level) ) goto GenCall;
+			else if ( AN.TeInFun == -4 && DoPolynomial(term,level) ) goto GenCall;
 		}
 		else {
 			termout = AT.WorkPointer;
 			if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) goto OverWork;
 			if ( InFunction(term,termout) ) goto GenCall;
 			AT.WorkPointer = termout + *termout;
-			*AR.RepPoint = 1;
+			*AN.RepPoint = 1;
 			AS.expchanged = 1;
 /*!!!*/
 /*
@@ -2556,7 +2564,7 @@ AutoGen:	i = *AT.TMout;
 		}
 	}
 	else if ( replac > 0 ) {
-		power = AR.TeSuOut;
+		power = AN.TeSuOut;
 		tepos = AR.TePos;
 		if ( power < 0 ) {	/* Table expansion */
 			power = -power; tepos = 0;
@@ -2593,7 +2601,7 @@ AutoGen:	i = *AT.TMout;
 				if ( InsertTerm(term,replac,extractbuff,
 					&(cbuf[extractbuff].Buffer[posisub]),termout,tepos) < 0 ) goto GenCall;
 				AT.WorkPointer = termout + *termout;
-				*AR.RepPoint = 1;
+				*AN.RepPoint = 1;
 				AS.expchanged = 1;
 				posisub += cbuf[extractbuff].Buffer[posisub];
 #ifdef WITHPTHREADS
@@ -2650,7 +2658,7 @@ AutoGen:	i = *AT.TMout;
 						goto OverWork;
 					if ( FiniTerm(term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
@@ -2693,7 +2701,7 @@ AutoGen:	i = *AT.TMout;
 						goto OverWork;
 					if ( FiniTerm(term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
@@ -2716,8 +2724,8 @@ AutoGen:	i = *AT.TMout;
 		RENUMBER renumber;
 		WORD *Freeze, *aa;
 		replac = -replac-1;
-		power = AR.TeSuOut;
-		Freeze = AR.Frozen;
+		power = AN.TeSuOut;
+		Freeze = AN.Frozen;
 		if ( Expressions[replac].status == STOREDEXPRESSION ) {
 			POSITION firstpos;
 			SETSTARTPOS(firstpos);
@@ -2779,7 +2787,7 @@ skippedfirst:
 					if ( FiniTerm(term,accum,termout,replac,0) ) goto GenCall;
 					if ( *termout ) {
 						AT.WorkPointer = termout + *termout;
-						*AR.RepPoint = 1;
+						*AN.RepPoint = 1;
 						AS.expchanged = 1;
 						if ( Generator(termout,level) ) goto GenCall;
 					}
@@ -2803,7 +2811,7 @@ skippedfirst:
   	}
 Return0:
 	AR.CurDum = DumNow;
-	AR.RepPoint = RepSto;
+	AN.RepPoint = RepSto;
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
 	return(0);
@@ -2869,6 +2877,7 @@ WORD
 DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 			 ,WORD *,aa,WORD,level,WORD *,freeze)
 {
+	GETIDENTITY;
 	POSITION oldposition;
 	WORD *acc, *termout, fromfreeze = 0, hand;
 	WORD *oldipointer = AR.CompressPointer;
@@ -2986,7 +2995,7 @@ doterms:
 				if ( FiniTerm(term,aa,termout,nexp,0) ) goto PowCall;
 				if ( *termout ) {
 					AT.WorkPointer = termout + *termout;
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 					if ( Generator(termout,level) ) goto PowCall;
 				}
@@ -3038,6 +3047,7 @@ PowCall2:;
 WORD
 Deferred ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	POSITION oldposition, startposition;
 	WORD *t, *m, *mstop, *tstart, decr, oldb, *termout, i, *oldwork;
 	WORD *oldipointer = AR.CompressPointer;
@@ -3084,7 +3094,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 	NCOPY(t,m,i);
 	oldb = *tstart;
 	AR.TePos = 0;
-	AR.TeSuOut = 0;
+	AN.TeSuOut = 0;
 /*
 	Status of affairs:
 	First bracket content starts at mstop.
@@ -3163,6 +3173,7 @@ DefCall2:;
 WORD
 PrepPoly ARG1(WORD *,term)
 {
+	GETIDENTITY;
 	WORD count = 0, i, jcoef, ncoef, ofun = 0;
 	WORD *t, *m, *r, *tstop, *poly = 0, *v, *w, *vv, *ww;
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -3393,6 +3404,7 @@ PrepPoly ARG1(WORD *,term)
 WORD
 PolyMul ARG1(WORD *,term)
 {
+	GETIDENTITY;
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *tt1, *tt2, *arg1, *arg2;
 	WORD *tstop;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;

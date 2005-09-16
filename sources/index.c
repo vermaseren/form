@@ -33,6 +33,7 @@ static POSITION theposition;
 POSITION *
 FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 {
+	GETIDENTITY;
 	BRACKETINDEX *bi;
 	LONG hi, low, med;
 	int i;

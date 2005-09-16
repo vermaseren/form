@@ -32,6 +32,7 @@ static int funisize = 0;
 
 int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD,mode)
 {
+	GETIDENTITY;
 	WORD *w, *t, *tt, *m, *r, **loc, *tstop, minloopsize;
 	int nfun, i, j, jj, k, n, sign = 0, action = 0, L, ten, ten2, totnum,
 	sign2, *alist, *wi, mini, maxi, medi = 0;
@@ -427,7 +428,7 @@ Success:;
 	*AT.WorkPointer = i;
 	t = term; w = AT.WorkPointer;
 	NCOPY(t,w,i)
-	*AR.RepPoint = 1;	/* For Repeat */
+	*AN.RepPoint = 1;	/* For Repeat */
 	return(1);
 }
 

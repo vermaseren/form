@@ -49,6 +49,7 @@ static WORD *FunScratch[300];
 WORD
 ReNumber ARG1(WORD *,term)
 {
+	GETIDENTITY;
 	WORD *d, *e, **p, **f;
 	WORD n, i, j, old;
 	AN.DumFound = d = RenumScratch;
@@ -96,6 +97,7 @@ ReNumber ARG1(WORD *,term)
 VOID
 FunLevel ARG1(WORD *,term)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *r, *fun;
 	WORD *m;
 	t = r = term;
@@ -281,6 +283,7 @@ Singles:
 
 int FullRenumber ARG2(WORD *,term,WORD,par)
 {
+	GETIDENTITY;
 	WORD *d, **p, **f, *w, *t, *best, *stac, *perm, a, *termtry;
 	WORD n, i, j, k, ii;
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -711,6 +714,7 @@ VectInd:		i = term[1] - 2;
 WORD
 MultDo ARG2(WORD *,term,WORD *,pattern)
 {
+	GETIDENTITY;
 	WORD *t, *r, i;
 	t = term + *term;
 	if ( pattern[2] > 0 ) {			/* Left multiply */
@@ -739,6 +743,7 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
 WORD
 TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *r, *m, i, j;
 	ReNumber(term);
 	Normalize(term);
@@ -782,11 +787,12 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 WORD
 DoDistrib ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *m, *r = 0, *stop, *tstop, *termout, *endhead, *starttail, *parms;
 	WORD i, j, k, n, nn, ntype, fun1 = 0, fun2 = 0, typ1 = 0, typ2 = 0;
 	WORD *arg, *oldwork, *mf, ktype = 0, atype = 0;
 	WORD sgn;
-	AR.TeInFun = AR.TePos = 0;
+	AN.TeInFun = AR.TePos = 0;
 	t = term;
 	tstop = t + *t;
 	stop = tstop - ABS(tstop[-1]);
@@ -983,7 +989,7 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 				UNLOCK(ErrorMessageLock);
 				return(-1);
 			}
-			*AR.RepPoint = 1;
+			*AN.RepPoint = 1;
 			AS.expchanged = 1;
 			if ( Generator(termout,level) ) Terminate(-1);
 #ifndef NUOVO
@@ -1059,10 +1065,11 @@ EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
 WORD
 DoDelta3 ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *m, *m1, *m2, *stopper, *tstop, *termout, *dels, *taken;
 	WORD *ic, *jc, *factors, *occur;
 	WORD num, num2, i, j, k, knum, a;
-	AR.TeInFun = AR.TePos = 0;
+	AN.TeInFun = AR.TePos = 0;
 	tstop = term + *term;
 	stopper = tstop - ABS(tstop[-1]);
 	t = term+1;
@@ -1252,6 +1259,7 @@ nextk:;
 
 WORD DoMerge ARG4(WORD *,term,WORD,level,WORD,fun,WORD,option)
 {
+	GETIDENTITY;
 	WORD n = fun, n1, n2, i1, i2, j1, j2, *j, k, k2;
 	WORD *t, *tt, *m, *tstop, *t1, *t2, *t1stop, *t2stop, *m1, *m2, *termout, *mm;
 	WORD *r1, *r2;

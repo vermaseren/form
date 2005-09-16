@@ -10,17 +10,6 @@
 
 #include "form3.h"
 
-static int doingpoly = 0;
-static int sorttype;
-static WORD bracketon, maxbracket;
-static WORD *brackbuf;
-static WORD *polybrackets;
-static LONG polybpointer, polybsize, polybpsize;
-static LONG *polybpstack;
-static WORD polyblevel = 0;
-static WORD zeropol[1] = { 0 };
-static WORD onepol[5] = { 4,1,1,3,0 };
-
 /*
   	#] Includes :
 	#[ Polyno :
@@ -92,6 +81,7 @@ WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 
 WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 {
+	GETIDENTITY;
 	WORD *t, *tt, *pbuffer, *w, *t1, *tstop1, *tstop2, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
 	if ( NewSort() ) { return(0); }
@@ -166,6 +156,7 @@ abortion:
 
 WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 {
+	GETIDENTITY;
 	WORD *t, *t1, *t2, *t1stop, *t2stop, *oldwork = AT.WorkPointer, *w = 0;
 	WORD ncoef1, ncoef2, ncoef3, *n1, *n2 = 0, *n3 = 0, *n, *n4, *n5;
 	int i1, i2, j, succ;
@@ -179,8 +170,8 @@ WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 		goto aborteer;
 	}
 	if ( *t1 == 0 ) {
-		*polyrem = CopyOfPolynomial(zeropol);
-		return(CopyOfPolynomial(zeropol));
+		*polyrem = CopyOfPolynomial(AT.zeropol);
+		return(CopyOfPolynomial(AT.zeropol));
 	}
 	GETSTOP(t1,t1stop);
 	GETSTOP(t2,t2stop);
@@ -202,12 +193,12 @@ WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 			n += ABS(ncoef3); n[-1] = ncoef3; *n4 = n-n4;
 		}
 		*n = 0;
-		*polyrem = CopyOfPolynomial(zeropol);
+		*polyrem = CopyOfPolynomial(AT.zeropol);
 		return(n3);
 	}
 	if ( t1+1 == t1stop ) {
 		*polyrem = CopyOfPolynomial(n1);
-		return(CopyOfPolynomial(zeropol));
+		return(CopyOfPolynomial(AT.zeropol));
 	}
 /*
 	Now compose *t1 / *t2 as multiplication factor
@@ -295,6 +286,7 @@ aborteer:
 
 WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 {
+	GETIDENTITY;
 	WORD *t1, *t2, *n3, *t1stop, *t2stop, *n1, *n2;
 	WORD *oldwork = AT.WorkPointer, *ow, *w, *outbuffer = 0;
 	WORD ncoef1, ncoef2, ncoef3, symnum;
@@ -319,8 +311,8 @@ WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 	}
 	if ( *t1 == 0 ) {
 		*n2 = 0;
-		*polyrem = CopyOfPolynomial(zeropol);
-		return(CopyOfPolynomial(zeropol));
+		*polyrem = CopyOfPolynomial(AT.zeropol);
+		return(CopyOfPolynomial(AT.zeropol));
 	}
 	outsize = 32;
 	outbuffer = (WORD *)Malloc1(outsize*sizeof(WORD),"Polyno1Div1");
@@ -351,7 +343,7 @@ WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 			i1 -= 2; w = oldwork;
 			while ( --i1 >= 0 ) outbuffer[outpoin++] = *w++;
 			outbuffer[outpoin++] = ncoef3;
-			n1 = CopyOfPolynomial(zeropol);
+			n1 = CopyOfPolynomial(AT.zeropol);
 			break;
 		}
 		else if ( t2+1 == t2stop ) {
@@ -470,6 +462,7 @@ WORD onesympol[9] = { 8, SYMBOL, 4, 1, 1, 1, 1, 3, 0 };
 
 WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 {
+	GETIDENTITY;
 	WORD lowestsymbol = 2*MAXPOWER, only1 = 2, curpow;
 	WORD *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *G1 = 0, *G2 = 0, *GA = 0, *GG;
 	WORD *b, *b1 = 0, *b2 = 0, *t, *t1, *t2, *tstop, powdif;
@@ -486,20 +479,20 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 	if ( t1+1 == tstop ) {
 #ifdef POLYDEBUG
 		MesPrint("The GCD is");
-		PolynoWrite(onepol);
+		PolynoWrite(AT.onepol);
 		UNLOCK(ErrorMessageLock);
 #endif
-		return(CopyOfPolynomial(onepol));
+		return(CopyOfPolynomial(AT.onepol));
 	}
 	t2 = poly2;
 	GETSTOP(t2,tstop);
 	if ( t2+1 == tstop ) {
 #ifdef POLYDEBUG
 		MesPrint("The GCD is");
-		PolynoWrite(onepol);
+		PolynoWrite(AT.onepol);
 		UNLOCK(ErrorMessageLock);
 #endif
-		return(CopyOfPolynomial(onepol));
+		return(CopyOfPolynomial(AT.onepol));
 	}
 #ifdef POLYDEBUG
 	UNLOCK(ErrorMessageLock);
@@ -546,7 +539,7 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 		PolynoPopBracket();
 		return(G1);
 	}
-	else if ( only1 == 2 ) return(CopyOfPolynomial(onepol));
+	else if ( only1 == 2 ) return(CopyOfPolynomial(AT.onepol));
 	if ( ( n1 = PolynoCoefNorm(poly1,lowestsymbol,&G1,2) ) == 0 ) goto aborteer;
 	if ( ( n2 = PolynoCoefNorm(poly2,lowestsymbol,&G2,2) ) == 0 ) goto aborteer;
 	if ( ( GA = PolynoGCD(G1,G2) ) == 0 ) goto aborteer;
@@ -818,6 +811,7 @@ UBYTE *PolynoPrint ARG1(WORD *,poly)
 
 int PolynoWrite ARG1(WORD *,poly)
 {
+	GETIDENTITY;
 	WORD *m, j, olddefer = AR.DeferFlag, first, lbrac;
 	AO.termbuf = AT.WorkPointer;
 	AO.bracket = AT.WorkPointer + AM.MaxTer;
@@ -859,40 +853,41 @@ abowrite:
 
 void PolynoPushBracket ARG1(WORD,numofsymbol)
 {
+	GETIDENTITY;
 	WORD *pnew;
 	LONG i, *pbnew;
-	if ( polybpointer + 8 > polybsize ) {
-		polybsize = 2*polybsize;
-		pnew = (WORD *)Malloc1(polybsize*sizeof(WORD),"PolynoPushBracket1");
-		for ( i = 0; i < polybpointer; i++ ) pnew[i] = polybrackets[i];
-		M_free(polybrackets,"PolynoPushBracket1");
-		polybrackets = pnew;
+	if ( AN.polybpointer + 8 > AN.polybsize ) {
+		AN.polybsize = 2*AN.polybsize;
+		pnew = (WORD *)Malloc1(AN.polybsize*sizeof(WORD),"PolynoPushBracket1");
+		for ( i = 0; i < AN.polybpointer; i++ ) pnew[i] = AN.polybrackets[i];
+		M_free(AN.polybrackets,"PolynoPushBracket1");
+		AN.polybrackets = pnew;
 	}
-	if ( polyblevel >= polybpsize ) {
-		polybpsize = 2*polybpsize;
-		pbnew = (LONG *)Malloc1(polybpsize*sizeof(WORD),"PolynoPushBracket2");
-		for ( i = 0; i < polyblevel; i++ ) pbnew[i] = polybpstack[i];
-		M_free(polybpstack,"PolynoPushBracket2");
-		polybpstack = pbnew;
+	if ( AN.polyblevel >= AN.polybpsize ) {
+		AN.polybpsize = 2*AN.polybpsize;
+		pbnew = (LONG *)Malloc1(AN.polybpsize*sizeof(WORD),"PolynoPushBracket2");
+		for ( i = 0; i < AN.polyblevel; i++ ) pbnew[i] = AN.polybpstack[i];
+		M_free(AN.polybpstack,"PolynoPushBracket2");
+		AN.polybpstack = pbnew;
 	}
 	if ( numofsymbol >= 0 ) {
-		AR.BrackBuf = polybrackets + polybpointer;
+		AT.BrackBuf = AN.polybrackets + AN.polybpointer;
 		AR.BracketOn = 1;
-		polybpstack[polyblevel++] = polybpointer;
-		polybrackets[polybpointer++] = 5;
-		polybrackets[polybpointer++] = SYMBOL;
-		polybrackets[polybpointer++] = 4;
-		polybrackets[polybpointer++] = numofsymbol;
-		polybrackets[polybpointer++] = 1;
-		polybrackets[polybpointer++] = 1;
-		polybrackets[polybpointer++] = 1;
-		polybrackets[polybpointer++] = 3;
+		AN.polybpstack[AN.polyblevel++] = AN.polybpointer;
+		AN.polybrackets[AN.polybpointer++] = 5;
+		AN.polybrackets[AN.polybpointer++] = SYMBOL;
+		AN.polybrackets[AN.polybpointer++] = 4;
+		AN.polybrackets[AN.polybpointer++] = numofsymbol;
+		AN.polybrackets[AN.polybpointer++] = 1;
+		AN.polybrackets[AN.polybpointer++] = 1;
+		AN.polybrackets[AN.polybpointer++] = 1;
+		AN.polybrackets[AN.polybpointer++] = 3;
 	}
 	else {
-		AR.BrackBuf = polybrackets + polybpointer;
+		AT.BrackBuf = AN.polybrackets + AN.polybpointer;
 		AR.BracketOn = 0;
-		polybpstack[polyblevel++] = polybpointer;
-		polybrackets[polybpointer++] = 0;
+		AN.polybpstack[AN.polyblevel++] = AN.polybpointer;
+		AN.polybrackets[AN.polybpointer++] = 0;
 	}
 }
 
@@ -903,19 +898,20 @@ void PolynoPushBracket ARG1(WORD,numofsymbol)
 
 void PolynoPopBracket ARG0
 {
-	if ( polyblevel == 0 ) {
+	GETIDENTITY;
+	if ( AN.polyblevel == 0 ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Internal error: PolynoBracket popped too often");
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	polybpointer = polybpstack[--polyblevel];
-	if ( polyblevel > 0 ) {
-		AR.BrackBuf = polybrackets + polybpstack[polyblevel-1];
-		if ( *AR.BrackBuf != 0 ) AR.BracketOn = 1;
+	AN.polybpointer = AN.polybpstack[--AN.polyblevel];
+	if ( AN.polyblevel > 0 ) {
+		AT.BrackBuf = AN.polybrackets + AN.polybpstack[AN.polyblevel-1];
+		if ( *AT.BrackBuf != 0 ) AR.BracketOn = 1;
 		else AR.BracketOn = 0;
 	}
-	else { AR.BrackBuf = 0; AR.BracketOn = 0; }
+	else { AT.BrackBuf = 0; AR.BracketOn = 0; }
 }
 
 /*
@@ -925,21 +921,22 @@ void PolynoPopBracket ARG0
 
 void PolynoStart ARG0
 {
-	if ( doingpoly == 0 ) {
-		sorttype = AC.SortType;
-		maxbracket = AR.MaxBracket;
-		brackbuf = AR.BrackBuf;
-		bracketon = AR.BracketOn;
-		AR.MaxBracket = 0; AR.BracketOn = 0; AR.BrackBuf = 0;
-		if ( polybsize == 0 ) {
-			polybsize = 160; polybpsize = 20;
-			polybrackets = (WORD *)Malloc1(polybsize*sizeof(WORD),"PolynoStart1");
-			polybpstack  = (LONG *)Malloc1(polybpsize*sizeof(LONG),"PolynoStart2");
-			polybpointer = 0; polyblevel = 0;
+	GETIDENTITY;
+	if ( AN.doingpoly == 0 ) {
+		AN.sorttype = AC.SortType;
+		AN.maxbracket = AR.MaxBracket;
+		AN.brackbuf = AT.BrackBuf;
+		AN.bracketon = AR.BracketOn;
+		AR.MaxBracket = 0; AR.BracketOn = 0; AT.BrackBuf = 0;
+		if ( AN.polybsize == 0 ) {
+			AN.polybsize = 160; AN.polybpsize = 20;
+			AN.polybrackets = (WORD *)Malloc1(AN.polybsize*sizeof(WORD),"PolynoStart1");
+			AN.polybpstack  = (LONG *)Malloc1(AN.polybpsize*sizeof(LONG),"PolynoStart2");
+			AN.polybpointer = 0; AN.polyblevel = 0;
 		}
 	}
 	AC.SortType = SORTHIGHFIRST;
-	doingpoly++;
+	AN.doingpoly++;
 }
 
 /*
@@ -949,12 +946,13 @@ void PolynoStart ARG0
 
 void PolynoFinish ARG0
 {
-	doingpoly--;
-	if ( doingpoly == 0 ) {
-		AC.SortType = sorttype;
-		AR.MaxBracket = maxbracket;
-		AR.BrackBuf = brackbuf;
-		AR.BracketOn = bracketon;
+	GETIDENTITY;
+	AN.doingpoly--;
+	if ( AN.doingpoly == 0 ) {
+		AC.SortType = AN.sorttype;
+		AR.MaxBracket = AN.maxbracket;
+		AT.BrackBuf = AN.brackbuf;
+		AR.BracketOn = AN.bracketon;
 	}
 }
 
@@ -965,6 +963,7 @@ void PolynoFinish ARG0
 
 WORD *PolynoNormalize ARG1(WORD *,poly)
 {
+	GETIDENTITY;
 	WORD *t = poly, *oldwork = AT.WorkPointer, *w, *pbuffer;
 	int i;
 	if ( NewSort() ) { return(0); }
@@ -1038,8 +1037,9 @@ static WORD proexp[SUBEXPSIZE+5] = { SUBEXPSIZE+4, EXPRESSION, SUBEXPSIZE, -1, 1
 
 WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *oldwork = AT.WorkPointer;
-	int olddoing = doingpoly,par, onevar1, onevar2 = 0;
+	int olddoing = AN.doingpoly,par, onevar1, onevar2 = 0;
 	WORD *m, *mm, ncoef1, ncoef2, ncoef3;
 	t = term; GETSTOP(t,tstop); t++;
 	while ( t < tstop && *t != AM.polyfunnum ) t += t[1];
@@ -1141,7 +1141,7 @@ aborteer:
 	if ( n2 ) { M_free(n2,"DoPolynomial6"); n2 = 0; }
 	if ( n3 ) { M_free(n3,"DoPolynomial7"); n3 = 0; }
 	if ( n4 ) { M_free(n4,"DoPolynomial8"); n4 = 0; }
-	if ( olddoing > doingpoly ) PolynoFinish();
+	if ( olddoing > AN.doingpoly ) PolynoFinish();
 	return(-1);
 }
 
@@ -1173,6 +1173,7 @@ WORD *CopyOfPolynomial ARG1(WORD *,poly)
 
 WORD *PolynoUnify ARG2(WORD *,poly,int,par)
 {
+	GETIDENTITY;
 	WORD *n, *n1, *t, *t1, *n2, *tstop, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
 	LONG outsize, numterms;
@@ -1474,6 +1475,7 @@ static WORD PIFnscrat, PIFnscrat1, PIFnscrat2;
 
 WORD *PolynoIntFac ARG1(WORD *,poly)
 {
+	GETIDENTITY;
 	WORD *t, *w, *oldwork = AT.WorkPointer, *pbuffer;
 	WORD n,n1,ncoef,i;
 	WORD *coef;

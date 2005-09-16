@@ -24,6 +24,7 @@
 WORD
 WildFill ARG3(WORD *,to,WORD *,from,WORD *,sub)
 {
+	GETIDENTITY;
 	WORD i, j, *s, *t, *m, len, dflag, odirt;
 	WORD *r, *u, *v, *w, *z, *zst, *zz, *subs, *accu, na, dirty = 0, *tstop;
 	WORD *temp = 0, *uu, *oldcpointer, sgn;
@@ -1333,11 +1334,12 @@ GotOne:;
 VOID
 ClearWild()
 {
+	GETIDENTITY;
 	WORD n, nn, *w;
 	n = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE) >> 2;		/* Number of wildcards */
 	AN.NumWild = nn = n;
 	if ( n > 0 ) {
-		w = AN.WildMask;
+		w = AT.WildMask;
 		do { *w++ = 0; } while ( --n > 0 );
 		w = AN.WildValue;
 		do {
@@ -1359,10 +1361,11 @@ ClearWild()
 WORD
 AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 {
+	GETIDENTITY;
 	WORD *w, *m, n, k, i = -1;
 	CBUF *C = cbuf+AT.ebufnum;
 	AN.WildReserve = 0;
-	m = AN.WildMask;
+	m = AT.WildMask;
 	w = AN.WildValue;
 	n = AN.NumWild;
 	if ( n <= 0 ) { return(-1); }
@@ -1541,7 +1544,7 @@ AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 	return(-1);
 FlipOn:
 	if ( i >= 0 ) {
-		m = AN.WildMask;
+		m = AT.WildMask;
 		w = AN.WildValue;
 		n = AN.NumWild;
 		while ( --n >= 0 ) {
@@ -1586,10 +1589,11 @@ FlipOn:
 WORD
 CheckWild ARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 {
+	GETIDENTITY;
 	WORD *w, *m, *s, n, old2;
 	WORD n2, oldval, dirty, i, j, notflag = 0, retblock = 0;
 	CBUF *C = cbuf+AT.ebufnum;
-	m = AN.WildMask;
+	m = AT.WildMask;
 	w = AN.WildValue;
 	n = AN.NumWild;
 	if ( n <= 0 ) { AN.oldtype = -1; AN.WildReserve = 0; return(-1); }
@@ -2023,7 +2027,7 @@ NoMnot:
 				if ( *s == SETTONUM ) {
 					if ( n2 == oldnumber && type
 					<= SYMTOSUB ) goto NoMatch;
-					m = AN.WildMask;
+					m = AT.WildMask;
 					w = AN.WildValue;
 					n = AN.NumWild;
 					while ( --n >= 0 ) {
@@ -2066,7 +2070,7 @@ NoMnot:
 					}
 				case SYMTOSUB:
 					if ( *w < 0 ) {
-						WORD *mm = AN.WildMask, *mmm, *part;
+						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
 						k = -*w;
@@ -2096,7 +2100,7 @@ NoMnot:
 					if ( *w == newnumber ) goto NoMatch;
 				case VECTOSUB:
 					if ( *w - WILDOFFSET >= AM.OffsetIndex ) {
-						WORD *mm = AN.WildMask, *mmm, *part;
+						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
 						k = *w - WILDOFFSET;
@@ -2126,7 +2130,7 @@ NoMnot:
 					if ( *w == newnumber ) goto NoMatch;
 				case INDTOSUB:
 					if ( *w - WILDOFFSET >= AM.OffsetIndex ) {
-						WORD *mm = AN.WildMask, *mmm, *part;
+						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
 						k = *w - WILDOFFSET;
@@ -2156,7 +2160,7 @@ NoMnot:
 					if ( *w == newnumber ) goto NoMatch;
 					if ( ( type == FUNTOFUN &&
 					( k = *w - WILDOFFSET ) > FUNCTION ) ) {
-						WORD *mm = AN.WildMask;
+						WORD *mm = AT.WildMask;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
 						while ( --nn >= 0 ) {
@@ -2176,7 +2180,7 @@ NoMnot:
 				if ( *s == SETTONUM ) {
 					if ( n2 == oldnumber && type
 					<= SYMTOSUB ) goto NoMatch;
-					m = AN.WildMask;
+					m = AT.WildMask;
 					w = AN.WildValue;
 					n = AN.NumWild;
 					while ( --n >= 0 ) {

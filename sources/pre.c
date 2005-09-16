@@ -582,6 +582,7 @@ PopPreVars ARG1(int,tonumber)
 VOID
 IniModule ARG1(int,type)
 {
+	GETIDENTITY;
 	WORD **w, i;
 	CBUF *C = cbuf+AC.cbufnum;
 	/*[05nov2003 mt]:*/ 
@@ -647,7 +648,7 @@ IniModule ARG1(int,type)
 	AC.CollectFun = 0;
 	AM.S0->PolyWise = 0;
 	AC.SymChangeFlag = 0;
-	AR.lhdollarerror = 0;
+	AP.lhdollarerror = 0;
 	AR.PolyFun = AC.lPolyFun;
 	AC.mparallelflag = AC.parallelflag;
 	OpenTemp();

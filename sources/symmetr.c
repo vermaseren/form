@@ -21,6 +21,7 @@
 WORD
 MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, i, retval;
 	WORD *mstop, *tstop, j, newvalue, newfun;
 	WORD fixvec[MAXMATCH],wcvec[MAXMATCH],fixind[MAXMATCH],wcind[MAXMATCH];
@@ -55,7 +56,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			m = AN.WildValue;
 			t = OldWork = AT.WorkPointer;
 			nwstore = i = (m[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
-			r = AN.WildMask;
+			r = AT.WildMask;
 			if ( i > 0 ) {
 				do {
 					*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
@@ -85,7 +86,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			}
 			if ( retval == 0 ) {
 				m = AN.WildValue;
-				t = OldWork; r = AN.WildMask; i = nwstore;
+				t = OldWork; r = AT.WildMask; i = nwstore;
 				if ( i > 0 ) {
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
@@ -187,7 +188,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 */
 	{
 		WORD *wv, *wm, n;
-		wm = AN.WildMask;
+		wm = AT.WildMask;
 		wv = AN.WildValue;
 		n = AN.NumWild;
 		do {
@@ -304,7 +305,7 @@ NextWV:
 	m = AN.WildValue;
 	t = OldWork = AT.WorkPointer;
 	nwstore = i = (m[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
-	r = AN.WildMask;
+	r = AT.WildMask;
 	if ( i > 0 ) {
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
@@ -363,7 +364,7 @@ NextWV:
 */
 				AN.RepFunNum -= 2;
 NoCaseB:		m = AN.WildValue;
-				t = OldWork; r = AN.WildMask; i = nwstore;
+				t = OldWork; r = AT.WildMask; i = nwstore;
 				if ( i > 0 ) {
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
@@ -493,6 +494,7 @@ Distribute ARG2(DISTRIBUTE *,d,WORD,first)
 
 int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD *thewildcards, *multiplicity, *renum, wc, newvalue, oldwilval = 0;
 	WORD *params, *lowlevel = 0;
@@ -513,7 +515,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		t = lowlevel = AT.WorkPointer;
 		m = AN.WildValue;
 		i = nwstore;
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -573,7 +575,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	m = AN.WildValue;
 	i = nwstore;
 	if ( i > 0 ) {
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -683,7 +685,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				if ( wc && nwstore > 0 ) {
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -776,7 +778,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				if ( wc ) {
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -932,7 +934,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				if ( wc ) {
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -956,7 +958,7 @@ nomatch:;
 		j = nwstore;
 		if ( j > 0 ) {
 			m = AN.WildValue;
-			t = lowlevel; r = AN.WildMask;
+			t = lowlevel; r = AT.WildMask;
 			do {
 				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 			} while ( --j > 0 );
@@ -978,6 +980,7 @@ nomatch:;
 
 int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, *multiplicity, *renum, wc, oldwilval = 0;
 	LONG oww = AT.pWorkPointer;
@@ -999,7 +1002,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		t = lowlevel = oldworkpointer;
 		m = AN.WildValue;
 		i = nwstore;
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -1063,7 +1066,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	m = AN.WildValue;
 	i = nwstore;
 	if ( i > 0 ) {
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -1158,7 +1161,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				if ( wc && nwstore > 0 ) {
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -1237,7 +1240,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				if ( wc ) {
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -1379,7 +1382,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				if ( wc ) {
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -1402,7 +1405,7 @@ NoSuccess:
 nomatch:;
 		j = nwstore;
 		m = AN.WildValue;
-		t = lowlevel; r = AN.WildMask;
+		t = lowlevel; r = AT.WildMask;
 		do {
 			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 		} while ( --j > 0 );
@@ -1424,6 +1427,7 @@ nomatch:;
 
 int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, oldwilval = 0;
 	WORD newvalue, *lowlevel = 0, num, assig;
@@ -1446,7 +1450,7 @@ int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		t = lowlevel = oldworkpointer;
 		m = AN.WildValue;
 		i = nwstore;
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -1522,7 +1526,7 @@ quicky:
 	m = AN.WildValue;
 	i = nwstore; assig = 0;
 	if ( i > 0 ) {
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			assig += *r;
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
@@ -1611,7 +1615,7 @@ quicky:
 */
 		m = AN.WildValue;
 		j = nwstore;
-		r = AN.WildMask;
+		r = AT.WildMask;
 		while ( --j >= 0 ) {
 			if ( m[2] == num && *r ) {
 				if ( type == *m ) break;
@@ -1639,7 +1643,7 @@ quicky:
 			for ( j = 0; j < tcount; j++ ) {
 				if ( MatchArgument(AT.pWorkSpace[oww+j],t) ) {
 					k = nwstore;
-					r = AN.WildMask;
+					r = AT.WildMask;
 					num = 0;
 					while ( --k >= 0 ) num += *r++;
 					if ( num == assig ) { /* no wildcards were changed */
@@ -1651,7 +1655,7 @@ quicky:
 			if ( j >= tcount ) goto NoSuccess;
 			j = nwstore;
 			m = AN.WildValue;
-			t = thewildcards + ntwa; r = AN.WildMask;
+			t = thewildcards + ntwa; r = AT.WildMask;
 			do {	/* undo assignment */
 				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 			} while ( --j > 0 );
@@ -1692,7 +1696,7 @@ oneless:
 		k = AT.pWorkSpace[lhfunnies+i][1];
 		m = AN.WildValue;
 		j = nwstore;
-		r = AN.WildMask;
+		r = AT.WildMask;
 		while ( --j >= 0 ) {
 			if ( *m == ARGTOARG && m[2] == k ) break;
 			m += 4; r++;
@@ -1761,7 +1765,7 @@ nextargw:;
 		for ( j = 0; j < tcount; j++ ) {
 			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+i]) ) {
 				k = nwstore;
-				r = AN.WildMask;
+				r = AT.WildMask;
 				num = 0;
 				while ( --k >= 0 ) num += *r++;
 				if ( num == assig ) { /* no wildcards were changed */
@@ -1777,7 +1781,7 @@ nextargw:;
 				else {	/* We cannot use this yet */
 					j = nwstore;
 					m = AN.WildValue;
-					t = thewildcards + ntwa; r = AN.WildMask;
+					t = thewildcards + ntwa; r = AT.WildMask;
 					do {	/* undo assignment */
 						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 					} while ( --j > 0 );
@@ -1868,7 +1872,7 @@ nextiraise:;
 		else i = j;
 		j = nwstore;
 		m = AN.WildValue;
-		t = thewildcards + ntwa; r = AN.WildMask;
+		t = thewildcards + ntwa; r = AT.WildMask;
 		do {
 			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 		} while ( --j > 0 );
@@ -1899,7 +1903,7 @@ NoSuccess:
 	if ( oldwilval > 0 ) {
 		j = nwstore;
 		m = AN.WildValue;
-		t = lowlevel; r = AN.WildMask;
+		t = lowlevel; r = AT.WildMask;
 		do {
 			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 		} while ( --j > 0 );
@@ -1918,6 +1922,7 @@ NoSuccess:
 
 int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 {
+	GETIDENTITY;
 	WORD *m = pat, *t = arg, i, j, newvalue;
 	WORD *argmstop = pat, *argtstop = arg;
 	WORD *cto, *cfrom, *csav, ci;
@@ -1945,8 +1950,8 @@ int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 			}
 			else if ( *m == -SYMBOL && m[1] >= 2*MAXPOWER ) {
 				i = m[1] - 2*MAXPOWER;
-				AN.argaddress = AN.FunArg;
-				AN.FunArg[ARGHEAD+1] = -*t;
+				AN.argaddress = AT.FunArg;
+				AT.FunArg[ARGHEAD+1] = -*t;
 				if ( CheckWild(i,SYMTOSUB,1,AN.argaddress) ) return(0);
 				AddWild(i,SYMTOSUB,0);
 			}
@@ -1981,8 +1986,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 			if ( *t == -VECTOR || *t == -SNUMBER ) goto IndAll;
 			if ( *t == -MINVECTOR ) {
 				i = m[1] - WILDOFFSET;
-				AN.argaddress = AN.MinVecArg;
-				AN.MinVecArg[ARGHEAD+3] = t[1];
+				AN.argaddress = AT.MinVecArg;
+				AT.MinVecArg[ARGHEAD+3] = t[1];
 				if ( CheckWild(i,INDTOSUB,1,AN.argaddress) ) return(0);
 				AddWild(i,INDTOSUB,(WORD)0);
 			}
@@ -1994,8 +1999,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 		else if ( *m == -VECTOR && *t == -MINVECTOR &&
 		( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
-			AN.argaddress = AN.MinVecArg;
-			AN.MinVecArg[ARGHEAD+3] = t[1];
+			AN.argaddress = AT.MinVecArg;
+			AT.MinVecArg[ARGHEAD+3] = t[1];
 			if ( CheckWild(i,VECTOSUB,1,AN.argaddress) ) return(0);
 			AddWild(i,VECTOSUB,(WORD)0);
 		}
@@ -2126,7 +2131,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 			*m -= msizcoef;
 			wildargs = AN.WildArgs;
 			wildeat = AN.WildEat;
-			for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AN.WildArgTaken[i];
+			for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AT.WildArgTaken[i];
 			AN.ForFindOnly = 0; AN.UseFindOnly = 1;
 			if ( FindRest(csav,m) && ( AN.UsedOtherFind || FindOnly(csav,m) ) ) { }
 			else {
@@ -2139,12 +2144,12 @@ IndAll:			i = m[1] - WILDOFFSET;
 				AN.patstop = opatstop;
 				AN.WildArgs = wildargs;
 				AN.WildEat = wildeat;
-				for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
+				for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 				return(0);
 			}
 			AN.WildArgs = wildargs;
 			AN.WildEat = wildeat;
-			for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
+			for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 			Substitute(csav,m,1);
 			cto = csav;
 			cfrom = cto + *cto - msizcoef;

@@ -276,6 +276,7 @@ FullCleanUp ARG0
 int
 DoPolyfun ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *t, c;
 	WORD funnum;
 	if ( *s == 0 || *s == ',' || *s == ')' ) {

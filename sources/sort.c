@@ -3,7 +3,7 @@
 
 	Sort routines according to new conventions (25-jun-1997).
 	This is more object oriented.
-	The active sort is indicated by AR.SS which should agree with
+	The active sort is indicated by AT.SS which should agree with
 	FunSorts[AR.sLevel];
 */
 #define NEWSPLITMERGE
@@ -52,13 +52,14 @@ char *toterms[] = { "   ", " >>", "-->" };
 VOID
 WriteStats ARG2(POSITION *,plspace,WORD,par)
 {
+	GETIDENTITY;
 	LONG millitime, y = MAXLONG >> 1;
 	WORD timepart;
 	SORTING *S;
 	POSITION pp;
-	if ( AR.SS == AM.S0 && AC.StatsFlag ) {
+	if ( AT.SS == AM.S0 && AC.StatsFlag ) {
 		if ( Expressions == 0 ) return;
-		S = AR.SS;
+		S = AT.SS;
 		LOCK(ErrorMessageLock);
 		if ( AC.ShortStats ) {}
 		else { MesPrint(""); }
@@ -257,7 +258,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats : 
+ 		#] WriteStats :
  		#[ NewSort :				WORD NewSort()
 
 		Starts a new sort.
@@ -270,6 +271,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 WORD
 NewSort()
 {
+	GETIDENTITY;
 	SORTING *S, **newFS;
 	int i, newsize;
 	if ( SoScratC == 0 )
@@ -292,7 +294,7 @@ NewSort()
 					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize);
 		}
 	}
-	AR.SS = S = FunSorts[AR.sLevel];
+	AT.SS = S = FunSorts[AR.sLevel];
 	S->sFill = S->sBuffer;
 	S->lFill = S->lBuffer;
 	S->lPatch = 0;
@@ -309,7 +311,7 @@ NewSort()
 	The next variable is for the staged sort only.
 	It should be treated differently
 
-	AR.OldPosOut = 0;
+	PUTZERO(AN.OldPosOut);
 */
 	return(0);
 }
@@ -334,13 +336,14 @@ NewSort()
 		          We first catch the output in a file (unless we can
 		          intercept things after the small buffer has been sorted)
 		          Then we read from the file into a buffer.
-		Only when par == 0 data compression can be attempted at AR.SS==AM.S0.
+		Only when par == 0 data compression can be attempted at AT.SS==AM.S0.
 */
 
 LONG
 EndSort ARG2(WORD *,buffer,int,par)
 {
-  SORTING *S = AR.SS;
+  GETIDENTITY;
+  SORTING *S = AT.SS;
   WORD j, **ss, *to, *t;
   LONG sSpace, over, tover, spare, retval = 0;
   POSITION position, pp;
@@ -605,14 +608,17 @@ RetRetval:
 	}
 	AR.outfile = oldoutfile;
 	AR.sLevel--;
-	if ( AR.sLevel >= 0 ) AR.SS = FunSorts[AR.sLevel];
+	if ( AR.sLevel >= 0 ) AT.SS = FunSorts[AR.sLevel];
 	if ( par == 1 ) {
-		if ( retval < 0 ) { DeAllocFileHandle(newout);
-/*			if ( AR.outfile->handle >= 0 ) {
+		if ( retval < 0 ) {
+			DeAllocFileHandle(newout);
+/*
+			if ( AR.outfile->handle >= 0 ) {
 				CloseFile(newout->handle);
 				remove(newout->name);
 			}
-			M_free(newout,"FileHandle"); */
+			M_free(newout,"FileHandle");
+*/
 		}
 		else {
 /*
@@ -748,6 +754,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 WORD
 Sflush ARG1(FILEHANDLE *,fi)
 {
+	GETIDENTITY;
 	LONG size, RetCode;
 	int dobracketindex = 0;
 	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
@@ -767,7 +774,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 	}
 	else { SeekFile(fi->handle,&(fi->POposition),SEEK_SET); }
 #ifdef ZWITHZLIB
-	if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+	if ( AT.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
 	&& dobracketindex == 0 ) {
 		if ( FlushOutputGZIP(fi) ) return(-1);
 		fi->POfill = fi->PObuffer;
@@ -811,11 +818,12 @@ Sflush ARG1(FILEHANDLE *,fi)
 WORD
 PutOut ARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 {
+	GETIDENTITY;
 	WORD i, *p, ret, *r, *rr, j, k, first;
 	int dobracketindex = 0;
 	LONG RetCode;
 
-	if ( AR.SS != AM.S0 ) {
+	if ( AT.SS != AM.S0 ) {
 /*
 		For this case no compression should be used
 */
@@ -1039,6 +1047,7 @@ nocompress:
 WORD
 FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 {
+	GETIDENTITY;
 	LONG size;
 	int dobracketindex = 0;
 	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
@@ -1076,7 +1085,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 			}
 		}
 #ifdef ZWITHZLIB
-		if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+		if ( AT.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
 		&& dobracketindex == 0 && ( compr > 0 ) ) {
 			if ( PutOutputGZIP(fi) ) return(-1);
 			fi->POfill = fi->PObuffer;
@@ -1112,7 +1121,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 	size = (fi->POfill-fi->PObuffer)*sizeof(WORD);
 	if ( fi->handle >= 0 ) {
 #ifdef ZWITHZLIB
-		if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+		if ( AT.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
 		&& dobracketindex == 0 && ( compr > 0 ) ) {
 			if ( FlushOutputGZIP(fi) ) return(-1);
 			fi->POfill = fi->PObuffer;
@@ -1139,7 +1148,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		}
 	}
 #ifdef ZWITHZLIB
-	if ( AR.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
+	if ( AT.SS == AM.S0 && !AR.NoCompress && AR.gzipCompress > 0
 		&& dobracketindex == 0 && ( compr > 0 ) ) {
 		PUTZERO(*position);
 		SeekFile(fi->handle,position,SEEK_END);
@@ -1172,7 +1181,8 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 WORD
 AddCoef ARG2(WORD **,ps1,WORD **,ps2)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD *s1, *s2;
 	WORD l1, l2, i;
 	WORD OutLen, *t, j;
@@ -1274,7 +1284,8 @@ RegEnd:
 WORD
 AddPoly ARG2(WORD **,ps1,WORD **,ps2)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD i;
 	WORD *s1, *s2, *m, *w, *t;
 	s1 = *ps1 + S->PolyWise;
@@ -1396,6 +1407,7 @@ AddPoly ARG2(WORD **,ps1,WORD **,ps2)
 VOID
 AddArgs ARG3(WORD *,s1,WORD *,s2,WORD *,m)
 {
+	GETIDENTITY;
 	WORD i1, i2;
 	WORD *w = m, *mm, *t, *t1, *t2, *tstop1, *tstop2;
 	WORD tempterm[8+FUNHEAD];
@@ -1581,7 +1593,7 @@ twogen:
 /*
 		Now we should merge the expressions in s1 and s2 into m.
 */
-		AR.SS->PolyFlag = 0;
+		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
 			i1 = Compare(s1,s2,(WORD)(-1));
 			if ( i1 > 0 ) {
@@ -1641,7 +1653,7 @@ twogen:
 			else w[1] = FUNHEAD+2;
 			if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) w[1] = FUNHEAD;
 		}
-		AR.SS->PolyFlag = 1;
+		AT.SS->PolyFlag = 1;
 	}
 }
 
@@ -1661,7 +1673,8 @@ twogen:
 WORD
 Compare ARG3(WORD *,term1,WORD *,term2,WORD,level)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD *stopper1, *stopper2, *t2;
 	WORD *s1, *s2, *t1;
 	WORD *stopex1, *stopex2;
@@ -1955,6 +1968,7 @@ static int compressSize = 0;
 
 static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 {
+	GETIDENTITY;
 	WORD *t, *s, j, k;
 	LONG size = 0;
 	int newsize, i;
@@ -1991,7 +2005,7 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 			#] debug :
 */
 	*n = 0;
-	if ( AR.SS == AM.S0 && !AR.NoCompress ) {
+	if ( AT.SS == AM.S0 && !AR.NoCompress ) {
 		if ( compressSize == 0 ) {
 			if ( *ss ) { compressSize = **ss + 64; }
 			else       { compressSize = AM.MaxTer + 2; }
@@ -2100,7 +2114,8 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 LONG
 SplitMerge ARG2(WORD **,Pointer,LONG,number)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD **pp3, **pp1, **pp2;
 	LONG nleft, nright, i, newleft, newright;
 	WORD **pptop;
@@ -2193,7 +2208,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 VOID
 SplitMerge ARG2(WORD **,Pointer,LONG,number)
 {
-	SORTING *S = AR.SS;
+	SORTING *S = AT.SS;
 	WORD **pp3, **pp1, **pp2;
 	LONG nleft, nright, i;
 	WORD **pptop;
@@ -2270,7 +2285,8 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 VOID
 GarbHand()
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD **Point, *s2, *t, *garbuf, i;
 	LONG k, total = 0;
 	int tobereturned = 0;
@@ -2387,7 +2403,8 @@ GarbHand()
 WORD
 MergePatches ARG1(WORD,par)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD **poin, **poin2, ul, k, i, im, *m1;
 	WORD *p, lpat, mpat, level, l1, l2, r1, r2, r3, c;
 	WORD *m2, *m3, r31, r33, ki, *rr;
@@ -2421,7 +2438,7 @@ NewMerge:
 		fout = &(S->file);
 		if ( fout->handle < 0 ) {
 FileMake:
-			PUTZERO(AR.OldPosOut);
+			PUTZERO(AN.OldPosOut);
 			if ( ( fhandle = CreateFile(fout->name) ) < 0 ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("Cannot create file %s",fout->name);
@@ -2462,7 +2479,7 @@ ConMer:
 		S->fPatches = S->inPatches;
 		S->inPatches = S->iPatches;
 		(S->inNum) = S->fPatchN;
-		AR.OldPosIn = AR.OldPosOut;
+		AN.OldPosIn = AN.OldPosOut;
 #ifdef ZWITHZLIB
 		m1 = S->fpincompressed;
 		S->fpincompressed = S->fpcompressed;
@@ -2734,7 +2751,7 @@ OneTerm:
 						w = AT.WorkPointer;
 						if ( w + m1[1] + m2[1] > AT.WorkTop ) {
 							LOCK(ErrorMessageLock);
-							MesPrint("A WorkSpace of %10l is too small",AT.WorkSize);
+							MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
 							UNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
@@ -2943,8 +2960,8 @@ EndOfAll:
 */
 		(S->fPatchN)++;
 		S->fPatches[S->fPatchN] = position;
-		if ( ISNOTZEROPOS(AR.OldPosIn) ) {		/* We are not done */
-			SeekFile(fin->handle,&(AR.OldPosIn),SEEK_SET);
+		if ( ISNOTZEROPOS(AN.OldPosIn) ) {		/* We are not done */
+			SeekFile(fin->handle,&(AN.OldPosIn),SEEK_SET);
 /*
 			We don't need extra provisions for the zlib compression here.
 			If part if an expression has been sorted, the whole has been so.
@@ -2952,7 +2969,7 @@ EndOfAll:
 */
 			if ( (ULONG)ReadFile(fin->handle,(UBYTE *)(&(S->inNum)),(LONG)sizeof(WORD)) !=
 				sizeof(WORD)
-			  || (ULONG)ReadFile(fin->handle,(UBYTE *)(&AR.OldPosIn),(LONG)sizeof(POSITION)) !=
+			  || (ULONG)ReadFile(fin->handle,(UBYTE *)(&AN.OldPosIn),(LONG)sizeof(POSITION)) !=
 				sizeof(POSITION)
 			  || (ULONG)ReadFile(fin->handle,(UBYTE *)S->iPatches,(LONG)((S->inNum)+1)
 					*sizeof(POSITION)) != ((S->inNum)+1)*sizeof(POSITION) ) {
@@ -3035,7 +3052,8 @@ PatCall2:;
 WORD
 StoreTerm ARG1(WORD *,term)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	WORD **ss, *lfill, j, *t;
 	POSITION pp;
 	LONG lSpace, sSpace, RetCode, over, tover;
@@ -3146,7 +3164,8 @@ StoreCall:
 static VOID
 StageSort ARG1(FILEHANDLE *,fout)
 {
-	SORTING *S = AR.SS;
+	GETIDENTITY;
+	SORTING *S = AT.SS;
 	if ( S->fPatchN >= S->MaxFpatches ) {
 		POSITION position;
 		PUTZERO(position);
@@ -3160,7 +3179,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 */
 		if ( (ULONG)WriteFile(fout->handle,(UBYTE *)(&(S->fPatchN)),(LONG)sizeof(WORD)) !=
 			sizeof(WORD)
-		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(&(AR.OldPosOut)),(LONG)sizeof(POSITION)) !=
+		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(&(AN.OldPosOut)),(LONG)sizeof(POSITION)) !=
 			sizeof(POSITION)
 		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(S->fPatches),(LONG)(S->fPatchN+1)
 					*sizeof(POSITION)) != (S->fPatchN+1)*sizeof(POSITION) ) {
@@ -3169,7 +3188,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		AR.OldPosOut = position;
+		AN.OldPosOut = position;
 		fout->filesize = position;
 		ADDPOS(fout->filesize,(S->fPatchN+2)*sizeof(POSITION) + sizeof(WORD));
 		fout->POposition = fout->filesize;
@@ -3210,6 +3229,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 WORD
 SortWild ARG2(WORD *,w,WORD,nw)
 {
+	GETIDENTITY;
 	WORD *v, *s, *m, k, i;
 	WORD *pScrat, *stop, *sv, error = 0;
 	pScrat = AT.WorkPointer;
@@ -3300,6 +3320,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 
 void CleanUpSort ARG1(int,num)
 {
+	GETIDENTITY;
 	SORTING *S;
 	int minnum = num, i;
 	if ( FunSorts ) {
@@ -3349,9 +3370,10 @@ void CleanUpSort ARG1(int,num)
 
 VOID LowerSortLevel ARG0
 {
+	GETIDENTITY;
 	if ( AR.sLevel >= 0 ) {
 		AR.sLevel--;
-		if ( AR.sLevel >= 0 ) AR.SS = FunSorts[AR.sLevel];
+		if ( AR.sLevel >= 0 ) AT.SS = FunSorts[AR.sLevel];
 	}
 }
 

@@ -24,6 +24,7 @@ int numtracestack = 0, intracestack = 0;
 WORD
 EpfFind ARG2(WORD *,term,WORD *,params)
 {
+	GETIDENTITY;
 	WORD *t, *m, *r, n1 = 0, n2, min = -1, count, fac;
 	WORD *c1 = 0, *c2 = 0, sgn = 1;
 	WORD *tstop, *mstop;
@@ -177,6 +178,7 @@ AllLev:
 WORD
 EpfCon ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	WORD *kron, *perm, *termout, *tstop, size2;
 	WORD *m, *t, sizes, sgn = 0, i;
 	sizes = *params - 3;
@@ -222,7 +224,7 @@ DoOnce:
 		m--;
 		if ( sgn < 0 ) *m = - *m;
 		if ( *termout ) {
-			*AR.RepPoint = 1;
+			*AN.RepPoint = 1;
 			AS.expchanged = 1;
 			AT.WorkPointer = termout + *termout;
 			if ( Generator(termout,level) < 0 ) goto EpfCall;
@@ -662,6 +664,7 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 WORD
 Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
@@ -824,6 +827,7 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 WORD
 Trace4Gen ARG2(TRACES *,t,WORD,number)
 {
+	GETIDENTITY;
 	WORD *termout, *stop;
 	WORD *p, *m, oldval;
 	WORD *pold, *mold, diff, *oldstring, cp;
@@ -878,10 +882,10 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					UNLOCK(ErrorMessageLock);
 					return(-1);
 				}
-				*AR.RepPoint = 1;
+				*AN.RepPoint = 1;
 				AS.expchanged = 1;
 				if ( *termout ) {
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) goto TracCall;
 				}
@@ -1257,7 +1261,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					return(-1);
 				}
 				if ( *termout ) {
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) {
 						AT.WorkPointer = termout;
@@ -1347,6 +1351,7 @@ TraceNno ARG3(WORD,number,WORD *,kron,TRACES *,t)
 WORD
 TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
@@ -1411,6 +1416,7 @@ TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 WORD
 TraceNgen ARG2(TRACES *,t,WORD,number)
 {
+	GETIDENTITY;
 	WORD *termout, *stop;
 	WORD *p, *m, oldval;
 	WORD *pold, *mold, diff, *oldstring;
@@ -1465,7 +1471,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 					return(-1);
 				}
 				if ( *termout ) {
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) goto TracCall;
 				}
@@ -1754,7 +1760,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 					return(-1);
 				}
 				if ( *termout ) {
-					*AR.RepPoint = 1;
+					*AN.RepPoint = 1;
 					AS.expchanged = 1;
 					if ( Generator(termout,t->level) ) {
 						AT.WorkPointer = termout;
@@ -1796,6 +1802,7 @@ TracCall:
 WORD
 Traces ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	switch ( AT.TMout[2] ) {	/* Subtype gives dimension */
 		case 0:
 			return(TraceN(term,params,num,level));
@@ -1816,6 +1823,7 @@ Traces ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 WORD
 TraceFind ARG2(WORD *,term,WORD *,params)
 {
+	GETIDENTITY;
 	WORD *p, *m, *to;
 	WORD *termout, *stop, *stop2, number = 0;
 	WORD first = 1;
@@ -1824,7 +1832,7 @@ TraceFind ARG2(WORD *,term,WORD *,params)
 	spinline = params[4];
 	if ( spinline < 0 ) {	/* $ variable. Evaluate */
 		sp = DolToIndex(-spinline);
-		if ( AR.ErrorInDollar || sp < 0 ) {
+		if ( AN.ErrorInDollar || sp < 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("$%s does not have an index value in trace statement in module %l",
 				DOLLARNAME(Dollars,-spinline),AC.CModule);
@@ -1926,6 +1934,7 @@ F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
 WORD
 Chisholm ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *r, *m, *s, *tt, *rr;
 	WORD *mat, *matpoint, *termout, *rdo;
 	CBUF *C = cbuf+AM.rbufnum;
@@ -2140,6 +2149,7 @@ ChisCall:
 WORD
 TenVecFind ARG2(WORD *,term,WORD *,params)
 {
+	GETIDENTITY;
 	WORD *t, *w, *m, *tstop;
 	WORD i, mode, thevector, thetensor, spectator;
 	thetensor = params[3];
@@ -2274,6 +2284,7 @@ match:
 WORD
 TenVec ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *m, *w, *termout, *tstop, *outlist, *ou, *ww, *mm;
 	WORD i, j, k, x, mode, thevector, thetensor, DumNow, spectator;
 	thetensor = params[2];

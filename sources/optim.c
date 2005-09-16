@@ -98,6 +98,7 @@ int Optimize ARG1(WORD,numexpr)
 
 int LoadOpti ARG1(WORD,numexpr)
 {
+	GETIDENTITY;
 	WORD *term, *t, *tstop, *m, *mstop, *oldwork = AT.WorkPointer, *tbuf, *w, nc;
 	WORD pow = 0;
 	LONG objnum = 0;
@@ -690,6 +691,7 @@ WORD MaxPowerOpti ARG1(LONG,number)
 
 WORD HuntNumFactor ARG3(LONG,number,WORD *,coef,int,par)
 {
+	GETIDENTITY;
 	SCALAR *sca = scabuffer + number, *ss;
 	WORD *t, *tt, *ttt, *m, *mm, *coef2, ncoef, n, nn, n1, n2, nt;
 	int i;
@@ -790,6 +792,7 @@ ExitHunt:
 
 WORD HuntFactor ARG3(LONG,number,WORD *,factor,int,par)
 {
+	GETIDENTITY;
 	SCALAR *sca, *scb;
 	WORD *t, *m, *ft, *fm, *fr, *frr, *fact, *coef, ncoef, retval;
 	int i, size;
@@ -920,6 +923,7 @@ loosethis:		fr = fm + 3; frr = fm;
 
 void HuntPairs ARG2(LONG,number,WORD,power)
 {
+	GETIDENTITY;
 	SCALAR *sca = scabuffer + number;
 	WORD *t, *tt, *m, *mm, *w, *w1, *pattern, *p, *pp, *patstop,
 		 *coef, ncoef, nf, nc2, nc, *newter;
@@ -1129,6 +1133,7 @@ nextterm:;
 
 void HuntBrackets ARG1(LONG,number)
 {
+	GETIDENTITY;
 	SCALAR *sca = scabuffer + number;
 	WORD *t, *m, *tt, *mm, *left = 0, mostpopular[2], *coef, nf, *newter;
 	WORD ncoef, nc2, nc;
@@ -1356,6 +1361,7 @@ void HuntNumBrackets ARG1(LONG,number)
 
 void HuntPowers ARG2(LONG,number,WORD,power)
 {
+	GETIDENTITY;
 	SCALAR *sca = scabuffer + number;
 	WORD *t1, *m1, *r1, *t2, *m2, *r2, *t3, *m3, *r3, *quotient, *extra
 	    , *q, n1, n2, n3, nq;

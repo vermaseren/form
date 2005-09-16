@@ -23,6 +23,7 @@
 WORD
 FindOnly ARG2(WORD *,term,WORD *,pattern)
 {
+	GETIDENTITY;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop, *setp = AN.ForFindOnly;
@@ -381,6 +382,7 @@ EndLoop:;
 WORD
 FindOnce ARG2(WORD *,term,WORD *,pattern)
 {
+	GETIDENTITY;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -916,6 +918,7 @@ EndLoop:;
 WORD
 FindMulti ARG2(WORD *,term,WORD *,pattern)
 {
+	GETIDENTITY;
 	WORD *t, *m, *p;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -1032,6 +1035,7 @@ FindMulti ARG2(WORD *,term,WORD *,pattern)
 WORD
 FindRest ARG2(WORD *,term,WORD *,pattern)
 {
+	GETIDENTITY;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;

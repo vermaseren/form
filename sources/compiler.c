@@ -400,6 +400,7 @@ IsIdStatement ARG1(UBYTE *,s)
 int
 CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 {
+	GETIDENTITY;
 	int error;
 	WORD *oldproto = AC.ProtoType;
 	AC.ProtoType = prototype;
@@ -587,6 +588,7 @@ int TestTables ARG0
 
 int CompileSubExpressions ARG1(SBYTE *,tokens)
 {
+	GETIDENTITY;
 	SBYTE *fill = tokens, *s = tokens, *t;
 	WORD number[MAXNUMSIZE], *oldwork, *w1, *w2;
 	int level, num, i, sumlevel = 0, sumtype = SYMTOSYM;
@@ -709,6 +711,7 @@ static UWORD *CGscrat7 = 0;
 
 int CodeGenerator ARG1(SBYTE *,tokens)
 {
+	GETIDENTITY;
 	SBYTE *s = tokens, c;
 	int i, sign = 1, first = 1, deno = 1, error = 0, minus, n, needarg, numexp, cc;
 	int base, sumlevel = 0, sumtype = SYMTOSYM, firstsumarg, inset = 0, dflag;

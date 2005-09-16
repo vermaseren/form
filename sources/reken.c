@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ RekenRational :
  		#[ Pack :			VOID Pack(a,na,b,nb)
 
@@ -45,7 +45,7 @@ Pack ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 }
 
 /*
- 		#] Pack : 
+ 		#] Pack :
  		#[ UnPack :			VOID UnPack(a,na,denom,numer)
 
 	Determines the sizes of the numerator and the denominator in the
@@ -73,7 +73,7 @@ UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
 }
 
 /*
- 		#] UnPack : 
+ 		#] UnPack :
  		#[ Mully :			WORD Mully(a,na,b,nb)
 
 	Multiplies the rational a by the Long b.
@@ -123,7 +123,7 @@ MullyEr:
 }
 
 /*
- 		#] Mully : 
+ 		#] Mully :
  		#[ Divvy :			WORD Divvy(a,na,b,nb)
 
 	Divides the rational a by the Long b.
@@ -169,7 +169,7 @@ DivvyEr:
 }
 
 /*
- 		#] Divvy : 
+ 		#] Divvy :
  		#[ AddRat :			WORD AddRat(a,na,b,nb,c,nc)
 */
 
@@ -321,7 +321,7 @@ AddRer:
 }
 
 /*
- 		#] AddRat : 
+ 		#] AddRat :
  		#[ MulRat :			WORD MulRat(a,na,b,nb,c,nc)
 
 	Multiplies the rationals a and b. The Gcd of the individual
@@ -452,7 +452,7 @@ MulRer:
 }
 
 /*
- 		#] MulRat : 
+ 		#] MulRat :
  		#[ DivRat :			WORD DivRat(a,na,b,nb,c,nc)
 
 	Divides the rational a by the rational b.
@@ -480,7 +480,7 @@ DivRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] DivRat : 
+ 		#] DivRat :
  		#[ Simplify :		WORD Simplify(a,na,b,nb)
 
 	Determines the greatest common denominator of a and b and
@@ -577,7 +577,7 @@ SimpErr:
 }
 
 /*
- 		#] Simplify : 
+ 		#] Simplify :
  		#[ AccumGCD :		WORD AccumGCD(a,na,b,nb)
 
 		Routine takes the rational GCD of the fractions in a and b and
@@ -606,7 +606,7 @@ AccErr:
 }
 
 /*
- 		#] AccumGCD : 
+ 		#] AccumGCD :
  		#[ TakeRatRoot:
 */
 
@@ -626,7 +626,7 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 }
 
 /*
- 		#] TakeRatRoot: 
+ 		#] TakeRatRoot:
   	#] RekenRational :
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
@@ -669,7 +669,7 @@ AddLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] AddLong : 
+ 		#] AddLong :
  		#[ AddPLon :		WORD AddPLon(a,na,b,nb,c,nc)
 
 	Adds two long integers a and b and puts the result in c.
@@ -723,7 +723,7 @@ AddPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,UWORD *,nc)
 }
 
 /*
- 		#] AddPLon : 
+ 		#] AddPLon :
  		#[ SubPLon :		VOID SubPLon(a,na,b,nb,c,nc)
 
 	Subtracts b from a. Assumes that a > b. Result in c.
@@ -760,7 +760,7 @@ SubPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] SubPLon : 
+ 		#] SubPLon :
  		#[ MulLong :		WORD MulLong(a,na,b,nb,c,nc)
 
 	Does a Long multiplication. Assumes that WORD is half the size
@@ -808,7 +808,7 @@ MulLov:
 }
 
 /*
- 		#] MulLong : 
+ 		#] MulLong :
  		#[ BigLong :		WORD BigLong(a,na,b,nb)
 
 	Returns > 0 if a > b, < 0 if b > a and 0 if a == b
@@ -833,7 +833,7 @@ BigLong ARG4(UWORD *,a,WORD,na,UWORD *,b,WORD,nb)
 }
 
 /*
- 		#] BigLong : 
+ 		#] BigLong :
  		#[ DivLong :		WORD DivLong(a,na,b,nb,c,nc,d,nd)
 
 	This is the long division which knows a couple of exceptions.
@@ -1021,7 +1021,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 }
 
 /*
- 		#] DivLong : 
+ 		#] DivLong :
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -1080,7 +1080,7 @@ RaisOvl:
 }
 
 /*
- 		#] RaisPow : 
+ 		#] RaisPow :
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -1115,7 +1115,7 @@ Product ARG3(UWORD *,a,WORD *,na,WORD,b)
 }
 
 /*
- 		#] Product : 
+ 		#] Product :
  		#[ Quotient :		UWORD Quotient(a,na,b)
 
 		Routine divides the long number a by b with the assumption that
@@ -1155,7 +1155,7 @@ Quotient ARG3(UWORD *,a,WORD *,na,WORD,b)
 }
 
 /*
- 		#] Quotient : 
+ 		#] Quotient :
  		#[ Remain10 :		WORD Remain10(a,na)
 
 	Routine devides a by 10 and gives the remainder as return value.
@@ -1183,7 +1183,7 @@ Remain10 ARG2(UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Remain10 : 
+ 		#] Remain10 :
  		#[ Remain4 :		WORD Remain4(a,na)
 
 	Routine devides a by 10000 and gives the remainder as return value.
@@ -1211,7 +1211,7 @@ Remain4 ARG2(UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Remain4 : 
+ 		#] Remain4 :
  		#[ PrtLong :		VOID PrtLong(a,na,s)
 
 	Puts the long positive number a in string s.
@@ -1268,7 +1268,7 @@ PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
 }
 
 /*
- 		#] PrtLong : 
+ 		#] PrtLong :
  		#[ GetLong :		WORD GetLong(s,a,na)
 
 	Reads a long number from a string.
@@ -1317,7 +1317,7 @@ GetLong ARG3(UBYTE *,s,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] GetLong : 
+ 		#] GetLong :
  		#[ GCD :			WORD GCD(a,na,b,nb,c,nc)
 
 	Algorithm to compute the GCD of two long numbers.
@@ -1494,7 +1494,7 @@ toobad:
 #endif
 
 /*
- 		#] GCD : 
+ 		#] GCD :
  		#[ GcdLong :		WORD GcdLong(a,na,b,nb,c,nc)
 
 	Returns the Greatest Common Divider of a and b in c.
@@ -1708,7 +1708,7 @@ GcdErr:
 }
 
 /*
- 		#] GcdLong : 
+ 		#] GcdLong :
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
@@ -1746,7 +1746,7 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 }
 
 /*
- 		#] GetBinom : 
+ 		#] GetBinom :
  		#[ TakeLongRoot:
 
 	Takes the 'power'-root of the long number in a.
@@ -1856,7 +1856,7 @@ TLcall:
 }
 
 /*
- 		#] TakeLongRoot: 
+ 		#] TakeLongRoot:
   	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
@@ -1953,7 +1953,7 @@ Modulus ARG1(WORD *,term)
 }
 
 /*
- 		#] Modulus : 
+ 		#] Modulus :
  		#[ TakeModulus :	WORD TakeModulus(a,na,par)
 
 		Routine gets the rational number in a with reduced length na.
@@ -1966,6 +1966,7 @@ Modulus ARG1(WORD *,term)
 WORD
 TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 {
+	GETIDENTITY;
 	UWORD *c, *d, *e, *f, *g, *h;
 	UWORD *x4,*x2;
 	UWORD *x3,*x1,*x5,*x6,*x7,*x8;
@@ -2048,7 +2049,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus : 
+ 		#] TakeModulus :
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2125,7 +2126,7 @@ MakeModTable()
 }
 
 /*
- 		#] MakeModTable : 
+ 		#] MakeModTable :
   	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
@@ -2142,6 +2143,7 @@ MakeModTable()
 int
 Factorial ARG3(WORD,n,UWORD *,a,WORD *,na)
 {
+	GETIDENTITY;
 	UWORD *b, *c;
 	WORD nc;
 	int i, j;
@@ -2202,7 +2204,7 @@ Factorial ARG3(WORD,n,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Factorial : 
+ 		#] Factorial :
  		#[ Bernoulli :		WORD Bernoulli(n,a,na)
 
 	Starts with only the value of bernoulli_(0).
@@ -2222,6 +2224,7 @@ Factorial ARG3(WORD,n,UWORD *,a,WORD *,na)
 int
 Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 {
+	GETIDENTITY;
 	UWORD *b, *c, *scrib, *ntop, *ntop1;
 	WORD i, i1, i2, nhalf, nqua, nscrib, nntop, nntop1, *oldworkpointer;
 	UWORD twee = 2, twonplus1;
@@ -2323,8 +2326,8 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Bernoulli : 
-  	#] Functions : 
+ 		#] Bernoulli :
+  	#] Functions :
 */
 
 /* temporary commentary for forcing cvs merge */

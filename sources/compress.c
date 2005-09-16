@@ -39,9 +39,10 @@ Bytef *ziobuffers;
 int
 SetupOutputGZIP ARG1(FILEHANDLE *,f)
 {
+	GETIDENTITY;
 	int zerror;
 
-	if ( AR.SS != AM.S0 ) return(0);
+	if ( AT.SS != AM.S0 ) return(0);
 	if ( AR.NoCompress == 1 ) return(0);
 	if ( AR.gzipCompress <= 0 ) return(0);
 
@@ -347,9 +348,10 @@ SetupAllInputGZIP ARG1(SORTING *,S)
 LONG
 FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffersize,int,numstream)
 {
+	GETIDENTITY;
 	int zerror;
 	LONG readsize, toread;
-	SORTING *S = AR.SS;
+	SORTING *S = AT.SS;
 	z_streamp zsp;
 	POSITION pos;
 	if ( S->fpincompressed[numstream] ) {

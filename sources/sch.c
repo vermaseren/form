@@ -581,6 +581,7 @@ static UBYTE *rsymname[] = {
 VOID
 WriteLists()
 {
+	GETIDENTITY;
 	WORD i, j, k, *skip;
 	int first, startvalue;
 	UBYTE *OutScr, *Out;
@@ -1308,6 +1309,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 WORD
 WriteInnerTerm ARG2(WORD *,term,WORD,first)
 {
+	GETIDENTITY;
 	WORD *t, *s, *s1, *s2, n, i, pow;
 	t = term;
 	s = t+1;
@@ -1671,6 +1673,7 @@ WriteExpression ARG2(WORD *,terms,LONG,ltot)
 WORD
 WriteAll()
 {
+	GETIDENTITY;
 	WORD lbrac, first;
 	WORD *t, *stopper, n, prtf;
 	POSITION pos;
@@ -1812,6 +1815,7 @@ AboWrite:
 WORD
 WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 {
+	GETIDENTITY;
 	WORD number;
 	WORD lbrac, first;
 	POSITION pos;

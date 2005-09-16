@@ -31,6 +31,7 @@ static UWORD *GCDbuffer = 0, *LCMbuffer = 0, *LCMb = 0, *LCMc = 0;
 WORD
 execarg ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *r, *m, *v;
 	WORD *start, *stop, *rstop, *r1, *r2 = 0, *r3 = 0, *r4, *r5, *r6, *r7, *r8, *r9;
 	WORD *mm, *mstop, *mnext, *rnext, *rr, *factor, type, ngcd, nq;
@@ -675,8 +676,8 @@ HaveTodo:
 						Remember: there are no wildcards.
 */
 						WORD *oRepFunList = AN.RepFunList;
-						WORD *oWildMask = AN.WildMask, *oWildValue = AN.WildValue;
-						AN.WildValue = locwildvalue; AN.WildMask = locwildvalue+2;
+						WORD *oWildMask = AT.WildMask, *oWildValue = AN.WildValue;
+						AN.WildValue = locwildvalue; AT.WildMask = locwildvalue+2;
 						AN.NumWild = 0;
 						r4 = r1; r5 = t; r7 = oldwork;
 						*r1++ = *t + ARGHEAD;
@@ -734,7 +735,7 @@ HaveTodo:
 							}
 						}
 						t = r3;
-						AN.WildMask = oWildMask; AN.WildValue = oWildValue;
+						AT.WildMask = oWildMask; AN.WildValue = oWildValue;
 					}
 					else {
 /*
@@ -1368,6 +1369,7 @@ execargerr:
 WORD
 execterm ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	CBUF *C = cbuf+AM.rbufnum;
 	WORD oldnumlhs = C->numlhs;
 	WORD maxisat = C->lhs[level][2];

@@ -120,6 +120,7 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 
 int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 {
+	GETIDENTITY;
 	WORD *tstop = t + t[1], *tt, *ttt, cs, maxpow, i, n, *m, *w1, *w2, rl;
 	WORD oldncmod, oldcmod;
 	if ( nmgscr == 0 ) {

@@ -41,6 +41,7 @@ int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 int DoExpr ARG2(UBYTE *,inp,int,type)
 {
+	GETIDENTITY;
 	int error = 0;
 	UBYTE *p, *q, c;
 	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
@@ -335,6 +336,7 @@ int CoSelect ARG1(UBYTE *,inp)
 
 int CoIdExpression ARG2(UBYTE *,inp,int,type)
 {
+	GETIDENTITY;
 	int i, j, idhead, error = 0, MinusSign = 0, opt, retcode;
 	WORD *w, *s, *m, *mm, *ww, *FirstWork, *OldWork, c1, ctype, numsets = 0,
 		 oldnumrhs, *ow, oldEside;
@@ -594,7 +596,7 @@ IllField:			c = *p; *p = 0;
 */
 	if ( !error && *s == 0 ) {
 IllLeft:MesPrint("&Illegal LHS");
-		AR.lhdollarflag = 0;
+		AC.lhdollarflag = 0;
 		return(1);
 	}
 	if ( !error && *(s+*s) != 0 ) {
@@ -606,11 +608,11 @@ IllLeft:MesPrint("&Illegal LHS");
 			if ( !error ) error = 1;
 			return(error);
 		}
-		AR.RepPoint = AT.RepCount + 1;
+		AN.RepPoint = AT.RepCount + 1;
         ow = AT.WorkPointer + AM.MaxTer;
 		mm = s; ww = ow; i = *mm;
 		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
-		AR.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
+		AC.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
 #ifdef FGPARALLEL
 		A.xsortflag = 0;		/* Block foliation at this point */
 		A.MayFoliate = 0;
@@ -624,11 +626,11 @@ IllLeft:MesPrint("&Illegal LHS");
 		if ( EndSort(w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
 		if ( *w == 0 || *(w+*w) != 0 ) {
 			MesPrint("&LHS must be one term");
-			AR.lhdollarflag = 0;
+			AC.lhdollarflag = 0;
 			return(1);
 		}
 		LowerSortLevel();
-		if ( AR.lhdollarflag ) MarkDirty(w,1);
+		if ( AC.lhdollarflag ) MarkDirty(w,1);
 	}
 	AT.WorkPointer = w + *w;
 	AC.DumNum = 0;
@@ -749,8 +751,8 @@ IllLeft:MesPrint("&Illegal LHS");
 	AC.ProtoType = OldWork+idhead;
 	if ( !error ) StudyPattern(OldWork);
 	AT.WorkPointer = OldWork + OldWork[1];
-	OldWork[4] = AR.lhdollarflag;
-	AR.lhdollarflag = 0;
+	OldWork[4] = AC.lhdollarflag;
+	AC.lhdollarflag = 0;
 /*
 	Now the right hand side.
 */
@@ -771,7 +773,7 @@ IllLeft:MesPrint("&Illegal LHS");
 */
 	/* if ( !error ) */ { AddNtoL(OldWork[1],OldWork); }
 AllDone:
-	AR.lhdollarflag = 0;
+	AC.lhdollarflag = 0;
 	AT.WorkPointer = FirstWork;
 	return(error);
 }
@@ -824,6 +826,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 
 int CoFill ARG1(UBYTE *,inp)
 {
+	GETIDENTITY;
 	WORD error = 0, x, funnum, type, *oldwp = AT.WorkPointer;
 	int i, oldcbufnum = AC.cbufnum, nofill = 0, numover, redef = 0;
 	WORD *w, *wold;
@@ -1078,6 +1081,7 @@ redef:;
 
 int CoFillExpression ARG1(UBYTE *,inp)
 {
+	GETIDENTITY;
 	UBYTE *p, c;
 	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AT.WorkPointer;
 	WORD *brackets, *term, brasize, *b, *m, *w, *pw, *tstop, zero = 0;
@@ -1403,6 +1407,7 @@ noway:
 
 int CoPrintTable ARG1(UBYTE *,inp)
 {
+	GETIDENTITY;
 	int fflag = 0, sflag = 0, addflag = 0, error = 0, sum, i, j;
 	UBYTE *filename, *p, c, buffer[100], *s, *oldoutputline = AO.OutputLine;
 	WORD type, funnum, *expr, *m, num;

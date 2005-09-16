@@ -652,6 +652,7 @@ void ClearWildcardNames ARG0
 
 int AddWildcardName ARG1(UBYTE *,name)
 {
+	GETIDENTITY;
 	int size = 0, tocopy, i;
 	UBYTE *s = name, *t, *newbuffer;
 	while ( *s ) { s++; size++; }
@@ -682,8 +683,8 @@ int AddWildcardName ARG1(UBYTE *,name)
 			M_free(AC.WildcardNames,"AC.WildcardNames");
 		}
 		AC.WildcardNames = newbuffer;
-		M_free(AN.WildArgTaken,"AN.WildArgTaken");
-		AN.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
+		M_free(AT.WildArgTaken,"AT.WildArgTaken");
+		AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
 				,"argument list names");
 	}
 	s = name;
@@ -1193,6 +1194,7 @@ static int nwarntab = 1;
 int
 DoTable ARG2(UBYTE *,s,int,par)
 {
+	GETIDENTITY;
 	UBYTE *name, *p, *inp, c;
 	int i, j, sparseflag = 0, rflag = 0, checkflag = 0, error = 0, ret, oldcbufnum;
 	WORD funnum, type, *OldWork, *w, *newp, *flags1;

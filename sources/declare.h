@@ -259,12 +259,12 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #define Add5Com(x1,x2,x3,x4) { WORD cod[5]; cod[0] = x1; cod[1] = 5; \
    cod[2] = x2; cod[3] = x3; cod[4] = x4; AddNtoL(5,cod); }
 
-#define WantAddPointers(x) while((AT.pWorkPointer+(x))>AT.pWorkSize)\
-	ExpandBuffer((void **)(&AT.pWorkSpace),&AT.pWorkSize,sizeof(WORD *))
-#define WantAddLongs(x) while((AT.lWorkPointer+(x))>AT.lWorkSize)\
-	ExpandBuffer((void **)(&AT.lWorkSpace),&AT.lWorkSize,sizeof(LONG))
-#define WantAddPositions(x) while((AT.posWorkPointer+(x))>AT.posWorkSize)\
-	ExpandBuffer((void **)(&AT.posWorkSpace),&AT.posWorkSize,sizeof(POSITION))
+#define WantAddPointers(x) while((AT.pWorkPointer+(x))>AM.pWorkSize)\
+	ExpandBuffer((void **)(&AT.pWorkSpace),&AM.pWorkSize,sizeof(WORD *))
+#define WantAddLongs(x) while((AT.lWorkPointer+(x))>AM.lWorkSize)\
+	ExpandBuffer((void **)(&AT.lWorkSpace),&AM.lWorkSize,sizeof(LONG))
+#define WantAddPositions(x) while((AT.posWorkPointer+(x))>AM.posWorkSize)\
+	ExpandBuffer((void **)(&AT.posWorkSpace),&AM.posWorkSize,sizeof(POSITION))
 
 /*
   	#] Macro's :

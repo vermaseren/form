@@ -57,6 +57,7 @@ Normalize ARG1(WORD *,term)
 /*
   	#[ Declarations :
 */
+	GETIDENTITY;
 	WORD *t, *m, *r, i, j, k, l, nsym;
 	WORD shortnum, stype;
 	WORD *stop, *to = 0, *from = 0;
@@ -141,7 +142,7 @@ conscan:;
 						if ( NoScrat2 == 0 ) {
 							NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
 						}
-						if ( AR.cTerm ) m = AR.cTerm;
+						if ( AN.cTerm ) m = AN.cTerm;
 						else m = term;
 						m += *m;
 						ncoef = REDLENG(ncoef);
@@ -423,7 +424,7 @@ NextSymbol:;
 				}
 				else {
 					pnco[nnco++] = t;
-					AR.lhdollarflag = 1;
+					AC.lhdollarflag = 1;
 				}
 #ifdef WITHPTHREADS
 				if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
@@ -558,8 +559,8 @@ MulIn:
 				else pcom[ncom++] = t;
 				break;
 			case COUNTFUNCTION:
-				if ( AR.cTerm ) {
-					k = CountFun(AR.cTerm,t);
+				if ( AN.cTerm ) {
+					k = CountFun(AN.cTerm,t);
 					if ( k == 0 ) goto NormZero;
 					if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
 					else { *((UWORD *)lnum) = -k; nnum = -1; }
@@ -567,9 +568,9 @@ MulIn:
 				}
 				break;
 			case TERMFUNCTION:
-				if ( AR.cTerm ) {
-					st = t; sr = r; sm = m; sc = AR.cTerm;
-					AR.cTerm = 0;
+				if ( AN.cTerm ) {
+					st = t; sr = r; sm = m; sc = AN.cTerm;
+					AN.cTerm = 0;
 					t = sc + 1;
 					m = sc + *sc;
 					ncoef = REDLENG(ncoef);
@@ -1482,7 +1483,7 @@ NoRep:
 		t = r;
 	} while ( t < m );
 	if ( sc ) {
-		AR.cTerm = sc;
+		AN.cTerm = sc;
 		r = t = sr; m = sm;
 		sc = sm = st = sr = 0;
 		goto conscan;
@@ -2625,6 +2626,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 WORD
 DoTheta ARG1(WORD *,t)
 {
+	GETIDENTITY;
 	WORD k, *r1, *r2, *tstop, type;
 	WORD ia, *ta, *tb, *stopa, *stopb;
 	if ( AC.BracketNormalize ) return(-1);

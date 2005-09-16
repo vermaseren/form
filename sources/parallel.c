@@ -69,12 +69,13 @@ static LONG PF_statsinterval;/* timeinterval for printing statistics */
 int
 PF_Statistics ARG2(LONG**,stats,int,proc)
 {
-  SORTING *S = AR.SS;
+  GETIDENTITY;
+  SORTING *S = AT.SS;
   LONG real,cpu;
   WORD rpart,cpart;
   int i,j;
   
-  if ( AR.SS == AM.S0 && PF.me == 0 ) {
+  if ( AT.SS == AM.S0 && PF.me == 0 ) {
 	real = PF_RealTime(PF_TIME); rpart = (WORD)(real%100); real /= 100;
 
 	if( !PF_stats ){
@@ -251,6 +252,7 @@ PF_AllocBuf ARG3(int,nbufs,LONG,bsize,WORD,free)
 int
 PF_InitTree ARG0
 {
+  GETIDENTITY;
   PF_BUFFER **rbuf = PF.rbufs;
   UBYTE *p,*stop;
   int numrbufs,numtasks = PF.numtasks;
@@ -287,7 +289,7 @@ PF_InitTree ARG0
   */
   numrbufs = PF.numrbufs;
   /* this is the size we have in the combined sortbufs for one slave */
-  size = (AR.SS->sTop2 - AR.SS->lBuffer - 1)/(PF.numtasks - 1);
+  size = (AT.SS->sTop2 - AT.SS->lBuffer - 1)/(PF.numtasks - 1);
 
   if(!rbuf){
 	if(!(rbuf = (PF_BUFFER**)Malloc1(numtasks*sizeof(PF_BUFFER*),
@@ -297,7 +299,7 @@ PF_InitTree ARG0
 	  if(!(rbuf[i] = PF_AllocBuf(numrbufs,sizeof(WORD)*size,1))) return(-1);
 	}
   }
-  rbuf[0]->buff[0] = AR.SS->lBuffer;
+  rbuf[0]->buff[0] = AT.SS->lBuffer;
   rbuf[0]->full[0] = rbuf[0]->fill[0] = rbuf[0]->buff[0];
   rbuf[0]->stop[0] = rbuf[1]->buff[0] = rbuf[0]->buff[0] + 1;
   rbuf[1]->full[0] = rbuf[1]->fill[0] = rbuf[1]->buff[0];
@@ -489,6 +491,7 @@ newterms:
 int
 PF_GetLoser ARG1(NODE,*n)
 {
+  GETIDENTITY;
   WORD comp;
 
   if(!PF_loser){
@@ -533,7 +536,7 @@ newright:
 	  UWORD *newcpos;
 	  WORD lclen,rclen,newclen,newnlen;
 
-	  if ( AR.SS->PolyWise ) {
+	  if ( AT.SS->PolyWise ) {
 		/* 
 		   #[ Here we work with PolyFun 
 		*/
@@ -545,11 +548,11 @@ newright:
 		if ( ( r1 = (int)*PF_term[n->lloser] ) <= 0 ) r1 = 20;
 		if ( ( r2 = (int)*PF_term[n->rloser] ) <= 0 ) r2 = 20;
 		tt1 = ml;
-		ml += AR.SS->PolyWise;
-		mr += AR.SS->PolyWise;
+		ml += AT.SS->PolyWise;
+		mr += AT.SS->PolyWise;
 		w = AT.WorkPointer;
 		if ( w + ml[1] + mr[1] > AT.WorkTop ) {
-		  MesPrint("A WorkSpace of %10l is too small",AT.WorkSize);
+		  MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
 		  Terminate(-1);
 		}
 		AddArgs(ml,mr,w);
@@ -566,7 +569,7 @@ newright:
 		  ml += ml[1];
 		  while ( --r1 >= 0 ) *--ml = *--mr;
 		  mr = ml - r2;
-		  r1 = AR.SS->PolyWise;
+		  r1 = AT.SS->PolyWise;
 		  while ( --r1 >= 0 ) *--ml = *--mr;
 		  *ml -= r2;
 		  PF_term[n->lloser] = ml;
@@ -576,7 +579,7 @@ newright:
 		  if( r2 > 2*AM.MaxTal) 
 			MesPrint("warning: new term in polyfun is large");
 		  mr = tt1 - r2;
-		  r1 = AR.SS->PolyWise;
+		  r1 = AT.SS->PolyWise;
 		  ml = tt1;
 		  *ml += r2;
 		  PF_term[n->lloser] = mr;
@@ -665,9 +668,10 @@ cancelled:
 int 
 PF_EndSort ARG0
 {
+  GETIDENTITY;
   FILEHANDLE *fout = AR.outfile;
   PF_BUFFER *sbuf=PF.sbuf;
-  SORTING *S = AR.SS;
+  SORTING *S = AT.SS;
   WORD *workspace,*outterm,*pp;
   LONG size;
   POSITION position;
@@ -675,8 +679,8 @@ PF_EndSort ARG0
   WORD newcoeff;
   int tag;
 	/*[30jan2004 mt]:*/
-  /*if( AR.SS != AM.S0 || AC.mparallelflag == NOPARALLELFLAG) return(0);*/
-  if( AR.SS != AM.S0 || (AC.mparallelflag != PARALLELFLAG) ) return(0);
+  /*if( AT.SS != AM.S0 || AC.mparallelflag == NOPARALLELFLAG) return(0);*/
+  if( AT.SS != AM.S0 || (AC.mparallelflag != PARALLELFLAG) ) return(0);
 	/*:[30jan2004 mt]*/
 
   if( PF.me != MASTER){
@@ -688,7 +692,7 @@ PF_EndSort ARG0
 	   First save the original PObuffer and POstop of the outfile
 
 	*/
-	size = (AR.SS->sTop2 - AR.SS->lBuffer - 1)/(PF.numtasks - 1);
+	size = (AT.SS->sTop2 - AT.SS->lBuffer - 1)/(PF.numtasks - 1);
 	size -= (AM.MaxTer + 2); 
 	if(fout->POsize < size*sizeof(WORD)) size = fout->POsize/sizeof(WORD);
 	if(!sbuf){
@@ -806,6 +810,7 @@ static  WORD *PF_CurrentBracket;
 WORD
 PF_GetTerm ARG1(WORD *,term)
 {
+  GETIDENTITY;
   FILEHANDLE *fi = AR.infile;
   WORD i,j;
   WORD *next,*np,*last,*lp=0,*nextstop,*tp=term;
@@ -994,6 +999,7 @@ RegRet:
 WORD
 PF_Deferred ARG2(WORD *,term,WORD,level)
 {
+  GETIDENTITY;
   WORD *bra,*bp,*bstop;
   WORD *tstart,*tstop;
   WORD *next = AR.infile->POfill;
@@ -1063,7 +1069,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
  DefCall:
   MesCall("PF_Deferred");
   SETERROR(-1);
- }
+}
 
 /*
  	 #] Deferred : 
@@ -1338,7 +1344,8 @@ PF_WaitAllSlaves ARG0
 */
 int
 PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
-{			
+{
+  GETIDENTITY;
   WORD *term = AT.WorkPointer;
   LONG dd = 0,ll;
   PF_BUFFER *sb=PF.sbuf;
@@ -1393,19 +1400,19 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	     #[ initialize sendbuffer if necessary
 
 		 the size of the sendbufs is:
-		 MIN(1/PF.numtasks*(AR.SS->sBufsize+AR.SS->lBufsize),AR.infile->POsize)
+		 MIN(1/PF.numtasks*(AT.SS->sBufsize+AT.SS->lBufsize),AR.infile->POsize)
 		 No allocation for extra buffers necessary, just make sb->buf... point 
 		 to the right places in the sortbuffers.
 	*/
-	NewSort(); /* we need AR.SS to be set for this!!! */
-	if(!sb || sb->buff[0] != AR.SS->lBuffer){
-	  size = (LONG)((AR.SS->sTop2 - AR.SS->lBuffer)/(PF.numtasks));
+	NewSort(); /* we need AT.SS to be set for this!!! */
+	if(!sb || sb->buff[0] != AT.SS->lBuffer){
+	  size = (LONG)((AT.SS->sTop2 - AT.SS->lBuffer)/(PF.numtasks));
 	  if(size > (AR.infile->POsize/sizeof(WORD) - 1) )
 		size = AR.infile->POsize/sizeof(WORD) - 1;
 	  if(!sb) 
 		if(!(sb = PF_AllocBuf(PF.numtasks,size*sizeof(WORD),PF.numtasks))) 
 		          return(-1);
-	  sb->buff[0] = AR.SS->lBuffer;
+	  sb->buff[0] = AT.SS->lBuffer;
 	  sb->full[0] = sb->fill[0] = sb->buff[0];
 	  for(j=1;j<PF.numtasks;j++)
 		sb->stop[j-1] = sb->buff[j] = sb->buff[j-1] + size;
@@ -1476,7 +1483,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	  }
 	  else { /* not parallel */
 		AT.WorkPointer = term + *term;
-		AR.RepPoint = AT.RepCount + 1;
+		AN.RepPoint = AT.RepCount + 1;
 		AR.CurDum = ReNumber(term);
 		if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 		if ( Generator(term,0) ) {
@@ -1677,7 +1684,7 @@ in pre.c.*/
 	while ( PF_GetTerm(term) ) {
 	  PF_linterms++; dd = deferskipped;
 	  AT.WorkPointer = term + *term;
-	  AR.RepPoint = AT.RepCount + 1;
+	  AN.RepPoint = AT.RepCount + 1;
 	  	  AR.CurDum = ReNumber(term);
 	  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 	  if ( Generator(term,0) ) {

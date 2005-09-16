@@ -255,6 +255,9 @@ UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
 VOID
 ReserveTempFiles ARG0
 {
+#ifdef WITHPTHREADS
+	int identity = 0;
+#endif
 	SETUPPARAMETERS *sp;
 	UBYTE *s, *t, c;	
 	int i;
@@ -486,7 +489,9 @@ StartVariables ARG0
 */
 	inictable();
 	AM.rbufnum = inicbufs();		/* Regular compiler buffer */
+#ifndef WITHPTHREADS
 	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
+#endif
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
 /*
 	Enter the built in objects
@@ -521,15 +526,14 @@ StartVariables ARG0
 		Sets[ii].type = fixedsets[i].type;
 	}
 	AM.RepMax = MAXREPEAT;
-	AT.RepCount = (int *)Malloc1((LONG)((MAXREPEAT+3)*sizeof(int)),"repeat buffers");
-	AR.RepPoint = AT.RepCount;
-	AT.RepTop = AT.RepCount + MAXREPEAT;
-
+#ifndef WITHPTHREADS
+	AT.RepCount = (int *)Malloc1((LONG)((AM.RepMax+3)*sizeof(int)),"repeat buffers");
+	AN.RepPoint = AT.RepCount;
+	AT.RepTop = AT.RepCount + AM.RepMax;
+#endif
 	AC.NumWildcardNames = 0;
 	AC.WildcardBufferSize = 50;
 	AC.WildcardNames = (UBYTE *)Malloc1((LONG)AC.WildcardBufferSize,"argument list names");
-	AN.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
-				,"argument list names");
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)"1",0,0);
@@ -582,6 +586,9 @@ StartVariables ARG0
 WORD
 IniVars()
 {
+#ifdef WITHPTHREADS
+	int identity = 0;
+#endif
 	WORD *fi, i, one = 1, *t;
 	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s;
@@ -651,15 +658,17 @@ IniVars()
 	AC.lUniTrace[2] = 4;
 	AM.gUniTrace[3] = 
 	AC.lUniTrace[3] = 1;
-	AN.MinVecArg[0] = 7+ARGHEAD;
-	AN.MinVecArg[ARGHEAD] = 7;
-	AN.MinVecArg[1+ARGHEAD] = INDEX;
-	AN.MinVecArg[2+ARGHEAD] = 3;
-	AN.MinVecArg[3+ARGHEAD] = 0;
-	AN.MinVecArg[4+ARGHEAD] = 1;
-	AN.MinVecArg[5+ARGHEAD] = 1;
-	AN.MinVecArg[6+ARGHEAD] = -3;
-	t = AN.FunArg;
+#ifdef WITHPTHREADS
+#else
+	AT.MinVecArg[0] = 7+ARGHEAD;
+	AT.MinVecArg[ARGHEAD] = 7;
+	AT.MinVecArg[1+ARGHEAD] = INDEX;
+	AT.MinVecArg[2+ARGHEAD] = 3;
+	AT.MinVecArg[3+ARGHEAD] = 0;
+	AT.MinVecArg[4+ARGHEAD] = 1;
+	AT.MinVecArg[5+ARGHEAD] = 1;
+	AT.MinVecArg[6+ARGHEAD] = -3;
+	t = AT.FunArg;
 	*t++ = 4+ARGHEAD+FUNHEAD;
 	for ( i = 1; i < ARGHEAD; i++ ) *t++ = 0;
 	*t++ = 4+FUNHEAD;
@@ -668,6 +677,15 @@ IniVars()
 	for ( i = 2; i < FUNHEAD; i++ ) *t++ = 0;
 	*t++ = 1; *t++ = 1; *t++ = 3;
 
+	AT.zeropol[0] = 0;
+	AT.onepol[0] = 4;
+	AT.onepol[1] = 1;
+	AT.onepol[2] = 1;
+	AT.onepol[3] = 3;
+	AT.onepol[4] = 0;
+	AN.doingpoly = 0;
+	AN.polyblevel = 0;
+#endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	C->Pointer = C->Buffer;
 
@@ -864,6 +882,7 @@ main ARG2(int,argc,char **,argv)
 VOID
 CleanUp ARG1(WORD,par)
 {
+	GETIDENTITY;
 	int i;
 
 	if ( FG.fname ) {
@@ -913,7 +932,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -960,6 +979,6 @@ Terminate ARG1(int,errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] Terminate :
 */
 

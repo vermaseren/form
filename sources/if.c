@@ -497,11 +497,12 @@ SkipCond:
 WORD
 HowMany ARG2(WORD *,ifcode,WORD *,term)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, *w, power, RetVal, i, topje, *newterm;
 	WORD *OldWork, *ww, *mm;
 	int numdollars = 0;
 	m = ifcode + IDHEAD;
-	AR.FullProto = m;
+	AN.FullProto = m;
 	AN.WildValue = w = m + SUBEXPSIZE;
 	m += m[1];
 	AN.WildStop = m;
@@ -523,11 +524,11 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		AT.WorkPointer = ww;
 		if ( EndSort(ww,0) < 0 ) {}
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
-			if ( AR.lhdollarerror == 0 ) {
+			if ( AP.lhdollarerror == 0 ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("&LHS must be one term");
 				UNLOCK(ErrorMessageLock);
-				AR.lhdollarerror = 1;
+				AP.lhdollarerror = 1;
 			}
 			AT.WorkPointer = OldWork;
 			return(-1);

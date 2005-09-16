@@ -50,7 +50,7 @@ static KEYWORD writeoptions[] = {
 };
 
 static KEYWORD onoffoptions[] = {
-	 {"compress",       (TFUN)&(AR.NoCompress),  0,  1}
+	 {"compress",       (TFUN)&(AC.NoCompress),  0,  1}
 	,{"insidefirst",	(TFUN)&(AC.insidefirst), 1,  0}
 	,{"propercount",    (TFUN)&(AC.BottomLevel), 1,  0}
 	,{"stats",			(TFUN)&(AC.StatsFlag),	1,	0}
@@ -164,13 +164,14 @@ setonoff ARG4(UBYTE *,s,int *,flag,int,onvalue,int,offvalue)
 */
 
 int CoCompress ARG1(UBYTE *,s) {
+	GETIDENTITY;
 	UBYTE *t, c;
 	if ( StrICmp(s,(UBYTE *)"on") == 0 ) {
-		AR.NoCompress = 0;
+		AC.NoCompress = 0;
 		AR.gzipCompress = GZIPDEFAULT;
 	}
 	else if ( StrICmp(s,(UBYTE *)"off") == 0 ) {
-		AR.NoCompress = 1;
+		AC.NoCompress = 1;
 		AR.gzipCompress = 0;
 	}
 	else {
@@ -212,6 +213,7 @@ int CoCompress ARG1(UBYTE *,s) {
 
 int CoOff ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *t, c;
 	int i, num = sizeof(onoffoptions)/sizeof(KEYWORD);
 	for (;;) {
@@ -264,6 +266,7 @@ int CoOff ARG1(UBYTE *,s)
 
 int CoOn ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *t, c;
 	int i, num = sizeof(onoffoptions)/sizeof(KEYWORD);
 	for (;;) {
@@ -681,6 +684,7 @@ CoNPrint ARG1(UBYTE *,s) { return(DoPrint(s,PRINTOFF)); }
 int
 CoPushHide ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	int i;
 	if ( AR.Fscr[2].PObuffer == 0 ) {
 		AC.ScratchBuf[2] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"hidesize");
@@ -943,6 +947,7 @@ CoNoSkip ARG1(UBYTE *,s) { return(SetExpr(s,0,SKIP)); }
 */
 
 int CoHide ARG1(UBYTE *,inp) {
+	GETIDENTITY;
 	if ( AR.Fscr[2].PObuffer == 0 ) {
 		AC.ScratchBuf[2] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"hidesize");
 		AR.Fscr[2].POsize = AM.ScratSize * sizeof(WORD);
@@ -1152,10 +1157,11 @@ CoLabel ARG1(UBYTE *,inp)
 int
 DoArgument ARG2(UBYTE *,s,int,par)
 {
+	GETIDENTITY;
 	UBYTE *name, *t, *v, c;
 	WORD *oldworkpointer = AT.WorkPointer, *w, *ww, number, *scale;
 	int error = 0, zeroflag, type, x;
-	AR.lhdollarflag = 0;
+	AC.lhdollarflag = 0;
 	while ( *s == ',' ) s++;
 	w = AT.WorkPointer;
 	*w++ = par;
@@ -1245,7 +1251,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 			else {
 				prototype[2] = retcode;
 				ww = C->lhs[retcode];
-				AR.lhdollarflag = 0;
+				AC.lhdollarflag = 0;
 				if ( *ww == 0 ) {
 					*w++ = -2; *w++ = 0;
 				}
@@ -1259,7 +1265,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 					if ( !error ) error = 1;
 				}
 				else {
-					AR.RepPoint = AT.RepCount + 1;
+					AN.RepPoint = AT.RepCount + 1;
 			        m = AT.WorkPointer;
 					mm = ww; i = *mm;
 					while ( --i >= 0 ) *m++ = *mm++;
@@ -1304,7 +1310,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 					}
 					LowerSortLevel();
 				}
-				oldworkpointer[5] = AR.lhdollarflag;
+				oldworkpointer[5] = AC.lhdollarflag;
 			}
 			*v = ')';
 			C->numrhs = oldnumrhs;
@@ -1515,6 +1521,7 @@ CoFactArg ARG1(UBYTE *,s) { return(DoArgument(s,TYPEFACTARG)); }
 int
 DoSymmetrize ARG2(UBYTE *,s,int,par)
 {
+	GETIDENTITY;
 	int extra = 0, error = 0, err, fix, x, groupsize, num, i;
 	UBYTE *name, c;
 	WORD funnum, *w, *ww, type;
@@ -2478,6 +2485,7 @@ CoExit ARG1(UBYTE *,s)
 int
 CoInExpression ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *t, c;
 	WORD *w, number;
 	int error = 0;
@@ -2575,6 +2583,7 @@ CoSetExitFlag ARG1(UBYTE *,s)
 
 int CoTryReplace ARG1(UBYTE *,p)
 {
+	GETIDENTITY;
 	UBYTE *name, c;
 	WORD *w, error = 0, i, which = -1, c1, minvec = 0;
 	w = AT.WorkPointer;
@@ -2781,6 +2790,7 @@ int CoEndRepeat ARG1(UBYTE *,inp)
 
 int DoBrackets ARG2(UBYTE *,inp,int, par)
 {
+	GETIDENTITY;
 	UBYTE *p, *pp, c;
 	WORD *to, i, type, *w, error = 0;
 	WORD c1,c2, *WorkSave;
@@ -2788,11 +2798,11 @@ int DoBrackets ARG2(UBYTE *,inp,int, par)
 	p = inp;
 	WorkSave = to = AT.WorkPointer;
 	to++;
-	if ( AR.BrackBuf == 0 ) {
+	if ( AT.BrackBuf == 0 ) {
 		AR.MaxBracket = 100;
-		AR.BrackBuf = (WORD *)Malloc1(sizeof(WORD)*(AR.MaxBracket+1),"bracket buffer");
+		AT.BrackBuf = (WORD *)Malloc1(sizeof(WORD)*(AR.MaxBracket+1),"bracket buffer");
 	}
-	*AR.BrackBuf = 0;
+	*AT.BrackBuf = 0;
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
 	if ( p[-1] == ',' && *p ) p--;
@@ -2869,10 +2879,10 @@ redo:	AR.BracketOn++;
 				WORD *newbuf;
 				newbuf = (WORD *)Malloc1(sizeof(WORD)*(i+1),"bracket buffer");
 				AR.MaxBracket = i;
-				if ( AR.BrackBuf != 0 ) M_free(AR.BrackBuf,"bracket buffer");
-				AR.BrackBuf = newbuf;
+				if ( AT.BrackBuf != 0 ) M_free(AT.BrackBuf,"bracket buffer");
+				AT.BrackBuf = newbuf;
 			}
-			to = AR.BrackBuf;
+			to = AT.BrackBuf;
 			NCOPY(to,w,i);
 		}
 	}
@@ -3115,6 +3125,7 @@ static UWORD *CIscratC = 0;
 
 int CoIf ARG1(UBYTE *,inp)
 {
+	GETIDENTITY;
 	int error = 0, level;
 	WORD *w, *ww, *u, *s, *OldWork, *OldSpace = AT.WorkSpace;
 	WORD gotexp = 0;		/* Indicates whether there can be a condition */
@@ -3829,6 +3840,7 @@ nogood:		MesPrint("&Value of UnitTrace should be a (positive) number or a symbol
 
 int
 CoTerm ARG1(UBYTE *,s) {
+	GETIDENTITY;
 	WORD *w = AT.WorkPointer;
 	int error = 0;
 	while ( *s == ',' ) s++;
@@ -3906,6 +3918,7 @@ CoEndTerm ARG1(UBYTE *,s)
 
 int
 CoSort ARG1(UBYTE *,s) {
+	GETIDENTITY;
 	WORD *w = AT.WorkPointer;
 	int error = 0;
 	while ( *s == ',' ) s++;
@@ -3946,6 +3959,7 @@ CoSort ARG1(UBYTE *,s) {
 int
 CoPolyFun ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	WORD numfun;
 	int type;
 	UBYTE *t;

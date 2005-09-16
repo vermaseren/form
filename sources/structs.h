@@ -102,7 +102,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -366,7 +366,7 @@ typedef struct TaBlEbAsE {
 } TABLEBASE;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
  
@@ -383,7 +383,6 @@ typedef struct FiLe {
 	POSITION *blockpos;			/* Positions of blocks in the file */
 	POSITION *fPatches;			/* Positions of patches if sort file */
 	POSITION POposition;    	/* File position */
-    POSITION OldPosOut;         /* Temporary for stage4 */
     POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
 	ULONG numblocks;			/* Number of blocks in file */
 	ULONG inbuffer;				/* Block in the buffer */
@@ -430,7 +429,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -472,7 +471,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
  
@@ -530,7 +529,7 @@ typedef struct bit_field set_of_char[32];
 typedef struct bit_field *one_byte;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -684,7 +683,7 @@ typedef struct DeBuGgInG {
 #endif
  
 /*
-  	#] Varia : 
+  	#] Varia :
   	#[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -721,6 +720,10 @@ struct M_const {
     LONG    gSlavePatchSize;       /* (M) */
     LONG    shmWinSize;            /* (M) size for shared memory window used in communications */
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
+    LONG    WorkSize;              /* (M) Size of WorkSpace */
+    LONG    pWorkSize;             /* (R) Size of pWorkSpace */
+    LONG    lWorkSize;             /* (R) Size of lWorkSpace */
+    LONG    posWorkSize;           /* (R) Size of posWorkSpace */
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
     int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
@@ -745,6 +748,7 @@ struct M_const {
     int     hparallelflag;         /* (M) */
     int     gparallelflag;         /* (M) */
     int     totalnumberofthreads;  /* (M) */
+	int		maxFlevels;            /* () maximum function levels */
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -790,7 +794,7 @@ struct M_const {
     UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 struct P_const {
@@ -822,6 +826,7 @@ struct P_const {
     int     NumPreTypes;           /* (P) Number of nesting objects in PreTypes */
     int     DelayPrevar;           /* (P) Delaying prevar substitution */
     int     AllowDelay;            /* (P) Allow delayed prevar substitution */
+    int     lhdollarerror;         /* (R) */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (?) used but not defined */
     UBYTE   ComChar;               /* (P) Commentary character */
@@ -829,7 +834,7 @@ struct P_const {
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 struct C_const {
@@ -956,6 +961,8 @@ struct C_const {
     int     vetotablebasefill;     /* (C) For the load in tablebase */
     int     exprfillwarning;       /* (C) Warning has been printed for expressions in fill statements */
     int     cbufnum;               /* (R) current compiler buffer */
+    int     lhdollarflag;          /* (R) left hand dollar present */
+    int     NoCompress;            /* (R) Controls native compression */
     WORD    RepLevel;              /* (C) Tracks nesting of repeat. */
     WORD    arglevel;              /* (C) level of nested argument statements */
     WORD    insidelevel;           /* (C) level of nested inside statements */
@@ -999,13 +1006,14 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
 struct S_const {
     FILEHANDLE *hidefile;          /* (S) Points to Fscr[2] */
     POSITION *OldOnFile;           /* (S) File positions of expressions */
+    LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
     int     NumOldOnFile;          /* (S) Number of expressions in OldOnFile */
     int     MultiThreaded;         /* (S) Are we running multi-threaded? */
     WORD    CurExpr;               /* (S) Number of current expression */
@@ -1018,46 +1026,27 @@ struct S_const {
     WORD    CollectOverFlag;       /* (R) Indicates overflow at Collect */
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
-		       They determine the environment that has to be transfered
-		       together with a term during multithreaded execution.
+               They determine the environment that has to be transfered
+               together with a term during multithreaded execution.
 */
 struct R_const {
     FILEHANDLE *infile;            /* (R) Points alternatingly to Fscr[0] or Fscr[1] */
     FILEHANDLE *outfile;           /* (R) Points alternatingly to Fscr[1] or Fscr[0] */
-    SORTING *SS;                   /* (R) Current sort buffer */
-    NESTING     Nest;              /* (R) Nesting of function levels etc. */
-    NESTING     NestStop;          /* (R) */
-    NESTING     NestPoin;          /* (R) */
-    WORD    *EndNest;              /* (R) Nesting of function levels etc. */
-    WORD    *Frozen;               /* (R) Bracket info */
-    WORD    *FullProto;            /* (R) Prototype of a subexpression or table */
-    WORD    *BrackBuf;             /* (R) Bracket buffer. Used by poly_ at runtime. */
+
     WORD    *CompressPointer;      /* (R) */
-    WORD    *cTerm;                /* (R) Current term for coef_ and term_ */
-    int     *RepPoint;             /* (R) Pointer in RepCount buffer. Tracks repeat */
-    STORECACHE  StoreCache;        /* (R) Cache for picking up stored expr. */
     FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
+
     POSITION DefPosition;          /* (R) Deferred position of keep brackets. */
-    POSITION OldPosIn;             /* (R) Used in sort. */
-    POSITION OldPosOut;            /* (R) Used in sort */
-    LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
     int     NoCompress;            /* (R) Controls native compression */
     int     gzipCompress;          /* (R) Controls gzip compression */
-    int     ErrorInDollar;         /* (R) */
-    int     lhdollarflag;          /* (R) left hand dollar present */
-    int     lhdollarerror;         /* (R) */
-    WORD    CurDum;                /* (R) Current maximum dummy number */
-    WORD    TeInFun;               /* (R) Passing type of action */
-    WORD    TeSuOut;               /* (R) Passing info. Local? */
-    WORD    DeferFlag;             /* (R) For defered brackets */
-    WORD    TePos;                 /* (R) */
-    WORD    RecFlag;               /* (R) */
     WORD    BracketOn;             /* (R) Intensly used in poly_ */
     WORD    MaxBracket;            /* (R) Size of BrackBuf. Changed by poly_ */
-
+    WORD    CurDum;                /* (R) Current maximum dummy number */
+    WORD    DeferFlag;             /* (R) For defered brackets */
+    WORD    TePos;                 /* (R) */
     WORD    sLevel;                /* (R) Sorting level */
     WORD    Stage4Name;            /* (R) Sorting only */
     WORD    GetOneFile;            /* (R) Getting from hide or regular */
@@ -1067,9 +1056,16 @@ struct R_const {
 /*
  		#] R :
  		#[ T : These are variables that stay in each thread during multi
-		       threaded execution.
+               threaded execution.
 */
 struct T_const {
+    SORTING *SS;                   /* (R) Current sort buffer */
+    NESTING     Nest;              /* (R) Nesting of function levels etc. */
+    NESTING     NestStop;          /* (R) */
+    NESTING     NestPoin;          /* (R) */
+    WORD    *BrackBuf;             /* (R) Bracket buffer. Used by poly_ at runtime. */
+    STORECACHE  StoreCache;        /* (R) Cache for picking up stored expr. */
+                                   /*     Seems not to be active */
     WORD    **pWorkSpace;          /* (R) Workspace for pointers. Dynamic. */
     LONG    *lWorkSpace;           /* (R) WorkSpace for LONG. Dynamic. */
     POSITION *posWorkSpace;        /* (R) WorkSpace for file positions */
@@ -1078,48 +1074,57 @@ struct T_const {
     WORD    *WorkPointer;          /* (R) Pointer in the WorkSpace heap. */
     int     *RepCount;             /* (M) Buffer for repeat nesting */
     int     *RepTop;               /* (M) Top of RepCount buffer */
+    WORD    *WildArgTaken;         /* (N) Stack for wildcard pattern matching */
     WORD    *n_coef;               /* (M) Used by normal. local. */
     WORD    *n_llnum;              /* (M) Used by normal. local. */
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
-	UWORD   *TMscrat1;             /* () Scratch for TakeModulus */
-	UWORD   *TMscrat2;             /* () Scratch for TakeModulus */
-	UWORD   *TMscrat3;             /* () Scratch for TakeModulus */
-	UWORD   *TMscrat4;             /* () Scratch for TakeModulus */
-	UWORD   *TMscrat5;             /* () Scratch for TakeModulus */
-	UWORD   *TMscrat6;             /* () Scratch for TakeModulus */
+    UWORD   *TMscrat1;             /* () Scratch for TakeModulus */
+    UWORD   *TMscrat2;             /* () Scratch for TakeModulus */
+    UWORD   *TMscrat3;             /* () Scratch for TakeModulus */
+    UWORD   *TMscrat4;             /* () Scratch for TakeModulus */
+    UWORD   *TMscrat5;             /* () Scratch for TakeModulus */
+    UWORD   *TMscrat6;             /* () Scratch for TakeModulus */
     long    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     long    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
     WORD    *TMaddr;               /* (R) buffer for TestSub */
+    WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
-    LONG    WorkSize;              /* (M) Size of WorkSpace */
-    LONG    pWorkSize;             /* (R) Size of pWorkSpace */
-    LONG    lWorkSize;             /* (R) Size of lWorkSpace */
-    LONG    posWorkSize;           /* (R) Size of posWorkSpace */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
     LONG    posWorkPointer;        /* (R) Offset-pointer in posWorkSpace */
     int     sfact;                 /* (T) size of the factorials buffer */
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
+	int		WildcardBufferSize;    /* () local copy for updates */
+    WORD    MinVecArg[7+ARGHEAD];  /* (N) but should be more local */
+    WORD    FunArg[4+ARGHEAD+FUNHEAD]; /* (N) but can be more local */
+    WORD    zeropol[1];            /* () Polynomial with value zero */
+    WORD    onepol[5];             /* () Polynomial with value one */
     WORD    TMout[40];             /* (R) Passing info */
     WORD    TMbuff;                /* (R) Communication between TestSub and Genera */
     WORD    nfac;                  /* (T) Number of highest stored factorial */
     WORD    nBer;                  /* (T) Number of highest bernoulli number. */
     WORD    mBer;                  /* (T) Size of buffer pBer. */
     WORD    PolyAct;               /* (R) Used for putting the PolyFun at end. ini at 0 */
+    WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
-		       that is inside blocks that should not be split, like pattern
-		       matching, traces etc. They are local for each thread.
-		       They don't need initializations.
+               that is inside blocks that should not be split, like pattern
+               matching, traces etc. They are local for each thread.
+               They don't need initializations.
 */
 struct N_const {
+    LONG    *polybpstack;          /* () Used in poly */
+    WORD    *EndNest;              /* (R) Nesting of function levels etc. */
+    WORD    *Frozen;               /* (R) Bracket info */
+    WORD    *FullProto;            /* (R) Prototype of a subexpression or table */
+    WORD    *cTerm;                /* (R) Current term for coef_ and term_ */
+    int     *RepPoint;             /* (R) Pointer in RepCount buffer. Tracks repeat */
     WORD    *WildValue;            /* (N) Wildcard info during pattern matching */
     WORD    *WildStop;             /* (N) Wildcard info during pattern matching */
-    WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     WORD    *argaddress;           /* (N) Used in pattern matching of arguments */
     WORD    *RepFunList;           /* (N) For pattern matching */
     WORD    *patstop;              /* (N) Used in pattern matching */
@@ -1133,31 +1138,42 @@ struct N_const {
     WORD    *UsedIndex;            /* (N) When storing terms of a global expr. */
     WORD    *UsedFunction;         /* (N) When storing terms of a global expr. */
     WORD    *MaskPointer;          /* (N) For wildcard pattern matching */
-    WORD    *WildArgTaken;         /* (N) Stack for wildcard pattern matching */
     WORD    *ForFindOnly;          /* (N) For wildcard pattern matching */
     WORD    *findTerm;             /* (N) For wildcard pattern matching */
     WORD    *findPattern;          /* (N) For wildcard pattern matching */
+    WORD    *brackbuf;             /* () Used in poly */
+    WORD    *polybrackets;         /* () Used in poly */
+    POSITION OldPosIn;             /* (R) Used in sort. */
+    POSITION OldPosOut;            /* (R) Used in sort */
+    LONG    polybpointer;          /* () Used in poly */
+    LONG    polybsize;             /* () Used in poly */
+    LONG    polybpsize;            /* () Used in poly */
     int     NumTotWildArgs;        /* (N) Used in pattern matching */
     int     UseFindOnly;           /* (N) Controls pattern routines */
     int     UsedOtherFind;         /* (N) Controls pattern routines */
+    int     doingpoly;             /* () Used in poly */
+    int     sorttype;              /* () Used in poly */
+    int     ErrorInDollar;         /* (R) */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */
     WORD    NumWild;               /* (N) Used in Wildcard */
-    WORD    MinVecArg[7+ARGHEAD];  /* (N) but should be more local */
-    WORD    FunArg[4+ARGHEAD+FUNHEAD]; /* (N) but can be more local */
     WORD    RepFunNum;             /* (N) Used in pattern matching */
     WORD    DisOrderFlag;          /* (N) Disorder option? Used in pattern matching */
     WORD    WildDirt;              /* (N) dirty in wldcard substitution. */
     WORD    NumFound;              /* (N) in reshuf only. Local? */
     WORD    WildReserve;           /* (N) Used in the wildcards */
-
+    WORD    TeInFun;               /* (R) Passing type of action */
+    WORD    TeSuOut;               /* (R) Passing info. Local? */
     WORD    WildArgs;              /* (R) */
     WORD    WildEat;               /* (R) */
     WORD    PolyNorm;              /* (R) For polynomial arithmetic */
+    WORD    bracketon;             /* () Used in poly */
+    WORD    maxbracket;            /* () Used in poly */
+    WORD    polyblevel;            /* () Used in poly */
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 struct O_const {
@@ -1196,7 +1212,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ Definitions :
 */
 
@@ -1232,7 +1248,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
   	#] A :
   	#[ FG :
 */
@@ -1250,7 +1266,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

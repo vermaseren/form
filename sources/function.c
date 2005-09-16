@@ -126,6 +126,7 @@ WORD
 Symmetrize ARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
 		WORD,type)
 {
+	GETIDENTITY;
 	WORD **args,**arg,nargs;
 	WORD *to, *r, *fstop;
 	WORD i, j, k, ff, exch, nexch, neq;
@@ -270,7 +271,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize :
+ 		#] Symmetrize : 
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -374,6 +375,7 @@ CompGroup ARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 
 int FullSymmetrize ARG2(WORD *,fun,int,type)
 {
+	GETIDENTITY;
 	WORD *Lijst, count = 0;
 	WORD *t, *funstop, i;
 	int retval;
@@ -403,7 +405,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 }
 
 /*
- 		#] FullSymmetrize :
+ 		#] FullSymmetrize : 
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -419,6 +421,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 WORD
 SymGen ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
+	GETIDENTITY;
 	WORD *t, *r, *m;
 	WORD i, j, k, c1, c2, ngroup;
 	WORD *rstop, Nlist, *inLijst, *Lijst, sign = 1, sumch = 0, count;
@@ -509,7 +512,7 @@ NextFun:
 			return(-1);
 		}
 		if ( !*term ) return(0);
-		*AR.RepPoint = 1;
+		*AN.RepPoint = 1;
 		AS.expchanged = 1;
 		if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) ReNumber(term);
 	}
@@ -517,7 +520,7 @@ NextFun:
 }
 
 /*
- 		#] SymGen :
+ 		#] SymGen : 
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -533,6 +536,7 @@ NextFun:
 WORD
 SymFind ARG2(WORD *,term,WORD *,params)
 {
+	GETIDENTITY;
 	WORD *t, *r, *m;
 	WORD j, c1, c2, count;
 	WORD *rstop;
@@ -580,7 +584,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind :
+ 		#] SymFind : 
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -590,10 +594,11 @@ NextFun:
 
 int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 {
+	GETIDENTITY;
 	WORD *t, *tend, *m, *tt, *ts;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(-funnum);
-		if ( AR.ErrorInDollar || funnum <= 0 ) {
+		if ( AN.ErrorInDollar || funnum <= 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("Dollar variable does not evaluate to function in ChainIn statement");
 			UNLOCK(ErrorMessageLock);
@@ -624,7 +629,7 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainIn :
+ 		#] ChainIn : 
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
@@ -632,11 +637,12 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 
 int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 {
+	GETIDENTITY;
 	WORD *t, *tend, *tt, *ts, *OldWork = AT.WorkPointer, *w, *ws;
 	int flag = 0, i;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(-funnum);
-		if ( AR.ErrorInDollar || funnum <= 0 ) {
+		if ( AN.ErrorInDollar || funnum <= 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("Dollar variable does not evaluate to function in ChainIn statement");
 			UNLOCK(ErrorMessageLock);
@@ -682,7 +688,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainOut :
+ 		#] ChainOut : 
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -712,6 +718,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 WORD
 MatchFunction ARG3(WORD *,pattern,WORD *,interm,WORD *,wilds)
 {
+	GETIDENTITY;
 	WORD *m, *t, *r, i;
 	WORD *mstop = 0, *tstop = 0;
 	WORD *argmstop, *argtstop;
@@ -762,7 +769,7 @@ MatchFunction ARG3(WORD *,pattern,WORD *,interm,WORD *,wilds)
 	m = AN.WildValue;
 	nwstore = i = (m[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 	if ( i > 0 ) {
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -873,7 +880,7 @@ FullOK:				AN.RepFunList[AN.RepFunNum+1] = WORDDIF(oldt,argtstop);
 NoGamma:
 				if ( j ) {		/* Undo wildcards */
 					m = AN.WildValue;
-					t = OldWork + AN.NumTotWildArgs; r = AN.WildMask; j = nwstore;
+					t = OldWork + AN.NumTotWildArgs; r = AT.WildMask; j = nwstore;
 					if ( j > 0 ) {
 						do {
 							*m++ = *t++; *m++ = *t++;
@@ -915,8 +922,8 @@ NoGamma:
 				return(0);	/* Cannot match */
 			}
 		}
-		AN.WildArgTaken[0] = AN.WildEat = tobeeaten;
-		for ( i = 1; i < AN.WildArgs; i++ ) AN.WildArgTaken[i] = 0;
+		AT.WildArgTaken[0] = AN.WildEat = tobeeaten;
+		for ( i = 1; i < AN.WildArgs; i++ ) AT.WildArgTaken[i] = 0;
 toploop:
 		numofwildarg = 0;
 
@@ -939,7 +946,7 @@ toploop:
 */
 			AN.argaddress = t;
 			if ( *m == FUNNYWILD ) {
-				tobeeaten = AN.WildArgTaken[numofwildarg++];
+				tobeeaten = AT.WildArgTaken[numofwildarg++];
 				i = tobeeaten | EATTENSOR;
 				if ( CheckWild(m[1],ARGTOARG,i,t) ) goto endloop;
 				AddWild(m[1],ARGTOARG,i);
@@ -986,7 +993,7 @@ endloop:;
 		i = nwstore;
 		if ( i > 0 ) {
 			m = AN.WildValue;
-			t = OldWork + ntwa; r = AN.WildMask;
+			t = OldWork + ntwa; r = AT.WildMask;
 			do {
 				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 			} while ( --i > 0 );
@@ -1000,7 +1007,7 @@ enloop:;
 			return(0);
 		}
 		while ( --i >= 0 ) {
-			if ( AN.WildArgTaken[i] == 0 ) {
+			if ( AT.WildArgTaken[i] == 0 ) {
 				if ( i == 0 ) {
 					AT.WorkPointer = OldWork;
 					*wilds = 0;
@@ -1008,13 +1015,13 @@ enloop:;
 				}
 			}
 			else {
-				(AN.WildArgTaken[i])--;
+				(AT.WildArgTaken[i])--;
 				numofwildarg = 0;
 				for ( j = 0; j <= i; j++ ) {
-					numofwildarg += AN.WildArgTaken[j];
+					numofwildarg += AT.WildArgTaken[j];
 				}
-				AN.WildArgTaken[j] = AN.WildEat-numofwildarg;
-				for ( j++; j < AN.WildArgs; j++ ) AN.WildArgTaken[j] = 0;
+				AT.WildArgTaken[j] = AN.WildEat-numofwildarg;
+				for ( j++; j < AN.WildArgs; j++ ) AT.WildArgTaken[j] = 0;
 				break;
 			}
 		}
@@ -1045,11 +1052,11 @@ enloop:;
 		}
 	}
 /*
-	Set up the array AN.WildArgTaken for the number of arguments that each
+	Set up the array AT.WildArgTaken for the number of arguments that each
 	wildarg eats.
 */
-	AN.WildArgTaken[0] = AN.WildEat = tobeeaten;
-	for ( i = 1; i < AN.WildArgs; i++ ) AN.WildArgTaken[i] = 0;
+	AT.WildArgTaken[0] = AN.WildEat = tobeeaten;
+	for ( i = 1; i < AN.WildArgs; i++ ) AT.WildArgTaken[i] = 0;
 topofloop:
 	numofwildarg = 0;
 /*
@@ -1086,13 +1093,13 @@ topofloop:
 				}
 				else if ( *m == -SYMBOL && m[1] >= 2*MAXPOWER ) {
 					i = m[1] - 2*MAXPOWER;
-					AN.argaddress = AN.FunArg;
-					AN.FunArg[ARGHEAD+1] = -*t;
+					AN.argaddress = AT.FunArg;
+					AT.FunArg[ARGHEAD+1] = -*t;
 					if ( CheckWild(i,SYMTOSUB,1,AN.argaddress) ) goto endofloop;
 					AddWild(i,SYMTOSUB,0);
 				}
 				else if ( *m == -ARGWILD ) {
-ArgAll:				i = AN.WildArgTaken[numofwildarg++];
+ArgAll:				i = AT.WildArgTaken[numofwildarg++];
 					AN.argaddress = t;
 					if ( CheckWild(m[1],ARGTOARG,i,t) ) goto endofloop;
 					AddWild(m[1],ARGTOARG,i);
@@ -1133,8 +1140,8 @@ IndAll:				i = m[1] - WILDOFFSET;
 				if ( *t == -VECTOR || *t == -SNUMBER ) goto IndAll;
 				if ( *t == -MINVECTOR ) {
 					i = m[1] - WILDOFFSET;
-					AN.argaddress = AN.MinVecArg;
-					AN.MinVecArg[ARGHEAD+3] = t[1];
+					AN.argaddress = AT.MinVecArg;
+					AT.MinVecArg[ARGHEAD+3] = t[1];
 					if ( CheckWild(i,INDTOSUB,1,AN.argaddress) ) goto endofloop;
 					AddWild(i,INDTOSUB,(WORD)0);
 				}
@@ -1146,8 +1153,8 @@ IndAll:				i = m[1] - WILDOFFSET;
 			}
 			else if ( *m == -VECTOR && *t == -MINVECTOR &&
 			( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
-				AN.argaddress = AN.MinVecArg;
-				AN.MinVecArg[ARGHEAD+3] = t[1];
+				AN.argaddress = AT.MinVecArg;
+				AT.MinVecArg[ARGHEAD+3] = t[1];
 				if ( CheckWild(i,VECTOSUB,1,AN.argaddress) ) goto endofloop;
 				AddWild(i,VECTOSUB,(WORD)0);
 			}
@@ -1273,7 +1280,7 @@ IndAll:				i = m[1] - WILDOFFSET;
 				*m -= msizcoef;
 				wildargs = AN.WildArgs;
 				wildeat = AN.WildEat;
-				for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AN.WildArgTaken[i];
+				for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AT.WildArgTaken[i];
 				AN.ForFindOnly = 0; AN.UseFindOnly = 1;
 				if ( FindRest(csav,m) && ( AN.UsedOtherFind || FindOnly(csav,m) ) ) {}
 				else {
@@ -1286,12 +1293,12 @@ IndAll:				i = m[1] - WILDOFFSET;
 					AN.patstop = opatstop;
 					AN.WildArgs = wildargs;
 					AN.WildEat = wildeat;
-					for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
+					for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 					goto endofloop;
 				}
 				AN.WildArgs = wildargs;
 				AN.WildEat = wildeat;
-				for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
+				for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 				Substitute(csav,m,1);
 				cto = csav;
 				cfrom = cto + *cto - msizcoef;
@@ -1324,7 +1331,7 @@ endofloop:;
 	i = nwstore;
 	if ( i > 0 ) {
 		m = AN.WildValue;
-		t = OldWork + ntwa; r = AN.WildMask;
+		t = OldWork + ntwa; r = AT.WildMask;
 		do {
 			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 		} while ( --i > 0 );
@@ -1339,21 +1346,21 @@ endoloop:;
 		return(0);
 	}
 	while ( --i >= 0 ) {
-		if ( AN.WildArgTaken[i] == 0 ) {
+		if ( AT.WildArgTaken[i] == 0 ) {
 			if ( i == 0 ) {
 				AT.WorkPointer = OldWork;
 				return(0);
 			}
 		}
 		else {
-			(AN.WildArgTaken[i])--;
+			(AT.WildArgTaken[i])--;
 			numofwildarg = 0;
 			for ( j = 0; j <= i; j++ ) {
-				numofwildarg += AN.WildArgTaken[j];
+				numofwildarg += AT.WildArgTaken[j];
 			}
-			AN.WildArgTaken[j] = AN.WildEat-numofwildarg;
+			AT.WildArgTaken[j] = AN.WildEat-numofwildarg;
 /* ----> bug to be replaced in other source code */
-			for ( j++; j < AN.WildArgs; j++ ) AN.WildArgTaken[j] = 0;
+			for ( j++; j < AN.WildArgs; j++ ) AT.WildArgTaken[j] = 0;
 			break;
 		}
 	}
@@ -1365,7 +1372,7 @@ NoCaseB:
 	i = nwstore;
 	if ( i > 0 ) {
 		m = AN.WildValue;
-		t = OldWork + ntwa; r = AN.WildMask;
+		t = OldWork + ntwa; r = AT.WildMask;
 		do {
 			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 		} while ( --i > 0 );
@@ -1377,7 +1384,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction :
+ 		#] MatchFunction : 
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		AN.patstop: end of the functions field in the search pattern
@@ -1388,6 +1395,7 @@ NoCaseB:
 WORD
 ScanFunctions ARG3(WORD *,inpat,WORD *,inter,WORD,par)
 {
+	GETIDENTITY;
 	WORD i, *m, *t, *r, sym, psym;
 	WORD *newpat, *newter, *instart, *oinpat = 0, *ointer = 0;
 	WORD nwstore, offset, *OldWork, SetStop = 0, oRepFunNum = AN.RepFunNum;
@@ -1404,7 +1412,7 @@ ScanFunctions ARG3(WORD *,inpat,WORD *,inter,WORD,par)
 	m = AN.WildValue;
 	nwstore = i = (m[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 	if ( i > 0 ) {
-		r = AN.WildMask;
+		r = AT.WildMask;
 		do {
 			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
 		} while ( --i > 0 );
@@ -1516,7 +1524,7 @@ rewild:
 			if ( wilds ) {
 				wildargs = AN.WildArgs;
 				wildeat = AN.WildEat;
-				for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AN.WildArgTaken[i];
+				for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AT.WildArgTaken[i];
 				oinpat = inpat; ointer = inter;
 			}
 			if ( par && *inter == GAMMA && AN.RepFunList[AN.RepFunNum+1] ) {
@@ -1574,7 +1582,7 @@ NoMat:
 			i = nwstore;
 			if ( i > 0 ) {
 				m = AN.WildValue;
-				t = OldWork + ntwa; r = AN.WildMask;
+				t = OldWork + ntwa; r = AT.WildMask;
 				do {
 					*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
 				} while ( --i > 0 );
@@ -1587,7 +1595,7 @@ NoMat:
 				inter = ointer; inpat = oinpat;
 				AN.WildArgs = wildargs;
 				AN.WildEat = wildeat;
-				for ( i = 0; i < wildargs; i++ ) AN.WildArgTaken[i] = wildargtaken[i];
+				for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 				goto rewild;
 			}
 			if ( SetStop ) break;
@@ -1652,7 +1660,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions :
+ 		#] ScanFunctions : 
 	#] Patterns :
 */
 

@@ -50,7 +50,7 @@ Error2 ARG3(char *,s1,char *,s2,UBYTE *,t)
 int
 MesWork ARG0
 {
-	MesPrint("=== Workspace overflow. %l bytes is not enough.",AT.WorkSize);
+	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
 	Terminate(-1);
 	return(-1);

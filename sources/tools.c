@@ -547,6 +547,9 @@ PositionStream ARG2(STREAM *,stream,LONG,position)
 VOID
 StartFiles ARG0
 {
+#ifdef WITHPTHREADS
+	int identity = 0;
+#endif
 	int i = CreateHandle();
 	filelist[i] = Ustdout;
 	AM.StdOut = i;

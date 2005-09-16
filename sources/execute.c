@@ -11,7 +11,7 @@ PFDOLLARS *PFDollars;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -22,6 +22,7 @@ PFDOLLARS *PFDollars;
 WORD
 CleanExpr ARG1(WORD,par)
 {
+	GETIDENTITY;
 	WORD j, n, i;
 	POSITION length;
 	EXPRESSIONS e_in, e_out, e;
@@ -136,7 +137,7 @@ CleanExpr ARG1(WORD,par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -196,7 +197,7 @@ PopVariables()
 }
 
 /*
- 		#] PopVariables :
+ 		#] PopVariables : 
  		#[ MakeGlobal :
 */
 
@@ -238,7 +239,7 @@ MakeGlobal ARG0
 }
 
 /*
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ TestDrop :
 */
 
@@ -304,13 +305,14 @@ TestDrop()
 }
 
 /*
- 		#] TestDrop :
+ 		#] TestDrop : 
  		#[ DoExecute :
 */
 
 WORD
 DoExecute ARG2(WORD,par,WORD,skip)
 {
+	GETIDENTITY;
 	WORD RetCode = 0;
 	int i, j;
 /*
@@ -767,7 +769,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute :
+ 		#] DoExecute : 
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -778,7 +780,7 @@ skipexec:
 	The level is used for nestings of brackets. The print routines
 	cannot handle this yet (31-Mar-1988).
 
-	The Bracket selector is in AR.BrackBuf in the form of a regular term,
+	The Bracket selector is in AT.BrackBuf in the form of a regular term,
 	but without coefficient.
 	When AR.BracketOn < 0 we have a socalled antibracket. The main effect
 	is an exchange of the inner and outer part and where the coefficient goes.
@@ -790,6 +792,7 @@ skipexec:
 WORD
 PutBracket ARG1(WORD *,termin)
 {
+	GETIDENTITY;
 	WORD *t, *t1, *b, i, j, *lastfun;
 	WORD *t2, *s1, *s2;
 	WORD *bStop, *bb, *tStop;
@@ -804,7 +807,7 @@ PutBracket ARG1(WORD *,termin)
 	else {
 		t1 = term1; t2 = term2;		/* Regular bracket */
 	}
-	b = AR.BrackBuf; bStop = b+*b; b++;
+	b = AT.BrackBuf; bStop = b+*b; b++;
 	while ( b < bStop ) {
 		if ( *b == INDEX ) { bwild = 1; bbb = b+2; binst = b + b[1]; break; }
 		b += b[1];
@@ -818,7 +821,7 @@ PutBracket ARG1(WORD *,termin)
 		lastfun = 0;
 		while ( t < tStop && *t >= FUNCTION
 			&& functions[*t-FUNCTION].commute ) {
-			b = AR.BrackBuf+1;
+			b = AT.BrackBuf+1;
 			while ( b < bStop ) {
 				if ( *b == *t ) {
 					lastfun = t;
@@ -862,7 +865,7 @@ NextNcom1:
 		lastfun = t;
 		while ( t < tStop && *t >= FUNCTION
 			&& functions[*t-FUNCTION].commute ) {
-			b = AR.BrackBuf+1;
+			b = AT.BrackBuf+1;
 			while ( b < bStop ) {
 				if ( *b == *t ) { lastfun = t + t[1]; goto NextNcom; }
 				b += b[1];
@@ -889,7 +892,7 @@ NextNcom:
 /*
 	Now we have only commuting functions left. Move the b pointer to them.
 */
-	b = AR.BrackBuf + 1;
+	b = AT.BrackBuf + 1;
 	while ( b < bStop && *b >= FUNCTION
 		&& ( *b < FUNCTION || functions[*b-FUNCTION].commute ) ) {
 		b += b[1];
@@ -1075,7 +1078,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket :
+ 		#] PutBracket : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1083,6 +1086,7 @@ nextdot:;
 
 void ExchangeExpressions ARG2(int,num1,int,num2)
 {
+	GETIDENTITY;
 	WORD node1, node2, namesize, TMproto[SUBEXPSIZE];
 	INDEXENTRY *ind;
 	EXPRESSIONS e1, e2;
@@ -1150,7 +1154,7 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
 }
 
 /*
- 		#] ExchangeExpressions :
+ 		#] ExchangeExpressions : 
  		#[ GetFirstBracket :
 */
 
@@ -1160,6 +1164,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 		Gets the first bracket of the expression 'num'
 		Puts it in term. If no brackets the answer is one.
 */
+	GETIDENTITY;
 	POSITION position, oldposition;
 	RENUMBER renumber;
 	FILEHANDLE *fi;
@@ -1246,7 +1251,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 }
 
 /*
- 		#] GetFirstBracket :
+ 		#] GetFirstBracket : 
  		#[ TermsInExpression :
 */
 
@@ -1258,7 +1263,7 @@ LONG TermsInExpression ARG1(WORD,num)
 }
 
 /*
- 		#] TermsInExpression :
+ 		#] TermsInExpression : 
  		#[ UpdatePositions :
 */
 
@@ -1285,6 +1290,6 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions :
+ 		#] UpdatePositions : 
 	#] Expressions :
 */

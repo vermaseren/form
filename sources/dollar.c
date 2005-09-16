@@ -21,6 +21,7 @@ static UWORD *IfScrat2 = 0;
 
 int CatchDollar ARG1(int,par)
 {
+	GETIDENTITY;
 	CBUF *C = cbuf + AC.cbufnum;
 	int error = 0, numterms = 0, numdollar, sign = 1, i;
 	LONG newsize;
@@ -56,7 +57,7 @@ int CatchDollar ARG1(int,par)
 		if ( !error ) error = 1;
 		goto onerror;
 	}
-	AR.RepPoint = AT.RepCount + 1;
+	AN.RepPoint = AT.RepCount + 1;
 	w = C->rhs[C->lhs[C->numlhs][5]];
 	while ( *w ) {
 		n = *w; t = oldwork;
@@ -135,6 +136,7 @@ onerror:
 
 int AssignDollar ARG2(WORD *,term,WORD,level)
 {
+	GETIDENTITY;
 	CBUF *C = cbuf+AM.rbufnum;
 	int numterms = 0, numdollar = C->lhs[level][2], sign = 1;
 	LONG newsize;
@@ -187,7 +189,7 @@ NewValIsZero:;
 					goto NoChangeZero;
 				default:
 					numvalue = DolToNumber(numdollar);
-					if ( AR.ErrorInDollar != 0 ) break;
+					if ( AN.ErrorInDollar != 0 ) break;
 					if ( dtype == MODMAX && numvalue < 0 ) break;
 					if ( dtype == MODMIN && numvalue > 0 ) break;
 					goto NoChangeZero;
@@ -252,7 +254,7 @@ HandleDolZero:;
 */
 						WORD extraterm[4];
 						numvalue = DolToNumber(numdollar);
-						if ( AR.ErrorInDollar != 0 ) break;
+						if ( AN.ErrorInDollar != 0 ) break;
 						if ( numvalue == 0 ) {
 							d->type = DOLZERO;
 							d->where[0] = 0;
@@ -398,7 +400,7 @@ HandleDolZero1:;
 				default:
 					WORD extraterm[4];
 					numvalue = DolToNumber(numdollar);
-					if ( AR.ErrorInDollar != 0 ) break;
+					if ( AN.ErrorInDollar != 0 ) break;
 					if ( numvalue == 0 ) {
 						d->type = DOLZERO;
 						d->where[0] = 0;
@@ -649,6 +651,7 @@ void TermAssign ARG1(WORD *,term)
 
 void WildDollars ARG0
 {
+	GETIDENTITY;
 	DOLLARS d;
 	WORD *m, *t, *w, *ww, *orig = 0;
 	int numdollar;
@@ -798,6 +801,7 @@ void WildDollars ARG0
 
 WORD DolToTensor ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
@@ -812,7 +816,7 @@ WORD DolToTensor ARG1(WORD,numdollar)
 		}
 	}
 #endif
-	AR.ErrorInDollar = 0;
+	AN.ErrorInDollar = 0;
 	if ( d->type == DOLTERMS && d->where[0] == FUNHEAD+4 &&
 	d->where[FUNHEAD+4] == 0 && d->where[FUNHEAD+3] == 3 &&
 	d->where[FUNHEAD+2] == 1 && d->where[FUNHEAD+1] == 1 &&
@@ -837,7 +841,7 @@ WORD DolToTensor ARG1(WORD,numdollar)
 		retval = d->where[0];
 	}
 	else {
-		AR.ErrorInDollar = 1;
+		AN.ErrorInDollar = 1;
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
@@ -853,6 +857,7 @@ WORD DolToTensor ARG1(WORD,numdollar)
 
 WORD DolToFunction ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
@@ -867,7 +872,7 @@ WORD DolToFunction ARG1(WORD,numdollar)
 		}
 	}
 #endif
-	AR.ErrorInDollar = 0;
+	AN.ErrorInDollar = 0;
 	if ( d->type == DOLTERMS && d->where[0] == FUNHEAD+4 &&
 	d->where[FUNHEAD+4] == 0 && d->where[FUNHEAD+3] == 3 &&
 	d->where[FUNHEAD+2] == 1 && d->where[FUNHEAD+1] == 1 &&
@@ -888,7 +893,7 @@ WORD DolToFunction ARG1(WORD,numdollar)
 		retval = d->where[0];
 	}
 	else {
-		AR.ErrorInDollar = 1;
+		AN.ErrorInDollar = 1;
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
@@ -904,6 +909,7 @@ WORD DolToFunction ARG1(WORD,numdollar)
 
 WORD DolToVector ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
@@ -918,7 +924,7 @@ WORD DolToVector ARG1(WORD,numdollar)
 		}
 	}
 #endif
-	AR.ErrorInDollar = 0;
+	AN.ErrorInDollar = 0;
 	if ( d->type == DOLINDEX && d->index < 0 ) {
 		retval = d->index;
 	}
@@ -946,7 +952,7 @@ WORD DolToVector ARG1(WORD,numdollar)
 		retval = d->where[1];
 	}
 	else {
-		AR.ErrorInDollar = 1;
+		AN.ErrorInDollar = 1;
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
@@ -962,8 +968,9 @@ WORD DolToVector ARG1(WORD,numdollar)
 
 WORD DolToNumber ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	DOLLARS d = Dollars + numdollar;
-	AR.ErrorInDollar = 0;
+	AN.ErrorInDollar = 0;
 	if ( ( d->type == DOLTERMS || d->type == DOLNUMBER )
 	 && d->where[0] == 4 &&
 	d->where[4] == 0 && ( d->where[3] == 3 || d->where[3] == -3 )
@@ -995,7 +1002,7 @@ WORD DolToNumber ARG1(WORD,numdollar)
 	&& d->where[2] < AM.OffsetIndex ) {
 		return(d->where[2]);
 	}
-	AR.ErrorInDollar = 1;
+	AN.ErrorInDollar = 1;
 	return(0);
 }
 
@@ -1006,9 +1013,10 @@ WORD DolToNumber ARG1(WORD,numdollar)
 
 WORD DolToSymbol ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	DOLLARS d = Dollars + numdollar;
-	AR.ErrorInDollar = 0;
 	WORD retval;
+	AN.ErrorInDollar = 0;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
 	if ( AS.MultiThreaded ) {
@@ -1038,7 +1046,7 @@ WORD DolToSymbol ARG1(WORD,numdollar)
 		retval = d->where[2];
 	}
 	else {
-		AR.ErrorInDollar = 1;
+		AN.ErrorInDollar = 1;
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
@@ -1054,6 +1062,7 @@ WORD DolToSymbol ARG1(WORD,numdollar)
 
 WORD DolToIndex ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
@@ -1068,7 +1077,7 @@ WORD DolToIndex ARG1(WORD,numdollar)
 		}
 	}
 #endif
-	AR.ErrorInDollar = 0;
+	AN.ErrorInDollar = 0;
 	if ( d->type == DOLTERMS && d->where[0] == 7 &&
 	d->where[7] == 0 && d->where[6] == 3 && d->where[5] == 1
 	 && d->where[4] == 1 && d->where[1] == INDEX && d->where[3] >= 0 ) {
@@ -1104,7 +1113,7 @@ WORD DolToIndex ARG1(WORD,numdollar)
 		retval = d->where[2];
 	}
 	else {
-		AR.ErrorInDollar = 1;
+		AN.ErrorInDollar = 1;
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
@@ -1124,10 +1133,11 @@ WORD DolToIndex ARG1(WORD,numdollar)
 
 DOLLARS DolToTerms ARG1(WORD,numdollar)
 {
+	GETIDENTITY;
 	LONG size;
 	DOLLARS d = Dollars + numdollar, newd;
 	WORD *t, *w;
-	AR.ErrorInDollar = 0;
+	AN.ErrorInDollar = 0;
 	switch ( d->type ) {
 		case DOLARGUMENT:
 			if ( d->where[0] < 0 ) {
@@ -1212,6 +1222,7 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 int
 DoInside ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	UBYTE *t, c;
 	WORD *w, number;
 	int error = 0;
@@ -1277,12 +1288,13 @@ skipdol:	error = 1;
 int
 InsideDollar ARG2(WORD *,ll,WORD,level)
 {
+	GETIDENTITY;
 	int numvar = (int)(ll[1]-3), j, error = 0;
 	WORD numdol, *oldcterm, *oldwork = AT.WorkPointer, olddefer, *r, *m;
 	WORD oldnumlhs, *dbuffer;
 	DOLLARS d, newd;
 	CBUF *C = cbuf+AM.rbufnum;
-	oldcterm = AR.cTerm; AR.cTerm = 0;
+	oldcterm = AN.cTerm; AN.cTerm = 0;
 	oldnumlhs = C->numlhs; C->numlhs = ll[2];
 	ll += 3;
 	olddefer = AR.DeferFlag;
@@ -1347,7 +1359,7 @@ InsideDollar ARG2(WORD *,ll,WORD,level)
 idcall:;
 	C->numlhs = oldnumlhs;
 	AR.DeferFlag = olddefer;
-	AR.cTerm = oldcterm;
+	AN.cTerm = oldcterm;
 	AT.WorkPointer = oldwork;
 	return(error);
 }
@@ -1431,6 +1443,7 @@ LONG TermsInDollar ARG1(WORD,num)
 UBYTE *
 PreIfDollarEval ARG2(UBYTE *,s,int *,value)
 {
+	GETIDENTITY;
 	UBYTE *s1,*s2,*s3,*s4,*s5,*t,c,c1,c2,c3;
 	int oprtr, type;
 	WORD *buf1 = 0, *buf2 = 0, numset, *oldwork = AT.WorkPointer;
@@ -1612,6 +1625,7 @@ onerror:
 
 WORD *TranslateExpression ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD oldnumrhs = C->numrhs;
 	LONG oldcpointer = C->Pointer - C->Buffer;
@@ -1639,7 +1653,7 @@ WORD *TranslateExpression ARG1(UBYTE *,s)
 	Evaluate this expression
 */
 	if ( NewSort() || NewSort() ) { return(0); }
-	AR.RepPoint = AT.RepCount + 1;
+	AN.RepPoint = AT.RepCount + 1;
 	oldEside = AC.Eside; AC.Eside = RHSIDE;
 	if ( Generator(AC.ProtoType-1,C->numlhs) ) {
 		AC.Eside = oldEside;
@@ -2213,6 +2227,7 @@ int MaxDollar ARG1(WORD, index)
 
 int SumDollars ARG1(WORD, index)
 {
+  GETIDENTITY;
   int i,j, error = 0;
   WORD *oldwork = AT.WorkPointer, *oldcterm, olddefer, *r, *m;
   DOLLARS sum;
@@ -2222,7 +2237,7 @@ int SumDollars ARG1(WORD, index)
   oldnumlhs = C->numlhs;
   oldnumrhs = C->numrhs;
 
-  oldcterm = AR.cTerm; AR.cTerm = 0;
+  oldcterm = AN.cTerm; AN.cTerm = 0;
   olddefer = AR.DeferFlag;
   AR.DeferFlag = 0;
 
@@ -2292,7 +2307,7 @@ cleanup:;
   C->numlhs = oldnumlhs;
   C->numrhs = oldnumrhs;
   AR.DeferFlag = olddefer;
-  AR.cTerm = oldcterm;
+  AN.cTerm = oldcterm;
   AT.WorkPointer = oldwork;
   
   return(error);

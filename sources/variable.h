@@ -91,7 +91,7 @@ extern FILE **FileStructs;
 #ifdef WITHPTHREADS
 #define AC A.C
 #define AM A.M
-#define AN A.N
+#define AN AB[identity].N
 #define AO A.O
 #define AP A.P
 #define AR AB[identity].R

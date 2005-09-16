@@ -60,7 +60,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -108,7 +108,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -179,7 +179,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -200,7 +200,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -217,7 +217,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -226,7 +226,7 @@ AllocSetups ARG0
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize, l;
-	int size, MaxPatches, MaxFpatches, j, error = 0, maxFlevels;
+	int size, MaxPatches, MaxFpatches, j, error = 0;
 
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
 	AC.iBuffer = (UBYTE *)Malloc1(AC.iBufferSize+1,"statement buffer");
@@ -249,10 +249,13 @@ AllocSetups ARG0
 	Allocate workspace.
 */
 	sp = GetSetupPar((UBYTE *)"workspace");
-	AT.WorkSize = sp->value;
-	AT.WorkSpace = (WORD *)Malloc1(sp->value*sizeof(WORD),(char *)(sp->parameter));
-	AT.WorkTop = AT.WorkSpace + sp->value;
+	AM.WorkSize = sp->value;
+#ifdef WITHPTHREADS
+#else
+	AT.WorkSpace = (WORD *)Malloc1(AM.WorkSize*sizeof(WORD),(char *)(sp->parameter));
+	AT.WorkTop = AT.WorkSpace + AM.WorkSize;
 	AT.WorkPointer = AT.WorkSpace;
+#endif
 /*
 	Set the size of the ZipBuffers and allocate them.
 */
@@ -275,7 +278,10 @@ AllocSetups ARG0
 	AC.FixIndices = (WORD *)Malloc1((AM.OffsetIndex)*sizeof(WORD),(char *)(sp->parameter));
 	AM.WilInd = AM.OffsetIndex + WILDOFFSET;
 	AM.DumInd = AM.OffsetIndex + 2*WILDOFFSET;
-	AM.IndDum = AR.CurDum = AM.DumInd + WILDOFFSET;
+	AM.IndDum = AM.DumInd + WILDOFFSET;
+#ifndef WITHPTHREADS
+	AR.CurDum = AM.IndDum;
+#endif
 	AM.mTraceDum = AM.IndDum + 2*WILDOFFSET;
 	sp = GetSetupPar((UBYTE *)"parentheses");
 	AM.MaxParLevel = sp->value+1;
@@ -287,12 +293,19 @@ AllocSetups ARG0
 	size = ( sp->value + 11 ) & (-4);
 	AM.MaxTal = size - 2;
 	if ( AM.MaxTal > (AM.MaxTer-2)/2 ) AM.MaxTal = (AM.MaxTer-2)/2;
+/*
 	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
-	AT.n_llnum = AT.n_coef + 2*size;
-	AC.cmod = (WORD *)Malloc1(size*4*sizeof(UWORD),(char *)(sp->parameter));
-	AM.gcmod = AC.cmod + size;
-	AC.powmod = AM.gcmod + size;
-	AM.gpowmod = AC.powmod + size;
+	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
+*/
+#ifdef WITHPTHREADS
+#else
+	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*AM.MaxTal+2,(char *)(sp->parameter));
+	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
+#endif
+	AC.cmod = (WORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
+	AM.gcmod = AC.cmod + AM.MaxTal;
+	AC.powmod = AM.gcmod + AM.MaxTal;
+	AM.gpowmod = AC.powmod + AM.MaxTal;
 /*
 	The IO buffers for the input and output expressions.
 	Fscr[2] will be assigned in a later stage for hiding expressions from
@@ -301,6 +314,7 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"scratchsize");
 	AM.ScratSize = sp->value/sizeof(WORD);
 	if ( AM.ScratSize < 4*AM.MaxTer ) AM.ScratSize = 4*AM.MaxTer;
+#ifndef WITHPTHREADS
 	for ( j = 0; j < 2; j++ ) {
 		AC.ScratchBuf[j] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"scratchsize");
 		AR.Fscr[j].POsize = AM.ScratSize * sizeof(WORD);
@@ -309,6 +323,7 @@ AllocSetups ARG0
 		PUTZERO(AR.Fscr[j].POposition);
 	}
 	AR.Fscr[2].PObuffer = 0;
+#endif
 /*
      The size for shared memory window for oneside MPI2 communications
 */
@@ -332,21 +347,25 @@ AllocSetups ARG0
 	MaxFpatches = sp->value;
 	sp = GetSetupPar((UBYTE *)"sortiosize");
 	IOsize = sp->value;
+#ifndef WITHPTHREADS
 #ifdef ZWITHZLIB
 	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize; }
+#endif
 #endif
 	AM.S0 = 0;
 	AM.S0 = AllocSort(LargeSize,SmallSize,SmallEsize,TermsInSmall
 					,MaxPatches,MaxFpatches,IOsize);
 #ifdef ZWITHZLIB
 	AM.S0->file.ziosize = IOsize;
+#ifndef WITHPTHREADS
 	AR.FoStage4[0].ziosize = IOsize;
 	AR.FoStage4[1].ziosize = IOsize;
 #endif
-
+#endif
+#ifndef WITHPTHREADS
 	AR.FoStage4[0].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 	AR.FoStage4[1].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
-
+#endif
 	sp = GetSetupPar((UBYTE *)"subsmallsize");
 	AM.SSmallSize = sp->value;
 	sp = GetSetupPar((UBYTE *)"subsmallextension");
@@ -367,14 +386,20 @@ AllocSetups ARG0
 	from the program, we can eliminate this code too.
 */
 	sp = GetSetupPar((UBYTE *)"functionlevels");
-	maxFlevels = sp->value + 1;
-	AR.Nest = (NESTING)Malloc1((LONG)sizeof(struct NeStInG)*maxFlevels,"functionlevels");
-	AR.NestStop = AR.Nest + maxFlevels;
-	AR.NestPoin = AR.Nest;
+	AM.maxFlevels = sp->value + 1;
+#ifdef WITHPTHREADS
+#else
+	AT.Nest = (NESTING)Malloc1((LONG)sizeof(struct NeStInG)*AM.maxFlevels,"functionlevels");
+	AT.NestStop = AT.Nest + AM.maxFlevels;
+	AT.NestPoin = AT.Nest;
+#endif
 
 	sp = GetSetupPar((UBYTE *)"maxwildcards");
 	AM.MaxWildcards = sp->value;
-	AN.WildMask = (WORD *)Malloc1((LONG)AM.MaxWildcards*sizeof(WORD),"maxwildcards");
+#ifdef WITHPTHREADS
+#else
+	AT.WildMask = (WORD *)Malloc1((LONG)AM.MaxWildcards*sizeof(WORD),"maxwildcards");
+#endif
 
 	sp = GetSetupPar((UBYTE *)"compresssize");
 	if ( sp->value < 2*AM.MaxTer ) sp->value = 2*AM.MaxTer;
@@ -433,7 +458,7 @@ AllocSetups ARG0
 }
 
 /*
- 		#] AllocSetups : 
+ 		#] AllocSetups :
  		#[ WriteSetup :
 */
 
@@ -477,7 +502,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -605,7 +630,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocFileHandle :
 */
 
@@ -643,7 +668,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of filenum. 21-sep-2000
@@ -661,7 +686,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -672,7 +697,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -750,7 +775,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -775,7 +800,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
 	#] Setups :
 */
 

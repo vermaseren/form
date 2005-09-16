@@ -53,6 +53,7 @@ static WORD patternbuffersize = 0;
 WORD
 TestMatch ARG2(WORD *,term,WORD *,level)
 {
+	GETIDENTITY;
 	WORD *ll, *m, *w, *llf, *OldWork, *ww, *mm;
 	WORD power = 0, match = 0, *rep, i, msign = 0;
 	int numdollars = 0;
@@ -66,18 +67,18 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		return(0);
 	}
 	else if ( *ll == TYPEREPEAT ) {
-		*++AR.RepPoint = 0;
+		*++AN.RepPoint = 0;
 		return(0);			/* Will force the next level */
 	}
 	else if ( *ll == TYPEENDREPEAT ) {
-		if ( *AR.RepPoint ) {
-			AR.RepPoint[-1] = 1;		/* Mark the higher level as dirty */
-			*AR.RepPoint = 0;
+		if ( *AN.RepPoint ) {
+			AN.RepPoint[-1] = 1;		/* Mark the higher level as dirty */
+			*AN.RepPoint = 0;
 			*level = ll[2];			/* Level to jump back to */
 		}
 		else {
-			AR.RepPoint--;
-			if ( AR.RepPoint < AT.RepCount ) {
+			AN.RepPoint--;
+			if ( AN.RepPoint < AT.RepCount ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("Internal problems with REPEAT count");
 				UNLOCK(ErrorMessageLock);
@@ -94,7 +95,7 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		else return(0);
 	}
 	m = ll + IDHEAD;
-	AR.FullProto = m;
+	AN.FullProto = m;
 	AN.WildValue = w = m + SUBEXPSIZE;
 	m += m[1];
 	AN.WildStop = m;
@@ -115,11 +116,14 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		AT.WorkPointer = ww;
 		if ( EndSort(ww,0) < 0 ) {}
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
-			if ( AR.lhdollarerror == 0 ) {
+			if ( AP.lhdollarerror == 0 ) {
+/*
+				If race condition we just get more error messages
+*/
 				LOCK(ErrorMessageLock);
 				MesPrint("&LHS must be one term");
 				UNLOCK(ErrorMessageLock);
-				AR.lhdollarerror = 1;
+				AP.lhdollarerror = 1;
 			}
 			AT.WorkPointer = OldWork;
 			return(-1);
@@ -377,6 +381,7 @@ nextlevel:;
 VOID
 Substitute ARG3(WORD *,term,WORD *,pattern,WORD,power)
 {
+	GETIDENTITY;
 	WORD *TemTerm;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
@@ -646,7 +651,7 @@ SubsL5:								fill += nq;
 									 ) sign += AN.RepFunList[mt+1];
 					if ( !PutExpr ) {
 						xstop = t + t[1];
-						t = AR.FullProto;
+						t = AN.FullProto;
 						nq = t[1];
 						t[3] = power;
 						NCOPY(fill,t,nq);
@@ -851,7 +856,7 @@ EndLoop:;
 	while ( t < tstop ) *fill++ = *t++;
 SubCoef:
 	if ( !PutExpr ) {
-		t = AR.FullProto;
+		t = AN.FullProto;
 		nq = t[1];
 		t[3] = power;
 		NCOPY(fill,t,nq);
@@ -913,6 +918,7 @@ FindSpecial ARG1(WORD *,term)
 WORD
 FindAll ARG4(WORD *,term,WORD *,pattern,WORD,level,WORD *,par)
 {
+	GETIDENTITY;
 	WORD *t, *m, *r;
 	WORD *tstop, *mstop, *TwoProto, *vwhere = 0, oldv, oldvv, vv, level2;
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;
@@ -934,7 +940,7 @@ InVect:
 			while ( r < tstop ) {
 				oldv = *r;
 				if ( v >= OffNum ) {
-					vwhere = AR.FullProto + 3 + SUBEXPSIZE;
+					vwhere = AN.FullProto + 3 + SUBEXPSIZE;
 					if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 						WORD *afirst, *alast, j;
 						j = vwhere[3];
@@ -944,8 +950,8 @@ InVect:
 						do {
 							if ( *afirst == *r ) {
 								if ( vwhere[1] == SETTONUM ) {
-									AR.FullProto[8+SUBEXPSIZE] = SYMTONUM;
-									AR.FullProto[11+SUBEXPSIZE] = ii;
+									AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
+									AN.FullProto[11+SUBEXPSIZE] = ii;
 								}
 								else if ( vwhere[4] >= 0 ) {
 									oldv = *(afirst - Sets[j].first
@@ -965,7 +971,7 @@ DoVect:				m = AT.WorkPointer;
 					mstop = t + *t;
 					do { *m++ = *t++; } while ( t < tstop );
 					vwhere = m;
-					t = AR.FullProto;
+					t = AN.FullProto;
 					nq = t[1];
 					t[3] = 1;
 					NCOPY(m,t,nq);
@@ -1010,7 +1016,7 @@ TwoVec:					m = AT.WorkPointer;
 						do { *m++ = *t++; } while ( t < tstop );
 						do {
 							vwhere = m;
-							t = AR.FullProto;
+							t = AN.FullProto;
 							nq = t[1];
 							t[3] = 2;
 							NCOPY(m,t,nq);
@@ -1034,7 +1040,7 @@ CopRest:				t = tstop;
 						return(1);
 					}
 					else if ( v >= OffNum ) {   /* v?.v? */
-						vwhere = AR.FullProto + 3+SUBEXPSIZE;
+						vwhere = AN.FullProto + 3+SUBEXPSIZE;
 						if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 							WORD *afirst, *alast, j;
 							j = vwhere[3];
@@ -1044,8 +1050,8 @@ CopRest:				t = tstop;
 							do {          	
 								if ( *afirst == *r ) {
 									if ( vwhere[1] == SETTONUM ) {
-										AR.FullProto[8+SUBEXPSIZE] = SYMTONUM;
-										AR.FullProto[11+SUBEXPSIZE] = ii;
+										AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
+										AN.FullProto[11+SUBEXPSIZE] = ii;
 									}
 									else if ( vwhere[4] >= 0 ) {
 										oldv = *(afirst - Sets[j].first
@@ -1077,7 +1083,7 @@ TwoPV:							m = AT.WorkPointer;
 								mstop = t + *t;
 								do { *m++ = *t++; } while ( t < tstop );
 								do {
-									t = AR.FullProto;
+									t = AN.FullProto;
 									vwhere = m + 3 +SUBEXPSIZE;
 									nq = t[1];
 									t[3] = 1;
@@ -1099,7 +1105,7 @@ TwoPV:							m = AT.WorkPointer;
 								goto CopRest;
 							}
 							else if ( vv > OffNum ) {
-								vwhere = AR.FullProto + 3+SUBEXPSIZE;
+								vwhere = AN.FullProto + 3+SUBEXPSIZE;
 								if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 									WORD *afirst, *alast, j;
 									j = vwhere[3];
@@ -1109,8 +1115,8 @@ TwoPV:							m = AT.WorkPointer;
 									do {
 										if ( *afirst == r[1] ) {
 											if ( vwhere[1] == SETTONUM ) {
-												AR.FullProto[8+SUBEXPSIZE] = SYMTONUM;
-												AR.FullProto[11+SUBEXPSIZE] = ii;
+												AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
+												AN.FullProto[11+SUBEXPSIZE] = ii;
 											}
 											else if ( vwhere[4] >= 0 ) {
 												oldvv = *(afirst - Sets[j].first
@@ -1136,7 +1142,7 @@ OneOnly:				m = AT.WorkPointer;
 						mstop = t + *t;
 						do { *m++ = *t++; } while ( t < tstop );
 						vwhere = m;
-						t = AR.FullProto;
+						t = AN.FullProto;
 						nq = t[1];
 						t[3] = i;
 						NCOPY(m,t,nq);
@@ -1146,7 +1152,7 @@ OneOnly:				m = AT.WorkPointer;
 						goto CopRest;
 					}
 					else if ( v >= OffNum ) {
-						vwhere = AR.FullProto + 3+SUBEXPSIZE;
+						vwhere = AN.FullProto + 3+SUBEXPSIZE;
 						if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 							WORD *afirst, *alast, *bfirst, *blast, j;
 							j = vwhere[3];
@@ -1156,8 +1162,8 @@ OneOnly:				m = AT.WorkPointer;
 							do {
 								if ( *afirst == *r ) {
 									if ( vwhere[1] == SETTONUM ) {
-										AR.FullProto[8+SUBEXPSIZE] = SYMTONUM;
-										AR.FullProto[11+SUBEXPSIZE] = ii;
+										AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
+										AN.FullProto[11+SUBEXPSIZE] = ii;
 									}
 									else if ( vwhere[4] >= 0 ) {
 										oldv = *(afirst - Sets[j].first
@@ -1200,8 +1206,8 @@ OneOnly:				m = AT.WorkPointer;
 								}
 								else if ( *afirst == r[1] ) {
 									if ( vwhere[1] == SETTONUM ) {
-										AR.FullProto[8+SUBEXPSIZE] = SYMTONUM;
-										AR.FullProto[11+SUBEXPSIZE] = ii;
+										AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
+										AN.FullProto[11+SUBEXPSIZE] = ii;
 									}
 									else if ( vwhere[4] >= 0 ) {
 										oldv = *(afirst - Sets[j].first
@@ -1257,7 +1263,7 @@ OneOnly:				m = AT.WorkPointer;
 						}
 						else { /* Matches twice */
 							vv = v;
-							TwoProto = AR.FullProto;
+							TwoProto = AN.FullProto;
 							goto TwoPV;
 						}
 					}
@@ -1273,7 +1279,7 @@ OneVect:;
 			while ( r < tstop ) {
 				oldv = *r;
 				if ( v >= OffNum && *r < -10 ) {
-					vwhere = AR.FullProto + 3+SUBEXPSIZE;
+					vwhere = AN.FullProto + 3+SUBEXPSIZE;
 					if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 						WORD *afirst, *alast, j;
 						j = vwhere[3];
@@ -1283,8 +1289,8 @@ OneVect:;
 						do {
 							if ( *afirst == *r ) {
 								if ( vwhere[1] == SETTONUM ) {
-									AR.FullProto[8+SUBEXPSIZE] = SYMTONUM;
-									AR.FullProto[11+SUBEXPSIZE] = ii;
+									AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
+									AN.FullProto[11+SUBEXPSIZE] = ii;
 								}
 								else if ( vwhere[4] >= 0 ) {
 									oldv = *(afirst - Sets[j].first
@@ -1304,7 +1310,7 @@ LeVect:				m = AT.WorkPointer;
 					*r = ++AR.CurDum;
 					if ( intens ) *intens = DIRTYSYMFLAG;
 					do { *m++ = *t++; } while ( t < tstop );
-					t = AR.FullProto;
+					t = AN.FullProto;
 					nq = t[1];
 					t[3] = 1;
 					if ( v >= OffNum ) *vwhere = oldv;
