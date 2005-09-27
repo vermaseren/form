@@ -3,18 +3,10 @@
 */
 
 #include "form3.h"
-DECLARE(WORD ReadElIf,ARG0)
 
 /*
   	#] Includes :
   	#[ If statement :
- 		#[ Variables :
-*/
-
-DECLARE(WORD HowMany,(WORD *,WORD *))
-
-/*
- 		#] Variables :
  		#[ Syntax :
 
 		The `if' is a conglomerate of statements: if,else,endif
@@ -88,21 +80,20 @@ DECLARE(WORD HowMany,(WORD *,WORD *))
 		Note that the whole setup asks for recursions.
 */
 
-static UWORD *DIscratC = 0, *DIscratD = 0, *DIscratE = 0;
-
 WORD
 DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 {
+	GETIDENTITY;
 	WORD *ifstop, *ifp;
 	UWORD *coef1 = 0, *coef2, *coef3, *cc;
 	WORD ncoef1, ncoef2, ncoef3, i = 0, first, *r, acoef, ismul1, ismul2, j;
 	UWORD *Spac1, *Spac2;
-	if ( DIscratC == 0 ) {
-		DIscratC = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"DoIfStatement");
-		DIscratD = DIscratC + AM.MaxTal + 2;
-		DIscratE = DIscratD + AM.MaxTal + 2;
+	if ( AN.DIscratC == 0 ) {
+		AN.DIscratC = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"DoIfStatement");
+		AN.DIscratD = AN.DIscratC + AM.MaxTal + 2;
+		AN.DIscratE = AN.DIscratD + AM.MaxTal + 2;
 	}
-	coef3 = DIscratC; Spac1 = DIscratD; Spac2 = DIscratE;
+	coef3 = AN.DIscratC; Spac1 = AN.DIscratD; Spac2 = AN.DIscratE;
 	ifstop = ifcode + ifcode[1];
 	ifp = ifcode + 3;
 	if ( ifp >= ifstop ) return(1);

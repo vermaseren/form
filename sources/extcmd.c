@@ -1,98 +1,93 @@
 /*
   	#[ Documentation :
 
-This module is written by M.Tentyukov as a part of implementation of
-interaction between FORM and external processes, first release
-09.04.2004. A part of this code is copyied from the DIANA project
-written by M. Tentyukov and published under the GPL version 2 as
-published by the Free Software Foundation.  The code of this module
-is NOT covered by GPL; it can be used under the terms of the FORM 
-License http://www.nikhef.nl/~form/license.html
-*/
+	This module is written by M.Tentyukov as a part of implementation of
+	interaction between FORM and external processes, first release
+	09.04.2004. A part of this code is copyied from the DIANA project
+	written by M. Tentyukov and published under the GPL version 2 as
+	published by the Free Software Foundation.  The code of this module
+	is NOT covered by GPL; it can be used under the terms of the FORM 
+	License http://www.nikhef.nl/~form/license.html
 
-/*
-If a macro WITHEXTERNALCHANNEL is not defined, all public punctions are 
-stubs returning failure.
-*/
+	If a macro WITHEXTERNALCHANNEL is not defined, all public punctions
+	are stubs returning failure.
 
-/* 
-The idea is to start an external command (in a subshell) swallowing
-its stdin and stdout. This can be done by means of the function 
-int openExternalChannel(cmd). 
-The function returns some small positive integer number (the
-descriptor of a newly created external channel), or -1 on failure.
+	The idea is to start an external command (in a subshell) swallowing
+	its stdin and stdout. This can be done by means of the function 
+	int openExternalChannel(cmd). 
+	The function returns some small positive integer number (the
+	descriptor of a newly created external channel), or -1 on failure.
 
-After the command is started, it becomes a _current_ opened external
-channel. The buffer can be sent to its stdin by a function
-int writeBufToExtChannel(buf, n)
-(here buf is a pointer to the buffer, n is the length in bytes; the
-function returns 0 in success, or -1 on failure),
-or one character can be read from its stdout by
-means of the function 
-int getcFromExtChannel().
+	After the command is started, it becomes a _current_ opened external
+	channel. The buffer can be sent to its stdin by a function
+	int writeBufToExtChannel(buf, n)
+	(here buf is a pointer to the buffer, n is the length in bytes; the
+	function returns 0 in success, or -1 on failure),
+	or one character can be read from its stdout by
+	means of the function 
+	int getcFromExtChannel().
 
-The latter returns the
-character casted to integer, or EOF, if the external program closes
-its stdout, or if the external program outputs a string coinciding
-with a _terminator_.
+	The latter returns the
+	character casted to integer, or EOF, if the external program closes
+	its stdout, or if the external program outputs a string coinciding
+	with a _terminator_.
 
-By default, the terminator if an empty line. For a current external
-channel it can be set by means of the function
-int setTerminatorForExternalChannel(newterminaror).
-The function returns 0 in success, or !0 if something is wrong (no
-current channel, too long terminator).
+	By default, the terminator if an empty line. For a current external
+	channel it can be set by means of the function
+	int setTerminatorForExternalChannel(newterminaror).
+	The function returns 0 in success, or !0 if something is wrong (no
+	current channel, too long terminator).
 
-After getcFromExtChannel() returns EOF, the current channel becomes
-undefined. Any further attempts to read information by
-getcFromExtChannel() result in EOF. To set (re-set) a current channel,
-the function 
-int selectExternalChannel(n) 
-can be used. This function accepts the valid external channel
-descriptor (returned by openExternalChannel) and returns the
-descriptor of a previous current channel (0, if there was no current
-channel, or -1, if the external channel descriptor is invalid).
+	After getcFromExtChannel() returns EOF, the current channel becomes
+	undefined. Any further attempts to read information by
+	getcFromExtChannel() result in EOF. To set (re-set) a current channel,
+	the function 
+	int selectExternalChannel(n) 
+	can be used. This function accepts the valid external channel
+	descriptor (returned by openExternalChannel) and returns the
+	descriptor of a previous current channel (0, if there was no current
+	channel, or -1, if the external channel descriptor is invalid).
 
-The function 
-int closeExternalChannel(n) 
-destroys the opened external channel with the descriptor n. It returns
-0 in success, or -1 on failure. If the corresponding external channel
-was the current one, the current channel becomes undefined.
+	The function 
+	int closeExternalChannel(n) 
+	destroys the opened external channel with the descriptor n. It returns
+	0 in success, or -1 on failure. If the corresponding external channel
+	was the current one, the current channel becomes undefined.
 
-The function 
-int getCurrentExternalChannel(void)
-returns the descriptor if the current external channel, or 0 , if
-there is no current external channel.
+	The function 
+	int getCurrentExternalChannel(void)
+	returns the descriptor if the current external channel, or 0 , if
+	there is no current external channel.
 
-The function 
-void closeAllExternalChannels(void)
+	The function 
+	void closeAllExternalChannels(void)
 
-destroys all opened exterbal channels.
+	destroys all opened external channels.
 
-List of all public functions:
+	List of all public functions:
 
-int openExternalChannel(char *cmd);
-int setTerminatorForExternalChannel(char *newterminaror);
-int closeExternalChannel(int n);
-int selectExternalChannel(int n);
-int writeBufToExtChannel(char *buf,int n);
-int getcFromExtChannel(void);
-int getCurrentExternalChannel(void);
-void closeAllExternalChannels(void);
+	int openExternalChannel(char *cmd);
+	int setTerminatorForExternalChannel(char *newterminaror);
+	int closeExternalChannel(int n);
+	int selectExternalChannel(int n);
+	int writeBufToExtChannel(char *buf,int n);
+	int getcFromExtChannel(void);
+	int getCurrentExternalChannel(void);
+	void closeAllExternalChannels(void);
 
-ATTENTION!
-Three of them:
-1 setTerminatorForExternalChannel
-2 writeBufToExtChannel
-3 getcFromExtChannel
-are NOT functions, but variables (pointers) of a corrsponding type.
-They are initialised by proper values to avoid repeated error checking.
+	ATTENTION!
 
-All public functions are independent of realization hidden in this module.
-All other functions may have a returned type/parameters type local w.r.t. 
-this module; they are not declared outside of this file.
-*/
+	Three of them:
+	1 setTerminatorForExternalChannel
+	2 writeBufToExtChannel
+	3 getcFromExtChannel
+	are NOT functions, but variables (pointers) of a corrsponding type.
+	They are initialised by proper values to avoid repeated error checking.
 
-/*
+	All public functions are independent of realization hidden in this module.
+	All other functions may have a returned type/parameters type local w.r.t. 
+	this module; they are not declared outside of this file.
+
   	#] Documentation : 
   	#[ Includes :
 */
@@ -114,7 +109,9 @@ Uncomment to get a self-consistent program:
 #ifdef SELFTEST
 #define WITHEXTERNALCHANNEL 1
 
-/* from declare.h:*/
+/*
+	from declare.h:
+*/
 #define VOID void
 #define ARG0 (VOID)
 #define ARG1(x1,y1) (x1 y1)
@@ -122,9 +119,9 @@ Uncomment to get a self-consistent program:
 #define ARG3(x1,y1,x2,y2,x3,y3) (x1 y1,x2 y2,x3 y3)
 
 /*The following variables should be defined in variable.h:*/
-extern int (*writeBufToExtChannel) ARG2(char *,/**/, size_t, /**/);
+extern int (*writeBufToExtChannel) ARG2(char *,buffer, size_t,n);
 extern int (*getcFromExtChannel) ARG0 ;
-extern int (*setTerminatorForExternalChannel) ARG1 (char *, /**/);
+extern int (*setTerminatorForExternalChannel) ARG1 (char *,buffer);
 
 #else /*ifdef SELFTEST*/
 #include "form3.h"
@@ -151,8 +148,8 @@ getcFromExtChannelFailure ARG0
 	return(-1);
 }/*getcFromExtChannelFailure*/
 
-int (*writeBufToExtChannel) ARG2(char *,/**/, size_t, /**/)= &writeBufToExtChannelFailure;
-int (*setTerminatorForExternalChannel) ARG1 (char *, /**/)= &setTerminatorForExternalChannelFailure;
+int (*writeBufToExtChannel) ARG2(char *,buffer, size_t,n)= &writeBufToExtChannelFailure;
+int (*setTerminatorForExternalChannel) ARG1 (char *,buffer)= &setTerminatorForExternalChannelFailure;
 int (*getcFromExtChannel) ARG0 = &getcFromExtChannelFailure;
 
 #ifndef WITHEXTERNALCHANNEL
@@ -177,7 +174,6 @@ typedef void (*mysighandler_t)(int);
   be increased by this value (in bytes):*/
 #define DELTA_EXT_BUF 128
 
-/**/
 #define DELTA_EXT_LIST 8
 
 /*The full path to the shell:*/
@@ -677,7 +673,7 @@ pid_t run_cmd(
    char *cmd,
    char *argv[]
    )
-{/**/
+{
 int fdin[2], fdout[2], fdsig[2];
 pid_t childpid,fatherchildpid = 0;
 
@@ -810,19 +806,19 @@ pid_t childpid,fatherchildpid = 0;
 
      close(fdsig[1]);
 
-     if(  (fdsend!=NULL)&&(fdreceive!=NULL)  ){
-        if(
-		           (close(fdin[0])==-1)/* Close up output side of fdin*/
-           ||(close(fdout[1])==-1)/*Close up input side of fdout*/
-          ){/**/
+     if ( ( fdsend != NULL ) && ( fdreceive != NULL )  ) {
+        if ( ( close(fdin[0]) == -1 ) /* Close up output side of fdin */
+          || ( close(fdout[1])== -1 ) /* Close up input side of fdout */
+          ) {
             close(fdin[1]);
             close(fdout[0]);
-            childpid = -childpid;/*Negative childpid indicates an error*/
-        }else{/*Success*/
-           *fdsend=fdin[1];
-           *fdreceive=fdout[0];
+            childpid = -childpid; /* Negative childpid indicates an error */
         }
-     }/*if(  (fdsend!=NULL)&&(fdreceive!=NULL)  )*/
+        else { /*Success*/
+           *fdsend    = fdin[1];
+           *fdreceive = fdout[0];
+        }
+     }
      /*Now if childpid == -1 then something is wrong*/
      if(childpid <0){/*Negative childpid indicates an error*/
          kill(childpid,SIGHUP); /* warn the child process */
@@ -1092,60 +1088,54 @@ return 0;
 
 #ifdef SELFTEST
 
-/*This is the example of how all these public functions may be used:*/
+/*
+	This is the example of how all these public functions may be used:
+*/
 
 char buf[1024];
 char buf2[1024];
+
 int main (void)
 {
+	int i, j, k;
+	long long s = 0;
 
-int i,j,k;
+	printf("Initial channel:%d\n",j=openExternalChannel("cat"));
 
-long long s=0;
+	if( ( i = setTerminatorForExternalChannel("qu") ) != 0 ) return 1;
 
-printf("Initial channel:%d\n",j=openExternalChannel("cat"));
+	while ( fgets(buf, 1024, stdin) != NULL ) {
+		if ( *buf == 'n' ) {
+			printf("New channel:%d\n",j=openExternalChannel(buf+1));
+			if ( fgets(buf, 1024, stdin) == NULL ) return 0;
+		}
+		else if ( *buf == 'c' ) {
+			printf("Destroy last channel:%d\n",j=closeExternalChannel(j));
+			if ( j == 0 ) return 0;
+			if ( fgets(buf, 1024, stdin) == NULL ) return 0;
+		}
+		else if ( *buf == 'r' ) {
+			int n = 0;
+			sscanf(buf+1,"%d",&n);
+			printf("Reopen channel %d:%d\n",n,selectExternalChannel(n));
+			if ( fgets(buf, 1024, stdin) == NULL ) return 0;
+		}
 
- if( (i=setTerminatorForExternalChannel("qu"))!=0)
-    return 1;
-
-while(fgets(buf, 1024, stdin)!=NULL){
-   if(*buf == 'n'){
-      printf("New channel:%d\n",j=openExternalChannel(buf+1));
-      if(fgets(buf, 1024, stdin)==NULL)
-        return 0;
-   }else if (*buf == 'c'){
-      printf("Destroy last channel:%d\n",j=closeExternalChannel(j));
-      if(j==0)
-          return 0;
-      if(fgets(buf, 1024, stdin)==NULL)
-        return 0;
-   }else if (*buf == 'r'){
-      int n=0;
-      sscanf(buf+1,"%d",&n);
-      printf("Reopen channel %d:%d\n",n,selectExternalChannel(n));
-      if(fgets(buf, 1024, stdin)==NULL)
-        return 0;
-   }      
-
-   writeBufToExtChannel(buf,k=StrLen(buf));
-   s += k;
-   for(j=0; (i=getcFromExtChannel())!='\n'; j++){
-     if(i==EOF){
-         printf("EOF!\n");
-         break;
-     }
-     buf2[j]=i;
-   }
-   buf2[j]='\0';
-   printf("I got:'%s'; pid=%d\n",buf2,getExternalChannelPid());
-}
-
-printf("Total:%lld bytes\n",s);
-
-closeAllExternalChannels();
-
-
-return 0;
+		writeBufToExtChannel(buf,k=StrLen(buf));
+		s += k;
+		for ( j = 0; ( i = getcFromExtChannel() ) != '\n'; j++) {
+			if ( i == EOF ) {
+				printf("EOF!\n");
+				break;
+			}
+			buf2[j] = i;
+		}
+		buf2[j] = '\0';
+		printf("I got:'%s'; pid=%d\n",buf2,getExternalChannelPid());
+	}
+	printf("Total:%lld bytes\n",s);
+	closeAllExternalChannels();
+	return 0;
 }
 #endif /*ifdef SELFTEST*/
 

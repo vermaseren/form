@@ -3,15 +3,14 @@
 
 	File contains the lowlevel routines for the management of primitive
 	database-like files. The structures are explained in the file manage.h
-	File made by J.Vermaseren, april-1994.
+	Original file for minos made by J.Vermaseren, april-1994.
+
+	Note: the minos primitives for writing are never invoked in parallel.
 */
 
 #include "form3.h"
 #include "minos.h"
-/*[15dec2003 mt]:*/
-/*#include "zlib.h"*/
 #include <zlib.h>
-/*:[15dec2003 mt]*/
 int withoutflush = 0;
 
 /*

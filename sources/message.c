@@ -1,9 +1,17 @@
 /*
   	#[ Includes :
+
+	The static variables for the messages can remain as such also for
+	the parallel version as messages are to be locked to avoid problems
+	with simultaneous messages.
 */
 
 #include "form3.h"
+
 static int iswarning = 0;
+ 
+static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
+					 'A','B','C','D','E','F'};
 
 /*
   	#] Includes :
@@ -74,9 +82,9 @@ MesWork ARG0
 	%#L	long long word * positioned.
 	%#s	string positioned.
 	%#p position in file.
-	%t	The current term (currentTerm)
-	%T	The current term (currentTerm) with its sign
-	%$	The next $ in listinprint
+	%t	The current term (AN.currentTerm)
+	%T	The current term (AN.currentTerm) with its sign
+	%$	The next $ in AN.listinprint
 	%x	hexadecimal. Takes 8 places. Mainly for debugging.
 	%%	%
 	%#	#
@@ -87,10 +95,6 @@ MesWork ARG0
 	Each call is terminated with a new line anyway.
 */
 
-char hex[] = {'0','1','2','3','4','5','6','7','8','9',
-					'A','B','C','D','E','F'};
-UBYTE extrabuffer[270];
-
 int
 #ifdef ANSI
 MesPrint(char *fmt, ... )
@@ -99,7 +103,9 @@ MesPrint(va_alist)
 va_dcl
 #endif
 {
+	GETIDENTITY;
 	char Out[270], *stopper, *t, *s, *u, c;
+	UBYTE extrabuffer[270];
 	int w, x, i, specialerror = 0;
 	LONG num, y;
 	WORD *array;
@@ -217,7 +223,7 @@ va_dcl
 				WORD oldbracket = AO.IsBracket;
 				WORD oldlength = AC.LineLength;
 				UBYTE *oldStop = AO.OutStop;
-				if ( currentTerm ) {
+				if ( AN.currentTerm ) {
 					if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					AO.IsBracket = 0;
 					AO.OutSkip = 1;
@@ -228,7 +234,7 @@ va_dcl
 					AddToLine((UBYTE *)Out);
 					if ( *s == 'T' ) noleadsign = 1;
 					else noleadsign = 0;
-					if ( WriteInnerTerm(currentTerm,noleadsign) ) Terminate(-1);
+					if ( WriteInnerTerm(AN.currentTerm,noleadsign) ) Terminate(-1);
 					t = Out;
 					u = (char *)AO.OutputLine;
 					*(AO.OutFill) = 0;
@@ -251,16 +257,16 @@ va_dcl
 				WORD oldlength = AC.LineLength;
 				UBYTE *oldStop = AO.OutStop;
 				WORD *term, indsubterm[3], *tt;
-				if ( *listinprint != DOLLAREXPRESSION ) {
+				if ( *AN.listinprint != DOLLAREXPRESSION ) {
 					specialerror = 1;
 				}
 				else {
-					DOLLARS d = Dollars + listinprint[1];
+					DOLLARS d = Dollars + AN.listinprint[1];
 #ifdef WITHPTHREADS
 					int nummodopt, dtype = -1;
 					if ( AS.MultiThreaded ) {
 						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
-							if ( listinprint[1] == ModOptdollars[nummodopt].number ) break;
+							if ( AN.listinprint[1] == ModOptdollars[nummodopt].number ) break;
 						}
 						if ( nummodopt < NumModOptdollars ) {
 							dtype = ModOptdollars[nummodopt].type;
@@ -277,7 +283,7 @@ va_dcl
 					AddToLine((UBYTE *)Out);
 					if ( d->type == DOLTERMS || d->type == DOLNUMBER ) {
 						WORD first = 1;
-						term = cbuf[AM.dbufnum].rhs[listinprint[1]];
+						term = cbuf[AM.dbufnum].rhs[AN.listinprint[1]];
 						do {
 							if ( AC.LineLength > 256 ) AC.LineLength = 256;
 							AO.IsBracket = 0;
@@ -425,7 +431,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
-					listinprint += 2;
+					AN.listinprint += 2;
 				}
 /*
 			#] dollars :

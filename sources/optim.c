@@ -8,7 +8,7 @@
 	   size numsca sca1,pow1,sca2,pow2,...,coeff
 	   If size < 0 we have to skip -size words
 	   A zero ends a subexpression, two zeroes the whole expression
-	2: Aply the routines from the codegenerator of spider.
+	2: Apply the routines from the codegenerator of spider.
 	The problem is where to leave the intermediate results.
 	We put them in a buffer and try to be careful.
 	Also the temporary assignments are put in a buffer.

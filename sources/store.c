@@ -4,9 +4,6 @@
 
 #include "form3.h"
 
-extern LONG deferskipped;
-WORD *dummyrenumlist;
-
 /*
   	#] Includes :
 	#[ StoreExpressions :
@@ -78,7 +75,6 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 VOID
 SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 {
-	GETIDENTITY;
 	POSITION possize;
 	LONG size;
 /*
@@ -705,12 +701,12 @@ GetTerm ARG1(WORD *,term)
 	WORD *r, *m, *mstop = 0, minsiz = 0, *bra = 0, *from;
 	WORD first, *start = 0, testing = 0;
 	FILEHANDLE *fi;
-	deferskipped = 0;
+	AN.deferskipped = 0;
 	if ( AS.GetFile == 2 ) fi = AS.hidefile;
 	else                   fi = AR.infile;
 	from = term;
 	if ( AS.KeptInHold ) {
-		r = AM.CompressBuffer;
+		r = AR.CompressBuffer;
 		i = *r;
 		if ( i <= 0 ) { *term = 0; goto RegRet; }
 		m = term;
@@ -719,7 +715,7 @@ GetTerm ARG1(WORD *,term)
 		goto RegRet;
 	}
 	if ( AR.DeferFlag ) {
-		m = AM.CompressBuffer;
+		m = AR.CompressBuffer;
 		if ( *m > 0 ) {
 			mstop = m + *m;
 			mstop -= ABS(mstop[-1]);
@@ -729,7 +725,7 @@ GetTerm ARG1(WORD *,term)
 					testing = 1;
 					mstop = m + m[1];
 					bra = term + 2*AM.MaxTer;
-					m = AM.CompressBuffer+1;
+					m = AR.CompressBuffer+1;
 					r = bra;
 					while ( m < mstop ) *r++ = *m++;
 					mstop = r;
@@ -750,14 +746,15 @@ GetTerm ARG1(WORD *,term)
 	}
 ReStart:
 	first = 0;
-	r = AM.CompressBuffer;
+	r = AR.CompressBuffer;
 	if ( fi->handle >= 0 ) {
 		if ( InIn <= 0 ) {
 			ADDPOS(fi->POposition,(fi->POfull-fi->PObuffer)*sizeof(WORD));
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-/* --COMPRESS-- */
 			if ( ( ( InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),
 				fi->POsize) ) < 0 ) || ( InIn & 1 ) ) goto GTerr;
+			InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
+			if ( ( InIn < 0 ) || ( InIn & 1 ) ) goto GTerr;
 #ifdef WORD2
 			InIn >>= 1;
 #else
@@ -787,7 +784,7 @@ ReStart:
 				i = *inp++;
 				InIn--;
 				*start += i;
-				*(AM.CompressBuffer) = len = *start;
+				*(AR.CompressBuffer) = len = *start;
 			}
 			else {
 				first = 1;
@@ -822,7 +819,7 @@ NewIn:
 				j = *inp++;
 				InIn--;
 				*start += j;
-				*(AM.CompressBuffer) = len = *start;
+				*(AR.CompressBuffer) = len = *start;
 			}
 			InIn -= j;
 			while ( --j >= 0 ) { *r++ = *term++ = *inp++; }
@@ -848,7 +845,7 @@ NewIn:
 		fi->POfill = inp;
 		if ( inp > fi->POfull ) goto GTerr;
 	}
-	if ( r >= AM.ComprTop ) {
+	if ( r >= AR.ComprTop ) {
 		MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
 		Terminate(-1);
 	}
@@ -883,7 +880,7 @@ strip:			r = from;
 			r++;
 		}
 		term = from;
-		deferskipped++;
+		AN.deferskipped++;
 		goto ReStart;
 	}
 RegRet:;
@@ -972,7 +969,7 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 				goto ErrGet;
 			}
 			while ( --i >= 0 ) *r++ = *term++;
-			if ( r >= AM.ComprTop ) {
+			if ( r >= AR.ComprTop ) {
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
 				Terminate(-1);
 			}
@@ -994,7 +991,7 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 		else { while ( --i >= 0 ) { *r++ = *term++ = *p++; } }
 		fi->POfill = p;
 		if ( p <= fi->POfull ) {
-			if ( r >= AM.ComprTop ) {
+			if ( r >= AR.ComprTop ) {
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
 				Terminate(-1);
 			}
@@ -1379,7 +1376,7 @@ PastCon:
 	NCOPY(r,m,first);
 PastEnd:
 	*rr = *to;
-	if ( r >= AM.ComprTop ) {
+	if ( r >= AR.ComprTop ) {
 		MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
 		Terminate(-1);
 	}
@@ -2290,7 +2287,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 
 	xx = ind->nsymbols+ind->nindices+ind->nvectors+ind->nfunctions;
 	if ( xx == 0 ) {
-		Expressions[expr].renumlists = w = dummyrenumlist;
+		Expressions[expr].renumlists = w = AN.dummyrenumlist;
 	}
 	else {
 		Expressions[expr].renumlists = w =

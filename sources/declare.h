@@ -277,7 +277,10 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER
 #define LOCK(x)       pthread_mutex_lock(&(x))
 #define UNLOCK(x)     pthread_mutex_unlock(&(x))
-#define GETIDENTITY   int identity = WhoAmI()
+/*
+#define GETIDENTITY   int identity = WhoAmI();
+*/
+#define GETIDENTITY   int identity = WhoAmI(); ALLPRIVATES *B = AB+identity;
 
 #else
 
@@ -621,11 +624,7 @@ DECLARE(int CreateLogFile,(char *))
 DECLARE(VOID CloseFile,(int))
 DECLARE(int CreateHandle,ARG0)
 DECLARE(LONG ReadFile,(int,UBYTE *,LONG))
-/*[15apr2004 mt]:*/
-/*I introduced the variable WriteFile, see the file variable.h:*/
-/*DECLARE(LONG WriteFile,(int,UBYTE *,LONG))*/
 DECLARE(LONG WriteFileToFile,(int,UBYTE *,LONG))
-/*:[15apr2004 mt]*/
 DECLARE(VOID SeekFile,(int,POSITION *,int))
 DECLARE(LONG TellFile,(int))
 DECLARE(void FlushFile,(int))
@@ -762,6 +761,8 @@ DECLARE(VOID ReserveTempFiles,ARG0)
 DECLARE(VOID PrintTerm,(WORD *,char *))
 DECLARE(VOID PrintSubTerm,(WORD *,char *))
 DECLARE(int ExpandTripleDots,ARG0)
+DECLARE(LONG ComPress,(WORD **,LONG *));
+DECLARE(VOID StageSort,(FILEHANDLE *));
 
 #define M_alloc(x)      malloc((size_t)(x))
 DECLARE(void M_free,(VOID *,char *))
@@ -1053,6 +1054,9 @@ DECLARE(int DoSlavePatch,(UBYTE *))
 DECLARE(int FlipTable,(FUNCTIONS,int))
 DECLARE(int ChainIn,(WORD *,WORD,WORD))
 DECLARE(int ChainOut,(WORD *,WORD,WORD))
+ 
+DECLARE(WORD ReadElIf,ARG0)
+DECLARE(WORD HowMany,(WORD *,WORD *))
 
 void *mmalloc(size_t size,char *message);
 char *str_dup(char *str);
@@ -1116,6 +1120,8 @@ DECLARE(int StartAllThreads,(int))
 DECLARE(int GetAvailable,ARG0)
 DECLARE(void WakeupThread,(int,int))
 DECLARE(int MasterWait,ARG0)
+DECLARE(int ThreadProcessor,ARG0)
+DECLARE(int ThreadsMerge,(WORD))
 #endif
 
 /*[12dec2003 mt]:*/
@@ -1137,6 +1143,16 @@ DECLARE(VOID closeAllExternalChannels,(VOID))
 /*:[14apr2004 mt]*/
 
 DECLARE(int writexactly,(int,char *,size_t))
+ 
+#ifdef PARALLEL
+DECLARE(LONG PF_BroadcastNumberOfTerms,(LONG)) 
+#endif
+
+DECLARE(UBYTE *defineChannel,(UBYTE*, HANDLERS*))
+DECLARE(int writeToChannel,(int,UBYTE *,HANDLERS*))
+#ifdef WITHEXTERNALCHANNEL
+DECLARE(LONG WriteToExternalChannel,(int,UBYTE *,LONG))
+#endif
 
 /*
   	#] Declarations :

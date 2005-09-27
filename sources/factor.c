@@ -16,10 +16,9 @@
 	In ModulusGCD1 we assume that m fits inside a WORD.
 */
 
-static WORD *mgscr1 = 0, *mgscr2 = 0, *mgscr3 = 0, nmgscr = 0;
-
 int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 {
+	GETIDENTITY;
 	WORD *t, *tstop, *t1 = 0, n1 = 0, n2, *m1, *m2, i, x1, offset;
 	LONG y, y1, y2;
 	tstop = term + *term; tstop -= ABS(tstop[-1]);
@@ -41,47 +40,47 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 				We have loaded the arrays. Now the works.
 */
 				if ( n1 < n2 ) {
-					m1 = mgscr1; mgscr1 = mgscr2; mgscr2 = m1; x1 = n1; n1 = n2; n2 = x1;
+					m1 = AN.mgscr1; AN.mgscr1 = AN.mgscr2; AN.mgscr2 = m1; x1 = n1; n1 = n2; n2 = x1;
 				}
 				for(;;) {
-					y1 = mgscr1[n1]; y2 = mgscr2[n2];
-					mgscr1[n1] = 0; offset = n1-n2;
+					y1 = AN.mgscr1[n1]; y2 = AN.mgscr2[n2];
+					AN.mgscr1[n1] = 0; offset = n1-n2;
 					for ( i = n2 - 1; i >= 0; i-- ) {
-						y = ( mgscr1[i+offset] * y2 - mgscr2[i] * y1 ) % modu;
+						y = ( AN.mgscr1[i+offset] * y2 - AN.mgscr2[i] * y1 ) % modu;
 						if ( y < 0 ) y += modu;
-						mgscr1[i+offset] = y;
+						AN.mgscr1[i+offset] = y;
 					}
 					for ( i = offset-1; i >= 0; i-- ) {
-						y = (mgscr1[i]*y2) % modu;
+						y = (AN.mgscr1[i]*y2) % modu;
 						if ( y < 0 ) y += modu;
-						mgscr1[i] = y;
+						AN.mgscr1[i] = y;
 					}
-					while ( n1 > 0 && mgscr1[n1] == 0 ) n1--;
-					if ( n1 == 0 && mgscr1[n1] == 0 ) break;
+					while ( n1 > 0 && AN.mgscr1[n1] == 0 ) n1--;
+					if ( n1 == 0 && AN.mgscr1[n1] == 0 ) break;
 					if ( n1 < n2 ) {
-						m1 = mgscr1; mgscr1 = mgscr2; mgscr2 = m1; x1 = n1; n1 = n2; n2 = x1;
+						m1 = AN.mgscr1; AN.mgscr1 = AN.mgscr2; AN.mgscr2 = m1; x1 = n1; n1 = n2; n2 = x1;
 					}
 				}
-				m1 = mgscr1; mgscr1 = mgscr2; mgscr2 = m1; x1 = n1; n1 = n2; n2 = x1;
+				m1 = AN.mgscr1; AN.mgscr1 = AN.mgscr2; AN.mgscr2 = m1; x1 = n1; n1 = n2; n2 = x1;
 			}
 		}
 		t += t[1];
 	}
 /*
-		The answer resides now in mgscr1. Paste it into term after the last t1.
+		The answer resides now in AN.mgscr1. Paste it into term after the last t1.
 */
 	if ( t1 ) {
 		if ( n1 == 0 ) {
 			offset = FUNHEAD+2;
 		}
-		else if ( n1 ==  1 && mgscr1[0] == 0 ) {
+		else if ( n1 ==  1 && AN.mgscr1[0] == 0 ) {
 			offset = FUNHEAD+2;
 		}
 		else {
 			offset = FUNHEAD + ARGHEAD;
-			if ( mgscr1[0] != 0 ) offset += 4;
+			if ( AN.mgscr1[0] != 0 ) offset += 4;
 			for ( i = 1; i <= n1; i++ ) {
-				if ( mgscr1[i] != 0 ) offset += 8;
+				if ( AN.mgscr1[i] != 0 ) offset += 8;
 			}
 		}
 		t = t1 + t1[1];
@@ -91,21 +90,21 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 		while ( m1 > t ) *--m2 = *--m1;
 		*t++ = fun2; *t++ = offset; *t++ = 1; FILLFUN3(t);
 		if ( n1 == 0 ) {
-			*t++ = -SNUMBER; *t++ = mgscr1[0];
+			*t++ = -SNUMBER; *t++ = AN.mgscr1[0];
 		}
-		else if ( n1 == 1 && mgscr1[0] == 0 ) {
+		else if ( n1 == 1 && AN.mgscr1[0] == 0 ) {
 			*t++ = -SYMBOL;
 			*t++ = sym;
 		}
 		else {
 			*t++ = offset - FUNHEAD; *t++ = 1; FILLARG(t);
-			if ( mgscr1[0] != 0 ) {
-				*t++ = 4; *t++ = mgscr1[0]; *t++ = 1; *t++ = 3;
+			if ( AN.mgscr1[0] != 0 ) {
+				*t++ = 4; *t++ = AN.mgscr1[0]; *t++ = 1; *t++ = 3;
 			}
 			for ( i = 1; i <= n1; i++ ) {
-				if ( mgscr1[i] != 0 ) {
+				if ( AN.mgscr1[i] != 0 ) {
 					*t++ = 8; *t++ = SYMBOL; *t++ = 4; *t++ = sym; *t++ = i;
-					*t++ = mgscr1[i]; *t++ = 1; *t++ = 3;
+					*t++ = AN.mgscr1[i]; *t++ = 1; *t++ = 3;
 				}
 			}
 		}
@@ -123,29 +122,29 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 	GETIDENTITY;
 	WORD *tstop = t + t[1], *tt, *ttt, cs, maxpow, i, n, *m, *w1, *w2, rl;
 	WORD oldncmod, oldcmod;
-	if ( nmgscr == 0 ) {
-		nmgscr = 40;
-		mgscr3 = mgscr1 = (WORD *)Malloc1(2*(nmgscr+1)*sizeof(WORD),"MakeMono");
-		mgscr2 = mgscr1 + nmgscr + 1;
+	if ( AN.nmgscr == 0 ) {
+		AN.nmgscr = 40;
+		AN.mgscr3 = AN.mgscr1 = (WORD *)Malloc1(2*(AN.nmgscr+1)*sizeof(WORD),"MakeMono");
+		AN.mgscr2 = AN.mgscr1 + AN.nmgscr + 1;
 	}
-	if ( whichbuffer == 0 ) m = mgscr1;
-	else                    m = mgscr2;
+	if ( whichbuffer == 0 ) m = AN.mgscr1;
+	else                    m = AN.mgscr2;
 /*
 	First the special cases
 */
 	t += FUNHEAD;
 	if ( *t == -SNUMBER && t+2 == tstop ) {
 		if ( t[1] < 0 ) {
-			mgscr2[0] = -((-t[1]) % modu);
-			if ( mgscr2[0] < 0 ) mgscr2[0] += modu;
+			AN.mgscr2[0] = -((-t[1]) % modu);
+			if ( AN.mgscr2[0] < 0 ) AN.mgscr2[0] += modu;
 		}
 		else {
-			mgscr2[0] = t[1] % modu;
+			AN.mgscr2[0] = t[1] % modu;
 		}
 		return(0);
 	}
 	else if ( *t == -SYMBOL && t+2 == tstop && t[1] == sym ) {
-		mgscr2[0] = 0; mgscr2[1] = 1; return(1);
+		AN.mgscr2[0] = 0; AN.mgscr2[1] = 1; return(1);
 	}
 	else if ( t + *t != tstop ) return(-1);
 /*
@@ -172,18 +171,18 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 */
 	oldncmod = AC.ncmod; oldcmod = AC.cmod[0];
 	AC.ncmod = 1; AC.cmod[0] = modu;
-	if ( maxpow > nmgscr ) {	/* extend the buffer? */
+	if ( maxpow > AN.nmgscr ) {	/* extend the buffer? */
 		WORD *m1;
-		nmgscr = maxpow;
-		m1 = (WORD *)Malloc1(2*(nmgscr+1)*sizeof(WORD),"MakeMono");
-		mgscr2 = m1 + nmgscr + 1;
+		AN.nmgscr = maxpow;
+		m1 = (WORD *)Malloc1(2*(AN.nmgscr+1)*sizeof(WORD),"MakeMono");
+		AN.mgscr2 = m1 + AN.nmgscr + 1;
 		if ( whichbuffer > 0 ) {
-			for ( i = 0; i < whichbuffer; i++ ) m1[i] = mgscr1[i];
+			for ( i = 0; i < whichbuffer; i++ ) m1[i] = AN.mgscr1[i];
 		}
-		M_free(mgscr3,"ModulusGCD1");
-		mgscr1 = m1;
-		if ( whichbuffer == 0 ) m = mgscr1;
-		else                    m = mgscr2;
+		M_free(AN.mgscr3,"ModulusGCD1");
+		AN.mgscr1 = m1;
+		if ( whichbuffer == 0 ) m = AN.mgscr1;
+		else                    m = AN.mgscr2;
 	}
 	for ( i = 0; i <= maxpow; i++ ) m[i] = 0;
 	tt = t + ARGHEAD;
@@ -223,20 +222,17 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 
 #ifdef CHINREM
 
-static UWORD *CRscrat1 = 0, *CRscrat2 = 0, *CRscrat3 = 0;
-static WORD nCRscrat1, nCRscrat2, nCRscrat3;
-
 int
 ChinRem ARG6(UWORD *,pp, UWORD *,rr, WORD, npp, UWORD *,x, WORD *,nx,int,par)
 {
 	UWORD *x1, *x2, *x3, z1, z2, i;
 	WORD y1, y2;
-	if ( CRscrat1 == 0 ) {
-		CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
-		CRscrat2 = CRscrat1 + AM.MaxTal+2;
-		CRscrat3 = CRscrat2 + AM.MaxTal+2;
+	if ( AN.CRscrat1 == 0 ) {
+		AN.CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
+		AN.CRscrat2 = AN.CRscrat1 + AM.MaxTal+2;
+		AN.CRscrat3 = AN.CRscrat2 + AM.MaxTal+2;
 	}
-	x1 = CRscrat1; x2 = CRscrat2;
+	x1 = AN.CRscrat1; x2 = AN.CRscrat2;
 	x1[0] = pp[0]; y1 = 1;
 	for ( i = 1; i < npp; i++ ) {
 		if ( MulLong(x1,y1,pp+i,1,x2,&y2) ) goto ChinErr;
@@ -252,8 +248,8 @@ ChinRem ARG6(UWORD *,pp, UWORD *,rr, WORD, npp, UWORD *,x, WORD *,nx,int,par)
 			*nx = 1; x[0] = z2;
 		}
 		else {
-			if ( MulLong(x2,y2,&z2,1,CRscrat3,&nCRscrat3) ) goto ChinErr;
-			if ( AddLong(x,*nx,CRscrat3,nCRscrat3,x,nx) ) goto ChinErr;
+			if ( MulLong(x2,y2,&z2,1,AN.CRscrat3,&AN.nCRscrat3) ) goto ChinErr;
+			if ( AddLong(x,*nx,AN.CRscrat3,AN.nCRscrat3,x,nx) ) goto ChinErr;
 		}
 	}
 	while ( BigLong(x1,y1,x,*nx) <= 0 ) {
@@ -294,13 +290,13 @@ ChinRema ARG8(UWORD*,pa,WORD,na,UWORD*,ra,WORD,nra,UWORD,pb,UWORD,rb,UWORD*,x,WO
 {
 	UWORD nn,pp,pd;
 	ULONG xx;
-	if ( CRscrat1 == 0 ) {
-		CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
-		CRscrat2 = CRscrat1 + AM.MaxTal+2;
-		CRscrat3 = CRscrat2 + AM.MaxTal+2;
+	if ( AN.CRscrat1 == 0 ) {
+		AN.CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
+		AN.CRscrat2 = AN.CRscrat1 + AM.MaxTal+2;
+		AN.CRscrat3 = AN.CRscrat2 + AM.MaxTal+2;
 	}
-	if ( AddLong(&rb,1,ra,-nra,CRscrat1,&nCRscrat1) ) goto ChinErr;
-	nn = DivMod(CRscrat1,nCRscrat1,pb);
+	if ( AddLong(&rb,1,ra,-nra,AN.CRscrat1,&AN.nCRscrat1) ) goto ChinErr;
+	nn = DivMod(AN.CRscrat1,AN.nCRscrat1,pb);
 	pp = DivMod(pa,na,pb);
 	pd = InvMod(pp,pb);
 	if ( pd == 0 ) {

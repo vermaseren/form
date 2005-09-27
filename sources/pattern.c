@@ -4,11 +4,6 @@
 
 #include "form3.h"
 
-static WORD *selecttermundo = 0;
-static WORD sizeselecttermundo = 0;
-static WORD *patternbuffer = 0;
-static WORD patternbuffersize = 0;
-
 /*
   	#] Includes :
  	#[ Patterns :
@@ -137,16 +132,16 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 			return(-1);
 		}
 		*m -= m[*m-1];
-		if ( *m > patternbuffersize ) {
-			if ( patternbuffer ) M_free(patternbuffer,"patternbuffer");
-			patternbuffersize = 2 * (*m);
-			patternbuffer = (WORD *)Malloc1(patternbuffersize * sizeof(WORD),
-					"patternbuffer");
+		if ( *m > AN.patternbuffersize ) {
+			if ( AN.patternbuffer ) M_free(AN.patternbuffer,"AN.patternbuffer");
+			AN.patternbuffersize = 2 * (*m);
+			AN.patternbuffer = (WORD *)Malloc1(AN.patternbuffersize * sizeof(WORD),
+					"AN.patternbuffer");
 		}
-		mm = patternbuffer;
+		mm = AN.patternbuffer;
 		i = *m;
 		NCOPY(mm,m,i);
-		m = patternbuffer;
+		m = AN.patternbuffer;
 		AC.Eside = RHSIDE;
 	}
 	AT.WorkPointer = ww = term + *term;
@@ -311,13 +306,13 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 */
 				if ( llf[1] > 2 ) {
 					WORD *t1, *t2;
-					if ( *term > sizeselecttermundo ) {
-						if ( selecttermundo ) M_free(selecttermundo,"selecttermundo");
-						sizeselecttermundo = *term +10;
-						selecttermundo = (WORD *)Malloc1(
-							sizeselecttermundo*sizeof(WORD),"selecttermundo");
+					if ( *term > AN.sizeselecttermundo ) {
+						if ( AN.selecttermundo ) M_free(AN.selecttermundo,"AN.selecttermundo");
+						AN.sizeselecttermundo = *term +10;
+						AN.selecttermundo = (WORD *)Malloc1(
+							AN.sizeselecttermundo*sizeof(WORD),"AN.selecttermundo");
 					}
-					t1 = term; t2 = selecttermundo; i = *term;
+					t1 = term; t2 = AN.selecttermundo; i = *term;
 					NCOPY(t2,t1,i);
 				}
 				power = 1;
@@ -326,7 +321,7 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 					if ( TestSelect(term,llf) ) {
 						WORD *t1, *t2;
 						power = 0;
-						t1 = term; t2 = selecttermundo; i = *t2;
+						t1 = term; t2 = AN.selecttermundo; i = *t2;
 						NCOPY(t1,t2,i);
 						goto nextlevel;
 					}

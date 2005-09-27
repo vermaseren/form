@@ -119,9 +119,6 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 		Lijst[0]....  The groups.
 */
 
-static WORD **arglist = 0;
-static int arglistsize = 0;
-
 WORD
 Symmetrize ARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
 		WORD,type)
@@ -138,12 +135,12 @@ Symmetrize ARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
 
 	ff = ( *func > FUNCTION ) ? functions[*func-FUNCTION].spec: 0;
 
-	if ( 2*func[1] > arglistsize ) {
-		if ( arglist ) M_free(arglist,"Symmetrize");
-		arglistsize = 2*func[1] + 8;
-		arglist = (WORD **)Malloc1(arglistsize*sizeof(WORD *),"Symmetrize");
+	if ( 2*func[1] > AN.arglistsize ) {
+		if ( AN.arglist ) M_free(AN.arglist,"Symmetrize");
+		AN.arglistsize = 2*func[1] + 8;
+		AN.arglist = (WORD **)Malloc1(AN.arglistsize*sizeof(WORD *),"Symmetrize");
 	}
-	arg = args = arglist;
+	arg = args = AN.arglist;
 	to = AT.WorkPointer;
 	r = func;
 	fstop = r + r[1];
@@ -230,7 +227,7 @@ recycle:
 			}
 		}
 		if ( jmin != 0 ) {
-			arg = arglist + func[1];
+			arg = AN.arglist + func[1];
 			a1 = Lijst + gsize * jmin;
 			k = gsize * ngroups;
 			a2 = Lijst + k;
@@ -238,7 +235,7 @@ recycle:
 				if ( a1 >= a2 ) a1 = Lijst;
 				*arg++ = args[*a1++];
 			}
-			arg = arglist + func[1];
+			arg = AN.arglist + func[1];
 			a1 = Lijst;
 			for ( i = 0; i < k; i++ ) args[*a1++] = *arg++;
 		}
@@ -271,7 +268,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize : 
+ 		#] Symmetrize :
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -405,7 +402,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 }
 
 /*
- 		#] FullSymmetrize : 
+ 		#] FullSymmetrize :
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -520,7 +517,7 @@ NextFun:
 }
 
 /*
- 		#] SymGen : 
+ 		#] SymGen :
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -584,7 +581,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind : 
+ 		#] SymFind :
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -629,7 +626,7 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainIn : 
+ 		#] ChainIn :
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
@@ -688,7 +685,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainOut : 
+ 		#] ChainOut :
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -1384,7 +1381,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction : 
+ 		#] MatchFunction :
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		AN.patstop: end of the functions field in the search pattern
@@ -1660,7 +1657,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions : 
+ 		#] ScanFunctions :
 	#] Patterns :
 */
 

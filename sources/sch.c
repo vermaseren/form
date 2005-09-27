@@ -1309,7 +1309,6 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 WORD
 WriteInnerTerm ARG2(WORD *,term,WORD,first)
 {
-	GETIDENTITY;
 	WORD *t, *s, *s1, *s2, n, i, pow;
 	t = term;
 	s = t+1;
@@ -1693,7 +1692,7 @@ WriteAll()
 	AT.WorkPointer += AM.MaxTer*2;
 	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 	AT.WorkPointer += 2*AC.LineLength;
-	*(AM.CompressBuffer) = 0;
+	*(AR.CompressBuffer) = 0;
 	first = 0;
 	for ( n = 0; n < NumExpressions; n++ ) {
 		if ( ( Expressions[n].printflag & PRINTON ) != 0 ) { first = 1; break; }
@@ -1871,7 +1870,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 
 	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 	AT.WorkPointer += 2*AC.LineLength;
-	*(AM.CompressBuffer) = 0;
+	*(AR.CompressBuffer) = 0;
 
 	AO.IsBracket = 0;
 	AO.OutSkip = 3;

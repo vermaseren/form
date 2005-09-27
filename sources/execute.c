@@ -4,14 +4,12 @@
 
 #include "form3.h"
 
-extern WORD *dummyrenumlist;
-
 #ifdef PARALLEL /* [04dec2002 df] */
 PFDOLLARS *PFDollars; 
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -37,7 +35,7 @@ CleanExpr ARG1(WORD,par)
 				M_free(e_in->renum,"Renumber"); e_in->renum = 0;
 			}
 			if ( e_in->renumlists ) {
-				if ( e_in->renumlists != dummyrenumlist )
+				if ( e_in->renumlists != AN.dummyrenumlist )
 						M_free(e_in->renumlists,"Renumber-lists");
 				e_in->renumlists = 0;
 			}
@@ -137,7 +135,7 @@ CleanExpr ARG1(WORD,par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -197,7 +195,7 @@ PopVariables()
 }
 
 /*
- 		#] PopVariables : 
+ 		#] PopVariables :
  		#[ MakeGlobal :
 */
 
@@ -239,7 +237,7 @@ MakeGlobal ARG0
 }
 
 /*
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ TestDrop :
 */
 
@@ -305,7 +303,7 @@ TestDrop()
 }
 
 /*
- 		#] TestDrop : 
+ 		#] TestDrop :
  		#[ DoExecute :
 */
 
@@ -769,7 +767,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute : 
+ 		#] DoExecute :
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1078,7 +1076,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket : 
+ 		#] PutBracket :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1154,7 +1152,7 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
 }
 
 /*
- 		#] ExchangeExpressions : 
+ 		#] ExchangeExpressions :
  		#[ GetFirstBracket :
 */
 
@@ -1251,7 +1249,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 }
 
 /*
- 		#] GetFirstBracket : 
+ 		#] GetFirstBracket :
  		#[ TermsInExpression :
 */
 
@@ -1263,7 +1261,7 @@ LONG TermsInExpression ARG1(WORD,num)
 }
 
 /*
- 		#] TermsInExpression : 
+ 		#] TermsInExpression :
  		#[ UpdatePositions :
 */
 
@@ -1290,6 +1288,6 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions : 
+ 		#] UpdatePositions :
 	#] Expressions :
 */

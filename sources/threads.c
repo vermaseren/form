@@ -9,11 +9,11 @@
 
 #define TERMINATETHREAD -1
 #define STARTNEWEXPRESSION 1
-#define LOWESTORDERDISTRIBUTION 2
+#define LOWESTLEVELGENERATION 2
 #define FINISHEXPRESSION 3
 #define THEMASTERWANTSMOREDATA 4
 #define CLEANUPEXPRESSION 5
-#define HIGHERORDERDISTRIBUTION 6
+#define HIGHERLEVELGENERATION 6
 */
  
 static int numberofthreads;
@@ -27,7 +27,7 @@ static pthread_t *threadpointers = 0;
 static pthread_mutex_t *wakeuplocks;
 static pthread_cond_t *wakeupconditions;
 static int *wakeup;
-static INILOCK(wakeupmasterlocks);
+static INILOCK(wakeupmasterlock);
 static pthread_cond_t wakeupmasterconditions = PTHREAD_COND_INITIALIZER;
 static int wakeupmaster = 0;
 
@@ -41,8 +41,11 @@ void IAmAvailable ARG1(int,identity);
 int ThreadWait ARG1(int,identity);
 int UpdateOneThread ARG1(int,identity);
 
+INILOCK(dummylock);
+static pthread_cond_t dummywakeupcondition = PTHREAD_COND_INITIALIZER;
+
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Identity :
  		#[ StartIdentity :
 
@@ -56,7 +59,7 @@ void StartIdentity ARG0
 }
 
 /*
- 		#] StartIdentity : 
+ 		#] StartIdentity :
  		#[ FinishIdentity :
 
 	The library needs a finishing routine
@@ -68,7 +71,7 @@ void FinishIdentity(int *keyp)
 }
 
 /*
- 		#] FinishIdentity : 
+ 		#] FinishIdentity :
  		#[ SetIdentity :
 
 	Assigns an integer value to a thread, starting at zero.
@@ -85,7 +88,7 @@ int SetIdentity ARG0
 }
 
 /*
- 		#] SetIdentity : 
+ 		#] SetIdentity :
  		#[ WhoAmI :
 
 	Returns the number of the thread in our administration
@@ -100,14 +103,19 @@ int WhoAmI ARG0
 	if ( identityofthreads <= 1 ) return(0);
 /*
 	Now the reading of the key.
-*/
+	According to the book the statement should read:
+
 	pthread_getspecific(identitykey,(void **)(&identity));
+
+	but according to the information in pthread.h it is:
+*/
+	identity = (int *)pthread_getspecific(identitykey);
 	return(*identity);
 }
 
 /*
- 		#] WhoAmI : 
-  	#] Identity : 
+ 		#] WhoAmI :
+  	#] Identity :
   	#[ StartAllThreads :
 
 	In this routine we start 'number' threats
@@ -118,6 +126,7 @@ int WhoAmI ARG0
 int StartAllThreads ARG1(int,number)
 {
 	int identity, j, dummy, *abp;
+	ALLPRIVATES *B;
 	long absize;
 	pthread_t thethread;
 
@@ -137,13 +146,13 @@ int StartAllThreads ARG1(int,number)
 
 	for ( j = 0; j < number; j++ ) {
 		wakeup[j] = 0;
-		wakeuplocks[j] = PTHREAD_MUTEX_INITIALIZER;
-		wakeupconditions[j] = PTHREAD_COND_INITIALIZER;
+		wakeuplocks[j] = dummylock;
+		wakeupconditions[j] = dummywakeupcondition;
 	}
 
 	numberofthreads = number;
 	StartIdentity();
-	identity = SetIndentity();
+	identity = SetIdentity();
 	threadpointers[identity] = pthread_self();
 
 	for ( j = 1; j < number; j++ ) {
@@ -153,22 +162,44 @@ int StartAllThreads ARG1(int,number)
 /*
 	Now we initialize the master at the same time that the workers are doing so.
 */
+	B = AB+identity;
 	InitializeOneThread(identity);
+	AR.infile = &(AR.Fscr[0]);
+	AR.outfile = &(AR.Fscr[1]);
+	AS.hidefile = &(AR.Fscr[2]);
 	return(0);
 }
 
 /*
-  	#] StartAllThreads : 
+  	#] StartAllThreads :
   	#[ InitializeOneThread :
 */
 
 void InitializeOneThread ARG1(int,identity)
 {
 	WORD *t;
-	int i;
+	int i, j;
+	ALLPRIVATES *B = AB+identity;
 	AR.CurDum = AM.IndDum;
+	for ( j = 0; j < 2; j++ ) {
+		AC.ScratchBuf[j] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"scratchsize");
+		AR.Fscr[j].POsize = AM.ScratSize * sizeof(WORD);
+		AR.Fscr[j].POfull = AR.Fscr[j].POfill = AR.Fscr[j].PObuffer = AC.ScratchBuf[j];
+		AR.Fscr[j].POstop = AR.Fscr[j].PObuffer + AM.ScratSize;
+		PUTZERO(AR.Fscr[j].POposition);
+	}
+	AR.Fscr[2].PObuffer = 0;
+	AR.Fscr[0].handle = -1;
+	AR.Fscr[1].handle = -1;
+	AR.Fscr[2].handle = -1;
+	AR.FoStage4[0].handle = -1;
+	AR.FoStage4[1].handle = -1;
+
+	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
+	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
 /*
-	Here we make all allocations for the struct AT (which is AB[identity].T).
+	Here we make all allocations for the struct AT
+	(which is AB[identity].T or B->T with B = AB+identity).
 */
 	AT.WorkSpace = (WORD *)Malloc1(AM.WorkSize*sizeof(WORD),"WorkSpace");
 	AT.WorkTop = AT.WorkSpace + AM.WorkSize;
@@ -213,6 +244,72 @@ void InitializeOneThread ARG1(int,identity)
 	AT.onepol[2] = 1;
 	AT.onepol[3] = 3;
 	AT.onepol[4] = 0;
+	AT.onesympol[0] = 8;
+	AT.onesympol[1] = SYMBOL;
+	AT.onesympol[2] = 4;
+	AT.onesympol[3] = 1;
+	AT.onesympol[4] = 1;
+	AT.onesympol[5] = 1;
+	AT.onesympol[6] = 1;
+	AT.onesympol[7] = 3;
+	AT.onesympol[8] = 0;
+	AT.comsym[0] = 8;
+	AT.comsym[1] = SYMBOL;
+	AT.comsym[2] = 4;
+	AT.comsym[3] = 0;
+	AT.comsym[4] = 1;
+	AT.comsym[5] = 1;
+	AT.comsym[6] = 1;
+	AT.comsym[7] = 3;
+	AT.comnum[0] = 4;
+	AT.comnum[1] = 1;
+	AT.comnum[2] = 1;
+	AT.comnum[3] = 3;
+	AT.comfun[0] = FUNHEAD+4;
+	AT.comfun[1] = FUNCTION;
+	AT.comfun[2] = FUNHEAD;
+	AT.comfun[3] = 0;
+#if FUNHEAD == 4
+	AT.comfun[4] = 0;
+#endif
+	AT.comfun[FUNHEAD+1] = 1;
+	AT.comfun[FUNHEAD+2] = 1;
+	AT.comfun[FUNHEAD+3] = 3;
+	AT.comind[0] = 7;
+	AT.comind[1] = INDEX;
+	AT.comind[2] = 3;
+	AT.comind[3] = 0;
+	AT.comind[4] = 1;
+	AT.comind[5] = 1;
+	AT.comind[6] = 3;
+	AT.locwildvalue[0] = SUBEXPRESSION;
+	AT.locwildvalue[1] = SUBEXPSIZE;
+	for ( i = 2; i < SUBEXPSIZE; i++ ) AT.locwildvalue[i] = 0;
+	AT.mulpat[0] = TYPEMULT;
+	AT.mulpat[1] = SUBEXPSIZE+3;
+	AT.mulpat[2] = 0;
+	AT.mulpat[3] = SUBEXPRESSION;
+	AT.mulpat[4] = SUBEXPSIZE;
+	AT.mulpat[5] = 0;
+	AT.mulpat[6] = 1;
+	for ( i = 7; i < SUBEXPSIZE+5; i++ ) AT.mulpat[i] = 0;
+	AT.proexp[0] = SUBEXPSIZE+4;
+	AT.proexp[1] = EXPRESSION;
+	AT.proexp[2] = SUBEXPSIZE;
+	AT.proexp[3] = -1;
+	AT.proexp[4] = 1;
+	for ( i = 5; i < SUBEXPSIZE+1; i++ ) AT.proexp[i] = 0;
+	AT.proexp[SUBEXPSIZE+1] = 1;
+	AT.proexp[SUBEXPSIZE+2] = 1;
+	AT.proexp[SUBEXPSIZE+3] = 3;
+	AT.proexp[SUBEXPSIZE+4] = 0;
+	AT.dummysubexp[0] = SUBEXPRESSION;
+	AT.dummysubexp[1] = SUBEXPSIZE+4;
+	for ( i = 2; i < SUBEXPSIZE; i++ ) AT.dummysubexp[i] = 0;
+	AT.dummysubexp[SUBEXPSIZE] = WILDDUMMY;
+	AT.dummysubexp[SUBEXPSIZE+1] = 4;
+	AT.dummysubexp[SUBEXPSIZE+2] = 0;
+	AT.dummysubexp[SUBEXPSIZE+3] = 0;
 
 	AT.MinVecArg[0] = 7+ARGHEAD;
 	AT.MinVecArg[ARGHEAD] = 7;
@@ -230,7 +327,26 @@ void InitializeOneThread ARG1(int,identity)
 	*t++ = FUNHEAD;
 	for ( i = 2; i < FUNHEAD; i++ ) *t++ = 0;
 	*t++ = 1; *t++ = 1; *t++ = 3;
-
+/*
+	Now the sort buffers. They depend on which thread. The master
+	inherits the sortbuffer from AM.S0
+*/
+	if ( identity == 0 ) {
+		AT.S0 = AM.S0;
+	}
+	else {
+/*
+		For the moment we don't have special settings.
+		They may become costly in virtual memory.
+*/
+		AT.S0 = AllocSort(AM.S0->LargeSize*sizeof(WORD)
+						 ,AM.S0->SmallSize*sizeof(WORD)
+						 ,AM.S0->SmallEsize*sizeof(WORD)
+						 ,AM.S0->TermsInSmall
+						 ,AM.S0->MaxPatches
+						 ,AM.S0->MaxFpatches
+						 ,AM.S0->file.POsize/sizeof(WORD) );
+	}
 	return;
 OnError:;
 	LOCK(ErrorMessageLock);
@@ -252,7 +368,7 @@ void FinalizeOneThread ARG1(int,identity)
 }
 
 /*
-  	#] FinalizeOneThread : 
+  	#] FinalizeOneThread :
   	#[ UpdateOneThread :
 
 	Fix up things that happened at compiler time.
@@ -260,26 +376,67 @@ void FinalizeOneThread ARG1(int,identity)
 
 int UpdateOneThread ARG1(int,identity)
 {
+	ALLPRIVATES *B = AB+identity;
 	if ( AT.WildcardBufferSize < AC.WildcardBufferSize ) {
-		M_free(AT.WildcardNames,"argument list names");
-		M_free(WildArgsTaken,"argument list names");
+		M_free(AT.WildArgTaken,"argument list names");
 		AT.WildcardBufferSize = AC.WildcardBufferSize;
 		AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
 				,"argument list names");
-		if ( AT.WildArgTaken != 0 ) return(-1);
+		if ( AT.WildArgTaken == 0 ) return(-1);
 	}
 	return(0);
 }
 
 /*
   	#] UpdateOneThread :
+  	#[ LoadOneThread :
+
+	Loads all relevant variables from thread 'from' into thread 'identity'
+	This is to be done just prior to waking up the thread.
+*/
+
+int LoadOneThread ARG3(int,from,int,identity,WORD *,term)
+{
+	WORD *t1, *t2, *tstop;
+	ALLPRIVATES *B = AB+identity;
+	AR.infile = AR0.infile;
+	AR.outfile = AR0.outfile;
+	AR.DefPosition = AR0.DefPosition;
+	AR.NoCompress = AR0.NoCompress;
+	AR.gzipCompress = AR0.gzipCompress;
+	AR.BracketOn = AR0.BracketOn;
+	AR.CurDum = AR0.CurDum;
+	AR.DeferFlag = AR0.DeferFlag;
+	AR.TePos = AR0.TePos;
+	AR.sLevel = AR0.sLevel;
+	AR.Stage4Name = AR0.Stage4Name;
+	AR.GetOneFile = AR0.GetOneFile;
+	AR.PolyFun = AR0.PolyFun;
+/*
+	AR.MaxBracket = AR0.MaxBracket;
+*/
+	t1 = term; tstop = term + *term;
+	t2 = AT.WorkPointer;
+	while ( t1 < tstop ) *t2++ = *t1++;
+/*
+	The relevant variables and the term are in their place.
+	There is nothing more to do.
+*/
+	return(0);
+}
+
+/*
+  	#] LoadOneThread :
   	#[ RunThread :
 */
 
 int RunThread ARG1(int *,dummy)
 {
+	WORD *term;
 	int identity, wakeupsignal;
+	ALLPRIVATES *B;
 	identity = SetIdentity();
+	B = AB+identity;
 	threadpointers[identity] = pthread_self();
 	InitializeOneThread(identity);
 	while ( ( wakeupsignal = ThreadWait(identity) ) > 0 ) {
@@ -290,17 +447,41 @@ int RunThread ARG1(int *,dummy)
 				Start with getting some buffers synchronized with the compiler
 */
 				if ( UpdateOneThread(identity) ) {
+					LOCK(ErrorMessageLock);
+					MesPrint("Update error in starting expression in thread %d in module %d",identity,AC.CModule);
+					UNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
+				AR.DeferFlag = AC.ComDefer;
+/*
+				Now fire up the sort buffer.
+*/
+				NewSort();
 				break;
-			case LOWESTORDERDISTRIBUTION:
+			case LOWESTLEVELGENERATION:
 /*
 				Term came from input. Needs to be dealt with.
+				The term sits at AT.WorkPointer;
 */
+				term = AT.WorkPointer;
+				AT.WorkPointer = term + *term;
+				AN.RepPoint = AT.RepCount + 1;
+				AR.CurDum = ReNumber(term);
+				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				if ( Generator(term,0) ) {
+					LowerSortLevel();
+					LOCK(ErrorMessageLock);
+					MesPrint("Error in processing one term in thread %d in module %d",identity,AC.CModule);
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				AT.WorkPointer = term;
 				break;
 			case FINISHEXPRESSION:
 /*
 				Do the sort and wait for data transfer to the master
+				For this the master has to synchronize somewhat before
+				the final sorting stage can be started.
 */
 				break;
 			case THEMASTERWANTSMOREDATA:
@@ -309,6 +490,8 @@ int RunThread ARG1(int *,dummy)
 				This is mainly needed when the sorted output resides on disk
 				Otherwise the master can collect it directly from the
 				workers sort buffers.
+				There is potential for refinement here, like getting signalled
+				when the buffer is half used.
 */
 				break;
 			case CLEANUPEXPRESSION:
@@ -316,7 +499,7 @@ int RunThread ARG1(int *,dummy)
 				Cleanup everything and wait for the next expression
 */
 				break;
-			case HIGHERORDERDISTRIBUTION:
+			case HIGHERLEVELGENERATION:
 /*
 				For later implementation.
 				When foliating halfway the tree.
@@ -338,7 +521,7 @@ int RunThread ARG1(int *,dummy)
 }
 
 /*
-  	#] RunThread : 
+  	#] RunThread :
   	#[ IAmAvailable :
 
 	To be called when a thread is available.
@@ -358,14 +541,14 @@ void IAmAvailable ARG1(int,identity)
 	if ( top == 0 ) {
 		LOCK(wakeupmasterlock);
 		wakeupmaster = identity;
-		pthread_cond_signal(&wakeupmasterconditions));
+		pthread_cond_signal(&wakeupmasterconditions);
 		UNLOCK(wakeupmasterlock);
 	}
 	UNLOCK(availabilitylock);
 }
 
 /*
-  	#] IAmAvailable : 
+  	#] IAmAvailable :
   	#[ GetAvailable :
 
 	Gets an available thread from the top of the stack.
@@ -381,7 +564,7 @@ int GetAvailable ARG0
 }
 
 /*
-  	#] GetAvailable : 
+  	#] GetAvailable :
   	#[ ThreadWait :
 
 	To be called by a thread when it has nothing to do.
@@ -393,18 +576,18 @@ int ThreadWait ARG1(int,identity)
 {
 	int retval;
 	IAmAvailable(identity);
-	LOCK(wakeuplock[identity]);
+	LOCK(wakeuplocks[identity]);
 	while ( wakeup[identity] == 0 ) {
-		pthread_cond_wait(&(wakeupconditions[identity]),&(wakeuplock[identity]));
+		pthread_cond_wait(&(wakeupconditions[identity]),&(wakeuplocks[identity]));
 	}
 	retval = wakeup[identity];
 	wakeup[identity] = 0;
-	UNLOCK(wakeuplock[identity]);
+	UNLOCK(wakeuplocks[identity]);
 	return(retval);
 }
 
 /*
-  	#] ThreadWait : 
+  	#] ThreadWait :
   	#[ MasterWait :
 
 	To be called by the master when it has to wait for one of the
@@ -427,7 +610,7 @@ int MasterWait ARG0
 }
 
 /*
-  	#] MasterWait : 
+  	#] MasterWait :
   	#[ WakeupThread :
 
 	To be called when the indicated thread needs waking up.
@@ -442,13 +625,152 @@ void WakeupThread ARG2(int,identity,int,signalnumber)
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	LOCK(wakeuplock[identity]);
+	LOCK(wakeuplocks[identity]);
 	wakeup[identity] = signalnumber;
 	pthread_cond_signal(&(wakeupconditions[identity]));
-	UNLOCK(wakeuplock[identity]);
+	UNLOCK(wakeuplocks[identity]);
 }
 
 /*
-  	#] WakeupThread : 
+  	#] WakeupThread :
+  	#[ ThreadProcessor :
+*/
+
+int
+ThreadProcessor()
+{
+#ifdef ALLTHREADS
+/*
+				First copy the prototype and get the bracketindex (if any)
+*/
+				if ( GetTerm(term) <= 0 ) {
+				  MesPrint("Expression %d has problems in scratchfile",i);
+				  retval = -1;
+				  break;
+				}
+				if ( AC.bracketindexflag ) OpenBracketIndex(i);
+				term[3] = i;
+				SeekScratch(AR.outfile,&position);
+				e->onfile = position;
+				if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+/*
+				Now, if we are running threads we have to start them.
+				Otherwise we have to do things ourselves.
+*/
+				if ( AS.MultiThreaded ) {
+					for ( id = 1; id < AM.totalnumberofthreads; id++ ) {
+						WakeupThread(id,STARTNEWEXPRESSION);
+					}
+					AN.ninterms = 0;
+					while ( GetTerm(term) ) {
+					  AN.ninterms++; dd = deferskipped;
+					  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
+						if ( GetMoreTerms(term) ) {
+						  LowerSortLevel(); goto ProcErr;
+						}
+					  }
+					  while ( ( id = GetAvailable() ) < 0 ) { MasterWait(); }
+					  LoadOneThread(0,id,term);
+					  WakeupThread(id,LOWESTLEVELGENERATION);
+					  AN.ninterms += dd;
+					}
+					AN.ninterms += dd;
+					if ( LastExpression ) {
+						if ( AR.infile->handle >= 0 ) {
+							CloseFile(AR.infile->handle);
+							AR.infile->handle = -1;
+							remove(AR.infile->name);
+							PUTZERO(AR.infile->POposition);
+							AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
+						}
+					}
+					for ( id = 1; id < AM.totalnumberofthreads; id++ ) {
+						WakeupThread(id,FINISHEXPRESSION);
+					}
+/*
+	here we should synchronize with the workers
+	finally we call the final sort routine. It doesn't need stage4.
+*/
+					if ( EndEndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
+/*
+*/
+					for ( id = 1; id < AM.totalnumberofthreads; id++ ) {
+						WakeupThread(id,CLEANUPEXPRESSION);
+					}
+					if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
+					else e->vflags |= ISZERO;
+					if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				
+					if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
+					if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
+					AS.GetFile = 0;
+					break;
+				}
+				else {
+					AR.DeferFlag = AC.ComDefer;
+					NewSort();
+					AN.ninterms = 0;
+					while ( GetTerm(term) ) {
+					  AN.ninterms++; dd = deferskipped;
+					  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
+						if ( GetMoreTerms(term) ) {
+						  LowerSortLevel(); goto ProcErr;
+						}
+					  }
+					  AT.WorkPointer = term + *term;
+					  AN.RepPoint = AT.RepCount + 1;
+					  AR.CurDum = ReNumber(term);
+					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+					  if ( Generator(term,0) ) {
+						LowerSortLevel(); goto ProcErr;
+					  }
+					  AN.ninterms += dd;
+					}
+					AN.ninterms += dd;
+					if ( LastExpression ) {
+						if ( AR.infile->handle >= 0 ) {
+							CloseFile(AR.infile->handle);
+							AR.infile->handle = -1;
+							remove(AR.infile->name);
+							PUTZERO(AR.infile->POposition);
+							AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
+						}
+					}
+					if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
+					if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
+					else e->vflags |= ISZERO;
+					if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				
+					if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
+					if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
+					AS.GetFile = 0;
+					break;
+				}
+#else
+	return(0);
+#endif
+}
+
+/*
+  	#] ThreadProcessor :
+  	#[ ThreadsMerge :
+
+	Routine takes after MergePatches.
+	We have however now, instead of file -> file a mode that
+	is workers -> master(file). This mode works a bit like
+	large buffer/file -> file except for that now the information
+	doesn't come from the patches in the sort file but from the
+	sorted results of the workers.
+	We make the workers responsible for keeping the patch buffers filled.
+*/
+
+int
+ThreadsMerge ARG1(WORD,par)
+{
+	return(-1);
+}
+
+/*
+  	#] ThreadsMerge :
 */
 #endif

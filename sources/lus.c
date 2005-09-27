@@ -22,14 +22,6 @@
 	          if < 0 we look for all loops.
 */
 
-static int *funargs = 0;
-static WORD **funlocs = 0;
-static int numfargs = 0;
-static int numflocs = 0;
-static int nargs, tohunt, numoffuns;
-static int *funinds = 0;
-static int funisize = 0;
-
 int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD,mode)
 {
 	GETIDENTITY;
@@ -69,20 +61,20 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 /*
 	Allocations:
 */
-	if ( numflocs < funnum ) {
-		if ( funlocs ) M_free(funlocs,"Lus: funlocs");
-		numflocs = funnum;
-		funlocs = (WORD **)Malloc1(sizeof(WORD *)*numflocs,"Lus: funlocs");
+	if ( AN.numflocs < funnum ) {
+		if ( AN.funlocs ) M_free(AN.funlocs,"Lus: AN.funlocs");
+		AN.numflocs = funnum;
+		AN.funlocs = (WORD **)Malloc1(sizeof(WORD *)*AN.numflocs,"Lus: AN.funlocs");
 	}
-	if ( numfargs < funnum*numargs ) {
-		if ( funargs ) M_free(funargs,"Lus: funargs");
-		numfargs = funnum*numargs;
-		funargs = (int *)Malloc1(sizeof(int *)*numfargs,"Lus: funargs");
+	if ( AN.numfargs < funnum*numargs ) {
+		if ( AN.funargs ) M_free(AN.funargs,"Lus: AN.funargs");
+		AN.numfargs = funnum*numargs;
+		AN.funargs = (int *)Malloc1(sizeof(int *)*AN.numfargs,"Lus: AN.funargs");
 	}
 /*
 	Make a list of relevant indices
 */
-	alist = funargs; loc = funlocs;
+	alist = AN.funargs; loc = AN.funlocs;
 	t = term+1;
 	if ( ten >= TENSORFUNCTION ) {
 		while ( t < tstop ) {
@@ -142,35 +134,35 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 	sort the list of available indices (and their multiplicity) and
 	work with binary searches.
 */
-	alist = funargs; totnum = numargs*nfun;
+	alist = AN.funargs; totnum = numargs*nfun;
 	if ( nfun > 7 ) {
-		if ( funisize < totnum ) {
-			if ( funinds ) M_free(funinds,"funinds");
-			funisize = (totnum*3)/2;
-			funinds = (int *)Malloc1(funisize*2*sizeof(int),"funinds");
+		if ( AN.funisize < totnum ) {
+			if ( AN.funinds ) M_free(AN.funinds,"AN.funinds");
+			AN.funisize = (totnum*3)/2;
+			AN.funinds = (int *)Malloc1(AN.funisize*2*sizeof(int),"AN.funinds");
 		}
-		i = totnum; n = 0; wi = funinds;
+		i = totnum; n = 0; wi = AN.funinds;
 		while ( --i >= 0 ) {
 			if ( *alist >= 0 ) { n++; *wi++ = *alist; *wi++ = 1; }
 			alist++;
 		}
-		n = SortTheList(funinds,n);
+		n = SortTheList(AN.funinds,n);
 		do {
 			action = 0;
 			for ( i = 0; i < nfun; i++ ) {
-				alist = funargs + i*numargs;
+				alist = AN.funargs + i*numargs;
 				jj = numargs;
 				for ( j = 0; j < jj; j++ ) {
 					if ( alist[j] < 0 ) break;
 					mini = 0; maxi = n-1;
 					while ( mini <= maxi ) {
-						medi = (mini + maxi) / 2; k = funinds[2*medi];
+						medi = (mini + maxi) / 2; k = AN.funinds[2*medi];
 						if ( alist[j] > k ) mini = medi + 1;
 						else if ( alist[j] < k ) maxi = medi - 1;
 						else break;
 					}
-					if ( funinds[2*medi+1] <= 1 ) {
-						(funinds[2*medi+1])--;
+					if ( AN.funinds[2*medi+1] <= 1 ) {
+						(AN.funinds[2*medi+1])--;
 						jj--; k = j; while ( k < jj ) { alist[k] = alist[k+1]; k++; }
 						alist[jj] = -1; j--;
 					}
@@ -179,16 +171,16 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 					if ( jj == 1 ) {
 						mini = 0; maxi = n-1;
 						while ( mini <= maxi ) {
-							medi = (mini + maxi) / 2; k = funinds[2*medi];
+							medi = (mini + maxi) / 2; k = AN.funinds[2*medi];
 							if ( alist[0] > k ) mini = medi + 1;
 							else if ( alist[0] < k ) maxi = medi - 1;
 							else break;
 						}
-						(funinds[2*medi+1])--;
-						if ( funinds[2*medi+1] == 1 ) action++;
+						(AN.funinds[2*medi+1])--;
+						if ( AN.funinds[2*medi+1] == 1 ) action++;
 					}
-					nfun--; totnum -= numargs; funlocs[i] = funlocs[nfun];
-					wi = funargs + nfun*numargs;
+					nfun--; totnum -= numargs; AN.funlocs[i] = AN.funlocs[nfun];
+					wi = AN.funargs + nfun*numargs;
 					for ( j = 0; j < numargs; j++ ) alist[j] = *wi++;
 					i--;
 				}
@@ -206,7 +198,7 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 		do {
 			action = 0;
 			for ( i = 0; i < nfun; i++ ) {
-				alist = funargs + i*numargs;
+				alist = AN.funargs + i*numargs;
 				n = numargs;
 				for ( k = 0; k < n; k++ ) {
 					if ( alist[k] < 0 ) { alist[k--] = alist[--n]; alist[n] = -1; }
@@ -214,16 +206,16 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 				if ( n <= 1 ) {
 					if ( n == 1 ) { j = alist[0]; }
 					else j = -1;
-					nfun--; totnum -= numargs; funlocs[i] = funlocs[nfun];
-					wi = funargs + nfun * numargs;
+					nfun--; totnum -= numargs; AN.funlocs[i] = AN.funlocs[nfun];
+					wi = AN.funargs + nfun * numargs;
 					for ( k = 0; k < numargs; k++ ) alist[k] = wi[k];
 					i--;
 					if ( j >= 0 ) {
-						for ( k = 0, jj = 0, wi = funargs; k < totnum; k++, wi++ ) {
+						for ( k = 0, jj = 0, wi = AN.funargs; k < totnum; k++, wi++ ) {
 							if ( *wi == j ) { jj++; if ( jj > 1 ) break; }
 						}
 						if ( jj <= 1 ) {
-							for ( k = 0, wi = funargs; k < totnum; k++, wi++ ) {
+							for ( k = 0, wi = AN.funargs; k < totnum; k++, wi++ ) {
 								if ( *wi == j ) { *wi = -1; action = 1; }
 							}
 						}
@@ -238,21 +230,21 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 	occurs at least twice in our list. There will be a loop!
 */
 	if ( mode != 0 && mode != 1 ) {
-		if ( mode > 0 ) tohunt =  mode - 5;
-		else            tohunt = -mode - 5;
-		nargs = numargs; numoffuns = nfun;
+		if ( mode > 0 ) AN.tohunt =  mode - 5;
+		else            AN.tohunt = -mode - 5;
+		AN.nargs = numargs; AN.numoffuns = nfun;
 		i = 0;
 		if ( loopsize < 0 ) {
 			if ( loopsize == -1 ) k = nfun;
 			else { k = -loopsize-1; if ( k > nfun ) k = nfun; }
 			for ( L = 2; L <= k; L++ ) {
-				if ( FindLus(0,L,tohunt) ) goto Success;
+				if ( FindLus(0,L,AN.tohunt) ) goto Success;
 			}
 		}
-		else if ( FindLus(0,loopsize,tohunt) ) { L = loopsize; goto Success; }
+		else if ( FindLus(0,loopsize,AN.tohunt) ) { L = loopsize; goto Success; }
 	}
 	else {
-		nargs = numargs; numoffuns = nfun;
+		AN.nargs = numargs; AN.numoffuns = nfun;
 		if ( loopsize < 0 ) {
 			jj = 2; k = nfun;
 			if ( loopsize < -1 ) { k = -loopsize-1; if ( k > nfun ) k = nfun; }
@@ -260,10 +252,10 @@ int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD
 		else { jj = k = loopsize; }
 		for ( L = jj; L <= k; L++ ) {
 			for ( i = 0; i <= nfun-L; i++ ) {
-				alist = funargs + i * numargs;
+				alist = AN.funargs + i * numargs;
 				for ( jj = 0; jj < numargs; jj++ ) {
 					if ( alist[jj] < 0 ) continue;
-					tohunt = alist[jj];
+					AN.tohunt = alist[jj];
 					for ( j = jj+1; j < numargs; j++ ) {
 						if ( alist[j] < 0 ) continue;
 						if ( FindLus(i+1,L-1,alist[j]) ) {
@@ -283,7 +275,7 @@ Success:;
 	Now we have to make the replacement and fix the potential sign
 */
 	sign2 = 1;
-	wi = funargs + i*numargs; loc = funlocs + i;
+	wi = AN.funargs + i*numargs; loc = AN.funlocs + i;
 	for ( k = 0; k < L; k++ ) *(loc[k]) = -1;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	w = AT.WorkPointer + 1;
@@ -439,19 +431,20 @@ Success:;
 
 int FindLus ARG3(int, from, int, level, int, openindex)
 {
+	GETIDENTITY;
 	int i, j, k, jj, *alist, *blist, *w, *m, partner;
-	WORD **loc = funlocs, *wor;
+	WORD **loc = AN.funlocs, *wor;
 	if ( level == 1 ) {
-		for ( i = from; i < numoffuns; i++ ) {
-			alist = funargs + i*nargs;
-			for ( j = 0; j < nargs; j++ ) {
+		for ( i = from; i < AN.numoffuns; i++ ) {
+			alist = AN.funargs + i*AN.nargs;
+			for ( j = 0; j < AN.nargs; j++ ) {
 				if ( alist[j] == openindex ) {
-					for ( k = 0; k < nargs; k++ ) {
+					for ( k = 0; k < AN.nargs; k++ ) {
 						if ( k == j ) continue;
-						if ( alist[k] == tohunt ) {
+						if ( alist[k] == AN.tohunt ) {
 							loc[from] = loc[i];
-							alist = funargs + from*nargs;
-							alist[0] = openindex; alist[1] = tohunt;
+							alist = AN.funargs + from*AN.nargs;
+							alist[0] = openindex; alist[1] = AN.tohunt;
 							return(1);
 						}
 					}
@@ -460,19 +453,19 @@ int FindLus ARG3(int, from, int, level, int, openindex)
 		}
 	}
 	else {
-		for ( i = from; i < numoffuns; i++ ) {
-			alist = funargs + i*nargs;
-			for ( j = 0; j < nargs; j++ ) {
+		for ( i = from; i < AN.numoffuns; i++ ) {
+			alist = AN.funargs + i*AN.nargs;
+			for ( j = 0; j < AN.nargs; j++ ) {
 				if ( alist[j] == openindex ) {
 					if ( from != i ) {
 						wor = loc[i]; loc[i] = loc[from]; loc[from] = wor;
-						blist = w = funargs + from*nargs;
+						blist = w = AN.funargs + from*AN.nargs;
 						m = alist;
-						k = nargs;
+						k = AN.nargs;
 						while ( --k >= 0 ) { jj = *m; *m++ = *w; *w++ = jj; }
 					}
 					else blist = alist;
-					for ( k = 0; k < nargs; k++ ) {
+					for ( k = 0; k < AN.nargs; k++ ) {
 						if ( k == j || blist[k] < 0 ) continue;
 						partner = blist[k];
 						if ( FindLus(from+1,level-1,partner) ) {
@@ -482,9 +475,9 @@ int FindLus ARG3(int, from, int, level, int, openindex)
 					}
 					if ( from != i ) {
 						wor = loc[i]; loc[i] = loc[from]; loc[from] = wor;
-						w = funargs + from*nargs;
+						w = AN.funargs + from*AN.nargs;
 						m = alist;
-						k = nargs;
+						k = AN.nargs;
 						while ( --k >= 0 ) { jj = *m; *m++ = *w; *w++ = jj; }
 					}
 				}
@@ -499,11 +492,9 @@ int FindLus ARG3(int, from, int, level, int, openindex)
   	#[ SortTheList :
 */
 
-static int *tlistbuf;
-static int tlistsize = 0;
-
 int SortTheList ARG2(int *,slist,int,num)
 {
+	GETIDENTITY;
 	int i, nleft, nright, *t1, *t2, *t3, *rlist;
 	if ( num <= 2 ) {
 		if ( num <=  1 ) return(num);
@@ -520,14 +511,14 @@ int SortTheList ARG2(int *,slist,int,num)
 		nleft = num/2; rlist = slist + 2*nleft;
 		nright = SortTheList(rlist,num-nleft);
 		nleft = SortTheList(slist,nleft);
-		if ( tlistsize < nleft ) {
-			if ( tlistbuf ) M_free(tlistbuf,"tlistbuf");
-			tlistsize = (nleft*3)/2;
-			tlistbuf = (int *)Malloc1(tlistsize*2*sizeof(int),"tlistbuf");
+		if ( AN.tlistsize < nleft ) {
+			if ( AN.tlistbuf ) M_free(AN.tlistbuf,"AN.tlistbuf");
+			AN.tlistsize = (nleft*3)/2;
+			AN.tlistbuf = (int *)Malloc1(AN.tlistsize*2*sizeof(int),"AN.tlistbuf");
 		}
-		i = nleft; t1 = slist; t2 = tlistbuf;
+		i = nleft; t1 = slist; t2 = AN.tlistbuf;
 		while ( --i >= 0 ) { *t2++ = *t1++; *t2++ = *t1++; }
-		i = nleft+nright; t1 = tlistbuf; t2 = rlist; t3 = slist;
+		i = nleft+nright; t1 = AN.tlistbuf; t2 = rlist; t3 = slist;
 		while ( nleft > 0 && nright > 0 ) {
 			if ( *t1 < *t2 ) {
 				*t3++ = *t1++; *t3++ = *t1++; nleft--;

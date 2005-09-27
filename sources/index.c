@@ -28,8 +28,6 @@
   	#[ FindBracket :
 */
 
-static POSITION theposition;
-
 POSITION *
 FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 {
@@ -97,9 +95,9 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	or it is not present at all.
 */
 	auxpos = bi->start;
-	SETBASEPOSITION(theposition,ADD2POS(auxpos,e->onfile));
-	if ( fi->handle >= 0 ) SeekFile(fi->handle,&theposition,SEEK_SET);
-	else SetScratch(fi,&theposition);
+	SETBASEPOSITION(AN.theposition,ADD2POS(auxpos,e->onfile));
+	if ( fi->handle >= 0 ) SeekFile(fi->handle,&AN.theposition,SEEK_SET);
+	else SetScratch(fi,&AN.theposition);
 /*
 	Put the bracket in the compress buffer as if it were the last term read.
 	Have a look at AR.CompressPointer. (set it right)
@@ -111,7 +109,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	NCOPY(t2,t1,j)
 	if ( i == 0 ) {	/* We found the proper bracket already */
 		AC.SortType = oldsorttype;
-		return(&theposition);
+		return(&AN.theposition);
 	}
 /*
 	Here we have to skip to the bracket if it exists (!)
@@ -148,7 +146,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
 				else i = Compare(bracket,AR.CompressPointer,0);
 				if ( i == 0 ) {
-					SETBASEPOSITION(theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
+					SETBASEPOSITION(AN.theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */
@@ -170,7 +168,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 				*p = a[0]; t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
-					SETBASEPOSITION(theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
+					SETBASEPOSITION(AN.theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */
@@ -185,7 +183,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 		ADD2POS(toppos,e->onfile);
 		cp = AR.CompressPointer;
 		for(;;) {
-			SeekFile(fi->handle,&theposition,SEEK_SET);
+			SeekFile(fi->handle,&AN.theposition,SEEK_SET);
 			GetOneTerm(term,0);
 			if ( *term == 0 ) {
 				AC.SortType = oldsorttype;
@@ -205,11 +203,11 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 			}
 			AR.CompressPointer = cp;
-			TELLFILE(fi->handle,&theposition);
+			TELLFILE(fi->handle,&AN.theposition);
 /*
 			Now check whether we passed the 'point'
 */
-			if ( ISGEPOS(theposition,toppos) ) {
+			if ( ISGEPOS(AN.theposition,toppos) ) {
 				AC.SortType = oldsorttype;
 				AR.CompressPointer = cp;
 				return(0);	/* Bracket does not exist */
@@ -218,7 +216,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	}
 found:
 	AC.SortType = oldsorttype;
-	return(&theposition);
+	return(&AN.theposition);
 }
 
 /*

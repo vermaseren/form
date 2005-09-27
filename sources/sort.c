@@ -4,35 +4,14 @@
 	Sort routines according to new conventions (25-jun-1997).
 	This is more object oriented.
 	The active sort is indicated by AT.SS which should agree with
-	FunSorts[AR.sLevel];
+	AN.FunSorts[AR.sLevel];
 */
 #define NEWSPLITMERGE
 
 #include "form3.h"
+
 /*
   	#] Includes :
-  	#[ SortVariables :
-*/
-
-#ifdef ANSI
-static LONG ComPress(WORD **,LONG *);
-static VOID StageSort(FILEHANDLE *);
-#else
-static LONG ComPress();
-static VOID StageSort();
-#endif
- 
-static WORD **SplitScratch = 0;
-static LONG InScratch = 0, SplitScratchSize = 0;
- 
-static SORTING **FunSorts = 0;
-static int NumFunSorts = 0;
-static int MaxFunSorts = 0;
- 
-static UWORD *SoScratC = 0;
-
-/*
-  	#] SortVariables :
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 
@@ -46,7 +25,6 @@ static UWORD *SoScratC = 0;
 
 */
 
-extern LONG ninterms;
 char *toterms[] = { "   ", " >>", "-->" };
 
 VOID
@@ -72,12 +50,12 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%7l.%2is %8l>%10l%3s%10l:%10p %s %s",
-					millitime,timepart,ninterms,S->GenTerms,toterms[par],
+					millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 					S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 /*
 					MesPrint("%14s %17s %7l.%2is %8l>%10l%3s%10l:%10p",
 					EXPRNAME(AS.CurExpr),AC.Commercial,millitime,timepart,
-					ninterms,S->GenTerms,toterms[par],S->TermsLeft,plspace);
+					AN.ninterms,S->GenTerms,toterms[par],S->TermsLeft,plspace);
 */
 				}
 				else {
@@ -86,49 +64,49 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 					MULPOS(pp,100);
 					if ( ISLESSPOS(*plspace,pp) ) {
 						MesPrint("%7l.%2is %8l>%10l%3s%10l:%11p %s %s",
-						millitime,timepart,ninterms,S->GenTerms,toterms[par],
+						millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 						S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 					}
 					else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%12p %s %s",
-							millitime,timepart,ninterms,S->GenTerms,toterms[par],
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%13p %s %s",
-							millitime,timepart,ninterms,S->GenTerms,toterms[par],
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%14p %s %s",
-							millitime,timepart,ninterms,S->GenTerms,toterms[par],
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%15p %s %s",
-							millitime,timepart,ninterms,S->GenTerms,toterms[par],
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%16p %s %s",
-							millitime,timepart,ninterms,S->GenTerms,toterms[par],
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%17p %s %s",
-							millitime,timepart,ninterms,S->GenTerms,toterms[par],
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
 							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
 						}
 						} } } } }
@@ -205,7 +183,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 		}
 		if ( par == 0 )
 			MesPrint(" %16s%7l Terms %s = %10l",EXPRNAME(AS.CurExpr),
-			ninterms,FG.swmes[par],S->TermsLeft);
+			AN.ninterms,FG.swmes[par],S->TermsLeft);
 		else
 			MesPrint(" %16s        Terms %s = %10l",
 			EXPRNAME(AS.CurExpr),FG.swmes[par],S->TermsLeft);
@@ -274,27 +252,27 @@ NewSort()
 	GETIDENTITY;
 	SORTING *S, **newFS;
 	int i, newsize;
-	if ( SoScratC == 0 )
-		SoScratC = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"NewSort");
+	if ( AN.SoScratC == 0 )
+		AN.SoScratC = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"NewSort");
 	AR.sLevel++;
-	if ( AR.sLevel >= NumFunSorts ) {
-		if ( NumFunSorts == 0 ) newsize = 100;
-		else newsize = 2*NumFunSorts;
+	if ( AR.sLevel >= AN.NumFunSorts ) {
+		if ( AN.NumFunSorts == 0 ) newsize = 100;
+		else newsize = 2*AN.NumFunSorts;
 		newFS = (SORTING **)Malloc1((newsize+1)*sizeof(SORTING *),"FunSort pointers");
-		for ( i = 0; i < NumFunSorts; i++ ) newFS[i] = FunSorts[i];
+		for ( i = 0; i < AN.NumFunSorts; i++ ) newFS[i] = AN.FunSorts[i];
 		for ( ; i <= newsize; i++ ) newFS[i] = 0;
-		if ( FunSorts ) M_free(FunSorts,"FunSort pointers");
-		FunSorts = newFS; NumFunSorts = newsize;
+		if ( AN.FunSorts ) M_free(AN.FunSorts,"FunSort pointers");
+		AN.FunSorts = newFS; AN.NumFunSorts = newsize;
 	}
-	if ( AR.sLevel == 0 ) { FunSorts[0] = AM.S0; }
+	if ( AR.sLevel == 0 ) { AN.FunSorts[0] = AM.S0; }
 	else {
-		if ( FunSorts[AR.sLevel] == 0 ) {
-			FunSorts[AR.sLevel] = AllocSort(
+		if ( AN.FunSorts[AR.sLevel] == 0 ) {
+			AN.FunSorts[AR.sLevel] = AllocSort(
 				AM.SLargeSize,AM.SSmallSize,AM.SSmallEsize,AM.STermsInSmall
 					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize);
 		}
 	}
-	AT.SS = S = FunSorts[AR.sLevel];
+	AT.SS = S = AN.FunSorts[AR.sLevel];
 	S->sFill = S->sBuffer;
 	S->lFill = S->lBuffer;
 	S->lPatch = 0;
@@ -306,7 +284,7 @@ NewSort()
 	S->sTerms = 0;
 	PUTZERO(S->file.POposition);
 	S->stage4 = 0;
-	if ( AR.sLevel > MaxFunSorts ) MaxFunSorts = AR.sLevel;
+	if ( AR.sLevel > AN.MaxFunSorts ) AN.MaxFunSorts = AR.sLevel;
 /*
 	The next variable is for the staged sort only.
 	It should be treated differently
@@ -608,7 +586,7 @@ RetRetval:
 	}
 	AR.outfile = oldoutfile;
 	AR.sLevel--;
-	if ( AR.sLevel >= 0 ) AT.SS = FunSorts[AR.sLevel];
+	if ( AR.sLevel >= 0 ) AT.SS = AN.FunSorts[AR.sLevel];
 	if ( par == 1 ) {
 		if ( retval < 0 ) {
 			DeAllocFileHandle(newout);
@@ -925,7 +903,7 @@ nocompress:
 			}
 /*					Sabotage getting into the coefficient next time */
 			r[-(ABS(r[-1]))] = 0;
-			if ( r >= AM.ComprTop ) {
+			if ( r >= AR.ComprTop ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
 				UNLOCK(ErrorMessageLock);
@@ -1187,7 +1165,7 @@ AddCoef ARG2(WORD **,ps1,WORD **,ps2)
 	WORD l1, l2, i;
 	WORD OutLen, *t, j;
 	UWORD *OutCoef;
-	OutCoef = SoScratC;
+	OutCoef = AN.SoScratC;
 	s1 = *ps1; s2 = *ps2;
 	GETCOEF(s1,l1);
 	GETCOEF(s2,l2);
@@ -1948,7 +1926,7 @@ NoPoly:
 
 /*
  		#] Compare :
- 		#[ ComPress :				static LONG ComPress(ss,n)
+ 		#[ ComPress :				LONG ComPress(ss,n)
 
 		Gets a list of pointers to terms and compresses the terms.
 		In n it collects the number of terms and the return value
@@ -1963,10 +1941,7 @@ NoPoly:
 		have been added).
 */
 
-static WORD *compressSpace = 0;
-static int compressSize = 0;
-
-static LONG ComPress ARG2(WORD **,ss,LONG *,n)
+LONG ComPress ARG2(WORD **,ss,LONG *,n)
 {
 	GETIDENTITY;
 	WORD *t, *s, j, k;
@@ -2006,27 +1981,27 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 */
 	*n = 0;
 	if ( AT.SS == AM.S0 && !AR.NoCompress ) {
-		if ( compressSize == 0 ) {
-			if ( *ss ) { compressSize = **ss + 64; }
-			else       { compressSize = AM.MaxTer + 2; }
-			compressSpace = (WORD *)Malloc1(compressSize*sizeof(WORD),"Compression");
+		if ( AN.compressSize == 0 ) {
+			if ( *ss ) { AN.compressSize = **ss + 64; }
+			else       { AN.compressSize = AM.MaxTer + 2; }
+			AN.compressSpace = (WORD *)Malloc1(AN.compressSize*sizeof(WORD),"Compression");
 		}
-		compressSpace[0] = 0;
+		AN.compressSpace[0] = 0;
 		while ( *ss ) {
 			k = 0;
 			s = *ss;
 			j = *s++;
-			if ( j > compressSize ) {
+			if ( j > AN.compressSize ) {
 				newsize = j + 64;
 				t = (WORD *)Malloc1(newsize*sizeof(WORD),"Compression");
-				if ( compressSpace ) {
-					for ( i = 0; i < *compressSpace; i++ ) t[i] = compressSpace[i];
-					M_free(compressSpace,"Compression");
+				if ( AN.compressSpace ) {
+					for ( i = 0; i < *AN.compressSpace; i++ ) t[i] = AN.compressSpace[i];
+					M_free(AN.compressSpace,"Compression");
 				}
-				compressSpace = t;
-				compressSize = newsize;
+				AN.compressSpace = t;
+				AN.compressSize = newsize;
 			}
-			t = compressSpace;
+			t = AN.compressSpace;
 			i = *t - 1;
 			*t++ = j; j--;
 			if ( AR.PolyFun ) {
@@ -2054,12 +2029,12 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 				size += j + 2;
 			}
 			else {
-				size += *compressSpace;
+				size += *AN.compressSpace;
 				if ( k == -1 ) { t--; s--; j++; }
 			}
 			while ( --j >= 0 ) *t++ = *s++;
 /*					Sabotage getting into the coefficient next time */
-			t = compressSpace + *compressSpace;
+			t = AN.compressSpace + *AN.compressSpace;
 			t[-(ABS(t[-1]))] = 0;
 			ss++;
 			(*n)++;
@@ -2106,7 +2081,7 @@ static LONG ComPress ARG2(WORD **,ss,LONG *,n)
 
 		Algorithm by J.A.M.Vermaseren (31-7-1988)
 
-		Note that SplitScratch and InScratch are used also in GarbHand
+		Note that AN.SplitScratch and AN.InScratch are used also in GarbHand
 */
 
 #ifdef NEWSPLITMERGE
@@ -2166,18 +2141,18 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 		}
 		return(newleft);
 	}
-	if ( nleft > SplitScratchSize ) {
-		SplitScratchSize = (nleft*3)/2+100;
-		if ( SplitScratchSize > S->Terms2InSmall/2 )
-			 SplitScratchSize = S->Terms2InSmall/2;
-		if ( SplitScratch ) M_free(SplitScratch,"SplitScratch");
-		SplitScratch = (WORD **)Malloc1(SplitScratchSize*sizeof(WORD *),"SplitScratch");
+	if ( nleft > AN.SplitScratchSize ) {
+		AN.SplitScratchSize = (nleft*3)/2+100;
+		if ( AN.SplitScratchSize > S->Terms2InSmall/2 )
+			 AN.SplitScratchSize = S->Terms2InSmall/2;
+		if ( AN.SplitScratch ) M_free(AN.SplitScratch,"AN.SplitScratch");
+		AN.SplitScratch = (WORD **)Malloc1(AN.SplitScratchSize*sizeof(WORD *),"AN.SplitScratch");
 	}
-	pp3 = SplitScratch; pp1 = Pointer; i = nleft;
+	pp3 = AN.SplitScratch; pp1 = Pointer; i = nleft;
 	do { *pp3++ = *pp1; *pp1++ = 0; } while ( *pp1 && --i > 0 );
 	if ( i > 0 ) { *pp3 = 0; i--; }
-	InScratch = nleft - i;
-	pp1 = SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
+	AN.InScratch = nleft - i;
+	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
 		if ( ( i = Compare(*pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
@@ -2199,7 +2174,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	while ( *pp2 && --nright >= 0 ) { *pp3++ = *pp2++; }
 	nleft = pp3 - Pointer;
 	while ( pp3 < pptop ) *pp3++ = 0;
-	InScratch = 0;
+	AN.InScratch = 0;
 	return(nleft);
 }
 
@@ -2230,18 +2205,18 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	nleft = number >> 1; nright = number - nleft;
 	SplitMerge(Pointer,nleft);
 	SplitMerge(Pointer+nleft,nright);
-	if ( nleft > SplitScratchSize ) {
-		SplitScratchSize = (nleft*3)/2+100;
-		if ( SplitScratchSize > S->Terms2InSmall/2 )
-			 SplitScratchSize = S->Terms2InSmall/2;
-		if ( SplitScratch ) M_free(SplitScratch,"SplitScratch");
-		SplitScratch = (WORD **)Malloc1(SplitScratchSize*sizeof(WORD *),"SplitScratch");
+	if ( nleft > AN.SplitScratchSize ) {
+		AN.SplitScratchSize = (nleft*3)/2+100;
+		if ( AN.SplitScratchSize > S->Terms2InSmall/2 )
+			 AN.SplitScratchSize = S->Terms2InSmall/2;
+		if ( AN.SplitScratch ) M_free(AN.SplitScratch,"AN.SplitScratch");
+		AN.SplitScratch = (WORD **)Malloc1(AN.SplitScratchSize*sizeof(WORD *),"AN.SplitScratch");
 	}
-	pp3 = SplitScratch; pp1 = Pointer; i = nleft;
+	pp3 = AN.SplitScratch; pp1 = Pointer; i = nleft;
 	do { *pp3++ = *pp1; *pp1++ = 0; } while ( *pp1 && --i > 0 );
 	if ( i > 0 ) { *pp3 = 0; i--; }
-	InScratch = nleft - i;
-	pp1 = SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
+	AN.InScratch = nleft - i;
+	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
 		if ( ( i = Compare(*pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
@@ -2264,7 +2239,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	while ( *pp1 && --nleft  >= 0 ) { *pp3++ = *pp1; *pp1++ = 0; }
 	while ( *pp2 && --nright >= 0 ) { *pp3++ = *pp2++; }
 	while ( pp3 < pptop ) *pp3++ = 0;
-	InScratch = 0;
+	AN.InScratch = 0;
 
 	return;
 }
@@ -2302,13 +2277,13 @@ GarbHand()
 	while ( --k >= 0 ) {
 		if ( ( s2 = *Point++ ) != 0 ) { total += *s2; }
 	}
-	Point = SplitScratch;
-	k = InScratch;
+	Point = AN.SplitScratch;
+	k = AN.InScratch;
 	while ( --k >= 0 ) {
 		if ( ( s2 = *Point++ ) != 0 ) { total += *s2; }
 	}
 #ifdef TESTGARB
-	MesPrint("total = %l, nterms = %l",2*total,InScratch);
+	MesPrint("total = %l, nterms = %l",2*total,AN.InScratch);
 	UNLOCK(ErrorMessageLock);
 #endif
 /*
@@ -2333,8 +2308,8 @@ GarbHand()
 		}
 		else { Point++; }
 	}
-	Point = SplitScratch;
-	k = InScratch;
+	Point = AN.SplitScratch;
+	k = AN.InScratch;
 	while ( --k >= 0 ) {
 		if ( *Point ) {
 			s2 = *Point++;
@@ -2355,8 +2330,8 @@ GarbHand()
 		}
 		else { Point++; }
 	}
-	Point = SplitScratch;
-	k = InScratch;
+	Point = AN.SplitScratch;
+	k = AN.InScratch;
 	while ( --k >= 0 ) {
 		if ( *Point ) {
 			*Point++ = s2;
@@ -2427,7 +2402,7 @@ MergePatches ARG1(WORD,par)
 	fout = &(AR.FoStage4[0]);
 	S->PolyFlag = AR.PolyFun ? 1: 0;
 NewMerge:
-	coef = SoScratC;
+	coef = AN.SoScratC;
 	poin = S->poina; poin2 = S->poin2a;
 	rr = AR.CompressPointer;
 	*rr = 0;
@@ -3161,7 +3136,7 @@ StoreCall:
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 
-static VOID
+VOID
 StageSort ARG1(FILEHANDLE *,fout)
 {
 	GETIDENTITY;
@@ -3323,16 +3298,16 @@ void CleanUpSort ARG1(int,num)
 	GETIDENTITY;
 	SORTING *S;
 	int minnum = num, i;
-	if ( FunSorts ) {
+	if ( AN.FunSorts ) {
 		if ( num == -1 ) {
-			if ( MaxFunSorts > 3 ) {
-				minnum = (MaxFunSorts+4)/2;
+			if ( AN.MaxFunSorts > 3 ) {
+				minnum = (AN.MaxFunSorts+4)/2;
 			}
 			else minnum = 4;
 		}
 		else if ( minnum == 0 ) minnum = 1;
-		for ( i = minnum; i < NumFunSorts; i++ ) {
-			S = FunSorts[i];
+		for ( i = minnum; i < AN.NumFunSorts; i++ ) {
+			S = AN.FunSorts[i];
 			if ( S ) {
 				if ( S->file.handle >= 0 ) {
 					CloseFile(S->file.handle);
@@ -3341,10 +3316,10 @@ void CleanUpSort ARG1(int,num)
 				}
 				M_free(S,"sorting struct");
 			}
-			FunSorts[i] = 0;
+			AN.FunSorts[i] = 0;
 		}
 		if ( num == 0 ) {
-			S = FunSorts[0];
+			S = AN.FunSorts[0];
 			if ( S ) {
 				if ( S->file.handle >= 0 ) {
 					CloseFile(S->file.handle);
@@ -3373,7 +3348,7 @@ VOID LowerSortLevel ARG0
 	GETIDENTITY;
 	if ( AR.sLevel >= 0 ) {
 		AR.sLevel--;
-		if ( AR.sLevel >= 0 ) AT.SS = FunSorts[AR.sLevel];
+		if ( AR.sLevel >= 0 ) AT.SS = AN.FunSorts[AR.sLevel];
 	}
 }
 

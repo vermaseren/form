@@ -11,7 +11,6 @@
 */
 #include "form3.h"
 
-extern LONG deferskipped; /* used in store.c ?? */
 PARALLELVARS PF;
 #ifdef MPI2
 WORD *PF_shared_buff;
@@ -815,7 +814,7 @@ PF_GetTerm ARG1(WORD *,term)
   WORD i,j;
   WORD *next,*np,*last,*lp=0,*nextstop,*tp=term;
 
-  deferskipped = 0;
+  AN.deferskipped = 0;
   if( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ){
 ReceiveNew:
 	{
@@ -937,7 +936,7 @@ ReceiveNew:
 	  }
 	  /* go on to next term */
 	  fi->POfill += *fi->POfill;
-	  deferskipped++;
+	  AN.deferskipped++;
 	  /* the usual checks */
 	  if( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ) 
 		goto ReceiveNew;
@@ -1438,7 +1437,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
     *(sb->fill[0])++ = (UWORD)(0);
 	*(sb->fill[0])++ = (UWORD)(1);
 	while ( GetTerm(term) ) {
-	  PF.ginterms++; dd = deferskipped;
+	  PF.ginterms++; dd = AN.deferskipped;
 	  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 		if ( GetMoreTerms(term) ) {
 		  LowerSortLevel(); return(-1);
@@ -1682,7 +1681,7 @@ in pre.c.*/
 #endif	
 
 	while ( PF_GetTerm(term) ) {
-	  PF_linterms++; dd = deferskipped;
+	  PF_linterms++; dd = AN.deferskipped;
 	  AT.WorkPointer = term + *term;
 	  AN.RepPoint = AT.RepCount + 1;
 	  	  AR.CurDum = ReNumber(term);

@@ -4,10 +4,6 @@
 
 #include "form3.h"
 
-static WORD RenumScratch[300];
-static WORD *PoinScratch[300];
-static WORD *FunScratch[300];
-
 /*
   	#] Includes :
   	#[ Reshuf :
@@ -52,9 +48,9 @@ ReNumber ARG1(WORD *,term)
 	GETIDENTITY;
 	WORD *d, *e, **p, **f;
 	WORD n, i, j, old;
-	AN.DumFound = d = RenumScratch;
-	AN.DumPlace = p = PoinScratch;
-	AN.DumFunPlace = f = FunScratch;
+	AN.DumFound = d = AN.RenumScratch;
+	AN.DumPlace = p = AN.PoinScratch;
+	AN.DumFunPlace = f = AN.FunScratch;
 	AN.NumFound = 0;
 	FunLevel(term);
 /*
@@ -292,9 +288,9 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 	Normalize(term);
 	if ( *term == 0 ) return(0);
 	n = ReNumber(term) - AM.IndDum;
-	d = RenumScratch;
-	p = PoinScratch;
-	f = FunScratch;
+	d = AN.RenumScratch;
+	p = AN.PoinScratch;
+	f = AN.FunScratch;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	k = AN.NumFound;
 	best = w = AT.WorkPointer; t = term;

@@ -669,12 +669,6 @@ IniSpecialModule ARG1(int,type)
  		#[ PreProcessor :
 */
 
-/*[26nov2003 mt]:*/
-#ifdef PARALLEL
-LONG PF_BroadcastNumberOfTerms ARG1 (LONG,x); 
-#endif
-/*:[26nov2003 mt]*/
-
 VOID
 PreProcessor ARG0
 {
@@ -1136,14 +1130,12 @@ dodollar:		s = sstart;
 
 */
 
-static int eat;
-
 int
 LoadStatement ARG1(int,type)
 {
 	UBYTE *s, c, cp;
 	int retval = 0, stringlevel = 0;
-	if ( type == NEWSTATEMENT ) { eat = 1; s = AC.iBuffer; }
+	if ( type == NEWSTATEMENT ) { AP.eat = 1; s = AC.iBuffer; }
 	else { s = AC.iPointer; *s = 0; c = ' '; goto blank; }
 	*s = 0;
 	for(;;) {
@@ -1152,7 +1144,7 @@ LoadStatement ARG1(int,type)
 		if ( stringlevel == 0 ) {
 			if ( c == LINEFEED ) { retval = 0; break; }
 			if ( c == ';' ) {
-				if ( eat < 0 ) s--;
+				if ( AP.eat < 0 ) s--;
 				while ( ( c = GetChar(0) ) == ' ' || c == '\t' ) {}
 				if ( c != LINEFEED ) UngetChar(c);
 				retval = 1;
@@ -1168,19 +1160,19 @@ LoadStatement ARG1(int,type)
 		if ( c == '"' ) {
 			if ( stringlevel == 0 ) stringlevel = 1;
 			else stringlevel = 0;
-			eat = 0;
+			AP.eat = 0;
 		}
 		else if ( stringlevel == 0 ) {
 			if ( c == '\t' ) c = ' ';
 			if ( c == ' ' ) {
-blank:			if ( eat ) continue;
+blank:			if ( AP.eat ) continue;
 				c = ',';
-				eat = -1;
+				AP.eat = -1;
 			}
-			else if ( chartype[c] <= 3 ) eat = 0;
+			else if ( chartype[c] <= 3 ) AP.eat = 0;
 			else {
-				if ( eat < 0 ) s--;
-				eat = 1;
+				if ( AP.eat < 0 ) s--;
+				AP.eat = 1;
 				if ( c == '*' && s > AC.iBuffer && s[-1] == '*' ) {
 					s[-1] = '^';
 					continue;
@@ -2949,346 +2941,26 @@ DoPreClose ARG1(UBYTE *,s)
 		%s	string (to be found among the objects) (with or without "")
 */
 
-/*[15apr2004 mt]:*/
-typedef struct{
-	WORD newlogonly,newhandle,oldhandle, oldlogonly, oldprinttype,oldsilent;
-}HANDLERS;
-
-/**/
-UBYTE *
-defineChannel ARG2(UBYTE*,s, HANDLERS*,h)
-{
-UBYTE *name,*to;
-
-	if ( *s != '<' )
-		return(s);
-
-	s++;
-	name = to = s;
-	while ( *s && *s != '>' ) {
-		if ( *s == '\\' ) s++;
-		*to++ = *s++;
-	}
-	if ( *s == 0 ) {
-		MesPrint("@Improper termination of filename");
-		return(0);
-	}
-	s++;
-	*to = 0;
-	if ( *name ) {
-		h->newhandle = GetChannel((char *)name);
-		h->newlogonly = 1;
-	}
-	else if ( AC.LogHandle >= 0 ) {
-		h->newhandle = AC.LogHandle;
-		h->newlogonly = 1;
-	}
-	return(s);	
-}
-
-int
-writeToChannel ARG3(int,wtype,UBYTE *,s,HANDLERS*,h)
-{
-	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
-	WORD  num;
-	UBYTE Out[270], *stopper;
-	int nosemi;
-
-/*
-	Now determine the format string
-*/
-	while ( *s == ',' || *s == ' ' ) s++;
-	if ( *s != '"' ) {
-		MesPrint("@No format string present");
-		return(-1);
-	}
-	s++; fstring = to = s;
-	while ( *s ) {
-		if ( *s == '\\' ) {
-			s++;
-			if ( *s == '\\' ) {
-				*to++ = *s++;
-				if ( *s == '\\' ) *to++ = *s++;
-			}
-			else if ( *s == '"' ) *to++ = *s++;
-			else { *to++ = '\\'; *to++ = *s++; }
-		}
-		else if ( *s == '"' ) break;
-		else *to++ = *s++;
-	}
-	if ( *s != '"' ) {
-		MesPrint("@No closing \" in format string");
-		return(-1);
-	}
-	*to = 0; s++;
-	if ( AC.LineLength > 20 && AC.LineLength <= 256 ) stopper = Out + AC.LineLength;
-	else stopper = Out + 256;
-	to = Out;
-/*
-	s points now at the list of objects (if any)
-	we can start executing the format string.
-*/
-	AM.silent = 0;
-	AC.LogHandle = h->newhandle;
-	AM.FileOnlyFlag = h->newlogonly;
-	if ( h->newhandle >= 0 ) {
-		AO.PrintType |= PRINTLFILE;
-	}
-	while ( *fstring ) {
-		if ( to >= stopper ) {
-			num = to - Out;
-			WriteString(wtype,Out,num);
-			to = Out;
-		}
-		if ( *fstring == '\\' ) {
-			fstring++;
-			if ( *fstring == 'n' ) {
-				num = to - Out;
-				WriteString(wtype,Out,num);
-				to = Out;
-				fstring++;
-			}
-			else if ( *fstring == 't' ) *to++ = '\t';
-			else if ( *fstring == 'b' ) { *to++ = '\\'; fstring++; }
-			else *to++ = *fstring++;
-		}
-		else if ( *fstring == '%' ) {
-			fstring++;
-			if ( *fstring == '$' ) {
-				UBYTE *dolalloc;
-				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
-				if ( *s != '$' ) {
-nodollar:			MesPrint("@$-variable expected in #write instruction");
-					AM.FileOnlyFlag = h->oldlogonly;
-					AC.LogHandle = h->oldhandle;
-					AO.PrintType = h->oldprinttype;
-					AM.silent = h->oldsilent;
-					return(-1);
-				}
-				s++; ss = s;
-				while ( chartype[*s] <= 1 ) s++;
-				if ( s == ss ) goto nodollar;
-				c = *s; *s = 0;
-				num = GetDollar(ss);
-				if ( num < 0 ) {
-					MesPrint("@#write instruction: $%s has not been defined",ss);
-					AM.FileOnlyFlag = h->oldlogonly;
-					AC.LogHandle = h->oldhandle;
-					AO.PrintType = h->oldprinttype;
-					AM.silent = h->oldsilent;
-					return(-1);
-				}
-				*s = c;
-				if ( *s && *s != ' ' && *s != ',' && *s != '\t' ) {
-					MesPrint("@#write instruction: illegal characters after $-variable");
-					AM.FileOnlyFlag = h->oldlogonly;
-					AC.LogHandle = h->oldhandle;
-					AO.PrintType = h->oldprinttype;
-					AM.silent = h->oldsilent;
-					return(-1);
-				}
-				if ( ( dolalloc = WriteDollarToBuffer(num) ) == 0 ) {
-					AM.FileOnlyFlag = h->oldlogonly;
-					AC.LogHandle = h->oldhandle;
-					AO.PrintType = h->oldprinttype;
-					AM.silent = h->oldsilent;
-					return(-1);
-				}
-				ss = dolalloc;
-				while ( *ss ) {
-					if ( to >= stopper ) {
-						num = to - Out;
-						WriteString(wtype,Out,num);
-						to = Out;
-					}
-					if ( chartype[*ss] > 3 ) { *to++ = *ss++; }
-					else {
-						sss = ss; while ( chartype[*ss] <= 3 ) ss++;
-						if ( ( to + (ss-sss) ) >= stopper ) {
-							if ( (ss-sss) >= (stopper-Out) ) {
-								if ( ( to - stopper ) < 10 ) {
-									num = to - Out;
-									WriteString(wtype,Out,num);
-									to = Out;
-								}
-								while ( (ss-sss) >= (stopper-Out) ) {
-									while ( to < stopper-1 ) {
-										*to++ = *sss++;
-									}
-									*to++ = '\\';
-									num = to - Out;
-									WriteString(wtype,Out,num);
-									to = Out;
-								}
-							}
-							else {
-								num = to - Out;
-								WriteString(wtype,Out,num);
-								to = Out;
-							}
-						}
-						while ( sss < ss ) *to++ = *sss++;
-					}
-				}
-				M_free(dolalloc,"written dollar");
-				fstring++;
-			}
-			else if ( *fstring == 's' ) {
-				fstring++;
-				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
-				if ( *s == '"' ) {
-					s++; ss = s;
-					while ( *s ) {
-						if ( *s == '\\' ) s++;
-						else if ( *s == '"' ) break;
-						s++;
-					}
-					if ( *s == 0 ) {
-						MesPrint("@#write instruction: Missing \" in string");
-						AM.FileOnlyFlag = h->oldlogonly;
-						AC.LogHandle = h->oldhandle;
-						AO.PrintType = h->oldprinttype;
-						AM.silent = h->oldsilent;
-						return(-1);
-					}
-					while ( ss < s ) {
-						if ( to >= stopper ) {
-							num = to - Out;
-							WriteString(wtype,Out,num);
-							to = Out;
-						}
-						if ( *ss == '\\' ) ss++;
-						*to++ = *ss++;
-					}
-					s++;
-				}
-				else {
-					sss = ss = s;
-					while ( *s && *s != ',' ) {
-						if ( *s == '\\' ) { s++; sss = s+1; }
-						s++;
-					}
-					while ( s > sss+1 && ( s[-1] == ' ' || s[-1] == '\t' ) ) s--;
-					while ( ss < s ) {
-						if ( to >= stopper ) {
-							num = to - Out;
-							WriteString(wtype,Out,num);
-							to = Out;
-						}
-						if ( *ss == '\\' ) ss++;
-						*to++ = *ss++;
-					}
-				}
-			}
-			else if ( *fstring == 'e' || *fstring == 'E' ) {
-				if ( *fstring == 'E' ) nosemi = 1;
-				else nosemi = 0;
-				fstring++;
-				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
-				if ( chartype[*s] != 0 && *s != '[' ) {
-noexpr:				MesPrint("@expression name expected in #write instruction");
-					AM.FileOnlyFlag = h->oldlogonly;
-					AC.LogHandle = h->oldhandle;
-					AO.PrintType = h->oldprinttype;
-					AM.silent = h->oldsilent;
-					return(-1);
-				}
-				ss = s;
-				if ( ( s = SkipAName(ss) ) == 0 || s[-1] == '_' ) goto noexpr;
-				s1 = s; c = c1 = *s1;
-				if ( c1 == '(' ) {
-					SKIPBRA3(s)
-					if ( *s == ')' ) {
-						AO.CurBufWrt = s1+1;
-						c = *s; *s = 0;
-					}
-					else {
-						MesPrint("@Illegal () specifier in expression name in #write");
-						AM.FileOnlyFlag = h->oldlogonly;
-						AC.LogHandle = h->oldhandle;
-						AO.PrintType = h->oldprinttype;
-						AM.silent = h->oldsilent;
-						return(-1);
-					}
-				}
-				else AO.CurBufWrt = (UBYTE *)underscore;
-				*s1 = 0;
-				num = to - Out;
-				if ( num > 0 ) WriteUnfinString(wtype,Out,num);
-				to = Out;
-				if ( WriteOne(ss,(int)num,nosemi) < 0 ) {
-					AM.FileOnlyFlag = h->oldlogonly;
-					AC.LogHandle = h->oldhandle;
-					AO.PrintType = h->oldprinttype;
-					AM.silent = h->oldsilent;
-					return(-1);
-				}
-				*s1 = c1;
-				if ( s > s1 ) *s++ = c;
-			}
-			else if ( *fstring == '%' ) {
-				*to++ = *fstring++;
-			}
-			else if ( *fstring == 0 ) {
-				*to++ = 0;
-			}
-			else {
-				MesPrint("@Illegal control sequence in format string in #write instruction");
-				AM.FileOnlyFlag = h->oldlogonly;
-				AC.LogHandle = h->oldhandle;
-				AO.PrintType = h->oldprinttype;
-				AM.silent = h->oldsilent;
-				return(-1);
-			}
-		}
-		else {
-			*to++ = *fstring++;
-		}
-	}
-/*
-	Now flush the output
-*/
-	num = to - Out;
-	/*[15apr2004 mt]:*/
-	if(wtype==EXTERNALCHANNELOUT){
-		if(num!=0)
-			WriteUnfinString(wtype,Out,num);
-	}else
-	/*:[15apr2004 mt]*/
-	WriteString(wtype,Out,num);
-
-/*
-	and restore original parameters
-*/
-	AM.FileOnlyFlag = h->oldlogonly;
-	AC.LogHandle = h->oldhandle;
-	AO.PrintType = h->oldprinttype;
-	AM.silent = h->oldsilent;
-	return(0);
-}
-
 int
 DoPreWrite ARG1(UBYTE *,s)
 {
-   HANDLERS h;
+	HANDLERS h;
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 
-	h.oldsilent=AM.silent;
-   h.newlogonly = h.oldlogonly = AM.FileOnlyFlag;
-   h.newhandle = h.oldhandle = AC.LogHandle;
-   h.oldprinttype = AO.PrintType;
+	h.oldsilent    = AM.silent;
+	h.newlogonly   = h.oldlogonly = AM.FileOnlyFlag;
+	h.newhandle    = h.oldhandle  = AC.LogHandle;
+	h.oldprinttype = AO.PrintType;
    
 	while ( *s == ' ' || *s == '\t' ) s++;
 /*
 	Determine where to write
 */
+	if( (s=defineChannel(s,&h))==0 ) return(-1);
 
-   if( (s=defineChannel(s,&h))==0 )
-		return(-1);
-
-   return(writeToChannel(WRITEOUT,s,&h));
+	return(writeToChannel(WRITEOUT,s,&h));
 }
 
 /*
@@ -3571,6 +3243,7 @@ DoSystem ARG1(UBYTE *,s)
 
 int DoPreNormPoly ARG1(UBYTE *,s)
 {
+	GETIDENTITY;
 	int par, error = 0;
 	UBYTE *s1, c;
 	WORD num1, num2, num3;
@@ -4472,15 +4145,10 @@ void MessPreNesting ARG1(int,par)
 
 /*
  		#] MessPreNesting :
- 	# ] PreProcessor :
-*/
-
-/*[12dec2003 mt]:*/
-/*
  		#[ DoPreAddSeparator :
-*/
 
-/*Characters ' ', '\t' and '"' are ignored!*/
+		Characters ' ', '\t' and '"' are ignored!
+*/
 
 int
 DoPreAddSeparator ARG1(UBYTE *,s)
@@ -4496,16 +4164,16 @@ DoPreAddSeparator ARG1(UBYTE *,s)
 		}
 		*/
 		set_set(*s,AC.separators);
-	}/*for(;*s != '\0';s++)*/
+	}
 	return(0);
-}/*DoPreAddSeparator*/
+}
 
 /*
  		#] DoPreAddSeparator :
  		#[ DoPreRmSeparator :
-*/
 
-/*Characters ' ', '\t' and '"' are ignored!*/
+		Characters ' ', '\t' and '"' are ignored!
+*/
 int
 DoPreRmSeparator ARG1(UBYTE *,s)
 {
@@ -4514,38 +4182,27 @@ DoPreRmSeparator ARG1(UBYTE *,s)
 	for(;*s != '\0';s++){
 		while ( *s == ' ' || *s == '\t' || *s == '"') s++;
 		set_del(*s,AC.separators);
-	}/*for(;*s != '\0';s++)*/
+	}
 	return(0);
-}/*DoPreRmSeparator*/
+}
 
 /*
  		#] DoPreRmSeparator :
-*/
-/*:[12dec2003 mt]*/
-
-/*
-		[14apr2004 mt]:
  		#[ DoExternal:
-*/
-#ifdef WITHEXTERNALCHANNEL
-/*NOT a static! These variables should be visible from startup.c!*/
-UBYTE *currentPrompt=0;
-int currentExternalChannel=0;
-#endif
-/*
-#external ["prevar"] command
+
+		#external ["prevar"] command
 */
 int
 DoExternal ARG1(UBYTE *,s)
 { 
 	UBYTE *prevar=0;
-   int externalD= 0;
+	int externalD= 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
-   if(*s == '"'){/*prevar to store the descriptor is defined*/
+	if(*s == '"'){/*prevar to store the descriptor is defined*/
 		prevar=++s;
 
 		if ( chartype[*s] == 0 )for(;*s != '"'; s++)switch(chartype[*s]){
@@ -4562,7 +4219,7 @@ DoExternal ARG1(UBYTE *,s)
       }
       *s='\0';
 		for(s++; *s == ' ' || *s == '\t'; s++);
-   }/*if(*s == '"')*/
+	}
 
 	if(*s == '\0'){
 		MesPrint("@Illegal external command");
@@ -4582,11 +4239,11 @@ DoExternal ARG1(UBYTE *,s)
 		NumToStr(buf,externalD);
 		if ( PutPreVar(prevar,buf,0,1) < 0 ) return(-1);
 	}
-	currentExternalChannel=externalD;
-	if(currentPrompt==0){/*Set the default terminator*/
+	AX.currentExternalChannel=externalD;
+	if(AX.currentPrompt==0){/*Set the default terminator*/
 		strDup1("\n","external channel prompt");
 	}else{/*Change default terminator*/
-		if(setTerminatorForExternalChannel(  (char *)currentPrompt)){
+		if(setTerminatorForExternalChannel(  (char *)AX.currentPrompt)){
 			MesPrint("@Too long prompt");
 			return(-1);
 		}
@@ -4611,12 +4268,12 @@ DoPrompt ARG1(UBYTE *,s)
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
-	if(currentPrompt)M_free(currentPrompt,"external channel prompt");
+	if(AX.currentPrompt)M_free(AX.currentPrompt,"external channel prompt");
 	if(*s == '\0')
-		currentPrompt=strDup1("\n","external channel prompt");
+		AX.currentPrompt=strDup1("\n","external channel prompt");
 	else
-		currentPrompt=strDup1(s,"external channel prompt");
-	if(  setTerminatorForExternalChannel( (char *)currentPrompt)>0  ){
+		AX.currentPrompt=strDup1(s,"external channel prompt");
+	if(  setTerminatorForExternalChannel( (char *)AX.currentPrompt)>0  ){
 		MesPrint("@Too long prompt");
 		return(-1);
 	}
@@ -4632,10 +4289,11 @@ DoPrompt ARG1(UBYTE *,s)
  		#[ DoSetExternal:
 			#setexternal n
 */
+
 int
 DoSetExternal ARG1(UBYTE *,s)
 {
-int n=0;
+	int n=0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4651,7 +4309,7 @@ int n=0;
 		MesPrint("@setexternal: invalid number");
 		return(-1);
 	}
-	currentExternalChannel=n;
+	AX.currentExternalChannel=n;
 	return(0);
 #else /*ifdef WITHEXTERNALCHANNEL*/
 	Error0("External channel: not implemented on this computer/system");
@@ -4663,10 +4321,11 @@ int n=0;
  		#[ DoRmExternal:
 			#rmexternal [n] (if 0, close all)
 */
+
 int
 DoRmExternal ARG1(UBYTE *,s)
 {
-int n=-1;
+	int n = -1;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4682,17 +4341,17 @@ int n=-1;
 	switch(n){
 		case 0:/*Close all opened channels*/
 			closeAllExternalChannels();
-			currentExternalChannel=0;
-			/*Do not clean currentPrompt!*/
+			AX.currentExternalChannel=0;
+			/*Do not clean AX.currentPrompt!*/
 			return(0);
 		case -1:/*number is not specified - try current*/
-			n=currentExternalChannel;
+			n=AX.currentExternalChannel;
 			/*No break!*/
 		default:
 			closeExternalChannel(n);/*No reaction for possible error*/
 	}
-	if (n == currentExternalChannel)/*cleaned up by closeExternalChannel()*/
-		currentExternalChannel=0;
+	if (n == AX.currentExternalChannel)/*cleaned up by closeExternalChannel()*/
+		AX.currentExternalChannel=0;
 	return(0);
 #else /*ifdef WITHEXTERNALCHANNEL*/
 	Error0("External channel: not implemented on this computer/system");
@@ -4715,8 +4374,8 @@ DoFromExternal ARG1(UBYTE *,s)
 	
 	FLUSHCONSOLE;
 	while ( *s == ' ' || *s == '\t' ) s++;
-	if(getCurrentExternalChannel()!=currentExternalChannel)
-		selectExternalChannel(currentExternalChannel);
+	if(getCurrentExternalChannel()!=AX.currentExternalChannel)
+		selectExternalChannel(AX.currentExternalChannel);
 	
 	if ( OpenStream(s,EXTERNALCHANNELSTREAM,0,PRENOACTION) == 0 ) return(-1);
 	return(0);
@@ -4745,6 +4404,7 @@ WriteToExternalChannel ARG3(int,handle,UBYTE *,buffer,LONG,size)
 	return(size);
 }
 #endif /*ifdef WITHEXTERNALCHANNEL*/
+
 int
 DoToExternal ARG1(UBYTE *,s)
 {
@@ -4765,13 +4425,13 @@ DoToExternal ARG1(UBYTE *,s)
 
 	while ( *s == ' ' || *s == '\t' ) s++;
 
-	if(currentExternalChannel==0){
+	if(AX.currentExternalChannel==0){
 		MesPrint("@No current external channel");
 		goto DoToExternalReady;
 	}
 
-	if(getCurrentExternalChannel()!=currentExternalChannel)
-		selectExternalChannel(currentExternalChannel);
+	if(getCurrentExternalChannel()!=AX.currentExternalChannel)
+		selectExternalChannel(AX.currentExternalChannel);
 
    ret=writeToChannel(EXTERNALCHANNELOUT,s,&h);
 	DoToExternalReady:
@@ -4786,5 +4446,327 @@ DoToExternal ARG1(UBYTE *,s)
 
 /*
  		#] DoToExternal :
+ 		#[ defineChannel :
 */
-/*:[14apr2004 mt]*/
+ 
+UBYTE *
+defineChannel ARG2(UBYTE*,s, HANDLERS*,h)
+{
+	UBYTE *name,*to;
+
+	if ( *s != '<' )
+		return(s);
+
+	s++;
+	name = to = s;
+	while ( *s && *s != '>' ) {
+		if ( *s == '\\' ) s++;
+		*to++ = *s++;
+	}
+	if ( *s == 0 ) {
+		MesPrint("@Improper termination of filename");
+		return(0);
+	}
+	s++;
+	*to = 0;
+	if ( *name ) {
+		h->newhandle = GetChannel((char *)name);
+		h->newlogonly = 1;
+	}
+	else if ( AC.LogHandle >= 0 ) {
+		h->newhandle = AC.LogHandle;
+		h->newlogonly = 1;
+	}
+	return(s);	
+}
+
+/*
+ 		#] defineChannel :
+ 		#[ writeToChannel :
+*/
+ 
+int
+writeToChannel ARG3(int,wtype,UBYTE *,s,HANDLERS*,h)
+{
+	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
+	WORD  num;
+	UBYTE Out[270], *stopper;
+	int nosemi;
+
+/*
+	Now determine the format string
+*/
+	while ( *s == ',' || *s == ' ' ) s++;
+	if ( *s != '"' ) {
+		MesPrint("@No format string present");
+		return(-1);
+	}
+	s++; fstring = to = s;
+	while ( *s ) {
+		if ( *s == '\\' ) {
+			s++;
+			if ( *s == '\\' ) {
+				*to++ = *s++;
+				if ( *s == '\\' ) *to++ = *s++;
+			}
+			else if ( *s == '"' ) *to++ = *s++;
+			else { *to++ = '\\'; *to++ = *s++; }
+		}
+		else if ( *s == '"' ) break;
+		else *to++ = *s++;
+	}
+	if ( *s != '"' ) {
+		MesPrint("@No closing \" in format string");
+		return(-1);
+	}
+	*to = 0; s++;
+	if ( AC.LineLength > 20 && AC.LineLength <= 256 ) stopper = Out + AC.LineLength;
+	else stopper = Out + 256;
+	to = Out;
+/*
+	s points now at the list of objects (if any)
+	we can start executing the format string.
+*/
+	AM.silent = 0;
+	AC.LogHandle = h->newhandle;
+	AM.FileOnlyFlag = h->newlogonly;
+	if ( h->newhandle >= 0 ) {
+		AO.PrintType |= PRINTLFILE;
+	}
+	while ( *fstring ) {
+		if ( to >= stopper ) {
+			num = to - Out;
+			WriteString(wtype,Out,num);
+			to = Out;
+		}
+		if ( *fstring == '\\' ) {
+			fstring++;
+			if ( *fstring == 'n' ) {
+				num = to - Out;
+				WriteString(wtype,Out,num);
+				to = Out;
+				fstring++;
+			}
+			else if ( *fstring == 't' ) *to++ = '\t';
+			else if ( *fstring == 'b' ) { *to++ = '\\'; fstring++; }
+			else *to++ = *fstring++;
+		}
+		else if ( *fstring == '%' ) {
+			fstring++;
+			if ( *fstring == '$' ) {
+				UBYTE *dolalloc;
+				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+				if ( *s != '$' ) {
+nodollar:			MesPrint("@$-variable expected in #write instruction");
+					AM.FileOnlyFlag = h->oldlogonly;
+					AC.LogHandle = h->oldhandle;
+					AO.PrintType = h->oldprinttype;
+					AM.silent = h->oldsilent;
+					return(-1);
+				}
+				s++; ss = s;
+				while ( chartype[*s] <= 1 ) s++;
+				if ( s == ss ) goto nodollar;
+				c = *s; *s = 0;
+				num = GetDollar(ss);
+				if ( num < 0 ) {
+					MesPrint("@#write instruction: $%s has not been defined",ss);
+					AM.FileOnlyFlag = h->oldlogonly;
+					AC.LogHandle = h->oldhandle;
+					AO.PrintType = h->oldprinttype;
+					AM.silent = h->oldsilent;
+					return(-1);
+				}
+				*s = c;
+				if ( *s && *s != ' ' && *s != ',' && *s != '\t' ) {
+					MesPrint("@#write instruction: illegal characters after $-variable");
+					AM.FileOnlyFlag = h->oldlogonly;
+					AC.LogHandle = h->oldhandle;
+					AO.PrintType = h->oldprinttype;
+					AM.silent = h->oldsilent;
+					return(-1);
+				}
+				if ( ( dolalloc = WriteDollarToBuffer(num) ) == 0 ) {
+					AM.FileOnlyFlag = h->oldlogonly;
+					AC.LogHandle = h->oldhandle;
+					AO.PrintType = h->oldprinttype;
+					AM.silent = h->oldsilent;
+					return(-1);
+				}
+				ss = dolalloc;
+				while ( *ss ) {
+					if ( to >= stopper ) {
+						num = to - Out;
+						WriteString(wtype,Out,num);
+						to = Out;
+					}
+					if ( chartype[*ss] > 3 ) { *to++ = *ss++; }
+					else {
+						sss = ss; while ( chartype[*ss] <= 3 ) ss++;
+						if ( ( to + (ss-sss) ) >= stopper ) {
+							if ( (ss-sss) >= (stopper-Out) ) {
+								if ( ( to - stopper ) < 10 ) {
+									num = to - Out;
+									WriteString(wtype,Out,num);
+									to = Out;
+								}
+								while ( (ss-sss) >= (stopper-Out) ) {
+									while ( to < stopper-1 ) {
+										*to++ = *sss++;
+									}
+									*to++ = '\\';
+									num = to - Out;
+									WriteString(wtype,Out,num);
+									to = Out;
+								}
+							}
+							else {
+								num = to - Out;
+								WriteString(wtype,Out,num);
+								to = Out;
+							}
+						}
+						while ( sss < ss ) *to++ = *sss++;
+					}
+				}
+				M_free(dolalloc,"written dollar");
+				fstring++;
+			}
+			else if ( *fstring == 's' ) {
+				fstring++;
+				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+				if ( *s == '"' ) {
+					s++; ss = s;
+					while ( *s ) {
+						if ( *s == '\\' ) s++;
+						else if ( *s == '"' ) break;
+						s++;
+					}
+					if ( *s == 0 ) {
+						MesPrint("@#write instruction: Missing \" in string");
+						AM.FileOnlyFlag = h->oldlogonly;
+						AC.LogHandle = h->oldhandle;
+						AO.PrintType = h->oldprinttype;
+						AM.silent = h->oldsilent;
+						return(-1);
+					}
+					while ( ss < s ) {
+						if ( to >= stopper ) {
+							num = to - Out;
+							WriteString(wtype,Out,num);
+							to = Out;
+						}
+						if ( *ss == '\\' ) ss++;
+						*to++ = *ss++;
+					}
+					s++;
+				}
+				else {
+					sss = ss = s;
+					while ( *s && *s != ',' ) {
+						if ( *s == '\\' ) { s++; sss = s+1; }
+						s++;
+					}
+					while ( s > sss+1 && ( s[-1] == ' ' || s[-1] == '\t' ) ) s--;
+					while ( ss < s ) {
+						if ( to >= stopper ) {
+							num = to - Out;
+							WriteString(wtype,Out,num);
+							to = Out;
+						}
+						if ( *ss == '\\' ) ss++;
+						*to++ = *ss++;
+					}
+				}
+			}
+			else if ( *fstring == 'e' || *fstring == 'E' ) {
+				if ( *fstring == 'E' ) nosemi = 1;
+				else nosemi = 0;
+				fstring++;
+				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+				if ( chartype[*s] != 0 && *s != '[' ) {
+noexpr:				MesPrint("@expression name expected in #write instruction");
+					AM.FileOnlyFlag = h->oldlogonly;
+					AC.LogHandle = h->oldhandle;
+					AO.PrintType = h->oldprinttype;
+					AM.silent = h->oldsilent;
+					return(-1);
+				}
+				ss = s;
+				if ( ( s = SkipAName(ss) ) == 0 || s[-1] == '_' ) goto noexpr;
+				s1 = s; c = c1 = *s1;
+				if ( c1 == '(' ) {
+					SKIPBRA3(s)
+					if ( *s == ')' ) {
+						AO.CurBufWrt = s1+1;
+						c = *s; *s = 0;
+					}
+					else {
+						MesPrint("@Illegal () specifier in expression name in #write");
+						AM.FileOnlyFlag = h->oldlogonly;
+						AC.LogHandle = h->oldhandle;
+						AO.PrintType = h->oldprinttype;
+						AM.silent = h->oldsilent;
+						return(-1);
+					}
+				}
+				else AO.CurBufWrt = (UBYTE *)underscore;
+				*s1 = 0;
+				num = to - Out;
+				if ( num > 0 ) WriteUnfinString(wtype,Out,num);
+				to = Out;
+				if ( WriteOne(ss,(int)num,nosemi) < 0 ) {
+					AM.FileOnlyFlag = h->oldlogonly;
+					AC.LogHandle = h->oldhandle;
+					AO.PrintType = h->oldprinttype;
+					AM.silent = h->oldsilent;
+					return(-1);
+				}
+				*s1 = c1;
+				if ( s > s1 ) *s++ = c;
+			}
+			else if ( *fstring == '%' ) {
+				*to++ = *fstring++;
+			}
+			else if ( *fstring == 0 ) {
+				*to++ = 0;
+			}
+			else {
+				MesPrint("@Illegal control sequence in format string in #write instruction");
+				AM.FileOnlyFlag = h->oldlogonly;
+				AC.LogHandle = h->oldhandle;
+				AO.PrintType = h->oldprinttype;
+				AM.silent = h->oldsilent;
+				return(-1);
+			}
+		}
+		else {
+			*to++ = *fstring++;
+		}
+	}
+/*
+	Now flush the output
+*/
+	num = to - Out;
+	/*[15apr2004 mt]:*/
+	if(wtype==EXTERNALCHANNELOUT){
+		if(num!=0)
+			WriteUnfinString(wtype,Out,num);
+	}else
+	/*:[15apr2004 mt]*/
+	WriteString(wtype,Out,num);
+
+/*
+	and restore original parameters
+*/
+	AM.FileOnlyFlag = h->oldlogonly;
+	AC.LogHandle = h->oldhandle;
+	AO.PrintType = h->oldprinttype;
+	AM.silent = h->oldsilent;
+	return(0);
+}
+
+/*
+ 		#] writeToChannel :
+ 	# ] PreProcessor :
+*/

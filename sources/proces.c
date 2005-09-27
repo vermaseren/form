@@ -9,16 +9,6 @@ WORD printscratch[2];
 /*
   	#] Includes :
 	#[ Processor :
- 		#[ Variables :
-*/
-
-LONG ninterms, deferskipped;
-WORD *currentTerm;
-WORD *listinprint;
-WORD numlistinprint;
-
-/*
- 		#] Variables :
  		#[ Processor :			WORD Processor()
 
 	This is the central processor.
@@ -54,7 +44,7 @@ Processor()
 #endif
 	if ( NumExpressions == 0 ) return(0);
 	AS.expflags = 0;
-	AR.CompressPointer = AM.CompressBuffer;
+	AR.CompressPointer = AR.CompressBuffer;
 	AR.NoCompress = AC.NoCompress;
 	term = AT.WorkPointer;
 	if ( ( AT.WorkPointer + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
@@ -98,12 +88,12 @@ Processor()
 			if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 			AR.DeferFlag = AC.ComDefer;
 			NewSort();
-			ninterms = 0;
+			AN.ninterms = 0;
 			t = e->inmem;
 			while ( *t ) {
 				for ( j = 0; j < *t; j++ ) term[j] = t[j];
 				t += *t;
-				ninterms++; dd = deferskipped;
+				AN.ninterms++; dd = AN.deferskipped;
 				if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 					if ( GetMoreFromMem(term,&t) ) {
 						LowerSortLevel(); goto ProcErr;
@@ -116,9 +106,9 @@ Processor()
 				if ( Generator(term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				}
-				ninterms += dd;
+				AN.ninterms += dd;
 			}
-			ninterms += dd;
+			AN.ninterms += dd;
 			if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
 			if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 			else e->vflags |= ISZERO;
@@ -174,32 +164,9 @@ commonread:
 				if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 				AR.DeferFlag = AC.ComDefer;
 				NewSort();
-				ninterms = 0;
-#ifdef FGPARALLEL
-				{  /* This old buro code. Don't use! */
-					WORD *oldwork = A.WorkSpace;
-					A.WorkSpace = A.WorkPointer;
-
-					ExprInvariants(&(e->onfile));
-
-					GeneraLoop();
-					SortLoop();
-					IniSortY();
-					A.SetFlag = e->setflag;
-					if ( A.NumNodes == 1 ) {
-						if ( EndSort(A.sBuffer) ) goto ProcErr;
-					}
-					else SortYloop();
-					if ( A.TermsLeft ) e->vflags &= ~ISZERO;
-					else e->vflags |= ISZERO;
-					if ( A.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-					A.WorkPointer = A.WorkSpace;
-					A.WorkSpace = oldwork;
-				}
-/*				ShowBuffer();  */
-#else
+				AN.ninterms = 0;
 				while ( GetTerm(term) ) {
-				  ninterms++; dd = deferskipped;
+				  AN.ninterms++; dd = AN.deferskipped;
 				  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 					if ( GetMoreTerms(term) ) {
 					  LowerSortLevel(); goto ProcErr;
@@ -212,9 +179,9 @@ commonread:
 				  if ( Generator(term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				  }
-				  ninterms += dd;
+				  AN.ninterms += dd;
 				}
-				ninterms += dd;
+				AN.ninterms += dd;
 				if ( LastExpression ) {
 					if ( AR.infile->handle >= 0 ) {
 						CloseFile(AR.infile->handle);
@@ -231,7 +198,6 @@ commonread:
 				
 				if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
 				if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
-#endif
 				AS.GetFile = 0;
 				break;
 			case SKIPLEXPRESSION:
@@ -255,8 +221,8 @@ commonread:
 				*AM.S0->sBuffer = 0; firstterm = -1;
 				do {
 					WORD *oldipointer = AR.CompressPointer;
-					WORD *comprtop = AM.ComprTop;
-					AM.ComprTop = AM.S0->sTop;
+					WORD *comprtop = AR.ComprTop;
+					AR.ComprTop = AM.S0->sTop;
 					AR.CompressPointer = AM.S0->sBuffer;
 					if ( firstterm > 0 ) {
 						if ( PutOut(term,&position,AR.outfile,1) < 0 ) goto ProcErr;
@@ -270,7 +236,7 @@ commonread:
 						firstterm++;
 					}
 					AR.CompressPointer = oldipointer;
-					AM.ComprTop = comprtop;
+					AR.ComprTop = comprtop;
 				} while ( GetTerm(term) );
 				if ( FlushOut(&position,AR.outfile,1) ) goto ProcErr;
 				break;
@@ -295,8 +261,8 @@ commonread:
 				*AM.S0->sBuffer = 0; firstterm = -1;
 				do {
 					WORD *oldipointer = AR.CompressPointer;
-					WORD *comprtop = AM.ComprTop;
-					AM.ComprTop = AM.S0->sTop;
+					WORD *comprtop = AR.ComprTop;
+					AR.ComprTop = AM.S0->sTop;
 					AR.CompressPointer = AM.S0->sBuffer;
 					if ( firstterm > 0 ) {
 						if ( PutOut(term,&position,AS.hidefile,1) < 0 ) goto ProcErr;
@@ -310,7 +276,7 @@ commonread:
 						firstterm++;
 					}
 					AR.CompressPointer = oldipointer;
-					AM.ComprTop = comprtop;
+					AR.ComprTop = comprtop;
 				} while ( GetTerm(term) );
 				if ( FlushOut(&position,AS.hidefile,1) ) goto ProcErr;
 				AS.hidefile->POfull = AS.hidefile->POfill;
@@ -351,14 +317,6 @@ ProcErr:
 	of the special functions.
 */
 
-#ifdef WHICHSUBEXPRESSION
-
-static UWORD *BinoScrat= 0;
-WORD nbino, last1 = 0;
-LONG last2 = 0, last3 = 0;
-
-#endif
-
 WORD
 TestSub ARG2(WORD *,term,WORD,level)
 {
@@ -389,12 +347,12 @@ ReStart:
 
 #ifdef WHICHSUBEXPRESSION
 
-			WORD *tmin = t, nbino;
+			WORD *tmin = t, AN.nbino;
 /*			LONG minval = MAXLONG; */
 			LONG minval = -1;
 			LONG mm, mnum1 = 1;
-			if ( BinoScrat == 0 ) {
-				BinoScrat = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"GetBinoScrat");
+			if ( AN.BinoScrat == 0 ) {
+				AN.BinoScrat = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"GetBinoScrat");
 			}
 #endif
 			if ( t[3] ) {
@@ -424,15 +382,15 @@ ReStart:
 /*
 						Compute Binom(numterms+power-1,power-1)
 						We need potentially long arrithmetic.
-						That is why we had to allocate BinoScrat
+						That is why we had to allocate AN.BinoScrat
 */
-						if ( last1 == t[3] && last2 == cbuf[t[4]].NumTerms[t[2]] + t[3] - 1 ) {
-							if ( last3 > minval ) {
-								minval = last3; tmin = t;
+						if ( AN.last1 == t[3] && AN.last2 == cbuf[t[4]].NumTerms[t[2]] + t[3] - 1 ) {
+							if ( AN.last3 > minval ) {
+								minval = AN.last3; tmin = t;
 							}
 						}
 						else {
-						last1 = t[3]; mm = last2 = cbuf[t[4]].NumTerms[t[2]] + t[3] - 1;
+						AN.last1 = t[3]; mm = AN.last2 = cbuf[t[4]].NumTerms[t[2]] + t[3] - 1;
 						if ( t[3] == 1 ) {
 							if ( mm > minval ) {
 								minval = mm; tmin = t;
@@ -440,19 +398,19 @@ ReStart:
 						}
 						else if ( t[3] > 0 ) {
 							if ( mm > MAXPOSITIVE ) goto TooMuch;
-							GetBinom(BinoScrat,&nbino,(WORD)mm,t[3]);
-							if ( nbino > 2 ) goto TooMuch;
-							if ( nbino == 2 ) {
-								mm = BinoScrat[1];
-								mm = ( mm << BITSINWORD ) + BinoScrat[0];
+							GetBinom(AN.BinoScrat,&AN.nbino,(WORD)mm,t[3]);
+							if ( AN.nbino > 2 ) goto TooMuch;
+							if ( AN.nbino == 2 ) {
+								mm = AN.BinoScrat[1];
+								mm = ( mm << BITSINWORD ) + AN.BinoScrat[0];
 							}
-							else if ( nbino == 1 ) mm = BinoScrat[0];
+							else if ( AN.nbino == 1 ) mm = AN.BinoScrat[0];
 							else mm = 0;
 							if ( mm > minval ) {
 								minval = mm; tmin = t;
 							}
 						}
-						last3 = mm;
+						AN.last3 = mm;
 						}
 					}
 #endif
@@ -464,13 +422,13 @@ ReStart:
 /*
 					To keep the flowcontrol simple we duplicate some code here
 */
-					if ( last1 == t[3] && last2 == cbuf[t[4]].NumTerms[t[2]] + t[3] - 1 ) {
-						if ( last3 > minval ) {
-							minval = last3; tmin = t;
+					if ( AN.last1 == t[3] && AN.last2 == cbuf[t[4]].NumTerms[t[2]] + t[3] - 1 ) {
+						if ( AN.last3 > minval ) {
+							minval = AN.last3; tmin = t;
 						}
 					}
 					else {
-					last1 = t[3]; mm = last2 = cbuf[t[4]].NumTerms[t[2]] + t[3] - 1;
+					AN.last1 = t[3]; mm = AN.last2 = cbuf[t[4]].NumTerms[t[2]] + t[3] - 1;
 					if ( t[3] == 1 ) {
 						if ( mm > minval ) {
 							minval = mm; tmin = t;
@@ -487,19 +445,19 @@ TooMuch:;
 							UNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
-						GetBinom(BinoScrat,&nbino,(WORD)mm,t[3]);
-						if ( nbino > 2 ) goto TooMuch;
-						if ( nbino == 2 ) {
-							mm = BinoScrat[1];
-							mm = ( mm << BITSINWORD ) + BinoScrat[0];
+						GetBinom(AN.BinoScrat,&AN.nbino,(WORD)mm,t[3]);
+						if ( AN.nbino > 2 ) goto TooMuch;
+						if ( AN.nbino == 2 ) {
+							mm = AN.BinoScrat[1];
+							mm = ( mm << BITSINWORD ) + AN.BinoScrat[0];
 						}
-						else if ( nbino == 1 ) mm = BinoScrat[0];
+						else if ( AN.nbino == 1 ) mm = AN.BinoScrat[0];
 						else mm = 0;
 						if ( mm > minval ) {
 							minval = mm; tmin = t;
 						}
 					}
-					last3 = mm;
+					AN.last3 = mm;
 					}
 				}
 				t = tmin;
@@ -2079,7 +2037,6 @@ Generator ARG2(WORD *,term,WORD,level)
 	LONG posisub, oldcpointer;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	WORD
 #endif
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
@@ -2216,9 +2173,9 @@ SkipCount:	level++;
 								LOCK(ErrorMessageLock);
 								MesPrint("$%s should have been an index"
 								,AC.dollarnames->namebuffer+Dollars[theindex].name);
-								currentTerm = term;
+								AN.currentTerm = term;
 								MesPrint("Current term: %t");
-								listinprint = printscratch;
+								AN.listinprint = printscratch;
 								printscratch[0] = DOLLAREXPRESSION;
 								printscratch[1] = theindex;
 								MesPrint("$%s = %$"
@@ -2302,9 +2259,9 @@ SkipCount:	level++;
 									LOCK(ErrorMessageLock);
 									MesPrint("$%s should have been an index"
 									,AC.dollarnames->namebuffer+Dollars[theindex].name);
-									currentTerm = term;
+									AN.currentTerm = term;
 									MesPrint("Current term: %t");
-									listinprint = printscratch;
+									AN.listinprint = printscratch;
 									printscratch[0] = DOLLAREXPRESSION;
 									printscratch[1] = theindex;
 									MesPrint("$%s = %$"
@@ -2368,9 +2325,9 @@ CommonEnd:
 					AM.exitflag = 1; /* no danger of race conditions */
 					break;
 				  case TYPEPRINT:
-					currentTerm = term;
-					numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
-					listinprint = C->lhs[level]+3+C->lhs[level][2];
+					AN.currentTerm = term;
+					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
+					AN.listinprint = C->lhs[level]+3+C->lhs[level][2];
 					LOCK(ErrorMessageLock);
 					MesPrint((char *)(C->lhs[level]+3));
 					UNLOCK(ErrorMessageLock);
@@ -2385,9 +2342,9 @@ CommonEnd:
 						AM.FileOnlyFlag = 1;
 						AO.PrintType |= PRINTLFILE;
 					}
-					currentTerm = term;
-					numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
-					listinprint = C->lhs[level]+3+C->lhs[level][2];
+					AN.currentTerm = term;
+					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
+					AN.listinprint = C->lhs[level]+3+C->lhs[level][2];
 					MesPrint((char *)(C->lhs[level]+3));
 					AO.PrintType = oldPrintType;
 					AM.FileOnlyFlag = oldFOflag;
@@ -2424,7 +2381,7 @@ CommonEnd:
 					Here we have to assign an expression to a $ variable.
 */
 					AR.NoCompress = 1;
-					AN.cTerm = currentTerm = term;
+					AN.cTerm = AN.currentTerm = term;
 					AT.WorkPointer = term + *term;
 					*AT.WorkPointer++ = 0;
 					if ( AssignDollar(term,level) ) goto GenCall;
@@ -2733,9 +2690,9 @@ AutoGen:	i = *AT.TMout;
 /*			Note that AT.TMaddr is needed for GetTable just once! */
 /*
 			We need space for the previous term in the compression
-			This is made available in AM.CompressBuffer, although we may get
+			This is made available in AR.CompressBuffer, although we may get
 			problems with this sooner or later. Hence we need to keep
-			a set of pointers in AM.CompressBuffer
+			a set of pointers in AR.CompressBuffer
 			Note that after the last call there has been no use made
 			of AR.CompressPointer, so it points automatically at its original
 			position!
@@ -3071,7 +3028,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 	else {
 		SETBASEPOSITION(oldposition,AR.infile->POfill-AR.infile->PObuffer);
 	}
-	t = m = AM.CompressBuffer;
+	t = m = AR.CompressBuffer;
 	t += *t;
 	mstop = t - ABS(t[-1]);
 	m++;
@@ -3085,10 +3042,10 @@ Deferred ARG2(WORD *,term,WORD,level)
 		return(0);
 	}
 	mstop = m + m[1];
-	decr = WORDDIF(mstop,AM.CompressBuffer)-1;
+	decr = WORDDIF(mstop,AR.CompressBuffer)-1;
 	tstart = AR.CompressPointer + decr;
 
-	m = AM.CompressBuffer;
+	m = AR.CompressBuffer;
 	t = AR.CompressPointer;
 	i = *m;
 	NCOPY(t,m,i);
@@ -3100,7 +3057,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 	First bracket content starts at mstop.
 	Next term starts at startposition and the file has been positioned.
 	Decompression information is in AR.CompressPointer.
-	The outside of the bracket runs from AM.CompressBuffer+1 to mstop.
+	The outside of the bracket runs from AR.CompressBuffer+1 to mstop.
 */
 	for(;;) {
 		*tstart = *(AR.CompressPointer)-decr;
@@ -3119,7 +3076,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 		t = AR.CompressPointer;
 		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
 		t++;
-		m = AM.CompressBuffer+1;
+		m = AR.CompressBuffer+1;
 		while ( m < mstop ) {
 			if ( *m != *t ) goto Thatsit;
 			m++; t++;

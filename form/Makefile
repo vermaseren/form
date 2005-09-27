@@ -97,14 +97,14 @@ endif
 
 
 HFILES = declare.h form3.h fsizes.h ftypes.h inivar.h minos.h \
-	structs.h unix.h variable.h windows.h zconf.h portsignals.h
+	structs.h unix.h variable.h windows.h portsignals.h
 
 OBJS = argument.o comexpr.o compcomm.o compiler.o compress.o comtool.o \
 	dollar.o execute.o extcmd.o factor.o findpat.o function.o if.o index.o \
 	lus.o message.o minos.o module.o names.o normal.o opera.o optim.o \
 	pattern.o poly.o pre.o proces.o ratio.o reken.o reshuf.o sch.o setfile.o \
-	smart.o sort.o startup.o store.o symmetr.o tables.o token.o tools.o \
-	unixfile.o wildcard.o
+	smart.o sort.o startup.o store.o symmetr.o tables.o threads.o token.o \
+	tools.o unixfile.o wildcard.o
 
 vpath %.c ../sources
 vpath %.h ../sources
@@ -113,7 +113,7 @@ vpath %.h ../sources
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c  $<
 
 form: $(HFILES) $(OBJS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(OBJS) -lz -o form
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OBJS) -o form -lz -pthread
 
 clean:
 	rm -f *.o form

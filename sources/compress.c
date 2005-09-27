@@ -17,17 +17,16 @@
 	is the original problem....
 
   	#[ Variables :
-*/
 
-/*
 	The following variables are to contain the intermediate buffers
 	for the inflation of the various patches in the sort file.
 	There can be up to MaxFpatches (FilePatches in the setup) and hence
 	we can have that many streams simultaneously. We set this up once
 	and only when needed.
+		(in struct A.N or AB[threadnum].N)
+	Bytef **AN.ziobufnum;
+	Bytef *AN.ziobuffers;
 */
-Bytef **ziobufnum;
-Bytef *ziobuffers;
 
 /*
   	#] Variables :
@@ -96,7 +95,7 @@ SetupOutputGZIP ARG1(FILEHANDLE *,f)
 }
 
 /*
-  	#] SetupOutputGZIP :
+  	#] SetupOutputGZIP : 
   	#[ PutOutputGZIP :
 
 	Routine is called when the PObuffer of f is full.
@@ -161,7 +160,7 @@ PutOutputGZIP ARG1(FILEHANDLE *,f)
 }
 
 /*
-  	#] PutOutputGZIP :
+  	#] PutOutputGZIP : 
   	#[ FlushOutputGZIP :
 
 	Routine is called to flush a stream. The compression of the input buffer
@@ -260,7 +259,7 @@ FlushOutputGZIP ARG1(FILEHANDLE *,f)
 }
 
 /*
-  	#] FlushOutputGZIP :
+  	#] FlushOutputGZIP : 
   	#[ SetupAllInputGZIP :
 
 	Routine prepares all gzip input streams for a merge.
@@ -269,6 +268,7 @@ FlushOutputGZIP ARG1(FILEHANDLE *,f)
 int
 SetupAllInputGZIP ARG1(SORTING *,S)
 {
+	GETIDENTITY;
 	int i, NumberOpened = 0;
 	z_streamp zsp;
 
@@ -280,16 +280,16 @@ SetupAllInputGZIP ARG1(SORTING *,S)
 			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef),"input raw buffers");
-		ziobufnum  = (Bytef **)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef *),"input raw pointers");
-		if ( ziobuffers == 0 || ziobufnum == 0 ) {
+		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef),"input raw buffers");
+		AN.ziobufnum  = (Bytef **)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef *),"input raw pointers");
+		if ( AN.ziobuffers == 0 || AN.ziobufnum == 0 ) {
 			LOCK(ErrorMessageLock);
 			MesCall("SetupAllInputGZIP");
 			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		for ( i  = 0 ; i < S->MaxFpatches; i++ ) {
-			ziobufnum[i] = ziobuffers + i * S->file.ziosize;
+			AN.ziobufnum[i] = AN.ziobuffers + i * S->file.ziosize;
 		}
 	}
 	for ( i = 0; i < S->inNum; i++ ) {
@@ -377,17 +377,17 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 				UNLOCK(ErrorMessageLock);
 #endif
 				SeekFile(f->handle,position,SEEK_SET);
-				readsize = ReadFile(f->handle,(UBYTE *)(ziobufnum[numstream]),toread);
+				readsize = ReadFile(f->handle,(UBYTE *)(AN.ziobufnum[numstream]),toread);
 				SeekFile(f->handle,position,SEEK_CUR);
 #ifdef GZIPDEBUG
 				LOCK(ErrorMessageLock);
-				{  char *s = ziobufnum[numstream]+readsize;
+				{  char *s = AN.ziobufnum[numstream]+readsize;
 					MesPrint("  +Last bytes read: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 				}
 				UNLOCK(ErrorMessageLock);
 #endif
 				if ( readsize == 0 ) {
-					zsp->next_in  = ziobufnum[numstream];
+					zsp->next_in  = AN.ziobufnum[numstream];
 					zsp->avail_in = f->ziosize;
 					zsp->total_in = 0;
 					return(zsp->total_out);
@@ -403,7 +403,7 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 /*
 				Set the input
 */
-				zsp->next_in  = ziobufnum[numstream];
+				zsp->next_in  = AN.ziobufnum[numstream];
 				zsp->avail_in = readsize;
 				zsp->total_in = 0;
 			}
@@ -467,17 +467,17 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 				UNLOCK(ErrorMessageLock);
 #endif
 				SeekFile(f->handle,position,SEEK_SET);
-				readsize = ReadFile(f->handle,(UBYTE *)(ziobufnum[numstream]),toread);
+				readsize = ReadFile(f->handle,(UBYTE *)(AN.ziobufnum[numstream]),toread);
 				SeekFile(f->handle,position,SEEK_CUR);
 #ifdef GZIPDEBUG
 				LOCK(ErrorMessageLock);
-				{  char *s = ziobufnum[numstream]+readsize;
+				{  char *s = AN.ziobufnum[numstream]+readsize;
 					MesPrint("   Last bytes read: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 				}
 				UNLOCK(ErrorMessageLock);
 #endif
 				if ( readsize == 0 ) {
-					zsp->next_in  = ziobufnum[numstream];
+					zsp->next_in  = AN.ziobufnum[numstream];
 					zsp->avail_in = f->ziosize;
 					zsp->total_in = 0;
 					return(zsp->total_out);
@@ -493,7 +493,7 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 /*
 				Reset the input
 */
-				zsp->next_in  = ziobufnum[numstream];
+				zsp->next_in  = AN.ziobufnum[numstream];
 				zsp->avail_in = readsize;
 				zsp->total_in = 0;
 			}

@@ -4,8 +4,6 @@
 
 #include "form3.h"
 
-WORD dummysubexp[SUBEXPSIZE+4];
-
 /*
   	#] Includes :
  	#[ Normalize :
@@ -45,11 +43,6 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 	Something should be done about it.
 
 */
-
-static UWORD *NoScrat2 = 0;
-static WORD *ReplaceScrat = 0;
-int RSsize = 0;
-static WORD *st = 0, *sm = 0, *sr = 0, *sc = 0;
 
 WORD
 Normalize ARG1(WORD *,term)
@@ -139,8 +132,8 @@ conscan:;
 						goto NextSymbol;
 					}
 					if ( *t <= DENOMINATORSYMBOL && *t >= COEFFSYMBOL ) {
-						if ( NoScrat2 == 0 ) {
-							NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
+						if ( AN.NoScrat2 == 0 ) {
+							AN.NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
 						}
 						if ( AN.cTerm ) m = AN.cTerm;
 						else m = term;
@@ -307,7 +300,7 @@ NextSymbol:;
 			case HAAKJE :
 				break;
 			case SETSET:
-				if ( WildFill(termout,term,dummysubexp) < 0 ) goto FromNorm;
+				if ( WildFill(termout,term,AT.dummysubexp) < 0 ) goto FromNorm;
 				i = *termout;
 				t = termout; m = term;
 				NCOPY(m,t,i);
@@ -335,7 +328,7 @@ NextSymbol:;
 #endif
 				if ( d->type == DOLZERO ) {
 #ifdef WITHPTHREADS
-					if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+					if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 					if ( t[3] == 0 ) goto NormZZ;
 					if ( t[3] < 0 ) goto NormInf;
@@ -351,7 +344,7 @@ NextSymbol:;
 					}
 					if ( nnum == 0 || ( nnum == 1 && lnum[0] == 0 ) ) {
 #ifdef WITHPTHREADS
-						if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+						if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 						if ( t[3] < 0 ) goto NormInf;
 						else if ( t[3] == 0 ) goto NormZZ;
@@ -362,7 +355,7 @@ NextSymbol:;
 					if ( t[3] < 0 ) {
 						if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
 #ifdef WITHPTHREADS
-							if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+							if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 							goto FromNorm;
 						}
@@ -370,7 +363,7 @@ NextSymbol:;
 					else if ( t[3] > 0 ) {
 						if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
 #ifdef WITHPTHREADS
-							if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+							if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 							goto FromNorm;
 						}
@@ -380,7 +373,7 @@ NextSymbol:;
 				else if ( d->type == DOLINDEX ) {
 					if ( d->index == 0 ) {
 #ifdef WITHPTHREADS
-						if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+						if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 						goto NormZero;
 					}
@@ -391,7 +384,7 @@ NextSymbol:;
 					t[4] = AM.dbufnum;
 					if ( t[3] == 0 ) {
 #ifdef WITHPTHREADS
-						if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+						if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 						break;
 					}
@@ -408,27 +401,27 @@ NextSymbol:;
 						t += t[1];
 					}
 #ifdef WITHPTHREADS
-					if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+					if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 					goto RegEnd;
 				}
 				else {
 #ifdef WITHPTHREADS
-					if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
+					if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
 					LOCK(ErrorMessageLock);
 					MesPrint("!!!This $ variation has not been implemented yet!!!");
 					UNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
+#ifdef WITHPTHREADS
+				if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+#endif
 				}
 				else {
 					pnco[nnco++] = t;
 					AC.lhdollarflag = 1;
 				}
-#ifdef WITHPTHREADS
-				if ( ptype > 0 ) { UNLOCK(p->pthreadslock); }
-#endif
 				break;
 			case DELTA :
 				t += 2;
@@ -569,10 +562,10 @@ MulIn:
 				break;
 			case TERMFUNCTION:
 				if ( AN.cTerm ) {
-					st = t; sr = r; sm = m; sc = AN.cTerm;
+					AN.st = t; AN.sr = r; AN.sm = m; AN.sc = AN.cTerm;
 					AN.cTerm = 0;
-					t = sc + 1;
-					m = sc + *sc;
+					t = AN.sc + 1;
+					m = AN.sc + *AN.sc;
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(m[-1]);	
 					m -= ABS(m[-1]);
@@ -1130,23 +1123,23 @@ ScanCont:		while ( t < r ) {
 						j = (j-1) >> 1;
 						i = ( i < 0 ) ? -j: j;
 						UnPack((UWORD *)to,i,&den,&num);
-						if ( NoScrat2 == 0 ) {
-							NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
+						if ( AN.NoScrat2 == 0 ) {
+							AN.NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
 						}
 						if ( DivLong((UWORD *)to,num,(UWORD *)(to+j),den
-						,(UWORD *)AT.WorkPointer,&num,NoScrat2,&den) ) goto FromNorm;
+						,(UWORD *)AT.WorkPointer,&num,AN.NoScrat2,&den) ) goto FromNorm;
 						if ( k < 0 && den < 0 ) {
-							*NoScrat2 = 1;
+							*AN.NoScrat2 = 1;
 							den = -1;
 							if ( AddLong((UWORD *)AT.WorkPointer,num
-							,NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
+							,AN.NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
 								goto FromNorm;
 						}
 						else if ( k > 0 && den > 0 ) {
-							*NoScrat2 = 1;
+							*AN.NoScrat2 = 1;
 							den = 1;
 							if ( AddLong((UWORD *)AT.WorkPointer,num,
-							NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
+							AN.NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
 								goto FromNorm;
 						}
 					}
@@ -1194,13 +1187,13 @@ defaultcase:;
 				if ( *t == REPLACEMENT && ReplaceType == -1 ) {
 					ReplaceType = 0;
 					from = t;
-					if ( RSsize < 2*t[1]+SUBEXPSIZE ) {
-						if ( ReplaceScrat ) M_free(ReplaceScrat,"ReplaceScrat");
-						RSsize = 2*t[1]+SUBEXPSIZE+40;
-						ReplaceScrat = (WORD *)Malloc1((RSsize+1)*sizeof(WORD),"ReplaceScrat");
+					if ( AN.RSsize < 2*t[1]+SUBEXPSIZE ) {
+						if ( AN.ReplaceScrat ) M_free(AN.ReplaceScrat,"AN.ReplaceScrat");
+						AN.RSsize = 2*t[1]+SUBEXPSIZE+40;
+						AN.ReplaceScrat = (WORD *)Malloc1((AN.RSsize+1)*sizeof(WORD),"AN.ReplaceScrat");
 					}
 					t += FUNHEAD;
-					ReplaceSub = ReplaceScrat;
+					ReplaceSub = AN.ReplaceScrat;
 					ReplaceSub += SUBEXPSIZE;
 					while ( t < r ) {
 						if ( *t > 0 ) goto NoRep;
@@ -1407,7 +1400,7 @@ defaultcase:;
 						}
 						
 					}
-					ReplaceScrat[1] = ReplaceSub-ReplaceScrat;
+					AN.ReplaceScrat[1] = ReplaceSub-AN.ReplaceScrat;
 					break;
 NoRep:
 					if ( ReplaceType > 0 ) {
@@ -1482,10 +1475,10 @@ NoRep:
 		}
 		t = r;
 	} while ( t < m );
-	if ( sc ) {
-		AN.cTerm = sc;
-		r = t = sr; m = sm;
-		sc = sm = st = sr = 0;
+	if ( AN.sc ) {
+		AN.cTerm = AN.sc;
+		r = t = AN.sr; m = AN.sm;
+		AN.sc = AN.sm = AN.st = AN.sr = 0;
 		goto conscan;
 	}
 /*
@@ -2492,12 +2485,12 @@ NextI:;
 		*t = WORDDIF(m,t);
 		if ( ReplaceType == 0 ) {
 			AT.WorkPointer = termout+*termout;
-			WildFill(term,termout,ReplaceScrat);
+			WildFill(term,termout,AN.ReplaceScrat);
 			if ( termout < term + *term ) termout = term + *term;
 		}
 		else {
 			AT.WorkPointer = r = termout + *termout;
-			WildFill(r,termout,ReplaceScrat);
+			WildFill(r,termout,AN.ReplaceScrat);
 			i = *r; m = term;
 			NCOPY(m,r,i);
 			if ( termout < m ) termout = m;

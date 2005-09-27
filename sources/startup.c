@@ -5,8 +5,6 @@
 #include "portsignals.h"
 #endif
 
-extern WORD dummysubexp[];
-
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
 /*
@@ -256,7 +254,7 @@ VOID
 ReserveTempFiles ARG0
 {
 #ifdef WITHPTHREADS
-	int identity = 0;
+	GETIDENTITY;
 #endif
 	SETUPPARAMETERS *sp;
 	UBYTE *s, *t, c;	
@@ -385,25 +383,25 @@ StartVariables ARG0
 	int i, ii;
 	PUTZERO(AM.zeropos);
 	StartPrepro();
-	/*[19nov2003 mt]:*/
-	/*The module counter:*/
+/*
+	The module counter:
+*/
 	AC.CModule=0;
-	/*:[19nov2003 mt]*/
-/*[28nov2003 mt]:*/   
 	AP.ChDollarList.lijst = NULL;
 #ifdef PARALLEL
-	/*Note, this variable can't be initialized in IniModule!:*/
+/*
+	Note, this variable can't be initialized in IniModule!:
+*/
 	AC.NumberOfRedefsInModule=0;
 #endif
-/*:[28nov2003 mt]*/
-
-	/*[12dec2003 mt]:*/
-	/*separators used to delimit arguments in #call and #do, by default ',' and '|':*/
-	/*Be sure, it is en empty set:*/
+/*
+	separators used to delimit arguments in #call and #do, by default ',' and '|':
+	Be sure, it is en empty set:
+*/
 	set_sub(AC.separators,AC.separators,AC.separators);
 	set_set(',',AC.separators);
 	set_set('|',AC.separators);
-	/*:[12dec2003 mt]*/
+
 	AM.SkipClears = 0;
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
@@ -565,13 +563,6 @@ StartVariables ARG0
 	AM.countfunnum += FUNCTION;
 	AM.polyfunnum += FUNCTION;
 	AM.polytopnum += FUNCTION;
-	dummysubexp[0] = SUBEXPRESSION;
-	dummysubexp[1] = SUBEXPSIZE+4;
-	for ( i = 2; i < SUBEXPSIZE; i++ ) dummysubexp[i] = 0;
-	dummysubexp[SUBEXPSIZE] = WILDDUMMY;
-	dummysubexp[SUBEXPSIZE+1] = 4;
-	dummysubexp[SUBEXPSIZE+2] = 0;
-	dummysubexp[SUBEXPSIZE+3] = 0;
 
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag = 1;
 }
@@ -587,9 +578,11 @@ WORD
 IniVars()
 {
 #ifdef WITHPTHREADS
-	int identity = 0;
+	GETIDENTITY;
+#else
+	WORD *t;
 #endif
-	WORD *fi, i, one = 1, *t;
+	WORD *fi, i, one = 1;
 	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s;
 	AC.ShortStats = 0;
@@ -683,8 +676,76 @@ IniVars()
 	AT.onepol[2] = 1;
 	AT.onepol[3] = 3;
 	AT.onepol[4] = 0;
+	AT.onesympol[0] = 8;
+	AT.onesympol[1] = SYMBOL;
+	AT.onesympol[2] = 4;
+	AT.onesympol[3] = 1;
+	AT.onesympol[4] = 1;
+	AT.onesympol[5] = 1;
+	AT.onesympol[6] = 1;
+	AT.onesympol[7] = 3;
+	AT.onesympol[8] = 0;
+	AT.comsym[0] = 8;
+	AT.comsym[1] = SYMBOL;
+	AT.comsym[2] = 4;
+	AT.comsym[3] = 0;
+	AT.comsym[4] = 1;
+	AT.comsym[5] = 1;
+	AT.comsym[6] = 1;
+	AT.comsym[7] = 3;
+	AT.comnum[0] = 4;
+	AT.comnum[1] = 1;
+	AT.comnum[2] = 1;
+	AT.comnum[3] = 3;
+	AT.comfun[0] = FUNHEAD+4;
+	AT.comfun[1] = FUNCTION;
+	AT.comfun[2] = FUNHEAD;
+	AT.comfun[3] = 0;
+#if FUNHEAD == 4
+	AT.comfun[4] = 0;
+#endif
+	AT.comfun[FUNHEAD+1] = 1;
+	AT.comfun[FUNHEAD+2] = 1;
+	AT.comfun[FUNHEAD+3] = 3;
+	AT.comind[0] = 7;
+	AT.comind[1] = INDEX;
+	AT.comind[2] = 3;
+	AT.comind[3] = 0;
+	AT.comind[4] = 1;
+	AT.comind[5] = 1;
+	AT.comind[6] = 3;
+	AT.locwildvalue[0] = SUBEXPRESSION;
+	AT.locwildvalue[1] = SUBEXPSIZE;
+	for ( i = 2; i < SUBEXPSIZE; i++ ) AT.locwildvalue[i] = 0;
+	AT.mulpat[0] = TYPEMULT;
+	AT.mulpat[1] = SUBEXPSIZE+3;
+	AT.mulpat[2] = 0;
+	AT.mulpat[3] = SUBEXPRESSION;
+	AT.mulpat[4] = SUBEXPSIZE;
+	AT.mulpat[5] = 0;
+	AT.mulpat[6] = 1;
+	for ( i = 7; i < SUBEXPSIZE+5; i++ ) AT.mulpat[i] = 0;
+	AT.proexp[0] = SUBEXPSIZE+4;
+	AT.proexp[1] = EXPRESSION;
+	AT.proexp[2] = SUBEXPSIZE;
+	AT.proexp[3] = -1;
+	AT.proexp[4] = 1;
+	for ( i = 5; i < SUBEXPSIZE+1; i++ ) AT.proexp[i] = 0;
+	AT.proexp[SUBEXPSIZE+1] = 1;
+	AT.proexp[SUBEXPSIZE+2] = 1;
+	AT.proexp[SUBEXPSIZE+3] = 3;
+	AT.proexp[SUBEXPSIZE+4] = 0;
+	AT.dummysubexp[0] = SUBEXPRESSION;
+	AT.dummysubexp[1] = SUBEXPSIZE+4;
+	for ( i = 2; i < SUBEXPSIZE; i++ ) AT.dummysubexp[i] = 0;
+	AT.dummysubexp[SUBEXPSIZE] = WILDDUMMY;
+	AT.dummysubexp[SUBEXPSIZE+1] = 4;
+	AT.dummysubexp[SUBEXPSIZE+2] = 0;
+	AT.dummysubexp[SUBEXPSIZE+3] = 0;
+
 	AN.doingpoly = 0;
 	AN.polyblevel = 0;
+
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	C->Pointer = C->Buffer;
@@ -851,10 +912,7 @@ main ARG2(int,argc,char **,argv)
 #endif
 			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
                          ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
-	ReserveTempFiles();
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
-	IniVars();
-	Globalize(1);
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
 #ifdef WITHPTHREADS
 	if ( StartAllThreads(AM.totalnumberofthreads) ) {
@@ -864,6 +922,9 @@ main ARG2(int,argc,char **,argv)
 #endif
 	sprintf(buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
+	ReserveTempFiles();
+	IniVars();
+	Globalize(1);
 	TimeCPU(0);
 	PreProcessor();
 	Terminate(0);
@@ -936,35 +997,27 @@ dontremove:;
  		#[ Terminate :
 */
 
-/*[19apr2004 mt]:*/
-#ifdef WITHEXTERNALCHANNEL
-extern UBYTE *currentPrompt;/*Defined in pre.c*/
-extern int currentExternalChannel;/*Defined in pre.c*/
-#endif
-/*:[19apr2004 mt]*/
-
 VOID
 Terminate ARG1(int,errorcode)
 {
-/*[19apr2004 mt]:*/
 #ifdef TRAPSIGNALS
-   exitInProgress=1;
+	exitInProgress=1;
 #endif
 #ifdef WITHEXTERNALCHANNEL
-	/*This function can be called from the error handler, so it is better to
-		clean up all started processes before any activity:*/
+/*
+	This function can be called from the error handler, so it is better to
+	clean up all started processes before any activity:
+*/
 	closeAllExternalChannels();
-	currentExternalChannel=0;
-	if(currentPrompt){
-		M_free(currentPrompt,"external channel prompt");
-		currentPrompt=0;
+	AX.currentExternalChannel=0;
+	if(AX.currentPrompt){
+		M_free(AX.currentPrompt,"external channel prompt");
+		AX.currentPrompt=0;
 	}
 #endif
-/*:[19apr2004 mt]*/
-
-#ifdef PARALLEL /* [27aug1997 ar] */
-  PF_Terminate(errorcode);
-#endif /* PARALLEL [27aug1997 ar] */
+#ifdef PARALLEL
+	PF_Terminate(errorcode);
+#endif
 	if ( AM.HoldFlag ) {
 		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
 		getchar();

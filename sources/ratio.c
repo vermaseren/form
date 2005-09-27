@@ -427,16 +427,15 @@ SumF1Call:
 
 */
 
-static UWORD *GlScratC = 0;
-
 WORD
 Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 {
+	GETIDENTITY;
 	UWORD *coef;
 	WORD ncoef, *t, *t1, *t2, i, nc2, nc3, old, newer;
-	if ( GlScratC == 0 )
-		GlScratC = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Glue");
-	coef = GlScratC;
+	if ( AN.GlScratC == 0 )
+		AN.GlScratC = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Glue");
+	coef = AN.GlScratC;
 	t = term1;
 	t += *t;
 	i = t[-1];

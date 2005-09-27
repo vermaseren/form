@@ -102,7 +102,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -331,7 +331,7 @@ typedef struct DoLlArS {
 	LONG	size;				/* The number of words */
 	LONG	name;
 #ifdef WITHPTHREADS
-	pthread_mutex_t	pthreadlock;
+	pthread_mutex_t	pthreadslock;
 #endif
 	WORD	type;
 	WORD	node;
@@ -365,8 +365,18 @@ typedef struct TaBlEbAsE {
 	int numtables;
 } TABLEBASE;
  
+typedef struct {
+	WORD *location;
+	int numargs;
+	int numfunnies;
+	int numwildcards;
+	int symmet;
+	int tensor;
+	int commute;
+} FUN_INFO;
+ 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
  
@@ -429,7 +439,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -471,7 +481,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
  
@@ -528,8 +538,17 @@ struct  bit_field {	/* Assume 8 bits per byte */
 typedef struct bit_field set_of_char[32];
 typedef struct bit_field *one_byte;
 
+typedef struct{
+	WORD newlogonly;
+	WORD newhandle;
+	WORD oldhandle;
+	WORD oldlogonly;
+	WORD oldprinttype;
+	WORD oldsilent;
+}HANDLERS;
+
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -683,7 +702,7 @@ typedef struct DeBuGgInG {
 #endif
  
 /*
-  	#] Varia :
+  	#] Varia : 
   	#[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -692,8 +711,6 @@ struct M_const {
     WORD    *gcmod;                /* (M) Global setting of modulus. Pointer to value */
     WORD    *gpowmod;              /* (M) Global setting printing as powers. Pointer. */
     UBYTE   *TempDir;              /* (M) Path with where the temporary files go */
-    WORD    *CompressBuffer;       /* (M) */
-    WORD    *ComprTop;             /* (M) */
     UBYTE *IncDir;                 /* (M) Directory path for include files */
     UBYTE *InputFileName;          /* (M) */
     UBYTE *LogFileName;            /* (M) */
@@ -794,7 +811,7 @@ struct M_const {
     UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 struct P_const {
@@ -827,6 +844,7 @@ struct P_const {
     int     DelayPrevar;           /* (P) Delaying prevar substitution */
     int     AllowDelay;            /* (P) Allow delayed prevar substitution */
     int     lhdollarerror;         /* (R) */
+	int		eat;                   /* () */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (?) used but not defined */
     UBYTE   ComChar;               /* (P) Commentary character */
@@ -834,7 +852,7 @@ struct P_const {
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 struct C_const {
@@ -1006,7 +1024,7 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1026,7 +1044,7 @@ struct S_const {
     WORD    CollectOverFlag;       /* (R) Indicates overflow at Collect */
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1035,6 +1053,8 @@ struct R_const {
     FILEHANDLE *infile;            /* (R) Points alternatingly to Fscr[0] or Fscr[1] */
     FILEHANDLE *outfile;           /* (R) Points alternatingly to Fscr[1] or Fscr[0] */
 
+    WORD    *CompressBuffer;       /* (M) */
+    WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
     FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
@@ -1059,6 +1079,7 @@ struct R_const {
                threaded execution.
 */
 struct T_const {
+	SORTING *S0;                   /* (-) The thread specific sort buffer */
     SORTING *SS;                   /* (R) Current sort buffer */
     NESTING     Nest;              /* (R) Nesting of function levels etc. */
     NESTING     NestStop;          /* (R) */
@@ -1097,10 +1118,21 @@ struct T_const {
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
 	int		WildcardBufferSize;    /* () local copy for updates */
+	WORD	dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
+	WORD	onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
+	WORD	comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
+	WORD	comnum[4];             /* () Used in tools.c = { 4,1,1,3 } */
+	WORD	comfun[FUNHEAD+4];     /* () Used in tools.c = {7,FUNCTION,3,0,1,1,3} */
+                                   /*            or { 8,FUNCTION,4,0,0,1,1,3 } */
+	WORD	comind[7];             /* () Used in tools.c = {7,INDEX,3,0,1,1,3} */
     WORD    MinVecArg[7+ARGHEAD];  /* (N) but should be more local */
     WORD    FunArg[4+ARGHEAD+FUNHEAD]; /* (N) but can be more local */
     WORD    zeropol[1];            /* () Polynomial with value zero */
     WORD    onepol[5];             /* () Polynomial with value one */
+	WORD	locwildvalue[SUBEXPSIZE]; /* () Used in argument.c = {SUBEXPRESSION,SUBEXPSIZE,0,0,0} */
+	WORD	mulpat[SUBEXPSIZE+5];  /* () Used in argument.c = {TYPEMULT, SUBEXPSIZE+3, 0, */
+						           /* SUBEXPRESSION, SUBEXPSIZE, 0, 1, 0, 0, 0 } */
+	WORD	proexp[SUBEXPSIZE+5];  /* () Used in poly.c */
     WORD    TMout[40];             /* (R) Passing info */
     WORD    TMbuff;                /* (R) Communication between TestSub and Genera */
     WORD    nfac;                  /* (T) Number of highest stored factorial */
@@ -1110,7 +1142,7 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1143,17 +1175,135 @@ struct N_const {
     WORD    *findPattern;          /* (N) For wildcard pattern matching */
     WORD    *brackbuf;             /* () Used in poly */
     WORD    *polybrackets;         /* () Used in poly */
+	WORD	*EAscrat;              /* () Used in execarg */
+#ifdef WITHZLIB
+	Bytef	**ziobufnum;           /* () Used in compress.c */
+	Bytef	*ziobuffers;           /* () Used in compress.c */
+#endif
+	UWORD	*IfScrat1;             /* () Used in dollar.c */
+	UWORD	*IfScrat2;             /* () Used in dollar.c */
+	WORD	*dummyrenumlist;       /* () Used in execute.c and store.c */
+	WORD	*mgscr1;               /* () Used in factor.c */
+	WORD	*mgscr2;               /* () Used in factor.c */
+	WORD	*mgscr3;               /* () Used in factor.c */
+	int		*funargs;              /* () Used in lus.c */
+	WORD	**funlocs;             /* () Used in lus.c */
+	int		*funinds;              /* () Used in lus.c */
+	UWORD	*NoScrat2;             /* () Used in normal.c */
+	WORD	*ReplaceScrat;         /* () Used in normal.c */
+	WORD	*st;                   /* () Used in normal.c */
+	WORD	*sm;                   /* () Used in normal.c */
+	WORD	*sr;                   /* () Used in normal.c */
+	WORD	*sc;                   /* () Used in normal.c */
+	TRACES	*tracestack;           /* () used in opera.c */
+	WORD	*selecttermundo;       /* () Used in pattern.c */
+	WORD	*patternbuffer;        /* () Used in pattern.c */
+	UWORD	*GlScratC;             /* () Used in ratio.c */
+	UWORD	*Myscrat1;             /* () Used in reken.c */
+	UWORD   *Myscrat2;             /* () Used in reken.c */
+	UWORD	*Dyscrat1;             /* () Used in reken.c */
+	UWORD	*Dyscrat2;             /* () Used in reken.c */
+	UWORD	*ARscrat1;             /* () Used in reken.c */
+	UWORD	*ARscrat2;             /* () Used in reken.c */
+	UWORD	*ARscrat3;             /* () Used in reken.c */
+	UWORD	*ARscrat4;             /* () Used in reken.c */
+	UWORD	*MRscrat1;             /* () Used in reken.c */
+	UWORD	*MRscrat2;             /* () Used in reken.c */
+	UWORD	*MRscrat3;             /* () Used in reken.c */
+	UWORD	*MRscrat4;             /* () Used in reken.c */
+	UWORD	*Siscrat5;             /* () Used in reken.c */
+	UWORD	*Siscrat6;             /* () Used in reken.c */
+	UWORD	*Siscrat7;             /* () Used in reken.c */
+	UWORD	*Siscrat8;             /* () Used in reken.c */
+	UWORD	*DLscrat9;             /* () Used in reken.c */
+	UWORD	*DLscratA;             /* () Used in reken.c */
+	UWORD	*DLscratB;             /* () Used in reken.c */
+	UWORD	*RPscratA;             /* () Used in reken.c */
+	UWORD	*RPscratB;             /* () Used in reken.c */
+	UWORD	*PLscratA;             /* () Used in reken.c */
+#ifdef EXTRAGCD
+	UWORD	*GCscrat6;             /* () Used in reken.c */
+	UWORD	*GCscrat7;             /* () Used in reken.c */
+	UWORD	*GCscrat8;             /* () Used in reken.c */
+#endif
+	UWORD	*GLscrat6;             /* () Used in reken.c */
+	UWORD	*GLscrat7;             /* () Used in reken.c */
+	UWORD	*GLscrat8;             /* () Used in reken.c */
+	UWORD	*GBscrat3;             /* () Used in reken.c */
+	UWORD	*GBscrat4;             /* () Used in reken.c */
+	UWORD	*TLscrat1;             /* () Used in reken.c */
+	UWORD	*TLscrat2;             /* () Used in reken.c */
+	UWORD	*TLscrat3;             /* () Used in reken.c */
+	UWORD	*TLscrat4;             /* () Used in reken.c */
+	UWORD	*CCscratE;             /* () Used in reken.c */
+	UWORD	*MMscrat7;             /* () Used in reken.c */
+	UWORD	*MMscratC;             /* () Used in reken.c */
+	WORD	*PoinScratch[300];     /* () used in reshuf.c */
+	WORD	*FunScratch[300];      /* () used in reshuf.c */
+	FUN_INFO *FunInfo;             /* () Used in smart.c */
+	WORD	**SplitScratch;        /* () Used in sort.c */
+	SORTING **FunSorts;            /* () Used in sort.c */
+	UWORD	*SoScratC;             /* () Used in sort.c */
+	WORD	*listinprint;          /* () Used in proces.c and message.c */
+	WORD	*currentTerm;          /* () Used in proces.c and message.c */
+	UWORD	*GCDbuffer;            /* () Used in argument.c */
+	UWORD	*LCMbuffer;            /* () Used in argument.c */
+	UWORD	*LCMb;                 /* () Used in argument.c */
+	UWORD	*LCMc;                 /* () Used in argument.c */
+#ifdef CHINREM
+	UWORD	*CRscrat1;             /* () Used in factor.c */
+	UWORD	*CRscrat2;             /* () Used in factor.c */
+	UWORD	*CRscrat3;             /* () Used in factor.c */
+#endif
+	WORD	**arglist;             /* () Used in function.c */
+	UWORD	*DIscratC;             /* () Used in if.c */
+	UWORD	*DIscratD;             /* () Used in if.c */
+	UWORD	*DIscratE;             /* () Used in if.c */
+	int		*tlistbuf;             /* () used in lus.c */
+#ifdef WHICHSUBEXPRESSION
+	UWORD	*BinoScrat;            /* () Used in proces.c */
+#endif
+	UWORD	*PIFscrat;             /* () Used in poly.c */
+	UWORD	*PIFscrat1;            /* () Used in poly.c */
+	UWORD	*PIFscrat2;            /* () Used in poly.c */
+	WORD	*compressSpace;        /* () Used in sort.c */
     POSITION OldPosIn;             /* (R) Used in sort. */
     POSITION OldPosOut;            /* (R) Used in sort */
+	POSITION theposition;          /* () Used in index.c */
     LONG    polybpointer;          /* () Used in poly */
     LONG    polybsize;             /* () Used in poly */
     LONG    polybpsize;            /* () Used in poly */
+	LONG	deferskipped;          /* () Used in proces.c store.c and parallel.c */
+	LONG	InScratch;             /* () Used in sort.c */
+	LONG	SplitScratchSize;      /* () Used in sort.c */
+	LONG	ninterms;              /* () Used in proces.c and sort.c */
+#ifdef WHICHSUBEXPRESSION
+	LONG	last2;                 /* () Used in proces.c */
+	LONG	last3;                 /* () Used in proces.c */
+#endif
     int     NumTotWildArgs;        /* (N) Used in pattern matching */
     int     UseFindOnly;           /* (N) Controls pattern routines */
     int     UsedOtherFind;         /* (N) Controls pattern routines */
     int     doingpoly;             /* () Used in poly */
     int     sorttype;              /* () Used in poly */
     int     ErrorInDollar;         /* (R) */
+	int		numfargs;              /* () Used in lus.c */
+	int		numflocs;              /* () Used in lus.c */
+	int		nargs;                 /* () Used in lus.c */
+	int		tohunt;                /* () Used in lus.c */
+	int		numoffuns;             /* () Used in lus.c */
+	int		funisize;              /* () Used in lus.c */
+	int		RSsize;                /* () Used in normal.c */
+	int		numtracesctack;        /* () used in opera.c */
+	int		intracestack;          /* () used in opera.c */
+	int		numfuninfo;            /* () Used in smart.c */
+	int		NumFunSorts;           /* () Used in sort.c */
+	int		MaxFunSorts;           /* () Used in sort.c */
+	int		arglistsize;           /* () Used in function.c */
+	int		tlistsize;             /* () used in lus.c */
+	int		filenum;               /* () used in setfile.c */
+	int		compressSize;          /* () Used in sort.c */
+	WORD	RenumScratch[300];     /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */
     WORD    NumWild;               /* (N) Used in Wildcard */
@@ -1170,10 +1320,26 @@ struct N_const {
     WORD    bracketon;             /* () Used in poly */
     WORD    maxbracket;            /* () Used in poly */
     WORD    polyblevel;            /* () Used in poly */
+	WORD	nmgscr;                /* () Used in factor.c */
+	WORD	sizeselecttermundo;    /* () Used in pattern.c */
+	WORD	patternbuffersize;     /* () Used in pattern.c */
+	WORD	numlistinprint;        /* () Used in process.c */
+#ifdef CHINREM
+	WORD	nCRscrat1;             /* () Used in factor.c */
+	WORD	nCRscrat2;             /* () Used in factor.c */
+	WORD	nCRscrat3;             /* () Used in factor.c */
+#endif
+#ifdef WHICHSUBEXPRESSION
+	WORD	nbino;                 /* () Used in proces.c */
+	WORD	last1;                 /* () Used in proces.c */
+#endif
+	WORD	PIFnscrat;             /* () Used in poly.c */
+	WORD	PIFnscrat1;            /* () Used in poly.c */
+	WORD	PIFnscrat2;            /* () Used in poly.c */
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 struct O_const {
@@ -1212,7 +1378,15 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O :
+ 		#] O : 
+ 		#[ X : The X struct contains variables that deal with the external channel
+*/
+struct X_const {
+	UBYTE	*currentPrompt;
+	int		currentExternalChannel;
+};
+/*
+ 		#] X : 
  		#[ Definitions :
 */
 
@@ -1224,6 +1398,7 @@ typedef struct AllGlobals {
     struct C_const C;
     struct S_const S;
     struct O_const O;
+	struct X_const X;
 } ALLGLOBALS;
 
 typedef struct AllPrivates {
@@ -1243,12 +1418,13 @@ typedef struct AllGlobals {
     struct T_const T;
     struct N_const N;
     struct O_const O;
+	struct X_const X;
 } ALLGLOBALS;
 
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
   	#] A :
   	#[ FG :
 */
@@ -1266,7 +1442,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

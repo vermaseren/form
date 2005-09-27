@@ -4,6 +4,8 @@
 
 #include "form3.h"
 
+EXTERNLOCK(dummylock);
+
 /*
   	#] Includes :
 
@@ -1840,7 +1842,8 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 	dol->node = nodenum;
 	dol->zero = 0;
 #ifdef WITHPTHREADS
-	dol->pthreadslock = PTHREAD_MUTEX_INITIALIZER;
+/*	dol->pthreadslock = PTHREAD_MUTEX_INITIALIZER; */
+	dol->pthreadslock = dummylock;
 #endif
 	AddRHS(AM.dbufnum,1);
 	AddLHS(AM.dbufnum);

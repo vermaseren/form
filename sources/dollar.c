@@ -4,8 +4,7 @@
 
 #include "form3.h"
 
-static UWORD *IfScrat1 = 0;
-static UWORD *IfScrat2 = 0;
+EXTERNLOCK(dummylock);
 
 /*
   	#] Includes :
@@ -225,7 +224,7 @@ NoChangeZero:;
 				d->size = 20;
 				d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 				cbuf[AM.dbufnum].rhs[numdollar] = d->where;
-				for i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
+				for ( i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
 				if ( oldwhere && oldwhere != &(AM.dollarzero) ) M_free(oldwhere,"dollar contents");
 			}
 			switch ( d->type ) {
@@ -244,8 +243,8 @@ HandleDolZero:;
 					if ( ( dw = d->where[0] ) > 0 && d->where[dw] != 0 ) {
 						break; /* was not a single number. Trust the user */
 					}
-					if ( dtype == MODMAX && CompCoef(d->where,where) < 0 ) break;
-					if ( dtype == MODMIN && CompCoef(d->where,where) > 0 ) break;
+					if ( dtype == MODMAX && CompCoef(d->where,w) < 0 ) break;
+					if ( dtype == MODMIN && CompCoef(d->where,w) > 0 ) break;
 					goto NoChangeOne;
 				default:
 					{
@@ -268,8 +267,8 @@ HandleDolZero:;
 						d->where[3] = extraterm[3] = numvalue > 0 ? 3 : -3;
 						d->where[4] = 0;
 						d->type = DOLNUMBER;
-						if ( dtype == MODMAX && CompCoef(extraterm,where) < 0 ) break;
-						if ( dtype == MODMIN && CompCoef(extraterm,where) > 0 ) break;
+						if ( dtype == MODMAX && CompCoef(extraterm,w) < 0 ) break;
+						if ( dtype == MODMIN && CompCoef(extraterm,w) > 0 ) break;
 						goto NoChangeOne;
 					}
 			}
@@ -397,7 +396,7 @@ HandleDolZero1:;
 					if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
 					AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
 					goto NoChange;
-				default:
+				default: {
 					WORD extraterm[4];
 					numvalue = DolToNumber(numdollar);
 					if ( AN.ErrorInDollar != 0 ) break;
@@ -419,6 +418,7 @@ HandleDolZero1:;
 					if ( ss ) { M_free(ss,"Sort of $"); ss = 0; }
 					AR.DeferFlag = olddefer; AR.NoCompress = oldcompress;
 					goto NoChange;
+				}
 			  }
 			}
 			else {
@@ -1207,7 +1207,8 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 	newd->type = DOLTERMS;
 	newd->size = size;
 #ifdef WITHPTHREADS
-	newd->pthreadslock = PTHREAD_MUTEX_INITIALIZER;
+/*	newd->pthreadslock = PTHREAD_MUTEX_INITIALIZER; */
+	newd->pthreadslock = dummylock;
 #endif
 	size++;
 	NCOPY(t,w,size);
@@ -1849,6 +1850,7 @@ int IsProductOf ARG2(WORD *,buf1,WORD *,buf2)
 
 int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 {
+	GETIDENTITY;
 	LONG num1, num2;
 	WORD *t1, *t2, *m1, *m2, *r1, *r2, nc1, nc2, ni1, ni2;
 	int i, j;
@@ -1876,18 +1878,18 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 /*
 	Now we have to test the constant factor
 */
-	if ( IfScrat1 == 0 ) {
-		IfScrat1 = (UWORD *)Malloc1((2*AM.MaxTal+2)*sizeof(UWORD),"IfScrat1");
+	if ( AN.IfScrat1 == 0 ) {
+		AN.IfScrat1 = (UWORD *)Malloc1((2*AM.MaxTal+2)*sizeof(UWORD),"AN.IfScrat1");
 	}
-	if ( IfScrat2 == 0 ) {
-		IfScrat2 = (UWORD *)Malloc1((2*AM.MaxTal+2)*sizeof(UWORD),"IfScrat2");
+	if ( AN.IfScrat2 == 0 ) {
+		AN.IfScrat2 = (UWORD *)Malloc1((2*AM.MaxTal+2)*sizeof(UWORD),"AN.IfScrat2");
 	}
 	t1 = buf1; t2 = buf2;
 	t1 += *t1; t2 += *t2;
 	if ( *t1 == 0 && *t2 == 0 ) return(1);
 	r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 	nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
-	if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat1,&ni1) ) {
+	if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat1,&ni1) ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("@Called from MultipleOf in $( )");
 		UNLOCK(ErrorMessageLock);
@@ -1897,7 +1899,7 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 		t1 += *t1; t2 += *t2;
 		r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 		nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
-		if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat2,&ni2) ) {
+		if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat2,&ni2) ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("@Called from MultipleOf in $( )");
 			UNLOCK(ErrorMessageLock);
@@ -1906,7 +1908,7 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 		if ( ni1 != ni2 ) return(0);
 		i = 2*ABS(ni1);
 		for ( j = 0; j < i; j++ ) {
-			if ( IfScrat1[j] != IfScrat2[j] ) return(0);
+			if ( AN.IfScrat1[j] != AN.IfScrat2[j] ) return(0);
 		}
 	}
 	return(1);
@@ -1991,6 +1993,7 @@ int TwoExprCompare ARG3(WORD *,buf1,WORD *,buf2,int,oprtr)
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
+	Not to be used in parallel.
 */
 
 static UWORD *dscrat = 0;

@@ -4,22 +4,17 @@
 
 /*[14apr2004 mt]:*/
 /*See the file extcmd.c*/
-extern int (*writeBufToExtChannel) ARG2(char *,/**/, size_t, /**/);
+extern int (*writeBufToExtChannel) ARG2(char *,buf, size_t,n);
 extern int (*getcFromExtChannel) ARG0 ;
-extern int (*setTerminatorForExternalChannel) ARG1 (char *, /**/);
+extern int (*setTerminatorForExternalChannel) ARG1 (char *,newterminator);
 /*:[14apr2004 mt]*/
 
-/*[15apr2004 mt]:*/
-extern LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/);
-/*:[15apr2004 mt]*/
+extern LONG (*WriteFile)  ARG3 (int,handle,UBYTE *,buffer,LONG,number);
 
 extern ALLGLOBALS A;
 #ifdef WITHPTHREADS
 extern ALLPRIVATES *AB;
 #endif
-extern WORD *currentTerm;
-extern WORD *listinprint;
-extern WORD numlistinprint;
 
 extern FIXEDGLOBALS FG;
 extern FIXEDSET fixedsets[];
@@ -27,6 +22,7 @@ extern FIXEDSET fixedsets[];
 extern char *setupfilename;
 
 EXTERNLOCK(ErrorMessageLock);
+EXTERNLOCK(FileReadLock);
 
 #ifdef VMS
 #include <stdio.h>
@@ -91,12 +87,21 @@ extern FILE **FileStructs;
 #ifdef WITHPTHREADS
 #define AC A.C
 #define AM A.M
-#define AN AB[identity].N
 #define AO A.O
 #define AP A.P
-#define AR AB[identity].R
 #define AS A.S
+#define AX A.X
+#define AN B->N
+#define AR B->R
+#define AT B->T
+/*
+#define AN AB[identity].N
+#define AR AB[identity].R
 #define AT AB[identity].T
+*/
+#define AN0 AB[from].N
+#define AR0 AB[from].R
+#define AT0 AB[from].T
 #else
 #define AC A.C
 #define AM A.M
@@ -106,6 +111,7 @@ extern FILE **FileStructs;
 #define AR A.R
 #define AS A.S
 #define AT A.T
+#define AX A.X
 #endif
 
 #endif

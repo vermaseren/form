@@ -458,8 +458,6 @@ aborteer:
 		Note the abundant recursions here.
 */
 
-WORD onesympol[9] = { 8, SYMBOL, 4, 1, 1, 1, 1, 3, 0 };
-
 WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 {
 	GETIDENTITY;
@@ -631,16 +629,16 @@ WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 				if ( ( G2 = PolynoMul(b1,n2) ) == 0 ) goto aborteer;
 				M_free(b1,"PolynoGCD"); b1 = 0;
 				if ( powdif > 0 ) {
-					onesympol[3] = lowestsymbol;
-					onesympol[4] = powdif;
-					if ( ( GG = PolynoMul(G2,onesympol) ) == 0 ) goto aborteer;
+					AT.onesympol[3] = lowestsymbol;
+					AT.onesympol[4] = powdif;
+					if ( ( GG = PolynoMul(G2,AT.onesympol) ) == 0 ) goto aborteer;
 					M_free(G2,"PolynoGCD");
 					G2 = GG; GG = 0;
 				}
 				else if ( powdif < 0 ) {
-					onesympol[3] = lowestsymbol;
-					onesympol[4] = -powdif;
-					if ( ( GG = PolynoMul(G1,onesympol) ) == 0 ) goto aborteer;
+					AT.onesympol[3] = lowestsymbol;
+					AT.onesympol[4] = -powdif;
+					if ( ( GG = PolynoMul(G1,AT.onesympol) ) == 0 ) goto aborteer;
 					M_free(G1,"PolynoGCD");
 					G1 = GG; GG = 0;
 				}
@@ -1023,18 +1021,6 @@ aborteer:
  		#[ DoPolynomial :
 */
 
-static WORD proexp[SUBEXPSIZE+5] = { SUBEXPSIZE+4, EXPRESSION, SUBEXPSIZE, -1, 1
-#if SUBEXPSIZE > 4
-	,0
-#endif
-#if SUBEXPSIZE > 5
-	,0
-#endif
-#if SUBEXPSIZE > 6
-	,0
-#endif
-	,1,1,3,0 };
-
 WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 {
 	GETIDENTITY;
@@ -1345,20 +1331,21 @@ aborteer:
 
 WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
 {
+	GETIDENTITY;
 	WORD *n1 = 0, *m, *mstop, *mm;
 	CBUF *C = cbuf + AC.cbufnum;
 	if ( par == 1 ) {
-		proexp[1] = SUBEXPRESSION;
-		proexp[5] = AM.dbufnum;
+		AT.proexp[1] = SUBEXPRESSION;
+		AT.proexp[5] = AM.dbufnum;
 	}
 	else if ( par == 0 ) {
-		proexp[1] = EXPRESSION;
-		proexp[5] = 0;
+		AT.proexp[1] = EXPRESSION;
+		AT.proexp[5] = 0;
 	}
-	proexp[3] = numexp;
+	AT.proexp[3] = numexp;
 	if ( NewSort() ) goto aborteer;
 	if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
-	if ( Generator(proexp,C->numlhs) ) {
+	if ( Generator(AT.proexp,C->numlhs) ) {
 		LowerSortLevel(); LowerSortLevel(); goto aborteer;
 	}
 	if ( EndSort((WORD *)(&n1),2) < 0 ) { LowerSortLevel(); goto aborteer; }
@@ -1416,7 +1403,7 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 #ifdef WITHPTHREADS
 	if ( AS.MultiThreaded ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
-			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+			if ( numdol == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
@@ -1462,16 +1449,11 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
  		#[ PolynoIntFac :
 
 		Normalizes the polynomial such that all coefficients are integers.
-		We use PIFscrat to collect the least common multiple of all
+		We use AN.PIFscrat to collect the least common multiple of all
 		denominators.
 		This representation is selected to optimize wrt further GCD
 		calculations;
 */
-
-static UWORD *PIFscrat = 0;
-static UWORD *PIFscrat1 = 0;
-static UWORD *PIFscrat2 = 0;
-static WORD PIFnscrat, PIFnscrat1, PIFnscrat2;
 
 WORD *PolynoIntFac ARG1(WORD *,poly)
 {
@@ -1480,15 +1462,15 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 	WORD n,n1,ncoef,i;
 	WORD *coef;
 	if ( ( poly = PolynoUnify(poly,1) ) == 0 ) goto PIFerror;
-	if ( PIFscrat == 0 ) {
-		PIFscrat = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"PolynoIntFac");
-		PIFscrat1 = PIFscrat +(AM.MaxTal+2);
-		PIFscrat2 = PIFscrat1+(AM.MaxTal+2);
+	if ( AN.PIFscrat == 0 ) {
+		AN.PIFscrat = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"PolynoIntFac");
+		AN.PIFscrat1 = AN.PIFscrat +(AM.MaxTal+2);
+		AN.PIFscrat2 = AN.PIFscrat1+(AM.MaxTal+2);
 	}
 /*
-	Collect the least common multiple in PIFscrat
+	Collect the least common multiple in AN.PIFscrat
 */
-	PIFnscrat = 1; *PIFscrat = 1; /* Start at value 1 */
+	AN.PIFnscrat = 1; *AN.PIFscrat = 1; /* Start at value 1 */
 	for ( t = poly; *t; ) {
 		t += *t;
 		n = (ABS(t[-1])-1)/2;
@@ -1496,14 +1478,14 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 		while ( n > 1 && w[-1] == 0 ) { w--; n--; }
 		w -= n;
 		if ( n == 1 && *w == 1 ) continue; /* Take the easiest case */
-		if ( GcdLong(PIFscrat,PIFnscrat,(UWORD *)w,n,PIFscrat1,&PIFnscrat1) )
+		if ( GcdLong(AN.PIFscrat,AN.PIFnscrat,(UWORD *)w,n,AN.PIFscrat1,&AN.PIFnscrat1) )
 			goto PIFerror;
-		if ( DivLong(PIFscrat,PIFnscrat,PIFscrat1,PIFnscrat1,PIFscrat2,&PIFnscrat2,PIFscrat1,&n1) )
+		if ( DivLong(AN.PIFscrat,AN.PIFnscrat,AN.PIFscrat1,AN.PIFnscrat1,AN.PIFscrat2,&AN.PIFnscrat2,AN.PIFscrat1,&n1) )
 			goto PIFerror;
-		if ( MulLong(PIFscrat2,PIFnscrat2,(UWORD *)w,n,PIFscrat,&PIFnscrat) )
+		if ( MulLong(AN.PIFscrat2,AN.PIFnscrat2,(UWORD *)w,n,AN.PIFscrat,&AN.PIFnscrat) )
 			goto PIFerror;
 	}
-	n = PIFnscrat;
+	n = AN.PIFnscrat;
 /*
 	Now multiply the whole polynomial with this constant.
 */
@@ -1512,7 +1494,7 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 	for ( t = poly; *t; ) {
 		w = oldwork;
 		i = *t;
-		if ( w + i + 2*PIFnscrat > AT.WorkTop ) {
+		if ( w + i + 2*AN.PIFnscrat > AT.WorkTop ) {
 			LOCK(ErrorMessageLock);
 			MesWork();
 			UNLOCK(ErrorMessageLock);
@@ -1523,7 +1505,7 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 		ncoef = w[*w-1];
 		coef = w + *w - ABS(ncoef);		
 		ncoef = REDLENG(ncoef);
-		if ( Mully((UWORD *)coef,&ncoef,PIFscrat,PIFnscrat) ) goto PIFerror1;
+		if ( Mully((UWORD *)coef,&ncoef,AN.PIFscrat,AN.PIFnscrat) ) goto PIFerror1;
 		ncoef = INCLENG(ncoef);
         n1 = ABS(ncoef);
 		coef[n1-1] = ncoef;

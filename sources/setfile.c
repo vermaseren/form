@@ -226,8 +226,10 @@ AllocSetups ARG0
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize, l;
-	int size, MaxPatches, MaxFpatches, j, error = 0;
-
+	int size, MaxPatches, MaxFpatches, error = 0;
+#ifndef WITHPTHREADS
+	int j;
+#endif
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
 	AC.iBuffer = (UBYTE *)Malloc1(AC.iBufferSize+1,"statement buffer");
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
@@ -404,9 +406,10 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"compresssize");
 	if ( sp->value < 2*AM.MaxTer ) sp->value = 2*AM.MaxTer;
 	AM.CompressSize = sp->value;
-	AM.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
-	AM.ComprTop = AM.CompressBuffer + AM.CompressSize;
-
+#ifndef WITHPTHREADS
+	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
+	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
+#endif
 	sp = GetSetupPar((UBYTE *)"bracketindexsize");
 	if ( sp->value < 20*AM.MaxTer ) sp->value = 2*AM.MaxTer;
 	AM.MaxBracketBufferSize = sp->value/sizeof(WORD);
@@ -510,12 +513,11 @@ WriteSetup ARG0
 		in a later stage for the function and subroutine sort buffers.
 */
 
-static int filenum = 0;
-
 SORTING *
 AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	,int,MaxPatches,int,MaxFpatches,LONG,IObuffersize)
 {
+	GETIDENTITY;
 	LONG allocation,longer,terms2insmall,sortsize,longerp;
 	SORTING *sort;
 	int i = 0, j = 0;
@@ -523,7 +525,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	if ( AM.S0 != 0 ) {
 		s = FG.fname; i = 0;
 		while ( *s ) { s++; i++; }
-		i += 5;
+		i += 11;
 	}
 
 	longer = MaxPatches > MaxFpatches ? MaxPatches : MaxFpatches;
@@ -617,9 +619,14 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 */
 		s = FG.fname; t = sort->file.name;
 		while ( *s ) *t++ = *s++;
+#ifdef WITHPTHREADS
+		t[-2] = 'F';
+		sprintf(t-1,"%d-%d",identity,AN.filenum);
+#else
 		t[-2] = 'f';
-		sprintf(t-1,"%d",filenum);
-		filenum++;
+		sprintf(t-1,"%d",AN.filenum);
+#endif
+		AN.filenum++;
 	}
 	else sort->file.name = 0;
 	sort->cBuffer = 0;
@@ -636,6 +643,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 
 FILEHANDLE *AllocFileHandle ARG0
 {
+	GETIDENTITY;
 	LONG allocation;
 	FILEHANDLE *fh;
 	int i = 0;
@@ -643,7 +651,7 @@ FILEHANDLE *AllocFileHandle ARG0
 
 	s = FG.fname; i = 0;
 	while ( *s ) { s++; i++; }
-	i += 5;
+	i += 11;
 
 	allocation = sizeof(FILEHANDLE) + (AM.SIOsize+1)*sizeof(WORD) + i*sizeof(char);
 	fh = (FILEHANDLE *)Malloc1(allocation,"FileHandle");
@@ -658,9 +666,14 @@ FILEHANDLE *AllocFileHandle ARG0
 		fh->name = (char *)(fh->POstop + 1);
 		s = FG.fname; t = fh->name;
 		while ( *s ) *t++ = *s++;
+#ifdef WITHPTHREADS
+		t[-2] = 'F';
+		sprintf(t-1,"%d-%d",identity,AN.filenum);
+#else
 		t[-2] = 'f';
-		sprintf(t-1,"%d",filenum);
-		filenum++;
+		sprintf(t-1,"%d",AN.filenum);
+#endif
+		AN.filenum++;
 	}
 	else fh->name = 0;
 	fh->POfill = fh->POfull = fh->PObuffer;
@@ -671,17 +684,18 @@ FILEHANDLE *AllocFileHandle ARG0
  		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
-		Made to repair deallocation of filenum. 21-sep-2000
+		Made to repair deallocation of AN.filenum. 21-sep-2000
 */
 
 void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 {
+	GETIDENTITY;
 	if ( fh->handle >= 0 ) {
 		CloseFile(fh->handle);
 		fh->handle = -1;
 		remove(fh->name);
 	}
-	filenum--; /* free namespace. was forgotten in first reading */
+	AN.filenum--; /* free namespace. was forgotten in first reading */
 	M_free(fh,"Temporary FileHandle");
 }
 

@@ -4,8 +4,6 @@
 
 #include "form3.h"
 
-static UWORD *EAscrat = 0;
-
 /*
   	#] include :
   	#[ execarg :
@@ -21,12 +19,6 @@ static UWORD *EAscrat = 0;
 	In addition the compare with C->numlhs isn't very fine, because we
 	need to insert a different value (C->lhs[level][2]).
 */
-
-WORD mulpat[] = {TYPEMULT, SUBEXPSIZE+3, 0,
-						SUBEXPRESSION, SUBEXPSIZE, 0, 1, 0, 0, 0 };
-WORD locwildvalue[SUBEXPSIZE] = { SUBEXPRESSION, SUBEXPSIZE, 0, 0, 0 };
-
-static UWORD *GCDbuffer = 0, *LCMbuffer = 0, *LCMb = 0, *LCMc = 0;
 
 WORD
 execarg ARG2(WORD *,term,WORD,level)
@@ -289,11 +281,11 @@ HaveTodo:
 						determine for all elements of this argument the LCM of
 						the denominators and the GCD of the numerators.
 */
-						if ( GCDbuffer == 0 ) {
-							GCDbuffer = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"execarg");
-							LCMbuffer = GCDbuffer + AM.MaxTal+2;
-							LCMb = LCMbuffer + AM.MaxTal+2;
-							LCMc = LCMb + AM.MaxTal+2;
+						if ( AN.GCDbuffer == 0 ) {
+							AN.GCDbuffer = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"execarg");
+							AN.LCMbuffer = AN.GCDbuffer + AM.MaxTal+2;
+							AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
+							AN.LCMc = AN.LCMb + AM.MaxTal+2;
 						}
 						r4 = r + *r;
 						r1 = r + ARGHEAD;
@@ -306,12 +298,12 @@ HaveTodo:
 						k = REDLENG(j);
 						if ( k < 0 ) k = -k;
 						while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-						for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
+						for ( kGCD = 0; kGCD < k; kGCD++ ) AN.GCDbuffer[kGCD] = r3[kGCD];
 						k = REDLENG(j);
 						if ( k < 0 ) k = -k;
 						r3 += k;
 						while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-						for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
+						for ( kLCM = 0; kLCM < k; kLCM++ ) AN.LCMbuffer[kLCM] = r3[kLCM];
 						r1 = r2;
 /*
 						Now go through the rest of the terms in this argument.
@@ -323,35 +315,35 @@ HaveTodo:
 							k = REDLENG(j);
 							if ( k < 0 ) k = -k;
 							while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-							if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+							if ( ( ( AN.GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
 /*
 								GCD is already 1
 */
 							}
 							else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-								if ( GcdLong(GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer,&kGCD) ) {
+								if ( GcdLong(AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer,&kGCD) ) {
 									goto execargerr;
 								}
 							}
 							else {
-								kGCD = 1; GCDbuffer[0] = 1;
+								kGCD = 1; AN.GCDbuffer[0] = 1;
 							}
 							k = REDLENG(j);
 							if ( k < 0 ) k = -k;
 							r3 += k;
 							while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-							if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+							if ( ( ( AN.LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
 								for ( kLCM = 0; kLCM < k; kLCM++ )
-									LCMbuffer[kLCM] = r3[kLCM];
+									AN.LCMbuffer[kLCM] = r3[kLCM];
 							}
 							else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
-								if ( GcdLong(LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
+								if ( GcdLong(AN.LCMbuffer,kLCM,(UWORD *)r3,k,AN.LCMb,&kkLCM) ) {
 									goto execargerr;
 								}
-								DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
-								MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
+								DivLong((UWORD *)r3,k,AN.LCMb,kkLCM,AN.LCMb,&kkLCM,AN.LCMc,&jLCM);
+								MulLong(AN.LCMbuffer,kLCM,AN.LCMb,kkLCM,AN.LCMc,&jLCM);
 								for ( kLCM = 0; kLCM < jLCM; kLCM++ )
-									LCMbuffer[kLCM] = LCMc[kLCM];
+									AN.LCMbuffer[kLCM] = AN.LCMc[kLCM];
 							}
 							else {} /* LCM doesn't change */
 							r1 = r2;
@@ -359,15 +351,15 @@ HaveTodo:
 /*
 						Now put the factor together: GCD/LCM
 */
-						r3 = (WORD *)(GCDbuffer);
+						r3 = (WORD *)(AN.GCDbuffer);
 						if ( kGCD == kLCM ) {
 							for ( jGCD = 0; jGCD < kGCD; jGCD++ )
-								r3[jGCD+kGCD] = LCMbuffer[jGCD];
+								r3[jGCD+kGCD] = AN.LCMbuffer[jGCD];
 							k = kGCD;
 						}
 						else if ( kGCD > kLCM ) {
 							for ( jGCD = 0; jGCD < kLCM; jGCD++ )
-								r3[jGCD+kGCD] = LCMbuffer[jGCD];
+								r3[jGCD+kGCD] = AN.LCMbuffer[jGCD];
 							for ( jGCD = kLCM; jGCD < kGCD; jGCD++ )
 								r3[jGCD+kGCD] = 0;
 							k = kGCD;
@@ -376,7 +368,7 @@ HaveTodo:
 							for ( jGCD = kGCD; jGCD < kLCM; jGCD++ )
 								r3[jGCD] = 0;
 							for ( jGCD = 0; jGCD < kLCM; jGCD++ )
-								r3[jGCD+kLCM] = LCMbuffer[jGCD];
+								r3[jGCD+kLCM] = AN.LCMbuffer[jGCD];
 							k = kLCM;
 						}
 						j = 2*k+1;
@@ -464,8 +456,8 @@ HaveTodo:
 					*r4++ = 0;
 					CC->rhs[CC->numrhs+1] = r4;
 					CC->Pointer = r4;
-					mulpat[5] = CC->numrhs;
-					mulpat[7] = AT.ebufnum;
+					AT.mulpat[5] = CC->numrhs;
+					AT.mulpat[7] = AT.ebufnum;
 				}
 				r3 = r;
 				AR.DeferFlag = 0;
@@ -484,7 +476,7 @@ HaveTodo:
 						What to do with dummy indices?
 */
 						if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
-							if ( MultDo(r1,mulpat) ) goto execargerr;
+							if ( MultDo(r1,AT.mulpat) ) goto execargerr;
 							AT.WorkPointer = r1 + *r1;
 						}
 						if ( Generator(r1,level) ) goto execargerr;
@@ -503,7 +495,7 @@ HaveTodo:
 					What to do with dummy indices?
 */
 					if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
-						if ( MultDo(m,mulpat) ) goto execargerr;
+						if ( MultDo(m,AT.mulpat) ) goto execargerr;
 						AT.WorkPointer = m + *m;
 					}
 					if ( Generator(m,level) ) goto execargerr;
@@ -677,7 +669,7 @@ HaveTodo:
 */
 						WORD *oRepFunList = AN.RepFunList;
 						WORD *oWildMask = AT.WildMask, *oWildValue = AN.WildValue;
-						AN.WildValue = locwildvalue; AT.WildMask = locwildvalue+2;
+						AN.WildValue = AT.locwildvalue; AT.WildMask = AT.locwildvalue+2;
 						AN.NumWild = 0;
 						r4 = r1; r5 = t; r7 = oldwork;
 						*r1++ = *t + ARGHEAD;
@@ -1250,23 +1242,23 @@ nextterm:						mm = mnext;
 */
 					t = r5;
 					if ( t + *t == r3 ) goto oneterm;
-					if ( EAscrat == 0 ) {
-						EAscrat = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD)
+					if ( AN.EAscrat == 0 ) {
+						AN.EAscrat = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD)
 								,"execarg");
 					}
 					GETSTOP(t,r6);
 					ngcd = t[t[0]-1];
 					i = abs(ngcd)-1;
-					while ( --i >= 0 ) EAscrat[i] = r6[i];
+					while ( --i >= 0 ) AN.EAscrat[i] = r6[i];
 					t += *t;
 					while ( t < r3 ) {
 						GETSTOP(t,r6);
 						i = t[t[0]-1];
-						if ( AccumGCD(EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
-						if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
+						if ( AccumGCD(AN.EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
+						if ( ngcd == 3 && AN.EAscrat[0] == 1 && AN.EAscrat[1] == 1 ) break;
 						t += *t;
 					}
- 					if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+ 					if ( ngcd != 3 || AN.EAscrat[0] != 1 || AN.EAscrat[1] != 1 ) {
 						if ( pow ) ngcd = -ngcd;
 						t = r5; r9 = r1; *r1++ = t[-ARGHEAD]; *r1++ = 1;
 						FILLARG(r1); ngcd = REDLENG(ngcd);
@@ -1276,7 +1268,7 @@ nextterm:						mm = mnext;
 							while ( r7 < r6) *r1++ = *r7++;
 							t += *t;
 							i = REDLENG(t[-1]);
-							if ( DivRat((UWORD *)r6,i,EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
+							if ( DivRat((UWORD *)r6,i,AN.EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
 							nq = INCLENG(nq);
 							i = ABS(nq)-1;
 							r1 += i; *r1++ = nq; *r8 = r1-r8;
@@ -1289,7 +1281,7 @@ nextterm:						mm = mnext;
 						&& factor[3] == -3 ) || pow == 0 ) {
 							r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
 							FILLARG(r1); *r1++ = i+2;
-							for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
+							for ( j = 0; j < i; j++ ) *r1++ = AN.EAscrat[j];
 							*r1++ = ngcd;
 							if ( ToFast(r9,r9) ) r1 = r9+2;
 						}
@@ -1299,17 +1291,17 @@ nextterm:						mm = mnext;
 							*r1++ = -SNUMBER; *r1++ = -1;
 							r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
 							FILLARG(r1); *r1++ = i+2;
-							for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
+							for ( j = 0; j < i; j++ ) *r1++ = AN.EAscrat[j];
 							*r1++ = ngcd;
 							if ( ToFast(r9,r9) ) r1 = r9+2;
 						}
 						else {
 							if ( ngcd < 0 ) ngcd = -ngcd;
 							if ( pow ) { *r1++ = -SNUMBER; *r1++ = -1; }
-							if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+							if ( ngcd != 3 || AN.EAscrat[0] != 1 || AN.EAscrat[1] != 1 ) {
 								r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
 								FILLARG(r1); *r1++ = i+2;
-								for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
+								for ( j = 0; j < i; j++ ) *r1++ = AN.EAscrat[j];
 								*r1++ = ngcd;
 								if ( ToFast(r9,r9) ) r1 = r9+2;
 							}

@@ -9,7 +9,7 @@
 FILES **filelist;
 int numinfilelist = 0;
 int filelistsize = 0;
-static LONG maxlistsize = (LONG)(MAXLONG);
+static LONG maxlistsize = (LONG)(MAXPOSITIVE);
 
 #ifdef MALLOCDEBUG
 #define BANNER 16
@@ -25,7 +25,7 @@ extern "C" getdtablesize();
 
 /*
   	#] Includes :
-	#[ Streams :
+  	#[ Streams :
  		#[ LoadInputFile :
 */
 
@@ -539,31 +539,30 @@ PositionStream ARG2(STREAM *,stream,LONG,position)
 
 /*
  		#] PositionStream :
-	#] Streams :
-	#[ Files :
+  	#] Streams :
+  	#[ Files :
  		#[ StartFiles :
 */
 
 VOID
 StartFiles ARG0
 {
-#ifdef WITHPTHREADS
-	int identity = 0;
-#endif
 	int i = CreateHandle();
 	filelist[i] = Ustdout;
 	AM.StdOut = i;
 	AC.StoreHandle = -1;
 	AC.LogHandle = -1;
+#ifndef WITHPTHREADS
 	AR.Fscr[0].handle = -1;
 	AR.Fscr[1].handle = -1;
 	AR.Fscr[2].handle = -1;
 	AR.FoStage4[0].handle = -1;
 	AR.FoStage4[1].handle = -1;
-	AO.StoreData.Handle = -1;
 	AR.infile = &(AR.Fscr[0]);
 	AR.outfile = &(AR.Fscr[1]);
 	AS.hidefile = &(AR.Fscr[2]);
+#endif
+	AO.StoreData.Handle = -1;
 	AC.Streams = 0;
 	AC.MaxNumStreams = 0;
 }
@@ -671,7 +670,7 @@ CreateHandle ARG0
 	}
 	else if ( numinfilelist >= filelistsize ) {
 		i = filelistsize;
-		if ( DoubleList((VOID ***)(&filelist),(int *)&filelistsize,(int)sizeof(FILES *),
+		if ( DoubleList((VOID ***)(&filelist),&filelistsize,(int)sizeof(FILES *),
 			"list of open files") != 0 ) Terminate(-1);
 		for ( j = i; j < filelistsize; j++ ) filelist[j] = 0;
 		numinfilelist = i + 1;
@@ -717,16 +716,15 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
  		#] ReadFile :
  		#[ WriteFile :
 */
-/*[15apr2004 mt]:*/ /*[13jul2005 mt] Is this ok?:*/
-/*This routine (WriteFile) is used too often. I introduced the pointer
-to it - this permits me to override it in some routines.*/
+
 LONG
 WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	return(Uwrite((char *)buffer,1,size,filelist[handle]));
 }
-LONG (*WriteFile)  ARG3 (int,/**/,UBYTE *,/**/,LONG,/**/)=&WriteFileToFile;
-/*:[15apr2004 mt]*/
+
+LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
+
 /*
  		#] WriteFile :
  		#[ SeekFile :
@@ -879,8 +877,8 @@ CloseChannel ARG1(char *,name)
 
 /*
  		#] CloseChannel :
-	#] Files :
-	#[ Strings :
+  	#] Files :
+  	#[ Strings :
  		#[ StrCmp :
 */
 
@@ -1246,8 +1244,8 @@ MakeDate ARG0
 
 /*
  		#] MakeDate :
-	#] Strings :
- 	#[ Mixed :
+  	#] Strings :
+  	#[ Mixed :
  		#[ Malloc :
 
 		Malloc routine with built in error checking.
@@ -1255,6 +1253,7 @@ MakeDate ARG0
 */
 #ifdef MALLOCDEBUG
 char *dummymessage = "Malloc";
+INILOCK(MallocLock);
 #endif
  
 VOID *
@@ -1264,6 +1263,8 @@ Malloc ARG1(LONG,size)
 #ifdef MALLOCDEBUG
 	char *t, *u;
 	int i;
+	LOCK(MallocLock);
+	LOCK(ErrorMessageLock);
 	if ( size == 0 ) {
 		MesPrint("Asking for 0 bytes in Malloc");
 	}
@@ -1274,7 +1275,13 @@ Malloc ARG1(LONG,size)
 #endif
 	mem = (VOID *)M_alloc(size);
 	if ( mem == 0 ) {
+#ifndef MALLOCDEBUG
+		LOCK(ErrorMessageLock);
+#else
+		UNLOCK(MallocLock);
+#endif
 		Error0("No memory!");
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 #ifdef MALLOCDEBUG
@@ -1305,12 +1312,16 @@ Malloc ARG1(LONG,size)
 				u--;
 				if ( *t != 0 || *u != 0 ) {
 					MesPrint("Writing outside memory for %s",malloclist[i]);
+					UNLOCK(ErrorMessageLock);
+					UNLOCK(MallocLock);
 					Terminate(-1);
 				}
 				t--;
 			}
 		}
 	}
+	UNLOCK(ErrorMessageLock);
+	UNLOCK(MallocLock);
 #endif
 	return(mem);
 }
@@ -1330,6 +1341,8 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 #ifdef MALLOCDEBUG
 	char *t, *u;
 	int i;
+	LOCK(MallocLock);
+	LOCK(ErrorMessageLock);
 	if ( size == 0 ) {
 		MesPrint("Asking for 0 bytes in Malloc1");
 	}
@@ -1340,7 +1353,13 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 #endif
 	mem = (VOID *)M_alloc(size);
 	if ( mem == 0 ) {
+#ifndef MALLOCDEBUG
+		LOCK(ErrorMessageLock);
+#else
+		UNLOCK(MallocLock);
+#endif
 		Error1("No memory while allocating ",(UBYTE *)messageifwrong);
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 #ifdef MALLOCDEBUG
@@ -1363,6 +1382,8 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 	for ( i = 0; i < BANNER; i++ ) { *t++ = 0; *--u = 0; }
 	mem = (void *)t;
 	M_check();
+	UNLOCK(ErrorMessageLock);
+	UNLOCK(MallocLock);
 #endif
 	return(mem);
 }
@@ -1378,6 +1399,8 @@ void M_free ARG2(VOID *,x,char *,where)
 	char *t = (char *)x;
 	int i, j, k;
 	LONG size = 0;
+	LOCK(MallocLock);
+	LOCK(ErrorMessageLock);
 	x = (void *)(((char *)x)-BANNER);
 	MesPrint("Freeing 0x%x: %s",x,where);
 	for ( i = nummalloclist-1; i >= 0; i-- ) {
@@ -1395,6 +1418,8 @@ void M_free ARG2(VOID *,x,char *,where)
 	if ( i < 0 ) {
 		printf("Error returning non-allocated address: 0x%x from %s\n"
 			,(unsigned int)x,where);
+		UNLOCK(ErrorMessageLock);
+		UNLOCK(MallocLock);
 		exit(-1);
 	}
 	else {
@@ -1416,6 +1441,8 @@ void M_free ARG2(VOID *,x,char *,where)
 			tt[0],tt[1],tt[2],tt[3]);
 		}
 		M_check();
+		UNLOCK(ErrorMessageLock);
+		UNLOCK(MallocLock);
 	}
 #endif
 	if ( x ) free(x);
@@ -1465,6 +1492,8 @@ void M_check()
 	}
 	if ( error ) {
 		M_print();
+		UNLOCK(ErrorMessageLock);
+		UNLOCK(MallocLock);
 		Terminate(-1);
 	}
 }
@@ -1582,6 +1611,8 @@ FromVarList ARG1(LIST *,L)
 /*
  		#] FromVarList :
  		#[ DoubleList :
+
+		To make the system thread safe we set maxlistsize fixed to MAXPOSITIVE
 */
 
 int
@@ -1589,10 +1620,14 @@ DoubleList ARG4(VOID ***,lijst,int *,oldsize,int,objectsize,char *,nameoftype)
 {
 	int error;
 	LONG lsize = *oldsize;
+/*
 	maxlistsize = (LONG)(MAXPOSITIVE);
+*/
 	error = DoubleLList(lijst,&lsize,objectsize,nameoftype);
 	*oldsize = lsize;
+/*
 	maxlistsize = (LONG)(MAXLONG);
+*/
 	return(error);
 }
 
@@ -1885,18 +1920,9 @@ CompareArgs ARG2(WORD *,arg1,WORD *,arg2)
 	returns 1 if arg1 comes first, -1 if arg2 comes first, 0 if equal
 */
 
-WORD comsym[] = { 8,SYMBOL,4,0,1,1,1,3 };
-WORD comnum[] = { 4,1,1,3 };
-#if FUNHEAD == 3
-	WORD comfun[] = { 7,FUNCTION,3,0,1,1,3 };
-#endif
-#if FUNHEAD == 4
-	WORD comfun[] = { 8,FUNCTION,4,0,0,1,1,3 };
-#endif
-WORD comind[] = { 7,INDEX,3,0,1,1,3 };
-
 int CompArg ARG2(WORD *,s1, WORD *,s2)
 {
+	GETIDENTITY;
 	WORD *st1, *st2, x[7];
 	int k;
 	if ( *s1 < 0 ) {
@@ -1909,37 +1935,37 @@ int CompArg ARG2(WORD *,s1, WORD *,s2)
 			if ( *s1 < *s2 ) return(-1);
 			return(0);
 		}
-		x[1] = comsym[3];
-		x[2] = comnum[1];
-		x[3] = comnum[3];
-		x[4] = comind[3];
-		x[5] = comind[6];
-		x[6] = comfun[1];
+		x[1] = AT.comsym[3];
+		x[2] = AT.comnum[1];
+		x[3] = AT.comnum[3];
+		x[4] = AT.comind[3];
+		x[5] = AT.comind[6];
+		x[6] = AT.comfun[1];
 		if ( *s1 == -SYMBOL ) {
-			comsym[3] = s1[1];
-			st1 = comsym+8; s1 = comsym;
+			AT.comsym[3] = s1[1];
+			st1 = AT.comsym+8; s1 = AT.comsym;
 		}
 		else if ( *s1 == -SNUMBER ) {
 			if ( s1[1] < 0 ) {
-				comnum[1] = -s1[1]; comnum[3] = -3;
+				AT.comnum[1] = -s1[1]; AT.comnum[3] = -3;
 			}
 			else {
-				comnum[1] = s1[1]; comnum[3] = 3;
+				AT.comnum[1] = s1[1]; AT.comnum[3] = 3;
 			}
-			st1 = comnum+4;
-			s1 = comnum;
+			st1 = AT.comnum+4;
+			s1 = AT.comnum;
 		}
 		else if ( *s1 == -INDEX || *s1 == -VECTOR ) {
-			comind[3] = s1[1]; comind[6] = 3;
-			st1 = comind+7; s1 = comind;
+			AT.comind[3] = s1[1]; AT.comind[6] = 3;
+			st1 = AT.comind+7; s1 = AT.comind;
 		}
 		else if ( *s1 == -MINVECTOR ) {
-			comind[3] = s1[1]; comind[6] = -3;
-			st1 = comind+7; s1 = comind;
+			AT.comind[3] = s1[1]; AT.comind[6] = -3;
+			st1 = AT.comind+7; s1 = AT.comind;
 		}
 		else if ( *s1 <= -FUNCTION ) {
-			comfun[1] = -*s1;
-			st1 = comfun+FUNHEAD+4; s1 = comfun;
+			AT.comfun[1] = -*s1;
+			st1 = AT.comfun+FUNHEAD+4; s1 = AT.comfun;
 		}
 /*
 			Symmetrize during compilation of id statement when properorder
@@ -1953,41 +1979,41 @@ int CompArg ARG2(WORD *,s1, WORD *,s2)
 		goto docompare;
 	}
 	else if ( *s2 < 0 ) {
-		x[1] = comsym[3];
-		x[2] = comnum[1];
-		x[3] = comnum[3];
-		x[4] = comind[3];
-		x[5] = comind[6];
-		x[6] = comfun[1];
+		x[1] = AT.comsym[3];
+		x[2] = AT.comnum[1];
+		x[3] = AT.comnum[3];
+		x[4] = AT.comind[3];
+		x[5] = AT.comind[6];
+		x[6] = AT.comfun[1];
 		if ( *s2 == -SYMBOL ) {
-			comsym[3] = s2[1];
-			st2 = comsym+8; s2 = comsym;
+			AT.comsym[3] = s2[1];
+			st2 = AT.comsym+8; s2 = AT.comsym;
 		}
 		else if ( *s2 == -SNUMBER ) {
 			if ( s2[1] < 0 ) {
-				comnum[1] = -s2[1]; comnum[3] = -3;
-				st2 = comnum+4;
+				AT.comnum[1] = -s2[1]; AT.comnum[3] = -3;
+				st2 = AT.comnum+4;
 			}
 			else if ( s2[1] == 0 ) {
-				st2 = comnum+4; s2 = st2;
+				st2 = AT.comnum+4; s2 = st2;
 			}
 			else {
-				comnum[1] = s2[1]; comnum[3] = 3;
-				st2 = comnum+4;
+				AT.comnum[1] = s2[1]; AT.comnum[3] = 3;
+				st2 = AT.comnum+4;
 			}
-			s2 = comnum;
+			s2 = AT.comnum;
 		}
 		else if ( *s2 == -INDEX || *s2 == -VECTOR ) {
-			comind[3] = s2[1]; comind[6] = 3;
-			st2 = comind+7; s2 = comind;
+			AT.comind[3] = s2[1]; AT.comind[6] = 3;
+			st2 = AT.comind+7; s2 = AT.comind;
 		}
 		else if ( *s2 == -MINVECTOR ) {
-			comind[3] = s2[1]; comind[6] = -3;
-			st2 = comind+7; s2 = comind;
+			AT.comind[3] = s2[1]; AT.comind[6] = -3;
+			st2 = AT.comind+7; s2 = AT.comind;
 		}
 		else if ( *s2 <= -FUNCTION ) {
-			comfun[1] = -*s2;
-			st2 = comfun+FUNHEAD+4; s2 = comfun;
+			AT.comfun[1] = -*s2;
+			st2 = AT.comfun+FUNHEAD+4; s2 = AT.comfun;
 		}
 /*
 			Symmetrize during compilation of id statement when properorder
@@ -2001,33 +2027,33 @@ int CompArg ARG2(WORD *,s1, WORD *,s2)
 		goto docompare;
 	}
 	else {
-		x[1] = comsym[3];
-		x[2] = comnum[1];
-		x[3] = comnum[3];
-		x[4] = comind[3];
-		x[5] = comind[6];
-		x[6] = comfun[1];
+		x[1] = AT.comsym[3];
+		x[2] = AT.comnum[1];
+		x[3] = AT.comnum[3];
+		x[4] = AT.comind[3];
+		x[5] = AT.comind[6];
+		x[6] = AT.comfun[1];
 		st1 = s1 + *s1; st2 = s2 + *s2;
 		s1 += ARGHEAD; s2 += ARGHEAD;
 docompare:
 		while ( s1 < st1 && s2 < st2 ) {
 			if ( ( k = Compare(s1,s2,(WORD)2) ) != 0 ) {
-				comsym[3] = x[1];
-				comnum[1] = x[2];
-				comnum[3] = x[3];
-				comind[3] = x[4];
-				comind[6] = x[5];
-				comfun[1] = x[6];
+				AT.comsym[3] = x[1];
+				AT.comnum[1] = x[2];
+				AT.comnum[3] = x[3];
+				AT.comind[3] = x[4];
+				AT.comind[6] = x[5];
+				AT.comfun[1] = x[6];
 				return(-k);
 			}
 			s1 += *s1; s2 += *s2;
 		}
-		comsym[3] = x[1];
-		comnum[1] = x[2];
-		comnum[3] = x[3];
-		comind[3] = x[4];
-		comind[6] = x[5];
-		comfun[1] = x[6];
+		AT.comsym[3] = x[1];
+		AT.comnum[1] = x[2];
+		AT.comnum[3] = x[3];
+		AT.comind[3] = x[4];
+		AT.comind[6] = x[5];
+		AT.comfun[1] = x[6];
 		if ( s1 < st1 ) return(1);
 		if ( s2 < st2 ) return(-1);
 	}
@@ -2253,7 +2279,7 @@ LONG Timer()
 
 /*
  		#] Timer :
- 	#] Mixed :
+  	#] Mixed :
 */
 /*[12dec2003 mt]:*/
 /*Four functions to manipulate character sets*/

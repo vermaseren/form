@@ -529,7 +529,7 @@ NextDot:;
 /*
 			#[ SETS :
 */
-				temp = accu + (((AM.ComprTop - accu)>>1)&(-2));
+				temp = accu + (((AR.ComprTop - accu)>>1)&(-2));
 				if ( ResolveSet(t,temp,sub) ) {
 					Terminate(-1);
 				}

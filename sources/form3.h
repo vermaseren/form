@@ -11,6 +11,10 @@
 #define WITHZLIB
 #define ZWITHZLIB
 
+/*
+#define WITHPTHREADS
+*/
+
 #ifdef ZWITHZLIB
 #include <zlib.h>
 #endif
@@ -189,6 +193,10 @@
 #include "structs.h"
 #include "declare.h"
 #include "variable.h"
+
+#ifdef WITHPTHREADS
+#include <pthread.h>
+#endif
 
 #ifdef OPTERON
 #define FILES FILE

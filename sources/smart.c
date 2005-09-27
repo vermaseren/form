@@ -19,21 +19,9 @@
 	be matched best. If the order should be different we can change it here.
 */
 
-typedef struct {
-	WORD *location;
-	int numargs;
-	int numfunnies;
-	int numwildcards;
-	int symmet;
-	int tensor;
-	int commute;
-} FUN_INFO;
-
-static FUN_INFO *FunInfo;
-static int numfuninfo = 0;
-
 void StudyPattern ARG1(WORD *,lhs)
 {
+	GETIDENTITY;
 	WORD *fullproto, *pat, *p, *p1, *p2, *pstop, *info, f;
 	int numfun = 0, numsym = 0, allwilds = 0, i, j, k, nc;
 	FUN_INFO *finf, *fmin, *f1, *f2, funscratch;
@@ -52,20 +40,20 @@ void StudyPattern ARG1(WORD *,lhs)
 /*
 	We need now some room for the information about the functions
 */
-	if ( numfun > numfuninfo ) {
-		if ( FunInfo ) M_free(FunInfo,"funinfo");
-		numfuninfo = numfun + 10;
-		FunInfo = (FUN_INFO *)Malloc1(numfuninfo*sizeof(FUN_INFO),"funinfo");
+	if ( numfun > AN.numfuninfo ) {
+		if ( AN.FunInfo ) M_free(AN.FunInfo,"funinfo");
+		AN.numfuninfo = numfun + 10;
+		AN.FunInfo = (FUN_INFO *)Malloc1(AN.numfuninfo*sizeof(FUN_INFO),"funinfo");
 	}
 /*
 	Now collect the information. First the locations.
 */
 	p = pat + 1; i = 0;
 	while ( p < info ) {
-		if ( *p >= FUNCTION ) FunInfo[i++].location = p;
+		if ( *p >= FUNCTION ) AN.FunInfo[i++].location = p;
 		p += p[1];
 	}
-	for ( i = 0, finf = FunInfo; i < numfun; i++, finf++ ) {
+	for ( i = 0, finf = AN.FunInfo; i < numfun; i++, finf++ ) {
 		p = finf->location;
 		pstop = p + p[1];
 		f = *p;
@@ -132,13 +120,13 @@ void StudyPattern ARG1(WORD *,lhs)
 	if ( numsym == 0 ) return;
 	if ( allwilds == 0 ) return;
 /*
-	We have the information in the array FunInfo.
+	We have the information in the array AN.FunInfo.
 	We sort things and then write the sorted pattern.
 	Of course we have to become even smarter in the future and look during
 	the sorting which wildcards are asigned when.
 	But for now this should do.
 */
-	finf = FunInfo;
+	finf = AN.FunInfo;
 	for ( i = 1; i < numfun; i++ ) {
 		fmin = finf; finf++;
 		if ( ( finf->symmet < fmin->symmet ) || (
@@ -146,20 +134,20 @@ void StudyPattern ARG1(WORD *,lhs)
 		( ( finf->numwildcards+finf->numfunnies < fmin->numwildcards+fmin->numfunnies )
 		|| ( ( finf->numwildcards+finf->numfunnies == fmin->numwildcards+fmin->numfunnies )
 		&& ( finf->numwildcards < fmin->numfunnies ) ) ) ) ) {
-			funscratch = FunInfo[i];
-			FunInfo[i] = FunInfo[i-1];
-			FunInfo[i-1] = funscratch;
+			funscratch = AN.FunInfo[i];
+			AN.FunInfo[i] = AN.FunInfo[i-1];
+			AN.FunInfo[i-1] = funscratch;
 			for ( j = i-1; j > 0; j-- ) {
-				f1 = FunInfo+j;
+				f1 = AN.FunInfo+j;
 				f2 = f1-1;
 				if ( ( f1->symmet < f2->symmet ) || (
 				( f1->symmet == f2->symmet ) &&
 				( ( f1->numwildcards+f1->numfunnies < f2->numwildcards+f2->numfunnies )
 				|| ( ( f1->numwildcards+f1->numfunnies == f2->numwildcards+f2->numfunnies )
 				&& ( f1->numwildcards < f2->numfunnies ) ) ) ) ) {
-					funscratch = FunInfo[j];
-					FunInfo[j] = FunInfo[j-1];
-					FunInfo[j-1] = funscratch;
+					funscratch = AN.FunInfo[j];
+					AN.FunInfo[j] = AN.FunInfo[j-1];
+					AN.FunInfo[j-1] = funscratch;
 				}
 				else break;
 			}
@@ -170,20 +158,20 @@ void StudyPattern ARG1(WORD *,lhs)
 	copy it back. Be careful with the non-commutative functions. There the
 	worst one should decide.
 */
-	for ( nc = numfun-1; nc >= 0; nc-- ) { if ( FunInfo[nc].commute ) break; }
+	for ( nc = numfun-1; nc >= 0; nc-- ) { if ( AN.FunInfo[nc].commute ) break; }
 	p = pat + 1;
 	p2 = info;
 	for ( i = 0; i < numfun; i++ ) {
 		if ( i == nc ) {
 			for ( k = 0; k <= nc; k++ ) {
-				if ( FunInfo[k].commute ) {
-					p1 = FunInfo[k].location; j = p1[1];
+				if ( AN.FunInfo[k].commute ) {
+					p1 = AN.FunInfo[k].location; j = p1[1];
 					NCOPY(p2,p1,j)
 				}
 			}
 		}
-		else if ( FunInfo[i].commute == 0 ) {
-			p1 = FunInfo[i].location; j = p1[1];
+		else if ( AN.FunInfo[i].commute == 0 ) {
+			p1 = AN.FunInfo[i].location; j = p1[1];
 			NCOPY(p2,p1,j)
 		}
 	}
@@ -196,8 +184,8 @@ void StudyPattern ARG1(WORD *,lhs)
 	for ( i = 0; i < numfun; i++ ) {
 		if ( i == nc ) {
 			for ( k = 0; k <= nc; k++ ) {
-				if ( FunInfo[k].commute ) {
-					finf = FunInfo + k;
+				if ( AN.FunInfo[k].commute ) {
+					finf = AN.FunInfo + k;
 					*p2++ = finf->numargs;
 					*p2++ = finf->numwildcards;
 					*p2++ = finf->numfunnies;
@@ -205,8 +193,8 @@ void StudyPattern ARG1(WORD *,lhs)
 				}
 			}
 		}
-		else if ( FunInfo[i].commute == 0 ) {
-			finf = FunInfo + i;
+		else if ( AN.FunInfo[i].commute == 0 ) {
+			finf = AN.FunInfo + i;
 			*p2++ = finf->numargs;
 			*p2++ = finf->numwildcards;
 			*p2++ = finf->numfunnies;
@@ -227,6 +215,7 @@ void StudyPattern ARG1(WORD *,lhs)
 
 int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 {
+	GETIDENTITY;
 	WORD *info = pattern + *pattern;
 	WORD *t, *tstop, *tt, *inf, *p;
 	int numfun = 0, inpat, i, j, numargs;
@@ -249,12 +238,12 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 /*
 	We need now some room for the information about the functions
 */
-	if ( numfun > numfuninfo ) {
-		if ( FunInfo ) M_free(FunInfo,"funinfo");
-		numfuninfo = numfun + 10;
-		FunInfo = (FUN_INFO *)Malloc1(numfuninfo*sizeof(FUN_INFO),"funinfo");
+	if ( numfun > AN.numfuninfo ) {
+		if ( AN.FunInfo ) M_free(AN.FunInfo,"funinfo");
+		AN.numfuninfo = numfun + 10;
+		AN.FunInfo = (FUN_INFO *)Malloc1(AN.numfuninfo*sizeof(FUN_INFO),"funinfo");
 	}
-	t = term + 1; finf = FunInfo;
+	t = term + 1; finf = AN.FunInfo;
 	while ( t < tstop ) {
 		if ( *t >= FUNCTION ) {
 			finf->location = t;
@@ -283,7 +272,7 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] ) continue;
 		if ( *p >= FUNCTION+WILDOFFSET ) continue;
-		for ( j = 0, finf = FunInfo; j < numfun; j++, finf++ ) {
+		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
 			if ( *p == *(finf->location) && *inf == finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
 				break;
@@ -294,7 +283,7 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] ) continue;
 		if ( *p < FUNCTION+WILDOFFSET ) continue;
-		for ( j = 0, finf = FunInfo; j < numfun; j++, finf++ ) {
+		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
 			if ( *inf == finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
 				break;
@@ -305,7 +294,7 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] == 0 ) continue;
 		if ( *p >= FUNCTION+WILDOFFSET ) continue;
-		for ( j = 0, finf = FunInfo; j < numfun; j++, finf++ ) {
+		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
 			if ( *p == *(finf->location) && *inf <= finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
 				break;
@@ -316,7 +305,7 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] == 0 ) continue;
 		if ( *p < FUNCTION+WILDOFFSET ) continue;
-		for ( j = 0, finf = FunInfo; j < numfun; j++, finf++ ) {
+		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
 			if ( *inf <= finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
 				break;
@@ -330,7 +319,7 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 	For now the rest is up to the real pattern matcher.
 
 	To undo the disabling of the number of arguments we need this code
-	for ( i = 0, finf = FunInfo; i < numfun; i++, finf++ ) {
+	for ( i = 0, finf = AN.FunInfo; i < numfun; i++, finf++ ) {
 		if ( finf->numargs < 0 ) finf->numargs = -finf->numargs-1;
 	}
 */
