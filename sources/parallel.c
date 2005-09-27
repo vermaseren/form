@@ -524,7 +524,7 @@ newright:
 	}
   }
   if(n->lloser > 0 && n->rloser > 0){
-	comp = Compare(PF_term[n->lloser],PF_term[n->rloser],(WORD)0);
+	comp = Compare(BHEAD PF_term[n->lloser],PF_term[n->rloser],(WORD)0);
 	if( comp > 0 )       return(n->lloser);
 	else if(comp < 0) return(n->rloser);
 	else{
@@ -608,7 +608,7 @@ newright:
 	  lclen = ( (lclen > 0) ? (lclen-1) : (lclen+1) ) >> 1;
 	  rclen = ( (rclen > 0) ? (rclen-1) : (rclen+1) ) >> 1;
 	  newcpos = PF_ScratchSpace;
-	  if(AddRat((UWORD *)lcpos,lclen,(UWORD *)rcpos,rclen,newcpos,&newnlen)) return(-1);
+	  if(AddRat(BHEAD (UWORD *)lcpos,lclen,(UWORD *)rcpos,rclen,newcpos,&newnlen)) return(-1);
 	  if( AC.ncmod != 0 ) {
 		if( BigLong(newcpos,newnlen,(UWORD *)AC.cmod,ABS(AC.ncmod)) >=0 ){
 		  WORD ii;
@@ -771,7 +771,7 @@ PF_EndSort ARG0
 	  */
 	}
 	PRINTFBUF("PF_EndSort to PutOut: ",outterm,*outterm);  
-	PutOut(outterm,&position,fout,1);
+	PutOut(BHEAD outterm,&position,fout,1);
   }		
 /*@@@*/
   if( FlushOut(&position,fout,0) ) return(-1);
@@ -1018,7 +1018,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   while ( *bra != HAAKJE && bra < bstop ) bra += bra[1];
   if ( bra >= bstop ) {	/* No deferred action! */
 	AT.WorkPointer = term + *term;
-	if ( Generator(term,level) ) goto DefCall;
+	if ( Generator(BHEAD term,level) ) goto DefCall;
 	AR.DeferFlag = 1;
 	AT.WorkPointer = oldwork;
 	return(0);
@@ -1041,7 +1041,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   	}
 	/* call Generator with new composed term */
   	AT.WorkPointer = termout + *termout;
-  	if ( Generator(termout,level) ) goto DefCall;
+  	if ( Generator(BHEAD termout,level) ) goto DefCall;
   	AT.WorkPointer = termout;
 	tstart = next + 1;
 	if( tstart >= AR.infile->POfull ) goto ThatsIt;
@@ -1393,7 +1393,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	AS.CurExpr = i;
 	SeekScratch(AR.outfile,&position);
 	e->onfile = position;
-	if ( PutOut(term,&position,AR.outfile,0) < 0 ) return(-1);
+	if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) return(-1);
 	/*
 	     #] write prototype to outfile
 	     #[ initialize sendbuffer if necessary
@@ -1483,9 +1483,9 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	  else { /* not parallel */
 		AT.WorkPointer = term + *term;
 		AN.RepPoint = AT.RepCount + 1;
-		AR.CurDum = ReNumber(term);
+		AR.CurDum = ReNumber(BHEAD term);
 		if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-		if ( Generator(term,0) ) {
+		if ( Generator(BHEAD term,0) ) {
 		  LowerSortLevel(); return(-1);
 		}
 		PF.ginterms += dd;	
@@ -1684,9 +1684,9 @@ in pre.c.*/
 	  PF_linterms++; dd = AN.deferskipped;
 	  AT.WorkPointer = term + *term;
 	  AN.RepPoint = AT.RepCount + 1;
-	  	  AR.CurDum = ReNumber(term);
+	  	  AR.CurDum = ReNumber(BHEAD term);
 	  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-	  if ( Generator(term,0) ) {
+	  if ( Generator(BHEAD term,0) ) {
 		MesPrint("[%d] PF_Processor: Error in Generator",PF.me);
 		LowerSortLevel(); return(-1);
 	  }

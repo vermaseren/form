@@ -62,7 +62,7 @@ int CatchDollar ARG1(int,par)
 		n = *w; t = oldwork;
 		NCOPY(t,w,n)
 		AT.WorkPointer = t;
-		if ( Generator(oldwork,C->numlhs) ) { error = 1; break; }
+		if ( Generator(BHEAD oldwork,C->numlhs) ) { error = 1; break; }
 	}
 	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&dbuffer),2) < 0 ) { error = 1; }
@@ -335,7 +335,7 @@ NoChangeOne:;
 			n = *w; t = ww = AT.WorkPointer;
 			NCOPY(t,w,n);
 			AT.WorkPointer = t;
-			if ( Generator(ww,C->numlhs) ) {
+			if ( Generator(BHEAD ww,C->numlhs) ) {
 				AT.WorkPointer = ww;
 				LowerSortLevel();
 				AR.DeferFlag = olddefer;
@@ -1328,7 +1328,7 @@ InsideDollar ARG2(WORD *,ll,WORD,level)
 /*
 			What to do with dummy indices?
 */
-			if ( Generator(oldwork,level) ) {
+			if ( Generator(BHEAD oldwork,level) ) {
 				LowerSortLevel();
 				error = -1; goto idcall;
 			}
@@ -1656,7 +1656,7 @@ WORD *TranslateExpression ARG1(UBYTE *,s)
 	if ( NewSort() || NewSort() ) { return(0); }
 	AN.RepPoint = AT.RepCount + 1;
 	oldEside = AC.Eside; AC.Eside = RHSIDE;
-	if ( Generator(AC.ProtoType-1,C->numlhs) ) {
+	if ( Generator(BHEAD AC.ProtoType-1,C->numlhs) ) {
 		AC.Eside = oldEside;
 		LowerSortLevel(); LowerSortLevel(); return(0);
 	}
@@ -1923,10 +1923,11 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 
 int TwoExprCompare ARG3(WORD *,buf1,WORD *,buf2,int,oprtr)
 {
+	GETIDENTITY;
 	WORD *t1, *t2, cond;
 	t1 = buf1; t2 = buf2;
 	while ( *t1 && *t2 ) {
-		cond = Compare(t1,t2,1);
+		cond = Compare(BHEAD t1,t2,1);
 		if ( cond != 0 ) {
 			if ( cond > 0 ) { /* t1 comes first */
 				switch ( oprtr ) {  /* t1 is less */
@@ -2001,6 +2002,7 @@ static WORD ndscrat;
 
 int DollarRaiseLow ARG2(UBYTE *,name,LONG,value)
 {
+	GETIDENTITY;
 	int num;
 	DOLLARS d;
 	int sgn = 1;
@@ -2046,7 +2048,7 @@ int DollarRaiseLow ARG2(UBYTE *,name,LONG,value)
 		if ( dscrat == 0 ) {
 			dscrat = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"DollarRaiseLow");
 		}
-		if ( AddRat((UWORD *)(d->where+1),i,
+		if ( AddRat(BHEAD (UWORD *)(d->where+1),i,
 			(UWORD *)lnum,nnum,dscrat,&ndscrat) ) {
 				LOCK(ErrorMessageLock);
 				MesCall("DollarRaiseLow");
@@ -2265,7 +2267,7 @@ int SumDollars ARG1(WORD, index)
 	  AT.WorkPointer = m;
 
 
-	  if (Generator(oldwork, 0)) 
+	  if (Generator(BHEAD oldwork, 0)) 
 	    {
 	      LowerSortLevel();
 	      LowerSortLevel();

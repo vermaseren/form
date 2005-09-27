@@ -62,7 +62,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 		else i = -1;
 	}
 	else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-	else i = Compare(bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
+	else i = Compare(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
 		AC.SortType = oldsorttype;
 		return(0);
@@ -76,7 +76,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 			else i = -1;
 		}
 		else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-		else i = Compare(bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
+		else i = Compare(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) { break; }
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
@@ -144,7 +144,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 					else i = -1;
 				}
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
-				else i = Compare(bracket,AR.CompressPointer,0);
+				else i = Compare(BHEAD bracket,AR.CompressPointer,0);
 				if ( i == 0 ) {
 					SETBASEPOSITION(AN.theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
 					goto found;
@@ -164,7 +164,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 				else if ( p[0] == 4 ) i = 1;
 				else {
-					i = Compare(bracket,p,0);
+					i = Compare(BHEAD bracket,p,0);
 				}
 				*p = a[0]; t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
@@ -235,6 +235,7 @@ found:
 VOID
 PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 {
+	GETIDENTITY;
 	BRACKETINDEX *bi, *b1, *b2, *b3;
 	BRACKETINFO *b;
 	POSITION thepos;
@@ -263,7 +264,7 @@ PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 			else i = -1;
 		}
 		else if ( b->bracketbuffer[bi->bracket] == 4 ) i = 1;
-		else i = Compare(term,b->bracketbuffer+bi->bracket,0);
+		else i = Compare(BHEAD term,b->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) {	/* still the same bracket */
 			goto bracketdone;
 		}

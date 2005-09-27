@@ -395,12 +395,12 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 					else {
 						if ( ismul1 ) {
 							if ( ncoef2 )
-								Divvy(coef2,&ncoef2,coef1,ncoef1);
+								Divvy(BHEAD coef2,&ncoef2,coef1,ncoef1);
 							cc = coef2; ncoef3 = ncoef2;
 						}
 						else {
 							if ( ncoef1 )
-								Divvy(coef1,&ncoef1,coef2,ncoef2);
+								Divvy(BHEAD coef1,&ncoef1,coef2,ncoef2);
 							cc = coef1; ncoef3 = ncoef1;
 						}
 						if ( ncoef3 < 0 ) ncoef3 = -ncoef3;
@@ -426,7 +426,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 					}
 					goto donemul;
 				}
-				else if ( AddRat(coef1,ncoef1,coef2,-ncoef2,coef3,&ncoef3) ) {
+				else if ( AddRat(BHEAD coef1,ncoef1,coef2,-ncoef2,coef3,&ncoef3) ) {
 					MesCall("DoIfStatement"); return(-1);
 				}
 				switch ( ifp[-2] ) {
@@ -507,7 +507,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
 		NewSort();
-		if ( Generator(OldWork,C->numlhs) ) {
+		if ( Generator(BHEAD OldWork,C->numlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = OldWork;
 			return(-1);

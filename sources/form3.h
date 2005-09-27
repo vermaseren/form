@@ -12,6 +12,7 @@
 #define ZWITHZLIB
 
 /*
+#define ITHREADS
 #define WITHPTHREADS
 */
 

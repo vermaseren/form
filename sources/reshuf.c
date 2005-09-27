@@ -43,16 +43,16 @@
 */
 
 WORD
-ReNumber ARG1(WORD *,term)
+ReNumber BARG1(WORD *,term)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *d, *e, **p, **f;
 	WORD n, i, j, old;
 	AN.DumFound = d = AN.RenumScratch;
 	AN.DumPlace = p = AN.PoinScratch;
 	AN.DumFunPlace = f = AN.FunScratch;
 	AN.NumFound = 0;
-	FunLevel(term);
+	FunLevel(BHEAD term);
 /*
 	Now the first level sorting.
 */
@@ -91,9 +91,9 @@ ReNumber ARG1(WORD *,term)
 */
 
 VOID
-FunLevel ARG1(WORD *,term)
+FunLevel BARG1(WORD *,term)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *tstop, *r, *fun;
 	WORD *m;
 	t = r = term;
@@ -175,7 +175,7 @@ FunLevel ARG1(WORD *,term)
 						m = t + *t;
 						t += ARGHEAD;
 						while ( t < m ) {
-							FunLevel(t);
+							FunLevel(BHEAD t);
 							t += *t;
 						}
 					}
@@ -283,11 +283,11 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 	WORD *d, **p, **f, *w, *t, *best, *stac, *perm, a, *termtry;
 	WORD n, i, j, k, ii;
 	WORD *oldworkpointer = AT.WorkPointer;
-	n = ReNumber(term) - AM.IndDum;
+	n = ReNumber(BHEAD term) - AM.IndDum;
 	if ( n <= 1 ) return(0);
-	Normalize(term);
+	Normalize(BHEAD term);
 	if ( *term == 0 ) return(0);
-	n = ReNumber(term) - AM.IndDum;
+	n = ReNumber(BHEAD term) - AM.IndDum;
 	d = AN.RenumScratch;
 	p = AN.PoinScratch;
 	f = AN.FunScratch;
@@ -296,7 +296,7 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 	best = w = AT.WorkPointer; t = term;
 	for ( i = *term; i > 0; i-- ) *w++ = *t++;
 	AT.WorkPointer = w;
-	Normalize(best);
+	Normalize(BHEAD best);
 	AT.WorkPointer = w = best + *best;
 	stac = w+100;
 	perm = stac + n + 1;
@@ -315,9 +315,9 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 				t = term; w = termtry;
 				for ( ii = 0; ii < *term; ii++ ) *w++ = *t++;
 				AT.WorkPointer = w;
-				if ( Normalize(termtry) == 0 ) {
+				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = Compare(termtry,best,0) ) > 0 ) {
+					if ( ( ii = Compare(BHEAD termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( ii = 0; ii < *termtry; ii++ ) *w++ = *t++;
 						i = 0; break; /* restart from beginning */
@@ -353,9 +353,9 @@ int FullRenumber ARG2(WORD *,term,WORD,par)
 				t = term; w = termtry;
 				for ( i = 0; i < *term; i++ ) *w++ = *t++;
 				AT.WorkPointer = w;
-				if ( Normalize(termtry) == 0 ) {
+				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = Compare(termtry,best,0) ) > 0 ) {
+					if ( ( ii = Compare(BHEAD termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( i = 0; i < *termtry; i++ ) *w++ = *t++;
 					}
@@ -741,8 +741,8 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 {
 	GETIDENTITY;
 	WORD *t, *r, *m, i, j;
-	ReNumber(term);
-	Normalize(term);
+	ReNumber(BHEAD term);
+	Normalize(BHEAD term);
 	m = r = term + *term;
 	m++;
 	i = pattern[2];
@@ -753,15 +753,15 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 	NCOPY(m,t,j)
 	*r = WORDDIF(m,r);
 	AT.WorkPointer = m;
-	if ( ( j = Normalize(r) ) == 0 || j == 1 ) {
+	if ( ( j = Normalize(BHEAD r) ) == 0 || j == 1 ) {
 		if ( *r == 0 ) return(0);
-		ReNumber(r); Normalize(r);
+		ReNumber(BHEAD r); Normalize(BHEAD r);
 		if ( *r == 0 ) return(0);
-		if ( ( i = Compare(term,r,0) ) < 0 ) return(Generator(r,level));
+		if ( ( i = Compare(BHEAD term,r,0) ) < 0 ) return(Generator(BHEAD r,level));
 		if ( i == 0 && CompCoef(term,r) != 0 ) { return(0); }
 	}
 	AT.WorkPointer = r;
-	return(Generator(term,level));
+	return(Generator(BHEAD term,level));
 }
 
 /*
@@ -987,7 +987,7 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 			}
 			*AN.RepPoint = 1;
 			AS.expchanged = 1;
-			if ( Generator(termout,level) ) Terminate(-1);
+			if ( Generator(BHEAD termout,level) ) Terminate(-1);
 #ifndef NUOVO
 			{
 				WORD k1;
@@ -1086,7 +1086,7 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 		m = m2; while ( m < tstop ) *t++ = *m++;
 		*termout = WORDDIF(t,termout);
 		AT.WorkPointer = t;
-		if ( Generator(termout,level) ) {
+		if ( Generator(BHEAD termout,level) ) {
 			LOCK(ErrorMessageLock);
 			MesCall("Do dd_");
 			UNLOCK(ErrorMessageLock);
@@ -1195,7 +1195,7 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 			while ( m < tstop ) *t++ = *m++;
 			*termout = WORDDIF(t,termout);
 			AT.WorkPointer = t;
-			if ( Generator(termout,level) ) {
+			if ( Generator(BHEAD termout,level) ) {
 				LOCK(ErrorMessageLock);
 				MesCall("Do dd_");
 				UNLOCK(ErrorMessageLock);
@@ -1290,7 +1290,7 @@ restart:;
 		t += t[1];
 	}
 	if ( t >= tstop ) {
-		return(Generator(term,level));
+		return(Generator(BHEAD term,level));
 	}
 	if ( t1[1] == FUNHEAD || t2[1] == FUNHEAD ) {
 		if ( t2[1] == FUNHEAD ) { t = t1; t1 = t2; t2 = t; }
@@ -1368,7 +1368,7 @@ restart:;
 		while ( t < tt ) *m++ = *t;
 		*termout = m - termout;
 		AT.WorkPointer = m;
-		if ( Generator(termout,level) ) goto Mergecall;
+		if ( Generator(BHEAD termout,level) ) goto Mergecall;
 /*
 		Raise configuration
 */

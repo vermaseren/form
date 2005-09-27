@@ -143,7 +143,7 @@ AllLev:
 	ncoef = REDLENG(*r);
 	tstop = t;
 	while ( m < mstop ) *t++ = *m++;
-	if ( Factorial(fac,facto,&nfac) || Mully((UWORD *)tstop,&ncoef,facto,nfac) ) {
+	if ( Factorial(BHEAD fac,facto,&nfac) || Mully(BHEAD (UWORD *)tstop,&ncoef,facto,nfac) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("EpfFind");
 		UNLOCK(ErrorMessageLock);
@@ -227,7 +227,7 @@ DoOnce:
 			*AN.RepPoint = 1;
 			AS.expchanged = 1;
 			AT.WorkPointer = termout + *termout;
-			if ( Generator(termout,level) < 0 ) goto EpfCall;
+			if ( Generator(BHEAD termout,level) < 0 ) goto EpfCall;
 		}
 	}
 	AT.WorkPointer = kron;
@@ -887,7 +887,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				if ( *termout ) {
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
-					if ( Generator(termout,t->level) ) goto TracCall;
+					if ( Generator(BHEAD termout,t->level) ) goto TracCall;
 				}
 				AT.WorkPointer= termout;
 				return(0);
@@ -1267,7 +1267,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				if ( *termout ) {
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
-					if ( Generator(termout,t->level) ) {
+					if ( Generator(BHEAD termout,t->level) ) {
 						AT.WorkPointer = termout;
 						goto TracCall;
 					}
@@ -1477,7 +1477,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 				if ( *termout ) {
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
-					if ( Generator(termout,t->level) ) goto TracCall;
+					if ( Generator(BHEAD termout,t->level) ) goto TracCall;
 				}
 				AT.WorkPointer= termout;
 				return(0);
@@ -1766,7 +1766,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 				if ( *termout ) {
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
-					if ( Generator(termout,t->level) ) {
+					if ( Generator(BHEAD termout,t->level) ) {
 						AT.WorkPointer = termout;
 						goto TracCall;
 					}
@@ -2012,7 +2012,7 @@ Chisholm ARG2(WORD *,term,WORD,level)
 		}
 		s++;
 	}
-	if ( norm == 0 ) return(Generator(term,level));	/* No Action */
+	if ( norm == 0 ) return(Generator(BHEAD term,level));	/* No Action */
 /*
   	#] Test :
   	#[ Do : Process the string
@@ -2108,7 +2108,7 @@ Chisholm ARG2(WORD *,term,WORD,level)
 							j = *termout;
 							NCOPY(m,t,j);
 							AT.WorkPointer = m;
-							if ( Generator(t,level) ) goto ChisCall;
+							if ( Generator(BHEAD t,level) ) goto ChisCall;
 
 							j = WORDDIF(termout,mat)-1;
 							t = matpoint;
@@ -2118,7 +2118,7 @@ Chisholm ARG2(WORD *,term,WORD,level)
 								i = *--m; *m = *t; *t++ = i;
 							}
 
-							if ( Generator(termout,level) ) goto ChisCall;
+							if ( Generator(BHEAD termout,level) ) goto ChisCall;
 							AT.WorkPointer = mat;
 
 							goto NextK;
@@ -2463,7 +2463,7 @@ docopy:
 	*termout = WORDDIF(m,termout);
 	AT.WorkPointer = m;
 	*AT.TMout = 0;
-	if ( Generator(termout,level) ) goto fromTenVec;
+	if ( Generator(BHEAD termout,level) ) goto fromTenVec;
 	AR.CurDum = DumNow;
 	AT.WorkPointer = termout;
 	return(0);

@@ -1417,17 +1417,17 @@ docoef:
 					if ( x2 == 0 ) {
 						innum[0] = 1; nin = 1;
 					}
-					else if ( RaisPow(innum,&nin,x2) ) {
+					else if ( RaisPow(BHEAD innum,&nin,x2) ) {
 						error = -1; innum[0] = 1; nin = 1;
 					}
 				}
 				if ( deno > 0 ) {
-					Simplify(innum,&nin,denominator,&ndenominator);
+					Simplify(BHEAD innum,&nin,denominator,&ndenominator);
 					for ( i = 0; i < nnumerator; i++ ) CGscrat7[i] = numerator[i];
 					MulLong(innum,nin,CGscrat7,nnumerator,numerator,&nnumerator);
 				}
 				else if ( deno < 0 ) {
-					Simplify(innum,&nin,numerator,&nnumerator);
+					Simplify(BHEAD innum,&nin,numerator,&nnumerator);
 					for ( i = 0; i < ndenominator; i++ ) CGscrat7[i] = denominator[i];
 					MulLong(innum,nin,CGscrat7,ndenominator,denominator,&ndenominator);
 				}

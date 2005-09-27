@@ -60,7 +60,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -108,7 +108,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -179,7 +179,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -200,7 +200,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -217,7 +217,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -461,7 +461,7 @@ AllocSetups ARG0
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 */
 
@@ -505,7 +505,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -517,11 +517,10 @@ SORTING *
 AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	,int,MaxPatches,int,MaxFpatches,LONG,IObuffersize)
 {
-	GETIDENTITY;
 	LONG allocation,longer,terms2insmall,sortsize,longerp;
 	SORTING *sort;
 	int i = 0, j = 0;
-	char *s, *t;
+	char *s;
 	if ( AM.S0 != 0 ) {
 		s = FG.fname; i = 0;
 		while ( *s ) { s++; i++; }
@@ -613,20 +612,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	PUTZERO(sort->file.POposition);
 	if ( AM.S0 != 0 ) {
 		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
-/*
-		This is not the allocation before the tempfiles are determined.
-		Hence we can use the name in FG.fname and modify the tail
-*/
-		s = FG.fname; t = sort->file.name;
-		while ( *s ) *t++ = *s++;
-#ifdef WITHPTHREADS
-		t[-2] = 'F';
-		sprintf(t-1,"%d-%d",identity,AN.filenum);
-#else
-		t[-2] = 'f';
-		sprintf(t-1,"%d",AN.filenum);
-#endif
-		AN.filenum++;
+		AllocSortFileName(sort);
 	}
 	else sort->file.name = 0;
 	sort->cBuffer = 0;
@@ -638,6 +624,32 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 
 /*
  		#] AllocSort :
+ 		#[ AllocSortFileName :
+*/
+
+VOID
+AllocSortFileName ARG1(SORTING *,sort)
+{
+	GETIDENTITY;
+	char *s, *t;
+/*
+		This is not the allocation before the tempfiles are determined.
+		Hence we can use the name in FG.fname and modify the tail
+*/
+	s = FG.fname; t = sort->file.name;
+	while ( *s ) *t++ = *s++;
+#ifdef WITHPTHREADS
+	t[-2] = 'F';
+	sprintf(t-1,"%d-%d",identity,AN.filenum);
+#else
+	t[-2] = 'f';
+	sprintf(t-1,"%d",AN.filenum);
+#endif
+	AN.filenum++;
+}
+
+/*
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -681,7 +693,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -700,7 +712,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -711,7 +723,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -789,7 +801,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -814,7 +826,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */
 

@@ -85,7 +85,7 @@ Processor()
 			AS.CurExpr = i;
 			SeekScratch(AR.outfile,&position);
 			e->onfile = position;
-			if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+			if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 			AR.DeferFlag = AC.ComDefer;
 			NewSort();
 			AN.ninterms = 0;
@@ -101,9 +101,9 @@ Processor()
 				}
 				AT.WorkPointer = term + *term;
 				AN.RepPoint = AT.RepCount + 1;
-				AR.CurDum = ReNumber(term);
+				AR.CurDum = ReNumber(BHEAD term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				if ( Generator(term,0) ) {
+				if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				}
 				AN.ninterms += dd;
@@ -161,7 +161,7 @@ commonread:
 				term[3] = i;
 				SeekScratch(AR.outfile,&position);
 				e->onfile = position;
-				if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+				if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 				AR.DeferFlag = AC.ComDefer;
 				NewSort();
 				AN.ninterms = 0;
@@ -174,9 +174,9 @@ commonread:
 				  }
 				  AT.WorkPointer = term + *term;
 				  AN.RepPoint = AT.RepCount + 1;
-				  AR.CurDum = ReNumber(term);
+				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				  if ( Generator(term,0) ) {
+				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				  }
 				  AN.ninterms += dd;
@@ -225,14 +225,14 @@ commonread:
 					AR.ComprTop = AM.S0->sTop;
 					AR.CompressPointer = AM.S0->sBuffer;
 					if ( firstterm > 0 ) {
-						if ( PutOut(term,&position,AR.outfile,1) < 0 ) goto ProcErr;
+						if ( PutOut(BHEAD term,&position,AR.outfile,1) < 0 ) goto ProcErr;
 					}
 					else if ( firstterm < 0 ) {
-						if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+						if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 						firstterm++;
 					}
 					else {
-						if ( PutOut(term,&position,AR.outfile,-1) < 0 ) goto ProcErr;
+						if ( PutOut(BHEAD term,&position,AR.outfile,-1) < 0 ) goto ProcErr;
 						firstterm++;
 					}
 					AR.CompressPointer = oldipointer;
@@ -265,14 +265,14 @@ commonread:
 					AR.ComprTop = AM.S0->sTop;
 					AR.CompressPointer = AM.S0->sBuffer;
 					if ( firstterm > 0 ) {
-						if ( PutOut(term,&position,AS.hidefile,1) < 0 ) goto ProcErr;
+						if ( PutOut(BHEAD term,&position,AS.hidefile,1) < 0 ) goto ProcErr;
 					}
 					else if ( firstterm < 0 ) {
-						if ( PutOut(term,&position,AS.hidefile,0) < 0 ) goto ProcErr;
+						if ( PutOut(BHEAD term,&position,AS.hidefile,0) < 0 ) goto ProcErr;
 						firstterm++;
 					}
 					else {
-						if ( PutOut(term,&position,AS.hidefile,-1) < 0 ) goto ProcErr;
+						if ( PutOut(BHEAD term,&position,AS.hidefile,-1) < 0 ) goto ProcErr;
 						firstterm++;
 					}
 					AR.CompressPointer = oldipointer;
@@ -318,9 +318,9 @@ ProcErr:
 */
 
 WORD
-TestSub ARG2(WORD *,term,WORD,level)
+TestSub BARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *m, *t, *r, retvalue, funflag, j;
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum = 0;
 	NESTING n;
@@ -530,7 +530,7 @@ TooMuch:;
 						m = AT.WorkPointer;
 						AT.WorkPointer = m + *m;
 						NewSort();
-						if ( Generator(m,cbuf[AM.rbufnum].numlhs) ) {
+						if ( Generator(BHEAD m,cbuf[AM.rbufnum].numlhs) ) {
 							LowerSortLevel(); goto EndTest;
 						}
 						if ( EndSort(m,0) < 0 ) goto EndTest;
@@ -556,7 +556,7 @@ TooMuch:;
 						*AT.WorkPointer = m-AT.WorkPointer;
 						m = AT.WorkPointer;
 						AT.WorkPointer = m + *m;
-						if ( Normalize(m) ) {
+						if ( Normalize(BHEAD m) ) {
 							LOCK(ErrorMessageLock);
 							MesPrint("Error while picking up contents of bracket");
 							UNLOCK(ErrorMessageLock);
@@ -877,7 +877,7 @@ DoSpec:
 											/* Sum over terms */
 							AT.RecFlag++;
 /*							i = *t; */
-							if ( ( retvalue = TestSub(t,level) ) != 0 ) {
+							if ( ( retvalue = TestSub(BHEAD t,level) ) != 0 ) {
 /*
 								Possible size changes:
 								Note defs at 471,467,460,400,425,328
@@ -920,7 +920,7 @@ DoSpec:
 							do { *m++ = *t++; } while ( t < r );
 							r = AT.WorkPointer;
 							AT.WorkPointer = r + *r;
-							if ( Normalize(r) ) {
+							if ( Normalize(BHEAD r) ) {
 								LowerSortLevel(); goto EndTest;
 							}
 							if ( AC.ncmod != 0 ) {
@@ -937,7 +937,7 @@ DoSpec:
 									}
 								}
 							}
-							if ( *r ) StoreTerm(r);
+							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
 
@@ -987,7 +987,7 @@ DoSpec:
 						AN.EndNest += j;
 /*						(AT.NestPoin->argsize)[1] = 0;  */
 						if ( funnum == DENOMINATOR || funnum == EXPONENT ) {
-							if ( Normalize(term) ) goto EndTest;
+							if ( Normalize(BHEAD term) ) goto EndTest;
 /*
 							And size changes here?????
 */
@@ -1249,7 +1249,7 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 						NCOPY(m,t,i);
 						m = to;
                         if ( AT.WorkPointer < m+*m ) AT.WorkPointer = m + *m;
-						if ( Generator(m,cbuf[AM.rbufnum].numlhs) ) {
+						if ( Generator(BHEAD m,cbuf[AM.rbufnum].numlhs) ) {
 							LowerSortLevel(); goto InFunc;
 						}
 					}
@@ -1743,7 +1743,7 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 				while ( r < s2 ) *m++ = *r++;
 				*m++ = 1; *m++ = 1; *m++ = 3;
 				m = AT.WorkPointer;
-				if ( Normalize(AT.WorkPointer) ) goto PasErr;
+				if ( Normalize(BHEAD AT.WorkPointer) ) goto PasErr;
 				r = freeze;
 				i = *m;
 				while ( --i >= 0 && *m++ == *r++ ) {}
@@ -2020,16 +2020,16 @@ FiniCall:
 
 /*
  		#] FiniTerm :
- 		#[ Generator :			WORD Generator(term,level)
+ 		#[ Generator :			WORD Generator(BHEAD term,level)
 
 		The heart of the program
 		Here the expansion tree is set up in one giant recursion
 */
 
 WORD
-Generator ARG2(WORD *,term,WORD,level)
+Generator BARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0;
 	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, retnorm, extractbuff;
 	int *RepSto = AN.RepPoint;
@@ -2041,19 +2041,11 @@ Generator ARG2(WORD *,term,WORD,level)
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
 
-#ifdef FGPARALLEL
-	if ( A.NewLeaf > 0 ) { A.NewLeaf = 0; goto Renormalize; }
-#endif
 ReStart:
-	if ( ( replac = TestSub(term,level) ) == 0 ) {
-#ifdef FGPARALLEL
-		if ( A.sLevel <= 0 && A.MayFoliate
-		&& A.NewLeaf == 0 && Foliate(term,level) ) goto BeGone;
-		A.NewLeaf = 0;
-#endif
+	if ( ( replac = TestSub(BHEAD term,level) ) == 0 ) {
 		if ( applyflag ) { TableReset(); applyflag = 0; }
 Renormalize:
-		if ( ( retnorm = Normalize(term) ) != 0 ) {
+		if ( ( retnorm = Normalize(BHEAD term) ) != 0 ) {
 			if ( retnorm > 0 ) goto ReStart;
 			goto GenCall;
 		}
@@ -2084,7 +2076,7 @@ SkipCount:	level++;
 					if ( !*term ) goto Return0;
 				}
 				if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) {
-					ReNumber(term); Normalize(term);
+					ReNumber(BHEAD term); Normalize(BHEAD term);
 				}
 				if ( AR.PolyFun > 0 && AR.sLevel <= 0 ) {
 					if ( PrepPoly(term) != 0 ) goto Return0;
@@ -2096,7 +2088,7 @@ SkipCount:	level++;
 					if ( PutBracket(term) ) return(-1);
 					AN.RepPoint = RepSto;
 					*AT.WorkPointer = 0;
-					i = StoreTerm(termout);
+					i = StoreTerm(BHEAD termout);
 					AT.WorkPointer = termout;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
@@ -2106,7 +2098,7 @@ SkipCount:	level++;
 					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 					*AT.WorkPointer = 0;
 					AN.RepPoint = RepSto;
-					i = StoreTerm(term);
+					i = StoreTerm(BHEAD term);
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
 					return(i);
@@ -2212,7 +2204,7 @@ SkipCount:	level++;
 							if ( j >= 0 ) {
 								termout = AT.WorkPointer;
 								AT.WorkPointer = termout + *termout;
-								if ( Generator(termout,level) ) goto GenCall;
+								if ( Generator(BHEAD termout,level) ) goto GenCall;
 								AT.WorkPointer = termout;
 							}
 							else {
@@ -2285,7 +2277,7 @@ SkipCount:	level++;
 						AR.CompressPointer = cp;
 						if ( WildFill(term,term,op) < 0 ) goto GenCall;
 						AR.CompressPointer = op;
-						ReNumber(term);
+						ReNumber(BHEAD term);
 						goto Renormalize;
 					}
 				  case TYPECHISHOLM:
@@ -2463,9 +2455,9 @@ CommonEnd:
 				}
 				goto SkipCount;
 			}
-		} while ( ( i = TestMatch(term,&level) ) == 0 );
+		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
 		if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
-		if ( i > 0 ) replac = TestSub(term,level);
+		if ( i > 0 ) replac = TestSub(BHEAD term,level);
 		else replac = i;
 		if ( replac >= 0 || AT.TMout[1] != SYMMETRIZE ) {
 			*AN.RepPoint = 1;
@@ -2516,7 +2508,7 @@ AutoGen:	i = *AT.TMout;
 			A.NewLeaf = -1;
 #endif
 */
-			if ( *termout && Generator(termout,level) < 0 ) goto GenCall;
+			if ( *termout && Generator(BHEAD termout,level) < 0 ) goto GenCall;
 			AT.WorkPointer = termout;
 		}
 	}
@@ -2570,7 +2562,7 @@ AutoGen:	i = *AT.TMout;
 				if ( cbuf[extractbuff].Buffer[posisub] == 0 ) A.NewLeaf = -1;
 #endif
 */
-				if ( Generator(termout,level) < 0 ) goto GenCall;
+				if ( Generator(BHEAD termout,level) < 0 ) goto GenCall;
 #ifdef WITHPTHREADS
 				if ( dtype > 0 ) break;
 #endif
@@ -2620,7 +2612,7 @@ AutoGen:	i = *AT.TMout;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
 #endif
-					if ( Generator(termout,level) ) goto GenCall;
+					if ( Generator(BHEAD termout,level) ) goto GenCall;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) break;
 #endif
@@ -2663,7 +2655,7 @@ AutoGen:	i = *AT.TMout;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) { UNLOCK(Dollars[replac].pthreadslock); }
 #endif
-					if ( Generator(termout,level) ) goto GenCall;
+					if ( Generator(BHEAD termout,level) ) goto GenCall;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 ) break;
 #endif
@@ -2746,7 +2738,7 @@ skippedfirst:
 						AT.WorkPointer = termout + *termout;
 						*AN.RepPoint = 1;
 						AS.expchanged = 1;
-						if ( Generator(termout,level) ) goto GenCall;
+						if ( Generator(BHEAD termout,level) ) goto GenCall;
 					}
 					i--; position--;
 					comprev--;
@@ -2954,7 +2946,7 @@ doterms:
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
-					if ( Generator(termout,level) ) goto PowCall;
+					if ( Generator(BHEAD termout,level) ) goto PowCall;
 				}
 			}
 			else {
@@ -3035,7 +3027,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 	while ( *m != HAAKJE && m < mstop ) m += m[1];
 	if ( m >= mstop ) {	/* No deferred action! */
 		AT.WorkPointer = term + *term;
-		if ( Generator(term,level) ) goto DefCall;
+		if ( Generator(BHEAD term,level) ) goto DefCall;
 		AR.DeferFlag = 1;
 		AT.WorkPointer = oldwork;
 		AR.GetOneFile = oldGetOneFile;
@@ -3068,7 +3060,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 		}
 		*tstart = oldb;
 		AT.WorkPointer = termout + *termout;
-		if ( Generator(termout,level) ) goto DefCall;
+		if ( Generator(BHEAD termout,level) ) goto DefCall;
 		AR.CompressPointer = oldipointer;
 		AT.WorkPointer = termout;
 		if ( GetOneTerm(AT.WorkPointer,AR.infile->handle) <= 0 ) break;
@@ -3231,7 +3223,7 @@ PrepPoly ARG1(WORD *,term)
 				*m++ = 1;
 				NCOPY(m,r,i);
 				AT.WorkPointer = m;
-				if ( Normalize(v) ) Terminate(-1);
+				if ( Normalize(BHEAD v) ) Terminate(-1);
 				AT.WorkPointer = oldworkpointer;
 				m = w;
 				if ( *v == 4 && v[2] == 1 && (v[1]&MAXPOSITIVE) == v[1] ) {
@@ -3457,7 +3449,7 @@ retry:
 		while ( t < tt2 ) *m++ = *t++;
 		*m++ = 1; *m++ = 1; *m++ = 3; *w = WORDDIF(m,w);
 		AT.WorkPointer = m;
-		if ( Normalize(w) ) { LowerSortLevel(); goto PolyCall; }
+		if ( Normalize(BHEAD w) ) { LowerSortLevel(); goto PolyCall; }
 		if ( *w ) {
 			m = w + *w;
 			if ( m[-1] != 3 || m[-2] != 1 || m[-3] != 1 ) {
@@ -3494,7 +3486,7 @@ retry:
 			m[-1] = l3;
 			*w = WORDDIF(m,w);
 			AT.WorkPointer = m;
-			if ( StoreTerm(w) ) { LowerSortLevel(); goto PolyCall; }
+			if ( StoreTerm(BHEAD w) ) { LowerSortLevel(); goto PolyCall; }
 		}
 	}	
 	}	
@@ -3541,7 +3533,7 @@ retry:
 done:
 	AT.WorkPointer = term + *term;
 	if ( action && noac ) {
-		if ( Normalize(term) ) goto PolyCall;
+		if ( Normalize(BHEAD term) ) goto PolyCall;
 		AT.WorkPointer = term + *term;
 	}
 	return(0);

@@ -1270,11 +1270,7 @@ DoArgument ARG2(UBYTE *,s,int,par)
 					mm = ww; i = *mm;
 					while ( --i >= 0 ) *m++ = *mm++;
 					mm = AT.WorkPointer; AT.WorkPointer = m;
-#ifdef FGPARALLEL
-					A.xsortflag = 0;		/* Block foliation at this point */
-					A.MayFoliate = 0;
-#endif
-					if ( Generator(mm,C->numlhs) ) {
+					if ( Generator(BHEAD mm,C->numlhs) ) {
 						LowerSortLevel(); error = 1;
 					}
 					else if ( EndSort(mm,0) < 0 ) {
@@ -2866,7 +2862,7 @@ redo:	AR.BracketOn++;
 	*AT.WorkPointer = to - AT.WorkPointer;
 	AT.WorkPointer = to;
 	AC.BracketNormalize = 1;
-	if ( Normalize(WorkSave) ) { error = 1; AR.BracketOn = 0; }
+	if ( Normalize(BHEAD WorkSave) ) { error = 1; AR.BracketOn = 0; }
 	else {
 		w = WorkSave;
 		if ( *w == 4 || !*w ) { AR.BracketOn = 0; }
@@ -3181,7 +3177,7 @@ ReDo:
 				}
 				else {
 					if ( w[-1] != 0 ) {
-						if ( Simplify((UWORD *)w,(WORD *)(w-1),
+						if ( Simplify(BHEAD (UWORD *)w,(WORD *)(w-1),
 						CIscratC,&ncoef) ) error = 1;
 						else {
 							i = w[-1];

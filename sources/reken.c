@@ -81,9 +81,9 @@ UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
 */
 
 WORD
-Mully ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
+Mully BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	UWORD *d, *e;
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
@@ -102,7 +102,7 @@ Mully ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	d = AN.Myscrat1; e = AN.Myscrat2;
 	for ( i = 0; i < nb; i++ ) { e[i] = *b++; }
 	ne = nb;
-	if ( Simplify(a+*na,&adenom,e,&ne) ) goto MullyEr;
+	if ( Simplify(BHEAD a+*na,&adenom,e,&ne) ) goto MullyEr;
 	if ( MulLong(a,anumer,e,ne,d,&nd) ) goto MullyEr;
 	b = a+*na;
 	for ( i = 0; i < *na; i++ ) { e[i] = *b++; }
@@ -130,9 +130,9 @@ MullyEr:
 */
 
 WORD
-Divvy ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
+Divvy BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	UWORD *d,*e;
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
@@ -153,7 +153,7 @@ Divvy ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	UnPack(a,*na,&adenom,&anumer);
 	for ( i = 0; i < nb; i++ ) { e[i] = *b++; }
 	ne = nb;
-	if ( Simplify(a,&anumer,e,&ne) ) goto DivvyEr;
+	if ( Simplify(BHEAD a,&anumer,e,&ne) ) goto DivvyEr;
 	if ( MulLong(a+*na,adenom,e,ne,d,&nd) ) goto DivvyEr;
 	*na = anumer;
 	Pack(a,na,d,nd);
@@ -172,9 +172,9 @@ DivvyEr:
 */
 
 WORD
-AddRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+AddRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	UWORD *d, *e, *f, *g;
 	WORD nd, ne, nf, ng, adenom, anumer, bdenom, bnumer;
 	if ( !na ) {
@@ -281,7 +281,7 @@ AddRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 		d[0] = (UWORD)t3;
 		if ( ( d[1] = (UWORD)(t3 >> BITSINWORD) ) != 0 ) nd = 2;
 		else nd = 1;
-		if ( Simplify(c,nc,d,&nd) ) goto AddRer;
+		if ( Simplify(BHEAD c,nc,d,&nd) ) goto AddRer;
 	}
 	else {
 		d = AN.ARscrat1; e = AN.ARscrat2; f = AN.ARscrat3; g = AN.ARscrat4;
@@ -300,7 +300,7 @@ AddRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 		if ( AddLong(c,*nc,g,ng,c,nc) ) goto AddRer;
 		if ( !*nc ) return(0);
 		if ( nd ) {
-			if ( Simplify(c,nc,d,&nd) ) goto AddRer;
+			if ( Simplify(BHEAD c,nc,d,&nd) ) goto AddRer;
 			if ( MulLong(e,ne,d,nd,g,&ng) ) goto AddRer;
 			if ( MulLong(g,ng,f,nf,d,&nd) ) goto AddRer;
 		}
@@ -384,8 +384,8 @@ MulRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 		for ( i = 0; i < enumr; i++ ) xe[i] = b[i];
 		b += nb;
 		for ( i = 0; i < eden; i++ ) xg[i] = b[i];
-		if ( Simplify(xd,&dnumr,xg,&eden) ) goto MulRer;
-		if ( Simplify(xe,&enumr,xf,&dden) ) goto MulRer;
+		if ( Simplify(BHEAD xd,&dnumr,xg,&eden) ) goto MulRer;
+		if ( Simplify(BHEAD xe,&enumr,xf,&dden) ) goto MulRer;
 		if ( MulLong(xd,dnumr,xe,enumr,c,nc) ) goto MulRer;
 		if ( MulLong(xf,dden,xg,eden,xd,&dnumr) ) goto MulRer;
 		Pack(c,nc,xd,dnumr);
@@ -486,9 +486,9 @@ DivRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 */
 
 WORD
-Simplify ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
+Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	UWORD *x1,*x2,*x3;
 	UWORD *x4;
 	WORD n1,n2,n3,n4,sgn = 1;
@@ -1024,9 +1024,9 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 */
 
 WORD
-RaisPow ARG3(UWORD *,a,WORD *,na,UWORD,b)
+RaisPow BARG3(UWORD *,a,WORD *,na,UWORD,b)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD i, nu;
 	UWORD *it, *iu, c;
 	UWORD *is;
@@ -1801,7 +1801,7 @@ int TakeLongRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 	for(;;) {
 		nc = nb;
 		for ( i = 0; i < nb; i++ ) c[i] = b[i];
-		if ( RaisPow(c,&nc,power-1) ) goto TLcall;
+		if ( RaisPow(BHEAD c,&nc,power-1) ) goto TLcall;
 		if ( DivLong(a,na,c,nc,d,&nd,e,&ne) ) goto TLcall;
 		nb = -nb;
 		if ( AddLong(d,nd,b,nb,c,&nc) ) goto TLcall;
@@ -1818,7 +1818,7 @@ int TakeLongRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 			We believe this is not needed
 			UWORD one = 1;
 			if ( AddLong(b,nb,&one,1,c,&nc) ) goto TLcall;
-			if ( RaisPow(c,&nc,power-1) ) goto TLcall;
+			if ( RaisPow(BHEAD c,&nc,power-1) ) goto TLcall;
 			if ( DivLong(a,na,c,nc,d,&nd,e,&ne) ) goto TLcall;
 			if ( ne != 0 ) return(1);
 			nb = -nb;
@@ -1894,7 +1894,7 @@ CompCoef ARG2(WORD *,term1,WORD *,term2)
 	The next call should get dedicated code, as AddRat does more than
 	strictly needed. Also more attention should be given to overflow.
 */
-	if ( AddRat((UWORD *)term1,n1,(UWORD *)term2,-n2,c,&n3) ) {
+	if ( AddRat(BHEAD (UWORD *)term1,n1,(UWORD *)term2,-n2,c,&n3) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("CompCoef");
 		UNLOCK(ErrorMessageLock);
@@ -2126,9 +2126,9 @@ MakeModTable()
 */
 
 int
-Factorial ARG3(WORD,n,UWORD *,a,WORD *,na)
+Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	UWORD *b, *c;
 	WORD nc;
 	int i, j;
@@ -2263,11 +2263,11 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 				i1 = REDLENG(i1);
 				i2 = REDLENG(i2);
 				MulRat(b+1,i1,c+1,i2,ntop,&nntop);
-				Mully(ntop,&nntop,&twee,1);
+				Mully(BHEAD ntop,&nntop,&twee,1);
 				if ( nscrib ) {
 					i = (WORD)nntop; if ( i < 0 ) i = -i;
 					ntop1 = ntop + 2*i;
-					AddRat(ntop,nntop,scrib,nscrib,ntop1,&nntop1);
+					AddRat(BHEAD ntop,nntop,scrib,nscrib,ntop1,&nntop1);
 				}
 				else {
 					ntop1 = ntop; nntop1 = nntop;
@@ -2279,7 +2279,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 				ntop = scrib + i1; 
 			}
 			twonplus1 = 2*n+1;
-			Divvy(scrib,&nscrib,&twonplus1,-1);
+			Divvy(BHEAD scrib,&nscrib,&twonplus1,-1);
 			i1 = INCLENG(nscrib);
 			i2 = i1; if ( i2 < 0 ) i2 = -i2;
 			i = (WORD)(AT.bernoullis[AT.pBer[n-1]]);

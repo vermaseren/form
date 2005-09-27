@@ -2037,7 +2037,7 @@ int CompArg ARG2(WORD *,s1, WORD *,s2)
 		s1 += ARGHEAD; s2 += ARGHEAD;
 docompare:
 		while ( s1 < st1 && s2 < st2 ) {
-			if ( ( k = Compare(s1,s2,(WORD)2) ) != 0 ) {
+			if ( ( k = Compare(BHEAD s1,s2,(WORD)2) ) != 0 ) {
 				AT.comsym[3] = x[1];
 				AT.comnum[1] = x[2];
 				AT.comnum[3] = x[3];

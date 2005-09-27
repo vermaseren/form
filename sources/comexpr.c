@@ -167,7 +167,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			AC.ProtoType[1] = osize;
 			AC.ProtoType[2] = i;
 /*			AR.outfile->POfill = AR.outfile->POfull; */
-			if ( PutOut(OldWork+2,&pos,AR.outfile,0) < 0 ) {
+			if ( PutOut(BHEAD OldWork+2,&pos,AR.outfile,0) < 0 ) {
 				MesPrint("&Cannot create expression");
 				error = -1;
 			}
@@ -179,7 +179,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 				OldWork[SUBEXPSIZE+4] = 1;
 				OldWork[SUBEXPSIZE+5] = 3;
 				OldWork[SUBEXPSIZE+6] = 0;
-				if ( PutOut(OldWork+2,&pos,AR.outfile,0) < 0
+				if ( PutOut(BHEAD OldWork+2,&pos,AR.outfile,0) < 0
 				|| FlushOut(&pos,AR.outfile,0) ) {
 					MesPrint("&Cannot create expression");
 					error = -1;
@@ -613,11 +613,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		mm = s; ww = ow; i = *mm;
 		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
 		AC.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
-#ifdef FGPARALLEL
-		A.xsortflag = 0;		/* Block foliation at this point */
-		A.MayFoliate = 0;
-#endif
-		if ( Generator(ow,C->numlhs) ) {
+		if ( Generator(BHEAD ow,C->numlhs) ) {
 			AC.Eside = oldEside;
 			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
 		}

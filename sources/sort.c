@@ -347,7 +347,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 	else { S->PolyFlag = S->PolyWise = 0; }
 	*(S->PoinFill) = 0;
 
-	SplitMerge(S->sPointer,S->sTerms);
+	SplitMerge(BHEAD S->sPointer,S->sTerms);
 
 	sSpace = 0;
 	tover = over = S->sTerms;
@@ -415,7 +415,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 				ss = S->sPointer;
 				while ( ( t = *ss++ ) != 0 ) {
 					if ( *t ) S->TermsLeft++;
-					if ( PutOut(t,&position,fout,1) < 0 ) {
+					if ( PutOut(BHEAD t,&position,fout,1) < 0 ) {
 						retval = -1; goto RetRetval;
 					}
 				}
@@ -529,7 +529,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 			position = S->fPatches[S->fPatchN];
 			ss = S->sPointer;
 			while ( ( t = *ss++ ) != 0 ) {
-				if ( PutOut(t,&position,&(S->file),0) < 0 ) {
+				if ( PutOut(BHEAD t,&position,&(S->file),0) < 0 ) {
 					retval = -1; goto RetRetval;
 				}
 			}
@@ -794,9 +794,9 @@ Sflush ARG1(FILEHANDLE *,fi)
 		prune the list occasionally.
 */
 WORD
-PutOut ARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
+PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD i, *p, ret, *r, *rr, j, k, first;
 	int dobracketindex = 0;
 	LONG RetCode;
@@ -1157,9 +1157,9 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 */
 
 WORD
-AddCoef ARG2(WORD **,ps1,WORD **,ps2)
+AddCoef BARG2(WORD **,ps1,WORD **,ps2)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	SORTING *S = AT.SS;
 	WORD *s1, *s2;
 	WORD l1, l2, i;
@@ -1169,7 +1169,7 @@ AddCoef ARG2(WORD **,ps1,WORD **,ps2)
 	s1 = *ps1; s2 = *ps2;
 	GETCOEF(s1,l1);
 	GETCOEF(s2,l2);
-	if ( AddRat((UWORD *)s1,l1,(UWORD *)s2,l2,OutCoef,&OutLen) ) {
+	if ( AddRat(BHEAD (UWORD *)s1,l1,(UWORD *)s2,l2,OutCoef,&OutLen) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("AddCoef");
 		UNLOCK(ErrorMessageLock);
@@ -1260,9 +1260,9 @@ RegEnd:
 */
 
 WORD
-AddPoly ARG2(WORD **,ps1,WORD **,ps2)
+AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	SORTING *S = AT.SS;
 	WORD i;
 	WORD *s1, *s2, *m, *w, *t;
@@ -1573,7 +1573,7 @@ twogen:
 */
 		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
-			i1 = Compare(s1,s2,(WORD)(-1));
+			i1 = Compare(BHEAD s1,s2,(WORD)(-1));
 			if ( i1 > 0 ) {
 				i2 = *s1;
 				NCOPY(m,s1,i2);
@@ -1601,7 +1601,7 @@ twogen:
 */
 				i1 = REDLENG(i1);
 				i2 = REDLENG(i2);
-				if ( AddRat((UWORD *)t1,i1,(UWORD *)t2,i2,(UWORD *)m,&i) ) {
+				if ( AddRat(BHEAD (UWORD *)t1,i1,(UWORD *)t2,i2,(UWORD *)m,&i) ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("Addition of coefficients of PolyFun");
 					UNLOCK(ErrorMessageLock);
@@ -1649,9 +1649,9 @@ twogen:
 */
 
 WORD
-Compare ARG3(WORD *,term1,WORD *,term2,WORD,level)
+Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	SORTING *S = AT.SS;
 	WORD *stopper1, *stopper2, *t2;
 	WORD *s1, *s2, *t1;
@@ -1886,7 +1886,7 @@ NoPoly:
 							s1 += ARGHEAD; s2 += ARGHEAD;
 							while ( s1 < stopex1 ) {
 								if ( s2 >= stopex2 ) return(PREV(-1));
-								if ( ( c2 = Compare(s1,s2,(WORD)1) ) != 0 )
+								if ( ( c2 = Compare(BHEAD s1,s2,(WORD)1) ) != 0 )
 									return(PREV(c2));
 								s1 += *s1;
 								s2 += *s2;
@@ -2087,9 +2087,9 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 #ifdef NEWSPLITMERGE
 
 LONG
-SplitMerge ARG2(WORD **,Pointer,LONG,number)
+SplitMerge BARG2(WORD **,Pointer,LONG,number)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	SORTING *S = AT.SS;
 	WORD **pp3, **pp1, **pp2;
 	LONG nleft, nright, i, newleft, newright;
@@ -2098,20 +2098,20 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = Compare(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
 		  number--;
-		  if ( S->PolyWise ) { if ( AddPoly(pp1,pp2) == 0 ) { number = 0; } }
-		  else {               if ( AddCoef(pp1,pp2) == 0 ) { number = 0; } }
+		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) == 0 ) { number = 0; } }
+		  else {               if ( AddCoef(BHEAD pp1,pp2) == 0 ) { number = 0; } }
 		}
 		return(number);
 	}
 	pptop = Pointer + number;
 	nleft = number >> 1; nright = number - nleft;
-	newleft  = SplitMerge(Pointer,nleft);
-	newright = SplitMerge(Pointer+nleft,nright);
+	newleft  = SplitMerge(BHEAD Pointer,nleft);
+	newright = SplitMerge(BHEAD Pointer+nleft,nright);
 /*
 	We compare the last of the left with the first of the right
 	If they are already in order, we will be done quickly.
@@ -2120,15 +2120,15 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	Addition of 23-jul-1999. It makes things a bit faster.
 */
 	if ( newleft > 0 && newright > 0 &&
-	( i = Compare(Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
+	( i = Compare(BHEAD Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+nleft; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
 		  if ( S->PolyWise ) {
-			if ( AddPoly(pp1,pp2) > 0 ) pp1++;
+			if ( AddPoly(BHEAD pp1,pp2) > 0 ) pp1++;
 			else newleft--;
 		  }
 		  else {               
-			if ( AddCoef(pp1,pp2) > 0 ) pp1++;
+			if ( AddCoef(BHEAD pp1,pp2) > 0 ) pp1++;
 			else newleft--;
 		  }
 		  *pp2++ = 0; newright--;
@@ -2154,7 +2154,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
-		if ( ( i = Compare(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
 			nright--;
@@ -2165,8 +2165,8 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 			nleft--;
 		}
 		else {
-		  if ( S->PolyWise ) { if ( AddPoly(pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  else {               if ( AddCoef(pp1,pp2) > 0 ) *pp3++ = *pp1; }
+		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
+		  else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
 		  *pp1++ = 0; *pp2++ = 0; nleft--; nright--;
 		}
 	}
@@ -2181,8 +2181,9 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 #else
 
 VOID
-SplitMerge ARG2(WORD **,Pointer,LONG,number)
+SplitMerge BARG2(WORD **,Pointer,LONG,number)
 {
+	GETBIDENTITY;
 	SORTING *S = AT.SS;
 	WORD **pp3, **pp1, **pp2;
 	LONG nleft, nright, i;
@@ -2191,20 +2192,20 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	if ( number < 2 ) return;
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = Compare(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
-		  if ( S->PolyWise ) { if ( !AddPoly(pp1,pp2) ) { *pp1 = 0; } }
-		  else {               if ( !AddCoef(pp1,pp2) ) { *pp1 = 0; } }
+		  if ( S->PolyWise ) { if ( !AddPoly(BHEAD pp1,pp2) ) { *pp1 = 0; } }
+		  else {               if ( !AddCoef(BHEAD pp1,pp2) ) { *pp1 = 0; } }
 		  *pp2 = 0;
 		}
 		return;
 	}
 	pptop = Pointer + number;
 	nleft = number >> 1; nright = number - nleft;
-	SplitMerge(Pointer,nleft);
-	SplitMerge(Pointer+nleft,nright);
+	SplitMerge(BHEAD Pointer,nleft);
+	SplitMerge(BHEAD Pointer+nleft,nright);
 	if ( nleft > AN.SplitScratchSize ) {
 		AN.SplitScratchSize = (nleft*3)/2+100;
 		if ( AN.SplitScratchSize > S->Terms2InSmall/2 )
@@ -2218,7 +2219,7 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
-		if ( ( i = Compare(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
 			nright--;
@@ -2229,9 +2230,9 @@ SplitMerge ARG2(WORD **,Pointer,LONG,number)
 			nleft--;
 		}
 		else {
-		  if ( S->PolyWise ) { if ( AddPoly(pp1,pp2) > 0 ) *pp3++ = *pp1; }
+		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
 		  else {               
-			if ( AddCoef(pp1,pp2) > 0 ) *pp3++ = *pp1; 
+			if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; 
 		  }
 		  *pp1++ = 0; *pp2++ = 0; nleft--; nright--;
 		}
@@ -2563,7 +2564,7 @@ ConMer:
 					while ( i > 0 ) *m1-- = *m2--;
 					*m1 = im;
 				}
-				if ( ( im = PutOut(m1,&position,fout,1) ) < 0 ) goto ReturnError;
+				if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
 				ADDPOS(S->SizeInFile[par],im);
 				m2 = m1;
 				m1 += *m1;
@@ -2597,7 +2598,7 @@ ConMer:
 						while ( i > 0 ) *m1-- = *m2--;
 						*m1 = im;
 					}
-					if ( ( im = PutOut(m1,&position,fout,1) ) < 0 ) goto ReturnError;
+					if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
 					ADDPOS(S->SizeInFile[par],im);
 					m2 = m1;
 					m1 += *m1;
@@ -2702,7 +2703,7 @@ OneTerm:
 */
 		while ( i >>= 1 ) {
 			if ( S->tree[i] > 0 ) {
-				if ( ( c = Compare(poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+				if ( ( c = Compare(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 					S->tree[i] is the smaller. Exchange and go on.
 */
@@ -2767,7 +2768,7 @@ OneTerm:
 					  m2 -= ABS(r2) - 1;
 					  r2 = ( ( r2 > 0 ) ? (r2-1) : (r2+1) ) >> 1;
 
-					  if ( AddRat((UWORD *)m1,r1,(UWORD *)m2,r2,coef,&r3) ) {
+					  if ( AddRat(BHEAD (UWORD *)m1,r1,(UWORD *)m2,r2,coef,&r3) ) {
 						LOCK(ErrorMessageLock);
 						MesCall("MergePatches");
 						UNLOCK(ErrorMessageLock);
@@ -2902,7 +2903,7 @@ NextTerm:
 			found the smallest in the set. indicated by k.
 			write to its destination.
 */
-		if ( ( im = PutOut(poin[k],&position,fout,1) ) < 0 ) {
+		if ( ( im = PutOut(BHEAD poin[k],&position,fout,1) ) < 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("Called from MergePatches with k = %d (stream %d)",k,S->ktoi[k]);
 			UNLOCK(ErrorMessageLock);
@@ -3025,9 +3026,9 @@ PatCall2:;
 	storing and sorting.
 */
 WORD
-StoreTerm ARG1(WORD *,term)
+StoreTerm BARG1(WORD *,term)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	SORTING *S = AT.SS;
 	WORD **ss, *lfill, j, *t;
 	POSITION pp;
@@ -3047,7 +3048,7 @@ StoreTerm ARG1(WORD *,term)
 /*
 		PrintTime();
 */
-		SplitMerge(ss,over);
+		SplitMerge(BHEAD ss,over);
 		sSpace = 0;
 		if ( over > 0 ) {
 			ss[over] = 0;

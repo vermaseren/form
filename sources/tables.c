@@ -381,7 +381,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 			while ( mm < tstop ) *m++ = *mm++;
 			*termout = m - termout;
 			AT.WorkPointer = m;
-			if ( Generator(termout,level) ) {
+			if ( Generator(BHEAD termout,level) ) {
 				MesCall("DoTableExpand");
 				return(-1);
 			}
@@ -466,7 +466,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 			while ( mm < tstop ) *m++ = *mm++;
 			*termout = m - termout;
 			AT.WorkPointer = m;
-			if ( Generator(termout,level) ) {
+			if ( Generator(BHEAD termout,level) ) {
 				MesCall("DoTableExpand");
 				return(-1);
 			}

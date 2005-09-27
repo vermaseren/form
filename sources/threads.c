@@ -30,10 +30,11 @@ static int *wakeup;
 static INILOCK(wakeupmasterlock);
 static pthread_cond_t wakeupmasterconditions = PTHREAD_COND_INITIALIZER;
 static int wakeupmaster = 0;
+static int identityretval;
 
 void StartIdentity ARG0;
 void FinishIdentity(int *keyp);
-int SetIdentity ARG0;
+int SetIdentity(int *identityretval);
 void InitializeOneThread ARG1(int,identity);
 void FinalizeOneThread ARG1(int,identity);
 int RunThread ARG1(int *,dummy);
@@ -77,14 +78,13 @@ void FinishIdentity(int *keyp)
 	Assigns an integer value to a thread, starting at zero.
 */
 
-int SetIdentity ARG0
+int SetIdentity ARG1(int *,identityretval)
 {
-	int retval;
 	LOCK(numberofthreadslock);
-	retval = identityofthreads++;
+	*identityretval = identityofthreads++;
 	UNLOCK(numberofthreadslock);
-	pthread_setspecific(identitykey,(void *)(&retval));
-	return(retval);
+	pthread_setspecific(identitykey,(void *)identityretval);
+	return(*identityretval);
 }
 
 /*
@@ -94,12 +94,15 @@ int SetIdentity ARG0
 	Returns the number of the thread in our administration
 */
 
+int pcounter = 0;
+
 int WhoAmI ARG0
 {
 	int *identity;
 /*
 	First a fast exit for when there is at most one thread
 */
+	pcounter++;
 	if ( identityofthreads <= 1 ) return(0);
 /*
 	Now the reading of the key.
@@ -108,6 +111,8 @@ int WhoAmI ARG0
 	pthread_getspecific(identitykey,(void **)(&identity));
 
 	but according to the information in pthread.h it is:
+	identity = (int *)pthread_getspecific(identitykey);
+	actually it turns out to be
 */
 	identity = (int *)pthread_getspecific(identitykey);
 	return(*identity);
@@ -115,6 +120,18 @@ int WhoAmI ARG0
 
 /*
  		#] WhoAmI :
+ 		#[ BeginIdentities :
+*/
+
+VOID
+BeginIdentities ARG0
+{
+	StartIdentity();
+	SetIdentity(&identityretval);
+}
+
+/*
+ 		#] BeginIdentities :
   	#] Identity :
   	#[ StartAllThreads :
 
@@ -129,6 +146,7 @@ int StartAllThreads ARG1(int,number)
 	ALLPRIVATES *B;
 	long absize;
 	pthread_t thethread;
+	identity = WhoAmI();
 
 	threadpointers = (pthread_t *)Malloc1(sizeof(pthread_t)*number,"threadpointers");
 /*
@@ -151,8 +169,6 @@ int StartAllThreads ARG1(int,number)
 	}
 
 	numberofthreads = number;
-	StartIdentity();
-	identity = SetIdentity();
 	threadpointers[identity] = pthread_self();
 
 	for ( j = 1; j < number; j++ ) {
@@ -433,9 +449,9 @@ int LoadOneThread ARG3(int,from,int,identity,WORD *,term)
 int RunThread ARG1(int *,dummy)
 {
 	WORD *term;
-	int identity, wakeupsignal;
+	int identity, wakeupsignal, identityretv;
 	ALLPRIVATES *B;
-	identity = SetIdentity();
+	identity = SetIdentity(&identityretv);
 	B = AB+identity;
 	threadpointers[identity] = pthread_self();
 	InitializeOneThread(identity);
@@ -466,9 +482,9 @@ int RunThread ARG1(int *,dummy)
 				term = AT.WorkPointer;
 				AT.WorkPointer = term + *term;
 				AN.RepPoint = AT.RepCount + 1;
-				AR.CurDum = ReNumber(term);
+				AR.CurDum = ReNumber(BHEAD term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				if ( Generator(term,0) ) {
+				if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel();
 					LOCK(ErrorMessageLock);
 					MesPrint("Error in processing one term in thread %d in module %d",identity,AC.CModule);
@@ -652,7 +668,7 @@ ThreadProcessor()
 				term[3] = i;
 				SeekScratch(AR.outfile,&position);
 				e->onfile = position;
-				if ( PutOut(term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+				if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 /*
 				Now, if we are running threads we have to start them.
 				Otherwise we have to do things ourselves.
@@ -719,9 +735,9 @@ ThreadProcessor()
 					  }
 					  AT.WorkPointer = term + *term;
 					  AN.RepPoint = AT.RepCount + 1;
-					  AR.CurDum = ReNumber(term);
+					  AR.CurDum = ReNumber(BHEAD term);
 					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-					  if ( Generator(term,0) ) {
+					  if ( Generator(BHEAD term,0) ) {
 						LowerSortLevel(); goto ProcErr;
 					  }
 					  AN.ninterms += dd;

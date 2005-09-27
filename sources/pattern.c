@@ -46,9 +46,9 @@
 */
 
 WORD
-TestMatch ARG2(WORD *,term,WORD *,level)
+TestMatch BARG2(WORD *,term,WORD *,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *ll, *m, *w, *llf, *OldWork, *ww, *mm;
 	WORD power = 0, match = 0, *rep, i, msign = 0;
 	int numdollars = 0;
@@ -103,7 +103,7 @@ TestMatch ARG2(WORD *,term,WORD *,level)
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
 		NewSort();
-		if ( Generator(OldWork,C->numlhs) ) {
+		if ( Generator(BHEAD OldWork,C->numlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = OldWork;
 			return(-1);

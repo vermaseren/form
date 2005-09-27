@@ -108,7 +108,7 @@ int LoadOpti ARG1(WORD,numexpr)
 	term = AT.WorkPointer;
 	while ( GetTerm(term) > 0 ) {
 		AT.WorkPointer = term + *term;
-		Normalize(term);
+		Normalize(BHEAD term);
 		AT.WorkPointer = term + *term;
 /*
 		First hunt objects. Some we don't accept!
@@ -1423,7 +1423,7 @@ void HuntPowers ARG2(LONG,number,WORD,power)
 					extra = quotient + quotient[0];
 					if ( DivRat((UWORD *)(r1+4),n1,(UWORD *)(quotient+4),nq
 						,(UWORD *)(extra+4),&n3) ) goto callHP;
-					if ( Mully((UWORD *)(extra+4),&n3,(UWORD *)(&power),1) ) goto callHP;
+					if ( Mully(BHEAD (UWORD *)(extra+4),&n3,(UWORD *)(&power),1) ) goto callHP;
 					n2 = INCLENG(n3);
 					extra[1] = LNUMBER; extra[2] = ABS(n2)+2; extra[3] = n2;
 					m3 = extra + extra[2] + 1;

@@ -49,7 +49,7 @@ execarg ARG2(WORD *,term,WORD,level)
 		AT.WorkPointer = v;
 		start = t; AC.Eside = LHSIDEX;
 		NewSort();
-		if ( Generator(factor,C->numlhs) ) {
+		if ( Generator(BHEAD factor,C->numlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = oldwork;
 			return(-1);
@@ -243,13 +243,13 @@ HaveTodo:
 							size = REDLENG(size);
 							if ( scale > 0 ) {
 								for ( jj = 0; jj < scale; jj++ ) {
-									if ( Mully((UWORD *)rstop,&size,(UWORD *)(r+1),k) )
+									if ( Mully(BHEAD (UWORD *)rstop,&size,(UWORD *)(r+1),k) )
 										goto execargerr;
 								}
 							}
 							else {
 								for ( jj = 0; jj > scale; jj-- ) {
-									if ( Divvy((UWORD *)rstop,&size,(UWORD *)(r+1),k) )
+									if ( Divvy(BHEAD (UWORD *)rstop,&size,(UWORD *)(r+1),k) )
 										goto execargerr;
 								}
 							}
@@ -479,7 +479,7 @@ HaveTodo:
 							if ( MultDo(r1,AT.mulpat) ) goto execargerr;
 							AT.WorkPointer = r1 + *r1;
 						}
-						if ( Generator(r1,level) ) goto execargerr;
+						if ( Generator(BHEAD r1,level) ) goto execargerr;
 						AT.WorkPointer = r1;
 					}
 				}
@@ -498,7 +498,7 @@ HaveTodo:
 						if ( MultDo(m,AT.mulpat) ) goto execargerr;
 						AT.WorkPointer = m + *m;
 					}
-					if ( Generator(m,level) ) goto execargerr;
+					if ( Generator(BHEAD m,level) ) goto execargerr;
 					AT.WorkPointer = r1;
 				}
 				if ( EndSort(AT.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
@@ -1339,7 +1339,7 @@ oneterm:;
 		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
 	C->numlhs = oldnumlhs;
-	if ( action && Normalize(term) ) goto execargerr;
+	if ( action && Normalize(BHEAD term) ) goto execargerr;
 	AT.WorkPointer = oldwork;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	AT.pWorkPointer = oldppointer;
@@ -1377,11 +1377,11 @@ execterm ARG2(WORD *,term,WORD,level)
 				t1 = oldworkpointer;
 				i = *term; while ( --i >= 0 ) *t1++ = *term++;
 				AT.WorkPointer = t1;
-				if ( Generator(oldworkpointer,level) ) goto exectermerr;
+				if ( Generator(BHEAD oldworkpointer,level) ) goto exectermerr;
 			}
 		}
 		else {
-			if ( Generator(term,level) ) goto exectermerr;
+			if ( Generator(BHEAD term,level) ) goto exectermerr;
 		}
 		if ( buffer1 ) {
 			M_free((void *)buffer1,"buffer in sort statement");
@@ -1396,7 +1396,7 @@ execterm ARG2(WORD *,term,WORD,level)
 		t1 = oldworkpointer;
 		i = *term; while ( --i >= 0 ) *t1++ = *term++;
 		AT.WorkPointer = t1;
-		if ( Generator(oldworkpointer,level) ) goto exectermerr;
+		if ( Generator(BHEAD oldworkpointer,level) ) goto exectermerr;
 	}
 	M_free(buffer1,"buffer in term statement");
 	AT.WorkPointer = oldworkpointer;

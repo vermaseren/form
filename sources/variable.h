@@ -91,14 +91,15 @@ extern FILE **FileStructs;
 #define AP A.P
 #define AS A.S
 #define AX A.X
-#define AN B->N
-#define AR B->R
-#define AT B->T
-/*
+#ifdef ITHREADS 
 #define AN AB[identity].N
 #define AR AB[identity].R
 #define AT AB[identity].T
-*/
+#else
+#define AN B->N
+#define AR B->R
+#define AT B->T
+#endif
 #define AN0 AB[from].N
 #define AR0 AB[from].R
 #define AT0 AB[from].T

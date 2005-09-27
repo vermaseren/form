@@ -269,6 +269,7 @@ static UWORD *RLscratE = 0;
 VOID
 RatToLine ARG2(UWORD *,a,WORD,na)
 {
+	GETIDENTITY;
 	WORD adenom, anumer;
 	if ( na < 0 ) na = -na;
 	if ( AC.OutNumberType == RATIONALMODE ) {
@@ -313,12 +314,12 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 		c = RLscratE; for ( i = 0; i < 2*na; i++ ) c[i] = a[i];
 		UnPack(c,na,&adenom,&anumer);
 		while ( BigLong(c,anumer,c+na,adenom) >= 0 ) {
-			Divvy(c,&na,&b,1);
+			Divvy(BHEAD c,&na,&b,1);
 			UnPack(c,na,&adenom,&anumer);
 			exponent++;
 		}		
 		while ( BigLong(c,anumer,c+na,adenom) < 0 ) {
-			Mully(c,&na,&b,1);
+			Mully(BHEAD c,&na,&b,1);
 			UnPack(c,na,&adenom,&anumer);
 			exponent--;
 		}		
@@ -330,7 +331,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 		*out++ = dig[0]+'0'; *out++ = '.';
 		while ( newl && i < AC.OutNumberType ) {
 			Pack(c,&newl,den,adenom);
-			Mully(c,&newl,&b,1);
+			Mully(BHEAD c,&newl,&b,1);
 			na = newl;
 			UnPack(c,na,&adenom,&anumer);
 			den = c + na;

@@ -5,6 +5,10 @@
 #include "portsignals.h"
 #endif
 
+#ifdef WITHPTHREADS
+extern int pcounter;
+#endif
+
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
 /*
@@ -532,6 +536,11 @@ StartVariables ARG0
 	AC.NumWildcardNames = 0;
 	AC.WildcardBufferSize = 50;
 	AC.WildcardNames = (UBYTE *)Malloc1((LONG)AC.WildcardBufferSize,"argument list names");
+#ifndef WITHPTHREADS
+	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
+				,"argument list names");
+	AT.WildcardBufferSize = AC.WildcardBufferSize;
+#endif
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)"1",0,0);
@@ -887,6 +896,9 @@ main ARG2(int,argc,char **,argv)
 #ifdef PARALLEL
 	if ( PF_Init(&argc,&argv) ) exit(-1);
 #endif
+#ifdef WITHPTHREADS
+	BeginIdentities();
+#endif
 	StartFiles();
 	StartVariables();
 
@@ -927,6 +939,9 @@ main ARG2(int,argc,char **,argv)
 	Globalize(1);
 	TimeCPU(0);
 	PreProcessor();
+#ifdef WITHPTHREADS
+MesPrint("pcounter = %l",pcounter);
+#endif
 	Terminate(0);
 	return(0);
 }
@@ -1000,6 +1015,9 @@ dontremove:;
 VOID
 Terminate ARG1(int,errorcode)
 {
+#ifdef WITHPTHREADS
+MesPrint("pcounter = %l",pcounter);
+#endif
 #ifdef TRAPSIGNALS
 	exitInProgress=1;
 #endif

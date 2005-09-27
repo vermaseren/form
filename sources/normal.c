@@ -45,12 +45,12 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 */
 
 WORD
-Normalize ARG1(WORD *,term)
+Normalize BARG1(WORD *,term)
 {
 /*
   	#[ Declarations :
 */
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m, *r, i, j, k, l, nsym;
 	WORD shortnum, stype;
 	WORD *stop, *to = 0, *from = 0;
@@ -169,14 +169,14 @@ conscan:;
 						  i = t[1];
 						  if ( i > 0 ) {
 							while ( i > 0 ) {
-								if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)m,nnum) )
+								if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)m,nnum) )
 										goto FromNorm;
 								i--;
 							}
 						  }
 						  else if ( i < 0 ) {
 							while ( i < 0 ) {
-								if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)m,nnum) )
+								if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)m,nnum) )
 										goto FromNorm;
 								i++;
 							}
@@ -205,15 +205,15 @@ conscan:;
 				}
 				lnum[0] = *t;
 				nnum = 1;
-				if ( t[1] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[1]))) )
+				if ( t[1] && RaisPow(BHEAD (UWORD *)lnum,&nnum,(UWORD)(ABS(t[1]))) )
 					goto FromNorm;
 				ncoef = REDLENG(ncoef);
 				if ( t[1] < 0 ) {
-					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				else if ( t[1] > 0 ) {
-					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				ncoef = INCLENG(ncoef);
@@ -350,10 +350,10 @@ NextSymbol:;
 						else if ( t[3] == 0 ) goto NormZZ;
 						goto NormZero;
 					}
-					if ( t[3] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
+					if ( t[3] && RaisPow(BHEAD (UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
 					ncoef = REDLENG(ncoef);
 					if ( t[3] < 0 ) {
-						if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
+						if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
 #ifdef WITHPTHREADS
 							if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
@@ -361,7 +361,7 @@ NextSymbol:;
 						}
 					}
 					else if ( t[3] > 0 ) {
-						if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
+						if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
 #ifdef WITHPTHREADS
 							if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
 #endif
@@ -445,7 +445,7 @@ NextSymbol:;
 									nnum = 1;
 								}
 								ncoef = REDLENG(ncoef);
-								if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+								if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 									goto FromNorm;
 								ncoef = INCLENG(ncoef);
 							}
@@ -477,11 +477,11 @@ NextSymbol:;
 */
 				if ( t[FUNHEAD] == -SNUMBER && t[1] == FUNHEAD+2
 											&& t[FUNHEAD+1] >= 0 ) {
-					if ( Factorial(t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
+					if ( Factorial(BHEAD t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
 						goto FromNorm;
 MulIn:
 					ncoef = REDLENG(ncoef);	
-					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
 				else pcom[ncom++] = t;
@@ -503,10 +503,10 @@ MulIn:
 					while ( lnum[mnum-1] == 0 ) mnum--;
 					if ( nnum < 0 ) mnum = -mnum;
 					ncoef = REDLENG(ncoef);	
-					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,mnum) ) goto FromNorm;
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,mnum) ) goto FromNorm;
 					mnum = inum;
 					while ( lnum[inum+mnum-1] == 0 ) mnum--;
-					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)(lnum+inum),mnum) ) goto FromNorm;
+					if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)(lnum+inum),mnum) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					if ( t[1] == FUNHEAD+4 && t[FUNHEAD+1] == 1
 					 && t[FUNHEAD+3] == -1 ) ncoef = -ncoef; 
@@ -611,7 +611,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					}
 					else { lnum[0] = x; nnum = 1; }
 					ncoef = REDLENG(ncoef);
-					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
@@ -913,10 +913,10 @@ loadnew2:
 				break;
 			case INVERSEFACTORIAL:
 				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] >= 0 ) {
-					if ( Factorial(t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
+					if ( Factorial(BHEAD t[FUNHEAD+1],(UWORD *)lnum,&nnum) )
 						goto FromNorm;
 					ncoef = REDLENG(ncoef);	
-					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+					if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
 				else {
@@ -943,7 +943,7 @@ nospec:				pcom[ncom++] = t;
 				break;
 			case LNUMBER :
 				ncoef = REDLENG(ncoef);
-				if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;
+				if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;
 				ncoef = INCLENG(ncoef);
 				break;
 			case SNUMBER :
@@ -957,14 +957,14 @@ nospec:				pcom[ncom++] = t;
 				}
 				lnum[0] = t[2];
 				nnum = 1;
-				if ( t[3] && RaisPow((UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
+				if ( t[3] && RaisPow(BHEAD (UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
 				ncoef = REDLENG(ncoef);
 				if ( t[3] < 0 ) {
-					if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				else if ( t[3] > 0 ) {
-					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
 						goto FromNorm;
 				}
 				ncoef = INCLENG(ncoef);
@@ -1086,10 +1086,10 @@ ScanCont:		while ( t < r ) {
 					goto defaultcase;
 				}
 				ncoef = REDLENG(ncoef);
-				if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,nc) )
+				if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,nc) )
 						goto FromNorm;
 				if ( nc < 0 ) nc = -nc;
-				if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)(AT.WorkPointer+nc),nc) )
+				if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)(AT.WorkPointer+nc),nc) )
 						goto FromNorm;
 				ncoef = INCLENG(ncoef);
 				}
@@ -1151,7 +1151,7 @@ ScanCont:		while ( t < r ) {
 					else goto NoInteg;
 					if ( num == 0 ) goto NormZero;
 					ncoef = REDLENG(ncoef);
-					if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,num) )
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,num) )
 						goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					break;
@@ -1554,7 +1554,7 @@ NoRep:
 				if ( *t < 0 ) { *AT.WorkPointer = -*t; j = -1; }
 				else { *AT.WorkPointer = *t; j = 1; }
 				ncoef = REDLENG(ncoef);
-				if ( Divvy((UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,j) )
+				if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)AT.WorkPointer,j) )
 					goto FromNorm;
 				ncoef = INCLENG(ncoef);
 				goto DropDen;
@@ -1661,7 +1661,7 @@ docontract:
 						j = 1;
 WithFix:				shortnum = k;
 						ncoef = REDLENG(ncoef);
-						if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)(&shortnum),j) )
+						if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)(&shortnum),j) )
 							goto FromNorm;
 						ncoef = INCLENG(ncoef);
 					}
@@ -1983,7 +1983,7 @@ onegammamatrix:
 							else {
 								shortnum = 2;
 								ncoef = REDLENG(ncoef);
-								if ( Mully((UWORD *)AT.n_coef,&ncoef,(UWORD *)(&shortnum),1) ) goto FromNorm;
+								if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)(&shortnum),1) ) goto FromNorm;
 								ncoef = INCLENG(ncoef);
 							}
 						}
@@ -2700,7 +2700,7 @@ DoTheta ARG1(WORD *,t)
 	ta += ARGHEAD; tb += ARGHEAD;
 	while ( ta < stopa ) {
 		if ( tb >= stopb ) return(0);
-		if ( ( ia = Compare(ta,tb,(WORD)1) ) < 0 ) return(0);
+		if ( ( ia = Compare(BHEAD ta,tb,(WORD)1) ) < 0 ) return(0);
 		if ( ia > 0 ) return(1);
 		ta += *ta;
 		tb += *tb;

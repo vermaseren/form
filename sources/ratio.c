@@ -329,7 +329,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 	}
 	*AN.RepPoint = 1;
 	AS.expchanged = 1;
-	if ( Generator(termout,level) ) {
+	if ( Generator(BHEAD termout,level) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("BinomGen");
 		UNLOCK(ErrorMessageLock);
@@ -402,7 +402,7 @@ DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		while ( C->Buffer[from] ) {
 			if ( InsertTerm(term,replac,extractbuff,C->Buffer+from,termout,0) < 0 ) goto SumF1Call;
 			AT.WorkPointer = termout + *termout;
-			if ( Generator(termout,level) < 0 ) goto SumF1Call;
+			if ( Generator(BHEAD termout,level) < 0 ) goto SumF1Call;
 			from += C->Buffer[from];
 		}
 		ival += iinc;
@@ -546,7 +546,7 @@ DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		NCOPY(to,from,i);
 		from = AT.WorkPointer;
 		AT.WorkPointer = to;
-		if ( Generator(from,level) < 0 ) goto SumF2Call;
+		if ( Generator(BHEAD from,level) < 0 ) goto SumF2Call;
 		if ( --isum <= 0 ) break;
 		ival += iinc;
 		t[3] = ival;

@@ -5,6 +5,18 @@
   	#[ ARG definitions :
 */
 
+#ifdef WITHPTHREADS
+#define PHEAD  ALLPRIVATES *,
+#define PHEAD0 ALLPRIVATES *
+#define BHEAD  B,
+#define BHEAD0 B
+#else
+#define PHEAD
+#define PHEAD0
+#define BHEAD
+#define BHEAD0
+#endif
+
 #ifdef ANSI
 /*
 	First the declaration macro's. They are to keep the code portable.
@@ -33,6 +45,41 @@
 #define ARG10(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9,xa,ya) \
 			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9,xa ya)
 
+#ifdef WITHPTHREADS
+#define BARG0 (ALLPRIVATES *B)
+#define BARG1(x1,y1) (ALLPRIVATES *B,x1 y1)
+#define BARG2(x1,y1,x2,y2) (ALLPRIVATES *B,x1 y1,x2 y2)
+#define BARG3(x1,y1,x2,y2,x3,y3) (ALLPRIVATES *B,x1 y1,x2 y2,x3 y3)
+#define BARG4(x1,y1,x2,y2,x3,y3,x4,y4) (ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4)
+#define BARG5(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5) (ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4,x5 y5)
+#define BARG6(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6) \
+			(ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6)
+#define BARG7(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7) \
+			(ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7)
+#define BARG8(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8) \
+			(ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8)
+#define BARG9(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9) \
+			(ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9)
+#define BARG10(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9,xa,ya) \
+			(ALLPRIVATES *B,x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9,xa ya)
+#else
+#define BARG0 ARG0
+#define BARG1(x1,y1) (x1 y1)
+#define BARG2(x1,y1,x2,y2) (x1 y1,x2 y2)
+#define BARG3(x1,y1,x2,y2,x3,y3) (x1 y1,x2 y2,x3 y3)
+#define BARG4(x1,y1,x2,y2,x3,y3,x4,y4) (x1 y1,x2 y2,x3 y3,x4 y4)
+#define BARG5(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5) (x1 y1,x2 y2,x3 y3,x4 y4,x5 y5)
+#define BARG6(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6) \
+			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6)
+#define BARG7(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7) \
+			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7)
+#define BARG8(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8) \
+			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8)
+#define BARG9(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9) \
+			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9)
+#define BARG10(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9,xa,ya) \
+			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9,xa ya)
+#endif
 #define DECLARE(x,y) x y ;
  
 #else
@@ -277,11 +324,12 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER
 #define LOCK(x)       pthread_mutex_lock(&(x))
 #define UNLOCK(x)     pthread_mutex_unlock(&(x))
-/*
+#define GETBIDENTITY
+#ifdef ITHREADS
 #define GETIDENTITY   int identity = WhoAmI();
-*/
+#else
 #define GETIDENTITY   int identity = WhoAmI(); ALLPRIVATES *B = AB+identity;
-
+#endif
 #else
 
 #define EXTERNLOCK(x)
@@ -289,6 +337,7 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #define LOCK(x) 
 #define UNLOCK(x)
 #define GETIDENTITY
+#define GETBIDENTITY
 
 #endif
 
@@ -313,11 +362,11 @@ DECLARE(UBYTE *StrCopy,(UBYTE *,UBYTE *))
 DECLARE(UBYTE *WrtPower,(UBYTE *,WORD))
 DECLARE(WORD AccumGCD,(UWORD *,WORD *,UWORD *,WORD))
 DECLARE(VOID AddArgs,(WORD *,WORD *,WORD *))
-DECLARE(WORD AddCoef,(WORD **,WORD **))
+DECLARE(WORD AddCoef,(PHEAD WORD **,WORD **))
 DECLARE(WORD AddLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
 DECLARE(WORD AddPLon,(UWORD *,WORD,UWORD *,WORD,UWORD *,UWORD *))
-DECLARE(WORD AddPoly,(WORD **,WORD **))
-DECLARE(WORD AddRat,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
+DECLARE(WORD AddPoly,(PHEAD WORD **,WORD **))
+DECLARE(WORD AddRat,(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
 DECLARE(VOID AddToLine,(UBYTE *))
 DECLARE(WORD AddWild,(WORD,WORD,WORD))
 DECLARE(WORD BigLong,(UWORD *,WORD,UWORD *,WORD))
@@ -333,7 +382,7 @@ DECLARE(int CompArg,(WORD *,WORD *))
 DECLARE(WORD CompCoef,(WORD *, WORD *))
 DECLARE(WORD CompGroup,(WORD,WORD **,WORD *,WORD *,WORD))
 DECLARE(WORD CompWord,(UBYTE *,char *))
-DECLARE(WORD Compare,(WORD *,WORD *,WORD))
+DECLARE(WORD Compare,(PHEAD WORD *,WORD *,WORD))
 DECLARE(WORD CopyToComp,ARG0)
 DECLARE(WORD CountDo,(WORD *,WORD *))
 DECLARE(WORD CountFun,(WORD *,WORD *))
@@ -344,7 +393,7 @@ DECLARE(VOID DetVars,(WORD *,WORD))
 DECLARE(WORD Distribute,(DISTRIBUTE *,WORD))
 DECLARE(WORD DivLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *,UWORD *,WORD *))
 DECLARE(WORD DivRat,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD Divvy,(UWORD *,WORD *,UWORD *,WORD))
+DECLARE(WORD Divvy,(PHEAD UWORD *,WORD *,UWORD *,WORD))
 DECLARE(WORD DoDelta,(WORD *))
 DECLARE(WORD DoDelta3,(WORD *,WORD))
 DECLARE(WORD DoTableExpansion,(WORD *,WORD))
@@ -370,7 +419,7 @@ DECLARE(WORD EpfFind,(WORD *,WORD *))
 DECLARE(WORD EpfGen,(WORD,WORD *,WORD *,WORD *,WORD))
 DECLARE(WORD EqualArg,(WORD *,WORD,WORD))
 DECLARE(WORD Evaluate,(UBYTE **))
-DECLARE(int Factorial,(WORD,UWORD *,WORD *))
+DECLARE(int Factorial,(PHEAD WORD,UWORD *,WORD *))
 DECLARE(int Bernoulli,(WORD,UWORD *,WORD *))
 DECLARE(WORD FindAll,(WORD *,WORD *,WORD,WORD *))
 DECLARE(WORD FindMulti,(WORD *,WORD *))
@@ -383,10 +432,10 @@ DECLARE(VOID FiniLine,ARG0)
 DECLARE(WORD FiniTerm,(WORD *,WORD *,WORD *,WORD,WORD))
 DECLARE(VOID FlushCon,ARG0)
 DECLARE(WORD FlushOut,(POSITION *,FILEHANDLE *,int))
-DECLARE(VOID FunLevel,(WORD *))
+DECLARE(VOID FunLevel,(PHEAD WORD *))
 DECLARE(VOID GarbHand,ARG0)
 DECLARE(WORD GcdLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD Generator,(WORD *,WORD))
+DECLARE(WORD Generator,(PHEAD WORD *,WORD))
 DECLARE(LONG Get1Long,(UBYTE *))
 DECLARE(WORD GetBinom,(UWORD *,WORD *,WORD,WORD))
 DECLARE(WORD GetFromStore,(WORD *,POSITION *,RENUMBER,WORD *,WORD))
@@ -433,11 +482,11 @@ DECLARE(WORD MesSet,(WORD))
 DECLARE(WORD Modulus,(WORD *))
 DECLARE(WORD MulLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
 DECLARE(WORD MulRat,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD Mully,(UWORD *,WORD *,UWORD *,WORD))
+DECLARE(WORD Mully,(PHEAD UWORD *,WORD *,UWORD *,WORD))
 DECLARE(WORD MultDo,(WORD *,WORD *))
 DECLARE(WORD NewSort,ARG0)
 DECLARE(WORD ExtraSymbol,(WORD,WORD,WORD,WORD *))
-DECLARE(WORD Normalize,(WORD *))
+DECLARE(WORD Normalize,(PHEAD WORD *))
 DECLARE(WORD OpenTemp,ARG0)
 DECLARE(VOID Pack,(UWORD *,WORD *,UWORD *,WORD ))
 DECLARE(LONG PasteFile,(WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD))
@@ -452,13 +501,13 @@ DECLARE(VOID PrtTerms,ARG0)
 DECLARE(WORD PutBracket,(WORD *))
 DECLARE(LONG PutIn,(FILEHANDLE *,POSITION *,WORD *,WORD **,int))
 DECLARE(WORD PutInStore,(INDEXENTRY *,WORD))
-DECLARE(WORD PutOut,(WORD *,POSITION *,FILEHANDLE *,WORD))
+DECLARE(WORD PutOut,(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD))
 DECLARE(UWORD Quotient,(UWORD *,WORD *,WORD))
-DECLARE(WORD RaisPow,(UWORD *,WORD *,UWORD))
+DECLARE(WORD RaisPow,(PHEAD UWORD *,WORD *,UWORD))
 DECLARE(VOID RatToLine,(UWORD *,WORD))
 DECLARE(WORD RatioFind,(WORD *,WORD *))
 DECLARE(WORD RatioGen,(WORD *,WORD *,WORD,WORD))
-DECLARE(WORD ReNumber,(WORD *))
+DECLARE(WORD ReNumber,(PHEAD WORD *))
 DECLARE(WORD ReadLHS,ARG0)
 DECLARE(WORD ReadRHS,(WORD))
 DECLARE(WORD ReadSnum,(UBYTE **))
@@ -475,15 +524,15 @@ DECLARE(VOID SetEndHScratch,(FILEHANDLE *,POSITION *))
 DECLARE(WORD SetFileIndex,ARG0)
 DECLARE(WORD SetParams,ARG0)
 DECLARE(WORD Sflush,(FILEHANDLE *))
-DECLARE(WORD Simplify,(UWORD *,WORD *,UWORD *,WORD *))
+DECLARE(WORD Simplify,(PHEAD UWORD *,WORD *,UWORD *,WORD *))
 DECLARE(WORD SkipWhite,ARG0)
 DECLARE(WORD SortWild,(WORD *,WORD))
 #ifdef NEWSPLITMERGE
-DECLARE(LONG SplitMerge,(WORD **,LONG))
+DECLARE(LONG SplitMerge,(PHEAD WORD **,LONG))
 #else
-DECLARE(VOID SplitMerge,(WORD **,LONG))
+DECLARE(VOID SplitMerge,(PHEAD WORD **,LONG))
 #endif
-DECLARE(WORD StoreTerm,(WORD *))
+DECLARE(WORD StoreTerm,(PHEAD WORD *))
 DECLARE(WORD StrCcmp,(UBYTE *, char *))
 DECLARE(VOID StrNcop,(UBYTE *, UBYTE *, WORD))
 DECLARE(WORD SubEval,(UBYTE **))
@@ -499,8 +548,8 @@ DECLARE(WORD TenVec,(WORD *,WORD *,WORD,WORD))
 DECLARE(WORD TenVecFind,(WORD *,WORD *))
 DECLARE(WORD TermRenumber,(WORD *,RENUMBER,WORD))
 DECLARE(VOID TestDrop,ARG0)
-DECLARE(WORD TestMatch,(WORD *,WORD *))
-DECLARE(WORD TestSub,(WORD *,WORD))
+DECLARE(WORD TestMatch,(PHEAD WORD *,WORD *))
+DECLARE(WORD TestSub,(PHEAD WORD *,WORD))
 DECLARE(LONG TimeCPU,(WORD))
 DECLARE(LONG Timer,ARG0)
 DECLARE(WORD ToStorage,(EXPRESSIONS,POSITION *))
@@ -662,6 +711,7 @@ DECLARE(SETUPPARAMETERS *GetSetupPar,(UBYTE *))
 DECLARE(int RecalcSetups,ARG0)
 DECLARE(int AllocSetups,ARG0)
 DECLARE(SORTING *AllocSort,(LONG,LONG,LONG,LONG,int,int,LONG))
+DECLARE(VOID AllocSortFileName,(SORTING *))
 DECLARE(UBYTE *LoadInputFile,(UBYTE *,int))
 DECLARE(UBYTE GetInput,ARG0)
 DECLARE(VOID ClearPushback,ARG0)
@@ -1115,6 +1165,7 @@ DECLARE(LONG FillInputGZIP,(FILEHANDLE *,POSITION *,UBYTE *,LONG,int))
 #endif
 
 #ifdef WITHPTHREADS
+DECLARE(VOID BeginIdentities,ARG0)
 DECLARE(int WhoAmI,ARG0)
 DECLARE(int StartAllThreads,(int))
 DECLARE(int GetAvailable,ARG0)

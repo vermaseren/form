@@ -21,17 +21,18 @@
 
 WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
 {
+	GETIDENTITY;
 	WORD *t, *pbuffer;
 	if ( NewSort() ) { return(0); }
 	if ( NewSort() ) { LowerSortLevel(); return(0); }
 	t = poly1;
 	while ( *t ) {
-		if ( StoreTerm(t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
+		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
 		t += *t;
 	}
 	t = poly2;
 	while ( *t ) {
-		if ( StoreTerm(t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
+		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
 		t += *t;
 	}
 	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
@@ -50,18 +51,19 @@ WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
 
 WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 {
+	GETIDENTITY;
 	WORD *t, *tt, *pbuffer;
 	if ( NewSort() ) { return(0); }
 	if ( NewSort() ) { LowerSortLevel(); return(0); }
 	t = poly1;
 	while ( *t ) {
-		if ( StoreTerm(t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
+		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
 		t += *t;
 	}
 	t = poly2;
 	while ( *t ) {
 		tt = t + *t; tt[-1] = -tt[-1];
-		if ( StoreTerm(t) ) {
+		if ( StoreTerm(BHEAD t) ) {
 			tt[-1] = -tt[-1];
 			LowerSortLevel(); LowerSortLevel(); return(0);
 		}
@@ -117,7 +119,7 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 			*oldwork = w - oldwork;
 			AT.WorkPointer = w;
 			tt += *tt;
-			if ( Normalize(oldwork) ) goto abortion;
+			if ( Normalize(BHEAD oldwork) ) goto abortion;
 			if ( AC.ncmod != 0 ) {
 				if ( Modulus(oldwork) ) goto abortion;
 				if ( *oldwork == 0 ) continue;
@@ -131,9 +133,9 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 					goto abortion;
 				}
 				if ( PutBracket(oldwork) ) goto abortion;
-				StoreTerm(w);
+				StoreTerm(BHEAD w);
 			}
-			else if ( StoreTerm(oldwork) ) goto abortion;
+			else if ( StoreTerm(BHEAD oldwork) ) goto abortion;
 		}
 		t += *t;
 	}
@@ -391,7 +393,7 @@ dosub:
 			if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
 			t1 = n1 + *n1;
 			while ( *t1 ) {
-				if ( StoreTerm(t1) ) { LowerSortLevel(); LowerSortLevel(); goto aborteer; };
+				if ( StoreTerm(BHEAD t1) ) { LowerSortLevel(); LowerSortLevel(); goto aborteer; };
 				t1 += *t1;
 			}
 			t2 = n2 + *n2;
@@ -418,7 +420,7 @@ dosub:
 				w[-1] = ncoef1;
 				*AT.WorkPointer = w-AT.WorkPointer;
 				AT.WorkPointer = w;
-				if ( StoreTerm(ow) ) {
+				if ( StoreTerm(BHEAD ow) ) {
 					LowerSortLevel(); LowerSortLevel(); goto aborteer;
 				};
 				t2 += *t2;
@@ -977,7 +979,7 @@ WORD *PolynoNormalize ARG1(WORD *,poly)
 		}
 		NCOPY(w,t,i);
 		AT.WorkPointer = w;
-		if ( Normalize(oldwork) ) goto aborteer;
+		if ( Normalize(BHEAD oldwork) ) goto aborteer;
 		if ( *oldwork == 0 ) continue;
 		AT.WorkPointer = oldwork + *oldwork;
 		GETSTOP(oldwork,w);
@@ -1000,9 +1002,9 @@ WORD *PolynoNormalize ARG1(WORD *,poly)
 				goto aborteer;
 			}
 			if ( PutBracket(oldwork) ) goto aborteer;
-			StoreTerm(w);
+			StoreTerm(BHEAD w);
 		}
-		else if ( StoreTerm(oldwork) ) goto aborteer;
+		else if ( StoreTerm(BHEAD oldwork) ) goto aborteer;
 	}
 	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
@@ -1118,7 +1120,7 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 		m[-1] = ncoef3;
 		*oldwork = m - oldwork;
 		AT.WorkPointer = m;
-		if ( Generator(oldwork,level) ) goto aborteer;
+		if ( Generator(BHEAD oldwork,level) ) goto aborteer;
 	}
 	if ( n3 ) M_free(n3,"DoPolynomial4");
 	return(0);
@@ -1345,7 +1347,7 @@ WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
 	AT.proexp[3] = numexp;
 	if ( NewSort() ) goto aborteer;
 	if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
-	if ( Generator(AT.proexp,C->numlhs) ) {
+	if ( Generator(BHEAD AT.proexp,C->numlhs) ) {
 		LowerSortLevel(); LowerSortLevel(); goto aborteer;
 	}
 	if ( EndSort((WORD *)(&n1),2) < 0 ) { LowerSortLevel(); goto aborteer; }
@@ -1505,12 +1507,12 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 		ncoef = w[*w-1];
 		coef = w + *w - ABS(ncoef);		
 		ncoef = REDLENG(ncoef);
-		if ( Mully((UWORD *)coef,&ncoef,AN.PIFscrat,AN.PIFnscrat) ) goto PIFerror1;
+		if ( Mully(BHEAD (UWORD *)coef,&ncoef,AN.PIFscrat,AN.PIFnscrat) ) goto PIFerror1;
 		ncoef = INCLENG(ncoef);
         n1 = ABS(ncoef);
 		coef[n1-1] = ncoef;
 		*w = coef+n1-w;
-		if ( StoreTerm(oldwork) ) goto PIFerror;
+		if ( StoreTerm(BHEAD oldwork) ) goto PIFerror;
 	}
 	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) goto PIFerror1;

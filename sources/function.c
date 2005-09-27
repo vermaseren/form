@@ -502,7 +502,7 @@ NextFun:
 		*t = -*t;
 	}
 	if ( sumch ) {
-		if ( Normalize(term) ) {
+		if ( Normalize(BHEAD term) ) {
 			LOCK(ErrorMessageLock);
 			MesCall("SymGen");
 			UNLOCK(ErrorMessageLock);
@@ -511,9 +511,9 @@ NextFun:
 		if ( !*term ) return(0);
 		*AN.RepPoint = 1;
 		AS.expchanged = 1;
-		if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) ReNumber(term);
+		if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) ReNumber(BHEAD term);
 	}
-	return(Generator(term,level));
+	return(Generator(BHEAD term,level));
 }
 
 /*
@@ -679,7 +679,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 		t = term; w = OldWork; i = *w;
 		NCOPY(t,w,i)
 		AT.WorkPointer = term + *term;
-		Normalize(term);
+		Normalize(BHEAD term);
 	}
 	return(0);
 }
