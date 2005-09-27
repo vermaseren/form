@@ -22,9 +22,9 @@
 */
 
 WORD
-EpfFind ARG2(WORD *,term,WORD *,params)
+EpfFind BARG2(WORD *,term,WORD *,params)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m, *r, n1 = 0, n2, min = -1, count, fac;
 	WORD *c1 = 0, *c2 = 0, sgn = 1;
 	WORD *tstop, *mstop;
@@ -176,9 +176,9 @@ AllLev:
 */
 
 WORD
-EpfCon ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+EpfCon BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *kron, *perm, *termout, *tstop, size2;
 	WORD *m, *t, sizes, sgn = 0, i;
 	sizes = *params - 3;
@@ -662,9 +662,9 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 */
 
 WORD
-Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+Trace4 BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
@@ -786,7 +786,7 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 		Now the trace is in normal order
 */
 	}
-	number = Trace4Gen(t,number);
+	number = Trace4Gen(BHEAD t,number);
 	AT.WorkPointer = OldW;
 	AN.numtracesctack--;
 	return(number);
@@ -825,9 +825,9 @@ Trace4 ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 */
 
 WORD
-Trace4Gen ARG2(TRACES *,t,WORD,number)
+Trace4Gen BARG2(TRACES *,t,WORD,number)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *termout, *stop;
 	WORD *p, *m, oldval;
 	WORD *pold, *mold, diff, *oldstring, cp;
@@ -913,7 +913,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 			else if ( t->gamma5 == GAMMA6 ) t->gamma5 = GAMMA7;
 			else if ( t->gamma5 == GAMMA7 ) t->gamma5 = GAMMA6;
 		}
-		if ( Trace4Gen(t,number-2) ) goto TracCall;
+		if ( Trace4Gen(BHEAD t,number-2) ) goto TracCall;
 		t = AN.tracestack + AN.numtracesctack - 1;
 		if ( t->gamma5 != GAMMA1 ) {
 			if ( t->gamma5 == GAMMA5 ) t->allsign = - t->allsign;
@@ -933,7 +933,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 			*(t->accup)++ = *p;
 			*(t->accup)++ = *p;
 			while ( m <= stop ) *p++ = *m++;
-			if ( Trace4Gen(t,number-2) ) goto TracCall;
+			if ( Trace4Gen(BHEAD t,number-2) ) goto TracCall;
 			t = AN.tracestack + AN.numtracesctack - 1;
 			while ( p > pold ) *--m = *--p;
 			*p++ = oldval;
@@ -968,7 +968,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					p = mold - 1;
 					m = mold + 1;
 					while ( m < stop ) *p++ = *m++;
-					if ( Trace4Gen(t,number-2) ) goto TracCall;
+					if ( Trace4Gen(BHEAD t,number-2) ) goto TracCall;
 					t = AN.tracestack + AN.numtracesctack - 1;
 					m--;
 					while ( m > mold ) *m-- = *--p;
@@ -1054,7 +1054,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					*(t->accup)++ = *m++;
 					*(t->accup)++ = *m++;
 				}
-				if ( Trace4Gen(t,number-4) ) goto TracCall;
+				if ( Trace4Gen(BHEAD t,number-4) ) goto TracCall;
 				t = AN.tracestack + AN.numtracesctack - 1;
 				t->factor -= 2;
 				if ( oldval <= 0 ) t->accup -= 2;
@@ -1099,7 +1099,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					p = m - 1;
 					m++;
 					while ( m < stop ) *p++ = *m++;
-					if ( Trace4Gen(t,number-2) ) goto TracCall;
+					if ( Trace4Gen(BHEAD t,number-2) ) goto TracCall;
 					t = AN.tracestack + AN.numtracesctack - 1;
 					pex = p; mex = m;
 					p = pold;
@@ -1109,7 +1109,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 			and then:
 			2*g_(1,aj)*...*g_(1,a1)*g_(1,an)
 */
-					if ( Trace4Gen(t,number-2) ) goto TracCall;
+					if ( Trace4Gen(BHEAD t,number-2) ) goto TracCall;
 					t = AN.tracestack + AN.numtracesctack - 1;
 					p = pold;
 					m = mold - 2;
@@ -1178,7 +1178,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 					c = t->accup[-1];
 					t->accup[-1] = *m;
 					*m = c;
-					if ( Trace4Gen(t,number-2) ) goto Trac4Call;
+					if ( Trace4Gen(BHEAD t,number-2) ) goto Trac4Call;
 					t = AN.tracestack + AN.numtracesctack - 1;
 					m--;
 					t->allsign = - t->allsign;
@@ -1187,7 +1187,7 @@ Trace4Gen ARG2(TRACES *,t,WORD,number)
 				t->accup[-1] = *m;
 				*m = c;
 				(t->factor)--;
-				if ( Trace4Gen(t,number-2) ) goto Trac4Call;
+				if ( Trace4Gen(BHEAD t,number-2) ) goto Trac4Call;
 				t = AN.tracestack + AN.numtracesctack - 1;
 				t->accup -= 2;
 				t->allsign = oldfactor;
@@ -1353,9 +1353,9 @@ TraceNno ARG3(WORD,number,WORD *,kron,TRACES *,t)
 */
 
 WORD
-TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+TraceN BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
@@ -1400,7 +1400,7 @@ TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	t->termp = term;
 	t->factor = params[4];
 	t->allsign = params[5];
-	number = TraceNgen(t,number);
+	number = TraceNgen(BHEAD t,number);
 	AT.WorkPointer = OldW;
 	AN.numtracesctack--;
 	return(number);
@@ -1418,9 +1418,9 @@ TraceN ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 */
 
 WORD
-TraceNgen ARG2(TRACES *,t,WORD,number)
+TraceNgen BARG2(TRACES *,t,WORD,number)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *termout, *stop;
 	WORD *p, *m, oldval;
 	WORD *pold, *mold, diff, *oldstring;
@@ -1498,7 +1498,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 		*(t->accup)++ = *p;
 		m = p+1;
 		while ( m < stop ) *p++ = *m++;
-		if ( TraceNgen(t,number-2) ) goto TracCall;
+		if ( TraceNgen(BHEAD t,number-2) ) goto TracCall;
 		t = AN.tracestack + AN.numtracesctack - 1;
 		while ( p > t->inlist ) *--m = *--p;
 		*p = *stop = oldval;
@@ -1513,7 +1513,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 			*(t->accup)++ = *p;
 			*(t->accup)++ = *p;
 			while ( m <= stop ) *p++ = *m++;
-			if ( TraceNgen(t,number-2) ) goto TracCall;
+			if ( TraceNgen(BHEAD t,number-2) ) goto TracCall;
 			t = AN.tracestack + AN.numtracesctack - 1;
 			while ( p > pold ) *--m = *--p;
 			*p++ = oldval;
@@ -1574,7 +1574,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 						c = *p;
 						*p = *m;
 						*m = c;
-						if ( TraceNgen(t,number-2) ) goto TracnCall;
+						if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 						t = AN.tracestack + AN.numtracesctack - 1;
 						m--;
 						t->allsign = - t->allsign;
@@ -1588,7 +1588,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 							&& indices[oldval-AM.OffsetIndex].nmin4
 							!= -NMIN4SHIFT ) {
 								t->allsign = - t->allsign;
-								if ( TraceNgen(t,number-2) ) goto TracnCall;
+								if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 								t = AN.tracestack + AN.numtracesctack - 1;
 								(t->factor)--;
 								*(t->accup)++ = SUMMEDIND;
@@ -1597,14 +1597,14 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 							}
 							else
 							{
-								if ( TraceNgen(t,number-2) ) goto TracnCall;
+								if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 								t = AN.tracestack + AN.numtracesctack - 1;
 								t->allsign = - t->allsign;
 								(t->factor)--;
 								*(t->accup)++ = oldval;
 								*(t->accup)++ = oldval;
 							}
-							if ( TraceNgen(t,number-2) ) goto TracnCall;
+							if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 							t = AN.tracestack + AN.numtracesctack - 1;
 							t->accup -= 2;
 							break;
@@ -1615,7 +1615,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 							(t->factor)++;			/* 4 */
 							*(t->accup)++ = *p;		/* d_(a,b) */
 							*(t->accup)++ = *m;
-							if ( TraceNgen(t,number-4) ) goto TracnCall;
+							if ( TraceNgen(BHEAD t,number-4) ) goto TracnCall;
 							t = AN.tracestack + AN.numtracesctack - 1;
 							*p = one; p[1] = two;
 							t->accup -= 2;
@@ -1629,14 +1629,14 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 							}
 							else {
 								t->allsign = - t->allsign;
-								if ( TraceNgen(t,number-2) ) goto TracnCall;
+								if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 								t = AN.tracestack + AN.numtracesctack - 1;
 								t->allsign = - t->allsign;
 								t->factor -= 2;
 								*(t->accup)++ = oldval;
 								*(t->accup)++ = oldval;
 							}
-							if ( TraceNgen(t,number-2) ) goto TracnCall;
+							if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 							t = AN.tracestack + AN.numtracesctack - 1;
 							t->accup -= 2;
 							}
@@ -1647,7 +1647,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 							*m = c;
 							c = m[-1]; m[-1] = m[-2]; m[-2] = c;
 							t->allsign = - t->allsign;
-							if ( TraceNgen(t,number-2) ) goto TracnCall;
+							if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 							t = AN.tracestack + AN.numtracesctack - 1;
 							m--;
 							c = *p;
@@ -1660,7 +1660,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 								*(t->accup)++ = SUMMEDIND;
 								*(t->accup)++ = 
 									indices[oldval-AM.OffsetIndex].nmin4;
-								if ( TraceNgen(t,number-2) ) goto TracnCall;
+								if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 								t = AN.tracestack + AN.numtracesctack - 1;
 								t->accup -= 2;
 								t->allsign = - t->allsign;
@@ -1669,12 +1669,12 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 							{
 								*(t->accup)++ = oldval;
 								*(t->accup)++ = oldval;
-								if ( TraceNgen(t,number-2) ) goto TracnCall;
+								if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 								t = AN.tracestack + AN.numtracesctack - 1;
 								t->accup -= 2;
 								t->allsign = - t->allsign;
 								t->factor += 2;
-								if ( TraceNgen(t,number-2) ) goto TracnCall;
+								if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 								t = AN.tracestack + AN.numtracesctack - 1;
 								t->factor -= 2;
 							}
@@ -1689,7 +1689,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 						c = t->accup[-1];
 						t->accup[-1] = *m;
 						*m = c;
-						if ( TraceNgen(t,number-2) ) goto TracnCall;
+						if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 						t = AN.tracestack + AN.numtracesctack - 1;
 						m--;
 						t->allsign = - t->allsign;
@@ -1698,7 +1698,7 @@ TraceNgen ARG2(TRACES *,t,WORD,number)
 					t->accup[-1] = *m;
 					*m = c;
 					(t->factor)--;
-					if ( TraceNgen(t,number-2) ) goto TracnCall;
+					if ( TraceNgen(BHEAD t,number-2) ) goto TracnCall;
 					t = AN.tracestack + AN.numtracesctack - 1;
 					t->accup -= 2;
 				}
@@ -1804,16 +1804,16 @@ TracCall:
 */
 
 WORD
-Traces ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+Traces BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	switch ( AT.TMout[2] ) {	/* Subtype gives dimension */
 		case 0:
-			return(TraceN(term,params,num,level));
+			return(TraceN(BHEAD term,params,num,level));
 		case 4:
-			return(Trace4(term,params,num,level));
+			return(Trace4(BHEAD term,params,num,level));
 		case 12:
-			return(Trace4(term,params,num,level));
+			return(Trace4(BHEAD term,params,num,level));
 		default:
 			return(0);
 	}
@@ -1825,9 +1825,9 @@ Traces ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 */
 
 WORD
-TraceFind ARG2(WORD *,term,WORD *,params)
+TraceFind BARG2(WORD *,term,WORD *,params)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *p, *m, *to;
 	WORD *termout, *stop, *stop2, number = 0;
 	WORD first = 1;
@@ -1936,9 +1936,9 @@ F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
 */
 
 WORD
-Chisholm ARG2(WORD *,term,WORD,level)
+Chisholm BARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *r, *m, *s, *tt, *rr;
 	WORD *mat, *matpoint, *termout, *rdo;
 	CBUF *C = cbuf+AM.rbufnum;
@@ -2151,9 +2151,9 @@ ChisCall:
 */
 
 WORD
-TenVecFind ARG2(WORD *,term,WORD *,params)
+TenVecFind BARG2(WORD *,term,WORD *,params)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *w, *m, *tstop;
 	WORD i, mode, thevector, thetensor, spectator;
 	thetensor = params[3];
@@ -2286,9 +2286,9 @@ match:
 */
 
 WORD
-TenVec ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+TenVec BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m, *w, *termout, *tstop, *outlist, *ou, *ww, *mm;
 	WORD i, j, k, x, mode, thevector, thetensor, DumNow, spectator;
 	thetensor = params[2];

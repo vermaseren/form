@@ -2023,7 +2023,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		AN.FullProto = T->prototype;
 		AN.WildValue = AN.FullProto + SUBEXPSIZE;
 		AN.WildStop = AN.FullProto+AN.FullProto[1];
-		ClearWild();
+		ClearWild(BHEAD0);
 		AN.RepFunNum = 0;
 		AN.RepFunList = AN.EndNest;
 		oldwork = AT.WorkPointer;
@@ -2042,7 +2042,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		while ( t < r ) *w++ = *t++;
 		t = AT.WorkPointer;
 		AT.WorkPointer = w;
-		if ( MatchFunction(T->pattern,t,&wilds) > 0 ) {
+		if ( MatchFunction(BHEAD T->pattern,t,&wilds) > 0 ) {
 /*
 			Here we caught one. Now we should worry about:
 			1: inserting the subexpression pointer with its wildcards

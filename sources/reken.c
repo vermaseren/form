@@ -285,7 +285,7 @@ AddRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	}
 	else {
 		d = AN.ARscrat1; e = AN.ARscrat2; f = AN.ARscrat3; g = AN.ARscrat4;
-		if ( GcdLong(a+na,adenom,b+nb,bdenom,d,&nd) ) goto AddRer;
+		if ( GcdLong(BHEAD a+na,adenom,b+nb,bdenom,d,&nd) ) goto AddRer;
 		if ( *d == 1 && nd == 1 ) nd = 0;
 		if ( nd ) {
 			if ( DivLong(a+na,adenom,d,nd,e,&ne,c,nc) ) goto AddRer;
@@ -328,7 +328,7 @@ AddRer:
 */
 
 WORD
-MulRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+MulRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
 	WORD i;
 	WORD sgn = 1;
@@ -364,7 +364,7 @@ MulRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	if ( nb < 0 ) { nb = -nb; sgn = -sgn; }
 	if ( !na || !nb ) { *nc = 0; return(0); }
 	if ( na != 1 || nb != 1 ) {
-		GETIDENTITY;
+		GETBIDENTITY;
 		UWORD *xd,*xe;
 		UWORD *xf,*xg;
 		WORD dden, dnumr, eden, enumr;
@@ -456,8 +456,9 @@ MulRer:
 */
 
 WORD
-DivRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
+	GETBIDENTITY;
 	WORD i, j;
 	UWORD *xd,*xe,xx;
 	if ( !nb ) {
@@ -469,7 +470,7 @@ DivRat ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	j = i = (nb >= 0)? nb: -nb;
 	xd = b; xe = b + i;
 	do { xx = *xd; *xd++ = *xe; *xe++ = xx; } while ( --j > 0 );
-	j = MulRat(a,na,b,nb,c,nc);
+	j = MulRat(BHEAD a,na,b,nb,c,nc);
 	xd = b; xe = b + i;
 	do { xx = *xd; *xd++ = *xe; *xe++ = xx; } while ( --i > 0 );
 	return(j);
@@ -583,13 +584,14 @@ SimpErr:
 
 WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
+	GETIDENTITY;
 	WORD nna,nnb,numa,numb,dena,denb;
 	nna = *na; if ( nna < 0 ) nna = -nna; nna = (nna-1)/2;
 	nnb = nb;  if ( nnb < 0 ) nnb = -nnb; nnb = (nnb-1)/2;
 	UnPack(a,nna,&dena,&numa);
 	UnPack(b,nnb,&denb,&numb);
-	if ( GcdLong(a,numa,b,numb,a,&numa) ) goto AccErr;
-	if ( GcdLong(a+nna,dena,b+nnb,denb,a+nna,&dena) ) goto AccErr;
+	if ( GcdLong(BHEAD a,numa,b,numb,a,&numa) ) goto AccErr;
+	if ( GcdLong(BHEAD a+nna,dena,b+nnb,denb,a+nna,&dena) ) goto AccErr;
 	Pack(a,&numa,a+nna,dena);
 	*na = INCLENG(numa);
 	return(0);
@@ -1494,9 +1496,9 @@ toobad:
 */
 
 WORD
-GcdLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	if ( !na || !nb ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Cannot take gcd");
@@ -2251,7 +2253,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 				b = AT.bernoullis + AT.pBer[nqua];
 				nscrib = *b++;
 				i = (WORD)(REDLENG(nscrib));
-				MulRat(b,i,b,i,scrib,&nscrib);
+				MulRat(BHEAD b,i,b,i,scrib,&nscrib);
 				ntop = scrib + 2*nscrib;
 				nscrib = nscrib;
 				nqua--;
@@ -2262,7 +2264,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 				i1 = (WORD)(*b); i2 = (WORD)(*c);
 				i1 = REDLENG(i1);
 				i2 = REDLENG(i2);
-				MulRat(b+1,i1,c+1,i2,ntop,&nntop);
+				MulRat(BHEAD b+1,i1,c+1,i2,ntop,&nntop);
 				Mully(BHEAD ntop,&nntop,&twee,1);
 				if ( nscrib ) {
 					i = (WORD)nntop; if ( i < 0 ) i = -i;

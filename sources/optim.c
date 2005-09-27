@@ -106,7 +106,7 @@ int LoadOpti ARG1(WORD,numexpr)
 	tbuf = oldwork;
 	AT.WorkPointer = tbuf + 2*AM.MaxTer;
 	term = AT.WorkPointer;
-	while ( GetTerm(term) > 0 ) {
+	while ( GetTerm(BHEAD term) > 0 ) {
 		AT.WorkPointer = term + *term;
 		Normalize(BHEAD term);
 		AT.WorkPointer = term + *term;
@@ -723,7 +723,7 @@ WORD HuntNumFactor ARG3(LONG,number,WORD *,coef,int,par)
 		nt = *t; ttt = t + t[2] + 1;
 		n1 = REDLENG(t[3]);
 		mm = m+1; *mm++ = LNUMBER;
-		if ( MulRat((UWORD *)(t+4),n1,(UWORD *)coef,n,(UWORD *)coef2,&n2) ) goto ExitHunt;
+		if ( MulRat(BHEAD (UWORD *)(t+4),n1,(UWORD *)coef,n,(UWORD *)coef2,&n2) ) goto ExitHunt;
 		i = INCLENG(n2);
 		*mm++ = ABS(i)+2;
 		*mm++ = i; if ( i < 0 ) i = -i; i--;
@@ -1034,7 +1034,7 @@ nexttt:;
 						newter = coef + 2*ABS(ncoef) + 2;
 						ncoef = REDLENG(ncoef);
 						nc2 = REDLENG(AT.WorkPointer[3]);
-						if ( MulRat((UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4)
+						if ( MulRat(BHEAD (UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4)
 						,nc2,(UWORD *)(newter+4),&nc) ) {
 							LOCK(ErrorMessageLock);
 							MesCall("HuntPairs");
@@ -1268,7 +1268,7 @@ nextt:;
 			newter = coef + 2*ABS(ncoef) + 2;
 			ncoef = REDLENG(ncoef);
 			nc2 = REDLENG(AT.WorkPointer[3]);
-			if ( MulRat((UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4),nc2
+			if ( MulRat(BHEAD (UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4),nc2
 			,(UWORD *)(newter+4),&nc) ) {
 				LOCK(ErrorMessageLock);
 				MesCall("HuntPairs");
@@ -1380,7 +1380,7 @@ void HuntPowers ARG2(LONG,number,WORD,power)
 				while ( t2 < sca->pointer ) {
 					m2 = t2 + t2[2] + 1; r2 = t2; t2 += *t2;
 					n2 = REDLENG(r2[3]);
-					if ( DivRat((UWORD *)(r2+4),n2,(UWORD *)(r1+4),n1,
+					if ( DivRat(BHEAD (UWORD *)(r2+4),n2,(UWORD *)(r1+4),n1,
 					(UWORD *)(quotient+4),&nq) ) goto callHP;
 					if ( TakeRatRoot((UWORD *)(quotient+4),&nq,power) ) continue;
 					n2 = INCLENG(nq);
@@ -1421,7 +1421,7 @@ void HuntPowers ARG2(LONG,number,WORD,power)
 					It is number 1 divided by quotient times the power.
 */
 					extra = quotient + quotient[0];
-					if ( DivRat((UWORD *)(r1+4),n1,(UWORD *)(quotient+4),nq
+					if ( DivRat(BHEAD (UWORD *)(r1+4),n1,(UWORD *)(quotient+4),nq
 						,(UWORD *)(extra+4),&n3) ) goto callHP;
 					if ( Mully(BHEAD (UWORD *)(extra+4),&n3,(UWORD *)(&power),1) ) goto callHP;
 					n2 = INCLENG(n3);
@@ -1612,6 +1612,7 @@ nexti2:;
 
 LONG TestNewSca ARG3(LONG,number,WORD *,coef,WORD *,ncoef)
 {
+	GETIDENTITY;
 	SCALAR *sca = scabuffer + number, *s;
 	WORD *t1, *t2, *m1, *m2, *coef2, ncoef2, n1, n2;
 	int no;
@@ -1642,12 +1643,12 @@ LONG TestNewSca ARG3(LONG,number,WORD *,coef,WORD *,ncoef)
 			t1 = sca->buffer;
 			t2 = s->buffer;
 			n1 = REDLENG(t1[3]); n2 = REDLENG(t2[3]);
-			DivRat((UWORD *)(t1+4),n1,(UWORD *)(t2+4),n2,(UWORD *)coef,ncoef);
+			DivRat(BHEAD (UWORD *)(t1+4),n1,(UWORD *)(t2+4),n2,(UWORD *)coef,ncoef);
 			t1 += *t1; t2 += *t2;
 			coef2 = coef + 2*ABS(*ncoef)+2;
 			while ( t1 < sca->pointer && t2 < s->pointer ) {
 				n1 = REDLENG(t1[3]); n2 = REDLENG(t2[3]);
-				DivRat((UWORD *)(t1+4),n1,(UWORD *)(t2+4),n2,(UWORD *)coef2,&ncoef2);
+				DivRat(BHEAD (UWORD *)(t1+4),n1,(UWORD *)(t2+4),n2,(UWORD *)coef2,&ncoef2);
 				if ( *ncoef != ncoef2 ) break;
 				ii = 2*ABS(*ncoef);
 				while ( --ii >= 0 ) {

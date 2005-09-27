@@ -145,14 +145,14 @@ conscan:;
 						  m -= ABS(m[-1]);
 						  if ( i > 0 ) {
 							while ( i > 0 ) {
-								if ( MulRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
+								if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
 								(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 								i--;
 							}
 						  }
 						  else if ( i < 0 ) {
 							while ( i < 0 ) {
-								if ( DivRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
+								if ( DivRat(BHEAD (UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
 								(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 								i++;
 							}
@@ -300,7 +300,7 @@ NextSymbol:;
 			case HAAKJE :
 				break;
 			case SETSET:
-				if ( WildFill(termout,term,AT.dummysubexp) < 0 ) goto FromNorm;
+				if ( WildFill(BHEAD termout,term,AT.dummysubexp) < 0 ) goto FromNorm;
 				i = *termout;
 				t = termout; m = term;
 				NCOPY(m,t,i);
@@ -569,7 +569,7 @@ MulIn:
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(m[-1]);	
 					m -= ABS(m[-1]);
-					if ( MulRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
+					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,(UWORD *)m,nnum,
 					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					r = t;
@@ -684,7 +684,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(*ts);	
 					if ( nnum < 0 ) nnum = -nnum;
-					if ( MulRat((UWORD *)AT.n_coef,ncoef,
+					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,
 					(UWORD *)(t+FUNHEAD+ARGHEAD+1),nnum,
 					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
@@ -800,7 +800,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 						  ti = size2;
 						  while ( ti > 1 && ttt[-1] == 0 ) { ttt--; ti--; }
 						  if ( ti == 1 && ttt[-1] == 1 ) {
-gcdcalc:					if ( GcdLong((UWORD *)num1,size1,(UWORD *)num2,size2
+gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 								,(UWORD *)lnum,&nnum) ) goto FromNorm;
 							goto MulIn;
 						  }
@@ -906,7 +906,7 @@ loadnew2:
 					if ( AT.n_llnum[0] == 0 ) goto NormZero;
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(AT.n_llnum[*AT.n_llnum-1]);	
-					if ( MulRat((UWORD *)AT.n_coef,ncoef,(UWORD *)lnum,nnum,
+					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,(UWORD *)lnum,nnum,
 					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 				}
@@ -1569,7 +1569,7 @@ NoRep:
 				m = r - ABS(*r) + 1;
 				if ( j != 3 || ( ( *m != 1 ) || ( m[1] != 1 ) ) ) {
 					ncoef = REDLENG(ncoef);
-					if ( DivRat((UWORD *)AT.n_coef,ncoef,(UWORD *)m,REDLENG(j),(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
+					if ( DivRat(BHEAD (UWORD *)AT.n_coef,ncoef,(UWORD *)m,REDLENG(j),(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
 					ncoef = INCLENG(ncoef);
 					j = ABS(j) - 3;
 					t[-FUNHEAD-ARGHEAD] -= j;
@@ -2485,12 +2485,12 @@ NextI:;
 		*t = WORDDIF(m,t);
 		if ( ReplaceType == 0 ) {
 			AT.WorkPointer = termout+*termout;
-			WildFill(term,termout,AN.ReplaceScrat);
+			WildFill(BHEAD term,termout,AN.ReplaceScrat);
 			if ( termout < term + *term ) termout = term + *term;
 		}
 		else {
 			AT.WorkPointer = r = termout + *termout;
-			WildFill(r,termout,AN.ReplaceScrat);
+			WildFill(BHEAD r,termout,AN.ReplaceScrat);
 			i = *r; m = term;
 			NCOPY(m,r,i);
 			if ( termout < m ) termout = m;

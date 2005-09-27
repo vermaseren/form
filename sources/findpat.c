@@ -21,9 +21,9 @@
 */
 
 WORD
-FindOnly ARG2(WORD *,term,WORD *,pattern)
+FindOnly BARG2(WORD *,term,WORD *,pattern)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop, *setp = AN.ForFindOnly;
@@ -59,8 +59,8 @@ OnlyZer1:
 						else if ( m[1] <= -2*MAXPOWER ) nt = -m[1];
 						else return(0);
 						nt -= 2*MAXPOWER;
-						if ( CheckWild(nt,SYMTONUM,0,&newval3) ) return(0);
-						AddWild(nt,SYMTONUM,0);
+						if ( CheckWild(BHEAD nt,SYMTONUM,0,&newval3) ) return(0);
+						AddWild(BHEAD nt,SYMTONUM,0);
 						m += 2;
 					} while ( m < ystop );
 					goto EndLoop;
@@ -81,8 +81,8 @@ OnlyZer1:
 						nt = -t[1];
 						nq = -m[1];
 OnlyL2:					nq -= 2*MAXPOWER;
-						if ( CheckWild(nq,SYMTONUM,nt,&newval3) ) return(0);
-						AddWild(nq,SYMTONUM,nt);
+						if ( CheckWild(BHEAD nq,SYMTONUM,nt,&newval3) ) return(0);
+						AddWild(BHEAD nq,SYMTONUM,nt);
 						m += 2;
 						t += 2;
 					}
@@ -95,22 +95,22 @@ OnlyL2:					nq -= 2*MAXPOWER;
 					nq = n;
 					p = older;
 					while ( nq > 0 ) {
-						if ( !CheckWild(*m-2*MAXPOWER,SYMTOSYM,*p,&newval1) ) {
+						if ( !CheckWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,*p,&newval1) ) {
 							if ( m[1] == p[1] ) {
-								AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+								AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 								break;
 							}
 							else if ( m[1] >= 2*MAXPOWER && m[1] != *m ) {
-								if ( !CheckWild(m[1]-2*MAXPOWER,SYMTONUM,p[1],&newval3) ) {
-									AddWild(m[1]-2*MAXPOWER,SYMTONUM,p[1]);
-									AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+								if ( !CheckWild(BHEAD m[1]-2*MAXPOWER,SYMTONUM,p[1],&newval3) ) {
+									AddWild(BHEAD m[1]-2*MAXPOWER,SYMTONUM,p[1]);
+									AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 									break;
 								}
 							}
 							else if ( m[1] <= -2*MAXPOWER && m[1] != -(*m) ) {
-								if ( !CheckWild(-m[1]-2*MAXPOWER,SYMTONUM,-p[1],&newval3) ) {
-									AddWild(-m[1]-2*MAXPOWER,SYMTONUM,-p[1]);
-									AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+								if ( !CheckWild(BHEAD -m[1]-2*MAXPOWER,SYMTONUM,-p[1],&newval3) ) {
+									AddWild(BHEAD -m[1]-2*MAXPOWER,SYMTONUM,-p[1]);
+									AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 									break;
 								}
 							}
@@ -131,8 +131,8 @@ OnlyL2:					nq -= 2*MAXPOWER;
 						else if ( m[1] <= -2*MAXPOWER ) nt = -m[1];
 						else return(0);
 						nt -= 2*MAXPOWER;
-						if ( CheckWild(nt,SYMTONUM,0,&newval3) ) return(0);
-						AddWild(nt,SYMTONUM,0);
+						if ( CheckWild(BHEAD nt,SYMTONUM,0,&newval3) ) return(0);
+						AddWild(BHEAD nt,SYMTONUM,0);
 						m += 2;
 					}
 					else {
@@ -183,8 +183,8 @@ OnlyZer2:
 						else if ( m[2] <= -2*MAXPOWER ) nq = -m[2];
 						else return(0);
 						nq -= 2*MAXPOWER;
-						if ( CheckWild(nq,SYMTONUM,0,&newval3) ) return(0);
-						AddWild(nq,SYMTONUM,0);
+						if ( CheckWild(BHEAD nq,SYMTONUM,0,&newval3) ) return(0);
+						AddWild(BHEAD nq,SYMTONUM,0);
 						m += 3;
 					} while ( m < ystop );
 					goto EndLoop;
@@ -207,8 +207,8 @@ OnlyZer2:
 						}
 						else return(0);
 						nq -= 2*MAXPOWER;
-						if ( CheckWild(nq,SYMTONUM,nt,&newval3) ) return(0);
-						AddWild(nq,SYMTONUM,nt);
+						if ( CheckWild(BHEAD nq,SYMTONUM,nt,&newval3) ) return(0);
+						AddWild(BHEAD nq,SYMTONUM,nt);
 					}
 					t += 3; m += 3;
 				}
@@ -222,42 +222,42 @@ OnlyZer2:
 						if ( *m == m[1] ) {
 							if ( *p != p[1] ) goto NextInDot;
 						}
-						if ( !CheckWild(*m-WILDOFFSET,VECTOVEC,*p,&newval1) &&
-							 !CheckWild(m[1]-WILDOFFSET,VECTOVEC,p[1],&newval2) ) {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*p,&newval1) &&
+							 !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,p[1],&newval2) ) {
 							if ( p[2] == m[2] ) {
-OnlyL9:							AddWild(m[1]-WILDOFFSET,VECTOVEC,newval2);
-								AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
+OnlyL9:							AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval2);
+								AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 								break;
 							}
 							if ( m[2] >= 2*MAXPOWER ) {
-								if ( !CheckWild(m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
-									AddWild(m[2]-2*MAXPOWER,SYMTONUM,newval3);
+								if ( !CheckWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
+									AddWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,newval3);
 									goto OnlyL9;
 								}
 							}
 							else if ( m[2] <= -2*MAXPOWER ) {
-								if ( !CheckWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
-									AddWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
+								if ( !CheckWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
+									AddWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
 									goto OnlyL9;
 								}
 							}
 						}
-						if ( !CheckWild(*m-WILDOFFSET,VECTOVEC,p[1],&newval1) &&
-							 !CheckWild(m[1]-WILDOFFSET,VECTOVEC,*p,&newval2) ) {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,p[1],&newval1) &&
+							 !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,*p,&newval2) ) {
 							if ( p[2] == m[2] ) {
-OnlyL10:						AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval2);
+OnlyL10:						AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval2);
 								break;
 							}
 							if ( m[2] >= 2*MAXPOWER ) {
-								if ( !CheckWild(m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
-									AddWild(m[2]-2*MAXPOWER,SYMTONUM,p[2]);
+								if ( !CheckWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
+									AddWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2]);
 									goto OnlyL10;
 								}
 							}
 							else if ( m[2] <= -2*MAXPOWER ) {
-								if ( !CheckWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
-									AddWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
+								if ( !CheckWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
+									AddWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
 									goto OnlyL10;
 								}
 							}
@@ -279,42 +279,42 @@ NextInDot:
 					nq = n;
 					p = older;
 					while ( nq > 0 ) {
-						if ( *m == *p && !CheckWild(m[1]-WILDOFFSET,VECTOVEC,p[1],&newval1) ) {
+						if ( *m == *p && !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,p[1],&newval1) ) {
 							if ( p[2] == m[2] ) {
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 								break;
 							}
 							else if ( m[2] >= 2*MAXPOWER ) {
-								if ( !CheckWild(m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
-									AddWild(m[2]-2*MAXPOWER,SYMTONUM,p[2]);
-									AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								if ( !CheckWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
+									AddWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2]);
+									AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
 							else if ( m[2] <= -2*MAXPOWER ) {
-								if ( !CheckWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
-									AddWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
-									AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								if ( !CheckWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
+									AddWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
+									AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
 						}
-						if ( *m == p[1] && !CheckWild(m[1]-WILDOFFSET,VECTOVEC,*p,&newval1) ) {
+						if ( *m == p[1] && !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,*p,&newval1) ) {
 							if ( p[2] == m[2] ) {
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 								break;
 							}
 							if ( m[2] >= 2*MAXPOWER ) {
-								if ( !CheckWild(m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
-									AddWild(m[2]-2*MAXPOWER,SYMTONUM,p[2]);
-									AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								if ( !CheckWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2],&newval3) ) {
+									AddWild(BHEAD m[2]-2*MAXPOWER,SYMTONUM,p[2]);
+									AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
 							else if ( m[2] <= -2*MAXPOWER ) {
-								if ( !CheckWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
-									AddWild(-m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
-									AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								if ( !CheckWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2],&newval3) ) {
+									AddWild(BHEAD -m[2]-2*MAXPOWER,SYMTONUM,-p[2]);
+									AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
@@ -334,8 +334,8 @@ NextInDot:
 						else if ( m[2] <= -2*MAXPOWER ) nt = -m[2];
 						else return(0);
 						nt -= 2*MAXPOWER;
-						if ( CheckWild(nt,SYMTONUM,0,&newval3) ) return(0);
-						AddWild(nt,SYMTONUM,0);
+						if ( CheckWild(BHEAD nt,SYMTONUM,0,&newval3) ) return(0);
+						AddWild(BHEAD nt,SYMTONUM,0);
 						m += 3;
 					}
 					else {
@@ -380,9 +380,9 @@ EndLoop:;
 */
 
 WORD
-FindOnce ARG2(WORD *,term,WORD *,pattern)
+FindOnce BARG2(WORD *,term,WORD *,pattern)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -418,12 +418,12 @@ TryZero:
 						else if ( m[1] <= -2*MAXPOWER ) nt = -m[1];
 						else return(0);
 						nt -= 2*MAXPOWER;
-						if ( ( ch = CheckWild(nt,SYMTONUM,0,&newval3) ) != 0 ) {
+						if ( ( ch = CheckWild(BHEAD nt,SYMTONUM,0,&newval3) ) != 0 ) {
 							if ( ch > 1 ) return(0);
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( *AN.MaskPointer == 2 ) return(0);
 						}
-						AddWild(nt,SYMTONUM,0);
+						AddWild(BHEAD nt,SYMTONUM,0);
 						m += 2;
 					} while ( m < ystop );
 					goto EndLoop;
@@ -443,7 +443,7 @@ TryZero:
 						nt = -nt;
 						mt = -mt;
 OnceL2:					mt -= 2*MAXPOWER;
-						if ( ( ch = CheckWild(mt,SYMTONUM,nt,&newval3) ) != 0 ) {
+						if ( ( ch = CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) != 0 ) {
 							if ( ch > 1 ) return(0);
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( AN.oldvalue <= 0 ) {
@@ -461,7 +461,7 @@ OnceL2:					mt -= 2*MAXPOWER;
 								}
 							}
 						}
-						AddWild(mt,SYMTONUM,nt);
+						AddWild(BHEAD mt,SYMTONUM,nt);
 						m += 2;
 						t += 2;
 					}
@@ -475,16 +475,16 @@ OnceL2:					mt -= 2*MAXPOWER;
 					p = older;
 					while ( nq > 0 ) {
 						nt = p[1];
-						if ( !CheckWild(*m-2*MAXPOWER,SYMTOSYM,*p,&newval1) ) {
+						if ( !CheckWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,*p,&newval1) ) {
 							mt = m[1];
 							if ( ( mt > 0 && mt <= nt ) ||
 							     ( mt < 0 && mt >= nt ) ) {
-								AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+								AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 								break;
 							}
 							else if ( mt >= 2*MAXPOWER && mt != *m ) {
 OnceL4a:						mt -= 2*MAXPOWER;
-								if ( ( ch = CheckWild(mt,SYMTONUM,nt,&newval3) ) != 0 ) {
+								if ( ( ch = CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) != 0 ) {
 									if ( ch > 1 ) return(0);
 									if ( AN.oldtype == SYMTONUM ) {
 										if ( AN.oldvalue >= 0 ) {
@@ -501,14 +501,14 @@ OnceL4a:						mt -= 2*MAXPOWER;
 												if ( nt > 0 ) nt = 0;
 											}
 										}
-										AddWild(mt,SYMTONUM,nt);
-										AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+										AddWild(BHEAD mt,SYMTONUM,nt);
+										AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 										break;
 									}
 								}
 								else {
-									AddWild(mt,SYMTONUM,nt);
-									AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+									AddWild(BHEAD mt,SYMTONUM,nt);
+									AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 									break;
 								}
 							}
@@ -534,12 +534,12 @@ OnceL4a:						mt -= 2*MAXPOWER;
 						else if ( m[1] <= -2*MAXPOWER ) nt = -m[1];
 						else return(0);
 						nt -= 2*MAXPOWER;
-						if ( ( ch = CheckWild(nt,SYMTONUM,0,&newval3) ) != 0 ) {
+						if ( ( ch = CheckWild(BHEAD nt,SYMTONUM,0,&newval3) ) != 0 ) {
 							if ( ch > 1 ) return(0);
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( *AN.MaskPointer == 2 ) return(0);
 						}
-						AddWild(nt,SYMTONUM,0);
+						AddWild(BHEAD nt,SYMTONUM,0);
 						m += 2;
 					}
 					else {
@@ -573,11 +573,11 @@ OnceOp:
 							nq = -m[2] - 2*MAXPOWER;
 						}
 						else return(0);
-						if ( CheckWild(nq,SYMTONUM,(WORD)0,&newval3) ) {
+						if ( CheckWild(BHEAD nq,SYMTONUM,(WORD)0,&newval3) ) {
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( *AN.MaskPointer == 2 ) return(0);
 						}
-						AddWild(nq,SYMTONUM,(WORD)0);
+						AddWild(BHEAD nq,SYMTONUM,(WORD)0);
 						m += 3;
 					} while ( m < ystop );
 					goto EndLoop;
@@ -600,7 +600,7 @@ OnceOp:
 						}
 						else if ( mt < 2*MAXPOWER ) return(0);
 						mt -= 2*MAXPOWER;
-						if ( CheckWild(mt,SYMTONUM,nt,&newval3) ) {
+						if ( CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) {
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( AN.oldvalue <= 0 ) {
 								if ( nt < AN.oldvalue ) nt = AN.oldvalue;
@@ -617,7 +617,7 @@ OnceOp:
 								}
 							}
 						}
-						AddWild(mt,SYMTONUM,nt);
+						AddWild(BHEAD mt,SYMTONUM,nt);
 						m += 3; t += 3;
 					}
 					else if ( ( nt > 0 && nt >= mt && mt > -2*MAXPOWER )
@@ -632,7 +632,7 @@ OnceOp:
 						nt = -nt;
 						mt = -mt;
 OnceL7:					mt -= 2*MAXPOWER;
-						if ( CheckWild(mt,SYMTONUM,nt,&newval3) ) {
+						if ( CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) {
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( AN.oldvalue <= 0 ) {
 								if ( nt < AN.oldvalue ) nt = AN.oldvalue;
@@ -649,7 +649,7 @@ OnceL7:					mt -= 2*MAXPOWER;
 								}
 							}
 						}
-						AddWild(mt,SYMTONUM,nt);
+						AddWild(BHEAD mt,SYMTONUM,nt);
 						m += 3;
 						t += 3;
 					}
@@ -667,19 +667,19 @@ OnceL7:					mt -= 2*MAXPOWER;
 						if ( *m == m[1] ) {
 							if ( *p != p[1] ) goto NextInDot;
 						}
-						if ( !CheckWild(*m-WILDOFFSET,VECTOVEC,*p,&newval1) &&
-							 !CheckWild(m[1]-WILDOFFSET,VECTOVEC,p[1],&newval2) ) {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*p,&newval1) &&
+							 !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,p[1],&newval2) ) {
 							nt = p[2];
 							mt = m[2];
 							if ( ( mt > 0 && nt >= mt ) ||
 								 ( mt < 0 && nt <= mt ) ) {
-OnceL9:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval2);
+OnceL9:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval2);
 								break;
 							}
 							if ( mt >= 2*MAXPOWER ) {
 OnceL9a:						mt -= 2*MAXPOWER;
-								if ( CheckWild(mt,SYMTONUM,nt,&newval3) ) {
+								if ( CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) {
 									if ( AN.oldtype == SYMTONUM ) {
 										if ( AN.oldvalue >= 0 ) {
 											if ( nt > AN.oldvalue ) nt = AN.oldvalue;
@@ -695,12 +695,12 @@ OnceL9a:						mt -= 2*MAXPOWER;
 												if ( nt > 0 ) nt = 0;
 											}
 										}
-										AddWild(mt,SYMTONUM,nt);
+										AddWild(BHEAD mt,SYMTONUM,nt);
 										goto OnceL9;
 									}
 								}
 								else {
-									AddWild(mt,SYMTONUM,nt);
+									AddWild(BHEAD mt,SYMTONUM,nt);
 									goto OnceL9;
 								}
 							}
@@ -710,19 +710,19 @@ OnceL9a:						mt -= 2*MAXPOWER;
 								goto OnceL9a;
 							}
 						}
-						if ( !CheckWild(*m-WILDOFFSET,VECTOVEC,p[1],&newval1) &&
-							 !CheckWild(m[1]-WILDOFFSET,VECTOVEC,*p,&newval2) ) {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,p[1],&newval1) &&
+							 !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,*p,&newval2) ) {
 							nt = p[2];
 							mt = m[2];
 							if ( ( mt > 0 && nt >= mt ) ||
 								 ( mt < 0 && nt <= mt ) ) {
-OnceL10:						AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval2);
+OnceL10:						AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval2);
 								break;
 							}
 							if ( mt >= 2*MAXPOWER ) {
 OnceL10a:						mt -= 2*MAXPOWER;
-								if ( CheckWild(mt,SYMTONUM,nt,&newval3) ) {
+								if ( CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) {
 									if ( AN.oldtype == SYMTONUM ) {
 										if ( AN.oldvalue >= 0 ) {
 											if ( nt > AN.oldvalue ) nt = AN.oldvalue;
@@ -738,12 +738,12 @@ OnceL10a:						mt -= 2*MAXPOWER;
 												if ( nt > 0 ) nt = 0;
 											}
 										}
-										AddWild(mt,SYMTONUM,nt);
+										AddWild(BHEAD mt,SYMTONUM,nt);
 										goto OnceL10;
 									}
 								}
 								else {
-									AddWild(mt,SYMTONUM,nt);
+									AddWild(BHEAD mt,SYMTONUM,nt);
 									goto OnceL10;
 								}
 							}
@@ -772,18 +772,18 @@ NextInDot:
 					nq = n;
 					p = older;
 					while ( nq > 0 ) {
-						if ( *m == *p && !CheckWild(m[1]-WILDOFFSET,
+						if ( *m == *p && !CheckWild(BHEAD m[1]-WILDOFFSET,
 						VECTOVEC,p[1],&newval1) ) {
 							nt = p[2];
 							mt = m[2];
 							if ( ( mt > 0 && nt >= mt ) ||
 							     ( mt < 0 && nt <= mt ) ) {
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 								break;
 							}
 							else if ( mt >= 2*MAXPOWER ) {
 OnceL7a:						mt -= 2*MAXPOWER;
-								if ( CheckWild(mt,SYMTONUM,nt,&newval3) ) {
+								if ( CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) {
 									if ( AN.oldtype == SYMTONUM ) {
 										if ( AN.oldvalue >= 0 ) {
 											if ( nt > AN.oldvalue ) nt = AN.oldvalue;
@@ -799,14 +799,14 @@ OnceL7a:						mt -= 2*MAXPOWER;
 												if ( nt > 0 ) nt = 0;
 											}
 										}
-										AddWild(mt,SYMTONUM,nt);
-										AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+										AddWild(BHEAD mt,SYMTONUM,nt);
+										AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 										break;
 									}
 								}
 								else {
-									AddWild(mt,SYMTONUM,nt);
-									AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+									AddWild(BHEAD mt,SYMTONUM,nt);
+									AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
@@ -816,18 +816,18 @@ OnceL7a:						mt -= 2*MAXPOWER;
 								goto OnceL7a;
 							}
 						}
-						if ( *m == p[1] && !CheckWild(m[1]-WILDOFFSET,
+						if ( *m == p[1] && !CheckWild(BHEAD m[1]-WILDOFFSET,
 						VECTOVEC,*p,&newval1) ) {
 							nt = p[2];
 							mt = m[2];
 							if ( ( mt > 0 && nt >= mt ) ||
 							     ( mt < 0 && nt <= mt ) ) {
-								AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+								AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 								break;
 							}
 							if ( mt >= 2*MAXPOWER ) {
 OnceL8a:						mt -= 2*MAXPOWER;
-								if ( CheckWild(mt,SYMTONUM,nt,&newval3) ) {
+								if ( CheckWild(BHEAD mt,SYMTONUM,nt,&newval3) ) {
 									if ( AN.oldtype == SYMTONUM ) {
 										if ( AN.oldvalue >= 0 ) {
 											if ( nt > AN.oldvalue ) nt = AN.oldvalue;
@@ -843,14 +843,14 @@ OnceL8a:						mt -= 2*MAXPOWER;
 												if ( nt > 0 ) nt = 0;
 											}
 										}
-										AddWild(mt,SYMTONUM,nt);
-										AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+										AddWild(BHEAD mt,SYMTONUM,nt);
+										AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 										break;
 									}
 								}
 								else {
-									AddWild(mt,SYMTONUM,nt);
-									AddWild(m[1]-WILDOFFSET,VECTOVEC,newval1);
+									AddWild(BHEAD mt,SYMTONUM,nt);
+									AddWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
@@ -875,11 +875,11 @@ OnceL8a:						mt -= 2*MAXPOWER;
 						else if ( m[2] <= -2*MAXPOWER ) nt = -m[2];
 						else return(0);
 						nt -= 2*MAXPOWER;
-						if ( CheckWild(nt,SYMTONUM,0,&newval3) ) {
+						if ( CheckWild(BHEAD nt,SYMTONUM,0,&newval3) ) {
 							if ( AN.oldtype != SYMTONUM ) return(0);
 							if ( *AN.MaskPointer == 2 ) return(0);
 						}
-						AddWild(nt,SYMTONUM,0);
+						AddWild(BHEAD nt,SYMTONUM,0);
 						m += 3;
 					}
 					else {
@@ -916,9 +916,9 @@ EndLoop:;
 */
 
 WORD
-FindMulti ARG2(WORD *,term,WORD *,pattern)
+FindMulti BARG2(WORD *,term,WORD *,pattern)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m, *p;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -955,11 +955,11 @@ FindMulti ARG2(WORD *,term,WORD *,pattern)
 					nq = n;
 					p = older;
 					while ( nq > 0 ) {
-						if ( !CheckWild(*m-2*MAXPOWER,SYMTOSYM,*p,&newval1) ) {
+						if ( !CheckWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,*p,&newval1) ) {
 							mt = p[1]/m[1];
 							if ( mt > 0 ) {
 								if ( power < 0 || mt < power ) power = mt;
-								AddWild(*m-2*MAXPOWER,SYMTOSYM,newval1);
+								AddWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,newval1);
 								break;
 							}
 						}
@@ -1033,9 +1033,9 @@ FindMulti ARG2(WORD *,term,WORD *,pattern)
 */
 
 WORD
-FindRest ARG2(WORD *,term,WORD *,pattern)
+FindRest BARG2(WORD *,term,WORD *,pattern)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -1092,7 +1092,7 @@ FindRest ARG2(WORD *,term,WORD *,pattern)
 			AN.terstop = t;
 			AN.patstop = m;
 			AN.NumTotWildArgs = ntwa;
-			if ( !ScanFunctions(ystop,xstop,0) ) return(0);
+			if ( !ScanFunctions(BHEAD ystop,xstop,0) ) return(0);
 		}
 /*
 			#] FUNCTIONS :
@@ -1120,8 +1120,8 @@ FindRest ARG2(WORD *,term,WORD *,pattern)
 					if ( m[1] < (AM.OffsetIndex+WILDOFFSET) ) {
 						while ( nq > 0 ) {
 							if ( m[1] == p[1] ) {
-								if ( !CheckWild(*m-WILDOFFSET,VECTOVEC,*p,&newval1) ) {
-RestL11:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
+								if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*p,&newval1) ) {
+RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 									break;
 								}
 							}
@@ -1131,9 +1131,9 @@ RestL11:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
 					}
 					else {		/* Double wildcard */
 						while ( nq > 0 ) {
-							if ( !CheckWild(*m-WILDOFFSET,VECTOVEC,*p,&newval1) &&
-								 !CheckWild(m[1]-WILDOFFSET,INDTOIND,p[1],&newval2) ) {
-								AddWild(m[1]-WILDOFFSET,INDTOIND,newval2);
+							if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*p,&newval1) &&
+								 !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,p[1],&newval2) ) {
+								AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval2);
 								goto RestL11;
 							}
 							p += 2;
@@ -1160,8 +1160,8 @@ RestL11:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
 					nq = n;
 					while ( nq > 0 ) {
 						if ( *m == *p ) {
-							if ( !CheckWild(m[1]-WILDOFFSET,INDTOIND,p[1],&newval1) ) {
-								AddWild(m[1]-WILDOFFSET,INDTOIND,newval1);
+							if ( !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,p[1],&newval1) ) {
+								AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval1);
 								break;
 							}
 						}
@@ -1228,16 +1228,16 @@ RestL11:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
 					nq = n;
 					q = older;
 					do {
-						if ( !CheckWild(*m-WILDOFFSET,INDTOIND,*q,&newval1) &&
-						     !CheckWild(m[1]-WILDOFFSET,INDTOIND,q[1],&newval2) ) {
-							AddWild(*m-WILDOFFSET,INDTOIND,newval1);
-							AddWild(m[1]-WILDOFFSET,INDTOIND,newval2);
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,*q,&newval1) &&
+						     !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,q[1],&newval2) ) {
+							AddWild(BHEAD *m-WILDOFFSET,INDTOIND,newval1);
+							AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval2);
 							break;
 						}
-						if ( !CheckWild(*m-WILDOFFSET,INDTOIND,q[1],&newval1) &&
-						     !CheckWild(m[1]-WILDOFFSET,INDTOIND,*q,&newval2) ) {
-							AddWild(*m-WILDOFFSET,INDTOIND,newval1);
-							AddWild(m[1]-WILDOFFSET,INDTOIND,newval2);
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,q[1],&newval1) &&
+						     !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,*q,&newval2) ) {
+							AddWild(BHEAD *m-WILDOFFSET,INDTOIND,newval1);
+							AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval2);
 							break;
 						}
 						q += 2;
@@ -1259,12 +1259,12 @@ RestL11:							AddWild(*m-WILDOFFSET,VECTOVEC,newval1);
 					nq = n;
 					q = older;
 					do {
-						if ( *m == *q && !CheckWild(m[1]-WILDOFFSET,INDTOIND,q[1],&newval1) ) {
-							AddWild(m[1]-WILDOFFSET,INDTOIND,newval1);
+						if ( *m == *q && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,q[1],&newval1) ) {
+							AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval1);
 							break;
 						}
-						if ( *m == q[1] && !CheckWild(m[1]-WILDOFFSET,INDTOIND,*q,&newval1) ) {
-							AddWild(m[1]-WILDOFFSET,INDTOIND,newval1);
+						if ( *m == q[1] && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,*q,&newval1) ) {
+							AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval1);
 							break;
 						}
 						q += 2;

@@ -22,9 +22,9 @@
 */
 
 WORD
-WildFill ARG3(WORD *,to,WORD *,from,WORD *,sub)
+WildFill BARG3(WORD *,to,WORD *,from,WORD *,sub)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD i, j, *s, *t, *m, len, dflag, odirt;
 	WORD *r, *u, *v, *w, *z, *zst, *zz, *subs, *accu, na, dirty = 0, *tstop;
 	WORD *temp = 0, *uu, *oldcpointer, sgn;
@@ -875,7 +875,7 @@ ss7:				j = t[1];
 					w = m;
 					*m++ = *t;
 					*m++ = t[1];
-					if ( WildFill(m,t+2,sub) < 0 ) {
+					if ( WildFill(BHEAD m,t+2,sub) < 0 ) {
 						LOCK(ErrorMessageLock);
 						MesCall("WildFill");
 						UNLOCK(ErrorMessageLock);
@@ -1116,7 +1116,7 @@ ss10:							*m++ = *t++;
 							t += ARGHEAD;
 							j = 0;
 							while ( t < zz ) {	/* do a term */
-								if ( ( len = WildFill(m,t,sub) ) < 0 ) {
+								if ( ( len = WildFill(BHEAD m,t,sub) ) < 0 ) {
 									LOCK(ErrorMessageLock);
 									MesCall("WildFill");
 									UNLOCK(ErrorMessageLock);
@@ -1332,9 +1332,9 @@ GotOne:;
 */
 
 VOID
-ClearWild()
+ClearWild BARG0
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD n, nn, *w;
 	n = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE) >> 2;		/* Number of wildcards */
 	AN.NumWild = nn = n;
@@ -1359,9 +1359,9 @@ ClearWild()
 */
 
 WORD
-AddWild ARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
+AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *w, *m, n, k, i = -1;
 	CBUF *C = cbuf+AT.ebufnum;
 	AN.WildReserve = 0;
@@ -1587,9 +1587,9 @@ FlipOn:
 */
 
 WORD
-CheckWild ARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
+CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *w, *m, *s, n, old2;
 	WORD n2, oldval, dirty, i, j, notflag = 0, retblock = 0;
 	CBUF *C = cbuf+AT.ebufnum;

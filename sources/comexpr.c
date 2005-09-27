@@ -1201,8 +1201,8 @@ int CoFillExpression ARG1(UBYTE *,inp)
 	AT.WorkPointer = term + AM.MaxTer;
 	AC.cbufnum = T->bufnum;
 	AC.tablefilling = funnum;
-	if ( GetTerm(term) > 0 ) {			/* Skip prototype */
-		while ( GetTerm(term) > 0 ) {
+	if ( GetTerm(BHEAD term) > 0 ) {			/* Skip prototype */
+		while ( GetTerm(BHEAD term) > 0 ) {
 			GETSTOP(term,tstop);
 			w = m = term + 1;
 			while ( m < tstop && *m != HAAKJE ) m += m[1];

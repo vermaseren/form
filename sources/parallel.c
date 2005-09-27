@@ -1036,7 +1036,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
 	The outside of the bracket runs from bra = PF_CurrentBracket to bstop.
   */
   for(;;) {
-  	if ( InsertTerm(term,0,AM.rbufnum,tstart,termout,0) < 0 ) {
+  	if ( InsertTerm(BHEAD term,0,AM.rbufnum,tstart,termout,0) < 0 ) {
   	  goto DefCall;
   	}
 	/* call Generator with new composed term */
@@ -1384,7 +1384,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	*/
 	if ( PF.log && PF.module >= PF.log )
 	  MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),PF.module);
-	if ( GetTerm(term) <= 0 ) {
+	if ( GetTerm(BHEAD term) <= 0 ) {
 	  MesPrint("[%d] Expression %d has problems in scratchfile",PF.me,i);
 	  return(-1);
 	}
@@ -1436,7 +1436,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
     termsinpatch = 0;
     *(sb->fill[0])++ = (UWORD)(0);
 	*(sb->fill[0])++ = (UWORD)(1);
-	while ( GetTerm(term) ) {
+	while ( GetTerm(BHEAD term) ) {
 	  PF.ginterms++; dd = AN.deferskipped;
 	  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 		if ( GetMoreTerms(term) ) {

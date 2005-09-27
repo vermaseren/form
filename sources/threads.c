@@ -111,8 +111,6 @@ int WhoAmI ARG0
 	pthread_getspecific(identitykey,(void **)(&identity));
 
 	but according to the information in pthread.h it is:
-	identity = (int *)pthread_getspecific(identitykey);
-	actually it turns out to be
 */
 	identity = (int *)pthread_getspecific(identitykey);
 	return(*identity);
@@ -659,7 +657,7 @@ ThreadProcessor()
 /*
 				First copy the prototype and get the bracketindex (if any)
 */
-				if ( GetTerm(term) <= 0 ) {
+				if ( GetTerm(BHEAD term) <= 0 ) {
 				  MesPrint("Expression %d has problems in scratchfile",i);
 				  retval = -1;
 				  break;
@@ -678,7 +676,7 @@ ThreadProcessor()
 						WakeupThread(id,STARTNEWEXPRESSION);
 					}
 					AN.ninterms = 0;
-					while ( GetTerm(term) ) {
+					while ( GetTerm(BHEAD term) ) {
 					  AN.ninterms++; dd = deferskipped;
 					  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 						if ( GetMoreTerms(term) ) {
@@ -726,7 +724,7 @@ ThreadProcessor()
 					AR.DeferFlag = AC.ComDefer;
 					NewSort();
 					AN.ninterms = 0;
-					while ( GetTerm(term) ) {
+					while ( GetTerm(BHEAD term) ) {
 					  AN.ninterms++; dd = deferskipped;
 					  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 						if ( GetMoreTerms(term) ) {

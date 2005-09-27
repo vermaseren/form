@@ -86,7 +86,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 /*
 		Operations have always their own level.
 */
-		if ( (*(FG.OperaFind[ll[2]]))(term,ll) ) return(-1);
+		if ( (*(FG.OperaFind[ll[2]]))(BHEAD term,ll) ) return(-1);
 		else return(0);
 	}
 	m = ll + IDHEAD;
@@ -146,7 +146,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 	}
 	AT.WorkPointer = ww = term + *term;
 
-	ClearWild();
+	ClearWild(BHEAD0);
 	while ( w < AN.WildStop ) {
 		if ( *w == LOADDOLLAR ) numdollars++;
 		w += w[1];
@@ -165,8 +165,8 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		case SUBONLY :
 			/* Must be an exact match */
 			AN.UseFindOnly = 1; AN.ForFindOnly = 0;
-			if ( FindRest(term,m) && ( AN.UsedOtherFind ||
-				FindOnly(term,m) ) ) {
+			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind ||
+				FindOnly(BHEAD term,m) ) ) {
 				power = 1;
 				if ( msign ) term[term[0]-1] = -term[term[0]-1];
 			}
@@ -174,17 +174,17 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 			break;
 		case SUBMANY :
 			AN.UseFindOnly = -1;
-			if ( ( power = FindRest(term,m) ) > 0 ) {
-				if ( ( power = FindOnce(term,m) ) > 0 ) {
+			if ( ( power = FindRest(BHEAD term,m) ) > 0 ) {
+				if ( ( power = FindOnce(BHEAD term,m) ) > 0 ) {
 					AN.UseFindOnly = 0;
 					do {
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
-						Substitute(term,m,1);
+						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
 							WildDollars();
 							numdollars = 0;
 						}
-						ClearWild();
+						ClearWild(BHEAD0);
 						AT.WorkPointer = ww = term + *term;
 /*						if ( rep < ww ) {*/
 							AN.RepFunNum = 0;
@@ -203,19 +203,19 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 							AN.RepFunNum = 0;
 						}
 */
-					} while ( FindRest(term,m) && ( AN.UsedOtherFind ||
-							FindOnce(term,m) ) );
+					} while ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind ||
+							FindOnce(BHEAD term,m) ) );
 					match = 1;
 				}
 				else if ( power < 0 ) {
 					do {
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
-						Substitute(term,m,1);
+						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
 							WildDollars();
 							numdollars = 0;
 						}
-						ClearWild();
+						ClearWild(BHEAD0);
 						AT.WorkPointer = ww = term + *term;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
@@ -234,20 +234,20 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 							AN.RepFunNum = 0;
 						}
 */
-					} while ( FindRest(term,m) );
+					} while ( FindRest(BHEAD term,m) );
 					match = 1;
 				}
 			}
 			else if ( power < 0 ) {
-				if ( FindOnce(term,m) ) {
+				if ( FindOnce(BHEAD term,m) ) {
 					do {
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
-						Substitute(term,m,1);
+						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
 							WildDollars();
 							numdollars = 0;
 						}
-						ClearWild();
+						ClearWild(BHEAD0);
 						AT.WorkPointer = ww = term + *term;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
@@ -266,7 +266,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 							AN.RepFunNum = 0;
 						}
 */
-					} while ( FindOnce(term,m) );
+					} while ( FindOnce(BHEAD term,m) );
 					match = 1;
 				}
 			}
@@ -278,18 +278,18 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 			goto nextlevel;
 		case SUBONCE :
 			AN.UseFindOnly = 0;
-			if ( FindRest(term,m) && ( AN.UsedOtherFind || FindOnce(term,m) ) ) {
+			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind || FindOnce(BHEAD term,m) ) ) {
 				power = 1;
 				if ( msign ) term[term[0]-1] = -term[term[0]-1];
 			}
 			else power = 0;
 			break;
 		case SUBMULTI :
-			power = FindMulti(term,m);
+			power = FindMulti(BHEAD term,m);
 			if ( ( power & 1 ) != 0 && msign ) term[term[0]-1] = -term[term[0]-1];
 			break;
 		case SUBALL :
-			while ( ( power = FindAll(term,m,*level,(WORD *)0) ) != 0 ) {
+			while ( ( power = FindAll(BHEAD term,m,*level,(WORD *)0) ) != 0 ) {
 				if ( ( power & 1 ) != 0 && msign ) term[term[0]-1] = -term[term[0]-1];
 				match = 1;
 			}
@@ -297,7 +297,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		case SUBSELECT :
 			llf = ll + IDHEAD;	llf += llf[1];	llf += *llf;
 			AN.UseFindOnly = 1; AN.ForFindOnly = llf;
-			if ( FindRest(term,m) && ( AN.UsedOtherFind || FindOnly(term,m) ) ) {
+			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind || FindOnly(BHEAD term,m) ) ) {
 				if ( msign ) term[term[0]-1] = -term[term[0]-1];
 /*
 				The following code needs to be hacked a bit to allow for
@@ -316,7 +316,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 					NCOPY(t2,t1,i);
 				}
 				power = 1;
-				Substitute(term,m,power);
+				Substitute(BHEAD term,m,power);
 				if ( llf[1] > 2 ) {
 					if ( TestSelect(term,llf) ) {
 						WORD *t1, *t2;
@@ -343,7 +343,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 			break;
 	}
 	if ( power ) {
-		Substitute(term,m,power);
+		Substitute(BHEAD term,m,power);
 		if ( numdollars ) {
 			WildDollars();
 			numdollars = 0;
@@ -374,9 +374,9 @@ nextlevel:;
 */
 
 VOID
-Substitute ARG3(WORD *,term,WORD *,pattern,WORD,power)
+Substitute BARG3(WORD *,term,WORD *,pattern,WORD,power)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *TemTerm;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
@@ -424,13 +424,13 @@ Substitute ARG3(WORD *,term,WORD *,pattern,WORD,power)
 					nt = t[1];
 					mt = m[1];
 					if ( mt >= 2*MAXPOWER ) {
-						if ( CheckWild(mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+						if ( CheckWild(BHEAD mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 							nt -= AN.oldvalue;
 							goto SubsL1;
 						}
 					}
 					else if ( mt <= -2*MAXPOWER ) {
-						if ( CheckWild(-mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+						if ( CheckWild(BHEAD -mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 							nt += AN.oldvalue;
 							goto SubsL1;
 						}
@@ -449,15 +449,15 @@ SubsL1:					if ( nt ) {
 					nq = WORDDIF(fill,subterm);
 					fill = subterm;
 					while ( nq > 0 ) {
-						if ( !CheckWild(*m-2*MAXPOWER,SYMTOSYM,*fill,&newval3) ) {
+						if ( !CheckWild(BHEAD *m-2*MAXPOWER,SYMTOSYM,*fill,&newval3) ) {
 							mt = m[1];
 							if ( mt >= 2*MAXPOWER ) {
-								if ( CheckWild(mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+								if ( CheckWild(BHEAD mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 									if ( fill[1] -= AN.oldvalue ) goto SubsL2;
 								}
 							}
 							else if ( mt <= -2*MAXPOWER ) {
-								if ( CheckWild(-mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+								if ( CheckWild(BHEAD -mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 									if ( fill[1] += AN.oldvalue ) goto SubsL2;
 								}
 							}
@@ -516,13 +516,13 @@ SubsL2:								fill += nq;
 					nt = t[2];
 					mt = m[2];
 					if ( mt >= 2*MAXPOWER ) {
-						if ( CheckWild(mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+						if ( CheckWild(BHEAD mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 							nt -= AN.oldvalue;
 							goto SubsL3;
 						}
 					}
 					else if ( mt <= -2*MAXPOWER ) {
-						if ( CheckWild(-mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+						if ( CheckWild(BHEAD -mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 							nt += AN.oldvalue;
 							goto SubsL3;
 						}
@@ -555,26 +555,26 @@ SubsL4:				nq = WORDDIF(fill,subterm);
 					fill = subterm;
 					while ( nq > 0 ) {
 						if ( ( oldval1 && ( (
-					       !CheckWild(*m-WILDOFFSET,VECTOVEC,*fill,&newval3)
-					    && !CheckWild(m[1]-WILDOFFSET,VECTOVEC,fill[1],&newval3)
+					       !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*fill,&newval3)
+					    && !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,fill[1],&newval3)
 						) || (
-					       !CheckWild(m[1]-WILDOFFSET,VECTOVEC,*fill,&newval3)
-					    && !CheckWild(*m-WILDOFFSET,VECTOVEC,fill[1],&newval3)
+					       !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,*fill,&newval3)
+					    && !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,fill[1],&newval3)
 						) ) ) || ( !oldval1 && ( (
 					       *m == *fill
-					    && !CheckWild(m[1]-WILDOFFSET,VECTOVEC,fill[1],&newval3)
+					    && !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,fill[1],&newval3)
 						) || (
-					       !CheckWild(m[1]-WILDOFFSET,VECTOVEC,*fill,&newval3)
+					       !CheckWild(BHEAD m[1]-WILDOFFSET,VECTOVEC,*fill,&newval3)
 					    && *m == fill[1] ) ) ) ) {
 							mt = m[2];
 							if ( mt >= 2*MAXPOWER ) {
-								if ( CheckWild(mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+								if ( CheckWild(BHEAD mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 									if ( fill[2] -= AN.oldvalue )
 											goto SubsL5;
 								}
 							}
 							else if ( mt <= -2*MAXPOWER ) {
-								if ( CheckWild(-mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
+								if ( CheckWild(BHEAD -mt-2*MAXPOWER,SYMTONUM,-MAXPOWER,&newval3) ) {
 									if ( fill[2] += AN.oldvalue )
 											goto SubsL5;
 								}
@@ -697,7 +697,7 @@ SubsL5:								fill += nq;
 					if ( m[1] < (AM.OffsetIndex+WILDOFFSET) ) {
 						do {
 							if ( m[1] == fill[1] &&
-							!CheckWild(*m-WILDOFFSET,VECTOVEC,*fill,&newval3) )
+							!CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*fill,&newval3) )
 								break;
 							fill += 2;
 							nq -= 2;
@@ -705,8 +705,8 @@ SubsL5:								fill += nq;
 					}
 					else {		/* Double wildcard */
 						do {
-							if ( !CheckWild(m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3)
-							&& !CheckWild(*m-WILDOFFSET,VECTOVEC,*fill,&newval3) )
+							if ( !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3)
+							&& !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*fill,&newval3) )
 								break;
 							if ( *fill == oldval1 && fill[1] == AN.oldvalue ) break;
 							fill += 2;
@@ -726,7 +726,7 @@ SubsL5:								fill += nq;
 					fill = subterm;
 					do {
 						if ( *m == *fill && 
-						!CheckWild(m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3) )
+						!CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3) )
 							break;
 						nq -= 2;
 						fill += 2;
@@ -809,17 +809,17 @@ SubsL6:				nq = WORDDIF(fill,subterm);
 					fill = subterm;
 					do {
 						if ( ( oldval1 && ( (
-					       !CheckWild(*m-WILDOFFSET,INDTOIND,*fill,&newval3)
-					    && !CheckWild(m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3)
+					       !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,*fill,&newval3)
+					    && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3)
 						) || (
-					       !CheckWild(m[1]-WILDOFFSET,INDTOIND,*fill,&newval3)
-					    && !CheckWild(*m-WILDOFFSET,INDTOIND,fill[1],&newval3)
+					       !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,*fill,&newval3)
+					    && !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,fill[1],&newval3)
 						) ) ) || ( !oldval1 && ( (
 					       *m == *fill
-					    && !CheckWild(m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3)
+					    && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,fill[1],&newval3)
 						) || (
 						   *m == fill[1]
-					    && !CheckWild(m[1]-WILDOFFSET,INDTOIND,*fill,&newval3)
+					    && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,*fill,&newval3)
 					    ) ) ) ) break;
 						fill += 2;
 						nq -= 2;
@@ -911,9 +911,9 @@ FindSpecial ARG1(WORD *,term)
 */
 
 WORD
-FindAll ARG4(WORD *,term,WORD *,pattern,WORD,level,WORD *,par)
+FindAll BARG4(WORD *,term,WORD *,pattern,WORD,level,WORD *,par)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m, *r;
 	WORD *tstop, *mstop, *TwoProto, *vwhere = 0, oldv, oldvv, vv, level2;
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;

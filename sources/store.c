@@ -693,9 +693,9 @@ PutErrS:
 */
 
 WORD
-GetTerm ARG1(WORD *,term)
+GetTerm BARG1(WORD *,term)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *inp, i, j = 0, len;
 	LONG InIn = AS.InInBuf, InIn2;
 	WORD *r, *m, *mstop = 0, minsiz = 0, *bra = 0, *from;
@@ -1020,6 +1020,7 @@ ErrGet:
 WORD
 GetMoreTerms ARG1(WORD *,term)
 {
+	GETIDENTITY;
 	WORD *t, *r, *m, *h, *tstop, i, inc, same;
 	WORD extra;
 /*	-------------change 17-feb-2003 */
@@ -1040,7 +1041,7 @@ GetMoreTerms ARG1(WORD *,term)
 	while ( t > tstop ) *--r = *--t;
 	r--;
 	*r = WORDDIF(m,r);
-	while ( GetTerm(m) > 0 ) {
+	while ( GetTerm(BHEAD m) > 0 ) {
 		r = m + 1;
 		t = m + *m - 1;
 		if ( same > ( i = ( *m - ABS(*t) -1 ) ) ) { /* Must fail */
@@ -1635,10 +1636,10 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 	w = AN.UsedSymbol;
 	i = NumSymbols + NumVectors + NumIndices + NumFunctions;
 	do { *w++ = 0; } while ( --i > 0 );
-	if ( GetTerm(term) > 0 ) {
+	if ( GetTerm(BHEAD term) > 0 ) {
 		DetVars(term,1);
-		if ( GetTerm(term) ) {
-			do { DetVars(term,0); } while ( GetTerm(term) > 0 );
+		if ( GetTerm(BHEAD term) ) {
+			do { DetVars(term,0); } while ( GetTerm(BHEAD term) > 0 );
 		}
 	}
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;

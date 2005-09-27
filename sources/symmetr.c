@@ -36,7 +36,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	offset = WORDDIF(fun,AN.terstart);
 	if ( pattern[1] != fun[1] ) return(0);
 	if ( *pattern >= FUNCTION+WILDOFFSET ) {
-		if ( CheckWild(*pattern-WILDOFFSET,FUNTOFUN,*fun,&newfun) ) return(0);
+		if ( CheckWild(BHEAD *pattern-WILDOFFSET,FUNTOFUN,*fun,&newfun) ) return(0);
 		funwild = 1;
 	}
 	else funwild = 0;
@@ -69,10 +69,10 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				return(-1);
 			}
 			AT.WorkPointer = t;
-			AddWild(*pattern-WILDOFFSET,FUNTOFUN,newfun);
+			AddWild(BHEAD *pattern-WILDOFFSET,FUNTOFUN,newfun);
 			if ( newpat >= AN.patstop ) {
 				if ( AN.UseFindOnly == 0 ) {
-					if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+					if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 						AN.UsedOtherFind = 1;
 						return(1);
 					}
@@ -82,7 +82,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			}
 			else {
 				newter = instart;
-				retval = ScanFunctions(newpat,inter,par);
+				retval = ScanFunctions(BHEAD newpat,inter,par);
 			}
 			if ( retval == 0 ) {
 				m = AN.WildValue;
@@ -99,7 +99,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		else {
 			if ( newpat >= AN.patstop ) {
 				if ( AN.UseFindOnly == 0 ) {
-					if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+					if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 						AN.UsedOtherFind = 1;
 						return(1);
 					}
@@ -108,7 +108,7 @@ MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				else return(1);
 			}
 			newter = instart;
-			i = ScanFunctions(newpat,inter,par);
+			i = ScanFunctions(BHEAD newpat,inter,par);
 			return(i);
 		}
 /*
@@ -328,15 +328,15 @@ NextWV:
 */
 				for ( i = 0; i < vwc; i++ ) {
 					j = wcvec[i] - WILDOFFSET;
-					if ( CheckWild(j,VECTOVEC,tfixvec[i],&newvalue) )
+					if ( CheckWild(BHEAD j,VECTOVEC,tfixvec[i],&newvalue) )
 						goto NoCaseB;
-					AddWild(j,VECTOVEC,newvalue);
+					AddWild(BHEAD j,VECTOVEC,newvalue);
 				}
 				for ( i = 0; i < iwc; i++ ) {
 					j = wcind[i] - WILDOFFSET;
-					if ( CheckWild(j,INDTOIND,fixvec[i],&newvalue) )
+					if ( CheckWild(BHEAD j,INDTOIND,fixvec[i],&newvalue) )
 						goto NoCaseB;
-					AddWild(j,INDTOIND,newvalue);
+					AddWild(BHEAD j,INDTOIND,newvalue);
 				}
 /*
 				Go into the recursion
@@ -345,10 +345,10 @@ NextWV:
 				AN.RepFunList[AN.RepFunNum++] =
 					( perm1.sign + perm2.sign + distr.sign + sign ) & 1;
 				newpat = pattern + pattern[1];
-				if ( funwild ) AddWild(*pattern-WILDOFFSET,FUNTOFUN,newfun);
+				if ( funwild ) AddWild(BHEAD *pattern-WILDOFFSET,FUNTOFUN,newfun);
 				if ( newpat >= AN.patstop ) {
 					if ( AN.UseFindOnly == 0 ) {
-						if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+						if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 							AN.UsedOtherFind = 1;
 							return(1);
 						}
@@ -357,7 +357,7 @@ NextWV:
 				}
 				else {
 					newter = instart;
-					if ( ScanFunctions(newpat,inter,par) ) { return(1); }
+					if ( ScanFunctions(BHEAD newpat,inter,par) ) { return(1); }
 				}
 /*
 				Restore the old Wildcard assignments
@@ -510,7 +510,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	nwstore = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 	if ( pnum > FUNCTION + WILDOFFSET ) {
 		pnum -= WILDOFFSET;
-		if ( CheckWild(pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
+		if ( CheckWild(BHEAD pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
 		oldwilval = 1;
 		t = lowlevel = AT.WorkPointer;
 		m = AN.WildValue;
@@ -527,7 +527,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			return(-1);
 		}
 		AT.WorkPointer = t;
-		AddWild(pnum,FUNTOFUN,newvalue);
+		AddWild(BHEAD pnum,FUNTOFUN,newvalue);
 	}
 	if ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == RCYCLESYMMETRIC ) type = 1;
 
@@ -547,7 +547,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		newpat = pattern + pattern[1];
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
-				if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+				if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 					AT.WorkPointer = oldworkpointer;
 					AN.UsedOtherFind = 1;
 					return(1);
@@ -559,7 +559,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				return(1);
 			}
 		}
-		else j = ScanFunctions(newpat,inter,par);
+		else j = ScanFunctions(BHEAD newpat,inter,par);
 		if ( j ) return(j);
 		goto NoSuccess;
 	}
@@ -598,8 +598,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			while ( p < pstop ) {
 				if ( *p != FUNNYWILD ) { p++; continue; }
 				AN.argaddress = t;
-				if ( CheckWild(p[1],ARGTOARG,0,t) ) goto nomatch;
-				AddWild(p[1],ARGTOARG,0);
+				if ( CheckWild(BHEAD p[1],ARGTOARG,0,t) ) goto nomatch;
+				AddWild(BHEAD p[1],ARGTOARG,0);
 				p += 2;
 			}
 			oldwilval = 1;
@@ -626,8 +626,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						/* Test wildcard index */
 
 						wc = *p - WILDOFFSET;
-						if ( CheckWild(wc,INDTOIND,*t,&newvalue) ) break;
-						AddWild(wc,INDTOIND,newvalue);
+						if ( CheckWild(BHEAD wc,INDTOIND,*t,&newvalue) ) break;
+						AddWild(BHEAD wc,INDTOIND,newvalue);
 					}
 					else if ( *t < MINSPEC && p[j] < MINSPEC
 						&& *p >= AM.OffsetVector + WILDOFFSET ) {
@@ -635,8 +635,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						/* Test wildcard vector */
 
 						wc = *p - WILDOFFSET;
-						if ( CheckWild(wc,VECTOVEC,*t,&newvalue) ) break;
-						AddWild(wc,VECTOVEC,newvalue);
+						if ( CheckWild(BHEAD wc,VECTOVEC,*t,&newvalue) ) break;
+						AddWild(BHEAD wc,VECTOVEC,newvalue);
 					}
 					else break;
 				}
@@ -653,14 +653,14 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						while ( p < pstop ) {
 							if ( *p != FUNNYWILD ) { p++; continue; }
 							AN.argaddress = t;
-							AddWild(p[1],ARGTOARG,0);
+							AddWild(BHEAD p[1],ARGTOARG,0);
 							p += 2;
 						}
 					}
 					newpat = pattern + pattern[1];
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
-							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+							if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 								AT.WorkPointer = oldworkpointer;
 								AN.UsedOtherFind = 1;
 								return(1);
@@ -672,7 +672,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 							return(1);
 						}
 					}
-					else j = ScanFunctions(newpat,inter,par);
+					else j = ScanFunctions(BHEAD newpat,inter,par);
 					if ( j ) {
 						AT.WorkPointer = oldworkpointer;
 						return(j); /* Full match. Return our success */
@@ -720,8 +720,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( *p == FUNNYWILD ) {
 						p++; wc = 1;
 						AN.argaddress = t;
-						if ( CheckWild(*p,ARGTOARG,funnycount|EATTENSOR,t) ) break;
-						AddWild(*p,ARGTOARG,funnycount|EATTENSOR);
+						if ( CheckWild(BHEAD *p,ARGTOARG,funnycount|EATTENSOR,t) ) break;
+						AddWild(BHEAD *p,ARGTOARG,funnycount|EATTENSOR);
 						j += funnycount-1; t += funnycount-1;
 					}
 					else if ( *p >= AM.OffsetIndex + WILDOFFSET
@@ -730,8 +730,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						/* Test wildcard index */
 
 						wc = *p - WILDOFFSET;
-						if ( CheckWild(wc,INDTOIND,*t,&newvalue) ) break;
-						AddWild(wc,INDTOIND,newvalue);
+						if ( CheckWild(BHEAD wc,INDTOIND,*t,&newvalue) ) break;
+						AddWild(BHEAD wc,INDTOIND,newvalue);
 					}
 					else if ( *t < MINSPEC && p[j] < MINSPEC
 						&& *p >= AM.OffsetVector + WILDOFFSET ) {
@@ -739,8 +739,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						/* Test wildcard vector */
 
 						wc = *p - WILDOFFSET;
-						if ( CheckWild(wc,VECTOVEC,*t,&newvalue) ) break;
-						AddWild(wc,VECTOVEC,newvalue);
+						if ( CheckWild(BHEAD wc,VECTOVEC,*t,&newvalue) ) break;
+						AddWild(BHEAD wc,VECTOVEC,newvalue);
 					}
 					else break;
 				}
@@ -753,7 +753,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					newpat = pattern + pattern[1];
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
-							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+							if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 								AT.WorkPointer = oldworkpointer;
 								AN.UsedOtherFind = 1;
 								return(1);
@@ -765,7 +765,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 							return(1);
 						}
 					}
-					else j = ScanFunctions(newpat,inter,par);
+					else j = ScanFunctions(BHEAD newpat,inter,par);
 					if ( j ) {
 						AT.WorkPointer = oldworkpointer;
 						return(j); /* Full match. Return our success */
@@ -876,8 +876,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( *p == FUNNYWILD ) {
 						p++; wc = thewildcards[renum[*p]];
 						AN.argaddress = t;
-						if ( CheckWild(*p,ARGTOARG,wc|EATTENSOR,t) ) break;
-						AddWild(*p,ARGTOARG,wc|EATTENSOR);
+						if ( CheckWild(BHEAD *p,ARGTOARG,wc|EATTENSOR,t) ) break;
+						AddWild(BHEAD *p,ARGTOARG,wc|EATTENSOR);
 						j += wc-1; t += wc-1; wc = 1;
 					}
 					else if ( *p >= AM.OffsetIndex + WILDOFFSET
@@ -886,8 +886,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						/* Test wildcard index */
 
 						wc = *p - WILDOFFSET;
-						if ( CheckWild(wc,INDTOIND,*t,&newvalue) ) break;
-						AddWild(wc,INDTOIND,newvalue);
+						if ( CheckWild(BHEAD wc,INDTOIND,*t,&newvalue) ) break;
+						AddWild(BHEAD wc,INDTOIND,newvalue);
 					}
 					else if ( *t < MINSPEC && p[j] < MINSPEC
 						&& *p >= AM.OffsetVector + WILDOFFSET ) {
@@ -895,8 +895,8 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						/* Test wildcard vector */
 
 						wc = *p - WILDOFFSET;
-						if ( CheckWild(wc,VECTOVEC,*t,&newvalue) ) break;
-						AddWild(wc,VECTOVEC,newvalue);
+						if ( CheckWild(BHEAD wc,VECTOVEC,*t,&newvalue) ) break;
+						AddWild(BHEAD wc,VECTOVEC,newvalue);
 					}
 					else break;
 				}
@@ -909,7 +909,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					newpat = pattern + pattern[1];
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
-							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+							if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 								AT.WorkPointer = oldworkpointer;
 								AN.UsedOtherFind = 1;
 								return(1);
@@ -921,7 +921,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 							return(1);
 						}
 					}
-					else j = ScanFunctions(newpat,inter,par);
+					else j = ScanFunctions(BHEAD newpat,inter,par);
 					if ( j ) {
 						AT.WorkPointer = oldworkpointer;
 						return(j); /* Full match. Return our success */
@@ -997,7 +997,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	nwstore = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 	if ( pnum > FUNCTION + WILDOFFSET ) {
 		pnum -= WILDOFFSET;
-		if ( CheckWild(pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
+		if ( CheckWild(BHEAD pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
 		oldwilval = 1;
 		t = lowlevel = oldworkpointer;
 		m = AN.WildValue;
@@ -1014,7 +1014,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			return(-1);
 		}
 		AT.WorkPointer = t;
-		AddWild(pnum,FUNTOFUN,newvalue);
+		AddWild(BHEAD pnum,FUNTOFUN,newvalue);
 	}
 	if ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == RCYCLESYMMETRIC ) type = 1;
 
@@ -1038,7 +1038,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		newpat = pattern + pattern[1];
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
-				if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+				if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 					AT.WorkPointer = oldworkpointer;
 					AN.UsedOtherFind = 1;
 					return(1);
@@ -1050,7 +1050,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				return(1);
 			}
 		}
-		else j = ScanFunctions(newpat,inter,par);
+		else j = ScanFunctions(BHEAD newpat,inter,par);
 		if ( j ) return(j);
 		goto NoSuccess;
 	}
@@ -1089,8 +1089,8 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			while ( p < pstop ) {
 				if ( *p != -ARGWILD ) { p++; continue; }
 				AN.argaddress = t;
-				if ( CheckWild(p[1],ARGTOARG,0,t) ) goto nomatch;
-				AddWild(p[1],ARGTOARG,0);
+				if ( CheckWild(BHEAD p[1],ARGTOARG,0,t) ) goto nomatch;
+				AddWild(BHEAD p[1],ARGTOARG,0);
 				p += 2;
 			}
 			oldwilval = 1;
@@ -1126,14 +1126,14 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						while ( p < pstop ) {
 							if ( *p != -ARGWILD ) { p++; continue; }
 							AN.argaddress = t;
-							AddWild(p[1],ARGTOARG,0);
+							AddWild(BHEAD p[1],ARGTOARG,0);
 							p += 2;
 						}
 					}
 					newpat = pattern + pattern[1];
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
-							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+							if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 								AT.WorkPointer = oldworkpointer;
 								AT.pWorkPointer = oww;
 								AN.UsedOtherFind = 1;
@@ -1147,7 +1147,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 							return(1);
 						}
 					}
-					else j = ScanFunctions(newpat,inter,par);
+					else j = ScanFunctions(BHEAD newpat,inter,par);
 					if ( j ) {
 						AT.WorkPointer = oldworkpointer;
 						AT.pWorkPointer = oww;
@@ -1196,8 +1196,8 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( *p == -ARGWILD ) {
 						wc = 1;
 						AN.argaddress = (WORD *)a;
-						if ( CheckWild(p[1],ARLTOARL,funnycount,(WORD *)a) ) break;
-						AddWild(p[1],ARLTOARL,funnycount);
+						if ( CheckWild(BHEAD p[1],ARLTOARL,funnycount,(WORD *)a) ) break;
+						AddWild(BHEAD p[1],ARLTOARL,funnycount);
 						j += funnycount-1; a += funnycount-1;
 					}
 					else if ( MatchArgument(t,p) == 0 ) break;
@@ -1212,7 +1212,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					newpat = pattern + pattern[1];
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
-							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+							if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 								AT.WorkPointer = oldworkpointer;
 								AT.pWorkPointer = oww;
 								AN.UsedOtherFind = 1;
@@ -1226,7 +1226,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 							return(1);
 						}
 					}
-					else j = ScanFunctions(newpat,inter,par);
+					else j = ScanFunctions(BHEAD newpat,inter,par);
 					if ( j ) {
 						AT.WorkPointer = oldworkpointer;
 						AT.pWorkPointer = oww;
@@ -1338,8 +1338,8 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					if ( *p == -ARGWILD ) {
 						wc = thewildcards[renum[p[1]]];
 						AN.argaddress = (WORD *)a;
-						if ( CheckWild(p[1],ARLTOARL,wc,(WORD *)a) ) break;
-						AddWild(p[1],ARLTOARL,wc);
+						if ( CheckWild(BHEAD p[1],ARLTOARL,wc,(WORD *)a) ) break;
+						AddWild(BHEAD p[1],ARLTOARL,wc);
 						j += wc-1; a += wc-1; wc = 1;
 					}
 					else if ( MatchArgument(t,p) == 0 ) break;
@@ -1354,7 +1354,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					newpat = pattern + pattern[1];
 					if ( newpat >= AN.patstop ) {
 						if ( AN.UseFindOnly == 0 ) {
-							if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+							if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 								AT.WorkPointer = oldworkpointer;
 								AT.pWorkPointer = oww;
 								AN.UsedOtherFind = 1;
@@ -1368,7 +1368,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 							return(1);
 						}
 					}
-					else j = ScanFunctions(newpat,inter,par);
+					else j = ScanFunctions(BHEAD newpat,inter,par);
 					if ( j ) {
 						AT.WorkPointer = oldworkpointer;
 						AT.pWorkPointer = oww;
@@ -1445,7 +1445,7 @@ int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	nwstore = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;
 	if ( pnum > FUNCTION + WILDOFFSET ) {
 		pnum -= WILDOFFSET;
-		if ( CheckWild(pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
+		if ( CheckWild(BHEAD pnum,FUNTOFUN,fun[0],&newvalue) ) return(0);
 		oldwilval = 1;
 		t = lowlevel = oldworkpointer;
 		m = AN.WildValue;
@@ -1462,7 +1462,7 @@ int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 			return(-1);
 		}
 		AT.WorkPointer = t;
-		AddWild(pnum,FUNTOFUN,newvalue);
+		AddWild(BHEAD pnum,FUNTOFUN,newvalue);
 	}
 	if ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == RCYCLESYMMETRIC ) type = 1;
 
@@ -1495,7 +1495,7 @@ quicky:
 		newpat = pattern + pattern[1];
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
-				if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+				if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 					AT.WorkPointer = oldworkpointer;
 					AN.UsedOtherFind = 1;
 					return(1);
@@ -1507,7 +1507,7 @@ quicky:
 				return(1);
 			}
 		}
-		else j = ScanFunctions(newpat,inter,par);
+		else j = ScanFunctions(BHEAD newpat,inter,par);
 		if ( j ) {
 			AT.WorkPointer = oldworkpointer;
 			return(j);
@@ -1749,7 +1749,7 @@ nextargw:;
 	if ( tcount == 0 ) {
 		if ( argcount > 0 ) goto NoSuccess;
 		for ( i = 0; i < funnycount; i++ ) {
-			AddWild(AT.pWorkSpace[lhfunnies+i][1],ARGTOARG,0);
+			AddWild(BHEAD AT.pWorkSpace[lhfunnies+i][1],ARGTOARG,0);
 		}
 		goto quicky;
 	}
@@ -1846,7 +1846,7 @@ nextiraise:;
 			newpat = pattern + pattern[1];
 			if ( newpat >= AN.patstop ) {
 				if ( AN.UseFindOnly == 0 ) {
-					if ( FindOnce(AN.findTerm,AN.findPattern) ) {
+					if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 						AT.WorkPointer = oldworkpointer;
 						AT.pWorkPointer = oww;
 						AN.UsedOtherFind = 1;
@@ -1860,7 +1860,7 @@ nextiraise:;
 					return(1);
 				}
 			}
-			else j = ScanFunctions(newpat,inter,par);
+			else j = ScanFunctions(BHEAD newpat,inter,par);
 			if ( j ) {
 				AT.WorkPointer = oldworkpointer;
 				AT.pWorkPointer = oww;
@@ -1945,15 +1945,15 @@ int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 			&& functions[-*t-FUNCTION].spec
 			== functions[-*m-FUNCTION-WILDOFFSET].spec ) {
 				i = -*m - WILDOFFSET;
-				if ( CheckWild(i,FUNTOFUN,-*t,&newvalue) ) return(0);
-				AddWild(i,FUNTOFUN,newvalue);
+				if ( CheckWild(BHEAD i,FUNTOFUN,-*t,&newvalue) ) return(0);
+				AddWild(BHEAD i,FUNTOFUN,newvalue);
 			}
 			else if ( *m == -SYMBOL && m[1] >= 2*MAXPOWER ) {
 				i = m[1] - 2*MAXPOWER;
 				AN.argaddress = AT.FunArg;
 				AT.FunArg[ARGHEAD+1] = -*t;
-				if ( CheckWild(i,SYMTOSUB,1,AN.argaddress) ) return(0);
-				AddWild(i,SYMTOSUB,0);
+				if ( CheckWild(BHEAD i,SYMTOSUB,1,AN.argaddress) ) return(0);
+				AddWild(BHEAD i,SYMTOSUB,0);
 			}
 			else return(0);
 		}
@@ -1962,22 +1962,22 @@ int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 			else if ( *t == -SYMBOL ) {
 				j = SYMTOSYM;
 SymAll:			if ( ( i = m[1] - 2*MAXPOWER ) < 0 ) return(0);
-				if ( CheckWild(i,j,t[1],&newvalue) ) return(0);
-				AddWild(i,j,newvalue);
+				if ( CheckWild(BHEAD i,j,t[1],&newvalue) ) return(0);
+				AddWild(BHEAD i,j,newvalue);
 			}
 			else if ( *t == -INDEX ) {
 IndAll:			i = m[1] - WILDOFFSET;
 				if ( i < AM.OffsetIndex || i >= WILDOFFSET+AM.OffsetIndex )
 															return(0);
 								/* We kill the summed over indices here */
-				if ( CheckWild(i,INDTOIND,t[1],&newvalue) ) return(0);
-				AddWild(i,INDTOIND,newvalue);
+				if ( CheckWild(BHEAD i,INDTOIND,t[1],&newvalue) ) return(0);
+				AddWild(BHEAD i,INDTOIND,newvalue);
 			}
 			else if ( *t == -VECTOR || *t == -MINVECTOR ) {
 				i = m[1] - WILDOFFSET;
 				if ( i < AM.OffsetVector ) return(0);
-				if ( CheckWild(i,VECTOVEC,t[1],&newvalue) ) return(0);
-				AddWild(i,VECTOVEC,newvalue);
+				if ( CheckWild(BHEAD i,VECTOVEC,t[1],&newvalue) ) return(0);
+				AddWild(BHEAD i,VECTOVEC,newvalue);
 			}
 			else return(0);
 		}
@@ -1988,8 +1988,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 				i = m[1] - WILDOFFSET;
 				AN.argaddress = AT.MinVecArg;
 				AT.MinVecArg[ARGHEAD+3] = t[1];
-				if ( CheckWild(i,INDTOSUB,1,AN.argaddress) ) return(0);
-				AddWild(i,INDTOSUB,(WORD)0);
+				if ( CheckWild(BHEAD i,INDTOSUB,1,AN.argaddress) ) return(0);
+				AddWild(BHEAD i,INDTOSUB,(WORD)0);
 			}
 			else return(0);
 		}
@@ -2001,8 +2001,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 		( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
 			AN.argaddress = AT.MinVecArg;
 			AT.MinVecArg[ARGHEAD+3] = t[1];
-			if ( CheckWild(i,VECTOSUB,1,AN.argaddress) ) return(0);
-			AddWild(i,VECTOSUB,(WORD)0);
+			if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) return(0);
+			AddWild(BHEAD i,VECTOSUB,(WORD)0);
 		}
 		else return(0);
 	}
@@ -2017,8 +2017,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 			WORD *mmmst, *mmm, mmmi;
 			if ( m[ARGHEAD+1] >= FUNCTION+WILDOFFSET ) {
 				mmmi = *m - WILDOFFSET;
-				if ( CheckWild(mmmi,FUNTOFUN,-*t,&newvalue) ) return(0);
-				AddWild(mmmi,FUNTOFUN,newvalue);
+				if ( CheckWild(BHEAD mmmi,FUNTOFUN,-*t,&newvalue) ) return(0);
+				AddWild(BHEAD mmmi,FUNTOFUN,newvalue);
 			}
 			else if ( m[ARGHEAD+1] != -*t ) return(0);
 /*
@@ -2030,8 +2030,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 				if ( *mmm != -ARGWILD ) return(0);
 				mmmi = 0;
 				AN.argaddress = t;
-				if ( CheckWild(mmm[1],ARGTOARG,mmmi,t) ) return(0);
-				AddWild(mmm[1],ARGTOARG,mmmi);
+				if ( CheckWild(BHEAD mmm[1],ARGTOARG,mmmi,t) ) return(0);
+				AddWild(BHEAD mmm[1],ARGTOARG,mmmi);
 				mmm += 2;
 			}
 		}
@@ -2046,21 +2046,21 @@ IndAll:			i = m[1] - WILDOFFSET;
 			if ( m[1] < 2*MAXPOWER ) return(0);
 			i = m[1] - 2*MAXPOWER;
 			AN.argaddress = t;
-			if ( CheckWild(i,SYMTOSUB,1,AN.argaddress) ) return(0);
-			AddWild(i,SYMTOSUB,0);
+			if ( CheckWild(BHEAD i,SYMTOSUB,1,AN.argaddress) ) return(0);
+			AddWild(BHEAD i,SYMTOSUB,0);
 		}
 		else if ( *m == -VECTOR ) {
 			if ( ( i = m[1] - WILDOFFSET ) < AM.OffsetVector ) return(0);
 			AN.argaddress = t;
-			if ( CheckWild(i,VECTOSUB,1,t) ) return(0);
-			AddWild(i,VECTOSUB,(WORD)0);
+			if ( CheckWild(BHEAD i,VECTOSUB,1,t) ) return(0);
+			AddWild(BHEAD i,VECTOSUB,(WORD)0);
 		}
 		else if ( *m == -INDEX ) {
 			if ( ( i = m[1] - WILDOFFSET ) < AM.OffsetIndex ) return(0);
 			if ( i >= AM.OffsetIndex + WILDOFFSET ) return(0);
 			AN.argaddress = t;
-			if ( CheckWild(i,INDTOSUB,1,AN.argaddress) ) return(0);
-			AddWild(i,INDTOSUB,(WORD)0);
+			if ( CheckWild(BHEAD i,INDTOSUB,1,AN.argaddress) ) return(0);
+			AddWild(BHEAD i,INDTOSUB,(WORD)0);
 		}
 		else return(0);
 	}
@@ -2133,7 +2133,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 			wildeat = AN.WildEat;
 			for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AT.WildArgTaken[i];
 			AN.ForFindOnly = 0; AN.UseFindOnly = 1;
-			if ( FindRest(csav,m) && ( AN.UsedOtherFind || FindOnly(csav,m) ) ) { }
+			if ( FindRest(BHEAD csav,m) && ( AN.UsedOtherFind || FindOnly(BHEAD csav,m) ) ) { }
 			else {
 				*m += msizcoef;
 				AT.WorkPointer = wildargtaken;
@@ -2150,7 +2150,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 			AN.WildArgs = wildargs;
 			AN.WildEat = wildeat;
 			for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
-			Substitute(csav,m,1);
+			Substitute(BHEAD csav,m,1);
 			cto = csav;
 			cfrom = cto + *cto - msizcoef;
 			cto++;

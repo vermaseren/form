@@ -1889,7 +1889,7 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 	if ( *t1 == 0 && *t2 == 0 ) return(1);
 	r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 	nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
-	if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat1,&ni1) ) {
+	if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat1,&ni1) ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("@Called from MultipleOf in $( )");
 		UNLOCK(ErrorMessageLock);
@@ -1899,7 +1899,7 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 		t1 += *t1; t2 += *t2;
 		r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 		nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
-		if ( DivRat((UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat2,&ni2) ) {
+		if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat2,&ni2) ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("@Called from MultipleOf in $( )");
 			UNLOCK(ErrorMessageLock);

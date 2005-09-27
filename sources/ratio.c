@@ -27,9 +27,9 @@
 */
 
 WORD
-RatioFind ARG2(WORD *,term,WORD *,params)
+RatioFind BARG2(WORD *,term,WORD *,params)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m, *r;
 	WORD x1, x2, i;
 	WORD *y1, *y2, n1 = 0, n2 = 0;
@@ -136,9 +136,9 @@ We have to revise the code for the second case.
 */
 
 WORD
-RatioGen ARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+RatioGen BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *t, *m;
 	WORD *tstops[3];
 	WORD n1, n2, i, j;
@@ -362,9 +362,9 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 */
 
 WORD
-DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
+DoSumF1 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *termout, *t, extractbuff = AT.TMbuff;
 	WORD isum, ival, iinc;
 	LONG from;
@@ -400,7 +400,7 @@ DoSumF1 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		t[3] = ival;
 		from = C->rhs[replac] - C->Buffer;
 		while ( C->Buffer[from] ) {
-			if ( InsertTerm(term,replac,extractbuff,C->Buffer+from,termout,0) < 0 ) goto SumF1Call;
+			if ( InsertTerm(BHEAD term,replac,extractbuff,C->Buffer+from,termout,0) < 0 ) goto SumF1Call;
 			AT.WorkPointer = termout + *termout;
 			if ( Generator(BHEAD termout,level) < 0 ) goto SumF1Call;
 			from += C->Buffer[from];
@@ -428,9 +428,9 @@ SumF1Call:
 */
 
 WORD
-Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
+Glue BARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	UWORD *coef;
 	WORD ncoef, *t, *t1, *t2, i, nc2, nc3, old, newer;
 	if ( AN.GlScratC == 0 )
@@ -448,13 +448,13 @@ Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 	t2 = (WORD *)coef;
 	while ( --i >= 0 ) *t2++ = *t1++;
 	i = *--t;
-	nc2 = WildFill(t,term2,sub);
+	nc2 = WildFill(BHEAD t,term2,sub);
 	*t = i;
 	t += nc2;
 	nc2 = t[-1];
 	t -= ABS(nc2);
 	newer = WORDDIF(t,term1);
-	if ( MulRat((UWORD *)t,REDLENG(nc2),coef,ncoef,(UWORD *)t,&nc3) ) {
+	if ( MulRat(BHEAD (UWORD *)t,REDLENG(nc2),coef,ncoef,(UWORD *)t,&nc3) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("Glue");
 		UNLOCK(ErrorMessageLock);
@@ -488,9 +488,9 @@ Glue ARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 */
 
 WORD
-DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
+DoSumF2 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *termout, *t, *from, *sub, *to, extractbuff = AT.TMbuff;
 	WORD isum, ival, iinc, insert, i;
 	CBUF *C;
@@ -550,7 +550,7 @@ DoSumF2 ARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 		if ( --isum <= 0 ) break;
 		ival += iinc;
 		t[3] = ival;
-		if ( Glue(termout,C->rhs[replac],sub,insert) < 0 ) goto SumF2Call;
+		if ( Glue(BHEAD termout,C->rhs[replac],sub,insert) < 0 ) goto SumF2Call;
 	}
 	AT.WorkPointer = termout;
 	return(0);

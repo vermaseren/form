@@ -533,7 +533,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		ww = term + *term;
 		if ( AT.WorkPointer < ww ) AT.WorkPointer = ww;
 	}
-	ClearWild();
+	ClearWild(BHEAD0);
 	while ( w < AN.WildStop ) {
 		if ( *w == LOADDOLLAR ) numdollars++;
 		w += w[1];
@@ -553,8 +553,8 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		case SUBONLY :
 			/* Must be an exact match */
 			AN.UseFindOnly = 1; AN.ForFindOnly = 0;
-			if ( FindRest(term,m) && ( AN.UsedOtherFind ||
-				FindOnly(term,m) ) ) RetVal = 1;
+			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind ||
+				FindOnly(BHEAD term,m) ) ) RetVal = 1;
 			else RetVal = 0;
 			break;
 		case SUBMANY :
@@ -567,64 +567,64 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 			NCOPY(r,t,i); AT.WorkPointer = r;
 			RetVal = 0;
 			AN.UseFindOnly = 0;
-			if ( ( power = FindRest(newterm,m) ) > 0 ) {
-				if ( ( power = FindOnce(newterm,m) ) > 0 ) {
+			if ( ( power = FindRest(BHEAD newterm,m) ) > 0 ) {
+				if ( ( power = FindOnce(BHEAD newterm,m) ) > 0 ) {
 					do {
-						Substitute(newterm,m,1);
+						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
 							WildDollars();
 							numdollars = 0;
 						}
-						ClearWild();
+						ClearWild(BHEAD0);
 						RetVal++;
-					} while ( FindRest(newterm,m) && (
-						AN.UsedOtherFind || FindOnce(newterm,m) ) );
+					} while ( FindRest(BHEAD newterm,m) && (
+						AN.UsedOtherFind || FindOnce(BHEAD newterm,m) ) );
 				}
 				else if ( power < 0 ) {
 					do {
-						Substitute(newterm,m,1);
+						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
 							WildDollars();
 							numdollars = 0;
 						}
-						ClearWild();
+						ClearWild(BHEAD0);
 						RetVal++;
-					} while ( FindRest(newterm,m) );
+					} while ( FindRest(BHEAD newterm,m) );
 				}
 			}
 			else if ( power < 0 ) {
-				if ( FindOnce(newterm,m) ) {
+				if ( FindOnce(BHEAD newterm,m) ) {
 					do {
-						Substitute(newterm,m,1);
+						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
 							WildDollars();
 							numdollars = 0;
 						}
-						ClearWild();
-					} while ( FindOnce(newterm,m) );
+						ClearWild(BHEAD0);
+					} while ( FindOnce(BHEAD newterm,m) );
 					RetVal = 1;
 				}
 			}
 			break;
 		case SUBONCE :
 			AN.UseFindOnly = 0;
-			if ( FindRest(term,m) && ( AN.UsedOtherFind || FindOnce(term,m) ) )
+			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind || FindOnce(BHEAD term,m) ) )
 				RetVal = 1;
 			else RetVal = 0;
 			break;
 		case SUBMULTI :
-			RetVal = FindMulti(term,m);
+			RetVal = FindMulti(BHEAD term,m);
 			break;
 		case SUBALL :
 			RetVal = 0;
 			for ( i = 0; i < *term; i++ ) ww[i] = term[i];			
-			while ( ( power = FindAll(ww,m,cbuf[AM.rbufnum].numlhs,ifcode) ) != 0 ) { RetVal += power; }
+			while ( ( power = FindAll(BHEAD ww,m,cbuf[AM.rbufnum].numlhs,ifcode) ) != 0 ) { RetVal += power; }
 			break;
 		case SUBSELECT :
 			ifcode += IDHEAD;	ifcode += ifcode[1];	ifcode += *ifcode;
 			AN.UseFindOnly = 1; AN.ForFindOnly = ifcode;
-			if ( FindRest(term,m) && ( AN.UsedOtherFind ||
-					FindOnly(term,m) ) ) RetVal = 1;
+			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind ||
+					FindOnly(BHEAD term,m) ) ) RetVal = 1;
 			else RetVal = 0;
 			break;
 		default :

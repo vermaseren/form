@@ -1,3 +1,15 @@
+ 
+#ifdef WITHPTHREADS
+#define PHEAD  ALLPRIVATES *,
+#define PHEAD0 ALLPRIVATES *
+#define BHEAD  B,
+#define BHEAD0 B
+#else
+#define PHEAD
+#define PHEAD0
+#define BHEAD
+#define BHEAD0
+#endif
 
 #define WITHOUTERROR 0
 #define WITHERROR 1
@@ -127,8 +139,6 @@ typedef short SHORT;
 #endif
 
 #ifdef ANSI
-typedef WORD (*WCN)(WORD *,WORD *,WORD,WORD);
-typedef WORD (*WCN2)(WORD *,WORD *);
 typedef VOID (*PVFUNWP)(WORD *);
 #ifdef INTELCOMPILER
 typedef VOID (*PVFUNV)();
@@ -140,8 +150,6 @@ typedef int (*CFUN)(VOID);
 typedef int (*TFUN)(UBYTE *);
 typedef int (*TFUN1)(UBYTE *,int);
 #else
-typedef WORD (*WCN)();
-typedef WORD (*WCN2)();
 typedef VOID (*PVFUNWP)();
 typedef VOID (*PVFUNV)();
 typedef int (*CFUN)();

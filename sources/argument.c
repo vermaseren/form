@@ -321,7 +321,7 @@ HaveTodo:
 */
 							}
 							else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-								if ( GcdLong(AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer,&kGCD) ) {
+								if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer,&kGCD) ) {
 									goto execargerr;
 								}
 							}
@@ -337,7 +337,7 @@ HaveTodo:
 									AN.LCMbuffer[kLCM] = r3[kLCM];
 							}
 							else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
-								if ( GcdLong(AN.LCMbuffer,kLCM,(UWORD *)r3,k,AN.LCMb,&kkLCM) ) {
+								if ( GcdLong(BHEAD AN.LCMbuffer,kLCM,(UWORD *)r3,k,AN.LCMb,&kkLCM) ) {
 									goto execargerr;
 								}
 								DivLong((UWORD *)r3,k,AN.LCMb,kkLCM,AN.LCMb,&kkLCM,AN.LCMc,&jLCM);
@@ -377,7 +377,7 @@ HaveTodo:
 */
 						size = term[*term-1];
 						size = REDLENG(size);
-						if ( MulRat((UWORD *)rstop,size,(UWORD *)r3,k,
+						if ( MulRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
 								(UWORD *)rstop,&size) ) goto execargerr;
 						size = INCLENG(size);
 						k = size < 0 ? -size: size;
@@ -425,13 +425,13 @@ HaveTodo:
 							size = REDLENG(size);
 							if ( scale > 0 ) {
 								for ( jj = 0; jj < scale; jj++ ) {
-									if ( MulRat((UWORD *)rstop,size,(UWORD *)r3,k,
+									if ( MulRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
 										(UWORD *)rstop,&size) ) goto execargerr;
 								}
 							}
 							else {
 								for ( jj = 0; jj > scale; jj-- ) {
-									if ( DivRat((UWORD *)rstop,size,(UWORD *)r3,k,
+									if ( DivRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
 										(UWORD *)rstop,&size) ) goto execargerr;
 								}
 							}
@@ -680,8 +680,8 @@ HaveTodo:
 							AN.RepFunList = r1;
 							AT.WorkPointer = r1+AN.RepFunNum+2;
 							i = *t;
-							if ( FindRest(t,factor) &&
-							 ( AN.UsedOtherFind || FindOnce(t,factor) ) ) {
+							if ( FindRest(BHEAD t,factor) &&
+							 ( AN.UsedOtherFind || FindOnce(BHEAD t,factor) ) ) {
 								NCOPY(r7,t,i)
 								j++;
 							}
@@ -1268,7 +1268,7 @@ nextterm:						mm = mnext;
 							while ( r7 < r6) *r1++ = *r7++;
 							t += *t;
 							i = REDLENG(t[-1]);
-							if ( DivRat((UWORD *)r6,i,AN.EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
+							if ( DivRat(BHEAD (UWORD *)r6,i,AN.EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
 							nq = INCLENG(nq);
 							i = ABS(nq)-1;
 							r1 += i; *r1++ = nq; *r8 = r1-r8;

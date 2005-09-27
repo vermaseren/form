@@ -76,7 +76,7 @@ Processor()
 
 			AS.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
-			if ( GetTerm(term) <= 0 ) {
+			if ( GetTerm(BHEAD term) <= 0 ) {
 				MesPrint("Expression %d has problems in scratchfile",i);
 				retval = -1;
 				break;
@@ -152,7 +152,7 @@ commonread:
 				  break;
 				}
 #endif
-				if ( GetTerm(term) <= 0 ) {
+				if ( GetTerm(BHEAD term) <= 0 ) {
 				  MesPrint("Expression %d has problems in scratchfile",i);
 				  retval = -1;
 				  break;
@@ -165,7 +165,7 @@ commonread:
 				AR.DeferFlag = AC.ComDefer;
 				NewSort();
 				AN.ninterms = 0;
-				while ( GetTerm(term) ) {
+				while ( GetTerm(BHEAD term) ) {
 				  AN.ninterms++; dd = AN.deferskipped;
 				  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
 					if ( GetMoreTerms(term) ) {
@@ -209,7 +209,7 @@ commonread:
 /*:[13nov2003 mt]*/
 				AS.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
-				if ( GetTerm(term) <= 0 ) {
+				if ( GetTerm(BHEAD term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
@@ -237,7 +237,7 @@ commonread:
 					}
 					AR.CompressPointer = oldipointer;
 					AR.ComprTop = comprtop;
-				} while ( GetTerm(term) );
+				} while ( GetTerm(BHEAD term) );
 				if ( FlushOut(&position,AR.outfile,1) ) goto ProcErr;
 				break;
 			case HIDELEXPRESSION:
@@ -249,7 +249,7 @@ commonread:
 /*:[13nov2003 mt]*/
 				AS.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
-				if ( GetTerm(term) <= 0 ) {
+				if ( GetTerm(BHEAD term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
@@ -277,7 +277,7 @@ commonread:
 					}
 					AR.CompressPointer = oldipointer;
 					AR.ComprTop = comprtop;
-				} while ( GetTerm(term) );
+				} while ( GetTerm(BHEAD term) );
 				if ( FlushOut(&position,AS.hidefile,1) ) goto ProcErr;
 				AS.hidefile->POfull = AS.hidefile->POfill;
 				break;
@@ -1099,7 +1099,7 @@ caughttable:
 					AN.FullProto = T->prototype;
 					AN.WildValue = AN.FullProto + SUBEXPSIZE;
 					AN.WildStop = AN.FullProto+AN.FullProto[1];
-					ClearWild();
+					ClearWild(BHEAD0);
 					AN.RepFunNum = 0;
 					AN.RepFunList = AN.EndNest;
 					AT.WorkPointer = AN.EndNest + (AM.MaxTer >> 1);
@@ -1109,7 +1109,7 @@ caughttable:
 						UNLOCK(ErrorMessageLock);
 					}
 					wilds = 0;
-					if ( MatchFunction(T->pattern,t1,&wilds) > 0 ) {
+					if ( MatchFunction(BHEAD T->pattern,t1,&wilds) > 0 ) {
 						AT.WorkPointer = oldwork;
 						if ( AT.NestPoin != AT.Nest ) return(1);
 
@@ -1576,9 +1576,9 @@ InFunc:
 */
 
 WORD
-InsertTerm ARG6(WORD *,term,WORD,replac,WORD,extractbuff,WORD *,position,WORD *,termout,WORD,tepos)
+InsertTerm BARG6(WORD *,term,WORD,replac,WORD,extractbuff,WORD *,position,WORD *,termout,WORD,tepos)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *m, *t, *r, i, l2, j;
 	WORD *u, *v, l1, *coef;
 	coef = AT.WorkPointer;
@@ -1610,7 +1610,7 @@ foundit:;
 			do { *m++ = *r++; } while ( r < t );
 			if ( t[1] > SUBEXPSIZE ) {
 				i = *--m;
-				if ( ( l2 = WildFill(m,position,t) ) < 0 ) goto InsCall;
+				if ( ( l2 = WildFill(BHEAD m,position,t) ) < 0 ) goto InsCall;
 				*m = i;
 				m += l2-1;
 				l2 = *m;
@@ -1637,7 +1637,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				*m++ = l1;
 			}
 			else {
-				if ( MulRat((UWORD *)u,REDLENG(l1),(UWORD *)r,REDLENG(l2),
+				if ( MulRat(BHEAD (UWORD *)u,REDLENG(l1),(UWORD *)r,REDLENG(l2),
 				(UWORD *)m,&l1) ) goto InsCall;
 				l2 = l1;
 				l2 <<= 1;
@@ -1801,8 +1801,9 @@ PasErr:
 */
 
 WORD *
-PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
+PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 {
+	GETBIDENTITY;
 	WORD *t, *r, x, y, z;
 	WORD *m, *u, l1, a[2];
 	m = accum + 2*AM.MaxTer;
@@ -1827,7 +1828,7 @@ PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 		if ( y != 1 ) { divby /= y; times /= y; }
 		a[1] = divby;
 		a[0] = times;
-		if ( MulRat((UWORD *)t,REDLENG(l1),(UWORD *)a,1,(UWORD *)accum,&l1) ) {
+		if ( MulRat(BHEAD (UWORD *)t,REDLENG(l1),(UWORD *)a,1,(UWORD *)accum,&l1) ) {
 			LOCK(ErrorMessageLock);
 			MesCall("PasteTerm");
 			UNLOCK(ErrorMessageLock);
@@ -1858,9 +1859,9 @@ PasteTerm ARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 */
 
 WORD
-FiniTerm ARG5(WORD *,term,WORD *,accum,WORD *,termout,WORD,number,WORD,tepos)
+FiniTerm BARG5(WORD *,term,WORD *,accum,WORD *,termout,WORD,number,WORD,tepos)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD *m, *t, *r, i, numacc, l2, ipp;
 	WORD *u, *v, l1, *coef = AT.WorkPointer, *oldaccum;
 	if ( ( AT.WorkPointer = coef + 2*AM.MaxTal ) > AT.WorkTop ) {
@@ -1898,7 +1899,7 @@ foundit:;
 						if ( *r == WILDCARDS ) {
 							r += 2;
 							i = *--m;
-							if ( ( l2 = WildFill(m,accum,r) ) < 0 ) goto FiniCall;
+							if ( ( l2 = WildFill(BHEAD m,accum,r) ) < 0 ) goto FiniCall;
 							goto AllWild;
 						}
 						r += r[1];
@@ -1907,7 +1908,7 @@ foundit:;
 				}
 				else if ( t[1] > SUBEXPSIZE && t[SUBEXPSIZE] != FROMBRAC ) {
 					i = *--m;
-					if ( ( l2 = WildFill(m,accum,t) ) < 0 ) goto FiniCall;
+					if ( ( l2 = WildFill(BHEAD m,accum,t) ) < 0 ) goto FiniCall;
 AllWild:			*m = i;
 					m += l2-1;
 					l2 = *m;
@@ -1943,7 +1944,7 @@ NoWild:				r = accum;
 						FiniLine();
 						goto FiniCall;
 					}
-					if ( MulRat((UWORD *)coef,l1,(UWORD *)r,l2,(UWORD *)coef,&l1) ) goto FiniCall;
+					if ( MulRat(BHEAD (UWORD *)coef,l1,(UWORD *)r,l2,(UWORD *)coef,&l1) ) goto FiniCall;
 					if ( AC.ncmod != 0 && TakeModulus((UWORD *)coef,&l1,0) ) goto FiniCall;
 				}
 				accum += *accum;
@@ -2194,7 +2195,7 @@ SkipCount:	level++;
 						while ( --i >= 0 ) {
 							cp[-1] = *t++;
 							termout = AT.WorkPointer;
-							if ( ( j = WildFill(termout,term,op)) < 0 )
+							if ( ( j = WildFill(BHEAD termout,term,op)) < 0 )
 								goto GenCall;
 							m = term;
 							j = *m;
@@ -2275,13 +2276,13 @@ SkipCount:	level++;
 							*cp++ = ++AR.CurDum;
 						}
 						AR.CompressPointer = cp;
-						if ( WildFill(term,term,op) < 0 ) goto GenCall;
+						if ( WildFill(BHEAD term,term,op) < 0 ) goto GenCall;
 						AR.CompressPointer = op;
 						ReNumber(BHEAD term);
 						goto Renormalize;
 					}
 				  case TYPECHISHOLM:
-					if ( Chisholm(term,level) ) goto GenCall;
+					if ( Chisholm(BHEAD term,level) ) goto GenCall;
 CommonEnd:
 					AT.WorkPointer = term + *term;
 					goto Return0;
@@ -2472,7 +2473,7 @@ AutoGen:	i = *AT.TMout;
 			if ( ( AT.WorkPointer += i ) > AT.WorkTop ) goto OverWork;
 			accum = AT.TMout;
 			while ( --i >= 0 ) *t++ = *accum++;
-			if ( (*(FG.Operation[termout[1]]))(term,termout,replac,level) ) goto GenCall;
+			if ( (*(FG.Operation[termout[1]]))(BHEAD term,termout,replac,level) ) goto GenCall;
 			AT.WorkPointer = termout;
 			goto Return0;
 		}
@@ -2547,7 +2548,7 @@ AutoGen:	i = *AT.TMout;
 			if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) goto OverWork;
 			while ( cbuf[extractbuff].Buffer[posisub] ) {
 				AT.WorkPointer = termout + AM.MaxTer;
-				if ( InsertTerm(term,replac,extractbuff,
+				if ( InsertTerm(BHEAD term,replac,extractbuff,
 					&(cbuf[extractbuff].Buffer[posisub]),termout,tepos) < 0 ) goto GenCall;
 				AT.WorkPointer = termout + *termout;
 				*AN.RepPoint = 1;
@@ -2587,7 +2588,7 @@ AutoGen:	i = *AT.TMout;
 			i = 1;
 			do {
 				if ( cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]] ) {
-					if ( ( a = PasteTerm(i-1,accum,
+					if ( ( a = PasteTerm(BHEAD i-1,accum,
 						&(cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]]),i,*same) ) == 0 )
 						goto GenCall;
 					AT.lWorkSpace[posit+1] = AT.lWorkSpace[posit];
@@ -2605,7 +2606,7 @@ AutoGen:	i = *AT.TMout;
 					termout = AT.WorkPointer = a;
 					if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
 						goto OverWork;
-					if ( FiniTerm(term,accum,termout,replac,tepos) ) goto GenCall;
+					if ( FiniTerm(BHEAD term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
@@ -2635,7 +2636,7 @@ AutoGen:	i = *AT.TMout;
 			i = 0;
 			while ( i >= 0 ) {
 				if ( cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]] ) {
-					if ( ( a = PasteTerm(i,accum,
+					if ( ( a = PasteTerm(BHEAD i,accum,
 						&(cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]]),1,1) ) == 0 ) goto GenCall;
 					AT.lWorkSpace[posit] += cbuf[extractbuff].Buffer[AT.lWorkSpace[posit]];
 					i++; posit++;
@@ -2648,7 +2649,7 @@ AutoGen:	i = *AT.TMout;
 					termout = AT.WorkPointer = a;
 					if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
 						goto OverWork;
-					if ( FiniTerm(term,accum,termout,replac,tepos) ) goto GenCall;
+					if ( FiniTerm(BHEAD term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
 					AS.expchanged = 1;
@@ -2733,7 +2734,7 @@ skippedfirst:
 				if ( i >= power ) {
 					termout = AT.WorkPointer = a;
 					if ( ( AT.WorkPointer += 2*AM.MaxTer ) > AT.WorkTop ) goto OverWork;
-					if ( FiniTerm(term,accum,termout,replac,0) ) goto GenCall;
+					if ( FiniTerm(BHEAD term,accum,termout,replac,0) ) goto GenCall;
 					if ( *termout ) {
 						AT.WorkPointer = termout + *termout;
 						*AN.RepPoint = 1;
@@ -2941,7 +2942,7 @@ doterms:
 					UNLOCK(ErrorMessageLock);
 					return(-1);
 				}
-				if ( FiniTerm(term,aa,termout,nexp,0) ) goto PowCall;
+				if ( FiniTerm(BHEAD term,aa,termout,nexp,0) ) goto PowCall;
 				if ( *termout ) {
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
@@ -3055,7 +3056,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 		*tstart = *(AR.CompressPointer)-decr;
 		AR.CompressPointer = AR.CompressPointer+AR.CompressPointer[0];
 
-		if ( InsertTerm(term,0,AM.rbufnum,tstart,termout,0) < 0 ) {
+		if ( InsertTerm(BHEAD term,0,AM.rbufnum,tstart,termout,0) < 0 ) {
 			goto DefCall;
 		}
 		*tstart = oldb;
@@ -3306,7 +3307,7 @@ PrepPoly ARG1(WORD *,term)
 				else ncoef--;
 				ncoef >>= 1;
 				while ( t < vv ) *m++ = *t++;
-				if ( MulRat((UWORD *)vv,ncoef,(UWORD *)tstop,jcoef,
+				if ( MulRat(BHEAD (UWORD *)vv,ncoef,(UWORD *)tstop,jcoef,
 					(UWORD *)m,&ncoef) ) Terminate(-1);
 				ncoef <<= 1;
 				m += ABS(ncoef);
@@ -3457,14 +3458,14 @@ retry:
 				m -= ABS(m[-1]);
 				t = t1 + *t1 - 1;
 				l1 = REDLENG(*t);
-				if ( MulRat((UWORD *)m,l3,(UWORD *)tt1,l1,(UWORD *)m,&l4) ) {
+				if ( MulRat(BHEAD (UWORD *)m,l3,(UWORD *)tt1,l1,(UWORD *)m,&l4) ) {
 					LowerSortLevel(); goto PolyCall; }
 				if ( AC.ncmod != 0 && TakeModulus((UWORD *)m,&l4,0) ) {
 					LowerSortLevel(); goto PolyCall; }
 				if ( l4 == 0 ) continue;
 				t = t2 + *t2 - 1;
 				l2 = REDLENG(*t);
-				if ( MulRat((UWORD *)m,l4,(UWORD *)tt2,l2,(UWORD *)m,&l3) ) {
+				if ( MulRat(BHEAD (UWORD *)m,l4,(UWORD *)tt2,l2,(UWORD *)m,&l3) ) {
 					LowerSortLevel(); goto PolyCall; }
 				if ( AC.ncmod != 0 && TakeModulus((UWORD *)m,&l3,0) ) {
 					LowerSortLevel(); goto PolyCall; }
@@ -3475,7 +3476,7 @@ retry:
 				l1 = REDLENG(*t);
 				t = t2 + *t2 - 1;
 				l2 = REDLENG(*t);
-				if ( MulRat((UWORD *)tt1,l1,(UWORD *)tt2,l2,(UWORD *)m,&l3) ) {
+				if ( MulRat(BHEAD (UWORD *)tt1,l1,(UWORD *)tt2,l2,(UWORD *)m,&l3) ) {
 					LowerSortLevel(); goto PolyCall; }
 				if ( AC.ncmod != 0 && TakeModulus((UWORD *)m,&l3,0) ) {
 					LowerSortLevel(); goto PolyCall; }

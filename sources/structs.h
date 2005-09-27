@@ -1424,10 +1424,18 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
   	#] A :
   	#[ FG :
 */
+
+#ifdef ANSI
+typedef WORD (*WCN)(PHEAD WORD *,WORD *,WORD,WORD);
+typedef WORD (*WCN2)(PHEAD WORD *,WORD *);
+#else
+typedef WORD (*WCN)();
+typedef WORD (*WCN2)();
+#endif
 
 typedef struct FixedGlobals {
 	WCN		Operation[8];
@@ -1442,7 +1450,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

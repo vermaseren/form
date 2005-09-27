@@ -111,7 +111,7 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 			while ( t1 < tstop2 ) *w++ = *t1++;
 			ncoef1 = REDLENG(ncoef1);
 			ncoef2 = REDLENG(ncoef2);
-			if ( MulRat((UWORD *)tstop1,ncoef1,(UWORD *)tstop2,ncoef2,
+			if ( MulRat(BHEAD (UWORD *)tstop1,ncoef1,(UWORD *)tstop2,ncoef2,
 				(UWORD *)w,&ncoef3) ) goto abortion;
 			ncoef3 = INCLENG(ncoef3);
 			w += ABS(ncoef3);
@@ -189,7 +189,7 @@ WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 			t = t1; t1 += *t1; n4 = n;
 			while ( t < t1stop ) *n++ = *t++;
 			ncoef1 = t1[-1]; ncoef1 = REDLENG(ncoef1);
-			if ( DivRat((UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
+			if ( DivRat(BHEAD (UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
 				(UWORD *)n,&ncoef3) ) goto aborteer;
 			ncoef3 = INCLENG(ncoef3);
 			n += ABS(ncoef3); n[-1] = ncoef3; *n4 = n-n4;
@@ -239,7 +239,7 @@ nextt:		t += *t;
 		}
 		if ( succ ) {	/* Now the coefficient */
 			ncoef1 = t[*t-1]; ncoef1 = REDLENG(ncoef1);
-			if ( DivRat((UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
+			if ( DivRat(BHEAD (UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
 				(UWORD *)w,&ncoef3) ) goto aborteer;
 			ncoef3 = INCLENG(ncoef3);
 			w += ABS(ncoef3); w[-1] = ncoef3; *oldwork = w - oldwork;
@@ -330,7 +330,7 @@ WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 			ncoef1 = n1[*n1-1];
 			ncoef2 = n2[*n2-1];
 			ncoef1 = REDLENG(ncoef1); ncoef2 = REDLENG(ncoef2);
-			if ( DivRat((UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
+			if ( DivRat(BHEAD (UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
 					(UWORD *)(oldwork),&ncoef3) ) goto aborteer;
 			ncoef3 = INCLENG(ncoef3);
 			i1 = ABS(ncoef3)+1;
@@ -364,7 +364,7 @@ dosub:
 			ncoef1 = n1[*n1-1];
 			ncoef2 = n2[*n2-1];
 			ncoef1 = REDLENG(ncoef1); ncoef2 = REDLENG(ncoef2);
-			if ( DivRat((UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
+			if ( DivRat(BHEAD (UWORD *)t1stop,ncoef1,(UWORD *)t2stop,ncoef2,
 					(UWORD *)(oldwork),&ncoef3) ) goto aborteer;
 			ncoef3 = INCLENG(ncoef3);
 			i1 = ABS(ncoef3)+5;
@@ -411,7 +411,7 @@ dosub:
 					*w++ = SYMBOL; *w++ = 4; *w++ = symnum; *w++ = t2[4]+j;
 				}
 				ncoef2 = t2[*t2-1]; ncoef2 = REDLENG(ncoef2);
-				if ( MulRat((UWORD *)(outbuffer+coefpoin),ncoef3,(UWORD *)(t2stop)
+				if ( MulRat(BHEAD (UWORD *)(outbuffer+coefpoin),ncoef3,(UWORD *)(t2stop)
 					,ncoef2,(UWORD *)w,&ncoef1) ) {
 					LowerSortLevel(); LowerSortLevel(); goto aborteer;
 				}
@@ -1113,7 +1113,7 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 		n1 += *n1;
 		ncoef1 = term[*term-1]; ncoef1 = REDLENG(ncoef1);
 		ncoef2 = n1[-1]; ncoef2 = REDLENG(ncoef2);
-		if ( MulRat((UWORD *)tstop,ncoef1,(UWORD *)n2,ncoef2,
+		if ( MulRat(BHEAD (UWORD *)tstop,ncoef1,(UWORD *)n2,ncoef2,
 			(UWORD *)m,&ncoef3) ) goto aborteer;
 		ncoef3 = INCLENG(ncoef3);
 		m += ABS(ncoef3);
@@ -1224,7 +1224,7 @@ WORD *PolynoUnify ARG2(WORD *,poly,int,par)
 		while ( t < tstop ) *n++ = *t++;
 		t1 += *t1;
 		ncoef2 = t1[-1]; ncoef2 = REDLENG(ncoef2);
-		if ( DivRat((UWORD *)tstop,ncoef2,(UWORD *)oldwork,ncoef1,
+		if ( DivRat(BHEAD (UWORD *)tstop,ncoef2,(UWORD *)oldwork,ncoef1,
 			(UWORD *)n,&ncoef3) ) { return(0); }
 		ncoef3 = INCLENG(ncoef3);
 		n += ABS(ncoef3);
@@ -1480,7 +1480,7 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 		while ( n > 1 && w[-1] == 0 ) { w--; n--; }
 		w -= n;
 		if ( n == 1 && *w == 1 ) continue; /* Take the easiest case */
-		if ( GcdLong(AN.PIFscrat,AN.PIFnscrat,(UWORD *)w,n,AN.PIFscrat1,&AN.PIFnscrat1) )
+		if ( GcdLong(BHEAD AN.PIFscrat,AN.PIFnscrat,(UWORD *)w,n,AN.PIFscrat1,&AN.PIFnscrat1) )
 			goto PIFerror;
 		if ( DivLong(AN.PIFscrat,AN.PIFnscrat,AN.PIFscrat1,AN.PIFnscrat1,AN.PIFscrat2,&AN.PIFnscrat2,AN.PIFscrat1,&n1) )
 			goto PIFerror;

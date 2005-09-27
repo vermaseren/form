@@ -1702,7 +1702,7 @@ WriteAll()
 	AO.IsBracket = 0;
 	AO.OutSkip = 3;
 	AR.DeferFlag = 0;
-	while ( GetTerm(AO.termbuf) ) {
+	while ( GetTerm(BHEAD AO.termbuf) ) {
 		t = AO.termbuf + 1;
 		n = Expressions[t[2]].status;
 		if ( ( n == LOCALEXPRESSION || n == GLOBALEXPRESSION
@@ -1757,7 +1757,7 @@ WriteAll()
 			AO.InFbrack = 0;
 			AO.FortFirst = 0;
 			first = 1;
-			while ( GetTerm(AO.termbuf) ) {
+			while ( GetTerm(BHEAD AO.termbuf) ) {
 				WORD *m;
 				GETSTOP(AO.termbuf,m);
 				if ( first ) {
@@ -1784,7 +1784,7 @@ WriteAll()
 			FiniLine();
 		}
 		else {
-			do { } while ( GetTerm(AO.termbuf) );
+			do { } while ( GetTerm(BHEAD AO.termbuf) );
 		}
 	}
 	if ( AC.OutputSpaces == NORMALFORMAT ) FiniLine();
@@ -1878,7 +1878,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 	AR.DeferFlag = 0;
 
 	if ( AC.OutputMode == FORTRANMODE ) AO.OutSkip = 6;
-	if ( GetTerm(AO.termbuf) <= 0 ) {
+	if ( GetTerm(BHEAD AO.termbuf) <= 0 ) {
 		MesPrint("@ReadError in expression %s",name);
 		goto AboWrite;
 	}
@@ -1886,7 +1886,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 	AO.InFbrack = 0;
 	AO.FortFirst = 0;
 	first = 1;
-	while ( GetTerm(AO.termbuf) ) {
+	while ( GetTerm(BHEAD AO.termbuf) ) {
 		WORD *m;
 		GETSTOP(AO.termbuf,m);
 		if ( first ) {
@@ -1927,7 +1927,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 	AO.InFbrack = 0;
 	AO.FortFirst = 0;
 	first = 1;
-	while ( GetTerm(AO.termbuf) ) {
+	while ( GetTerm(BHEAD AO.termbuf) ) {
 		WORD *m;
 		GETSTOP(AO.termbuf,m);
 		if ( first ) {
