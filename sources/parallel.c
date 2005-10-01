@@ -7,7 +7,7 @@
   parallel.h). So there still need two different objectfiles to be compiled 
   for mpi and pvm!
 
-  #[ includes
+  	#[ includes :
 */
 #include "form3.h"
 
@@ -17,8 +17,11 @@ WORD *PF_shared_buff;
 #endif
 
 /*[04nov2003 mt]:*/
-/*This will work well only under Linux, see #ifdef PF_WITH_SCHED_YIELD below
-in PF_WaitAllSlaves().*/
+/*
+	This will work well only under Linux, see 
+		#ifdef PF_WITH_SCHED_YIELD
+	below in PF_WaitAllSlaves().
+*/
 #ifdef PF_WITH_SCHED_YIELD
 #include <sched.h>
 #endif
@@ -36,10 +39,13 @@ in PF_WaitAllSlaves().*/
 #define PRINTFBUF(TEXT,TERM,SIZE) {}
 #endif
 
+int PF_PackString ARG1(UBYTE *,str);
+int PF_UnPackString ARG1(UBYTE *,str);
+
 /*
-  #] includes
-  #[ statistics
-     #[ variables (should be part of a struct?)
+  	#] includes :
+  	#[ statistics :
+ 		#[ variables : (should be part of a struct?)
 */
 static LONG PF_maxinterms;   /* maximum number of terms in one inputpatch */ 
 static LONG PF_linterms;     /* local interms on this proces: PF_Proces */
@@ -55,8 +61,8 @@ static LONG **PF_stats=0;    /* space for collecting statistics of all procs */
 static LONG PF_laststat;     /* last realtime when statistics were printed */
 static LONG PF_statsinterval;/* timeinterval for printing statistics */
 /*
-     #] variables (should be part of a struct?)
-	 #[ int        PF_Statistics(LONG**,int)
+ 		#] variables :
+ 		#[ PF_Statistics : (LONG**,int)
 
 	 prints statistics every PF_statinterval seconds
 	 for proc = 0 it prints final statistics for EndSort.
@@ -136,10 +142,10 @@ PF_Statistics ARG2(LONG**,stats,int,proc)
   return(0);
 }
 /*
-     #] int PF_Statistics(LONG**,int)
-  #] statistics
-  #[ sort.c
-     #[ sort variables
+ 		#] PF_Statistics :
+  	#] statistics :
+  	#[ sort.c :
+ 		#[ sort variables :
   */
 
 /* a node for the tree of losers in the final sorting on the master */
@@ -164,8 +170,8 @@ static  WORD *PF_WorkSpace;      /* used in PF_EndSort */
 static  UWORD *PF_ScratchSpace;  /* used in PF_GetLosers */
 
 /*
-     #] sort variables
-	 #[ PF_BUFFER* PF_AllocBuf(int,LONG,WORD)
+ 		#] sort variables :
+ 		#[ PF_AllocBuf : (int,LONG,WORD)
 
   Allocate one PF_BUFFER struct with numbuf buffers of size bsize
   For the first 'free' buffers there is no space allocated 
@@ -235,8 +241,8 @@ PF_AllocBuf ARG3(int,nbufs,LONG,bsize,WORD,free)
   return(buf);
 }
 /*
-     #] PF_BUFFER *PF_AllocBuf(int,LONG)
-     #[ int        PF_InitTree()
+ 		#] PF_AllocBuf :
+ 		#[ PF_InitTree : ()
 
   Initializes the sorting tree on the master.
 
@@ -259,10 +265,10 @@ PF_InitTree ARG0
   int numslaves = numtasks-1;
   long size;
 
-  /* 
-	 #[ the buffers for the new coefficients and the terms 
-	    we need one for each slave 
-  */
+/* 
+ 		#[ the buffers : for the new coefficients and the terms 
+ 		   we need one for each slave 
+*/
   if(!PF_term){ 
 	size =  2*numtasks*sizeof(WORD*) + sizeof(WORD)*
 	  ( numtasks*(1 + AM.MaxTal) + (AM.MaxTer+1) + 2*(AM.MaxTal+2)); 
@@ -282,9 +288,9 @@ PF_InitTree ARG0
 
 	if( p != stop){ MesPrint("error in PF_InitTree"); return(-1); }
   }
-  /* 
-	 #] 
-     #[ the receive buffers 
+/* 
+ 		#] the buffers :
+ 		#[ the receive buffers :
   */
   numrbufs = PF.numrbufs;
   /* this is the size we have in the combined sortbufs for one slave */
@@ -321,12 +327,12 @@ PF_InitTree ARG0
   PF_term[0][0] = 0;
   PF.rbufs = rbuf;
 
-  /* 
-	 #] the receive buffers
-	 #[ the actual tree 
+/* 
+ 		#] the receive buffers :
+ 		#[ the actual tree :
 	
 	 calculate number of nodes in mergetree and allocate space for them 
-  */
+*/
   if(numslaves < 3) numnodes = 1;
   else{
 	numnodes = 2;
@@ -364,14 +370,14 @@ PF_InitTree ARG0
 	}
 	PF_root[i].rloser = 0;
   }
-  /*
-	#] the actual tree 
-  */
+/*
+ 		#] the actual tree :
+*/
   return(numnodes);
 }
 /*
-     #] PF_InitTree()
-	 #[ WORD*      PF_PutIn(int)
+ 		#] PF_InitTree :
+ 		#[ PF_PutIn : (int)
 
   PF_PutIn replaces PutIn on the master process and is used in PF_GetLoser. 
   It puts in the next term from slaveprocess 'src' into the tree of losers
@@ -471,8 +477,8 @@ newterms:
   return(term);
 }
 /*
-     #] WORD* PF_PutIn(int)
-	 #[ int        PF_GetLoser(*NODE)
+ 		#] PF_PutIn : (int)
+ 		#[ PF_GetLoser : (*NODE)
   
   Find the 'smallest' of all the PF_terms. Take also care of changing 
   coefficients and cancelling terms. When the coefficient changes, the new is 
@@ -653,8 +659,8 @@ cancelled:
   return(0);
 }
 /*
-     #] PF_GetLoser(NODE)
-	 #[ int        PF_EndSort()
+ 		#] PF_GetLoser :
+ 		#[ PF_EndSort :
 
   if this is not the masterprocess, just initialize the sendbuffers and 
   return 0, else PF_EndSort sends the rest of the terms in the sendbuffer 
@@ -778,17 +784,17 @@ PF_EndSort ARG0
   return(1);
 }
 /*
-     #] int PF_EndSort(WORD *,int,int,int)
-  #] sort.c
-  #[ proces.c
-     #[ variables
-  */
+ 		#] PF_EndSort :
+  	#] sort.c :
+  	#[ proces.c :
+ 		#[ variables :
+*/
 
 static  WORD *PF_CurrentBracket;      
 
 /*
-     #] sort variables
-     #[ WORD       PF_GetTerm(WORD*)
+ 		#] variables :
+ 		#[ PF_GetTerm : (WORD*)
 
   This replaces GetTerm on the slaves, which get their terms from the master, 
   not the infile anymore, is nonblocking and buffered ...
@@ -818,9 +824,9 @@ PF_GetTerm ARG1(WORD *,term)
   if( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ){
 ReceiveNew:
 	{
-	  /*
-		#[ receive new terms from master
-	  */
+/*
+ 		#[ receive new terms from master :
+*/
 	  int src = MASTER,tag;
 	  int follow = 0;
 	  LONG size,cpu,space = 0;
@@ -891,9 +897,9 @@ ReceiveNew:
 	  fi->POfill += 2;
 	  fi->POfull = fi->PObuffer + size;
 	  if(tag == PF_ENDSORT_MSGTAG) *fi->POfull++ = 0;
-	  /*
-		#] receive new terms from master
-	  */
+/*
+ 		#] receive new terms from master :
+*/
 	}
 	if( PF_CurrentBracket ) *PF_CurrentBracket = 0;
   }
@@ -904,20 +910,20 @@ ReceiveNew:
   }
   if ( AR.DeferFlag ) {
 	if ( !PF_CurrentBracket ){
-	  /*
-		#[ alloc space 
-	  */
+/*
+ 		#[ alloc space :
+*/
 	  PF_CurrentBracket = 
 		(WORD*)Malloc1(sizeof(WORD)*AM.MaxTer,"PF_CurrentBracket");
 	  *PF_CurrentBracket = 0;
-	  /*
-		#] alloc space 
-	  */
+/*
+ 		#] alloc space :
+*/
 	}
 	while ( *PF_CurrentBracket ){ /* "for each term in the buffer" */
-	  /*
-		#[ test bracket & skip if it's equal to the last in PF_CurrentBracket
-	  */
+/*
+ 		#[ test : bracket & skip if it's equal to the last in PF_CurrentBracket
+*/
 	  next = fi->POfill;
 	  nextstop = next + *next; nextstop -= ABS(nextstop[-1]);
 	  next++;
@@ -945,14 +951,14 @@ ReceiveNew:
 		*term = 0;
 		goto RegRet;
 	  }
-	  /*
-		#] test bracket & skip if it's equal to the last in PF_CurrentBracket
-	  */
+/*
+ 		#] test :
+*/
 	}
-	/*
-	  #[ copy this term to CurrentBracket and the part outside of bracket 
+/*
+ 		#[ copy : this term to CurrentBracket and the part outside of bracket 
 	     to WorkSpace at term
-	*/
+*/
 strip:
 	next = fi->POfill;
 	nextstop = next + *next; nextstop -= ABS(nextstop[-1]);
@@ -977,9 +983,9 @@ strip:
 	  while ( np < next ) *tp++ = *lp++ = *np++;
 	}
 	tp = term;
-	/*
-	  #] 
-	*/
+/*
+ 		#] copy :
+*/
   }
 
   i = *fi->POfill;
@@ -989,8 +995,8 @@ RegRet:
   return(*term);
 }
 /*							  
-     #] int        PF_GetTerm
-	 #[ WORD       PF_Deferred(WORD*,WORD) :
+ 		#] PF_GetTerm :
+ 		#[ PF_Deferred : (WORD*,WORD)
 	 
 	 Picks up the deferred brackets.
 */
@@ -1071,12 +1077,12 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
 }
 
 /*
- 	 #] Deferred : 
+ 		#] PF_Deferred :
 */
 
 /*[02nov2003 mt]:*/
 #ifdef REMOVEDBY_MT
-     #[ int        PF_Wait4Slave(int)
+ 		#[ PF_Wait4Slave : (int)
 /* mt: This function for par=1 is a complete nonsense. Moreover, 
   the structure of this function consists of two independent algorithms, one
   for par=0 and the other for par=1.
@@ -1188,12 +1194,11 @@ recv:
   goto recv;
 }
 /*
-      #] int        PF_Wait4Slave
+ 		#] PF_Wait4Slave :
 */
 #endif
-
 /*
-     #[ int        PF_Wait4Slave(int):
+ 		#[ PF_Wait4Slave : (int)
   Waiting for the slave src to accept terms, it returns the number of that 
   slave.*/
 static LONG **PF_W4Sstats=0;
@@ -1225,15 +1230,13 @@ PF_Wait4Slave ARG1(int,src)
 	return(next);
 }
 /*
-   #] int        PF_Wait4Slave(int):
-*/
+ 		#] PF_Wait4Slave :
+ 		#[ PF_WaitAllSlaves : (void)
 
-/*
-   #[ int   PF_WaitAllSlaves(void):
 		This function waits until all slaves are ready to send terms back to the master.
 		If some slave is not working, it sends PF_ENDSORT_MSGTAG and waits for the answer.
 		Messages from slaves will be read only after all slaves are ready, 
-      further in caller function.
+		further in caller function.
 */
 int 
 PF_WaitAllSlaves ARG0
@@ -1326,13 +1329,10 @@ PF_WaitAllSlaves ARG0
 		(exit from the main loop since readySlaves=PF.numtasks+1):*/
 	return(PF.numtasks-readySlaves);
 }/*PF_WaitAllSlaves*/
-/*
-   #] int   PF_WaitAllSlaves(void):
-*/
-/*:[02nov2003 mt]*/
 
 /*
-	 #[ int        PF_Processor(EXPRESSION,WORD)
+ 		#] PF_WaitAllSlaves :
+ 		#[ PF_Processor :
 
   replaces parts of Processor on the masters and slaves.
   On the master PF_Processor is responsible for proper distribution of terms 
@@ -1801,10 +1801,10 @@ in pre.c.*/
   return(0);
 }
 /*
-     #] int        PF_Processor()
-  #] proces.c
-  #[ startup
-     #[ int        PF_Init(int*,char***)
+ 		#] PF_Processor :
+  	#] proces.c :
+  	#[ startup :, prepro & compile
+ 		#[ PF_Init : (int*,char***)
 
 	 PF_LibInit should do all library dependent initializations.
 	 Then PF_Init should do all the library independent stuff.
@@ -1938,13 +1938,9 @@ int PF_Init ARG2(int*,argc,char ***,argv){
   return(0);
 }
 /*	 
-     #] int         PF_Init(int*,char***)
-  #] startup, prepro & compile
-*/
-
-/*[26nov2003 mt]:*/
-/*
- 		#[ LONG PF_BroadcastNumberOfTerms
+ 		#] PF_Init :
+  	#] startup :
+  	#[ PF_BroadcastNumberOfTerms :
 */
 /* The procedure is used to broadcast number of terms in expression for
 preprocessor if-expression 'termsin', see pre.c. The procedure assumes that 
@@ -1973,8 +1969,8 @@ PF_BroadcastNumberOfTerms ARG1 (LONG,x)
 	return (x);
 }/*PF_BroadcastNumberOfTerms*/
 /*
- 		#] LONG PF_BroadcastNumberOfTerms
- 		#[ int PF_InitRedefinedPreVars
+  	#] PF_BroadcastNumberOfTerms :
+  	#[ PF_InitRedefinedPreVars :
 */
 int
 PF_InitRedefinedPreVars ARG0
@@ -2059,17 +2055,8 @@ PF_InitRedefinedPreVars ARG0
 	return (0);
 }/*PF_InitRedefinedPreVars*/
 /*
- 		#] int PF_InitRedefinedPreVars
-*/
-/*:[26nov2003 mt]*/
-
-/*
-[27jul2004 mt]:
-*/
-int PF_PackString ARG1(UBYTE *,str);
-int PF_UnPackString ARG1(UBYTE *,str);
-/*
-   #[  PF_BroadcastString(UBYTE*)
+  	#] PF_InitRedefinedPreVars :
+  	#[ PF_BroadcastString : (UBYTE*)
 */
 /* 
 
@@ -2106,8 +2093,5 @@ UBYTE *cstr=str;
 	return (0);
 }/*PF_BroadcastString*/
 /*
-   #[ int PF_BroadcastString(UBYTE*)
-*/
-/*
-:[27jul2004 mt]
+  	#] PF_BroadcastString :
 */

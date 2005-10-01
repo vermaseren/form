@@ -184,7 +184,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 		cp = AR.CompressPointer;
 		for(;;) {
 			SeekFile(fi->handle,&AN.theposition,SEEK_SET);
-			GetOneTerm(term,0);
+			GetOneTerm(BHEAD term,fi->handle);
 			if ( *term == 0 ) {
 				AC.SortType = oldsorttype;
 				return(0);	/* Bracket does not exist */

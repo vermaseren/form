@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -26,7 +26,7 @@ OpenTemp()
 }
 
 /*
- 		#] OpenTemp :
+ 		#] OpenTemp : 
  		#[ SeekScratch :
 */
 
@@ -38,7 +38,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
 }
 
 /*
- 		#] SeekScratch :
+ 		#] SeekScratch : 
  		#[ SetEndScratch :
 */
 
@@ -53,7 +53,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndScratch :
+ 		#] SetEndScratch : 
  		#[ SetEndHScratch :
 */
 
@@ -68,7 +68,7 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndHScratch :
+ 		#] SetEndHScratch : 
  		#[ SetScratch :
 */
 
@@ -77,11 +77,6 @@ SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 {
 	POSITION possize;
 	LONG size;
-/*
-	if ( f != AR.infile && f != AS.hidefile ) {
-		MesPrint("SetScratch: reading only!"); Terminate(-1);
-	}
-*/
 	if ( ISLESSPOS(*position,f->POposition) ||
 	ISGEPOSINC(*position,f->POposition,(f->POfull-f->PObuffer)*sizeof(WORD)) ) {
 		if ( f->handle < 0 ) {
@@ -96,7 +91,6 @@ SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 			MesPrint("Cannot position file in SetScratch");
 			Terminate(-1);
 		}
-/* --COMPRESS-- */
 		if ( ( size = ReadFile(f->handle,(UBYTE *)(f->PObuffer),f->POsize) ) < 0
 		|| ( size & 1 ) != 0 ) {
 			MesPrint("Read error in SetScratch");
@@ -121,7 +115,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch :
+ 		#] SetScratch : 
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -148,7 +142,6 @@ RevertScratch()
 		if ( ISNOTZEROPOS(scrpos) ) {
 			return(MesPrint("Error with scratch output."));
 		}
-/* --COMPRESS-- */
 		if ( ( AS.InInBuf = ReadFile(AR.infile->handle,(UBYTE *)(AR.infile->PObuffer)
 			,AR.infile->POsize) ) < 0 || AS.InInBuf & 1 ) {
 			return(MesPrint("Error while reading from scratch file"));
@@ -166,7 +159,7 @@ RevertScratch()
 }
 
 /*
- 		#] RevertScratch :
+ 		#] RevertScratch : 
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -209,7 +202,7 @@ ResetScratch()
 }
 
 /*
- 		#] ResetScratch :
+ 		#] ResetScratch : 
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -410,7 +403,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave :
+ 		#] CoSave : 
  		#[ CoLoad :
 */
 
@@ -557,7 +550,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad :
+ 		#] CoLoad : 
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -631,7 +624,7 @@ DeleteStore ARG1(WORD,par)
 }
 
 /*
- 		#] DeleteStore :
+ 		#] DeleteStore : 
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -683,13 +676,22 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore :
+ 		#] PutInStore : 
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
 		Puts it in 'term'.
 		Returns the length of the term.
 
+		Used by Processor
+		        WriteAll
+		        WriteOne
+		        GetMoreTerms
+		        ToStorage
+		        CoFillExpression
+		        LoadOpti
+				PF_Processor
+		In multi thread/processor mode all calls are done by the master.
 */
 
 WORD
@@ -909,7 +911,7 @@ RegRet:;
 			FiniLine();
 		}
 	}
-			#] debug :
+			#] debug : 
 */
 	return(*from);
 GTerr:
@@ -927,12 +929,22 @@ GTerr:
 		Returns the length of the term.
 		Input is unbuffered.
 		Compression via AR.CompressPointer
+		par is actually in all calls a file handle
+
+		Routine is called from
+			DoOnePow           Get one power of an expression
+			Deferred           Get the contents of a bracket
+			GetFirstBracket
+			FindBracket
+		We should do something about the lack of buffering.
+		Maybe a buffer of a few times AM.MaxTer (MaxTermSize).
+		Each thread will need its own buffer!
 */
 
 WORD
-GetOneTerm ARG2(WORD *,term,WORD,par)
+GetOneTerm BARG2(WORD *,term,WORD,par)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	WORD i, *p;
 	LONG j;
 	FILEHANDLE *fi;
@@ -940,8 +952,13 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 	r = rr;
 	if ( AR.GetOneFile == 2 ) fi = AS.hidefile;
 	else                      fi = AR.infile;
-	if ( par != -2 && fi->handle >= 0 ) {
-/* --COMPRESS-- */
+	if ( /* par != -2 && */ fi->handle >= 0 ) {
+/*
+		To be changed:
+		1: check first whether the term lies completely inside the buffer
+		2: if not a: use old strategy for AT.identity == 0 (master)
+		          b: for workers, position file and read buffer
+*/
 		if ( ReadFile(fi->handle,(UBYTE *)term,(LONG)sizeof(WORD)) == sizeof(WORD) ) {
 			p = term;
 			j = i = *term++;
@@ -949,7 +966,6 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 			if ( i < 0 ) {
 				*p = -i + 1;
 				while ( ++i <= 0 ) *term++ = *r++;
-/* --COMPRESS-- */
 				if ( ReadFile(fi->handle,(UBYTE *)term,(LONG)sizeof(WORD)) !=
 				sizeof(WORD) ) {
 					goto ErrGet;
@@ -964,7 +980,6 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 			}
 			i = (WORD)j;
 			j *= TABLESIZE(WORD,UBYTE);
-/* --COMPRESS-- */
 			if ( ReadFile(fi->handle,(UBYTE *)term,j) != j ) {
 				goto ErrGet;
 			}
@@ -978,6 +993,15 @@ GetOneTerm ARG2(WORD *,term,WORD,par)
 		}
 	}
 	else {
+/*
+		Here the whole expression is in the buffer.
+		The workers can use the buffer of the master.
+		This means that their values of POfill etc will be detached
+		from their own buffer for a while.
+		fi->POfill points at a position in the master buffer
+		fi->POfull points at the end of information in the master buffer
+		To get this right we only have to redirect these two before the call!
+*/
 		p = fi->POfill;
 		if ( p >= fi->POfull ) { *term = 0; return(0); }
 		j = i = *p;
@@ -1105,7 +1129,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms :
+ 		#] GetMoreTerms : 
  		#[ GetMoreFromMem :
 
 */
@@ -1197,7 +1221,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem :
+ 		#] GetMoreFromMem : 
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1392,7 +1416,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore :
+ 		#] GetFromStore : 
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1577,7 +1601,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars :
+ 		#] DetVars : 
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -1786,7 +1810,7 @@ ErrInSto:
 }
 
 /*
- 		#] ToStorage :
+ 		#] ToStorage : 
  		#[ NextFileIndex :
 */
 
@@ -1835,7 +1859,7 @@ ErrNextS:
 }
 
 /*
- 		#] NextFileIndex :
+ 		#] NextFileIndex : 
  		#[ SetFileIndex :
 */
 
@@ -1864,7 +1888,7 @@ SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex :
+ 		#] SetFileIndex : 
  		#[ VarStore :
 */
 
@@ -1908,7 +1932,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 }
 
 /*
- 		#] VarStore :
+ 		#] VarStore : 
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2075,7 +2099,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber :
+ 		#] TermRenumber : 
  		#[ FindrNumber :
 */
 
@@ -2104,7 +2128,7 @@ ErrFindr:
 }
 
 /*
- 		#] FindrNumber :
+ 		#] FindrNumber : 
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2226,7 +2250,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex :
+ 		#] FindInIndex : 
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2377,7 +2401,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	}
 	}
 /*
-			#] Symbols :
+			#] Symbols : 
 			#[ Indices :
 */
 	{
@@ -2440,7 +2464,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices :
+			#] Indices : 
 			#[ Vectors :
 */
 	{
@@ -2484,7 +2508,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors :
+			#] Vectors : 
 			#[ Functions :
 */
 	{
@@ -2532,7 +2556,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions :
+			#] Functions : 
 
 	Now we skip the prototype. This sets the start posiion at the first term
 */
@@ -2564,7 +2588,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
 	#] StoreExpressions :
 */
 

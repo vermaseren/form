@@ -2069,7 +2069,7 @@ SkipCount:	level++;
 				  }
 				  else
 #endif
-					if ( Deferred(term,level) ) goto GenCall;
+					if ( Deferred(BHEAD term,level) ) goto GenCall;
 					goto Return0;
 				}
 				if ( AC.ncmod != 0 ) {
@@ -2880,12 +2880,12 @@ DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 	else {
 		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(AS.OldOnFile[nexp]));
 	}
-	if ( GetOneTerm(accum,hand) > 0 ) {			/* Skip prototype */
+	if ( GetOneTerm(BHEAD accum,hand) > 0 ) {			/* Skip prototype */
 		(*aa)++;
 		power--;
 doterms:
 		AR.CompressPointer = oldipointer;
-		while ( GetOneTerm(accum,hand) > 0 ) {
+		while ( GetOneTerm(BHEAD accum,hand) > 0 ) {
 /*
 			Here should come the code to test for [].
 */
@@ -2992,12 +2992,15 @@ PowCall2:;
  		#[ Deferred :			WORD Deferred(term,level)
 
 		Picks up the deferred brackets.
+		The old version isn't thread safe.
+		We have to lock positioning the file and reading it in
+		a thread specific buffer.
 */
 
 WORD
-Deferred ARG2(WORD *,term,WORD,level)
+Deferred BARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY;
 	POSITION oldposition, startposition;
 	WORD *t, *m, *mstop, *tstart, decr, oldb, *termout, i, *oldwork;
 	WORD *oldipointer = AR.CompressPointer;
@@ -3007,6 +3010,9 @@ Deferred ARG2(WORD *,term,WORD,level)
 	AT.WorkPointer += AM.MaxTer;
 	termout = AT.WorkPointer;
 	AR.DeferFlag = 0;
+/*
+		Store old position and position the file (if file)
+*/
 	if ( AR.infile->handle >= 0 ) {
 		PUTZERO(oldposition);
 		SeekFile(AR.infile->handle,&oldposition,SEEK_CUR);
@@ -3021,6 +3027,9 @@ Deferred ARG2(WORD *,term,WORD,level)
 	else {
 		SETBASEPOSITION(oldposition,AR.infile->POfill-AR.infile->PObuffer);
 	}
+/*
+		Look in the CompressBuffer where the bracket contents start
+*/
 	t = m = AR.CompressBuffer;
 	t += *t;
 	mstop = t - ABS(t[-1]);
@@ -3046,11 +3055,12 @@ Deferred ARG2(WORD *,term,WORD,level)
 	AR.TePos = 0;
 	AN.TeSuOut = 0;
 /*
-	Status of affairs:
-	First bracket content starts at mstop.
-	Next term starts at startposition and the file has been positioned.
-	Decompression information is in AR.CompressPointer.
-	The outside of the bracket runs from AR.CompressBuffer+1 to mstop.
+		Status:
+		First bracket content starts at mstop.
+		Next term starts at startposition.
+		The file has been positioned.
+		Decompression information is in AR.CompressPointer.
+		The outside of the bracket runs from AR.CompressBuffer+1 to mstop.
 */
 	for(;;) {
 		*tstart = *(AR.CompressPointer)-decr;
@@ -3064,7 +3074,7 @@ Deferred ARG2(WORD *,term,WORD,level)
 		if ( Generator(BHEAD termout,level) ) goto DefCall;
 		AR.CompressPointer = oldipointer;
 		AT.WorkPointer = termout;
-		if ( GetOneTerm(AT.WorkPointer,AR.infile->handle) <= 0 ) break;
+		if ( GetOneTerm(BHEAD AT.WorkPointer,AR.infile->handle) <= 0 ) break;
 		AR.CompressPointer = oldipointer;
 		t = AR.CompressPointer;
 		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
@@ -3075,7 +3085,10 @@ Deferred ARG2(WORD *,term,WORD,level)
 			m++; t++;
 		}
 	}
-Thatsit:
+Thatsit:;
+/*
+		Finished. Reposition the file, restore information and return.
+*/
 	if ( AR.infile->handle >= 0 ) {
 		SeekFile(AR.infile->handle,&oldposition,SEEK_SET);
 		if ( ISNEGPOS(oldposition) ) {

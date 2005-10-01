@@ -13,8 +13,8 @@
 
 /*
 #define ITHREADS
-#define WITHPTHREADS
 */
+#define WITHPTHREADS
 
 #ifdef ZWITHZLIB
 #include <zlib.h>

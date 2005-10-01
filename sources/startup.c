@@ -965,10 +965,16 @@ CleanUp ARG1(WORD,par)
 	CleanUpSort(0);
 	for ( i = 0; i < 2; i++ ) {
 		if ( AR.Fscr[i].handle >= 0 ) {
-			CloseFile(AR.Fscr[i].handle);
+			if ( AR.Fscr[i].name ) {
+/*
+				If there are more threads referring to the same file
+				only the one with the name is the owner of the file.
+*/
+				CloseFile(AR.Fscr[i].handle);
+				remove(AR.Fscr[i].name);
+			}
 			AR.Fscr[i].handle = - 1;
 			AR.Fscr[i].POfill = 0;
-			remove(AR.Fscr[i].name);
 		}
 	}
 	if ( par > 0 ) {

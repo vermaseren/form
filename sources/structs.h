@@ -390,13 +390,11 @@ typedef struct FiLe {
 	z_streamp zsp;				/* The pointer to the stream struct for gzip */
 	Bytef *ziobuffer;			/* The output buffer for compression */
 #endif
-	POSITION *blockpos;			/* Positions of blocks in the file */
 	POSITION *fPatches;			/* Positions of patches if sort file */
 	POSITION POposition;    	/* File position */
     POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
 	ULONG numblocks;			/* Number of blocks in file */
 	ULONG inbuffer;				/* Block in the buffer */
-	ULONG blockpossize;			/* Size of blockpos buffer */
     LONG POsize;                /* size of the buffer */
 #ifdef ZWITHZLIB
     LONG ziosize;               /* size of the zoutbuffer */
@@ -405,9 +403,9 @@ typedef struct FiLe {
 	int active;					/* File is open or closed */
 	WORD fPatchN;				/* Number of patches on file */
 #ifdef ZWITHZLIB
-	PADPOINTER(5,2,1,0);
-#else
 	PADPOINTER(4,2,1,0);
+#else
+	PADPOINTER(3,2,1,0);
 #endif
 } FILEHANDLE;
  
@@ -439,7 +437,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -910,7 +908,6 @@ struct C_const {
     UBYTE   *iPointer;             /* (C) Running pointer in the compiler input buffer */
     UBYTE   **LabelNames;          /* (C) List of names in label statements */
     WORD    *FixIndices;           /* (C) Buffer of fixed indices */
-    WORD    *ScratchBuf[3];        /* (C) The scratch buffers. Change for hide. */
     WORD    *termsumcheck;         /* (C) checking of nesting */
     UBYTE *iStop;                  /* (C) Top of iBuffer. */
     UBYTE *WildcardNames;          /* (C) Names of ?a variables */
@@ -1074,7 +1071,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi
                threaded execution.
 */
@@ -1118,6 +1115,9 @@ struct T_const {
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
 	int		WildcardBufferSize;    /* () local copy for updates */
+#ifdef WITHPTHREADS
+	int		identity;              /* () When we work with B->T */
+#endif
 	WORD	dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
 	WORD	onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
 	WORD	comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
@@ -1142,7 +1142,7 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1424,7 +1424,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
   	#] A :
   	#[ FG :
 */
@@ -1450,7 +1450,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

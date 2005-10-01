@@ -46,7 +46,7 @@ INILOCK(dummylock);
 static pthread_cond_t dummywakeupcondition = PTHREAD_COND_INITIALIZER;
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Identity :
  		#[ StartIdentity :
 
@@ -60,7 +60,7 @@ void StartIdentity ARG0
 }
 
 /*
- 		#] StartIdentity :
+ 		#] StartIdentity : 
  		#[ FinishIdentity :
 
 	The library needs a finishing routine
@@ -72,7 +72,7 @@ void FinishIdentity(int *keyp)
 }
 
 /*
- 		#] FinishIdentity :
+ 		#] FinishIdentity : 
  		#[ SetIdentity :
 
 	Assigns an integer value to a thread, starting at zero.
@@ -88,7 +88,7 @@ int SetIdentity ARG1(int *,identityretval)
 }
 
 /*
- 		#] SetIdentity :
+ 		#] SetIdentity : 
  		#[ WhoAmI :
 
 	Returns the number of the thread in our administration
@@ -117,7 +117,7 @@ int WhoAmI ARG0
 }
 
 /*
- 		#] WhoAmI :
+ 		#] WhoAmI : 
  		#[ BeginIdentities :
 */
 
@@ -129,8 +129,8 @@ BeginIdentities ARG0
 }
 
 /*
- 		#] BeginIdentities :
-  	#] Identity :
+ 		#] BeginIdentities : 
+  	#] Identity : 
   	#[ StartAllThreads :
 
 	In this routine we start 'number' threats
@@ -185,21 +185,52 @@ int StartAllThreads ARG1(int,number)
 }
 
 /*
-  	#] StartAllThreads :
+  	#] StartAllThreads : 
   	#[ InitializeOneThread :
+
+	One complication:
+		AM.ScratSize can be rather big. We don't want all the workers
+		to have an allocation of that size. Some computers may run out
+		of allocations.
+		We need on the workers:
+			AR.Fscr[0] : input for keep brackets and expressions in rhs
+			AR.Fscr[1] : output of the sorting to be fed to the master
+			AR.Fscr[2] : input for keep brackets and expressions in rhs
+		Hence the 0 and 2 channels can use a rather small buffer like
+			10*AM.MaxTer.
+		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers.
 */
 
 void InitializeOneThread ARG1(int,identity)
 {
-	WORD *t;
+	WORD *t, *ScratchBuf;
 	int i, j;
+	LONG ScratchSize;
 	ALLPRIVATES *B = AB+identity;
 	AR.CurDum = AM.IndDum;
 	for ( j = 0; j < 2; j++ ) {
-		AC.ScratchBuf[j] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"scratchsize");
-		AR.Fscr[j].POsize = AM.ScratSize * sizeof(WORD);
-		AR.Fscr[j].POfull = AR.Fscr[j].POfill = AR.Fscr[j].PObuffer = AC.ScratchBuf[j];
-		AR.Fscr[j].POstop = AR.Fscr[j].PObuffer + AM.ScratSize;
+		if ( identity == 0 ) {
+			ScratchSize = AM.ScratSize;
+		}
+		else {
+			if ( j == 1 ) {
+				ScratchSize = AM.ScratSize / (numberofthreads-1);
+				if ( ScratchSize < 10*AM.MaxTer ) ScratchSize = 10 * AM.MaxTer;
+			}
+			else {
+/*
+				These are just different windows onto files of the master.
+*/
+				ScratchSize = 10 * AM.MaxTer;
+				AR.Fscr[j].name = 0;
+			}
+		}
+		ScratchSize = ( ScratchSize + 255 ) / 256;
+		ScratchSize = ScratchSize * 256;
+		ScratchBuf = (WORD *)Malloc1(ScratchSize*sizeof(WORD),"scratchsize");
+		AR.Fscr[j].POsize = ScratchSize * sizeof(WORD);
+		AR.Fscr[j].POfull = AR.Fscr[j].POfill = AR.Fscr[j].PObuffer = ScratchBuf;
+		AR.Fscr[j].POstop = AR.Fscr[j].PObuffer + ScratchSize;
 		PUTZERO(AR.Fscr[j].POposition);
 	}
 	AR.Fscr[2].PObuffer = 0;
@@ -237,11 +268,12 @@ void InitializeOneThread ARG1(int,identity)
 	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
 				,"argument list names");
 	AT.WildcardBufferSize = AC.WildcardBufferSize;
+
+	AT.identity = identity;
 /*
 	Still to do: the SS stuff.
 	             the Fscr[3]
 	             the FoStage4[2]
-	             the CompressPointer/Buffer.
 */
 	if ( AT.WorkSpace == 0 ||
 	     AT.n_coef == 0 ||
@@ -382,7 +414,7 @@ void FinalizeOneThread ARG1(int,identity)
 }
 
 /*
-  	#] FinalizeOneThread :
+  	#] FinalizeOneThread : 
   	#[ UpdateOneThread :
 
 	Fix up things that happened at compiler time.
@@ -402,7 +434,7 @@ int UpdateOneThread ARG1(int,identity)
 }
 
 /*
-  	#] UpdateOneThread :
+  	#] UpdateOneThread : 
   	#[ LoadOneThread :
 
 	Loads all relevant variables from thread 'from' into thread 'identity'
@@ -433,6 +465,19 @@ int LoadOneThread ARG3(int,from,int,identity,WORD *,term)
 	t2 = AT.WorkPointer;
 	while ( t1 < tstop ) *t2++ = *t1++;
 /*
+	The compressbuffer contents are mainly relevant for keep brackets
+	We should do this only if there is a keep brackets statement
+	We may however still need the compressbuffer for expressions in the rhs.
+*/
+	if ( AC.ComDefer > 0 ) {
+		t1 = AR.CompressBuffer; t2 = AR0.CompressBuffer;
+		while ( t2 < AR0.CompressPointer ) *t1++ = *t2++;
+		AR.CompressPointer = t1;
+	}
+	else {
+		AR.CompressPointer = AR.CompressBuffer;
+	}
+/*
 	The relevant variables and the term are in their place.
 	There is nothing more to do.
 */
@@ -440,7 +485,7 @@ int LoadOneThread ARG3(int,from,int,identity,WORD *,term)
 }
 
 /*
-  	#] LoadOneThread :
+  	#] LoadOneThread : 
   	#[ RunThread :
 */
 
@@ -535,7 +580,7 @@ int RunThread ARG1(int *,dummy)
 }
 
 /*
-  	#] RunThread :
+  	#] RunThread : 
   	#[ IAmAvailable :
 
 	To be called when a thread is available.
@@ -562,7 +607,7 @@ void IAmAvailable ARG1(int,identity)
 }
 
 /*
-  	#] IAmAvailable :
+  	#] IAmAvailable : 
   	#[ GetAvailable :
 
 	Gets an available thread from the top of the stack.
@@ -578,7 +623,7 @@ int GetAvailable ARG0
 }
 
 /*
-  	#] GetAvailable :
+  	#] GetAvailable : 
   	#[ ThreadWait :
 
 	To be called by a thread when it has nothing to do.
@@ -601,7 +646,7 @@ int ThreadWait ARG1(int,identity)
 }
 
 /*
-  	#] ThreadWait :
+  	#] ThreadWait : 
   	#[ MasterWait :
 
 	To be called by the master when it has to wait for one of the
@@ -624,7 +669,7 @@ int MasterWait ARG0
 }
 
 /*
-  	#] MasterWait :
+  	#] MasterWait : 
   	#[ WakeupThread :
 
 	To be called when the indicated thread needs waking up.
@@ -646,7 +691,7 @@ void WakeupThread ARG2(int,identity,int,signalnumber)
 }
 
 /*
-  	#] WakeupThread :
+  	#] WakeupThread : 
   	#[ ThreadProcessor :
 */
 
@@ -766,7 +811,7 @@ ThreadProcessor()
 }
 
 /*
-  	#] ThreadProcessor :
+  	#] ThreadProcessor : 
   	#[ ThreadsMerge :
 
 	Routine takes after MergePatches.
@@ -785,6 +830,6 @@ ThreadsMerge ARG1(WORD,par)
 }
 
 /*
-  	#] ThreadsMerge :
+  	#] ThreadsMerge : 
 */
 #endif

@@ -1211,7 +1211,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 			SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
 			fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(AS.OldOnFile[num]));
 		}
-		if ( GetOneTerm(term,hand) < 0 || GetOneTerm(term,hand) < 0 ) {
+		if ( GetOneTerm(BHEAD term,hand) < 0 || GetOneTerm(BHEAD term,hand) < 0 ) {
 			MesCall("GetFirstBracket");
 			SETERROR(-1)
 		}

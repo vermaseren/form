@@ -685,11 +685,12 @@ int
 CoPushHide ARG1(UBYTE *,s)
 {
 	GETIDENTITY;
+	WORD *ScratchBuf;
 	int i;
 	if ( AR.Fscr[2].PObuffer == 0 ) {
-		AC.ScratchBuf[2] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"hidesize");
+		ScratchBuf = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"hidesize");
 		AR.Fscr[2].POsize = AM.ScratSize * sizeof(WORD);
-		AR.Fscr[2].POfull = AR.Fscr[2].POfill = AR.Fscr[2].PObuffer = AC.ScratchBuf[2];
+		AR.Fscr[2].POfull = AR.Fscr[2].POfill = AR.Fscr[2].PObuffer = ScratchBuf;
 		AR.Fscr[2].POstop = AR.Fscr[2].PObuffer + AM.ScratSize;
 		PUTZERO(AR.Fscr[2].POposition);
 	}
@@ -948,10 +949,11 @@ CoNoSkip ARG1(UBYTE *,s) { return(SetExpr(s,0,SKIP)); }
 
 int CoHide ARG1(UBYTE *,inp) {
 	GETIDENTITY;
+	WORD *ScratchBuf;
 	if ( AR.Fscr[2].PObuffer == 0 ) {
-		AC.ScratchBuf[2] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"hidesize");
+		ScratchBuf = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"hidesize");
 		AR.Fscr[2].POsize = AM.ScratSize * sizeof(WORD);
-		AR.Fscr[2].POfull = AR.Fscr[2].POfill = AR.Fscr[2].PObuffer = AC.ScratchBuf[2];
+		AR.Fscr[2].POfull = AR.Fscr[2].POfill = AR.Fscr[2].PObuffer = ScratchBuf;
 		AR.Fscr[2].POstop = AR.Fscr[2].PObuffer + AM.ScratSize;
 		PUTZERO(AR.Fscr[2].POposition);
 	}

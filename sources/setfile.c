@@ -60,7 +60,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -108,7 +108,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -179,7 +179,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -200,7 +200,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -217,7 +217,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -318,9 +318,10 @@ AllocSetups ARG0
 	if ( AM.ScratSize < 4*AM.MaxTer ) AM.ScratSize = 4*AM.MaxTer;
 #ifndef WITHPTHREADS
 	for ( j = 0; j < 2; j++ ) {
-		AC.ScratchBuf[j] = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"scratchsize");
+		WORD *ScratchBuf;
+		ScratchBuf = (WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"scratchsize");
 		AR.Fscr[j].POsize = AM.ScratSize * sizeof(WORD);
-		AR.Fscr[j].POfull = AR.Fscr[j].POfill = AR.Fscr[j].PObuffer = AC.ScratchBuf[j];
+		AR.Fscr[j].POfull = AR.Fscr[j].POfill = AR.Fscr[j].PObuffer = ScratchBuf;
 		AR.Fscr[j].POstop = AR.Fscr[j].PObuffer + AM.ScratSize;
 		PUTZERO(AR.Fscr[j].POposition);
 	}
@@ -461,7 +462,7 @@ AllocSetups ARG0
 }
 
 /*
- 		#] AllocSetups : 
+ 		#] AllocSetups :
  		#[ WriteSetup :
 */
 
@@ -505,7 +506,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -693,7 +694,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -712,7 +713,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -723,7 +724,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -801,7 +802,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -826,7 +827,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
 	#] Setups :
 */
 
