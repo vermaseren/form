@@ -288,3 +288,31 @@ enclosed with #ifdef SAFESIGNAL
 [14sep2005 mt]:
 Bugfix (in proces.c:Generator): in "off parallel", the master itself must
 collect preprovars.
+
+****** [09 oct 2005]  intermediate release for synchronization ********
+
+1. Preprocessor variables PARALLELTASK_ and NPARALLELTASKS_ are
+defined even for sequential version: otherwise, it is too
+difficult to run the same program in both parallel and seq.
+modes:
+
+   /*[20sep2005 mt]:*/
+   /*Define preprocessor variable PARALLELTASK_ as 0:*/
+   PutPreVar((UBYTE *)"PARALLELTASK_",(UBYTE *)"0",0,0);
+   /*Define preprocessor variable NPARALLELTASKS_ as 1:*/
+   PutPreVar((UBYTE *)"NPARALLELTASKS_",(UBYTE *)"1",0,0);
+   /*:[20sep2005 mt]*/
+
+2. Dollar variables for the parallel mode is re-written, but at the
+moment is not finished. The code from execute.c:DoExecute() is
+re-written completely and moved it to mkDollarsParallel() in
+paralle.c.  MinDollar() and MaxDollar() in dollar.c newer worked, a
+lot of bugs were fixed.
+
+The problem is that sometimes dollar variables are longer than
+PF_packbuf!  Especially, when slaves pack several dollarvars.  For
+broadcasting dollarvars created at preprocessing time the problem is
+solved, see PF_BroadcastPreDollar() in parallel.c: we split long
+expressin into chunks, and broadcast each chunk independently.
+mkDollarsParallel() in parallel.c should be changed, it fails if
+dollarvars are not really short.

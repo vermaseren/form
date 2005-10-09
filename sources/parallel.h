@@ -21,7 +21,10 @@
 #define PF_ATTACH_MSGTAG     40
 #define PF_GREET_MSTAG       50
 
-
+/*[04oct2005 mt]:*/
+/*PF.packsize:*/
+#define PF_PACKSIZE 1000
+/*:[04oct2005 mt]*/
 
 #define PF_ATTACH_REDEF       1
 #define PF_ATTACH_DOLLAR      2
@@ -169,6 +172,11 @@ typedef struct PF_DOLLARS {
 extern PARALLELVARS PF;
 
 extern PFDOLLARS *PFDollars;
+
+/*[04oct2005 mt]:*/
+/*for broadcasting dollarvars, see parallel.c:PF_BroadcastPreDollar():*/
+extern LONG PF_maxDollarChunkSize;
+/*:[04oct2005 mt]*/
 
 /*
   	#] global variables used by the PF_functions :

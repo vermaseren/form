@@ -75,8 +75,14 @@ extern FILE **FileStructs;
 #define Expressions ((EXPRESSIONS)(AC.ExpressionList.lijst))
 #define NumExpressions AC.ExpressionList.num
 
+/*[28sep2005 mt]:*/
+/*This code is never used*/
+/*
 #define PPchangeddollars ((WORD *)(AP.ChDollarList.lijst))
 #define NumPPchangeddollars AP.ChDollarList.num
+*/
+/*:[28sep2005 mt]*/
+
 #define PotModdollars ((WORD *)(AC.PotModDolList.lijst))
 #define NumPotModdollars AC.PotModDolList.num
 #define ModOptdollars ((MODOPTDOLLAR *)(AC.ModOptDolList.lijst))

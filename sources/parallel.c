@@ -2095,3 +2095,420 @@ UBYTE *cstr=str;
 /*
   	#] PF_BroadcastString :
 */
+/*[19sep2005 mt]:*/
+/*
+   #[ int PF_BroadcastPreDollar
+*/
+/*
+Broadcasting dollar variables set as a preprocessor variables.
+	Only the master is able to make an assignment like #$a=g; where g
+is an expression: only the master has an access to the expression.
+So, the master broadcasts the result to slaves.
+
+The result is in *dbuffer of the size is *newsize (in number of WORDs),
++1 for trailing zero. For slave newsize and numterms are output 
+parameters.
+
+The function returns 0 on success.
+*/
+int
+PF_BroadcastPreDollar ARG3 (WORD **, dbuffer, LONG *, newsize, int *, numterms)
+{
+int err=0;
+LONG i;
+/*		 Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+       No if(AC.mparallelflag==PARALLELFLAG) !!
+*/
+	if(MASTER == PF.me){
+		/*The problem is that sometimes dollar variables are longer 
+			than PF_packbuf! So we split long expressin into chunks.
+			There are n filled chunks and one portially filled chunk:*/
+		LONG n=( (*newsize)+1)/PF_maxDollarChunkSize;
+
+		/*...and one more chunk for the rest; if the expression fits to 
+			the buffer without splitting, the latter will be the only one.*/
+
+		/*PF_maxDollarChunkSize is the maximal number of items fitted to 
+			the buffer. It is calculated in PF_LibInit() in mpi.c.
+			PF_maxDollarChunkSize is calculated for the first step, when 
+			two fields (numterms and newsize, see below) are already packed.
+			For simplicity, this value is used also for all steps, in 
+			despite  of it is	a bit less than maximally available space.*/
+
+		WORD *thechunk=*dbuffer;
+
+		err=PF_BroadCast(0);/*initialize buffers*/
+		err|= PF_Pack(numterms,1,PF_INT);
+		err|= PF_Pack(newsize,1,PF_LONG);/*pack the size*/
+
+		/*Pack and broadcast completely filled chunks.
+			It may happen, this loop is not entered at all:*/
+		for(i=0; i<n;i++){
+			err|= PF_Pack(thechunk,PF_maxDollarChunkSize,PF_WORD);
+			err|= PF_BroadCast(1);
+			thechunk+=PF_maxDollarChunkSize;
+			PF_BroadCast(0);
+		}/*for(i=0; i<n;i++)*/
+
+		/*Pack and broadcast the rest:*/
+		if((n=( (*newsize)+1)%PF_maxDollarChunkSize)!=0){
+			err|= PF_Pack(thechunk,n,PF_WORD);
+			err|= PF_BroadCast(1);
+		}/*if((n=( (*newsize)+1)%PF_maxDollarChunkSize)!=0)*/
+		
+	}/*if(MASTER == PF.me)*/
+	
+	if(MASTER != PF.me){/*Slave - unpack received buffer*/
+		WORD *thechunk;
+		LONG n,therest,thesize;
+		err|= PF_BroadCast(1);/*Broadcasting - no buffer initilisation for slaves!*/
+		err|=PF_UnPack(numterms,1,PF_INT);
+		err|=PF_UnPack(newsize,1,PF_LONG);
+		/*Now we know the buffer size.*/
+		thesize=(*newsize)+1;
+		/*Evaluate the number of completely filled chunks. The last step must be 
+			treated separately, so -1:*/
+		n=(thesize/PF_maxDollarChunkSize) - 1;
+		/*Note, here n can be <0, this is ok.*/
+
+		therest=thesize % PF_maxDollarChunkSize;
+
+		thechunk=*dbuffer= 
+			(WORD*)Malloc1( thesize * sizeof(WORD),"$-buffer slave");
+
+		if(thechunk == NULL)
+			return(err|4);
+
+		/*Unpack completely filled chunks and receive the next portion.
+			It may happen, this loop is not entered at all:*/
+		for(i=0; i<n;i++){
+			err|= PF_UnPack(thechunk,PF_maxDollarChunkSize,PF_WORD);
+			thechunk+=PF_maxDollarChunkSize;
+			err|= PF_BroadCast(1);
+		}/*for(i=0; i<n;i++)*/
+
+		/*Now the last completely filled chunk:*/
+		if(n>=0){
+			err|= PF_UnPack(thechunk,PF_maxDollarChunkSize,PF_WORD);
+			thechunk+=PF_maxDollarChunkSize;
+			if(therest!=0)
+				err|= PF_BroadCast(1);
+		}/*if(n>=0)*/
+
+		/*Unpack the rest (it is already received!):*/
+		if(therest!=0)
+			err|= PF_UnPack(thechunk,therest,PF_WORD);
+
+	}/*if(MASTER != PF.me)*/
+
+	return (err);
+
+}/*PF_BroadcastPreDollar*/
+/*
+   #] int PF_BroadcastPreDollar
+*/
+/*[19sep2005 mt]:*/
+
+/*[29sep2005 mt]:*/
+/*
+   #[ int mkDollarsParallel
+*/
+PFDOLLARS *PFDollars=NULL;
+/*Maximal number of PFDollars:*/
+static int MaxPFDollars=0;
+
+/*[9oct2005 mt]: This procedure should be changed, it fails if
+dollarvars are not really short. The model of slaves ->master->slaves
+couldn't be based on a small PF_packbuf.*/
+/*
+This procedure combines dollars from the various slaves
+and broadcasts the result to all slaves.
+
+There are NumPotModdollars of dollars which could be changed.
+They are in the array PotModdollars.
+
+The current module could be executed in parallel only if all
+"changeable" dollars are listed in the array ModOptdollars which
+is an array of objects of type MODOPTDOLLAR (there are 
+NumModOptdollars of them), otherwise the modile was switched
+to sequential mode.
+
+If the current module was executed in sequential mode, the master
+just broadcasts all "changeable" dollars to all slaves.
+
+If the current module was executed in parallel mode, the master receives
+dollars from slaves, combines them and broadcasts the result to all salves.
+
+The pseudo-code is as follows:
+
+if parallel then
+	if Master then
+		INITIALIZATION
+		MASTER RECEIVING:receive potentially modified dollars from slaves
+		COMBINING:combine received dollars
+		CLEANUP
+	else
+		SLAVE SENDING:	pack potentially modified dollars
+							send dollars to the Master
+	endif
+endif
+if Master then
+	MASTER PACK:pack potentially modified dollars
+endif
+Broadcast
+if Slave then
+	For each dollar:
+	SLAVE UNPACK:Unpack broadcasted data
+	SLAVE STORE: replace corresponding dollar by unpacked data
+endif
+*/
+/*Note, this function can be invoked only if NumPotModdollars > 0 !!!
+Since NumPotModdollars>0, then NumDollars>0.
+*/
+/*
+	The function returns 0 in success, or -1.
+*/
+WORD mkDollarsParallel ARG0
+{
+int i,j,nSlave,src, index, namesize;
+UBYTE *name, *p, *textdoll;
+WORD type, *where, *r;
+LONG size;
+DOLLARS  d, newd;
+
+
+	if(AC.mparallelflag == PARALLELFLAG){
+		if (PF.me == 0) {/*Master*/
+
+			/*INITIALIZATION:*/
+			/*Data from slaves will be placed into an array PFDollars.
+				It must be re-allocated, if it's length is not enough.*/
+			/*Realloc PFDollars, if needed:*/
+			if(MaxPFDollars<NumDollars){
+				/*First, free previous allocation:*/
+				for(i=1; i < MaxPFDollars; i++)
+					M_free(PFDollars[i].slavebuf, "pointer to slave buffers");
+				if(PFDollars!=NULL)
+					M_free(PFDollars, "pointer to PFDOLLARS");
+				/*Allocate new one:*/
+				MaxPFDollars=NumDollars;
+				PFDollars = (PFDOLLARS *)Malloc1(NumDollars*sizeof(PFDOLLARS),
+															"pointer to PFDOLLARS");
+				/*and initialize it:*/
+				for (i = 1; i < NumDollars; i++) {
+					PFDollars[i].slavebuf = (WORD**)Malloc1(PF.numtasks*sizeof(WORD*),
+							    "pointer to array of slave buffers");
+					for (j = 0; j < PF.numtasks; j++) 
+						PFDollars[i].slavebuf[j] = &(AM.dollarzero);
+				}/*for (i = 1; i < NumDollars; i++)*/
+			}/*if(MaxPFDollars<NumDollars)*/
+			/*:INITIALIZATION*/
+
+			/*MASTER RECEIVING:*/
+			/*Get dollars from each of slaves, unpack them and put
+				data into PFDollars:*/
+			for (nSlave = 1; nSlave < PF.numtasks; nSlave++) {
+				PF_Receive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, &i);
+				/*the last parameter (i) is always PF_DOLLAR_MSGTAG, ignored*/
+
+				/*Now all the info is in PF_buffer.*/
+				/*Here NumPotModdollars dollars totally available; we trust
+					this number is the same on each slave:*/
+				for (i = 0; i < NumPotModdollars; i++) {
+					PF_UnPack(&namesize, 1, PF_INT);
+					name = (UBYTE*)Malloc1(namesize, "dollar name");
+					PF_UnPack(name, namesize, PF_BYTE);
+					PF_UnPack(&type, 1, PF_WORD);
+					if (type != DOLZERO) {
+						PF_UnPack(&size, 1, PF_LONG);
+						where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
+						PF_UnPack(where, size+1, PF_WORD);
+					}/*if (type != DOLZERO)*/ 
+					else 
+						where = &(AM.dollarzero);
+					/*Now we have the dollar name in "name", the dollar type in "type",
+						the contents in "where" (of size "size").*/
+					/*Find the dollar "index" (its order number):*/
+					index = GetDollar(name);
+					/*and find the corresponding index (j) of this dollar in the
+						ModOptdollars array:*/
+					for ( j = 0; j < NumModOptdollars; j++ )
+						if (ModOptdollars[j].number == index)
+							break;
+					/* In principle, if the dollar was not found in ModOptdollars,
+						this means that it was not mentioned in the module option.
+						At present, this is impossible since in such situation 
+						the module must be executed in the sequential mode.*/
+					/*Error checkup?:*/
+					/*
+					if (j >= NumModOptdollars){
+						printf(" Error in dollar transfer \n");
+						Terminate(-1);
+					}
+					*/
+
+					if (j >= NumModOptdollars)
+						return(-1);
+
+					/*Now put data into PFDollars:*/
+					/*The following type is NOT a dollar type, this is the
+						module option type:*/
+					PFDollars[index].type = ModOptdollars[j].type;
+					/*Note the dollar type (from "type") is not used :O*/
+					PFDollars[index].slavebuf[src] = where;
+/*@@@*/
+/*Static buffer instead of name!!:*/
+					if (name) M_free(name, "dollar name");
+				}/*for (i = 0; i < NumPotModdollars; i++)*/
+			}/*for (nSlave = 1; nSlave < PF.numtasks; nSlave++)*/
+			/*Now all (raw) info from slaves is in PFDollars*/
+			/*:MASTER RECEIVING*/
+
+			/*COMBINING:*/
+			for (i = 0; i < NumPotModdollars; i++)
+				switch (PFDollars[index=PotModdollars[i]].type) {
+					/*New dollar for the Master is created in the 
+						corresponding function similar to case MODNOKEEP*/
+					case MODSUM:/*result must be summed up*/
+						if(SumDollars(index)) MesPrint("error in SumDollars");
+						break;
+					case MODMAX:/*result must be a maximum*/
+						if(MaxDollar(index)) MesPrint("error in MaxDollar");
+						break;
+					case MODMIN:/*result must be a minimum*/
+						if(MinDollar(index)) MesPrint("error in MinDollar");
+						break;
+					case MODNOKEEP:/*result is just a DOLZERO*/
+						d = Dollars + index;
+						if(d->where && d->where != &(AM.dollarzero))
+							M_free(d->where, "old content of dollar");
+						d->type  = DOLZERO;
+						d->where = &(AM.dollarzero);
+						d->size  = 0;
+						cbuf[AM.dbufnum].rhs[index] = d->where;
+						break;
+					default:
+						MesPrint("Serious internal error with module option");
+						Terminate(-1);
+				}/*switch (PFDollars[index=PotModdollars[i]].type)*/
+			/*:COMBINING*/
+			/*CLEANUP:*/
+			/*:CLEANUP*/
+			for (i = 1; i < NumDollars; i++) 
+				/*Note, slavebuf[0] was not allocated! It is just a copy!*/
+				for (j = 1; j < PF.numtasks; j++) 
+					if (PFDollars[i].slavebuf[j] != &(AM.dollarzero)){
+						M_free(PFDollars[i].slavebuf[j], "slave buffer");
+						PFDollars[i].slavebuf[j] = &(AM.dollarzero);
+					}/*if (PFDollars[i].slavebuf[j] != &(AM.dollarzero))*/
+		}/*if (PF.me == 0)*/
+		else{/*Slave*/
+			/*SLAVE SENDING:*/
+		   PF_Send(MASTER, PF_DOLLAR_MSGTAG, 0);
+			for (i = 0; i < NumPotModdollars; i++) {
+				index = PotModdollars[i];
+				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
+				namesize = 1;
+				while(*p++) namesize++;
+				newd=DolToTerms(index);
+				/* type newd==0  will not be send to master */
+				PF_Pack(&namesize, 1, PF_INT);
+				PF_Pack(name, namesize, PF_BYTE);
+				if (newd != 0) {
+					PF_Pack(&(newd->type), 1, PF_WORD);
+					PF_Pack(&(newd->size), 1, PF_LONG);
+					PF_Pack(newd->where, newd->size+1, PF_WORD);
+				} 
+				else {
+						type = DOLZERO;
+						PF_Pack(&type, 1, PF_WORD);
+				}
+			}
+			PF_Send(MASTER, PF_DOLLAR_MSGTAG, 1);
+			/*:SLAVE SENDING*/
+		}/*if (PF.me == 0)...else...*/
+	}/*if(AC.mparallelflag == PARALLELFLAG)*/
+	/*The Master must pack and broadcast independently on mparallelflag!*/
+
+	/*MASTER PACK:*/
+	if (PF.me == 0) {
+		/*Prepare PF_buffer:*/
+		PF_BroadCast(0);
+		for (i = 0; i < NumPotModdollars; i++) {
+			index = PotModdollars[i];
+			p = name = AC.dollarnames->namebuffer+Dollars[index].name;
+			namesize = 1;
+			while(*p++) namesize++;
+
+			newd=DolToTerms(index);
+			/* if newd=0, this type of dollars will not be send to master */
+
+			PF_Pack(&namesize, 1, PF_INT);
+			PF_Pack(name, namesize, PF_BYTE);
+
+			if (newd != 0) {
+				PF_Pack(&(newd->type), 1, PF_WORD);
+				PF_Pack(&(newd->size), 1, PF_LONG);
+				PF_Pack(newd->where, newd->size+1, PF_WORD);
+			} else {
+				type = DOLZERO;
+				PF_Pack(&type, 1, PF_WORD);
+			}
+		}/*for (i = 0; i < NumPotModdollars; i++)*/
+	}/*if (PF.me == 0)*/
+	/*:MASTER PACK*/
+
+	PF_BroadCast(1);
+
+	if (PF.me != 0) {
+		/*For each dollar:*/
+		for (i = 0; i < NumPotModdollars; i++) {
+			/*SLAVE UNPACK:*/
+			PF_UnPack(&namesize, 1, PF_INT);
+			name = (UBYTE*)Malloc1(namesize, "dollar name");
+			PF_UnPack(name, namesize, PF_BYTE);
+			PF_UnPack(&type, 1, PF_WORD);
+			if (type != DOLZERO) {
+				PF_UnPack(&size, 1, PF_LONG);
+				where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
+				PF_UnPack(where, size+1, PF_WORD);
+			}/*if (type != DOLZERO)*/
+	      else
+				where = &(AM.dollarzero);
+			/*:SLAVE UNPACK*/
+			/*SLAVE STORE:*/
+			index = GetDollar(name);
+			d = Dollars + index;
+			if (d->where && d->where != &(AM.dollarzero))
+				M_free(d->where, "old content of dollar");
+			d->type  = type;
+			d->where = where;
+			if (type != DOLZERO) {
+				/*[29sep2005 mt] Strange stuff... To be investigated.
+					How could it be, that 
+					where == 0 || *where == 0 and type != DOLZERO?:*/
+				if (where == 0 || *where == 0) {
+					d->type  = DOLZERO;
+					if (where) M_free(where, "received dollar content");
+					d->where = &(AM.dollarzero); d->size  = 0;
+				} 
+				else {
+					r = d->where; while(*r) r += *r;
+					d->size = r - d->where;
+				}
+			}/*if (type != DOLZERO)*/
+
+			cbuf[AM.dbufnum].rhs[index] = d->where;
+
+			if (name) M_free(name, "dollar name");
+
+		}/*for (i = 0; i < NumPotModdollars; i++)*/
+		/*:SLAVE STORE*/
+	}/*if (PF.me != 0)*/
+	return (0);
+}/*mkDollarsParallel*/
+/*
+   #] int mkDollarsParallel
+*/
+
+/*:[29sep2005 mt]*/

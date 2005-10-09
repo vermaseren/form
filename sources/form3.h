@@ -14,7 +14,9 @@
 /*
 #define ITHREADS
 */
+/*
 #define WITHPTHREADS
+*/
 
 #ifdef ZWITHZLIB
 #include <zlib.h>

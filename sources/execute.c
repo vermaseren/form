@@ -4,9 +4,14 @@
 
 #include "form3.h"
 
+/*[28sep2005 mt]:*/
+#ifdef REMOVEDBY_MT
+/*Moved to parallel.c:*/
 #ifdef PARALLEL /* [04dec2002 df] */
-PFDOLLARS *PFDollars; 
+PFDOLLARS *PFDollars;
 #endif
+#endif
+/*:[28sep2005 mt]*/
 
 /*
   	#] Includes :
@@ -365,6 +370,10 @@ DoExecute ARG2(WORD,par,WORD,skip)
 		}
 	}
 	if ( RetCode ) return(RetCode);
+
+/*[28sep2005 mt]:*/
+/*This code is never used*/
+#ifdef REMOVEDBY_MT
 /*
 	@@@@@@@@@@@@@@@@ can be removed? [03dec2002 df]
 	Here we invalidate caches of the slaves for all dollars changed by the
@@ -389,6 +398,8 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	  } 
 	}  
 #endif /* PARALLEL */
+#endif
+/*:[28sep2005 mt]*/
 
 	if ( ( AS.ExecMode = par ) == GLOBALMODULE ) AS.ExecMode = 0;
 /*
@@ -444,255 +455,17 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	TableReset();
 	if ( AC.tableuse ) { M_free(AC.tableuse,"tableuse"); AC.tableuse = 0; }
 
-#ifdef PARALLEL /* [04dec2002 df] */
-
-	if ( PF.me == 0 ) {
-
-	  PFDollars = (PFDOLLARS *)Malloc1(NumDollars*sizeof(PFDOLLARS), "pointer to PFDOLLARS");
-
-	  for (i = 1; i < NumDollars; i++) {
-		PFDollars[i].slavebuf = (WORD**)Malloc1(PF.numtasks*sizeof(WORD*),
-							"pointer to array of slave buffers");
-		for ( j = 0; j < PF.numtasks; j++ ) {
-		  PFDollars[i].slavebuf[j] = &(AM.dollarzero);
-		}
-	  }
-	}
-	if ( ( AC.mparallelflag == PARALLELFLAG ) &&
-		 ( NumModOptdollars > 0 ) &&
-		 ( NumPotModdollars > 0 ) ) {
-	  int attach = 0, error;
-	  int source, src, tag, index, namesize;
-	  UBYTE *name, *p, *textdoll;
-	  WORD type, *where, *r;
-	  LONG size;
-	  DOLLARS  d, newd;
-
-	  if ( PF.me == 0 ) {
-		for ( source = 1; source < PF.numtasks; source++ ) {
-		  PF_Receive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, &tag);
-		  PF_UnPack(&attach, 1, PF_INT);
-		  if (attach) {
-			switch(attach) {
-				case PF_ATTACH_DOLLAR: {
-/*
-					printf(" Received PF_DOLLAR_MSGTAG from slave %d\n", src);
-*/
-					for ( i = 0; i < NumPotModdollars; i++ ) {
-						PF_UnPack(&namesize, 1, PF_INT);
-						name = (UBYTE*)Malloc1(namesize, "dollar name");
-						PF_UnPack(name, namesize, PF_BYTE);
-						PF_UnPack(&type, 1, PF_WORD);
-
-						if (type != DOLZERO) {
-							PF_UnPack(&size, 1, PF_LONG);
-							where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
-							PF_UnPack(where, size+1, PF_WORD);
-						} 
-						else {
-							where = &(AM.dollarzero);
-						}
-						index = GetDollar(name);
-						for ( j = 0; j < NumModOptdollars; j++ ) {
-							if (ModOptdollars[j].number = index) {
-								PFDollars[index].type = ModOptdollars[j].type;
-								break;
-							}
-						}
-						if ( j >= NumModOptdollars )
-							MesPrint(" Error in dollar transfer \n");
-						PFDollars[index].slavebuf[src] = where;
-						if (name) M_free(name, "dollar name");
-					}
-				}
-				default:
-					break;
-			}
-		  }
-		}
-
-		for (i = 0; i < NumPotModdollars; i++) {
-		  index = PotModdollars[i];
-		  switch (PFDollars[index].type) {
-			  case MODSUM: {
-				if (SumDollars(index)) MesPrint("error in SumDollars");
-				break;
-			  }
-			  case MODMAX: {
-				if (MaxDollar(index)) MesPrint("error in MaxDollar");
-				break;
-			  }
-			  case MODMIN: {
-				if (MinDollar(index)) MesPrint("error in MinDollar");
-				break;
-			  }
-			  case MODNOKEEP: {
-				d = Dollars + index;
-				if (d->where && d->where != &(AM.dollarzero)) {
-					M_free(d->where, "old content of dollar");
-				}
-				d->type  = DOLZERO;
-				d->where = &(AM.dollarzero);
-				d->size  = 0;
-		  
-				cbuf[AM.dbufnum].rhs[index] = d->where;
-		  
-				break;
-			  }
-			  default: {
-				MesPrint("Serious internal error with module option");
-				Terminate(-1);
-				break;
-			  }
-		  }
-/*
-		  textdoll = WriteDollarToBuffer(index);
-		  printf(" new $-content is %s\n", textdoll);
-*/
-		}
-/*
-		Broadcasting to slaves new values of dollar variables
-*/
-/*
-		printf("\n\n Broadcasting dollar values back to slaves ...\n\n");
-*/
-		PF_BroadCast(0);
-
-		for (i = 0; i < NumPotModdollars; i++) {
-		  index = PotModdollars[i];
-		  
-		  p = name = AC.dollarnames->namebuffer + Dollars[index].name;
-		  namesize = 1;
-
-		  while(*p++) namesize++;
-
-		  newd = DolToTerms(index);
-
-		  PF_Pack(&namesize, 1, PF_INT);
-		  PF_Pack(name, namesize, PF_BYTE);
-
-		  if ( newd != 0 ) {
-			PF_Pack(&(newd->type), 1, PF_WORD);
-			PF_Pack(&(newd->size), 1, PF_LONG);
-			PF_Pack(newd->where, newd->size+1, PF_WORD);
-		  }
-		  else {
-			type = DOLZERO;
-			PF_Pack(&type, 1, PF_WORD);
-		  }
-		}
-		
-		PF_BroadCast(1);
-	  } 
-	  else {
-		PF_Send(MASTER, PF_DOLLAR_MSGTAG, 0);
-
-		attach = PF_ATTACH_DOLLAR;
-		PF_Pack(&attach, 1, PF_INT);
-
-		for ( i = 0; i < NumPotModdollars; i++ ) {
-
-		  index = PotModdollars[i];
-		  p = name	= AC.dollarnames->namebuffer + Dollars[index].name;
-		  namesize = 1;
-		  while ( *p++ ) namesize++;
-
-		  newd = DolToTerms(index);
-
-/* tmp code
-					printf(" after to DOLTERMS conversion ...\n");
-					textdoll = WriteDollarToBuffer(index);
-					printf(" $ name is %s\n", name);
-					printf(" $ content is %s\n", textdoll);
-tmp code */
-
-		  PF_Pack(&namesize, 1, PF_INT);
-		  PF_Pack(name, namesize, PF_BYTE);
-
-		  if ( newd != 0 ) {
-			PF_Pack(&(newd->type), 1, PF_WORD);
-			PF_Pack(&(newd->size), 1, PF_LONG);
-			PF_Pack(newd->where, newd->size+1, PF_WORD);
-		  } 
-		  else {
-			type = DOLZERO;
-			PF_Pack(&type, 1, PF_WORD);
-		  }
-
-		}
-
-		PF_Send(MASTER, PF_DOLLAR_MSGTAG, 1);
-/*
-			Receiving new dollar values from MASTER process ...
-*/
-		PF_BroadCast(1);
-
-		for ( i = 0; i < NumPotModdollars; i++ ) {
-
-		  PF_UnPack(&namesize, 1, PF_INT);
-
-		  name = (UBYTE*)Malloc1(namesize, "dollar name");
-		  PF_UnPack(name, namesize, PF_BYTE);
-
-		  PF_UnPack(&type, 1, PF_WORD);
-
-		  if (type != DOLZERO) {
-			PF_UnPack(&size, 1, PF_LONG);
-			where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
-			PF_UnPack(where, size+1, PF_WORD);
-		  } 
-		  else {
-			where = &(AM.dollarzero);
-		  }
-
-		  index = GetDollar(name);
-
-		  d = Dollars + index;
-		  if ( d->where && ( d->where != &(AM.dollarzero) ) ) {
-			M_free(d->where, "old content of dollar");
-		  }
-
-		  d->type  = type;
-		  d->where = where;
-		  
-		  if ( type != DOLZERO ) {
-			if (where == 0 || *where == 0) {
-				d->type  = DOLZERO;
-				if ( where ) M_free(where, "received dollar content");
-				d->where = &(AM.dollarzero); d->size	= 0;
-			} 
-			else {
-				r = d->where;
-				while ( *r ) r += *r;
-				d->size = r - d->where;
-			}
-		  }
-				  
-		  cbuf[AM.dbufnum].rhs[index] = d->where;
-
-		  if ( name ) M_free(name, "dollar name");
-		  
-		}
-
-	  }
-
-	}
-
-	if (PF.me == 0) {
-	  for ( i = 1; i < NumDollars; i++ ) {
-		for ( j = 0; j < PF.numtasks; j++ ) {
-		  if ( PFDollars[i].slavebuf[j] != &(AM.dollarzero) ) {
-			M_free(PFDollars[i].slavebuf[j], "slave buffer");
-		  }
-		}
-		M_free(PFDollars[i].slavebuf, "pointer to slave buffers");
-	  }
-
-	  M_free(PFDollars, "pointer to PFDOLLARS");
-
-	}
-
-#endif /* PARALLEL [04dec2002 df] */
+/*[28sep2005 mt]:*/
+#ifdef PARALLEL
+	/*Here there was a long code written by df in December 2002. I re-write
+	it completely and moved it to mkDollarsParallel() in paralle.c:*/
+	if(NumPotModdollars > 0)
+		if( (RetCode=mkDollarsParallel())!=0 )
+			return(RetCode);
+#endif
+#ifdef WITHPTHREADS
+#endif
+/*:[28sep2005 mt]*/
 
 /*
 	@@@@@@@@@@@@@@@

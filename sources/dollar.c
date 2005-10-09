@@ -27,6 +27,11 @@ int CatchDollar ARG1(int,par)
 	WORD *w, *t, n, nsize, *oldwork = AT.WorkPointer, *dbuffer;
 	DOLLARS d;
 	numdollar = C->lhs[C->numlhs][2];
+
+/*[19sep2005 mt]:*/
+/*ChDollarList is newer used!*/
+#ifdef REMOVEDBY_MT
+
 /*
 	The following code is basically only for PARALLEL
 */
@@ -37,6 +42,7 @@ int CatchDollar ARG1(int,par)
 		w = (WORD *)FromList(&AP.ChDollarList);
 		*w = numdollar;
 	}
+#endif /*#ifdef REMOVEDBY_MT*/
 
 	d = Dollars+numdollar;
 	if ( par == -1 ) {
@@ -48,6 +54,22 @@ int CatchDollar ARG1(int,par)
 		cbuf[AM.dbufnum].rhs[numdollar] = d->where;
 		return(0);
 	}
+	/*[19sep2005 mt]:*/
+#ifdef PARALLEL
+	/*
+	The problem here is that only the master is able to make an assignment
+	like #$a=g; where g is an expression: only the master has an access to
+	the whole expression. So, only the master invokes Generator, and then
+	it broadcasts the result to slaves.
+   	Broadcasting must be performed immediately, one cannot postponed
+	broadcasting to the end of the module since the dollar variable is
+	visible in the current module. For the same reason, this should be
+	done independently on on/off parallel status.
+	*/
+	if(MASTER == PF.me){
+#endif
+	/*:[19sep2005 mt]*/
+
 	EXCHINOUT
  
 	if ( NewSort() ) { if ( !error ) error = 1; goto onerror; }
@@ -67,11 +89,27 @@ int CatchDollar ARG1(int,par)
 	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)(&dbuffer),2) < 0 ) { error = 1; }
 	LowerSortLevel();
+/*[19sep2005 mt]:*/
+#ifdef REMOVEDBY_MT
 	if ( error == 0 ) {
 		w = dbuffer;
 		while ( *w ) { w += *w; numterms++; }
 	}
 	w++; newsize = w - dbuffer;
+#endif /*REMOVEDBY_MT*/
+	w = dbuffer;
+	if ( error == 0 )
+		while ( *w ) { w += *w; numterms++; }
+	else
+		goto onerror;
+	newsize = w - dbuffer+1;
+#ifdef PARALLEL
+	}/*if(MASTER == PF.me)*/
+	/*PF_BroadcastPreDollar allocates dbuffer for slaves!:*/
+	if( (error=PF_BroadcastPreDollar(&dbuffer,&newsize,&numterms))!=0 )
+		goto onerror;
+#endif
+/*:[19sep2005 mt]*/
 	if ( numterms == 0 ) {
 		d->type = DOLZERO;
 		goto docopy;
@@ -111,7 +149,17 @@ docopy:;
 	if ( C->Pointer > C->rhs[C->numrhs] ) C->Pointer = C->rhs[C->numrhs];
 	C->numlhs--; C->numrhs--;
 onerror:
+/*[19sep2005 mt]:*/
+#ifdef PARALLEL
+	if(MASTER == PF.me){
+#endif
+/*:[19sep2005 mt]*/
 	BACKINOUT
+/*[19sep2005 mt]:*/
+#ifdef PARALLEL
+	}/*if(MASTER == PF.me)*/
+#endif
+/*:[19sep2005 mt]*/
 	return(error);
 }
 
@@ -2093,15 +2141,24 @@ int MinDollar ARG1(WORD, index)
   int i, error=0, res;
   WORD *where, size, *r, *t;
   DOLLARS d;
-
-  if(PF.numtasks < 2) 
+	/*[30sep2005 mt]:*/
+	/*Why?*/
+#ifdef REMOVEDBY_MT
+	if(PF.numtasks < 2)
     {
       error = 1; /* this function works only in parallel mode */
       return(error);
     }
+#endif
+	if(PF.numtasks < 2)
+		return(0);
+	/*:[30sep2005 mt]*/
 
  PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
 
+	/*[30sep2005 mt]:*/
+	/*A bit stupid code:*/
+#ifdef REMOVEDBY_MT
  if (PF.numtasks > 2) 
    {
      for (i = 1; i < PF.numtasks; i++)
@@ -2111,6 +2168,14 @@ int MinDollar ARG1(WORD, index)
 	 if(res) PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[i];
        }
    }
+#endif
+	/*No any reason to start comparision from 1!:*/
+	for (i = 2; i < PF.numtasks; i++){
+		res = TwoExprCompare(PFDollars[index].slavebuf[i],
+			PFDollars[index].slavebuf[0], LESS);
+		if(res) PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[i];
+	}/*for (i = 2; i < PF.numtasks; i++)*/
+	/*:[30sep2005 mt]*/
 
  where = 0;
  t = PFDollars[index].slavebuf[0];
@@ -2119,10 +2184,19 @@ int MinDollar ARG1(WORD, index)
    {
      r = t;
      while (*r) r += *r;
-     size = r - t;
+		/*[30sep2005 mt]:*/
+		/*A bug!:*/
+     /*size = r - t;*/
+		size = r - t+1;
+		/*:[30sep2005 mt]*/
      where = (WORD*)Malloc1(size*sizeof(WORD), "dollar content");
      r = where;
-     NCOPY(r, t, size);
+		/*[30seo2005 mt]:*/
+		/*A bug!:*/
+     /*NCOPY(r, t, size);*/
+		i=size;
+		NCOPY(r, t, i);
+		/*:[30seo2005 mt]*/
    }
  
  d = Dollars + index;
@@ -2167,16 +2241,26 @@ int MaxDollar ARG1(WORD, index)
   int i, error=0, res;
   WORD *where, size, *r, *t;
   DOLLARS d;
-  
+
+	/*[30sep2005 mt]:*/
+	/*Why?*/
+#ifdef REMOVEDBY_MT  
   if(PF.numtasks < 2)
     {
       error = 1; /* this function works only in parallel mode */
       return(error);
     }
-  
-  PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
+#endif
+	if(PF.numtasks < 2)
+		return(0);
+	/*:[30sep2005 mt]*/
 
-  for(i = 1; i < PF.numtasks; i++)
+  PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
+	/*[30sep2005 mt]:*/
+  /*for(i = 1; i < PF.numtasks; i++)*/
+	/*No any reason to start comparision from 1!*/
+	for(i = 2; i < PF.numtasks; i++)
+	/*:[30sep2005 mt]*/
     {
       res = TwoExprCompare(PFDollars[index].slavebuf[i],
 			   PFDollars[index].slavebuf[0], GREATER);
@@ -2190,10 +2274,19 @@ int MaxDollar ARG1(WORD, index)
     {
       r = t;
       while (*r) r += *r;
-      size = r - t;
+		/*[30sep2005 mt]:*/
+		/*A bug!:*/
+      /*size = r - t;*/
+		size = r - t+1;
+		/*:[30sep2005 mt]*/
       where = (WORD*)Malloc1(size*sizeof(WORD), "dollar content");
       r = where;
-      NCOPY(r, t, size);
+		/*[30sep2005 mt]:*/
+		/*A bug!:*/
+      /*NCOPY(r, t, size);*/
+		i=size;
+		NCOPY(r, t, i);
+		/*:[30sep2005 mt]*/
     }
   d = Dollars + index;
   

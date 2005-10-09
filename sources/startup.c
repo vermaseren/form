@@ -920,6 +920,12 @@ main ARG2(int,argc,char **,argv)
 	PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
 	if ( PF.me == MASTER && !AM.silent )
 #else
+	/*[20sep2005 mt]:*/
+	/*Define preprocessor variable PARALLELTASK_ as 0:*/
+	PutPreVar((UBYTE *)"PARALLELTASK_",(UBYTE *)"0",0,0);
+	/*Define preprocessor variable NPARALLELTASKS_ as 1:*/
+	PutPreVar((UBYTE *)"NPARALLELTASKS_",(UBYTE *)"1",0,0);
+	/*:[20sep2005 mt]*/
 	if ( !AM.silent ) 
 #endif
 			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"

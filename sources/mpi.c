@@ -38,6 +38,9 @@ PF_RealTime ARG1(int,i)
   	#] LONG PF_RealTime(int):
   	#[ int  PF_LibInit(int*,char***) :
 */
+/*[04oct2005 mt]:*/
+LONG PF_maxDollarChunkSize=0;
+/*:[04oct2005 mt]*/
 int 
 PF_LibInit ARG2(int*,argcp,char***,argvp)
 {  
@@ -49,7 +52,52 @@ PF_LibInit ARG2(int*,argcp,char***,argvp)
   ret = MPI_Comm_size(PF_COMM,&PF.numtasks);
   if(ret != MPI_SUCCESS) return(ret); 
 
-  PF.packsize = 1000;
+	/*[04oct2005 mt]:*/
+  /*PF.packsize = 1000;*/
+	PF.packsize = PF_PACKSIZE;
+	{/*Block*/
+		int bytes, totalbytes=0;
+		/*There is one problem with maximal possible packing: there is no API to
+			convert bytes to the record number. So, here we calculate the buffer 
+			size needed for storing dollarvars:*/
+		/*LONG PF_maxDollarChunkSize is the size for the portion of the dollar 
+			variable buffer suitable for broadcasting. This variable should be 
+			visible from parallel.c*/
+		/*Evaluate PF_Pack(numterms,1,PF_INT):*/
+		if(  ( ret = MPI_Pack_size(1,PF_INT,PF_COMM,&bytes) )!=MPI_SUCCESS )
+	 		return(ret); 
+
+		totalbytes+=bytes;
+		/*Evaluate PF_Pack( newsize,1,PF_LONG):*/
+		if(  ( ret = MPI_Pack_size(1,PF_LONG,PF_COMM,&bytes) )!=MPI_SUCCESS )
+	 		return(ret); 
+
+		totalbytes+=bytes;
+		/*Now avaulable room is PF.packsize-totalbytes*/
+
+		totalbytes=PF.packsize-totalbytes;
+		/*Now totalbytes is the size of chunk in bytes.
+			Evaluate this size in number of records:*/
+		/*Rough estimation:*/
+		PF_maxDollarChunkSize=totalbytes/sizeof(WORD);
+		/*Go to the up limit:*/
+		do{
+			if(  ( ret = MPI_Pack_size(
+						++PF_maxDollarChunkSize,PF_WORD,PF_COMM,&bytes) )!=MPI_SUCCESS )
+				return(ret);
+		}while(bytes<totalbytes);
+		/*Now the chunk size is too large*/
+		/*And now evaluate the exact value:*/
+		do{
+			if(  ( ret = MPI_Pack_size(
+						--PF_maxDollarChunkSize,PF_WORD,PF_COMM,&bytes) )!=MPI_SUCCESS )
+				return(ret);
+		}while(bytes>totalbytes);
+		/*Now PF_maxDollarChunkSize is the size of chunk of PF_WORD fitting the 
+			buffer <= (PF.packsize-PF_INT-PF_LONG)*/
+	}/*Block*/
+	/*:[04oct2005 mt]*/
+
   return(0);
 }
 /*
