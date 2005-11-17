@@ -126,7 +126,11 @@ extern int (*setTerminatorForExternalChannel) ARG1 (char *,buffer);
 #else /*ifdef SELFTEST*/
 #include "form3.h"
 #ifdef PARALLEL
+/*[17nov2005 mt]:*/
+/*removed:
 int PF_BroadcastString ARG1 (UBYTE *,str);
+*/
+/*:[17nov2005 mt]*/
 #endif
 #endif /*ifdef SELFTEST ... else*/
 
@@ -328,10 +332,10 @@ int ret;
    }/*if ( PF.me == MASTER */
 
    /*Master broadcasts result to slaves, slaves read it from the master:*/
-   if( PF_BroadcastString(h->INbuf) ){/*Fail!*/
+   if( PF_BroadcastString((UBYTE *)h->INbuf) ){/*Fail!*/
 		  MesPrint("Fail broadcasting external channel results");
 		  Terminate(-1);
-   }/*if( PF_BroadcastString(h->INbuf) )*/
+   }/*if( PF_BroadcastString((UBYTE *)h->INbuf) )*/
 
    if( *(h->INbuf) == '\0'){/*Empty line? This shouldn't be!*/
       closeExternalChannel(externalChannelsListTop-externalChannelsList+1);
@@ -391,7 +395,7 @@ int ret;
       }/*if ( PF.me == MASTER )*/
 
       /*Master broadcasts results to slaves, slaves read it from the master:*/
-      if( PF_BroadcastString(h->IBfull) ){/*Fail!*/
+      if( PF_BroadcastString((UBYTE *)h->IBfull) ){/*Fail!*/
         MesPrint("Fail broadcasting external channel results");
         Terminate(-1);
       }/*if( PF_BroadcastString(h->IBfull) )*/
@@ -688,9 +692,12 @@ pid_t childpid,fatherchildpid = 0;
                                   tell the father if fail.*/
 
    /* Fork to create the child process:*/
-   if((childpid = fork()) == -1)
+   if((childpid = fork()) == -1){
+       /*[16nov2005 mt]:*/
+       perror("fork");
+       /*:[16nov2005 mt]*/
        return(-1);
-
+   }
   if(childpid == 0){/*Child.*/
      int i,maxfd=fdsig[1];
 
@@ -925,7 +932,7 @@ char statusbuf[2]={'\0','\0'};/*'\0' if doublepipe retuns ok, '!' othervise.*/
     /*else: Keep h->pid = 0 and h->fsend = 0 for slaves in parallel mode!*/
 
    /*Master broadcasts status to slaves, slaves read it from the master:*/
-   if( PF_BroadcastString(statusbuf) ){/*Fail!*/
+   if( PF_BroadcastString((UBYTE *)statusbuf) ){/*Fail!*/
       h->pid=-1;
    }else if( statusbuf[0]=='!')/*Master fails*/
       h->pid=-1;
@@ -948,7 +955,7 @@ char statusbuf[2]={'\0','\0'};/*'\0' if doublepipe retuns ok, '!' othervise.*/
    /*Initialize a terminator:*/
    *(h->terminator=Malloc1(DELTA_EXT_BUF,"External channel terminator"))='\n';
    (h->terminator)[1]='\0';/*By default the terminator is '\n'*/
-   h->cmd=strDup1(cmd,"External channel command");
+   h->cmd=(char *)strDup1((UBYTE *)cmd,"External channel command");
    /*ok - ready!*/
    return(h);
    /*Something is wrong?*/

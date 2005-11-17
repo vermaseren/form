@@ -914,9 +914,9 @@ main ARG2(int,argc,char **,argv)
 	Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master
 	Define preprocessor variable NPARALLELTASKS_ as a total number of processes
 */
-	sprintf(buf,"%d",PF.me);
+	sprintf((char*)buf,"%d",PF.me);
 	PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
-	sprintf(buf,"%d",PF.numtasks);
+	sprintf((char*)buf,"%d",PF.numtasks);
 	PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
 	if ( PF.me == MASTER && !AM.silent )
 #else
@@ -938,7 +938,7 @@ main ARG2(int,argc,char **,argv)
 		Terminate(-1);
 	}
 #endif
-	sprintf(buf,"%d",AM.totalnumberofthreads);
+	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
 	ReserveTempFiles();
 	IniVars();

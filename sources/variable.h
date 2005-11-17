@@ -1,15 +1,26 @@
 #ifndef __VARIABLE__
 
 #define __VARIABLE__
-
 /*[14apr2004 mt]:*/
 /*See the file extcmd.c*/
+/*[17nov2005 mt]:*/
+#ifdef REMOVEDBY_MT
 extern int (*writeBufToExtChannel) ARG2(char *,buf, size_t,n);
 extern int (*getcFromExtChannel) ARG0 ;
 extern int (*setTerminatorForExternalChannel) ARG1 (char *,newterminator);
+#endif
+extern WRITEBUFTOEXTCHANNEL writeBufToExtChannel;
+extern GETCFROMEXTCHANNEL getcFromExtChannel;
+extern SETTERMINATORFOREXTERNALCHANNEL setTerminatorForExternalChannel;
+/*:[17nov2005 mt]*/
 /*:[14apr2004 mt]*/
 
+/*[17nov2005 mt]:*/
+/*
 extern LONG (*WriteFile)  ARG3 (int,handle,UBYTE *,buffer,LONG,number);
+*/
+extern WRITEFILE WriteFile;
+/*:[17nov2005 mt]*/
 
 extern ALLGLOBALS A;
 #ifdef WITHPTHREADS

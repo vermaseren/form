@@ -21,10 +21,15 @@
 #define PF_ATTACH_MSGTAG     40
 #define PF_GREET_MSTAG       50
 
+/*[12oct2005 mt]:*/
+/*Better to localize this istuff in mpi.c:*/
+#ifdef REMOVEDBY_MT
 /*[04oct2005 mt]:*/
 /*PF.packsize:*/
 #define PF_PACKSIZE 1000
 /*:[04oct2005 mt]*/
+#endif
+/*:[12oct2005 mt]*/
 
 #define PF_ATTACH_REDEF       1
 #define PF_ATTACH_DOLLAR      2
@@ -158,8 +163,11 @@ typedef struct ParallelVars{
   /*[26nov2003 mt]:*/
   int mnumredefs; /* number of redefined PreProVar in current module*/
   /*:[26nov2003 mt]*/
-  LONG packsize; /* this is only for the packbuffer of the MPI routines */
 
+	/*[12oct2005 mt]:*/
+	/*Better to localize this istuff in mpi.c:*/
+  /*LONG packsize;*/ /* this is only for the packbuffer of the MPI routines */
+	/*:[12oct2005 mt]*/
   int log;              /* flag for logging mode */
 
 }PARALLELVARS;
@@ -182,4 +190,28 @@ extern LONG PF_maxDollarChunkSize;
   	#] global variables used by the PF_functions :
 */
 
+/*
+[17nov2005 mt]:
+   #[ function prototypes:
+*/
+
+DECLARE(int PF_InitRedefinedPreVars, () )
+DECLARE(int PF_Processor, (EXPRESSIONS,WORD,WORD) )
+DECLARE(WORD PF_Deferred, (WORD *,WORD) )
+DECLARE(int PF_EndSort, () )
+DECLARE(int PF_Init, (int*,char ***) )
+DECLARE(int PF_Terminate,(int))
+DECLARE(int PF_ISendSbuf, (int,int) )
+DECLARE(int PF_PackString, (UBYTE *) )
+DECLARE(int PF_UnPackString, (UBYTE *) )
+DECLARE(int PF_BroadcastPreDollar, (WORD **, LONG *,int *) )
+DECLARE(int PF_BroadcastString, (UBYTE *)  )
+DECLARE(LONG PF_BroadcastNumberOfTerms,(LONG) )
+DECLARE(WORD PF_mkDollarsParallel, () )
+DECLARE(void PF_markPotModDollars, () )
+DECLARE(void PF_statPotModDollar,(int,int) )
+/*
+   #] function prototypes:
+[:17nov2005 mt]
+*/
 #endif

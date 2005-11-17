@@ -44,6 +44,18 @@ int CatchDollar ARG1(int,par)
 	}
 #endif /*#ifdef REMOVEDBY_MT*/
 
+	/*[06nov2005 mt]:*/
+#ifdef PARALLEL
+	/*This usage of this dollar is just a preprocessor. But, it was already 
+		marked as potentially modified (in CoAssign in comexpr.c). We cannot just 
+		remove the mark: this dollarvar could appear somewhere eles in this 
+		module in a "right" context. So, we count referencies to this dollarvar 
+		in the "right" context, and decrement the counter here. If at the end the
+		counter is >0, the dollarvar is really "potentially modified".*/
+	PF_statPotModDollar(numdollar,-1);
+#endif
+	/*:[06nov2005 mt]*/
+
 	d = Dollars+numdollar;
 	if ( par == -1 ) {
 		d->type = DOLUNDEFINED;

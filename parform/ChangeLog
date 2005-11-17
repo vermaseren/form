@@ -316,3 +316,19 @@ solved, see PF_BroadcastPreDollar() in parallel.c: we split long
 expressin into chunks, and broadcast each chunk independently.
 mkDollarsParallel() in parallel.c should be changed, it fails if
 dollarvars are not really short.
+
+*********************** new release *************************************
+The problem with dollar variables longer than
+PF_packbuf is solved, see comments in the section "Long pack stuff:"
+in mpi.c. !!NOT WIDELY TESTED!!
+
+Some cleanup concerning declaration of PF_ - functions.
+functonal variables  from extcmd and WriteFile.
+
+[12oct2005 mt]: Some stuff is moved into another place
+in the file mpi.c, and PF.packsize is removed and PF_packsize is used
+instead. It is rather difficult to proper comment it, so not all these
+changing are marked by "[12oct2005 mt]".
+
+[08nov2005 mt:] Bugfix on the bugfix of 14sep2005 concerning collecting
+preprovars by the master in "off parallel" mode.

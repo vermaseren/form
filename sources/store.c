@@ -753,8 +753,12 @@ ReStart:
 		if ( InIn <= 0 ) {
 			ADDPOS(fi->POposition,(fi->POfull-fi->PObuffer)*sizeof(WORD));
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+/*
+[06nov2005 mt]:From: Jos Vermaseren Date: Wed, 19 Oct 2005:
+...the first read has to be eliminated.
 			if ( ( ( InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),
 				fi->POsize) ) < 0 ) || ( InIn & 1 ) ) goto GTerr;
+*/
 			InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
 			if ( ( InIn < 0 ) || ( InIn & 1 ) ) goto GTerr;
 #ifdef WORD2

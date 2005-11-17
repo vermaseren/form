@@ -1182,7 +1182,15 @@ DECLARE(VOID closeAllExternalChannels,(VOID))
 /*:[14apr2004 mt]*/
 
 DECLARE(int writexactly,(int,char *,size_t))
- 
+
+/*[17nov2005 mt]:*/
+DECLARE(typedef int (*WRITEBUFTOEXTCHANNEL),(char *,size_t) )
+DECLARE(typedef int (*GETCFROMEXTCHANNEL),() )
+DECLARE(typedef int (*SETTERMINATORFOREXTERNALCHANNEL),(char *) )
+
+DECLARE(typedef LONG (*WRITEFILE), (int,UBYTE *,LONG) )
+/*:[17nov2005 mt]*/
+
 #ifdef PARALLEL
 DECLARE(LONG PF_BroadcastNumberOfTerms,(LONG)) 
 #endif

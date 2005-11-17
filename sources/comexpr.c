@@ -1610,6 +1610,9 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 /*
 	Add to the list of potentially modified dollars (for PARALLEL)
 */
+/*[06nov2005 mt]:*/
+#ifdef REMOVEDBY_MT
+
 	for ( i = 0; i < NumPotModdollars; i++ ) {
 		if ( number == PotModdollars[i] ) break;
 	}
@@ -1617,6 +1620,11 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 		pmd = (WORD *)FromList(&AC.PotModDolList);
 		*pmd = number;
 	}
+#endif
+#ifdef PARALLEL
+	PF_statPotModDollar(number,1);
+#endif
+/*:[06nov2005 mt]*/
 	return(error);
 }
 

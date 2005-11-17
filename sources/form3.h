@@ -8,8 +8,14 @@
 #define PRODUCTIONDATE "13-sep-2005"
 #endif
 
+/*[17oct2005 mt]:*/
+#define FORM_INLINE inline
+/*:[17oct2005 mt]*/
+
+
 #define WITHZLIB
 #define ZWITHZLIB
+
 
 /*
 #define ITHREADS

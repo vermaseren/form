@@ -318,6 +318,14 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	GETIDENTITY;
 	WORD RetCode = 0;
 	int i, j;
+
+/*[06nov2005 mt]:*/
+#ifdef PARALLEL
+	/*See comments to PF_PotModDollars in parallel.c*/
+	PF_markPotModDollars();	
+#endif
+/*:[06nov2005 mt]*/
+
 /*
 		AC.mparallelflag was set to PARALLELFLAG in IniModule.
 		It can be set to NOPARALLEL_MOPT or PARALLEL_MOPT (module option)
@@ -329,7 +337,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 		if( ( AC.mparallelflag & NOPARALLEL_MOPT ) == 0 ) {
 			if( AM.hparallelflag != PARALLELFLAG ) {
 				AC.mparallelflag |= ( AC.parallelflag = AM.hparallelflag );
-#ifdef PARALLEL 
+#ifdef PARALLEL
 				MesPrint("WARNING!: $ use in table - module %l is forced to run in sequential mode.", AC.CModule);
 #endif
 			}
@@ -458,9 +466,9 @@ DoExecute ARG2(WORD,par,WORD,skip)
 /*[28sep2005 mt]:*/
 #ifdef PARALLEL
 	/*Here there was a long code written by df in December 2002. I re-write
-	it completely and moved it to mkDollarsParallel() in paralle.c:*/
+	it completely and moved it to PF_mkDollarsParallel() in paralle.c:*/
 	if(NumPotModdollars > 0)
-		if( (RetCode=mkDollarsParallel())!=0 )
+		if( (RetCode=PF_mkDollarsParallel())!=0 )
 			return(RetCode);
 #endif
 #ifdef WITHPTHREADS

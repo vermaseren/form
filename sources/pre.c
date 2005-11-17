@@ -706,6 +706,8 @@ PreProcessor ARG0
 /*:[28nov2003 mt]*/
 		numstatement = 0;
 		for(;;) {	/* Read a single line/statement */
+if(AC.CModule >=55)
+   c=' ';
 			c = GetChar(0);
 			if ( c == AP.ComChar ) {  /* This line is commentary */
 				LoadInstruction(5);
@@ -4227,7 +4229,7 @@ DoExternal ARG1(UBYTE *,s)
 	}
 	/*here s is a command*/
    /*See the file extcmd.c*/
-	if(  (externalD=openExternalChannel(s))<1){/*error?*/
+	if(  (externalD=openExternalChannel((char *)s))<1){/*error?*/
 		/*Not quite correct - terminate the program on error:*/
 		Error1("Can't start external program",s);
 		return(-1);
@@ -4399,7 +4401,7 @@ WriteToExternalChannel ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	/*ATT! handle is not used! Actual output is performed to
 	 	the current external channel, see extcmd.c!*/
-	if(writeBufToExtChannel(buffer,size))
+	if(writeBufToExtChannel((char*)buffer,size))
 		return(-1);
 	return(size);
 }

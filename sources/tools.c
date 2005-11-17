@@ -9,8 +9,13 @@
 FILES **filelist;
 int numinfilelist = 0;
 int filelistsize = 0;
+/*[17nov2005]:*/
+#ifdef WITHPTHREADS
 static LONG maxlistsize = (LONG)(MAXPOSITIVE);
-
+#else
+static LONG maxlistsize = (LONG)(MAXLONG);
+#endif
+/*:[17nov2005]*/
 #ifdef MALLOCDEBUG
 #define BANNER 16
 void *malloclist[6000];
@@ -722,8 +727,12 @@ WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	return(Uwrite((char *)buffer,1,size,filelist[handle]));
 }
-
+/*[17nov2005]:*/
+WRITEFILE WriteFile = &WriteFileToFile;
+/*
 LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
+*/
+/*:[17nov2005]*/
 
 /*
  		#] WriteFile :

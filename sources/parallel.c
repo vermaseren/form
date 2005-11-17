@@ -11,6 +11,51 @@
 */
 #include "form3.h"
 
+/*[17nov2005 mt:*/
+DECLARE(LONG PF_RealTime, (int))
+DECLARE(int PF_LibInit,(int*, char***))
+DECLARE(int PF_Terminate,(int))
+DECLARE(int PF_Probe,(int*))
+DECLARE(int PF_InitPackBuf,())
+DECLARE(int PF_PrintPackBuf,(char*,int) )
+#ifdef SHMEM
+DECLARE(int PF_Pack,(VOID *,LONG,int) )
+DECLARE(int PF_UnPack, (VOID*,LONG,int) )
+#else
+#ifdef MPI
+DECLARE(int PF_Pack,(VOID *,LONG,MPI_Datatype) )
+DECLARE(int PF_UnPack, (VOID*,LONG,MPI_Datatype) )
+#endif /*ifdef MPI*/
+#endif/*ifdef SHMEM*/
+DECLARE(int PF_Send, (int,int,int) )
+DECLARE(int PF_BroadCast, (int) )
+DECLARE(int PF_Receive,(int,int,int*,int*) )
+DECLARE(int PF_ISendSbuf, (int,int) )
+DECLARE(int PF_RecvWbuf, (WORD*,LONG*,int*) )
+DECLARE(int PF_WaitRbuf, (PF_BUFFER *,int,LONG *) )
+DECLARE(int PF_PackString, (UBYTE *) )
+DECLARE(int PF_UnPackString, (UBYTE *) )
+DECLARE(int PF_InitRedefinedPreVars, () )
+DECLARE(int PF_Processor, (EXPRESSIONS,WORD,WORD) )
+DECLARE(WORD PF_Deferred, (WORD *,WORD) )
+DECLARE(int PF_EndSort, () )
+DECLARE(int PF_Init, (int*,char ***) )
+DECLARE(int PF_longSingleReset, () )
+DECLARE(int PF_longMultiReset, () )
+DECLARE(int PF_longSinglePack, (UBYTE *,int,MPI_Datatype) )
+DECLARE(int PF_longSingleUnPack, (UBYTE*,LONG,MPI_Datatype) )
+DECLARE(int PF_longMultiPack, (UBYTE *,int,int,MPI_Datatype) )
+DECLARE(int PF_longMultiUnPack,(UBYTE*,int,int,MPI_Datatype) )
+DECLARE(int PF_longSingleSend, (int,int) )
+DECLARE(int PF_longSingleReceive,(int,int,int*,int*) )
+DECLARE(int PF_longBroadcast,() )
+DECLARE(int PF_IRecvRbuf,(PF_BUFFER*,int,int) )
+DECLARE(int PF_WaitAllSlaves,() )
+DECLARE(int MinDollar, (WORD) )
+DECLARE(int MaxDollar, (WORD) )
+DECLARE(int SumDollars, (WORD) )
+/*:[17nov2005 mt*/
+
 PARALLELVARS PF;
 #ifdef MPI2
 WORD *PF_shared_buff;
@@ -29,8 +74,8 @@ WORD *PF_shared_buff;
 
 #ifdef PF_WITHLOG
 #define PRINTFBUF(TEXT,TERM,SIZE)  { if(PF.log){ WORD iii;\
-  fprintf(stderr,"[%d|%d] %s : ",PF.me,PF.module,TEXT);\
-  if(TERM){ fprintf(stderr,"[%d] ",*TERM);\
+  fprintf(stderr,"[%d|%ld] %s : ",PF.me,PF.module,(char*)TEXT);\
+  if(TERM){ fprintf(stderr,"[%d] ",(int)(*TERM));\
     if((SIZE)<500 && (SIZE)>0) for(iii=1;iii<(SIZE);iii++)\
       fprintf(stderr,"%d ",TERM[iii]); }\
   fprintf(stderr,"\n");\
@@ -39,8 +84,12 @@ WORD *PF_shared_buff;
 #define PRINTFBUF(TEXT,TERM,SIZE) {}
 #endif
 
+/*[17nov2005 mt:*/
+/* moved in the beginning of the file:
 int PF_PackString ARG1(UBYTE *,str);
 int PF_UnPackString ARG1(UBYTE *,str);
+*/
+/*:[17nov2005 mt*/
 
 /*
   	#] includes :
@@ -1794,7 +1843,7 @@ in pre.c.*/
 	   #] Slave 
 	*/				  
     if(PF.log){
-	  fprintf(stderr,"[%d|%d] Endsort,Collect,Broadcast done\n",PF.me,PF.module);
+	  fprintf(stderr,"[%d|%ld] Endsort,Collect,Broadcast done\n",PF.me,PF.module);
 	  fflush(stderr);
 	}
   }
@@ -1875,12 +1924,12 @@ int PF_Init ARG2(int*,argc,char ***,argv){
 
 	if( (c = getenv("PF_MAXINTERMS")) ){
 	  PF_maxinterms = (LONG)atoi(c);
-	  fprintf(stderr,"[%d] changing PF_maxinterms to %d\n",PF.me,PF_maxinterms);
+	  fprintf(stderr,"[%d] changing PF_maxinterms to %ld\n",PF.me,PF_maxinterms);
 	  fflush(stderr);
 	}
 	if( (c = getenv("PF_STATS")) ){
 	  PF_statsinterval = (int)atoi(c);
-	  fprintf(stderr,"[%d] changing PF_statsinterval to %d\n",PF.me,PF_statsinterval);
+	  fprintf(stderr,"[%d] changing PF_statsinterval to %ld\n",PF.me,PF_statsinterval);
 	  fflush(stderr);
 	  if(PF_statsinterval < 1) PF_statsinterval = 10;
 	}
@@ -1926,7 +1975,7 @@ int PF_Init ARG2(int*,argc,char ***,argv){
 	AM.Path = (UBYTE*)Malloc1(fpsize*sizeof(UBYTE),"Path");
 	PF_UnPack(AM.Path,(LONG)fpsize,PF_BYTE);
 	if(PF.log) {
-	  fprintf(stderr,"[%d] log=%d rbufs=%d sbufs=%d maxin=%d path=%s\n",
+	  fprintf(stderr,"[%d] log=%d rbufs=%d sbufs=%d maxin=%ld path=%s\n",
 			  PF.me,PF.log,PF.numrbufs,PF.numsbufs,PF_maxinterms,AM.Path);
 	  fflush(stderr);
 	}
@@ -2040,7 +2089,7 @@ PF_InitRedefinedPreVars ARG0
 			PF_UnPack(value,l,PF_BYTE);
 
 			if(PF.log) 
-				printf("[%d] module %d: PutPreVar(\"%s\",\"%s\",1);\n",
+				printf("[%d] module %ld: PutPreVar(\"%s\",\"%s\",1);\n",
 					PF.me,PF.module,name,value);
 
 			/*Re-define the variable:*/
@@ -2211,7 +2260,7 @@ LONG i;
 
 /*[29sep2005 mt]:*/
 /*
-   #[ int mkDollarsParallel
+   #[ int PF_mkDollarsParallel
 */
 PFDOLLARS *PFDollars=NULL;
 /*Maximal number of PFDollars:*/
@@ -2220,6 +2269,7 @@ static int MaxPFDollars=0;
 /*[9oct2005 mt]: This procedure should be changed, it fails if
 dollarvars are not really short. The model of slaves ->master->slaves
 couldn't be based on a small PF_packbuf.*/
+/*[17nov2005 mt]: done*/
 /*
 This procedure combines dollars from the various slaves
 and broadcasts the result to all slaves.
@@ -2268,7 +2318,7 @@ Since NumPotModdollars>0, then NumDollars>0.
 /*
 	The function returns 0 in success, or -1.
 */
-WORD mkDollarsParallel ARG0
+WORD PF_mkDollarsParallel ARG0
 {
 int i,j,nSlave,src, index, namesize;
 UBYTE *name, *p, *textdoll;
@@ -2278,8 +2328,8 @@ DOLLARS  d, newd;
 
 
 	if(AC.mparallelflag == PARALLELFLAG){
-		if (PF.me == 0) {/*Master*/
 
+		if (PF.me == 0) {/*Master*/
 			/*INITIALIZATION:*/
 			/*Data from slaves will be placed into an array PFDollars.
 				It must be re-allocated, if it's length is not enough.*/
@@ -2308,21 +2358,41 @@ DOLLARS  d, newd;
 			/*Get dollars from each of slaves, unpack them and put
 				data into PFDollars:*/
 			for (nSlave = 1; nSlave < PF.numtasks; nSlave++) {
-				PF_Receive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, &i);
+				/*[17oct2005 mt]:*/
+				/*Master and slaves must initialize the "long" send buffer:*/
+				if(PF_longSingleReset())
+					return(-1);
+				/*PF_Receive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, &i);*/
+				if(PF_longSingleReceive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, &i))
+					return(-1);
+				/*:[17oct2005 mt]*/
 				/*the last parameter (i) is always PF_DOLLAR_MSGTAG, ignored*/
 
 				/*Now all the info is in PF_buffer.*/
 				/*Here NumPotModdollars dollars totally available; we trust
 					this number is the same on each slave:*/
 				for (i = 0; i < NumPotModdollars; i++) {
-					PF_UnPack(&namesize, 1, PF_INT);
+					/*[17oct2005 mt]:*/
+					/*PF_UnPack(&namesize, 1, PF_INT);*/
+					PF_longSingleUnPack((UBYTE*)&namesize, 1, PF_INT);
+					/*:[17oct2005 mt]*/
 					name = (UBYTE*)Malloc1(namesize, "dollar name");
-					PF_UnPack(name, namesize, PF_BYTE);
-					PF_UnPack(&type, 1, PF_WORD);
+					/*[17oct2005 mt]:*/
+					/*PF_UnPack(name, namesize, PF_BYTE);
+						PF_UnPack(&type, 1, PF_WORD);*/
+					PF_longSingleUnPack(name, namesize, PF_BYTE);
+					PF_longSingleUnPack((UBYTE*)&type, 1, PF_WORD);
+					/*:[17oct2005 mt]*/
 					if (type != DOLZERO) {
-						PF_UnPack(&size, 1, PF_LONG);
+						/*[17oct2005 mt]:*/
+						/*PF_UnPack(&size, 1, PF_LONG);*/
+						PF_longSingleUnPack((UBYTE*)&size, 1, PF_LONG);
+						/*:[17oct2005 mt]*/
 						where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
-						PF_UnPack(where, size+1, PF_WORD);
+						/*[17oct2005 mt]:*/
+						/*PF_UnPack(where, size+1, PF_WORD);*/
+						PF_longSingleUnPack((UBYTE*)where, size+1, PF_WORD);
+						/*:[17oct2005 mt]*/
 					}/*if (type != DOLZERO)*/ 
 					else 
 						where = &(AM.dollarzero);
@@ -2404,7 +2474,13 @@ DOLLARS  d, newd;
 		}/*if (PF.me == 0)*/
 		else{/*Slave*/
 			/*SLAVE SENDING:*/
-		   PF_Send(MASTER, PF_DOLLAR_MSGTAG, 0);
+			/*[17oct2005 mt]:*/
+			/*Master and slaves must initialize the "long" send buffer:*/
+			if(PF_longSingleReset())
+				return(-1);
+
+		   /*PF_Send(MASTER, PF_DOLLAR_MSGTAG, 0);*/
+			/*:[17oct2005 mt]*/
 			for (i = 0; i < NumPotModdollars; i++) {
 				index = PotModdollars[i];
 				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
@@ -2412,6 +2488,8 @@ DOLLARS  d, newd;
 				while(*p++) namesize++;
 				newd=DolToTerms(index);
 				/* type newd==0  will not be send to master */
+				/*[17oct2005 mt]:*/
+#ifdef REMOVEDBY_MT				
 				PF_Pack(&namesize, 1, PF_INT);
 				PF_Pack(name, namesize, PF_BYTE);
 				if (newd != 0) {
@@ -2425,15 +2503,38 @@ DOLLARS  d, newd;
 				}
 			}
 			PF_Send(MASTER, PF_DOLLAR_MSGTAG, 1);
+#endif
+				PF_longSinglePack((UBYTE*)&namesize, 1, PF_INT);
+				PF_longSinglePack(name, namesize, PF_BYTE);
+				if (newd != 0) {
+					PF_longSinglePack((UBYTE*)&(newd->type), 1, PF_WORD);
+					PF_longSinglePack((UBYTE*)&(newd->size), 1, PF_LONG);
+					PF_longSinglePack((UBYTE*)newd->where, newd->size+1, PF_WORD);
+				} 
+				else {
+						type = DOLZERO;
+						PF_longSinglePack((UBYTE*)&type, 1, PF_WORD);
+				}
+			}
+			PF_longSingleSend(MASTER, PF_DOLLAR_MSGTAG);
 			/*:SLAVE SENDING*/
 		}/*if (PF.me == 0)...else...*/
 	}/*if(AC.mparallelflag == PARALLELFLAG)*/
 	/*The Master must pack and broadcast independently on mparallelflag!*/
 
+	/*[17oct2005 mt]:*/
+	/*Initialization is performed independently for the Master and slaves:*/
+	if(PF_longMultiReset())
+		return(-1);
+	/*:[17oct2005 mt]*/
+
 	/*MASTER PACK:*/
 	if (PF.me == 0) {
+		/*[17oct2005 mt]:*/
+		/*See a few lines above*/
 		/*Prepare PF_buffer:*/
-		PF_BroadCast(0);
+		/*PF_BroadCast(0);*/
+		/*:[17oct2005 mt]*/
 		for (i = 0; i < NumPotModdollars; i++) {
 			index = PotModdollars[i];
 			p = name = AC.dollarnames->namebuffer+Dollars[index].name;
@@ -2442,7 +2543,8 @@ DOLLARS  d, newd;
 
 			newd=DolToTerms(index);
 			/* if newd=0, this type of dollars will not be send to master */
-
+			/*[17oct2005 mt]:*/
+#ifdef REMOVEDBY_MT
 			PF_Pack(&namesize, 1, PF_INT);
 			PF_Pack(name, namesize, PF_BYTE);
 
@@ -2454,16 +2556,35 @@ DOLLARS  d, newd;
 				type = DOLZERO;
 				PF_Pack(&type, 1, PF_WORD);
 			}
+#endif
+			PF_longMultiPack((UBYTE*)&namesize, 1, sizeof(int),PF_INT);
+			PF_longMultiPack(name, namesize, 1,PF_BYTE);
+
+			if (newd != 0) {
+				PF_longMultiPack((UBYTE*)&(newd->type), 1, sizeof(WORD),PF_WORD);
+				PF_longMultiPack((UBYTE*)&(newd->size), 1, sizeof(LONG),PF_LONG);
+				PF_longMultiPack((UBYTE*)newd->where, newd->size+1, sizeof(WORD),PF_WORD);
+			} else {
+				type = DOLZERO;
+				PF_longMultiPack((UBYTE*)&type, 1, sizeof(WORD),PF_WORD);
+			}
+			/*:[17oct2005 mt]*/
 		}/*for (i = 0; i < NumPotModdollars; i++)*/
 	}/*if (PF.me == 0)*/
 	/*:MASTER PACK*/
 
-	PF_BroadCast(1);
+	/*[17oct2005 mt]:*/
+	/*PF_BroadCast(1);*/
+	if(PF_longBroadcast())
+		return(-1);
+	/*:[17oct2005 mt]*/
 
 	if (PF.me != 0) {
 		/*For each dollar:*/
 		for (i = 0; i < NumPotModdollars; i++) {
 			/*SLAVE UNPACK:*/
+			/*[17oct2005 mt]:*/
+#ifdef REMOVEDBY_MT
 			PF_UnPack(&namesize, 1, PF_INT);
 			name = (UBYTE*)Malloc1(namesize, "dollar name");
 			PF_UnPack(name, namesize, PF_BYTE);
@@ -2472,6 +2593,18 @@ DOLLARS  d, newd;
 				PF_UnPack(&size, 1, PF_LONG);
 				where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
 				PF_UnPack(where, size+1, PF_WORD);
+			}/*if (type != DOLZERO)*/
+	      else
+				where = &(AM.dollarzero);
+#endif
+			PF_longMultiUnPack((UBYTE*)&namesize, 1, sizeof(int),PF_INT);
+			name = (UBYTE*)Malloc1(namesize, "dollar name");
+			PF_longMultiUnPack(name, namesize, 1,PF_BYTE);
+			PF_longMultiUnPack((UBYTE*)&type, 1, sizeof(WORD),PF_WORD);
+			if (type != DOLZERO) {
+				PF_longMultiUnPack((UBYTE*)&size, 1, sizeof(LONG),PF_LONG);
+				where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
+				PF_longMultiUnPack((UBYTE*)where, size+1, sizeof(WORD),PF_WORD);
 			}/*if (type != DOLZERO)*/
 	      else
 				where = &(AM.dollarzero);
@@ -2506,9 +2639,67 @@ DOLLARS  d, newd;
 		/*:SLAVE STORE*/
 	}/*if (PF.me != 0)*/
 	return (0);
-}/*mkDollarsParallel*/
+}/*PF_mkDollarsParallel*/
 /*
-   #] int mkDollarsParallel
+   #] int PF_mkDollarsParallel
 */
 
 /*:[29sep2005 mt]*/
+
+
+/*[06nov2005 mt]:*/
+
+
+	/*
+   #[ PotModDollars
+		Usage of a dollar just in a preprocessor is undistingueshable from the 
+		"real" run-time. Dollars, marked as potentially modified in CoAssign in 
+		comexpr.c may be not of a "really" potentially modified type. This become
+		clear in CatchDollar() in dollar.c, but we cannot just
+		remove the mark: this dollarvar could appear somewhere eles in this 
+		module in a "right" context. So, we count referencies to this dollarvar 
+		in the "right" context, and decrement the counter in CatchDollar(). If at 
+		the end the	counter is >0, the dollarvar is really "potentially modified".
+   */
+
+static int * PF_potModDolls=NULL;
+static int PF_potModDollsTop=0;
+static int PF_potModDollsN=-1;
+#define PDLSTDELTA 16
+
+void 
+PF_statPotModDollar ARG2(int, dollarnum, int, valToAdd)
+{
+	if(dollarnum>=PF_potModDollsTop){
+		/*increase the array*/
+		int i=PF_potModDollsTop;
+		PF_potModDolls=
+			realloc(PF_potModDolls,(PF_potModDollsTop+=PDLSTDELTA)*sizeof(int));
+		if(PF_potModDolls == NULL)
+			Terminate(-1);
+		for(;i<PF_potModDollsTop;i++)
+			PF_potModDolls[i]=0;		
+	}/*if(dollarnum>=PF_potModDollsTop)*/
+	PF_potModDolls[dollarnum]+=valToAdd;
+	if(dollarnum>PF_potModDollsN)
+		PF_potModDollsN=dollarnum;
+}/*PF_statPotModDollar*/
+
+void
+PF_markPotModDollars ARG0
+{
+int i;
+	for(i=0; i<=PF_potModDollsN; i++){
+		if(PF_potModDolls[i]>0){
+			WORD *pmd=(WORD *)FromList(&AC.PotModDolList);
+			*pmd = i;
+		}/*if(PF_potModDolls[i]>0)*/
+		PF_potModDolls[i]=0;
+	}/*for(i=0; i<PF_potModDollsTop; i++)*/
+	PF_potModDollsN=0;
+}/*PF_markPotModDollars*/
+
+/*
+   #] PotModDollars
+*/
+/*:[06nov2005 mt]*/
