@@ -3,6 +3,8 @@
 
 #ifdef TRAPSIGNALS
 #include "portsignals.h"
+#else
+#include <signal.h>
 #endif
 
 #ifdef WITHPTHREADS
@@ -88,8 +90,34 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 							while ( *s >= '0' && *s <= '9' )
 								threadnum = 10*threadnum + *s++ - '0';
 							break;
-				case 'p': /* Next arg is a path variable like in environment */
-							TAKEPATH(AM.Path)  break;
+				case 'p':
+					/*[10may2006 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+					/*There are two possibilities: -p|-pipe*/		
+					if(s[1]=='i'){
+						if( (s[2]=='p')&&(s[3]=='e')&&(s[4]=='\0') ){
+							argc--;
+							/*Initialize pre-set external channels, see 
+								the file extcmd.c:*/
+							if(initPresetExternalChannels(*argv++,AX.timeout)<1){
+								Error0("Error initializing preset external channels");
+								errorflag++;
+							}
+							AX.timeout=-1;/*This indicates that preset channels 
+													are initialized from cmdline*/
+						}else{
+							Error1("Illegal option in call of FORM: ",s);
+							errorflag++;
+						}
+					}else{
+#endif
+							 /* Next arg is a path variable like in environment */
+						TAKEPATH(AM.Path)
+#ifdef WITHEXTERNALCHANNEL
+					}
+#endif
+					break;
+					/*:[10may2006 mt]*/
 				case 'q': /* Quiet option. Only output */
 							AM.silent = 1; break;
 				case 's': /* Next arg is dir with form.set to be used */
@@ -896,6 +924,20 @@ main ARG2(int,argc,char **,argv)
 #ifdef PARALLEL
 	if ( PF_Init(&argc,&argv) ) exit(-1);
 #endif
+
+/*[08may2006 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+	AX.currentExternalChannel=0;
+	AX.killSignal=SIGKILL;
+	AX.killWholeGroup=1;
+	AX.daemonize=1;
+	AX.currentPrompt=0;
+	AX.timeout=1000;/*One second to initialize preset channels*/
+	AX.shellname=strDup1((UBYTE *)"/bin/sh -c","external channel shellname");
+	AX.stderrname=strDup1((UBYTE *)"/dev/null","external channel stderrname");
+#endif
+/*:[08may2006 mt]*/
+
 #ifdef WITHPTHREADS
 	BeginIdentities();
 #endif
@@ -908,6 +950,16 @@ main ARG2(int,argc,char **,argv)
 	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
 	if ( MakeSetupAllocs() ) Terminate(-2);
+/*[15may2006 mt]:*/
+#ifdef WITHEXTERNALCHANNEL
+	/*If env.variable "FORM_PIPES" is defined, we have to initialize 
+		corresponding pre-set external channels, see file extcmd.c.*/
+	/*This line must be after all setup settings: in future, timeout
+		could be changed at setup.*/
+	if(AX.timeout>=0)/*if AX.timeout<0, this was done by cmdline option -pipe*/
+		initPresetExternalChannels((UBYTE*)getenv("FORM_PIPES"),AX.timeout);
+#endif
+/*:[15may2006 mt]*/
 
 #ifdef PARALLEL
 /*
@@ -1040,10 +1092,25 @@ MesPrint("pcounter = %l",pcounter);
 */
 	closeAllExternalChannels();
 	AX.currentExternalChannel=0;
+	/*[08may2006 mt]:*/
+	AX.killSignal=SIGKILL;
+	AX.killWholeGroup=1;
+	AX.daemonize=1;
+	/*:[08may2006 mt]*/
 	if(AX.currentPrompt){
 		M_free(AX.currentPrompt,"external channel prompt");
 		AX.currentPrompt=0;
 	}
+	/*[08may2006 mt]:*/
+	if(AX.shellname){
+		M_free(AX.shellname,"external channel shellname");
+		AX.shellname=0;
+	}
+	if(AX.stderrname){
+		M_free(AX.shellname,"external channel stderrname");
+		AX.stderrname=0;
+	}
+	/*:[08may2006 mt]*/
 #endif
 #ifdef PARALLEL
 	PF_Terminate(errorcode);

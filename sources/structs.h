@@ -1383,6 +1383,19 @@ struct O_const {
 */
 struct X_const {
 	UBYTE	*currentPrompt;
+	/*[08may2006 mt]:*/
+	int timeout;				/*timeout to initialize preset channels.
+										If timeout<0, the preset channels are 
+										already initialized*/
+	int killSignal;			/* signal number, SIGKILL by default*/
+	int killWholeGroup;		/* if 0, the signal is sent only to a process, 
+										if !=0 (default) is sent to a whole process group*/
+	int daemonize;				/* if !=0 (default), start in a daemon mode */
+	UBYTE *shellname;			/* if !=NULL (default is "/bin/sh -c"), start in 
+										the specified	subshell*/
+	UBYTE *stderrname;		/* If !=NULL (default if "/dev/null"), stderr is 
+										redirected to the specified file*/
+	/*:[08may2006 mt]*/
 	int		currentExternalChannel;
 };
 /*

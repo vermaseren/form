@@ -375,6 +375,7 @@ HaveTodo:
 /*
 						Now we have to correct the overal factor
 */
+						if ( scale && ( factor == 0 || *factor > 0 ) ) goto ScaledVariety;
 						size = term[*term-1];
 						size = REDLENG(size);
 						if ( MulRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
@@ -421,6 +422,7 @@ HaveTodo:
 /*
 							Now we correct the overal factor
 */
+ScaledVariety:;
 							size = term[*term-1];
 							size = REDLENG(size);
 							if ( scale > 0 ) {

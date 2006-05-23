@@ -909,7 +909,8 @@ ReceiveNew:
 	  /* size = fi->POstop - fi->PObuffer; 1 less for the last 0 if ENDSORTMSGTAG */
 	  size = fi->POstop - fi->PObuffer - 1;
 
-
+		/*[16feb2006 mt]:*/
+		/* Absolutely extra!
          PF_Receive(MASTER,PF_ANY_MSGTAG,&src,&tag);
 	 
 #ifdef MPI2          
@@ -924,6 +925,10 @@ ReceiveNew:
 #else
                 PF_RecvWbuf(fi->PObuffer,&size,&src);
 #endif
+		*/
+		tag=PF_RecvWbuf(fi->PObuffer,&size,&src);
+		/*:[16feb2006 mt]*/
+
 
 
 
@@ -1358,9 +1363,13 @@ PF_WaitAllSlaves ARG0
 					*(PF.sbuf->fill[next])++ = 0;
 					PF.sbuf->active = next;
 				}/*if(!has_sent[0]) ... else*/
+				/*[16feb2006 mt]:*/
 				/*Send ENDSORT:*/
+				/* Absolutely extra!
 				PF_Send(next,PF_ENDSORT_MSGTAG,0);
 				PF_Send(next,PF_ENDSORT_MSGTAG,1);
+				*/
+				/*:[16feb2006 mt]*/
 				/*Send the buffer:*/
 				PF_ISendSbuf(next,PF_ENDSORT_MSGTAG);
 				break;
@@ -1506,12 +1515,14 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 
 		  sb->active = next;
 		  
-
-                  size = sb->fill[next] - sb->buff[next];
-		  PF_Send(next,PF_TERM_MSGTAG,0);
-                   PF_Pack(&size, 1, PF_LONG);
-		  PF_Send(next,PF_TERM_MSGTAG,1);
-
+			size = sb->fill[next] - sb->buff[next];
+			/*[16feb2006 mt]:*/
+			/* Absolutely extra!
+			PF_Send(next,PF_TERM_MSGTAG,0);
+			PF_Pack(&size, 1, PF_LONG);
+			PF_Send(next,PF_TERM_MSGTAG,1);
+			*/
+			/*:[16feb2006 mt]*/
 
 #ifdef MPI2
 		  if (!PF_Put_origin(next)){
@@ -2696,7 +2707,10 @@ int i;
 		}/*if(PF_potModDolls[i]>0)*/
 		PF_potModDolls[i]=0;
 	}/*for(i=0; i<PF_potModDollsTop; i++)*/
-	PF_potModDollsN=0;
+	/*[06dec2005 mt]:*/
+	/*PF_potModDollsN=0;*/
+	PF_potModDollsN=-1;
+	/*:[06dec2005 mt]*/
 }/*PF_markPotModDollars*/
 
 /*

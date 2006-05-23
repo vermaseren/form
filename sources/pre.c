@@ -74,6 +74,9 @@ static KEYWORD precommands[] = {
 	/*[19apr2004 mt]:*/
 	,{"setexternal"  , DoSetExternal  , 0, 0}
 	/*:[19apr2004 mt]*/
+	/*[10may2006 mt]:*/
+	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
+	/*:[10may2006 mt]:*/
 	,{"show"        , DoPreShow      , 0, 0}
 	,{"switch"      , DoPreSwitch    , 0, 0}
 	,{"system"      , DoSystem       , 0, 0}
@@ -1828,7 +1831,7 @@ DoInclude ARG1(UBYTE *,s)
 	int str1offset, withnolist = 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
-    if ( *s == '-' || *s == '+' ) {
+	if ( *s == '-' || *s == '+' ) {
 		if ( *s == '-' ) {
 			withnolist = 1;
 		}
@@ -4229,7 +4232,14 @@ DoExternal ARG1(UBYTE *,s)
 	}
 	/*here s is a command*/
    /*See the file extcmd.c*/
-	if(  (externalD=openExternalChannel((char *)s))<1){/*error?*/
+	/*[08may2006 mt]:*/
+	externalD=openExternalChannel(
+				s,
+ 				AX.daemonize,
+				AX.shellname,
+				AX.stderrname);
+	/*:[08may2006 mt]*/
+	if(externalD<1){/*error?*/
 		/*Not quite correct - terminate the program on error:*/
 		Error1("Can't start external program",s);
 		return(-1);
@@ -4241,15 +4251,17 @@ DoExternal ARG1(UBYTE *,s)
 		NumToStr(buf,externalD);
 		if ( PutPreVar(prevar,buf,0,1) < 0 ) return(-1);
 	}
+
 	AX.currentExternalChannel=externalD;
-	if(AX.currentPrompt==0){/*Set the default terminator*/
-		strDup1("\n","external channel prompt");
-	}else{/*Change default terminator*/
+	/*[08may2006 mt]:*/
+	if(AX.currentPrompt!=0){/*Change default terminator*/
 		if(setTerminatorForExternalChannel(  (char *)AX.currentPrompt)){
 			MesPrint("@Too long prompt");
 			return(-1);
 		}
 	}
+	setKillModeForExternalChannel(AX.killSignal,AX.killWholeGroup);
+	/*:[08may2006 mt]*/
 	return(0);
 #else /*ifdef WITHEXTERNALCHANNEL*/
 	Error0("External channel: not implemented on this computer/system");
@@ -4272,7 +4284,7 @@ DoPrompt ARG1(UBYTE *,s)
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if(AX.currentPrompt)M_free(AX.currentPrompt,"external channel prompt");
 	if(*s == '\0')
-		AX.currentPrompt=strDup1("\n","external channel prompt");
+		AX.currentPrompt=NULL;
 	else
 		AX.currentPrompt=strDup1(s,"external channel prompt");
 	if(  setTerminatorForExternalChannel( (char *)AX.currentPrompt)>0  ){
@@ -4320,6 +4332,159 @@ DoSetExternal ARG1(UBYTE *,s)
 }
 /*
  		#] DoSetExternal:
+*/
+ 		/*[10may2006 mt]:*/
+/*
+ 		#[ DoSetExternalAttr:
+*/
+
+static FORM_INLINE UBYTE *
+pickupword ARG1(UBYTE *,s)
+{
+
+	for(;*s>' ';s++)switch(*s){
+		case '=':
+		case ',':
+		case ';':
+			return(s);
+	}/*for(;*s>' ';s++)switch(*s)*/
+	return(s);
+}
+/*Returns 0 if the first string (case insensitively) equal to
+  the beginning of the second string (of length n):
+*/
+static int
+strINCmp ARG3(UBYTE *,a,UBYTE *,b,int,n)
+{
+	for(;n>0;n--)if(tolower(*a++)!=tolower(*b++))
+		return(1);
+	return(*a != '\0');
+}
+
+#define KILL "kill"
+#define KILLALL "killall"
+#define DAEMON "daemon"
+#define SHELL "shell"
+#define STDERR "stderr"
+
+#define TRUE_EXPR "true"
+#define FALSE_EXPR "false"
+#define NOSHELL "noshell"
+#define TERMINAL "terminal"
+
+/*
+	Expects comma-separated list of pairs name=value
+*/
+int
+DoSetExternalAttr ARG1(UBYTE *,s)
+{
+	int lnam,lval;
+	UBYTE *nam,*val;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+
+#ifdef WITHEXTERNALCHANNEL
+	do{
+		/*Read the name:*/
+		while ( *s == ' ' || *s == '\t' ) s++;
+		s=pickupword(nam=s);
+		lnam=s-nam;
+		while ( *s == ' ' || *s == '\t' ) s++;
+		if(*s++!='='){
+			MesPrint("@External channel:'=' expected instead of %s",s-1);
+			return(-1);
+		}
+		/*Read the value:*/
+		while ( *s == ' ' || *s == '\t' ) s++;
+		val=s;
+
+		for(;;){
+			UBYTE *m;
+			s=pickupword(s);
+			m=s;
+			while ( *s == ' ' || *s == '\t' ) s++;
+         if( (*s == ',')||(*s == '\n')||(*s == ';')||(*s == '\0') ){
+				s=m;
+				break;
+			}
+		}/*for(;;)*/
+
+		lval=s-val;
+		while ( *s == ' ' || *s == '\t' ) s++;
+
+		if(strINCmp((UBYTE *)SHELL,nam,lnam)==0){
+			if(AX.shellname!=NULL)
+				M_free(AX.shellname,"external channel shellname");
+			if(strINCmp((UBYTE *)NOSHELL,val,lval)==0)
+				AX.shellname=NULL;
+			else{
+				UBYTE *ch,*b;
+				b=ch=AX.shellname=Malloc1(lval+1,"external channel shellname");
+				while(ch-b<lval)
+					*ch++=*val++;
+				*ch='\0';
+			}
+		}else if(strINCmp((UBYTE *)DAEMON,nam,lnam)==0){
+			if(strINCmp((UBYTE *)TRUE_EXPR,val,lval)==0)
+				AX.daemonize = 1;
+			else if(strINCmp((UBYTE *)FALSE_EXPR,val,lval)==0)
+				AX.daemonize = 0;
+			else{
+				MesPrint("@External channel:true or false expected for %s",DAEMON);
+				return(-1);
+			}
+		}else	if(strINCmp((UBYTE *)KILLALL,nam,lnam)==0){
+			if(strINCmp((UBYTE *)TRUE_EXPR,val,lval)==0)
+				AX.killWholeGroup = 1;
+			else if(strINCmp((UBYTE *)FALSE_EXPR,val,lval)==0)
+				AX.killWholeGroup = 0;
+			else{
+				MesPrint("@External channel: true or false expected for %s",KILLALL);
+				return(-1);
+			}
+		}else	if(strINCmp((UBYTE *)KILL,nam,lnam)==0){
+			int i,n=0;
+			for(i=0;i<lval;i++)
+				if( *val>='0' && *val<= '9' )
+					n = 10*n + *val++  - '0';
+				else{
+					MesPrint("@External channel: number expected for %s",KILL);
+					return(-1);
+				}
+				AX.killSignal=n;
+		}else	if(strINCmp((UBYTE *)STDERR,nam,lnam)==0){
+			if( AX.stderrname != NULL )
+				M_free(AX.stderrname,"external channel stderrname");
+			if(strINCmp((UBYTE *)TERMINAL,val,lval)==0)
+				AX.stderrname = NULL;
+			else{
+				UBYTE *ch,*b;
+				b=ch=AX.stderrname=Malloc1(lval+1,"external channel stderrname");
+				while(ch-b<lval)
+					*ch++=*val++;
+				*ch='\0';
+			}
+		}else{
+			nam[lnam+1]='\0';
+			MesPrint("@External channel: unrecognized attribute",nam);
+			return(-1);
+		}
+	}while(*s++ == ',');
+	if(  (*(s-1)>' ')&&(*(s-1)!=';')  ){
+		MesPrint("@External channel: syntax error: %s",s-1);
+		return(-1);
+	}
+   return(0);
+#else /*ifdef WITHEXTERNALCHANNEL*/
+	Error0("External channel: not implemented on this computer/system");
+	return(-1);
+#endif /*ifdef WITHEXTERNALCHANNEL ... else*/
+}
+/*
+ 		#] DoSetExternalAttr:
+*/
+ 		/*:[10may2006 mt]*/
+/*
  		#[ DoRmExternal:
 			#rmexternal [n] (if 0, close all)
 */
@@ -4333,9 +4498,10 @@ DoRmExternal ARG1(UBYTE *,s)
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
-	if( chartype[*s] == 1 )
+	if( chartype[*s] == 1 ){
 		for(n=0; chartype[*s] == 1 ; s++) { n = 10*n + *s - '0'; }
-	while ( *s == ' ' || *s == '\t' ) s++;
+		while ( *s == ' ' || *s == '\t' ) s++;
+	}
 	if(*s!='\0'){
 		MesPrint("@rmexternal: invalid number");
 		return(-1);
@@ -4364,22 +4530,188 @@ DoRmExternal ARG1(UBYTE *,s)
 /*
  		#] DoRmExternal:
  		#[ DoFromExternal :
-				#fromexternal
+				#fromexternal 
+					is used to read the text from the running external
+					program, the synthax is similar to the #include
+					directive.
+				#fromexternal "varname"
+					is used to read the text from the running external
+					program into the preprocessor variable varname.
+					directive.
+				#fromexternal "varname" maxlength
+					is used to read the text from the running external
+					program into the preprocessor variable varname.
+					directive. Only first maxlength characters are 
+					stored.
+
+					FORM continues to read the running external
+					program output until the extrenal program outputs a
+					prompt.
+
 */
 
 int
 DoFromExternal ARG1(UBYTE *,s)
 {
+	/*[02feb2006 mt]:*/
+	UBYTE *prevar=0; 
+	int lbuf=-1;
+	/*:[02feb20006 mt]*/
+	/*[17may2006 mt]:*/
+   int withNoList=AC.NoShowInput;
+	/*:[17may2006 mt]*/
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 #ifdef WITHEXTERNALCHANNEL
 	
 	FLUSHCONSOLE;
+
 	while ( *s == ' ' || *s == '\t' ) s++;
+	/*[17may2006 mt]:*/
+	if ( *s == '-' || *s == '+' ) {
+		if ( *s == '-' )
+			withNoList = 1;
+		else
+			withNoList = 0;
+		s++;
+		while ( *s == ' ' || *s == '\t' ) s++;
+	}/*if ( *s == '-' || *s == '+' )*/
+	/*:[17may2006 mt]*/
+	/*[02feb2006 mt]:*/
+	if(*s == '"'){/*prevar to store the output is defined*/
+		prevar=++s;
+
+		if ( *s=='$' || chartype[*s] == 0 )for(;*s != '"'; s++)switch(chartype[*s]){
+			case 10:/*'\0' fits here*/
+				MesPrint("@Can't finde closing \"");
+				Terminate(-1);
+			case 0:case 1: continue;
+			default:
+				break;
+		}
+		if(*s != '"'){
+				MesPrint("@Illegal name to store output of external channel");
+				return(-1);
+      }
+      *s='\0';
+		for(s++; *s == ' ' || *s == '\t'; s++);
+	}/*if(*s == '"')*/
+
+	if(*s != '\0'){
+		if( chartype[*s] == 1 ){
+			for(lbuf=0; chartype[*s] == 1 ; s++) { lbuf = 10*lbuf + *s - '0'; }
+			while ( *s == ' ' || *s == '\t' ) s++;
+		}
+		if( (*s!='\0')||(lbuf<0) ){
+			MesPrint("@Illegal buffer length in fromexternal");
+			return(-1);
+		}
+	}/*if(*s != '\0')*/
+	/*:[02feb20006 mt]*/
 	if(getCurrentExternalChannel()!=AX.currentExternalChannel)
-		selectExternalChannel(AX.currentExternalChannel);
-	
+		/*[08may20006 mt]:*/
+		/*selectExternalChannel(AX.currentExternalChannel);*/
+		if(selectExternalChannel(AX.currentExternalChannel)){
+			MesPrint("@No current external channel");
+			return(-1);
+		}
+		/*:[08may20006 mt]*/
+
+	/*[02feb2006 mt]:*/
+	if(prevar!=0){/*The result must be stored into preprovar*/
+      UBYTE *buf;
+		int cc;
+		if(lbuf == -1){/*Unlimited buffer, everything must be stored*/
+			int i;
+			buf=Malloc1( (lbuf=255)+1,"Fromexternal");
+			/*[18may20006 mt]:*/
+			/*for(i=0;(cc=getcFromExtChannel())!=EOF;i++){*/
+			/* May 2006: now getcFromExtChannelOk returns EOF while 
+				getcFromExtChannelFailure returns -2 (see comments in 
+				exctcmd.c):*/
+			for(i=0;(cc=getcFromExtChannel())>0;i++){
+			/*:[18may20006 mt]*/
+				if(i==lbuf){
+					int j;
+					UBYTE *tmp=Malloc1( (lbuf*=2)+1,"Fromexternal");
+					for(j=0;j<i;j++)tmp[j]=buf[j];
+					M_free(buf,"Fromexternal");
+					buf=tmp;
+				}
+				buf[i]=cc;
+			}/*for(i=0;(cc=getcFromExtChannel())>0;i++)*/
+			/*[18may20006 mt]:*/
+         if(cc == -2){
+				MesPrint("@No current external channel");
+				return(-1);
+			}
+			lbuf=i;
+			/*:[18may20006 mt]*/
+			buf[i]='\0';
+		}else{/*Fixed buffer, only lbuf chars must be stored*/
+			int i;
+			buf=Malloc1(lbuf+1,"Fromexternal");
+			for(i=0; i<lbuf;i++){
+			/*[18may20006 mt]:*/
+				/*if( (cc=getcFromExtChannel())==EOF )*/
+				/* May 2006: now getcFromExtChannelOk returns EOF while 
+					getcFromExtChannelFailure returns -2 (see comments in 
+					exctcmd.c):*/
+				if( (cc=getcFromExtChannel())<1 )
+			/*:[18may20006 mt]*/
+					break;
+				buf[i]=cc;
+			}
+			buf[i]='\0';
+			/*[18may20006 mt]:*/
+			/*if(cc!=EOF)
+				while(getcFromExtChannel()!=EOF);*//*Eat the rest*/
+			/* May 2006: now getcFromExtChannelOk returns EOF while 
+				getcFromExtChannelFailure returns -2 (see comments in 
+				exctcmd.c):*/
+			if(cc>0)
+				while(getcFromExtChannel()>0);/*Eat the rest*/
+			else if(cc == -2){
+				MesPrint("@No current external channel");
+				return(-1);
+			}
+			/*:[18may20006 mt]*/
+		}
+		/*[18may20006 mt]:*/
+		if(*prevar == '$'){/*Put the answer to the dollar variable*/
+			/*Here lbuf is the actual length of buf!*/
+			/*"prevar=buf'\0'":*/
+			UBYTE *pbuf=Malloc1(StrLen(prevar)+1+lbuf+1,"Fromexternal to dollar");
+			UBYTE *c=pbuf;
+			UBYTE *b=prevar;
+			while(*b!='\0'){*c++ = *b++;}
+			*c++='=';
+			b=buf;
+			while(  (*c++=*b++)!='\0'  );
+			AC.PreAssignFlag = 1;
+			if(
+					CompileStatement(pbuf)
+					||CatchDollar(0)
+			){
+				Error1("External channel: can't asign output to dollar variable ",prevar);
+			}
+			AC.PreAssignFlag = 0;
+			M_free(pbuf,"Fromexternal to dollar");
+		}else{
+			/*:[18may20006 mt]*/
+			cc=PutPreVar(prevar,buf,0,1);
+			/*[18may20006 mt]:*/
+		}
+		/*:[18may20006 mt]*/
+		M_free(buf,"Fromexternal");
+		if ( cc < 0 ) return(-1);
+		return(0);
+	}
+	/*:[02feb2006 mt]*/
 	if ( OpenStream(s,EXTERNALCHANNELSTREAM,0,PRENOACTION) == 0 ) return(-1);
+	/*[17may2006 mt]:*/
+	AC.NoShowInput = withNoList;
+	/*:[17may2006 mt]*/
 	return(0);
 #else
 	Error0("External channel: not implemented on this computer/system");

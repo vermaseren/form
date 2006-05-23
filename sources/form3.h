@@ -12,10 +12,10 @@
 #define FORM_INLINE inline
 /*:[17oct2005 mt]*/
 
-
+/*
 #define WITHZLIB
 #define ZWITHZLIB
-
+*/
 
 /*
 #define ITHREADS

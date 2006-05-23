@@ -332,3 +332,90 @@ changing are marked by "[12oct2005 mt]".
 
 [08nov2005 mt:] Bugfix on the bugfix of 14sep2005 concerning collecting
 preprovars by the master in "off parallel" mode.
+
+*********************** new release *************************************
+[06dec2005 mt]: bugfix in PF_markPotModDollars (PF_potModDollsN=-1, not 0!)
+
+May 2006 mt: external channels are changed according to the paper
+http://www.arxiv.org/abs/cs.SC/0604052
+The file extcmd.c is re-written completely.
+The file extcmd.c is formatted according to FORM conventions (leading 
+tabs and folders).
+
+The preprocessor instruction #fromexternal is extended:
+#fromexternal[+|-] ["[$]varname",[maxlength]]
+   appends the output of the current external command to the FORM
+   program. The semantics differ depending on the optional
+   arguments. After the external command sends the prompt, FORM will
+   continue with a next line after the line containing the
+   #fromexternal instruction. The prompt string is not appended. The
+   optional + or - sign after the name has influence on the listing of
+   the content.
+#fromexternal[+|-]
+   The semantics is similar to the #include
+   instruction but folders are not supported. 
+#fromexternal[+|-] "[$]varname"
+   is used to read the text from the running external command into the
+   preprocessor variable varname, or into the dollar variable $varname
+   if the name of the variable starts with the dollar sign $.
+#fromexternal[+|-] "[$]varname" maxlength
+   is used to read the text from the running external command into the
+   preprocessor (or dollar) variable varname. Only the first maxlength
+   characters are stored.
+
+The preprocessor instruction #setexternalattr list_of_attributes
+sets attributes for  newly started external commands. Already
+running external commands are not affected. The list of attributes
+is a comma separated list of pairs attribute=value, e.g.:
+#setexternalattr shell=noshell,kill=9,killall=false
+Possible attributes are:
+kill
+   specifies the signal to be sent to the external command either
+   before the termination of the FORM program or by the preprocessor
+   instruction #rmexternal. By default this is 9 (SIGKILL). Number
+   0 means that no signal will be sent.
+killall
+   Indicates whether the kill signal will be sent to the whole group
+   or only to the initial process. Possible values are "true" and
+   "false". By default, the kill signal will be sent to the whole
+   group.
+daemon
+   Indicates whether the command should be "daemonized", i.e.  the
+   initial process will be passed to the init process and will belong
+   to the new process group in the new session.  Possible values are
+   "true" and "false". By default, "true".
+shell
+   specifies which shell is used to run a command. By default this is
+   "/bin/sh -c".  If set "shell=noshell", the command will be stared
+   by the instruction #external directly but not in a subshell, so the
+   command should be a name of the executable file rather than a
+   system command. The instruction #external will duplicate the
+   actions of the shell in searching for an executable file if the
+   specified file name does not contain a slash (/) character.  The
+   search path is the path specified in the environment by the PATH
+   variable.  If this variable isn't specified, the default path
+   "/bin:/usr/bin" is used.
+stderr
+   specifies a file to redirect the standard error stream to.  By
+   default it is "/dev/null". "stderr=terminal" is set, the standard
+   error stream is not redirected.
+Only attributes that are explicitly mentioned are changed, all others
+remain unchanged.
+
+There is a possibility to start FORM from another program providing
+one (or more) communication channels (see below). These channels will
+be visible from a FORM program as "pre-opened" external channels
+existing after FORM starts. In this case, the preprocessor variable
+"PIPES_" is defined and is equal to the total number of the pre-opened
+external channels.  Pre-opened external channel descriptors are
+contained in the preprocessor variables "PIPE1_", "PIPE2_", etc.  The
+corrsponding file descriptors are passed as a decimal number via the
+environment variable FORM_PIPES or the command line option "-pipe";
+the command line option overrides the environment variable. See the 
+paper cs.SC/0604052 for detailes, or comments in extcmd.c just before
+the function initPresetExternalChannels().
+
+The prototype of the function openExternalChannel is changed.
+getcFromExtChannelFailure() now returns -2 (formerly EOF) to 
+distinguish between fault and normal EOF condition returned 
+getcFromExtChannel()

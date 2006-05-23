@@ -728,6 +728,9 @@ DECLARE(int DoToExternal,(UBYTE *))
 DECLARE(int DoFromExternal,(UBYTE *))
 DECLARE(int DoPrompt,(UBYTE *))
 DECLARE(int DoSetExternal,(UBYTE *))
+/*[10may2006 mt]:*/
+DECLARE(int DoSetExternalAttr,(UBYTE *))
+/*:[10may2006 mt]*/
 DECLARE(int DoRmExternal,(UBYTE *))
 /*:[14apr2004 mt]*/
 DECLARE(int DoMessage,(UBYTE *))
@@ -1174,20 +1177,30 @@ DECLARE(int DoPreRmSeparator,(UBYTE *))
 
 /*[14apr2004 mt]:*/
 /*See the file extcmd.c*/
+/*[08may2006 mt]:*/
+/*
 DECLARE(int openExternalChannel,(char *))
+*/
+DECLARE(int openExternalChannel,(UBYTE *,int,UBYTE *,UBYTE *))
+DECLARE(int initPresetExternalChannels,(UBYTE *, int))
+/*:[08may2006 mt]*/
 DECLARE(int closeExternalChannel,(int))
 DECLARE(int selectExternalChannel,(int))
 DECLARE(int getCurrentExternalChannel,(VOID))
 DECLARE(VOID closeAllExternalChannels,(VOID))
 /*:[14apr2004 mt]*/
 
-DECLARE(int writexactly,(int,char *,size_t))
+/*[08may2006 mt]:*/
+/*DECLARE(int writexactly,(int,char *,size_t))*/
+/*:[08may2006 mt]*/
 
 /*[17nov2005 mt]:*/
 DECLARE(typedef int (*WRITEBUFTOEXTCHANNEL),(char *,size_t) )
 DECLARE(typedef int (*GETCFROMEXTCHANNEL),() )
 DECLARE(typedef int (*SETTERMINATORFOREXTERNALCHANNEL),(char *) )
-
+/*[08may2006 mt]:*/
+DECLARE(typedef int (*SETKILLMODEFOREXTERNALCHANNEL),(int,int) )
+/*:[08may2006 mt]*/
 DECLARE(typedef LONG (*WRITEFILE), (int,UBYTE *,LONG) )
 /*:[17nov2005 mt]*/
 

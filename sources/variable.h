@@ -12,6 +12,9 @@ extern int (*setTerminatorForExternalChannel) ARG1 (char *,newterminator);
 extern WRITEBUFTOEXTCHANNEL writeBufToExtChannel;
 extern GETCFROMEXTCHANNEL getcFromExtChannel;
 extern SETTERMINATORFOREXTERNALCHANNEL setTerminatorForExternalChannel;
+/*[08may2006 mt]:*/
+extern SETKILLMODEFOREXTERNALCHANNEL setKillModeForExternalChannel;
+/*:[08may2006 mt]*/
 /*:[17nov2005 mt]*/
 /*:[14apr2004 mt]*/
 

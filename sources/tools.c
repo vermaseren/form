@@ -87,7 +87,17 @@ ReadFromStream ARG1(STREAM *,stream)
 	if ( stream->type == EXTERNALCHANNELSTREAM ) {
 		int cc;
 		cc = getcFromExtChannel();
-		if ( cc == EOF ) return(ENDOFSTREAM);
+		/*[18may20006 mt]:*/
+		/*if ( cc == EOF ) return(ENDOFSTREAM);*/
+		if ( cc < 0 ){
+			if( cc == EOF )
+			 return(ENDOFSTREAM);
+			else{
+				Error0("No current external channel");
+				Terminate(-1);
+			}
+		}/*if ( cc < 0 )*/
+		/*:[18may20006 mt]*/
 		c = cc;
 		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
 		if ( c == LINEFEED ) stream->eqnum = 1;

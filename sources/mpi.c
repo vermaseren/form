@@ -35,7 +35,7 @@ static int   PF_packpos=0;
 */
 static LONG PF_packsize=0;
 
-int PF_longPackInit ARG0;
+static int PF_longPackInit ARG0;
 /*:[12oct2005 mt]*/
 
 
