@@ -1422,7 +1422,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression :
+  	#] CoFillExpression : 
   	#[ CoPrintTable :
 
 	Syntax
@@ -1603,9 +1603,9 @@ static WORD AssignLHS[14] = { TYPEASSIGN, 3+SUBEXPSIZE, 0,
 
 int CoAssign ARG1(UBYTE *,inp)
 {
-	int error = 0, retcode, type, i;
+	int error = 0, retcode, type;
 	UBYTE *name;
-	WORD number, *pmd;
+	WORD number;
 	if ( *inp != '$' ) {
 nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 		return(1);
@@ -1643,15 +1643,32 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 	Add to the list of potentially modified dollars (for PARALLEL)
 */
 /*[06nov2005 mt]:*/
-#ifdef REMOVEDBY_MT
-
-	for ( i = 0; i < NumPotModdollars; i++ ) {
+#ifdef WITHPTHREADS
+	{
+	  int i;
+	  WORD *pmd;
+	  for ( i = 0; i < NumPotModdollars; i++ ) {
 		if ( number == PotModdollars[i] ) break;
-	}
-	if ( i >= NumPotModdollars ) {
+	  }
+	  if ( i >= NumPotModdollars ) {
 		pmd = (WORD *)FromList(&AC.PotModDolList);
 		*pmd = number;
+	  }
 	}
+#else
+#ifdef REMOVEDBY_MT
+	{
+	  int i;
+	  WORD *pmd;
+	  for ( i = 0; i < NumPotModdollars; i++ ) {
+		if ( number == PotModdollars[i] ) break;
+	  }
+	  if ( i >= NumPotModdollars ) {
+		pmd = (WORD *)FromList(&AC.PotModDolList);
+		*pmd = number;
+	  }
+	}
+#endif
 #endif
 #ifdef PARALLEL
 	PF_statPotModDollar(number,1);
@@ -1661,7 +1678,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign : 
+  	#] CoAssign :
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
