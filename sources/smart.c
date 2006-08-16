@@ -21,7 +21,7 @@
 
 void StudyPattern ARG1(WORD *,lhs)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *fullproto, *pat, *p, *p1, *p2, *pstop, *info, f;
 	int numfun = 0, numsym = 0, allwilds = 0, i, j, k, nc;
 	FUN_INFO *finf, *fmin, *f1, *f2, funscratch;
@@ -215,7 +215,7 @@ void StudyPattern ARG1(WORD *,lhs)
 
 int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *info = pattern + *pattern;
 	WORD *t, *tstop, *tt, *inf, *p;
 	int numfun = 0, inpat, i, j, numargs;

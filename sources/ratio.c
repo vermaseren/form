@@ -29,7 +29,7 @@
 WORD
 RatioFind BARG2(WORD *,term,WORD *,params)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *r;
 	WORD x1, x2, i;
 	WORD *y1, *y2, n1 = 0, n2 = 0;
@@ -138,7 +138,7 @@ We have to revise the code for the second case.
 WORD
 RatioGen BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m;
 	WORD *tstops[3];
 	WORD n1, n2, i, j;
@@ -291,7 +291,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 			 ,WORD,x2,WORD,pow1,WORD,pow2
                          ,WORD,sign,UWORD *,coef,WORD,ncoef)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *r;
 	WORD *termout;
 	WORD k;
@@ -364,7 +364,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 WORD
 DoSumF1 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *termout, *t, extractbuff = AT.TMbuff;
 	WORD isum, ival, iinc;
 	LONG from;
@@ -430,7 +430,7 @@ SumF1Call:
 WORD
 Glue BARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	UWORD *coef;
 	WORD ncoef, *t, *t1, *t2, i, nc2, nc3, old, newer;
 	if ( AN.GlScratC == 0 )
@@ -490,7 +490,7 @@ Glue BARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 WORD
 DoSumF2 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *termout, *t, *from, *sub, *to, extractbuff = AT.TMbuff;
 	WORD isum, ival, iinc, insert, i;
 	CBUF *C;

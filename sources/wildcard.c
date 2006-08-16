@@ -4,7 +4,11 @@
 
 #include "form3.h"
 
+#define DEBUG(x)
+
 /*
+#define DEBUG(x) x
+
   	#] Includes :
  	#[ Wildcards :
  		#[ WildFill :			WORD WildFill(to,from,sub)
@@ -24,7 +28,7 @@
 WORD
 WildFill BARG3(WORD *,to,WORD *,from,WORD *,sub)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD i, j, *s, *t, *m, len, dflag, odirt;
 	WORD *r, *u, *v, *w, *z, *zst, *zz, *subs, *accu, na, dirty = 0, *tstop;
 	WORD *temp = 0, *uu, *oldcpointer, sgn;
@@ -710,6 +714,7 @@ Tensors:
 									t++; break;
 								}
 								w = C->rhs[s[3]];
+DEBUG(MesPrint("Thread %w(a): s[3] = %d, w=(%d,%d,%d,%d)",s[3],w[0],w[1],w[2],w[3]);)
 								j = *w++;
 								if ( j > 0 ) {
 									NCOPY(m,w,j);
@@ -726,6 +731,7 @@ Tensors:
 										}
 										else {
 											LOCK(ErrorMessageLock);
+DEBUG(MesPrint("Thread %w(aa): *w = %d",*w);)
 											MesPrint("Illegal substitution of argument field in tensor");
 											UNLOCK(ErrorMessageLock);
 											SETERROR(-1)
@@ -814,16 +820,20 @@ ss6:					m++; t++;
 							|| ( *s == VECTOMIN && ( *t == VECTOSUB || *t == VECTOVEC ) )
 							|| ( *s == INDTOIND && *t == INDTOSUB )
 							|| ( *s == INDTOSUB && *t == INDTOIND ) ) {
+								WORD *vv = m;
 								*t = *s;
-								t[3] = s[3];
+                                j = t[1];
+								NCOPY(m,t,j);
+								vv[3] = s[3];
 								dirty = 1;
-								break;
+								goto sr7;
 							}
 						}
 						s += s[1];
 					}
 ss7:				j = t[1];
 					NCOPY(m,t,j);
+sr7:;
 				}
 				break;
 /*
@@ -957,10 +967,10 @@ ss8:				v = m;
 								}
 								v[2] |= DIRTYFLAG;
 								w = C->rhs[s[3]];
+DEBUG(MesPrint("Thread %w(b): s[3] = %d, w=(%d,%d,%d,%d)",s[3],w[0],w[1],w[2],w[3]);)
 								if ( *w == 0 ) {
 									w++;
 									while ( *w ) {
-
 										if ( *w > 0 ) j = *w;
 										else if ( *w <= -FUNCTION ) j = 1;
 										else j = 2;
@@ -1013,6 +1023,7 @@ ss8:				v = m;
 										else if ( *s == SYMTOSUB ) {
 ToSub:										m--;
 											w = C->rhs[s[3]];
+DEBUG(MesPrint("Thread %w(c): s[3] = %d, w=(%d,%d,%d,%d)",s[3],w[0],w[1],w[2],w[3]);)
 											s = m;
 											m += 2;
 											while ( *w ) {
@@ -1129,7 +1140,9 @@ ss10:							*m++ = *t++;
 							if ( AN.WildDirt ) {
 								dirty = w[1] = 1; v[2] |= DIRTYFLAG;
 							}
-							else AN.WildDirt = odirt;
+							else {
+								AN.WildDirt = odirt;
+							}
 							if ( ToFast(w,w) ) {
 								if ( *w <= -FUNCTION ) {
 									if ( *w == NUMARGSFUN || *w == NUMTERMSFUN ) {
@@ -1182,6 +1195,7 @@ ss10:							*m++ = *t++;
 WORD
 ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 {
+	GETIDENTITY
 	WORD *m, *s, *w, j, i, ii, i3, flag, num;
 	DOLLARS d = 0;
 #ifdef WITHPTHREADS
@@ -1222,7 +1236,12 @@ ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
-					LOCK(d->pthreadslock);
+					if ( dtype == MODLOCAL ) {
+						d = ModOptdollars[nummodopt].dstruct+AT.identity;
+					}
+					else {
+						LOCK(d->pthreadslockread);
+					}
 				}
 			}
 #endif
@@ -1256,7 +1275,7 @@ ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 				}
 			}
 #ifdef WITHPTHREADS
-			if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 			LOCK(ErrorMessageLock);
 			MesPrint("Unusable type of variable $%s in set substitution",
@@ -1266,7 +1285,7 @@ ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
 		}
 GotOne:;
 #ifdef WITHPTHREADS
-		if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+		if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 		ii = m[*w];
 		if ( ii >= 2*MAXPOWER ) i3 = ii - 2*MAXPOWER;
@@ -1334,9 +1353,9 @@ GotOne:;
 VOID
 ClearWild BARG0
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD n, nn, *w;
-	n = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE) >> 2;		/* Number of wildcards */
+	n = (AN.WildValue[-SUBEXPSIZE+1]-SUBEXPSIZE)/4;		/* Number of wildcards */
 	AN.NumWild = nn = n;
 	if ( n > 0 ) {
 		w = AT.WildMask;
@@ -1361,9 +1380,10 @@ ClearWild BARG0
 WORD
 AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *w, *m, n, k, i = -1;
 	CBUF *C = cbuf+AT.ebufnum;
+DEBUG(WORD *mm;)
 	AN.WildReserve = 0;
 	m = AT.WildMask;
 	w = AN.WildValue;
@@ -1383,12 +1403,14 @@ AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
 				w = AN.argaddress;
+DEBUG(mm = m;)
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
 				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
+DEBUG(MesPrint("Thread %w(d): m=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->numrhs);)
 				C->Pointer = m;
 				goto FlipOn;
 			}
@@ -1402,6 +1424,7 @@ AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
 				w = AN.argaddress;
+DEBUG(mm=m;)
 				if ( ( newnumber & EATTENSOR ) != 0 ) {
 					n = newnumber & ~EATTENSOR;
 					*m++ = n;
@@ -1414,10 +1437,12 @@ AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 					*m++ = 0;
 				}
 				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+DEBUG(if ( mm != m-1 ) MesPrint("Thread %w(e): Alarm!"); mm = m-1;)
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
 				C->Pointer = m;
+DEBUG(MesPrint("Thread %w(e): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->numrhs);)
 				return(0);
 			}
 			m++; w += w[1];
@@ -1430,6 +1455,7 @@ AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 				*m = 1;
 				m = AddRHS(AT.ebufnum,1);
 				w[3] = C->numrhs;
+DEBUG(mm=m;)
 				a = (WORD **)(AN.argaddress); n = 0; k = newnumber;
 				while ( --newnumber >= 0 ) {
 					w = *a++;
@@ -1438,7 +1464,9 @@ AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 					else n += 2;
 				}
 				*m++ = 0;
+				*m++ = 0;
 				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+DEBUG(if ( mm != m-1 ) MesPrint("Thread %w(f): Alarm!"); mm = m-1;)
 				a = (WORD **)(AN.argaddress);
 				while ( --k >= 0 ) {
 					w = *a++;
@@ -1448,6 +1476,7 @@ AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
 				}
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
+DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->numrhs);)
 				C->Pointer = m;
 				return(0);
 			}
@@ -1557,6 +1586,14 @@ FlipOn:
 		LOCK(ErrorMessageLock);
 		MesPrint(" Bug in AddWild with passing set[i]");
 		UNLOCK(ErrorMessageLock);
+/*
+		For the moment we want to crash here. That is easier with debugging.
+*/
+#ifdef WITHPTHREADS
+		{ WORD *s = 0;
+			*s++ = 1;
+		}
+#endif
 		Terminate(-1);
 	}
 	return(0);
@@ -1589,7 +1626,7 @@ FlipOn:
 WORD
 CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *w, *m, *s, n, old2;
 	WORD n2, oldval, dirty, i, j, notflag = 0, retblock = 0;
 	CBUF *C = cbuf+AT.ebufnum;

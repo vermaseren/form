@@ -11,6 +11,7 @@ char commentchar[] = "*";
 char dotchar[] = "_";
 char highfirst[] = "highfirst";
 char lowfirst[] = "lowfirst";
+char procedureextension[] = "prc";
 
 #define NUMERICALVALUE 0
 #define STRINGVALUE 1
@@ -34,12 +35,18 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (long)MAXNUMBERSIZE}
 	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (long)MAXTER}
 	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (long)MAXWILDC}
+	,{(UBYTE *)"numstorecaches",        NUMERICALVALUE, 0, (long)NUMSTORECACHES}
+	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
+	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
+	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (long)procedureextension}
+	,{(UBYTE *)"resettimeonclear",          ONOFFVALUE, 0, (long)1}
 	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (long)SCRATCHSIZE}
 	,{(UBYTE *)"shmwinsize",            NUMERICALVALUE, 0, (long)SHMWINSIZE}
+	,{(UBYTE *)"sizestorecache",        NUMERICALVALUE, 0, (long)SIZESTORECACHE}
 	,{(UBYTE *)"slavepatchsize",        NUMERICALVALUE, 0, (long)SLAVEPATCHSIZE}
 	,{(UBYTE *)"smallextension",        NUMERICALVALUE, 0, (long)SMALLOVERFLOW}
 	,{(UBYTE *)"smallsize",             NUMERICALVALUE, 0, (long)SMALLBUFFER}
@@ -54,13 +61,16 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"subtermsinsmall",       NUMERICALVALUE, 0, (long)STERMSSMALL}
 	,{(UBYTE *)"tempdir",                  STRINGVALUE, 0, (long)curdirp}
 	,{(UBYTE *)"termsinsmall",          NUMERICALVALUE, 0, (long)TERMSSMALL}
+    ,{(UBYTE *)"threadbucketsize",      NUMERICALVALUE, 0, (long)DEFAULTTHREADBUCKETSIZE}
+    ,{(UBYTE *)"threadloadbalancing",       ONOFFVALUE, 0, (long)DEFAULTTHREADLOADBALANCING}
     ,{(UBYTE *)"threads",               NUMERICALVALUE, 0, (long)DEFAULTTHREADS}
+    ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (long)WORKBUFFER}
 	,{(UBYTE *)"zipsize",               NUMERICALVALUE, 0, (long)ZIPBUFFERSIZE}
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -108,7 +118,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -179,7 +189,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -200,7 +210,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -208,16 +218,40 @@ int
 RecalcSetups ARG0
 {
 	SETUPPARAMETERS *sp, *sp1;
+
+	sp1 = GetSetupPar((UBYTE *)"threads");
+	if ( sp1->value > 0 ) AM.totalnumberofthreads = sp1->value+1;
+	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+
+	sp  = GetSetupPar((UBYTE *)"filepatches");
+	if ( sp->value < AM.totalnumberofthreads-1 )
+		sp->value = AM.totalnumberofthreads - 1;
+
 	sp  = GetSetupPar((UBYTE *)"smallsize");
 	sp1 = GetSetupPar((UBYTE *)"smallextension");
 	if ( 6*sp1->value < 7*sp->value ) sp1->value = (7*sp->value)/6;
 	sp = GetSetupPar((UBYTE *)"termsinsmall");
 	sp->value = ( sp->value + 15 ) & (-16L);
+#ifdef WITHPTHREADS
+	{
+	SETUPPARAMETERS *sp2;
+	LONG totalsize, minimumsize;
+	sp = GetSetupPar((UBYTE *)"largesize");
+	totalsize = sp1->value+sp->value;
+	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
+	AM.MaxTer = sp2->value*sizeof(WORD);
+	minimumsize = (AM.totalnumberofthreads-1)*(AM.MaxTer+
+		NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS*AM.MaxTer);
+	if ( totalsize < minimumsize ) {
+		sp->value = minimumsize - sp1->value;
+	}
+	}
+#endif
 	return(0);
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -227,9 +261,13 @@ AllocSetups ARG0
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize, l;
 	int size, MaxPatches, MaxFpatches, error = 0;
+	UBYTE *s;
 #ifndef WITHPTHREADS
 	int j;
 #endif
+	sp = GetSetupPar((UBYTE *)"threads");
+	if ( sp->value > 0 ) AM.totalnumberofthreads = sp->value+1;
+
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
 	AC.iBuffer = (UBYTE *)Malloc1(AC.iBufferSize+1,"statement buffer");
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
@@ -327,6 +365,12 @@ AllocSetups ARG0
 	}
 	AR.Fscr[2].PObuffer = 0;
 #endif
+	sp = GetSetupPar((UBYTE *)"threadbucketsize");
+	AC.ThreadBucketSize = AM.gThreadBucketSize = AM.ggThreadBucketSize = sp->value;
+	sp = GetSetupPar((UBYTE *)"threadloadbalancing");
+	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing = sp->value;
+	sp = GetSetupPar((UBYTE *)"threadsortfilesynch");
+	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch = sp->value;
 /*
      The size for shared memory window for oneside MPI2 communications
 */
@@ -351,18 +395,19 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"sortiosize");
 	IOsize = sp->value;
 #ifndef WITHPTHREADS
-#ifdef ZWITHZLIB
+#ifdef WITHZLIB
 	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize; }
 #endif
 #endif
 	AM.S0 = 0;
 	AM.S0 = AllocSort(LargeSize,SmallSize,SmallEsize,TermsInSmall
 					,MaxPatches,MaxFpatches,IOsize);
-#ifdef ZWITHZLIB
+#ifdef WITHZLIB
 	AM.S0->file.ziosize = IOsize;
 #ifndef WITHPTHREADS
 	AR.FoStage4[0].ziosize = IOsize;
 	AR.FoStage4[1].ziosize = IOsize;
+	AT.S0 = AM.S0;
 #endif
 #endif
 #ifndef WITHPTHREADS
@@ -419,12 +464,40 @@ AllocSetups ARG0
 	AO.FortDotChar = ((UBYTE *)(sp->value))[0];
 	sp = GetSetupPar((UBYTE *)"commentchar");
 	AP.cComChar = AP.ComChar = ((UBYTE *)(sp->value))[0];
+	sp = GetSetupPar((UBYTE *)"procedureextension");
+/*
+	Check validity first.
+*/
+	s = (UBYTE *)(sp->value);
+	if ( FG.cTable[*s] != 0 ) {
+		MesPrint("  Illegal string for procedure extension %s",(UBYTE *)sp->value);
+		error = -2;
+	}
+	else {
+		s++;
+		while ( *s ) {
+			if ( *s == ' ' || *s == '\t' || *s == '\n' ) {
+				MesPrint("  Illegal string for procedure extension %s",(UBYTE *)sp->value);
+				error = -2;
+				break;
+			}
+			s++;
+		}
+	}
+	AP.cprocedureExtension = strDup1((UBYTE *)(sp->value),"procedureExtension");
+	AP.procedureExtension = strDup1(AP.cprocedureExtension,"procedureExtension");
 	sp = GetSetupPar((UBYTE *)"continuationlines");
 	AM.FortranCont = sp->value;
 	sp = GetSetupPar((UBYTE *)"oldorder");
 	AM.OldOrderFlag = sp->value;
+	sp = GetSetupPar((UBYTE *)"resettimeonclear");
+	AM.resetTimeOnClear = sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritestatistics");
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag = 1-sp->value;
+	sp = GetSetupPar((UBYTE *)"nwritefinalstatistics");
+	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats = 1-sp->value;
+	sp = GetSetupPar((UBYTE *)"nwritethreadstatistics");
+	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;
@@ -440,9 +513,39 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"slavepatchsize");
 	AM.hSlavePatchSize = AM.gSlavePatchSize =
 	AC.SlavePatchSize = AC.mSlavePatchSize = sp->value;
-
-	sp = GetSetupPar((UBYTE *)"threads");
-	AM.totalnumberofthreads = sp->value;
+/*
+	The store caches (code installed 15-aug-2006 JV)
+*/
+	sp = GetSetupPar((UBYTE *)"numstorecaches");
+	AM.NumStoreCaches = sp->value;
+	sp = GetSetupPar((UBYTE *)"sizestorecache");
+	AM.SizeStoreCache = sp->value;
+#ifndef WITHPTHREADS
+/*
+	Install the store caches (15-aug-2006 JV)
+	Note that in the case of PTHREADS this is done in InitializeOneThread
+*/
+	AT.StoreCache = 0;
+	if ( AM.NumStoreCaches > 0 ) {
+		STORECACHE sa, sb;
+		size = sizeof(struct StOrEcAcHe)+AM.SizeStoreCache;
+		size = ((size-1)/sizeof(size_t)+1)*sizeof(size_t);
+		AT.StoreCache = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
+		sa = AT.StoreCache;
+		for ( j = 0; j < AM.NumStoreCaches; j++ ) {
+			sb = (STORECACHE)(VOID *)((UBYTE *)sa+size);
+			if ( j == AM.NumStoreCaches-1 ) {
+				sa->next = 0;
+			}
+			else {
+				sa->next = sb;
+			}
+			SETBASEPOSITION(sa->position,-1);
+			SETBASEPOSITION(sa->toppos,-1);
+			sa = sb;
+		}		
+	}
+#endif
 /*
 	And now some order sensitive things
 */
@@ -506,7 +609,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -516,18 +619,19 @@ WriteSetup ARG0
 
 SORTING *
 AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
-	,int,MaxPatches,int,MaxFpatches,LONG,IObuffersize)
+	,int,MaxPatches,int,MaxFpatches,LONG,IOsize)
 {
 	LONG allocation,longer,terms2insmall,sortsize,longerp;
+	LONG IObuffersize = IOsize;
 	SORTING *sort;
 	int i = 0, j = 0;
 	char *s;
 	if ( AM.S0 != 0 ) {
 		s = FG.fname; i = 0;
 		while ( *s ) { s++; i++; }
-		i += 11;
+/*		i += 11; */
+		i += 16;
 	}
-
 	longer = MaxPatches > MaxFpatches ? MaxPatches : MaxFpatches;
 	longerp = longer;
 	while ( (1 << j) < longerp ) j++;
@@ -567,7 +671,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 		+LargeSize
 		+SmallEsize
 		+sortsize
-		+IObuffersize*sizeof(WORD) + i;
+		+IObuffersize*sizeof(WORD) + i + 12;
 	sort = (SORTING *)Malloc1(allocation,"sort buffers");
 
 	sort->LargeSize = LargeSize/sizeof(WORD);
@@ -589,7 +693,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	sort->inPatches = sort->fPatchesStop + longer;
 	sort->tree = (WORD *)(sort->inPatches + longer);
 	sort->used = sort->tree+longerp;
-#ifdef ZWITHZLIB
+#ifdef WITHZLIB
 	sort->fpcompressed = sort->used+longerp;
 	sort->fpincompressed = sort->fpcompressed+longerp;
 	sort->ktoi = sort->fpincompressed+longerp;
@@ -611,6 +715,12 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 	sort->file.active = 0;
 	sort->file.handle = -1;
 	PUTZERO(sort->file.POposition);
+#ifdef WITHPTHREADS
+	sort->file.pthreadslock = dummylock;
+#endif
+#ifdef WITHZLIB
+	sort->file.ziosize = IOsize;
+#endif
 	if ( AM.S0 != 0 ) {
 		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
 		AllocSortFileName(sort);
@@ -624,14 +734,14 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
 VOID
 AllocSortFileName ARG1(SORTING *,sort)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	char *s, *t;
 /*
 		This is not the allocation before the tempfiles are determined.
@@ -641,7 +751,7 @@ AllocSortFileName ARG1(SORTING *,sort)
 	while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 	t[-2] = 'F';
-	sprintf(t-1,"%d-%d",identity,AN.filenum);
+	sprintf(t-1,"%d.%d",identity,AN.filenum);
 #else
 	t[-2] = 'f';
 	sprintf(t-1,"%d",AN.filenum);
@@ -650,13 +760,13 @@ AllocSortFileName ARG1(SORTING *,sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
 FILEHANDLE *AllocFileHandle ARG0
 {
-	GETIDENTITY;
+	GETIDENTITY
 	LONG allocation;
 	FILEHANDLE *fh;
 	int i = 0;
@@ -664,7 +774,8 @@ FILEHANDLE *AllocFileHandle ARG0
 
 	s = FG.fname; i = 0;
 	while ( *s ) { s++; i++; }
-	i += 11;
+	i += 16;
+/*	i += 11; */
 
 	allocation = sizeof(FILEHANDLE) + (AM.SIOsize+1)*sizeof(WORD) + i*sizeof(char);
 	fh = (FILEHANDLE *)Malloc1(allocation,"FileHandle");
@@ -675,6 +786,9 @@ FILEHANDLE *AllocFileHandle ARG0
 	fh->active = 0;
 	fh->handle = -1;
 	PUTZERO(fh->POposition);
+#ifdef WITHPTHREADS
+	fh->pthreadslock = dummylock;
+#endif
 	if ( AM.S0 != 0 ) {
 		fh->name = (char *)(fh->POstop + 1);
 		s = FG.fname; t = fh->name;
@@ -694,7 +808,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -702,7 +816,7 @@ FILEHANDLE *AllocFileHandle ARG0
 
 void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	if ( fh->handle >= 0 ) {
 		CloseFile(fh->handle);
 		fh->handle = -1;
@@ -713,7 +827,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -724,7 +838,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -802,7 +916,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -827,7 +941,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */
 

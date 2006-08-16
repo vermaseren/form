@@ -21,7 +21,7 @@
 
 WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *pbuffer;
 	if ( NewSort() ) { return(0); }
 	if ( NewSort() ) { LowerSortLevel(); return(0); }
@@ -35,7 +35,7 @@ WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
 		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
 		t += *t;
 	}
-	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 }
@@ -51,7 +51,7 @@ WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
 
 WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tt, *pbuffer;
 	if ( NewSort() ) { return(0); }
 	if ( NewSort() ) { LowerSortLevel(); return(0); }
@@ -69,7 +69,7 @@ WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 		}
 		tt[-1] = -tt[-1]; t = tt;
 	}
-	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 }
@@ -83,7 +83,7 @@ WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 
 WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tt, *pbuffer, *w, *t1, *tstop1, *tstop2, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
 	if ( NewSort() ) { return(0); }
@@ -132,7 +132,7 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 					UNLOCK(ErrorMessageLock);
 					goto abortion;
 				}
-				if ( PutBracket(oldwork) ) goto abortion;
+				if ( PutBracket(BHEAD oldwork) ) goto abortion;
 				StoreTerm(BHEAD w);
 			}
 			else if ( StoreTerm(BHEAD oldwork) ) goto abortion;
@@ -140,7 +140,7 @@ WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
 		t += *t;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 abortion:
@@ -158,7 +158,7 @@ abortion:
 
 WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *t1, *t2, *t1stop, *t2stop, *oldwork = AT.WorkPointer, *w = 0;
 	WORD ncoef1, ncoef2, ncoef3, *n1, *n2 = 0, *n3 = 0, *n, *n4, *n5;
 	int i1, i2, j, succ;
@@ -288,7 +288,7 @@ aborteer:
 
 WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t1, *t2, *n3, *t1stop, *t2stop, *n1, *n2;
 	WORD *oldwork = AT.WorkPointer, *ow, *w, *outbuffer = 0;
 	WORD ncoef1, ncoef2, ncoef3, symnum;
@@ -427,7 +427,7 @@ dosub:
 			}
 		}
 		AT.WorkPointer = ow;
-		if ( EndSort((WORD *)(&n3),2) < 0 ) { LowerSortLevel(); goto aborteer; }
+		if ( EndSort((WORD *)((VOID *)(&n3)),2) < 0 ) { LowerSortLevel(); goto aborteer; }
 		LowerSortLevel();
 		n1 = n3;
 	}
@@ -462,7 +462,7 @@ aborteer:
 
 WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD lowestsymbol = 2*MAXPOWER, only1 = 2, curpow;
 	WORD *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *G1 = 0, *G2 = 0, *GA = 0, *GG;
 	WORD *b, *b1 = 0, *b2 = 0, *t, *t1, *t2, *tstop, powdif;
@@ -811,7 +811,7 @@ UBYTE *PolynoPrint ARG1(WORD *,poly)
 
 int PolynoWrite ARG1(WORD *,poly)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *m, j, olddefer = AR.DeferFlag, first, lbrac;
 	AO.termbuf = AT.WorkPointer;
 	AO.bracket = AT.WorkPointer + AM.MaxTer;
@@ -853,7 +853,7 @@ abowrite:
 
 void PolynoPushBracket ARG1(WORD,numofsymbol)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *pnew;
 	LONG i, *pbnew;
 	if ( AN.polybpointer + 8 > AN.polybsize ) {
@@ -898,7 +898,7 @@ void PolynoPushBracket ARG1(WORD,numofsymbol)
 
 void PolynoPopBracket ARG0
 {
-	GETIDENTITY;
+	GETIDENTITY
 	if ( AN.polyblevel == 0 ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Internal error: PolynoBracket popped too often");
@@ -921,7 +921,7 @@ void PolynoPopBracket ARG0
 
 void PolynoStart ARG0
 {
-	GETIDENTITY;
+	GETIDENTITY
 	if ( AN.doingpoly == 0 ) {
 		AN.sorttype = AC.SortType;
 		AN.maxbracket = AR.MaxBracket;
@@ -946,7 +946,7 @@ void PolynoStart ARG0
 
 void PolynoFinish ARG0
 {
-	GETIDENTITY;
+	GETIDENTITY
 	AN.doingpoly--;
 	if ( AN.doingpoly == 0 ) {
 		AC.SortType = AN.sorttype;
@@ -963,7 +963,7 @@ void PolynoFinish ARG0
 
 WORD *PolynoNormalize ARG1(WORD *,poly)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t = poly, *oldwork = AT.WorkPointer, *w, *pbuffer;
 	int i;
 	if ( NewSort() ) { return(0); }
@@ -1001,13 +1001,13 @@ WORD *PolynoNormalize ARG1(WORD *,poly)
 				UNLOCK(ErrorMessageLock);
 				goto aborteer;
 			}
-			if ( PutBracket(oldwork) ) goto aborteer;
+			if ( PutBracket(BHEAD oldwork) ) goto aborteer;
 			StoreTerm(BHEAD w);
 		}
 		else if ( StoreTerm(BHEAD oldwork) ) goto aborteer;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 aborteer:
@@ -1025,8 +1025,8 @@ aborteer:
 
 WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
-	WORD *t, *tstop, *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *oldwork = AT.WorkPointer;
+	GETIDENTITY
+	WORD *t, *tstop, *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *n5, *oldwork = AT.WorkPointer;
 	int olddoing = AN.doingpoly,par, onevar1, onevar2 = 0;
 	WORD *m, *mm, ncoef1, ncoef2, ncoef3;
 	t = term; GETSTOP(t,tstop); t++;
@@ -1065,6 +1065,7 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 				n3 = Polyno1Div(n1,n2,&n4);
 			else
 				n3 = PolynoDiv(n1,n2,&n4);
+			n5 = AT.lastpolyrem; AT.lastpolyrem = n4; n4 = n5;
 			break;
 		case POLYREM:
 			if ( onevar1 >= -1 && onevar2 >= -1 && onevar1 == onevar2 )
@@ -1123,6 +1124,7 @@ WORD DoPolynomial ARG2(WORD *,term,WORD,level)
 		if ( Generator(BHEAD oldwork,level) ) goto aborteer;
 	}
 	if ( n3 ) M_free(n3,"DoPolynomial4");
+	AT.WorkPointer = oldwork;
 	return(0);
 aborteer:
 	if ( n1 ) { M_free(n1,"DoPolynomial5"); n1 = 0; }
@@ -1135,6 +1137,56 @@ aborteer:
 
 /*
  		#] DoPolynomial :
+ 		#[ DoPolyGetRem :
+*/
+
+WORD DoPolyGetRem ARG2(WORD *,term,WORD,level)
+{
+	GETIDENTITY
+	WORD *t, *tstop, *oldwork = AT.WorkPointer;
+	WORD *m, *mm, ncoef1, ncoef2, ncoef3, *n1, *n2;
+	t = term; GETSTOP(t,tstop); t++;
+	while ( t < tstop && *t != AM.polygetremnum ) t += t[1];
+	if ( t >= tstop ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Internal error. Irregular Polygetrem_ function");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	n1 = AT.lastpolyrem;
+	if ( n1 == 0 ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Error call to polygetrem_ function not after polydiv_.");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	while ( *n1 ) {
+		m = oldwork;
+		mm = term;
+		while ( mm < t ) *m++ = *mm++;
+		GETSTOP(n1,n2);
+		mm = n1+1;
+		while ( mm < n2 ) *m++ = *mm++;
+		mm = t + t[1];
+		while ( mm < tstop ) *m++ = *mm++;
+		n1 += *n1;
+		ncoef1 = term[*term-1]; ncoef1 = REDLENG(ncoef1);
+		ncoef2 = n1[-1]; ncoef2 = REDLENG(ncoef2);
+		if ( MulRat(BHEAD (UWORD *)tstop,ncoef1,(UWORD *)n2,ncoef2,
+			(UWORD *)m,&ncoef3) ) return(-1);
+		ncoef3 = INCLENG(ncoef3);
+		m += ABS(ncoef3);
+		m[-1] = ncoef3;
+		*oldwork = m - oldwork;
+		AT.WorkPointer = m;
+		if ( Generator(BHEAD oldwork,level) ) return(-1);
+	}
+	AT.WorkPointer = oldwork;
+	return(0);
+}
+
+/*
+ 		#] DoPolyGetRem :
  		#[ CopyOfPolynomial :
 */
 
@@ -1161,7 +1213,7 @@ WORD *CopyOfPolynomial ARG1(WORD *,poly)
 
 WORD *PolynoUnify ARG2(WORD *,poly,int,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *n, *n1, *t, *t1, *n2, *tstop, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
 	LONG outsize, numterms;
@@ -1333,9 +1385,12 @@ aborteer:
 
 WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *n1 = 0, *m, *mstop, *mm;
 	CBUF *C = cbuf + AC.cbufnum;
+	int localnumlhs;
+	if ( AC.cbufnum == AM.rbufnum ) { localnumlhs = AR.Cnumlhs; }
+	else { localnumlhs = C->numlhs; }
 	if ( par == 1 ) {
 		AT.proexp[1] = SUBEXPRESSION;
 		AT.proexp[5] = AM.dbufnum;
@@ -1347,10 +1402,10 @@ WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
 	AT.proexp[3] = numexp;
 	if ( NewSort() ) goto aborteer;
 	if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
-	if ( Generator(BHEAD AT.proexp,C->numlhs) ) {
+	if ( Generator(BHEAD AT.proexp,localnumlhs) ) {
 		LowerSortLevel(); LowerSortLevel(); goto aborteer;
 	}
-	if ( EndSort((WORD *)(&n1),2) < 0 ) { LowerSortLevel(); goto aborteer; }
+	if ( EndSort((WORD *)((VOID *)(&n1)),2) < 0 ) { LowerSortLevel(); goto aborteer; }
 	LowerSortLevel();
 /*
 	Now check the 'quality'. Only positive powers of symbols allowed.
@@ -1385,6 +1440,7 @@ aborteer:
 
 int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 {
+	GETIDENTITY
 	WORD *n1, *n2, *n;
 	int onevar, retval;
 	DOLLARS d;
@@ -1409,7 +1465,12 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			LOCK(d->pthreadslock);
+			if ( dtype == MODLOCAL ) {
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
+			}
+			else {
+				LOCK(d->pthreadslockwrite);
+			}
 		}
 	}
 #endif
@@ -1424,6 +1485,18 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 	if ( par == 1 ) {
 		d = Dollars+numexp;
 		d->type = DOLTERMS;
+#ifdef WITHPTHREADS
+		if ( AS.MultiThreaded ) {
+			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+				if ( numexp == ModOptdollars[nummodopt].number ) break;
+			}
+			if ( nummodopt < NumModOptdollars ) {
+				if (  ModOptdollars[nummodopt].type == MODLOCAL ) {
+					d = ModOptdollars[nummodopt].dstruct+AT.identity;
+				}
+			}
+		}
+#endif
 		cbuf[AM.dbufnum].CanCommu[numexp] = 0;
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"$-buffer old");
 		n = n1; while ( *n ) n += *n;
@@ -1441,7 +1514,7 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 	}
 	else retval = -1;
 #ifdef WITHPTHREADS
-	if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockwrite); }
 #endif
 	return(retval);
 }
@@ -1459,7 +1532,7 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 
 WORD *PolynoIntFac ARG1(WORD *,poly)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *w, *oldwork = AT.WorkPointer, *pbuffer;
 	WORD n,n1,ncoef,i;
 	WORD *coef;
@@ -1515,7 +1588,7 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 		if ( StoreTerm(BHEAD oldwork) ) goto PIFerror;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)(&pbuffer),2) < 0 ) goto PIFerror1;
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) goto PIFerror1;
 	LowerSortLevel();
 	return(pbuffer);
 PIFerror1:
@@ -1530,4 +1603,26 @@ PIFerror:
 /*
  		#] PolynoIntFac :
 	#] Polyno :
+  	#[ PolyNorm :
+
+	Should see the arguments of numerator and denominator as two
+	polynomials and
+	1: Make the coefficients integer.
+	2: Determine the QCD of the two polynomials.
+	3: Divide out the QCD.
+	4: Make sure again that the coefficients are integer again.
+	When there are more occurrences of numerator or denominator each
+	numerator has to be treated in combination with each denominator.
+
+	Syntax was: PolyNorm,numerator,denominator;
+	in which numerator and denominator are the names of two CFunctions.
+*/
+
+int PolyNorm BARG4(WORD *,term,WORD,level,WORD,numerator,WORD,denominator)
+{
+	return(0);
+}
+
+/*
+  	#] PolyNorm :
 */

@@ -21,27 +21,27 @@ static struct id_options {
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CoLocal :
 */
 
 int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal :
+  	#] CoLocal : 
   	#[ CoGlobal :
 */
 
 int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal :
+  	#] CoGlobal : 
   	#[ DoExpr:
 */
 
 int DoExpr ARG2(UBYTE *,inp,int,type)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int error = 0;
 	UBYTE *p, *q, c;
 	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
@@ -218,7 +218,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -229,7 +229,7 @@ int CoIdOld ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdOld :
+  	#] CoIdOld : 
   	#[ CoId :
 */
 
@@ -240,7 +240,7 @@ int CoId ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoId :
+  	#] CoId : 
   	#[ CoIdNew :
 */
 
@@ -251,7 +251,7 @@ int CoIdNew ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdNew :
+  	#] CoIdNew : 
   	#[ CoDisorder :
 */
 
@@ -262,7 +262,7 @@ int CoDisorder ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDisorder :
+  	#] CoDisorder : 
   	#[ CoMany :
 */
 
@@ -273,7 +273,7 @@ int CoMany ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMany :
+  	#] CoMany : 
   	#[ CoMulti :
 */
 
@@ -284,7 +284,7 @@ int CoMulti ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMulti :
+  	#] CoMulti : 
   	#[ CoIfMatch :
 */
 
@@ -295,7 +295,7 @@ int CoIfMatch ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIfMatch :
+  	#] CoIfMatch : 
   	#[ CoOnce :
 */
 
@@ -306,7 +306,7 @@ int CoOnce ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnce :
+  	#] CoOnce : 
   	#[ CoOnly :
 */
 
@@ -317,7 +317,7 @@ int CoOnly ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnly :
+  	#] CoOnly : 
   	#[ CoSelect :
 */
 
@@ -328,7 +328,7 @@ int CoSelect ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoSelect :
+  	#] CoSelect : 
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -336,7 +336,7 @@ int CoSelect ARG1(UBYTE *,inp)
 
 int CoIdExpression ARG2(UBYTE *,inp,int,type)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int i, j, idhead, error = 0, MinusSign = 0, opt, retcode;
 	WORD *w, *s, *m, *mm, *ww, *FirstWork, *OldWork, c1, ctype, numsets = 0,
 		 oldnumrhs, *ow, oldEside;
@@ -612,12 +612,13 @@ IllLeft:MesPrint("&Illegal LHS");
         ow = AT.WorkPointer + AM.MaxTer;
 		mm = s; ww = ow; i = *mm;
 		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
-		AC.lhdollarflag = 0; oldEside = AC.Eside; AC.Eside = LHSIDE;
+		AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
+		AR.Cnumlhs = C->numlhs;
 		if ( Generator(BHEAD ow,C->numlhs) ) {
-			AC.Eside = oldEside;
+			AR.Eside = oldEside;
 			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
 		}
-		AC.Eside = oldEside;
+		AR.Eside = oldEside;
 		AT.WorkPointer = w;
 		if ( EndSort(w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
 		if ( *w == 0 || *(w+*w) != 0 ) {
@@ -775,7 +776,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression :
+  	#] CoIdExpression : 
   	#[ CoMultiply :
 */
 
@@ -814,7 +815,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMultiply :
+  	#] CoMultiply : 
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -822,7 +823,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 
 int CoFill ARG1(UBYTE *,inp)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD error = 0, x, funnum, type, *oldwp = AT.WorkPointer;
 	int i, oldcbufnum = AC.cbufnum, nofill = 0, numover, redef = 0;
 	WORD *w, *wold;
@@ -1060,7 +1061,7 @@ redef:;
 }
 
 /*
-  	#] CoFill :
+  	#] CoFill : 
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1077,7 +1078,7 @@ redef:;
 
 int CoFillExpression ARG1(UBYTE *,inp)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *p, c;
 	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AT.WorkPointer;
 	WORD *brackets, *term, brasize, *b, *m, *w, *pw, *tstop, zero = 0;
@@ -1127,6 +1128,31 @@ int CoFillExpression ARG1(UBYTE *,inp)
 		inp = p;
 		if ( ( p = SkipAName(inp) ) == 0 ) return(1);
 		c = *p; *p = 0;
+
+		if ( GetVar(inp,&type,&symnum,-1,NOAUTO) == NAMENOTFOUND ) {
+			MesPrint("&%s should be a previously declared symbol or function",inp);
+			*p = c; return(1);
+		}
+		else if ( type == CSYMBOL ) {
+			*p++ = c;
+			*AT.WorkPointer++ = symnum;
+			numsym++;
+		}
+		else if ( type == CFUNCTION ) {
+			numsym = -1;
+			*p++ = c;
+			if ( c != ')' ) {
+				MesPrint("&Argument should be a single function or a list of symbols");
+				return(1);
+			}
+			symnum += FUNCTION;
+			*AT.WorkPointer++ = symnum;
+		}
+		else {
+			MesPrint("&%s should be a previously declared symbol or function",inp);
+			*p = c; return(1);
+		}
+/*
 		if ( GetVar(inp,&type,&symnum,CSYMBOL,NOAUTO) == NAMENOTFOUND ) {
 			if ( numsym > 0 ) {
 				MesPrint("&%s should be a previously declared symbol",inp);
@@ -1151,6 +1177,7 @@ int CoFillExpression ARG1(UBYTE *,inp)
 		*p++ = c;
 		*AT.WorkPointer++ = symnum;
 		numsym++;
+*/
 		if ( c == ')' ) break;
 		if ( c != ',' ) {
 			MesPrint("&Illegal separator in FillExpression statement");
@@ -1237,6 +1264,7 @@ int CoFillExpression ARG1(UBYTE *,inp)
 			Now compute the element. See whether we need it
 */
 			if ( numsym < 0 ) {
+				WORD *bb;
 				if ( *brackets != symnum || brasize != brackets[1] ) {
 					weneedit = 0; continue;	/* Cannot work! */
 				}
@@ -1244,35 +1272,39 @@ int CoFillExpression ARG1(UBYTE *,inp)
 				Now count the number of arguments and whether they are numbers
 */
 				b = brackets + FUNHEAD;
+				bb = brackets+brackets[1];
 				i = 0;
-				while ( b < m ) {
-					if ( *b != -CNUMBER ) break;
+				while ( b < bb ) {
+					if ( *b != -SNUMBER ) break;
 					i++;
 					b += 2;
 				}
-				if ( b < m || i != T->numind ) {
+				if ( b < bb || i != T->numind ) {
 					weneedit = 0; continue;	/* Cannot work! */
 				}
 			}
-			else if ( *brackets != SYMBOL || brackets[1] < brasize
-			|| (brackets[1]-2) > numsym*2 ) {
+			else if ( brasize > 0 && ( *brackets != SYMBOL 
+			|| brackets[1] < brasize || (brackets[1]-2) > numsym*2 ) ) {
 				weneedit = 0; continue;	/* Cannot work! */
 			}
 			numzero = 0; sum = 0;
 			if ( numsym > 0 ) {
 			  for ( i = 0; i < numsym; i++ ) {
-				b = brackets + 2; j = brackets[1]-2;
-				while ( j > 0 ) {
-					if ( *b == oldwork[i] ) break;
-					j -= 2; b += 2;
-				}
-				if ( j <= 0 ) {  /* it was not there */
-					numzero++; pow = 0;
-					if ( 2*numzero+brackets[1]-2 > numsym*2 ) {
-						weneedit = 0; goto nextterm;
+				if ( brasize > 0 ) {
+					b = brackets + 2; j = brackets[1]-2;
+					while ( j > 0 ) {
+						if ( *b == oldwork[i] ) break;
+						j -= 2; b += 2;
 					}
+					if ( j <= 0 ) {  /* it was not there */
+						numzero++; pow = 0;
+						if ( 2*numzero+brackets[1]-2 > numsym*2 ) {
+							weneedit = 0; goto nextterm;
+						}
+					}
+					else pow = b[1];
 				}
-				else pow = b[1];
+				else pow = 0;
 				if ( T->sparse ) *pw++ = pow;
 				else if ( pow < T->mm[i].mini || pow > T->mm[i].maxi ) {
 					weneedit = 0; goto nextterm;
@@ -1403,7 +1435,7 @@ noway:
 
 int CoPrintTable ARG1(UBYTE *,inp)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int fflag = 0, sflag = 0, addflag = 0, error = 0, sum, i, j;
 	UBYTE *filename, *p, c, buffer[100], *s, *oldoutputline = AO.OutputLine;
 	WORD type, funnum, *expr, *m, num;
@@ -1559,7 +1591,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable :
+  	#] CoPrintTable : 
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1629,7 +1661,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign :
+  	#] CoAssign : 
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1645,7 +1677,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 	WORD type, funnum, i;
 	c = *inp;
 	while ( c ) {
-		while ( *inp == ',' ) *inp++;
+		while ( *inp == ',' ) inp++;
 		if ( *inp == 0 ) break;
 		if ( ( p = SkipAName(inp) ) == 0 ) return(1);
 		c = *p; *p = 0;
@@ -1693,7 +1725,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDeallocateTable :
+  	#] CoDeallocateTable : 
 */
 
 

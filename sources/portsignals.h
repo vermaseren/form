@@ -1,25 +1,25 @@
-/*
-*/
+
 #ifndef PORTSIGNAL_H
 #define PORTSIGNAL_H
+ 
+/*
+	Some systems (especially LINUX) have not enough 
+	signals available so some of the (!documented!) signals
+	are not defined. This file contains the definition of all
+	signals used in the program.
+	If the signal is not defined we define it as unused (>NSIG).
 
-/*Attention! This include MUST be BEFORE all SIG... deinitions!*/
+	The include of signal.h must be first, before we try to define
+	undefined signals.
+*/
 #include <signal.h>
 
 #define FATAL_SIG_ERROR 4
 
-
-
-/*
- * Some of systems (especially LINUX) has too small number of
- * signals available to the system so some of the (!documented!) signals
- * are not defined. This file contains the definition of all signals used
- * in the program.
- * If the signal is not define we define it as unused (>NSIG).
- */
-
 #ifndef NSIG
-/* Must be enough:) :*/
+/*
+	The value of NSIG must be enough to fall outside the range of defined signals
+*/
 #define NSIG (1024)
 #endif
 

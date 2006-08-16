@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Patterns :
  		#[ Rules :
 
@@ -23,7 +23,7 @@
 		6:	x^n? can revert to n = 0 if there is no power of x.
 		7:	x?^n? must match some x. There could be an ambiguity otherwise.
 
- 		#] Rules :
+ 		#] Rules : 
  		#[ TestMatch :			WORD TestMatch(term,level)
 
 	This routine governs the pattern matching. If it decides
@@ -48,8 +48,8 @@
 WORD
 TestMatch BARG2(WORD *,term,WORD *,level)
 {
-	GETBIDENTITY;
-	WORD *ll, *m, *w, *llf, *OldWork, *ww, *mm;
+	GETBIDENTITY
+	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm;
 	WORD power = 0, match = 0, *rep, i, msign = 0;
 	int numdollars = 0;
 	CBUF *C = cbuf+AM.rbufnum;
@@ -89,21 +89,48 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		if ( (*(FG.OperaFind[ll[2]]))(BHEAD term,ll) ) return(-1);
 		else return(0);
 	}
+	OldWork = AT.WorkPointer;
+	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+	ww = AT.WorkPointer;
+#ifdef WITHPTHREADS
+/*
+		Here we need to make a copy of the subexpression object because we
+		will be writing the values of the wildcards in it. We copy it into
+		the private version of the compiler buffer that is used for scratch
+		space. It will get popped when Generator returns.
+*/
+	{
+		WORD *ma = AddRHS(AT.ebufnum,1);
+		WORD *ta = ll;
+		int ja = ta[1];
+		CBUF *CC = cbuf+AT.ebufnum;
+		if ( ( ma+ja+2 ) > CC->Top ) {
+			ma = DoubleCbuffer(AT.ebufnum,ma);
+		}
+		m = ma + IDHEAD;
+/*		ll = ma; */
+		NCOPY(ma,ta,ja);
+		*ma++ = 0;
+		CC->rhs[CC->numrhs+1] = ma;
+		CC->Pointer = ma;
+	}
+#else
 	m = ll + IDHEAD;
+#endif
 	AN.FullProto = m;
 	AN.WildValue = w = m + SUBEXPSIZE;
 	m += m[1];
 	AN.WildStop = m;
-	OldWork = AT.WorkPointer;
+	StartWork = ww;
 	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
-		AC.Eside = LHSIDEX;
+		AR.Eside = LHSIDEX;
 		ww = AT.WorkPointer; i = m[0]; mm = m;
 		NCOPY(ww,mm,i);
-		*OldWork += 3;
+		*StartWork += 3;
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
 		NewSort();
-		if ( Generator(BHEAD OldWork,C->numlhs) ) {
+		if ( Generator(BHEAD StartWork,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = OldWork;
 			return(-1);
@@ -142,9 +169,13 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		i = *m;
 		NCOPY(mm,m,i);
 		m = AN.patternbuffer;
-		AC.Eside = RHSIDE;
+		AR.Eside = RHSIDE;
+
+		AT.WorkPointer = ww = StartWork;
 	}
+/*
 	AT.WorkPointer = ww = term + *term;
+*/
 
 	ClearWild(BHEAD0);
 	while ( w < AN.WildStop ) {
@@ -184,8 +215,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 							WildDollars();
 							numdollars = 0;
 						}
+						if ( ww < term+term[0] ) ww = term+term[0];
 						ClearWild(BHEAD0);
-						AT.WorkPointer = ww = term + *term;
+						AT.WorkPointer = ww;
 /*						if ( rep < ww ) {*/
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
@@ -215,8 +247,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 							WildDollars();
 							numdollars = 0;
 						}
+						if ( ww < term+term[0] ) ww = term+term[0];
 						ClearWild(BHEAD0);
-						AT.WorkPointer = ww = term + *term;
+						AT.WorkPointer = ww;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
@@ -247,8 +280,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 							WildDollars();
 							numdollars = 0;
 						}
+						if ( ww < term+term[0] ) ww = term+term[0];
 						ClearWild(BHEAD0);
-						AT.WorkPointer = ww = term + *term;
+						AT.WorkPointer = ww;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
@@ -359,7 +393,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		AT.WorkPointer = AN.RepFunList;
 	}
 nextlevel:;
-	} while ( (*level)++ < C->numlhs && C->lhs[*level][0] == TYPEIDOLD );
+	} while ( (*level)++ < AR.Cnumlhs && C->lhs[*level][0] == TYPEIDOLD );
 	(*level)--;
 	AT.WorkPointer = AN.RepFunList;
 	return(match);
@@ -376,7 +410,7 @@ nextlevel:;
 VOID
 Substitute BARG3(WORD *,term,WORD *,pattern,WORD,power)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *TemTerm;
 	WORD *t, *m;
 	WORD *tstop, *mstop;
@@ -491,7 +525,7 @@ SubsL2:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -611,7 +645,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -671,7 +705,7 @@ SubsL5:								fill += nq;
 			m += m[1];
 		}
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -747,7 +781,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] VECTORS :
+			#] VECTORS : 
 			#[ INDICES :
 
 			Currently without wildcards
@@ -777,7 +811,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] INDICES :
+			#] INDICES : 
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -844,7 +878,7 @@ SubsL6:				nq = WORDDIF(fill,subterm);
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DELTAS :
+			#] DELTAS : 
 */
 EndLoop:;
 	} while ( m < mstop ); }
@@ -874,7 +908,7 @@ SubCoef:
 }
 
 /*
- 		#] Substitute :
+ 		#] Substitute : 
  		#[ FindSpecial :		WORD FindSpecial(term)
 
 	Routine to detect symplifications regarding the special functions
@@ -906,14 +940,14 @@ FindSpecial ARG1(WORD *,term)
 	return(0);
 }
 
- 		#] FindSpecial :
+ 		#] FindSpecial : 
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
 WORD
 FindAll BARG4(WORD *,term,WORD *,pattern,WORD,level,WORD *,par)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *r;
 	WORD *tstop, *mstop, *TwoProto, *vwhere = 0, oldv, oldvv, vv, level2;
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;
@@ -1065,7 +1099,7 @@ CopRest:				t = tstop;
 					oldv = *r;
 					oldvv = r[1];
 					if ( v == *r ) {
-						if ( !par ) { while ( ++level <= C->numlhs
+						if ( !par ) { while ( ++level <= AR.Cnumlhs
 						&& C->lhs[level][0] == TYPEIDOLD ) {
 							m = C->lhs[level];
 							m += IDHEAD;
@@ -1195,7 +1229,7 @@ OneOnly:				m = AT.WorkPointer;
 											} while ( ++bfirst < blast );
 										}
 											}
-									} while ( ++level2 < C->numlhs &&
+									} while ( ++level2 < AR.Cnumlhs &&
 									C->lhs[level2][0] == TYPEIDOLD );
 									goto OneOnly;
 								}
@@ -1209,7 +1243,7 @@ OneOnly:				m = AT.WorkPointer;
 										+ Sets[vwhere[4]].first);
 									}
 									level2 = level;
-									while ( ++level2 < C->numlhs &&
+									while ( ++level2 < AR.Cnumlhs &&
 									C->lhs[level2][0] == TYPEIDOLD ) {
 										if ( !par ) m = C->lhs[level2];
 										else m = par;
@@ -1354,7 +1388,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll :
+ 		#] FindAll : 
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp
@@ -1580,7 +1614,7 @@ dotensor:
 }
 
 /*
- 		#] TestSelect :
+ 		#] TestSelect : 
   	#] Patterns :
 */
 

@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -24,18 +24,18 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use :
+  	#] syntax and use : 
   	#[ FindBracket :
 */
 
 POSITION *
 FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	BRACKETINDEX *bi;
 	LONG hi, low, med;
 	int i;
-	WORD oldsorttype = AC.SortType, *t1, *t2, j, bsize, *term, *p, *pstop;
+	WORD oldsorttype = AC.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
 	WORD *tstop, *cp;
 	FILEHANDLE *fi;
 	POSITION auxpos, toppos;
@@ -47,7 +47,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 		case DROPHGEXPRESSION:
 		case HIDDENLEXPRESSION:
 		case HIDDENGEXPRESSION:
-			fi = AS.hidefile;
+			fi = AR.hidefile;
 			break;
 		default:
 			fi = AR.infile;
@@ -94,10 +94,14 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	The bracket is now either bi itself or between bi and the next one
 	or it is not present at all.
 */
-	auxpos = bi->start;
-	SETBASEPOSITION(AN.theposition,ADD2POS(auxpos,e->onfile));
+	AN.theposition = e->onfile;
+	ADD2POS(AN.theposition,bi->start);
+/*
+	The seek will have to move closer to the actual read so that we
+	can place a lock around the two.
 	if ( fi->handle >= 0 ) SeekFile(fi->handle,&AN.theposition,SEEK_SET);
 	else SetScratch(fi,&AN.theposition);
+*/
 /*
 	Put the bracket in the compress buffer as if it were the last term read.
 	Have a look at AR.CompressPointer. (set it right)
@@ -131,7 +135,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				p++; p += *p + 1;
 			}
 			else if ( *p < 0 ) {	/* changes bracket */
-				fi->POfill = p;
+				pp = p;
 				t2 = AR.CompressPointer;
 				t1 = t2 - *p++ + 1;
 				j = *p++;
@@ -146,14 +150,15 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
 				else i = Compare(BHEAD bracket,AR.CompressPointer,0);
 				if ( i == 0 ) {
-					SETBASEPOSITION(AN.theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
+					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
+					fi->POfill = pp;
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */
 			}
 			else {	/* no compression. We have to check! */
 				WORD a[4];
-				fi->POfill = p;
+				pp = p;
 				t2 = p + 1; while ( *t2 != HAAKJE ) t2 += t2[1];
 				a[0] = *p; a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];
 				*t2++ = 1; *t2++ = 1; *t2++ = 3;
@@ -168,7 +173,8 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 				*p = a[0]; t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
-					SETBASEPOSITION(AN.theposition,(fi->POfill-fi->PObuffer)*sizeof(WORD));
+					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
+					fi->POfill = pp;
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */
@@ -179,12 +185,17 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 		return(0);	/* Bracket does not exist */
 	}
 	else {
-		toppos = bi->next;
-		ADD2POS(toppos,e->onfile);
+		toppos = e->onfile;
+		ADD2POS(toppos,bi->next);
 		cp = AR.CompressPointer;
 		for(;;) {
-			SeekFile(fi->handle,&AN.theposition,SEEK_SET);
+			auxpos = AN.theposition;
+			GetOneTerm(BHEAD term,fi,&auxpos,0);
+/*
+			SeekFile(fi->handle,&auxpos,SEEK_SET);
 			GetOneTerm(BHEAD term,fi->handle);
+			SeekFile(fi->handle,&auxpos,SEEK_CUR);
+*/
 			if ( *term == 0 ) {
 				AC.SortType = oldsorttype;
 				return(0);	/* Bracket does not exist */
@@ -203,7 +214,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 			}
 			AR.CompressPointer = cp;
-			TELLFILE(fi->handle,&AN.theposition);
+			AN.theposition = auxpos;
 /*
 			Now check whether we passed the 'point'
 */
@@ -235,7 +246,7 @@ found:
 VOID
 PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	BRACKETINDEX *bi, *b1, *b2, *b3;
 	BRACKETINFO *b;
 	POSITION thepos;
@@ -404,7 +415,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex :
+  	#] PutBracketInIndex : 
   	#[ ClearBracketIndex :
 */
 
@@ -422,7 +433,7 @@ ClearBracketIndex ARG1(WORD,numexp)
 }
 
 /*
-  	#] ClearBracketIndex :
+  	#] ClearBracketIndex : 
   	#[ OpenBracketIndex :
 */
 
@@ -447,7 +458,7 @@ OpenBracketIndex ARG1(WORD,nexpr)
 }
 
 /*
-  	#] OpenBracketIndex :
+  	#] OpenBracketIndex : 
 */
 
 /*

@@ -12,19 +12,16 @@
 #define FORM_INLINE inline
 /*:[17oct2005 mt]*/
 
-/*
 #define WITHZLIB
-#define ZWITHZLIB
-*/
 
 /*
 #define ITHREADS
+#define WITHPCOUNTER
+#define DEBUGGINGLOCKS
 */
-/*
 #define WITHPTHREADS
-*/
 
-#ifdef ZWITHZLIB
+#ifdef WITHZLIB
 #include <zlib.h>
 #endif
 
@@ -207,7 +204,8 @@
 #include <pthread.h>
 #endif
 
-#ifdef OPTERON
+#ifdef OOPTERON
+
 #define FILES FILE
 #define Uopen(x,y) fopen(x,y)
 #define Uflush(x) fflush(x)
@@ -221,7 +219,9 @@
 #define Usetpos(x,y) fsetpos(x,y)
 #define Ustdout stdout
 #define MAX_OPEN_FILES FOPEN_MAX
+
 #else
+
 #ifdef UNIX
 #define UFILES
 typedef struct FiLeS {
@@ -244,7 +244,9 @@ DECLARE(int Usetpos,(FILES *,fpos_t *))
 DECLARE(void Usetbuf,(FILES *,char *))
 extern FILES *Ustdout;
 #define MAX_OPEN_FILES getdtablesize()
+
 #else
+
 #define FILES FILE
 #define Uopen(x,y) fopen(x,y)
 #define Uflush(x) fflush(x)
@@ -258,6 +260,7 @@ extern FILES *Ustdout;
 #define Usetpos(x,y) fsetpos(x,y)
 #define Ustdout stdout
 #define MAX_OPEN_FILES FOPEN_MAX
+
 #endif
 #endif
  

@@ -8,7 +8,9 @@
 #endif
 
 #ifdef WITHPTHREADS
+#ifdef WITHPCOUNTER
 extern int pcounter;
+#endif
 #endif
 
 static char nameversion[] = "";
@@ -86,10 +88,22 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 				case 'L': /* Make log file with only final statistics */
 							AM.LogType = 1;  break;
 				case 'm': /* Read number of threads */
-							s++;
+				case 'w': /* Read number of workers */
+							t = s++;
+							threadnum = 0;
 							while ( *s >= '0' && *s <= '9' )
 								threadnum = 10*threadnum + *s++ - '0';
+							if ( *s ) {
+								Error1("Illegal value for option m: ",t);
+								errorflag++;
+							}
+/*							if ( threadnum == 1 ) threadnum = 0; */
+							threadnum++;
 							break;
+/*
+				case 'n':
+							Reserved for number of slaves without MPI
+*/
 				case 'p':
 					/*[10may2006 mt]:*/
 #ifdef WITHEXTERNALCHANNEL
@@ -277,21 +291,25 @@ OpenInput ARG0
 		b: if none, try in the form.set file.
 		c: if still none, try in the environment for the variable FORMTMP
 		d: if still none, try the current directory.
+
+		The parameter indicates action in the case of multithreaded running.
+		par = 0 : We just run on a single processor. Keep everything normal.
+		par = 1 : Multithreaded running startup phase 1.
+		par = 2 : Multithreaded running startup phase 2.
 */
 
 UBYTE *emptystring = (UBYTE *)"";
 UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
 
 VOID
-ReserveTempFiles ARG0
+ReserveTempFiles ARG1(int,par)
 {
-#ifdef WITHPTHREADS
-	GETIDENTITY;
-#endif
+	GETIDENTITY
 	SETUPPARAMETERS *sp;
 	UBYTE *s, *t, c;	
-	int i;
+	int i = 0;
 	WORD j;
+	if ( par == 0 || par == 1 ) {
 	if ( AM.TempDir == 0 ) {
 		sp = GetSetupPar((UBYTE *)"tmpdir");
 		if ( ( sp->flags | USEDFLAG ) != USEDFLAG ) {
@@ -385,29 +403,64 @@ ReserveTempFiles ARG0
 	t = (UBYTE *)FG.fname;
 	while ( *t ) *s++ = *t++;
 	s[-2] = 'o'; *s = 0;
-	s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file a");
-	AR.FoStage4[0].name = (char *)s;
-	t = (UBYTE *)FG.fname;
-	while ( *t ) *s++ = *t++;
-	s[-2] = '4'; s[-1] = 'a'; *s = 0;
-	s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file b");
-	AR.FoStage4[1].name = (char *)s;
-	t = (UBYTE *)FG.fname;
-	while ( *t ) *s++ = *t++;
-	s[-2] = '4'; s[-1] = 'b'; *s = 0;
-	for ( j = 0; j < 3; j++ ) {
-		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for scratch file");
-		AR.Fscr[j].name = (char *)s;
+	}
+/*
+	With the stage4 and scratch file names we have to be a bit more careful.
+	They are to be allocated after the threads are initialized when there
+	are threads of course.
+*/
+	if ( par == 0 ) {
+		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file a");
+		AR.FoStage4[0].name = (char *)s;
 		t = (UBYTE *)FG.fname;
 		while ( *t ) *s++ = *t++;
-		s[-2] = 'c'; s[-1] = '0'+j; *s = 0;
+		s[-2] = '4'; s[-1] = 'a'; *s = 0;
+		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file b");
+		AR.FoStage4[1].name = (char *)s;
+		t = (UBYTE *)FG.fname;
+		while ( *t ) *s++ = *t++;
+		s[-2] = '4'; s[-1] = 'b'; *s = 0;
+		for ( j = 0; j < 3; j++ ) {
+			s = (UBYTE *)Malloc1(sizeof(char)*i,"name for scratch file");
+			AR.Fscr[j].name = (char *)s;
+			t = (UBYTE *)FG.fname;
+			while ( *t ) *s++ = *t++;
+			s[-2] = 'c'; s[-1] = '0'+j; *s = 0;
+		}
 	}
+#ifdef WITHPTHREADS
+	else if ( par == 2 ) {
+		s = FG.fname; i = 0;
+		while ( *s ) { s++; i++; }
+		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file a");
+		sprintf(s,"%s.%d",FG.fname,AT.identity);
+		s[i-2] = '4'; s[i-1] = 'a';
+		AR.FoStage4[0].name = (char *)s;
+		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file b");
+		sprintf(s,"%s.%d",FG.fname,AT.identity);
+		s[i-2] = '4'; s[i-1] = 'b';
+		AR.FoStage4[1].name = (char *)s;
+		if ( AT.identity == 0 ) {
+			for ( j = 0; j < 3; j++ ) {
+				s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
+				AR.Fscr[j].name = (char *)s;
+				t = (UBYTE *)FG.fname;
+				while ( *t ) *s++ = *t++;
+				s[-2] = 'c'; s[-1] = '0'+j; *s = 0;
+			}
+		}
+	}
+#endif
 }
 
 /*
  		#] ReserveTempFiles :
  		#[ StartVariables :
 */
+
+#ifdef WITHPTHREADS
+ALLPRIVATES *DummyPointer = 0;
+#endif
 
 VOID
 StartVariables ARG0
@@ -425,6 +478,12 @@ StartVariables ARG0
 	Note, this variable can't be initialized in IniModule!:
 */
 	AC.NumberOfRedefsInModule=0;
+#endif
+#ifdef WITHPTHREADS
+/*
+	We need a value in AB because in the startup some routines may call AB[0].
+*/
+	AB = (ALLPRIVATES **)&DummyPointer;
 #endif
 /*
 	separators used to delimit arguments in #call and #do, by default ',' and '|':
@@ -451,6 +510,8 @@ StartVariables ARG0
 	AM.hparallelflag = AM.gparallelflag =
 	AC.parallelflag = AC.mparallelflag = PARALLELFLAG;
 	AC.tablefilling = 0;
+	AM.resetTimeOnClear = 1;
+
 /*
 	Information for the lists of variables. Part of error message and size:
 */
@@ -521,6 +582,8 @@ StartVariables ARG0
 	AM.rbufnum = inicbufs();		/* Regular compiler buffer */
 #ifndef WITHPTHREADS
 	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
+#else
+	AS.MasterSort = 0;
 #endif
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
 /*
@@ -536,6 +599,9 @@ StartVariables ARG0
 	AC.vetofilling = 0;
 
 	AddDollar((UBYTE *)"$",DOLUNDEFINED,0,0);
+
+	cbuf[AM.dbufnum].mnumlhs = cbuf[AM.dbufnum].numlhs;
+	cbuf[AM.dbufnum].mnumrhs = cbuf[AM.dbufnum].numrhs;
 
 	AddSymbol((UBYTE *)"i_",-MAXPOWER,MAXPOWER,VARTYPEIMAGINARY);
 	AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE);
@@ -595,13 +661,27 @@ StartVariables ARG0
 	GetName(AC.varnames,(UBYTE *)"count_",&AM.countfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"poly_",&AM.polyfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"polynorm_",&AM.polytopnum,NOAUTO);
+	GetName(AC.varnames,(UBYTE *)"polygetrem_",&AM.polygetremnum,NOAUTO);
 	AM.termfunnum += FUNCTION;
 	AM.matchfunnum += FUNCTION;
 	AM.countfunnum += FUNCTION;
 	AM.polyfunnum += FUNCTION;
 	AM.polytopnum += FUNCTION;
+	AM.polygetremnum += FUNCTION;
 
+	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1;
+	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats = 1;
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag = 1;
+	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag = 1;
+	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing = 1;
+	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch = 0;
+	AM.gcNumDollars = AP.DollarList.num;
+
+#ifdef WITHPTHREADS
+	AC.inputnumbers = 0;
+	AC.pfirstnum = 0;
+	AC.numpfirstnum = AC.sizepfirstnum = 0;
+#endif
 }
 
 /*
@@ -615,7 +695,7 @@ WORD
 IniVars()
 {
 #ifdef WITHPTHREADS
-	GETIDENTITY;
+	GETIDENTITY
 #else
 	WORD *t;
 #endif
@@ -627,7 +707,7 @@ IniVars()
 	AC.SortType = AC.lSortType = AM.gSortType;
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
-	AC.Eside = 0;
+	AR.Eside = 0;
 	AC.DumNum = 0;
 	AC.ncmod = AM.gncmod = 0;
 	AC.npowmod = AM.gnpowmod = 0;
@@ -647,7 +727,7 @@ IniVars()
 	AM.gOutputSpaces = NORMALFORMAT;
 	AC.OutNumberType = RATIONALMODE;
 	AM.gOutNumberType = RATIONALMODE;
-#ifdef ZWITHZLIB
+#ifdef WITHZLIB
 	AR.gzipCompress = GZIPDEFAULT;
 #endif
 	AR.BracketOn = 0;
@@ -657,6 +737,7 @@ IniVars()
 	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;
 	AC.properorderflag = AM.gproperorderflag = PROPERORDERFLAG;
 	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
+    AC.ThreadBucketSize = AM.gThreadBucketSize;
 
 	GlobalSymbols     = NumSymbols;
 	GlobalIndices     = NumIndices;
@@ -823,7 +904,6 @@ IniVars()
 	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
 	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
 
-	AS.MultiThreaded = 0;
 	return(0);
 }
 
@@ -906,6 +986,11 @@ setSignalHandlers ARG0
  		#] Signal handlers :
  		#[ main :
 */
+
+#ifdef WITHPTHREADS
+ALLPRIVATES *ABdummy[10];
+#endif
+
 int
 main ARG2(int,argc,char **,argv)
 {
@@ -913,6 +998,10 @@ main ARG2(int,argc,char **,argv)
 	char *sa;
 	int i = sizeof(A);
 
+#ifdef WITHPTHREADS
+	AB = ABdummy;
+	StartHandleLock();
+#endif
 /*[28apr2004 mt]:*/
 #ifdef TRAPSIGNALS
 	setSignalHandlers();
@@ -972,33 +1061,45 @@ main ARG2(int,argc,char **,argv)
 	PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
 	if ( PF.me == MASTER && !AM.silent )
 #else
-	/*[20sep2005 mt]:*/
-	/*Define preprocessor variable PARALLELTASK_ as 0:*/
+/*[20sep2005 mt]:*/
+/*
+	Define preprocessor variable PARALLELTASK_ as 0:
+*/
 	PutPreVar((UBYTE *)"PARALLELTASK_",(UBYTE *)"0",0,0);
-	/*Define preprocessor variable NPARALLELTASKS_ as 1:*/
+/*
+	Define preprocessor variable NPARALLELTASKS_ as 1:
+*/
 	PutPreVar((UBYTE *)"NPARALLELTASKS_",(UBYTE *)"1",0,0);
-	/*:[20sep2005 mt]*/
+/*:[20sep2005 mt]*/
 	if ( !AM.silent ) 
 #endif
 			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
                          ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+	AS.MultiThreaded = 0;
 #ifdef WITHPTHREADS
+	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
+	ReserveTempFiles(1);
 	if ( StartAllThreads(AM.totalnumberofthreads) ) {
 		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
 		Terminate(-1);
 	}
+#else
+	ReserveTempFiles(0);
 #endif
 	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
-	ReserveTempFiles();
 	IniVars();
 	Globalize(1);
 	TimeCPU(0);
+	TimeChildren(0);
+	TimeWallClock(0);
 	PreProcessor();
 #ifdef WITHPTHREADS
-MesPrint("pcounter = %l",pcounter);
+#ifdef WITHPCOUNTER
+	MesPrint("pcounter = %l",pcounter);
+#endif
 #endif
 	Terminate(0);
 	return(0);
@@ -1016,7 +1117,7 @@ MesPrint("pcounter = %l",pcounter);
 VOID
 CleanUp ARG1(WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int i;
 
 	if ( FG.fname ) {
@@ -1052,18 +1153,21 @@ CleanUp ARG1(WORD,par)
 			}
 		}
 		CloseFile(AC.StoreHandle);
-		if ( par >= 0 || AO.StoreData.Handle < 0 ) {
+		if ( par >= 0 || AR.StoreData.Handle < 0 ) {
 			remove(FG.fname);
 		}
 dontremove:;
 #else
 		CloseFile(AC.StoreHandle);
-		if ( par >= 0 || AO.StoreData.Handle < 0 ) {
+		if ( par >= 0 || AR.StoreData.Handle < 0 ) {
 			remove(FG.fname);
 		}
 #endif
 	}
 	}
+/*
+	Now the final message concerning the total time
+*/
 	if ( AC.LogHandle >= 0 && par <= 0 ) {
 		WORD lh = AC.LogHandle;
 		AC.LogHandle = -1;
@@ -1076,11 +1180,19 @@ dontremove:;
  		#[ Terminate :
 */
 
+static int firstterminate = 1;
+
 VOID
 Terminate ARG1(int,errorcode)
 {
+	if ( errorcode && firstterminate ) {
+		firstterminate = 0;
+		Crash();
+	}
 #ifdef WITHPTHREADS
-MesPrint("pcounter = %l",pcounter);
+#ifdef WITHPCOUNTER
+	MesPrint("pcounter = %l",pcounter);
+#endif
 #endif
 #ifdef TRAPSIGNALS
 	exitInProgress=1;
@@ -1115,6 +1227,10 @@ MesPrint("pcounter = %l",pcounter);
 #ifdef PARALLEL
 	PF_Terminate(errorcode);
 #endif
+#ifdef WITHPTHREADS
+	TerminateAllThreads();
+#endif
+	if ( AC.FinalStats ) PrintRunningTime();
 	if ( AM.HoldFlag ) {
 		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
 		getchar();
@@ -1130,5 +1246,31 @@ MesPrint("pcounter = %l",pcounter);
 
 /*
  		#] Terminate :
+ 		#[ PrintRunningTime :
+*/
+
+VOID PrintRunningTime ARG0
+{
+#ifdef WITHPTHREADS
+	LONG mastertime = TimeCPU(1);
+	LONG workertime = GetWorkerTimes();
+	LONG wallclocktime = TimeWallClock(1);
+	LONG totaltime = mastertime+workertime;
+	MesPrint("  %l.%2i sec + %l.%2i sec: %l.%2i sec out of %l.%2i sec",
+		mastertime/1000,(WORD)((mastertime%1000)/10),
+		workertime/1000,(WORD)((workertime%1000)/10),
+		totaltime/1000,(WORD)((totaltime%1000)/10),
+		wallclocktime/100,(WORD)(wallclocktime%100));
+#else
+	LONG mastertime = TimeCPU(1);
+	LONG wallclocktime = TimeWallClock(1);
+	MesPrint("  %l.%2i sec out of %l.%2i sec",
+		mastertime/1000,(WORD)((mastertime%1000)/10),
+		wallclocktime/100,(WORD)(wallclocktime%100));
+#endif
+}
+
+/*
+ 		#] PrintRunningTime :
 */
 

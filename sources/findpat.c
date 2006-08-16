@@ -23,7 +23,7 @@
 WORD
 FindOnly BARG2(WORD *,term,WORD *,pattern)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop, *setp = AN.ForFindOnly;
@@ -382,7 +382,7 @@ EndLoop:;
 WORD
 FindOnce BARG2(WORD *,term,WORD *,pattern)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -918,7 +918,7 @@ EndLoop:;
 WORD
 FindMulti BARG2(WORD *,term,WORD *,pattern)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *p;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
@@ -1035,7 +1035,7 @@ FindMulti BARG2(WORD *,term,WORD *,pattern)
 WORD
 FindRest BARG2(WORD *,term,WORD *,pattern)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;

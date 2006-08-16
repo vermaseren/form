@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Normalize :
  		#[ Commute :
 
@@ -34,7 +34,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 }
 
 /*
- 		#] Commute :
+ 		#] Commute : 
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -50,7 +50,7 @@ Normalize BARG1(WORD *,term)
 /*
   	#[ Declarations :
 */
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *r, i, j, k, l, nsym;
 	WORD shortnum, stype;
 	WORD *stop, *to = 0, *from = 0;
@@ -84,7 +84,7 @@ Normalize BARG1(WORD *,term)
 	int termflag;
 */
 /*
-  	#] Declarations :
+  	#] Declarations : 
   	#[ Setup :
 */
 Restart:
@@ -103,12 +103,12 @@ Restart:
 	AT.WorkPointer += AM.MaxTer;
 	fillsetexp = termout+1;
 	nsetexp = 0;
-	AN.PolyNorm = 0;
+	AN.PolyNormFlag = 0;
 /*
 	termflag = 0;
 */
 /*
-  	#] Setup :
+  	#] Setup : 
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = ngam = neps = nexp = nden = 
@@ -218,7 +218,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER :
+			#] TO SNUMBER : 
 */
 						t += 2;
 						goto NextSymbol;
@@ -312,7 +312,7 @@ NextSymbol:;
 				TestSub pick it up. Of course look for special cases first.
 				Note that we have a special compiler buffer for the values.
 */
-				if ( AC.Eside != LHSIDE ) {
+				if ( AR.Eside != LHSIDE ) {
 				DOLLARS d = Dollars + t[2];
 #ifdef WITHPTHREADS
 				int nummodopt, ptype = -1;
@@ -322,13 +322,18 @@ NextSymbol:;
 					}
 					if ( nummodopt < NumModOptdollars ) {
 						ptype = ModOptdollars[nummodopt].type;
-						LOCK(d->pthreadslock);
+						if ( ptype == MODLOCAL ) {
+							d = ModOptdollars[nummodopt].dstruct+AT.identity;
+						}
+						else {
+							LOCK(d->pthreadslockread);
+						}
 					}
 				}
 #endif
 				if ( d->type == DOLZERO ) {
 #ifdef WITHPTHREADS
-					if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+					if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 					if ( t[3] == 0 ) goto NormZZ;
 					if ( t[3] < 0 ) goto NormInf;
@@ -344,7 +349,7 @@ NextSymbol:;
 					}
 					if ( nnum == 0 || ( nnum == 1 && lnum[0] == 0 ) ) {
 #ifdef WITHPTHREADS
-						if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+						if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 						if ( t[3] < 0 ) goto NormInf;
 						else if ( t[3] == 0 ) goto NormZZ;
@@ -355,7 +360,7 @@ NextSymbol:;
 					if ( t[3] < 0 ) {
 						if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
 #ifdef WITHPTHREADS
-							if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+							if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 							goto FromNorm;
 						}
@@ -363,7 +368,7 @@ NextSymbol:;
 					else if ( t[3] > 0 ) {
 						if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) {
 #ifdef WITHPTHREADS
-							if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+							if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 							goto FromNorm;
 						}
@@ -373,7 +378,7 @@ NextSymbol:;
 				else if ( d->type == DOLINDEX ) {
 					if ( d->index == 0 ) {
 #ifdef WITHPTHREADS
-						if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+						if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 						goto NormZero;
 					}
@@ -384,7 +389,7 @@ NextSymbol:;
 					t[4] = AM.dbufnum;
 					if ( t[3] == 0 ) {
 #ifdef WITHPTHREADS
-						if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+						if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 						break;
 					}
@@ -392,7 +397,26 @@ NextSymbol:;
 					t = r;
 					while ( t < m ) {
 						if ( *t == DOLLAREXPRESSION ) {
+#ifdef WITHPTHREADS
+							if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+#endif
 							d = Dollars + t[2];
+#ifdef WITHPTHREADS
+							if ( AS.MultiThreaded ) {
+								for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+									if ( t[2] == ModOptdollars[nummodopt].number ) break;
+								}
+								if ( nummodopt < NumModOptdollars ) {
+									ptype = ModOptdollars[nummodopt].type;
+									if ( ptype == MODLOCAL ) {
+										d = ModOptdollars[nummodopt].dstruct+AT.identity;
+									}
+									else {
+										LOCK(d->pthreadslockread);
+									}
+								}
+							}
+#endif
 							if ( d->type == DOLTERMS ) {
 								t[0] = SUBEXPRESSION;
 								t[4] = AM.dbufnum;
@@ -401,13 +425,13 @@ NextSymbol:;
 						t += t[1];
 					}
 #ifdef WITHPTHREADS
-					if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+					if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 					goto RegEnd;
 				}
 				else {
 #ifdef WITHPTHREADS
-					if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+					if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 					LOCK(ErrorMessageLock);
 					MesPrint("!!!This $ variation has not been implemented yet!!!");
@@ -415,11 +439,15 @@ NextSymbol:;
 					goto NormMin;
 				}
 #ifdef WITHPTHREADS
-				if ( ptype > 0 ) { UNLOCK(d->pthreadslock); }
+				if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 				}
 				else {
 					pnco[nnco++] = t;
+/*
+					The next statement should be safe as the value is used
+					only by the compiler (ie the master).
+*/
 					AC.lhdollarflag = 1;
 				}
 				break;
@@ -711,15 +739,11 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					iii = ttt[*ttt-1];
 					if ( *ttt == ttt[ARGHEAD]+ARGHEAD &&
 						ttt[ARGHEAD] == ABS(iii)+1 ) {
-						WORD oldncmod = AC.ncmod;
-						WORD oldcmod = AC.cmod[0];
-						AC.ncmod = 1;
-						AC.cmod[0] = ttt[*ttt+1];
+						WORD ncmod = 1;
+						WORD cmod = ttt[*ttt+1];
 						iii = REDLENG(iii);
-						if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,0) )
+						if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,&cmod,ncmod,0) )
 							goto FromNorm;
-						AC.cmod[0] = oldcmod;
-						AC.ncmod = oldncmod;
 						*((UWORD *)lnum) = ttt[ARGHEAD+1];
 						if ( *lnum == 0 ) goto NormZero;
 						nnum = 1;
@@ -1416,7 +1440,7 @@ NoRep:
 */
 				if ( *t == DUMMYFUN || *t == DUMMYTEN ) {}
 				else {
-					if ( ( t[2] & DIRTYFLAG ) != 0 ) {
+					if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION].tabl == 0 ) ) {
 						t[2] &= ~DIRTYFLAG;
 						t[2] |= DIRTYSYMFLAG;
 					}
@@ -1632,7 +1656,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators :
+  	#] Easy denominators : 
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -1866,7 +1890,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions :
+  	#] Index Contractions : 
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2017,7 +2041,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions :
+  	#] NonCommuting Functions : 
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2158,9 +2182,9 @@ NextI:;
 				}
 			}
 			else if ( *t == AR.PolyFun ) {
-				if ( t[FUNHEAD+1] == 0 && AC.Eside != LHSIDE && 
+				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
 				t[1] == FUNHEAD + 2 && t[FUNHEAD] == -SNUMBER ) goto NormZero;
-				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNorm = 1;
+				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}
@@ -2175,7 +2199,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions :
+  	#] Commuting Functions : 
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2184,7 +2208,7 @@ NextI:;
 			t = peps[i];
 			if ( ( t[2] & DIRTYSYMFLAG ) != DIRTYSYMFLAG ) continue;
 			t[2] &= ~DIRTYSYMFLAG;
-			if ( AC.Eside == LHSIDE || AC.Eside == LHSIDEX ) {
+			if ( AR.Eside == LHSIDE || AR.Eside == LHSIDEX ) {
 						/* Potential problems with FUNNYWILD */
 				WORD *tt, *u;
 /*
@@ -2264,7 +2288,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors :
+  	#] LeviCivita tensors : 
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2295,7 +2319,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta :
+  	#] Delta : 
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2317,7 +2341,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices :
+  	#] Loose Vectors/Indices : 
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2346,7 +2370,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors :
+  	#] Vectors : 
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2413,7 +2437,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts :
+  	#] Dotproducts : 
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2465,7 +2489,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols :
+  	#] Symbols : 
   	#[ Errors and Finish :
 */
 	stop = termout + AM.MaxTer;
@@ -2557,7 +2581,7 @@ FromNorm:
 	UNLOCK(ErrorMessageLock);
 	return(-1);
 /*
-  	#] Errors and Finish :
+  	#] Errors and Finish : 
 */
 }
 
@@ -2612,14 +2636,14 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 }
 
 /*
- 		#] ExtraSymbol :
+ 		#] ExtraSymbol : 
  		#[ DoTheta :
 */
 
 WORD
 DoTheta ARG1(WORD *,t)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD k, *r1, *r2, *tstop, type;
 	WORD ia, *ta, *tb, *stopa, *stopb;
 	if ( AC.BracketNormalize ) return(-1);
@@ -2710,7 +2734,7 @@ DoTheta ARG1(WORD *,t)
 }
 
 /*
- 		#] DoTheta :
+ 		#] DoTheta : 
  		#[ DoDelta :
 */
 
@@ -2778,7 +2802,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta :
+ 		#] DoDelta : 
  		#[ DoRevert :
 */
 
@@ -2853,8 +2877,70 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 }
 
 /*
- 		#] DoRevert :
+ 		#] DoRevert : 
  	#] Normalize :
+  	#[ DetCommu :
+
+	Determines the number of terms in an expression that contain
+	noncommuting objects. This can be used to see whether products of
+	this expression can be evaluated with binomial coefficients.
+
+	We don't try to be fancy. If a term contains noncommuting objects
+	we are not looking whether they can commute with complete other
+	terms.
+
+	If the number gets too large we cut it off.
+*/
+
+#define MAXNUMBEROFNONCOMTERMS 2
+
+WORD DetCommu ARG1(WORD *,terms)
+{
+	WORD *t, *tnext, *tstop;
+	WORD num = 0;
+	if ( *terms == 0 ) return(0);
+	if ( terms[*terms] == 0 ) return(0);
+	t = terms;
+	while ( *t ) {
+		tnext = t + *t;
+		tstop = tnext - ABS(tnext[-1]);
+		t++;
+		while ( t < tstop ) {
+			if ( *t >= FUNCTION ) {
+				if ( functions[*t-FUNCTION].commute ) {
+					num++;
+					if ( num >= MAXNUMBEROFNONCOMTERMS ) return(num);
+					break;
+				}
+			}
+			else if ( *t == SUBEXPRESSION ) {
+				if ( cbuf[t[4]].CanCommu[t[2]] ) {
+					num++;
+					if ( num >= MAXNUMBEROFNONCOMTERMS ) return(num);
+					break;
+				}
+			}
+			else if ( *t == EXPRESSION ) {
+				num++;
+				if ( num >= MAXNUMBEROFNONCOMTERMS ) return(num);
+				break;
+			}
+			else if ( *t == DOLLAREXPRESSION ) {
+				if ( cbuf[AM.dbufnum].CanCommu[t[2]] ) {
+					num++;
+					if ( num >= MAXNUMBEROFNONCOMTERMS ) return(num);
+					break;
+				}
+			}
+			t += t[1];
+		}
+		t = tnext;
+	}
+	return(num);
+}
+
+/*
+  	#] DetCommu :
 */
 
 /* temporary commentary for forcing cvs merge */

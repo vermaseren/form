@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Utilities :
  		#[ MakeDirty :
 
@@ -53,7 +53,7 @@ MakeDirty ARG3(WORD *,term,WORD *,x,WORD,par)
 }
 
 /*
- 		#] MakeDirty : 
+ 		#] MakeDirty :
  		#[ MarkDirty :
 
 		Routine marks all functions dirty with the given flags.
@@ -96,7 +96,7 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 }
 
 /*
- 		#] MarkDirty : 
+ 		#] MarkDirty :
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -120,10 +120,10 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 */
 
 WORD
-Symmetrize ARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
+Symmetrize BARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
 		WORD,type)
 {
-	GETIDENTITY;
+	GETBIDENTITY
 	WORD **args,**arg,nargs;
 	WORD *to, *r, *fstop;
 	WORD i, j, k, ff, exch, nexch, neq;
@@ -162,7 +162,7 @@ Symmetrize ARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
 	if ( type == SYMMETRIC || type == ANTISYMMETRIC ) {
 	for ( i = 1; i < ngroups; i++ ) {
 		a3 = a2 = a1 + gsize;
-		k = reverseorder*CompGroup(ff,args,a1,a2,gsize);
+		k = reverseorder*CompGroup(BHEAD ff,args,a1,a2,gsize);
 		if ( k < 0 ) {
 			j = i-1;
 			for(;;) {
@@ -174,7 +174,7 @@ Symmetrize ARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
 				if ( j <= 0 ) break;
 				a1 -= gsize;
 				a2 -= gsize;
-				k = reverseorder*CompGroup(ff,args,a1,a2,gsize);
+				k = reverseorder*CompGroup(BHEAD ff,args,a1,a2,gsize);
 				if ( k == 0 ) neq = 2;
 				if ( k >= 0 ) break;
 				j--;
@@ -193,7 +193,7 @@ recycle:
 				if ( iimin >= ngroups ) iimin -= ngroups;
 				ii = j + i;
 				if ( ii >= ngroups ) ii -= ngroups;
-				k = reverseorder*CompGroup(ff,args,Lijst+gsize*iimin,Lijst+gsize*ii,gsize);
+				k = reverseorder*CompGroup(BHEAD ff,args,Lijst+gsize*iimin,Lijst+gsize*ii,gsize);
 				if ( k > 0 ) break;
 				if ( k < 0 ) { jmin = j; nexch = 4; break; }
 			}
@@ -205,7 +205,7 @@ recycle:
 					if ( iimin >= ngroups ) iimin -= ngroups;
 					ii = j - i;
 					if ( ii < 0 ) ii += ngroups;
-					k = reverseorder*CompGroup(ff,args,Lijst+gsize*iimin,Lijst+gsize*ii,gsize);
+					k = reverseorder*CompGroup(BHEAD ff,args,Lijst+gsize*iimin,Lijst+gsize*ii,gsize);
 					if ( k > 0 ) break;
 					if ( k < 0 ) {
 						nexch = 4;
@@ -281,14 +281,15 @@ recycle:
 */
 
 WORD
-CompGroup ARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
+CompGroup BARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 {
+	GETBIDENTITY
 	WORD *t1, *t2, i1, i2, n, k;
 
 	for ( n = 0; n < num; n++ ) {
 		t1 = args[a1[n]]; t2 = args[a2[n]];
 		if ( type >= TENSORFUNCTION ) {
-			if ( AC.Eside == LHSIDE || AC.Eside == LHSIDEX ) {
+			if ( AR.Eside == LHSIDE || AR.Eside == LHSIDEX ) {
 				if ( *t1 == FUNNYWILD ) {
 					if ( *t2 == FUNNYWILD ) {
 						if ( t1[1] < t2[1] ) return(1);
@@ -376,7 +377,7 @@ CompGroup ARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 
 int FullSymmetrize ARG2(WORD *,fun,int,type)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *Lijst, count = 0;
 	WORD *t, *funstop, i;
 	int retval;
@@ -399,14 +400,14 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 	Lijst = AT.WorkPointer;
 	for ( i = 0; i < count; i++ ) Lijst[i] = i;
 	AT.WorkPointer += count;
-	retval = Symmetrize(fun,Lijst,0,count,1,type);
+	retval = Symmetrize(BHEAD fun,Lijst,0,count,1,type);
 	fun[2] &= ~DIRTYSYMFLAG;
 	AT.WorkPointer = Lijst;
 	return(retval);
 }
 
 /*
- 		#] FullSymmetrize : 
+ 		#] FullSymmetrize :
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -422,7 +423,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 WORD
 SymGen BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *r, *m;
 	WORD i, j, k, c1, c2, ngroup;
 	WORD *rstop, Nlist, *inLijst, *Lijst, sign = 1, sumch = 0, count;
@@ -488,7 +489,7 @@ NextGroup:;
 				for ( i = 0; i < Nlist; i++ ) Lijst[i] = inLijst[i];
 				AT.WorkPointer += Nlist;
 			}
-			j = Symmetrize(t,Lijst,Nlist,ngroup,params[6],params[2]);
+			j = Symmetrize(BHEAD t,Lijst,Nlist,ngroup,params[6],params[2]);
 			AT.WorkPointer = Lijst;
 			if ( params[2] == 4 ) { /* antisymmetric */
 				if ( ( j & 1 ) != 0 ) sign = -sign;
@@ -537,7 +538,7 @@ NextFun:
 WORD
 SymFind BARG2(WORD *,term,WORD *,params)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *r, *m;
 	WORD j, c1, c2, count;
 	WORD *rstop;
@@ -585,7 +586,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind : 
+ 		#] SymFind :
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -595,7 +596,7 @@ NextFun:
 
 int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tend, *m, *tt, *ts;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(-funnum);
@@ -630,7 +631,7 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainIn : 
+ 		#] ChainIn :
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
@@ -638,8 +639,8 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 
 int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 {
-	GETIDENTITY;
-	WORD *t, *tend, *tt, *ts, *OldWork = AT.WorkPointer, *w, *ws;
+	GETIDENTITY
+	WORD *t, *tend, *tt, *ts, *w, *ws;
 	int flag = 0, i;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(-funnum);
@@ -651,8 +652,9 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 		}
 	}
 	tend = term+*term;
+	if ( AT.WorkPointer < tend ) AT.WorkPointer = tend;
 	tend -= ABS(tend[-1]);
-	t = term+1; tt = term; w = OldWork;
+	t = term+1; tt = term; w = AT.WorkPointer;
 	while ( t < tend ) {
 		if ( *t != funnum ) { t += t[1]; continue; }
 		flag = 1;
@@ -662,7 +664,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 		while ( t < ts ) {
 			ws = w;
 			for ( i = 0; i < FUNHEAD; i++ ) *w++ = tt[i];
-			if ( functions[*t-FUNCTION].spec >= TENSORFUNCTION ) {
+			if ( functions[*tt-FUNCTION].spec >= TENSORFUNCTION ) {
 				*w++ = *t++;
 			}
 			else if ( *t < 0 ) {
@@ -679,8 +681,8 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 	if ( flag == 1 ) {
 		ts = term + *term;
 		while ( tt < ts ) *w++ = *tt++;
-		*OldWork = w - OldWork;
-		t = term; w = OldWork; i = *w;
+		*AT.WorkPointer = w - AT.WorkPointer;
+		t = term; w = AT.WorkPointer; i = *w;
 		NCOPY(t,w,i)
 		AT.WorkPointer = term + *term;
 		Normalize(BHEAD term);
@@ -689,7 +691,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainOut : 
+ 		#] ChainOut :
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -719,7 +721,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 WORD
 MatchFunction BARG3(WORD *,pattern,WORD *,interm,WORD *,wilds)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *m, *t, *r, i;
 	WORD *mstop = 0, *tstop = 0;
 	WORD *argmstop, *argtstop;
@@ -900,7 +902,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA : 
+ 		#] GAMMA :
  		#[ Tensors :
 */
 	}
@@ -1028,7 +1030,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors : 
+ 		#] Tensors :
 */
 	}
 /*
@@ -1259,7 +1261,7 @@ IndAll:				i = m[1] - WILDOFFSET;
 				oRepFunNum = AN.RepFunNum;
 				AN.RepFunNum = 0;
 				AN.RepFunList = AT.WorkPointer;
-				AT.WorkPointer += AM.MaxTer >> 1;
+				AT.WorkPointer += AM.MaxTer/2;
 				csav = cto = AT.WorkPointer;
 				cfrom = t;
 				ci = *t;
@@ -1385,7 +1387,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction : 
+ 		#] MatchFunction :
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		AN.patstop: end of the functions field in the search pattern
@@ -1396,7 +1398,7 @@ NoCaseB:
 WORD
 ScanFunctions BARG3(WORD *,inpat,WORD *,inter,WORD,par)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD i, *m, *t, *r, sym, psym;
 	WORD *newpat, *newter, *instart, *oinpat = 0, *ointer = 0;
 	WORD nwstore, offset, *OldWork, SetStop = 0, oRepFunNum = AN.RepFunNum;
@@ -1661,7 +1663,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions : 
+ 		#] ScanFunctions :
 	#] Patterns :
 */
 

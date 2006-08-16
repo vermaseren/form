@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -16,7 +16,7 @@
 WORD
 OpenTemp()
 {
-	GETIDENTITY;
+	GETIDENTITY
 	if ( AR.outfile->handle >= 0 ) {
 		SeekFile(AR.outfile->handle,&(AR.outfile->filesize),SEEK_SET);
 		AR.outfile->POposition = AR.outfile->filesize;
@@ -26,7 +26,7 @@ OpenTemp()
 }
 
 /*
- 		#] OpenTemp : 
+ 		#] OpenTemp :
  		#[ SeekScratch :
 */
 
@@ -38,7 +38,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
 }
 
 /*
- 		#] SeekScratch : 
+ 		#] SeekScratch :
  		#[ SetEndScratch :
 */
 
@@ -53,7 +53,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndScratch : 
+ 		#] SetEndScratch :
  		#[ SetEndHScratch :
 */
 
@@ -68,13 +68,14 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndHScratch : 
+ 		#] SetEndHScratch :
  		#[ SetScratch :
 */
 
 VOID
 SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 {
+	GETIDENTITY
 	POSITION possize;
 	LONG size;
 	if ( ISLESSPOS(*position,f->POposition) ||
@@ -100,22 +101,22 @@ SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 		f->POfill = f->PObuffer;
 		f->POposition = *position;
 #ifdef WORD2
-		AS.InInBuf = size >> 1;
+		AR.InInBuf = size >> 1;
 #else
-		AS.InInBuf = size / TABLESIZE(WORD,UBYTE);
+		AR.InInBuf = size / TABLESIZE(WORD,UBYTE);
 #endif
-		f->POfull = f->PObuffer + AS.InInBuf;
+		f->POfull = f->PObuffer + AR.InInBuf;
 	}
 	else {
 endpos:
 		DIFPOS(possize,*position,f->POposition);
 		f->POfill = (WORD *)(BASEPOSITION(possize)+(UBYTE *)(f->PObuffer));
-		if ( f != AS.hidefile) AS.InInBuf = f->POfull-f->POfill;
+		if ( f != AR.hidefile ) AR.InInBuf = f->POfull-f->POfill;
 	}
 }
 
 /*
- 		#] SetScratch : 
+ 		#] SetScratch :
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -126,7 +127,7 @@ endpos:
 WORD
 RevertScratch()
 {
-	GETIDENTITY;
+	GETIDENTITY
 	FILEHANDLE *f;
 	if ( AR.infile->handle >= 0 && AR.infile->handle != AR.outfile->handle ) {
 		CloseFile(AR.infile->handle);
@@ -142,14 +143,14 @@ RevertScratch()
 		if ( ISNOTZEROPOS(scrpos) ) {
 			return(MesPrint("Error with scratch output."));
 		}
-		if ( ( AS.InInBuf = ReadFile(AR.infile->handle,(UBYTE *)(AR.infile->PObuffer)
-			,AR.infile->POsize) ) < 0 || AS.InInBuf & 1 ) {
+		if ( ( AR.InInBuf = ReadFile(AR.infile->handle,(UBYTE *)(AR.infile->PObuffer)
+			,AR.infile->POsize) ) < 0 || AR.InInBuf & 1 ) {
 			return(MesPrint("Error while reading from scratch file"));
 		}
 		else {
-			AS.InInBuf /= TABLESIZE(WORD,UBYTE);
+			AR.InInBuf /= TABLESIZE(WORD,UBYTE);
 		}
-		AR.infile->POfull = AR.infile->PObuffer + AS.InInBuf;
+		AR.infile->POfull = AR.infile->PObuffer + AR.InInBuf;
 	}
 	PUTZERO(AR.infile->POposition);
 	AR.outfile->POfill = AR.outfile->POfull = AR.outfile->PObuffer;
@@ -159,7 +160,7 @@ RevertScratch()
 }
 
 /*
- 		#] RevertScratch : 
+ 		#] RevertScratch :
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -171,7 +172,7 @@ RevertScratch()
 WORD
 ResetScratch()
 {
-	GETIDENTITY;
+	GETIDENTITY
 	FILEHANDLE *f;
 	if ( AR.infile->handle >= 0 ) {
 		CloseFile(AR.infile->handle); AR.infile->handle = -1;
@@ -187,12 +188,12 @@ ResetScratch()
 			return(MesPrint("Error with scratch output."));
 		}
 /* --COMPRESS-- */
-		if ( ( AS.InInBuf = ReadFile(AR.outfile->handle,(UBYTE *)(AR.outfile->PObuffer)
-		,AR.outfile->POsize) ) < 0 || AS.InInBuf & 1 ) {
+		if ( ( AR.InInBuf = ReadFile(AR.outfile->handle,(UBYTE *)(AR.outfile->PObuffer)
+		,AR.outfile->POsize) ) < 0 || AR.InInBuf & 1 ) {
 			return(MesPrint("Error while reading from scratch file"));
 		}
-		else AS.InInBuf /= TABLESIZE(WORD,UBYTE);
-		AR.outfile->POfull = AR.outfile->PObuffer + AS.InInBuf;
+		else AR.InInBuf /= TABLESIZE(WORD,UBYTE);
+		AR.outfile->POfull = AR.outfile->PObuffer + AR.InInBuf;
 	}
 	else AR.outfile->POfull = AR.outfile->POfill;
 	AR.outfile->POfill = AR.outfile->PObuffer;
@@ -202,7 +203,7 @@ ResetScratch()
 }
 
 /*
- 		#] ResetScratch : 
+ 		#] ResetScratch :
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -214,7 +215,7 @@ ResetScratch()
 
 int CoSave ARG1(UBYTE *,inp)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *p, c;
 	WORD n = 0, i;
 	WORD error = 0, type, number;
@@ -278,7 +279,7 @@ int CoSave ARG1(UBYTE *,inp)
 					TMproto[3] = 1;
 					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 					AT.TMaddr = TMproto;
-					if ( ( indold = FindInIndex(number,&AO.StoreData,0) ) != 0 ) {
+					if ( ( indold = FindInIndex(number,&AR.StoreData,0) ) != 0 ) {
 						if ( i <= 0 ) {
 /*
 							AO.SaveData.Index.next = SeekFile(AO.SaveData.Handle,&(AM.zeropos),SEEK_END);
@@ -312,7 +313,7 @@ int CoSave ARG1(UBYTE *,inp)
 						ind->variables = filesize;
 						ind->position = ind->variables;
 						ADDPOS(ind->position,DIFBASE(indold->position,indold->variables));
-						SeekFile(AO.StoreData.Handle,&(indold->variables),SEEK_SET);
+						SeekFile(AR.StoreData.Handle,&(indold->variables),SEEK_SET);
 						wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 						scrpos = ind->length;
 						ADDPOS(scrpos,DIFBASE(ind->position,ind->variables));
@@ -321,7 +322,7 @@ int CoSave ARG1(UBYTE *,inp)
 						do {
 							if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 /* --COMPRESS--? */
-							if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
+							if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 							!= wSize ) {
 								MesPrint("ReadError");
 								error = -1;
@@ -375,13 +376,13 @@ NextExpr:;
 		if ( n ) {
 			wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 			PUTZERO(scrpos);
-			SeekFile(AO.StoreData.Handle,&scrpos,SEEK_SET);		/* Start at the beginning */
-			scrpos = AO.StoreData.Fill;			/* Number of bytes to be copied */
+			SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);		/* Start at the beginning */
+			scrpos = AR.StoreData.Fill;			/* Number of bytes to be copied */
 			SETBASEPOSITION(scrpos1,wSize);
 			do {
 				if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 /* --COMPRESS--? */
-				if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize) != wSize ) {
+				if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize) != wSize ) {
 					MesPrint("ReadError");
 					error = -1;
 					goto EndSave;
@@ -403,13 +404,13 @@ SavWrt:
 }
 
 /*
- 		#] CoSave : 
+ 		#] CoSave :
  		#[ CoLoad :
 */
 
 int CoLoad ARG1(UBYTE *,inp)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	INDEXENTRY *ind;
 	LONG RetCode;
 	UBYTE *p, c;
@@ -499,11 +500,11 @@ int CoLoad ARG1(UBYTE *,inp)
 			if ( c ) c = *++p;
 			inp = p;
 		} while ( c );
-		scrpos = AO.StoreData.Position;
-		SeekFile(AO.StoreData.Handle,&scrpos,SEEK_SET);
-		if ( ISNOTEQUALPOS(scrpos,AO.StoreData.Position) ) goto LoadWrt;
+		scrpos = AR.StoreData.Position;
+		SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
+		if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto LoadWrt;
 /* --COMPRESS-- */
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)(&(AO.StoreData.Index))
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(AR.StoreData.Index))
 			,(LONG)sizeof(struct FiLeInDeX)) != (LONG)sizeof(struct FiLeInDeX) ) goto LoadWrt;
 	}
 	else {				/* All saved expressions should be stored. Easy */
@@ -550,7 +551,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad : 
+ 		#] CoLoad :
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -561,12 +562,12 @@ LoadRead:
 WORD
 DeleteStore ARG1(WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	char *s;
 	WORD j, n = 0;
 	EXPRESSIONS e_in, e_out;
 	WORD DidClean = 0;
-	if ( AO.StoreData.Handle >= 0 ) {
+	if ( AR.StoreData.Handle >= 0 ) {
 		if ( par > 0 ) {
 			n = NumExpressions;
 			j = 0;
@@ -598,7 +599,7 @@ DeleteStore ARG1(WORD,par)
 			NumExpressions = j;
 			if ( DidClean ) CompactifyTree(AC.exprnames);
 		}
-		AO.StoreData.Handle = -1;
+		AR.StoreData.Handle = -1;
 		CloseFile(AC.StoreHandle);
 		{
 /*
@@ -624,7 +625,7 @@ DeleteStore ARG1(WORD,par)
 }
 
 /*
- 		#] DeleteStore : 
+ 		#] DeleteStore :
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -636,15 +637,15 @@ DeleteStore ARG1(WORD,par)
 WORD
 PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	INDEXENTRY *newind;
 	LONG wSize;
 	POSITION scrpos,scrpos1;
 	newind = NextFileIndex(&(Expressions[num].onfile));
 	*newind = *ind;
-	newind->variables = AO.StoreData.Fill;
-	SeekFile(AO.StoreData.Handle,&(newind->variables),SEEK_SET);
-	if ( ISNOTEQUALPOS(newind->variables,AO.StoreData.Fill) ) goto PutErrS;
+	newind->variables = AR.StoreData.Fill;
+	SeekFile(AR.StoreData.Handle,&(newind->variables),SEEK_SET);
+	if ( ISNOTEQUALPOS(newind->variables,AR.StoreData.Fill) ) goto PutErrS;
 	newind->position = newind->variables;
 	ADDPOS(newind->position,DIFBASE(ind->position,ind->variables));
 	scrpos = ind->variables;
@@ -653,7 +654,7 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 	wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 	scrpos = ind->length;
 	ADDPOS(scrpos,DIFBASE(ind->position,ind->variables));
-	ADD2POS(AO.StoreData.Fill,scrpos);
+	ADD2POS(AR.StoreData.Fill,scrpos);
 	SETBASEPOSITION(scrpos1,wSize);
 	do {
 		if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
@@ -661,52 +662,57 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 		if ( ReadFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 		!= wSize ) goto PutErrS;
 /* --COMPRESS--? */
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 		!= wSize ) goto PutErrS;
 		ADDPOS(scrpos,-wSize);
 	} while ( ISPOSPOS(scrpos) );
-	scrpos = AO.StoreData.Position;
-	SeekFile(AO.StoreData.Handle,&scrpos,SEEK_SET);
-	if ( ISNOTEQUALPOS(scrpos,AO.StoreData.Position) ) goto PutErrS;
+	scrpos = AR.StoreData.Position;
+	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
+	if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto PutErrS;
 /* --COMPRESS-- */
-	if ( WriteFile(AO.StoreData.Handle,(UBYTE *)(&AO.StoreData.Index),(LONG)sizeof(FILEINDEX))
+	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)sizeof(FILEINDEX))
 	== (LONG)sizeof(FILEINDEX) ) return(0);
 PutErrS:
 	return(MesPrint("File error"));
 }
 
 /*
- 		#] PutInStore : 
+ 		#] PutInStore :
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
 		Puts it in 'term'.
 		Returns the length of the term.
 
-		Used by Processor
-		        WriteAll
-		        WriteOne
-		        GetMoreTerms
-		        ToStorage
-		        CoFillExpression
-		        LoadOpti
-				PF_Processor
+		Used by Processor        (proces.c)
+		        WriteAll         (sch.c)
+		        WriteOne         (sch.c)
+		        GetMoreTerms     (store.c)
+		        ToStorage        (store.c)
+		        CoFillExpression (comexpr.c)
+				FactorInExpr     (factor.c)
+		        LoadOpti         (optim.c)
+				PF_Processor     (parallel.c)
+				ThreadsProcessor (threads.c)
 		In multi thread/processor mode all calls are done by the master.
+		Note however that other routines, used by the threads, can use
+		the same file. Hence we need to be careful about SeekFile and locks.
 */
-
+ 
 WORD
 GetTerm BARG1(WORD *,term)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *inp, i, j = 0, len;
-	LONG InIn = AS.InInBuf, InIn2;
+	LONG InIn = AR.InInBuf;
 	WORD *r, *m, *mstop = 0, minsiz = 0, *bra = 0, *from;
 	WORD first, *start = 0, testing = 0;
 	FILEHANDLE *fi;
 	AN.deferskipped = 0;
-	if ( AS.GetFile == 2 ) fi = AS.hidefile;
+	if ( AS.GetFile == 2 ) fi = AR.hidefile;
 	else                   fi = AR.infile;
 	from = term;
+/*>>>>>>AS.KeptInHold!!!>>>>>>>*/
 	if ( AS.KeptInHold ) {
 		r = AR.CompressBuffer;
 		i = *r;
@@ -752,28 +758,28 @@ ReStart:
 	if ( fi->handle >= 0 ) {
 		if ( InIn <= 0 ) {
 			ADDPOS(fi->POposition,(fi->POfull-fi->PObuffer)*sizeof(WORD));
+			LOCK(AS.inputslock);
+			LOCK(fi->pthreadslock);
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-/*
-[06nov2005 mt]:From: Jos Vermaseren Date: Wed, 19 Oct 2005:
-...the first read has to be eliminated.
-			if ( ( ( InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),
-				fi->POsize) ) < 0 ) || ( InIn & 1 ) ) goto GTerr;
-*/
 			InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
-			if ( ( InIn < 0 ) || ( InIn & 1 ) ) goto GTerr;
+			UNLOCK(fi->pthreadslock);
+			UNLOCK(AS.inputslock);
+			if ( ( InIn < 0 ) || ( InIn & 1 ) ) {
+				goto GTerr;
+			}
 #ifdef WORD2
 			InIn >>= 1;
 #else
 			InIn /= TABLESIZE(WORD,UBYTE);
 #endif
-			AS.InInBuf = InIn;
+			AR.InInBuf = InIn;
 			if ( !InIn ) { *r = 0; *from = 0; goto RegRet; }
 			fi->POfill = fi->PObuffer;
 			fi->POfull = fi->PObuffer + InIn;
 		}
 		inp = fi->POfill;
 		if ( ( len = i = *inp ) == 0 ) {
-			AS.InInBuf--;
+			AR.InInBuf--;
 			(fi->POfill)++;
 			*r = 0;
 			*from = 0;
@@ -809,10 +815,15 @@ ReStart:
 		if ( j ) {
 NewIn:
 			ADDPOS(fi->POposition,(fi->POfull-fi->PObuffer)*sizeof(WORD));
+			LOCK(AS.inputslock);
+			LOCK(fi->pthreadslock);
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-/* --COMPRESS-- */
-			if ( ( InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) )
-			<= 0 || ( InIn & 1 ) ) goto GTerr;
+			InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
+			UNLOCK(fi->pthreadslock);
+			UNLOCK(AS.inputslock);
+			if ( ( InIn <= 0 ) || ( InIn & 1 ) ) {
+				goto GTerr;
+			}
 #ifdef WORD2
 			InIn >>= 1;
 #else
@@ -831,10 +842,9 @@ NewIn:
 			while ( --j >= 0 ) { *r++ = *term++ = *inp++; }
 		}
 		fi->POfill = inp;
-		AS.InInBuf = InIn;
-		TELLFILE(fi->handle,&AR.DefPosition);
-		InIn2 = InIn*sizeof(WORD); /* Don't do in one statement. sizeof-> size_t! */
-		ADDPOS(AR.DefPosition,-InIn2);
+		AR.InInBuf = InIn;
+		AR.DefPosition = fi->POposition;
+		ADDPOS(AR.DefPosition,((UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer)));
 	}
 	else {
 		inp = fi->POfill;
@@ -849,7 +859,11 @@ NewIn:
 		else if ( !j ) j = 1;
 		while ( --j >= 0 ) { *r++ = *term++ = *inp++; }
 		fi->POfill = inp;
-		if ( inp > fi->POfull ) goto GTerr;
+/*%%%%%ADDED 7-apr-2006 for Keep Brackets in bucket */
+		SETBASEPOSITION(AR.DefPosition,((UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer)));
+		if ( inp > fi->POfull ) {
+			goto GTerr;
+		}
 	}
 	if ( r >= AR.ComprTop ) {
 		MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
@@ -892,9 +906,12 @@ strip:			r = from;
 RegRet:;
 /*
 			#[ debug :
+*/
 	{
 		UBYTE OutBuf[140];
-		if ( AP.DebugFlag ) {
+/*		if ( AP.DebugFlag ) { */
+		if ( ( AC.PreDebug & DUMPINTERMS ) == DUMPINTERMS ) {
+			LOCK(ErrorMessageLock);
 			AO.OutFill = AO.OutputLine = OutBuf;
 			AO.OutSkip = 3;
 			FiniLine();
@@ -913,13 +930,15 @@ RegRet:;
 				}
 			}
 			FiniLine();
+			UNLOCK(ErrorMessageLock);
 		}
 	}
-			#] debug : 
+/*
+			#] debug :
 */
 	return(*from);
 GTerr:
-	MesPrint("Error while reading scratch file");
+	MesPrint("Error while reading scratch file in GetTerm");
 	Terminate(-1);
 	return(-1);
 }
@@ -943,35 +962,48 @@ GTerr:
 		We should do something about the lack of buffering.
 		Maybe a buffer of a few times AM.MaxTer (MaxTermSize).
 		Each thread will need its own buffer!
+
+		If par == 0 we use ReadPosFile which can fill the whole buffer.
+		If par == 1 we use ReadFile and do actual read operations.
+
+		Note: we cannot use ReadPosFile when running in the master thread.
 */
 
 WORD
-GetOneTerm BARG2(WORD *,term,WORD,par)
+GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD i, *p;
-	LONG j;
-	FILEHANDLE *fi;
+	LONG j, siz;
 	WORD *r, *rr = AR.CompressPointer;
 	r = rr;
-	if ( AR.GetOneFile == 2 ) fi = AS.hidefile;
-	else                      fi = AR.infile;
-	if ( /* par != -2 && */ fi->handle >= 0 ) {
+	if ( fi->handle >= 0 ) {
 /*
 		To be changed:
 		1: check first whether the term lies completely inside the buffer
 		2: if not a: use old strategy for AT.identity == 0 (master)
 		          b: for workers, position file and read buffer
 */
-		if ( ReadFile(fi->handle,(UBYTE *)term,(LONG)sizeof(WORD)) == sizeof(WORD) ) {
+		if ( par == 0 ) {
+			siz = ReadPosFile(BHEAD fi,(UBYTE *)term,1L,pos);
+		}
+		else {
+			siz = ReadFile(fi->handle,(UBYTE *)term,sizeof(WORD));
+		}
+		if ( siz == sizeof(WORD) ) {
 			p = term;
 			j = i = *term++;
 			r++;
 			if ( i < 0 ) {
 				*p = -i + 1;
 				while ( ++i <= 0 ) *term++ = *r++;
-				if ( ReadFile(fi->handle,(UBYTE *)term,(LONG)sizeof(WORD)) !=
-				sizeof(WORD) ) {
+				if ( par == 0 ) {
+					siz = ReadPosFile(BHEAD fi,(UBYTE *)term,1L,pos);
+				}
+				else {
+					siz = ReadFile(fi->handle,(UBYTE *)term,sizeof(WORD));
+				}
+				if ( siz != sizeof(WORD) ) {
 					goto ErrGet;
 				}
 				*p += *term;
@@ -983,13 +1015,22 @@ GetOneTerm BARG2(WORD *,term,WORD,par)
 				j--;
 			}
 			i = (WORD)j;
-			j *= TABLESIZE(WORD,UBYTE);
-			if ( ReadFile(fi->handle,(UBYTE *)term,j) != j ) {
+			if ( par == 0 ) {
+				siz = ReadPosFile(BHEAD fi,(UBYTE *)term,j,pos);
+				j *= TABLESIZE(WORD,UBYTE);
+			}
+			else {
+				j *= TABLESIZE(WORD,UBYTE);
+				siz = ReadFile(fi->handle,(UBYTE *)term,j);
+			}
+			if ( siz != j ) {
 				goto ErrGet;
 			}
 			while ( --i >= 0 ) *r++ = *term++;
 			if ( r >= AR.ComprTop ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			AR.CompressPointer = r; *r = 0;
@@ -999,13 +1040,8 @@ GetOneTerm BARG2(WORD *,term,WORD,par)
 	else {
 /*
 		Here the whole expression is in the buffer.
-		The workers can use the buffer of the master.
-		This means that their values of POfill etc will be detached
-		from their own buffer for a while.
-		fi->POfill points at a position in the master buffer
-		fi->POfull points at the end of information in the master buffer
-		To get this right we only have to redirect these two before the call!
 */
+		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(*pos));
 		p = fi->POfill;
 		if ( p >= fi->POfull ) { *term = 0; return(0); }
 		j = i = *p;
@@ -1018,9 +1054,12 @@ GetOneTerm BARG2(WORD *,term,WORD,par)
 		if ( i == 0 ) { i = 1; *r++ = 0; *term++ = 0; }
 		else { while ( --i >= 0 ) { *r++ = *term++ = *p++; } }
 		fi->POfill = p;
+		SETBASEPOSITION(*pos,(UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer));
 		if ( p <= fi->POfull ) {
 			if ( r >= AR.ComprTop ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
+				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			AR.CompressPointer = r; *r = 0;
@@ -1028,7 +1067,9 @@ GetOneTerm BARG2(WORD *,term,WORD,par)
 		}
 	}
 ErrGet:
+	LOCK(ErrorMessageLock);
 	MesPrint("Error while reading scratch file in GetOneTerm");
+	UNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
 }
@@ -1048,9 +1089,10 @@ ErrGet:
 WORD
 GetMoreTerms ARG1(WORD *,term)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *r, *m, *h, *tstop, i, inc, same;
 	WORD extra;
+	WORD retval = 0;
 /*	-------------change 17-feb-2003 */
 	extra = ((AM.MaxTer/sizeof(WORD))*((long)100-AC.CollectPercentage))/100;
 	if ( extra < 23 ) extra = 23;
@@ -1061,7 +1103,7 @@ GetMoreTerms ARG1(WORD *,term)
 	tstop = t - ABS(t[-1]);
 	h = term+1;
 	while ( *h != HAAKJE && h < tstop ) h += h[1];
-	if ( h >= tstop ) return(0);
+	if ( h >= tstop ) return(retval);
 	inc = FUNHEAD+ARGHEAD+1-h[1];
 	same = WORDDIF(h,term) + h[1] - 1;
 	r = m = t + inc;
@@ -1102,6 +1144,7 @@ GetMoreTerms ARG1(WORD *,term)
 		*m -= same;
 		m++;
 		while ( r < tstop ) *m++ = *r++;
+		retval++;
 		if ( extra == 23 ) extra = ((AM.MaxTer/sizeof(WORD))/6);
 	}
 FullTerm:
@@ -1129,11 +1172,11 @@ FullTerm:
 	*m++ = 3;
 	*term = WORDDIF(m,term);
 	AS.KeptInHold = 1;
-	return(0);
+	return(retval);
 }
 
 /*
- 		#] GetMoreTerms : 
+ 		#] GetMoreTerms :
  		#[ GetMoreFromMem :
 
 */
@@ -1225,7 +1268,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem : 
+ 		#] GetMoreFromMem :
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1243,24 +1286,20 @@ FullTerm:
 		The cache is a pure read cache.
 */
 
+static int gfs = 0;
+
 WORD
 GetFromStore ARG5(WORD *,to,POSITION *,position,RENUMBER,renumber,
 	WORD *,InCompState,WORD,nexpr)
 {
-/*!!!
-static cnum=0;
-  !!!*/
-	GETIDENTITY;
+	GETIDENTITY
 	LONG RetCode, num, first = 0;
 	WORD *from, *m;
 	STORECACHE s;
 	STORECACHE snext, sold;
 	WORD *r, *rr = AR.CompressPointer;
-	POSITION scrpos;
 	r = rr;
-/*!!!
-cnum++;
-  !!!*/
+	gfs++;
 	sold = s = (STORECACHE)(&AT.StoreCache);
 	snext = s->next;
 	while ( snext ) {
@@ -1297,6 +1336,7 @@ cnum++;
 					goto InNew;
 				}
 			}
+PastCon:;
 			while ( num > 0 && ISLESSPOS(*position,s->toppos) ) {
 				*r++ = *m++ = *from++; ADDPOS(*position,sizeof(WORD)); num--;
 			}
@@ -1304,11 +1344,11 @@ cnum++;
 InNew:
 				SETBASEPOSITION(s->position,-1);
 				SETBASEPOSITION(s->toppos,-1);
-				SeekFile(AO.StoreData.Handle,position,SEEK_SET);
-/* --COMPRESS--? */
-				if ( ( RetCode =
-				ReadFile(AO.StoreData.Handle,(UBYTE *)(s->buffer),AM.SizeStoreCache) )
-				 < 0 ) goto PastErr;
+				LOCK(AM.storefilelock);
+				SeekFile(AR.StoreData.Handle,position,SEEK_SET);
+				RetCode = ReadFile(AR.StoreData.Handle,(UBYTE *)(s->buffer),AM.SizeStoreCache);
+				UNLOCK(AM.storefilelock);
+				if ( RetCode < 0 ) goto PastErr;
 				if ( !RetCode ) return( *to = 0 );
 				s->position = *position;
 				s->toppos = *position;
@@ -1328,10 +1368,11 @@ InNew:
 	}
 	if ( AT.StoreCache ) {		/* Fill the last buffer */
 		s->position = *position;
-		SeekFile(AO.StoreData.Handle,position,SEEK_SET);
-/* --COMPRESS--? */
-		if ( ( RetCode = ReadFile(AO.StoreData.Handle,(UBYTE *)(s->buffer),AM.SizeStoreCache) )
-		 < 0 ) goto PastErr;
+		LOCK(AM.storefilelock);
+		SeekFile(AR.StoreData.Handle,position,SEEK_SET);
+		RetCode = ReadFile(AR.StoreData.Handle,(UBYTE *)(s->buffer),AM.SizeStoreCache);
+		UNLOCK(AM.storefilelock);
+		if ( RetCode < 0 ) goto PastErr;
 		if ( !RetCode ) return( *to = 0 );
 		s->toppos = *position;
 		ADDPOS(s->toppos,RetCode);
@@ -1356,22 +1397,15 @@ InNew:
 			ADDPOS(*position,sizeof(WORD));
 			*InCompState = (WORD)(num+2);
 		}
-PastCon:
-		scrpos = *position; ADDPOS(scrpos,num*wsizeof(WORD));
-		if ( ISGEPOS(scrpos,s->toppos) ) {
-			MesPrint("Inconsistency in storage file");
-			goto PastErr;
-		}
-		while ( --num >= 0 ) {
-			*r++ = *m++ = *from++;
-		}
-		goto PastEnd;
+		goto PastCon;
 	}
 /*		No caching available */
-	SeekFile(AO.StoreData.Handle,position,SEEK_SET);
-/* --COMPRESS--? */
-	if ( ( RetCode = ReadFile(AO.StoreData.Handle,(UBYTE *)to,(LONG)sizeof(WORD)) ) !=
-	sizeof(WORD) ) {
+	LOCK(AM.storefilelock);
+	SeekFile(AR.StoreData.Handle,position,SEEK_SET);
+	RetCode = ReadFile(AR.StoreData.Handle,(UBYTE *)to,(LONG)sizeof(WORD));
+	SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
+	UNLOCK(AM.storefilelock);
+	if ( RetCode != sizeof(WORD) ) {
 		*to = 0;
 		return((WORD)RetCode);
 	}
@@ -1381,10 +1415,15 @@ PastCon:
 		num = *m++;
 		*to = *r++ = (WORD)(-num + 1);
 		while ( ++num <= 0 ) *m++ = *r++;
-/* --COMPRESS--? */
-		if ( ( RetCode = ReadFile(AO.StoreData.Handle,(UBYTE *)m,(LONG)sizeof(WORD)) ) !=
-		sizeof(WORD) ) {
+		LOCK(AM.storefilelock);
+		SeekFile(AR.StoreData.Handle,position,SEEK_SET);
+		RetCode = ReadFile(AR.StoreData.Handle,(UBYTE *)m,(LONG)sizeof(WORD));
+		SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
+		UNLOCK(AM.storefilelock);
+		if ( RetCode != sizeof(WORD) ) {
+			LOCK(ErrorMessageLock);
 			MesPrint("@Error in compression of store file");
+			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		num = *m;
@@ -1397,16 +1436,30 @@ PastCon:
 	}
 	first = num;
 	num *= wsizeof(WORD);
-/* --COMPRESS--? */
-	if ( num < 0 || ( RetCode = ReadFile(AO.StoreData.Handle,(UBYTE *)m,num) ) != num ) {
+	if ( num < 0 ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("@Error in stored expressions file at position %9p",position);
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	LOCK(AM.storefilelock);
+	SeekFile(AR.StoreData.Handle,position,SEEK_SET);
+	RetCode = ReadFile(AR.StoreData.Handle,(UBYTE *)m,num);
+	SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
+	UNLOCK(AM.storefilelock);
+	if ( RetCode != num ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("@Error in stored expressions file at position %9p",position);
+		UNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	NCOPY(r,m,first);
 PastEnd:
 	*rr = *to;
 	if ( r >= AR.ComprTop ) {
+		LOCK(ErrorMessageLock);
 		MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
+		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	AR.CompressPointer = r; *r = 0;
@@ -1415,12 +1468,14 @@ PastEnd:
 		return((WORD)*to);
 	}
 PastErr:
+	LOCK(ErrorMessageLock);
 	MesCall("GetFromStore");
+	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
 /*
- 		#] GetFromStore : 
+ 		#] GetFromStore :
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1433,7 +1488,7 @@ PastErr:
 VOID
 DetVars ARG2(WORD *,term,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *stopper;
 	WORD *t, sym;
 	WORD *sarg;
@@ -1605,7 +1660,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars : 
+ 		#] DetVars :
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -1621,7 +1676,7 @@ Tensors:
 WORD
 ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *w, i, j;
 	WORD *term;
 	INDEXENTRY *indexent;
@@ -1635,7 +1690,7 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 	indexent->CompressSize = 0;		/* thus far no compression */
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 /*	AR.infile->POfull = AR.infile->POfill; */
-	AS.InInBuf = 0;
+	AR.InInBuf = 0;
 	if ( AR.infile->handle >= 0 ) {
 		scrpos = e->onfile;
 		SeekFile(AR.infile->handle,&scrpos,SEEK_SET);
@@ -1644,7 +1699,7 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 			return(MesPrint(":::Error in Scratch file"));
 		}
 		AR.infile->POposition = e->onfile;
-		AR.infile->POfull = AR.infile->PObuffer; AS.InInBuf = 0;
+		AR.infile->POfull = AR.infile->PObuffer; AR.InInBuf = 0;
 	}
 	else {
 		AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer)+BASEPOSITION(e->onfile));
@@ -1696,11 +1751,11 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 	indexent->nfunctions = j;
 /*	size += j * sizeof(struct FuNcTiOn); */
 	indexent->length = *length;
-	indexent->variables = AO.StoreData.Fill;
-/*	indexent->position = AO.StoreData.Fill + size; */
+	indexent->variables = AR.StoreData.Fill;
+/*	indexent->position = AR.StoreData.Fill + size; */
 	StrCopy(AC.exprnames->namebuffer+e->name,(UBYTE *)(indexent->name));
 	AO.wpoin = AO.wpos;
-	SeekFile(AO.StoreData.Handle,&(AO.StoreData.Fill),SEEK_SET);
+	SeekFile(AR.StoreData.Handle,&(AR.StoreData.Fill),SEEK_SET);
 	{
 		 SYMBOLS a;
 		w = AN.UsedSymbol;
@@ -1759,9 +1814,9 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 	}
 	if ( VarStore((UBYTE *)0L,(WORD)0,(WORD)0,(WORD)0) ) goto ErrToSto;	/* Flush buffer */
 /*
-	indexent->position = SeekFile(AO.StoreData.Handle,0L,SEEK_CUR);
+	indexent->position = SeekFile(AR.StoreData.Handle,0L,SEEK_CUR);
 */
-	TELLFILE(AO.StoreData.Handle,&(indexent->position));
+	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	indexent->size = (WORD)DIFBASE(indexent->position,indexent->variables);
 	if ( AR.outfile->handle >= 0 ) {
 		POSITION llength;
@@ -1775,7 +1830,7 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 			if ( ReadFile(AR.outfile->handle,AO.wpos,size) != size )
 				return(MesPrint("Error while reading scratch file"));
 /* --COMPRESS--? */
-			if ( WriteFile(AO.StoreData.Handle,AO.wpos,size) != size )
+			if ( WriteFile(AR.StoreData.Handle,AO.wpos,size) != size )
 				return(MesPrint("Error while writing storage file"));
 			ADDPOS(llength,-size);
 		}
@@ -1784,28 +1839,28 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 		WORD *ppp;
 		ppp = (WORD *)((UBYTE *)(AR.outfile->PObuffer) + BASEPOSITION(e->onfile));
 /* --COMPRESS-- */
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)ppp,BASEPOSITION(*length)) != 
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)ppp,BASEPOSITION(*length)) != 
 		BASEPOSITION(*length) )
 			return(MesPrint("Error while writing storage file"));
 	}
 	ADD2POS(*length,indexent->position);
 	e->onfile = indexpos;
 /*
-	AO.StoreData.Fill = SeekFile(AO.StoreData.Handle,&(AM.zeropos),SEEK_END);
+	AR.StoreData.Fill = SeekFile(AR.StoreData.Handle,&(AM.zeropos),SEEK_END);
 */
-	AO.StoreData.Fill = *length;
-	SeekFile(AO.StoreData.Handle,&(AO.StoreData.Fill),SEEK_SET);
-	scrpos = AO.StoreData.Position;
+	AR.StoreData.Fill = *length;
+	SeekFile(AR.StoreData.Handle,&(AR.StoreData.Fill),SEEK_SET);
+	scrpos = AR.StoreData.Position;
 	ADDPOS(scrpos,sizeof(POSITION));
-	SeekFile(AO.StoreData.Handle,&scrpos,SEEK_SET);
+	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
 /* --COMPRESS-- */
-	if ( WriteFile(AO.StoreData.Handle,((UBYTE *)&(AO.StoreData.Index.number))
+	if ( WriteFile(AR.StoreData.Handle,((UBYTE *)&(AR.StoreData.Index.number))
 		,(LONG)(sizeof(LONG))) != sizeof(LONG) ) goto ErrInSto;
-	SeekFile(AO.StoreData.Handle,&indexpos,SEEK_SET);
+	SeekFile(AR.StoreData.Handle,&indexpos,SEEK_SET);
 /* --COMPRESS-- */
-	if ( WriteFile(AO.StoreData.Handle,(UBYTE *)indexent,(LONG)(sizeof(INDEXENTRY))) !=
+	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)indexent,(LONG)(sizeof(INDEXENTRY))) !=
 		sizeof(INDEXENTRY) ) goto ErrInSto;
-	FlushFile(AO.StoreData.Handle);
+	FlushFile(AR.StoreData.Handle);
 	return(0);
 ErrToSto:
 	return(MesPrint("---Error while storing namelists"));
@@ -1814,92 +1869,94 @@ ErrInSto:
 }
 
 /*
- 		#] ToStorage : 
+ 		#] ToStorage :
  		#[ NextFileIndex :
 */
 
 INDEXENTRY *
 NextFileIndex ARG1(POSITION *,indexpos)
 {
-	if ( AO.StoreData.Handle <= 0 ) {
+	GETIDENTITY
+	if ( AR.StoreData.Handle <= 0 ) {
 		if ( SetFileIndex() ) {
 			MesCall("NextFileIndex");
 			return(0);
 		}
-		AO.StoreData.Index.number = 1;
+		AR.StoreData.Index.number = 1;
 		SETBASEPOSITION(*indexpos,(sizeof(LONG)+sizeof(POSITION)));
-		return(AO.StoreData.Index.expression);
+		return(AR.StoreData.Index.expression);
 	}
-	while ( AO.StoreData.Index.number >= (LONG)(INFILEINDEX) ) {
-		if ( ISNOTZEROPOS(AO.StoreData.Index.next) ) {
-			SeekFile(AO.StoreData.Handle,&(AO.StoreData.Index.next),SEEK_SET);
-			AO.StoreData.Position = AO.StoreData.Index.next;
+	while ( AR.StoreData.Index.number >= (LONG)(INFILEINDEX) ) {
+		if ( ISNOTZEROPOS(AR.StoreData.Index.next) ) {
+			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Index.next),SEEK_SET);
+			AR.StoreData.Position = AR.StoreData.Index.next;
 /* --COMPRESS--? */
-			if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(&AO.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
+			if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
 			(LONG)(sizeof(FILEINDEX)) ) goto ErrNextS;
 		}
 		else {
-			AO.StoreData.Index.number = 0;
-			SeekFile(AO.StoreData.Handle,&(AO.StoreData.Position),SEEK_SET);
+			AR.StoreData.Index.number = 0;
+			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Position),SEEK_SET);
 /* --COMPRESS-- */
-			if ( WriteFile(AO.StoreData.Handle,(UBYTE *)(&(AO.StoreData.Fill)),(LONG)(sizeof(LONG)))
+			if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(AR.StoreData.Fill)),(LONG)(sizeof(LONG)))
 			!= (LONG)(sizeof(LONG)) ) goto ErrNextS;
-			PUTZERO(AO.StoreData.Index.next);
-			SeekFile(AO.StoreData.Handle,&(AO.StoreData.Fill),SEEK_SET);
-			AO.StoreData.Position = AO.StoreData.Fill;
+			PUTZERO(AR.StoreData.Index.next);
+			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Fill),SEEK_SET);
+			AR.StoreData.Position = AR.StoreData.Fill;
 /* --COMPRESS-- */
-			if ( WriteFile(AO.StoreData.Handle,(UBYTE *)(&AO.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
+			if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
 			(LONG)(sizeof(FILEINDEX)) ) goto ErrNextS;
-			ADDPOS(AO.StoreData.Fill,sizeof(FILEINDEX));
+			ADDPOS(AR.StoreData.Fill,sizeof(FILEINDEX));
 		}
 	}
-	*indexpos = AO.StoreData.Position;
+	*indexpos = AR.StoreData.Position;
 	ADDPOS(*indexpos,(sizeof(LONG)+sizeof(POSITION)) +
-		AO.StoreData.Index.number * sizeof(INDEXENTRY));
-	return(&AO.StoreData.Index.expression[(AO.StoreData.Index.number)++]);
+		AR.StoreData.Index.number * sizeof(INDEXENTRY));
+	return(&AR.StoreData.Index.expression[(AR.StoreData.Index.number)++]);
 ErrNextS:
 	MesPrint("Error in storage file");
 	return(0);
 }
 
 /*
- 		#] NextFileIndex : 
+ 		#] NextFileIndex :
  		#[ SetFileIndex :
 */
 
 WORD
 SetFileIndex()
 {
-	if ( AO.StoreData.Handle < 0 ) {
-		AO.StoreData.Handle = AC.StoreHandle;
-		PUTZERO(AO.StoreData.Index.next);
-		AO.StoreData.Index.number = 0;
-		SETBASEPOSITION(AO.StoreData.Fill,sizeof(FILEINDEX));
+	GETIDENTITY
+	if ( AR.StoreData.Handle < 0 ) {
+		AR.StoreData.Handle = AC.StoreHandle;
+		PUTZERO(AR.StoreData.Index.next);
+		AR.StoreData.Index.number = 0;
+		SETBASEPOSITION(AR.StoreData.Fill,sizeof(FILEINDEX));
 /* --COMPRESS-- */
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)(&AO.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
 		(LONG)(sizeof(FILEINDEX)) ) return(MesPrint("Error writing storage file"));
 	}
 	else {
 		POSITION scrpos;
 		PUTZERO(scrpos);
-		SeekFile(AO.StoreData.Handle,&scrpos,SEEK_SET);
+		SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(&AO.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
 		(LONG)(sizeof(FILEINDEX)) ) return(MesPrint("Error reading storage file"));
 	}
-	PUTZERO(AO.StoreData.Position);
+	PUTZERO(AR.StoreData.Position);
 	return(0);
 }
 
 /*
- 		#] SetFileIndex : 
+ 		#] SetFileIndex :
  		#[ VarStore :
 */
 
 WORD
 VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *t, *u;
 	if ( s ) {
 		n -= sizeof(WORD);
@@ -1908,7 +1965,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 		while ( n && t < u ) { *t++ = *s++; n--; }
 		if ( t >= u ) {
 /* --COMPRESS-- */
-			if ( WriteFile(AO.StoreData.Handle,AO.wpos,AO.wlen) != AO.wlen ) return(-1);
+			if ( WriteFile(AR.StoreData.Handle,AO.wpos,AO.wlen) != AO.wlen ) return(-1);
 			t = AO.wpos;
 			do { *t++ = *s++; n--; } while ( n && t < u );
 		}
@@ -1920,7 +1977,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 		while ( n > 0 && t < u ) { *t++ = *s++; n--; }
 		if ( n > 0 ) {
 /* --COMPRESS-- */
-			if ( WriteFile(AO.StoreData.Handle,AO.wpos,AO.wlen) != AO.wlen ) return(-1);
+			if ( WriteFile(AR.StoreData.Handle,AO.wpos,AO.wlen) != AO.wlen ) return(-1);
 			t = AO.wpos;
 			do { *t++ = *s++; n--; } while ( n && t < u );
 		}
@@ -1930,13 +1987,13 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 		LONG size;
 		size = AO.wpoin - AO.wpos;
 /* --COMPRESS-- */
-		if ( WriteFile(AO.StoreData.Handle,AO.wpos,size) != size ) return(-1);
+		if ( WriteFile(AR.StoreData.Handle,AO.wpos,size) != size ) return(-1);
 	}
 	return(0);
 }
 
 /*
- 		#] VarStore : 
+ 		#] VarStore :
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2103,7 +2160,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber : 
+ 		#] TermRenumber :
  		#[ FindrNumber :
 */
 
@@ -2114,25 +2171,59 @@ FindrNumber ARG2(WORD,n,VARRENUM *,v)
 	hi = v->hi;
 	lo = v->lo;
 	med = v->start;
+if ( *hi == 0 ) {
+	MesPrint("Serious problems coming up in FindrNumber");
+	return(-1);
+}
 	while ( *med != n ) {
 		if ( *med < n ) {
 			if ( med == hi ) goto ErrFindr;
 			lo = med;
-			med = hi - ((hi-med)>>1);
+			med = hi - ((WORDDIF(hi,med))/2);
 		}
 		else {
 			if ( med == lo ) goto ErrFindr;
 			hi = med;
-			med = ((med-lo)>>1) + lo;
+			med = lo + ((WORDDIF(med,lo))/2);
 		}
 	}
 	return(WORDDIF(med,v->lo));
 ErrFindr:
+/*
+	Reconstruction:
+*/
+	{
+		int i;
+		i = WORDDIF(v->hi,v->lo);
+		MesPrint("FindrNumber: n = %d, list has %d members",n,i);
+		while ( i >= 0 ) {
+			MesPrint("v->lo[%d] = %d",i,v->lo[i]); i--;
+		}
+		hi = v->hi;
+		lo = v->lo;
+		med = v->start;
+		MesPrint("Start with %d,%d,%d",0,WORDDIF(med,v->lo),WORDDIF(hi,v->lo));
+		while ( *med != n ) {
+			if ( *med < n ) {
+				if ( med == hi ) goto ErrFindr2;
+				lo = med;
+				med = hi - ((WORDDIF(hi,med))/2);
+			}
+			else {
+				if ( med == lo ) goto ErrFindr2;
+				hi = med;
+				med = ((WORDDIF(med,lo))/2) + lo;
+			}
+			MesPrint("New: %d,%d,%d, *med = %d",WORDDIF(lo,v->lo),WORDDIF(med,v->lo),WORDDIF(hi,v->lo),*med);
+		}
+	}
+	return(WORDDIF(med,v->lo));
+ErrFindr2:
 	return(MesPrint("Renumbering problems"));
 }
 
 /*
- 		#] FindrNumber : 
+ 		#] FindrNumber :
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2149,7 +2240,7 @@ ErrFindr:
 INDEXENTRY *
 FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	INDEXENTRY *ind;
 	WORD i, hand, *m;
 	WORD *start, *stop, *stop2, *m2, nomatch = 0;
@@ -2165,7 +2256,7 @@ FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 		m += m[1];
 	}
 	stop = m;
-	if ( !par ) hand = AO.StoreData.Handle;
+	if ( !par ) hand = AR.StoreData.Handle;
 	else        hand = AO.SaveData.Handle;
 	for(;;) {
 		if ( ( i = (WORD)(f->Index.number) ) != 0 ) {
@@ -2227,8 +2318,8 @@ FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 		f->Position = f->Index.next;
 		if ( ISEQUALPOS(f->Position,stindex) ) goto ErrGetTab;
 		if ( !par ) {
-			SeekFile(AO.StoreData.Handle,&(f->Position),SEEK_SET);
-			if ( ISNOTEQUALPOS(f->Position,AO.StoreData.Position) ) goto ErrGt2;
+			SeekFile(AR.StoreData.Handle,&(f->Position),SEEK_SET);
+			if ( ISNOTEQUALPOS(f->Position,AR.StoreData.Position) ) goto ErrGt2;
 		}
 		else {
 			SeekFile(AO.SaveData.Handle,&(f->Position),SEEK_SET);
@@ -2254,7 +2345,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex : 
+ 		#] FindInIndex :
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2268,12 +2359,28 @@ ErrGt2:
 		an already existing prototype that is constructed by the
 		pattern matcher. This has not been put in yet.
 
+		There is a problem with the parallel processing.
+		Feeding in the variables that were erased by a .store could in
+		principle happen in different orders (ParFORM) or simultaneously
+		(TFORM). The proper resolution is to have the compiler call GetTable
+		when a stored expression is encountered.
+
+		This has been mended in development of TFORM by reading the
+		symbol tables during compilation. See the call to GetTable
+		in the CodeGenerator.
+
+		Next is the problem of FindInIndex which writes in AR.StoreData
+		Copying this is expensive!
+
+		This Doesn't work well for TFORM yet.!!!!!!!!
+		e[x1,x2] versus e[x2,x1] messes up.
+		For the rest is the reloading during execution not thread safe.
 */
 
 RENUMBER
 GetTable ARG2(WORD,expr,POSITION *,position)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD i, j;
 	WORD *w;
 	RENUMBER r;
@@ -2289,8 +2396,11 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	Prepare for FindInIndex to put the prototype in the WorkSpace.
 	oldw will point at the "wildcards"
 */
+#ifndef WITHPTHREADS
+
 	if ( ( r = Expressions[expr].renum ) != 0 ) {
 /*
+
 		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Problem here is E(x1,x2)-E(x2,x1)
 		Second time the new assignment is not made!
@@ -2301,10 +2411,14 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 		return(r);
 */
 	}
-	else {
-		Expressions[expr].renum = r =
-			(RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
+	else
+	{
+		Expressions[expr].renum = 
+		r = (RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
 	}
+#else
+		r = (RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
+#endif
 
 	oldw = AT.WorkPointer + 1 + SUBEXPSIZE;
 /*
@@ -2312,15 +2426,22 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	After all it has to find an occurrence with the proper arguments.
 	This sets the WorkPointer. Hence be careful now.
 */
-	if ( ( ind = FindInIndex(expr,&AO.StoreData,0) ) == 0 ) return(0);
+	LOCK(AM.storefilelock);
+	if ( ( ind = FindInIndex(expr,&AR.StoreData,0) ) == 0 ) {
+		UNLOCK(AM.storefilelock);
+		return(0);
+	}
 
 	xx = ind->nsymbols+ind->nindices+ind->nvectors+ind->nfunctions;
 	if ( xx == 0 ) {
-		Expressions[expr].renumlists = w = AN.dummyrenumlist;
+		Expressions[expr].renumlists = 
+		w = AN.dummyrenumlist;
 	}
 	else {
-		Expressions[expr].renumlists = w =
-			(WORD *)Malloc1(sizeof(WORD)*(xx*2),"VarSpace");
+#ifndef WITHPTHREADS
+		Expressions[expr].renumlists = 
+#endif
+		w = (WORD *)Malloc1(sizeof(WORD)*(xx*2),"VarSpace");
 	}
 	r->symb.lo = w;
 	r->symb.start = w + ind->nsymbols/2;
@@ -2350,7 +2471,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	r->funnum = w;
 /*	w += ind->nfunctions; */
 
-	SeekFile(AO.StoreData.Handle,&(ind->variables),SEEK_SET);
+	SeekFile(AR.StoreData.Handle,&(ind->variables),SEEK_SET);
 	*position = ind->position;
 	jsym = ind->nsymbols;
 	jvec = ind->nvectors;
@@ -2364,12 +2485,12 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	w = r->symb.lo; j = jsym;
 	for ( i = 0; i < j; i++ ) {
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct SyMbOl)))
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct SyMbOl)))
 		!= sizeof(struct SyMbOl) ) goto ErrGt2;
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number;
 		if ( s->flags ) {
@@ -2405,7 +2526,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	}
 	}
 /*
-			#] Symbols : 
+			#] Symbols :
 			#[ Indices :
 */
 	{
@@ -2413,12 +2534,12 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	w = r->indi.lo; j = jind;
 	for ( i = 0; i < j; i++ ) {
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct InDeX)))
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct InDeX)))
 		!= sizeof(struct InDeX) ) goto ErrGt2;
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS--? */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + AM.OffsetIndex;
 		if ( s->dimension < 0 ) {	/* Relabel the dimension */
@@ -2468,7 +2589,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices : 
+			#] Indices :
 			#[ Vectors :
 */
 	{
@@ -2476,12 +2597,12 @@ GetTb3:
 	w = r->vect.lo; j = jvec;
 	for ( i = 0; i < j; i++ ) {
 /* --COMPRESS-- */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct VeCtOr)))
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct VeCtOr)))
 		!= sizeof(struct VeCtOr) ) goto ErrGt2;
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS-- */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + AM.OffsetVector;
 		if ( s->flags ) {
@@ -2512,7 +2633,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors : 
+			#] Vectors :
 			#[ Functions :
 */
 	{
@@ -2520,12 +2641,12 @@ GetTb3:
 	w = r->func.lo; j = jfun;
 	for ( i = 0; i < j; i++ ) {
 /* --COMPRESS-- */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct FuNcTiOn)))
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)s,(LONG)(sizeof(struct FuNcTiOn)))
 		!= sizeof(struct FuNcTiOn) ) goto ErrGt2;
 		nsize = s->namesize; nsize += sizeof(void *)-1;
 		nsize &= -sizeof(void *);
 /* --COMPRESS-- */
-		if ( ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
+		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + FUNCTION;
 		if ( s->flags ) {
@@ -2560,39 +2681,51 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions : 
+			#] Functions :
 
 	Now we skip the prototype. This sets the start posiion at the first term
 */
-	if ( error ) { AT.WorkPointer = oldwork; return(0); }
+	if ( error ) {
+		UNLOCK(AM.storefilelock);
+		AT.WorkPointer = oldwork;
+		return(0);
+	}
 /* --COMPRESS-- */
-	if ( ReadFile(AO.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
-	sizeof(WORD) || !*AT.WorkPointer ) { AT.WorkPointer = oldwork; return(0); }
+	if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+	sizeof(WORD) || !*AT.WorkPointer ) {
+		UNLOCK(AM.storefilelock);
+		AT.WorkPointer = oldwork;
+		return(0);
+	}
 	num = *AT.WorkPointer - 1;
 	num *= sizeof(WORD);
 /* --COMPRESS-- */
 	if ( *AT.WorkPointer < 0 ||
-	ReadFile(AO.StoreData.Handle,(UBYTE *)(AT.WorkPointer+1),num) != num ) {
+	ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer+1),num) != num ) {
 		MesPrint("@Error in stored expressions file at position %10p",*position);
+		UNLOCK(AM.storefilelock);
 		AT.WorkPointer = oldwork;
 		return(0);
 	}
+	UNLOCK(AM.storefilelock);
 	ADDPOS(*position,num+sizeof(WORD));
 	r->startposition = *position;
 	AT.WorkPointer = oldwork;
 	return(r);
 GetTcall:
+	UNLOCK(AM.storefilelock);
 	AT.WorkPointer = oldwork;
 	MesCall("GetTable");
 	return(0);
 ErrGt2:
+	UNLOCK(AM.storefilelock);
 	AT.WorkPointer = oldwork;
 	MesPrint("Readerror in GetTable");
 	return(0);
 }
 
 /*
- 		#] GetTable : 
+ 		#] GetTable :
 	#] StoreExpressions :
 */
 

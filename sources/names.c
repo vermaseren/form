@@ -349,7 +349,6 @@ GetVar ARG5(UBYTE *,name,WORD *,type,WORD *,number,int,wantedtype,int,par)
 	if ( ( typ = GetName(AC.varnames,name,number,par) ) != wantedtype ) {
 		if ( typ != NAMENOTFOUND ) {
 			if ( wantedtype == -1 ) {
-/*				if ( typ == CFUNCTION ) *number += FUNCTION; */
 				*type = typ;
 				return(1);
 			}
@@ -561,6 +560,10 @@ CopyTree ARG3(NAMETREE *,newtree,NAMETREE *,oldtree,WORD,node)
 				Dubious[n->number].name = newtree->namefill;
 				Dubious[n->number].node = newtree->nodefill;
 				break;
+			case CDOLLAR:
+				Dollars[n->number].name = newtree->namefill;
+				Dollars[n->number].node = newtree->nodefill;
+				break;
 			default:
 				MesPrint("Illegal variable type in CopyTree: %d",n->type);
 				break;
@@ -654,7 +657,7 @@ void ClearWildcardNames ARG0
 
 int AddWildcardName ARG1(UBYTE *,name)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int size = 0, tocopy, i;
 	UBYTE *s = name, *t, *newbuffer;
 	while ( *s ) { s++; size++; }
@@ -1196,7 +1199,7 @@ static int nwarntab = 1;
 int
 DoTable ARG2(UBYTE *,s,int,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *name, *p, *inp, c;
 	int i, j, sparseflag = 0, rflag = 0, checkflag = 0, error = 0, ret, oldcbufnum;
 	WORD funnum, type, *OldWork, *w, *newp, *flags1;
@@ -1842,8 +1845,8 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 	dol->node = nodenum;
 	dol->zero = 0;
 #ifdef WITHPTHREADS
-/*	dol->pthreadslock = PTHREAD_MUTEX_INITIALIZER; */
-	dol->pthreadslock = dummylock;
+	dol->pthreadslockread = dummylock;
+	dol->pthreadslockwrite = dummylock;
 #endif
 	AddRHS(AM.dbufnum,1);
 	AddLHS(AM.dbufnum);
@@ -1859,6 +1862,7 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 	cbuf[AM.dbufnum].rhs[numdollar] = dol->where;
 	cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 	cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+
 	return(numdollar);
 }
 
@@ -2345,6 +2349,33 @@ void ResetVariables ARG1(int, par)
 
 /*
   	#] ResetVariables :
+  	#[ RemoveDollars :
+*/
+
+void RemoveDollars ARG0
+{
+	DOLLARS d;
+	CBUF *C = cbuf + AM.dbufnum;
+	int numdollar = AP.DollarList.num;
+	if ( numdollar > 0 ) {
+	  while ( numdollar > AM.gcNumDollars ) {
+		numdollar--;
+		d = Dollars + numdollar;
+		if ( d->where && d->where != &(d->zero) && d->where != &(AM.dollarzero) ) {
+			M_free(d->where,"dollar->where"); d->where = &(d->zero); d->size = 0;
+		}
+		AC.dollarnames->namenode[d->node].type = CDELETE;
+	  }
+	  AP.DollarList.num = AM.gcNumDollars;
+	  CompactifyTree(AC.dollarnames);
+
+	  C->numrhs = C->mnumrhs;
+	  C->numlhs = C->mnumlhs;
+	}
+}
+
+/*
+  	#] RemoveDollars :
   	#[ Globalize :
 */
 

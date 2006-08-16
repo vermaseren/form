@@ -63,7 +63,27 @@ void finishcbuf ARG1(WORD,num)
 }
 
 /*
-  	#] finishcbuf :
+  	#] finishcbuf : 
+  	#[ clearcbuf :
+*/
+
+void clearcbuf ARG1(WORD,num)
+{
+	CBUF *C = cbuf+num;
+	if ( C->boomlijst ) M_free(C->boomlijst,"compiler buffer");
+	C->Pointer = C->Buffer;
+	C->numrhs = C->numlhs = 0;
+	C->mnumlhs = 0;
+	C->boomlijst = 0;
+	C->mnumrhs = 0;
+	C->rhs[0] = C->rhs[1] = C->Pointer;
+	C->numtree = C->rootnum = C->MaxTreeSize = 0;
+	RedoTree(C,C->maxrhs);
+	ClearTree(num);
+}
+
+/*
+  	#] clearcbuf :
   	#[ DoubleCbuffer :
 */
 
@@ -97,7 +117,7 @@ DoubleCbuffer ARG2(int,num,WORD *,w)
 }
 
 /*
-  	#] DoubleCbuffer :
+  	#] DoubleCbuffer : 
   	#[ AddLHS :
 */
 
@@ -115,7 +135,7 @@ WORD *AddLHS ARG1(int,num)
 }
 
 /*
-  	#] AddLHS :
+  	#] AddLHS : 
   	#[ AddRHS :
 */
 

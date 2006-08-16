@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -45,7 +45,7 @@
 WORD
 ReNumber BARG1(WORD *,term)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *d, *e, **p, **f;
 	WORD n, i, j, old;
 	AN.DumFound = d = AN.RenumScratch;
@@ -82,7 +82,7 @@ ReNumber BARG1(WORD *,term)
 }
 
 /*
- 		#] Renumber :
+ 		#] Renumber : 
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -93,7 +93,7 @@ ReNumber BARG1(WORD *,term)
 VOID
 FunLevel BARG1(WORD *,term)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *tstop, *r, *fun;
 	WORD *m;
 	t = r = term;
@@ -201,7 +201,7 @@ FunLevel BARG1(WORD *,term)
 }
 
 /*
- 		#] FunLevel :
+ 		#] FunLevel : 
  		#[ DetCurDum :
 */
 
@@ -267,7 +267,7 @@ Singles:
 }
 
 /*
- 		#] DetCurDum :
+ 		#] DetCurDum : 
  		#[ FullRenumber :
 
 		Does a full renumbering. May be slow if there are many indices.
@@ -279,7 +279,7 @@ Singles:
 
 int FullRenumber ARG2(WORD *,term,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *d, **p, **f, *w, *t, *best, *stac, *perm, a, *termtry;
 	WORD n, i, j, k, ii;
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -378,8 +378,8 @@ Return0:
 }
 
 /*
- 		#] FullRenumber :
-  	#] Reshuf :
+ 		#] FullRenumber : 
+  	#] Reshuf : 
   	#[ Count :
  		#[ CountDo :
 
@@ -535,7 +535,7 @@ NextFF:
 }
 
 /*
- 		#] CountDo :
+ 		#] CountDo : 
  		#[ CountFun :
 
 		This is the count function.
@@ -701,8 +701,8 @@ VectInd:		i = term[1] - 2;
 }
 
 /*
- 		#] CountFun :
-  	#] Count :
+ 		#] CountFun : 
+  	#] Count : 
   	#[ Multiply Term :
  		#[ MultDo :
 */
@@ -710,7 +710,7 @@ VectInd:		i = term[1] - 2;
 WORD
 MultDo ARG2(WORD *,term,WORD *,pattern)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *r, i;
 	t = term + *term;
 	if ( pattern[2] > 0 ) {			/* Left multiply */
@@ -730,8 +730,8 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
 }
 
 /*
- 		#] MultDo :
-  	#] Multiply Term :
+ 		#] MultDo : 
+  	#] Multiply Term : 
   	#[ Try Term(s) :
  		#[ TryDo :
 */
@@ -739,7 +739,7 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
 WORD
 TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *r, *m, i, j;
 	ReNumber(BHEAD term);
 	Normalize(BHEAD term);
@@ -765,8 +765,8 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 }
 
 /*
- 		#] TryDo :
-  	#] Try Term(s) :
+ 		#] TryDo : 
+  	#] Try Term(s) : 
   	#[ Distribute :
  		#[ DoDistrib :
 
@@ -781,13 +781,13 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 */
 
 WORD
-DoDistrib ARG2(WORD *,term,WORD,level)
+DoDistrib BARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *r = 0, *stop, *tstop, *termout, *endhead, *starttail, *parms;
 	WORD i, j, k, n, nn, ntype, fun1 = 0, fun2 = 0, typ1 = 0, typ2 = 0;
 	WORD *arg, *oldwork, *mf, ktype = 0, atype = 0;
-	WORD sgn;
+	WORD sgn, dirtyflag;
 	AN.TeInFun = AR.TePos = 0;
 	t = term;
 	tstop = t + *t;
@@ -823,6 +823,7 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 		}
 		t = r;
 	}
+	dirtyflag = t[2];
 	ntype = t[FUNHEAD+1];
 	n = t[FUNHEAD+3];
 /*
@@ -886,8 +887,9 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 			mf = m;
 			*m++ = fun1;
 			*m++ = FUNHEAD;
-#if FUNHEAD > 2
-			k = FUNHEAD -2;
+			*m++ = dirtyflag;
+#if FUNHEAD > 3
+			k = FUNHEAD -3;
 			while ( k-- > 0 ) *m++ = 0;
 #endif
 			r = parms;
@@ -913,8 +915,9 @@ DoDistrib ARG2(WORD *,term,WORD,level)
 			mf = m;
 			*m++ = fun2;
 			*m++ = FUNHEAD;
-#if FUNHEAD > 2
-			k = FUNHEAD -2;
+			*m++ = dirtyflag;
+#if FUNHEAD > 3
+			k = FUNHEAD -3;
 			while ( k-- > 0 ) *m++ = 0;
 #endif
 			r = parms;
@@ -1025,7 +1028,7 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 }
 
 /*
- 		#] DoDistrib :
+ 		#] DoDistrib : 
  		#[ EqualArg :
 
 		Returns 1 if the arguments in the field are identical.
@@ -1054,14 +1057,14 @@ EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
 }
 
 /*
- 		#] EqualArg :
+ 		#] EqualArg : 
  		#[ DoDelta3 :
 */
 
 WORD
 DoDelta3 ARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *m, *m1, *m2, *stopper, *tstop, *termout, *dels, *taken;
 	WORD *ic, *jc, *factors, *occur;
 	WORD num, num2, i, j, k, knum, a;
@@ -1238,8 +1241,8 @@ nextk:;
 }
 
 /*
- 		#] DoDelta3 :
-  	#] Distribute :
+ 		#] DoDelta3 : 
+  	#] Distribute : 
   	#[ DoMerge :
 
 	Merges the arguments of all occurrences of function fun into a
@@ -1255,8 +1258,8 @@ nextk:;
 
 WORD DoMerge ARG4(WORD *,term,WORD,level,WORD,fun,WORD,option)
 {
-	GETIDENTITY;
-	WORD n = fun, n1, n2, i1, i2, j1, j2, *j, k, k2;
+	GETIDENTITY
+	WORD n = fun, n1, n2, i1, i2, j1, j2, *j, k1, k2;
 	WORD *t, *tt, *m, *tstop, *t1, *t2, *t1stop, *t2stop, *m1, *m2, *termout, *mm;
 	WORD *r1, *r2;
 	int i;
@@ -1308,46 +1311,41 @@ restart:;
 	t1 += FUNHEAD; t2 += FUNHEAD;
 	p = p1 = AT.pWorkPointer;
 	n1 = 0;
-	while ( t1 < t1stop ) { AT.pWorkSpace[p] = t1; p++; n1++; NEXTARG(t1); }
+	t = t1;
+	while ( t < t1stop ) { n1++; NEXTARG(t); }
+	n2 = 0;
+	t = t2;
+	while ( t < t2stop ) { n2++; NEXTARG(t); }
+	WantAddPointers(n1+n2+2);
+	while ( t1 < t1stop ) { AT.pWorkSpace[p] = t1; p++; NEXTARG(t1); }
 	AT.pWorkSpace[p] = t1stop; p++;
 	p2 = p;
-	n2 = 0;
-	while ( t2 < t2stop ) { AT.pWorkSpace[p] = t2; p++; n2++; NEXTARG(t2); }
+	while ( t2 < t2stop ) { AT.pWorkSpace[p] = t2; p++; NEXTARG(t2); }
 	AT.pWorkSpace[p] = t2stop; p++;
 	AT.pWorkPointer = p;
 /*
 	Now start filling
 */
-	j = AT.WorkPointer; AT.WorkPointer += n1;
+	j = AT.WorkPointer; AT.WorkPointer += n1+1;
 	for ( i = 0; i < n1; i++ ) j[i] = 0;
 	termout = AT.WorkPointer;
-	t = term; m = termout; while ( t < t1 ) *m++ = *t++;
-	mm = m;
-	for ( i = 0; i < FUNHEAD; i++ ) *m++ = *t++;
-	j1 = n1-1;
 	for (;;) {
-/*
-		Copy configuration
-		We have n1 integers in j, indicating before which element of the
-		second list the elements of the first list come.
-		Hence 0,0,3,4,4,n2 means that there are first two elements from list 1
-		then 3 from list 2, then one from 1, one from 2, two from 1, the rest
-		from 2 and them one from 1.
-*/
+		m = termout;
+		t = term; while ( t < m1 ) *m++ = *t++;
+		mm = m;
+		for ( i = 0; i < FUNHEAD; i++ ) *m++ = *t++;
+		j1 = n1-1;
 		i1 = i2 = 0;
 		r1 = m1+FUNHEAD; r2 = m2+FUNHEAD;
-		for ( k = 0, k2 = 0; k < n1; k++ ) {
-/*
-			if ( *k == *k2 ) we need a combinatorics factor
-							 count back in 1 and forward in 2
-*/
-			if ( j[k] <= k2 ) {	/* copy from 1 */
-				r1 = AT.pWorkSpace[p1+k];
-				r2 = AT.pWorkSpace[p1+k+1];
+		for ( k1 = 0, k2 = 0; k1 < n1; ) {
+			if ( j[k1] <= k2 ) {	/* copy from 1 */
+				r1 = AT.pWorkSpace[p1+k1];
+				r2 = AT.pWorkSpace[p1+k1+1];
 				while ( r1 < r2 ) *m++ = *r1++;
+				k1++;
 			}
 			else { /* copy from 2 */
-				while ( k2 < j[k] ) {
+				while ( k2 < j[k1] ) {
 					r1 = AT.pWorkSpace[p2+k2];
 					r2 = AT.pWorkSpace[p2+k2+1];
 					while ( r1 < r2 ) *m++ = *r1++;
@@ -1363,23 +1361,23 @@ restart:;
 		}
 		mm[1] = m - mm;
 		t = t1stop;
-		while ( t < t2 ) *m++ = *t++;
+		while ( t < m2 ) *m++ = *t++;
 		t = t2stop;
-		while ( t < tt ) *m++ = *t;
+		while ( t < tt ) *m++ = *t++;
 		*termout = m - termout;
 		AT.WorkPointer = m;
 		if ( Generator(BHEAD termout,level) ) goto Mergecall;
 /*
 		Raise configuration
 */
+raise:;
 		j[j1]++;
-		if ( j[j1] >= n2 ) {
-			while ( ( j[j1] >= n2 ) && ( j1 >= 0 ) ) { j1--; }
-			if ( j1 == 0 && j[j1] >= 0 ) break;
-			j[j1]++;
-/*
-			if ( *j1 = *(j[j1]) we skip. -> combinatorics
-*/
+		if ( j[j1] > n2 ) {
+			while ( ( j[j1] > n2 ) && ( j1 >= 0 ) ) { j1--; }
+			if ( j1 < 0 ) break;
+			goto raise;
+		}
+		{
 			j2 = j[j1++];
 			while ( j1 < n1 ) { j[j1] = j2; j1++; }
 			j1--;

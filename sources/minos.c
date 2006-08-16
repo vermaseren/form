@@ -10,7 +10,6 @@
 
 #include "form3.h"
 #include "minos.h"
-#include <zlib.h>
 int withoutflush = 0;
 
 /*

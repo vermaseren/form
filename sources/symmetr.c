@@ -21,7 +21,7 @@
 WORD
 MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *m, *t, *r, i, retval;
 	WORD *mstop, *tstop, j, newvalue, newfun;
 	WORD fixvec[MAXMATCH],wcvec[MAXMATCH],fixind[MAXMATCH],wcind[MAXMATCH];
@@ -494,7 +494,7 @@ Distribute ARG2(DISTRIBUTE *,d,WORD,first)
 
 int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD *thewildcards, *multiplicity, *renum, wc, newvalue, oldwilval = 0;
 	WORD *params, *lowlevel = 0;
@@ -733,7 +733,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						if ( CheckWild(BHEAD wc,INDTOIND,*t,&newvalue) ) break;
 						AddWild(BHEAD wc,INDTOIND,newvalue);
 					}
-					else if ( *t < MINSPEC && p[j] < MINSPEC
+					else if ( *t < MINSPEC && *p < MINSPEC
 						&& *p >= AM.OffsetVector + WILDOFFSET ) {
 
 						/* Test wildcard vector */
@@ -889,7 +889,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 						if ( CheckWild(BHEAD wc,INDTOIND,*t,&newvalue) ) break;
 						AddWild(BHEAD wc,INDTOIND,newvalue);
 					}
-					else if ( *t < MINSPEC && p[j] < MINSPEC
+					else if ( *t < MINSPEC && *p < MINSPEC
 						&& *p >= AM.OffsetVector + WILDOFFSET ) {
 
 						/* Test wildcard vector */
@@ -980,7 +980,7 @@ nomatch:;
 
 int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, *multiplicity, *renum, wc, oldwilval = 0;
 	LONG oww = AT.pWorkPointer;
@@ -1427,7 +1427,7 @@ nomatch:;
 
 int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, oldwilval = 0;
 	WORD newvalue, *lowlevel = 0, num, assig;
@@ -1922,7 +1922,7 @@ NoSuccess:
 
 int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *m = pat, *t = arg, i, j, newvalue;
 	WORD *argmstop = pat, *argtstop = arg;
 	WORD *cto, *cfrom, *csav, ci;

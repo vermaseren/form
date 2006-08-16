@@ -113,6 +113,7 @@ static KEYWORD com2commands[] = {
 	,{"once",           (TFUN)CoOnce,             STATEMENT,    PARTEST}
 	,{"only",           (TFUN)CoOnly,             STATEMENT,    PARTEST}
 	,{"polyfun",        (TFUN)CoPolyFun,          DECLARATION,  PARTEST}
+	,{"polynorm",       (TFUN)CoPolyNorm,         STATEMENT,    PARTEST}
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}
 	,{"print[]",        (TFUN)CoPrintB,           TOOUTPUT,     PARTEST}
 	,{"printtable",     (TFUN)CoPrintTable,       MIXED,        PARTEST}
@@ -137,6 +138,7 @@ static KEYWORD com2commands[] = {
 	,{"tb",             (TFUN)CoTableBase,        DECLARATION,  PARTEST}
 	,{"term",           (TFUN)CoTerm,             STATEMENT,    PARTEST}
 	,{"testuse",        (TFUN)CoTestUse,          STATEMENT,    PARTEST}
+	,{"threadbucketsize",(TFUN)CoThreadBucket,    DECLARATION,  PARTEST}
 	,{"totensor",       (TFUN)CoToTensor,         STATEMENT,    PARTEST}
 	,{"tovector",       (TFUN)CoToVector,         STATEMENT,    PARTEST}
 	,{"trace4",         (TFUN)CoTrace4,           STATEMENT,    PARTEST}
@@ -400,7 +402,7 @@ IsIdStatement ARG1(UBYTE *,s)
 int
 CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int error;
 	WORD *oldproto = AC.ProtoType;
 	AC.ProtoType = prototype;
@@ -412,7 +414,7 @@ CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 	}
 	else error = tokenize(s,leftright);
 	if ( error == 0 ) {
-		AC.Eside = leftright;
+		AR.Eside = leftright;
 		AC.CompileLevel = 0;
 		if ( leftright == LHSIDE ) { AC.DumNum = AR.CurDum = 0; }
 		error = CompileSubExpressions(AC.tokens);
@@ -588,7 +590,7 @@ int TestTables ARG0
 
 int CompileSubExpressions ARG1(SBYTE *,tokens)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	SBYTE *fill = tokens, *s = tokens, *t;
 	WORD number[MAXNUMSIZE], *oldwork, *w1, *w2;
 	int level, num, i, sumlevel = 0, sumtype = SYMTOSYM;
@@ -658,7 +660,8 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 				Terminate(-1);
 			}
 			if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
-				DoubleBuffer((void **)&subexpbuffers,(void **)&topsubexpbuffers,sizeof(SUBBUF),"subexpbuffers");
+				DoubleBuffer((void **)((VOID *)(&subexpbuffers))
+				,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
 			}
 			subexpbuffers[insubexpbuffers].subexpnum = num;
 			subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
@@ -711,7 +714,7 @@ static UWORD *CGscrat7 = 0;
 
 int CodeGenerator ARG1(SBYTE *,tokens)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	SBYTE *s = tokens, c;
 	int i, sign = 1, first = 1, deno = 1, error = 0, minus, n, needarg, numexp, cc;
 	int base, sumlevel = 0, sumtype = SYMTOSYM, firstsumarg, inset = 0, dflag;
@@ -720,6 +723,9 @@ int CodeGenerator ARG1(SBYTE *,tokens)
 	WORD *w1, *w2, *tsize = 0, *relo = 0;
 	UWORD *numerator, *denominator, *innum;
 	CBUF *C;
+	POSITION position;
+	WORD TMproto[SUBEXPSIZE];
+	RENUMBER renumber;
 	if ( AC.TokensWriteFlag ) WriteTokens(tokens);
 	if ( CGscrat7 == 0 )
 		CGscrat7 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(WORD),"CodeGenerator");
@@ -902,11 +908,38 @@ doexpr:					s += 2;
 						FILLFUN3(t)
 						x2 = 0; while ( *s >= 0 ) { x2 = x2*128 + *s++; }
 						*t++ = -EXPRESSION; *t++ = x2;
+/*
+						The next code is added to facilitate parallel processing
+						We need to call GetTable here to make sure all processors
+						have the same numbering of all variables.
+*/
+						if ( Expressions[x2].status == STOREDEXPRESSION ) {
+							TMproto[0] = EXPRESSION;
+							TMproto[1] = SUBEXPSIZE;
+							TMproto[2] = x2;
+							TMproto[3] = 1;
+							{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+							AT.TMaddr = TMproto;
+							PUTZERO(position);
+							if ( ( renumber = GetTable(x2,&position) ) == 0 ) {
+								error = 1;
+								MesPrint("&Problems getting information about stored expression %s"
+								,EXPRNAME(x2));
+							}
+#ifdef WITHPTHREADS
+							M_free(renumber->symb.lo,"VarSpace");
+							M_free(renumber,"Renumber");
+#endif
+							AR.StoreData.dirtyflag = 1;
+						}
+/* ------------------above code added 16-may-2006 JV--------------------------*/
 						if ( *s != TFUNCLOSE ) {
 							if ( x1 == FIRSTBRACKET )
 								MesPrint("&Problems with argument of FirstBracket_");
-							else
+							else if ( x1 == TERMSINEXPR )
 								MesPrint("&Problems with argument of TermsIn_");
+							else
+								MesPrint("&Problems with argument of FactorIn_");
 							error = 1;
 							while ( *s != TENDOFIT && *s != TFUNCLOSE ) s++;
 						}
@@ -914,7 +947,7 @@ doexpr:					s += 2;
 						goto fin;
 					}
 				}
-				else if ( x1 == TERMSINEXPR ) {
+				else if ( x1 == TERMSINEXPR || x1 == FACTORIN ) {
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) goto doexpr;
 					if ( s[0] == TFUNOPEN && s[1] == TDOLLAR ) {
 						s += 2;
@@ -923,7 +956,10 @@ doexpr:					s += 2;
 						x2 = 0; while ( *s >= 0 ) { x2 = x2*128 + *s++; }
 						*t++ = -DOLLAREXPRESSION; *t++ = x2;
 						if ( *s != TFUNCLOSE ) {
-							MesPrint("&Problems with argument of TermsIn_");
+							if ( x1 == TERMSINEXPR )
+								MesPrint("&Problems with argument of TermsIn_");
+							else
+								MesPrint("&Problems with argument of FactorIn_");
 							error = 1;
 							while ( *s != TENDOFIT && *s != TFUNCLOSE ) s++;
 						}
@@ -961,6 +997,31 @@ illpoly:				MesPrint("&Illegal use of Poly_ function");
 						s++;
 						x2 = 0; while ( *s >= 0 ) { x2 = 128*x2 + *s++; }
 						*t++ = -EXPRESSION; *t++ = x2;
+/*
+						The next code is added to facilitate parallel processing
+						We need to call GetTable here to make sure all processors
+						have the same numbering of all variables.
+*/
+						if ( Expressions[x2].status == STOREDEXPRESSION ) {
+							TMproto[0] = EXPRESSION;
+							TMproto[1] = SUBEXPSIZE;
+							TMproto[2] = x2;
+							TMproto[3] = 1;
+							{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+							AT.TMaddr = TMproto;
+							PUTZERO(position);
+							if ( ( renumber = GetTable(x2,&position) ) == 0 ) {
+								error = 1;
+								MesPrint("&Problems getting information about stored expression %s"
+								,EXPRNAME(x2));
+							}
+#ifdef WITHPTHREADS
+							M_free(renumber->symb.lo,"VarSpace");
+							M_free(renumber,"Renumber");
+#endif
+							AR.StoreData.dirtyflag = 1;
+						}
+/* ------------------above code added 16-may-2006 JV--------------------------*/
 					}
 					else goto illpoly;
 					if ( xx2 != POLYNORM && xx2 != POLYINTFAC ) {
@@ -975,6 +1036,31 @@ illpoly:				MesPrint("&Illegal use of Poly_ function");
 							s++;
 							x2 = 0; while ( *s >= 0 ) { x2 = 128*x2 + *s++; }
 							*t++ = -EXPRESSION; *t++ = x2;
+/*
+							The next code is added to facilitate parallel processing
+							We need to call GetTable here to make sure all processors
+							have the same numbering of all variables.
+*/
+							if ( Expressions[x2].status == STOREDEXPRESSION ) {
+								TMproto[0] = EXPRESSION;
+								TMproto[1] = SUBEXPSIZE;
+								TMproto[2] = x2;
+								TMproto[3] = 1;
+								{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+								AT.TMaddr = TMproto;
+								PUTZERO(position);
+								if ( ( renumber = GetTable(x2,&position) ) == 0 ) {
+									error = 1;
+									MesPrint("&Problems getting information about stored expression %s"
+									,EXPRNAME(x2));
+								}
+#ifdef WITHPTHREADS
+								M_free(renumber->symb.lo,"VarSpace");
+								M_free(renumber,"Renumber");
+#endif
+								AR.StoreData.dirtyflag = 1;
+							}
+/* ------------------above code added 16-may-2006 JV--------------------------*/
 						}
 						else goto illpoly;
 					}
@@ -1125,7 +1211,33 @@ dofunction:			firstsumarg = 1;
 							case TDOLLAR:
 								*t++ = -DOLLAREXPRESSION; *t++ = x2; break;
 							case TEXPRESSION:
-								*t++ = -EXPRESSION; *t++ = x2; break;
+								*t++ = -EXPRESSION; *t++ = x2;
+/*
+								The next code is added to facilitate parallel processing
+								We need to call GetTable here to make sure all processors
+								have the same numbering of all variables.
+*/
+								if ( Expressions[x2].status == STOREDEXPRESSION ) {
+									TMproto[0] = EXPRESSION;
+									TMproto[1] = SUBEXPSIZE;
+									TMproto[2] = x2;
+									TMproto[3] = 1;
+									{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+									AT.TMaddr = TMproto;
+									PUTZERO(position);
+									if ( ( renumber = GetTable(x2,&position) ) == 0 ) {
+										error = 1;
+										MesPrint("&Problems getting information about stored expression %s"
+										,EXPRNAME(x2));
+									}
+#ifdef WITHPTHREADS
+									M_free(renumber->symb.lo,"VarSpace");
+									M_free(renumber,"Renumber");
+#endif
+									AR.StoreData.dirtyflag = 1;
+								}
+/* ------------------above code added 16-may-2006 JV--------------------------*/
+								break;
 							case TINDEX:
 								*t++ = -INDEX; *t++ = x2 + AM.OffsetIndex;
 								break;
@@ -1285,6 +1397,31 @@ dofunction:			firstsumarg = 1;
 				v = t;
 				*t++ = EXPRESSION; *t++ = SUBEXPSIZE; *t++ = x1; *t++ = deno;
 				*t++ = 0; FILLSUB(t)
+/*
+				The next code is added to facilitate parallel processing
+				We need to call GetTable here to make sure all processors
+				have the same numbering of all variables.
+*/
+				if ( Expressions[x1].status == STOREDEXPRESSION ) {
+					TMproto[0] = EXPRESSION;
+					TMproto[1] = SUBEXPSIZE;
+					TMproto[2] = x1;
+					TMproto[3] = 1;
+					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+					AT.TMaddr = TMproto;
+					PUTZERO(position);
+					if ( ( renumber = GetTable(x1,&position) ) == 0 ) {
+						error = 1;
+						MesPrint("&Problems getting information about stored expression %s"
+						,EXPRNAME(x1));
+					}
+#ifdef WITHPTHREADS
+					M_free(renumber->symb.lo,"VarSpace");
+					M_free(renumber,"Renumber");
+#endif
+					AR.StoreData.dirtyflag = 1;
+				}
+/* ------------------above code added 16-may-2006 JV--------------------------*/
 				if ( *s == TFUNOPEN ) {
 					do {
 						s++; c = *s++;
@@ -1451,7 +1588,7 @@ docoef:
 				goto TryPower;
 			case TDOLLAR:
 				x1 = 0; while ( *s >= 0 ) { x1 = x1*128 + *s++; }
-				if ( AC.Eside != LHSIDE ) {
+				if ( AR.Eside != LHSIDE ) {
 					*t++ = SUBEXPRESSION; *t++ = SUBEXPSIZE; *t++ = x1;
 					dflag = 1;
 				}
@@ -1508,7 +1645,7 @@ docoef:
 	AT.WorkPointer = oldwork;
 	if ( error ) return(-1);
 	AddToCB(C,0)
-	if ( AC.CompileLevel > 0 && AC.Eside != LHSIDE ) {
+	if ( AC.CompileLevel > 0 && AR.Eside != LHSIDE ) {
 		/* See whether we have this one already */
 		error = InsTree(C->numrhs);
 		if ( error < (C->numrhs) ) {

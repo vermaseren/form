@@ -24,7 +24,7 @@
 WORD
 EpfFind BARG2(WORD *,term,WORD *,params)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *r, n1 = 0, n2, min = -1, count, fac;
 	WORD *c1 = 0, *c2 = 0, sgn = 1;
 	WORD *tstop, *mstop;
@@ -178,7 +178,7 @@ AllLev:
 WORD
 EpfCon BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *kron, *perm, *termout, *tstop, size2;
 	WORD *m, *t, sizes, sgn = 0, i;
 	sizes = *params - 3;
@@ -664,7 +664,7 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 WORD
 Trace4 BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
@@ -827,7 +827,7 @@ Trace4 BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 WORD
 Trace4Gen BARG2(TRACES *,t,WORD,number)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *termout, *stop;
 	WORD *p, *m, oldval;
 	WORD *pold, *mold, diff, *oldstring, cp;
@@ -1355,7 +1355,7 @@ TraceNno ARG3(WORD,number,WORD *,kron,TRACES *,t)
 WORD
 TraceN BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
@@ -1420,7 +1420,7 @@ TraceN BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 WORD
 TraceNgen BARG2(TRACES *,t,WORD,number)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *termout, *stop;
 	WORD *p, *m, oldval;
 	WORD *pold, *mold, diff, *oldstring;
@@ -1806,7 +1806,7 @@ TracCall:
 WORD
 Traces BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	switch ( AT.TMout[2] ) {	/* Subtype gives dimension */
 		case 0:
 			return(TraceN(BHEAD term,params,num,level));
@@ -1827,7 +1827,7 @@ Traces BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 WORD
 TraceFind BARG2(WORD *,term,WORD *,params)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *p, *m, *to;
 	WORD *termout, *stop, *stop2, number = 0;
 	WORD first = 1;
@@ -1938,7 +1938,7 @@ F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
 WORD
 Chisholm BARG2(WORD *,term,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *r, *m, *s, *tt, *rr;
 	WORD *mat, *matpoint, *termout, *rdo;
 	CBUF *C = cbuf+AM.rbufnum;
@@ -2153,7 +2153,7 @@ ChisCall:
 WORD
 TenVecFind BARG2(WORD *,term,WORD *,params)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *w, *m, *tstop;
 	WORD i, mode, thevector, thetensor, spectator;
 	thetensor = params[3];
@@ -2288,7 +2288,7 @@ match:
 WORD
 TenVec BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD *t, *m, *w, *termout, *tstop, *outlist, *ou, *ww, *mm;
 	WORD i, j, k, x, mode, thevector, thetensor, DumNow, spectator;
 	thetensor = params[2];

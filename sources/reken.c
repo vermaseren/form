@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ RekenRational :
  		#[ Pack :			VOID Pack(a,na,b,nb)
 
@@ -45,7 +45,7 @@ Pack ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 }
 
 /*
- 		#] Pack :
+ 		#] Pack : 
  		#[ UnPack :			VOID UnPack(a,na,denom,numer)
 
 	Determines the sizes of the numerator and the denominator in the
@@ -73,7 +73,7 @@ UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
 }
 
 /*
- 		#] UnPack :
+ 		#] UnPack : 
  		#[ Mully :			WORD Mully(a,na,b,nb)
 
 	Multiplies the rational a by the Long b.
@@ -83,7 +83,7 @@ UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
 WORD
 Mully BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	UWORD *d, *e;
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
@@ -122,7 +122,7 @@ MullyEr:
 }
 
 /*
- 		#] Mully :
+ 		#] Mully : 
  		#[ Divvy :			WORD Divvy(a,na,b,nb)
 
 	Divides the rational a by the Long b.
@@ -132,7 +132,7 @@ MullyEr:
 WORD
 Divvy BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	UWORD *d,*e;
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
@@ -167,14 +167,14 @@ DivvyEr:
 }
 
 /*
- 		#] Divvy :
+ 		#] Divvy : 
  		#[ AddRat :			WORD AddRat(a,na,b,nb,c,nc)
 */
 
 WORD
 AddRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	UWORD *d, *e, *f, *g;
 	WORD nd, ne, nf, ng, adenom, anumer, bdenom, bnumer;
 	if ( !na ) {
@@ -318,7 +318,7 @@ AddRer:
 }
 
 /*
- 		#] AddRat :
+ 		#] AddRat : 
  		#[ MulRat :			WORD MulRat(a,na,b,nb,c,nc)
 
 	Multiplies the rationals a and b. The Gcd of the individual
@@ -364,7 +364,7 @@ MulRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	if ( nb < 0 ) { nb = -nb; sgn = -sgn; }
 	if ( !na || !nb ) { *nc = 0; return(0); }
 	if ( na != 1 || nb != 1 ) {
-		GETBIDENTITY;
+		GETBIDENTITY
 		UWORD *xd,*xe;
 		UWORD *xf,*xg;
 		WORD dden, dnumr, eden, enumr;
@@ -448,7 +448,7 @@ MulRer:
 }
 
 /*
- 		#] MulRat :
+ 		#] MulRat : 
  		#[ DivRat :			WORD DivRat(a,na,b,nb,c,nc)
 
 	Divides the rational a by the rational b.
@@ -458,7 +458,7 @@ MulRer:
 WORD
 DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD i, j;
 	UWORD *xd,*xe,xx;
 	if ( !nb ) {
@@ -477,7 +477,7 @@ DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] DivRat :
+ 		#] DivRat : 
  		#[ Simplify :		WORD Simplify(a,na,b,nb)
 
 	Determines the greatest common denominator of a and b and
@@ -489,7 +489,7 @@ DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 WORD
 Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	UWORD *x1,*x2,*x3;
 	UWORD *x4;
 	WORD n1,n2,n3,n4,sgn = 1;
@@ -573,7 +573,7 @@ SimpErr:
 }
 
 /*
- 		#] Simplify :
+ 		#] Simplify : 
  		#[ AccumGCD :		WORD AccumGCD(a,na,b,nb)
 
 		Routine takes the rational GCD of the fractions in a and b and
@@ -584,7 +584,7 @@ SimpErr:
 
 WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD nna,nnb,numa,numb,dena,denb;
 	nna = *na; if ( nna < 0 ) nna = -nna; nna = (nna-1)/2;
 	nnb = nb;  if ( nnb < 0 ) nnb = -nnb; nnb = (nnb-1)/2;
@@ -603,7 +603,7 @@ AccErr:
 }
 
 /*
- 		#] AccumGCD :
+ 		#] AccumGCD : 
  		#[ TakeRatRoot:
 */
 
@@ -623,8 +623,8 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 }
 
 /*
- 		#] TakeRatRoot:
-  	#] RekenRational :
+ 		#] TakeRatRoot: 
+  	#] RekenRational : 
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -666,7 +666,7 @@ AddLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] AddLong :
+ 		#] AddLong : 
  		#[ AddPLon :		WORD AddPLon(a,na,b,nb,c,nc)
 
 	Adds two long integers a and b and puts the result in c.
@@ -720,7 +720,7 @@ AddPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,UWORD *,nc)
 }
 
 /*
- 		#] AddPLon :
+ 		#] AddPLon : 
  		#[ SubPLon :		VOID SubPLon(a,na,b,nb,c,nc)
 
 	Subtracts b from a. Assumes that a > b. Result in c.
@@ -757,7 +757,7 @@ SubPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] SubPLon :
+ 		#] SubPLon : 
  		#[ MulLong :		WORD MulLong(a,na,b,nb,c,nc)
 
 	Does a Long multiplication. Assumes that WORD is half the size
@@ -805,7 +805,7 @@ MulLov:
 }
 
 /*
- 		#] MulLong :
+ 		#] MulLong : 
  		#[ BigLong :		WORD BigLong(a,na,b,nb)
 
 	Returns > 0 if a > b, < 0 if b > a and 0 if a == b
@@ -830,7 +830,7 @@ BigLong ARG4(UWORD *,a,WORD,na,UWORD *,b,WORD,nb)
 }
 
 /*
- 		#] BigLong :
+ 		#] BigLong : 
  		#[ DivLong :		WORD DivLong(a,na,b,nb,c,nc,d,nd)
 
 	This is the long division which knows a couple of exceptions.
@@ -903,7 +903,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 		}
 	}
 	else {
-		GETIDENTITY;
+		GETIDENTITY
 
 		/* Start with normalization operation */
 
@@ -1017,7 +1017,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 }
 
 /*
- 		#] DivLong :
+ 		#] DivLong : 
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -1028,7 +1028,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 WORD
 RaisPow BARG3(UWORD *,a,WORD *,na,UWORD,b)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	WORD i, nu;
 	UWORD *it, *iu, c;
 	UWORD *is;
@@ -1075,7 +1075,7 @@ RaisOvl:
 }
 
 /*
- 		#] RaisPow :
+ 		#] RaisPow : 
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -1110,7 +1110,7 @@ Product ARG3(UWORD *,a,WORD *,na,WORD,b)
 }
 
 /*
- 		#] Product :
+ 		#] Product : 
  		#[ Quotient :		UWORD Quotient(a,na,b)
 
 		Routine divides the long number a by b with the assumption that
@@ -1150,7 +1150,7 @@ Quotient ARG3(UWORD *,a,WORD *,na,WORD,b)
 }
 
 /*
- 		#] Quotient :
+ 		#] Quotient : 
  		#[ Remain10 :		WORD Remain10(a,na)
 
 	Routine devides a by 10 and gives the remainder as return value.
@@ -1178,7 +1178,7 @@ Remain10 ARG2(UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Remain10 :
+ 		#] Remain10 : 
  		#[ Remain4 :		WORD Remain4(a,na)
 
 	Routine devides a by 10000 and gives the remainder as return value.
@@ -1206,7 +1206,7 @@ Remain4 ARG2(UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Remain4 :
+ 		#] Remain4 : 
  		#[ PrtLong :		VOID PrtLong(a,na,s)
 
 	Puts the long positive number a in string s.
@@ -1216,7 +1216,7 @@ Remain4 ARG2(UWORD *,a,WORD *,na)
 VOID
 PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD q, i;
 	UBYTE *sa, *sb;
 	UBYTE c;
@@ -1262,7 +1262,7 @@ PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
 }
 
 /*
- 		#] PrtLong :
+ 		#] PrtLong : 
  		#[ GetLong :		WORD GetLong(s,a,na)
 
 	Reads a long number from a string.
@@ -1311,7 +1311,7 @@ GetLong ARG3(UBYTE *,s,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] GetLong :
+ 		#] GetLong : 
  		#[ GCD :			WORD GCD(a,na,b,nb,c,nc)
 
 	Algorithm to compute the GCD of two long numbers.
@@ -1486,7 +1486,7 @@ toobad:
 #endif
 
 /*
- 		#] GCD :
+ 		#] GCD : 
  		#[ GcdLong :		WORD GcdLong(a,na,b,nb,c,nc)
 
 	Returns the Greatest Common Divider of a and b in c.
@@ -1498,7 +1498,7 @@ toobad:
 WORD
 GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	if ( !na || !nb ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Cannot take gcd");
@@ -1699,14 +1699,14 @@ GcdErr:
 }
 
 /*
- 		#] GcdLong :
+ 		#] GcdLong : 
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
 WORD
 GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD j, k, l;
 	if ( i1-i2 < i2 ) i2 = i1-i2;
 	if ( i2 == 0 ) { *a = 1; *na = 1; return(0); }
@@ -1736,7 +1736,7 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 }
 
 /*
- 		#] GetBinom :
+ 		#] GetBinom : 
  		#[ TakeLongRoot:
 
 	Takes the 'power'-root of the long number in a.
@@ -1750,7 +1750,7 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 
 int TakeLongRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int numbits, guessbits, i;
 	UWORD x, *b, *c, *d, *e;
 	WORD na, nb, nc, nd, ne;
@@ -1845,8 +1845,8 @@ TLcall:
 }
 
 /*
- 		#] TakeLongRoot:
-  	#] RekenLong :
+ 		#] TakeLongRoot: 
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -1860,7 +1860,7 @@ TLcall:
 WORD
 CompCoef ARG2(WORD *,term1,WORD *,term2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UWORD *c;
 	WORD n1,n2,n3,*a;
 	GETCOEF(term1,n1);
@@ -1906,7 +1906,7 @@ CompCoef ARG2(WORD *,term1,WORD *,term2)
 }
 
 /*
- 		#] CompCoef :
+ 		#] CompCoef : 
  		#[ Modulus :		WORD Modulus(term)
 
 	Routine takes the coefficient of term modulus b. The answer
@@ -1921,7 +1921,7 @@ Modulus ARG1(WORD *,term)
 	WORD n1;
 	t = term;
 	GETCOEF(t,n1);
-	if ( TakeModulus((UWORD *)t,&n1,0) ) {
+	if ( TakeModulus((UWORD *)t,&n1,AC.cmod,AC.ncmod,0) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("Modulus");
 		UNLOCK(ErrorMessageLock);
@@ -1941,7 +1941,7 @@ Modulus ARG1(WORD *,term)
 }
 
 /*
- 		#] Modulus :
+ 		#] Modulus : 
  		#[ TakeModulus :	WORD TakeModulus(a,na,par)
 
 		Routine gets the rational number in a with reduced length na.
@@ -1952,17 +1952,17 @@ Modulus ARG1(WORD *,term)
 */
 
 WORD
-TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
+TakeModulus ARG5(UWORD *,a,WORD *,na,WORD *,cmodvec,WORD,ncmod,WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UWORD *c, *d, *e, *f, *g, *h;
 	UWORD *x4,*x2;
 	UWORD *x3,*x1,*x5,*x6,*x7,*x8;
 	WORD y3,y1,y5,y6;
 	WORD n1, i, y2, y4;
 	WORD nh, tdenom, tnumer, nmod;
-	if ( AC.ncmod == 0 ) return(0);		/* No modulus operation */
-	nmod = ABS(AC.ncmod);
+	if ( ncmod == 0 ) return(0);		/* No modulus operation */
+	nmod = ABS(ncmod);
 	n1 = *na;
 	if ( !par ) UnPack(a,n1,&tdenom,&tnumer);
 	else { tnumer = n1; }
@@ -1976,10 +1976,10 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 	}
 	c = AT.TMscrat1; d = AT.TMscrat2; e = AT.TMscrat3; f = AT.TMscrat4; g = AT.TMscrat5; h = AT.TMscrat6;
 	n1 = ABS(n1);
-	if ( DivLong(a,tnumer,(UWORD *)AC.cmod,nmod,
+	if ( DivLong(a,tnumer,(UWORD *)cmodvec,nmod,
 		c,&nh,a,&tnumer) ) goto ModErr;
 	if ( par ) { *na = tnumer; return(0); }
-	if ( DivLong(a+n1,tdenom,(UWORD *)AC.cmod,nmod,c,&nh,a+n1,&tdenom) ) goto ModErr;
+	if ( DivLong(a+n1,tdenom,(UWORD *)cmodvec,nmod,c,&nh,a+n1,&tdenom) ) goto ModErr;
 	if ( !tdenom ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Division by zero in modulus arithmetic");
@@ -1999,7 +1999,7 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 		UNLOCK(ErrorMessageLock);
 		return(-1);
 	}
-	x2 = (UWORD *)AC.cmod; x1 = c; i = nmod; while ( --i >= 0 ) *x1++ = *x2++;
+	x2 = (UWORD *)cmodvec; x1 = c; i = nmod; while ( --i >= 0 ) *x1++ = *x2++;
 	x1 = c; x2 = a+n1; x3 = d; x4 = e; x5 = f; x6 = g;
 	y1 = nmod; y2 = tdenom; y4 = 0; y5 = 1; *x5 = 1;
 	for(;;) {
@@ -2019,11 +2019,11 @@ TakeModulus ARG3(UWORD *,a,WORD *,na,WORD,par)
 		x7 = x1; x1 = x2; y1 = y2; x2 = x3; y2 = y3; x3 = x7;
 		x8 = x4; x4 = x5; y4 = y5; x5 = x6; y5 = y6; x6 = x8;
 	}
-	if ( y5 < 0 && AddLong((UWORD *)AC.cmod,nmod,x5,y5,x5,&y5) ) goto ModErr;
+	if ( y5 < 0 && AddLong((UWORD *)cmodvec,nmod,x5,y5,x5,&y5) ) goto ModErr;
 	if ( MulLong(a,tnumer,x5,y5,c,&y3) ) goto ModErr;
-	if ( DivLong(c,y3,(UWORD *)AC.cmod,nmod,d,&y5,a,&tdenom) ) goto ModErr;
+	if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;
 	if ( !tdenom ) { *na = 0; return(0); }
-	if ( tdenom < 0 ) SubPLon((UWORD *)AC.cmod,nmod,a,-tdenom,a,&tdenom);
+	if ( tdenom < 0 ) SubPLon((UWORD *)cmodvec,nmod,a,-tdenom,a,&tdenom);
 	*na = i = tdenom;
 	a += i;
 	*a++ = 1;
@@ -2077,7 +2077,7 @@ MakeModTable()
 		AC.modpowers[1] = 0;
 	}
 	else {
-		GETIDENTITY;
+		GETIDENTITY
 		WORD nScrat, n2;
 		if ( AN.MMscrat7 == 0 ) {
 			AN.MMscrat7 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"MakeModTable");
@@ -2094,7 +2094,7 @@ MakeModTable()
 			AC.modpowers[j+1] = (WORD)(i >> BITSINWORD);
 			MulLong((UWORD *)AN.MMscratC,nScrat,(UWORD *)AC.powmod,
 			AC.npowmod,(UWORD *)AN.MMscrat7,&n2);
-			TakeModulus(AN.MMscrat7,&n2,1);
+			TakeModulus(AN.MMscrat7,&n2,AC.cmod,AC.ncmod,1);
 			*AN.MMscratC = *AN.MMscrat7; AN.MMscratC[1] = AN.MMscrat7[1]; nScrat = n2;
 		}
 		j = size << 1;
@@ -2113,7 +2113,7 @@ MakeModTable()
 }
 
 /*
- 		#] MakeModTable :
+ 		#] MakeModTable : 
   	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
@@ -2130,7 +2130,7 @@ MakeModTable()
 int
 Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
 {
-	GETBIDENTITY;
+	GETBIDENTITY
 	UWORD *b, *c;
 	WORD nc;
 	int i, j;
@@ -2191,7 +2191,7 @@ Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Factorial :
+ 		#] Factorial : 
  		#[ Bernoulli :		WORD Bernoulli(n,a,na)
 
 	Starts with only the value of bernoulli_(0).
@@ -2211,7 +2211,7 @@ Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
 int
 Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UWORD *b, *c, *scrib, *ntop, *ntop1;
 	WORD i, i1, i2, nhalf, nqua, nscrib, nntop, nntop1, *oldworkpointer;
 	UWORD twee = 2, twonplus1;
@@ -2313,8 +2313,8 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Bernoulli :
-  	#] Functions :
+ 		#] Bernoulli : 
+  	#] Functions : 
 */
 
 /* temporary commentary for forcing cvs merge */

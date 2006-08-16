@@ -25,7 +25,7 @@ PFDOLLARS *PFDollars;
 WORD
 CleanExpr ARG1(WORD,par)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD j, n, i;
 	POSITION length;
 	EXPRESSIONS e_in, e_out, e;
@@ -36,13 +36,13 @@ CleanExpr ARG1(WORD,par)
 	e_in = e_out = Expressions;
 	if ( n > 0 ) { do {
 		if ( par ) {
-			if ( e_in->renum ) {
-				M_free(e_in->renum,"Renumber"); e_in->renum = 0;
-			}
 			if ( e_in->renumlists ) {
 				if ( e_in->renumlists != AN.dummyrenumlist )
 						M_free(e_in->renumlists,"Renumber-lists");
 				e_in->renumlists = 0;
+			}
+			if ( e_in->renum ) {
+				M_free(e_in->renum,"Renumber"); e_in->renum = 0;
 			}
 		}
 		if ( e_in->status == HIDDENLEXPRESSION
@@ -126,15 +126,15 @@ CleanExpr ARG1(WORD,par)
 		e_in++;
 	} while ( --n > 0 ); }
 	NumExpressions = j;
-	if ( numhid == 0 && AS.hidefile->PObuffer ) {
-		if ( AS.hidefile->handle >= 0 ) {
-			CloseFile(AS.hidefile->handle);
-			remove(AS.hidefile->name);
-			AS.hidefile->handle = -1;
+	if ( numhid == 0 && AR.hidefile->PObuffer ) {
+		if ( AR.hidefile->handle >= 0 ) {
+			CloseFile(AR.hidefile->handle);
+			remove(AR.hidefile->name);
+			AR.hidefile->handle = -1;
 		}
-		AS.hidefile->POfull =
-		AS.hidefile->POfill = AS.hidefile->PObuffer;
-		PUTZERO(AS.hidefile->POposition);
+		AR.hidefile->POfull =
+		AR.hidefile->POfill = AR.hidefile->PObuffer;
+		PUTZERO(AR.hidefile->POposition);
 	}
 	return(0);
 }
@@ -171,6 +171,13 @@ PopVariables()
 	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;
 	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
 	AC.properorderflag = AM.gproperorderflag;
+    AC.ThreadBucketSize = AM.gThreadBucketSize;
+	AC.ThreadStats = AM.gThreadStats;
+	AC.FinalStats = AM.gFinalStats;
+	AC.ThreadsFlag = AM.gThreadsFlag;
+	AC.ThreadBalancing = AM.gThreadBalancing;
+	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch;
+	if ( AC.ThreadsFlag && AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	{
 		WORD *p, *m;
 		p = AM.gcmod;
@@ -226,6 +233,12 @@ MakeGlobal ARG0
 	AM.gparallelflag = AC.parallelflag;
 	AM.gSlavePatchSize = AC.SlavePatchSize;
 	AM.gproperorderflag = AC.properorderflag;
+    AM.gThreadBucketSize = AC.ThreadBucketSize;
+	AM.gThreadStats = AC.ThreadStats;
+	AM.gFinalStats = AC.FinalStats;
+	AM.gThreadsFlag = AC.ThreadsFlag;
+	AM.gThreadBalancing = AC.ThreadBalancing;
+	AM.gThreadSortFileSynch = AC.ThreadSortFileSynch;
 	p = AM.gcmod;
 	m = AC.cmod;
 	i = ABS(AC.ncmod);
@@ -315,17 +328,17 @@ TestDrop()
 WORD
 DoExecute ARG2(WORD,par,WORD,skip)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD RetCode = 0;
-	int i, j;
-
-/*[06nov2005 mt]:*/
+	int i, oldmultithreaded = AS.MultiThreaded;
+#ifdef WITHPTHREADS
+	int j;
+#endif
 #ifdef PARALLEL
+	int j;
 	/*See comments to PF_PotModDollars in parallel.c*/
 	PF_markPotModDollars();	
 #endif
-/*:[06nov2005 mt]*/
-
 /*
 		AC.mparallelflag was set to PARALLELFLAG in IniModule.
 		It can be set to NOPARALLEL_MOPT or PARALLEL_MOPT (module option)
@@ -348,6 +361,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 		AC.mparallelflag |= AC.parallelflag;
 	}
 
+	SpecialCleanup(BHEAD0);
 	if ( skip ) goto skipexec;
 	if ( AC.IfLevel > 0 ) {
 		MesPrint(" %d endif statement(s) missing",AC.IfLevel);
@@ -378,6 +392,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 		}
 	}
 	if ( RetCode ) return(RetCode);
+	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 
 /*[28sep2005 mt]:*/
 /*This code is never used*/
@@ -414,6 +429,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	Now we compare whether all elements of PotModdollars are contained in
 	ModOptdollars. If not, we may not run parallel.
 */
+#ifdef PARALLEL
 	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
 	  if ( NumPotModdollars > NumModOptdollars ) 
 		AC.mparallelflag = NOPARALLEL_DOLLAR;
@@ -425,19 +441,38 @@ DoExecute ARG2(WORD,par,WORD,skip)
 			AC.parallelflag = NOPARALLEL_DOLLAR;
 			break;
 		  }
+		}
+	}
+#endif
 #ifdef WITHPTHREADS
+	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
+	  if ( NumPotModdollars > NumModOptdollars ) {
+		AC.mparallelflag = NOPARALLEL_DOLLAR;
+		AS.MultiThreaded = 0;
+	  }
+	  else 
+		for ( i = 0; i < NumPotModdollars; i++ ) {
+		  for ( j = 0; j < NumModOptdollars; j++ ) 
+			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
+		  if ( j >= NumModOptdollars ) {
+			AC.parallelflag = NOPARALLEL_DOLLAR;
+			AS.MultiThreaded = 0;
+			break;
+		  }
 		  switch ( ModOptdollars[j].type ) {
 			case MODSUM:
 			case MODMAX:
 			case MODMIN:
+			case MODLOCAL:
 				break;
 			default:
 				AC.parallelflag = NOPARALLEL_DOLLAR;
+				AS.MultiThreaded = 0;
 				break;
 		  }
-#endif
 		}
 	}
+#endif
 #ifdef PARALLEL 
 	if ( ( AC.mparallelflag & NOPARALLEL_DOLLAR ) != 0 ) {
 		if ( AC.mparallelflag == NOPARALLEL_DOLLAR )	
@@ -459,7 +494,14 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	if ( AC.NamesFlag || AC.CodesFlag ) WriteLists();
 	if ( par == GLOBALMODULE ) MakeGlobal();
 	if ( RevertScratch() ) return(-1);
+/*
+	Now the actual execution
+*/
 	if ( AP.preError == 0 && ( Processor() || WriteAll() ) ) RetCode = -1;
+/*
+	That was it. Next is cleanup.
+*/
+	AS.MultiThreaded = oldmultithreaded;
 	TableReset();
 	if ( AC.tableuse ) { M_free(AC.tableuse,"tableuse"); AC.tableuse = 0; }
 
@@ -472,6 +514,23 @@ DoExecute ARG2(WORD,par,WORD,skip)
 			return(RetCode);
 #endif
 #ifdef WITHPTHREADS
+	for ( j = 0; j < NumModOptdollars; j++ ) {
+		if ( ModOptdollars[j].dstruct ) {
+/*
+			First clean up dollar values.
+*/
+			for ( i = 0; i < AM.totalnumberofthreads; i++ ) {
+				if ( ModOptdollars[j].dstruct[i].size > 0 ) {
+					M_free(ModOptdollars[j].dstruct[i].where,"Local dollar value");
+				}
+			}
+/*
+			Now clean up the whole array.
+*/
+			M_free(ModOptdollars[j].dstruct,"Local DOLLARS");
+			ModOptdollars[j].dstruct = 0;
+		}
+	}
 #endif
 /*:[28sep2005 mt]*/
 
@@ -516,14 +575,14 @@ skipexec:
 		AR.outfile->POfull =
 		AR.outfile->POfill = AR.outfile->PObuffer;
 		PUTZERO(AR.outfile->POposition);
-		if ( AS.hidefile->handle >= 0 ) {
-			CloseFile(AS.hidefile->handle);
-			remove(AS.hidefile->name);
-			AS.hidefile->handle = -1;
+		if ( AR.hidefile->handle >= 0 ) {
+			CloseFile(AR.hidefile->handle);
+			remove(AR.hidefile->name);
+			AR.hidefile->handle = -1;
 		}
-		AS.hidefile->POfull =
-		AS.hidefile->POfill = AS.hidefile->PObuffer;
-		PUTZERO(AS.hidefile->POposition);
+		AR.hidefile->POfull =
+		AR.hidefile->POfill = AR.hidefile->PObuffer;
+		PUTZERO(AR.hidefile->POposition);
 		AC.HideLevel = 0;
 		if ( par == CLEARMODULE ) {
 			if ( DeleteStore(0) < 0 ) {
@@ -544,6 +603,7 @@ skipexec:
 		ResetVariables(0);
 		CleanUpSort(-1);
 	}
+	clearcbuf(AC.cbufnum);
 	return(RetCode);
 }
 
@@ -569,12 +629,12 @@ skipexec:
 */
 
 WORD
-PutBracket ARG1(WORD *,termin)
+PutBracket BARG1(WORD *,termin)
 {
-	GETIDENTITY;
+	GETBIDENTITY
 	WORD *t, *t1, *b, i, j, *lastfun;
 	WORD *t2, *s1, *s2;
-	WORD *bStop, *bb, *tStop;
+	WORD *bStop, *bb, *bf, *tStop;
 	WORD *term1,*term2, *m1, *m2, *tStopa;
 	WORD *bbb = 0, *bind, *binst = 0, bwild = 0;
 	term1 = AT.WorkPointer+1;
@@ -676,14 +736,11 @@ NextNcom:
 		&& ( *b < FUNCTION || functions[*b-FUNCTION].commute ) ) {
 		b += b[1];
 	}
+	bf = b;
 
-	while ( t < tStop && ( b < bStop || bwild ) ) {
-		while ( b < bStop && *b != *t ) {
-			if ( *b > *t && *t < FUNCTION ) b += b[1];
-			else if ( *t >= FUNCTION && *b >= FUNCTION && *b < *t ) b += b[1];
-			else break;
-		}
-/*		while ( b < bStop && *b > *t ) b += b[1]; */
+	while ( t < tStop && ( bf < bStop || bwild ) ) {
+		b = bf;
+		while ( b < bStop && *b != *t ) { b += b[1]; }
 		i = t[1];
 		if ( *t >= FUNCTION ) { /* We are in function territory */
 			if ( b < bStop && *b == *t ) goto FunBrac;
@@ -858,6 +915,18 @@ nextdot:;
 
 /*
  		#] PutBracket :
+ 		#[ SpecialCleanup :
+*/
+
+VOID SpecialCleanup BARG0
+{
+	GETBIDENTITY
+	if ( AT.previousEfactor ) M_free(AT.previousEfactor,"Efactor cache");
+	AT.previousEfactor = 0;
+}
+
+/*
+ 		#] SpecialCleanup :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -865,7 +934,7 @@ nextdot:;
 
 void ExchangeExpressions ARG2(int,num1,int,num2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD node1, node2, namesize, TMproto[SUBEXPSIZE];
 	INDEXENTRY *ind;
 	EXPRESSIONS e1, e2;
@@ -892,19 +961,19 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
 		TMproto[3] = 1;
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
-		ind = FindInIndex(num1,&AO.StoreData,0);
+		ind = FindInIndex(num1,&AR.StoreData,0);
 		s1 = (SBYTE *)(AC.exprnames->namebuffer+e1->name);
 		i = e1->namesize;
 		s2 = ind->name;
 		NCOPY(s2,s1,i);
 		*s2 = 0;
-		SeekFile(AO.StoreData.Handle,&(e1->onfile),SEEK_SET);
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)ind,
+		SeekFile(AR.StoreData.Handle,&(e1->onfile),SEEK_SET);
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)ind,
 		(LONG)(sizeof(INDEXENTRY))) != sizeof(INDEXENTRY) ) {
 			MesPrint("File error while exchanging expressions");
 			Terminate(-1);
 		}
-		FlushFile(AO.StoreData.Handle);
+		FlushFile(AR.StoreData.Handle);
 	}
 	if ( e2->status == STOREDEXPRESSION ) {
 /*
@@ -916,19 +985,19 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
 		TMproto[3] = 1;
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
-		ind = FindInIndex(num1,&AO.StoreData,0);
+		ind = FindInIndex(num1,&AR.StoreData,0);
 		s1 = (SBYTE *)(AC.exprnames->namebuffer+e2->name);
 		i = e2->namesize;
 		s2 = ind->name;
 		NCOPY(s2,s1,i);
 		*s2 = 0;
-		SeekFile(AO.StoreData.Handle,&(e2->onfile),SEEK_SET);
-		if ( WriteFile(AO.StoreData.Handle,(UBYTE *)ind,
+		SeekFile(AR.StoreData.Handle,&(e2->onfile),SEEK_SET);
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)ind,
 		(LONG)(sizeof(INDEXENTRY))) != sizeof(INDEXENTRY) ) {
 			MesPrint("File error while exchanging expressions");
 			Terminate(-1);
 		}
-		FlushFile(AO.StoreData.Handle);
+		FlushFile(AR.StoreData.Handle);
 	}
 }
 
@@ -942,12 +1011,13 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 /*
 		Gets the first bracket of the expression 'num'
 		Puts it in term. If no brackets the answer is one.
+		Routine is called from Normalize. Hence it should be thread-safe
 */
-	GETIDENTITY;
+	GETIDENTITY
 	POSITION position, oldposition;
 	RENUMBER renumber;
 	FILEHANDLE *fi;
-	WORD type, *oldcomppointer, oldonefile, hand, numword;
+	WORD type, *oldcomppointer, oldonefile, numword;
 	WORD *t, *tstop;
 
 	oldcomppointer = AR.CompressPointer;
@@ -969,39 +1039,46 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 			MesCall("GetFirstBracket");
 			SETERROR(-1)
 		}
+#ifdef WITHPTHREADS
+		M_free(renumber->symb.lo,"VarSpace");
+		M_free(renumber,"Renumber");
+#endif
 	}
 	else {			/* Active expression */
 		oldonefile = AR.GetOneFile;
 		if ( type == HIDDENLEXPRESSION || type == HIDDENGEXPRESSION ) {
-			AR.GetOneFile = 2; fi = AS.hidefile;
+			AR.GetOneFile = 2; fi = AR.hidefile;
 		}
 		else {
 			AR.GetOneFile = 0; fi = AR.infile;
 		}
-		hand = fi->handle;
-		if ( hand >= 0 ) {
+		if ( fi->handle >= 0 ) {
 			PUTZERO(oldposition);
+/*
 			SeekFile(fi->handle,&oldposition,SEEK_CUR);
-			SeekFile(hand,&(AS.OldOnFile[num]),SEEK_SET);
-			if ( ISNEGPOS(AS.OldOnFile[num]) ) {
-				MesPrint("File error");
-				SETERROR(-1)
+*/
 			}
-		}
 		else {
 			SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
-			fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(AS.OldOnFile[num]));
 		}
-		if ( GetOneTerm(BHEAD term,hand) < 0 || GetOneTerm(BHEAD term,hand) < 0 ) {
+		position = AS.OldOnFile[num];
+		if ( GetOneTerm(BHEAD term,fi,&position,1) < 0
+		|| ( GetOneTerm(BHEAD term,fi,&position,1) < 0 ) ) {
+			LOCK(ErrorMessageLock);
 			MesCall("GetFirstBracket");
+			UNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
-		if ( hand >= 0 ) {
-			SeekFile(hand,&oldposition,SEEK_SET);
+		if ( fi->handle >= 0 ) {
+/*
+			SeekFile(fi->handle,&oldposition,SEEK_SET);
 			if ( ISNEGPOS(oldposition) ) {
+				LOCK(ErrorMessageLock);
 				MesPrint("File error");
+				UNLOCK(ErrorMessageLock);
 				SETERROR(-1)
 			}
+*/
 		}
 		else {
 			fi->POfill = fi->PObuffer+BASEPOSITION(oldposition);
@@ -1070,5 +1147,311 @@ void UpdatePositions()
 
 /*
  		#] UpdatePositions :
+ 		#[ CountTerms1 :		LONG CountTerms1()
+
+		Counts the terms in the current deferred bracket
+		Is mainly an adaptation of the routine Deferred in proces.c
+*/
+
+LONG
+CountTerms1 BARG0
+{
+	GETBIDENTITY
+	POSITION oldposition, startposition;
+	WORD *t, *m, *mstop, decr, i, *oldwork, retval;
+	WORD *oldipointer = AR.CompressPointer;
+	WORD oldGetOneFile = AR.GetOneFile, olddeferflag = AR.DeferFlag;
+	LONG numterms = 0;
+	AR.GetOneFile = 1;
+	oldwork = AT.WorkPointer;
+	AT.WorkPointer += AM.MaxTer;
+	AR.DeferFlag = 0;
+/*
+		Store old position
+*/
+	if ( AR.infile->handle >= 0 ) {
+		PUTZERO(oldposition);
+/*??????*/
+		SeekFile(AR.infile->handle,&oldposition,SEEK_CUR);
+		startposition = AR.DefPosition;
+	}
+	else {
+		SETBASEPOSITION(oldposition,AR.infile->POfill-AR.infile->PObuffer);
+/*		SETBASEPOSITION(startposition,(UBYTE *)(AR.infile->POfill)-(UBYTE *)(AR.infile->PObuffer)); */
+/*%%%%%ADDED 13-apr-2006 for Keep Brackets in bucket */
+		startposition = AR.DefPosition;
+		AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer)
+					+BASEPOSITION(startposition));
+	}
+/*
+		Look in the CompressBuffer where the bracket contents start
+*/
+	t = m = AR.CompressBuffer;
+	t += *t;
+	mstop = t - ABS(t[-1]);
+	m++;
+	while ( *m != HAAKJE && m < mstop ) m += m[1];
+	if ( m >= mstop ) {	/* No deferred action! */
+		numterms = 1;
+		AR.DeferFlag = olddeferflag;
+		AT.WorkPointer = oldwork;
+		AR.GetOneFile = oldGetOneFile;
+		return(numterms);
+	}
+	mstop = m + m[1];
+	decr = WORDDIF(mstop,AR.CompressBuffer)-1;
+
+	m = AR.CompressBuffer;
+	t = AR.CompressPointer;
+	i = *m;
+	NCOPY(t,m,i);
+	AR.TePos = 0;
+	AN.TeSuOut = 0;
+/*
+		Status:
+		First bracket content starts at mstop.
+		Next term starts at startposition.
+		Decompression information is in AR.CompressPointer.
+		The outside of the bracket runs from AR.CompressBuffer+1 to mstop.
+*/
+	AR.CompressPointer = oldipointer;
+	for(;;) {
+		numterms++;
+		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile,&startposition,0);
+/*
+		if ( AR.infile->handle >= 0 ) {
+			SeekFile(AR.infile->handle,&startposition,SEEK_SET);
+		}
+		else { AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer) + BASEPOSITION(startposition)); }
+		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile->handle);
+		if ( AR.infile->handle >= 0 ) {
+			SeekFile(AR.infile->handle,&startposition,SEEK_CUR);
+		}
+		else { SETBASEPOSITION(startposition,(UBYTE *)(AR.infile->POfill)-(UBYTE *)(AR.infile->PObuffer)); }
+*/
+		if ( retval <= 0 ) break;
+
+		AR.CompressPointer = oldipointer;
+		t = AR.CompressPointer;
+		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
+		t++;
+		m = AR.CompressBuffer+1;
+		while ( m < mstop ) {
+			if ( *m != *t ) goto Thatsit;
+			m++; t++;
+		}
+	}
+Thatsit:;
+/*
+		Finished. Reposition the file, restore information and return.
+*/
+	AT.WorkPointer = oldwork;
+	if ( AR.infile->handle >= 0 ) {
+/*
+		SeekFile(AR.infile->handle,&oldposition,SEEK_SET);
+*/
+	}
+	else {
+		AR.infile->POfill = AR.infile->PObuffer + BASEPOSITION(oldposition);
+	}
+	AR.DeferFlag = olddeferflag;
+	AR.GetOneFile = oldGetOneFile;
+	return(numterms);
+}
+
+/*
+ 		#] CountTerms1 :
+ 		#[ TermsInBracket :		LONG TermsInBracket(term,level)
+
+	The function TermsInBracket_()
+	Syntax:
+		TermsInBracket_() : The current bracket in a Keep Brackets
+		TermsInBracket_(bracket) : This bracket in the current expression
+		TermsInBracket_(expression,bracket) : This bracket in the given expression
+	All other specifications don't have any effect.
+*/
+
+#define CURRENTBRACKET 1
+#define BRACKETCURRENTEXPR 2
+#define BRACKETOTHEREXPR 3
+#define NOBRACKETACTIVE 4
+
+LONG TermsInBracket BARG2(WORD *,term,WORD,level)
+{
+	WORD *t, *tstop, *b, *tt, numexp = 0, *n1, *n2;
+	int type = 0, i, num;
+	LONG numterms = 0;
+	WORD *bracketbuffer = AT.WorkPointer;
+	t = term; GETSTOP(t,tstop);
+	t++; b = bracketbuffer;
+	while ( t < tstop ) {
+		if ( *t != TERMSINBRACKET ) { t += t[1]; continue; }
+		if ( t[1] == FUNHEAD || (
+			 t[1] == FUNHEAD+2
+			&& t[FUNHEAD] == -SNUMBER
+			&& t[FUNHEAD+1] == 0
+		 ) ) {
+			if ( AC.ComDefer == 0 ) {
+				type = NOBRACKETACTIVE;
+			}
+			else {
+				type = CURRENTBRACKET;
+			}
+			*b = 0;
+			break;
+		}
+		if ( t[FUNHEAD] == -EXPRESSION ) {
+			numexp = t[FUNHEAD+1];
+			if ( t[FUNHEAD+2] < 0 ) {
+				if ( ( t[FUNHEAD+2] <= -FUNCTION ) && ( t[1] == FUNHEAD+3 ) ) {
+					type = BRACKETOTHEREXPR;
+					*b++ = FUNHEAD+4; *b++ = -t[FUNHEAD+2]; *b++ = FUNHEAD;
+					for ( i = 2; i < FUNHEAD; i++ ) *b++ = 0;
+					*b++ = 1; *b++ = 1; *b++ = 3;
+					break;
+				}
+				else if ( ( t[FUNHEAD+2] > -FUNCTION ) && ( t[1] == FUNHEAD+4 ) ) {
+					type = BRACKETOTHEREXPR;
+					tt = t + FUNHEAD+2;
+					switch ( *tt ) {
+						case -SYMBOL:
+							*b++ = 8; *b++ = SYMBOL; *b++ = 4; *b++ = tt[1];
+							*b++ = 1; *b++ = 1; *b++ = 1; *b++ = 3;
+							break;
+						case -SNUMBER:
+							if ( tt[1] == 1 ) {
+								*b++ = 4; *b++ = 1; *b++ = 1; *b++ = 3;
+							}
+							else goto IllBraReq;
+							break;
+						default:
+							goto IllBraReq;
+					}
+					break;
+				}
+			}
+			else if ( ( t[FUNHEAD+2] == (t[1]-FUNHEAD-2) ) &&
+					  ( t[FUNHEAD+2+ARGHEAD] == (t[FUNHEAD+2]-ARGHEAD) ) ) {
+				type = BRACKETOTHEREXPR;
+				tt = t + FUNHEAD + ARGHEAD; num = *tt;
+				for ( i = 0; i < num; i++ ) *b++ = *tt++;
+				break;
+			}
+		}
+		else {
+			if ( t[FUNHEAD] < 0 ) {
+				if ( ( t[FUNHEAD] <= -FUNCTION ) && ( t[1] == FUNHEAD+1 ) ) {
+					type = BRACKETCURRENTEXPR;
+					*b++ = FUNHEAD+4; *b++ = -t[FUNHEAD+2]; *b++ = FUNHEAD;
+					for ( i = 2; i < FUNHEAD; i++ ) *b++ = 0;
+					*b++ = 1; *b++ = 1; *b++ = 3; *b = 0;
+					break;
+				}
+				else if ( ( t[FUNHEAD] > -FUNCTION ) && ( t[1] == FUNHEAD+2 ) ) {
+					type = BRACKETCURRENTEXPR;
+					tt = t + FUNHEAD+2;
+					switch ( *tt ) {
+						case -SYMBOL:
+							*b++ = 8; *b++ = SYMBOL; *b++ = 4; *b++ = tt[1];
+							*b++ = 1; *b++ = 1; *b++ = 1; *b++ = 3;
+							break;
+						case -SNUMBER:
+							if ( tt[1] == 1 ) {
+								*b++ = 4; *b++ = 1; *b++ = 1; *b++ = 3;
+							}
+							else goto IllBraReq;
+							break;
+						default:
+							goto IllBraReq;
+					}
+					break;
+				}
+			}
+			else if ( ( t[FUNHEAD] == (t[1]-FUNHEAD) ) &&
+					  ( t[FUNHEAD+ARGHEAD] == (t[FUNHEAD]-ARGHEAD) ) ) {
+				type = BRACKETCURRENTEXPR;
+				tt = t + FUNHEAD + ARGHEAD; num = *tt;
+				for ( i = 0; i < num; i++ ) *b++ = *tt++;
+				break;
+			}
+			else {
+IllBraReq:;
+				LOCK(ErrorMessageLock);
+				MesPrint("Illegal bracket request in termsinbracket_ function.");
+				UNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+		}
+		t += t[1];
+	}
+	AT.WorkPointer = b;
+	if ( AT.WorkPointer + *term +4 > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		MesPrint("Called from termsinbracket_ function.");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+/*
+	We are now in the position to look for the bracket
+*/
+	switch ( type ) {
+		case CURRENTBRACKET:
+/*
+			The code here should be rather similar to when we pick up
+			the contents of the bracket. In our case we only count the
+			terms though.
+*/
+			numterms = CountTerms1(BHEAD0);
+			break;
+		case BRACKETCURRENTEXPR:
+/*
+			Not implemented yet.
+*/
+			LOCK(ErrorMessageLock);
+			MesPrint("termsinbracket_ function currently only handles Keep Brackets.");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		case BRACKETOTHEREXPR:
+			LOCK(ErrorMessageLock);
+			MesPrint("termsinbracket_ function currently only handles Keep Brackets.");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		case NOBRACKETACTIVE:
+			numterms = 1;
+			break;
+	}
+/*
+	Now we have the number in numterms. We replace the function by it.
+*/
+	n1 = term; n2 = AT.WorkPointer; tstop = n1 + *n1;
+	while ( n1 < t ) *n2++ = *n1++;
+	i = numterms >> BITSINWORD;
+	if ( i == 0 ) {
+		*n2++ = LNUMBER; *n2++ = 4; *n2++ = 1; *n2++ = (WORD)(numterms & WORDMASK);
+	}
+	else {
+		*n2++ = LNUMBER; *n2++ = 5; *n2++ = 2;
+		*n2++ = (WORD)(numterms & WORDMASK); *n2++ = i;
+	}
+	n1 += n1[1];
+	while ( n1 < tstop ) *n2++ = *n1++;
+	AT.WorkPointer[0] = n2 - AT.WorkPointer;
+	AT.WorkPointer = n2;
+	if ( Generator(BHEAD n1,level) < 0 ) {
+		AT.WorkPointer = bracketbuffer;
+		LOCK(ErrorMessageLock);
+		MesPrint("Called from termsinbracket_ function.");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+/*
+	Finished. Reset things and return.
+*/
+	AT.WorkPointer = bracketbuffer;
+	return(numterms);
+}
+/*
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level)
 	#] Expressions :
 */

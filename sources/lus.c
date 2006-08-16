@@ -24,7 +24,7 @@
 
 int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD,mode)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *w, *t, *tt, *m, *r, **loc, *tstop, minloopsize;
 	int nfun, i, j, jj, k, n, sign = 0, action = 0, L, ten, ten2, totnum,
 	sign2, *alist, *wi, mini, maxi, medi = 0;
@@ -431,7 +431,7 @@ Success:;
 
 int FindLus ARG3(int, from, int, level, int, openindex)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int i, j, k, jj, *alist, *blist, *w, *m, partner;
 	WORD **loc = AN.funlocs, *wor;
 	if ( level == 1 ) {
@@ -494,7 +494,7 @@ int FindLus ARG3(int, from, int, level, int, openindex)
 
 int SortTheList ARG2(int *,slist,int,num)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int i, nleft, nright, *t1, *t2, *t3, *rlist;
 	if ( num <= 2 ) {
 		if ( num <=  1 ) return(num);

@@ -290,7 +290,7 @@ int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
 
 WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *tstop, *stopper, *termout, *m, *mm, *tp, *r;
 	TABLES T = 0;
 	int i, j, num;
@@ -700,7 +700,7 @@ int CoTBopen ARG1(UBYTE *,s)
 
 int CoTBaddto ARG1(UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	DBASE *d;
 	UBYTE *tablename, c, *t, elementstring[ELEMENTSIZE+20], *ss, *es;
 	WORD type, funnum, lbrac, first, num, *expr, *w;
@@ -898,6 +898,8 @@ int CoTBenter ARG1(UBYTE *,s)
 		if ( basenumber > 0 ) {
 			for ( i = 0; i < d->info.numberofindexblocks; i++ ) {
 				for ( j = 0; j < NUMOBJECTS; j++ ) {
+					if ( basenumber != d->iblocks[i]->objects[j].tablenumber )
+						continue;
 					arguments = (UBYTE *)(d->iblocks[i]->objects[j].element);
 					rhs = (UBYTE *)ReadObject(d,basenumber,(char *)arguments);
 					if ( printall ) {
@@ -1016,7 +1018,7 @@ int CoTBenter ARG1(UBYTE *,s)
 
 int CoTestUse ARG1(UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *tablename, c;
 	WORD type, funnum, *w;
 	TABLES T;
@@ -1472,7 +1474,7 @@ int CoTBreplace ARG1(UBYTE *,s)
 
 int CoTBuse ARG1(UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	DBASE *d;
 	MLONG basenumber;
 	UBYTE *arguments, *rhs, *buffer, *t, *u, c, *tablename, *tail, *p;
@@ -1638,9 +1640,7 @@ int CoTBuse ARG1(UBYTE *,s)
 						*u++ = 0; *u = 0;
 						M_free(rhs,"rhs in TBuse");
 
-
 						error1 = CoFill(buffer);
- 
 
 						if ( error1 < 0 ) { return(error); }
 						if ( error1 != 0 ) error = error1;
@@ -1665,7 +1665,7 @@ int CoTBuse ARG1(UBYTE *,s)
 
 int CoApply ARG1(UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *tablename, c;
 	WORD type, funnum, *w;
 	TABLES T;
@@ -1907,7 +1907,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 
 int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD rhsnumber, *oldwork, *funs, numfuns, funnum;
 	WORD ii, *t, *t1, *w, *p, *m, *m1, *u, *r, tbufnum, csize, wilds;
 	NESTING NN;
@@ -1929,6 +1929,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 */
 	while ( t < m ) {
 		if ( *t < FUNCTION ) { t += t[1]; continue; }
+		if ( functions[*t-FUNCTION].spec > 0 ) { t += t[1]; continue; }
 		AT.NestPoin->funsize = t;
 		r = t + t[1];
 		t += FUNHEAD;

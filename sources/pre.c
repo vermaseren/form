@@ -59,6 +59,7 @@ static KEYWORD precommands[] = {
 	,{"preout"      , DoPreOut       , 0, 0}
 	,{"print"       , DoPrePrint     , 0, 0}
 	,{"procedure"   , DoProcedure    , 0, 0}
+	,{"procedureextension" , DoPrcExtension , 0, 0}
 	/*[19apr2004 mt]:*/
 	,{"prompt"      , DoPrompt       , 0, 0}
 	/*:[19apr2004 mt]*/
@@ -107,10 +108,10 @@ GetInput ARG0
 		if ( c != ENDOFSTREAM ) {
 #ifdef PARALLEL
 			if ( PF.me == MASTER 
-				 && !AC.NoShowInput 
+				 && AC.NoShowInput <= 0
 				 && AC.CurrentStream->type != PREVARSTREAM )
 #else
-			if ( !AC.NoShowInput && AC.CurrentStream->type != PREVARSTREAM )
+			if ( AC.NoShowInput <= 0 && AC.CurrentStream->type != PREVARSTREAM )
 #endif
 				CharOut(c);
 			return(c);
@@ -416,6 +417,19 @@ GetPreVar ARG2(UBYTE *,name,int,flag)
 	else if ( t[-1] == '+' && t[-2] == '+' && t-2 > name && t[-3] != '_' ) {
 		t -= 2; c = *t; *t = 0;
 	}
+	else if ( StrICmp(name,"time_") == 0 ) {
+		LONG millitime, timepart;
+		int timepart1, timepart2;
+		static char timestring[40];
+		millitime = TimeCPU(1);
+		timepart = millitime%1000;
+		millitime /= 1000;
+		timepart /= 10;
+		timepart1 = timepart / 10;
+		timepart2 = timepart % 10;
+    	sprintf(timestring,"%ld.%1d%1d",millitime,timepart1,timepart2);
+		return((UBYTE *)timestring);
+	}
 	for ( i = NumPre-1; i >= 0; i-- ) {
 		if ( StrCmp(name,PreVar[i].name) == 0 ) {
 			ThePreVar = PreVar+i;
@@ -430,7 +444,7 @@ GetPreVar ARG2(UBYTE *,name,int,flag)
 		else if ( StrCmp(name,(UBYTE *)"ZERO") == 0 ) mode = 0;
 		else if ( StrCmp(name,(UBYTE *)"SHOWINPUT") == 0 ) {
 			*t++ = '_';
-			if ( AC.NoShowInput ) return(no);
+			if ( AC.NoShowInput > 0 ) return(no);
 			else return(yes);
 		}
 		else mode = -1;
@@ -585,7 +599,7 @@ PopPreVars ARG1(int,tonumber)
 VOID
 IniModule ARG1(int,type)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD **w, i;
 	CBUF *C = cbuf+AC.cbufnum;
 	/*[05nov2003 mt]:*/ 
@@ -595,12 +609,10 @@ IniModule ARG1(int,type)
 	PF.parallel=0;
 	/*BTW, this was the bug preventing usage of more than 1 expression!*/
 #endif
-/*:[05nov2003 mt]*/ 
-	/*[30jan2004 mt]:*/
-	AC.mparallelflag=PARALLELFLAG;
-	/*:[30jan2004 mt]*/
+	AC.mparallelflag = PARALLELFLAG;
 
 	AR.BracketOn = 0;
+	AR.StoreData.dirtyflag = 0;
 	AC.bracketindexflag = 0;
 
 /*[06nov2003 mt]:*/
@@ -654,6 +666,11 @@ IniModule ARG1(int,type)
 	AP.lhdollarerror = 0;
 	AR.PolyFun = AC.lPolyFun;
 	AC.mparallelflag = AC.parallelflag;
+	NumPotModdollars = 0;
+#ifdef WITHPTHREADS
+	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
+	else AS.MultiThreaded = 0;
+#endif
 	OpenTemp();
 }
 
@@ -681,6 +698,7 @@ PreProcessor ARG0
 	UBYTE c, *t, *s;
 	AC.compiletype = 0;
 	AC.PreContinuation = 0;
+	AP.gNumPre = NumPre;
 	for(;;) {
 /*		if ( A.StatisticsFlag ) CharOut(LINEFEED); */
 
@@ -794,7 +812,8 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						case CLEARMODULE:
 							FullCleanUp();
 							error1 = error2 = 0;
-							TimeCPU(0);
+							PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,1);
+							if ( AM.resetTimeOnClear ) TimeCPU(0);
 							break;
 						case ENDMODULE:
 							Terminate( -( error1 | error2 ) );
@@ -802,6 +821,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				}
 				AC.tablecheck = 0;
 				AC.compiletype = 0;
+				if ( AC.exprfillwarning > 0 ) {
+					AC.exprfillwarning = 0;
+				}
 				
 				break;  /* start a new module */
 			}
@@ -837,9 +859,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				else AC.PreContinuation = 1;
 				if ( error1 == 0 && !AC.PreContinuation ) {
 					if ( ( AC.PreDebug & PREPROONLY ) == 0 ) {
+						int onpmd = NumPotModdollars;
 						if ( AP.PreOut || ( AC.PreDebug & DUMPTOCOMPILER )
 						== DUMPTOCOMPILER ) MesPrint(" %s",AC.iBuffer);
-
 						retcode = CompileStatement(AC.iBuffer);
 						if ( retcode < 0 ) error1++;
 						if ( retcode ) error2++;
@@ -850,6 +872,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 							}
 							else CatchDollar(-1);
 							AC.PreAssignFlag = 0;
+							NumPotModdollars = onpmd;
 						}
 					}
 					else {
@@ -876,6 +899,7 @@ PreProInstruction ARG0
 	AP.preFill = 0;
 	AP.AllowDelay = 0;
 	AP.DelayPrevar = 0;
+
 	oldmode = 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) {
 		LoadInstruction(3);
@@ -1827,17 +1851,13 @@ illname:;
 int
 DoInclude ARG1(UBYTE *,s)
 {
-	UBYTE *name = s, *fold, *t, c;
-	int str1offset, withnolist = 0;
+	UBYTE *name = s, *fold, *t, c, c1 = 0, c2 = 0, c3 = 0;
+	int str1offset, withnolist = AC.NoShowInput;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
-	if ( *s == '-' || *s == '+' ) {
-		if ( *s == '-' ) {
-			withnolist = 1;
-		}
-		else {
-			withnolist = -1;
-		}
+    if ( *s == '-' || *s == '+' ) {
+		if ( *s == '-' ) withnolist = 1;
+		else             withnolist = 0;
 		s++;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		name = s;
@@ -1916,6 +1936,9 @@ DoInclude ARG1(UBYTE *,s)
 									position = GetStreamPosition(AC.CurrentStream);
 									linenum = AC.CurrentStream->linenumber;
 									prevline = AC.CurrentStream->prevline;
+									c3 = AC.CurrentStream->isnextchar;
+									c1 = AC.CurrentStream->nextchar[0];
+									c2 = AC.CurrentStream->nextchar[1];
 								}
 								else {
 									foldopen = 0;
@@ -1924,6 +1947,9 @@ DoInclude ARG1(UBYTE *,s)
 									AC.CurrentStream->prevline = prevline;
 									AC.CurrentStream->eqnum = 1;
 									AC.NoShowInput--;
+									AC.CurrentStream->isnextchar = c3;
+									AC.CurrentStream->nextchar[0] = c1;
+									AC.CurrentStream->nextchar[1] = c2;
 									break;
 								}
 							}
@@ -1951,9 +1977,7 @@ nofold:
 		}
 		M_free(name,"name of include file");
 	}
-	else {
-		AC.NoShowInput += withnolist;
-	}
+	AC.NoShowInput = withnolist;
 	return(0);
 }
 
@@ -2032,7 +2056,7 @@ syntax:
 int
 DoCall ARG1(UBYTE *,s)
 {
-	UBYTE *t, *u, *name, c, cp, *args1, *args2, *t1, *t2, *wild = 0;
+	UBYTE *t, *u, *v, *name, c, cp, *args1, *args2, *t1, *t2, *wild = 0;
 	int bratype = 0, wildargs = 0, inwildargs = 0, nwildargs = 0;
 	PROCEDURE *p;
 	int streamoffset;
@@ -2053,10 +2077,15 @@ DoCall ARG1(UBYTE *,s)
 		namesize = 0;
 		t = name;
 		while ( *t ) { t++; namesize++; }
-		t = p->name = (UBYTE *)Malloc1(namesize+5,"procedure");
+		t = AP.procedureExtension;
+		while ( *t ) { t++; namesize++; }
+		t = p->name = (UBYTE *)Malloc1(namesize+2,"procedure");
 		u = name;
 		while ( *u ) *t++ = *u++;
-		*t++ = '.'; *t++ = 'p'; *t++ = 'r'; *t++ = 'c'; *t = 0;
+		*t++ = '.';
+		v = AP.procedureExtension;
+		while ( *v ) *t++ = *v++;
+		*t = 0;
 		p->loadmode = 0;	/* buffer should be freed at end */
 		p->p.buffer = LoadInputFile(p->name,PROCEDUREFILE);
 		if ( p->p.buffer == 0 ) return(-1);
@@ -2201,14 +2230,26 @@ DoDebug ARG1(UBYTE *,s)
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 	NeedNumber(x,s,nonumber)
-	if ( x < 0 || x > 63 ) goto nonumber;
+	if ( x < 0 || x >(PREPROONLY
+					| DUMPTOCOMPILER
+					| DUMPOUTTERMS
+					| DUMPINTERMS
+					| DUMPTOSORT
+					| DUMPTOPARALLEL
+#ifdef WITHPTHREADS
+					| THREADSDEBUG
+#endif
+			 ) ) goto nonumber;
 	AC.PreDebug = 0;
-	if ( ( x & 1  ) != 0 ) AC.PreDebug |= PREPROONLY;
-	if ( ( x & 2  ) != 0 ) AC.PreDebug |= DUMPTOCOMPILER;
-	if ( ( x & 4  ) != 0 ) AC.PreDebug |= DUMPOUTTERMS;
-	if ( ( x & 8  ) != 0 ) AC.PreDebug |= DUMPINTERMS;
-	if ( ( x & 16 ) != 0 ) AC.PreDebug |= DUMPTOSORT;
-	if ( ( x & 32 ) != 0 ) AC.PreDebug |= DUMPTOPARALLEL;
+	if ( ( x & PREPROONLY     ) != 0 ) AC.PreDebug |= PREPROONLY;     /* 1  */
+	if ( ( x & DUMPTOCOMPILER ) != 0 ) AC.PreDebug |= DUMPTOCOMPILER; /* 2  */
+	if ( ( x & DUMPOUTTERMS   ) != 0 ) AC.PreDebug |= DUMPOUTTERMS;   /* 4  */
+	if ( ( x & DUMPINTERMS    ) != 0 ) AC.PreDebug |= DUMPINTERMS;    /* 8  */
+	if ( ( x & DUMPTOSORT     ) != 0 ) AC.PreDebug |= DUMPTOSORT;     /* 16 */
+	if ( ( x & DUMPTOPARALLEL ) != 0 ) AC.PreDebug |= DUMPTOPARALLEL; /* 32 */
+#ifdef WITHPTHREADS
+	if ( ( x & THREADSDEBUG   ) != 0 ) AC.PreDebug |= THREADSDEBUG;   /* 64 */
+#endif
 	return(0);
 nonumber:
 	MesPrint("@Illegal argument for debug instruction");
@@ -2366,8 +2407,8 @@ DoDo ARG1(UBYTE *,s)
 /*
 		Compile and put in dollar variable.
 		Note that we remember the dollar by name and that this name ends in _
-*/
 printf ( "%s\n",loop->dollarname);
+*/
 		AC.PreAssignFlag = 2;
         CompileStatement(loop->dollarname);
 		if ( CatchDollar(0) ) {
@@ -2576,7 +2617,7 @@ DoEnddo ARG1(UBYTE *,s)
 */
 		ww = w + *w; v = *ww; *ww = 0;
 		dw = d->where; d->where = w;
-		t = WriteDollarToBuffer(numdollar);
+		t = WriteDollarToBuffer(numdollar,1);
 		d->where = dw; *ww = v;
 		PutPreVar(loop->name,t,0,1);	/* We overwrite the definition */
 		M_free(t,"dollar");
@@ -2744,6 +2785,41 @@ Error0("Temporary pipes not supported in parallel mode");
 
 /*
  		#] DoPipe :
+ 		#[ DoPrcExtension :
+*/
+
+int
+DoPrcExtension ARG1(UBYTE *,s)
+{
+	UBYTE *t, *u, c;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == '\t' ) s++;
+	if ( *s == 0 || *s == '\n' ) {
+		MesPrint("@No valid procedure extension specified");
+		return(-1);
+	}
+	if ( FG.cTable[*s] != 0 ) {
+		MesPrint("@Procedure extension should be a string starting with an alphabetic character. No whitespace.");
+		return(-1);
+	}
+	t = s;
+	while ( *s && *s != '\n' && *s != ' ' && *s != '\t' ) s++;
+	u = s;
+	while ( *s == ' ' || *s == '\t' ) s++;
+	if ( *s != 0 && *s != '\n' ) {
+		MesPrint("@Too many parameters in ProcedureExtension instruction");
+		return(-1);
+	}
+	c = *u; *u = 0;
+	if ( AP.procedureExtension ) M_free(AP.procedureExtension,"ProcedureExtension");
+	AP.procedureExtension = strDup1(t,"ProcedureExtension");
+	*u = c;
+	return(0);
+}
+
+/*
+ 		#] DoPrcExtension :
  		#[ DoPreOut :
 */
 
@@ -3248,7 +3324,7 @@ DoSystem ARG1(UBYTE *,s)
 
 int DoPreNormPoly ARG1(UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	int par, error = 0;
 	UBYTE *s1, c;
 	WORD num1, num2, num3;
@@ -4751,9 +4827,9 @@ DoToExternal ARG1(UBYTE *,s)
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
 
 	h.oldsilent=AM.silent;
-   h.newlogonly = h.oldlogonly = AM.FileOnlyFlag;
-   h.newhandle = h.oldhandle = AC.LogHandle;
-   h.oldprinttype = AO.PrintType;
+	h.newlogonly = h.oldlogonly = AM.FileOnlyFlag;
+	h.newhandle = h.oldhandle = AC.LogHandle;
+	h.oldprinttype = AO.PrintType;
 
 	WriteFile=&WriteToExternalChannel;
 
@@ -4767,7 +4843,7 @@ DoToExternal ARG1(UBYTE *,s)
 	if(getCurrentExternalChannel()!=AX.currentExternalChannel)
 		selectExternalChannel(AX.currentExternalChannel);
 
-   ret=writeToChannel(EXTERNALCHANNELOUT,s,&h);
+	ret=writeToChannel(EXTERNALCHANNELOUT,s,&h);
 	DoToExternalReady:
 		WriteFile=OldWrite;
 		return(ret);
@@ -4920,7 +4996,7 @@ nodollar:			MesPrint("@$-variable expected in #write instruction");
 					AM.silent = h->oldsilent;
 					return(-1);
 				}
-				if ( ( dolalloc = WriteDollarToBuffer(num) ) == 0 ) {
+				if ( ( dolalloc = WriteDollarToBuffer(num,0) ) == 0 ) {
 					AM.FileOnlyFlag = h->oldlogonly;
 					AC.LogHandle = h->oldhandle;
 					AO.PrintType = h->oldprinttype;
@@ -5059,6 +5135,38 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				*s1 = c1;
 				if ( s > s1 ) *s++ = c;
 			}
+/*
+			File content
+*/
+			else if ( ( *fstring == 'f' ) || ( *fstring == 'F' ) ) {
+				LONG n;
+				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+				ss = s;
+				while ( *s && *s != ',' ) {
+					if ( *s == '\\' ) s++;
+					s++;
+				}
+				c = *s; *s = 0;
+				s1 = LoadInputFile(ss,HEADERFILE);
+				*s = c;
+/*
+				There should have been a way to pass the file size.
+				Also there should be conversions for \r\n etc.
+*/
+				if ( s1 ) {
+					ss = s1; while ( *ss ) ss++;
+					n = ss-s1;
+					WriteString(wtype,s1,n);
+					M_free(s1,"copy file");
+				}
+				else if ( *fstring == 'F' ) {
+					*s = 0;
+					MesPrint("@Error in #write: could not open file %s",ss);
+					*s = c;
+					goto ReturnWithError;
+				}
+				fstring++;
+			}
 			else if ( *fstring == '%' ) {
 				*to++ = *fstring++;
 			}
@@ -5067,6 +5175,7 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 			}
 			else {
 				MesPrint("@Illegal control sequence in format string in #write instruction");
+ReturnWithError:
 				AM.FileOnlyFlag = h->oldlogonly;
 				AC.LogHandle = h->oldhandle;
 				AO.PrintType = h->oldprinttype;
@@ -5089,7 +5198,6 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 	}else
 	/*:[15apr2004 mt]*/
 	WriteString(wtype,Out,num);
-
 /*
 	and restore original parameters
 */

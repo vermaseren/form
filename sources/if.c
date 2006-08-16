@@ -83,7 +83,7 @@
 WORD
 DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *ifstop, *ifp;
 	UWORD *coef1 = 0, *coef2, *coef3, *cc;
 	WORD ncoef1, ncoef2, ncoef3, i = 0, first, *r, acoef, ismul1, ismul2, j;
@@ -118,7 +118,23 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 			case IFDOLLAR:
 				{
 					DOLLARS d = Dollars + ifp[2];
+#ifdef WITHPTHREADS
+					int nummodopt, dtype = -1;
+					if ( AS.MultiThreaded ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( ifp[2] == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+identity;
+							}
+						}
+					}
+					dtype = d->type;
+#else
 					int dtype = d->type;  /* We use dtype to make the operation atomic */
+#endif
 					if ( dtype == DOLZERO ) return(0);
 					if ( dtype == DOLUNDEFINED ) {
 						if ( AC.UnsureDollarMode == 0 ) {
@@ -223,7 +239,12 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 						}
 						if ( nummodopt < NumModOptdollars ) {
 							dtype = ModOptdollars[nummodopt].type;
-							LOCK(d->pthreadslock);
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+identity;
+							}
+							else {
+								LOCK(d->pthreadslockread);
+							}
 						}
 					}
 #endif
@@ -231,7 +252,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 						case DOLUNDEFINED:
 							if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
-								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 								LOCK(ErrorMessageLock);
 								MesPrint("$%s is undefined",AC.dollarnames->namebuffer+d->name);
@@ -248,7 +269,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							|| d->where[2] < 0 || d->where[2] >= AM.OffsetIndex ) {
 								if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
-									if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+									if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 									LOCK(ErrorMessageLock);
 									MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
@@ -268,7 +289,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							}
 							else if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
-								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 								LOCK(ErrorMessageLock);
 								MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
@@ -284,7 +305,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							) {
 								if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
-									if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+									if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 									LOCK(ErrorMessageLock);
 									MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
@@ -332,7 +353,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							else {
 								if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
-									if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+									if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 									LOCK(ErrorMessageLock);
 									MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
@@ -357,7 +378,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							}
 							if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
-								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 								LOCK(ErrorMessageLock);
 								MesPrint("$%s is of wrong type",AC.dollarnames->namebuffer+d->name);
@@ -368,7 +389,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 							break;
 					}
 #ifdef WITHPTHREADS
-					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 				}
 				break;
@@ -488,7 +509,7 @@ SkipCond:
 WORD
 HowMany ARG2(WORD *,ifcode,WORD *,term)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *m, *t, *r, *w, power, RetVal, i, topje, *newterm;
 	WORD *OldWork, *ww, *mm;
 	int numdollars = 0;
@@ -499,15 +520,14 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 	AN.WildStop = m;
 	OldWork = AT.WorkPointer;
 	if ( ( ifcode[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
-		CBUF *C = cbuf+AM.rbufnum;
-		AC.Eside = LHSIDEX;
+		AR.Eside = LHSIDEX;
 		ww = AT.WorkPointer; i = m[0]; mm = m;
 		NCOPY(ww,mm,i);
 		*OldWork += 3;
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
 		NewSort();
-		if ( Generator(BHEAD OldWork,C->numlhs) ) {
+		if ( Generator(BHEAD OldWork,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = OldWork;
 			return(-1);
@@ -527,7 +547,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		m = ww; AT.WorkPointer = ww = m + *m;
 		if ( m[*m-1] < 0 ) { m[*m-1] = -m[*m-1]; }
 		*m -= m[*m-1];
-		AC.Eside = RHSIDE;
+		AR.Eside = RHSIDE;
 	}
 	else {
 		ww = term + *term;
@@ -540,7 +560,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 	}
 	AN.RepFunNum = 0;
 	AN.RepFunList = AT.WorkPointer;
-	AT.WorkPointer += AM.MaxTer >> 1;
+	AT.WorkPointer += AM.MaxTer/2;
 	topje = cbuf[AT.ebufnum].numrhs;
 	if ( AT.WorkPointer >= AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
@@ -618,7 +638,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 		case SUBALL :
 			RetVal = 0;
 			for ( i = 0; i < *term; i++ ) ww[i] = term[i];			
-			while ( ( power = FindAll(BHEAD ww,m,cbuf[AM.rbufnum].numlhs,ifcode) ) != 0 ) { RetVal += power; }
+			while ( ( power = FindAll(BHEAD ww,m,AR.Cnumlhs,ifcode) ) != 0 ) { RetVal += power; }
 			break;
 		case SUBSELECT :
 			ifcode += IDHEAD;	ifcode += ifcode[1];	ifcode += *ifcode;

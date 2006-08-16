@@ -9,15 +9,8 @@
 FILES **filelist;
 int numinfilelist = 0;
 int filelistsize = 0;
-/*[17nov2005]:*/
-#ifdef WITHPTHREADS
-static LONG maxlistsize = (LONG)(MAXPOSITIVE);
-#else
-static LONG maxlistsize = (LONG)(MAXLONG);
-#endif
-/*:[17nov2005]*/
 #ifdef MALLOCDEBUG
-#define BANNER 16
+#define BANNER (4*sizeof(LONG))
 void *malloclist[6000];
 long mallocsizes[6000];
 char *mallocstrings[6000];
@@ -74,7 +67,9 @@ ReadFromStream ARG1(STREAM *,stream)
 #ifdef WITHPIPE
 	if ( stream->type == PIPESTREAM ) {
 		int cc;
+		LOCK(AM.handlelock);
 		cc = getc((FILE *)(filelist[stream->handle]));
+		UNLOCK(AM.handlelock);
 		if ( cc == EOF ) return(ENDOFSTREAM);
 		c = cc;
 		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
@@ -226,7 +221,7 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
 		case DOLLARSTREAM:
 			if ( ( num = GetDollar(name) ) < 0 ) return(0);
 			stream = CreateStream((UBYTE *)"dollar-stream");
-			stream->buffer = stream->pointer = s = WriteDollarToBuffer(num);
+			stream->buffer = stream->pointer = s = WriteDollarToBuffer(num,1);
 			while ( *s ) s++;
 			stream->top = s;
 			stream->inbuffer = s - stream->buffer;
@@ -262,7 +257,9 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
 					Error0("@Cannot create pipe");
 				}
 				stream->handle = CreateHandle();
+				LOCK(AM.handlelock);
 				filelist[stream->handle] = (FILES *)f;
+				UNLOCK(AM.handlelock);
 			}
 			stream->buffer = stream->top = 0;
 			stream->inbuffer = 0;
@@ -275,15 +272,16 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
 #ifdef WITHEXTERNALCHANNEL
 		case EXTERNALCHANNELSTREAM:
 			{/*Block*/
-			int n;
-			if( (n=getCurrentExternalChannel()) == 0 )
-				Error0("@No current extrenal channel");
-			stream = CreateStream((UBYTE *)"externalchannel");
-			stream->handle = CreateHandle();
-			*( (int*)(filelist[stream->handle] = 
-				Malloc1(sizeof(int),"external channel handle")
-			         ) 
-			 )=n;
+				int n, *tmpn;
+				if( (n=getCurrentExternalChannel()) == 0 )
+					Error0("@No current extrenal channel");
+				stream = CreateStream((UBYTE *)"externalchannel");
+				stream->handle = CreateHandle();
+				tmpn = (int *)Malloc1(sizeof(int),"external channel handle");
+				*tmpn = n;
+				LOCK(AM.handlelock);
+				filelist[stream->handle] = (FILES *)tmpn;
+				UNLOCK(AM.handlelock);
 			}/*Block*/
 			stream->buffer = stream->top = 0;
 			stream->inbuffer = 0;
@@ -309,7 +307,7 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
 	else if ( prevarmode < 0 ) stream->prevars = -prevarmode-1;
 	AC.CurrentStream = stream;
 	if ( type == PREREADSTREAM || type == PRECALCSTREAM
-		|| type == DOLLARSTREAM ) AC.NoShowInput++;
+		|| type == DOLLARSTREAM ) AC.NoShowInput = 1;
 	return(stream);
 }
 
@@ -411,17 +409,23 @@ CloseStream ARG1(STREAM *,stream)
 	if ( stream->type == FILESTREAM ) CloseFile(stream->handle);
 #ifdef WITHPIPE
 	else if ( stream->type == PIPESTREAM ) {
+		LOCK(AM.handlelock);
 		pclose((FILE *)(filelist[stream->handle]));
 		filelist[stream->handle] = 0;
 		numinfilelist--;
+		UNLOCK(AM.handlelock);
 	}
 #endif
 /*[14apr2004 mt]:*/
 #ifdef WITHEXTERNALCHANNEL
 	else if ( stream->type == EXTERNALCHANNELSTREAM ) {
-      M_free(filelist[stream->handle],"external channel handle");
+		int *tmpn;
+		LOCK(AM.handlelock);
+		tmpn = (int *)(filelist[stream->handle]);
 		filelist[stream->handle] = 0;
 		numinfilelist--;
+		UNLOCK(AM.handlelock);
+		M_free(tmpn,"external channel handle");
 	}
 #endif /*ifdef WITHEXTERNALCHANNEL*/
 /*:[14apr2004 mt]*/
@@ -459,7 +463,7 @@ CloseStream ARG1(STREAM *,stream)
 	}
 	stream->name = 0;
 /*	if ( stream->type != FILESTREAM )  */
-		AC.NoShowInput = stream->previousNoShowInput;
+	AC.NoShowInput = stream->previousNoShowInput;
 	stream->buffer = 0;		/* To make sure we will not reuse it */
 	stream->pointer = 0;
 /*
@@ -575,9 +579,9 @@ StartFiles ARG0
 	AR.FoStage4[1].handle = -1;
 	AR.infile = &(AR.Fscr[0]);
 	AR.outfile = &(AR.Fscr[1]);
-	AS.hidefile = &(AR.Fscr[2]);
+	AR.hidefile = &(AR.Fscr[2]);
+	AR.StoreData.Handle = -1;
 #endif
-	AO.StoreData.Handle = -1;
 	AC.Streams = 0;
 	AC.MaxNumStreams = 0;
 }
@@ -592,10 +596,13 @@ OpenFile ARG1(char *,name)
 {
 	FILES *f;
 	int i;
+
 	if ( ( f = Uopen(name,"rb") ) == 0 ) return(-1);
 /*	Usetbuf(f,0); */
 	i = CreateHandle();
+	LOCK(AM.handlelock);
 	filelist[i] = f;
+	UNLOCK(AM.handlelock);
 	return(i);
 }
 
@@ -613,7 +620,9 @@ OpenAddFile ARG1(char *,name)
 	if ( ( f = Uopen(name,"a+b") ) == 0 ) return(-1);
 /*	Usetbuf(f,0); */
 	i = CreateHandle();
+	LOCK(AM.handlelock);
 	filelist[i] = f;
+	UNLOCK(AM.handlelock);
 	TELLFILE(i,&scrpos);
 	SeekFile(i,&scrpos,SEEK_SET);
 	return(i);
@@ -631,7 +640,9 @@ CreateFile ARG1(char *,name)
 	int i;
 	if ( ( f = Uopen(name,"w+b") ) == 0 ) return(-1);
 	i = CreateHandle();
+	LOCK(AM.handlelock);
 	filelist[i] = f;
+	UNLOCK(AM.handlelock);
 	return(i);
 }
 
@@ -648,7 +659,9 @@ CreateLogFile ARG1(char *,name)
 	if ( ( f = Uopen(name,"w+b") ) == 0 ) return(-1);
 	Usetbuf(f,0);
 	i = CreateHandle();
+	LOCK(AM.handlelock);
 	filelist[i] = f;
+	UNLOCK(AM.handlelock);
 	return(i);
 }
 
@@ -661,21 +674,34 @@ VOID
 CloseFile ARG1(int,handle)
 {
 	if ( handle >= 0 ) {
-		Uclose(filelist[handle]);
+		FILES *f;	/* we need this variable to be thread-safe */
+		LOCK(AM.handlelock);
+		f = filelist[handle];
 		filelist[handle] = 0;
 		numinfilelist--;
+		UNLOCK(AM.handlelock);
+		Uclose(f);
 	}
 }
 
 /*
  		#] CloseFile :
  		#[ CreateHandle :
+
+		We need a lock here.
+		Problem: the same lock is needed inside Malloc1 and M_free which
+		is used in DoubleList when we use MALLOCDEBUG
+
+		Conclusion: MALLOCDEBUG will have to be a bit unsafe
 */
 
 int
 CreateHandle ARG0
 {
 	int i, j;
+#ifndef MALLOCDEBUG
+	LOCK(AM.handlelock);
+#endif
 	if ( filelistsize == 0 ) {
         filelistsize = 10;
         filelist = (FILES **)Malloc1(sizeof(FILES *)*filelistsize,"file handle");
@@ -685,7 +711,7 @@ CreateHandle ARG0
 	}
 	else if ( numinfilelist >= filelistsize ) {
 		i = filelistsize;
-		if ( DoubleList((VOID ***)(&filelist),&filelistsize,(int)sizeof(FILES *),
+		if ( DoubleList((VOID ***)((VOID *)(&filelist)),&filelistsize,(int)sizeof(FILES *),
 			"list of open files") != 0 ) Terminate(-1);
 		for ( j = i; j < filelistsize; j++ ) filelist[j] = 0;
 		numinfilelist = i + 1;
@@ -697,9 +723,23 @@ CreateHandle ARG0
         }
 		numinfilelist++;
 	}
+	filelist[i] = (FILES *)(filelist); /* Just for now to not get into problems */
+/*
+	The next code is not needed when we use open.
+	It may be needed when we use fopen.
+	fopen is used in minos.c without this central administration.
+*/
 	if ( numinfilelist > MAX_OPEN_FILES ) {
+#ifndef MALLOCDEBUG
+		UNLOCK(AM.handlelock);
+#endif
 		MesPrint("More than %d open files",MAX_OPEN_FILES);
 		Error0("System limit. This limit is not due to FORM!");
+	}
+	else {
+#ifndef MALLOCDEBUG
+		UNLOCK(AM.handlelock);
+#endif
 	}
 	return(i);
 }
@@ -713,10 +753,14 @@ LONG
 ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	LONG inbuf = 0, r;
+	FILES *f;
 	char *b;
 	b = (char *)buffer;
 	for(;;) {	/* Gotta do difficult because of VMS! */
-		r = Uread(b,1,size,filelist[handle]);
+		LOCK(AM.handlelock);
+		f = filelist[handle];
+		UNLOCK(AM.handlelock);
+		r = Uread(b,1,size,f);
 		if ( r < 0 ) return(r);
 		if ( r == 0 ) return(inbuf);
 		inbuf += r;
@@ -729,13 +773,102 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 
 /*
  		#] ReadFile :
+ 		#[ ReadPosFile :
+
+		Gets words from a file(handle).
+		First tries to get the information from the buffers.
+		Reads a file at a position. Updates the position.
+		Places a lock in the case of multithreading.
+		Exists for multiple reading from the same file.
+		size is the number of WORDs to read!!!!
+*/
+
+LONG
+ReadPosFile BARG4(FILEHANDLE *,fi,UBYTE *,buffer,LONG,size,POSITION *,pos)
+{
+	GETBIDENTITY
+	LONG i, retval = 0;
+	WORD *b = (WORD *)buffer, *t;
+
+	if ( fi->handle < 0 ) {
+		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(*pos));
+		t = fi->POfill;
+		while ( size > 0 && fi->POfill < fi->POfull ) { *b++ = *t++; size--; }
+	}
+	else {
+		if ( ISLESSPOS(*pos,fi->POposition) || ISGEPOSINC(*pos,fi->POposition,
+			((UBYTE *)(fi->POfull)-(UBYTE *)(fi->PObuffer))) ) {
+/*
+			The start is not inside the buffer. Fill the buffer.
+*/
+
+			fi->POposition = *pos;
+			LOCK(AS.inputslock);
+			LOCK(fi->pthreadslock);
+			SeekFile(fi->handle,pos,SEEK_SET);
+			retval = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
+			UNLOCK(fi->pthreadslock);
+			UNLOCK(AS.inputslock);
+			fi->POfull = fi->PObuffer+retval/sizeof(WORD);
+			fi->POfill = fi->PObuffer;
+			AR.InInBuf = retval/sizeof(WORD);
+		}
+		else {
+			fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + DIFBASE(*pos,fi->POposition));
+		}
+		if ( fi->POfill + size <= fi->POfull ) {
+			t = fi->POfill;
+			while ( size > 0 ) { *b++ = *t++; size--; }
+		}
+		else {
+		  for (;;) {
+			i = fi->POfull - fi->POfill; t = fi->POfill;
+			if ( i > size ) i = size;
+			size -= i;
+			while ( --i >= 0 ) *b++ = *t++;
+			if ( size == 0 ) break;
+			ADDPOS(fi->POposition,(UBYTE *)(fi->POfull)-(UBYTE *)(fi->PObuffer));
+			LOCK(AS.inputslock);
+			LOCK(fi->pthreadslock);
+			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+			retval = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
+			UNLOCK(fi->pthreadslock);
+			UNLOCK(AS.inputslock);
+			fi->POfull = fi->PObuffer+retval/sizeof(WORD);
+			fi->POfill = fi->PObuffer;
+			AR.InInBuf = retval/sizeof(WORD);
+			if ( retval == 0 ) { t = fi->POfill; break; }
+		  }
+		}
+	}
+	retval = (UBYTE *)b - buffer;
+	fi->POfill = t;
+	ADDPOS(*pos,retval);
+	return(retval);
+}
+
+/*
+ 		#] ReadPosFile :
  		#[ WriteFile :
 */
 
 LONG
 WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
-	return(Uwrite((char *)buffer,1,size,filelist[handle]));
+	FILES *f;
+	LONG retval;
+	LOCK(AM.handlelock);
+	f = filelist[handle];
+	UNLOCK(AM.handlelock);
+	retval = Uwrite((char *)buffer,1,size,f);
+/*
+#ifdef UFILES
+	We could use one of the following but it does slow things down a lot.
+	fsync(f->descriptor);
+    sync();
+#endif
+*/
+	return(retval);
 }
 /*[17nov2005]:*/
 WRITEFILE WriteFile = &WriteFileToFile;
@@ -752,15 +885,19 @@ LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
 VOID
 SeekFile ARG3(int,handle,POSITION *,offset,int,origin)
 {
+	FILES *f;
+	LOCK(AM.handlelock);
+	f = filelist[handle];
+	UNLOCK(AM.handlelock);
 	if ( origin == SEEK_SET ) {
-		Useek(filelist[handle],BASEPOSITION(*offset),origin);
-		SETBASEPOSITION(*offset,(Utell(filelist[handle])));
+		Useek(f,BASEPOSITION(*offset),origin);
+		SETBASEPOSITION(*offset,(Utell(f)));
 		return;
 	}
 	else if ( origin == SEEK_END ) {
-		Useek(filelist[handle],0,origin);
+		Useek(f,0,origin);
 	}
-	SETBASEPOSITION(*offset,(Utell(filelist[handle])));
+	SETBASEPOSITION(*offset,(Utell(f)));
 }
 
 /*
@@ -779,7 +916,11 @@ TellFile ARG1(int,handle)
 VOID
 TELLFILE ARG2(int,handle,POSITION *,position)
 {
-	SETBASEPOSITION(*position,(Utell(filelist[handle])));
+	FILES *f;
+	LOCK(AM.handlelock);
+	f = filelist[handle];
+	UNLOCK(AM.handlelock);
+	SETBASEPOSITION(*position,(Utell(f)));
 }
 
 /*
@@ -789,7 +930,11 @@ TELLFILE ARG2(int,handle,POSITION *,position)
 
 void FlushFile ARG1(int,handle)
 {
-	Uflush(filelist[handle]);
+	FILES *f;
+	LOCK(AM.handlelock);
+	f = filelist[handle];
+	UNLOCK(AM.handlelock);
+	Uflush(f);
 }
 
 /*
@@ -800,7 +945,11 @@ void FlushFile ARG1(int,handle)
 int
 GetPosFile ARG2(int,handle,fpos_t *,pospointer)
 {
-	return(Ugetpos(filelist[handle],pospointer));
+	FILES *f;
+	LOCK(AM.handlelock);
+	f = filelist[handle];
+	UNLOCK(AM.handlelock);
+	return(Ugetpos(f,pospointer));
 }
 
 /*
@@ -811,11 +960,59 @@ GetPosFile ARG2(int,handle,fpos_t *,pospointer)
 int
 SetPosFile ARG2(int,handle,fpos_t *,pospointer)
 {
-	return(Usetpos(filelist[handle],(fpos_t *)pospointer));
+	FILES *f;
+	LOCK(AM.handlelock);
+	f = filelist[handle];
+	UNLOCK(AM.handlelock);
+	return(Usetpos(f,(fpos_t *)pospointer));
 }
 
 /*
  		#] SetPosFile :
+ 		#[ SynchFile :
+
+		It may be that when we use many sort files at the same time there
+		is a big traffic jam in the cache. This routine is experimental,
+		just to see whether this improves the situation.
+		It could also be that the internal disk of the Quad opteron norma
+		is very slow.
+*/
+
+VOID SynchFile ARG1(int,handle)
+{
+	FILES *f;
+	if ( handle >= 0 ) {
+		LOCK(AM.handlelock);
+		f = filelist[handle];
+		UNLOCK(AM.handlelock);
+		fsync(f->descriptor);
+	}
+}
+
+/*
+ 		#] SynchFile :
+ 		#[ TruncateFile :
+
+		It may be that when we use many sort files at the same time there
+		is a big traffic jam in the cache. This routine is experimental,
+		just to see whether this improves the situation.
+		It could also be that the internal disk of the Quad opteron norma
+		is very slow.
+*/
+
+VOID TruncateFile ARG1(int,handle)
+{
+	FILES *f;
+	if ( handle >= 0 ) {
+		LOCK(AM.handlelock);
+		f = filelist[handle];
+		UNLOCK(AM.handlelock);
+		ftruncate(f->descriptor,0);
+	}
+}
+
+/*
+ 		#] TruncateFile :
  		#[ GetChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -827,6 +1024,7 @@ GetChannel ARG1(char *,name)
 {
 	CHANNEL *ch;
 	int i;
+	FILES *f;
 	for ( i = 0; i < NumOutputChannels; i++ ) {
 		if ( channels[i].name == 0 ) continue;
 		if ( StrCmp((UBYTE *)name,(UBYTE *)(channels[i].name)) == 0 ) return(channels[i].handle);
@@ -838,7 +1036,10 @@ GetChannel ARG1(char *,name)
 	else { ch = (CHANNEL *)FromList(&AC.ChannelList); }
 	ch->name = (char *)strDup1((UBYTE *)name,"name of channel");
 	ch->handle = CreateFile(name);
-	Usetbuf(filelist[ch->handle],0);	 /* We turn the buffer off!!!!!!*/
+	LOCK(AM.handlelock);
+	f = filelist[ch->handle];
+	UNLOCK(AM.handlelock);
+	Usetbuf(f,0);	 /* We turn the buffer off!!!!!!*/
 	return(ch->handle);
 }
 
@@ -855,6 +1056,7 @@ GetAppendChannel ARG1(char *,name)
 {
 	CHANNEL *ch;
 	int i;
+	FILES *f;
 	for ( i = 0; i < NumOutputChannels; i++ ) {
 		if ( channels[i].name == 0 ) continue;
 		if ( StrCmp((UBYTE *)name,(UBYTE *)(channels[i].name)) == 0 ) return(channels[i].handle);
@@ -866,7 +1068,10 @@ GetAppendChannel ARG1(char *,name)
 	else { ch = (CHANNEL *)FromList(&AC.ChannelList); }
 	ch->name = (char *)strDup1((UBYTE *)name,"name of channel");
 	ch->handle = OpenAddFile(name);
-	Usetbuf(filelist[ch->handle],0);	 /* We turn the buffer off!!!!!!*/
+	LOCK(AM.handlelock);
+	f = filelist[ch->handle];
+	UNLOCK(AM.handlelock);
+	Usetbuf(f,0);	 /* We turn the buffer off!!!!!!*/
 	return(ch->handle);
 }
 
@@ -1283,7 +1488,7 @@ Malloc ARG1(LONG,size)
 	char *t, *u;
 	int i;
 	LOCK(MallocLock);
-	LOCK(ErrorMessageLock);
+/*	LOCK(ErrorMessageLock); */
 	if ( size == 0 ) {
 		MesPrint("Asking for 0 bytes in Malloc");
 	}
@@ -1296,11 +1501,16 @@ Malloc ARG1(LONG,size)
 	if ( mem == 0 ) {
 #ifndef MALLOCDEBUG
 		LOCK(ErrorMessageLock);
-#else
-		UNLOCK(MallocLock);
 #endif
 		Error0("No memory!");
+#ifndef MALLOCDEBUG
 		UNLOCK(ErrorMessageLock);
+#else
+/*		UNLOCK(ErrorMessageLock); */
+#endif
+#ifdef MALLOCDEBUG
+		UNLOCK(MallocLock);
+#endif
 		Terminate(-1);
 	}
 #ifdef MALLOCDEBUG
@@ -1331,7 +1541,7 @@ Malloc ARG1(LONG,size)
 				u--;
 				if ( *t != 0 || *u != 0 ) {
 					MesPrint("Writing outside memory for %s",malloclist[i]);
-					UNLOCK(ErrorMessageLock);
+/*					UNLOCK(ErrorMessageLock); */
 					UNLOCK(MallocLock);
 					Terminate(-1);
 				}
@@ -1339,7 +1549,7 @@ Malloc ARG1(LONG,size)
 			}
 		}
 	}
-	UNLOCK(ErrorMessageLock);
+/*	UNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
 	return(mem);
@@ -1361,7 +1571,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 	char *t, *u;
 	int i;
 	LOCK(MallocLock);
-	LOCK(ErrorMessageLock);
+/*	LOCK(ErrorMessageLock); */
 	if ( size == 0 ) {
 		MesPrint("Asking for 0 bytes in Malloc1");
 	}
@@ -1374,11 +1584,16 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 	if ( mem == 0 ) {
 #ifndef MALLOCDEBUG
 		LOCK(ErrorMessageLock);
-#else
-		UNLOCK(MallocLock);
 #endif
 		Error1("No memory while allocating ",(UBYTE *)messageifwrong);
+#ifndef MALLOCDEBUG
 		UNLOCK(ErrorMessageLock);
+#else
+/*		UNLOCK(ErrorMessageLock); */
+#endif
+#ifdef MALLOCDEBUG
+		UNLOCK(MallocLock);
+#endif
 		Terminate(-1);
 	}
 #ifdef MALLOCDEBUG
@@ -1401,7 +1616,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 	for ( i = 0; i < BANNER; i++ ) { *t++ = 0; *--u = 0; }
 	mem = (void *)t;
 	M_check();
-	UNLOCK(ErrorMessageLock);
+/*	UNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
 	return(mem);
@@ -1418,10 +1633,10 @@ void M_free ARG2(VOID *,x,char *,where)
 	char *t = (char *)x;
 	int i, j, k;
 	LONG size = 0;
-	LOCK(MallocLock);
-	LOCK(ErrorMessageLock);
 	x = (void *)(((char *)x)-BANNER);
+/*	LOCK(ErrorMessageLock); */
 	MesPrint("Freeing 0x%x: %s",x,where);
+	LOCK(MallocLock);
 	for ( i = nummalloclist-1; i >= 0; i-- ) {
 		if ( x == malloclist[i] ) {
 			size = mallocsizes[i];
@@ -1437,7 +1652,7 @@ void M_free ARG2(VOID *,x,char *,where)
 	if ( i < 0 ) {
 		printf("Error returning non-allocated address: 0x%x from %s\n"
 			,(unsigned int)x,where);
-		UNLOCK(ErrorMessageLock);
+/*		UNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 		exit(-1);
 	}
@@ -1460,7 +1675,7 @@ void M_free ARG2(VOID *,x,char *,where)
 			tt[0],tt[1],tt[2],tt[3]);
 		}
 		M_check();
-		UNLOCK(ErrorMessageLock);
+/*		UNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 	}
 #endif
@@ -1511,7 +1726,7 @@ void M_check()
 	}
 	if ( error ) {
 		M_print();
-		UNLOCK(ErrorMessageLock);
+/*		UNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 		Terminate(-1);
 	}
@@ -1608,11 +1823,21 @@ FromVarList ARG1(LIST *,L)
 		if ( L->maxnum == 0 ) L->maxnum = 12;
 		else if ( L->lijst ) {
 			L->maxnum *= 2;
-			if ( L->maxnum > MAXVARIABLES ) L->maxnum = MAXVARIABLES;
-			if ( L->num >= MAXVARIABLES ) {
-				MesPrint("!!!More than %l objects in list of variables",
-					MAXVARIABLES);
-				Terminate(-1);
+			if ( L == &(AP.DollarList) ) {
+				if ( L->maxnum > MAXDOLLARVARIABLES ) L->maxnum = MAXDOLLARVARIABLES;
+				if ( L->num >= MAXDOLLARVARIABLES ) {
+					MesPrint("!!!More than %l objects in list of $-variables",
+						MAXDOLLARVARIABLES);
+					Terminate(-1);
+				}
+			}
+			else {
+				if ( L->maxnum > MAXVARIABLES ) L->maxnum = MAXVARIABLES;
+				if ( L->num >= MAXVARIABLES ) {
+					MesPrint("!!!More than %l objects in list of variables",
+						MAXVARIABLES);
+					Terminate(-1);
+				}
 			}
 		}
 		newlist = Malloc1(L->maxnum * L->size,L->message);
@@ -1630,24 +1855,54 @@ FromVarList ARG1(LIST *,L)
 /*
  		#] FromVarList :
  		#[ DoubleList :
-
-		To make the system thread safe we set maxlistsize fixed to MAXPOSITIVE
 */
 
 int
 DoubleList ARG4(VOID ***,lijst,int *,oldsize,int,objectsize,char *,nameoftype)
 {
+	VOID **newlist;
+	LONG i, newsize, fullsize;
+	VOID **to, **from;
+	static LONG maxlistsize = (LONG)(MAXPOSITIVE);
+	if ( *lijst == 0 ) {
+		if ( *oldsize > 0 ) newsize = *oldsize;
+		else newsize = 100;
+	}
+	else newsize = *oldsize * 2;
+	if ( newsize > maxlistsize ) {
+		if ( *oldsize == maxlistsize ) {
+			MesPrint("No memory for extra space in %s",nameoftype);
+			return(-1);
+		}
+		newsize = maxlistsize;
+	}
+	fullsize = ( newsize * objectsize + sizeof(VOID *)-1 ) & (-sizeof(VOID *));
+	newlist = (VOID **)Malloc1(fullsize,nameoftype);
+	if ( *lijst ) {	/* Now some punning. DANGEROUS CODE in principle */
+		to = newlist; from = *lijst; i = (*oldsize * objectsize)/sizeof(VOID *);
+/*
+#ifdef MALLOCDEBUG
+if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
+		,*oldsize,objectsize,fullsize);
+#endif
+*/
+		while ( --i >= 0 ) *to++ = *from++;
+	}
+	if ( *lijst ) M_free(*lijst,"DoubleLList");
+	*lijst = newlist;
+	*oldsize = newsize;
+	return(0);
+/*
 	int error;
 	LONG lsize = *oldsize;
-/*
+
 	maxlistsize = (LONG)(MAXPOSITIVE);
-*/
 	error = DoubleLList(lijst,&lsize,objectsize,nameoftype);
 	*oldsize = lsize;
-/*
 	maxlistsize = (LONG)(MAXLONG);
-*/
+
 	return(error);
+*/
 }
 
 /*
@@ -1661,6 +1916,7 @@ DoubleLList ARG4(VOID ***,lijst,LONG *,oldsize,int,objectsize,char *,nameoftype)
 	VOID **newlist;
 	LONG i, newsize, fullsize;
 	VOID **to, **from;
+	static LONG maxlistsize = (LONG)(MAXLONG);
 	if ( *lijst == 0 ) {
 		if ( *oldsize > 0 ) newsize = *oldsize;
 		else newsize = 100;
@@ -1941,7 +2197,7 @@ CompareArgs ARG2(WORD *,arg1,WORD *,arg2)
 
 int CompArg ARG2(WORD *,s1, WORD *,s2)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *st1, *st2, x[7];
 	int k;
 	if ( *s1 < 0 ) {
@@ -2085,14 +2341,51 @@ argerror:
 
 /*
  		#] CompArg :
+ 		#[ TimeWallClock :
+*/
+
+#include <sys/timeb.h>
+
+LONG
+TimeWallClock ARG1(WORD,par)
+{
+	struct timeb tp;
+	ftime(&tp);
+	if ( par ) {
+		return(((LONG)(tp.time)-AM.OldSecTime)*100 + 
+			((LONG)(tp.millitm)-AM.OldMilliTime)/10);
+	}
+	else {
+		AM.OldSecTime   = (LONG)(tp.time);
+		AM.OldMilliTime = (LONG)(tp.millitm);
+		return(0L);
+	}
+}
+
+/*
+ 		#] TimeWallClock :
+ 		#[ TimeChildren :
+*/
+
+LONG
+TimeChildren ARG1(WORD,par)
+{
+	if ( par ) return(Timer(1)-AM.OldChildTime);
+	AM.OldChildTime = Timer(1);
+	return(0L);
+}
+
+/*
+ 		#] TimeChildren :
  		#[ TimeCPU :
 */
 
 LONG
 TimeCPU ARG1(WORD,par)
 {
-	if ( par ) return(Timer()-AM.OldTime);
-	AM.OldTime = Timer();
+	GETIDENTITY
+	if ( par ) return(Timer(0)-AR.OldTime);
+	AR.OldTime = Timer(0);
 	return(0L);
 }
 
@@ -2106,9 +2399,10 @@ TimeCPU ARG1(WORD,par)
 #include <time.h>
 
 LONG
-Timer()
+Timer ARG1(int,par)
 {
 	long t;
+	if ( par == 1 ) { return(0); }
 	t = clock();
 	if ( ( AO.wrapnum & 1 ) != 0 ) t ^= 0x80000000;
 	if ( t < 0 ) {
@@ -2127,11 +2421,19 @@ Timer()
 #include <sys/resource.h>
 
 LONG
-Timer ARG0
+Timer ARG1(int,par)
 {
     struct rusage rusage;
-    getrusage(0,&rusage);
-    return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
 }
 
 #else
@@ -2140,11 +2442,19 @@ Timer ARG0
 #include <sys/time.h>
 #include <sys/resource.h>
 
-LONG Timer()
+LONG Timer(int par)
 {
 	struct rusage rusage;
-	getrusage(0,&rusage);
-	return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
 }
 
 #else
@@ -2153,11 +2463,19 @@ LONG Timer()
 #include <sys/time.h>
 #include <sys/resource.h>
 
-LONG Timer()
+LONG Timer(int par)
 {
 	struct rusage rusage;
-	getrusage(0,&rusage);
-	return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
 }
 
 #else
@@ -2166,18 +2484,26 @@ LONG Timer()
 #include <sys/time.h>
 #include <sys/resource.h>
 
-LONG Timer()
+LONG Timer(int par)
 {
-        struct rusage rusage;
-        getrusage(0,&rusage);
-        return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+    struct rusage rusage;
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
 }
 
 #else
 
 #ifdef ANSI
 LONG
-Timer ARG0
+Timer ARG1(int,par)
 {
 #ifdef ALPHA
 /* 	clock_t t,tikken = clock();									  */
@@ -2191,8 +2517,16 @@ Timer ARG0
 #include <sys/time.h>
 #include <sys/resource.h>
     struct rusage rusage;
-    getrusage(0,&rusage);
-    return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
 #else
 #ifdef DEC_STATION
 	clock_t tikken = clock();
@@ -2215,11 +2549,14 @@ Timer ARG0
 void times(tbuffer_t *buffer);
 
 LONG
-Timer()
+Timer(int par)
 {
 	tbuffer_t buffer;
-	times(&buffer);
-	return(buffer.proc_user_time * 10);
+	if ( par == 1 ) { return(0); }
+	else {
+		times(&buffer);
+		return(buffer.proc_user_time * 10);
+	}
 }
 
 #endif
@@ -2243,10 +2580,11 @@ long pretime = 0;
 #endif
 #endif
 
-LONG Timer()
+LONG Timer(int par)
 {
 #ifdef MICROTIME
 	long t;
+	if ( par == 1 ) { return(0); }
 	t = clock();
 	if ( ( AO.wrapnum & 1 ) != 0 ) t ^= 0x80000000;
 	if ( t < 0 ) {
@@ -2260,6 +2598,7 @@ LONG Timer()
 	struct tms buffer;
 	long ret;
 	unsigned long a1, a2, a3, a4;
+	if ( par == 1 ) { return(0); }
 	times(&buffer);
 	a1 = (unsigned long)buffer.tms_utime;
 	a2 = a1 >> 16;
@@ -2277,12 +2616,21 @@ LONG Timer()
 #ifdef REALTIME
 	struct timeval tp;
 	struct timezone tzp;
+	if ( par == 1 ) { return(0); }
 	gettimeofday(&tp,&tzp); */
 	return(tp.tv_sec*1000+tp.tv_usec/1000);
 #else
 	struct rusage rusage;
-	getrusage(0,&rusage);
-	return(rusage.ru_utime.tv_sec*1000+rusage.ru_utime.tv_usec/1000);
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
 #endif
 #endif
 #endif
@@ -2298,6 +2646,25 @@ LONG Timer()
 
 /*
  		#] Timer :
+ 		#[ Crash :
+
+		Routine for debugging purposes
+*/
+
+int Crash ARG0
+{
+	int retval;
+#ifdef DEBUGGING
+	int *zero = 0;
+	retval = *zero;
+#else
+	retval = 0;
+#endif
+	return(retval);
+}
+
+/*
+ 		#] Crash :
   	#] Mixed :
 */
 /*[12dec2003 mt]:*/

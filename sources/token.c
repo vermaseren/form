@@ -98,8 +98,9 @@ dovariable:		c = *in; *in = 0;
 											AC.NumberOfRhsExprInModule++;
 #endif
 /*:[06nov2003 mt]*/
-										if ( AC.exprfillwarning == 0 )
+										if ( AC.exprfillwarning == 0 ) {
 												AC.exprfillwarning = 1;
+										}
 										break;
 					case CDELTA:        *out++ = TDELTA;      *in = c;
 										object = 1; continue;
@@ -118,7 +119,9 @@ donumber:		i = 0;
 				break;
 			case 1:		/* 0-9 */
 				CHECKPOLY
-				s = in++; i = 1;
+				s = in;
+				while ( *s == '0' && s[1] == '0' ) s++;
+				in = s+1; i = 1;
 				while ( FG.cTable[*in] == 1 ) { in++; i++; }
 				if ( object > 0 ) {
 					c = *in; *in = 0;
@@ -226,8 +229,9 @@ donumber:		i = 0;
 						}
 						*out++ = TDOLLAR;
 						object = 1;
-						if ( AC.exprfillwarning == 0 )
+						if ( ( AC.exprfillwarning == 0 ) && ( out[-2] != TWILDCARD ) ) {
 								AC.exprfillwarning = 1;
+						}
 						goto donumber;
 					}
 					else {
@@ -860,7 +864,8 @@ simp2token ARG2(SBYTE *,s,int,mode)
 							*fill++ = *s++; continue;
 						}
 						else if ( ( n == (FIRSTBRACKET-FUNCTION)
-						|| n == (TERMSINEXPR-FUNCTION) )
+						|| n == (TERMSINEXPR-FUNCTION)
+						|| n == (FACTORIN-FUNCTION) )
 						&& fill[-1] == TFUNOPEN ) {
 							v = s+1;
 							if ( *v == TEXPRESSION ) {

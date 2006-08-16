@@ -123,7 +123,7 @@ static LONG PF_statsinterval;/* timeinterval for printing statistics */
 int
 PF_Statistics ARG2(LONG**,stats,int,proc)
 {
-  GETIDENTITY;
+  GETIDENTITY
   SORTING *S = AT.SS;
   LONG real,cpu;
   WORD rpart,cpart;
@@ -306,7 +306,7 @@ PF_AllocBuf ARG3(int,nbufs,LONG,bsize,WORD,free)
 int
 PF_InitTree ARG0
 {
-  GETIDENTITY;
+  GETIDENTITY
   PF_BUFFER **rbuf = PF.rbufs;
   UBYTE *p,*stop;
   int numrbufs,numtasks = PF.numtasks;
@@ -545,7 +545,7 @@ newterms:
 int
 PF_GetLoser ARG1(NODE,*n)
 {
-  GETIDENTITY;
+  GETIDENTITY
   WORD comp;
 
   if(!PF_loser){
@@ -722,7 +722,7 @@ cancelled:
 int 
 PF_EndSort ARG0
 {
-  GETIDENTITY;
+  GETIDENTITY
   FILEHANDLE *fout = AR.outfile;
   PF_BUFFER *sbuf=PF.sbuf;
   SORTING *S = AT.SS;
@@ -864,7 +864,7 @@ static  WORD *PF_CurrentBracket;
 WORD
 PF_GetTerm ARG1(WORD *,term)
 {
-  GETIDENTITY;
+  GETIDENTITY
   FILEHANDLE *fi = AR.infile;
   WORD i,j;
   WORD *next,*np,*last,*lp=0,*nextstop,*tp=term;
@@ -1058,7 +1058,7 @@ RegRet:
 WORD
 PF_Deferred ARG2(WORD *,term,WORD,level)
 {
-  GETIDENTITY;
+  GETIDENTITY
   WORD *bra,*bp,*bstop;
   WORD *tstart,*tstop;
   WORD *next = AR.infile->POfill;
@@ -1402,7 +1402,7 @@ PF_WaitAllSlaves ARG0
 int
 PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 {
-  GETIDENTITY;
+  GETIDENTITY
   WORD *term = AT.WorkPointer;
   LONG dd = 0,ll;
   PF_BUFFER *sb=PF.sbuf;
@@ -1497,7 +1497,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	while ( GetTerm(BHEAD term) ) {
 	  PF.ginterms++; dd = AN.deferskipped;
 	  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
-		if ( GetMoreTerms(term) ) {
+		if ( GetMoreTerms(term) < 0 ) {
 		  LowerSortLevel(); return(-1);
 		}
 	  }
@@ -2157,7 +2157,7 @@ UBYTE *cstr=str;
 */
 /*[19sep2005 mt]:*/
 /*
-   #[ int PF_BroadcastPreDollar
+   #[ int PF_BroadcastPreDollar :
 */
 /*
 Broadcasting dollar variables set as a preprocessor variables.
@@ -2265,13 +2265,13 @@ LONG i;
 
 }/*PF_BroadcastPreDollar*/
 /*
-   #] int PF_BroadcastPreDollar
+   #] int PF_BroadcastPreDollar :
 */
 /*[19sep2005 mt]:*/
 
 /*[29sep2005 mt]:*/
 /*
-   #[ int PF_mkDollarsParallel
+   #[ int PF_mkDollarsParallel:
 */
 PFDOLLARS *PFDollars=NULL;
 /*Maximal number of PFDollars:*/
@@ -2449,7 +2449,7 @@ DOLLARS  d, newd;
 			for (i = 0; i < NumPotModdollars; i++)
 				switch (PFDollars[index=PotModdollars[i]].type) {
 					/*New dollar for the Master is created in the 
-						corresponding function similar to case MODNOKEEP*/
+						corresponding function similar to case MODLOCAL*/
 					case MODSUM:/*result must be summed up*/
 						if(SumDollars(index)) MesPrint("error in SumDollars");
 						break;
@@ -2459,7 +2459,7 @@ DOLLARS  d, newd;
 					case MODMIN:/*result must be a minimum*/
 						if(MinDollar(index)) MesPrint("error in MinDollar");
 						break;
-					case MODNOKEEP:/*result is just a DOLZERO*/
+					case MODLOCAL:/*result is just a DOLZERO*/
 						d = Dollars + index;
 						if(d->where && d->where != &(AM.dollarzero))
 							M_free(d->where, "old content of dollar");
@@ -2652,7 +2652,7 @@ DOLLARS  d, newd;
 	return (0);
 }/*PF_mkDollarsParallel*/
 /*
-   #] int PF_mkDollarsParallel
+   #] int PF_mkDollarsParallel:
 */
 
 /*:[29sep2005 mt]*/

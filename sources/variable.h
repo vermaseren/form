@@ -27,7 +27,7 @@ extern WRITEFILE WriteFile;
 
 extern ALLGLOBALS A;
 #ifdef WITHPTHREADS
-extern ALLPRIVATES *AB;
+extern ALLPRIVATES **AB;
 #endif
 
 extern FIXEDGLOBALS FG;
@@ -37,6 +37,7 @@ extern char *setupfilename;
 
 EXTERNLOCK(ErrorMessageLock);
 EXTERNLOCK(FileReadLock);
+EXTERNLOCK(dummylock);
 
 #ifdef VMS
 #include <stdio.h>
@@ -54,11 +55,6 @@ extern FILE **FileStructs;
 #define PreVar ((PREVAR *)(AP.PreVarList.lijst))
 #define NumPre AP.PreVarList.num
 #define MaxNumPre AP.PreVarList.maxnum
-/*
-#define Descriptor ((DESCRIPTORLIST *)(A.DescriptorList.lijst))
-#define NumDescr A.DescriptorList.num
-#define MaxNumDescr A.DescriptorList.maxnum
-*/
 #define SetElements ((WORD *)(AC.SetElementList.lijst))
 #define Sets ((SETS)(AC.SetList.lijst))
 #define functions ((FUNCTIONS)(AC.FunctionList.lijst))
@@ -112,17 +108,17 @@ extern FILE **FileStructs;
 #define AS A.S
 #define AX A.X
 #ifdef ITHREADS 
-#define AN AB[identity].N
-#define AR AB[identity].R
-#define AT AB[identity].T
+#define AN AB[identity]->N
+#define AR AB[identity]->R
+#define AT AB[identity]->T
 #else
 #define AN B->N
 #define AR B->R
 #define AT B->T
 #endif
-#define AN0 AB[from].N
-#define AR0 AB[from].R
-#define AT0 AB[from].T
+#define AN0 B0->N
+#define AR0 B0->R
+#define AT0 B0->T
 #else
 #define AC A.C
 #define AM A.M

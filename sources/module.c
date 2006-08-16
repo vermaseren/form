@@ -25,9 +25,9 @@ static KEYWORD ModuleWords[] = {
 };
 
 static KEYWORD ModuleOptions[] = {
-	 {"maximum",			DoModMax,		MODMAX,			0}
+	 {"local",	 			DoModLocal,		MODLOCAL,		0}
+	,{"maximum",			DoModMax,		MODMAX,			0}
 	,{"minimum",			DoModMin,		MODMIN,			0}
-	,{"nokeep", 			DoModNoKeep,	MODNOKEEP,		0}
 	,{"noparallel",			DoNoParallel,	NOPARALLEL_MOPT,0}
 	,{"parallel",			DoParallel,     PARALLELFLAG,	0}
 	,{"polyfun",			DoPolyfun,		POLYFUN,		0}
@@ -232,6 +232,11 @@ ExecStore ARG0
 /*
  		#] ExecStore :
  		#[ FullCleanUp :
+
+		Remark 27-oct-2005 by JV
+		This routine (and CleanUp in startup.c) may still need some work:
+			What to do with preprocessor variables
+			What to do with files we write to
 */
 
 VOID
@@ -249,20 +254,39 @@ FullCleanUp ARG0
 	}
 	NumProcedures = 0;
 
+	while ( NumPre > AP.gNumPre ) {
+		NumPre--;
+		M_free(PreVar[NumPre].name,"PreVar[NumPre].name");
+		PreVar[NumPre].name = PreVar[NumPre].value = 0;
+	}
+
 	AC.DidClean = 0;
 	for ( j = 0; j < NumExpressions; j++ ) {
 		AC.exprnames->namenode[Expressions[j].node].type = CDELETE;
 		AC.DidClean = 1;
 	}
 
-
 	CompactifyTree(AC.exprnames);
+
+	AP.ComChar = AP.cComChar;
+	if ( AP.procedureExtension ) M_free(AP.procedureExtension,"procedureextension");
+	AP.procedureExtension = strDup1(AP.cprocedureExtension,"procedureextension");
+
+	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag;
+	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats;
+	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats;
+	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag;
+	if ( AC.ThreadsFlag && AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
+	AC.ThreadBucketSize = AM.gThreadBucketSize = AM.ggThreadBucketSize;
+	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing;
+	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch;
 
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {
 		MesPrint("@Cannot restart the storage file");
 		Terminate(-1);
 	}
+	RemoveDollars();
 	CleanUp(1);
 	ResetVariables(2);
 	IniVars();
@@ -276,7 +300,7 @@ FullCleanUp ARG0
 int
 DoPolyfun ARG1(UBYTE *,s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	UBYTE *t, c;
 	WORD funnum;
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
@@ -414,26 +438,26 @@ int DoModMin ARG1(UBYTE *,s)
 
 /*
  		#] DoModMin :
- 		#[ DoModNoKeep :
+ 		#[ DoModLocal :
 */
 
-int DoModNoKeep ARG1(UBYTE *,s)
+int DoModLocal ARG1(UBYTE *,s)
 {
 	while ( *s == ',' ) s++;
 	if ( *s != '$' ) {
-		MesPrint("@Module NoKeep should mention which $-variables");
+		MesPrint("@ModuleOption Local should mention which $-variables");
 		return(-1);
 	}
-	s = DoModDollar(s,MODNOKEEP);
+	s = DoModDollar(s,MODLOCAL);
 	if ( s && *s != 0 ) {
-		MesPrint("@Irregular end of NoKeep option of Module statement");
+		MesPrint("@Irregular end of Local option of ModuleOption statement");
 		return(-1);
 	}
 	return(0);
 }
 
 /*
- 		#] DoModNoKeep :
+ 		#] DoModLocal :
  		#[ DoSlavePatch :
 */
 
@@ -478,6 +502,39 @@ UBYTE * DoModDollar ARG2(UBYTE *,s,int,type)
 			md = (MODOPTDOLLAR *)FromList(&AC.ModOptDolList);
 			md->number = number;
 			md->type = type;
+#ifdef WITHPTHREADS
+			if ( type == MODLOCAL ) {
+				int j, i;
+				DOLLARS dglobal, dlocal;
+				md->dstruct = (DOLLARS)Malloc1(
+					sizeof(struct DoLlArS)*AM.totalnumberofthreads,"Local DOLLARS");
+/*
+				Now copy the global dollar into the local copies.
+				This can be nontrivial if the value needs an allocation.
+				We don't really need the locks.
+*/
+				dglobal = Dollars + number;
+				for ( j = 0; j < AM.totalnumberofthreads; j++ ) {
+					dlocal = md->dstruct + j;
+					dlocal->index = dglobal->index;
+					dlocal->node = dglobal->node;
+					dlocal->type = dglobal->type;
+					dlocal->name = dglobal->name;
+					dlocal->size = dglobal->size;
+					dlocal->where = dglobal->where;
+					if ( dlocal->size > 0 ) {
+						dlocal->where = (WORD *)Malloc1(dlocal->size*sizeof(WORD),"Local dollar value");
+						for ( i = 0; i < dlocal->size; i++ )
+							dlocal->where[i] = dglobal->where[i];
+					}
+					dlocal->pthreadslockread = dummylock;
+					dlocal->pthreadslockwrite = dummylock;
+				}
+			}
+			else {
+				md->dstruct = 0;
+			}
+#endif
 			*s = c;
 		}
 		else {

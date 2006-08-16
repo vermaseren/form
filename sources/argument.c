@@ -23,19 +23,19 @@
 WORD
 execarg ARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD *t, *r, *m, *v;
 	WORD *start, *stop, *rstop, *r1, *r2 = 0, *r3 = 0, *r4, *r5, *r6, *r7, *r8, *r9;
 	WORD *mm, *mstop, *mnext, *rnext, *rr, *factor, type, ngcd, nq;
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf+AT.ebufnum;
-	WORD i, j, k, oldnumlhs = C->numlhs, count, action = 0, olddefer = AR.DeferFlag;
+	WORD i, j, k, oldnumlhs = AR.Cnumlhs, count, action = 0, olddefer = AR.DeferFlag;
 	WORD oldnumrhs = CC->numrhs, size, pow, ncom, jj;
 	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AT.pWorkPointer, lp;
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
-	WORD kLCM = 0, kGCD = 0, kkLCM = 0, jLCM = 0, jGCD;
+	WORD kLCM = 0, kGCD = 0, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
 	AT.WorkPointer += *term;
 	start = C->lhs[level];
-	C->numlhs = start[2];
+	AR.Cnumlhs = start[2];
 	stop = start + start[1];
 	type = *start;
 	scale = start[4];
@@ -47,9 +47,9 @@ execarg ARG2(WORD *,term,WORD,level)
 		*v++ = i+3; i--; NCOPY(v,t,i);
 		*v++ = 1; *v++ = 1; *v++ = 3;
 		AT.WorkPointer = v;
-		start = t; AC.Eside = LHSIDEX;
+		start = t; AR.Eside = LHSIDEX;
 		NewSort();
-		if ( Generator(BHEAD factor,C->numlhs) ) {
+		if ( Generator(BHEAD factor,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = oldwork;
 			return(-1);
@@ -62,7 +62,7 @@ execarg ARG2(WORD *,term,WORD,level)
 			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
-		AC.Eside = RHSIDE;
+		AR.Eside = RHSIDE;
 		if ( *factor > 0 ) {
 			v = factor+*factor;
 			v -= ABS(v[-1]);
@@ -294,6 +294,7 @@ HaveTodo:
 */
 						r2 = r1 + *r1;
 						j = r2[-1];
+						if ( j < 0 ) sign = -1;
 						r3 = r2 - ABS(j);
 						k = REDLENG(j);
 						if ( k < 0 ) k = -k;
@@ -375,14 +376,15 @@ HaveTodo:
 /*
 						Now we have to correct the overal factor
 */
-						if ( scale && ( factor == 0 || *factor > 0 ) ) goto ScaledVariety;
+						if ( scale && ( factor == 0 || *factor > 0 ) )
+							goto ScaledVariety;
 						size = term[*term-1];
 						size = REDLENG(size);
 						if ( MulRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
 								(UWORD *)rstop,&size) ) goto execargerr;
 						size = INCLENG(size);
 						k = size < 0 ? -size: size;
-						rstop[k-1] = size;
+						rstop[k-1] = size*sign;
 						*term = (WORD)(rstop - term) + k;
 					}
 					else {
@@ -444,7 +446,7 @@ ScaledVariety:;
 						}
 					}
 /*
-                  	We generate a statement for addapting all terms in the
+                  	We generate a statement for adapting all terms in the
 					argument sucessively
 */
 					r4 = AddRHS(AT.ebufnum,1);
@@ -453,7 +455,7 @@ ScaledVariety:;
 					i = (j-1)>>1;
 					for ( k = 0; k < i; k++ ) *r4++ = r3[i+k];
 					for ( k = 0; k < i; k++ ) *r4++ = r3[k];
-					if ( ( type == TYPENORM3 ) || ( type == TYPENORM4 ) ) *r4++ = j;
+					if ( ( type == TYPENORM3 ) || ( type == TYPENORM4 ) ) *r4++ = j*sign;
 					else *r4++ = r3[j-1];
 					*r4++ = 0;
 					CC->rhs[CC->numrhs+1] = r4;
@@ -1084,7 +1086,6 @@ ScaledVariety:;
 /*
 								Now we have to remove the delta's/vectors
 */
-								*t = t[1] = NOINDEX;
 								mm = rnext;
 								while ( mm < r3 ) {
 									mnext = mm + *mm;
@@ -1099,6 +1100,7 @@ ScaledVariety:;
 									*mm = mm[1] = NOINDEX;
 									mm = mnext;
 								}
+								*t = t[1] = NOINDEX;
 								t += 2;
 							}
 						}
@@ -1193,6 +1195,7 @@ nextmterm:						mm = mnext;
 /*
 							Copy the function
 */
+							action = 1;
 							*r1++ = t[1] + 4 + ARGHEAD;
 							for ( i = 1; i < ARGHEAD; i++ ) *r1++ = 0;
 							*r1++ = t[1] + 4;
@@ -1227,6 +1230,7 @@ nextterm:						mm = mnext;
 									*t = DUMMYTEN;
 							else
 									*t = DUMMYFUN;
+							v[2] = DIRTYFLAG;
 							t += t[1];
 						}
 						else {
@@ -1326,6 +1330,7 @@ oneterm:;
 					}
 				}
 				r2[1] = r1 - r2;
+				v[2] = DIRTYFLAG;
 			}
 			else {
 				r = t + t[1];
@@ -1340,7 +1345,7 @@ oneterm:;
 		while ( --i >= 0 ) *t++ = *m++;
 		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
-	C->numlhs = oldnumlhs;
+	AR.Cnumlhs = oldnumlhs;
 	if ( action && Normalize(BHEAD term) ) goto execargerr;
 	AT.WorkPointer = oldwork;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -1363,15 +1368,15 @@ execargerr:
 WORD
 execterm ARG2(WORD *,term,WORD,level)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	CBUF *C = cbuf+AM.rbufnum;
-	WORD oldnumlhs = C->numlhs;
+	WORD oldnumlhs = AR.Cnumlhs;
 	WORD maxisat = C->lhs[level][2];
 	WORD *buffer1 = 0;
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t1, i;
 	do {
-		C->numlhs = C->lhs[level][3];
+		AR.Cnumlhs = C->lhs[level][3];
 		NewSort();
 		if ( buffer1 ) {
 			term = buffer1;
@@ -1389,10 +1394,10 @@ execterm ARG2(WORD *,term,WORD,level)
 			M_free((void *)buffer1,"buffer in sort statement");
 			buffer1 = 0;
 		}
-		if ( EndSort((WORD *)(&buffer1),2) < 0 ) goto exectermerr;
-		level = C->numlhs;
-	} while ( C->numlhs < maxisat );
-	C->numlhs = oldnumlhs;
+		if ( EndSort((WORD *)((VOID *)(&buffer1)),2) < 0 ) goto exectermerr;
+		level = AR.Cnumlhs;
+	} while ( AR.Cnumlhs < maxisat );
+	AR.Cnumlhs = oldnumlhs;
 	term = buffer1;
 	while ( *term ) {
 		t1 = oldworkpointer;

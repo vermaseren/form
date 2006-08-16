@@ -14,7 +14,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
 					 'A','B','C','D','E','F'};
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ exit :
  		#[ Error0 :
 */
@@ -27,7 +27,7 @@ Error0 ARG1(char *,s)
 }
 
 /*
- 		#] Error0 :
+ 		#] Error0 : 
  		#[ Error1 :
 */
 
@@ -39,7 +39,7 @@ Error1 ARG2(char *,s,UBYTE *,t)
 }
 
 /*
- 		#] Error1 :
+ 		#] Error1 : 
  		#[ Error2 :
 */
 
@@ -51,7 +51,7 @@ Error2 ARG3(char *,s1,char *,s2,UBYTE *,t)
 }
 
 /*
- 		#] Error2 :
+ 		#] Error2 : 
  		#[ MesWork :
 */
 
@@ -65,7 +65,7 @@ MesWork ARG0
 }
 
 /*
- 		#] MesWork :
+ 		#] MesWork : 
  		#[ MesPrint :
 
 	Kind of a printf function for simple messages.
@@ -82,8 +82,10 @@ MesWork ARG0
 	%#L	long long word * positioned.
 	%#s	string positioned.
 	%#p position in file.
+	%r  The current term in raw format (internal representation)
 	%t	The current term (AN.currentTerm)
 	%T	The current term (AN.currentTerm) with its sign
+	%w	Number of the thread(worker)
 	%$	The next $ in AN.listinprint
 	%x	hexadecimal. Takes 8 places. Mainly for debugging.
 	%%	%
@@ -103,7 +105,7 @@ MesPrint(va_alist)
 va_dcl
 #endif
 {
-	GETIDENTITY;
+	GETIDENTITY
 	char Out[270], *stopper, *t, *s, *u, c;
 	UBYTE extrabuffer[270];
 	int w, x, i, specialerror = 0;
@@ -247,6 +249,40 @@ va_dcl
 					AO.OutStop = oldStop;
 				}
 			}
+			else if ( *s == 'r' ) {
+				WORD oldskip = AO.OutSkip;
+				WORD oldmode = AC.OutputMode;
+				WORD oldbracket = AO.IsBracket;
+				WORD oldlength = AC.LineLength;
+				UBYTE *oldStop = AO.OutStop;
+				if ( AN.currentTerm ) {
+					WORD *tt = AN.currentTerm;
+					if ( AC.LineLength > 256 ) AC.LineLength = 256;
+					AO.IsBracket = 0;
+					AO.OutSkip = 1;
+					AC.OutputMode = 0;
+					AO.OutFill = AO.OutputLine;
+					AO.OutStop = AO.OutputLine + AC.LineLength;
+					*t = 0;
+					i = *tt;
+					while ( --i >= 0 ) {
+						t = NumCopy(*tt,(UBYTE *)t);
+						tt++;
+						if ( t >= stopper ) {
+							num = t - Out;
+							WriteString(ERROROUT,(UBYTE *)Out,num);
+							num = 0; t = Out;
+						}
+						*t++ = ' '; *t++ = ' ';
+					}
+					*t = 0;
+					AO.OutSkip = oldskip;
+					AC.OutputMode = oldmode;
+					AO.IsBracket = oldbracket;
+					AC.LineLength = oldlength;
+					AO.OutStop = oldStop;
+				}
+			}
 			else if ( *s == '$' ) {
 /*
 			#[ dollars :
@@ -270,7 +306,12 @@ va_dcl
 						}
 						if ( nummodopt < NumModOptdollars ) {
 							dtype = ModOptdollars[nummodopt].type;
-							LOCK(d->pthreadslock);
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+identity;
+							}
+							else {
+								LOCK(d->pthreadslockread);
+							}
 						}
 					}
 #endif
@@ -295,7 +336,7 @@ va_dcl
 							AddToLine((UBYTE *)Out);
 							if ( WriteInnerTerm(term,first) ) {
 #ifdef WITHPTHREADS
-								if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 								Terminate(-1);
 							}
@@ -325,7 +366,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 						AddToLine((UBYTE *)Out);
 						if ( WriteSubTerm(tt,1) ) {
 #ifdef WITHPTHREADS
-							if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+							if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 							Terminate(-1);
 						}
@@ -429,14 +470,41 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 						}
 					}
 #ifdef WITHPTHREADS
-					if ( dtype > 0 ) { UNLOCK(d->pthreadslock); }
+					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 					AN.listinprint += 2;
 				}
 /*
-			#] dollars :
+			#] dollars : 
 */
 			}
+#ifdef WITHPTHREADS
+			else if ( *s == 'W' ) {	/* number of the thread with time */
+				LONG millitime;
+				WORD timepart;
+				t = (char *)NumCopy(identity,(UBYTE *)t);
+				millitime = TimeCPU(1);
+				timepart = (WORD)(millitime%1000);
+				millitime /= 1000;
+				timepart /= 10;
+				*t++ = '('; *t = 0;
+				t = (char *)LongCopy(millitime,(UBYTE *)t);
+				*t++ = '.'; *t = 0;
+				t = (char *)NumCopy(timepart,(UBYTE *)t);
+				*t++ = ')'; *t = 0;
+				if ( t >= stopper ) {
+					num = t - Out;
+					WriteString(ERROROUT,(UBYTE *)Out,num);
+					num = 0; t = Out;
+				}
+			}
+			else if ( *s == 'w' ) {	/* number of the thread */
+				t = (char *)NumCopy(identity,(UBYTE *)t);
+			}
+#else
+			else if ( *s == 'w' ) {	}
+			else if ( *s == 'W' ) {	}
+#endif
 			else if ( FG.cTable[(int)*s] == 1 ) {
 				x = *s++ - '0';
 				while ( FG.cTable[(int)*s] == 1 )
@@ -496,7 +564,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 			else if ( *s == 'x' ) {
 				char c;
 				y = va_arg(ap, LONG);
-				i = 8;
+				i = sizeof(LONG);
 				while ( --i > 0 ) {
 					c = ( y >> (i*4) ) & 0xF;
 					if ( c ) break;
@@ -544,7 +612,7 @@ Warning ARG1(char *,s)
 }
 
 /*
- 		#] Warning :
+ 		#] Warning : 
  		#[ HighWarning :
 */
 
@@ -557,7 +625,7 @@ HighWarning ARG1(char *,s)
 }
 
 /*
- 		#] HighWarning :
+ 		#] HighWarning : 
  		#[ MesCall :
 */
 
@@ -568,7 +636,7 @@ MesCall ARG1(char *,s)
 }
 
 /*
- 		#] MesCall :
+ 		#] MesCall : 
  		#[ MesCerr :
 */
 
@@ -588,7 +656,7 @@ MesCerr ARG2(char *,s,UBYTE *,t)
 }
 
 /*
- 		#] MesCerr :
+ 		#] MesCerr : 
  		#[ MesComp :
 */
 
@@ -603,7 +671,7 @@ MesComp ARG3(char *,s,UBYTE *,p,UBYTE *,q)
 }
 
 /*
- 		#] MesComp :
+ 		#] MesComp : 
  		#[ PrintTerm :
 */
 
@@ -611,7 +679,7 @@ VOID
 PrintTerm ARG2(WORD *,term,char *,where)
 {
 	UBYTE OutBuf[140];
-	WORD *t;
+	WORD *t, x;
 	int i;
 	AO.OutFill = AO.OutputLine = OutBuf;
 	t = term;
@@ -620,13 +688,21 @@ PrintTerm ARG2(WORD *,term,char *,where)
 	TokenToLine((UBYTE *)where);
 	TokenToLine((UBYTE *)": ");
 	i = *t;
-	while ( --i >= 0 ) { TalToLine((UWORD)(*t++)); TokenToLine((UBYTE *)"  "); }
+	while ( --i >= 0 ) {
+		x = *t++;
+		if ( x < 0 ) {
+			x = -x;
+			TokenToLine((UBYTE *)"-");
+		}
+		TalToLine((UWORD)(x));
+		TokenToLine((UBYTE *)"  ");
+	}
 	AO.OutSkip = 0;
 	FiniLine();
 }
 
 /*
- 		#] PrintTerm :
+ 		#] PrintTerm : 
  		#[ PrintSubTerm :
 */
 
@@ -649,6 +725,25 @@ PrintSubTerm ARG2(WORD *,term,char *,where)
 }
 
 /*
- 		#] PrintSubTerm :
+ 		#] PrintSubTerm : 
+ 		#[ PrintWords :
+*/
+
+VOID
+PrintWords ARG2(WORD *,buffer,LONG,number)
+{
+	UBYTE OutBuf[140];
+	WORD *t;
+	AO.OutFill = AO.OutputLine = OutBuf;
+	t = buffer;
+	AO.OutSkip = 3;
+	FiniLine();
+	while ( --number >= 0 ) { TalToLine((UWORD)(*t++)); TokenToLine((UBYTE *)"  "); }
+	AO.OutSkip = 0;
+	FiniLine();
+}
+
+/*
+ 		#] PrintWords : 
 	#] exit :
 */
