@@ -1440,15 +1440,19 @@ NoRep:
 */
 				if ( *t == DUMMYFUN || *t == DUMMYTEN ) {}
 				else {
-					if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION].tabl == 0 ) ) {
-						t[2] &= ~DIRTYFLAG;
-						t[2] |= DIRTYSYMFLAG;
-					}
 					if ( *t < (FUNCTION + WILDOFFSET) ) {
+						if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION].tabl == 0 ) ) {
+							t[2] &= ~DIRTYFLAG;
+							t[2] |= DIRTYSYMFLAG;
+						}
 						if ( functions[*t-FUNCTION].commute ) { pnco[nnco++] = t; }
 						else { pcom[ncom++] = t; }
 					}
 					else {
+						if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION-WILDOFFSET].tabl == 0 ) ) {
+							t[2] &= ~DIRTYFLAG;
+							t[2] |= DIRTYSYMFLAG;
+						}
 						if ( functions[*t-FUNCTION-WILDOFFSET].commute ) {
 							pnco[nnco++] = t;
 						}
