@@ -4696,7 +4696,7 @@ DoFromExternal ARG1(UBYTE *,s)
 	/*[02feb2006 mt]:*/
 	if(prevar!=0){/*The result must be stored into preprovar*/
       UBYTE *buf;
-		int cc;
+		int cc = 0;
 		if(lbuf == -1){/*Unlimited buffer, everything must be stored*/
 			int i;
 			buf=Malloc1( (lbuf=255)+1,"Fromexternal");

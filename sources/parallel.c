@@ -320,7 +320,7 @@ PF_InitTree ARG0
 */
   if(!PF_term){ 
 	size =  2*numtasks*sizeof(WORD*) + sizeof(WORD)*
-	  ( numtasks*(1 + AM.MaxTal) + (AM.MaxTer+1) + 2*(AM.MaxTal+2)); 
+	  ( numtasks*(1 + AM.MaxTal) + (AM.MaxTer/sizeof(WORD)+1) + 2*(AM.MaxTal+2)); 
 
 	PF_term = (WORD **)Malloc1(size,"PF_term");
 	stop = ((UBYTE*)PF_term) + size;
@@ -332,7 +332,7 @@ PF_InitTree ARG0
 	  PF_newcpos[i] = (WORD *)p; p += sizeof(WORD)*AM.MaxTal;
 	  PF_newclen[i] = 0;
 	}
-	PF_WorkSpace = (WORD *)p;    p += sizeof(WORD)*(AM.MaxTer+1);
+	PF_WorkSpace = (WORD *)p;    p += AM.MaxTer+sizeof(WORD);
 	PF_ScratchSpace = (UWORD*)p; p += 2*(AM.MaxTal+2)*sizeof(UWORD);
 
 	if( p != stop){ MesPrint("error in PF_InitTree"); return(-1); }
@@ -365,7 +365,7 @@ PF_InitTree ARG0
 
   for(i = 1; i < numtasks; i++){
 	for(j = 0; j < rbuf[i]->numbufs; j++){
-	  rbuf[i]->full[j] = rbuf[i]->fill[j] = rbuf[i]->buff[j] + AM.MaxTer + 2;
+	  rbuf[i]->full[j] = rbuf[i]->fill[j] = rbuf[i]->buff[j] + AM.MaxTer/sizeof(WORD) + 2;
 	}
 	PF_term[i] = rbuf[i]->fill[rbuf[i]->active];
 	*PF_term[i] = 0;
@@ -456,14 +456,14 @@ PF_PutIn ARG1(int,src)
   
   if(src <= 0) return(PF_term[0]);
 
-  if( rbuf->full[a] == rbuf->buff[a] + AM.MaxTer + 2){
+  if( rbuf->full[a] == rbuf->buff[a] + AM.MaxTer/sizeof(WORD) + 2){
 	/* very first term from this src */
 	tag = PF_WaitRbuf(rbuf,a,&size);
 	rbuf->full[a] += size;
 	if(tag == PF_ENDBUFFER_MSGTAG) *rbuf->full[a]++ = 0;
 	else if(rbuf->numbufs > 1){
 	  /* post a nonblock. recv. for the next buffer */
-	  rbuf->full[next] = rbuf->buff[next] + AM.MaxTer + 2;
+	  rbuf->full[next] = rbuf->buff[next] + AM.MaxTer/sizeof(WORD) + 2;
 	  size = (LONG)(rbuf->stop[next] - rbuf->full[next]);
 	  PF_IRecvRbuf(rbuf,next,src);
 	}
@@ -473,7 +473,7 @@ PF_PutIn ARG1(int,src)
 
   if( term + *term > rbuf->full[a] || term + 1 >= rbuf->full[a] ){
 newterms:
-	m1 = rbuf->buff[next] + AM.MaxTer + 1;
+	m1 = rbuf->buff[next] + AM.MaxTer/sizeof(WORD) + 1;
 	if(*term < 0 || term == rbuf->full[a]){ 
 	  /* copy term and lastterm to the new buffer, so that they end at m1 */
 	  m2 = rbuf->full[a] - 1;
@@ -490,12 +490,12 @@ newterms:
 	  rbuf->fill[next] = term = m1 + 1;
 	}
 	if(rbuf->numbufs == 1){
-	  rbuf->full[a] = rbuf->buff[a] + AM.MaxTer + 2;
+	  rbuf->full[a] = rbuf->buff[a] + AM.MaxTer/sizeof(WORD) + 2;
 	  size = (LONG)(rbuf->stop[a] - rbuf->full[a]);
  	  PF_IRecvRbuf(rbuf,a,src);
 	}
 	/* wait for new terms in the next buffer */
-	rbuf->full[next] = rbuf->buff[next] + AM.MaxTer + 2;
+	rbuf->full[next] = rbuf->buff[next] + AM.MaxTer/sizeof(WORD) + 2;
 	tag = PF_WaitRbuf(rbuf,next,&size);
 	rbuf->full[next] += size;
 	if(tag == PF_ENDBUFFER_MSGTAG){
@@ -503,7 +503,7 @@ newterms:
 	}
 	else if(rbuf->numbufs > 1){
 	  /* post a nonblock. recv. for active buffer, it is not needed anymore */
-	  rbuf->full[a] = rbuf->buff[a] + AM.MaxTer + 2;
+	  rbuf->full[a] = rbuf->buff[a] + AM.MaxTer/sizeof(WORD) + 2;
 	  size = (LONG)(rbuf->stop[a] - rbuf->full[a]);
 	  PF_IRecvRbuf(rbuf,a,src);
 	}
@@ -747,7 +747,7 @@ PF_EndSort ARG0
 
 	*/
 	size = (AT.SS->sTop2 - AT.SS->lBuffer - 1)/(PF.numtasks - 1);
-	size -= (AM.MaxTer + 2); 
+	size -= (AM.MaxTer/sizeof(WORD) + 2); 
 	if(fout->POsize < size*sizeof(WORD)) size = fout->POsize/sizeof(WORD);
 	if(!sbuf){
 	  if(!(sbuf = PF_AllocBuf(PF.numsbufs,size*sizeof(WORD),1))) return(-1);
@@ -968,7 +968,7 @@ ReceiveNew:
  		#[ alloc space :
 */
 	  PF_CurrentBracket = 
-		(WORD*)Malloc1(sizeof(WORD)*AM.MaxTer,"PF_CurrentBracket");
+		(WORD*)Malloc1(AM.MaxTer,"PF_CurrentBracket");
 	  *PF_CurrentBracket = 0;
 /*
  		#] alloc space :
@@ -1065,7 +1065,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   WORD *termout = AT.WorkPointer;
   WORD *oldwork = AT.WorkPointer;
 
-  AT.WorkPointer += AM.MaxTer;  
+  AT.WorkPointer = (WORD *)((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
   AR.DeferFlag = 0;
   
   PRINTFBUF("PF_Deferred (Term)   ",term,*term);
@@ -1422,7 +1422,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 #endif
 
 
-  if ( ( AT.WorkPointer + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
+  if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer ) ) > AT.WorkTop ) return(MesWork());
 
   /* allocate and/or reset the variables used for the redefine */
   if ( !PF.redef || NumPre > (LONG)PF.numredefs ){
@@ -1496,7 +1496,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	*(sb->fill[0])++ = (UWORD)(1);
 	while ( GetTerm(BHEAD term) ) {
 	  PF.ginterms++; dd = AN.deferskipped;
-	  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
+	  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
 		if ( GetMoreTerms(term) < 0 ) {
 		  LowerSortLevel(); return(-1);
 		}

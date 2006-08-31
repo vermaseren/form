@@ -2109,7 +2109,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 			AN.RepFunNum = 0;
 			wildargtaken = AT.WorkPointer;
 			AN.RepFunList = wildargtaken + AN.NumTotWildArgs;
-			AT.WorkPointer = AN.RepFunList + ( AM.MaxTer >> 1 );
+		    AT.WorkPointer = (WORD *)(((UBYTE *)(AN.RepFunList)) + AM.MaxTer/2);
 			csav = cto = AT.WorkPointer;
 			cfrom = t;
 			ci = *t;

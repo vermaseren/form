@@ -7,7 +7,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 
@@ -62,7 +62,7 @@ Processor()
 	AR.CompressPointer = AR.CompressBuffer;
 	AR.NoCompress = AC.NoCompress;
 	term = AT.WorkPointer;
-	if ( ( AT.WorkPointer + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
+	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer) ) > AT.WorkTop ) return(MesWork());
 	UpdatePositions();
 	C->rhs[C->numrhs+1] = C->Pointer;
 	AS.KeptInHold = 0;
@@ -126,7 +126,7 @@ Processor()
 				for ( j = 0; j < *t; j++ ) term[j] = t[j];
 				t += *t;
 				AN.ninterms++; dd = AN.deferskipped;
-				if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
+				if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
 					if ( GetMoreFromMem(term,&t) ) {
 						LowerSortLevel(); goto ProcErr;
 					}
@@ -149,7 +149,7 @@ Processor()
 			if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
 			AS.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -205,7 +205,7 @@ commonread:;
 					while ( GetTerm(BHEAD term) ) {
 					  SeekScratch(AR.infile,&position);
 					  AN.ninterms++; dd = AN.deferskipped;
-					  if ( AC.CollectFun && *term <= (AM.MaxTer>>1) ) {
+					  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
 						if ( GetMoreTerms(term) < 0 ) {
 						  LowerSortLevel(); goto ProcErr;
 						}
@@ -346,7 +346,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 
 	TestSub hunts for subexpression pointers.
@@ -1237,7 +1237,7 @@ caughttable:
 					ClearWild(BHEAD0);
 					AN.RepFunNum = 0;
 					AN.RepFunList = AN.EndNest;
-					AT.WorkPointer = AN.EndNest + (AM.MaxTer >> 1);
+				    AT.WorkPointer = (WORD *)(((UBYTE *)(AN.EndNest)) + AM.MaxTer/2);
 					if ( AT.WorkPointer >= AT.WorkTop ) {
 						LOCK(ErrorMessageLock);
 						MesWork();
@@ -1311,7 +1311,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 
 		Makes the replacement of 'replac' in a function argument.
@@ -1766,7 +1766,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 
 		Puts the terms 'term' and 'position' together into a single
@@ -1854,7 +1854,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				}
 			}
 			*termout = WORDDIF(m,termout);
-			if (*termout > AM.MaxTer ) goto InsCall;
+			if ( (*termout)*sizeof(WORD) > AM.MaxTer ) goto InsCall;
 			AT.WorkPointer = coef;
 			return(0);
 		}
@@ -1887,7 +1887,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 
 		Gets a term from stored expression expr and puts it in
@@ -1907,7 +1907,7 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	WORD InCompState;
 	WORD *oldipointer;
 	LONG retlength;
-	stop = accum + 2*AM.MaxTer;
+    stop = (WORD *)(((UBYTE *)(accum)) + 2*AM.MaxTer);
 	*accum++ = number;
 	while ( --number >= 0 ) accum += *accum;
 	if ( freeze ) {
@@ -1994,7 +1994,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 
 		Puts the term at position in the accumulator accum at position
@@ -2009,7 +2009,7 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 	GETBIDENTITY
 	WORD *t, *r, x, y, z;
 	WORD *m, *u, l1, a[2];
-	m = accum + 2*AM.MaxTer;
+    m = (WORD *)(((UBYTE *)(accum)) + 2*AM.MaxTer);
 	*accum++ = number;
 	while ( --number >= 0 ) accum += *accum;
 	if ( times == divby ) {
@@ -2053,7 +2053,7 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 
 		Concatenates the contents of the accumulator into a single
@@ -2223,7 +2223,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 
 		The heart of the program
@@ -2261,7 +2261,8 @@ Renormalize:
 			if ( PolyMul(term) ) goto GenCall;
 			if ( !*term ) goto Return0;
 		}
-		if ( AT.WorkPointer < term + AM.MaxTer ) AT.WorkPointer = term + AM.MaxTer;
+		if ( AT.WorkPointer < (WORD *)(((UBYTE *)(term)) + AM.MaxTer) )
+			 AT.WorkPointer = (WORD *)(((UBYTE *)(term)) + AM.MaxTer);
 		do {
 SkipCount:	level++;
 			if ( level > AR.Cnumlhs ) {
@@ -2758,7 +2759,8 @@ AutoGen:	i = *AT.TMout;
 		}
 		else {
 			termout = AT.WorkPointer;
-			if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) goto OverWork;
+		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			if ( InFunction(term,termout) ) goto GenCall;
 			AT.WorkPointer = termout + *termout;
 			*AN.RepPoint = 1;
@@ -2813,9 +2815,10 @@ AutoGen:	i = *AT.TMout;
 		}
 		if ( power == 1 ) {		/* Just a single power */
 			termout = AT.WorkPointer;
-			if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) goto OverWork;
+		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			while ( StartBuf[posisub] ) {
-				AT.WorkPointer = termout + AM.MaxTer;
+			    AT.WorkPointer = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
 				if ( InsertTerm(BHEAD term,replac,extractbuff,
 					&(StartBuf[posisub]),termout,tepos) < 0 ) goto GenCall;
 				AT.WorkPointer = termout + *termout;
@@ -2857,7 +2860,8 @@ AutoGen:	i = *AT.TMout;
 			olw = posit = AT.lWorkPointer; AT.lWorkPointer += power1;
 			same = ++AT.WorkPointer;
 			a = accum = ( AT.WorkPointer += power1+1 );
-			if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop ) goto OverWork;
+		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
+			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			AT.lWorkSpace[posit] = posisub;
 			same[-1] = 0;
 			*same = 1;
@@ -2882,7 +2886,8 @@ AutoGen:	i = *AT.TMout;
 				}
 				if ( i > power ) {
 					termout = AT.WorkPointer = a;
-					if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
+				    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
+					if ( AT.WorkPointer > AT.WorkTop )
 						goto OverWork;
 					if ( FiniTerm(BHEAD term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
@@ -2915,8 +2920,8 @@ AutoGen:	i = *AT.TMout;
 			WantAddLongs(power);
 			posit = olw = AT.lWorkPointer; AT.lWorkPointer += power;
 			a = accum = AT.WorkPointer;
-			if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
-				goto OverWork;
+		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
+			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			for ( i = 0; i < power; i++ ) AT.lWorkSpace[posit++] = posisub;
 			posit = olw;
 			*accum = 0;
@@ -2935,8 +2940,8 @@ AutoGen:	i = *AT.TMout;
 				}
 				if ( i >= power ) {
 					termout = AT.WorkPointer = a;
-					if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
-						goto OverWork;
+				    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
+					if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 					if ( FiniTerm(BHEAD term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
@@ -3003,8 +3008,8 @@ AutoGen:	i = *AT.TMout;
 			position = olpw;
 			if ( ( renumber = GetTable(replac,&(AT.posWorkSpace[position])) ) == 0 ) goto GenCall;
 			accum = AT.WorkPointer;
-			if ( ( AT.WorkPointer += 2 * AM.MaxTer ) > AT.WorkTop )
-					goto OverWork;
+		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
+			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			aa = AT.WorkPointer;
 			*accum = 0;
 			i = 0; StartPos = AT.posWorkSpace[position];
@@ -3035,7 +3040,8 @@ skippedfirst:
 				}
 				if ( i >= power ) {
 					termout = AT.WorkPointer = a;
-					if ( ( AT.WorkPointer += 2*AM.MaxTer ) > AT.WorkTop ) goto OverWork;
+				    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
+					if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 					if ( FiniTerm(BHEAD term,accum,termout,replac,0) ) goto GenCall;
 					if ( *termout ) {
 						AT.WorkPointer = termout + *termout;
@@ -3058,7 +3064,7 @@ skippedfirst:
 		}
 		else {			/* Active expression */
 			aa = accum = AT.WorkPointer;
-			if ( ( AT.WorkPointer + 2 * AM.MaxTer + 1 ) > AT.WorkTop )
+			if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2 * AM.MaxTer + sizeof(WORD)) ) > AT.WorkTop )
 					goto OverWork;
 			*accum++ = -1; AT.WorkPointer++;
 			if ( DoOnePow(term,power,replac,accum,aa,level,Freeze) ) goto GenCall;
@@ -3250,7 +3256,8 @@ doterms:
 			acc += *acc;
 			if ( power <= 0 ) {
 				termout = acc;
-				if ( ( AT.WorkPointer = acc + 2*AM.MaxTer ) > AT.WorkTop ) {
+			    AT.WorkPointer = (WORD *)(((UBYTE *)(acc)) + 2*AM.MaxTer);
+				if ( AT.WorkPointer > AT.WorkTop ) {
 					LOCK(ErrorMessageLock);
 					MesWork();
 					UNLOCK(ErrorMessageLock);
@@ -3302,7 +3309,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 
 		Picks up the deferred brackets.
@@ -3321,7 +3328,7 @@ Deferred BARG2(WORD *,term,WORD,level)
 	WORD oldGetOneFile = AR.GetOneFile;
 	AR.GetOneFile = 1;
 	oldwork = AT.WorkPointer;
-	AT.WorkPointer += AM.MaxTer;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	termout = AT.WorkPointer;
 	AR.DeferFlag = 0;
 /*
@@ -3416,7 +3423,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 
 		Routine checks whether the count of function AR.PolyFun is zero
@@ -3665,7 +3672,7 @@ PrepPoly ARG1(WORD *,term)
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyMul :			WORD PolyMul(term) 
 */
 
@@ -3840,7 +3847,7 @@ retry:
 	t2 = term + *term;
 	while ( t1 < t2 ) *t++ = *t1++;
 	*AT.WorkPointer = n1 = WORDDIF(t,AT.WorkPointer);
-	if ( n1 > AM.MaxTer ) {
+	if ( n1*sizeof(WORD) > AM.MaxTer ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
 		goto PolyCall2;
@@ -3865,6 +3872,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyMul : 
+ 		#] PolyMul :
 	#] Processor :
 */

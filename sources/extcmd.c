@@ -622,7 +622,7 @@ static  FORM_INLINE char * addStr ARG2(char *, to, char *, from)
 static FORM_INLINE ssize_t 
 writeSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
 {
-	ssize_t res;
+	ssize_t res = 0;
 	fd_set wfds;
 	struct timeval tv;
 	int nrep=5;/*five attempts it interrupted by a non-blocking signal*/
@@ -672,7 +672,7 @@ writeSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
 static FORM_INLINE ssize_t 
 readSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
 {
-	ssize_t res;
+	ssize_t res = 0;
 	fd_set rfds;
 	struct timeval tv;
 	int nrep=5;/*five attempts it interrupted by a non-blocking signal*/

@@ -70,7 +70,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -118,7 +118,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -189,7 +189,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -210,7 +210,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -251,7 +251,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -332,7 +332,8 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"maxnumbersize");
 	size = ( sp->value + 11 ) & (-4);
 	AM.MaxTal = size - 2;
-	if ( AM.MaxTal > (AM.MaxTer-2)/2 ) AM.MaxTal = (AM.MaxTer-2)/2;
+	if ( AM.MaxTal > (AM.MaxTer/sizeof(WORD)-2)/2 )
+				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
 /*
 	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
 	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
@@ -394,6 +395,7 @@ AllocSetups ARG0
 	MaxFpatches = sp->value;
 	sp = GetSetupPar((UBYTE *)"sortiosize");
 	IOsize = sp->value;
+	if ( IOsize < AM.MaxTer ) { IOsize = AM.MaxTer; sp->value = IOsize; }
 #ifndef WITHPTHREADS
 #ifdef WITHZLIB
 	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize; }
@@ -609,7 +611,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -734,7 +736,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -760,7 +762,7 @@ AllocSortFileName ARG1(SORTING *,sort)
 }
 
 /*
- 		#] AllocSortFileName : 
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -808,7 +810,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -827,7 +829,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -838,7 +840,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -916,7 +918,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -941,7 +943,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
 	#] Setups :
 */
 

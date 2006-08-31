@@ -299,7 +299,7 @@ WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
 */
 	t1 = n1 = poly1;
 	t2 = n2 = poly2;
-	if ( oldwork + 2*AM.MaxTer >= AT.WorkTop ) {
+	if ( (WORD *)(((UBYTE *)(oldwork)) + 2*AM.MaxTer) >= AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
 		UNLOCK(ErrorMessageLock);
@@ -814,8 +814,8 @@ int PolynoWrite ARG1(WORD *,poly)
 	GETIDENTITY
 	WORD *m, j, olddefer = AR.DeferFlag, first, lbrac;
 	AO.termbuf = AT.WorkPointer;
-	AO.bracket = AT.WorkPointer + AM.MaxTer;
-	AT.WorkPointer += AM.MaxTer*2;
+    AO.bracket = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer*2);
 	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 	AT.WorkPointer += 2*AC.LineLength;
 	AO.IsBracket = 0;

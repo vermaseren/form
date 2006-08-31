@@ -560,7 +560,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 	}
 	AN.RepFunNum = 0;
 	AN.RepFunList = AT.WorkPointer;
-	AT.WorkPointer += AM.MaxTer/2;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	topje = cbuf[AT.ebufnum].numrhs;
 	if ( AT.WorkPointer >= AT.WorkTop ) {
 		LOCK(ErrorMessageLock);

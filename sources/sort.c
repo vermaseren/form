@@ -17,7 +17,7 @@ UBYTE THRbuf[100];
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 
@@ -312,7 +312,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats : 
+ 		#] WriteStats :
  		#[ NewSort :				WORD NewSort()
 
 		Starts a new sort.
@@ -374,7 +374,7 @@ NewSort()
 }
 
 /*
- 		#] NewSort : 
+ 		#] NewSort :
  		#[ EndSort :				WORD EndSort(buffer,par)
 
 		Finishes a sort.
@@ -462,7 +462,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 				sSpace = 0;
 				while ( ( t = *ss++ ) != 0 ) {
 					j = *t;
-					if ( ( sSpace += j ) > AM.MaxTer ) {
+					if ( ( sSpace += j ) > AM.MaxTer/sizeof(WORD) ) {
 						LOCK(ErrorMessageLock);
 						MesPrint("Sorted function argument too long.");
 						UNLOCK(ErrorMessageLock);
@@ -529,7 +529,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 		}
 	}
 	sSpace++;
-	lSpace = sSpace + (S->lFill - S->lBuffer) - (LONG)S->lPatch*AM.MaxTer;
+	lSpace = sSpace + (S->lFill - S->lBuffer) - (LONG)S->lPatch*(AM.MaxTer/sizeof(WORD));
 	SETBASEPOSITION(pp,lSpace);
 	MULPOS(pp,sizeof(WORD));
 	if ( S->file.handle >= 0 ) {
@@ -545,7 +545,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 	if ( par == 2 ) { AR.outfile = newout = AllocFileHandle(); }
 	if ( S->lPatch > 0 ) {
 		if ( ( S->lPatch >= S->MaxPatches ) ||
-			( ( S->lFill + sSpace + 2*AM.MaxTer ) >= S->lTop ) ) {
+			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer) ) >= S->lTop ) ) {
 /*
 			The large buffer is too full. Merge and write it
 */
@@ -582,7 +582,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 		}
 		else {
 			S->Patches[S->lPatch++] = S->lFill;
-			to = S->lFill + AM.MaxTer;
+		    to = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
 			if ( tover > 0 ) {
 				ss = S->sPointer;
 				while ( ( t = *ss++ ) != 0 ) {
@@ -840,7 +840,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 	WORD *from, *to;
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
-	if ( i > AM.MaxTer ) {
+	if ( i*sizeof(WORD) > AM.MaxTer ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Problems in PutIn");
 		UNLOCK(ErrorMessageLock);
@@ -875,7 +875,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 }
 
 /*
- 		#] PutIn : 
+ 		#] PutIn :
  		#[ Sflush :					WORD Sflush(file)
 
 	Puts the contents of a buffer to output
@@ -936,7 +936,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 }
 
 /*
- 		#] Sflush : 
+ 		#] Sflush :
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 
 	Routine writes one term to file handle at position. It returns
@@ -1209,7 +1209,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut : 
+ 		#] PutOut :
  		#[ FlushOut :				WORD Flushout(position,file,compr)
 
 	Completes output to an output file and writes the trailing zero.
@@ -1362,7 +1362,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 }
 
 /*
- 		#] FlushOut : 
+ 		#] FlushOut :
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 
 		Adds the coefficients of the terms *ps1 and *ps2.
@@ -1457,7 +1457,7 @@ AddCoef BARG2(WORD **,ps1,WORD **,ps2)
 	S->sFill = s2;
 RegEnd:
 	*ps2 = 0;
-	if ( **ps1 > AM.MaxTer ) {
+	if ( **ps1 > AM.MaxTer/sizeof(WORD) ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
 		AM.MaxTer);
@@ -1468,7 +1468,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef : 
+ 		#] AddCoef :
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 
 		Routine should be called when S->PolyWise != 0. It points then
@@ -1586,7 +1586,7 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 		*m = WORDDIF(s2,m);
 		*ps1 = m;
 		S->sFill = s2;
-		if ( *m > AM.MaxTer ) {
+		if ( *m > AM.MaxTer/sizeof(WORD) ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
 			AM.MaxTer);
@@ -1598,7 +1598,7 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 }
 
 /*
- 		#] AddPoly : 
+ 		#] AddPoly :
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
 
@@ -1858,7 +1858,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs : 
+ 		#] AddArgs :
  		#[ Compare :				WORD Compare(term1,term2,level)
 
 	Compares two terms. The answer is:
@@ -2147,7 +2147,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare : 
+ 		#] Compare :
  		#[ ComPress :				LONG ComPress(ss,n)
 
 		Gets a list of pointers to terms and compresses the terms.
@@ -2199,13 +2199,13 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		ss = sss;
 	}
 
-			#] debug : 
+			#] debug :
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
 		if ( AN.compressSize == 0 ) {
 			if ( *ss ) { AN.compressSize = **ss + 64; }
-			else       { AN.compressSize = AM.MaxTer + 2; }
+			else       { AN.compressSize = AM.MaxTer/sizeof(WORD) + 2; }
 			AN.compressSpace = (WORD *)Malloc1(AN.compressSize*sizeof(WORD),"Compression");
 		}
 		AN.compressSpace[0] = 0;
@@ -2292,13 +2292,13 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		FiniLine();
 	}
 
-			#] debug : 
+			#] debug :
 */
 	return(size);
 }
 
 /*
- 		#] ComPress : 
+ 		#] ComPress :
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 
 		Algorithm by J.A.M.Vermaseren (31-7-1988)
@@ -2470,7 +2470,7 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 #endif
 
 /*
- 		#] SplitMerge : 
+ 		#] SplitMerge :
  		#[ GarbHand :				VOID GarbHand()
 
 		Garbage collection new style. Options:
@@ -2577,7 +2577,7 @@ GarbHand()
 }
 
 /*
- 		#] GarbHand : 
+ 		#] GarbHand :
  		#[ MergePatches :			WORD MergePatches(par)
 
 	The general merge routine. Can be used for the large buffer
@@ -2729,21 +2729,7 @@ ConMer:
 		S->Patches[S->lPatch] = S->lFill;
 		for ( i = 0; i < S->lPatch; i++ ) {
 			S->pStop[i] = S->Patches[i+1]-1;
-			S->Patches[i] += AM.MaxTer;
-/*
-			{
-				WORD jtel = 0;
-				WORD *ttel = S->Patches[i];
-				printf("The contents are for i = %d\n\n",i);
-				while ( ttel < S->pStop[i] ) {
-					jtel++;
-					printf("%d ",*ttel);
-					ttel++;
-					if ( jtel >= 20 ) { printf("\n"); jtel = 0; }
-				}
-				printf("\n");
-			}
-*/
+		    S->Patches[i] = (WORD *)(((UBYTE *)(S->Patches[i])) + AM.MaxTer);
 		}
 	}
 	else {	/* Load the patches */
@@ -2758,7 +2744,11 @@ ConMer:
 #endif
 			p = S->lBuffer;
 			for ( i = 0; i < S->lPatch; i++ ) {
+				p = (WORD *)(((UBYTE *)p)+2*AM.MaxTer+COMPINC*sizeof(WORD));
+/*
+	Bad bug caught 31-aug-2006
 				p += AM.MaxTer + COMPINC;
+*/
 				S->Patches[i] = p;
 				p = (WORD *)(((UBYTE *)p) + fin->POsize);
 				S->pStop[i] = m2 = p;
@@ -2833,12 +2823,12 @@ ConMer:
 #ifdef WITHZLIB
 			SetupOutputGZIP(fout);
 			SetupAllInputGZIP(S);
-			m1 = m2 = S->sBuffer + 2*AM.MaxTer;
+			m1 = m2 = (WORD *)(((UBYTE *)(S->sBuffer)) + 2*AM.MaxTer);
 			PUTZERO(position2);
 			while ( ( length = FillInputGZIP(fin,&position2,
-					(UBYTE *)(S->sBuffer+2*AM.MaxTer),
-					(S->SmallEsize-2*AM.MaxTer)*sizeof(WORD),0) ) > 0 ) {
-				while ( *m1 && ( m1 + AM.MaxTer < S->sTop2 ) ) {
+					(((UBYTE *)(S->sBuffer))+2*AM.MaxTer),
+					(S->SmallEsize*sizeof(WORD)-2*AM.MaxTer),0) ) > 0 ) {
+				while ( *m1 && ( (WORD *)(((UBYTE *)(m1)) + AM.MaxTer ) < S->sTop2 ) ) {
 					if ( *m1 < 0 ) { /* Need to uncompress */
 						i = -(*m1++); m2 += i+1; im = *m1+i;
 						while ( i > 0 ) *m1-- = *m2--;
@@ -2857,7 +2847,7 @@ ConMer:
 /*
 				Now move the remaining part 'back'
 */
-				m3 = S->sBuffer+2*AM.MaxTer;
+			    m3 = (WORD *)(((UBYTE *)(S->sBuffer)) + 2*AM.MaxTer);
 				m1 = S->sTop2;
 				while ( m1 > m2 ) *--m3 = *--m1;
 				m1 = m2 + *m2;
@@ -3097,7 +3087,7 @@ cancelled:
 								we left 2*maxlng spaces open at the beginning
 								of each patch.
 */
-							if ( (l1 + r31) > AM.MaxTer ) {
+							if ( (l1 + r31) > AM.MaxTer/sizeof(WORD) ) {
 								LOCK(ErrorMessageLock);
 								MesPrint("Coefficient overflow during sort");
 								UNLOCK(ErrorMessageLock);
@@ -3345,7 +3335,8 @@ StoreTerm BARG1(WORD *,term)
 		}
 		sSpace++;
 
-		lSpace = sSpace + (S->lFill - S->lBuffer) - AM.MaxTer*((LONG)S->lPatch);
+		lSpace = sSpace + (S->lFill - S->lBuffer)
+				 - (AM.MaxTer/sizeof(WORD))*((LONG)S->lPatch);
 		SETBASEPOSITION(pp,lSpace);
 		MULPOS(pp,sizeof(WORD));
 		if ( S->file.handle >= 0 ) {
@@ -3358,12 +3349,12 @@ StoreTerm BARG1(WORD *,term)
 			AC.LogHandle = oldLogHandle;
 		}
 /*
-		if ( !S->lPatch && ( S->lFill + sSpace + 2*AM.MaxTer ) >= S->lTop )
+		if ( !S->lPatch && ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop )
 			goto SkipLarge;
 */
 		if ( ( S->lPatch >= S->MaxPatches ) ||
 /*            Albert had here       2*AM.MaxTal     */
-			( ( S->lFill + sSpace + 2*AM.MaxTer ) >= S->lTop ) ) {
+			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop ) ) {
 /*
 			The large buffer is too full. Merge and write it
 */
@@ -3387,7 +3378,7 @@ StoreTerm BARG1(WORD *,term)
 			S->lFill = S->lBuffer;
 		}
 		S->Patches[S->lPatch++] = S->lFill;
-		lfill = S->lFill + AM.MaxTer;
+	    lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
 		if ( tover > 0 ) {
 			ss = S->sPointer;
 			while ( ( t = *ss++ ) != 0 ) {
@@ -3421,7 +3412,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm : 
+ 		#] StoreTerm :
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 
@@ -3582,7 +3573,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 }
 
 /*
- 		#] SortWild : 
+ 		#] SortWild :
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 
 		Partially or completely frees function sort buffers.
@@ -3652,7 +3643,7 @@ void CleanUpSort ARG1(int,num)
 }
 
 /*
- 		#] CleanUpSort : 
+ 		#] CleanUpSort :
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 
@@ -3666,6 +3657,6 @@ VOID LowerSortLevel ARG0
 }
 
 /*
- 		#] LowerSortLevel : 
+ 		#] LowerSortLevel :
 	#] SortUtilities :
 */

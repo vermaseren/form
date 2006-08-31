@@ -1068,7 +1068,7 @@ Add2ComStrings ARG4(int,n,WORD *,array,UBYTE *,string1,UBYTE *,string2)
 }
 
 /*
-  	#] Add2ComStrings :
+  	#] Add2ComStrings : 
   	#[ CoDiscard :
 */
 
@@ -1874,7 +1874,7 @@ illargs:;
 }
 
 /*
-  	#] CoRedefine :
+  	#] CoRedefine : 
   	#[ CoRenumber :
 
 	renumber    or renumber,0     Only exchanges (n^2 until no improvement)
@@ -3235,6 +3235,7 @@ int CoIf ARG1(UBYTE *,inp)
 		level = 0;
 ReDo:
 		if ( FG.cTable[*p] == 1 ) {		/* Number */
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			u = w;
 			*w++ = LONGNUMBER;
 			w += 2;
@@ -3295,6 +3296,7 @@ OnlyNum:
 		else if ( *p == '+' ) { p++; goto ReDo; }
 		else if ( *p == '-' ) { level ^= 1; p++; goto ReDo; }
 		else if ( *p == 'c' || *p == 'C' ) {	/* Count or Coefficient */
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			while ( FG.cTable[*++p] == 0 );
 			c = *p; *p = 0;
 			if ( !StrICmp(inp,(UBYTE *)"count") ) {
@@ -3322,6 +3324,7 @@ OnlyNum:
 			inp = p;
 		}
 		else if ( *p == 'm' || *p == 'M' ) {	/* match */
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			while ( !FG.cTable[*++p] );
 			c = *p; *p = 0;
 			if ( !StrICmp(inp,(UBYTE *)"match") ) {
@@ -3358,6 +3361,7 @@ OnlyNum:
 				gotexp = 1;
 			}
 			else if ( !StrICmp(inp,(UBYTE *)"multipleof") ) {
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 				*p = c;
 				if ( c != '(' ) {
 					MesPrint("&no ( after multipleof");
@@ -3386,6 +3390,7 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			}
 		}
 		else if ( *p == 'f' || *p == 'F' ) {	/* FindLoop */
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			while ( FG.cTable[*++p] == 0 );
 			c = *p; *p = 0;
 			if ( !StrICmp(inp,(UBYTE *)"findloop") ) {
@@ -3410,6 +3415,7 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			inp = p;
 		}
 		else if ( *p == 'e' || *p == 'E' ) { /* Expression */
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			while ( FG.cTable[*++p] == 0 );
 			c = *p; *p = 0;
 			if ( !StrICmp(inp,(UBYTE *)"expression") ) {
@@ -3455,6 +3461,7 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			inp = p;
 		}
 		else if ( *p == '$' ) {
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			p++; inp = p;
 			while ( FG.cTable[*p] == 0 || FG.cTable[*p] == 1 ) p++;
 			c = *p; *p = 0;
@@ -3569,7 +3576,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf : 
+  	#] CoIf :
   	#[ CoElse :
 */
 

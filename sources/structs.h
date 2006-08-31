@@ -736,7 +736,7 @@ struct M_const {
 	pthread_mutex_t handlelock;    /* (M) */
 	pthread_mutex_t storefilelock; /* (M) */
 #endif
-    LONG    MaxTer;                /* (M) Maximum term size. Fixed at setup. */
+    LONG    MaxTer;                /* (M) Maximum term size. Fixed at setup. In Bytes!!!*/
     LONG    CompressSize;          /* (M) Size of Compress buffer */
     LONG    ScratSize;             /* (M) Size of Fscr[] buffers */
     LONG    SizeStoreCache;        /* (M) Size of the chaches for reading global expr. */

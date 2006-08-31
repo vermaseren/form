@@ -1756,8 +1756,8 @@ WriteAll()
 		SETERROR(-1)
 	}
 	AO.termbuf = AT.WorkPointer;
-	AO.bracket = AT.WorkPointer + AM.MaxTer;
-	AT.WorkPointer += AM.MaxTer*2;
+    AO.bracket = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer*2);
 	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 	AT.WorkPointer += 2*AC.LineLength;
 	*(AR.CompressBuffer) = 0;
@@ -1935,8 +1935,8 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 				 + BASEPOSITION(Expressions[number].onfile));
 	}
 	AO.termbuf = AT.WorkPointer;
-	AO.bracket = AT.WorkPointer + AM.MaxTer;
-	AT.WorkPointer += AM.MaxTer*2;
+    AO.bracket = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer*2);
 
 	AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 	AT.WorkPointer += 2*AC.LineLength;

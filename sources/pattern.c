@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Patterns :
  		#[ Rules :
 
@@ -23,7 +23,7 @@
 		6:	x^n? can revert to n = 0 if there is no power of x.
 		7:	x?^n? must match some x. There could be an ambiguity otherwise.
 
- 		#] Rules : 
+ 		#] Rules :
  		#[ TestMatch :			WORD TestMatch(term,level)
 
 	This routine governs the pattern matching. If it decides
@@ -184,7 +184,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 	}
 	AN.RepFunNum = 0;
 	rep = AN.RepFunList = AT.WorkPointer;
-	AT.WorkPointer += AM.MaxTer >> 1;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 	if ( AT.WorkPointer >= AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
@@ -221,7 +221,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 /*						if ( rep < ww ) {*/
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
-							AT.WorkPointer += AM.MaxTer >> 1;
+						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
 								LOCK(ErrorMessageLock);
 								MesWork();
@@ -253,7 +253,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
-							AT.WorkPointer += AM.MaxTer >> 1;
+						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
 								LOCK(ErrorMessageLock);
 								MesWork();
@@ -286,7 +286,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
 							rep = AN.RepFunList = ww;
-							AT.WorkPointer += AM.MaxTer >> 1;
+						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
 								LOCK(ErrorMessageLock);
 								MesWork();
@@ -419,7 +419,7 @@ Substitute BARG3(WORD *,term,WORD *,pattern,WORD,power)
 	WORD *q, *subterm, *tcoef, oldval1 = 0, newval3, i = 0;
 	WORD PutExpr = 0, sign = 0;
 	TemTerm = AT.WorkPointer;
-	if ( ( AT.WorkPointer + AM.MaxTer*2 ) > AT.WorkTop ) {
+	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer*2) ) > AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
 		UNLOCK(ErrorMessageLock);
@@ -525,7 +525,7 @@ SubsL2:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] SYMBOLS : 
+			#] SYMBOLS :
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -645,7 +645,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS : 
+			#] DOTPRODUCTS :
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -705,7 +705,7 @@ SubsL5:								fill += nq;
 			m += m[1];
 		}
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -781,7 +781,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] VECTORS : 
+			#] VECTORS :
 			#[ INDICES :
 
 			Currently without wildcards
@@ -811,7 +811,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] INDICES : 
+			#] INDICES :
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -878,7 +878,7 @@ SubsL6:				nq = WORDDIF(fill,subterm);
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DELTAS : 
+			#] DELTAS :
 */
 EndLoop:;
 	} while ( m < mstop ); }
@@ -908,7 +908,7 @@ SubCoef:
 }
 
 /*
- 		#] Substitute : 
+ 		#] Substitute :
  		#[ FindSpecial :		WORD FindSpecial(term)
 
 	Routine to detect symplifications regarding the special functions
@@ -940,7 +940,7 @@ FindSpecial ARG1(WORD *,term)
 	return(0);
 }
 
- 		#] FindSpecial : 
+ 		#] FindSpecial :
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
@@ -1388,7 +1388,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll : 
+ 		#] FindAll :
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp
@@ -1614,7 +1614,7 @@ dotensor:
 }
 
 /*
- 		#] TestSelect : 
+ 		#] TestSelect :
   	#] Patterns :
 */
 

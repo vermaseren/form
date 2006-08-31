@@ -377,7 +377,8 @@ DoSumF1 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 	}
 	else return(0);
 	termout = AT.WorkPointer;
-	if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) {
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+	if ( AT.WorkPointer > AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
 		UNLOCK(ErrorMessageLock);
@@ -502,7 +503,8 @@ DoSumF2 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
 	}
 	else return(0);
 	termout = AT.WorkPointer;
-	if ( ( AT.WorkPointer += AM.MaxTer ) > AT.WorkTop ) {
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+	if ( AT.WorkPointer > AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
 		UNLOCK(ErrorMessageLock);

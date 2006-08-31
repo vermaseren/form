@@ -2028,7 +2028,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		AN.RepFunNum = 0;
 		AN.RepFunList = AN.EndNest;
 		oldwork = AT.WorkPointer;
-		AT.WorkPointer = AN.EndNest + (AM.MaxTer >> 1);
+	    AT.WorkPointer = (WORD *)(((UBYTE *)(AN.EndNest)) + AM.MaxTer/2);
 /*
 		The RepFunList is after the term but not very relevant.
 		We need because MatchFunction uses it

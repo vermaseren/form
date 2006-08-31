@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ Commute :
 
@@ -34,7 +34,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -84,7 +84,7 @@ Normalize BARG1(WORD *,term)
 	int termflag;
 */
 /*
-  	#] Declarations : 
+  	#] Declarations :
   	#[ Setup :
 */
 Restart:
@@ -100,7 +100,7 @@ Restart:
 	t = AT.n_coef;
 	NCOPY(t,r,i);
 	termout = AT.WorkPointer;
-	AT.WorkPointer += AM.MaxTer;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	fillsetexp = termout+1;
 	nsetexp = 0;
 	AN.PolyNormFlag = 0;
@@ -108,7 +108,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup : 
+  	#] Setup :
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = ngam = neps = nexp = nden = 
@@ -218,7 +218,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -1660,7 +1660,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators : 
+  	#] Easy denominators :
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -1894,7 +1894,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions : 
+  	#] Index Contractions :
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2045,7 +2045,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions : 
+  	#] NonCommuting Functions :
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2203,7 +2203,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions : 
+  	#] Commuting Functions :
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2292,7 +2292,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors : 
+  	#] LeviCivita tensors :
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2323,7 +2323,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta : 
+  	#] Delta :
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2345,7 +2345,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices : 
+  	#] Loose Vectors/Indices :
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2374,7 +2374,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors : 
+  	#] Vectors :
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2441,7 +2441,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts : 
+  	#] Dotproducts :
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2493,10 +2493,10 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols : 
+  	#] Symbols :
   	#[ Errors and Finish :
 */
-	stop = termout + AM.MaxTer;
+    stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
 	i = ABS(ncoef);
 	if ( ( m + i ) > stop ) {
 		LOCK(ErrorMessageLock);
@@ -2585,7 +2585,7 @@ FromNorm:
 	UNLOCK(ErrorMessageLock);
 	return(-1);
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 
@@ -2640,7 +2640,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 }
 
 /*
- 		#] ExtraSymbol : 
+ 		#] ExtraSymbol :
  		#[ DoTheta :
 */
 
@@ -2738,7 +2738,7 @@ DoTheta ARG1(WORD *,t)
 }
 
 /*
- 		#] DoTheta : 
+ 		#] DoTheta :
  		#[ DoDelta :
 */
 
@@ -2806,7 +2806,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta : 
+ 		#] DoDelta :
  		#[ DoRevert :
 */
 
@@ -2881,7 +2881,7 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 }
 
 /*
- 		#] DoRevert : 
+ 		#] DoRevert :
  	#] Normalize :
   	#[ DetCommu :
 

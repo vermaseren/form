@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -24,7 +24,7 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use : 
+  	#] syntax and use :
   	#[ FindBracket :
 */
 
@@ -415,7 +415,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex : 
+  	#] PutBracketInIndex :
   	#[ ClearBracketIndex :
 */
 
@@ -433,7 +433,7 @@ ClearBracketIndex ARG1(WORD,numexp)
 }
 
 /*
-  	#] ClearBracketIndex : 
+  	#] ClearBracketIndex :
   	#[ OpenBracketIndex :
 */
 
@@ -445,7 +445,7 @@ OpenBracketIndex ARG1(WORD,nexpr)
 	LONG i;
 	bi = (BRACKETINFO *)Malloc1(sizeof(BRACKETINFO),"BracketInfo");
 	e->newbracketinfo = bi;
-	i = 20*AM.MaxTer;
+	i = 20*AM.MaxTer/sizeof(WORD);
 	if ( i < 1000 ) i = 1000;
 	bi->bracketbuffer = (WORD *)Malloc1(i*sizeof(WORD),"Bracket Buffer");
 	bi->bracketbuffersize = i;
@@ -458,7 +458,7 @@ OpenBracketIndex ARG1(WORD,nexpr)
 }
 
 /*
-  	#] OpenBracketIndex : 
+  	#] OpenBracketIndex :
 */
 
 /*

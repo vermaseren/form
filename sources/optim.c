@@ -104,7 +104,7 @@ int LoadOpti ARG1(WORD,numexpr)
 	LONG objnum = 0;
 	int i;
 	tbuf = oldwork;
-	AT.WorkPointer = tbuf + 2*AM.MaxTer;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(tbuf)) + 2*AM.MaxTer);
 	term = AT.WorkPointer;
 	while ( GetTerm(BHEAD term) > 0 ) {
 		AT.WorkPointer = term + *term;

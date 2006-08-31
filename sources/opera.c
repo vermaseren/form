@@ -185,7 +185,7 @@ EpfCon BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	kron = AT.WorkPointer;
 	perm = (AT.WorkPointer += sizes);
 	termout = (AT.WorkPointer += sizes);
-	AT.WorkPointer += AM.MaxTer;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	if ( AT.WorkPointer > AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();

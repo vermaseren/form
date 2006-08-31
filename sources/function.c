@@ -1261,7 +1261,7 @@ IndAll:				i = m[1] - WILDOFFSET;
 				oRepFunNum = AN.RepFunNum;
 				AN.RepFunNum = 0;
 				AN.RepFunList = AT.WorkPointer;
-				AT.WorkPointer += AM.MaxTer/2;
+		        AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 				csav = cto = AT.WorkPointer;
 				cfrom = t;
 				ci = *t;

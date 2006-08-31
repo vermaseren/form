@@ -21,21 +21,21 @@ static struct id_options {
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
 int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
 int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ DoExpr:
 */
 
@@ -218,7 +218,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
@@ -229,7 +229,7 @@ int CoIdOld ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdOld : 
+  	#] CoIdOld :
   	#[ CoId :
 */
 
@@ -240,7 +240,7 @@ int CoId ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoId : 
+  	#] CoId :
   	#[ CoIdNew :
 */
 
@@ -251,7 +251,7 @@ int CoIdNew ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdNew : 
+  	#] CoIdNew :
   	#[ CoDisorder :
 */
 
@@ -262,7 +262,7 @@ int CoDisorder ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDisorder : 
+  	#] CoDisorder :
   	#[ CoMany :
 */
 
@@ -273,7 +273,7 @@ int CoMany ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMany : 
+  	#] CoMany :
   	#[ CoMulti :
 */
 
@@ -284,7 +284,7 @@ int CoMulti ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMulti : 
+  	#] CoMulti :
   	#[ CoIfMatch :
 */
 
@@ -295,7 +295,7 @@ int CoIfMatch ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIfMatch : 
+  	#] CoIfMatch :
   	#[ CoOnce :
 */
 
@@ -306,7 +306,7 @@ int CoOnce ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnce : 
+  	#] CoOnce :
   	#[ CoOnly :
 */
 
@@ -317,7 +317,7 @@ int CoOnly ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnly : 
+  	#] CoOnly :
   	#[ CoSelect :
 */
 
@@ -328,7 +328,7 @@ int CoSelect ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoSelect : 
+  	#] CoSelect :
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -609,7 +609,7 @@ IllLeft:MesPrint("&Illegal LHS");
 			return(error);
 		}
 		AN.RepPoint = AT.RepCount + 1;
-        ow = AT.WorkPointer + AM.MaxTer;
+        ow = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 		mm = s; ww = ow; i = *mm;
 		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
 		AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
@@ -776,7 +776,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression : 
+  	#] CoIdExpression :
   	#[ CoMultiply :
 */
 
@@ -815,7 +815,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMultiply : 
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1061,7 +1061,7 @@ redef:;
 }
 
 /*
-  	#] CoFill : 
+  	#] CoFill :
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1224,8 +1224,8 @@ int CoFillExpression ARG1(UBYTE *,inp)
 	if ( numsym < 0 ) { brackets = pw + 1; }
 	else { brackets = pw + numsym; }
 	brasize = -1; weneedit = 0; /* stands for we need it */
-	term = brackets + AM.MaxTer;
-	AT.WorkPointer = term + AM.MaxTer;
+    term = (WORD *)(((UBYTE *)(brackets)) + AM.MaxTer);
+    AT.WorkPointer = (WORD *)(((UBYTE *)(term)) + AM.MaxTer);
 	AC.cbufnum = T->bufnum;
 	AC.tablefilling = funnum;
 	if ( GetTerm(BHEAD term) > 0 ) {			/* Skip prototype */
@@ -1422,7 +1422,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax
@@ -1591,7 +1591,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable : 
+  	#] CoPrintTable :
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1742,7 +1742,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDeallocateTable : 
+  	#] CoDeallocateTable :
 */
 
 

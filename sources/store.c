@@ -732,7 +732,7 @@ GetTerm BARG1(WORD *,term)
 				if ( *m == HAAKJE ) {
 					testing = 1;
 					mstop = m + m[1];
-					bra = term + 2*AM.MaxTer;
+				    bra = (WORD *)(((UBYTE *)(term)) + 2*AM.MaxTer);
 					m = AR.CompressBuffer+1;
 					r = bra;
 					while ( m < mstop ) *r++ = *m++;
@@ -746,7 +746,7 @@ GetTerm BARG1(WORD *,term)
 				m += m[1];
 			}
 		}
-		bra = term+2*AM.MaxTer;
+	    bra = (WORD *)(((UBYTE *)(term)) + 2*AM.MaxTer);
 		mstop = bra+1;
 		*bra = 0;
 		minsiz = 1;
@@ -960,7 +960,7 @@ GTerr:
 			GetFirstBracket
 			FindBracket
 		We should do something about the lack of buffering.
-		Maybe a buffer of a few times AM.MaxTer (MaxTermSize).
+		Maybe a buffer of a few times AM.MaxTer (MaxTermSize*sizeof(WORD)).
 		Each thread will need its own buffer!
 
 		If par == 0 we use ReadPosFile which can fill the whole buffer.
@@ -1220,7 +1220,7 @@ GetMoreFromMem ARG2(WORD *,term,WORD **,tpoin)
 			}
 			r++; t++;
 		}
-		if ( ( WORDDIF(m,term) + i + extra ) > (AM.MaxTer>>1) ) {
+		if ( ( WORDDIF(m,term) + i + extra ) > (AM.MaxTer/(2*sizeof(WORD))) ) {
 /* 23 = 3 +20. The 20 is to have some extra for substitutions or whatever */
 			if ( AS.CollectOverFlag == 0 && AC.AltCollectFun == 0 ) {
 				Warning("Bracket contents too long in Collect statement");
@@ -1709,7 +1709,8 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 	AN.UsedVector   = w;	w += NumVectors;
 	AN.UsedIndex    = w;	w += NumIndices;
 	AN.UsedFunction = w;	w += NumFunctions;
-	term = w;			w += AM.MaxTer;
+	term = w;
+    w = (WORD *)(((UBYTE *)(w)) + AM.MaxTer);
 	if ( w > AT.WorkTop ) {
 		f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 		return(MesWork());

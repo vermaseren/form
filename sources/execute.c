@@ -638,8 +638,8 @@ PutBracket BARG1(WORD *,termin)
 	WORD *term1,*term2, *m1, *m2, *tStopa;
 	WORD *bbb = 0, *bind, *binst = 0, bwild = 0;
 	term1 = AT.WorkPointer+1;
-	term2 = term1 + AM.MaxTer;
-	if ( ( term2 + AM.MaxTer ) > AT.WorkTop ) return(MesWork());
+	term2 = (WORD *)(((UBYTE *)(term1)) + AM.MaxTer);
+	if ( ( (WORD *)(((UBYTE *)(term2)) + AM.MaxTer) ) > AT.WorkTop ) return(MesWork());
 	if ( AR.BracketOn < 0 ) {
 		t2 = term1; t1 = term2;		/* AntiBracket */
 	}
@@ -1164,7 +1164,7 @@ CountTerms1 BARG0
 	LONG numterms = 0;
 	AR.GetOneFile = 1;
 	oldwork = AT.WorkPointer;
-	AT.WorkPointer += AM.MaxTer;
+    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	AR.DeferFlag = 0;
 /*
 		Store old position
