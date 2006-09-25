@@ -33,6 +33,7 @@ static int numberclaimed;
 
 static THREADBUCKET **threadbuckets, **freebuckets;
 static int numthreadbuckets;
+static int numberoffullbuckets;
 
 /* static int numberbusy = 0; */
 
@@ -76,7 +77,7 @@ void StartIdentity ARG0
 }
 
 /*
- 		#] StartIdentity :
+ 		#] StartIdentity : 
  		#[ FinishIdentity :
 
 	The library needs a finishing routine
@@ -88,7 +89,7 @@ void FinishIdentity(int *keyp)
 }
 
 /*
- 		#] FinishIdentity :
+ 		#] FinishIdentity : 
  		#[ SetIdentity :
 
 	Assigns an integer value to a thread, starting at zero.
@@ -104,7 +105,7 @@ int SetIdentity ARG1(int *,identityretval)
 }
 
 /*
- 		#] SetIdentity :
+ 		#] SetIdentity : 
  		#[ WhoAmI :
 
 	Returns the number of the thread in our administration
@@ -140,7 +141,7 @@ int WhoAmI ARG0
 }
 
 /*
- 		#] WhoAmI :
+ 		#] WhoAmI : 
  		#[ BeginIdentities :
 */
 
@@ -152,8 +153,8 @@ BeginIdentities ARG0
 }
 
 /*
- 		#] BeginIdentities :
-  	#] Identity :
+ 		#] BeginIdentities : 
+  	#] Identity : 
   	#[ StartHandleLock :
 */
 
@@ -163,7 +164,7 @@ void StartHandleLock ARG0
 }
 
 /*
-  	#] StartHandleLock :
+  	#] StartHandleLock : 
   	#[ StartAllThreads :
 
 	In this routine we start 'number' threats
@@ -220,7 +221,7 @@ int StartAllThreads ARG1(int,number)
 }
 
 /*
-  	#] StartAllThreads :
+  	#] StartAllThreads : 
   	#[ InitializeOneThread :
 
 	One complication:
@@ -515,7 +516,7 @@ OnError:;
 }
 
 /*
-  	#] InitializeOneThread :
+  	#] InitializeOneThread : 
   	#[ FinalizeOneThread :
 */
 
@@ -528,7 +529,7 @@ void FinalizeOneThread ARG1(int,identity)
 }
 
 /*
-  	#] FinalizeOneThread :
+  	#] FinalizeOneThread : 
   	#[ TerminateAllThreads :
 */
 
@@ -545,7 +546,7 @@ VOID TerminateAllThreads ARG0
 }
 
 /*
-  	#] TerminateAllThreads :
+  	#] TerminateAllThreads : 
   	#[ MakeThreadBuckets :
 
 	Creates 2*number thread buckets. We want double the number because
@@ -608,7 +609,7 @@ int MakeThreadBuckets ARG2(int,number,int,par)
 }
 
 /*
-  	#] MakeThreadBuckets :
+  	#] MakeThreadBuckets : 
   	#[ GetWorkerTimes :
 */
 
@@ -621,7 +622,7 @@ LONG GetWorkerTimes ARG0
 }
 
 /*
-  	#] GetWorkerTimes :
+  	#] GetWorkerTimes : 
   	#[ UpdateOneThread :
 
 	Fix up things that happened at compiler time.
@@ -641,7 +642,7 @@ int UpdateOneThread ARG1(int,identity)
 }
 
 /*
-  	#] UpdateOneThread :
+  	#] UpdateOneThread : 
   	#[ LoadOneThread :
 
 	Loads all relevant variables from thread 'from' into thread 'identity'
@@ -724,7 +725,7 @@ int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
 }
 
 /*
-  	#] LoadOneThread :
+  	#] LoadOneThread : 
   	#[ SetWorkerFiles :
 */
 
@@ -783,7 +784,7 @@ void SetWorkerFiles ARG0
 }
 
 /*
-  	#] SetWorkerFiles :
+  	#] SetWorkerFiles : 
   	#[ RunThread :
 */
 
@@ -821,7 +822,7 @@ int RunThread ARG1(int *,dummy)
 				NewSort();
 				break;
 /*
-			#] STARTNEWEXPRESSION :
+			#] STARTNEWEXPRESSION : 
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -920,7 +921,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION :
+			#] LOWESTLEVELGENERATION : 
 			#[ FINISHEXPRESSION :
 */
 			case FINISHEXPRESSION:
@@ -953,7 +954,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION :
+			#] FINISHEXPRESSION : 
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -992,7 +993,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION :
+			#] CLEANUPEXPRESSION : 
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1003,7 +1004,7 @@ bucketstolen:;
 */
 				break;
 /*
-			#] HIGHERLEVELGENERATION :
+			#] HIGHERLEVELGENERATION : 
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1013,13 +1014,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE :
+			#] STARTNEWMODULE : 
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD :
+			#] TERMINATETHREAD : 
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1038,7 +1039,7 @@ EndOfThread:;
 }
 
 /*
-  	#] RunThread :
+  	#] RunThread : 
   	#[ IAmAvailable :
 
 	To be called when a thread is available.
@@ -1068,7 +1069,7 @@ void IAmAvailable ARG1(int,identity)
 }
 
 /*
-  	#] IAmAvailable :
+  	#] IAmAvailable : 
   	#[ GetAvailableThread :
 
 	Gets an available thread from the top of the stack.
@@ -1092,7 +1093,7 @@ int GetAvailableThread ARG0
 }
 
 /*
-  	#] GetAvailableThread :
+  	#] GetAvailableThread : 
   	#[ GetThread :
 
 	Gets a given thread from the list of available threads, even if
@@ -1118,7 +1119,7 @@ int GetThread ARG1(int,identity)
 }
 
 /*
-  	#] GetThread :
+  	#] GetThread : 
   	#[ GetTop :
 
 	Gets a given thread from the list of available threads, even if
@@ -1135,7 +1136,7 @@ int GetTop ARG0
 }
 
 /*
-  	#] GetTop :
+  	#] GetTop : 
   	#[ ThreadWait :
 
 	To be called by a thread when it has nothing to do.
@@ -1173,7 +1174,7 @@ int ThreadWait ARG1(int,identity)
 }
 
 /*
-  	#] ThreadWait :
+  	#] ThreadWait : 
   	#[ ThreadClaimedBlock :
 
 	To be called by a thread when it has nothing to do.
@@ -1199,7 +1200,7 @@ int ThreadClaimedBlock ARG1(int,identity)
 }
 
 /*
-  	#] ThreadClaimedBlock :
+  	#] ThreadClaimedBlock : 
   	#[ MasterWait :
 
 	To be called by the master when it has to wait for one of the
@@ -1222,7 +1223,7 @@ int MasterWait ARG0
 }
 
 /*
-  	#] MasterWait :
+  	#] MasterWait : 
   	#[ MasterWaitThread :
 
 	To be called by the master when it has to wait for one of the
@@ -1245,7 +1246,7 @@ int MasterWaitThread ARG1(int,identity)
 }
 
 /*
-  	#] MasterWaitThread :
+  	#] MasterWaitThread : 
   	#[ MasterWaitAll :
 
 	To be called by the master when it has to wait for all of the
@@ -1264,7 +1265,7 @@ void MasterWaitAll ARG0
 }
 
 /*
-  	#] MasterWaitAll :
+  	#] MasterWaitAll : 
   	#[ MasterWaitAllBlocks :
 
 	To be called by the master when it has to wait for all of the
@@ -1283,7 +1284,7 @@ void MasterWaitAllBlocks ARG0
 }
 
 /*
-  	#] MasterWaitAllBlocks :
+  	#] MasterWaitAllBlocks : 
   	#[ WakeupThread :
 
 	To be called when the indicated thread needs waking up.
@@ -1305,7 +1306,7 @@ void WakeupThread ARG2(int,identity,int,signalnumber)
 }
 
 /*
-  	#] WakeupThread :
+  	#] WakeupThread : 
   	#[ WakeupMasterFromThread :
 
 	To be called when the indicated thread needs waking up.
@@ -1327,7 +1328,49 @@ void WakeupMasterFromThread ARG2(int,identity,int,signalnumber)
 }
 
 /*
-  	#] WakeupMasterFromThread :
+  	#] WakeupMasterFromThread : 
+  	#[ SendOneBucket :
+
+	To be called when there is a full bucket and an available thread
+*/
+
+int SendOneBucket ARG0
+{
+	ALLPRIVATES *B0 = AB[0];
+	THREADBUCKET *thr = 0;
+	int j, k, id;
+	for ( j = 0; j < numthreadbuckets; j++ ) {
+		if ( threadbuckets[j]->free == BUCKETFILLED ) {
+			thr = threadbuckets[j];
+			for ( k = j+1; k < numthreadbuckets; k++ )
+				threadbuckets[k-1] = threadbuckets[k];
+			threadbuckets[numthreadbuckets-1] = thr;
+			break;
+		}
+	}
+	AN0.ninterms++;
+	while ( ( id = GetAvailableThread() ) < 0 ) { MasterWait(); }
+/*
+	Prepare the thread. Give it the term and variables.
+*/
+	LoadOneThread(0,id,thr,0);
+	thr->busy = BUCKETASSIGNED;
+	thr->free = BUCKETINUSE;
+	numberoffullbuckets--;
+/*
+	And signal the thread to run.
+	Form now on we may only interfere with this bucket
+	1: after it has been marked BUCKETCOMINGFREE
+	2: when thr->busy == BUCKETDOINGTERM and then only when protected by
+	   thr->lock. This would be for load balancing.
+*/
+	WakeupThread(id,LOWESTLEVELGENERATION);
+	AN0.ninterms += thr->ddterms;
+	return(0);
+}
+
+/*
+  	#] SendOneBucket :
   	#[ ThreadsProcessor :
 */
 
@@ -1340,6 +1383,7 @@ ThreadsProcessor ARG3(EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	LONG numinput = 1;
 	WORD *oldworkpointer = AT0.WorkPointer, *tt, *ttco = 0, *t1, ter;
 	THREADBUCKET *thr = 0;
+	numberoffullbuckets = 0;
 /*
 	Start up all threads. The lock needs to be around the whole loop
 	to keep processes from terminating quickly and putting themselves
@@ -1408,6 +1452,10 @@ ThreadsProcessor ARG3(EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 			}
 		}
 /*
+		Check whether we have a priority task:
+*/
+		if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket();
+/*
 		Now put more terms in the bucket. Position tt after the first term
 */
 		tt = thr->threadbuffer; tt += *tt;
@@ -1431,6 +1479,10 @@ ThreadsProcessor ARG3(EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 */
 		while ( ( dd < thrbufsiz ) &&
 			( tt - thr->threadbuffer ) < ( thr->threadbuffersize - AM.MaxTer - 2 ) ) {
+/*
+			First check:
+*/
+			if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket();
 /*
 			There is room in the bucket. Fill yet another term.
 */
@@ -1456,6 +1508,7 @@ ThreadsProcessor ARG3(EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 		numinput += dd;
 		*tt = 0;           /* mark end of bucket */
 		thr->free = BUCKETFILLED;
+		numberoffullbuckets++;
 		if ( topofavailables <= 0 && endofinput == 0 ) {
 /*
 			Problem: topofavailables may already be > 0, but the
@@ -1530,6 +1583,7 @@ DoBucket:;
 		LoadOneThread(0,id,thr,0);
 		thr->busy = BUCKETASSIGNED;
 		thr->free = BUCKETINUSE;
+		numberoffullbuckets--;
 /*
 		And signal the thread to run.
 		Form now on we may only interfere with this bucket
@@ -1929,7 +1983,7 @@ intercepted:;
 }
 
 /*
-  	#] LoadReadjusted :
+  	#] LoadReadjusted : 
   	#[ SortStrategy :
 
 	When the final sort to the scratch file should take place
@@ -1963,7 +2017,7 @@ intercepted:;
 	buffer/block of the master and leave out the scratch of the worker
 	completely.
 
-  	#] SortStrategy :
+  	#] SortStrategy : 
   	#[ PutToMaster :
 
 		Writes the term (uncompressed) to the masters buffers.
@@ -2030,7 +2084,7 @@ PutToMaster BARG1(WORD *,term)
 }
 
 /*
-  	#] PutToMaster :
+  	#] PutToMaster : 
   	#[ MasterMerge :
 */
 
@@ -2114,7 +2168,7 @@ MasterMerge ARG0
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	Now construct the tree:
 */
@@ -2458,7 +2512,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge :
+  	#] MasterMerge : 
   	#[ IniSortBlocks :
 */
 
@@ -2525,6 +2579,6 @@ int IniSortBlocks ARG1(int,numworkers)
 }
 
 /*
-  	#] IniSortBlocks :
+  	#] IniSortBlocks : 
 */
 #endif

@@ -178,7 +178,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -202,7 +202,7 @@ inictable ARG0
 }
 
 /*
- 		#] inictable :
+ 		#] inictable : 
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -255,7 +255,7 @@ findcommand ARG1(UBYTE *,in)
 }
 
 /*
- 		#] findcommand :
+ 		#] findcommand : 
  		#[ ParenthesesTest :
 */
 
@@ -299,7 +299,7 @@ int ParenthesesTest ARG1(UBYTE *,sin)
 }
 
 /*
- 		#] ParenthesesTest :
+ 		#] ParenthesesTest : 
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -334,7 +334,7 @@ SkipAName ARG1(UBYTE *,s)
 }
 
 /*
- 		#] SkipAName :
+ 		#] SkipAName : 
  		#[ IsRHS :
 */
 
@@ -381,7 +381,7 @@ IsRHS ARG2(UBYTE *,s,UBYTE,c)
 }
 
 /*
- 		#] IsRHS :
+ 		#] IsRHS : 
  		#[ IsIdStatement :
 */
 
@@ -392,7 +392,7 @@ IsIdStatement ARG1(UBYTE *,s)
 }
 
 /*
- 		#] IsIdStatement :
+ 		#] IsIdStatement : 
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -433,7 +433,7 @@ CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 }
 
 /*
- 		#] CompileAlgebra :
+ 		#] CompileAlgebra : 
  		#[ CompileStatement :
 
 */
@@ -540,7 +540,7 @@ CompileStatement ARG1(UBYTE *,in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
@@ -579,7 +579,7 @@ int TestTables ARG0
 }
 
 /*
- 		#] TestTables :
+ 		#] TestTables : 
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -686,7 +686,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 }
 
 /*
- 		#] CompileSubExpressions :
+ 		#] CompileSubExpressions : 
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -738,6 +738,8 @@ int CodeGenerator ARG1(SBYTE *,tokens)
 	denominator = numerator + 2*AM.MaxTal;
 	innum = denominator + 2*AM.MaxTal;
 	term = (WORD *)(innum + 2*AM.MaxTal);
+	AT.WorkPointer = term + AM.MaxTer;
+	if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 	cc = 0;
 	t = term+1;
 	numerator[0] = denominator[0] = 1;
@@ -1654,6 +1656,11 @@ docoef:
 		}
 	}
 	return(C->numrhs);
+OverWork:
+	LOCK(ErrorMessageLock);
+	MesWork();
+	UNLOCK(ErrorMessageLock);
+	return(-1);
 }
 
 /*
@@ -1683,7 +1690,7 @@ int CompleteTerm ARG6(WORD *,term,UWORD *,numer,UWORD *,denom,WORD,nnum,WORD,nde
 }
 
 /*
- 		#] CompleteTerm :
+ 		#] CompleteTerm : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

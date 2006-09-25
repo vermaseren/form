@@ -92,7 +92,7 @@ int PF_UnPackString ARG1(UBYTE *,str);
 /*:[17nov2005 mt*/
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ statistics :
  		#[ variables : (should be part of a struct?)
 */
@@ -110,7 +110,7 @@ static LONG **PF_stats=0;    /* space for collecting statistics of all procs */
 static LONG PF_laststat;     /* last realtime when statistics were printed */
 static LONG PF_statsinterval;/* timeinterval for printing statistics */
 /*
- 		#] variables :
+ 		#] variables : 
  		#[ PF_Statistics : (LONG**,int)
 
 	 prints statistics every PF_statinterval seconds
@@ -191,8 +191,8 @@ PF_Statistics ARG2(LONG**,stats,int,proc)
   return(0);
 }
 /*
- 		#] PF_Statistics :
-  	#] statistics :
+ 		#] PF_Statistics : 
+  	#] statistics : 
   	#[ sort.c :
  		#[ sort variables :
   */
@@ -219,7 +219,7 @@ static  WORD *PF_WorkSpace;      /* used in PF_EndSort */
 static  UWORD *PF_ScratchSpace;  /* used in PF_GetLosers */
 
 /*
- 		#] sort variables :
+ 		#] sort variables : 
  		#[ PF_AllocBuf : (int,LONG,WORD)
 
   Allocate one PF_BUFFER struct with numbuf buffers of size bsize
@@ -290,7 +290,7 @@ PF_AllocBuf ARG3(int,nbufs,LONG,bsize,WORD,free)
   return(buf);
 }
 /*
- 		#] PF_AllocBuf :
+ 		#] PF_AllocBuf : 
  		#[ PF_InitTree : ()
 
   Initializes the sorting tree on the master.
@@ -338,7 +338,7 @@ PF_InitTree ARG0
 	if( p != stop){ MesPrint("error in PF_InitTree"); return(-1); }
   }
 /* 
- 		#] the buffers :
+ 		#] the buffers : 
  		#[ the receive buffers :
   */
   numrbufs = PF.numrbufs;
@@ -377,7 +377,7 @@ PF_InitTree ARG0
   PF.rbufs = rbuf;
 
 /* 
- 		#] the receive buffers :
+ 		#] the receive buffers : 
  		#[ the actual tree :
 	
 	 calculate number of nodes in mergetree and allocate space for them 
@@ -420,12 +420,12 @@ PF_InitTree ARG0
 	PF_root[i].rloser = 0;
   }
 /*
- 		#] the actual tree :
+ 		#] the actual tree : 
 */
   return(numnodes);
 }
 /*
- 		#] PF_InitTree :
+ 		#] PF_InitTree : 
  		#[ PF_PutIn : (int)
 
   PF_PutIn replaces PutIn on the master process and is used in PF_GetLoser. 
@@ -526,7 +526,7 @@ newterms:
   return(term);
 }
 /*
- 		#] PF_PutIn : (int)
+ 		#] PF_PutIn : (int) 
  		#[ PF_GetLoser : (*NODE)
   
   Find the 'smallest' of all the PF_terms. Take also care of changing 
@@ -708,7 +708,7 @@ cancelled:
   return(0);
 }
 /*
- 		#] PF_GetLoser :
+ 		#] PF_GetLoser : 
  		#[ PF_EndSort :
 
   if this is not the masterprocess, just initialize the sendbuffers and 
@@ -833,8 +833,8 @@ PF_EndSort ARG0
   return(1);
 }
 /*
- 		#] PF_EndSort :
-  	#] sort.c :
+ 		#] PF_EndSort : 
+  	#] sort.c : 
   	#[ proces.c :
  		#[ variables :
 */
@@ -842,7 +842,7 @@ PF_EndSort ARG0
 static  WORD *PF_CurrentBracket;      
 
 /*
- 		#] variables :
+ 		#] variables : 
  		#[ PF_GetTerm : (WORD*)
 
   This replaces GetTerm on the slaves, which get their terms from the master, 
@@ -952,7 +952,7 @@ ReceiveNew:
 	  fi->POfull = fi->PObuffer + size;
 	  if(tag == PF_ENDSORT_MSGTAG) *fi->POfull++ = 0;
 /*
- 		#] receive new terms from master :
+ 		#] receive new terms from master : 
 */
 	}
 	if( PF_CurrentBracket ) *PF_CurrentBracket = 0;
@@ -971,7 +971,7 @@ ReceiveNew:
 		(WORD*)Malloc1(AM.MaxTer,"PF_CurrentBracket");
 	  *PF_CurrentBracket = 0;
 /*
- 		#] alloc space :
+ 		#] alloc space : 
 */
 	}
 	while ( *PF_CurrentBracket ){ /* "for each term in the buffer" */
@@ -1006,7 +1006,7 @@ ReceiveNew:
 		goto RegRet;
 	  }
 /*
- 		#] test :
+ 		#] test : 
 */
 	}
 /*
@@ -1038,7 +1038,7 @@ strip:
 	}
 	tp = term;
 /*
- 		#] copy :
+ 		#] copy : 
 */
   }
 
@@ -1049,7 +1049,7 @@ RegRet:
   return(*term);
 }
 /*							  
- 		#] PF_GetTerm :
+ 		#] PF_GetTerm : 
  		#[ PF_Deferred : (WORD*,WORD)
 	 
 	 Picks up the deferred brackets.
@@ -1131,7 +1131,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
 }
 
 /*
- 		#] PF_Deferred :
+ 		#] PF_Deferred : 
 */
 
 /*[02nov2003 mt]:*/
@@ -1248,7 +1248,7 @@ recv:
   goto recv;
 }
 /*
- 		#] PF_Wait4Slave :
+ 		#] PF_Wait4Slave : 
 */
 #endif
 /*
@@ -1284,7 +1284,7 @@ PF_Wait4Slave ARG1(int,src)
 	return(next);
 }
 /*
- 		#] PF_Wait4Slave :
+ 		#] PF_Wait4Slave : 
  		#[ PF_WaitAllSlaves : (void)
 
 		This function waits until all slaves are ready to send terms back to the master.
@@ -1389,7 +1389,7 @@ PF_WaitAllSlaves ARG0
 }/*PF_WaitAllSlaves*/
 
 /*
- 		#] PF_WaitAllSlaves :
+ 		#] PF_WaitAllSlaves : 
  		#[ PF_Processor :
 
   replaces parts of Processor on the masters and slaves.
@@ -1437,8 +1437,8 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 
   if(PF.me == MASTER){
 	/* 
-	   #[ Master
-	     #[ write prototype to outfile
+ 		#[ Master:
+			#[ write prototype to outfile:
 	*/
 	if ( PF.log && PF.module >= PF.log )
 	  MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),PF.module);
@@ -1453,8 +1453,8 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	e->onfile = position;
 	if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) return(-1);
 	/*
-	     #] write prototype to outfile
-	     #[ initialize sendbuffer if necessary
+			#] write prototype to outfile: 
+			#[ initialize sendbuffer if necessary:
 
 		 the size of the sendbufs is:
 		 MIN(1/PF.numtasks*(AT.SS->sBufsize+AT.SS->lBufsize),AR.infile->POsize)
@@ -1479,8 +1479,8 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	for(j=0;j<PF.numtasks;j++) sb->full[j] = sb->fill[j] = sb->buff[j];
        
 	/*
-	     #] initialize sendbuffers
-		 #[ loop for all terms in infile:
+			#] initialize sendbuffer if necessary: 
+			#[ loop for all terms in infile:
 
 		 copy them always to sb->buff[0], when that is full, wait for 
 		 next slave to accept terms, exchange sb->buff[0] and 
@@ -1553,8 +1553,8 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	}
 	PF.ginterms += dd;
 	/*
-		 #] loop for all terms in infile
-		 #[ Clean up & EndSort
+			#] loop for all terms in infile: 
+			#[ Clean up & EndSort:
 	*/
 	
 	if ( LastExpression ) {
@@ -1576,8 +1576,8 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
 	AS.GetFile = 0;	
 	/* 
-	     #] Clean up and call EndSort
-	     #[ Collect (stats,prepro,...)
+			#] Clean up & EndSort: 
+			#[ Collect (stats,prepro,...):
 	*/
 	if(AC.mparallelflag == PARALLELFLAG){
 	  for(k=1;k<PF.numtasks;k++){
@@ -1665,7 +1665,7 @@ PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
 	  PF_Statistics(PF_stats,0);
    }/*if(AC.mparallelflag == PARALLELFLAG)*/	
 	/*
-	     #] Collect (stats,prepro,...)
+			#] Collect (stats,prepro,...): 
 	*/
 /*[26nov2003 mt]:*/
 /*This operation is moved to the beginning of each block, see PreProcessor 
@@ -1861,8 +1861,8 @@ in pre.c.*/
   return(0);
 }
 /*
- 		#] PF_Processor :
-  	#] proces.c :
+ 		#] PF_Processor : 
+  	#] proces.c : 
   	#[ startup :, prepro & compile
  		#[ PF_Init : (int*,char***)
 
@@ -1998,8 +1998,8 @@ int PF_Init ARG2(int*,argc,char ***,argv){
   return(0);
 }
 /*	 
- 		#] PF_Init :
-  	#] startup :
+ 		#] PF_Init : 
+  	#] startup : 
   	#[ PF_BroadcastNumberOfTerms :
 */
 /* The procedure is used to broadcast number of terms in expression for
@@ -2029,7 +2029,7 @@ PF_BroadcastNumberOfTerms ARG1 (LONG,x)
 	return (x);
 }/*PF_BroadcastNumberOfTerms*/
 /*
-  	#] PF_BroadcastNumberOfTerms :
+  	#] PF_BroadcastNumberOfTerms : 
   	#[ PF_InitRedefinedPreVars :
 */
 int
@@ -2115,7 +2115,7 @@ PF_InitRedefinedPreVars ARG0
 	return (0);
 }/*PF_InitRedefinedPreVars*/
 /*
-  	#] PF_InitRedefinedPreVars :
+  	#] PF_InitRedefinedPreVars : 
   	#[ PF_BroadcastString : (UBYTE*)
 */
 /* 
@@ -2153,7 +2153,7 @@ UBYTE *cstr=str;
 	return (0);
 }/*PF_BroadcastString*/
 /*
-  	#] PF_BroadcastString :
+  	#] PF_BroadcastString : 
 */
 /*[19sep2005 mt]:*/
 /*
@@ -2265,7 +2265,7 @@ LONG i;
 
 }/*PF_BroadcastPreDollar*/
 /*
-   #] int PF_BroadcastPreDollar :
+   #] int PF_BroadcastPreDollar : 
 */
 /*[19sep2005 mt]:*/
 
@@ -2652,7 +2652,7 @@ DOLLARS  d, newd;
 	return (0);
 }/*PF_mkDollarsParallel*/
 /*
-   #] int PF_mkDollarsParallel:
+   #] int PF_mkDollarsParallel: 
 */
 
 /*:[29sep2005 mt]*/
@@ -2661,8 +2661,8 @@ DOLLARS  d, newd;
 /*[06nov2005 mt]:*/
 
 
-	/*
-   #[ PotModDollars
+/*
+   #[ PotModDollars:
 		Usage of a dollar just in a preprocessor is undistingueshable from the 
 		"real" run-time. Dollars, marked as potentially modified in CoAssign in 
 		comexpr.c may be not of a "really" potentially modified type. This become
@@ -2714,6 +2714,6 @@ int i;
 }/*PF_markPotModDollars*/
 
 /*
-   #] PotModDollars
+   #] PotModDollars: 
 */
 /*:[06nov2005 mt]*/
