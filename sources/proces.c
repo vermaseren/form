@@ -349,7 +349,7 @@ ProcErr:
  		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 
-	TestSub hunts for subexpression pointers.
+		TestSub hunts for subexpression pointers.
 	If one is found its power is given in AN.TeSuOut.
 	and the returnvalue is 'expressionnumber'.
 	If the expression number is negative it is an expression on disk.
@@ -364,12 +364,13 @@ TestSub BARG2(WORD *,term,WORD,level)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, retvalue, funflag, j;
-	WORD *stop, *t1, *t2, funnum, wilds, tbufnum = 0;
+	WORD *stop, *t1, *t2, funnum, wilds, tbufnum;
 	NESTING n;
 	CBUF *C = cbuf+AT.ebufnum;
-	LONG isp, i = 0;
+	LONG isp, i;
 	TABLES T;
 ReStart:
+	tbufnum = 0; i = 0;
 	AT.TMbuff = AM.rbufnum;
 	funflag = 0;
 	t = term;
@@ -1052,7 +1053,6 @@ DoSpec:
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
-
 						if ( EndSort(AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 
@@ -1099,7 +1099,18 @@ DoSpec:
 						AN.EndNest += j;
 /*						(AT.NestPoin->argsize)[1] = 0;  */
 						if ( funnum == DENOMINATOR || funnum == EXPONENT ) {
-							if ( Normalize(BHEAD term) ) goto EndTest;
+							if ( Normalize(BHEAD term) ) {
+/*
+								In this case something has been substituted
+								Either a $ or a replace_?????
+								Originally we had here:
+
+								goto EndTest;
+
+								It seems better to restart.
+*/
+								goto ReStart;
+							}
 /*
 							And size changes here?????
 */
@@ -1132,11 +1143,25 @@ DoSpec:
 					Test 1: index arguments and range. i will be the number
 						of the element in the table.
 */
-					WORD rhsnumber, *oldwork = AT.WorkPointer;
+					WORD rhsnumber, *oldwork = AT.WorkPointer, *Tpattern;
 					WORD ii, *p;
 					MINMAX *mm;
 					T = functions[funnum-FUNCTION].tabl;
+/*
+					The next application of T->pattern isn't thread safe.
 					p = T->pattern + FUNHEAD+1;
+					The new code is in the next three lines and in the application
+					ii = T->pattern[1]; p = Tpattern; pp = T->pattern;
+					for ( i = 0; i < ii; i++ ) *p++ = *pp++;
+					AT.WorkPointer = p; 
+*/
+#ifdef WITHPTHREADS
+					Tpattern = T->pattern[AT.identity];
+#else
+					Tpattern = T->pattern;
+#endif
+					p = Tpattern + FUNHEAD+1;
+
 					mm = T->mm;
 					if ( T->sparse ) {
 						t = t1+FUNHEAD;
@@ -1216,19 +1241,7 @@ teststrict:					if ( T->strict == -2 ) {
 */
 caughttable:
 #ifdef WITHPTHREADS
-					{
-						WORD *ma = AddRHS(AT.ebufnum,1);
-						WORD *ta = T->prototype;
-						int ja = ta[1];
-						if ( ( ma+ja+2) > C->Top ) {
-							ma = DoubleCbuffer(AT.ebufnum,ma);
-						}
-						AN.FullProto = ma;
-						NCOPY(ma,ta,ja);
-						*ma++ = 0;
-						C->rhs[C->numrhs+1] = ma;
-						C->Pointer = ma;
-					}
+					AN.FullProto = T->prototype[AT.identity];
 #else
 					AN.FullProto = T->prototype;
 #endif
@@ -1244,7 +1257,8 @@ caughttable:
 						UNLOCK(ErrorMessageLock);
 					}
 					wilds = 0;
-					if ( MatchFunction(BHEAD T->pattern,t1,&wilds) > 0 ) {
+/*					if ( MatchFunction(BHEAD T->pattern,t1,&wilds) > 0 ) {  } */
+					if ( MatchFunction(BHEAD Tpattern,t1,&wilds) > 0 ) {
 						AT.WorkPointer = oldwork;
 						if ( AT.NestPoin != AT.Nest ) return(1);
 
@@ -2231,7 +2245,9 @@ FiniCall:
 */
 
 static WORD zeroDollar[] = { 0, 0 };
-
+/*
+static long debugcounter = 0;
+*/
 WORD
 Generator BARG2(WORD *,term,WORD,level)
 {
@@ -2814,6 +2830,12 @@ AutoGen:	i = *AT.TMout;
 			i = (WORD)cbuf[extractbuff].CanCommu[replac];
 		}
 		if ( power == 1 ) {		/* Just a single power */
+/*
+debugcounter++;
+if ( debugcounter == 78736449 ) {
+	MesPrint("Coming into the danger zone. debugcounter = %l",debugcounter);
+}
+*/
 			termout = AT.WorkPointer;
 		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;

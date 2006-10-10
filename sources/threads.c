@@ -63,7 +63,7 @@ INILOCK(dummylock);
 static pthread_cond_t dummywakeupcondition = PTHREAD_COND_INITIALIZER;
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Identity :
  		#[ StartIdentity :
 
@@ -864,15 +864,17 @@ int RunThread ARG1(int *,dummy)
 /*
 					What if we want to steal and we set thr->free while
 					the thread is inside the next code for a long time?
-*/
 				  if ( AT.LoadBalancing ) {
+*/
 					LOCK(thr->lock);
 					thr->busy = BUCKETDOINGTERM;
 					UNLOCK(thr->lock);
+/*
 				  }
 				  else {
 					thr->busy = BUCKETDOINGTERM;
 				  }
+*/
 				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
@@ -889,14 +891,16 @@ int RunThread ARG1(int *,dummy)
 					UNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				  }
-				  if ( AT.LoadBalancing ) {
+/*				  if ( AT.LoadBalancing ) { */
 					LOCK(thr->lock);
 					thr->busy = BUCKETPREPARINGTERM;
 					UNLOCK(thr->lock);
+/*
 				  }
 				  else {
 					thr->busy = BUCKETPREPARINGTERM;
 				  }
+*/
 				  if ( thr->free == BUCKETTERMINATED ) {
 					if ( thr->usenum == thr->totnum ) {
 						thr->free = BUCKETCOMINGFREE;
@@ -910,18 +914,19 @@ int RunThread ARG1(int *,dummy)
 				} while ( *ttin );
 				thr->free = BUCKETCOMINGFREE;
 bucketstolen:;
-				if ( AT.LoadBalancing ) {
+/*				if ( AT.LoadBalancing ) { */
 					LOCK(thr->lock);
 					thr->busy = BUCKETTOBERELEASED;
 					UNLOCK(thr->lock);
-				}
+/*				}
 				else {
 					thr->busy = BUCKETTOBERELEASED;
 				}
+*/
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION : 
+			#] LOWESTLEVELGENERATION :
 			#[ FINISHEXPRESSION :
 */
 			case FINISHEXPRESSION:
@@ -1039,7 +1044,7 @@ EndOfThread:;
 }
 
 /*
-  	#] RunThread : 
+  	#] RunThread :
   	#[ IAmAvailable :
 
 	To be called when a thread is available.
@@ -1370,7 +1375,7 @@ int SendOneBucket ARG0
 }
 
 /*
-  	#] SendOneBucket :
+  	#] SendOneBucket : 
   	#[ ThreadsProcessor :
 */
 
@@ -1581,7 +1586,9 @@ DoBucket:;
 		Prepare the thread. Give it the term and variables.
 */
 		LoadOneThread(0,id,thr,0);
+		LOCK(thr->lock);
 		thr->busy = BUCKETASSIGNED;
+		UNLOCK(thr->lock);
 		thr->free = BUCKETINUSE;
 		numberoffullbuckets--;
 /*
@@ -1767,7 +1774,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor :
+  	#] ThreadsProcessor : 
   	#[ LoadReadjusted :
 
 	This routine does the load readjustment at the end of a module.
@@ -1791,7 +1798,7 @@ int LoadReadjusted ARG0
 {
 	ALLPRIVATES *B0 = AB[0];
 	THREADBUCKET *thr, *thrtogo = 0;
-	int numtogo, numfree, numbusy, n, nperbucket, extra, i, j, u;
+	int numtogo, numfree, numbusy, n, nperbucket, extra, i, j, u, bus;
 	LONG numinput;
 	WORD *t1, *c1, *t2, *c2, *t3;
 /*
@@ -1814,19 +1821,25 @@ restart:;
 			freebuckets[numfree++] = thr;
 		}
 		else if ( thr->totnum > 1 ) { /* never steal from a bucket with one term */
+			LOCK(thr->lock);
+			bus = thr->busy;
+			UNLOCK(thr->lock);
 			if ( thr->free == BUCKETINUSE ) {
 				n = thr->totnum-thr->usenum;
-				if ( thr->busy == BUCKETASSIGNED ) numbusy++;
-				else if ( ( thr->busy != BUCKETASSIGNED )
+				if ( bus == BUCKETASSIGNED ) numbusy++;
+				else if ( ( bus != BUCKETASSIGNED )
 					   && ( n > numtogo ) ) {
 					numtogo = n;
 					thrtogo = thr;
 				}
 			}
-			else if ( thr->busy == BUCKETTOBERELEASED
+			else if ( bus == BUCKETTOBERELEASED
 			 && thr->free == BUCKETRELEASED ) {
 				freebuckets[numfree++] = thr;
-				thr->free = BUCKETATEND; thr->busy = BUCKETPREPARINGTERM;
+				thr->free = BUCKETATEND;
+				LOCK(thr->lock);
+				thr->busy = BUCKETPREPARINGTERM;
+				UNLOCK(thr->lock);
 			}
 		}
 	}

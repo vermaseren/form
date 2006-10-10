@@ -459,7 +459,7 @@ AllocSetups ARG0
 	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
 #endif
 	sp = GetSetupPar((UBYTE *)"bracketindexsize");
-	if ( sp->value < 20*AM.MaxTer ) sp->value = 2*AM.MaxTer;
+	if ( sp->value < 20*AM.MaxTer ) sp->value = 20*AM.MaxTer;
 	AM.MaxBracketBufferSize = sp->value/sizeof(WORD);
 
 	sp = GetSetupPar((UBYTE *)"dotchar");

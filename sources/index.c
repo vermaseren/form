@@ -36,7 +36,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	LONG hi, low, med;
 	int i;
 	WORD oldsorttype = AC.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
-	WORD *tstop, *cp;
+	WORD *tstop, *cp, a[4];
 	FILEHANDLE *fi;
 	POSITION auxpos, toppos;
 
@@ -141,6 +141,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				j = *p++;
 				NCOPY(t1,p,j)
 				t2++; while ( *t2 != HAAKJE ) t2 += t2[1];
+				a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];
 				*t2++ = 1; *t2++ = 1; *t2++ = 3;
 				*AR.CompressPointer = t2 - AR.CompressPointer;
 				if ( *bracket == 4 ) {
@@ -149,6 +150,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				}
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
 				else i = Compare(BHEAD bracket,AR.CompressPointer,0);
+				t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
 					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
 					fi->POfill = pp;
@@ -157,7 +159,6 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				if ( i > 0 ) break;	/* passed what was possible */
 			}
 			else {	/* no compression. We have to check! */
-				WORD a[4];
 				pp = p;
 				t2 = p + 1; while ( *t2 != HAAKJE ) t2 += t2[1];
 				a[0] = *p; a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];

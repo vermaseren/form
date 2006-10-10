@@ -126,6 +126,12 @@ conscan:;
 				t += 2;
 				from = m;
 				do {
+/*
+if ( *t < 0 && *t > -MAXPOWER ) {
+	PrintTerm(term,"Negative symbol number");
+
+}
+*/
 					if ( t[1] == 0 ) {
 						if ( *t == 0 || *t == MAXPOWER ) goto NormZZ;
 						t += 2;

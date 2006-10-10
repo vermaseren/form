@@ -18,8 +18,8 @@
 #define ITHREADS
 #define WITHPCOUNTER
 #define DEBUGGINGLOCKS
-*/
 #define WITHPTHREADS
+*/
 
 #ifdef WITHZLIB
 #include <zlib.h>

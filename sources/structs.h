@@ -184,10 +184,15 @@ typedef struct BrAcKeTiNfO {
  
 typedef struct TaBlEs {
     WORD    *tablepointers; /* start in tablepointers table */
+#ifdef WITHPTHREADS
+    WORD    **prototype;     /* The wildcard prototyping for arguments */
+    WORD    **pattern;       /* The pattern with which to match the arguments */
+#else
     WORD    *prototype;     /* The wildcard prototyping for arguments */
+    WORD    *pattern;       /* The pattern with which to match the arguments */
+#endif
 	MINMAX	*mm;		    /* Array bounds, dimension by dimension */
 	WORD	*flags;         /* Is element in use ? etc */
-    WORD    *pattern;       /* The pattern with which to match the arguments */
 	COMPTREE *boomlijst;	/* Tree for searching in sparse tables */
 	UBYTE	*argtail;       /* The arguments in characters. For tablebase
                                Starts with parenthesis to indicate tail */

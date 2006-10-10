@@ -76,9 +76,15 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 							*w = DROPGEXPRESSION;
 					}
 					AC.TransEname = Expressions[c2].name;
+/*
+		Original code:
 					Expressions[c2].replace = j =
 						EntVar(CEXPRESSION,0,type,0,0);
+		At some moment it does get the value in j but not in Expressions[c2].replace
+*/
+					j = EntVar(CEXPRESSION,0,type,0,0);
 					Expressions[j].node = Expressions[c2].node;
+					Expressions[c2].replace = j;
 				}
 				else {
 					MesPrint("&name of expression is also name of a variable");
@@ -826,12 +832,13 @@ int CoFill ARG1(UBYTE *,inp)
 	GETIDENTITY
 	WORD error = 0, x, funnum, type, *oldwp = AT.WorkPointer;
 	int i, oldcbufnum = AC.cbufnum, nofill = 0, numover, redef = 0;
-	WORD *w, *wold;
+	WORD *w, *wold, *Tprototype;
 	UBYTE *p = inp, c, *inp1;
 	TABLES T = 0, oldT;
 	LONG newreservation, sum = 0;
 	UBYTE *p1, *p2, *p3, *p4, *fake = 0;
 	int tablestub = 0;
+	if ( AC.exprfillwarning == 1 ) AC.exprfillwarning = 0;
 /*
 	Read the name of the function and test that it is in the table.
 */
@@ -1002,7 +1009,12 @@ redef:;
 	while ( *inp1 ) {
 		p = SkipField(inp1,0);
 		c = *p; *p = 0;
-		if ( ( i = CompileAlgebra(inp1,RHSIDE,T->prototype) ) < 0 ) { error = 1; i = 0; }
+#ifdef WITHPTHREADS
+		Tprototype = T->prototype[0];
+#else
+		Tprototype = T->prototype;
+#endif
+		if ( ( i = CompileAlgebra(inp1,RHSIDE,Tprototype) ) < 0 ) { error = 1; i = 0; }
 		if ( !nofill ) {
 			T->tablepointers[sum] = i;
 			T->tablepointers[sum+1] = T->bufnum;

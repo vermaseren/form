@@ -36,7 +36,7 @@ DECLARE(int CheckTableDeclarations,(DBASE *))
 static UBYTE *tablebase = (UBYTE *)"tablebase";
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ ClearTableTree :
 */
 
@@ -59,7 +59,7 @@ void ClearTableTree ARG1(TABLES,T)
 }
 
 /*
-  	#] ClearTableTree :
+  	#] ClearTableTree : 
   	#[ InsTableTree :
 
 	int InsTableTree(TABLES T,WORD *,arglist)
@@ -215,7 +215,7 @@ balance:;
 }
 
 /*
-  	#] InsTableTree :
+  	#] InsTableTree : 
   	#[ RedoTableTree :
 
 	To be used when a sparse table is trimmed due to a .store
@@ -240,7 +240,7 @@ void RedoTableTree ARG2(TABLES,T,int,newsize)
 }
 
 /*
-  	#] RedoTableTree :
+  	#] RedoTableTree : 
   	#[ FindTableTree :
 
 	int FindTableTree(TABLES T,WORD *,arglist,int,inc)
@@ -284,7 +284,7 @@ int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
 }
 
 /*
-  	#] FindTableTree :
+  	#] FindTableTree : 
   	#[ DoTableExpansion :
 */
 
@@ -476,7 +476,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] DoTableExpansion :
+  	#] DoTableExpansion : 
   	#[ TableBase :
 
 	File with all the database related things.
@@ -515,7 +515,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 	If we put all our diagrams inside, we have to go outside the concept
 	of tables.
 
-  	#] TableBase :
+  	#] TableBase : 
   	#[ CoTableBase :
 
 	To be followed by ,subkey
@@ -575,7 +575,7 @@ proper:;
 }
 
 /*
-  	#] CoTableBase :
+  	#] CoTableBase : 
   	#[ FlipTable :
 
 	Flips the table between use as 'stub' and regular use
@@ -594,7 +594,7 @@ int FlipTable ARG2(FUNCTIONS,f,int,type)
 }
 
 /*
-  	#] FlipTable :
+  	#] FlipTable : 
   	#[ SpareTable :
 
 	Creates a spare element for a table. This is used in the table bases.
@@ -637,7 +637,7 @@ int SpareTable ARG1(TABLES,TT)
 }
 
 /*
-  	#] SpareTable :
+  	#] SpareTable : 
   	#[ FindTB :
 
 	Looks for a tablebase with the given name in the active tablebases.
@@ -655,7 +655,7 @@ DBASE *FindTB ARG1(UBYTE *,name)
 }
 
 /*
-  	#] FindTB :
+  	#] FindTB : 
   	#[ CoTBcreate :
 
 	Creates a new tablebase.
@@ -677,7 +677,7 @@ int CoTBcreate ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBcreate :
+  	#] CoTBcreate : 
   	#[ CoTBopen :
 */
 
@@ -694,7 +694,7 @@ int CoTBopen ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBopen :
+  	#] CoTBopen : 
   	#[ CoTBaddto :
 */
 
@@ -856,7 +856,7 @@ tableabort:;
 }
 
 /*
-  	#] CoTBaddto :
+  	#] CoTBaddto : 
   	#[ CoTBenter :
 
 	Loads the elements of the tables specified into memory and sends them
@@ -1007,7 +1007,7 @@ int CoTBenter ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBenter :
+  	#] CoTBenter : 
   	#[ CoTestUse :
 
 	Possibly to be followed by names of tables.
@@ -1053,7 +1053,7 @@ int CoTestUse ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTestUse :
+  	#] CoTestUse : 
   	#[ CheckTableDeclarations :
 
 		Checks that all tables in a tablebase  have identical properties to
@@ -1121,7 +1121,7 @@ int CheckTableDeclarations ARG1(DBASE *,d)
 }
 
 /*
-  	#] CheckTableDeclarations :
+  	#] CheckTableDeclarations : 
   	#[ CoTBload :
 
 		Loads the table stubbs of the specified tables in the indicated
@@ -1274,7 +1274,7 @@ finishup:;
 }
 
 /*
-  	#] CoTBload :
+  	#] CoTBload : 
   	#[ TestUse :
 
 	Look for tbl_(tablename,arguments)
@@ -1341,7 +1341,7 @@ WORD TestUse ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] TestUse :
+  	#] TestUse : 
   	#[ CoTBaudit :
 */
 
@@ -1381,7 +1381,7 @@ int CoTBaudit ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBaudit :
+  	#] CoTBaudit : 
   	#[ CoTBon :
 */
 
@@ -1412,7 +1412,7 @@ int CoTBon ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBon :
+  	#] CoTBon : 
   	#[ CoTBoff :
 */
 
@@ -1443,7 +1443,7 @@ int CoTBoff ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBoff :
+  	#] CoTBoff : 
   	#[ CoTBcleanup :
 */
 
@@ -1454,7 +1454,7 @@ int CoTBcleanup ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBcleanup :
+  	#] CoTBcleanup : 
   	#[ CoTBreplace :
 */
 
@@ -1465,7 +1465,7 @@ int CoTBreplace ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBreplace :
+  	#] CoTBreplace : 
   	#[ CoTBuse :
 
 	Here the actual table use as determined in TestUse causes the needed
@@ -1657,7 +1657,7 @@ int CoTBuse ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBuse :
+  	#] CoTBuse : 
   	#[ CoApply :
 
 	Possibly to be followed by names of tables.
@@ -1714,7 +1714,7 @@ int CoApply ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoApply :
+  	#] CoApply : 
   	#[ CoTBhelp :
 */
 
@@ -1758,7 +1758,7 @@ int CoTBhelp ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBhelp :
+  	#] CoTBhelp : 
   	#[ ReWorkT :
 
 	Replaces the STUBBS of the functions in the list.
@@ -1842,7 +1842,7 @@ inc:		j = t[1];
 }
 
 /*
-  	#] ReWorkT :
+  	#] ReWorkT : 
   	#[ Apply :
 */
 
@@ -1887,7 +1887,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] Apply :
+  	#] Apply : 
   	#[ ApplyExec :
 
 	Replaces occurrences of tbl_(table,indices,pattern) by the proper
@@ -1908,7 +1908,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 {
 	GETIDENTITY
-	WORD rhsnumber, *oldwork, *funs, numfuns, funnum;
+	WORD rhsnumber, *Tpattern, *funs, numfuns, funnum;
 	WORD ii, *t, *t1, *w, *p, *m, *m1, *u, *r, tbufnum, csize, wilds;
 	NESTING NN;
 	int i, j, isp, stilltogo;
@@ -1998,7 +1998,12 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 			of the element in the table.
 */
 		T = T->spare;
-		p = T->pattern + FUNHEAD + 1;
+#ifdef WITHPTHREADS
+		Tpattern = T->pattern[identity];
+#else
+		Tpattern = T->pattern;
+#endif
+		p = Tpattern+FUNHEAD+1;
 		for ( i = 0; i < T->numind; i++, t += 2 ) {
 			if ( *t != -SNUMBER ) break;
 		}
@@ -2021,13 +2026,16 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		pattern matching. This should be easy. We addapted the
 		pattern, so that the array indices match already.
 */
+#ifdef WITHPTHREADS
+		AN.FullProto = T->prototype[identity];
+#else
 		AN.FullProto = T->prototype;
+#endif
 		AN.WildValue = AN.FullProto + SUBEXPSIZE;
 		AN.WildStop = AN.FullProto+AN.FullProto[1];
 		ClearWild(BHEAD0);
 		AN.RepFunNum = 0;
 		AN.RepFunList = AN.EndNest;
-		oldwork = AT.WorkPointer;
 	    AT.WorkPointer = (WORD *)(((UBYTE *)(AN.EndNest)) + AM.MaxTer/2);
 /*
 		The RepFunList is after the term but not very relevant.
@@ -2043,14 +2051,18 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		while ( t < r ) *w++ = *t++;
 		t = AT.WorkPointer;
 		AT.WorkPointer = w;
-		if ( MatchFunction(BHEAD T->pattern,t,&wilds) > 0 ) {
+		if ( MatchFunction(BHEAD Tpattern,t,&wilds) > 0 ) {
 /*
 			Here we caught one. Now we should worry about:
 			1: inserting the subexpression pointer with its wildcards
 			2: NestPoin because we may not be at the lowest level
 			The function starts at t1.
 */
+#ifdef WITHPTHREADS
+			m1 = T->prototype[identity];
+#else
 			m1 = T->prototype;
+#endif
 			m1[2] = rhsnumber;
 			m1[4] = tbufnum;
 			t = t1;
@@ -2098,12 +2110,8 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 			}
 			r = t1 + t1[1];
 			maxtogo--;
-			if ( maxtogo <= 0 ) {
-				AT.WorkPointer = oldwork;
-				return(maxtogo);
-			}
+			if ( maxtogo <= 0 ) return(maxtogo);
 		}
-		AT.WorkPointer = oldwork;
 		t = r;
 	}
 	return(maxtogo);
@@ -2146,7 +2154,7 @@ WORD ApplyReset ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] ApplyReset :
+  	#] ApplyReset : 
   	#[ TableReset :
 */
 
@@ -2164,12 +2172,12 @@ WORD TableReset ARG0
 }
 
 /*
-  	#] TableReset :
+  	#] TableReset : 
   	#[ LoadTableElement :
 ?????
 int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 {
 }
 
-  	#] LoadTableElement :
+  	#] LoadTableElement : 
 */
