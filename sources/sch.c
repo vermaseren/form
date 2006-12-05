@@ -28,7 +28,7 @@ static int noextralinefeed = 0;
 static int lowestlevel = 1;
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ schryf-Utilities :
  		#[ StrCopy :			UBYTE *StrCopy(from,to)
 */
@@ -41,7 +41,7 @@ StrCopy ARG2(UBYTE *,from,UBYTE *,to)
 }
 
 /*
- 		#] StrCopy :
+ 		#] StrCopy : 
  		#[ AddToLine :			VOID AddToLine(s)
 
 	Puts the characters of s in the outputline. If the line becomes
@@ -126,7 +126,7 @@ AddToLine ARG1(UBYTE *,s)
 }
 
 /*
- 		#] AddToLine :
+ 		#] AddToLine : 
  		#[ FiniLine :			VOID FiniLine()
 */
 
@@ -202,7 +202,7 @@ FiniLine()
 }
 
 /*
- 		#] FiniLine :
+ 		#] FiniLine : 
  		#[ IniLine :			VOID IniLine()
 
 	Initializes the output line for the type of output
@@ -231,7 +231,7 @@ IniLine()
 }
 
 /*
- 		#] IniLine :
+ 		#] IniLine : 
  		#[ LongToLine :			VOID LongToLine(a,na)
 
 	Puts a Long integer in the output line. If it is only a single
@@ -260,7 +260,7 @@ LongToLine ARG2(UWORD *,a,WORD,na)
 }
 
 /*
- 		#] LongToLine :
+ 		#] LongToLine : 
  		#[ RatToLine :			VOID RatToLine(a,na)
 
 	Puts a rational number in the output line. The sign is ignored.
@@ -408,7 +408,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 }
 
 /*
- 		#] RatToLine :
+ 		#] RatToLine : 
  		#[ TalToLine :			VOID TalToLine(x)
 
 	Writes the unsigned number x to the output as a single token.
@@ -434,7 +434,7 @@ TalToLine ARG1(UWORD,x)
 }
 
 /*
- 		#] TalToLine :
+ 		#] TalToLine : 
  		#[ TokenToLine :		VOID TokenToLine(s)
 
 	Puts s in the output buffer. If it doesn't fit the buffer is
@@ -530,7 +530,7 @@ TokenToLine ARG1(UBYTE *,s)
 }
 
 /*
- 		#] TokenToLine :
+ 		#] TokenToLine : 
  		#[ CodeToLine :			VOID CodeToLine(name,number,mode)
 
 	Writes a name and possibly its number to output as a single token.
@@ -547,7 +547,7 @@ CodeToLine ARG2(WORD,number,UBYTE *,Out)
 }
 
 /*
- 		#] CodeToLine :
+ 		#] CodeToLine : 
  		#[ PrtTerms :			VOID PrtTerms()
 */
 
@@ -570,7 +570,7 @@ PrtTerms()
 }
 
 /*
- 		#] PrtTerms :
+ 		#] PrtTerms : 
  		#[ WrtPower :
 */
 
@@ -607,7 +607,7 @@ WrtPower ARG2(UBYTE *,Out,WORD,Power)
 }
 
 /*
- 		#] WrtPower :
+ 		#] WrtPower : 
  		#[ PrintTime :
 */
 
@@ -621,7 +621,7 @@ void PrintTime ARG0
 }
 
 /*
- 		#] PrintTime :
+ 		#] PrintTime : 
   	#] schryf-Utilities :
  	#[ schryf-Writes :
  		#[ WriteLists :			VOID WriteLists()
@@ -989,7 +989,7 @@ WriteLists()
 }
 
 /*
- 		#] WriteLists :
+ 		#] WriteLists : 
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
@@ -1069,7 +1069,7 @@ CleanUp:
 }
 
 /*
- 		#] WriteArgument :
+ 		#] WriteArgument : 
  		#[ WriteSubTerm :		WORD WriteSubTerm(sterm,first)
 
 	Writes a single subterm field to the output line.
@@ -1359,7 +1359,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 }
 
 /*
- 		#] WriteSubTerm :
+ 		#] WriteSubTerm : 
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
@@ -1493,7 +1493,7 @@ WriteInnerTerm ARG2(WORD *,term,WORD,first)
 }
 
 /*
- 		#] WriteInnerTerm :
+ 		#] WriteInnerTerm : 
  		#[ WriteTerm :			WORD WriteTerm(term,lbrac,first,prtf,br)
 
 	Writes a term to output. It tests the bracket information first.
@@ -1696,7 +1696,7 @@ WrtTmes:				t = term;
 }
 
 /*
- 		#] WriteTerm :
+ 		#] WriteTerm : 
  		#[ WriteExpression :	WORD WriteExpression(terms,ltot)
 
 	Writes a subexpression to output.
@@ -1731,7 +1731,7 @@ WriteExpression ARG2(WORD *,terms,LONG,ltot)
 }
 
 /*
- 		#] WriteExpression :
+ 		#] WriteExpression : 
  		#[ WriteAll :			WORD WriteAll()
 
 		Writes all expressions that should be written
@@ -1875,7 +1875,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll :
+ 		#] WriteAll : 
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
@@ -1969,7 +1969,12 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 			goto AboWrite;
 		first = 0;
 	}
-	if ( first ) { TOKENTOLINE(" 0","0"); }
+	if ( first ) {
+		IniLine();
+		startinline = alreadyinline;
+		AO.OutFill = AO.OutputLine + startinline;
+		TOKENTOLINE(" 0","0");
+	}
 	else if ( lbrac ) {
 /*		if ( ( prtf & PRINTCONTENTS ) != 0 ) PrtTerms(); */
 		TOKENTOLINE(" )",")");

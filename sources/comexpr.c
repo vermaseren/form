@@ -190,6 +190,15 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 					MesPrint("&Cannot create expression");
 					error = -1;
 				}
+/*
+				The next statement repairs a bug that occurs with
+				L  F2 = .....
+				#$d = F1[x];
+				in which the POfull was less than POfill and the setting
+				of the Scratch file in store.c goes wrong.
+				15-oct-2006 JV
+*/
+				AR.outfile->POfull = AR.outfile->POfill;
 			}
 			OldWork[2] = j;
 			AddNtoL(OldWork[1],OldWork);

@@ -3,9 +3,12 @@
 */
 
 #include "form3.h"
+ 
+#define GCDMAX 3
 
+#define NEWTRICK 1
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ RekenRational :
  		#[ Pack :			VOID Pack(a,na,b,nb)
 
@@ -524,6 +527,26 @@ Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 			}
 		}
 	}
+#ifdef NEWTRICK
+	else if ( *na >= GCDMAX && *nb >= GCDMAX ) {
+		n1 = i = *na; x3 = a;
+		NCOPY(x1,x3,i);
+		x3 = b; n2 = i = *nb;
+		NCOPY(x2,x3,i);
+		x4 = AN.Siscrat5;
+		x2 = AN.Siscrat6;
+		if ( GcdLong(BHEAD AN.Siscrat8,n1,AN.Siscrat7,n2,x2,&n3) ) goto SimpErr;
+		n2 = n3;
+		if ( *x2 != 1 || n2 != 1 ) {
+			DivLong(a,*na,x2,n2,x1,&n1,x4,&n4);
+			*na = i = n1;
+			NCOPY(a,x1,i);
+			DivLong(b,*nb,x2,n2,x3,&n3,x4,&n4);
+			*nb = i = n3;
+			NCOPY(b,x3,i);
+		}
+	}
+#endif
 	else {
 		x4 = AN.Siscrat5;
 		n1 = i = *na; x3 = a;
@@ -535,14 +558,14 @@ Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 			if ( DivLong(x1,n1,x2,n2,x4,&n4,x3,&n3) ) goto SimpErr;
 			if ( !n3 ) break;
 			if ( n2 == 1 ) {
-				while ( ( *x1 = (*x2) % (*x3) ) != 0 ) {*x2 = *x3; *x3 = *x1; }
+				while ( ( *x1 = (*x2) % (*x3) ) != 0 ) { *x2 = *x3; *x3 = *x1; }
 				*x2 = *x3;
 				break;
 			}
 			if ( DivLong(x2,n2,x3,n3,x4,&n4,x1,&n1) ) goto SimpErr;
 			if ( !n1 ) { x2 = x3; n2 = n3; x3 = AN.Siscrat7; break; }
 			if ( n3 == 1 ) {
-				while ( ( *x2 = (*x3) % (*x1) ) != 0 ) {*x3 = *x1; *x1 = *x2; }
+				while ( ( *x2 = (*x3) % (*x1) ) != 0 ) { *x3 = *x1; *x1 = *x2; }
 				*x2 = *x1;
 				n2 = 1;
 				break;
@@ -550,7 +573,7 @@ Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 			if ( DivLong(x3,n3,x1,n1,x4,&n4,x2,&n2) ) goto SimpErr;
 			if ( !n2 ) { x2 = x1; n2 = n1; x1 = AN.Siscrat7; break; }
 			if ( n1 == 1 ) {
-				while ( ( *x3 = (*x1) % (*x2) ) != 0 ) {*x1 = *x2; *x2 = *x3; }
+				while ( ( *x3 = (*x1) % (*x2) ) != 0 ) { *x1 = *x2; *x2 = *x3; }
 				break;
 			}
 		}
@@ -585,13 +608,25 @@ SimpErr:
 WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 {
 	GETIDENTITY
-	WORD nna,nnb,numa,numb,dena,denb;
+	WORD nna,nnb,numa,numb,dena,denb,numc,denc;
+	int i;
+	if ( AN.GCDbuffer == 0 ) {
+		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
+		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
+		AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
+		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
+		AN.LCMc = AN.LCMb + AM.MaxTal+2;
+	}
 	nna = *na; if ( nna < 0 ) nna = -nna; nna = (nna-1)/2;
 	nnb = nb;  if ( nnb < 0 ) nnb = -nnb; nnb = (nnb-1)/2;
 	UnPack(a,nna,&dena,&numa);
 	UnPack(b,nnb,&denb,&numb);
-	if ( GcdLong(BHEAD a,numa,b,numb,a,&numa) ) goto AccErr;
-	if ( GcdLong(BHEAD a+nna,dena,b+nnb,denb,a+nna,&dena) ) goto AccErr;
+	if ( GcdLong(BHEAD a,numa,b,numb,AN.GCDbuffer,&numc) ) goto AccErr;
+	numa = numc;
+	for ( i = 0; i < numa; i++ ) a[i] = AN.GCDbuffer[i];
+	if ( GcdLong(BHEAD a+nna,dena,b+nnb,denb,AN.GCDbuffer,&denc) ) goto AccErr;
+	dena = denc;
+	for ( i = 0; i < dena; i++ ) a[i+nna] = AN.GCDbuffer[i];
 	Pack(a,&numa,a+nna,dena);
 	*na = INCLENG(numa);
 	return(0);
@@ -1495,6 +1530,8 @@ toobad:
 	In principle a and c can be the same.
 */
 
+#ifndef NEWTRICK
+
 WORD
 GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 {
@@ -1698,8 +1735,303 @@ GcdErr:
 	SETERROR(-1)
 }
 
+#else
+
 /*
- 		#] GcdLong : 
+	New routine for GcdLong that uses smart shortcuts.
+	Algorithm by J. Vermaseren 15-nov-2006.
+	It runs faster for very big numbers but only by a fixed factor.
+	There is no improvement in the power behaviour.
+	Improvement on the whole of hf9 (multiple zeta values at weight 9):
+		Better than a factor 2 on a 32 bits architecture and 2.76 on a
+		64 bits architecture.
+
+	If we have two long numbers (na,nb > GCDMAX) we will work in a
+	truncated way. At the moment of writing (15-nov-2006) it isn't
+	clear whether this algorithm is an invention or a reinvention.
+	A short search on the web didn't show anything.
+
+	Algorithm
+
+	1: while ( na > nb || nb < GCDMAX ) {
+		if ( nb == 0 ) { result in a }
+		c = a % b;
+		a = b;
+		b = c;
+	   }
+	2: Make the truncated values in which a and b are the combinations
+	   of the top two words of a and b. The whole numbers are aa and bb now.
+	3: ma1 = 1; ma2 = 0; mb1 = 0; mb2 = 1;
+	4: A = a; B = b; m = a/b; c = a - m*b;
+	   c = ma1*a+ma2*b-m*(mb1*a+mb2*b) = (ma1-m*mb1)*a+(ma2-m*mb2)*b
+	   mc1 = ma1-m*mb1; mc2 = ma2-m*mb2;
+	5: a = b; ma1 = mb1; ma2 = mb2;
+	   b = c; mb1 = mc1; mb2 = mc2;
+	6: if ( b != 0 && nb >= FULLMAX ) goto 4;
+	7: Now construct the new quantities
+		ma1*aa+ma2*bb and mb1*aa+mb2*bb
+	8: goto 1;
+
+	The essence of the above algorithm is that we do the divisions only
+	on relatively short numbers. Also usually there are many steps 4&5
+	for each step 7. This eliminates many operations.
+	The termination at FULLMAX is that we make errors by not considering
+	the tail of the number. If we run b down all the way, the errors combine
+	in such a way that the new numbers may be of the same order as the old
+	numbers. By stopping halfway we don't get the error beyond halfway
+	either. Unfortunately this means that a >= FULLMAX and hence na > nb
+	which means that next we will have a complete division. But just once.
+	Running the steps 4-6 till a < FULLMAX runs already into problems.
+	It may be necessary to experiment a bit to obtain the optimum value
+	of GCDMAX.
+*/
+
+WORD
+GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+{
+	GETBIDENTITY
+	UWORD x,y,z;
+	UWORD *x1,*x2,*x3,*x4,*x5,*d;
+	WORD n1,n2,n3,n4,n5,i;
+	RLONG lx,ly,lz;
+	LONG ma1, ma2, mb1, mb2, mc1, mc2, m;
+#ifdef WITHEXTRAPASS
+	int pass;
+#endif
+	if ( !na || !nb ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Cannot take gcd");
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	if ( na < 0 ) na = -na;
+	if ( nb < 0 ) nb = -nb;
+	if ( AN.GLscrat6 == 0 ) {
+		AN.GLscrat6 = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GcdLong");
+		AN.GLscrat7 = AN.GLscrat6 + AM.MaxTal+2;
+		AN.GLscrat8 = AN.GLscrat7 + AM.MaxTal+2;
+		AN.GLscrat9 = AN.GLscrat8 + AM.MaxTal+2;
+		AN.GLscrat10 = AN.GLscrat9 + AM.MaxTal+2;
+	}
+restart:;
+	if ( na == 1 && nb == 1 ) {
+		x = *a;
+		y = *b;
+		do { z = x % y; x = y; } while ( ( y = z ) != 0 );
+		*c = x;
+		*nc = 1;
+	}
+	else if ( na <= 2 && nb <= 2 ) {
+		if ( na == 2 ) { lx = (((RLONG)(a[1]))<<BITSINWORD) + *a; }
+		else { lx = *a; }
+		if ( nb == 2 ) { ly = (((RLONG)(b[1]))<<BITSINWORD) + *b; }
+		else { ly = *b; }
+		if ( lx < ly ) { lz = lx; lx = ly; ly = lz; }
+		do {
+			lz = lx % ly; lx = ly;
+		} while ( ( ly = lz ) != 0 && ( lx & AWORDMASK ) != 0 );
+		if ( ly ) {
+			x = (UWORD)lx; y = (UWORD)ly;
+			do { *c = x % y; x = y; } while ( ( y = *c ) != 0 );
+			*c = x;
+			*nc = 1;
+		}
+		else
+		{
+			*c++ = (UWORD)lx;
+			if ( ( *c = (UWORD)(lx >> BITSINWORD) ) != 0 ) *nc = 2;
+			else *nc = 1;
+		}
+	}
+	else if ( na < GCDMAX || nb < GCDMAX || na != nb ) {
+		if ( na < nb ) {
+			x2 = AN.GLscrat8; x3 = a; n2 = i = na;
+			NCOPY(x2,x3,i);
+			x1 = c; x3 = b; n1 = i = nb;
+			NCOPY(x1,x3,i);
+		}
+		else {
+			x1 = c; x3 = a; n1 = i = na;
+			NCOPY(x1,x3,i);
+			x2 = AN.GLscrat8; x3 = b; n2 = i = nb;
+			NCOPY(x2,x3,i);
+		}
+		x1 = c; x2 = AN.GLscrat8; x3 = AN.GLscrat7; x4 = AN.GLscrat6;
+		for(;;){
+			if ( DivLong(x1,n1,x2,n2,x4,&n4,x3,&n3) ) goto GcdErr;
+			if ( !n3 ) { x1 = x2; n1 = n2; break; }
+			if ( n2 <= 2 ) { a = x2; b = x3; na = n2; nb = n3; goto restart; }
+			if ( n3 >= GCDMAX && n2 == n3 ) {
+				a = AN.GLscrat9; b = AN.GLscrat10; na = n2; nb = n3;
+				for ( i = 0; i < na; i++ ) a[i] = x2[i];
+				for ( i = 0; i < nb; i++ ) b[i] = x3[i];
+				goto newtrick;
+			}
+			if ( DivLong(x2,n2,x3,n3,x4,&n4,x1,&n1) ) goto GcdErr;
+			if ( !n1 ) { x1 = x3; n1 = n3; break; }
+			if ( n3 <= 2 ) { a = x3; b = x1; na = n3; nb = n1; goto restart; }
+			if ( n1 >= GCDMAX && n1 == n3 ) {
+				a = AN.GLscrat9; b = AN.GLscrat10; na = n3; nb = n1;
+				for ( i = 0; i < na; i++ ) a[i] = x3[i];
+				for ( i = 0; i < nb; i++ ) b[i] = x1[i];
+				goto newtrick;
+			}
+			if ( DivLong(x3,n3,x1,n1,x4,&n4,x2,&n2) ) goto GcdErr;
+			if ( !n2 ) { *nc = n1; return(0); }
+			if ( n1 <= 2 ) { a = x1; b = x2; na = n1; nb = n2; goto restart; }
+			if ( n2 >= GCDMAX && n2 == n1 ) {
+				a = AN.GLscrat9; b = AN.GLscrat10; na = n1; nb = n2;
+				for ( i = 0; i < na; i++ ) a[i] = x1[i];
+				for ( i = 0; i < nb; i++ ) b[i] = x2[i];
+				goto newtrick;
+			}
+		}
+		*nc = i = n1;
+		NCOPY(c,x1,i);
+	}
+	else {
+/*
+		This is the new algorithm starting at step 3.
+
+	3: ma1 = 1; ma2 = 0; mb1 = 0; mb2 = 1;
+	4: A = a; B = b; m = a/b; c = a - m*b;
+	   c = ma1*a+ma2*b-m*(mb1*a+mb2*b) = (ma1-m*mb1)*a+(ma2-m*mb2)*b
+	   mc1 = ma1-m*mb1; mc2 = ma2-m*mb2;
+	5: a = b; ma1 = mb1; ma2 = mb2;
+	   b = c; mb1 = mc1; mb2 = mc2;
+	6: if ( b != 0 ) goto 4;
+*/
+newtrick:;
+#ifdef WITHEXTRAPASS
+		pass = 0;
+#endif
+		ma1 = 1; ma2 = 0; mb1 = 0; mb2 = 1;
+		lx = (((RLONG)(a[na-1]))<<BITSINWORD) + a[na-2];
+		ly = (((RLONG)(b[nb-1]))<<BITSINWORD) + b[nb-2];
+		if ( ly > lx ) { lz = lx; lx = ly; ly = lz; d = a; a = b; b = d; }
+#ifdef WITHEXTRAPASS
+retry:;
+#endif
+		do {
+			m = lx/ly;
+			mc1 = ma1-m*mb1; mc2 = ma2-m*mb2;
+			ma1 = mb1; ma2 = mb2; mb1 = mc1; mb2 = mc2;
+			lz = lx - m*ly; lx = ly; ly = lz;
+		} while ( ly >= FULLMAX );
+/*
+		Next the construction of the two new numbers
+
+	7: Now construct the new quantities
+		a = ma1*aa+ma2*bb and b = mb1*aa+mb2*bb
+*/
+		x1 = AN.GLscrat6;
+		x2 = AN.GLscrat7;
+		x3 = AN.GLscrat8;
+		x5 = AN.GLscrat10;
+		if ( ma1 < 0 ) {
+			ma1 = -ma1;
+			x1[0] = (UWORD)ma1;
+			x1[1] = (UWORD)(ma1 >> BITSINWORD);
+			if ( x1[1] ) n1 = -2;
+			else         n1 = -1;
+		}
+		else {
+			x1[0] = (UWORD)ma1;
+			x1[1] = (UWORD)(ma1 >> BITSINWORD);
+			if ( x1[1] ) n1 = 2;
+			else         n1 = 1;
+		}
+		if ( MulLong(a,na,x1,n1,x2,&n2) ) goto GcdErr;
+		if ( ma2 < 0 ) {
+			ma2 = -ma2;
+			x1[0] = (UWORD)ma2;
+			x1[1] = (UWORD)(ma2 >> BITSINWORD);
+			if ( x1[1] ) n1 = -2;
+			else         n1 = -1;
+		}
+		else {
+			x1[0] = (UWORD)ma2;
+			x1[1] = (UWORD)(ma2 >> BITSINWORD);
+			if ( x1[1] ) n1 = 2;
+			else         n1 = 1;
+		}
+		if ( MulLong(b,nb,x1,n1,x3,&n3) ) goto GcdErr;
+		if ( AddLong(x2,n2,x3,n3,c,&n4) ) goto GcdErr;
+		if ( mb1 < 0 ) {
+			mb1 = -mb1;
+			x1[0] = (UWORD)mb1;
+			x1[1] = (UWORD)(mb1 >> BITSINWORD);
+			if ( x1[1] ) n1 = -2;
+			else         n1 = -1;
+		}
+		else {
+			x1[0] = (UWORD)mb1;
+			x1[1] = (UWORD)(mb1 >> BITSINWORD);
+			if ( x1[1] ) n1 = 2;
+			else         n1 = 1;
+		}
+		if ( MulLong(a,na,x1,n1,x2,&n2) ) goto GcdErr;
+		if ( mb2 < 0 ) {
+			mb2 = -mb2;
+			x1[0] = (UWORD)mb2;
+			x1[1] = (UWORD)(mb2 >> BITSINWORD);
+			if ( x1[1] ) n1 = -2;
+			else         n1 = -1;
+		}
+		else {
+			x1[0] = (UWORD)mb2;
+			x1[1] = (UWORD)(mb2 >> BITSINWORD);
+			if ( x1[1] ) n1 = 2;
+			else         n1 = 1;
+		}
+		if ( MulLong(b,nb,x1,n1,x3,&n3) ) goto GcdErr;
+		if ( AddLong(x2,n2,x3,n3,x5,&n5) ) goto GcdErr;
+		a = c; na = n4; b = x5; nb = n5;
+		if ( nb == 0 ) { *nc = n4; return(0); }
+		x4 = AN.GLscrat9; 
+		for ( i = 0; i < na; i++ ) x4[i] = a[i];
+		a = x4;
+		if ( na < 0 ) na = -na;
+		if ( nb < 0 ) nb = -nb;
+
+		if ( nb >= GCDMAX && na == nb+1 && b[nb-1] >= HALFMAX && b[nb-1] > a[na-1] ) {
+			lx = (((RLONG)(a[na-1]))<<BITSINWORD) + a[na-2];
+			x1[0] = lx/b[nb-1]; n1 = 1;
+			MulLong(b,nb,x1,n1,x2,&n2);
+			n2 = -n2;
+			AddLong(a,na,x2,n2,x4,&n4);
+			if ( n4 == 0 ) {
+				*nc = nb;
+				for ( i = 0; i < nb; i++ ) c[i] = b[i];
+				return(0);
+			}
+			if ( n4 < 0 ) n4 = -n4;
+			a = b; na = nb; b = x4; nb = n4;
+		}
+
+#ifdef WITHEXTRAPASS
+		if ( pass == 0 && nb >= GCDMAX && na == nb+1 && b[nb-1] >= HALFMAX ) {
+			pass = 1;
+			ma1 = 1; ma2 = 0; mb1 = 0; mb2 = 1;
+			lx = (((RLONG)(a[na-1]))<<BITSINWORD) + a[na-2];
+			ly = (RLONG)(b[nb-1]);
+			goto retry;
+		}
+#endif
+		goto restart;
+	}
+	return(0);
+GcdErr:
+	LOCK(ErrorMessageLock);
+	MesCall("GcdLong");
+	UNLOCK(ErrorMessageLock);
+	SETERROR(-1)
+}
+
+#endif
+
+/*
+ 		#] GcdLong :
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
@@ -1846,7 +2178,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2037,7 +2369,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus :
+ 		#] TakeModulus : 
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2114,7 +2446,7 @@ MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms :
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 

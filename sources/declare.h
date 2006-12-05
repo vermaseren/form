@@ -115,7 +115,7 @@
 		ne = nb; if ( t ) e[ne++] = t;     }
  
 #define TOKENTOLINE(x,y) if ( AC.OutputSpaces == NOSPACEFORMAT ) { \
-		TokenToLine((UBYTE *)y); } else { TokenToLine((UBYTE *)x); }
+		TokenToLine((UBYTE *)(y)); } else { TokenToLine((UBYTE *)(x)); }
 
 
 #define UngetFromStream(stream,c) ((stream)->nextchar[(stream)->isnextchar++]=c)

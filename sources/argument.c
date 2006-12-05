@@ -32,7 +32,8 @@ execarg ARG2(WORD *,term,WORD,level)
 	WORD oldnumrhs = CC->numrhs, size, pow, ncom, jj;
 	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AT.pWorkPointer, lp;
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
-	WORD kLCM = 0, kGCD = 0, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
+	WORD kLCM = 0, kGCD = 0, kGCD2, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
+	int ii;
 	AT.WorkPointer += *term;
 	start = C->lhs[level];
 	AR.Cnumlhs = start[2];
@@ -282,8 +283,9 @@ HaveTodo:
 						the denominators and the GCD of the numerators.
 */
 						if ( AN.GCDbuffer == 0 ) {
-							AN.GCDbuffer = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"execarg");
-							AN.LCMbuffer = AN.GCDbuffer + AM.MaxTal+2;
+							AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
+							AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
+							AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
 							AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
 							AN.LCMc = AN.LCMb + AM.MaxTal+2;
 						}
@@ -322,9 +324,11 @@ HaveTodo:
 */
 							}
 							else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-								if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer,&kGCD) ) {
+								if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer2,&kGCD2) ) {
 									goto execargerr;
 								}
+								kGCD = kGCD2;
+								for ( ii = 0; ii < kGCD; ii++ ) AN.GCDbuffer[ii] = AN.GCDbuffer2[ii];
 							}
 							else {
 								kGCD = 1; AN.GCDbuffer[0] = 1;

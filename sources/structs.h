@@ -1306,6 +1306,8 @@ struct N_const {
 	UWORD	*GLscrat6;             /* () Used in reken.c */
 	UWORD	*GLscrat7;             /* () Used in reken.c */
 	UWORD	*GLscrat8;             /* () Used in reken.c */
+	UWORD	*GLscrat9;             /* () Used in reken.c */
+	UWORD	*GLscrat10;            /* () Used in reken.c */
 	UWORD	*GBscrat3;             /* () Used in reken.c */
 	UWORD	*GBscrat4;             /* () Used in reken.c */
 	UWORD	*TLscrat1;             /* () Used in reken.c */
@@ -1323,10 +1325,11 @@ struct N_const {
 	UWORD	*SoScratC;             /* () Used in sort.c */
 	WORD	*listinprint;          /* () Used in proces.c and message.c */
 	WORD	*currentTerm;          /* () Used in proces.c and message.c */
-	UWORD	*GCDbuffer;            /* () Used in argument.c */
-	UWORD	*LCMbuffer;            /* () Used in argument.c */
-	UWORD	*LCMb;                 /* () Used in argument.c */
-	UWORD	*LCMc;                 /* () Used in argument.c */
+	UWORD	*GCDbuffer;            /* () Used in argument.c and factor.c */
+	UWORD	*GCDbuffer2;           /* () Used in argument.c and factor.c */
+	UWORD	*LCMbuffer;            /* () Used in argument.c and factor.c */
+	UWORD	*LCMb;                 /* () Used in argument.c and factor.c */
+	UWORD	*LCMc;                 /* () Used in argument.c and factor.c */
 #ifdef CHINREM
 	UWORD	*CRscrat1;             /* () Used in factor.c */
 	UWORD	*CRscrat2;             /* () Used in factor.c */

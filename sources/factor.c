@@ -113,7 +113,7 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 }
 
 /*
-  	#] ModulusGCD1 :
+  	#] ModulusGCD1 : 
   	#[ MakeMono :
 */
 
@@ -203,7 +203,7 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 }
 
 /*
-  	#] MakeMono :
+  	#] MakeMono : 
   	#[ ChinRem :
 
 	We have two input arrays: pp with a list of (short) primes
@@ -268,7 +268,7 @@ ChinErr:
 }
 
 /*
-  	#] ChinRem :
+  	#] ChinRem : 
   	#[ ChinRema :
 
 	Use of the Chinese Remainder theorem.
@@ -317,7 +317,7 @@ ChinErr:
 }
 
 /*
-  	#] ChinRema :
+  	#] ChinRema : 
   	#[ DivMod :
 
 	Takes the modulus a%b and returns it. We assume that b fits inside a word.
@@ -334,7 +334,7 @@ UWORD DivMod ARG3(UWORD *,a,WORD,na,UWORD,b)
 }
 
 /*
-  	#] DivMod :
+  	#] DivMod : 
   	#[ DivShort :
 
 	Divides the long integer a by the short word b. Result in c.
@@ -361,7 +361,7 @@ WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
 }
 
 /*
-  	#] DivShort :
+  	#] DivShort : 
   	#[ InvMod :
 
 	Takes the inverse of A mod B. Assumes of course that a has an inverse,
@@ -400,7 +400,7 @@ UWORD InvMod ARG2(UWORD,A,UWORD,B)
 }
 
 /*
-  	#] InvMod :
+  	#] InvMod : 
   	#[ MakePrimes :
 
 	Routine creates (or extends) a list of short primes, starting at the
@@ -483,7 +483,7 @@ int MakePrimes ARG2(UWORD *,a,WORD,na)
 #endif
 
 /*
-  	#] MakePrimes :
+  	#] MakePrimes : 
   	#[ FactorIn :
 
 	This routine tests for a factor in a dollar expression.
@@ -496,8 +496,8 @@ int FactorIn BARG2(WORD *,term,WORD,level)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *m, *mm, *oldwork, *mstop, *n1, *n2, *n3, *n4, *n1stop, *n2stop;
-	WORD *r1, *r2, *r3, *r4, j, k, kGCD, kLCM, jGCD, kkLCM, jLCM, size;
-	int fromwhere = 0;
+	WORD *r1, *r2, *r3, *r4, j, k, kGCD, kGCD2, kLCM, jGCD, kkLCM, jLCM, size;
+	int fromwhere = 0, i;
 	DOLLARS d;
 	t = term; GETSTOP(t,tstop); t++;
 	while ( ( t < tstop ) && ( *t != FACTORIN || ( ( *t == FACTORIN )
@@ -720,8 +720,9 @@ nofactor:;
 	and the GCD of the numerators.
 */
 	if ( AN.GCDbuffer == 0 ) {
-		AN.GCDbuffer = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"execarg");
-		AN.LCMbuffer = AN.GCDbuffer + AM.MaxTal+2;
+		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
+		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
+		AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
 		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
 		AN.LCMc = AN.LCMb + AM.MaxTal+2;
 	}
@@ -758,9 +759,11 @@ nofactor:;
 */
 		}
 		else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-			if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer,&kGCD) ) {
+			if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer2,&kGCD2) ) {
 				goto onerror;
 			}
+			kGCD = kGCD2;
+			for ( i = 0; i < kGCD; i++ ) AN.GCDbuffer[i] = AN.GCDbuffer2[i];
 		}
 		else {
 			kGCD = 1; AN.GCDbuffer[0] = 1;
@@ -862,10 +865,11 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *m, *oldwork, *mstop, *n1, *n2, *n3, *n4, *n1stop, *n2stop;
-	WORD *r1, *r2, *r3, *r4, j, k, kGCD, kLCM, jGCD, kkLCM, jLCM, size, sign;
+	WORD *r1, *r2, *r3, *r4, j, k, kGCD, kGCD2, kLCM, jGCD, kkLCM, jLCM, size, sign;
 	WORD *newterm, expr = 0;
 	WORD olddeferflag = AR.DeferFlag, oldgetfile = AS.GetFile, oldhold = AS.KeptInHold;
 	WORD newgetfile, newhold;
+	int i;
 	EXPRESSIONS e;
 	FILEHANDLE *file = 0;
 	POSITION position, oldposition, startposition;
@@ -964,8 +968,9 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 	and the GCD of the numerators.
 */
 	if ( AN.GCDbuffer == 0 ) {
-		AN.GCDbuffer = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"execarg");
-		AN.LCMbuffer = AN.GCDbuffer + AM.MaxTal+2;
+		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
+		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
+		AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
 		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
 		AN.LCMc = AN.LCMb + AM.MaxTal+2;
 	}
@@ -1180,9 +1185,11 @@ nofactor:;
 */
 		}
 		else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-			if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer,&kGCD) ) {
+			if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer2,&kGCD2) ) {
 				goto onerror;
 			}
+			kGCD = kGCD2;
+			for ( i = 0; i < kGCD; i++ ) AN.GCDbuffer[i] = AN.GCDbuffer2[i];
 		}
 		else {
 			kGCD = 1; AN.GCDbuffer[0] = 1;
