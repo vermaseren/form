@@ -1490,7 +1490,7 @@ DoTable ARG2(UBYTE *,s,int,par)
 }
 
 /*
-  	#] DoTable :
+  	#] DoTable : 
   	#[ CoTable :
 */
 
@@ -2129,7 +2129,7 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				for (j = 0; j <= T->buffersfill; j++ ) {
+				for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
 					finishcbuf(T->buffers[j]);
 				}
 				/*[07apr2004 mt]:*/ /*memory leak*/
@@ -2141,7 +2141,7 @@ void ResetVariables ARG1(int, par)
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					for (j = 0; j <= TT->buffersfill; j++ ) {
+					for (j = 0; j < TT->buffersfill; j++ ) { /* was <= */
 						finishcbuf(TT->buffers[j]);
 					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
@@ -2193,7 +2193,7 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				for (j = 0; j <= T->buffersfill; j++ ) {
+				for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
 					finishcbuf(T->buffers[j]);
 				}
 				if ( T->spare ) {
@@ -2201,7 +2201,7 @@ void ResetVariables ARG1(int, par)
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					for (j = 0; j <= TT->buffersfill; j++ ) {
+					for (j = 0; j < TT->buffersfill; j++ ) { /* was <= */
 						finishcbuf(TT->buffers[j]);
 					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
@@ -2237,7 +2237,7 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				for (j = 0; j <= T->buffersfill; j++ ) {
+				for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
 					finishcbuf(T->buffers[j]);
 				}
 				/*[07apr2004 mt]:*/  /*memory leak*/
@@ -2249,7 +2249,7 @@ void ResetVariables ARG1(int, par)
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					for (j = 0; j <= TT->buffersfill; j++ ) {
+					for (j = 0; j < TT->buffersfill; j++ ) { /* was <= */
 						finishcbuf(TT->buffers[j]);
 					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
@@ -2364,7 +2364,7 @@ void ResetVariables ARG1(int, par)
 				if ( T->flags ) M_free(T->flags,"tableflags");
 				if ( T->argtail ) M_free(T->argtail,"table arguments");
 				if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
-				for (j = 0; j <= T->buffersfill; j++ ) {
+				for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
 					finishcbuf(T->buffers[j]);
 				}
 				if ( T->spare ) {
@@ -2372,7 +2372,7 @@ void ResetVariables ARG1(int, par)
 					if ( TT->mm ) M_free(TT->mm,"tableminmax");
 					if ( TT->flags ) M_free(TT->flags,"tableflags");
 					if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
-					for (j = 0; j <= TT->buffersfill; j++ ) {
+					for (j = 0; j < TT->buffersfill; j++ ) { /* was <= */
 						finishcbuf(TT->buffers[j]);
 					}
 					if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
@@ -2392,7 +2392,7 @@ void ResetVariables ARG1(int, par)
 }
 
 /*
-  	#] ResetVariables : 
+  	#] ResetVariables :
   	#[ RemoveDollars :
 */
 

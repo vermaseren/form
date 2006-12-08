@@ -411,6 +411,10 @@ AllocSetups ARG0
 	AR.FoStage4[1].ziosize = IOsize;
 	AT.S0 = AM.S0;
 #endif
+#else
+#ifndef WITHPTHREADS
+	AT.S0 = AM.S0;
+#endif
 #endif
 #ifndef WITHPTHREADS
 	AR.FoStage4[0].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);

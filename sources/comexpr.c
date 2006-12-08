@@ -1730,7 +1730,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 		}
 		if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
 		ClearTableTree(T);
-		for (i = 0; i <= T->buffersfill; i++ ) {
+		for (i = 0; i < T->buffersfill; i++ ) { /* was <= */
 			finishcbuf(T->buffers[i]);
 		}
 		T->bufnum = inicbufs();
@@ -1745,7 +1745,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 			TABLES TT = T->spare;
 			if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
 			ClearTableTree(TT);
-			for (i = 0; i <= TT->buffersfill; i++ ) {
+			for (i = 0; i < TT->buffersfill; i++ ) { /* was <= */
 				finishcbuf(TT->buffers[i]);
 			}
 			TT->bufnum = inicbufs();
