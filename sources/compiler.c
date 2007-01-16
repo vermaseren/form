@@ -1400,30 +1400,10 @@ dofunction:			firstsumarg = 1;
 				*t++ = EXPRESSION; *t++ = SUBEXPSIZE; *t++ = x1; *t++ = deno;
 				*t++ = 0; FILLSUB(t)
 /*
-				The next code is added to facilitate parallel processing
-				We need to call GetTable here to make sure all processors
-				have the same numbering of all variables.
+				Here we had some erroneous code before. It should be after
+				the reading of the parameters as it is now (after 15-jan-2007).
+				Thomas Hahn noticed this and reported it.
 */
-				if ( Expressions[x1].status == STOREDEXPRESSION ) {
-					TMproto[0] = EXPRESSION;
-					TMproto[1] = SUBEXPSIZE;
-					TMproto[2] = x1;
-					TMproto[3] = 1;
-					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
-					AT.TMaddr = TMproto;
-					PUTZERO(position);
-					if ( ( renumber = GetTable(x1,&position) ) == 0 ) {
-						error = 1;
-						MesPrint("&Problems getting information about stored expression %s"
-						,EXPRNAME(x1));
-					}
-#ifdef WITHPTHREADS
-					M_free(renumber->symb.lo,"VarSpace");
-					M_free(renumber,"Renumber");
-#endif
-					AR.StoreData.dirtyflag = 1;
-				}
-/* ------------------above code added 16-may-2006 JV--------------------------*/
 				if ( *s == TFUNOPEN ) {
 					do {
 						s++; c = *s++;
@@ -1496,6 +1476,28 @@ dofunction:			firstsumarg = 1;
 					*t++ = WILDCARDS; *t++ = n+2;
 					NCOPY(t,r,n);
 				}
+/*
+				Code added for parallel processing.
+				This is different from the other occurrences to test immediately
+				for renumbering. Here we have to read the parameters first.
+*/
+				if ( Expressions[x1].status == STOREDEXPRESSION ) {
+					v[1] = t-v;
+					AT.TMaddr = v;
+					PUTZERO(position);
+					if ( ( renumber = GetTable(x1,&position) ) == 0 ) {
+						error = 1;
+						MesPrint("&Problems getting information about stored expression %s"
+						,EXPRNAME(x1));
+					}
+#ifdef WITHPTHREADS
+					M_free(renumber->symb.lo,"VarSpace");
+					M_free(renumber,"Renumber");
+#endif
+					AR.StoreData.dirtyflag = 1;
+				}
+/* ------------------above code added 15-jan-2007 JV----Bug report by T.Hahn-*/
+
 				if ( *s == LBRACE ) {
 /*
 					This should be one term that should be inserted

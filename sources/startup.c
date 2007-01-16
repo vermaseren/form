@@ -637,7 +637,7 @@ StartVariables ARG0
 #endif
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
-	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)"1",0,0);
+	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)"2",0,0);
 	PutPreVar((UBYTE *)"NAMEVERSION_",(UBYTE *)nameversion,0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
 	AM.atstartup = 0;
@@ -1073,8 +1073,13 @@ main ARG2(int,argc,char **,argv)
 /*:[20sep2005 mt]*/
 	if ( !AM.silent ) 
 #endif
+#ifdef BETAVERSION
+			MesPrint("FORM by J.Vermaseren,version %d.%dBeta(%s) Run %s"
+                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+#else
 			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
                          ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+#endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
 	AS.MultiThreaded = 0;

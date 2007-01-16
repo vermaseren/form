@@ -132,17 +132,23 @@ PutOutputGZIP ARG1(FILEHANDLE *,f)
 				UNLOCK(ErrorMessageLock);
 			}
 #endif
+#ifdef ALLLOCK
 			LOCK(f->pthreadslock);
+#endif
 			SeekFile(f->handle,&(f->POposition),SEEK_SET);
 			if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->ziosize)
 						!= f->ziosize ) {
+#ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
+#endif
 				LOCK(ErrorMessageLock);
 				MesPrint("%wWrite error during compressed sort. Disk full?");
 				UNLOCK(ErrorMessageLock);
 				return(-1);
 			}
+#ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
+#endif
 			ADDPOS(f->filesize,f->ziosize);
 			ADDPOS(f->POposition,f->ziosize);
 #ifdef WITHPTHREADS
@@ -206,17 +212,23 @@ FlushOutputGZIP ARG1(FILEHANDLE *,f)
 			MesPrint("%wWriting %l bytes at %10p",f->ziosize,&(f->POposition));
 			UNLOCK(ErrorMessageLock);
 #endif
+#ifdef ALLLOCK
 			LOCK(f->pthreadslock);
+#endif
 			SeekFile(f->handle,&(f->POposition),SEEK_SET);
 			if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->ziosize)
 						!= f->ziosize ) {
+#ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
+#endif
 				LOCK(ErrorMessageLock);
 				MesPrint("%wWrite error during compressed sort. Disk full?");
 				UNLOCK(ErrorMessageLock);
 				return(-1);
 			}
+#ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
+#endif
 			ADDPOS(f->filesize,f->ziosize);
 			ADDPOS(f->POposition,f->ziosize);
 #ifdef WITHPTHREADS
@@ -241,17 +253,23 @@ FlushOutputGZIP ARG1(FILEHANDLE *,f)
 		MesPrint("%wWriting %l bytes at %10p",(LONG)(f->zsp->avail_out),&(f->POposition));
 		UNLOCK(ErrorMessageLock);
 #endif
+#ifdef ALLLOCK
 		LOCK(f->pthreadslock);
+#endif
 		SeekFile(f->handle,&(f->POposition),SEEK_SET);
 		if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->zsp->total_out)
 						!= f->zsp->total_out ) {
+#ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
+#endif
 			LOCK(ErrorMessageLock);
 			MesPrint("%wWrite error during compressed sort. Disk full?");
 			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
+#ifdef ALLLOCK
 		UNLOCK(f->pthreadslock);
+#endif
 		ADDPOS(f->filesize,f->zsp->total_out);
 		ADDPOS(f->POposition,f->zsp->total_out);
 #ifdef WITHPTHREADS
@@ -409,11 +427,15 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 				MesPrint("%w-+Reading %l bytes in stream %d at position %10p; stop at %10p",toread,numstream,position,&(S->fPatchesStop[numstream]));
 				UNLOCK(ErrorMessageLock);
 #endif
+#ifdef ALLLOCK
 				LOCK(f->pthreadslock);
+#endif
 				SeekFile(f->handle,position,SEEK_SET);
 				readsize = ReadFile(f->handle,(UBYTE *)(AN.ziobufnum[numstream]),toread);
 				SeekFile(f->handle,position,SEEK_CUR);
+#ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
+#endif
 #ifdef GZIPDEBUG
 				LOCK(ErrorMessageLock);
 				{  char *s = AN.ziobufnum[numstream]+readsize;
@@ -501,11 +523,15 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 				MesPrint("%w--Reading %l bytes in stream %d at position %10p",toread,numstream,position);
 				UNLOCK(ErrorMessageLock);
 #endif
+#ifdef ALLLOCK
 				LOCK(f->pthreadslock);
+#endif
 				SeekFile(f->handle,position,SEEK_SET);
 				readsize = ReadFile(f->handle,(UBYTE *)(AN.ziobufnum[numstream]),toread);
 				SeekFile(f->handle,position,SEEK_CUR);
+#ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
+#endif
 #ifdef GZIPDEBUG
 				LOCK(ErrorMessageLock);
 				{  char *s = AN.ziobufnum[numstream]+readsize;
@@ -582,11 +608,15 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 		MesPrint("%w++Reading %l bytes at position %10p",buffersize,position);
 		UNLOCK(ErrorMessageLock);
 #endif
+#ifdef ALLLOCK
 		LOCK(f->pthreadslock);
+#endif
 		SeekFile(f->handle,position,SEEK_SET);
 		readsize = ReadFile(f->handle,buffer,buffersize);
 		SeekFile(f->handle,position,SEEK_CUR);
+#ifdef ALLLOCK
 		UNLOCK(f->pthreadslock);
+#endif
 		if ( readsize < 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("%wFillInputGZIP: Read error during uncompressed sort.");

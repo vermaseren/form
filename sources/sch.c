@@ -1135,6 +1135,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 			}
   			break;
 		case INDEX :
+			while ( t < stopper ) {
 			if ( !first ) TokenToLine((UBYTE *)"*");
 			if ( *t >= 0 ) {
 				if ( *t < AM.OffsetIndex ) {
@@ -1161,6 +1162,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 			}
 			else {
 				TokenToLine(VARNAME(vectors,*t - AM.OffsetVector)); t++;
+			}
 			}
 			break;
 		case DOLLAREXPRESSION:
@@ -1359,7 +1361,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 }
 
 /*
- 		#] WriteSubTerm : 
+ 		#] WriteSubTerm :
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
@@ -2041,7 +2043,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteOne :
+ 		#] WriteOne : 
   	#] schryf-Writes :
 */
 

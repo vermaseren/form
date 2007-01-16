@@ -2334,7 +2334,7 @@ NextI:;
 */
 	if ( nind ) {
 		t = pind;
-		for ( i = 0; i < nind-1; i++ ) {
+		for ( i = 0; i < nind; i++ ) {
 			r = t + 1;
 			for ( j = i+1; j < nind; j++ ) {
 				if ( *r < *t ) {

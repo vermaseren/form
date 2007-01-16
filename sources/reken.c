@@ -659,7 +659,7 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 
 /*
  		#] TakeRatRoot: 
-  	#] RekenRational : 
+  	#] RekenRational :
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -1795,9 +1795,6 @@ GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	WORD n1,n2,n3,n4,n5,i;
 	RLONG lx,ly,lz;
 	LONG ma1, ma2, mb1, mb2, mc1, mc2, m;
-#ifdef WITHEXTRAPASS
-	int pass;
-#endif
 	if ( !na || !nb ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Cannot take gcd");
@@ -1827,6 +1824,11 @@ restart:;
 		if ( nb == 2 ) { ly = (((RLONG)(b[1]))<<BITSINWORD) + *b; }
 		else { ly = *b; }
 		if ( lx < ly ) { lz = lx; lx = ly; ly = lz; }
+#if ( BITSINWORD == 16 )
+		do {
+			lz = lx % ly; lx = ly;
+		} while ( ( ly = lz ) != 0 );
+#else
 		do {
 			lz = lx % ly; lx = ly;
 		} while ( ( ly = lz ) != 0 && ( lx & AWORDMASK ) != 0 );
@@ -1837,6 +1839,7 @@ restart:;
 			*nc = 1;
 		}
 		else
+#endif
 		{
 			*c++ = (UWORD)lx;
 			if ( ( *c = (UWORD)(lx >> BITSINWORD) ) != 0 ) *nc = 2;
@@ -1902,16 +1905,10 @@ restart:;
 	6: if ( b != 0 ) goto 4;
 */
 newtrick:;
-#ifdef WITHEXTRAPASS
-		pass = 0;
-#endif
 		ma1 = 1; ma2 = 0; mb1 = 0; mb2 = 1;
 		lx = (((RLONG)(a[na-1]))<<BITSINWORD) + a[na-2];
 		ly = (((RLONG)(b[nb-1]))<<BITSINWORD) + b[nb-2];
 		if ( ly > lx ) { lz = lx; lx = ly; ly = lz; d = a; a = b; b = d; }
-#ifdef WITHEXTRAPASS
-retry:;
-#endif
 		do {
 			m = lx/ly;
 			mc1 = ma1-m*mb1; mc2 = ma2-m*mb2;
@@ -1993,7 +1990,16 @@ retry:;
 		a = x4;
 		if ( na < 0 ) na = -na;
 		if ( nb < 0 ) nb = -nb;
-
+/*
+		The typical case now is that in a we have the last step to go
+		to loose the leading word, while in b we have lost the leading word.
+		We could go to DivLong now but we can also add an extra step that
+		is less wasteful.
+		In the case that the new leading word of b is extrememly short (like 1)
+		we make a rather large error of course. In the worst case the whole
+		will be intercepted by DivLong after all, but that is so rare that
+		it shouldn't influence any timing in a measurable way.
+*/
 		if ( nb >= GCDMAX && na == nb+1 && b[nb-1] >= HALFMAX && b[nb-1] > a[na-1] ) {
 			lx = (((RLONG)(a[na-1]))<<BITSINWORD) + a[na-2];
 			x1[0] = lx/b[nb-1]; n1 = 1;
@@ -2008,16 +2014,6 @@ retry:;
 			if ( n4 < 0 ) n4 = -n4;
 			a = b; na = nb; b = x4; nb = n4;
 		}
-
-#ifdef WITHEXTRAPASS
-		if ( pass == 0 && nb >= GCDMAX && na == nb+1 && b[nb-1] >= HALFMAX ) {
-			pass = 1;
-			ma1 = 1; ma2 = 0; mb1 = 0; mb2 = 1;
-			lx = (((RLONG)(a[na-1]))<<BITSINWORD) + a[na-2];
-			ly = (RLONG)(b[nb-1]);
-			goto retry;
-		}
-#endif
 		goto restart;
 	}
 	return(0);

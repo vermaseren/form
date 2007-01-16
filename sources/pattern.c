@@ -159,9 +159,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 			return(-1);
 		}
 		*m -= m[*m-1];
-		if ( *m > AN.patternbuffersize ) {
+		if ( ( *m + 1 ) > AN.patternbuffersize ) {
 			if ( AN.patternbuffer ) M_free(AN.patternbuffer,"AN.patternbuffer");
-			AN.patternbuffersize = 2 * (*m);
+			AN.patternbuffersize = 2 * (*m) + 2;
 			AN.patternbuffer = (WORD *)Malloc1(AN.patternbuffersize * sizeof(WORD),
 					"AN.patternbuffer");
 		}
@@ -170,6 +170,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		NCOPY(mm,m,i);
 		m = AN.patternbuffer;
 		AR.Eside = RHSIDE;
+		*mm = 0;
 
 		AT.WorkPointer = ww = StartWork;
 	}

@@ -776,11 +776,15 @@ RetRetval:
 */
 				POSITION zeropos;
 				PUTZERO(position);
+#ifdef ALLLOCK
 				LOCK(newout->pthreadslock);
+#endif
 				SeekFile(newout->handle,&position,SEEK_END);
 				PUTZERO(zeropos);
 				SeekFile(newout->handle,&zeropos,SEEK_SET);
+#ifdef ALLLOCK
 				UNLOCK(newout->pthreadslock);
+#endif
 				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)
 						,"$-buffer reading");
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
@@ -859,17 +863,23 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 		Terminate(-1);
 	}
 #else
+#ifdef ALLLOCK
 	LOCK(file->pthreadslock);
+#endif
 	SeekFile(file->handle,position,SEEK_SET);
 	if ( ( RetCode = ReadFile(file->handle,(UBYTE *)buffer,file->POsize) ) < 0 ) {
+#ifdef ALLLOCK
 		UNLOCK(file->pthreadslock);
+#endif
 		LOCK(ErrorMessageLock);
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
 			RetCode,file->POsize);
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
+#ifdef ALLLOCK
 	UNLOCK(file->pthreadslock);
+#endif
 #endif
 	return(RetCode);
 }
@@ -917,11 +927,15 @@ Sflush ARG1(FILEHANDLE *,fi)
 	else
 #endif
 	{
+#ifdef ALLLOCK
 	  LOCK(fi->pthreadslock);
+#endif
 	  size = (fi->POfill-fi->PObuffer)*sizeof(WORD);
 	  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 	  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
+#ifdef ALLLOCK
 		UNLOCK(fi->pthreadslock);
+#endif
 		LOCK(ErrorMessageLock);
 		MesPrint("Write error while finishing sort. Disk full?");
 		UNLOCK(ErrorMessageLock);
@@ -930,7 +944,9 @@ Sflush ARG1(FILEHANDLE *,fi)
 	  ADDPOS(fi->filesize,size);
 	  ADDPOS(fi->POposition,size);
 	  fi->POfill = fi->PObuffer;
+#ifdef ALLLOCK
 	  UNLOCK(fi->pthreadslock);
+#endif
 	}
 	return(0);
 }
@@ -989,10 +1005,14 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 						return(-1);
 					}
 				}
+#ifdef ALLLOCK
 				LOCK(fi->pthreadslock);
+#endif
 				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 				if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+#ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
+#endif
 					LOCK(ErrorMessageLock);
 					MesPrint("Write error during sort. Disk full?");
 					UNLOCK(ErrorMessageLock);
@@ -1001,7 +1021,9 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 				ADDPOS(fi->filesize,fi->POsize);
 				p = fi->PObuffer;
 				ADDPOS(fi->POposition,fi->POsize);
+#ifdef ALLLOCK
 				UNLOCK(fi->pthreadslock);
+#endif
 #ifdef WITHPTHREADS
 				if ( AS.MasterSort && AC.ThreadSortFileSynch ) {
 					if ( fi->handle >= 0 ) SynchFile(fi->handle);
@@ -1164,10 +1186,14 @@ nocompress:
 				else
 #endif
 				{
+#ifdef ALLLOCK
 				  LOCK(fi->pthreadslock);
+#endif
 				  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 				  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+#ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
+#endif
 					LOCK(ErrorMessageLock);
 					MesPrint("Write error during sort. Disk full?");
 					UNLOCK(ErrorMessageLock);
@@ -1176,7 +1202,9 @@ nocompress:
 				  ADDPOS(fi->filesize,fi->POsize);
 				  p = fi->PObuffer;
 				  ADDPOS(fi->POposition,fi->POsize);
+#ifdef ALLLOCK
 				  UNLOCK(fi->pthreadslock);
+#endif
 #ifdef WITHPTHREADS
 				  if ( AS.MasterSort && AC.ThreadSortFileSynch ) {
 					if ( fi->handle >= 0 ) SynchFile(fi->handle);
@@ -1270,10 +1298,14 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		else
 #endif
 		{
+#ifdef ALLLOCK
 		  LOCK(fi->pthreadslock);
+#endif
 		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 		  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+#ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
+#endif
 			LOCK(ErrorMessageLock);
 			MesPrint("Write error while sorting. Disk full?");
 			UNLOCK(ErrorMessageLock);
@@ -1282,7 +1314,9 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		  ADDPOS(fi->filesize,fi->POsize);
 		  fi->POfill = fi->PObuffer;
 		  ADDPOS(fi->POposition,fi->POsize);
+#ifdef ALLLOCK
 		  UNLOCK(fi->pthreadslock);
+#endif
 #ifdef WITHPTHREADS
 		  if ( AS.MasterSort && AC.ThreadSortFileSynch ) {
 			if ( fi->handle >= 0 ) SynchFile(fi->handle);
@@ -1314,10 +1348,14 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		else
 #endif
 		{
+#ifdef ALLLOCK
 		  LOCK(fi->pthreadslock);
+#endif
 		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 		  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
+#ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
+#endif
 			LOCK(ErrorMessageLock);
 			MesPrint("Write error while finishing sorting. Disk full?");
 			UNLOCK(ErrorMessageLock);
@@ -1326,7 +1364,9 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		  ADDPOS(fi->filesize,size);
 		  ADDPOS(fi->POposition,size);
 		  fi->POfill = fi->PObuffer;
+#ifdef ALLLOCK
 		  UNLOCK(fi->pthreadslock);
+#endif
 #ifdef WITHPTHREADS
 		  if ( AS.MasterSort && AC.ThreadSortFileSynch ) {
 			if ( fi->handle >= 0 ) SynchFile(fi->handle);
@@ -1345,9 +1385,13 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		&& dobracketindex == 0 && ( compr > 0 ) ) {
 		PUTZERO(*position);
 		if ( fi->handle >= 0 ) {
+#ifdef ALLLOCK
 			LOCK(fi->pthreadslock);
+#endif
 			SeekFile(fi->handle,position,SEEK_END);
+#ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
+#endif
 		}
 		else {
 			ADDPOS(*position,((UBYTE *)fi->POfill-(UBYTE *)fi->PObuffer));
@@ -2648,9 +2692,13 @@ FileMake:
 #endif
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
+#ifdef ALLLOCK
 			LOCK(fout->pthreadslock);
+#endif
 			SeekFile(fout->handle,&(fout->filesize),SEEK_SET);
+#ifdef ALLLOCK
 			UNLOCK(fout->pthreadslock);
+#endif
 			S->fPatchN = 0;
 			PUTZERO(S->fPatches[0]);
 			fout->POfill = fout->PObuffer;	
@@ -2762,10 +2810,14 @@ ConMer:
 	}
 	if ( fout->handle >= 0 ) {
 		PUTZERO(position);
+#ifdef ALLLOCK
 		LOCK(fout->pthreadslock);
+#endif
 		SeekFile(fout->handle,&position,SEEK_END);
 		ADDPOS(position,((fout->POfill-fout->PObuffer)*sizeof(WORD)));
+#ifdef ALLLOCK
 		UNLOCK(fout->pthreadslock);
+#endif
 	}
 	else {
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
