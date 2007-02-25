@@ -1010,8 +1010,10 @@ main ARG2(int,argc,char **,argv)
 /*
 	To prevent some undefined variables
 */
+#ifndef WITHPTHREADS
 	TimeCPU(0);
 	TimeWallClock(0);
+#endif
 
 #ifdef PARALLEL
 	if ( PF_Init(&argc,&argv) ) exit(-1);
@@ -1113,7 +1115,7 @@ main ARG2(int,argc,char **,argv)
 	return(0);
 }
 /*
- 		#] main : 
+ 		#] main :
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1260,15 +1262,21 @@ Terminate ARG1(int,errorcode)
 VOID PrintRunningTime ARG0
 {
 #ifdef WITHPTHREADS
-	LONG mastertime = TimeCPU(1);
-	LONG workertime = GetWorkerTimes();
-	LONG wallclocktime = TimeWallClock(1);
-	LONG totaltime = mastertime+workertime;
-	MesPrint("  %l.%2i sec + %l.%2i sec: %l.%2i sec out of %l.%2i sec",
-		mastertime/1000,(WORD)((mastertime%1000)/10),
-		workertime/1000,(WORD)((workertime%1000)/10),
-		totaltime/1000,(WORD)((totaltime%1000)/10),
-		wallclocktime/100,(WORD)(wallclocktime%100));
+	LONG mastertime;
+	LONG workertime;
+	LONG wallclocktime;
+	LONG totaltime;
+	if ( AB[0] != 0 ) {
+		mastertime = TimeCPU(1);
+		workertime = GetWorkerTimes();
+		wallclocktime = TimeWallClock(1);
+		totaltime = mastertime+workertime;
+		MesPrint("  %l.%2i sec + %l.%2i sec: %l.%2i sec out of %l.%2i sec",
+			mastertime/1000,(WORD)((mastertime%1000)/10),
+			workertime/1000,(WORD)((workertime%1000)/10),
+			totaltime/1000,(WORD)((totaltime%1000)/10),
+			wallclocktime/100,(WORD)(wallclocktime%100));
+	}
 #else
 	LONG mastertime = TimeCPU(1);
 	LONG wallclocktime = TimeWallClock(1);
@@ -1279,6 +1287,6 @@ VOID PrintRunningTime ARG0
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 
