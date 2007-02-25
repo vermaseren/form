@@ -2352,10 +2352,29 @@ SkipCount:	level++;
 					AT.WorkPointer = term + *term;
 					goto Return0;
 				  case TYPEIF:
+#ifdef WITHPTHREADS
+					{
+/*
+						We may be writing in the space here when wildcards
+						are involved in a match(). Hence we have to make
+						a private copy here!!!!
+*/
+						WORD ic, jc, *ifcode, *jfcode;
+						jfcode = C->lhs[level]; jc = jfcode[1];
+						ifcode = AT.WorkPointer; AT.WorkPointer += jc;
+						for ( ic = 0; ic < jc; ic++ ) ifcode[ic] = jfcode[ic];
+						while ( !DoIfStatement(ifcode,term) ) {
+							level = C->lhs[level][2];
+							if ( C->lhs[level][0] != TYPEELIF ) break;
+						}
+						AT.WorkPointer = ifcode;
+					}
+#else
 					while ( !DoIfStatement(C->lhs[level],term) ) {
 						level = C->lhs[level][2];
 						if ( C->lhs[level][0] != TYPEELIF ) break;
 					}
+#endif
 					break;
 				  case TYPEELIF:
 					do {
@@ -2740,7 +2759,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3138,7 +3157,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 
 		Routine gets one power of an expression.
@@ -3480,7 +3499,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 
 		Routine checks whether the count of function AR.PolyFun is zero

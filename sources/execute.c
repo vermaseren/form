@@ -556,6 +556,7 @@ DoExecute ARG2(WORD,par,WORD,skip)
 	NumModOptdollars = 0;
 
 skipexec:
+	AC.numpfirstnum = 0;
 	AC.DidClean = 0;
 	TestDrop();
 	if ( par == STOREMODULE || par == CLEARMODULE ) {

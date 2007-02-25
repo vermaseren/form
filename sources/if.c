@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ If statement :
  		#[ Syntax :
 
@@ -69,7 +69,7 @@
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax :
+ 		#] Syntax : 
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -497,7 +497,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement :
+ 		#] DoIfStatement : 
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -589,6 +589,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 			AN.UseFindOnly = 0;
 			if ( ( power = FindRest(BHEAD newterm,m) ) > 0 ) {
 				if ( ( power = FindOnce(BHEAD newterm,m) ) > 0 ) {
+					AN.UseFindOnly = 0;
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
@@ -692,7 +693,7 @@ VOID DoubleIfBuffers ARG0
 }
 
 /*
- 		#] DoubleIfBuffers :
+ 		#] DoubleIfBuffers : 
   	#] If statement :
 */
 
