@@ -732,7 +732,10 @@ multermnum:			if ( x == 0 ) goto NormZero;
 */
 				if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SNUMBER
 					&& t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+3] > 0 ) {
-					*((UWORD *)lnum) = t[FUNHEAD+1]%t[FUNHEAD+3];
+					WORD tmod;
+					tmod = t[FUNHEAD+1]%t[FUNHEAD+3];
+					if ( tmod < 0 ) tmod += t[FUNHEAD+3];
+					*((UWORD *)lnum) = tmod;
 					if ( *lnum == 0 ) goto NormZero;
 					nnum = 1;
 					goto MulIn;

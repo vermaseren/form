@@ -214,7 +214,7 @@ typedef struct TaBlEs {
 	WORD	buffersfill;	/* When we use more than one compiler buffer */
 	WORD	tablenum;       /* For testing of tableuse */
 	WORD	mode;			/* 0: normal, 1: stub */
-	WORD	notusedyet;		/* For future considerations */
+	WORD	numdummies;		/*  */
 	PADPOINTER(4,7,6,0);
 } *TABLES;
 
@@ -237,7 +237,7 @@ typedef struct ExPrEsSiOn {
 	WORD	whichbuffer;
 	WORD	namesize;
 	WORD	compression;
-	WORD	reserved;
+	WORD	numdummies;
 	PADPOINTER(2,0,10,0);
 } *EXPRESSIONS;
 
@@ -319,7 +319,9 @@ typedef struct DoLlArS {
 	WORD	node;
 	WORD	index;
 	WORD	zero;
-	PADPOINTER(2,0,4,0);
+	WORD	numdummies;
+	WORD	reserved;
+	PADPOINTER(2,0,6,0);
 } *DOLLARS;
 
 typedef struct MoDoPtDoLlArS {
@@ -554,6 +556,7 @@ typedef struct CbUf {
 	WORD **rhs;
 	LONG *CanCommu;
 	LONG *NumTerms;
+	WORD *numdum;
 	COMPTREE *boomlijst;
 	LONG BufferSize;
 	int numlhs;
@@ -1140,6 +1143,7 @@ struct R_const {
     WORD    GetOneFile;            /* (R) Getting from hide or regular */
     WORD    PolyFun;               /* (C) Number of the PolyFun function */
     WORD    Eside;                 /* () Tells which side of = sign */
+	WORD	MaxDum;                /* Maximum dummy value in an expression */
 };
 
 /*

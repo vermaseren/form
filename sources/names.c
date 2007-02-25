@@ -1303,6 +1303,7 @@ DoTable ARG2(UBYTE *,s,int,par)
 	T->buffersfill = 0;
 	T->buffers[T->buffersfill++] = T->bufnum;
 	T->mode = 0;
+	T->numdummies = 0;
     mm = T->mm;
     T->numind = 0;
     if ( rflag > 0 ) AC.MustTestTable++;
@@ -1888,6 +1889,7 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 	dol->type = type;
 	dol->node = nodenum;
 	dol->zero = 0;
+	dol->numdummies = 0;
 #ifdef WITHPTHREADS
 	dol->pthreadslockread = dummylock;
 	dol->pthreadslockwrite = dummylock;
@@ -1911,7 +1913,7 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 }
 
 /*
-  	#] AddDollar : 
+  	#] AddDollar :
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.
@@ -2048,11 +2050,12 @@ AddExpression ARG4(UBYTE *,name,int,x,int,y,int,z)
 		expr->namesize = 0;
 	}
 	expr->vflags = 0;
+	expr->numdummies = 0;
 	return(numexpr);
 }
 
 /*
-  	#] AddExpression : 
+  	#] AddExpression :
   	#[ GetLabel :
 */
 

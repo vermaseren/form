@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ MatchE :					WORD MatchE(pattern,fun,inter,par)
 
 		Pattern and fun point at a Levi-Civita tensor.
@@ -379,7 +379,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE :
+  	#] MatchE : 
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -426,7 +426,7 @@ Permute ARG2(PERM *,perm,WORD,first)
 }
 
 /*
-  	#] Permute :
+  	#] Permute : 
   	#[ Distribute :
 */
 
@@ -478,7 +478,7 @@ Distribute ARG2(DISTRIBUTE *,d,WORD,first)
 }
 
 /*
-  	#] Distribute :
+  	#] Distribute : 
   	#[ MatchCy :
 
 		Matching of (r)cyclic tensors.
@@ -697,7 +697,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 1:
+  	#] Case 1: 
   	#[ Case 2: One FUNNYWILD. Fix its length.
 */
 	if ( funnycount == 1 ) {
@@ -794,7 +794,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 2:
+  	#] Case 2: 
   	#[ Case 3: More than one FUNNYWILD. Complicated.
 */
 
@@ -950,7 +950,7 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		(thewildcards[iraise-1])++;
 	}
 /*
-  	#] Case 3:
+  	#] Case 3: 
 */
 NoSuccess:
 	if ( oldwilval > 0 ) {
@@ -971,7 +971,7 @@ nomatch:;
 }
 
 /*
-  	#] MatchCy :
+  	#] MatchCy : 
   	#[ FunMatchCy :
 
 		Matching of (r)cyclic functions.
@@ -982,7 +982,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
-	WORD **a, *thewildcards, *multiplicity, *renum, wc, oldwilval = 0;
+	WORD **a, *thewildcards, *multiplicity, *renum, wc, wcc, oldwilval = 0;
 	LONG oww = AT.pWorkPointer;
 	WORD newvalue, *lowlevel = 0;
 	int argcount = 0, funnycount = 0, tcount = 0;
@@ -1110,7 +1110,8 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 				for ( j = 0; j < tcount; j++ ) { /* The arguments */
 					while ( *p == -ARGWILD ) p += 2;
 					t = AT.pWorkSpace[oww+((i+j)%tcount)];
-					if ( MatchArgument(t,p) == 0 ) break;
+					if ( ( wcc =  MatchArgument(t,p) ) == 0 ) break;
+					if ( wcc > 1 ) wc = 1;
 					NEXTARG(p);
 				}
 				if ( j >= tcount ) { /* Match! */
@@ -1256,7 +1257,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 2:
+  	#] Case 2: 
   	#[ Case 3: More than one -ARGWILD. Complicated.
 */
 
@@ -1398,7 +1399,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		(thewildcards[iraise-1])++;
 	}
 /*
-  	#] Case 3:
+  	#] Case 3: 
 */
 NoSuccess:
 	if ( oldwilval > 0 ) {
@@ -1635,6 +1636,11 @@ quicky:
 			a = AT.pWorkSpace+lhpars;
 			iraise--;
 			if ( iraise != i ) signs++;
+/*
+			The problem with the next code is that we start with a
+			messed up configuration and that we pass the 'canonical' solution.
+*/
+			signs++;   /* this was forgotten till 18-feb-2007 */
 			m = a[iraise];
 			a[iraise] = a[i];
 			a[i] = m; i--;
@@ -1916,7 +1922,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy :
+  	#] FunMatchSy : 
   	#[ MatchArgument :
 */
 
@@ -1931,6 +1937,7 @@ int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 	WORD wildargs, wildeat;
 	WORD *mtrmstop, *ttrmstop, *msubstop, msizcoef;
 	WORD *wildargtaken;
+	int wc = 1;
 
 
 	NEXTARG(argmstop);
@@ -1944,7 +1951,7 @@ int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 			else if ( *m <= -FUNCTION-WILDOFFSET
 			&& functions[-*t-FUNCTION].spec
 			== functions[-*m-FUNCTION-WILDOFFSET].spec ) {
-				i = -*m - WILDOFFSET;
+				i = -*m - WILDOFFSET; wc = 2;
 				if ( CheckWild(BHEAD i,FUNTOFUN,-*t,&newvalue) ) return(0);
 				AddWild(BHEAD i,FUNTOFUN,newvalue);
 			}
@@ -1962,6 +1969,7 @@ int MatchArgument ARG2(WORD *,arg,WORD *,pat)
 			else if ( *t == -SYMBOL ) {
 				j = SYMTOSYM;
 SymAll:			if ( ( i = m[1] - 2*MAXPOWER ) < 0 ) return(0);
+				wc = 2;
 				if ( CheckWild(BHEAD i,j,t[1],&newvalue) ) return(0);
 				AddWild(BHEAD i,j,newvalue);
 			}
@@ -1970,12 +1978,14 @@ IndAll:			i = m[1] - WILDOFFSET;
 				if ( i < AM.OffsetIndex || i >= WILDOFFSET+AM.OffsetIndex )
 															return(0);
 								/* We kill the summed over indices here */
+				wc = 2;
 				if ( CheckWild(BHEAD i,INDTOIND,t[1],&newvalue) ) return(0);
 				AddWild(BHEAD i,INDTOIND,newvalue);
 			}
 			else if ( *t == -VECTOR || *t == -MINVECTOR ) {
 				i = m[1] - WILDOFFSET;
 				if ( i < AM.OffsetVector ) return(0);
+				wc = 2;
 				if ( CheckWild(BHEAD i,VECTOVEC,t[1],&newvalue) ) return(0);
 				AddWild(BHEAD i,VECTOVEC,newvalue);
 			}
@@ -1988,6 +1998,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 				i = m[1] - WILDOFFSET;
 				AN.argaddress = AT.MinVecArg;
 				AT.MinVecArg[ARGHEAD+3] = t[1];
+				wc = 2;
 				if ( CheckWild(BHEAD i,INDTOSUB,1,AN.argaddress) ) return(0);
 				AddWild(BHEAD i,INDTOSUB,(WORD)0);
 			}
@@ -2001,13 +2012,14 @@ IndAll:			i = m[1] - WILDOFFSET;
 		( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
 			AN.argaddress = AT.MinVecArg;
 			AT.MinVecArg[ARGHEAD+3] = t[1];
+			wc = 2;
 			if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) return(0);
 			AddWild(BHEAD i,VECTOSUB,(WORD)0);
 		}
 		else return(0);
 	}
 /*
-  	#] Both fast :
+  	#] Both fast : 
   	#[ Fast arg :
 */
 	else if ( *m > 0 && *t <= -FUNCTION ) {
@@ -2017,6 +2029,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 			WORD *mmmst, *mmm, mmmi;
 			if ( m[ARGHEAD+1] >= FUNCTION+WILDOFFSET ) {
 				mmmi = *m - WILDOFFSET;
+				wc = 2;
 				if ( CheckWild(BHEAD mmmi,FUNTOFUN,-*t,&newvalue) ) return(0);
 				AddWild(BHEAD mmmi,FUNTOFUN,newvalue);
 			}
@@ -2029,7 +2042,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 			while ( mmm < mmmst ) {
 				if ( *mmm != -ARGWILD ) return(0);
 				mmmi = 0;
-				AN.argaddress = t;
+				AN.argaddress = t; wc = 2;
 				if ( CheckWild(BHEAD mmm[1],ARGTOARG,mmmi,t) ) return(0);
 				AddWild(BHEAD mmm[1],ARGTOARG,mmmi);
 				mmm += 2;
@@ -2038,34 +2051,34 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast arg :
+  	#] Fast arg : 
   	#[ Fast pat :
 */
 	else if ( *m < 0 && *t > 0 ) {
 		if ( *m == -SYMBOL ) {			/* SYMTOSUB */
 			if ( m[1] < 2*MAXPOWER ) return(0);
 			i = m[1] - 2*MAXPOWER;
-			AN.argaddress = t;
+			AN.argaddress = t; wc = 2;
 			if ( CheckWild(BHEAD i,SYMTOSUB,1,AN.argaddress) ) return(0);
 			AddWild(BHEAD i,SYMTOSUB,0);
 		}
 		else if ( *m == -VECTOR ) {
 			if ( ( i = m[1] - WILDOFFSET ) < AM.OffsetVector ) return(0);
-			AN.argaddress = t;
+			AN.argaddress = t; wc = 2;
 			if ( CheckWild(BHEAD i,VECTOSUB,1,t) ) return(0);
 			AddWild(BHEAD i,VECTOSUB,(WORD)0);
 		}
 		else if ( *m == -INDEX ) {
 			if ( ( i = m[1] - WILDOFFSET ) < AM.OffsetIndex ) return(0);
 			if ( i >= AM.OffsetIndex + WILDOFFSET ) return(0);
-			AN.argaddress = t;
+			AN.argaddress = t; wc = 2;
 			if ( CheckWild(BHEAD i,INDTOSUB,1,AN.argaddress) ) return(0);
 			AddWild(BHEAD i,INDTOSUB,(WORD)0);
 		}
 		else return(0);
 	}
 /*
-  	#] Fast pat :
+  	#] Fast pat : 
   	#[ Both general :
 */
 	else if ( *m > 0 && *t > 0 ) {
@@ -2167,15 +2180,15 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 	}
 /*
-  	#] Both general :
+  	#] Both general : 
 */
 	else return(0);
 /*
-	And now the success:
+	And now the success: (wc = 2 means that there was a woldcard involved)
 */
-	return(1);
+	return(wc);
 }
 
 /*
-  	#] MatchArgument :
+  	#] MatchArgument : 
 */

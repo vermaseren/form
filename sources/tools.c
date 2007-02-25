@@ -2202,6 +2202,11 @@ int CompArg ARG2(WORD *,s1, WORD *,s2)
 	int k;
 	if ( *s1 < 0 ) {
 		if ( *s2 < 0 ) {
+			if ( *s1 <= -FUNCTION && *s2 <= -FUNCTION ) {
+				if ( *s1 > *s2 ) return(-1);
+				if ( *s1 < *s2 ) return(1);
+				return(0);
+			}
 			if ( *s1 > *s2 ) return(1);
 			if ( *s1 < *s2 ) return(-1);
 			if ( *s1 <= -FUNCTION ) return(0);

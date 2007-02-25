@@ -379,7 +379,78 @@ Return0:
 
 /*
  		#] FullRenumber : 
-  	#] Reshuf : 
+ 		#[ MoveDummies :
+
+		Routine shifts the dummy indices by an amount 'shift'.
+		It is an adaptation of DetCurDum.
+		Needed for  = ...*expression^power*...
+		in which expression contains dummy indices.
+		Note that this code should have been in ver1 already and has
+		always been missing. Routine made 29-jan-2007.
+*/
+
+VOID MoveDummies BARG2(WORD *,term,WORD,shift)
+{
+	GETBIDENTITY
+	WORD maxval = AM.IndDum;
+	WORD maxtop = maxval + MAXDUMMIES;
+	WORD *tstop, *m, *r;
+	tstop = term + *term - 1;
+	tstop -= ABS(*tstop);
+	term++;
+	while ( term < tstop ) {
+		if ( *term == VECTOR ) {
+			m = term + 3;
+			term += term[1];
+			while ( m < term ) {
+				if ( *m > maxval && *m < maxtop ) *m += shift;
+				m += 2;
+			}
+		}
+		else if ( *term == DELTA || *term == INDEX ) {
+			m = term + 2;
+Singles:
+			term += term[1];
+			while ( m < term ) {
+				if ( *m > maxval && *m < maxtop ) *m += shift;
+				m++;
+			}
+		}
+		else if ( *term >= FUNCTION ) {
+			if ( functions[*term-FUNCTION].spec >= TENSORFUNCTION ) {
+				m = term + FUNHEAD;
+				goto Singles;
+			}
+			r = term + FUNHEAD;
+			term += term[1];
+			while ( r < term ) {		/* The arguments */
+				if ( *r < 0 ) {
+					if ( *r <= -FUNCTION ) r++;
+					else if ( *r == -INDEX ) {
+						if ( r[1] > maxval && r[1] < maxtop ) r[1] += shift;
+						r += 2;
+					}
+					else r += 2;
+				}
+				else {
+					m = r + ARGHEAD;
+					r += *r;
+					while ( m < r ) {   /* Terms in the argument */
+						MoveDummies(BHEAD m,shift);
+						m += *m;
+					}
+				}
+			}
+		}
+		else {
+			term += term[1];
+		}
+	}
+}
+
+/*
+ 		#] MoveDummies :
+  	#] Reshuf :
   	#[ Count :
  		#[ CountDo :
 
@@ -1251,7 +1322,7 @@ nextk:;
 		Merge[,once|all],fun;
 		Merge[,once|all],$fun;
 	The expansion of the dollar should give a single function.
-	The dollar is indicate as usual with a negative value.
+	The dollar is indicated as usual with a negative value.
 	option = 1 (once): generate identical results only once
 	option = 0 (all): generate identical results with combinatorics (default)
 */

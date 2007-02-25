@@ -476,8 +476,8 @@ ALLPRIVATES *InitializeOneThread ARG1(int,identity)
 						 ,AM.S0->SmallSize*sizeof(WORD)/numberofworkers
 						 ,AM.S0->SmallEsize*sizeof(WORD)/numberofworkers
 						 ,AM.S0->TermsInSmall
-						 ,AM.S0->MaxPatches
-						 ,AM.S0->MaxFpatches
+						 ,AM.S0->MaxPatches/numberofworkers
+						 ,AM.S0->MaxFpatches/numberofworkers
 						 ,AM.S0->file.POsize);
 	}
 	AR.CompressPointer = AR.CompressBuffer;
@@ -516,7 +516,7 @@ OnError:;
 }
 
 /*
-  	#] InitializeOneThread : 
+  	#] InitializeOneThread :
   	#[ FinalizeOneThread :
 */
 
@@ -816,6 +816,7 @@ int RunThread ARG1(int *,dummy)
 				}
 				AR.DeferFlag = AC.ComDefer;
 				AR.sLevel = AS.sLevel;
+				AR.MaxDum = AM.IndDum;
 /*
 				Now fire up the sort buffer.
 */
@@ -926,7 +927,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION :
+			#] LOWESTLEVELGENERATION : 
 			#[ FINISHEXPRESSION :
 */
 			case FINISHEXPRESSION:
@@ -1044,7 +1045,7 @@ EndOfThread:;
 }
 
 /*
-  	#] RunThread :
+  	#] RunThread : 
   	#[ IAmAvailable :
 
 	To be called when a thread is available.
@@ -1763,6 +1764,11 @@ NextBucket:;
 	for ( id = 1; id < AM.totalnumberofthreads; id++ ) {
 		if ( GetThread(id) > 0 ) WakeupThread(id,CLEANUPEXPRESSION);
 	}
+	e->numdummies = 0;
+	for ( id = 1; id < AM.totalnumberofthreads; id++ ) {
+		if ( AB[i]->R.MaxDum - AM.IndDum > e->numdummies )
+			e->numdummies = AB[i]->R.MaxDum - AM.IndDum;
+	}
 /*
 	And wait for all to be clean.
 */
@@ -2181,7 +2187,7 @@ MasterMerge ARG0
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
 	Now construct the tree:
 */

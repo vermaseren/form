@@ -220,9 +220,12 @@ RecalcSetups ARG0
 	SETUPPARAMETERS *sp, *sp1;
 
 	sp1 = GetSetupPar((UBYTE *)"threads");
+	if ( AM.totalnumberofthreads > 1 ) sp1->value = AM.totalnumberofthreads - 1;
+	else sp1->value = 0;
+/*
 	if ( sp1->value > 0 ) AM.totalnumberofthreads = sp1->value+1;
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
-
+*/
 	sp  = GetSetupPar((UBYTE *)"filepatches");
 	if ( sp->value < AM.totalnumberofthreads-1 )
 		sp->value = AM.totalnumberofthreads - 1;

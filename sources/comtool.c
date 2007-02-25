@@ -28,9 +28,10 @@ inicbufs ARG0
 	C->numlhs = 0;
 	C->mnumlhs = 0;
 	C->maxrhs = 25;
-	C->rhs = (WORD **)Malloc1(C->maxrhs*(sizeof(WORD *)+2*sizeof(LONG)),"compiler buffer");
+	C->rhs = (WORD **)Malloc1(C->maxrhs*(sizeof(WORD *)+2*sizeof(LONG)+sizeof(WORD)),"compiler buffer");
 	C->CanCommu = (LONG *)(C->rhs+C->maxrhs);
-	C->NumTerms = (LONG *)(C->rhs+2*C->maxrhs);
+	C->NumTerms = C->CanCommu+C->maxrhs;
+	C->numdum = (WORD *)(C->NumTerms+C->maxrhs);
 	C->numrhs = 0;
 	C->mnumrhs = 0;
 	C->rhs[0] = C->rhs[1] = C->Pointer;
@@ -143,7 +144,7 @@ WORD *AddRHS ARG2(int,num,int,type)
 {
 	LONG fullsize, *lold, newsize;
 	int i;
-	WORD **old;
+	WORD **old, *wold;
 	CBUF *C;
 restart:;
 	C = cbuf + num;
@@ -177,13 +178,15 @@ restart:;
 			}
 		}
 		old	= C->rhs;
-		fullsize = newsize * (sizeof(WORD *) + 2*sizeof(LONG));
+		fullsize = newsize * (sizeof(WORD *) + 2*sizeof(LONG) + sizeof(WORD));
 		C->rhs = (WORD **)Malloc1(fullsize,"subexpression lists");
 		for ( i = 0; i < C->maxrhs; i++ ) C->rhs[i] = old[i];
 		lold = C->CanCommu; C->CanCommu = (LONG *)(C->rhs+newsize);
 		for ( i = 0; i < C->maxrhs; i++ ) C->CanCommu[i] = lold[i];
 		lold = C->NumTerms; C->NumTerms = (LONG *)(C->rhs+2*newsize);
 		for ( i = 0; i < C->maxrhs; i++ ) C->NumTerms[i] = lold[i];
+		wold = C->numdum; C->numdum = (WORD *)(C->NumTerms+newsize);
+		for ( i = 0; i < C->maxrhs; i++ ) C->numdum[i] = wold[i];
 		if ( old ) M_free(old,"subexpression lists");
 		C->maxrhs = newsize;
 		if ( type == 0 ) RedoTree(C,C->maxrhs);

@@ -1401,7 +1401,7 @@ nofun:					MesPrint("&%s is not a function or a set of functions"
 }
 
 /*
-  	#] DoArgument : 
+  	#] DoArgument :
   	#[ CoArgument :
 */
 
@@ -1489,7 +1489,7 @@ int
 CoMakeInteger ARG1(UBYTE *,s) { return(DoArgument(s,TYPENORM4)); }
 
 /*
-  	#] CoMakeInteger : 
+  	#] CoMakeInteger :
   	#[ CoSplitArg :
 */
 

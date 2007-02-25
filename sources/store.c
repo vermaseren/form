@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -26,7 +26,7 @@ OpenTemp()
 }
 
 /*
- 		#] OpenTemp :
+ 		#] OpenTemp : 
  		#[ SeekScratch :
 */
 
@@ -38,7 +38,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
 }
 
 /*
- 		#] SeekScratch :
+ 		#] SeekScratch : 
  		#[ SetEndScratch :
 */
 
@@ -53,7 +53,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndScratch :
+ 		#] SetEndScratch : 
  		#[ SetEndHScratch :
 */
 
@@ -68,7 +68,7 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndHScratch :
+ 		#] SetEndHScratch : 
  		#[ SetScratch :
 */
 
@@ -116,7 +116,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch :
+ 		#] SetScratch : 
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -160,7 +160,7 @@ RevertScratch()
 }
 
 /*
- 		#] RevertScratch :
+ 		#] RevertScratch : 
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -203,7 +203,7 @@ ResetScratch()
 }
 
 /*
- 		#] ResetScratch :
+ 		#] ResetScratch : 
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -404,7 +404,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave :
+ 		#] CoSave : 
  		#[ CoLoad :
 */
 
@@ -551,7 +551,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad :
+ 		#] CoLoad : 
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -625,7 +625,7 @@ DeleteStore ARG1(WORD,par)
 }
 
 /*
- 		#] DeleteStore :
+ 		#] DeleteStore : 
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -677,7 +677,7 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore :
+ 		#] PutInStore : 
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -934,7 +934,7 @@ RegRet:;
 		}
 	}
 /*
-			#] debug :
+			#] debug : 
 */
 	return(*from);
 GTerr:
@@ -944,7 +944,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm :
+ 		#] GetTerm : 
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.
@@ -1075,7 +1075,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm :
+ 		#] GetOneTerm : 
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1176,7 +1176,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms :
+ 		#] GetMoreTerms : 
  		#[ GetMoreFromMem :
 
 */
@@ -1268,7 +1268,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem :
+ 		#] GetMoreFromMem : 
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1465,6 +1465,8 @@ PastEnd:
 	AR.CompressPointer = r; *r = 0;
 	if ( !TermRenumber(to,renumber,nexpr) ) {
 		MarkDirty(to,DIRTYSYMFLAG);
+		if ( AR.CurDum > AM.IndDum && Expressions[nexpr].numdummies > 0 )
+			MoveDummies(BHEAD to,AR.CurDum - AM.IndDum);
 		return((WORD)*to);
 	}
 PastErr:
@@ -1475,7 +1477,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore :
+ 		#] GetFromStore : 
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1660,7 +1662,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars :
+ 		#] DetVars : 
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -1814,11 +1816,20 @@ ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
 		}
 	}
 	if ( VarStore((UBYTE *)0L,(WORD)0,(WORD)0,(WORD)0) ) goto ErrToSto;	/* Flush buffer */
-/*
-	indexent->position = SeekFile(AR.StoreData.Handle,0L,SEEK_CUR);
-*/
 	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	indexent->size = (WORD)DIFBASE(indexent->position,indexent->variables);
+/*
+		The following code was added when it became apparent (30-jan-2007)
+		that we need provisions for extra space without upsetting existing
+		.sav files. Here we can put as much as we want.
+		Look in GetTable on how to recover numdummies.
+		Forgetting numdummies has been in there from the beginning.
+*/
+	if ( e->numdummies > 0 ) {
+		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->numdummies)),(LONG)sizeof(WORD)) != 
+			sizeof(WORD) ) return(MesPrint("Error while writing storage file"));
+		TELLFILE(AR.StoreData.Handle,&(indexent->position));
+	}
 	if ( AR.outfile->handle >= 0 ) {
 		POSITION llength;
 		llength = *length;
@@ -1870,7 +1881,7 @@ ErrInSto:
 }
 
 /*
- 		#] ToStorage :
+ 		#] ToStorage : 
  		#[ NextFileIndex :
 */
 
@@ -1920,7 +1931,7 @@ ErrNextS:
 }
 
 /*
- 		#] NextFileIndex :
+ 		#] NextFileIndex : 
  		#[ SetFileIndex :
 */
 
@@ -1950,7 +1961,7 @@ SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex :
+ 		#] SetFileIndex : 
  		#[ VarStore :
 */
 
@@ -1994,7 +2005,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 }
 
 /*
- 		#] VarStore :
+ 		#] VarStore : 
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2049,7 +2060,7 @@ ctrap++;
 				if ( ( n = FindrNumber(*term,&(renumber->vect)) )
 					 < 0 ) goto ErrR;
 				*term++ = renumber->vecnum[n];
-				if ( *term >= AM.OffsetIndex ) {
+				if ( ( *term >= AM.OffsetIndex ) && ( *term < AM.IndDum ) ) {
 					if ( ( n = FindrNumber(*term,&(renumber->indi)) )
 						 < 0 ) goto ErrR;
 					*term++ = renumber->indnum[n];
@@ -2072,7 +2083,7 @@ Tensors:
 		Still TOBEDONE
 */
 				}
-				else if ( *term  >= AM.OffsetIndex ) {
+				else if ( ( *term  >= AM.OffsetIndex ) && ( *term < AM.IndDum ) ) {
 					if ( ( n = FindrNumber(*term,&(renumber->indi)) )
 						 < 0 ) goto ErrR;
 					*term = renumber->indnum[n];
@@ -2131,7 +2142,7 @@ Tensors:
 			Still TOBEDONE
 */
 						}
-						else if ( *term  >= AM.OffsetIndex ) {
+						else if ( ( *term  >= AM.OffsetIndex ) && ( *term < AM.IndDum ) ) {
 							if ( ( n = FindrNumber(*term,&(renumber->indi)) )
 								 < 0 ) goto ErrR;
 							*term = renumber->indnum[n];
@@ -2172,10 +2183,13 @@ FindrNumber ARG2(WORD,n,VARRENUM *,v)
 	hi = v->hi;
 	lo = v->lo;
 	med = v->start;
-if ( *hi == 0 ) {
-	MesPrint("Serious problems coming up in FindrNumber");
-	return(-1);
-}
+	if ( *hi == 0 ) {
+		if ( n != *hi ) {
+			MesPrint("Serious problems coming up in FindrNumber");
+			return(-1);
+		}
+		return(*hi);
+	}
 	while ( *med != n ) {
 		if ( *med < n ) {
 			if ( med == hi ) goto ErrFindr;
@@ -2268,6 +2282,16 @@ FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
 				if ( ( !par && ISEQUALPOS(indexpos,Expressions[expr].onfile) )
 				|| ( par && !StrCmp(EXPRNAME(expr),(UBYTE *)(ind->name)) ) ) {
 					nomatch = 1;
+/*
+MesPrint("index: position: %8p",&(ind->position));
+MesPrint("index: length: %8p",&(ind->length));
+MesPrint("index: variables: %8p",&(ind->variables));
+MesPrint("index: nsymbols: %d",ind->nsymbols);
+MesPrint("index: nindices: %d",ind->nindices);
+MesPrint("index: nvectors: %d",ind->nvectors);
+MesPrint("index: nfunctions: %d",ind->nfunctions);
+MesPrint("index: size: %d",ind->size);
+*/
 					if ( par ) return(ind);
 					scrpos = ind->position;
 					SeekFile(hand,&scrpos,SEEK_SET);
@@ -2346,7 +2370,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex :
+ 		#] FindInIndex : 
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2527,7 +2551,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	}
 	}
 /*
-			#] Symbols :
+			#] Symbols : 
 			#[ Indices :
 */
 	{
@@ -2590,7 +2614,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices :
+			#] Indices : 
 			#[ Vectors :
 */
 	{
@@ -2634,7 +2658,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors :
+			#] Vectors : 
 			#[ Functions :
 */
 	{
@@ -2682,15 +2706,49 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions :
+			#] Functions : 
 
-	Now we skip the prototype. This sets the start posiion at the first term
+	Now we skip the prototype. This sets the start position at the first term
 */
 	if ( error ) {
 		UNLOCK(AM.storefilelock);
 		AT.WorkPointer = oldwork;
 		return(0);
 	}
+
+	{
+/*
+		For clarity we look where we are.
+		We want to know: is this position already known?
+		Could we have inserted extra information here?
+*/
+		POSITION pos;
+		int nummystery;
+		TELLFILE(AR.StoreData.Handle,&pos);
+		nummystery = DIFBASE(ind->position,pos);
+/*
+		MesPrint("--> We are at position       %8p",&pos);
+		MesPrint("--> The index says        at %8p",&(ind->position));
+		MesPrint("--> There are %d mystery bytes",nummystery);
+*/
+		if ( nummystery > 0 ) {
+			if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+			sizeof(WORD) ) {
+				UNLOCK(AM.storefilelock);
+				AT.WorkPointer = oldwork;
+				return(0);
+			}
+			Expressions[expr].numdummies = *AT.WorkPointer;
+/*
+			MesPrint("--> numdummies = %d",Expressions[expr].numdummies);
+*/
+		}
+		else {
+			Expressions[expr].numdummies = 0;
+		}
+	}
+
+	SeekFile(AR.StoreData.Handle,&(ind->position),SEEK_SET);
 /* --COMPRESS-- */
 	if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
 	sizeof(WORD) || !*AT.WorkPointer ) {
@@ -2726,7 +2784,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
 	#] StoreExpressions :
 */
 

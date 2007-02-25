@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] include :
+  	#] include : 
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -141,6 +141,7 @@ HaveTodo:
 /*
 				If we come here we have to do the argument i (first is 1).
 */
+				sign = 1;
 				v[2] |= DIRTYFLAG;
 				r = t + FUNHEAD;
 				j = i;
@@ -445,7 +446,7 @@ ScaledVariety:;
 							}
 							size = INCLENG(size);
 							k = size < 0 ? -size: size;
-							rstop[k-1] = size;
+							rstop[k-1] = size*sign;
 							*term = (WORD)(rstop - term) + k;
 						}
 					}
@@ -1421,6 +1422,6 @@ exectermerr:
 }
 
 /*
-  	#] execterm :
+  	#] execterm : 
 */
 

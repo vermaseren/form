@@ -179,7 +179,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar : 
+  	#] CatchDollar :
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -538,7 +538,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar : 
+  	#] AssignDollar :
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -864,7 +864,7 @@ void WildDollars ARG0
 }
 
 /*
-  	#] WildDollars :
+  	#] WildDollars : 
   	#[ DolToTensor :    with LOCK
 */
 
@@ -1328,6 +1328,7 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
 	newd->node = d->node;
 	newd->type = DOLTERMS;
 	newd->size = size;
+	newd->numdummies = d->numdummies;
 #ifdef WITHPTHREADS
 	newd->pthreadslockread  = dummylock;
 	newd->pthreadslockwrite = dummylock;

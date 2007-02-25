@@ -733,6 +733,7 @@ int CodeGenerator ARG1(SBYTE *,tokens)
 	C = cbuf + AC.cbufnum;
 	numexp = C->numrhs;
 	C->NumTerms[numexp] = 0;
+	C->numdum[numexp] = 0;
 	oldwork = AT.WorkPointer;
 	numerator = (UWORD *)(AT.WorkPointer);
 	denominator = numerator + 2*AM.MaxTal;
@@ -795,6 +796,10 @@ fin:			deno = 1;
 				if ( *s == TWILDCARD ) { s++; x1 += WILDOFFSET; }
 				if ( inset ) { *t++ = x1; *relo = 2; }
 				else           *t++ = x1 + AM.OffsetIndex;
+				if ( t[-1] > AM.IndDum ) {
+					x1 = t[-1] - AM.IndDum;
+					if ( x1 > C->numdum[numexp] ) C->numdum[numexp] = x1;
+				}
 				goto fin;
 			case TGENINDEX:
 				*t++ = INDEX; *t++ = 3; *t++ = AC.DumNum+WILDOFFSET;
@@ -847,6 +852,10 @@ dovector:		if ( inset == 0 ) x1 += AM.OffsetVector;
 						if ( inset < 2 ) x2 += AM.OffsetIndex;
 						if ( *s == TWILDCARD ) { s++; x2 += WILDOFFSET; }
 						*t++ = VECTOR; *t++ = 4; *t++ = x1; *t++ = x2;
+						if ( t[-1] > AM.IndDum ) {
+							x2 = t[-1] - AM.IndDum;
+							if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+						}
 					}
 					else if ( *s == TGENINDEX ) {
 						*t++ = VECTOR; *t++ = 4; *t++ = x1;
@@ -1116,7 +1125,12 @@ dotensor:
 							x2 = 0; while ( *s >= 0 ) x2 = 128*x2 + *s++;
 							switch ( c ) {
 								case TINDEX:
-									*t++ = x2; break;
+									*t++ = x2;
+									if ( t[-1]+AM.OffsetIndex > AM.IndDum ) {
+										x2 = t[-1]+AM.OffsetIndex - AM.IndDum;
+										if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+									}
+									break;
 								case TVECTOR:
 									*t++ = x2; break;
 								case TNUMBER1:
@@ -1134,6 +1148,10 @@ dotensor:
 							case TINDEX:
 								if ( inset < 2 ) *t++ = x2 + AM.OffsetIndex;
 								else *t++ = x2;
+								if ( x2+AM.OffsetIndex > AM.IndDum ) {
+									x2 = x2+AM.OffsetIndex - AM.IndDum;
+									if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+								}
 								break;
 							case TGENINDEX:
 								*t++ = AC.DumNum + WILDOFFSET;
@@ -1199,6 +1217,10 @@ dofunction:			firstsumarg = 1;
 								}
 								else if ( c == TINDEX ) {
 									sumlevel = x2+AM.OffsetIndex; sumtype = INDTOIND;
+									if ( sumlevel > AM.IndDum ) {
+										x2 = sumlevel - AM.IndDum;
+										if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+									}
 								}
 							}
 						}
@@ -1242,6 +1264,10 @@ dofunction:			firstsumarg = 1;
 								break;
 							case TINDEX:
 								*t++ = -INDEX; *t++ = x2 + AM.OffsetIndex;
+								if ( t[-1] > AM.IndDum ) {
+									x2 = t[-1] - AM.IndDum;
+									if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+								}
 								break;
 							case TGENINDEX:
 								*t++ = -INDEX; *t++ = AC.DumNum + WILDOFFSET;
@@ -1283,7 +1309,12 @@ dofunction:			firstsumarg = 1;
 									case TSYMBOL:
 										*t++ = -SYMBOL; *t++ = x2; break;
 									case TINDEX:
-										*t++ = -INDEX; *t++ = x2; break;
+										*t++ = -INDEX; *t++ = x2;
+										if ( x2+AM.OffsetIndex > AM.IndDum ) {
+											x2 = x2+AM.OffsetIndex - AM.IndDum;
+											if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+										}
+										break;
 									case TVECTOR:
 										*t++ = -VECTOR; *t++ = x2; break;
 									case TNUMBER1:
@@ -1415,12 +1446,16 @@ dofunction:			firstsumarg = 1;
 								break;
 							case TINDEX:
 								*t++ = INDEX; *t++ = 3; *t++ = x2+AM.OffsetIndex;
+								if ( t[-1] > AM.IndDum ) {
+									x2 = t[-1] - AM.IndDum;
+									if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+								}
 								break;
 							case TVECTOR:
 								*t++ = INDEX; *t++ = 3; *t++ = x2+AM.OffsetVector;
 								break;
 							case TFUNCTION:
-								*t++ = x2; *t++ = 2; break;
+								*t++ = x2+FUNCTION; *t++ = 2; break;
 							case TNUMBER:
 							case TNUMBER1:
 								if ( x2 >= AM.OffsetIndex || x2 < 0 ) {
@@ -1447,7 +1482,12 @@ dofunction:			firstsumarg = 1;
 									case TSYMBOL:
 										*t++ = SYMBOL; *t++ = 4; *t++ = x2; *t++ = 1; break;
 									case TINDEX:
-										*t++ = INDEX; *t++ = 3; *t++ = x2; break;
+										*t++ = INDEX; *t++ = 3; *t++ = x2;
+										if ( x2+AM.OffsetIndex > AM.IndDum ) {
+											x2 = x2+AM.OffsetIndex - AM.IndDum;
+											if ( x2 > C->numdum[numexp] ) C->numdum[numexp] = x2;
+										}
+										break;
 									case TVECTOR:
 										*t++ = VECTOR; *t++ = 3; *t++ = x2; break;
 									case TNUMBER1:

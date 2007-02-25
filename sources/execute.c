@@ -112,6 +112,7 @@ CleanExpr ARG1(WORD,par)
 					e_out->inmem = e_in->inmem;
 					e_out->bracketinfo = e_in->bracketinfo;
 					e_out->newbracketinfo = e_in->newbracketinfo;
+					e_out->numdummies = e_in->numdummies;
 				}
 				e_out++;
 				j++;

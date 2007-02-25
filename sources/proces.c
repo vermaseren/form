@@ -7,7 +7,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 
@@ -201,6 +201,7 @@ commonread:;
 #endif
 				{
 					NewSort();
+					AR.MaxDum = AM.IndDum;
 					AN.ninterms = 0;
 					while ( GetTerm(BHEAD term) ) {
 					  SeekScratch(AR.infile,&position);
@@ -234,6 +235,7 @@ commonread:;
 						}
 					}
 					if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
+					e->numdummies = AR.MaxDum - AM.IndDum;
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
@@ -346,7 +348,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 
 		TestSub hunts for subexpression pointers.
@@ -1325,7 +1327,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 
 		Makes the replacement of 'replac' in a function argument.
@@ -1780,7 +1782,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 
 		Puts the terms 'term' and 'position' together into a single
@@ -1901,7 +1903,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 
 		Gets a term from stored expression expr and puts it in
@@ -2008,7 +2010,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 
 		Puts the term at position in the accumulator accum at position
@@ -2067,7 +2069,7 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 
 		Concatenates the contents of the accumulator into a single
@@ -2237,7 +2239,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 
 		The heart of the program
@@ -2299,6 +2301,8 @@ SkipCount:	level++;
 				}
 				if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) {
 					ReNumber(BHEAD term); Normalize(BHEAD term);
+					if ( !*term ) goto Return0;
+					if ( AR.CurDum > AR.MaxDum ) AR.MaxDum = AR.CurDum;
 				}
 				if ( AR.PolyFun > 0 && AR.sLevel <= 0 ) {
 					if ( PrepPoly(term) != 0 ) goto Return0;
@@ -2736,7 +2740,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -2830,12 +2834,6 @@ AutoGen:	i = *AT.TMout;
 			i = (WORD)cbuf[extractbuff].CanCommu[replac];
 		}
 		if ( power == 1 ) {		/* Just a single power */
-/*
-debugcounter++;
-if ( debugcounter == 78736449 ) {
-	MesPrint("Coming into the danger zone. debugcounter = %l",debugcounter);
-}
-*/
 			termout = AT.WorkPointer;
 		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
@@ -2997,7 +2995,7 @@ if ( debugcounter == 78736449 ) {
 		POSITION StartPos;
 		LONG position, olpw, opw, comprev, extra;
 		RENUMBER renumber;
-		WORD *Freeze, *aa;
+		WORD *Freeze, *aa, *dummies;
 		replac = -replac-1;
 		power = AN.TeSuOut;
 		Freeze = AN.Frozen;
@@ -3029,17 +3027,24 @@ if ( debugcounter == 78736449 ) {
 			}
 			position = olpw;
 			if ( ( renumber = GetTable(replac,&(AT.posWorkSpace[position])) ) == 0 ) goto GenCall;
+			dummies = AT.WorkPointer;
+			*dummies++ = AR.CurDum;
+			AT.WorkPointer += power+2;
 			accum = AT.WorkPointer;
 		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + 2*AM.MaxTer);
 			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			aa = AT.WorkPointer;
 			*accum = 0;
 			i = 0; StartPos = AT.posWorkSpace[position];
+			dummies[i] = AR.CurDum;
 			while ( i >= 0 ) {
 skippedfirst:
 				AR.CompressPointer = AT.pWorkSpace[comprev-1];
 				if ( ( extra = PasteFile(i,accum,&(AT.posWorkSpace[position])
 						,&a,renumber,Freeze,replac) ) < 0 ) goto GenCall;
+				if ( Expressions[replac].numdummies > 0 ) {
+					AR.CurDum = dummies[i] + Expressions[replac].numdummies;
+				}
 				if ( NOTSTARTPOS(firstpos) ) {
 					if ( ISMINPOS(firstpos) || ISEQUALPOS(firstpos,AT.posWorkSpace[position]) ) {
 						firstpos = AT.posWorkSpace[position];
@@ -3055,9 +3060,11 @@ skippedfirst:
 */
 					i++; AT.posWorkSpace[++position] = StartPos;
 					AT.pWorkSpace[comprev++] = AR.CompressPointer;
+					dummies[i] = AR.CurDum;
 				}
 				else {
 					PUTZERO(AT.posWorkSpace[position]); position--; i--;
+					AR.CurDum = dummies[i];
 					comprev--;
 				}
 				if ( i >= power ) {
@@ -3072,6 +3079,7 @@ skippedfirst:
 						if ( Generator(BHEAD termout,level) ) goto GenCall;
 					}
 					i--; position--;
+					AR.CurDum = dummies[i];
 					comprev--;
 				}
 				AT.WorkPointer = aa;
@@ -3130,7 +3138,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 
 		Routine gets one power of an expression.
@@ -3169,6 +3177,8 @@ DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 	WORD type, retval;
 	WORD oldGetOneFile = AR.GetOneFile;
 	BRACKETINFO *bi;
+	WORD olddummies = AR.CurDum;
+	WORD extradummies = Expressions[nexp].numdummies;
 	type = Expressions[nexp].status;
 	if ( type == HIDDENLEXPRESSION || type == HIDDENGEXPRESSION ) {
 		AR.GetOneFile = 2; fi = AR.hidefile;
@@ -3274,6 +3284,12 @@ doterms:
 				while ( t < m ) *r++ = *t++;
 				*accum = WORDDIF(r,accum);
 			}
+			if ( extradummies > 0 ) {
+				if ( olddummies > AM.IndDum ) {
+					MoveDummies(BHEAD accum,olddummies-AM.IndDum);
+				}
+				AR.CurDum = olddummies+extradummies;
+			}
 			acc = accum;
 			acc += *acc;
 			if ( power <= 0 ) {
@@ -3321,6 +3337,7 @@ EndExpr:
 		fi->POfill = fi->PObuffer + BASEPOSITION(oldposition);
 	}
 	AR.GetOneFile = oldGetOneFile;
+	AR.CurDum = olddummies;
 	return(0);
 PowCall:;
 	LOCK(ErrorMessageLock);
@@ -3331,7 +3348,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 
 		Picks up the deferred brackets.
@@ -3348,9 +3365,14 @@ Deferred BARG2(WORD *,term,WORD,level)
 	WORD *t, *m, *mstop, *tstart, decr, oldb, *termout, i, *oldwork, retval;
 	WORD *oldipointer = AR.CompressPointer, *oldPOfill = AR.infile->POfill;
 	WORD oldGetOneFile = AR.GetOneFile;
+	WORD *copyspace = 0, *tbegin, olddummies = AR.CurDum;
 	AR.GetOneFile = 1;
 	oldwork = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+	if ( Expressions[AS.CurExpr].numdummies && AR.CurDum > AM.IndDum ) {
+		copyspace = AT.WorkPointer;
+	    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+	}
 	termout = AT.WorkPointer;
 	AR.DeferFlag = 0;
 /*
@@ -3406,8 +3428,19 @@ Deferred BARG2(WORD *,term,WORD,level)
 	for(;;) {
 		*tstart = *(AR.CompressPointer)-decr;
 		AR.CompressPointer = AR.CompressPointer+AR.CompressPointer[0];
-
-		if ( InsertTerm(BHEAD term,0,AM.rbufnum,tstart,termout,0) < 0 ) {
+/*
+		Now worry about dummy indices. If those are present and there are
+		already dummy indices we have to make a copy, because otherwise
+		the bracket scan gets messed up. This is what copyspace is for.
+*/
+		if ( copyspace ) {
+			t = tbegin = copyspace; m = tstart; i = *tstart;
+			NCOPY(t,m,i);
+			MoveDummies(BHEAD tbegin,olddummies-AM.IndDum);
+			AR.CurDum = olddummies + Expressions[AS.CurExpr].numdummies;
+		}
+		else tbegin = tstart;
+		if ( InsertTerm(BHEAD term,0,AM.rbufnum,tbegin,termout,0) < 0 ) {
 			goto DefCall;
 		}
 		*tstart = oldb;
@@ -3436,6 +3469,8 @@ Thatsit:;
 	if ( AR.infile->handle < 0 ) AR.infile->POfill = oldPOfill;
 	AR.DeferFlag = 1;
 	AR.GetOneFile = oldGetOneFile;
+	AR.CurDum = olddummies;
+	AT.WorkPointer = oldwork;
 	return(0);
 DefCall:;
 	LOCK(ErrorMessageLock);
@@ -3694,7 +3729,7 @@ PrepPoly ARG1(WORD *,term)
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyMul :			WORD PolyMul(term) 
 */
 
@@ -3894,6 +3929,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyMul :
+ 		#] PolyMul : 
 	#] Processor :
 */

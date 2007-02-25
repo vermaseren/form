@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ StudyPattern :
 
 	Argument is a complete lhs of an id-statement
@@ -206,7 +206,7 @@ void StudyPattern ARG1(WORD *,lhs)
 }
 
 /*
-  	#] StudyPattern :
+  	#] StudyPattern : 
   	#[ MatchIsPossible :
 
 	We come here when there are functions and there is nontrivial
@@ -222,8 +222,6 @@ int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
 	FUN_INFO *finf;
 /*
 	We need a list of functions and their number of arguments
-	We can use the lists for the compiler because this is something
-	that needs not be reentrant.
 */
 	GETSTOP(term,tstop);
 	t = term + 1;

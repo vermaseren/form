@@ -14,19 +14,8 @@ static UBYTE underscore[2] = {'_',0};
 static PREVAR *ThePreVar = 0;
 
 static KEYWORD precommands[] = {
-	/*[12dec2003 mt]:*/
-	/* Preprocessor directives "addseparator" and "rmseparator" adds/removes 
-		separator characters used to separate function arguments. Example:
-	#define QQ "a|g|a"
-	#addseparator %
-	*Comma must be quoted!:
-	#rmseparator ","
-	#rmseparator |
-	#call H(a,a%`QQ')
-	*/
-	{"addseparator"      , DoPreAddSeparator    , 0, 0},
-	/*:[12dec2003 mt]*/
-	 {"append"      , DoPreAppend    , 0, 0}
+	 {"addseparator", DoPreAddSeparator,0,0}
+	,{"append"      , DoPreAppend    , 0, 0}
 	,{"assign"      , DoPreAssign    , 0, 0}
 	,{"break"       , DoPreBreak     , 0, 0}
 	,{"call"        , DoCall         , 0, 0}
@@ -45,10 +34,8 @@ static KEYWORD precommands[] = {
 	,{"endprocedure", DoEndprocedure , 0, 0}
 	,{"endswitch"   , DoPreEndSwitch , 0, 0}
 	,{"exchange"    , DoPreExchange  , 0, 0}
-	/*[14apr2004 mt]:*/
 	,{"external"    , DoExternal     , 0, 0}
 	,{"fromexternal", DoFromExternal , 0, 0}
-	/*:[14apr2004 mt]*/
 	,{"if"          , DoIf           , 0, 0}
 	,{"ifdef"       , (TFUN)DoIfdef  , 1, 0}
 	,{"ifndef"      , (TFUN)DoIfdef  , 2, 0}
@@ -60,37 +47,24 @@ static KEYWORD precommands[] = {
 	,{"print"       , DoPrePrint     , 0, 0}
 	,{"procedure"   , DoProcedure    , 0, 0}
 	,{"procedureextension" , DoPrcExtension , 0, 0}
-	/*[19apr2004 mt]:*/
 	,{"prompt"      , DoPrompt       , 0, 0}
-	/*:[19apr2004 mt]*/
 	,{"redefine"    , DoRedefine     , 0, 0}
 	,{"remove"      , DoPreRemove    , 0, 0}
-	/*[19apr2004 mt]:*/
 	,{"rmexternal"  , DoRmExternal   , 0, 0}
-	/*:[19apr2004 mt]*/
-	/*[12dec2003 mt]:*/
-	/*See comment to "addseparator" above:*/
-	,{"rmseparator"      , DoPreRmSeparator    , 0, 0}
-	/*:[12dec2003 mt]*/
-	/*[19apr2004 mt]:*/
-	,{"setexternal"  , DoSetExternal  , 0, 0}
-	/*:[19apr2004 mt]*/
-	/*[10may2006 mt]:*/
+	,{"rmseparator" , DoPreRmSeparator,0, 0}
+	,{"setexternal" , DoSetExternal  , 0, 0}
 	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
-	/*:[10may2006 mt]:*/
 	,{"show"        , DoPreShow      , 0, 0}
 	,{"switch"      , DoPreSwitch    , 0, 0}
 	,{"system"      , DoSystem       , 0, 0}
 	,{"terminate"   , DoTerminate    , 0, 0}
-	/*[15apr2004 mt]:*/
-	,{"toexternal"    , DoToExternal  , 0, 0}
-	/*:[15apr2004 mt]*/
+	,{"toexternal"  , DoToExternal   , 0, 0}
 	,{"undefine"    , DoUndefine     , 0, 0}
 	,{"write"       , DoPreWrite     , 0, 0}
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	# [ PreProcessor :
  		#[ GetInput :
 
@@ -727,8 +701,6 @@ PreProcessor ARG0
 /*:[28nov2003 mt]*/
 		numstatement = 0;
 		for(;;) {	/* Read a single line/statement */
-if(AC.CModule >=55)
-   c=' ';
 			c = GetChar(0);
 			if ( c == AP.ComChar ) {  /* This line is commentary */
 				LoadInstruction(5);
@@ -886,7 +858,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor : 
+ 		#] PreProcessor :
  		#[ PreProInstruction :
 */
 
@@ -4228,6 +4200,17 @@ void MessPreNesting ARG1(int,par)
  		#] MessPreNesting : 
  		#[ DoPreAddSeparator :
 
+		Preprocessor directives "addseparator" and "rmseparator" add/remove 
+		separator characters used to separate function arguments. 
+		Example:
+
+			#define QQ "a|g|a"
+			#addseparator %
+			*Comma must be quoted!:
+			#rmseparator ","
+			#rmseparator |
+			#call H(a,a%`QQ')
+
 		Characters ' ', '\t' and '"' are ignored!
 */
 
@@ -4252,6 +4235,8 @@ DoPreAddSeparator ARG1(UBYTE *,s)
 /*
  		#] DoPreAddSeparator : 
  		#[ DoPreRmSeparator :
+
+		See commentary with DoPreAddSeparator
 
 		Characters ' ', '\t' and '"' are ignored!
 */
