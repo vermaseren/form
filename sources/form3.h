@@ -1,12 +1,12 @@
 
 #define VERSION 3
 #define MINORVERSION 2
-#define BETAVERSION
+/* #define BETAVERSION */
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "15-jan-2007"
+#define PRODUCTIONDATE "28-feb-2007"
 #endif
 
 /*[17oct2005 mt]:*/

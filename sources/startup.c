@@ -36,7 +36,7 @@ static UBYTE deflogname[] = "formsession.log";
 int
 DoTail ARG2(int,argc,UBYTE **,argv)
 {
-	int errorflag = 0;
+	int errorflag = 0, onlyversion = 1;
 	UBYTE *s, *t, *copy;
 	int threadnum = 0;
 	argc--; argv++;
@@ -48,6 +48,10 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 #else
 	AM.SetupDir = AM.SetupFile = AM.Path = 0;
 #endif
+	if ( argc < 1 ) {
+		onlyversion = 0;
+		goto printversion;
+	}
 	while ( argc >= 1 ) {
 		s = *argv++; argc--;
 		if ( *s == '-' || ( *s == '/' && ( argc > 0 || AM.Interact ) ) ) {
@@ -141,6 +145,24 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 							TAKEPATH(AM.SetupFile) break;
 				case 't': /* Next arg is directory for temp files */
 							TAKEPATH(AM.TempDir)   break;
+				case 'v':
+printversion:;
+#ifdef WITHPTHREADS
+#ifdef BETAVERSION
+							printf("TFORM version %d.%dBeta(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+#else
+							printf("TFORM version %d.%d(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+#endif
+#else
+#ifdef BETAVERSION
+							printf("FORM version %d.%dBeta(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+#else
+							printf("FORM version %d.%d(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+#endif
+#endif
+							if ( onlyversion ) return(-1);
+							AM.InputFileName = 0;
+							break;
 				case 'y': /* Preprocessor dumps output. No compilation. */
 							AC.PreDebug = PREPROONLY;   break;
 				default:
@@ -205,7 +227,7 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -1078,12 +1100,22 @@ main ARG2(int,argc,char **,argv)
 /*:[20sep2005 mt]*/
 	if ( !AM.silent ) 
 #endif
+#ifdef WITHPTHREADS
+#ifdef BETAVERSION
+			MesPrint("TFORM by J.Vermaseren,version %d.%dBeta(%s) Run %s"
+                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+#else
+			MesPrint("TFORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
+                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+#endif
+#else
 #ifdef BETAVERSION
 			MesPrint("FORM by J.Vermaseren,version %d.%dBeta(%s) Run %s"
                          ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
 #else
 			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
                          ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+#endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
