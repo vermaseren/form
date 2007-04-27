@@ -516,7 +516,7 @@ OnError:;
 }
 
 /*
-  	#] InitializeOneThread :
+  	#] InitializeOneThread : 
   	#[ FinalizeOneThread :
 */
 
@@ -674,7 +674,7 @@ int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
 	We should do this only if there is a keep brackets statement
 	We may however still need the compressbuffer for expressions in the rhs.
 */
-	if ( par == 1 ) {
+	if ( par >= 1 ) {
 /*
 		We may not need this %%%%% 7-apr-2006
 */
@@ -726,6 +726,44 @@ int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
 
 /*
   	#] LoadOneThread : 
+  	#[ BalanceRunThread :
+
+	To start a thread from the Generator routine we need to pass a number
+	of variables
+*/
+
+int BalanceRunThread BARG3(int,identity,WORD,*term,WORD,level)
+{
+	GETBIDENTITY
+	ALLPRIVATES *BB;
+	WORD *t, *tt;
+	int i, *ti, *tti;
+
+	LoadOneThread(AT.identity,identity,0,2);
+/*
+	Extra loading if needed. Quantities changed in Generator.
+	Like the level that has to be passed.
+*/
+	BB = AB[identity];
+	BB->R.level = level;
+	BB->T.TMbuff = AT.TMbuff;
+	ti = AT.RepCount; tti = BB->T.RepCount;
+	i = AN.RepPoint - AT.RepCount;
+	BB->N.RepPoint = BB->T.RepCount + i;
+	for ( ; i >= 0; i-- ) tti[i] = ti[i];
+
+	t = term; i = *term;
+	tt = BB->T.WorkSpace;
+	NCOPY(tt,t,i);
+	BB->T.WorkPointer = tt;
+
+	WakeupThread(identity,HIGHERLEVELGENERATION);
+
+	return(0);
+}
+
+/*
+  	#] BalanceRunThread : 
   	#[ SetWorkerFiles :
 */
 
@@ -1004,10 +1042,18 @@ bucketstolen:;
 */
 			case HIGHERLEVELGENERATION:
 /*
-				For later implementation.
 				When foliating halfway the tree.
 				This should only be needed in a second level load balancing
 */
+				term = AT.WorkSpace; AT.WorkPointer = term + *term;
+				if ( Generator(BHEAD term,AR.level) ) {
+					LowerSortLevel();
+					LOCK(ErrorMessageLock);
+					MesPrint("Error in load balancing one term at level %d in thread %d in module %d",AR.level,AT.identity,AC.CModule);
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				AT.WorkPointer = term;
 				break;
 /*
 			#] HIGHERLEVELGENERATION : 
@@ -1100,6 +1146,33 @@ int GetAvailableThread ARG0
 
 /*
   	#] GetAvailableThread : 
+  	#[ ConditionalGetAvailableThread :
+
+*/
+
+int ConditionalGetAvailableThread ARG0
+{
+	int retval = -1;
+	if ( topofavailables > 0 ) {
+		LOCK(availabilitylock);
+		if ( topofavailables > 0 ) {
+			retval = listofavailables[--topofavailables];
+		}
+		UNLOCK(availabilitylock);
+		if ( retval >= 0 ) {
+/*
+			Make sure the thread is indeed waiting and not between
+			saying that it is available and starting to wait.
+*/
+			LOCK(wakeuplocks[retval]);
+			UNLOCK(wakeuplocks[retval]);
+		}
+	}
+	return(retval);
+}
+
+/*
+  	#] ConditionalGetAvailableThread : 
   	#[ GetThread :
 
 	Gets a given thread from the list of available threads, even if
@@ -1710,21 +1783,26 @@ NextBucket:;
 			AB[id]->T.LoadBalancing = 0;
 		}
 	}
+	if ( AC.ThreadBalancing ) {
 /*
-	Stage two load balancing is still to be implemented.
-	It would let generator give tasks to other workers.
-	This is something for the (far?) future.
-	Such balancing is only needed when there is a single bad term.
-	The tricky point is how deep in the tree should one go.
-
-	if ( AC.ThreadBalancing2 ) AS.LoadBalancing2 = 1;
-
-		The AS.LoadBalancing2 flag should have Generator look for
+		The AS.Balancing flag should have Generator look for
 		free workers and apply the "buro" method.
-		There is still code in the old version 1.1 that does this.
-		Look also for the buro files (refers to solving burocraty).
+
+		There is still a serious problem.
+		When for instance a sum_, there may be space created in a local
+		compiler buffer for a wildcard substitution or whatever.
+		Compiler buffer execution scribble space.....
+		This isn't copied along?
+		Look up ebufnum. There are 12 places with AddRHS!
+		Problem: one process alloces in ebuf. Then term is given to
+		other process. It would like to use from this ebuf, but the sender
+		finishes first and removes the ebuf (and/or overwrites it).
+
 */
+		AS.Balancing = 1;
+	}
 	MasterWaitAll();
+	AS.Balancing = 0;
 /*
 	When we deal with the last expression we can now remove the input
 	scratch file. This saves potentially much disk space (up to 1/3)
@@ -1780,7 +1858,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor : 
+  	#] ThreadsProcessor :
   	#[ LoadReadjusted :
 
 	This routine does the load readjustment at the end of a module.
@@ -2187,7 +2265,7 @@ MasterMerge ARG0
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	Now construct the tree:
 */

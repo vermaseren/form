@@ -2261,7 +2261,7 @@ Generator BARG2(WORD *,term,WORD,level)
 	LONG posisub, oldcpointer;
 	DOLLARS d = 0;
 #ifdef WITHPTHREADS
-	int nummodopt, dtype = -1;
+	int nummodopt, dtype = -1, id;
 #endif
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
@@ -2759,7 +2759,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -2866,6 +2866,12 @@ AutoGen:	i = *AT.TMout;
 				posisub += StartBuf[posisub];
 #ifdef WITHPTHREADS
 				if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+				if ( ( AS.Balancing && CC->numrhs == 0 ) && StartBuf[posisub] ) {
+					if ( ( id = ConditionalGetAvailableThread() ) >= 0 ) {
+						if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
+					}
+				}
+				else
 #endif
 				if ( Generator(BHEAD termout,level) < 0 ) goto GenCall;
 #ifdef WITHPTHREADS
@@ -2934,6 +2940,11 @@ AutoGen:	i = *AT.TMout;
 					AS.expchanged = 1;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+					if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 )
+					&& ( id = ConditionalGetAvailableThread() ) >= 0 ) {
+						if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
+					}
+					else
 #endif
 					if ( Generator(BHEAD termout,level) ) goto GenCall;
 #ifdef WITHPTHREADS
@@ -2987,6 +2998,10 @@ AutoGen:	i = *AT.TMout;
 					AS.expchanged = 1;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+					if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 ) && ( id = ConditionalGetAvailableThread() ) >= 0 ) {
+						if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
+					}
+					else
 #endif
 					if ( Generator(BHEAD termout,level) ) goto GenCall;
 #ifdef WITHPTHREADS
@@ -3095,6 +3110,13 @@ skippedfirst:
 						AT.WorkPointer = termout + *termout;
 						*AN.RepPoint = 1;
 						AS.expchanged = 1;
+#ifdef WITHPTHREADS
+						if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 ) && ( id = ConditionalGetAvailableThread() ) >= 0 ) {
+							if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
+
+						}
+						else
+#endif
 						if ( Generator(BHEAD termout,level) ) goto GenCall;
 					}
 					i--; position--;

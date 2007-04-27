@@ -217,7 +217,13 @@ HaveTodo:
 							continue;
 						}
 						else if ( factor && *factor == 0
-						&& *r == -SNUMBER && r[1] != 1 ) {
+						&& ( *r == -SNUMBER && r[1] != 1 ) ) {
+							WantAddPointers(2);
+							AT.pWorkSpace[AT.pWorkPointer++] = t;
+							AT.pWorkSpace[AT.pWorkPointer++] = r;
+							continue;
+						}
+						else if ( *r == -MINVECTOR ) {
 							WantAddPointers(2);
 							AT.pWorkSpace[AT.pWorkPointer++] = t;
 							AT.pWorkSpace[AT.pWorkPointer++] = r;
@@ -847,6 +853,12 @@ ScaledVariety:;
 							}
 							continue;
 						}
+						else if ( *t == -MINVECTOR ) {
+							*r1++ = -VECTOR; t++; *r1++ = *t++;
+							*r1++ = -SNUMBER; *r1++ = -1;
+							*r1++ = -SNUMBER; *r1++ = 1;
+							continue;
+						}
 					}
 					r3 = t + *t;
 					t += ARGHEAD;  r5 = t; /* Store starting point */
@@ -1136,11 +1148,21 @@ ScaledVariety:;
 								We have a factor
 */
 								action = 1;
+/*
+								The next looks like an error.
+								We should have here a VECTOR or INDEX like object
+
 								*r1++ = 7 + ARGHEAD;
 								for ( j = 1; j < ARGHEAD; j++ ) *r1++ = 0;
 								*r1++ = 7; *r1++ = *r7;
 								*r1++ = 3; *r1++ = *t;
 								*r1++ = 1; *r1++ = 1; *r1++ = 3;
+
+								Replace this by:  (11-apr-2007)
+*/
+								if ( *t < 0 ) { *r1++ = -VECTOR; }
+								else { *r1++ = -INDEX; }
+								*r1++ = *t;
 /*
 								Now we have to remove the index
 */

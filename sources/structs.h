@@ -93,7 +93,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -363,7 +363,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
  
@@ -435,7 +435,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -477,7 +477,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
  
@@ -544,7 +544,7 @@ typedef struct{
 }HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -721,7 +721,7 @@ typedef struct ThReAdBuCkEt {
 #endif
 
 /*
-  	#] Varia :
+  	#] Varia : 
   	#[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -795,13 +795,14 @@ struct M_const {
     int     ggFinalStats;
     int     gThreadsFlag;
     int     ggThreadsFlag;
-	int     gThreadBalancing;
-	int     ggThreadBalancing;
+    int     gThreadBalancing;
+    int     ggThreadBalancing;
     int     gThreadSortFileSynch;
     int     ggThreadSortFileSynch;
     int     maxFlevels;            /* () maximum function levels */
     int     resetTimeOnClear;      /* (M) */
     int     gcNumDollars;          /* () number of dollars for .clear */
+    int     MultiRun;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -896,7 +897,7 @@ struct P_const {
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 struct C_const {
@@ -1080,7 +1081,7 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1094,6 +1095,7 @@ struct S_const {
 #ifdef WITHPTHREADS
     int     MasterSort;            /* Final stage of sorting to the master */
 #endif
+    int     Balancing;             /* For second stage loadbalancing */
     WORD    CurExpr;               /* (S) Number of current expression */
     WORD    ExecMode;              /* (S) */
 
@@ -1107,7 +1109,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1144,10 +1146,11 @@ struct R_const {
     WORD    PolyFun;               /* (C) Number of the PolyFun function */
     WORD    Eside;                 /* () Tells which side of = sign */
 	WORD	MaxDum;                /* Maximum dummy value in an expression */
+	WORD	level;                 /* Running level in Generator */
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 struct T_const {
@@ -1223,7 +1226,7 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1429,7 +1432,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 struct O_const {
@@ -1467,7 +1470,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 struct X_const {
@@ -1488,7 +1491,7 @@ struct X_const {
 	int		currentExternalChannel;
 };
 /*
- 		#] X :
+ 		#] X : 
  		#[ Definitions :
 */
 
@@ -1526,7 +1529,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
   	#] A :
   	#[ FG :
 */
@@ -1552,7 +1555,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

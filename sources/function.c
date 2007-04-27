@@ -365,7 +365,7 @@ CompGroup BARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 }
 
 /*
- 		#] CompGroup :
+ 		#] CompGroup : 
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -604,6 +604,7 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 {
 	GETIDENTITY
 	WORD *t, *tend, *m, *tt, *ts;
+	int action;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(-funnum);
 		if ( AN.ErrorInDollar || funnum <= 0 ) {
@@ -613,26 +614,30 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 			return(-1);
 		}
 	}
-	tend = term+*term;
-	tend -= ABS(tend[-1]);
-	t = term+1;
-	while ( t < tend ) {
-		if ( *t != funnum ) { t += t[1]; continue; }
-		m = t;
-		t += t[1];
-		tt = t;
-		if ( *t != funnum ) break;
-		while ( *t == funnum ) {
-			ts = t + t[1];
-			t += FUNHEAD;
+	do {
+		action = 0;
+		tend = term+*term;
+		tend -= ABS(tend[-1]);
+		t = term+1;
+		while ( t < tend ) {
+			if ( *t != funnum ) { t += t[1]; continue; }
+			m = t;
+			t += t[1];
+			tt = t;
+			if ( *t != funnum ) continue;
+			action = 1;
+			while ( *t == funnum ) {
+				ts = t + t[1];
+				t += FUNHEAD;
+				while ( t < ts ) *tt++ = *t++;
+			}
+			m[1] = tt - m;
+			ts = term + *term;
 			while ( t < ts ) *tt++ = *t++;
+			*term = tt - term;
+			break;
 		}
-		m[1] = tt - m;
-		ts = term + *term;
-		while ( t < ts ) *tt++ = *t++;
-		*term = tt - term;
-		break;
-	}
+	} while ( action );
 	return(0);
 }
 
@@ -876,7 +881,7 @@ FullOK:				AN.RepFunList[AN.RepFunNum+1] = WORDDIF(oldt,argtstop);
 				}
 				else goto NoGamma;
 			}
-			else if ( *m < MINSPEC && *m > (AM.OffsetVector+WILDOFFSET)
+			else if ( *m < MINSPEC && *m >= (AM.OffsetVector+WILDOFFSET)
 			&& *t < MINSPEC ) {			/* Wildcard vecor */
 				if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*t,&newvalue) ) {
 					AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newvalue);
@@ -908,7 +913,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA : 
+ 		#] GAMMA :
  		#[ Tensors :
 */
 	}
@@ -1393,7 +1398,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction : 
+ 		#] MatchFunction :
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		AN.patstop: end of the functions field in the search pattern

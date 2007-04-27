@@ -1913,7 +1913,7 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 }
 
 /*
-  	#] AddDollar :
+  	#] AddDollar : 
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.
@@ -2010,14 +2010,17 @@ static char *plural[] = { "","n","","","","n" };
 int
 NameConflict ARG2(int,type,UBYTE *,name)
 {
-	if ( type != CDUBIOUS )
+	if ( type == NAMENOTFOUND ) {
+		MesPrint("&%s has not been declared",name);
+	}
+	else if ( type != CDUBIOUS )
 		MesPrint("&%s has been declared as a%s %s already"
 			,name,plural[type],nametype[type]);
 	return(1);
 }
 
 /*
-  	#] NameConflict : 
+  	#] NameConflict :
   	#[ AddExpression :
 */
 
@@ -2055,7 +2058,7 @@ AddExpression ARG4(UBYTE *,name,int,x,int,y,int,z)
 }
 
 /*
-  	#] AddExpression :
+  	#] AddExpression : 
   	#[ GetLabel :
 */
 
@@ -2395,7 +2398,7 @@ void ResetVariables ARG1(int, par)
 }
 
 /*
-  	#] ResetVariables :
+  	#] ResetVariables : 
   	#[ RemoveDollars :
 */
 

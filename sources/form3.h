@@ -6,7 +6,7 @@
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "28-feb-2007"
+#define PRODUCTIONDATE "16-apr-2007"
 #endif
 
 /*[17oct2005 mt]:*/

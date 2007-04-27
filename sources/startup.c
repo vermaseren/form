@@ -91,6 +91,9 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 							break;
 				case 'L': /* Make log file with only final statistics */
 							AM.LogType = 1;  break;
+				case 'M': /* Multirun. Becareful with tempfiles */
+							AM.MultiRun = 1;
+							break;
 				case 'm': /* Read number of threads */
 				case 'w': /* Read number of workers */
 							t = s++;
@@ -227,7 +230,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -345,7 +348,8 @@ ReserveTempFiles ARG1(int,par)
 */
 	s = AM.TempDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
-	FG.fname = (char *)Malloc1(sizeof(UBYTE)*i,"name for temporary files");
+
+	FG.fname = (char *)Malloc1(sizeof(UBYTE)*(i+10),"name for temporary files");
 	s = AM.TempDir; t = (UBYTE *)FG.fname;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
@@ -384,7 +388,42 @@ ReserveTempFiles ARG1(int,par)
 #endif
 	while ( *s ) *t++ = *s++;
 	*t = 0;
-	for(;;) {
+#ifdef UNIX
+/*
+		There are problems when running many FORM jobs at the same time
+		from make or minos. If they start up simultaneously, occasionally
+		they can make the same .str file. We prevent this with first trying
+		a file that contains the last three digits of the pid. If this file
+		has already been taken we fall back on the old scheme.
+		The whole is controled with the -M (MultiRun) parameter in the
+		command tail.
+*/
+	if ( AM.MultiRun ) {
+		pid_t pp = getpid();
+		int num = ((int)pp)%100000;
+		t += 2;
+		*t = 0;
+		t[-1] = 'r';
+		t[-2] = 't';
+		t[-3] = 's';
+		t[-4] = '.';
+		t[-5] = '0' + num%10;
+		t[-6] = '0' + (num/10)%10;
+		t[-7] = '0' + (num/100)%10;
+		t[-8] = '0' + (num/1000)%10;
+		t[-9] = '0' + num/10000;
+		if ( ( AC.StoreHandle = CreateFile((char *)FG.fname) ) < 0 ) {
+			t[-5] = 'x'; t[-6] = 'x'; t[-7] = 'x'; t[-8] = 'x'; t[-9] = 'x';
+			goto classic;
+		}
+	}
+	else
+#endif
+	{
+#ifdef UNIX
+classic:;
+#endif
+	  for(;;) {
 		if ( ( AC.StoreHandle = OpenFile((char *)FG.fname) ) < 0 ) {
 			if ( ( AC.StoreHandle = CreateFile((char *)FG.fname) ) >= 0 ) break;
 		}
@@ -414,6 +453,7 @@ ReserveTempFiles ARG1(int,par)
 			else t[-6] = (UBYTE)(c+1);
 		}
 		else t[-5] = (UBYTE)(c+1);
+	  }
 	}
 /*
 	Now we should asign a name to the main sort file and the two stage 4 files.
@@ -421,7 +461,8 @@ ReserveTempFiles ARG1(int,par)
 	AM.S0->file.name = (char *)Malloc1(sizeof(char)*i,"name for temporary files");
 	s = (UBYTE *)AM.S0->file.name;
 	t = (UBYTE *)FG.fname;
-	while ( *t ) *s++ = *t++;
+	i = 1;
+	while ( *t ) { *s++ = *t++; i++; }
 	s[-2] = 'o'; *s = 0;
 	}
 /*
@@ -474,7 +515,7 @@ ReserveTempFiles ARG1(int,par)
 }
 
 /*
- 		#] ReserveTempFiles : 
+ 		#] ReserveTempFiles :
  		#[ StartVariables :
 */
 
@@ -705,7 +746,7 @@ StartVariables ARG0
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -790,6 +831,7 @@ IniVars()
 	AM.gUniTrace[3] = 
 	AC.lUniTrace[3] = 1;
 #ifdef WITHPTHREADS
+	AS.Balancing = 0;
 #else
 	AT.MinVecArg[0] = 7+ARGHEAD;
 	AT.MinVecArg[ARGHEAD] = 7;
@@ -928,7 +970,7 @@ IniVars()
 }
 
 /*
- 		#] IniVars : 
+ 		#] IniVars :
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1147,7 +1189,7 @@ main ARG2(int,argc,char **,argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1319,6 +1361,6 @@ VOID PrintRunningTime ARG0
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 
