@@ -21,21 +21,21 @@ static struct id_options {
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
 int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
 int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ DoExpr:
 */
 
@@ -46,7 +46,6 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 	UBYTE *p, *q, c;
 	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
 	POSITION pos;
-	EXPRESSIONS e = 0;
 	while ( *inp == ',' ) inp++;
 	p = inp;
 	while ( *p && *p != '=' ) {
@@ -94,13 +93,12 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			}
 			else j = EntVar(CEXPRESSION,inp,type,0,0);
 			*q = c;
-			e = Expressions+j;
 			OldWork = w = AT.WorkPointer;
 			*w++ = TYPEEXPRESSION;
 			*w++ = 3+SUBEXPSIZE;
 			*w++ = j;
 			AC.ProtoType = w;
-			AS.CurExpr = j;				/* Block expression j */
+			AR.CurExpr = j;				/* Block expression j */
 			*w++ = SUBEXPRESSION;
 			*w++ = SUBEXPSIZE;
 			*w++ = j;
@@ -152,6 +150,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 			*w++ = 3;
 			*w++ = 0;
 			SeekScratch(AR.outfile,&pos);
+			Expressions[j].counter = 1; 
 			Expressions[j].onfile = pos; 
 			Expressions[j].whichbuffer = 0;
 			OldWork[2] = w - OldWork - 3;
@@ -233,7 +232,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
@@ -244,7 +243,7 @@ int CoIdOld ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdOld : 
+  	#] CoIdOld :
   	#[ CoId :
 */
 
@@ -255,7 +254,7 @@ int CoId ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoId : 
+  	#] CoId :
   	#[ CoIdNew :
 */
 
@@ -266,7 +265,7 @@ int CoIdNew ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdNew : 
+  	#] CoIdNew :
   	#[ CoDisorder :
 */
 
@@ -277,7 +276,7 @@ int CoDisorder ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDisorder : 
+  	#] CoDisorder :
   	#[ CoMany :
 */
 
@@ -288,7 +287,7 @@ int CoMany ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMany : 
+  	#] CoMany :
   	#[ CoMulti :
 */
 
@@ -299,7 +298,7 @@ int CoMulti ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMulti : 
+  	#] CoMulti :
   	#[ CoIfMatch :
 */
 
@@ -310,7 +309,7 @@ int CoIfMatch ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIfMatch : 
+  	#] CoIfMatch :
   	#[ CoOnce :
 */
 
@@ -321,7 +320,7 @@ int CoOnce ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnce : 
+  	#] CoOnce :
   	#[ CoOnly :
 */
 
@@ -332,7 +331,7 @@ int CoOnly ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnly : 
+  	#] CoOnly :
   	#[ CoSelect :
 */
 
@@ -343,7 +342,7 @@ int CoSelect ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoSelect : 
+  	#] CoSelect :
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -353,7 +352,7 @@ int CoIdExpression ARG2(UBYTE *,inp,int,type)
 {
 	GETIDENTITY
 	int i, j, idhead, error = 0, MinusSign = 0, opt, retcode;
-	WORD *w, *s, *m, *mm, *ww, *FirstWork, *OldWork, c1, ctype, numsets = 0,
+	WORD *w, *s, *m, *mm, *ww, *FirstWork, *OldWork, c1, numsets = 0,
 		 oldnumrhs, *ow, oldEside;
 	UBYTE *p, *pp, c;
 	CBUF *C = cbuf+AC.cbufnum;
@@ -366,7 +365,7 @@ int CoIdExpression ARG2(UBYTE *,inp,int,type)
 	else                  
 */
 	idhead = IDHEAD;
-	AS.CurExpr = -1;
+	AR.CurExpr = -1;
 	w = AT.WorkPointer;
 	*w++ = type;
 	*w++ = idhead + SUBEXPSIZE;
@@ -482,7 +481,7 @@ findsets:;
 					}
 					else {
 						c = *p; *p = 0;
-						if ( ( ctype = GetName(AC.varnames,inp,&c1,NOAUTO) ) != CSET ) {
+						if ( GetName(AC.varnames,inp,&c1,NOAUTO) != CSET ) {
 							MesPrint("&%s is not a set",inp);
 							error = 1;
 						}
@@ -791,7 +790,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression : 
+  	#] CoIdExpression :
   	#[ CoMultiply :
 */
 
@@ -830,7 +829,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMultiply : 
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1446,7 +1445,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax
@@ -1615,7 +1614,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable : 
+  	#] CoPrintTable :
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1627,7 +1626,7 @@ static WORD AssignLHS[14] = { TYPEASSIGN, 3+SUBEXPSIZE, 0,
 
 int CoAssign ARG1(UBYTE *,inp)
 {
-	int error = 0, retcode, type;
+	int error = 0, retcode;
 	UBYTE *name;
 	WORD number;
 	if ( *inp != '$' ) {
@@ -1645,9 +1644,8 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 		return(1);
 	}
 	*inp = 0;
-	if ( ( type = GetName(AC.dollarnames,name,&number,NOAUTO) ) == NAMENOTFOUND ) {
+	if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) {
 		number = AddDollar(name,DOLUNDEFINED,0,0);
-		type = DOLUNDEFINED;
 	}
 	*inp++ = '=';
 /*
@@ -1702,7 +1700,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign : 
+  	#] CoAssign :
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1766,7 +1764,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDeallocateTable : 
+  	#] CoDeallocateTable :
 */
 
 

@@ -50,7 +50,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 {
 	GETBIDENTITY
 	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm;
-	WORD power = 0, match = 0, *rep, i, msign = 0;
+	WORD power = 0, match = 0, /* *rep, */ i, msign = 0;
 	int numdollars = 0;
 	CBUF *C = cbuf+AM.rbufnum;
 	do {
@@ -184,7 +184,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		w += w[1];
 	}
 	AN.RepFunNum = 0;
-	rep = AN.RepFunList = AT.WorkPointer;
+	/* rep = */ AN.RepFunList = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 	if ( AT.WorkPointer >= AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
@@ -221,7 +221,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 						AT.WorkPointer = ww;
 /*						if ( rep < ww ) {*/
 							AN.RepFunNum = 0;
-							rep = AN.RepFunList = ww;
+							/* rep = */ AN.RepFunList = ww;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
 								LOCK(ErrorMessageLock);
@@ -253,7 +253,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 						AT.WorkPointer = ww;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
-							rep = AN.RepFunList = ww;
+							/* rep = */ AN.RepFunList = ww;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
 								LOCK(ErrorMessageLock);
@@ -286,7 +286,7 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 						AT.WorkPointer = ww;
 /*						if ( rep < ww ) { */
 							AN.RepFunNum = 0;
-							rep = AN.RepFunList = ww;
+							/* rep = */ AN.RepFunList = ww;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
 								LOCK(ErrorMessageLock);

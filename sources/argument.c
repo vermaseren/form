@@ -1388,7 +1388,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -1445,5 +1445,136 @@ exectermerr:
 
 /*
   	#] execterm : 
+  	#[ ArgumentImplode :
+*/
+
+int
+ArgumentImplode BARG2(WORD *,term,WORD *,thelist)
+{
+	WORD *liststart, *liststop, *inlist;
+	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
+	liststop = thelist + thelist[1];
+	liststart = thelist + 2;
+	t = term;
+	tend = t + *t;
+	tstop = tend - ABS(tend[-1]);
+	t++;
+	while ( t < tstop ) {
+		if ( *t >= FUNCTION ) {
+			inlist = liststart;
+			while ( inlist < liststop && *inlist != *t ) inlist += inlist[1];
+			if ( inlist < liststop ) {
+				tt = t; ttstop = t + t[1]; w = AT.WorkPointer;
+				for ( i = 0; i < FUNHEAD; i++ ) *w++ = *tt++;
+				while ( tt < ttstop ) {
+					if ( *tt == -SNUMBER && tt[1] == 0 ) {
+						ncount = 1; ttt = tt;
+						while ( tt < ttstop && *tt == -SNUMBER && tt[1] == 0 ) {
+							ncount++; tt += 2;
+						}
+						if ( tt < ttstop && *tt == -SNUMBER && ( tt[1] == 1 || tt[1] == -1 ) ) {
+							*w++ = -SNUMBER;
+							*w++ = ncount * tt[1];
+							tt += 2;
+						}
+						else {
+							while ( ttt < tt ) *w++ = *ttt++;
+							if ( tt < ttstop && *tt == -SNUMBER ) {
+								*w++ = *tt++; *w++ = *tt++;
+							}
+						}
+					}
+					else if ( *tt <= -FUNCTION ) {
+						*w++ = *tt++;
+					}
+					else if ( *tt < 0 ) {
+						*w++ = *tt++;
+						*w++ = *tt++;
+					}
+					else {
+						i = *tt; NCOPY(w,tt,i)
+					}
+				}
+				AT.WorkPointer[1] = w - AT.WorkPointer;
+				while ( tt < tend ) *w++ = *tt++;
+				ttt = AT.WorkPointer; tt = t;
+				while ( ttt < w ) *tt++ = *ttt++;
+				term[0] = tt - term;
+				AT.WorkPointer = tt;
+				tend = tt; tstop = tt - ABS(tt[-1]);
+			}
+		}
+		t += t[1];
+	}
+	return(0);
+}
+
+/*
+  	#] ArgumentImplode :
+  	#[ ArgumentExplode :
+*/
+
+int
+ArgumentExplode BARG2(WORD *,term,WORD *,thelist)
+{
+	WORD *liststart, *liststop, *inlist;
+	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
+	liststop = thelist + thelist[1];
+	liststart = thelist + 2;
+	t = term;
+	tend = t + *t;
+	tstop = tend - ABS(tend[-1]);
+	t++;
+	while ( t < tstop ) {
+		if ( *t >= FUNCTION ) {
+			inlist = liststart;
+			while ( inlist < liststop && *inlist != *t ) inlist += inlist[1];
+			if ( inlist < liststop ) {
+				tt = t; ttstop = t + t[1]; w = AT.WorkPointer;
+				for ( i = 0; i < FUNHEAD; i++ ) *w++ = *tt++;
+				while ( tt < ttstop ) {
+					if ( *tt == -SNUMBER ) {
+						if ( tt[1] < AM.MaxTer/4 && tt[1] > -(AM.MaxTer/4)
+							&& ( tt[1] > 1 || tt[1] < -1 ) ) {
+							ncount = ABS(tt[1]);
+							while ( ncount > 1 ) {
+								*w++ = -SNUMBER; *w++ = 0; ncount--;
+							}
+							*w++ = -SNUMBER;
+							if ( tt[1] < 0 ) *w++ = -1;
+							else             *w++ =  1;
+							tt += 2;
+						}
+						else {
+							*w++ = *tt++; *w++ = *tt++;
+						}
+					}
+					else if ( *tt <= -FUNCTION ) {
+						*w++ = *tt++;
+					}
+					else if ( *tt < 0 ) {
+						*w++ = *tt++;
+						*w++ = *tt++;
+					}
+					else {
+						i = *tt; NCOPY(w,tt,i)
+					}
+				}
+				AT.WorkPointer[1] = w - AT.WorkPointer;
+				while ( tt < tend ) *w++ = *tt++;
+				ttt = AT.WorkPointer; tt = t;
+				while ( ttt < w ) *tt++ = *ttt++;
+				term[0] = tt - term;
+				AT.WorkPointer = tt;
+				tend = tt; tstop = tt - ABS(tt[-1]);
+			}
+		}
+		t += t[1];
+	}
+	return(0);
+}
+
+/*
+  	#] ArgumentExplode :
 */
 

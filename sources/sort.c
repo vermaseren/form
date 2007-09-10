@@ -16,6 +16,14 @@
 UBYTE THRbuf[100];
 #endif
 
+#ifdef WITHSTATS
+extern long numwrites;
+extern long numreads;
+extern long numseeks;
+extern long nummallocs;
+extern long numfrees;
+#endif
+
 /*
   	#] Includes :
 	#[ SortUtilities :
@@ -25,7 +33,7 @@ UBYTE THRbuf[100];
 		par = 1 after merge to sortfile.
 		par = 2 after the sort
 
-		current expression is to be found in AS.CurExpr.
+		current expression is to be found in AR.CurExpr.
 		terms are in S->TermsLeft.
 		S->GenTerms.
 
@@ -71,63 +79,63 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%7l.%2is %8l>%10l%3s%10l:%10p %s %s",
 					millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-					S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 /*
 					MesPrint("%14s %17s %7l.%2is %8l>%10l%3s%10l:%10p",
-					EXPRNAME(AS.CurExpr),AC.Commercial,millitime,timepart,
+					EXPRNAME(AR.CurExpr),AC.Commercial,millitime,timepart,
 					AN.ninterms,S->GenTerms,toterms[par],S->TermsLeft,plspace);
 */
 				}
 				else {
-					LONG y = 1000000000L;
+					y = 1000000000L;
 					SETBASEPOSITION(pp,y);
 					MULPOS(pp,100);
 					if ( ISLESSPOS(*plspace,pp) ) {
 						MesPrint("%7l.%2is %8l>%10l%3s%10l:%11p %s %s",
 						millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-						S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 					}
 					else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%12p %s %s",
 							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%13p %s %s",
 							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%14p %s %s",
 							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%15p %s %s",
 							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%16p %s %s",
 							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %8l>%10l%3s%10l:%17p %s %s",
 							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						} } } } }
 					}
@@ -137,51 +145,51 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%7l.%2is %10l:%10p",millitime,timepart,
-					S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 				}
 				else {
-					LONG y = 1000000000L;
+					y = 1000000000L;
 					SETBASEPOSITION(pp,y);
 					MULPOS(pp,100);
 					if ( ISLESSPOS(*plspace,pp) ) {
 						MesPrint("%7l.%2is %10l:%11p",millitime,timepart,
-						S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 					}
 					else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %10l:%12p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %10l:%13p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %10l:%14p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %10l:%15p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %10l:%16p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						else {
 						MULPOS(pp,10);
 						if ( ISLESSPOS(*plspace,pp) ) {
 							MesPrint("%7l.%2is %10l:%17p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AS.CurExpr),AC.Commercial);
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
 						}
 						} } } } }
 					}
@@ -210,56 +218,56 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 #if ( BITSINLONG > 32 )
 		if ( par == 0 )
 			if ( S->TermsLeft >= 10000000000L ) {
-				MesPrint(" %16s%7l Terms %s = %16l",EXPRNAME(AS.CurExpr),
+				MesPrint("%16s%8l Terms %s = %16l",EXPRNAME(AR.CurExpr),
 				AN.ninterms,FG.swmes[par],S->TermsLeft);
 			}
 			else {
-				MesPrint(" %16s%7l Terms %s = %10l",EXPRNAME(AS.CurExpr),
+				MesPrint("%16s%8l Terms %s = %10l",EXPRNAME(AR.CurExpr),
 				AN.ninterms,FG.swmes[par],S->TermsLeft);
 			}
 		else {
 			if ( S->TermsLeft >= 10000000000L ) {
 #ifdef WITHPTHREADS
 				if ( identity > 0 && par == 2 ) {
-					MesPrint(" %16s        Terms in thread = %16l",
-					EXPRNAME(AS.CurExpr),S->TermsLeft);
+					MesPrint("%16s         Terms in thread = %16l",
+					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
 #endif
 				{
-					MesPrint(" %16s        Terms %s = %16l",
-					EXPRNAME(AS.CurExpr),FG.swmes[par],S->TermsLeft);
+					MesPrint("%16s         Terms %s = %16l",
+					EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft);
 				}
 			}
 			else {
 #ifdef WITHPTHREADS
 				if ( identity > 0 && par == 2 ) {
-					MesPrint(" %16s        Terms in thread = %10l",
-					EXPRNAME(AS.CurExpr),S->TermsLeft);
+					MesPrint("%16s         Terms in thread = %10l",
+					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
 #endif
 				{
-					MesPrint(" %16s        Terms %s = %10l",
-					EXPRNAME(AS.CurExpr),FG.swmes[par],S->TermsLeft);
+					MesPrint("%16s         Terms %s = %10l",
+					EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft);
 				}
 			}
 		}
 #else
 		if ( par == 0 )
-			MesPrint(" %16s%7l Terms %s = %10l",EXPRNAME(AS.CurExpr),
+			MesPrint("%16s%8l Terms %s = %10l",EXPRNAME(AR.CurExpr),
 			AN.ninterms,FG.swmes[par],S->TermsLeft);
 		else {
 #ifdef WITHPTHREADS
 			if ( identity > 0 && par == 2 ) {
-				MesPrint(" %16s        Terms in thread = %10l",
-				EXPRNAME(AS.CurExpr),S->TermsLeft);
+				MesPrint("%16s         Terms in thread = %10l",
+				EXPRNAME(AR.CurExpr),S->TermsLeft);
 			}
 			else
 #endif
 			{
-				MesPrint(" %16s        Terms %s = %10l",
-				EXPRNAME(AS.CurExpr),FG.swmes[par],S->TermsLeft);
+				MesPrint("%16s         Terms %s = %10l",
+				EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft);
 			}
 		}
 #endif
@@ -268,7 +276,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 			MesPrint("%24s Bytes used      = %10p",AC.Commercial,plspace);
 		}
 		else {
-			LONG y = 1000000000L;
+			y = 1000000000L;
 			SETBASEPOSITION(pp,y);
 			MULPOS(pp,100);
 			if ( ISLESSPOS(*plspace,pp) ) {
@@ -307,6 +315,12 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 				} } } } }
 			}
 		} }
+#ifdef WITHSTATS
+		MesPrint("Total number of writes: %l, reads: %l, seeks, %l"
+			,numwrites,numreads,numseeks);
+		MesPrint("Total number of mallocs: %l, frees: %l"
+			,nummallocs,numfrees);
+#endif
 		UNLOCK(ErrorMessageLock);
 	}
 }
@@ -694,6 +708,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 		WriteStats(&pp,2);
 	}
 RetRetval:
+
 /*[25nov2003 mt]:*/
 /*For parallel sorting S->TermsLeft is 0, so we have to use PF.goutterms instead:*/
 
@@ -703,20 +718,20 @@ RetRetval:
 #else
 	if ( AR.sLevel == 0 ) {
 #endif /* PARALLEL [11mar1998 ar] */
-		Expressions[AS.CurExpr].counter = S->TermsLeft;
+		Expressions[AR.CurExpr].counter = S->TermsLeft;
 	}
 #endif
 
 #ifdef PARALLEL
 	if ( AR.sLevel == 0 && PF.me == MASTER) {
 		if(AC.mparallelflag == PARALLELFLAG)
-			Expressions[AS.CurExpr].counter = PF.goutterms;
+			Expressions[AR.CurExpr].counter = PF.goutterms;
 		else
-			Expressions[AS.CurExpr].counter = S->TermsLeft;
+			Expressions[AR.CurExpr].counter = S->TermsLeft;
 	}/*if ( AR.sLevel == 0 && PF.me == MASTER)*/
 #else
 	if ( AR.sLevel == 0 ) {
-		Expressions[AS.CurExpr].counter = S->TermsLeft;
+		Expressions[AR.CurExpr].counter = S->TermsLeft;
 	}/*if ( AR.sLevel == 0 )*/
 #endif
 /*:[25nov2003 mt]*/
@@ -782,9 +797,6 @@ RetRetval:
 				SeekFile(newout->handle,&position,SEEK_END);
 				PUTZERO(zeropos);
 				SeekFile(newout->handle,&zeropos,SEEK_SET);
-#ifdef ALLLOCK
-				UNLOCK(newout->pthreadslock);
-#endif
 				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)
 						,"$-buffer reading");
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
@@ -799,6 +811,9 @@ RetRetval:
 					*((WORD **)buffer) = to;
 					retval /= sizeof(WORD);
 				}
+#ifdef ALLLOCK
+				UNLOCK(newout->pthreadslock);
+#endif
 			  }
 			  else {
 /*
@@ -898,7 +913,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 	GETIDENTITY
 	LONG size, RetCode;
 	int dobracketindex = 0;
-	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
+	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 	if ( fi->handle < 0 ) {
 		if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
@@ -997,6 +1012,7 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 #endif
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
+						PUTZERO(fi->POposition);
 					}
 					else {
 						LOCK(ErrorMessageLock);
@@ -1009,12 +1025,15 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 				LOCK(fi->pthreadslock);
 #endif
 				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-				if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+				if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
 #ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
 #endif
 					LOCK(ErrorMessageLock);
 					MesPrint("Write error during sort. Disk full?");
+					MesPrint("Attempt to write %l bytes on file %d at position %15p",
+								fi->POsize,fi->handle,&(fi->POposition));
+					MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
 					UNLOCK(ErrorMessageLock);
 					return(-1);
 				}
@@ -1038,8 +1057,8 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 	if ( ( AC.PreDebug & DUMPOUTTERMS ) == DUMPOUTTERMS ) {
 			LOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
-			sprintf(THRbuf,"PutOut(%d)",AT.identity);
-			PrintTerm(term,THRbuf);
+			sprintf((char *)(THRbuf),"PutOut(%d)",AT.identity);
+			PrintTerm(term,(char *)(THRbuf));
 #else
 			PrintTerm(term,"PutOut");
 #endif
@@ -1047,7 +1066,7 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 			UNLOCK(ErrorMessageLock);
 	}
 
-	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
+	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 	r = rr = AR.CompressPointer;
 	first = j = k = ret = 0;
@@ -1168,6 +1187,7 @@ nocompress:
 #endif
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
+						PUTZERO(fi->POposition);
 					}
 					else {
 						LOCK(ErrorMessageLock);
@@ -1190,12 +1210,15 @@ nocompress:
 				  LOCK(fi->pthreadslock);
 #endif
 				  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-				  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+				  if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
 #ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
 #endif
 					LOCK(ErrorMessageLock);
 					MesPrint("Write error during sort. Disk full?");
+					MesPrint("Attempt to write %l bytes on file %d at position %15p",
+								fi->POsize,fi->handle,&(fi->POposition));
+					MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
 					UNLOCK(ErrorMessageLock);
 					return(-1);
 				  }
@@ -1248,9 +1271,9 @@ WORD
 FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 {
 	GETIDENTITY
-	LONG size;
+	LONG size, RetCode;
 	int dobracketindex = 0;
-	if ( AR.sLevel <= 0 && Expressions[AS.CurExpr].newbracketinfo
+	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
 
@@ -1271,7 +1294,6 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
   }
 #endif /* PARALLEL [16mar1998 ar] */
 	if ( fi->POfill >= fi->POstop ) {
-		LONG RetCode;
 		if ( fi->handle < 0 ) {
 			if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 #ifdef GZIPDEBUG
@@ -1280,6 +1302,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 				UNLOCK(ErrorMessageLock);
 #endif
 				PUTZERO(fi->filesize);
+				PUTZERO(fi->POposition);
 				fi->handle = (WORD)RetCode;
 			}
 			else {
@@ -1302,12 +1325,15 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		  LOCK(fi->pthreadslock);
 #endif
 		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-		  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) != fi->POsize ) {
+		  if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
 #ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
 #endif
 			LOCK(ErrorMessageLock);
 			MesPrint("Write error while sorting. Disk full?");
+			MesPrint("Attempt to write %l bytes on file %d at position %15p",
+						fi->POsize,fi->handle,&(fi->POposition));
+			MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
 			UNLOCK(ErrorMessageLock);
 			return(-1);
 		  }
@@ -1352,12 +1378,15 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		  LOCK(fi->pthreadslock);
 #endif
 		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
-		  if ( WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) != size ) {
+		  if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) ) != size ) {
 #ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
 #endif
 			LOCK(ErrorMessageLock);
 			MesPrint("Write error while finishing sorting. Disk full?");
+			MesPrint("Attempt to write %l bytes on file %d at position %15p",
+						size,fi->handle,&(fi->POposition));
+			MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
 			UNLOCK(ErrorMessageLock);
 			return(-1);
 		  }
@@ -1375,9 +1404,9 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 		}
 	}
 	if ( dobracketindex ) {
-		BRACKETINFO *b = Expressions[AS.CurExpr].newbracketinfo;
+		BRACKETINFO *b = Expressions[AR.CurExpr].newbracketinfo;
 		if ( b->indexfill > 0 ) {
-			DIFPOS(b->indexbuffer[b->indexfill-1].next,*position,Expressions[AS.CurExpr].onfile);
+			DIFPOS(b->indexbuffer[b->indexfill-1].next,*position,Expressions[AR.CurExpr].onfile);
 		}
 	}
 #ifdef WITHZLIB
@@ -1976,7 +2005,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 		if ( c1 <= (FUNCTION-1)
 		|| ( c1 >= FUNCTION && functions[c1-FUNCTION].spec ) ) {
 			if ( c1 == SYMBOL ) {
-				if ( AC.SortType >= SORTPOWERFIRST ) {
+				if ( AR.SortType >= SORTPOWERFIRST ) {
 					WORD i1 = 0, *r1;
 					r1 = s1;
 					while ( s1 < t1 ) { i1 += s1[1]; s1 += 2; }
@@ -1991,7 +2020,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 				while ( s1 < t1 ) {
 					if ( s2 >= t2 ) {
 /*						return(PREV(1));  */
-						if ( AC.SortType==SORTLOWFIRST ) {
+						if ( AR.SortType==SORTLOWFIRST ) {
 							return(PREV((s1[1]>0?-1:1)));
 						}
 						else {
@@ -2000,7 +2029,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 					}
 					if ( *s1 != *s2 ) {
 /*						return(PREV(*s2-*s1)); */
-						if ( AC.SortType==SORTLOWFIRST ) {
+						if ( AR.SortType==SORTLOWFIRST ) {
 							if ( *s1 < *s2 ) {
 								return(PREV((s1[1]<0?1:-1)));
 							}
@@ -2019,12 +2048,12 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 					}
 					s1++; s2++;
 					if ( *s1 != *s2 ) return(
-						PREV((AC.SortType==SORTLOWFIRST?*s2-*s1:*s1-*s2)));
+						PREV((AR.SortType==SORTLOWFIRST?*s2-*s1:*s1-*s2)));
 					s1++; s2++;
 				}
 				if ( s2 < t2 ) {
 /*					return(PREV(-1));  */
-					if ( AC.SortType==SORTLOWFIRST ) {
+					if ( AR.SortType==SORTLOWFIRST ) {
 						return(PREV((s2[1]<0?-1:1)));
 					}
 					else {
@@ -2033,7 +2062,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 				}
 			}
 			else if ( c1 == DOTPRODUCT ) {
-				if ( AC.SortType >= SORTPOWERFIRST ) {
+				if ( AR.SortType >= SORTPOWERFIRST ) {
 					WORD i1 = 0, *r1;
 					r1 = s1;
 					while ( s1 < t1 ) { i1 += s1[2]; s1 += 3; }
@@ -2052,7 +2081,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 					if ( *s1 != *s2 ) return(PREV(*s2-*s1));
 					s1++; s2++;
 					if ( *s1 != *s2 ) return(
-						PREV((AC.SortType==SORTLOWFIRST?*s2-*s1:*s1-*s2)));
+						PREV((AR.SortType==SORTLOWFIRST?*s2-*s1:*s1-*s2)));
 					s1++; s2++;
 				}
 				if ( s2 < t2 ) return(PREV(-1));
@@ -2175,7 +2204,7 @@ NoPoly:
 		}
 	}
 	{
-		if ( AC.SortType != SORTLOWFIRST ) {
+		if ( AR.SortType != SORTLOWFIRST ) {
 			if ( t1 < stopper1 ) return(PREV(1));
 			if ( t2 < stopper2 ) return(PREV(-1));
 		}
@@ -2692,6 +2721,7 @@ FileMake:
 #endif
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
+			PUTZERO(fout->POposition);
 #ifdef ALLLOCK
 			LOCK(fout->pthreadslock);
 #endif
@@ -3245,7 +3275,7 @@ EndOfAll:
 			SeekFile(fin->handle,&(AN.OldPosIn),SEEK_SET);
 /*
 			We don't need extra provisions for the zlib compression here.
-			If part if an expression has been sorted, the whole has been so.
+			If part of an expression has been sorted, the whole has been so.
 			This means that S->fpincompressed[] will remain the same
 */
 			if ( (ULONG)ReadFile(fin->handle,(UBYTE *)(&(S->inNum)),(LONG)sizeof(WORD)) !=
@@ -3359,8 +3389,8 @@ StoreTerm BARG1(WORD *,term)
 
 	if ( ( AC.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) {
 #ifdef WITHPTHREADS
-		sprintf(THRbuf,"StoreTerm(%d)",AT.identity);
-		PrintTerm(term,THRbuf);
+		sprintf((char *)(THRbuf),"StoreTerm(%d)",AT.identity);
+		PrintTerm(term,(char *)(THRbuf));
 #else
 		PrintTerm(term,"StoreTerm");
 #endif

@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Utilities :
  		#[ MakeDirty :
 
@@ -53,7 +53,7 @@ MakeDirty ARG3(WORD *,term,WORD *,x,WORD,par)
 }
 
 /*
- 		#] MakeDirty : 
+ 		#] MakeDirty :
  		#[ MarkDirty :
 
 		Routine marks all functions dirty with the given flags.
@@ -96,7 +96,7 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 }
 
 /*
- 		#] MarkDirty : 
+ 		#] MarkDirty :
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -120,7 +120,7 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 */
 
 WORD
-Symmetrize BARG6(WORD *,func,WORD *,Lijst,WORD,Nlist,WORD,ngroups,WORD,gsize,
+Symmetrize BARG5(WORD *,func,WORD *,Lijst,WORD,ngroups,WORD,gsize,
 		WORD,type)
 {
 	GETBIDENTITY
@@ -268,7 +268,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize : 
+ 		#] Symmetrize :
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -365,7 +365,7 @@ CompGroup BARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 }
 
 /*
- 		#] CompGroup : 
+ 		#] CompGroup :
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -406,14 +406,14 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 	Lijst = AT.WorkPointer;
 	for ( i = 0; i < count; i++ ) Lijst[i] = i;
 	AT.WorkPointer += count;
-	retval = Symmetrize(BHEAD fun,Lijst,0,count,1,type);
+	retval = Symmetrize(BHEAD fun,Lijst,count,1,type);
 	fun[2] &= ~DIRTYSYMFLAG;
 	AT.WorkPointer = Lijst;
 	return(retval);
 }
 
 /*
- 		#] FullSymmetrize : 
+ 		#] FullSymmetrize :
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -495,7 +495,7 @@ NextGroup:;
 				for ( i = 0; i < Nlist; i++ ) Lijst[i] = inLijst[i];
 				AT.WorkPointer += Nlist;
 			}
-			j = Symmetrize(BHEAD t,Lijst,Nlist,ngroup,params[6],params[2]);
+			j = Symmetrize(BHEAD t,Lijst,ngroup,params[6],params[2]);
 			AT.WorkPointer = Lijst;
 			if ( params[2] == 4 ) { /* antisymmetric */
 				if ( ( j & 1 ) != 0 ) sign = -sign;
@@ -521,14 +521,14 @@ NextFun:
 		}
 		if ( !*term ) return(0);
 		*AN.RepPoint = 1;
-		AS.expchanged = 1;
+		AR.expchanged = 1;
 		if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) ReNumber(BHEAD term);
 	}
 	return(Generator(BHEAD term,level));
 }
 
 /*
- 		#] SymGen : 
+ 		#] SymGen :
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -592,7 +592,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind : 
+ 		#] SymFind :
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -600,7 +600,7 @@ NextFun:
 		This one always takes less space.
 */
 
-int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
+int ChainIn ARG2(WORD *,term,WORD,funnum)
 {
 	GETIDENTITY
 	WORD *t, *tend, *m, *tt, *ts;
@@ -642,13 +642,13 @@ int ChainIn ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainIn : 
+ 		#] ChainIn :
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
 */
 
-int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
+int ChainOut ARG2(WORD *,term,WORD,funnum)
 {
 	GETIDENTITY
 	WORD *t, *tend, *tt, *ts, *w, *ws;
@@ -702,7 +702,7 @@ int ChainOut ARG3(WORD *,term,WORD,level,WORD,funnum)
 }
 
 /*
- 		#] ChainOut : 
+ 		#] ChainOut :
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -1041,7 +1041,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors : 
+ 		#] Tensors :
 */
 	}
 /*
@@ -1674,7 +1674,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions : 
+ 		#] ScanFunctions :
 	#] Patterns :
 */
 

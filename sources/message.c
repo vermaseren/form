@@ -14,7 +14,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
 					 'A','B','C','D','E','F'};
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ exit :
  		#[ Error0 :
 */
@@ -27,7 +27,7 @@ Error0 ARG1(char *,s)
 }
 
 /*
- 		#] Error0 : 
+ 		#] Error0 :
  		#[ Error1 :
 */
 
@@ -39,7 +39,7 @@ Error1 ARG2(char *,s,UBYTE *,t)
 }
 
 /*
- 		#] Error1 : 
+ 		#] Error1 :
  		#[ Error2 :
 */
 
@@ -51,7 +51,7 @@ Error2 ARG3(char *,s1,char *,s2,UBYTE *,t)
 }
 
 /*
- 		#] Error2 : 
+ 		#] Error2 :
  		#[ MesWork :
 */
 
@@ -65,7 +65,7 @@ MesWork ARG0
 }
 
 /*
- 		#] MesWork : 
+ 		#] MesWork :
  		#[ MesPrint :
 
 	Kind of a printf function for simple messages.
@@ -189,7 +189,7 @@ va_dcl
 			}
 /*  #endif  */
 			else if ( *s == 'c' ) {
-				c = va_arg(ap, int);
+				c = (char)(va_arg(ap, int));
 				*t++ = c; *t = 0;
 			}
 			else if ( *s == 'a' ) {
@@ -266,7 +266,7 @@ va_dcl
 					*t = 0;
 					i = *tt;
 					while ( --i >= 0 ) {
-						t = NumCopy(*tt,(UBYTE *)t);
+						t = (char *)NumCopy(*tt,(UBYTE *)t);
 						tt++;
 						if ( t >= stopper ) {
 							num = t - Out;
@@ -475,7 +475,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					AN.listinprint += 2;
 				}
 /*
-			#] dollars : 
+			#] dollars :
 */
 			}
 #ifdef WITHPTHREADS
@@ -488,7 +488,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 				millitime /= 1000;
 				timepart /= 10;
 				*t++ = '('; *t = 0;
-				t = (char *)LongCopy(millitime,(UBYTE *)t);
+				t = (char *)LongCopy(millitime,(char *)t);
 				*t++ = '.'; *t = 0;
 				t = (char *)NumCopy(timepart,(UBYTE *)t);
 				*t++ = ')'; *t = 0;
@@ -550,28 +550,28 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 				else if ( *s == 'i' ) {
 					w = va_arg(ap, int);
 					u = t + x;
-					do { *--u = w%10+'0'; w /= 10; } while ( u > t );
+					do { *--u = (char)(w%10+'0'); w /= 10; } while ( u > t );
 					t += x;
 				}
 				else {
 					w = va_arg(ap, int);
 					u = t + x;
-					do { *--u = w%10+'0'; w /= 10; } while ( w && u > t );
+					do { *--u = (char )(w%10+'0'); w /= 10; } while ( w && u > t );
 					while ( --u >= t ) *u = ' ';
 					t += x;
 				}
 			}
 			else if ( *s == 'x' ) {
-				char c;
+				char ccc;
 				y = va_arg(ap, LONG);
 				i = sizeof(LONG);
 				while ( --i > 0 ) {
-					c = ( y >> (i*4) ) & 0xF;
-					if ( c ) break;
+					ccc = ( y >> (i*4) ) & 0xF;
+					if ( ccc ) break;
 				}
 				do {
-					c = ( y >> (i*4) ) & 0xF;
-					*t++ = hex[(int)c];
+					ccc = ( y >> (i*4) ) & 0xF;
+					*t++ = hex[(int)ccc];
 				} while ( --i >= 0 );
 			}
 			else if ( *s == '#' ) *t++ = *s;
@@ -599,7 +599,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 }
 
 /*
- 		#] MesPrint : 
+ 		#] MesPrint :
  		#[ Warning :
 */
 
@@ -612,7 +612,7 @@ Warning ARG1(char *,s)
 }
 
 /*
- 		#] Warning : 
+ 		#] Warning :
  		#[ HighWarning :
 */
 
@@ -625,7 +625,7 @@ HighWarning ARG1(char *,s)
 }
 
 /*
- 		#] HighWarning : 
+ 		#] HighWarning :
  		#[ MesCall :
 */
 
@@ -636,7 +636,7 @@ MesCall ARG1(char *,s)
 }
 
 /*
- 		#] MesCall : 
+ 		#] MesCall :
  		#[ MesCerr :
 */
 
@@ -656,7 +656,7 @@ MesCerr ARG2(char *,s,UBYTE *,t)
 }
 
 /*
- 		#] MesCerr : 
+ 		#] MesCerr :
  		#[ MesComp :
 */
 
@@ -671,7 +671,7 @@ MesComp ARG3(char *,s,UBYTE *,p,UBYTE *,q)
 }
 
 /*
- 		#] MesComp : 
+ 		#] MesComp :
  		#[ PrintTerm :
 */
 
@@ -702,7 +702,7 @@ PrintTerm ARG2(WORD *,term,char *,where)
 }
 
 /*
- 		#] PrintTerm : 
+ 		#] PrintTerm :
  		#[ PrintSubTerm :
 */
 
@@ -725,7 +725,7 @@ PrintSubTerm ARG2(WORD *,term,char *,where)
 }
 
 /*
- 		#] PrintSubTerm : 
+ 		#] PrintSubTerm :
  		#[ PrintWords :
 */
 
@@ -744,6 +744,6 @@ PrintWords ARG2(WORD *,buffer,LONG,number)
 }
 
 /*
- 		#] PrintWords : 
+ 		#] PrintWords :
 	#] exit :
 */

@@ -1174,7 +1174,7 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 1:
+  	#] Case 1: 
   	#[ Case 2: One -ARGWILD. Fix its length.
 */
 	if ( funnycount == 1 ) {
@@ -1419,7 +1419,7 @@ nomatch:;
 }
 
 /*
-  	#] FunMatchCy :
+  	#] FunMatchCy : 
   	#[ FunMatchSy :
 
 		Matching of (anti)symmetric functions.
@@ -1636,11 +1636,6 @@ quicky:
 			a = AT.pWorkSpace+lhpars;
 			iraise--;
 			if ( iraise != i ) signs++;
-/*
-			The problem with the next code is that we start with a
-			messed up configuration and that we pass the 'canonical' solution.
-*/
-			signs++;   /* this was forgotten till 18-feb-2007 */
 			m = a[iraise];
 			a[iraise] = a[i];
 			a[i] = m; i--;
@@ -1685,12 +1680,21 @@ cat1:
 		if ( j >= tcount ) goto NoSuccess;	/* Even the fixed ones don't match */
 oneless:
 		signs += j - i;
+/*
+		The next statements replace the one that is commented out
+*/
+		tcount--;
+		while ( j < tcount ) {
+			AT.pWorkSpace[oww+j] = AT.pWorkSpace[oww+j+1]; j++;
+		}
+/*
 		AT.pWorkSpace[oww+j] = AT.pWorkSpace[oww+(--tcount)];
+*/
 		argcount--; j = i;
 		while ( j < argcount ) {
 			AT.pWorkSpace[lhpars+j] = AT.pWorkSpace[lhpars+j+1]; j++;
 		}
-		iraise--;
+		iraise--; i--;
 	}
 /*
 	Now we see whether there are any ARGWILD objects that have been
@@ -1922,7 +1926,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy : 
+  	#] FunMatchSy :
   	#[ MatchArgument :
 */
 

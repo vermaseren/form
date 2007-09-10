@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ If statement :
  		#[ Syntax :
 
@@ -69,7 +69,7 @@
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax : 
+ 		#] Syntax :
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -147,7 +147,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 			case IFEXPRESSION:
 				r = ifp+2; j = ifp[1] - 2;
 				while ( --j >= 0 ) {
-					if ( *r == AS.CurExpr ) return(1);
+					if ( *r == AR.CurExpr ) return(1);
 					r++;
 				}
 				return(0);
@@ -396,7 +396,7 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 			case IFEXPRESSION:
 				r = ifp+2; j = ifp[1] - 2; ncoef2 = 0;
 				while ( --j >= 0 ) {
-					if ( *r == AS.CurExpr ) { ncoef2 = 1; break; }
+					if ( *r == AR.CurExpr ) { ncoef2 = 1; break; }
 					r++;
 				}
 				coef2[0] = ncoef2;
@@ -497,7 +497,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement : 
+ 		#] DoIfStatement :
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -693,7 +693,7 @@ VOID DoubleIfBuffers ARG0
 }
 
 /*
- 		#] DoubleIfBuffers : 
+ 		#] DoubleIfBuffers :
   	#] If statement :
 */
 

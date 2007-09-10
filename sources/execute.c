@@ -114,6 +114,9 @@ CleanExpr ARG1(WORD,par)
 					e_out->newbracketinfo = e_in->newbracketinfo;
 					e_out->numdummies = e_in->numdummies;
 				}
+#ifdef WITHPTHREADS
+				e_out->partodo = 0;
+#endif
 				e_out++;
 				j++;
 				break;
@@ -152,6 +155,7 @@ CleanExpr ARG1(WORD,par)
 WORD
 PopVariables()
 {
+	GETIDENTITY
 	WORD j, retval;
 
 	retval = CleanExpr(1);
@@ -203,7 +207,7 @@ PopVariables()
 	AC.OutputMode = AM.gOutputMode;
 	AC.OutputSpaces = AM.gOutputSpaces;
 	AC.OutNumberType = AM.gOutNumberType;
-	AC.SortType = AM.gSortType;
+	AR.SortType = AC.SortType = AM.gSortType;
 	return(retval);
 }
 
@@ -490,11 +494,24 @@ DoExecute ARG2(WORD,par,WORD,skip)
 		AC.mparallelflag = NOPARALLEL_RHS;
 	}
 #endif
-
+	AR.SortType = AC.SortType;
 	if ( AC.SetupFlag ) WriteSetup();
 	if ( AC.NamesFlag || AC.CodesFlag ) WriteLists();
 	if ( par == GLOBALMODULE ) MakeGlobal();
 	if ( RevertScratch() ) return(-1);
+#ifdef WITHPTHREADS
+	AC.numpartodo = 0;
+	if ( AM.totalnumberofthreads >= 3 ) {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			if ( Expressions[i].partodo > 0 ) AC.numpartodo++;
+		}
+	}
+	else {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			Expressions[i].partodo = 0;
+		}
+	}
+#endif
 /*
 	Now the actual execution
 */
@@ -1170,20 +1187,18 @@ CountTerms1 BARG0
 	oldwork = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	AR.DeferFlag = 0;
+	startposition = AR.DefPosition;
 /*
 		Store old position
 */
 	if ( AR.infile->handle >= 0 ) {
 		PUTZERO(oldposition);
-/*??????*/
+/*
 		SeekFile(AR.infile->handle,&oldposition,SEEK_CUR);
-		startposition = AR.DefPosition;
+*/
 	}
 	else {
 		SETBASEPOSITION(oldposition,AR.infile->POfill-AR.infile->PObuffer);
-/*		SETBASEPOSITION(startposition,(UBYTE *)(AR.infile->POfill)-(UBYTE *)(AR.infile->PObuffer)); */
-/*%%%%%ADDED 13-apr-2006 for Keep Brackets in bucket */
-		startposition = AR.DefPosition;
 		AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer)
 					+BASEPOSITION(startposition));
 	}
@@ -1282,7 +1297,7 @@ Thatsit:;
 
 LONG TermsInBracket BARG2(WORD *,term,WORD,level)
 {
-	WORD *t, *tstop, *b, *tt, numexp = 0, *n1, *n2;
+	WORD *t, *tstop, *b, *tt, *n1, *n2;
 	int type = 0, i, num;
 	LONG numterms = 0;
 	WORD *bracketbuffer = AT.WorkPointer;
@@ -1305,7 +1320,6 @@ LONG TermsInBracket BARG2(WORD *,term,WORD,level)
 			break;
 		}
 		if ( t[FUNHEAD] == -EXPRESSION ) {
-			numexp = t[FUNHEAD+1];
 			if ( t[FUNHEAD+2] < 0 ) {
 				if ( ( t[FUNHEAD+2] <= -FUNCTION ) && ( t[1] == FUNHEAD+3 ) ) {
 					type = BRACKETOTHEREXPR;

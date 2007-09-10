@@ -238,14 +238,15 @@ int CoOff ARG1(UBYTE *,s)
 			MesPrint("&Unrecognized option in OFF statement: %s",t);
 			*s = c; return(-1);
 		}
-		if ( StrICont(t,"compress") == 0 ) {
+		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
 			AR.gzipCompress = 0;
 		}
-		if ( StrICont(t,"threads") == 0 ) {
+		if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
 			AS.MultiThreaded = 0;
 		}
 		*s = c;
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
+		AR.SortType = AC.SortType;
 	}
 }
 
@@ -275,7 +276,7 @@ int CoOn ARG1(UBYTE *,s)
 			MesPrint("&Unrecognized option in ON statement: %s",t);
 			*s = c; return(-1);
 		}
-		if ( StrICont(t,"compress") == 0 ) {
+		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
 			AR.gzipCompress = GZIPDEFAULT;
 			*s = c;
 			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
@@ -283,7 +284,7 @@ int CoOn ARG1(UBYTE *,s)
 			  t = s;
 			  while ( FG.cTable[*s] <= 1 ) s++;
 			  c = *s; *s = 0;
-			  if ( StrICmp(t,"gzip") == 0 ) {}
+			  if ( StrICmp(t,(UBYTE *)"gzip") == 0 ) {}
 			  else {
 				MesPrint("&Unrecognized option in ON compress statement: %s",t);
 				return(-1);
@@ -308,10 +309,11 @@ int CoOn ARG1(UBYTE *,s)
 			}
 		}
 		else { *s = c; }
-		if ( StrICont(t,"threads") == 0 ) {
+		if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
 			if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 		}
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
+		AR.SortType = AC.SortType;
 	}
 }
 
@@ -846,7 +848,7 @@ int
 SetExpr ARG3(UBYTE *,s,int,setunset,int,par)
 {
 	WORD *w, numexpr;
-	int error = 0, type, i;
+	int error = 0, i;
 	UBYTE *name, c;
 	if ( *s == 0 ) {
 		for ( i = 0; i < NumExpressions; i++ ) {
@@ -865,19 +867,19 @@ SetExpr ARG3(UBYTE *,s,int,setunset,int,par)
 			return(1);
 		}
 		c = *s; *s = 0;
-		if ( ( type = GetName(AC.exprnames,name,&numexpr,NOAUTO) ) == CEXPRESSION ) {
+		if ( GetName(AC.exprnames,name,&numexpr,NOAUTO) == CEXPRESSION ) {
 			w = &(Expressions[numexpr].status);
 			*w = SetExprCases(par,setunset,*w);
 			if ( par == HIDE && setunset == 1 )
 				Expressions[numexpr].hidelevel = AC.HideLevel;
 		}
-		else if ( ( type = GetName(AC.varnames,name,&numexpr,NOAUTO) ) != NAMENOTFOUND ) {
+		else if ( GetName(AC.varnames,name,&numexpr,NOAUTO) != NAMENOTFOUND ) {
 			MesPrint("&%s is not an expression",name);
 			error = 1;
 		}
 		*s = c;
 	}
-	return(0);
+	return(error);
 }
 
 /*
@@ -977,8 +979,8 @@ AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s = thestring, *w;
-	WORD *cc;
 #ifdef COMPBUFDEBUG
+	WORD *cc;
 	UBYTE *ww;
 #endif
 	int i, numchars = 0, size, zeroes;
@@ -995,7 +997,9 @@ AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
 	AddLHS(AC.cbufnum);
 	size = numchars/sizeof(WORD)+1;
 	while ( C->Pointer+size+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+#ifdef COMPBUFDEBUG
 	cc = C->Pointer;
+#endif
 	*(C->Pointer)++ = array[0];
 	*(C->Pointer)++ = size+n+2;
 	for ( i = 1; i < n; i++ ) *(C->Pointer)++ = array[i];
@@ -1687,6 +1691,7 @@ CoRCycleSymmetrize ARG1(UBYTE *,s) { return(DoSymmetrize(s,RCYCLESYMMETRIC)); }
 int
 CoWrite ARG1(UBYTE *,s)
 {
+	GETIDENTITY
 	UBYTE *option;
 	KEYWORD *key;
 	option = s;
@@ -1700,6 +1705,7 @@ CoWrite ARG1(UBYTE *,s)
 		return(1);
 	}
 	*((int *)(key->func)) = key->type;
+	AR.SortType = AC.SortType;
 	return(0);
 }
 
@@ -1711,6 +1717,7 @@ CoWrite ARG1(UBYTE *,s)
 int
 CoNWrite ARG1(UBYTE *,s)
 {
+	GETIDENTITY
 	UBYTE *option;
 	KEYWORD *key;
 	option = s;
@@ -1724,6 +1731,7 @@ CoNWrite ARG1(UBYTE *,s)
 		return(1);
 	}
 	*((int *)(key->func)) = key->flags;
+	AR.SortType = AC.SortType;
 	return(0);
 }
 
@@ -2553,6 +2561,99 @@ CoExit ARG1(UBYTE *,s)
 
 /*
   	#] CoExit :
+  	#[ CoInParallel :
+*/
+
+int
+CoInParallel ARG1(UBYTE *,s)
+{
+	return(DoInParallel(s,1));
+}
+
+/*
+  	#] CoInParallel :
+  	#[ CoNotInParallel :
+*/
+
+int
+CoNotInParallel ARG1(UBYTE *,s)
+{
+	return(DoInParallel(s,0));
+}
+
+/*
+  	#] CoNotInParallel :
+  	#[ DoInParallel :
+
+	InParallel;
+	InParallel,names;
+	NotInParallel;
+	NotInParallel,names;
+*/
+
+int
+DoInParallel ARG2(UBYTE *,s,int,par)
+{
+#ifdef WITHPTHREADS
+	EXPRESSIONS e;
+	WORD i;
+#endif
+	WORD number;
+	UBYTE *t, c;
+	int error = 0;
+	if ( *s == 0 ) {
+#ifdef WITHPTHREADS
+		for ( i = NumExpressions-1; i >= 0; i-- ) {
+			e = Expressions+i;
+			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
+			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+			) {
+				e->partodo = par;
+			}
+		}
+#endif
+	}
+	else {
+		for(;;) {	/* Look for a (comma separated) list of variables */
+			while ( *s == ',' ) s++;
+			if ( *s == 0 ) break;
+			if ( *s == '[' || FG.cTable[*s] == 0 ) {
+				t = s;
+				if ( ( s = SkipAName(s) ) == 0 ) {
+					MesPrint("&Improper name for an expression: '%s'",t);
+					return(1);
+				}
+				c = *s; *s = 0;
+				if ( GetName(AC.exprnames,t,&number,NOAUTO) == CEXPRESSION ) {
+#ifdef WITHPTHREADS
+					e = Expressions+number;
+					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
+					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+					) {
+						e->partodo = par;
+					}
+#endif
+				}
+				else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
+					MesPrint("&%s is not an expression",t);
+					error = 1;
+				}
+				*s = c;
+			}
+			else {
+				MesPrint("&Illegal object in InExpression statement");
+				error = 1;
+				while ( *s && *s != ',' ) s++;
+				if ( *s == 0 ) break;
+			}
+		}
+
+	}
+	return(error);
+}
+
+/*
+  	#] DoInParallel :
   	#[ CoInExpression :
 */
 
@@ -3887,7 +3988,7 @@ int CoFunPowers ARG1(UBYTE *,inp)
 
 int CoUnitTrace ARG1(UBYTE *,s)
 {
-	WORD num, type;
+	WORD num;
 	if ( FG.cTable[*s] == 1 ) {
 		ParseNumber(num,s)
 		if ( *s != 0 ) {
@@ -3898,7 +3999,7 @@ nogood:		MesPrint("&Value of UnitTrace should be a (positive) number or a symbol
 		AC.lUniTrace[2] = num;
 	}
 	else {
-		if ( ( type = GetName(AC.varnames,s,&num,WITHAUTO) ) == CSYMBOL ) {
+		if ( GetName(AC.varnames,s,&num,WITHAUTO) == CSYMBOL ) {
 			AC.lUniTrace[0] = SYMBOL;
 			AC.lUniTrace[2] = num;
 			num = -num;
@@ -4176,7 +4277,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 	UBYTE *t, c;
 	LONG x = 0;
 	int sgn = 1;
-	WORD numfun1, numfun2, numsym, type, buff[6];
+	WORD numfun1, numfun2, numsym, buff[6];
 	while ( *s == '+' || *s == '-' ) {
 		if ( *s == '-' ) sgn = -sgn;
 		s++;
@@ -4186,7 +4287,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 	t = SkipAName(s);
 	c = *t; *t = 0;
 	if ( *s == '$' ) {
-		if ( ( type = GetName(AC.dollarnames,s+1,&numsym,NOAUTO) ) == CDOLLAR )
+		if ( GetName(AC.dollarnames,s+1,&numsym,NOAUTO) == CDOLLAR )
 			numsym = -numsym;
 		else {
 			MesPrint("&%s is undefined",s);
@@ -4195,7 +4296,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 			return(1);
 		}
 	}
-	else if ( ( type = GetName(AC.varnames,s,&numsym,WITHAUTO) ) != CSYMBOL ) {
+	else if ( GetName(AC.varnames,s,&numsym,WITHAUTO) != CSYMBOL ) {
 		MesPrint("&%s is not a symbol",s);
 		numsym = AddSymbol(s,-MAXPOWER,MAXPOWER,0);
 		*t = c;
@@ -4206,7 +4307,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 	s = SkipAName(t);
 	c = *s; *s = 0;
 	if ( *t == '$' ) {
-		if ( ( type = GetName(AC.dollarnames,t+1,&numfun1,NOAUTO) ) == CDOLLAR )
+		if ( GetName(AC.dollarnames,t+1,&numfun1,NOAUTO) == CDOLLAR )
 			numfun1 = -numfun1;
 		else {
 			MesPrint("&%s is undefined",t);
@@ -4216,7 +4317,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 		}
 	}
 	else {
-		if ( ( type = GetName(AC.varnames,t,&numfun1,WITHAUTO) ) != CFUNCTION ) {
+		if ( GetName(AC.varnames,t,&numfun1,WITHAUTO) != CFUNCTION ) {
 			MesPrint("&%s is not a function",t);
 			numfun1 = AddFunction(t,0,0,0,0) + FUNCTION;
 			*s = c;
@@ -4229,7 +4330,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 	t = SkipAName(s);
 	c = *t; *t = 0;
 	if ( *s == '$' ) {
-		if ( ( type = GetName(AC.dollarnames,s+1,&numfun2,NOAUTO) ) == CDOLLAR )
+		if ( GetName(AC.dollarnames,s+1,&numfun2,NOAUTO) == CDOLLAR )
 			numfun2 = -numfun2;
 		else {
 			MesPrint("&%s is undefined",s);
@@ -4239,7 +4340,7 @@ CoModulusGCD ARG1(UBYTE *,s)
 		}
 	}
 	else {
-		if ( ( type = GetName(AC.varnames,s,&numfun2,WITHAUTO) ) != CFUNCTION ) {
+		if ( GetName(AC.varnames,s,&numfun2,WITHAUTO) != CFUNCTION ) {
 			MesPrint("&%s is not a function",s);
 			numfun2 = AddFunction(s,0,0,0,0) + FUNCTION;
 			*t = c;
@@ -4315,6 +4416,156 @@ nofunc:			MesPrint("&%s is not a CFunction",t);
 
 /*
   	#] CoPolyNorm :
+  	#[ DoArgPlode :
 
+	Syntax: a list of functions.
+	If the functions have an argument it must be a function.
+	In the case f(g) we treat f(g(...)) with g any argument.
+	  (not yet implemented)
+*/
+
+int
+DoArgPlode ARG2(UBYTE *,s,int,par)
+{
+	GETIDENTITY
+	WORD numfunc, type, error = 0, *w, n;
+	int i;
+	w = AT.WorkPointer;
+	*w++ = par;
+	w++;
+	while ( *s == ',' ) s++;
+	while ( *s ) {
+		if ( *s == '$' ) {
+			MesPrint("&We don't do dollar variables yet in ArgImplode/ArgExplode");
+			return(1);
+		}
+		if ( ( type = GetName(AC.varnames,s,&numfunc,WITHAUTO) ) == CFUNCTION ) {
+			numfunc += FUNCTION;
+		}
+		else if ( type != -1 ) {
+			if ( type != CDUBIOUS ) {
+				NameConflict(type,s);
+				type = MakeDubious(AC.varnames,s,&numfunc);
+			}
+			error = 1;
+		}
+		else {
+			MesPrint("&%s is not a function",s);
+			numfunc = AddFunction(s,0,0,0,0) + FUNCTION;
+			return(1);
+		}
+		s = SkipAName(s);
+		*w++ = numfunc;
+		*w++ = FUNHEAD;
+#if FUNHEAD > 2
+		for ( i = 2; i < FUNHEAD; i++ ) *w++ = 0;
+#endif
+		if ( *s && *s != ',' ) {
+			MesPrint("&Illegal character in ArgImplode/ArgExplode statement: %s",s);
+			return(1);
+		}
+		while ( *s == ',' ) s++;
+	}
+	n = w - AT.WorkPointer;
+	AT.WorkPointer[1] = n;
+	AddNtoL(n,AT.WorkPointer);
+	return(error);
+}
+
+/*
+  	#] DoArgPlode :
+  	#[ CoArgExplode :
+*/
+
+int
+CoArgExplode ARG1(UBYTE *,s) { return(DoArgPlode(s,TYPEARGEXPLODE)); }
+
+/*
+  	#] CoArgExplode :
+  	#[ CoArgImplode :
+*/
+
+int
+CoArgImplode ARG1(UBYTE *,s) { return(DoArgPlode(s,TYPEARGIMPLODE)); }
+
+/*
+  	#] CoArgImplode :
+  	#[ CoClearTable :
+*/
+
+int
+CoClearTable ARG1(UBYTE *,s)
+{
+	UBYTE c, *t;
+	int j, type, error = 0;
+	WORD numfun;
+	TABLES T, TT;
+	if ( *s == 0 ) {
+		MesPrint("&The ClearTable statement needs at least one (table) argument.");
+		return(1);
+	}
+	while ( *s ) {
+		t = s;
+		s = SkipAName(s);
+		c = *s; *s = 0;
+		if ( ( ( type = GetName(AC.varnames,t,&numfun,WITHAUTO) ) != CFUNCTION )
+		&& type != CDUBIOUS ) {
+nofunc:		MesPrint("&%s is not a sparse table",t);
+			error = 4;
+			if ( type < 0 ) numfun = AddFunction(t,0,0,0,0);
+			*s = c;
+			if ( *s == ',' ) s++;
+			continue;
+		}
+		else if ( ( ( T = functions[numfun].tabl ) == 0 )
+		 || ( T->sparse == 0 ) ) goto nofunc;
+		numfun += FUNCTION;
+		*s = c;
+		if ( *s == ',' ) s++;
+/*
+		Now we clear the table.
+*/
+		if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
+		for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
+			finishcbuf(T->buffers[j]);
+		}
+		if ( T->buffers ) M_free(T->buffers,"Table buffers");
+		finishcbuf(T->bufnum);
+		if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
+
+		T->boomlijst = 0;
+		T->numtree = 0; T->rootnum = 0; T->MaxTreeSize = 0;
+		T->boomlijst = 0;
+		T->bufnum = inicbufs();
+		T->bufferssize = 8;
+		T->buffers = (WORD *)Malloc1(sizeof(WORD)*T->bufferssize,"Table buffers");
+		T->buffersfill = 0;
+		T->buffers[T->buffersfill++] = T->bufnum;
+
+		T->totind = 0;			/* At the moment there are this many */
+		T->tablepointers = 0;
+		T->reserved = 0;
+
+		ClearTableTree(T);
+
+		if ( T->spare ) {
+			TT = T->spare;
+			if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
+			for (j = 0; j < TT->buffersfill; j++ ) {
+				finishcbuf(TT->buffers[j]);
+			}
+			if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
+			if ( TT->buffers )M_free(TT->buffers,"Table buffers");
+			if ( TT->mm ) M_free(TT->mm,"tableminmax");
+			if ( TT->flags ) M_free(TT->flags,"tableflags");
+			M_free(TT,"table");
+			SpareTable(T);
+		}
+	}
+	return(error);
+}
+
+/*
+  	#] CoClearTable :
 */
 /* temporary commentary for forcing cvs merge */

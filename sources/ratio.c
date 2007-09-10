@@ -324,11 +324,11 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 	if ( AT.WorkPointer > AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
-		return(-1);
 		UNLOCK(ErrorMessageLock);
+		return(-1);
 	}
 	*AN.RepPoint = 1;
-	AS.expchanged = 1;
+	AR.expchanged = 1;
 	if ( Generator(BHEAD termout,level) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("BinomGen");

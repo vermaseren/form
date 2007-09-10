@@ -21,6 +21,14 @@ int nummalloclist = 0;
 extern "C" getdtablesize();
 #endif
 
+#ifdef WITHSTATS
+long numwrites = 0;
+long numreads = 0;
+long numseeks = 0;
+long nummallocs = 0;
+long numfrees = 0;
+#endif
+
 /*
   	#] Includes : 
   	#[ Streams :
@@ -71,7 +79,7 @@ ReadFromStream ARG1(STREAM *,stream)
 		cc = getc((FILE *)(filelist[stream->handle]));
 		UNLOCK(AM.handlelock);
 		if ( cc == EOF ) return(ENDOFSTREAM);
-		c = cc;
+		c = (UBYTE)cc;
 		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
 		if ( c == LINEFEED ) stream->eqnum = 1;
 		return(c);
@@ -93,7 +101,7 @@ ReadFromStream ARG1(STREAM *,stream)
 			}
 		}/*if ( cc < 0 )*/
 		/*:[18may20006 mt]*/
-		c = cc;
+		c = (UBYTE)cc;
 		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
 		if ( c == LINEFEED ) stream->eqnum = 1;
 		return(c);
@@ -760,6 +768,9 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 		LOCK(AM.handlelock);
 		f = filelist[handle];
 		UNLOCK(AM.handlelock);
+#ifdef WITHSTATS
+		numreads++;
+#endif
 		r = Uread(b,1,size,f);
 		if ( r < 0 ) return(r);
 		if ( r == 0 ) return(inbuf);
@@ -781,6 +792,20 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 		Places a lock in the case of multithreading.
 		Exists for multiple reading from the same file.
 		size is the number of WORDs to read!!!!
+
+		We may need some strategy in the caching. This routine is used from
+		GetOneTerm only. The problem is when it reads brackets and the
+		brackets are read backwards. This is very uneconomical because
+		each time it may read a large buffer.
+		On the other hand, reading piece by piece in GetOneTerm takes
+		much overhead as well.
+		Two strategies come to mind:
+		1: keep things as they are but limit the size of the buffers.
+		2: have the position of 'pos' at about 1/3 of the buffer.
+		   this is of course guess work.
+		Currently we have implemented the first method by creating the
+		setup parameter threadscratchsize with the default value 100K.
+		In the test program much bigger values gave a slower program.
 */
 
 LONG
@@ -804,14 +829,12 @@ ReadPosFile BARG4(FILEHANDLE *,fi,UBYTE *,buffer,LONG,size,POSITION *,pos)
 
 			fi->POposition = *pos;
 			LOCK(AS.inputslock);
-			LOCK(fi->pthreadslock);
 			SeekFile(fi->handle,pos,SEEK_SET);
 			retval = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
-			UNLOCK(fi->pthreadslock);
 			UNLOCK(AS.inputslock);
 			fi->POfull = fi->PObuffer+retval/sizeof(WORD);
 			fi->POfill = fi->PObuffer;
-			AR.InInBuf = retval/sizeof(WORD);
+			if ( fi != AR.hidefile ) AR.InInBuf = retval/sizeof(WORD);
 		}
 		else {
 			fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + DIFBASE(*pos,fi->POposition));
@@ -829,14 +852,12 @@ ReadPosFile BARG4(FILEHANDLE *,fi,UBYTE *,buffer,LONG,size,POSITION *,pos)
 			if ( size == 0 ) break;
 			ADDPOS(fi->POposition,(UBYTE *)(fi->POfull)-(UBYTE *)(fi->PObuffer));
 			LOCK(AS.inputslock);
-			LOCK(fi->pthreadslock);
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 			retval = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
-			UNLOCK(fi->pthreadslock);
 			UNLOCK(AS.inputslock);
 			fi->POfull = fi->PObuffer+retval/sizeof(WORD);
 			fi->POfill = fi->PObuffer;
-			AR.InInBuf = retval/sizeof(WORD);
+			if ( fi != AR.hidefile ) AR.InInBuf = retval/sizeof(WORD);
 			if ( retval == 0 ) { t = fi->POfill; break; }
 		  }
 		}
@@ -856,19 +877,21 @@ LONG
 WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	FILES *f;
-	LONG retval;
+	LONG retval, totalwritten = 0, stilltowrite;
 	LOCK(AM.handlelock);
 	f = filelist[handle];
 	UNLOCK(AM.handlelock);
-	retval = Uwrite((char *)buffer,1,size,f);
-/*
-#ifdef UFILES
-	We could use one of the following but it does slow things down a lot.
-	fsync(f->descriptor);
-    sync();
+	while ( totalwritten < size ) {
+		stilltowrite = size - totalwritten;
+#ifdef WITHSTATS
+		numwrites++;
 #endif
-*/
-	return(retval);
+		retval = Uwrite((char *)buffer+totalwritten,1,stilltowrite,f);
+		if ( retval < 0 ) return(retval);
+		if ( retval == 0 ) return(totalwritten);
+		totalwritten += retval;
+	}
+	return(totalwritten);
 }
 /*[17nov2005]:*/
 WRITEFILE WriteFile = &WriteFileToFile;
@@ -878,7 +901,7 @@ LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
 /*:[17nov2005]*/
 
 /*
- 		#] WriteFile : 
+ 		#] WriteFile :
  		#[ SeekFile :
 */
 
@@ -889,6 +912,9 @@ SeekFile ARG3(int,handle,POSITION *,offset,int,origin)
 	LOCK(AM.handlelock);
 	f = filelist[handle];
 	UNLOCK(AM.handlelock);
+#ifdef WITHSTATS
+	numseeks++;
+#endif
 	if ( origin == SEEK_SET ) {
 		Useek(f,BASEPOSITION(*offset),origin);
 		SETBASEPOSITION(*offset,(Utell(f)));
@@ -910,6 +936,9 @@ TellFile ARG1(int,handle)
 {
 	POSITION pos;
 	TELLFILE(handle,&pos);
+#ifdef WITHSTATS
+	numseeks++;
+#endif
 	return(BASEPOSITION(pos));
 }
 
@@ -1101,7 +1130,7 @@ CloseChannel ARG1(char *,name)
 
 /*
  		#] CloseChannel : 
-  	#] Files : 
+  	#] Files :
   	#[ Strings :
  		#[ StrCmp :
 */
@@ -1158,7 +1187,7 @@ StrICont ARG2(UBYTE *,s1,UBYTE *,s2)
 int
 ConWord ARG2(UBYTE *,s1,UBYTE *,s2)
 {
-	while ( *s1 && tolower(*s1) == tolower(*s2) ) { s1++; s2++; }
+	while ( *s1 && ( tolower(*s1) == tolower(*s2) ) ) { s1++; s2++; }
 	if ( *s1 == 0 ) return(1);
 	return(0);
 }
@@ -1290,7 +1319,7 @@ UBYTE *
 EndOfToken ARG1(UBYTE *,s)
 {
 	UBYTE c;
-	while ( ( c = FG.cTable[*s] ) == 0 || c == 1 ) s++;
+	while ( ( c = (UBYTE)(FG.cTable[*s]) ) == 0 || c == 1 ) s++;
 	return(s);
 }
 
@@ -1303,7 +1332,7 @@ UBYTE *
 ToToken ARG1(UBYTE *,s)
 {
 	UBYTE c;
-	while ( *s && ( c = FG.cTable[*s] ) != 0 && c != 1 ) s++;
+	while ( *s && ( c = (UBYTE)(FG.cTable[*s]) ) != 0 && c != 1 ) s++;
 	return(s);
 }
 
@@ -1375,11 +1404,11 @@ NumCopy ARG2(WORD,x,UBYTE *,to)
 	WORD i = 0, j;
 	if ( x < 0 ) { x = -x; *to++ = '-'; }
 	s = to;
-	do { *s++ = (x % 10)+'0'; i++; } while ( ( x /= 10 ) != 0 );
+	do { *s++ = (UBYTE)((x % 10)+'0'); i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
 	j = ( i - 1 ) >> 1;
 	while ( j >= 0 ) {
-		i = to[j]; to[j] = s[-j]; s[-j] = i; j--;
+		i = to[j]; to[j] = s[-j]; s[-j] = (UBYTE)i; j--;
 	}
 	return(s+1);
 }
@@ -1403,7 +1432,7 @@ LongCopy ARG2(LONG,x,char *,to)
 	*s-- = '\0';
 	j = ( i - 1 ) >> 1;
 	while ( j >= 0 ) {
-		i = to[j]; to[j] = s[-j]; s[-j] = i; j--;
+		i = to[j]; to[j] = s[-j]; s[-j] = (char)i; j--;
 	}
 	return(s+1);
 }
@@ -1428,7 +1457,7 @@ LongLongCopy ARG2(off_t *,y,char *,to)
 	*s-- = '\0';
 	j = ( i - 1 ) >> 1;
 	while ( j >= 0 ) {
-		i = to[j]; to[j] = s[-j]; s[-j] = i; j--;
+		i = to[j]; to[j] = s[-j]; s[-j] = (char)i; j--;
 	}
 	return(s+1);
 }
@@ -1667,6 +1696,9 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 		MesPrint("Asking for 0 bytes in Malloc1");
 	}
 #endif
+#ifdef WITHSTATS
+	nummallocs++;
+#endif
 	if ( ( size & 7 ) != 0 ) { size = size - ( size&7 ) + 8; }
 #ifdef MALLOCDEBUG
 	size += 2*BANNER;
@@ -1769,6 +1801,9 @@ void M_free ARG2(VOID *,x,char *,where)
 /*		UNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 	}
+#endif
+#ifdef WITHSTATS
+	numfrees++;
 #endif
 	if ( x ) free(x);
 }
@@ -2537,9 +2572,41 @@ Timer ARG1(int,par)
 #ifdef LINUX
 #include <sys/time.h>
 #include <sys/resource.h>
+#ifdef WITHPOSIXCLOCK
+#include <time.h>
+/*
+	And include -lrt in the link statement (on blade02)
+*/
+#endif
 
 LONG Timer(int par)
 {
+#ifdef WITHPOSIXCLOCK
+/*
+	Only to be used in combination with WITHPTHREADS
+	This clock seems to be supported by the standard.
+	The getrusage clock returns according to the standard only the combined
+	time of the whole process. But in older versions of Linux LinuxThreads
+	is used which gives a separate id to each thread and individual timings.
+	In NPTL we get, according to the standard, one combined timing.
+	To get individual timings we need to use
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing)
+	with AR.timing of the time
+	struct timespec {
+		__time_t tv_sec;            Seconds.
+		long int tv_nsec;           Nanoseconds.
+	};
+
+*/
+	GETIDENTITY
+	if ( par == 0 ) {
+		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing) ) {
+			MesPrint("Error in getting timing information");
+		}
+		return(AR.timing.tv_sec*1000+AR.timing.tv_nsec/1000000);
+	}
+	return(0);
+#else
 	struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
@@ -2551,6 +2618,7 @@ LONG Timer(int par)
     	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
+#endif
 }
 
 #else
@@ -2558,9 +2626,41 @@ LONG Timer(int par)
 #ifdef OPTERON
 #include <sys/time.h>
 #include <sys/resource.h>
+#ifdef WITHPOSIXCLOCK
+#include <time.h>
+/*
+	And include -lrt in the link statement (on blade02)
+*/
+#endif
 
 LONG Timer(int par)
 {
+#ifdef WITHPOSIXCLOCK
+/*
+	Only to be used in combination with WITHPTHREADS
+	This clock seems to be supported by the standard.
+	The getrusage clock returns according to the standard only the combined
+	time of the whole process. But in older versions of Linux LinuxThreads
+	is used which gives a separate id to each thread and individual timings.
+	In NPTL we get, according to the standard, one combined timing.
+	To get individual timings we need to use
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing)
+	with AR.timing of the time
+	struct timespec {
+		__time_t tv_sec;            Seconds.
+		long int tv_nsec;           Nanoseconds.
+	};
+
+*/
+	GETIDENTITY
+	if ( par == 0 ) {
+		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing) ) {
+			MesPrint("Error in getting timing information");
+		}
+		return(AR.timing.tv_sec*1000+AR.timing.tv_nsec/1000000);
+	}
+	return(0);
+#else
 	struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
@@ -2572,6 +2672,7 @@ LONG Timer(int par)
     	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
+#endif
 }
 
 #else

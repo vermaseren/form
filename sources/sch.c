@@ -381,7 +381,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 */
 		den = c + na; i = 1;
 		DivLong(c,anumer,den,adenom,dig,&ndig,c,&newl);
-		*out++ = dig[0]+'0'; *out++ = '.';
+		*out++ = (UBYTE)(dig[0]+'0'); *out++ = '.';
 		while ( newl && i < AC.OutNumberType ) {
 			Pack(c,&newl,den,adenom);
 			Mully(BHEAD c,&newl,&b,1);
@@ -390,7 +390,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 			den = c + na;
 			DivLong(c,anumer,den,adenom,dig,&ndig,c,&newl);
 			if ( ndig == 0 ) *out++ = '0';
-			else *out++ = dig[0]+'0';
+			else *out++ = (UBYTE)(dig[0]+'0');
 			i++;
 		}
 		*out++ = 'E';
@@ -398,7 +398,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 		else { *out++ = '+'; }
 		o = out;
 		do {
-			*out++ = (exponent % 10)+'0';
+			*out++ = (UBYTE)((exponent % 10)+'0');
 			exponent /= 10;
 		} while ( exponent );
 		*out = 0; out--;
@@ -424,11 +424,11 @@ TalToLine ARG1(UWORD,x)
 	UBYTE *s;
 	WORD i = 0, j;
 	s = t;
-	do { *s++ = (x % 10)+'0'; i++; } while ( ( x /= 10 ) != 0 );
+	do { *s++ = (UBYTE)((x % 10)+'0'); i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
 	j = ( i - 1 ) >> 1;
 	while ( j >= 0 ) {
-		i = t[j]; t[j] = s[-j]; s[-j] = i; j--;
+		i = t[j]; t[j] = s[-j]; s[-j] = (UBYTE)i; j--;
 	}
 	TokenToLine(t);
 }
@@ -1361,7 +1361,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 }
 
 /*
- 		#] WriteSubTerm :
+ 		#] WriteSubTerm : 
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
@@ -1872,7 +1872,7 @@ AboWrite:
 	SetScratch(AR.infile,&pos);
 	f = AR.outfile; AR.outfile = AR.infile; AR.infile = f;
 	MesCall("WriteAll");
-	SETERROR(-1)
+	Terminate(-1);
 	return(-1);
 }
 
@@ -1905,7 +1905,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		case UNHIDEGEXPRESSION:
 		case DROPHLEXPRESSION:
 		case DROPHGEXPRESSION:
-			AS.GetFile = 2;
+			AR.GetFile = 2;
 			break;
 		case LOCALEXPRESSION:
 		case GLOBALEXPRESSION:
@@ -1913,7 +1913,7 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		case DROPLEXPRESSION:
 		case SKIPGEXPRESSION:
 		case DROPGEXPRESSION:
-			AS.GetFile = 0;
+			AR.GetFile = 0;
 			break;
 		default:
 			MesPrint("@expressions %s is not active. It cannot be written",name);
@@ -1924,13 +1924,13 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		MesCall("WriteOne");
 		SETERROR(-1)
 	}
-	if ( AS.GetFile == 2 ) f = AR.hidefile;
+	if ( AR.GetFile == 2 ) f = AR.hidefile;
 	else f = AR.infile;
 /*
 		Now position the file
 */
 	if ( f->handle >= 0 ) {
-		SeekFile(f->handle,&(Expressions[number].onfile),SEEK_SET);
+		SetScratch(f,&(Expressions[number].onfile));
 	}
 	else {
 		f->POfill = (WORD *)((UBYTE *)(f->PObuffer)
@@ -1966,7 +1966,6 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 			startinline = alreadyinline;
 			AO.OutFill = AO.OutputLine + startinline;
 		}
-/*		if ( ( prtf & PRINTONETERM ) != 0 ) first = 0; */
 		if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
 			goto AboWrite;
 		first = 0;
@@ -1978,16 +1977,8 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		TOKENTOLINE(" 0","0");
 	}
 	else if ( lbrac ) {
-/*		if ( ( prtf & PRINTCONTENTS ) != 0 ) PrtTerms(); */
 		TOKENTOLINE(" )",")");
 	}
-/*
-	else if ( ( prtf & PRINTCONTENTS ) != 0 ) {
-		TOKENTOLINE(" + 1 * ( ","+1*(");
-		PrtTerms();
-		TOKENTOLINE(" )",")");
-	}
-*/
 	if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE
 		 && nosemi == 0 ) TokenToLine((UBYTE *)";");
 	AO.OutSkip = 3;
@@ -1999,51 +1990,22 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 		FiniLine();
 		noextralinefeed = 0;
 	}
-/*
-
-	lbrac = 0;
-	AO.InFbrack = 0;
-	AO.FortFirst = 0;
-	first = 1;
-	while ( GetTerm(BHEAD AO.termbuf) ) {
-		WORD *m;
-		GETSTOP(AO.termbuf,m);
-		if ( first ) {
-			IniLine();
-			startinline = alreadyinline;
-			AO.OutFill = AO.OutputLine + startinline;
-		}
-		if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
-			goto AboWrite;
-		first = 0;
-	}
-	if ( first ) { TOKENTOLINE(" 0","0") }
-	else if ( lbrac ) {
-		TOKENTOLINE(" )",")");
-	}
-	if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE )
-		 TokenToLine((UBYTE *)";");
-	AO.OutSkip = 3;
-	FiniLine();
-*/
-	if ( AR.infile->handle >= 0 ) {
-		SeekFile(AR.infile->handle,&(AR.infile->filesize),SEEK_SET);
-	}
 	AO.IsBracket = 0;
 	AT.WorkPointer = AO.termbuf;
-	SetScratch(AR.infile,&pos);
+	SetScratch(f,&pos);
 	f = AR.outfile; AR.outfile = AR.infile; AR.infile = f;
 	return(0);
 AboWrite:
 	SetScratch(AR.infile,&pos);
+	f->POposition = pos;
 	f = AR.outfile; AR.outfile = AR.infile; AR.infile = f;
 	MesCall("WriteOne");
-	SETERROR(-1)
+	Terminate(-1);
 	return(-1);
 }
 
 /*
- 		#] WriteOne : 
+ 		#] WriteOne :
   	#] schryf-Writes :
 */
 

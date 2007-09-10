@@ -87,16 +87,20 @@ SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 			Terminate(-1);
 		}
 		possize = *position;
+		LOCK(AS.inputslock);
 		SeekFile(f->handle,&possize,SEEK_SET);
 		if ( ISNOTEQUALPOS(possize,*position) ) {
+			UNLOCK(AS.inputslock);
 			MesPrint("Cannot position file in SetScratch");
 			Terminate(-1);
 		}
 		if ( ( size = ReadFile(f->handle,(UBYTE *)(f->PObuffer),f->POsize) ) < 0
 		|| ( size & 1 ) != 0 ) {
+			UNLOCK(AS.inputslock);
 			MesPrint("Read error in SetScratch");
 			Terminate(-1);
 		}
+		UNLOCK(AS.inputslock);
 		if ( size == 0 ) { f->PObuffer[0] = 0; }
 		f->POfill = f->PObuffer;
 		f->POposition = *position;
@@ -709,17 +713,16 @@ GetTerm BARG1(WORD *,term)
 	WORD first, *start = 0, testing = 0;
 	FILEHANDLE *fi;
 	AN.deferskipped = 0;
-	if ( AS.GetFile == 2 ) fi = AR.hidefile;
+	if ( AR.GetFile == 2 ) fi = AR.hidefile;
 	else                   fi = AR.infile;
 	from = term;
-/*>>>>>>AS.KeptInHold!!!>>>>>>>*/
-	if ( AS.KeptInHold ) {
+	if ( AR.KeptInHold ) {
 		r = AR.CompressBuffer;
 		i = *r;
 		if ( i <= 0 ) { *term = 0; goto RegRet; }
 		m = term;
 		NCOPY(m,r,i);
-		AS.KeptInHold = 0;
+		AR.KeptInHold = 0;
 		goto RegRet;
 	}
 	if ( AR.DeferFlag ) {
@@ -759,10 +762,8 @@ ReStart:
 		if ( InIn <= 0 ) {
 			ADDPOS(fi->POposition,(fi->POfull-fi->PObuffer)*sizeof(WORD));
 			LOCK(AS.inputslock);
-			LOCK(fi->pthreadslock);
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 			InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
-			UNLOCK(fi->pthreadslock);
 			UNLOCK(AS.inputslock);
 			if ( ( InIn < 0 ) || ( InIn & 1 ) ) {
 				goto GTerr;
@@ -816,10 +817,8 @@ ReStart:
 NewIn:
 			ADDPOS(fi->POposition,(fi->POfull-fi->PObuffer)*sizeof(WORD));
 			LOCK(AS.inputslock);
-			LOCK(fi->pthreadslock);
 			SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 			InIn = ReadFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize);
-			UNLOCK(fi->pthreadslock);
 			UNLOCK(AS.inputslock);
 			if ( ( InIn <= 0 ) || ( InIn & 1 ) ) {
 				goto GTerr;
@@ -871,10 +870,10 @@ NewIn:
 	}
 	AR.CompressPointer = r; *r = 0;
 	if ( testing ) {
-		WORD j;
+		WORD jj;
 		r = from;
-		j = *r - 1 - ABS(*(r+*r-1));
-		if ( j < minsiz ) goto strip;
+		jj = *r - 1 - ABS(*(r+*r-1));
+		if ( jj < minsiz ) goto strip;
 		r++;
 		m = bra;
 		while ( m < mstop ) {
@@ -976,8 +975,23 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 	WORD i, *p;
 	LONG j, siz;
 	WORD *r, *rr = AR.CompressPointer;
+	int error = 0;
 	r = rr;
 	if ( fi->handle >= 0 ) {
+#ifdef READONEBYONE
+#ifdef WITHPTHREADS
+/*
+		This code needs some investigation.
+		It may be that we should do this always.
+		It may be that even for workers it is no good.
+		We may have to make a variable like AM.ReadDirect with
+		if ( AM.ReadDirect ) par = 1;
+		and a user command like
+		On ReadDirect;
+*/
+		if ( AT.identity > 0 ) par = 1;
+#endif
+#endif
 /*
 		To be changed:
 		1: check first whether the term lies completely inside the buffer
@@ -988,11 +1002,19 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 			siz = ReadPosFile(BHEAD fi,(UBYTE *)term,1L,pos);
 		}
 		else {
+			LOCK(AS.inputslock);
+			SeekFile(fi->handle,pos,SEEK_SET);
 			siz = ReadFile(fi->handle,(UBYTE *)term,sizeof(WORD));
+			UNLOCK(AS.inputslock);
+			ADDPOS(*pos,siz);
 		}
 		if ( siz == sizeof(WORD) ) {
 			p = term;
 			j = i = *term++;
+			if ( ( i > AM.MaxTer ) || ( -i >= AM.MaxTer ) ) {
+				error = 1;
+				goto ErrGet;
+			}
 			r++;
 			if ( i < 0 ) {
 				*p = -i + 1;
@@ -1001,13 +1023,22 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 					siz = ReadPosFile(BHEAD fi,(UBYTE *)term,1L,pos);
 				}
 				else {
+					LOCK(AS.inputslock);
+					SeekFile(fi->handle,pos,SEEK_SET);
 					siz = ReadFile(fi->handle,(UBYTE *)term,sizeof(WORD));
+					UNLOCK(AS.inputslock);
+					ADDPOS(*pos,sizeof(WORD));
 				}
 				if ( siz != sizeof(WORD) ) {
+					error = 2;
 					goto ErrGet;
 				}
 				*p += *term;
 				j = *term;
+				if ( ( j > AM.MaxTer ) || ( j <= 0 ) ) {
+					error = 3;
+					goto ErrGet;
+				}
 				*rr = *p;
 			}
 			else {
@@ -1021,9 +1052,14 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 			}
 			else {
 				j *= TABLESIZE(WORD,UBYTE);
+				LOCK(AS.inputslock);
+				SeekFile(fi->handle,pos,SEEK_SET);
 				siz = ReadFile(fi->handle,(UBYTE *)term,j);
+				UNLOCK(AS.inputslock);
+				ADDPOS(*pos,j);
 			}
 			if ( siz != j ) {
+				error = 4;
 				goto ErrGet;
 			}
 			while ( --i >= 0 ) *r++ = *term++;
@@ -1036,6 +1072,7 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 			AR.CompressPointer = r; *r = 0;
 			return(*p);
 		}
+		error = 5;
 	}
 	else {
 /*
@@ -1065,10 +1102,11 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 			AR.CompressPointer = r; *r = 0;
 			return((WORD)j);
 		}
+		error = 6;
 	}
 ErrGet:
 	LOCK(ErrorMessageLock);
-	MesPrint("Error while reading scratch file in GetOneTerm");
+	MesPrint("Error while reading scratch file in GetOneTerm (%d)",error);
 	UNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
@@ -1083,7 +1121,7 @@ ErrGet:
 	We can keep calling GetTerm either till a bracket is finished 
 	or till it would make the term too long (> AM.MaxTer/2)
 	In all cases this function makes that the routine GetTerm
-	has a term in 'hold', so the AS.KeptInHold flag must be turned on.
+	has a term in 'hold', so the AR.KeptInHold flag must be turned on.
 */
 
 WORD
@@ -1093,7 +1131,9 @@ GetMoreTerms ARG1(WORD *,term)
 	WORD *t, *r, *m, *h, *tstop, i, inc, same;
 	WORD extra;
 	WORD retval = 0;
-/*	-------------change 17-feb-2003 */
+/*
+	We use 23% as a quasi-random default value.
+*/
 	extra = ((AM.MaxTer/sizeof(WORD))*((long)100-AC.CollectPercentage))/100;
 	if ( extra < 23 ) extra = 23;
 /*
@@ -1171,7 +1211,7 @@ FullTerm:
 	*m++ = 1;
 	*m++ = 3;
 	*term = WORDDIF(m,term);
-	AS.KeptInHold = 1;
+	AR.KeptInHold = 1;
 	return(retval);
 }
 
@@ -1184,6 +1224,7 @@ FullTerm:
 WORD
 GetMoreFromMem ARG2(WORD *,term,WORD **,tpoin)
 {
+	GETIDENTITY
 	WORD *t, *r, *m, *h, *tstop, i, j, inc, same;
 	LONG extra = 23;
 /*
@@ -1263,7 +1304,7 @@ FullTerm:
 	*m++ = 1;
 	*m++ = 3;
 	*term = WORDDIF(m,term);
-	AS.KeptInHold = 1;
+	AR.KeptInHold = 1;
 	return(0);
 }
 
@@ -2172,7 +2213,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber :
+ 		#] TermRenumber : 
  		#[ FindrNumber :
 */
 
@@ -2238,7 +2279,7 @@ ErrFindr2:
 }
 
 /*
- 		#] FindrNumber :
+ 		#] FindrNumber : 
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2374,7 +2415,7 @@ ErrGt2:
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
-		They are allocated in the AM.WorkSpace.
+		They are allocated in the WorkSpace.
 		First the expression data are located. The Index is treated
 		as a circularly linked buffer which is paged forwardly.
 		If the indexentry is located (in ind) the two renumber tables
@@ -2423,21 +2464,8 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 */
 #ifndef WITHPTHREADS
 
-	if ( ( r = Expressions[expr].renum ) != 0 ) {
-/*
-
-		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		Problem here is E(x1,x2)-E(x2,x1)
-		Second time the new assignment is not made!
-		change made 20-nov-1997 (commented out two lines and put the
-		Malloc1 call inside the else{})
-
-		*position = r->startposition;
-		return(r);
-*/
-	}
-	else
-	{
+	if ( ( r = Expressions[expr].renum ) != 0 ) { }
+	else {
 		Expressions[expr].renum = 
 		r = (RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
 	}
@@ -2785,6 +2813,181 @@ ErrGt2:
 
 /*
  		#] GetTable : 
+ 		#[ CopyExpression :
+
+		Copies from one scratch buffer to another.
+		We assume here that the complete 'from' scratch buffer is taken.
+		We also assume that the 'from' buffer is positioned at the end of
+		the expression.
+
+		The locks should be placed in the calling routine. We need basically
+		AS.outputslock.
+*/
+
+int
+CopyExpression ARG2(FILEHANDLE *,from,FILEHANDLE *,to)
+{
+	POSITION posfrom, poscopy;
+	LONG fullsize,i;
+	WORD *t1, *t2;
+	int RetCode;
+	SeekScratch(from,&posfrom);
+	if ( from->handle < 0 ) {	/* input is in memory */
+		fullsize = (BASEPOSITION(posfrom))/sizeof(WORD);
+		if ( ( to->POstop - to->POfull ) >= fullsize ) {
+/*
+			Fits inside the buffer of the output. This will be fast.
+*/
+			t1 = from->PObuffer;
+			t2 = to->POfull;
+			NCOPY(t2,t1,fullsize)
+			to->POfull = to->POfill = t2;
+			goto WriteTrailer;
+		}
+		if ( to->handle < 0 ) {		/* First open the file */
+			if ( ( RetCode = CreateFile(to->name) ) >= 0 ) {
+				to->handle = (WORD)RetCode;
+				PUTZERO(to->filesize);
+				PUTZERO(to->POposition);
+			}
+			else {
+				LOCK(ErrorMessageLock);
+				MesPrint("Cannot create scratch file %s",to->name);
+				UNLOCK(ErrorMessageLock);
+				return(-1);
+			}
+		}
+		t1 = from->PObuffer;
+		while ( fullsize > 0 ) {
+			i = to->POstop - to->POfull;
+			if ( i > fullsize ) i = fullsize;
+			fullsize -= i;
+			t2 = to->POfull;
+			NCOPY(t2,t1,i)
+			if ( fullsize > 0 ) {
+				SeekFile(to->handle,&(to->POposition),SEEK_SET);
+				if ( WriteFile(to->handle,((UBYTE *)(to->PObuffer)),to->POsize) != to->POsize ) {
+					LOCK(ErrorMessageLock);
+					MesPrint("Error while writing to disk. Disk full?");
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
+				ADDPOS(to->POposition,to->POsize);
+/*				SeekFile(to->handle,&(to->POposition),SEEK_CUR); */
+				to->filesize = to->POposition;
+				to->POfill = to->POfull = to->PObuffer;
+			}
+			else {
+				to->POfill = to->POfull = t2;
+			}
+		}
+		goto WriteTrailer;
+	}
+/*
+	Now the input involves a file. This needs the use of the PObuffer of from.
+	First make sure the tail of the buffer has been written
+*/
+	if ( ((UBYTE *)(from->POfill)-(UBYTE *)(from->PObuffer)) > 0 ) {
+		if ( WriteFile(from->handle,((UBYTE *)(from->PObuffer)),((UBYTE *)(from->POfill)-(UBYTE *)(from->PObuffer)))
+		!= ((UBYTE *)(from->POfill)-(UBYTE *)(from->PObuffer)) ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Error while writing to disk. Disk full?");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		SeekFile(from->handle,&(from->POposition),SEEK_CUR);
+		posfrom = from->filesize = from->POposition;
+		from->POfill = from->POfull = from->PObuffer;
+	}
+/*
+	Now copy the complete contents
+*/
+	PUTZERO(poscopy);
+	SeekFile(from->handle,&poscopy,SEEK_SET);
+	while ( ISLESSPOS(poscopy,posfrom) ) {
+		fullsize = ReadFile(from->handle,((UBYTE *)(from->PObuffer)),from->POsize);
+		if ( fullsize < 0 || ( fullsize % sizeof(WORD) ) != 0 ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Error while reading from disk while copying expression.");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		fullsize /= sizeof(WORD);
+		from->POfull = from->PObuffer + fullsize;
+		t1 = from->PObuffer;
+
+		if ( ( to->POstop - to->POfull ) >= fullsize ) {
+/*
+			Fits inside the buffer of the output. This will be fast.
+*/
+			t2 = to->POfull;
+			NCOPY(t2,t1,fullsize)
+			to->POfill = to->POfull = t2;
+		}
+		else {
+		  if ( to->handle < 0 ) {		/* First open the file */
+			if ( ( RetCode = CreateFile(to->name) ) >= 0 ) {
+				to->handle = (WORD)RetCode;
+				PUTZERO(to->POposition);
+				PUTZERO(to->filesize);
+			}
+			else {
+				LOCK(ErrorMessageLock);
+				MesPrint("Cannot create scratch file %s",to->name);
+				UNLOCK(ErrorMessageLock);
+				return(-1);
+			}
+		  }
+		  while ( fullsize > 0 ) {
+			i = to->POstop - to->POfull;
+			if ( i > fullsize ) i = fullsize;
+			fullsize -= i;
+			t2 = to->POfull;
+			NCOPY(t2,t1,i)
+			if ( fullsize > 0 ) {
+				SeekFile(to->handle,&(to->POposition),SEEK_SET);
+				if ( WriteFile(to->handle,((UBYTE *)(to->PObuffer)),to->POsize) != to->POsize ) {
+					LOCK(ErrorMessageLock);
+					MesPrint("Error while writing to disk. Disk full?");
+					UNLOCK(ErrorMessageLock);
+					return(-1);
+				}
+				ADDPOS(to->POposition,to->POsize);
+/*				SeekFile(to->handle,&(to->POposition),SEEK_CUR); */
+				to->filesize = to->POposition;
+				to->POfill = to->POfull = to->PObuffer;
+			}
+			else {
+				to->POfill = to->POfull = t2;
+			}
+		  }
+		}
+		SeekFile(from->handle,&poscopy,SEEK_CUR);
+	}
+WriteTrailer:
+	if ( ( to->handle >= 0 ) && ( to->POfill > to->PObuffer ) ) {
+		fullsize = (UBYTE *)(to->POfill) - (UBYTE *)(to->PObuffer);
+/*
+		PUTZERO(to->POposition);
+		SeekFile(to->handle,&(to->POposition),SEEK_END);
+*/
+		SeekFile(to->handle,&(to->filesize),SEEK_SET);
+		if ( WriteFile(to->handle,((UBYTE *)(to->PObuffer)),fullsize) != fullsize ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Error while writing to disk. Disk full?");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		ADDPOS(to->filesize,fullsize);
+		to->POposition = to->filesize;
+		to->POfill = to->POfull = to->PObuffer;
+	}
+
+	return(0);
+}
+
+/*
+ 		#] CopyExpression :
 	#] StoreExpressions :
 */
 

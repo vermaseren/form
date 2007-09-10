@@ -104,7 +104,7 @@
 	All other functions may have a returned type/parameters type local w.r.t. 
 	this module; they are not declared outside of this file.
 
-  	#] Documentation : 
+  	#] Documentation :
   	#[ Includes :
 */
 
@@ -282,8 +282,8 @@ static int externalChannelsListFill=0;
 /*"current" external channel:*/
 static EXTHANDLE *externalChannelsListTop=0;
 /*
-  	#] Local structs :
-  	#[ Selftest functions:
+  	#] Local types :
+  	#[ Selftest functions :
 */
 #ifdef SELFTEST
 
@@ -603,7 +603,7 @@ l2s ARG2(long,x,char *,to)
 	*s-- = '\0';
 	j = ( i - 1 ) >> 1;
 	while ( j >= 0 ) {
-		i = to[j]; to[j] = s[-j]; s[-j] = i; j--;
+		i = to[j]; to[j] = s[-j]; s[-j] = (char)i; j--;
 	}
 	return(s+1);
 }
@@ -1210,19 +1210,19 @@ typedef struct{
 /* Creates a new external channel starting the command cmd (if cmd !=NULL)
 	or using informaion from (ECINFOSTRUCT *)shellname, if cmd ==NULL:*/
 static FORM_INLINE void* createExternalChannel ARG5(
-								  EXTHANDLE *,h,
-								  char *,cmd, /*Command to run or NULL*/
-								  /*0 --neither setsid nor daemonize, !=0 -- full daemonization:*/
-								  int, daemonize,
-								  char *,shellname,/* The shell (like "/bin/sh -c") or NULL*/
-								  char *,stderrname/*filename to redirect stderr or NULL*/
+					  EXTHANDLE *,h,
+					  char *,cmd, /*Command to run or NULL*/
+					  /*0 --neither setsid nor daemonize, !=0 -- full daemonization:*/
+					  int, daemonize,
+					  char *,shellname,/* The shell (like "/bin/sh -c") or NULL*/
+					  char *,stderrname/*filename to redirect stderr or NULL*/
 																)
 {
-int fdreceive=0;
-int gpid;
-ECINFOSTRUCT *psetInfo;
+	int fdreceive=0;
+	int gpid = 0;
+	ECINFOSTRUCT *psetInfo;
 #ifdef PARALLEL
-char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
+	char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
 #endif
 	extHandlerInit(h);
 
@@ -1251,7 +1251,7 @@ char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
 #ifdef PARALLEL
 		if(h->pid<0)
 			statusbuf[0]='!';/*Brodcast fail to slaves*/
-	}/*if ( PF.me == MASTER )*/
+	}
 	 /*else: Keep h->pid = 0 and h->fsend = 0 for slaves in parallel mode!*/
 
 	/*Master broadcasts status to slaves, slaves read it from the master:*/
@@ -1265,12 +1265,12 @@ char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
 #ifdef PARALLEL
 	if ( PF.me == MASTER ){
 #endif
-	h->gpid=gpid;
+		h->gpid=gpid;
 	/*Open stdout of a newly created program as FILE* :*/
-	if( (h->frec=fdopen(fdreceive,"r")) == 0 )goto createExternalChannelFails;
+		if( (h->frec=fdopen(fdreceive,"r")) == 0 )goto createExternalChannelFails;
 
 #ifdef PARALLEL
-	}/*if ( PF.me == MASTER )*/
+	}
 #endif      
 	/*Initialize buffers:*/
 	extHandlerAlloc(h,cmd,shellname,stderrname);
@@ -1281,6 +1281,7 @@ char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
 		destroyExternalChannel(h);
 		return(NULL);
 }/*createExternalChannel*/
+
 /*
   	#] createExternalChannel :
   	#[ openExternalChannel :
@@ -1349,6 +1350,10 @@ ECINFOSTRUCT inf;
 #define PIDTXTSIZE 23
 #define BOTHPIDSIZE 45
 
+#ifndef LONG_MAX
+#define LONG_MAX 0x7FFFFFFFL
+#endif
+
 /*There is a possibility to start FORM from another program providing
 one (or more) communication channels. These channels will be
 visible from a FORM program as ``pre-opened'' external channels existing
@@ -1364,77 +1369,64 @@ used.
 	The following function expects as the first argument 
 this comma-separated list of the  desctiptor pairs and tries to 
 initialize each of channel during thetimeout milliseconds:*/
+
 int initPresetExternalChannels ARG2(UBYTE *,theline, int, thetimeout)
 {
-int i,nchannels=0;
-int pidln;/*The length of FORM PID in pidtxt*/
-char pidtxt[PIDTXTSIZE]/*64/Log_2[10] = 19.3, this is enough for any integer*/,
-	  chdescriptor[PIDTXTSIZE],
-	  bothpidtxt[BOTHPIDSIZE],/*"#,#\n\0"*/
-	  *c,*b;
-int pip[2];
-pid_t ppid;
-	if(theline == NULL)
-		return(-1);
+	int i, nchannels = 0;
+	int pidln;           /*The length of FORM PID in pidtxt*/
+	char pidtxt[PIDTXTSIZE],     /*64/Log_2[10] = 19.3, this is enough for any integer*/
+	     chdescriptor[PIDTXTSIZE],
+	     bothpidtxt[BOTHPIDSIZE],   /*"#,#\n\0"*/
+	     *c,*b = 0;
+	int pip[2];
+	pid_t ppid;
+	if ( theline == NULL ) return(-1);
 	/*Put into pidtxt PID\n:*/
-	*(c=l2s((long)getpid(),pidtxt))='\n';
-	*++c = '\0';
-	pidln=c-pidtxt;
+	c = l2s((long)getpid(),pidtxt);
+	*c++='\n';
+	*c = '\0';
+	pidln = c-pidtxt;
 
-	do{
-		pip[0]=(int)str2i((char*)theline,&c,0xFFFF);
-		if( (pip[0]<0)||(*c!=',') )
-		  goto presetFails;
+	do {
+		pip[0] = (int)str2i((char*)theline,&c,0xFFFF);
+		if( ( pip[0] < 0 ) || ( *c != ',' ) ) goto presetFails;
 		
-		theline=(UBYTE*)c+1;
-		pip[1]=(int)str2i((char*)theline,&c,0xFFFF);
-		if( (pip[1]<0)||( (*c!=',')&&(*c!='\0')) )
-			goto presetFails; 
-		theline=(UBYTE *)c+1;
+		theline = (UBYTE*)c + 1;
+		pip[1] = (int)str2i((char*)theline,&c,0xFFFF);
+		if ( (pip[1] < 0 ) || ( ( *c != ',' ) && ( *c != '\0' ) ) ) goto presetFails; 
+		theline = (UBYTE *)c + 1;
 		/*Now we have two descriptors.
 		  According to the protocol, FORM must send to external channel 
 		  it's PID with added '\n' and read back two comma-separaetd
 		  decimals with added '\n'. The first must be repeated FORM PID,
 		  the second must be the parent PID
 		*/
-		if(writeSome(pip[1],pidtxt,pidln,thetimeout)!=pidln)
-			goto presetFails;
-		i=readSome(pip[0],bothpidtxt,BOTHPIDSIZE,thetimeout);
-		if(
-			  (i<4)/*at least 1,2\n*/
-			||(i==BOTHPIDSIZE)/*No space for trailing '\0'*/
-		  )goto presetFails;
+		if ( writeSome(pip[1],pidtxt,pidln,thetimeout) != pidln ) goto presetFails;
+		i = readSome(pip[0],bothpidtxt,BOTHPIDSIZE,thetimeout);
+		if( ( i < 4 )                 /*at least 1,2\n*/
+			|| ( i == BOTHPIDSIZE )   /*No space for trailing '\0'*/
+		  ) goto presetFails;
 		/*read the FORM PID:*/
-		ppid=(pid_t)str2i(bothpidtxt,&b,getpid());
-		if( 
-				(*b != ',')
-			 ||(ppid != getpid())
-		  )goto presetFails;
+		ppid = (pid_t)str2i(bothpidtxt,&b,getpid());
+		if( ( *b != ',' ) || ( ppid != getpid() ) )goto presetFails;
 		/*read the parent PID:*/
 		/*The problem is that we do not know the the real type of pid_t.
 		  But long should be ehough. On obsolete systems (when LONG_MAX
 		  is not defined) we assume pid_t is 32-bit integer.
 		  This can lead to problem with portability: */
-#ifndef LONG_MAX
-#define LONG_MAX 0x7FFFFFFFL
-#endif
-		ppid=(pid_t)str2i(b+1,&b,LONG_MAX);
-		if( 
-			  (*b != '\n')
-			||(ppid<2)
-		  )
-			goto presetFails;
-		i=openPresetExternalChannel(pip[0],pip[1],ppid);
-		if(i<0)
-			goto presetFails;
+		ppid = (pid_t)str2i(b+1,&b,LONG_MAX);
+		if ( (*b != '\n') || (ppid<2) ) goto presetFails;
+		i = openPresetExternalChannel(pip[0],pip[1],ppid);
+		if ( i < 0 ) goto presetFails;
 		nchannels++;
 		/*Now use bothpidtxt as a buffer for preprovar, the space is enough:*/
 		/*"PIPE#_" where # is ne order number of the channel:*/
-		*(b=l2s(nchannels,addStr(bothpidtxt,"PIPE")))='_';
-		b[1]='\0';
-		*l2s(i,chdescriptor)='\0';
+		b = l2s(nchannels,addStr(bothpidtxt,"PIPE"));
+		*b = '_';
+		b[1] = '\0';
+		*l2s(i,chdescriptor) = '\0';
 		PutPreVar((UBYTE*)bothpidtxt,(UBYTE*)chdescriptor,0,0);
-	}while(*c!='\0');
+	} while ( *c != '\0' );
 	/*Export proprovar "PIPES_":*/
 	*l2s(nchannels,chdescriptor)='\0';
 	PutPreVar((UBYTE*)"PIPES_",(UBYTE*)chdescriptor,0,0);
@@ -1442,7 +1434,7 @@ pid_t ppid;
 	/*success:*/
 	return (nchannels);
 
-	presetFails:
+presetFails:
 		/*Here we assume the descriptors the beginning of the list!*/
 		for(i=0; i<nchannels; i++)
 			destroyExternalChannel(externalChannelsList+i);

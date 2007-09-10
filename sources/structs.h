@@ -238,7 +238,12 @@ typedef struct ExPrEsSiOn {
 	WORD	namesize;
 	WORD	compression;
 	WORD	numdummies;
+#ifdef WITHPTHREADS
+	WORD	partodo;		/* Whether to be done in parallel mode */
+	PADPOINTER(2,0,11,0);
+#else
 	PADPOINTER(2,0,10,0);
+#endif
 } *EXPRESSIONS;
 
 typedef struct SyMbOl {			/* Don't change unless altering .sav too */
@@ -397,7 +402,7 @@ typedef struct FiLe {
 	pthread_mutex_t	pthreadslock;
 #endif
     int handle;					/* Our own handle */
-	int active;					/* File is open or closed */
+	int active;					/* File is open or closed. Not used. */
 	WORD fPatchN;				/* Number of patches on file */
 #ifdef WITHZLIB
 	PADPOINTER(4,2,1,0);
@@ -743,6 +748,8 @@ struct M_const {
 #ifdef WITHPTHREADS
 	pthread_mutex_t handlelock;    /* (M) */
 	pthread_mutex_t storefilelock; /* (M) */
+    LONG    ThreadScratSize;       /* (M) Size of Fscr[0/2] buffers of the workers */
+    LONG    ThreadScratOutSize;    /* (M) Size of Fscr[1] buffers of the workers */
 #endif
     LONG    MaxTer;                /* (M) Maximum term size. Fixed at setup. In Bytes!!!*/
     LONG    CompressSize;          /* (M) Size of Compress buffer */
@@ -1038,6 +1045,7 @@ struct C_const {
 #ifdef WITHPTHREADS
 	int     numpfirstnum;          /* For redefine */
 	int     sizepfirstnum;         /* For redefine */
+	int     numpartodo;
 #endif
     WORD    RepLevel;              /* (C) Tracks nesting of repeat. */
     WORD    arglevel;              /* (C) level of nested argument statements */
@@ -1088,6 +1096,7 @@ struct C_const {
 struct S_const {
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
+	pthread_mutex_t	outputslock;
 #endif
     POSITION *OldOnFile;           /* (S) File positions of expressions */
     int     NumOldOnFile;          /* (S) Number of expressions in OldOnFile */
@@ -1096,13 +1105,8 @@ struct S_const {
     int     MasterSort;            /* Final stage of sorting to the master */
 #endif
     int     Balancing;             /* For second stage loadbalancing */
-    WORD    CurExpr;               /* (S) Number of current expression */
     WORD    ExecMode;              /* (S) */
 
-    WORD    KeptInHold;            /* (R) */
-    WORD    GetFile;               /* (R) Where to get the terms {like Hide} */
-    WORD    expchanged;            /* (R) Info about expression */
-    WORD    expflags;              /* (R) Info about expression */
     WORD    CollectOverFlag;       /* (R) Indicates overflow at Collect */
 #ifdef WITHPTHREADS
 	WORD	sLevel;                /* Copy of AR0.sLevel because it can get messy */
@@ -1127,6 +1131,9 @@ struct R_const {
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
 
     POSITION DefPosition;          /* (R) Deferred position of keep brackets. */
+#ifdef WITHPOSIXCLOCK
+	struct timespec timing;        /* Struct defined in time.h */
+#endif
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
     LONG    pWorkSize;             /* (R) Size of pWorkSpace */
@@ -1135,6 +1142,11 @@ struct R_const {
     int     NoCompress;            /* (R) Controls native compression */
     int     gzipCompress;          /* (R) Controls gzip compression */
     int     Cnumlhs;               /* Local copy of cbuf[rbufnum].numlhs */
+#ifdef WITHPTHREADS
+    int     exprtodo;              /* The expression to do in parallel mode */
+#endif
+    WORD    GetFile;               /* (R) Where to get the terms {like Hide} */
+    WORD    KeptInHold;            /* (R) */
     WORD    BracketOn;             /* (R) Intensly used in poly_ */
     WORD    MaxBracket;            /* (R) Size of BrackBuf. Changed by poly_ */
     WORD    CurDum;                /* (R) Current maximum dummy number */
@@ -1147,6 +1159,10 @@ struct R_const {
     WORD    Eside;                 /* () Tells which side of = sign */
 	WORD	MaxDum;                /* Maximum dummy value in an expression */
 	WORD	level;                 /* Running level in Generator */
+    WORD    expchanged;            /* (R) Info about expression */
+    WORD    expflags;              /* (R) Info about expression */
+    WORD    CurExpr;               /* (S) Number of current expression */
+	WORD    SortType;              /* A copy of AC.SortType to play with */
 };
 
 /*
@@ -1200,7 +1216,11 @@ struct T_const {
     int     WildcardBufferSize;    /* () local copy for updates */
 #ifdef WITHPTHREADS
     int     identity;              /* () When we work with B->T */
-	int     LoadBalancing;         /* Needed for synchronization */
+    int     LoadBalancing;         /* Needed for synchronization */
+#ifdef WITHSORTBOTS
+    int     SortBotIn1;            /* Input stream 1 for a SortBot */
+    int     SortBotIn2;            /* Input stream 2 for a SortBot */
+#endif
 #endif
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */

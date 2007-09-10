@@ -97,7 +97,7 @@
 
 #endif
 /*
-  	#] ARG definitions :
+  	#] ARG definitions : 
   	#[ Macro's :
 */
 
@@ -292,13 +292,13 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 	ExpandBuffer((void **)(&AT.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
 
 /*
-  	#] Macro's :
+  	#] Macro's : 
   	#[ Thread objects :
 */
 
 #ifdef WITHPTHREADS
 
-#define EXTERNLOCK(x) extern pthread_mutex_t x
+#define EXTERNLOCK(x) extern pthread_mutex_t x;
 #define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER
 #ifdef DEBUGGINGLOCKS
 #include <asm/errno.h>
@@ -325,10 +325,12 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #endif
 
 /*
-  	#] Thread objects :
+  	#] Thread objects : 
   	#[ Declarations :
 */
 
+DECLARE(VOID StartVariables,ARG0)
+DECLARE(VOID setSignalHandlers,ARG0)
 DECLARE(UBYTE *CodeToLine,(WORD,UBYTE *))
 DECLARE(INDEXENTRY *FindInIndex,(WORD,FILEDATA *,WORD))
 DECLARE(UBYTE *GetLine,(UBYTE *,LONG,WORD))
@@ -384,9 +386,11 @@ DECLARE(WORD DoTableExpansion,(WORD *,WORD))
 DECLARE(WORD DoDistrib,(PHEAD WORD *,WORD))
 DECLARE(WORD DoMerge,(WORD *,WORD,WORD,WORD))
 DECLARE(WORD TestUse,(WORD *,WORD))
+DECLARE(DBASE *FindTB,(UBYTE *))
+DECLARE(int CheckTableDeclarations,(DBASE *))
 DECLARE(WORD Apply,(WORD *,WORD))
 DECLARE(int ApplyExec,(WORD *,int,WORD))
-DECLARE(WORD ApplyReset,(WORD *,WORD))
+DECLARE(WORD ApplyReset,(WORD))
 DECLARE(WORD TableReset,ARG0)
 DECLARE(VOID ReWorkT,(WORD *,WORD *,WORD))
 DECLARE(WORD DoIfStatement,(WORD *,WORD *))
@@ -421,6 +425,8 @@ DECLARE(WORD FlushOut,(POSITION *,FILEHANDLE *,int))
 DECLARE(VOID FunLevel,(PHEAD WORD *))
 DECLARE(VOID GarbHand,ARG0)
 DECLARE(WORD GcdLong,(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
+DECLARE(VOID GCD,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
+DECLARE(ULONG GCD2,(ULONG,ULONG))
 DECLARE(WORD Generator,(PHEAD WORD *,WORD))
 DECLARE(LONG Get1Long,(UBYTE *))
 DECLARE(WORD GetBinom,(UWORD *,WORD *,WORD,WORD))
@@ -515,6 +521,7 @@ DECLARE(WORD Sflush,(FILEHANDLE *))
 DECLARE(WORD Simplify,(PHEAD UWORD *,WORD *,UWORD *,WORD *))
 DECLARE(WORD SkipWhite,ARG0)
 DECLARE(WORD SortWild,(WORD *,WORD))
+DECLARE(FILE *LocateBase,(char **,char **))
 #ifdef NEWSPLITMERGE
 DECLARE(LONG SplitMerge,(PHEAD WORD **,LONG))
 #else
@@ -528,7 +535,7 @@ DECLARE(VOID SubPLon,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
 DECLARE(VOID Substitute,(PHEAD WORD *,WORD *,WORD))
 DECLARE(WORD SymFind,(PHEAD WORD *,WORD *))
 DECLARE(WORD SymGen,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD Symmetrize,(PHEAD WORD *,WORD *,WORD,WORD,WORD,WORD))
+DECLARE(WORD Symmetrize,(PHEAD WORD *,WORD *,WORD,WORD,WORD))
 DECLARE(int FullSymmetrize,(WORD *,int))
 DECLARE(WORD TakeModulus,(UWORD *,WORD *,WORD *,WORD,WORD))
 DECLARE(VOID TalToLine,(UWORD))
@@ -632,7 +639,7 @@ DECLARE(VOID Terminate,(int))
 DECLARE(NAMENODE *GetNode,(NAMETREE *,UBYTE *))
 DECLARE(int AddName,(NAMETREE *,UBYTE *,WORD,WORD,int *))
 DECLARE(int GetName,(NAMETREE *,UBYTE *,WORD *,int))
-DECLARE(int GetAutoName,(NAMETREE *,UBYTE *,WORD *))
+DECLARE(int GetAutoName,(UBYTE *,WORD *))
 DECLARE(int GetVar,(UBYTE *,WORD *,WORD *,int,int))
 DECLARE(int MakeDubious,(NAMETREE *,UBYTE *,WORD *))
 DECLARE(int GetOName,(NAMETREE *,UBYTE *,WORD *,int))
@@ -643,7 +650,7 @@ DECLARE(VOID CopyTree,(NAMETREE *,NAMETREE *,WORD))
 DECLARE(int CompactifyTree,(NAMETREE *))
 DECLARE(NAMETREE *MakeNameTree,ARG0)
 DECLARE(VOID FreeNameTree,(NAMETREE *))
-DECLARE(int AddExpression,(UBYTE *,int,int,int))
+DECLARE(int AddExpression,(UBYTE *,int,int))
 DECLARE(int AddSymbol,(UBYTE *,int,int,int))
 DECLARE(int AddDollar,(UBYTE *,WORD,WORD *,LONG))
 DECLARE(int ReplaceDollar,(WORD,WORD,WORD *,LONG))
@@ -678,6 +685,7 @@ DECLARE(int GetChannel,(char *))
 DECLARE(int GetAppendChannel,(char *))
 DECLARE(int CloseChannel,(char *))
 DECLARE(VOID inictable,ARG0)
+DECLARE(KEYWORD *findcommand,(UBYTE *))
 DECLARE(int inicbufs,ARG0)
 DECLARE(VOID StartFiles,ARG0)
 DECLARE(UBYTE *MakeDate,ARG0)
@@ -811,8 +819,8 @@ DECLARE(VOID PrintTerm,(WORD *,char *))
 DECLARE(VOID PrintSubTerm,(WORD *,char *))
 DECLARE(VOID PrintWords,(WORD *,LONG))
 DECLARE(int ExpandTripleDots,ARG0)
-DECLARE(LONG ComPress,(WORD **,LONG *));
-DECLARE(VOID StageSort,(FILEHANDLE *));
+DECLARE(LONG ComPress,(WORD **,LONG *))
+DECLARE(VOID StageSort,(FILEHANDLE *))
 
 #define M_alloc(x)      malloc((size_t)(x))
 DECLARE(void M_free,(VOID *,char *))
@@ -832,12 +840,27 @@ DECLARE(int AddNtoC,(int,WORD *))
 DECLARE(VOID DoubleIfBuffers,ARG0)
 DECLARE(STREAM *CreateStream,(UBYTE *))
 
+DECLARE(int setonoff,(UBYTE *,int *,int,int))
+DECLARE(int DoPrint,(UBYTE *,int))
+DECLARE(int SetExpr,(UBYTE *,int,int))
+DECLARE(void AddToCom,(int,WORD *))
+DECLARE(int Add2ComStrings,(int,WORD *,UBYTE *,UBYTE *))
+DECLARE(int DoSymmetrize,(UBYTE *,int))
+DECLARE(int DoArgument,(UBYTE *,int))
+DECLARE(int DoBrackets,(UBYTE *,int))
+DECLARE(WORD *CountComp,(UBYTE *,WORD *))
 DECLARE(int CoAntiBracket,(UBYTE *))
 DECLARE(int CoAntiSymmetrize,(UBYTE *))
+DECLARE(int DoArgPlode,(UBYTE *,int))
+DECLARE(int CoArgExplode,(UBYTE *))
+DECLARE(int CoArgImplode,(UBYTE *))
 DECLARE(int CoArgument,(UBYTE *))
 DECLARE(int CoInside,(UBYTE *))
 DECLARE(int DoInside,(UBYTE *))
 DECLARE(int CoInExpression,(UBYTE *))
+DECLARE(int CoInParallel,(UBYTE *))
+DECLARE(int CoNotInParallel,(UBYTE *))
+DECLARE(int DoInParallel,(UBYTE *,int))
 DECLARE(int CoEndInExpression,(UBYTE *))
 DECLARE(int CoBracket,(UBYTE *))
 DECLARE(int CoCFunction,(UBYTE *))
@@ -941,6 +964,7 @@ DECLARE(int CoToVector,(UBYTE *))
 DECLARE(int CoTrace4,(UBYTE *))
 DECLARE(int CoTraceN,(UBYTE *))
 DECLARE(int CoChisholm,(UBYTE *))
+DECLARE(int CoClearTable,(UBYTE *))
 DECLARE(int DoChain,(UBYTE *,int))
 DECLARE(int CoChainin,(UBYTE *))
 DECLARE(int CoChainout,(UBYTE *))
@@ -970,12 +994,12 @@ DECLARE(UBYTE *IsRHS,(UBYTE *,UBYTE))
 DECLARE(int ParenthesesTest,(UBYTE *))
 DECLARE(int tokenize,(UBYTE *,WORD))
 DECLARE(void WriteTokens,(SBYTE *))
-DECLARE(int simp1token,(SBYTE *,int))
-DECLARE(int simpwtoken,(SBYTE *,int))
-DECLARE(int simp2token,(SBYTE *,int))
+DECLARE(int simp1token,(SBYTE *))
+DECLARE(int simpwtoken,(SBYTE *))
+DECLARE(int simp2token,(SBYTE *))
 DECLARE(int simp3atoken,(SBYTE *,int))
 DECLARE(int simp3btoken,(SBYTE *,int))
-DECLARE(int simp4token,(SBYTE *,int))
+DECLARE(int simp4token,(SBYTE *))
 DECLARE(int simp5token,(SBYTE *,int))
 DECLARE(UBYTE *SkipAName,(UBYTE *))
 DECLARE(int TestTables,ARG0)
@@ -1104,11 +1128,15 @@ DECLARE(int DoModMin,(UBYTE *))
 DECLARE(int DoModLocal,(UBYTE *))
 DECLARE(UBYTE *DoModDollar,(UBYTE *,int))
 DECLARE(int DoSlavePatch,(UBYTE *))
+DECLARE(int DoinParallel,(UBYTE *))
+DECLARE(int DonotinParallel,(UBYTE *))
 
 DECLARE(int FlipTable,(FUNCTIONS,int))
-DECLARE(int ChainIn,(WORD *,WORD,WORD))
-DECLARE(int ChainOut,(WORD *,WORD,WORD))
+DECLARE(int ChainIn,(WORD *,WORD))
+DECLARE(int ChainOut,(WORD *,WORD))
 DECLARE(int PolyNorm,(PHEAD WORD *,WORD,WORD,WORD))
+DECLARE(int ArgumentImplode,(PHEAD WORD *,WORD *))
+DECLARE(int ArgumentExplode,(PHEAD WORD *,WORD *))
  
 DECLARE(WORD ReadElIf,ARG0)
 DECLARE(WORD HowMany,(WORD *,WORD *))
@@ -1161,7 +1189,7 @@ int LinSumFinish(int variety,char *outname);
 char *SkipString(char *);
 int ModulusGCD1(WORD modu,WORD fun1,WORD fun2,WORD *term,WORD sym);
 int MakeMono(WORD modu,WORD *t,WORD whichbuffer,WORD sym);
-int TryEnvironment();
+int TryEnvironment(VOID);
 
 #ifdef WITHZLIB
 DECLARE(int SetupOutputGZIP,(FILEHANDLE *))
@@ -1184,13 +1212,46 @@ DECLARE(int ConditionalGetAvailableThread,ARG0)
 DECLARE(int BalanceRunThread,(PHEAD int,WORD *,WORD))
 DECLARE(void WakeupThread,(int,int))
 DECLARE(int MasterWait,ARG0)
-DECLARE(int ThreadsProcessor,(EXPRESSIONS,WORD,WORD))
+DECLARE(int InParallelProcessor,ARG0)
+DECLARE(int ThreadsProcessor,(EXPRESSIONS,WORD))
 DECLARE(int ThreadsMerge,ARG0)
 DECLARE(int MasterMerge,ARG0)
 DECLARE(int PutToMaster,(PHEAD WORD *))
 DECLARE(void SetWorkerFiles,ARG0)
 DECLARE(int MakeThreadBuckets,(int,int))
+DECLARE(void Test,ARG0)
+DECLARE(int SendOneBucket,ARG0)
+DECLARE(int LoadOneThread,(int,int,THREADBUCKET *,int))
+DECLARE(void *RunSortBot,(void *))
+DECLARE(void MasterWaitAllSortBots,ARG0)
+DECLARE(int SortBotMerge,(PHEAD0))
+DECLARE(int SortBotOut,(PHEAD WORD *))
+DECLARE(void DefineSortBotTree,ARG0)
+DECLARE(int SortBotMasterMerge,ARG0)
+DECLARE(int SortBotWait,(int))
+DECLARE(void StartIdentity,ARG0)
+DECLARE(void FinishIdentity,(void *))
+DECLARE(int SetIdentity,(int *))
+DECLARE(ALLPRIVATES *InitializeOneThread,(int))
+DECLARE(void FinalizeOneThread,(int))
+DECLARE(void *RunThread,(void *))
+DECLARE(void IAmAvailable,(int))
+DECLARE(int ThreadWait,(int))
+DECLARE(int ThreadClaimedBlock,(int))
+DECLARE(int GetThread,(int))
+DECLARE(int UpdateOneThread,(int))
+DECLARE(void AlsoAvailable,(int))
+DECLARE(void AlsoRunning,(int))
+DECLARE(void MasterWaitAll,ARG0)
+DECLARE(void MasterWaitAllBlocks,ARG0)
+DECLARE(int MasterWaitThread,(int))
+DECLARE(void WakeupMasterFromThread,(int,int))
+DECLARE(int LoadReadjusted,ARG0)
+DECLARE(int IniSortBlocks,(int))
+
 #endif
+
+DECLARE(int CopyExpression,(FILEHANDLE *,FILEHANDLE *))
 
 /*[12dec2003 mt]:*/
 DECLARE(int set_in,(UBYTE, set_of_char))
@@ -1241,6 +1302,16 @@ DECLARE(int writeToChannel,(int,UBYTE *,HANDLERS*))
 #ifdef WITHEXTERNALCHANNEL
 DECLARE(LONG WriteToExternalChannel,(int,UBYTE *,LONG))
 #endif
+DECLARE(pid_t getExternalChannelPid,ARG0)
+DECLARE(int writeBufToExtChannelOk,(char *,size_t))
+DECLARE(int getcFromExtChannelOk,ARG0)
+DECLARE(int setKillModeForExternalChannelOk,(int,int))
+DECLARE(int setTerminatorForExternalChannelOk,(char *))
+DECLARE(int getcFromExtChannelFailure,ARG0)
+DECLARE(int setKillModeForExternalChannelFailure,(int,int))
+DECLARE(int setTerminatorForExternalChannelFailure,(char *))
+DECLARE(int writeBufToExtChannelFailure,(char *,size_t))
+
 
 /*
   	#] Declarations :

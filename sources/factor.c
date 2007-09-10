@@ -113,7 +113,7 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 }
 
 /*
-  	#] ModulusGCD1 : 
+  	#] ModulusGCD1 :
   	#[ MakeMono :
 */
 
@@ -203,7 +203,7 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 }
 
 /*
-  	#] MakeMono : 
+  	#] MakeMono :
   	#[ ChinRem :
 
 	We have two input arrays: pp with a list of (short) primes
@@ -268,7 +268,7 @@ ChinErr:
 }
 
 /*
-  	#] ChinRem : 
+  	#] ChinRem :
   	#[ ChinRema :
 
 	Use of the Chinese Remainder theorem.
@@ -317,7 +317,7 @@ ChinErr:
 }
 
 /*
-  	#] ChinRema : 
+  	#] ChinRema :
   	#[ DivMod :
 
 	Takes the modulus a%b and returns it. We assume that b fits inside a word.
@@ -334,7 +334,7 @@ UWORD DivMod ARG3(UWORD *,a,WORD,na,UWORD,b)
 }
 
 /*
-  	#] DivMod : 
+  	#] DivMod :
   	#[ DivShort :
 
 	Divides the long integer a by the short word b. Result in c.
@@ -361,7 +361,7 @@ WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
 }
 
 /*
-  	#] DivShort : 
+  	#] DivShort :
   	#[ InvMod :
 
 	Takes the inverse of A mod B. Assumes of course that a has an inverse,
@@ -400,7 +400,7 @@ UWORD InvMod ARG2(UWORD,A,UWORD,B)
 }
 
 /*
-  	#] InvMod : 
+  	#] InvMod :
   	#[ MakePrimes :
 
 	Routine creates (or extends) a list of short primes, starting at the
@@ -483,7 +483,7 @@ int MakePrimes ARG2(UWORD *,a,WORD,na)
 #endif
 
 /*
-  	#] MakePrimes : 
+  	#] MakePrimes :
   	#[ FactorIn :
 
 	This routine tests for a factor in a dollar expression.
@@ -867,7 +867,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 	WORD *t, *tstop, *m, *oldwork, *mstop, *n1, *n2, *n3, *n4, *n1stop, *n2stop;
 	WORD *r1, *r2, *r3, *r4, j, k, kGCD, kGCD2, kLCM, jGCD, kkLCM, jLCM, size, sign;
 	WORD *newterm, expr = 0;
-	WORD olddeferflag = AR.DeferFlag, oldgetfile = AS.GetFile, oldhold = AS.KeptInHold;
+	WORD olddeferflag = AR.DeferFlag, oldgetfile = AR.GetFile, oldhold = AR.KeptInHold;
 	WORD newgetfile, newhold;
 	int i;
 	EXPRESSIONS e;
@@ -975,7 +975,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 		AN.LCMc = AN.LCMb + AM.MaxTal+2;
 	}
 	position = AS.OldOnFile[expr];
-	AR.DeferFlag = 0; AS.KeptInHold = newhold; AS.GetFile = newgetfile;
+	AR.DeferFlag = 0; AR.KeptInHold = newhold; AR.GetFile = newgetfile;
 	SeekScratch(file,&oldposition);
 	SetScratch(file,&position);
 	if ( GetTerm(BHEAD oldwork) <= 0 ) {
@@ -996,7 +996,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 		goto Complete;
 	}
 	SeekScratch(file,&position);
-	AR.DeferFlag = olddeferflag; AS.KeptInHold = oldhold; AS.GetFile = oldgetfile;
+	AR.DeferFlag = olddeferflag; AR.KeptInHold = oldhold; AR.GetFile = oldgetfile;
 
 	r2 = m = oldwork + *oldwork;
 	j = m[-1];
@@ -1021,11 +1021,11 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 	The copy and the coefficient are in place. Now search through the terms.
 */
 	for (;;) {
-		AR.DeferFlag = 0; AS.KeptInHold = newhold; AS.GetFile = newgetfile;
+		AR.DeferFlag = 0; AR.KeptInHold = newhold; AR.GetFile = newgetfile;
 		SetScratch(file,&position);
 		size = GetTerm(BHEAD newterm);
 		SeekScratch(file,&position);
-		AR.DeferFlag = olddeferflag; AS.KeptInHold = oldhold; AS.GetFile = oldgetfile;
+		AR.DeferFlag = olddeferflag; AR.KeptInHold = oldhold; AR.GetFile = oldgetfile;
 		if ( size == 0 ) break;
 		m = oldwork+1;
 		r2 = newterm + *newterm;

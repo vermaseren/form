@@ -60,6 +60,8 @@ static KEYWORD com1commands[] = {
 
 static KEYWORD com2commands[] = {
 	 {"apply",          (TFUN)CoApply,            STATEMENT,    PARTEST}
+	,{"argexplode",     (TFUN)CoArgExplode,       STATEMENT,    PARTEST}
+	,{"argimplode",     (TFUN)CoArgImplode,       STATEMENT,    PARTEST}
 	,{"argument",       (TFUN)CoArgument,         STATEMENT,    PARTEST}
 	,{"assign",         (TFUN)CoAssign,           STATEMENT,    PARTEST}
 	,{"auto",           (TFUN)CoAuto,             DECLARATION,  PARTEST}
@@ -67,6 +69,7 @@ static KEYWORD com2commands[] = {
 	,{"chainin",        (TFUN)CoChainin,          STATEMENT,    PARTEST}
 	,{"chainout",       (TFUN)CoChainout,         STATEMENT,    PARTEST}
 	,{"chisholm",       (TFUN)CoChisholm,         STATEMENT,    PARTEST}
+	,{"cleartable",     (TFUN)CoClearTable,       DECLARATION,  PARTEST}
 	,{"collect",        (TFUN)CoCollect,          SPECIFICATION,PARTEST}
 	,{"contract",       (TFUN)CoContract,         STATEMENT,    PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
@@ -92,6 +95,7 @@ static KEYWORD com2commands[] = {
 	,{"if",             (TFUN)CoIf,               STATEMENT,    PARTEST}
 	,{"ifmatch",        (TFUN)CoIfMatch,          STATEMENT,    PARTEST}
 	,{"inexpression",   (TFUN)CoInExpression,     STATEMENT,    PARTEST}
+	,{"inparallel",     (TFUN)CoInParallel,       SPECIFICATION,PARTEST}
 	,{"inside",         (TFUN)CoInside,           STATEMENT,    PARTEST}
 	,{"insidefirst",    (TFUN)CoInsideFirst,      DECLARATION,  PARTEST}
 	,{"keep",           (TFUN)CoKeep,             SPECIFICATION,PARTEST}
@@ -105,6 +109,7 @@ static KEYWORD com2commands[] = {
 	,{"ndrop",          (TFUN)CoNoDrop,           SPECIFICATION,PARTEST}
 	,{"nhide",          (TFUN)CoNoHide,           SPECIFICATION,PARTEST}
 	,{"normalize",      (TFUN)CoNormalize,        STATEMENT,    PARTEST}
+	,{"notinparallel",  (TFUN)CoNotInParallel,    SPECIFICATION,PARTEST}
 	,{"nskip",          (TFUN)CoNoSkip,           SPECIFICATION,PARTEST}
 	,{"ntable",         (TFUN)CoNTable,           DECLARATION,  PARTEST}
 	,{"nunhide",        (TFUN)CoNoUnHide,         SPECIFICATION,PARTEST}
@@ -178,7 +183,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 
@@ -202,7 +207,7 @@ inictable ARG0
 }
 
 /*
- 		#] inictable : 
+ 		#] inictable :
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -255,7 +260,7 @@ findcommand ARG1(UBYTE *,in)
 }
 
 /*
- 		#] findcommand : 
+ 		#] findcommand :
  		#[ ParenthesesTest :
 */
 
@@ -299,7 +304,7 @@ int ParenthesesTest ARG1(UBYTE *,sin)
 }
 
 /*
- 		#] ParenthesesTest : 
+ 		#] ParenthesesTest :
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -334,7 +339,7 @@ SkipAName ARG1(UBYTE *,s)
 }
 
 /*
- 		#] SkipAName : 
+ 		#] SkipAName :
  		#[ IsRHS :
 */
 
@@ -381,7 +386,7 @@ IsRHS ARG2(UBYTE *,s,UBYTE,c)
 }
 
 /*
- 		#] IsRHS : 
+ 		#] IsRHS :
  		#[ IsIdStatement :
 */
 
@@ -392,7 +397,7 @@ IsIdStatement ARG1(UBYTE *,s)
 }
 
 /*
- 		#] IsIdStatement : 
+ 		#] IsIdStatement :
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -433,7 +438,7 @@ CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 }
 
 /*
- 		#] CompileAlgebra : 
+ 		#] CompileAlgebra :
  		#[ CompileStatement :
 
 */
@@ -540,7 +545,7 @@ CompileStatement ARG1(UBYTE *,in)
 }
 
 /*
- 		#] CompileStatement : 
+ 		#] CompileStatement :
  		#[ TestTables :
 */
 
@@ -579,7 +584,7 @@ int TestTables ARG0
 }
 
 /*
- 		#] TestTables : 
+ 		#] TestTables :
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -670,7 +675,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 			*fill++ = TSUBEXP;
 			i = 0;
 			do { number[i++] = num & 0x7F; num >>= 7; } while ( num );
-			while ( --i >= 0 ) *fill++ = number[i];
+			while ( --i >= 0 ) *fill++ = (SBYTE)(number[i]);
 			s++;
 		}
 		else if ( *s == TEMPTY ) s++;
@@ -686,7 +691,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 }
 
 /*
- 		#] CompileSubExpressions : 
+ 		#] CompileSubExpressions :
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -1732,7 +1737,7 @@ int CompleteTerm ARG6(WORD *,term,UWORD *,numer,UWORD *,denom,WORD,nnum,WORD,nde
 }
 
 /*
- 		#] CompleteTerm : 
+ 		#] CompleteTerm :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

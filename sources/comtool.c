@@ -360,11 +360,11 @@ balance:;
 	for (;;) {
 		p = boomlijst + ip;
 		iq = p->parent;
-		if ( iq == C->rootnum ) return(h);
+		if ( iq == C->rootnum ) break;
 		q = boomlijst + iq;
 		if ( ip == q->left ) q->blnce--;
 		else                 q->blnce++;
-		if ( q->blnce == 0 ) return(h);
+		if ( q->blnce == 0 ) break;
 		if ( q->blnce == -2 ) {
 			if ( p->blnce == -1 ) { /* single rotation */
 				q->left = p->right;
@@ -394,7 +394,7 @@ balance:;
 				else if ( s->blnce < 0 ) { p->blnce = s->blnce = 0; q->blnce = 1; }
 				else { p->blnce = s->blnce = q->blnce = 0; }
 			}
-			return(h);
+			break;
 		}
 		else if ( q->blnce == 2 ) {
 			if ( p->blnce == 1 ) {	/* single rotation */
@@ -424,7 +424,7 @@ balance:;
 				else if ( s->blnce > 0 ) { p->blnce = s->blnce = 0; q->blnce = -1; }
 				else { p->blnce = s->blnce = q->blnce = 0; }
 			}
-			return(h);
+			break;
 		}
 		is = ip; ip = iq;
 	}

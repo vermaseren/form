@@ -7,13 +7,14 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 
 	This is the central processor.
 	It accepts a stream of Expressions in the stream indicated by AR.infile,
 	which is accessed by a call to GetTerm.
+	(actually an error. Can also be AR.hidefile)
 	The definitions of an expression are seen as an id-statement, so the
 	primary Expressions should be written to the system of scratch files
 	as single terms with an expression pointer. Each expression is terminated
@@ -40,6 +41,7 @@ Processor()
 	int firstterm;
 	CBUF *CC = cbuf+AT.ebufnum;
 	WORD **w;
+	FILEHANDLE *curfile;
 	if ( CC->numrhs > 0 || CC->numlhs > 0 ) {
 		if ( CC->rhs ) {
 			w = CC->rhs; i = CC->numrhs;
@@ -58,14 +60,14 @@ Processor()
 	PF.module++;
 #endif
 	if ( NumExpressions == 0 ) return(0);
-	AS.expflags = 0;
+	AR.expflags = 0;
 	AR.CompressPointer = AR.CompressBuffer;
 	AR.NoCompress = AC.NoCompress;
 	term = AT.WorkPointer;
 	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer) ) > AT.WorkTop ) return(MesWork());
 	UpdatePositions();
 	C->rhs[C->numrhs+1] = C->Pointer;
-	AS.KeptInHold = 0;
+	AR.KeptInHold = 0;
 	if ( AC.CollectFun ) AR.DeferFlag = 0;
 /*
 		Next determine the last expression. This is used for removing the
@@ -91,11 +93,29 @@ Processor()
 		SetWorkerFiles();
 	}
 #endif
+#ifdef WITHPTHREADS
+/*
+		We start with running the expressions with expr->partodo in parallel.
+		The current model is: give each worker an expression. Wait for 
+		workers to finish and tell them where to write.
+		Then give them a new expression. Workers may have to wait for each
+		other. This is also the case with the last one.
+*/
+	if ( ( AC.numpartodo > 0 ) && InParallelProcessor() ) {
+		retval = 1;
+	}
+#endif
 	for ( i = 0; i < NumExpressions; i++ ) {
-		AS.CollectOverFlag = 0;
 		e = Expressions+i;
+#ifdef WITHPTHREADS
+		if ( AC.numpartodo > 0 && e->partodo > 0 ) {
+			e->partodo = 0;
+			continue;
+		}
+#endif
+		AS.CollectOverFlag = 0;
 		e->vflags &= ~ISUNMODIFIED;
-		AS.expchanged = 0;
+		AR.expchanged = 0;
 		if ( i == last ) LastExpression = 1;
 		else             LastExpression = 0;
 		if ( e->inmem ) {
@@ -106,7 +126,7 @@ Processor()
 */
 			WORD j;
 
-			AS.GetFile = 0;
+			AR.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
 			if ( GetTerm(BHEAD term) <= 0 ) {
 				MesPrint("Expression %d has problems in scratchfile",i);
@@ -114,7 +134,7 @@ Processor()
 				break;
 			}
 			term[3] = i;
-			AS.CurExpr = i;
+			AR.CurExpr = i;
 			SeekScratch(AR.outfile,&position);
 			e->onfile = position;
 			if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
@@ -144,34 +164,36 @@ Processor()
 			if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
 			if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 			else e->vflags |= ISZERO;
-			if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-				if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
-			if ( AS.expchanged ) AS.expflags |= ISUNMODIFIED;
-			AS.GetFile = 0;
+			if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
+			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
+			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
-			AS.CurExpr = i;
+			AR.CurExpr = i;
 			switch ( e->status ) {
 			case UNHIDELEXPRESSION:
 			case UNHIDEGEXPRESSION:
-				AS.GetFile = 2;
+				AR.GetFile = 2;
 #ifdef PARALLEL
 	            if ( PF.me == MASTER ) SetScratch(AR.hidefile,&(e->onfile));
 #else
 				SetScratch(AR.hidefile,&(e->onfile));
 #endif
+				curfile = AR.hidefile;
 				goto commonread;
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
-				AS.GetFile = 0;
+				AR.GetFile = 0;
 #ifdef PARALLEL
 				if ( PF.me == MASTER ) SetScratch(AR.infile,&(e->onfile));
 #else
 				SetScratch(AR.infile,&(e->onfile));
 #endif
+				curfile = AR.infile;
 commonread:;
 #ifdef PARALLEL
 				if ( PF_Processor(e,i,LastExpression) ) {
@@ -192,7 +214,7 @@ commonread:;
 				AR.DeferFlag = AC.ComDefer;
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
-					if ( ThreadsProcessor(e,i,LastExpression) ) {
+					if ( ThreadsProcessor(e,LastExpression) ) {
 						MesPrint("Error in ThreadsProcessor");
 						goto ProcErr;
 					}
@@ -204,13 +226,13 @@ commonread:;
 					AR.MaxDum = AM.IndDum;
 					AN.ninterms = 0;
 					while ( GetTerm(BHEAD term) ) {
-					  SeekScratch(AR.infile,&position);
+					  SeekScratch(curfile,&position);
 					  AN.ninterms++; dd = AN.deferskipped;
 					  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
 						if ( GetMoreTerms(term) < 0 ) {
 						  LowerSortLevel(); goto ProcErr;
 						}
-					    SeekScratch(AR.infile,&position);
+					    SeekScratch(curfile,&position);
 					  }
 					  AT.WorkPointer = term + *term;
 					  AN.RepPoint = AT.RepCount + 1;
@@ -220,9 +242,9 @@ commonread:;
 						LowerSortLevel(); goto ProcErr;
 					  }
 					  AN.ninterms += dd;
-					  SetScratch(AR.infile,&position);
-					  AR.InInBuf = (AR.infile->POfull-AR.infile->PObuffer)
-							-DIFBASE(position,AR.infile->POposition)/sizeof(WORD);
+					  SetScratch(curfile,&position);
+					  AR.InInBuf = (curfile->POfull-curfile->PObuffer)
+							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
 					}
 					AN.ninterms += dd;
 					if ( LastExpression ) {
@@ -239,10 +261,10 @@ commonread:;
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
-				if ( AS.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-				if ( AM.S0->TermsLeft ) AS.expflags |= ISZERO;
-				if ( AS.expchanged )    AS.expflags |= ISUNMODIFIED;
-				AS.GetFile = 0;
+				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
+				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
+				AR.GetFile = 0;
 #endif
 				break;
 			case SKIPLEXPRESSION:
@@ -253,7 +275,7 @@ commonread:;
 #ifdef PARALLEL
 				if ( PF.me != MASTER ) break;
 #endif
-				AS.GetFile = 0;
+				AR.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(BHEAD term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
@@ -291,7 +313,7 @@ commonread:;
 #ifdef PARALLEL
 				if ( PF.me != MASTER ) break;
 #endif
-				AS.GetFile = 0;
+				AR.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(BHEAD term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
@@ -337,7 +359,7 @@ commonread:;
 				break;
 		}
 		}
-		AS.KeptInHold = 0;
+		AR.KeptInHold = 0;
 	}
 	AR.DeferFlag = 0;
 	AT.WorkPointer = term;
@@ -795,15 +817,15 @@ Important: we may not have enough spots here
 				|| ( t[2] & DIRTYFLAG ) != 0 ) funflag = 1;
 			if ( *t <= MAXBUILTINFUNCTION ) {
 			if ( *t == THETA || *t == THETA2 ) {
-				WORD *tstop, *t2, kk;
+				WORD *tstop, *tt2, kk;
 				tstop = t + t[1];
-				t2 = t + FUNHEAD;
-				while ( t2 < tstop ) {
-					if ( *t2 > 0 && t2[1] != 0 ) {
+				tt2 = t + FUNHEAD;
+				while ( tt2 < tstop ) {
+					if ( *tt2 > 0 && tt2[1] != 0 ) {
 /*						funflag = 2; */
 						goto DoSpec;
 					}
-					NEXTARG(t2)
+					NEXTARG(tt2)
 				}
 				if ( !AT.RecFlag ) {
 					if ( ( kk = DoTheta(t) ) == 0 ) {
@@ -820,15 +842,15 @@ Important: we may not have enough spots here
 				}
 			}
 			else if ( *t == DELTA2 || *t == DELTAP ) {
-				WORD *tstop, *t2, kk;
+				WORD *tstop, *tt2, kk;
 				tstop = t + t[1];
-				t2 = t + FUNHEAD;
-				while ( t2 < tstop ) {
-					if ( *t2 > 0 && t2[1] != 0 ) {
+				tt2 = t + FUNHEAD;
+				while ( tt2 < tstop ) {
+					if ( *tt2 > 0 && tt2[1] != 0 ) {
 /*						funflag = 2; */
 						goto DoSpec;
 					}
-					NEXTARG(t2)
+					NEXTARG(tt2)
 				}
 				if ( !AT.RecFlag ) {
 					if ( ( kk = DoDelta(t) ) == 0 ) {
@@ -1175,7 +1197,7 @@ DoSpec:
 						isp = FindTableTree(T,t1+FUNHEAD,2);
 						if ( isp < 0 ) goto teststrict;
 						rhsnumber = T->tablepointers[isp+T->numind];
-#if ( TABLEXTENSION == 2 )
+#if ( TABLEEXTENSION == 2 )
 						tbufnum = T->bufnum;
 #else
 						tbufnum = T->tablepointers[isp+T->numind+1];
@@ -1228,7 +1250,7 @@ teststrict:					if ( T->strict == -2 ) {
 							goto showtable;
 						}
 						rhsnumber = T->tablepointers[i];
-#if ( TABLEXTENSION == 2 )
+#if ( TABLEEXTENSION == 2 )
 						tbufnum = T->bufnum;
 #else
 						tbufnum = T->tablepointers[i+1];
@@ -2061,8 +2083,9 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 	}
 	if ( accum >= m ) {
 		LOCK(ErrorMessageLock);
-		MesPrint("Buffer too small in PasteTerm"); return(0);
+		MesPrint("Buffer too small in PasteTerm");
 		UNLOCK(ErrorMessageLock);
+		return(0);
 	}
 	*accum = 0;
 	return(accum);
@@ -2263,6 +2286,18 @@ Generator BARG2(WORD *,term,WORD,level)
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1, id;
 #endif
+#ifdef WITHPTHREADS
+/*
+if ( Expressions[0].bracketinfo != 0 &&
+		 Expressions[0].bracketinfo->indexbuffer == 0 &&
+		 Expressions[0].bracketinfo->bracketbuffer != 0 ) {
+	LOCK(ErrorMessageLock);
+	MesPrint("Problems with bracket index in thread %d",AT.identity);
+	UNLOCK(ErrorMessageLock);
+}
+*/
+#endif
+
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
 
@@ -2388,11 +2423,11 @@ SkipCount:	level++;
 				  case TYPESUMFIX:
 					{
 						WORD *cp = AR.CompressPointer, *op = AR.CompressPointer;
-						WORD *t = C->lhs[level] + 3, *m, j;
+						WORD *tlhs = C->lhs[level] + 3, *m, jlhs;
 						WORD theindex = C->lhs[level][2];
 						if ( theindex < 0 ) {	/* $-variable */
 #ifdef WITHPTHREADS
-							int nummodopt, dtype = -1;
+							int ddtype = -1;
 							theindex = -theindex;
 							d = Dollars + theindex;
 							if ( AS.MultiThreaded ) {
@@ -2400,8 +2435,8 @@ SkipCount:	level++;
 									if ( theindex == ModOptdollars[nummodopt].number ) break;
 								}
 								if ( nummodopt < NumModOptdollars ) {
-									dtype = ModOptdollars[nummodopt].type;
-									if ( dtype == MODLOCAL ) {
+									ddtype = ModOptdollars[nummodopt].type;
+									if ( ddtype == MODLOCAL ) {
 										d = ModOptdollars[nummodopt].dstruct+AT.identity;
 									}
 									else {
@@ -2429,13 +2464,13 @@ SkipCount:	level++;
 								,AC.dollarnames->namebuffer+d->name);
 								UNLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
-							if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+							if ( ddtype > 0 && ddtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 								goto GenCall;
 							}
 							theindex = d->index;
 #ifdef WITHPTHREADS
-							if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+							if ( ddtype > 0 && ddtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 						}
 						cp[1] = SUBEXPSIZE+4;
@@ -2447,16 +2482,16 @@ SkipCount:	level++;
 						cp++;
 						AR.CompressPointer = cp;
 						while ( --i >= 0 ) {
-							cp[-1] = *t++;
+							cp[-1] = *tlhs++;
 							termout = AT.WorkPointer;
-							if ( ( j = WildFill(BHEAD termout,term,op)) < 0 )
+							if ( ( jlhs = WildFill(BHEAD termout,term,op)) < 0 )
 								goto GenCall;
 							m = term;
-							j = *m;
-							while ( --j >= 0 ) {
+							jlhs = *m;
+							while ( --jlhs >= 0 ) {
 								if ( *m++ != *termout++ ) break;
 							}
-							if ( j >= 0 ) {
+							if ( jlhs >= 0 ) {
 								termout = AT.WorkPointer;
 								AT.WorkPointer = termout + *termout;
 								if ( Generator(BHEAD termout,level) ) goto GenCall;
@@ -2486,7 +2521,7 @@ SkipCount:	level++;
 							theindex = *wp++;
 							if ( theindex < 0 ) {	/* $-variable */
 #ifdef WITHPTHREADS
-								int nummodopt, dtype = -1;
+								int ddtype = -1;
 								theindex = -theindex;
 								d = Dollars + theindex;
 								if ( AS.MultiThreaded ) {
@@ -2494,8 +2529,8 @@ SkipCount:	level++;
 										if ( theindex == ModOptdollars[nummodopt].number ) break;
 									}
 									if ( nummodopt < NumModOptdollars ) {
-										dtype = ModOptdollars[nummodopt].type;
-										if ( dtype == MODLOCAL ) {
+										ddtype = ModOptdollars[nummodopt].type;
+										if ( ddtype == MODLOCAL ) {
 											d = ModOptdollars[nummodopt].dstruct+AT.identity;
 										}
 										else {
@@ -2522,13 +2557,13 @@ SkipCount:	level++;
 									,AC.dollarnames->namebuffer+d->name);
 									UNLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
-									if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+									if ( ddtype > 0 && ddtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 									goto GenCall;
 								}
 								theindex = d->index;
 #ifdef WITHPTHREADS
-								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+								if ( ddtype > 0 && ddtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 							}
 							*cp++ = INDTOIND;
@@ -2703,7 +2738,7 @@ CommonEnd:
 					int numexprs = (int)(ll[1]-3);
 					ll += 3;
 					while ( numexprs-- >= 0 ) {
-						if ( *ll == AS.CurExpr ) break;
+						if ( *ll == AR.CurExpr ) break;
 						ll++;
 					}
 					if ( numexprs < 0 ) level = C->lhs[level][2];
@@ -2732,7 +2767,7 @@ CommonEnd:
 /*
 				  case TYPEAPPLYRESET:
 					AT.WorkPointer = term + *term;
-					if ( ApplyReset(term,level) ) goto GenCall;
+					if ( ApplyReset(level) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
 */
@@ -2743,17 +2778,27 @@ CommonEnd:
 					break;
 				  case TYPECHAININ:
 					AT.WorkPointer = term + *term;
-					if ( ChainIn(term,level,C->lhs[level][2]) ) goto GenCall;
+					if ( ChainIn(term,C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
 				  case TYPECHAINOUT:
 					AT.WorkPointer = term + *term;
-					if ( ChainOut(term,level,C->lhs[level][2]) ) goto GenCall;
+					if ( ChainOut(term,C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
 				  case TYPEPOLYNORM:
 					AT.WorkPointer = term + *term;
 					if ( PolyNorm(BHEAD term,level,C->lhs[level][2],C->lhs[level][3]) ) goto GenCall;
+					AT.WorkPointer = term + *term;
+					break;
+				  case TYPEARGIMPLODE:
+					AT.WorkPointer = term + *term;
+					if ( ArgumentImplode(BHEAD term,C->lhs[level]) ) goto GenCall;
+					AT.WorkPointer = term + *term;
+					break;
+				  case TYPEARGEXPLODE:
+					AT.WorkPointer = term + *term;
+					if ( ArgumentExplode(BHEAD term,C->lhs[level]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
 				}
@@ -2768,7 +2813,7 @@ CommonEnd:
 		else replac = i;
 		if ( replac >= 0 || AT.TMout[1] != SYMMETRIZE ) {
 			*AN.RepPoint = 1;
-			AS.expchanged = 1;
+			AR.expchanged = 1;
 		}
 		if ( replac < 0 ) {		/* Terms come from automatic generation */
 AutoGen:	i = *AT.TMout;
@@ -2803,7 +2848,7 @@ AutoGen:	i = *AT.TMout;
 			if ( InFunction(term,termout) ) goto GenCall;
 			AT.WorkPointer = termout + *termout;
 			*AN.RepPoint = 1;
-			AS.expchanged = 1;
+			AR.expchanged = 1;
 			if ( *termout && Generator(BHEAD termout,level) < 0 ) goto GenCall;
 			AT.WorkPointer = termout;
 		}
@@ -2862,7 +2907,7 @@ AutoGen:	i = *AT.TMout;
 					&(StartBuf[posisub]),termout,tepos) < 0 ) goto GenCall;
 				AT.WorkPointer = termout + *termout;
 				*AN.RepPoint = 1;
-				AS.expchanged = 1;
+				AR.expchanged = 1;
 				posisub += StartBuf[posisub];
 #ifdef WITHPTHREADS
 				if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
@@ -2937,7 +2982,7 @@ AutoGen:	i = *AT.TMout;
 					if ( FiniTerm(BHEAD term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
-					AS.expchanged = 1;
+					AR.expchanged = 1;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 					if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 )
@@ -2995,7 +3040,7 @@ AutoGen:	i = *AT.TMout;
 					if ( FiniTerm(BHEAD term,accum,termout,replac,tepos) ) goto GenCall;
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
-					AS.expchanged = 1;
+					AR.expchanged = 1;
 #ifdef WITHPTHREADS
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 					if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 ) && ( id = ConditionalGetAvailableThread() ) >= 0 ) {
@@ -3109,7 +3154,7 @@ skippedfirst:
 					if ( *termout ) {
 						AT.WorkPointer = termout + *termout;
 						*AN.RepPoint = 1;
-						AS.expchanged = 1;
+						AR.expchanged = 1;
 #ifdef WITHPTHREADS
 						if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 ) && ( id = ConditionalGetAvailableThread() ) >= 0 ) {
 							if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
@@ -3179,7 +3224,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 
 		Routine gets one power of an expression.
@@ -3217,7 +3262,6 @@ DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 	FILEHANDLE *fi;
 	WORD type, retval;
 	WORD oldGetOneFile = AR.GetOneFile;
-	BRACKETINFO *bi;
 	WORD olddummies = AR.CurDum;
 	WORD extradummies = Expressions[nexp].numdummies;
 	type = Expressions[nexp].status;
@@ -3229,12 +3273,16 @@ DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 	}
 	if ( fi->handle >= 0 ) {
 		PUTZERO(oldposition);
+#ifdef WITHSEEK
+		LOCK(AS.inputslock);
 		SeekFile(fi->handle,&oldposition,SEEK_CUR);
+		UNLOCK(AS.inputslock);
+#endif
 	}
 	else {
 		SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
 	}
-	if ( freeze && ( ( bi = Expressions[nexp].bracketinfo ) != 0 ) ) {
+	if ( freeze && ( Expressions[nexp].bracketinfo != 0 ) ) {
 		POSITION *brapos;
 /*
 		There is a bracket index
@@ -3245,25 +3293,10 @@ DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
 		if ( ( brapos = FindBracket(&(Expressions[nexp]),freeze) ) == 0 )
 			goto EndExpr;
 		startposition = *brapos;
-/*
-		if ( fi->handle >= 0 ) {
-			SeekFile(fi->handle,brapos,SEEK_SET);
-		}
-		else {
-			fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(*brapos));
-		}
-*/
 		goto doterms;
 	}
 	startposition = AS.OldOnFile[nexp];
 	retval = GetOneTerm(BHEAD accum,fi,&startposition,0);
-/*
-	if ( fi->handle >= 0 ) { SeekFile(fi->handle,&startposition,SEEK_SET); }
-	else { fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(startposition)); }
-	retval = GetOneTerm(BHEAD accum,fi->handle);
-	if ( fi->handle >= 0 ) { SeekFile(fi->handle,&startposition,SEEK_CUR); }
-	else { SETBASEPOSITION(startposition,(UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer)); }
-*/
 	if ( retval > 0 ) {			/* Skip prototype */
 		(*aa)++;
 		power--;
@@ -3271,13 +3304,6 @@ doterms:
 		AR.CompressPointer = oldipointer;
 		for (;;) {
 			retval = GetOneTerm(BHEAD accum,fi,&startposition,0);
-/*
-			if ( fi->handle >= 0 ) { SeekFile(fi->handle,&startposition,SEEK_SET); }
-			else { fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(startposition)); }
-			retval = GetOneTerm(BHEAD accum,fi->handle);
-			if ( fi->handle >= 0 ) { SeekFile(fi->handle,&startposition,SEEK_CUR); }
-			else { SETBASEPOSITION(startposition,(UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer)); }
-*/
 			if ( retval <= 0 ) break;
 /*
 			Here should come the code to test for [].
@@ -3346,7 +3372,7 @@ doterms:
 				if ( *termout ) {
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
-					AS.expchanged = 1;
+					AR.expchanged = 1;
 					if ( Generator(BHEAD termout,level) ) goto PowCall;
 				}
 			}
@@ -3367,12 +3393,16 @@ EndExpr:
 	}
 	AR.CompressPointer = oldipointer;
 	if ( fi->handle >= 0 ) {
+#ifdef WITHSEEK
+		LOCK(AS.inputslock);
 		SeekFile(fi->handle,&oldposition,SEEK_SET);
+		UNLOCK(AS.inputslock);
 		if ( ISNEGPOS(oldposition) ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("File error");
 			goto PowCall2;
 		}
+#endif
 	}
 	else {
 		fi->POfill = fi->PObuffer + BASEPOSITION(oldposition);
@@ -3382,14 +3412,16 @@ EndExpr:
 	return(0);
 PowCall:;
 	LOCK(ErrorMessageLock);
+#ifdef WITHSEEK
 PowCall2:;
+#endif
 	MesCall("DoOnePow");
 	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 
 		Picks up the deferred brackets.
@@ -3402,7 +3434,7 @@ WORD
 Deferred BARG2(WORD *,term,WORD,level)
 {
 	GETBIDENTITY
-	POSITION oldposition, startposition;
+	POSITION startposition;
 	WORD *t, *m, *mstop, *tstart, decr, oldb, *termout, i, *oldwork, retval;
 	WORD *oldipointer = AR.CompressPointer, *oldPOfill = AR.infile->POfill;
 	WORD oldGetOneFile = AR.GetOneFile;
@@ -3410,25 +3442,26 @@ Deferred BARG2(WORD *,term,WORD,level)
 	AR.GetOneFile = 1;
 	oldwork = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
-	if ( Expressions[AS.CurExpr].numdummies && AR.CurDum > AM.IndDum ) {
+	if ( Expressions[AR.CurExpr].numdummies && AR.CurDum > AM.IndDum ) {
 		copyspace = AT.WorkPointer;
 	    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	}
 	termout = AT.WorkPointer;
 	AR.DeferFlag = 0;
+	startposition = AR.DefPosition;
 /*
 		Store old position
 */
 	if ( AR.infile->handle >= 0 ) {
+/*
 		PUTZERO(oldposition);
 		SeekFile(AR.infile->handle,&oldposition,SEEK_CUR);
-		startposition = AR.DefPosition;
+*/
 	}
 	else {
+/*
 		SETBASEPOSITION(oldposition,AR.infile->POfill-AR.infile->PObuffer);
-/*		SETBASEPOSITION(startposition,(UBYTE *)(AR.infile->POfill)-(UBYTE *)(AR.infile->PObuffer));*/
-/*%%%%%ADDED 7-apr-2006 for Keep Brackets in bucket */
-		startposition = AR.DefPosition;
+*/
 		AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer)
 					+BASEPOSITION(startposition));
 	}
@@ -3478,7 +3511,7 @@ Deferred BARG2(WORD *,term,WORD,level)
 			t = tbegin = copyspace; m = tstart; i = *tstart;
 			NCOPY(t,m,i);
 			MoveDummies(BHEAD tbegin,olddummies-AM.IndDum);
-			AR.CurDum = olddummies + Expressions[AS.CurExpr].numdummies;
+			AR.CurDum = olddummies + Expressions[AR.CurExpr].numdummies;
 		}
 		else tbegin = tstart;
 		if ( InsertTerm(BHEAD term,0,AM.rbufnum,tbegin,termout,0) < 0 ) {
@@ -3706,7 +3739,7 @@ PrepPoly ARG1(WORD *,term)
 			No indices allowed.
 */
 			while ( t < r ) {
-				WORD *vv, *vstop;
+				WORD *vstop;
 				vv = t + *t;
 				vstop = vv - ABS(vv[-1]);
 				t++;

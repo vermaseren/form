@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -24,7 +24,7 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use :
+  	#] syntax and use : 
   	#[ FindBracket :
 */
 
@@ -34,12 +34,13 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	GETIDENTITY
 	BRACKETINDEX *bi;
 	LONG hi, low, med;
-	int i;
-	WORD oldsorttype = AC.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
+	int i, iexpr;
+	WORD oldsorttype = AR.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
 	WORD *tstop, *cp, a[4];
 	FILEHANDLE *fi;
 	POSITION auxpos, toppos;
 
+	iexpr = e - Expressions;
 	switch ( e->status ) {
 		case UNHIDELEXPRESSION:
 		case UNHIDEGEXPRESSION:
@@ -55,7 +56,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	}
 	hi = e->bracketinfo->indexfill; low = 0;
 	if ( hi <= 0 ) return(0);
-	AC.SortType = e->bracketinfo->SortType;
+	AR.SortType = e->bracketinfo->SortType;
 	bi = e->bracketinfo->indexbuffer + hi - 1;
 	if ( *bracket == 4 ) {
 		if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
@@ -64,7 +65,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
 	else i = Compare(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
-		AC.SortType = oldsorttype;
+		AR.SortType = oldsorttype;
 		return(0);
 	}
 	else if ( i == 0 ) med = hi-1;
@@ -80,7 +81,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 		if ( i == 0 ) { break; }
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
-				AC.SortType = oldsorttype;
+				AR.SortType = oldsorttype;
 				return(0);
 			}
 			hi = med;
@@ -94,6 +95,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	The bracket is now either bi itself or between bi and the next one
 	or it is not present at all.
 */
+/*	AN.theposition = AS.OldOnFile[iexpr]; */
 	AN.theposition = e->onfile;
 	ADD2POS(AN.theposition,bi->start);
 /*
@@ -112,7 +114,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 	t2 = AR.CompressPointer;
 	NCOPY(t2,t1,j)
 	if ( i == 0 ) {	/* We found the proper bracket already */
-		AC.SortType = oldsorttype;
+		AR.SortType = oldsorttype;
 		return(&AN.theposition);
 	}
 /*
@@ -122,9 +124,13 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 */
 	if ( fi->handle < 0 ) {
 		p = (WORD *)((UBYTE *)(fi->PObuffer)
-			 + BASEPOSITION(e->onfile) + BASEPOSITION(bi->start));
+/*			 + BASEPOSITION(AS.OldOnFile[iexpr]) */
+			 + BASEPOSITION(e->onfile)
+			 + BASEPOSITION(bi->start));
 		pstop = (WORD *)((UBYTE *)(fi->PObuffer)
-			 + BASEPOSITION(e->onfile) + BASEPOSITION(bi->next));
+/*			 + BASEPOSITION(AS.OldOnFile[iexpr]) */
+			 + BASEPOSITION(e->onfile)
+			 + BASEPOSITION(bi->next));
 		while ( p < pstop ) {
 /*
 			Check now: if size or part from previous term < size of bracket
@@ -182,10 +188,11 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 				p += *p;
 			}
 		}
-		AC.SortType = oldsorttype;
+		AR.SortType = oldsorttype;
 		return(0);	/* Bracket does not exist */
 	}
 	else {
+/*		toppos = AS.OldOnFile[iexpr]; */
 		toppos = e->onfile;
 		ADD2POS(toppos,bi->next);
 		cp = AR.CompressPointer;
@@ -198,7 +205,7 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 			SeekFile(fi->handle,&auxpos,SEEK_CUR);
 */
 			if ( *term == 0 ) {
-				AC.SortType = oldsorttype;
+				AR.SortType = oldsorttype;
 				return(0);	/* Bracket does not exist */
 			}
 			tstop = term + *term;
@@ -220,14 +227,14 @@ FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
 			Now check whether we passed the 'point'
 */
 			if ( ISGEPOS(AN.theposition,toppos) ) {
-				AC.SortType = oldsorttype;
+				AR.SortType = oldsorttype;
 				AR.CompressPointer = cp;
 				return(0);	/* Bracket does not exist */
 			}
 		}
 	}
 found:
-	AC.SortType = oldsorttype;
+	AR.SortType = oldsorttype;
 	return(&AN.theposition);
 }
 
@@ -241,7 +248,7 @@ found:
 	This means that there should be a bracket somewhere
 	Note that the brackets come in in proper order.
 
-	DON'T forget AC.SortType to be put into e->bracketinfo->SortType
+	DON'T forget AR.SortType to be put into e->bracketinfo->SortType
 */
 
 VOID
@@ -251,7 +258,7 @@ PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 	BRACKETINDEX *bi, *b1, *b2, *b3;
 	BRACKETINFO *b;
 	POSITION thepos;
-	EXPRESSIONS e = Expressions + AS.CurExpr;
+	EXPRESSIONS e = Expressions + AR.CurExpr;
 	LONG hi, i, average;
 	WORD *t, *tstop, *t1, *t2, *oldt, oldsize, oldh, oldhs;
 	if ( ( b = e->newbracketinfo ) == 0 ) return;
@@ -416,7 +423,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex :
+  	#] PutBracketInIndex : 
   	#[ ClearBracketIndex :
 */
 
@@ -434,8 +441,10 @@ ClearBracketIndex ARG1(WORD,numexp)
 }
 
 /*
-  	#] ClearBracketIndex :
+  	#] ClearBracketIndex : 
   	#[ OpenBracketIndex :
+
+	Note: This routine is thread-safe
 */
 
 VOID
@@ -459,7 +468,7 @@ OpenBracketIndex ARG1(WORD,nexpr)
 }
 
 /*
-  	#] OpenBracketIndex :
+  	#] OpenBracketIndex : 
 */
 
 /*

@@ -9,9 +9,7 @@
 #define PRODUCTIONDATE "16-apr-2007"
 #endif
 
-/*[17oct2005 mt]:*/
 #define FORM_INLINE inline
-/*:[17oct2005 mt]*/
 
 #define WITHZLIB
 
@@ -20,7 +18,10 @@
 #define WITHPCOUNTER
 #define DEBUGGINGLOCKS
 #define WITHPTHREADS
+#define WITHPOSIXCLOCK
+#define WITHSTATS
 */
+#define WITHSORTBOTS
 
 #ifdef WITHZLIB
 #include <zlib.h>

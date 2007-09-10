@@ -64,9 +64,9 @@ Normalize BARG1(WORD *,term)
 	WORD pdot[3*NORMSIZE],*ppdot,ndot;
 	WORD pdel[2*NORMSIZE],*ppdel,ndel;
 	WORD pind[NORMSIZE],nind;
-	WORD *pgam[NORMSIZE/2],ngam;
+	WORD ngam;
 	WORD *peps[NORMSIZE/3],neps;
-	WORD *pexp[NORMSIZE/3],nexp;
+	WORD nexp;
 	WORD *pden[NORMSIZE/3],nden;
 	WORD *pcom[NORMSIZE],ncom;
 	WORD *pnco[NORMSIZE],nnco;
@@ -76,7 +76,6 @@ Normalize BARG1(WORD *,term)
 	WORD *termout, oldtoprhs = 0, subtype;
 	WORD ReplaceType, didcontr, regval = 0;
 	WORD *ReplaceSub;
-	WORD nsetexp;
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
 	LONG oldcpointer = 0;
@@ -102,7 +101,6 @@ Restart:
 	termout = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	fillsetexp = termout+1;
-	nsetexp = 0;
 	AN.PolyNormFlag = 0;
 /*
 	termflag = 0;
@@ -1007,7 +1005,7 @@ nospec:				pcom[ncom++] = t;
 			case GAMMAFIVE :
 			case GAMMASIX :
 			case GAMMASEVEN :
-				pgam[ngam++] = pnco[nnco++] = t;
+				pnco[nnco++] = t;
 				t += FUNHEAD+1;
 				goto ScanCont;
 			case LEVICIVITA :
@@ -1057,7 +1055,6 @@ ScanCont:		while ( t < r ) {
 */
 					t[2] &= ~DIRTYSYMFLAG;
 
-					pexp[nexp++] = t;
 					pnco[nnco++] = t;
 				}
 				break;

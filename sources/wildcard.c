@@ -9,7 +9,7 @@
 /*
 #define DEBUG(x) x
 
-  	#] Includes : 
+  	#] Includes :
  	#[ Wildcards :
  		#[ WildFill :			WORD WildFill(to,from,sub)
 
@@ -219,7 +219,7 @@ Seven:;
 				while ( s < z ) *m++ = *s++;
 				break;
 /*
-			#] SYMBOLS : 
+			#] SYMBOLS :
 */
 			case DOTPRODUCT:
 /*
@@ -527,7 +527,7 @@ NextDot:;
 				}
 				break;
 /*
-			#] DOTPRODUCTS : 
+			#] DOTPRODUCTS :
 */
 			case SETSET:
 /*
@@ -542,7 +542,7 @@ NextDot:;
 				t = temp; u = t + t[1];
 				goto ReSwitch;
 /*
-			#] SETS : 
+			#] SETS :
 */
 			case VECTOR:
 /*
@@ -635,7 +635,7 @@ ss4:				m++; t++;
 				}
 				break;
 /*
-			#] VECTORS : 
+			#] VECTORS :
 */
 			case INDEX:
 /*
@@ -681,7 +681,7 @@ ss5:				m++; t++;
 				}
 				break;
 /*
-			#] INDEX : 
+			#] INDEX :
 */
 			case DELTA:
 			case LEVICIVITA:
@@ -780,7 +780,7 @@ ss6:					m++; t++;
 				}
 				break;
 /*
-			#] SPECIALS : 
+			#] SPECIALS :
 */
 			case SUBEXPRESSION:
 /*
@@ -837,7 +837,7 @@ sr7:;
 				}
 				break;
 /*
-			#] SUBEXPRESSION : 
+			#] SUBEXPRESSION :
 */
 			case EXPRESSION:
 /*
@@ -902,7 +902,7 @@ sr7:;
 				v[1] = m-v;
 				break;
 /*
-			#] EXPRESSION : 
+			#] EXPRESSION :
 */
 			default:
 /*
@@ -1114,7 +1114,7 @@ ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments : 
+			#] Simple arguments :
 */
 						}
 						else {
@@ -1161,7 +1161,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 */
 		}
 		t = uu;
@@ -1176,7 +1176,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill : 
+ 		#] WildFill :
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -1342,7 +1342,7 @@ GotOne:;
 }
 
 /*
- 		#] ResolveSet : 
+ 		#] ResolveSet :
  		#[ ClearWild :			VOID ClearWild()
 
 	Clears the current wildcard settings and makes them ready for
@@ -1369,7 +1369,7 @@ ClearWild BARG0
 }
 
 /*
- 		#] ClearWild : 
+ 		#] ClearWild :
  		#[ AddWild :			WORD AddWild(oldnumber,type,newnumber)
 
  		Adds a wildcard assignment.
@@ -1713,7 +1713,10 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 						m = C->rhs[w[3]];
 						if ( (C->rhs[w[3]+1] - m - 1) == n ) {
 							while ( n > 0 ) {
-								if ( *m++ != *newval++ ) break;
+								if ( *m != *newval ) {
+									m++; newval++; break;
+								}
+								m++; newval++;
 								n--;
 							}
 							if ( n <= 0 ) return(0);
@@ -1735,7 +1738,10 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 							if ( n == *m ) {
 								m++;
 								while ( --n >= 0 ) {
-									if ( *m++ != *newval++ ) break;
+									if ( *m != *newval ) {
+										m++; newval++; break;
+									}
+									m++; newval++;
 								}
 								if ( n < 0 ) return(0);
 							}
@@ -1773,7 +1779,10 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 							while ( --i >= 0 ) { NEXTARG(s) }
 							n = WORDDIF(s,newval);
 							while ( --n >= 0 ) {
-								if ( *newval++ != *m++ ) break;
+								if ( *m != *newval ) {
+									m++; newval++; break;
+								}
+								m++; newval++;
 							}
 							if ( n < 0 && *m == 0 ) return(0);
 						}
@@ -1811,15 +1820,29 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 							s = *a++;
 							if ( *s > 0 ) {
 								n = *s;
-								while ( --n >= 0 ) if ( *s++ != *m++ ) break;
+								while ( --n >= 0 ) {
+									if ( *s != *m ) {
+										s++; m++; break;
+									}
+									s++; m++;
+								}
 								if ( n >= 0 ) break;
 							}
 							else if ( *s <= -FUNCTION ) {
-								if ( *s++ != *m++ ) break;
+								if ( *s != *m ) {
+									s++; m++; break;
+								}
+								s++; m++;
 							}
 							else {
-								if ( *s++ != *m++ ) break;
-								if ( *s++ != *m++ ) break;
+								if ( *s != *m ) {
+									s++; m++; break;
+								}
+								s++; m++;
+								if ( *s != *m ) {
+									s++; m++; break;
+								}
+								s++; m++;
 							}
 						}
 						if ( i < 0 && *m == 0 ) return(0);
@@ -1838,7 +1861,7 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 /*
 				Search for vector or index nature. If not so: reject.
 */
-				WORD *ss, *sstop, *tt, *ttstop, count, j;
+				WORD *ss, *sstop, *tt, *ttstop, count, jt;
 				ss = newval;
 				sstop = ss + *ss;
 				ss += ARGHEAD;
@@ -1849,8 +1872,8 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 					count = 0;
 					while ( ss < ttstop ) {
 						if ( *ss == INDEX ) {
-							j = ss[1] - 2; ss += 2;
-							while ( --j >= 0 ) {
+							jt = ss[1] - 2; ss += 2;
+							while ( --jt >= 0 ) {
 								if ( *ss < MINSPEC ) count++;
 								ss++;
 							}
@@ -1877,7 +1900,10 @@ CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
 							m = C->rhs[w[3]];
 							if ( (C->rhs[w[3]+1] - m - 1) == n ) {
 								while ( n > 0 ) {
-									if ( *m++ != *newval++ ) break;
+									if ( *m != *newval ) {
+										m++; newval++; break;
+									}
+									m++; newval++;
 									n--;
 								}
 								if ( n <= 0 ) return(0);
@@ -2121,7 +2147,10 @@ NoMnot:
 									part = newval+2;
 									if ( (C->rhs[ww[3]+1]-mmm-1) == nn ) {
 										while ( --nn >= 0 ) {
-											if ( *mmm++ != *part++ ) break;
+											if ( *mmm != *part ) {
+												mmm++; part++; break;
+											}
+											mmm++; part++;
 										}
 										if ( nn < 0 ) goto NoMatch;
 									}
@@ -2151,7 +2180,10 @@ NoMnot:
 									part = newval+2;
 									if ( (C->rhs[ww[3]+1]-mmm-1) == nn ) {
 										while ( --nn >= 0 ) {
-											if ( *mmm++ != *part++ ) break;
+											if ( *mmm != *part ) {
+												mmm++; part++; break;
+											}
+											mmm++; part++;
 										}
 										if ( nn < 0 ) goto NoMatch;
 									}
@@ -2181,7 +2213,10 @@ NoMnot:
 									part = newval+2;
 									if ( (C->rhs[ww[3]+1]-mmm-1) == nn ) {
 										while ( --nn >= 0 ) {
-											if ( *mmm++ != *part++ ) break;
+											if ( *mmm != *part ) {
+												mmm++; part++; break;
+											}
+											mmm++; part++;
 										}
 										if ( nn < 0 ) goto NoMatch;
 									}
@@ -2257,7 +2292,7 @@ NoM:
 }
 
 /*
- 		#] CheckWild : 
+ 		#] CheckWild :
  	#] Wildcards :
 */
 

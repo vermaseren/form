@@ -64,6 +64,8 @@ SETUPPARAMETERS setupparameters[] =
     ,{(UBYTE *)"threadbucketsize",      NUMERICALVALUE, 0, (long)DEFAULTTHREADBUCKETSIZE}
     ,{(UBYTE *)"threadloadbalancing",       ONOFFVALUE, 0, (long)DEFAULTTHREADLOADBALANCING}
     ,{(UBYTE *)"threads",               NUMERICALVALUE, 0, (long)DEFAULTTHREADS}
+	,{(UBYTE *)"threadscratchoutsize",  NUMERICALVALUE, 0, (long)THREADSCRATCHOUTSIZE}
+	,{(UBYTE *)"threadscratchsize",     NUMERICALVALUE, 0, (long)THREADSCRATCHSIZE}
     ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (long)WORKBUFFER}
 	,{(UBYTE *)"zipsize",               NUMERICALVALUE, 0, (long)ZIPBUFFERSIZE}
@@ -337,6 +339,8 @@ AllocSetups ARG0
 	AM.MaxTal = size - 2;
 	if ( AM.MaxTal > (AM.MaxTer/sizeof(WORD)-2)/2 )
 				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
+	if ( AM.MaxTal < (AM.MaxTer/sizeof(WORD)-2)/4 )
+				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/4;
 /*
 	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
 	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
@@ -358,6 +362,12 @@ AllocSetups ARG0
 	sp = GetSetupPar((UBYTE *)"scratchsize");
 	AM.ScratSize = sp->value/sizeof(WORD);
 	if ( AM.ScratSize < 4*AM.MaxTer ) AM.ScratSize = 4*AM.MaxTer;
+#ifdef WITHPTHREADS
+	sp = GetSetupPar((UBYTE *)"threadscratchsize");
+	AM.ThreadScratSize = sp->value/sizeof(WORD);
+	sp = GetSetupPar((UBYTE *)"threadscratchoutsize");
+	AM.ThreadScratOutSize = sp->value/sizeof(WORD);
+#endif
 #ifndef WITHPTHREADS
 	for ( j = 0; j < 2; j++ ) {
 		WORD *ScratchBuf;
@@ -939,7 +949,7 @@ int TryEnvironment()
 	for ( i = 0; i < imax; i++ ) {
 		t = s = (char *)(setupparameters[i].parameter);
 		u = varname+5;
-		while ( *s ) { *u++ = toupper(*s); s++; }
+		while ( *s ) { *u++ = (char)(toupper(*s)); s++; }
 		*u = 0;
 		s = (char *)(getenv(varname));
 		if ( s ) {

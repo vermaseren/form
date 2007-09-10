@@ -6,7 +6,7 @@
 #define BHEAD0 B
 #else
 #define PHEAD
-#define PHEAD0
+#define PHEAD0 VOID
 #define BHEAD
 #define BHEAD0
 #endif
@@ -434,6 +434,8 @@ typedef int (*TFUN1)();
 #define TYPECHAINOUT 64
 #define TYPENORM4 65
 #define TYPEPOLYNORM 66
+#define TYPEARGIMPLODE 67
+#define TYPEARGEXPLODE 68
 
 #define TAKETRACE 1
 #define CONTRACT 2
@@ -678,6 +680,11 @@ typedef int (*TFUN1)();
 #define CLEANUPEXPRESSION 4
 #define HIGHERLEVELGENERATION 5
 #define STARTNEWMODULE 6
+#define CLAIMOUTPUT 7
+#define FINISHEXPRESSION2 8
+#define INISORTBOT 7
+#define RUNSORTBOT 8
+#define DOONEEXPRESSION 9
 
 #define MASTERBUFFERISFULL 1
 

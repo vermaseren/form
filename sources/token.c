@@ -113,7 +113,7 @@ dovariable:		c = *in; *in = 0;
 				}
 				object = 1;
 donumber:		i = 0;
-				do { num[i++] = number & 0x7F; number >>= 7; } while ( number );
+				do { num[i++] = (SBYTE)(number & 0x7F); number >>= 7; } while ( number );
 				while ( --i >= 0 ) *out++ = num[i];
 				*in = c;
 				break;
@@ -131,12 +131,12 @@ donumber:		i = 0;
 				}
 				if ( i == 1 && *in == '_' && ( *s == '5' || *s == '6'
 				|| *s == '7' ) ) {
-					in++; *out++ = TSGAMMA; *out++ = *s - '4';
+					in++; *out++ = TSGAMMA; *out++ = (SBYTE)(*s - '4');
 					object = 1;
 					break;
 				}
 				*out++ = TNUMBER;
-				if ( ( i & 1 ) != 0 ) *out++ = *s++ - '0';
+				if ( ( i & 1 ) != 0 ) *out++ = (SBYTE)(*s++ - '0');
 				if ( out + (in-s)/2 >= AC.toptokens ) {
 					long oldsize = out - AC.tokens;
 					DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"more tokens");
@@ -144,7 +144,7 @@ donumber:		i = 0;
 					outtop = AC.toptokens - MAXNUMSIZE;
 				}
 				while ( s < in ) {   /* We store in base 100 */
-					*out++ = ( *s - '0' ) * 10 + ( s[1] - '0' );
+					*out++ = (SBYTE)(( *s - '0' ) * 10 + ( s[1] - '0' ));
 					s += 2;
 				}
 				object = 2;
@@ -169,7 +169,7 @@ donumber:		i = 0;
 								i = AddWildcardName((UBYTE *)s);
 								*in = c;
 								*out++ = TWILDARG;
-								*out++ = i;
+								*out++ = (SBYTE)i;
 							}
 							object = 1;
 						}
@@ -188,7 +188,7 @@ donumber:		i = 0;
 							}
 							*in = c;
 							*out++ = TWILDARG;
-							*out++ = i;
+							*out++ = (SBYTE)i;
 						}
 						else {
 							*out++ = TGENINDEX;
@@ -290,13 +290,13 @@ donumber:		i = 0;
 						*out++ = TFUNOPEN;
 						if ( polyflag ) {
 							if ( in[1] != ')' && in[1] != ',' ) {
-								*out++ = TNUMBER; *out++ = polyflag;
+								*out++ = TNUMBER; *out++ = (SBYTE)(polyflag);
 								*out++ = TCOMMA;
 								*out++ = LPARENTHESIS;
 							}
 							else {
 								*out++ = LPARENTHESIS;
-								*out++ = TNUMBER; *out++ = polyflag;
+								*out++ = TNUMBER; *out++ = (SBYTE)(polyflag);
 							}
 							polyflag = 0;
 						}
@@ -416,7 +416,7 @@ donumber:		i = 0;
 					if ( number >= 0 ) {
 						*out++ = TSET;
 						i = 0;
-						do { num[i++] = number & 0x7F; number >>= 7; } while ( number );
+						do { num[i++] = (SBYTE)(number & 0x7F); number >>= 7; } while ( number );
 						while ( --i >= 0 ) *out++ = num[i];
 					}
 					else if ( error == 0 ) error = 1;
@@ -451,21 +451,21 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 /*
 	Simplify fixed set elements
 */
-	if ( error == 0 && simp1token(AC.tokens,leftright) ) error = 1;
+	if ( error == 0 && simp1token(AC.tokens) ) error = 1;
 /*
 	Collect wildcards for the prototype. Symplify the leftover wildcards
 */
-	if ( error == 0 && leftright == LHSIDE && simpwtoken(AC.tokens,leftright) )
+	if ( error == 0 && leftright == LHSIDE && simpwtoken(AC.tokens) )
 				error = 1;
 /*
 	Now prepare the set[n] objects in the RHS.
 */
-	if ( error == 0 && leftright == RHSIDE && simp4token(AC.tokens,leftright) )
+	if ( error == 0 && leftright == RHSIDE && simp4token(AC.tokens) )
 				error = 1;
 /*
 	Simplify simple function arguments (and 1/fac_ and 1/invfac_)
 */
-	if ( error == 0 && simp2token(AC.tokens,leftright) ) error = 1;
+	if ( error == 0 && simp2token(AC.tokens) ) error = 1;
 
 /*
 	Next we try to remove composite denominators or exponents and
@@ -478,7 +478,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 	if ( error == 0 && ( numexp = simp3atoken(AC.tokens,leftright) ) < 0 )
 		error = 1;
 	if ( numexp > 0 ) {
-		SBYTE *t;
+		SBYTE *tt;
 		out = AC.tokens;
 		while ( *out != TENDOFIT ) out++;
 		while ( out+numexp*9+20 > outtop ) {
@@ -487,12 +487,12 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 			out = AC.tokens + oldsize;
 			outtop = AC.toptokens - MAXNUMSIZE;
 		}
-		t = out + numexp*9+20;
-		while ( out >= AC.tokens ) { *t-- = *out--; }
-		while ( t >= AC.tokens ) { *t-- = TEMPTY; }
+		tt = out + numexp*9+20;
+		while ( out >= AC.tokens ) { *tt-- = *out--; }
+		while ( tt >= AC.tokens ) { *tt-- = TEMPTY; }
 		if ( error == 0 && simp3btoken(AC.tokens,leftright) ) error = 1;
 
-		if ( error == 0 && simp2token(AC.tokens,leftright) ) error = 1;
+		if ( error == 0 && simp2token(AC.tokens) ) error = 1;
 	}
 /*
 	In simp5token we test for special cases like sumvariables that are
@@ -535,7 +535,7 @@ WriteTokens ARG1(SBYTE *,in)
 writenumber:
 			s = out;
 			do {
-				*out++ = ( x % 10 ) + '0';
+				*out++ = (char)(( x % 10 ) + '0');
 				numinline++;
 				x = x / 10;
 			} while ( x );
@@ -563,7 +563,7 @@ writenumber:
 */
 
 int
-simp1token ARG2(SBYTE *,s,int,mode)
+simp1token ARG1(SBYTE *,s)
 {
 	int error = 0, n, i;
 	WORD numsub;
@@ -612,7 +612,7 @@ simp1token ARG2(SBYTE *,s,int,mode)
 if ( n < 0 ) {
 	MesPrint("Value of n = %d",n);
 }
-						do { numtab[i++] = n & 0x7F; n >>= 7; } while ( n );
+						do { numtab[i++] = (SBYTE)(n & 0x7F); n >>= 7; } while ( n );
 						while ( --i >= 0 ) *fill++ = numtab[i];
 					}
 					else {
@@ -649,7 +649,7 @@ if ( n < 0 ) {
 */
 
 int
-simpwtoken ARG2(SBYTE *,s,int,mode)
+simpwtoken ARG1(SBYTE *,s)
 {
 	int error = 0, first = 1, notflag;
 	WORD num, numto, numdollar, *w = AC.WildC, *wstart, *wtop;
@@ -804,7 +804,7 @@ firsterr:		if ( first ) {
 */
 
 int
-simp2token ARG2(SBYTE *,s,int,mode)
+simp2token ARG1(SBYTE *,s)
 {
 	SBYTE *to, *fill, *t, *v, *w, *s0 = s;
 	int error = 0, n;
@@ -828,11 +828,11 @@ simp2token ARG2(SBYTE *,s,int,mode)
 		else if ( *s == TEMPTY ) s++;
 		else if ( *s == AM.facnum && ( fill > (s0+1) ) && fill[-2] == TDIVIDE
 		 && fill[-1] == TFUNCTION ) {
-			fill[-2] = TMULTIPLY; *fill++ = AM.invfacnum; s++;
+			fill[-2] = TMULTIPLY; *fill++ = (SBYTE)(AM.invfacnum); s++;
 		}
 		else if ( *s == AM.invfacnum && ( fill > (s0+1) ) && fill[-2] == TDIVIDE
 		 && fill[-1] == TFUNCTION ) {
-			fill[-2] = TMULTIPLY; *fill++ = AM.facnum; s++;
+			fill[-2] = TMULTIPLY; *fill++ = (SBYTE)(AM.facnum); s++;
 		}
 		else *fill++ = *s++;
 	}
@@ -1285,7 +1285,7 @@ dosymbol:
 
 putexp1:			fill = ff;
 					if ( denom < 0 ) fill[-1] = TMULTIPLY;
-					*fill++ = TFUNCTION; *fill++ = AM.expnum; *fill++ = TFUNOPEN;
+					*fill++ = TFUNCTION; *fill++ = (SBYTE)(AM.expnum); *fill++ = TFUNOPEN;
 					if ( dotp ) *fill++ = LPARENTHESIS;
 					while ( ss < t ) *fill++ = *ss++;
 					if ( dotp ) *fill++ = RPARENTHESIS;
@@ -1352,7 +1352,7 @@ dofunpower:
 						sube = 0;
 					}
 					fill = ff;
-					*fill++ = TFUNCTION; *fill++ = AM.expnum; *fill++ = TFUNOPEN;
+					*fill++ = TFUNCTION; *fill++ = (SBYTE)(AM.expnum); *fill++ = TFUNOPEN;
 					*fill++ = LPARENTHESIS;
 					while ( ss < t ) *fill++ = *ss++;
 					t++;
@@ -1469,7 +1469,7 @@ dofunpower:
 				}
 				else if ( denom < 0 ) {
 					fill = ff; ff[-1] = TMULTIPLY;
-					*fill++ = TFUNCTION; *fill++ = AM.denomnum;
+					*fill++ = TFUNCTION; *fill++ = (SBYTE)(AM.denomnum);
 					*fill++ = TFUNOPEN; *fill++ = LPARENTHESIS;
 					while ( ss < t ) *fill++ = *ss++;
 					*fill++ = RPARENTHESIS; *fill++ = TFUNCLOSE;
@@ -1516,7 +1516,7 @@ dofunpower:
 				t++; sube = 1;
 				goto dofunpower;
 			case TSET:
-				*fill++ = *s++; n = *s++; *fill++ = n;
+				*fill++ = *s++; n = *s++; *fill++ = (SBYTE)n;
 				while ( *s >= 0 ) { *fill++ = *s; n = 128*n + *s++; }
 				n = Sets[n].type;
 				switch ( n ) {
@@ -1534,7 +1534,7 @@ dodot:			*fill++ = *s++;
 					*fill++ = *s++; while ( *s >= 0 ) *fill++ = *s++;
 				}
 				else if ( *s == TSET ) {
-					*fill++ = *s++; n = *s++; *fill++ = n;
+					*fill++ = *s++; n = *s++; *fill++ = (SBYTE)n;
 					while ( *s >= 0 ) { *fill++ = *s; n = 128*n + *s++; }
 					if ( *s == LBRACE ) {
 						if ( n < AM.NumFixedSets || Sets[n].type == CRANGE ) {
@@ -1588,7 +1588,7 @@ doublepower:;
 */
 
 int
-simp4token ARG2(SBYTE *,s,int,mode)
+simp4token ARG1(SBYTE *,s)
 {
 	int error = 0, n, nsym, settype;
 	WORD i, *w, *wstop, level;

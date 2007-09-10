@@ -685,7 +685,6 @@ constnorm:;
 		n1 = n2; n2 = n3; n3 = 0;
 		n2 = PolynoUnify(n2,0);
 	}
-	return(0);
 aborteer:
 	if ( n1 ) M_free(n1,"PolynoGCD");
 	if ( n2 ) M_free(n2,"PolynoGCD");
@@ -923,7 +922,7 @@ void PolynoStart ARG0
 {
 	GETIDENTITY
 	if ( AN.doingpoly == 0 ) {
-		AN.sorttype = AC.SortType;
+		AN.sorttype = AR.SortType;
 		AN.maxbracket = AR.MaxBracket;
 		AN.brackbuf = AT.BrackBuf;
 		AN.bracketon = AR.BracketOn;
@@ -935,7 +934,7 @@ void PolynoStart ARG0
 			AN.polybpointer = 0; AN.polyblevel = 0;
 		}
 	}
-	AC.SortType = SORTHIGHFIRST;
+	AR.SortType = SORTHIGHFIRST;
 	AN.doingpoly++;
 }
 
@@ -949,7 +948,7 @@ void PolynoFinish ARG0
 	GETIDENTITY
 	AN.doingpoly--;
 	if ( AN.doingpoly == 0 ) {
-		AC.SortType = AN.sorttype;
+		AR.SortType = AN.sorttype;
 		AR.MaxBracket = AN.maxbracket;
 		AT.BrackBuf = AN.brackbuf;
 		AR.BracketOn = AN.bracketon;

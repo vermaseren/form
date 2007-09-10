@@ -41,7 +41,6 @@ int
 SetupOutputGZIP ARG1(FILEHANDLE *,f)
 {
 	GETIDENTITY
-	int zerror;
 
 	if ( AT.SS != AT.S0 ) return(0);
 	if ( AR.NoCompress == 1 ) return(0);
@@ -85,7 +84,7 @@ SetupOutputGZIP ARG1(FILEHANDLE *,f)
 /*
 	6: Initiate the deflation
 */
-	if ( ( zerror = deflateInit(f->zsp,AR.gzipCompress) ) != Z_OK ) {
+	if ( deflateInit(f->zsp,AR.gzipCompress) != Z_OK ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Error from zlib: %s",f->zsp->msg);
 		MesCall("SetupOutputGZIP");

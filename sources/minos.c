@@ -804,7 +804,7 @@ DBASE *OpenDbase(char *filename)
 
 MLONG AddTableName(DBASE *d,char *name,TABLES T)
 {
-	char *s, *t, *u, *tt;
+	char *s, *t, *tt;
 	int namesize, tailsize;
 	MLONG newsize, i, num;
 /*
@@ -851,7 +851,7 @@ MLONG AddTableName(DBASE *d,char *name,TABLES T)
 			return(0);
 		tt = t;
 		if ( d->tablenames ) {
-			s = d->tablenames; u = t;
+			s = d->tablenames;
 			for ( i = 0; i < d->tablenamefill; i++ ) *t++ = *s++;
 			*t = 0;
 			M_free(d->tablenames,"d->tablenames");

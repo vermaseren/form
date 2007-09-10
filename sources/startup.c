@@ -230,7 +230,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -306,7 +306,7 @@ OpenInput ARG0
 }
 
 /*
- 		#] OpenInput : 
+ 		#] OpenInput :
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -407,11 +407,11 @@ ReserveTempFiles ARG1(int,par)
 		t[-2] = 't';
 		t[-3] = 's';
 		t[-4] = '.';
-		t[-5] = '0' + num%10;
-		t[-6] = '0' + (num/10)%10;
-		t[-7] = '0' + (num/100)%10;
-		t[-8] = '0' + (num/1000)%10;
-		t[-9] = '0' + num/10000;
+		t[-5] = (UBYTE)('0' + num%10);
+		t[-6] = (UBYTE)('0' + (num/10)%10);
+		t[-7] = (UBYTE)('0' + (num/100)%10);
+		t[-8] = (UBYTE)('0' + (num/1000)%10);
+		t[-9] = (UBYTE)('0' + num/10000);
 		if ( ( AC.StoreHandle = CreateFile((char *)FG.fname) ) < 0 ) {
 			t[-5] = 'x'; t[-6] = 'x'; t[-7] = 'x'; t[-8] = 'x'; t[-9] = 'x';
 			goto classic;
@@ -486,19 +486,19 @@ classic:;
 			AR.Fscr[j].name = (char *)s;
 			t = (UBYTE *)FG.fname;
 			while ( *t ) *s++ = *t++;
-			s[-2] = 'c'; s[-1] = '0'+j; *s = 0;
+			s[-2] = 'c'; s[-1] = (UBYTE)('0'+j); *s = 0;
 		}
 	}
 #ifdef WITHPTHREADS
 	else if ( par == 2 ) {
-		s = FG.fname; i = 0;
+		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file a");
-		sprintf(s,"%s.%d",FG.fname,AT.identity);
+		sprintf((char *)s,"%s.%d",FG.fname,AT.identity);
 		s[i-2] = '4'; s[i-1] = 'a';
 		AR.FoStage4[0].name = (char *)s;
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file b");
-		sprintf(s,"%s.%d",FG.fname,AT.identity);
+		sprintf((char *)s,"%s.%d",FG.fname,AT.identity);
 		s[i-2] = '4'; s[i-1] = 'b';
 		AR.FoStage4[1].name = (char *)s;
 		if ( AT.identity == 0 ) {
@@ -507,7 +507,7 @@ classic:;
 				AR.Fscr[j].name = (char *)s;
 				t = (UBYTE *)FG.fname;
 				while ( *t ) *s++ = *t++;
-				s[-2] = 'c'; s[-1] = '0'+j; *s = 0;
+				s[-2] = 'c'; s[-1] = (UBYTE)('0'+j); *s = 0;
 			}
 		}
 	}
@@ -707,6 +707,10 @@ StartVariables ARG0
 	AP.PreTypes = (int *)Malloc1(sizeof(int)*(AP.MaxPreTypes+1),"preprocessor types");
 
 	AC.SortType = AC.lSortType = AM.gSortType = SORTLOWFIRST;
+#ifdef WITHPTHREADS
+#else
+	AR.SortType = AC.SortType;
+#endif
 	AC.LogHandle = -1;
 	AC.SetList.numtemp        = AC.SetList.num;
 	AC.SetElementList.numtemp = AC.SetElementList.num;
@@ -765,7 +769,7 @@ IniVars()
 	UBYTE *s;
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
-	AC.SortType = AC.lSortType = AM.gSortType;
+	AR.SortType = AC.SortType = AC.lSortType = AM.gSortType;
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
 	AR.Eside = 0;
@@ -807,7 +811,6 @@ IniVars()
 	GlobalSets        = NumSets;
 	GlobalSetElements = NumSetElements;
 	AC.modpowers = (UWORD *)0;
-	AC.SortType = AM.gSortType = AC.lSortType;
 
 	i = AM.OffsetIndex;
 	fi = AC.FixIndices;
@@ -961,8 +964,8 @@ IniVars()
 	*s++ = sizeof(INDEXENTRY);
 	*s++ = sizeof(FILEINDEX) >> 8;
 	*s++ = (UBYTE)(sizeof(FILEINDEX));
-	*s++ = AM.OffsetIndex >> 8;
-	*s++ = AM.OffsetIndex;
+	*s++ = (UBYTE)(AM.OffsetIndex >> 8);
+	*s++ = (UBYTE)(AM.OffsetIndex);
 	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
 	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
 
@@ -1045,7 +1048,7 @@ setSignalHandlers ARG0
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers : 
+ 		#] Signal handlers :
  		#[ main :
 */
 
@@ -1189,7 +1192,7 @@ main ARG2(int,argc,char **,argv)
 	return(0);
 }
 /*
- 		#] main : 
+ 		#] main :
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1260,7 +1263,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -1303,7 +1306,7 @@ Terminate ARG1(int,errorcode)
 		AX.shellname=0;
 	}
 	if(AX.stderrname){
-		M_free(AX.shellname,"external channel stderrname");
+		M_free(AX.stderrname,"external channel stderrname");
 		AX.stderrname=0;
 	}
 	/*:[08may2006 mt]*/
@@ -1329,7 +1332,7 @@ Terminate ARG1(int,errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] Terminate :
  		#[ PrintRunningTime :
 */
 
@@ -1361,6 +1364,6 @@ VOID PrintRunningTime ARG0
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 

@@ -35,9 +35,9 @@ extern FIXEDSET fixedsets[];
 
 extern char *setupfilename;
 
-EXTERNLOCK(ErrorMessageLock);
-EXTERNLOCK(FileReadLock);
-EXTERNLOCK(dummylock);
+EXTERNLOCK(ErrorMessageLock)
+EXTERNLOCK(FileReadLock)
+EXTERNLOCK(dummylock)
 
 #ifdef VMS
 #include <stdio.h>

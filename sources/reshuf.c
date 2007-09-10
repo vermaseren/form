@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -82,7 +82,7 @@ ReNumber BARG1(WORD *,term)
 }
 
 /*
- 		#] Renumber : 
+ 		#] Renumber :
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -201,7 +201,7 @@ FunLevel BARG1(WORD *,term)
 }
 
 /*
- 		#] FunLevel : 
+ 		#] FunLevel :
  		#[ DetCurDum :
 */
 
@@ -267,7 +267,7 @@ Singles:
 }
 
 /*
- 		#] DetCurDum : 
+ 		#] DetCurDum :
  		#[ FullRenumber :
 
 		Does a full renumbering. May be slow if there are many indices.
@@ -378,7 +378,7 @@ Return0:
 }
 
 /*
- 		#] FullRenumber : 
+ 		#] FullRenumber :
  		#[ MoveDummies :
 
 		Routine shifts the dummy indices by an amount 'shift'.
@@ -606,7 +606,7 @@ NextFF:
 }
 
 /*
- 		#] CountDo : 
+ 		#] CountDo :
  		#[ CountFun :
 
 		This is the count function.
@@ -772,8 +772,8 @@ VectInd:		i = term[1] - 2;
 }
 
 /*
- 		#] CountFun : 
-  	#] Count : 
+ 		#] CountFun :
+  	#] Count :
   	#[ Multiply Term :
  		#[ MultDo :
 */
@@ -801,8 +801,8 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
 }
 
 /*
- 		#] MultDo : 
-  	#] Multiply Term : 
+ 		#] MultDo :
+  	#] Multiply Term :
   	#[ Try Term(s) :
  		#[ TryDo :
 */
@@ -836,8 +836,8 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 }
 
 /*
- 		#] TryDo : 
-  	#] Try Term(s) : 
+ 		#] TryDo :
+  	#] Try Term(s) :
   	#[ Distribute :
  		#[ DoDistrib :
 
@@ -1060,7 +1060,7 @@ DoDistrib BARG2(WORD *,term,WORD,level)
 				return(-1);
 			}
 			*AN.RepPoint = 1;
-			AS.expchanged = 1;
+			AR.expchanged = 1;
 			if ( Generator(BHEAD termout,level) ) Terminate(-1);
 #ifndef NUOVO
 			{
@@ -1099,7 +1099,7 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 }
 
 /*
- 		#] DoDistrib : 
+ 		#] DoDistrib :
  		#[ EqualArg :
 
 		Returns 1 if the arguments in the field are identical.
@@ -1128,7 +1128,7 @@ EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
 }
 
 /*
- 		#] EqualArg : 
+ 		#] EqualArg :
  		#[ DoDelta3 :
 */
 
@@ -1137,7 +1137,7 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 {
 	GETIDENTITY
 	WORD *t, *m, *m1, *m2, *stopper, *tstop, *termout, *dels, *taken;
-	WORD *ic, *jc, *factors, *occur;
+	WORD *ic, *jc, *factors;
 	WORD num, num2, i, j, k, knum, a;
 	AN.TeInFun = AR.TePos = 0;
 	tstop = term + *term;
@@ -1199,7 +1199,6 @@ DoDelta3 ARG2(WORD *,term,WORD,level)
 			i++; (taken[knum])++;
 		}
 	}
-	occur = m;
 	for ( i = 0; i < knum; i++ ) *m++ = taken[i];
 	ic = m; num2 = num/2;
 	jc = ic + num2;
@@ -1312,8 +1311,8 @@ nextk:;
 }
 
 /*
- 		#] DoDelta3 : 
-  	#] Distribute : 
+ 		#] DoDelta3 :
+  	#] Distribute :
   	#[ DoMerge :
 
 	Merges the arguments of all occurrences of function fun into a
@@ -1330,7 +1329,7 @@ nextk:;
 WORD DoMerge ARG4(WORD *,term,WORD,level,WORD,fun,WORD,option)
 {
 	GETIDENTITY
-	WORD n = fun, n1, n2, i1, i2, j1, j2, *j, k1, k2;
+	WORD n = fun, n1, n2, j1, j2, *j, k1, k2;
 	WORD *t, *tt, *m, *tstop, *t1, *t2, *t1stop, *t2stop, *m1, *m2, *termout, *mm;
 	WORD *r1, *r2;
 	int i;
@@ -1406,7 +1405,6 @@ restart:;
 		mm = m;
 		for ( i = 0; i < FUNHEAD; i++ ) *m++ = *t++;
 		j1 = n1-1;
-		i1 = i2 = 0;
 		r1 = m1+FUNHEAD; r2 = m2+FUNHEAD;
 		for ( k1 = 0, k2 = 0; k1 < n1; ) {
 			if ( j[k1] <= k2 ) {	/* copy from 1 */

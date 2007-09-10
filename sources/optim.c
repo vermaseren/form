@@ -55,7 +55,7 @@ static LONG *multiplicities = 0, multiplicitysize = 0;
 int Optimize ARG1(WORD,numexpr)
 {
 	int retval;
-	WORD powmax;
+/*	WORD powmax; */
 	LONG j;
 	if ( FindScratchName() ) return(-1);
 	if ( LoadOpti(numexpr) < 0 ) return(-1);
@@ -65,8 +65,8 @@ int Optimize ARG1(WORD,numexpr)
 	We pass the various optimization steps.
 */
 	HuntNumFactor(0L,0,0);
-	powmax = 0;
 /*
+	powmax = 0;
 	{
 	WORD i;
 	for ( j = 0; j < scanumber; j++ ) {
@@ -415,13 +415,13 @@ int FindScratchName ARG0
 		sname[0] = scratchname[0]; sname[1] = scratchname[1];
 		if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		&& ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-		  sname[0] = scratchname[0]; sname[1] = scratchname[1]-'a'+'A';
+		  sname[0] = scratchname[0]; sname[1] = (UBYTE)(scratchname[1]-'a'+'A');
 		  if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		  && ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-			sname[0] = scratchname[0]-'a'+'A'; sname[1] = scratchname[1]-'a'+'A';
+			sname[0] = (UBYTE)(scratchname[0]-'a'+'A'); sname[1] = (UBYTE)(scratchname[1]-'a'+'A');
 			if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 			&& ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-			  sname[0] = scratchname[0]-'a'+'A'; sname[1] = scratchname[1];
+			  sname[0] = (UBYTE)(scratchname[0]-'a'+'A'); sname[1] = scratchname[1];
 			  if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 			  && ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) )
 				return(0);
@@ -434,7 +434,7 @@ int FindScratchName ARG0
 		sname[0] = scratchname[0]; sname[1] = scratchname[1];
 		if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		&& ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-		  sname[0] = scratchname[0]-'a'+'A';
+		  sname[0] = (UBYTE)(scratchname[0]-'a'+'A');
 		  if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		  && ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) )
 			return(0);
@@ -451,7 +451,7 @@ int FindScratchName ARG0
 		sname[2] = scratchname[2];
 		if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		&& ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-		  sname[0] = scratchname[0]-'a'+'A';
+		  sname[0] = (UBYTE)(scratchname[0]-'a'+'A');
 		  if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		  && ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) )
 			return(0);
@@ -471,7 +471,7 @@ int FindScratchName ARG0
 		sname[2] = scratchname[2]; sname[3] = scratchname[3];
 		if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		&& ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-		  sname[0] = scratchname[0]-'a'+'A';
+		  sname[0] = (UBYTE)(scratchname[0]-'a'+'A');
 		  if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		  && ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) )
 			return(0);
@@ -495,7 +495,7 @@ int FindScratchName ARG0
 		sname[4] = scratchname[4];
 		if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		&& ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) ) {
-		  sname[0] = scratchname[0]-'a'+'A';
+		  sname[0] = (UBYTE)(scratchname[0]-'a'+'A');
 		  if ( ( GetName(AC.varnames,sname,&number,NOAUTO) == NAMENOTFOUND )
 		  && ( GetName(AC.exprnames,sname,&number,NOAUTO) == NAMENOTFOUND ) )
 			return(0);
@@ -605,7 +605,7 @@ int PrintOptima ARG1(WORD,numexpr)
 		}
 
 		if ( i == 0 ) {
-			sprintf((char *)obuffer,"%s=",EXPRNAME(numexpr));
+			sprintf((char *)obuffer,"%s=",(char *)(EXPRNAME(numexpr)));
 			TokenToLine(obuffer);
 		}
 		else {
@@ -1138,7 +1138,7 @@ void HuntBrackets ARG1(LONG,number)
 	WORD *t, *m, *tt, *mm, *left = 0, mostpopular[2], *coef, nf, *newter;
 	WORD ncoef, nc2, nc;
 	LONG mostmultiple, n, i, num, newscanum, ns;
-	int first, j, neg, nons;
+	int j, neg, nons;
 	for (;;) {
 	if ( sca->numterms <= 2 ) return;
 	n = scanumber + numobjects;
@@ -1179,7 +1179,7 @@ void HuntBrackets ARG1(LONG,number)
 	and sent off to a new expression.
 	First find the first to start the system.
 */
-	t = sca->buffer; newscanum = scanumber; first = 1;
+	t = sca->buffer; newscanum = scanumber;
 	while ( t < sca->pointer ) {
 		m = t + t[2] + 1; tt = t; t += *t;
 		while ( m < t ) {

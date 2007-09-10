@@ -28,9 +28,6 @@
 
 #include "form3.h"
 #include "minos.h"
- 
-DECLARE(DBASE *FindTB,(UBYTE *))
-DECLARE(int CheckTableDeclarations,(DBASE *))
 
 /* static UBYTE *sparse = (UBYTE *)"sparse"; */
 static UBYTE *tablebase = (UBYTE *)"tablebase";
@@ -143,11 +140,11 @@ balance:;
 	for (;;) {
 		p = boomlijst + ip;
 		iq = p->parent;
-		if ( iq == T->rootnum ) return(T->numtree);
+		if ( iq == T->rootnum ) break;
 		q = boomlijst + iq;
 		if ( ip == q->left ) q->blnce--;
 		else                 q->blnce++;
-		if ( q->blnce == 0 ) return(T->numtree);
+		if ( q->blnce == 0 ) break;
 		if ( q->blnce == -2 ) {
 			if ( p->blnce == -1 ) { /* single rotation */
 				q->left = p->right;
@@ -177,7 +174,7 @@ balance:;
 				else if ( s->blnce < 0 ) { p->blnce = s->blnce = 0; q->blnce = 1; }
 				else { p->blnce = s->blnce = q->blnce = 0; }
 			}
-			return(T->numtree);
+			break;
 		}
 		else if ( q->blnce == 2 ) {
 			if ( p->blnce == 1 ) {	/* single rotation */
@@ -207,7 +204,7 @@ balance:;
 				else if ( s->blnce > 0 ) { p->blnce = s->blnce = 0; q->blnce = -1; }
 				else { p->blnce = s->blnce = q->blnce = 0; }
 			}
-			return(T->numtree);
+			break;
 		}
 		is = ip; ip = iq;
 	}
@@ -668,12 +665,11 @@ DBASE *FindTB ARG1(UBYTE *,name)
 
 int CoTBcreate ARG1(UBYTE *,s)
 {
-	DBASE *d;
-	if ( ( d = FindTB(tablebasename) ) != 0 ) {
+	if ( FindTB(tablebasename) != 0 ) {
 		MesPrint("&There is already an open TableBase with the name %s",tablebasename);
 		return(-1);
 	}
-	d = NewDbase((char *)tablebasename,0);
+	NewDbase((char *)tablebasename,0);
 	return(0);
 }
 
@@ -847,7 +843,7 @@ int CoTBaddto ARG1(UBYTE *,s)
 	M_free(AO.DollarOutBuffer,"DollarOutBuffer");
 	AO.DollarOutBuffer = 0;
 	AO.DollarOutSizeBuffer = 0;
-	return(0);	
+	return(error);	
 tableabort:;
 	M_free(AO.DollarOutBuffer,"DollarOutBuffer");
 	AO.DollarOutBuffer = 0;
@@ -868,7 +864,7 @@ int CoTBenter ARG1(UBYTE *,s)
 {
 	DBASE *d;
 	MLONG basenumber;
-	UBYTE *arguments, *rhs, *buffer, *t, *u, c, *tablename, *tail;
+	UBYTE *arguments, *rhs, *buffer, *t, *u, c, *tablename;
 	LONG size;
 	int i, j, error = 0, error1 = 0, printall = 0;
 	TABLES T = 0;
@@ -950,7 +946,7 @@ int CoTBenter ARG1(UBYTE *,s)
 	  while ( *s ) {
 		basenumber++;
 		tablename = s; while ( *s ) s++; s++;
-		tail = s; while ( *s ) s++; s++;
+		while ( *s ) s++; s++;
 		if ( ( GetVar(tablename,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
 			|| ( T = functions[funnum].tabl ) == 0 ) {
 			MesPrint("&%s should be a previously declared table",tablename);
@@ -1134,7 +1130,7 @@ int CheckTableDeclarations ARG1(DBASE *,d)
 int CoTBload ARG1(UBYTE *,ss)
 {
 	DBASE *d;
-	UBYTE *s, *name, *t, *r, *command, *arguments, *tail, c;
+	UBYTE *s, *name, *t, *r, *command, *arguments, *tail;
 	LONG commandsize;
 	int num, cs, es, ns, ts, i, j, error = 0, error1;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
@@ -1147,7 +1143,7 @@ int CoTBload ARG1(UBYTE *,ss)
 	if ( *ss ) {
 	  while ( *ss == ',' || *ss == ' ' || *ss == '\t' ) ss++;
 	  while ( *ss ) {
-		name = ss; ss = SkipAName(ss); c = *ss; *ss = 0;
+		name = ss; ss = SkipAName(ss); *ss = 0;
 		s = (UBYTE *)(d->tablenames);
 		num = 0; ns = 0;
 		while ( *s ) {
@@ -1478,7 +1474,7 @@ int CoTBuse ARG1(UBYTE *,s)
 	GETIDENTITY
 	DBASE *d;
 	MLONG basenumber;
-	UBYTE *arguments, *rhs, *buffer, *t, *u, c, *tablename, *tail, *p;
+	UBYTE *arguments, *rhs, *buffer, *t, *u, c, *tablename, *p;
 	LONG size, sum, x;
 	int i, j, error = 0, error1 = 0, k;
 	TABLES T = 0;
@@ -1576,7 +1572,7 @@ int CoTBuse ARG1(UBYTE *,s)
 	  while ( *s ) {
 		basenumber++;
 		tablename = s; while ( *s ) s++; s++;
-		tail = s; while ( *s ) s++; s++;
+		while ( *s ) s++; s++;
 		if ( ( GetVar(tablename,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
 			|| ( T = functions[funnum].tabl ) == 0 ) {
 			MesPrint("&%s should be a previously declared table",tablename);
@@ -2012,7 +2008,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 		isp = FindTableTree(T,t1+FUNHEAD+1,2);
 		if ( isp < 0 ) { t = r; continue; }
 		rhsnumber = T->tablepointers[isp+T->numind];
-#if ( TABLEXTENSION == 2 )
+#if ( TABLEEXTENSION == 2 )
 		tbufnum = T->bufnum;
 #else
 		tbufnum = T->tablepointers[isp+T->numind+1];
@@ -2123,7 +2119,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
   	#[ ApplyReset :
 */
 
-WORD ApplyReset ARG2(WORD *,term,WORD,level)
+WORD ApplyReset ARG1(WORD,level)
 {
 	WORD *funs, numfuns;
 	TABLES T;
