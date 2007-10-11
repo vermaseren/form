@@ -54,6 +54,7 @@ AddToLine ARG1(UBYTE *,s)
 {
 	UBYTE *Out;
 	LONG num;
+	int i;
 	if ( AO.OutInBuffer ) { AddToDollarBuffer(s); return; }
 	Out = AO.OutFill;
 	while ( *s ) {
@@ -104,6 +105,7 @@ AddToLine ARG1(UBYTE *,s)
 				}
 			}
 			startinline = 0;
+			for ( i = 0; i < AO.OutSkip; i++ ) AO.OutputLine[i] = ' ';
 			Out = AO.OutputLine + AO.OutSkip;
 			if ( ( AC.OutputMode == FORTRANMODE
 			 || AC.OutputMode == PFORTRANMODE ) && AO.OutSkip == 7 ) {
@@ -126,7 +128,7 @@ AddToLine ARG1(UBYTE *,s)
 }
 
 /*
- 		#] AddToLine : 
+ 		#] AddToLine :
  		#[ FiniLine :			VOID FiniLine()
 */
 
@@ -2005,7 +2007,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteOne :
+ 		#] WriteOne : 
   	#] schryf-Writes :
 */
 

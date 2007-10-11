@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Normalize :
  		#[ Commute :
 
@@ -34,7 +34,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 }
 
 /*
- 		#] Commute :
+ 		#] Commute : 
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -83,7 +83,7 @@ Normalize BARG1(WORD *,term)
 	int termflag;
 */
 /*
-  	#] Declarations :
+  	#] Declarations : 
   	#[ Setup :
 */
 Restart:
@@ -106,7 +106,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup :
+  	#] Setup : 
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = ngam = neps = nexp = nden = 
@@ -124,12 +124,6 @@ conscan:;
 				t += 2;
 				from = m;
 				do {
-/*
-if ( *t < 0 && *t > -MAXPOWER ) {
-	PrintTerm(term,"Negative symbol number");
-
-}
-*/
 					if ( t[1] == 0 ) {
 						if ( *t == 0 || *t == MAXPOWER ) goto NormZZ;
 						t += 2;
@@ -222,7 +216,7 @@ if ( *t < 0 && *t > -MAXPOWER ) {
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER :
+			#] TO SNUMBER : 
 */
 						t += 2;
 						goto NextSymbol;
@@ -680,6 +674,23 @@ multermnum:			if ( x == 0 ) goto NormZero;
 */
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
 					if ( ( t[FUNHEAD+1] & 1 ) != 0 ) ncoef = -ncoef;
+				}
+				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] )
+				&& ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) ) {
+					UWORD *numer1,*denom1;
+					WORD nsize = abs(t[t[1]-1]), nnsize, isize;
+					nnsize = (nsize-1)/2;
+					numer1 = t + FUNHEAD+ARGHEAD+1;
+					denom1 = numer1 + nnsize;
+					for ( isize = 1; isize < nnsize; isize++ ) {
+						if ( denom1[isize] ) break;
+					}
+					if ( ( denom1[0] != 1 ) || isize < nnsize ) {
+						pcom[ncom++] = t;
+					}
+					else {
+						if ( ( numer1[0] & 1 ) != 0 ) ncoef = -ncoef;
+					}
 				}
 				else pcom[ncom++] = t;
 				break;
@@ -1516,7 +1527,7 @@ NoRep:
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -1666,7 +1677,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators :
+  	#] Easy denominators : 
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -1900,7 +1911,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions :
+  	#] Index Contractions : 
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2051,7 +2062,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions :
+  	#] NonCommuting Functions : 
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2209,7 +2220,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions :
+  	#] Commuting Functions : 
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2298,7 +2309,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors :
+  	#] LeviCivita tensors : 
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2329,7 +2340,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta :
+  	#] Delta : 
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2351,7 +2362,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices :
+  	#] Loose Vectors/Indices : 
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2380,7 +2391,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors :
+  	#] Vectors : 
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2399,6 +2410,9 @@ NextI:;
 			do {
 				if ( *r == *t ) {
 					if ( *++r == *++t ) {
+/*
+!!!!!!!! This code is wrong! negative powers? power overflow?
+*/
 						if ( *++r < MAXPOWER && t[1] < MAXPOWER ) {
 							t++;
 							*t += *r;
@@ -2466,8 +2480,8 @@ NextI:;
 				}
 			}
 			else if ( *t < 2*MAXPOWER && *t > -2*MAXPOWER ) {	/* Put powers in range */
-				if ( ( ( t[1] > symbols[*t].maxpower ) ||
-					   ( t[1] < symbols[*t].minpower ) ) &&
+				if ( ( ( ( t[1] > symbols[*t].maxpower ) && ( symbols[*t].maxpower < MAXPOWER ) ) ||
+					   ( ( t[1] < symbols[*t].minpower ) && ( symbols[*t].minpower > -MAXPOWER ) ) ) &&
 					   ( t[1] < 2*MAXPOWER ) && ( t[1] > -2*MAXPOWER ) ) {
 					if ( i <= 2 || t[2] != *t ) goto NormZero;
 				}
@@ -2499,7 +2513,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols :
+  	#] Symbols : 
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -2646,7 +2660,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 }
 
 /*
- 		#] ExtraSymbol :
+ 		#] ExtraSymbol : 
  		#[ DoTheta :
 */
 
@@ -2744,7 +2758,7 @@ DoTheta ARG1(WORD *,t)
 }
 
 /*
- 		#] DoTheta :
+ 		#] DoTheta : 
  		#[ DoDelta :
 */
 
@@ -2812,7 +2826,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta :
+ 		#] DoDelta : 
  		#[ DoRevert :
 */
 
@@ -2887,7 +2901,7 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 }
 
 /*
- 		#] DoRevert :
+ 		#] DoRevert : 
  	#] Normalize :
   	#[ DetCommu :
 
@@ -2950,7 +2964,7 @@ WORD DetCommu ARG1(WORD *,terms)
 }
 
 /*
-  	#] DetCommu :
+  	#] DetCommu : 
 */
 
 /* temporary commentary for forcing cvs merge */

@@ -1402,6 +1402,8 @@ execterm ARG2(WORD *,term,WORD,level)
 	WORD *buffer1 = 0;
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t1, i;
+	WORD olddeferflag = AR.DeferFlag;
+	AR.DeferFlag = 0;
 	do {
 		AR.Cnumlhs = C->lhs[level][3];
 		NewSort();
@@ -1425,6 +1427,7 @@ execterm ARG2(WORD *,term,WORD,level)
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );
 	AR.Cnumlhs = oldnumlhs;
+	AR.DeferFlag = olddeferflag;
 	term = buffer1;
 	while ( *term ) {
 		t1 = oldworkpointer;
@@ -1437,6 +1440,7 @@ execterm ARG2(WORD *,term,WORD,level)
 	return(0);
 exectermerr:
 	AT.WorkPointer = oldworkpointer;
+	AR.DeferFlag = olddeferflag;
 	LOCK(ErrorMessageLock);
 	MesCall("execterm");
 	UNLOCK(ErrorMessageLock);
@@ -1444,7 +1448,7 @@ exectermerr:
 }
 
 /*
-  	#] execterm : 
+  	#] execterm :
   	#[ ArgumentImplode :
 */
 
@@ -1510,7 +1514,7 @@ ArgumentImplode BARG2(WORD *,term,WORD *,thelist)
 }
 
 /*
-  	#] ArgumentImplode :
+  	#] ArgumentImplode : 
   	#[ ArgumentExplode :
 */
 
@@ -1575,6 +1579,6 @@ ArgumentExplode BARG2(WORD *,term,WORD *,thelist)
 }
 
 /*
-  	#] ArgumentExplode :
+  	#] ArgumentExplode : 
 */
 
