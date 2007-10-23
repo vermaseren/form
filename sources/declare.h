@@ -714,6 +714,7 @@ DECLARE(SETUPPARAMETERS *GetSetupPar,(UBYTE *))
 DECLARE(int RecalcSetups,ARG0)
 DECLARE(int AllocSetups,ARG0)
 DECLARE(SORTING *AllocSort,(LONG,LONG,LONG,LONG,int,int,LONG))
+DECLARE(int AllocScratchBuffers,ARG0)
 DECLARE(VOID AllocSortFileName,(SORTING *))
 DECLARE(UBYTE *LoadInputFile,(UBYTE *,int))
 DECLARE(UBYTE GetInput,ARG0)
@@ -1312,7 +1313,6 @@ DECLARE(int getcFromExtChannelFailure,ARG0)
 DECLARE(int setKillModeForExternalChannelFailure,(int,int))
 DECLARE(int setTerminatorForExternalChannelFailure,(char *))
 DECLARE(int writeBufToExtChannelFailure,(char *,size_t))
-
 
 /*
   	#] Declarations :

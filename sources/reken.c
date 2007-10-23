@@ -1,14 +1,20 @@
 /*
   	#[ Includes : reken.c
 */
+#define WITHGMP
 
 #include "form3.h"
+
+#ifdef WITHGMP
+#include <gmp.h>
+#define GMPSPREAD (GMP_LIMB_BITS/BITSINWORD)
+#endif
  
 #define GCDMAX 3
 
 #define NEWTRICK 1
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ RekenRational :
  		#[ Pack :			VOID Pack(a,na,b,nb)
 
@@ -48,7 +54,7 @@ Pack ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 }
 
 /*
- 		#] Pack :
+ 		#] Pack : 
  		#[ UnPack :			VOID UnPack(a,na,denom,numer)
 
 	Determines the sizes of the numerator and the denominator in the
@@ -76,7 +82,7 @@ UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
 }
 
 /*
- 		#] UnPack :
+ 		#] UnPack : 
  		#[ Mully :			WORD Mully(a,na,b,nb)
 
 	Multiplies the rational a by the Long b.
@@ -98,10 +104,12 @@ Mully BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	if ( *na < 0 ) { sgn = -sgn; *na = -*na; }
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
 	UnPack(a,*na,&adenom,&anumer);
+#ifdef INDIVIDUALALLOC
 	if ( AN.Myscrat1 == 0 ) {
 		AN.Myscrat1 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Mully");
 		AN.Myscrat2 = AN.Myscrat1 + AM.MaxTal+2;
 	}
+#endif
 	d = AN.Myscrat1; e = AN.Myscrat2;
 	for ( i = 0; i < nb; i++ ) { e[i] = *b++; }
 	ne = nb;
@@ -125,7 +133,7 @@ MullyEr:
 }
 
 /*
- 		#] Mully :
+ 		#] Mully : 
  		#[ Divvy :			WORD Divvy(a,na,b,nb)
 
 	Divides the rational a by the Long b.
@@ -139,10 +147,12 @@ Divvy BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	UWORD *d,*e;
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
+#ifdef INDIVIDUALALLOC
 	if ( AN.Dyscrat1 == 0 ) {
 		AN.Dyscrat1 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Divvy");
 		AN.Dyscrat2 = AN.Dyscrat1 + AM.MaxTal+2;
 	}
+#endif
 	d = AN.Dyscrat1;
 	e = AN.Dyscrat2;
 	if ( !nb ) {
@@ -170,7 +180,7 @@ DivvyEr:
 }
 
 /*
- 		#] Divvy :
+ 		#] Divvy : 
  		#[ AddRat :			WORD AddRat(a,na,b,nb,c,nc)
 */
 
@@ -242,12 +252,14 @@ AddRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	UnPack(b,nb,&bdenom,&bnumer);
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
+#ifdef INDIVIDUALALLOC
 	if ( AN.ARscrat1 == 0 ) {
 		AN.ARscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"AddRat");
 		AN.ARscrat2 = AN.ARscrat1 + AM.MaxTal+2;
 		AN.ARscrat3 = AN.ARscrat2 + AM.MaxTal+2;
 		AN.ARscrat4 = AN.ARscrat3 + AM.MaxTal+2;
 	}
+#endif
 	if ( na == 1 && nb == 1 ) {
 		RLONG t1, t2, t3;
 		t3 = ((RLONG)a[1])*((RLONG)b[1]);
@@ -321,7 +333,7 @@ AddRer:
 }
 
 /*
- 		#] AddRat :
+ 		#] AddRat : 
  		#[ MulRat :			WORD MulRat(a,na,b,nb,c,nc)
 
 	Multiplies the rationals a and b. The Gcd of the individual
@@ -373,12 +385,14 @@ MulRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 		WORD dden, dnumr, eden, enumr;
 		UnPack(a,na,&dden,&dnumr);
 		UnPack(b,nb,&eden,&enumr);
+#ifdef INDIVIDUALALLOC
 		if ( AN.MRscrat1 == 0 ) {
 			AN.MRscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"MulRat");
 			AN.MRscrat2 = AN.MRscrat1 + AM.MaxTal+2;
 			AN.MRscrat3 = AN.MRscrat2 + AM.MaxTal+2;
 			AN.MRscrat4 = AN.MRscrat3 + AM.MaxTal+2;
 		}
+#endif
 		xd = AN.MRscrat3; xf = AN.MRscrat4;
 		for ( i = 0; i < dnumr; i++ ) xd[i] = a[i];
 		a += na;
@@ -451,7 +465,7 @@ MulRer:
 }
 
 /*
- 		#] MulRat :
+ 		#] MulRat : 
  		#[ DivRat :			WORD DivRat(a,na,b,nb,c,nc)
 
 	Divides the rational a by the rational b.
@@ -480,7 +494,7 @@ DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] DivRat :
+ 		#] DivRat : 
  		#[ Simplify :		WORD Simplify(a,na,b,nb)
 
 	Determines the greatest common denominator of a and b and
@@ -499,12 +513,14 @@ Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
 	WORD i;
 	if ( *na < 0 ) { *na = -*na; sgn = -sgn; }
 	if ( *nb < 0 ) { *nb = -*nb; sgn = -sgn; }
+#ifdef INDIVIDUALALLOC
 	if ( AN.Siscrat5 == 0 ) {
 		AN.Siscrat5 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"Simplify");
 		AN.Siscrat6 = AN.Siscrat5 + AM.MaxTal+2;
 		AN.Siscrat7 = AN.Siscrat6 + AM.MaxTal+2;
 		AN.Siscrat8 = AN.Siscrat7 + AM.MaxTal+2;
 	}
+#endif
 	x1 = AN.Siscrat8; x2 = AN.Siscrat7;
 	if ( *nb == 1 ) {
 		x3 = AN.Siscrat6;
@@ -596,7 +612,7 @@ SimpErr:
 }
 
 /*
- 		#] Simplify :
+ 		#] Simplify : 
  		#[ AccumGCD :		WORD AccumGCD(a,na,b,nb)
 
 		Routine takes the rational GCD of the fractions in a and b and
@@ -610,6 +626,7 @@ WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	GETIDENTITY
 	WORD nna,nnb,numa,numb,dena,denb,numc,denc;
 	int i;
+#ifdef INDIVIDUALALLOC
 	if ( AN.GCDbuffer == 0 ) {
 		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
 		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
@@ -617,6 +634,7 @@ WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
 		AN.LCMc = AN.LCMb + AM.MaxTal+2;
 	}
+#endif
 	nna = *na; if ( nna < 0 ) nna = -nna; nna = (nna-1)/2;
 	nnb = nb;  if ( nnb < 0 ) nnb = -nnb; nnb = (nnb-1)/2;
 	UnPack(a,nna,&dena,&numa);
@@ -638,7 +656,7 @@ AccErr:
 }
 
 /*
- 		#] AccumGCD :
+ 		#] AccumGCD : 
  		#[ TakeRatRoot:
 */
 
@@ -658,8 +676,8 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 }
 
 /*
- 		#] TakeRatRoot:
-  	#] RekenRational :
+ 		#] TakeRatRoot: 
+  	#] RekenRational : 
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -701,7 +719,7 @@ AddLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] AddLong :
+ 		#] AddLong : 
  		#[ AddPLon :		WORD AddPLon(a,na,b,nb,c,nc)
 
 	Adds two long integers a and b and puts the result in c.
@@ -755,7 +773,7 @@ AddPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,UWORD *,nc)
 }
 
 /*
- 		#] AddPLon :
+ 		#] AddPLon : 
  		#[ SubPLon :		VOID SubPLon(a,na,b,nb,c,nc)
 
 	Subtracts b from a. Assumes that a > b. Result in c.
@@ -792,7 +810,7 @@ SubPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 }
 
 /*
- 		#] SubPLon :
+ 		#] SubPLon : 
  		#[ MulLong :		WORD MulLong(a,na,b,nb,c,nc)
 
 	Does a Long multiplication. Assumes that WORD is half the size
@@ -808,12 +826,71 @@ MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	WORD sgn = 1;
 	UWORD i, *ic, *ia;
 	RLONG t, bb;
+#ifdef INDIVIDUALALLOC
+	if ( AN.DLscrat9 == 0 ) {
+		AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"MulLong");
+		AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
+		AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
+		AN.DLscratC = AN.DLscratB + AM.MaxTal+4;
+	}
+#endif
+
 	if ( !na || !nb ) { *nc = 0; return(0); }
 	if ( na < 0 ) { na = -na; sgn = -sgn; }
 	if ( nb < 0 ) { nb = -nb; sgn = -sgn; }
 	*nc = i = na + nb;
 	if ( i > (UWORD)(AM.MaxTal+1) ) goto MulLov;
 	ic = c;
+#ifdef WITHGMP
+	if (na > 3 && nb > 3) {
+		mp_limb_t res;
+		UWORD *to, *from;
+		int j;
+		GETIDENTITY
+
+#if ( GMPSPREAD != 1 )
+		if ( na & 1 ) {
+			from = a; a = to = AN.DLscrat9; j = na; NCOPY(to, from, j);
+			a[na++] = 0;
+			++*nc;
+		} else
+#endif
+		if ( (long)a & (sizeof(mp_limb_t)-1) ) {
+			from = a; a = to = AN.DLscrat9; j = na; NCOPY(to, from, j);
+		}
+
+#if ( GMPSPREAD != 1 )
+		if ( nb & 1 ) {
+			from = b; b = to = AN.DLscratA; j = nb; NCOPY(to, from, j);
+			b[nb++] = 0;
+			++*nc;
+		} else
+#endif
+		if ( (long)b & (sizeof(mp_limb_t)-1) ) {
+			from = b; b = to = AN.DLscratA; j = nb; NCOPY(to, from, j);
+		}
+
+		if ( ( *nc > i ) || ( (long)c & (sizeof(mp_limb_t)-1) ) ) {
+			ic = AN.DLscratB;
+		}
+		if ( na < nb ) {
+			res = mpn_mul((mp_ptr)ic, (mp_srcptr)b, nb/GMPSPREAD, (mp_srcptr)a, na/GMPSPREAD);
+		} else {
+			res = mpn_mul((mp_ptr)ic, (mp_srcptr)a, na/GMPSPREAD, (mp_srcptr)b, nb/GMPSPREAD);
+		}
+		while ( ic[i-1] == 0 ) i--;
+		*nc = i;
+/*
+		if ( res == 0 ) *nc -= GMPSPREAD;
+		else if ( res <= WORDMASK ) --*nc;
+*/
+		if ( ic != c ) {
+			j = *nc; NCOPY(c, ic, j);
+		}
+		if ( sgn < 0 ) *nc = -(*nc);
+		return(0);
+	}
+#endif
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
 		ia = a;
@@ -865,7 +942,7 @@ BigLong ARG4(UWORD *,a,WORD,na,UWORD *,b,WORD,nb)
 }
 
 /*
- 		#] BigLong :
+ 		#] BigLong : 
  		#[ DivLong :		WORD DivLong(a,na,b,nb,c,nc,d,nd)
 
 	This is the long division which knows a couple of exceptions.
@@ -940,13 +1017,76 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 	else {
 		GETIDENTITY
 
-		/* Start with normalization operation */
-
+#ifdef INDIVIDUALALLOC
 		if ( AN.DLscrat9 == 0 ) {
-			AN.DLscrat9 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"DivLong");
-			AN.DLscratA = AN.DLscrat9 + AM.MaxTal+2;
-			AN.DLscratB = AN.DLscratA + AM.MaxTal+2;
+			AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"DivLong");
+			AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
+			AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
+			AN.DLscratC = AN.DLscratB + AM.MaxTal+4;
 		}
+#endif
+/*
+ 		#[ GMP stuff :
+
+		We start with copying a and b.
+		Then we make space for c and d.
+		Next we call mpn_tdiv_qr
+		We adjust sizes and copy to c and d if needed.
+		Finally the signs are settled.
+*/
+#ifdef WITHGMP
+		if ( na > 4 && nb > 3 ) {
+		  UWORD *ic, *id, *to, *from;
+		  int j = na - nb;
+
+#if ( GMPSPREAD != 1 )
+		  if ( na & 1 ) {
+			from = a; a = to = AN.DLscrat9; i = na; NCOPY(to, from, i);
+			a[na++] = 0;
+		  } else
+#endif
+		  if ( (long)a & (sizeof(mp_limb_t)-1) ) {
+			from = a; a = to = AN.DLscrat9; i = na; NCOPY(to, from, i);
+		  }
+
+#if ( GMPSPREAD != 1 )
+		  if ( nb & 1 ) {
+			from = b; b = to = AN.DLscratA; i = nb; NCOPY(to, from, i);
+			b[nb++] = 0;
+		  } else
+#endif
+		  if ( ( (long)b & (sizeof(mp_limb_t)-1) ) != 0 ) {
+			from = b; b = to = AN.DLscratA; i = nb; NCOPY(to, from, i);
+		  }
+
+		  if ( ( (long)c & (sizeof(mp_limb_t)-1) ) != 0 ) ic = AN.DLscratB;
+		  else                                            ic = c;
+
+		  if ( ( (long)d & (sizeof(mp_limb_t)-1) ) != 0 ) id = AN.DLscratC;
+		  else                                            id = d;
+
+		  mpn_tdiv_qr((mp_limb_t *)ic,(mp_limb_t *)id,(mp_size_t)0,
+			(const mp_limb_t *)a,(mp_size_t)(na/GMPSPREAD),
+			(const mp_limb_t *)b,(mp_size_t)(nb/GMPSPREAD));
+
+		  while ( j >= 0 && ic[j] == 0 ) j--;
+		  j++; *nc = j;
+		  if ( c != ic ) { NCOPY(c,ic,j); }
+
+		  j = nb-1;
+		  while ( j >= 0 && id[j] == 0 ) j--;
+		  j++; *nd = j;
+		  if ( d != id ) { NCOPY(d,id,j); }
+
+		  if ( sgn < 0 ) { *nc = -(*nc); *nd = -(*nd); }
+		  return(0);
+		}
+#endif
+/*
+ 		#] GMP stuff : 
+*/
+		/* Start with normalization operation */
+ 
 		e = AN.DLscratB; f = AN.DLscratA; g = AN.DLscrat9;
 		if ( b[nb-1] == (FULLMAX-1) ) norm = 1;
 		else {
@@ -1052,7 +1192,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 }
 
 /*
- 		#] DivLong :
+ 		#] DivLong : 
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -1069,10 +1209,12 @@ RaisPow BARG3(UWORD *,a,WORD *,na,UWORD,b)
 	UWORD *is;
 	WORD ns, nt, nmod;
 	nmod = ABS(AC.ncmod);
+#ifdef INDIVIDUALALLOC
 	if ( AN.RPscratA == 0 ) {
 		AN.RPscratA = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"RaisPow");
 		AN.RPscratB = AN.RPscratA + AM.MaxTal+2;
 	}
+#endif
 	is = AN.RPscratB;
 	if ( !*na || ( ( *na == 1 ) && ( *a == 1 ) ) ) return(0);
 	for ( i = 0; i < *na; i++ ) *is++ = a[i];
@@ -1110,7 +1252,7 @@ RaisOvl:
 }
 
 /*
- 		#] RaisPow :
+ 		#] RaisPow : 
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -1145,7 +1287,7 @@ Product ARG3(UWORD *,a,WORD *,na,WORD,b)
 }
 
 /*
- 		#] Product :
+ 		#] Product : 
  		#[ Quotient :		UWORD Quotient(a,na,b)
 
 		Routine divides the long number a by b with the assumption that
@@ -1185,7 +1327,7 @@ Quotient ARG3(UWORD *,a,WORD *,na,WORD,b)
 }
 
 /*
- 		#] Quotient :
+ 		#] Quotient : 
  		#[ Remain10 :		WORD Remain10(a,na)
 
 	Routine devides a by 10 and gives the remainder as return value.
@@ -1213,7 +1355,7 @@ Remain10 ARG2(UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Remain10 :
+ 		#] Remain10 : 
  		#[ Remain4 :		WORD Remain4(a,na)
 
 	Routine devides a by 10000 and gives the remainder as return value.
@@ -1241,7 +1383,7 @@ Remain4 ARG2(UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Remain4 :
+ 		#] Remain4 : 
  		#[ PrtLong :		VOID PrtLong(a,na,s)
 
 	Puts the long positive number a in string s.
@@ -1256,9 +1398,11 @@ PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
 	UBYTE *sa, *sb;
 	UBYTE c;
 	UWORD *bb, *b;
+#ifdef INDIVIDUALALLOC
 	if ( AN.PLscratA == 0 ) {
 		AN.PLscratA = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"PrtLong");
 	}
+#endif
 	b = AN.PLscratA;
 	bb = b;
 	i = na; while ( --i >= 0 ) *bb++ = *a++;
@@ -1297,7 +1441,7 @@ PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
 }
 
 /*
- 		#] PrtLong :
+ 		#] PrtLong : 
  		#[ GetLong :		WORD GetLong(s,a,na)
 
 	Reads a long number from a string.
@@ -1346,7 +1490,7 @@ GetLong ARG3(UBYTE *,s,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] GetLong :
+ 		#] GetLong : 
  		#[ GCD :			WORD GCD(a,na,b,nb,c,nc)
 
 	Algorithm to compute the GCD of two long numbers.
@@ -1435,11 +1579,13 @@ out:
 	The loop recognizes the case that na-nb >= 1
 	In that case we just have to divide!
 */
+#ifdef INDIVIDUALALLOC
 	if ( AN.GCscrat6 == 0 ) {
 		AN.GCscrat6 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"GCD");
 		AN.GCscrat7 = AN.GCscrat6 + AM.MaxTal+2;
 		AN.GCscrat8 = AN.GCscrat7 + AM.MaxTal+2;
 	}
+#endif
 	r = x1 = AN.GCscrat6; t = x2 = AN.GCscrat7; x3 = AN.GCscrat8;
 	j = na;
 	NCOPY(r,a,j);
@@ -1513,7 +1659,7 @@ toobad:
 #endif
 
 /*
- 		#] GCD :
+ 		#] GCD : 
  		#[ GcdLong :		WORD GcdLong(a,na,b,nb,c,nc)
 
 	Returns the Greatest Common Divider of a and b in c.
@@ -1523,6 +1669,9 @@ toobad:
 */
 
 #ifndef NEWTRICK
+/*
+  	#[ Old Routine :
+*/
 
 WORD
 GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
@@ -1536,11 +1685,13 @@ GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
+#ifdef INDIVIDUALALLOC
 	if ( AN.GLscrat6 == 0 ) {
 		AN.GLscrat6 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"GcdLong");
 		AN.GLscrat7 = AN.GLscrat6 + AM.MaxTal+2;
 		AN.GLscrat8 = AN.GLscrat7 + AM.MaxTal+2;
 	}
+#endif
 	if ( na == 1 && nb == 1 ) {
 #ifdef EXTRAGCD2
 		*c = (UWORD)GCD2((ULONG)*a,(ULONG)*b);
@@ -1726,7 +1877,9 @@ GcdErr:
 	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
-
+/*
+  	#] Old Routine : 
+*/
 #else
 
 /*
@@ -1809,13 +1962,89 @@ GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
+#ifdef INDIVIDUALALLOC
 	if ( AN.GLscrat6 == 0 ) {
-		AN.GLscrat6 = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GcdLong");
-		AN.GLscrat7 = AN.GLscrat6 + AM.MaxTal+2;
-		AN.GLscrat8 = AN.GLscrat7 + AM.MaxTal+2;
-		AN.GLscrat9 = AN.GLscrat8 + AM.MaxTal+2;
-		AN.GLscrat10 = AN.GLscrat9 + AM.MaxTal+2;
+		AN.GLscrat6 = (UWORD *)Malloc1(5*(AM.MaxTal+4)*sizeof(UWORD),"GcdLong");
+		AN.GLscrat7 = AN.GLscrat6 + AM.MaxTal+4;
+		AN.GLscrat8 = AN.GLscrat7 + AM.MaxTal+4;
+		AN.GLscrat9 = AN.GLscrat8 + AM.MaxTal+4;
+		AN.GLscrat10 = AN.GLscrat9 + AM.MaxTal+4;
 	}
+#endif
+/*
+  	#[ GMP stuff :
+*/
+#ifdef WITHGMP
+	if ( na > 3 && nb > 3 ) {
+		int i;
+		mp_limb_t *upa, *upb, *upc, xx;
+		UWORD *uw;
+		unsigned int tcounta, tcountb, tcounta1, tcountb1;
+		mp_size_t ana, anb, anc;
+
+		uw = AN.GLscrat6;
+		upa = (mp_limb_t *)(AN.GLscrat6);
+		ana = na; tcounta1 = 0;
+		while ( a[0] == 0 ) { a++; ana--; tcounta1++; }
+		for ( i = 0; i < ana; i++ ) { *uw++ = *a++; }
+		if ( ( ana & 1 ) != 0 ) { *uw = 0; ana++; }
+		ana >>= 1;
+
+		uw = AN.GLscrat7;
+		upb = (mp_limb_t *)(AN.GLscrat7);
+		anb = nb; tcountb1 = 0;
+		while ( b[0] == 0 ) { b++; anb--; tcountb1++; }
+		for ( i = 0; i < anb; i++ ) { *uw++ = *b++; }
+		if ( ( anb & 1 ) != 0 ) { *uw = 0; anb++; }
+		anb >>= 1;
+
+		xx = upa[0]; tcounta = 0;
+		while ( ( xx & 15 ) == 0 ) { tcounta += 4; xx >>= 4; }
+		while ( ( xx &  1 ) == 0 ) { tcounta += 1; xx >>= 1; }
+		xx = upb[0]; tcountb = 0;
+		while ( ( xx & 15 ) == 0 ) { tcountb += 4; xx >>= 4; }
+		while ( ( xx &  1 ) == 0 ) { tcountb += 1; xx >>= 1; }
+
+		if ( tcounta ) {
+			mpn_rshift(upa,upa,ana,tcounta);
+			if ( upa[ana-1] == 0 ) ana--;
+		}
+		if ( tcountb ) {
+			mpn_rshift(upb,upb,anb,tcountb);
+			if ( upb[anb-1] == 0 ) anb--;
+		}
+
+		upc = (mp_limb_t *)(AN.GLscrat8);
+		if ( ( ana > anb ) || ( ( ana == anb ) && ( upa[ana-1] >= upb[ana-1] ) ) ) {
+			anc = mpn_gcd(upc,upa,ana,upb,anb);
+		}
+		else {
+			anc = mpn_gcd(upc,upb,anb,upa,ana);
+		}
+
+		tcounta = tcounta1*BITSINWORD + tcounta;
+		tcountb = tcountb1*BITSINWORD + tcountb;
+		if ( tcountb > tcounta ) tcountb = tcounta;
+		tcounta = tcountb/BITSINWORD;
+		tcountb = tcountb%BITSINWORD;
+
+		if ( tcountb ) {
+			xx = mpn_lshift(upc,upc,anc,tcountb);
+			if ( xx ) { upc[anc] = xx; anc++; }
+		}
+
+		uw = (UWORD *)upc; anc *= 2;
+		while ( uw[anc-1] == 0 ) anc--;
+		for ( i = 0; i < tcounta; i++ ) *c++ = 0;
+		for ( i = 0; i < anc; i++ ) *c++ = *uw++;
+		*nc = anc + tcounta;
+
+		return(0);
+	}
+#endif
+/*
+  	#] GMP stuff : 
+*/
 restart:;
 	if ( na == 1 && nb == 1 ) {
 		x = *a;
@@ -2033,7 +2262,7 @@ GcdErr:
 #endif
 
 /*
- 		#] GcdLong :
+ 		#] GcdLong : 
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
@@ -2046,10 +2275,12 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 	if ( i2 == 0 ) { *a = 1; *na = 1; return(0); }
 	if ( i2 > i1 ) { *a = 0; *na = 0; return(0); }
 	*a = i1; *na = 1;
+#ifdef INDIVIDUALALLOC
 	if ( AN.GBscrat3 == 0 ) {
 		AN.GBscrat3 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"GetBinom");
 		AN.GBscrat4 = AN.GBscrat3 + AM.MaxTal+2;
 	}
+#endif
 	for ( j = 2; j <= i2; j++ ) {
 		AN.GBscrat3[0] = i1+1-j;
 		if ( MulLong(a,*na,AN.GBscrat3,(WORD)1,AN.GBscrat4,&k) ) {
@@ -2070,7 +2301,7 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 }
 
 /*
- 		#] GetBinom :
+ 		#] GetBinom : 
  		#[ TakeLongRoot:
 
 	Takes the 'power'-root of the long number in a.
@@ -2115,12 +2346,14 @@ int TakeLongRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 	guessbits = numbits / power;
 	if ( guessbits <= 0 ) return(1); /* root < 2 and 1 we did already */
 	nb = guessbits/BITSINWORD;
+#ifdef INDIVIDUALALLOC
 	if ( AN.TLscrat1 == 0 ) {
 		AN.TLscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"TakeLongRoot");
 		AN.TLscrat2 = AN.TLscrat1 + AM.MaxTal + 2;
 		AN.TLscrat3 = AN.TLscrat2 + AM.MaxTal + 2;
 		AN.TLscrat4 = AN.TLscrat3 + AM.MaxTal + 2;
 	}
+#endif
 /*
 	The recursion is:
 	(b'-b) = (a/b^(power-1)-b)/n
@@ -2179,7 +2412,7 @@ TLcall:
 }
 
 /*
- 		#] TakeLongRoot:
+ 		#] TakeLongRoot: 
   	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
@@ -2199,9 +2432,11 @@ CompCoef ARG2(WORD *,term1,WORD *,term2)
 	WORD n1,n2,n3,*a;
 	GETCOEF(term1,n1);
 	GETCOEF(term2,n2);
+#ifdef INDIVIDUALALLOC
 	if ( AN.CCscratE == 0 ) {
 		AN.CCscratE = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"CompCoef");
 	}
+#endif
 	c = AN.CCscratE;
 	if ( term1[1] == 0 && n1 == 1 ) {
 		if ( term2[1] == 0 && n2 == 1 ) return(0);
@@ -2240,7 +2475,7 @@ CompCoef ARG2(WORD *,term1,WORD *,term2)
 }
 
 /*
- 		#] CompCoef :
+ 		#] CompCoef : 
  		#[ Modulus :		WORD Modulus(term)
 
 	Routine takes the coefficient of term modulus b. The answer
@@ -2275,7 +2510,7 @@ Modulus ARG1(WORD *,term)
 }
 
 /*
- 		#] Modulus :
+ 		#] Modulus : 
  		#[ TakeModulus :	WORD TakeModulus(a,na,par)
 
 		Routine gets the rational number in a with reduced length na.
@@ -2300,6 +2535,7 @@ TakeModulus ARG5(UWORD *,a,WORD *,na,WORD *,cmodvec,WORD,ncmod,WORD,par)
 	n1 = *na;
 	if ( !par ) UnPack(a,n1,&tdenom,&tnumer);
 	else { tnumer = n1; }
+#ifdef INDIVIDUALALLOC
 	if ( AT.TMscrat1 == 0 ) {
 		AT.TMscrat1 = (UWORD *)Malloc1(6*(AM.MaxTal+2)*sizeof(UWORD),"TakeModulus");
 		AT.TMscrat2 = AT.TMscrat1 + AM.MaxTal+2;
@@ -2308,6 +2544,7 @@ TakeModulus ARG5(UWORD *,a,WORD *,na,WORD *,cmodvec,WORD,ncmod,WORD,par)
 		AT.TMscrat5 = AT.TMscrat4 + AM.MaxTal+2;
 		AT.TMscrat6 = AT.TMscrat5 + AM.MaxTal+2;
 	}
+#endif
 	c = AT.TMscrat1; d = AT.TMscrat2; e = AT.TMscrat3; f = AT.TMscrat4; g = AT.TMscrat5; h = AT.TMscrat6;
 	n1 = ABS(n1);
 	if ( DivLong(a,tnumer,(UWORD *)cmodvec,nmod,
@@ -2371,7 +2608,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus :
+ 		#] TakeModulus : 
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2413,10 +2650,12 @@ MakeModTable()
 	else {
 		GETIDENTITY
 		WORD nScrat, n2;
+#ifdef INDIVIDUALALLOC
 		if ( AN.MMscrat7 == 0 ) {
 			AN.MMscrat7 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"MakeModTable");
 			AN.MMscratC = AN.MMscrat7 + AM.MaxTal+2;
 		}
+#endif
 		*AN.MMscratC = 1;
 		nScrat = 1;
 		j = size << 1;
@@ -2447,8 +2686,8 @@ MakeModTable()
 }
 
 /*
- 		#] MakeModTable :
-  	#] RekenTerms :
+ 		#] MakeModTable : 
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
@@ -2525,7 +2764,7 @@ Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Factorial :
+ 		#] Factorial : 
  		#[ Bernoulli :		WORD Bernoulli(n,a,na)
 
 	Starts with only the value of bernoulli_(0).
@@ -2647,8 +2886,6 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 }
 
 /*
- 		#] Bernoulli :
-  	#] Functions :
+ 		#] Bernoulli : 
+  	#] Functions : 
 */
-
-/* temporary commentary for forcing cvs merge */

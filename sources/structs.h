@@ -857,7 +857,7 @@ struct M_const {
     UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 struct P_const {
@@ -1322,6 +1322,7 @@ struct N_const {
 	UWORD	*DLscrat9;             /* () Used in reken.c */
 	UWORD	*DLscratA;             /* () Used in reken.c */
 	UWORD	*DLscratB;             /* () Used in reken.c */
+	UWORD	*DLscratC;             /* () Used in reken.c */
 	UWORD	*RPscratA;             /* () Used in reken.c */
 	UWORD	*RPscratB;             /* () Used in reken.c */
 	UWORD	*PLscratA;             /* () Used in reken.c */
@@ -1452,7 +1453,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 struct O_const {

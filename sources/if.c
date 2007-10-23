@@ -88,11 +88,13 @@ DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
 	UWORD *coef1 = 0, *coef2, *coef3, *cc;
 	WORD ncoef1, ncoef2, ncoef3, i = 0, first, *r, acoef, ismul1, ismul2, j;
 	UWORD *Spac1, *Spac2;
+#ifdef INDIVIDUALALLOC
 	if ( AN.DIscratC == 0 ) {
 		AN.DIscratC = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"DoIfStatement");
 		AN.DIscratD = AN.DIscratC + AM.MaxTal + 2;
 		AN.DIscratE = AN.DIscratD + AM.MaxTal + 2;
 	}
+#endif
 	coef3 = AN.DIscratC; Spac1 = AN.DIscratD; Spac2 = AN.DIscratE;
 	ifstop = ifcode + ifcode[1];
 	ifp = ifcode + 3;

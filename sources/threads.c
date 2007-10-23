@@ -59,7 +59,7 @@ static LONG numberofterms;
 #endif
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Identity :
  		#[ StartIdentity :
 
@@ -73,7 +73,7 @@ void StartIdentity ARG0
 }
 
 /*
- 		#] StartIdentity :
+ 		#] StartIdentity : 
  		#[ FinishIdentity :
 
 	The library needs a finishing routine
@@ -85,7 +85,7 @@ void FinishIdentity(void *keyp)
 }
 
 /*
- 		#] FinishIdentity :
+ 		#] FinishIdentity : 
  		#[ SetIdentity :
 
 	Assigns an integer value to a thread, starting at zero.
@@ -101,7 +101,7 @@ int SetIdentity ARG1(int *,identityretval)
 }
 
 /*
- 		#] SetIdentity :
+ 		#] SetIdentity : 
  		#[ WhoAmI :
 
 	Returns the number of the thread in our administration
@@ -137,7 +137,7 @@ int WhoAmI ARG0
 }
 
 /*
- 		#] WhoAmI :
+ 		#] WhoAmI : 
  		#[ BeginIdentities :
 */
 
@@ -149,8 +149,8 @@ BeginIdentities ARG0
 }
 
 /*
- 		#] BeginIdentities :
-  	#] Identity :
+ 		#] BeginIdentities : 
+  	#] Identity : 
   	#[ StartHandleLock :
 */
 
@@ -160,7 +160,7 @@ void StartHandleLock ARG0
 }
 
 /*
-  	#] StartHandleLock :
+  	#] StartHandleLock : 
   	#[ StartAllThreads :
 
 	In this routine we start 'number' threats
@@ -246,7 +246,7 @@ int StartAllThreads ARG1(int,number)
 }
 
 /*
-  	#] StartAllThreads :
+  	#] StartAllThreads : 
   	#[ InitializeOneThread :
 
 	One complication:
@@ -358,6 +358,7 @@ ALLPRIVATES *InitializeOneThread ARG1(int,identity)
 		AT.comind[5] = 1;
 		AT.comind[6] = 3;
 
+		AllocScratchBuffers();
 		return(B);
 	}
 	if ( identity == 0 && AN.SoScratC == 0 ) {
@@ -610,6 +611,7 @@ ALLPRIVATES *InitializeOneThread ARG1(int,identity)
 		}		
 	}
 	ReserveTempFiles(2);
+	AllocScratchBuffers();
 	return(B);
 OnError:;
 	LOCK(ErrorMessageLock);
@@ -633,7 +635,7 @@ void FinalizeOneThread ARG1(int,identity)
 }
 
 /*
-  	#] FinalizeOneThread :
+  	#] FinalizeOneThread : 
   	#[ TerminateAllThreads :
 */
 
@@ -660,7 +662,7 @@ VOID TerminateAllThreads ARG0
 }
 
 /*
-  	#] TerminateAllThreads :
+  	#] TerminateAllThreads : 
   	#[ MakeThreadBuckets :
 
 	Creates 2*number thread buckets. We want double the number because
@@ -723,7 +725,7 @@ int MakeThreadBuckets ARG2(int,number,int,par)
 }
 
 /*
-  	#] MakeThreadBuckets :
+  	#] MakeThreadBuckets : 
   	#[ GetWorkerTimes :
 */
 
@@ -740,7 +742,7 @@ LONG GetWorkerTimes ARG0
 }
 
 /*
-  	#] GetWorkerTimes :
+  	#] GetWorkerTimes : 
   	#[ UpdateOneThread :
 
 	Fix up things that happened at compiler time.
@@ -764,7 +766,7 @@ int UpdateOneThread ARG1(int,identity)
 }
 
 /*
-  	#] UpdateOneThread :
+  	#] UpdateOneThread : 
   	#[ LoadOneThread :
 
 	Loads all relevant variables from thread 'from' into thread 'identity'
@@ -840,7 +842,7 @@ int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
 }
 
 /*
-  	#] LoadOneThread :
+  	#] LoadOneThread : 
   	#[ BalanceRunThread :
 
 	To start a thread from the Generator routine we need to pass a number
@@ -878,7 +880,7 @@ int BalanceRunThread BARG3(int,identity,WORD,*term,WORD,level)
 }
 
 /*
-  	#] BalanceRunThread :
+  	#] BalanceRunThread : 
   	#[ SetWorkerFiles :
 */
 
@@ -952,7 +954,7 @@ void SetWorkerFiles ARG0
 }
 
 /*
-  	#] SetWorkerFiles :
+  	#] SetWorkerFiles : 
   	#[ RunThread :
 */
 
@@ -993,7 +995,7 @@ void *RunThread ARG1(void *,dummy)
 				NewSort();
 				break;
 /*
-			#] STARTNEWEXPRESSION :
+			#] STARTNEWEXPRESSION : 
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -1097,7 +1099,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION :
+			#] LOWESTLEVELGENERATION : 
 			#[ FINISHEXPRESSION :
 */
 #ifdef WITHSORTBOTS
@@ -1141,7 +1143,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION :
+			#] FINISHEXPRESSION : 
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -1180,7 +1182,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION :
+			#] CLEANUPEXPRESSION : 
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1199,7 +1201,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] HIGHERLEVELGENERATION :
+			#] HIGHERLEVELGENERATION : 
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1209,13 +1211,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE :
+			#] STARTNEWMODULE : 
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD :
+			#] TERMINATETHREAD : 
 			#[ DOONEEXPRESSION :
 
 				When a thread has to do a complete (not too big) expression.
@@ -1337,7 +1339,7 @@ ProcErr:			Terminate(-1);
 
 				} break;
 /*
-			#] DOONEEXPRESSION :
+			#] DOONEEXPRESSION : 
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1356,7 +1358,7 @@ EndOfThread:;
 }
 
 /*
-  	#] RunThread :
+  	#] RunThread : 
   	#[ RunSortBot :
 */
 
@@ -1390,20 +1392,20 @@ void *RunSortBot ARG1(void *,dummy)
 SETBASEPOSITION(AN.theposition,0);
 				break;
 /*
-			#] INISORTBOT :
+			#] INISORTBOT : 
 			#[ RUNSORTBOT :
 */
 			case RUNSORTBOT:
 				SortBotMerge(B);
 				break;
 /*
-			#] RUNSORTBOT :
+			#] RUNSORTBOT : 
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD :
+			#] TERMINATETHREAD : 
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1424,7 +1426,7 @@ EndOfThread:;
 #endif
 
 /*
-  	#] RunSortBot :
+  	#] RunSortBot : 
   	#[ IAmAvailable :
 
 	To be called when a thread is available.
@@ -1454,7 +1456,7 @@ void IAmAvailable ARG1(int,identity)
 }
 
 /*
-  	#] IAmAvailable :
+  	#] IAmAvailable : 
   	#[ GetAvailableThread :
 
 	Gets an available thread from the top of the stack.
@@ -1478,7 +1480,7 @@ int GetAvailableThread ARG0
 }
 
 /*
-  	#] GetAvailableThread :
+  	#] GetAvailableThread : 
   	#[ ConditionalGetAvailableThread :
 
 */
@@ -1505,7 +1507,7 @@ int ConditionalGetAvailableThread ARG0
 }
 
 /*
-  	#] ConditionalGetAvailableThread :
+  	#] ConditionalGetAvailableThread : 
   	#[ GetThread :
 
 	Gets a given thread from the list of available threads, even if
@@ -1531,7 +1533,7 @@ int GetThread ARG1(int,identity)
 }
 
 /*
-  	#] GetThread :
+  	#] GetThread : 
   	#[ ThreadWait :
 
 	To be called by a thread when it has nothing to do.
@@ -1569,7 +1571,7 @@ int ThreadWait ARG1(int,identity)
 }
 
 /*
-  	#] ThreadWait :
+  	#] ThreadWait : 
   	#[ SortBotWait :
 
 	To be called by a thread when it has nothing to do.
@@ -1607,7 +1609,7 @@ int SortBotWait ARG1(int,identity)
 #endif
 
 /*
-  	#] SortBotWait :
+  	#] SortBotWait : 
   	#[ ThreadClaimedBlock :
 
 	To be called by a thread when it has nothing to do.
@@ -1633,7 +1635,7 @@ int ThreadClaimedBlock ARG1(int,identity)
 }
 
 /*
-  	#] ThreadClaimedBlock :
+  	#] ThreadClaimedBlock : 
   	#[ MasterWait :
 
 	To be called by the master when it has to wait for one of the
@@ -1656,7 +1658,7 @@ int MasterWait ARG0
 }
 
 /*
-  	#] MasterWait :
+  	#] MasterWait : 
   	#[ MasterWaitThread :
 
 	To be called by the master when it has to wait for one of the
@@ -1679,7 +1681,7 @@ int MasterWaitThread ARG1(int,identity)
 }
 
 /*
-  	#] MasterWaitThread :
+  	#] MasterWaitThread : 
   	#[ MasterWaitAll :
 
 	To be called by the master when it has to wait for all of the
@@ -1698,7 +1700,7 @@ void MasterWaitAll ARG0
 }
 
 /*
-  	#] MasterWaitAll :
+  	#] MasterWaitAll : 
   	#[ MasterWaitAllSortBots :
 
 	To be called by the master when it has to wait for all of the
@@ -1720,7 +1722,7 @@ void MasterWaitAllSortBots ARG0
 #endif
 
 /*
-  	#] MasterWaitAllSortBots :
+  	#] MasterWaitAllSortBots : 
   	#[ MasterWaitAllBlocks :
 
 	To be called by the master when it has to wait for all of the
@@ -1739,7 +1741,7 @@ void MasterWaitAllBlocks ARG0
 }
 
 /*
-  	#] MasterWaitAllBlocks :
+  	#] MasterWaitAllBlocks : 
   	#[ WakeupThread :
 
 	To be called when the indicated thread needs waking up.
@@ -1761,7 +1763,7 @@ void WakeupThread ARG2(int,identity,int,signalnumber)
 }
 
 /*
-  	#] WakeupThread :
+  	#] WakeupThread : 
   	#[ WakeupMasterFromThread :
 
 	To be called when the indicated thread needs waking up.
@@ -1783,7 +1785,7 @@ void WakeupMasterFromThread ARG2(int,identity,int,signalnumber)
 }
 
 /*
-  	#] WakeupMasterFromThread :
+  	#] WakeupMasterFromThread : 
   	#[ SendOneBucket :
 
 	To be called when there is a full bucket and an available thread
@@ -1825,7 +1827,7 @@ int SendOneBucket ARG0
 }
 
 /*
-  	#] SendOneBucket :
+  	#] SendOneBucket : 
   	#[ InParallelProcessor :
 
 	We divide the expressions marked by partodo over the workers.
@@ -1881,7 +1883,7 @@ InParallelProcessor ARG0
 }
 
 /*
-  	#] InParallelProcessor :
+  	#] InParallelProcessor : 
   	#[ ThreadsProcessor :
 */
 
@@ -2292,7 +2294,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor :
+  	#] ThreadsProcessor : 
   	#[ LoadReadjusted :
 
 	This routine does the load readjustment at the end of a module.
@@ -2514,7 +2516,7 @@ intercepted:;
 }
 
 /*
-  	#] LoadReadjusted :
+  	#] LoadReadjusted : 
   	#[ SortStrategy :
 
 	When the final sort to the scratch file should take place
@@ -2548,7 +2550,7 @@ intercepted:;
 	buffer/block of the master and leave out the scratch of the worker
 	completely.
 
-  	#] SortStrategy :
+  	#] SortStrategy : 
   	#[ PutToMaster :
 
 		Writes the term (uncompressed) to the masters buffers.
@@ -2615,7 +2617,7 @@ PutToMaster BARG1(WORD *,term)
 }
 
 /*
-  	#] PutToMaster :
+  	#] PutToMaster : 
   	#[ SortBotOut :
 
 		This is the output routine of the SortBots.
@@ -2655,7 +2657,7 @@ SortBotOut BARG1(WORD *,term)
 #endif
 
 /*
-  	#] SortBotOut :
+  	#] SortBotOut : 
   	#[ MasterMerge :
 */
 
@@ -2742,7 +2744,7 @@ MasterMerge ARG0
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	Now construct the tree:
 */
@@ -3086,7 +3088,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge :
+  	#] MasterMerge : 
   	#[ SortBotMasterMerge :
 
 	This routine is run as master. Hence B = B0. Etc.
@@ -3198,7 +3200,7 @@ SortBotMasterMerge ARG0
 #endif
 
 /*
-  	#] SortBotMasterMerge :
+  	#] SortBotMasterMerge : 
   	#[ SortBotMerge :
 
 	Merges two streams into one
@@ -3284,7 +3286,7 @@ SortBotMerge BARG0
 			}
 			term1 += im;
 /*
-			#] One is smallest :
+			#] One is smallest : 
 */
 		}
 		else if ( c < 0 ) {
@@ -3326,7 +3328,7 @@ next2:		im = *term2;
 			}
 			term2 += im;
 /*
-			#] Two is smallest :
+			#] Two is smallest : 
 */
 		}
 		else {
@@ -3475,7 +3477,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 			goto next2;
 /*
-			#] Equal :
+			#] Equal : 
 */
 		}
 	}
@@ -3523,7 +3525,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 		}
 /*
-			#] Tail in one :
+			#] Tail in one : 
 */
 	}
 	else if ( *term2 ) {
@@ -3567,7 +3569,7 @@ cancelled:;		/* Now we need two new terms */
 			term2 += im;
 		}
 /*
-			#] Tail in two :
+			#] Tail in two : 
 */
 	}
 	SortBotOut(BHEAD 0);
@@ -3601,7 +3603,7 @@ ReturnError:;
 #endif
 
 /*
-  	#] SortBotMerge :
+  	#] SortBotMerge : 
   	#[ IniSortBlocks :
 */
 
@@ -3680,7 +3682,7 @@ int IniSortBlocks ARG1(int,numworkers)
 }
 
 /*
-  	#] IniSortBlocks :
+  	#] IniSortBlocks : 
   	#[ DefineSortBotTree :
 
 	Tells each SortBot where its input is coming from
@@ -3708,7 +3710,7 @@ DefineSortBotTree ARG0
 #endif
 
 /*
-  	#] DefineSortBotTree :
+  	#] DefineSortBotTree : 
   	#[ Test :
 */
 
@@ -3725,6 +3727,6 @@ void Test ARG0
 }
 
 /*
-  	#] Test :
+  	#] Test : 
 */
 #endif

@@ -1065,7 +1065,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
   WORD *termout = AT.WorkPointer;
   WORD *oldwork = AT.WorkPointer;
 
-  AT.WorkPointer = (WORD *)((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+  AT.WorkPointer = (WORD *)((UBYTE *)(AT.WorkPointer) + AM.MaxTer);
   AR.DeferFlag = 0;
   
   PRINTFBUF("PF_Deferred (Term)   ",term,*term);

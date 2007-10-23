@@ -1536,11 +1536,13 @@ WORD *PolynoIntFac ARG1(WORD *,poly)
 	WORD n,n1,ncoef,i;
 	WORD *coef;
 	if ( ( poly = PolynoUnify(poly,1) ) == 0 ) goto PIFerror;
+#ifdef INDIVIDUALALLOC
 	if ( AN.PIFscrat == 0 ) {
 		AN.PIFscrat = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"PolynoIntFac");
 		AN.PIFscrat1 = AN.PIFscrat +(AM.MaxTal+2);
 		AN.PIFscrat2 = AN.PIFscrat1+(AM.MaxTal+2);
 	}
+#endif
 /*
 	Collect the least common multiple in AN.PIFscrat
 */

@@ -680,7 +680,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					UWORD *numer1,*denom1;
 					WORD nsize = abs(t[t[1]-1]), nnsize, isize;
 					nnsize = (nsize-1)/2;
-					numer1 = t + FUNHEAD+ARGHEAD+1;
+					numer1 = (UWORD *)(t + FUNHEAD+ARGHEAD+1);
 					denom1 = numer1 + nnsize;
 					for ( isize = 1; isize < nnsize; isize++ ) {
 						if ( denom1[isize] ) break;
@@ -1527,7 +1527,7 @@ NoRep:
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by

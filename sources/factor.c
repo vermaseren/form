@@ -224,11 +224,13 @@ ChinRem ARG6(UWORD *,pp, UWORD *,rr, WORD, npp, UWORD *,x, WORD *,nx,int,par)
 {
 	UWORD *x1, *x2, *x3, z1, z2, i;
 	WORD y1, y2;
+#ifdef INDIVIDUALALLOC
 	if ( AN.CRscrat1 == 0 ) {
 		AN.CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
 		AN.CRscrat2 = AN.CRscrat1 + AM.MaxTal+2;
 		AN.CRscrat3 = AN.CRscrat2 + AM.MaxTal+2;
 	}
+#endif
 	x1 = AN.CRscrat1; x2 = AN.CRscrat2;
 	x1[0] = pp[0]; y1 = 1;
 	for ( i = 1; i < npp; i++ ) {
@@ -287,11 +289,13 @@ ChinRema ARG8(UWORD*,pa,WORD,na,UWORD*,ra,WORD,nra,UWORD,pb,UWORD,rb,UWORD*,x,WO
 {
 	UWORD nn,pp,pd;
 	ULONG xx;
+#ifdef INDIVIDUALALLOC
 	if ( AN.CRscrat1 == 0 ) {
 		AN.CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
 		AN.CRscrat2 = AN.CRscrat1 + AM.MaxTal+2;
 		AN.CRscrat3 = AN.CRscrat2 + AM.MaxTal+2;
 	}
+#endif
 	if ( AddLong(&rb,1,ra,-nra,AN.CRscrat1,&AN.nCRscrat1) ) goto ChinErr;
 	nn = DivMod(AN.CRscrat1,AN.nCRscrat1,pb);
 	pp = DivMod(pa,na,pb);
@@ -719,6 +723,7 @@ nofactor:;
 	For the coefficient we have to determine the LCM of the denominators
 	and the GCD of the numerators.
 */
+#ifdef INDIVIDUALALLOC
 	if ( AN.GCDbuffer == 0 ) {
 		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
 		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
@@ -726,6 +731,7 @@ nofactor:;
 		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
 		AN.LCMc = AN.LCMb + AM.MaxTal+2;
 	}
+#endif
 	r1 = d->where;
 /*
 	First take the first term to load up the LCM and the GCD
@@ -967,6 +973,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 	For the coefficient we have to determine the LCM of the denominators
 	and the GCD of the numerators.
 */
+#ifdef INDIVIDUALALLOC
 	if ( AN.GCDbuffer == 0 ) {
 		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
 		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
@@ -974,6 +981,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
 		AN.LCMc = AN.LCMb + AM.MaxTal+2;
 	}
+#endif
 	position = AS.OldOnFile[expr];
 	AR.DeferFlag = 0; AR.KeptInHold = newhold; AR.GetFile = newgetfile;
 	SeekScratch(file,&oldposition);

@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] include : 
+  	#] include :
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -1275,10 +1275,12 @@ nextterm:						mm = mnext;
 */
 					t = r5;
 					if ( t + *t == r3 ) goto oneterm;
+#ifdef INDIVIDUALALLOC
 					if ( AN.EAscrat == 0 ) {
 						AN.EAscrat = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD)
 								,"execarg");
 					}
+#endif
 					GETSTOP(t,r6);
 					ngcd = t[t[0]-1];
 					i = abs(ngcd)-1;
@@ -1388,7 +1390,7 @@ execargerr:
 }
 
 /*
-  	#] execarg : 
+  	#] execarg :
   	#[ execterm :
 */
 
@@ -1514,7 +1516,7 @@ ArgumentImplode BARG2(WORD *,term,WORD *,thelist)
 }
 
 /*
-  	#] ArgumentImplode : 
+  	#] ArgumentImplode :
   	#[ ArgumentExplode :
 */
 
@@ -1579,6 +1581,6 @@ ArgumentExplode BARG2(WORD *,term,WORD *,thelist)
 }
 
 /*
-  	#] ArgumentExplode : 
+  	#] ArgumentExplode :
 */
 

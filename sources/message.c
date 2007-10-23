@@ -572,7 +572,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 			else if ( *s == 'x' ) {
 				char ccc;
 				y = va_arg(ap, LONG);
-				i = sizeof(LONG);
+				i = 2*sizeof(LONG);
 				while ( --i > 0 ) {
 					ccc = ( y >> (i*4) ) & 0xF;
 					if ( ccc ) break;
