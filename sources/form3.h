@@ -17,11 +17,13 @@
 #define ITHREADS
 #define WITHPCOUNTER
 #define DEBUGGINGLOCKS
-#define WITHPTHREADS
-#define WITHPOSIXCLOCK
 #define WITHSTATS
 */
 #define WITHSORTBOTS
+
+#ifdef WITHPTHREADS
+#define WITHPOSIXCLOCK
+#endif
 
 #ifdef WITHZLIB
 #include <zlib.h>

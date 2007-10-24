@@ -1314,6 +1314,7 @@ DECLARE(int setKillModeForExternalChannelFailure,(int,int))
 DECLARE(int setTerminatorForExternalChannelFailure,(char *))
 DECLARE(int writeBufToExtChannelFailure,(char *,size_t))
 
+DECLARE(int ReleaseTB,ARG0)
 /*
   	#] Declarations :
 */

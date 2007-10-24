@@ -744,7 +744,7 @@ int CodeGenerator ARG1(SBYTE *,tokens)
 	denominator = numerator + 2*AM.MaxTal;
 	innum = denominator + 2*AM.MaxTal;
 	term = (WORD *)(innum + 2*AM.MaxTal);
-	AT.WorkPointer = term + AM.MaxTer;
+	AT.WorkPointer = term + AM.MaxTer/sizeof(WORD);
 	if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 	cc = 0;
 	t = term+1;

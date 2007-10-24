@@ -566,7 +566,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 #ifdef GZIPDEBUG
 			LOCK(ErrorMessageLock);
 			MesPrint("%w EndSort: lPatch = %d, MaxPatches = %d,lFill = %12x, sSpace = %ld, MaxTer = %d, lTop = %12x"
-					,S->lPatch,S->MaxPatches,S->lFill,sSpace,AM.MaxTer,S->lTop);
+					,S->lPatch,S->MaxPatches,S->lFill,sSpace,AM.MaxTer/sizeof(WORD),S->lTop);
 			UNLOCK(ErrorMessageLock);
 #endif
 			if ( MergePatches(1) ) {
@@ -1533,7 +1533,7 @@ RegEnd:
 	if ( **ps1 > AM.MaxTer/sizeof(WORD) ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
-		AM.MaxTer);
+		AM.MaxTer/sizeof(WORD));
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1662,7 +1662,7 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 		if ( *m > AM.MaxTer/sizeof(WORD) ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
-			AM.MaxTer);
+			AM.MaxTer/sizeof(WORD));
 			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}

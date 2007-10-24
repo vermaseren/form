@@ -72,7 +72,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -120,7 +120,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -191,7 +191,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -212,7 +212,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -243,8 +243,17 @@ RecalcSetups ARG0
 	LONG totalsize, minimumsize;
 	sp = GetSetupPar((UBYTE *)"largesize");
 	totalsize = sp1->value+sp->value;
+/*
 	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
 	AM.MaxTer = sp2->value*sizeof(WORD);
+*/
+	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
+	AM.MaxTer = sp2->value*sizeof(WORD);
+	if ( AM.MaxTer < 200*sizeof(WORD) ) AM.MaxTer = 200*sizeof(WORD);
+	if ( AM.MaxTer > MAXPOSITIVE - 200*sizeof(WORD) ) AM.MaxTer = MAXPOSITIVE - 200*sizeof(WORD);
+	AM.MaxTer /= sizeof(WORD);
+	AM.MaxTer *= sizeof(WORD);
+
 	minimumsize = (AM.totalnumberofthreads-1)*(AM.MaxTer+
 		NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS*AM.MaxTer);
 	if ( totalsize < minimumsize ) {
@@ -256,7 +265,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -288,8 +297,10 @@ AllocSetups ARG0
 */
 	sp = GetSetupPar((UBYTE *)"maxtermsize");
 	AM.MaxTer = sp->value*sizeof(WORD);
-	if ( AM.MaxTer < 100 ) AM.MaxTer = 250;
-	if ( AM.MaxTer > MAXPOSITIVE - 200 ) AM.MaxTer = MAXPOSITIVE - 200;
+	if ( AM.MaxTer < 200*sizeof(WORD) ) AM.MaxTer = 200*sizeof(WORD);
+	if ( AM.MaxTer > MAXPOSITIVE - 200*sizeof(WORD) ) AM.MaxTer = MAXPOSITIVE - 200*sizeof(WORD);
+	AM.MaxTer /= sizeof(WORD);
+	AM.MaxTer *= sizeof(WORD);
 /*
 	Allocate workspace.
 */
@@ -341,7 +352,7 @@ AllocSetups ARG0
 				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
 	if ( AM.MaxTal < (AM.MaxTer/sizeof(WORD)-2)/4 )
 				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/4;
-	AM.MaxTal &= -4;
+	AM.MaxTal &= -sizeof(WORD)*2;
 /*
 	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
 	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
@@ -588,7 +599,7 @@ AllocSetups ARG0
 }
 
 /*
- 		#] AllocSetups : 
+ 		#] AllocSetups :
  		#[ WriteSetup :
 */
 
@@ -632,7 +643,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -757,7 +768,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -783,7 +794,7 @@ AllocSortFileName ARG1(SORTING *,sort)
 }
 
 /*
- 		#] AllocSortFileName : 
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -831,7 +842,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -850,7 +861,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -861,7 +872,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -939,7 +950,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -964,7 +975,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
  		#[ AllocScratchBuffers :
 */
 

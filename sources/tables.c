@@ -2177,4 +2177,23 @@ int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 }
 
   	#] LoadTableElement :
+  	#[ ReleaseTB :
+
+	Releases all TableBases
+*/
+
+int ReleaseTB ARG0
+{
+	DBASE *d;
+	int i;
+	for ( i = NumTableBases - 1; i >= 0; i-- ) {
+		d = tablebases+i;
+		fclose(d->handle);
+		FreeTableBase(d);
+	}
+	return(0);
+}
+
+/*
+  	#] ReleaseTB :
 */

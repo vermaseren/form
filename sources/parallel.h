@@ -63,17 +63,30 @@
 #      define pvm_upkWORD(x,y,z) pvm_upkint(x,y,z)
 #      define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
 #    endif
-#  else /* regular 32 bit architecture with 16 bit WORDS */
-#    define PF_BYTE PVM_BYTE
-#    define PF_WORD PVM_SHORT
-#    define PF_INT  PVM_INT
-#    define PF_LONG PVM_LONG
-#    define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
-#    define pvm_pkWORD(x,y,z) pvm_pkshort(x,y,z)
-#    define pvm_pkLONG(x,y,z) pvm_pklong(x,y,z)
-#    define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
-#    define pvm_upkWORD(x,y,z) pvm_upkshort(x,y,z)
-#    define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
+#  else
+#    ifdef OPTERON
+#      define PF_BYTE PVM_BYTE
+#      define PF_WORD PVM_INT
+#      define PF_INT  PVM_INT
+#      define PF_LONG PVM_LONG
+#      define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
+#      define pvm_pkWORD(x,y,z) pvm_pkint(x,y,z)
+#      define pvm_pkLONG(x,y,z) pvm_pklong(x,y,z)
+#      define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
+#      define pvm_upkWORD(x,y,z) pvm_upkint(x,y,z)
+#      define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
+#    else /* regular 32 bit architecture with 16 bit WORDS */
+#      define PF_BYTE PVM_BYTE
+#      define PF_WORD PVM_SHORT
+#      define PF_INT  PVM_INT
+#      define PF_LONG PVM_LONG
+#      define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
+#      define pvm_pkWORD(x,y,z) pvm_pkshort(x,y,z)
+#      define pvm_pkLONG(x,y,z) pvm_pklong(x,y,z)
+#      define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
+#      define pvm_upkWORD(x,y,z) pvm_upkshort(x,y,z)
+#      define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
+#    endif
 #  endif
 #endif
 
@@ -94,11 +107,18 @@
 #      define PF_INT  MPI_INT
 #      define PF_LONG MPI_LONG
 #    endif
-#  else         /* regular 32 bit architecture with 16 bit WORDS */
-#    define PF_BYTE MPI_BYTE
-#    define PF_WORD MPI_SHORT
-#    define PF_INT  MPI_INT
-#    define PF_LONG MPI_LONG
+#  else
+#    ifdef OPTERON
+#      define PF_BYTE MPI_BYTE
+#      define PF_WORD MPI_INT
+#      define PF_INT  MPI_INT
+#      define PF_LONG MPI_LONG
+#    else         /* regular 32 bit architecture with 16 bit WORDS */
+#      define PF_BYTE MPI_BYTE
+#      define PF_WORD MPI_SHORT
+#      define PF_INT  MPI_INT
+#      define PF_LONG MPI_LONG
+#    endif
 #  endif
 #endif
 
