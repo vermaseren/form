@@ -1011,7 +1011,7 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 		if ( siz == sizeof(WORD) ) {
 			p = term;
 			j = i = *term++;
-			if ( ( i > AM.MaxTer/sizeof(WORD) ) || ( -i >= AM.MaxTer/sizeof(WORD) ) ) {
+			if ( ( i > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( -i >= AM.MaxTer/((WORD)sizeof(WORD)) ) ) {
 				error = 1;
 				goto ErrGet;
 			}
@@ -1035,7 +1035,7 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 				}
 				*p += *term;
 				j = *term;
-				if ( ( j > AM.MaxTer/sizeof(WORD) ) || ( j <= 0 ) ) {
+				if ( ( j > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( j <= 0 ) ) {
 					error = 3;
 					goto ErrGet;
 				}

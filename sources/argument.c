@@ -1540,8 +1540,8 @@ ArgumentExplode BARG2(WORD *,term,WORD *,thelist)
 				for ( i = 0; i < FUNHEAD; i++ ) *w++ = *tt++;
 				while ( tt < ttstop ) {
 					if ( *tt == -SNUMBER ) {
-						if ( tt[1] < AM.MaxTer/(sizeof(WORD)*4)
-							&& tt[1] > -(AM.MaxTer/(sizeof(WORD)*4))
+						if ( tt[1] < AM.MaxTer/((WORD)sizeof(WORD)*4)
+							&& tt[1] > -(AM.MaxTer/((WORD)sizeof(WORD)*4))
 							&& ( tt[1] > 1 || tt[1] < -1 ) ) {
 							ncount = ABS(tt[1]);
 							while ( ncount > 1 ) {

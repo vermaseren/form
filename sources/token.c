@@ -1019,12 +1019,12 @@ dosymbol:
 					s++;				/* Now we compose the power */
 					num = *s++;			/* If the number is way too large */
 					while ( *s >= 0 ) {	/* it may look like not too big */
-						if ( num >= MAXPOWER ) break;	/* Hence... */
+						if ( num > MAXPOWER ) break;	/* Hence... */
 						num = base*num + *s++;
 					}
 					while ( *s >= 0 ) s++;	/* Finish the number if needed */
 					if ( *s == TPOWER ) goto doublepower;
-					if ( num < MAXPOWER ) continue;	/* Simple case */
+					if ( num <= MAXPOWER ) continue;	/* Simple case */
 				}
 				else if ( *s == TSYMBOL && c != TNUMBER && c != TNUMBER1 ) {
 					s++; n = 0; while ( *s >= 0 ) { n = 128*n + *s++; }
@@ -1258,12 +1258,12 @@ dosymbol:
 					*fill++ = *s++;
 					num = *s++; *fill++ = num;
 					while ( *s >= 0 ) {
-						if ( num >= MAXPOWER ) break;
+						if ( num > MAXPOWER ) break;
 						*fill++ = *s;
 						num = base*num + *s++;
 					}
 					while ( *s >= 0 ) *fill++ = *s++;
-					if ( num < MAXPOWER ) continue;
+					if ( num <= MAXPOWER ) continue;
 					goto putexp1;
 				}
 				else if ( *s == TSYMBOL && c != TNUMBER && c != TNUMBER1 ) {

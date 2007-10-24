@@ -2413,7 +2413,7 @@ illdo:;
 }
 
 /*
- 		#] DoDo :
+ 		#] DoDo : 
  		#[ DoElse :
 */
 
@@ -3288,7 +3288,10 @@ DoSystem ARG1(UBYTE *,s)
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
 	while ( *s == ' ' || *s == '\t' ) s++;
-	if ( system((char *)s) ) return(-1);
+	if ( system((char *)s) ) {
+		MesPrint("@System call returned with error condition");
+		Terminate(-1);
+	}
 	return(0);
 #else
 	Error0("External programs not implemented on this computer/system");
@@ -3297,7 +3300,7 @@ DoSystem ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoSystem : 
+ 		#] DoSystem :
  		#[ DoPreNormPoly :
 
 		Syntax #NormPoly(F,x,$b) or #NormPoly($a,x,$b)
@@ -3506,7 +3509,7 @@ PreLoad ARG5(PRELOAD *,p,UBYTE *,start,UBYTE *,stop,int,mode,char *,message)
 }
 
 /*
- 		#] PreLoad : 
+ 		#] PreLoad :
  		#[ PreSkip :
 
 		Skips a loop or procedure.

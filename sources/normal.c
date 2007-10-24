@@ -125,7 +125,7 @@ conscan:;
 				from = m;
 				do {
 					if ( t[1] == 0 ) {
-						if ( *t == 0 || *t == MAXPOWER ) goto NormZZ;
+/*						if ( *t == 0 || *t == MAXPOWER ) goto NormZZ; */
 						t += 2;
 						goto NextSymbol;
 					}
@@ -235,7 +235,7 @@ conscan:;
 								goto NormMin;
 							}
 							*m += *t;
-							if	( *m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+							if	( *m >= 2*MAXPOWER || *m <= -2*MAXPOWER ) {
 								LOCK(ErrorMessageLock);
 								MesPrint("Power overflow during normalization");
 								UNLOCK(ErrorMessageLock);
@@ -1527,7 +1527,7 @@ NoRep:
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2461,7 +2461,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts :
+  	#] Dotproducts : 
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2605,12 +2605,12 @@ FromNorm:
 	UNLOCK(ErrorMessageLock);
 	return(-1);
 /*
-  	#] Errors and Finish :
+  	#] Errors and Finish : 
 */
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 
@@ -2631,7 +2631,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 				Terminate(-1);
 			}
 			*m += pow;
-			if	( *m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
+			if	( *m >= 2*MAXPOWER || *m <= -2*MAXPOWER ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("Power overflow during normalization");
 				UNLOCK(ErrorMessageLock);

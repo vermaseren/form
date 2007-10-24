@@ -828,6 +828,7 @@ MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	RLONG t, bb;
 #ifdef INDIVIDUALALLOC
 	if ( AN.DLscrat9 == 0 ) {
+		GETIDENTITY
 		AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"MulLong");
 		AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
 		AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
@@ -917,7 +918,7 @@ MulLov:
 }
 
 /*
- 		#] MulLong :
+ 		#] MulLong : 
  		#[ BigLong :		WORD BigLong(a,na,b,nb)
 
 	Returns > 0 if a > b, < 0 if b > a and 0 if a == b

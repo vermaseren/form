@@ -128,7 +128,7 @@ AddToLine ARG1(UBYTE *,s)
 }
 
 /*
- 		#] AddToLine :
+ 		#] AddToLine : 
  		#[ FiniLine :			VOID FiniLine()
 */
 
@@ -1165,6 +1165,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 			else {
 				TokenToLine(VARNAME(vectors,*t - AM.OffsetVector)); t++;
 			}
+			first = 0;
 			}
 			break;
 		case DOLLAREXPRESSION:
@@ -1363,7 +1364,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 }
 
 /*
- 		#] WriteSubTerm : 
+ 		#] WriteSubTerm :
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
