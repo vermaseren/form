@@ -166,6 +166,7 @@ PopVariables()
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
 	AC.StatsFlag = AM.gStatsFlag;
+	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers;
 	AC.lUnitTrace = AM.gUnitTrace;
 	AC.lDefDim = AM.gDefDim;
 	AC.lDefDim4 = AM.gDefDim4;
@@ -225,6 +226,7 @@ MakeGlobal ARG0
 	AM.gCodesFlag = AC.CodesFlag;
 	AM.gNamesFlag = AC.NamesFlag;
 	AM.gStatsFlag = AC.StatsFlag;
+	AM.gNoSpacesInNumbers = AO.NoSpacesInNumbers;
 	AM.gUnitTrace = AC.lUnitTrace;
 	AM.gDefDim = AC.lDefDim;
 	AM.gDefDim4 = AC.lDefDim4;

@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ Commute :
 
@@ -34,7 +34,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -78,12 +78,13 @@ Normalize BARG1(WORD *,term)
 	WORD *ReplaceSub;
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
+	WORD *ANsc = 0, *ANsm = 0, *ANsr = 0;
 	LONG oldcpointer = 0;
 /*
 	int termflag;
 */
 /*
-  	#] Declarations : 
+  	#] Declarations :
   	#[ Setup :
 */
 Restart:
@@ -106,7 +107,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup : 
+  	#] Setup :
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = ngam = neps = nexp = nden = 
@@ -130,9 +131,11 @@ conscan:;
 						goto NextSymbol;
 					}
 					if ( *t <= DENOMINATORSYMBOL && *t >= COEFFSYMBOL ) {
+/*
 						if ( AN.NoScrat2 == 0 ) {
 							AN.NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
 						}
+*/
 						if ( AN.cTerm ) m = AN.cTerm;
 						else m = term;
 						m += *m;
@@ -216,7 +219,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -588,10 +591,10 @@ MulIn:
 				break;
 			case TERMFUNCTION:
 				if ( AN.cTerm ) {
-					AN.st = t; AN.sr = r; AN.sm = m; AN.sc = AN.cTerm;
+					ANsr = r; ANsm = m; ANsc = AN.cTerm;
 					AN.cTerm = 0;
-					t = AN.sc + 1;
-					m = AN.sc + *AN.sc;
+					t = ANsc + 1;
+					m = ANsc + *ANsc;
 					ncoef = REDLENG(ncoef);
 					nnum = REDLENG(m[-1]);	
 					m -= ABS(m[-1]);
@@ -1164,6 +1167,13 @@ ScanCont:		while ( t < r ) {
 						j = (j-1) >> 1;
 						i = ( i < 0 ) ? -j: j;
 						UnPack((UWORD *)to,i,&den,&num);
+/*
+						Potentially the use of NoScrat2 is unsafe.
+						It makes the routine not reentrant, but because it is
+						used only locally and because we only call the
+						low level routines DivLong and AddLong which never
+						make calls involving Normalize, things are OK after all
+*/
 						if ( AN.NoScrat2 == 0 ) {
 							AN.NoScrat2 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"Normalize");
 						}
@@ -1183,6 +1193,7 @@ ScanCont:		while ( t < r ) {
 							AN.NoScrat2,den,(UWORD *)AT.WorkPointer,&num) )
 								goto FromNorm;
 						}
+
 					}
 					else if ( *to == -SNUMBER ) {	/* No rounding needed */
 						if ( to[1] < 0 ) { *AT.WorkPointer = -to[1]; num = -1; }
@@ -1520,14 +1531,14 @@ NoRep:
 		}
 		t = r;
 	} while ( t < m );
-	if ( AN.sc ) {
-		AN.cTerm = AN.sc;
-		r = t = AN.sr; m = AN.sm;
-		AN.sc = AN.sm = AN.st = AN.sr = 0;
+	if ( ANsc ) {
+		AN.cTerm = ANsc;
+		r = t = ANsr; m = ANsm;
+		ANsc = ANsm = ANsr = 0;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -1677,7 +1688,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators : 
+  	#] Easy denominators :
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -1911,7 +1922,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions : 
+  	#] Index Contractions :
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2062,7 +2073,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions : 
+  	#] NonCommuting Functions :
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2220,7 +2231,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions : 
+  	#] Commuting Functions :
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2309,7 +2320,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors : 
+  	#] LeviCivita tensors :
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2340,7 +2351,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta : 
+  	#] Delta :
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2362,7 +2373,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices : 
+  	#] Loose Vectors/Indices :
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2391,7 +2402,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors : 
+  	#] Vectors :
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2461,7 +2472,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts : 
+  	#] Dotproducts :
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2513,7 +2524,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols : 
+  	#] Symbols :
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -2543,6 +2554,181 @@ NextI:;
 			NCOPY(m,r,i);
 			if ( termout < m ) termout = m;
 		}
+/*
+ 		#[ normalize replacements :
+
+		At this point we have the problem that we may have to treat functions
+		with a dirtyflag. In the original setting DIRTYFLAG is replaced
+		in the redo by DIRTYSYMFLAG but that doesn't take care of things
+		like  f(y*x) -> f(x*y) etc. This is why we need to redo the arguments
+		in the style that TestSub uses for dirty arguments, But this again
+		involves calls to Normalize itself (and to the sorting system).
+		This is the reason why Normalize has to be reentrant.
+*/
+		{
+			WORD oldpolynorm = AN.PolyNormFlag;
+			WORD *oldcterm = AN.cTerm, *tstop, *argstop, *rnext, *tt, *wt;
+			WORD *oldwork;
+			LONG newspace, oldspace, numterms;
+			AT.WorkPointer = termout;
+			if ( AT.WorkPointer < term + *term && term >= AT.WorkSpace
+			&& term < AT.WorkTop ) AT.WorkPointer = term + *term;
+/*
+			To do things 100% right we have to call TestSub and potentially
+			invoke Generator, because there could be Table elements that
+			suddenly can be substituted!
+			That last possibility we will omit!
+*/
+			tstop = term + *term; tstop -= ABS(tstop[-1]);
+			t = term +1;
+			while ( t < tstop ) {
+				if ( *t >= FUNCTION && ( ( t[2] & DIRTYFLAG ) != 0 ) ) {
+					r = t + FUNHEAD; argstop = t + t[1];
+					while ( r < argstop ) {
+						if ( *r > 0 && ( r[1] != 0 ) ) {
+							m  = r + ARGHEAD; rnext = r + *r;
+							oldwork = AT.WorkPointer;
+							NewSort();
+							m  = r + ARGHEAD; rnext = r + *r;
+							while ( m < rnext ) {
+								i = *m; tt = m; wt = oldwork;
+								NCOPY(wt,tt,i);
+								AT.WorkPointer = wt;
+								if ( Generator(BHEAD oldwork,AR.Cnumlhs) ) {
+									LowerSortLevel(); goto FromNorm;
+								}
+								m += *m;
+							}
+						    AT.WorkPointer = (WORD *)(((UBYTE *)(oldwork)) + AM.MaxTer);
+							if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
+							m = AT.WorkPointer;
+							if ( EndSort(m,1) < 0 ) goto FromNorm;
+/*
+							Now we have to analyse the output
+							Count terms and space
+*/
+							numterms = 0; wt = m;
+							while ( *wt ) { numterms++; wt += *wt; }
+							newspace = wt - m;
+							oldspace = *r - ARGHEAD;
+/*
+							Now the special cases
+*/
+							if ( numterms == 0 ) {
+								m[0] = -SNUMBER; m[1] = 0;
+								newspace = 2;
+							}
+							else if ( numterms == 1 ) {
+								if ( *m == 4+FUNHEAD && m[3+FUNHEAD] == 3
+								&& m[2+FUNHEAD] == 1 && m[1+FUNHEAD] == 1
+								&& m[1] >= FUNCTION ) {
+									m[0] = -m[1];
+									newspace = 1;
+								}
+								else if ( *m == 8 && m[7] == 3
+								&& m[6] == 1 && m[5] == 1
+								&& m[1] == SYMBOL && m[4] == 1 ) {
+									m[0] = -SYMBOL; m[1] = m[3];
+									newspace = 2;
+								}
+								else if ( *m == 7 && m[6] == 3
+								&& m[5] == 1 && m[4] == 1
+								&& m[1] == INDEX ) {
+									if ( m[3] >= 0 ) {
+										m[0] = -INDEX; m[1] = m[3];
+									}
+									else {
+										m[0] = -VECTOR; m[1] = m[3];
+									}
+									newspace = 2;
+								}
+								else if ( *m == 7 && m[6] == -3
+								&& m[5] == 1 && m[4] == 1
+								&& m[1] == INDEX && m[3] < 0 ) {
+									m[0] = -MINVECTOR; m[1] = m[3];
+									newspace = 2;
+								}
+								else if ( *m == 4
+								&& m[2] == 1 && (UWORD)(m[1]) <= MAXPOSITIVE ) {
+									m[0] = -SNUMBER;
+									if ( m[3] < 0 ) m[1] = -m[1];
+									newspace = 2;
+								}
+							}
+/*
+							Now the old argument takes oldspace spaces.
+							The new argument takes newspace places.
+							The new argument sits at m. There should be enough
+							space in the term to accept it, but we may have to
+							move the tail of the term
+*/
+							if ( newspace <= 2 ) {
+								oldspace = *r;
+								i = oldspace - newspace;
+								*r = *m;
+								if ( newspace > 1 ) r[1] = m[1];
+								m = r + newspace;
+								wt = rnext;
+								tt = term + *term;
+								while ( wt < tt ) *m++ = *wt++;
+								*term -= i;
+								t[1] -= i;
+								tstop -= i;
+								argstop -= i;
+							}
+							else if ( oldspace == newspace ) {
+								i = newspace; tt = r+ARGHEAD; wt = m;
+								NCOPY(tt,wt,i);
+								r[1] = 0;
+							}
+							else if ( oldspace > newspace ) {
+								i = newspace; tt = r+ARGHEAD; wt = m;
+								NCOPY(tt,wt,i);
+								wt = rnext; m = term + *term;
+								while ( wt < m ) *tt++ = *wt++;
+								i = oldspace - newspace;
+								*term -= i;
+								t[1] -= i;
+								tstop -= i;
+								argstop -= i;
+								*r -= i;
+								r[1] = 0;
+							}
+							else if ( (*term+newspace-oldspace)*sizeof(WORD) > AM.MaxTer ) {
+								LOCK(ErrorMessageLock);
+								MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
+								MesCall("Norm");
+								UNLOCK(ErrorMessageLock);
+								return(-1);
+							}
+							else {
+								i = newspace - oldspace;
+								tt = term + *term; wt = rnext;
+								while ( tt > rnext ) { tt--; tt[i] = tt[0]; }
+								*term += i;
+								t[1] += i;
+								tstop += i;
+								argstop += i;
+								*r += i;
+								i = newspace; tt = r+ARGHEAD; wt = m;
+								NCOPY(tt,wt,i);
+								r[1] = 0;
+							}
+							AT.WorkPointer = oldwork;
+						}
+						NEXTARG(r)
+					}
+				}
+                t[2] &= ~DIRTYFLAG;
+				t += t[1];
+			}
+
+			AN.PolyNormFlag = oldpolynorm;
+			AN.cTerm = oldcterm;
+		}
+/*
+ 		#] normalize replacements :
+*/
 		AT.WorkPointer = termout;
 		if ( ReplaceType == 0 ) {
 			regval = 1;
@@ -2604,13 +2790,21 @@ FromNorm:
 	MesCall("Norm");
 	UNLOCK(ErrorMessageLock);
 	return(-1);
+
+OverWork:
+	LOCK(ErrorMessageLock);
+	MesWork();
+	MesCall("Norm");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
+
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
@@ -2660,7 +2854,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 }
 
 /*
- 		#] ExtraSymbol : 
+ 		#] ExtraSymbol :
  		#[ DoTheta :
 */
 
@@ -2758,7 +2952,7 @@ DoTheta ARG1(WORD *,t)
 }
 
 /*
- 		#] DoTheta : 
+ 		#] DoTheta :
  		#[ DoDelta :
 */
 
@@ -2826,7 +3020,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta : 
+ 		#] DoDelta :
  		#[ DoRevert :
 */
 
@@ -2901,7 +3095,7 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 }
 
 /*
- 		#] DoRevert : 
+ 		#] DoRevert :
  	#] Normalize :
   	#[ DetCommu :
 
@@ -2964,7 +3158,7 @@ WORD DetCommu ARG1(WORD *,terms)
 }
 
 /*
-  	#] DetCommu : 
+  	#] DetCommu :
 */
 
 /* temporary commentary for forcing cvs merge */

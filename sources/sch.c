@@ -249,20 +249,27 @@ LongToLine ARG2(UWORD *,a,WORD,na)
 {
 	UBYTE *OutScratch;
 	if ( LLscratch == 0 ) {
-		LLscratch = (UBYTE *)Malloc1(4*(AM.MaxTal+2)*sizeof(UBYTE),"LongToLine");
+		LLscratch = (UBYTE *)Malloc1(4*(AM.MaxTal*sizeof(WORD)+2)*sizeof(UBYTE),"LongToLine");
 	}
 	OutScratch = LLscratch;
 	if ( na < 0 ) na = -na;
 	if ( na > 1 ) {
 		PrtLong(a,na,OutScratch);
-		TokenToLine(OutScratch);
+		if ( AO.NoSpacesInNumbers || AC.OutputMode == REDUCEMODE ) {
+			AO.BlockSpaces = 1;
+			TokenToLine(OutScratch);
+			AO.BlockSpaces = 0;
+		}
+		else {
+			TokenToLine(OutScratch);
+		}
 	}
 	else if ( !na ) TokenToLine((UBYTE *)"0");
 	else TalToLine(*a);
 }
 
 /*
- 		#] LongToLine : 
+ 		#] LongToLine :
  		#[ RatToLine :			VOID RatToLine(a,na)
 
 	Puts a rational number in the output line. The sign is ignored.
@@ -444,14 +451,16 @@ TalToLine ARG1(UWORD,x)
 	Par indicates the number of leading blanks in the line.
 	This parameter is needed here for the WriteLists routine.
 
+	Remark (27-oct-2007): i and j must be longer than WORD!
+	It can happen that a number is so long that it has more than 2^15 or 2^31
+	digits!
 */
 
 VOID
 TokenToLine ARG1(UBYTE *,s)
 {
 	UBYTE *t, *Out;
-	WORD i = 0, j;
-	LONG num;
+	LONG num, i = 0, j;
 	if ( AO.OutInBuffer ) { AddToDollarBuffer(s); return; }
 	t = s; Out = AO.OutFill;
 	while ( *t++ ) i++;
@@ -498,6 +507,16 @@ TokenToLine ARG1(UBYTE *,s)
 				}
 			}
 			startinline = 0;
+			Out = AO.OutputLine;
+			if ( AO.BlockSpaces == 0 ) {
+				for ( j = 0; j < AO.OutSkip; j++ ) { *Out++ = ' '; }
+				if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
+				 && AO.OutSkip == 7 ) {
+					Out[-2] = fcontchar;
+					Out[-1] = ' ';
+				}
+			}
+/*
 			Out = AO.OutputLine + AO.OutSkip;
 			if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 			 && AO.OutSkip == 7 ) {
@@ -507,6 +526,7 @@ TokenToLine ARG1(UBYTE *,s)
 			else {
 				for ( j = 0; j < AO.OutSkip; j++ ) { AO.OutputLine[j] = ' '; }
 			}
+*/
 			if ( AO.IsBracket ) { *Out++ = ' '; *Out++ = ' '; *Out++ = ' '; }
 			*Out = '\0';
 			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE
@@ -1364,7 +1384,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 }
 
 /*
- 		#] WriteSubTerm :
+ 		#] WriteSubTerm : 
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
@@ -1923,10 +1943,14 @@ WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
 			return(-1);
 	}
 	SeekScratch(AR.outfile,&pos);
+
+	f = AR.outfile; AR.outfile = AR.infile; AR.infile = f;
+/*
 	if ( ResetScratch() ) {
 		MesCall("WriteOne");
 		SETERROR(-1)
 	}
+*/
 	if ( AR.GetFile == 2 ) f = AR.hidefile;
 	else f = AR.infile;
 /*

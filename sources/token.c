@@ -25,11 +25,12 @@
 int
 tokenize ARG2(UBYTE *,in,WORD,leftright)
 {
-	int error = 0, i, object, funlevel = 0, bracelevel = 0, explevel = 0, numexp;
+	int error = 0, object, funlevel = 0, bracelevel = 0, explevel = 0, numexp;
 	int polyflag = 0;
 	WORD number, type;
 	UBYTE *s, c;
 	SBYTE *out, *outtop, num[MAXNUMSIZE], *t;
+	LONG i;
 	if ( AC.tokens == 0 )
 		DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"start tokens");
 	out = AC.tokens;
@@ -137,7 +138,7 @@ donumber:		i = 0;
 				}
 				*out++ = TNUMBER;
 				if ( ( i & 1 ) != 0 ) *out++ = (SBYTE)(*s++ - '0');
-				if ( out + (in-s)/2 >= AC.toptokens ) {
+				while ( out + (in-s)/2 >= AC.toptokens ) {
 					long oldsize = out - AC.tokens;
 					DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"more tokens");
 					out = AC.tokens + oldsize;

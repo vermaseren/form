@@ -239,7 +239,7 @@ found:
 }
 
 /*
-  	#] FindBracket :
+  	#] FindBracket : 
   	#[ PutBracketInIndex :
 
 	Call via
@@ -288,10 +288,25 @@ PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
 			goto bracketdone;
 		}
 		if ( i > 0 ) { /* We have a problem */
-			LOCK(ErrorMessageLock);
-			MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
-			UNLOCK(ErrorMessageLock);
-			Terminate(-1);
+/*
+			There is a special case in which we have only functions and
+			term is contained completely in the bracket
+*/
+			t = term + 1;
+			tstop = term + *term - 3;
+			while ( t < tstop && *t > HAAKJE ) t += t[1];
+			if ( t < tstop ) goto problems;
+			for ( i = 1; i < *term - 3; i++ ) {
+				if ( term[i] != b->bracketbuffer[bi->bracket+i] ) break;
+			}
+			if ( i < *term - 3 ) {
+problems:;
+				LOCK(ErrorMessageLock);
+				MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
+				UNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			i = -1;
 		}
 	}
 /*
@@ -423,7 +438,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex : 
+  	#] PutBracketInIndex :
   	#[ ClearBracketIndex :
 */
 

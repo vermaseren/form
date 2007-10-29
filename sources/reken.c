@@ -826,29 +826,29 @@ MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	WORD sgn = 1;
 	UWORD i, *ic, *ia;
 	RLONG t, bb;
-#ifdef INDIVIDUALALLOC
-	if ( AN.DLscrat9 == 0 ) {
-		GETIDENTITY
-		AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"MulLong");
-		AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
-		AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
-		AN.DLscratC = AN.DLscratB + AM.MaxTal+4;
-	}
-#endif
-
 	if ( !na || !nb ) { *nc = 0; return(0); }
 	if ( na < 0 ) { na = -na; sgn = -sgn; }
 	if ( nb < 0 ) { nb = -nb; sgn = -sgn; }
 	*nc = i = na + nb;
 	if ( i > (UWORD)(AM.MaxTal+1) ) goto MulLov;
 	ic = c;
+/*
+  	#[ GMP stuff :
+*/
 #ifdef WITHGMP
 	if (na > 3 && nb > 3) {
 		mp_limb_t res;
 		UWORD *to, *from;
 		int j;
 		GETIDENTITY
-
+#ifdef INDIVIDUALALLOC
+		if ( AN.DLscrat9 == 0 ) {
+			AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"MulLong");
+			AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
+			AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
+			AN.DLscratC = AN.DLscratB + AM.MaxTal+4;
+		}
+#endif
 #if ( GMPSPREAD != 1 )
 		if ( na & 1 ) {
 			from = a; a = to = AN.DLscrat9; j = na; NCOPY(to, from, j);
@@ -892,6 +892,9 @@ MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 		return(0);
 	}
 #endif
+/*
+  	#] GMP stuff :
+*/
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
 		ia = a;

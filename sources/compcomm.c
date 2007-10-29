@@ -77,6 +77,7 @@ static KEYWORD onoffoptions[] = {
 	/*[30jan2004 mt]:*/
 	/*,{"parallel",	    (TFUN)&(AC.parallelflag),0,1}*/
 	,{"parallel",	    (TFUN)&(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
+	,{"nospacesinnumbers",(TFUN)&(AO.NoSpacesInNumbers),1,0}
 	/*:[30jan2004 mt]*/
 };
 

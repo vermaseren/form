@@ -35,6 +35,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (long)MAXNUMBERSIZE}
 	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (long)MAXTER}
 	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (long)MAXWILDC}
+	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"numstorecaches",        NUMERICALVALUE, 0, (long)NUMSTORECACHES}
 	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
@@ -120,7 +121,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -191,7 +192,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -212,7 +213,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -265,7 +266,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -523,6 +524,8 @@ AllocSetups ARG0
 	AM.OldOrderFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"resettimeonclear");
 	AM.resetTimeOnClear = sp->value;
+	sp = GetSetupPar((UBYTE *)"nospacesinnumbers");
+	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers = sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritestatistics");
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritefinalstatistics");
@@ -643,7 +646,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -768,7 +771,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -794,7 +797,7 @@ AllocSortFileName ARG1(SORTING *,sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
@@ -842,7 +845,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -861,7 +864,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -872,7 +875,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -950,7 +953,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -975,7 +978,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
  		#[ AllocScratchBuffers :
 */
 
@@ -1066,7 +1069,7 @@ int AllocScratchBuffers ARG0
 }
 
 /*
- 		#] AllocScratchBuffers :
+ 		#] AllocScratchBuffers : 
 	#] Setups :
 */
 

@@ -810,6 +810,8 @@ struct M_const {
     int     resetTimeOnClear;      /* (M) */
     int     gcNumDollars;          /* () number of dollars for .clear */
     int     MultiRun;
+    int     gNoSpacesInNumbers;    /*     For very long numbers */
+    int     ggNoSpacesInNumbers;   /*     For very long numbers */
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -857,7 +859,7 @@ struct M_const {
     UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 struct P_const {
@@ -1295,10 +1297,12 @@ struct N_const {
 	int		*funinds;              /* () Used in lus.c */
 	UWORD	*NoScrat2;             /* () Used in normal.c */
 	WORD	*ReplaceScrat;         /* () Used in normal.c */
-	WORD	*st;                   /* () Used in normal.c */
-	WORD	*sm;                   /* () Used in normal.c */
-	WORD	*sr;                   /* () Used in normal.c */
-	WORD	*sc;                   /* () Used in normal.c */
+/*
+	WORD	*st;
+	WORD	*sm;
+	WORD	*sr;
+	WORD	*sc;
+*/
 	TRACES	*tracestack;           /* () used in opera.c */
 	WORD	*selecttermundo;       /* () Used in pattern.c */
 	WORD	*patternbuffer;        /* () Used in pattern.c */
@@ -1453,7 +1457,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 struct O_const {
@@ -1482,6 +1486,8 @@ struct O_const {
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
     LONG    DollarInOutBuffer;     /* (O) Characters in DollarOutBuffer */
     int     OutInBuffer;           /* (O) Which routine does the writing */
+    int     NoSpacesInNumbers;     /*     For very long numbers */
+    int     BlockSpaces;           /*     For very long numbers */
     WORD    OutSkip;               /* (O) How many chars to skip in output line */
     WORD    IsBracket;             /* (O) Controls brackets */
     WORD    InFbrack;              /* (O) For writing only */
@@ -1491,7 +1497,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 struct X_const {

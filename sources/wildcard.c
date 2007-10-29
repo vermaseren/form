@@ -89,11 +89,48 @@ ReSwitch:
 								if ( ABS(*t) >= 2*MAXPOWER) {
 DoPow:							s = subs;
 								for ( j = 0; j < i; j++ ) {
-									if ( ( *s == SYMTOSYM || *s == SYMTONUM ) &&
+									if ( ( *s == SYMTONUM ) &&
 									( ABS(*t) - 2*MAXPOWER ) == s[2] ) {
 										dirty = 1;
 										*w = s[3];
 										if ( *t < 0 ) *w = -*w;
+										break;
+									}
+									if ( ( *s == SYMTOSYM ) &&
+									( ABS(*t) - 2*MAXPOWER ) == s[2] ) {
+										dirty = 1;
+										zz = z;
+										while ( --zz >= zst ) {
+											zz[1+FUNHEAD+ARGHEAD] = *zz;
+										}
+										w += 1+FUNHEAD+ARGHEAD;
+										*zst = EXPONENT;
+										zst[2] = DIRTYFLAG;
+										zst[FUNHEAD+ARGHEAD] = WORDDIF(z,zst)+4;
+										zst[1+FUNHEAD] = 1;
+										zst[FUNHEAD] = WORDDIF(z,zst)+4+ARGHEAD;
+										z += FUNHEAD+ARGHEAD+1;
+										*w = 1;	/* exponent -> 1 */
+										*z++ = 1;
+										*z++ = 1;
+										*z++ = 3;
+										if ( *t > 0 ) {
+											*z++ = -SYMBOL;
+											*z++ = s[3];
+										}
+										else {
+											*z++ = ARGHEAD+8;
+											*z++ = 1;
+											*z++ = 8;
+											*z++ = SYMBOL;
+											*z++ = 4;
+											*z++ = s[3];
+											*z++ = 1;
+											*z++ = 1;
+											*z++ = 1;
+											*z++ = -3;
+										}
+										zst[1] = WORDDIF(z,zst);
 										break;
 									}
 									if ( *s == SYMTOSUB &&
@@ -103,13 +140,14 @@ MakeExp:								dirty = 1;
 										while ( --zz >= zst ) {
 											zz[1+FUNHEAD+ARGHEAD] = *zz;
 										}
+										w += 1+FUNHEAD+ARGHEAD;
 										*zst = EXPONENT;
 										zst[2] = DIRTYFLAG;
 										zst[FUNHEAD+ARGHEAD] = WORDDIF(z,zst)+4;
 										zst[1+FUNHEAD] = 1;
 										zst[FUNHEAD] = WORDDIF(z,zst)+4+ARGHEAD;
-										z += FUNHEAD+ARGHEAD;
-										*z++ = 1;	/* exponent -> 1 */
+										z += FUNHEAD+ARGHEAD+1;
+										*w = 1;	/* exponent -> 1 */
 										*z++ = 1;
 										*z++ = 1;
 										*z++ = 3;
@@ -219,7 +257,7 @@ Seven:;
 				while ( s < z ) *m++ = *s++;
 				break;
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 */
 			case DOTPRODUCT:
 /*
@@ -527,7 +565,7 @@ NextDot:;
 				}
 				break;
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 */
 			case SETSET:
 /*
@@ -542,7 +580,7 @@ NextDot:;
 				t = temp; u = t + t[1];
 				goto ReSwitch;
 /*
-			#] SETS :
+			#] SETS : 
 */
 			case VECTOR:
 /*
@@ -635,7 +673,7 @@ ss4:				m++; t++;
 				}
 				break;
 /*
-			#] VECTORS :
+			#] VECTORS : 
 */
 			case INDEX:
 /*
@@ -681,7 +719,7 @@ ss5:				m++; t++;
 				}
 				break;
 /*
-			#] INDEX :
+			#] INDEX : 
 */
 			case DELTA:
 			case LEVICIVITA:
@@ -780,7 +818,7 @@ ss6:					m++; t++;
 				}
 				break;
 /*
-			#] SPECIALS :
+			#] SPECIALS : 
 */
 			case SUBEXPRESSION:
 /*
@@ -837,7 +875,7 @@ sr7:;
 				}
 				break;
 /*
-			#] SUBEXPRESSION :
+			#] SUBEXPRESSION : 
 */
 			case EXPRESSION:
 /*
@@ -902,7 +940,7 @@ sr7:;
 				v[1] = m-v;
 				break;
 /*
-			#] EXPRESSION :
+			#] EXPRESSION : 
 */
 			default:
 /*
@@ -1114,7 +1152,7 @@ ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments :
+			#] Simple arguments : 
 */
 						}
 						else {

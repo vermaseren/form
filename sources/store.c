@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -26,7 +26,7 @@ OpenTemp()
 }
 
 /*
- 		#] OpenTemp :
+ 		#] OpenTemp : 
  		#[ SeekScratch :
 */
 
@@ -38,7 +38,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
 }
 
 /*
- 		#] SeekScratch :
+ 		#] SeekScratch : 
  		#[ SetEndScratch :
 */
 
@@ -53,7 +53,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndScratch :
+ 		#] SetEndScratch : 
  		#[ SetEndHScratch :
 */
 
@@ -68,7 +68,7 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndHScratch :
+ 		#] SetEndHScratch : 
  		#[ SetScratch :
 */
 
@@ -120,7 +120,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch :
+ 		#] SetScratch : 
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -164,7 +164,7 @@ RevertScratch()
 }
 
 /*
- 		#] RevertScratch :
+ 		#] RevertScratch : 
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -207,7 +207,7 @@ ResetScratch()
 }
 
 /*
- 		#] ResetScratch :
+ 		#] ResetScratch : 
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -408,7 +408,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave :
+ 		#] CoSave : 
  		#[ CoLoad :
 */
 
@@ -555,7 +555,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad :
+ 		#] CoLoad : 
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -629,7 +629,7 @@ DeleteStore ARG1(WORD,par)
 }
 
 /*
- 		#] DeleteStore :
+ 		#] DeleteStore : 
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -681,7 +681,7 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore :
+ 		#] PutInStore : 
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -933,7 +933,7 @@ RegRet:;
 		}
 	}
 /*
-			#] debug :
+			#] debug : 
 */
 	return(*from);
 GTerr:
@@ -943,7 +943,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm :
+ 		#] GetTerm : 
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.
@@ -1113,7 +1113,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm :
+ 		#] GetOneTerm : 
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1216,7 +1216,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms :
+ 		#] GetMoreTerms : 
  		#[ GetMoreFromMem :
 
 */
@@ -1309,7 +1309,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem :
+ 		#] GetMoreFromMem : 
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1518,7 +1518,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore :
+ 		#] GetFromStore : 
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1703,7 +1703,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars :
+ 		#] DetVars : 
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -1922,7 +1922,7 @@ ErrInSto:
 }
 
 /*
- 		#] ToStorage :
+ 		#] ToStorage : 
  		#[ NextFileIndex :
 */
 
@@ -1951,8 +1951,8 @@ NextFileIndex ARG1(POSITION *,indexpos)
 			AR.StoreData.Index.number = 0;
 			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Position),SEEK_SET);
 /* --COMPRESS-- */
-			if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(AR.StoreData.Fill)),(LONG)(sizeof(LONG)))
-			!= (LONG)(sizeof(LONG)) ) goto ErrNextS;
+			if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(AR.StoreData.Fill)),(LONG)(sizeof(POSITION)))
+			!= (LONG)(sizeof(POSITION)) ) goto ErrNextS;
 			PUTZERO(AR.StoreData.Index.next);
 			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Fill),SEEK_SET);
 			AR.StoreData.Position = AR.StoreData.Fill;
@@ -2002,7 +2002,7 @@ SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex :
+ 		#] SetFileIndex : 
  		#[ VarStore :
 */
 
@@ -2046,7 +2046,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 }
 
 /*
- 		#] VarStore :
+ 		#] VarStore : 
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2213,7 +2213,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber :
+ 		#] TermRenumber : 
  		#[ FindrNumber :
 */
 
@@ -2279,7 +2279,7 @@ ErrFindr2:
 }
 
 /*
- 		#] FindrNumber :
+ 		#] FindrNumber : 
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2411,7 +2411,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex :
+ 		#] FindInIndex : 
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2579,7 +2579,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	}
 	}
 /*
-			#] Symbols :
+			#] Symbols : 
 			#[ Indices :
 */
 	{
@@ -2642,7 +2642,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices :
+			#] Indices : 
 			#[ Vectors :
 */
 	{
@@ -2686,7 +2686,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors :
+			#] Vectors : 
 			#[ Functions :
 */
 	{
@@ -2734,7 +2734,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions :
+			#] Functions : 
 
 	Now we skip the prototype. This sets the start position at the first term
 */
@@ -2812,7 +2812,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
@@ -2987,7 +2987,7 @@ WriteTrailer:
 }
 
 /*
- 		#] CopyExpression :
+ 		#] CopyExpression : 
 	#] StoreExpressions :
 */
 

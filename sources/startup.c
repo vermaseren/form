@@ -230,7 +230,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -306,7 +306,7 @@ OpenInput ARG0
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -515,7 +515,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -741,6 +741,9 @@ StartVariables ARG0
 	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing = 1;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch = 0;
 	AM.gcNumDollars = AP.DollarList.num;
+
+	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers = 0;
+	AO.BlockSpaces = 0;
 
 #ifdef WITHPTHREADS
 	AC.inputnumbers = 0;
@@ -973,7 +976,7 @@ IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1048,7 +1051,7 @@ setSignalHandlers ARG0
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1192,7 +1195,7 @@ main ARG2(int,argc,char **,argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1263,7 +1266,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1332,7 +1335,7 @@ Terminate ARG1(int,errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
  		#[ PrintRunningTime :
 */
 
@@ -1364,6 +1367,6 @@ VOID PrintRunningTime ARG0
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 

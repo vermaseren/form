@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Modules :
  		#[ ModuleInstruction :
 
@@ -100,7 +100,7 @@ ModuleInstruction ARG2(int *,moduletype,int *,specialtype)
 }
 
 /*
- 		#] ModuleInstruction : 
+ 		#] ModuleInstruction :
  		#[ CoModuleOption :
 
 	ModuleOption, options;
@@ -152,7 +152,7 @@ CoModuleOption ARG1(UBYTE *,s)
 }
 
 /*
- 		#] CoModuleOption : 
+ 		#] CoModuleOption :
  		#[ CoModOption :
 
 	To be called from a .instruction.
@@ -196,7 +196,7 @@ CoModOption ARG1(UBYTE *,s)
 }
 
 /*
- 		#] CoModOption : 
+ 		#] CoModOption :
  		#[ SetSpecialMode :
 */
 
@@ -206,7 +206,7 @@ SetSpecialMode ARG2(int,moduletype,int,specialtype)
 }
 
 /*
- 		#] SetSpecialMode : 
+ 		#] SetSpecialMode :
  		#[ MakeGlobal :
 
 VOID
@@ -214,7 +214,7 @@ MakeGlobal ARG0
 {
 }
 
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ ExecModule :
 */
 
@@ -225,7 +225,7 @@ ExecModule ARG1(int,moduletype)
 }
 
 /*
- 		#] ExecModule : 
+ 		#] ExecModule :
  		#[ ExecStore :
 */
 
@@ -236,7 +236,7 @@ ExecStore ARG0
 }
 
 /*
- 		#] ExecStore : 
+ 		#] ExecStore :
  		#[ FullCleanUp :
 
 		Remark 27-oct-2005 by JV
@@ -279,6 +279,7 @@ FullCleanUp ARG0
 	AP.procedureExtension = strDup1(AP.cprocedureExtension,"procedureextension");
 
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag;
+	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers;
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats;
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats;
 	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag;
@@ -299,7 +300,7 @@ FullCleanUp ARG0
 }
 
 /*
- 		#] FullCleanUp : 
+ 		#] FullCleanUp :
  		#[ DoPolyfun :
 */
 
@@ -340,7 +341,7 @@ DoPolyfun ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoPolyfun : 
+ 		#] DoPolyfun :
  		#[ DoNoParallel :
 */
 
@@ -358,7 +359,7 @@ int DoNoParallel ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoNoParallel : 
+ 		#] DoNoParallel :
  		#[ DoParallel :
 */
 
@@ -383,7 +384,7 @@ int DoParallel ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoParallel : 
+ 		#] DoParallel :
  		#[ DoModSum :
 */
 
@@ -403,7 +404,7 @@ int DoModSum ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModSum : 
+ 		#] DoModSum :
  		#[ DoModMax :
 */
 
@@ -423,7 +424,7 @@ int DoModMax ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModMax : 
+ 		#] DoModMax :
  		#[ DoModMin :
 */
 
@@ -443,7 +444,7 @@ int DoModMin ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModMin : 
+ 		#] DoModMin :
  		#[ DoModLocal :
 */
 
@@ -463,7 +464,7 @@ int DoModLocal ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModLocal : 
+ 		#] DoModLocal :
  		#[ DoSlavePatch :
 */
 
@@ -481,7 +482,7 @@ int DoSlavePatch ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoSlavePatch : 
+ 		#] DoSlavePatch :
  		#[ DoModDollar :
 */
 
@@ -553,7 +554,7 @@ UBYTE * DoModDollar ARG2(UBYTE *,s,int,type)
 }
 
 /*
- 		#] DoModDollar : 
+ 		#] DoModDollar :
  		#[ DoinParallel :
 
 		The idea is that we should have the commands
@@ -600,7 +601,7 @@ DoExecStatement ARG0
 }
 
 /*
- 		#] DoExecStatement : 
+ 		#] DoExecStatement :
  		#[ DoPipeStatement :
 */
 
@@ -618,6 +619,6 @@ DoPipeStatement ARG0
 }
 
 /*
- 		#] DoPipeStatement : 
+ 		#] DoPipeStatement :
 	#] External :
 */
