@@ -2279,6 +2279,7 @@ DoDo ARG1(UBYTE *,s)
 		if ( PreSkip((UBYTE *)"do",(UBYTE *)"enddo",1) ) return(-1);
 		return(0);
 	}
+
 /*
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3300,7 +3301,7 @@ DoSystem ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoSystem :
+ 		#] DoSystem : 
  		#[ DoPreNormPoly :
 
 		Syntax #NormPoly(F,x,$b) or #NormPoly($a,x,$b)
@@ -3509,7 +3510,7 @@ PreLoad ARG5(PRELOAD *,p,UBYTE *,start,UBYTE *,stop,int,mode,char *,message)
 }
 
 /*
- 		#] PreLoad :
+ 		#] PreLoad : 
  		#[ PreSkip :
 
 		Skips a loop or procedure.
@@ -3549,7 +3550,10 @@ PreSkip ARG3(UBYTE *,start,UBYTE *,stop,int,mode)
 			if ( StrICmp(t-size2,(UBYTE *)(stop)) == 0 ) {
 				while ( ( c = GetInput() ) != LINEFEED && c != ENDOFINPUT ) {}
 				level--;
-				if ( level <= 0 ) break;
+				if ( level <= 0 ) {
+					pushbackchar = LINEFEED;
+					break;
+				}
 				if ( c == ENDOFINPUT ) Error1("Missing #",stop);
 				i = 0; t = buffer;
 			}
@@ -3557,7 +3561,9 @@ PreSkip ARG3(UBYTE *,start,UBYTE *,stop,int,mode)
 		if ( ( i == size1 ) && mode && ( com == 0 ) ) {
 			*t = 0;
 			if ( StrICmp(t-size1,(UBYTE *)(start)) == 0 ) {
+				while ( ( c = GetInput() ) != LINEFEED && c != ENDOFINPUT ) {}
 				level++;
+				i = 0; t = buffer;
 			}
 		}
 	}
@@ -3565,7 +3571,7 @@ PreSkip ARG3(UBYTE *,start,UBYTE *,stop,int,mode)
 }
 
 /*
- 		#] PreSkip : 
+ 		#] PreSkip :
  		#[ StartPrepro :
 */
 

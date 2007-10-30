@@ -29,6 +29,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"filepatches",           NUMERICALVALUE, 0, (long)MAXFPATCHES}
 	,{(UBYTE *)"functionlevels",        NUMERICALVALUE, 0, (long)MAXFLEVELS}
 	,{(UBYTE *)"incdir",                     PATHVALUE, 0, (long)curdirp}
+	,{(UBYTE *)"indentspace",           NUMERICALVALUE, 0, (long)INDENTSPACE}
 	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (long)1}
 	,{(UBYTE *)"largepatches",          NUMERICALVALUE, 0, (long)MAXPATCHES}
 	,{(UBYTE *)"largesize",             NUMERICALVALUE, 0, (long)LARGEBUFFER}
@@ -526,6 +527,8 @@ AllocSetups ARG0
 	AM.resetTimeOnClear = sp->value;
 	sp = GetSetupPar((UBYTE *)"nospacesinnumbers");
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers = sp->value;
+	sp = GetSetupPar((UBYTE *)"indentspace");
+	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace = sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritestatistics");
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritefinalstatistics");

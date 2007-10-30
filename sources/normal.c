@@ -2582,7 +2582,8 @@ NextI:;
 			tstop = term + *term; tstop -= ABS(tstop[-1]);
 			t = term +1;
 			while ( t < tstop ) {
-				if ( *t >= FUNCTION && ( ( t[2] & DIRTYFLAG ) != 0 ) ) {
+				if ( *t >= FUNCTION && ( ( t[2] & DIRTYFLAG ) != 0 )
+				&& ( functions[*t-FUNCTION].spec == 0 ) ) {
 					r = t + FUNHEAD; argstop = t + t[1];
 					while ( r < argstop ) {
 						if ( *r > 0 && ( r[1] != 0 ) ) {
@@ -2854,7 +2855,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 }
 
 /*
- 		#] ExtraSymbol :
+ 		#] ExtraSymbol : 
  		#[ DoTheta :
 */
 
@@ -2952,7 +2953,7 @@ DoTheta ARG1(WORD *,t)
 }
 
 /*
- 		#] DoTheta :
+ 		#] DoTheta : 
  		#[ DoDelta :
 */
 
@@ -3020,7 +3021,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta :
+ 		#] DoDelta : 
  		#[ DoRevert :
 */
 
@@ -3095,7 +3096,7 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 }
 
 /*
- 		#] DoRevert :
+ 		#] DoRevert : 
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3158,7 +3159,7 @@ WORD DetCommu ARG1(WORD *,terms)
 }
 
 /*
-  	#] DetCommu :
+  	#] DetCommu : 
 */
 
 /* temporary commentary for forcing cvs merge */

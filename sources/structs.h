@@ -856,6 +856,8 @@ struct M_const {
     WORD    atstartup;             /* To protect against DATE_ ending in \n */
     WORD    exitflag;              /* (R) For the exit statement */
     WORD    NumStoreCaches;        /* () Number of storage caches per processor */
+    WORD    gIndentSpace;          /* For indentation in output */
+	WORD	ggIndentSpace;
     UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
@@ -1494,6 +1496,7 @@ struct O_const {
     WORD    PrintType;             /* (O) */
     WORD    FortFirst;             /* (O) Only in sch.c */
     WORD    DoubleFlag;            /* (O) Output in double precision */
+    WORD    IndentSpace;           /* For indentation in output */
     UBYTE   FortDotChar;           /* (O) */
 };
 /*

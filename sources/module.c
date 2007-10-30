@@ -280,6 +280,7 @@ FullCleanUp ARG0
 
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag;
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers;
+	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace;
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats;
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats;
 	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag;
