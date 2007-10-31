@@ -2720,7 +2720,10 @@ NextI:;
 						NEXTARG(r)
 					}
 				}
-                t[2] &= ~DIRTYFLAG;
+				if ( *t >= FUNCTION && ( t[2] & DIRTYFLAG ) != 0 ) {
+					t[2] &= ~DIRTYFLAG;
+					if ( functions[*t-FUNCTION].symmetric ) t[2] |= DIRTYSYMFLAG;
+				}
 				t += t[1];
 			}
 

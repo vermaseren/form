@@ -1609,8 +1609,8 @@ PIFerror:
 	Should see the arguments of numerator and denominator as two
 	polynomials and
 	1: Make the coefficients integer.
-	2: Determine the QCD of the two polynomials.
-	3: Divide out the QCD.
+	2: Determine the GCD of the two polynomials.
+	3: Divide out the GCD.
 	4: Make sure again that the coefficients are integer again.
 	When there are more occurrences of numerator or denominator each
 	numerator has to be treated in combination with each denominator.
