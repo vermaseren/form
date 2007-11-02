@@ -2568,7 +2568,7 @@ NextI:;
 		{
 			WORD oldpolynorm = AN.PolyNormFlag;
 			WORD *oldcterm = AN.cTerm, *tstop, *argstop, *rnext, *tt, *wt;
-			WORD *oldwork;
+			WORD *oldwork, olddefer;
 			LONG newspace, oldspace, numterms;
 			AT.WorkPointer = termout;
 			if ( AT.WorkPointer < term + *term && term >= AT.WorkSpace
@@ -2589,6 +2589,8 @@ NextI:;
 						if ( *r > 0 && ( r[1] != 0 ) ) {
 							m  = r + ARGHEAD; rnext = r + *r;
 							oldwork = AT.WorkPointer;
+							olddefer = AR.DeferFlag;
+							AR.DeferFlag = 0;
 							NewSort();
 							m  = r + ARGHEAD; rnext = r + *r;
 							while ( m < rnext ) {
@@ -2608,6 +2610,7 @@ NextI:;
 							Now we have to analyse the output
 							Count terms and space
 */
+							AR.DeferFlag = olddefer;
 							numterms = 0; wt = m;
 							while ( *wt ) { numterms++; wt += *wt; }
 							newspace = wt - m;
