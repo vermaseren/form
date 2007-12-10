@@ -97,7 +97,7 @@
 
 #endif
 /*
-  	#] ARG definitions : 
+  	#] ARG definitions :
   	#[ Macro's :
 */
 
@@ -292,7 +292,7 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 	ExpandBuffer((void **)(&AT.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
 
 /*
-  	#] Macro's : 
+  	#] Macro's :
   	#[ Thread objects :
 */
 
@@ -325,7 +325,7 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #endif
 
 /*
-  	#] Thread objects : 
+  	#] Thread objects :
   	#[ Declarations :
 */
 
@@ -368,7 +368,7 @@ DECLARE(int CompArg,(WORD *,WORD *))
 DECLARE(WORD CompCoef,(WORD *, WORD *))
 DECLARE(WORD CompGroup,(PHEAD WORD,WORD **,WORD *,WORD *,WORD))
 DECLARE(WORD CompWord,(UBYTE *,char *))
-DECLARE(WORD Compare,(PHEAD WORD *,WORD *,WORD))
+DECLARE(WORD Compare1,(PHEAD WORD *,WORD *,WORD))
 DECLARE(WORD CopyToComp,ARG0)
 DECLARE(WORD CountDo,(WORD *,WORD *))
 DECLARE(WORD CountFun,(WORD *,WORD *))
@@ -484,7 +484,7 @@ DECLARE(WORD OpenTemp,ARG0)
 DECLARE(VOID Pack,(UWORD *,WORD *,UWORD *,WORD ))
 DECLARE(LONG PasteFile,(WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD))
 DECLARE(WORD Permute,(PERM *,WORD))
-DECLARE(WORD PolyMul,(WORD *))
+DECLARE(WORD PolyFunMul,(PHEAD WORD *))
 DECLARE(WORD PopVariables,ARG0)
 DECLARE(WORD PrepPoly,(WORD *))
 DECLARE(WORD Processor,ARG0)
@@ -804,6 +804,7 @@ DECLARE(VOID FullCleanUp,ARG0)
 DECLARE(int DoExecStatement,ARG0)
 DECLARE(int DoPipeStatement,ARG0)
 DECLARE(int DoPolyfun,(UBYTE *))
+DECLARE(int DoPolyratfun,(UBYTE *))
 DECLARE(int CompileStatement,(UBYTE *))
 DECLARE(UBYTE *ToToken,(UBYTE *))
 DECLARE(int GetDollar,(UBYTE *))
@@ -874,6 +875,7 @@ DECLARE(int CoCycleSymmetrize,(UBYTE *))
 DECLARE(int CoDelete,(UBYTE *))
 DECLARE(int CoTableBase,(UBYTE *))
 DECLARE(int CoApply,(UBYTE *))
+DECLARE(int CoDenominators,(UBYTE *))
 DECLARE(int CoDimension,(UBYTE *))
 DECLARE(int CoDiscard,(UBYTE *))
 DECLARE(int CoDisorder,(UBYTE *))
@@ -927,6 +929,7 @@ DECLARE(int CoOn,(UBYTE *))
 DECLARE(int CoOnce,(UBYTE *))
 DECLARE(int CoOnly,(UBYTE *))
 DECLARE(int CoPolyFun,(UBYTE *))
+DECLARE(int CoPolyRatFun,(UBYTE *))
 DECLARE(int CoPolyNorm,(UBYTE *))
 DECLARE(int CoPrint,(UBYTE *))
 DECLARE(int CoPrintB,(UBYTE *))
@@ -1139,6 +1142,7 @@ DECLARE(int ChainOut,(WORD *,WORD))
 DECLARE(int PolyNorm,(PHEAD WORD *,WORD,WORD,WORD))
 DECLARE(int ArgumentImplode,(PHEAD WORD *,WORD *))
 DECLARE(int ArgumentExplode,(PHEAD WORD *,WORD *))
+DECLARE(int DenToFunction,(WORD *,WORD))
  
 DECLARE(WORD ReadElIf,ARG0)
 DECLARE(WORD HowMany,(WORD *,WORD *))
@@ -1291,7 +1295,9 @@ DECLARE(typedef int (*SETTERMINATORFOREXTERNALCHANNEL),(char *) )
 DECLARE(typedef int (*SETKILLMODEFOREXTERNALCHANNEL),(int,int) )
 /*:[08may2006 mt]*/
 DECLARE(typedef LONG (*WRITEFILE), (int,UBYTE *,LONG) )
-/*:[17nov2005 mt]*/
+DECLARE(typedef WORD (*COMPARE), (PHEAD WORD *,WORD *,WORD) )
+
+#define Compare ((COMPARE)AR.CompareRoutine)
 
 #ifdef PARALLEL
 DECLARE(LONG PF_BroadcastNumberOfTerms,(LONG))
@@ -1315,6 +1321,60 @@ DECLARE(int setTerminatorForExternalChannelFailure,(char *))
 DECLARE(int writeBufToExtChannelFailure,(char *,size_t))
 
 DECLARE(int ReleaseTB,ARG0)
+
+DECLARE(int SymbolNormalize,(WORD *,WORD *,WORD))
+DECLARE(int CheckMinTerm,(WORD *,WORD *))
+DECLARE(int ReOrderSymbols,(WORD *,WORD *,WORD))
+DECLARE(int CompareSymbols,(PHEAD WORD *,WORD *,WORD))
+DECLARE(WORD *PolyAdd,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyMul,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyDiv,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyDivI,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyMul0,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyDiv0,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyRatNorm,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyFunNorm,(PHEAD WORD *,WORD))
+DECLARE(WORD *PolyFunAddRat,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyRemoveContent,(PHEAD WORD *,WORD))
+DECLARE(WORD *PolyGCD,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyGCD1,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyGCD1a,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyGCD1b,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyGCD1c,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyGCD1d,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyDiv1,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyDiv1d,(PHEAD WORD *,WORD *))
+DECLARE(WORD *PolyPseudoRem1,(PHEAD WORD *,WORD *))
+DECLARE(WORD *GetNegPow,(PHEAD WORD *))
+DECLARE(WORD *PolyNormPoly,(PHEAD WORD *))
+DECLARE(WORD PolyRatFunMul,(PHEAD WORD *))
+DECLARE(WORD *PolyTake,(PHEAD WORD *,WORD))
+DECLARE(WORD PolyGetRenumbering,(PHEAD WORD *,WORD *))
+DECLARE(WORD InvertModular,(WORD,WORD))
+DECLARE(WORD InvertLongModular,(PHEAD UWORD *,WORD,WORD,UWORD *,WORD *))
+/*DECLARE(WORD *PolyModGCD,(PHEAD WORD *,WORD *,WORD))*/
+DECLARE(int PolyModGCD,(POLYMOD *,POLYMOD *))
+DECLARE(int PolyConvertToModulus,(WORD *,POLYMOD *,WORD))
+DECLARE(WORD *PolyConvertFromModulus,(PHEAD POLYMOD *,WORD))
+DECLARE(WORD *PolyChineseRemainder,(PHEAD WORD *,WORD *,WORD *,WORD,WORD))
+DECLARE(WORD NextPrime,(PHEAD WORD))
+DECLARE(WORD ModShortPrime,(UWORD *,WORD,WORD))
+DECLARE(int AllocPolyModCoefs,(POLYMOD *,WORD))
+DECLARE(WORD DivMod,(UWORD *,WORD,WORD))
+DECLARE(int AccumTermGCD,(WORD *,WORD *))
+DECLARE(int PolyTakeSqrt,(PHEAD WORD *))
+DECLARE(int PolyTakeRoot,(PHEAD WORD *,WORD))
+DECLARE(WORD *PolyPow,(PHEAD WORD *,WORD))
+
+DECLARE(WORD *EvaluateGcd,(PHEAD WORD *))
+
+DECLARE(WORD ReadSaveHeader,ARG0)
+DECLARE(WORD ReadSaveIndex,(FILEINDEX *))
+DECLARE(WORD ReadSaveExpression,(UBYTE *,UBYTE *,LONG *,LONG *))
+DECLARE(UBYTE *ReadSaveTerm32,(UBYTE *,UBYTE *,UBYTE **,UBYTE *,UBYTE *,int))
+DECLARE(WORD ReadSaveVariables,(UBYTE *,UBYTE *,LONG *,LONG *,INDEXENTRY *,LONG *))
+DECLARE(WORD WriteStoreHeader,(WORD))
+
 /*
   	#] Declarations :
 */

@@ -169,7 +169,7 @@ Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -370,7 +370,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 
 		TestSub hunts for subexpression pointers.
@@ -393,6 +393,7 @@ TestSub BARG2(WORD *,term,WORD,level)
 	CBUF *C = cbuf+AT.ebufnum;
 	LONG isp, i;
 	TABLES T;
+	VOID *oldcompareroutine = AR.CompareRoutine;
 ReStart:
 	tbufnum = 0; i = 0;
 	AT.TMbuff = AM.rbufnum;
@@ -650,7 +651,7 @@ TooMuch:;
 */
 				r = t+FUNHEAD;
 				NEXTARG(r)
-				if ( *r == -SNUMBER && r+2 == t+t[1] &&
+				if ( *r == -SNUMBER && r[1] < MAXPOWER && r+2 == t+t[1] &&
 				t[FUNHEAD] > -FUNCTION && ( t[FUNHEAD] != -SNUMBER
 				|| t[FUNHEAD+1] != 0 ) && t[FUNHEAD] != ARGHEAD ) {
 				  if ( r[1] == 0 ) {
@@ -1048,6 +1049,9 @@ DoSpec:
 						j = *t;
 						t += ARGHEAD;
 						NewSort();
+						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
+							AR.CompareRoutine = &CompareSymbols;
+						}
 						if ( AT.WorkPointer < term + *term )
 							AT.WorkPointer = term + *term;
 
@@ -1079,7 +1083,9 @@ DoSpec:
 						}
 						if ( EndSort(AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
-
+						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
+							AR.CompareRoutine = oldcompareroutine;
+						}
 						while ( *m ) m += *m;
 						i = WORDDIF(m,AT.WorkPointer);
 						*AT.WorkPointer = i;
@@ -1349,7 +1355,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 
 		Makes the replacement of 'replac' in a function argument.
@@ -1360,7 +1366,7 @@ WORD
 InFunction ARG2(WORD *,term,WORD *,termout)
 {
 	GETIDENTITY
-	WORD *m, *t, *r, sign = 1;
+	WORD *m, *t, *r, *rr, sign = 1;
 	WORD *u, *v, *w, *from, *to, 
 		ipp, olddefer = AR.DeferFlag, oldPolyFun = AR.PolyFun, i, j;
 	LONG numterms;
@@ -1416,8 +1422,11 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 						*m++ = *from++;
 					}
 					to = m;
-					AR.PolyFun = 0;
 					NewSort();
+					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
+						AR.CompareRoutine = &CompareSymbols;
+					}
+					AR.PolyFun = 0;
 					while ( t < v ) {
 						i = *t;
 						NCOPY(m,t,i);
@@ -1435,6 +1444,9 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 					to -= ARGHEAD;
 					if ( EndSort(m,0) < 0 ) goto InFunc;
 					AR.PolyFun = oldPolyFun;
+					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
+						AR.CompareRoutine = &Compare1;
+					}
 					while ( *m ) m += *m;
 					*to = WORDDIF(m,to);
 					to[1] = 1;  /* ??????? or rather 0?. 24-mar-2006 JV */
@@ -1485,7 +1497,6 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 						*m++ = *from++;
 					}
 					to = m;
-					AR.PolyFun = 0;
 					switch ( d->type ) {
 						case DOLINDEX:
 							if ( d->index >= 0 && d->index < AM.OffsetIndex ) {
@@ -1504,6 +1515,11 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 								break;
 							}
 						case DOLTERMS:
+/*
+							Here we have the special case of the PolyRatFun
+							That function may have a different sort of the
+							terms in the argument.
+*/
 							to = m; r = d->where;
 							*m++ = 0; *m++ = 1;
 							FILLARG(m)
@@ -1514,6 +1530,38 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 							if ( ToFast(to,to) ) {
 								if ( *to <= -FUNCTION ) m = to+1;
 								else m = to+2;
+							}
+							else if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
+								AR.PolyFun = 0;
+								NewSort();
+								AR.CompareRoutine = &CompareSymbols;
+								r = to + ARGHEAD;
+								while ( r < m ) {
+									rr = r; r += *r;
+									if ( SymbolNormalize(rr,0,2) ) goto InFunc;
+									if ( StoreTerm(BHEAD rr) ) {
+										AR.CompareRoutine = &Compare1;
+										LowerSortLevel();
+										Terminate(-1);
+									}
+								}
+								if ( EndSort(to+ARGHEAD,0) < 0 ) goto InFunc;
+								AR.PolyFun = oldPolyFun;
+								AR.CompareRoutine = &Compare1;
+								m = to+ARGHEAD;
+								if ( *m == 0 ) {
+									*to = -SNUMBER;
+									to[1] = 0;
+									m = to + 2;
+								}
+								else {
+									while ( *m ) m += *m;
+									*t = m - to;
+									if ( ToFast(to,to) ) {
+										if ( *to <= -FUNCTION ) m = to+1;
+										else m = to+2;
+									}
+								}
 							}
 							w[1] = w[1] - 2 + (m-to);
 							break;
@@ -1584,7 +1632,6 @@ InFunction ARG2(WORD *,term,WORD *,termout)
 #ifdef WITHPTHREADS
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
-					AR.PolyFun = oldPolyFun;
 					r = term + *term;
 					t = v;
 					while ( t < r ) *m++ = *t++;
@@ -1804,7 +1851,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 
 		Puts the terms 'term' and 'position' together into a single
@@ -1925,7 +1972,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 
 		Gets a term from stored expression expr and puts it in
@@ -2032,7 +2079,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 
 		Puts the term at position in the accumulator accum at position
@@ -2092,7 +2139,7 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 
 		Concatenates the contents of the accumulator into a single
@@ -2262,7 +2309,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 
 		The heart of the program
@@ -2311,7 +2358,7 @@ Renormalize:
 		}
 		if ( !*term ) goto Return0;
 		if ( AN.PolyNormFlag ) {
-			if ( PolyMul(term) ) goto GenCall;
+			if ( PolyFunMul(BHEAD term) ) goto GenCall;
 			if ( !*term ) goto Return0;
 		}
 		if ( AT.WorkPointer < (WORD *)(((UBYTE *)(term)) + AM.MaxTer) )
@@ -2801,10 +2848,13 @@ CommonEnd:
 					if ( ArgumentExplode(BHEAD term,C->lhs[level]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
+				  case TYPEDENOMINATORS:
+					DenToFunction(term,C->lhs[level][2]);
+					break;
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3224,7 +3274,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 
 		Routine gets one power of an expression.
@@ -3554,7 +3604,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 
 		Routine checks whether the count of function AR.PolyFun is zero
@@ -3579,9 +3629,10 @@ WORD
 PrepPoly ARG1(WORD *,term)
 {
 	GETIDENTITY
-	WORD count = 0, i, jcoef, ncoef, ofun = 0;
+	WORD count = 0, i, jcoef, ncoef, j;
 	WORD *t, *m, *r, *tstop, *poly = 0, *v, *w, *vv, *ww;
 	WORD *oldworkpointer = AT.WorkPointer;
+	WORD *arg1, *arg2, *arg3;
 	AT.PolyAct = 0;
 	t = term;
 	GETSTOP(t,tstop);
@@ -3597,44 +3648,59 @@ PrepPoly ARG1(WORD *,term)
 	r = m = term + *term;
 	i = ABS(m[-1]);
 	if ( count == 0 ) {
-		if ( ofun ) return(0);
 		poly = t = tstop;
 		if ( i == 3 && m[-2] == 1 && (m[-3]&MAXPOSITIVE) == m[-3] ) {
 			*m++ = AR.PolyFun;
-			*m++ = FUNHEAD+2;
-#if FUNHEAD > 2
-			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
-			*m++ = -SNUMBER;
-			*m = m[-2-FUNHEAD] < 0 ? -m[-4-FUNHEAD]: m[-4-FUNHEAD];
-			m++;
+			if ( AR.PolyFunType == 1 ) {
+				*m++ = FUNHEAD+2;
+				FILLFUN(m)
+				*m++ = -SNUMBER;
+				*m = m[-2-FUNHEAD] < 0 ? -m[-4-FUNHEAD]: m[-4-FUNHEAD];
+				m++;
+			}
+			else if ( AR.PolyFunType == 2 ) {
+				*m++ = FUNHEAD+4;
+				FILLFUN(m)
+				*m++ = -SNUMBER;
+				*m = m[-2-FUNHEAD] < 0 ? -m[-4-FUNHEAD]: m[-4-FUNHEAD];
+				m++;
+				*m++ = -SNUMBER;
+				*m++ = 1;
+			}
 		}
 		else {
 			r = tstop;
 			*m++ = AR.PolyFun;
-			*m++ = FUNHEAD+ARGHEAD+i+1;
-#if FUNHEAD > 2
-			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
-			*m++ = ARGHEAD+i+1;
-			*m++ = 0;
-#if ARGHEAD > 2
-			{ int ie = ARGHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
-			*m++ = i+1;
-			NCOPY(m,r,i);
+			if ( AR.PolyFunType == 1 ) {
+				*m++ = FUNHEAD+ARGHEAD+i+1;
+				FILLFUN(m)
+				*m++ = ARGHEAD+i+1;
+				*m++ = 0;
+				FILLARG(m)
+				*m++ = i+1;
+				NCOPY(m,r,i);
+			}
+			else if ( AR.PolyFunType == 2 ) {
+				*m++ = FUNHEAD+ARGHEAD+i+3;
+				FILLFUN(m)
+				*m++ = ARGHEAD+i+1;
+				*m++ = 0;
+				FILLARG(m)
+				*m++ = i+1;
+				NCOPY(m,r,i);
+				*m++ = -SNUMBER;
+				*m++ = 1;
+			}
 		}
 	}
-	else {
+	else if ( AR.PolyFunType == 1 ) {
+/*
+ 		#[ One argument :
+*/
 		m = term + *term;
 		r = poly + poly[1];
 		if ( ( poly[1] == FUNHEAD+2 && poly[FUNHEAD+1] == 0
 		&& poly[FUNHEAD] == -SNUMBER ) || poly[1] == FUNHEAD ) return(1);
-		if ( ofun ) {
-			*term -= poly[1];
-			while ( r < m ) *poly++ = *r++;
-			return(0);
-		}
 		t = poly + FUNHEAD;
 		if ( t >= r ) return(0);
 		if ( m[-1] == 3 && *tstop == 1 && tstop[1] == 1 ) {
@@ -3647,20 +3713,14 @@ PrepPoly ARG1(WORD *,term)
 			r = tstop;
 			*m++ = AR.PolyFun;
 			*m++ = FUNHEAD*2+ARGHEAD+i+1;
-#if FUNHEAD > 2
-			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+			FILLFUN(m)
 			*m++ = FUNHEAD+ARGHEAD+i+1;
 			*m++ = 0;
-#if ARGHEAD > 2
-			{ int ie = ARGHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+			FILLARG(m)
 			*m++ = FUNHEAD+i+1;
 			*m++ = -*t++;
 			*m++ = FUNHEAD;
-#if FUNHEAD > 2
-			{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+			FILLFUN(m)
 			NCOPY(m,r,i);
 		}
 		else if ( *t < 0 ) {
@@ -3684,37 +3744,27 @@ PrepPoly ARG1(WORD *,term)
 				m = w;
 				if ( *v == 4 && v[2] == 1 && (v[1]&MAXPOSITIVE) == v[1] ) {
 					*m++ = FUNHEAD+2;
-#if FUNHEAD > 2
-					{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+					FILLFUN(m)
 					*m++ = -SNUMBER;
 					*m++ = v[3] < 0 ? -v[1] : v[1];
 				}
 				else if ( *v == 0 ) return(1);
 				else {
 					*m++ = FUNHEAD+ARGHEAD+*v;
-#if FUNHEAD > 2
-					{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+					FILLFUN(m)
 					*m++ = ARGHEAD+*v;
 					*m++ = 0;
-#if ARGHEAD > 2
-					{ int ie = ARGHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+					FILLARG(m)
 					m = v + *v;
 				}
 			}
 			else if ( *t == -SYMBOL ) {
 				*m++ = AR.PolyFun;
 				*m++ = FUNHEAD+ARGHEAD+5+i;
-#if FUNHEAD > 2
-				{ int ie = FUNHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+				FILLFUN(m)
 				*m++ = ARGHEAD+5+i;
 				*m++ = 0;
-#if ARGHEAD > 2
-				{ int ie = ARGHEAD-2; while ( ie-- > 0 ) *m++ = 0; }
-#endif
+				FILLARG(m)
 				*m++ = 5+i;
 				*m++ = SYMBOL;
 				*m++ = 4;
@@ -3723,7 +3773,6 @@ PrepPoly ARG1(WORD *,term)
 				NCOPY(m,r,i);
 			}
 			else return(0);			/* Not symbol-like */
-			t += 2;
 		}
 		else {
 			if ( t + *t < r ) return(0); /* More than one argument */
@@ -3787,10 +3836,196 @@ PrepPoly ARG1(WORD *,term)
 				else { w[-FUNHEAD+1] = FUNHEAD+2; m = w+2; }
 				
 			}
-	        t = r;
 		}
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
+/*
+ 		#] One argument :
+*/
+	}
+	else if ( AR.PolyFunType == 2 ) {
+/*
+ 		#[ Two arguments :
+*/
+		m = term + *term;
+		r = poly + poly[1];
+		arg1 = arg2 = poly+FUNHEAD;
+		if ( arg2 < r ) { NEXTARG(arg2) }
+		arg3 = arg2;
+		if ( arg3 < r ) { NEXTARG(arg3) }
+		if ( arg3 != r || arg2 == r ) return(0); /* numargs != 2 */
+/*
+		Try whether there are zeroes. They make life either easy or hard.
+*/
+		if ( arg2[0] == -SNUMBER && arg2[1] == 0 ) {
+			if ( arg1[0] == -SNUMBER && arg1[1] == 0 ) {
+				LOCK(ErrorMessageLock);
+				MesPrint("0/0 in PolyRatFun.");
+				UNLOCK(ErrorMessageLock);
+			}
+			else {
+				LOCK(ErrorMessageLock);
+				MesPrint("Division by zero in PolyRatFun.");
+				UNLOCK(ErrorMessageLock);
+			}
+			Terminate(-1);
+		}
+		if ( arg1[0] == -SNUMBER && arg1[1] == 0 ) return(1);
+/*
+		If the main coefficient is one we don't do anything
+*/
+		if ( m[-1] == 3 && *tstop == 1 && tstop[1] == 1 ) {
+			i = poly[1];
+			t = poly;
+			NCOPY(m,t,i);
+		}
+		else if ( *t <= -FUNCTION ) {
+IllegalContent:
+			LOCK(ErrorMessageLock);
+			MesPrint("The PolyRatFun may only contain symbols and/or numbers.");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		else if ( *arg1 < 0 ) {
+			r = tstop;
+			if ( *arg1 == -SNUMBER ) {
+				w = m;
+				*m = AR.PolyFun;
+				m += FUNHEAD+ARGHEAD;
+				v = m;
+				*m++ = 5+i;
+				*m++ = SNUMBER;
+				*m++ = 4;
+				*m++ = arg1[1];
+				*m++ = 1;
+				NCOPY(m,r,i);
+				AT.WorkPointer = m;
+				if ( Normalize(BHEAD v) ) Terminate(-1);
+				AT.WorkPointer = oldworkpointer;
+				m = w+1;
+				if ( *v == 4 && v[2] == 1 && (v[1]&MAXPOSITIVE) == v[1] ) {
+					*m++ = FUNHEAD+2;
+					FILLFUN(m)
+					*m++ = -SNUMBER;
+					*m++ = v[3] < 0 ? -v[1] : v[1];
+				}
+				else if ( *v == 0 ) return(1);
+				else {
+					*m++ = FUNHEAD+ARGHEAD+*v;
+					FILLFUN(m)
+					*m++ = ARGHEAD+*v;
+					*m++ = 0;
+					FILLARG(m)
+					m = v + *v;
+				}
+				if ( *arg2 < 0 ) { *m++ = arg2[0]; *m++ = arg2[1]; }
+				else {
+					j = *arg2;
+					NCOPY(m,arg2,j);
+				}
+				w[1] = m - w;
+			}
+			else if ( *arg1 == -SYMBOL ) {
+				w = m;
+				*m++ = AR.PolyFun;
+				*m++ = FUNHEAD+ARGHEAD+5+i;
+				FILLFUN(m)
+				*m++ = ARGHEAD+5+i;
+				*m++ = 0;
+				FILLARG(m)
+				*m++ = 5+i;
+				*m++ = SYMBOL;
+				*m++ = 4;
+				*m++ = arg1[1];
+				*m++ = 1;
+				NCOPY(m,r,i);
+				if ( *arg2 < 0 ) { *m++ = arg2[0]; *m++ = arg2[1]; }
+				else {
+					j = *arg2;
+					NCOPY(m,arg2,j);
+				}
+				w[1] = m - w;
+			}
+			else goto IllegalContent;
+		}
+		else {
+			i = m[-1];
+			w = m;
+			*m++ = AR.PolyFun;
+			m += ARGHEAD+FUNHEAD-1;
+			arg1 += ARGHEAD;
+			jcoef = i < 0 ? (i+1)>>1:(i-1)>>1;
+			v = t = arg1;
+/*
+			Test now the scalar nature of the argument.
+			No indices allowed.
+*/
+			while ( t < arg2 ) {
+				WORD *vstop;
+				vv = t + *t;
+				vstop = vv - ABS(vv[-1]);
+				t++;
+				while( t < vstop ) {
+					if ( *t == INDEX ) return(0);
+					t += t[1];
+				}
+				t = vv;
+			}
+/*
+			Now multiply each term by the coefficient.
+*/
+			t = v;
+			while ( t < arg2 ) {
+				ww = m;
+				v = t + *t;
+				ncoef = v[-1];
+				vv = v - ABS(ncoef);
+                if ( ncoef < 0 ) ncoef++;
+				else ncoef--;
+				ncoef >>= 1;
+				while ( t < vv ) *m++ = *t++;
+				if ( MulRat(BHEAD (UWORD *)vv,ncoef,(UWORD *)tstop,jcoef,
+					(UWORD *)m,&ncoef) ) Terminate(-1);
+				ncoef <<= 1;
+				m += ABS(ncoef);
+				if ( ncoef < 0 ) ncoef--;
+				else ncoef++;
+				*m++ = ncoef;
+				*ww = WORDDIF(m,ww);
+				if ( AC.ncmod != 0 ) {
+					if ( Modulus(ww) ) Terminate(-1);
+					if ( *ww == 0 ) return(1);
+					m = ww + *ww;
+				}
+				t = v;
+			}
+			w[FUNHEAD] = (WORDDIF(m,w)) - FUNHEAD;
+			w[FUNHEAD+1] = 0;
+			if ( ToFast(w+FUNHEAD,w+FUNHEAD) ) {
+				if ( w[FUNHEAD] <= -FUNCTION ) {
+					goto IllegalContent;
+				}
+				m = w + FUNHEAD+2;
+			}
+			if ( *arg2 < 0 ) { *m++ = arg2[0]; *m++ = arg2[1]; }
+			else {
+				j = *arg2; t = arg2;
+				NCOPY(m,t,j);
+			}
+			w[1] = WORDDIF(m,w); w += 2;
+			FILLFUN(w)
+		}
+		t = poly + poly[1];
+		while ( t < tstop ) *poly++ = *t++;
+/*
+ 		#] Two arguments :
+*/
+	}
+	else {
+		LOCK(ErrorMessageLock);
+		MesPrint("Illegal value for PolyFunType in PrepPoly");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
 	}
 	r = term + *term;
 	AT.PolyAct = WORDDIF(poly,term);
@@ -3803,17 +4038,24 @@ PrepPoly ARG1(WORD *,term)
 }
 
 /*
- 		#] PrepPoly : 
- 		#[ PolyMul :			WORD PolyMul(term) 
+ 		#] PrepPoly :
+ 		#[ PolyFunMul :			WORD PolyFunMul(term)
+
+		Multiplies the arguments of multiple occurrences of the polyfun.
+		In this routine we do the original PolyFun with one argument only.
+		The PolyRatFun (PolyFunType = 2) is done is a dedicated routine
+		in the file polynito.c
+		The new result is written over the old result.
 */
 
 WORD
-PolyMul ARG1(WORD *,term)
+PolyFunMul BARG1(WORD *,term)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *tt1, *tt2, *arg1, *arg2;
 	WORD *tstop;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
+	if ( AR.PolyFunType == 2 ) return(PolyRatFunMul(BHEAD term));
 retry:
 	AT.WorkPointer = term + *term;
 	GETSTOP(term,tstop);
@@ -3997,12 +4239,12 @@ done:
 PolyCall:;
 	LOCK(ErrorMessageLock);
 PolyCall2:;
-	MesCall("PolyMul");
+	MesCall("PolyFunMul");
 	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
 /*
- 		#] PolyMul : 
+ 		#] PolyFunMul :
 	#] Processor :
 */

@@ -25,7 +25,7 @@ extern long numfrees;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 
@@ -326,7 +326,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats :
+ 		#] WriteStats : 
  		#[ NewSort :				WORD NewSort()
 
 		Starts a new sort.
@@ -356,7 +356,7 @@ NewSort()
 	}
 	if ( AR.sLevel == 0 ) {
 		AN.FunSorts[0] = AT.S0;
-		AT.S0->PolyFlag = ( AR.PolyFun != 0 ) ? 1: 0;
+		AT.S0->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
 	}
 	else {
 		if ( AN.FunSorts[AR.sLevel] == 0 ) {
@@ -388,7 +388,7 @@ NewSort()
 }
 
 /*
- 		#] NewSort :
+ 		#] NewSort : 
  		#[ EndSort :				WORD EndSort(buffer,par)
 
 		Finishes a sort.
@@ -437,7 +437,7 @@ EndSort ARG2(WORD *,buffer,int,par)
 	oldoutfile = AR.outfile;
 	if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(); }
 	if ( S == AT.S0 ) {
-		S->PolyFlag = ( AR.PolyFun != 0 ) ? 1: 0;
+		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
 		S->PolyWise = 0;
 	}
 	else {
@@ -844,7 +844,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 
 	Reads a new patch from position in file handle.
@@ -900,7 +900,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 }
 
 /*
- 		#] PutIn :
+ 		#] PutIn : 
  		#[ Sflush :					WORD Sflush(file)
 
 	Puts the contents of a buffer to output
@@ -967,7 +967,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 }
 
 /*
- 		#] Sflush :
+ 		#] Sflush : 
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 
 	Routine writes one term to file handle at position. It returns
@@ -1260,7 +1260,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut :
+ 		#] PutOut : 
  		#[ FlushOut :				WORD Flushout(position,file,compr)
 
 	Completes output to an output file and writes the trailing zero.
@@ -1435,7 +1435,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 }
 
 /*
- 		#] FlushOut :
+ 		#] FlushOut : 
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 
 		Adds the coefficients of the terms *ps1 and *ps2.
@@ -1541,7 +1541,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef :
+ 		#] AddCoef : 
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 
 		Routine should be called when S->PolyWise != 0. It points then
@@ -1552,6 +1552,16 @@ RegEnd:
 		We have to reserve a space equal to the size of one term + the
 		size of the argument of the other. The addition has to be done
 		in this routine because not all objects are reentrant.
+
+		Newer addition (12-nov-2007).
+		The PolyFun can have two arguments.
+		In that case S->PolyFlag is 2 and we have to call the routine for
+		adding rational polynomials.
+		We have to be rather careful what happens with:
+			The location of the output
+			The order of the terms in the arguments
+		At first we allow only univariate polynomials in the PolyFun.
+		This restriction will be lifted a.s.a.p.
 */
 
 WORD
@@ -1560,20 +1570,38 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 	GETBIDENTITY
 	SORTING *S = AT.SS;
 	WORD i;
-	WORD *s1, *s2, *m, *w, *t;
+	WORD *s1, *s2, *m, *w, *t, oldpw = S->PolyWise;
 	s1 = *ps1 + S->PolyWise;
 	s2 = *ps2 + S->PolyWise;
 	w = AT.WorkPointer;
-	if ( w + s1[1] + s2[1] + 12 + ARGHEAD >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
-		MesPrint("Program was adding polyfun arguments");
-		MesWork();
-		UNLOCK(ErrorMessageLock);
-	}
 /*
 	Add here the two arguments. Is a straight merge.
 */
-	AddArgs(BHEAD s1,s2,w);
+	if ( S->PolyFlag == 2 ) {
+		if ( (WORD *)((UBYTE *)w + AM.MaxTer) >= AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Program was adding polyfun arguments");
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+		}
+		S->PolyWise = 0;
+		PolyFunAddRat(BHEAD s1,s2);
+		S->PolyWise = oldpw;
+		AT.WorkPointer = w;
+		if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 && w[1] > FUNHEAD ) {
+			*ps1 = *ps2 = 0; return(0);
+		}
+		else if ( w[1] <= FUNHEAD ) { *ps1 = *ps2 = 0; return(0); }
+	}
+	else {
+		if ( w + s1[1] + s2[1] + 12 + ARGHEAD >= AT.WorkTop ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Program was adding polyfun arguments");
+			MesWork();
+			UNLOCK(ErrorMessageLock);
+		}
+		AddArgs(BHEAD s1,s2,w);
+	}
 /*
 	Now we need to store the result in a convenient place.
 */
@@ -1671,7 +1699,7 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 }
 
 /*
- 		#] AddPoly :
+ 		#] AddPoly : 
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
 
@@ -1926,13 +1954,13 @@ twogen:
 			else w[1] = FUNHEAD+2;
 			if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) w[1] = FUNHEAD;
 		}
-		AT.SS->PolyFlag = 1;
+		AT.SS->PolyFlag = AR.PolyFunType;
 	}
 }
 
 /*
  		#] AddArgs :
- 		#[ Compare :				WORD Compare(term1,term2,level)
+ 		#[ Compare1 :				WORD Compare1(term1,term2,level)
 
 	Compares two terms. The answer is:
 	0	equal ( with exception of the coefficient if level == 0. )
@@ -1944,7 +1972,7 @@ twogen:
 */
 
 WORD
-Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
+Compare1 BARG3(WORD *,term1,WORD *,term2,WORD,level)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -1964,6 +1992,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 		}
 */
 		count = 0; localPoly = 1; S->PolyWise = polyhit = 0;
+		S->PolyFlag = AR.PolyFunType;
 	}
 	else { localPoly = 0; }
 	prevorder = 0;
@@ -2102,6 +2131,7 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 #endif
 			if ( localPoly && c1 == AR.PolyFun ) {
 				if ( count == 0 ) {
+				  if ( AR.PolyFunType == 1 ) {
 					WORD i1, i2;
 					if ( *s1 > 0 ) i1 = *s1;
 					else if ( *s1 <= -FUNCTION ) i1 = 1;
@@ -2111,31 +2141,43 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 					else i2 = 2;
 					if ( s1+i1 == t1 && s2+i2 == t2 ) {	/* This is the stuff */
 /*
-						Test for scalar nature?
+						Test for scalar nature
 */
 						if ( !polyhit ) {
 							WORD *u1, *u2, *ustop;
-							u1 = s1 + ARGHEAD;
-							while ( u1 < t1 ) {
-								u2 = u1 + *u1;
-								ustop = u2 - ABS(u2[-1]);
-								u1++;
-								while ( u1 < ustop ) {
-									if ( *u1 == INDEX ) goto NoPoly;
-									u1 += u1[1];
-								}
-								u1 = u2;
+							if ( *s1 < 0 ) {
+								if ( *s1 != -SNUMBER && *s1 != -SYMBOL && *s1 > -FUNCTION )
+									goto NoPoly;
 							}
-							u1 = s2 + ARGHEAD;
-							while ( u1 < t2 ) {
-								u2 = u1 + *u1;
-								ustop = u2 - ABS(u2[-1]);
-								u1++;
-								while ( u1 < ustop ) {
-									if ( *u1 == INDEX ) goto NoPoly;
-									u1 += u1[1];
+							else {
+								u1 = s1 + ARGHEAD;
+								while ( u1 < t1 ) {
+									u2 = u1 + *u1;
+									ustop = u2 - ABS(u2[-1]);
+									u1++;
+									while ( u1 < ustop ) {
+										if ( *u1 == INDEX ) goto NoPoly;
+										u1 += u1[1];
+									}
+									u1 = u2;
 								}
-								u1 = u2;
+							}
+							if ( *s2 < 0 ) {
+								if ( *s2 != -SNUMBER && *s2 != -SYMBOL && *s2 > -FUNCTION )
+									goto NoPoly;
+							}
+							else {
+								u1 = s2 + ARGHEAD;
+								while ( u1 < t2 ) {
+									u2 = u1 + *u1;
+									ustop = u2 - ABS(u2[-1]);
+									u1++;
+									while ( u1 < ustop ) {
+										if ( *u1 == INDEX ) goto NoPoly;
+										u1 += u1[1];
+									}
+									u1 = u2;
+								}
 							}
 						}
 						S->PolyWise = WORDDIF(s1,term1);
@@ -2147,6 +2189,108 @@ Compare BARG3(WORD *,term1,WORD *,term2,WORD,level)
 NoPoly:
 						S->PolyWise = localPoly = 0;
 					}
+				  }
+				  else if ( AR.PolyFunType == 2 ) {
+					WORD i1, i2, i1a, i2a;
+					if ( *s1 > 0 ) i1 = *s1;
+					else if ( *s1 <= -FUNCTION ) i1 = 1;
+					else i1 = 2;
+					if ( *s2 > 0 ) i2 = *s2;
+					else if ( *s2 <= -FUNCTION ) i2 = 1;
+					else i2 = 2;
+					if ( s1[i1] > 0 ) i1a = s1[i1];
+					else if ( s1[i1] <= -FUNCTION ) i1a = 1;
+					else i1a = 2;
+					if ( s2[i2] > 0 ) i2a = s2[i2];
+					else if ( s2[i2] <= -FUNCTION ) i2a = 1;
+					else i2a = 2;
+					if ( s1+i1+i1a == t1 && s2+i2+i2a == t2 ) {	/* This is the stuff */
+/*
+						Test for scalar nature
+*/
+						if ( !polyhit ) {
+							WORD *u1, *u2, *ustop;
+							if ( *s1 < 0 ) {
+								if ( *s1 != -SNUMBER && *s1 != -SYMBOL && *s1 > -FUNCTION )
+									goto NoPoly;
+							}
+							else {
+								u1 = s1 + ARGHEAD;
+								while ( u1 < s1+i1 ) {
+									u2 = u1 + *u1;
+									ustop = u2 - ABS(u2[-1]);
+									u1++;
+									while ( u1 < ustop ) {
+										if ( *u1 == INDEX ) goto NoPoly;
+										u1 += u1[1];
+									}
+									u1 = u2;
+								}
+							}
+							if ( s1[i1] < 0 ) {
+								if ( s1[i1] != -SNUMBER && s1[i1] != -SYMBOL && s1[i1] > -FUNCTION )
+									goto NoPoly;
+							}
+							else {
+								u1 = s1 +i1 + ARGHEAD;
+								while ( u1 < t1 ) {
+									u2 = u1 + *u1;
+									ustop = u2 - ABS(u2[-1]);
+									u1++;
+									while ( u1 < ustop ) {
+										if ( *u1 == INDEX ) goto NoPoly;
+										u1 += u1[1];
+									}
+									u1 = u2;
+								}
+							}
+							if ( *s2 < 0 ) {
+								if ( *s2 != -SNUMBER && *s2 != -SYMBOL && *s2 > -FUNCTION )
+									goto NoPoly;
+							}
+							else {
+								u1 = s2 + ARGHEAD;
+								while ( u1 < s2+i2 ) {
+									u2 = u1 + *u1;
+									ustop = u2 - ABS(u2[-1]);
+									u1++;
+									while ( u1 < ustop ) {
+										if ( *u1 == INDEX ) goto NoPoly;
+										u1 += u1[1];
+									}
+									u1 = u2;
+								}
+							}
+							if ( s2[i2] < 0 ) {
+								if ( s2[i2] != -SNUMBER && s2[i2] != -SYMBOL && s2[i2] > -FUNCTION )
+									goto NoPoly;
+							}
+							else {
+								u1 = s2 + i2 + ARGHEAD;
+								while ( u1 < t2 ) {
+									u2 = u1 + *u1;
+									ustop = u2 - ABS(u2[-1]);
+									u1++;
+									while ( u1 < ustop ) {
+										if ( *u1 == INDEX ) goto NoPoly;
+										u1 += u1[1];
+									}
+									u1 = u2;
+								}
+							}
+						}
+						S->PolyWise = WORDDIF(s1,term1);
+						S->PolyWise -= FUNHEAD;
+						count = 1;
+						continue;
+					}
+					else {
+						S->PolyWise = localPoly = 0;
+					}
+				  }
+				  else {
+					S->PolyWise = localPoly = 0;
+				  }
 				}
 				else {
 					t1 = term1 + S->PolyWise;
@@ -2220,7 +2364,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare :
+ 		#] Compare1 :
  		#[ ComPress :				LONG ComPress(ss,n)
 
 		Gets a list of pointers to terms and compresses the terms.
@@ -2272,7 +2416,7 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		ss = sss;
 	}
 
-			#] debug :
+			#] debug : 
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
@@ -2365,13 +2509,13 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		FiniLine();
 	}
 
-			#] debug :
+			#] debug : 
 */
 	return(size);
 }
 
 /*
- 		#] ComPress :
+ 		#] ComPress : 
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 
 		Algorithm by J.A.M.Vermaseren (31-7-1988)
@@ -2526,9 +2670,7 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 		}
 		else {
 		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  else {               
-			if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; 
-		  }
+		  else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
 		  *pp1++ = 0; *pp2++ = 0; nleft--; nright--;
 		}
 	}
@@ -2543,7 +2685,7 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 #endif
 
 /*
- 		#] SplitMerge :
+ 		#] SplitMerge : 
  		#[ GarbHand :				VOID GarbHand()
 
 		Garbage collection new style. Options:
@@ -2650,7 +2792,7 @@ GarbHand()
 }
 
 /*
- 		#] GarbHand :
+ 		#] GarbHand : 
  		#[ MergePatches :			WORD MergePatches(par)
 
 	The general merge routine. Can be used for the large buffer
@@ -2694,7 +2836,7 @@ MergePatches ARG1(WORD,par)
 	if ( AM.safetyfirst != 1 ) goto NormalReturn;
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
-	S->PolyFlag = AR.PolyFun ? 1: 0;
+	S->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
 NewMerge:
 	coef = AN.SoScratC;
 	poin = S->poina; poin2 = S->poin2a;
@@ -2853,7 +2995,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	The old code had to be replaced because all output needs to go
 	through PutOut. For this we have to go term by term and keep
@@ -3370,7 +3512,7 @@ PatCall2:;
 }
 
 /*
- 		#] MergePatches :
+ 		#] MergePatches : 
  		#[ StoreTerm :				WORD StoreTerm(term)
 
 	The central routine to accept terms, store them and keep things
@@ -3401,7 +3543,7 @@ StoreTerm BARG1(WORD *,term)
 /*
 	The small buffer is full. It has to be sorted and written.
 */
-		S->PolyFlag = ( AR.PolyFun != 0 ) ? 1:0;
+		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType:0;
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
@@ -3494,7 +3636,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm :
+ 		#] StoreTerm : 
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 
@@ -3557,7 +3699,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 }
 
 /*
- 		#] StageSort :
+ 		#] StageSort : 
  		#[ SortWild :				WORD SortWild(w,nw)
 
 	Sorts the wildcard entries in the parameter w. Double entries
@@ -3655,7 +3797,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 }
 
 /*
- 		#] SortWild :
+ 		#] SortWild : 
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 
 		Partially or completely frees function sort buffers.
@@ -3725,7 +3867,7 @@ void CleanUpSort ARG1(int,num)
 }
 
 /*
- 		#] CleanUpSort :
+ 		#] CleanUpSort : 
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 
@@ -3739,6 +3881,6 @@ VOID LowerSortLevel ARG0
 }
 
 /*
- 		#] LowerSortLevel :
+ 		#] LowerSortLevel : 
 	#] SortUtilities :
 */

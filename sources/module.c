@@ -36,6 +36,7 @@ static KEYWORD ModuleOptions[] = {
 	,{"notinparallel",		DonotinParallel,0,              1}
 	,{"parallel",			DoParallel,     PARALLELFLAG,	0}
 	,{"polyfun",			DoPolyfun,		POLYFUN,		0}
+	,{"polyratfun",			DoPolyratfun,	POLYFUN,		0}
 	,{"slavepatchsize",		DoSlavePatch,	MODSLAVEPATCH,	0}
 	,{"sum",				DoModSum,		MODSUM,			0}
 };
@@ -312,7 +313,7 @@ DoPolyfun ARG1(UBYTE *,s)
 	UBYTE *t, c;
 	WORD funnum;
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
-		AR.PolyFun = 0;
+		AR.PolyFun = 0; AR.PolyFunType = 0;
 		return(0);
 	}
 	if ( *s != '=' ) {
@@ -329,7 +330,12 @@ DoPolyfun ARG1(UBYTE *,s)
 		*t = c;
 		return(-1);
 	}
-	AR.PolyFun = funnum+FUNCTION;
+	if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) {
+		MesPrint("@The PolyFun must be a regular commuting function!");
+		*t = c;
+		return(-1);
+	}
+	AR.PolyFun = funnum+FUNCTION; AR.PolyFunType = 1;
 	*t = c;
 	SKIPBLANKS(t)
 	if ( *t && *t != ',' && *t != ')' ) {
@@ -343,6 +349,52 @@ DoPolyfun ARG1(UBYTE *,s)
 
 /*
  		#] DoPolyfun :
+ 		#[ DoPolyratfun :
+*/
+
+int
+DoPolyratfun ARG1(UBYTE *,s)
+{
+	GETIDENTITY
+	UBYTE *t, c;
+	WORD funnum;
+	if ( *s == 0 || *s == ',' || *s == ')' ) {
+		AR.PolyFun = 0; AR.PolyFunType = 0;
+		return(0);
+	}
+	if ( *s != '=' ) {
+		MesPrint("@Proper use is: PolyRatFun[=functionname]");
+		return(-1);
+	}
+	s++;
+	SKIPBLANKS(s)
+	t = EndOfToken(s);
+	c = *t; *t = 0;
+
+	if ( GetName(AC.varnames,s,&funnum,WITHAUTO) != CFUNCTION ) {
+		MesPrint("@ %s is not a properly declared function",s);
+		*t = c;
+		return(-1);
+	}
+	if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) {
+		MesPrint("@The PolyRatFun must be a regular commuting function!");
+		*t = c;
+		return(-1);
+	}
+	AR.PolyFun = funnum+FUNCTION; AR.PolyFunType = 2;
+	*t = c;
+	SKIPBLANKS(t)
+	if ( *t && *t != ',' && *t != ')' ) {
+		t++; c = *t; *t = 0;
+		MesPrint("@Improper ending of end-of-module instruction: %s",s);
+		*t = c;
+		return(-1);
+	}
+	return(0);
+}
+
+/*
+ 		#] DoPolyratfun :
  		#[ DoNoParallel :
 */
 

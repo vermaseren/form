@@ -44,6 +44,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
+	,{(UBYTE *)"polygcdchoice",         NUMERICALVALUE, 0, (long)0}
 	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (long)procedureextension}
 	,{(UBYTE *)"resettimeonclear",          ONOFFVALUE, 0, (long)1}
 	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (long)SCRATCHSIZE}
@@ -122,7 +123,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -193,7 +194,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -214,7 +215,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -267,7 +268,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -341,6 +342,12 @@ AllocSetups ARG0
 	AR.CurDum = AM.IndDum;
 #endif
 	AM.mTraceDum = AM.IndDum + 2*WILDOFFSET;
+
+	sp = GetSetupPar((UBYTE *)"polygcdchoice");
+	if ( sp->value < 0 ) sp->value = 0;
+	if ( sp->value > 3 ) sp->value = 3;
+	AM.polygcdchoice = sp->value;
+
 	sp = GetSetupPar((UBYTE *)"parentheses");
 	AM.MaxParLevel = sp->value+1;
 	AC.tokenarglevel = (WORD *)Malloc1((sp->value+1)*sizeof(WORD),(char *)(sp->parameter));
@@ -649,7 +656,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -774,7 +781,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -800,7 +807,7 @@ AllocSortFileName ARG1(SORTING *,sort)
 }
 
 /*
- 		#] AllocSortFileName : 
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -848,7 +855,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -867,7 +874,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -878,7 +885,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -956,7 +963,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -981,7 +988,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
  		#[ AllocScratchBuffers :
 */
 
@@ -993,7 +1000,7 @@ int AllocScratchBuffers ARG0
 	GETIDENTITY
 	UWORD *buffer;
 	int numbuffers;
-	numbuffers = 57;
+	numbuffers = 63;
 #ifdef EXTRAGCD
 	numbuffers += 3;
 #endif
@@ -1068,11 +1075,18 @@ int AllocScratchBuffers ARG0
 	SETNUMBUF(AT.TMscrat6)
 	SETNUMBUF(AN.MMscrat7)
 	SETNUMBUF(AN.MMscratC)
+
+	SETNUMBUF(AN.POscrat1)
+	SETNUMBUF(AN.POscrat2)
+	SETNUMBUF(AN.POscrat3)
+	SETNUMBUF(AN.POscrat4)
+	SETNUMBUF(AN.POscratg)
+	SETNUMBUF(AN.POscrath)
 	return(0);
 }
 
 /*
- 		#] AllocScratchBuffers : 
+ 		#] AllocScratchBuffers :
 	#] Setups :
 */
 

@@ -175,6 +175,7 @@ PopVariables()
 	AC.npowmod = AM.gnpowmod;
 	AC.funpowers = AM.gfunpowers;
 	AC.lPolyFun = AM.gPolyFun;
+	AC.lPolyFunType = AM.gPolyFunType;
 	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;
 	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
 	AC.properorderflag = AM.gproperorderflag;
@@ -239,6 +240,7 @@ MakeGlobal ARG0
 	AM.gOutNumberType = AC.OutNumberType;
 	AM.gfunpowers = AC.funpowers;
 	AM.gPolyFun = AC.lPolyFun;
+	AM.gPolyFunType = AC.lPolyFunType;
 	AM.gparallelflag = AC.parallelflag;
 	AM.gSlavePatchSize = AC.SlavePatchSize;
 	AM.gproperorderflag = AC.properorderflag;

@@ -173,6 +173,11 @@
 #define BITSINSHORT 16
 #define SHORTMASK 0xFFFF
 #define WORDSIZE32 1
+/* ENDIANNESS */
+#define INT16 short
+#define INT32 int
+#define INT64 long
+#undef INT128
 #endif
 
 #include <stdio.h>

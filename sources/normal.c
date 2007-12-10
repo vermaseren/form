@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Normalize :
  		#[ Commute :
 
@@ -34,7 +34,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 }
 
 /*
- 		#] Commute :
+ 		#] Commute : 
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -51,7 +51,7 @@ Normalize BARG1(WORD *,term)
   	#[ Declarations :
 */
 	GETBIDENTITY
-	WORD *t, *m, *r, i, j, k, l, nsym;
+	WORD *t, *m, *r, i, j, k, l, nsym, *ss, *tt, *u;
 	WORD shortnum, stype;
 	WORD *stop, *to = 0, *from = 0;
 /*
@@ -219,7 +219,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER :
+			#] TO SNUMBER : 
 */
 						t += 2;
 						goto NextSymbol;
@@ -780,6 +780,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 				else pcom[ncom++] = t;
 				break;
 			case GCDFUNCTION:
+#ifdef NEWGCDFUNCTION
 				{
 /*
 				Has two integer arguments
@@ -859,6 +860,76 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 				}
 				else pcom[ncom++] = t;
 				}
+#else
+				{
+					WORD *gcd = AT.WorkPointer;
+					if ( ( gcd = EvaluateGcd(BHEAD t) ) == 0 ) goto FromNorm;
+					if ( *gcd == 4 && gcd[1] == 1 && gcd[2] == 1 && gcd[4] == 0 ) {
+						AT.WorkPointer = gcd;
+					}
+					else if ( gcd[*gcd] == 0 ) {
+						WORD *t1, iii, change, *num, *den, numsize, densize;
+						if ( gcd[*gcd-1] < *gcd-1 ) {
+							t1 = gcd+1;
+							for ( iii = 2; iii < t1[1]; iii += 2 ) {
+								change = ExtraSymbol(t1[iii],t1[iii+1],nsym,ppsym);
+								nsym += change;
+								ppsym += change << 1;
+							}
+						}
+						t1 = gcd + *gcd;
+						iii = t1[-1]; num = t1-iii; numsize = (iii-1)/2;
+						den = num + numsize; densize = numsize;
+						while ( numsize > 1 && num[numsize-1] == 0 ) numsize--;
+						while ( densize > 1 && den[densize-1] == 0 ) densize--;
+						if ( numsize > 1 || num[0] != 1 ) {
+							ncoef = REDLENG(ncoef);
+							if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)num,numsize) ) goto FromNorm;
+							ncoef = INCLENG(ncoef);
+						}
+						if ( densize > 1 || den[0] != 1 ) {
+							ncoef = REDLENG(ncoef);
+							if ( Divvy(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)den,densize) ) goto FromNorm;
+							ncoef = INCLENG(ncoef);
+						}
+						AT.WorkPointer = gcd;
+					}
+					else {	/* a whole expression */
+/*
+						Action: Put the expression in a compiler buffer.
+						Insert a SUBEXPRESSION subterm
+						Set the return value of the routine such that in
+						Generator the term gets sent again to TestSub.
+
+						1: put in C (ebufnum)
+						2: after that the WorkSpace is free again.
+						3: insert the SUBEXPRESSION
+						4: copy the top part of the term down
+*/
+						LONG size = AT.WorkPointer - gcd;
+
+						ss = AddRHS(AT.ebufnum,1);
+						while ( (ss + size + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
+						tt = gcd;
+						NCOPY(ss,tt,size);
+						C->rhs[C->numrhs+1] = ss;
+						C->Pointer = ss;
+
+						t[0] = SUBEXPRESSION;
+						t[1] = SUBEXPSIZE;
+						t[2] = C->numrhs;
+						t[3] = 1;
+						t[4] = AT.ebufnum;
+						t += 5;
+						tt = term + *term;
+						while ( r < tt ) *t++ = *r++;
+						*term = t - term;
+
+						regval = 1;
+						goto RegEnd;
+					}
+				}
+#endif
 				break;
 			case MINFUNCTION:
 			case MAXFUNCTION:
@@ -1051,7 +1122,7 @@ ScanCont:		while ( t < r ) {
 						if ( k == 0 ) goto NormZZ;
 						break;
 					}
-					if ( *rr == -SNUMBER && rr[1] > 0 && k < 0 ) {
+					if ( *rr == -SNUMBER && rr[1] > 0 && rr[1] < MAXPOWER && k < 0 ) {
 						k = -k;
 						if ( functions[k-FUNCTION].commute ) {
 							for ( i = 0; i < rr[1]; i++ ) pnco[nnco++] = rr-1;
@@ -1062,6 +1133,12 @@ ScanCont:		while ( t < r ) {
 						break;
 					}
 					if ( k == 0 ) goto NormZero;
+					if ( t[FUNHEAD] == -SYMBOL && *rr == -SNUMBER && t[1] == FUNHEAD+4 ) {
+						if ( rr[1] < MAXPOWER ) {
+							t = rr; *rr = t[FUNHEAD+1];
+							goto NextSymbol;
+						}
+					}
 /*
 					if ( ( t[FUNHEAD] > 0 && t[FUNHEAD+1] != 0 )
 					|| ( *rr > 0 && rr[1] != 0 ) ) {}
@@ -1282,7 +1359,7 @@ defaultcase:;
 							it isn't vector-like or index-like
 */
 							else if ( t[2] > 0 ) {
-								WORD *ss, *sstop, *tt, *ttstop, n;
+								WORD *sstop, *ttstop, n;
 								ss = t+2;
 								sstop = ss + *ss;
 								ss += ARGHEAD;
@@ -1329,7 +1406,7 @@ defaultcase:;
 							Search for vector nature first
 */
 							else if ( t[2] > 0 ) {
-								WORD *ss, *sstop, *tt, *ttstop, *w, *mm, n, count;
+								WORD *sstop, *ttstop, *w, *mm, n, count;
 								WORD *v1, *v2 = 0;
 								ss = t+2;
 								sstop = ss + *ss;
@@ -1635,7 +1712,6 @@ NoRep:
 					m[2] = 3;
 				}
 				while ( t < m ) {
-					WORD *tt;
 					r = t + t[1];
 					if ( *t == SYMBOL || *t == DOTPRODUCT ) {
 						k = t[1];
@@ -2214,11 +2290,30 @@ NextI:;
 				}
 			}
 			else if ( *t == AR.PolyFun ) {
+			  if ( AR.PolyFunType == 1 ) { /* Regular PolyFun with one argument */
 				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
 				t[1] == FUNHEAD + 2 && t[FUNHEAD] == -SNUMBER ) goto NormZero;
 				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
 				k = t[1];
 				NCOPY(m,t,k);
+			  }
+			  else if ( AR.PolyFunType == 2 ) { /* PolyRatFun. Two arguments */
+/*
+				First check for zeroes.
+*/
+				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
+				t[1] > FUNHEAD + 2 && t[FUNHEAD] == -SNUMBER ) {
+					u = t + FUNHEAD + 2;
+					if ( *u < 0 ) {
+						if ( *u <= -FUNCTION ) {}
+						else if ( t[1] == FUNHEAD+4 ) goto NormZero;
+					}
+					else if ( t[1] == *u+FUNHEAD+2 ) goto NormZero;
+				}
+				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
+				k = t[1];
+				NCOPY(m,t,k);
+			  }
 			}
 			else if ( *t > 0 ) {
 				k = t[1];
@@ -2242,7 +2337,6 @@ NextI:;
 			t[2] &= ~DIRTYSYMFLAG;
 			if ( AR.Eside == LHSIDE || AR.Eside == LHSIDEX ) {
 						/* Potential problems with FUNNYWILD */
-				WORD *tt, *u;
 /*
 				First make sure all FUNNIES are at the end.
 				Then sort separately
@@ -2734,7 +2828,7 @@ NextI:;
 			AN.cTerm = oldcterm;
 		}
 /*
- 		#] normalize replacements :
+ 		#] normalize replacements : 
 */
 		AT.WorkPointer = termout;
 		if ( ReplaceType == 0 ) {
@@ -3166,6 +3260,321 @@ WORD DetCommu ARG1(WORD *,terms)
 
 /*
   	#] DetCommu : 
+  	#[ EvaluateGcd :
+
+	Try to evaluate the GCDFUNCTION gcd_.
+	This function can have a number of arguments which can be numbers
+	and/or polynomials. If there are objects that aren't SYMBOLS or numbers
+	it cannot work currently.
+
+	To make this work properly we have to intervene in proces.c
+     proces.c:						if ( Normalize(BHEAD m) ) {
+1060 proces.c:							if ( Normalize(BHEAD r) ) {
+1126?proces.c:							if ( Normalize(BHEAD term) ) {
+     proces.c:				if ( Normalize(BHEAD AT.WorkPointer) ) goto PasErr;
+2308!proces.c:		if ( ( retnorm = Normalize(BHEAD term) ) != 0 ) {
+     proces.c:					ReNumber(BHEAD term); Normalize(BHEAD term);
+     proces.c:				if ( Normalize(BHEAD v) ) Terminate(-1);
+     proces.c:		if ( Normalize(BHEAD w) ) { LowerSortLevel(); goto PolyCall; }
+     proces.c:		if ( Normalize(BHEAD term) ) goto PolyCall;
 */
 
-/* temporary commentary for forcing cvs merge */
+WORD *EvaluateGcd BARG1(WORD *,subterm)
+{
+	WORD *oldworkpointer = AT.WorkPointer, *work1, *work2, *work3;
+	WORD *t, *tt, *ttt, *t1, *t2, *t3, *t4, *tstop;
+	WORD ct, nnum;
+	UWORD gcdnum, stor;
+	WORD *lnum=AT.n_llnum+1;
+	WORD *num1, *num2, *num3, *den1, *den2, *den3;
+	WORD sizenum1, sizenum2, sizenum3, sizeden1, sizeden2, sizeden3;
+	int i, isnumeric = 0, numarg = 0, sizearg;
+	long size;
+/*
+	Step 1: Look for -SNUMBER or -SYMBOL arguments.
+	        If encountered, treat everybody with it.
+*/
+	tt = subterm + subterm[1]; t = subterm + FUNHEAD;
+
+	while ( t < tt ) {
+		numarg++;
+		if ( *t == -SNUMBER ) {
+			if ( t[1] == 0 ) {
+gcdzero:;
+				LOCK(ErrorMessageLock);
+				MesPrint("Trying to take the GCD involving a zero term.");
+				UNLOCK(ErrorMessageLock);
+				return(0);
+			}
+			gcdnum = ABS(t[1]);
+			t1 = subterm + FUNHEAD;
+			while ( gcdnum > 1 && t1 < tt ) {
+				if ( *t1 == -SNUMBER ) {
+					stor = ABS(t1[1]);
+					if ( stor == 0 ) goto gcdzero;
+					if ( GcdLong(BHEAD (UWORD *)&stor,1,(UWORD *)&gcdnum,1,
+									(UWORD *)lnum,&nnum) ) goto FromGCD;
+					gcdnum = lnum[0];
+					t1 += 2;
+					continue;
+				}
+				else if ( *t1 == -SYMBOL ) goto gcdisone;
+				else if ( *t1 < 0 ) goto gcdillegal;
+/*
+				Now we have to go through all the terms in the argument.
+				This includes long numbers.
+*/
+				ttt = t1 + *t1;
+				ct = *ttt; *ttt = 0;
+				if ( t1[1] != 0 ) {	/* First normalize the argument */
+					t1 = PolyNormPoly(BHEAD t1+ARGHEAD);
+				}
+				else t1 += ARGHEAD;
+				while ( *t1 ) {
+					t1 += *t1;
+					i = ABS(t1[-1]);
+					t2 = t1 - i;
+					i = (i-1)/2;
+					t3 = t2+i-1;
+					while ( t3 > t2 && *t3 == 0 ) { t3--; i--; }
+					if ( GcdLong(BHEAD (UWORD *)t2,(WORD)i,(UWORD *)&gcdnum,1,
+									(UWORD *)lnum,&nnum) ) {
+						*ttt = ct;
+						goto FromGCD;
+					}
+					gcdnum = lnum[0];
+					if ( gcdnum == 1 ) {
+						*ttt = ct;
+						goto gcdisone;
+					}
+				}
+				*ttt = ct;
+				t1 = ttt;
+				AT.WorkPointer = oldworkpointer;
+			}
+			if ( gcdnum == 1 ) goto gcdisone;
+			oldworkpointer[0] = 4;
+			oldworkpointer[1] = gcdnum;
+			oldworkpointer[2] = 1;
+			oldworkpointer[3] = 3;
+			oldworkpointer[4] = 0;
+			AT.WorkPointer = oldworkpointer + 5;
+			return(oldworkpointer);
+		}
+		else if ( *t == -SYMBOL ) {
+			t1 = subterm + FUNHEAD;
+			i = t[1];
+			while ( t1 < tt ) {
+				if ( *t1 == -SNUMBER ) goto gcdisone;
+				if ( *t1 == -SYMBOL ) {
+					if ( t1[1] != i ) goto gcdisone;
+					t1 += 2; continue;
+				}
+				if ( *t1 < 0 ) goto gcdillegal;
+				ttt = t1 + *t1;
+				ct = *ttt; *ttt = 0;
+				if ( t1[1] != 0 ) {	/* First normalize the argument */
+					t2 = PolyNormPoly(BHEAD t1+ARGHEAD);
+				}
+				else t2 = t1 + ARGHEAD;
+				while ( *t2 ) {
+					t3 = t2+1;
+					t2 = t2 + *t2;
+					tstop = t2 - ABS(t2[-1]);
+					while ( t3 < tstop ) {
+						if ( *t3 != SYMBOL ) {
+							*ttt = ct;
+							goto gcdillegal;
+						}
+						t4 = t3 + 2;
+						t3 += t3[1];
+						while ( t4 < t3 ) {
+							if ( *t4 == i && t4[1] > 0 ) goto nextterminarg;
+							t4 += 2;
+						}
+					}
+					*ttt = ct;
+					goto gcdisone;
+nextterminarg:;
+				}
+				*ttt = ct;
+				t1 = ttt;
+				AT.WorkPointer = oldworkpointer;
+			}
+			oldworkpointer[0] = 8;
+			oldworkpointer[1] = SYMBOL;
+			oldworkpointer[2] = 4;
+			oldworkpointer[3] = t[1];
+			oldworkpointer[4] = 1;
+			oldworkpointer[5] = 1;
+			oldworkpointer[6] = 1;
+			oldworkpointer[7] = 3;
+			oldworkpointer[8] = 0;
+			AT.WorkPointer = oldworkpointer+9;
+			return(oldworkpointer);
+		}
+		else if ( *t < 0 ) {
+gcdillegal:;
+			LOCK(ErrorMessageLock);
+			MesPrint("Illegal object in gcd_ function. Object not a number or a symbol.");
+			UNLOCK(ErrorMessageLock);
+			goto FromGCD;
+		}
+		else if ( ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
+		else if ( t[1] != 0 ) {
+			ttt = t + *t; ct = *ttt; *ttt = 0;
+			t = PolyNormPoly(BHEAD t+ARGHEAD);
+			*ttt = ct;
+			if ( t[*t] == 0 && ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
+			AT.WorkPointer = oldworkpointer;
+			t = ttt;
+		}
+		t += *t;
+	}
+/*
+	At this point there are only generic arguments.
+	There are however still two cases:
+	1: There is an argument that is purely numerical
+	   In that case we have to take the gcd of all coefficients
+	2: All arguments are nontrivial polynomials.
+	   Here we don't worry so much about the factor. (???)
+	We know whether case 1 occurs when isnumeric > 0.
+	We can look up numarg to get a good starting value.
+*/
+	AT.WorkPointer = oldworkpointer;
+	if ( isnumeric ) {
+		t = subterm + FUNHEAD;
+		for ( i = 1; i < isnumeric; i++ ) {
+			NEXTARG(t);
+		}
+		if ( t[1] != 0 ) {	/* First normalize the argument */
+			ttt = t + *t; ct = *ttt; *ttt = 0;
+			t = PolyNormPoly(BHEAD t+ARGHEAD);
+			*ttt = ct;
+		}
+		t += *t;
+		i = (ABS(t[-1])-1)/2;
+		den1 = t - 1 - i;
+		num1 = den1 - i;
+		sizenum1 = sizeden1 = i;
+		while ( sizenum1 > 1 && num1[sizenum1-1] == 0 ) sizenum1--;
+		while ( sizeden1 > 1 && den1[sizeden1-1] == 0 ) sizeden1--;
+		work1 = AT.WorkPointer+1; work2 = work1+sizenum1;
+		for ( i = 0; i < sizenum1; i++ ) work1[i] = num1[i];
+		for ( i = 0; i < sizeden1; i++ ) work2[i] = den1[i];
+		num1 = work1; den1 = work2;
+		AT.WorkPointer = work2 = work2 + sizeden1;
+		t = subterm + FUNHEAD;
+		while ( t < tt ) {
+			ttt = t + *t; ct = *ttt; *ttt = 0;
+			if ( t[1] != 0 ) {
+				t = PolyNormPoly(BHEAD t+ARGHEAD);
+			}
+			else t += ARGHEAD;
+			while ( *t ) {
+				t += *t;
+				i = (ABS(t[-1])-1)/2;
+				den2 = t - 1 - i;
+				num2 = den2 - i;
+				sizenum2 = sizeden2 = i;
+				while ( sizenum2 > 1 && num2[sizenum2-1] == 0 ) sizenum2--;
+				while ( sizeden2 > 1 && den2[sizeden2-1] == 0 ) sizeden2--;
+				num3 = AT.WorkPointer;
+				if ( GcdLong(BHEAD (UWORD *)num2,sizenum2,(UWORD *)num1,sizenum1,
+									(UWORD *)num3,&sizenum3) ) goto FromGCD;
+				sizenum1 = sizenum3;
+				for ( i = 0; i < sizenum1; i++ ) num1[i] = num3[i];
+				den3 = AT.WorkPointer;
+				if ( GcdLong(BHEAD (UWORD *)den2,sizeden2,(UWORD *)den1,sizeden1,
+									(UWORD *)den3,&sizeden3) ) goto FromGCD;
+				sizeden1 = sizeden3;
+				for ( i = 0; i < sizeden1; i++ ) den1[i] = den3[i];
+				if ( sizenum1 == 1 && num1[0] == 1 && sizeden1 == 1 && den1[1] == 1 )
+					goto gcdisone;
+			}
+			*ttt = ct;
+			t = ttt;
+			AT.WorkPointer = work2;
+		}
+		AT.WorkPointer = oldworkpointer;
+/*
+		Now copy the GCD to the 'output'
+*/
+		if ( sizenum1 > sizeden1 ) {
+			while ( sizenum1 > sizeden1 ) den1[sizeden1++] = 0;
+		}
+		else if ( sizenum1 < sizeden1 ) {
+			while ( sizenum1 < sizeden1 ) num1[sizenum1++] = 0;
+		}
+		t = oldworkpointer;
+		i = 2*sizenum1+1;
+		*t++ = i+1;
+		if ( num1 != t ) { NCOPY(t,num1,sizenum1); }
+		else t += sizenum1;
+		if ( den1 != t ) { NCOPY(t,den1,sizeden1); }
+		else t += sizeden1;
+		*t++ = i;
+		*t++ = 0;
+		AT.WorkPointer = t;
+		return(oldworkpointer);
+	}
+/*
+	Now the real stuff with only polynomials.
+	Pick up the shortest term to start.
+	We are a bit brutish about this.
+*/
+	t = subterm + FUNHEAD;
+	AT.WorkPointer += AM.MaxTer/sizeof(WORD);
+	work2 = AT.WorkPointer;
+	sizearg = subterm[1];
+	i = 0; work3 = 0;
+	while ( t < tt ) {
+		i++;
+		work1 = AT.WorkPointer;
+		ttt = t + *t; ct = *ttt; *ttt = 0;
+		t = PolyNormPoly(BHEAD t+ARGHEAD);
+		if ( *work1 < AT.WorkPointer-work1 ) {
+			sizearg = AT.WorkPointer-work1;
+			numarg = i;
+			work3 = work1;
+		}
+		*ttt = ct; t = ttt;		
+	}
+	*AT.WorkPointer++ = 0;
+/*
+	We have properly normalized arguments and the shortest is indicated in work3
+*/
+	work1 = work3;
+	while ( *work2 ) {
+		if ( work2 != work3 ) {
+			work1 = PolyGCD(BHEAD work1,work2);
+		}
+		while ( *work2 ) work2 += *work2;
+		work2++;
+	}
+	work2 = work1;
+	while ( *work2 ) work2 += *work2;
+	size = work2 - work1 + 1;
+	t = oldworkpointer;
+	NCOPY(t,work1,size);
+	AT.WorkPointer = t;
+	return(oldworkpointer);
+
+gcdisone:;
+	oldworkpointer[0] = 4;
+	oldworkpointer[1] = 1;
+	oldworkpointer[2] = 1;
+	oldworkpointer[3] = 3;
+	oldworkpointer[4] = 0;
+	AT.WorkPointer = oldworkpointer+5;
+	return(oldworkpointer);
+FromGCD:
+	LOCK(ErrorMessageLock);
+	MesCall("EvaluateGcd");
+	UNLOCK(ErrorMessageLock);
+	return(0);
+}
+
+/*
+  	#] EvaluateGcd : 
+*/

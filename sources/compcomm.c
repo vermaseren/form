@@ -341,7 +341,7 @@ int CoOn ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoOn :
+  	#] CoOn : 
   	#[ CoInsideFirst :
 */
 
@@ -1930,7 +1930,7 @@ CoRenumber ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoRenumber : 
+  	#] CoRenumber :
   	#[ CoSum :
 */
 
@@ -4171,16 +4171,17 @@ CoPolyFun ARG1(UBYTE *,s)
 	UBYTE *t;
 	if ( *s == 0 ) {
 		AR.PolyFun = AC.lPolyFun = 0;
+		AR.PolyFunType = AC.lPolyFunType = 0;
 		return(0);
 	}
 	t = SkipAName(s);
 	if ( t == 0 || *t != 0 ) {
-		MesPrint("&PolyFun statement needs a single function for its argument");
+		MesPrint("&PolyFun statement needs a single commuting function for its argument");
 		return(1);
 	}
 	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
-	|| ( functions[numfun].spec != 0 ) ) {
-		MesPrint("&%s should be a regular function",s);
+	|| ( functions[numfun].spec != 0 ) || ( functions[numfun].commute != 0 ) ) {
+		MesPrint("&%s should be a regular commuting function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
 				AddFunction(s,0,0,0,0);
@@ -4188,11 +4189,50 @@ CoPolyFun ARG1(UBYTE *,s)
 		return(1);
 	}
 	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
+	AR.PolyFunType = AC.lPolyFunType = 1;
 	return(0);
 }
 
 /*
   	#] CoPolyFun : 
+  	#[ CoPolyRatFun :
+
+	Collect,functionname
+*/
+
+int
+CoPolyRatFun ARG1(UBYTE *,s)
+{
+	GETIDENTITY
+	WORD numfun;
+	int type;
+	UBYTE *t;
+	if ( *s == 0 ) {
+		AR.PolyFun = AC.lPolyFun = 0;
+		AR.PolyFunType = AC.lPolyFunType = 0;
+		return(0);
+	}
+	t = SkipAName(s);
+	if ( t == 0 || *t != 0 ) {
+		MesPrint("&PolyRatFun statement needs a single commuting function for its argument");
+		return(1);
+	}
+	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
+	|| ( functions[numfun].spec != 0 ) || ( functions[numfun].commute != 0 ) ) {
+		MesPrint("&%s should be a regular commuting function",s);
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0);
+		}
+		return(1);
+	}
+	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
+	AR.PolyFunType = AC.lPolyFunType = 2;
+	return(0);
+}
+
+/*
+  	#] CoPolyRatFun : 
   	#[ CoMerge :
 */
 
@@ -4590,5 +4630,35 @@ nofunc:		MesPrint("&%s is not a sparse table",t);
 
 /*
   	#] CoClearTable : 
+  	#[ CoDenominators :
+*/
+
+int
+CoDenominators ARG1(UBYTE *,s)
+{
+	WORD numfun;
+	int type;
+	UBYTE *t = SkipAName(s), *t1;
+	if ( t == 0 ) goto syntaxerror;
+	t1 = t; while ( *t1 == ',' || *t1 == ' ' || *t1 == '\t' ) t1++;
+	if ( *t1 ) goto syntaxerror;
+	*t = 0;
+	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
+	|| ( functions[numfun].spec != 0 ) ) {
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0);
+		}
+		goto syntaxerror;
+	}
+	Add3Com(TYPEDENOMINATORS,numfun+FUNCTION);
+	return(0);
+syntaxerror:
+	MesPrint("&Denominators statement needs one regular function for its argument");
+	return(1);
+}
+
+/*
+  	#] CoDenominators :
 */
 /* temporary commentary for forcing cvs merge */

@@ -136,6 +136,11 @@ typedef UWORD FLOAT;
 typedef short SHORT;
 #define BITSINSHORT 16
 #define SHORTMASK 0xFFFF
+/* ENDIANNESS */
+#define INT16 short
+#define INT32 int
+#undef INT64
+#undef INT128
 #endif
 #endif
 
@@ -436,6 +441,7 @@ typedef int (*TFUN1)();
 #define TYPEPOLYNORM 66
 #define TYPEARGIMPLODE 67
 #define TYPEARGEXPLODE 68
+#define TYPEDENOMINATORS 69
 
 #define TAKETRACE 1
 #define CONTRACT 2

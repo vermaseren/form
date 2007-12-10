@@ -29,6 +29,23 @@ typedef struct {
 
 /*	Next are the index structs for stored and saved expressions */
 
+typedef struct {
+	UBYTE headermark[8];  /* old versions of FORM have a max sizeof(POSITION) of 8 */
+	UBYTE lenWORD;
+	UBYTE lenLONG;
+	UBYTE lenPOS;
+	UBYTE lenPOINTER;
+	UBYTE endianness[16]; /* sizeof(int) should be <= 16  */
+	UBYTE sSym;
+	UBYTE sInd;
+	UBYTE sVec;
+	UBYTE sFun;
+	UBYTE maxpower[16];
+	UBYTE wildoffset[16];
+	UBYTE revision;
+	UBYTE reserved[512-8-4-16-4-16-16-1]; /* padding to 512 bytes */
+} STOREHEADER;
+
 typedef struct InDeXeNtRy {
 	POSITION	position;		/* Position of the expression itself */
 	POSITION	length;			/* Length of the expression itself */
@@ -93,7 +110,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -725,9 +742,17 @@ typedef struct ThReAdBuCkEt {
 
 #endif
 
+typedef struct {
+	WORD	*coefs;				/* The array of coefficients */
+	WORD	numsym;				/* The number of the symbol in the polynomial */
+	WORD	arraysize;			/* The size of the allocation of coefs */
+	WORD	polysize;			/* The maximum power in the polynomial */
+	WORD	modnum;				/* The prime number of the modulus */
+} POLYMOD;
+
 /*
-  	#] Varia : 
-  	#[ A :
+  	#] Varia :
+    #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
 struct M_const {
@@ -812,6 +837,7 @@ struct M_const {
     int     MultiRun;
     int     gNoSpacesInNumbers;    /*     For very long numbers */
     int     ggNoSpacesInNumbers;   /*     For very long numbers */
+    int     polygcdchoice;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -851,6 +877,7 @@ struct M_const {
     WORD    polygetremnum;         /* (M) internal number of polygetrem_ function */
     WORD    polytopnum;            /* (M) internal number of maximum poly function */
     WORD    gPolyFun;              /* (M) global value of PolyFun */
+    WORD    gPolyFunType;          /* (M) global value of PolyFun */
     WORD    safetyfirst;           /* (M) for testing special versions */
     WORD    dollarzero;            /* (M) for dollars with zero value */
     WORD    atstartup;             /* To protect against DATE_ ending in \n */
@@ -861,7 +888,7 @@ struct M_const {
     UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 struct P_const {
@@ -1083,6 +1110,7 @@ struct C_const {
     WORD    StoreHandle;           /* (C) Handle of .str file */
     WORD    HideLevel;             /* (C) Hiding indicator */
     WORD    lPolyFun;              /* (C) local value of PolyFun */
+    WORD    lPolyFunType;          /* (C) local value of PolyFunType */
     WORD    SymChangeFlag;         /* (C) */
     WORD    inusedtables;          /* (C) Number of elements in usedtables */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
@@ -1131,6 +1159,7 @@ struct R_const {
     WORD    *CompressBuffer;       /* (M) */
     WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
+	VOID    *CompareRoutine;
     FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
 
@@ -1160,6 +1189,7 @@ struct R_const {
     WORD    Stage4Name;            /* (R) Sorting only */
     WORD    GetOneFile;            /* (R) Getting from hide or regular */
     WORD    PolyFun;               /* (C) Number of the PolyFun function */
+    WORD    PolyFunType;           /* () value of PolyFunType */
     WORD    Eside;                 /* () Tells which side of = sign */
 	WORD	MaxDum;                /* Maximum dummy value in an expression */
 	WORD	level;                 /* Running level in Generator */
@@ -1198,6 +1228,7 @@ struct T_const {
     WORD    *n_llnum;              /* (M) Used by normal. local. */
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
+	WORD    *primelist;
     UWORD   *TMscrat1;             /* () Scratch for TakeModulus */
     UWORD   *TMscrat2;             /* () Scratch for TakeModulus */
     UWORD   *TMscrat3;             /* () Scratch for TakeModulus */
@@ -1248,6 +1279,8 @@ struct T_const {
     WORD    mBer;                  /* (T) Size of buffer pBer. */
     WORD    PolyAct;               /* (R) Used for putting the PolyFun at end. ini at 0 */
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
+	WORD    inprimelist;
+	WORD    sizeprimelist;
 };
 /*
  		#] T : 
@@ -1351,6 +1384,12 @@ struct N_const {
 	UWORD	*CCscratE;             /* () Used in reken.c */
 	UWORD	*MMscrat7;             /* () Used in reken.c */
 	UWORD	*MMscratC;             /* () Used in reken.c */
+	UWORD	*POscrat1;             /* () Used in polynito.c */
+	UWORD	*POscrat2;             /* () Used in polynito.c */
+	UWORD	*POscrat3;             /* () Used in polynito.c */
+	UWORD	*POscrat4;             /* () Used in polynito.c */
+	UWORD	*POscratg;             /* () Used in polynito.c */
+	UWORD	*POscrath;             /* () Used in polynito.c */
 	WORD	*PoinScratch[300];     /* () used in reshuf.c */
 	WORD	*FunScratch[300];      /* () used in reshuf.c */
 	FUN_INFO *FunInfo;             /* () Used in smart.c */
@@ -1381,9 +1420,13 @@ struct N_const {
 	UWORD	*PIFscrat1;            /* () Used in poly.c */
 	UWORD	*PIFscrat2;            /* () Used in poly.c */
 	WORD	*compressSpace;        /* () Used in sort.c */
+	WORD	*poly1a;
+	WORD	*poly2a;
 #ifdef WITHPTHREADS
 	THREADBUCKET *threadbuck;
 #endif
+	POLYMOD polymod1;              /* For use in PolyModGCD and calling routines */
+	POLYMOD polymod2;              /* For use in PolyModGCD and calling routines */
     POSITION OldPosIn;             /* (R) Used in sort. */
     POSITION OldPosOut;            /* (R) Used in sort */
 	POSITION theposition;          /* () Used in index.c */
@@ -1423,6 +1466,7 @@ struct N_const {
 	int		tlistsize;             /* () used in lus.c */
 	int		filenum;               /* () used in setfile.c */
 	int		compressSize;          /* () Used in sort.c */
+	int		polysortflag;
 	WORD	RenumScratch[300];     /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */
@@ -1444,6 +1488,8 @@ struct N_const {
 	WORD	sizeselecttermundo;    /* () Used in pattern.c */
 	WORD	patternbuffersize;     /* () Used in pattern.c */
 	WORD	numlistinprint;        /* () Used in process.c */
+	WORD	getdivgcd;
+	WORD	nPOscrata;
 #ifdef CHINREM
 	WORD	nCRscrat1;             /* () Used in factor.c */
 	WORD	nCRscrat2;             /* () Used in factor.c */
@@ -1459,7 +1505,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 struct O_const {
@@ -1473,6 +1519,23 @@ struct O_const {
     UBYTE   *DollarOutBuffer;      /* (O) Outputbuffer for Dollars */
     UBYTE   *CurBufWrt;            /* (O) Name of currently written expr. */
     FILEDATA    SaveData;          /* (O) */
+    STOREHEADER SaveHeader;       /* ()  System Independent save-Files */
+    WORD    transFlag;
+    WORD    powerFlag;
+    WORD    resizeFlag;
+    WORD    bufferedInd;
+    VOID    (*FlipWORD)(UBYTE *);
+    VOID    (*FlipLONG)(UBYTE *);
+    VOID    (*FlipPOS)(UBYTE *);
+    VOID    (*FlipPOINTER)(UBYTE *);
+    VOID    (*ResizeData)(UBYTE *,int,UBYTE *,int);
+    VOID    (*ResizeWORD)(UBYTE *,UBYTE *);
+    VOID    (*ResizeNCWORD)(UBYTE *,UBYTE *);
+    VOID    (*ResizeLONG)(UBYTE *,UBYTE *);
+    VOID    (*ResizePOS)(UBYTE *,UBYTE *);
+    VOID    (*ResizePOINTER)(UBYTE *,UBYTE *);
+    VOID    (*CheckPower)(UBYTE *);
+    VOID    (*RenumberVec)(UBYTE *);
 #ifdef mBSD
 #ifdef MICROTIME
     long    wrap;                  /* (O) For statistics time. wrap around */
@@ -1560,7 +1623,7 @@ typedef struct AllGlobals {
 
 /*
  		#] Definitions : 
-  	#] A :
+    #] A :
   	#[ FG :
 */
 

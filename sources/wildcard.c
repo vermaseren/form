@@ -9,7 +9,7 @@
 /*
 #define DEBUG(x) x
 
-  	#] Includes :
+  	#] Includes : 
  	#[ Wildcards :
  		#[ WildFill :			WORD WildFill(to,from,sub)
 
@@ -1199,7 +1199,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 */
 		}
 		t = uu;
@@ -1214,7 +1214,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill :
+ 		#] WildFill : 
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -1380,7 +1380,7 @@ GotOne:;
 }
 
 /*
- 		#] ResolveSet :
+ 		#] ResolveSet : 
  		#[ ClearWild :			VOID ClearWild()
 
 	Clears the current wildcard settings and makes them ready for
@@ -1407,7 +1407,7 @@ ClearWild BARG0
 }
 
 /*
- 		#] ClearWild :
+ 		#] ClearWild : 
  		#[ AddWild :			WORD AddWild(oldnumber,type,newnumber)
 
  		Adds a wildcard assignment.
@@ -1637,7 +1637,7 @@ FlipOn:
 }
 
 /*
- 		#] AddWild :
+ 		#] AddWild : 
  		#[ CheckWild :			WORD CheckWild(oldnumber,type,newnumber,newval)
 
  		Tests whether a wildcard assignment is allowed.
@@ -2330,7 +2330,49 @@ NoM:
 }
 
 /*
- 		#] CheckWild :
+ 		#] CheckWild : 
  	#] Wildcards :
+  	#[ DenToFunction :
+
+	Renames the denominator function into a function with the given number.
+	For the syntax see   Denominators,function;
+*/
+
+int
+DenToFunction ARG2(WORD *,term,WORD,numfun)
+{
+	int action = 0;
+	WORD *t, *tstop, *tnext, *arg, *argstop, *targ;
+	t = term+1;
+	tstop = term + *term; tstop -= ABS(tstop[-1]);
+	while ( t < tstop ) {
+		if ( *t == DENOMINATOR ) {
+			*t = numfun; t[2] |= DIRTYFLAG; action = 1;
+		}
+		tnext = t + t[1];
+		if ( *t >= FUNCTION && functions[*t-FUNCTION].spec == 0 ) {
+			arg = t + FUNHEAD;
+			while ( arg < tnext ) {
+				if ( *arg > 0 ) {
+					targ = arg + ARGHEAD; argstop = arg + *arg;
+					while ( targ < argstop ) {
+						if ( DenToFunction(targ,numfun) ) {
+							arg[1] |= DIRTYFLAG; t[2] |= DIRTYFLAG; action = 1;
+						}
+						targ += *targ;
+					}
+					arg = argstop;
+				}
+				else if ( *arg <= -FUNCTION ) arg++;
+				else arg += 2;
+			}
+		}
+		t = tnext;
+	}
+	return(action);
+}
+
+/*
+  	#] DenToFunction :
 */
 

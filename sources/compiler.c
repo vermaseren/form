@@ -75,6 +75,7 @@ static KEYWORD com2commands[] = {
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
 	,{"deallocatetable",(TFUN)CoDeallocateTable,  DECLARATION,  PARTEST}
 	,{"delete",         (TFUN)CoDelete,           SPECIFICATION,PARTEST}
+	,{"denominators",   (TFUN)CoDenominators,     STATEMENT,    PARTEST}
 	,{"disorder",       (TFUN)CoDisorder,         STATEMENT,    PARTEST}
 	,{"drop",           (TFUN)CoDrop,             SPECIFICATION,PARTEST}
 	,{"else",           (TFUN)CoElse,             STATEMENT,    PARTEST}
@@ -119,6 +120,7 @@ static KEYWORD com2commands[] = {
 	,{"only",           (TFUN)CoOnly,             STATEMENT,    PARTEST}
 	,{"polyfun",        (TFUN)CoPolyFun,          DECLARATION,  PARTEST}
 	,{"polynorm",       (TFUN)CoPolyNorm,         STATEMENT,    PARTEST}
+	,{"polyratfun",     (TFUN)CoPolyRatFun,       DECLARATION,  PARTEST}
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}
 	,{"print[]",        (TFUN)CoPrintB,           TOOUTPUT,     PARTEST}
 	,{"printtable",     (TFUN)CoPrintTable,       MIXED,        PARTEST}

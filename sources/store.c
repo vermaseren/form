@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -26,7 +26,7 @@ OpenTemp()
 }
 
 /*
- 		#] OpenTemp : 
+ 		#] OpenTemp :
  		#[ SeekScratch :
 */
 
@@ -38,7 +38,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
 }
 
 /*
- 		#] SeekScratch : 
+ 		#] SeekScratch :
  		#[ SetEndScratch :
 */
 
@@ -53,7 +53,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndScratch : 
+ 		#] SetEndScratch :
  		#[ SetEndHScratch :
 */
 
@@ -68,7 +68,7 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
 }
 
 /*
- 		#] SetEndHScratch : 
+ 		#] SetEndHScratch :
  		#[ SetScratch :
 */
 
@@ -120,7 +120,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch : 
+ 		#] SetScratch :
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -164,7 +164,7 @@ RevertScratch()
 }
 
 /*
- 		#] RevertScratch : 
+ 		#] RevertScratch :
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -207,7 +207,7 @@ ResetScratch()
 }
 
 /*
- 		#] ResetScratch : 
+ 		#] ResetScratch :
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -408,7 +408,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave : 
+ 		#] CoSave :
  		#[ CoLoad :
 */
 
@@ -451,10 +451,14 @@ int CoLoad ARG1(UBYTE *,inp)
 	}
 
 	AO.SaveData.Handle = (WORD)(RetCode);
-/* --COMPRESS--? */
+
+#ifdef SYSDEPENDENTSAVE
 	if ( ReadFile(AO.SaveData.Handle,(UBYTE *)(&(AO.SaveData.Index)),
 		(LONG)sizeof(struct FiLeInDeX)) != (LONG)sizeof(struct FiLeInDeX) ) goto LoadRead;
-
+#else
+	if ( ReadSaveHeader() ) goto LoadRead;
+	if ( ReadSaveIndex(&AO.SaveData.Index) ) goto LoadRead;
+#endif
 	if ( c ) {			/* There follows a list of expressions */
 		*p++ = c;
 		inp = p;
@@ -514,6 +518,7 @@ int CoLoad ARG1(UBYTE *,inp)
 	else {				/* All saved expressions should be stored. Easy */
 		i = (WORD)(AO.SaveData.Index.number);
 		ind = AO.SaveData.Index.expression;
+#ifdef SYSDEPENDENTSAVE
 		if ( i > 0 ) { do {
 			if ( GetVar((UBYTE *)(ind->name),&type,&number,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
 				MesPrint("Conflicting name: %s",ind->name);
@@ -532,7 +537,6 @@ int CoLoad ARG1(UBYTE *,inp)
 			i--;
 			if ( i == 0 && ISNOTZEROPOS(AO.SaveData.Index.next) ) {
 				SeekFile(AO.SaveData.Handle,&(AO.SaveData.Index.next),SEEK_SET);
-/* --COMPRESS--? */
 				if ( ReadFile(AO.SaveData.Handle,(UBYTE *)(&(AO.SaveData.Index)),
 					(LONG)sizeof(struct FiLeInDeX)) != (LONG)sizeof(struct FiLeInDeX) ) goto LoadRead;
 				i = (WORD)(AO.SaveData.Index.number);
@@ -540,8 +544,45 @@ int CoLoad ARG1(UBYTE *,inp)
 			}
 			else ind++;
 		} while ( i > 0 ); }
+#else
+		if ( i > 0 ) { 
+			do {
+				if ( GetVar((UBYTE *)(ind->name),&type,&number,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+					MesPrint("Conflicting name: %s",ind->name);
+					error = -1;
+				}
+				else {
+					if ( ( num = EntVar(CEXPRESSION,(UBYTE *)(ind->name),STOREDEXPRESSION,0,0) ) >= 0 ) {
+						if ( !error ) {
+							if ( PutInStore(ind,num) ) error = -1;
+							else if ( !AM.silent && silentload == 0 )
+								MesPrint(" %s loaded",ind->name);
+						}
+					}
+					else error = -1;
+				}
+				i--;
+				if ( i == 0 && ISNOTZEROPOS(AO.SaveData.Index.next) ) {
+					SeekFile(AO.SaveData.Handle,&(AO.SaveData.Index.next),SEEK_SET);
+					if ( ReadSaveIndex(&AO.SaveData.Index) ) goto LoadRead;
+					i = (WORD)(AO.SaveData.Index.number);
+					ind = AO.SaveData.Index.expression;
+				}
+				else ind++;
+			} while ( i > 0 );
+		}
+#endif
 	}
 EndLoad:
+#ifndef SYSDEPENDENTSAVE
+	if ( AO.powerFlag ) {
+		MesPrint("WARNING: min-/maxpower had to be adjusted!");
+	}
+	if ( AO.resizeFlag ) {
+		MesPrint("ERROR: could not downsize data!");
+		return ( -2 );
+	}
+#endif
 	CloseFile(AO.SaveData.Handle);
 	return(error);
 LoadWrt:
@@ -555,7 +596,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad : 
+ 		#] CoLoad :
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -629,7 +670,7 @@ DeleteStore ARG1(WORD,par)
 }
 
 /*
- 		#] DeleteStore : 
+ 		#] DeleteStore :
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -644,44 +685,125 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 	GETIDENTITY
 	INDEXENTRY *newind;
 	LONG wSize;
+#ifndef SYSDEPENDENTSAVE
+	LONG wSizeOut;
+	LONG stage;
+	/* DEBUG */
+	LONG wo;
+#endif
 	POSITION scrpos,scrpos1;
 	newind = NextFileIndex(&(Expressions[num].onfile));
 	*newind = *ind;
+#ifndef SYSDEPENDENTSAVE
+	SETBASEPOSITION(newind->length, 0);
+#endif
 	newind->variables = AR.StoreData.Fill;
 	SeekFile(AR.StoreData.Handle,&(newind->variables),SEEK_SET);
+#ifdef SYSDEPENDENTSAVE
 	if ( ISNOTEQUALPOS(newind->variables,AR.StoreData.Fill) ) goto PutErrS;
 	newind->position = newind->variables;
 	ADDPOS(newind->position,DIFBASE(ind->position,ind->variables));
+#else
+	if ( ISNOTEQUALPOS(newind->variables,AR.StoreData.Fill) ) goto PutErrS1;
+	/* set read position to ind->variables */
+#endif
 	scrpos = ind->variables;
 	SeekFile(AO.SaveData.Handle,&scrpos,SEEK_SET);
+#ifdef SYSDEPENDENTSAVE
 	if ( ISNOTEQUALPOS(scrpos,ind->variables) ) goto PutErrS;
+#else
+	if ( ISNOTEQUALPOS(scrpos,ind->variables) ) goto PutErrS2;
+	newind->position = newind->variables;
+	/* set max size for read-in */
+#endif
 	wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
+#ifdef SYSDEPENDENTSAVE
 	scrpos = ind->length;
 	ADDPOS(scrpos,DIFBASE(ind->position,ind->variables));
 	ADD2POS(AR.StoreData.Fill,scrpos);
+#endif
 	SETBASEPOSITION(scrpos1,wSize);
+#ifndef SYSDEPENDENTSAVE
+	SETBASEPOSITION(scrpos, DIFBASE(ind->position,ind->variables));
+	/* copy variables first */
+	stage = -1;
 	do {
 		if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
-/* --COMPRESS--? */
+		wSizeOut = wSize;
+		if ( ReadSaveVariables(
+			(UBYTE *)AT.WorkPointer, (UBYTE *)AT.WorkTop, &wSize, &wSizeOut, ind, &stage) ) {
+			/*DEBUG */
+			MesPrint("A");
+			goto PutErrS;
+		}
+		if ( WriteFile(AR.StoreData.Handle, (UBYTE *)AT.WorkPointer, wSizeOut)
+		!= wSizeOut ) goto PutErrS3;
+		ADDPOS(scrpos,-wSize);
+		ADDPOS(newind->position, wSizeOut);
+		ADDPOS(AR.StoreData.Fill, wSizeOut);
+	} while ( ISPOSPOS(scrpos) );
+	/* then copy the expression itself */
+	wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
+	scrpos = ind->length;
+#endif
+	do {
+		if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
+#ifdef SYSDEPENDENTSAVE
 		if ( ReadFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 		!= wSize ) goto PutErrS;
-/* --COMPRESS--? */
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 		!= wSize ) goto PutErrS;
 		ADDPOS(scrpos,-wSize);
+#else
+		wSizeOut = wSize;
+		if ( ReadSaveExpression((UBYTE *)AT.WorkPointer, (UBYTE *)AT.WorkTop, &wSize, &wSizeOut) ) {
+			/* DEBUG */
+			MesPrint("B");
+			goto PutErrS;
+		}
+/*
+		printf("W %lu\n",wSizeOut);
+		fflush(0);
+*/
+		if ( (wo = WriteFile(AR.StoreData.Handle, (UBYTE *)AT.WorkPointer, wSizeOut))
+		!= wSizeOut ) goto PutErrS4;
+		ADDPOS(scrpos,-wSize);
+		ADDPOS(AR.StoreData.Fill, wSizeOut);
+		ADDPOS(newind->length, wSizeOut);
+#endif
 	} while ( ISPOSPOS(scrpos) );
 	scrpos = AR.StoreData.Position;
 	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
+#ifdef SYSDEPENDENTSAVE
 	if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto PutErrS;
-/* --COMPRESS-- */
+#else
+	if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto PutErrS5;
+#endif
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)sizeof(FILEINDEX))
 	== (LONG)sizeof(FILEINDEX) ) return(0);
+#ifndef SYSDEPENDENTSAVE
+PutErrS1:
+			MesPrint("1");
+PutErrS2:
+			MesPrint("2");
+PutErrS3:
+			MesPrint("3");
+PutErrS4:
+			printf("W %lu\n",wo);
+			fflush(0);
+			MesPrint("4 %l",wo);
+PutErrS5:
+			MesPrint("5");
 PutErrS:
+			MesPrint("1");
+#else
+PutErrS:
+#endif
 	return(MesPrint("File error"));
 }
 
 /*
- 		#] PutInStore : 
+ 		#] PutInStore :
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -933,7 +1055,7 @@ RegRet:;
 		}
 	}
 /*
-			#] debug : 
+			#] debug :
 */
 	return(*from);
 GTerr:
@@ -943,7 +1065,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm : 
+ 		#] GetTerm :
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.
@@ -1011,7 +1133,12 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 		if ( siz == sizeof(WORD) ) {
 			p = term;
 			j = i = *term++;
-			if ( ( i > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( -i >= AM.MaxTer/((WORD)sizeof(WORD)) ) ) {
+#ifdef SYSDEPENDENTSAVE
+			if ( ( i > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( -i >= AM.MaxTer/((WORD)sizeof(WORD)) ) )
+#else
+			if ( ( i > AM.MaxTer ) || ( -i >= AM.MaxTer ) )
+#endif
+			{
 				error = 1;
 				goto ErrGet;
 			}
@@ -1035,7 +1162,12 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 				}
 				*p += *term;
 				j = *term;
-				if ( ( j > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( j <= 0 ) ) {
+#ifdef SYSDEPENDENTSAVE
+				if ( ( j > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( j <= 0 ) )
+#else
+				if ( ( j > AM.MaxTer ) || ( j <= 0 ) )
+#endif
+				{
 					error = 3;
 					goto ErrGet;
 				}
@@ -1113,7 +1245,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm : 
+ 		#] GetOneTerm :
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1216,7 +1348,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms : 
+ 		#] GetMoreTerms :
  		#[ GetMoreFromMem :
 
 */
@@ -1309,7 +1441,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem : 
+ 		#] GetMoreFromMem :
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1518,7 +1650,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore : 
+ 		#] GetFromStore :
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1703,7 +1835,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars : 
+ 		#] DetVars :
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -1922,7 +2054,7 @@ ErrInSto:
 }
 
 /*
- 		#] ToStorage : 
+ 		#] ToStorage :
  		#[ NextFileIndex :
 */
 
@@ -1936,7 +2068,11 @@ NextFileIndex ARG1(POSITION *,indexpos)
 			return(0);
 		}
 		AR.StoreData.Index.number = 1;
+#ifdef SYSDEPENDENTSAVE
 		SETBASEPOSITION(*indexpos,(sizeof(LONG)+sizeof(POSITION)));
+#else
+		SETBASEPOSITION(*indexpos,(sizeof(LONG)+sizeof(POSITION)+sizeof(STOREHEADER)));
+#endif
 		return(AR.StoreData.Index.expression);
 	}
 	while ( AR.StoreData.Index.number >= (LONG)(INFILEINDEX) ) {
@@ -1984,25 +2120,38 @@ SetFileIndex()
 		AR.StoreData.Handle = AC.StoreHandle;
 		PUTZERO(AR.StoreData.Index.next);
 		AR.StoreData.Index.number = 0;
+#ifdef SYSDEPENDENTSAVE
 		SETBASEPOSITION(AR.StoreData.Fill,sizeof(FILEINDEX));
+#else
+		if ( WriteStoreHeader(AR.StoreData.Handle) ) return(MesPrint("Error writing storage file header"));
+		SETBASEPOSITION(AR.StoreData.Fill, (LONG)(sizeof(FILEINDEX)+sizeof(STOREHEADER)));
+#endif
 /* --COMPRESS-- */
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
 		(LONG)(sizeof(FILEINDEX)) ) return(MesPrint("Error writing storage file"));
 	}
 	else {
 		POSITION scrpos;
+#ifdef SYSDEPENDENTSAVE
 		PUTZERO(scrpos);
+#else
+		SETBASEPOSITION(scrpos, (LONG)(sizeof(STOREHEADER)));
+#endif
 		SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
 /* --COMPRESS--? */
 		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
 		(LONG)(sizeof(FILEINDEX)) ) return(MesPrint("Error reading storage file"));
 	}
+#ifdef SYSDEPENDENTSAVE
 	PUTZERO(AR.StoreData.Position);
+#else
+	SETBASEPOSITION(AR.StoreData.Position, (LONG)(sizeof(STOREHEADER)));
+#endif
 	return(0);
 }
 
 /*
- 		#] SetFileIndex : 
+ 		#] SetFileIndex :
  		#[ VarStore :
 */
 
@@ -2046,7 +2195,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 }
 
 /*
- 		#] VarStore : 
+ 		#] VarStore :
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2213,7 +2362,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber : 
+ 		#] TermRenumber :
  		#[ FindrNumber :
 */
 
@@ -2279,13 +2428,13 @@ ErrFindr2:
 }
 
 /*
- 		#] FindrNumber : 
+ 		#] FindrNumber :
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
 		If found it returns a pointer to the index entry, otherwise zero.
-		par = 0		Search by address
-		par = 1		Search by name
+		par = 0		Search by address (--> f == &AR.StoreData, called by GetTable, CoSave )
+		par = 1		Search by name    (--> f == &AO.SaveData,  called by CoLoad )
 
 		When comparing parameter fields the parameters of the expression
 		to be searched are in AT.TMaddr. This includes the primary expression
@@ -2383,18 +2532,28 @@ MesPrint("index: size: %d",ind->size);
 		}
 		f->Position = f->Index.next;
 		if ( ISEQUALPOS(f->Position,stindex) ) goto ErrGetTab;
+#ifndef SYSDEPENDENTSAVE
+		number = sizeof(struct FiLeInDeX);
+#endif
 		if ( !par ) {
 			SeekFile(AR.StoreData.Handle,&(f->Position),SEEK_SET);
 			if ( ISNOTEQUALPOS(f->Position,AR.StoreData.Position) ) goto ErrGt2;
+#ifndef SYSDEPENDENTSAVE
+			if ( ReadFile(f->Handle, (UBYTE *)(&(f->Index)), number) != number ) goto ErrGt2;
+#endif
 		}
 		else {
 			SeekFile(AO.SaveData.Handle,&(f->Position),SEEK_SET);
 			if ( ISNOTEQUALPOS(f->Position,AO.SaveData.Position) ) goto ErrGt2;
+#ifndef SYSDEPENDENTSAVE
+			if ( ReadSaveIndex(&f->Index) ) goto ErrGt2;
+#endif
 		}
+#ifdef SYSDEPENDENTSAVE
 		number = sizeof(struct FiLeInDeX);
-/* --COMPRESS-- */
 		if ( ReadFile(f->Handle,(UBYTE *)(&(f->Index)),number) !=
 		number ) goto ErrGt2;
+#endif
 	}
 ErrGetTab:
 	if ( nomatch ) {
@@ -2411,7 +2570,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex : 
+ 		#] FindInIndex :
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2579,7 +2738,7 @@ GetTable ARG2(WORD,expr,POSITION *,position)
 	}
 	}
 /*
-			#] Symbols : 
+			#] Symbols :
 			#[ Indices :
 */
 	{
@@ -2642,7 +2801,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices : 
+			#] Indices :
 			#[ Vectors :
 */
 	{
@@ -2686,7 +2845,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors : 
+			#] Vectors :
 			#[ Functions :
 */
 	{
@@ -2734,7 +2893,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions : 
+			#] Functions :
 
 	Now we skip the prototype. This sets the start position at the first term
 */
@@ -2812,7 +2971,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable : 
+ 		#] GetTable :
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
@@ -2987,7 +3146,1386 @@ WriteTrailer:
 }
 
 /*
- 		#] CopyExpression : 
+ 		#] CopyExpression :
 	#] StoreExpressions :
+	#[ System Independent Saved Expressions :
+ 		#[ Flip :
+*/
+
+#ifndef INT16
+#error "INT16 not defined!"
+#endif
+#ifndef INT32
+#error "INT32 not defined!"
+#endif
+
+VOID
+FlipN ARG2(UBYTE *,p,int,length)
+{
+	UBYTE *q, buf;
+	q = p + length;
+	do {
+		--q;
+		buf = *p; *p = *q; *q = buf;
+	} while ( ++p != q );
+}
+
+VOID
+Flip16 ARG1(UBYTE *,p)
+{
+	INT16 in = *((INT16 *)p);
+	INT16 out = ( (((in) >> 8) & 0x00FF) | (((in) << 8) & 0xFF00) );
+	*((INT16 *)p) = out;
+}
+
+VOID
+Flip32 ARG1(UBYTE *,p)
+{
+	INT32 in = *((INT32 *)p);
+	INT32 out =
+		( (((in) >> 24) & 0x000000FF) | (((in) >>  8) & 0x0000FF00) | \
+		  (((in) <<  8) & 0x00FF0000) | (((in) << 24) & 0xFF000000) );
+	*((INT32 *)p) = out;
+}
+
+#ifdef INT64
+VOID
+Flip64 ARG1(UBYTE *,p)
+{
+	INT64 in = *((INT64 *)p);
+	INT64 out =
+		( (((in) >> 56) & 0x00000000000000FF) | (((in) >> 40) & 0x000000000000FF00) | \
+		  (((in) >> 24) & 0x0000000000FF0000) | (((in) >>  8) & 0x00000000FF000000) | \
+		  (((in) <<  8) & 0x000000FF00000000) | (((in) << 24) & 0x0000FF0000000000) | \
+		  (((in) << 40) & 0x00FF000000000000) | (((in) << 56) & 0xFF00000000000000) );
+	*((INT64 *)p) = out;
+}
+#else
+VOID
+Flip64 ARG1(UBYTE *,p) { FlipN(p, 8); }
+#endif /* INT64 */
+
+VOID
+Flip128 ARG1(UBYTE *,p) { FlipN(p, 16); }
+
+/*
+ 		#] Flip :
+ 		#[ Resize :
+*/
+
+VOID
+ResizeDataBE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
+{
+	if ( slen > dlen ) {
+		src += slen - dlen;
+		while ( dlen-- ) { *dst++ = *src++; }
+	}
+	else {
+		int i = dlen - slen;
+		while ( i-- ) { *dst++ = 0; }
+		while ( slen-- ) { *dst++ = *src++; }
+	}
+}
+
+VOID
+ResizeDataLE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
+{
+	if ( slen > dlen ) {
+		while ( dlen-- ) { *dst++ = *src++; }
+	}
+	else {
+		int i = dlen - slen;
+		while ( slen-- ) { *dst++ = *src++; }
+		while ( i-- ) { *dst++ = 0; }
+	}
+}
+
+VOID
+Resize16t16 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	*((INT16 *)dst) = *((INT16 *)src);
+}
+
+VOID
+Resize16t32 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT16 in = *((INT16 *)src);
+	INT32 out = (INT32)in;
+	*((INT32 *)dst) = out;
+}
+
+#ifdef INT64
+VOID
+Resize16t64 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT16 in = *((INT16 *)src);
+	INT64 out = (INT64)in;
+	*((INT64 *)dst) = out;
+}
+#else
+VOID
+Resize16t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 2, dst, 8); }
+#endif /* INT64 */
+
+VOID
+Resize16t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 2, dst, 16); }
+
+VOID
+Resize32t32 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	*((INT32 *)dst) = *((INT32 *)src);
+}
+
+#ifdef INT64
+VOID
+Resize32t64 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT32 in = *((INT32 *)src);
+	INT64 out = (INT64)in;
+	*((INT64 *)dst) = out;
+}
+#else
+VOID
+Resize32t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 4, dst, 8); }
+#endif /* INT64 */
+
+VOID
+Resize32t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 4, dst, 16); }
+
+#ifdef INT64
+VOID
+Resize64t64 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	*((INT64 *)dst) = *((INT64 *)src);
+}
+#else
+VOID
+Resize64t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 8); }
+#endif /* INT64 */
+
+VOID
+Resize64t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 16); }
+
+VOID
+Resize128t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 16); }
+
+VOID
+Resize32t16 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT32 in = *((INT32 *)src);
+	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
+	INT16 out = (INT16)in;
+	*((INT16 *)dst) = out;
+}
+
+VOID
+Resize32t16NC ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT32 in = *((INT32 *)src);
+	INT16 out = (INT16)in;
+	*((INT16 *)dst) = out;
+}
+
+#ifdef INT64
+VOID
+Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT64 in = *((INT64 *)src);
+	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
+	INT16 out = (INT16)in;
+	*((INT16 *)dst) = out;
+}
+VOID
+Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT64 in = *((INT64 *)src);
+	INT16 out = (INT16)in;
+	*((INT16 *)dst) = out;
+}
+#else
+VOID
+Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 2); }
+VOID
+Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 2); }
+#endif /* INT64 */
+
+#ifdef INT64
+VOID
+Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT64 in = *((INT64 *)src);
+	if ( in > ((INT64)1<<31)-1 || in < -((INT64)1<<31)+1 ) AO.resizeFlag |= 1;
+	INT32 out = (INT32)in;
+	*((INT32 *)dst) = out;
+}
+VOID
+Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst)
+{
+	INT64 in = *((INT64 *)src);
+	INT32 out = (INT32)in;
+	*((INT32 *)dst) = out;
+}
+#else
+VOID
+Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 4); }
+VOID
+Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 4); }
+#endif /* INT64 */
+
+VOID
+Resize128t16 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 2); }
+
+VOID
+Resize128t16NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 2); }
+
+VOID
+Resize128t32 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 4); }
+
+VOID
+Resize128t32NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 4); }
+
+VOID
+Resize128t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
+
+VOID
+Resize128t64NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
+
+/*
+.		#] Resize :
+ 		#[ CheckPower and RenumberVec :
+*/
+
+VOID
+CheckPower32 ARG1(UBYTE *,p)
+{
+	if ( *((INT32 *)p) < -MAXPOWER ) {
+		AO.powerFlag |= 0x01;
+		*((INT32 *)p) = -MAXPOWER;
+	}
+	p += sizeof(INT32);
+	if ( *((INT32 *)p) > MAXPOWER ) {
+		AO.powerFlag |= 0x02;
+		*((INT32 *)p) = MAXPOWER;
+	}
+}
+
+VOID
+RenumberVec32 ARG1(UBYTE *,p)
+{
+	INT32 wildoffset = *((INT32 *)AO.SaveHeader.wildoffset);
+	INT32 in = *((INT32 *)p);
+	in = in + 2*wildoffset;
+	in = in - 2*WILDOFFSET;
+	*((INT32 *)p) = in;
+}
+
+/*
+.		#] CheckPower and RenumberVec :
+ 		#[ ResizeCoeff :
+*/
+
+VOID
+ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
+{
+	int i;
+	INT32 sign;
+	INT32 *in, *p;
+	INT32 *out = (INT32 *)*bout;
+	INT32 *end = (INT32 *)bend;
+
+	if ( sizeof(WORD) == 2 ) {
+		/* 4 -> 2 */
+		INT32 len = (end - 1 - out) / 2;
+		int zeros = 2;
+		p = out + len - 1;
+
+		if ( *p & 0xFFFF0000 ) --zeros;
+		p += len;
+		if ( *p & 0xFFFF0000 ) --zeros;
+
+		in = end - 1;
+		sign = ( *in-- > 0 ) ? 1 : -1;
+		p = out + 4*len;
+		if ( zeros == 2 ) p -= 2;
+		out = p--;
+
+		if ( zeros < 2 ) *p-- = *in >> 16;
+		*p-- = *in-- & 0x0000FFFF;
+		for ( i = 1; i < len; ++i ) {
+			*p-- = *in >> 16;
+			*p-- = *in-- & 0x0000FFFF;
+		}
+		if ( zeros < 2 ) *p-- = *in >> 16;
+		*p-- = *in-- & 0x0000FFFF;
+		for ( i = 1; i < len; ++i ) {
+			*p-- = *in >> 16;
+			*p-- = *in-- & 0x0000FFFF;
+		}
+
+		*out = (out - p) * sign;
+		*bout = (UBYTE *)(out+1);
+
+	}
+	else {
+		/* TODO check for out > top */
+		/* 2 -> 4 */
+		INT32 len = (end - 1 - out) / 2;
+		if ( len == 1 ) {
+			*out = *(unsigned INT16 *)out;
+			++out;
+			*out = *(unsigned INT16 *)out;
+			++out;
+			++out;
+		}
+		else {
+			p = out;
+			*out = *(unsigned INT16 *)out;
+			in = out + 1;
+			for ( i = 1; i < len; ++i ) {
+				/* shift */
+				*out = (unsigned INT32)(*(unsigned INT16 *)out)
+					+ ((unsigned INT32)(*(unsigned INT16 *)in) << 16);
+				++in;
+				if ( ++i == len ) break;
+				/* copy */
+				++out;
+				*out = *(unsigned INT16 *)in;
+				++in;
+			}
+			++out;
+			*out = *(unsigned INT16 *)in;
+			++in;
+			for ( i = 1; i < len; ++i ) {
+				/* shift */
+				*out = (unsigned INT32)(*(unsigned INT16 *)out)
+					+ ((unsigned INT32)(*(unsigned INT16 *)in) << 16);
+				++in;
+				if ( ++i == len ) break;
+				/* copy */
+				++out;
+				*out = *(unsigned INT16 *)in;
+				++in;
+			}
+			++out;
+			if ( *in < 0 ) *out = -(out - p + 1);
+			else *out = out - p + 1;
+			++out;
+		}
+
+		*bout = (UBYTE *)out;
+	}
+}
+
+/*
+ 		#] ResizeCoeff :
+ 		#[ WriteStoreHeader :
+*/
+
+WORD
+WriteStoreHeader ARG1(WORD,handle)
+{
+	static STOREHEADER sh = {
+		{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },	/* store header mark */
+		0, 0, 0, 0,											/* sizeof of WORD,LONG,POSITION,void* */
+		{},													/* endianness check number */
+		0, 0, 0, 0,											/* sizeof variable structs */
+		{},													/* maxpower */
+		{},													/* wildoffset */
+		0x01,												/* revision */
+		{} };												/* reserved */
+	int endian, i;
+
+	if ( sh.lenWORD == 0 ) {
+		sh.lenWORD = sizeof(WORD);
+		sh.lenLONG = sizeof(LONG);
+		sh.lenPOS = sizeof(POSITION);
+		sh.lenPOINTER = sizeof(void *);
+
+		endian = 1;
+		for ( i = 1; i < sizeof(int); ++i ) {
+			endian <<= 8;
+			endian += i+1;
+		}
+		for ( i = 0; i < sizeof(int); ++i ) sh.endianness[i] = ((char *)&endian)[i];
+
+		sh.sSym = sizeof(struct SyMbOl);
+		sh.sInd = sizeof(struct InDeX);
+		sh.sVec = sizeof(struct VeCtOr);
+		sh.sFun = sizeof(struct FuNcTiOn);
+
+		*((WORD *)sh.maxpower) = MAXPOWER;
+		*((WORD *)sh.wildoffset) = WILDOFFSET;
+	}
+
+	return ( WriteFile(handle,(UBYTE *)(&sh),(LONG)(sizeof(STOREHEADER)))
+	         != (LONG)(sizeof(STOREHEADER)) );
+}
+
+/*
+ 		#] WriteStoreHeader :
+ 		#[ ReadSaveHeader :
+*/
+
+unsigned int
+CompactifySizeof ARG1(unsigned int,size)
+{
+	switch ( size ) {
+		case  2: return 0;
+		case  4: return 1;
+		case  8: return 2;
+		case 16: return 3;
+		default: MesPrint("Error compactifying size.");
+		         return 3;
+	}
+}
+
+WORD
+ReadSaveHeader()
+{
+	static VOID (*flipJumpTable[4])(UBYTE *) =
+		{ Flip16, Flip32, Flip64, Flip128 };
+	static VOID (*resizeJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
+		{ { Resize16t16,  Resize32t16,  Resize64t16,  Resize128t16  },
+		  { Resize16t32,  Resize32t32,  Resize64t32,  Resize128t32  },
+		  { Resize16t64,  Resize32t64,  Resize64t64,  Resize128t64  },
+		  { Resize16t128, Resize32t128, Resize64t128, Resize128t128 } };
+	static VOID (*resizeNCJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
+		{ { Resize16t16,  Resize32t16NC,  Resize64t16NC,  Resize128t16NC  },
+		  { Resize16t32,  Resize32t32,  Resize64t32NC,  Resize128t32NC  },
+		  { Resize16t64,  Resize32t64,  Resize64t64,  Resize128t64NC  },
+		  { Resize16t128, Resize32t128, Resize64t128, Resize128t128 } };
+	int endian, i;
+	WORD idxW = CompactifySizeof(sizeof(WORD));
+	WORD idxL = CompactifySizeof(sizeof(LONG));
+	WORD idxP = CompactifySizeof(sizeof(POSITION));
+	WORD idxVP = CompactifySizeof(sizeof(void *));
+
+	AO.transFlag = 0;
+	AO.powerFlag = 0;
+	AO.resizeFlag = 0;
+	AO.bufferedInd = 0;
+
+	if ( ReadFile(AO.SaveData.Handle,(UBYTE *)(&AO.SaveHeader),
+		(LONG)sizeof(STOREHEADER)) != (LONG)sizeof(STOREHEADER) )
+		return(MesPrint("Error reading save file header"));
+
+	/* check whether save-file has no header -> old version */
+	for ( i = 0; i < 8; ++i ) {
+		if ( AO.SaveHeader.headermark[i] != 0xFF ) {
+			POSITION p;
+			PUTZERO(p);
+			SeekFile(AO.SaveData.Handle, &p, SEEK_SET);
+			return ( 0 );
+		}
+	}
+
+	endian = 1;
+	for ( i = 1; i < sizeof(int); ++i ) {
+		endian <<= 8;
+		endian += i+1;
+	}
+	if ( ((char *)&endian)[0] < ((char *)&endian)[1] ) {
+		/* this machine is big-endian */
+		AO.ResizeData = ResizeDataBE;
+	}
+	else {
+		/* this machine is little-endian */
+		AO.ResizeData = ResizeDataLE;
+	}
+
+	if ( AO.SaveHeader.endianness[0] > AO.SaveHeader.endianness[1] ) {
+		AO.transFlag = ( ((char *)&endian)[0] < ((char *)&endian)[1] );
+	}
+	else {
+		AO.transFlag = ( ((char *)&endian)[0] > ((char *)&endian)[1] );
+	}
+	if ( (WORD)AO.SaveHeader.lenWORD != sizeof(WORD) ) AO.transFlag |= 0x02;
+	if ( (WORD)AO.SaveHeader.lenLONG != sizeof(LONG) ) AO.transFlag |= 0x04;
+	if ( (WORD)AO.SaveHeader.lenPOS != sizeof(POSITION) ) AO.transFlag |= 0x08;
+	if ( (WORD)AO.SaveHeader.lenPOINTER != sizeof(void *) ) AO.transFlag |= 0x10;
+
+	AO.FlipWORD = flipJumpTable[idxW];
+	AO.FlipLONG = flipJumpTable[idxL];
+	AO.FlipPOS = flipJumpTable[idxP];
+	AO.FlipPOINTER = flipJumpTable[idxVP];
+
+	/* Works only for machines where WORD is not greater than 32bit */
+	AO.CheckPower = CheckPower32;
+	AO.RenumberVec = RenumberVec32;
+
+	AO.ResizeWORD = resizeJumpTable[idxW][CompactifySizeof(AO.SaveHeader.lenWORD)];
+	AO.ResizeNCWORD = resizeNCJumpTable[idxW][CompactifySizeof(AO.SaveHeader.lenWORD)];
+	AO.ResizeLONG = resizeJumpTable[idxL][CompactifySizeof(AO.SaveHeader.lenLONG)];
+	AO.ResizePOS = resizeJumpTable[idxP][CompactifySizeof(AO.SaveHeader.lenPOS)];
+	AO.ResizePOINTER = resizeJumpTable[idxVP][CompactifySizeof(AO.SaveHeader.lenPOINTER)];
+
+	return ( 0 );
+}
+
+/*
+ 		#] ReadSaveHeader :
+ 		#[ ReadSaveIndex :
+*/
+
+WORD
+ReadSaveIndex ARG1(FILEINDEX *,fileind)
+{
+	if ( AO.transFlag ) {
+		static FILEINDEX sbuffer;
+		FILEINDEX buffer;
+		UBYTE *p, *q;
+		int i;
+
+		int lenW = AO.SaveHeader.lenWORD;
+		int lenL = AO.SaveHeader.lenLONG;
+		int lenP = AO.SaveHeader.lenPOS;
+
+		if ( AO.bufferedInd ) {
+			*fileind = sbuffer;
+			AO.bufferedInd = 0;
+			return ( 0 );
+		}
+
+		if ( ReadFile(AO.SaveData.Handle, (UBYTE *)fileind, sizeof(FILEINDEX))
+				!= sizeof(FILEINDEX) ) {
+			return ( MesPrint("Error reading stored expression.") );
+		}
+
+		if ( AO.transFlag & 1 ) {
+			LONG number;
+			int padp = MAXPOWER + 1 + lenL - ((lenW*5+(MAXENAME + 1)) & (lenL-1));
+			p = (UBYTE *)fileind;
+			AO.FlipPOS(p); p += lenP;			/* next */
+			AO.FlipLONG(p);						/* number */
+			AO.ResizeLONG(p, (UBYTE *)&number);
+			p += lenL;
+			for ( i = 0; i < number; ++i ) {
+				AO.FlipPOS(p); p += lenP;		/* position */
+				AO.FlipPOS(p); p += lenP;		/* length */
+				AO.FlipPOS(p); p += lenP;		/* variables */
+				AO.FlipLONG(p); p += lenL;		/* CompressSize */
+				AO.FlipWORD(p); p += lenW;		/* nsymbols */
+				AO.FlipWORD(p); p += lenW;		/* nindices */
+				AO.FlipWORD(p); p += lenW;		/* nvectors */
+				AO.FlipWORD(p); p += lenW;		/* nfunctions */
+				AO.FlipWORD(p); p += lenW;		/* size */
+				p += padp;
+			}
+		}
+
+		if ( AO.transFlag > 1 ) {
+			int n;
+			int padp = lenL - ((lenW*5+(MAXENAME + 1)) & (lenL-1));
+			int padq = sizeof(LONG) - ((sizeof(WORD)*5+(MAXENAME + 1)) & (sizeof(LONG)-1));
+			LONG number, maxnumber;
+
+			p = (UBYTE *)fileind; q = (UBYTE *)&buffer;
+			AO.ResizePOS(p, q);						/* next */
+			p += lenP; q += sizeof(POSITION);
+			AO.ResizeLONG(p, q);					/* number */
+			p += lenL;
+			number = *((LONG *)q);
+			if ( number > INFILEINDEX ) {
+				AO.bufferedInd = number-INFILEINDEX;
+				if ( AO.bufferedInd > INFILEINDEX ) {
+					/* can happen when reading 32bit and writing >=128bit */
+					return ( MesPrint("Too many index entries.") );
+				}
+				maxnumber = INFILEINDEX;
+				*((LONG *)q) = INFILEINDEX;
+			}
+			else {
+				maxnumber = number;
+			}
+			q += sizeof(LONG);
+			for ( i = 0; i < maxnumber; ++i ) {
+				AO.ResizePOS(p, q);					/* position */
+				p += lenP; q += sizeof(POSITION);
+				AO.ResizePOS(p, q);					/* length */
+				p += lenP; q += sizeof(POSITION);
+				AO.ResizePOS(p, q);					/* variables */
+				p += lenP; q += sizeof(POSITION);
+				AO.ResizeLONG(p, q);				/* CompressSize */
+				p += lenL; q += sizeof(LONG);
+				AO.ResizeWORD(p, q);				/* nsymbols */
+				p += lenW; q += sizeof(WORD);
+				AO.ResizeWORD(p, q);				/* nindices */
+				p += lenW; q += sizeof(WORD);
+				AO.ResizeWORD(p, q);				/* nvectors */
+				p += lenW; q += sizeof(WORD);
+				AO.ResizeWORD(p, q);				/* nfunctions */
+				p += lenW; q += sizeof(WORD);
+				AO.ResizeWORD(p, q);				/* size (unchanged!) */
+				p += lenW; q += sizeof(WORD);
+				n = MAXENAME + 1;
+				NCOPY(q, p, n)
+				p += padp;
+				q += padq;
+			}
+			if ( AO.bufferedInd ) {
+				sbuffer.next = buffer.next;
+				sbuffer.number = AO.bufferedInd;
+				q = (UBYTE *)&sbuffer + sizeof(POSITION) + sizeof(LONG);
+				for ( i = maxnumber; i < number; ++i ) {
+					AO.ResizePOS(p, q);				/* position */
+					p += lenP; q += sizeof(POSITION);
+					AO.ResizePOS(p, q);				/* length */
+					p += lenP; q += sizeof(POSITION);
+					AO.ResizePOS(p, q);				/* variables */
+					p += lenP; q += sizeof(POSITION);
+					AO.ResizeLONG(p, q);			/* CompressSize */
+					p += lenL; q += sizeof(LONG);
+					AO.ResizeWORD(p, q);			/* nsymbols */
+					p += lenW; q += sizeof(WORD);
+					AO.ResizeWORD(p, q);			/* nindices */
+					p += lenW; q += sizeof(WORD);
+					AO.ResizeWORD(p, q);			/* nvectors */
+					p += lenW; q += sizeof(WORD);
+					AO.ResizeWORD(p, q);			/* nfunctions */
+					p += lenW; q += sizeof(WORD);
+					AO.ResizeWORD(p, q);			/* size (unchanged!) */
+					p += lenW; q += sizeof(WORD);
+					n = MAXENAME + 1;
+					NCOPY(q, p, n)
+					p += padp;
+					q += padq;
+				}
+			}
+			p = (UBYTE *)fileind; q = (UBYTE *)&buffer; n = sizeof(FILEINDEX);
+			NCOPY(p, q, n)
+		}
+
+		return ( 0 );
+	} else {
+		return ( ReadFile(AO.SaveData.Handle, (UBYTE *)fileind, sizeof(FILEINDEX))
+		         != sizeof(FILEINDEX) );
+	}
+}
+
+/*
+ 		#] ReadSaveIndex :
+ 		#[ ReadSaveVariables :
+*/
+
+WORD
+ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,INDEXENTRY *,ind,LONG *,stage)
+{
+	if ( AO.transFlag ) {
+		static WORD numReadSym;
+		static WORD numReadInd;
+		static WORD numReadVec;
+		static WORD numReadFun;
+		UBYTE *in, *out, *pp, *end;
+		WORD namelen, realnamelen;
+		WORD lenW = AO.SaveHeader.lenWORD;
+		WORD lenL = AO.SaveHeader.lenLONG;
+		WORD lenP = AO.SaveHeader.lenPOINTER;
+		WORD flip = AO.transFlag & 1;
+		POSITION pos;
+		TELLFILE(AO.SaveData.Handle,&pos);
+
+		if ( (lenW > sizeof(WORD))
+		|| ( (lenW == sizeof(WORD))
+		     && ( (lenL > sizeof(LONG))
+		          || ( (lenL == sizeof(LONG)) && lenP > sizeof(void *))
+		        )
+		   ) ) {
+			in = out = buffer;
+			end = buffer + *size;
+		}
+		else {
+			end = top;
+			LONG newsize = (end - buffer) / (1 + sizeof(WORD)/lenW);
+			out = buffer;
+			in = end - newsize;
+			if ( *size > newsize ) *size = newsize;
+		}
+
+		if ( ReadFile(AO.SaveData.Handle, in, *size) != *size ) {
+			return ( MesPrint("Error reading stored expression.") );
+		}
+
+		*size = 0;
+		*outsize = 0;
+
+		if ( *stage == -1 ) {
+			numReadSym = 0;
+			numReadInd = 0;
+			numReadVec = 0;
+			numReadFun = 0;
+			++*stage;
+		}
+
+		while ( in < end ) {
+			/* Symbols */
+			if ( *stage == 0 ) {
+				if ( ind->nsymbols <= numReadSym ) {
+					++*stage;
+					continue;
+				}
+				if ( end - in < AO.SaveHeader.sSym ) {
+					goto RSVEnd;
+				}
+				if ( flip ) {
+					pp = in;
+					AO.FlipLONG(pp); pp += lenL;
+					while ( pp < in + AO.SaveHeader.sSym ) {
+						AO.FlipWORD(pp); pp += lenW;
+					}
+				}
+				pp = in + AO.SaveHeader.sSym;
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
+				AO.CheckPower(in);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; 
+				realnamelen = *((WORD *)out);
+				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
+				out += sizeof(WORD);
+				while ( in < pp ) {
+					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				}
+				namelen = *((WORD *)out-1); /* cares for padding "bug" */
+				if ( end - in < namelen ) {
+					goto RSVEnd;
+				}
+				*((WORD *)out-1) = realnamelen;
+				*size += AO.SaveHeader.sSym + namelen;
+				*outsize += sizeof(struct SyMbOl) + realnamelen;
+				namelen -= realnamelen;
+				NCOPY(out, in, realnamelen);
+				in += namelen;
+				++numReadSym;
+				continue;
+			}
+			/* Indices */
+			if ( *stage == 1 ) {
+				if ( ind->nindices <= numReadInd ) {
+					++*stage;
+					continue;
+				}
+				if ( end - in < AO.SaveHeader.sInd ) {
+					goto RSVEnd;
+				}
+				if ( flip ) {
+					pp = in;
+					AO.FlipLONG(pp); pp += lenL;
+					while ( pp < in + AO.SaveHeader.sInd ) {
+						AO.FlipWORD(pp); pp += lenW;
+					}
+				}
+				pp = in + AO.SaveHeader.sInd;
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW;
+				realnamelen = *((WORD *)out);
+				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
+				out += sizeof(WORD);
+				while ( in < pp ) {
+					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				}
+				namelen = *((WORD *)out-1); /* cares for padding "bug" */
+				if ( end - in < namelen ) {
+					goto RSVEnd;
+				}
+				*((WORD *)out-1) = realnamelen;
+				*size += AO.SaveHeader.sInd + namelen;
+				*outsize += sizeof(struct InDeX) + realnamelen;
+				namelen -= realnamelen;
+				NCOPY(out, in, realnamelen);
+				in += namelen;
+				++numReadInd;
+				continue;
+			}
+			/* Vectors */
+			if ( *stage == 2 ) {
+				if ( ind->nvectors <= numReadVec ) {
+					++*stage;
+					continue;
+				}
+				if ( end - in < AO.SaveHeader.sVec ) {
+					goto RSVEnd;
+				}
+				if ( flip ) {
+					pp = in;
+					AO.FlipLONG(pp); pp += lenL;
+					while ( pp < in + AO.SaveHeader.sVec ) {
+						AO.FlipWORD(pp); pp += lenW;
+					}
+				}
+				pp = in + AO.SaveHeader.sVec;
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW;
+				realnamelen = *((WORD *)out);
+				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
+				out += sizeof(WORD);
+				while ( in < pp ) {
+					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				}
+				namelen = *((WORD *)out-1); /* cares for padding "bug" */
+				if ( end - in < namelen ) {
+					goto RSVEnd;
+				}
+				*((WORD *)out-1) = realnamelen;
+				*size += AO.SaveHeader.sVec + namelen;
+				*outsize += sizeof(struct VeCtOr) + realnamelen;
+				namelen -= realnamelen;
+				NCOPY(out, in, realnamelen);
+				in += namelen;
+				++numReadVec;
+				continue;
+			}
+			/* Functions */
+			if ( *stage == 3 ) {
+				if ( ind->nfunctions <= numReadFun ) {
+					++*stage;
+					continue;
+				}
+				if ( end - in < AO.SaveHeader.sFun ) {
+					goto RSVEnd;
+				}
+				if ( flip ) {
+					pp = in;
+					AO.FlipPOINTER(pp); pp += lenP;
+					AO.FlipLONG(pp); pp += lenL;
+					AO.FlipLONG(pp); pp += lenL;
+					while ( pp < in + AO.SaveHeader.sFun ) {
+						AO.FlipWORD(pp); pp += lenW;
+					}
+				}
+				pp = in + AO.SaveHeader.sFun;
+				AO.ResizePOINTER(in, out); in += lenP; out += sizeof(void *);
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW;
+				realnamelen = *((WORD *)out);
+				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
+				out += sizeof(WORD);
+				while ( in < pp ) {
+					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
+				}
+				namelen = *((WORD *)out-1); /* cares for padding "bug" */
+				if ( end - in < namelen ) {
+					goto RSVEnd;
+				}
+				*((WORD *)out-1) = realnamelen;
+				*size += AO.SaveHeader.sFun + namelen;
+				*outsize += sizeof(struct FuNcTiOn) + realnamelen;
+				namelen -= realnamelen;
+				NCOPY(out, in, realnamelen);
+				in += namelen;
+				++numReadFun;
+				continue;
+			}
+			/* handle numdummies */
+			if ( end - in == lenW ) {
+				AO.FlipWORD(pp); pp += lenW;
+				AO.ResizeWORD(in, out);
+				*size += lenW;
+				*outsize += sizeof(WORD);
+			}
+			return ( 0 );
+		}
+
+RSVEnd:
+		ADDPOS(pos, *size);
+		SeekFile(AO.SaveData.Handle, &pos, SEEK_SET);
+		return ( 0 );
+	} else {
+		return ( ReadFile(AO.SaveData.Handle, buffer, *size) != *size );
+	}
+}
+
+/*
+ 		#] ReadSaveVariables :
+ 		#[ ReadSaveTerm :
+*/
+
+UBYTE *
+ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *top, int terminbuf)
+{
+	GETIDENTITY
+
+	INT32 len, j, id;
+	INT32 *r, *t, *coeff, *end, *newtermsize, *rend;
+	INT32 *newsubtermp;
+	INT32 *in = (INT32 *)bin;
+	INT32 *out = (INT32 *)*bout;
+
+	/* if called recursively the term is already in buffer. is it the case? */
+	if ( terminbuf ) {
+		len = *out;
+		end = out + len;
+		r = in + 1;
+		rend = (INT32 *)boutend;
+		coeff = end - ABS(*(end-1));
+		newtermsize = (INT32 *)*bout;
+		out = newtermsize + 1;
+	}
+	else {
+		r = (INT32 *)AR.CompressBuffer;
+		INT32 rbuf = *r;
+
+		len = j = *in;
+		if ( j < 0 ) {
+			++in;
+			if ( (UBYTE *)in >= binend ) {
+				return ( bin );
+			}
+			*out = len = -j + 1 + *in;
+			end = out + *out;
+			if ( (UBYTE *)end >= top )
+			{
+				return ( bin );
+			}
+			++out;
+			*r++ = len;
+			while ( ++j <= 0 ) {
+				INT32 bb = *r++;
+				*out++ = bb;
+			}
+			j = *in++;
+		}
+		else if ( j == 0 ) {
+			/* care for padding words */
+			while ( (UBYTE *)in < binend ) {
+				*out++ = 0;
+				if ( (UBYTE *)out > top ) {
+					return ( (UBYTE *)bin );
+				}
+
+				*r++ = 0;
+				++in;
+			}
+			*bout = (UBYTE *)out;
+			return ( (UBYTE *)in );
+		}
+		else {
+			end = out + len;
+			if ( (UBYTE *)end >= top ) {
+				return ( bin );
+			}
+		}
+		if ( (UBYTE *)(in + j) >= binend ) {
+			*(AR.CompressBuffer) = rbuf;
+			return ( bin );
+		}
+		if ( (UBYTE *)out + j >= top ) {
+			return ( bin );
+		}
+		while ( --j >= 0 )
+		{
+			INT32 bb = *in++;
+			*r++ = *out++ = bb;
+		}
+
+		rend = r;
+
+		r = (INT32 *)AR.CompressBuffer + 1;
+		coeff = end - ABS(*(end-1));
+		newtermsize = (INT32 *)*bout;
+		out = newtermsize + 1;
+	}
+
+	/* iterate over subterms */
+	while ( out < coeff ) {
+
+		id = *out++;
+		++r;
+		t = out + *out - 1;
+		newsubtermp = out;
+		++out;
+		++r;
+
+		if ( id == SYMBOL ) {
+			while ( out < t ) {
+				++out;	/* symbol number */
+				++r;
+				if ( ABS(*out) >= MAXPOWER ) { 
+					INT32 *a, *b;
+					INT32 n;
+					INT32 num = *(out-1);
+					INT32 exp = *out;
+					coeff += 9;
+					end += 9;
+					t += 9;
+					if ( (UBYTE *)end > top ) return ( bin );
+					out -= 3;
+					*out++ = EXPONENT;		/* id */
+					*out++ = 13;			/* size */
+					*out++ = 1;				/* dirtyflag */
+					*out++ = -SYMBOL;		/* first short arg */
+					*out++ = num;
+					*out++ = 8;				/* second arg, size */
+					*out++ = 0;				/* dirtyflag */
+					*out++ = 6;				/* term size */
+					*out++ = ABS(exp) & 0x0000FFFF;
+					*out++ = ABS(exp) >> 16;
+					*out++ = 1;	
+					*out++ = 0;
+					*out++ = ( exp < 0 ) ? -5 : 5;
+					a = ++r;
+					b = out;
+					n = rend - r;
+					NCOPY(b, a, n)
+				}
+				else {
+					++out;
+					++r;
+				}
+			}
+		}
+		else if ( id == DOTPRODUCT ) {
+			while ( out < t ) {
+				AO.RenumberVec((UBYTE *)out);
+				++out;
+				++r;
+				AO.RenumberVec((UBYTE *)out);
+				++out;
+				++r;
+				if ( ABS(*out) >= MAXPOWER ) { 
+					INT32 *a, *b;
+					INT32 n;
+					INT32 num1 = *(out-2);
+					INT32 num2 = *(out-1);
+					INT32 exp = *out;
+					coeff += 17;
+					end += 17;
+					t += 17;
+					if ( (UBYTE *)end > top ) return ( bin );
+					out -= 4;
+					*out++ = EXPONENT;		/* id */
+					*out++ = 22;			/* size */
+					*out++ = 1;				/* dirtyflag */
+					*out++ = 11;			/* first arg, size */
+					*out++ = 0;				/* dirtyflag */
+					*out++ = 9;				/* term size */
+					*out++ = DOTPRODUCT;	/* p1.p2 */
+					*out++ = 5;				/* subterm size */
+					*out++ = num1;			/* p1 */
+					*out++ = num2;			/* p2 */
+					*out++ = 1;				/* exponent */
+					*out++ = 1;				/* coeff */
+					*out++ = 1;
+					*out++ = 3;
+					*out++ = 8;				/* second arg, size */
+					*out++ = 0;				/* dirtyflag */
+					*out++ = 6;				/* term size */
+					*out++ = ABS(exp) & 0x0000FFFF;
+					*out++ = ABS(exp) >> 16;
+					*out++ = 1;	
+					*out++ = 0;
+					*out++ = ( exp < 0 ) ? -5 : 5;
+					a = ++r;
+					b = out;
+					n = rend - r;
+					NCOPY(b, a, n)
+				}
+				else {
+					++out;
+					++r;
+				}
+			}
+		}
+		else if ( id == VECTOR ) {
+			while ( out < t ) {
+				AO.RenumberVec((UBYTE *)out);
+				++out;
+				++r;
+				++out;
+				++r;
+			}
+		}
+		else if ( id == INDEX ) {
+			r += t - out;
+			out = t;
+		}
+		else if ( id == SUBEXPRESSION ) {
+			while ( out < t ) {
+				++out;
+				++r;
+			}
+		}
+		else if ( id == DELTA || 
+		          (id >= FUNCTION && functions[id-FUNCTION].spec >= TENSORFUNCTION) ) {
+				r += t - out;
+				out = t;
+		}
+		else if ( id >= FUNCTION ) {
+			INT32 *argEnd;
+			UBYTE *newbin;
+			++out;
+			++r;
+			while ( out < t ) {
+				if ( *out < 0 ) {
+					/* short notation */
+					switch ( -*out ) {
+						case SYMBOL:
+							++out;
+							++r;
+							++out;
+							++r;
+							break;
+						case SNUMBER:
+							++out;
+							++r;
+							if ( sizeof(WORD) == 2 ) {
+								/* resize if needed */
+								if ( *out > (1<<15)-1 || *out < -(1<<15)+1 ) {
+									INT32 *a, *b;
+									INT32 n;
+									INT32 num = *out;
+									coeff += 6;
+									end += 6;
+									argEnd += 6;
+									t += 6;
+									if ( (UBYTE *)end > top ) return ( bin );
+									--out;
+									*out++ = 8;			/* argument size */
+									*out++ = 0;			/* dirtyflag */
+									*out++ = 6;			/* term size */
+									*out++ = ABS(num) & 0x0000FFFF;
+									*out++ = ABS(num) >> 16;
+									*out++ = 1;
+									*out++ = 0;
+									*out++ = ( num < 0 ) ? -5 : 5;
+									a = ++r;
+									b = out;
+									n = rend - r;
+									NCOPY(b, a, n)
+								}
+								else {
+									++out;
+									++r;
+								}
+							}
+							else {
+								++out;
+								++r;
+							}
+							break;
+						case VECTOR:
+							++out;
+							++r;
+							AO.RenumberVec((UBYTE *)out);
+							++out;
+							++r;
+							break;
+						case INDEX:
+							++out;
+							++r;
+							++out;
+							++r;
+							break;
+						case MINVECTOR:
+							++out;
+							++r;
+							AO.RenumberVec((UBYTE *)out);
+							++out;
+							++r;
+							break;
+						default:
+							if ( -*out >= FUNCTION ) {
+								++out;
+								++r;
+								break;
+							} else {
+								MesPrint("short function code %d not implemented.", *out);
+								return ( (UBYTE *)in );
+							}
+					}
+				}
+				else {
+					INT32 *newargsize = out;
+					argEnd = out + *out;
+					++out;
+					++r;
+					++out;
+					++r;
+					while ( out < argEnd ) {
+						INT32 *keepsizep = out + *out;
+						INT32 lenbuf = *out;
+						newbin = ReadSaveTerm32((UBYTE *)r, binend, (UBYTE **)&out, (UBYTE *)rend, top, 1);
+						r += lenbuf;
+						if ( newbin == (UBYTE *)r ) {
+							return ( (UBYTE *)in );
+						}
+						if ( out > keepsizep ) {
+							INT32 *a, *b;
+							INT32 n;
+							INT32 extention = out - keepsizep;
+							a = r;
+							b = out;
+							n = rend - r;
+							NCOPY(b, a, n)
+							coeff += extention;
+							end += extention;
+							argEnd += extention;
+							t += extention;
+						}
+						else if ( out < keepsizep ) {
+							INT32 *a, *b;
+							INT32 n;
+							INT32 extention = keepsizep - out;
+							a = keepsizep;
+							b = out;
+							n = rend - r;
+							NCOPY(b, a, n)
+							coeff -= extention;
+							end -= extention;
+							argEnd -= extention;
+							t -= extention;
+						}
+					}
+					*newargsize = out - newargsize;
+				}
+			}
+		}
+		else {
+			MesPrint("ID %d not recognized.", id);
+			return ( (UBYTE *)in );
+		}
+
+		*newsubtermp = out - newsubtermp + 1;
+	}
+
+	if ( (UBYTE *)end >= top ) {
+		return ( bin );
+	}
+
+	/* do coefficient and adjust term size */
+	UBYTE *boutbuf = *bout;
+	*bout = (UBYTE *)out;
+
+	ResizeCoeff32(bout, (UBYTE *)end, top);
+
+	if ( *bout >= top ) {
+		*bout = boutbuf;
+		return ( bin );
+	}
+
+	*newtermsize = (INT32 *)*bout - newtermsize;
+
+	return ( (UBYTE *)in );
+}
+
+/*
+ 		#] ReadSaveTerm :
+ 		#[ ReadSaveExpression :
+*/
+
+WORD
+ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
+{
+	if ( AO.transFlag ) {
+		UBYTE *in, *end, *out, *outend, *p, *inend;
+		LONG half;
+		WORD lenW = AO.SaveHeader.lenWORD;
+		POSITION pos;
+		TELLFILE(AO.SaveData.Handle,&pos);
+
+		half = (top-buffer)/2;
+		if ( *size > half ) *size = half;
+		if ( lenW < sizeof(WORD) ) {
+			if ( *size * sizeof(WORD)/lenW > half ) *size = half/2;
+		}
+		else {
+			if ( *size > half ) *size = half;
+		}
+	
+		in = out = buffer;
+		if ( lenW == sizeof(WORD) ) in += half;
+		else out += half;
+		end = in + *size;
+		inend = in + half;
+		outend = out + *size;
+
+		if ( ReadFile(AO.SaveData.Handle, in, *size) != *size ) {
+			return ( MesPrint("Error reading stored expression.") );
+		}
+
+		if ( AO.transFlag & 1 ) {
+			p = in;
+			end -= lenW;
+			while ( p <= end ) {
+				AO.FlipWORD(p); p += lenW;
+			}
+			end += lenW;
+		}
+
+		if ( lenW > sizeof(WORD) ) {
+			/* renumber first */
+			do {
+				outend = out+*size;
+				if ( outend > top ) outend = top;
+				p = ReadSaveTerm32(in, end, &out, outend, top, 0);
+				if ( p == in ) break;
+				in = p;
+			} while ( in <= end - lenW );
+			/* resize */
+			*size = in - buffer;
+			in = buffer + half;
+			end = out;
+			out = buffer;
+
+			while ( in < end ) {
+				AO.ResizeNCWORD(in, out);
+				in += lenW; out += sizeof(WORD);
+			}
+		}
+		else {
+			if ( lenW < sizeof(WORD) ) {
+				/* resize first */
+				while ( in < end ) {
+					AO.ResizeWORD(in, out);
+					in += lenW; out += sizeof(WORD);
+				}
+				in = buffer + half;
+				end = in + (*size * sizeof(WORD)/lenW);
+				out = buffer;
+			}
+			/* renumber */
+			do {
+				p = ReadSaveTerm32(in, end, &out, end, top, 0);
+				if ( p == in ) break;
+				in = p;
+			} while ( in <= end - sizeof(WORD) );
+			*size = in - buffer - half;
+		}
+
+		*outsize = out - buffer;
+		ADDPOS(pos, *size);
+		SeekFile(AO.SaveData.Handle, &pos, SEEK_SET);
+
+		return ( 0 );
+	}
+	else {
+		return ( ReadFile(AO.SaveData.Handle, buffer, *size) != *size );
+	}
+}
+
+/*
+ 		#] ReadSaveExpression :
+	#] System Independent Saved Expressions :
 */
 

@@ -5,7 +5,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ ModulusGCD1 :
 
 	For experimentation
@@ -113,7 +113,7 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
 }
 
 /*
-  	#] ModulusGCD1 :
+  	#] ModulusGCD1 : 
   	#[ MakeMono :
 */
 
@@ -203,138 +203,20 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 }
 
 /*
-  	#] MakeMono :
-  	#[ ChinRem :
-
-	We have two input arrays: pp with a list of (short) primes
-	and rr with a list of remainders. Length of both arrays is npp.
-	We return the positive constant x (length nx) with the property
-	x < prod(pp[i])
-	x%pp[i] = rr[i]
-	Algorithm:
-		P = prod(pp[i])
-		x = sum_(i,0,npp-1,(P/pp[i])*(((P/pp[i])mod(pp[i]))^-1*rr[i])mod(pp[i])
-	When par == 1 we put the number between -P/2 and +P/2
-*/
-
-#ifdef CHINREM
-
-int
-ChinRem ARG6(UWORD *,pp, UWORD *,rr, WORD, npp, UWORD *,x, WORD *,nx,int,par)
-{
-	UWORD *x1, *x2, *x3, z1, z2, i;
-	WORD y1, y2;
-#ifdef INDIVIDUALALLOC
-	if ( AN.CRscrat1 == 0 ) {
-		AN.CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
-		AN.CRscrat2 = AN.CRscrat1 + AM.MaxTal+2;
-		AN.CRscrat3 = AN.CRscrat2 + AM.MaxTal+2;
-	}
-#endif
-	x1 = AN.CRscrat1; x2 = AN.CRscrat2;
-	x1[0] = pp[0]; y1 = 1;
-	for ( i = 1; i < npp; i++ ) {
-		if ( MulLong(x1,y1,pp+i,1,x2,&y2) ) goto ChinErr;
-		x3 = x1; x1 = x2; x2 = x3; y1 = y2;
-	}
-
-	for ( i = 0; i < npp; i++ ) {
-		DivShort(x1,y1,pp[i],x2,&y2);
-		z1 = DivMod(x2,y2,pp[i]);
-		z1 = InvMod(z1,pp[i]);
-		z2 = (((ULONG)z1)*rr[i])%pp[i];
-		if ( i == 0 ) {
-			*nx = 1; x[0] = z2;
-		}
-		else {
-			if ( MulLong(x2,y2,&z2,1,AN.CRscrat3,&AN.nCRscrat3) ) goto ChinErr;
-			if ( AddLong(x,*nx,AN.CRscrat3,AN.nCRscrat3,x,nx) ) goto ChinErr;
-		}
-	}
-	while ( BigLong(x1,y1,x,*nx) <= 0 ) {
-		SubPLon(x,*nx,x1,y1,x,nx);
-	}
-	if ( par == 1 ) {
-		SubPLon(x1,y1,x,*nx,x2,&y2);
-		if ( BigLong(x,*nx,x2,y2) > 0 ) ) {
-			for ( i = 0; i < y2; i++ ) x[i] = x2[i];
-			*nx = -y2;
-		}
-	}
-	return(0);
-ChinErr:
-	LOCK(ErrorMessageLock);
-	MesCall("ChinRem");
-	UNLOCK(ErrorMessageLock);
-	SETERROR(-1)
-}
-
-/*
-  	#] ChinRem :
-  	#[ ChinRema :
-
-	Use of the Chinese Remainder theorem.
-	We assume here that the smallest one (pb) of the (relative) primes
-	fits inside a FORM word.
-	x = pa*a+ra = pb*b+rb.
-	with
-	a = x/pa, ra = x%pa, b = x/pb, rb = x%pb.
-	Output is x and its length.
-	We use:
-		a = (((rb-ra))/(pa%pb))mod(pb)
-*/
-
-int
-ChinRema ARG8(UWORD*,pa,WORD,na,UWORD*,ra,WORD,nra,UWORD,pb,UWORD,rb,UWORD*,x,WORD*,nx)
-{
-	UWORD nn,pp,pd;
-	ULONG xx;
-#ifdef INDIVIDUALALLOC
-	if ( AN.CRscrat1 == 0 ) {
-		AN.CRscrat1 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"ChinRem");
-		AN.CRscrat2 = AN.CRscrat1 + AM.MaxTal+2;
-		AN.CRscrat3 = AN.CRscrat2 + AM.MaxTal+2;
-	}
-#endif
-	if ( AddLong(&rb,1,ra,-nra,AN.CRscrat1,&AN.nCRscrat1) ) goto ChinErr;
-	nn = DivMod(AN.CRscrat1,AN.nCRscrat1,pb);
-	pp = DivMod(pa,na,pb);
-	pd = InvMod(pp,pb);
-	if ( pd == 0 ) {
-		LOCK(ErrorMessageLock);
-		MesPrint("Problems with inverse in modulus calculation");
-		UNLOCK(ErrorMessageLock);
-		goto ChinErr;
-	}
-	xx = ((ULONG)nn)*pd;
-	pd = xx%pb;
-/*
-	Now the object we are after is pd*pa+ra
-*/
-	if ( MulLong(pa,na,&pd,1,x,nx) || AddLong(x,*nx,ra,nra,x,nx) ) goto ChinErr;
-	return(0);
-ChinErr:
-	LOCK(ErrorMessageLock);
-	MesCall("ChinRema");
-	UNLOCK(ErrorMessageLock);
-	SETERROR(-1)
-}
-
-/*
-  	#] ChinRema :
+  	#] MakeMono : 
   	#[ DivMod :
 
 	Takes the modulus a%b and returns it. We assume that b fits inside a word.
 */
 
-UWORD DivMod ARG3(UWORD *,a,WORD,na,UWORD,b)
+WORD DivMod ARG3(UWORD *,a,WORD,na,WORD,b)
 {
 	int la;
 	long x = 0;
 	la = ABS(na);
 	while ( la > 0 ) { x = ((x << BITSINWORD) + a[--la]) % b; }
 	if ( na < 0 && x != 0 ) x = b - x;
-	return ( (UWORD)x );
+	return ( (WORD)x );
 }
 
 /*
@@ -351,7 +233,7 @@ WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
 	long x = 0, y;
 	lb = la = ABS(na);
 	while ( --la > 0 ) {
-		y = (x << BITSINWORD) + a[la]);
+		y = (x << BITSINWORD) + a[la];
 		x = y % b;
 		c[la] = y/b;
 	}
@@ -365,129 +247,7 @@ WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
 }
 
 /*
-  	#] DivShort :
-  	#[ InvMod :
-
-	Takes the inverse of A mod B. Assumes of course that a has an inverse,
-	or in other words: it assumes that a and b are relative prime.
-	If not, the return value is zero.
-	There are two possible algorithms:
-	a:  x = a^(p-2)
-	b:	determine x*a+y*b = 1. Then x is the inverse.
-	We assume that a < b.
-	Of course, when speed is very important, and b is not too big, we
-	could build a table for this.
-*/
-
-UWORD InvMod ARG2(UWORD,A,UWORD,B)
-{
-	UWORD x1,x3,n,c,a=A,b=B;
-	int sign = 1;
-	x1 = 0; x3 = 1;
-/*
-	x2 = 1; x4 = 0;
-        b = x2*B-x1*A;
-		a = x3*A-x4*B;
-*/
-	for(;;) {
-		n = b/a; c = b%a;
-		if ( c == 0 ) break;
-/*
-		c = b-n*a = (x2+n*x4)*B-(x1+n*x3)*A;
-		of course we need only the coefficient of A.
-*/		
-		y = n*x3; x3 = x1+y; x1 = y; b = a; a = c; sign = -sign;
-	}
-	if ( a != 1 ) return(0);
-	if ( sign < 0 ) x3 = B - x3;
-	return(x3);
-}
-
-/*
-  	#] InvMod :
-  	#[ MakePrimes :
-
-	Routine creates (or extends) a list of short primes, starting at the
-	maximum positive short prime and going downward.
-	It stores these primes in a list and keeps with it a list of the
-	2-log of the products of all the primes to this point.
-*/
-
-int CheckPrime ARG1(int,p)
-{
-	int i;
-	if ( ( p & 1 ) == 0 ) return(0); /* is not prime */
-	for ( i = 3; i < p; i += 2 ) {
-		if ( i*i > p ) break;
-		if ( p % i == 0 ) return(0);
-	}
-	return(1);
-}
-
-int TwoLog ARG2(UWORD *,a,WORD,na)
-{
-	int j, k;
-	UWORD m,nn;
-	if ( na < 0 ) na = -na;
-	for ( j = 0, nn = a[na-1]; j < BITSINWORD; j++, nn >>= 1 ) {
-		if ( nn == 0 ) break;
-	}
-	return(na*BITSINWORD + j);
-}
-
-UWORD *mkprimescrat = 0;
-WORD mkprimenscrat = 0;
-WORD startprimesat = MAXPOSITIVE;
-UWORD *primelist = 0;
-int *logprimelist = 0;
-int nprimelist = 0;
-int primelistsize = 0;
-
-int MakePrimes ARG2(UWORD *,a,WORD,na)
-{
-	int i;
-	UWORD k;
-	if ( mkprimescrat == 0 ) {
-		mkprimescrat = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"MakePrimes");
-		mkprimescrat[0] = 1; mkprimenscrat = 1;
-	}
-	for ( i = startprimesat; i > 1; i -= 2 ) {
-		if ( CheckPrime(i) ) {
-			if ( nprimelist >= primelistsize ) {
-				UWORD *p1;
-				int *p2, ns, j;
-				ns = 2*primelistsize;
-				if ( ns <= 0 ) ns = 12;
-				p1 = (UWORD *)Malloc1(sizeof(UWORD)*ns,"MakePrimes1");
-				p2 = (int *)Malloc1(sizeof(int)*ns,"MakePrimes2");
-				for ( j = 0; j < primelistsize; j++ ) {
-					p1[j] = primelist[j];
-					p2[j] = logprimelist[j];
-				}
-				if ( primelist ) M_free(primelist,"MakePrimes1");
-				if ( logprimelist ) M_free(logprimelist,"MakePrimes2");
-				primelist = p1; logprimelist = p2; primelistsize = ns;
-			}
-			primelist[nprimelist] = i;
-			k = i;
-			MulLong(mkprimescrat,mkprimenscrat,&k,1,mkprimescrat,&mkprimenscrat);
-			logprimelist[nprimelist++] = TwoLog(mkprimescrat,mkprimenscrat);
-			if ( BigLong(mkprimescrat,mkprimenscrat,a,na) > 0 ) {
-				startprimesat = i-2;
-				return(0);
-			}
-		}
-	}
-	LOCK(ErrorMessageLock);
-	MesPrint("Input in MakePrimes too large to work with all short primes");
-	UNLOCK(ErrorMessageLock);
-	return(1);
-}
-
-#endif
-
-/*
-  	#] MakePrimes :
+  	#] DivShort : 
   	#[ FactorIn :
 
 	This routine tests for a factor in a dollar expression.
@@ -617,7 +377,7 @@ int FactorIn BARG2(WORD *,term,WORD,level)
 					break;
 				}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 */
 				else if ( *m == DOTPRODUCT ) {
@@ -651,7 +411,7 @@ int FactorIn BARG2(WORD *,term,WORD,level)
 					break;
 				}
 /*
-			#] DOTPRODUCT :
+			#] DOTPRODUCT : 
 			#[ VECTOR :
 */
 				else if ( *m == VECTOR ) {
@@ -683,7 +443,7 @@ nextn1:					n1 += 2;
 					break;
 				}
 /*
-			#] VECTOR :
+			#] VECTOR : 
 			#[ REMAINDER :
 */
 				else {
@@ -699,7 +459,7 @@ nextn1:					n1 += 2;
 					goto nextm;  /* match */
 				}
 /*
-			#] REMAINDER :
+			#] REMAINDER : 
 */
 			}
             if ( r1 >= r2 ) { /* no factor! */
@@ -854,7 +614,7 @@ onerror:
 }
 
 /*
-  	#] FactorIn :
+  	#] FactorIn : 
   	#[ FactorInExpr :
 
 	This routine tests for a factor in an active or hidden expression.
@@ -1079,7 +839,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 					break;
 				}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 */
 				else if ( *m == DOTPRODUCT ) {
@@ -1113,7 +873,7 @@ int FactorInExpr BARG2(WORD *,term,WORD,level)
 					break;
 				}
 /*
-			#] DOTPRODUCT :
+			#] DOTPRODUCT : 
 			#[ VECTOR :
 */
 				else if ( *m == VECTOR ) {
@@ -1145,7 +905,7 @@ nextn1:					n1 += 2;
 					break;
 				}
 /*
-			#] VECTOR :
+			#] VECTOR : 
 			#[ REMAINDER :
 */
 				else {
@@ -1161,7 +921,7 @@ nextn1:					n1 += 2;
 					goto nextm;  /* match */
 				}
 /*
-			#] REMAINDER :
+			#] REMAINDER : 
 */
 			}
             if ( r1 >= r2 ) { /* no factor! */
@@ -1299,6 +1059,6 @@ onerror:
 }
 
 /*
-  	#] FactorInExpr :
+  	#] FactorInExpr : 
 */
 

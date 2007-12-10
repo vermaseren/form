@@ -783,7 +783,7 @@ PF_EndSort ARG0
 	 work. The smallest term needs to be copied to the outbuf: use PutOut.
   */
   PF_InitTree();
-  S->PolyFlag = AR.PolyFun ? 1: 0;
+  S->PolyFlag = AR.PolyFun ? S->PolyFunType : 0;
   *AR.CompressPointer = 0;
   PUTZERO(position);
 /*[25nov2003 mt]:*/

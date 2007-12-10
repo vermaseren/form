@@ -230,7 +230,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -306,7 +306,7 @@ OpenInput ARG0
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -515,7 +515,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -687,6 +687,7 @@ StartVariables ARG0
 	AT.RepCount = (int *)Malloc1((LONG)((AM.RepMax+3)*sizeof(int)),"repeat buffers");
 	AN.RepPoint = AT.RepCount;
 	AT.RepTop = AT.RepCount + AM.RepMax;
+	AN.polysortflag = 0;
 #endif
 	AC.NumWildcardNames = 0;
 	AC.WildcardBufferSize = 50;
@@ -695,6 +696,7 @@ StartVariables ARG0
 	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
 				,"argument list names");
 	AT.WildcardBufferSize = AC.WildcardBufferSize;
+	AR.CompareRoutine = &Compare1;
 #endif
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
@@ -754,7 +756,7 @@ StartVariables ARG0
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -781,6 +783,7 @@ IniVars()
 	AC.ncmod = AM.gncmod = 0;
 	AC.npowmod = AM.gnpowmod = 0;
 	AC.lPolyFun = AM.gPolyFun = 0;
+	AC.lPolyFunType = AM.gPolyFunType = 0;
 	AC.DirtPow = 0;
 	AC.lDefDim = AM.gDefDim = 4;
 	AC.lDefDim4 = AM.gDefDim4 = 0;
@@ -932,7 +935,13 @@ IniVars()
 
 	AN.doingpoly = 0;
 	AN.polyblevel = 0;
+	AN.getdivgcd = 0;
+	AT.inprimelist = -1;
+	AT.sizeprimelist = 0;
+	AT.primelist = 0;
 
+	AllocPolyModCoefs(&(AN.polymod1),100);
+	AllocPolyModCoefs(&(AN.polymod2),100);
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	C->Pointer = C->Buffer;
@@ -1052,7 +1061,7 @@ setSignalHandlers ARG0
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1196,7 +1205,7 @@ main ARG2(int,argc,char **,argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1267,7 +1276,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1336,7 +1345,7 @@ Terminate ARG1(int,errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
  		#[ PrintRunningTime :
 */
 
@@ -1368,6 +1377,6 @@ VOID PrintRunningTime ARG0
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 

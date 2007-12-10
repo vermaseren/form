@@ -650,7 +650,7 @@ WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 	return(0);
 AccErr:
 	LOCK(ErrorMessageLock);
-	MesCall("AccumLong");
+	MesCall("AccumGCD");
 	UNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
@@ -893,7 +893,7 @@ MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	}
 #endif
 /*
-  	#] GMP stuff :
+  	#] GMP stuff : 
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -2417,7 +2417,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
