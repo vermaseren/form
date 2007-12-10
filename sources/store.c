@@ -688,8 +688,6 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 #ifndef SYSDEPENDENTSAVE
 	LONG wSizeOut;
 	LONG stage;
-	/* DEBUG */
-	LONG wo;
 #endif
 	POSITION scrpos,scrpos1;
 	newind = NextFileIndex(&(Expressions[num].onfile));
@@ -699,23 +697,16 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 #endif
 	newind->variables = AR.StoreData.Fill;
 	SeekFile(AR.StoreData.Handle,&(newind->variables),SEEK_SET);
-#ifdef SYSDEPENDENTSAVE
 	if ( ISNOTEQUALPOS(newind->variables,AR.StoreData.Fill) ) goto PutErrS;
 	newind->position = newind->variables;
+#ifdef SYSDEPENDENTSAVE
 	ADDPOS(newind->position,DIFBASE(ind->position,ind->variables));
-#else
-	if ( ISNOTEQUALPOS(newind->variables,AR.StoreData.Fill) ) goto PutErrS1;
-	/* set read position to ind->variables */
 #endif
+	/* set read position to ind->variables */
 	scrpos = ind->variables;
 	SeekFile(AO.SaveData.Handle,&scrpos,SEEK_SET);
-#ifdef SYSDEPENDENTSAVE
 	if ( ISNOTEQUALPOS(scrpos,ind->variables) ) goto PutErrS;
-#else
-	if ( ISNOTEQUALPOS(scrpos,ind->variables) ) goto PutErrS2;
-	newind->position = newind->variables;
 	/* set max size for read-in */
-#endif
 	wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 #ifdef SYSDEPENDENTSAVE
 	scrpos = ind->length;
@@ -732,12 +723,10 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 		wSizeOut = wSize;
 		if ( ReadSaveVariables(
 			(UBYTE *)AT.WorkPointer, (UBYTE *)AT.WorkTop, &wSize, &wSizeOut, ind, &stage) ) {
-			/*DEBUG */
-			MesPrint("A");
 			goto PutErrS;
 		}
 		if ( WriteFile(AR.StoreData.Handle, (UBYTE *)AT.WorkPointer, wSizeOut)
-		!= wSizeOut ) goto PutErrS3;
+		!= wSizeOut ) goto PutErrS;
 		ADDPOS(scrpos,-wSize);
 		ADDPOS(newind->position, wSizeOut);
 		ADDPOS(AR.StoreData.Fill, wSizeOut);
@@ -757,16 +746,10 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 #else
 		wSizeOut = wSize;
 		if ( ReadSaveExpression((UBYTE *)AT.WorkPointer, (UBYTE *)AT.WorkTop, &wSize, &wSizeOut) ) {
-			/* DEBUG */
-			MesPrint("B");
 			goto PutErrS;
 		}
-/*
-		printf("W %lu\n",wSizeOut);
-		fflush(0);
-*/
-		if ( (wo = WriteFile(AR.StoreData.Handle, (UBYTE *)AT.WorkPointer, wSizeOut))
-		!= wSizeOut ) goto PutErrS4;
+		if ( WriteFile(AR.StoreData.Handle, (UBYTE *)AT.WorkPointer, wSizeOut)
+		!= wSizeOut ) goto PutErrS;
 		ADDPOS(scrpos,-wSize);
 		ADDPOS(AR.StoreData.Fill, wSizeOut);
 		ADDPOS(newind->length, wSizeOut);
@@ -774,31 +757,10 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 	} while ( ISPOSPOS(scrpos) );
 	scrpos = AR.StoreData.Position;
 	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
-#ifdef SYSDEPENDENTSAVE
 	if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto PutErrS;
-#else
-	if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto PutErrS5;
-#endif
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)sizeof(FILEINDEX))
 	== (LONG)sizeof(FILEINDEX) ) return(0);
-#ifndef SYSDEPENDENTSAVE
-PutErrS1:
-			MesPrint("1");
-PutErrS2:
-			MesPrint("2");
-PutErrS3:
-			MesPrint("3");
-PutErrS4:
-			printf("W %lu\n",wo);
-			fflush(0);
-			MesPrint("4 %l",wo);
-PutErrS5:
-			MesPrint("5");
 PutErrS:
-			MesPrint("1");
-#else
-PutErrS:
-#endif
 	return(MesPrint("File error"));
 }
 
@@ -1133,11 +1095,7 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 		if ( siz == sizeof(WORD) ) {
 			p = term;
 			j = i = *term++;
-#ifdef SYSDEPENDENTSAVE
 			if ( ( i > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( -i >= AM.MaxTer/((WORD)sizeof(WORD)) ) )
-#else
-			if ( ( i > AM.MaxTer ) || ( -i >= AM.MaxTer ) )
-#endif
 			{
 				error = 1;
 				goto ErrGet;
@@ -1162,11 +1120,7 @@ GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
 				}
 				*p += *term;
 				j = *term;
-#ifdef SYSDEPENDENTSAVE
 				if ( ( j > AM.MaxTer/((WORD)sizeof(WORD)) ) || ( j <= 0 ) )
-#else
-				if ( ( j > AM.MaxTer ) || ( j <= 0 ) )
-#endif
 				{
 					error = 3;
 					goto ErrGet;
