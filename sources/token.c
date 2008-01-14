@@ -566,7 +566,7 @@ writenumber:
 int
 simp1token ARG1(SBYTE *,s)
 {
-	int error = 0, n, i;
+	int error = 0, n, i, base;
 	WORD numsub;
 	SBYTE *fill = s, *start, *t, numtab[10];
 	SETS set;
@@ -576,11 +576,12 @@ simp1token ARG1(SBYTE *,s)
 			while ( *start != LBRACE ) start--;
 			t = start - 1;
 			while ( *t >= 0 ) t--;
-			if ( *t == TSET && start[1] == TNUMBER ) {
+			if ( *t == TSET && ( start[1] == TNUMBER || start[1] == TNUMBER1 ) ) {
+				base = start[1] == TNUMBER ? 100: 128;
 				start += 2;
 				numsub = *start++;
 				while ( *start >= 0 && start < fill )
-					{ numsub = 128*numsub + *start++; }
+					{ numsub = base*numsub + *start++; }
 				if ( start == fill ) {
 					start = t;
 					t++; n = *t++; while ( *t >= 0 ) { n = 128*n + *t++; }
