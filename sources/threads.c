@@ -413,8 +413,10 @@ ALLPRIVATES *InitializeOneThread ARG1(int,identity)
 	AR.FoStage4[0].handle = -1;
 	AR.FoStage4[1].handle = -1;
 	IOsize = AM.S0->file.POsize;
+#ifdef WITHZLIB
 	AR.FoStage4[0].ziosize = IOsize;
 	AR.FoStage4[1].ziosize = IOsize;
+#endif
 	AR.FoStage4[0].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 	AR.FoStage4[1].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 
