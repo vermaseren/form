@@ -562,7 +562,7 @@ int CoLoad ARG1(UBYTE *,inp)
 					else error = -1;
 				}
 				i--;
-				if ( i == 0 && ISNOTZEROPOS(AO.SaveData.Index.next) ) {
+				if ( i == 0 && (ISNOTZEROPOS(AO.SaveData.Index.next) || AO.bufferedInd) ) {
 					SeekFile(AO.SaveData.Handle,&(AO.SaveData.Index.next),SEEK_SET);
 					if ( ReadSaveIndex(&AO.SaveData.Index) ) goto LoadRead;
 					i = (WORD)(AO.SaveData.Index.number);
@@ -715,10 +715,15 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 #endif
 	SETBASEPOSITION(scrpos1,wSize);
 #ifndef SYSDEPENDENTSAVE
+	/* prepare look-up table for tensor functions */
+	if ( ind->nfunctions ) {
+		AO.tensorList = (UBYTE *)malloc(MAXSAVEFUNCTION);
+	}
 	SETBASEPOSITION(scrpos, DIFBASE(ind->position,ind->variables));
 	/* copy variables first */
 	stage = -1;
 	do {
+		wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 		if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 		wSizeOut = wSize;
 		if ( ReadSaveVariables(
@@ -736,6 +741,7 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 	scrpos = ind->length;
 #endif
 	do {
+		wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 		if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 #ifdef SYSDEPENDENTSAVE
 		if ( ReadFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize)
@@ -745,9 +751,11 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 		ADDPOS(scrpos,-wSize);
 #else
 		wSizeOut = wSize;
+
 		if ( ReadSaveExpression((UBYTE *)AT.WorkPointer, (UBYTE *)AT.WorkTop, &wSize, &wSizeOut) ) {
 			goto PutErrS;
 		}
+
 		if ( WriteFile(AR.StoreData.Handle, (UBYTE *)AT.WorkPointer, wSizeOut)
 		!= wSizeOut ) goto PutErrS;
 		ADDPOS(scrpos,-wSize);
@@ -755,6 +763,10 @@ PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
 		ADDPOS(newind->length, wSizeOut);
 #endif
 	} while ( ISPOSPOS(scrpos) );
+	/* free look-up table for tensor functions */
+	if ( ind->nfunctions ) {
+		free(AO.tensorList);
+	}
 	scrpos = AR.StoreData.Position;
 	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
 	if ( ISNOTEQUALPOS(scrpos,AR.StoreData.Position) ) goto PutErrS;
@@ -2078,7 +2090,7 @@ SetFileIndex()
 		SETBASEPOSITION(AR.StoreData.Fill,sizeof(FILEINDEX));
 #else
 		if ( WriteStoreHeader(AR.StoreData.Handle) ) return(MesPrint("Error writing storage file header"));
-		SETBASEPOSITION(AR.StoreData.Fill, (LONG)(sizeof(FILEINDEX)+sizeof(STOREHEADER)));
+		SETBASEPOSITION(AR.StoreData.Fill, (LONG)sizeof(FILEINDEX)+(LONG)sizeof(STOREHEADER));
 #endif
 /* --COMPRESS-- */
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
@@ -2485,7 +2497,7 @@ MesPrint("index: size: %d",ind->size);
 			} while ( --i > 0 );
 		}
 		f->Position = f->Index.next;
-		if ( ISEQUALPOS(f->Position,stindex) ) goto ErrGetTab;
+		if ( ISEQUALPOS(f->Position,stindex) && !AO.bufferedInd ) goto ErrGetTab;
 #ifndef SYSDEPENDENTSAVE
 		number = sizeof(struct FiLeInDeX);
 #endif
@@ -3103,7 +3115,23 @@ WriteTrailer:
  		#] CopyExpression :
 	#] StoreExpressions :
 	#[ System Independent Saved Expressions :
+
+	All functions concerned with the system independent reading of save-files
+	are here. They are called by the functions CoLoad, PutInStore,
+	SetFileIndex, FindInIndex. In case no translation (endianness flip,
+	resizing of words, renumbering) has to be done, they just do simple file
+	reading. The function SaveFileHeader() for writing a header with
+	information about the system architecture, FORM version, etc. is also
+	located here.
+
  		#[ Flip :
+
+		Functions for flipping the endianness. These functions will be called
+		via function pointers.  See struct O_const and ReadSaveHeader().
+
+		Optimized versions for 16,32 and 64 bit do exist. FlipN is a general
+		version for arbitrary word sizes.
+
 */
 
 #ifndef INT16
@@ -3165,6 +3193,18 @@ Flip128 ARG1(UBYTE *,p) { FlipN(p, 16); }
 /*
  		#] Flip :
  		#[ Resize :
+
+		Functions for resizing words. These functions will be called via
+		function pointers.  See struct O_const and ReadSaveHeader().
+		Specialized functions for all combinations of reading 16,32,64 bit and
+		writing 16,32,64 bit do exist. The general version for arbitrary word
+		sizes comes in two variants depending on the endianness of the machine
+		(ResizeDataBE for big-endian, ResizeDataLE for little-endian) and is
+		accessed via the function pointer ResizeData in the struct O_const.
+		Versions with and without checking for too big numbers exist. In case a
+		checking is done, the resizeFlag in struct O_const will be used to
+		signal the result. This flag will be checked by CoLoad().
+
 */
 
 VOID
@@ -3347,6 +3387,14 @@ Resize128t64NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
 /*
 .		#] Resize :
  		#[ CheckPower and RenumberVec :
+
+		Functions for checking the size of exponents and renumbering vectors.
+		If a checking fails, the powerFlag in struct O_const will be set. This
+		flag is used by CoLoad().
+		Renumbering of vectors is done by compensating for the different
+		WILDOFFSET on the involved machines and FORM versions. The WILDOFFSET
+		from the writing machine is coded in the header of the save-file.
+
 */
 
 VOID
@@ -3376,6 +3424,19 @@ RenumberVec32 ARG1(UBYTE *,p)
 /*
 .		#] CheckPower and RenumberVec :
  		#[ ResizeCoeff :
+
+		Resizing of the coefficients of expressions and terms. The functions
+		only work on uniform data with a word size of 32bit
+		(ReadSaveExpression() provides for that). The resizing then actually
+		means whether zeros can be removed when going from 64bit to 32bit, or
+		whether the coefficient size has to be doubled effectively when going
+		from 32bit to 64bit. Both cases involve copying of words and a
+		shrinking or growing of the memory used in '*bout'
+
+		bout	input and output buffer for coefficient
+		bend	end of input
+		top		end of buffer
+
 */
 
 VOID
@@ -3421,7 +3482,6 @@ ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
 
 	}
 	else {
-		/* TODO check for out > top */
 		/* 2 -> 4 */
 		INT32 len = (end - 1 - out) / 2;
 		if ( len == 1 ) {
@@ -3466,6 +3526,10 @@ ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
 			++out;
 		}
 
+		if ( out > (INT32 *)top ) {
+			MesPrint("Error in resizing coefficient!");
+		}
+
 		*bout = (UBYTE *)out;
 	}
 }
@@ -3473,11 +3537,19 @@ ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
 /*
  		#] ResizeCoeff :
  		#[ WriteStoreHeader :
+
+		Writes header with information about system architecture and FORM
+		revision to an open store file. Called by SetFileIndex().
+
+		handle			specifies open file to which header will be written
+		RETURN VALUE	= 0 everything okay, > 1 an error occurred
+
 */
 
 WORD
 WriteStoreHeader ARG1(WORD,handle)
 {
+	/* template of the STOREHEADER */
 	static STOREHEADER sh = {
 		{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },	/* store header mark */
 		0, 0, 0, 0,											/* sizeof of WORD,LONG,POSITION,void* */
@@ -3489,6 +3561,7 @@ WriteStoreHeader ARG1(WORD,handle)
 		{} };												/* reserved */
 	int endian, i;
 
+	/* if called for the first time ... */
 	if ( sh.lenWORD == 0 ) {
 		sh.lenWORD = sizeof(WORD);
 		sh.lenLONG = sizeof(LONG);
@@ -3517,7 +3590,14 @@ WriteStoreHeader ARG1(WORD,handle)
 
 /*
  		#] WriteStoreHeader :
- 		#[ ReadSaveHeader :
+ 		#[ CompactifySizeof :
+
+		Utility function used by ReadSaveHeader() to convert a sizeof into a
+		convenient array index.
+
+		size			size in bytes
+		RETURN VALUE	log_2(size) - 1
+
 */
 
 unsigned int
@@ -3533,9 +3613,25 @@ CompactifySizeof ARG1(unsigned int,size)
 	}
 }
 
+/*
+ 		#] CompactifySizeof :
+ 		#[ ReadSaveHeader :
+
+		Reads the header in the save file and sets function pointers and flags
+		according to the information found there. Must be called before any
+		other ReadSave... function. It is called by CoLoad().
+
+		Currently works only for the exchange between 32bit and 64bit machines
+		(WORD size must be 2 or 4 bytes)!
+
+		RETURN VALUE	= 0 everything okay, > 1 an error occurred
+
+*/
+
 WORD
 ReadSaveHeader()
 {
+	/* Read-only tables of function pointers for conversions. */
 	static VOID (*flipJumpTable[4])(UBYTE *) =
 		{ Flip16, Flip32, Flip64, Flip128 };
 	static VOID (*resizeJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
@@ -3548,6 +3644,7 @@ ReadSaveHeader()
 		  { Resize16t32,  Resize32t32,  Resize64t32NC,  Resize128t32NC  },
 		  { Resize16t64,  Resize32t64,  Resize64t64,  Resize128t64NC  },
 		  { Resize16t128, Resize32t128, Resize64t128, Resize128t128 } };
+
 	int endian, i;
 	WORD idxW = CompactifySizeof(sizeof(WORD));
 	WORD idxL = CompactifySizeof(sizeof(LONG));
@@ -3563,7 +3660,9 @@ ReadSaveHeader()
 		(LONG)sizeof(STOREHEADER)) != (LONG)sizeof(STOREHEADER) )
 		return(MesPrint("Error reading save file header"));
 
-	/* check whether save-file has no header -> old version */
+	/* check whether save-file has no header. if yes then it is an old version
+	   of FORM -> go back to position 0 in file which then contains the first
+	   index and skip the rest. */
 	for ( i = 0; i < 8; ++i ) {
 		if ( AO.SaveHeader.headermark[i] != 0xFF ) {
 			POSITION p;
@@ -3587,6 +3686,7 @@ ReadSaveHeader()
 		AO.ResizeData = ResizeDataLE;
 	}
 
+	/* set AO.transFlag if ANY conversion has to be done later */
 	if ( AO.SaveHeader.endianness[0] > AO.SaveHeader.endianness[1] ) {
 		AO.transFlag = ( ((char *)&endian)[0] < ((char *)&endian)[1] );
 	}
@@ -3603,7 +3703,7 @@ ReadSaveHeader()
 	AO.FlipPOS = flipJumpTable[idxP];
 	AO.FlipPOINTER = flipJumpTable[idxVP];
 
-	/* Works only for machines where WORD is not greater than 32bit */
+	/* Works only for machines where WORD is not greater than 32bit ! */
 	AO.CheckPower = CheckPower32;
 	AO.RenumberVec = RenumberVec32;
 
@@ -3619,21 +3719,40 @@ ReadSaveHeader()
 /*
  		#] ReadSaveHeader :
  		#[ ReadSaveIndex :
+
+		Reads a FILEINDEX from the open save file specified by
+		AO.SaveData.Handle. Translations for adjusting endianness and data
+		sizes are done if necessary. Called by CoLoad() and FindInIndex().
+
+		Depends on the assumption that sizeof(FILEINDEX) is the same everywhere.
+		If FILEINDEX or INDEXENTRY changes, then this functions has to be adjusted.
+
+		fileind			contains the read FILEINDEX after succesful return.
+						must point to allocated, big enough memory.
+		RETURN VALUE	= 0 everything okay, > 1 an error occurred
+
 */
 
 WORD
 ReadSaveIndex ARG1(FILEINDEX *,fileind)
 {
+	/* do we need some translation for the FILEINDEX? */
 	if ( AO.transFlag ) {
+		/* if a translated FILEINDEX can hold less entries than the original
+		   FILEINDEX, then we need to buffer the extra entires in this static
+		   variable (can happen going from 32bit to 64bit */
 		static FILEINDEX sbuffer;
+
 		FILEINDEX buffer;
 		UBYTE *p, *q;
 		int i;
 
+		/* shortcuts */
 		int lenW = AO.SaveHeader.lenWORD;
 		int lenL = AO.SaveHeader.lenLONG;
 		int lenP = AO.SaveHeader.lenPOS;
 
+		/* if we have a buffered FILEINDEX then just return it */
 		if ( AO.bufferedInd ) {
 			*fileind = sbuffer;
 			AO.bufferedInd = 0;
@@ -3645,9 +3764,11 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 			return ( MesPrint("Error reading stored expression.") );
 		}
 
+		/* do we need to flip the endianness? */
 		if ( AO.transFlag & 1 ) {
 			LONG number;
-			int padp = MAXPOWER + 1 + lenL - ((lenW*5+(MAXENAME + 1)) & (lenL-1));
+			/* padding bytes */
+			int padp = lenL - ((lenW*5+(MAXENAME + 1)) & (lenL-1));
 			p = (UBYTE *)fileind;
 			AO.FlipPOS(p); p += lenP;			/* next */
 			AO.FlipLONG(p);						/* number */
@@ -3667,11 +3788,13 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 			}
 		}
 
+		/* do we need to resize data? */
 		if ( AO.transFlag > 1 ) {
+			LONG number, maxnumber;
 			int n;
+			/* padding bytes */
 			int padp = lenL - ((lenW*5+(MAXENAME + 1)) & (lenL-1));
 			int padq = sizeof(LONG) - ((sizeof(WORD)*5+(MAXENAME + 1)) & (sizeof(LONG)-1));
-			LONG number, maxnumber;
 
 			p = (UBYTE *)fileind; q = (UBYTE *)&buffer;
 			AO.ResizePOS(p, q);						/* next */
@@ -3679,10 +3802,14 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 			AO.ResizeLONG(p, q);					/* number */
 			p += lenL;
 			number = *((LONG *)q);
+			/* if FILEINDEX in file contains more entries than the FILEINDEX in
+			   memory can contain, then adjust the numbers and prepare for
+			   buffering */
 			if ( number > INFILEINDEX ) {
 				AO.bufferedInd = number-INFILEINDEX;
 				if ( AO.bufferedInd > INFILEINDEX ) {
-					/* can happen when reading 32bit and writing >=128bit */
+					/* can happen when reading 32bit and writing >=128bit.
+					   Fix: more than one static buffer for FILEINDEX */
 					return ( MesPrint("Too many index entries.") );
 				}
 				maxnumber = INFILEINDEX;
@@ -3692,6 +3819,7 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 				maxnumber = number;
 			}
 			q += sizeof(LONG);
+			/* read all INDEXENTRY that fit into the output buffer */
 			for ( i = 0; i < maxnumber; ++i ) {
 				AO.ResizePOS(p, q);					/* position */
 				p += lenP; q += sizeof(POSITION);
@@ -3716,6 +3844,7 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 				p += padp;
 				q += padq;
 			}
+			/* read all the remaining INDEXENTRY and put them into the static buffer */
 			if ( AO.bufferedInd ) {
 				sbuffer.next = buffer.next;
 				sbuffer.number = AO.bufferedInd;
@@ -3745,10 +3874,10 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 					q += padq;
 				}
 			}
+			/* copy to output */
 			p = (UBYTE *)fileind; q = (UBYTE *)&buffer; n = sizeof(FILEINDEX);
 			NCOPY(p, q, n)
 		}
-
 		return ( 0 );
 	} else {
 		return ( ReadFile(AO.SaveData.Handle, (UBYTE *)fileind, sizeof(FILEINDEX))
@@ -3759,25 +3888,67 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 /*
  		#] ReadSaveIndex :
  		#[ ReadSaveVariables :
+
+		Reads the variables from the open file specified by AO.SaveData.Handle.
+		It reads '*size' bytes and writes them to '*buffer'. It is called by
+		PutInStore().
+		If translation is necessary, the data might shrink or grow in size,
+		then '*size' is adjusted so that the reading and writing fits into the
+		memory from 'buffer' to 'top'. The actual number of read bytes is
+		returned in '*size', the number of written bytes is returned in
+		'*outsize'. If '*size' is smaller than the actual size of the
+		variables, this function will be called several times and needs to
+		remember the current position in the variable structure. The parameter
+		'stage' does this job. When ReadSaveVariables() is called for the first
+		time, this parameter should have the value -1. The parameter 'ind' is
+		used to get the number of variables.
+
+
+		buffer			read variables are written into this allocated memory
+		top				upper end of allocated memory
+		size			number of bytes to read. might return a smaller number
+						of read bytes if translation was necessary
+		outsize			if translation has be done, outsize contains the number
+						of written bytes
+		ind				pointer of INDEXENTRY for the current expression. read-only
+		stage			should be -1 for the first call, will be increased by
+						ReadSaveVariables to memorize the position in the
+						variable structure
+		RETURN VALUE	= 0 everything okay, > 1 an error occurred
+
 */
 
 WORD
 ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,INDEXENTRY *,ind,LONG *,stage)
 {
+	/* do we need some translation for the variables? */
 	if ( AO.transFlag ) {
+		/* counters for the number of already read symbols, indices, ... that
+		   need to remain valid between different calls to ReadSaveVariables().
+		   are initialized if stage == -1 */
 		static WORD numReadSym;
 		static WORD numReadInd;
 		static WORD numReadVec;
 		static WORD numReadFun;
-		UBYTE *in, *out, *pp, *end;
+
+		POSITION pos;
+		UBYTE *in, *out, *pp, *end, *outbuf;
 		WORD namelen, realnamelen;
+		/* shortcuts */
 		WORD lenW = AO.SaveHeader.lenWORD;
 		WORD lenL = AO.SaveHeader.lenLONG;
 		WORD lenP = AO.SaveHeader.lenPOINTER;
 		WORD flip = AO.transFlag & 1;
-		POSITION pos;
+
+		/* remember file position in case we have to rewind */
 		TELLFILE(AO.SaveData.Handle,&pos);
 
+		/* decide on the position of the in and out buffers.
+		   if the input is "bigger" than the output, we resize in-place, i.e.
+		   we immediately overwrite the source data by the translated data. in
+		   and out buffers start at the same place.
+		   if not, we read from the end of the given buffer and write at the
+		   beginning. */
 		if ( (lenW > sizeof(WORD))
 		|| ( (lenW == sizeof(WORD))
 		     && ( (lenL > sizeof(LONG))
@@ -3789,6 +3960,10 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 		}
 		else {
 			end = top;
+			/* data will grow roughly by sizeof(WORD)/lenW. the exact value is
+			   not important. if reading and writing areas start to overlap, the
+			   reading will already be near the end of the data and overwriting
+			   doesn't matter. */
 			LONG newsize = (end - buffer) / (1 + sizeof(WORD)/lenW);
 			out = buffer;
 			in = end - newsize;
@@ -3802,6 +3977,7 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 		*size = 0;
 		*outsize = 0;
 
+		/* first time in ReadSaveVariables(). initialize counters. */
 		if ( *stage == -1 ) {
 			numReadSym = 0;
 			numReadInd = 0;
@@ -3828,15 +4004,15 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 					}
 				}
 				pp = in + AO.SaveHeader.sSym;
-				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG); /* name     */
 				AO.CheckPower(in);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; 
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* minpower */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* maxpower */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* complex  */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node     */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -3850,9 +4026,16 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 				*((WORD *)out-1) = realnamelen;
 				*size += AO.SaveHeader.sSym + namelen;
 				*outsize += sizeof(struct SyMbOl) + realnamelen;
-				namelen -= realnamelen;
-				NCOPY(out, in, realnamelen);
-				in += namelen;
+				if ( realnamelen > namelen ) {
+					int j = namelen;
+					NCOPY(out, in, j);
+					out += realnamelen - namelen;
+				}
+				else {
+					int j = realnamelen;
+					NCOPY(out, in, j);
+					in += namelen - realnamelen;
+				}
 				++numReadSym;
 				continue;
 			}
@@ -3873,14 +4056,14 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 					}
 				}
 				pp = in + AO.SaveHeader.sInd;
-				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW;
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG); /* name      */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* type      */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* dimension */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number    */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags     */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* nmin4     */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node      */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize  */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -3894,9 +4077,16 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 				*((WORD *)out-1) = realnamelen;
 				*size += AO.SaveHeader.sInd + namelen;
 				*outsize += sizeof(struct InDeX) + realnamelen;
-				namelen -= realnamelen;
-				NCOPY(out, in, realnamelen);
-				in += namelen;
+				if ( realnamelen > namelen ) {
+					int j = namelen;
+					NCOPY(out, in, j);
+					out += realnamelen - namelen;
+				}
+				else {
+					int j = realnamelen;
+					NCOPY(out, in, j);
+					in += namelen - realnamelen;
+				}
 				++numReadInd;
 				continue;
 			}
@@ -3917,12 +4107,12 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 					}
 				}
 				pp = in + AO.SaveHeader.sVec;
-				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW;
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG); /* name     */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* complex  */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node     */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -3936,9 +4126,16 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 				*((WORD *)out-1) = realnamelen;
 				*size += AO.SaveHeader.sVec + namelen;
 				*outsize += sizeof(struct VeCtOr) + realnamelen;
-				namelen -= realnamelen;
-				NCOPY(out, in, realnamelen);
-				in += namelen;
+				if ( realnamelen > namelen ) {
+					int j = namelen;
+					NCOPY(out, in, j)
+					out += realnamelen - namelen;
+				}
+				else {
+					int j = realnamelen;
+					NCOPY(out, in, j)
+					in += namelen - realnamelen;
+				}
 				++numReadVec;
 				continue;
 			}
@@ -3961,17 +4158,18 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 					}
 				}
 				pp = in + AO.SaveHeader.sFun;
-				AO.ResizePOINTER(in, out); in += lenP; out += sizeof(void *);
-				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
-				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
-				AO.ResizeWORD(in, out); in += lenW;
+				outbuf = out;
+				AO.ResizePOINTER(in, out); in += lenP; out += sizeof(void *); /* tabl */
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG); /* symminfo  */
+				AO.ResizeLONG(in, out); in += lenL; out += sizeof(LONG); /* name      */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* commute   */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* complex   */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number    */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags     */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* spec      */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* symmetric */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node      */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize  */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -3985,15 +4183,25 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 				*((WORD *)out-1) = realnamelen;
 				*size += AO.SaveHeader.sFun + namelen;
 				*outsize += sizeof(struct FuNcTiOn) + realnamelen;
-				namelen -= realnamelen;
-				NCOPY(out, in, realnamelen);
-				in += namelen;
+				if ( realnamelen > namelen ) {
+					int j = namelen;
+					NCOPY(out, in, j);
+					out += realnamelen - namelen;
+				}
+				else {
+					int j = realnamelen;
+					NCOPY(out, in, j);
+					in += namelen - realnamelen;
+				}
 				++numReadFun;
+				/* we use the information whether a function is tensorial later in ReadSaveTerm */
+				AO.tensorList[((FUNCTIONS)outbuf)->number+FUNCTION] =
+					((FUNCTIONS)outbuf)->spec == TENSORFUNCTION;
 				continue;
 			}
 			/* handle numdummies */
 			if ( end - in == lenW ) {
-				AO.FlipWORD(pp); pp += lenW;
+				if ( flip ) AO.FlipWORD(in);
 				AO.ResizeWORD(in, out);
 				*size += lenW;
 				*outsize += sizeof(WORD);
@@ -4002,6 +4210,9 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 		}
 
 RSVEnd:
+		/* we are here because the remaining buffer cannot hold the next
+		   struct. we position the file behind the last sucessfully translated
+		   struct and return. */
 		ADDPOS(pos, *size);
 		SeekFile(AO.SaveData.Handle, &pos, SEEK_SET);
 		return ( 0 );
@@ -4013,6 +4224,33 @@ RSVEnd:
 /*
  		#] ReadSaveVariables :
  		#[ ReadSaveTerm :
+
+		ReadSaveTerm-functions read a single term from the given buffer at
+		'bin' and write the translated term back to this buffer at 'bout'.
+
+		ReadSaveTerm32() is currently the only instantiation of a
+		ReadSaveTerm-function. It only deals with data that already has the
+		correct endianness and that is resized to 32bit words but without being
+		renumbered or translated in any other way. It uses the compress buffer
+		AR.CompressBuffer.
+
+		The function is reentrant in order to cope with nested function arguments.
+		It is called by ReadSaveExpression() and itself.
+
+		The RETURN VALUE indicates the position in the input buffer up to which
+		the data has already been successfully processed. The parameter 'bout'
+		returns the corresponding position in the output buffer.
+		
+		bin				start of the input buffer
+		binend			end of the input buffer
+		bout			as input points to the beginning of the output buffer,
+						as output points behind the already translated data in
+						the output buffer
+		boutend			end of already decompressed data in output buffer
+		top				end of output buffer
+		terminbuf		flag whether decompressed data is already in the output
+						buffer. used in recursive calls
+		RETURN VALUE	pointer to the next unprocessed data in the input buffer
 */
 
 UBYTE *
@@ -4026,8 +4264,10 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 	INT32 *in = (INT32 *)bin;
 	INT32 *out = (INT32 *)*bout;
 
-	/* if called recursively the term is already in buffer. is it the case? */
+	/* if called recursively the term is already decompressed in buffer.
+	   is this the case? */
 	if ( terminbuf ) {
+		/* don't do any decompression, just adjust the pointers */
 		len = *out;
 		end = out + len;
 		r = in + 1;
@@ -4037,10 +4277,12 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		out = newtermsize + 1;
 	}
 	else {
+		/* do deprompression of necessary. always return if the space in the
+		   buffer is not sufficient */
 		r = (INT32 *)AR.CompressBuffer;
 		INT32 rbuf = *r;
-
 		len = j = *in;
+		/* first copy from AR.CompressBuffer if necessary */
 		if ( j < 0 ) {
 			++in;
 			if ( (UBYTE *)in >= binend ) {
@@ -4048,8 +4290,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			}
 			*out = len = -j + 1 + *in;
 			end = out + *out;
-			if ( (UBYTE *)end >= top )
-			{
+			if ( (UBYTE *)end >= top ) {
 				return ( bin );
 			}
 			++out;
@@ -4087,14 +4328,13 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		if ( (UBYTE *)out + j >= top ) {
 			return ( bin );
 		}
-		while ( --j >= 0 )
-		{
+		/* second copy from input buffer */
+		while ( --j >= 0 ) {
 			INT32 bb = *in++;
 			*r++ = *out++ = bb;
 		}
 
 		rend = r;
-
 		r = (INT32 *)AR.CompressBuffer + 1;
 		coeff = end - ABS(*(end-1));
 		newtermsize = (INT32 *)*bout;
@@ -4108,13 +4348,12 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		++r;
 		t = out + *out - 1;
 		newsubtermp = out;
-		++out;
-		++r;
+		++out; ++r;
 
 		if ( id == SYMBOL ) {
 			while ( out < t ) {
-				++out;	/* symbol number */
-				++r;
+				++out; ++r; /* symbol number */
+				/* if exponent is too big, rewrite as exponent function */
 				if ( ABS(*out) >= MAXPOWER ) { 
 					INT32 *a, *b;
 					INT32 n;
@@ -4144,19 +4383,17 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 					NCOPY(b, a, n)
 				}
 				else {
-					++out;
-					++r;
+					++out; ++r;
 				}
 			}
 		}
 		else if ( id == DOTPRODUCT ) {
 			while ( out < t ) {
-				AO.RenumberVec((UBYTE *)out);
-				++out;
-				++r;
-				AO.RenumberVec((UBYTE *)out);
-				++out;
-				++r;
+				AO.RenumberVec((UBYTE *)out); /* vector 1 */
+				++out; ++r;
+				AO.RenumberVec((UBYTE *)out); /* vector 2 */
+				++out; ++r;
+				/* if exponent is too big, rewrite as exponent function */
 				if ( ABS(*out) >= MAXPOWER ) { 
 					INT32 *a, *b;
 					INT32 n;
@@ -4196,53 +4433,65 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 					NCOPY(b, a, n)
 				}
 				else {
-					++out;
-					++r;
+					++out; ++r;
 				}
 			}
 		}
 		else if ( id == VECTOR ) {
 			while ( out < t ) {
-				AO.RenumberVec((UBYTE *)out);
-				++out;
-				++r;
-				++out;
-				++r;
+				AO.RenumberVec((UBYTE *)out); /* vector number */
+				++out; ++r;
+				++out; ++r; /* index, do nothing */
 			}
 		}
 		else if ( id == INDEX ) {
+			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset);
+			while ( out < t ) {
+				/* if there is a vector, renumber it */
+				if ( *out < vectoroffset ) {
+					AO.RenumberVec((UBYTE *)out);
+				}
+				++out; ++r;
+			}
+		}
+		else if ( id == SUBEXPRESSION ) {
+			/* nothing to translate */
+			while ( out < t ) {
+				++out; ++r;
+			}
+		}
+		else if ( id == DELTA ) {
+			/* nothing to translate */
 			r += t - out;
 			out = t;
 		}
-		else if ( id == SUBEXPRESSION ) {
+		else if ( id == GAMMA || id == LEVICIVITA || (id >= FUNCTION && AO.tensorList[id]) ) {
+			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset);
 			while ( out < t ) {
-				++out;
-				++r;
+				/* if there is a vector as an argument, renumber it */
+				if ( *out < vectoroffset ) {
+					AO.RenumberVec((UBYTE *)out);
+				}
+				++out; ++r;
 			}
-		}
-		else if ( id == DELTA || 
-		          (id >= FUNCTION && functions[id-FUNCTION].spec >= TENSORFUNCTION) ) {
-				r += t - out;
-				out = t;
 		}
 		else if ( id >= FUNCTION ) {
 			INT32 *argEnd;
 			UBYTE *newbin;
-			++out;
-			++r;
+
+			++out; ++r; /* dirty flags */
+			
+			/* loop over arguments */
 			while ( out < t ) {
 				if ( *out < 0 ) {
-					/* short notation */
+					/* short notation arguments */
 					switch ( -*out ) {
 						case SYMBOL:
-							++out;
-							++r;
-							++out;
-							++r;
+							++out; ++r;
+							++out; ++r;
 							break;
 						case SNUMBER:
-							++out;
-							++r;
+							++out; ++r;
 							if ( sizeof(WORD) == 2 ) {
 								/* resize if needed */
 								if ( *out > (1<<15)-1 || *out < -(1<<15)+1 ) {
@@ -4269,39 +4518,30 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 									NCOPY(b, a, n)
 								}
 								else {
-									++out;
-									++r;
+									++out; ++r;
 								}
 							}
 							else {
-								++out;
-								++r;
+								++out; ++r;
 							}
 							break;
 						case VECTOR:
-							++out;
-							++r;
+							++out; ++r;
 							AO.RenumberVec((UBYTE *)out);
-							++out;
-							++r;
+							++out; ++r;
 							break;
 						case INDEX:
-							++out;
-							++r;
-							++out;
-							++r;
+							++out; ++r;
+							++out; ++r;
 							break;
 						case MINVECTOR:
-							++out;
-							++r;
+							++out; ++r;
 							AO.RenumberVec((UBYTE *)out);
-							++out;
-							++r;
+							++out; ++r;
 							break;
 						default:
 							if ( -*out >= FUNCTION ) {
-								++out;
-								++r;
+								++out; ++r;
 								break;
 							} else {
 								MesPrint("short function code %d not implemented.", *out);
@@ -4310,20 +4550,22 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 					}
 				}
 				else {
+					/* long arguments */
 					INT32 *newargsize = out;
 					argEnd = out + *out;
-					++out;
-					++r;
-					++out;
-					++r;
+					++out; ++r;
+					++out; ++r; /* dirty flags */
 					while ( out < argEnd ) {
 						INT32 *keepsizep = out + *out;
 						INT32 lenbuf = *out;
+						/* recursion */
 						newbin = ReadSaveTerm32((UBYTE *)r, binend, (UBYTE **)&out, (UBYTE *)rend, top, 1);
 						r += lenbuf;
 						if ( newbin == (UBYTE *)r ) {
 							return ( (UBYTE *)in );
 						}
+						/* if the term done by recursion has changed in size,
+						   we need to move the rest of the data accordingly */
 						if ( out > keepsizep ) {
 							INT32 *a, *b;
 							INT32 n;
@@ -4386,6 +4628,25 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 /*
  		#] ReadSaveTerm :
  		#[ ReadSaveExpression :
+
+		Reads an expression from the open file specified by AO.SaveData.Handle.
+		The endianness flip and a resizing without renumbering is done in this
+		function. Therefore the buffer consists of chunks with a uniform
+		maximal word size (32bit at the moment). The actual renumbering is then
+		done as a call to the function ReadSaveTerm32. The result is returned in
+		'buffer'. If the translation at some point doesn't fit into the buffer
+		anymore, the function returns and must be called again. In any case
+		'size' returns the number of successfully read bytes, 'outsize' returns
+		the number of successfully written bytes, and the file will be
+		positioned at the next byte after the successfully read data.  It is
+		called by PutInStore().
+
+		buffer			output buffer, holds the (translated) expression
+		top				end of buffer
+		size			number of read bytes
+		outsize			number of written bytes
+		RETURN VALUE	= 0 everything okay, > 1 an error occurred
+
 */
 
 WORD
@@ -4393,20 +4654,32 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 {
 	if ( AO.transFlag ) {
 		UBYTE *in, *end, *out, *outend, *p, *inend;
+		POSITION pos;
 		LONG half;
 		WORD lenW = AO.SaveHeader.lenWORD;
-		POSITION pos;
+
+		/* remember the last file position in case an expression cannot be
+		   fully processed */
 		TELLFILE(AO.SaveData.Handle,&pos);
 
+		/* adjust 'size' depending on whether the translated data is bigger or
+		   smaller */ 
 		half = (top-buffer)/2;
 		if ( *size > half ) *size = half;
-		if ( lenW < sizeof(WORD) ) {
-			if ( *size * sizeof(WORD)/lenW > half ) *size = half/2;
+		if ( lenW < (ULONG)sizeof(WORD) ) {
+			if ( *size * (ULONG)sizeof(WORD)/lenW > half ) *size = half*lenW/(ULONG)sizeof(WORD);
 		}
 		else {
 			if ( *size > half ) *size = half;
 		}
-	
+
+		/* depending on the necessary resizing we position the input pointer
+		   either at the start of the buffer or in the middle. if the data will
+		   roughly remain the same size, we need only one processing step, so
+		   we put the 'in' at the middle and 'out' and the beginning. in the
+		   other cases we need two processing steps, so first we put 'in' at
+		   the beginning and write at the middle. the second step can then read
+		   from the middle and put its results at the beginning. */
 		in = out = buffer;
 		if ( lenW == sizeof(WORD) ) in += half;
 		else out += half;
@@ -4436,13 +4709,14 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 				if ( p == in ) break;
 				in = p;
 			} while ( in <= end - lenW );
-			/* resize */
+			/* then resize */
 			*size = in - buffer;
 			in = buffer + half;
 			end = out;
 			out = buffer;
 
 			while ( in < end ) {
+				/* resize without checking */
 				AO.ResizeNCWORD(in, out);
 				in += lenW; out += sizeof(WORD);
 			}
@@ -4455,18 +4729,17 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 					in += lenW; out += sizeof(WORD);
 				}
 				in = buffer + half;
-				end = in + (*size * sizeof(WORD)/lenW);
+				end = out;
 				out = buffer;
 			}
-			/* renumber */
+			/* then renumber */
 			do {
-				p = ReadSaveTerm32(in, end, &out, end, top, 0);
+				p = ReadSaveTerm32(in, end, &out,  buffer+half, buffer+half, 0);
 				if ( p == in ) break;
 				in = p;
 			} while ( in <= end - sizeof(WORD) );
-			*size = in - buffer - half;
+			*size = (in - buffer - half) * lenW / (ULONG)sizeof(WORD);
 		}
-
 		*outsize = out - buffer;
 		ADDPOS(pos, *size);
 		SeekFile(AO.SaveData.Handle, &pos, SEEK_SET);

@@ -29,20 +29,26 @@ typedef struct {
 
 /*	Next are the index structs for stored and saved expressions */
 
+/* the first 8 bytes serve as a unique mark to identity save-files that
+   contain such a header. older versions of FORM will write the POSITION of the
+   next FILEINDEX here and that always differs from this pattern.
+   len... give the number of bytes for the data types on the architecture.
+
+   */
 typedef struct {
 	UBYTE headermark[8];  /* old versions of FORM have a max sizeof(POSITION) of 8 */
-	UBYTE lenWORD;
-	UBYTE lenLONG;
-	UBYTE lenPOS;
-	UBYTE lenPOINTER;
-	UBYTE endianness[16]; /* sizeof(int) should be <= 16  */
-	UBYTE sSym;
-	UBYTE sInd;
-	UBYTE sVec;
-	UBYTE sFun;
-	UBYTE maxpower[16];
-	UBYTE wildoffset[16];
-	UBYTE revision;
+	UBYTE lenWORD;        /* number of bytes for the data type */
+	UBYTE lenLONG;        /* ...                               */
+	UBYTE lenPOS;         /* ...                               */
+	UBYTE lenPOINTER;     /* ...                               */
+	UBYTE endianness[16]; /* used to determine endianness, sizeof(int) should be <= 16 */
+	UBYTE sSym;           /* sizeof(struct SyMbOl)    */
+	UBYTE sInd;           /* sizeof(struct InDeX)     */
+	UBYTE sVec;           /* sizeof(struct VeCtOr)    */
+	UBYTE sFun;           /* sizeof(struct FuNcTiOn)  */
+	UBYTE maxpower[16];   /* maximum power            */
+	UBYTE wildoffset[16]; /* WILDOFFSET macro         */
+	UBYTE revision;       /* Revision number of save-file system <-> FORM version */
 	UBYTE reserved[512-8-4-16-4-16-16-1]; /* padding to 512 bytes */
 } STOREHEADER;
 
@@ -1519,12 +1525,12 @@ struct O_const {
     UBYTE   *DollarOutBuffer;      /* (O) Outputbuffer for Dollars */
     UBYTE   *CurBufWrt;            /* (O) Name of currently written expr. */
     FILEDATA    SaveData;          /* (O) */
-    STOREHEADER SaveHeader;       /* ()  System Independent save-Files */
-    WORD    transFlag;
-    WORD    powerFlag;
-    WORD    resizeFlag;
-    WORD    bufferedInd;
-    VOID    (*FlipWORD)(UBYTE *);
+    STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
+    WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
+    WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
+    WORD    resizeFlag;            /* ()  >0 indicades that something went wrong when resizing words */
+    WORD    bufferedInd;           /* ()  Contains extra INDEXENTRIES, see ReadSaveIndex() for an explanation */
+    VOID    (*FlipWORD)(UBYTE *);  /* ()  Function pointers for translations. Initialized by ReadSaveHeader() */
     VOID    (*FlipLONG)(UBYTE *);
     VOID    (*FlipPOS)(UBYTE *);
     VOID    (*FlipPOINTER)(UBYTE *);
@@ -1536,6 +1542,7 @@ struct O_const {
     VOID    (*ResizePOINTER)(UBYTE *,UBYTE *);
     VOID    (*CheckPower)(UBYTE *);
     VOID    (*RenumberVec)(UBYTE *);
+	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
 #ifdef mBSD
 #ifdef MICROTIME
     long    wrap;                  /* (O) For statistics time. wrap around */
