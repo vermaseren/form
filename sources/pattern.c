@@ -800,8 +800,30 @@ SubsL5:								fill += nq;
 			fill++;
 			subterm = fill;
 			do {
-				if ( *m == *t ) { m += 1; t += 1; }
-				else { *fill++ = *t++; }
+				if ( *m == *t ) {
+					m += 1; t += 1;
+				}
+				else if ( *m >= (AM.OffsetIndex+WILDOFFSET) ) {
+					while ( t < xstop ) *fill++ = *t++;
+					nq = WORDDIF(fill, subterm);
+					fill = subterm;
+					do {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,*fill,&newval3) ) {
+							break;
+						}
+						fill += 1;
+						nq -= 1;
+					} while ( nq > 0 );
+					nq -= 1;
+					if ( nq > 0 ) {
+						q = fill + 1;
+						NCOPY(fill,q,nq);
+					}
+					m += 1;
+				}
+				else {
+					*fill++ = *t++; 
+				}
 			} while ( m < ystop );
 			while ( t < xstop ) *fill++ = *t++;
 			nq = WORDDIF(fill,subterm);
