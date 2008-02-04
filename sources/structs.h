@@ -1,6 +1,11 @@
 #ifndef __STRUCTS__
 
 #define __STRUCTS__
+
+/** @file structs.h
+ *
+ *  Contains definitions for global structs.
+ */
  
 /*
   	#[ sav&store :
@@ -29,55 +34,80 @@ typedef struct {
 
 /*	Next are the index structs for stored and saved expressions */
 
-/* the first 8 bytes serve as a unique mark to identity save-files that
-   contain such a header. older versions of FORM will write the POSITION of the
-   next FILEINDEX here and that always differs from this pattern.
-   len... give the number of bytes for the data types on the architecture.
-
-   */
+/**
+ *  Defines the structure of the file header for store-files and save-files.
+ *
+ *  The first 8 bytes serve as a unique mark to identity save-files that
+ *  contain such a header. Older versions of FORM don't have this header and
+ *  will write the POSITION of the next file index (struct FiLeInDeX) here,
+ *  which is always different from this pattern.
+ *
+ *  It is always 512 bytes long.
+ */
 typedef struct {
-	UBYTE headermark[8];  /* old versions of FORM have a max sizeof(POSITION) of 8 */
-	UBYTE lenWORD;        /* number of bytes for the data type */
-	UBYTE lenLONG;        /* ...                               */
-	UBYTE lenPOS;         /* ...                               */
-	UBYTE lenPOINTER;     /* ...                               */
-	UBYTE endianness[16]; /* used to determine endianness, sizeof(int) should be <= 16 */
-	UBYTE sSym;           /* sizeof(struct SyMbOl)    */
-	UBYTE sInd;           /* sizeof(struct InDeX)     */
-	UBYTE sVec;           /* sizeof(struct VeCtOr)    */
-	UBYTE sFun;           /* sizeof(struct FuNcTiOn)  */
-	UBYTE maxpower[16];   /* maximum power            */
-	UBYTE wildoffset[16]; /* WILDOFFSET macro         */
-	UBYTE revision;       /* Revision number of save-file system <-> FORM version */
-	UBYTE reserved[512-8-4-16-4-16-16-1]; /* padding to 512 bytes */
+	UBYTE headermark[8];  /**< Pattern for header identification. Old versions
+	                           of FORM have a maximum sizeof(POSITION) of 8 */
+	UBYTE lenWORD;        /**< Number of bytes for WORD */
+	UBYTE lenLONG;        /**< Number of bytes for LONG */
+	UBYTE lenPOS;         /**< Number of bytes for POSITION */
+	UBYTE lenPOINTER;     /**< Number of bytes for void * */
+	UBYTE endianness[16]; /**< Used to determine endianness, sizeof(int) should be <= 16 */
+	UBYTE sSym;           /**< sizeof(struct SyMbOl)   */
+	UBYTE sInd;           /**< sizeof(struct InDeX)    */
+	UBYTE sVec;           /**< sizeof(struct VeCtOr)   */
+	UBYTE sFun;           /**< sizeof(struct FuNcTiOn) */
+	UBYTE maxpower[16];   /**< Maximum power, see #MAXPOWER */
+	UBYTE wildoffset[16]; /**< #WILDOFFSET macro         */
+	UBYTE revision;       /**< Revision number of save-file system  */
+	UBYTE reserved[512-8-4-16-4-16-16-1]; /**< Padding to 512 bytes */
 } STOREHEADER;
 
+/**
+ *  Defines the structure of an entry in a file index (see struct FiLeInDeX).
+ *  
+ *  It represents one expression in the file.
+ *
+ *  It is always 512 bytes long.
+ */
 typedef struct InDeXeNtRy {
-	POSITION	position;		/* Position of the expression itself */
-	POSITION	length;			/* Length of the expression itself */
-	POSITION	variables;		/* Position of the list with variables */
-	LONG	CompressSize;		/* size of buffer before compress */
-	WORD	nsymbols;			/* Number of symbols in the list */
-	WORD	nindices;			/* Number of indices in the list */
-	WORD	nvectors;			/* Number of vectors in the list */
-	WORD	nfunctions;			/* Number of functions in the list */
-	WORD    size;				/* Size of variables field */
-	SBYTE	name[MAXENAME+1];
+	POSITION	position;		/**< Position of the expression itself */
+	POSITION	length;			/**< Length of the expression itself */
+	POSITION	variables;		/**< Position of the list with variables */
+	LONG	CompressSize;		/**< Size of buffer before compress */
+	WORD	nsymbols;			/**< Number of symbols in the list */
+	WORD	nindices;			/**< Number of indices in the list */
+	WORD	nvectors;			/**< Number of vectors in the list */
+	WORD	nfunctions;			/**< Number of functions in the list */
+	WORD    size;				/**< Size of variables field */
+	SBYTE	name[MAXENAME+1];	/**< Name of expression */
 	PADLONG(1,5,MAXENAME+1);
 } INDEXENTRY;
 
-/* We want sizeof(FILEINDEX) to be 512 or some other nice number */
-
+/**
+ *  Maximum number of entries (struct InDeXeNtRy) in a file index (struct
+ *  FiLeInDeX). Number is calculated such that the size of a file index is no
+ *  more than 512 bytes.
+ */
 #define INFILEINDEX ((512-sizeof(LONG)-sizeof(POSITION))/sizeof(INDEXENTRY))
+/**
+ *  Number of empty filling bytes for a file index (struct FiLeInDeX). It is
+ *  calculated such that the size of a file index is always 512 bytes.
+ */
 #define EMPTYININDEX (512-sizeof(LONG)-sizeof(POSITION)-INFILEINDEX*sizeof(INDEXENTRY))
 
+/**
+ *  Defines the structure of a file index in store-files and save-files.
+ *  
+ *  It contains several entries (see struct InDeXeNtRy) up to a maximum of
+ *  #INFILEINDEX.
+ *
+ *  It is always 512 bytes long.
+ */
 typedef struct FiLeInDeX {
-	POSITION	next;			/* Position of next FILEINDEX if any */
-	LONG	number;				/* Number of used entries in this index */
-	INDEXENTRY expression[INFILEINDEX];
-
-	SBYTE	empty[EMPTYININDEX];
-
+	POSITION	next;			/**< Position of next FILEINDEX if any */
+	LONG	number;				/**< Number of used entries in this index */
+	INDEXENTRY expression[INFILEINDEX]; /**< File index entries */
+	SBYTE	empty[EMPTYININDEX];		/**< Padding to 512 bytes */
 } FILEINDEX;
 
 typedef struct FiLeDaTa {

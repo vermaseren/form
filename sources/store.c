@@ -1,3 +1,9 @@
+/** @file store.c
+ *
+ *  Contains all functions that deal with store-files and the system
+ *  independent save-files.
+ */
+
 /*
   	#[ Includes : store.c
 */
@@ -2078,6 +2084,11 @@ ErrNextS:
  		#[ SetFileIndex :
 */
 
+/**
+ *  Reads the next file index and puts it into AR.StoreData.Index. TODO
+ *
+ *  @return  = 0 everything okay, != 0 an error occurred
+ */
 WORD
 SetFileIndex()
 {
@@ -3125,13 +3136,6 @@ WriteTrailer:
 	located here.
 
  		#[ Flip :
-
-		Functions for flipping the endianness. These functions will be called
-		via function pointers.  See struct O_const and ReadSaveHeader().
-
-		Optimized versions for 16,32 and 64 bit do exist. FlipN is a general
-		version for arbitrary word sizes.
-
 */
 
 #ifndef INT16
@@ -3141,6 +3145,15 @@ WriteTrailer:
 #error "INT32 not defined!"
 #endif
 
+/**
+ *  Flips the endianness. This function will be called via function pointers.
+ *  See struct O_const and ReadSaveHeader().
+ *
+ *  It is a general version for arbitrary word sizes.
+ *  
+ *  @param  p       pointer to data
+ *  @param  length  length of data in bytes
+ */
 VOID
 FlipN ARG2(UBYTE *,p,int,length)
 {
@@ -3152,6 +3165,15 @@ FlipN ARG2(UBYTE *,p,int,length)
 	} while ( ++p != q );
 }
 
+/**
+ *  Flips the endianness. This function will be called via function pointers.
+ *  See struct O_const and ReadSaveHeader().
+ *
+ *  It is an optimized version for 16 bit (other versions for 32bit and 64bit
+ *  do exist).
+ *  
+ *  @param  p  pointer to data
+ */
 VOID
 Flip16 ARG1(UBYTE *,p)
 {
@@ -3160,6 +3182,7 @@ Flip16 ARG1(UBYTE *,p)
 	*((INT16 *)p) = out;
 }
 
+/** @see Flip16() */
 VOID
 Flip32 ARG1(UBYTE *,p)
 {
@@ -3170,6 +3193,7 @@ Flip32 ARG1(UBYTE *,p)
 	*((INT32 *)p) = out;
 }
 
+/** @see Flip16() */
 #ifdef INT64
 VOID
 Flip64 ARG1(UBYTE *,p)
@@ -3187,26 +3211,26 @@ VOID
 Flip64 ARG1(UBYTE *,p) { FlipN(p, 8); }
 #endif /* INT64 */
 
+/** @see Flip16() */
 VOID
 Flip128 ARG1(UBYTE *,p) { FlipN(p, 16); }
 
 /*
  		#] Flip :
  		#[ Resize :
-
-		Functions for resizing words. These functions will be called via
-		function pointers.  See struct O_const and ReadSaveHeader().
-		Specialized functions for all combinations of reading 16,32,64 bit and
-		writing 16,32,64 bit do exist. The general version for arbitrary word
-		sizes comes in two variants depending on the endianness of the machine
-		(ResizeDataBE for big-endian, ResizeDataLE for little-endian) and is
-		accessed via the function pointer ResizeData in the struct O_const.
-		Versions with and without checking for too big numbers exist. In case a
-		checking is done, the resizeFlag in struct O_const will be used to
-		signal the result. This flag will be checked by CoLoad().
-
 */
 
+/**
+ *  Resizes words. This function will be called via function pointers. See
+ *  struct O_const and ReadSaveHeader().
+ *
+ *  General version for arbitrary word sizes and big-endian machines.
+ *
+ *  @param  src  pointer to input data
+ *  @param  dst  pointer to output data
+ *  @param  slen number of bytes of input
+ *  @param  dlen number of bytes of output
+ */
 VOID
 ResizeDataBE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
 {
@@ -3221,6 +3245,9 @@ ResizeDataBE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
 	}
 }
 
+/**
+ *  The same as ResizeDataBE() but for little-endian machines.
+ */
 VOID
 ResizeDataLE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
 {
@@ -3234,12 +3261,25 @@ ResizeDataLE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
 	}
 }
 
+/**
+ *  Resizes words. This function will be called via function pointers. See
+ *  struct O_const and ReadSaveHeader().
+ *
+ *  Specialized version for the specific combination of reading 16bit and
+ *  writing 16bit (more versions for other bit-combinations do exist).
+ *  
+ *  No checking for too big numbers is done.
+ *
+ *  @param  src  pointer to input data
+ *  @param  dst  pointer to output data
+ */
 VOID
 Resize16t16 ARG2(UBYTE *,src,UBYTE *,dst)
 {
 	*((INT16 *)dst) = *((INT16 *)src);
 }
 
+/** @see Resize16t16() */
 VOID
 Resize16t32 ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3248,6 +3288,7 @@ Resize16t32 ARG2(UBYTE *,src,UBYTE *,dst)
 	*((INT32 *)dst) = out;
 }
 
+/** @see Resize16t16() */
 #ifdef INT64
 VOID
 Resize16t64 ARG2(UBYTE *,src,UBYTE *,dst)
@@ -3261,15 +3302,18 @@ VOID
 Resize16t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 2, dst, 8); }
 #endif /* INT64 */
 
+/** @see Resize16t16() */
 VOID
 Resize16t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 2, dst, 16); }
 
+/** @see Resize16t16() */
 VOID
 Resize32t32 ARG2(UBYTE *,src,UBYTE *,dst)
 {
 	*((INT32 *)dst) = *((INT32 *)src);
 }
 
+/** @see Resize16t16() */
 #ifdef INT64
 VOID
 Resize32t64 ARG2(UBYTE *,src,UBYTE *,dst)
@@ -3283,9 +3327,11 @@ VOID
 Resize32t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 4, dst, 8); }
 #endif /* INT64 */
 
+/** @see Resize16t16() */
 VOID
 Resize32t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 4, dst, 16); }
 
+/** @see Resize16t16() */
 #ifdef INT64
 VOID
 Resize64t64 ARG2(UBYTE *,src,UBYTE *,dst)
@@ -3297,12 +3343,15 @@ VOID
 Resize64t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 8); }
 #endif /* INT64 */
 
+/** @see Resize16t16() */
 VOID
 Resize64t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 16); }
 
+/** @see Resize16t16() */
 VOID
 Resize128t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 16); }
 
+/** @see Resize16t16() */
 VOID
 Resize32t16 ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3312,6 +3361,12 @@ Resize32t16 ARG2(UBYTE *,src,UBYTE *,dst)
 	*((INT16 *)dst) = out;
 }
 
+/**
+ *  The same as Resize32t16() but with checking for too big numbers.
+ *
+ *  The resizeFlag in struct O_const will be used to signal the result of the
+ *  checking. This flag is used by CoLoad().
+ */
 VOID
 Resize32t16NC ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3321,6 +3376,7 @@ Resize32t16NC ARG2(UBYTE *,src,UBYTE *,dst)
 }
 
 #ifdef INT64
+/** @see Resize16t16() */
 VOID
 Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3329,6 +3385,7 @@ Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst)
 	INT16 out = (INT16)in;
 	*((INT16 *)dst) = out;
 }
+/** @see Resize32t16NC() */
 VOID
 Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3337,13 +3394,16 @@ Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst)
 	*((INT16 *)dst) = out;
 }
 #else
+/** @see Resize16t16() */
 VOID
 Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 2); }
+/** @see Resize32t16NC() */
 VOID
 Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 2); }
 #endif /* INT64 */
 
 #ifdef INT64
+/** @see Resize16t16() */
 VOID
 Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3352,6 +3412,7 @@ Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst)
 	INT32 out = (INT32)in;
 	*((INT32 *)dst) = out;
 }
+/** @see Resize32t16NC() */
 VOID
 Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst)
 {
@@ -3360,43 +3421,49 @@ Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst)
 	*((INT32 *)dst) = out;
 }
 #else
+/** @see Resize16t16() */
 VOID
 Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 4); }
+/** @see Resize32t16NC() */
 VOID
 Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 4); }
 #endif /* INT64 */
 
+/** @see Resize16t16() */
 VOID
 Resize128t16 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 2); }
 
+/** @see Resize32t16NC() */
 VOID
 Resize128t16NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 2); }
 
+/** @see Resize16t16() */
 VOID
 Resize128t32 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 4); }
 
+/** @see Resize32t16NC() */
 VOID
 Resize128t32NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 4); }
 
+/** @see Resize16t16() */
 VOID
 Resize128t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
 
+/** @see Resize32t16NC() */
 VOID
 Resize128t64NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /*
-.		#] Resize :
+		#] Resize :
  		#[ CheckPower and RenumberVec :
-
-		Functions for checking the size of exponents and renumbering vectors.
-		If a checking fails, the powerFlag in struct O_const will be set. This
-		flag is used by CoLoad().
-		Renumbering of vectors is done by compensating for the different
-		WILDOFFSET on the involved machines and FORM versions. The WILDOFFSET
-		from the writing machine is coded in the header of the save-file.
-
 */
 
+/**
+ *  Checks the size of exponents. If a checking fails, the powerFlag in struct
+ *  O_const will be set. This flag is used by CoLoad().
+ *
+ *  @param  p  pointer to WORD containing exponent
+ */
 VOID
 CheckPower32 ARG1(UBYTE *,p)
 {
@@ -3411,6 +3478,13 @@ CheckPower32 ARG1(UBYTE *,p)
 	}
 }
 
+/**
+ *  Renumbers vectors by compensating for the different WILDOFFSET on the
+ *  involved machines and FORM versions. The WILDOFFSET from the writing
+ *  machine is coded in the header of the save-file.
+ *
+ *  @param  p  pointer to WORD containing vector code
+ */
 VOID
 RenumberVec32 ARG1(UBYTE *,p)
 {
@@ -3422,23 +3496,23 @@ RenumberVec32 ARG1(UBYTE *,p)
 }
 
 /*
-.		#] CheckPower and RenumberVec :
+ 		#] CheckPower and RenumberVec :
  		#[ ResizeCoeff :
-
-		Resizing of the coefficients of expressions and terms. The functions
-		only work on uniform data with a word size of 32bit
-		(ReadSaveExpression() provides for that). The resizing then actually
-		means whether zeros can be removed when going from 64bit to 32bit, or
-		whether the coefficient size has to be doubled effectively when going
-		from 32bit to 64bit. Both cases involve copying of words and a
-		shrinking or growing of the memory used in '*bout'
-
-		bout	input and output buffer for coefficient
-		bend	end of input
-		top		end of buffer
-
 */
 
+/**
+ *  Resizes the coefficients of expressions and terms. The function only
+ *  work on uniform data with a word size of 32bit (ReadSaveExpression()
+ *  provides for that). The resizing then actually means whether zeros can be
+ *  removed when going from 64bit to 32bit, or whether the coefficient size has
+ *  to be doubled effectively when going from 32bit to 64bit. Both cases
+ *  involve copying of words and a shrinking or growing of the memory used in
+ *  @e *bout.
+ *
+ *  @param  bout  input and output buffer for coefficient
+ *  @param  bend  end of input
+ *  @param  top   end of buffer
+ */
 VOID
 ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
 {
@@ -3537,15 +3611,17 @@ ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
 /*
  		#] ResizeCoeff :
  		#[ WriteStoreHeader :
-
-		Writes header with information about system architecture and FORM
-		revision to an open store file. Called by SetFileIndex().
-
-		handle			specifies open file to which header will be written
-		RETURN VALUE	= 0 everything okay, > 1 an error occurred
-
 */
 
+/**
+ *  Writes header with information about system architecture and FORM revision
+ *  to an open store file.
+ *
+ *  Called by SetFileIndex().
+ *
+ *  @param  handle  specifies open file to which header will be written
+ *  @return         = 0 everything okay, != 0 an error occurred
+ */
 WORD
 WriteStoreHeader ARG1(WORD,handle)
 {
@@ -3591,15 +3667,15 @@ WriteStoreHeader ARG1(WORD,handle)
 /*
  		#] WriteStoreHeader :
  		#[ CompactifySizeof :
-
-		Utility function used by ReadSaveHeader() to convert a sizeof into a
-		convenient array index.
-
-		size			size in bytes
-		RETURN VALUE	log_2(size) - 1
-
 */
 
+/**
+ *  Utility function used by ReadSaveHeader() to convert a sizeof into a
+ *  convenient array index.
+ *
+ *  @param  size  size in bytes
+ *  @return       log_2(size) - 1
+ */
 unsigned int
 CompactifySizeof ARG1(unsigned int,size)
 {
@@ -3616,18 +3692,20 @@ CompactifySizeof ARG1(unsigned int,size)
 /*
  		#] CompactifySizeof :
  		#[ ReadSaveHeader :
-
-		Reads the header in the save file and sets function pointers and flags
-		according to the information found there. Must be called before any
-		other ReadSave... function. It is called by CoLoad().
-
-		Currently works only for the exchange between 32bit and 64bit machines
-		(WORD size must be 2 or 4 bytes)!
-
-		RETURN VALUE	= 0 everything okay, > 1 an error occurred
-
 */
 
+/**
+ *  Reads the header in the save file and sets function pointers and flags
+ *  according to the information found there. Must be called before any other
+ *  ReadSave... function.
+ *
+ *  Currently works only for the exchange between 32bit and 64bit machines
+ *  (WORD size must be 2 or 4 bytes)!
+ *
+ *  It is called by CoLoad().
+ *
+ *  @return   = 0 everything okay, != 0 an error occurred
+ */
 WORD
 ReadSaveHeader()
 {
@@ -3719,20 +3797,21 @@ ReadSaveHeader()
 /*
  		#] ReadSaveHeader :
  		#[ ReadSaveIndex :
-
-		Reads a FILEINDEX from the open save file specified by
-		AO.SaveData.Handle. Translations for adjusting endianness and data
-		sizes are done if necessary. Called by CoLoad() and FindInIndex().
-
-		Depends on the assumption that sizeof(FILEINDEX) is the same everywhere.
-		If FILEINDEX or INDEXENTRY changes, then this functions has to be adjusted.
-
-		fileind			contains the read FILEINDEX after succesful return.
-						must point to allocated, big enough memory.
-		RETURN VALUE	= 0 everything okay, > 1 an error occurred
-
 */
 
+/**
+ *  Reads a FILEINDEX from the open save file specified by AO.SaveData.Handle.
+ *  Translations for adjusting endianness and data sizes are done if necessary.
+ *
+ *  Depends on the assumption that sizeof(FILEINDEX) is the same everywhere.
+ *  If FILEINDEX or INDEXENTRY change, then this functions has to be adjusted.
+ *
+ *  Called by CoLoad() and FindInIndex().
+ *
+ *  @param  fileind  contains the read FILEINDEX after succesful return. must
+ *                   point to allocated, big enough memory.
+ *  @return          = 0 everything okay, != 0 an error occurred
+ */
 WORD
 ReadSaveIndex ARG1(FILEINDEX *,fileind)
 {
@@ -3888,36 +3967,38 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 /*
  		#] ReadSaveIndex :
  		#[ ReadSaveVariables :
-
-		Reads the variables from the open file specified by AO.SaveData.Handle.
-		It reads '*size' bytes and writes them to '*buffer'. It is called by
-		PutInStore().
-		If translation is necessary, the data might shrink or grow in size,
-		then '*size' is adjusted so that the reading and writing fits into the
-		memory from 'buffer' to 'top'. The actual number of read bytes is
-		returned in '*size', the number of written bytes is returned in
-		'*outsize'. If '*size' is smaller than the actual size of the
-		variables, this function will be called several times and needs to
-		remember the current position in the variable structure. The parameter
-		'stage' does this job. When ReadSaveVariables() is called for the first
-		time, this parameter should have the value -1. The parameter 'ind' is
-		used to get the number of variables.
-
-
-		buffer			read variables are written into this allocated memory
-		top				upper end of allocated memory
-		size			number of bytes to read. might return a smaller number
-						of read bytes if translation was necessary
-		outsize			if translation has be done, outsize contains the number
-						of written bytes
-		ind				pointer of INDEXENTRY for the current expression. read-only
-		stage			should be -1 for the first call, will be increased by
-						ReadSaveVariables to memorize the position in the
-						variable structure
-		RETURN VALUE	= 0 everything okay, > 1 an error occurred
-
 */
 
+/**
+ *  Reads the variables from the open file specified by AO.SaveData.Handle. It
+ *  reads @e *size bytes and writes them to @e *buffer. It is called by
+ *  PutInStore().
+ *
+ *  If translation is necessary, the data might shrink or grow in size, then
+ *  @e *size is adjusted so that the reading and writing fits into the memory
+ *  from @e buffer to @e top. The actual number of read bytes is returned in
+ *  @e *size, the number of written bytes is returned in @e *outsize.
+ *
+ *  If @e *size is smaller than the actual size of the variables, this function
+ *  will be called several times and needs to remember the current position in
+ *  the variable structure. The parameter @e stage does this job. When
+ *  ReadSaveVariables() is called for the first time, this parameter should
+ *  have the value -1.
+ *
+ *  The parameter @e ind is used to get the number of variables.
+ *
+ *  @param  buffer   read variables are written into this allocated memory
+ *  @param  top      upper end of allocated memory
+ *  @param  size     number of bytes to read. might return a smaller number
+ *                   of read bytes if translation was necessary
+ *  @param  outsize  if translation has be done, outsize contains the number
+ *                   of written bytes
+ *  @param  ind      pointer of INDEXENTRY for the current expression. read-only
+ *  @param  stage    should be -1 for the first call, will be increased by
+ *                   ReadSaveVariables to memorize the position in the
+ *                   variable structure
+ *  @return          = 0 everything okay, != 0 an error occurred
+ */
 WORD
 ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,INDEXENTRY *,ind,LONG *,stage)
 {
@@ -3932,7 +4013,7 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 		static WORD numReadFun;
 
 		POSITION pos;
-		UBYTE *in, *out, *pp, *end, *outbuf;
+		UBYTE *in, *out, *pp = 0, *end, *outbuf;
 		WORD namelen, realnamelen;
 		/* shortcuts */
 		WORD lenW = AO.SaveHeader.lenWORD;
@@ -4224,35 +4305,36 @@ RSVEnd:
 /*
  		#] ReadSaveVariables :
  		#[ ReadSaveTerm :
-
-		ReadSaveTerm-functions read a single term from the given buffer at
-		'bin' and write the translated term back to this buffer at 'bout'.
-
-		ReadSaveTerm32() is currently the only instantiation of a
-		ReadSaveTerm-function. It only deals with data that already has the
-		correct endianness and that is resized to 32bit words but without being
-		renumbered or translated in any other way. It uses the compress buffer
-		AR.CompressBuffer.
-
-		The function is reentrant in order to cope with nested function arguments.
-		It is called by ReadSaveExpression() and itself.
-
-		The RETURN VALUE indicates the position in the input buffer up to which
-		the data has already been successfully processed. The parameter 'bout'
-		returns the corresponding position in the output buffer.
-		
-		bin				start of the input buffer
-		binend			end of the input buffer
-		bout			as input points to the beginning of the output buffer,
-						as output points behind the already translated data in
-						the output buffer
-		boutend			end of already decompressed data in output buffer
-		top				end of output buffer
-		terminbuf		flag whether decompressed data is already in the output
-						buffer. used in recursive calls
-		RETURN VALUE	pointer to the next unprocessed data in the input buffer
 */
 
+/**
+ *  Reads a single term from the given buffer at @e bin and write the
+ *  translated term back to this buffer at @e bout.
+ *
+ *  ReadSaveTerm32() is currently the only instantiation of a
+ *  ReadSaveTerm-function. It only deals with data that already has the correct
+ *  endianness and that is resized to 32bit words but without being renumbered
+ *  or translated in any other way. It uses the compress buffer
+ *  AR.CompressBuffer.
+ *
+ *  The function is reentrant in order to cope with nested function arguments.
+ *  It is called by ReadSaveExpression() and itself.
+ *
+ *  The @e return @e value indicates the position in the input buffer up to
+ *  which the data has already been successfully processed. The parameter
+ *  @e bout returns the corresponding position in the output buffer.
+ *
+ *  @param  bin        start of the input buffer
+ *  @param  binend     end of the input buffer
+ *  @param  bout       as input points to the beginning of the output buffer,
+ *                     as output points behind the already translated data in
+ *                     the output buffer
+ *  @param  boutend    end of already decompressed data in output buffer
+ *  @param  top        end of output buffer
+ *  @param  terminbuf  flag whether decompressed data is already in the output
+ *                     buffer. used in recursive calls
+ *  @return            pointer to the next unprocessed data in the input buffer
+ */
 UBYTE *
 ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *top, int terminbuf)
 {
@@ -4628,27 +4710,29 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 /*
  		#] ReadSaveTerm :
  		#[ ReadSaveExpression :
-
-		Reads an expression from the open file specified by AO.SaveData.Handle.
-		The endianness flip and a resizing without renumbering is done in this
-		function. Therefore the buffer consists of chunks with a uniform
-		maximal word size (32bit at the moment). The actual renumbering is then
-		done as a call to the function ReadSaveTerm32. The result is returned in
-		'buffer'. If the translation at some point doesn't fit into the buffer
-		anymore, the function returns and must be called again. In any case
-		'size' returns the number of successfully read bytes, 'outsize' returns
-		the number of successfully written bytes, and the file will be
-		positioned at the next byte after the successfully read data.  It is
-		called by PutInStore().
-
-		buffer			output buffer, holds the (translated) expression
-		top				end of buffer
-		size			number of read bytes
-		outsize			number of written bytes
-		RETURN VALUE	= 0 everything okay, > 1 an error occurred
-
 */
 
+/**
+ *  Reads an expression from the open file specified by AO.SaveData.Handle.
+ *  The endianness flip and a resizing without renumbering is done in this
+ *  function. Thereafter the buffer consists of chunks with a uniform maximal
+ *  word size (32bit at the moment). The actual renumbering is then done by
+ *  calling the function ReadSaveTerm32(). The result is returned in @e buffer.
+ *
+ *  If the translation at some point doesn't fit into the buffer anymore, the
+ *  function returns and must be called again. In any case @e size returns the
+ *  number of successfully read bytes, @e outsize returns the number of
+ *  successfully written bytes, and the file will be positioned at the next
+ *  byte after the successfully read data.
+ *
+ *  It is called by PutInStore().
+ *
+ *  @param  buffer   output buffer, holds the (translated) expression
+ *  @param  top      end of buffer
+ *  @param  size     number of read bytes
+ *  @param  outsize  number of written bytes
+ *  @return          = 0 everything okay, != 0 an error occurred
+ */
 WORD
 ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 {
@@ -4755,4 +4839,3 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
  		#] ReadSaveExpression :
 	#] System Independent Saved Expressions :
 */
-
