@@ -695,7 +695,10 @@ multermnum:			if ( x == 0 ) goto NormZero;
 						if ( ( numer1[0] & 1 ) != 0 ) ncoef = -ncoef;
 					}
 				}
-				else pcom[ncom++] = t;
+				else {
+					goto doflags;
+/*					pcom[ncom++] = t; */
+				}
 				break;
 			case SIGFUNCTION:
 /*
@@ -1546,6 +1549,7 @@ NoRep:
 				if ( *t == DUMMYFUN || *t == DUMMYTEN ) {}
 				else {
 					if ( *t < (FUNCTION + WILDOFFSET) ) {
+doflags:
 						if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION].tabl == 0 ) ) {
 							t[2] &= ~DIRTYFLAG;
 							t[2] |= DIRTYSYMFLAG;

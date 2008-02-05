@@ -1,11 +1,6 @@
 #ifndef __STRUCTS__
 
 #define __STRUCTS__
-
-/** @file structs.h
- *
- *  Contains definitions for global structs.
- */
  
 /*
   	#[ sav&store :
@@ -34,80 +29,49 @@ typedef struct {
 
 /*	Next are the index structs for stored and saved expressions */
 
-/**
- *  Defines the structure of the file header for store-files and save-files.
- *
- *  The first 8 bytes serve as a unique mark to identity save-files that
- *  contain such a header. Older versions of FORM don't have this header and
- *  will write the POSITION of the next file index (struct FiLeInDeX) here,
- *  which is always different from this pattern.
- *
- *  It is always 512 bytes long.
- */
 typedef struct {
-	UBYTE headermark[8];  /**< Pattern for header identification. Old versions
-	                           of FORM have a maximum sizeof(POSITION) of 8 */
-	UBYTE lenWORD;        /**< Number of bytes for WORD */
-	UBYTE lenLONG;        /**< Number of bytes for LONG */
-	UBYTE lenPOS;         /**< Number of bytes for POSITION */
-	UBYTE lenPOINTER;     /**< Number of bytes for void * */
-	UBYTE endianness[16]; /**< Used to determine endianness, sizeof(int) should be <= 16 */
-	UBYTE sSym;           /**< sizeof(struct SyMbOl)   */
-	UBYTE sInd;           /**< sizeof(struct InDeX)    */
-	UBYTE sVec;           /**< sizeof(struct VeCtOr)   */
-	UBYTE sFun;           /**< sizeof(struct FuNcTiOn) */
-	UBYTE maxpower[16];   /**< Maximum power, see #MAXPOWER */
-	UBYTE wildoffset[16]; /**< #WILDOFFSET macro         */
-	UBYTE revision;       /**< Revision number of save-file system  */
-	UBYTE reserved[512-8-4-16-4-16-16-1]; /**< Padding to 512 bytes */
+	UBYTE headermark[8];  /* old versions of FORM have a max sizeof(POSITION) of 8 */
+	UBYTE lenWORD;
+	UBYTE lenLONG;
+	UBYTE lenPOS;
+	UBYTE lenPOINTER;
+	UBYTE endianness[16]; /* sizeof(int) should be <= 16  */
+	UBYTE sSym;
+	UBYTE sInd;
+	UBYTE sVec;
+	UBYTE sFun;
+	UBYTE maxpower[16];
+	UBYTE wildoffset[16];
+	UBYTE revision;
+	UBYTE reserved[512-8-4-16-4-16-16-1]; /* padding to 512 bytes */
 } STOREHEADER;
 
-/**
- *  Defines the structure of an entry in a file index (see struct FiLeInDeX).
- *  
- *  It represents one expression in the file.
- *
- *  It is always 512 bytes long.
- */
 typedef struct InDeXeNtRy {
-	POSITION	position;		/**< Position of the expression itself */
-	POSITION	length;			/**< Length of the expression itself */
-	POSITION	variables;		/**< Position of the list with variables */
-	LONG	CompressSize;		/**< Size of buffer before compress */
-	WORD	nsymbols;			/**< Number of symbols in the list */
-	WORD	nindices;			/**< Number of indices in the list */
-	WORD	nvectors;			/**< Number of vectors in the list */
-	WORD	nfunctions;			/**< Number of functions in the list */
-	WORD    size;				/**< Size of variables field */
-	SBYTE	name[MAXENAME+1];	/**< Name of expression */
+	POSITION	position;		/* Position of the expression itself */
+	POSITION	length;			/* Length of the expression itself */
+	POSITION	variables;		/* Position of the list with variables */
+	LONG	CompressSize;		/* size of buffer before compress */
+	WORD	nsymbols;			/* Number of symbols in the list */
+	WORD	nindices;			/* Number of indices in the list */
+	WORD	nvectors;			/* Number of vectors in the list */
+	WORD	nfunctions;			/* Number of functions in the list */
+	WORD    size;				/* Size of variables field */
+	SBYTE	name[MAXENAME+1];
 	PADLONG(1,5,MAXENAME+1);
 } INDEXENTRY;
 
-/**
- *  Maximum number of entries (struct InDeXeNtRy) in a file index (struct
- *  FiLeInDeX). Number is calculated such that the size of a file index is no
- *  more than 512 bytes.
- */
+/* We want sizeof(FILEINDEX) to be 512 or some other nice number */
+
 #define INFILEINDEX ((512-sizeof(LONG)-sizeof(POSITION))/sizeof(INDEXENTRY))
-/**
- *  Number of empty filling bytes for a file index (struct FiLeInDeX). It is
- *  calculated such that the size of a file index is always 512 bytes.
- */
 #define EMPTYININDEX (512-sizeof(LONG)-sizeof(POSITION)-INFILEINDEX*sizeof(INDEXENTRY))
 
-/**
- *  Defines the structure of a file index in store-files and save-files.
- *  
- *  It contains several entries (see struct InDeXeNtRy) up to a maximum of
- *  #INFILEINDEX.
- *
- *  It is always 512 bytes long.
- */
 typedef struct FiLeInDeX {
-	POSITION	next;			/**< Position of next FILEINDEX if any */
-	LONG	number;				/**< Number of used entries in this index */
-	INDEXENTRY expression[INFILEINDEX]; /**< File index entries */
-	SBYTE	empty[EMPTYININDEX];		/**< Padding to 512 bytes */
+	POSITION	next;			/* Position of next FILEINDEX if any */
+	LONG	number;				/* Number of used entries in this index */
+	INDEXENTRY expression[INFILEINDEX];
+
+	SBYTE	empty[EMPTYININDEX];
+
 } FILEINDEX;
 
 typedef struct FiLeDaTa {
@@ -146,7 +110,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -786,6 +750,17 @@ typedef struct {
 	WORD	modnum;				/* The prime number of the modulus */
 } POLYMOD;
 
+typedef struct {
+	POLYMOD	*ppoly;				/* An array of polynomials */
+	WORD	*ncoefs;			/* How many powers of the prime in each coef */
+	WORD	numsym;				/* The number of the symbol in the polynomial */
+	WORD	padicsize;			/* Elements allocated in ppoly; */
+	WORD	numpow;				/* Maximum power of modnum actually used */
+	WORD	arraysize;			/* The size of the allocation of coefs */
+	WORD	polysize;			/* The maximum power in the polynomial */
+	WORD	modnum;				/* The prime number of the modulus */
+} POLYPADIC;
+
 /*
   	#] Varia :
     #[ A :
@@ -1277,6 +1252,8 @@ struct T_const {
     WORD    *TMaddr;               /* (R) buffer for TestSub */
     WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
+	WORD	*maxpowlist;           /* () For use in polynomial GCD's */
+	ULONG	*wranfia;              /* () For use in the random number generator */
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
@@ -1293,6 +1270,8 @@ struct T_const {
     int     SortBotIn2;            /* Input stream 2 for a SortBot */
 #endif
 #endif
+	int		wranfjrand;            /* For use in the random number generator */
+	int		wranfcall;             /* For use in the random number generator */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
@@ -1317,6 +1296,7 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 	WORD    inprimelist;
 	WORD    sizeprimelist;
+	WORD    minimumsymbol;         /* () For use in polynomial GCD's */
 };
 /*
  		#] T : 
@@ -1541,7 +1521,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 struct O_const {
@@ -1555,12 +1535,12 @@ struct O_const {
     UBYTE   *DollarOutBuffer;      /* (O) Outputbuffer for Dollars */
     UBYTE   *CurBufWrt;            /* (O) Name of currently written expr. */
     FILEDATA    SaveData;          /* (O) */
-    STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
-    WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
-    WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
-    WORD    resizeFlag;            /* ()  >0 indicades that something went wrong when resizing words */
-    WORD    bufferedInd;           /* ()  Contains extra INDEXENTRIES, see ReadSaveIndex() for an explanation */
-    VOID    (*FlipWORD)(UBYTE *);  /* ()  Function pointers for translations. Initialized by ReadSaveHeader() */
+    STOREHEADER SaveHeader;       /* ()  System Independent save-Files */
+    WORD    transFlag;
+    WORD    powerFlag;
+    WORD    resizeFlag;
+    WORD    bufferedInd;
+    VOID    (*FlipWORD)(UBYTE *);
     VOID    (*FlipLONG)(UBYTE *);
     VOID    (*FlipPOS)(UBYTE *);
     VOID    (*FlipPOINTER)(UBYTE *);
@@ -1572,7 +1552,6 @@ struct O_const {
     VOID    (*ResizePOINTER)(UBYTE *,UBYTE *);
     VOID    (*CheckPower)(UBYTE *);
     VOID    (*RenumberVec)(UBYTE *);
-	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
 #ifdef mBSD
 #ifdef MICROTIME
     long    wrap;                  /* (O) For statistics time. wrap around */
@@ -1600,7 +1579,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 struct X_const {

@@ -1952,7 +1952,7 @@ calledfrom:
 }
 
 /*
-  	#] PolyRemoveContent : 
+  	#] PolyRemoveContent :
   	#[ PolyGCD :
 
 	Calculates the GCD of two polynomials.
@@ -1992,16 +1992,14 @@ WORD *PolyGCD BARG2(WORD *,Poly1,WORD *,Poly2)
  		#] Declarations: 
  		#[ Special cases:
 */
-	if ( Poly1[*Poly1] == 0 && ABS(Poly1[*Poly1-1]) == *Poly1-1 ) goto gcdisone;
-	if ( Poly2[*Poly2] == 0 && ABS(Poly2[*Poly2-1]) == *Poly2-1 ) goto gcdisone;
-/*
- 		#] Special cases: 
- 		#[ Determine the order of the variables:
-*/
 	if ( *Poly1 == 0 || ( Poly1[*Poly1] == 0 && ABS(Poly1[*Poly1-1]) == *Poly1-1 ) )
 		goto gcdisone;
 	if ( *Poly2 == 0 || ( Poly2[*Poly2] == 0 && ABS(Poly2[*Poly2-1]) == *Poly2-1 ) )
 		goto gcdisone;
+/*
+ 		#] Special cases: 
+ 		#[ Determine the order of the variables:
+*/
 
 	if ( ( slist = PolyGetRenumbering(BHEAD Poly1,Poly2) ) == 0 ) goto calledfrom;
 
@@ -2703,7 +2701,7 @@ restart:;
 */
 	if ( poly1[4] < poly2[4] ) { p = poly1; poly1 = poly2; poly2 = p; }
 /*
-  	#] Step C1 : 
+  	#] Step C1 :
 
 	Put the GCD of the leading coefficients in gcdcoef
 */
@@ -2726,7 +2724,7 @@ restart:;
 	else         gcdpow = m2-1;
 	for (;;) {
 		prime = NextPrime(BHEAD numprime);
-		lgcd = ModShortPrime((UWORD *)gcdcoef,ngcdcoef,prime);
+		lgcd = DivMod((UWORD *)gcdcoef,ngcdcoef,prime);
 		PolyConvertToModulus(poly1,&(AN.polymod1),prime);
 		PolyConvertToModulus(poly2,&(AN.polymod2),prime);
 		if ( AN.polymod1.polysize != m1 || AN.polymod2.polysize != m2
@@ -2905,13 +2903,15 @@ multipleofpoly2:
 	if ( AN.getdivgcd ) {
 		poly2a = AT.WorkPointer;
 		poly2arem = PolyDiv(BHEAD Poly2,poly2);
-	}
-	t = oldworkpointer; p = poly2; while ( *p ) p += *p;
-	size = p - poly2 + 1; p = poly2; NCOPY(t,p,size);
-	if ( AN.getdivgcd ) {
+		t = oldworkpointer; p = poly2; while ( *p ) p += *p;
+		size = p - poly2 + 1; p = poly2; NCOPY(t,p,size);
 		AN.poly1a = t; size = poly2a - poly1a; p = poly1a; NCOPY(t,p,size);
 		AN.poly1a = t; size = AT.WorkPointer - poly2a; p = poly2a; NCOPY(t,p,size);
 		AN.getdivgcd = 0;
+	}
+	else {
+		t = oldworkpointer; p = poly2; while ( *p ) p += *p;
+		size = p - poly2 + 1; p = poly2; NCOPY(t,p,size);
 	}
 	AT.WorkPointer = t;
 	return(oldworkpointer);
@@ -2924,7 +2924,7 @@ calledfrom:;
 }
 
 /*
- 		#] Algorithm 1 :
+ 		#] Algorithm 1 : 
  		#[ Algorithm 2 : The classical method
 
 	Algorithm 2:
@@ -3287,7 +3287,7 @@ calledfrom:
 
 /*
  		#] Algorithm 3 : 
-  	#] PolyGCD1 :
+  	#] PolyGCD1 : 
   	#[ PolyDiv1 :
 
 	Division of univariate polynomials.
@@ -4188,18 +4188,35 @@ WORD *PolyConvertFromModulus BARG2(POLYMOD *,PolyIn,WORD,lgcd)
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t;
 	WORD mm = PolyIn->modnum/2, x, pow;
-	LONG g = (LONG)lgcd;
+	LONG g;
 	t = oldworkpointer;
-	for ( pow = PolyIn->polysize; pow >= 0; pow-- ) {
-		if ( PolyIn->coefs[pow] ) {
-			if ( pow == 0 ) *t++ = 4;
-			else {
-				*t++ = 8; *t++ = SYMBOL; *t++ = 4;
-				*t++ = PolyIn->numsym; *t++ = pow;
+	if ( lgcd == 1 ) {
+		for ( pow = PolyIn->polysize; pow >= 0; pow-- ) {
+			if ( PolyIn->coefs[pow] ) {
+				if ( pow == 0 ) *t++ = 4;
+				else {
+					*t++ = 8; *t++ = SYMBOL; *t++ = 4;
+					*t++ = PolyIn->numsym; *t++ = pow;
+				}
+				x = PolyIn->coefs[pow];
+				if ( x > mm ) { *t++ = PolyIn->modnum - x; *t++ = 1; *t++ = -3; }
+				else          { *t++ = x;     *t++ = 1; *t++ =  3; }
 			}
-			x = (WORD)((PolyIn->coefs[pow]*g)%PolyIn->modnum);
-			if ( x > mm ) { *t++ = PolyIn->modnum - x; *t++ = 1; *t++ = -3; }
-			else          { *t++ = x;     *t++ = 1; *t++ =  3; }
+		}
+	}
+	else {
+		g = (LONG)lgcd;
+		for ( pow = PolyIn->polysize; pow >= 0; pow-- ) {
+			if ( PolyIn->coefs[pow] ) {
+				if ( pow == 0 ) *t++ = 4;
+				else {
+					*t++ = 8; *t++ = SYMBOL; *t++ = 4;
+					*t++ = PolyIn->numsym; *t++ = pow;
+				}
+				x = (WORD)((PolyIn->coefs[pow]*g)%PolyIn->modnum);
+				if ( x > mm ) { *t++ = PolyIn->modnum - x; *t++ = 1; *t++ = -3; }
+				else          { *t++ = x;     *t++ = 1; *t++ =  3; }
+			}
 		}
 	}
 	*t++ = 0;
@@ -4370,6 +4387,151 @@ calledfrom:;
 
 /*
   	#] PolyChineseRemainder : 
+  	#[ PolyHenselUni :
+
+	Routine does a Hensel lifting of two univariate polynomials in modular
+	notation to two polynomials in regular notation.
+	The lifting is for a = u*w => Prod = Poly1*Poly2
+	We start with u(1),w(1) in which u(1)=u%p and w(1)=w%p
+	Input: a,u(1),w(1)
+	Return: u,w in which u sits at AT.WorkPointer and w at the return value.
+	If there is no solution (because u,w aren't relative prime for instance)
+	the return value is zero.
+	We assume that at the moment of starting Prod is content free.
+*/
+
+#ifdef XXXXXX
+WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	WORD m, m1, m2, prime = Poly11->modnum, *p, *t;
+	UWORD *tc;
+	int i, k, kmax;
+	LONG r1, r2, lc;
+	if ( *Prod == 0 ) { *oldworkpointer = -1; return(0); }
+	if ( *Prod == ABS(Prod[*Prod-1])+1 ) {
+		
+	}
+/*
+	Step 1: Find the leading coefficient lc of Prod and multiply Prod by it.
+	        Make Poly11 and Poly21 monic mod p and multiply them by lc%p.
+*/
+	p = Prod + *Prod;
+	size = ABS(p[-1]);
+	p -= size;
+	t = oldworkpointer;
+	*t++ = size+1;
+	for ( i = 0; i < size; i++ ) *t++ = *p++;
+	*t++ = 0;
+	AT.WorkPointer = t;
+	Prod = PolyMul0(PHEAD,Prod,oldworkpointer);
+	p -= size;
+	size = (size-1)/2;
+	tc = (UWORD)(p + size);
+	lc = 0;
+	while ( tc > p ) {
+		lc += (LONG)((ULONG)(*--tc));
+		lc %= prime;
+	}
+
+	m1 = Poly11->polysize
+	r1 = (lc*((LONG)(InvertModular(Poly11->coefs[m1],prime))))%prime;
+	for ( i = 0; i <= m1; i++ ) {
+		Poly11->coefs[i] = (WORD)((Poly11->coefs[i]*r1)%prime;
+	}
+	m2 = Poly21->polysize
+	r2 = (lc*((LONG)(InvertModular(Poly21->coefs[m2],prime))))%prime;
+	for ( i = 0; i <= m2; i++ ) {
+		Poly21->coefs[i] = (WORD)((Poly21->coefs[i]*r2)%prime;
+	}
+/*
+	Step 2: Get the maximum coefficient in Prod (in the absolute sense)
+	        and multiply it by two(??). Then determine kmax as the plog of this
+	        number, rounded down. (This is not quite correct. Theoretically
+	        it can be bigger. How much requires some investigation.)
+*/
+	
+/*
+	Step 3: Determine that Poly11 and Poly21 are relatively prime.
+	        Use the extended Eucliden algorithm and obtain s1 and s2
+	        s1*Poly21+s2*Poly11 = 1.
+	        If Poly21 and Poly11 are not relatively prime, 
+	        put the value 1 at AT.WorkPointer and return zero.
+*/
+	if ( PolyModExtGCD(PHEAD,Poly11,Poly22,&s1,&s2) ) {
+		AT.WorkPointer = oldworkpointer;
+		AT.WorkPointer[0] = 1;
+		return(0);
+	}
+/*
+	Step 4: Set poly1 = Poly11 and poly2 = Poly21
+*/
+	poly1 = PolyConvertFromModulus(PHEAD,Poly11,1);
+	poly2 = PolyConvertFromModulus(PHEAD,Poly21,1);
+/*
+	Step 5: Set up the loop of k=1,...,kmax
+*/
+	for ( k = 1; k <= kmax; k++ ) {
+/*
+	Step 6: Compute c = ((Prod - poly1*poly2)/p^k)
+	        If ( c == 0 ) we can terminate with poly1 and poly2 after taking
+	                      their content out to compensate for the lc of step 1
+	        Note: for the termination criterion we have to work out
+	              all powers in p. We could work out only the powers needed
+	              for c%p and if c is zero, recheck with all powers.
+	        Note: one way to economize is to look at the increments.
+*/
+		
+		poly3 = PolyMul(BHEAD,poly1,poly2);
+		t = poly3;
+		while ( *t ) { t += *t; t[-1] = -t[-1]; }
+		ProdP = PolyAdd(BHEAD,Prod,poly3);
+		if ( *ProdP == 0 ) break;	/* Solution! */
+		cterm = AT.WorkPointer + 1;  *cterm = prime; ncterm = 1;
+		RaisePow(cterm,&ncterm,k);
+		for ( i = 0; i < ncterm; i++ ) { cterm[ncterm+i] = cterm[i]; cterm[i] = 0; }
+		cterm[0] = 1;
+		AT.WorkPointer[0] = 2*(ncterm+1);
+		cterm = AT.WorkPointer;
+		c = PolyMul0(BHEAD,ProdP,cterm);
+/*
+	Step 7: Take c = c % p;
+	        s1p = ((s1*c) % Poly11) % p
+	        s2p = ((s2*c) % Poly21) % p
+	        Note: this can be done in one division as the quotients are
+	              identical.
+*/
+/*
+	Step 8: poly1 = poly1 + s1p * p^k
+	        poly2 = poly2 + s2p * p^k
+*/
+	}
+	if ( k > kmax ) {	/* No solution */
+/*
+		If the loop terminated without a solution, put the value 2
+		at AT.WorkPointer and return zero.
+*/
+		AT.WorkPointer = oldworkpointer;
+		AT.WorkPointer[0] = 2;
+		return(0);
+	}
+/*
+	Take the content from poly1 and poly2.
+*/
+	poly1 = PolyRemoveContent(BHEAD,poly1,1);
+	poly2 = PolyRemoveContent(BHEAD,poly2,1);
+	t = poly1; while ( *t ) t += *t; size = (t - poly1)+1;
+	t = poly1; p = oldworkpointer; NCOPY(p,t,size);
+	t = poly2; while ( *t ) t += *t; size = (t - poly2)+1;
+	retval = p;
+	t = poly2; NCOPY(p,t,size);
+	AT.WorkPointer = p;
+	return(retval);
+}
+#endif
+
+/*
+  	#] PolyHenselUni :
   	#[ NextPrime :
 
 	Gives the next prime number in the list of prime numbers.
@@ -4594,6 +4756,7 @@ int PolyTakeSqrt BARG1(WORD *,Poly)
 		*t++ = 2*size1+1;
 		*outpoly = t - outpoly;
 		t++;
+		m2 = 0;
 	}
 	else {
 		m = Poly[4];
@@ -4755,6 +4918,7 @@ int PolyTakeRoot BARG2(WORD *,Poly,WORD,n)
 		*t++ = 2*size1+1;
 		*outpoly = t - outpoly;
 		t++;
+		mn = 0;
 	}
 	else {
 		m = Poly[4];
@@ -4858,4 +5022,957 @@ noroot:;
 
 /*
   	#] PolyTakeRoot : 
+  	#[ PolyMulti :
+ 		#[ PolyInterpolation :
+
+		Routine does one variable in the GCD calculation, using the
+		interpolation technique. This technique has a limited window of
+		applicability. One can work in either of two ways:
+		A: Everything is done modular and reconstruction is afterwards.
+		B: We work over Z or even the rationals and leave the modular stuff
+		   to the univariate routine(s).
+		The last method is easier conceptually.
+		The first method has the problem of normalization.
+*/
+
+#ifdef XXXXXXX
+WORD *PolyInterpolation BARG3(WORD *,Poly1,WORD *,Poly2,WORD,numsym)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	LONG oldpworkpointer = AT.pWorkPointer;
+	WORD num = AT.maxpowlist[numsym];
+	WORD n, *poly1, *poly2, *poly, **polynomials, *t, *p;
+	LONG size;
+
+	if ( numsym == AT.minimumsymbol ) {
+		return(PolyGCD1(BHEAD Poly1,Poly2));
+	}
+/*
+		We need space in the pointer workspace.
+		Note that we don't give a value to polynomials here because we are
+		going to call this routine recursively and pWorkSpace can still be
+		changed. Hence we have to update this address inside the loop after
+		each call.
+*/
+	WantAddPointers(num+2);
+	AT.pWorkPointer += num+1;
+/*
+		Now evaluate in the points 0,1,...,num and store the results in
+		an array of polynomials.
+*/
+	for ( n = 0; n <= num; n++ ) {
+		poly1 = PolySubs(BHEAD Poly1,n,numsym);
+		poly2 = PolySubs(BHEAD Poly2,n,numsym);
+		poly = PolyInterpolation(BHEAD poly1,poly2,numsym-1);
+		polynomials = AT.pWorkSpace+oldpworkpointer;
+		polynomials[n] = poly;
+	}
+	polynomials[num+1] = 0;
+/*
+		Reconstruct the polynomial.
+*/
+	poly = PolyNewton(BHEAD polynomials,num,numsym);
+/*
+		Copy the result to the proper position, not leaving any holes
+		in the workspace.
+*/
+	t = oldworkpointer; p = poly; while ( *p ) p += *p;
+	size = p - poly + 1; p = poly; NCOPY(t,p,size);
+	AT.WorkPointer = t;
+	AT.pWorkPointer = oldpworkpointer;
+	return(oldworkpointer);
+}
+#endif
+/*
+ 		#] PolyInterpolation : 
+ 		#[ PolySubs :
+
+	Substitutes an integer value for the symbol indicated by numsym and
+	returns the new polynomial.
+	We assume that the symbol is the last in the list and hence that the
+	ordering of the terms isn't affected. This way we won't need the sort
+	routines.
+
+	We need some scratch arrays for the arithmetic.
+	We can use the ones of either the DivLong or the GcdLong routines in reken.c
+
+	The main reason the routine is rather lengthy is that there are a number
+	of cases. It could be done simpler, but it would be slower.
+
+	Another way of improving the speed could be to tabulate the powers,
+	but this could take some space when we have high powers.
+*/
+
+WORD *PolySubs BARG3(WORD *,Poly,WORD,value,WORD,numsym)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	WORD *p, *t, *p1, *t1;
+	WORD *coef, ncoef, nscrat, mscrat, pow;
+	int first = 1, i, i1, i2;
+
+	t = oldworkpointer;
+	p = Poly;
+
+	if ( value == 0 ) {	/* copy the terms that don't have numsym */
+		while ( *p ) {
+			p1 = p; p += *p;
+			if ( ABS(p[-1]) == *p1-1 || p1[p1[2]-1] != numsym ) {
+				while ( p1 < p ) *t++ = *p1++;
+			}
+		}
+		*t++ = 0;
+		AT.WorkPointer = t;
+		return(oldworkpointer);
+	}
+
+	while ( *p ) {
+		p1 = p;
+		p += *p;
+/*
+		Compare the other variables. If identical we have to add.
+		If not identical we have to close a result.
+		If this is a first entry we have to copy the coefficient of p1 to
+		the accumulator array.
+		There is of course the complication of the 'constant' term(s)
+*/
+		if ( *p == 0 ) {	/* last term. we need to write. */
+			if ( first ) {
+				while ( p1 < p ) *t++ = *p1++;
+			}
+			else if ( ABS(p[-1]) == *p1-1 ) {
+				t1 = t; t++; coef = p1+1;
+addcoef1:;
+				ncoef = p[-1];
+				if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
+				else             ncoef = (ncoef-1)/2;
+				if ( AddLong((UWORD *)coef,ncoef,
+				             (UWORD *)AN.DLscrat9,nscrat,
+				             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+				ncoef = ABS(nscrat);
+				for ( i = 0; i < ncoef; i++ ) *t++ = AN.DLscrat9[i];
+				*t++ = 1;
+				for ( i = 1; i < ncoef; i++ ) *t++ = 0;
+				ncoef = 2*ncoef+1; if ( nscrat < 0 ) ncoef = -ncoef;
+				*t++ = ncoef; *t1 = t - t1;
+			}
+			else if ( p1[p1[2]-1] != numsym ) {
+				t1 = t; t++; p1++; coef = p1+p1[1];
+				while ( p1 < coef ) *t++ = *p1++;
+				goto addcoef1;
+			}
+			else if ( value == 1 ) {
+				t1 = t; t++; p1++; coef = p1+p1[1];
+				if ( p1[1] == 4 ) goto addcoef1;
+				i = p1[1]-2; NCOPY(t,p1,i); t1[2] -= 2;
+				goto addcoef1;
+			}
+			else {	/* Now we are in a Horner scheme */
+				pow = p1[p1[2]];
+				t1 = t; t++; p1++; coef = p1+p1[1];
+				if ( p1[1] > 4 ) {
+					i = p1[1]-2; NCOPY(t,p1,i); t1[2] -= 2;
+				}
+				ncoef = p[-1];
+				if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
+				else             ncoef = (ncoef-1)/2;
+				if ( AddLong((UWORD *)coef,ncoef,
+				             (UWORD *)AN.DLscrat9,nscrat,
+				             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+				if ( value < 0 ) {
+					AN.DLscratA[0] = -value; mscrat = -1;
+				}
+				else {
+					AN.DLscratA[0] = value; mscrat = 1;
+				}
+				if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
+				if ( MulLong((UWORD *)AN.DLscrat9,nscrat,
+				             (UWORD *)AN.DLscratA,mscrat,
+				             (UWORD *)t,&ncoef) ) goto calledfrom;
+				nscrat = ncoef; if ( ncoef < 0 ) ncoef = -ncoef;
+				t += ncoef;
+				*t++ = 1;
+				for ( i = 1; i < ncoef; i++ ) *t++ = 0;
+				ncoef = 2*ncoef+1; if ( nscrat < 0 ) ncoef = -ncoef;
+				*t++ = ncoef; *t1 = t - t1;
+			}
+			break;
+		}
+		else if ( p1[2] == 4 && p1[3] == numsym ) {
+			if ( first ) {
+				coef = p1+5;
+				nscrat = p[-1];
+				if ( nscrat < 0 ) nscrat = (nscrat+1)/2;
+				else              nscrat = (nscrat-1)/2;
+				ncoef = ABS(nscrat);
+				for ( i = 0; i < ncoef; i++ ) AN.DLscrat9[i] = coef[i];
+				first = 0;
+			}
+			else {
+				coef = p1+5; pow = p1[4]-p[4];
+				ncoef = p[-1];
+				if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
+				else             ncoef = (ncoef-1)/2;
+				if ( AddLong((UWORD *)coef,ncoef,
+				             (UWORD *)AN.DLscrat9,nscrat,
+				             (UWORD *)AN.DLscratB,&ncoef) ) goto calledfrom;
+				if ( value < 0 ) {
+					AN.DLscratA[0] = -value; mscrat = -1;
+				}
+				else {
+					AN.DLscratA[0] = value; mscrat = 1;
+				}
+				if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
+				if ( MulLong((UWORD *)AN.DLscratB,ncoef,
+				             (UWORD *)AN.DLscratA,mscrat,
+				             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+			}
+		}
+		else {
+/*
+			We have to compare with the next term.
+			If the next term is of the same type (except for the power
+			of numsym) we accumulate with a Horner scheme. If not we have
+			to terminate and write (and turn on first for the next term).
+			Again: the next term could be a constant
+*/
+			if ( ABS(p[*p-1]) == *p-1 ) { /* terminates a sequence */
+terminates:;
+				if ( first ) {
+					i = *p1; NCOPY(t,p1,i);
+				}
+				else {
+					t1 = t;
+					ncoef = p[-1];
+					coef = p - ABS(ncoef);
+					if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
+					else             ncoef = (ncoef-1)/2;
+					if ( p1[p1[2]-1] == numsym ) {	/* add and multiply */
+						while ( p1 < coef ) *t++ = *p1++;
+						if ( AddLong((UWORD *)AN.DLscrat9,nscrat,
+						             (UWORD *)coef,ncoef,
+						             (UWORD *)AN.DLscratB,&ncoef) ) goto calledfrom;
+						pow = coef[-1];
+						if ( value < 0 ) {
+							AN.DLscratA[0] = -value; mscrat = -1;
+						}
+						else {
+							AN.DLscratA[0] = value; mscrat = 1;
+						}
+						if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
+						if ( MulLong((UWORD *)AN.DLscratB,ncoef,
+						             (UWORD *)AN.DLscratA,mscrat,
+						             (UWORD *)t,&nscrat) ) goto calledfrom;
+					}
+					else {	/* only add */
+						while ( p1 < coef ) *t++ = *p1++;
+						if ( AddLong((UWORD *)AN.DLscrat9,nscrat,
+						             (UWORD *)coef,ncoef,
+						             (UWORD *)t,&nscrat) ) goto calledfrom;
+					}
+					ncoef = ABS(nscrat);
+					t += ncoef; *t++ = 1;
+					for ( i = 1; i < ncoef; i++ ) *t++ = 0;
+					ncoef = 2*ncoef+1; if ( nscrat < 0 ) ncoef = -ncoef;
+					*t++ = ncoef;
+					*t1 = t - t1;
+					first = 1;
+				}
+			}
+			else {	/* Here we have to compare: is it similar? */
+				i1 = p1[2]; i2 = p[2];
+				if ( i2 > i1 || i2 < i1-2 ) goto terminates;
+				if ( i2 == i1-2 ) {
+					if ( p[i2-1] == numsym ) goto terminates;
+					if ( p1[i1-1] != numsym ) goto terminates;
+					for ( i = 3; i <= i2; i += 2 ) {
+						if ( p[i] != p1[i] ) goto terminates;
+						if ( p[i+1] != p1[i+1] ) goto terminates;
+					}
+				}
+				else {
+					for ( i = 3; i <= i2; i += 2 ) {
+						if ( p[i] != p1[i] ) goto terminates;
+						if ( p[i+1] != p1[i+1] && p[i] != numsym ) goto terminates;
+					}
+				}
+				if ( first ) {
+					ncoef = p[-1];
+					coef = p - ABS(ncoef);
+					if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
+					else             ncoef = (ncoef-1)/2;
+					nscrat = ABS(ncoef);
+					for ( i = 0; i < nscrat; i++ ) AN.DLscratB[i] = coef[i];
+					pow = coef[-1];
+					if ( i1 == i2 ) pow -= p[p[2]];
+					if ( value < 0 ) {
+						AN.DLscratA[0] = -value; mscrat = -1;
+					}
+					else {
+						AN.DLscratA[0] = value; mscrat = 1;
+					}
+					if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
+					if ( MulLong((UWORD *)AN.DLscratB,ncoef,
+					             (UWORD *)AN.DLscratA,mscrat,
+					             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+					first = 0;
+				}
+				else {	/* accumulate with a Horner scheme */
+					ncoef = p[-1];
+					coef = p - ABS(ncoef);
+					if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
+					else             ncoef = (ncoef-1)/2;
+					if ( AddLong((UWORD *)AN.DLscrat9,nscrat,
+					             (UWORD *)coef,ncoef,
+					             (UWORD *)AN.DLscratB,&ncoef) ) goto calledfrom;
+					pow = coef[-1];
+					if ( i1 == i2 ) pow -= p[p[2]];
+					if ( value < 0 ) {
+						AN.DLscratA[0] = -value; mscrat = -1;
+					}
+					else {
+						AN.DLscratA[0] = value; mscrat = 1;
+					}
+					if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
+					if ( MulLong((UWORD *)AN.DLscratB,ncoef,
+					             (UWORD *)AN.DLscratA,mscrat,
+					             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+				}
+			}
+		}
+	}
+	*t++ = 0;
+	AT.WorkPointer = t;
+	return(oldworkpointer);
+calledfrom:;
+	LOCK(ErrorMessageLock);
+	MesCall("PolySubs");
+	UNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(0);
+}
+
+/*
+ 		#] PolySubs : 
+ 		#[ PolyNewton :
+
+	Puts a number of polynomials together in a Newton interpolation
+	reconstruction. We assume that the polynomials have been evaluated
+	in the points 0,1,...,num and out of that we reconstruct the powers
+	of the numsym-th symbol.
+
+	The algorith used is the Newton algorithm:
+	P(x) = a0 + a1*(x-x0) + a2*(x-x0)*(x-x1) + ... + a(n-1)*(x-x0)*...*(x-x(n-2))
+	We have to determine the ai from the P(xi)
+
+		a0 = P(x0) = P(0)
+		a1 = (P(1)-a0)/(1-0)
+		a2 = (P(2)-a0-a1*(2-0))/((2-0)*(2-1))
+		   = (P(2)-a0)/2! - a1/1!
+		a3 = (P(3)-a0-a1*(3-0)-a2*(3-0)*(3-1))/((3-0)*(3-1)*(3-2))
+		   = (P(3)-a0)/3! - a1/2! - a2/1!
+		a4 = (P(4)-a0)/4! - a1/3! - a2/2! - a3/1!
+		etc.
+
+		a0 = P(0)
+		a1 = (P(1)-P(0))/1!
+		a2 = (P(2)-2*P(1)+P(0))/2!
+		a3 = (P(3)-3*P(2)+3*P(1)-P(0))/3!
+		a4 = (P(4)-4*P(3)+6*P(2)-4*P(1)+P(0))/4!
+
+		an = sum_(i,0,n,P(i)*sign_(n-i)*binom_(n,i))/n!;
+		   = sum_(i,0,n,P(i)*sign_(n-i)*invfac_(n-i)*invfac_(i));
+
+	We use these points because they give a rather easy representation
+	with the binomials or the two factorials in the denominator.
+
+	Considering the nature of the problem, the answer is supposed to
+	be over the integers. It seems best to select those formulas that
+	manage to avoid the use of fractions. This would for instance be the
+	first formula for an as the binomials are integers and the division by
+	n! can be done after adding all terms.
+
+	The way to put together the final answer is with a Horner scheme:
+	P(x) = a0+(x-x0)*(a1+(x-x1)*(a2+(x-x2)*(a3+.... +(x-x(n-1))*(an)...)))
+	     = a0+x*(a1+(x-1)*(a2+(x-2)*(a3+...+(x-(n-1))*(an)...)))
+	and the art is to try to avoid the sorting routines.
+	a(m) = sum_(i,0,m,P(m-i)*sign_(i)*binom_(m,i))/m!;
+*/
+
+WORD *PolyNewton BARG3(WORD **,Polynomials,WORD,num,WORD,numsym)
+{
+	WORD *accum = AT.WorkPointer;
+	WORD *t, *p, *t1, *p1, *p2, *coef, ncoef;
+	WORD *temp, *temp1;
+	int n, i;
+	LONG size; ULONG nn, x;
+
+	if ( num == 0 ) {
+		p = t = Polynomials[0];
+		while ( *t ) t += *t;
+		t++; size = t - p;
+		t = accum; NCOPY(t,p,size);
+		AT.WorkPointer = t;
+		return(accum);
+	}
+	accum = PolyGetNewtonCoef(BHEAD Polynomials,num);
+
+	for ( n = num-1; n >= 0; n-- ) {
+		temp = t = AT.WorkPointer;
+/*
+		Multiply the accumulator by x(numsym)
+*/
+		p = accum;
+		while ( *p ) {
+			p1 = p; p += *p;
+			if ( ABS(p[-1]) == *p1-1 ) {
+				*t++ = *p1++ + 4;
+				*t++ = SYMBOL; *t++ = 4; *t++ = numsym; *t++ = 1;
+				while ( p1 < p ) *t++ = *p1++;
+			}
+			else if ( p1[p1[2]-1] != numsym ) {
+				*t++ = *p1++ + 2;
+				p2 = p1 + p1[1]; *t++ = *p1++; *t++ = *p1++ + 2;
+				while ( p1 < p2 ) *t++ = *p1++;
+				*t++ = numsym; *t++ = 1;
+				while ( p1 < p ) *t++ = *p1++;
+			}
+			else {
+				p2 = p1 + p1[2];
+				while ( p1 < p2 ) *t++ = *p1++;
+				*t++ = *p1++ + 1;
+				while ( p1 < p ) *t++ = *p1++;
+			}
+		}
+		*t++ = 0;
+		if ( n != 0 ) {
+/*
+			Multiply the accumulator by -n and add to the part with x.
+*/
+			nn = (ULONG)n;
+			temp1 = t;
+			p = accum;
+			while ( *p ) {
+				p1 = p; p += *p;
+				coef = p - ABS(p[-1]);
+				ncoef = ABS(p[-1]);
+				ncoef = (ncoef-1)/2;
+				t1 = t;
+				while ( p1 < coef ) *t++ = *p1++;
+				x = coef[0]*nn;
+				*t++ = (WORD)x;
+				for ( i = 1; i < ncoef; i++ ) {
+					x = ( x >> BITSINWORD ) + coef[i] * nn;
+					*t++ = (WORD)x;
+				}
+				x = ( x >> BITSINWORD );
+				if ( x ) {
+					*t++ = (WORD)x;
+					ncoef++;
+				}
+				*t++ = 1;
+				for ( i = 1; i < ncoef; i++ ) *t++ = 0;
+				if ( p[-1] < 0 ) *t++ =   2*ncoef+1;
+				else             *t++ = -(2*ncoef+1);
+				*t1 = t - t1;
+			}
+			*t++ = 0;
+			AT.WorkPointer = t;
+			temp = PolyAdd(BHEAD temp,temp1);
+		}
+/*
+		Get the Newton coefficient and add it into the accumulator
+*/
+		temp1 = PolyGetNewtonCoef(BHEAD Polynomials,n);
+		temp = PolyAdd(BHEAD temp1,temp);
+		size = AT.WorkPointer - temp;
+		p = temp; t = accum;
+		NCOPY(t,p,size);
+		AT.WorkPointer = t;
+	}
+	return(accum);
+}
+
+/*
+ 		#] PolyNewton : 
+ 		#[ PolyGetNewtonCoef :
+
+	Computes the polynomial
+	a(num) = sum_(n,0,num,P(num-n)*sign_(n)*binom_(num,n))/num!;
+	It is assumed that after addition everything can indeed be divided by num!
+
+	Note: This can be more efficient if we tabulate the binomials.
+*/
+
+WORD *PolyGetNewtonCoef BARG2(WORD **,Polynomials,WORD,num)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	WORD *t, *p, *p1, *t1, *coef, icoef, ncoef, *temp, *bino, nbino, *accum;
+	WORD size1, size2, *fac, nfac;
+	int n, i;
+	LONG size;
+/*
+	Start with putting the first term in the 'accumulator'
+*/
+	p = t = Polynomials[num];
+	while ( *t ) t += *t; size = t - p + 1;
+	t = oldworkpointer; NCOPY(t,p,size);
+	AT.WorkPointer = t;
+	for ( n = 1; n <= num; n++ ) {
+		bino = AT.WorkPointer;
+		GetBinom((UWORD *)bino,&nbino,num,n);
+		t = temp = AT.WorkPointer = bino + nbino;
+		if ( ( n & 1 ) != 0 ) nbino = -nbino;
+		p = Polynomials[num-n];
+		while ( *p ) {
+			p1 = p; p += *p;
+			ncoef = ABS(p[-1]); coef = p - ncoef; ncoef = (ncoef-1)/2;
+			t1 = t;
+			while ( p1 < coef ) *t++ = *p1++;
+			if ( MulLong((UWORD *)coef,ncoef,
+			             (UWORD *)bino,nbino,
+			             (UWORD *)t,&ncoef) ) goto calledfrom;
+			if ( p[-1] < 0 ) ncoef = -ncoef;
+			icoef = ABS(ncoef);
+			t += icoef; *t++ = 1;
+			for ( i = 1; i < icoef; i++ ) *t++ = 0;
+			if ( ncoef < 0 ) *t++ = 2*ncoef-1;
+			else             *t++ = 2*ncoef+1;
+			*t1 = t - t1;
+		}
+		*t++ = 0; AT.WorkPointer = t;
+		accum = PolyAdd(BHEAD temp,oldworkpointer);
+		size = AT.WorkPointer - accum;
+		p = accum; t = oldworkpointer; NCOPY(t,p,size);
+		AT.WorkPointer = t;
+	}
+/*
+	Now we have to divide the final result by num!
+*/
+	fac = AT.WorkPointer;
+	if ( Factorial(BHEAD num,(UWORD *)fac,&nfac) ) goto calledfrom;
+	accum = t = AT.WorkPointer = fac+nfac;
+	p = oldworkpointer;
+	while ( *p ) {
+		p1 = p; p += *p;
+		ncoef = ABS(p[-1]); coef = p - ncoef; ncoef = (ncoef-1)/2;
+		t1 = t;
+		while ( p1 < coef ) *t++ = *p1++;
+		DivLong((UWORD *)coef,ncoef,
+		        (UWORD *)fac,nfac,
+		        (UWORD *)t,&size1,
+		        (UWORD *)(t+ncoef),&size2);
+		if ( size2 ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Problems with division by %d! in PolyGetNewtonCoef",num);
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		if ( size1 < 0 ) { ncoef = -size1; size1 = 2*size1-1; }
+		else             { ncoef =  size1; size1 = 2*size1+1; }
+		t += ncoef; *t++ = 1;
+		for ( i = 1; i < ncoef; i++ ) *t++ = 0;
+		*t++ = size1;
+		*t1 = t - t1;
+	}
+	*t++ = 0; size = t - accum; p = accum; t = oldworkpointer;
+	NCOPY(t,p,size);
+	AT.WorkPointer = t;
+	return(oldworkpointer);
+calledfrom:;
+	LOCK(ErrorMessageLock);
+	MesCall("PolyGetNewtonCoef");
+	UNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(0);
+}
+
+/*
+ 		#] PolyGetNewtonCoef : 
+ 		#[ PolyGetGCDPowers :
+
+		Routine gets two multivariate polynomials and determines upper bounds
+		for the powers of the individual variables in the GCD.
+		The answer is gives as an object of type SYMBOL in the workspace.
+		We assume that for each variable there is a term without it
+		(which means that the minimum power of each variable is zero).
+		plist1 and plist2 contain lists of the maximum powers of the variables
+		in the for of objects of type SYMBOL. They are followed each by a
+		single number that gives the maximum dimension of the polynomials.
+		Method used:
+		For each of the variables:
+		1: substitute values for all other variables in such a way that the
+		   lead and trailing coefficients are non-zero.
+		   Do this modulus a prime number.
+		2: compute the GCD.
+		3: Worry about unlucky homomorphisms.
+
+		Assume that originally we are working over the integers.
+
+		Note: The information we collect here can be used very profitably
+		in the later stages of the GCD calculations.
+
+		Other assumption:
+		The lists of variables are matching (except for the (positive) powers).
+
+		Note: We can only obtain upper bounds. Example:
+			x^2 + x*y - 1 and (x-1)*(x+2+y) in y=0 would give (x-1) and not 1.
+		This (and the unlucky homomorphisms) is why we try several points.
+		We try up to MINIMUMSUCCESRATE points.
+		There is no danger in overestimating, except for that we will do
+		too much work later and our conclusions, based on these results,
+		might not be as complete as we would want.
+
+		If the points in PolyGetConfig are selected carefully it should
+		be ***extremely*** unlikely that we don't get the proper values.
+*/
+
+#define MINIMUMSUCCESRATE 3
+
+WORD *PolyGetGCDPowers BARG4(WORD *,Poly1,WORD *,Poly2,WORD *,plist1,WORD *,plist2)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	int i, numvars, success;
+	WORD *config, numprime, prime;
+	WORD min1, min2;
+
+	for ( i = 0; i <= plist1[1]; i++ ) oldworkpointer[i] = plist1[i];
+	AT.WorkPointer += plist1[1]+1;
+
+	numvars = plist1[1]-2/2;
+/*
+	First we determine the dimension of the GCD
+*/
+	numprime = 0; success = 0;
+	while ( success < MINIMUMSUCCESRATE ) {
+		config = PolyGetConfig(BHEAD numvars);
+		prime = NextPrime(BHEAD numprime);
+		if ( ( ( min1 = PolyModSubsVector(BHEAD Poly1,config,numvars,prime,
+					-1,plist1[plist1[1]],&(AN.polymod1)) ) >= 0 ) &&
+		     ( ( min2 = PolyModSubsVector(BHEAD Poly2,config,numvars,prime,
+					-1,plist2[plist2[1]],&(AN.polymod2)) ) >= 0 ) ) {
+			if ( min2 < min1 ) min1 = min2;
+
+			PolyModGCD(&(AN.polymod1),&(AN.polymod2));
+
+			if ( ( AN.polymod1.polysize+min1 ) < oldworkpointer[plist1[1]] )
+				oldworkpointer[plist1[1]] = AN.polymod1.polysize+min1;
+			if ( ( AN.polymod1.polysize+min1 ) == 0 ) {	/* GCD = 1 */
+				AT.WorkPointer = config;
+				break;
+			}
+			success++;
+		}
+		numprime++;
+		AT.WorkPointer = config;
+	}
+	if ( oldworkpointer[plist1[1]] == 0 ) {
+/*
+		In this case we know for sure that the GCD is one.
+		Hence we can set all individual powers to zero and return immediately.
+*/
+		for ( i = 3; i < plist1[1]; i += 2 ) oldworkpointer[i] = 0;
+		return(oldworkpointer);
+	}
+/*
+	Next we try to determine the powers variable by variable.
+*/
+	for ( i = 2; i < plist1[1]; i += 2 ) {
+		numprime = 0; success = 0;
+		while ( success < MINIMUMSUCCESRATE ) {
+			config = PolyGetConfig(BHEAD numvars);
+			prime = NextPrime(BHEAD numprime);
+			if ( ( PolyModSubsVector(BHEAD Poly1,config,numvars,prime,
+						plist1[i],plist1[i+1],&(AN.polymod1)) == 0 ) &&
+			     ( PolyModSubsVector(BHEAD Poly2,config,numvars,prime,
+						plist2[i],plist2[i+1],&(AN.polymod2)) == 0 ) ) {
+
+				PolyModGCD(&(AN.polymod1),&(AN.polymod2));
+
+				if ( AN.polymod1.polysize < oldworkpointer[i+1] )
+					oldworkpointer[i+1] = AN.polymod1.polysize;
+				if ( AN.polymod1.polysize == 0 ) {	/* GCD = 1 */
+					AT.WorkPointer = config;
+					break;
+				}
+				success++;
+			}
+			numprime++;
+			AT.WorkPointer = config;
+		}
+	}
+/*
+	Extra test for the dimension. If all individual powers are zero, so
+	must be the dimension.
+*/
+	for ( i = 3; i < plist1[1]; i += 2 ) {
+		if ( oldworkpointer[i] != 0 ) break;
+	}
+	if ( i >= plist1[1] ) oldworkpointer[plist1[1]] = 0;
+	return(oldworkpointer);
+}
+
+/*
+ 		#] PolyGetGCDPowers : 
+ 		#[ PolyModSubsVector :
+
+		Poly:   the polynomial.
+		values: the array with values.
+		num:    number of variables.
+		prime:  we will work modulus this prime number.
+		numsym: this symbol should not be replaced.
+		maxi:   maximum power of numsym
+		pm:     we want the result in this object
+
+		if numsym is negative we try to determine the dimension.
+		Hence each variable is replaced by x1*value rather than by value.
+
+		When the dimension is set up, it may happen that there is no
+		constant term. In that case we make a correction by shifting the
+		polynomial down by enough powers to force there to be a constant term.
+		The number of powers by which we have to shift will then be
+		the (positive) returned value. We have to test though that the
+		very lowest terms didn't cancel or vanish due to the modular stuff.
+
+		If the result isn't 'complete' we return -1.
+*/
+
+WORD PolyModSubsVector BARG7(WORD *,Poly,WORD *,values,WORD,num,WORD,prime,WORD,numsym,WORD,maxi,POLYMOD *,pm)
+{
+	WORD *p, *p1, *coef, ncoef, correction = 0;
+	int i, pow, minpow = maxi;
+	LONG val;
+
+	AllocPolyModCoefs(pm,maxi);
+	for ( i = 0; i <= maxi; i++ ) pm->coefs[i] = 0;
+	pm->numsym   = numsym;
+	pm->modnum   = prime;
+	pm->polysize = maxi;
+
+	p = Poly;
+	while ( *p ) {
+		p1 = p; p += *p;
+		pow = 0;
+		val = 1;
+/*
+		Substitute the values.
+*/
+		if ( ABS(p[-1]) > *p1-1 ) {
+			p1++;
+			if ( numsym < 0 ) {
+				for ( i = 3; i < p1[1]; i += 2 ) {
+					pow += p1[i];
+				}
+				if ( pow < minpow ) minpow = pow;
+			}
+			for ( i = 2; i < p1[1]; i += 2 ) {
+				if ( p1[i] == numsym ) pow = p1[i+1];
+				else {
+					if ( p1[i] == 0 ) goto zerovalue;
+					else if ( p1[1] == 1 ) {
+					}
+					else {
+						val *= ModPow(values[p1[i]],p1[i+1],prime);
+						val %= prime;
+						if ( val < 0 ) val += prime;
+					}
+				}
+			}
+		}
+		else if ( numsym < 0 ) minpow = 0;
+/*
+		Now take care of the coefficient
+*/
+		coef = p - ABS(p[-1]);
+		ncoef = p[-1]; if ( ncoef < 0 ) ncoef = (ncoef+1)/2; else ncoef = (ncoef-1)/2;
+		val = (val*DivMod((UWORD *)coef,ncoef,prime)) % prime;
+		if ( val < 0 ) val += prime;
+/*
+		And accumulate in the coefs array
+*/
+		val += pm->coefs[pow];
+		if ( val >= prime ) val -= prime;
+		pm->coefs[pow] = (WORD)val;
+zerovalue:;
+	}
+/*
+	Next make the polynomial monic, provided that the leading coefficient
+	isn't zero.
+	Testing on the trailing term makes only sense if we are setting up
+	the polynomial for dimensional calculations.
+*/
+	if ( pm->coefs[maxi] == 0 ) return(-1);
+	if ( pm->coefs[0] == 0 ) {
+		if ( numsym >= 0 ) return(-1);
+		for ( i = 1; i < maxi; i++ ) {
+			if ( pm->coefs[i] != 0 ) break;
+		}
+		correction = i;
+		if ( correction > minpow ) return(-1);
+		for ( i = correction; i <= maxi; i++ )
+				pm->coefs[i-correction] = pm->coefs[i];
+		pm->polysize = maxi = maxi - correction;
+	}
+	val = InvertModular(pm->coefs[maxi],prime);
+	pm->coefs[maxi] = 1;
+	for ( i = 0; i < maxi; i++ ) {
+		if ( pm->coefs[i] ) pm->coefs[i] = (val*pm->coefs[i])%prime;
+	}
+	return(correction);
+}
+
+/*
+ 		#] PolyModSubsVector : 
+ 		#[ ModPow :
+
+		Calculates ( num to the power pow ) % prime;
+*/
+
+WORD ModPow ARG3(WORD,num,WORD,pow,WORD,prime)
+{
+	int sign;
+	int npow;
+	LONG val;
+	if ( pow == 0 ) return(1);
+	sign = 1;
+	if ( num < 0 ) {
+		num = -num;
+		if ( ( pow & 1 ) != 0 ) sign = -1;
+	}
+	if ( num >= prime ) num %= prime;
+	if ( pow == 1 ) {
+		if ( sign < 0 ) return(prime-num);
+		else return(num);
+	}
+	npow = 0;
+	while ( pow ) {
+		npow <<= 1;
+		if ( ( pow & 1 ) != 0 ) { npow++; }
+		pow >>= 1;
+	}
+	val = num; npow >>= 1;
+	while ( npow ) {
+		val = (val*val)%prime;
+		if ( ( npow & 1 ) != 0 ) { val = (val*num)%prime; }
+		npow >>= 1;
+	}
+	if ( sign < 0 ) return(prime-(WORD)val);
+	else            return((WORD)val);
+}
+
+/*
+ 		#] ModPow : 
+ 		#[ PolyGetSymbols :
+
+		Returns an object of type -1. It contains triplets which consists of
+		the number of a symbol, its maximum power and its minimum power.
+		The value of *maxi is the maximum 'dimension' of the polynomial.
+*/
+
+WORD *PolyGetSymbols BARG2(WORD *,Poly,int *,maxi)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	WORD *p, *p1, *t;
+	int i, j, k;
+	int m;
+/*
+	Load the symbols of the first term
+*/
+	oldworkpointer = oldworkpointer; p1 = p = Poly; p += *p;
+	*oldworkpointer = -1; oldworkpointer[1] = 2;
+	t = oldworkpointer + 2;
+	if ( ABS(p[-1]) == *p1-1 ) {	/* nothing there */
+		oldworkpointer[2] = 0;
+		AT.WorkPointer = oldworkpointer + 3;
+		return(oldworkpointer);
+	}
+	p1++; *maxi = 0;
+	for ( i = 2; i < p1[1]; i += 2 ) {
+		*t++ = p1[i++];
+		*t++ = p1[i]; *maxi += p1[i];
+		*t++ = p1[i++];
+	}
+	j = oldworkpointer[1] = t-oldworkpointer;
+/*
+	Now go through the other terms. Update the maxima and minima.
+	If a new symbol has to be added, its minimum power will be zero because
+	it was missing in the first term.
+*/
+	while ( *p ) {
+		p1 = p; p += *p;
+		if ( ABS(p[-1]) == *p1-1 ) {
+			for ( j = 2; j < oldworkpointer[1]; j += 3 )
+					oldworkpointer[j+2] = 0;
+			continue;
+		}
+		p1++; i = 2; j = 2; m = 0;
+		while ( i < p1[1] ) {
+			if ( p1[i] == oldworkpointer[j] ) {
+				if ( p1[i+1] > oldworkpointer[j+1] )
+							oldworkpointer[j+1] = p1[i+1];
+				else if ( p1[i+1] < oldworkpointer[j+2] )
+							oldworkpointer[j+2] = p1[i+1];
+				m += p1[i+1];
+				i += 2; j += 3;
+			}
+			else if ( p1[i] < oldworkpointer[j] ) {
+				for ( k = oldworkpointer[1]-1; k >= j; k-- )
+						oldworkpointer[k+3] = oldworkpointer[k];
+				oldworkpointer[j] = p1[i];
+				oldworkpointer[j+1] = p1[i+1]; m += p1[i+1];
+				oldworkpointer[j+2] = 0; /* it was missing in the first term */
+				oldworkpointer[1] += 3;
+				i += 2; j += 3;
+			}
+			else {
+				oldworkpointer[j+2] = 0; /* not present in this term */
+				j += 3;
+			}
+			if ( j >= oldworkpointer[1] ) {
+				t = oldworkpointer + oldworkpointer[1];
+				while ( i < p1[1] ) {
+					*t++ = p1[i++]; m += p1[i];
+					*t++ = p1[i++];
+					*t++ = 0;
+				}
+				oldworkpointer[1] = t-oldworkpointer;
+				break;
+			}
+		}
+		while ( j < oldworkpointer[1] ) {
+			oldworkpointer[j+2] = 0;
+			j += 3;
+		}
+		if ( m > *maxi ) *maxi = m;
+	}
+	oldworkpointer[oldworkpointer[1]] = 0;
+	AT.WorkPointer = oldworkpointer + oldworkpointer[1] + 1;
+	return(oldworkpointer);
+}
+
+/*
+ 		#] PolyGetSymbols : 
+ 		#[ PolyGetConfig :
+
+		This routine should give an array of values to be substituted.
+		numvars tells how many dimensions we have.
+
+		If we can do this right we can guarantee the maximum powers
+		of the variables in the routine PolyGetGCDPowers.
+
+		This may need some study!
+		AT the moment we use a decent random number generator.
+*/
+
+WORD *PolyGetConfig BARG1(WORD,numvars)
+{
+	WORD *oldworkspace = AT.WorkPointer;
+	int i;
+	for ( i = 0; i < numvars; i++ ) oldworkspace[i] = wranf(BHEAD0);
+	AT.WorkPointer = oldworkspace + numvars;
+	return(oldworkspace);
+}
+
+/*
+ 		#] PolyGetConfig : 
+  	#] PolyMulti : 
 */

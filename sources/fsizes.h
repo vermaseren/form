@@ -28,7 +28,6 @@
 #define HALFMAX 0x100
 #endif
 #define MAXENAME 16
-#define MAXSAVEFUNCTION 16384
 
 #define MAXPARLEVEL 100
 #define MAXNUMBERSIZE 200

@@ -1015,7 +1015,7 @@ mysighandler_t oldPIPE=NULL;
 		if( ttymode & 16 )/* create a session and sets the process group ID */
 			setsid();
 
-		/**/
+		/*   */
 		if(set_cloexec_flag (fdsig[1], 1)!=0){/*Error?*/
 			/*Signal to parent:*/
 			writepid(fdsig[1],(pid_t)-2);

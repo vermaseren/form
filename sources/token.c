@@ -601,10 +601,7 @@ simp1token ARG1(SBYTE *,s)
 								break;
 							case CINDEX:
 								if ( n < AM.OffsetIndex ) *fill++ = TNUMBER1;
-								else {
-									*fill++ = TINDEX;
-									n -= AM.OffsetIndex;
-								}
+								else *fill++ = TINDEX;
 								break;
 							case CVECTOR:   *fill++ = TVECTOR;
 								n -= AM.OffsetVector;   break;

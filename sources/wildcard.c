@@ -824,6 +824,7 @@ ss6:					m++; t++;
 /*
 			#[ SUBEXPRESSION :
 */
+				dirty = 1;
 				tstop = t + t[1];
 				*m++ = *t++;
 				*m++ = *t++;
@@ -836,7 +837,6 @@ ss6:					m++; t++;
 								( ABS(t[-1]) - 2*MAXPOWER ) == s[2] ) {
 							m[-1] = s[3];
 							if ( t[-1] < 0 ) m[-1] = -m[-1];
-							dirty = 1;
 							break;
 						}
 						s += s[1];
@@ -863,7 +863,6 @@ ss6:					m++; t++;
                                 j = t[1];
 								NCOPY(m,t,j);
 								vv[3] = s[3];
-								dirty = 1;
 								goto sr7;
 							}
 						}
@@ -881,6 +880,7 @@ sr7:;
 /*
 			#[ EXPRESSION :
 */
+				dirty = 1;
 				tstop = t + t[1];
 				v = m;
 				*m++ = *t++;
@@ -893,7 +893,6 @@ sr7:;
 						if ( *s == SYMTONUM ) {
 							m[-1] = s[3];
 							if ( t[-1] < 0 ) m[-1] = -m[-1];
-							dirty = 1;
 							break;
 						}
 						else if ( *s <= SYMTOSUB ) {
@@ -2373,6 +2372,6 @@ DenToFunction ARG2(WORD *,term,WORD,numfun)
 }
 
 /*
-  	#] DenToFunction :
+  	#] DenToFunction : 
 */
 

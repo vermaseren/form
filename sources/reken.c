@@ -677,7 +677,7 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 
 /*
  		#] TakeRatRoot: 
-  	#] RekenRational : 
+  	#] RekenRational :
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -2417,7 +2417,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2691,7 +2691,7 @@ MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms : 
+  	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
@@ -2891,5 +2891,72 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 
 /*
  		#] Bernoulli : 
-  	#] Functions : 
+ 		#[ wranf :
+
+		A random number generator that generates random WORDs with a very
+		long sequence. It is based on the Knuth generator.
+
+		We take some care that each thread can run its own, but each
+		uses its own startup. Hence the seed includes the identity of
+		the thread.
+
+		For NPAIR1, NPAIR2 we can use any pair from the table on page 28.
+		Candidates are 24,55 (the example on the pages 171,172)
+		or (33,97) or (38,89)
+*/
+
+#define NPAIR1 38
+#define NPAIR2 89
+#define WARMUP 6
+
+void wranfnew BARG0
+{
+	int i;
+	LONG j;
+	for ( i = 0; i < NPAIR1; i++ ) {
+		j = AT.wranfia[i] - AT.wranfia[i+(NPAIR2-NPAIR1)];
+		if ( j < 0 ) j += 1L << (2*BITSINWORD-2);
+		AT.wranfia[i] = j;
+	}
+	for ( i = NPAIR1; i < NPAIR2; i++ ) {
+		j = AT.wranfia[i] - AT.wranfia[i-NPAIR1];
+		if ( j < 0 ) j += 1L << (2*BITSINWORD-2);
+		AT.wranfia[i] = j;
+	}
+}
+
+WORD wranf BARG0
+{
+	int imax = NPAIR2-1;
+	ULONG i, ii;
+	LONG j, k;
+
+	if ( AT.wranfia == 0 ) {
+		AT.wranfia = (ULONG *)Malloc1(NPAIR2*sizeof(ULONG),"wranf");
+#ifdef WITHPTHREADS
+		AT.wranfia[imax] = j = (((ULONG)AT.identity+31459L) << (BITSINWORD-2))+12345;
+#else
+		AT.wranfia[imax] = j = ( 31459L << (BITSINWORD-2))+12345;
+#endif
+		k = 1;
+		for ( i = 0; i < imax; i++ ) {
+			ii = (NPAIR1*i)*NPAIR2;
+			AT.wranfia[ii] = k;
+			k = j - k;
+			if ( k < 0 ) k += 1L << (2*BITSINWORD-2);
+			j = AT.wranfia[ii];
+		}
+		for ( i = 0; i < WARMUP; i++ ) wranfnew(BHEAD0);
+		AT.wranfcall = 0;
+	}
+	if ( AT.wranfcall >= NPAIR2 ) {
+		wranfnew(BHEAD0);
+		AT.wranfcall = 0;
+	}
+	return((WORD)(AT.wranfia[AT.wranfcall++]>>(BITSINWORD-1)));
+}
+
+/*
+ 		#] wranf :
+  	#] Functions :
 */
