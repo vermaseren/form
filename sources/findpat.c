@@ -1197,8 +1197,41 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 			ystop = m + m[1];
 			t += 2;
 			m += 2;
-			while ( t < xstop && m < ystop && *t == *m ) { t++; m++; }
-			if ( t < tstop || m < mstop ) return(0);
+			n = 0;
+			p = older;
+			do {
+				if ( *m == *t && t < xstop && m < ystop ) {
+					t++; m++;
+				}
+				else if ( *m >= (AM.OffsetIndex+WILDOFFSET) ) {
+					while ( t < xstop ) {
+						*p++ = *t++; n++;
+					}
+					if ( !n ) return(0);
+					nq = n;
+					q = older;
+					do {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,*q,&newval1) ) {
+							AddWild(BHEAD *m-WILDOFFSET,INDTOIND,newval1);
+							break;
+						}
+						q++;
+						nq--;
+					} while ( nq > 0 );
+					if ( nq <= 0 ) return (0);
+					n--;
+					nq--;
+					p = q + 1;
+					while ( nq > 0 ) { *q++ = *p++; nq--; }
+					p--;
+					m++;
+				}
+				else {
+					if ( t >= xstop ) return(0);
+					*p++ = *t++; n++;
+				}
+			} while ( m < ystop );
+
 /*
 			return(0);
 */
