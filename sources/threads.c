@@ -1,11 +1,22 @@
+/** @file threads.c
+ *
+ *  Routines for the interface of FORM with the pthreads library
+ *
+ *	This is the main part of the parallelization of TFORM.
+ *	It is important to also look in the files structs.h and variable.h
+ *	because the treatment of the A and B structs is essential (these
+ *	structs are used by means of the macros AM, AP, AC, AS, AR, AT, AN,
+ *	AO and AX). Also the definitions and use of the macros BHEAD and PHEAD
+ *	should be looked up.
+ *
+ *	The sources are set up in such a way that if WITHPTHREADS isn't defined
+ *	there is no trace of pthread parallelization.
+ *	The reason is that TFORM is far more memory hungry than sequential FORM.
+ */
  
 #ifdef WITHPTHREADS
 
-#include "form3.h"
-
 /*
-	Routines for the interface of FORM with the pthreads library
-
   	#[ Variables :
 
 	The sortbot additions are from 17-may-2007 and after. They consitute
@@ -16,6 +27,8 @@
 	for a large part a copy of the MergePatches routine in sort.c and hence
 	even though complex the bad part has been thoroughly debugged.
 */
+ 
+#include "form3.h"
  
 static int numberofthreads;
 static int numberofworkers;
@@ -641,7 +654,7 @@ OnError:;
 }
 
 /*
-  	#] InitializeOneThread :
+  	#] InitializeOneThread : 
   	#[ FinalizeOneThread :
 */
 
@@ -3109,7 +3122,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge :
+  	#] MasterMerge : 
   	#[ SortBotMasterMerge :
 
 	This routine is run as master. Hence B = B0. Etc.

@@ -1,3 +1,19 @@
+/** @file sort.c
+ *
+ *  Contains the sort routines.
+ *	We distinguish levels of sorting.
+ *	The ground level is the sorting of terms in an expression.
+ *	When a term has functions, the arguments can contain terms that need
+ *	sorting, which this then done by raising the level. This can happen
+ *	recursively. NewSort and EndSort automatically raise and lower the
+ *	level. Because the ground level does some special things, sometimes
+ *	we have to raise immediately to the second level skipping the ground level.
+ *
+ *	Special routines for the parallel sorting are in the file threads.c
+ *	Also the sorting of terms in polynomials is special but most of that is
+ *	controled by changing the address of the compare routine. Other routines
+ *	relevant for adding rational polynomials are in the file polynito.c
+ */
 /*
   	#[ Includes : sort.c
 
@@ -28,16 +44,20 @@ extern long numfrees;
   	#] Includes : 
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
-
-		par = 0 after a splitmerge.
-		par = 1 after merge to sortfile.
-		par = 2 after the sort
-
-		current expression is to be found in AR.CurExpr.
-		terms are in S->TermsLeft.
-		S->GenTerms.
-
 */
+/**
+ *		Writes the statistics.
+ *
+ *		@param plspace The size in bytes currently occupied
+ *		@param par
+ *		par = 0 after a splitmerge.
+ *		par = 1 after merge to sortfile.
+ *		par = 2 after the sort
+ *
+ *		current expression is to be found in AR.CurExpr.
+ *		terms are in S->TermsLeft.
+ *		S->GenTerms.
+ */
 
 char *toterms[] = { "   ", " >>", "-->" };
 
@@ -326,15 +346,18 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats : 
+ 		#] WriteStats :
  		#[ NewSort :				WORD NewSort()
-
-		Starts a new sort.
-		At the lowest level this is a 'main sort' with the struct according
-		to the parameters in S0. At higher levels this is a sort for
-		functions, subroutines or dollars.
-		We prepare the arrays and structs.
 */
+/**
+ *		Starts a new sort.
+ *		At the lowest level this is a 'main sort' with the struct according
+ *		to the parameters in S0. At higher levels this is a sort for
+ *		functions, subroutines or dollars.
+ *		We prepare the arrays and structs.
+ *
+ *		@return Regular convention (OK -> 0)
+ */
 
 WORD
 NewSort()
@@ -390,25 +413,30 @@ NewSort()
 /*
  		#] NewSort : 
  		#[ EndSort :				WORD EndSort(buffer,par)
-
-		Finishes a sort.
-		At AR.sLevel == 0 the output is to the regular output stream.
-		When AR.sLevel > 0, the parameter par determines the actual output.
-		The AR.sLevel will be popped.
-		All ongoing stages are finished and if the sortfile is open
-		it is closed.
-		The statistics are printed when AR.sLevel == 0.
-		par == 0  Output to the buffer.
-		par == 1  Sort for function arguments.
-		          The output will be copied into the buffer.
-		          It is assumed that this is in the WorkSpace.
-		par == 2  Sort for $-variable. We return the address of the buffer
-		          that contains the output in buffer (treated like WORD **).
-		          We first catch the output in a file (unless we can
-		          intercept things after the small buffer has been sorted)
-		          Then we read from the file into a buffer.
-		Only when par == 0 data compression can be attempted at AT.SS==AT.S0.
 */
+/**
+ *		Finishes a sort.
+ *		At AR.sLevel == 0 the output is to the regular output stream.
+ *		When AR.sLevel > 0, the parameter par determines the actual output.
+ *		The AR.sLevel will be popped.
+ *		All ongoing stages are finished and if the sortfile is open
+ *		it is closed.
+ *		The statistics are printed when AR.sLevel == 0.
+ *		par == 0  Output to the buffer.
+ *		par == 1  Sort for function arguments.
+ *		          The output will be copied into the buffer.
+ *		          It is assumed that this is in the WorkSpace.
+ *		par == 2  Sort for $-variable. We return the address of the buffer
+ *		          that contains the output in buffer (treated like WORD **).
+ *		          We first catch the output in a file (unless we can
+ *		          intercept things after the small buffer has been sorted)
+ *		          Then we read from the file into a buffer.
+ *		Only when par == 0 data compression can be attempted at AT.SS==AT.S0.
+ *
+ *		@param buffer buffer for output when needed
+ *		@param par    See above
+ *		@return If negative: error. If positive: number of words in output.
+ */
 
 LONG
 EndSort ARG2(WORD *,buffer,int,par)
@@ -846,11 +874,21 @@ RetRetval:
 /*
  		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
-
-	Reads a new patch from position in file handle.
-	It is put at buffer, anything after take is moved forward.
-
 */
+/**
+ *	Reads a new patch from position in file handle.
+ *	It is put at buffer, anything after take is moved forward.
+ *	This would be part of a term that hasn't been used yet.
+ *	Because of this there should be some space before the start of the buffer
+ *
+ *	@param file     The file system from which to read
+ *	@param position The position from which to read
+ *	@param buffer   The buffer into which to read
+ *	@param take     The unused tail should be moved before the buffer
+ *	@param npat		The number of the patch. Is needed if the information
+ *	                was compressed with gzip, because each patch has its
+ *	                own independent gzip encoding.
+ */
 
 LONG
 PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,npat)
@@ -902,10 +940,13 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 /*
  		#] PutIn : 
  		#[ Sflush :					WORD Sflush(file)
-
-	Puts the contents of a buffer to output
-
 */
+/**
+ *	Puts the contents of a buffer to output
+ *	Only to be used when there is a single patch in the large buffer.
+ *
+ *	@param fi  The filesystem (or its cache) to which the patch should be written
+ */
 
 WORD
 Sflush ARG1(FILEHANDLE *,fi)
@@ -969,22 +1010,29 @@ Sflush ARG1(FILEHANDLE *,fi)
 /*
  		#] Sflush : 
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
-
-	Routine writes one term to file handle at position. It returns
-	the new value of the position.
-
-	NOTE:
-		For 'final output' we may have to index the brackets.
-		See the struct BRACKETINDEX.
-		We should maintain:
-		1: a list with brackets
-			array with the brackets
-		2: a list of objects of type BRACKETINDEX. It contains
-			array with either pointers or offsets to the list of brackets.
-			starting positions in the file.
-		The index may be tied to a maximum size. In that case we may have to
-		prune the list occasionally.
 */
+/**
+ *	Routine writes one term to file handle at position. It returns
+ *	the new value of the position.
+ *
+ *	NOTE:
+ *		For 'final output' we may have to index the brackets.
+ *		See the struct BRACKETINDEX.
+ *		We should maintain:
+ *		1: a list with brackets
+ *			array with the brackets
+ *		2: a list of objects of type BRACKETINDEX. It contains
+ *			array with either pointers or offsets to the list of brackets.
+ *			starting positions in the file.
+ *		The index may be tied to a maximum size. In that case we may have to
+ *		prune the list occasionally.
+ *
+ *	@param term     The term to be written
+ *	@param position The position in the file. Afterwards it is updated
+ *	@param fi       The file (or its cache) to which should be written
+ *	@param ncomp    Information about what type of compression should be used
+ */
+
 WORD
 PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 {
@@ -1262,10 +1310,15 @@ nocompress:
 /*
  		#] PutOut : 
  		#[ FlushOut :				WORD Flushout(position,file,compr)
-
-	Completes output to an output file and writes the trailing zero.
-
 */
+/**
+ *	Completes output to an output file and writes the trailing zero.
+ *
+ *	@param position The position in the file after writing
+ *	@param fi       The file (or its cache)
+ *	@param compr	Indicates whether there should be compression with gzip.
+ *	@return   Regular conventions (OK -> 0).
+ */
 
 WORD
 FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
@@ -1437,19 +1490,20 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 /*
  		#] FlushOut : 
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
-
-		Adds the coefficients of the terms *ps1 and *ps2.
-		The problem comes when there is not enough space for a new
-		longer coefficient. First a local solution is tried.
-		If this is not succesfull we need to move terms around.
-		The possibility of a garbage collection should not be
-		ignored, as avoiding this costs very much extra space which
-		is nearly wasted otherwise.
-
-		If the return value is zero the terms cancelled.
-
-		The resulting term is left in *ps1.
 */
+/**
+ *		Adds the coefficients of the terms *ps1 and *ps2.
+ *		The problem comes when there is not enough space for a new
+ *		longer coefficient. First a local solution is tried.
+ *		If this is not succesfull we need to move terms around.
+ *		The possibility of a garbage collection should not be
+ *		ignored, as avoiding this costs very much extra space which
+ *		is nearly wasted otherwise.
+ *
+ *		If the return value is zero the terms cancelled.
+ *
+ *		The resulting term is left in *ps1.
+ */
 
 WORD
 AddCoef BARG2(WORD **,ps1,WORD **,ps2)
@@ -1543,26 +1597,31 @@ RegEnd:
 /*
  		#] AddCoef : 
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
-
-		Routine should be called when S->PolyWise != 0. It points then
-		to the position of AR.PolyFun in both terms.
-
-		We add the contents of the arguments of the two polynomials.
-		Special attention has to be given to special arguments.
-		We have to reserve a space equal to the size of one term + the
-		size of the argument of the other. The addition has to be done
-		in this routine because not all objects are reentrant.
-
-		Newer addition (12-nov-2007).
-		The PolyFun can have two arguments.
-		In that case S->PolyFlag is 2 and we have to call the routine for
-		adding rational polynomials.
-		We have to be rather careful what happens with:
-			The location of the output
-			The order of the terms in the arguments
-		At first we allow only univariate polynomials in the PolyFun.
-		This restriction will be lifted a.s.a.p.
 */
+/**
+ *		Routine should be called when S->PolyWise != 0. It points then
+ *		to the position of AR.PolyFun in both terms.
+ *
+ *		We add the contents of the arguments of the two polynomials.
+ *		Special attention has to be given to special arguments.
+ *		We have to reserve a space equal to the size of one term + the
+ *		size of the argument of the other. The addition has to be done
+ *		in this routine because not all objects are reentrant.
+ *
+ *		Newer addition (12-nov-2007).
+ *		The PolyFun can have two arguments.
+ *		In that case S->PolyFlag is 2 and we have to call the routine for
+ *		adding rational polynomials.
+ *		We have to be rather careful what happens with:
+ *			The location of the output
+ *			The order of the terms in the arguments
+ *		At first we allow only univariate polynomials in the PolyFun.
+ *		This restriction will be lifted a.s.a.p.
+ *
+ *		@param ps1 A pointer to the postion of the first term
+ *		@param ps2 A pointer to the postion of the second term
+ *		@return If zero the terms cancel. Otherwise the new term is in *ps1.
+ */
 
 WORD
 AddPoly BARG2(WORD **,ps1,WORD **,ps2)
@@ -1702,6 +1761,12 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
  		#] AddPoly : 
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
+/**
+ *	Adds the arguments of two occurrences the PolyFun.
+ *	@param s1 Pointer to the first occurrence.
+ *	@param s2 Pointer to the second occurrence.
+ *	@param m  Pointer to where the answer should be.
+ */
 
 #define INSLENGTH(x)  w[1] = FUNHEAD+ARGHEAD+x; w[FUNHEAD] = ARGHEAD+x;
 
@@ -1959,17 +2024,33 @@ twogen:
 }
 
 /*
- 		#] AddArgs :
+ 		#] AddArgs : 
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
-
-	Compares two terms. The answer is:
-	0	equal ( with exception of the coefficient if level == 0. )
-	>0	term1 comes first.
-	<0	term2 comes first.
-	Some special precautions may be needed to keep the CompCoef routine
-	from generating overflows, although this is very unlikely in subterms.
-	This routine should not return an error condition.
-*/
+*
+/**
+ *	Compares two terms. The answer is:
+ *	0	equal ( with exception of the coefficient if level == 0. )
+ *	>0	term1 comes first.
+ *	<0	term2 comes first.
+ *	Some special precautions may be needed to keep the CompCoef routine
+ *	from generating overflows, although this is very unlikely in subterms.
+ *	This routine should not return an error condition.
+ *
+ *	Originally this routine was called Compare.
+ *	With the treatment of special polynomials with terms that contain only
+ *	symbols and the need for extreme speed for the polynomial routines we
+ *	made a special compare routine and now we store the address of the 
+ *	current compare routine in AR.CompareRoutine and have a macro Compare
+ *	which makes all existing code work properly and we can just replace the
+ *	routine on a thread by thread basis (each thread has its own AR struct).
+ *
+ *	@param term1 First input term
+ *	@param term2 Second input term
+ *	@param level The sorting level (may influence on the result)
+ *	@return 0	equal ( with exception of the coefficient if level == 0. )
+ *	        >0	term1 comes first.
+ *	        <0	term2 comes first.
+ */
 
 WORD
 Compare1 BARG3(WORD *,term1,WORD *,term2,WORD,level)
@@ -2364,21 +2445,26 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 :
+ 		#] Compare1 : 
  		#[ ComPress :				LONG ComPress(ss,n)
-
-		Gets a list of pointers to terms and compresses the terms.
-		In n it collects the number of terms and the return value
-		of the function is the space that is occupied.
-
-		We have to pay some special attention to the compression of
-		terms with a PolyFun. This PolyFun should occur only straight
-		before the coefficient, so we can use the same trick as for
-		the coefficient to sabotage compression of this object
-		(Replace in the history the function pointer by zero. This
-		is safe, because terms that would be identical otherwise would
-		have been added).
 */
+/**
+ *		Gets a list of pointers to terms and compresses the terms.
+ *		In n it collects the number of terms and the return value
+ *		of the function is the space that is occupied.
+ *
+ *		We have to pay some special attention to the compression of
+ *		terms with a PolyFun. This PolyFun should occur only straight
+ *		before the coefficient, so we can use the same trick as for
+ *		the coefficient to sabotage compression of this object
+ *		(Replace in the history the function pointer by zero. This
+ *		is safe, because terms that would be identical otherwise would
+ *		have been added).
+ *
+ *		@param ss Array of pointers to terms to be compressed.
+ *		@param n  Number of pointers in ss.
+ *		@return   Total number of words needed for the compressed result.
+ */
 
 LONG ComPress ARG2(WORD **,ss,LONG *,n)
 {
@@ -2517,11 +2603,31 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 /*
  		#] ComPress : 
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
-
-		Algorithm by J.A.M.Vermaseren (31-7-1988)
-
-		Note that AN.SplitScratch and AN.InScratch are used also in GarbHand
 */
+/**
+ *		Algorithm by J.A.M.Vermaseren (31-7-1988)
+ *
+ *		Note that AN.SplitScratch and AN.InScratch are used also in GarbHand
+ *
+ *		Merge sort in memory. The input is an array of pointers.
+ *		Sorting is done recursively by dividing the array in two equal parts
+ *		and calling SplitMerge for each.
+ *		When the parts are small enough we can do the compare and take the
+ *		appropriate action.
+ *		An addition is that we look for 'runs'. Sequences that are already
+ *		ordered. This happens a lot when there is very little action in a
+ *		module. This made FORM faster by a few percent.
+ *
+ *		@param  Pointer The array of pointers to the terms to be sorted.
+ *		@param  number  The number of pointers in Pointer.
+ *
+ *		The terms are supposed to be sitting in the small buffer and there
+ *		is supposed to be an extension to this buffer for when there are
+ *		two terms that should be added and the result takes more space than
+ *		each of the original terms. The notation guarantees that the result
+ *		never needs more space than the sum of the spaces of the original
+ *		terms.
+ */
 
 #ifdef NEWSPLITMERGE
 
@@ -2687,13 +2793,21 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 /*
  		#] SplitMerge : 
  		#[ GarbHand :				VOID GarbHand()
-
-		Garbage collection new style. Options:
-		1: find some buffer that has enough space (maybe in the large
-		   buffer).
-		2: allocate a buffer.Give it back afterwards of course.
-		The major complication is the buffer for SplitMerge.
 */
+/**
+ *		Garbage collection that takes place when the small extension is full
+ *		and we need to place more terms there.
+ *		When this is the case there are many holes in the small buffer and
+ *		the whole can be compactified.
+ *		The major complication is the buffer for SplitMerge.
+ *		There are to options for temporary memory:
+ *		1: find some buffer that has enough space (maybe in the large
+ *		   buffer).
+ *		2: allocate a buffer. Give it back afterwards of course.
+ *		If the small extension is properly dimensioned this routine should
+ *		be called very rarely. Most of the time it will be called when the
+ *		polyfun or polyratfun is active.
+ */
 
 VOID
 GarbHand()
@@ -2794,22 +2908,22 @@ GarbHand()
 /*
  		#] GarbHand : 
  		#[ MergePatches :			WORD MergePatches(par)
-
-	The general merge routine. Can be used for the large buffer
-	and the file merging. The array S->Patches tells where the patches
-	start S->pStop tells where they end (has to be computed first).
-	The end of a 'line to be merged' is indicated by a zero. If
-	the end is reached without running into a zero or a term
-	runs over the boundary of a patch it is a file merging operation
-	and a new piece from the file is read in.
-	On the Atari one delaying factor could be the omnipresent SeekFile.
-	If the FAT is kept in cache memory this operation becomes much
-	faster.
-	If par == 0 the sort is for file -> outputfile.
-	If par == 1 the sort is for large buffer -> sortfile.
-	If par == 2 the sort is for large buffer -> outputfile.
-
 */
+/**
+ *	The general merge routine. Can be used for the large buffer
+ *	and the file merging. The array S->Patches tells where the patches
+ *	start S->pStop tells where they end (has to be computed first).
+ *	The end of a 'line to be merged' is indicated by a zero. If
+ *	the end is reached without running into a zero or a term
+ *	runs over the boundary of a patch it is a file merging operation
+ *	and a new piece from the file is read in.
+ *
+ *	@param par
+ *	If par == 0 the sort is for file -> outputfile.
+ *	If par == 1 the sort is for large buffer -> sortfile.
+ *	If par == 2 the sort is for large buffer -> outputfile.
+ *
+ */
 
 WORD
 MergePatches ARG1(WORD,par)
@@ -3514,11 +3628,15 @@ PatCall2:;
 /*
  		#] MergePatches : 
  		#[ StoreTerm :				WORD StoreTerm(term)
-
-	The central routine to accept terms, store them and keep things
-	at least partially sorted. A call to EndSort will then complete
-	storing and sorting.
 */
+/**
+ *	The central routine to accept terms, store them and keep things
+ *	at least partially sorted. A call to EndSort will then complete
+ *	storing and sorting.
+ *
+ *	@param term The term to be stored
+ *	@return  Regular return conventions (OK -> 0)
+ */
 
 WORD
 StoreTerm BARG1(WORD *,term)
@@ -3639,6 +3757,11 @@ StoreCall:
  		#] StoreTerm : 
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
+/**
+ *		Prepares a stage 4 or higher sort.
+ *		Stage 4 sorts occur when the sort file contains more patches than
+ *		can be merged in one pass.
+ */
 
 VOID
 StageSort ARG1(FILEHANDLE *,fout)
@@ -3701,15 +3824,19 @@ StageSort ARG1(FILEHANDLE *,fout)
 /*
  		#] StageSort : 
  		#[ SortWild :				WORD SortWild(w,nw)
-
-	Sorts the wildcard entries in the parameter w. Double entries
-	are removed. Full space taken is nw words.
-	Routine serves for the reading of wildcards in the compiler.
-	The entries come in the format:
-	(type,4,number,0) in which the zero is reserved for the
-	future replacement of 'number'.
-
 */
+/**
+ *	Sorts the wildcard entries in the parameter w. Double entries
+ *	are removed. Full space taken is nw words.
+ *	Routine serves for the reading of wildcards in the compiler.
+ *	The entries come in the format:
+ *	(type,4,number,0) in which the zero is reserved for the
+ *	future replacement of 'number'.
+ *
+ *	@param w  buffer with wildcard entries.
+ *	@param nw number of wildcard entries.
+ *	@return  Normal conventions (OK -> 0)
+ */
 
 WORD
 SortWild ARG2(WORD *,w,WORD,nw)
@@ -3799,9 +3926,10 @@ SortWild ARG2(WORD *,w,WORD,nw)
 /*
  		#] SortWild : 
  		#[ CleanUpSort :			VOID CleanUpSort(num)
-
-		Partially or completely frees function sort buffers.
 */
+/**
+ *		Partially or completely frees function sort buffers.
+ */
 
 void CleanUpSort ARG1(int,num)
 {
@@ -3853,7 +3981,6 @@ void CleanUpSort ARG1(int,num)
 	}
 	for ( i = 0; i < 2; i++ ) {
 		if ( AR.FoStage4[i].handle >= 0 ) {
-/*			TruncateFile(AR.FoStage4[i].handle); */
 			CloseFile(AR.FoStage4[i].handle);
 			remove(AR.FoStage4[i].name);
 			AR.FoStage4[i].handle = -1;
@@ -3870,6 +3997,9 @@ void CleanUpSort ARG1(int,num)
  		#] CleanUpSort : 
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
+/**
+ *		Lowers the level in the sort system.
+ */
 
 VOID LowerSortLevel ARG0
 {

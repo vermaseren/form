@@ -1,3 +1,8 @@
+/** @file proces.c
+ *
+ *  Contains the central terms processor routines. This is the core of
+ *	the virtual machine. All other files are to help these routines.
+ */
 /*
   	#[ Includes : proces.c
 */
@@ -7,26 +12,27 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
-
-	This is the central processor.
-	It accepts a stream of Expressions in the stream indicated by AR.infile,
-	which is accessed by a call to GetTerm.
-	(actually an error. Can also be AR.hidefile)
-	The definitions of an expression are seen as an id-statement, so the
-	primary Expressions should be written to the system of scratch files
-	as single terms with an expression pointer. Each expression is terminated
-	with a zero and the whole is terminated by two zeroes.
-
-	The routine DoExecute should determine whether results are to be
-	printed, should revert the scratch I/O directions etc.
-
-	Remark: The bug wrt AS.OldOnFile (had to be done first!) survived
-	till 20-apr-1989. How can that be?
-
 */
+/**
+ *	This is the central processor.
+ *	It accepts a stream of Expressions which is accessed by calls to GetTerm.
+ *	The expressions reside either in AR.infile or AR.hidefile
+ *	The definitions of an expression are seen as an id-statement, so the
+ *	primary Expressions should be written to the system of scratch files
+ *	as single terms with an expression pointer. Each expression is terminated
+ *	with a zero and the whole is terminated by two zeroes.
+ *
+ *	The routine DoExecute should determine whether results are to be
+ *	printed, should revert the scratch I/O directions etc.
+ *	In principle it is DoExecute that calls Processor.
+ *
+ *	@return if everything OK: 0. Otherwise error. The preprocessor
+ *	        may continue with compilation though. Really fatal errors should
+ *	        return on the spot by calling Terminate.
+ */
  
 WORD
 Processor()
@@ -370,18 +376,31 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
-
-		TestSub hunts for subexpression pointers.
-	If one is found its power is given in AN.TeSuOut.
-	and the returnvalue is 'expressionnumber'.
-	If the expression number is negative it is an expression on disk.
-
-	In addition this routine tries to locate subexpression pointers
-	in functions. It also notices that action must be taken with any
-	of the special functions.
 */
+/**
+ *	TestSub hunts for subexpression pointers.
+ *	If one is found its power is given in AN.TeSuOut.
+ *	and the returnvalue is 'expressionnumber'.
+ *	If the expression number is negative it is an expression on disk.
+ *
+ *	In addition this routine tries to locate subexpression pointers
+ *	in functions. It also notices that action must be taken with any
+ *	of the special functions.
+ *
+ *	@param  term  The term in which TestSub hunts for potential action
+ *	@param  level The number of the 'level' in the compiler buffer.
+ *	@return The number of the (sub)expression that was encountered.
+ *
+ *	Other values that are returned are in AN.TeSuOut, AR.TePos, AT.TMbuff,
+ *		AN.TeInFun, AN.Frozen, AT.TMaddr 
+ *
+ *	The level in the compiler buffer is more or less the number of the
+ *	statement in the module. Hence it refers to the element in the lhs array.
+ *
+ *	This routine is one of the most important routines in FORM.
+ */
 
 WORD
 TestSub BARG2(WORD *,term,WORD,level)
@@ -1355,12 +1374,20 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
-
-		Makes the replacement of 'replac' in a function argument.
-
 */
+/**
+ *		Makes the replacement the subexpression with the number 'replac'
+ *		in a function argument. Additional information is passed in some
+ *		of the AR, AN, AT variables.
+ *
+ *		@param term     The input term
+ *		@param termout  The output term
+ *		@return         0: everything is fine, Negative: fatal, Positive: error.
+ *
+ *		Special attention should be given to nested functions!
+ */
 
 WORD
 InFunction ARG2(WORD *,term,WORD *,termout)
@@ -1851,17 +1878,25 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
-
-		Puts the terms 'term' and 'position' together into a single
-		legal term in termout. replac is the number of the subexpression
-		that should be replaced. It must be a positive term.
-		When action is needed in the argument of a function all terms
-		in that argument are dealt with recursively. The subexpression
-		is sorted. Only one subexpression is done at a time this way.
-
 */
+/**
+ *		Puts the terms 'term' and 'position' together into a single
+ *		legal term in termout. replac is the number of the subexpression
+ *		that should be replaced. It must be a positive term.
+ *		When action is needed in the argument of a function all terms
+ *		in that argument are dealt with recursively. The subexpression
+ *		is sorted. Only one subexpression is done at a time this way.
+ *
+ *		@param term        the input term
+ *		@param replac      number of the subexpression pointer to replace
+ *		@param extractbuff number of the compiler buffer replac refers to
+ *		@param position    position from where to take the term in the compiler buffer
+ *		@param termout     the output term
+ *		@param tepos       offset in term where the subexpression is.
+ *		@return  Normal conventions (OK = 0).
+ */
 
 WORD
 InsertTerm BARG6(WORD *,term,WORD,replac,WORD,extractbuff,WORD *,position,WORD *,termout,WORD,tepos)
@@ -1972,14 +2007,23 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
-
-		Gets a term from stored expression expr and puts it in
-		the accumulator at position number. It returns the length of the
-		term that came from file.
-
 */
+/**
+ *		Gets a term from stored expression expr and puts it in
+ *		the accumulator at position number. It returns the length of the
+ *		term that came from file.
+ *
+ *		@param number   number of partial terms to skip in accum
+ *		@param accum    the accumulator
+ *		@param position file position from where to get the stored term
+ *		@param accfill  returns tail position in accum
+ *		@param renumber the renumber struct for the variables in the stored expression
+ *		@param freeze   information about if we need only the contents of a bracket
+ *		@param nexpr    the number of the stored expression
+ *		@return Normal conventions (OK = 0).
+ */
 
 LONG
 PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
@@ -2079,14 +2123,29 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
-
-		Puts the term at position in the accumulator accum at position
-		'number+1'. if times > 0 the coefficient of this term is
-		multiplied by times/divby.
-
 */
+/**
+ *		Puts the term at position in the accumulator accum at position
+ *		'number+1'. if times > 0 the coefficient of this term is
+ *		multiplied by times/divby.
+ *
+ *		@param number The number of term fragments in accum that should be skipped
+ *		@param accum  The accumulator of term fragments
+ *		@param position A position in (typically) a compiler buffer from where
+ *		                a (piece of a) term comes.
+ *		@param times  Multiply the result by this
+ *		@param divby  Divide the result by this.
+ *
+ *		This routine is typically used when we have to replace a (sub)expression
+ *		pointer by a power of a (sub)expression. This uses mostly a binomial
+ *		expansion and the new term is the old term multiplied one by one
+ *		by terms of the new expression. The factors times and divby keep track
+ *		of the binomial coefficient.
+ *		Once this is complete, the routine FiniTerm will make the contents
+ *		of the accumulator into a proper term that still needs to be normalized.
+ */
 
 WORD *
 PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
@@ -2139,13 +2198,19 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
-
-		Concatenates the contents of the accumulator into a single
-		legal term, which replaces the subexpression pointer
-
 */
+/**
+ *		Concatenates the contents of the accumulator into a single
+ *		legal term, which replaces the subexpression pointer
+ *
+ *		@param term    the input term with the (sub)expression subterm
+ *		@param accum   the accumulator with the term fragments
+ *		@param termout the location where the output should be written
+ *		@param number  the number of term fragments in the accumulator
+ *		@param tepos   the position of the subterm in term to be replaced
+ */
 
 WORD
 FiniTerm BARG5(WORD *,term,WORD *,accum,WORD *,termout,WORD,number,WORD,tepos)
@@ -2309,12 +2374,31 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
-
-		The heart of the program
-		Here the expansion tree is set up in one giant recursion
 */
+/**
+ *		The heart of the program.
+ *		Here the expansion tree is set up in one giant recursion
+ *
+ *		@param term   the input term. may be overwritten
+ *		@param level  the level in the compiler buffer (number of statement)
+ *		@return Normal conventions (OK = 0).
+ *
+ *		The routine looks first whether there are unsubstituted (sub)expressions.
+ *		If so, one of them gets inserted term by term and the new term is
+ *		used in a renewed call to Generator.
+ *		If there are no (sub)expressions, the term is normalized, the
+ *		compiler level is raised (next statement) and the program looks
+ *		what type of statement this is. If this is a special statement it
+ *		is either treated on the spot or the appropriate routine is called.
+ *		If it is a substitution, the pattern matcher is called (TestMatch)
+ *		which tells whether there was a match. If so we need to call
+ *		TestSub again to test for (sub)expressions.
+ *		If we run out of levels, the term receives a final treatment for
+ *		modulus calculus and/or brackets and is then sent off to the
+ *		sorting routines.
+ */
 
 static WORD zeroDollar[] = { 0, 0 };
 /*
@@ -3274,32 +3358,33 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
-
-		Routine gets one power of an expression.
-		If there are more powers needed there will be a recursion.
-
-		No attempt is made to use binomials because we have no
-		information about commutating properties.
-
-		There is a searching for the contents of brackets if needed.
-		This searching may be rather slow because of the single links.
-
-		freeze is the pointer to the bracket information that should
-			   be matched.
-		nexp   is the number of the expression.
-		accum  is the accumulator of terms. It accepts the termfragments
-			   that are made into a proper term in FiniTerm
-		term   is the term we are adding to.
-		power  is the power of the expression that we need.
-		level  is the current depth in the tree of statements. It is
-			   needed to continue to the next operation/substitution
-			   with each generated term
-		aa	   points to the start of the entire accumulator. In *aa
-			   we store the number of term fragments that are in the
-			   accumulator.
 */
+/**
+ *		Routine gets one power of an expression in the scratch system.
+ *		If there are more powers needed there will be a recursion.
+ *
+ *		No attempt is made to use binomials because we have no
+ *		information about commutating properties.
+ *
+ *		There is a searching for the contents of brackets if needed.
+ *		This searching may be rather slow because of the single links.
+ *
+ *		@param term   is the term we are adding to.
+ *		@param power  is the power of the expression that we need.
+ *		@param nexp   is the number of the expression.
+ *		@param accum  is the accumulator of terms. It accepts the termfragments
+ *			          that are made into a proper term in FiniTerm
+ *		@param aa	  points to the start of the entire accumulator. In *aa
+ *			          we store the number of term fragments that are in the
+ *			          accumulator.
+ *		@param level  is the current depth in the tree of statements. It is
+ *			          needed to continue to the next operation/substitution
+ *			          with each generated term
+ *		@param freeze is the pointer to the bracket information that should
+ *			          be matched.
+ */
 
 WORD
 DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
@@ -3471,14 +3556,24 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
-
-		Picks up the deferred brackets.
-		The old version isn't thread safe.
-		We have to lock positioning the file and reading it in
-		a thread specific buffer.
 */
+/**
+ *		Picks up the deferred brackets.
+ *		These are the bracket contents of which we postpone the reading
+ *		when we use the 'Keep Brackets' statement. These contents are
+ *		multiplying the terms just before they are sent to the sorting
+ *		system.
+ *		Special attention goes to having it thread-safe
+ *		We have to lock positioning the file and reading it in
+ *		a thread specific buffer.
+ *
+ *		@param term  The term that must be multiplied by the contents of the
+ *		             current bracket
+ *		@param level The compiler level. This is needed because after
+ *		             multiplying term by term we call Generator again.
+ */
 
 WORD
 Deferred BARG2(WORD *,term,WORD,level)
@@ -3604,26 +3699,27 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
-
-		Routine checks whether the count of function AR.PolyFun is zero
-		or one. If it is one and it has one scalarlike argument the
-		coefficient of the term is pulled inside the argument.
-		If the count is zero a new function is made with the coefficient
-		as its only argument. The function should be placed at its
-		proper position.
-
-		When this function is active it places the PolyFun as last
-		object before the coefficient. This is needed because otherwise
-		the compress algorithm has problems in MergePatches.
-
-		The bracket routine should also place the PolyFun at a
-		comparable spot.
-		The compression should then stop at the PolyFun. It doesn't
-		really have to stop when writing the final result but this may
-		be too complicated.
 */
+/**
+ *		Routine checks whether the count of function AR.PolyFun is zero
+ *		or one. If it is one and it has one scalarlike argument the
+ *		coefficient of the term is pulled inside the argument.
+ *		If the count is zero a new function is made with the coefficient
+ *		as its only argument. The function should be placed at its
+ *		proper position.
+ *
+ *		When this function is active it places the PolyFun as last
+ *		object before the coefficient. This is needed because otherwise
+ *		the compress algorithm has problems in MergePatches.
+ *
+ *		The bracket routine should also place the PolyFun at a
+ *		comparable spot.
+ *		The compression should then stop at the PolyFun. It doesn't
+ *		really have to stop when writing the final result but this may
+ *		be too complicated.
+ */
 
 WORD
 PrepPoly ARG1(WORD *,term)
@@ -4038,15 +4134,19 @@ IllegalContent:
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
-
-		Multiplies the arguments of multiple occurrences of the polyfun.
-		In this routine we do the original PolyFun with one argument only.
-		The PolyRatFun (PolyFunType = 2) is done is a dedicated routine
-		in the file polynito.c
-		The new result is written over the old result.
 */
+/**
+ *		Multiplies the arguments of multiple occurrences of the polyfun.
+ *		In this routine we do the original PolyFun with one argument only.
+ *		The PolyRatFun (PolyFunType = 2) is done is a dedicated routine
+ *		in the file polynito.c
+ *		The new result is written over the old result.
+ *
+ *		@param term It contains the input term and later the output.
+ *		@return Normal conventions (OK = 0).
+ */
 
 WORD
 PolyFunMul BARG1(WORD *,term)
@@ -4245,6 +4345,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

@@ -3,7 +3,6 @@
  *  Contains all functions that deal with store-files and the system
  *  independent save-files.
  */
-
 /*
   	#[ Includes : store.c
 */
