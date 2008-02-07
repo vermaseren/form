@@ -1,0 +1,296 @@
+
+\chapter{The dollar variables}
+\label{dollars}
+
+In the older versions of \FORM\ there were two types of variables: the 
+preprocessor variables\index{variables!preprocessor} and the algebraic 
+variables\index{variables!algebraic}. The preprocessor 
+variables are string variables that are used by the edit features of the 
+preprocessor to prepare the input for the compiler part of \FORM. The 
+algebraic objects are the expressions and the various algebraic variables 
+like the symbols, functions, vectors etc. There existed however very few 
+possibilities to communicate from the algebraic level to the decision 
+taking at the preprocessor level. This has changed dramatically with 
+version 3 and the introduction of the dollar 
+variables\index{variables!dollar}.
+
+Dollar variables are basically (little) expressions that can be used to 
+store various types of information. They can be used both as preprocessor 
+objects as well as algebraic objects. They can also be defined and given 
+contents both by the preprocessor and during execution on a term by term 
+basis. Dollar variables are kept in memory. Hence it is important not to 
+make them too big, because in that case performance might suffer.
+
+What is a legal name for a dollar variable?
+Dollar variables have a name that consists of a dollar sign (\verb:$:) 
+followed by an alphabetic character and then potentially more alphanumeric 
+characters. Hence \verb:$a: and \verb:$var: and \verb:$r4t78y0: are legal 
+names and \verb:$1a: is not a legal name. The variables do not have to be 
+declared. However \FORM\ will complain if a dollar variable is being used, 
+before it has encountered a statement or an instruction in which the 
+variable has been given a value. Hence giving a variable a value counts at 
+the same time as a declaration.
+
+What can be stored in a dollar variable?
+\begin{itemize}
+\item Algebraic expressions like in \verb:$var = (a+b)^2;:
+\item Individual objects like indices, numbers, symbols.
+\item Zero.
+\item Parts of a term.
+\item Argument\index{argument field} fields that consist of zero, one or 
+more arguments.
+\end{itemize}
+Actually the parts of a term are treated as a complete term and hence as a 
+special case of an algebraic expression. Internally they are stored 
+slightly differently for speed, but at the user level this should not be 
+noticeable. Actually, with the exception of the argument fields, \FORM\ can 
+convert one type into the other and will try so, depending on the use that 
+is made of the specific dollar variable. In the case that a variable is 
+used in a way that should not be possible (like the content of a variable 
+is a symbol, but it is used in a position where an index is expected) there 
+will be a runtime\index{runtime error} error\index{error!runtime}.
+
+How is a variable used?
+\begin{itemize}
+\item As a preprocessor variable\index{variable!preprocessor}. This is done 
+by putting the variable between a pair of `' as in \verb:`$var':. In this 
+case the regular print routines of \FORM\ make a textual 
+representation\index{representation!textual} of 
+the variable as it exists at the moment that the preprocessor excounters 
+this object, and this string is then substituted by the preprocessor as if 
+it were the contents of a preprocessor variable.
+\item Like an expression during execution time. This would be the case in 
+the statement
+\begin{verbatim}
+    id x = y + $var;
+\end{verbatim}
+in which \verb:$var: is substituted 
+in a way that is similar to the substitution of a local expression \verb:F: 
+in the statement
+\begin{verbatim}
+    id x = y + F;
+\end{verbatim}
+except for that the dollar variable is always stored in the CPU memory.
+\item As an algebraic object during execution time. This could be the case 
+with any value of the variable that is not an expression. An example would 
+be
+\begin{verbatim}
+    id f(?a) = f(?a,$var);
+\end{verbatim}
+in which the dollar variable contains an 
+argument field.
+\item As an algebraic object in a delayed substitution of a pattern or a 
+special statement. This may need some clarification. If we have the 
+statement
+\begin{verbatim}
+    id f($var) = anything;
+\end{verbatim}
+the compiler does not substitute 
+the current value of \verb:$var:. The reason is that \verb:$var: could have 
+a different value for each term that runs into this statement, while the 
+compiler compiles the statement only once. Hence \FORM\ will substitute the 
+value of \verb:$var: only at the moment that it will attempt the pattern 
+matching. This is called delayed\index{delayed substitution} 
+substitution\index{substitution!delayed}. If one likes the compiler to 
+substitute a value, one can basically let the preprocessor take care of 
+this by typing
+\begin{verbatim}
+    id f(`$var') = anything;
+\end{verbatim}
+A similar delayed 
+substitution takes place in statements of the type \verb:Trace,$var;:.
+\end{itemize}
+
+How does one give a value to a dollar variable?
+\begin{itemize}
+\item In the preprocessor. This is done with an instruction of the type 
+\verb:#$var = 0;:. This is an instruction that can run over more than one 
+line. The r.h.s. can be any algebraic expression. Specifically it can 
+contain dollar variables or local/global expressions. Such 
+expressions are worked out during the preprocessing. Hence this variable 
+acquires a value immediately.
+\item During execution when control reaches a statement of the form 
+\verb:$var = expression;:. Again the r.h.s. can contain any normal 
+algebraic expression including dollar variables and local/global 
+expressions. The r.h.s. will be evaluated and the value will be assigned to 
+\verb:$var:. In the case that \verb:$var: had already a value, the old 
+value will be deleted and the new value will be `installed'.
+\item During execution when the dollar variable is assigned the value of a 
+wildcard as in
+\begin{verbatim}
+    id f(x?$var) = whatever;
+\end{verbatim}
+If the function \verb:f: 
+occurs more than once in a term, \verb:$var: will have the value of the 
+last match. In the case that the value of the first match is needed one can 
+use the option `once' in the id-statement as in
+\begin{verbatim}
+    id,once,f(x?$var) = whatever;
+\end{verbatim}
+In general one can paste the dollar variable to the end of any 
+wildcard description. Hence one can use \verb:id f(x?{1,2,3}$var) = ...;: 
+and
+\begin{verbatim}
+    id f(x?set[n?$var1]$var2) = ...;
+\end{verbatim}
+\end{itemize}
+Note the difference between \verb:#$a = 0;: and \verb:$a = 0;:. One CANNOT 
+make a wildcard\index{wildcard} construction for dollar variables 
+themselves as in \verb:id f($var?) = ...;:
+
+Dollar variables CANNOT be indexed as in \verb:$var(2): or something 
+equivalent. There is however a solution at the preprocessor level for this 
+by defining individual variables \verb:$var1: to \verb:$varn: and then 
+using \verb:$var`i': or \verb:`$var`i'': for some preprocessor variable 
+\verb:i:.
+
+Printing dollar\index{dollar!printing} variables:
+\begin{itemize}
+\item In the preprocessor one can use the \verb:#write: instruction
+        (see \ref{prewrite}).
+\item During execution one can use the Print statement (see 
+        \ref{substaprint}).
+\end{itemize}
+In both cases one should use the format\index{format} string. The syntax is 
+described in the chapters on these statements. The format descriptor of a 
+dollar variable is \verb:%$: and this looks after the format string for the 
+next dollar variable. Of course one can also use the dollar variable as a 
+preprocessor variable when printing/writing in the preprocessor.
+
+Examples.
+
+Counting terms:
+\begin{verbatim}
+    S	a,b;
+    Off statistics;
+    L	F = (a+b)^6;
+    #$a = 0;
+    $a = $a+1;
+    Print "      >> After %t we have %$ term(s)",$a;
+    #write "     ># $a = `$a'"
+     ># $a = 0
+    .sort
+      >> After  + a^6 we have 1 term(s)
+      >> After  + 6*a^5*b we have 2 term(s)
+      >> After  + 15*a^4*b^2 we have 3 term(s)
+      >> After  + 20*a^3*b^3 we have 4 term(s)
+      >> After  + 15*a^2*b^4 we have 5 term(s)
+      >> After  + 6*a*b^5 we have 6 term(s)
+      >> After  + b^6 we have 7 term(s)
+    #write "     ># $a = `$a'"
+     ># $a = 7
+    .end
+\end{verbatim}
+
+\noindent Maximum power of x in an expression:
+\begin{verbatim}
+    S	x,a,b;
+    Off statistics;
+    L	F = (a+b)^4+a*(a+x)^3;
+    .sort
+    #$a = 0;
+    if ( count(x,1) > $a ) $a = count_(x,1);
+    Print "      >> After %t the maximum power of x is %$",$a;
+    #write "     ># $a = `$a'"
+     ># $a = 0
+    .sort
+      >> After  + 3*x*a^3 the maximum power of x is 1
+      >> After  + 3*x^2*a^2 the maximum power of x is 2
+      >> After  + x^3*a the maximum power of x is 3
+      >> After  + 4*a*b^3 the maximum power of x is 3
+      >> After  + 6*a^2*b^2 the maximum power of x is 3
+      >> After  + 4*a^3*b the maximum power of x is 3
+      >> After  + 2*a^4 the maximum power of x is 3
+      >> After  + b^4 the maximum power of x is 3
+    #write "     ># $a = `$a'"
+     ># $a = 3
+    .end
+\end{verbatim}
+
+\section{Dollar variables in a parallel environment}
+\label{pardollars}
+
+When \FORM\ is used for parallel\index{parallel processing} processing, 
+either by means of ParFORM\index{ParFORM} or by means of 
+\TFORM\index{TFORM}, there can be a problem with the dollar variables as in 
+principle there is a central administration and dollar variables that are 
+defined during running will in general have the last assigned value. In a 
+parallel environment this can be nondeterministic\index{nondeterministic}. 
+Look for instance at the following example:
+\begin{verbatim}
+    S   x,a,b;
+    CF  f;
+    L   F = f(a+b) + f(a+2*b);
+    .sort
+    id  f(x?$x) = f(x);
+    Multiply,$x;
+    Print;
+    .end
+\end{verbatim}
+Usually this program will give the 'correct' answer, but in principle one 
+thread could define \verb:$x: and then the next thread could overwrite this 
+value before the first thread has used it. This is serious. Hence \FORM\ 
+will veto\index{veto} the use of multiple threads/processors for modules in 
+which dollar variables get values during the execution of the program, 
+unless the user can give \FORM\ more information about the use of the 
+dollar variables. In the above case the value of \verb:$x: will be local to 
+each term and hence to each thread\index{thread}. The value in previous 
+terms is unimportant. We can tell this to \FORM\ with a variety of the 
+moduleoption\index{moduleoption} statement (see \ref{substamoduleoption}). 
+This would be:
+\begin{verbatim}
+    S   x,a,b;
+    CF  f;
+    L   F = f(a+b) + f(a+2*b);
+    .sort
+    id  f(x?$x) = f(x);
+    Multiply,$x;
+    Print;
+    ModuleOption,local,$x;
+    .end
+\end{verbatim}
+In this case \FORM\ makes at the start of the execution of the module a copy 
+of whatever value \verb:$x: has at that moment (in this case no value yet 
+and hence it gets set to zero) for each thread/processor and then each 
+thread/processor uses its own copy during execution. After the module has 
+been completed the local copies are removed and the original global value 
+is accessible again. This way execution will be safe in a parallel 
+environment.
+
+There are more cases that \FORM\ can handle in a parallel environment. 
+These are also options in the moduleoption statement:
+\begin{verbatim}
+    ModuleOption,maximum,$a;
+    ModuleOption,minimum,$b;
+    ModuleOption,sum,$c;
+\end{verbatim}
+Here we say that \verb:$a: is accumulating a maximum numerical value, 
+\verb:$b: collects a minimum numerical value and \verb:$c: is a numerical 
+sum. In all three cases there is a central administration and the use of 
+the variables has to be blocked for other threads/processors during the 
+updating of the values. Sometimes that can be efficient, but in other 
+programs that may actually make them slower. One should experiment. A 
+sample program is given below:
+\begin{verbatim}
+    S   a1,...,a10;
+    L   F = (a1+...+a10)^3;
+    .sort
+    #$c = 0;
+    Print +f "<%w> %t";
+    Multiply,(a1+...+a10);
+    $c = $c+1;
+    ModuleOption,sum,$c;
+    .sort
+    #message $c = `$c'
+    #$max = 0;
+    #$min = 10;
+    if ( count(a1,1) > $max ) $max = count_(a1,1);
+    if ( count(a4,1) < $min ) $min = count_(a4,1);
+    ModuleOption,maximum,$max;
+    ModuleOption,minimum,$min;
+    .sort
+    #message $max = `$max'
+    #message $min = `$min'
+    .end
+\end{verbatim}
+The print statement is showing which thread is dealing with which term.

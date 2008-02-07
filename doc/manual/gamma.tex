@@ -1,0 +1,276 @@
+
+\chapter{Dirac algebra}
+\label{gammaalgebra}
+
+For its use in high\index{high energy physics} energy physics FORM is 
+equipped with a built-in class of functions. These are the 
+gamma\index{gamma matrices} matrices of the Dirac\index{Dirac algebra} 
+algebra which are generically denoted by g\_\index{g\_}. The gamma matrices 
+fulfill the relations:
+\begin{verbatim}
+     {g_(j1,mu),g_(j1,nu)} = 2 * d_(mu,nu)
+     [g_(j1,mu),g_(j2,nu)] = 0    j1 not equal to j2.
+\end{verbatim}
+The first argument is a so-called spin\index{spin line} line index. When 
+gamma matrices have the same spin line, they belong to the same Dirac 
+algebra and commute with the matrices of other Dirac algebra's. The indices 
+mu and nu are over space-time and are therefore usually running from 1 to 4 
+(or from 0 to 3 in Bjorken \& Drell metric\index{Bjorken \& Drell metric}). 
+The totally antisymmetric product e\_(m1,m2,...,mn)\*g\_(j,m1)\*...\*g\_(j,
+mn)/n! is defined to be gamma5 or g5\_(j). The notation 5\index{g5\_} finds 
+its roots in 4 dimensional space-time. The unit matrix is denoted by 
+gi\_(j). In four dimensions a basis of the Dirac algebra can be given by: 
+\begin{verbatim}
+     gi_(j)
+     g_(j,mu)
+     [g_(j,mu),g_(j,nu)]/2
+     g5_(j)*g_(j,mu)
+     g5_(j)
+\end{verbatim}
+In a different number of dimensions this basis is correspondingly 
+different. We introduce the following notation for convenience: 
+\begin{verbatim}
+     g6_(j) = gi(j) + g5_(j)     (from Schoonschip)
+     g7_(j) = gi(j) - g5_(j)
+     g_(j,mu,nu) = g_(j,mu)*g_(j,nu)  (from Reduce)
+     g_(j,mu,nu,.....,ro,si) =
+                      g_(j,mu,nu,.....,ro)*g_(j,si)
+     g_(j,5_) = g5_(j)
+     g_(j,6_) = g6_(j)
+     g_(j,7_) = g7_(j)
+\end{verbatim}
+The common operation on gamma matrices is to obtain the trace\index{trace} 
+of astring of gamma matrices. This is done with the statement:
+
+\leftvitem{4cm}{trace4\index{trace4}, j}
+\rightvitem{12cm}{Take the trace in 4 dimensions of the combination of all 
+gamma matrices with spin line j in the current term. Any non-commuting 
+objects that may be between some of these matrices are ignored. It is the 
+users responsibility to issue this statement only after all functions of 
+the relevant matrices are resolved. The four refers to special 
+tricks\index{tricks} that 
+can be applied in four dimensions. This allows for relatively compact 
+expressions. For the complete syntax, consult \ref{substatrace}}
+
+\leftvitem{4cm}{tracen\index{tracen}, j}
+\rightvitem{12cm}{Take the trace in an unspecified number of dimensions. 
+This number of dimensions is considered to be even. The traces are 
+evaluated by only using the anticommutation properties of the matrices. As 
+the number of dimensions is not specified the occurrence of a g5\_(j) is a 
+fatal error. In general the expressions that are generated this way are 
+longer than the four dimensional expressions. For the complete syntax, 
+consult \ref{substatracen}}
+
+It is possible to alter the value of the trace of the
+unit\index{unit matrix} matrix gi\_(j).\index{gi\_} Its
+default value is 4, but by using the 
+statement (see \ref{substaunittrace})
+\begin{verbatim}
+    unittrace value;
+\end{verbatim}
+it can be altered. Value may be any positive short number ($< 2^{15}$ on 
+32\index{32 bits} bit machines and $< 2^{31}$ on 64\index{64 bits} bit 
+machines) or a single symbol with the exception of the symbol 
+i\_.\index{i\_}
+
+There are several options for the 4-dimensional traces. These options find 
+their origin in the Chisholm\index{Chisholm} relation that is valid in 4 
+dimensions but not in a general number of dimensions. This relation can be 
+found in the literature. It is given by:
+\begin{equation}
+    \gamma_\mu Tr[\gamma_\mu S] = 2(S + S^R)
+\end{equation}
+\noindent in which S is a string of gamma matrices with an odd number of 
+matrices ($\gamma_5$ counts for an even number of matrices). $S^R$ is the 
+reversed string. This relation can be used to combine traces with common 
+indices. The use of this relation is the default for trace4\index{trace4}. 
+If it needs to be switched off, one should add the extra option
+`nocontract':
+\begin{verbatim}
+    trace4,nocontract,j;
+\end{verbatim}
+The option `contract'\index{contract} is the default but it can be used to 
+enhance the readability of the program. The second option that refers to 
+this relation is the option `symmetrize'\index{symmetrize}. Often it 
+happens that there are two or more common indices in two spin lines. 
+Without the symmetrize option (or with the 
+`nosymmetrize'\index{nosymmetrize} option) the first of these indices is 
+taken and the relation is applied to it. With the `symmetrize' option 
+the average over all possibilities is taken. This means of course that of 
+there are two common indices the amount of work is doubled. There is 
+however a potentially large advantage. In some traces that involve the use of 
+$\gamma_5$ the use of automatic algorithms results often in an avalanche of 
+terms with a single Levi-Civita tensor, while symmetry arguments can show 
+that these terms should add up to zero. By working out the traces in a more 
+symmetric fashion FORM is often capable of eliminating all or nearly all of 
+these Levi-Civita tensors. Normally such an elimination is rather 
+complicated. It involves relations that have so far defied proper 
+implementation, even though people have been looking for such algorithms 
+already for a long time. Hence the use of the symmetry from the beginning 
+seems at the moment the best bet.
+
+It is possible to only apply the Chisholm\index{Chisholm} identity without 
+taking the trace. This is done with the chisholm statement (see 
+\ref{substachisholm}). 
+
+The n dimensional traces can use a special feature, when the declaration 
+of the indices involved will allow it. When an index has been declared 
+as n-dimensional and the dimension is followed by a second symbol as in
+\begin{verbatim}
+    symbols n,nn;
+    index mu=n:nn;
+\end{verbatim}
+and if the index \verb:mu: is a contracted index in a single 
+n-dimensional trace, then the formula for this trace can be shortened by 
+using \verb:nn: (one term) instead of the quantity $(n-4)$ (two terms). 
+This can make the taking of the n-dimensional traces significantly 
+faster.
+
+\vspace{3mm}
+
+\noindent Algorithms\index{algorithms}:
+
+FORM has been equipped with several built in rules to keep the 
+number of generated terms to a minimum during the evaluation of a 
+trace. These rules are:
+
+\begin{description}
+\item [rule 0]
+    Strings with an odd number of matrices (gamma5 counts for an even number 
+    of matrices) have a trace that is zero, when using trace4 or tracen.
+\item [rule 1]
+    A string of gamma matrices is first scanned for adjacent 
+matrices that have the same contractable index, or that are contracted with 
+the same vector. If such a pair is found, the relations
+%\begin{eqnarray}
+%   \gamma^\mu\gamma^\nu & = & 1\times \delta^{\mu\nu} \nonumber \\
+%   \gamma^p\gamma^p & = & 1\times p\mydot p \nonumber
+%\end{eqnarray}
+\begin{verbatim}
+      g_(1,mu,mu) = gi_(1)*d_(mu,mu)
+      g_(1,p1,p1) = gi_(1)*p1.p1
+\end{verbatim}
+\noindent are applied.
+\item [rule 2]
+   Next there is a scan for a pair of the same contractable 
+indices that has an odd number of other matrices in between. This is done 
+only for 4 dimensions (trace4) and the dimension of the indices must be 4. 
+If found, the Chisholm\index{Chisholm} identity is applied:
+%\begin{eqnarray}
+%   \gamma^\mu\gamma^{m_1}\gamma^{m_2}\cdots\gamma^{m_n}\gamma^\mu & = &
+%        -2\gamma^{m_n}\cdots\gamma^{m_2}\gamma^{m_1}  \nonumber \\
+%\end{eqnarray}
+\begin{verbatim}
+      g_(1,mu,m1,m2,...mn,mu) = -2*g_(1,mn,...,m2,m1)
+\end{verbatim}
+\item [rule 3]
+  Then (again only for trace4) there is a search for a pair 
+of matrices with the same 4 dimensional index and an even number of 
+matrices in between. If found, one of the following variations of the 
+Chisholm\index{Chisholm} identity is applied:
+\begin{verbatim}
+      g_(1,mu,m1,m2,mu) = 4*gi_(1)*d_(m1,m2)
+      g_(1,mu,m1,m2,...,mj,mn,mu) =
+                      2*g_(1,mn,m1,m2,...,mj)
+                     +2*g_(1,mj,...,m2,m1,mn)
+\end{verbatim}
+\item [rule 4]
+  Then there is a scan for pairs of matrices that have the 
+same index or that are contracted with the same vector. If found, the 
+identity:
+\begin{verbatim}
+      g_(1,mu,m1,m2,...,mj,mn,mu) =
+                2*d_(mu,mn)*g_(1,mu,m1,m2,...,mj)
+               -2*d_(mu,mj)*g_(1,mu,m1,m2,...,mn)
+                ....
+             -/+2*d_(mu,m2)*g_(1,mu,m1,...,mj,mn)
+             +/-2*d_(mu,m1)*g_(1,mu,m2,...,mj,mn)
+             -/+2*d_(mu,mu)*g_(1,m1,m2,...,mj,mn)
+\end{verbatim}
+\noindent is used to 'anticommute'\index{anticommute} these identical 
+objects till they become adjacent and can be eliminated with the 
+application of rule 1. In the case of an n-dimensional trace and when 
+\verb:mu: is an index (it might also be a vector in the above formula) for 
+which the definition of the dimension involved two symbols, there is a 
+shorter formula. In that case the last three terms can be combined into two 
+terms:
+\begin{verbatim}
+     -/+(n-4)*g_(1,m1,m2,...,mj,mn)
+     -/+4*d_(m1,m2)*g_(1,m3,m4,...,mj,mn)
+\end{verbatim}
+\noindent It should be clear now that this formula is only superior, when 
+there is a single symbol to represent $(n-4)$. After this all gamma 
+matrices that are left have a different index or are contracted with 
+different vectors. These are treated using:
+\item [rule5]
+  Traces in 4 dimensions for which all gamma matrices have 
+a different index, or are contracted with a different four-vector are 
+evaluated using the reduction formula
+\begin{verbatim}
+      g_(1,mu,nu,ro) =
+                 g_(1,5_,si)*e_(mu,nu,ro,si)
+                +d_(mu,nu)*g_(1,ro)
+                -d_(mu,ro)*g_(1,nu)
+                +d_(nu,ro)*g_(1,mu)
+\end{verbatim}
+For tracen the generating algorithm is based on the generation of all 
+possible pairs of indices/vectors that occur in the gamma matrices in 
+combination with their proper sign. When the dimension is not specified, 
+there is no shorter expression.
+\end{description}
+
+\noindent Remarks:
+
+When an index is declared to have dimension n and the command trace4 is 
+used, the special 4 dimensional rules 2 and 3 are not applied to this 
+index. The application of rule 1 or 4 will then give the correct 
+results. The result will nevertheless be wrong due to rule 5, when there 
+are at least 10 gamma matrices left after the application of the first 4 
+rules, as the two algorithms in rule 5 give a difference only, when 
+there are at least 10 gamma matrices. For counting gamma matrices the 
+$\gamma_5$ counts for 4 matrices with respect to this rule. The result 
+is unpredictable, when both indices in four dimensions and indices in n 
+dimensions occur in the same string of gamma matrices. Therefore one 
+should be very careful, when using the four dimensional trace under the 
+condition that the results need to be correct in n dimensions. This is 
+sometimes needed, when a $\gamma_5$ is involved. The tracen-statement 
+will not allow the presence of a $\gamma_5$. In general it is best to 
+emulate n-dimensional traces with a $\gamma_5$ separately. The eventual 
+trace, with all matrices with a different index, can be generated with 
+the use of the 'distrib\_' function:
+\begin{verbatim}
+    *
+    *   Symmetric trace of a gamma5 and 12 regular matrices
+    *
+    I   m1,...,m12;
+    F   G5,g1,g2;
+    L   F = G5(m1,...,m12);
+    id  G5(?a) = distrib_(-1,4,g1,g2,?a);
+    id  g1(?a) = e_(?a);
+    id  g2(?a) = g_(1,?a);
+    tracen,1;
+    .end
+
+Time =       1.07 sec    Generated terms =      51975
+                F        Terms in output =      51975
+                         Bytes used      =     919164
+\end{verbatim}
+This rather symmetric result is in contrast to the 4-dimensional result 
+which is much shorter, but it is very unsymmetric:
+\begin{verbatim}
+    *
+    *   Regular trace of a gamma5 and 12 regular matrices
+    *
+    I   m1,...,m12;
+    L   F = g_(1,5_,m1,...,m12);
+    trace4,1;
+    .end
+
+Time =       0.02 sec    Generated terms =       1053
+                F        Terms in output =       1029
+                         Bytes used      =      20284
+\end{verbatim}
+The precise workings of the distrib\_\index{distrib\_} function is given in 
+\ref{fundistrib}.
+
+

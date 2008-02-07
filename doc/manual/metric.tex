@@ -1,0 +1,259 @@
+
+\chapter{A few notes on the use of a metric}
+\label{metric}
+
+\noindent When FORM was designed, it was decided to make its syntax more or 
+less independent of a choice of the metric\index{metric}. Hence statements 
+and facilities that programs like Schoonschip\index{Schoonschip} or 
+REDUCE\index{REDUCE} provide but which depend on the choice of a metric 
+have been left out. Instead there are facilities to implement any choice of 
+the metric, when the need really arises. When one makes a proper study of 
+it, it turns out that one usually has to do very little or nothing. \hfill 
+\vspace{2mm}
+
+\noindent First one should realize that FORM does not know any specific 
+metric by itself. Dotproducts are just objects of manipulation. It is 
+assumed that when a common index of two vectors is contracted, this works 
+out properly into a scalar object. This means that if one has a metric with 
+upper and lower indices\index{indices!upper}\index{indices!lower}, one 
+index is supposed to be an upper index and the other is supposed to be a 
+lower index. If the user does not like this, it is his/her responsibility 
+to force the system into a different action. This is reflected in the fact 
+that FORM does not have an internal metric tensor\index{tensor!metric} 
+$\eta_{\mu\nu}$. It has only a Kronecker\index{Kronecker} 
+delta\index{delta!Kronecker} $\delta_{\mu\nu} =$ \verb:d_(mu,nu): with 
+\verb:p(mu)*d_(mu,nu)*q(nu): $\rightarrow$ \verb:p.q: when mu and nu are 
+summable indices\index{indices!summable}. \hfill \vspace{2mm}
+
+\noindent The dependency of a metric usually enters with statements like 
+$p^2 = \pm m^2$, which the user should provide anyway, because FORM does 
+not have such knowledge. Connected to this is the choice of a 
+propagator\index{propagator} as either $\gamma_\mu p_\mu + m$ or 
+$\gamma_\mu p_\mu + i\ m$. This is also something the user should provide. 
+The only objects that FORM recognizes and that could be considered as 
+metric-dependent are the gamma matrices\index{matrices!gamma} and the 
+Levi-Civita\index{Levi-Civita} tensor\index{tensor!Levi-Civita} 
+\verb:e_:. Because the trace of a $\gamma_5$ involves a Levi-Civita tensor, 
+the two are intimately connected. The anticommutator of two gamma matrices 
+is defined with the Kronecker delta. Amazingly enough that works out well, 
+provided that, if such Kronecker delta's survive in the output, they are 
+interpreted as a metric tensor. This should be done with great care, 
+because at such a point one does something that depends of the metric; one 
+may have to select whether the indices are upper or lower indices. One 
+should check carefully that the way the output is interpreted leads indeed 
+to the results that are expected. This is anyway coupled to how one should 
+interpret the input, because in such a case one would also have an input 
+with `open' indices and give them a proper interpretation. The rule is that 
+generally one does not have to do anything. The upper indices in the input 
+will be upper indices in the output and the same for lower indices. \hfill 
+\vspace{2mm}
+
+\noindent The contraction\index{contraction} of two Levi-Civita tensors will give products of 
+Kronecker delta's. This means that formally there could be an error of the 
+sign of the determinant of the metric tensor, if one would like the 
+Kronecker delta to play the role of a metric tensor. Hence it is best to 
+try to avoid such a situation. \hfill \vspace{2mm}
+
+\noindent In FORM the $\gamma_5$ is an object that anticommutes with 
+the $\gamma_\mu$ and has $\gamma_5\gamma_5 = 1$. Its properties 
+in the trace are 
+\begin{eqnarray}
+	Tr[\gamma_5\gamma_{m_1}\gamma_{m_2}\gamma_{m_3}\gamma_{m_4}] & = &
+		\epsilon_{\mu_1\mu_2\mu_3\mu_4} \nonumber
+\end{eqnarray}
+This has a number of interesting consequences. The V-A and V+A currents are 
+represented by $\gamma_7\gamma_\mu = (1-\gamma_5)\gamma_\mu$ and 
+$\gamma_6\gamma_\mu = (1+\gamma_5)\gamma_\mu$ respectively. Under 
+conjugation we have to replace $\gamma_5$ by $-\gamma_5$ as is not 
+uncommon. \hfill \vspace{2mm}
+
+\noindent There was a time that a conjugation\index{conjugation} operation 
+was planned in FORM. As time progressed, it was realized that this would 
+introduce problems with some of the internal objects. Hence some objects 
+have the property that they are considered imaginary\index{imaginary}. In 
+practise FORM does not do anything with this. Neither does it do anything 
+with the declarations real\index{real}, complex\index{complex} and 
+imaginary\index{imaginary}. If ever a way is found to implent a conjugation 
+operator that will make everybody happy, it may still be built in. \hfill 
+\vspace{2mm}
+
+\noindent The above should give the user enough information to convert any 
+specific metric to what is needed to make FORM do what is expected from it. 
+Afterwards one can convert back, provided no metric\index{metric} specific 
+operations are done. Such metric specific things are for instance needed in 
+some types of approximations in which one substitutes objects by 
+(vector)components halfway the calculation. In that case one cannot rely on 
+that the conversions at the beginning and the end will be compensating each 
+other. For this case FORM allows the user to define a private metric. All 
+the tools exist to make this a success with the exception of a loss in 
+speed of course. Let us have a look at the contraction of two Levi-Civita 
+tensors in an arbitrary metric:
+\begin{verbatim}
+    Indices m1,m2,m3,n1,n2,n3,i1,i2,i3;
+    Cfunction eta(symmetric),e(antisymmetric);
+    Off Statistics;
+    *
+    *   We have our own Levi-Civita tensor e
+    *
+    Local F = e(m1,m2,m3)*e(m1,m2,m3);
+    *
+    *   We write the contraction as
+    *
+    id  e(m1?,m2?,m3?)*e(n1?,n2?,n3?) =
+            e_(m1,m2,m3)*e_(i1,i2,i3)*
+                eta(n1,i1)*eta(n2,i2)*eta(n3,i3);
+    *
+    *   Now we can use the internal workings of the contract:
+    *
+    Contract;
+    Print +s;
+    .sort
+
+   F =
+       + eta(i1,i1)*eta(i2,i2)*eta(i3,i3)
+       - eta(i1,i1)*eta(i2,i3)^2
+       - eta(i1,i2)^2*eta(i3,i3)
+       + 2*eta(i1,i2)*eta(i1,i3)*eta(i2,i3)
+       - eta(i1,i3)^2*eta(i2,i2)
+      ;
+
+    *
+    *   For specifying a metric we need individual components:
+    *
+    Sum i1,1,2,3;
+    Sum i2,1,2,3;
+    Sum i3,1,2,3;
+    Print +s;
+    .sort
+
+   F =
+       + 6*eta(1,1)*eta(2,2)*eta(3,3)
+       - 6*eta(1,1)*eta(2,3)^2
+       - 6*eta(1,2)^2*eta(3,3)
+       + 12*eta(1,2)*eta(1,3)*eta(2,3)
+       - 6*eta(1,3)^2*eta(2,2)
+      ;
+
+    *
+    *   And now we can provide the metric tensor
+    *
+    id  eta(1,1) = 1;
+    id  eta(2,2) = 1;
+    id  eta(3,3) = -1;
+    id  eta(1,2) = 0;
+    id  eta(1,3) = 0;
+    id  eta(2,3) = 0;
+    Print +s;
+    .end
+
+   F =
+       - 6
+      ;
+\end{verbatim}
+This is the ultimate in flexibility\index{flexibility} of course. It can 
+also be worked out in a different way. In this case we try to change the 
+behaviour of the Kronecker\index{Kronecker} delta\index{delta!Kronecker} a 
+bit. This is dangerous\index{dangerous} and needs, in addition to a good 
+understanding of what is happening, good testing to make sure that what the 
+user wants is indeed what does happen. Here we use the 
+FixIndex\index{fixindex} (\ref{substafixindex}) statement. This one assigns 
+specific values to selected diagonal elements of the Kronecker delta. Of 
+course it is the responsibility of the user to make sure that the 
+calculation will indeed run into those elements. This is by no means 
+automatic, because when FORM uses formal indices it never writes them out 
+in components. Moreover, it would not be defined what would be the 
+components connected to an index. The index could run over $0,1,2,3$ or 
+over $1,2,3,4$, or maybe even over $5,7,9,11$. And what does an 
+n-dimensional index run over? In the above example it is the sum 
+(\ref{substasum}) statement that determines this. Hence this is fully under 
+the control of the user. Therefore a proper way to deal with the above 
+example would be
+\begin{verbatim}
+    Indices i1,i2,i3;
+    FixIndex 1:1,2:1,3:-1;
+    Off Statistics;
+    *
+    Local F = e_(i1,i2,i3)*e_(i1,i2,i3);
+    Sum i1,1,2,3;
+    Sum i2,1,2,3;
+    Sum i3,1,2,3;
+    Print +s;
+    .sort
+
+   F =
+       + 6*e_(1,2,3)*e_(1,2,3)
+      ;
+
+    Contract;
+    Print +s;
+    .end
+
+   F =
+       - 6
+      ;
+\end{verbatim}
+In the case that one would like to exchange the order of the summation and 
+the contraction, while using the FixIndex mechanism, one needs to be more 
+careful. In that case we have to prevent the indices from being summed over 
+while they are indices of a Kronecker delta, because as long as the indices 
+are symbolic, FORM will replace \verb:d_(i1,i1): by the dimension of 
+\verb:i1:, and that is not what we want. Hence we have to declare the 
+indices to be non-summable by giving them dimension zero:
+\begin{verbatim}
+    Indices i1=0,i2=0,i3=0;
+    FixIndex 1:1,2:1,3:-1;
+    Off Statistics;
+    *
+    Local F = e_(i1,i2,i3)*e_(i1,i2,i3);
+    Contract;
+    Print +s;
+    .sort
+
+   F =
+       + d_(i1,i1)*d_(i2,i2)*d_(i3,i3)
+       - d_(i1,i1)*d_(i2,i3)*d_(i2,i3)
+       - d_(i1,i2)*d_(i1,i2)*d_(i3,i3)
+       + 2*d_(i1,i2)*d_(i1,i3)*d_(i2,i3)
+       - d_(i1,i3)*d_(i1,i3)*d_(i2,i2)
+      ;
+
+    Sum i1,1,2,3;
+    Sum i2,1,2,3;
+    Sum i3,1,2,3;
+    Print +s;
+    .end
+
+   F =
+       - 6
+      ;
+\end{verbatim}
+As we can see, the automatic summation over the indices is not performed 
+now and this gives us a chance to do the summation manually. After that the 
+fixindex statement can have its effect. \hfill \vspace{2mm}
+
+\noindent It should be clear from the above examples that it is usually 
+much easier to manipulate the input in such a way that the terms with two 
+Levi-Civita tensors have the negative sign from the beginning. This would 
+give programs that are less complicated and much faster. \hfill \vspace{2mm}
+
+\noindent Hence we are faced with the situation that in normal cases one 
+does not do anything. If one wants to go beyond this and wants to interfere 
+with the inner workings themselves by for instance inserting a factor $i$ 
+in front of the $\gamma_5$ and emulating the upper and lower indices of a 
+favorite metric, this leads from one problem to the next. Extreme care is 
+needed. This is usually done by people who have first worked with other 
+programs in which things don't work as naturally as in FORM. By the time 
+one has really figured out how to deal with the metric and how to make use 
+of the internal algorithms of FORM, one usually does not have to do very 
+much again. \hfill \vspace{2mm}
+
+\noindent As in the Zen\index{Zen} saying: \hfill \vspace{2mm}
+
+\noindent To the beginning student mountains\index{mountains} are mountains 
+and water\index{water} is water. To the advanced student\index{student} 
+mountains stop being mountains and water stops being water. To the 
+master\index{master} mountains are mountains again and water is water 
+again. \hfill \vspace{2mm}
+
+\noindent Of course the modern master also checks that what he expects the 
+system to do, is indeed what the system does.

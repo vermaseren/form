@@ -1,0 +1,414 @@
+
+\chapter{The TableBase}
+\label{tablebase}
+
+The tablebase\index{tablebase} statement controls a 
+database\index{database}-like structure that allows FORM to control massive 
+amounts of data in the form of tables and
+table\index{table elements}\index{table} elements.
+The contents of a tablebase are formed by one or more table declarations 
+and a number of fill\index{fill} statements. These fill statements however 
+are not immediately compiled. For each fill statement a special fill 
+statement is generated and compiled that is of the form
+\begin{verbatim}
+    Fill tablename(indices) = tbl_(tablename,indices,arguments);
+\end{verbatim}
+The function tbl\_\index{tbl\_} is a special function to make a temporary 
+table substitution. It indicates that the corresponding element can be 
+found in a tablebase that has been opened. At a later stage one can tell 
+FORM to see which table elements are actually needed and then only those 
+will be loaded from the tablebase and compiled.
+
+Tablebases have a special internal structure and the right hand sides of 
+the fill statements are actually stored in a compressed\index{compressed} 
+state. These tablebases can be created with special statements and uploaded 
+with any previously compiled table. Hence one can prepare a tablebase in a 
+previous job, to be used at a later stage, without the time penalty of 
+loading the whole table at that later stage.
+
+Assume we have a file named no11fill.h that loooks like
+\begin{verbatim}
+    Symbols ...;
+    Table,sparse,no11fill(11,N?);
+    Fill no11fill(-3,1,1,1,1,1,1,1,0,0,0) = ....
+    Fill no11fill(-2,1,1,1,1,1,1,1,0,0,0) = ....
+    etc.
+\end{verbatim}
+It should be noted that only sparse\index{sparse} tables can be stored 
+inside a tablebase. The right hand sides could be typically a few kilobytes 
+of formulas and there could be a few thousand of these fill statements. To 
+make this into a tablebase one would use the program
+\begin{verbatim}
+    #-
+    #include no11fill.h
+    #+
+    TableBase "no11.tbl" create;
+    TableBase "no11.tbl" addto no11fill;
+    .end
+\end{verbatim}
+The include\index{\#include} instruction makes that FORM reads and compiles 
+the table. Then the first tablebase statement creates a new tablebase file 
+by the name no11.tbl. If such a file existed already, the old version will 
+be lost. If one would like to add to an existing tablebase, one should use 
+the `open'\index{open} keyword. The second tablebase statement adds the 
+table no11fill to the tablebase file no11.tbl. This takes care of declaring 
+the table, making an index of all elements that have been filled and 
+putting their right hand sides, in compressed form, into the tablebase. The 
+compression is based on the zlib\index{zlib} library, provided by Jean-loup 
+Gailly\index{Gailly!Jean-loup} and Mark Adler\index{Adler!Mark} (version 
+1.1.3, July 9th, 1998) and it strikes a nice balance between speed and 
+compression ratio.
+
+The tablebase can be loaded in a different program as in
+\begin{verbatim}
+    TableBase "no11.tbl" open;
+\end{verbatim}
+This loads the main index\index{index!main} of the file into memory.
+
+If one would like to compile the short version of the fill statements (the 
+normal action at this point) one needs to use the load\index{load} option. 
+Without any names of tables it will read the index of all tables. If tables 
+are specied, only the index of those tables is taken and the proper 
+tbl\_ fill statements are generated:
+\begin{verbatim}
+    TableBase "no11.tbl" open;
+    TableBase "no11.tbl" load no11fill;
+\end{verbatim}
+
+If one would like to compile\index{compile} the complete tables, rather 
+than just the shortened versions, one can use the enter option as in:
+\begin{verbatim}
+    TableBase "no11.tbl" open;
+    TableBase "no11.tbl" enter no11fill;
+\end{verbatim}
+
+Let us assume we used the load option. Hence now an occurrence of a table 
+element will be replaced by the stub\index{stub function}-function 
+tbl\_\index{tbl\_}. In order to have this replaced by the actual right hand 
+side of the original fill statement we have to do some more work. At a 
+given moment we have to make FORM look which elements are actually needed. 
+This is done with the TestUse\index{testuse} statement as in
+\begin{verbatim}
+    TestUse no11fill;
+\end{verbatim}
+This does nothing visible. It just marks internally which elements will be 
+needed and have not been entered yet.
+
+The actual entering of the needed elements is done with the use\index{use} 
+option:\begin{verbatim}
+    TableBase "no11.tbl" use;
+\end{verbatim}
+If many elements are needed, this statement may need some compilation time. 
+Note however that this is time at a moment that it is clear that the 
+elements are needed, which is entirely different from a fixed time at the 
+startup of a program when the whole table is loaded as would have to be 
+done before the tablebase statement existed. Usually however only a 
+part of the table is needed, and in the extreme case only one or two 
+elements. In that case the profit is obvious.
+
+At this point the proper elements are available inside the system, but 
+because we have two versions of the table (one the short version with 
+tbl\_, the other the complete elements) we have to tell FORM to apply 
+the proper definitions with the `apply'\index{apply} statement.
+\begin{verbatim}
+    Apply;
+\end{verbatim}
+Now the actual rhs will be inserted.
+
+One may wonder why this has to be done in such a `slow' way with this much 
+control over the process. The point is that at the moment the table 
+elements are recognized, one may not want the rhs yet, because it may be 
+many lines. Yet one may want to take the elements away from the main stream 
+of action. Similarly, having a table element recognized at a certain stage, 
+may not mean automatically that it will be needed. The coefficient may 
+still become zero during additional manipulations. Hence the user is left 
+with full control over the process, even though that may lead to slightly 
+more programming. It will allow for the fastest program.
+
+For the name of a tablebase we advise the use of the extension 
+.tbl\index{.tbl} to avoid confusion.
+
+Note that the above scheme may need several applications, if table elements 
+refer in their definition to other table elements. This can be done with a 
+construction like:
+\begin{verbatim}
+    #do i = 1,1
+        TestUse;
+        .sort
+        TableBase "basename.tbl" use;
+        Apply;
+        if ( count(tbl_,1) ) Redefine i "0";
+        .sort
+    #enddo
+\end{verbatim}
+It will stay in the loop until there are no more tbl\_ functions to be 
+resolved.
+
+The complete syntax (more is planned):
+
+%--#[ addto :
+
+\section{addto}
+\label{tbladdto}
+
+\noindent Syntax:
+
+TableBase "file.tbl" addto tablename;
+
+TableBase "file.tbl" addto tablename(tableelement);
+
+\noindent See also open (\ref{tblopen}) and create (\ref{tblcreate}).
+
+\noindent Adds\index{addto} the contents of a (sparse\index{sparse}) table 
+to a tablebase. The base must be either an existing tablebase (made 
+accessible with an open statement) or a new tablebase (made available with 
+a create statement). In the first version what is added is the collection 
+of all fill statements that have been used to define elements of the 
+indicated table, in addition to a definition of the table (if that had not 
+been done yet). In the second version only individual elements of the 
+indicated table are added. These elements are indicated as it should be in 
+the left hand side of a fill\index{fill} statement.
+
+\noindent One is allowed to specify more than one table, or more than one 
+element. If one likes to specify anything after an element, it should be 
+realized that one needs to use a comma for a separator, because blank 
+spaces after a parenthesis are seen as irrelevant.
+
+\noindent Examples:
+\begin{verbatim}
+    TableBase "no11.tbl" open;
+    TableBase "no11.tbl" load;
+    TableBase "no11.tbl" addto no11filb;
+    TableBase "no11.tbl" addto no11fill(-3,1,1,1,1,2,1,1,0,0,0),
+                               no11fill(-2,1,1,2,1,1,1,1,0,0,0);
+\end{verbatim}
+
+%--#] addto :
+%--#[ apply :
+
+\section{apply}
+\label{tblapply}
+
+\noindent Syntax:
+
+Apply;
+Apply number;
+
+Apply tablename(s);
+Apply number tablename(s);
+
+\noindent See also testuse (\ref{tbltestuse}) and use (\ref{tbluse}).
+
+\noindent The actual application\index{apply} of fill\index{fill} 
+statements that were taken from the tablebases. If no tables are specified, 
+this is done for all tables, otherwise only for the tables whose names are 
+mentioned. The elements must have been registered as used before with the 
+application of a testuse\index{testuse} statement, and they must have been 
+compiled from the tablebase with the use\index{use} option of the tablebase 
+statement. The number refers to the maximum number of table elements that 
+can be substituted in each term. This way one can choose to replace only 
+one element at a time. If no number is present all occurrences will be 
+replaced. This refers also to occurences inside function arguments. If only 
+a limited number is specified in the apply statement, the occurrences 
+inside function arguments have priority.
+
+%--#] apply :
+%--#[ audit :
+
+\section{audit}
+\label{tblaudit}
+
+\noindent Syntax:
+
+TableBase "file.tbl" audit;
+
+\noindent See also open (\ref{tblopen})
+
+\noindent Prints\index{audit} a list of all tables and table elements that 
+are defined in the specified tablebase. This tablebase needs to be opened 
+first. As of the moment there are no options for the audit. Future options 
+might include formatting of the output.
+
+%--#] audit :
+%--#[ create :
+
+\section{create}
+\label{tblcreate}
+
+\noindent Syntax:
+
+TableBase "file.tbl" create;
+
+\noindent See also open (\ref{tblopen})
+
+\noindent This creates\index{create} a new file\index{file!new} with the 
+indicated name. This file will be initialized as a tablebase. If there was 
+already a file with the given name, its old contents will be lost. If one 
+would like to add to an existing tablebase, one should use the 
+`open'\index{open} option.
+
+%--#] create :
+%--#[ enter :
+
+\section{enter}
+\label{tblenter}
+
+\noindent Syntax:
+
+TableBase "file.tbl" enter;
+
+TableBase "file.tbl" enter tablename(s);
+
+\noindent See also open (\ref{tblenter}) and load (\ref{tblload}).
+
+\noindent Scans\index{enter} the specified tablebase and (in the first 
+variety) creates for all elements of all tables in the tablebase a 
+fill\index{fill} statement with its full contents. This is at times faster 
+than reading the fill statements from a regular input 
+file\index{file!input}, because the tablebase has its contents 
+compressed\index{compress}. 
+Hence this costs less file access time. When table names are specified, 
+only the tables that are mentioned have their elements treated this way.
+
+\noindent The tablebase must of course be open for its contents to be 
+available.
+
+\noindent If one would like FORM to only see what elements are available 
+and load that information one should use the load\index{load} option.
+
+%--#] enter :
+%--#[ load :
+
+\section{load}
+\label{tblload}
+
+\noindent Syntax:
+
+TableBase "file.tbl" load;
+
+TableBase "file.tbl" load tablename(s);
+
+\noindent See also open (\ref{tblopen}) and enter (\ref{tblenter}).
+
+\noindent Scans\index{load} the index of the specified tablebase and (in 
+the first variety) creates for all elements of all tables in the tablebase 
+a fill\index{fill} statement of the type
+\begin{verbatim}
+    Fill tablename(indices) = tbl_(tablename,indices,arguments);
+\end{verbatim}
+This is the fill statement that will be used when elements of one of these 
+tables are encountered. The function tbl\_ is called the (table)stub 
+function. When table names are specified, only the tables that are 
+mentioned have their elements treated this way.
+
+\noindent The tablebase must of course be open for its contents to be 
+available.
+
+\noindent If one would like to actually load the complete fill statements, 
+one should use the enter option.
+
+%--#] load :
+%--#[ off :
+
+\section{off}
+\label{tbloff}
+
+\noindent Syntax:
+
+TableBase "file.tbl" off subkey;
+
+\noindent See also addto (\ref{tbladdto}) and off (\ref{tblon}).
+
+\noindent Currently\index{off} only the subkey `compress'\index{compress} 
+is recognized. It makes sure that no compression is used when elements are 
+being stored in a tablebase with the addto\index{addto} option. This could 
+be interesting when the right hand sides of the fill statements are 
+relatively short.
+
+%--#] off :
+%--#[ on :
+
+\section{on}
+\label{tblon}
+
+\noindent Syntax:
+
+TableBase "file.tbl" on subkey;
+
+\noindent See also addto (\ref{tbladdto}) and off (\ref{tbloff}).
+
+\noindent Currently\index{on} only the subkey `compress'\index{compress} is 
+recognized. It makes sure that compression with the gzip\index{gzip} 
+algorithms is used when elements are being stored in a tablebase with the 
+addto\index{addto} option. This is the default.
+
+%--#] on :
+%--#[ open :
+
+\section{open}
+\label{tblopen}
+
+\noindent Syntax:
+
+TableBase "file.tbl" open;
+
+\noindent See also create (\ref{tblcreate})
+
+\noindent This opens\index{open} an existing file with the indicated name. 
+It is assumed that the file has been created\index{create} with the 
+`create' option in a previous FORM program. It gives the user access to the 
+contents of the tablebase. In addition it allows the user to add to its 
+contents.
+
+\noindent Just like with other files, FORM will look for the file in in 
+current directory and in all other directories mentioned in the environment 
+variable `FORMPATH'\index{FORMPATH} (see for instance the 
+\#call\index{\#call} (\ref{precall}) and the \#include\index{\#include} 
+(\ref{preinclude}) instructions).
+
+%--#] open :
+%--#[ testuse :
+
+\section{testuse}
+\label{tbltestuse}
+
+\noindent Syntax:
+
+TestUse;
+
+TestUse tablename(s);
+
+\noindent See also use (\ref{tbluse}).
+
+\noindent Tests\index{testuse} for all elements of the specified tables (if 
+no tables are mentioned, this is done for all tables) whether they are used 
+in a stub\index{stub} function tbl\_\index{tbl\_}. If so, this indicates 
+that these elements must be compiled from a tablebase, provided this has 
+not been done already. The compilation will have to be done at a time, 
+specified by the user. This can be done with the use\index{use} option. All 
+this statement does is set some flags in the internals of FORM for the 
+table elements that are encountered in the currently active expressions.
+
+%--#] testuse :
+%--#[ use :
+
+\section{use}
+\label{tbluse}
+
+\noindent Syntax:
+
+TableBase "file.tbl" use;
+
+TableBase "file.tbl" use tablename(s);
+
+\noindent See also testuse (\ref{tbltestuse}) and apply (\ref{tblapply}).
+
+\noindent Causes\index{use} those elements of the specified tables to be 
+compiled, that a previous testuse\index{testuse} statement has encountered 
+and that have not yet been compiled before. If no tables are mentioned this 
+is done for all tables. The right hand sides of the definition of the table 
+elements will not yet be substituted. That is done with an 
+apply\index{apply} statement.
+
+%--#] use :
+

@@ -1,0 +1,251 @@
+\chapter{Brackets}
+\label{brackets}
+
+At times one would like to order the output in a specific way. In an 
+expression which is for instance a polynomial in terms of the symbol $x$, 
+one might want to make this behaviour in terms of $x$ more apparent by 
+printing the output in such a way, that all powers of $x$ are outside 
+parentheses\index{parentheses}, and the whole rest is inside parentheses. 
+This is done with the bracket\index{bracket} statement:
+\begin{verbatim}
+    Bracket x;
+\end{verbatim}
+or in short notation
+\begin{verbatim}
+    B x;
+\end{verbatim}
+One can specify more than one object in the bracket statement, but only a 
+single bracket statement (the last one) is considered. Bracket statements 
+belong to the module in which they occur. Hence they are forgotten after 
+the next end-of-module.
+
+If a vector is mentioned in a bracket statement, 
+all occurrences of this vector as a loose vector, a vector with any index, 
+inside a dotproduct, or inside a tensor are taken outside brackets. If the 
+vector occurs inside a non-commuting tensor, all other non commuting 
+objects that are to the left of this tensor will also be taken outside the 
+parentheses.
+
+When a function or tensor is mentioned in a bracket statement, it is not 
+allowed to have any arguments in the bracket statement. All occurrences of 
+this function will be pulled outside brackets. If the function is 
+non-commuting, all other functions and/or tensors that are non-commuting 
+and are to the left of the specific function(s) or tensor(s) will also be 
+outside parentheses.
+
+The opposite of the bracket statement is the antibracket\index{antibracket} 
+statement:
+\begin{verbatim}
+    AntiBracket x;
+\end{verbatim}
+or
+\begin{verbatim}
+    ABracket x;
+\end{verbatim}
+or
+\begin{verbatim}
+    AB x;
+\end{verbatim}
+This statement causes also brackets in the output, but now everything is 
+put outside brackets, except for powers of x and coefficients. This way one 
+can make the $x$-dependence apparent differently.
+
+Because the bracket statement causes a different ordering of the terms when 
+storing the expression, one can use this ordering in the next module. There 
+are various ways to do this.
+
+One can use the contents of a given bracket in a r.h.s. expression as in
+\begin{verbatim}
+    Symbols a,b,c,x;
+    L  F = a*x^2+b*x+c;
+    B x;
+    .sort
+    L  Discriminant = F[x]^2-4*F[x^2]*F[1];
+    Print;
+    .end
+\end{verbatim}
+The outside of the bracket is placed between braces\index{braces} after the 
+name of the expression. The bracket that has nothing outside is referred to 
+with the number 1. If a bracket is empty, its contents will be represented 
+by the value zero.
+
+The regular algorithm by which \FORM{} finds brackets in an expression, is 
+to start from the beginning and inspect each term until it finds the 
+appropriate bracket. This is fully in the spirit of the sequential 
+treatment of expressions in \FORM{}. This can however be rather 
+slow\index{slow} in big 
+expressions that reside on a disk. Hence there is the bracket\index{bracket 
+index} 
+index\index{index!bracket} 
+feature. It is invoked by putting a $+$-sign after the bracket (or B) 
+statement as in 
+\begin{verbatim}
+    Bracket+ x;
+\end{verbatim}
+or
+\begin{verbatim}
+    B+ x;
+\end{verbatim}
+This option causes \FORM{} to build a tree of (disk) positions for the 
+different brackets, with the condition that the whole storage of this tree 
+of brackets does not exceed a given maximum space, named 
+`bracketindexsize'\index{bracketindexsize} 
+(see chapter~\ref{setup} on the setup parameters). 
+If the index would need more space \FORM{} will start 
+skipping brackets in the index. This means that it will have to look for 
+the bracket in a sequential fashion, but starting from the position 
+indicated by the previous bracket in the index. This will still be very 
+fast, provided the index is not very small.
+
+When the bracket index option is used, \FORM will not compress the 
+expressions that use such an index with the zlib compression, even if the 
+user asked for this in an earlier statement. The use if the index indicates 
+that the brackets are going to be used intensively, and hence the 
+continuous decompression that would result would destroy most of the profit 
+that comes from the index. If the brackets are only for cosmetics in the 
+output, it is better not to use the index option. It does use resources to 
+construct the index\index{index tree} tree\index{tree!index}. Also when 
+brackets are only used sequentially as in the features discussed below, the 
+presence of the index is not beneficial. It should only be applied when 
+contents of brackets are used in the above way (like with the 
+discriminant).
+
+There are several statements that make use of the bracket ordering:
+\begin{itemize}
+\item Keep\index{keep brackets} Brackets;
+	This statement takes from the input one term at a time as usual, but 
+then it takes the part outside the brackets, executes the statements of the 
+module only on that part of the term, and then, when all statements of the 
+module have had their effect, the resulting term(s) is/are multiplied by 
+the full content of the bracket. The next term taken from the input will be 
+the first term of the next bracket. This way one can hide part of the terms 
+for the pattern matcher. Also one can avoid that the same matching will 
+occur many times, as in an expression of the type
+\begin{verbatim}
+      + f(y)*(x+x^2+x^3+x^4+1)
+\end{verbatim}
+If we would want to make a replacement of the type
+\begin{verbatim}
+    Keep Brackets;
+    id f?{f1,f2,f3}(u?) = f(u+1)/u;
+\end{verbatim}
+the pattern matching and the substitution would have to be done only once, 
+rather than 5 times, as would be the case if the Keep bracket statement 
+would not be used.
+\item Collect\index{collect} FunctionName;
+	The contents of the various brackets will be placed inside a function 
+with the given name. Hence
+\begin{verbatim}
+      + f(y)*(x+x^2+x^3+x^4+1)
+      + f(y^2)*(x+2*x^2+3*x^3+4*x^4+1)
+\end{verbatim}
+with
+\begin{verbatim}
+    Collect h;
+\end{verbatim}
+would result in:
+\begin{verbatim}
+      + f(y)*h(x+x^2+x^3+x^4+1)
+      + f(y^2)*h(x+2*x^2+3*x^3+4*x^4+1)
+\end{verbatim}
+This can be very useful to locate $x$-dependence even further, because 
+bracketting the new expression in terms of $h$ could make very clear 
+whether a given polynomial in $x$ would factor the whole expression, or 
+which factors are occurring. To bring \verb:h(x+1): and \verb:h(2*x+2): to 
+multiples of the same objects one should consult the pages on the 
+normalize\index{normalize} 
+(\ref{substanormalize}) 
+and makeinteger\index{makeinteger} (\ref{substamakeinteger}) statements.
+
+The Collect statement, together with the PolyFun\index{polyfun} statement, 
+can also be very useful, if the variable $x$ (or other variables) is 
+temporarily not playing much of a role in the pattern matching. It can make 
+the program much faster.
+
+For more information on the collect statement one should consult 
+section~\ref{substacollect}.
+\end{itemize}
+
+\noindent
+Restrictions: The bracket index can only be used with active expressions. 
+Hence the access of specific brackets in stored expressions will always be 
+of the slow variety. To make it faster, one can copy the expression into a 
+local expression with indexed brackets, use it, and drop the expression 
+when it is not needed any longer.
+
+The brackets can also be used to save space on the disk in problems in 
+which the expressions become rather large. Let us assume the following 
+simple problem:
+\begin{verbatim}
+    Symbols x1,...,x12;
+    Local F = (x1+...+x12)^10;
+    .sort
+    id  x1 = x4+x7;
+    .end
+\end{verbatim}
+If the program is run like this the expression F contains 352716 terms 
+after the sort and after the id the sorting in the .end results in a final 
+stage sort\index{sort!final stage} of which the statistics are:
+\begin{verbatim}
+Time =      46.87 sec
+                F        Terms active    =     504240
+                         Bytes used      =   13462248
+
+Time =      52.09 sec    Generated terms =     646646
+                F        Terms in output =     184756
+                         Bytes used      =    4883306
+\end{verbatim}
+We see, that the intermediate sort file still contains more than 500000 
+terms and more than 13 Mbytes, while the final result contains less than 5 
+Mbytes. Why is this? When the terms in FORM are sorted first come the 
+powers of \verb:x1:, because this is the variable that was declared first. 
+Hence the terms that do not have powers of \verb:x1: come much later in the 
+input and will not be compared with the terms generated by the substitution 
+of for instance a single power of \verb:x1: until very late in the sorting. 
+What can we do about this? We can try to group the terms in the first sort 
+such that after the substitution like terms will be `very close' to each 
+other and hence will add quickly. This is done in the program
+\begin{verbatim}
+    Symbols x1,...,x12;
+    Local F = (x1+...+x12)^10;
+    AntiBracket x1,x4,x7;
+    .sort
+    id  x1 = x4+x7;
+    .end
+\end{verbatim}
+Now all powers of the mentioned variables will be inside the brackets and 
+all other variables will be outside. Because the terms inside the brackets 
+are all following each other in the input of the second module, terms that 
+will add will be generated closely together.
+The result is visible in the final statistics:
+\begin{verbatim}
+Time =      47.23 sec
+                F        Terms active    =     184761
+                         Bytes used      =    4928008
+
+Time =      48.40 sec    Generated terms =     646646
+                F        Terms in output =     184756
+                         Bytes used      =    4883306
+\end{verbatim}
+Now the final step of the sorting has already almost the proper number of 
+terms. The difference is due to brackets that are half in one `patch' on 
+the disk and half in the next `patch' (for the meaning of the patches, one 
+should read the part about sorting\index{sorting} in chapter~\ref{setup} on 
+the setup file. It should be rather clear now that this saves disk space 
+and the corresponding amount of time. These early cancellations can also be 
+seen in the first statistics message of the second module. In the first 
+case it is
+\begin{verbatim}
+Time =      19.76 sec    Generated terms =      10431
+                F   5216 Terms left      =       8065
+                         Bytes used      =     239406
+\end{verbatim}
+and in the second case it is
+\begin{verbatim}
+Time =      22.82 sec    Generated terms =      10124
+                F   5835 Terms left      =       3186
+                         Bytes used      =      96678
+\end{verbatim}
+This also causes a more efficient use of the large buffer and again a 
+better use of the disk. There have been cases in which this `trick' was 
+essential to keep the sort file inside the available disk space.

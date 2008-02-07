@@ -1,0 +1,246 @@
+
+\section{Sorting and statistics}
+\label{sorting}
+
+The sorting system is a vital part of FORM and one of the main reasons why 
+the speed of FORM compares so favorably with other systems. 
+A good understanding of what happens during the sorting\index{sorting} of 
+expressions is essential if one wants to write efficient\index{efficient} 
+programs. In essence the sorting is done by a tree\index{tree sort} sort. 
+However due to the nature of mathematical expressions there is a 
+complication. When two terms are identical with the possible exception of 
+their coefficient, we will add their coefficients, put this new coefficient 
+in the place of the coefficient of the first term, and drop the second 
+term. If the new coefficient happens to be zero, both terms are dropped. 
+Hence the number of terms during the sort is not fixed. For a tree sort 
+this is not a major complication\index{complication}. What is more annoying 
+though is that the new coefficient may take more space inside the storage 
+than either of the old coefficients. Let us have a look now at what happens 
+in a FORM program. Much can be seen from the statistics.
+\begin{verbatim}
+    S	x1,...,x4;
+    L	F = (x1+...+x4)^4;
+    .end
+
+Time =       0.01 sec    Generated terms =         35
+                F        Terms in output =         35
+                         Bytes used      =        628
+\end{verbatim}
+In this case the program generated 35 terms. Whenever a term is generated 
+and FORM is done with it (no more statements will act on it), FORM 
+will write it into a buffer which is called the small buffer. Additionally 
+it stores a pointer to the location of this term inside the small buffer. 
+Next it will continue generating terms. This process will be stopped by 
+either of three conditions:
+\begin{enumerate}
+\item FORM is finished generating terms.
+\item The last generated term does not fit inside the space remaining in 
+the small buffer.
+\item There is no space for a pointer to the last generated term inside the 
+array of pointers.
+\end{enumerate}
+In either of these three cases FORM will sort the contents of the 
+small\index{small buffer} buffer\index{buffer!small}. This sorting is done 
+`by pointers' and hence it is important that the whole small buffer fits 
+inside the physical memory of the computer. If this would not be the case, 
+some very inefficient swapping of memory might be the result. During this 
+sorting FORM may run into the problem that the coefficient of two combined 
+terms does not fit in the place of one of the two old coefficients. This 
+means that the combined term will need more space, but because the old 
+terms might be enclosed by other terms, this space may not be available 
+locally. To this end FORM has some spare space in the small buffer which is 
+called the small\index{small extension} extension\index{extension!small}. 
+Actually the term SmallExtension\index{smallextension} is used for the 
+combination of the small buffer and its extra space. The extra space is at 
+least $1/6$ times the size of the small buffer, but typically it will be 
+about $1/3$ the size of the small buffer. In some exceptional cases (with 
+heavy use of a polynomial coefficient via the PolyFun\index{polyfun} 
+command) bigger sizes might be useful.
+
+In the case that the new combined term needs more space than each of the 
+old terms, the new term is placed in the extension space. If, during the 
+sort, the extension space becomes exhausted, FORM will make a 
+garbage\index{garbage collection} 
+collection of the entire extended small buffer. This will always result in 
+the extension space becoming empty again, because the notation of the terms 
+in FORM is such the the new combined term will at most occupy an amount 
+of space equal to the sum of the spaces of the original two terms. In older 
+versions of FORM this garbage collection was executed by means of a 
+temporary disk file. In the new version it is done inside the memory by 
+temporarily allocating a new buffer. Anyway such garbage collections are 
+relatively rare.
+
+In the above example, the sorting occured because the generation of terms 
+was finished. Hence the sorted output is written away in such a way that it 
+can be used as input for a potential next module (or to be printed). 
+Hence let us change the size of the small buffer:
+\begin{verbatim}
+    #: SmallSize 300
+    S	x1,...,x4;
+    L	F = (x1+...+x4)^4;
+    .end
+
+Time =       0.00 sec    Generated terms =         13
+                F      1 Terms left      =         13
+                         Bytes used      =        236
+
+Time =       0.00 sec    Generated terms =         26
+                F      1 Terms left      =         26
+                         Bytes used      =        476
+
+Time =       0.00 sec    Generated terms =         35
+                F      1 Terms left      =         35
+                         Bytes used      =        632
+
+Time =       0.00 sec    Generated terms =         35
+                F        Terms in output =         35
+                         Bytes used      =        628
+\end{verbatim}
+Now the size of the small buffer will be only 300 bytes. As a result the 
+13-th term does not fit. We can see this in the statistics: the 13-th term 
+has been generated and FORM sorts the small buffer. The output of the 12 
+sorted terms is written to another buffer, called the
+large\index{large buffer} buffer\index{buffer!large}. Inside the large 
+buffer the terms are lightly compressed. This compression is related to the 
+fact that in each `patch'\index{patch} the terms are already sorted and 
+hence we may not have to repeat the identical beginnings of each term. 
+Hence the amount of space used after this sort is less than the 300 bytes 
+of the small buffer, even though the 13-th term gave an overflow for these 
+300 bytes. The small buffer fills up again at the 26-th term and again it 
+is sorted and the results written to the large buffer. Finally, after 35 
+terms, the generation is finished. Hence the remains in the small buffer 
+are also sorted and written as a third `patch' into the large buffer. Then 
+the large buffer is sorted. For this a different sort technique is used. It 
+is assumed that the large buffer is not always residing inside the physical 
+memory. Hence parts of it may be swapped out temporarily. With the size of 
+current days memories this may not happen very often, unless one sets the 
+size of the buffer to something comparable to the memory size of the 
+computer and several programs are running at the same time. Anyway, 
+swapping will not affect the large buffer very much. \FORM\ will merge the 
+`patches' by going sequentially through them with a method called 
+`tree\index{tree of loosers} of loosers' in the book by Knuth\index{Knuth} 
+(the art of computer programming, vol. 3). Because it goes sequentially 
+through the patches, uses all the information it reads and never needs it 
+again, this method is indeed rather well resistent to swapping.
+
+The next complication is of course when the large buffer is full. This can 
+be either because its byte space is full, or because the maximum number of 
+patches is exceeded. Because the sorting method uses quite a few variables 
+for each patch, there is a space allocated for them and hence there is a 
+maximum number of patches. If we set this to 2 (just for demonstration 
+purposes) we obtain:
+\begin{verbatim}
+    #: SmallSize 200
+    #: LargePatches 2
+    S	x1,...,x4;
+    L	F = (x1+...+x4)^4;
+    .end
+
+Time =       0.00 sec    Generated terms =          9
+                F      1 Terms left      =          9
+                         Bytes used      =        164
+
+Time =       0.00 sec    Generated terms =         17
+                F      1 Terms left      =         17
+                         Bytes used      =        312
+
+Time =       0.00 sec    Generated terms =         26
+                F      1 Terms left      =         26
+                         Bytes used      =        478
+
+Time =       0.00 sec
+                F        Terms active    =         26
+                         Bytes used      =        474
+
+Time =       0.00 sec    Generated terms =         35
+                F      1 Terms left      =         35
+                         Bytes used      =        630
+
+Time =       0.00 sec
+                F        Terms active    =         35
+                         Bytes used      =        786
+
+Time =       0.00 sec    Generated terms =         35
+                F        Terms in output =         35
+                         Bytes used      =        628
+\end{verbatim}
+We see that after the third small buffer has been sorted, the third patch 
+cannot be written to the large buffer. Hence the large buffer is sorted 
+(indicated by the special statistics involving the phrase `Terms active'). 
+The result of this is written as a sorted patch to the
+sort\index{sort file} file. This file is one of the 
+temporary\index{temporary files} files that FORM can create. It has the 
+extension .sor\index{.sor extension}. Then the third patch is written into 
+the --by now empty-- large buffer. At the end of term generation, the last 
+small buffer is sorted, its results written into the large buffer, then 
+that is sorted and its results written as the final patch into the sort 
+file. Then, finally the patches in the sort file are merged in a method 
+similar to the way the large buffer is sorted. This final sort is a 
+disk\index{disk to disk sort} to disk sort. Hence it can use the disk 
+rather intensely and the use of the CPU may drop temporarily, although it 
+is nothing so dramatic as when the computer is involved in heavy 
+inefficient swapping as can be the case with many other algebra programs. 
+Also, this is usually only a small fraction of the running time of the 
+program. The exception may be when FORM is running several processes and 
+they are all using disk sorts simultaneously. In that case some file 
+systems may not be very good at handling the ensuing
+traffic\index{traffic jam} jams.
+
+Also the disk to disk sort will have a maximum number of patches that can 
+be sorted simultaneously. If this number is exceeded there will be one or 
+more extra stages\index{stages in the sorting} in the sorting, all of which 
+will be disk to disk sorts. It is advisable to tune the setup parameters in 
+such a way that one can prevent this, because it involves usually needless 
+use of resources. One can try to increase the parameter 
+FilePatches\index{filepatches}, but the problem is that FORM uses a 
+caching\index{caching} system to buffer the inputs from the sort file. The 
+cache buffers have to have a size that is at least twice the maximum size 
+of a term. For each patch it needs a buffer and all buffers together should 
+fit inside the combination of the large buffer and the small extended 
+buffer. This puts an upper limit on the number of file patches. 
+Additionally this buffer (SortIOsize\index{sortiosize}) should not be very 
+small, because otherwise the disk IO operations are very inefficient. Hence 
+it helps often to increase the size of the small buffer and the large 
+buffer first. That gives fewer patches. Additionally it in turn can allow 
+for more file patches that are not too small.
+
+One thing that one can see now is that if terms are to cancel or to add, it 
+is advantageous if this happens already in an early stage of the sorting. 
+This means that it is most efficient if these terms will end up in the 
+small buffer at the same time. This should explain the example given in the 
+section on brackets\index{brackets}. This way fewer terms are written to 
+the large buffer and/or the sort file, which means that less disk space 
+will be used.
+
+The sizes of buffers involved can all be tuned to a given hardware. How 
+this is done is explained in the chapter on the setup\index{setup} \ref{setup}.
+
+When FORM is dealing with the arguments\index{arguments of functions} of 
+functions and if an argument is a multiterm subexpression, also such 
+subexpressions need to be sorted. In older versions of FORM this was done 
+inside the at that moment remaining space of the small buffer and its 
+extension. The reason was that such subexpressions would be rather short 
+(they would have to fit inside a function argument and were hence limited 
+by the maximum size of a term) and buffer space was hard to come by in 
+computers with small memories. In the new version of FORM other 
+subexpression sorts were added: the sorting in the term environment (see 
+\ref{substaterm}) and the sorting of \$-expressions. Both sorts do not have 
+the restriction of the maximum size of a term. They can result in 
+expressions that are arbitrarily long (although that might not give 
+efficient programs). Hence the sorting of subexpressions have now their own 
+buffers. And more than one such set may be needed if for instance the term 
+environment is used in a nested fashion. Of course the settings for the 
+buffers of this `subsort' are not quite as large as for the main buffers. 
+And the user can of course also influence their settings as explained in 
+the chapter on the setup \ref{setup}. This chapter gives also all default 
+values.
+
+When FORM is running in parallel mode (either TFORM or ParFORM) each worker 
+will need its own buffers. In ParFORM in which the processors each control 
+their own memory, the size of each of these buffers are the same as for the 
+master process. In TFORM with its shared memory the sizes that the user 
+selects for the sort buffers and the scratch file caches refer to the 
+buffers of the master thread. The workers each get basically buffers with 
+1/N times the size of the buffer of the master. They may be made a bit 
+bigger when potential conflicts with MaxTermSize occur.
+

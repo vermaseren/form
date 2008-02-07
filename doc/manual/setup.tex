@@ -1,0 +1,450 @@
+
+\chapter{The setup}
+\label{setup}
+
+When FORM is started, it has a number of settings\index{setup} built in 
+that were determined during its installation\index{installation}. If the 
+user would like to alter these settings, it is possible to either specify 
+their desired values in a setup file\index{file!setup} or to do so at the 
+beginning of the program file\index{file!program}. There are two ways in 
+which FORM can find a setup file. The first way is by having a file named 
+`form.set'\index{form.set} in the current directory. If such a file is 
+present, FORM will open it and interpret its contents as setup parameters. 
+If this file is not present, one may specify a setup file with the -s 
+option in the command tail. This option must precede the name of the input 
+file. After the -s follow one or more blanks or tabs and then the full name 
+of the setup file. FORM will try to read startup parameters from this file. 
+If a file `form.set' is present, FORM will ignore the -s option and its 
+corresponding file name. This order of interpretation allows the user to 
+define an alias with a standard setup file which can be overruled by a 
+local setup file. If, in the beginning of the program file, before any 
+other statements with the exception of the \#- instruction and commentary 
+statements, there are lines that start with \#: the remaining contents of 
+these lines are interpreted exactly like the lines in the setup file. The 
+specifications in the program file take precedence\index{precedence} over 
+all other specifications. If neither of the above methods is used, FORM 
+will use a built in set of parameters. Their values may depend on the 
+installation and are given below. 
+
+The following is a list of parameters that can be set. The syntax is rather 
+simple: The full word must be specified (case insensitive), followed by one 
+or more blanks or tabs and the desired number, string or character. 
+Anything after this is considered to be commentary. In the setup file lines 
+that do not start with an alphabetic character are seen as commentary. The 
+sizes of the buffers are given in bytes, unless mentioned otherwise. A word 
+is 2 bytes for 32\index{32 bits} bit machines and 4 bytes for 64\index{64 
+bits} bit machines.
+
+\leftvitem{3.8cm}{bracketindexsize\index{setup!bracketindexsize}\index{bracketindexsize}}
+\rightvitem{12.6cm}{Maximum size in bytes of any individual index of a 
+bracketted expression. Each expression will have its own index. The index 
+starts with a relatively small size and will grow if needed. But it will 
+never grow beyong the specified size. If more space is needed, FORM will 
+start skipping brackets and find those back later by linear search. See 
+also chapter~\ref{brackets} and section~\ref{substabracket}.}
+
+\leftvitem{3.8cm}{CommentChar\index{setup!commentchar}\index{commentchar}}
+\rightvitem{12.6cm}{This should be followed by one or more blanks and a 
+single non-blank character. This character will be used to indicate 
+commentary, instead of the regular $*$ in column 1.}
+
+\leftvitem{3.8cm}{CompressSize\index{setup!compresssize}\index{compresssize}}
+\rightvitem{12.6cm}{When compressing output terms, FORM needs a compression 
+buffer. This buffer deals recursively with compression and decompression of 
+terms that are either written or read. Its size will be at least 
+MaxTermSize but when there is heavy use of expressions in the right hand 
+side of definitions or substitution it would have to be considerably 
+longer. It is hoped that in the future this parameter can be eliminated. 
+CompressSize should be given in bytes.}
+
+\leftvitem{3.8cm}{ConstIndex\index{setup!constindex}\index{constindex}}
+\rightvitem{12.6cm}{This is the number of indices that are considered to be 
+constant indices like in fixed vector components (the so-called fixed 
+indices). The size of this parameter is not coupled to any array space, but 
+it should not go much beyond 1000 on a 32\index{32 bits} bit machine. On a 
+64\index{64 bits} bit machine it can go considerably further.}
+
+\leftvitem{3.8cm}{ContinuationLines\index{setup!continuationlines}\index{continuationlines}}
+\rightvitem{12.6cm}{The number of continuation lines that the local Fortran 
+compiler will allow. This limits the number of continuation lines, when the 
+output option `Format Fortran' (see \ref{substaformat}) is selected.}
+
+\leftvitem{3.8cm}{DotChar\index{setup!dotchar}\index{dotchar}}
+\rightvitem{12.6cm}{There should be a single character following this name 
+(and the blank(s) after it). This character will be used instead of the \_, 
+when dotproducts\index{dotproducts} are printed in Fortran\index{Fortran} 
+output. This option is needed because some Fortran compilers do not 
+recognize the underscore as a valid character. In the olden days one could 
+use here the dollar character but nowadays many Fortran compilers do not 
+recognize this character as belonging to a variable name.}
+
+\leftvitem{3.8cm}{FunctionLevels\index{setup!functionlevels}\index{functionlevels}}
+\rightvitem{12.6cm}{The maximum number of levels that may occur, when 
+functions have functions in their arguments.}
+ 
+\leftvitem{3.8cm}{IncDir\index{setup!incdir}\index{incdir}}
+\rightvitem{12.6cm}{Directory (or path of directories) in which FORM will 
+look for files if they are not to be found in the current directory. This 
+involves files for the \#include\index{\#include} and \#call\index{\#call} 
+instructions. This variable takes precedence over the 
+Path\index{setup!path}\index{path} variable.}
+ 
+\leftvitem{3.8cm}{InsideFirst\index{setup!insidefirst}\index{insidefirst}}
+\rightvitem{12.6cm}{Not having any effect at the moment.}
+ 
+\leftvitem{3.8cm}{MaxNumberSize\index{setup!maxnumbersize}\index{maxnumbersize}}
+\rightvitem{12.6cm}{Allows the setting of the maximum size of the numbers 
+in FORM. The number should be given in words. For 32\index{32 bits} bit 
+systems a word is two bytes and for 64\index{64 bits} bit systems a word is 
+4 bytes. The number size is always limited by the maximum size of the terms 
+(see MaxTermSize). Actually it has to be less than half of MaxTermSize 
+because a coefficient contains both a numerator and a denominator. It is 
+not always a good idea to have the number size at its maximum value, 
+especially when MaxTermSize is large. In that case it could be very long 
+before a runaway algorithm runs into limitations of size (arithmetic for 
+very long fractions is not very fast due to the continuous need for 
+computing GCD's)}
+
+\leftvitem{3.8cm}{MaxTermSize\index{setup!maxtermsize}\index{maxtermsize}}
+\rightvitem{12.6cm}{\label{setupmaxtermsize}
+This is the maximum size that an individual term may occupy in words. This 
+size does not affect any allocations. One should realize however that the 
+larger this size is the heavier the demand can be on the workspace, because 
+the workspace acts as a heap during the execution and sometimes allocations 
+have to be made in advance, before FORM knows what the actual size of the 
+term will be. Consequently the evaluation tree cannot be very deep, when 
+WorkSpace / MaxTermSize is not very big. MaxTermSize controls mainly how 
+soon FORM starts complaining about terms that are too complicated. Its 
+absolute maximum is 32568 on 32\index{32 bits} bit systems and about $10^9$ 
+on 64\index{64 bits} bit systems (of course the workspace would have to be 
+considerably larger than that....).}
+
+\leftvitem{3.8cm}{MaxWildCards\index{setup!maxwildcards}\index{maxwildcards}}
+\rightvitem{12.6cm}{The maximum number of wildcards that 
+can be active in a single matching of a pattern. Under normal circumstance 
+the default value of 100 should be more than enough.}
+
+\leftvitem{3.8cm}{NoSpacesInNumbers\index{setup!nospacesinnumbers}\index{nospacesinnumbers}}
+\rightvitem{12.6cm}{\label{nospacesinnumbers}Long numbers are usually spread over several lines 
+by placing a backspace character at the end of each line and then 
+continuing at the next line. For cosmetic purposes FORM puts usually a few 
+blank spaces at the beginning of the new line. FORM itself can read this but 
+some programs cannot. Hence one can put FORM in a mode in which these 
+blanks are omitted. The values of the variable are ON or OFF. There is also 
+a command to change this behaviour at runtime. See the on and off commands 
+at pages \ref{staonnospacesinnumbers} and \ref{staoffnospacesinnumbers}.}
+
+\leftvitem{3.8cm}{NumStoreCaches\index{setup!numstorecaches}\index{numstorecaches}}
+\rightvitem{12.6cm}{This number determines how many store caches (see 
+the description of the SizeStoreCache setup parameter below) there will 
+be. In the case of parallel processing this will be the number of caches 
+per processor.}
+
+\leftvitem{3.8cm}{NwriteStatistics\index{setup!nwritestatistics}\index{nwritestatistics}}
+\rightvitem{12.6cm}{When this word is mentioned, the default setting for the 
+statistics is that no run time statistics will be shown. Ordinarily they 
+will be shown.}
+ 
+\leftvitem{3.8cm}{OldOrder\index{setup!oldorder}\index{oldorder}}
+\rightvitem{12.6cm}{A special flag (values ON/OFF) by which one can still 
+select the old option of not checking for the order of statements inside a 
+module. This should be used only in the case that it is nearly impossible 
+to change a program to the new mode in which the order of the statements 
+(declarations etc) is relevant. In the future this old mode may not exist.}
+ 
+\leftvitem{3.8cm}{Parentheses\index{setup!parentheses}\index{parentheses}}
+\rightvitem{12.6cm}{The maximum number of nestings of parentheses or 
+functions inside functions. The variable may be eliminated in a later 
+version.}
+ 
+\leftvitem{3.8cm}{Path\index{setup!path}\index{path}}
+\rightvitem{12.6cm}{Directory (or path of directories) in which FORM will 
+look for files if they are not to be found in the current directory. This 
+involves files for the \#include\index{\#include} and \#call\index{\#call} 
+instructions. FORM will test this path after a potential path specified as 
+IncDir\index{setup!incdir}\index{incdir}.}
+ 
+
+\leftvitem{3.8cm}{ProcedureExtension\index{setup!procedureEetension}\index{procedureextension}}
+\rightvitem{12.6cm}{The extension that will be used by FORM for finding the 
+procedures that are in separate files. Restrictions on the strings used are 
+as explained in the preprocessor 
+\#procedureextension\index{\#procedureextension} instruction in section 
+\ref{preprocedureextension}.}
+ 
+\leftvitem{3.8cm}{ResetTimeOnClear\index{setup!resettimeonclear}\index{resettimeonclear}}
+\rightvitem{12.6cm}{The value is ON or OFF. The default value is ON. This 
+means that by default the clock is reset after each .clear\index{.clear} 
+(see chapter \ref{modules} on modules) instruction at the end of a module.}
+
+\leftvitem{3.8cm}{ScratchSize\index{setup!scratchsize}\index{scratchsize}}
+\rightvitem{12.6cm}{The size of the input and the output buffers for the 
+regular algebra processing. Terms are read in in chunks this size and are 
+written to the output file using buffers of this size. There are either two 
+or three of these buffers, depending on whether the hide\index{hide} 
+facility is being used (see \ref{substahide}). These buffers must have a 
+size that is at least as large as the MaxTermSize\index{maxtermsize}. These 
+buffers act as caches for the files with the extension .sc1\index{.sc1}, 
+.sc2\index{.sc2} and .sc3\index{.sc3}.}
+
+\leftvitem{3.8cm}{SizeStoreCache\index{setup!sizestorecache}\index{sizestorecache}}
+\rightvitem{12.6cm}{The size of the caches\index{caches} that are used for 
+reading terms when stored expressions are used in the r.h.s. of a 
+statement. Typically there are several such caches and they make the 
+reading much faster. In the case of parallel processing these caches become 
+very important because without them the different processes may all want to 
+read from the .str\index{.str} file\index{file!store} at the same time and 
+execution speed will suffer badly. The number of store caches is determined 
+by the NumStoreCaches\index{numstorecaches} setup parameter which is 
+described above. The size of these caches doesn't have to be very large as 
+compared to some of the other buffers. It is recommended though to have 
+them at least as large as MaxTermSize\index{maxtermsize} (see above).}
+ 
+\leftvitem{3.8cm}{SlavePatchSize\index{setup!slavepatchsize}\index{slavepatchsize}}
+\rightvitem{12.6cm}{For the parallel version. It is ignored in sequential 
+versions. Tells FORM how big the patches of terms that are being 
+distributed over the secondary processors should be. See also 
+\ref{substaslavepatchsize}. If the number is too small, FORM will basically 
+send individual terms.}
+ 
+\leftvitem{3.8cm}{SortType\index{setup!sorttype}\index{sorttype}}
+\rightvitem{12.6cm}{Possible values are "lowfirst"\index{lowfirst}, 
+"highfirst"\index{highfirst} and "powerfirst"\index{powerfirst}. "lowfirst" 
+is the default. Determines the order in which the terms are placed during 
+sorting. In the case of lowfirst, lower powers of symbols and dotproducts 
+come before higher powers. In the case of highfirst it is the opposite. In 
+the case of powerfirst the combined powers of all symbols together are 
+considered and the highest combined powers come first. See also the 
+on\index{on} statement in \ref{substaon}.}
+
+\leftvitem{3.8cm}{TempDir\index{setup!tempdir}\index{tempdir}}
+\rightvitem{12.6cm}{This variable should contain the name of a directory 
+that is the directory in which FORM should make its temporary files. If the 
+-t (or -T) option is used when FORM is started, the TempDir variable in the 
+setup file is ignored. FORM can create a number of different temporary 
+files.}
+ 
+\leftvitem{3.8cm}{ThreadBucketSize\index{setup!threadbucketsize}\index{threadbucketsize}}
+\rightvitem{12.6cm}{Only relevant for \TFORM. The size of the number of 
+terms sent to the workers simultaneously. 
+For details see the chapter on the parallel version (\ref{parallel}).}
+ 
+\leftvitem{3.8cm}{ThreadLoadBalancing\index{setup!threadloadbalancing}\index{threadloadbalancing}}
+\rightvitem{12.6cm}{\indent Only relevant for \TFORM. Possible values are ON 
+or OFF. For details see the chapter on the parallel version (\ref{parallel}).}
+ 
+\leftvitem{3.8cm}{Threads\index{setup!threads}\index{threads}}
+\rightvitem{12.6cm}{Only relevant for \TFORM (see chapter on the parallel 
+version). Specifies the default number of worker threads to be used. The 
+values 0 and 1 will indicate that running will only be done by the master 
+thread (\ref{parallel}).}
+
+\leftvitem{3.8cm}{ThreadScratchOutSize\index{setup!threadscratchoutsize}\index{threadscratchoutsize}}
+\rightvitem{12.6cm}{The size of the output scratch buffers for each of the 
+worker threads. These buffers will be used when the InParallel 
+statement~\ref{substainparallel} is active. They are used to catch the 
+output of the expressions as processed by the individual workers before 
+they are copied to the output scratch buffer/file of the master. The output 
+scratch buffer/file of each worker will never contain more than one 
+expression at a time.}
+
+\leftvitem{3.8cm}{ThreadScratchSize\index{setup!threadscratchsize}\index{threadscratchsize}}
+\rightvitem{12.6cm}{The size of the input scratch buffers for each of the 
+worker threads. These buffers are only used when the main scratch buffers 
+of the master process isn't sufficient and scratch files have been made. 
+When the buffers of the master are big enough, the workers only use 
+pointers to the buffer of the master. Once there are scratch files the 
+buffer is used for caching the input from those files. In that case each 
+worker has its own cache. For reading purposes it can actually be counter 
+productive if these buffers are very large. This parameter sets the value 
+for the input and the hide\index{hide} scratch files. The output scratch 
+size for the workers is set with the ThreadScratchOutSize parameter.}
+
+%\leftvitem{3.8cm}{ThreadSortFileSynch\index{setup!threadsortfilesynch}\index{threadsortfilesynch}}
+%\rightvitem{12.6cm}{\indent Only relevant for \TFORM. Possible values are ON 
+%or OFF. For details see the chapter on the parallel version (\ref{parallel}).}
+
+\leftvitem{3.8cm}{WorkSpace\index{setup!workspace}\index{workspace}}
+\rightvitem{12.6cm}{The size of the heap that is used by the algebra 
+processor when it is evaluating the substitution tree. It will contain 
+terms, half finished terms and other information. The size of the workspace 
+may be a limitation on the depth of a substitution tree.}
+
+%\leftvitem{3.8cm}{ZipSize\index{setup!zipsize}\index{zipsize}}
+%\rightvitem{12.6cm}{This parameter defines the maximum size of a buffer for 
+%compression and decompression of parts of expressions with the ZIP 
+%algorithm. Currently this algorithm is not in use yet, but it is one of the 
+%relatively urgent future projects. ZIP compression can reduce intermediate 
+%files by a factor 4.}
+%%%%%%%for compressing .sav files?
+
+Variables that take a path\index{path} for their value expect a sequence of 
+directories, separated by colon characters as in the UNIX\index{UNIX} way 
+to define such objects.
+
+The above parameters are conceptually relatively easy. The parameters that 
+are still left are more complicated and are often restricted in their 
+size by some relationships. Hence it is necessary to understand the 
+sorting inside FORM a little bit before using them. On the other hand 
+these parameters can influence the performance noticeably. See also chapter 
+\ref{sorting} for more details.
+
+When terms are send to `output' by the main algebra engine, they are put 
+inside a buffer. This buffer is called the `small\index{small buffer} 
+buffer\index{buffer!small}'. Its size is given by the variable {\sl 
+SmallSize\index{smallsize}}. When this buffer is full, or when the number 
+of terms in this buffer exceeds a given maximum, indicated by the variable 
+{\sl TermsInSmall\index{termsinsmall}}, the contents of the buffer are 
+sorted. The sorting is done by pointers, hence it is important that the 
+small buffer resides inside the physical memory. During the sorting it may 
+happen that coefficients are added. The sum of two rational numbers can 
+take more space than any of the individual numbers, so there will be a 
+space problem. This has been solved by the construction of an extension to 
+the small buffer. The variable {\sl SmallExtension\index{smallextension}} 
+is the size of the small buffer together with this extension. The value for 
+SmallExtension will always be at least 7/6 times the value of SmallSize.
+
+The result of the sorting of the small buffer is written to the 
+`large\index{large buffer} buffer\index{buffer!large}' (with the size {\sl 
+LargeSize\index{largesize}}) as a single object and the filling of the 
+small buffer can resume. Whenever there is not enough room in the large 
+buffer for the result of sorting the small buffer, or whenever there are 
+already a given number of these sorted `patches' in it (controlled by the 
+variable {\sl LargePatches\index{largepatches}}) the buffer will be sorted 
+by merging the patches\index{patch} to make room for the new results. The 
+output is written to the sort file as a single patch. Then the results from 
+the small buffer can be written to the large buffer. This game can continue 
+till no more terms are generated. In the end it will be necessary to sort 
+the results in the intermediate sort file\index{file!sort}. This can be 
+done with up to {\sl FilePatches\index{filepatches}} at a time. Because 
+file operations are notoriously slow the combination of the small buffer, 
+the small extension and the large buffer is used for caching\index{cache} 
+purposes. Hence this space can be split in `FilePatches' caches. The 
+limitation is that each cache should be capable to contain at least two 
+terms of maximal size. This means that the sum of SmallExtension and 
+LargeSize must be at least FilePatches times 2*MaxTermSize*(bytes in short 
+integer). It is possible to set the size of these caches directly with the 
+variable {\sl SortIOsize\index{sortiosize}}. If the variable is too large, 
+the variable FilePatches may be adjusted by FORM. If there are more than 
+FilePatches patches in the sort file, a second sort file is needed for the 
+output of each `superpatch'\index{superpatch}. When the first sort file has 
+been treated, the second sort file can be treated in exactly the same way 
+as its predecessor. This process will finish eventually. When there are at 
+most FilePatches patches in a sort file, the output of their merging can be 
+written directly to the regular output. For completeness we give a list of 
+all these variables:
+
+\leftvitem{3cm}{FilePatches\index{setup!filepatches}\index{filepatches}}
+\rightvitem{13cm}{The maximum number of patches that can be merged 
+simultaneously, when the intermediate sort file is involved.}
+
+\leftvitem{3cm}{LargePatches\index{setup!largepatches}\index{largepatches}}
+\rightvitem{13cm}{The maximum number of patches that is allowed in the 
+large buffer. The large buffer may reside in virtual memory, due to the 
+nature of the sort that is applied to it.}
+
+\leftvitem{3cm}{TermsInSmall\index{setup!termsinsmall}\index{termsinsmall}}
+\rightvitem{13cm}{The maximum number of terms that is allowed in the small 
+buffer before it is sorted. The sorted result is either copied to the large 
+buffer or written to the intermediate sort file (when LargeSize is too 
+small).}
+
+\leftvitem{3cm}{SmallSize\index{setup!smallsize}\index{smallsize}}
+\rightvitem{13cm}{The size of the small buffer in bytes.}
+
+\leftvitem{3cm}{SmallExtension\index{setup!smallextension}\index{smallextension}}
+\rightvitem{13cm}{The size of the small buffer plus its extension.}
+
+\leftvitem{3cm}{LargeSize\index{setup!largesize}\index{largesize}}
+\rightvitem{13cm}{The size of the large buffer.}
+
+\leftvitem{3cm}{SortIOsize\index{setup!sortiosize}\index{sortiosize}}
+\rightvitem{13cm}{The size of the buffer that is used to write to the 
+intermediate sorting file and to read from it. It should be noted that if 
+this buffer is not very large, the sorting of large files may become rather 
+slow, depending on the operating system. Hence we recommend a potential 
+fourth stage in the sorting over having this number too small to fit more 
+filepatches in the combined small and large buffer. Setting the small and 
+large buffers to a decent size may avoid all problems by a: making more 
+space for the caching, b: creating fewer file patches to start with.}
+
+There is a second set of the above setup parameters for sorts of 
+subexpressions\index{subexpressions} as in function arguments or in the 
+term environment (see \ref{substaterm}). Because these things can happen 
+with more than one level, whatever allocations have to be made (during 
+runtime when needed) may have to be made several times. Hence one should be 
+far more conservative here than with the global allocations. Anyway, those 
+sorts should rarely involve anything very big. With the function arguments 
+the condition is that the final result will fit inside a single term, but 
+with the term environment no such restriction exists. The relevant 
+variables here are subfilepatches, sublargepatches, sublargesize, 
+subsmallextension, subsmallsize, subsortiosize and subtermsinsmall. Their 
+meanings are the same as for the variables without the sub in front.
+
+When FORM is running in parallel mode (either TFORM or ParFORM) each worker 
+will need its own buffers. In ParFORM in which the processors each control 
+their own memory, the size of each of these buffers are the same as for the 
+master process. In TFORM with its shared memory the above sizes refer to 
+the buffers of the master thread. The workers each get basically buffers 
+with 1/N times the size of the buffer of the master. This may get made a 
+bit bigger when potential conflicts with MaxTermSize occur.
+
+The default settings are
+\begin{center}
+\begin{tabular}{lr}
+bracketindexsize &      200000 \\
+commentchar &           $*$ \\
+compresssize &          30000 \\
+constindex &            128 \\
+continuationlines &     15 \\
+dotchar &               . \\
+filepatches &           128 \\
+functionlevels &        30 \\
+incdir &                . \\
+insidefirst &           ON \\
+largepatches &          128 \\
+largesize &             10000000 \\
+maxnumbersize &         200 \\
+maxtermsize &           2000 \\
+maxwildcards &          100 \\
+numstorecaches &        4 \\
+nwritestatistics &      OFF \\
+oldorder &              OFF \\
+parentheses &           100 \\
+path &                  . \\
+scratchsize &           3000000 \\
+sizestorecache &        32768 \\
+slavepatchsize &        10 \\
+smallextension &        3000000 \\
+smallsize &             2500000 \\
+sortiosize &            100000 \\
+sorttype &              lowfirst \\
+subfilepatches &        32 \\
+sublargepatches &       64 \\
+sublargesize &          1000000 \\
+subsmallextension &     300000 \\
+subsmallsize &          200000 \\
+subsortiosize &         32768 \\
+subtermsinsmall &       8000 \\
+tempdir &               . \\
+termsinsmall &          50000 \\
+threadbucketsize &      500 \\
+threadloadbalancing &   ON \\
+threads &               0 \\
+threadsortfilesynch &   OFF \\
+workspace &             1000000 \\
+%zipsize &               32768 \\
+\end{tabular}
+\end{center}
+If one compares these numbers with the corresponding numbers for older 
+versions one will notice that here we assume that the standard computer 
+will have much more memory available than in the `old time'. Basically we 
+expect that a serious FORM user has at least 64 Mbytes available. If it is 
+considerably less one should define a setup file with smaller settings.
+
+More recently a new notation for large numbers has been allowed. One can 
+use the characters K, M and G to indicate kilo (three zeroes), mega (6 
+zeroes) and giga (9 zeroes) as in 10M for 10000000.
+
+To find out what the setup values are, one can use the `ON,setup;' 
+statement (\ref{substaon});

@@ -1,0 +1,234 @@
+
+\chapter{Modules}
+\label{modules}
+
+Modules\index{module} are the basic execution\index{execution} blocks. 
+Statements\index{statements} are always part of a module, and they will be 
+executed only when the module is executed. This is directly opposite to 
+preprocessor instructions which are executed when they are encountered in 
+the input stream.
+
+Modules are terminated by a line that starts with a period\index{period}. 
+Such a line is called the module\index{module instruction} instruction. 
+Once the module instruction has been recognized, the compilation of the 
+module is terminated and the module will be executed. All active 
+expressions will be processed one by one, term by term. When each term of 
+an expression has been through all statements of the module, the combined 
+results of all operations on all the terms of the expression will be sorted 
+and the resulting expression will be sent to the output. This can be an 
+intermediate file\index{file!intermediate}, or it can be some 
+memory\index{memory}, depending on the size of the output. If the combined 
+output of all active expressions is less than the parameter 
+``ScratchSize''\index{ScratchSize}, the results stay in memory. ScratchSize 
+is one of the setup parameters (see chapter \ref{setup}).
+
+A module consists in general of several types of statements:
+\begin{description}
+\item [Declarations\index{declarations}] These are the declarations of 
+variables.
+\item [Specifications\index{specifications}] These tell what to do with 
+existing expressions as a whole.
+\item [Definitions\index{definitions}] These define new expressions.
+\item [Executable\index{executable statements} statements] The operations 
+on all active expressions.
+\item [OutputSpecifications\index{output specifications}] These specify the 
+output representation.
+\item [End-of-module specifications\index{end of module specifications}] 
+Extra settings that are for this module only.
+\item [Mixed statements\index{mixed statements}] They can occur in various 
+classes. Most notably the print statement.
+\end{description}
+Statements must occur in such an order that no statement follows a 
+statement of a later category. The only exception is formed by the mixed 
+statements, which can occur anywhere. This is different from earlier 
+versions of FORM in which the order of the statements was not fixed. This 
+did cause a certain amount of confusion about the workings of FORM.
+
+There are several types of modules.
+\begin{description}
+\item[.sort\index{.sort}] \label{instrsort} The general end-of-module. 
+Causes execution of all active expressions, and prepares them for the next 
+module.
+\item[.end\index{.end}] \label{instrend} Executes all active expressions 
+and terminates the program.
+\item[.store\index{.store}] \label{instrstore} Executes all active 
+expressions. Then it writes all active global expressions to an 
+intermediate storage file\index{file!storage} and removes all other 
+non-global expressions. Removes all memory of declarations except for those 
+that were made before a .global instruction.
+\item[.global\index{.global}] \label{instrglobal} No execution of 
+expressions. It just saves declarations made thus far from being erased by 
+a .store instruction.
+\item[.clear\index{.clear}] \label{instrclear} Executes all active 
+expressions. Then it clears all buffers with the exception of the main 
+input stream. Continues execution in the main input stream as if the 
+program had started at this point. The only parameters that cannot be 
+changed at this point are the setup parameters. They remain. By default 
+also the clock\index{clock} is reset. If this is not desired this can be 
+changed by means of the ResetTimeOnClear\index{resettimeonclear} setup 
+variable (see chapter \ref{setup}).
+\end{description}
+Each program must be terminated by a .end instruction. If such an 
+instruction is absent and FORM encounters an end-of-input it will issue a 
+warning and generate a .end instruction.
+
+Module instructions can contain a special commentary that will be printed 
+in all statistics that are generated during the execution of the module. 
+This special commentary is restricted to 24 characters (the statistics have 
+a fixed format and hence there is only a limited amount of space 
+available). This commentary is initiated by a colon and terminated by a 
+semicolon. The characters between this colon and the semicolon are the 
+special message, also called advertisement. Example
+\begin{verbatim}
+	.sort:Eliminate x;
+\end{verbatim}
+would give in the statistics something like
+\begin{verbatim}
+Time =       0.46 sec    Generated terms =        360
+                F        Terms in output =        360
+            Eliminate x  Bytes used      =       4506
+\end{verbatim}
+If the statistics are switched off, there will be no printing of this 
+advertisement either.
+
+For backwards compatibility there is still an obsolete\index{obsolete} 
+mechanism to pass module options via the module instructions. This is a 
+feature which will probably disappear in future versions of \FORM. We do 
+give the syntax to allow the user to identify the option properly and 
+enable proper translation into the moduleoption\index{moduleoption} 
+statement (see \ref{substamoduleoption}).
+\begin{verbatim}
+    .sort(PolyFun=functionname);
+    .sort(PolyFun=functionname):advertisement;
+\end{verbatim}
+causes the given function to be treated as a polynomial\index{polyfun} 
+function. This means that its (single) argument would be treated as the 
+coefficient of the terms. The action of FORM on individual terms is
+\begin{enumerate}
+\item Ignore polynomial functions with more than one argument.
+\item If there is no polynomial function with a single argument, generate 
+one with the argument 1.\item If there is more than one polynomial function 
+with a single argument, multiply the arguments and replace these functions 
+with a single polynomial function with the product of the arguments for a 
+single argument.
+\item Multiply the argument of the polynomial function with the coefficient 
+of the term. Replace the coefficient itself by one.
+\end{enumerate}
+If, after this, two terms differ only in the argument of their polynomial 
+function FORM will add the arguments and replace the two terms by a single 
+term which is identical to the two previous terms except for that the 
+argument of its polynomial function is the sum of their two arguments.
+
+It should be noted that the proper placement of .sort\index{.sort} 
+instructions in aFORM program is an art by itself. Too many .sort 
+instructions cause too much sorting, which can slow execution down 
+considerably. It can also cause the writing of intermediate expressions 
+which are much larger than necessary, if the next statements would cause 
+great simplifications. Not enough .sort instructions can make that 
+cancellations are postponed unnecessarily and hence much work will be done 
+double. This can slow down execution by a big factor. First an example of a 
+superfluous .sort:
+\begin{verbatim}
+    S	a1,...,a7;
+    L	F = (a1+...+a7)^16;
+    .sort
+
+Time =      31.98 sec    Generated terms =      74613
+                F        Terms in output =      74613
+                         Bytes used      =    1904316
+    id	a7 = a1+a2+a3;
+    .end
+
+Time =     290.34 sec
+                F        Terms active    =      87027
+                         Bytes used      =    2253572
+
+Time =     295.20 sec    Generated terms =     735471
+                F        Terms in output =      20349
+                         Bytes used      =     538884
+\end{verbatim}
+Without the sort the same program gives:
+\begin{verbatim}
+    S	a1,...,a7;
+    L	F = (a1+...+a7)^16;
+    id	a7 = a1+a2+a3;
+    .end
+
+Time =     262.79 sec
+                F        Terms active    =      94372
+                         Bytes used      =    2643640
+
+Time =     267.81 sec    Generated terms =     735471
+                F        Terms in output =      20349
+                         Bytes used      =     538884
+\end{verbatim}
+and we see that the sorting in the beginning is nearly completely wasted. 
+Now a clear example of not enough .sort instructions. A common problem is 
+the substitution of one power\index{power series} series into another. If 
+one does this in one step one could have:
+\begin{verbatim}
+    #define MAX "36"
+    S  j,x(:`MAX'),y(:`MAX');
+    *
+    *	Power series expansion of ln_(1+x)
+    *
+    L	F = -sum_(j,1,`MAX',sign_(j)*x^j/j);
+    *
+    *	Substitute the expansion of x = exp_(y)-1
+    *
+    id	x = x*y;
+    #do j = 2,`MAX'+1
+    id	x = 1+x*y/`j';
+    #enddo
+    Print;
+    .end
+
+Time =      76.84 sec    Generated terms =      99132
+                F        Terms in output =          1
+                         Bytes used      =         18
+
+   F =
+      y;
+\end{verbatim}
+With an extra .sort inside the loop one obtains for the same program (after 
+suppressing some of the statistics:
+\begin{verbatim}
+    #define MAX "36"
+    S  j,x(:`MAX'),y(:`MAX');
+    *
+    *	Power series expansion of ln_(1+x)
+    *
+    L	F = -sum_(j,1,`MAX',sign_(j)*x^j/j);
+    *
+    *	Substitute the expansion of x = exp_(y)-1
+    *
+    id	x = x*y;
+    #do j = 2,`MAX'+1
+    id	x = 1+x*y/`j';
+    .sort: step `j';
+
+Time =       0.46 sec    Generated terms =        360
+                F        Terms in output =        360
+                 step 2  Bytes used      =       4506
+    #enddo
+           .
+           .
+           .
+Time =       3.07 sec    Generated terms =          3
+                F        Terms in output =          1
+                step 37  Bytes used      =         18
+    Print;
+    .end
+
+Time =       3.07 sec    Generated terms =          1
+                F        Terms in output =          1
+                         Bytes used      =         18
+
+   F =
+      y;
+\end{verbatim}
+It is very hard to give general rules that are more specific than what has 
+been said above. The user should experiment with the placements of the .sort 
+before making a very large run. 
+
+

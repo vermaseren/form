@@ -1,0 +1,1784 @@
+
+\chapter{The preprocessor}
+\label{preprocessor}
+
+%--#[ General :
+
+The preprocessor\index{preprocessor} is a program segment that reads and 
+edits\index{edit} the input, after which the processed input is offered to 
+the compiler\index{compiler} part of FORM. When a module\index{module} 
+instruction is encountered by the preprocessor, the compilation is halted 
+and the module is executed. The compiler buffers are cleared and FORM 
+will continue with the next module. The preprocessor acts almost purely on 
+character strings. As such it does not know about the algebraic properties 
+of the objects it processes. Additionally the preprocessor also filters out 
+the commentary\index{commentary}.
+
+The commands for the preprocessor are called instructions. Preprocessor 
+instructions start with the character \# as the first non-blank character 
+in a line. After this there are several possibilities.
+\begin{description}
+\item[\#:]\index{\#:} Special syntax for setup parameters at the beginning 
+of the program. See the chapter on the setup parameters.
+\item[\#-, \#+]\index{\#-}\index{\#+} Turns the listing of the input off or 
+on.
+\item[\#name]\index{\#name} Preprocessor command. The syntax of the various 
+commands will be discussed below.
+\item[\#\$name]\index{\#\$name} Giving a value to a dollar variable in the 
+preprocessor. See chapter \ref{dollars} on dollar variables.
+\end{description}
+
+%--#] General :
+%--#[ The preprocessor variables :
+
+\section{The preprocessor variables}
+\label{preprovariables}
+
+In order to help in the edit\index{edit} function the preprocessor is 
+equipped with variables\index{preprocessor variables} that can be defined 
+or redefined by the user or by other preprocessor actions. Preprocessor 
+variables have regular names that are composed of strings of alphanumeric 
+characters of which the first one must be alphabetic. When they are defined 
+one just uses this name. When they are used the name should be enclosed 
+between a backquote\index{backquote} and a quote\index{quote} as if these 
+were some type of brackets. Hence `a2r' is the reference to a regular 
+preprocessor variable. Preprocessor variables contain strings of 
+characters. No interpretation is given to these strings. The 
+backquote/quote pairs can be nested. Hence `a`i'r' will result in the 
+preprocessor variable `i' to be substituted first. If this happens to be 
+the string "2", the result after the first substitution would be `a2r' and 
+then FORM would look for its string value.
+
+The use of the backquotes is different from the earlier versions of FORM. 
+There the preprocessor variables would be enclosed in a pair of quotes and 
+no nesting\index{nesting} was possible. FORM still understands this old 
+notation because it does not lead to ambiguities. The user is however 
+strongly advised to use the new notation with the backquotes, because in 
+future versions the old\index{old notation} notation may not be recognized 
+any longer.
+
+\noindent FORM has a number of built in preprocessor variables. They are:
+
+\noindent \begin{tabular}{ll}
+VERSION\_     &\index{VERSION\_} The current version as the 3 in 3.2.\\
+SUBVERSION\_  &\index{SUBVERSION\_} The sub-version as the 2 in 3.2.\\
+NAMEVERSION\_ &\index{NAMEVERSION\_} For special versions that are experimental. Otherwise 
+                empty.\\
+NAME\_        &\index{NAME\_} The name of the program file.\\
+DATE\_        &\index{DATE\_} The date of the current run.\\
+CMODULE\_     &\index{CMODULE\_} The number of the current module.\\
+SHOWINPUT\_   &\index{SHOWINPUT\_} If input listing is on: 1, if off: 0.
+\end{tabular}
+
+%--#] The preprocessor variables :
+%--#[ Calculator :
+\section{The preprocessor calculator}
+\label{calculator}
+
+Sometimes a preprocessor\index{preprocessor variable!numeric} variable 
+should be interpreted as a number and some arithmetic\index{arithmetic} 
+should be done with it. For this FORM is equiped with what is called the 
+preprocessor calculator\index{calculator}. When the input reading device 
+encounters a left curly\index{curly bracket} bracket\index{bracket!curly} 
+\verb:{:, it will read till the matching right curly bracket \verb:}: and 
+then test whether the characters (after substitution of preprocessor 
+variables) can be interpreted as a numerical expression. If it is not a 
+valid numerical expression the whole string, including the curly brackets, 
+will be passed on to the later stages of the program. If it is a numerical 
+expression, it will be evaluated, and the whole string, including the curly 
+brackets, will be replaced by a textual representation of the result. 
+Example:
+\begin{verbatim}
+    Local F`i' = F{`i'-1}+F{`i'-2};
+\end{verbatim}
+If the preprocessor variable i has the value 11, the calculator makes this 
+into
+\begin{verbatim}
+    Local F11 = F10+F9;
+\end{verbatim}
+Valid numerical expressions can contain the characters
+\begin{verbatim}
+   0 1 2 3 4 5 6 7 8 9 + - * / % ( ) { } & | ^ !
+\end{verbatim}
+The use of parentheses is as in regular arithmetic. The curly 
+brackets fullfil the same role, as one can nest these brackets of course. 
+Operators are:
+\begin{description}
+\item[$+$] Regular addition\index{addition}.
+\item[$-$] Regular subtraction\index{subtraction}.
+\item[$\ast$] Regular multiplication\index{multiplication}.
+\item[$/$] Regular (integer) division\index{division}.
+\item[$\%$] The remainder\index{remainder} after (integer) division as in 
+the language C\index{C}.
+\item[$\&$] And\index{and} operator. This is a bitwise operator.
+\item[$|$] Or\index{or} operator. This is a bitwise or.
+\item[$\wedge$] Exponent\index{exponent} operator.
+\item[$!$] Factorial\index{factorial}. This is a postfix operator.
+\item[$\wedge\%$] A postfix ${}^2\!\log$. This means that it 
+takes\index{twolog} the ${}^2\!\log$ of the object to the left of it.
+\item[$\wedge/$] A postfix square\index{square root} root. This means that 
+it takes the square root of the object to the left of it.
+\end{description}
+Note that all arithmetic\index{arithmetic} is done over the integers and 
+that there is a finite range. On 32\index{32 bits} bit systems this range 
+will be $2^{31}-1$ to $-2^{31}$, while on 64\index{64 bits} bit systems 
+this will be  $2^{63}-1$ to $-2^{63}$. In particular this means that 
+\verb:{13^/}: becomes \verb:3:. The preprocessor calculator is only meant 
+for some simple counting and organization of the program flow. Hence there 
+is no large degree of sophistication. Very important is that the 
+comma\index{comma} character is not a legal character for the preprocessor 
+calculator. This can be used to avoid some problems. Suppose one needs to 
+make a substitution of the type:
+\begin{verbatim}
+    id f(x?!{0}) = 1/x;
+\end{verbatim}
+in which the value zero should be excluded from the pattern matching (see 
+dynamical\index{set!dynamical} sets in chapter \ref{pattern} on pattern 
+matching). This would not work, because the preprocessor would make this 
+into
+\begin{verbatim}
+    id f(x?!0) = 1/x;
+\end{verbatim}
+which is illegal syntax. Hence the proper trick is to write
+\begin{verbatim}
+    id f(x?!{,0}) = 1/x;
+\end{verbatim}
+With the comma the preprocessor will leave this untouched, and hence now 
+the set is passed properly.
+
+Good use of the preprocessor calculator can make life much easier for 
+FORM. For example the following statements
+\begin{verbatim}
+    id  f(`i') = 1/(`i'+1);
+    id  f(`i') = 1/{`i'+1};
+\end{verbatim}
+are quite different in nature. In the first statement the compiler gets an 
+expression with a composite denominator. The compiler never tries to 
+simplify expressions by doing algebra on them. Sometimes this may not be 
+optimal, but there are cases in which it would cause wrong results (in 
+particular when noncommuting and commuting functions are mixed and 
+wildcards are used). Hence the composite denominator has to be worked out 
+during run time for each term separately. The second statement has the 
+preprocessor work out the sum and hence the compiler gets a simple fraction 
+and less time will be needed during running. Note that
+\begin{verbatim}
+    id  f(`i') = {1/(`i'+1)};
+\end{verbatim}
+would most likely not produce the desired result, because the preprocessor 
+calculator works only over the integers. Hence, unless i is equal to zero 
+or -2, the result would be zero (excluding of course the fatal error when i 
+is equal to -1).
+
+%--#] Calculator :
+%--#[ ... :
+\section{The triple dot operator}
+\label{tripledot}
+
+The last\index{...} stage of the actions of the preprocessor involves the 
+triple dot operator. It indicates a repeated pattern as in \verb:a1+...+a4: 
+which would expand into \verb:a1+a2+a3+a4:. This operator is used in two 
+different ways. First the most general way:
+\begin{verbatim}
+    <pattern1>operator1...operator2<pattern2>
+\end{verbatim}
+in which the less\index{less than} than and greater\index{greater than} 
+than signs serve as boundaries for the patterns. The operators can be any 
+pair of the following:
+\begin{description}
+\item[+\ +]\index{+...+} Repetitions will be separated by plus signs.
+\item[--\ --]\index{-...-} Repetitions will be separated by minus signs.
+\item[+\ --]\index{+...-} Repetitions will be separated by alternating signs. 
+First will be plus.
+\item[--\ +]\index{-...+} Repetitions will be separated by alternating signs. 
+First will be minus.
+\item[$\ast\ \ast$]\index{*...*} Repetitions will be separated by $\ast$.
+\item[/\ /]\index{/.../} Repetitions will be separated by /.
+\item[,\ ,]\index{,...,} Repetitions will be separated by comma's.
+\item[:\ :]\index{:...:} Repetitions will be separated by {\it single} dots.
+%\item[+\ +]\index{.@$+\cdots+$} Repetitions will be separated by plus signs.
+%\item[--\ --]\index{.@$-\cdots-$} Repetitions will be separated by minus signs.
+%\item[+\ --]\index{.@$+\cdots-$} Repetitions will be separated by alternating signs. 
+%First will be plus.
+%\item[--\ +]\index{.@$-\cdots+$} Repetitions will be separated by alternating signs. 
+%First will be minus.
+%\item[$\ast\ \ast$]\index{.@$\ast\cdots\ast$} Repetitions will be separated by $\ast$.
+%\item[/\ /]\index{.@$/\cdots/$} Repetitions will be separated by /.
+%\item[,\ ,]\index{.@$,\cdots,$} Repetitions will be separated by comma's.
+%\item[:\ :]\index{.@$:\cdots:$} Repetitions will be separated by {\it single} dots.
+\end{description}
+For such a pair of operators FORM will inspect the patterns\index{pattern} 
+and see whether the differences between the two patterns are just numbers. 
+If the differences are numbers and the absolute value of the difference of 
+each matching pair is always the same (a difference of zero is allowed too; 
+it leads to no action for the pair), then FORM will expand the pattern, 
+running from the first to the last in increments of one. For each pair the 
+counter can either run up or run down, depending on whether the number in 
+the first pattern is greater or less than the number in the second pattern. 
+Example:
+\begin{verbatim}
+    Local F = <a1b6(c3)>-...+<a4b3(c6)>;
+\end{verbatim}
+leads to
+\begin{verbatim}
+    Local F = a1b6(c3)-a2b5(c4)+a3b4(c5)-a4b3(c6);
+\end{verbatim}
+The second form is a bit simpler. It recognizes that there are special 
+cases that can be written in a more intuitive way. If there is only a 
+single number to be varied, and it is the end of the pattern, and the rest 
+of the patterns consists only of alphanumeric characters of which the first 
+is an alphabetic character, we do not need the less than/greater than 
+combination. This is shown in
+\begin{verbatim}
+    Symbol a1,...,a12;
+\end{verbatim}
+There is one extra exception. The variables used this way may have a 
+question mark after them to indicate that they are wildcards:
+\begin{verbatim}
+    id  f(a1?,...,a4?) = g(a1,...,a4,a1+...+a4);
+\end{verbatim}
+This construction did not exist in earlier versions of FORM (version 1 and 
+version 2). There one needed the \#do\index{\#do} instruction for many of 
+the above constructions, creating code that was very hard to read. The 
+\verb:...: operator should improve the readability of the programs very 
+much.
+
+%--#] ... :
+%--#[ append :
+ 
+\section{\#append}
+\label{preappend}
+
+\noindent Syntax:
+
+\#append $<$filename$>$
+ 
+\noindent See also write (\ref{prewrite}),
+            close (\ref{preclose}), create (\ref{precreate},
+            remove (\ref{preremove})
+
+\noindent Opens\index{\#append} the named file for writing. The file will 
+be positioned at the end. The next \#write\index{\#write} instruction will 
+add to it.
+
+%--#] append :
+%--#[ break :
+
+\section{\#break}
+\label{prebreak}
+
+\noindent Syntax:
+
+\#break
+ 
+\noindent See also switch (\ref{preswitch}),
+        endswitch (\ref{preendswitch}),
+        case (\ref{precase}),
+        default (\ref{predefault})
+
+\noindent If the\index{\#break} lines before were not part of the control 
+flow ({\it i.e.} these lines are used for the later stages of the program), 
+this instruction is ignored. If they are part of the control flow, the flow 
+will continue after the matching \#endswitch\index{\#endswitch} 
+instruction. The \#break instruction must of course be inside the range of 
+a \#switch\index{\#switch}/\#endswitch construction.
+
+%--#] break :
+%--#[ call :
+
+\section{\#call}
+\label{precall}
+
+\noindent Syntax:
+
+\#call procname(var1,...,varn)
+ 
+\noindent See also procedure (\ref{preprocedure}), endprocedure
+(\ref{preendprocedure})
+
+\noindent This instruction\index{\#call} calls the 
+procedure\index{procedure} with the name procname. The result is that FORM 
+looks for this procedure, first in its procedure 
+buffers\index{buffer!procedure} (for procedures that were defined in the 
+regular text stream as explained under the \#procedure\index{\#procedure} 
+instruction), then it looks for a file by the name procname.prc in the 
+current directory, and if it still has not found the procedure it looks in 
+the directories indicated the path\index{path} variable in either the setup 
+file or at the start of the program (see chapter \ref{setup} on the setup 
+file). Next it looks for the -p option in the command that started FORM 
+(see the chapter on running FORM). If this -p option has not been used FORM 
+will see whether there is an environment variable by the name 
+FORMPATH\index{FORMPATH}. The directories indicated there will be searched 
+for the file procname.prc. If FORM cannot find the file, there will be an 
+error message and execution will be stopped immediately.
+
+Once the procedure has been located, FORM reads the whole file and then 
+determines whether the number of parameters is identical in the 
+\#call\index{\#call} instruction and the \#procedure\index{\#procedure} 
+instruction. A difference is a fatal error.
+
+The parameter field consists of strings, separated by commas. If a string 
+contains a comma, this comma should be preceded by a 
+backslash\index{backslash} character (\verb:\:). If a string should contain 
+a linefeed\index{linefeed}, one should `escape' this linefeed by putting a 
+backslash and continue on the next line.
+
+Before version 3 of FORM the syntax was different. The parentheses 
+were curly brackets and the separators the symbol \verb:|:. This was made 
+to facilitate the use of strings that might contain commas. In practise 
+however, this turned out to be far from handy. In addition the new 
+preprocessor calculator is a bit more active and hence an instruction of 
+the type
+\begin{verbatim}
+    #call test{1}
+\end{verbatim}
+will now be intercepted by the preprocessor calculator\index{calculator} 
+and changed into
+\begin{verbatim}
+    #call test1
+\end{verbatim}
+Because there are many advantages to the preprocessor calculator treating 
+the parameters of the procedures before they are called (in the older 
+versions it did not do this), the notation has been changed. FORM still 
+understands the old notation, provided that there is no conflict with the 
+preprocessor calculator. Hence
+\begin{verbatim}
+    #call test{1|a}
+    #call test{1,a}
+    #call test(1|a)
+    #call test(1,a)
+\end{verbatim}
+are all legal and give the same result, but only the last notation will 
+work in future versions of FORM.
+
+Nowadays also the use of the argument field wildcard (see chapter 
+\ref{pattern} on pattern matching) is allowed as in the 
+regular functions:
+\begin{verbatim}
+    #define a "1"
+    #define bc2 "x"
+    #define bc3 "y"
+    #define b "c`~a'"
+    #procedure hop(c,?d);
+    #redefine a "3"
+    #message This is the call: `c',`?d'
+    #endprocedure
+    
+    #redefine a "2"
+    #message This is b: `b'
+~~~This is b: c2
+    
+    #call hop(`b`!b''`!b'`b'`!b'`b',`~a',`b',`a')
+~~~This is the call: xc2c3c2c3,3,c3,2
+    
+    .end
+\end{verbatim}
+We also see here that the rules about delayed substitution (see also the 
+\#define\index{\#define} instruction on page \ref{predefine}) apply. The 
+use of `!b' cancels the delayed substitution that is asked for in the 
+definition of b.
+
+The default extension for procedure files is .prc\index{.prc}, but it is 
+possible to change this. There are two different ways: One is with the 
+\#procedureExtension\index{\#procedureExtension} instruction in section 
+\ref{preprocedureextension}. The other is via the setup (see the chapter on 
+the setup file, chapter \ref{setup}).
+
+%--#] call :
+%--#[ case :
+
+\section{\#case}
+\label{precase}
+
+\noindent Syntax:
+
+\#case string
+ 
+\noindent See also switch (\ref{preswitch}),
+        endswitch (\ref{preendswitch}),
+        break (\ref{prebreak}),
+        default (\ref{predefault})
+
+\noindent The lines after the \#case\index{\#case} instruction will be used 
+if either this is the first \#case\index{\#case} instruction of which the 
+string matches the string in the \#switch\index{\#switch} instruction, or 
+the control flow was already using the lines before this \#case instruction 
+and there was no \#break\index{\#break} instruction (this is called 
+fall-through). The control flow will include lines either until the next 
+matching \#break instruction, or until the matching 
+\#endswitch\index{\#endswitch} instruction.
+
+%--#] case :
+%--#[ close :
+
+\section{\#close}
+\label{preclose}
+
+\noindent Syntax:
+
+\#close $<$filename$>$
+ 
+\noindent See also write (\ref{prewrite}), append (\ref{preappend},
+            create (\ref{precreate}, remove (\ref{preremove})
+
+\noindent This instruction closes\index{\#close} the file\index{file!close} 
+by the given name, if such a file had been opened by the previous 
+\#write\index{\#write} instruction. Normally FORM closes all such files at 
+the end of execution. Hence the user would not have to worry about this. 
+The use of a subsequent \#write instruction with the same file name will 
+remove the old contents and hence start basically a new file. There are 
+times that this is useful.
+
+%--#] close :
+%--#[ commentchar :
+
+\section{\#commentchar}
+\label{precommentchar}
+
+\noindent Syntax:
+
+\#commentchar character
+
+\noindent The specified\index{\#commentchar} character should be a single 
+non-whitespace character. There may be white space (blanks and/or tabs) 
+before or after it. The character will take over the role of the comment 
+character. {\it i.e.} any line that starts with this character in column 1 
+will be considered commentary\index{commentary}. This feature was provided 
+because output of some other algebra programs could put the multiplication 
+sign in column 1 in longer expressions.
+
+The default commentary character is $\ast$.
+
+%--#] commentchar :
+%--#[ create :
+ 
+\section{\#create}
+\label{precreate}
+
+\noindent Syntax:
+
+\#append $<$filename$>$
+ 
+\noindent See also write (\ref{prewrite}),
+            close (\ref{preclose}), append (\ref{preappend}),
+            remove (\ref{preremove})
+
+\noindent Opens the named\index{\#create} file for writing. If the file 
+existed already, its previous contents will be lost. The next 
+\#write\index{\#write} instruction will add to it. In principle this 
+instruction is not needed, because the \#write instruction would create the 
+file if it had not been opened yet at the moment of writing.
+
+%--#] create :
+%--#[ default :
+
+\section{\#default}
+\label{predefault}
+
+\noindent Syntax:
+
+\#default
+ 
+\noindent See also switch (\ref{preswitch}),
+        endswitch (\ref{preendswitch}),
+        case (\ref{precase}),
+        break (\ref{prebreak})
+
+\noindent Control\index{\#default} flow continues after this instruction if 
+there is no \#case\index{\#case} instruction of which the string matches 
+the string in the \#switch\index{\#switch} instruction. Control flow also 
+continues after this instruction, if the lines before were included and 
+there was no \#break\index{\#break} instruction to stop the control flow 
+(fall-through). Control flow will stop either when a matching \#break 
+instruction is reached, or when a matching \#endswitch\index{\#endswitch} 
+is encountered. In the last case of course control flow will continue after 
+the \#endswitch instruction.
+
+%--#] default :
+%--#[ define :
+
+\section{\#define}
+\label{predefine}
+
+\noindent Syntax:
+
+\#define name "string"
+ 
+\noindent See also redefine (\ref{preredefine}), undefine 
+(\ref{preundefine})
+
+\noindent in which name\index{\#define} refers to the name of the 
+preprocessor\index{preprocessor variable} 
+variable\index{variable!preprocessor} to be defined and the contents of the 
+string will form the value of the variable. The double quotes are mandatory 
+delimiters of the string.
+
+The use of the \#define\index{\#define} instruction creates a new instance 
+of the preprocessor variable with the given name. This means that the old 
+instance\index{instance} remains. If for some reason the later instance 
+becomes undefined (see for instance \#undefine), the older instance will be 
+the one that is active. If the old definition is to be overwritten, one 
+should use the \#redefine\index{\#redefine} instruction.
+
+As of version 3.2 preprocessor variables can also have arguments as in the 
+C\index{C} language. Hence
+
+\#define var(a,b) "(`\verb:~:a'+`\verb:~:b'+`c')"
+
+is allowed. The parameters should be referred to inside a pair of `' as 
+with all preprocessor variables. A special feature is the socalled 
+delayed\index{delayed substitution} 
+substitution\index{substitution!delayed}. With macro's like the above the 
+question is always {\sl when} a preprocessor variable will be substituted. 
+Take for instance
+\begin{verbatim}
+    #define c "3"
+    #define var1(a,b) "(`~a'+`~b'+`c')"
+    #define var2(a,b) "(`~a'+`~b'+`~c')"
+    #redefine c "4"
+    Local F1 = `var1(1,2)';
+    Local F2 = `var2(1,2)';
+    Print;
+    .end
+
+   F1 =
+      6;
+
+   F2 =
+      7;
+\end{verbatim}
+The parameter c will be substituted inmediately when var1 is defined. In 
+var2 it will be only substituted when var2 is used. It should be clear that 
+a and b should also be used in the delayed fashion because they do not 
+exist yet at the moment of the definition of var1 and var2. Notice also 
+that the whole macro\index{macro}, with its arguments should be placed 
+between the backquote and the quote. Another example can be found with the 
+\#call\index{\#call} instruction. See section \ref{precall}
+
+%--#] define :
+%--#[ do :
+ 
+\section{\#do}
+\label{predo}
+
+\noindent Syntax:
+
+\#do lvar = i1,i2
+
+\#do lvar = i1,i2,i3
+
+\#do lvar = $\{$string1$|$...$|$stringn$\}$
+
+\#do lvar = $\{$string1,...,stringn$\}$
+
+\#do lvar = nameofexpression
+ 
+\noindent See also enddo (\ref{preenddo})
+
+\noindent The \#do\index{\#do} instruction\index{do loop} needs a matching 
+\#enddo\index{\#enddo} instruction. All code inbetween these two 
+instructions will be read as many times as indicated in the parameter field 
+of the \#do instruction. The parameter lvar is a preprocessor variable of 
+which the value is determined by the other parameters. Inside the loop it 
+should be referred to by enclosing its name between a backquote/quote pair 
+as is usual for preprocessor variables. The various possible parameter 
+fields have the following meaning:
+\begin{description}
+\item[\#do lvar = i1,i2] The parameters i1 and i2 should be integers. The 
+first time in the loop lvar will get the value of i1 (as a string) and each 
+next time its value will be one greater (translated into a string again). 
+The last time in the loop the value of lvar will be the greatest integer 
+that is less or equal to i2. If i2 is less than i1, the loop is skipped 
+completely.
+\item[\#do lvar = i1,i2,i3] The parameters i1,i2 and i3 should be integers. 
+The first time in the loop lvar will get the value of i1 (as a string) and 
+each next time its value will be incremented by adding i3 (translated into 
+a string again). If i3 is positive, the last value of lvar will be the one 
+for which lvar+i3 is greater than i2. If i2 is less than i1, the loop is 
+skipped completely. If i3 is negative the last value of lvar will be the 
+one for which lvar+i3 is less than i2. If i3 is zero there will be an 
+error.
+\item[\#do lvar = $\{$string1$|$...$|$stringn$\}$] The first time in the 
+loop the value of lvar is the string indicated by string1, the next time 
+will be string2 etc till the last time when it will be stringn. This is 
+called a listed\index{listed loop} loop\index{loop!listed}. The notation 
+with the $|$ is an old notation which is still accepted. The new notation 
+uses a comma instead.
+\item[\#do lvar = $\{$string1,...,stringn$\}$] The first time in the loop 
+the value of lvar is the string indicated by string1, the next time will be 
+string2 etc till the last time when it will be stringn. This is called a 
+listed\index{listed loop} loop\index{loop!listed}.
+\item[\#do lvar = expression] The loop variable will take one by one for 
+its value all the terms of the given expression. This is protected against 
+changing the expression inside the loop by making a copy of the expression 
+inside the memory. Hence one should be careful with very big expressions. 
+An expression that is zero gives a loop over zero terms, hence the loop is 
+never executed.
+\end{description}
+The first two types of \#do instructions are called 
+numerical\index{numerical loop} loops\index{loop!numerical}. In the 
+parameters of numerical loops the preprocessor calculator\index{calculator} 
+is invoked automatically. One should make sure not to use a leading $\{$ 
+for the first numerical parameter in such a loop. This would be interpreted 
+as belonging to a listed loop.
+
+After a loop has been finished, the corresponding preprocessor variable 
+will be undefined. This means that if there is a previous preprocessor 
+variable by the same name, the value of the \#do instruction will be used 
+inside the loop, and afterwards the old value will be active again.
+
+It is allowed to overwrite the value of a preprocessor \#do instruction 
+variable. This can be very useful to create the equivalent of a repeat loop 
+that contains .sort instructions as in
+\begin{verbatim}
+    #do i = 1,1
+        id,once,x = y+2;
+        if ( count(x,1) > 0 ) redefine i "0";
+        .sort
+    #enddo
+\end{verbatim}
+A few remarks are necessary here. The redefine\index{redefine} statement 
+(see section \ref{substaredefine}) should be before the last 
+.sort\index{.sort} inside the loop, because the \#do instruction is part of 
+the preprocessor. Hence the value of i is considered before the module is 
+executed. This means that if the redefine would be after the .sort, two 
+things would go wrong: First the loop would be terminated before the 
+redefine would ever make a chance of being executed. Second the statement 
+would be compiled in the expectation that there is a variable i, but then 
+the loop would be terminated. Afterwards, when the statement is being 
+executed it would refer to a variable that does not exist any longer. 
+
+If one wants to make a loop over the externals of the brackets of an 
+expression only one needs to do some work. Assume we have the expression F 
+and we want to loop over the brackets in x and y:
+\begin{verbatim}
+    L   FF = F;
+    Bracket x,y;
+    .sort
+    CF acc,acc2;
+    Skip F;
+    Collect acc,acc2;
+    id  acc(x?) = 1;
+    id  acc2(x?)= 1;
+    B   x,y;
+    .sort
+    Skip F;
+    Collect acc;
+    id  acc(x?) = 1;
+    .sort
+    #do i = FF
+    L   G = F[`i'];
+        .
+        .
+    #enddo
+\end{verbatim}
+Notice that we have to do the collect\index{collect} trick twice because 
+the first time the bracket could be too long for one term. The second time 
+that restriction doesn't exist because besides the x and the y there are 
+only integer coefficients.
+
+%--#] do :
+%--#[ else :
+
+\section{\#else}
+\label{preelse}
+
+\noindent Syntax:
+
+\#else
+ 
+\noindent See also if (\ref{preif}),
+            endif (\ref{preendif}),
+            elseif (\ref{preelseif}),
+            ifdef (\ref{preifdef}),
+            ifndef (\ref{preifndef})
+
+\noindent This instruction\index{\#else} is used inside a 
+\#if\index{\#if}/\#endif\index{\#endif} construction. The code that follows 
+it until the \#endif instruction will be read if the condition of the \#if 
+instruction (and of none of the corresponding \#elseif\index{\#elseif} 
+instructions) is not true. If any of these conditions is true, this code is 
+skipped. The reading is stopped after the matching \#endif is encountered 
+and continued after this matching \#endif instruction.
+
+%--#] else :
+%--#[ elseif :
+
+\section{\#elseif}
+\label{preelseif}
+
+\noindent Syntax:
+
+\#elseif ( condition )
+ 
+\noindent See also if (\ref{preif}),
+            endif (\ref{preendif}),
+            else (\ref{preelse})
+
+\noindent The syntax\index{\#elseif} of the condition is identical to the 
+syntax for the condition in the \#if\index{\#if} instruction. The \#elseif 
+instruction can occur between an \#if and an \#endif\index{\#endif} 
+instruction, before a possible matching \#else\index{\#else} instruction. 
+The code after this condition till the next \#elseif instruction, or till a 
+\#else instruction or till a \#endif instruction, whatever comes first, 
+will be read if the condition in the \#elseif instruction is true and none 
+of the conditions in matching previous \#if or \#elseif instructions were 
+true. The reading is stopped after the matching \#elseif/\#else/\#endif is 
+encountered and continued after the matching \#endif instruction.
+
+Example
+\begin{verbatim}
+    #if ( `i' == 2 )
+        some code
+    #elseif ( `i' == 3 )
+        more code
+    #elseif ( `j' >= "x2y" )
+        more code
+    #else
+        more code
+    #endif
+\end{verbatim}
+
+%--#] elseif :
+%--#[ enddo :
+
+\section{\#enddo}
+\label{preenddo}
+
+\noindent Syntax:
+
+\#enddo
+ 
+\noindent See also do (\ref{predo})
+
+\noindent Used to\index{\#enddo} terminate\index{terminate} a preprocessor 
+do\index{do loop} loop. See the \#do\index{\#do} instruction.
+
+%--#] enddo :
+%--#[ endif :
+
+\section{\#endif}
+\label{preendif}
+
+\noindent Syntax:
+
+\#endif
+ 
+\noindent See also if (\ref{preif}),
+            else (\ref{preelse}),
+            elseif (\ref{preelseif}),
+            ifdef (\ref{preifdef}),
+            ifndef (\ref{preifndef})
+
+\noindent Used to terminate\index{\#endif} a \#if\index{\#if}, 
+\#ifdef\index{\#ifdef} or \#ifndef\index{\#ifndef} construction. 
+Reading will continue after it.
+
+%--#] endif :
+%--#[ endprocedure :
+
+\section{\#endprocedure}
+\label{preendprocedure}
+
+\noindent Syntax:
+
+\#endprocedure
+ 
+\noindent See also procedure (\ref{preprocedure}), call
+(\ref{precall})
+
+\noindent Each procedure\index{procedure} must be terminated by an 
+\#endprocedure\index{\#endprocedure} instruction. If the procedure resides 
+in its own file, the \#endprocedure will cause the closing of the file. 
+Hence any text that is in the file after the \#endprocedure instruction 
+will be ignored.
+
+When control reaches the \#endprocedure instruction, all (local) 
+preprocessor variables\index{variables!preprocessor} that were defined 
+inside the procedure and all parameters of the call of the procedure will 
+become undefined.
+
+%--#] endprocedure :
+%--#[ endswitch :
+
+\section{\#endswitch}
+\label{preendswitch}
+
+\noindent Syntax:
+
+\#endswitch
+ 
+\noindent See also switch (\ref{preswitch}),
+        case (\ref{precase}),
+        break (\ref{prebreak}),
+        default (\ref{predefault})
+
+\noindent This instruction marks the end\index{\#endswitch} of a 
+\#switch\index{\#switch} construction. After none or one of the cases of 
+the \#switch construction has been included in the control flow, reading 
+will continue after the matching \#endswitch instruction. Each \#switch 
+needs a \#endswitch, unless a .end instruction is encountered first.
+
+%--#] endswitch :
+%--#[ exchange :
+
+\section{\#exchange}
+\label{preexchange}
+
+\noindent Syntax:
+
+\#exchange expr1,expr2
+
+\#exchange \$var1,\$var2
+
+\noindent Exchanges\index{\#exchange} the names of two 
+expressions\index{expression}. This means that the contents of the 
+expressions remain where they are. Hence the order in which the expressions 
+are processed remains the same, but the name under which one has to refer 
+to them has been changed.
+
+In the variety with the dollar variables\index{\$-variable} the contents of 
+the variables are exchanged. This is not much work, because dollar 
+variables reside in memory and hence only two pointers to the contents have 
+to be exchanged (and some extra information about the contents).
+
+This instruction can be very useful when sorting expressions or dollar 
+variables by their contents.
+
+%--#] exchange :
+%--#[ external :
+
+\section{\#external}
+\label{preexternal}
+
+\noindent Syntax:
+
+\#external $<$"prevar"$>$ systemcommand
+
+\noindent See also
+
+\noindent Starts the command\index{\#external} in the background, 
+connecting to its standard\index{standard output}\index{standard input} 
+input\index{input!standard} and output\index{output!standard}. By default, 
+the \#external command has no controlling terminal, the standard error stream 
+is redirected to \verb|/dev/null| and the command is run in a subshell in a 
+new session and in a new process group (see the preprocessor instruction 
+\verb|#setexternalattr|).
+
+The optional parameter ``prevar'' is the name of a preprocessor variable 
+placed between double quotes. If it is present, the ``descriptor'' (small 
+positive integer number) of the external command is stored into this 
+variable and can be used for references to this external command (if there 
+is more than one external command running simultaneously).
+
+The external command that is started last becomes the ``current'' (active) 
+external command.  All further instructions 
+\#fromexternal\index{\#fromexternal} and \#toexternal\index{\#toexternal} 
+deal with the current external command.
+
+%--#] external :
+%--#[ fromexternal :
+
+\section{\#fromexternal}
+\label{prefromexternal}
+
+\noindent Syntax:
+
+\#fromexternal$<$+$>$$<$-$>$ $<$"$<$\$$>$varname",$<$maxlength$>$$>$
+
+\noindent Appends\index{\#fromexternal} the output of the current external 
+command to the FORM program. The semantics differ depending on the optional 
+arguments. After the external command sends the prompt\index{prompt}, FORM 
+will continue with a next line after the line containing the \#fromexternal 
+instruction. The prompt string is not appended. The optional + or - sign 
+after the name has influence on the listing of the content. The varieties 
+are:
+                                                           
+\#fromexternal$<$+$>$$<$-$>$
+
+\noindent The semantics is similar to the \#include\index{\#include} 
+instruction but folders are not supported. 
+
+\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname"
+
+\noindent is used to read the text from the running external command into 
+the preprocessor variable varname, or into the dollar variable \$varname if 
+the name of the variable starts with the dollar sign ``\$''.
+
+\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname" maxlength
+
+\noindent is used to read the text from the running external command into 
+the preprocessor (or dollar) variable varname. Only the first maxlength 
+characters are stored.
+
+%--#] fromexternal :
+%--#[ if :
+
+\section{\#if}
+\label{preif}
+
+\noindent Syntax:
+
+\#if ( condition )
+ 
+\noindent See also endif (\ref{preendif}),
+            else (\ref{preelse}),
+            elseif (\ref{preelseif}),
+            ifdef (\ref{preifdef}),
+            ifndef (\ref{preifndef})
+
+\noindent The \#if\index{\#if} instruction should be accompanied by a 
+matching \#endif\index{\#endif} instruction. In addition there can be 
+between the \#if and the \#endif some \#elseif\index{\#elseif} instructions 
+and/or a single \#else\index{\#else} instruction. The condition is a 
+logical variable that is true if its value is not equal to zero, and false 
+if its value is zero. Hence it is allowed to use
+\begin{verbatim}
+    #if `i'
+        statements
+    #endif
+\end{verbatim}
+provided that i has a value which can be interpreted as a number. If there 
+is just a string that cannot be seen as a logical\index{logical} condition 
+or a number it will be interpreted as false. The regular syntax of the 
+simple condition is
+\begin{verbatim}
+    #if `i' == st2x
+        statements
+    #endif
+\end{verbatim}
+or
+\begin{verbatim}
+    #if ( `i' == st2x )
+        statements
+    #endif
+\end{verbatim}
+in which the compare is a numerical compare if both strings can be seen as 
+numbers, while it will be a string compare if at least one of the two 
+cannot be seen as a numerical object. One can also use more complicated 
+conditions as in
+\begin{verbatim}
+    #if ( ( `i' > 5 ) && ( `j' > `i' ) )
+\end{verbatim}
+These are referred to as composite conditions. The possible operators are
+\begin{description}
+\item[$>$] Greater than, either in numerical or in lexicographical sense.
+\item[$<$] Less than, either in numerical or in lexicographical sense.
+\item[$>=$] Greater than or equal to, either in numerical or in 
+lexicographical sense.
+\item[$<=$] Less than or equal to, either in numerical or in 
+lexicographical sense.
+\item[$==$ or $=$] Equal to.
+\item[$!=$] Not equal to.
+\item[$\&\&$] Logical and operator to combine conditions.
+\item[$||$] Logical or operator to combine conditions.
+\end{description}
+
+If the condition evaluates to true, the lines after the \#if instruction 
+will be read until the first matching \#elseif instruction, or a \#else 
+instruction or a \#endif instruction, whatever comes first. After such an 
+instruction is encountered input reading stops and continues after the 
+matching \#endif instruction.
+
+Like with the regular if-statement (see \ref{substaif}), there are some special 
+functions that allow the asking of questions about objects. These are
+
+\leftvitem{3cm}{termsin()}
+\rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
+expression or a \$-variable. This function then evaluates into the number 
+of terms in that expression.}
+
+\leftvitem{3cm}{maxpowerof()}
+\rightvitem{13cm}{The argument of maxpowerof\index{maxpowerof} is the name 
+of a symbol. This function then evaluates into the maximum power of that 
+symbol as it has been declared. If no maximum power has been set in the 
+declaration of the symbol, the general maximum power for symbols is 
+returned (see \ref{substasymbols}).}
+
+\leftvitem{3cm}{minpowerof()}
+\rightvitem{13cm}{The argument of minpowerof\index{minpowerof} is the name 
+of a symbol. This function then evaluates into the minimum power of that 
+symbol as it has been declared. If no minimum power has been set in the 
+declaration of the symbol, the general minimum power for symbols is 
+returned (see \ref{substasymbols}).}
+
+%--#] if :
+%--#[ ifdef :
+
+\section{\#ifdef}
+\label{preifdef}
+
+\noindent Syntax:
+
+\#ifdef `prevar'
+ 
+\noindent See also if (\ref{preif}),
+            endif (\ref{preendif}),
+            else (\ref{preelse}),
+            ifndef (\ref{preifndef})
+
+\noindent If the named\index{\#ifdef} preprocessor variable has been 
+defined the condition is true, else it is false. For the rest the 
+instruction behaves like the \#if\index{\#if} instruction.
+
+%--#] ifdef :
+%--#[ ifndef :
+
+\section{\#ifndef}
+\label{preifndef}
+
+\noindent Syntax:
+
+\#ifndef `prevar'
+ 
+\noindent See also if (\ref{preif}),
+            endif (\ref{preendif}),
+            else (\ref{preelse}),
+            ifdef (\ref{preifdef})
+
+\noindent If the named\index{\#ifndef} preprocessor variable has been 
+defined the condition is false, else it is true. For the rest the 
+instruction behaves like the \#if\index{\#if} instruction.
+
+%--#] ifndef :
+%--#[ include :
+
+\section{\#include}
+\label{preinclude}
+
+\noindent Syntax:
+
+\#include[-+] filename
+
+\#include[-+] filename \# foldname
+
+\noindent The named\index{\#include} file is searched for and opened. 
+Reading\index{reading} continues from this file until its end. Then the 
+file will be closed and reading continues after the \#include instruction. 
+If a foldname\index{foldname} is specified, FORM will only read the 
+contents of the first fold\index{fold} it encounters in the given file that 
+has the specified name.
+
+The file is searched for in the current directory, then in the path 
+specified in the path\index{path} variable in the setup file or at the 
+beginning of the program (see chapter \ref{setup} on the setup file). Next 
+it will look in the path specified in the -p option when FORM is started 
+(see the chapter on running FORM). If this option has not been used, FORM 
+will look for the environment variable FORMPATH\index{FORMPATH}. If this 
+variable exists it will be interpreted as a path and FORM will search the 
+indicated directories for the given file. If none is found there will be an 
+error message and execution will be halted.
+
+The optional + or - sign after the name has influence on the listing of the 
+contents of the file. A - sign will have the effect of a \#- instruction 
+during the reading of the file. A plus sign will have the effect of a \#+ 
+instruction during the reading of the file.
+
+A fold is defined by a starting line of the format:
+\begin{verbatim}
+    *--#[ name :
+\end{verbatim}
+and a closing line of the format
+\begin{verbatim}
+    *--#] name :
+\end{verbatim}
+in which the first character is actually the current 
+commentary\index{commentary} character (see the \#commentchar instruction). 
+All lines between two such lines are considered to be the contents of the 
+fold. If FORM decides that it needs this fold, it will read these contents 
+and put them in its input stream. More about folds is explained in the 
+manual of the STedi editor which is also provided in the FORM 
+distribution.
+
+%--#] include :
+%--#[ message :
+
+\section{\#message}
+\label{premessage}
+
+\noindent Syntax:
+
+\#message themessagestring
+
+\noindent This instruction places a message\index{\#message} in the output 
+that is clearly marked as such. It is printed with an initial three 
+characters in front as in
+\begin{verbatim}
+    Symbols a,b,c;
+    #message Simple example;
+~~~Simple example;
+    Local F = (a+b+c)^10;
+    .end
+
+Time =       0.00 sec    Generated terms =         66
+                F        Terms in output =         66
+                         Bytes used      =       1138
+\end{verbatim}
+Note that the semicolon\index{semicolon} is not needed and if present is 
+printed as well. If one needs messages without this clear markation, one 
+should use the \#write\index{\#write} instruction.
+ 
+%--#] message :
+%--#[ pipe :
+ 
+\section{\#pipe}
+\label{prepipe}
+
+\noindent Syntax:
+
+\#pipe systemcommand
+ 
+\noindent See also system (\ref{presystem})
+
+\noindent This\index{\#pipe} forces a system command to be executed by the 
+operating system. The complete string (excluding initial blanks or tabs) is 
+passed to the operating system. Next FORM will intercept the output of 
+whatever is produced and read that as input. Hence, whenever output is 
+produced FORM will take action, and it will wait when no output is ready. 
+After the command has been finished, FORM will continue with the next line. 
+This instruction has only been implemented on systems that support 
+pipes\index{pipe}. This is mainly UNIX\index{UNIX} and derived systems. 
+Note that this instruction also introduces operating system dependent code. 
+Hence it should be used with great care.
+
+%--#] pipe :
+%--#[ preout :
+ 
+\section{\#preout}
+\label{prepreout}
+
+\noindent Syntax:
+
+\#preout ON
+
+\#preout OFF
+
+\noindent Turns\index{\#preout} listing of the output of the preprocessor 
+to the compiler on or off. Example:
+\begin{verbatim}
+    #PreOut ON
+    S   a1,...,a4;
+ S,a1,a2,a3,a4
+    L   F = (a1+...+a4)^2;
+ L,F=(a1+a2+a3+a4)^2
+    id  a4 = -a1;
+ id,a4=-a1
+    .end
+
+Time =       0.00 sec    Generated terms =         10
+                F        Terms in output =          3
+                         Bytes used      =         52
+\end{verbatim}
+
+%--#] preout :
+%--#[ procedure :
+
+\section{\#procedure}
+\label{preprocedure}
+
+\noindent Syntax:
+
+\#procedure name(var1,...,varn)
+ 
+\noindent See also endprocedure (\ref{preendprocedure}), call
+(\ref{precall})
+
+\noindent Name\index{\#procedure} is the name of the 
+procedure\index{procedure}. It will be referred to by this name. If the 
+procedure resides in a separate file the name of the file should be 
+name.prc and the \#procedure instruction should form the first line of the 
+file. The \# should be the first character of the file. The parameter field 
+is optional. If there are no parameters, the procedure should also be 
+called without parameters (see the \#call instruction). The parameters 
+(here called var1 to varn) are preprocessor variables and hence they should 
+be referred to between a backquote\index{backquote}/quote\index{quote} pair 
+as in `var1' to `varn'. If there exist already variables with such names 
+when the procedure is called, the new definition comes on top of the old 
+one. Hence in the procedure (and procedures called from it, unless the same 
+problems occurs there too, as would be the case with recursions) the new 
+definition is used, and it is released again when control returns from the 
+procedure. After that the old definition will be in effect again.
+
+If the procedure is included in the regular input stream, FORM will read 
+the text of the procedure until the \#endprocedure\index{\#endprocedure} 
+instruction and store it in a special buffer. When the procedure is called, 
+FORM will read the procedure from this buffer, rather than from a file. In 
+systems where file transfer is slow (very busy server with a slow network) 
+this may be faster, especially when many small procedures are called.
+
+One way to make libraries\index{library!making a}\index{library} that 
+contain many procedures and maybe more code is to put all procedures into 
+one header (.h) file and include this file at the beginning of the program 
+with a \#include\index{\#include} instruction. This way one has all 
+procedures load and one knows for sure that it are the proper procedures as 
+it guards against the inadvertently picking up of procedures from other 
+directories. It also makes for fewer files and hence makes for better 
+housekeeping.
+
+%--#] procedure :
+%--#[ procedureextension :
+
+% NEW@@@
+
+\section{\#procedureextension}
+\label{preprocedureextension}
+
+\noindent Syntax:
+
+\#procedureextension string
+ 
+\noindent See also \#call (\ref{precall})
+
+\noindent The default\index{\#procedureextension} extension of procedures 
+is .prc\index{.prc} in FORM. It is however possible that this clashes with 
+the extensions used by other programs like the Grace\index{Grace} system 
+(Yuasa et al, Prog. Theor. Phys. Suppl. 138(2000)18 ). In that case it is 
+possible to change the extension of the procedures in the current program. 
+This is either done via the setup (page \ref{setup}) or by the 
+\#procedureextension instruction of the preprocessor. The new string 
+replaces the string prc, used by default. For the new string the following 
+restrictions hold:
+\begin{enumerate}
+\item The first character must be alphabetic
+\item No whitespace characters (blanks and/or tabs) are allowed
+\end{enumerate}
+For the rest any characters can be used.
+
+\noindent The new extension will remain valid either till the next 
+\#procedureextension instruction or to the next .clear\index{.clear} 
+instruction (page \ref{instrclear}), whatever comes first.
+
+%--#] procedureextension :
+%--#[ prompt :
+
+\section{\#prompt}
+\label{preprompt}
+
+\noindent Syntax:
+
+\#prompt $<$newprompt$>$
+
+\noindent Sets a new prompt\index{\#prompt} for the current external 
+command (if present) and all further (newly started) external commands.
+
+If newprompt is an empty string, the default prompt (an empty line) will be 
+used.
+
+The prompt\index{prompt} is a line consisting of a single prompt string. By 
+default, this is an empty string.
+
+%--#] prompt :
+%--#[ redefine :
+
+\section{\#redefine}
+\label{preredefine}
+
+\noindent Syntax:
+
+\#redefine name "string"
+ 
+\noindent See also define (\ref{predefine}), undefine 
+(\ref{preundefine})
+
+\noindent in which\index{\#redefine} name refers to the name of the 
+preprocessor\index{preprocessor variable} 
+variable\index{variable!preprocessor} to be redefined. The contents of the 
+string will be its new value. If no variable of the given name exists yet, 
+the instruction will be equivalent to the \#define\index{\#define} 
+instruction.
+
+%--#] redefine :
+%--#[ remove :
+ 
+\section{\#remove}
+\label{preremove}
+
+\noindent Syntax:
+
+\#remove filename
+
+\noindent or
+
+\#remove $<$filename$>$
+ 
+\noindent See also write (\ref{prewrite}), append (\ref{preappend},
+            create (\ref{precreate}, close (\ref{preclose})
+
+\noindent Deletes\index{\#remove} the named file from the system. Under 
+UNIX\index{UNIX} this would be equivalent to the instruction
+\begin{verbatim}
+    #system rm filename
+\end{verbatim}
+and under MS-DOS\index{MS-DOS} oriented systems like Windows\index{Windows} 
+it would be equivalent to
+\begin{verbatim}
+    #system del filename
+\end{verbatim}
+The difference with the \#system\index{\#system} instruction is that the 
+\#remove\index{\#remove} instruction does not depend on the particular 
+syntax of the operating system. Hence the \#remove instruction can always 
+be used.
+
+%--#] remove :
+%--#[ rmexternal :
+
+\section{\#rmexternal}
+\label{prermexternal}
+
+\noindent Syntax:
+
+\#rmexternal $<$n$>$
+
+\noindent Terminates\index{\#rmexternal} an external command. The integer 
+number n must be either the descriptor of a running external command, or 0.
+
+If n is 0, then all external programs will be terminated.
+
+If n is not specified, the current external command will be terminated.
+
+The action of this instruction depends on the attributes of the external 
+channel (see the \#setexternalattr\index{\#setexternalattr} (section 
+\ref{setexternalcommunication}) instruction). By default, the instruction 
+closes the commands' IO channels, sends a KILL\index{KILL signal} signal to 
+every process in its process group and waits for the external command to be 
+finished.
+
+%--#] rmexternal :
+%--#[ setexternal :
+
+\section{\#setexternal}
+\label{presetexternal}
+
+\noindent Syntax:
+
+\#setexternal n
+
+\noindent Sets\index{\#setexternal} the ``current'' external command. The 
+instructions \#toexternal\index{\#toexternal} and 
+\#fromexternal\index{\#fromexternal} deal with the current external 
+command.  The integer number n must be the descriptor of a running external 
+command.
+
+%--#] setexternal :
+%--#[ setexternalattr :
+
+\section{\#setexternalattr}
+\label{presetexternalattr}
+
+\noindent Syntax:
+
+\#setexternalattr list\_of\_attributes
+
+\noindent sets\index{\#setexternalattr} attributes for {\em newly started} 
+external commands. Already running external commands are not affected. The 
+list of attributes is a comma separated list of pairs attribute=value, 
+e.g.:
+\begin{verbatim}
+   #setexternalattr shell=noshell,kill=9,killall=false
+\end{verbatim}
+Possible attributes are:
+\begin{description}
+\item[kill\index{kill}]
+specifies the signal to be sent to the external command 
+either before the termination of the FORM program or by the preprocessor 
+instruction \verb|#rmexternal|. By default this is 9 (
+SIGKILL\index{SIGKILL signal}). Number 0 means that no signal will be sent.
+\item[killall\index{killall}] Indicates whether the kill signal will be sent to the whole 
+group or only to the initial process. Possible values are ``\verb|true|'' 
+and ``\verb|false|''. By default, the kill signal will be sent to the
+whole group.
+\item[daemon\index{daemon}]
+Indicates whether the command should be ``daemonized'', i.e. 
+the initial process will be passed to the init process and will belong
+to the new process group in the new session.  
+Possible values are ``\verb|true|'' and ``\verb|false|''. By default, 
+``\verb|true|''.
+\item[shell\index{shell}]
+specifies which shell\index{shell} is used to run a
+command. (Starting an external command in a subshell permits to
+start not only executable files but also scripts\index{script} and 
+pipelined\index{pipelined job} jobs. The disadvantage is that there is no 
+way to detect failure upon startup since usually the shell is started 
+successfully.) By default this is ``\verb|/bin/sh -c|''.  If set 
+\verb|shell=noshell|, the command will be stared by the instruction 
+\#external\index{\#external} directly but not in a subshell, so the command 
+should be a name of the executable file rather than a system command. The 
+instruction \#external will duplicate the actions of the shell in searching 
+for an executable file if the specified file name does not contain a slash 
+(/) character.  The search path is the path specified in the environment by 
+the PATH\index{PATH} variable.  If this variable isn't specified, the 
+default path ``\verb|:/bin:/usr/bin|''
+is used.
+\item[stderr\index{stderr}]
+specifies a file to redirect the standard\index{standard error} error 
+stream to. By default it is ``\verb|/dev/null|''. If set 
+\verb|stderr=terminal|, no redirection occurs.
+\end{description}
+Only attributes that are explicitly mentioned are changed, all others remain 
+unchanged. Note, changing attributes should be done with care. For example,
+\begin{verbatim}
+   #setexternalattr daemon=false
+\end{verbatim}
+starts a command in the subshell within the current process group with
+default attributes kill=9 and killall=true.
+The instruction \#rmexternal\index{\#rmexternal} sends the
+KILL\index{KILL signal} signal to the wholegroup, which means that also 
+FORM itself will be killed.
+
+%--#] setexternalattr :
+%--#[ show :
+
+\section{\#show}
+\label{preshow}
+
+\noindent Syntax:
+
+\#show [preprocessorvariablename[s]]
+
+\noindent If no names\index{\#show} are present, the contents of all 
+preprocessor variables\index{variable!preprocessor} will be printed to the 
+regular output. If one or more preprocessor variables are specified 
+(separated by comma's), only their contents will be printed. The 
+preprocessor variables should be represented by their name only. No 
+enclosing backquote/quote should be used, because that would force a 
+substitution of the preprocessor variable before the instruction gets to 
+see the name. Example:
+\begin{verbatim}
+    #define MAX "3"
+    Symbols a1,...,a`MAX';
+    L F = (a1+...+a`MAX')^2;
+    #show
+#The preprocessor variables:
+0: VERSION_ = "3"
+1: SUBVERSION_ = "2"
+2: NAMEVERSION_ = ""
+3: DATE_ = "Wed Feb 28 08:43:20 2007"
+4: NAME_ = "testpre.frm"
+5: CMODULE_ = "1"
+6: MAX = "3"
+    .end
+
+Time =       0.00 sec    Generated terms =          6
+                F        Terms in output =          6
+                         Bytes used      =        102
+\end{verbatim}
+We see that the variable MAX has indeed the value 3. There are six 
+additional variables which have been defined by FORM itself. Hence the 
+trailing underscore which cannot be used in user defined names. The current 
+version of FORM is shown in the variable VERSION\_\index{VERSION\_} and the 
+name of the current program is given in the variable NAME\_\index{NAME\_}. 
+For more about the system defined preprocessor variables see 
+\ref{preprovariables}.
+
+There is another preprocessor variable that does not show in the listings. 
+Its name is SHOWINPUT\_\index{SHOWINPUT\_}. This variable has the value one 
+if the listing of the input is on and the value zero if the listing of the 
+input is off.
+
+%--#] show :
+%--#[ switch :
+
+\section{\#switch}
+\label{preswitch}
+
+\noindent Syntax:
+
+\#switch string
+ 
+\noindent See also endswitch (\ref{preendswitch}),
+        case (\ref{precase}),
+        break (\ref{prebreak}),
+        default (\ref{predefault})
+
+\noindent the\index{\#switch} string could for instance be a preprocessor 
+variable as in
+\begin{verbatim}
+    #switch `i'
+\end{verbatim}
+The \#switch\index{\#switch} instruction, together with 
+\#case\index{\#case}, \#break\index{\#break}, \#default\index{\#default} 
+and \#endswitch\index{\#endswitch}, allows the user to conveniently make 
+code for a number of cases that are distinguished by the value of a 
+preprocessor variable. In the past this was only possible with the use of 
+folds\index{folds} in the \#include\index{\#include} instruction and the 
+corresponding include file\index{file!include} (see \ref{preinclude}). 
+Because few people have an editor like STedi (see the FORM distribution 
+site) that can handle the folds in a proper way, it was judged that the 
+more common switch mechanism might be friendlier. The proper syntax of a 
+complete construction would be
+\begin{verbatim}
+    #switch `par'
+    #case 1
+       some statements
+    #break
+    #case ax2
+       other statements
+    #break
+    #default
+       more statements
+    #break
+    #endswitch
+\end{verbatim}
+The number of cases is not limited. The compare between the strings in the 
+\#switch instruction and in the \#case instructions is as a text string. 
+Hence numerical strings have no special meaning. If a \#break instruction 
+is omitted, control may go into another case. This is called 
+fall-through\index{fall-through}. 
+This is a way in which one can have the same statements for several cases. 
+The \#default instruction is not mandatory.
+
+FORM will look for the first case of which the string matches the string 
+in the \#switch instruction. Input reading (control flow) starts after this 
+\#case instruction, and continues till either a \#break instruction is 
+encountered, or the \#endswitch is met. After that input reading continues 
+after the \#endswitch instruction. If no case has a matching string, input 
+reading starts after the \#default instruction. If no \#default instruction 
+is found, input reading continues after the matching \#endswitch 
+instruction.
+
+\#switch constructions can be nested\index{nested}. They can be combined 
+with \#if\index{\#if} constructions, \#do\index{\#do} instructions, etc. 
+but they should obey normal nesting rules (as with nesting of 
+brackets\index{bracket} of different types).
+
+%--#] switch :
+%--#[ system :
+ 
+\section{\#system}
+\label{presystem}
+
+\noindent Syntax:
+
+\#system systemcommand
+ 
+\noindent See also pipe (\ref{prepipe})
+
+\noindent This forces a system\index{\#system} command to be executed by 
+the operating system. The complete string (excluding initial blanks or 
+tabs) is passed to the operating system. FORM will then wait until control 
+is returned. Note that this instruction introduces operating system 
+dependent code. Hence it should be used with great care.
+
+%--#] system :
+%--#[ terminate :
+ 
+\section{\#terminate}
+\label{preterminate}
+
+\noindent Syntax:
+
+\#terminate \verb:<:exit code\verb:>:
+ 
+\noindent This forces FORM to terminate\index{\#terminate} execution 
+immediately. If an exit code is given (an integer number), this will be the 
+return value that FORM gives to the shell program from which it was run. If 
+no return value is specified, the value -1 will be returned.
+
+%--#] terminate :
+%--#[ toexternal :
+
+\section{\#toexternal}
+\label{pretoexternal}
+
+\noindent Syntax:
+
+\#toexternal "formatstring" $<$,variables$>$
+
+\noindent See also
+
+\noindent Sends\index{\#toexternal} the output to the current external 
+command. The semantics of the \verb|"formatstring"| and the
+\verb|[,variables]| is the same as for the \#write\index{\#write} 
+instruction, except for the trailing end-of-line symbol. In contrast to the 
+\#write instruction, the \#toexternal instruction does not append any new 
+line symbol to the end of its output.
+
+%--#] toexternal :
+%--#[ undefine :
+
+\section{\#undefine}
+\label{preundefine}
+
+\noindent Syntax:
+
+\#undefine name
+ 
+\noindent See also define (\ref{predefine}), redefine 
+(\ref{preredefine})
+
+\noindent in which\index{\#undefine} name refers to the name of the 
+preprocessor variable\index{variable!preprocessor} to be undefined. This 
+statement causes the given preprocessor variable to be removed from the 
+stack of preprocessor variables. If an earlier instance of this variable 
+existed (other variable with the same name), it will become active again. 
+There are various other ways by which preprocessor variables can become 
+undefined. All variables belonging to a procedure are undefined at the end 
+of a procedure, and so are all other preprocessor variables that were 
+defined inside this procedure. The same holds for the preprocessor variable 
+that is used as a loop parameter in the \#do\index{\#do} instruction.
+
+%--#] undefine :
+%--#[ write :
+
+\section{\#write}
+\label{prewrite}
+
+\noindent Syntax:
+
+\#write [$<$filename$>$] "formatstring" [,variables]
+ 
+\noindent See also append (\ref{preappend}),
+            create (\ref{precreate}), remove (\ref{preremove}),
+            close (\ref{preclose})
+
+\noindent If there\index{\#write} is no file specified, the output will be 
+to the regular output\index{output channel} channel. If a file is 
+specified, FORM will look whether this file is open already. If it is open 
+already, the specified output will be added to the file. If it is not open 
+yet it will be opened. Any previous contents will be lost. This would be 
+equivalent to using the \#create\index{\#create} instruction first. If 
+output has to be added to an existing file, the \#append\index{\#append} 
+instruction should be used first.
+
+The format\index{format string} string is like a format string in the 
+language C\index{C}. This means 
+that it is placed between double quotes. It will contain text that will be 
+printed, and it will contain special character sequences for special 
+actions. These sequences and the corresponding actions are:
+\begin{description}
+\item[$\backslash$ n] A newline\index{newline} character.
+\item[$\backslash$ t] A tab\index{tab} character.
+\item[$\backslash$ "] A double\index{double quote} quote character.
+\item[$\backslash$ b] A backslash\index{backslash} character.
+\item[\%\%] The character \%\index{\%}.
+\item[\%] If the last character in the string, it causes the omission of a 
+linefeed\index{linefeed} at the end of the printing. Note that if this 
+happens in the regular output (as opposed to a file) there may be 
+interference with the listing of the input.
+\item[\%\$] A dollar variable\index{\$-variable}. The variable should be 
+indicated in the list of variables. Each occurrence of \%\$ will look for 
+the next variable.
+\item[\%e] An active expression\index{expression}. The expression should be 
+indicated in the list of variables. Each occurrence of \%e will look for 
+the next variable. Unlike the output caused by the print statement the 
+expression will be printed without its name and there will also be no 
+\verb:=: sign unless there is one in the format string of course. If the 
+current output format is fortran\index{fortran} output there is an extra option. After the 
+name of the expression one should put between parentheses the name to be 
+used when there are too many continuation cards.
+\item[\%E] Like \%e, but whereas the \%e terminates the expression with a 
+;, the \%E does not give this trailing semicolon\index{semicolon}.
+\item[\%s] A string\index{string}. The string should be 
+given in the list of variables and be enclosed between double quotes. Each 
+occurrence of \%s will look for the next variable in the list.
+\item[\%f] A file\index{file}. The name of the file will be expected in the 
+list of variables. The file is searched for in the current directory, then 
+in path indicated by the path variable in the setup file or at the 
+beginning of the file (see chapter \ref{setup} on the setup file), then in 
+the path specified in the -p option when FORM is started (see the chapter 
+on running FORM). If this option has not been used, FORM will look for the 
+environment variable FORMPATH\index{FORMPATH}. If this variable exists it 
+will be interpreted as a path and FORM will search the indicated 
+directories for the given file. If none is found there will be an error 
+message and execution will be halted.
+\end{description}
+If no special variables are asked for (by means of \%\$, \%e, \%E or \%s) 
+the list of variables will be ignored (if present). Example:
+\begin{verbatim}
+    Symbols a,b;
+    L   F = a+b;
+    #$a1 = a+b;
+    #$a2 = (a+b)^2;
+    #$a3 = $a1^3;
+    #write " One power: %$\n Two powers: %$\n Three powers: %$\n%s"\
+           ,$a1,$a2,$a3," The end"
+ One power: a+b
+ Two powers: 2*a*b+a^2+b^2
+ Three powers: 3*a*b^2+3*a^2*b+a^3+b^3
+ The end
+    .end
+
+Time =       0.00 sec    Generated terms =          2
+                F        Terms in output =          2
+                         Bytes used      =         32
+\end{verbatim}
+We see that the writing occurs immediately after the \#write\index{\#write} 
+instruction, because it is done by the preprocessor. Hence the output comes 
+before the execution of the expression F.
+\begin{verbatim}
+    S   x1,...,x10;
+    L   MyExpression = (x1+...+x10)^4;
+    .sort
+    Format Fortran;
+    #write <fun.f> "      FUNCTION fun(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)"
+    #write <fun.f> "      REAL x1,x2,x3,x4,x5,x6,x7,x8,x9,x10"
+    #write <fun.f> "      fun = %e",MyExpression(fun)
+    #write <fun.f> "      RETURN"
+    #write <fun.f> "      END"
+    .end
+\end{verbatim}
+Some remarks are necessary here. Because the \#write is a preprocessor 
+instruction, the .sort\index{.sort} is essential. Without it, the 
+expression has not been worked out at the moment we want to write. The name 
+of the expression is too long for fortran\index{fortran}, and hence the 
+output file will use a different name (in this case the name `fun' was 
+selected). The output file looks like
+\begin{verbatim}
+      FUNCTION fun(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)
+      REAL x1,x2,x3,x4,x5,x6,x7,x8,x9,x10
+      fun = 24*x1*x2*x3*x4 + 24*x1*x2*x3*x5 + 24*x1*x2*x3*x6 + 24*x1*x2
+     & *x3*x7 + 24*x1*x2*x3*x8 + 24*x1*x2*x3*x9 + 24*x1*x2*x3*x10 + 12*
+          .....
+     & x8 + 4*x6**3*x9 + 4*x6**3*x10 + x6**4 + 24*x7*x8*x9*x10 + 12*x7*
+     & x8*x9**2
+      fun = fun + 12*x7*x8*x10**2 + 12*x7*x8**2*x9 + 12*x7*x8**2*x10 + 
+     & 4*x7*x8**3 + 12*x7*x9*x10**2 + 12*x7*x9**2*x10 + 4*x7*x9**3 + 4*
+     & x7*x10**3 + 12*x7**2*x8*x9 + 12*x7**2*x8*x10 + 6*x7**2*x8**2 + 
+     & 12*x7**2*x9*x10 + 6*x7**2*x9**2 + 6*x7**2*x10**2 + 4*x7**3*x8 + 
+     & 4*x7**3*x9 + 4*x7**3*x10 + x7**4 + 12*x8*x9*x10**2 + 12*x8*x9**2
+     & *x10 + 4*x8*x9**3 + 4*x8*x10**3 + 12*x8**2*x9*x10 + 6*x8**2*
+     & x9**2 + 6*x8**2*x10**2 + 4*x8**3*x9 + 4*x8**3*x10 + x8**4 + 4*x9
+     & *x10**3 + 6*x9**2*x10**2 + 4*x9**3*x10 + x9**4 + x10**4
+
+      RETURN
+      END
+\end{verbatim}
+and each time after 19 continuation lines we have to break the expression 
+and use the \verb:fun = fun +: trick to continue.
+
+%--#] write :
+%--#[ Some remarks :
+
+\section{Some remarks}
+It should be noted that the various constructions like 
+\#do\index{\#do}/\#enddo\index{\#enddo}, 
+\#procedure\index{\#procedure}/\#endprocedure\index{\#endprocedure}, 
+\#switch\index{\#switch}/\#endswitch\index{\#endswitch} and 
+\#if\index{\#if}/\#endif\index{\#endif} all 
+create a certain environment. These environments cannot be mixed. This 
+means that one cannot make code of the type
+\begin{verbatim}
+#do i = 1,5
+ #if ( `MAX' > `i' )
+    id f(`i') = g`i'(x);
+#enddo
+ some statements
+#do i = 1,5
+ #endif
+#enddo
+\end{verbatim}
+whether this could be considered useful or not. Similarly one cannot make a 
+construction that might be very useful:
+\begin{verbatim}
+#do i = 1,5
+  #do j`i' = 1,3
+#enddo
+  some statements
+#do i = 1,5
+  #enddo
+#enddo
+\end{verbatim}
+Currently the syntax does not allow this. This may change in the future.
+
+%--#] Some remarks :
+
+

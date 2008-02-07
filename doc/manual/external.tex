@@ -1,0 +1,404 @@
+\chapter{External communication}
+\label{externalcommunication}
+
+To communicate\index{communication!external} with other programs FORM is 
+equiped with special commands. One set of commands is rather simple in 
+nature: the \#pipe\index{\#pipe} (see section \ref{prepipe}) and 
+\#system\index{\#system} (see section \ref{presystem}) instructions allow 
+FORM to run programs in the regular command\index{command shell} 
+shell\index{shell}. Sometimes however much more sophistication is needed 
+because these instructions have a rather large overhead and need to start 
+new processes each time they are executed. Hence a second more extensive 
+set of instructions was developed that allows the start of an external 
+process\index{process!external}, keep it open and maintain a two way 
+communication\index{communication!two way} with it. Similarly it is 
+possible to start FORM in such a way from other programs. Many details of 
+the method of implementation and a number of examples are given in a 
+separate paper which can also found in the FORM site 
+(http://www.nikhef.nl/$\sim$form) under publications (look for the file 
+extform.ps\index{extform.ps} or extform.pdf\index{extform.pdf}). Here we 
+will just show the essentials and the syntax.
+
+The basic idea is to open (by means of the preprocessor) a number of 
+external channels\index{channel!external} (there is no reason to be 
+restricted to just one) by starting the corresponding program in a command 
+shell. This program is kept running and a number is assigned to each 
+channel. Next we can select a channel and communicate with it. To not run 
+into syntactic problems, because the external program may have different 
+ideas of what a formula should look like, one may have to install 
+filters\index{filter}. These are additional programs that should be 
+prepared before the FORM program is started that process the communication 
+to convert from one notation to the other.
+
+%--#[ #external :
+
+\section{\#external}
+\label{external}
+
+\noindent Syntax:
+
+\#external $<$"prevar"$>$ systemcommand
+
+\noindent See also
+
+\noindent Starts\index{\#external} the command in the background, 
+connecting to its standard input and output. By default, the external 
+command has no controlling terminal, the standard error stream is 
+redirected to \verb|/dev/null| and the command is run in a subshell in a 
+new session and in a new process group (see the preprocessor instruction 
+\verb|#setexternalattr|).
+
+The optional parameter ``prevar'' is the name of a preprocessor variable 
+placed between double quotes. If it is present, the ``descriptor'' (small 
+positive integer number) of the external command is stored into this 
+variable and can be used for references to this external command (if there 
+is more than one external command running simultaneously).
+
+The external command that is started last becomes the ``current'' (active) 
+external command.  All further instructions 
+\#fromexternal\index{\#fromexternal} and \#toexternal\index{\#toexternal} 
+deal with the current external command.
+
+%--#] #external :
+%--#[ #toexternal :
+
+\section{\#toexternal}
+\label{toexternalcommunication}
+
+\noindent Syntax:
+
+\#toexternal "formatstring" $<$,variables$>$
+
+\noindent See also
+
+\noindent Sends\index{\#toexternal} the output to the current 
+external\index{\#external} command. The semantics of the 
+\verb|"formatstring"| and the \verb|[,variables]| is the same as for the 
+\#write\index{\#write} instruction, except for the trailing end-of-line symbol. In 
+contrast to the \#write instruction, the \#toexternal instruction does not 
+append any newline\index{newline} symbol to the end of its output.
+
+%--#] #toexternal :
+%--#[ #fromexternal :
+
+\section{\#fromexternal}
+\label{fromexternalcommunication}
+
+\noindent Syntax:
+
+\#fromexternal$<$+$>$$<$-$>$ $<$"$<$\$$>$varname",$<$maxlength$>$$>$
+
+\noindent Appends\index{\#fromexternal} the output of the current 
+external\index{\#external} 
+command to the FORM program. The semantics differ depending on the optional 
+arguments. After the external command sends the prompt, FORM will continue 
+with a next line after the line containing the \#fromexternal instruction. 
+The prompt string is not appended. The optional + or - sign after the name 
+has influence on the listing of the content. The varieties are:
+                                                           
+\#fromexternal$<$+$>$$<$-$>$
+
+\noindent The semantics is similar to the \#include\index{\#include} 
+instruction but folders\index{folders} are not supported. 
+
+\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname"
+
+\noindent is used to read the text from the running external command into 
+the preprocessor variable varname, or into the dollar variable \$varname if 
+the name of the variable starts with the dollar sign ``\$''.
+
+\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname" maxlength
+
+\noindent is used to read the text from the running external command into 
+the preprocessor (or dollar) variable varname. Only the first maxlength 
+characters are stored.
+
+%--#] #fromexternal :
+%--#[ #prompt :
+
+\section{\#prompt}
+\label{promptcommunication}
+
+\noindent Syntax:
+
+\#prompt $<$newprompt$>$
+
+\noindent Sets\index{\#prompt} a new prompt for the current external 
+command (if present) and all further (newly started) external commands.
+
+If newprompt is an empty string, the default prompt (an empty line) will be 
+used.
+
+The prompt is a line consisting of a single prompt string. By default, this 
+is an empty string.
+
+%--#] #prompt :
+%--#[ #setexternal :
+
+\section{\#setexternal}
+\label{setexternalcommunication}
+
+\noindent Syntax:
+
+\#setexternal n
+
+\noindent Sets the ``current'' external\index{\#setexternal} command. The 
+instructions \#toexternal\index{\#toexternal} and 
+\#fromexternal\index{\#fromexternal} deal with the current external 
+command.  The integer number n must be the descriptor of a running external 
+command.
+
+%--#] #setexternal :
+%--#[ #rmexternal :
+
+\section{\#rmexternal}
+\label{rmexternalcommunication}
+
+\noindent Syntax:
+
+\#rmexternal $<$n$>$
+
+\noindent Terminates an external\index{\#rmexternal} command. The integer 
+number n must be either the descriptor of a running external command, or 0.
+
+If n is 0, then all external programs will be terminated.
+
+If n is not specified, the current external command will be terminated.
+
+The action of this instruction depends on the attributes of the external 
+channel (see the \#setexternalattr\index{\#setexternalattr} (section 
+\ref{setexternalcommunication}) instruction). By default, the instruction 
+closes the commands' IO channels, sends a KILL\index{KILL signal} signal to 
+every process in its process group and waits for the external command to be 
+finished.
+
+%--#] #rmexternal :
+%--#[ #setexternalattr :
+
+\section{\#setexternalattr}
+\label{setexternalattrcommunication}
+
+\noindent Syntax:
+
+\#setexternalattr list\_of\_attributes
+
+\noindent sets\index{\#setexternalattr} attributes for {\em newly started} 
+external commands. Already running external commands are not affected. The 
+list of attributes is a comma separated list of pairs attribute=value, 
+e.g.:
+\begin{verbatim}
+   #setexternalattr shell=noshell,kill=9,killall=false
+\end{verbatim}
+Possible attributes are:
+\begin{description}
+\item[kill\index{kill}]
+specifies the signal to be sent to the external command either before the 
+termination of the FORM program or by the preprocessor instruction 
+\#rmexternal\index{\#rmexternal}. By default this is 9 
+(SIGKILL\index{SIGKILL signal}). Number 0 means that no signal will be 
+sent.
+\item[killall\index{killall}] Indicates whether the KILL\index{KILL signal} 
+signal will be sent to the whole group or only to the initial process. 
+Possible values are ``\verb|true|'' and ``\verb|false|''. By default, the 
+kill signal will be sent to the whole group.
+\item[daemon\index{daemon}]
+Indicates whether the command should be ``daemonized'', i.e. 
+the initial process will be passed to the init process and will belong
+to the new process group in the new session.  
+Possible values are ``\verb|true|'' and ``\verb|false|''. By default, 
+``\verb|true|''.
+\item[shell\index{shell}]
+specifies which shell\index{shell} is used to run a command. (Starting an 
+external command in a subshell permits to start not only executable files 
+but also scripts and pipelined jobs. The disadvantage is that there is no 
+way to detect failure upon startup since usually the shell is started 
+successfully.) By default this is ``\verb|/bin/sh -c|''.  If set 
+\verb|shell=noshell|, the command will be started by the instruction 
+\#external\index{\#external} directly but not in a subshell, so the command 
+should be a name of the executable file rather than a system command. The 
+instruction \#external will duplicate the actions of the shell in searching 
+for an executable file if the specified file name does not contain a slash 
+(/) character.  The search path\index{path!search} is the path specified in 
+the environment by the PATH\index{PATH} variable.  If this variable isn't 
+specified, the default path ``\verb|:/bin:/usr/bin|'' is used.
+\item[stderr\index{stderr}]
+specifies a file to redirect the standard error\index{error stream} stream 
+to. By default it is ``\verb|/dev/null|''. If set \verb|stderr=terminal|,
+no redirection occurs.
+\end{description}
+Only attributes that are explicitly mentioned are changed, all others remain 
+unchanged. Note, changing attributes should be done with care. For example,
+\begin{verbatim}
+   #setexternalattr daemon=false
+\end{verbatim}
+starts a command in the subshell within the current process group with
+default attributes kill=9 and killall=true.
+The instruction \#rmexternal\index{\#rmexternal} sends the
+KILL\index{KILL signal} signal to the whole group, which means that also 
+FORM itself will be killed.
+
+%--#] #setexternalattr :
+%--#[ An example :
+
+\section{An example}
+ 
+An example of the above instructions could be:
+\begin{verbatim}
+ 1  symbol a,b;
+ 2
+ 3  #external "n1" cat -u
+ 4
+ 5  #external "n2" cat -u
+ 6
+ 7  *  cat simply repeats its input. The default prompt is an
+ 8  *  empty line. So we use "\n\n" here -- one "\n" is to finish
+ 9  *  the line, and the next "\n" is the prompt:
+10  #toexternal "(a+b)^2\n\n"
+11
+12  #setexternal `n1'
+13  *  For this channel the prompt will be "READY\n":
+14  #toexternal "(a+b)^3\nREADY\n"
+15
+16  #setexternal `n2'
+17  *  Set the default prompt:
+18  #prompt
+19  Local aPLUSbTO2=
+20  #fromexternal
+21         ;
+22
+23  #setexternal `n1'
+24  #prompt READY
+25  Local aPLUSbTO3=
+26  #fromexternal
+27         ;
+28
+29  #rmexternal `n1'
+30  #rmexternal `n2'
+31
+32  Print;
+33  .end
+\end{verbatim}
+
+Two external channels are opened in lines 3 and 5. The UNIX\index{UNIX} 
+utility ``\verb|cat|'' simply repeats its input.
+The option ``\verb|-u|'' is used to prevent the output buffering. The 
+option is ignored by the GNU\index{GNU} \verb|cat| utility but is mandatory 
+for non-GNU versions of \verb|cat|.
+
+After line 5 the current external channel is `\verb|n2|'. The default 
+prompt is an empty line so in line 10 ``\verb|\n\n|'' is used -- 
+one``\verb|\n|'' is to finish the line, and the next ``\verb|\n|'' is the 
+prompt.
+
+Line 12 switches the current channel to `\verb|n1|'. For this channel
+the prompt will be ``\verb|READY|'', see line 24, hence the expression is
+finished by ``\verb|\nREADY\n|''.
+
+Line 16 switches to the `\verb|n2|' external channel and line 18 sets
+the default prompt (which is extra in this example since the default
+prompt was not changed up to now).
+
+Results (just a literal repetition of the sent expressions) are read
+in lines 20 and 26.
+
+Lines 29 and 30 close the external channels.
+
+%--#] An example :
+%--#[ Embedding :
+
+\section{Embedding FORM in other applications}
+\label{embeddingcommunication}
+
+The external channel instructions permit FORM to swallow an external 
+program. The same mechanism can be used in order to {\em 
+embed\index{embed}} FORM in other applications.
+
+There is a possibility to start FORM from another program providing
+one (or more) communication channels (see below). These channels will be 
+visible from a FORM program as
+``pre-opened''\index{pre-opened external channels} external channels 
+existing after FORM starts. There is no need to open them with the 
+\#external\index{\#external} instruction.
+In this case, the preprocessor variable ``PIPES\_''\index{PIPES\_} is 
+defined and is equal to the total number of the pre-opened external 
+channels. Pre-opened external channel descriptors are contained in the 
+preprocessor 
+variables ``PIPE1\_''\index{PIPE1\_}, ``PIPE2\_''\index{PIPE2\_}, etc.
+For example, if `PIPES\_'\index{PIPES\_} is 3 then there are 3 
+pre-opened external channels with the descriptors `PIPE1\_',
+`PIPE2\_' and `PIPE3\_' so e.g. the following instruction could
+be used:
+\begin{verbatim}
+   #setexternal `PIPE2_'
+\end{verbatim}
+without 
+\begin{verbatim}
+   #external "PIPE2_"
+\end{verbatim}
+
+The external channel attributes make no sense for the pre-opened channel 
+(see the \#setexternalattr\index{\#setexternalattr} instruction (section 
+\ref{setexternalattrcommunication})).
+Formally, they are as follows:
+\begin{verbatim}
+   kill=0,
+   killall=false,
+   daemon=false,
+   stderr=/dev/tty,
+   shell=noshell
+\end{verbatim}
+
+In order to activate the pre-opened external channels, the parent
+application must follow some standards. Here we describe a low-level 
+protocol\index{protocol!lowlevel}, the corresponding 
+C-interface\index{C-interface} is available from the FORM distribution site 
+under packages and then externalchannels.
+
+Before starting FORM, the parent application must create one or more pairs 
+of pipes. A pipe\index{pipe} is a pair of file descriptors, one is for 
+reading and another is for writing. In LINUX\index{LINUX}, see ``man 2 
+pipe''. The read-only descriptor of the first pipe in the pair and the 
+write-only descriptor of the second pipe must be passed to FORM as an 
+argument of a command line option ``\verb|-pipe|'' in ASCII decimal format. 
+The argument of the option is a comma-separated list of pairs
+``\verb|r#,w#|'' where ``\verb|r#|'' is a read-only descriptor and 
+``\verb|w#|'' is a write-only descriptor; alternatively, an environment 
+variable FORM\_PIPES\index{FORM\_PIPES} containing this list can be used 
+(the command line option overrides the environment veriable). For example, 
+to start FORM with two pre-opened external channels the parent application 
+has to create first four pipes. Lets us suppose the first pipe was created 
+with the descriptors 5 and 6, the second pipe has the descriptors 7 and 8, 
+the third pipe has the descriptors 9 and 10 and the fourth pipe has the 
+descriptors 11 and 12. The descriptors 5 and 8 will be used by FORM as the 
+input and the output for the first pre-opened external channel while the 
+descriptors 9 and 12 will be used by FORM as the input and the output for 
+the second pre-opened external channel.
+
+Then the parent application must start FORM with the following 
+command line option:
+\begin{verbatim}
+   -pipe 5,8,9,12
+\end{verbatim}
+
+Upon startup, FORM sends its PID\index{PID} (the Process Identifier) in 
+ASCIIdecimal format with an appended newline character to the descriptor 8 
+and then FORM will wait for the answer from the descriptor 5. The answer 
+must be two comma-separated integers in ASCII decimal format followed by a 
+newline character. The first integer corresponds to the FORM PID while the 
+second one is the parent process PID. If the answer is not obtained after 
+some timeout, or if it is not correct (i.e. it is not a list of two 
+integers or the first integer is not the FORM PID) then FORM fails. If 
+everything is correct, FORM creates the pre-opened channel and puts its 
+descriptor in the preprocessor variable ``PIPE1\_''.
+
+Then FORM processes the second pair of arguments, ``\verb|9,12|''.
+
+After all pairs have been processed FORM creates the preprocessor variable 
+``PIPES\_'' and puts into this variable the total number of created 
+pre-opened external channels.
+
+The order of processing the pairs of numbers in the argument is fixed 
+exactly as it was described above i.e. from the left to the right.
+
+%--#] Embedding :
+

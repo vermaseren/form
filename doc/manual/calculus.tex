@@ -1,0 +1,66 @@
+
+
+
+The routines inside FORM that deal with the coefficients are all written in 
+C (and hence not in assembler language!). This enhances the portability 
+greatly. It are these routines that determine the word size in FORM. The 
+requirement that the multiplication of two words must be a rather natural 
+operation makes that on a 32-bits architecture the word size becomes 16 
+bits and on a 64-bits architecture it becomes 32 bits. In some 32-bits 
+processors one could use a 32 bits multiplication and recover the full 64 
+bits result by looking at two registers. Similarly divisions can be done 
+that way. But this requires assembly language programming, because in C the 
+only way one can do this is by first casting one of the numbers to (long 
+long int) and then the compiler usually creates several multiplications all 
+except one being superfluous. The fact that the use of low level GMP 
+routines can give a slightly faster code is entirely due to the fact that 
+indeed they work with these longer words and use assembly level routines.
+
+Originally the low level calculus routines (addition, multiplication, 
+division and the calculation of GCD's) were fully optimized for relatively 
+short numbers. The idea being that for most calculations that is what 
+occurs most of the time. Over the years computers became bigger and people 
+were taking expansions further and further and hence the speed of these 
+routines became a noticeable factor. This was mostly the GCD routine. In 
+the past the GCD algorithm had been studied and compares had been made 
+between the Euclidean and the binary algorithms. The performance of the 
+binary algorithm depends rather crucially on how one can shift through an 
+array of integers and in the C language this isn't very efficient. Hence 
+this algorithm was abandoned in the late 80's. Of course, due to the fact 
+that it uses only shifts and subtractions asymptotically it is faster than 
+the Euclidean algorithm, but in the past the region in which it was more 
+efficient wasn't reached.
+
+When the calculation of GCD's became a real problem a new algorithm for 
+longer numbers was invented which turned out to be a little bit like an 
+improved version of the Lehmer-Euclid algorithm. This made the behaviour 
+for big integers much better. At yet a later stage the GMP library was 
+introduced and applied for numbers that are longer than just a few words. 
+Here we need some conversion from FORM words to the words that the GMP 
+routines need. For a GCD calculation this is however a negligible factor. 
+The improvement in speed was far less dramatic than hoped for, even though 
+GMP works with longer words and has its central code in assembler language. 
+But faster is faster and hence FORM can use now three of the low level GMP 
+routines (GCD, multiplication and division) for its big numbers. The 
+improvement coming from the multiplication and the division routines has 
+thus far been only a few percent. This was for calculations with numbers 
+that occupy tenths of words. If FORM could use the double words from the C 
+code, probably the conversion to the GMP notation would more than offset 
+the benefit of the use of low level assembly routines.
+
+When very long numbers will be used with thousands of words the situation 
+is different. In that case GMP has special algorithms that were never built 
+for FORM. But for the moment most FORM programs have not reached such cases 
+yet. Whenever this is the case for a program it is best to run this program 
+on a computer that provides the GMP library with its operating system. When 
+the GMP library isn't available on a system, FORM will use its own 
+routines, which, as mentioned, aren't bad, but were not ment for such 
+extreme cases.
+
+The higher level routines for calculus of rational numbers can be done in 
+any language. The algorithms are standard and can be found in any decent 
+text book. It are the low level routines that determine the eventual 
+speed. For these objects the GMP library would probably slow FORM down to a 
+significant degree as on the object level they are much messed up with 
+memory allocation problems, and at the memory management level FORM doesn't 
+have any of these problems.

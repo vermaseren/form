@@ -1,0 +1,373 @@
+
+\chapter{The parallel version}
+\label{parallel}
+
+%--#[ Introduction :
+
+FORM has two versions that can make use of several processors 
+simultaneously. Which version can be used profitably depends very much on 
+the architecture of the computer one is using. Each version has its own 
+control commands which are ignored by the other version and the sequential 
+version of FORM. The parallel versions are:
+\begin{itemize}
+\item ParFORM\index{ParFORM}: This version runs on processors that have 
+their own memory and preferably their own disk. Each processor gets a copy 
+of the complete program and a system like MPI\index{MPI} is used for the 
+communication\index{communication}. When the network connections are very 
+fast one can also use ParFORM on clusters of workstations. ParFORM was 
+developed at the university of Karlsruhe\index{Karlsruhe}.
+\item TFORM\index{TFORM}: This version uses P-threads and runs on computers 
+which have several processors with a shared memory. Data is kept as common 
+data as much as possible and only when a worker thread gets a task a 
+minimal amount of data is copied to its private buffers. Currently it seems 
+to perform best on computers with two or four processors.
+\end{itemize}
+Both ParFORM and TFORM suffer from the same bottlenecks\index{bottleneck}. 
+At the beginning of a module there is a single expression, managed by a 
+master process which then has to distribute the terms over the workers. At 
+the end of the module the sorted results of the workers have to be gathered 
+in by the master\index{master} and merged into a single expression again. 
+Efficiency depends critically on how fast the terms can be given to the 
+workers\index{workers}, how well the load for the workers is balanced and 
+how much time the master has to spend in the final stages of the sorting. 
+Another factor is the complexity of the operations inside the module. If 
+the module has very few and simple statements, the gain in performance will 
+be much less than when the module has much work to do for each term.
+
+The ParFORM and TFORM specific code is internally completely separated. 
+This offers the possibility that sooner or later the two can be combined to 
+allow efficient running on clusters of dual or quad processor machines. 
+Whether this would give significant extra benefits needs to be 
+investigated. When this project will be undertaken depends very much on the 
+availability of such computers.
+
+Because ParFORM uses protocols like MPI\index{MPI}, and because these 
+protocols don't have rigorous standards (each platform seems to have its 
+own variety), the port to new machines is often rather painful. Hence 
+currently (year 2007) we don't have large numbers of executables ready in 
+the distribution site. Ports will take place on demand and availability of 
+time and resources. For TFORM the situation is much more favorable. Its 
+treatment of the parallelization follows the standard for 
+POSIX\index{POSIX} threads (or Pthreads) for which the libraries are 
+implemented on almost any UNIX\index{UNIX} system and many other systems.
+
+The ideal of a parallel version of FORM is that it should execute nearly 
+any regular FORM program, whether it was written for parallelization or 
+not. And it should execute much faster on several processors than the 
+sequential version on a single processor. The performance is given by the 
+improvement factor which is the execution time of the sequential version 
+divided by the execution time of the parallel version as measured in real 
+time (not CPU time) on a computer that has no other major tasks. The ideal 
+would of course be that a computer with N processors would give an 
+improvement factor of N. It should be easy to see that this ideal cannot be 
+reached, due to the bottlenecks described above. Also the compilation takes 
+place on a single processor and the instructions of the preprocessor are 
+typically also tasks for a single thread/processor. Yet for small numbers 
+of processors one can do rather well. Many old calculations, when repeated 
+with TFORM would give improvement\index{improvement factor} factors above 
+1.7 on a dual pentium\index{pentium} machine and around 3 or a bit higher 
+on a quad opteron\index{opteron} machine. This was without modifying even a 
+single statement in the programs. Of course these numbers depend very much 
+on the type of the problem and the programming style used. As of yet there 
+is very little experience with parallel versions of FORM. Hence people will 
+have to discover what are good ways of getting the most out of their 
+computer. It is expected that there will be much progress in the coming 
+years.
+
+First we will now discuss the running of the two versions. After that we 
+will describe some common syntactic problems.
+
+%--#] Introduction : 
+%--#[ TFORM :
+
+\section{TFORM}
+\label{tform}
+
+Let us assume that the executable of TFORM\index{TFORM} is called tform. It 
+is used exactly the same way as the sequential version of FORM (named form) 
+is used with the exception of the possibilty to specify the number of 
+worker\index{worker} threads with the -w option. The command
+\begin{verbatim}
+    tform -w4 calcdia
+\end{verbatim}
+would execute the program in the file calcdia.frm, using 4 worker threads, 
+in addition to the one master thread. When the -w option is not given or 
+when only one worker thread is asked for, tform will run the whole program 
+inside the master\index{master} thread. Because tform always has some 
+overhead this is usually a little bit slower than using form. Strange 
+enough there are exceptions although this may have to do with the fact that 
+measuring the time of a program doesn't always give the same numbers.
+
+It is also possible to specify the number of worker threads in the setup 
+file, using the line
+\begin{verbatim}
+    Threads 4
+\end{verbatim}
+for 4 threads. And as with all setup parameters one can pass this 
+information also via the environment variable FORM\_threads or with the line
+\begin{verbatim}
+    #: Threads 4
+\end{verbatim}
+at the beginning of the program file.
+
+When the master passes terms to the workers, it has to signal\index{signal} 
+the workers that there is some data. In their turn, each worker has to send 
+the master a signal when it has completed its task and it is ready for 
+more. Such signals cost time. Hence it is usually best to send terms in 
+groups, called buckets\index{bucket}. The optimal number of terms in a 
+bucket depends very much on the problem and the size of the expression. 
+Bigger buckets mean less overhead in signals. If the buckets are too big 
+the workers may have to wait too much. Values between 100 and 1000 are 
+usually rather good. There is a default bucket size which is typically 
+around 500. The user can change this value in two ways: The first is with 
+the ThreadBucketSize\index{threadbucketsize} setup parameter in the 
+form.set file (or at the startup of the program file, or with the 
+FORM\_threadbucketsize environment variable) and the second is with the 
+ThreadBucketSize statement (see \ref{substathreadbucketsize}) which is a 
+declaration like Symbol or Dimension. The first terms in an expression will 
+be sent in smaller buckets to get the workers something to do as soon as 
+possible.
+
+Usually the bigger buckets give a better performance, but they suffer from 
+a nasty side-effect. Complicated terms that need much execution time have a 
+tendency to stick together. Hence there can be one bucket with most of the 
+difficult terms and at the end of the module all workers and the master 
+have to wait for one worker to finish. This can be improved with a 
+load\index{load balancing} balancing mechanism. The current version will 
+take terms from the buckets of workers that take more time than the others. 
+By default this mechanism is on, but it can be switched on or off with the 
+`on ThreadLoadBalancing\index{threadloadbalancing};' and `off 
+ThreadLoadBalancing;' statements. It can also be set as one of the setup 
+parameters in the form.set file with
+\begin{verbatim}
+    ThreadLoadBalancing OFF
+\end{verbatim}
+or
+\begin{verbatim}
+    ThreadLoadBalancing ON
+\end{verbatim}
+or at the start of the program or in the environment.
+
+The LINUX\index{LINUX} operating system tries to cache\index{cache} files 
+that are to be written to disk. Somehow, when several big files have to be 
+written it gets all confused (it is not known in what way). This means that 
+if tform produces 4 large sort files\index{file!sort} eventually the system 
+becomes intolerably slow. At one time a test program was 4.5 times slower 
+with 4 worker processors than with just the master running, even though the 
+master had a single even bigger sort file. This has been improved by having 
+the file-to-file sort of the threads changed into a 
+file-to-masterbuffers-to-combined-output. Yet the writing and subsequent 
+merging of the 4 files at the same time can be disastrous. Work is done to 
+improve this, but it may not be easy to circumvent facilities of the 
+operating system. Apparently the quality of the drivers is crucial here. 
+%There is a variable that can force FORM to make sure that the part of the 
+%file system that concerns the sort files is synchronized. This can be done 
+%with
+%\begin{verbatim}
+%    ThreadSortFileSynch ON
+%\end{verbatim}
+%or
+%\begin{verbatim}
+%    ThreadSortFileSynch OFF
+%\end{verbatim}
+%or in the setup file with the variable threadsortfilesynch to be set either 
+%on or off. Of course what can be done in the setup file can be done at the 
+%start of the program as with
+%\begin{verbatim}
+%    #: ThreadSortFileSynch on
+%\end{verbatim}
+%or in the environment.
+
+One can switch the parallel processing on or off (for the complete module) 
+at any moment in the program with the 
+statements\index{on!threads}\index{off!threads}
+\begin{verbatim}
+    On Threads;
+    Off Threads;
+\end{verbatim}
+Additionally one can switch the statistics per thread on or off with
+\begin{verbatim}
+    On ThreadStats;
+    Off ThreadStats;
+\end{verbatim}
+When the thread\index{on!threadstats}\index{on!threadstats} statistics are 
+switched off only the statistics of the master thread are printed which is 
+usually only the final statistics for each of the expressions.
+
+The timing information in the statistics is the CPU\index{CPU time} time 
+spent by the thread that prints the statistics. Hence the total CPU time 
+spent is the sum of the time of all workers and the time of the master. In 
+good running the time of the master should be the smallest number. When the 
+statistics per thread are switched off, only the statistics of the master 
+process will be printed with this `small' number. Hence it may look like 
+the program isn't progressing very much.
+
+For debugging purposes the term by term print\index{print} statement (see 
+\ref{substaprint}) is equipped with the \verb:%W: and \verb:%w: format 
+strings. The first will cause the printing of the number of the current 
+thread and the CPU-time used thusfar in that thread. The second will only 
+print the number of the current thread. The thread with the number zero is 
+the master thread. Putting a statement like
+\begin{verbatim}
+    Print +f "<%W> %t";
+\end{verbatim}
+would show which thread is processing which term and when.
+
+These are all the commands that specifically concern TFORM. When more 
+experience is gained using TFORM, more parameters and commands may become 
+available.
+
+The fact that the threads need private\index{private} data makes that TFORM 
+will use more memory than FORM. Most of the buffers are not very large, but 
+of course there are some buffers which need to be large, like the sort 
+buffers and the scratch input\index{input}/hide\index{hide} buffers. The 
+sizes that the user specifies for these buffers are for the corresponding 
+buffers of the master. The workers get each 1/N times the size for these 
+buffers, when there are N workers. In the case that makes these buffers too 
+small because of for instance MaxTermSize, the buffers may become larger.
+
+%--#] TFORM :
+%--%[ ParFORM :
+
+\section{ParFORM}
+\label{parform}
+
+This section is still to be written. The current version does not have all 
+its necessary commands running yet (as specified in the moduleoption 
+statement \ref{substamoduleoption}). Keep tuned!
+
+To be addressed:
+\begin{itemize}
+\item How to run ParFORM. Selection of processors.
+\item How ParFORM runs (like one worker per processor and the master with 
+its own processor and waiting in loops rather than working with wakup 
+signals).
+\item Special commands for controling its performance.
+\item Buffer sizes.
+\item etc.
+\end{itemize}
+
+%--%] ParFORM :
+%--#[ Some problems :
+
+\section{Some problems}
+
+Both parallel versions share a number of problems which are inherent to 
+running in an environment in which the order\index{order of terms} in which 
+terms are processed isn't deterministic\index{deterministic}. Most of these 
+problems concern \verb:$:-variables. They present a mix between private and 
+common information. Consider the code
+\begin{verbatim}
+    id  f(x?$xvar) = g(x);
+    id  ......
+    id  a^n? = b^n*h($var);
+\end{verbatim}
+Of course one could do this simple example differently, but we are 
+discussing the principle. What we have here is that each term that passes 
+the first statement will acquire its own value of \verb:$var:, to be used a 
+bit later. It is clear that if we have a common administration of 
+\verb:$:-variables we would have to `lock'\index{lock} the value for a 
+considerable amount of time, thereby spoiling much of the gains of parallel 
+processing. Hence in this case it would be best that each worker maintains 
+its own local value of \verb:$var:. But in the following example we have 
+the opposite:
+\begin{verbatim}
+    #$xmax = -1;
+    if ( count(x,1) > $xmax ) $xmax = count_(x,1);
+\end{verbatim}
+Here we collect a maximum power in the variable \verb:$xmax:. If each 
+worker would have a local value of \verb:$xmax:, the question is what to do 
+with all these local values at the end of the module. A human will see that 
+here we are collecting a maximum, but the computer cannot and should not 
+see this. Hence the general rule in parallel processing is that when there 
+are \verb:$:-variables\index{\$-variable} obtaining a value during the 
+algebraic phase of a module the entire module is run sequentially, unless 
+FORM has been helped with a moduleoption statement for each of the 
+variables involved. Hence in the last example
+\begin{verbatim}
+    ModuleOption Maximum $xmax;
+\end{verbatim}
+would tell FORM how to combine the local values in ParFORM (ParFORM 
+maintains local values of all \verb:$:-variables). In TFORM it 
+would put the value directly into the central administration, provided it 
+is bigger than the previous value. Only during the update the variable 
+would have to be locked.
+
+There are several options in the moduleoption statement:
+\begin{itemize}
+\item Maximum\index{moduleoption!maximum}: The variable must have a 
+numerical value and the maximum is collected.
+\item Minimum\index{moduleoption!minimum}: The variable must have a 
+numerical value and the minimum is collected.
+\item Sum\index{moduleoption!sum}: The variable must have a numerical value 
+and the sum is collected.
+\item Local\index{moduleoption!local}: The value will be kept privately and 
+no attempt is made to put it in the central administration, neither during 
+the execution of the module, nor at the end. If there was already a 
+variable by this name in the central administration it will keep the value 
+it had before the module started execution. At the end of the module, all 
+private values will be forgotten.
+\end{itemize}
+
+%Currently the only other way in which FORM switches automatically to its 
+%sequential mode for the entire module is when the redefine statement is 
+%detected by the compiler. The redefine statement makes FORM to change the 
+%value of a global object (a preprocessor variable) which cannot be done 
+%reliably. For this there is no solution. The best way around it is using 
+%\verb:$:-variables and preprocessor instructions. We show this in an 
+%example in which we construct the equivalent of a conditional repeat that 
+%includes a .sort instruction:
+%\begin{verbatim}
+%    #do i = 1,1
+%      statements
+%      if ( count(x,1) > 0 ) redefine i "0";
+%      .sort
+%    #enddo
+%\end{verbatim}
+%To run this in parallel, one could use
+%\begin{verbatim}
+%    #do i = 1,1
+%      #$i = 1;
+%      statements
+%      if ( count(x,1) > 0 ) $i = 0;
+%      ModuleOption minimum $i;
+%      .sort
+%      #redefine i "`$i'"
+%    #enddo
+%\end{verbatim}
+%Admitedly this isn't as simple as the redefine statement, but it works in 
+%all versions of \FORM\ starting with version 3.0.
+
+It should be noted that when a new expression is defined in its defining 
+module it starts out as a single term. Hence it cannot benefit from 
+parallelization in that module. Therefore the code
+\begin{verbatim}
+    #define MAX "200"
+    Symbols x0,...,x10;
+    Local F = (x0+...+x`MAX')^3;
+    id x1 = -x2-...-x`MAX';
+    .end
+\end{verbatim}
+will execute inside a single worker while
+\begin{verbatim}
+    #define MAX "200"
+    Symbols x0,...,x10;
+    Local F = (x0+...+x`MAX')^3;
+    .sort
+    id x1 = -x2-...-x`MAX';
+    .end
+\end{verbatim}
+will make the first expansion inside a single worker and the more costly 
+subsitution can be made in parallel. A better load\index{load balancing} 
+balancing algorithm in which at any node in the expansion tree tasks can be 
+given to idle workers would solve this problem, but due to some 
+complications this has not yet been implemented. The structure of FORM will 
+however allow such an implementation.
+%\footnote{In the year 1991 version 1 of FORM was parallelized on a 
+%computer at FNAL along these lines. It was however rather primitive and 
+%lack of access to suitable computers stopped further development at that 
+%moment.}
+
+%--#] Some problems :
+
+

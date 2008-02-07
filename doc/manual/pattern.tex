@@ -1,0 +1,254 @@
+\chapter{Pattern matching}
+\label{pattern}
+
+Substitutions\index{substitutions}\index{pattern matching} are made in FORM 
+by specifying a generic object that should be replaced by an expression. 
+This generic object is called a pattern\index{pattern}. Patterns that the 
+user may already be familiar with are the regular expressions in many 
+UNIX\index{UNIX} based systems or just a statement like \verb:ls *.frm: to 
+list only files of which the name ends in \verb:.frm:. In this case the 
+\verb:*: is called a wildcard\index{wildcard} that can take any string 
+value. In symbolic manipulation there will be wildcards also, but their 
+nature will be different. They are also indicated in a different way.
+
+In FORM wildcard variables are indicated by attaching a 
+question\index{question mark} mark (?) to the name of a variable. The type 
+of the variable indicates what type of object we are looking for. Assume 
+the following id\index{id} statements:
+\begin{verbatim}
+    Functions f,g;
+    Symbol x;
+
+    id f(g?,x) = g(x,x);
+\end{verbatim}
+In this statement g will match any function and hence all occurrences 
+of f, in which the first argument is a function and the second argument is 
+the symbol x, will match. In the right hand side the function g will be 
+substituted by whatever identity g had to assume in the left hand side to 
+make the match. Hence \verb:f(f,x): will be replaced by \verb:f(x,x):.
+
+In general function wildcards\index{wildcard!function} can only match 
+functions. Even though tensors are special functions, regular function 
+wildcards cannot match tensors, and tensor wildcards cannot match 
+functions. However commuting\index{commuting} function wildcards can match 
+noncommuting\index{noncommuting} functions {\sl et vise versa}.
+
+Index\index{wildcard!index} wildcards can only match indices. The 
+dimension of the indices is not relevant. Hence:
+\begin{verbatim}
+    id f(mu?,mu?) = 4;
+\end{verbatim}
+would match both \verb:f(ka,ka): and \verb:f(2,2):. We will see later 
+how to be more selective about such matches.
+
+When the same wildcard occurs more than once in a pattern, it should be 
+matched by the same object in all its occurrences. Hence the above pattern 
+would not match \verb:f(mu,nu):.
+
+There is one complication concerning the above rule of index wildcards only 
+matching indices. FORM writes contractions with vectors in a special 
+shorthand notation called Schoonschip\index{Schoonschip} notation. Hence 
+\verb:f(mu)*p(mu): becomes \verb:f(p):. This means that the substitution
+\begin{verbatim}
+    id f(mu?)*g(nu?) = fg(mu,nu);
+\end{verbatim}
+should also replace the term \verb:f(p)*g(q): by \verb:fg(p,q):. In this 
+case it looks like the wildcard indices matched the vectors. This is 
+however not the case, because if we take the previous pattern (with the 
+\verb:f(mu?,mu?):), it is not going to match the term \verb:f(p,p):, 
+because this term should be read as something of the type
+\verb:f(mu,nu)*p(mu)*p(nu):
+and that term does not fit the pattern \verb:f(mu?,mu?):.
+
+Vector\index{wildcard!vector} wildcards can match vectors, but they can 
+also match vector-like expressions in function arguments. A vector-like 
+expression is an expression in which all terms contain one single vector 
+without indices, possibly multiplied by other objects like coefficients, 
+functions or symbols. Hence
+\begin{verbatim}
+    id f(p?) = p.p;
+\end{verbatim}
+would match \verb:f(q):, \verb:f(2*q-r): and \verb:f(a*q+f(x)*r):, if p, q 
+and r are vectors, and a and x are symbols, and f is a function. It would 
+not match \verb:f(x): and neither would it match \verb:f(q*r):, nor 
+\verb:f(a*q+x):.
+
+Wildcard\index{wildcard!symbol} symbols are the most flexible objects. They 
+can match symbols, numbers and expressions that do not contain loose 
+indices or vectors without indices. These last objects are called 
+scalar\index{scalar objects} objects. Hence wildcard symbols can match all 
+scalar objects. In
+\begin{verbatim}
+    id x^n? = x^(n+1)/(n+1);
+\end{verbatim}
+the wildcard symbol n would normally match a numerical integer power. In
+\begin{verbatim}
+    id f(x?) = x^2;
+\end{verbatim}
+there would be a match with \verb:f(y):, with \verb:f(1+2*y): and with 
+\verb:f(p.p):, but there would not be a match with \verb:f(p): if p is a 
+vector.
+
+There is one extra type of wildcards. This type is rather special. It 
+refers to groups of function
+arguments\index{wildcard!argument field}\index{argument field wildcard}. 
+The number of arguments is not specified. These variables are indicated by 
+a question mark followed by a name (just the opposite of the other wildcard 
+variables), and in the right hand side they are also written with the 
+leading question mark:
+\begin{verbatim}
+    id f(?name) = g(1,?name);
+\end{verbatim}
+In this statement\index{?name} all occurrences of f with any number of 
+arguments (including no arguments) will match. Hence \verb:f(mu,nu): will 
+be replaced by \verb:g(1,mu,nu):. In the case that f is a regular function 
+and g is a tensor, it is conceivable that the arguments in \verb:?name: 
+will not fit inside a tensor. For instance \verb:f(x):, with x a symbol, 
+would match and FORM would try to put the symbol inside the tensor g. This 
+would result in a runtime error. In general FORM will only accept arguments 
+that are indices or single vectors for a substitution into a tensor. The 
+object \verb:?name: is called an {\bf argument field wildcard}.
+
+One should realize that the use of multiple argument field wildcards can 
+make the pattern matching slow.
+\begin{verbatim}
+    id f(?a,p1?,?b,p2?,?c,p3?,?d)*g(?e,p3?,?f,p1?,?g,p2?,?h) = ....
+\end{verbatim}
+may involve considerable numbers of tries, especially when there are many 
+occurrences of f and g in a term. One should be very careful with this.
+ 
+A complication is the pattern matching in functions with symmetry 
+properties. In principle FORM has to try all possible permutations before 
+it can conclude that a match does not occur. This can become rather time 
+consuming when many wildcards are involved. FORM has a number of tricks 
+built in, in an attempt to speed this up, but it is clear that for many 
+cases these tricks are not enough. This type of pattern matching is one of 
+the weakest aspects of `artificial intelligence' in general. It is hoped 
+that in future versions it can be improved. For the moment the practical 
+consequence is that argument field wildcards cannot be used in symmetric 
+and antisymmetric functions. If one needs to make a generic replacement in 
+a symmetric function one cannot use
+\begin{verbatim}
+    CFunction f(symmetric),g(symmetric);
+    id  f(?a) = ....;
+\end{verbatim}
+but one could try something like
+\begin{verbatim}
+    CFunction f(symmetric),ff,g(symmetric);
+    id  f(x1?,...,x5?) = ff(x1,...,x5);
+    id  ff(?a) = ...;
+    id  ff(?a) = f(?a);
+\end{verbatim}
+if f has for instance 5 arguments. If different numbers of arguments are 
+involved, one may need more than one statement here or a statement with the 
+replace\_\index{replace\_} function:
+\begin{verbatim}
+    Multiply replace_(f,ff);
+\end{verbatim}
+It just shows that one should at times be a bit careful with overuse of 
+(anti)symmetric functions. Cyclic functions do not have this restriction.
+
+When there are various possibilities for a match, FORM will just take the 
+first one it encounters. Because it is not fixed how FORM searches for 
+matches (in future versions the order of trying may be changed without 
+notice) one should try to avoid ambiguities\index{ambiguity} as in
+\begin{verbatim}
+    id f(?a,?b) = g(?a)*h(?b);
+\end{verbatim}
+Of course the current search method is fully consistent (and starts with 
+all arguments in \verb:?a: and none in \verb:?b: etc, but a future pattern 
+matcher may do it in a different order.
+
+When two argument field wildcards in the left hand side have the same name, 
+a match will only occur, when they match the same objects. Hence
+\begin{verbatim}
+    id f(?a,?a) = g(?a);
+\end{verbatim}
+will match \verb:f(a,b,a,b): or just \verb:f: (in which case \verb:?a: will 
+have zero arguments), but it will not match \verb:f(b,b,b):.
+
+Sometimes it is useful when a search can be restricted to a limited set of 
+objects. For this FORM knows the concept of sets\index{set}. If the name of 
+a set is attached after the question mark, this is an indication for FORM 
+to look only for matches in which the wildcard becomes one of the members 
+of the set:
+\begin{verbatim}
+    Symbols a,a1,a2,a3,b,c;
+    Set aa:a1,a2,a3;
+
+    id f(a?aa) = ...
+\end{verbatim}
+would match \verb:f(a1): but not \verb:f(b):. Sets can also be defined 
+dynamically\index{set!dynamical} by enclosing the elements between curly 
+brackets\index{bracket!curly} as in:
+\begin{verbatim}
+    Symbols a,a1,a2,a3,b,c;
+
+    id f(a?{a1,a2,a3}) = ...
+\end{verbatim}
+Sets\index{Set of symbols} of symbols can contain (small integer) numbers 
+as well. Similarly sets\index{set of indices} of indices can contain fixed 
+indices (positive numbers less than the value of fixindex\index{fixindex} 
+(see the chapter on the setup \ref{setup}). This means that some sets can 
+be ambiguous\index{set!ambiguous} in their nature.
+
+Sometimes sets\index{sets!array} can be used as some type of 
+array\index{array}. In the case of
+\begin{verbatim}
+    Symbols a,a1,a2,a3,b,c,n;
+    Set aa:a1,a2,a3;
+
+    id f(a?aa[n]) = ...
+\end{verbatim}
+not only does `a' have to be an element of the set aa, but if it is an 
+element of that set, n will become the number of the element that has been 
+matched. Hence for \verb:f(a2): the wildcard a would become \verb:a2: and 
+the wildcard n would become 2. These objects can be used in the 
+righthandside. One can also use sets in the righthandside with an index 
+like the n of the previous example:
+\begin{verbatim}
+    Symbols a,a1,a2,a3,b1,b2,b3,c,n;
+    Functions f,g1,g2,g3;
+    Set aa:a1,a2,a3;
+    Set bb:b1,b2,b3;
+    Set gg:g1,g2,g3;
+
+    id f(a?aa[n]) = gg[n](bb[n]);
+\end{verbatim}
+which would replace \verb:f(a2): by \verb:g2(b2):. One cannot do 
+arithmetic\index{arithmetic} with these number of the array element. 
+Constructions like \verb:bb[n+1]: are not allowed.
+
+There is one more mechanism by which the array nature of sets can be used. 
+In the statement (declarations as before)
+\begin{verbatim}
+    id f(a?aa?bb) = a*f(a);
+\end{verbatim}
+a will have to be an element of the set aa, but after the matching it takes 
+the identity of the corresponding\index{set!corresponding element} element of 
+the set bb. Hence \verb:f(a2): becomes after this statement 
+\verb:b2*f(b2):.
+
+Wildcards can also give their value directly to 
+\$-variables\index{wildcard!\$-variable}\index{\$-variable} (see the chapter of the \$-variables 
+\ref{dollars}). If a \$-variable is attached to a wildcard (if there is a 
+set restriction, it should be after the set) the \$-variable will obtain 
+the same contents as the wildcard, provided a match occurs. If there is 
+more than one match, the last match will be in the \$-variable.
+\begin{verbatim}
+    id f(a?$w) = f(a);
+\end{verbatim}
+will put the match of a in \verb:$w:. Hence in the case of \verb:f(a2): the 
+\$-variable will have the value \verb:a2:. In the case of 
+\verb:f(a2)*f(a3): the eventual value of \verb:$w: depends on the order in 
+which FORM does the matching. This is not specified and it would not be 
+good strategy to make programs that will depend on it. A future pattern 
+matcher might do it differently! But one could do things like
+\begin{verbatim}
+    while ( match(f(a?$w)) );
+        id f($w) = ....
+        id g($w) = ....
+    endwhile;
+\end{verbatim}
+just to make sure with which match one is working.
+

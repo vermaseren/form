@@ -1,0 +1,1 @@
+SUBDIRS = doxygen manual

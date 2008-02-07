@@ -1,0 +1,4790 @@
+
+\chapter{Statements}
+\label{statements}
+
+%--#[ abrackets :
+
+\section{abrackets, antibrackets}
+\label{substaabrackets}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & ab[rackets][+][-] {\tt<}list of names{\tt>}; \\
+& antib[rackets][+][-] {\tt<}list of names{\tt>}; \\
+See also & bracket (\ref{substabracket}) and the chapter on brackets 
+     (\ref{brackets})
+\end{tabular} \vspace{4mm}
+
+\noindent
+This statement\index{abrackets}\index{antibrackets} does the opposite of 
+the bracket statement (see \ref{substabracket}). In the bracket statement 
+the variables that are mentioned are placed outside brackets and inside the 
+brackets are all other objects. In the antibracket statement the variables 
+in the list are the only objects that are not placed outside the brackets. 
+For the rest of the syntax, see the bracket statement (section 
+\ref{substabracket}).
+\vspace{10mm}
+
+%--#] abrackets : 
+%--#[ also :
+ 
+\section{also}
+\label{substaalso}
+
+\noindent \begin{tabular}{ll}
+Type & Executable Statement \\
+Syntax & a[lso] [options] {\tt<}pattern{\tt>} = 
+         {\tt<}expression{\tt>}; \\
+See also & identify (\ref{substaidentify}), idold (\ref{substaidold})
+\end{tabular} \vspace{4mm}
+
+\noindent The also\index{also} statement should follow either an 
+id\index{id} statement or another also statement. The action is that the 
+pattern matching in the also statement takes place immediately after the 
+pattern matching of the previous id statement (or also statement) and after 
+possible matching patterns have been removed, but before the r.h.s. 
+expressions are inserted. It is identical to the idold statement (see 
+\ref{substaidold}). Example:
+\begin{verbatim}
+    id    x = cosphi*x-sinphi*y;
+    also  y = sinphi*x+cosphi*y;
+\end{verbatim}
+
+\noindent The options are explained in the section on the id statement (see 
+\ref{substaidentify}). \vspace{10mm}
+
+%--#] also : 
+%--#[ antisymmetrize :
+
+\section{antisymmetrize}
+\label{substaantisymmetrize}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & an[tisymmetrize] \verb:{:{\tt<}name of function/tensor{\tt>}
+         [{\tt<}argument specifications{\tt>}];\verb:}: \\
+See also & symmetrize (\ref{substasymmetrize}), cyclesymmetrize 
+(\ref{substacyclesymmetrize}), rcyclesymmetrize (\ref{substarcyclesymmetrize})
+\end{tabular} \vspace{4mm}
+
+\noindent The argument specifications are explained in the section on the 
+symmetrize statements (see \ref{substasymmetrize}). \vspace{4mm}
+
+\noindent The action of this statement\index{antisymmetrize} is to 
+anti-symmetrize the (specified) arguments of the functions that are 
+mentioned. This means that the arguments are brought to `natural order' in 
+the notation of FORM and each exchange of arguments or groups of arguments 
+results in a minus sign in the coefficient of the term. The `natural order' 
+may depend on the order of declaration of the variables. If two arguments 
+or groups of arguments that are part in the anti-symmetrization are 
+identical, the function is replaced by zero. \vspace{10mm}
+
+%--#] antisymmetrize : 
+%--#[ apply :
+
+\section{apply}
+\label{substaapply}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & apply ["{\tt<}tablename(s){\tt>}"];
+\\ See also & tablebases (\ref{tablebase}), apply (\ref{tblapply})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{apply} is explained in the chapter on 
+tablebases.\vspace{10mm}
+
+%--#] apply : 
+%--#[ argexplode :
+
+\section{argexplode}
+\label{substaargexplode}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & argexplode [{\tt<}list of functions{\tt>}] \\
+See also & argimplode (\ref{substaargimplode})
+\end{tabular} \vspace{4mm}
+
+\noindent See the description of the ArgImplode~\ref{substaargimplode} 
+statement.
+\vspace{10mm}
+
+%--#] argexplode : 
+%--#[ argimplode :
+
+\section{argimplode}
+\label{substaargimplode}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & argimplode [{\tt<}list of functions{\tt>}] \\
+See also & argexplode (\ref{substaargexplode})
+\end{tabular} \vspace{4mm}
+
+\noindent This is a rather specialized statement. It converts one notation 
+of indices, used for harmonic sums\index{sums!harmonic}\index{harmonic 
+sums}, harmonic 
+polylogarithms\index{polylogarithms!harmonic}\index{harmonic 
+polylogarithms} and multiple zeta values\index{multiple zeta values} into 
+its alternative notation. The two notations are:
+\begin{verbatim}
+   Z(0,0,0,1,0,0,-1)
+   Z(4,-3)
+\end{verbatim}
+In the first notation the indices can only be 0, 1 and -1. In the second 
+notation there can be no zeroes. The `ArgImplode,Z;' 
+statement\index{argimplode} would be 
+equivalent to the statement
+\begin{verbatim}
+   repeat id Z(?a,0,x?!{0,0},?b) = Z(?a,x+sig_(x),?b);
+\end{verbatim}
+and takes one from the first notation to the second. The `ArgExplode,Z;' 
+statement\index{argexplode} is equivalent to the statement
+\begin{verbatim}
+   repeat id Z(?a,0,x?!{1,0,-1},?b) = Z(?a,0,x-sig_(x),?b);
+\end{verbatim}
+and takes one from the second notation to the first. The reason that these 
+statements have been built in lies in the fact that for many indices the 
+repeat statements started to become very time-consuming.
+
+\noindent For the harmonic sums, the harmonic polylogarithms and the 
+multiple zeta values one can use the summer6 and the harmpol packages in 
+the FORM distribution. They are described in the papers
+
+J.~A.~M. Vermaseren, {\it Harmonic sums, Mellin transforms and integrals},
+  {\em Int. J. Mod. Phys.} {\bf A14} (1999) 2037,
+  http://arxiv.org/abs/hep-ph/9806280.
+
+E.~Remiddi and J.~A.~M. Vermaseren, {\it Harmonic polylogarithms},  {\em 
+Int. J. Mod. Phys.} {\bf A15} (2000) 725,
+  http://arxiv.org/abs/hep-ph/9905237.
+\vspace{10mm}
+
+%--#] argimplode : 
+%--#[ argument :
+
+\section{argument}
+\label{substaargument}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & argument [{\tt<}argument specifications{\tt>}] \\ &
+    \ \ \ \ \ \ \ \ \ \ \ \
+ \verb:{:{\tt<}name of function/set{\tt>}
+[{\tt<}argument specifications{\tt>}]\verb:}:; \\
+See also & endargument (\ref{substaendargument})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement starts an argument\index{argument} 
+environment\index{environment!argument}. Such an environment is terminated 
+by an endargument statement (see \ref{substaendargument}). The statements 
+between the argument and the endargument\index{endargument} statements will 
+be applied only to the function arguments as specified by the remaining 
+information in the argument statement. This information is given by:
+\begin{itemize}
+\item   No further information: the statements are applied to all arguments 
+of all functions.
+\item   A series of numbers: the statements are applied to the given 
+arguments of all functions.
+\item   A function name (or a set of functions), possibly followed by a 
+series of numbers: the statements are applied to the numbered arguments of 
+the function specified. If a set of functions was specified, all the 
+functions in the set will be taken. If no numbers are specified, all 
+arguments of the function (or elements of the set) are taken.
+\end{itemize}
+The combination of a function (or set) possibly followed by numbers of 
+arguments, can occur as many times as needed. The generic numbers of 
+arguments that refer to all functions work in addition to the numbers 
+specified for individual functions. Example\vspace{1mm}
+\begin{verbatim}
+   Argument 2,f,1,{f,f1},3,4;
+\end{verbatim}
+This specifies the second argument of all functions. In addition the first 
+argument of \verb:f: will be taken and then also the third and fourth 
+arguments of \verb:f: and \verb:f1: will be taken. \vspace{4mm}
+
+\noindent Argument/endargument constructions can be nested. \vspace{10mm}
+
+%--#] argument : 
+%--#[ autodeclare :
+
+\section{auto, autodeclare}
+\label{substaautodeclare}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & autodeclare {\tt<}variable type{\tt>} {\tt<}list of variables to be declared{\tt>}; \\
+       & auto {\tt<}variable type{\tt>} {\tt<}list of variables to be declared{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent The variable\index{auto}\index{autodeclare} types are 
+\vspace{1mm}
+
+\lefttabitem{s[ymbol]}
+\tabitem{Declaration of symbols\index{symbols}. For options see \ref{substasymbols}.}
+
+\lefttabitem{v[ector]}
+\tabitem{Declaration of vectors\index{vectors}. For options see \ref{substavectors}.}
+
+\lefttabitem{i[ndex]}
+\tabitem{Declaration of indices\index{index}. For options see \ref{substaindex}.}
+
+\lefttabitem{i[ndices]}
+\tabitem{Declaration of indices\index{indices}. For options see \ref{substaindex}.}
+
+\lefttabitem{f[unctions]}
+\tabitem{Declaration of noncommuting\index{noncommuting} 
+functions\index{functions!noncommuting}. For options see 
+\ref{substanfunctions}.}
+
+\lefttabitem{nf[unctions]}
+\tabitem{Declaration of noncommuting functions. For options see 
+\ref{substanfunctions}.}
+
+\lefttabitem{cf[unctions]}
+\tabitem{Declaration of commuting\index{commuting} 
+functions\index{functions!commuting}. For options see 
+\ref{substacfunctions}.}
+
+\lefttabitem{co[mmuting]}
+\tabitem{Declaration of commuting functions. For options see 
+\ref{substacfunctions}.}
+
+\lefttabitem{t[ensors]}
+\tabitem{Declaration of commuting tensors\index{tensors!commuting}. For options see 
+\ref{substatensors}.}
+
+\lefttabitem{nt[ensors]}
+\tabitem{Declaration of noncommuting tensors\index{tensors!noncommuting}. For options see 
+\ref{substantensors}.}
+
+\lefttabitem{ct[ensors]}
+\tabitem{Declaration of commuting tensors\index{tensors!commuting}. For options see 
+\ref{substactensors}.}
+
+\noindent The action of the autodeclare statement is to set a default for 
+variable types. In a statement of the type
+\begin{verbatim}
+   AutoDeclare Symbol a,bc,def;
+\end{verbatim}
+all undeclared variables of which the name starts with the character a, the 
+string bc or the string def will be interpreted as symbols and entered in 
+the name tables as such. In the case there are two statements as in
+\begin{verbatim}
+   AutoDeclare CFunction b,d;
+   AutoDeclare Symbol a,bc,def;
+\end{verbatim}
+all previously undeclared variables of which the name starts with a, bc or 
+def will be declared as symbols. All other previously undeclared variables 
+of which the name starts with a b or a d will be declared as commuting 
+functions. This is independent of the order of the autodeclare statements. 
+{\FORM} starts looking for the most detailed matches 
+first. Hence the variable defi will match with the string def first.
+\vspace{4mm}
+
+\noindent It is also allowed to use the properties of the various variables 
+in the autodeclare statement:
+\begin{verbatim}
+   AutoDeclare Index i=4,i3=3,i5=5;
+\end{verbatim}
+This declares all previously undeclared variables of which the name starts 
+with an i to be four dimensional indices, unless their names start with i3 in 
+which case they will be three dimensional indices, or their names start 
+with i5 in which case they will be five dimensional indices. \vspace{10mm}
+
+%--#] autodeclare : 
+%--#[ bracket :
+
+\section{bracket}
+\label{substabracket}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & b[rackets][+][-] {\tt<}list of names{\tt>}; \\
+See also & antibracket (\ref{substaabrackets}), keep (\ref{substakeep}),
+    collect(\ref{substacollect}) and the chapter on brackets 
+     (\ref{brackets})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement causes the output to be reorganized in such a way 
+that all objects in the `list of names' are placed outside 
+brackets\index{bracket} and all remaining objects inside 
+brackets\index{brackets}. This grouping will remain till the next time that 
+the expression is active and is being manipulated. Hence the brackets can 
+survive skip (see \ref{substaskip}), hide (see \ref{substahide}) and even 
+save (see \ref{substasave}) and load (see \ref{substaload}) statements. The 
+bracket information can be used by the collect (see \ref{substacollect}) 
+and keep (see \ref{substakeep}) statements, as well in r.h.s. expressions 
+when the contents of individual brackets of an expression can be picked up 
+(see \ref{brackets}). \vspace{4mm}
+
+\noindent The list of names can contain names of symbols, vectors, 
+functions and tensors. In addition it can contain dotproducts. There should 
+be only one bracket or antibracket (see \ref{substaabrackets}) statement 
+in each module. If there is more than one, only the last one has an effect. 
+\vspace{4mm}
+
+\noindent The presense of a $+$ or $-$ after the bracket (or anti bracket) 
+refers to potential indexing of the brackets\index{brackets!indexing}. 
+Usually {\FORM} has the information inside the terms in an expression. If 
+it needs to search for a particular bracket it does so by starting at the 
+beginning of that expression. This can be slow. If one likes to access 
+individual brackets, it may be faster to tell {\FORM} to make an index by 
+putting the $+$ after the bracket or antibracket keyword. For more 
+information, see the chapter on brackets (see \ref{brackets}). A $-$ 
+indicates that no index should be made. Currently this is the default and 
+hence there is no need to use this option. It is present just in case the 
+default might be changed in a future version of {\FORM} (in which {\FORM} 
+might for instance try to determine by itself what seems best. This option 
+exists for case that the user would like to overrule such a mechanism). 
+\vspace{4mm}
+
+\noindent See also the antibracket statement in \ref{substaabrackets}.
+\vspace{10mm}
+
+%--#] bracket : 
+%--#[ cfunctions :
+
+\section{cfunctions}
+\label{substacfunctions}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & c[functions] {\tt<}list of functions to be declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), nfunctions (\ref{substanfunctions})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement declares commuting\index{commuting} 
+functions\index{functions!commuting}. The name of a 
+function can be followed by some information that specifies additional 
+properties of the preceeding function. These can be (name indicates the 
+name of the function to be declared): \vspace{4mm}
+
+\leftvitem{4.1cm}{name{\hash}r}
+\rightvitem{12cm}{The function is considered to be a real\index{real} function (default).}
+
+\leftvitem{4.1cm}{name{\hash}c}
+\rightvitem{12cm}{The function is considered to be a complex\index{complex} function. This means 
+that internally two spaces are reserved. One for the variable name and one 
+for its complex conjugate name{\hash}.}
+
+\leftvitem{4.1cm}{name{\hash}i}
+\rightvitem{12cm}{The function is considered to be imaginary\index{imaginary}.}
+
+\leftvitem{4.1cm}{name(s[ymmetric])}
+\rightvitem{12cm}{The function is totally symmetric\index{symmetric}. This means that during 
+normalization {\FORM} will order the arguments according to its internal 
+notion of order by trying permutations. The result will depend on the order 
+of declaration of variables.}
+
+\leftvitem{4.1cm}{name(a[ntisymmetric])}
+\rightvitem{12cm}{The function is totally antisymmetric\index{antisymmetric}. This means that 
+during normalization {\FORM} will order the arguments according to its 
+internal notion of order and if the resulting permutation of arguments is 
+odd the coefficient of the term will change sign. The order will depend on 
+the order of declaration of variables.}
+
+\leftvitem{4.1cm}{name(c[yclesymmetric])}
+\rightvitem{12cm}{The function is cycle\index{cycle symmetric} symmetric in 
+all its arguments. This means that during normalization {\FORM} will order 
+the arguments according to its internal notion of order by trying cyclic 
+permutations. The result will depend on the order of declaration of 
+variables.}
+
+\leftvitem{4.1cm}{name(r[cyclesymmetric)
+
+name(r[cyclic])
+
+name(r[eversecyclic])}
+\rightvitem{12cm}{The function is reverse\index{reverse cycle symmetric} 
+cycle symmetric in all its arguments. This means that during normalization 
+{\FORM} will order the arguments according to its internal notion of order 
+by trying cyclic permutations and/or a complete reverse order of all 
+arguments. The result will depend on the order of declaration of 
+variables.}
+
+\noindent The complexity properties and the symmetric properties can be 
+combined. In that case the complexity properties should come first as in
+\begin{verbatim}
+    CFunction f1#i(antisymmetric);
+\end{verbatim}
+\vspace{10mm}
+
+%--#] cfunctions : 
+%--#[ chainin :
+ 
+\section{chainin}
+\label{substachainin}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & Chainin,name of function;
+\\ See also & chainout (\ref{substachainout})
+\end{tabular} \vspace{4mm}
+
+\noindent Has\index{chainin} the same effect as the statement
+\begin{verbatim}
+   repeat id f(?a)*f(?b) = f(?a,?b);
+\end{verbatim}
+if f is the name of the function specified. The chainin statement is just a 
+faster shortcut. \vspace{10mm}
+
+%--#] chainin : 
+%--#[ chainout :
+ 
+\section{chainout}
+\label{substachainout}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & Chainout,name of function;
+\\ See also & chainin (\ref{substachainin})
+\end{tabular} \vspace{4mm}
+
+\noindent Has\index{chainout} the same effect as the statement
+\begin{verbatim}
+   repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
+\end{verbatim}
+if f is the name of the function specified. The chainout statement is just a 
+much faster shortcut. \vspace{10mm}
+
+%--#] chainout : 
+%--#[ chisholm :
+
+\section{chisholm}
+\label{substachisholm}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & chisholm [options] {\tt<}spinline indices{\tt>}; \\
+See also & trace4 (\ref{substatrace}) and the chapter on gamma algebra 
+(\ref{gammaalgebra})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{chisholm} applies the identity
+\begin{eqnarray}
+    \gamma_a\gamma_\mu\gamma_b \Tr[\gamma_\mu S] & = &
+         2\gamma_a( S + S^R ) \gamma_b  \nonumber
+\end{eqnarray}
+in order to contract traces. $S$ is here a string of
+gamma\index{gamma matrices} matrices and $S^R$ is the reverse string. This 
+identity is particularly useful when the matrices $\gamma_6 = 1+\gamma_5$ 
+and/or $\gamma_7 = 1-\gamma_5$ are involved. The spinline\index{spinline} index refers to 
+which trace should be eliminated this way. The options are \vspace{1mm}
+ 
+\lefttabitem{symmetrize}
+\tabitem{If there is more than one contraction with other gamma matrices, 
+the answer will be the sum of the various contractions, divided by the 
+number of different contractions. This will often result in a minimization 
+of the number of $\gamma_5$ matrices left in the final results.}
+
+\lefttabitem{nosymmetrize}
+\tabitem{The first contraction encountered will be taken. No attempt is 
+made to optimize with respect to the number of $\gamma_5$ matrices left.}
+
+\noindent IMPORTANT: the above identity is only valid in 4 dimensions. For 
+more details, see the chapter on gamma\index{gamma algebra} algebra 
+\ref{gammaalgebra}. \vspace{10mm}
+
+%--#] chisholm : 
+%--#[ cleartable :
+
+\section{cleartable}
+\label{substacleartable}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & ClearTable [{\tt<}list of tables{\tt>}]
+\end{tabular} \vspace{4mm}
+
+\noindent This statement clears the tables that are mentioned. Sometimes 
+sparse tables can take so much space that there is no room for new 
+elements, while old elements are not needed any longer. In that case one 
+can clear the table and start all over again with filling it.
+\vspace{10mm}
+
+%--#] cleartable : 
+%--#[ collect :
+
+\section{collect}
+\label{substacollect}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & collect {\tt<}name of function{\tt>}; \\
+       & collect {\tt<}name of function{\tt>} 
+        {\tt<}name of other function{\tt>}; \\
+       & collect {\tt<}name of function{\tt>} 
+        {\tt<}name of other function{\tt>} {\tt<}percentage{\tt>};
+\\ See also & bracket (\ref{substabracket}), antibracket 
+     (\ref{substaabrackets}) and the chapter on brackets 
+     (\ref{brackets})
+\end{tabular} \vspace{4mm}
+
+\noindent Upon processing\index{collect} the expressions (hence expressions 
+in hide as well as skipped expressions do not take part in this) the 
+contents of the brackets\index{brackets} (if there was a bracket or 
+antibracket\index{antibracket} statement in the preceeding module) are 
+collected and put inside the argument of the named function. Hence if the 
+expression \verb:F: is given by
+\begin{verbatim}
+   F =
+      a*(b^2+c)
+    + a^2*(b+6)
+    + b^3 + c*b + 12;
+\end{verbatim}
+the statement
+\begin{verbatim}
+   Collect cfun;
+\end{verbatim}
+will change \verb:F: into
+\begin{verbatim}
+   F = a*cfun(b^2+c)+a^2*cfun(b+6)+cfun(b^3+c*b+12);
+\end{verbatim}
+The major complication\index{complication} occurs if the content of a 
+bracket is so long that it will not fit inside a single term. The maximum 
+size of a term is limited by the setup parameter 
+maxtermsize\index{maxtermsize} (see \ref{setupmaxtermsize}). If this size 
+is exceed {\FORM} will split the bracket contents over more than one term, 
+in each of which it will be inside the named function. It will issue a 
+warning that it has done so. \vspace{4mm}
+
+\noindent If a second function is specified (the 
+alternative\index{alternative} collect function) and if a bracket takes 
+more space than can be put inside a single term, the bracket contents will 
+be split over more than one term, in each of which it will be inside the 
+alternative collect function. In this case there is no need for a 
+warning\index{warning} 
+as the user can easily check whether this has occurred by checking whether 
+the alternative function is present in the expression. \vspace{4mm}
+
+\noindent If additionally a percentage\index{percentage} is specified (an 
+integer in the range of 1 to 99) this determines how big the argument must 
+be as compared to MaxTermSize (see chapter \ref{setup} on the setup) before 
+use is made of the alternate collect function. \vspace{10mm}
+
+%--#] collect : 
+%--#[ commuting :
+ 
+\section{commuting}
+\label{substacommuting}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & co[mmuting] {\tt<}list of functions to be declared{\tt>}; \\
+See also & cfunctions (\ref{substacfunctions}), functions (\ref{substafunctions})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{commuting} is completely identical to the 
+cfunction statement (see \ref{substacfunctions}). \vspace{10mm}
+
+%--#] commuting : 
+%--#[ compress :
+
+\section{compress}
+\label{substacompress}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & comp[ress] {\tt<}on/off{\tt>};
+\\ See also & on (\ref{substaon}), off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{compress} is obsolete. The user should try 
+to use the compress option of the on (see \ref{substaon}) or the off (see 
+\ref{substaoff}) statements. \vspace{10mm}
+
+%--#] compress : 
+%--#[ contract :
+
+\section{contract}
+\label{substacontract}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & contract [{\tt<}argument specifications{\tt>}];
+\end{tabular} \vspace{4mm}
+
+\noindent Statement\index{contract} causes the contraction of pairs of 
+Levi-Civita\index{Levi-Civita} tensors\index{tensor!Levi-Civita} \verb:e_: 
+(see also \ref{functions}) into combinations of Kronecker\index{Kronecker} 
+delta's\index{delta!Kronecker}. If there are contracted indices, and if 
+their dimension is identical to the number of indices of the Levi-Civita 
+tensors, the regular shortcuts are taken. If there are contracted indices 
+with a different dimension, the contraction treats these indices 
+temporarily as different and lets the contraction be ruled by the 
+contraction mechanism of the Kronecker delta's. In practise this means that 
+the dimension will enter via $\delta^{\mu}_{\mu} \rightarrow {\rm 
+dim}(\mu)$. \vspace{4mm}
+
+\noindent In {\FORM} there are no upper\index{upper} and lower\index{lower} 
+indices\index{indices!lower}\index{indices!upper}. Of course the user can 
+emulate those. The contract statement always assumes that there is a proper 
+distribution of upper and lower indices if the user decided to work in a 
+metric in which this makes a difference. Note however that due to the fact 
+that the Levi-Civita tensor is considered to be imaginary, there is usually 
+no need to do anything special. This is explained in the chapter on 
+functions (see \ref{functions}). \vspace{4mm}
+
+\noindent There are several options to control which contractions will be 
+taken. They are \vspace{1mm}
+
+\lefttabitem{Contract;}
+\tabitem{Here only a single pair of Levi-Civita tensors will be contracted. 
+The pair that is selected by {\FORM} is the pair that will give the smallest 
+number of terms in their contraction.}
+
+\leftvitem{4cm}{Contract {\tt <}number{\tt>};}
+\rightvitem{12cm}{This tells {\FORM} to keep contracting pairs of Levi-Civita tensors 
+until there are {\tt <}number{\tt>} or {\tt <}number{\tt>}$+1$ 
+Levi-Civita tensors left. A common example is
+
+Contract 0;
+
+which will contract as many pairs as possible.}
+
+\leftvitem{4cm}{Contract:{\tt<}number{\tt>};}
+\rightvitem{12cm}{Here the number indicates the number of indices in the 
+Levi-Civita tensors to be contracted. Only a single pair will be 
+contracted and it will be the pair that gives the smallest number of 
+terms.}
+
+\leftvitem{4cm}{Contract:{\tt<}number{\tt>}
+
+\hfill {\tt<}number{\tt>};}
+\rightvitem{12cm}{The First number refers to the number of indices in the 
+Levi-Civita tensors to be contracted. The second number refers to the 
+number of Levi-Civita tensors that should be left (if possible) after 
+contraction.}
+
+\noindent Note that the order in which {\FORM} selects the contractions is by 
+looking at which pair will give the smallest number of terms. This means 
+that usually the largest buildup of terms is at the end. This is not always 
+the case, because there can be a complicated network of contracted indices. 
+\vspace{10mm}
+
+%--#] contract : 
+%--#[ ctable :
+
+\section{ctable}
+\label{substactable}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & ctable {\tt<}options{\tt>} {\tt<}table to be 
+declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), table (\ref{substatable}),
+        ntable (\ref{substantable})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement declares a commuting\index{commuting} 
+table\index{table!commuting} and is identical to the table command (see 
+\ref{substatable}) which has the commuting property as its default. 
+\vspace{10mm}
+
+%--#] ctable : 
+%--#[ ctensors :
+ 
+\section{ctensors}
+\label{substactensors}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & ct[ensors] {\tt<}list of tensors to be declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), tensors 
+        (\ref{substatensors}), ntensors (\ref{substantensors})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement declares commuting\index{commuting} 
+tensors\index{tensor!commuting}. It is equal to the tensor statement (see 
+\ref{substatensors}) which has the commuting property as its default. 
+\vspace{10mm}
+
+%--#] ctensors : 
+%--#[ cyclesymmetrize :
+
+\section{cyclesymmetrize}
+\label{substacyclesymmetrize}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & cy[clesymmetrize] \verb:{:{\tt<}name of function/tensor{\tt>}
+         [{\tt<}argument specifications{\tt>}];\verb:}: \\
+See also & symmetrize (\ref{substasymmetrize}), antisymmetrize 
+(\ref{substaantisymmetrize}), rcyclesymmetrize (\ref{substarcyclesymmetrize})
+\end{tabular} \vspace{4mm}
+
+\noindent The argument\index{cyclesymmetrize} specifications are explained 
+in the section on the symmetrize statements (see \ref{substasymmetrize}). 
+\vspace{4mm}
+
+\noindent The action of this stament is to cycle-symmetrize the (specified) 
+arguments of the functions that are mentioned. This means that the 
+arguments are brought to `natural order' in the notation of FORM by trying 
+cyclic permutations of the arguments or groups of arguments. The `natural 
+order' may depend on the order of declaration of the variables. 
+\vspace{10mm}
+
+%--#] cyclesymmetrize : 
+%--#[ deallocatetable :
+ 
+\section{deallocatetable}
+\label{substadeallocatetable}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration\\
+Syntax & DeallocateTable,name(s) of sparse table(s);
+\\ See also & table (\ref{substatable}), fill (\ref{substafill}),
+   table bases (\ref{tablebase}).
+\end{tabular} \vspace{4mm}
+
+\noindent Works\index{deallocatetable} only for sparse\index{sparse} 
+tables\index{table!sparse}. Deallocates all definitions of elements as 
+obtained with `Fill'\index{fill} statements as if there never were any 
+`Fill' statements for the given tables.
+
+This statement exists because sometimes cleaning up big tables is needed 
+when they take too much memory. This can be the case when a big tablebase 
+has been used. \vspace{10mm}
+
+%--#] deallocatetable : 
+%--#[ delete :
+
+\section{delete}
+\label{substadelete}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & delete storage;
+\\ See also & save (\ref{substasave}), load (\ref{substaload})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{delete} clears the complete 
+storage\index{storage file} file\index{file!storage} and 
+reduces it to zero size. The effect is that all stored expressions are 
+removed from the system. Because it is impossible to remove individual 
+expressions from the store file (there is no mechanism to fill the 
+resulting holes) it is the only way to clean up the storage file. If some 
+expressions should be excluded from this elimination process, one should 
+copy them first into active global expressions, then delete the storage 
+file, after which the expressions can be written to storage again with a 
+.store\index{.store} instruction. \vspace{10mm}
+
+%--#] delete : 
+%--#[ denominators :
+
+\section{denominators}
+\label{substadenominators}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & denominators functionname;
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{denominators} allows the user to rename all 
+occurrences of the built-in denominator function. This built-in function is 
+kind of an oddity inside FORM. Denominators are presented by a very special 
+function which doesn't really have a name and hence is rather hard to 
+address. In addition there are special rules connected to denominators. 
+Hence it is usually better to collect denominators inside functions that 
+have been defined by the user and hence allow the user to manipulate them 
+at will. Yet, objects can end up inside denominator functions, especially 
+when output from other programs is read in. Hence this statement allows all 
+occurrences of the denominator function to be renamed into the function 
+that is given in the statement. This function will work well together with 
+the PolyRatFun statement in which we define a PolyFun with two arguments of 
+which the second acts as a denominator and the first as a numerator:
+\begin{verbatim}
+   PolyRatFun,rat;
+   Denominators,den;
+   id den(x?) = rat(1,x);
+\end{verbatim}
+For more about this one should consult the part on the 
+PolyRatFun\index{polyratfun} statement 
+(\ref{substapolyratfun}) and the chapter on polynomials.
+\vspace{10mm}
+
+%--#] denominators : 
+%--#[ dimension :
+ 
+\section{dimension}
+\label{substadimension}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & d[imension] {\tt<}number or symbol{\tt>};
+\\ See also & index (\ref{substaindex})
+\end{tabular} \vspace{4mm}
+
+\noindent Sets the default dimension\index{dimension!default}. This default 
+dimension determines the dimension of the indices\index{indices} that are 
+being declared without dimension specification as well as the dimension of 
+all dummy indices\index{indices!dummy}. At the moment an index is declared 
+and there is no dimension specification, {\FORM} looks for the default 
+dimension and uses that. This index will then have this dimension, even 
+when the default dimension is changed at a later moment. The dummy indices 
+always have the dimension of the current default dimension. If the default 
+dimension is changed the dimension of all dummy indices changes with it. 
+Varieties: \vspace{1mm}
+
+\leftvitem{4cm}{Dimension {\tt<}number{\tt>};}
+\rightvitem{12cm}{Declares the number to be the default dimension.}
+
+\leftvitem{4cm}{Dimension {\tt<}symbol{\tt>};}
+\rightvitem{12cm}{Symbol must be the name of a symbol, either previously 
+declared or declarable because of an auto-declaration (see 
+\ref{substaautodeclare}). Declares the symbol to be the default dimension.}
+
+\leftvitem{4cm}{Dimension
+
+\hfill {\tt<}symbol{\tt>}:{\tt<}symbol{\tt>};}
+\rightvitem{12cm}{The symbols\index{symbols} must be the names of symbols, 
+either previously declared or declarable because of an auto-declaration 
+(see \ref{substaautodeclare}). The first symbol will be the default 
+dimension. The second symbol will be the the first symbol minus 4. It will 
+be used as such in the trace\index{trace contractions} 
+contractions\index{contractions!trace}. See also \ref{substatracen} and 
+\ref{substaindex}.}
+
+\noindent Examples:
+\begin{verbatim}
+   Dimension 3;
+   Dimension n;
+   Dimension n:[n-4];
+\end{verbatim}
+The default dimension in {\FORM} is 4. \vspace{10mm}
+
+%--#] dimension : 
+%--#[ discard :
+
+\section{discard}
+\label{substadiscard}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & dis[card];
+\end{tabular} \vspace{4mm}
+
+\noindent This statement discards\index{discard} the current term. It can 
+be very useful in statements of the type
+\begin{verbatim}
+   if ( count(x,1) > 5 ) Discard;
+\end{verbatim}
+which eliminates all terms that have more than five powers of x. 
+\vspace{10mm}
+
+%--#] discard : 
+%--#[ disorder :
+
+\section{disorder}
+\label{substadisorder}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement \\
+Syntax & disorder {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement is identical to the disorder\index{disorder} 
+option\index{option!disorder} of the id\index{id statement}\index{id} 
+statement (see \ref{substaidentify}). It is just a shorthand notation for 
+`id disorder'. \vspace{10mm}
+
+%--#] disorder : 
+%--#[ drop :
+
+\section{drop}
+\label{substadrop}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & drop; \\
+       & drop {\tt<}list of expressions{\tt>};
+\\ See also & ndrop (\ref{substandrop})
+\end{tabular} \vspace{4mm}
+
+\noindent In the first variety this statement\index{drop} eliminates all 
+expressions\index{expression} from the system. In the second variety it 
+eliminates only the expressions that are mentioned from the system. All 
+expressions that are to be dropped can still be used in the r.h.s. of other 
+expressions inside the current module. Basically the expressions to be 
+dropped are not treated for execution and after the module has finished 
+completely they are removed. See also the ndrop 
+statement~\ref{substandrop}. \vspace{10mm}
+
+%--#] drop : 
+%--#[ else :
+
+\section{else}
+\label{substaelse}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & else;
+\\ See also & if (\ref{substaif}),
+              elseif (\ref{substaelseif}),
+              endif (\ref{substaendif})
+\end{tabular} \vspace{4mm}
+
+\noindent To be used in combination with an if statement (see 
+\ref{substaif}). The statements following the
+else\index{else statement}\index{else} statement until the matching 
+endif\index{endif statement}\index{endif} 
+statement (see \ref{substaendif}) will be executed for the current term if 
+the conditions of the matching proceeding if\index{if statement}\index{if} 
+statement and/or all corresponding elseif\index{elseif} statements (see 
+\ref{substaelseif}) are false. If any of the conditions of the matching 
+proceeding if or elseif statements are true the statements following the 
+else statement will be skipped. \vspace{10mm}
+
+%--#] else : 
+%--#[ elseif :
+ 
+\section{elseif}
+\label{substaelseif}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & elseif ( {\tt<}condition{\tt>} );
+\\ See also & if (\ref{substaif}),
+              else (\ref{substaelse}),
+              endif (\ref{substaendif})
+\end{tabular} \vspace{4mm}
+
+\noindent Should be proceeded by an if\index{if statement}\index{if} 
+statement (see \ref{substaif}) and followed at least by a matching 
+endif\index{endif statement}\index{endif} 
+statement (see \ref{substaendif}). If the conditions of the proceeding 
+matching if statement and all proceeding matching
+elseif\index{elseif statement}\index{elseif} statements are false the 
+condition of this elseif statement will be evaluated. If it is true, the 
+statements following it until the next matching elseif,
+else\index{else statement}\index{else} or endif statement will be executed. 
+If not, control is passed to this next elseif, else or endif statement. The 
+syntax for the condition is exactly the same as for the condition in the if 
+statement. \vspace{10mm}
+ 
+%--#] elseif : 
+%--#[ endargument :
+
+\section{endargument}
+\label{substaendargument}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endargument; \\
+See also & argument (\ref{substaargument})
+\end{tabular} \vspace{4mm}
+
+\noindent Terminates an argument environment\index{environment!argument} 
+(see \ref{substaargument}). The argument\index{argument} statement and its 
+corresponding endargument\index{endargument} statement must belong to the 
+same module. Argument environments can be nested with all other 
+environments. \vspace{10mm}
+
+%--#] endargument : 
+%--#[ endif :
+
+\section{endif}
+\label{substaendif}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endif;
+\\ See also & if (\ref{substaif}),
+              elseif (\ref{substaelseif}),
+              else (\ref{substaelse})
+\end{tabular} \vspace{4mm}
+
+\noindent Terminates an if\index{if statement}\index{if} construction (see \ref{substaif}, 
+\ref{substaelseif} and \ref{substaelse}). If should be noted that 
+if\index{endif statement}\index{endif} 
+constructions can be nested.
+\vspace{10mm}
+
+%--#] endif : 
+%--#[ endinexpression :
+ 
+\section{endinexpression}
+\label{substaendinexpression}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endinexpression;
+\\ See also & inexpression(\ref{substainexpression})
+\end{tabular} \vspace{4mm}
+
+\noindent Only to be used in combination with the 
+inexpression\index{endinexpression}\index{inexpression} statement. The 
+combination
+\begin{verbatim}
+   InExpression,expr;
+       Statements;
+   EndInExpression;
+\end{verbatim}
+is a more readable version of the construction
+\begin{verbatim}
+   if ( expression(expr) );
+       Statements;
+   endif;
+\end{verbatim}
+\vspace{10mm}
+
+%--#] endinexpression : 
+%--#[ endinside :
+
+\section{endinside}
+\label{substaendinside}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endinside;
+\\ See also & inside (\ref{substainside}) and the chapter on \$-variables 
+(\ref{dollars})
+\end{tabular}\vspace{4mm}
+
+\noindent Terminates an `inside'\index{inside} 
+environment\index{environment!inside} (see \ref{substainside}) which is 
+used to operate on the contents of \$-variables\index{\$-variable} (see 
+\ref{dollars}).\vspace{10mm}
+
+%--#] endinside : 
+%--#[ endrepeat :
+
+\section{endrepeat}
+\label{substaendrepeat}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endrepeat;
+\\ See also & repeat (\ref{substarepeat}), while (\ref{substawhile})
+\end{tabular} \vspace{4mm}
+
+\noindent Ends the repeat\index{repeat} 
+environment\index{environment!repeat}. The repeat environment is started 
+with a repeat statement (see \ref{substarepeat}). The repeat and its 
+matching endrepeat\index{endrepeat} should be inside the same module. 
+Repeat environments can be nested with all other environments (and other 
+repeat environments). \vspace{10mm}
+
+%--#] endrepeat : 
+%--#[ endterm :
+
+\section{endterm}
+\label{substaendterm}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endterm;
+\\ See also & term (\ref{substaterm}), sort (\ref{substasort})
+\end{tabular} \vspace{4mm}
+
+\noindent Terminates a term\index{term} environment\index{environment!term} 
+(see \ref{substaterm}). Term environments\index{endterm} can be nested with 
+other term environments and with other environments in general. The whole 
+environment should be part of one single module. See also \ref{substasort}. 
+\vspace{10mm}
+
+%--#] endterm : 
+%--#[ endwhile :
+
+\section{endwhile}
+\label{substaendwhile}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endwhile;
+\\ See also & while (\ref{substawhile}), repeat (\ref{substarepeat})
+\end{tabular} \vspace{4mm}
+
+\noindent Terminates a while\index{while} environment\index{environment!while} (see \ref{substawhile}). The while 
+statement and its corresponding endwhile\index{endwhile} statement must be part of the same 
+module. \vspace{10mm}
+
+%--#] endwhile : 
+%--#[ exit :
+
+\section{exit}
+\label{substaexit}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & exit ["{\tt<}string{\tt>}"];
+\\ See also & setexitflag (\ref{substasetexitflag})
+\end{tabular} \vspace{4mm}
+
+\noindent Causes execution to be aborted\index{exit}\index{aborted} 
+immediately. The string will be printed in the output. This can be used to 
+indicate where FORM ran into the exit statement. \vspace{10mm}
+
+%--#] exit : 
+%--#[ factarg :
+
+\section{factarg}
+\label{substafactarg}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & factarg options \verb:{:{\tt<}name of function/set{\tt>}
+                [{\tt<}argument specifications{\tt>}]\verb:}:;
+\\ See also & splitarg (\ref{substasplitarg})
+\end{tabular} \vspace{4mm}
+
+\noindent Splits\index{factarg} the indicated function\index{function 
+arguments} arguments into individual factors. The argument specifications 
+are as in the splitarg\index{splitarg} statement (see 
+\ref{substasplitarg}). There are a few extra options:
+
+\leftvitem{2cm}{(0)}
+\rightvitem{14cm}{Eliminates the coefficient\index{coefficient} of the term 
+in the argument. Similar to Normalize,(0),....}
+
+\leftvitem{2cm}{(1)}
+\rightvitem{14cm}{The coefficient of the term and its sign are pulled out 
+separately.}
+
+\leftvitem{2cm}{(-1)}
+\rightvitem{14cm}{The coefficient is pulled out with its sign.}
+
+\noindent In the case of the above options only the coefficient is treated. 
+When these options are not used the whole term is treated as in:
+\begin{verbatim}
+    Symbols a,b,c;
+    CFunctions f,f1,f2,f3;
+    Local F = f(-3*a*b)+f(3*a*b)
+             +f1(-3*a*b)+f1(3*a*b)
+             +f2(-3*a*b)+f2(3*a*b)
+             +f3(-3*a*b)+f3(3*a*b);
+    FactArg,f;
+    Factarg,(0),f1;
+    Factarg,(1),f2;
+    Factarg,(-1),f3;
+    Print;
+    .end
+
+   F =
+      f(a,b,-1,3) + f(a,b,3) + 2*f1(a*b) + f2(a*b,-1,3) + f2(a*b,3)
+      + f3(a*b,-3) + f3(a*b,3);
+\end{verbatim}
+\vspace{10mm}
+
+%--#] factarg : 
+%--#[ fill :
+
+\section{fill}
+\label{substafill}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & fill {\tt<}tableelement{\tt>} = {\tt<}expression{\tt>} [,{\tt<}moreexpressions{\tt>}];
+\\ See also & table (\ref{substatable}), 
+                fillexpression (\ref{substafillexpression}),
+                printtable (\ref{substaprinttable})
+\end{tabular} \vspace{4mm}
+
+\noindent The standard\index{fill} way to define elements of a 
+table\index{table}. In the left hand 
+side one specifies the table element without the extra function arguments 
+that could potentially occur (see \ref{substatable}). In the right hand 
+side one specifies what the table element should be substituted by. 
+Example:
+\begin{verbatim}
+    Table tab(1:2,1:2,x?);
+    Fill tab(1,1) = x+y;
+    Fill tab(2,1) = (x+y)^2;
+    Fill tab(1,2) = tab(1,1)+y;
+    Fill tab(2,2) = tab(2,1)+y^2;
+\end{verbatim}
+The first fill statement is a bit like a continuous attempt to try the 
+substitution
+\begin{verbatim}
+    id  tab(1,1,x?) = x+y;
+\end{verbatim}
+The last two fill statements show that one could use the table 
+recursively\index{recursively}. 
+If a real loop occurs the program may terminate due to
+stack\index{stack overflow} overflow.
+
+\noindent It is possible to define several table elements in one statement. 
+In that case the various elements are separated by commas. The last index 
+is the first one to be raised. This means that in the above example one 
+could have written:
+\begin{verbatim}
+    Table tab(1:2,1:2,x?);
+    Fill tab(1,1) = x+y,tab(1,1)+y,(x+y)^2,tab(2,1)+y^2;
+\end{verbatim}\vspace{10mm}
+
+\noindent One warning\index{warning} is called for. One should avoid using 
+expressions in the right hand side of fill statements:
+\begin{verbatim}
+    Table B(1:1);
+    Local dummy = 1;
+    .sort
+    Fill B(1) = dummy;
+    Drop dummy;
+    .sort
+    Local F = B(1);
+    Print;
+    .end
+\end{verbatim}
+In the example a crash will result, because when we use the table element 
+the expression dummy doesn't exist anymore. In a fill statement the r.h.s. 
+is not expanded. Hence it keeps the reference to the expression dummy. When 
+the table element is used the reference to the expression dummy is inserted 
+and expanded. Hence one obtains the contents of dummy that exist at the 
+moment of use. This is illustrated in the following example:
+\begin{verbatim}
+    Table B(1:1);
+    Local dummy = 1;
+    .sort
+    Fill B(1) = dummy;
+    .sort
+    Local F = B(1);
+    Print;
+    .sort
+    Drop;
+    .sort
+    Local dummy = 2;
+    .sort
+    Local F = B(1);
+    Print;
+    .end
+\end{verbatim}
+The final value of F will be 2, not 1.
+
+\noindent A way to get around this problem is to force the evaluation of 
+the table definition by using dollar\index{dollar} 
+variables\index{variable!dollar}:
+\begin{verbatim}
+    Table B(1:1);
+    Local dummy = 1;
+    .sort
+    #$value = dummy;
+    Fill B(1) = `$value';
+    Drop dummy;
+    .sort
+    Local F = B(1);
+    Print;
+    .end
+\end{verbatim}
+Here we use the character representation of the contents of the dollar 
+variable to obtain an expression that doesn't need any further evaluation. 
+If we would put
+\begin{verbatim}
+    fill B(1) = $value;
+\end{verbatim}
+a reference to the dollar variable would be inserted and it would only be 
+evaluated at use again. In principle this could cause similar problems.
+
+\noindent Not dropping the expression dummy can sometimes give the correct 
+result, but is potentially still unsafe. 
+\begin{verbatim}
+    Table B(1:1);
+    Local u = 2;
+    Local dummy = 1;
+    .sort
+    Fill B(1) = dummy;
+    Drop dummy;
+    .sort
+    Local v = 5;
+    Local F = B(1);
+    Print;
+    .end
+\end{verbatim}
+Here the answer will be 5, because after u has been dropped the expressions 
+will be renumbered. Hence now dummy becomes the first expression, and 
+eventually v becomes the second expression. The references in the table 
+elements are not renumbered. Hence the r.h.s. of B(1) keeps pointing at the 
+second expression, which at the moment of application has the value 5. One 
+can see now also why the original example crashes. First dummy was the 
+first expression and at the moment of application F is the first (existing) 
+expression. Hence the substitution of B(1) causes a self reference and 
+hence an infinite loop. Eventually some buffer will 
+overflow\index{overflow}.
+\vspace{10mm}
+
+%--#] fill : 
+%--#[ fillexpression :
+ 
+\section{fillexpression}
+\label{substafillexpression}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & fillexpression {\tt<}table{\tt>} = {\tt<}expression{\tt>}({\tt<}x1{\tt>},...,{\tt<}xn{\tt>});
+\\     & fillexpression {\tt<}table{\tt>} = {\tt<}expression{\tt>}({\tt<}funname{\tt>});
+\\ See also & table (\ref{substatable}), 
+                fill (\ref{substafill}) and the table\_ function 
+(\ref{funtable})
+\end{tabular}\vspace{4mm}
+
+\noindent Used\index{fillexpression} to dynamically\index{dynamical loading}
+load\index{loading dynamically} a table\index{table} during runtime. When 
+there are n symbols (here called x1 to xn) it is assumed that the table is 
+n-dimensional. The expression must previously have been bracketted in these 
+symbols and each of the brackets\index{brackets} has the effect of a 
+fill\index{fill} statement in which the powers of the x1 to xn refer to the 
+table elements. Brackets that do not have a corresponding table element are 
+skipped.
+
+\noindent In the case that only a function name is specified the arguments 
+of the function refer to the table elements.
+\vspace{10mm}
+
+%--#] fillexpression : 
+%--#[ fixindex :
+ 
+\section{fixindex}
+\label{substafixindex}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & fi[xindex] \verb:{:{\tt<}number{\tt>} {\tt<}value{\tt>}\verb:}:;
+\\ See also & index (\ref{substaindex}) and chapter \ref{metric}.
+\end{tabular} \vspace{4mm}
+
+\noindent Defines \verb:d_(number,number) = value: in which number is the 
+number\index{fixindex} of a fixed\index{fixed index} index\index{index} 
+(hence a positive short integer with a value less than 
+ConstIndex\index{constindex} (see \ref{setup}). The value should be a 
+short\index{short integer} integer, i.e. its absolute value should be less 
+than $2^{15}$ on 32\index{32 bits} bit computers and less than $2^{31}$ on 
+64\index{64 bits} bit 
+computers. One can define more than one fixed index in one statement. 
+Before one would like to solve problems involving the choice of a metric 
+with this statement, one should consult the chapter on the use of a 
+metric\index{metric} 
+(chapter \ref{metric}).
+\vspace{10mm}
+
+%--#] fixindex : 
+%--#[ format :
+
+\section{format}
+\label{substaformat}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & fo[rmat] {\tt<}option{\tt>};
+\\ See also & print (\ref{substaprint})
+\end{tabular} \vspace{4mm}
+
+\noindent Controls the format\index{format} for the 
+printing\index{printing} of expressions. There is a variety of options.
+
+\leftvitem{3cm}{$<$number$>$}
+\rightvitem{13cm}{Output will be printed using the indicated number of 
+characters per line. The default is 72. Numbers outside the range 1-255 are 
+corrected to 72. Positive numbers less than 39 are corrected to 39.}
+
+\leftvitem{3cm}{float\index{float}\index{format!float} \hfill \\ \ \ \ \ {\tt[}$<$number$>${\tt]}}
+\rightvitem{13cm}{Numbers are printed in floating\index{floating point} 
+point notation, even though internally they remain fractions. This is 
+purely cosmetic. If no number is specified the precision of the output will 
+be 10 digits. If a number is specified it indicates the number of digits to 
+be used for the precision.}
+
+\leftvitem{3cm}{rational\index{rational}\index{format!rational}}
+\rightvitem{13cm}{Output format is switched back to rational numbers (in 
+contrast to floating point output). This is the default.}
+
+\leftvitem{3cm}{nospaces\index{nospaces}\index{format!nospaces}}
+\rightvitem{13cm}{The output is printed without the spaces that make the 
+output slightly more readable. This gives a more compact output.}
+
+\leftvitem{3cm}{spaces\index{spaces}\index{format!spaces}}
+\rightvitem{13cm}{The output is printed with extra spaces between the terms 
+and around certain operators to make it slightly more readable. This is the 
+default.}
+
+\leftvitem{3cm}{fortran\index{fortran}\index{format!fortran}}
+\rightvitem{13cm}{The output is printed in a way that is readable by a 
+fortran compiler. This includes continuation characters and the splitting 
+of the output into blocks of no more than 15 continuation lines. This 
+number can be changed with the setup parameter ContinuationLines (see 
+\ref{setup}). In addition dotproducts are printed with the `dotchar' 
+in the place of the period between the vectors. This dotchar can be set in 
+the setup file (see \ref{setup}). Its default is the underscore character.}
+
+\leftvitem{3cm}{doublefortran\index{doublefortran}\index{format!doublefortran}}
+\rightvitem{13cm}{Same as the fortran mode, but fractions are printed with 
+double floating point numbers, because some compilers convert numbers like 
+1. into 1.E0. With this format FORM will force double precision by using 
+1.D0.}
+
+\leftvitem{3cm}{C\index{C}\index{format!C}}
+\rightvitem{13cm}{Output will be C compatible. The
+exponent\index{exponent operator} operator ($\wedge$) is represeted by the 
+function pow\index{pow}. It is the responsibility of the user that this 
+function will be properly defined. Dotproducts are printed with the 
+`dotchar'\index{dotchar} in the place of the period between the vectors. 
+This dotchar can be set in the setup file (see \ref{setup}). Its default is 
+the underscore\index{underscore character} character.}
+
+\leftvitem{3cm}{maple\index{maple}\index{format!maple}}
+\rightvitem{13cm}{Output will be as much as possible compatible with Maple 
+format. It is not guaranteed that this is perfect.}
+
+\leftvitem{3cm}{mathematica\index{mathematica}\index{format!mathematica}}
+\rightvitem{13cm}{Output will be as much as possible compatible with 
+Mathematica format. It is not guaranteed that this is perfect.}
+
+\leftvitem{3cm}{reduce\index{reduce}\index{format!reduce}}
+\rightvitem{13cm}{Output will be as much as possible compatible with 
+Reduce format. It is not guaranteed that this is perfect.}
+
+\noindent The last few formats have not been tried out extensively. The 
+author is open for suggestions. \vspace{10mm}
+
+%--#] format : 
+%--#[ functions :
+ 
+\section{functions}
+\label{substafunctions}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & f[unctions] {\tt<}list of functions to be declared{\tt>}; \\
+See also & cfunctions (\ref{substacfunctions}), 
+           tensors (\ref{substatensors}),
+           ntensors (\ref{substantensors}), \\ &
+           table (\ref{substatable}),
+           ntable (\ref{substantable}),
+           ctable (\ref{substactable})
+\end{tabular} \vspace{4mm}
+
+\noindent Used to declare one or more functions\index{functions}. The functions declared 
+with this statement will be noncommuting\index{noncommuting}. For 
+commuting\index{commuting} functions one 
+should use the cf[unctions] statement (see \ref{substacfunctions}). 
+Functions can have a number of properties that can be set in the 
+declaration. This is done by appending the options to the name of the 
+function. These options are:
+
+\leftvitem{4.1cm}{name{\hash}r}
+\rightvitem{12cm}{The function is considered to be a real\index{real} function (default).}
+
+\leftvitem{4.1cm}{name{\hash}c}
+\rightvitem{12cm}{The function is considered to be a complex\index{complex} function. This means 
+that internally two spaces are reserved. One for the variable name and one 
+for its complex conjugate name{\hash}.}
+
+\leftvitem{4.1cm}{name{\hash}i}
+\rightvitem{12cm}{The function is considered to be imaginary\index{imaginary}.}
+
+\leftvitem{4.1cm}{name(s[ymmetric])}
+\rightvitem{12cm}{The function is totally symmetric\index{symmetric}. This means that during 
+normalization {\FORM} will order the arguments according to its internal 
+notion of order by trying permutations. The result will depend on the order 
+of declaration of variables.}
+
+\leftvitem{4.1cm}{name(a[ntisymmetric])}
+\rightvitem{12cm}{The function is totally antisymmetric\index{antisymmetric}. This means that 
+during normalization {\FORM} will order the arguments according to its 
+internal notion of order and if the resulting permutation of arguments is 
+odd the coefficient of the term will change sign. The order will depend on 
+the order of declaration of variables.}
+
+\leftvitem{4.1cm}{name(c[yclesymmetric])}
+\rightvitem{12cm}{The function is cycle\index{cycle symmetric} 
+symmetric\index{symmetric!cycle} in all its arguments. 
+This means that during normalization {\FORM} will order the arguments 
+according to its internal notion of order by trying cyclic permutations. 
+The result will depend on the order of declaration of variables.}
+
+\leftvitem{4.1cm}{name(r[cyclesymmetric)
+
+name(r[cyclic])
+
+name(r[eversecyclic])}
+\rightvitem{12cm}{The function is reverse\index{reverse cycle symmetric} 
+cycle symmetric\index{symmetric!reverse cycle} in all its arguments. This 
+means that during normalization {\FORM} will order the arguments according 
+to its internal notion of order by trying cyclic permutations and/or a 
+complete reverse order of all arguments. The result will depend on the 
+order of declaration of variables.}\vspace{2mm}
+
+\noindent The complexity properties and the symmetric properties can be 
+combined. In that case the complexity properties should come first as in
+\begin{verbatim}
+    Function f1#i(symmetric);
+\end{verbatim}
+\vspace{10mm}
+
+%--#] functions : 
+%--#[ funpowers :
+
+\section{funpowers}
+\label{substafunpowers}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & funpowers {\tt<}on/off{\tt>};
+\\ See also & on (\ref{substaon}), off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{funpowers} is obsolete\index{obsolete}. The 
+user should try to use the funpowers option of the on\index{on} (see 
+\ref{substaon}) or the off\index{off} (see \ref{substaoff}) statements. 
+\vspace{10mm}
+
+%--#] funpowers : 
+%--#[ global :
+
+\section{global}
+\label{substaglobal}
+
+\noindent \begin{tabular}{ll}
+Type & Definition statement\\
+Syntax & g[lobal] {\tt<}name{\tt>} = {\tt<}expression{\tt>}; \\
+       & g[lobal] {\tt<}names of expressions{\tt>};
+\\ See also & local (\ref{substalocal})
+\end{tabular} \vspace{4mm}
+
+\noindent Used to define a global\index{global} 
+expression\index{expression}. A global expression is an expression that 
+remains active until the first .store\index{.store} instruction. At that 
+moment it is stored into the `storage file'\index{storage 
+file}\index{file!storage} and stops being manipulated. After this it can 
+still be used in the right hand side of expressions and id\index{id} 
+statements (see \ref{substaidnew}). Global expressions that have been put 
+in the storage file can be saved to a disk file\index{file!disk} with the 
+save statement (see \ref{substasave}) for use in later programs.
+
+\noindent There are two versions of the global statement. In the first the 
+expression is defined and filled with a right hand side expression. The left 
+hand side and the right hand side are separated by an = sign. In this case 
+the expression can have arguments which will serve as
+dummy\index{dummy arguments} arguments after the global expression has been 
+stored with a .store instruction. Note that this use of arguments can often 
+be circumvented with the replace\_ function (see \ref{funreplace}) as in
+\begin{verbatim}
+    Global F(a,b) = (a+b)^2;
+    .store
+    Local FF = F(x,y);
+    Local GG = F*replace_(a,x,b,y);
+\end{verbatim}
+because both definitions give the same result.
+
+\noindent The second version of the global statement has no = sign and no 
+right hand side. It can be used to change a local\index{local} expression 
+into a global expression. \vspace{10mm}
+
+%--#] global : 
+%--#[ goto :
+
+\section{goto}
+\label{substagoto}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & go[to] {\tt<}label{\tt>}; \\
+       & go to {\tt<}label{\tt>};
+\\ See also & label (\ref{substalabel})
+\end{tabular} \vspace{4mm}
+
+\noindent Causes\index{goto} processing to proceed at the indicated 
+label\index{label} statement 
+(see \ref{substalabel}). This label statement must be in the same module. 
+\vspace{10mm}
+
+%--#] goto : 
+%--#[ hide :
+
+\section{hide}
+\label{substahide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & hide; \\
+       & hide {\tt<}list of expressions{\tt>};
+\\ See also & nhide (\ref{substanhide}),
+              unhide (\ref{substaunhide}),
+              nunhide (\ref{substanunhide}),
+              pushhide (\ref{substapushhide}),
+              pophide (\ref{substapophide})
+\end{tabular} \vspace{4mm}
+
+\noindent In the first variety this statement marks all currently active 
+expressions for being put in hidden\index{hide} storage. In the second variety it marks 
+only the specified active\index{active expressions} expressions as such. \vspace{4mm}
+
+\noindent If an expression is marked for being hidden, it will be copied to 
+the `hide\index{hide file} file'\index{file!hide}, a storage which is 
+either in memory or on file depending on the combined size of all 
+expressions being hidden. If this size exceeds the size of the setup 
+parameter scratchsize\index{scratchsize} (see \ref{setup}) the storage will 
+be on file. If it is less, the storage will be in memory. An expression 
+that has been hidden is not affected by the statements in the modules as 
+long as it remains hidden, but it can be used inside other expressions in 
+the same way skipped\index{skipped expressions} expressions (see 
+\ref{substaskip}) or active expressions can be used. In particular all its 
+bracket\index{bracket} information (see \ref{substabracket}) is retained 
+and can be accessed, including possible bracket\index{bracket index} 
+indexing. \vspace{4mm}
+
+\noindent The hide mechanism is particularly useful if an expression is not 
+needed for a large number of modules. It has also advantages over the 
+storing of global expressions after a .store\index{.store} instruction (see 
+\ref{instrstore}), because the substitution of global expressions is slower 
+(name definitions may have changed and have to be checked) and also a 
+possible bracket index is not maintained by the .store instruction. 
+\vspace{4mm}
+
+\noindent Expressions can be returned from a hidden status into active 
+expressions with the unhide\index{unhide} statement (see 
+\ref{substaunhide}). One might want to consult the nhide\index{nhide} 
+statement (\ref{substahide}) as well. \vspace{4mm}
+
+\noindent When an expression is marked to be hidden it will remain just 
+marked until execution starts in the current module. When it is the turn of 
+the expression to be executed, it is copied to the hide file instead. 
+\vspace{4mm}
+
+\noindent Note that a .store instruction will simultaneously remove all 
+expressions from the hide system. \vspace{10mm}
+
+%--#] hide : 
+%--#[ identify :
+
+\section{identify}
+\label{substaidentify}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & id[entify] [{\tt<}options{\tt>}] {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & also (\ref{substaalso}),
+              idnew (\ref{substaidnew}),
+              idold (\ref{substaidold})
+\end{tabular}\vspace{4mm}
+
+\noindent The statement\index{id}\index{identify} tries to match the 
+pattern\index{pattern}. If the pattern matches one or more times, it will 
+be replaced by the expression in the r.h.s. taking the possible 
+wildcard\index{wildcard} substitutions into account. For the description of 
+the patterns, see chapter \ref{pattern}.
+
+\noindent The options are \vspace{1mm}
+
+\lefttabitem{multi\index{multi}}
+\tabitem{This option is for combinations of symbols and dotproducts only 
+and it does not use wildcard powers. FORM determines how many times the 
+pattern fits in one pattern matching action. Then the r.h.s. is substituted 
+to that power. It is the default for these kinds of patterns.}
+
+\lefttabitem{many\index{many}}
+\tabitem{This is the default for patterns that contain other objects 
+than symbols and dotproducts. The pattern is matched and taken out. Then 
+FORM tries again to match the pattern in the remainder of the term. This 
+is repeated until there is no further match. Then for each match the r.h.s. 
+is substituted (with its own wildcard substitutions).}
+
+\lefttabitem{select\index{select}}
+\tabitem{This option should be followed by one or more sets\index{set}. After 
+the sets the pattern can be specified. The pattern will only be substituted 
+if none of the objects mentioned in the sets will be left after the pattern 
+has been taken out. This holds only for objects 'at ground level'; i.e. the 
+pattern matcher will not look inside function arguments for this. Note 
+that this is a special case of the option 'only'.}
+
+\lefttabitem{once\index{once}}
+\tabitem{The pattern is matched only once, even if it occurs more than once 
+in the term. The first match that FORM encounters is taken. When wildcards 
+are involved, this may depend on the order of declaration of variables. It 
+could also be installation dependent. Also the setting of 
+properorder\index{properorder} (see \ref{substaon} and \ref{substaoff}) 
+could be relevant. Try to write programs in such a way that the outcome 
+does not depend on which match is taken.}
+
+\lefttabitem{only\index{only}}
+\tabitem{The pattern will match only if there is an exact match in 
+the powers of the symbols and dotproducts present.}
+
+\lefttabitem{ifmatch$->$\index{ifmatch}}
+\tabitem{This option should be followed by the name (or number) of a 
+label\index{label}. If the pattern matches, the replacement will be made 
+after which the execution continues at the label.}
+
+\lefttabitem{disorder\index{disorder}}
+\tabitem{This option is used for products of 
+noncommuting\index{noncommuting} functions\index{functions!noncommuting} or 
+tensors\index{tensors!noncommuting}. The match will only take place if the 
+order of the functions in the match is different from what FORM would have 
+made of it if the functions would be commuting\index{commuting}. Hence if 
+the functions in the term are in the order that FORM would give them if 
+they would be commuting (which depends on the order of declaration) there 
+will be no match. This can be rather handy when using wildcards as in {\tt 
+F(a?)*F(b?)}.}
+\vspace{10mm}
+
+%--#] identify : 
+%--#[ idnew :
+
+\section{idnew}
+\label{substaidnew}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & idn[ew] [{\tt<}options{\tt>}] {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify}),
+              also (\ref{substaalso}),
+              idold (\ref{substaidold})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{idnew} and its options are completely 
+identical to the regular id\index{id} or identify\index{identify} statement 
+(see \ref{substaidentify}). \vspace{10mm}
+
+%--#] idnew : 
+%--#[ idold :
+
+\section{idold}
+\label{substaidold}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & ido[ld] [{\tt<}options{\tt>}] {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify}),
+              also (\ref{substaalso}),
+              idnew (\ref{substaidnew})
+\end{tabular}\vspace{4mm}
+
+\noindent This statement\index{idold} and its options are completely 
+identical to the regular also\index{also} statement (see \ref{substaalso}). 
+The options are described with the id\index{id} or identify\index{identify} 
+statement (see \ref{substaidentify}).
+\vspace{10mm}
+
+%--#] idold : 
+%--#[ if :
+ 
+\section{if}
+\label{substaif}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & if ( {\tt<}condition{\tt>} ); \\
+       & if ( {\tt<}condition{\tt>} ) {\tt<}executable statement{\tt>}
+\\ See also & elseif (\ref{substaelseif}),
+              else (\ref{substaelse}),
+              endif (\ref{substaendif})
+\end{tabular} \vspace{4mm}
+
+\noindent Used\index{if} for executing parts of code only when certain 
+conditions\index{condition} are met. Works together with the 
+else\index{else} statement (see \ref{substaelse}), the elseif\index{elseif} 
+statement (see \ref{substaelseif}) and the endif\index{endif} statement 
+(see \ref{substaendif}). There are two versions. In the first the if 
+statement must be accompanied by at least an endif statement. In that case 
+the statements between the if statement and the endif statement will be 
+executed if the condition is met. It is also possible to use elseif and 
+else statements to be more flexible. This is done in the same way as in 
+almost all computer languages.
+
+\noindent In the second form the if statement does not terminate with a 
+semicolon\index{semicolon}. It is followed by a single regular statement. 
+No endif statement should be used. The single statement will be executed if 
+the condition is met.
+
+\noindent The condition in the if statement should be enclosed by 
+parentheses. Its primary components are:
+
+\leftvitem{3cm}{count()\index{count}}
+\rightvitem{13cm}{Returns an integer power counting value for the current 
+term. Should have arguments that come in pairs. The first element of the 
+pair is a variable. The second is its integer weight\index{weight}. The 
+types of variables that are allowed are symbols, dotproducts, functions, 
+tensors, tables and vectors. The weights can be positive as well as 
+negative. They have to be short integers (Absolute value $< 2^{15}$ on 
+32\index{32 bits} bit computers and $< 2^{31}$ on 64\index{64 bits} bit 
+computers). The vectors can have several options appended to their name. 
+This is done by putting a + after the name of the vector and have this 
+followed by one or more of the following letters:
+
+\noindent \begin{tabular}{ll}
+v & Loose vectors with an index are taken into account. \\
+d & Vectors inside dotproducts are taken into account.  \\
+f & Vectors inside tensors are taken into account. \\
+?set &
+\begin{minipage}[t]{11cm}{The set should be a set of functions. Vectors inside 
+the functions that are members of the set are taken into account. It is 
+assumed that those functions are linear in the given vector}\end{minipage}
+\end{tabular} \vspace{1mm}
+
+When no options are specified the result is identical to +vfd.}
+
+\leftvitem{3cm}{match()\index{match}}
+\rightvitem{13cm}{The argument of the match condition can be any left hand 
+side of an id statement, including options as once\index{once}, 
+only\index{only}, multi\index{multi}, many\index{many} and 
+select\index{select} (see \ref{substaidnew}). The id of the id statement 
+should not be included. FORM will invoke the pattern\index{pattern matcher} 
+matcher and see how many times the pattern matches. This number is 
+returned. In the case of once or only this is of course at most one.}
+
+\leftvitem{3cm}{expression()\index{expression}}
+\rightvitem{13cm}{The argument(s) of this condition is/are a list of 
+expressions. In the case that the current term belongs to any of the given 
+expressions the return value is 1. If it does not belong to any of the 
+given expressions the return value is 0.}
+
+\leftvitem{3cm}{findloop()\index{findloop}}
+\rightvitem{13cm}{The arguments are as in the 
+replaceloop\index{replaceloop} statement (see \ref{substareplaceloop}) with 
+the exception of the outfun which should be omitted. If FORM detects an 
+index\index{index loop} loop in the current term that fulfils the specified 
+conditions the return value is 1. It is 0 otherwise.}
+ 
+\leftvitem{3cm}{multipleof()\index{multipleof}}
+\rightvitem{13cm}{The argument should be a positive integer. This object is 
+to be compared with a number (could be obtained from a condition) and if 
+this number is an integer multiple of the argument there will be a match. 
+If should be obvious that such a compare only makes sense for the == and != 
+operators.}
+
+\leftvitem{3cm}{$<$integer$>$}
+\rightvitem{13cm}{To be compared either with another number, the result of a 
+condition or a multipleof object.}
+ 
+\leftvitem{3cm}{coefficient\index{coefficient}}
+\rightvitem{13cm}{Represents the coefficient of the current term.}
+
+\leftvitem{3cm}{\$-variable}
+\rightvitem{13cm}{Will be evaluated at runtime when the if statement is 
+encountered. Should evaluate into a numerical value. If it does not, an 
+error will result.}
+
+\noindent All the above primary components result in numerical objects. 
+Such objects can be compared to each other in structures of the type 
+$<$obj1$>$ $<$operator$>$ $<$obj2$>$. The result of such a compare is 
+either true (or 1) or false (or 0). The operators are:
+ 
+\leftvitem{2cm}{$>$}
+\rightvitem{14cm}{Results in true if object 1 is greater than object 2.}
+ 
+\leftvitem{2cm}{$<$}
+\rightvitem{14cm}{Results in true if object 1 is less than object 2.}
+ 
+\leftvitem{2cm}{$=$}
+\rightvitem{14cm}{Same as ==.}
+ 
+\leftvitem{2cm}{$==$}
+\rightvitem{14cm}{Results in true if both objects have the same value.}
+ 
+\leftvitem{2cm}{$>=$}
+\rightvitem{14cm}{Results in true if object 1 is greater than or equal to object 2.}
+ 
+\leftvitem{2cm}{$<=$}
+\rightvitem{14cm}{Results in true if object 1 is less than or equal to object 2.}
+ 
+\leftvitem{2cm}{$!=$}
+\rightvitem{14cm}{Results in true if object 1 does not have the same value 
+as object 2.}
+
+If the condition for true is not met, false is returned. Several of the 
+above compares can be combined with logical operators. For this it is 
+necessary to enclose the above compares within parentheses. This forces 
+FORM to interprete the hierarchy\index{hierarchy} of the operators 
+properly. The extra logical operators are
+ 
+\leftvitem{2cm}{$||$}
+\rightvitem{14cm}{The or operation. True if at least one of the objects 1 
+and 2 is true (or nonzero). False or zero if both are false or zero.}
+ 
+\leftvitem{2cm}{$\&\&$}
+\rightvitem{14cm}{The and operation. True if both the objects 1 
+and 2 are true (or nonzero). False or zero if at least one is false or zero.}
+
+\noindent Example:
+\begin{verbatim}
+    if ( ( match(f(1,x)*g(?a)) && ( count(x,1,v+d,1) == 3 ) )
+         || ( expression(F1,F2) == 0 ) );
+        some statements
+    endif;
+    if ( ( ( match(f(1,x)*g(?a)) == 0 ) && ( count(x,1,v+d,1) == 3 ) )
+         || expression(F1,F2) );
+        some statements
+    endif;
+\end{verbatim}
+We see that \verb:match(): is equivalent to \verb:( match() != 0 ): and 
+something similar for \verb:expression():. This shorthand\index{shorthand} 
+notation can make a program slightly more readable.
+
+{\bf Warning! } The if-statement knows only logical values as the result of 
+operations. Hence the answer to anything that contains parenthesis (which 
+counts as the evaluation of an expression) is either true (1) or false (0). 
+Hence the object (5) evaluates to true. \vspace{10mm}
+
+%--#] if : 
+%--#[ ifmatch :
+
+\section{ifmatch}
+\label{substaifmatch}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & ifmatch$->$ {\tt<}label{\tt>} {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{ifmatch} is identical to the ifmatch option 
+of the id statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   ifmatch-> ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id ifmatch-> ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] ifmatch : 
+%--#[ index :
+ 
+\section{index, indices}
+\label{substaindex}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & i[ndex] {\tt<}list of indices to be declared{\tt>}; \\
+       & i[ndices] {\tt<}list of indices to be declared{\tt>};
+\\ See also & dimension (\ref{substadimension}),
+              fixindex (\ref{substafixindex})
+\end{tabular} \vspace{4mm}
+
+\noindent Declares one or more indices\index{index}\index{indices}. In the 
+declaration of an index one can specify its dimension\index{dimension}. 
+This is done by appending one or two options to the name of the index to be 
+declared:\vspace{4mm}
+
+\leftvitem{3cm}{name=dim}
+\rightvitem{13cm}{The dimension is either a nonnegative integer or a 
+previously declared symbol. If the dimension is zero\index{zero!dimension} 
+this means that no dimension is attached to the index. The consequence is 
+that the index cannot be summed over and index contractions are not 
+performed for this index. If no dimension is specified the default 
+dimension will be assumed (see the dimension statement 
+\ref{substadimension}).}
+
+\leftvitem{3cm}{name=dim:ext}
+\rightvitem{13cm}{The dimension is a symbol as above. Ext is an extra 
+symbol which indicates the value of dim-4. This option is useful when 
+traces over gamma matrices are considered (see \ref{substatrace} and 
+\ref{substatracen}).} \vspace{10mm}
+
+%--#] index : 
+%--#[ inexpression :
+ 
+\section{inexpression}
+\label{substainexpression}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & inexpression,name(s) of expression(s);
+\\ See also & endinexpression(\ref{substaendinexpression})
+\end{tabular} \vspace{4mm}
+
+\noindent The combination\index{inexpression}
+\begin{verbatim}
+   InExpression,expr;
+       Statements;
+   EndInExpression;
+\end{verbatim}
+is a more readable version of the construction
+\begin{verbatim}
+   if ( expression(expr) );
+       Statements;
+   endif;
+\end{verbatim}
+\vspace{10mm}
+
+%--#] inexpression : 
+%--#[ inparallel :
+
+\section{inparallel}
+\label{substainparallel}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & inparallel; \\
+       & inparallel {\tt<}list of expressions{\tt>};
+\\ See also & NotInParallel (\ref{substanotinparallel}), 
+     ModuleOption (\ref{substamoduleoption})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement is only active in the context of 
+TFORM\index{TFORM}. It causes 
+(small) expressions to be executed side by side. Normally the terms of 
+expressions are distributed over the processors and the expressions are 
+executed one by one. This isn't very efficient for small expressions 
+because there is a certain amount of overhead. When there are many small 
+expressions, this stamement can cause each expression to be executed by its 
+own processor. A consequence is that the expressions now can finish in a 
+semi-random order and hence may end up in the output in a order that is 
+different from when this statement isn't used. The proper order is restored 
+in the first module that comes after and that doesn't use this option. One 
+should be careful using this statement for big expressions, because in that 
+case the sorting may need sort files and the output may temporarily need 
+scratch files and the simultaneous use of many files can slow execution 
+down significantly.
+
+\noindent In the case that no expressions are mentioned, all active 
+expressions will be affected. When there is a list of expressions, only 
+those mentioned will be affected, provided they are active. Several of 
+these statements will work cumulatively. This statement doesn't affect 
+expressions that are still to be defined inside the current module. If it 
+is needed to affect such expressions inside the current module, one should 
+use the InParallel option of the 
+ModuleOption~\ref{substamoduleoption}\index{ModuleOption} 
+statement. This statement works independently of the `On 
+Parallel;'~\ref{substaon} and `Off Parallel;'~\ref{substaoff} statements.
+\vspace{10mm}
+
+%--#] inparallel : 
+%--#[ inside :
+
+\section{inside}
+\label{substainside}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & inside {\tt<}list of \$-variables{\tt>};
+\\ See also & endinside (\ref{substaendinside}) and the chapter on \$-variables 
+(\ref{dollars})
+\end{tabular} \vspace{4mm}
+
+\noindent works\index{inside} a bit like the argument\index{argument} 
+statement (see \ref{substaargument}) but with 
+\$-variables\index{\$-variable} instead of with functions. An inside 
+statement should be paired with an endinside\index{endinside} statement 
+(see \ref{substaendinside}) inside the same module. The statements 
+inbetween will then be executed on the contents of the \$-variables that 
+are mentioned. One should pay some attention to the order of the action. 
+The \$-variables are treated sequentially. Hence, after the first one has 
+been treated its contents are substituted by the new value. Then the second 
+one is treated. If it uses the contents of the first variable, it will use 
+the new value. If the first variable uses the contents of the second 
+variable it will use its old value. Redefining any of the listed 
+\$-variables in the range of the `inside-environment' is very dangerous. It 
+is not specified what FORM will do. Most likely it will be 
+unpleasant\index{unpleasant}. 
+\vspace{10mm}
+
+%--#] inside : 
+%--#[ insidefirst :
+
+\section{insidefirst}
+\label{substainsidefirst}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & insidefirst {\tt<}on/off{\tt>};
+\\ See also & on (\ref{substaon}), off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{insidefirst} is obsolete\index{obsolete}. 
+The user should try to use the insidefirst option of the on (see 
+\ref{substaon}) or the off (see \ref{substaoff}) statements. \vspace{10mm}
+
+%--#] insidefirst : 
+%--#[ keep :
+
+\section{keep}
+\label{substakeep}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & keep brackets; \\
+\\ See also & bracket (\ref{substabracket}), antibracket 
+     (\ref{substaabrackets}) and the chapter on brackets 
+     (\ref{brackets})
+\end{tabular} \vspace{4mm}
+
+\noindent The effect\index{keep brackets}\index{keep}\index{brackets!keep} 
+of this statement is that during execution of the current module the 
+contents of the brackets are not considered. The statements only act on the 
+`outside' of the brackets. Only when the terms are considered finished and 
+are ready for the sorting are they multiplied by the contents of the 
+brackets. At times this can save much computer time as complicated pattern 
+matching and multiplications of function arguments with large fractions 
+have to be done only once, rather than for each complete term separately 
+(assuming that each bracket contains a large number of terms).
+
+\noindent There can be some nasty side effects. Assume an expression like:
+\begin{verbatim}
+    F = f(i1,x)*(g(i1,y)+g(i1,z));
+    B  f;
+    .sort
+    Keep Brackets;
+    sum i1;
+\end{verbatim}
+the result will be
+\begin{verbatim}
+    F = f(N1_?,x)*g(i1,y)+f(N1_?,x)*g(i1,z));
+\end{verbatim}
+because at the moment of summing over i1 FORM is not looking inside the 
+brackets and hence it never sees the second occurrence of i1. There are 
+some beneficial applications of the keep statement in the 
+`mincer'\index{mincer} package that comes with the FORM distribution. In 
+this package the most costly step was made faster by a significant factor 
+(depending on the problem) due to the keep brackets statement. 
+\vspace{10mm}
+
+%--#] keep : 
+%--#[ label :
+
+\section{label}
+\label{substalabel}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & la[bel] {\tt<}name of label{\tt>};
+\\ See also & goto (\ref{substagoto})
+\end{tabular} \vspace{4mm}
+
+\noindent Places a label\index{label} at the current location. The name of 
+the label can be any name or number. Control can be transfered to the 
+position of the label by a goto\index{goto} statement (see 
+\ref{substagoto}) or the ifmatch\index{ifmatch} option of an id statement 
+(see \ref{substaidentify}). The only condition is that the goto statement 
+and the label must be inside the same module. Once the module is terminated 
+all existing labels are forgotten. This means that in a later module a 
+label with the same name can be used again (this may not improve 
+readability though but it is a good thing when third party libraries are 
+used). \vspace{10mm}
+
+%--#] label : 
+%--#[ load :
+
+\section{load}
+\label{substaload}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & loa[d] {\tt<}filename{\tt>} [{\tt<}list of expressions{\tt>}];
+\\ See also & save (\ref{substasave}), delete (\ref{substadelete})
+\end{tabular} \vspace{4mm}
+
+\noindent Loads\index{load} a previously saved\index{saved file} 
+file\index{file!saved} (see \ref{substasave}). If no expressions are 
+specified all expressions in the file are put in the storage 
+file\index{file!storage} and obtain the status of stored global 
+expressions. If a list of expressions is specified all those expressions 
+are loaded and possible other expressions are ignored. If a specified 
+expression is not present, an error will result. If one does not know 
+exactly what expressions are present in a file one could load the file 
+without a list of expressions, because FORM will list all expressions that 
+it encountered. \vspace{10mm}
+
+%--#] load : 
+%--#[ local :
+ 
+\section{local}
+\label{substalocal}
+
+\noindent \begin{tabular}{ll}
+Type & Definition statement\\
+Syntax & l[ocal] {\tt<}name{\tt>} = {\tt<}expression{\tt>}; \\
+       & l[ocal] {\tt<}names of expressions{\tt>};
+\\ See also & global (\ref{substaglobal})
+\end{tabular} \vspace{4mm}
+
+\noindent Used to define a local\index{local} expression. A local 
+expression is an expression that will be dropped\index{drop} when a 
+.store\index{.store} instruction is encountered. If this is not what is 
+intended one should use global\index{global} expressions (see 
+\ref{substaglobal}). The statement can also be used to change the status of 
+a global expression into that of a local expression. In that case there is 
+no = sign and no right hand side. \vspace{10mm}
+
+%--#] local : 
+%--#[ makeinteger :
+
+\section{makeinteger}
+\label{substamakeinteger}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & makeinteger [{\tt<}argument specifications{\tt>}] \\ &
+    \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 
+ \verb:{:{\tt<}name of function/set{\tt>}
+[{\tt<}argument specifications{\tt>}]\verb:}:; \\
+See also & normalize (\ref{substanormalize})
+\end{tabular} \vspace{4mm}
+
+\noindent Normalizes\index{makeinteger} the indicated 
+argument\index{argument} of the indicated functions(s) in such a way that 
+all terms in this argument have integer 
+coefficients\index{coefficients!integer} with a their greatest common 
+divider being one. This still leaves the possibility that the first term of 
+this argument may be negative. If this is not desired one can first 
+normalize\index{normalize} the argument and then make its coefficients 
+integer. The overal factor that is needed to make the coefficients like 
+described is taken from the overal factor of the complete term. Example
+\begin{verbatim}
+    S   a,b,c;
+    CF  f;
+    L   F = f(22/3*a+14/5*b+18/7*c);
+    MakeInteger,f;
+    Print +f;
+    .end
+
+   F =
+      2/105*f(135*c + 147*b + 385*a);
+
+\end{verbatim}
+
+\noindent Note that this feature can be used to make outputs look much more 
+friendly. It can be used in combination with the 
+AntiBracket\index{antibracket} statement (\ref{substaabrackets}) and the 
+function dum\_\index{dum\_} (\ref{fundum}) to imitate a smart extra level 
+of brackets and make outputs shorter.
+\vspace{10mm}
+
+%--#] makeinteger : 
+%--#[ many :
+ 
+\section{many}
+\label{substamany}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & many {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{many} is identical to the many option of the 
+id\index{id} statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   many ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id many ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] many : 
+%--#[ merge : To do <--------
+%
+%	See in reshuf.c
+%	Opposite of distrib_
+%
+%--#] merge : 
+%--#[ metric :
+
+\section{metric}
+\label{substametric}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & metric {\tt<}option{\tt>};
+\end{tabular}
+
+\noindent Remark: statement\index{metric} is inactive\index{inactive}. 
+Should have no effect.
+\vspace{10mm}
+
+%--#] metric : 
+%--#[ moduleoption :
+
+\section{moduleoption}
+\label{substamoduleoption}
+
+\noindent \begin{tabular}{ll}
+Type & Module control statement\\
+Syntax & moduleoption {\tt<}option{\tt>}[,{\tt<}value{\tt>}];
+\\ See also & polyfun (\ref{substapolyfun}),
+              slavepatchsize (\ref{substaslavepatchsize}),
+              dollar variables (\ref{pardollars})
+\end{tabular} \vspace{4mm}
+
+\noindent Used\index{moduleoption} to set a mode for just the current 
+module. It overrides the normal setting and will revert to this normal 
+setting after this module. The settings are:
+
+\leftvitem{3cm}{parallel\index{moduleoption!parallel}}
+\rightvitem{13cm}{Allows parallel\index{parallel} execution of the current module if all 
+other conditions are right. This is the default.}
+
+\leftvitem{3cm}{noparallel\index{moduleoption!noparallel}}
+\rightvitem{13cm}{Vetoes parallel\index{parallel} execution of the current module.}
+
+\leftvitem{3cm}{inparallel\index{moduleoption!inparallel}}
+\rightvitem{13cm}{This option is more or less equivalent to the 
+InParallel~\ref{substainparallel} statement. The difference is that because 
+this statement comes at the end of the module, its effects include also the 
+expressions that have been defined inside the current module. This is not 
+the case for the InParallel statement. The InParallel option can be 
+followed by the names of expressions. If no such names are present, all 
+active expressions are affected. Otherwise only the expressions that are 
+mentioned are affected. Once this option is mentioned no more options can 
+be used inside the same ModuleOption statement. This is to avoid potential 
+confusion that could arise when expressions are used with a name identical 
+to the name of one of the options.}
+
+\leftvitem{3cm}{notinparallel\index{moduleoption!notinparallel}}
+\rightvitem{13cm}{This option is more or less equivalent to the 
+NotInParallel~\ref{substanotinparallel} statement. The difference is that 
+because this statement comes at the end of the module, its effects include 
+also the expressions that have been defined inside the current module. This 
+is not the case for the NotInParallel statement. The NotInParallel option 
+can be followed by the names of expressions. If no such names are present, 
+all active expressions are affected. Otherwise only the expressions that 
+are mentioned are affected. Once this option is mentioned no more options 
+can be used inside the same ModuleOption statement. This is to avoid 
+potential confusion that could arise when expressions are used with a name 
+identical to the name of one of the options.}
+
+\leftvitem{3cm}{polyfun\index{moduleoption!polyfun}}
+\rightvitem{13cm}{Possibly followed by the name of a 
+`polyfun'\index{polyfun}. Is similar to the polyfun statement (see 
+\ref{substapolyfun}) but only valid for the current module.}
+
+\leftvitem{3cm}{slavepatchsize\index{moduleoption!slavepatchsize}}
+\rightvitem{13cm}{Followed by a number. Similar to the 
+slavepatchsize\index{slavepatchsize} 
+statement (see \ref{substaslavepatchsize}) but only valid for the current 
+module.}
+
+\leftvitem{3cm}{local\index{moduleoption!local}}
+\rightvitem{13cm}{Should be followed by a list of \$-variables. Indicates 
+that the contents of the indicated \$-variables\index{\$-variable} are not 
+relevant once the module has been finished and neither is the term by term 
+order in which the \$-variables obtain their value. In practise each 
+processor\index{processor}/thread\index{thread} will work with its own copy 
+of this variable.}
+
+\leftvitem{3cm}{maximum\index{moduleoption!maximum}}
+\rightvitem{13cm}{Should be followed by a list of 
+\$-variables\index{\$-variable}. Indicates that of the contents of the 
+indicated \$-variables the maximum is the only thing that is relevant once 
+the module has been finished. The term by term order in which the 
+\$-variables obtain their value is not relevant.}
+
+\leftvitem{3cm}{minimum\index{moduleoption!minimum}}
+\rightvitem{13cm}{Should be followed by a list of 
+\$-variables\index{\$-variable}. Indicates that of the contents of the 
+indicated \$-variables the minimum is the only thing that is relevant once 
+the module has been finished. The term by term order in which the 
+\$-variables obtain their value is not relevant.}
+
+\leftvitem{3cm}{sum\index{moduleoption!sum}}
+\rightvitem{13cm}{Should be followed by a list of 
+\$-variables\index{\$-variable}. Indicates that the indicated \$-variables 
+are representing a sum. The term by term order in which the \$-variables 
+obtain their value is not relevant.}
+
+\noindent The options `local', `maximum', `minimum' and `sum' are for 
+parallel versions of \FORM. The presence of \$-variables can be a problem 
+when the order of processing of the terms is not well defined. These 
+options tell \FORM\ what these \$-variables are used for. In the above 
+cases \FORM\ can take the appropriate action when gathering information 
+from the various processors. This will allow
+parallel\index{parallel execution} execution of the current module. If 
+\$-variables are used in a module and they are defined on a term by term 
+basis, the normal action of \FORM\ will be to veto parallel execution 
+unless it is clear that no confusion can occur. See also the chapters on 
+the parallel version(\ref{parallel}) and on the dollar 
+variables(\ref{pardollars}).\vspace{10mm}
+
+%--#] moduleoption : 
+%--#[ modulus :
+ 
+\section{modulus}
+\label{substamodulus}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & m[odulus] {\tt<}value{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent Defines all calculus to be modulus\index{modulus} the given 
+number, provided this number is positive. If this number is less than the 
+(installation dependend but at least 10000) maximum power for symbols and 
+dotproducts the powers of symbols and dotproducts are reduced with the 
+relation $x^{value} = x$.
+
+\noindent The modulus calculus extends itself to 
+fractions\index{fractions}. This means that if the value is not a prime 
+number division by zero could result. It is the responsibility of the user 
+to avoid such problems.
+
+\noindent When the value in the modulus statement is either 0 or 1 the 
+statement would be meaningless. It is used as a signal to FORM that modulus 
+calculus should be switched off again.
+
+\noindent The reduction of powers with the relation $x^{value}=x$ can be 
+switched off by specifying a negative number for `value'. In that case only 
+coefficients are treated. Of course the value used for the modulus will be 
+the absolute value of the number that was specified. Hence
+\begin{verbatim}
+    Modulus,-17;
+\end{verbatim}
+will set all arithmetic to modulus 17 and powers will not be affected.
+
+\noindent When the value for the modulus arithmetic is a prime\index{prime} 
+number there exists another option. In the statement
+\begin{verbatim}
+    Modulus p:x;
+\end{verbatim}
+in which p is a prime number and x a generator (a number such that all 
+numbers mod p that are not zero can be written as powers of x) FORM will 
+construct a table to express all nonzero numbers less than p as powers of 
+x. This will fail if either x is not a generator or when the numbers are 
+too large for the construction of such a table. If the table can be 
+constructed FORM uses it when printing results and expresses all numbers as 
+powers of the generator.\vspace{10mm}
+
+%--#] modulus : 
+%--#[ modulusgcd : To do <------
+%
+%	ModulusGCD,m,x,f1,f2;   Look inside factor.c
+%	Assume m fits inside a word and x is a symbol.
+%	Takes all occurrences of function f1 in the variable x.
+%	Takes the arguments mod m and determines their GCD.
+%	Puts the result in f2. Leaves the f1.
+%
+%--#] modulusgcd : 
+%--#[ multi :
+ 
+\section{multi}
+\label{substamulti}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & multi {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement is identical to the multi\index{multi} option of 
+the id\index{id} statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   multi ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id multi ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] multi : 
+%--#[ multiply :
+ 
+\section{multiply}
+\label{substamultiply}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & mu[ltiply] [{\tt<}option{\tt>}] {\tt<}expression{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent Statement multiplies\index{multiply} all terms by the given 
+expression. It is advisable to use the options when noncommuting variables 
+are involved. They are:\vspace{1mm}
+
+\lefttabitem{left\index{multiply!left}}
+\tabitem{Multiplication is from the left.}
+
+\lefttabitem{right\index{multiply!right}}
+\tabitem{Multiplication is from the right.}
+
+\noindent There is no guarantee\index{guarantee} as to what the default is 
+with respect to multiplication from the left or from the right. It is up to 
+{\FORM} to decide what it considers to be most efficient when neither 
+option is present. \vspace{4mm}
+
+\noindent Note that one should not abbreviate this command to `multi', 
+because there is a separate multi\index{multi} command (see 
+\ref{substamulti}). \vspace{10mm}
+
+%--#] multiply : 
+%--#[ ndrop :
+
+\section{ndrop}
+\label{substandrop}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & ndrop; \\
+       & ndrop {\tt<}list of expressions{\tt>};
+\\ See also & drop (\ref{substadrop})
+\end{tabular} \vspace{4mm}
+
+In the first variety\index{ndrop} this statement cancels all 
+drop\index{drop} plans. This means that all expressions scheduled for being 
+dropped will be restored to their previous status of local or global 
+expressions. In the second variety this happens only to the expressions 
+that are specified. Example:
+\begin{verbatim}
+   Drop;
+   Ndrop F1,F2;
+\end{verbatim}
+This drops all expressions, except for the expressions \verb:F1: and 
+\verb:F2:. \vspace{10mm}
+
+%--#] ndrop : 
+%--#[ nfunctions :
+ 
+\section{nfunctions}
+\label{substanfunctions}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & n[functions] {\tt<}list of functions to be declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), cfunctions (\ref{substacfunctions})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{nfunction} declares 
+noncommuting\index{noncommuting} functions. It is equal to the 
+function\index{function} statement (see \ref{substafunctions}) which has 
+the noncommuting property as its default. \vspace{10mm}
+
+%--#] nfunctions : 
+%--#[ nhide :
+
+\section{nhide}
+\label{substanhide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & nhide; \\
+       & nhide {\tt<}list of expressions{\tt>};
+\\ See also & hide (\ref{substahide}),
+              unhide (\ref{substaunhide}),
+              nunhide (\ref{substanunhide}),
+              pushhide (\ref{substapushhide}),
+              pophide (\ref{substapophide})
+\end{tabular} \vspace{4mm}
+
+\noindent In its first variety\index{nhide} this statement undoes all 
+hide\index{hide} plans that exist thus far in the current module. In the 
+second variety it does this only for the specified active\index{active} 
+expressions. See the hide statement in \ref{substahide}. Example:
+\begin{verbatim}
+   Hide;
+   Nhide F1,F2;
+\end{verbatim}
+Here all active expressions will be transferred to the hide file except for 
+the expressions \verb:F1: and \verb:F2:. \vspace{10mm}
+
+%--#] nhide : 
+%--#[ normalize :
+
+\section{normalize}
+\label{substanormalize}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & normalize options \verb:{:{\tt<}name of function/set{\tt>}
+         [{\tt<}argument specifications{\tt>}]\verb:}:;
+\\ See also & argument (\ref{substaargument}), splitarg 
+            (\ref{substasplitarg}), makeinteger (\ref{substamakeinteger})
+\end{tabular} \vspace{4mm}
+
+\noindent Normalizes\index{normalize} the indicated 
+arguments\index{argument} of the indicated functions. Normalization means 
+that the argument will be multiplied by the inverse of its 
+coefficient\index{coefficient} 
+(provided it is not zero). This holds for single term arguments. For 
+multiple term arguments the inverse of the coefficient of the first term of 
+the argument is used. The options and the argument specifications are as in 
+the SplitArg\index{splitarg} statement (see \ref{substasplitarg}). Under normal 
+circumstances the coefficient that is removed from the argument(s) is 
+multiplied into the coefficient of the term. This can be avoid with the 
+extra option
+\verb:(0):. Hence
+
+\leftvitem{4cm}{Normalize,f;}
+\rightvitem{12cm}{changes {\tt f(2*x+3*y)} into {\tt 2*f(x+3/2*y)} but}
+
+\leftvitem{4cm}{Normalize,(0),f;}
+\rightvitem{12cm}{changes {\tt f(2*x+3*y)} into {\tt f(x+3/2*y)}.}
+\vspace{10mm}
+
+%--#] normalize : 
+%--#[ notinparallel :
+
+\section{notinparallel}
+\label{substanotinparallel}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & notinparallel; \\
+       & notinparallel {\tt<}list of expressions{\tt>};
+\\ See also & InParallel (\ref{substainparallel}), 
+     ModuleOption (\ref{substamoduleoption})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement is only active in the context of 
+TFORM\index{TFORM}. It vetoes (small) expressions to be executed side by 
+side. For a complete explanation of this type of running one should look at 
+the InParallel~\ref{substainparallel} statement. Because the default is 
+that expressions are executed one by one, the major use of this statement 
+is in constructions like:
+\begin{verbatim}
+   InParallel;
+   NotInParallel F1,F25;
+\end{verbatim}
+which would first mark all expressions to be executed in simultaneous mode 
+and then make an exception for {\tt F1} and {\tt F25}.
+\vspace{10mm}
+
+%--#] notinparallel : 
+%--#[ nprint :
+
+\section{nprint}
+\label{substanprint}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & np[rint] {\tt<}list of names of expressions{\tt>};
+\\ See also & print (\ref{substaprint})
+\end{tabular} \vspace{4mm}
+
+\noindent Statement\index{nprint} is used to take expressions from the list 
+of expressions to be printed. When a print\index{print} statement is used 
+(see \ref{substaprint}) without specification of expressions, all active 
+expressions are marked for printing. With this statement one can remove a 
+number of them from the list. \vspace{10mm}
+
+%--#] nprint : 
+%--#[ nskip :
+
+\section{nskip}
+\label{substanskip}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & nskip; \\
+       & nskip {\tt<}list of expressions{\tt>};
+\\ See also & skip (\ref{substaskip})
+\end{tabular} \vspace{4mm}
+
+\noindent In the first variety\index{nskip} it causes the cancellation of 
+all skip\index{skip} plans (see \ref{substaskip}) for expressions. The 
+status of these expressions is restored to their previous status (active 
+local or global expressions). In the second variety this is done for the 
+specified expressions only. Example:
+\begin{verbatim}
+   Skip;
+   Nskip F1,F2;
+\end{verbatim}
+This causes all active expressions to be skipped except for the expressions 
+\verb:F1: and \verb:F2:. \vspace{10mm}
+
+%--#] nskip : 
+%--#[ ntable :
+
+\section{ntable}
+\label{substantable}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & ntable {\tt<}options{\tt>} {\tt<}table to be 
+declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), table (\ref{substatable}),
+        ctable (\ref{substactable})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{ntable} declares a 
+noncommuting\index{noncommuting} table\index{table!noncommuting}. For the 
+rest it is identical to the table\index{table} command (see 
+\ref{substatable}) which has the commuting property as its default. 
+\vspace{10mm}
+
+%--#] ntable : 
+%--#[ ntensors :
+ 
+\section{ntensors}
+\label{substantensors}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & nt[ensors] {\tt<}list of tensors to be declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), tensors 
+            (\ref{substatensors}), ctensors (\ref{substactensors})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{ntensor} declares 
+noncommuting\index{noncommuting} tensors\index{tensor!noncommuting}. For 
+the rest it is equal to the tensor\index{tensor} statement (see 
+\ref{substatensors}) which has the commuting property as its default.
+
+\noindent The options that exist for properties of tensors are the same as 
+those for functions (see \ref{substafunctions}). \vspace{10mm}
+
+%--#] ntensors : 
+%--#[ nunhide :
+
+\section{nunhide}
+\label{substanunhide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & nunhide; \\
+       & nunhide {\tt<}list of expressions{\tt>};
+\\ See also & hide (\ref{substahide}),
+              nhide (\ref{substanhide}),
+              unhide (\ref{substaunhide}),
+              pushhide (\ref{substapushhide}),
+              pophide (\ref{substapophide})
+\end{tabular} \vspace{4mm}
+
+\noindent In its first variety\index{nunhide} this statement undoes all 
+unhide\index{unhide} (see \ref{substaunhide} and \ref{substahide}) plans 
+that the system has in the current module. In its second variety this 
+happens only with the specified expressions. Example:
+\begin{verbatim}
+   Unhide;
+   Nunhide F1,F2;
+\end{verbatim}
+All expressions are taken from the hide\index{hide} system, except for the 
+expressions \verb:F1: and \verb:F2:. \vspace{10mm}
+
+%--#] nunhide : 
+%--#[ nwrite :
+
+\section{nwrite}
+\label{substanwrite}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & nw[rite] {\tt<}keyword{\tt>};
+\\ See also & on (\ref{substaon}), off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{nwrite} is considered 
+obsolete\index{obsolete}. All its varieties have been taken over by the 
+off\index{off} statement (see \ref{substaoff}) and the on\index{on} 
+statement (see \ref{substaon}). The current version of {\FORM} will still 
+recognize it, but the user is advised to avoid its usage. In future 
+versions of {\FORM} it is scheduled to be used for a different kind of 
+writing and hence its syntax may change considerably. The conversion 
+program conv2to3\index{conv2to3} should help in the conversion of programs 
+that have been written for version 2. For completeness we still give the 
+syntax and how it should be converted.
+The keywords are: \vspace{4mm}
+
+\leftvitem{3cm}{stats\index{nwrite!stats}}
+\rightvitem{13cm}{Same as: Off stats;}
+
+\leftvitem{3cm}{statistics\index{nwrite!statistics}}
+\rightvitem{13cm}{Same as: Off statistics;}
+
+\leftvitem{3cm}{shortstats\index{nwrite!shortstats}}
+\rightvitem{13cm}{Same as: Off shortstats;}
+
+\leftvitem{3cm}{shortstatistics\index{nwrite!shortstatistics}}
+\rightvitem{13cm}{Same as: Off shortstatistics;}
+
+\leftvitem{3cm}{warnings\index{nwrite!warnings}}
+\rightvitem{13cm}{Same as: Off warnings;}
+
+\leftvitem{3cm}{allwarnings\index{nwrite!allwarnings}}
+\rightvitem{13cm}{Same as: Off allwarnings;}
+
+\leftvitem{3cm}{setup\index{nwrite!setup}}
+\rightvitem{13cm}{Same as: Off setup;}
+
+\leftvitem{3cm}{names\index{nwrite!names}}
+\rightvitem{13cm}{Same as: Off names;}
+
+\leftvitem{3cm}{allnames\index{nwrite!allnames}}
+\rightvitem{13cm}{Same as: Off allnames;}
+
+\leftvitem{3cm}{shortstats\index{nwrite!shortstats}}
+\rightvitem{13cm}{Same as: Off shortstats;}
+
+\leftvitem{3cm}{highfirst\index{nwrite!highfirst}}
+\rightvitem{13cm}{Same as: Off highfirst;}
+
+\leftvitem{3cm}{lowfirst\index{nwrite!lowfirst}}
+\rightvitem{13cm}{Same as: Off lowfirst;}
+
+\leftvitem{3cm}{powerfirst\index{nwrite!powerfirst}}
+\rightvitem{13cm}{Same as: Off powerfirst;}
+\vspace{10mm}
+
+%--#] nwrite : 
+%--#[ off :
+
+\section{off}
+\label{substaoff}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & off {\tt<}keyword{\tt>}; \\
+       & off {\tt<}keyword{\tt>} {\tt<}option{\tt>};
+\\ See also & on (\ref{substaon})
+\end{tabular} \vspace{4mm}
+
+\noindent Statement\index{off} to control settings\index{settings} during 
+execution. Many of these settings replace older statements. The settings 
+and their keywords are:
+ 
+\leftvitem{3cm}{allnames\index{off!allnames}}
+\rightvitem{13cm}{Turns the allnames mode off. The default.}
+ 
+\leftvitem{3cm}{allwarnings\index{off!allwarnings}}
+\rightvitem{13cm}{Turns off the printing of all warnings.}
+
+\leftvitem{3cm}{compress\index{off!compress}}
+\rightvitem{13cm}{Turns compression mode off.}
+ 
+\leftvitem{3cm}{finalstats\index{off!finalstats}}
+\rightvitem{13cm}{Turns off the last line of statistics that is normally 
+printed at the end of the run (introduced in version 3.2).}
+ 
+\leftvitem{3cm}{highfirst\index{off!highfirst}}
+\rightvitem{13cm}{Puts the sorting in a low first mode.}
+
+\leftvitem{3cm}{insidefirst\index{off!insidefirst}}
+\rightvitem{13cm}{Not active at the moment.}
+ 
+\leftvitem{3cm}{lowfirst\index{off!lowfirst}}
+\rightvitem{13cm}{Leaves the default low first mode and puts the sorting in 
+a high first mode.}
+ 
+\leftvitem{3cm}{names\index{off!names}}
+\rightvitem{13cm}{Turns the names mode off. This is the default.}
+
+\leftvitem{3cm}{nospacesinnumbers\index{off!nospacesinnumbers}}
+\rightvitem{13cm}{\label{staoffnospacesinnumbers}Makes that very long numbers are printed with leading 
+blank spaces at the beginning of a new line. The numbers are usually broken 
+up by placing a backspace character at the end of the line and then 
+continuing at the next line. For cosmetic purposes FORM puts usually a few 
+blank spaces at the beginning of the line. FORM itself can read this but 
+some programs cannot. This option can be turned off by the `on 
+nospacesinnumbers;' statement. The printing of the blank characters can be 
+restored by turning this variable off. See also page 
+\ref{nospacesinnumbers} for a corresponding variable in the setup file.}
+ 
+\leftvitem{3cm}{parallel\index{off!parallel}}
+\rightvitem{13cm}{Disallows the running of the program in parallel mode 
+(only relevant for parallel versions of FORM).}
+ 
+\leftvitem{3cm}{powerfirst\index{off!powerfirst}}
+\rightvitem{13cm}{Puts the sorting back into `highfirst' mode.}
+
+\leftvitem{3cm}{propercount\index{off!propercount}}
+\rightvitem{13cm}{Turns the propercounting mode off. This means that for the 
+generated terms in the statistics not only the `ground level' terms are 
+counted but also terms that were generated inside function arguments.}
+ 
+\leftvitem{3cm}{properorder\index{off!properorder}}
+\rightvitem{13cm}{Turns the properorder mode off. This is the default.}
+ 
+\leftvitem{3cm}{setup\index{off!setup}}
+\rightvitem{13cm}{Switches off the mode in which the setup parameters are 
+printed. This is the default.}
+
+\leftvitem{3cm}{stats\index{off!stats}}
+\rightvitem{13cm}{Same as `Off statistics'.}
+
+\leftvitem{3cm}{statistics\index{off!statistics}}
+\rightvitem{13cm}{Turns off the printing of statistics.}
+
+\leftvitem{3cm}{shortstats\index{off!shortstats}}
+\rightvitem{13cm}{Same as `Off shortstatistics'.}
+
+\leftvitem{3cm}{shortstatistics\index{off!shortstatistics}}
+\rightvitem{13cm}{Takes the writing of the statistics back from shorthand 
+mode to the regular statistics mode in which each statistics messages takes 
+three lines of text and one blank line.}
+ 
+\leftvitem{3cm}{threadloadbalancing\index{off!threadloadbalancing}}
+\rightvitem{13cm}{Disallows the loadbalancing of \TFORM in parallel mode. 
+In other versions of FORM this option is ignored.}
+ 
+\leftvitem{3cm}{threads\index{off!threads}}
+\rightvitem{13cm}{Disallows multithreaded running in \TFORM.
+In other versions of FORM this option is ignored.}
+
+\leftvitem{3cm}{threadstats\index{off!threadstats}}
+\rightvitem{13cm}{Turns off the thread by thread printing of the statitics 
+in \TFORM. Only the master thread will be printing statistics. Other 
+versions of FORM will ignore this option.}
+
+\leftvitem{3cm}{warnings\index{off!warnings}}
+\rightvitem{13cm}{Turns off the printing of warnings.}
+
+\noindent If a description is too short, one should also consult the 
+description in the on statement (see \ref{substaon}). \vspace{10mm}
+
+%--#] off : 
+%--#[ on :
+ 
+\section{on}
+\label{substaon}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & on {\tt<}keyword{\tt>}; \\
+       & on {\tt<}keyword{\tt>} {\tt<}option{\tt>};
+\\ See also & off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent New statement to control settings during execution. Many of these 
+settings replace older statements. The settings and their keywords are:
+ 
+\leftvitem{3cm}{allnames\index{on!allnames}}
+\rightvitem{13cm}{Same as `On names' but additionally all system variables 
+are printed as well. Default is off. }
+ 
+\leftvitem{3cm}{allwarnings\index{on!allwarnings}}
+\rightvitem{13cm}{Puts the printing of warnings in a mode in which all 
+warnings, even the very unimportant warnings are printed.}
+
+\leftvitem{3cm}{compress\index{on!compress}}
+\rightvitem{13cm}{Turns compression mode on. This compression is a 
+relatively simple compression that hardly costs extra computer time but 
+saves roughly a factor two in diskstorage. The old statement was `compress 
+on' but this should be avoided in the future. This setting is the default.}
+
+\leftvitem{3cm}{compress,gzip\index{gzip}}
+\rightvitem{13cm}{This option should be followed by a comma or a space and 
+a single digit. It activates the gzip compression for the sort file. This 
+compression can make the intermediate sort file considerably shorter at the 
+cost of some CPU time. This option can be used when disk space is at a 
+premium. The digit indicates the compression level. Zero means no 
+compression and 9 is the highest level. The default level is 6. Above that 
+the compression becomes very slow and doesn't gain very much extra.}
+
+\leftvitem{3cm}{finalstats\index{on!finalstats}}
+\rightvitem{13cm}{Determines whether FORM prints a final line of run time 
+statistics at the end of the run. Default is on.}
+ 
+\leftvitem{3cm}{highfirst\index{on!highfirst}}
+\rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
+powers come before low powers.}
+
+\leftvitem{3cm}{insidefirst\index{on!insidefirst}}
+\rightvitem{13cm}{Not active at the moment.}
+ 
+\leftvitem{3cm}{lowfirst\index{on!lowfirst}}
+\rightvitem{13cm}{In this mode polynomials are sorted in a way that low 
+powers come before high powers. This is the default.}
+ 
+\leftvitem{3cm}{names\index{on!names}}
+\rightvitem{13cm}{Turns on the mode in which at the end of each module the 
+names of all variables that have been defined by the user are printed. This 
+is an inspection mode for debugging by the user. Default is off.}
+
+\leftvitem{3cm}{nospacesinnumbers\index{on!nospacesinnumbers}}
+\rightvitem{13cm}{\label{staonnospacesinnumbers}Makes that very long numbers are printed with no leading 
+blank spaces at the beginning of a new line. The numbers are usually broken 
+up by placing a backspace character at the end of the line and then 
+continuing at the next line. For cosmetic purposes FORM puts usually a few 
+blank spaces at the beginning of the line. FORM itself can read this but 
+some programs cannot. Hence this printing of the blank characters can be 
+omitted by turning this variable on. See also page 
+\ref{nospacesinnumbers} for a corresponding variable in the setup file.}
+ 
+\leftvitem{3cm}{parallel\index{on!parallel}}
+\rightvitem{13cm}{Allows the running of the program in parallel mode unless 
+other problems prevent this. This is of course only relevant for parallel 
+versions of FORM. The default is on.}
+ 
+\leftvitem{3cm}{powerfirst\index{on!powerfirst}}
+\rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
+powers come before low powers. The most relevant is however the combined 
+power of all symbols.}
+
+\leftvitem{3cm}{propercount\index{on!propercount}}
+\rightvitem{13cm}{Sets the counting of the terms during generation into 
+`propercount' mode. This means that only terms at the `ground level' are 
+counted and terms inside functions arguments are not counted in the 
+statistics. This setting is the default.}
+ 
+\leftvitem{3cm}{properorder\index{on!properorder}}
+\rightvitem{13cm}{Turns the properorder mode on. The default is off. In the 
+properorder mode FORM pays particular attention to function arguments when 
+bringing terms and expressions to normal form. This may cost a considerable 
+amount of extra time. In normal mode FORM is a bit sloppy (and much 
+faster) about this, resulting sometimes in an ordering that appears without 
+logic. This concerns only function arguments! This mode is mainly intended 
+for the few moments in which the proper ordering is important.}
+ 
+\leftvitem{3cm}{setup\index{on!setup}}
+\rightvitem{13cm}{Causes the printing of the current setup parameters for 
+inspection. Default is off.}
+
+\leftvitem{3cm}{shortstatistics\index{on!shortstatistics}}
+\rightvitem{13cm}{Puts the writing of the statistics in a shorthand mode in 
+which the complete statistics are written on a single line only.}
+ 
+\leftvitem{3cm}{shortstats\index{on!shortstats}}
+\rightvitem{13cm}{Same as `On shortstatistics'.}
+
+\leftvitem{3cm}{statistics\index{on!statistics}}
+\rightvitem{13cm}{Turns the writing of runtime statistics on. This is the 
+default. It is possible to change this default with one of the setup 
+parameters in the setup file (see \ref{setup}).}
+ 
+\leftvitem{3cm}{stats\index{on!stats}}
+\rightvitem{13cm}{Same as `On statistics'.}
+ 
+\leftvitem{3cm}{threadloadbalancing\index{on!threadloadbalancing}}
+\rightvitem{13cm}{Causes the loadbalancing mechanism in TFORM to be turned 
+on or off. Default is on. Ignored by other versions of FORM.}
+ 
+\leftvitem{3cm}{threads\index{on!threads}}
+\rightvitem{13cm}{Allows the running of the program in multithreaded mode 
+unless other problems prevent this. This is of course only relevant for 
+TFORM. Other versions of FORM ignore this. The default is on.}
+ 
+\leftvitem{3cm}{threadstats\index{on!threadstats}}
+\rightvitem{13cm}{Only active for TFORM. It determines whether all threads 
+print their run time statistics or only the master thread does so. Default 
+is on.}
+ 
+\leftvitem{3cm}{warnings\index{on!warnings}}
+\rightvitem{13cm}{Turns on the printing of warnings in regular mode. This 
+is the default.}
+\vspace{10mm}
+
+%--#] on : 
+%--#[ once :
+ 
+\section{once}
+\label{substaonce}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & once {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{once} is identical to the once option of the 
+id\index{id} statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   once ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id once ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] once : 
+%--#[ only :
+ 
+\section{only}
+\label{substaonly}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & only {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{only} is identical to the only option of the 
+id\index{id} statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   only ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id only ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] only : 
+%--#[ polyfun :
+
+\section{polyfun}
+\label{substapolyfun}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & polyfun {\tt<}name of function{\tt>}; \\
+       & polyfun;
+\\ See also & moduleoption (\ref{substamoduleoption})
+\end{tabular}\vspace{4mm}
+
+\noindent Declares the specified\index{polyfun} function to be the 
+`polyfun'. The polyfun is a function of which the single 
+argument\index{argument} is considered to be the 
+coefficient\index{coefficient} of the term. If two terms are otherwise 
+identical the arguments of their polyfun will be added during the sorting, 
+even if these arguments are little expressions. Hence
+\begin{verbatim}
+    PolyFun acc;
+    Local F = 3*x^2*acc(1+y+y^2)+2*x^2*acc(1-y+y^2);
+\end{verbatim}
+will result in
+\begin{verbatim}
+    F = x^2*acc(5+y+5*y^2);
+\end{verbatim}
+Note that the external numerical coefficient\index{coefficient} is also 
+pulled inside the polyfun.
+
+\noindent If the polyfun statement has no argument, FORM reverts to its 
+default mode in which no polyfun exists. This does not change any terms. If 
+one would like to remove the polyfun from the terms one has to do that 
+`manually' as in
+\begin{verbatim}
+    PolyFun;
+    id  acc(x?) = x;
+\end{verbatim}
+in which we assume that previously the function acc had been declared to be 
+the `polyfun'. \vspace{10mm}
+
+%--#] polyfun : 
+%--#[ polyratfun :
+
+\section{polyratfun}
+\label{substapolyratfun}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & polyratfun {\tt<}name of function{\tt>}; \\
+       & polyratfun;
+\\ See also & polyfun (\ref{substapolyfun}),
+			  moduleoption (\ref{substamoduleoption})
+\end{tabular}\vspace{4mm}
+
+\noindent Declares the specified\index{polyratfun} function to be the 
+`polyratfun'. The polyratfun is a function with two 
+arguments\index{argument} which together form a rational polynomial that 
+acts as the 
+coefficient\index{coefficient} of the term. If two terms are otherwise 
+identical the arguments of their polyratfun will be added during the sorting, 
+even if these arguments are little nontrivial. Hence
+\begin{verbatim}
+    PolyRatFun acc;
+    Local F = 3*x^2*acc(1+y+y^2,1-y)+2*x^2*acc(1-y+y^2,1+y);
+\end{verbatim}
+will result in
+\begin{verbatim}
+    F = x^2*acc(-y^3-10*y^2-2*y-5,y^2-1);
+\end{verbatim}
+Note that the external numerical coefficient\index{coefficient} is also 
+pulled inside the polyratfun.
+
+\noindent If the polyratfun statement has no argument, FORM reverts to its 
+default mode in which no polyratfun exists. This does not change any terms.
+
+\noindent The polyratfun has many similarities with the polyfun (see 
+\ref{substapolyfun}). At any moment there can only be at most either one 
+polyfun or one polyratfun. Occurrences of the polyfun or the polyratfun 
+with the wrong number or the wrong type of arguments are treated as regular 
+functions.
+
+\noindent There is a fundamental difference between the polyfun and the 
+polyratfun. The last one is far more restrictive. It can have only numbers 
+and symbols for its arguments. Also the ordering of the terms in the 
+arguments can be different. In the polyratfun the terms are always sorted 
+with the highest power first. In the polyfun the ordering is as with the 
+regular terms. By default the lowest powers come first as one usually likes 
+for power series expansions.
+
+\noindent REMARK: The treatment of polynomials is currently under 
+development and hence not all facilities are fully operational. At the 
+moment of writing (15-nov-2007), the polyratfun only supports rational 
+polynomials in a single variable.
+\vspace{10mm}
+
+%--#] polyratfun :
+%--#[ pophide :
+
+\section{pophide}
+\label{substapophide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & pophide;
+\\ See also & hide (\ref{substahide}),
+              nhide (\ref{substanhide}),
+              unhide (\ref{substaunhide}),
+              nunhide (\ref{substanunhide}),
+              pushhide (\ref{substapushhide})
+\end{tabular} \vspace{4mm}
+
+\noindent Undoes\index{pophide} the action of the most recent 
+pushhide\index{pushhide} statement (see \ref{substapushhide}). If there is 
+no matching pushhide statement an error will result. \vspace{10mm}
+
+%--#] pophide : 
+%--#[ print :
+ 
+\section{print}
+\label{substaprint}
+
+\noindent \begin{tabular}{ll}
+Type & Print statement\\
+Syntax & Print [{\tt<}options{\tt>}]; \\
+       & Print \verb:{:[{\tt<}options{\tt>}] {\tt<}expression{\tt>}\verb:}:; \\
+       & Print [{\tt<}options{\tt>}] "{\tt<}format string{\tt>}" [{\tt<}objects{\tt>}];
+\\ See also & print[] (\ref{substaprintc}),
+              nprint (\ref{substanprint}),
+              printtable (\ref{substaprinttable})
+\end{tabular}\vspace{4mm}
+
+\noindent General purpose print\index{print} statement. Has three modes. In 
+the first two modes flags are set for the printing of expressions after the 
+current module has been finished. The third mode concerns printing during 
+execution. This allows the printing of indivudual terms or 
+\$-variables\index{\$-variable} on a term by term basis. It should be 
+considered as a useful debugging\index{debugging} device.
+
+\noindent In the first mode all active\index{active} expressions are 
+scheduled for printing. The options are
+
+\leftvitem{1cm}{+f}
+\rightvitem{15cm}{Printing will be only to the log\index{log} 
+file\index{file!log}.}
+
+\leftvitem{1cm}{-f}
+\rightvitem{15cm}{Printing will be both to the screen\index{screen} and to 
+the log\index{log} file\index{file!log}. This is the default.}
+
+\leftvitem{1cm}{+s}
+\rightvitem{15cm}{Each term will start a new line. This is called the 
+single\index{single term mode} term mode\index{mode!single term}.}
+
+\leftvitem{1cm}{-s}
+\rightvitem{15cm}{Regular term mode. There can be more terms in a line. 
+Linebreaks\index{linebreaks} are placed when the line is full. The line 
+size is set in the format\index{format} statement (see \ref{substaformat}). 
+This is the default.}
+
+\noindent In the second mode one can specify
+individual\index{individual expressions} expressions to be printed. The 
+options hold for all the expressions that follow them until new options are 
+specified. The options are the same as for the first mode.
+
+\noindent In the third mode there is a format\index{format string} string 
+as for the printf\index{printf} command in the C\index{C} programming 
+language. Of course the control characters are not exactly the same as for 
+the C language because the objects are different. The special characters 
+are:
+
+\leftvitem{1cm}{\%t\index{print!\%t}}
+\rightvitem{15cm}{The current term will be printed at this position 
+including its sign, even if this is a plus sign.}
+
+\leftvitem{1cm}{\%T\index{print!\%T}}
+\rightvitem{15cm}{The current term will be printed at this position. If its 
+coeficient is positive no leading plus sign is printed.}
+
+\leftvitem{1cm}{\%w\index{print!\%w}}
+\rightvitem{15cm}{The number of the current thread will be printed. This is 
+for \TFORM\ only. In the sequential version this combination is skipped. The 
+number zero refers to the master thread.}
+ 
+\leftvitem{1cm}{\%W\index{print!\%W}}
+\rightvitem{15cm}{The number of the current thread and its CPU-time at the 
+moment of printing. This is for \TFORM\ only. In the sequential version 
+this combination is skipped. The number zero refers to the master thread.}
+
+\leftvitem{1cm}{\%\$\index{print!\%\$}}
+\rightvitem{15cm}{A dollar expression will be printed at this position. The 
+name(s) of the dollar expression(s) should follow the format string in the 
+order in which they are used in the format string.}
+
+\leftvitem{1cm}{\%\%\index{print!\%\%}}
+\rightvitem{15cm}{The character \%.}
+
+\leftvitem{1cm}{\%}
+\rightvitem{15cm}{If this is the last character of the string no linefeed 
+will be printed at the end of the print command.}
+
+\leftvitem{1cm}{$\backslash$n}
+\rightvitem{15cm}{A linefeed\index{linefeed}.}
+
+\noindent Each call is terminated with a linefeed\index{linefeed}. Example:
+\begin{verbatim}
+    Symbols a,b,c;
+    Local F = 3*a+2*b;
+    Print "> %T";
+    id  a = b+c;
+    Print ">> %t";
+    Print;
+    .end
+> 3*a
+>>  + 3*b
+>>  + 3*c
+> 2*b
+>>  + 2*b
+
+   F =
+      5*b + 3*c;
+\end{verbatim}
+
+\noindent In the third mode one can also use the $+/-f$ options of the 
+first mode. This should be placed before the format string as in
+\begin{verbatim}
+    Print +f "(%$) %t",$var;
+\end{verbatim}
+
+\noindent Because of the mixed nature of this statement it can occur in 
+more than one location in the module. \vspace{10mm}
+
+%--#] print : 
+%--#[ print[] :
+
+\section{print[]}
+\label{substaprintc}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & print[] \verb:{:[{\tt<}options{\tt>}] {\tt<}name{\tt>}\verb:}:;
+\\ See also & print (\ref{substaprint})
+\end{tabular}\vspace{4mm}
+
+\noindent Print\index{print} statement\index{print[]} to cause the printing 
+of expressions at the end of the current module. Is like the first two 
+modes of the regular print statement (see \ref{substaprint}), but when 
+printing FORM does not print the contents of each bracket\index{bracket}, 
+only the number of terms inside the bracket. Is to be used in combination 
+with a bracket or an antibracket\index{antibracket} statement (see 
+\ref{substabracket} and \ref{substaabrackets}). Apart from this the options 
+are identical to those of the first two modes of the print statement. 
+\vspace{10mm}
+
+%--#] print[] : 
+%--#[ printtable :
+
+\section{printtable}
+\label{substaprinttable}
+
+\noindent \begin{tabular}{ll}
+Type & Print statement\\
+Syntax & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>};  \\
+       & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>} $>$ {\tt<}filename{\tt>}; \\
+       & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>} $>>$ {\tt<}filename{\tt>};
+\\ See also & print (\ref{substaprint}),
+            table (\ref{substatable}),
+            fill (\ref{substafill}),
+            fillexpression (\ref{substafillexpression}) \\ &
+            and the table\_ function (\ref{funtable})
+\end{tabular}\vspace{4mm}
+
+\noindent Almost\index{printtable} the opposite of a 
+FillExpression\index{fillexpression} statement (see 
+\ref{substafillexpression}). Prints\index{print} the contents of a 
+table\index{table} according to the current format (see 
+\ref{substaformat}). The output can go to standard output, the 
+log\index{log} file\index{file!log} or a specified file. The elements of 
+the table that have been defined and filled are written in the form of 
+fill\index{fill} statements (see \ref{substafill}) in such a way that they 
+can be read in a future program to fill the table with the current 
+contents. This is especially useful when the fillexpression statement has 
+been used to dynamically extend tables based on what FORM has encountered 
+during running. This way those elements will not have to be computed again 
+in future programs. 
+
+\noindent The options are
+
+\leftvitem{1.3cm}{+f}
+\rightvitem{14.7cm}{Output is to the logfile and not to the screen.}
+
+\leftvitem{1.3cm}{-f}
+\rightvitem{14.7cm}{Output is both to the logfile and to the screen. This is 
+the default.}
+
+\leftvitem{1.3cm}{+s}
+\rightvitem{14.7cm}{Output will be in a mode in which each new term starts a 
+new line.}
+
+\leftvitem{1.3cm}{-s}
+\rightvitem{14.7cm}{Output will be in the regular mode in which new terms 
+continue to be written on the same line within the limits of the number of 
+characters per line as set in the format statement. Default is 72 
+characters per line. This can be changed with the format\index{format} 
+statement (see \ref{substaformat}).}
+
+\noindent If redirection to a file is specified output will be only to this 
+file. The +f option will be ignored. There are two possibilities:
+
+\leftvitem{2.8cm}{$>$ filename}
+\rightvitem{13.2cm}{The old contents of the file with name `filename' will be 
+overwritten\index{overwrite}.}
+
+\leftvitem{2.8cm}{$>>$ filename}
+\rightvitem{13.2cm}{The table will be appended\index{append} to the file 
+with the name `filename'. This allows the writing of more than one table to 
+a file.}
+\vspace{10mm}
+
+%--#] printtable : 
+%--#[ propercount :
+
+\section{propercount}
+\label{substapropercount}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & propercount {\tt<}on/off{\tt>};
+\\ See also & on (\ref{substaon}), off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{propercount} is obsolete\index{obsolete}. 
+The user should try to use the propercount option of the on\index{on} (see 
+\ref{substaon}) or the off\index{off} (see \ref{substaoff}) statements. 
+\vspace{10mm}
+
+%--#] propercount : 
+%--#[ pushhide :
+
+\section{pushhide}
+\label{substapushhide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & pushhide;
+\\ See also & hide (\ref{substahide}),
+              nhide (\ref{substanhide}),
+              unhide (\ref{substaunhide}),
+              nunhide (\ref{substanunhide}),
+              pophide (\ref{substapophide})
+\end{tabular} \vspace{4mm}
+
+\noindent Hides\index{hide} all currently\index{pushhide} active 
+expressions (see \ref{substahide}). The pophide\index{pophide} statement 
+(see \ref{substapophide}) can bring them back to active status again. 
+\vspace{10mm}
+
+%--#] pushhide : 
+%--#[ ratio :
+ 
+\section{ratio}
+\label{substaratio}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & ratio {\tt<}symbol1{\tt>} {\tt<}symbol2{\tt>} {\tt<}symbol3{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{ratio} can be used for limited but fast 
+partial\index{partial fractioning} fractioning. In the statement
+\begin{verbatim}
+   ratio a,b,c;
+\end{verbatim}
+in which \verb:a:, \verb:b: and \verb:c: should be three symbols {\FORM} 
+will assume that $c = b-a$ and then make the substitutions
+\begin{eqnarray}
+    \frac{1}{a^m}\frac{1}{b^n} & = & \sum_{i=0}^{m-1}\sign(i)
+        \binom(n-1+i,n-1)\frac{1}{a^{m-i}}\frac{1}{c^{n+i}}
+        +\sum_{i=0}^{n-1}\sign(m)
+        \binom(m-1+i,m-1)\frac{1}{b^{n-i}}\frac{1}{c^{m+i}}
+        \nonumber \\
+    \frac{b^n}{a^m} & = & \sum_{i=0}^n\binom(n,i)\frac{c^i}{a^{m-n+i}}
+            \ \ \ \ \ \ \ \hfill m\ge n \nonumber \\
+    \frac{b^n}{a^m} & = & \sum_{i=0}^{m-1}\binom(n,i)\frac{c^{n-i}}{a^{m-i}}
+        + \sum_{i=0}^{n-m}\binom(m-1+i,m-1)
+            c^ib^{n-m-i}
+            \ \ \ \ \ \ \ \hfill m<n \nonumber
+\end{eqnarray}
+Of course, such substitutions can be made also by the user in a more 
+flexible way. This statement has however the advantage of the best speed.
+\vspace{4mm}
+
+\noindent Actually the ratio statement is a leftover from the 
+Schoonschip\index{Schoonschip} 
+inheritance. For most simple partial fractioning one could use
+\begin{verbatim}
+   repeat id 1/[x+a]/[x+b] = (1/[x+a]-1/[x+b])/[b-a];
+   repeat id [x+a]/[x+b] = 1-[b-a]/[x+b];
+   repeat id [x+b]/[x+a] = 1+[b-a]/[x+a];
+\end{verbatim}
+or similar constructions. This does not give the speed of the 
+binomials\index{binomials}, but it does make the program more readable and 
+it is much more flexible.
+\vspace{10mm}
+
+%--#] ratio : 
+%--#[ rcyclesymmetrize :
+ 
+\section{rcyclesymmetrize}
+\label{substarcyclesymmetrize}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & rc[yclesymmetrize] \verb:{:{\tt<}name of function/tensor{\tt>}
+         [{\tt<}argument specifications{\tt>}];\verb:}: \\
+See also & symmetrize (\ref{substasymmetrize}), cyclesymmetrize 
+(\ref{substacyclesymmetrize}), antisymmetrize (\ref{substaantisymmetrize})
+\end{tabular} \vspace{4mm}
+
+\noindent The argument\index{rcyclesymmetrize} specifications are explained 
+in the section on the symmetrize\index{symmetrize} statement (see 
+\ref{substasymmetrize}). \vspace{4mm}
+
+\noindent The action of this stament is to
+reverse\index{reverse cycle symmetrize}-cycle-symmetrize
+\index{symmetrize!reverse cycle} the (specified) arguments of the functions 
+that are mentioned. This means that the arguments are brought to `natural 
+order' in the notation of FORM by trying cyclic and reverse cyclic 
+permutations\index{permutations} of the arguments or groups of arguments. 
+The `natural order' may depend on the order of declaration of the 
+variables. \vspace{10mm}
+
+%--#] rcyclesymmetrize : 
+%--#[ redefine :
+
+\section{redefine}
+\label{substaredefine}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & r[edefine] {\tt<}preprocessor variable{\tt>} "{\tt<}string{\tt>}";
+\\ See also & preprocessor variables in the chapter on the preprocessor 
+    (\ref{preprocessor})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{redefine} can be used to change the contents 
+of preprocessor\index{preprocessor variables} 
+variables\index{variables!preprocessor}. The new contents can be used after 
+the current module has finished execution and the preprocessor becomes 
+active again for further translation and compilation\index{compilation}. 
+This termwise adaptation of the value of a preprocessor variable can be 
+very useful in setting up multi module loops until a certain condition is 
+not met any longer. Example:
+\begin{verbatim}
+   #do i = 1,1
+      statements;
+      if ( condition ) redefine i "0";
+      .sort
+   #enddo
+\end{verbatim}
+As long as there is a term that fulfils the condition the loop\index{loop} 
+will continue. This defines effectively a while loop\index{loop!while} (see 
+\ref{substawhile}) over various modules. Note that the .sort\index{.sort} 
+instruction is essential. Note also that a construction like
+\begin{verbatim}
+   if ( count(x,1) > 3 ) redefine i "`i'+1";
+\end{verbatim}
+is probably not going to do what the user intends. It is not going to count 
+terms with more than three powers of x. The preprocessor will insert the 
+compile time value of the preprocessor variable i. If this is 0, then each 
+time a term has more than three powers of x, i will get the string value 
+\verb:0+1:. If one would like to do such counting, one should use a 
+dollar variable\index{\$-variable} (see \ref{dollars}). \vspace{10mm}
+
+%--#] redefine : 
+%--#[ renumber :
+
+\section{renumber}
+\label{substarenumber}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & renumber {\tt<}number{\tt>};
+\\ See also & sum (\ref{substasum})
+\end{tabular}\vspace{4mm}
+
+\noindent Renumbers\index{renumber} the dummy\index{dummy} 
+indices\index{indices!dummy}. Dummy indices are indices of the type 
+\verb:N1_?:. Normally FORM tries to renumber these indices to make the 
+internal representation of a term `minimal'. It does not try exhaustively 
+though. Especially interference with symmetric or antisymmetric functions 
+is far from perfect. This is due to considerations of economy. With the 
+renumber statement the user can force FORM to do better. The allowable 
+options are:
+
+\leftvitem{1cm}{0}
+\rightvitem{15cm}{All exchanges of one pair of dummy indices are tried 
+until all pair exchanges yield no improvements. This is the default if no 
+option is specified.}
+
+\leftvitem{1cm}{1}
+\rightvitem{15cm}{If there are N sets of dummy indices all N! 
+permutations\index{permutations} are tried. This can be very costly when a 
+large number of indices is involved. Use with care!}\vspace{10mm}
+
+%--#] renumber : 
+%--#[ repeat :
+
+\section{repeat}
+\label{substarepeat}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & repeat; \\
+       & repeat {\tt<}executable statement{\tt>}
+\\ See also & endrepeat (\ref{substaendrepeat}), while (\ref{substawhile})
+\end{tabular} \vspace{4mm}
+
+\noindent The repeat\index{repeat} statement starts a
+repeat\index{repeat environment} environment. It is terminated with an 
+endrepeat\index{endrepeat} statement (see \ref{substaendrepeat}). The 
+repeat statement and its matching endrepeat statement should be inside the 
+same module. \vspace{4mm}
+
+\noindent The staments inside the repeat environment should all be 
+executable statements (or print statements) and if any of the executable 
+statements inside the environment has changed the current term, the action 
+of the endrepeat statement will be to bring control back to the beginning 
+of the environment. In that sense the repeat/endrepeat combination acts as
+\begin{verbatim}
+   do
+      executable statements
+   while any action due to any of the statements
+\end{verbatim}
+The second form of the statement is a shorthand\index{shorthand} notation:
+\begin{verbatim}
+   repeat;
+      single statement;
+   endrepeat;
+\end{verbatim}
+is equivalent to
+\begin{verbatim}
+   repeat single statement;
+\end{verbatim}
+Particular attention should be given to avoid infinite\index{infinite loop} 
+loops\index{loop!infinite} as in
+\begin{verbatim}
+   repeat id a = a+1;
+\end{verbatim}
+A more complicated infinite loop is
+\begin{verbatim}
+   repeat;
+      id  S(x1?)*R(x2?) = T(x1,x2,x2-x1);
+      id  T(x1?,x2?,x3?pos_) = T(x1,x2-2,x3-1)*X(x2);
+      id  T(x1?,x2?,x3?) = S(x1)*R(x2);
+   endrepeat;
+\end{verbatim}
+If the current term is S(2)*R(2), the statements in the loop do not change 
+it in the end. Yet the program goes into an infinite loop, because the 
+first id statement will change the term (action) and the third statement 
+will change it back. {\FORM} does not check that the term is the same 
+again. Hence there is action inside the repeat environment and hence the 
+statements will be executed again. This kind of hidden action is a major 
+source of premature\index{premature} 
+terminations\index{termination!premature} of {\FORM} programs. \vspace{4mm}
+
+\noindent Repeat environments can be nested\index{nested} with all other 
+environments (and of course also with other repeat/endrepeat combinations). 
+\vspace{10mm}
+
+%--#] repeat : 
+%--#[ replaceloop :
+
+\section{replaceloop}
+\label{substareplaceloop}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & replaceloop {\tt<}parameters{\tt>};
+\\ See also & the findloop option of the if statement (\ref{substaif})
+\end{tabular}\vspace{4mm}
+
+\noindent This statement\index{replaceloop} causes the substitution of 
+index\index{index loop} loops\index{loop!index}. An index loop is a 
+sequence of contracted indices in which the indices are arguments of 
+various instances of the same function and each contracted\index{contracted 
+indices} index\index{index!contracted} occurs once in one instance of the 
+function and once in another instance of the function. Such a contraction 
+defines a connection and if a number of such connections between 
+occurrences of the function form a loop this structure is a candidate for 
+replacement. Examples of such loops are:
+\begin{verbatim}
+    f(i1,i2,j1)*f(i2,i1,j2)
+    f(i1,i2,j1)*f(i2,i3,j2)*f(i1,i3,j3)
+    f(i1,k1,i2,j1)*f(k2,i2,i3,j2)*f(i1,k3,i3,j3)
+\end{verbatim}
+The first term has a loop of two functions or vertices\index{vertices} and 
+the other two terms each define a loop of three vertices. The parameters 
+are:
+
+\leftvitem{4cm}{$<$name$>$}
+\rightvitem{12cm}{The name of the function that defines the `vertices'. 
+This must always be the first parameter.}
+
+\leftvitem{4cm}{arguments=number}
+\rightvitem{12cm}{Only occurrences of the vertex function with the 
+specified number of arguments will be considered. The specification of this 
+parameter is mandatory.}
+
+\leftvitem{4cm}{loopsize=number}
+\rightvitem{12cm}{Only a loop with this number of vertices will be 
+considered.}
+
+\leftvitem{4cm}{loopsize=all}
+\rightvitem{12cm}{All loop\index{loopsize} sizes will be considered and the 
+smallest loop is substituted.}
+
+\leftvitem{4cm}{loopsize$<$number}
+\rightvitem{12cm}{Only loops with fewer vertices than `number' will be 
+considered and the smallest looop will be substituted.}
+
+\leftvitem{4cm}{outfun=$<$name$>$}
+\rightvitem{12cm}{Name of an output function in which the remaining 
+arguments of all the vertex functions will be given. This parameter is 
+mandatory.}
+
+\leftvitem{4cm}{include-$<$name$>$}
+\rightvitem{12cm}{Name of a summable index that must be one of the links in 
+the loop. This parameter is optional.}
+
+\noindent The loopsize\index{loopsize} parameter is mandatory. Hence one of 
+its options must be specified. The order of the parameters is not 
+important. The only important thing is that the name of the vertex function 
+must be first. The names of the keywords may be abbreviated as in
+\begin{verbatim}
+    ReplaceLoop f,a=3,l=all,o=ff,i=i2;
+\end{verbatim}
+although this does not improve the readability of the program. Hence a more 
+readable abbreviated version might be
+\begin{verbatim}
+    ReplaceLoop f,arg=3,loop=all,out=ff,inc=i2;
+\end{verbatim}
+
+\noindent The action of the statement is to remove the vertex functions 
+that constitute the loop and replace them by the output function. This 
+outfun will have the arguments of all the vertex functions minus the 
+contracted indices that define the loop. The order of the arguments is the 
+order in which they are encountered when following the loop. The order of 
+the arguments in the outfun depends however on the order in which FORM 
+encounters the vertices. Hence the outfun will often be 
+cyclesymmetric\index{symmetric!cycle}\index{cyclesymmetric} (see 
+\ref{substafunctions} and \ref{substacyclesymmetrize}). If FORM has to 
+exchange indices to make a `proper loop' (i.e. giving relevance to the 
+first index as if it is something incoming and the second index as if it is 
+something outgoing) and if the vertex function is 
+antisymmetric\index{antisymmetric}\index{symmetric!anti}, each exchange will 
+result in a minus sign. Examples:
+\begin{verbatim}
+    Functions f(antisymmetric),ff(cyclesymmetric);
+    Indices i1,...,i8;
+    Local F = f(i1,i4,i2)*f(i5,i2,i3)*f(i3,i1,i6)*f(i4,i7,i8);
+    ReplaceLoop f,arg=3,loop=3,out=ff;
+\end{verbatim}
+would result in
+\begin{verbatim}
+    -f(i4,i7,i8)*ff(i4,i5,i6)
+\end{verbatim}
+and
+\begin{verbatim}
+    Functions f(antisymmetric),ff(cyclesymmetric);
+    Indices i1,...,i9;
+    Local F = f(i1,i4,i2)*f(i5,i2,i3)*f(i3,i1,i6)*f(i4,i7,i8)
+            *f(i6,i7,i8);
+    ReplaceLoop f,arg=3,loop=all,out=ff;
+\end{verbatim}
+would give
+\begin{verbatim}
+    -f(i1,i4,i2)*f(i5,i2,i3)*f(i3,i1,i6)*ff(i4,i6)
+\end{verbatim}
+because the smallest loop will be taken. A number of examples can be found 
+in the package\index{package!color} `color'\index{color package} for group 
+theory\index{group theory} invariants that is part of the FORM 
+distribution. 
+
+\noindent A related object is the findloop\index{findloop} option of the 
+if\index{if} statement (see \ref{substaif}). This option just probes 
+whether a loop is present but makes no replacements.\vspace{10mm}
+
+%--#] replaceloop : 
+%--#[ save :
+
+\section{save}
+\label{substasave}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & sa[ve] {\tt<}filename{\tt>} [{\tt<}names of global expressions{\tt>}];
+\\ See also & load (\ref{substaload})
+\end{tabular}\vspace{4mm}
+
+\noindent Saves\index{save} the contents of the store\index{store file} 
+file\index{file!store} (all global expressions that were stored in 
+.store\index{.store} 
+instructions) to a file with the indicated name. If a list of expressions 
+is provided only those expressions are saved and the others are ignored. 
+Currently the contents of the save file are still 
+architecture\index{architecture dependent} dependent. 
+This will be changed in the future.
+
+\noindent Together with the load\index{load} statement (see 
+\ref{substaload}) the save statement provides a mechanism to transfer data 
+in internal notation from one program to another. It is the prefered method 
+to keep results of a lengthy job for further analysis without the need for 
+the long initial running time.
+
+\noindent In order to avoid confusion .sav\label{ex:sav}\index{.sav} is the 
+preferred extension\index{extension!.sav} of saved files.\vspace{10mm}
+
+%--#] save : 
+%--#[ select :
+
+\section{select}
+\label{substaselect}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & select {\tt<}list of sets{\tt>} {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{select} is identical to the select option of 
+the id\index{id} statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   select ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id select ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] select : 
+%--#[ set :
+
+\section{set}
+\label{substaset}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & set {\tt<}set to be declared{\tt>}:{\tt<}element{\tt>} [{\tt<}more elements{\tt>}];
+\end{tabular} \vspace{4mm}
+
+\noindent Declares a single set\index{set} and specifies its 
+elements\index{elements}. Sets have a type of variables connected to them. 
+There can be sets of symbols, sets of functions, sets of vectors, sets of 
+indices and sets of numbers. For the purpose of sets tensors\index{tensor} 
+and tables\index{table} counts as functions.
+
+\noindent There can also be mixed sets\index{set!mixed} of indices and 
+numbers. When a number could be either a fixed index or just a number FORM 
+will keep the type of the set unfixed. This can change either when the next 
+element is a symbolic index or a number that cannot be a fixed index (like 
+a negative number). If the status does not get resolved the set can be used 
+in the wildcarding of both symbols and indices. Normally sets of numbers 
+can be used only in the wildcarding of symbols. \vspace{10mm}
+
+%--#] set : 
+%--#[ setexitflag :
+
+\section{setexitflag}
+\label{substasetexitflag}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & setexitflag;
+\\ See also & exit (\ref{substaexit})
+\end{tabular} \vspace{4mm}
+
+\noindent Causes\index{setexitflag} termination\index{termination} of the 
+program after execution\index{execution} of the current module has 
+finished. \vspace{10mm}
+
+%--#] setexitflag : 
+%--#[ skip :
+
+\section{skip}
+\label{substaskip}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & skip; \\
+       & skip {\tt<}list of expressions{\tt>};
+\\ See also & nskip (\ref{substanskip})
+\end{tabular} \vspace{4mm}
+
+\noindent In the first\index{skip} variety this statement marks all 
+active\index{active} expressions that are in existence at the moment this 
+statement is compiled, to be skipped. In the second variety this is done 
+only to the active expressions that are specified. If an expression is 
+skipped in a given module, the statements in the module have no effect on 
+it. Also it will not be sorted\index{sort} again at the end of the module. 
+This means that any bracket\index{bracket} information (see 
+\ref{substabracket}) in the expression remains the way it was. Consult also 
+the nskip\index{nskip} statement in \ref{substanskip}. \vspace{4mm}
+
+\noindent Skipped expressions can be used in the expressions in the r.h.s. 
+of id\index{id} statements (see \ref{substaidentify}) or 
+multiply\index{multiply} statements (see \ref{substamultiply}), etc. 
+\vspace{10mm}
+
+%--#] skip : 
+%--#[ slavepatchsize :
+
+\section{slavepatchsize}
+\label{substaslavepatchsize}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & slavepatchsize {\tt<}value{\tt>};
+\\ See also & moduleoption (\ref{substamoduleoption})
+\end{tabular}\vspace{4mm}
+
+\noindent Sets the size\index{slavepatchsize} of the buffer for sending 
+terms to the secondary processors in ParFORM\index{ParFORM}, one of the 
+parallel\index{parallel} versions of FORM (see chapter \ref{parallel}). In 
+all other versions this statement is ignored. If the value of 
+slavepatchsize is less than the maximum term size (see \ref{setup}) it will 
+be readjusted to the value of maxtermsize\index{maxtermsize} (see 
+\ref{setupmaxtermsize}). \vspace{10mm}
+
+%--#] slavepatchsize : 
+%--#[ sort :
+
+\section{sort}
+\label{substasort}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & sort;
+\\ See also & term (\ref{substaterm}), endterm (\ref{substaendterm})
+\end{tabular} \vspace{4mm}
+
+\noindent Statement\index{sort} to be used inside the term\index{term} 
+environment\index{environment!term} (see \ref{substaterm} and 
+\ref{substaendterm}). It forces a sort in the same way as a 
+.sort\index{.sort} instruction forces a sort for entire expressions. 
+\vspace{10mm}
+
+%--#] sort : 
+%--#[ splitarg :
+
+\section{splitarg}
+\label{substasplitarg}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & splitarg options \verb:{:{\tt<}name of function/set{\tt>}
+             [{\tt<}argument specifications{\tt>}]\verb:}:;
+\\ See also & splitfirstarg (\ref{substasplitfirstarg}),
+             splitlastarg (\ref{substasplitlastarg}),
+             factarg (\ref{substafactarg})
+\end{tabular}\vspace{4mm}
+
+\noindent Takes\index{splitarg} the indicated argument\index{argument} of a 
+function and if such an argument is a subexpression that consists on more 
+than one term, all terms become single arguments of the function as in
+\begin{verbatim}
+   f(a+b-5*c*d) --> f(a,b,-5*c*d)
+\end{verbatim}
+The way arguments are indicated is rather similar to the way this is done 
+in the argument\index{argument statement} statement (see 
+\ref{substaargument}). One can however indicate only a single group of 
+functions in one statement. Additionally there are other options. All 
+options are in the order that they should be specified:
+
+\leftvitem{5cm}{(term)}
+\rightvitem{11cm}{Only terms that are a numerical multiple of the given 
+term are split off. The terms that are split off will trail the remainder.}
+
+\leftvitem{5cm}{((term))}
+\rightvitem{11cm}{Only terms that contain the given term will be split off. 
+The terms that are split off will trail the remainder.}
+
+\noindent The statement is terminated with a sequence of functions or 
+sets\index{set} of functions. The splitting action will apply only to the 
+specified functions or to members of the set(s). If no functions or sets of 
+functions are specified all functions will be treated, including the built 
+in functions.
+ 
+\noindent The argument specifications consist of a list of numbers, 
+indicating the arguments that should be treated. If no arguments are 
+specified, all arguments will be treated. \vspace{10mm}
+
+%--#] splitarg : 
+%--#[ splitfirstarg :
+
+\section{splitfirstarg}
+\label{substasplitfirstarg}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & splitfirstarg \verb:{:{\tt<}name of function/set{\tt>}
+         [{\tt<}argument specifications{\tt>}]\verb:}:;
+\\ See also & splitarg (\ref{substasplitarg}),
+             splitlastarg (\ref{substasplitlastarg})
+\end{tabular}\vspace{4mm}
+
+\noindent A little\index{splitfirstarg} bit like the 
+SplitArg\index{splitarg} statement (see \ref{substasplitarg}). Splits the 
+given argument(s) into its first term and a remainder. Then replaces the 
+argument by the remainder\index{remainder}, followed by the first term.
+
+\noindent The statement is terminated with a sequence of functions or sets 
+of functions. The splitting action will apply only to the specified 
+functions or to members of the set(s). If no functions or sets\index{set} 
+of functions are specified all functions will be treated, including the 
+built in functions.
+ 
+\noindent The argument specifications consist of a list of numbers, 
+indicating the arguments that should be treated. If no arguments are 
+specified all arguments will be treated. \vspace{10mm}
+
+%--#] splitfirstarg : 
+%--#[ splitlastarg :
+
+\section{splitlastarg}
+\label{substasplitlastarg}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & splitlastarg \verb:{:{\tt<}name of function/set{\tt>}
+         [{\tt<}argument specifications{\tt>}]\verb:}:;
+\\ See also & splitarg (\ref{substasplitarg}),
+             splitfirstarg (\ref{substasplitfirstarg})
+\end{tabular}\vspace{4mm}
+
+\noindent A little\index{splitlastarg} bit like the 
+SplitArg\index{splitarg} statement (see \ref{substasplitarg}). Splits the 
+given argument(s) into its last term and a remainder. Then replaces the 
+argument by the remainder, followed by the last term.
+
+\noindent The statement is terminated with a sequence of functions or sets 
+of functions. The splitting action will apply only to the specified 
+functions or to members of the set(s). If no functions or sets\index{set} 
+of functions are specified all functions will be treated, including the 
+built in functions.
+ 
+\noindent The argument specifications consist of a list of numbers, 
+indicating the arguments that should be treated. If no arguments are 
+specified all arguments will be treated. \vspace{10mm}
+
+%--#] splitlastarg : 
+%--#[ sum :
+
+\section{sum}
+\label{substasum}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & sum {\tt<}list of indices{\tt>};
+\\ See also & renumber (\ref{substarenumber})
+\end{tabular}\vspace{4mm}
+
+\noindent The given indices will be summed\index{sum} over. There are two 
+varieties. In the first the index is followed by a sequence of nonnegative 
+short integers. In that case the summation means that for each of the 
+integers a new instance of the term is created in which the index is 
+replaced by that integer. In the second variety the index is either the 
+last object in the statement or followed by another index. In that case the 
+index is replaced by an internal dummy\index{dummy} 
+index\index{index!dummy} of the type \verb:N1_?: (or with another number 
+instead of the 1). Such indices have the current
+default\index{default dimension} dimension\index{dimension!default} and can 
+be renamed at will by FORM to bring terms into standard notation. For 
+example:
+\begin{verbatim}
+   f(N2_?,N1_?)*g(N2_?,N1_?)
+\end{verbatim}
+will be changed into
+\begin{verbatim}
+   f(N1_?,N2_?)*g(N1_?,N2_?).
+\end{verbatim}
+The user can use these dummy indices in the left hand side of 
+id\index{id} statements.
+\vspace{10mm}
+
+%--#] sum : 
+%--#[ symbols :
+ 
+\section{symbols}
+\label{substasymbols}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & s[ymbols] {\tt<}list of symbols to be declared{\tt>};
+\end{tabular}\vspace{4mm}
+
+\noindent Declares one or more symbols\index{symbol}. Each symbol can be 
+followed by a number of options. These are (assuming that x is the symbol 
+to be declared):
+
+\leftvitem{2cm}{x\hash{}r}
+\rightvitem{14cm}{The symbol is real\index{real}. This is the default.}
+
+\leftvitem{2cm}{x\hash{}c}
+\rightvitem{14cm}{The symbol is complex\index{complex}. This means that two 
+spaces are reserved for this symbol, one for x and one for x\hash (the 
+complex conjugate).}
+
+\leftvitem{2cm}{x\hash{}i}
+\rightvitem{14cm}{The symbol is imaginary\index{imaginary}.}
+
+\leftvitem{2cm}{x(:5)}
+\rightvitem{14cm}{The symbol has the maximum power 5. This means that $x^6$ 
+and higher powers are automatically eliminated during the 
+normalization\index{normalization} of a term. Of course any other number, 
+positive or negative, is allowed.}
+
+\leftvitem{2cm}{x(-3:)}
+\rightvitem{14cm}{The symbol has the minimum power -3. This means that 
+$x^{-4}$ and lower powers are automatically eliminated during the 
+normalization of a term. Of course any other number, positive or negative, 
+is allowed. Note that when the minimum power is positive, terms that have 
+no power of x should technically be eliminated, but FORM will not do so. 
+Such an action can be achieved at any moment with a combination of the 
+count\index{if!count}\index{count} option of an if\index{if} statement (see 
+\ref{substaif}) and a discard\index{discard} statement (see 
+\ref{substadiscard}).}
+
+\leftvitem{2cm}{x(-3:5)}
+\rightvitem{14cm}{The combination of a maximum and a minimum power 
+restriction (see above).}\vspace{4mm}
+
+\noindent Complexity properties and power restrictions can be combined. In 
+that case the complexity properties come first and then the power 
+restrictions.\vspace{10mm}
+
+%--#] symbols : 
+%--#[ symmetrize :
+
+\section{symmetrize}
+\label{substasymmetrize}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & symm[etrize] \verb:{:{\tt<}name of function/tensor{\tt>}
+         [{\tt<}argument specifications{\tt>}];\verb:}: \\
+See also & antisymmetrize (\ref{substaantisymmetrize}), cyclesymmetrize 
+(\ref{substacyclesymmetrize}), rcyclesymmetrize (\ref{substarcyclesymmetrize})
+\end{tabular} \vspace{4mm}
+
+\noindent The arguments\index{symmetrize} consist of the name of a function 
+(or a tensor), possibly followed by some specifications. Hence we have the 
+following varieties: \vspace{1mm}
+
+\leftvitem{5cm}{{\tt<}name{\tt>}}
+\rightvitem{11cm}{The function is symmetrized in all its arguments.}
+
+\leftvitem{5cm}{{\tt<}name{\tt><}numbers{\tt>}}
+\rightvitem{11cm}{The function is symmetrized in the arguments that are 
+mentioned. If there are fewer arguments than the highest number mentioned 
+in the list or arguments, no symmetrization will take place.}
+
+\leftvitem{5cm}{{\tt<}name{\tt>:<}number{\tt>}}
+\rightvitem{11cm}{Only functions with the specified number of arguments 
+will be considered. Note: the number should follow the colon directly 
+without intermediate space or comma.}
+
+\leftvitem{5cm}{{\tt<}name{\tt>:<}number{\tt><}numbers{\tt>}}
+\rightvitem{11cm}{If there is a number immediately following the colon, 
+only functions with exactly that number of arguments will be considered. If 
+the list of arguments contains numbers greater than this number, they will 
+be ignored. If no number follows the colon directly, this indicates that 
+symmetrization will take place, no matter the number of arguments of the 
+function. If the list of arguments has numbers greater than the number of 
+arguments of the function, these numbers will be ignored.}
+
+\leftvitem{5cm}{{\tt<}name{\tt>}
+
+{\tt<}(groups of numbers){\tt>}}
+\rightvitem{11cm}{The groups are specified as lists of numbers of arguments 
+between parenthesis. All groups must have the same number of arguments or 
+there will be a compile error. The groups are symmetrized as groups. The 
+arguments do not have to be adjacent. Neither do they have to be ordered. 
+The symmetrization\index{symmetrization} takes place in a way that the first elements of the 
+groups are most significant, etc. If any argument number is greater than 
+the number of arguments of the function, no symmetrization will take place.}
+
+\leftvitem{5cm}{{\tt<}name{\tt>:<}number{\tt>}
+
+{\tt<}(groups of numbers){\tt>}}
+\rightvitem{11cm}{The groups are specified as lists of numbers of arguments 
+between parenthesis. All groups must have the same number of arguments or 
+there will be a compile error. The groups are symmetrized as groups. The 
+arguments do not have to be adjacent. Neither do they have to be ordered. 
+The symmetrization takes place in a way that the first elements of the 
+groups are most significant, etc. If no number follows the colon directly 
+symmetrization takes place no matter the number of arguments of the 
+function. Groups that contain a number that is greater than the number of 
+arguments of the function will be ignored. If a number follows the colon 
+directly, only functions with that number of arguments will be symmetrized. 
+Again, groups that contain a number that is greater than the number of 
+arguments of the function will be ignored.}
+\vspace{3mm}
+
+\noindent The action of this stament is to symmetrize the 
+(specified) arguments of the functions that are mentioned. This means that 
+the arguments are brought to `natural order' in the notation of FORM by 
+trying permutations\index{permutation} of the arguments or groups of 
+arguments. The `natural order' may depend on the order of declaration of 
+the variables. \vspace{4mm}
+
+\noindent Examples:
+\begin{verbatim}
+   Symmetrize Fun;
+   Symmetrize Fun 1,2,4;
+   Symmetrize Fun:5;
+   Symmetrize Fun: 1,2,4;
+   Symmetrize Fun:5 1,2,4;
+   Symmetrize Fun (1,6),(7,3),(5,2);
+   Symmetrize Fun:8 (1,6),(7,3),(5,2);
+   Symmetrize Fun: (1,6),(7,3),(5,2);
+\end{verbatim}
+ \vspace{10mm}
+
+%--#] symmetrize : 
+%--#[ table :
+
+\section{table}
+\label{substatable}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & table {\tt<}options{\tt>} {\tt<}table to be 
+declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), ctable (\ref{substactable}),
+        ntable (\ref{substantable}), fill (\ref{substafill})
+\end{tabular}\vspace{4mm}
+
+\noindent The statement declares a single table\index{table}. A table is a 
+very special instance of a function. Hence it can be either 
+commuting\index{commuting} or noncommuting\index{noncommuting}. The table 
+statement declares its function to be commuting. A noncommuting table is 
+declared with the ntable\index{ntable} statement (se \ref{substantable}). A 
+table has a number of table\index{table indices} indices (at least one!) 
+and after that it can have a number of regular function arguments with or 
+without wildcarding. The table indices can come in two varieties: 
+matrix\index{matrix like} like or sparse\index{sparse}. In the case of a 
+matrix like table\index{table!matrix like}, for each of the indices a range 
+has to be specified. FORM then reserves a location for each of the 
+potential elements. For a sparse table\index{table!sparse} one only 
+specifies the number of indices. Sparse tables take less space, but they 
+require more time searching whether an element has been defined. For a 
+matrix like table FORM can look directly whether an element has been 
+defined. Hence one has a tradeoff between space and speed.\vspace{4mm}
+
+\noindent Table elements are defined with the fill\index{fill} statement (see 
+\ref{substafill}). Fill statements for table elements cannot be used before 
+the table has been declared with a table or ntable statement.\vspace{4mm}
+
+\noindent When FORM encounters an unsubstituted table it will look for its 
+indices. Then it can check whether the table element has been defined. If 
+not, it can either complain (when the `strict'\index{strict} option is 
+used) or continue without substitution. Note that an unsubstituted table 
+element is a rather expensive object as FORM will frequently check whether 
+it can be substituted (new elements can be defined in a variety of 
+ways....). If the indices match a defined table element, FORM will check 
+whether the remaining arguments of the table will match the function-type 
+arguments given in the table declaration in the same way regular function 
+arguments are matched. Hence these arguments can contain 
+wildcards\index{wildcards} and even argument\index{argument field} field 
+wildcards. If a match occurs, the table is replaced immediately.
+
+\noindent The options are
+
+\lefttabitem{check\index{table!check}}
+\tabitem{A check is executed on table boundaries. An element that is 
+outside the table boundaries (regular matrix type tables only) will cause 
+an error message and execution will be halted.}
+
+\lefttabitem{relax\index{table!relax}}
+\tabitem{Normally all elements of a table should be defined during 
+execution and an undefined element will give an error message. The relax 
+option switches this off and undefined elements will remain as if they are 
+regular functions.}
+
+\lefttabitem{sparse\index{table!sparse}}
+\tabitem{The table is considered to be sparse. In the case of a sparse 
+table only the number of indices should be specified. Ranges are not 
+relevant. Each table element is stored separately. Searching for table 
+elements is done via a balanced tree\index{tree!balanced}. This takes of 
+course more time than the matrix type search with is just by indexing. A 
+matrix like table\index{table!matrix like} is the default.}
+
+\lefttabitem{strict\index{table!strict}}
+\tabitem{If this option is specified all table elements that are 
+encountered during execution should be defined. An undefined table element 
+will result in an error and execution is halted. Additionally all table 
+elements should be properly defined at the end of the module in which the 
+table has been defined.}
+
+\lefttabitem{zerofill\index{table!zerofill}}
+\tabitem{Any undefined table element is considered to be 
+zero.}\vspace{10mm}
+
+\noindent The defaults are that the table is matrix like and table elements 
+that cannot be substituted will result in an error.\vspace{4mm}
+
+\noindent Ranges for indices in matrix like tables are indicated with a 
+semicolon as in
+\begin{verbatim}
+   Symbol x;
+   Table t1(1:3,-2:4);
+   Table t2(0:3,0:3,x?);
+   Table sparse,t3(4);
+\end{verbatim}
+The table \verb:t1: is two dimensional and has 21 elements. The table 
+\verb:t2: is also two dimensional and has 16 elements. In addition there is 
+an extra argument which can be anything that a wildcard symbol will match. 
+The table \verb:t3: is a sparse table with 4 indices.\vspace{4mm}
+
+\noindent If the computer on which FORM runs is a 32\index{32 bits} bit 
+computer no table can have more than $2^{15} = 32768$ elements. On a 
+64\index{64 bits} bit computer the limit is $2^{31}$, but one should take 
+into account that each element declared causes some overhead. \vspace{4mm}
+
+\noindent If the wildcarding in the declaration of a table involves the 
+definition of a dollar variable\index{\$-variable} (this is allowed! See 
+\ref{dollars}) parallel execution of the entire remainder of the FORM 
+program is switched off. This is of course only relevant for parallel 
+versions of FORM. But if at all possible one should try to find better 
+solutions than this use of dollar variables, allowing future parallel 
+processing of the program.
+
+\noindent In some cases tables are built up slowly during the execution of 
+a program and used incrementally. This means that more and more CPU memory 
+is needed. Eventually this can cause a crash by lack of memory. In the case 
+that the earlier elements of the table aren't needed anymore, one could use 
+the ClearTable~\ref{substacleartable} statement.
+\vspace{10mm}
+
+%--#] table : 
+%--#[ tablebase :
+
+\section{tablebase}
+\label{substatablebase}
+
+\noindent This statement is explained in the chapter on 
+tablebases\index{tablebase} (\ref{tablebase}).
+\vspace{10mm}
+
+%--#] tablebase : 
+%--#[ tensors :
+ 
+\section{tensors}
+\label{substatensors}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & t[ensors] {\tt<}list of tensors to be declared{\tt>}; \\
+See also & functions (\ref{substafunctions}), ctensors 
+        (\ref{substactensors}), ntensors (\ref{substantensors})
+\end{tabular}\vspace{4mm}
+
+\noindent A tensor\index{tensor} is a special function that can have only 
+indices for its arguments. If an index a contracted with the index of a 
+vector Schoonschip\index{Schoonschip} notation is used. This means that the 
+vector is written as a pseudo argument of the tensor. It should always be 
+realized that in that case in principle the actual argument is a dummy 
+index. Tensors come in two varieties: commuting\index{commuting} and 
+noncommuting\index{noncommuting}. The tensor statement declares a tensor to 
+be commuting. In order to declare a tensor to be noncommuting one should 
+use the ntensor\index{ntensor} statement (see \ref{substantensors}).
+
+\noindent The options that exist for properties of tensors are the same as 
+those for functions (see \ref{substafunctions}). \vspace{10mm}
+
+%--#] tensors : 
+%--#[ term :
+
+\section{term}
+\label{substaterm}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & term;
+\\ See also & endterm (\ref{substaendterm}), sort (\ref{substasort})
+\end{tabular} \vspace{4mm}
+
+\noindent Begins the term\index{term} environment\index{environment!term}. 
+This environment is terminated with the endterm\index{endterm} statement 
+(see \ref{substaendterm}). The action is that temporarily the current term 
+is seen as a little expression by itself. The statements inside the 
+environment are applied to it and one can even sort the results with the 
+sort\index{sort} statement (see \ref{substasort}) which should not be 
+confused with the .sort\index{.sort} instruction that terminates a module. 
+Inside the term environment one can have only executable statements and 
+possibly term-wise print statements (see \ref{substaprint}). When the end 
+of the term environment is reached, the results are sorted (as would be 
+done with an expression at the end of a module) and execution continues 
+with the resulting terms. This environment can be nested\index{nested}. 
+\vspace{10mm}
+
+%--#] term : 
+%--#[ testuse :
+
+\section{testuse}
+\label{substatestuse}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & testuse ["{\tt<}tablename(s){\tt>}"];
+\\ See also & tablebases (\ref{tablebase}), testuse (\ref{tbltestuse})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{testuse} is explained in the chapter on 
+tablebases\index{tablebase}.\vspace{10mm}
+
+%--#] testuse : 
+%--#[ threadbucketsize :
+ 
+\section{threadbucketsize}
+\label{substathreadbucketsize}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration\\
+Syntax & ThreadBucketSize,number;
+\\ See also & the section on TFORM (\ref{tform})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{threadbucketsize} is only active in 
+TFORM\index{TFORM}. In all other versions of FORM it is ignored. It sets 
+the size of the buckets\index{bucket} that the master\index{master} thread 
+prepares for treatment by the workers. Bigger buckets means less overhead 
+in signals, but when the buckets are too big the workers may have to wait 
+too long before getting tasks. The best bucket size is usually between 100 
+and 1000, although this depends very much on the problem. The default value 
+is currently 500. For more ways to set this variable one should consult the 
+section on TFORM (\ref{tform}). To find out what its value is, use the
+`ON,setup;' statement (\ref{substaon} and \ref{setup}). \vspace{10mm}
+
+%--#] threadbucketsize : 
+%--#[ totensor :
+
+\section{totensor}
+\label{substatotensor}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & totensor [nosquare] [functions] [!{\tt<}vector or set{\tt>}] {\tt<}vector{\tt>} {\tt<}tensor{\tt>}; \\
+       & totensor [nosquare] [functions] [!{\tt<}vector or set{\tt>}] {\tt<}tensor{\tt>} {\tt<}vector{\tt>};
+\\ See also & tovector (\ref{substatovector})
+\end{tabular} \vspace{4mm}
+
+\noindent Looks for multiple\index{totensor} occurrences of the given 
+vector, either inside dotproducts, contracted with a tensor, as argument of 
+a function or as a loose vector with an index. In all occurrences in 
+which the vector has been contracted a dummy index is introduced to make 
+the contraction apparent. Then all these vectors with their indices are 
+replaced by the specified tensor with all the indices of these vectors. To 
+make this clearer:
+\begin{eqnarray}
+    p^{\mu_1}p^{\mu_2}p^{\mu_3} \rightarrow t^{\mu_1\mu_2\mu_3} \nonumber
+\end{eqnarray}
+and hence
+\begin{verbatim}
+   p.p1^2*f(p,p1)*p(mu)*tt(p1,p,p2,p)
+\end{verbatim}
+gives after \verb:totensor p,t;:
+\begin{verbatim}
+   f(N1_?,p1)*tt(p1,N2_?,p2,N3_?)*t(p1,p1,mu,N1_?,N2_?,N3_?)
+\end{verbatim}\vspace{4mm}
+
+\noindent The options are
+
+\leftvitem{3cm}{nosquare\index{totensor!nosquare}}
+\rightvitem{13cm}{Dotproducts with twice the specified vector (square of 
+the vector) are not taken into account.}
+
+\leftvitem{3cm}{functions\index{totensor!functions}}
+\rightvitem{13cm}{Vectors that are arguments of regular functions will also 
+be considered. By default this is not done.}
+
+\leftvitem{3cm}{!vector\index{totensor!"!vector}}
+\rightvitem{13cm}{Dotproducts involving the specified vector are not 
+treated.}
+
+\leftvitem{3cm}{!set\index{totensor!"!set}}
+\rightvitem{13cm}{The set should be a set of vectors. All dotproducts 
+involving a vector of the set are not treated.}\vspace{10mm}
+
+%--#] totensor : 
+%--#[ tovector :
+
+\section{tovector}
+\label{substatovector}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & tovector {\tt<}tensor{\tt>} {\tt<}vector{\tt>}; \\
+       & tovector {\tt<}vector{\tt>} {\tt<}tensor{\tt>};
+\\ See also & totensor (\ref{substatotensor})
+\end{tabular} \vspace{4mm}
+
+\noindent The opposite\index{tovector} of the totensor\index{totensor} 
+statement. The tensor is replaced by a product of the given vectors, each 
+with one of the indices of the tensor as in:
+\begin{eqnarray}
+    t^{\mu_1\mu_2\mu_3} \rightarrow p^{\mu_1}p^{\mu_2}p^{\mu_3} \nonumber
+\end{eqnarray}\vspace{10mm}
+
+%--#] tovector : 
+%--#[ trace4 :
+
+\section{trace4}
+\label{substatrace}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & trace4 [{\tt<}options{\tt>}] {\tt<}index{\tt>}; \\
+See also & tracen (\ref{substatracen}), chisholm (\ref{substachisholm}),
+    unittrace (\ref{substaunittrace}) \\ &
+    and the chapter on gamma algebra (\ref{gammaalgebra})
+\end{tabular} \vspace{4mm}
+
+\noindent Takes the trace\index{trace4} of the gamma\index{gamma matrices} 
+matrices with the given trace\index{trace line} line 
+index\index{index!trace line}. It assumes that the matrices are 
+defined in four dimensions, hence it uses some relations that are only 
+valid in four dimensions. For details about these relations and other 
+methods used, consult chapter~\ref{gammaalgebra} on gamma matrices. The 
+options are: \vspace{4mm}
+
+\lefttabitem{contract\index{trace4!contract}}
+\tabitem{Try to use the Chisholm\index{Chisholm} identity to eliminate this 
+trace and contract it with other gamma matrices. See also 
+\ref{substachisholm}. This is the default.}
+
+\lefttabitem{nocontract\index{trace4!nocontract}}
+\tabitem{Do not use the Chisholm\index{Chisholm} identity to eliminate this 
+trace and contract it with other gamma matrices. See also 
+\ref{substachisholm}.}
+
+\lefttabitem{nosymmetrize\index{trace4!nosymmetrize}}
+\tabitem{When using the Chisholm\index{Chisholm} identity to eliminate this 
+trace and contract it with other gamma matrices, do not do it in the 
+symmetric fashion, but use the first contraction encountered. See also 
+\ref{substachisholm}.}
+
+\lefttabitem{notrick\index{trace4!notrick}}
+\tabitem{The final stage of trace taking, when all indices are different 
+and there are no contractions with identical vectors, as well as no 
+$\gamma_5$ matrices present, is done with n-dimensional methods, rather 
+than with 4-dimensional tricks.}
+
+\lefttabitem{symmetrize}
+\tabitem{When using the Chisholm identity to eliminate this trace and 
+contract it with other gamma matrices, try to do it in the symmetric 
+fashion. See also \ref{substachisholm}.}
+
+\lefttabitem{trick}
+\tabitem{The final stage of trace taking, when all indices are different 
+and there are no contractions with identical vectors is done using the 
+4-dimensional relation
+
+$\gamma^a\gamma^b\gamma^c = \epsilon^{abcd}\gamma_5\gamma^d
+    +\gamma^a\delta^{bc}-\gamma^b\delta^{ac}+\gamma^c\delta^{ab}$
+
+This gives a shorter result for long traces. It is the default.
+} \vspace{10mm}
+
+%--#] trace4 : 
+%--#[ tracen :
+
+\section{tracen}
+\label{substatracen}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & tracen {\tt<}index{\tt>}; \\
+See also & trace4 (\ref{substatrace}), chisholm (\ref{substachisholm}),
+    unittrace (\ref{substaunittrace}) \\ &
+    and the chapter on gamma algebra (\ref{gammaalgebra})
+\end{tabular} \vspace{4mm}
+
+\noindent Takes\index{tracen} the trace of the gamma\index{gamma matrices} 
+matrices with the spin\index{spin line} line indicated by the index. It is 
+assumed that the trace is over a symbolic number of dimensions. Hence no 
+special 4-dimensional tricks are used. The presence of $\gamma_5$, 
+$\gamma_6$ or $\gamma_7$ is not tolerated. When indices are contracted 
+{\FORM} will try to use the special symbol for the dimension$-4$ if it has 
+been defined in the declaration of the index (see \ref{substaindex}. This 
+results in relatively compact expressions. For more details on the 
+algorithm used, see chapter~\ref{gammaalgebra} on gamma matrices. 
+\vspace{10mm}
+
+%--#] tracen : 
+%--#[ tryreplace :
+
+\section{tryreplace}
+\label{substatryreplace}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & tryreplace \verb:{:{\tt<}name{\tt>} {\tt<}replacement{\tt>}\verb:}:;
+\\ See also & the replace\_ function (\ref{funreplace})
+\end{tabular} \vspace{4mm}
+
+\noindent The list\index{tryreplace} of potential replacements should be 
+similar to the arguments of the replace\_\index{replace\_} 
+function\index{function!replace\_} (see \ref{funreplace}). {\FORM} will 
+make a copy of the current term, try the replacement and if the replacement 
+results in a term which, by the internal ordering of {\FORM}, comes before 
+the current term, the current term is replaced by the new variety. 
+\vspace{10mm}
+
+%--#] tryreplace : 
+%--#[ unittrace :
+
+\section{unittrace}
+\label{substaunittrace}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & u[nittrace] {\tt<}value{\tt>}; \\
+See also & trace4 (\ref{substatrace}), tracen (\ref{substatracen}),
+    chisholm (\ref{substachisholm})
+    and the chapter on gamma algebra (\ref{gammaalgebra})
+\end{tabular} \vspace{4mm}
+
+\noindent Sets\index{unittrace} the value of the trace of the 
+unit\index{unit matrix} matrix\index{matrix!unit} in the Dirac\index{Dirac} 
+algebra\index{algebra!Dirac} (i.e. the object \verb:g1_(n): for trace line 
+\verb:n:)). The parameter \verb:value: can be either a short positive 
+number or any symbol with the exception of \verb:i_:. See also 
+chapter~\ref{gammaalgebra}. \vspace{10mm}
+
+%--#] unittrace : 
+%--#[ unhide :
+
+\section{unhide}
+\label{substaunhide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & unhide; \\
+       & unhide {\tt<}list of expressions{\tt>};
+\\ See also & hide (\ref{substahide}),
+              nhide (\ref{substanhide}),
+              nunhide (\ref{substanunhide}),
+              pushhide (\ref{substapushhide}),
+              pophide (\ref{substapophide})
+\end{tabular} \vspace{4mm}
+
+\noindent In its\index{unhide} first variety this statement causes all 
+statements in the hide\index{hide} file\index{file!hide} to become 
+active\index{active} expressions again. In its second variety only the 
+specified expressions are taken from the hide system and become active 
+again. An expression that is made active again can be manipulated again in 
+the module in which the unhide statement occurs. For more information one 
+should look at the hide statement in \ref{substahide}. \vspace{4mm}
+
+\noindent Note that if only a number of expressions is taken from the hide 
+system, the hide file may be left with `holes', i.e. space between the 
+remaining expressions that contain no relevant information any longer. 
+{\FORM} contains no mechanism to use the space in these holes. Hence if 
+space is at a premium and many holes develop one should unhide all 
+expressions (this causes the hide system to be started from zero size 
+again) and then send the relevant expressions back to the hide system. 
+\vspace{10mm}
+
+%--#] unhide : 
+%--#[ vectors :
+
+\section{vectors}
+\label{substavectors}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & v[ectors] {\tt<}list of vectors to be declared{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent Used for the declaration of vectors\index{vector}. Example:
+\begin{verbatim}
+   Vectors p,q,q1,q2,q3;
+\end{verbatim}
+\vspace{10mm}
+
+%--#] vectors : 
+%--#[ write :
+
+\section{write}
+\label{substawrite}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & w[rite] {\tt<}keyword{\tt>};
+\\ See also & on (\ref{substaon}), off (\ref{substaoff})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{write} is considered 
+obsolete\index{obsolete}. All its varieties have been taken over by the 
+on\index{on} statement (see \ref{substaon}) and the off\index{off} 
+statement (see \ref{substaoff}). The current version of {\FORM} will still 
+recognize it, but the user is advised to avoid its usage. In future 
+versions of {\FORM} it is scheduled to be used for a different kind of 
+writing and hence its syntax may change considerably. The conversion 
+program conv2to3 should help in the conversion of programs written for 
+version 2. For completeness we still give the syntax and how it should be 
+converted. The keywords are: \vspace{4mm}
+ 
+\leftvitem{3cm}{allnames\index{write!allnames}}
+\rightvitem{13cm}{Same as: On allnames;}
+
+\leftvitem{3cm}{allwarnings\index{write!allwarnings}}
+\rightvitem{13cm}{Same as: On allwarnings;}
+ 
+\leftvitem{3cm}{highfirst\index{write!highfirst}}
+\rightvitem{13cm}{Same as: On highfirst;}
+ 
+\leftvitem{3cm}{lowfirst\index{write!lowfirst}}
+\rightvitem{13cm}{Same as: On lowfirst;}
+
+\leftvitem{3cm}{names\index{write!names}}
+\rightvitem{13cm}{Same as: On names;}
+ 
+\leftvitem{3cm}{powerfirst\index{write!powerfirst}}
+\rightvitem{13cm}{Same as: On powerfirst;}
+ 
+\leftvitem{3cm}{setup\index{write!setup}}
+\rightvitem{13cm}{Same as: On setup;}
+ 
+\leftvitem{3cm}{shortstatistics\index{write!shortstatistics}}
+\rightvitem{13cm}{Same as: On shortstatistics;}
+
+\leftvitem{3cm}{shortstats\index{write!shortstats}}
+\rightvitem{13cm}{Same as: On shortstats;}
+ 
+\leftvitem{3cm}{statistics\index{write!statistics}}
+\rightvitem{13cm}{Same as: On statistics;}
+ 
+\leftvitem{3cm}{stats\index{write!stats}}
+\rightvitem{13cm}{Same as: On stats;}
+ 
+\leftvitem{3cm}{warnings\index{write!warnings}}
+\rightvitem{13cm}{Same as: On warnings;}
+
+\vspace{10mm}
+
+%--#] write : 
+%--#[ while :
+
+\section{while}
+\label{substawhile}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & while ( condition );
+\\ See also & endwhile (\ref{substaendwhile}), repeat (\ref{substarepeat}),
+            if (\ref{substaif})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{while} starts the while 
+environment\index{environment!while}. It should be paired with an 
+endwhile\index{endwhile} statement (see \ref{substaendwhile}) which 
+terminates the while environment. The statements between the while and the 
+endwhile statements will be executed as long as the condition is met. For 
+the description of the condition one should consult the if\index{if} 
+statement (see \ref{substaif}). The while/endwhile combination is 
+equivalent to the construction
+\begin{verbatim}
+   repeat;
+      if ( condition );
+
+
+      endif;
+   endrepeat;
+\end{verbatim}
+If only a single statement is inside the environment one can also use
+\begin{verbatim}
+   while ( condition ) statement;
+\end{verbatim}
+Of course one should try to avoid infinite\index{infinite loop} 
+loops\index{loops!infinite}. In order to maximize the speed of {\FORM} not 
+all internal stacks are protected and hence the result may be that {\FORM} 
+may crash. It is also possible that {\FORM} may detect a shortage of buffer 
+space and quit with an error message. \vspace{4mm}
+
+\noindent For each term for which execution reaches the endwhile statement, 
+control is brought back to the while statement. For each term that reaches 
+the while statement the condition is checked and if it is met, the 
+statements inside the environment are executed again on this term. If the 
+condition is not met, execution continues after the endwhile statement. 
+\vspace{10mm}
+
+%--#] while : 
+

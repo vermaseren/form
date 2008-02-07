@@ -1,0 +1,819 @@
+
+\chapter{Variables}
+\label{variables}
+
+The objects of symbolic manipulations are expressions\index{expression}. 
+Expressions are built up from terms\index{terms} and terms are composed of 
+variables. {\FORM} knows several types of variables\index{variables}, each 
+of which has special rules assigned to it. The types of variables are 
+symbols, vectors, indices, functions, sets and expressions. In addition 
+there are tensors and tables which are special functions, preprocessor 
+variables\index{variables!preprocessor} (see chapter~\ref{preprocessor}) 
+and there are dollar variables\index{variables!dollar} (see 
+chapter~\ref{dollars}). The expressions are used either in the definition 
+of an expression or in the right hand side of an expression or a 
+substitution. When an expression is used in the right hand side of another 
+expression or a substitution, it will be replaced by its contents at the 
+first opportunity. Therefore an expression will never occur as a variable 
+in the output of other expressions and we will ignore their potential 
+presence in the remainder of this chapter. Similarly preprocessor variables 
+and  dollar variables will be replaced immediately when they are 
+encountered.
+
+The right hand side of an expression can consist of symbols, vectors, 
+indices functions and elements of a set. All these objects have to be 
+declared before they can be used. The rules 
+connected to each of these types of variables are described in the 
+sections below.
+
+\section{Names}
+
+There are two types of names\index{names}. Regular 
+names\index{names!definition} consist of alphabetic and numeric characters 
+with the condition that the first character must be alphabetic. {\FORM} is 
+case sensitive with respect to names. In addition there are {\bf formal 
+names}. These names start with the character \verb:[: and end with a 
+matching character \verb:]:. In between there can be any characters that 
+are not intercepted by the preprocessor. This allows the use of variables 
+like \verb:[x+a]:. Using formal names can improve the readability of 
+programs very much, while at the same time giving the user the benefits of 
+the greater speed. The use of denominators\index{denominators} that are 
+composite (like \verb:1/(x+a):) is usually rather costly in time. Often 
+\verb:1/[x+a]: is equally readable, while leading to the same results. Note 
+however that the variable \verb:[x+a]: will have to be declared properly. 
+On the other hand: {\FORM} may not have to know about x and a. These formal 
+names can also be used for the names of expressions, but they are not valid 
+for the names of dollar variables\index{variables!dollar} and the names of 
+preprocessor variables\index{variables!preprocessor}.
+
+Some names may contain special characters. All built in objects have for 
+their last character an underscore\index{underscore} (\_). 
+Dotproducts\index{dotproducts} (the scalar product of two vectors) consist 
+of two vectors separated either by a period or by a dollar sign. The dollar 
+sign is used by {\FORM}, when the output of the program has to be 
+Fortran\index{fortran} compatible. The user can replace the dollar sign in 
+the output by an arbitrary character by defining the variable 
+"DotChar"\index{dotchar} in the setup\index{setup file} file. How this is 
+done is explained in chapter~\ref{setup}. In the input the user may apply 
+either the notation with the period or the notation with the dollar. It is 
+however recommended to use the period\index{period} because in future 
+versions the notation with the dollar may be dropped.  The above 
+conventions avoid the possibility of conflicts with reserved names, 
+allowing the user full freedom when choosing names. 
+
+The dollar sign is also used as the first character in the name of dollar 
+variables\index{variables!dollar}. The rest of the name should consist of 
+alphanumeric characters of which the first should be alphabetic. The names 
+of preprocessor variables\index{variables!preprocessor} should also consist 
+of alphanumeric characters of which the first should be alphabetic. Also 
+here the ones that are defined by the system have a trailing 
+underscore\index{underscore} (\_) character.
+
+With respect to the user defined names {\FORM} is case sensitive. This 
+means that the variables a and A are different objects. With respect to 
+system defined objects {\FORM} is case insensitive. Hence both d\_ and D\_ 
+indicate the same Kronecker delta.
+
+In many languages the use of the underscore\index{underscore} (\_) 
+character is also permitted in the definition of user defined names. In 
+{\FORM} this is NOT the case. Even though the earlier manuals `forbade' 
+this specifically there was a bug in earlier versions that permitted it to 
+some degree. And because people don't read manuals, there were those who 
+used this character and even made it into a vital part of their naming 
+conventions. This then broke when version 3 was introduced. It should be 
+clear though that the underscore character is reserved for a completely 
+different type of future use and hence nothing can be done about this. Just 
+remember: it is never a good idea to use undocumented features without 
+consulting with the development team first.
+
+The complex conjugate\index{conjugate!complex} of a complex 
+quantity is indicated by the character \verb:#: appended to the name of the 
+variable. In the current version of {\FORM} not much is done with it. The 
+latest approach is that it is seen as obsolete. If possible, please avoid 
+using it.
+
+The length of names\index{names!length} is not restricted in {\FORM}. There 
+is one exception to this rule: names of expressions cannot be longer than 
+16 characters. Of course in practise there are physical limits on the size 
+of names, posed by the size of the memory of the computer being used.
+
+\section{Symbols}
+
+\label{sect-symbols}
+Symbols\index{symbols} are plain objects that behave most like normal 
+variables in hand manipulations. Many hand manipulations concern 
+polynomial formulae of simple algebraic variables. {\FORM} assumes that 
+symbols commute with all other objects and have a power connected to 
+them. This power is limited to an installation dependent maximum and 
+minimum. A power outside this range will lead to an error message. The 
+user may override this built in restriction by one of private design that
+is more restrictive. Any power that falls outside the user defined range 
+leads to the removal of the term that contains the variable with this 
+power. Such a power restriction can be defined for 
+each symbol separately.
+
+Symbols can also have complex conjugation\index{conjugation!complex} 
+properties. A symbol can be declared to be real, imaginary or complex. This 
+property is only relevant, when the complex conjugation operator is used. 
+This operator has not been implemented and currently there are no plans to 
+do so. 
+
+The syntax of the statement that defines symbols is given by (see also 
+p.~\ref{substasymbols}): 
+\begin{verbatim}
+     S[ymbols]    name[#{R|I|C}][(min:max)];
+\end{verbatim}
+Each variable is declared by the presence of its name in a 
+symbol-statement. If the \# symbol is appended, it should be followed by 
+either the character C, I or R to indicate whether the variable is 
+complex\index{complex}, imaginary\index{imaginary} or real\index{real}. The 
+\#R is not really necessary, as the type `real' is the default. It is not 
+relevant whether the C, I, R are in upper or in lower case. A power 
+restriction\index{restriction!power} is indicated with a range between 
+regular parentheses. If one of the two numbers is not present, the default 
+value is taken. This default value is installation dependent, but it is at 
+least -10000 and 10000 respectively. Each symbol-statement can define more 
+than one variable. In that case the variables have to be separated either 
+by comma's or by blanks. Example:
+\begin{verbatim}
+     S    x,y,z,a#c,b#c,c#c,r(-5:5),s(:20),t#i(6:9);
+\end{verbatim}
+In this statement x, y and z are normal real algebraic variables. The 
+variables a, b and c are complex. This means that for each of these 
+variables two entries are reserved in the property lists: one for the 
+variable and one for its complex conjugate. The variable r has a power 
+restriction: Any power outside the specified range will cause the term 
+containing this power to be eliminated. This is particularly useful in 
+power series expansions. The restrictions on s are such that there is 
+no limitation on the minimum power of s --with the exception of the 
+built in restrictions-- but a term with a power of s that is larger 
+than 20 is eliminated. The variable t is imaginary. This means that 
+under complex conjugation it changes sign. Its power restrictions are 
+somewhat uncommon. Any power outside the range 6 to 9 is eliminated. 
+There is however one exception: a term that does not contain t to any 
+power ($t^0$) is not affected. 
+\begin{verbatim}
+    s     x(:10),y;
+    L     F=y^7;
+    id    y=x+x^2;
+    print;
+    .end
+
+Time =       0.01 sec    Generated terms =          4
+                F        Terms in output =          4
+                         Bytes used      =         54
+
+   F =
+      x^7 + 7*x^8 + 21*x^9 + 35*x^10;
+\end{verbatim}
+Note that all terms with a power greater than 10 do not even count 
+as generated terms. They are intercepted immediately after the 
+replacement, before any possible additional statements can be 
+carried out.
+
+There are several built in symbols\index{symbols!built in}. They are:
+
+\noindent i\_\index{i\_}: it is defined by \verb:i_^2 = -1: and this 
+property is used by {\FORM} to simplify terms. It is the only symbol that 
+cannot be used as a dimension or a wildcard.
+
+\noindent pi\_\index{pi\_}: a reserved variable which will eventually be 
+used to indicate the variable $\pi$.
+
+\noindent coeff\_\index{coeff\_}: this variable is automatically replaced 
+by the coefficient of the current term.
+
+\noindent num\_\index{num\_}: this variable is automatically replaced by 
+the numerator of the coefficient of the current term.
+
+\noindent den\_\index{den\_}: this variable is automatically replaced by 
+the denominator of the coefficient of the current term.
+
+
+\section{Vectors}
+
+\label{sect-vectors}
+A vector\index{vectors} is an object with a single index\index{index}. This 
+index represents a number that indicates which component of the vector is 
+meant. Vectors have a dimension\index{dimension} connected to them which is 
+the dimension of the vector space in which they are defined. In {\FORM} 
+this dimension is by default set to 4. If the user likes to change this 
+default, this can be done with the `Dimension'-statement. The use of this 
+command affects the dimension of all vectors and the default dimension of 
+indices. Its syntax is (see also p.~\ref{substadimension}):
+\begin{verbatim}
+     dimension number;
+\end{verbatim}
+or
+\begin{verbatim}
+     dimension symbol;
+\end{verbatim}
+The number must be a number that fits inside a {\FORM} word which is 
+an installation dependent size, but it will be at least 32767. 
+The number must be positive or zero. Negative values are illegal. 
+If a symbol is specified, it must have been declared before. Any symbol 
+may be used with the exception of i\_\index{i\_}. 
+
+The declaration of vectors (see p.~\ref{substavectors}) is rather 
+straightforward:
+\begin{verbatim}
+     V[ector] name [,MoreNames];
+\end{verbatim}
+The names of the vectors may be separated either by comma's or 
+by blanks. Example: 
+\begin{verbatim}
+     V    p,q;
+     I    mu,nu;
+     L    F=p(mu)*q(nu);
+\end{verbatim}
+
+\section{Indices}
+
+\label{sect-indices}
+Indices\index{indices}\index{index} are objects that represent a number 
+that is used as an integer argument for counting purposes. They are used 
+mostly as the arguments of vectors or multidimensional arrays (or tensors). 
+Their main property is that they have a dimension\index{dimension}. This 
+dimension indicates what values the index can take. A four-dimensional 
+index can usually take the values 1 to 4. A very important property of an 
+index is found in the convention that it is assumed that an index that is 
+used twice in the same term is summed over. This is called the 
+Einstein\index{Einstein} summation\index{summation!Einstein} convention. 
+Hence the term p(mu)$*$q(mu) is equivalent to the scalar product of the 
+vectors p and q (which can also be written as p.q). 
+
+There are of course also indices that should not be summed over. 
+Such indices we call zero-dimensional. This is just a convention. 
+To declare indices we use the statement (see also p.~\ref{substaindex}): 
+\begin{verbatim}
+     Index name[={number|symbol}]
+                   [,othername[={number|symbol}]];
+\end{verbatim}
+When the equals sign is used, this indicates the specification of a 
+dimension. Indices that are not followed by an equals sign get the 
+dimension that is currently the default dimension (see also 
+p.~\ref{substadimension})). The dimension can be either a number that is 
+zero or positive (zero indicates that the summation convention does not 
+apply for this index) or it can be any symbol with the exception of the 
+symbol i\_. The symbol must have been declared before. 
+
+The most important use of the dimension of an index is the built in rule 
+that a Kronecker\index{Kronecker} delta\index{delta!Kronecker} with twice 
+the same index is replaced by the dimension of this index, proided this 
+index has a non-zero dimension. Therefore when mu is 4-dimensional, d\_(mu,
+mu) will be replaced by 4 and when nu is n-dimensional, d\_(nu,nu) will be 
+replaced by n. If rho is zero dimensional, the expression d\_(rho,rho) is 
+left untouched.
+
+In addition to the symbolic indices there is a number of fixed 
+indices\index{indices!fixed} with a numeric\index{indices!numeric} value. 
+The values of these indices runs from zero to an installation dependent 
+number (usually 127). Users who like a different maximum value should 
+consult chapter~\ref{setup} about the setup parameters. The numeric indices 
+are all assumed to have dimension zero, hence no summation is applied to 
+them. This means that they can be used for vector components. It is 
+therefore perfectly legal to use:
+\begin{verbatim}
+     V    p,q,r;
+     L    F=p(1)*q(1)*r(1)+p(2)*q(2)*r(2);
+\end{verbatim}
+When two numeric indices occur inside the same Kronecker delta, a value 
+is substituted for this delta. Normally this value is one, when the two 
+indices are identical and zero, when they are different. The value for 
+the diagonal elements can be changed with the 
+`FixIndex'-statement (see also p.~\ref{substafixindex}): 
+\begin{verbatim}
+     Fi[xIndex] number:value [,number:value];
+\end{verbatim}
+This command assigns to d\_(number,number) the given value. 
+This value must fit inside a single {\FORM} word. This means that this 
+value can at least be in the range -32768 to +32767. For more 
+details on the size of a {\FORM} word one should consult the 
+installation manual. 
+
+In the case of summable indices\index{indices!summable} the use of three 
+times the same index in the same term would cause problems. {\FORM} will 
+execute the contraction for the first pair it encounters, after which the 
+third index is left. In the case of four or more indices the pairing for 
+the contractions depends on the order in which the parts of the term are 
+processed. Hence to the user the result may seem to be quasi random. 
+Nothing can be done about this and the user should guard against such 
+ambiguous notation\index{notation!ambiguous}.
+
+There is a special version of the index declarations that is used for 
+traces\index{traces} of gamma\index{gamma matrices} 
+matrices\index{matrices!gamma} in n dimensions. If an index is declared with
+\begin{verbatim}
+    Symbols n,epsilon;
+    Index m=n:epsilon;
+\end{verbatim}
+its dimension will be n and it is assumed that epsilon can be used for 
+$(n-4)$ during the taking of the trace of a string of gamma matrices. It 
+is also possible to use this notation in the dimension-statement. See 
+also chapter~\ref{gammaalgebra} on the gamma matrices.
+
+\section{Functions}
+
+\label{sect-functions}
+There are two classes of functions\index{functions}: {\bf commuting 
+functions} which commute automatically with all other objects, and {\bf 
+non-commuting functions} which do not necessarily commute with other 
+non-commuting functions. An object is declared to be a 
+commuting\index{commuting} function\index{function!commuting} with the 
+`cfunction' command. Of this command the first two characters are 
+mandatory, the others optional. An object is declared to be a 
+non-commuting\index{non-commuting} function\index{function!non-commuting} 
+with the `function' command. Here only the f is mandatory. The declaration 
+of a function knows one option. This option concerns the complexity 
+properties of the function. It is indicated by a \# following the name, 
+after which one of the characters R, I, C specifies whether the function is 
+real\index{real}, imaginary\index{imaginary} or complex\index{complex}. The 
+declaration that a function is real is unnecessary as `real' is the default 
+property. Example:
+\begin{verbatim}
+     CF   fa,fb,fc;
+     F    ga,gb,gc#c;
+\end{verbatim}
+In this example the functions fa, fb, fc are commuting and the 
+functions ga, gb and gc are not necessarily commuting. In addition the 
+function gc is complex. More about functions and their conventions 
+is explained in chapter~\ref{functions}.
+
+Within the commutation classes there are several types of special 
+functions. Currently these are tensors\index{tensors} and 
+tables\index{tables}. The tables are described on page~\ref{substatable} 
+and in chapter~\ref{tablebase}.
+
+Tensors\index{tensors} are special functions. Their arguments can be 
+indices and vectors only. When an argument is a vector, it is assumed that 
+this vector has been put in this position as the result of an 
+Einstein\index{Einstein} summation\index{summation!Einstein}, i.e., there 
+used to be an index in this position, but the index was contracted with the 
+index of the vector. Hence {\FORM} assumes that there is a linearity 
+property with respect to such vectors. Tensors are declared with one of the 
+following statements (see also pages~\ref{substatensors},
+\ref{substantensors},\ref{substactensors}:
+\begin{verbatim}
+    T[ensors] t1;
+    CT[ensors] t2;
+    NT[ensors] t3;
+\end{verbatim}
+The type `ntensor' indicates a non-commuting tensor, while the other two 
+types indicate commuting tensors. Note that the 'T' is a 
+commuting tensor, while the 'F' indicates a non-commuting function. In 
+addition to the above declarations one may add the same complexity 
+properties that can be added for functions. This is currently not very 
+useful though as there exists no complex conjugation 
+operator yet. Internally a tensor is a function with special properties. 
+Hence when function properties are discussed, usually these properties 
+refer also to tensors, unless the type of the arguments would not allow 
+the operations or arguments specified.
+
+\section{Sets}
+
+\label{sect-sets}
+A set\index{sets} is a (non-empty) collection of variables that should 
+all be of the same type. This type can be symbols, vectors, indices or 
+functions. A set has a name which can be used to refer to 
+it, and this name may not coincide with any of the other names in the 
+program. A set is declared by giving its name, followed by a 
+colon\index{colon}, after which the elements of the set are listed. The first 
+element determines the type of all the elements of the set. All 
+elements must have been declared as variables before the set-statement. 
+There can be only one set per statement. Example (see also 
+p.~\ref{substaset}): 
+\begin{verbatim}
+     s    xa, xb, xc, xd, ya, x, y;
+     i    mu, nu, rho;
+     set exxes: xa, xb, xc, xd;
+     set yyy: xc, xd, xb, ya;
+     set indi:  mu, nu, rho, 1, 2, 3;
+     set xandy: xa, ya;
+\end{verbatim}
+We see here that a single symbol (xa) can belong to more than one set. 
+Also the fixed indices (1, 2 and 3) can be elements 
+of a set of indices and the numbers that can be powers can also be 
+members of a set of symbols (usually -9999 to + 9999). If this can cause 
+confusion, {\FORM} will give a warning and interpret the set as a 
+set of symbols.
+
+In addition to the user defined sets there are some built in sets with a 
+special meaning. These are:
+\begin{description}
+\item[int\_]\index{int\_} This is a set of symbols. It refers to all integer numbers 
+	that fit inside a {\FORM} word.
+\item[pos\_]\index{pos\_} This is a set of symbols. They are the positive integers that 
+    fit inside a {\FORM} word.
+\item[pos0\_]\index{pos0\_} A set of symbols. They are all non-negative integers that 
+fit inside a {\FORM} word.
+\item[neg\_]\index{neg\_}  A set of symbols. They are all negative integers that 
+fit inside a {\FORM} word.
+\item[neg0\_]\index{neg0\_}  A set of symbols. They are all non-positive integers that 
+fit inside a {\FORM} word.
+\item[symbol\_]\index{symbol\_} The set of all formal symbols. It excludes integers, 
+    numbers and whole function arguments.
+\item[fixed\_]\index{fixed\_} The set of all fixed indices.
+\item[index\_]\index{index\_} The set of all indices.
+\item[number\_]\index{number\_} The set of all rational numbers.
+\item[even\_]\index{even\_} This is a set of symbols. It refers to all even integer numbers 
+	that fit inside a {\FORM} word.
+\item[odd\_]\index{odd\_} This is a set of symbols. It refers to all odd integer numbers 
+	that fit inside a {\FORM} word.
+\end{description}
+
+Sets can be used during wildcarding\index{wildcarding}. When x is a symbol, 
+the notation x? indicates `any symbol'. This is sometimes more than we 
+want. In the case that we would like `any symbol that belongs to the set 
+exxes' we would write x?exxes which is an unique notation as usually 
+the question mark cannot be followed by a name. There should be no blank 
+between the question mark and the name of the set. The object x?indi 
+would result in a type mismatch error, if x is a symbol and indi a set of 
+indices. 
+
+This use of wildcards belonging to sets can be extended even more: 
+The notation x?exxes?yyy means that x should belong to the set exxes, and
+its replacement should be the corresponding element of set yyy. At first 
+this notation looks unnecessarily complicated. The statement 
+\begin{verbatim}
+     id   x?exxes?yyy = x;
+\end{verbatim}
+should have the much simpler syntax
+\begin{verbatim}
+     id   exxes = yyy;
+\end{verbatim}
+This last notation cannot be maintained, when the patterns are more 
+complicated, hence it has been omitted altogether.
+
+When things become really complicated\index{complicated}, the sets can be 
+used as kind of an array. They can be used with a fixed array index 
+(running from 1 for the first element). When they have a symbolic argument 
+(must be a symbol), they are either in the right hand side of an 
+id-statement and the symbol must be replaced by a number by means of a 
+wildcard substitution or in the left hand side and the symbol is 
+automatically seen as a wildcard. The set must still follow the question 
+mark of a wildcard. An example will clarify the above:
+\begin{verbatim}
+    s a1,a2,a3,b1,b2,b3,x,n;
+    f g1,g2,g3,g;
+    set aa:a1,a2,a3;
+    set bb:b1,b2,b3;
+    set gg:g1,g2,g3;
+   
+    id  g(x?aa[n]) = gg[n](bb[n]) + bb[2]*n;
+\end{verbatim}
+The n in the left hand side is automatically a symbol wildcard. x must 
+match an element in aa and n takes its number. In the right hand side 
+\verb:gg[n]: becomes an array element, when the n is substituted. The 
+same holds for \verb:bb[n]:. The element \verb:bb[2]: is immediately 
+replaced by b2, so there is rarely profit by using this, unless the 
+preprocessor had something to do with the construction of this 
+quantity. As should be clear from the above: the array elements are 
+indicated with straight braces\index{braces}. 
+
+Another use of sets is in the select  
+option\index{option!select} of the id-statement. This is discussed in 
+chapter~\ref{pattern} on pattern\index{pattern matching} matching. 
+
+Neither the array properties of the sets nor the select option of the 
+id-statement can be used in conjunction with the built in sets. These 
+sets are not supposed to have a finite number of indices.
+
+Apart from the above sets that were formally declared and used by name 
+there is a second way to use sets. These sets are called {\bf implicitly 
+declared sets\index{sets!implicitly declared}}. They are declared at the 
+position that they are used and their use defines their contents. The 
+elements of the set should be enclosed by a pair of curly 
+brackets\index{brackets!curly} and the set is placed at the position where 
+otherwise the name of the set would be used:
+\begin{verbatim}
+    Symbols a1,a2,a3,b1,b2,b3,x,n;
+    CFunctions g1,g2,g3,g;
+    Local expr =
+        g(a1)+g(a2)+g(a3)+g(x);
+    id,g(x?{a1,a2,a3}[n]) = {g1,g2,g3}[n]({b1,b2,b3}[n]);
+    print;
+    .end
+
+   expr =
+      g1(b1) + g2(b2) + g3(b3) + g(x);
+\end{verbatim}
+Such a set exists internally only till the end of the module in which it 
+is used. It can be used at all positions where named sets can be used. 
+Hence they can also be used, when the array properties of sets are 
+considered.
+
+The preprocessor has to be able to distinguish these sets from strings for 
+its calculator\index{calculator!preprocessor} (see 
+chapter~\ref{preprocessor}). Usually this is no problem, because any 
+regular name contains at least one character that is not accepted by this 
+calculator. If the only elements in the set are numeric the 
+comma\index{comma} will tell the preprocessor that it is a set and the 
+calculator should not be used. This leaves the case of a set with a single 
+numeric element. By placing a comma either before or after it the use of 
+the calculator is vetoed. For the interpretation of the set this makes no 
+difference.
+
+When it is possible to demand an object to be inside a 
+set\index{set!inside}, it should also be possible to demand that an object 
+be outside a set\index{set!outside}. This is done with the `?!' operator 
+instead of the `?' operator. The extra exclamation\index{exclamation} mark 
+is like a `not' operator. It can be used only, when its use makes sense. 
+Hence it cannot be used in conjunction with the array properties of sets 
+and together with the select option of the id-statement. So its only use is 
+in patterns of the type
+\begin{verbatim}
+    x?!setname
+    x?!{a,b,c}
+\end{verbatim}
+as is done in
+\begin{verbatim}
+    id  x^n?!{,-1} = x^(n+1)/(n+1);
+\end{verbatim}
+There is a variation of the second type that is not possible with named 
+sets\index{sets!named}:
+\begin{verbatim}
+    Symbols a,b,x,y,z;
+    CFunction f;
+    
+    id  f(x?!{a,y?,z?})*f(y?!{b,x?,z?})*f(z?!{x?,y?})
+            =  .........
+\end{verbatim}
+In this complicated pattern the z is easiest: It is not allowed to be equal 
+to the objects that will be substituted for the wildcards x and y. The 
+symbol x cannot be equal to the wildcards y and z, but in addition it 
+should not be equal to a. A similar condition holds for y. One could argue 
+that at least one of these conditions is superfluous from the strictly 
+logical viewpoint. It depends however on the order of the declarations in 
+how {\FORM} runs through the pattern, so it would require some trying to 
+see which `not' specifications are superfluous. If for instance the first 
+function is matched first, there is still no assignment for z. This means 
+that the z? in the set cannot be used yet and hence it places no 
+restrictions on x. Therefore it is the x? in the last function that causes 
+x and z to be different. If on the other hand the last function would be 
+matched first, we need the z? in the set of the first function. From the 
+strict logical viewpoint, {\FORM} could go back over the pattern and still 
+make the appropriate rejections, but this would cost too much extra time. 
+As one can see, it is safer to specify both.
+
+\section{The autodeclare conventions}
+
+As we have seen above, all variables that are introduced by the user have 
+to be declared. As such {\FORM} is a strong\index{strong typing} typing 
+language. This isn't always handy. Hence it is possible to introduce some 
+rules about the automatic declaration of classes of variables. This is done 
+with the AutoDeclare\index{autodeclare} statement (see also 
+p.~\ref{substaautodeclare}). If we use the statements
+\begin{verbatim}
+     AutoDeclare Symbol x,tt;
+     AutoDeclare CFunction f,t;
+\end{verbatim}
+any object encountered by the compiler of which the name starts with the 
+character x will automatically be declared as a symbol. Also objects of 
+which the name starts with the characters tt will be declared as symbols. 
+Objects of which the name starts with the characters f or t, but not with 
+the string tt, and that have not yet been declared will be declared 
+automatically as commuting functions. As one can see, in the case of 
+potential conflicts\index{conflicts} (like with t and tt) the more 
+restrictive one takes precedence. This is independent of the order of the 
+AutoDeclare statements. One disadvantage of the use of the AutoDeclare 
+statement is that one looses a certain amount of control over the order of 
+declaration of the variables, as now they will be declared in the order in 
+which they occur in the statements. The order of the declaration determines 
+the ordering of the objects in the output.
+
+\section{Name lists}
+
+\label{sect-namelists}
+Sometimes it is necessary to see how {\FORM} has interpreted a set
+of declarations. It can also be that declarations were made in an unlisted 
+include file and that the user wants to know what variables have been 
+defined. The lists\index{lists} of active variables\index{variables!lists} 
+can be printed with the statement
+\begin{verbatim}
+     On names;
+\end{verbatim}
+This statement sets a flag that causes the listing of all name tables and 
+default properties that are active at the moment that the compiler has 
+finished compiling the current module and all modules after. The printing 
+is just before the algebra processor takes over for the execution of the 
+module --assuming that no error condition exists--. If the `On names' is 
+specified in a module that ends with a .global-instruction, the name lists 
+will be printed at the end of each module, as printing the name lists will 
+then be the default option. If one likes to switch this flag off, this can 
+be done with the statement
+\begin{verbatim}
+     Off names;
+\end{verbatim}
+which prohibits the printing of the name lists in the current module and 
+all modules following.
+
+\section{Dummy indices}
+
+\label{sect-dummies}
+Sometimes indices\index{indices!dummy} are to be summed over but due to the 
+evaluation procedures some terms contain the index mu and other terms 
+contain the index nu. There is a command to sum over indices in such a way 
+that {\FORM} recognizes that the exact name of the index is irrelevant. 
+This is the `sum'-statement (see also p.~\ref{substasum}): \begin{verbatim}
+   i  mu,nu;
+   f  f1,f2;
+   L  F=f1(mu)*f2(mu)+f1(nu)*f2(nu);
+   sum  mu;
+   sum  nu;
+   print;
+   .end
+\end{verbatim}
+At first the expression contains two terms. After the summations {\FORM} 
+recognizes the terms as identical. In the output we see the term: 
+\begin{verbatim}
+   2*f1(N1_?)*f2(N1_?)
+\end{verbatim}
+The \verb:N1_?: are dummy indices. 
+The dimension of these dummy indices is the current 
+default dimension\index{dimension!default} as set with the last 
+dimension-statement. This may look like it is a restriction, but in 
+practice it is possible to declare the default dimension to have one 
+value in one module, take some sums, and do some more operations, and 
+then give the default dimension another value in the next module. It should 
+be realized however that then the dimension of the already existing dummy 
+indices may change with it.
+
+The scheme that is used to renumber\index{renumber} the 
+indices\index{indices!renumber} in a term is quite 
+involved. It will catch nearly all possibilities, but in order to avoid 
+to try all $n!$ permutations, when there are n pairs of dummy indices, 
+{\FORM} does not try everything. It is possible to come up with examples 
+in which the scheme is not perfect. It is left as a 
+challenge for the reader to find such an example. In the case that the 
+scheme isn't sufficient one can use the Renumber statement (see 
+p.~\ref{substarenumber}) to force a complete renumbering. As this involves 
+n! attempts in which n is the number of different dummy indices, this can 
+become time consuming.
+
+These dummy indices can be used to solve a well known problem in the 
+automatic summation of indices. This problem occurs, when summed indices 
+are found inside a subexpression that is raised to a power:
+\begin{verbatim}
+    Index mu,nu;
+    CFunctions f,g;
+    Vectors p,q;
+    Local F = (f(mu)*g(mu))^2;
+    sum mu;
+    id f(nu?) = p(nu);
+    id g(nu?) = q(nu);
+    print;
+    .end
+
+   F =
+      p.p*q.q;
+\end{verbatim}
+Clearly the answer is not what we had in mind, when we made the program. 
+There is an easy way out:
+\begin{verbatim}
+    Index mu,nu;
+    Symbol x;
+    CFunctions f,g;
+    Vectors p,q;
+    Local F = x^2;
+    repeat;
+        id,once,x = f(mu)*g(mu);
+        sum mu;
+    endrepeat;
+    id f(nu?) = p(nu);
+    id g(nu?) = q(nu);
+    print;
+    .end
+
+   F =
+      p.q^2;
+\end{verbatim}
+This time things went better, because each sum-statement moves an index 
+mu to a new dummy index.
+
+There are some extra problems connected to dummy indices. Assume that we 
+have the expression F which contains
+\begin{verbatim}
+     F = f(N1_?,N2_?)*f(N2_?,N1_?);
+\end{verbatim}
+and next we have the module
+\begin{verbatim}
+     Indices mu,nu,rho,si;
+     Vectors p1,p2,p3,v;
+     Tensor g;
+     Local G = e_(mu,nu,rho,si)*g(mu,nu,p1,v)*g(rho,si,p2,v);
+     sum mu,nu,rho,si;
+     Multiply F^3;
+     id  v = e_(p1,p2,p3,?);
+     print;
+     .end
+
+   G =
+      f(N1_?,N2_?)*f(N2_?,N1_?)*f(N3_?,N4_?)*f(N4_?,N3_?)*
+      f(N5_?,N6_?)*f(N6_?,N5_?)*g(N7_?,N8_?,p1,N9_?)*
+      g(N10_?,N11_?,p2,N12_?)*e_(p1,p2,p3,N9_?)*
+      e_(p1,p2,p3,N12_?)*e_(N7_?,N8_?,N10_?,N11_?);
+\end{verbatim}
+Here the situation with the dummy indices becomes rather messy, and all 
+earlier versions of FORM were not prepared for this. Their answer could be:
+\begin{verbatim}
+    G =
+      f(N1_?,N2_?)*f(N1_?,N2_?)*f(N1_?,N2_?)*f(N2_?,N1_?)*
+      f(N2_?,N1_?)*f(N2_?,N1_?)*g(N1_?,N2_?,p2,N3_?)*
+      g(N4_?,N5_?,p1,N6_?)*e_(p1,p2,p3,N3_?)*
+      e_(p1,p2,p3,N6_?)*e_(N1_?,N2_?,N4_?,N5_?);
+\end{verbatim}
+which is clearly not what the program is supposed to give. In the current 
+version we have made the tracing of the dummy indices and the renumbering 
+of them at the proper moment a lot better. It is however not complete as a 
+complete implementation might severely influence the speed of execution at 
+some points. The scheme is complete for the inclusion of local and global 
+expressions. On the other hand it doesn't work for the contents of dollar 
+variables\index{variables!dollar}. Neither does it work for dummy indices 
+introduced in user defined code as in
+\begin{verbatim}
+     id  x^n? = (f(N1_?)*g(N1_?))^n;
+\end{verbatim}
+For the latter case we showed a workaround above. Anyway there is a certain 
+ambiguity here. Just imagine we write
+\begin{verbatim}
+     id  x^n? = f(N1_?)^n*g(N1_?)^n;
+\end{verbatim}
+Formally it is exactly the same, but what we mean is far from clear. For 
+the dollar variables we considered the contracted dummy indices rare enough 
+that it doesn't merit sacrificing speed. And then there is one more little 
+caveat\index{caveat}. Global expressions that were stored with older 
+versions of FORM than version 3.2, but are read with version 3.2 or later 
+would have a problem if the expression were to contain dummy indices. The 
+newer version of the .sav files\index{files!.sav} will contain information 
+about the dummy indices. {\FORM} can still read the old versions but will 
+have to `invent' information by assuming that there are no dummy indices. 
+If there are expressions with such dummy indices the best is to copy the 
+expressions to a new expression and let the copying be followed by a .sort. 
+That should set things straight. A final remark: if an elegant solution is 
+found with which the above cases could be made to work without the penalty 
+in execution time, it will be built in in the future.
+
+\section{Kronecker delta's}
+
+\label{sect-kroneckerdelta}
+The built in object d\_ represents the Kronecker\index{Kronecker} 
+delta\index{delta!Kronecker}. Even though this 
+object looks a little bit like a tensor, internally it isn't treated as 
+such. Actually it has its own data type. It must have exactly two arguments 
+and these arguments should be either indices or vectors. A d\_ with at 
+least one vector is immediately replaced, either by a vector with an index 
+(if there is one vector and one index) or by a dotproduct (when there are 
+two vectors). If a Kronecker delta contains an index that occurs also at 
+another position in the same term, and if that index is summable, and if 
+the index occurs as the index of a vector, inside a tensor, inside another 
+d\_ or as the argument of a function, and the object inside which it occurs 
+is not inside the argument of a function itself (unless the d\_ is inside 
+the same argument) then the Einstein\index{Einstein} 
+summation\index{summation!Einstein} convention is used and the 
+d\_ is eliminated, while the second occurrence of the index is replaced by 
+the other index in the d\_ (Are you still with us?). When a 
+Kronecker delta has two identical indices and these indices are summable, 
+the d\_ is replaced by the dimension of the index. If they are fixed 
+indices, the d\_ is replaced by one, unless this value has been altered 
+with the fixindex-statement. Some examples of Kronecker delta's are given 
+in section~\ref{fund}.
+
+\section{Restrictions}
+
+There is a restriction\index{restrictions} on the total number of 
+variables\index{variables!total number of} that {\FORM} can handle. For the 
+number of symbols, vectors, indices, functions and sets together the exact 
+number depends on the type of computer. For a computer with a 32-bits 
+processor this number is 32768. This includes the built in objects. 
+Individual types of variables (like symbols) are usually restricted to 
+about 8000. For a 
+computer with a 64-bits processor the maximum has been set arbitrarily at 
+2000000000. In addition there are restrictions on the total amount of 
+memory\index{memory!total amount of} needed by {\FORM} to maintain an 
+administration of all these variables. These restrictions are set by the 
+memory allocator of the computer on which {\FORM} is running.
+
+\section{Some common bugs}
+
+There is a type of error\index{error}\index{bug} by the user (including at 
+times the author) that is so common that it deserves mentioning here. 
+Consider the code:
+\begin{verbatim}
+     Symbol x1,x2
+     Index m1,m2;
+\end{verbatim}
+As a statement it is perfectly legal\index{legal}, but it may produce 
+rather funny errors at a later stage when we try to use m1 or m2. 
+Inspection with the `On names;' statement shows that we have the symbols 
+x1,x2,Index,m1,m2. This is most likely not what the user wanted. Closer 
+inspection shows that we forgot the semicolon at the end of the symbol 
+statement. We should have had:
+\begin{verbatim}
+     Symbol x1,x2;
+     Index m1,m2;
+\end{verbatim}
+This is the most common error for which {\FORM} cannot give a direct error 
+message (it is after all a legal statement). Hence when faced with 
+mysterious errors or error messages, one could have a good look by using 
+the `On names' statement. Maybe it shows something, and if not, one has to 
+look for other causes.
