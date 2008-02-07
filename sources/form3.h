@@ -6,7 +6,17 @@
  *	There are also some system dependencies concerning file functions.
  */
 
-#define VERSION 3
+/* !!! uncomment to use autoconf !!! */
+/* #define USE_AUTOCONF */
+
+#ifdef USE_AUTOCONF
+
+#include "config.h"
+
+#else /* USE_AUTOCONF */
+
+#define VERSION "3.2"
+#define MAJORVERSION 3
 #define MINORVERSION 2
 /* #define BETAVERSION */
 
@@ -16,9 +26,12 @@
 #define PRODUCTIONDATE "16-apr-2007"
 #endif
 
-#define FORM_INLINE inline
-
 #define WITHZLIB
+#define WITHGMP
+
+#endif /* USE_AUTOCONF */
+
+#define FORM_INLINE inline
 
 /*
 #define ITHREADS

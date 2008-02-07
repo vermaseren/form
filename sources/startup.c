@@ -160,15 +160,15 @@ DoTail ARG2(int,argc,UBYTE **,argv)
 printversion:;
 #ifdef WITHPTHREADS
 #ifdef BETAVERSION
-							printf("TFORM version %d.%dBeta(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+							printf("TFORM version %sBeta(%s)\n",VERSION,PRODUCTIONDATE);
 #else
-							printf("TFORM version %d.%d(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+							printf("TFORM version %s(%s)\n",VERSION,PRODUCTIONDATE);
 #endif
 #else
 #ifdef BETAVERSION
-							printf("FORM version %d.%dBeta(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+							printf("FORM version %sBeta(%s)\n",VERSION,PRODUCTIONDATE);
 #else
-							printf("FORM version %d.%d(%s)\n",VERSION,MINORVERSION,PRODUCTIONDATE);
+							printf("FORM version %s(%s)\n",VERSION,PRODUCTIONDATE);
 #endif
 #endif
 							if ( onlyversion ) return(-1);
@@ -965,8 +965,8 @@ IniVars()
 	*s++ = sizeof(WORD);
 	*s++ = sizeof(LONG);
 	*s++ = sizeof(char *);
-	*s++ = VERSION >> 8;
-	*s++ = VERSION;
+	*s++ = MAJORVERSION >> 8;
+	*s++ = MAJORVERSION;
 	*s++ = (UBYTE)((MINORVERSION & 0xFFFF) >> 8);
 	*s++ = (UBYTE)(MINORVERSION & 0xFF);
 	i = 8 - sizeof(LONG); while ( --i >= 0 ) *s++ = 0;
@@ -1168,19 +1168,19 @@ main ARG2(int,argc,char **,argv)
 #endif
 #ifdef WITHPTHREADS
 #ifdef BETAVERSION
-			MesPrint("TFORM by J.Vermaseren,version %d.%dBeta(%s) Run %s"
-                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+			MesPrint("TFORM by J.Vermaseren,version %sBeta(%s) Run %s"
+                         ,VERSION,PRODUCTIONDATE,MakeDate());
 #else
-			MesPrint("TFORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
-                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+			MesPrint("TFORM by J.Vermaseren,version %s(%s) Run at: %s"
+                         ,VERSION,PRODUCTIONDATE,MakeDate());
 #endif
 #else
 #ifdef BETAVERSION
-			MesPrint("FORM by J.Vermaseren,version %d.%dBeta(%s) Run %s"
-                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+			MesPrint("FORM by J.Vermaseren,version %sBeta(%s) Run %s"
+                         ,VERSION,PRODUCTIONDATE,MakeDate());
 #else
-			MesPrint("FORM by J.Vermaseren,version %d.%d(%s) Run at: %s"
-                         ,VERSION,MINORVERSION,PRODUCTIONDATE,MakeDate());
+			MesPrint("FORM by J.Vermaseren,version %s(%s) Run at: %s"
+                         ,VERSION,PRODUCTIONDATE,MakeDate());
 #endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);

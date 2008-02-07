@@ -11,7 +11,6 @@
 /*
   	#[ Includes : reken.c
 */
-#define WITHGMP
 
 #include "form3.h"
 
