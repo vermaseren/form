@@ -178,7 +178,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -558,7 +558,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
@@ -1622,6 +1622,7 @@ struct T_const {
     WORD    *lastpolyrem;          /* () Remainder after PolyDiv_ */
     long    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     long    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
+    ULONG   *wranfia;
     WORD    *TMaddr;               /* (R) buffer for TestSub */
     WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
@@ -1641,6 +1642,7 @@ struct T_const {
     int     SortBotIn2;            /* Input stream 2 for a SortBot */
 #endif
 #endif
+    int     wranfcall;
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
@@ -1667,7 +1669,7 @@ struct T_const {
 	WORD    sizeprimelist;
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
