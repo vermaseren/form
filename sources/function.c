@@ -1,3 +1,10 @@
+/** @file function.c
+ *
+ *  The file with the central routines for the pattern matching of
+ *	functions and their arguments.
+ *	The file also contains the routines for the execution of the
+ *	Symmetrize statement and its variations (like antisymmetrize etc).
+ */
 /*
   	#[ Includes : function.c
 */
@@ -5,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Utilities :
  		#[ MakeDirty :
 
@@ -53,7 +60,7 @@ MakeDirty ARG3(WORD *,term,WORD *,x,WORD,par)
 }
 
 /*
- 		#] MakeDirty :
+ 		#] MakeDirty : 
  		#[ MarkDirty :
 
 		Routine marks all functions dirty with the given flags.
@@ -96,7 +103,7 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 }
 
 /*
- 		#] MarkDirty :
+ 		#] MarkDirty : 
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -268,7 +275,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize :
+ 		#] Symmetrize : 
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -365,7 +372,7 @@ CompGroup BARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 }
 
 /*
- 		#] CompGroup :
+ 		#] CompGroup : 
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -413,7 +420,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 }
 
 /*
- 		#] FullSymmetrize :
+ 		#] FullSymmetrize : 
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -528,7 +535,7 @@ NextFun:
 }
 
 /*
- 		#] SymGen :
+ 		#] SymGen : 
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -592,7 +599,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind :
+ 		#] SymFind : 
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -642,7 +649,7 @@ int ChainIn ARG2(WORD *,term,WORD,funnum)
 }
 
 /*
- 		#] ChainIn :
+ 		#] ChainIn : 
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
@@ -702,7 +709,7 @@ int ChainOut ARG2(WORD *,term,WORD,funnum)
 }
 
 /*
- 		#] ChainOut :
+ 		#] ChainOut : 
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -913,7 +920,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA :
+ 		#] GAMMA : 
  		#[ Tensors :
 */
 	}
@@ -1041,7 +1048,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors :
+ 		#] Tensors : 
 */
 	}
 /*
@@ -1398,7 +1405,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction :
+ 		#] MatchFunction : 
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		AN.patstop: end of the functions field in the search pattern
@@ -1674,7 +1681,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions :
+ 		#] ScanFunctions : 
 	#] Patterns :
 */
 

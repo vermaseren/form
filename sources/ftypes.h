@@ -1,3 +1,11 @@
+
+/** @file ftypes.h
+ *
+ *  Contains the definitions of many internal codes
+ *	Rather than using numbers directly we do this by defines, making it
+ *	much easier to change things. Changing things is sometimes also
+ *	a good way of testing the code.
+ */
  
 #ifdef WITHPTHREADS
 #define PHEAD  ALLPRIVATES *,
@@ -20,9 +28,8 @@
 #define PRECALCSTREAM 4
 #define DOLLARSTREAM 5
 #define PREREADSTREAM2 6
-/*[14apr2004 mt]:*/
 #define EXTERNALCHANNELSTREAM 7
-/*:[14apr2004 mt]*/
+
 #define SUBROUTINEFILE 0
 #define PROCEDUREFILE 1
 #define HEADERFILE 2

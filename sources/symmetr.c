@@ -1,3 +1,8 @@
+/** @file symmetr.c
+ *
+ *  The routines that deal with the pattern matching of functions with
+ *	symmetric properties.
+ */
 /*
   	#[ Includes : function.c
 */
@@ -1926,7 +1931,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy :
+  	#] FunMatchSy : 
   	#[ MatchArgument :
 */
 

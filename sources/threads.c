@@ -12,6 +12,12 @@
  *	The sources are set up in such a way that if WITHPTHREADS isn't defined
  *	there is no trace of pthread parallelization.
  *	The reason is that TFORM is far more memory hungry than sequential FORM.
+ *
+ *	Special attention should also go to the locks. The proper use of the
+ *	locks is essential and determines whether TFORM can work at all.
+ *	We use the LOCK/UNLOCK macros which are empty in the case of sequential FORM
+ *	These locks are at many places in the source files when workers can
+ *	interfere with each others data or with the data of the master.
  */
  
 #ifdef WITHPTHREADS
@@ -75,10 +81,11 @@ static LONG numberofterms;
   	#] Variables : 
   	#[ Identity :
  		#[ StartIdentity :
-
-	To be called once when we start up the threads.
-	Starts our identity administration.
 */
+/**
+ *	To be called once when we start up the threads.
+ *	Starts our identity administration.
+ */
 
 void StartIdentity ARG0
 {
@@ -86,11 +93,12 @@ void StartIdentity ARG0
 }
 
 /*
- 		#] StartIdentity : 
+ 		#] StartIdentity :
  		#[ FinishIdentity :
-
-	The library needs a finishing routine
 */
+/**
+ *	The library needs a finishing routine
+ */
 
 void FinishIdentity(void *keyp)
 {
@@ -98,11 +106,12 @@ void FinishIdentity(void *keyp)
 }
 
 /*
- 		#] FinishIdentity : 
+ 		#] FinishIdentity :
  		#[ SetIdentity :
-
-	Assigns an integer value to a thread, starting at zero.
 */
+/**
+ *	Assigns an integer value to a thread, starting at zero.
+ */
 
 int SetIdentity ARG1(int *,identityretval)
 {
@@ -114,18 +123,27 @@ int SetIdentity ARG1(int *,identityretval)
 }
 
 /*
- 		#] SetIdentity : 
+ 		#] SetIdentity :
  		#[ WhoAmI :
-
-	Returns the number of the thread in our administration
-
-	pcounter is for debugging purposes only. It tells how often the WhoAmI
-	routine is called. We would like this to be substantially less than the
-	number of terms being manipulated (in the limit that this number is large)
 */
+ 
 #ifdef WITHPCOUNTER
 int pcounter = 0;
 #endif
+
+/**
+ *	Returns the number of the current thread in our administration
+ *
+ *	pcounter is for debugging purposes only. It tells how often the WhoAmI
+ *	routine is called. We would like this to be substantially less than the
+ *	number of terms being manipulated (in the limit that this number is large)
+ *
+ *	This routine is to be called in routines that need access to the thread
+ *	specific data and that don't get their B-struct passed as an argument.
+ *	Routines that get called frequently need their B-struct passed.
+ *	This is done with BHEAD and the argumentfield gets declared with
+ *	one of the BARG macros rather than the ARG macros.
+ */
 
 int WhoAmI ARG0
 {
@@ -150,9 +168,13 @@ int WhoAmI ARG0
 }
 
 /*
- 		#] WhoAmI : 
+ 		#] WhoAmI :
  		#[ BeginIdentities :
 */
+/**
+ *	Starts up the identity registration. This is the routine to be called
+ *	at the startup of TFORM.
+ */
 
 VOID
 BeginIdentities ARG0
@@ -162,10 +184,15 @@ BeginIdentities ARG0
 }
 
 /*
- 		#] BeginIdentities : 
+ 		#] BeginIdentities :
   	#] Identity : 
   	#[ StartHandleLock :
 */
+/**
+ *	Routine to be called at the startup of TFORM.
+ *	We have this routine because we would like to keep all access to TFORM
+ *	specific data in this file.
+ */
 
 void StartHandleLock ARG0
 {
@@ -175,11 +202,23 @@ void StartHandleLock ARG0
 /*
   	#] StartHandleLock : 
   	#[ StartAllThreads :
-
-	In this routine we start 'number' threats
-	All threads make their allocations.
-	Then all, except for the master, go to sleep.
 */
+/**
+ *	In this routine we start 'number' threats
+ *	The routine that runs the show for each worker is called RunThread.
+ *	It will call the allocations and all the worker specific action.
+ *	Then the master has to wait till all workers are asleep before continuing.
+ *	If we use SortBots (special threads to help the master during the
+ *	final stages of a big sort) they are started and their routine is
+ *	called RunSortBot.
+ *	The master then waits till all sortbots are asleep before continuing.
+ *	Finally the sort buffers of the master are parcelled up for the final
+ *	merge in big sorts in which the workers have to feed the master.
+ *
+ *	@param number The number of main threads (including the master)
+ *	              The number of workers is number-1.
+ *	@return  Standard return conventions (OK -> 0)
+ */
 
 int StartAllThreads ARG1(int,number)
 {
@@ -261,23 +300,38 @@ int StartAllThreads ARG1(int,number)
 /*
   	#] StartAllThreads : 
   	#[ InitializeOneThread :
-
-	One complication:
-		AM.ScratSize can be rather big. We don't want all the workers
-		to have an allocation of that size. Some computers may run out
-		of allocations.
-		We need on the workers:
-			AR.Fscr[0] : input for keep brackets and expressions in rhs
-			AR.Fscr[1] : output of the sorting to be fed to the master
-			AR.Fscr[2] : input for keep brackets and expressions in rhs
-		Hence the 0 and 2 channels can use a rather small buffer like
-			10*AM.MaxTer.
-		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers.
 */
-
+/**
+ *	Array for putting a label on memory allocations and error messages.
+ */
 UBYTE *scratchname[] = { (UBYTE *)"scratchsize",
                          (UBYTE *)"scratchsize",
                          (UBYTE *)"hidesize" };
+/**
+ *	Initializes one thread. This includes the allocation of its private
+ *	space and all its buffers. Also the initialization of variables.
+ *
+ *	@param identity The (TFORM defined) integer identifier of the thread.
+ *	@return A pointer to the struct with all private data of the thread.
+ *	We call this struct B and we have a system of macros
+ *	(defined in variable.h) that allows us to access its substructs in
+ *	the same way as the corresponding substructs in sequential FORM are
+ *	accessed. Example:
+ *		In TFORM  AR is defined as B->R
+ *		In FORM   AR is defined as A.R  (here it is part of the A struct)
+ *
+ *	One complication:
+ *		AM.ScratSize can be rather big. We don't want all the workers
+ *		to have an allocation of that size. Some computers may run out
+ *		of allocations.
+ *		We need on the workers:
+ *			AR.Fscr[0] : input for keep brackets and expressions in rhs
+ *			AR.Fscr[1] : output of the sorting to be fed to the master
+ *			AR.Fscr[2] : input for keep brackets and expressions in rhs
+ *		Hence the 0 and 2 channels can use a rather small buffer like
+ *			10*AM.MaxTer.
+ *		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers.
+ */
 
 ALLPRIVATES *InitializeOneThread ARG1(int,identity)
 {
@@ -657,19 +711,30 @@ OnError:;
   	#] InitializeOneThread : 
   	#[ FinalizeOneThread :
 */
+/**
+ *	To be called at the end of the run to give the final time statistics for
+ *	this thread.
+ *
+ *	@param identity The TFORM defined integer identity of the thread.
+ *	                In principle we could find it out from here with a call
+ *	                to WhoAmI but because this is to be called at a very
+ *	                late stage during clean up, we don't want to run any risks.
+ */
 
 void FinalizeOneThread ARG1(int,identity)
 {
 	timerinfo[identity] = TimeCPU(1);
-/*
-	Here we free all allocations for the struct AT (which is AB[identity].T).
-*/
 }
 
 /*
   	#] FinalizeOneThread : 
   	#[ TerminateAllThreads :
 */
+/**
+ *	To be called at the end of running TFORM.
+ *	Theoretically the system can clean up after up, but it may be better
+ *	to do it ourselves.
+ */
 
 VOID TerminateAllThreads ARG0
 {
@@ -696,20 +761,31 @@ VOID TerminateAllThreads ARG0
 /*
   	#] TerminateAllThreads : 
   	#[ MakeThreadBuckets :
-
-	Creates 2*number thread buckets. We want double the number because
-	we want to prepare number of them while another number are occupied.
-
-	Each bucket should have about AC.ThreadBucketSize*AM.MaxTerm words.
-
-	When loading a thread we only have to pass the address of a full bucket.
-	This gives more overlap between the master and the workers and hence
-	less waiting.
-
-	par = 0: First allocation
-	par = 1: Reallocation when we change the bucket size with the 
-	         threadbucketsize statement.
 */
+/**
+ *	Creates 2*number thread buckets. We want double the number because
+ *	we want to prepare number of them while another number are occupied.
+ *
+ *	Each bucket should have about AC.ThreadBucketSize*AM.MaxTerm words.
+ *
+ *	When loading a thread we only have to pass the address of a full bucket.
+ *	This gives more overlap between the master and the workers and hence
+ *	less waiting.
+ *
+ *	The buckets are used because sending terms one by one to the workers
+ *	costs too much overhead. Hence we put a number of terms in each bucket
+ *	and then pass the whole bucket. In the ideal case the master loads the
+ *	buckets while the workers are processing the contents of the buckets
+ *	they have been assigned. In practise often the processing can go faster
+ *	than that the master can fill the buckets for all workers.
+ *	It should be possible to improve this bucket system, but the trivial
+ *	idea 
+ *
+ *	@param number The number of workers
+ *	@param par    par = 0: First allocation
+ *	              par = 1: Reallocation when we change the bucket size with the 
+ *	                       threadbucketsize statement.
+ */
 
 int MakeThreadBuckets ARG2(int,number,int,par)
 {
@@ -760,6 +836,10 @@ int MakeThreadBuckets ARG2(int,number,int,par)
   	#] MakeThreadBuckets : 
   	#[ GetWorkerTimes :
 */
+/**
+ *	Gets the total CPU time of all workers together.
+ *	To be called at the end of the TFORM run.
+ */
 
 LONG GetWorkerTimes ARG0
 {
@@ -776,9 +856,12 @@ LONG GetWorkerTimes ARG0
 /*
   	#] GetWorkerTimes : 
   	#[ UpdateOneThread :
-
-	Fix up things that happened at compiler time.
 */
+/**
+ *	Fix up some of the things that happened at compiler time.
+ *
+ *	@param identity The TFORM defined integer thread identifier.
+ */
 
 int UpdateOneThread ARG1(int,identity)
 {
@@ -800,10 +883,19 @@ int UpdateOneThread ARG1(int,identity)
 /*
   	#] UpdateOneThread : 
   	#[ LoadOneThread :
-
-	Loads all relevant variables from thread 'from' into thread 'identity'
-	This is to be done just prior to waking up the thread.
 */
+/**
+ *	Loads all relevant variables from thread 'from' into thread 'identity'
+ *	This is to be done just prior to waking up the thread.
+ *	It is important to keep the number of variables to be copied to a minimum
+ *	because this is part of the 'overhead'.
+ *
+ *	@param from     the source thread which has all the variables already
+ *	@param identity the TFORM defined integer thread identitier of the thread that needs the copy
+ *	@param thr      the bucket that contains the terms to be processed by 'identity'
+ *	@param par		if 1 copies the already active pieces in the (de)compress buffer
+ *	@return Standard return convention (OK -> 0)
+ */
 
 int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
 {
@@ -877,10 +969,21 @@ int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
 /*
   	#] LoadOneThread : 
   	#[ BalanceRunThread :
-
-	To start a thread from the Generator routine we need to pass a number
-	of variables
 */
+/**
+ *	To start a thread from the Generator routine we need to pass a number
+ *	of variables.
+ *	This is part of the second stage load balancing. The second stage is
+ *	when we interfere with the expansion tree in Generator and let branches
+ *	of the tree be treated by other workers.
+ *	Early experiments show disappointing results and hence the system is
+ *	currently disabled.
+ *
+ *	@param identity  The identity of the thread that will receive the term.
+ *	@param term      The term to be passed to thread 'identity'
+ *	@param level     The level at which we are in the tree. Defines the statement.
+ *	@return Standard return convention (OK -> 0)
+ */
 
 int BalanceRunThread BARG3(int,identity,WORD,*term,WORD,level)
 {
@@ -916,6 +1019,9 @@ int BalanceRunThread BARG3(int,identity,WORD,*term,WORD,level)
   	#] BalanceRunThread : 
   	#[ SetWorkerFiles :
 */
+/**
+ *	Initializes the scratch files at the start of the execution of a module.
+ */
 
 void SetWorkerFiles ARG0
 {
@@ -990,6 +1096,12 @@ void SetWorkerFiles ARG0
   	#] SetWorkerFiles : 
   	#[ RunThread :
 */
+/**
+ *	This is the routine that represents each worker.
+ *	The model is that the worker waits for a 'signal'.
+ *	If there is a signal it wakes up, looks at what signal and then takes
+ *	the corresponding action. After this it goes back to sleep.
+ */
 
 void *RunThread ARG1(void *,dummy)
 {
@@ -1028,7 +1140,7 @@ void *RunThread ARG1(void *,dummy)
 				NewSort();
 				break;
 /*
-			#] STARTNEWEXPRESSION : 
+			#] STARTNEWEXPRESSION :
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -1132,7 +1244,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION : 
+			#] LOWESTLEVELGENERATION :
 			#[ FINISHEXPRESSION :
 */
 #ifdef WITHSORTBOTS
@@ -1176,7 +1288,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION : 
+			#] FINISHEXPRESSION :
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -1215,7 +1327,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION : 
+			#] CLEANUPEXPRESSION :
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1234,7 +1346,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] HIGHERLEVELGENERATION : 
+			#] HIGHERLEVELGENERATION :
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1244,13 +1356,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE : 
+			#] STARTNEWMODULE :
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD : 
+			#] TERMINATETHREAD :
 			#[ DOONEEXPRESSION :
 
 				When a thread has to do a complete (not too big) expression.
@@ -1372,7 +1484,7 @@ ProcErr:			Terminate(-1);
 
 				} break;
 /*
-			#] DOONEEXPRESSION : 
+			#] DOONEEXPRESSION :
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1394,6 +1506,12 @@ EndOfThread:;
   	#] RunThread : 
   	#[ RunSortBot :
 */
+/**
+ *	This is the routine that represents each sortbot.
+ *	The model is that the sortbot waits for a 'signal'.
+ *	If there is a signal it wakes up, looks at what signal and then takes
+ *	the corresponding action. After this it goes back to sleep.
+ */
 
 #ifdef WITHSORTBOTS
 
@@ -1426,20 +1544,20 @@ void *RunSortBot ARG1(void *,dummy)
 SETBASEPOSITION(AN.theposition,0);
 				break;
 /*
-			#] INISORTBOT : 
+			#] INISORTBOT :
 			#[ RUNSORTBOT :
 */
 			case RUNSORTBOT:
 				SortBotMerge(B);
 				break;
 /*
-			#] RUNSORTBOT : 
+			#] RUNSORTBOT :
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD : 
+			#] TERMINATETHREAD :
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1462,14 +1580,17 @@ EndOfThread:;
 /*
   	#] RunSortBot : 
   	#[ IAmAvailable :
-
-	To be called when a thread is available.
-	Puts it on a stack.
-	We use a stack model. It is also possible to define a circular queue.
-	This will be tried out at a later stage.
-	One advantage of a stack could be that if we cannot feed all threads
-	more sorting is done at the threads and the master has to do less.
 */
+/**
+ *	To be called by a thread when it becomes available.
+ *	Puts it on a stack.
+ *	We use a stack model. It is also possible to define a circular queue.
+ *	This will be tried out at a later stage.
+ *	One advantage of a stack could be that if we cannot feed all threads
+ *	more sorting is done at the threads and the master has to do less.
+ *
+ *	@param identity The identity thread that signals its availability.
+ */
 
 void IAmAvailable ARG1(int,identity)
 {
@@ -1492,9 +1613,14 @@ void IAmAvailable ARG1(int,identity)
 /*
   	#] IAmAvailable : 
   	#[ GetAvailableThread :
-
-	Gets an available thread from the top of the stack.
 */
+/**
+ *	Gets an available thread from the top of the stack.
+ *	Maybe a circular buffer model would work better. This would mean that
+ *	we take the lowest available worker, rather than the highest.
+ *	We then have to work with high water marks and low water marks.
+ *	(writing point and reading point). Still to be investigated.
+ */
 
 int GetAvailableThread ARG0
 {
@@ -1516,8 +1642,13 @@ int GetAvailableThread ARG0
 /*
   	#] GetAvailableThread : 
   	#[ ConditionalGetAvailableThread :
-
 */
+/**
+ *	Looks whether a thread is available.
+ *	If a thread is available it is taken from the stack of available threads.
+ *
+ *	@return the identity of an available thread or -1 if none is available.
+ */
 
 int ConditionalGetAvailableThread ARG0
 {
@@ -1543,10 +1674,15 @@ int ConditionalGetAvailableThread ARG0
 /*
   	#] ConditionalGetAvailableThread : 
   	#[ GetThread :
-
-	Gets a given thread from the list of available threads, even if
-	it isn't on the top of the stack.
 */
+/**
+ *	Gets a given thread from the list of available threads, even if
+ *	it isn't on the top of the stack.
+ *
+ *	@param identity The number of the thread that we want to remove from the
+ *	                list of available threads.
+ *	@return The number of the thread if it was available. -1 otherwise.
+ */
 
 int GetThread ARG1(int,identity)
 {
@@ -1569,11 +1705,15 @@ int GetThread ARG1(int,identity)
 /*
   	#] GetThread : 
   	#[ ThreadWait :
-
-	To be called by a thread when it has nothing to do.
-	It goes to sleep and waits for a wakeup call.
-	The return value is the number of the wakeup signal.
 */
+/**
+ *	To be called by a thread when it has nothing to do.
+ *	It goes to sleep and waits for a wakeup call.
+ *	The return value is the number of the wakeup signal.
+ *
+ *	@param identity The number of the thread.
+ *	@return The number of the wake-up signal.
+ */
 
 int ThreadWait ARG1(int,identity)
 {
@@ -1607,13 +1747,17 @@ int ThreadWait ARG1(int,identity)
 /*
   	#] ThreadWait : 
   	#[ SortBotWait :
-
-	To be called by a thread when it has nothing to do.
-	It goes to sleep and waits for a wakeup call.
-	The return value is the number of the wakeup signal.
 */
-
+ 
 #ifdef WITHSORTBOTS
+/**
+ *	To be called by a sortbot thread when it has nothing to do.
+ *	It goes to sleep and waits for a wakeup call.
+ *	The return value is the number of the wakeup signal.
+ *
+ *	@param identity The number of the sortbot thread.
+ *	@return The number of the wake-up signal.
+ */
 
 int SortBotWait ARG1(int,identity)
 {
@@ -1645,11 +1789,16 @@ int SortBotWait ARG1(int,identity)
 /*
   	#] SortBotWait : 
   	#[ ThreadClaimedBlock :
-
-	To be called by a thread when it has nothing to do.
-	It goes to sleep and waits for a wakeup call.
-	The return value is the number of the wakeup signal.
 */
+/**
+ *	When the final sort of an expression starts the workers have to claim
+ *	the first block in the buffers of the master for their output.
+ *	The master may only continue after all workers have claimed their block
+ *	because otherwise it is possible that the master may claim this block for
+ *	reading before it has been written in.
+ *	Hence the master must wait till all blocks have been claimed. Then the
+ *	master will get signalled that it can continue.
+ */
 
 int ThreadClaimedBlock ARG1(int,identity)
 {
@@ -1671,12 +1820,13 @@ int ThreadClaimedBlock ARG1(int,identity)
 /*
   	#] ThreadClaimedBlock : 
   	#[ MasterWait :
-
-	To be called by the master when it has to wait for one of the
-	workers to become available.
-	It goes to sleep and waits for a wakeupmaster call.
-	The return value is the identity of the process that wakes up the master.
 */
+/**
+ *	To be called by the master when it has to wait for one of the
+ *	workers to become available.
+ *	It goes to sleep and waits for a wakeupmaster call.
+ *	The return value is the identity of the process that wakes up the master.
+ */
 
 int MasterWait ARG0
 {
@@ -1694,11 +1844,12 @@ int MasterWait ARG0
 /*
   	#] MasterWait : 
   	#[ MasterWaitThread :
-
-	To be called by the master when it has to wait for one of the
-	workers to become available.
-	The return value is the value of the signal.
 */
+/**
+ *	To be called by the master when it has to wait for a specific one of the
+ *	workers to become available.
+ *	The return value is the value of the signal.
+ */
 
 int MasterWaitThread ARG1(int,identity)
 {
@@ -1717,11 +1868,12 @@ int MasterWaitThread ARG1(int,identity)
 /*
   	#] MasterWaitThread : 
   	#[ MasterWaitAll :
-
-	To be called by the master when it has to wait for all of the
-	workers to finish a given task.
-	It goes to sleep and waits for a wakeup call in ThreadWait
 */
+/**
+ *	To be called by the master when it has to wait for all of the
+ *	workers to finish a given task.
+ *	It goes to sleep and waits for a wakeup call in ThreadWait
+ */
 
 void MasterWaitAll ARG0
 {
@@ -1736,12 +1888,14 @@ void MasterWaitAll ARG0
 /*
   	#] MasterWaitAll : 
   	#[ MasterWaitAllSortBots :
-
-	To be called by the master when it has to wait for all of the
-	sortbots to start their task.
 */
-
+ 
 #ifdef WITHSORTBOTS
+
+/**
+ *	To be called by the master when it has to wait for all of the
+ *	sortbots to start their task.
+ */
 
 void MasterWaitAllSortBots ARG0
 {
@@ -1758,11 +1912,12 @@ void MasterWaitAllSortBots ARG0
 /*
   	#] MasterWaitAllSortBots : 
   	#[ MasterWaitAllBlocks :
-
-	To be called by the master when it has to wait for all of the
-	workers to finish a given task.
-	It goes to sleep and waits for a wakeup call in ThreadWait
 */
+/**
+ *	To be called by the master when it has to wait for all of the
+ *	workers to claim their first block in the sort buffers of the master.
+ *	It goes to sleep and waits for a wakeup call.
+ */
 
 void MasterWaitAllBlocks ARG0
 {
@@ -1777,10 +1932,14 @@ void MasterWaitAllBlocks ARG0
 /*
   	#] MasterWaitAllBlocks : 
   	#[ WakeupThread :
-
-	To be called when the indicated thread needs waking up.
-	The signal number should be nonzero!
 */
+/**
+ *	To be called when the indicated thread needs waking up.
+ *	The signal number should be nonzero!
+ *
+ *	@param identity     The number of the worker to be woken up
+ *	@param signalnumber The signal with which it should be woken up.
+ */
 
 void WakeupThread ARG2(int,identity,int,signalnumber)
 {
@@ -1799,10 +1958,14 @@ void WakeupThread ARG2(int,identity,int,signalnumber)
 /*
   	#] WakeupThread : 
   	#[ WakeupMasterFromThread :
-
-	To be called when the indicated thread needs waking up.
-	The signal number should be nonzero!
 */
+/**
+ *	To be called when the indicated thread needs to wake up the master.
+ *	The signal number should be nonzero!
+ *
+ *	@param identity     The number of the worker who wakes up the master.
+ *	@param signalnumber The signal with which the master should be woken up.
+ */
 
 void WakeupMasterFromThread ARG2(int,identity,int,signalnumber)
 {
@@ -1821,9 +1984,11 @@ void WakeupMasterFromThread ARG2(int,identity,int,signalnumber)
 /*
   	#] WakeupMasterFromThread : 
   	#[ SendOneBucket :
-
-	To be called when there is a full bucket and an available thread
 */
+/**
+ *	To be called when there is a full bucket and an available thread
+ *	It prepares the thread and then wakes it up.
+ */
 
 int SendOneBucket ARG0
 {
@@ -1863,12 +2028,25 @@ int SendOneBucket ARG0
 /*
   	#] SendOneBucket : 
   	#[ InParallelProcessor :
-
-	We divide the expressions marked by partodo over the workers.
-	The workers are responsible for writing their results into the buffers
-	of the master (output). This is to be controled by locks.
-	The order of the expressions may get changed this way.
 */
+/**
+ *	We divide the expressions marked by partodo over the workers.
+ *	The workers are responsible for writing their results into the buffers
+ *	of the master (output). This is to be controled by locks.
+ *	The order of the expressions may get changed this way.
+ *
+ *	The InParallel statement allows the execution of complete expressions
+ *	in a single worker simultaneously. This is useful for when there are
+ *	many short expressions. This way we don't need the bottleneck of the
+ *	merging by the master. The complete sort for each expression is done
+ *	inside its own single worker. The bottleneck here is the writing of the
+ *	result into the scratch system. This is now done by the workers themselves.
+ *	Because each expression must be contiguous, the writing should be done
+ *	as quickly as possible and be protected by locks.
+ *
+ *	The implementation of this statement gave a significant increase in
+ *	efficiency in the running of the Multiple Zeta Values program.
+ */
 
 int
 InParallelProcessor ARG0
@@ -1920,6 +2098,26 @@ InParallelProcessor ARG0
   	#] InParallelProcessor : 
   	#[ ThreadsProcessor :
 */
+/**
+ *	This routine takes the role of the central part of the Processor routine
+ *	in the file proces.c when multiple threads are available.
+ *	It deals with the expressions that are not marked in the InParallel
+ *	statement. These are usually the large expressions. It will divide
+ *	the terms of these expressions over the workers, using a bucket system
+ *	to reduce overhead (buckets are collections of a number of terms that
+ *	are transfered together).
+ *	At the end of the expression when all terms have been assigned and 
+ *	workers become available again, there is a load balancing system to
+ *	take terms from the buckets of workers that still have to do many terms
+ *	and give them to idle workers. This is called first level load balancing.
+ *
+ *	The routine is called for each expression separately by Processor.
+ *
+ *	@param e              The expression to be executed
+ *	@param LastExpression Indicates whether it is the last expression in which case
+ *	                      in the end the input scratch file can be deleted before
+ *	                      the output is written. This saves diskspace.
+ */
 
 int
 ThreadsProcessor ARG2(EXPRESSIONS,e,WORD,LastExpression)
@@ -2330,23 +2528,24 @@ ProcErr:;
 /*
   	#] ThreadsProcessor : 
   	#[ LoadReadjusted :
-
-	This routine does the load readjustment at the end of a module.
-	It may be that there are still some threads that have a bucket full of
-	difficult terms. In that case we steal the bucket from such a thread
-	and redistribute the terms over the available buckets to be sent to
-	the free threads. As we steal all remaining terms from the bucket
-	it can happen that eventually the same worker gets some of the terms
-	back at a later stage.
-
-	The only tricky point is the stealing process. We have to do this
-	without having to send signals or testing locks for each term processed.
-	The lock is set around thr->busy when AT.LoadBalancing == 1 but
-	when does the worker see this? (caching?)
-
-	Remark: the thr->busy == BUCKETASSIGNED flag is to prevent stealing
-	from a thread that has not done anything yet.
 */
+/**
+ *	This routine does the load readjustment at the end of a module.
+ *	It may be that there are still some threads that have a bucket full of
+ *	difficult terms. In that case we steal the bucket from such a thread
+ *	and redistribute the terms over the available buckets to be sent to
+ *	the free threads. As we steal all remaining terms from the bucket
+ *	it can happen that eventually the same worker gets some of the terms
+ *	back at a later stage.
+ *
+ *	The only tricky point is the stealing process. We have to do this
+ *	without having to send signals or testing locks for each term processed.
+ *	The lock is set around thr->busy when AT.LoadBalancing == 1 but
+ *	when does the worker see this? (caching?)
+ *
+ *	Remark: the thr->busy == BUCKETASSIGNED flag is to prevent stealing
+ *	from a thread that has not done anything yet.
+ */
 
 int LoadReadjusted ARG0
 {
@@ -2552,61 +2751,64 @@ intercepted:;
 /*
   	#] LoadReadjusted : 
   	#[ SortStrategy :
-
-	When the final sort to the scratch file should take place
-	in a thread we should redirect to a different PutOut say PutToMaster.
-	The buffer in the Master should be an integer number times the size
-	of the buffer for PutToMaster (the PObuffersize in the 'scratchfile').
-	The action should be (assume the multiple is 3):
-		Once the worker has its buffer full it fills block 1. Next 2. etc.
-		After filling block 3 the next fill will be at 1 when it is available
-		again. Becarefull to have a locked variable that indicates whether the
-		Master has started to claim all blocks 1.
-		The Master starts working once all blocks 1 are full.
-		Each Worker has an array for the blocks that tells their status. ???
-		(Maybe better the lock on the whole block).
-		There should be a lock on them. The locks will make the threads
-		wait properly. When the Master finished a block, it marks it as
-		empty. When the master reaches the end of the last block it moves
-		the remainder to the piece before block 1. Etc.
-		Once terminated the worker can do the same as currently after
-		the call to EndSort (leave control to the master).
-		The master starts after there is a signal that all blocks 1 have
-		been filled. The tricky point is this signal without having
-		threads spend time in a waiting loop.
-	Don't compress the terms. It costs more time and serves here no real
-	purpose. It only makes things slower for the master.
-
-	At the moment the scratch buffer of the workers is 1/N times the scratch
-	buffer of the master which is usually about the size of the Large buffer
-	of the master. This way we can save a factor on the scratch buffer size
-	of the workers. Alternative: let PutToMaster write directly into the
-	buffer/block of the master and leave out the scratch of the worker
-	completely.
-
+*/
+/**
+ *	When the final sort to the scratch file should take place
+ *	in a thread we should redirect to a different PutOut say PutToMaster.
+ *	The buffer in the Master should be an integer number times the size
+ *	of the buffer for PutToMaster (the PObuffersize in the 'scratchfile').
+ *	The action should be (assume the multiple is 3):
+ *		Once the worker has its buffer full it fills block 1. Next 2. etc.
+ *		After filling block 3 the next fill will be at 1 when it is available
+ *		again. Becarefull to have a locked variable that indicates whether the
+ *		Master has started to claim all blocks 1.
+ *		The Master starts working once all blocks 1 are full.
+ *		Each Worker has an array for the blocks that tells their status. ???
+ *		(Maybe better the lock on the whole block).
+ *		There should be a lock on them. The locks will make the threads
+ *		wait properly. When the Master finished a block, it marks it as
+ *		empty. When the master reaches the end of the last block it moves
+ *		the remainder to the piece before block 1. Etc.
+ *		Once terminated the worker can do the same as currently after
+ *		the call to EndSort (leave control to the master).
+ *		The master starts after there is a signal that all blocks 1 have
+ *		been filled. The tricky point is this signal without having
+ *		threads spend time in a waiting loop.
+ *	Don't compress the terms. It costs more time and serves here no real
+ *	purpose. It only makes things slower for the master.
+ *
+ *	At the moment the scratch buffer of the workers is 1/N times the scratch
+ *	buffer of the master which is usually about the size of the Large buffer
+ *	of the master. This way we can save a factor on the scratch buffer size
+ *	of the workers. Alternative: let PutToMaster write directly into the
+ *	buffer/block of the master and leave out the scratch of the worker
+ *	completely.
+*/
+/*
   	#] SortStrategy : 
   	#[ PutToMaster :
-
-		Writes the term (uncompressed) to the masters buffers.
-		We put it inside a block. The blocks have locks. This makes
-		that we have to wait automatically when all blocks are full.
-		This routine takes the place of PutOut when making the final
-		sort in a thread.
-		It takes the place of FlushOut when the argument is NULL.
-
-		We need an initialization first in which the first MasterBlockLock
-		is set and MasterBlock is set to 1.
-		At the end we need to unlock the last block. Both actions can
-		be done in the routine that calls EndSort for the thread.
-
-		The initialization of the variables in SB is done in
-		IniSortBlocks. This is done only once but it has to wait till
-		all threads exist and the masters sort buffers have been allocated.
-
-		Note: the zero block is reserved for leftovers at the end of the
-		last block that get moved back to the front to keep the terms
-		contiguous (done in MasterMerge).
 */
+/**
+ *		Writes the term (uncompressed) to the masters buffers.
+ *		We put it inside a block. The blocks have locks. This makes
+ *		that we have to wait automatically when all blocks are full.
+ *		This routine takes the place of PutOut when making the final
+ *		sort in a thread.
+ *		It takes the place of FlushOut when the argument is NULL.
+ *
+ *		We need an initialization first in which the first MasterBlockLock
+ *		is set and MasterBlock is set to 1.
+ *		At the end we need to unlock the last block. Both actions can
+ *		be done in the routine that calls EndSort for the thread.
+ *
+ *		The initialization of the variables in SB is done in
+ *		IniSortBlocks. This is done only once but it has to wait till
+ *		all threads exist and the masters sort buffers have been allocated.
+ *
+ *		Note: the zero block is reserved for leftovers at the end of the
+ *		last block that get moved back to the front to keep the terms
+ *		contiguous (done in MasterMerge).
+ */
 
 int
 PutToMaster BARG1(WORD *,term)
@@ -2653,15 +2855,17 @@ PutToMaster BARG1(WORD *,term)
 /*
   	#] PutToMaster : 
   	#[ SortBotOut :
-
-		This is the output routine of the SortBots.
-		It can run PutToMaster, except for the final merge.
-		In that case we need to do special things like calling PutOut.
-		Hence the first thing we have to do is to figure out where our
-		output should be going.
 */
-
+ 
 #ifdef WITHSORTBOTS
+
+/**
+ *		This is the output routine of the SortBots.
+ *		It can run PutToMaster, except for the final merge.
+ *		In that case we need to do special things like calling PutOut.
+ *		Hence the first thing we have to do is to figure out where our
+ *		output should be going.
+ */
 
 int
 SortBotOut BARG1(WORD *,term)
@@ -2694,6 +2898,22 @@ SortBotOut BARG1(WORD *,term)
   	#] SortBotOut : 
   	#[ MasterMerge :
 */
+/**
+ *	This is the routine in which the master merges the sorted output that
+ *	comes from the workers. It is similar to MergePatches in sort.c from which
+ *	it takes much code.
+ *	The important concept here is that we want the master to be working as
+ *	much as possible because it constitutes the bottleneck.
+ *	The workers fill the buffers of the master. These buffers are divided
+ *	into parts for each worker as is done with the file patches in MergePatches
+ *	but now also each worker part is divided into blocks. This allows the
+ *	worker to fill blocks while the master is already working on blocks that
+ *	were filled before. The blocks are arranged in a circular fashion.
+ *	The whole is controled by locks which seems faster than setting it up
+ *	with signals.
+ *
+ *	This routine is run by the master when we don't use the sortbots.
+ */
 
 int
 MasterMerge ARG0
@@ -2778,7 +2998,7 @@ MasterMerge ARG0
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
 	Now construct the tree:
 */
@@ -3124,11 +3344,24 @@ ReturnError:
 /*
   	#] MasterMerge : 
   	#[ SortBotMasterMerge :
-
-	This routine is run as master. Hence B = B0. Etc.
 */
-
+ 
 #ifdef WITHSORTBOTS
+
+/**
+ *	This is the master routine for the final stage in a sortbot merge.
+ *	A sortbot merge is a merge in which the output of two workers is
+ *	merged into a single output which then can be given as one of two
+ *	streams to another sortbot. The idea is that each sortbot is responsible
+ *	for one one compare per term. In the end the master does the last
+ *	merge of only two streams and writes the result to the output.
+ *	There doesn't seem to be an advantage to splitting this last task.
+ *
+ *	The use of the sortbots gives a measurable improvement but it isn't
+ *	optimal yet.
+ *
+ *	This routine is run as master. Hence B = B0. Etc.
+ */
 
 int
 SortBotMasterMerge ARG0
@@ -3236,11 +3469,14 @@ SortBotMasterMerge ARG0
 /*
   	#] SortBotMasterMerge : 
   	#[ SortBotMerge :
-
-	Merges two streams into one
 */
-
+ 
 #ifdef WITHSORTBOTS
+
+/**
+ *	This routine is run by a sortbot and merges two sorted output streams into
+ *	a single sorted stream.
+ */
 
 int
 SortBotMerge BARG0
@@ -3320,7 +3556,7 @@ SortBotMerge BARG0
 			}
 			term1 += im;
 /*
-			#] One is smallest : 
+			#] One is smallest :
 */
 		}
 		else if ( c < 0 ) {
@@ -3362,7 +3598,7 @@ next2:		im = *term2;
 			}
 			term2 += im;
 /*
-			#] Two is smallest : 
+			#] Two is smallest :
 */
 		}
 		else {
@@ -3512,7 +3748,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 			goto next2;
 /*
-			#] Equal : 
+			#] Equal :
 */
 		}
 	}
@@ -3560,7 +3796,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 		}
 /*
-			#] Tail in one : 
+			#] Tail in one :
 */
 	}
 	else if ( *term2 ) {
@@ -3604,7 +3840,7 @@ cancelled:;		/* Now we need two new terms */
 			term2 += im;
 		}
 /*
-			#] Tail in two : 
+			#] Tail in two :
 */
 	}
 	SortBotOut(BHEAD 0);
@@ -3641,8 +3877,14 @@ ReturnError:;
   	#] SortBotMerge : 
   	#[ IniSortBlocks :
 */
-
+ 
 static int SortBlocksInitialized = 0;
+
+/**
+ *	Initializes the blocks in the sort buffers of the master.
+ *	These blocks are needed to keep both the workers and the master working
+ *	simultaneously. See also the commentary at the routine MasterMerge.
+ */
 
 int IniSortBlocks ARG1(int,numworkers)
 {
@@ -3719,11 +3961,14 @@ int IniSortBlocks ARG1(int,numworkers)
 /*
   	#] IniSortBlocks : 
   	#[ DefineSortBotTree :
-
-	Tells each SortBot where its input is coming from
 */
-
+ 
 #ifdef WITHSORTBOTS
+
+/**
+ *	To be used in a sortbot merge. It initializes the whole sortbot
+ *	system by telling the sortbot which threads provide their input.
+ */
 
 void
 DefineSortBotTree ARG0
@@ -3748,6 +3993,9 @@ DefineSortBotTree ARG0
   	#] DefineSortBotTree : 
   	#[ Test :
 */
+/**
+ *	Testing routine for debugging purposes. Obsolete?
+ */
 
 void Test ARG0
 {

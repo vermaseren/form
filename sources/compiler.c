@@ -1,3 +1,17 @@
+/** @file compiler.c
+ *
+ *  The heart of the compiler.
+ *  It contains the tables of statements.
+ *	It finds the statements in the tables and calls the proper routines.
+ *	For algebraic expressions it runs the compilation by first calling
+ *	the tokenizer, splitting things into subexpressions and generating
+ *	the code. There is a system for recognizing already existing
+ *	subexpressions. This economizes on the length of the output.
+ *
+ *	Note: the compiler of FORM doesn't attempt to normalize the input.
+ *	Hence x+1 and 1+x are different objects during compilation.
+ *	Similarly (a+b-b) will not be simplified to (a).
+ */
 /*
   	#[ includes :
 */
@@ -185,7 +199,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -209,7 +223,7 @@ inictable ARG0
 }
 
 /*
- 		#] inictable :
+ 		#] inictable : 
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -262,7 +276,7 @@ findcommand ARG1(UBYTE *,in)
 }
 
 /*
- 		#] findcommand :
+ 		#] findcommand : 
  		#[ ParenthesesTest :
 */
 
@@ -306,7 +320,7 @@ int ParenthesesTest ARG1(UBYTE *,sin)
 }
 
 /*
- 		#] ParenthesesTest :
+ 		#] ParenthesesTest : 
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -341,7 +355,7 @@ SkipAName ARG1(UBYTE *,s)
 }
 
 /*
- 		#] SkipAName :
+ 		#] SkipAName : 
  		#[ IsRHS :
 */
 
@@ -388,7 +402,7 @@ IsRHS ARG2(UBYTE *,s,UBYTE,c)
 }
 
 /*
- 		#] IsRHS :
+ 		#] IsRHS : 
  		#[ IsIdStatement :
 */
 
@@ -399,7 +413,7 @@ IsIdStatement ARG1(UBYTE *,s)
 }
 
 /*
- 		#] IsIdStatement :
+ 		#] IsIdStatement : 
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -440,7 +454,7 @@ CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 }
 
 /*
- 		#] CompileAlgebra :
+ 		#] CompileAlgebra : 
  		#[ CompileStatement :
 
 */
@@ -547,7 +561,7 @@ CompileStatement ARG1(UBYTE *,in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
@@ -586,7 +600,7 @@ int TestTables ARG0
 }
 
 /*
- 		#] TestTables :
+ 		#] TestTables : 
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -693,7 +707,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 }
 
 /*
- 		#] CompileSubExpressions :
+ 		#] CompileSubExpressions : 
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -1713,7 +1727,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1739,7 +1753,7 @@ int CompleteTerm ARG6(WORD *,term,UWORD *,numer,UWORD *,denom,WORD,nnum,WORD,nde
 }
 
 /*
- 		#] CompleteTerm :
+ 		#] CompleteTerm : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

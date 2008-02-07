@@ -1,4 +1,10 @@
 
+/** @file inivar.h
+ *
+ *  Contains the initialization of a number of structs at compile time
+ *	This file should only be included in the file startup.c !!!
+ */
+
 FIXEDGLOBALS FG = {
 		 {Traces				/* Dummy as zeroeth argument */
 		,Traces

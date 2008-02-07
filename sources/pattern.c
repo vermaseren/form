@@ -1,3 +1,14 @@
+/** @file pattern.c
+ *
+ *  Top level pattern matching routines.
+ *	More pattern matching is found in findpat.c, function.c, symmetr.c
+ *	and smart.c. The last three files contain the matching inside functions.
+ *	The file pattern.c contains also the very important routine Substitute.
+ *	All regular pattern matching is just the finding of the pattern and
+ *	indicating what are the wildcards etc. The routine Substitute does
+ *	the actual removal of the pattern and replaces it by a subterm of the
+ *	type SUBEXPRESSION.
+ */
 /*
   	#[ Includes : pattern.c
 */
@@ -5,7 +16,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Patterns :
  		#[ Rules :
 
@@ -23,7 +34,7 @@
 		6:	x^n? can revert to n = 0 if there is no power of x.
 		7:	x?^n? must match some x. There could be an ambiguity otherwise.
 
- 		#] Rules :
+ 		#] Rules : 
  		#[ TestMatch :			WORD TestMatch(term,level)
 
 	This routine governs the pattern matching. If it decides
@@ -401,7 +412,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch :
+ 		#] TestMatch : 
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 
 	The current version doesn't scan function arguments yet. 7-Apr-1988
@@ -526,7 +537,7 @@ SubsL2:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -646,7 +657,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -706,7 +717,7 @@ SubsL5:								fill += nq;
 			m += m[1];
 		}
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -782,7 +793,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] VECTORS :
+			#] VECTORS : 
 			#[ INDICES :
 
 			Currently without wildcards
@@ -834,7 +845,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] INDICES :
+			#] INDICES : 
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -901,7 +912,7 @@ SubsL6:				nq = WORDDIF(fill,subterm);
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DELTAS :
+			#] DELTAS : 
 */
 EndLoop:;
 	} while ( m < mstop ); }
@@ -931,7 +942,7 @@ SubCoef:
 }
 
 /*
- 		#] Substitute :
+ 		#] Substitute : 
  		#[ FindSpecial :		WORD FindSpecial(term)
 
 	Routine to detect symplifications regarding the special functions
@@ -963,7 +974,7 @@ FindSpecial ARG1(WORD *,term)
 	return(0);
 }
 
- 		#] FindSpecial :
+ 		#] FindSpecial : 
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
@@ -1411,7 +1422,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll :
+ 		#] FindAll : 
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp
@@ -1637,7 +1648,7 @@ dotensor:
 }
 
 /*
- 		#] TestSelect :
+ 		#] TestSelect : 
   	#] Patterns :
 */
 

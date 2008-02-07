@@ -1,3 +1,14 @@
+/** @file smart.c
+ *
+ *  The functions for smart pattern searches in combinations of functions.
+ *  When many wildcards are involved and the functions are (anti)symmetric
+ *	an exhaustive search for all possibilities may take very much time
+ *	(like factorial in the number of wildcards) while a human can often
+ *	see immediately that there cannot be a match. The routines here try
+ *	to make FORM a bit smarter in this respect.
+ *
+ *	This is just the beginning. It still needs lots of work!
+ */
 /*
   	#[ Includes : function.c
 */
@@ -331,5 +342,5 @@ NotPossible:
 }
 
 /*
-  	#] MatchIsPossible :
+  	#] MatchIsPossible : 
 */

@@ -1,6 +1,12 @@
 #ifndef __PARALLEL__
 
 #define __PARALLEL__
+
+/** @file parallel.h
+ *
+ *  Header file with things relevant to ParForm.
+ */
+
 /*
   	#[ macros & definitions :
 */

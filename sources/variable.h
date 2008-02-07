@@ -1,9 +1,17 @@
 #ifndef __VARIABLE__
 
 #define __VARIABLE__
-/*[14apr2004 mt]:*/
+
+/** @file variable.h
+ *
+ *  Contains a number of defines to make the coding easier.
+ *	Especially the defines for the use of the lists are very nice.
+ *	And of course the AC for A.C and AT for either A.T of B->T
+ *	are indispensible to keep FORM and TFORM in one set of sources.
+ */
+
 /*See the file extcmd.c*/
-/*[17nov2005 mt]:*/
+
 #ifdef REMOVEDBY_MT
 extern int (*writeBufToExtChannel) ARG2(char *,buf, size_t,n);
 extern int (*getcFromExtChannel) ARG0 ;
@@ -12,13 +20,8 @@ extern int (*setTerminatorForExternalChannel) ARG1 (char *,newterminator);
 extern WRITEBUFTOEXTCHANNEL writeBufToExtChannel;
 extern GETCFROMEXTCHANNEL getcFromExtChannel;
 extern SETTERMINATORFOREXTERNALCHANNEL setTerminatorForExternalChannel;
-/*[08may2006 mt]:*/
 extern SETKILLMODEFOREXTERNALCHANNEL setKillModeForExternalChannel;
-/*:[08may2006 mt]*/
-/*:[17nov2005 mt]*/
-/*:[14apr2004 mt]*/
 
-/*[17nov2005 mt]:*/
 /*
 extern LONG (*WriteFile)  ARG3 (int,handle,UBYTE *,buffer,LONG,number);
 */

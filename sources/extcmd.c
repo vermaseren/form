@@ -1,3 +1,7 @@
+/** @file extcmd.c
+ *
+ *  The system that takes care of communication with external programs.
+ */
 /*
   	#[ Documentation :
 
@@ -104,7 +108,7 @@
 	All other functions may have a returned type/parameters type local w.r.t. 
 	this module; they are not declared outside of this file.
 
-  	#] Documentation :
+  	#] Documentation : 
   	#[ Includes :
 */
 
@@ -122,7 +126,7 @@ Also after #ifdef SELFTEST ... #else there is
 #include "form3.h"
 */
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Selftest initializing:
 */
 
@@ -172,7 +176,7 @@ extern int (*setKillModeForExternalChannel)
 #include "form3.h"
 #endif /*ifdef SELFTEST ... else*/
 /*
-  	#] Selftest initializing:
+  	#] Selftest initializing: 
   	#[ FailureFunctions:
 */
 
@@ -209,7 +213,7 @@ int (*setKillModeForExternalChannel) ARG2 (int, signum, int, sentToWholeGroup)=
 	&setKillModeForExternalChannelFailure;
 int (*getcFromExtChannel) ARG0 = &getcFromExtChannelFailure;
 /*
-  	#] FailureFunctions:
+  	#] FailureFunctions: 
   	#[ Stubs :
 */
 #ifndef WITHEXTERNALCHANNEL
@@ -226,7 +230,7 @@ int getCurrentExternalChannel ARG0 {return(0)};
 void closeAllExternalChannels ARG0{};
 #else /*ifndef WITHEXTERNALCHANNEL*/
 /*
-  	#] Stubs :
+  	#] Stubs : 
   	#[ Local types :
 */
 /*First argument for the function signal:*/
@@ -282,7 +286,7 @@ static int externalChannelsListFill=0;
 /*"current" external channel:*/
 static EXTHANDLE *externalChannelsListTop=0;
 /*
-  	#] Local types :
+  	#] Local types : 
   	#[ Selftest functions :
 */
 #ifdef SELFTEST
@@ -324,7 +328,7 @@ int PutPreVar(UBYTE *a,UBYTE *b,UBYTE *c,int i)
 
 #endif
 /*
-  	#] Selftest functions :
+  	#] Selftest functions : 
   	#[ Local functions :
 */
 
@@ -709,7 +713,7 @@ readSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
 }/*readSome*/
 
 /*
-  	#] Local functions :
+  	#] Local functions : 
   	#[ Ok functions:
 */
 
@@ -936,7 +940,7 @@ mysighandler_t oldPIPE;
 	return(ret);
 }/*writeBufToExtChannel*/
 /*
-  	#] Ok functions:
+  	#] Ok functions: 
   	#[ do_run_cmd :
 */
 /*The function returns PID of the started command*/
@@ -1138,7 +1142,7 @@ mysighandler_t oldPIPE=NULL;
 		return((pid_t)-1);
 }/*do_run_cmd*/
 /*
-  	#] do_run_cmd :
+  	#] do_run_cmd : 
   	#[ run_cmd :
 */
 /*Starts the command cmd (directly, if shellpath is NULL, or in a subshell), 
@@ -1195,7 +1199,7 @@ pid_t thepid;
 	return(thepid);
 }/*run_cmd*/
 /*
-  	#] run_cmd :
+  	#] run_cmd : 
   	#[ createExternalChannel :
 */
 /*The structure to pass parameters to createExternalChannel
@@ -1283,7 +1287,7 @@ static FORM_INLINE void* createExternalChannel ARG5(
 }/*createExternalChannel*/
 
 /*
-  	#] createExternalChannel :
+  	#] createExternalChannel : 
   	#[ openExternalChannel :
 */
 int openExternalChannel 
@@ -1334,7 +1338,7 @@ int i=0;
 	return(-1);
 }/*openExternalChannel*/
 /*
-  	#] openExternalChannel :
+  	#] openExternalChannel : 
   	#[ initPresetExternalChannels :
 */
 /*Just simpe wrapper to invoke  openExternalChannel()
@@ -1441,7 +1445,7 @@ presetFails:
 		return(-1);
 } /*initPresetExternalChannels*/
 /*
-  	#] initPresetExternalChannels :
+  	#] initPresetExternalChannels : 
   	#[ selectExternalChannel :
 */
 /* 
@@ -1481,7 +1485,7 @@ int ret=0;
 	return(ret);
 }/*selectExternalChannel*/
 /*
-  	#] selectExternalChannel :
+  	#] selectExternalChannel : 
   	#[ closeExternalChannel :
 */
 
@@ -1517,7 +1521,7 @@ int closeExternalChannel ARG1(int, n)
 	return(0);
 }/*closeExternalChannel*/
 /*
-  	#] closeExternalChannel :
+  	#] closeExternalChannel : 
   	#[ closeAllExternalChannels :
 */
 void closeAllExternalChannels  ARG0
@@ -1539,7 +1543,7 @@ int i;
 	}
 }/*closeAllExternalChannels*/
 /*
-  	#] closeAllExternalChannels :
+  	#] closeAllExternalChannels : 
   	#[ getExternalChannelPid :
 */
 pid_t getExternalChannelPid ARG0
@@ -1549,7 +1553,7 @@ pid_t getExternalChannelPid ARG0
   return(-1);
 }/*getExternalChannelPid*/
 /*
-  	#] getExternalChannelPid :
+  	#] getExternalChannelPid : 
   	#[ getCurrentExternalChannel :
 */
 
@@ -1562,7 +1566,7 @@ getCurrentExternalChannel ARG0
 	return(0);
 }/*getCurrentExternalChannel*/
 /*
-  	#] getCurrentExternalChannel :
+  	#] getCurrentExternalChannel : 
   	#[ Selftest main :
 */
 
@@ -1651,7 +1655,7 @@ int main (void)
 }
 #endif /*ifdef SELFTEST*/
 /*
-  	#] Selftest main :
+  	#] Selftest main : 
 */
 
 #endif /*ifndef WITHEXTERNALCHANNEL ... else*/

@@ -1,3 +1,9 @@
+/** @file comexpr.c
+ *
+ *  Compiler routines for statements that involve algebraic expressions.
+ *	These involve definitions, id-statements, the multiply statement
+ *	and the fill statement.
+ */
 /*
   	#[ Includes : compi2.c
 
@@ -21,21 +27,21 @@ static struct id_options {
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CoLocal :
 */
 
 int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal :
+  	#] CoLocal : 
   	#[ CoGlobal :
 */
 
 int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal :
+  	#] CoGlobal : 
   	#[ DoExpr:
 */
 
@@ -232,7 +238,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -243,7 +249,7 @@ int CoIdOld ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdOld :
+  	#] CoIdOld : 
   	#[ CoId :
 */
 
@@ -254,7 +260,7 @@ int CoId ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoId :
+  	#] CoId : 
   	#[ CoIdNew :
 */
 
@@ -265,7 +271,7 @@ int CoIdNew ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIdNew :
+  	#] CoIdNew : 
   	#[ CoDisorder :
 */
 
@@ -276,7 +282,7 @@ int CoDisorder ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDisorder :
+  	#] CoDisorder : 
   	#[ CoMany :
 */
 
@@ -287,7 +293,7 @@ int CoMany ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMany :
+  	#] CoMany : 
   	#[ CoMulti :
 */
 
@@ -298,7 +304,7 @@ int CoMulti ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMulti :
+  	#] CoMulti : 
   	#[ CoIfMatch :
 */
 
@@ -309,7 +315,7 @@ int CoIfMatch ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoIfMatch :
+  	#] CoIfMatch : 
   	#[ CoOnce :
 */
 
@@ -320,7 +326,7 @@ int CoOnce ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnce :
+  	#] CoOnce : 
   	#[ CoOnly :
 */
 
@@ -331,7 +337,7 @@ int CoOnly ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoOnly :
+  	#] CoOnly : 
   	#[ CoSelect :
 */
 
@@ -342,7 +348,7 @@ int CoSelect ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoSelect :
+  	#] CoSelect : 
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -790,7 +796,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression :
+  	#] CoIdExpression : 
   	#[ CoMultiply :
 */
 
@@ -829,7 +835,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoMultiply :
+  	#] CoMultiply : 
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1081,7 +1087,7 @@ redef:;
 }
 
 /*
-  	#] CoFill :
+  	#] CoFill : 
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1445,7 +1451,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression :
+  	#] CoFillExpression : 
   	#[ CoPrintTable :
 
 	Syntax
@@ -1614,7 +1620,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable :
+  	#] CoPrintTable : 
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1700,7 +1706,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign :
+  	#] CoAssign : 
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1764,7 +1770,7 @@ int CoDeallocateTable ARG1(UBYTE *,inp)
 }
 
 /*
-  	#] CoDeallocateTable :
+  	#] CoDeallocateTable : 
 */
 
 

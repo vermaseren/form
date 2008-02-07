@@ -1,3 +1,8 @@
+/** @file execute.c
+ *
+ *	The routines that start the execution phase of a module.
+ *	It also contains the routines for placing the bracket subterm.
+ */
 /*
   	#[ Includes : execute.c
 */
@@ -14,7 +19,7 @@ PFDOLLARS *PFDollars;
 /*:[28sep2005 mt]*/
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -144,7 +149,7 @@ CleanExpr ARG1(WORD,par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -215,7 +220,7 @@ PopVariables()
 }
 
 /*
- 		#] PopVariables :
+ 		#] PopVariables : 
  		#[ MakeGlobal :
 */
 
@@ -266,7 +271,7 @@ MakeGlobal ARG0
 }
 
 /*
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ TestDrop :
 */
 
@@ -332,7 +337,7 @@ TestDrop()
 }
 
 /*
- 		#] TestDrop :
+ 		#] TestDrop : 
  		#[ DoExecute :
 */
 
@@ -635,7 +640,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute :
+ 		#] DoExecute : 
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -941,7 +946,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket :
+ 		#] PutBracket : 
  		#[ SpecialCleanup :
 */
 
@@ -953,7 +958,7 @@ VOID SpecialCleanup BARG0
 }
 
 /*
- 		#] SpecialCleanup :
+ 		#] SpecialCleanup : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1029,7 +1034,7 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
 }
 
 /*
- 		#] ExchangeExpressions :
+ 		#] ExchangeExpressions : 
  		#[ GetFirstBracket :
 */
 
@@ -1134,7 +1139,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
 }
 
 /*
- 		#] GetFirstBracket :
+ 		#] GetFirstBracket : 
  		#[ TermsInExpression :
 */
 
@@ -1146,7 +1151,7 @@ LONG TermsInExpression ARG1(WORD,num)
 }
 
 /*
- 		#] TermsInExpression :
+ 		#] TermsInExpression : 
  		#[ UpdatePositions :
 */
 
@@ -1173,7 +1178,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions :
+ 		#] UpdatePositions : 
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1285,7 +1290,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 :
+ 		#] CountTerms1 : 
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1476,6 +1481,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level)
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */

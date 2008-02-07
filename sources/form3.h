@@ -1,4 +1,11 @@
 
+/** @file form3.h
+ *
+ *  Contains critical defines for the compilation process
+ *	Also contains the inclusion of all necessary header files.
+ *	There are also some system dependencies concerning file functions.
+ */
+
 #define VERSION 3
 #define MINORVERSION 2
 /* #define BETAVERSION */

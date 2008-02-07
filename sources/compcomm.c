@@ -1,3 +1,12 @@
+/** @file compcomm.c
+ *
+ *  Compiler routines for most statements that don't involve algebraic
+ *	expressions. Exceptions: all routines involving declarations are in
+ *	the file names.c
+ *	When making new statements one can add the compiler routines here and
+ *	have a look whether there is already a routine that is similar. In that
+ *	case one can make a copy and modify it.
+ */
 /*
   	#[ includes :
 */
@@ -1930,7 +1939,7 @@ CoRenumber ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoRenumber :
+  	#] CoRenumber : 
   	#[ CoSum :
 */
 
@@ -4659,6 +4668,6 @@ syntaxerror:
 }
 
 /*
-  	#] CoDenominators :
+  	#] CoDenominators : 
 */
 /* temporary commentary for forcing cvs merge */

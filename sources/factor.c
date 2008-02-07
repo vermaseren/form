@@ -1,3 +1,8 @@
+/** @file factor.c
+ *
+ *	The routines for finding (one term) factors in dollars and expressions.
+ *	In addition there are some (unused?) experimental routines.
+ */
 /*
   	#[ Includes : factor.c
 */
@@ -220,7 +225,7 @@ WORD DivMod ARG3(UWORD *,a,WORD,na,WORD,b)
 }
 
 /*
-  	#] DivMod :
+  	#] DivMod : 
   	#[ DivShort :
 
 	Divides the long integer a by the short word b. Result in c.

@@ -41,10 +41,13 @@ extern long numfrees;
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 */
+ 
+char *toterms[] = { "   ", " >>", "-->" };
+
 /**
  *		Writes the statistics.
  *
@@ -58,8 +61,6 @@ extern long numfrees;
  *		terms are in S->TermsLeft.
  *		S->GenTerms.
  */
-
-char *toterms[] = { "   ", " >>", "-->" };
 
 VOID
 WriteStats ARG2(POSITION *,plspace,WORD,par)
@@ -411,7 +412,7 @@ NewSort()
 }
 
 /*
- 		#] NewSort : 
+ 		#] NewSort :
  		#[ EndSort :				WORD EndSort(buffer,par)
 */
 /**
@@ -872,7 +873,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort : 
+ 		#] EndSort :
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -938,7 +939,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 }
 
 /*
- 		#] PutIn : 
+ 		#] PutIn :
  		#[ Sflush :					WORD Sflush(file)
 */
 /**
@@ -1008,7 +1009,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 }
 
 /*
- 		#] Sflush : 
+ 		#] Sflush :
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 */
 /**
@@ -1308,7 +1309,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut : 
+ 		#] PutOut :
  		#[ FlushOut :				WORD Flushout(position,file,compr)
 */
 /**
@@ -1488,7 +1489,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 }
 
 /*
- 		#] FlushOut : 
+ 		#] FlushOut :
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**
@@ -1595,7 +1596,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef : 
+ 		#] AddCoef :
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 */
 /**
@@ -1758,17 +1759,18 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 }
 
 /*
- 		#] AddPoly : 
+ 		#] AddPoly :
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
+ 
+#define INSLENGTH(x)  w[1] = FUNHEAD+ARGHEAD+x; w[FUNHEAD] = ARGHEAD+x;
+
 /**
  *	Adds the arguments of two occurrences the PolyFun.
  *	@param s1 Pointer to the first occurrence.
  *	@param s2 Pointer to the second occurrence.
  *	@param m  Pointer to where the answer should be.
  */
-
-#define INSLENGTH(x)  w[1] = FUNHEAD+ARGHEAD+x; w[FUNHEAD] = ARGHEAD+x;
 
 VOID
 AddArgs BARG3(WORD *,s1,WORD *,s2,WORD *,m)
@@ -2024,7 +2026,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs : 
+ 		#] AddArgs :
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
 *
 /**
@@ -2445,7 +2447,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 : 
+ 		#] Compare1 :
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
@@ -2502,7 +2504,7 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		ss = sss;
 	}
 
-			#] debug : 
+			#] debug :
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
@@ -2595,13 +2597,13 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		FiniLine();
 	}
 
-			#] debug : 
+			#] debug :
 */
 	return(size);
 }
 
 /*
- 		#] ComPress : 
+ 		#] ComPress :
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 */
 /**
@@ -2791,7 +2793,7 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 #endif
 
 /*
- 		#] SplitMerge : 
+ 		#] SplitMerge :
  		#[ GarbHand :				VOID GarbHand()
 */
 /**
@@ -2906,7 +2908,7 @@ GarbHand()
 }
 
 /*
- 		#] GarbHand : 
+ 		#] GarbHand :
  		#[ MergePatches :			WORD MergePatches(par)
 */
 /**
@@ -3109,7 +3111,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
 	The old code had to be replaced because all output needs to go
 	through PutOut. For this we have to go term by term and keep
@@ -3626,7 +3628,7 @@ PatCall2:;
 }
 
 /*
- 		#] MergePatches : 
+ 		#] MergePatches :
  		#[ StoreTerm :				WORD StoreTerm(term)
 */
 /**
@@ -3754,7 +3756,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm : 
+ 		#] StoreTerm :
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**
@@ -3822,7 +3824,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 }
 
 /*
- 		#] StageSort : 
+ 		#] StageSort :
  		#[ SortWild :				WORD SortWild(w,nw)
 */
 /**
@@ -3924,7 +3926,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 }
 
 /*
- 		#] SortWild : 
+ 		#] SortWild :
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 */
 /**
@@ -3994,7 +3996,7 @@ void CleanUpSort ARG1(int,num)
 }
 
 /*
- 		#] CleanUpSort : 
+ 		#] CleanUpSort :
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 /**
@@ -4011,6 +4013,6 @@ VOID LowerSortLevel ARG0
 }
 
 /*
- 		#] LowerSortLevel : 
+ 		#] LowerSortLevel :
 	#] SortUtilities :
 */

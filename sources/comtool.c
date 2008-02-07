@@ -1,3 +1,7 @@
+/** @file comtool.c
+ *
+ *  Utility routines for the compiler.
+ */
 /*
   	#[ Includes :
 */
@@ -5,7 +9,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ inicbufs :
 */
 
@@ -42,7 +46,7 @@ inicbufs ARG0
 }
 
 /*
-  	#] inicbufs :
+  	#] inicbufs : 
   	#[ finishcbuf :
 */
 
@@ -84,7 +88,7 @@ void clearcbuf ARG1(WORD,num)
 }
 
 /*
-  	#] clearcbuf :
+  	#] clearcbuf : 
   	#[ DoubleCbuffer :
 */
 
@@ -199,7 +203,7 @@ restart:;
 }
 
 /*
-  	#] AddRHS :
+  	#] AddRHS : 
   	#[ AddNtoL :
 */
 
@@ -217,7 +221,7 @@ int AddNtoL ARG2(int,n,WORD *,array)
 }
 
 /*
-  	#] AddNtoL :
+  	#] AddNtoL : 
   	#[ AddNtoC :
 */
 
@@ -237,7 +241,7 @@ int AddNtoC ARG2(int,n,WORD *,array)
 }
 
 /*
-  	#] AddNtoC :
+  	#] AddNtoC : 
   	#[ InsTree :
 
 	Routines for balanced tree searching and insertion.
@@ -432,7 +436,7 @@ balance:;
 }
 
 /*
-  	#] InsTree :
+  	#] InsTree : 
   	#[ RedoTree :
 */
 
@@ -450,7 +454,7 @@ void RedoTree ARG2(CBUF *,C,int,size)
 }
 
 /*
-  	#] RedoTree :
+  	#] RedoTree : 
   	#[ ClearTree :
 */
 
@@ -469,7 +473,7 @@ void ClearTree ARG1(int,i)
 }
 
 /*
-  	#] ClearTree :
+  	#] ClearTree : 
   	#[ numcommute :
 
 	Returns the number of non-commuting terms in the expression
@@ -496,6 +500,6 @@ LONG numcommute ARG2(WORD *,terms,LONG *,numterms)
 }
 
 /*
-  	#] numcommute :
+  	#] numcommute : 
 */
 

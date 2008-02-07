@@ -1,3 +1,11 @@
+/** @file startup.c
+ *
+ *  This file contains the main program.
+ *  It also deals with the very early stages of the startup of FORM
+ *	and the final stages when the program attemps some cleanup.
+ *	Here is the routine that analyses the command tail.
+ */
+
 #include "form3.h"
 #include "inivar.h"
 
@@ -986,7 +994,7 @@ IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/

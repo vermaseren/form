@@ -1,3 +1,11 @@
+/** @file reshuf.c
+ *
+ *	Mixed routines:
+ *	Routines for relabelling dummy indices.
+ *	The multiply command
+ *	The distrib_ function
+ *	The tryreplace statement
+ */
 /*
   	#[ Includes : reshuf.c
 */
@@ -5,7 +13,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -82,7 +90,7 @@ ReNumber BARG1(WORD *,term)
 }
 
 /*
- 		#] Renumber :
+ 		#] Renumber : 
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -201,7 +209,7 @@ FunLevel BARG1(WORD *,term)
 }
 
 /*
- 		#] FunLevel :
+ 		#] FunLevel : 
  		#[ DetCurDum :
 */
 
@@ -267,7 +275,7 @@ Singles:
 }
 
 /*
- 		#] DetCurDum :
+ 		#] DetCurDum : 
  		#[ FullRenumber :
 
 		Does a full renumbering. May be slow if there are many indices.
@@ -378,7 +386,7 @@ Return0:
 }
 
 /*
- 		#] FullRenumber :
+ 		#] FullRenumber : 
  		#[ MoveDummies :
 
 		Routine shifts the dummy indices by an amount 'shift'.
@@ -449,8 +457,8 @@ Singles:
 }
 
 /*
- 		#] MoveDummies :
-  	#] Reshuf :
+ 		#] MoveDummies : 
+  	#] Reshuf : 
   	#[ Count :
  		#[ CountDo :
 
@@ -606,7 +614,7 @@ NextFF:
 }
 
 /*
- 		#] CountDo :
+ 		#] CountDo : 
  		#[ CountFun :
 
 		This is the count function.
@@ -772,8 +780,8 @@ VectInd:		i = term[1] - 2;
 }
 
 /*
- 		#] CountFun :
-  	#] Count :
+ 		#] CountFun : 
+  	#] Count : 
   	#[ Multiply Term :
  		#[ MultDo :
 */
@@ -801,8 +809,8 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
 }
 
 /*
- 		#] MultDo :
-  	#] Multiply Term :
+ 		#] MultDo : 
+  	#] Multiply Term : 
   	#[ Try Term(s) :
  		#[ TryDo :
 */
@@ -836,8 +844,8 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 }
 
 /*
- 		#] TryDo :
-  	#] Try Term(s) :
+ 		#] TryDo : 
+  	#] Try Term(s) : 
   	#[ Distribute :
  		#[ DoDistrib :
 
@@ -1099,7 +1107,7 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 }
 
 /*
- 		#] DoDistrib :
+ 		#] DoDistrib : 
  		#[ EqualArg :
 
 		Returns 1 if the arguments in the field are identical.
@@ -1128,7 +1136,7 @@ EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
 }
 
 /*
- 		#] EqualArg :
+ 		#] EqualArg : 
  		#[ DoDelta3 :
 */
 
@@ -1311,8 +1319,8 @@ nextk:;
 }
 
 /*
- 		#] DoDelta3 :
-  	#] Distribute :
+ 		#] DoDelta3 : 
+  	#] Distribute : 
   	#[ DoMerge :
 
 	Merges the arguments of all occurrences of function fun into a
@@ -1470,7 +1478,7 @@ Mergecall:
 }
 
 /*
-  	#] DoMerge :
+  	#] DoMerge : 
 */
 
 

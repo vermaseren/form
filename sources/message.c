@@ -1,3 +1,11 @@
+/** @file message.c
+ *
+ *  Contains the routines that write messages.
+ *	This includes the very important routine MesPrint which is the
+ *	FORM equivalent of printf but then with escape sequences that are
+ *	relevant for symbolic manipulation.
+ *	The FORM statement Print "...." is passed almost literally to MesPrint.
+ */
 /*
   	#[ Includes :
 
@@ -483,7 +491,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					AN.listinprint += 2;
 				}
 /*
-			#] dollars :
+			#] dollars : 
 */
 			}
 #ifdef WITHPTHREADS
@@ -607,7 +615,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 }
 
 /*
- 		#] MesPrint :
+ 		#] MesPrint : 
  		#[ Warning :
 */
 

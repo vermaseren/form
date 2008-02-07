@@ -2,7 +2,14 @@
 #ifndef __MANAGE_H__
 
 #define __MANAGE_H__
- 
+
+/** @file minos.h
+ *
+ *  Contains all needed declarations and definitions for the tablebase
+ *	low level file routines. These have been taken from the minos database
+ *	system and modified somewhat.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

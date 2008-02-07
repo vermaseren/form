@@ -1,3 +1,10 @@
+/** @file index.c
+ *
+ *  The routines that deal with bracket indexing
+ *	It creates the bracket index and it can find the brackets using
+ *	the index.
+ */
+
 /*
   	#[ Includes : index.c
 */
@@ -438,7 +445,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex :
+  	#] PutBracketInIndex : 
   	#[ ClearBracketIndex :
 */
 

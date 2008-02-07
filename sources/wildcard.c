@@ -1,3 +1,14 @@
+/** @file wildcard.c
+ *
+ *  Contains the functions that deal with the wildcards.
+ *	During the pattern matching there are two steps:
+ *	1: check that a wildcard substitution is correct (if there was already
+ *	   an assignment for this variable, it is the same; it is part of the
+ *	   proper set; it is the proper type of variables, etc.)
+ *	2: make the assignment
+ *	In addition we have to be able to clear assignments.
+ *	During execution we have to make the actual replacements (WildFill)
+ */
 /*
   	#[ Includes : wildcard.c
 */

@@ -1,3 +1,8 @@
+/** @file tables.c
+ *
+ *  Contains all functions that deal with the table bases on the 'FORM level'
+ *  The low level databse routines are in minos.c
+ */
 /*
   	#[ Includes :
 
@@ -33,7 +38,7 @@
 static UBYTE *tablebase = (UBYTE *)"tablebase";
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ ClearTableTree :
 */
 
@@ -56,7 +61,7 @@ void ClearTableTree ARG1(TABLES,T)
 }
 
 /*
-  	#] ClearTableTree :
+  	#] ClearTableTree : 
   	#[ InsTableTree :
 
 	int InsTableTree(TABLES T,WORD *,arglist)
@@ -212,7 +217,7 @@ balance:;
 }
 
 /*
-  	#] InsTableTree :
+  	#] InsTableTree : 
   	#[ RedoTableTree :
 
 	To be used when a sparse table is trimmed due to a .store
@@ -237,7 +242,7 @@ void RedoTableTree ARG2(TABLES,T,int,newsize)
 }
 
 /*
-  	#] RedoTableTree :
+  	#] RedoTableTree : 
   	#[ FindTableTree :
 
 	int FindTableTree(TABLES T,WORD *,arglist,int,inc)
@@ -281,7 +286,7 @@ int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
 }
 
 /*
-  	#] FindTableTree :
+  	#] FindTableTree : 
   	#[ DoTableExpansion :
 */
 
@@ -473,7 +478,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] DoTableExpansion :
+  	#] DoTableExpansion : 
   	#[ TableBase :
 
 	File with all the database related things.
@@ -512,7 +517,7 @@ WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
 	If we put all our diagrams inside, we have to go outside the concept
 	of tables.
 
-  	#] TableBase :
+  	#] TableBase : 
   	#[ CoTableBase :
 
 	To be followed by ,subkey
@@ -572,7 +577,7 @@ proper:;
 }
 
 /*
-  	#] CoTableBase :
+  	#] CoTableBase : 
   	#[ FlipTable :
 
 	Flips the table between use as 'stub' and regular use
@@ -591,7 +596,7 @@ int FlipTable ARG2(FUNCTIONS,f,int,type)
 }
 
 /*
-  	#] FlipTable :
+  	#] FlipTable : 
   	#[ SpareTable :
 
 	Creates a spare element for a table. This is used in the table bases.
@@ -635,7 +640,7 @@ int SpareTable ARG1(TABLES,TT)
 }
 
 /*
-  	#] SpareTable :
+  	#] SpareTable : 
   	#[ FindTB :
 
 	Looks for a tablebase with the given name in the active tablebases.
@@ -653,7 +658,7 @@ DBASE *FindTB ARG1(UBYTE *,name)
 }
 
 /*
-  	#] FindTB :
+  	#] FindTB : 
   	#[ CoTBcreate :
 
 	Creates a new tablebase.
@@ -674,7 +679,7 @@ int CoTBcreate ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBcreate :
+  	#] CoTBcreate : 
   	#[ CoTBopen :
 */
 
@@ -691,7 +696,7 @@ int CoTBopen ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBopen :
+  	#] CoTBopen : 
   	#[ CoTBaddto :
 */
 
@@ -853,7 +858,7 @@ tableabort:;
 }
 
 /*
-  	#] CoTBaddto :
+  	#] CoTBaddto : 
   	#[ CoTBenter :
 
 	Loads the elements of the tables specified into memory and sends them
@@ -1004,7 +1009,7 @@ int CoTBenter ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBenter :
+  	#] CoTBenter : 
   	#[ CoTestUse :
 
 	Possibly to be followed by names of tables.
@@ -1050,7 +1055,7 @@ int CoTestUse ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTestUse :
+  	#] CoTestUse : 
   	#[ CheckTableDeclarations :
 
 		Checks that all tables in a tablebase  have identical properties to
@@ -1118,7 +1123,7 @@ int CheckTableDeclarations ARG1(DBASE *,d)
 }
 
 /*
-  	#] CheckTableDeclarations :
+  	#] CheckTableDeclarations : 
   	#[ CoTBload :
 
 		Loads the table stubbs of the specified tables in the indicated
@@ -1271,7 +1276,7 @@ finishup:;
 }
 
 /*
-  	#] CoTBload :
+  	#] CoTBload : 
   	#[ TestUse :
 
 	Look for tbl_(tablename,arguments)
@@ -1338,7 +1343,7 @@ WORD TestUse ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] TestUse :
+  	#] TestUse : 
   	#[ CoTBaudit :
 */
 
@@ -1378,7 +1383,7 @@ int CoTBaudit ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBaudit :
+  	#] CoTBaudit : 
   	#[ CoTBon :
 */
 
@@ -1409,7 +1414,7 @@ int CoTBon ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBon :
+  	#] CoTBon : 
   	#[ CoTBoff :
 */
 
@@ -1440,7 +1445,7 @@ int CoTBoff ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBoff :
+  	#] CoTBoff : 
   	#[ CoTBcleanup :
 */
 
@@ -1451,7 +1456,7 @@ int CoTBcleanup ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBcleanup :
+  	#] CoTBcleanup : 
   	#[ CoTBreplace :
 */
 
@@ -1462,7 +1467,7 @@ int CoTBreplace ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBreplace :
+  	#] CoTBreplace : 
   	#[ CoTBuse :
 
 	Here the actual table use as determined in TestUse causes the needed
@@ -1654,7 +1659,7 @@ int CoTBuse ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBuse :
+  	#] CoTBuse : 
   	#[ CoApply :
 
 	Possibly to be followed by names of tables.
@@ -1711,7 +1716,7 @@ int CoApply ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoApply :
+  	#] CoApply : 
   	#[ CoTBhelp :
 */
 
@@ -1755,7 +1760,7 @@ int CoTBhelp ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoTBhelp :
+  	#] CoTBhelp : 
   	#[ ReWorkT :
 
 	Replaces the STUBBS of the functions in the list.
@@ -1839,7 +1844,7 @@ inc:		j = t[1];
 }
 
 /*
-  	#] ReWorkT :
+  	#] ReWorkT : 
   	#[ Apply :
 */
 
@@ -1884,7 +1889,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 }
 
 /*
-  	#] Apply :
+  	#] Apply : 
   	#[ ApplyExec :
 
 	Replaces occurrences of tbl_(table,indices,pattern) by the proper
@@ -2115,7 +2120,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
 }
 
 /*
-  	#] ApplyExec :
+  	#] ApplyExec : 
   	#[ ApplyReset :
 */
 
@@ -2151,7 +2156,7 @@ WORD ApplyReset ARG1(WORD,level)
 }
 
 /*
-  	#] ApplyReset :
+  	#] ApplyReset : 
   	#[ TableReset :
 */
 
@@ -2169,14 +2174,14 @@ WORD TableReset ARG0
 }
 
 /*
-  	#] TableReset :
+  	#] TableReset : 
   	#[ LoadTableElement :
 ?????
 int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 {
 }
 
-  	#] LoadTableElement :
+  	#] LoadTableElement : 
   	#[ ReleaseTB :
 
 	Releases all TableBases
@@ -2195,5 +2200,5 @@ int ReleaseTB ARG0
 }
 
 /*
-  	#] ReleaseTB :
+  	#] ReleaseTB : 
 */

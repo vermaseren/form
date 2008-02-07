@@ -1,3 +1,7 @@
+/** @file polynito.c
+ *
+ *  Contains functions for the manipulation of (univariate) polynomials.
+ */
 /*
   	#[ Includes : polynito.c
 */
@@ -66,24 +70,25 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
 
   	#] Notation : 
   	#[ SymbolNormalize :
-
-	Routine normalizes terms that contain only symbols.
-	For use in the poly functions.
-	Regular minimum and maximum properties are ignored.
-	If minterm is defined it indicates that terms that don't contain
-	the pattern in minterm can be rejected.
-
-	if ( par == 0 ) we assume that any object of type SYMBOL is already
-	in proper order and hence that if there is only one such object
-	no work needs to be done except for checking with minterm
-
-	if ( par > 1 ) we also check whether there are negative powers
-    in the output. This is not allowed.
-
-	minterm should just be a single subterm of type SYMBOL with its
-	symbols in proper order. All the powers of the symbols in minterm
-	must be present in the output term.
 */
+/**
+ *	Routine normalizes terms that contain only symbols.
+ *	For use in the poly functions.
+ *	Regular minimum and maximum properties are ignored.
+ *	If minterm is defined it indicates that terms that don't contain
+ *	the pattern in minterm can be rejected.
+ *
+ *	if ( par == 0 ) we assume that any object of type SYMBOL is already
+ *	in proper order and hence that if there is only one such object
+ *	no work needs to be done except for checking with minterm
+ *
+ *	if ( par > 1 ) we also check whether there are negative powers
+ *    in the output. This is not allowed.
+ *
+ *	minterm should just be a single subterm of type SYMBOL with its
+ *	symbols in proper order. All the powers of the symbols in minterm
+ *	must be present in the output term.
+ */
 
 int SymbolNormalize ARG3(WORD *,term,WORD *,minterm,WORD,par)
 {
@@ -206,11 +211,12 @@ Nexti:;
 /*
   	#] SymbolNormalize : 
   	#[ CheckMinTerm :
-
-	Arguments are subterms of type SYMBOL. Properly ordered.
-	Checks whether minterm is contained in term.
-	returns 1 if it does, 0 if it doesn't.
 */
+/**
+ *	Arguments are subterms of type SYMBOL. Properly ordered.
+ *	Checks whether minterm is contained in term.
+ *	returns 1 if it does, 0 if it doesn't.
+ */
 
 int CheckMinTerm ARG2(WORD *,term,WORD *,minterm)
 {
@@ -238,17 +244,18 @@ nextm:	m += 2;
 /*
   	#] CheckMinTerm : 
   	#[ ReOrderSymbols :
-
-	term contains a single subterm of type SYMBOL
-	slist contains a list of symbol renumberings. Its format is
-	SYMBOL,size (,numa1,numa2)(,numb1,numb2).....
-	If par = 0 we renumber numa -> numb and if par = 1 numb -> numa.
-	It is assumed that there will be no doubles after renumbering.
-	The new term will be ordered.
-
-	This routine is intended for the reordering of symbols in the
-	poly routines. Often a reordering can make a big difference.
 */
+/**
+ *	term contains a single subterm of type SYMBOL
+ *	slist contains a list of symbol renumberings. Its format is
+ *	SYMBOL,size (,numa1,numa2)(,numb1,numb2).....
+ *	If par = 0 we renumber numa -> numb and if par = 1 numb -> numa.
+ *	It is assumed that there will be no doubles after renumbering.
+ *	The new term will be ordered.
+ *
+ *	This routine is intended for the reordering of symbols in the
+ *	poly routines. Often a reordering can make a big difference.
+ */
 
 int ReOrderSymbols ARG3(WORD *,term,WORD *,slist,WORD,par)
 {
@@ -293,18 +300,19 @@ int ReOrderSymbols ARG3(WORD *,term,WORD *,slist,WORD,par)
 /*
   	#] ReOrderSymbols : 
   	#[ CompareSymbols :
-
-	Compares the terms, based on the value of AN.polysortflag.
-	If term1 < term2 the return value is -1
-	If term1 > term2 the return value is  1
-	If term1 = term2 the return value is  0
-	The coefficients may differ.
-	The terms contain only a single subterm of type SYMBOL.
-	If AN.polysortflag = 0 it is a 'regular' compare.
-	If AN.polysortflag = 1 the sum of the powers is more important
-	par is a dummy parameter to make the parameter field identical
-	to that of Compare1 which is the regular compare routine in sort.c
 */
+/**
+ *	Compares the terms, based on the value of AN.polysortflag.
+ *	If term1 < term2 the return value is -1
+ *	If term1 > term2 the return value is  1
+ *	If term1 = term2 the return value is  0
+ *	The coefficients may differ.
+ *	The terms contain only a single subterm of type SYMBOL.
+ *	If AN.polysortflag = 0 it is a 'regular' compare.
+ *	If AN.polysortflag = 1 the sum of the powers is more important
+ *	par is a dummy parameter to make the parameter field identical
+ *	to that of Compare1 which is the regular compare routine in sort.c
+ */
 
 int CompareSymbols BARG3(WORD *,term1,WORD *,term2,WORD,par)
 {
@@ -335,14 +343,15 @@ int CompareSymbols BARG3(WORD *,term1,WORD *,term2,WORD,par)
 /*
   	#] CompareSymbols : 
   	#[ PolyAdd :
-
-	Assumes that both polynomials are properly normalized
-	Hence we don't need the full sort routines.
-
-	Output is in the WorkSpace at the original setting of the WorkPointer.
-	The return value is the start of the polynomial.
-	The WorkPointer is put at the end of the output.
 */
+/**
+ *	Assumes that both polynomials are properly normalized
+ *	Hence we don't need the full sort routines.
+ *
+ *	Output is in the WorkSpace at the original setting of the WorkPointer.
+ *	The return value is the start of the polynomial.
+ *	The WorkPointer is put at the end of the output.
+ */
 
 WORD *PolyAdd BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -412,10 +421,11 @@ WORD *PolyAdd BARG2(WORD *,Poly1,WORD *,Poly2)
 /*
   	#] PolyAdd : 
   	#[ PolyMul :
-
-	Multiplies two polynomials the stupid way.
-	This is mainly for multivariate polynomials.
 */
+/**
+ *	Multiplies two polynomials the stupid way.
+ *	This is mainly for multivariate polynomials.
+ */
 
 WORD *PolyMul BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -477,22 +487,23 @@ WORD *PolyMul BARG2(WORD *,Poly1,WORD *,Poly2)
 /*
   	#] PolyMul : 
   	#[ PolyDiv :
-
-	Divides polynomial Poly1 by Poly2.
-	The quotient is in AT.WorkPointer as it comes in.
-	The remainder comes after it and the output points at it.
-	AT.WorkPointer will be pointing at after the remainder.
-	The first terms in the polynomials are the 'worst' terms.
-	We assume that the polynomials are properly normalized. In that case
-	we can use the algorithm
-	1: Move all terms in poly1 that don't fit l(Poly2) to the sort.
-	2: Determine the quotient q for the first term in both.
-	3: Add q to the quotient.
-	4: Replace Poly1 by Poly1-q*Poly2.
-	5: Go back to 1.
-	We manipulate everything in the WorkSpace. The final result is minimal
-	in its occupation of it. There are no holes. It does mean some copying.
 */
+/**
+ *	Divides polynomial Poly1 by Poly2.
+ *	The quotient is in AT.WorkPointer as it comes in.
+ *	The remainder comes after it and the output points at it.
+ *	AT.WorkPointer will be pointing at after the remainder.
+ *	The first terms in the polynomials are the 'worst' terms.
+ *	We assume that the polynomials are properly normalized. In that case
+ *	we can use the algorithm
+ *	1: Move all terms in poly1 that don't fit l(Poly2) to the sort.
+ *	2: Determine the quotient q for the first term in both.
+ *	3: Add q to the quotient.
+ *	4: Replace Poly1 by Poly1-q*Poly2.
+ *	5: Go back to 1.
+ *	We manipulate everything in the WorkSpace. The final result is minimal
+ *	in its occupation of it. There are no holes. It does mean some copying.
+ */
 
 WORD *PolyDiv BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -652,16 +663,17 @@ NegPow:
 /*
   	#] PolyDiv : 
   	#[ PolyDivI :
-
-	Divides polynomial Poly1 by Poly2.
-	We assume that both polynomials have at minimum power of at least
-	one and that all coefficients are integer.
-	In addition we test whether there is a remainder.
-	If there is a remainder this is considered an error and the return
-	value is a zero polynomial.
-	Also the answer has to be a polynomial over the integers.
-	This routine is used to try whether we have hit on a GCD.
 */
+/**
+ *	Divides polynomial Poly1 by Poly2.
+ *	We assume that both polynomials have at minimum power of at least
+ *	one and that all coefficients are integer.
+ *	In addition we test whether there is a remainder.
+ *	If there is a remainder this is considered an error and the return
+ *	value is a zero polynomial.
+ *	Also the answer has to be a polynomial over the integers.
+ *	This routine is used to try whether we have hit on a GCD.
+ */
 
 WORD *PolyDivI BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -843,11 +855,12 @@ calledfrom:;
 /*
   	#] PolyDivI : 
   	#[ PolyMul0 :
-
-	Multiplies a polynomial by a term.
-	The way we have set up the ordering of the terms in the polynomials
-	we won't have to sort again! Hence we can be very fast.
 */
+/**
+ *	Multiplies a polynomial by a term.
+ *	The way we have set up the ordering of the terms in the polynomials
+ *	we won't have to sort again! Hence we can be very fast.
+ */
 
 WORD *PolyMul0 BARG2(WORD *,Poly,WORD *,term)
 {
@@ -909,19 +922,20 @@ WORD *PolyMul0 BARG2(WORD *,Poly,WORD *,term)
 /*
   	#] PolyMul0 : 
   	#[ PolyDiv0 :
-
-	Divides polynomial Poly1 by Poly2, assuming that there is no remainder.
-	The first terms in the polynomials are the 'worst' terms.
-	We assume that the polynomials are properly normalized. In that case
-	we can use the algorithm
-	1: Determine the quotient q for the first term in both.
-	   If sumpow1 < sumpow2 we are done.
-	2: Add q to the output.
-	3: Replace Poly1 by Poly1-q*Poly2.
-	4: Go back to 1.
-	We manipulate everything in the WorkSpace. The final result is minimal
-	in its occupation of it. There are no holes. It does mean some copying.
 */
+/**
+ *	Divides polynomial Poly1 by Poly2, assuming that there is no remainder.
+ *	The first terms in the polynomials are the 'worst' terms.
+ *	We assume that the polynomials are properly normalized. In that case
+ *	we can use the algorithm
+ *	1: Determine the quotient q for the first term in both.
+ *	   If sumpow1 < sumpow2 we are done.
+ *	2: Add q to the output.
+ *	3: Replace Poly1 by Poly1-q*Poly2.
+ *	4: Go back to 1.
+ *	We manipulate everything in the WorkSpace. The final result is minimal
+ *	in its occupation of it. There are no holes. It does mean some copying.
+ */
 
 WORD *PolyDiv0 BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -1056,24 +1070,25 @@ NegPow:
 /*
   	#] PolyDiv0 : 
   	#[ PolyPow :
-
-	Take a power of a polynomial
-	There are two ways to do this:
-	1: we use binomial coefficients
-	2: we use the bitwise multiplication and squaring.
-	The first method has the disadvantage that one generates way too many
-	terms, as in the example of the substitution of power series expansions
-	into each other.
-	Hence we use the second method. It is the same as in the routine RaisPow
-	in reken.c
-	Its only disadvantage is that it generates also too many terms but
-	it keeps this relatively contained by the frequent sorts (when the
-	power is high).
-
-	Note: there is no need here for special normalizations and conventions
-	except for that the sort routine assumes that there are only symbols.
-	We use this routine mainly internally. As in PolyTakeRoot.
 */
+/**
+ *	Take a power of a polynomial
+ *	There are two ways to do this:
+ *	1: we use binomial coefficients
+ *	2: we use the bitwise multiplication and squaring.
+ *	The first method has the disadvantage that one generates way too many
+ *	terms, as in the example of the substitution of power series expansions
+ *	into each other.
+ *	Hence we use the second method. It is the same as in the routine RaisPow
+ *	in reken.c
+ *	Its only disadvantage is that it generates also too many terms but
+ *	it keeps this relatively contained by the frequent sorts (when the
+ *	power is high).
+ *
+ *	Note: there is no need here for special normalizations and conventions
+ *	except for that the sort routine assumes that there are only symbols.
+ *	We use this routine mainly internally. As in PolyTakeRoot.
+ */
 
 WORD *PolyPow BARG2(WORD *,Poly,WORD,pow)
 {
@@ -1124,14 +1139,15 @@ WORD *PolyPow BARG2(WORD *,Poly,WORD,pow)
 /*
   	#] PolyPow : 
   	#[ PolyRatNorm :
-
-	Determines the GCD of the two polynomials and divides it out.
-	We assume that both polynomials are properly normalized.
-	The answer is:
-	New poly1 in the startvalue of AT.WorkPointer
-	New poly2 in the return value.
-	AT.WorkPointer points at the first position after the new poly2.
 */
+/**
+ *	Determines the GCD of the two polynomials and divides it out.
+ *	We assume that both polynomials are properly normalized.
+ *	The answer is:
+ *	New poly1 in the startvalue of AT.WorkPointer
+ *	New poly2 in the return value.
+ *	AT.WorkPointer points at the first position after the new poly2.
+ */
 
 WORD *PolyRatNorm BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -1162,13 +1178,14 @@ WORD *PolyRatNorm BARG2(WORD *,Poly1,WORD *,Poly2)
 /*
   	#] PolyRatNorm : 
   	#[ PolyFunNorm :
-
-	Gets the PolyFun with two arguments.
-	Brings it to normal form and makes the polynomials ready for processing.
-	If par == 0 we write the new polyfun over the old one.
-	If par == 1 we put the new polyfun in the WorkSpace.
-	If par == 2 we put the two polynomials in the WorkSpace.
 */
+/**
+ *	Gets the PolyFun with two arguments.
+ *	Brings it to normal form and makes the polynomials ready for processing.
+ *	If par == 0 we write the new polyfun over the old one.
+ *	If par == 1 we put the new polyfun in the WorkSpace.
+ *	If par == 2 we put the two polynomials in the WorkSpace.
+ */
 
 WORD *PolyFunNorm BARG2(WORD *,term,WORD,par)
 {
@@ -1476,11 +1493,12 @@ endnormalize:;
 /*
   	#] PolyFunNorm : 
   	#[ PolyFunAddRat :
-
-	Gets two with PolyFuns with up to two arguments.
-	Adds the contents of the rational PolyFuns.
-	Returns the new polyfun
 */
+/**
+ *	Gets two with PolyFuns with up to two arguments.
+ *	Adds the contents of the rational PolyFuns.
+ *	Returns the new polyfun
+ */
 
 WORD *PolyFunAddRat BARG2(WORD *,t1,WORD *,t2)
 {
@@ -1706,19 +1724,20 @@ skip2:;
 /*
   	#] PolyFunAddRat : 
   	#[ PolyRemoveContent :
-
-	Routine takes the polynomial and determines the 'content'.
-	It then removes the content.
-	The parameter par determines the precise action.
-	When par == 0 we make the lead coefficient one.
-	When par == 1 we make all coefficients integer and relative prime.
-	When par == 2 we make all coefficients integer and relative prime
-		and we also pull out powers of the variables if possible.
-	The content is a regular term.
-	When par == 0 it is at AT.WorkPointer.
-	When par == 1,2 it is at the start value of the WorkPointer and the
-	primitive part follows it.
 */
+/**
+ *	Routine takes the polynomial and determines the 'content'.
+ *	It then removes the content.
+ *	The parameter par determines the precise action.
+ *	When par == 0 we make the lead coefficient one.
+ *	When par == 1 we make all coefficients integer and relative prime.
+ *	When par == 2 we make all coefficients integer and relative prime
+ *		and we also pull out powers of the variables if possible.
+ *	The content is a regular term.
+ *	When par == 0 it is at AT.WorkPointer.
+ *	When par == 1,2 it is at the start value of the WorkPointer and the
+ *	primitive part follows it.
+ */
 
 WORD *PolyRemoveContent BARG2(WORD *,Poly,WORD,par)
 {
@@ -1952,12 +1971,13 @@ calledfrom:
 }
 
 /*
-  	#] PolyRemoveContent :
+  	#] PolyRemoveContent : 
   	#[ PolyGCD :
-
-	Calculates the GCD of two polynomials.
-	There can be various strategies for such calculations.
 */
+/**
+ *	Calculates the GCD of two polynomials.
+ *	There can be various strategies for such calculations.
+ */
 
 WORD *PolyGCD BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -2188,15 +2208,16 @@ calledfrom:
 /*
   	#] PolyGCD : 
   	#[ PolyGetRenumbering :
-
-	Figures out an economical scheme to renumber the symbols to make the
-	GCD calculation faster.
-	The subterm of type SYMBOL is where the WorkPointer used to point.
-	The WorkPointer is raised to after it.
-	The return value is the number of symbols that are NOT common between
-	the two polynomials.
-	The common symbols are sorted with lowest power first.
 */
+/**
+ *	Figures out an economical scheme to renumber the symbols to make the
+ *	GCD calculation faster.
+ *	The subterm of type SYMBOL is where the WorkPointer used to point.
+ *	The WorkPointer is raised to after it.
+ *	The return value is the number of symbols that are NOT common between
+ *	the two polynomials.
+ *	The common symbols are sorted with lowest power first.
+ */
 
 WORD PolyGetRenumbering BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -2322,15 +2343,16 @@ nexti2:;
 /*
   	#] PolyGetRenumbering : 
   	#[ PolyTake :
-
-	Takes a polynomial in which presumably numsym is the leftmost symbol.
-	It looks at the polynomial coefficients of the various powers,
-	determines their GCD and divides it out.
-	It leaves the GCD at the start value of the WorkPointer and the
-	'content free' polynomial at the return value.
-
-	There are a few special cases of course.
 */
+/**
+ *	Takes a polynomial in which presumably numsym is the leftmost symbol.
+ *	It looks at the polynomial coefficients of the various powers,
+ *	determines their GCD and divides it out.
+ *	It leaves the GCD at the start value of the WorkPointer and the
+ *	'content free' polynomial at the return value.
+ *
+ *	There are a few special cases of course.
+ */
 
 WORD *PolyTake BARG2(WORD *,Poly,WORD,numsym)
 {
@@ -2446,9 +2468,10 @@ simplecase:
 /*
   	#] PolyTake : 
   	#[ GetNegPow :
-
-	Extracts a term that contains the LCM of all negative powers.
 */
+/**
+ *	Extracts a term that contains the LCM of all negative powers.
+ */
 
 WORD *GetNegPow BARG1(WORD *,Poly)
 {
@@ -2517,9 +2540,10 @@ WORD *GetNegPow BARG1(WORD *,Poly)
 /*
   	#] GetNegPow : 
   	#[ PolyNormPoly :
-
-	Normalizes a polynomial.
 */
+/**
+ *	Normalizes a polynomial.
+ */
  
 WORD *PolyNormPoly BARG1(WORD *,Poly)
 {
@@ -2552,27 +2576,28 @@ WORD *PolyNormPoly BARG1(WORD *,Poly)
   	#] PolyNormPoly : 
   	#[ PolyGCD1 :
  		#[ Generic routine :
-
-	Calls one of the univariate GCD routines depending on the value of the
-	variable AM.polygcdchoice. This can be set in the setup file with the
-	command   polygcdchoice value
-		0: The default routine.
-		1: The modular algorithm.
-		2: The algorithm in which the lead term has coefficient one
-		3: The subresultant algorithm
-	For bigger polynomials in which the GCD has a power almost the same as
-	that of the simplest input polynomial and for rather simple polynomials
-	method 2 is usually the fastest. In all other cases the modular
-	algorithm is (often by far) the fastest.
-	There was a fourth method based on solving the equations for
-		a(x)*P1(x)+b(x)*P2(x) = gcd(x)
-	which boils down to working with the Sylvester matrix. This is always
-	the slowest method by far (at least in all our test cases). We have put
-	this routine in the file extrapoly, just in case it is needed for some
-	reason or another. Note that if it is added here, one should update 
-	the file setfile.c because currently it doesn't allow AM.polygcdchoice
-	to be larger than 3.
 */
+/**
+ *	Calls one of the univariate GCD routines depending on the value of the
+ *	variable AM.polygcdchoice. This can be set in the setup file with the
+ *	command   polygcdchoice value
+ *		0: The default routine.
+ *		1: The modular algorithm.
+ *		2: The algorithm in which the lead term has coefficient one
+ *		3: The subresultant algorithm
+ *	For bigger polynomials in which the GCD has a power almost the same as
+ *	that of the simplest input polynomial and for rather simple polynomials
+ *	method 2 is usually the fastest. In all other cases the modular
+ *	algorithm is (often by far) the fastest.
+ *	There was a fourth method based on solving the equations for
+ *		a(x)*P1(x)+b(x)*P2(x) = gcd(x)
+ *	which boils down to working with the Sylvester matrix. This is always
+ *	the slowest method by far (at least in all our test cases). We have put
+ *	this routine in the file extrapoly, just in case it is needed for some
+ *	reason or another. Note that if it is added here, one should update 
+ *	the file setfile.c because currently it doesn't allow AM.polygcdchoice
+ *	to be larger than 3.
+ */
 
 WORD *PolyGCD1 BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -2607,35 +2632,36 @@ WORD *PolyGCD1 BARG2(WORD *,Poly1,WORD *,Poly2)
 /*
  		#] Generic routine : 
  		#[ Algorithm 1 : The modular method
-
-		This algorithm evaluates the GCD modulus prime numbers.
-		Actually we only need the numbers to be relatively prime.
-		This would make it easier to find a set of them but for
-		factorization we need prime numbers anyway.
-
-		Step 1: Fish out the special cases.
-		Step 2: Make the polynomials primitive.
-		        Determine the GCD of the leading coefficients.
-		Step 3: set numprime to 0.
-		Step 4: Get the next prime number p(numprime)
-		Step 5: If it divides one of the leading coefs: raise numprime
-		        and go back to step 4.
-		Step 6: Convert the polynomials to mod p(numprime) notation.
-		        Get lgcd = the GCD mod p(numprime)
-		Step 7: Determine the mod of the GCD of the polynomials.
-		Step 8: Combine with previous results with the
-		        Chinese remainder theorem.
-		Step 9: Test whether this GCD divides the original polynomials.
-		        If so, we have a solution.
-		        Else, raise numprime and goto step 4.
-
-		Remarks: try only prime numbers that don't divide the leading
-		coefficients of Poly1 and Poly2. That guarantees that the leading
-		term of the gcd doesn't become zero.
-		Also check on the constant term to guaratee that one to be present.
-		We also insert code against 'unlucky primes' although probably the
-		checking on the constant term excludes them (but we have no proof)
 */
+/**
+ *		This algorithm evaluates the GCD modulus prime numbers.
+ *		Actually we only need the numbers to be relatively prime.
+ *		This would make it easier to find a set of them but for
+ *		factorization we need prime numbers anyway.
+ *
+ *		Step 1: Fish out the special cases.
+ *		Step 2: Make the polynomials primitive.
+ *		        Determine the GCD of the leading coefficients.
+ *		Step 3: set numprime to 0.
+ *		Step 4: Get the next prime number p(numprime)
+ *		Step 5: If it divides one of the leading coefs: raise numprime
+ *		        and go back to step 4.
+ *		Step 6: Convert the polynomials to mod p(numprime) notation.
+ *		        Get lgcd = the GCD mod p(numprime)
+ *		Step 7: Determine the mod of the GCD of the polynomials.
+ *		Step 8: Combine with previous results with the
+ *		        Chinese remainder theorem.
+ *		Step 9: Test whether this GCD divides the original polynomials.
+ *		        If so, we have a solution.
+ *		        Else, raise numprime and goto step 4.
+ *
+ *		Remarks: try only prime numbers that don't divide the leading
+ *		coefficients of Poly1 and Poly2. That guarantees that the leading
+ *		term of the gcd doesn't become zero.
+ *		Also check on the constant term to guaratee that one to be present.
+ *		We also insert code against 'unlucky primes' although probably the
+ *		checking on the constant term excludes them (but we have no proof)
+ */
 
 WORD *PolyGCD1a BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -2926,19 +2952,20 @@ calledfrom:;
 /*
  		#] Algorithm 1 : 
  		#[ Algorithm 2 : The classical method
-
-	Algorithm 2:
-
-	Determination of the GCD of two polynomials in one and the same variable
-	1: take out the content from p2.
-	2: put the polynomials at p1 and p2.
-	3: Make the classical p3 = p1%p2;
-	4: Copy p2 to p1.
-	5: If p3 == 0, terminate. Answer in p1 which sits at the original
-	   value of the workpointer. return
-	6: copy p3 to p2 and go back to 1.
-	This is a crude algorithm but for short polynomials usually efficient.
 */
+/**
+ *	Algorithm 2:
+ *
+ *	Determination of the GCD of two polynomials in one and the same variable
+ *	1: take out the content from p2.
+ *	2: put the polynomials at p1 and p2.
+ *	3: Make the classical p3 = p1%p2;
+ *	4: Copy p2 to p1.
+ *	5: If p3 == 0, terminate. Answer in p1 which sits at the original
+ *	   value of the workpointer. return
+ *	6: copy p3 to p2 and go back to 1.
+ *	This is a crude algorithm but for short polynomials usually efficient.
+ */
 
 WORD *PolyGCD1b BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -3021,23 +3048,24 @@ valueisone:
 /* 
  		#] Algorithm 2 : 
  		#[ Algorithm 3 : The subresultant method
-
-		This is algorithm C from the book of Knuth, also called the subresultant
-		algorithm. Its essence is to work over the integers. We will maintain
-		the same notation, even though we don't really need the denominators.
-
-		Step 1: Reduce Poly1 and Poly2 to primitive polynominals poly1 and poly2
-		        Set d = gcd(cont(Poly1),cont(Poly2)).
-		        Set g = h = 1;
-		Step 2: m1 = degree(poly1), m2 = degree(poly2).  delta = m1-m2
-		        Calculate the remainder rem of poly1/poly2 using algorith R
-		        for pseudo-division.
-		        if ( rem == 0 ) return(d*poly2)
-		        if ( rem == constant ) return(d)
-		Step 3: poly1 = poly2; poly2 = rem/(g*h^delta)
-		        g = l(poly1); h = h^(1-delta)*g^delta;
-				goto Step 2.
 */
+/**
+ *		This is algorithm C from the book of Knuth, also called the subresultant
+ *		algorithm. Its essence is to work over the integers. We will maintain
+ *		the same notation, even though we don't really need the denominators.
+ *
+ *		Step 1: Reduce Poly1 and Poly2 to primitive polynominals poly1 and poly2
+ *		        Set d = gcd(cont(Poly1),cont(Poly2)).
+ *		        Set g = h = 1;
+ *		Step 2: m1 = degree(poly1), m2 = degree(poly2).  delta = m1-m2
+ *		        Calculate the remainder rem of poly1/poly2 using algorith R
+ *		        for pseudo-division.
+ *		        if ( rem == 0 ) return(d*poly2)
+ *		        if ( rem == constant ) return(d)
+ *		Step 3: poly1 = poly2; poly2 = rem/(g*h^delta)
+ *		        g = l(poly1); h = h^(1-delta)*g^delta;
+ *				goto Step 2.
+ */
 
 WORD *PolyGCD1c BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -3289,15 +3317,16 @@ calledfrom:
  		#] Algorithm 3 : 
   	#] PolyGCD1 : 
   	#[ PolyDiv1 :
-
-	Division of univariate polynomials.
-	We assume the polynomials to be ordered with the highest power first.
-	The coefficients can be rationals.
-	The reason the routine is so long is that there are very many special cases.
-	Those are all treated separately to increase speed. In normal programs the
-	percentage of special cases actually occurring may be very high.
-	This routine will be very good with sparse polynomials.
 */
+/**
+ *	Division of univariate polynomials.
+ *	We assume the polynomials to be ordered with the highest power first.
+ *	The coefficients can be rationals.
+ *	The reason the routine is so long is that there are very many special cases.
+ *	Those are all treated separately to increase speed. In normal programs the
+ *	percentage of special cases actually occurring may be very high.
+ *	This routine will be very good with sparse polynomials.
+ */
 
 WORD *PolyDiv1 BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -3543,36 +3572,37 @@ WORD *PolyDiv1 BARG2(WORD *,Poly1,WORD *,Poly2)
 /*
   	#] PolyDiv1 : 
   	#[ PolyPseudoRem1 :
-
-	The pseudo division is done to obtain:
-		(l(poly2(x)))^(m1-m2+1)*Poly1(x) = quot(x)*Poly2(x)+rem(x)
-		for ( k = m1-m2; k >= 0; k-- ) {
-			q(k) = poly1(m2+k)*poly2(m2)^k
-			for ( j = m2+k-1; j >= k; j-- ) {
-				poly1(j) = poly2(m2)*poly1(j)-poly1(m2+k)*poly2(j-k)
-			}
-			for ( j = k-1; j >= 0; j-- ) {
-				poly1(j) = poly2(m2)*poly1(j)
-			}
-		}
-	l(Poly) means the coefficient of the leading term in Poly.
-	It is possible to make a shortcut on the number of multiplications.
-	We will implement this in a second phase of development.
-
-	In this routine we consider fewer special cases as in the routine PolyDiv1.
-	It is for internal use (PolyGCD1) and hence we know that certain cases
-	cannot occur.
-
-	We are only interested in the remainder. Hence the formula for q(k) is
-	irrelevant and we ignore it.
-	The algorithm terminates when the leading power of poly1 is less than the
-	leading power of poly2. In that case the remainder is in poly1.
-
-	We assume that Poly1 and Poly2 are primitive and all coefficients are
-	integers.
-
-	See Knuth vol 2, page 407.
 */
+/**
+ *	The pseudo division is done to obtain:
+ *		(l(poly2(x)))^(m1-m2+1)*Poly1(x) = quot(x)*Poly2(x)+rem(x)
+ *		for ( k = m1-m2; k >= 0; k-- ) {
+ *			q(k) = poly1(m2+k)*poly2(m2)^k
+ *			for ( j = m2+k-1; j >= k; j-- ) {
+ *				poly1(j) = poly2(m2)*poly1(j)-poly1(m2+k)*poly2(j-k)
+ *			}
+ *			for ( j = k-1; j >= 0; j-- ) {
+ *				poly1(j) = poly2(m2)*poly1(j)
+ *			}
+ *		}
+ *	l(Poly) means the coefficient of the leading term in Poly.
+ *	It is possible to make a shortcut on the number of multiplications.
+ *	We will implement this in a second phase of development.
+ *
+ *	In this routine we consider fewer special cases as in the routine PolyDiv1.
+ *	It is for internal use (PolyGCD1) and hence we know that certain cases
+ *	cannot occur.
+ *
+ *	We are only interested in the remainder. Hence the formula for q(k) is
+ *	irrelevant and we ignore it.
+ *	The algorithm terminates when the leading power of poly1 is less than the
+ *	leading power of poly2. In that case the remainder is in poly1.
+ *
+ *	We assume that Poly1 and Poly2 are primitive and all coefficients are
+ *	integers.
+ *
+ *	See Knuth vol 2, page 407.
+ */
 
 WORD *PolyPseudoRem1 BARG2(WORD *,Poly1,WORD *,Poly2)
 {
@@ -3750,13 +3780,14 @@ calledfrom:
 /*
   	#] PolyPseudoRem1 : 
   	#[ PolyRatFunMul :
-
-	Looks for multiple occurrences of the PolyRatFun in the given term.
-	If it finds them it multiplies their contents. In the end there should
-	be at most a single PolyRatFun left.
-	Routine is called only when AR.PolyFunType == 2, hence when we have the
-	PolyRatFun.
 */
+/**
+ *	Looks for multiple occurrences of the PolyRatFun in the given term.
+ *	If it finds them it multiplies their contents. In the end there should
+ *	be at most a single PolyRatFun left.
+ *	Routine is called only when AR.PolyFunType == 2, hence when we have the
+ *	PolyRatFun.
+ */
 
 WORD PolyRatFunMul BARG1(WORD *,term)
 {
@@ -3965,15 +3996,16 @@ tryothert2:;
 /*
   	#] PolyRatFunMul : 
   	#[ InvertModular :
-
-	Determines the number y with the property that x*y = 1 modulus m
-	m is supposed to be prime.
-	This is done by the extended Euclidean algorithm.
-	If a*x+b*m = 1  (and 1 is the gcd of x and m because m is prime)
-	then a*x = 1 mod m and hence y = a.
-	Set m = 0*x+1*m = a1*x+b1*m
-	    x = 1*x+0*m = a2*x+b2*m
 */
+/**
+ *	Determines the number y with the property that x*y = 1 modulus m
+ *	m is supposed to be prime.
+ *	This is done by the extended Euclidean algorithm.
+ *	If a*x+b*m = 1  (and 1 is the gcd of x and m because m is prime)
+ *	then a*x = 1 mod m and hence y = a.
+ *	Set m = 0*x+1*m = a1*x+b1*m
+ *	    x = 1*x+0*m = a2*x+b2*m
+ */
 
 WORD InvertModular ARG2(WORD,xx,WORD,m)
 {
@@ -3996,10 +4028,11 @@ WORD InvertModular ARG2(WORD,xx,WORD,m)
 /*
   	#] InvertModular : 
   	#[ InvertLongModular :
-
-	Does the extended GCD calculation with the Long integer a and the WORD m.
-	Returns a^-1 mod m and b becomes m^-1 mod a
 */
+/**
+ *	Does the extended GCD calculation with the Long integer a and the WORD m.
+ *	Returns a^-1 mod m and b becomes m^-1 mod a
+ */
 
 WORD InvertLongModular BARG5(UWORD *,a,WORD,na,WORD,m,UWORD *,b,WORD *,nb)
 {
@@ -4073,18 +4106,19 @@ WORD InvertLongModular BARG5(UWORD *,a,WORD,na,WORD,m,UWORD *,b,WORD *,nb)
 /*
   	#] InvertLongModular : 
   	#[ PolyModGCD :
-
-	Gets two polynomials of which the coefficients have been taken modulus
-	a prime number.
-	It returns the GCD modulus this number.
-	The routine is destructive in the sense that the input polynomials
-	are overwritten. The output is in Poly1.
-	The algorithm is for dense polynomials.
-	The polynomials are represented like the Long numbers are as an array
-	of WORDs, the first of which is the coefficient of the zero power, etc.
-	Note that because the output is at most as long as the shortest input
-	we never have allocation problems.
 */
+/**
+ *	Gets two polynomials of which the coefficients have been taken modulus
+ *	a prime number.
+ *	It returns the GCD modulus this number.
+ *	The routine is destructive in the sense that the input polynomials
+ *	are overwritten. The output is in Poly1.
+ *	The algorithm is for dense polynomials.
+ *	The polynomials are represented like the Long numbers are as an array
+ *	of WORDs, the first of which is the coefficient of the zero power, etc.
+ *	Note that because the output is at most as long as the shortest input
+ *	we never have allocation problems.
+ */
 
 int PolyModGCD ARG2(POLYMOD *,Poly1,POLYMOD *,Poly2)
 {
@@ -4142,13 +4176,14 @@ relativeprime:
 /*
   	#] PolyModGCD : 
   	#[ PolyConvertToModulus :
-
-	Input: a polynomial and a prime number that fits inside a single word.
-	Output: a polynomial in modulus notation in which all coefficients
-	are taken modulus prime.
-	Output notation: array of numbers: coefs[pow] = coef%prime.
-	The input polynomial must have integer coefficients and be primitive.
 */
+/**
+ *	Input: a polynomial and a prime number that fits inside a single word.
+ *	Output: a polynomial in modulus notation in which all coefficients
+ *	are taken modulus prime.
+ *	Output notation: array of numbers: coefs[pow] = coef%prime.
+ *	The input polynomial must have integer coefficients and be primitive.
+ */
 
 int PolyConvertToModulus ARG3(WORD *,PolyIn,POLYMOD *,PolyOut,WORD,prime)
 {
@@ -4176,12 +4211,13 @@ int PolyConvertToModulus ARG3(WORD *,PolyIn,POLYMOD *,PolyOut,WORD,prime)
 /*
   	#] PolyConvertToModulus : 
   	#[ PolyConvertFromModulus :
-
-	Input: a polynomial in modulus notation.
-	Output: a polynomial in regular notation.
-	Note that we convert the coefficients to the range -prime/2,...,prime/2
-	We also input the future leading coefficient at lgcd
 */
+/**
+ *	Input: a polynomial in modulus notation.
+ *	Output: a polynomial in regular notation.
+ *	Note that we convert the coefficients to the range -prime/2,...,prime/2
+ *	We also input the future leading coefficient at lgcd
+ */
 
 WORD *PolyConvertFromModulus BARG2(POLYMOD *,PolyIn,WORD,lgcd)
 {
@@ -4227,27 +4263,28 @@ WORD *PolyConvertFromModulus BARG2(POLYMOD *,PolyIn,WORD,lgcd)
 /*
   	#] PolyConvertFromModulus : 
   	#[ PolyChineseRemainder :
-
-	Combines two polynomials using the Chinese remainder theorem.
-	Poly1 has coefficients modulus the (long integer) mod1 with size nmod1
-	Poly2 has coefficients modulus the (long integer) mod2 with size nmod2
-	The output polynomial then has coefficients modulus mod1 * mod2.
-
-	One of the special problems is what to do with a constant polynomial.
-	We have set that arbitrarily to one.
-	The same holds for polynomials in which the leading term is missing.
-	We have normalized them to one in their (apparently sub)leading term!
-
-	In first instance it seems better to refuse polynomials in which the
-	leading term is missing.
-
-	Chinese remainder:
-		A%(m1*m2) = a1*m1+r1
-		A%(m1*m2) = a2*m2+r2
-	Compute n1 such that (n1*m1)%m2 is one
-	Compute n2 such that (n2*m2)%m1 is one
-	Then (r1*n2*m2+r2*n1*m1)%(m1*m2) is A%(m1*m2)
 */
+/**
+ *	Combines two polynomials using the Chinese remainder theorem.
+ *	Poly1 has coefficients modulus the (long integer) mod1 with size nmod1
+ *	Poly2 has coefficients modulus the (long integer) mod2 with size nmod2
+ *	The output polynomial then has coefficients modulus mod1 * mod2.
+ *
+ *	One of the special problems is what to do with a constant polynomial.
+ *	We have set that arbitrarily to one.
+ *	The same holds for polynomials in which the leading term is missing.
+ *	We have normalized them to one in their (apparently sub)leading term!
+ *
+ *	In first instance it seems better to refuse polynomials in which the
+ *	leading term is missing.
+ *
+ *	Chinese remainder:
+ *		A%(m1*m2) = a1*m1+r1
+ *		A%(m1*m2) = a2*m2+r2
+ *	Compute n1 such that (n1*m1)%m2 is one
+ *	Compute n2 such that (n2*m2)%m1 is one
+ *	Then (r1*n2*m2+r2*n1*m1)%(m1*m2) is A%(m1*m2)
+ */
 
 WORD *PolyChineseRemainder BARG5(WORD *,Poly1,WORD *,Poly2,WORD *,mod1,WORD,nmod1,WORD ,mod2)
 {
@@ -4388,17 +4425,18 @@ calledfrom:;
 /*
   	#] PolyChineseRemainder : 
   	#[ PolyHenselUni :
-
-	Routine does a Hensel lifting of two univariate polynomials in modular
-	notation to two polynomials in regular notation.
-	The lifting is for a = u*w => Prod = Poly1*Poly2
-	We start with u(1),w(1) in which u(1)=u%p and w(1)=w%p
-	Input: a,u(1),w(1)
-	Return: u,w in which u sits at AT.WorkPointer and w at the return value.
-	If there is no solution (because u,w aren't relative prime for instance)
-	the return value is zero.
-	We assume that at the moment of starting Prod is content free.
 */
+/**
+ *	Routine does a Hensel lifting of two univariate polynomials in modular
+ *	notation to two polynomials in regular notation.
+ *	The lifting is for a = u*w => Prod = Poly1*Poly2
+ *	We start with u(1),w(1) in which u(1)=u%p and w(1)=w%p
+ *	Input: a,u(1),w(1)
+ *	Return: u,w in which u sits at AT.WorkPointer and w at the return value.
+ *	If there is no solution (because u,w aren't relative prime for instance)
+ *	the return value is zero.
+ *	We assume that at the moment of starting Prod is content free.
+ */
 
 #ifdef XXXXXX
 WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
@@ -4531,19 +4569,20 @@ WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
 #endif
 
 /*
-  	#] PolyHenselUni :
+  	#] PolyHenselUni : 
   	#[ NextPrime :
-
-	Gives the next prime number in the list of prime numbers.
-	Returns the number of bits this covers.
-
-	If the list isn't long enough we expand it.
-	For ease in ParForm and because these lists shouldn't be very big
-	we let each worker keep its own list.
-
-	The list is cut off at MAXPOWER, because we don't want to get into
-	trouble that the power of a variable gets larger than the prime number.
 */
+/**
+ *	Gives the next prime number in the list of prime numbers.
+ *	Returns the number of bits this covers.
+ *
+ *	If the list isn't long enough we expand it.
+ *	For ease in ParForm and because these lists shouldn't be very big
+ *	we let each worker keep its own list.
+ *
+ *	The list is cut off at MAXPOWER, because we don't want to get into
+ *	trouble that the power of a variable gets larger than the prime number.
+ */
 
 WORD NextPrime BARG1(WORD,num)
 {
@@ -4594,9 +4633,10 @@ nexti:;
 /*
   	#] NextPrime : 
   	#[ ModShortPrime :
-
-	Takes the Long integer a and determines the remainder when divided by x.
 */
+/**
+ *	Takes the Long integer a and determines the remainder when divided by x.
+ */
 
 WORD ModShortPrime ARG3(UWORD *,a,WORD,na,WORD,x)
 {
@@ -4611,10 +4651,11 @@ WORD ModShortPrime ARG3(UWORD *,a,WORD,na,WORD,x)
 /*
   	#] ModShortPrime : 
   	#[ AllocPolyModCoefs :
-
-	Allocates an array for the coefficients of a polynomial in mod notation.
-	It can also update an existing allocation.
 */
+/**
+ *	Allocates an array for the coefficients of a polynomial in mod notation.
+ *	It can also update an existing allocation.
+ */
 
 int AllocPolyModCoefs ARG2(POLYMOD *,polymod,WORD,size)
 {
@@ -4647,12 +4688,13 @@ int AllocPolyModCoefs ARG2(POLYMOD *,polymod,WORD,size)
 /*
   	#] AllocPolyModCoefs : 
   	#[ AccumTermGCD :
-
-	Makes the GCD of term1 and term2 and puts the result back in term1.
-	For the coefficients we can use AccumGCD, but for the symbols we
-	have to do some extra work. Of course often there are no symbols
-	in which case there isn't much extra work.
 */
+/**
+ *	Makes the GCD of term1 and term2 and puts the result back in term1.
+ *	For the coefficients we can use AccumGCD, but for the symbols we
+ *	have to do some extra work. Of course often there are no symbols
+ *	in which case there isn't much extra work.
+ */
 
 int AccumTermGCD ARG2(WORD *,term1,WORD *,term2)
 {
@@ -4715,16 +4757,17 @@ nexti:;
 /*
   	#] AccumTermGCD : 
   	#[ PolyTakeSqrt :
-
-	Takes the square root of a polynomial if it exists.
-	If the square root exists the return value is 0 and the root is at
-	the position that AT.WorkPointer had at the moment of the call.
-	The new value of AT.WorkPointer will be after the root.
-	If the root doesn't exist the return value is -1.
-
-	Remark: We take the equivalent of the positive square root.
-	No funnies with two solutions!!!!
 */
+/**
+ *	Takes the square root of a polynomial if it exists.
+ *	If the square root exists the return value is 0 and the root is at
+ *	the position that AT.WorkPointer had at the moment of the call.
+ *	The new value of AT.WorkPointer will be after the root.
+ *	If the root doesn't exist the return value is -1.
+ *
+ *	Remark: We take the equivalent of the positive square root.
+ *	No funnies with two solutions!!!!
+ */
 
 int PolyTakeSqrt BARG1(WORD *,Poly)
 {
@@ -4860,13 +4903,14 @@ noroot:;
 /*
   	#] PolyTakeSqrt : 
   	#[ PolyTakeRoot :
-
-	Takes the n-th root of a polynomial if it exists.
-	If the n-th root exists the return value is 0 and the root is at
-	the position that AT.WorkPointer had at the moment of the call.
-	The new value of AT.WorkPointer will be after the root.
-	If the root doesn't exist the return value is -1.
 */
+/**
+ *	Takes the n-th root of a polynomial if it exists.
+ *	If the n-th root exists the return value is 0 and the root is at
+ *	the position that AT.WorkPointer had at the moment of the call.
+ *	The new value of AT.WorkPointer will be after the root.
+ *	If the root doesn't exist the return value is -1.
+ */
 
 int PolyTakeRoot BARG2(WORD *,Poly,WORD,n)
 {
@@ -5024,16 +5068,17 @@ noroot:;
   	#] PolyTakeRoot : 
   	#[ PolyMulti :
  		#[ PolyInterpolation :
-
-		Routine does one variable in the GCD calculation, using the
-		interpolation technique. This technique has a limited window of
-		applicability. One can work in either of two ways:
-		A: Everything is done modular and reconstruction is afterwards.
-		B: We work over Z or even the rationals and leave the modular stuff
-		   to the univariate routine(s).
-		The last method is easier conceptually.
-		The first method has the problem of normalization.
 */
+/**
+ *		Routine does one variable in the GCD calculation, using the
+ *		interpolation technique. This technique has a limited window of
+ *		applicability. One can work in either of two ways:
+ *		A: Everything is done modular and reconstruction is afterwards.
+ *		B: We work over Z or even the rationals and leave the modular stuff
+ *		   to the univariate routine(s).
+ *		The last method is easier conceptually.
+ *		The first method has the problem of normalization.
+ */
 
 #ifdef XXXXXXX
 WORD *PolyInterpolation BARG3(WORD *,Poly1,WORD *,Poly2,WORD,numsym)
@@ -5086,22 +5131,23 @@ WORD *PolyInterpolation BARG3(WORD *,Poly1,WORD *,Poly2,WORD,numsym)
 /*
  		#] PolyInterpolation : 
  		#[ PolySubs :
-
-	Substitutes an integer value for the symbol indicated by numsym and
-	returns the new polynomial.
-	We assume that the symbol is the last in the list and hence that the
-	ordering of the terms isn't affected. This way we won't need the sort
-	routines.
-
-	We need some scratch arrays for the arithmetic.
-	We can use the ones of either the DivLong or the GcdLong routines in reken.c
-
-	The main reason the routine is rather lengthy is that there are a number
-	of cases. It could be done simpler, but it would be slower.
-
-	Another way of improving the speed could be to tabulate the powers,
-	but this could take some space when we have high powers.
 */
+/**
+ *	Substitutes an integer value for the symbol indicated by numsym and
+ *	returns the new polynomial.
+ *	We assume that the symbol is the last in the list and hence that the
+ *	ordering of the terms isn't affected. This way we won't need the sort
+ *	routines.
+ *
+ *	We need some scratch arrays for the arithmetic.
+ *	We can use the ones of either the DivLong or the GcdLong routines in reken.c
+ *
+ *	The main reason the routine is rather lengthy is that there are a number
+ *	of cases. It could be done simpler, but it would be slower.
+ *
+ *	Another way of improving the speed could be to tabulate the powers,
+ *	but this could take some space when we have high powers.
+ */
 
 WORD *PolySubs BARG3(WORD *,Poly,WORD,value,WORD,numsym)
 {
@@ -5354,49 +5400,50 @@ calledfrom:;
 /*
  		#] PolySubs : 
  		#[ PolyNewton :
-
-	Puts a number of polynomials together in a Newton interpolation
-	reconstruction. We assume that the polynomials have been evaluated
-	in the points 0,1,...,num and out of that we reconstruct the powers
-	of the numsym-th symbol.
-
-	The algorith used is the Newton algorithm:
-	P(x) = a0 + a1*(x-x0) + a2*(x-x0)*(x-x1) + ... + a(n-1)*(x-x0)*...*(x-x(n-2))
-	We have to determine the ai from the P(xi)
-
-		a0 = P(x0) = P(0)
-		a1 = (P(1)-a0)/(1-0)
-		a2 = (P(2)-a0-a1*(2-0))/((2-0)*(2-1))
-		   = (P(2)-a0)/2! - a1/1!
-		a3 = (P(3)-a0-a1*(3-0)-a2*(3-0)*(3-1))/((3-0)*(3-1)*(3-2))
-		   = (P(3)-a0)/3! - a1/2! - a2/1!
-		a4 = (P(4)-a0)/4! - a1/3! - a2/2! - a3/1!
-		etc.
-
-		a0 = P(0)
-		a1 = (P(1)-P(0))/1!
-		a2 = (P(2)-2*P(1)+P(0))/2!
-		a3 = (P(3)-3*P(2)+3*P(1)-P(0))/3!
-		a4 = (P(4)-4*P(3)+6*P(2)-4*P(1)+P(0))/4!
-
-		an = sum_(i,0,n,P(i)*sign_(n-i)*binom_(n,i))/n!;
-		   = sum_(i,0,n,P(i)*sign_(n-i)*invfac_(n-i)*invfac_(i));
-
-	We use these points because they give a rather easy representation
-	with the binomials or the two factorials in the denominator.
-
-	Considering the nature of the problem, the answer is supposed to
-	be over the integers. It seems best to select those formulas that
-	manage to avoid the use of fractions. This would for instance be the
-	first formula for an as the binomials are integers and the division by
-	n! can be done after adding all terms.
-
-	The way to put together the final answer is with a Horner scheme:
-	P(x) = a0+(x-x0)*(a1+(x-x1)*(a2+(x-x2)*(a3+.... +(x-x(n-1))*(an)...)))
-	     = a0+x*(a1+(x-1)*(a2+(x-2)*(a3+...+(x-(n-1))*(an)...)))
-	and the art is to try to avoid the sorting routines.
-	a(m) = sum_(i,0,m,P(m-i)*sign_(i)*binom_(m,i))/m!;
 */
+/**
+ *	Puts a number of polynomials together in a Newton interpolation
+ *	reconstruction. We assume that the polynomials have been evaluated
+ *	in the points 0,1,...,num and out of that we reconstruct the powers
+ *	of the numsym-th symbol.
+ *
+ *	The algorith used is the Newton algorithm:
+ *	P(x) = a0 + a1*(x-x0) + a2*(x-x0)*(x-x1) + ... + a(n-1)*(x-x0)*...*(x-x(n-2))
+ *	We have to determine the ai from the P(xi)
+ *
+ *		a0 = P(x0) = P(0)
+ *		a1 = (P(1)-a0)/(1-0)
+ *		a2 = (P(2)-a0-a1*(2-0))/((2-0)*(2-1))
+ *		   = (P(2)-a0)/2! - a1/1!
+ *		a3 = (P(3)-a0-a1*(3-0)-a2*(3-0)*(3-1))/((3-0)*(3-1)*(3-2))
+ *		   = (P(3)-a0)/3! - a1/2! - a2/1!
+ *		a4 = (P(4)-a0)/4! - a1/3! - a2/2! - a3/1!
+ *		etc.
+ *
+ *		a0 = P(0)
+ *		a1 = (P(1)-P(0))/1!
+ *		a2 = (P(2)-2*P(1)+P(0))/2!
+ *		a3 = (P(3)-3*P(2)+3*P(1)-P(0))/3!
+ *		a4 = (P(4)-4*P(3)+6*P(2)-4*P(1)+P(0))/4!
+ *
+ *		an = sum_(i,0,n,P(i)*sign_(n-i)*binom_(n,i))/n!;
+ *		   = sum_(i,0,n,P(i)*sign_(n-i)*invfac_(n-i)*invfac_(i));
+ *
+ *	We use these points because they give a rather easy representation
+ *	with the binomials or the two factorials in the denominator.
+ *
+ *	Considering the nature of the problem, the answer is supposed to
+ *	be over the integers. It seems best to select those formulas that
+ *	manage to avoid the use of fractions. This would for instance be the
+ *	first formula for an as the binomials are integers and the division by
+ *	n! can be done after adding all terms.
+ *
+ *	The way to put together the final answer is with a Horner scheme:
+ *	P(x) = a0+(x-x0)*(a1+(x-x1)*(a2+(x-x2)*(a3+.... +(x-x(n-1))*(an)...)))
+ *	     = a0+x*(a1+(x-1)*(a2+(x-2)*(a3+...+(x-(n-1))*(an)...)))
+ *	and the art is to try to avoid the sorting routines.
+ *	a(m) = sum_(i,0,m,P(m-i)*sign_(i)*binom_(m,i))/m!;
+ */
 
 WORD *PolyNewton BARG3(WORD **,Polynomials,WORD,num,WORD,numsym)
 {
@@ -5495,13 +5542,14 @@ WORD *PolyNewton BARG3(WORD **,Polynomials,WORD,num,WORD,numsym)
 /*
  		#] PolyNewton : 
  		#[ PolyGetNewtonCoef :
-
-	Computes the polynomial
-	a(num) = sum_(n,0,num,P(num-n)*sign_(n)*binom_(num,n))/num!;
-	It is assumed that after addition everything can indeed be divided by num!
-
-	Note: This can be more efficient if we tabulate the binomials.
 */
+/**
+ *	Computes the polynomial
+ *	a(num) = sum_(n,0,num,P(num-n)*sign_(n)*binom_(num,n))/num!;
+ *	It is assumed that after addition everything can indeed be divided by num!
+ *
+ *	Note: This can be more efficient if we tabulate the binomials.
+ */
 
 WORD *PolyGetNewtonCoef BARG2(WORD **,Polynomials,WORD,num)
 {
@@ -5589,42 +5637,43 @@ calledfrom:;
 /*
  		#] PolyGetNewtonCoef : 
  		#[ PolyGetGCDPowers :
-
-		Routine gets two multivariate polynomials and determines upper bounds
-		for the powers of the individual variables in the GCD.
-		The answer is gives as an object of type SYMBOL in the workspace.
-		We assume that for each variable there is a term without it
-		(which means that the minimum power of each variable is zero).
-		plist1 and plist2 contain lists of the maximum powers of the variables
-		in the for of objects of type SYMBOL. They are followed each by a
-		single number that gives the maximum dimension of the polynomials.
-		Method used:
-		For each of the variables:
-		1: substitute values for all other variables in such a way that the
-		   lead and trailing coefficients are non-zero.
-		   Do this modulus a prime number.
-		2: compute the GCD.
-		3: Worry about unlucky homomorphisms.
-
-		Assume that originally we are working over the integers.
-
-		Note: The information we collect here can be used very profitably
-		in the later stages of the GCD calculations.
-
-		Other assumption:
-		The lists of variables are matching (except for the (positive) powers).
-
-		Note: We can only obtain upper bounds. Example:
-			x^2 + x*y - 1 and (x-1)*(x+2+y) in y=0 would give (x-1) and not 1.
-		This (and the unlucky homomorphisms) is why we try several points.
-		We try up to MINIMUMSUCCESRATE points.
-		There is no danger in overestimating, except for that we will do
-		too much work later and our conclusions, based on these results,
-		might not be as complete as we would want.
-
-		If the points in PolyGetConfig are selected carefully it should
-		be ***extremely*** unlikely that we don't get the proper values.
 */
+/**
+ *		Routine gets two multivariate polynomials and determines upper bounds
+ *		for the powers of the individual variables in the GCD.
+ *		The answer is gives as an object of type SYMBOL in the workspace.
+ *		We assume that for each variable there is a term without it
+ *		(which means that the minimum power of each variable is zero).
+ *		plist1 and plist2 contain lists of the maximum powers of the variables
+ *		in the for of objects of type SYMBOL. They are followed each by a
+ *		single number that gives the maximum dimension of the polynomials.
+ *		Method used:
+ *		For each of the variables:
+ *		1: substitute values for all other variables in such a way that the
+ *		   lead and trailing coefficients are non-zero.
+ *		   Do this modulus a prime number.
+ *		2: compute the GCD.
+ *		3: Worry about unlucky homomorphisms.
+ *
+ *		Assume that originally we are working over the integers.
+ *
+ *		Note: The information we collect here can be used very profitably
+ *		in the later stages of the GCD calculations.
+ *
+ *		Other assumption:
+ *		The lists of variables are matching (except for the (positive) powers).
+ *
+ *		Note: We can only obtain upper bounds. Example:
+ *			x^2 + x*y - 1 and (x-1)*(x+2+y) in y=0 would give (x-1) and not 1.
+ *		This (and the unlucky homomorphisms) is why we try several points.
+ *		We try up to MINIMUMSUCCESRATE points.
+ *		There is no danger in overestimating, except for that we will do
+ *		too much work later and our conclusions, based on these results,
+ *		might not be as complete as we would want.
+ *
+ *		If the points in PolyGetConfig are selected carefully it should
+ *		be ***extremely*** unlikely that we don't get the proper values.
+ */
 
 #define MINIMUMSUCCESRATE 3
 
@@ -5714,27 +5763,28 @@ WORD *PolyGetGCDPowers BARG4(WORD *,Poly1,WORD *,Poly2,WORD *,plist1,WORD *,plis
 /*
  		#] PolyGetGCDPowers : 
  		#[ PolyModSubsVector :
-
-		Poly:   the polynomial.
-		values: the array with values.
-		num:    number of variables.
-		prime:  we will work modulus this prime number.
-		numsym: this symbol should not be replaced.
-		maxi:   maximum power of numsym
-		pm:     we want the result in this object
-
-		if numsym is negative we try to determine the dimension.
-		Hence each variable is replaced by x1*value rather than by value.
-
-		When the dimension is set up, it may happen that there is no
-		constant term. In that case we make a correction by shifting the
-		polynomial down by enough powers to force there to be a constant term.
-		The number of powers by which we have to shift will then be
-		the (positive) returned value. We have to test though that the
-		very lowest terms didn't cancel or vanish due to the modular stuff.
-
-		If the result isn't 'complete' we return -1.
 */
+/**
+ *		Poly:   the polynomial.
+ *		values: the array with values.
+ *		num:    number of variables.
+ *		prime:  we will work modulus this prime number.
+ *		numsym: this symbol should not be replaced.
+ *		maxi:   maximum power of numsym
+ *		pm:     we want the result in this object
+ *
+ *		if numsym is negative we try to determine the dimension.
+ *		Hence each variable is replaced by x1*value rather than by value.
+ *
+ *		When the dimension is set up, it may happen that there is no
+ *		constant term. In that case we make a correction by shifting the
+ *		polynomial down by enough powers to force there to be a constant term.
+ *		The number of powers by which we have to shift will then be
+ *		the (positive) returned value. We have to test though that the
+ *		very lowest terms didn't cancel or vanish due to the modular stuff.
+ *
+ *		If the result isn't 'complete' we return -1.
+ */
 
 WORD PolyModSubsVector BARG7(WORD *,Poly,WORD *,values,WORD,num,WORD,prime,WORD,numsym,WORD,maxi,POLYMOD *,pm)
 {
@@ -5823,9 +5873,10 @@ zerovalue:;
 /*
  		#] PolyModSubsVector : 
  		#[ ModPow :
-
-		Calculates ( num to the power pow ) % prime;
 */
+/**
+ *		Calculates ( num to the power pow ) % prime;
+ */
 
 WORD ModPow ARG3(WORD,num,WORD,pow,WORD,prime)
 {
@@ -5862,11 +5913,12 @@ WORD ModPow ARG3(WORD,num,WORD,pow,WORD,prime)
 /*
  		#] ModPow : 
  		#[ PolyGetSymbols :
-
-		Returns an object of type -1. It contains triplets which consists of
-		the number of a symbol, its maximum power and its minimum power.
-		The value of *maxi is the maximum 'dimension' of the polynomial.
 */
+/**
+ *		Returns an object of type -1. It contains triplets which consists of
+ *		the number of a symbol, its maximum power and its minimum power.
+ *		The value of *maxi is the maximum 'dimension' of the polynomial.
+ */
 
 WORD *PolyGetSymbols BARG2(WORD *,Poly,int *,maxi)
 {
@@ -5952,16 +6004,17 @@ WORD *PolyGetSymbols BARG2(WORD *,Poly,int *,maxi)
 /*
  		#] PolyGetSymbols : 
  		#[ PolyGetConfig :
-
-		This routine should give an array of values to be substituted.
-		numvars tells how many dimensions we have.
-
-		If we can do this right we can guarantee the maximum powers
-		of the variables in the routine PolyGetGCDPowers.
-
-		This may need some study!
-		AT the moment we use a decent random number generator.
 */
+/**
+ *		This routine should give an array of values to be substituted.
+ *		numvars tells how many dimensions we have.
+ *
+ *		If we can do this right we can guarantee the maximum powers
+ *		of the variables in the routine PolyGetGCDPowers.
+ *
+ *		This may need some study!
+ *		AT the moment we use a decent random number generator.
+ */
 
 WORD *PolyGetConfig BARG1(WORD,numvars)
 {

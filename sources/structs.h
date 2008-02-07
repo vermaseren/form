@@ -11,11 +11,23 @@
   	#[ sav&store :
 */
 
+/**
+ *
+ */
+
 typedef struct PoSiTiOn {
 	off_t p1;
 } POSITION;
+
+/**
+ *
+ */
  
 #define INFILEINDX 15
+
+/**
+ *
+ */
 
 typedef struct {
 	POSITION	nameposition;	/* Position of the name of the expression */
@@ -24,6 +36,10 @@ typedef struct {
 	POSITION	exprposition;	/* Position of the expression itself */
 /*	POSITION	exprlength;		   Length of the expression itself */
 } INDXENTRY;
+
+/**
+ *
+ */
 
 typedef struct {
 	POSITION	nextindex;			/* Position of next FILEINDX if any */
@@ -110,6 +126,10 @@ typedef struct FiLeInDeX {
 	SBYTE	empty[EMPTYININDEX];		/**< Padding to 512 bytes */
 } FILEINDEX;
 
+/**
+ *
+ */
+
 typedef struct FiLeDaTa {
 	FILEINDEX Index;
 	POSITION Fill;
@@ -119,11 +139,19 @@ typedef struct FiLeDaTa {
 	PADLONG(0,2,0);
 } FILEDATA;
 
+/**
+ *
+ */
+
 typedef struct VaRrEnUm {		/* Pointers to an array in which a */
 	WORD		*start;			/* binary search will be performed */
 	WORD		*lo;
 	WORD		*hi;
 } VARRENUM;
+
+/**
+ *
+ */
 
 typedef struct ReNuMbEr {
 	VARRENUM	symb;			/* First stage renumbering */
@@ -138,6 +166,10 @@ typedef struct ReNuMbEr {
 	PADPOINTER(0,0,0,0);
 } *RENUMBER;
 
+/**
+ *
+ */
+
 typedef struct {
 	WORD	nsymbols;			/* Number of symbols in the list */
 	WORD	nindices;			/* Number of indices in the list */
@@ -146,9 +178,16 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
+
+/**
+ *	Much information is stored in arrays of which we can double the size
+ *	if the array proves to be too small. Such arrays are controled by
+ *	a variable of type LIST. The routines that expand the lists are in the
+ *	file tools.c
+ */
 
 typedef struct {
 	void *lijst;
@@ -161,7 +200,12 @@ typedef struct {
 	int numclear;		/* Only for the clear instruction */
 	PADPOINTER(0,6,0,0);
 } LIST;
- 
+
+/**
+ *	The KEYWORD struct defines names of commands/statements and the routine
+ *	to be called when they are encountered by the compiler or preprocessor.
+ */
+
 typedef struct {
 	char *name;
 	TFUN func;
@@ -169,11 +213,23 @@ typedef struct {
 	int flags;
 } KEYWORD;
 
+/**
+ *	The names of variables are kept in an array. Elements of type NAMELIST
+ *	point to the names and tell us what these names corresponds to in
+ *	internal notation (type of the variable and its number)
+ */
+
 typedef struct NameLi {         /* For fast namesearching */
     WORD where;
     WORD type;
     WORD number;
 } NAMELIST;
+
+/**
+ *	The names of variables are kept in an array. Elements of type NAMENODE
+ *	define a tree (that is kept balanced) that make it easy and fast to
+ *	look for variables. See also NAMETREE
+ */
  
 typedef struct NaMeNode {
 	LONG name;
@@ -185,6 +241,13 @@ typedef struct NaMeNode {
 	WORD number;
 	PADLONG(0,6,0);
 } NAMENODE;
+
+/**
+ *	A struct of type NAMETREE controls a complete (balanced) tree of names
+ *	for the compiler. The compiler maintains several of such trees and the
+ *	system has been set up in such a way that one could define more of them
+ *	if we ever want to work with local name spaces.
+ */
 
 typedef struct NaMeTree {
 	NAMENODE *namenode;
@@ -203,6 +266,14 @@ typedef struct NaMeTree {
 	PADPOINTER(10,0,1,0);
 } NAMETREE;
 
+/**
+ *	The subexpressions in the compiler are kept track of in a (balanced) tree
+ *	to reduce the need for subexpressions and hence save much space in
+ *	large rhs expressions (like when we have xxxxxxx occurrences of objects
+ *	like f(x+1,x+1) in which each x+1 becomes a subexpression.
+ *	The struct that controls this tree is COMPTREE.
+ */
+
 typedef struct tree {
 	int parent;
 	int left;    /* left child (if not -1) */
@@ -210,12 +281,20 @@ typedef struct tree {
 	int value;   /* the object to be sorted and searched */
 	int blnce;   /* balance factor */
 } COMPTREE;
+
+/**
+ *
+ */
  
 typedef struct MiNmAx {
     WORD mini;          /* minimum value */
     WORD maxi;          /* maximum value */
     WORD size;          /* value of one unit in this position */
 } MINMAX;
+
+/**
+ *
+ */
  
 typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
 	POSITION start;				/* Place where bracket starts - start of expr */
@@ -223,6 +302,10 @@ typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
 	LONG bracket;				/* Offset of position in bracketbuffer */
 	PADPOINTER(1,0,0,0);
 } BRACKETINDEX;
+
+/**
+ *
+ */
 
 typedef struct BrAcKeTiNfO {
 	BRACKETINDEX *indexbuffer;
@@ -234,6 +317,10 @@ typedef struct BrAcKeTiNfO {
 	WORD SortType;				/* The sorting criterium used (like POWERFIRST etc) */
 	PADPOINTER(4,0,1,0);
 } BRACKETINFO;
+
+/**
+ *
+ */
  
 typedef struct TaBlEs {
     WORD    *tablepointers; /* start in tablepointers table */
@@ -271,6 +358,10 @@ typedef struct TaBlEs {
 	PADPOINTER(4,7,6,0);
 } *TABLES;
 
+/**
+ *
+ */
+
 typedef struct ExPrEsSiOn {
 	RENUMBER renum;			/* For Renumbering of global stored expressions */
 	BRACKETINFO *bracketinfo;
@@ -299,6 +390,10 @@ typedef struct ExPrEsSiOn {
 #endif
 } *EXPRESSIONS;
 
+/**
+ *
+ */
+
 typedef struct SyMbOl {			/* Don't change unless altering .sav too */
 	LONG	name;				/* Location in names buffer */
 	WORD	minpower;			/* Minimum power admissible */
@@ -310,6 +405,10 @@ typedef struct SyMbOl {			/* Don't change unless altering .sav too */
 	WORD	namesize;
 	PADLONG(0,7,0);
 } *SYMBOLS;
+
+/**
+ *
+ */
 
 typedef struct InDeX {			/* Don't change unless altering .sav too */
 	LONG	name;				/* Location in names buffer */
@@ -323,6 +422,10 @@ typedef struct InDeX {			/* Don't change unless altering .sav too */
 	PADLONG(0,7,0);
 } *INDICES;
 
+/**
+ *
+ */
+
 typedef struct VeCtOr {			/* Don't change unless altering .sav too */
 	LONG	name;				/* Location in names buffer */
 	WORD	complex;			/* Properties under complex conjugation */
@@ -332,6 +435,10 @@ typedef struct VeCtOr {			/* Don't change unless altering .sav too */
 	WORD	namesize;
 	PADLONG(0,5,0);
 } *VECTORS;
+
+/**
+ *
+ */
 
 typedef struct FuNcTiOn {		/* Don't change unless altering .sav too */
 	TABLES	tabl;				/* For if redefined as table */
@@ -348,6 +455,10 @@ typedef struct FuNcTiOn {		/* Don't change unless altering .sav too */
 	PADPOINTER(2,0,8,0);
 } *FUNCTIONS;
 
+/**
+ *
+ */
+
 typedef struct SeTs {
 	LONG	name;				/* Location in names buffer */
 	WORD	type;				/* Symbol, vector, index or function */
@@ -357,6 +468,10 @@ typedef struct SeTs {
 	WORD	namesize;
 	PADLONG(1,5,0);
 } *SETS;
+
+/**
+ *
+ */
 
 typedef struct DuBiOuS {		/* Undeclared objects. Just for compiler. */
 	LONG	name;				/* Location in names buffer */
@@ -382,6 +497,10 @@ typedef struct DoLlArS {
 	PADPOINTER(2,0,6,0);
 } *DOLLARS;
 
+/**
+ *
+ */
+
 typedef struct MoDoPtDoLlArS {
 	WORD	number;
 	WORD	type;
@@ -390,16 +509,28 @@ typedef struct MoDoPtDoLlArS {
 #endif
 } MODOPTDOLLAR;
 
+/**
+ *
+ */
+
 typedef struct fixedset {
 	char *name;
 	char *description;
 	int type;
 } FIXEDSET;
 
+/**
+ *
+ */
+
 typedef struct TaBlEbAsEsUbInDeX {
 	POSITION where;
 	LONG size;
 } TABLEBASESUBINDEX;
+
+/**
+ *
+ */
 
 typedef struct TaBlEbAsE {
 	UBYTE *name;
@@ -409,7 +540,13 @@ typedef struct TaBlEbAsE {
 	POSITION current;
 	int numtables;
 } TABLEBASE;
- 
+
+/**
+ *	The struct FUN_INFO is used for information about functions in the file
+ *	smart.c which is supposed to intelligently look for patterns in
+ *	complicated wildcard situations involving symmetric functions.
+ */
+
 typedef struct {
 	WORD *location;
 	int numargs;
@@ -421,10 +558,21 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
- 
+
+/**
+ *	The type FILEHANDLE is the struct that controls all relevant information
+ *	of a file, whether it is open or not. The file may even not yet exist.
+ *	There is a system of caches (PObuffer) and as long as the information
+ *	to be written still fits inside the cache the file may never be
+ *	created. There are variables that can store information about different
+ *	types of files, like scratch files or sort files.
+ *	Depending on what is available in the system we may also have information
+ *	about gzip compression (currently sort file only) or locks (TFORM).
+ */
+
 typedef struct FiLe {
     WORD *PObuffer;             /* Address of the intermediate buffer */
     WORD *POstop;               /* End of the buffer */
@@ -463,6 +611,15 @@ typedef struct FiLe {
 	PADPOINTER(3,2,1,0);
 #endif
 } FILEHANDLE;
+
+/**
+ *	Input is read from 'streams' which are represented by objects of type
+ *	STREAM. A stream can be a file, a do-loop, a procedure, the string value
+ *	of a preprocessor variable .....
+ *	When a new stream is opened we have to keep information about where
+ *	to fall back in the parent stream to allow this to happen even in the
+ *	middle of reading names etc as would be the case with a`i'b
+ */
  
 typedef struct StreaM {
 	UBYTE *buffer;
@@ -497,6 +654,15 @@ typedef struct StreaM {
   	#[ Traces :
 */
 
+/**
+ *	The struct TRACES keeps track of the progress during the expansion
+ *	of a 4-dimensional trace. Each time a term gets generated the expansion
+ *	tree continues in the next statement. When it returns it has to know
+ *	where to continue. The 4-dimensional traces are more complicated
+ *	than the n-dimensional traces (see TRACEN) because of the extra tricks
+ *	that can be used. They are responsible for the shorter final expressions.
+ */
+
 typedef struct TrAcEs {			/* For computing 4 dimensional traces */
 	WORD		*accu;		/* NUMBER * 2 */
 	WORD		*accup;
@@ -523,6 +689,13 @@ typedef struct TrAcEs {			/* For computing 4 dimensional traces */
 	PADPOINTER(0,0,19,0);
 } TRACES;
 
+/**
+ *	The struct TRACEN keeps track of the progress during the expansion
+ *	of a 4-dimensional trace. Each time a term gets generated the expansion
+ *	tree continues in the next statement. When it returns it has to know
+ *	where to continue.
+ */
+
 typedef struct TrAcEn {			/* For computing n dimensional traces */
 	WORD		*accu;		/* NUMBER */
 	WORD		*accup;
@@ -538,6 +711,10 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
   	#] Traces : 
   	#[ Preprocessor :
 */
+
+/**
+ *	An element of the type PREVAR is needed for each preprocessor variable.
+ */
  
 typedef struct pReVaR {
 	UBYTE *name;
@@ -548,11 +725,20 @@ typedef struct pReVaR {
 	PADPOINTER(0,2,0,0);
 } PREVAR;
 
+/**
+ *	Used by the preprocessor to load the contents of a doloop or a procedure.
+ *	The struct PRELOAD is used both in the DOLOOP and PROCEDURE structs.
+ */
+
 typedef struct {
 	UBYTE	*buffer;
     LONG	size;
 	PADPOINTER(1,0,0,0);
 } PRELOAD;
+
+/**
+ *	An element of the type PROCEDURE is needed for each procedure in the system.
+ */
 
 typedef struct {
 	PRELOAD p;
@@ -560,6 +746,13 @@ typedef struct {
 	int		loadmode;
 	PADPOINTER(0,1,0,0);
 } PROCEDURE;
+
+/**
+ *	Each preprocessor do loop has a struct of type DOLOOP to keep track
+ *	of all relevant parameters like where the beginning of the loop is,
+ *	what the boundaries, increment and value of the loop parameter are, etc.
+ *	Also we keep the whole loop inside a buffer of type PRELOAD
+ */
 
 typedef struct DoLoOp {
 	PRELOAD p;			/* size, name and buffer */
@@ -578,6 +771,13 @@ typedef struct DoLoOp {
 	PADPOINTER(4,4,0,0);
 } DOLOOP;
 
+/**
+ *	The struct bit_field is used by set_in, set_set, set_del and set_sub.
+ *	They in turn are used in pre.c to toggle bits that indicate whether
+ *	a character can be used as a separator of function arguments.
+ *	This facility is used in the communication with external channels.
+ */
+
 struct  bit_field {	/* Assume 8 bits per byte */
     UINT bit_0        : 1;
     UINT bit_1        : 1;
@@ -589,22 +789,40 @@ struct  bit_field {	/* Assume 8 bits per byte */
     UINT bit_7        : 1;
 };
 
+/**
+ *	Used in set_in, set_set, set_del and set_sub.
+ */
+
 typedef struct bit_field set_of_char[32];
+
+/**
+ *	Used in set_in, set_set, set_del and set_sub.
+ */
+
 typedef struct bit_field *one_byte;
 
-typedef struct{
+/**
+ *	The struct HANDLERS is used in the communication with external channels.
+ */
+
+typedef struct {
 	WORD newlogonly;
 	WORD newhandle;
 	WORD oldhandle;
 	WORD oldlogonly;
 	WORD oldprinttype;
 	WORD oldsilent;
-}HANDLERS;
+} HANDLERS;
 
 /*
   	#] Preprocessor : 
   	#[ Varia :
 */
+
+/**
+ *	The CBUF struct is used by the compiler. It is a compiler buffer of which
+ *	since version 3.0 there can be many.
+ */
 
 typedef struct CbUf {
 	WORD *Buffer;
@@ -629,11 +847,24 @@ typedef struct CbUf {
 	PADPOINTER(1,9,0,0);
 } CBUF;
 
+/**
+ *	When we read input from text files we have to remember not only their
+ *	handle but also their name. This is needed for error messages.
+ *	Hence we call such a file a channel and reserve a struct of type
+ *	CHANNEL to allow to lay this link.
+ */
+
 typedef struct ChAnNeL {
 	char *name;
 	int handle;
 	PADPOINTER(0,1,0,0);
 } CHANNEL;
+
+/**
+ *	Each setup parameter has one element of the struct SETUPPARAMETERS
+ *	assigned to it. By binary search in the array of them we can then
+ *	locate the proper element by name.
+ */
  
 typedef struct {
 	UBYTE *parameter;
@@ -642,11 +873,25 @@ typedef struct {
 	long value;
 } SETUPPARAMETERS;
 
+/**
+ *	The NESTING struct is used when we enter the argument of functions and
+ *	there is the possibility that we have to change something there.
+ *	Because functions can be nested we have to keep track of all levels
+ *	of functions in case we have to move the outer layers to make room
+ *	for a larger function argument.
+ */
+
 typedef struct NeStInG {
 	WORD *termsize;
 	WORD *funsize;
 	WORD *argsize;
 } *NESTING;
+
+/**
+ *	The struct of type STORECACHE is used by a caching system for reading
+ *	terms from stored expressions. Each thread should have its own system
+ *	of caches.
+ */
 
 typedef struct StOrEcAcHe {
 	struct StOrEcAcHe *next;
@@ -656,6 +901,11 @@ typedef struct StOrEcAcHe {
 	PADPOINTER(2,0,2,0);
 } *STORECACHE;
 
+/**
+ *	The struct PERM is used to generate all permutations when the pattern
+ *	matcher has to try to match (anti)symmetric functions.
+ */
+
 typedef struct PeRmUtE {
 	WORD *objects;
 	WORD sign;
@@ -663,6 +913,11 @@ typedef struct PeRmUtE {
 	WORD cycle[MAXMATCH];
 	PADPOINTER(0,0,MAXMATCH+2,0);
 } PERM;
+
+/**
+ *	The struct DISTRIBUTE is used to help the pattern
+ *	matcher when matching antisymmetric tensors.
+ */
 
 typedef struct DiStRiBuTe {
 	WORD *obj1;
@@ -674,7 +929,16 @@ typedef struct DiStRiBuTe {
 	WORD n;
 	WORD cycle[MAXMATCH];
 } DISTRIBUTE;
- 
+
+/**
+ *	The struct SORTING is used to control a sort operation.
+ *	It includes a small and a large buffer and arrays for keeping track
+ *	of various stages of the (merge) sorts.
+ *	Each sort level has its own struct and different levels can have
+ *	different sizes for its arrays.
+ *	Also different threads have their own set of SORTING structs.
+ */
+
 typedef struct sOrT {
 	WORD *lBuffer;				/* The large buffer */
 	WORD *lTop;					/* End of the large buffer */
@@ -739,6 +1003,12 @@ typedef struct sOrT {
 } SORTING;
 
 #ifdef WITHPTHREADS
+
+/**
+ *	The SORTBLOCK's are used by TFORM when the master has to merge the sorted
+ *	results of each of the workers.
+ */
+
 typedef struct SoRtBlOcK {
     pthread_mutex_t *MasterBlockLock;
     WORD    **MasterStart;
@@ -762,6 +1032,11 @@ typedef struct DeBuGgInG {
 
 #ifdef WITHPTHREADS
 
+/**
+ *	The THREADBUCKET struct defines one of the buckets used to pass terms
+ *	from the master to the workers in TFORM.
+ */
+
 typedef struct ThReAdBuCkEt {
 	POSITION *deferbuffer;      /* For Keep Brackets: remember position */
 	WORD *threadbuffer;         /* Here are the (primary) terms */
@@ -778,6 +1053,13 @@ typedef struct ThReAdBuCkEt {
 
 #endif
 
+/**
+ *	The POLYMOD struct controls one univariate polynomial of which the
+ *	coefficients have been taken modulus a (prime) number that fits inside
+ *	a variable of type WORD. The polynomial is stored as an array of
+ *	coefficients of size WORD.
+ */
+
 typedef struct {
 	WORD	*coefs;				/* The array of coefficients */
 	WORD	numsym;				/* The number of the symbol in the polynomial */
@@ -785,6 +1067,16 @@ typedef struct {
 	WORD	polysize;			/* The maximum power in the polynomial */
 	WORD	modnum;				/* The prime number of the modulus */
 } POLYMOD;
+
+/**
+ *	The POLYPADIC struct controls one univariate polynomial of which the
+ *	coefficients are in p-adic notation rather than notation modulus FULLMAX.
+ *	The terms are stored in sparse notation as regular terms that have
+ *	a subterm of type SYMBOL. The difference is the coefficient.
+ *	The coefficient is an integer expanded in powers of a prime which is
+ *	given in the element modnum (the prime has to fit inside a variable
+ *	of type WORD).
+ */
 
 typedef struct {
 	POLYMOD	*ppoly;				/* An array of polynomials */
@@ -798,10 +1090,17 @@ typedef struct {
 } POLYPADIC;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
+/**
+ *	The M_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name M
+ *	We see it used with the macro AM as in AM.S0
+ *	It contains global settings at startup or .clear
+ */
+
 struct M_const {
     SORTING *S0;                   /* (M) The main sort buffer */
     WORD    *gcmod;                /* (M) Global setting of modulus. Pointer to value */
@@ -938,6 +1237,13 @@ struct M_const {
  		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
+/**
+ *	The P_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name P
+ *	We see it used with the macro AP as in AP.InOutBuf
+ *	It contains objects that have dealings with the preprocessor.
+ */
+
 struct P_const {
     LIST DollarList;               /* (R) Dollar variables. Contains pointers
                                        to contents of the variables.*/
@@ -985,6 +1291,14 @@ struct P_const {
  		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
+/**
+ *	The C_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name C
+ *	We see it used with the macro AC as in AC.exprnames
+ *	It contains variables that involve the compiler and objects set during
+ *	compilation.
+ */
+
 struct C_const {
     set_of_char separators;        /* (C) Separators in #call and #do */
     NAMETREE *dollarnames;         /* (C) Names of dollar variables */
@@ -1172,6 +1486,13 @@ struct C_const {
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
+/**
+ *	The S_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name S
+ *	We see it used with the macro AS as in AS.ExecMode
+ *	It has some variables used by the master in multithreaded runs
+ */
+
 struct S_const {
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
@@ -1197,6 +1518,14 @@ struct S_const {
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
 */
+/**
+ *	The R_const struct is part of the global data and resides either in the
+ *	ALLGLOBALS struct A, or the ALLPRIVATES struct B (TFORM) under the name R
+ *	We see it used with the macro AR as in AR.infile
+ *	It has the variables that define the running environment and that
+ *	should be transferred with a term in a multithreaded run.
+ */
+
 struct R_const {
     FILEHANDLE *infile;            /* (R) Points alternatingly to Fscr[0] or Fscr[1] */
     FILEHANDLE *outfile;           /* (R) Points alternatingly to Fscr[1] or Fscr[0] */
@@ -1250,6 +1579,14 @@ struct R_const {
  		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
+/**
+ *	The T_const struct is part of the global data and resides either in the
+ *	ALLGLOBALS struct A, or the ALLPRIVATES struct B (TFORM) under the name T
+ *	We see it used with the macro AT as in AT.WorkPointer
+ *	It has variables that are private to each thread, most of which have
+ *	to be defined at startup.
+ */
+
 struct T_const {
 #ifdef WITHPTHREADS
     SORTBLOCK SB;
@@ -1336,6 +1673,14 @@ struct T_const {
                matching, traces etc. They are local for each thread.
                They don't need initializations.
 */
+/**
+ *	The N_const struct is part of the global data and resides either in the
+ *	ALLGLOBALS struct A, or the ALLPRIVATES struct B (TFORM) under the name N
+ *	We see it used with the macro AN as in AN.RepFunNum
+ *	It has variables that are private to each thread and are used as
+ *	temporary storage during the expansion of the terms tree.
+ */
+
 struct N_const {
     LONG    *polybpstack;          /* () Used in poly */
     WORD    *EndNest;              /* (R) Nesting of function levels etc. */
@@ -1555,6 +1900,13 @@ struct N_const {
  		#] N : 
  		#[ O : The O struct concerns output variables
 */
+/**
+ *	The O_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name O
+ *	We see it used with the macro AO as in AO.OutputLine
+ *	It contains variables that involve the writing of text output.
+ */
+
 struct O_const {
     UBYTE   *OutputLine;           /* (O) Sits also in debug statements */
     UBYTE   *OutStop;              /* (O) Top of OutputLine buffer */
@@ -1614,22 +1966,27 @@ struct O_const {
  		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
+/**
+ *	The X_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name X
+ *	We see it used with the macro AX as in AX.timeout
+ *	It contains variables that involve communication with external programs
+ */
+
 struct X_const {
-	UBYTE	*currentPrompt;
-	/*[08may2006 mt]:*/
-	int timeout;				/*timeout to initialize preset channels.
-										If timeout<0, the preset channels are 
-										already initialized*/
-	int killSignal;			/* signal number, SIGKILL by default*/
-	int killWholeGroup;		/* if 0, the signal is sent only to a process, 
-										if !=0 (default) is sent to a whole process group*/
-	int daemonize;				/* if !=0 (default), start in a daemon mode */
-	UBYTE *shellname;			/* if !=NULL (default is "/bin/sh -c"), start in 
-										the specified	subshell*/
-	UBYTE *stderrname;		/* If !=NULL (default if "/dev/null"), stderr is 
-										redirected to the specified file*/
-	/*:[08may2006 mt]*/
-	int		currentExternalChannel;
+	UBYTE *currentPrompt;
+	int timeout;               /* timeout to initialize preset channels.
+	                              If timeout<0, the preset channels are 
+	                              already initialized*/
+	int killSignal;            /* signal number, SIGKILL by default*/
+	int killWholeGroup;        /* if 0, the signal is sent only to a process, 
+	                              if !=0 (default) is sent to a whole process group*/
+	int daemonize;             /* if !=0 (default), start in a daemon mode */
+	UBYTE *shellname;          /* if !=NULL (default is "/bin/sh -c"), start in 
+	                              the specified subshell*/
+	UBYTE *stderrname;         /* If !=NULL (default if "/dev/null"), stderr is 
+	                              redirected to the specified file*/
+	int	currentExternalChannel;
 };
 /*
  		#] X : 
@@ -1637,6 +1994,11 @@ struct X_const {
 */
 
 #ifdef WITHPTHREADS
+
+/**
+ *	With pthreads (TFORM) the ALLGLOBALS struct has all the variables of which
+ *	there is only a single copy.
+ */
 
 typedef struct AllGlobals {
     struct M_const M;
@@ -1647,6 +2009,11 @@ typedef struct AllGlobals {
 	struct X_const X;
 } ALLGLOBALS;
 
+/**
+ *	With pthreads (TFORM) the ALLPRIVATES struct has all the variables of which
+ *	each thread must have its own (private) copy.
+ */
+
 typedef struct AllPrivates {
     struct R_const R;
     struct T_const T;
@@ -1654,6 +2021,10 @@ typedef struct AllPrivates {
 } ALLPRIVATES;
 
 #else
+
+/**
+ *	Without pthreads (FORM) the ALLGLOBALS struct has all the global variables
+ */
 
 typedef struct AllGlobals {
     struct M_const M;
@@ -1682,6 +2053,17 @@ typedef WORD (*WCN2)(PHEAD WORD *,WORD *);
 typedef WORD (*WCN)();
 typedef WORD (*WCN2)();
 #endif
+
+/**
+ *	The FIXEDGLOBALS struct is an anachronism. It started as the struct
+ *	with global variables that needed initialization.
+ *	It contains the elements Operation and OperaFind which define a very early
+ *	way of automatically jumping to the proper operation. We find the results
+ *	of it in parts of the file opera.c
+ *	Later operations were treated differently in a more transparent way.
+ *	We never changed the existing code. The most important part is currently
+ *	the cTable which is used intensively in the compiler.
+ */
 
 typedef struct FixedGlobals {
 	WCN		Operation[8];

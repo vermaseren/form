@@ -1,3 +1,13 @@
+/** @file tools.c
+ *
+ *  Low level routines for many types of task.
+ *	There are routines for manipulating the input system (streams and files)
+ *	routines for string manipulation, the memory allocation interface,
+ *	and the clock. The last is the most sensitive to ports.
+ *	In the past nearly every port to another OS or computer gave trouble.
+ *	Nowadays it is slightly better but the poor POSIX compliance of LINUX
+ *	again gave problems for the multithreaded version.
+ */
 /*
   	#[ Includes :
 #define MALLOCDEBUG 1
@@ -30,7 +40,7 @@ long numfrees = 0;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -901,7 +911,7 @@ LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
 /*:[17nov2005]*/
 
 /*
- 		#] WriteFile :
+ 		#] WriteFile : 
  		#[ SeekFile :
 */
 
@@ -1130,7 +1140,7 @@ CloseChannel ARG1(char *,name)
 
 /*
  		#] CloseChannel : 
-  	#] Files :
+  	#] Files : 
   	#[ Strings :
  		#[ StrCmp :
 */
@@ -2862,5 +2872,5 @@ int Crash ARG0
 
 /*
  		#] Crash : 
-  	#] Mixed : 
+  	#] Mixed :
 */

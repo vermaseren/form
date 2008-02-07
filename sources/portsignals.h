@@ -1,17 +1,21 @@
 
 #ifndef PORTSIGNAL_H
 #define PORTSIGNAL_H
- 
-/*
-	Some systems (especially LINUX) have not enough 
-	signals available so some of the (!documented!) signals
-	are not defined. This file contains the definition of all
-	signals used in the program.
-	If the signal is not defined we define it as unused (>NSIG).
 
-	The include of signal.h must be first, before we try to define
-	undefined signals.
-*/
+/** @file portsignals.h
+ *
+ *  Contains definitions for signals used/intercepted in FORM.
+ *
+ *	Some systems (especially LINUX) have not enough 
+ *	signals available so some of the (!documented!) signals
+ *	are not defined. This file contains the definition of all
+ *	signals used in the program.
+ *	If the signal is not defined we define it as unused (>NSIG).
+ *
+ *	The include of signal.h must be first, before we try to define
+ *	undefined signals.
+ */
+
 #include <signal.h>
 
 #define FATAL_SIG_ERROR 4

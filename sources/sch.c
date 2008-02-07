@@ -1,3 +1,8 @@
+/** @file sch.c
+ *
+ *  Contains the functions that deal with the writing of expressions/terms
+ *	in a textual representation. (Dutch schrijven = to write)
+ */
 /*
   	#[ Includes : sch.c
 */
@@ -269,7 +274,7 @@ LongToLine ARG2(UWORD *,a,WORD,na)
 }
 
 /*
- 		#] LongToLine :
+ 		#] LongToLine : 
  		#[ RatToLine :			VOID RatToLine(a,na)
 
 	Puts a rational number in the output line. The sign is ignored.

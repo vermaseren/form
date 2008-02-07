@@ -1,4 +1,10 @@
 
+/** @file unix.h
+ *
+ *  Contains the definition of constants connected to the byte structure
+ *	of the computer. Like WORD size etc. Used mainly on unix-like systems.
+ */
+
 #define LINEFEED '\n'
 #define CARRIAGERETURN 0x0D
 

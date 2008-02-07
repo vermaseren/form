@@ -1,3 +1,8 @@
+/** @file argument.c
+ *
+ *  Contains the routines that deal with the execution phase of the argument
+ *	and related statements (like term)
+ */
 /*
   	#[ include : argument.c
 */
@@ -5,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] include :
+  	#] include : 
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -1390,7 +1395,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -1450,7 +1455,7 @@ exectermerr:
 }
 
 /*
-  	#] execterm :
+  	#] execterm : 
   	#[ ArgumentImplode :
 */
 
@@ -1516,7 +1521,7 @@ ArgumentImplode BARG2(WORD *,term,WORD *,thelist)
 }
 
 /*
-  	#] ArgumentImplode :
+  	#] ArgumentImplode : 
   	#[ ArgumentExplode :
 */
 
@@ -1582,6 +1587,6 @@ ArgumentExplode BARG2(WORD *,term,WORD *,thelist)
 }
 
 /*
-  	#] ArgumentExplode :
+  	#] ArgumentExplode : 
 */
 

@@ -1,3 +1,10 @@
+/** @file ratio.c
+ *
+ *	A variety of routines:
+ *	The ratio command for partial fractioning
+ *	(rather old. Schoonschip inheritance)
+ *	The sum routines.
+ */
 /*
   	#[ Includes : ratio.c
 */
@@ -5,8 +12,8 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
-  	#[ Polynomials :
+  	#] Includes : 
+  	#[ Ratio :
 
 	These are the special operations regarding simple polynomials.
 	The first and most needed is the partial fractioning expansion.
@@ -104,7 +111,7 @@ We have to revise the code for the second case.
 }
 
 /*
- 		#] RatioFind :
+ 		#] RatioFind : 
  		#[ RatioGen :
 
 		The algoritm:
@@ -279,7 +286,7 @@ RatioCall:
 }
 
 /*
- 		#] RatioGen :
+ 		#] RatioGen : 
  		#[ BinomGen :
 
 		Routine for the generation of terms in a binomialtype expansion.
@@ -340,7 +347,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 }
 
 /*
- 		#] BinomGen :
+ 		#] BinomGen : 
  		#[ DoSumF1 :
 
 		Routine expands a sum_ function.
@@ -418,7 +425,7 @@ SumF1Call:
 }
 
 /*
- 		#] DoSumF1 :
+ 		#] DoSumF1 : 
  		#[ Glue :
 
 		Routine multiplies two terms. The second term is subject
@@ -484,7 +491,7 @@ Glue BARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
 }
 
 /*
- 		#] Glue :
+ 		#] Glue : 
  		#[ DoSumF2 :
 */
 
@@ -564,7 +571,7 @@ SumF2Call:
 }
 
 /*
- 		#] DoSumF2 :
-  	#] Polynomials :
+ 		#] DoSumF2 : 
+  	#] Ratio :
 */
 

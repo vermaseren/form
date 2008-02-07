@@ -1,3 +1,11 @@
+/** @file names.c
+ *
+ *  The complete names administration.
+ *  All variables with a name have to pass here to be properly registered,
+ *	have structs of the proper type assigned to them etc.
+ *	The file also contains the utility routines for maintaining the
+ *	balanced trees that make searching for names rather fast.
+ */
 /*
   	#[ Includes :
 */
@@ -2402,7 +2410,7 @@ void ResetVariables ARG1(int, par)
 }
 
 /*
-  	#] ResetVariables :
+  	#] ResetVariables : 
   	#[ RemoveDollars :
 */
 

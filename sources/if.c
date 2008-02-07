@@ -1,3 +1,7 @@
+/** @file if.c
+ *
+ *  Routines for the dealing with if statements.
+ */
 /*
   	#[ Includes : if.c
 */
@@ -5,7 +9,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ If statement :
  		#[ Syntax :
 
@@ -69,7 +73,7 @@
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax :
+ 		#] Syntax : 
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -499,7 +503,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement :
+ 		#] DoIfStatement : 
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -660,7 +664,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
 }
 
 /*
- 		#] HowMany :
+ 		#] HowMany : 
  		#[ DoubleIfBuffers :
 */
 
@@ -695,7 +699,7 @@ VOID DoubleIfBuffers ARG0
 }
 
 /*
- 		#] DoubleIfBuffers :
-  	#] If statement :
+ 		#] DoubleIfBuffers : 
+  	#] If statement : 
 */
 

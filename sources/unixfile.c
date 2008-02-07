@@ -1,3 +1,7 @@
+/** @file unixfile.c
+ *
+ *  The interface to a fast variety of file routines in the unix system.
+ */
 /*
   	#[ Includes :
 
@@ -30,7 +34,7 @@ extern "C" lseek();
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Uopen :
 */
 
@@ -58,7 +62,7 @@ FILES *Uopen ARG2(char *,filename,char *,mode)
 }
 
 /*
-  	#] Uopen :
+  	#] Uopen : 
   	#[ Uclose :
 */
 
@@ -74,7 +78,7 @@ int Uclose ARG1(FILES *,f)
 }
 
 /*
-  	#] Uclose :
+  	#] Uclose : 
   	#[ Uread :
 */
 
@@ -102,7 +106,7 @@ size_t ret;
 }
 
 /*
-  	#] Uread :
+  	#] Uread : 
   	#[ Uwrite :
 */
 
@@ -129,7 +133,7 @@ size_t thesize=size*nobj;
 }
 
 /*
-  	#] Uwrite :
+  	#] Uwrite : 
   	#[ Useek :
 */
 
@@ -140,7 +144,7 @@ int Useek ARG3(FILES *,f,off_t,offset,int,origin)
 }
 
 /*
-  	#] Useek :
+  	#] Useek : 
   	#[ Utell :
 */
 
@@ -151,14 +155,14 @@ off_t Utell ARG1(FILES *,f)
 }
 
 /*
-  	#] Utell :
+  	#] Utell : 
   	#[ Uflush :
 */
 
 void Uflush ARG1(FILES *,f) {}
 
 /*
-  	#] Uflush :
+  	#] Uflush : 
   	#[ Ugetpos :
 */
 
@@ -168,7 +172,7 @@ int Ugetpos ARG2(FILES *,f,fpos_t *,ptr)
 }
 
 /*
-  	#] Ugetpos :
+  	#] Ugetpos : 
   	#[ Usetpos :
 */
 
@@ -178,13 +182,13 @@ int Usetpos ARG2(FILES *,f,fpos_t *,ptr)
 }
 
 /*
-  	#] Usetpos :
+  	#] Usetpos : 
   	#[ Usetbuf :
 */
 
 void Usetbuf ARG2(FILES *,f,char *,ptr) { }
 
 /*
-  	#] Usetbuf :
+  	#] Usetbuf : 
 */
 #endif

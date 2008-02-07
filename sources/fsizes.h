@@ -1,3 +1,9 @@
+
+/** @file fsizes.h
+ *
+ *  The definition the default values for certain buffer sizes etc.
+ */
+
 /*
 	First the fixed variables
 */

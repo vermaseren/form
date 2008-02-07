@@ -1,12 +1,14 @@
+/** @file parallel.c
+ *
+ *  Message passing library independent functions of parform
+ *
+ *  This file contains functions needed for the parallel version of form3 
+ *  these functions need no real link to the message passing libraries, they 
+ *  only need some interface dependent preprocessor definitions (check 
+ *  parallel.h). So there still need two different objectfiles to be compiled 
+ *  for mpi and pvm!
+ */
 /*
-  Message passing library independent functions of parform
-
-  This file contains functions needed for the parallel version of form3 
-  these functions need no real link to the message passing libraries, they 
-  only need some interface dependent preprocessor definitions (check 
-  parallel.h). So there still need two different objectfiles to be compiled 
-  for mpi and pvm!
-
   	#[ includes :
 */
 #include "form3.h"

@@ -1,3 +1,9 @@
+/** @file compress.c
+ *
+ *  The routines for the use of gzip (de)compression of the information
+ *  in the sort file.
+ */
+
 #include "form3.h"
 
 #ifdef WITHZLIB
@@ -31,7 +37,7 @@
 */
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ SetupOutputGZIP :
 
 	Routine prepares a gzip output stream for the given file.
@@ -96,7 +102,7 @@ SetupOutputGZIP ARG1(FILEHANDLE *,f)
 }
 
 /*
-  	#] SetupOutputGZIP :
+  	#] SetupOutputGZIP : 
   	#[ PutOutputGZIP :
 
 	Routine is called when the PObuffer of f is full.
@@ -182,7 +188,7 @@ PutOutputGZIP ARG1(FILEHANDLE *,f)
 }
 
 /*
-  	#] PutOutputGZIP :
+  	#] PutOutputGZIP : 
   	#[ FlushOutputGZIP :
 
 	Routine is called to flush a stream. The compression of the input buffer
@@ -309,7 +315,7 @@ FlushOutputGZIP ARG1(FILEHANDLE *,f)
 }
 
 /*
-  	#] FlushOutputGZIP :
+  	#] FlushOutputGZIP : 
   	#[ SetupAllInputGZIP :
 
 	Routine prepares all gzip input streams for a merge.
@@ -386,7 +392,7 @@ SetupAllInputGZIP ARG1(SORTING *,S)
 }
 
 /*
-  	#] SetupAllInputGZIP :
+  	#] SetupAllInputGZIP : 
   	#[ FillInputGZIP :
 
 	Routine is called when we need new input in the specified buffer.
@@ -627,6 +633,6 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 }
 
 /*
-  	#] FillInputGZIP :
+  	#] FillInputGZIP : 
 */
 #endif

@@ -1,3 +1,7 @@
+/** @file optim.c
+ *
+ *  experimental routines for the optimization of FORTRAN or C output.
+ */
 /*
   	#[ Includes:
 
@@ -48,7 +52,7 @@ static LONG sizepointers = 0;
 static LONG *multiplicities = 0, multiplicitysize = 0;
 
 /*
-  	#] Includes:
+  	#] Includes: 
   	#[ Optimize:
 */
 
@@ -92,7 +96,7 @@ int Optimize ARG1(WORD,numexpr)
 }
 
 /*
-  	#] Optimize:
+  	#] Optimize: 
   	#[ LoadOpti:
 */
 
@@ -199,7 +203,7 @@ int LoadOpti ARG1(WORD,numexpr)
 }
 
 /*
-  	#] LoadOpti:
+  	#] LoadOpti: 
   	#[ CleanOptiBuffer:
 */
 
@@ -230,7 +234,7 @@ void CleanOptiBuffer ARG0
 }
 
 /*
-  	#] CleanOptiBuffer:
+  	#] CleanOptiBuffer: 
   	#[ PutObject:
 */
 
@@ -328,7 +332,7 @@ int PutObject ARG2(WORD *,object,int,type)
 }
 
 /*
-  	#] PutObject:
+  	#] PutObject: 
   	#[ AddToOpti:
 */
 
@@ -387,7 +391,7 @@ int AddToOpti ARG2(WORD *,term,int,num)
 }
 
 /*
-  	#] AddToOpti:
+  	#] AddToOpti: 
   	#[ FindScratchName:
 */
 
@@ -512,7 +516,7 @@ int FindScratchName ARG0
 }
 
 /*
-  	#] FindScratchName:
+  	#] FindScratchName: 
   	#[ PrintOptima:
 */
 
@@ -663,7 +667,7 @@ nexti:;
 }
 
 /*
-  	#] PrintOptima:
+  	#] PrintOptima: 
   	#[ MaxPowerOpti:
 */
 
@@ -685,7 +689,7 @@ WORD MaxPowerOpti ARG1(LONG,number)
 }
 
 /*
-  	#] MaxPowerOpti:
+  	#] MaxPowerOpti: 
   	#[ HuntNumFactor:
 */
 
@@ -774,7 +778,7 @@ ExitHunt:
 }
 
 /*
-  	#] HuntNumFactor:
+  	#] HuntNumFactor: 
   	#[ HuntFactor:
 
 	Hunts for factors in scalar 'number'
@@ -911,7 +915,7 @@ loosethis:		fr = fm + 3; frr = fm;
 }
 
 /*
-  	#] HuntFactor:
+  	#] HuntFactor: 
   	#[ HuntPairs:
 
 	Routine looks for an object (x) to a power of at least 'power'.
@@ -1123,7 +1127,7 @@ nextterm:;
 }
 
 /*
-  	#] HuntPairs:
+  	#] HuntPairs: 
   	#[ HuntBrackets:
 
 	Routine goes through a sca and tries to find the most popular object.
@@ -1337,7 +1341,7 @@ nextt:;
 }
 
 /*
-  	#] HuntBrackets:
+  	#] HuntBrackets: 
   	#[ HuntNumBrackets:
 
 	Hunts for terms with an identical coefficient
@@ -1349,7 +1353,7 @@ void HuntNumBrackets ARG1(LONG,number)
 }
 
 /*
-  	#] HuntNumBrackets:
+  	#] HuntNumBrackets: 
   	#[ HuntPowers:
 
 	Tries to look for something of the type
@@ -1493,7 +1497,7 @@ callHP:
 }
 
 /*
-  	#] HuntPowers:
+  	#] HuntPowers: 
   	#[ CombiOpti:
 
 	We try to express the bigger sca's into smaller sca's
@@ -1606,7 +1610,7 @@ nexti2:;
 }
 
 /*
-  	#] CombiOpti:
+  	#] CombiOpti: 
   	#[ TestNewSca:
 */
 
@@ -1672,7 +1676,7 @@ LONG TestNewSca ARG3(LONG,number,WORD *,coef,WORD *,ncoef)
 }
 
 /*
-  	#] TestNewSca:
+  	#] TestNewSca: 
   	#[ NormOpti:
 */
 
@@ -1694,7 +1698,7 @@ void NormOpti ARG1(WORD *,term)
 }
 
 /*
-  	#] NormOpti:
+  	#] NormOpti: 
   	#[ SortOpti:
 */
 
@@ -1735,7 +1739,7 @@ void SortOpti ARG1(LONG,number)
 }
 
 /*
-  	#] SortOpti:
+  	#] SortOpti: 
   	#[ SplitOpti:
 
 	SplitMerge for the SortOpti routine.
@@ -1793,6 +1797,6 @@ void SplitOpti ARG2(WORD **,pointers,LONG,number)
 }
 
 /*
-  	#] SplitOpti:
+  	#] SplitOpti: 
 */
 

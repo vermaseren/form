@@ -1,3 +1,15 @@
+/** @file findpat.c
+ *
+ *  Pattern matching of symbols and dotproducts.
+ *  There are various routines because of the options in the id-statements
+ *	like once, only, multi and many.
+ *	These are amoung the oldest routines in FORM and that can be noticed,
+ *	because the interplay with the function matching is not complete.
+ *	When we match functions and halfway we fail we can backtrack properly.
+ *	With the symbols, the dotproducts and the vectors (in pattern.c) there
+ *	is no proper backtracking. Hence the routines here need still quite
+ *	some work or may even have to be rewritten.
+ */
 /*
   	#[ Includes : findpat.c
 */
@@ -5,7 +17,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Patterns :
  		#[ FindOnly :			WORD FindOnly(term,pattern)
 
@@ -162,7 +174,7 @@ OnlyL2:					nq -= 2*MAXPOWER;
 			return(1);
 		}
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -346,7 +358,7 @@ NextInDot:
 			t = xstop;
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 */
 		else {
 			LOCK(ErrorMessageLock);
@@ -368,7 +380,7 @@ EndLoop:;
 }
 
 /*
- 		#] FindOnly :
+ 		#] FindOnly : 
  		#[ FindOnce :			WORD FindOnce(term,pattern)
 
 	Searches for a single match in term. The difference with multi
@@ -549,7 +561,7 @@ OnceL4a:						mt -= 2*MAXPOWER;
 			} while ( m < ystop );
 		}
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -890,7 +902,7 @@ OnceL8a:						mt -= 2*MAXPOWER;
 			t = xstop;
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 */
 		else {
 			LOCK(ErrorMessageLock);
@@ -907,7 +919,7 @@ EndLoop:;
 }
 
 /*
- 		#] FindOnce :
+ 		#] FindOnce : 
  		#[ FindMulti :			WORD FindMulti(term,pattern)
 
 	Note that multi cannot deal with wildcards. Those patterns revert
@@ -985,7 +997,7 @@ FindMulti BARG2(WORD *,term,WORD *,pattern)
 			} while ( m < ystop );
 		}
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -1011,7 +1023,7 @@ FindMulti BARG2(WORD *,term,WORD *,pattern)
 			t = xstop;
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 */
 		else {
 			LOCK(ErrorMessageLock);
@@ -1025,7 +1037,7 @@ FindMulti BARG2(WORD *,term,WORD *,pattern)
 }
 
 /*
- 		#] FindMulti :
+ 		#] FindMulti : 
  		#[ FindRest :			WORD FindRest(term,pattern)
 
 	This routine scans for anything but dotproducts and symbols.
@@ -1095,7 +1107,7 @@ FindRest BARG2(WORD *,term,WORD *,pattern)
 			if ( !ScanFunctions(BHEAD ystop,xstop,0) ) return(0);
 		}
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -1182,7 +1194,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 			} while ( m < ystop );
 		}
 /*
-			#] VECTORS :
+			#] VECTORS : 
 			#[ INDICES :
 */
 		else if ( *m == INDEX ) {
@@ -1237,7 +1249,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 */
 		}
 /*
-			#] INDICES :
+			#] INDICES : 
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -1319,7 +1331,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 			} while ( m < ystop );
 		}
 /*
-			#] DELTAS :
+			#] DELTAS : 
 */
 		else {
 			LOCK(ErrorMessageLock);
@@ -1334,7 +1346,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 }
 
 /*
- 		#] FindRest :
+ 		#] FindRest : 
 	#] Patterns :
 */
 

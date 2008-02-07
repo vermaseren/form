@@ -1,6 +1,12 @@
 #ifndef __FDECLARE__
 
 #define __FDECLARE__
+
+/** @file declare.h
+ *
+ *  Contains macros and function declarations.
+ */
+
 /*
   	#[ ARG definitions :
 */
@@ -9,7 +15,7 @@
 /*
 	First the declaration macro's. They are to keep the code portable.
 	They wouldn't be needed ordinarily, but there is such a thing as
-	the IBM interpretation of the ANSI standard.
+	the "IBM interpretation of the ANSI standard".
 */
 
 #ifdef INTELCOMPILER

@@ -2377,6 +2377,12 @@ FiniCall:
  		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
+ 
+static WORD zeroDollar[] = { 0, 0 };
+/*
+static long debugcounter = 0;
+*/
+
 /**
  *		The heart of the program.
  *		Here the expansion tree is set up in one giant recursion
@@ -2400,10 +2406,6 @@ FiniCall:
  *		sorting routines.
  */
 
-static WORD zeroDollar[] = { 0, 0 };
-/*
-static long debugcounter = 0;
-*/
 WORD
 Generator BARG2(WORD *,term,WORD,level)
 {

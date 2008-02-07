@@ -1,11 +1,17 @@
+/** @file lus.c
+ *
+ *	Routines to find loops in index contractions.
+ *	These routines allow for a category of topological statements.
+ *	They were originally developed for the color library.
+ */
 /*
-  	#[ Includes : function.c
+  	#[ Includes : lus.c
 */
 
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Lus :
 
 	Routine to find loops.
@@ -425,7 +431,7 @@ Success:;
 }
 
 /*
-  	#] Lus :
+  	#] Lus : 
   	#[ FindLus :
 */
 
@@ -488,7 +494,7 @@ int FindLus ARG3(int, from, int, level, int, openindex)
 }
 
 /*
-  	#] FindLus :
+  	#] FindLus : 
   	#[ SortTheList :
 */
 
@@ -538,6 +544,6 @@ int SortTheList ARG2(int *,slist,int,num)
 }
 
 /*
-  	#] SortTheList :
+  	#] SortTheList : 
 */
 

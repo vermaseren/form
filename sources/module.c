@@ -1,3 +1,9 @@
+/** @file module.c
+ *
+ *  A number of routines that deal with the moduleoption statement and the
+ *  execution of modules.
+ *	Additionally there are the execution of the exec and pipe instructions.
+ */
 /*
   	#[ Includes :
 */
@@ -5,7 +11,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Modules :
  		#[ ModuleInstruction :
 
@@ -101,7 +107,7 @@ ModuleInstruction ARG2(int *,moduletype,int *,specialtype)
 }
 
 /*
- 		#] ModuleInstruction :
+ 		#] ModuleInstruction : 
  		#[ CoModuleOption :
 
 	ModuleOption, options;
@@ -153,7 +159,7 @@ CoModuleOption ARG1(UBYTE *,s)
 }
 
 /*
- 		#] CoModuleOption :
+ 		#] CoModuleOption : 
  		#[ CoModOption :
 
 	To be called from a .instruction.
@@ -197,7 +203,7 @@ CoModOption ARG1(UBYTE *,s)
 }
 
 /*
- 		#] CoModOption :
+ 		#] CoModOption : 
  		#[ SetSpecialMode :
 */
 
@@ -207,7 +213,7 @@ SetSpecialMode ARG2(int,moduletype,int,specialtype)
 }
 
 /*
- 		#] SetSpecialMode :
+ 		#] SetSpecialMode : 
  		#[ MakeGlobal :
 
 VOID
@@ -215,7 +221,7 @@ MakeGlobal ARG0
 {
 }
 
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ ExecModule :
 */
 
@@ -226,7 +232,7 @@ ExecModule ARG1(int,moduletype)
 }
 
 /*
- 		#] ExecModule :
+ 		#] ExecModule : 
  		#[ ExecStore :
 */
 
@@ -237,7 +243,7 @@ ExecStore ARG0
 }
 
 /*
- 		#] ExecStore :
+ 		#] ExecStore : 
  		#[ FullCleanUp :
 
 		Remark 27-oct-2005 by JV
@@ -302,7 +308,7 @@ FullCleanUp ARG0
 }
 
 /*
- 		#] FullCleanUp :
+ 		#] FullCleanUp : 
  		#[ DoPolyfun :
 */
 
@@ -348,7 +354,7 @@ DoPolyfun ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoPolyfun :
+ 		#] DoPolyfun : 
  		#[ DoPolyratfun :
 */
 
@@ -394,7 +400,7 @@ DoPolyratfun ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoPolyratfun :
+ 		#] DoPolyratfun : 
  		#[ DoNoParallel :
 */
 
@@ -412,7 +418,7 @@ int DoNoParallel ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoNoParallel :
+ 		#] DoNoParallel : 
  		#[ DoParallel :
 */
 
@@ -437,7 +443,7 @@ int DoParallel ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoParallel :
+ 		#] DoParallel : 
  		#[ DoModSum :
 */
 
@@ -457,7 +463,7 @@ int DoModSum ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModSum :
+ 		#] DoModSum : 
  		#[ DoModMax :
 */
 
@@ -477,7 +483,7 @@ int DoModMax ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModMax :
+ 		#] DoModMax : 
  		#[ DoModMin :
 */
 
@@ -497,7 +503,7 @@ int DoModMin ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModMin :
+ 		#] DoModMin : 
  		#[ DoModLocal :
 */
 
@@ -517,7 +523,7 @@ int DoModLocal ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoModLocal :
+ 		#] DoModLocal : 
  		#[ DoSlavePatch :
 */
 
@@ -535,7 +541,7 @@ int DoSlavePatch ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoSlavePatch :
+ 		#] DoSlavePatch : 
  		#[ DoModDollar :
 */
 
@@ -607,7 +613,7 @@ UBYTE * DoModDollar ARG2(UBYTE *,s,int,type)
 }
 
 /*
- 		#] DoModDollar :
+ 		#] DoModDollar : 
  		#[ DoinParallel :
 
 		The idea is that we should have the commands
@@ -624,7 +630,7 @@ int DoinParallel ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DoinParallel :
+ 		#] DoinParallel : 
  		#[ DonotinParallel :
 */
 
@@ -634,7 +640,7 @@ int DonotinParallel ARG1(UBYTE *,s)
 }
 
 /*
- 		#] DonotinParallel :
+ 		#] DonotinParallel : 
 	#] Modules :
 	#[ External :
  		#[ DoExecStatement :
@@ -654,7 +660,7 @@ DoExecStatement ARG0
 }
 
 /*
- 		#] DoExecStatement :
+ 		#] DoExecStatement : 
  		#[ DoPipeStatement :
 */
 
@@ -672,6 +678,6 @@ DoPipeStatement ARG0
 }
 
 /*
- 		#] DoPipeStatement :
+ 		#] DoPipeStatement : 
 	#] External :
 */

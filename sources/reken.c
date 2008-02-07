@@ -1,3 +1,13 @@
+/** @file reken.c
+ *
+ *  This file contains the numerical routines.
+ *  The arithmetic in FORM is normally over the rational numbers.
+ *	Hence there are routines for dealing with integers and with rational
+ *	of 'arbitrary precision' (within limits)
+ *	There are also routines for that calculus modulus an integer.
+ *	In addition there are the routines for factorials and bernoulli numbers.
+ *	The random number function is currently only for internal purposes.
+ */
 /*
   	#[ Includes : reken.c
 */
@@ -677,7 +687,7 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 
 /*
  		#] TakeRatRoot: 
-  	#] RekenRational :
+  	#] RekenRational : 
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -2417,7 +2427,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2691,7 +2701,7 @@ MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms :
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
@@ -2957,6 +2967,6 @@ WORD wranf BARG0
 }
 
 /*
- 		#] wranf :
+ 		#] wranf : 
   	#] Functions :
 */
