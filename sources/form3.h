@@ -6,10 +6,7 @@
  *	There are also some system dependencies concerning file functions.
  */
 
-/* !!! uncomment to use autoconf !!! */
-/* #define USE_AUTOCONF */
-
-#ifdef USE_AUTOCONF
+#ifdef HAVE_CONFIG_H
 
 #include "config.h"
 
