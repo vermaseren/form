@@ -54,9 +54,15 @@ SRCBASE = \
 	wildcard.c \
 	windows.h
 
-# TODO check for intel compiler
-COMPILEFLAGS=-fomit-frame-pointer -Wno-strict-aliasing
+SRCPARALLEL = \
+	mpi.c \
+	parallel.c \
+	parallel.h
+
+COMPILEFLAGS=
 LINKFLAGS=
+if USINGGCC
+COMPILEFLAGS+=-fomit-frame-pointer -Wno-strict-aliasing -Wall 
 if OPTPENTIUM
 COMPILEFLAGS+=-march=i686
 LINKFLAGS+=-march=i686
@@ -65,13 +71,21 @@ if OPTOPTERON
 COMPILEFLAGS+=-march=opteron
 LINKFLAGS+=-march=opteron
 endif
+endif
+if USINGICC
+COMPILEFLAGS+=-Wall 
+if OPTPENTIUM
+COMPILEFLAGS+=-march=pentiumiii
+LINKFLAGS+=-march=pentiumiii
+endif
+endif
 
 bin_PROGRAMS =
 
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CFLAGS = $(COMPILEFLAGS) -O3 -Wall
+form_CFLAGS = $(COMPILEFLAGS) -O3
 form_LDFLAGS = -static -s $(LINKFLAGS) 
 form_LDADD = @GMPLIBS@ @ZLIBS@
 endif
@@ -89,7 +103,7 @@ if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE)
 tform_CPPFLAGS = -DWITHPTHREADS
-tform_CFLAGS = $(COMPILEFLAGS) -O3 -Wall 
+tform_CFLAGS = $(COMPILEFLAGS) -O3
 tform_LDFLAGS = -static -s -pthread $(LINKFLAGS)
 tform_LDADD = @GMPLIBS@ @ZLIBS@ -lrt
 endif
@@ -104,11 +118,11 @@ tvorm_LDADD = @GMPLIBS@ @ZLIBS@ -lrt
 endif
 
 if BUILD_PARFORM
-# TODO
+parform% : override CC = @MPICOMPILER@
+parfor% : override LINK = @MPICOMPILER@
 bin_PROGRAMS += parform
-parform_SOURCES = $(SRCBASE)
-parform_CPPFLAGS =
-#parform_CFLAGS = -O2
-parform_CFLAGS =
-#parform_LDADD = @GMPLIBS@ @ZLIBS@
+parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
+parform_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG
+#parform_CFLAGS = -O3 -mcpu=i586
+parform_LDADD = @GMPLIBS@ @ZLIBS@
 endif

@@ -32,32 +32,13 @@ AH_VERBATIM([__DATE__],
 #endif])
 
 # Check for programs
-AC_PROG_CC([gcc icc cc])
+AC_PROG_CC([gcc cc icc])
 AM_PROG_CC_C_O
 
 # Checks for header files
 AC_HEADER_STDC
-# TODO
-# AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/file.h sys/time.h sys/timeb.h unistd.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-# TODO
-# AC_TYPE_OFF_T
-# AC_TYPE_PID_T
-# AC_TYPE_SIZE_T
-# AC_HEADER_TIME
-
-# Checks for library functions
-# TODO
-# AC_FUNC_FORK
-# AC_FUNC_GETPGRP
-# AC_FUNC_MALLOC
-# AC_FUNC_REALLOC
-# AC_FUNC_SELECT_ARGTYPES
-# AC_TYPE_SIGNAL
-# AC_CHECK_FUNCS([clock_gettime ftime ftruncate gettimeofday select])
-
-dnl switches for DEBUGGING, 64bit, documentation, gmp
+AC_HEADER_TIME
+AC_CHECK_HEADERS([fcntl.h limits.h sys/file.h])
 
 # Sets _FILE_OFFSET_BITS if possible
 AC_SYS_LARGEFILE
@@ -102,6 +83,10 @@ case $host_os in
 		AC_MSG_WARN([Compiling for a unrecognized OS.])
 		;;
 esac
+
+# Check for C compiler vendor
+AM_CONDITIONAL([USINGGCC], [test "x$GCC" = xyes])
+AM_CONDITIONAL([USINGICC], [test "x$CC" = xicc])
 
 # Check for gmp
 GMPLIBS=
@@ -162,17 +147,15 @@ AM_CONDITIONAL([BUILD_TFORM], [test "x$build_tform" = xyes])
 AM_CONDITIONAL([BUILD_TVORM], [test "x$build_tvorm" = xyes])
 
 # Check for MPI
-# AC_CHECK_PROGS(MPICC, mpicc hcc mpxlc_r mpxlc mpcc cmpicc, $CC)
-# AC_SUBST(MPICC)
-# AC_CHECK_FUNC(MPI_Init, [MPILIBS=" "])
-# AC_CHECK_LIB(fmpi, MPI_Init, [MPILIBS="-lfmpi"])
-#
-# TODO check for MPI
 AC_ARG_ENABLE([parform], [AS_HELP_STRING([--disable-parform],
 	[do not build parallel version using MPI (parform)])],
 	[], [enableval=yes])
-enableval=no
 build_parform=$enableval
+AS_IF([test "x$build_parform" = xyes],
+	[AC_CHECK_PROG([MPICOMPILER], [mpicc], [mpicc], [])
+	 AS_IF([test -z "$MPICOMPILER"], [build_parform=no])
+	 AC_SUBST([MPICOMPILER])
+	])
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 
 # Provide a clean environment
