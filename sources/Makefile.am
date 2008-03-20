@@ -94,7 +94,7 @@ if BUILD_VORM
 bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
 vorm_CPPFLAGS = -DDEBUGGING
-vorm_CFLAGS = -g
+vorm_CFLAGS = -g -Wall
 vorm_LDFLAGS = -static -g
 vorm_LDADD = @GMPLIBS@ @ZLIBS@
 endif
