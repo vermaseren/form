@@ -2028,7 +2028,7 @@ twogen:
 /*
  		#] AddArgs :
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
-*
+*/
 /**
  *	Compares two terms. The answer is:
  *	0	equal ( with exception of the coefficient if level == 0. )

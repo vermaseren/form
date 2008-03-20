@@ -521,9 +521,11 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		m = AN.WildValue;
 		i = nwstore;
 		r = AT.WildMask;
-		do {
-			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
-		} while ( --i > 0 );
+		if ( i > 0 ) {
+			do {
+				*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
+			} while ( --i > 0 );
+		}
 		*t++ = C->numrhs;
 		if ( t >= AT.WorkTop ) {
 			LOCK(ErrorMessageLock);
@@ -691,9 +693,11 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
@@ -784,9 +788,11 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
@@ -940,9 +946,11 @@ int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
@@ -964,9 +972,11 @@ nomatch:;
 		if ( j > 0 ) {
 			m = AN.WildValue;
 			t = lowlevel; r = AT.WildMask;
-			do {
-				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-			} while ( --j > 0 );
+			if ( j > 0 ) {
+				do {
+					*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+				} while ( --j > 0 );
+			}
 			C->numrhs = *t++;
 			C->Pointer = C->Buffer + oldcpointer;
 		}
@@ -1008,9 +1018,11 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		m = AN.WildValue;
 		i = nwstore;
 		r = AT.WildMask;
-		do {
-			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
-		} while ( --i > 0 );
+		if ( i > 0 ) {
+			do {
+				*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
+			} while ( --i > 0 );
+		}
 		*t++ = C->numrhs;
 		if ( t >= AT.WorkTop ) {
 			LOCK(ErrorMessageLock);
@@ -1168,9 +1180,11 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
@@ -1247,9 +1261,11 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
@@ -1389,9 +1405,11 @@ int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 				}
@@ -1412,9 +1430,11 @@ nomatch:;
 		j = nwstore;
 		m = AN.WildValue;
 		t = lowlevel; r = AT.WildMask;
-		do {
-			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-		} while ( --j > 0 );
+		if ( j > 0 ) {
+			do {
+				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+			} while ( --j > 0 );
+		}
 		C->numrhs = *t++;
 		C->Pointer = C->Buffer + oldcpointer;
 	}
@@ -1457,9 +1477,11 @@ int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 		m = AN.WildValue;
 		i = nwstore;
 		r = AT.WildMask;
-		do {
-			*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
-		} while ( --i > 0 );
+		if ( i > 0 ) {
+			do {
+				*t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *m++; *t++ = *r++;
+			} while ( --i > 0 );
+		}
 		*t++ = C->numrhs;
 		if ( t >= AT.WorkTop ) {
 			LOCK(ErrorMessageLock);
@@ -1662,9 +1684,11 @@ quicky:
 			j = nwstore;
 			m = AN.WildValue;
 			t = thewildcards + ntwa; r = AT.WildMask;
-			do {	/* undo assignment */
-				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-			} while ( --j > 0 );
+			if ( j > 0 ) {
+				do {	/* undo assignment */
+					*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+				} while ( --j > 0 );
+			}
 			C->numrhs = *t++;
 		}
 		continue;
@@ -1797,9 +1821,11 @@ nextargw:;
 					j = nwstore;
 					m = AN.WildValue;
 					t = thewildcards + ntwa; r = AT.WildMask;
-					do {	/* undo assignment */
-						*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-					} while ( --j > 0 );
+					if ( j > 0 ) {
+						do {	/* undo assignment */
+							*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+						} while ( --j > 0 );
+					}
 					C->numrhs = *t++;
 					C->Pointer = C->Buffer + oldcpointer;
 					goto nextiraise;
@@ -1888,9 +1914,11 @@ nextiraise:;
 		j = nwstore;
 		m = AN.WildValue;
 		t = thewildcards + ntwa; r = AT.WildMask;
-		do {
-			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-		} while ( --j > 0 );
+		if ( j > 0 ) {
+			do {
+				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+			} while ( --j > 0 );
+		}
 		C->numrhs = *t++;
 		C->Pointer = C->Buffer + oldcpointer;
 /*
@@ -1919,9 +1947,11 @@ NoSuccess:
 		j = nwstore;
 		m = AN.WildValue;
 		t = lowlevel; r = AT.WildMask;
-		do {
-			*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
-		} while ( --j > 0 );
+		if ( j > 0 ) {
+			do {
+				*m++ = *t++; *m++ = *t++; *m++ = *t++; *m++ = *t++; *r++ = *t++;
+			} while ( --j > 0 );
+		}
 		C->numrhs = *t++;
 		C->Pointer = C->Buffer + oldcpointer;
 	}

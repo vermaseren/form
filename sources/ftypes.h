@@ -18,9 +18,14 @@
 #define BHEAD
 #define BHEAD0
 #endif
-
+ 
 #define WITHOUTERROR 0
 #define WITHERROR 1
+
+/*
+	The various streams. (look also in tools.c)
+*/
+
 #define FILESTREAM 0
 #define PREVARSTREAM 1
 #define PREREADSTREAM 2
@@ -29,20 +34,31 @@
 #define DOLLARSTREAM 5
 #define PREREADSTREAM2 6
 #define EXTERNALCHANNELSTREAM 7
+ 
+#define ENDOFSTREAM 0xFF
+#define ENDOFINPUT 0xFF
+
+/*
+	Types of files
+*/
 
 #define SUBROUTINEFILE 0
 #define PROCEDUREFILE 1
 #define HEADERFILE 2
 #define SETUPFILE 3
 #define TABLEBASEFILE 4
-#define ENDOFSTREAM 0xFF
-#define ENDOFINPUT 0xFF
+
+/*
+	Types of modules
+*/
+
 #define FIRSTMODULE -1
 #define GLOBALMODULE 0
 #define SORTMODULE 1
 #define STOREMODULE 2
 #define CLEARMODULE 3
 #define ENDMODULE 4
+
 #define POLYFUN 0
 
 #define NOPARALLEL_DOLLAR 1
@@ -91,9 +107,7 @@
 #define EXPRSOUT 3
 #define WRITEOUT 4
 
-/*[15apr2004 mt]:*/
 #define EXTERNALCHANNELOUT 5
-/*:[15apr2004 mt]*/
 
 #define NUMERICALLOOP 0
 #define LISTEDLOOP 1
@@ -105,6 +119,10 @@
 #define PRETYPEPROCEDURE 3
 #define PRETYPESWITCH 4
 
+/*
+	Type of statement. Used to make sure that the statements are in proper order
+*/
+
 #define DECLARATION   1
 #define SPECIFICATION 2
 #define DEFINITION    3
@@ -113,14 +131,17 @@
 #define ATENDOFMODULE 6
 #define MIXED         9
 
+/*
+	The typedefs are to allow the compilers to do better error checking.
+*/
 
-/*[13apr2004 mt]:*/
 #ifdef __INTEL_COMPILER
-/*icc doesn't like this
-typedef void VOID;*/
+/*
+	icc doesn't like the typedef void VOID;
+	Hence we work the old fashioned way:
+*/
 #define VOID void
 #endif
-/*:[13apr2004 mt]*/
 
 #ifndef ALPHA
 #ifndef OPTERON
@@ -170,6 +191,7 @@ typedef int (*TFUN)();
 typedef int (*TFUN1)();
 #endif
 
+
 #define NOAUTO 0
 #define PARTEST 1
 #define WITHAUTO 2
@@ -181,6 +203,10 @@ typedef int (*TFUN1)();
 #define FUNCTIONONLY 8
 #define SETONLY 16
 #define EXPRESSIONONLY 32
+
+/*
+	Type of variable found by the compiler.
+*/
 
 #define CDELETE -1
 #define ANYTYPE -1
@@ -199,6 +225,10 @@ typedef int (*TFUN1)();
 #define CRANGE 12
 #define CVECTOR1 21
 #define CDOUBLEDOT 22
+
+/*
+	Types of tokens in the tokenizer.
+*/
 
 #define TSYMBOL -1
 #define TINDEX -2
@@ -241,7 +271,6 @@ typedef int (*TFUN1)();
 #define TSGAMMA -39
 #define TSETDOL -40
 
-
 #define TYPEISFUN 0
 #define TYPEISSUB 1
 #define TYPEISMYSTERY -1
@@ -249,6 +278,10 @@ typedef int (*TFUN1)();
 #define LHSIDEX 2
 #define LHSIDE 1
 #define RHSIDE 0
+
+/*
+	Output modes
+*/
 
 #define FORTRANMODE 1
 #define REDUCEMODE 2
@@ -279,6 +312,9 @@ typedef int (*TFUN1)();
 	We use those codes in CoIdExpression for function information
 	after the pattern. Because SETSET also stands there we have to
 	be careful!!
+	Don't forget MAXBUILTINFUNCTION when adding codes!
+	The object FUNCTION is at the start of the functions that are in regular
+	notation. Anything below it is in special notation.
 */
 #define SYMBOL 1
 #define DOTPRODUCT 2
@@ -390,6 +426,15 @@ typedef int (*TFUN1)();
 #define NUMERATORSYMBOL 3
 #define DENOMINATORSYMBOL 4
 
+/*
+	The objects that have a name that starts with TYPE are codes of statements
+	made by the compiler. Each statement starts with such a code, followed by
+	its size. For how most of these statements are used can be seen in the
+	Generator function in the file proces.c
+	TYPEOPERATION is an anachronism that remains used only for the statements
+	that are executed in the file opera.c (like traces and contractions).
+*/
+
 #define TYPEEXPRESSION 0
 #define TYPEIDNEW 1
 #define TYPEIDOLD 2
@@ -397,7 +442,7 @@ typedef int (*TFUN1)();
 #define TYPEREPEAT 4
 #define TYPEENDREPEAT 5
 /*
-	The next counts must be higher than all the others
+	The next counts must be higher than the ones before
 */
 #define TYPECOUNT 20
 #define TYPEMULT 21
@@ -450,6 +495,10 @@ typedef int (*TFUN1)();
 #define TYPEARGEXPLODE 68
 #define TYPEDENOMINATORS 69
 
+/*
+	The codes for the 'operations' that are part of TYPEOPERATION.
+*/
+
 #define TAKETRACE 1
 #define CONTRACT 2
 #define RATIO 3
@@ -457,6 +506,10 @@ typedef int (*TFUN1)();
 #define TENVEC 5
 #define SUMNUM1 6
 #define SUMNUM2 7
+
+/*
+	The various types of wildcards.
+*/
 
 #define WILDDUMMY 0
 #define SYMTONUM 1
@@ -478,6 +531,10 @@ typedef int (*TFUN1)();
 #define SETNUMBER 17
 #define LOADDOLLAR 18
 
+/*
+	Dirty flags (introduced when functions got a field with a dirty flag)
+*/
+
 #define CLEANFLAG 0
 #define DIRTYFLAG 1
 #define DIRTYSYMFLAG 2
@@ -489,10 +546,19 @@ typedef int (*TFUN1)();
 #define EXPRHEAD 5
 #define TYPEARGHEADSIZE 6
 
+/*
+	Actions to be taken with expressions. They are marked with these objects
+	during compilation.
+*/
+
 #define SKIP 1
 #define DROP 2
 #define HIDE 3
 #define UNHIDE 4
+
+/*
+	Types of expressions
+*/
 
 #define LOCALEXPRESSION 0
 #define SKIPLEXPRESSION 1
@@ -524,7 +590,10 @@ typedef int (*TFUN1)();
 #define TENSORFUNCTION 2
 #define GAMMAFUNCTION 4
 
-/*  Special sets */
+/*
+	Special sets
+*/
+
 #define POS_    0   /* integer > 0 */
 #define POS0_   1   /* integer >= 0 */
 #define NEG_    2   /* integer < 0 */
@@ -536,6 +605,10 @@ typedef int (*TFUN1)();
 #define FIXED_  8   /* fixed index */
 #define INDEX_  9   /* index only */
 #define Q_     10   /* rational */
+
+/*
+	Special indices.
+*/
 
 #define GAMMA1 0
 #define GAMMA5 -1
@@ -549,8 +622,9 @@ typedef int (*TFUN1)();
 #define EMPTYINDEX -9
 
 /*
-	The next one should be less than all of the above
+	The next one should be less than all of the above special indices.
 */
+
 #define MINSPEC -10
 
 #define USEDFLAG 2
@@ -595,6 +669,10 @@ typedef int (*TFUN1)();
 #define ANTISYMMETRIC 4
 #define REVERSEORDER 256
 
+/*
+	Types of id statements (substitutions)
+*/
+
 #define SUBMULTI 1
 #define SUBONCE 2
 #define SUBONLY 3
@@ -611,6 +689,10 @@ typedef int (*TFUN1)();
 #define GFIVE 4
 #define GPLUS 3
 #define GMINUS 2
+
+/*
+	Types of objects inside an if clause.
+*/
 
 #define LONGNUMBER 1
 #define MATCH 2
@@ -644,6 +726,10 @@ typedef int (*TFUN1)();
 #define GENNONCOMMUTE 0x2000
 
 #define NAMENOTFOUND -9
+
+/*
+	Types of dollar expressions.
+*/
 
 #define DOLUNDEFINED 0
 #define DOLNUMBER 1
@@ -686,6 +772,10 @@ typedef int (*TFUN1)();
 #define ELEMENTLOADED 2
 
 #ifdef WITHPTHREADS
+/*
+	Signals that the workers have to react to
+*/
+
 #define TERMINATETHREAD -1
 #define STARTNEWEXPRESSION 1
 #define LOWESTLEVELGENERATION 2
@@ -700,6 +790,10 @@ typedef int (*TFUN1)();
 #define DOONEEXPRESSION 9
 
 #define MASTERBUFFERISFULL 1
+
+/*
+	Bucket states
+*/
 
 #define BUCKETFREE 1
 #define BUCKETINUSE 0

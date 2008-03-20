@@ -12,11 +12,30 @@
 */
 
 #ifdef ANSI
-/*
-	First the declaration macro's. They are to keep the code portable.
-	They wouldn't be needed ordinarily, but there is such a thing as
-	the "IBM interpretation of the ANSI standard".
-*/
+/**
+ *	First the declaration macro's. They are to keep the code portable.
+ *	They wouldn't be needed ordinarily, but there is such a thing as
+ *	the "IBM interpretation of the ANSI standard".
+ *	In the old days there was also the difference between K&R C and Ansi C.
+ *	By using macro's for the definition of functions we ensure that we
+ *	don't need all kinds of ifdef's for each function we define.
+ *
+ *	There are two types of macro's. The ones that are called ARG0, ARG1, ...
+ *	and the ones that are called BARG0, BARG1, ...
+ *	The last ones were introduced when TFORM was programmed. In the case of
+ *	workers, each worker may need some private data. These can in principle
+ *	be accessed by some posix calls but that is unnecessarily slow. The
+ *	passing of a pointer to the complete data struct with private data will
+ *	be much faster. And anyway, there would have to be a macro that either
+ *	makes the posix call (TFORM) or doesn't (FORM). The solution by having
+ *	macro's that either pass the pointer (TFORM) or don't pass it (FORM)
+ *	is seen as the best solution.
+ *
+ *	In the declarations and the calling of the functions we have to use
+ *	either the PHEAD or the BHEAD macro if the pointer is to be passed.
+ *	These macro's contain the comma as well. Hence we need special macro's
+ *	if there are no other arguments. These are called PHEAD0 and BHEAD0.
+ */
 
 #ifdef INTELCOMPILER
 #define ARG0 ()
@@ -103,7 +122,7 @@
 
 #endif
 /*
-  	#] ARG definitions :
+  	#] ARG definitions : 
   	#[ Macro's :
 */
 
@@ -122,7 +141,6 @@
  
 #define TOKENTOLINE(x,y) if ( AC.OutputSpaces == NOSPACEFORMAT ) { \
 		TokenToLine((UBYTE *)(y)); } else { TokenToLine((UBYTE *)(x)); }
-
 
 #define UngetFromStream(stream,c) ((stream)->nextchar[(stream)->isnextchar++]=c)
 #define StreamPosition(stream) ((stream)->bufferposition + \
@@ -298,7 +316,7 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 	ExpandBuffer((void **)(&AT.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
 
 /*
-  	#] Macro's :
+  	#] Macro's : 
   	#[ Thread objects :
 */
 
@@ -331,9 +349,17 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #endif
 
 /*
-  	#] Thread objects :
+  	#] Thread objects : 
   	#[ Declarations :
 */
+
+/**
+ *	All functions (well, nearly all) are declared here.
+ *	This is done with the macro DECLARE which allows us to distinguish
+ *	between various flavours of the C language.
+ *	This was especially relevant in the days of K&R compilers and ANSI
+ *	compilers existing side by side.
+ */
 
 DECLARE(VOID StartVariables,ARG0)
 DECLARE(VOID setSignalHandlers,ARG0)
@@ -1397,9 +1423,6 @@ DECLARE(int DoRecovery,ARG0)
 DECLARE(void DoCheckpoint,ARG0)
 
 /*
-  	#] Declarations :
+  	#] Declarations : 
 */
 #endif
-
-/* temporary commentary for forcing cvs merge */
-
