@@ -1642,7 +1642,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 	inp++; name = inp;
 	if ( FG.cTable[*inp] != 0 ) goto nolhs;
 	while ( FG.cTable[*inp] < 2 ) inp++;
-	if ( AC.PreAssignFlag == 2 ) {
+	if ( AP.PreAssignFlag == 2 ) {
 		if ( *inp == '_' ) inp++;
 	}
 	if ( *inp != '=' ) {

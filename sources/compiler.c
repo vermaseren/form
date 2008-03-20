@@ -499,7 +499,7 @@ CompileStatement ARG1(UBYTE *,in)
 	This is relatively new (2.2c) and may cause some problems with old
 	programs. Hence the first error message should explain!
 */
-	if ( AC.PreAssignFlag == 0 && AM.OldOrderFlag == 0 ) {
+	if ( AP.PreAssignFlag == 0 && AM.OldOrderFlag == 0 ) {
 	  if ( ( AC.compiletype == DECLARATION || AC.compiletype == SPECIFICATION )
 	  && ( k->type == STATEMENT || k->type == DEFINITION || k->type == TOOUTPUT ) ) {
 		if ( AC.tablecheck == 0 ) {

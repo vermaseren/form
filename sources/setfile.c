@@ -294,7 +294,7 @@ AllocSetups ARG0
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 	AP.preStart = (UBYTE *)Malloc1(AP.pSize,"instruction buffer");
 	AP.preStop = AP.preStart + AP.pSize - 3;
-	AP.PreIfStack = (int *)Malloc1(AC.MaxPreIfLevel*sizeof(int),
+	AP.PreIfStack = (int *)Malloc1(AP.MaxPreIfLevel*sizeof(int),
 				"Preprocessor if stack");
 	AP.PreIfStack[0] = EXECUTINGIF;
 	sp = GetSetupPar((UBYTE *)"insidefirst");

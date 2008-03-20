@@ -1010,7 +1010,7 @@ RegRet:;
 	{
 		UBYTE OutBuf[140];
 /*		if ( AP.DebugFlag ) { */
-		if ( ( AC.PreDebug & DUMPINTERMS ) == DUMPINTERMS ) {
+		if ( ( AP.PreDebug & DUMPINTERMS ) == DUMPINTERMS ) {
 			LOCK(ErrorMessageLock);
 			AO.OutFill = AO.OutputLine = OutBuf;
 			AO.OutSkip = 3;

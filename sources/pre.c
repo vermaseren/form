@@ -675,7 +675,7 @@ PreProcessor ARG0
 	int error1 = 0, error2 = 0, retcode, numstatement, retval;
 	UBYTE c, *t, *s;
 	AC.compiletype = 0;
-	AC.PreContinuation = 0;
+	AP.PreContinuation = 0;
 	AP.gNumPre = NumPre;
 
 	if ( AC.CheckpointFlag == -1 ) DoRecovery();
@@ -744,7 +744,7 @@ PreProcessor ARG0
 				*AP.preStart = 0;
 			}
 			else if ( c == '.' ) {
-				if ( ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) ||
+				if ( ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ||
 				( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) ) {
 					LoadInstruction(1);
 					continue;
@@ -811,7 +811,7 @@ startnewmodule:;
 				break;  /* start a new module */
 			}
 			else {
-				if ( ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) ||
+				if ( ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ||
 				( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) ) {
 /*					if ( c == '{' || c == '}' ) { */
 						pushbackchar = c;
@@ -824,7 +824,7 @@ startnewmodule:;
 					continue;
 				}
 				UngetChar(c);
-				if ( AC.PreContinuation ) {
+				if ( AP.PreContinuation ) {
 					retval = LoadStatement(OLDSTATEMENT);
 				}
 				else {
@@ -834,27 +834,27 @@ startnewmodule:;
 				}
 				if ( retval < 0 ) {
 					error1++;
-					if ( retval == -1 ) AC.PreContinuation = 0;
-					else AC.PreContinuation = 1;
+					if ( retval == -1 ) AP.PreContinuation = 0;
+					else AP.PreContinuation = 1;
 					TryRecover(0);
 				}
-				else if ( retval > 0 ) AC.PreContinuation = 0;
-				else AC.PreContinuation = 1;
-				if ( error1 == 0 && !AC.PreContinuation ) {
-					if ( ( AC.PreDebug & PREPROONLY ) == 0 ) {
+				else if ( retval > 0 ) AP.PreContinuation = 0;
+				else AP.PreContinuation = 1;
+				if ( error1 == 0 && !AP.PreContinuation ) {
+					if ( ( AP.PreDebug & PREPROONLY ) == 0 ) {
 						int onpmd = NumPotModdollars;
-						if ( AP.PreOut || ( AC.PreDebug & DUMPTOCOMPILER )
+						if ( AP.PreOut || ( AP.PreDebug & DUMPTOCOMPILER )
 						== DUMPTOCOMPILER ) MesPrint(" %s",AC.iBuffer);
 						retcode = CompileStatement(AC.iBuffer);
 						if ( retcode < 0 ) error1++;
 						if ( retcode ) error2++;
-						if ( AC.PreAssignFlag ) {
+						if ( AP.PreAssignFlag ) {
 							if ( retcode == 0 ) {
 								if ( ( retcode = CatchDollar(0) ) < 0 ) error1++;
 								else if ( retcode > 0 ) error2++;
 							}
 							else CatchDollar(-1);
-							AC.PreAssignFlag = 0;
+							AP.PreAssignFlag = 0;
 							NumPotModdollars = onpmd;
 						}
 					}
@@ -862,7 +862,7 @@ startnewmodule:;
 						MesPrint(" %s",AC.iBuffer);
 					}
 				}
-				AC.PreAssignFlag = 0;
+				AP.PreAssignFlag = 0;
 			}
 		}
 	}
@@ -894,11 +894,11 @@ PreProInstruction ARG0
 		else if ( StrICmp(AP.preStart,(UBYTE *)"assign ") == 0 ) {}
 		else { LoadInstruction(1); }
 	}
-	else if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) {
+	else if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) {
 		LoadInstruction(3);
 		if ( ( StrICmp(AP.preStart,(UBYTE *)"else") == 0
 		|| StrICmp(AP.preStart,(UBYTE *)"elseif") == 0 )
-		&& AP.PreIfStack[AC.PreIfLevel] == LOOKINGFORELSE ) {
+		&& AP.PreIfStack[AP.PreIfLevel] == LOOKINGFORELSE ) {
 			LoadInstruction(0);
 		}
 		else if ( StrICmp(AP.preStart,(UBYTE *)"assign ") == 0 ) {}
@@ -1571,7 +1571,7 @@ TheDefine ARG2(UBYTE *,s,int,mode)
 #ifdef SCANSTRING
 	UBYTE *name, *value, *t, one[] = "1";
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( ScanString(s,"% %w% %S",&name,&t) <= 0 ) return(-1);
 	if ( *t == 0 ) value = one;
 	else if ( ScanString(t,"\"%s\"",&value) <= 0 ) return(-1);
@@ -1580,7 +1580,7 @@ TheDefine ARG2(UBYTE *,s,int,mode)
 #else
 	UBYTE *name, *value, *valpoin, *args = 0, c;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	name = s;
 	if ( chartype[*s] != 0 ) goto illname;
 	s++;
@@ -1649,7 +1649,7 @@ DoCommentChar ARG1(UBYTE *,s)
 {
 	UBYTE c;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == 0 || *s == '\n' ) {
 		MesPrint("@No valid comment character specified");
@@ -1683,18 +1683,18 @@ DoPreAssign ARG1(UBYTE *,s)
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) {
 		return(0);
 	}
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) {
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) {
 		return(0);
 	}
 	if ( *s ) {
 		MesPrint("@Illegal characters in %#assign instruction");
 		error = 1;
 	}
-	AC.PreAssignFlag = 1;
-	if ( AC.PreContinuation ) {
+	AP.PreAssignFlag = 1;
+	if ( AP.PreContinuation ) {
 		MesPrint("@Assign instructions cannot occur inside statements");
 		MesPrint("@Missing ; ?");
-		AC.PreContinuation = 0;
+		AP.PreContinuation = 0;
 		error = 1;
 	}
 	return(error);
@@ -1790,7 +1790,7 @@ DoUndefine ARG1(UBYTE *,s)
 	PREVAR *p;
 */
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	name = s;
 	if ( chartype[*s] != 0 ) goto illname;
 	s++;
@@ -1836,7 +1836,7 @@ DoInclude ARG1(UBYTE *,s)
 	UBYTE *name = s, *fold, *t, c, c1 = 0, c2 = 0, c3 = 0;
 	int str1offset, withnolist = AC.NoShowInput;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
     if ( *s == '-' || *s == '+' ) {
 		if ( *s == '-' ) withnolist = 1;
 		else             withnolist = 0;
@@ -1980,7 +1980,7 @@ DoPreExchange ARG1(UBYTE *,s)
 	UBYTE *s1, *s2;
 	WORD num1, num2;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 	if ( *s == '$' ) {
 		s++; s1 = s; while ( FG.cTable[*s] <= 1 ) s++;
@@ -2045,7 +2045,7 @@ DoCall ARG1(UBYTE *,s)
 	int i, namesize, narg1, narg2, bralevel, numpre;
 	long i1, i2;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 /*
 	1:	Get the name of the procedure.
 	2:	Locate the procedure.
@@ -2210,7 +2210,7 @@ DoDebug ARG1(UBYTE *,s)
 {
 	int x;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	NeedNumber(x,s,nonumber)
 	if ( x < 0 || x >(PREPROONLY
 					| DUMPTOCOMPILER
@@ -2222,15 +2222,15 @@ DoDebug ARG1(UBYTE *,s)
 					| THREADSDEBUG
 #endif
 			 ) ) goto nonumber;
-	AC.PreDebug = 0;
-	if ( ( x & PREPROONLY     ) != 0 ) AC.PreDebug |= PREPROONLY;     /* 1  */
-	if ( ( x & DUMPTOCOMPILER ) != 0 ) AC.PreDebug |= DUMPTOCOMPILER; /* 2  */
-	if ( ( x & DUMPOUTTERMS   ) != 0 ) AC.PreDebug |= DUMPOUTTERMS;   /* 4  */
-	if ( ( x & DUMPINTERMS    ) != 0 ) AC.PreDebug |= DUMPINTERMS;    /* 8  */
-	if ( ( x & DUMPTOSORT     ) != 0 ) AC.PreDebug |= DUMPTOSORT;     /* 16 */
-	if ( ( x & DUMPTOPARALLEL ) != 0 ) AC.PreDebug |= DUMPTOPARALLEL; /* 32 */
+	AP.PreDebug = 0;
+	if ( ( x & PREPROONLY     ) != 0 ) AP.PreDebug |= PREPROONLY;     /* 1  */
+	if ( ( x & DUMPTOCOMPILER ) != 0 ) AP.PreDebug |= DUMPTOCOMPILER; /* 2  */
+	if ( ( x & DUMPOUTTERMS   ) != 0 ) AP.PreDebug |= DUMPOUTTERMS;   /* 4  */
+	if ( ( x & DUMPINTERMS    ) != 0 ) AP.PreDebug |= DUMPINTERMS;    /* 8  */
+	if ( ( x & DUMPTOSORT     ) != 0 ) AP.PreDebug |= DUMPTOSORT;     /* 16 */
+	if ( ( x & DUMPTOPARALLEL ) != 0 ) AP.PreDebug |= DUMPTOPARALLEL; /* 32 */
 #ifdef WITHPTHREADS
-	if ( ( x & THREADSDEBUG   ) != 0 ) AC.PreDebug |= THREADSDEBUG;   /* 64 */
+	if ( ( x & THREADSDEBUG   ) != 0 ) AP.PreDebug |= THREADSDEBUG;   /* 64 */
 #endif
 	return(0);
 nonumber:
@@ -2248,7 +2248,7 @@ DoTerminate ARG1(UBYTE *,s)
 {
 	int x;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( *s ) {
 		NeedNumber(x,s,nonumber)
 		Terminate(x);
@@ -2286,14 +2286,14 @@ DoDo ARG1(UBYTE *,s)
 	int oldNoShowInput = AC.NoShowInput, i;
 
 	if ( ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH )
-	|| ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) ) {
+	|| ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ) {
 		if ( PreSkip((UBYTE *)"do",(UBYTE *)"enddo",1) ) return(-1);
 		return(0);
 	}
 
 /*
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 */
 	AddToPreTypes(PRETYPEDO);
  
@@ -2400,13 +2400,13 @@ DoDo ARG1(UBYTE *,s)
 		Note that we remember the dollar by name and that this name ends in _
 printf ( "%s\n",loop->dollarname);
 */
-		AC.PreAssignFlag = 2;
+		AP.PreAssignFlag = 2;
         CompileStatement(loop->dollarname);
 		if ( CatchDollar(0) ) {
 			MesPrint("@Cannot load expression in do loop");
 			return(-1);
 		}
-		AC.PreAssignFlag = 0;
+		AP.PreAssignFlag = 0;
 		*uu = 0;
 	}
 	else goto illdo; /* Syntax problems */
@@ -2433,7 +2433,7 @@ int
 DoElse ARG1(UBYTE *,s)
 {
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
-		if ( AC.PreIfLevel <= 0 ) MesPrint("@%#else without corresponding %#if");
+		if ( AP.PreIfLevel <= 0 ) MesPrint("@%#else without corresponding %#if");
 		else MessPreNesting(1);
 		return(-1);
 	}
@@ -2445,16 +2445,16 @@ DoElse ARG1(UBYTE *,s)
 		while ( *s == ' ' ) s++;
 		return(DoElseif(s));
 	}
-	if ( AC.PreIfLevel <= 0 ) {
+	if ( AP.PreIfLevel <= 0 ) {
 		MesPrint("@%#else without corresponding %#if");
 		return(-1);
 	}
-	switch ( AP.PreIfStack[AC.PreIfLevel] ) {
+	switch ( AP.PreIfStack[AP.PreIfLevel] ) {
 		case EXECUTINGIF:
-			AP.PreIfStack[AC.PreIfLevel] = LOOKINGFORENDIF;
+			AP.PreIfStack[AP.PreIfLevel] = LOOKINGFORENDIF;
 			break;
 		case LOOKINGFORELSE:
-			AP.PreIfStack[AC.PreIfLevel] = EXECUTINGIF;
+			AP.PreIfStack[AP.PreIfLevel] = EXECUTINGIF;
 			break;
 		case LOOKINGFORENDIF:
 			break;
@@ -2472,22 +2472,22 @@ DoElseif ARG1(UBYTE *,s)
 {
 	int condition;
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
-		if ( AC.PreIfLevel <= 0 ) MesPrint("@%#elseif without corresponding %#if");
+		if ( AP.PreIfLevel <= 0 ) MesPrint("@%#elseif without corresponding %#if");
 		else MessPreNesting(2);
 		return(-1);
 	}
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AC.PreIfLevel <= 0 ) {
+	if ( AP.PreIfLevel <= 0 ) {
 		MesPrint("@%#elseif without corresponding %#if");
 		return(-1);
 	}
-	switch ( AP.PreIfStack[AC.PreIfLevel] ) {
+	switch ( AP.PreIfStack[AP.PreIfLevel] ) {
 		case EXECUTINGIF:
-			AP.PreIfStack[AC.PreIfLevel] = LOOKINGFORENDIF;
+			AP.PreIfStack[AP.PreIfLevel] = LOOKINGFORENDIF;
 			break;
 		case LOOKINGFORELSE:
 			if ( ( condition = EvalPreIf(s) ) < 0 ) return(-1);
-			AP.PreIfStack[AC.PreIfLevel] = condition;
+			AP.PreIfStack[AP.PreIfLevel] = condition;
 			break;
 		case LOOKINGFORENDIF:
 			break;
@@ -2511,10 +2511,10 @@ DoEnddo ARG1(UBYTE *,s)
 	LONG xval;
 	int xsign;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 /*
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ||
-		AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) {
+		AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) {
 		if ( AP.PreTypes[AP.NumPreTypes] == PRETYPEDO ) AP.NumPreTypes--;
 		else { MessPreNesting(3); return(-1); }
 		return(0);
@@ -2638,17 +2638,17 @@ int
 DoEndif ARG1(UBYTE *,s)
 {
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
-		if ( AC.PreIfLevel <= 0 ) MesPrint("@%#endif without corresponding %#if");
+		if ( AP.PreIfLevel <= 0 ) MesPrint("@%#endif without corresponding %#if");
 		else MessPreNesting(5);
 		return(-1);
 	}
 	AP.NumPreTypes--;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AC.PreIfLevel <= 0 ) {
+	if ( AP.PreIfLevel <= 0 ) {
 		MesPrint("@%#endif without corresponding %#if");
 		return(-1);
 	}
-	AC.PreIfLevel--;
+	AP.PreIfLevel--;
 	return(0);
 }
 
@@ -2671,7 +2671,7 @@ DoEndprocedure ARG1(UBYTE *,s)
 	}
 	AP.NumPreTypes--;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	AC.CurrentStream = CloseStream(AC.CurrentStream);
 	do {
 		NumProcedures--;
@@ -2694,16 +2694,16 @@ DoIf ARG1(UBYTE *,s)
 	int condition;
 	AddToPreTypes(PRETYPEIF);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] == EXECUTINGIF ) {
+	if ( AP.PreIfStack[AP.PreIfLevel] == EXECUTINGIF ) {
 		condition = EvalPreIf(s);
 		if ( condition < 0 ) return(-1);
 	}
 	else condition = LOOKINGFORENDIF;
-	if ( AC.PreIfLevel+1 >= AC.MaxPreIfLevel ) {
-		if ( DoubleList((VOID ***)&AP.PreIfStack,&AC.MaxPreIfLevel,sizeof(int),
+	if ( AP.PreIfLevel+1 >= AP.MaxPreIfLevel ) {
+		if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) return(-1);
 	}
-	AP.PreIfStack[++AC.PreIfLevel] = condition;
+	AP.PreIfStack[++AP.PreIfLevel] = condition;
 	return(0);
 }
 
@@ -2718,17 +2718,17 @@ DoIfdef ARG2(UBYTE *,s,int,par)
 	int condition;
 	AddToPreTypes(PRETYPEIF);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] == EXECUTINGIF ) {
+	if ( AP.PreIfStack[AP.PreIfLevel] == EXECUTINGIF ) {
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( ( *s == 0 ) == ( par == 1 ) ) condition = LOOKINGFORELSE;
 		else                               condition = EXECUTINGIF;
 	}
 	else condition = LOOKINGFORENDIF;
-	if ( AC.PreIfLevel+1 >= AC.MaxPreIfLevel ) {
-		if ( DoubleList((VOID ***)&AP.PreIfStack,&AC.MaxPreIfLevel,sizeof(int),
+	if ( AP.PreIfLevel+1 >= AP.MaxPreIfLevel ) {
+		if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) return(-1);
 	}
-	AP.PreIfStack[++AC.PreIfLevel] = condition;
+	AP.PreIfStack[++AP.PreIfLevel] = condition;
 	return(0);
 }
 
@@ -2741,7 +2741,7 @@ int
 DoMessage ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	MesPrint("~~~%s",s);
 	return(0);
@@ -2756,7 +2756,7 @@ int
 DoPipe ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 /*[29jul2004 mt]:*/
 #ifdef PARALLEL
 Error0("Temporary pipes not supported in parallel mode");
@@ -2784,7 +2784,7 @@ DoPrcExtension ARG1(UBYTE *,s)
 {
 	UBYTE *t, *u, c;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == 0 || *s == '\n' ) {
 		MesPrint("@No valid procedure extension specified");
@@ -2818,7 +2818,7 @@ int
 DoPreOut ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( tolower(*s) == 'o' ) {
 		if ( tolower(s[1]) == 'n' && s[2] == 0 ) {
 			AP.PreOut = 1;
@@ -2842,7 +2842,7 @@ int
 DoPrePrint ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	return(0);
 }
 
@@ -2860,7 +2860,7 @@ DoPreAppend ARG1(UBYTE *,s)
 	UBYTE *name, *to;
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 /*
 	Determine where to write
@@ -2903,7 +2903,7 @@ DoPreCreate ARG1(UBYTE *,s)
 	UBYTE *name, *to;
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 /*
 	Determine where to write
@@ -2942,7 +2942,7 @@ DoPreRemove ARG1(UBYTE *,s)
 {
 	UBYTE *name, *to;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == '<' ) { s++; }
 	else {
@@ -2975,7 +2975,7 @@ DoPreClose ARG1(UBYTE *,s)
 {
 	UBYTE *name, *to;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == '<' ) { s++; }
 	else {
@@ -3019,7 +3019,7 @@ DoPreWrite ARG1(UBYTE *,s)
 	HANDLERS h;
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 	h.oldsilent    = AM.silent;
 	h.newlogonly   = h.oldlogonly = AM.FileOnlyFlag;
@@ -3057,7 +3057,7 @@ DoProcedure ARG1(UBYTE *,s)
 	PROCEDURE *p;
 	LONG i;
 	if ( ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH )
-	|| ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) ) {
+	|| ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ) {
 		if ( PreSkip((UBYTE *)"procedure",(UBYTE *)"endprocedure",1) ) return(-1);
 		return(0);
 	}
@@ -3095,7 +3095,7 @@ DoProcedure ARG1(UBYTE *,s)
 
 int DoPreBreak ARG1(UBYTE *,s)
 {
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
 			 MesPrint("@Break without corresponding Switch");
@@ -3119,7 +3119,7 @@ int DoPreBreak ARG1(UBYTE *,s)
 int DoPreCase ARG1(UBYTE *,s)
 {
 	UBYTE *t;
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
 			 MesPrint("@Case without corresponding Switch");
@@ -3157,7 +3157,7 @@ int DoPreCase ARG1(UBYTE *,s)
 
 int DoPreDefault ARG1(UBYTE *,s)
 {
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
 			 MesPrint("@Default without corresponding Switch");
@@ -3180,7 +3180,7 @@ int DoPreDefault ARG1(UBYTE *,s)
 
 int DoPreEndSwitch ARG1(UBYTE *,s)
 {
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
 			 MesPrint("@EndSwitch without corresponding Switch");
@@ -3208,7 +3208,7 @@ int DoPreSwitch ARG1(UBYTE *,s)
 {
 	UBYTE *t, *switchstring, **newstrings;
 	int newnum, i, *newmodes;
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	SKIPBLANKS(s)
 	t = s;
 	while ( *s ) { if ( *s == '\\' ) s++; s++; }
@@ -3264,7 +3264,7 @@ DoPreShow ARG1(UBYTE *,s)
 	int i;
 	UBYTE *name, c;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == 0 ) {
 		MesPrint("%#The preprocessor variables:");
@@ -3296,7 +3296,7 @@ int
 DoSystem ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -3329,7 +3329,7 @@ int DoPreNormPoly ARG1(UBYTE *,s)
 	UBYTE *s1, c;
 	WORD num1, num2, num3;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 	if ( *s != '(' ) goto syntax;
 	s++;
@@ -3589,10 +3589,10 @@ PreSkip ARG3(UBYTE *,start,UBYTE *,stop,int,mode)
 VOID
 StartPrepro ARG0
 {
-	AC.MaxPreIfLevel = 2;
-	if ( DoubleList((VOID ***)&AP.PreIfStack,&AC.MaxPreIfLevel,sizeof(int),
+	AP.MaxPreIfLevel = 2;
+	if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) Terminate(-1);
-	AC.PreIfLevel = 0; AP.PreIfStack[0] = EXECUTINGIF;
+	AP.PreIfLevel = 0; AP.PreIfStack[0] = EXECUTINGIF;
 
 	AP.NumPreSwitchStrings = 10;
 	AP.PreSwitchStrings = (UBYTE **)Malloc1(sizeof(UBYTE *)*
@@ -4308,7 +4308,7 @@ int
 DoPreAddSeparator ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	for(;*s != '\0';s++){
 		while ( *s == ' ' || *s == '\t' || *s == '"') s++;
 		/* Todo: 
@@ -4334,7 +4334,7 @@ int
 DoPreRmSeparator ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	for(;*s != '\0';s++){
 		while ( *s == ' ' || *s == '\t' || *s == '"') s++;
 		set_del(*s,AC.separators);
@@ -4354,7 +4354,7 @@ DoExternal ARG1(UBYTE *,s)
 	UBYTE *prevar=0;
 	int externalD= 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -4429,7 +4429,7 @@ int
 DoPrompt ARG1(UBYTE *,s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -4460,7 +4460,7 @@ DoSetExternal ARG1(UBYTE *,s)
 {
 	int n=0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -4529,7 +4529,7 @@ DoSetExternalAttr ARG1(UBYTE *,s)
 	int lnam,lval;
 	UBYTE *nam,*val;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	do{
@@ -4640,7 +4640,7 @@ DoRmExternal ARG1(UBYTE *,s)
 {
 	int n = -1;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -4707,7 +4707,7 @@ DoFromExternal ARG1(UBYTE *,s)
    int withNoList=AC.NoShowInput;
 	/*:[17may2006 mt]*/
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 #ifdef WITHEXTERNALCHANNEL
 	
 	FLUSHCONSOLE;
@@ -4834,14 +4834,14 @@ DoFromExternal ARG1(UBYTE *,s)
 			*c++='=';
 			b=buf;
 			while(  (*c++=*b++)!='\0'  );
-			AC.PreAssignFlag = 1;
+			AP.PreAssignFlag = 1;
 			if(
 					CompileStatement(pbuf)
 					||CatchDollar(0)
 			){
 				Error1("External channel: can't asign output to dollar variable ",prevar);
 			}
-			AC.PreAssignFlag = 0;
+			AP.PreAssignFlag = 0;
 			M_free(pbuf,"Fromexternal to dollar");
 		}else{
 			/*:[18may20006 mt]*/
@@ -4894,7 +4894,7 @@ DoToExternal ARG1(UBYTE *,s)
 	int ret=-1;
 #ifdef WITHEXTERNALCHANNEL
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AC.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 	h.oldsilent=AM.silent;
 	h.newlogonly = h.oldlogonly = AM.FileOnlyFlag;

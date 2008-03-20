@@ -217,7 +217,7 @@ donumber:		i = 0;
 					s = in;
 					if ( FG.cTable[*in] == 0 ) {
 						while ( FG.cTable[*in] == 0 || FG.cTable[*in] == 1 ) in++;
-						if ( *in == '_' && AC.PreAssignFlag == 2 ) in++;
+						if ( *in == '_' && AP.PreAssignFlag == 2 ) in++;
 						c = *in; *in = 0;
 						if ( object > 0 ) {
 							if ( object != 1 || leftright == RHSIDE ) {

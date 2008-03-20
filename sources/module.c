@@ -259,7 +259,7 @@ FullCleanUp ARG0
 
 	while ( AC.CurrentStream->previous >= 0 )
 		AC.CurrentStream = CloseStream(AC.CurrentStream);
-	AP.PreSwitchLevel = AC.PreIfLevel = 0;
+	AP.PreSwitchLevel = AP.PreIfLevel = 0;
 
 	for ( j = NumProcedures-1; j >= 0; j-- ) {
 		if ( Procedures[j].name ) M_free(Procedures[j].name,"name of procedure");

@@ -1103,7 +1103,7 @@ PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
 		fi->POfill = p;
 		return(ret);
 	}
-	if ( ( AC.PreDebug & DUMPOUTTERMS ) == DUMPOUTTERMS ) {
+	if ( ( AP.PreDebug & DUMPOUTTERMS ) == DUMPOUTTERMS ) {
 			LOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 			sprintf((char *)(THRbuf),"PutOut(%d)",AT.identity);
@@ -3649,7 +3649,7 @@ StoreTerm BARG1(WORD *,term)
 	POSITION pp;
 	LONG lSpace, sSpace, RetCode, over, tover;
 
-	if ( ( AC.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) {
+	if ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) {
 #ifdef WITHPTHREADS
 		sprintf((char *)(THRbuf),"StoreTerm(%d)",AT.identity);
 		PrintTerm(term,(char *)(THRbuf));

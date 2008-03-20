@@ -1260,12 +1260,11 @@ struct P_const {
     int *PreIfStack;               /* (P) Tracks nesting of #if */
     int *PreSwitchModes;           /* (P) Stack of switch status */
     int *PreTypes;                 /* (P) stack of #call, #do etc nesting */
-    DOLOOP      DoLoops[MAXLOOPS+1];/* (P) */
-    PROCEDURE   FirstProc;         /* (P) */
-    PROCEDURE   CurProc;           /* (P) */
 #ifdef WITHPTHREADS
 	pthread_mutex_t PreVarLock;    /* (P) */
 #endif
+    int     PreAssignFlag;         /* (C) Indicates #assign -> catch dollar */
+    int     PreContinuation;       /* (C) Indicates whether the statement is new */
     LONG    InOutBuf;              /* (P) Characters in the output buf in pre.c */
     LONG    pSize;                 /* (P) size of preStart */
     int     PreproFlag;            /* (P) Internal use to mark work on prepro instr. */
@@ -1275,11 +1274,14 @@ struct P_const {
     int     NumPreSwitchStrings;   /* (P) Size of PreSwitchStrings */
     int     MaxPreTypes;           /* (P) Size of PreTypes */
     int     NumPreTypes;           /* (P) Number of nesting objects in PreTypes */
+    int     MaxPreIfLevel;         /* (C) Maximum number of nested #if. Dynamic */
+    int     PreIfLevel;            /* (C) Current position if PreIfStack */
     int     DelayPrevar;           /* (P) Delaying prevar substitution */
     int     AllowDelay;            /* (P) Allow delayed prevar substitution */
     int     lhdollarerror;         /* (R) */
 	int		eat;                   /* () */
 	int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
+    int     PreDebug;              /* (C) */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (?) used but not defined */
     UBYTE   ComChar;               /* (P) Commentary character */
@@ -1376,10 +1378,7 @@ struct C_const {
     LONG    mSlavePatchSize;       /* (C) */
     LONG    CModule;               /* (C) Counter of current module */
     LONG    ThreadBucketSize;      /* (C) Roughly the maximum number of input terms */
-    int     MaxPreIfLevel;         /* (C) Maximum number of nested #if. Dynamic */
     int     NoShowInput;           /* (C) No listing of input as in .prc, #do */
-    int     PreDebug;              /* (C) */
-    int     PreIfLevel;            /* (C) */
     int     ShortStats;            /* (C) */
     int     compiletype;           /* (C) type of statement {DECLARATION etc} */
     int     firstconstindex;       /* (C) flag for giving first error message */
@@ -1401,8 +1400,6 @@ struct C_const {
     int     BottomLevel;           /* (C) For propercount. Not used!!! */
     int     CompileLevel;          /* (C) Subexpression level */
     int     TokensWriteFlag;       /* (C) */
-    int     PreAssignFlag;         /* (C) Indicates #assign -> catch dollar */
-    int     PreContinuation;       /* (C) Indicates whether the statement is new */
     int     AutoDeclareFlag;       /* (C) Mode of looking for names */
     int     UnsureDollarMode;      /* (C)?Controls error messages undefined $'s */
     int     outsidefun;            /* (C) Used for writing Tables to file */

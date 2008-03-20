@@ -175,7 +175,7 @@ printversion:;
 							AM.InputFileName = 0;
 							break;
 				case 'y': /* Preprocessor dumps output. No compilation. */
-							AC.PreDebug = PREPROONLY;   break;
+							AP.PreDebug = PREPROONLY;   break;
 				case 'R': /* recover from saved snapshot */
 							AC.CheckpointFlag = -1;
 							break;
@@ -575,7 +575,7 @@ StartVariables ARG0
 	AM.MaxStreamSize = 1024;
 	AC.iBufferSize = 512;
 	AP.pSize = 128;
-	AC.MaxPreIfLevel = 10;
+	AP.MaxPreIfLevel = 10;
 	AP.cComChar = AP.ComChar = '*';
 	AM.OffsetVector = -2*WILDOFFSET+MINSPEC;
 	AC.cbufList.num = 0;
@@ -960,7 +960,7 @@ IniVars()
 	AP.ComChar = AP.cComChar;
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
-	AC.PreAssignFlag = 0;
+	AP.PreAssignFlag = 0;
 
 	return(0);
 }

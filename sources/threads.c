@@ -1196,7 +1196,7 @@ void *RunThread ARG1(void *,dummy)
 				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				  if ( ( AC.PreDebug & THREADSDEBUG ) != 0 ) {
+				  if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("Thread %w executing term:");
 					PrintTerm(term,"LLG");
