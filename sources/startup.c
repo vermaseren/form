@@ -176,6 +176,9 @@ printversion:;
 							break;
 				case 'y': /* Preprocessor dumps output. No compilation. */
 							AC.PreDebug = PREPROONLY;   break;
+				case 'R': /* recover from saved snapshot */
+							AC.CheckpointFlag = -1;
+							break;
 				default:
 						if ( FG.cTable[*s] == 1 ) {
 							AM.SkipClears = 0; t = s;
@@ -1153,6 +1156,23 @@ main ARG2(int,argc,char **,argv)
 #endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
+	if ( CheckRecoveryFile() ) {
+		if ( AC.CheckpointFlag != -1 ) {
+			/* recovery file exists but recovery option is not given */
+			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
+			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
+			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
+			Terminate(-1);
+		}
+	}
+	else {
+		if ( AC.CheckpointFlag == -1 ) {
+			/* recovery option given but recovery file does not exist */
+			MesPrint("Option -R for recovery has been given, but the recovery file");
+			MesPrint("%s does not exist!", RecoveryFilename());
+			Terminate(-1);
+		}
+	}
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
 	AS.MultiThreaded = 0;
 #ifdef WITHPTHREADS

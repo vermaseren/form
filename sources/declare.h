@@ -1391,6 +1391,11 @@ DECLARE(UBYTE *ReadSaveTerm32,(UBYTE *,UBYTE *,UBYTE **,UBYTE *,UBYTE *,int))
 DECLARE(WORD ReadSaveVariables,(UBYTE *,UBYTE *,LONG *,LONG *,INDEXENTRY *,LONG *))
 DECLARE(WORD WriteStoreHeader,(WORD))
 
+DECLARE(int CheckRecoveryFile,ARG0)
+DECLARE(char *RecoveryFilename,ARG0)
+DECLARE(int DoRecovery,ARG0)
+DECLARE(void DoCheckpoint,ARG0)
+
 /*
   	#] Declarations :
 */

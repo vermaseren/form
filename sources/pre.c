@@ -677,6 +677,10 @@ PreProcessor ARG0
 	AC.compiletype = 0;
 	AC.PreContinuation = 0;
 	AP.gNumPre = NumPre;
+
+	if ( AC.CheckpointFlag == -1 ) DoRecovery();
+	AC.CheckpointStamp = Timer(0);
+
 	for(;;) {
 /*		if ( A.StatisticsFlag ) CharOut(LINEFEED); */
 
@@ -760,6 +764,7 @@ PreProcessor ARG0
 endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						if ( AM.safetyfirst == 0 ) {
 							UBYTE *sss, *ssss, rs[14];
+							/* rs[] = "NAMEVERSION_\0\0" */
 							rs[1] = 'A'; rs[3] = rs[5] = 'E';
 							rs[8] = 'I'; rs[2] = 'M';
 							rs[0] = rs[10] = 'N'; rs[9] = 'O';
@@ -784,13 +789,13 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 					switch ( moduletype ) {
 						case STOREMODULE:
 							if ( ExecStore() ) error1++;
-							break;
+							goto startnewmodule;
 						case CLEARMODULE:
 							FullCleanUp();
 							error1 = error2 = 0;
 							PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,1);
 							if ( AM.resetTimeOnClear ) TimeCPU(0);
-							break;
+							goto startnewmodule;
 						case ENDMODULE:
 							Terminate( -( error1 | error2 ) );
 					}
@@ -800,7 +805,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( AC.exprfillwarning > 0 ) {
 					AC.exprfillwarning = 0;
 				}
-				
+
+startnewmodule:;
+				if ( AC.CheckpointFlag ) DoCheckpoint();
 				break;  /* start a new module */
 			}
 			else {

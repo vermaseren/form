@@ -1,5 +1,6 @@
 SRCBASE = \
 	argument.c \
+	checkpoint.c \
 	comexpr.c \
 	compcomm.c \
 	compiler.c \

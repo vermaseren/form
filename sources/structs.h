@@ -1479,6 +1479,19 @@ struct C_const {
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
+    int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
+                                        -1 : do recovery from snapshot, set by command line option;
+                                        0 : do nothing; 1 : create snapshots, set by On checkpoint
+                                        statement */
+    LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)) */
+    char    *CheckpointRunAfter;   /**< Filename of script to be executed _before_ creating the
+                                        snapshot. Dynamically allocated in startup.c. NULL if no
+                                        script shall be executed. */
+    char    *CheckpointRunBefore;  /**< Filename of script to be executed _after_ having created
+                                        the snapshot. Dynamically allocated in startup.c. NULL if
+                                        no script shall be executed. */
+    LONG    CheckpointInterval;    /**< Timeinterval in milliseconds for snapshots. 0 if snapshots
+                                        shall be created at the end of _every_ module. */
 };
 /*
  		#] C : 
