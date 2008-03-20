@@ -780,7 +780,6 @@ IniVars()
 #endif
 	WORD *fi, i, one = 1;
 	CBUF *C = cbuf+AC.cbufnum;
-	UBYTE *s;
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
 	AR.SortType = AC.SortType = AC.lSortType = AM.gSortType;
@@ -959,36 +958,6 @@ IniVars()
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AC.PreAssignFlag = 0;
-
-	s = AM.SaveFileHeader;
-	*s++ = sizeof(char);
-	*s++ = sizeof(WORD);
-	*s++ = sizeof(LONG);
-	*s++ = sizeof(char *);
-	*s++ = MAJORVERSION >> 8;
-	*s++ = MAJORVERSION;
-	*s++ = (UBYTE)((MINORVERSION & 0xFFFF) >> 8);
-	*s++ = (UBYTE)(MINORVERSION & 0xFF);
-	i = 8 - sizeof(LONG); while ( --i >= 0 ) *s++ = 0;
-	i = sizeof(LONG);     while ( --i >= 0 ) *s++ = AM.ZipBufferSize >> (i*8);
-	*s++ = sizeof(struct SyMbOl) >> 8;
-	*s++ = sizeof(struct SyMbOl);
-	*s++ = sizeof(struct InDeX) >> 8;
-	*s++ = sizeof(struct InDeX);
-	*s++ = sizeof(struct VeCtOr) >> 8;
-	*s++ = sizeof(struct VeCtOr);
-	*s++ = sizeof(struct FuNcTiOn) >> 8;
-	*s++ = sizeof(struct FuNcTiOn);
-	*s++ = sizeof(POSITION) >> 8;
-	*s++ = sizeof(POSITION);
-	*s++ = sizeof(INDEXENTRY) >> 8;
-	*s++ = sizeof(INDEXENTRY);
-	*s++ = sizeof(FILEINDEX) >> 8;
-	*s++ = (UBYTE)(sizeof(FILEINDEX));
-	*s++ = (UBYTE)(AM.OffsetIndex >> 8);
-	*s++ = (UBYTE)(AM.OffsetIndex);
-	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
-	*s++ = 0; *s++ = 0; *s++ = 0; *s++ = 0;
 
 	return(0);
 }

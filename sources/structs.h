@@ -1231,7 +1231,6 @@ struct M_const {
     WORD    NumStoreCaches;        /* () Number of storage caches per processor */
     WORD    gIndentSpace;          /* For indentation in output */
 	WORD	ggIndentSpace;
-    UBYTE   SaveFileHeader[SFHSIZE];/*(M) Header written to .str and .sav files */
 };
 /*
  		#] M : 
@@ -1906,7 +1905,8 @@ struct N_const {
  *	The O_const struct is part of the global data and resides in the
  *	ALLGLOBALS struct A under the name O
  *	We see it used with the macro AO as in AO.OutputLine
- *	It contains variables that involve the writing of text output.
+ *	It contains variables that involve the writing of text output and
+ *	save/store files.
  */
 
 struct O_const {
