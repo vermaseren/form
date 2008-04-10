@@ -789,13 +789,13 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 					switch ( moduletype ) {
 						case STOREMODULE:
 							if ( ExecStore() ) error1++;
-							goto startnewmodule;
+							break;
 						case CLEARMODULE:
 							FullCleanUp();
 							error1 = error2 = 0;
 							PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,1);
 							if ( AM.resetTimeOnClear ) TimeCPU(0);
-							goto startnewmodule;
+							break;
 						case ENDMODULE:
 							Terminate( -( error1 | error2 ) );
 					}
@@ -805,8 +805,6 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( AC.exprfillwarning > 0 ) {
 					AC.exprfillwarning = 0;
 				}
-
-startnewmodule:;
 				if ( AC.CheckpointFlag ) DoCheckpoint();
 				break;  /* start a new module */
 			}
