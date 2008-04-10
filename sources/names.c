@@ -1414,8 +1414,8 @@ DoTable ARG2(UBYTE *,s,int,par)
 		OldWork[1] = i;
 		j = cbuf[AC.cbufnum].Pointer-cbuf[AC.cbufnum].lhs[ret] + T->numind*2-3;
 #ifdef WITHPTHREADS
-		T->prototype = (WORD **)Malloc1(((i+j)*sizeof(WORD)+2*sizeof(WORD *))*
-				AM.totalnumberofthreads,"table prototype");
+		T->prototypeSize = ((i+j)*sizeof(WORD)+2*sizeof(WORD *)) * AM.totalnumberofthreads;
+		T->prototype = (WORD **)Malloc1(T->prototypeSize,"table prototype");
 		T->pattern = T->prototype + AM.totalnumberofthreads;
 		{
 			WORD *t; int k, n;
@@ -1427,7 +1427,8 @@ DoTable ARG2(UBYTE *,s,int,par)
 			T->pattern[0] = t;
 		}
 #else
-		T->prototype = (WORD *)Malloc1((i+j)*sizeof(WORD),"table prototype");
+		T->prototypeSize = (i+j)*sizeof(WORD);
+		T->prototype = (WORD *)Malloc1(T->prototypeSize, "table prototype");
 		T->pattern = T->prototype + i;
 		while ( --i >= 0 ) T->prototype[i] = OldWork[i];
 #endif

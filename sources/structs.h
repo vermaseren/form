@@ -331,6 +331,7 @@ typedef struct TaBlEs {
     WORD    *prototype;     /* The wildcard prototyping for arguments */
     WORD    *pattern;       /* The pattern with which to match the arguments */
 #endif
+	int     prototypeSize;  /**< Size of allocated memory for prototype in bytes. */
 	MINMAX	*mm;		    /* Array bounds, dimension by dimension */
 	WORD	*flags;         /* Is element in use ? etc */
 	COMPTREE *boomlijst;	/* Tree for searching in sparse tables */

@@ -1419,8 +1419,8 @@ DECLARE(WORD WriteStoreHeader,(WORD))
 
 DECLARE(int CheckRecoveryFile,ARG0)
 DECLARE(char *RecoveryFilename,ARG0)
-DECLARE(int DoRecovery,ARG0)
-DECLARE(void DoCheckpoint,ARG0)
+DECLARE(int DoRecovery,(PHEAD0))
+DECLARE(void DoCheckpoint,(PHEAD0))
 
 /*
   	#] Declarations : 
