@@ -204,9 +204,14 @@ typedef int (*TFUN1)();
 #define SETONLY 16
 #define EXPRESSIONONLY 32
 
-/*
-	Type of variable found by the compiler.
-*/
+
+/**
+ *  @name Defines: compiler types
+ *  Type of variable found by the compiler.
+ *  @anchor CompilerTypes
+ */
+
+/*@{*/
 
 #define CDELETE -1
 #define ANYTYPE -1
@@ -225,6 +230,8 @@ typedef int (*TFUN1)();
 #define CRANGE 12
 #define CVECTOR1 21
 #define CDOUBLEDOT 22
+
+/*@}*/
 
 /*
 	Types of tokens in the tokenizer.
