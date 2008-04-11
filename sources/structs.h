@@ -590,7 +590,6 @@ typedef struct FiLe {
 	z_streamp zsp;				/* The pointer to the stream struct for gzip */
 	Bytef *ziobuffer;			/* The output buffer for compression */
 #endif
-	POSITION *fPatches;			/* Positions of patches if sort file */
 	POSITION POposition;    	/* File position */
     POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
 	ULONG numblocks;			/* Number of blocks in file */
@@ -605,7 +604,6 @@ typedef struct FiLe {
 #endif
     int handle;					/* Our own handle */
 	int active;					/* File is open or closed. Not used. */
-	WORD fPatchN;				/* Number of patches on file */
 #ifdef WITHZLIB
 	PADPOINTER(4,2,1,0);
 #else
@@ -1315,7 +1313,6 @@ struct C_const {
     LIST IndexList;                /* (C) List of indices */
     LIST SetElementList;           /* (C) List of all elements of all sets */
     LIST SetList;                  /* (C) List of the sets */
-    LIST SortList;                 /* (C) List of sort buffers */
     LIST SymbolList;               /* (C) List of the symbols and their properties */
     LIST VectorList;               /* (C) List of the vectors */
     LIST cbufList;                 /* (C) List of compiler buffers */
@@ -1336,12 +1333,10 @@ struct C_const {
     LIST *Indices;                 /* (C) id. */
     LIST *Vectors;                 /* (C) id. */
     LIST *Functions;               /* (C) id. */
-    LIST *TableBases;
     NAMETREE **activenames;        /* (C) id. */
     STREAM  *Streams;              /* (C) The input streams. */
     STREAM  *CurrentStream;        /* (C) The current input stream.
                                        Streams are: do loop, file, prevariable */
-    TABLES  usedtables;            /* (C) For checking the use of tables */
     LONG    *termstack;            /* (C) Last term statement {offset} */
     LONG    *termsortstack;        /* (C) Last sort statement {offset} */
     WORD    *cmod;                 /* (C) Local setting of modulus. Pointer to value */
@@ -1364,7 +1359,6 @@ struct C_const {
     SBYTE *toptokens;              /* (C) Top of tokens */
     SBYTE *endoftokens;            /* (C) end of the actual tokens */
     WORD *tokenarglevel;           /* (C) keeps track of function arguments */
-    WORD    *tableuse;             /* (C) list of tables of which the use should be checked */
 #ifdef WITHPTHREADS
 	LONG    *inputnumbers;         /* For redefine */
 	WORD    *pfirstnum;            /* For redefine */
@@ -1470,7 +1464,6 @@ struct C_const {
     WORD    lPolyFun;              /* (C) local value of PolyFun */
     WORD    lPolyFunType;          /* (C) local value of PolyFunType */
     WORD    SymChangeFlag;         /* (C) */
-    WORD    inusedtables;          /* (C) Number of elements in usedtables */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
 #ifdef PARALLEL
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/

@@ -532,7 +532,6 @@ DoExecute ARG2(WORD,par,WORD,skip)
 */
 	AS.MultiThreaded = oldmultithreaded;
 	TableReset();
-	if ( AC.tableuse ) { M_free(AC.tableuse,"tableuse"); AC.tableuse = 0; }
 
 /*[28sep2005 mt]:*/
 #ifdef PARALLEL

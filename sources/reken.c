@@ -2630,7 +2630,10 @@ MakeModTable()
 {
 	LONG size, i, j, n;
 	n = ABS(AC.ncmod);
-	if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
+	if ( AC.modpowers ) {
+		M_free(AC.modpowers,"AC.modpowers");
+		AC.modpowers = NULL;
+	}
 	if ( n > 2 ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("&No memory for modulus generator power table");

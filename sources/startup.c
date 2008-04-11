@@ -617,8 +617,6 @@ StartVariables ARG0
 	AP.DollarList.size = sizeof(struct DoLlArS);
 	AC.DubiousList.message = "ambiguous variable";
 	AC.DubiousList.size = sizeof(struct DuBiOuS);
-	AC.SortList.message = "list of sort buffers";
-	AC.SortList.size = sizeof(SORTING *);
 	AC.TableBaseList.message = "list of tablebases";
 	AC.TableBaseList.size = sizeof(DBASE);
 
@@ -646,7 +644,6 @@ StartVariables ARG0
 	AC.dollarnames = MakeNameTree();
 	AC.autonames = MakeNameTree();
 	AC.activenames = &(AC.varnames);
-	AC.tableuse = 0;
 /*
 	Initialize the compiler:
 */
@@ -665,9 +662,6 @@ StartVariables ARG0
 	AC.Indices = &(AC.IndexList);
 	AC.Vectors = &(AC.VectorList);
 	AC.Functions = &(AC.FunctionList);
-	AC.TableBases = &(AC.TableBaseList);
-	AC.usedtables = 0;
-	AC.inusedtables = 0;
 	AC.vetofilling = 0;
 
 	AddDollar((UBYTE *)"$",DOLUNDEFINED,0,0);
