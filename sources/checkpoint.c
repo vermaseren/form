@@ -10,6 +10,22 @@
 
 #include "form3.h"
 
+#ifdef WITHPTHREADS
+
+void DoCheckpoint BARG0
+{}
+
+int DoRecovery BARG0
+{return(0);}
+
+int CheckRecoveryFile()
+{return(0);}
+
+char *RecoveryFilename()
+{return(0);}
+
+#else
+
 #include <errno.h>
 
 /*
@@ -380,6 +396,7 @@ void print_P()
 
 void print_R()
 {
+	GETIDENTITY
 	size_t i;
 	printf("%s\n", AR.infile->name);
 	printf("%s\n", AR.outfile->name);
@@ -668,10 +685,10 @@ int DoRecovery BARG0
 	R_COPY_LIST(AC.ModOptDolList);
 #ifdef WITHPTHREADS
 	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
-		R_COPY_B(ModOptdollars[i].dstruct, sizeof(struct DoLlArS), DOLLARS);
-		R_COPY_B(ModOptdollars[i].dstruct.where, ModOptdollars[i].dstruct.size*sizeof(WORD), WORD*);
-		ModOptdollars[i].dstruct.pthreadslockread = dummylock;
-		ModOptdollars[i].dstruct.pthreadslockwrite = dummylock;
+		R_COPY_B(ModOptdollars[i].dstruct[0], sizeof(struct DoLlArS), DOLLARS);
+		R_COPY_B(ModOptdollars[i].dstruct->where, ModOptdollars[i].dstruct->size*sizeof(WORD), WORD*);
+		ModOptdollars[i].dstruct->pthreadslockread = dummylock;
+		ModOptdollars[i].dstruct->pthreadslockwrite = dummylock;
 	}
 #endif /* ifdef WITHPTHREADS */
 
@@ -1223,7 +1240,7 @@ int DoSnapshot BARG0
 #ifdef WITHPTHREADS
 	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
 		S_WRITE_B(ModOptdollars[i].dstruct, sizeof(struct DoLlArS));
-		S_WRITE_DOLLAR(ModOptdollars[i].dstruct);
+		S_WRITE_DOLLAR((*(ModOptdollars[i].dstruct)));
 	}
 #endif /* ifdef WITHPTHREADS */
 
@@ -1506,3 +1523,5 @@ void DoCheckpoint BARG0
 /*
   	#] DoCheckpoint :
 */
+
+#endif

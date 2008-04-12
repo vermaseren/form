@@ -670,6 +670,7 @@ IniSpecialModule ARG1(int,type)
 VOID
 PreProcessor ARG0
 {
+	GETIDENTITY
 	int moduletype = FIRSTMODULE;
 	int specialtype = 0;
 	int error1 = 0, error2 = 0, retcode, numstatement, retval;
@@ -678,7 +679,7 @@ PreProcessor ARG0
 	AP.PreContinuation = 0;
 	AP.gNumPre = NumPre;
 
-	if ( AC.CheckpointFlag == -1 ) DoRecovery();
+	if ( AC.CheckpointFlag == -1 ) DoRecovery(BHEAD0);
 	AC.CheckpointStamp = Timer(0);
 
 	for(;;) {
@@ -805,7 +806,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( AC.exprfillwarning > 0 ) {
 					AC.exprfillwarning = 0;
 				}
-				if ( AC.CheckpointFlag ) DoCheckpoint();
+				if ( AC.CheckpointFlag ) DoCheckpoint(BHEAD0);
 				break;  /* start a new module */
 			}
 			else {
