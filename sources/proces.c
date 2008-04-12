@@ -2032,7 +2032,7 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	GETIDENTITY
 	WORD *r, l, *m, i;
 	WORD *stop, *s1, *s2;
-	POSITION AccPos;
+/*	POSITION AccPos; bug 12-apr-2008 JV */
 	WORD InCompState;
 	WORD *oldipointer;
 	LONG retlength;
@@ -2040,14 +2040,14 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 	*accum++ = number;
 	while ( --number >= 0 ) accum += *accum;
 	if ( freeze ) {
-		AccPos = *position;
+/*		AccPos = *position; bug 12-apr-2008 JV */
 		oldipointer = AR.CompressPointer;
 		do {
 			AR.CompressPointer = oldipointer;
-			if ( ( l = GetFromStore(accum,&AccPos,renumber,&InCompState,nexpr) ) < 0 )
+/*			if ( ( l = GetFromStore(accum,&AccPos,renumber,&InCompState,nexpr) ) < 0 ) bug 12-apr-2008 JV */
+			if ( ( l = GetFromStore(accum,position,renumber,&InCompState,nexpr) ) < 0 )
 				goto PasErr;
 			if ( !l ) { *accum = 0; return(0); }
-/*			ADDPOS(AccPos,InCompState * wsizeof(WORD)); */
 			r = accum;
 			m = r + *r;
 			m -= ABS(m[-1]);
@@ -2093,7 +2093,8 @@ PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
 				}
 			}
 		} while ( l < 0 );
-		retlength = DIFBASE(AccPos,*position) / sizeof(WORD);
+		retlength = InCompState;
+/*		retlength = DIFBASE(AccPos,*position) / sizeof(WORD);  bug 12-apr-2008 JV */
 	}
 	else {
 		if ( ( l = GetFromStore(accum,position,renumber,&InCompState,nexpr) ) < 0 ) {
@@ -2123,7 +2124,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -3360,7 +3361,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

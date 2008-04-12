@@ -1111,7 +1111,8 @@ FindRest BARG2(WORD *,term,WORD *,pattern)
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
-			while ( *t != VECTOR ) { t += t[1]; if ( t >= tstop ) return(0); }
+			while ( t < tstop && *t != VECTOR ) t += t[1];
+			if ( t >= tstop ) return(0);
 			xstop = t + t[1];
 			ystop = m + m[1];
 			t += 2;
@@ -1194,7 +1195,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 			} while ( m < ystop );
 		}
 /*
-			#] VECTORS : 
+			#] VECTORS :
 			#[ INDICES :
 */
 		else if ( *m == INDEX ) {
@@ -1249,7 +1250,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 */
 		}
 /*
-			#] INDICES : 
+			#] INDICES :
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -1346,7 +1347,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 }
 
 /*
- 		#] FindRest : 
+ 		#] FindRest :
 	#] Patterns :
 */
 

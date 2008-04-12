@@ -1601,7 +1601,23 @@ dofunction:			firstsumarg = 1;
 				deno = 1;
 				break;
 			case TNUMBER:
-				if ( *s == 0 ) { s++; sign = 0; break; /* term is zero */ }
+				if ( *s == 0 ) {
+					s++;
+					if ( *s == TPOWER ) {
+						s++; if ( *s == TMINUS ) { s++; deno = -deno; }
+						c = *s++; base = ( c == TNUMBER ) ? 100: 128;
+						x2 = 0; while ( *s >= 0 ) { x2 = x2*base + *s++; }
+						if ( x2 == 0 ) {
+							error = -1;
+							MesPrint("&Encountered 0^0 during compilation");
+						}
+						if ( deno < 0 ) {
+							error = -1;
+							MesPrint("&Division by zero during compilation (0 to the power negative number)");
+						}
+					}
+					sign = 0; break; /* term is zero */
+				}
 				y = *s++;
 				if ( *s >= 0 ) { y = 100*y + *s++; }
 				innum[0] = y; nin = 1;
@@ -1727,7 +1743,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator : 
+ 		#] CodeGenerator :
  		#[ CompleteTerm :
 
 		Completes the term

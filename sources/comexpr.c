@@ -64,7 +64,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 		if ( ( q = SkipAName(inp) ) == 0 || q[-1] == '_' ) {
 			MesPrint("&Illegal name for expression");
 			error = 1;
-			if ( q[-1] == '-' ) {
+			if ( q[-1] == '_' ) {
 				while ( FG.cTable[*q] < 2 || *q == '_' ) q++;
 			}
 		}
@@ -238,7 +238,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 

@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ Commute :
 
@@ -43,7 +43,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -228,7 +228,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -2652,14 +2652,14 @@ NextI:;
 		if ( ReplaceType == 0 ) {
 			AT.WorkPointer = termout+*termout;
 			WildFill(BHEAD term,termout,AN.ReplaceScrat);
-			if ( termout < term + *term ) termout = term + *term;
+			termout = term + *term;
 		}
 		else {
 			AT.WorkPointer = r = termout + *termout;
 			WildFill(BHEAD r,termout,AN.ReplaceScrat);
 			i = *r; m = term;
 			NCOPY(m,r,i);
-			if ( termout < m ) termout = m;
+			termout = m;
 		}
 /*
  		#[ normalize replacements :
@@ -2671,7 +2671,16 @@ NextI:;
 		in the style that TestSub uses for dirty arguments, But this again
 		involves calls to Normalize itself (and to the sorting system).
 		This is the reason why Normalize has to be reentrant.
+
+		To do things 100% right we have to call TestSub and potentially
+		invoke Generator, because there could be Table elements that
+		suddenly can be substituted!
+
+		It seems best to get the term through Generator again, but that means
+		we have to catch the output via the sort mechanism. It may be a bit
+		wasteful, but it is definitely the most correct.
 */
+#ifdef OLDNORMREPLACE
 		{
 			WORD oldpolynorm = AN.PolyNormFlag;
 			WORD *oldcterm = AN.cTerm, *tstop, *argstop, *rnext, *tt, *wt;
@@ -2840,14 +2849,30 @@ NextI:;
 			AN.PolyNormFlag = oldpolynorm;
 			AN.cTerm = oldcterm;
 		}
+		{
+			WORD *oldwork = AT.WorkPointer;
+			WORD olddefer = AR.DeferFlag;
+			AR.DeferFlag = 0;
+			NewSort();
+			if ( Generator(BHEAD term,AR.Cnumlhs) ) {
+				LowerSortLevel(); goto FromNorm;
+			}
+		    AT.WorkPointer = oldwork;
+			if ( EndSort(term,1) < 0 ) goto FromNorm;
+			if ( *term == 0 ) goto NormZero;
+			AR.DeferFlag = olddefer;
+		}
+#endif
 /*
- 		#] normalize replacements : 
+ 		#] normalize replacements :
 */
+#ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
 		if ( ReplaceType == 0 ) {
 			regval = 1;
 			goto Restart;
 		}
+#endif
 /*
 		The next 'reset' cannot be done. We still need the expression
 		in the buffer. Note though that this may cause a runaway pointer
@@ -2905,12 +2930,14 @@ FromNorm:
 	UNLOCK(ErrorMessageLock);
 	return(-1);
 
+#ifdef OLDNORMREPLACE
 OverWork:
 	LOCK(ErrorMessageLock);
 	MesWork();
 	MesCall("Norm");
 	UNLOCK(ErrorMessageLock);
 	return(-1);
+#endif
 
 /*
   	#] Errors and Finish :
