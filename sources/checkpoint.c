@@ -10,22 +10,6 @@
 
 #include "form3.h"
 
-#ifdef WITHPTHREADS
-
-void DoCheckpoint BARG0
-{}
-
-int DoRecovery BARG0
-{return(0);}
-
-int CheckRecoveryFile()
-{return(0);}
-
-char *RecoveryFilename()
-{return(0);}
-
-#else
-
 #include <errno.h>
 
 /*
@@ -499,18 +483,15 @@ void print_R()
  *  states in FORM, so that the execution can recommence in preprocessor() as
  *  if no restart of FORM had occured.
  */
-int DoRecovery BARG0
+int DoRecovery ARG0
 {
-	GETBIDENTITY
+	GETIDENTITY
 	FILE *fd;
 	POSITION pos;
 	void *buf, *p;
 	size_t size, i, j;
 	void *org, *org2, *org3, *org4, *org5;
 	int ofs;
-#ifdef WITHPTHREADS
-	pthread_mutex_t buf_PreVarLock;
-#endif
 
 	printf("Recovering ... "); fflush(0);
 
@@ -602,7 +583,11 @@ int DoRecovery BARG0
 						TABLEEXTENSION*sizeof(WORD)*(tabl->totind), WORD*);
 				}
 			}
+#ifdef WITHPTHREADS			
+			/* TODO */
+#else
 			R_COPY_B(tabl->prototype, tabl->prototypeSize, WORD*);
+#endif			
 			R_COPY_B(tabl->mm, tabl->numind*sizeof(MINMAX), MINMAX*);
 			R_COPY_B(tabl->flags, tabl->numind*sizeof(WORD), WORD*);
 			R_COPY_B(tabl->boomlijst, tabl->MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
@@ -622,7 +607,11 @@ int DoRecovery BARG0
 							TABLEEXTENSION*sizeof(WORD)*(spare->totind), WORD*);
 					}
 				}
+#ifdef WITHPTHREADS			
+			/* TODO */
+#else
 				R_COPY_B(spare->prototype, spare->prototypeSize, WORD*);
+#endif			
 				R_COPY_B(spare->mm, spare->numind*sizeof(MINMAX), MINMAX*);
 				R_COPY_B(spare->flags, spare->numind*sizeof(WORD), WORD*);
 				R_COPY_B(spare->boomlijst, spare->MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
@@ -685,7 +674,7 @@ int DoRecovery BARG0
 	R_COPY_LIST(AC.ModOptDolList);
 #ifdef WITHPTHREADS
 	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
-		R_COPY_B(ModOptdollars[i].dstruct[0], sizeof(struct DoLlArS), DOLLARS);
+		R_COPY_B(ModOptdollars[i].dstruct, sizeof(struct DoLlArS), DOLLARS);
 		R_COPY_B(ModOptdollars[i].dstruct->where, ModOptdollars[i].dstruct->size*sizeof(WORD), WORD*);
 		ModOptdollars[i].dstruct->pthreadslockread = dummylock;
 		ModOptdollars[i].dstruct->pthreadslockwrite = dummylock;
@@ -829,7 +818,7 @@ int DoRecovery BARG0
 		org = AC.inputnumbers;
 		R_COPY_B(AC.inputnumbers, AC.sizepfirstnum*(sizeof(WORD)+sizeof(LONG)), LONG*);
 		ofs = AC.inputnumbers - (LONG*)org;
-		pfirstnum += ofs;
+		AC.pfirstnum += ofs;
 	}
 #endif /* ifdef WITHPTHREADS */
 
@@ -1073,9 +1062,9 @@ int DoRecovery BARG0
  *  it renames this intermediate file to the final recovery file. Then it copies
  *  the sort and store files if necessary.
  */
-int DoSnapshot BARG0
+int DoSnapshot ARG0
 {
-	GETBIDENTITY
+	GETIDENTITY
 	FILE *fd;
 	POSITION pos;
 	size_t i, j, l;
@@ -1240,7 +1229,7 @@ int DoSnapshot BARG0
 #ifdef WITHPTHREADS
 	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
 		S_WRITE_B(ModOptdollars[i].dstruct, sizeof(struct DoLlArS));
-		S_WRITE_DOLLAR((*(ModOptdollars[i].dstruct)));
+		S_WRITE_DOLLAR((*ModOptdollars[i].dstruct));
 	}
 #endif /* ifdef WITHPTHREADS */
 
@@ -1500,16 +1489,15 @@ int DoSnapshot BARG0
  *  Checks whether a snapshot should be done. Calls DoSnapshot() to create the
  *  snapshot.
  */
-void DoCheckpoint BARG0
+void DoCheckpoint ARG0
 {
-	GETBIDENTITY
 	int error;
 	LONG timestamp = Timer(0);
 
 	if ( timestamp - AC.CheckpointStamp > AC.CheckpointInterval ) {
 		/* TODO call script */
 
-		error = DoSnapshot(BHEAD0);
+		error = DoSnapshot();
 		if ( error ) {
 			printf("Error creating recovery files: %d\n", error); fflush(0);
 		}
@@ -1523,5 +1511,3 @@ void DoCheckpoint BARG0
 /*
   	#] DoCheckpoint :
 */
-
-#endif
