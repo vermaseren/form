@@ -11,6 +11,8 @@
 
 /* EXTERNLOCK(dummylock) */
 
+static UBYTE underscore[2] = {'_',0};
+
 /*
   	#] Includes : 
   	#[ CatchDollar :
@@ -557,17 +559,22 @@ NoChange:;
 UBYTE *WriteDollarToBuffer ARG2(WORD,numdollar,WORD,par)
 {
 	DOLLARS d = Dollars+numdollar;
-	UBYTE *s;
+	UBYTE *s, *oldcurbufwrt = AO.CurBufWrt;
 	WORD *t, lbrac = 0, first = 0, arg[2], oldOutputMode = AC.OutputMode;
+	WORD oldinfbrack = AO.InFbrack;
 	int error = 0;
  
 	AO.DollarOutSizeBuffer = 32;
 	AO.DollarOutBuffer = (UBYTE *)Malloc1(AO.DollarOutSizeBuffer,"DollarOutBuffer");
 	AO.DollarInOutBuffer = 1;
 	AO.PrintType = 1;
+	AO.InFbrack = 0;
 	s = AO.DollarOutBuffer;
 	*s = 0;
 	if ( par > 0 ) { AC.OutputMode = NORMALFORMAT; }
+	else {
+		AO.CurBufWrt = (UBYTE *)underscore;
+	}
 	AO.OutInBuffer = 1;
 	switch ( d->type ) {
 		case DOLARGUMENT:
@@ -609,6 +616,8 @@ UBYTE *WriteDollarToBuffer ARG2(WORD,numdollar,WORD,par)
 	}
 	AC.OutputMode = oldOutputMode;
 	AO.OutInBuffer = 0;
+	AO.InFbrack = oldinfbrack;
+	AO.CurBufWrt = oldcurbufwrt;
 	if ( error ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
@@ -622,7 +631,7 @@ UBYTE *WriteDollarToBuffer ARG2(WORD,numdollar,WORD,par)
 }
 
 /*
-  	#] WriteDollarToBuffer : 
+  	#] WriteDollarToBuffer :
   	#[ AddToDollarBuffer :
 */
 

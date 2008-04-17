@@ -332,7 +332,7 @@ OpenInput ARG0
 		par = 2 : Multithreaded running startup phase 2.
 */
 
-UBYTE *emptystring = (UBYTE *)"";
+UBYTE *emptystring = (UBYTE *)".";
 UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
 
 VOID
@@ -345,8 +345,8 @@ ReserveTempFiles ARG1(int,par)
 	WORD j;
 	if ( par == 0 || par == 1 ) {
 	if ( AM.TempDir == 0 ) {
-		sp = GetSetupPar((UBYTE *)"tmpdir");
-		if ( ( sp->flags | USEDFLAG ) != USEDFLAG ) {
+		sp = GetSetupPar((UBYTE *)"tempdir");
+		if ( ( sp->flags & USEDFLAG ) != USEDFLAG ) {
 			AM.TempDir = (UBYTE *)getenv("FORMTMP");
 			if ( AM.TempDir == 0 ) AM.TempDir = emptystring;
 		}
