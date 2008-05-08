@@ -1364,7 +1364,7 @@ GetMoreFromMem ARG2(WORD *,term,WORD **,tpoin)
 			}
 			r++; t++;
 		}
-		if ( ( WORDDIF(m,term) + i + extra ) > (AM.MaxTer/(2*sizeof(WORD))) ) {
+		if ( ( WORDDIF(m,term) + i + extra ) > (LONG)(AM.MaxTer/(2*sizeof(WORD))) ) {
 /* 23 = 3 +20. The 20 is to have some extra for substitutions or whatever */
 			if ( AS.CollectOverFlag == 0 && AC.AltCollectFun == 0 ) {
 				Warning("Bracket contents too long in Collect statement");
@@ -3355,8 +3355,8 @@ VOID
 Resize32t16 ARG2(UBYTE *,src,UBYTE *,dst)
 {
 	INT32 in = *((INT32 *)src);
-	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
 	INT16 out = (INT16)in;
+	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
 	*((INT16 *)dst) = out;
 }
 
@@ -3628,12 +3628,12 @@ WriteStoreHeader ARG1(WORD,handle)
 	static STOREHEADER sh = {
 		{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },	/* store header mark */
 		0, 0, 0, 0,											/* sizeof of WORD,LONG,POSITION,void* */
-		{},													/* endianness check number */
+		{ 0 },												/* endianness check number */
 		0, 0, 0, 0,											/* sizeof variable structs */
-		{},													/* maxpower */
-		{},													/* wildoffset */
+		{ 0 },												/* maxpower */
+		{ 0 },												/* wildoffset */
 		0x01,												/* revision */
-		{} };												/* reserved */
+		{ 0 } };											/* reserved */
 	int endian, i;
 
 	/* if called for the first time ... */
@@ -3644,11 +3644,11 @@ WriteStoreHeader ARG1(WORD,handle)
 		sh.lenPOINTER = sizeof(void *);
 
 		endian = 1;
-		for ( i = 1; i < sizeof(int); ++i ) {
+		for ( i = 1; i < (int)sizeof(int); ++i ) {
 			endian <<= 8;
 			endian += i+1;
 		}
-		for ( i = 0; i < sizeof(int); ++i ) sh.endianness[i] = ((char *)&endian)[i];
+		for ( i = 0; i < (int)sizeof(int); ++i ) sh.endianness[i] = ((char *)&endian)[i];
 
 		sh.sSym = sizeof(struct SyMbOl);
 		sh.sInd = sizeof(struct InDeX);
@@ -3750,7 +3750,7 @@ ReadSaveHeader()
 	}
 
 	endian = 1;
-	for ( i = 1; i < sizeof(int); ++i ) {
+	for ( i = 1; i < (int)sizeof(int); ++i ) {
 		endian <<= 8;
 		endian += i+1;
 	}
@@ -3883,9 +3883,9 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
 			/* if FILEINDEX in file contains more entries than the FILEINDEX in
 			   memory can contain, then adjust the numbers and prepare for
 			   buffering */
-			if ( number > INFILEINDEX ) {
+			if ( number > (LONG)INFILEINDEX ) {
 				AO.bufferedInd = number-INFILEINDEX;
-				if ( AO.bufferedInd > INFILEINDEX ) {
+				if ( AO.bufferedInd > (WORD)INFILEINDEX ) {
 					/* can happen when reading 32bit and writing >=128bit.
 					   Fix: more than one static buffer for FILEINDEX */
 					return ( MesPrint("Too many index entries.") );
@@ -4029,22 +4029,22 @@ ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,IND
 		   and out buffers start at the same place.
 		   if not, we read from the end of the given buffer and write at the
 		   beginning. */
-		if ( (lenW > sizeof(WORD))
-		|| ( (lenW == sizeof(WORD))
-		     && ( (lenL > sizeof(LONG))
-		          || ( (lenL == sizeof(LONG)) && lenP > sizeof(void *))
+		if ( (lenW > (WORD)sizeof(WORD))
+		|| ( (lenW == (WORD)sizeof(WORD))
+		     && ( (lenL > (WORD)sizeof(LONG))
+		          || ( (lenL == (WORD)sizeof(LONG)) && lenP > (WORD)sizeof(void *))
 		        )
 		   ) ) {
 			in = out = buffer;
 			end = buffer + *size;
 		}
 		else {
-			end = top;
 			/* data will grow roughly by sizeof(WORD)/lenW. the exact value is
 			   not important. if reading and writing areas start to overlap, the
 			   reading will already be near the end of the data and overwriting
 			   doesn't matter. */
-			LONG newsize = (end - buffer) / (1 + sizeof(WORD)/lenW);
+			LONG newsize = (top - buffer) / (1 + sizeof(WORD)/lenW);
+			end = top;
 			out = buffer;
 			in = end - newsize;
 			if ( *size > newsize ) *size = newsize;
@@ -4339,6 +4339,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 {
 	GETIDENTITY
 
+	UBYTE *boutbuf;
 	INT32 len, j, id;
 	INT32 *r, *t, *coeff, *end, *newtermsize, *rend;
 	INT32 *newsubtermp;
@@ -4360,8 +4361,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 	else {
 		/* do deprompression of necessary. always return if the space in the
 		   buffer is not sufficient */
+		INT32 rbuf;
 		r = (INT32 *)AR.CompressBuffer;
-		INT32 rbuf = *r;
+		rbuf = *r;
 		len = j = *in;
 		/* first copy from AR.CompressBuffer if necessary */
 		if ( j < 0 ) {
@@ -4691,7 +4693,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 	}
 
 	/* do coefficient and adjust term size */
-	UBYTE *boutbuf = *bout;
+	boutbuf = *bout;
 	*bout = (UBYTE *)out;
 
 	ResizeCoeff32(bout, (UBYTE *)end, top);
@@ -4749,8 +4751,8 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 		   smaller */ 
 		half = (top-buffer)/2;
 		if ( *size > half ) *size = half;
-		if ( lenW < (ULONG)sizeof(WORD) ) {
-			if ( *size * (ULONG)sizeof(WORD)/lenW > half ) *size = half*lenW/(ULONG)sizeof(WORD);
+		if ( lenW < (WORD)sizeof(WORD) ) {
+			if ( *size * (LONG)sizeof(WORD)/lenW > half ) *size = half*lenW/(LONG)sizeof(WORD);
 		}
 		else {
 			if ( *size > half ) *size = half;
@@ -4783,7 +4785,7 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 			end += lenW;
 		}
 
-		if ( lenW > sizeof(WORD) ) {
+		if ( lenW > (WORD)sizeof(WORD) ) {
 			/* renumber first */
 			do {
 				outend = out+*size;
@@ -4805,7 +4807,7 @@ ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
 			}
 		}
 		else {
-			if ( lenW < sizeof(WORD) ) {
+			if ( lenW < (WORD)sizeof(WORD) ) {
 				/* resize first */
 				while ( in < end ) {
 					AO.ResizeWORD(in, out);
