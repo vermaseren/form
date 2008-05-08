@@ -87,8 +87,8 @@ char *RecoveryFilename()
 void print_BYTE(void *p)
 {
 	UBYTE h = (*((UBYTE*)p) >> 4);
-	if ( h > 9 ) h += 55; else h += 48;
 	UBYTE l = (*((UBYTE*)p) & 0x0F);
+	if ( h > 9 ) h += 55; else h += 48;
 	if ( l > 9 ) l += 55; else l += 48;
 	printf("%c%c ", h, l);
 }
@@ -219,7 +219,7 @@ void print_PROCEDURE(PROCEDURE *l)
 
 void print_NAMETREE(NAMETREE *t)
 {
-	size_t i;
+	int i;
 	for ( i=0; i<t->nodefill; ++i ) {
 		printf("%ld %d %d %d %d %d %d\n", t->namenode[i].name,
 			 t->namenode[i].parent, t->namenode[i].left, t->namenode[i].right,
@@ -255,8 +255,8 @@ void print_STREAM(STREAM *t)
 
 void print_C()
 {
-	size_t i;
-	printf("\%\% C_const\n");
+	int i;
+	printf("%%%% C_const\n");
 	for ( i=0; i<32; ++i ) {
 		printf("%d",AC.separators[i].bit_7);
 		printf("%d",AC.separators[i].bit_6);
@@ -327,8 +327,8 @@ void print_C()
 
 void print_P()
 {
-	size_t i;
-	printf("\%\% P_const\n");
+	int i;
+	printf("%%%% P_const\n");
 	print_LIST(&AP.DollarList);
 	for ( i=0; i<AP.DollarList.num; ++i ) {
 		print_DOLLARS(&(Dollars[i]));
@@ -410,13 +410,13 @@ void print_R()
 /* reading a single variable */
 
 #define R_SET(VAR,TYPE) \
-	VAR = *((TYPE*)p); p += sizeof(TYPE);
+	VAR = *((TYPE*)p); p = (unsigned char*)p + sizeof(TYPE);
 
 /* general buffer */
 
 #define R_COPY_B(VAR,SIZE,CAST) \
 	VAR = (CAST)Malloc1(SIZE,#VAR); \
-	memcpy(VAR, p, SIZE); p += SIZE;
+	memcpy(VAR, p, SIZE); p = (unsigned char*)p + SIZE;
 
 #define S_WRITE_B(BUF,LEN) \
 	if ( fwrite(BUF, LEN, 1, fd) != 1 ) return(__LINE__);
@@ -425,7 +425,7 @@ void print_R()
 
 #define R_COPY_S(VAR) \
 	if ( VAR ) { \
-		VAR = (void*)strdup(p); p += strlen(p) + 1; \
+		VAR = (void*)strdup(p); p = (unsigned char*)p + strlen(p) + 1; \
 	}
 
 #define S_WRITE_S(STR) \
@@ -489,7 +489,7 @@ int DoRecovery ARG0
 	FILE *fd;
 	POSITION pos;
 	void *buf, *p;
-	size_t size, i, j;
+	int size, i, j;
 	void *org, *org2, *org3, *org4, *org5;
 	int ofs;
 
@@ -553,7 +553,7 @@ int DoRecovery ARG0
 	/* first we copy AC as a whole and then restore the pointer structures step
 	 * by step. */
 
-	AC = *((struct C_const*)p); p += sizeof(struct C_const);
+	AC = *((struct C_const*)p); p = (unsigned char*)p + sizeof(struct C_const);
 	
 	R_COPY_NAMETREE(AC.dollarnames);
 	R_COPY_NAMETREE(AC.exprnames);
@@ -738,7 +738,7 @@ int DoRecovery ARG0
 			AC.Streams[i].top += ofs;
 		}
 		else {
-			p += AC.Streams[i].buffersize;
+			p = (unsigned char*)p + AC.Streams[i].buffersize;
 		}
 		R_COPY_S(AC.Streams[i].FoldName);
 		R_COPY_S(AC.Streams[i].name);
@@ -874,7 +874,7 @@ int DoRecovery ARG0
 	R_FREE(AP.PreSwitchModes);
 	R_FREE(AP.PreTypes);
 	
-	AP = *((struct P_const*)p); p += sizeof(struct P_const);
+	AP = *((struct P_const*)p); p = (unsigned char*)p + sizeof(struct P_const);
 #ifdef WITHPTHREADS
 	AP.PreVarLock = dummylock;
 #endif
@@ -956,7 +956,7 @@ int DoRecovery ARG0
 	org4 = AR.CompressPointer;
 	org5 = AR.CompareRoutine;
 
-	AR = *((struct R_const*)p); p += sizeof(struct R_const);
+	AR = *((struct R_const*)p); p = (unsigned char*)p + sizeof(struct R_const);
 
 	ofs = AR.Fscr - (FILEHANDLE*)org;
 	AR.infile += ofs;
@@ -1067,7 +1067,7 @@ int DoSnapshot ARG0
 	GETIDENTITY
 	FILE *fd;
 	POSITION pos;
-	size_t i, j, l;
+	int i, j, l;
 	WORD *w;
 
 	printf("Saving recovery point ... "); fflush(0);
