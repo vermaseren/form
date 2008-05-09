@@ -84,6 +84,8 @@ static KEYWORD onoffoptions[] = {
 	,{"threadsortfilesynch",(TFUN)&(AC.ThreadSortFileSynch),1,  0}
 	,{"threadstats",	(TFUN)&(AC.ThreadStats),1,	0}
 	,{"finalstats",	    (TFUN)&(AC.FinalStats),1,	0}
+	,{"fewerstats",		(TFUN)&(AC.ShortStatsMax),	10,		0}
+	,{"fewerstatistics",(TFUN)&(AC.ShortStatsMax),	10,		0}
 	/*[30jan2004 mt]:*/
 	/*,{"parallel",	    (TFUN)&(AC.parallelflag),0,1}*/
 	,{"parallel",	    (TFUN)&(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
@@ -95,7 +97,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ CoCollect :
 
 	Collect,functionname
@@ -263,7 +265,7 @@ int CoOff ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoOff : 
+  	#] CoOff :
   	#[ CoOn :
 */
 
@@ -477,6 +479,30 @@ int CoOn ARG1(UBYTE *,s)
 			}
 			return(0);
 		}
+		else if ( ( StrICont(t,(UBYTE *)"fewerstats") == 0 ) ||
+		          ( StrICont(t,(UBYTE *)"fewerstatistics") == 0 ) ) {
+			*s = c;
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			if ( *s ) {
+				i = 0;
+				while ( FG.cTable[*s] == 1 ) { i = 10*i + *s++ - '0'; }
+				if ( *s ) {
+					MesPrint("&Unrecognized option in ON FewerStatistics statement: %s",t);
+					return(-1);
+				}
+				if ( i > AM.S0->MaxPatches ) {
+					if ( AC.WarnFlag )
+					MesPrint("&Warning: FewerStatistics parameter greater than MaxPatches(=%d). Adjusted to %d"
+					,AM.S0->MaxPatches,(AM.S0->MaxPatches+1)/2);
+					i = (AM.S0->MaxPatches+1)/2;
+				}
+				AC.ShortStatsMax = i;
+			}
+			else {
+				AC.ShortStatsMax = 10; /* default value */
+			}
+			return(0);
+		}
 		else if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
 			if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 		}
@@ -487,7 +513,7 @@ int CoOn ARG1(UBYTE *,s)
 }
 
 /*
-  	#] CoOn : 
+  	#] CoOn :
   	#[ CoInsideFirst :
 */
 

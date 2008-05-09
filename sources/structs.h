@@ -1230,9 +1230,11 @@ struct M_const {
     WORD    NumStoreCaches;        /* () Number of storage caches per processor */
     WORD    gIndentSpace;          /* For indentation in output */
 	WORD	ggIndentSpace;
+    WORD    gShortStatsMax;        /* For  On FewerStatistics 10; */
+    WORD    ggShortStatsMax;       /* For  On FewerStatistics 10; */
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1292,11 +1294,11 @@ struct P_const {
  		#[ C : The C struct defines objects changed by the compiler
 */
 /**
- *	The C_const struct is part of the global data and resides in the
- *	ALLGLOBALS struct A under the name C
- *	We see it used with the macro AC as in AC.exprnames
- *	It contains variables that involve the compiler and objects set during
- *	compilation.
+ *  The C_const struct is part of the global data and resides in the
+ *  ALLGLOBALS struct A under the name C
+ *  We see it used with the macro AC as in AC.exprnames
+ *  It contains variables that involve the compiler and objects set during
+ *  compilation.
  */
 
 struct C_const {
@@ -1360,8 +1362,8 @@ struct C_const {
     SBYTE *endoftokens;            /* (C) end of the actual tokens */
     WORD *tokenarglevel;           /* (C) keeps track of function arguments */
 #ifdef WITHPTHREADS
-	LONG    *inputnumbers;         /* For redefine */
-	WORD    *pfirstnum;            /* For redefine */
+    LONG    *inputnumbers;         /* For redefine */
+    WORD    *pfirstnum;            /* For redefine */
 #endif
     LONG    argstack[MAXNEST];     /* (C) {contents} Stack for nesting of Argument */
     LONG    insidestack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
@@ -1426,9 +1428,9 @@ struct C_const {
     int     lhdollarflag;          /* (R) left hand dollar present */
     int     NoCompress;            /* (R) Controls native compression */
 #ifdef WITHPTHREADS
-	int     numpfirstnum;          /* For redefine */
-	int     sizepfirstnum;         /* For redefine */
-	int     numpartodo;
+    int     numpfirstnum;          /* For redefine */
+    int     sizepfirstnum;         /* For redefine */
+    int     numpartodo;
 #endif
     WORD    RepLevel;              /* (C) Tracks nesting of repeat. */
     WORD    arglevel;              /* (C) level of nested argument statements */
@@ -1465,6 +1467,7 @@ struct C_const {
     WORD    lPolyFunType;          /* (C) local value of PolyFunType */
     WORD    SymChangeFlag;         /* (C) */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
+    WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
 #ifdef PARALLEL
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
@@ -1485,7 +1488,7 @@ struct C_const {
                                         shall be created at the end of _every_ module. */
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1522,11 +1525,11 @@ struct S_const {
                together with a term during multithreaded execution.
 */
 /**
- *	The R_const struct is part of the global data and resides either in the
- *	ALLGLOBALS struct A, or the ALLPRIVATES struct B (TFORM) under the name R
- *	We see it used with the macro AR as in AR.infile
- *	It has the variables that define the running environment and that
- *	should be transferred with a term in a multithreaded run.
+ *  The R_const struct is part of the global data and resides either in the
+ *  ALLGLOBALS struct A, or the ALLPRIVATES struct B (TFORM) under the name R
+ *  We see it used with the macro AR as in AR.infile
+ *  It has the variables that define the running environment and that
+ *  should be transferred with a term in a multithreaded run.
  */
 
 struct R_const {
@@ -1538,13 +1541,13 @@ struct R_const {
     WORD    *CompressBuffer;       /* (M) */
     WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
-	VOID    *CompareRoutine;
+    VOID    *CompareRoutine;
     FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
 
     POSITION DefPosition;          /* (R) Deferred position of keep brackets. */
 #ifdef WITHPOSIXCLOCK
-	struct timespec timing;        /* Struct defined in time.h */
+    struct timespec timing;        /* Struct defined in time.h */
 #endif
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
@@ -1570,12 +1573,13 @@ struct R_const {
     WORD    PolyFun;               /* (C) Number of the PolyFun function */
     WORD    PolyFunType;           /* () value of PolyFunType */
     WORD    Eside;                 /* () Tells which side of = sign */
-	WORD	MaxDum;                /* Maximum dummy value in an expression */
-	WORD	level;                 /* Running level in Generator */
+    WORD    MaxDum;                /* Maximum dummy value in an expression */
+    WORD    level;                 /* Running level in Generator */
     WORD    expchanged;            /* (R) Info about expression */
     WORD    expflags;              /* (R) Info about expression */
     WORD    CurExpr;               /* (S) Number of current expression */
-	WORD    SortType;              /* A copy of AC.SortType to play with */
+    WORD    SortType;              /* A copy of AC.SortType to play with */
+    WORD    ShortSortCount;        /* For On FewerStatistics 10; */
 };
 
 /*
@@ -1672,7 +1676,7 @@ struct T_const {
 	WORD    sizeprimelist;
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.

@@ -870,9 +870,10 @@ ss6:					m++; t++;
 							|| ( *s == INDTOIND && *t == INDTOSUB )
 							|| ( *s == INDTOSUB && *t == INDTOIND ) ) {
 								WORD *vv = m;
-								*t = *s;
+/*								*t = *s;  Wrong!!! Overwrites compiler buffer  */
                                 j = t[1];
 								NCOPY(m,t,j);
+								vv[0] = s[0];
 								vv[3] = s[3];
 								goto sr7;
 							}
@@ -885,7 +886,7 @@ sr7:;
 				}
 				break;
 /*
-			#] SUBEXPRESSION : 
+			#] SUBEXPRESSION :
 */
 			case EXPRESSION:
 /*
@@ -1224,7 +1225,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill : 
+ 		#] WildFill :
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:

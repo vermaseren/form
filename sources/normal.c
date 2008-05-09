@@ -1628,7 +1628,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2660,6 +2660,17 @@ NextI:;
 			i = *r; m = term;
 			NCOPY(m,r,i);
 			termout = m;
+
+
+			r = m = term;
+			r += *term; r -= ABS(r[-1]);
+			m++;
+			while ( m < r ) {
+				if ( *m > FUNCTION && m[1] > FUNHEAD &&
+				functions[*m-FUNCTION].spec != TENSORFUNCTION )
+					m[2] |= DIRTYFLAG;
+				m += m[1];
+			}
 		}
 /*
  		#[ normalize replacements :
@@ -2864,7 +2875,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements :
+ 		#] normalize replacements : 
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -2995,7 +3006,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
 }
 
 /*
- 		#] ExtraSymbol : 
+ 		#] ExtraSymbol :
  		#[ DoTheta :
 */
 

@@ -10,6 +10,8 @@
  *	type SUBEXPRESSION.
  */
 /*
+!!! Notice the change in OnePV in FindAll (7-may-2008 JV).
+
   	#[ Includes : pattern.c
 */
 
@@ -36,7 +38,9 @@
 
  		#] Rules : 
  		#[ TestMatch :			WORD TestMatch(term,level)
+*/
 
+/**
 	This routine governs the pattern matching. If it decides
 	that a substitution should be made, this can be either the
 	insertion of a right hand side (C->rhs) or the automatic generation
@@ -54,6 +58,14 @@
 	The format is here:
 	length,functionnumber,length-2 parameters
 
+	There is a certain complexity wrt repeat levels.
+	Another complication is the poking of the wildcard values in the 
+	subexpression prototype in the compiler buffer. This was how things were
+	done in the past with sequential FORM, but with the advent of TFORM this
+	cannot be maintained. Now, for TFORM we make a copy of it.
+	7-may-2008 (JV):
+	  We cannot yet guarantee that this has been done 100% correctly. There
+	  are errors that occur in TFORM only and that may indicate problems.
 */
 
 WORD
@@ -65,6 +77,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 	int numdollars = 0;
 	CBUF *C = cbuf+AM.rbufnum;
 	do {
+/*
+ 		#[ Preliminaries :
+*/
 	ll = C->lhs[*level];
 	if ( *ll == TYPEEXPRESSION ) {
 /*
@@ -100,6 +115,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		if ( (*(FG.OperaFind[ll[2]]))(BHEAD term,ll) ) return(-1);
 		else return(0);
 	}
+/*
+ 		#] Preliminaries : 
+*/
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	ww = AT.WorkPointer;
@@ -133,6 +151,9 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 	m += m[1];
 	AN.WildStop = m;
 	StartWork = ww;
+/*
+ 		#[ Expand dollars :
+*/
 	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
 		AR.Eside = LHSIDEX;
 		ww = AT.WorkPointer; i = m[0]; mm = m;
@@ -186,9 +207,10 @@ TestMatch BARG2(WORD *,term,WORD *,level)
 		AT.WorkPointer = ww = StartWork;
 	}
 /*
+ 		#] Expand dollars : 
+
 	AT.WorkPointer = ww = term + *term;
 */
-
 	ClearWild(BHEAD0);
 	while ( w < AN.WildStop ) {
 		if ( *w == LOADDOLLAR ) numdollars++;
@@ -1139,7 +1161,8 @@ CopRest:				t = tstop;
 							m += IDHEAD;
 							if ( m[-IDHEAD+2] == SUBALL ) {
 							if ( ( vv = m[m[1]+3] ) == r[1] ) {
-OnePV:							TwoProto = m;
+/*OnePV:							TwoProto = m; */
+OnePV:							TwoProto = AN.FullProto;
 TwoPV:							m = AT.WorkPointer;
 								tstop = t;
 								t = term;
@@ -1422,7 +1445,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll : 
+ 		#] FindAll :
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp

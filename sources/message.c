@@ -718,7 +718,42 @@ PrintTerm ARG2(WORD *,term,char *,where)
 }
 
 /*
- 		#] PrintTerm : 
+ 		#] PrintTerm :
+ 		#[ PrintTermC :
+*/
+
+VOID
+PrintTermC ARG2(WORD *,term,char *,where)
+{
+	UBYTE OutBuf[140];
+	WORD *t, x;
+	int i;
+	if ( *term >= 0 ) {
+		PrintTerm(term,where);
+		return;
+	}
+	AO.OutFill = AO.OutputLine = OutBuf;
+	t = term;
+	AO.OutSkip = 3;
+	FiniLine();
+	TokenToLine((UBYTE *)where);
+	TokenToLine((UBYTE *)": ");
+	i = t[1]+2;
+	while ( --i >= 0 ) {
+		x = *t++;
+		if ( x < 0 ) {
+			x = -x;
+			TokenToLine((UBYTE *)"-");
+		}
+		TalToLine((UWORD)(x));
+		TokenToLine((UBYTE *)"  ");
+	}
+	AO.OutSkip = 0;
+	FiniLine();
+}
+
+/*
+ 		#] PrintTermC :
  		#[ PrintSubTerm :
 */
 

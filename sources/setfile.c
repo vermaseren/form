@@ -79,7 +79,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -127,7 +127,7 @@ DoSetups ARG0
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -198,7 +198,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -219,7 +219,7 @@ GetSetupPar ARG1(UBYTE *,s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -272,7 +272,7 @@ RecalcSetups ARG0
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -366,6 +366,7 @@ AllocSetups ARG0
 	if ( AM.MaxTal < (AM.MaxTer/sizeof(WORD)-2)/4 )
 				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/4;
 	AM.MaxTal &= -sizeof(WORD)*2;
+	sp->value = AM.MaxTal;
 /*
 	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
 	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
@@ -619,7 +620,7 @@ AllocSetups ARG0
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 */
 
@@ -663,7 +664,7 @@ WriteSetup ARG0
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -725,7 +726,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 		+LargeSize
 		+SmallEsize
 		+sortsize
-		+IObuffersize*sizeof(WORD) + i + 12;
+		+IObuffersize*sizeof(WORD) + i + 16;
 	sort = (SORTING *)Malloc1(allocation,"sort buffers");
 
 	sort->LargeSize = LargeSize/sizeof(WORD);
@@ -788,7 +789,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -814,7 +815,7 @@ AllocSortFileName ARG1(SORTING *,sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
@@ -862,7 +863,7 @@ FILEHANDLE *AllocFileHandle ARG0
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -881,7 +882,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -892,7 +893,7 @@ int MakeSetupAllocs ARG0
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -970,7 +971,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -995,7 +996,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
  		#[ AllocScratchBuffers :
 */
 
@@ -1014,7 +1015,7 @@ int AllocScratchBuffers ARG0
 #ifdef CHINREM
 	numbuffers += 3;
 #endif
-	buffer = (UWORD *)Malloc1(numbuffers*(AM.MaxTal+4)*sizeof(WORD),"Scrat buffers");
+	buffer = (UWORD *)Malloc1(numbuffers*(AM.MaxTal+4)*sizeof(UWORD),"Scrat buffers");
 	if ( buffer == 0 ) return(-1);
 
 	SETNUMBUFN(AN.EAscrat,2)

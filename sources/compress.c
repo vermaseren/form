@@ -633,6 +633,6 @@ FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffer
 }
 
 /*
-  	#] FillInputGZIP : 
+  	#] FillInputGZIP :
 */
 #endif

@@ -1703,7 +1703,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 	LOCK(MallocLock);
 /*	LOCK(ErrorMessageLock); */
 	if ( size == 0 ) {
-		MesPrint("Asking for 0 bytes in Malloc1");
+		MesPrint("%wAsking for 0 bytes in Malloc1");
 	}
 #endif
 #ifdef WITHSTATS
@@ -1733,7 +1733,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
 	mallocsizes[nummalloclist] = size;
 	mallocstrings[nummalloclist] = (char *)messageifwrong;
 	malloclist[nummalloclist++] = mem;
-	if ( filelist ) MesPrint("Mem1 at 0x%x: %l bytes. %s",mem,size,messageifwrong);
+	if ( filelist ) MesPrint("%wMem1 at 0x%x: %l bytes. %s",mem,size,messageifwrong);
 	{
 		int i = nummalloclist-1;
 		while ( --i >= 0 ) {
@@ -1768,7 +1768,7 @@ void M_free ARG2(VOID *,x,char *,where)
 	LONG size = 0;
 	x = (void *)(((char *)x)-BANNER);
 /*	LOCK(ErrorMessageLock); */
-	MesPrint("Freeing 0x%x: %s",x,where);
+	MesPrint("%wFreeing 0x%x: %s",x,where);
 	LOCK(MallocLock);
 	for ( i = nummalloclist-1; i >= 0; i-- ) {
 		if ( x == malloclist[i] ) {
@@ -1795,7 +1795,7 @@ void M_free ARG2(VOID *,x,char *,where)
 		}
 		if ( j ) {
 			LONG *tt = (LONG *)x;
-			MesPrint("!!!!! Banner has been written in !!!!!: %x %x %x %x",
+			MesPrint("%w!!!!! Banner has been written in !!!!!: %x %x %x %x",
 			tt[0],tt[1],tt[2],tt[3]);
 		}
 		t += size;
@@ -1804,7 +1804,7 @@ void M_free ARG2(VOID *,x,char *,where)
 		}
 		if ( j ) {
 			LONG *tt = (LONG *)x;
-			MesPrint("!!!!! Tail has been written in !!!!!: %x %x %x %x",
+			MesPrint("%w!!!!! Tail has been written in !!!!!: %x %x %x %x",
 			tt[0],tt[1],tt[2],tt[3]);
 		}
 		M_check();
@@ -1839,7 +1839,7 @@ void M_check()
 		}
 		if ( j ) {
 			tt = (LONG *)(malloclist[i]);
-			MesPrint("!!!!! Banner %d (%s) has been written in !!!!!: %x %x %x %x",
+			MesPrint("%w!!!!! Banner %d (%s) has been written in !!!!!: %x %x %x %x",
 			i,mallocstrings[i],tt[0],tt[1],tt[2],tt[3]);
 			tt[0] = tt[1] = tt[2] = tt[3] = 0;
 			error = 1;
@@ -1850,13 +1850,13 @@ void M_check()
 		}
 		if ( j ) {
 			tt = (LONG *)t;
-			MesPrint("!!!!! Tail %d (%s) has been written in !!!!!: %x %x %x %x",
+			MesPrint("%w!!!!! Tail %d (%s) has been written in !!!!!: %x %x %x %x",
 			i,mallocstrings[i],tt[0],tt[1],tt[2],tt[3]);
 			tt[0] = tt[1] = tt[2] = tt[3] = 0;
 			error = 1;
 		}
 		if ( ( mallocstrings[i][0] == ' ' ) || ( mallocstrings[i][0] == '#' ) ) {
-			MesPrint("!!!!! Funny mallocstring");
+			MesPrint("%w!!!!! Funny mallocstring");
 			error = 1;
 		}
 	}
@@ -1885,7 +1885,7 @@ void M_print() {}
 #endif
 
 /*
- 		#] M_check : 
+ 		#] M_check :
  		#[ FromList :
 
 	Returns the next object in a list.

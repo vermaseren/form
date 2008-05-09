@@ -241,7 +241,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -317,7 +317,7 @@ OpenInput ARG0
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -526,7 +526,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -761,7 +761,7 @@ StartVariables ARG0
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -814,6 +814,9 @@ IniVars()
 	AC.properorderflag = AM.gproperorderflag = PROPERORDERFLAG;
 	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
     AC.ThreadBucketSize = AM.gThreadBucketSize;
+	AC.ShortStatsMax = 0;
+	AM.gShortStatsMax = 0;
+	AM.ggShortStatsMax = 0;
 
 	GlobalSymbols     = NumSymbols;
 	GlobalIndices     = NumIndices;
@@ -960,7 +963,7 @@ IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1035,7 +1038,7 @@ setSignalHandlers ARG0
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1196,7 +1199,7 @@ main ARG2(int,argc,char **,argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1267,7 +1270,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1278,6 +1281,11 @@ Terminate ARG1(int,errorcode)
 {
 	if ( errorcode && firstterminate ) {
 		firstterminate = 0;
+#ifdef WITHPTHREADS
+		MesPrint("Program terminating in thread %w at &");
+#else
+		MesPrint("Program terminating at &");
+#endif
 		Crash();
 	}
 #ifdef WITHPTHREADS
@@ -1368,6 +1376,6 @@ VOID PrintRunningTime ARG0
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 

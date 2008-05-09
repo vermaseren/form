@@ -122,7 +122,7 @@
 
 #endif
 /*
-  	#] ARG definitions : 
+  	#] ARG definitions :
   	#[ Macro's :
 */
 
@@ -316,7 +316,7 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 	ExpandBuffer((void **)(&AT.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
 
 /*
-  	#] Macro's : 
+  	#] Macro's :
   	#[ Thread objects :
 */
 
@@ -349,7 +349,7 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 #endif
 
 /*
-  	#] Thread objects : 
+  	#] Thread objects :
   	#[ Declarations :
 */
 
@@ -851,6 +851,7 @@ DECLARE(char *LongCopy,(LONG,char *))
 DECLARE(char *LongLongCopy,(off_t *,char *))
 DECLARE(VOID ReserveTempFiles,(int))
 DECLARE(VOID PrintTerm,(WORD *,char *))
+DECLARE(VOID PrintTermC,(WORD *,char *))
 DECLARE(VOID PrintSubTerm,(WORD *,char *))
 DECLARE(VOID PrintWords,(WORD *,LONG))
 DECLARE(int ExpandTripleDots,ARG0)
@@ -1423,6 +1424,6 @@ DECLARE(int DoRecovery,ARG0)
 DECLARE(void DoCheckpoint,ARG0)
 
 /*
-  	#] Declarations : 
+  	#] Declarations :
 */
 #endif

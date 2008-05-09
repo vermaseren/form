@@ -175,7 +175,7 @@ Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -2124,7 +2124,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2154,7 +2154,8 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
 	GETBIDENTITY
 	WORD *t, *r, x, y, z;
 	WORD *m, *u, l1, a[2];
-    m = (WORD *)(((UBYTE *)(accum)) + 2*AM.MaxTer);
+    m = (WORD *)(((UBYTE *)(accum)) + AM.MaxTer);
+/*    m = (WORD *)(((UBYTE *)(accum)) + 2*AM.MaxTer); */
 	*accum++ = number;
 	while ( --number >= 0 ) accum += *accum;
 	if ( times == divby ) {
@@ -2375,7 +2376,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -2941,7 +2942,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3361,7 +3362,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -3559,7 +3560,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**

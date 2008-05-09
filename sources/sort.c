@@ -41,7 +41,7 @@ extern long numfrees;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 */
@@ -75,6 +75,13 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
 #endif
 		if ( Expressions == 0 ) return;
+
+		if ( par == 0 ) {
+			AR.ShortSortCount++;
+			if ( AR.ShortSortCount < AC.ShortStatsMax ) return;
+		}
+		AR.ShortSortCount = 0;
+
 		S = AT.SS;
 		LOCK(ErrorMessageLock);
 		if ( AC.ShortStats ) {}
@@ -95,6 +102,131 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 		millitime /= 1000;
 		timepart /= 10;
 		if ( AC.ShortStats ) {
+#ifdef WITHPTHREADS
+		  if ( identity > 0 ) {
+			if ( par == 0 || par == 2 ) {
+				SETBASEPOSITION(pp,y);
+				if ( ISLESSPOS(*plspace,pp) ) {
+					MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%10p %s %s",identity,
+					millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+/*
+					MesPrint("%d: %14s %17s %7l.%2is %8l>%10l%3s%10l:%10p",identity,
+					EXPRNAME(AR.CurExpr),AC.Commercial,millitime,timepart,
+					AN.ninterms,S->GenTerms,toterms[par],S->TermsLeft,plspace);
+*/
+				}
+				else {
+					y = 1000000000L;
+					SETBASEPOSITION(pp,y);
+					MULPOS(pp,100);
+					if ( ISLESSPOS(*plspace,pp) ) {
+						MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%11p %s %s",identity,
+						millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+					}
+					else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%12p %s %s",identity,
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%13p %s %s",identity,
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%14p %s %s",identity,
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%15p %s %s",identity,
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%16p %s %s",identity,
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%17p %s %s",identity,
+							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						} } } } }
+					}
+				}
+			}
+			else if ( par == 1 ) {
+				SETBASEPOSITION(pp,y);
+				if ( ISLESSPOS(*plspace,pp) ) {
+					MesPrint("%d: %7l.%2is %10l:%10p",identity,millitime,timepart,
+					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+				}
+				else {
+					y = 1000000000L;
+					SETBASEPOSITION(pp,y);
+					MULPOS(pp,100);
+					if ( ISLESSPOS(*plspace,pp) ) {
+						MesPrint("%d: %7l.%2is %10l:%11p",identity,millitime,timepart,
+						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+					}
+					else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %10l:%12p",identity,millitime,timepart,
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %10l:%13p",identity,millitime,timepart,
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %10l:%14p",identity,millitime,timepart,
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %10l:%15p",identity,millitime,timepart,
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %10l:%16p",identity,millitime,timepart,
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						else {
+						MULPOS(pp,10);
+						if ( ISLESSPOS(*plspace,pp) ) {
+							MesPrint("%d: %7l.%2is %10l:%17p",identity,millitime,timepart,
+							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+						}
+						} } } } }
+					}
+				}
+			} } else
+#endif
+			{
 			if ( par == 0 || par == 2 ) {
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
@@ -216,7 +348,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 					}
 				}
 			}
-		}
+		} }
 		else {
 		if ( par == 1 ) {
 			MesPrint("Time = %7l.%2i sec",millitime,timepart);
@@ -347,7 +479,7 @@ WriteStats ARG2(POSITION *,plspace,WORD,par)
 }
 
 /*
- 		#] WriteStats :
+ 		#] WriteStats : 
  		#[ NewSort :				WORD NewSort()
 */
 /**
@@ -381,6 +513,7 @@ NewSort()
 	if ( AR.sLevel == 0 ) {
 		AN.FunSorts[0] = AT.S0;
 		AT.S0->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
+		AR.ShortSortCount = 0;
 	}
 	else {
 		if ( AN.FunSorts[AR.sLevel] == 0 ) {
@@ -412,7 +545,7 @@ NewSort()
 }
 
 /*
- 		#] NewSort :
+ 		#] NewSort : 
  		#[ EndSort :				WORD EndSort(buffer,par)
 */
 /**
@@ -873,7 +1006,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -939,7 +1072,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
 }
 
 /*
- 		#] PutIn :
+ 		#] PutIn : 
  		#[ Sflush :					WORD Sflush(file)
 */
 /**
@@ -1009,7 +1142,7 @@ Sflush ARG1(FILEHANDLE *,fi)
 }
 
 /*
- 		#] Sflush :
+ 		#] Sflush : 
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 */
 /**
@@ -1309,7 +1442,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut :
+ 		#] PutOut : 
  		#[ FlushOut :				WORD Flushout(position,file,compr)
 */
 /**
@@ -1489,7 +1622,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
 }
 
 /*
- 		#] FlushOut :
+ 		#] FlushOut : 
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**
@@ -1596,7 +1729,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef :
+ 		#] AddCoef : 
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 */
 /**
@@ -1759,7 +1892,7 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
 }
 
 /*
- 		#] AddPoly :
+ 		#] AddPoly : 
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
  
@@ -2026,7 +2159,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs :
+ 		#] AddArgs : 
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
 */
 /**
@@ -2447,7 +2580,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 :
+ 		#] Compare1 : 
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
@@ -2504,7 +2637,7 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		ss = sss;
 	}
 
-			#] debug :
+			#] debug : 
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
@@ -2597,13 +2730,13 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 		FiniLine();
 	}
 
-			#] debug :
+			#] debug : 
 */
 	return(size);
 }
 
 /*
- 		#] ComPress :
+ 		#] ComPress : 
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 */
 /**
@@ -2793,7 +2926,7 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 #endif
 
 /*
- 		#] SplitMerge :
+ 		#] SplitMerge : 
  		#[ GarbHand :				VOID GarbHand()
 */
 /**
@@ -2908,7 +3041,7 @@ GarbHand()
 }
 
 /*
- 		#] GarbHand :
+ 		#] GarbHand : 
  		#[ MergePatches :			WORD MergePatches(par)
 */
 /**
@@ -3111,7 +3244,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	The old code had to be replaced because all output needs to go
 	through PutOut. For this we have to go term by term and keep
@@ -3129,8 +3262,8 @@ ConMer:
 			m2 = m1 = *S->Patches; /* The m2 is to keep the compiler from complaining */
 			while ( *m1 ) {
 				if ( *m1 < 0 ) { /* Need to uncompress */
-					i = -(*m1++); m2 += i+1; im = *m1+i;
-					while ( i > 0 ) *m1-- = *m2--;
+					i = -(*m1++); m2 += i; im = *m1+i+1;
+					while ( i > 0 ) { *m1-- = *m2--; i--; }
 					*m1 = im;
 				}
 #ifdef WITHPTHREADS
@@ -3170,8 +3303,8 @@ ConMer:
 					(S->SmallEsize*sizeof(WORD)-2*AM.MaxTer),0) ) > 0 ) {
 				while ( *m1 && ( (WORD *)(((UBYTE *)(m1)) + AM.MaxTer ) < S->sTop2 ) ) {
 					if ( *m1 < 0 ) { /* Need to uncompress */
-						i = -(*m1++); m2 += i+1; im = *m1+i;
-						while ( i > 0 ) *m1-- = *m2--;
+						i = -(*m1++); m2 += i; im = *m1+i+1;
+						while ( i > 0 ) { *m1-- = *m2--; i--; }
 						*m1 = im;
 					}
 #ifdef WITHPTHREADS
@@ -3190,6 +3323,7 @@ ConMer:
 			    m3 = (WORD *)(((UBYTE *)(S->sBuffer)) + 2*AM.MaxTer);
 				m1 = S->sTop2;
 				while ( m1 > m2 ) *--m3 = *--m1;
+				m2 = m3;
 				m1 = m2 + *m2;
 			}
 			if ( length < 0 ) {
@@ -3756,7 +3890,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm :
+ 		#] StoreTerm : 
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**
@@ -3824,7 +3958,7 @@ StageSort ARG1(FILEHANDLE *,fout)
 }
 
 /*
- 		#] StageSort :
+ 		#] StageSort : 
  		#[ SortWild :				WORD SortWild(w,nw)
 */
 /**
@@ -3926,7 +4060,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
 }
 
 /*
- 		#] SortWild :
+ 		#] SortWild : 
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 */
 /**
@@ -3996,7 +4130,7 @@ void CleanUpSort ARG1(int,num)
 }
 
 /*
- 		#] CleanUpSort :
+ 		#] CleanUpSort : 
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 /**
@@ -4013,6 +4147,6 @@ VOID LowerSortLevel ARG0
 }
 
 /*
- 		#] LowerSortLevel :
+ 		#] LowerSortLevel : 
 	#] SortUtilities :
 */
