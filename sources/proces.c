@@ -662,6 +662,43 @@ TooMuch:;
 			return(i);
 		}
 		else if ( *t >= FUNCTION ) {
+            if ( t[0] == EXPONENT ) {
+                if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SYMBOL &&
+                t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+3] < MAXPOWER
+                && t[FUNHEAD+3] > -MAXPOWER ) {
+                    t[0] = SYMBOL;
+                    t[1] = 4;
+                    t[2] = t[FUNHEAD+1];
+                    t[3] = t[FUNHEAD+3];
+                    r = term + *term;
+                    m = t + FUNHEAD+4;
+                    t += 4;
+                    while ( m < r ) *t++ = *m++;
+                    *term = WORDDIF(t,term);
+                    goto ReStart;
+                }
+				else if ( t[1] == FUNHEAD+ARGHEAD+11 && t[FUNHEAD] == ARGHEAD+9
+				 && t[FUNHEAD+ARGHEAD] == 9 && t[FUNHEAD+ARGHEAD+1] == DOTPRODUCT
+				 && t[FUNHEAD+ARGHEAD+8] == 3
+				 && t[FUNHEAD+ARGHEAD+7] == 1
+				 && t[FUNHEAD+ARGHEAD+6] == 1
+				 && t[FUNHEAD+ARGHEAD+5] == 1
+                 && t[FUNHEAD+ARGHEAD+9] == -SNUMBER
+				 && t[FUNHEAD+ARGHEAD+10] < MAXPOWER
+                 && t[FUNHEAD+ARGHEAD+10] > -MAXPOWER ) {
+					t[0] = DOTPRODUCT;
+					t[1] = 5;
+					t[2] = t[FUNHEAD+ARGHEAD+3];
+					t[3] = t[FUNHEAD+ARGHEAD+4];
+					t[4] = t[FUNHEAD+ARGHEAD+10];
+                    r = term + *term;
+                    m = t + FUNHEAD+ARGHEAD+11;
+                    t += 5;
+                    while ( m < r ) *t++ = *m++;
+                    *term = WORDDIF(t,term);
+                    goto ReStart;
+				}
+            }
 			funnum = *t;
 			if ( *t >= FUNCTION + WILDOFFSET ) funnum -= WILDOFFSET;
 			if ( *t == EXPONENT ) {
@@ -1374,7 +1411,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2376,7 +2413,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3560,7 +3597,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**

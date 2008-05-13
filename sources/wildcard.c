@@ -886,7 +886,7 @@ sr7:;
 				}
 				break;
 /*
-			#] SUBEXPRESSION :
+			#] SUBEXPRESSION : 
 */
 			case EXPRESSION:
 /*
@@ -1207,10 +1207,42 @@ ss10:							*m++ = *t++;
 					v[1] = WORDDIF(m,v);		/* Fill function length */
 					s = accu;
 					NCOPY(m,s,na);
+/*
+                    Now some code to speed up a few special cases
+*/
+                    if ( v[0] == EXPONENT ) {
+                        if ( v[1] == FUNHEAD+4 && v[FUNHEAD] == -SYMBOL &&
+                        v[FUNHEAD+2] == -SNUMBER && v[FUNHEAD+3] < MAXPOWER
+                        && v[FUNHEAD+3] > -MAXPOWER ) {
+                            v[0] = SYMBOL;
+                            v[1] = 4;
+                            v[2] = v[FUNHEAD+1];
+                            v[3] = v[FUNHEAD+3];
+                            m = v+4;
+                        }
+						else if ( v[1] == FUNHEAD+ARGHEAD+11
+						 && v[FUNHEAD] == ARGHEAD+9
+						 && v[FUNHEAD+ARGHEAD] == 9
+						 && v[FUNHEAD+ARGHEAD+1] == DOTPRODUCT
+						 && v[FUNHEAD+ARGHEAD+8] == 3
+						 && v[FUNHEAD+ARGHEAD+7] == 1
+						 && v[FUNHEAD+ARGHEAD+6] == 1
+						 && v[FUNHEAD+ARGHEAD+5] == 1
+                		 && v[FUNHEAD+ARGHEAD+9] == -SNUMBER
+						 && v[FUNHEAD+ARGHEAD+10] < MAXPOWER
+        		         && v[FUNHEAD+ARGHEAD+10] > -MAXPOWER ) {
+							v[0] = DOTPRODUCT;
+							v[1] = 5;
+							v[2] = v[FUNHEAD+ARGHEAD+3];
+							v[3] = v[FUNHEAD+ARGHEAD+4];
+							v[4] = v[FUNHEAD+ARGHEAD+10];
+							m = v+5;
+						}
+                    }
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 */
 		}
 		t = uu;
