@@ -270,8 +270,9 @@ fi
 if test $atleastone = no; then
 	echo "    <NONE>"
 fi
-echo "Type 'make <format>' to generate a specific documentation"
-echo "format."
+echo "Type 'make <format>' in the directories doc/manual or"
+echo "doc/doxygen to generate the respective documentation with"
+echo "the specified format."
 echo
 echo "#########################################################"
 echo
