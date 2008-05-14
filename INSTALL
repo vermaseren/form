@@ -1,0 +1,167 @@
+Overview
+========
+
+FORM uses the GNU autoconf tools to configure and install. In principle, the
+three-step invocation
+
+    ./configure
+    make
+    make install
+
+should be enough to configure, compile, and install FORM with default settings
+into the default path "/usr/bin".
+
+Nevertheless, you are strongly advised to carefully read the following sections
+in order to prevent common mistakes and to be able to choose the best
+configuration settings for your system.
+
+
+Prerequisites
+=============
+
+In case you need to (re-)generate the script "configure" (see next section), you
+have to have the GNU autoconf/automake programs installed on your system. You
+should have at least autoconf version >= 2.59 and automake version >= 1.7.
+
+To compile the sources you need a C compiler that understands ANSI C, i.e. the
+C89 standard, like for example the GNU compiler collection (GCC) or the Intel C
+compiler.
+
+The threaded version of FORM needs a Posix compliant implementation of threads
+(pthreads). The parallel version ParFORM needs a MPI 2 implementation.
+
+The manual needs a LaTeX installation with the commands "latex" and "dvips" or
+"pdflatex" available. For the html format the command "latex2html" is needed.
+The source code documentation needs Doxygen, at least version 1.3.
+
+As a default, FORM tries to use the GMP library and the zlib library for fast
+numerics and compression, respectively. If anyone of these libraries is not
+available, the corresponding feature will be deactivated. GMP should be at least
+version 4.2. The zlib library should be a recent version, >= 1.2.
+
+
+Preparations
+============
+
+If you have acquired the FORM sources via CVS, several files will be missing,
+especially the script "configure". To generate these files you have to issue the
+command
+
+    autoreconf -i
+
+If you have downloaded and extracted the tar-file distribution, these files are
+already there and the above step is not necessary. But in case you experience
+problems related to the GNU autoconf files, it can be a good idea to recreate
+all these files with the command "autoreconf", maybe with the additional option
+"-f" to force a recreation.
+
+
+Configuration
+=============
+
+Running
+
+    ./configure
+
+will check your system and activate the available default settings. The chosen
+configuration will be printed at the end of the running. To change the default
+installation path use the "--prefix" option:
+
+    ./configure --prefix=<path>
+
+The FORM executables will then be installed into the directory "<path>/bin".
+
+As a default, all possible flavors of FORM, i.e. the sequential version (form),
+the threaded version (tform) , the parallel version (parform), the debugging
+versions of all of them (vorm, tvorm, ...), will be selected for compilation. To
+prevent a flavor from being build, use one of the following options:
+
+    ./configure --disable-scalar
+    ./configure --disable-debug
+    ./configure --disable-threaded
+    ./configure --disable-debug-threaded
+    ./configure --disable-parform
+
+Use one of the following options
+
+    ./configure --without-gmp
+    ./configure --without-zlib
+
+to prevent FORM from using one of these libraries. The executable will not be
+linked against this library then. Usually, you don't need to care about these
+options.
+
+The option
+
+    ./configure --disable-largefile
+
+forces FORM not to use large file support, i.e. to use _FILE_OFFSET_BITS==32 and
+thereby restrict files to be less than 2GB in size on 32bit machines. Usually,
+you don't need to care about this option.
+
+Finally, the option "--help" shows the available options together with a short
+explanation:
+
+    ./configure --help
+
+
+Compilation
+===========
+
+Issue the command
+
+    make
+
+to build all activated FORM flavors (form, tform, ...). The compilation will
+result in the executables sitting in the sources directory of the distribution.
+To compile only a specific flavor of FORM, name it as a parameter:
+
+    make form
+    make tform
+    make vorm
+    make tvorm
+    make parform
+
+Additional flags for the compiler or linker can be given at the command line,
+for example:
+
+    make vorm CFLAGS=-O1
+
+To cleanup the distribution directory, the command
+
+    make clean
+
+can be used.
+
+
+Documentation
+=============
+
+You need to change into the directory "doc" to build the documentation. There
+you choose to run one of the commands
+   
+    make dvi
+    make ps
+	make pdf
+	make html
+
+to build all documentation in the specified format. If you want to build only
+the manual or the source code documentation, you need to change directory into
+"doc/manual" or "doc/doxygen" before you issue the make commands.
+
+
+Installation
+============
+
+With the command
+
+    make install
+
+the compiled executables will be copied into the configured path ("/usr/bin" as
+the default).
+
+
+Troubleshooting
+===============
+
+No troubles to be shot, yet.

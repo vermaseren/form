@@ -1,0 +1,54 @@
+Conditions for the use of FORM
+==============================
+
+The use of the FORM program and programs in the distribution is free of charge
+but subject to the following conditions:
+
+   1. The programs are `as is'. That is, neither the author(s) nor his/their
+	  employer(s) is/are to be held responsible in any way for any errors or
+	  malfunctioning of the programs.
+   2. The programs are not to be redistributed in any version that is modified
+	  from the original distribution version unless with the specific consent of
+	  the author. In particular this license file is to be part of any
+	  redistribution.
+   3. The programs are not to be redistributed in exchange for money or made
+	  part of any commercial deal without the explicit written consent of the
+	  author.
+   4. When the FORM program is used for scientific work that leads to
+	  publication in a scientific journal, this work should refer to the use of
+	  FORM by the following citation: J.A.M.Vermaseren "New features of FORM"
+	  math-ph/0010025 or something similar that is acceptable for the journal of
+	  publication.
+
+Some remarks:
+
+ad 1: It is always wise to make cross checks on your calculations. It is
+	  virtually impossible to make more than 2 Mbytes of code without errors. If
+	  you do believe that you ran into an error, please try to make a bug report
+	  and try to keep it as concise as possible. Send bug reports to
+	  "form@nikhef.nl".
+
+ad 2: It is to nobodies advantage if different versions of programs start
+	  floating around. If someone has a sensible modification of any of the
+	  programs, please send it to "form@nikhef.nl".
+	  If possible the author(s) will then include this modification in the
+	  distribution (with mentioning the source of it).
+
+ad 3: If somebody is going to earn money by distributing FORM or making it part
+	  of a commercial product, maybe it is not a bad idea to not forget the
+	  author(s). This could even help in the service department.
+
+ad 4: NIKHEF, my home institute and FOM, its granting agency have allowed me to
+	  spend enormous amounts of time on the making and improving of FORM. At the
+	  same time, one of the ways they measure `productivity' is by citations. It
+	  would be nice to show them something for all this work.
+
+More remarks: If you do not agree with the above conditions, you have two
+options:
+
+    * You do not use FORM and the other programs included in the distribution.
+	* You let the author(s) know about reasonable improvements of the above
+	  conditions. If they are mutually acceptable, you might still be allowed to
+	  use the programs.
+
+Jos Vermaseren, 25-jan-2007
