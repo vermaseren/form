@@ -409,6 +409,7 @@ IsRHS ARG2(UBYTE *,s,UBYTE,c)
 int
 IsIdStatement ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	return(0);
 }
 
