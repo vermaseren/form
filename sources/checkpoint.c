@@ -423,9 +423,10 @@ void print_R()
 
 /* character strings */
 
-#define R_COPY_S(VAR) \
+#define R_COPY_S(VAR,CAST) \
 	if ( VAR ) { \
-		VAR = (void*)strdup(p); p = (unsigned char*)p + strlen(p) + 1; \
+		VAR = (CAST)malloc(strlen(p)+1); \
+		strcpy((char*)VAR, p); p = (unsigned char*)p + strlen(p) + 1; \
 	}
 
 #define S_WRITE_S(STR) \
@@ -561,7 +562,7 @@ int DoRecovery ARG0
 
 	R_COPY_LIST(AC.ChannelList);
 	for ( i=0; i<AC.ChannelList.num; ++i ) {
-		R_COPY_S(channels[i].name);
+		R_COPY_S(channels[i].name,char*);
 		/* TODO restore correct handle for channel */
 	}
 
@@ -591,7 +592,7 @@ int DoRecovery ARG0
 			R_COPY_B(tabl->mm, tabl->numind*sizeof(MINMAX), MINMAX*);
 			R_COPY_B(tabl->flags, tabl->numind*sizeof(WORD), WORD*);
 			R_COPY_B(tabl->boomlijst, tabl->MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
-			R_COPY_S(tabl->argtail);
+			R_COPY_S(tabl->argtail,UBYTE*);
 			if ( tabl->spare ) {
 				TABLES spare;
 				R_COPY_B(tabl->spare, sizeof(struct TaBlEs), TABLES);
@@ -615,7 +616,7 @@ int DoRecovery ARG0
 				R_COPY_B(spare->mm, spare->numind*sizeof(MINMAX), MINMAX*);
 				R_COPY_B(spare->flags, spare->numind*sizeof(WORD), WORD*);
 				R_COPY_B(spare->boomlijst, spare->MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
-				R_COPY_S(spare->argtail);
+				R_COPY_S(spare->argtail,UBYTE*);
 				R_COPY_B(spare->buffers, spare->bufferssize*sizeof(WORD), WORD*);
 			}
 			R_COPY_B(tabl->buffers, tabl->bufferssize*sizeof(WORD), WORD*);
@@ -699,9 +700,9 @@ int DoRecovery ARG0
 				}
 			}
 		}
-		R_COPY_S(tablebases[i].name);
-		R_COPY_S(tablebases[i].fullname);
-		R_COPY_S(tablebases[i].tablenames);
+		R_COPY_S(tablebases[i].name,char*);
+		R_COPY_S(tablebases[i].fullname,char*);
+		R_COPY_S(tablebases[i].tablenames,char*);
 	}
 
 	R_COPY_LIST(AC.cbufList);
@@ -740,8 +741,8 @@ int DoRecovery ARG0
 		else {
 			p = (unsigned char*)p + AC.Streams[i].buffersize;
 		}
-		R_COPY_S(AC.Streams[i].FoldName);
-		R_COPY_S(AC.Streams[i].name);
+		R_COPY_S(AC.Streams[i].FoldName,UBYTE*);
+		R_COPY_S(AC.Streams[i].name,UBYTE*);
 		if ( AC.Streams[i].type == PREVARSTREAM || AC.Streams[i].type == DOLLARSTREAM ) {
 			AC.Streams[i].pname = AC.Streams[i].name;
 		}
@@ -793,7 +794,7 @@ int DoRecovery ARG0
 	if ( AC.LabelNames ) {
 		R_COPY_B(AC.LabelNames, AC.MaxLabels*(sizeof(UBYTE*)+sizeof(WORD)), UBYTE**);
 		for ( i=0; i<AC.NumLabels; ++i ) {
-			R_COPY_S(AC.LabelNames[i]);
+			R_COPY_S(AC.LabelNames[i],UBYTE*);
 		}
 	}
 	
@@ -913,13 +914,13 @@ int DoRecovery ARG0
 		DoLoops[i].name += ofs;
 		DoLoops[i].vars += ofs;
 		DoLoops[i].contents += ofs;
-		R_COPY_S(DoLoops[i].dollarname);
+		R_COPY_S(DoLoops[i].dollarname,UBYTE*);
 	}
 
 	R_COPY_LIST(AP.ProcList);
 	for ( i=0; i<AP.ProcList.num; ++i ) {
 		R_COPY_B(Procedures[i].p.buffer, Procedures[i].p.size, UBYTE*);
-		R_COPY_S(Procedures[i].name);
+		R_COPY_S(Procedures[i].name,UBYTE*);
 	}
 
 	R_COPY_LIST(AP.ChDollarList);
@@ -927,7 +928,7 @@ int DoRecovery ARG0
 	size = (AP.NumPreSwitchStrings+1)*sizeof(UBYTE*);
 	R_COPY_B(AP.PreSwitchStrings, size, UBYTE**);
 	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
-		R_COPY_S(AP.PreSwitchStrings[i]);
+		R_COPY_S(AP.PreSwitchStrings[i],UBYTE*);
 	}
 
 	org = AP.preStart;
@@ -938,8 +939,8 @@ int DoRecovery ARG0
 	}
 	AP.preStop += ofs;
 
-	R_COPY_S(AP.procedureExtension);
-	R_COPY_S(AP.cprocedureExtension);
+	R_COPY_S(AP.procedureExtension,UBYTE*);
+	R_COPY_S(AP.cprocedureExtension,UBYTE*);
 
 	R_COPY_B(AP.PreIfStack, AP.MaxPreIfLevel*sizeof(int), int*);
 	R_COPY_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*sizeof(int), int*);
@@ -980,7 +981,7 @@ int DoRecovery ARG0
 			AR.Fscr[i].POfill += ofs;
 			AR.Fscr[i].POfull += ofs;
 		}
-		R_COPY_S(AR.Fscr[i].name);
+		R_COPY_S(AR.Fscr[i].name,char*);
 #ifdef WITHPTHREADS
 		/* TODO
 		 * restore wPObuffer ...
