@@ -678,7 +678,7 @@ proper:		MesPrint("&Proper syntax is: FixIndex,number:value[,number,value];");
 
 int
 CoMetric ARG1(UBYTE *,s)
-{ MesPrint("&The metric statement does not do anything yet"); return(1); }
+{ DUMMYUSE(s); MesPrint("&The metric statement does not do anything yet"); return(1); }
 
 /*
   	#] CoMetric : 
@@ -2796,6 +2796,9 @@ DoInParallel ARG2(UBYTE *,s,int,par)
 	WORD number;
 	UBYTE *t, c;
 	int error = 0;
+#ifndef WITHPTHREADS
+	DUMMYUSE(par);
+#endif
 	if ( *s == 0 ) {
 #ifdef WITHPTHREADS
 		for ( i = NumExpressions-1; i >= 0; i-- ) {
@@ -3124,6 +3127,7 @@ int CoEndRepeat ARG1(UBYTE *,inp)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	int level, error = 0, repeatlevel = 0;
+	DUMMYUSE(inp);
 	AC.RepLevel--;
 	if ( AC.RepLevel < 0 ) {
 		MesPrint("&EndRepeat without Repeat");
@@ -3933,6 +3937,7 @@ int CoEndIf ARG1(UBYTE *,inp)
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD i = C->numlhs, to, k = -AC.IfLevel;
 	int error = 0;
+	DUMMYUSE(inp);
 	if ( AC.IfLevel <= 0 ) {
 		MesPrint("&Endif statement without corresponding if"); return(1);
 	}

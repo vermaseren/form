@@ -248,6 +248,9 @@
 
 #define SETERROR(x) { Terminate(-1); return(-1); }
 
+/* use this macro to avoid the unused parameter warning */
+#define DUMMYUSE(x) (void)(x);
+
 #ifdef _FILE_OFFSET_BITS
 #if _FILE_OFFSET_BITS==64
 /*:[19mar2004 mt]*/
