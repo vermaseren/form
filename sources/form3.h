@@ -28,6 +28,9 @@
 
 #endif /* USE_AUTOCONF */
 
+#if __STDC_VERSION__ < 199901L
+#define inline
+#endif
 #define FORM_INLINE inline
 
 /*
