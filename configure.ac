@@ -32,6 +32,7 @@ AH_VERBATIM([__DATE__],
 #endif])
 
 # Check for programs
+cflagsbackup=$CFLAGS
 AC_PROG_CC([gcc cc icc])
 AM_PROG_CC_C_O
 
@@ -46,8 +47,9 @@ AC_SYS_LARGEFILE
 # Check for architecture and OS
 AC_CANONICAL_HOST
 # DEBUG
+# echo HOST $host
 # echo CPU $host_cpu
-# echo HOST $host_os
+# echo OS $host_os
 # echo VENDOR $host_vendor
 # END DEBUG
 case $host_cpu in
@@ -85,7 +87,7 @@ case $host_os in
 esac
 
 # Check for C compiler vendor
-AM_CONDITIONAL([USINGGCC], [test "x$GCC" = xyes])
+AM_CONDITIONAL([USINGGCC], [test "x$CC" = xgcc])
 AM_CONDITIONAL([USINGICC], [test "x$CC" = xicc])
 
 # Check for gmp
@@ -160,7 +162,7 @@ AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 
 # Provide a clean environment
 CPPFLAGS=
-CFLAGS=
+CFLAGS=$cflagsbackup
 LDFLAGS=
 
 # Check for doxygen

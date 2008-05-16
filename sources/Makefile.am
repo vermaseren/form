@@ -60,62 +60,68 @@ SRCPARALLEL = \
 	parallel.c \
 	parallel.h
 
+# for release versions
 COMPILEFLAGS=
-LINKFLAGS=
+LINKFLAGS=-static -s
+# for debugging versions
+DEBUGCOMPILEFLAGS=-g -Wall
+DEBUGLINKFLAGS=-static -g
+
+# compiler specific parameters
 if USINGGCC
-COMPILEFLAGS+=-fomit-frame-pointer -Wno-strict-aliasing -Wall 
+COMPILEFLAGS+=-O3 -fomit-frame-pointer
+DEBUGCOMPILEFLAGS+=-Wextra -pedantic
 if OPTPENTIUM
 COMPILEFLAGS+=-march=i686
-LINKFLAGS+=-march=i686
 endif
 if OPTOPTERON
 COMPILEFLAGS+=-march=opteron
-LINKFLAGS+=-march=opteron
 endif
 endif
 if USINGICC
-COMPILEFLAGS+=-Wall 
+COMPILEFLAGS+=-fast
 if OPTPENTIUM
-COMPILEFLAGS+=-march=pentiumiii
-LINKFLAGS+=-march=pentiumiii
+COMPILEFLAGS+=-march=pentium3 -mtune=pentiumpro
 endif
 endif
+
+EXTRALIBS=@GMPLIBS@ @ZLIBS@
 
 bin_PROGRAMS =
 
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CFLAGS = $(COMPILEFLAGS) -O3
-form_LDFLAGS = -static -s $(LINKFLAGS) 
-form_LDADD = @GMPLIBS@ @ZLIBS@
+form_CFLAGS = $(COMPILEFLAGS)
+form_LDFLAGS = $(LINKFLAGS)
+form_LDADD = $(EXTRALIBS)
 endif
 
 if BUILD_VORM
 bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
 vorm_CPPFLAGS = -DDEBUGGING
-vorm_CFLAGS = -g -Wall
-vorm_LDFLAGS = -static -g
-vorm_LDADD = @GMPLIBS@ @ZLIBS@
+vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
+vorm_LDFLAGS = $(DEBUGLINKFLAGS)
+vorm_LDADD = $(EXTRALIBS)
 endif
 
 if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE)
 tform_CPPFLAGS = -DWITHPTHREADS
-tform_CFLAGS = $(COMPILEFLAGS) -O3
-tform_LDFLAGS = -static -s -pthread $(LINKFLAGS)
-tform_LDADD = @GMPLIBS@ @ZLIBS@ -lrt
+tform_CFLAGS = $(COMPILEFLAGS)
+tform_LDFLAGS = $(LINKFLAGS) -pthread
+tform_LDADD = $(EXTRALIBS) -lrt
 endif
 
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE)
 tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING
-tvorm_CFLAGS = -g
-tvorm_LDFLAGS = -static -g -pthread
-tvorm_LDADD = @GMPLIBS@ @ZLIBS@ -lrt
+tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
+tvorm_LDFLAGS = $(DEBUGLINKFLAGS) -pthread
+tvorm_LDADD = $(EXTRALIBS) -lrt
 endif
 
 if BUILD_PARFORM
@@ -125,5 +131,5 @@ bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
 parform_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG
 #parform_CFLAGS = -O3 -mcpu=i586
-parform_LDADD = @GMPLIBS@ @ZLIBS@
+parform_LDADD = $(EXTRALIBS)
 endif
