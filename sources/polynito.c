@@ -318,6 +318,7 @@ int CompareSymbols BARG3(WORD *,term1,WORD *,term2,WORD,par)
 {
 	int sum1, sum2;
 	WORD *t1, *t2, *tt1, *tt2;
+	DUMMYUSE(par);
 	t1 = term1 + 1; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]); t1 += 2;
 	t2 = term2 + 1; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]); t2 += 2;
 	if ( AN.polysortflag > 0 ) {
@@ -5791,6 +5792,7 @@ WORD PolyModSubsVector BARG7(WORD *,Poly,WORD *,values,WORD,num,WORD,prime,WORD,
 	WORD *p, *p1, *coef, ncoef, correction = 0;
 	int i, pow, minpow = maxi;
 	LONG val;
+	DUMMYUSE(num);
 
 	AllocPolyModCoefs(pm,maxi);
 	for ( i = 0; i <= maxi; i++ ) pm->coefs[i] = 0;

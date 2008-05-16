@@ -184,18 +184,21 @@ extern int (*setKillModeForExternalChannel)
 int
 writeBufToExtChannelFailure ARG2(char *,buf, size_t, count)
 {
+	DUMMYUSE(buf); DUMMYUSE(count);
 	return(-1);
 }/*writeBufToExtChannelFailure*/
 
 int 
 setTerminatorForExternalChannelFailure ARG1 (char *,newTerminator)
 {
+	DUMMYUSE(newTerminator);
 	return(-1);
 }/*setTerminatorForExternalChannelFailure*/
 
 int
 setKillModeForExternalChannelFailure ARG2 (int, signum, int, sentToWholeGroup)
 {
+	DUMMYUSE(signum); DUMMYUSE(sentToWholeGroup);
 	return(-1);
 }/*setKillModeForExternalChannelFailure*/
 

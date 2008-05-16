@@ -159,7 +159,7 @@ off_t Utell ARG1(FILES *,f)
   	#[ Uflush :
 */
 
-void Uflush ARG1(FILES *,f) {}
+void Uflush ARG1(FILES *,f) { DUMMYUSE(f); }
 
 /*
   	#] Uflush : 
@@ -168,6 +168,7 @@ void Uflush ARG1(FILES *,f) {}
 
 int Ugetpos ARG2(FILES *,f,fpos_t *,ptr)
 {
+	DUMMYUSE(f); DUMMYUSE(ptr);
 	return(-1);
 }
 
@@ -178,6 +179,7 @@ int Ugetpos ARG2(FILES *,f,fpos_t *,ptr)
 
 int Usetpos ARG2(FILES *,f,fpos_t *,ptr)
 {
+	DUMMYUSE(f); DUMMYUSE(ptr);
 	return(-1);
 }
 
@@ -186,7 +188,7 @@ int Usetpos ARG2(FILES *,f,fpos_t *,ptr)
   	#[ Usetbuf :
 */
 
-void Usetbuf ARG2(FILES *,f,char *,ptr) { }
+void Usetbuf ARG2(FILES *,f,char *,ptr) { DUMMYUSE(f); DUMMYUSE(ptr); }
 
 /*
   	#] Usetbuf : 
