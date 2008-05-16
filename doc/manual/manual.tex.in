@@ -72,22 +72,22 @@
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-\input{startup}
-\input{variable}
-\input{prepro}
-\input{module}
-\input{pattern}
-\input{dollar}
-\input{statements}
-\input{functions}
-\input{bracket}
-\input{tablebas}
-\input{gamma}
-\input{metric}
-\input{sorting}
-\input{setup}
-\input{parallel}
-\input{external}
+\input{@srcdir@/startup}
+\input{@srcdir@/variable}
+\input{@srcdir@/prepro}
+\input{@srcdir@/module}
+\input{@srcdir@/pattern}
+\input{@srcdir@/dollar}
+\input{@srcdir@/statements}
+\input{@srcdir@/functions}
+\input{@srcdir@/bracket}
+\input{@srcdir@/tablebas}
+\input{@srcdir@/gamma}
+\input{@srcdir@/metric}
+\input{@srcdir@/sorting}
+\input{@srcdir@/setup}
+\input{@srcdir@/parallel}
+\input{@srcdir@/external}
 
 \printindex
 
