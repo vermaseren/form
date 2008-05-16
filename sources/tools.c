@@ -1811,6 +1811,8 @@ void M_free ARG2(VOID *,x,char *,where)
 /*		UNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 	}
+#else
+	DUMMYUSE(where);
 #endif
 #ifdef WITHSTATS
 	numfrees++;

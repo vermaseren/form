@@ -53,6 +53,7 @@ ModuleInstruction ARG2(int *,moduletype,int *,specialtype)
 	UBYTE *t, *s, *u, c;
 	KEYWORD *key;
 	int addit = 0, error = 0, i, j;
+	DUMMYUSE(specialtype);
 	LoadInstruction(0);
 	AC.firstctypemessage = 0;
 	s = AP.preStart; SKIPBLANKS(s)
@@ -210,6 +211,7 @@ CoModOption ARG1(UBYTE *,s)
 VOID
 SetSpecialMode ARG2(int,moduletype,int,specialtype)
 {
+	DUMMYUSE(moduletype); DUMMYUSE(specialtype);
 }
 
 /*

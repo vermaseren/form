@@ -670,6 +670,7 @@ DBASE *FindTB ARG1(UBYTE *,name)
 
 int CoTBcreate ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( FindTB(tablebasename) != 0 ) {
 		MesPrint("&There is already an open TableBase with the name %s",tablebasename);
 		return(-1);
@@ -686,6 +687,7 @@ int CoTBcreate ARG1(UBYTE *,s)
 int CoTBopen ARG1(UBYTE *,s)
 {
 	DBASE *d;
+	DUMMYUSE(s);
 	if ( ( d = FindTB(tablebasename) ) != 0 ) {
 		MesPrint("&There is already an open TableBase with the name %s",tablebasename);
 		return(-1);
@@ -1451,6 +1453,7 @@ int CoTBoff ARG1(UBYTE *,s)
 
 int CoTBcleanup ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	MesPrint("&TableBase Cleanup statement not yet implemented");
 	return(1);
 }
@@ -1462,6 +1465,7 @@ int CoTBcleanup ARG1(UBYTE *,s)
 
 int CoTBreplace ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	MesPrint("&TableBase Replace statement not yet implemented");
 	return(1);
 }
@@ -1755,6 +1759,7 @@ char *helptb[] = {
 int CoTBhelp ARG1(UBYTE *,s)
 {
 	int i, ii = sizeof(helptb)/sizeof(char *);
+	DUMMYUSE(s);
 	for ( i = 0; i < ii; i++ ) MesPrint("%s",helptb[i]);
 	return(0);
 }

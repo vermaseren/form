@@ -1350,6 +1350,7 @@ nextt:;
 
 void HuntNumBrackets ARG1(LONG,number)
 {
+	DUMMYUSE(number);
 }
 
 /*

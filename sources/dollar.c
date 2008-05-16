@@ -237,6 +237,7 @@ int AssignDollar ARG2(WORD *,term,WORD,level)
 		}
 	}
 #endif
+	DUMMYUSE(term);
 	w = rh;
 /*
 	First some shortcuts

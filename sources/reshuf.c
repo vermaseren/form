@@ -1342,6 +1342,7 @@ WORD DoMerge ARG4(WORD *,term,WORD,level,WORD,fun,WORD,option)
 	WORD *r1, *r2;
 	int i;
 	LONG p, p1, p2;
+	DUMMYUSE(option);
 	if ( n < 0 ) {
 		if ( ( n = DolToFunction(-n) ) == 0 ) {
 			LOCK(ErrorMessageLock);
@@ -1480,11 +1481,3 @@ Mergecall:
 /*
   	#] DoMerge : 
 */
-
-
-
-
-
-
-
-

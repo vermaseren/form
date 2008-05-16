@@ -660,6 +660,7 @@ IniModule ARG1(int,type)
 VOID
 IniSpecialModule ARG1(int,type)
 {
+	DUMMYUSE(type);
 }
 
 /*
@@ -2508,6 +2509,7 @@ DoEnddo ARG1(UBYTE *,s)
 	UBYTE *t, *tt, *value, numstr[16];
 	LONG xval;
 	int xsign;
+	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 /*
@@ -2635,6 +2637,7 @@ finish:;
 int
 DoEndif ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
 		if ( AP.PreIfLevel <= 0 ) MesPrint("@%#endif without corresponding %#if");
 		else MessPreNesting(5);
@@ -2663,6 +2666,7 @@ DoEndif ARG1(UBYTE *,s)
 int
 DoEndprocedure ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEPROCEDURE ) {
 		MessPreNesting(6);
 		return(-1);
@@ -2839,6 +2843,7 @@ DoPreOut ARG1(UBYTE *,s)
 int
 DoPrePrint ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	return(0);
@@ -3093,6 +3098,7 @@ DoProcedure ARG1(UBYTE *,s)
 
 int DoPreBreak ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
@@ -3155,6 +3161,7 @@ int DoPreCase ARG1(UBYTE *,s)
 
 int DoPreDefault ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
@@ -3178,6 +3185,7 @@ int DoPreDefault ARG1(UBYTE *,s)
 
 int DoPreEndSwitch ARG1(UBYTE *,s)
 {
+	DUMMYUSE(s);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPESWITCH ) {
 		if ( AP.PreSwitchLevel <= 0 )
@@ -4877,6 +4885,7 @@ WriteToExternalChannel ARG3(int,handle,UBYTE *,buffer,LONG,size)
 {
 	/*ATT! handle is not used! Actual output is performed to
 	 	the current external channel, see extcmd.c!*/
+	DUMMYUSE(handle);
 	if(writeBufToExtChannel((char*)buffer,size))
 		return(-1);
 	return(size);

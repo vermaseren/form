@@ -1628,6 +1628,7 @@ PIFerror:
 
 int PolyNorm BARG4(WORD *,term,WORD,level,WORD,numerator,WORD,denominator)
 {
+	DUMMYUSE(term); DUMMYUSE(level); DUMMYUSE(numerator); DUMMYUSE(denominator);
 	return(0);
 }
 

@@ -440,6 +440,7 @@ SymGen BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	WORD *t, *r, *m;
 	WORD i, j, k, c1, c2, ngroup;
 	WORD *rstop, Nlist, *inLijst, *Lijst, sign = 1, sumch = 0, count;
+	DUMMYUSE(num);
 	c1 = params[3];		/* function number */
 	c2 = FUNCTION + WILDOFFSET;
 	Nlist = params[4];

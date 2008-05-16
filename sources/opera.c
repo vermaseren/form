@@ -2301,6 +2301,7 @@ TenVec BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 	GETBIDENTITY
 	WORD *t, *m, *w, *termout, *tstop, *outlist, *ou, *ww, *mm;
 	WORD i, j, k, x, mode, thevector, thetensor, DumNow, spectator;
+	DUMMYUSE(num);
 	thetensor = params[2];
 	thevector = params[3];
 	mode = params[4];
