@@ -40,7 +40,7 @@ WORD
 WildFill BARG3(WORD *,to,WORD *,from,WORD *,sub)
 {
 	GETBIDENTITY
-	WORD i, j, *s, *t, *m, len, dflag, odirt;
+	WORD i, j, *s, *t, *m, len, dflag, odirt, adirt;
 	WORD *r, *u, *v, *w, *z, *zst, *zz, *subs, *accu, na, dirty = 0, *tstop;
 	WORD *temp = 0, *uu, *oldcpointer, sgn;
 	WORD subcount, setflag, *setlist = 0, si;
@@ -1172,9 +1172,9 @@ ss10:							*m++ = *t++;
 							NEXTARG(zz)
 							odirt = AN.WildDirt; AN.WildDirt = 0;
 							AR.CompressPointer = accu + na;
-							m += ARGHEAD;
-							t += ARGHEAD;
+							for ( j = 0; j < ARGHEAD; j++ ) *m++ = *t++;
 							j = 0;
+							adirt = 0;
 							while ( t < zz ) {	/* do a term */
 								if ( ( len = WildFill(BHEAD m,t,sub) ) < 0 ) {
 									LOCK(ErrorMessageLock);
@@ -1182,12 +1182,17 @@ ss10:							*m++ = *t++;
 									UNLOCK(ErrorMessageLock);
 									SETERROR(-1)
 								}
+								if ( AN.WildDirt ) {
+									adirt = AN.WildDirt;
+									AN.WildDirt = 0;
+								}
 								m += len;
 								t += *t;
 							}
 							*w = WORDDIF(m,w);	/* Fill parameter length */
-							if ( AN.WildDirt ) {
+							if ( adirt ) {
 								dirty = w[1] = 1; v[2] |= DIRTYFLAG;
+								AN.WildDirt = adirt;
 							}
 							else {
 								AN.WildDirt = odirt;

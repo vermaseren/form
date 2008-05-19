@@ -95,7 +95,9 @@ Normalize BARG1(WORD *,term)
 /*
   	#] Declarations :
   	#[ Setup :
+PrintTerm(term,"Normalize");
 */
+
 Restart:
 	didcontr = 0;
 	ReplaceType = -1;
@@ -1628,7 +1630,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2875,7 +2877,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements : 
+ 		#] normalize replacements :
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -3104,7 +3106,7 @@ DoTheta ARG1(WORD *,t)
 }
 
 /*
- 		#] DoTheta : 
+ 		#] DoTheta :
  		#[ DoDelta :
 */
 
@@ -3172,7 +3174,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta : 
+ 		#] DoDelta :
  		#[ DoRevert :
 */
 
@@ -3247,7 +3249,7 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 }
 
 /*
- 		#] DoRevert : 
+ 		#] DoRevert :
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3310,7 +3312,7 @@ WORD DetCommu ARG1(WORD *,terms)
 }
 
 /*
-  	#] DetCommu : 
+  	#] DetCommu :
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3627,5 +3629,5 @@ FromGCD:
 }
 
 /*
-  	#] EvaluateGcd : 
+  	#] EvaluateGcd :
 */

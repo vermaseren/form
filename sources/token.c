@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Compiler :
  		#[ tokenize :
 
@@ -383,9 +383,9 @@ donumber:		i = 0;
 				else goto IllPos;
 				in++;
 				break;
-			case 5:		/* + - * / ^ : */
+			case 5:		/* + - * % / ^ : */
 				CHECKPOLY
-				if ( *in == ':' ) goto IllPos;
+				if ( *in == ':' || *in == '%' ) goto IllPos;
 				if ( *in == '*' || *in == '/' || *in == '^' ) {
 					if ( object <= 0 ) {
 						MesPrint("&Illegal position for operator: %s",in);
@@ -563,7 +563,7 @@ writenumber:
 }
 
 /*
- 		#] WriteTokens :
+ 		#] WriteTokens : 
  		#[ simp1token :
 
 		Routine substitutes set elements if possible.
@@ -643,7 +643,7 @@ if ( n < 0 ) {
 }
 
 /*
- 		#] simp1token :
+ 		#] simp1token : 
  		#[ simpwtoken :
 
 		Only to be called in the LHS.
@@ -804,7 +804,7 @@ firsterr:		if ( first ) {
 }
 
 /*
- 		#] simpwtoken :
+ 		#] simpwtoken : 
  		#[ simp2token :
 
 		Deals with function arguments.
@@ -985,7 +985,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token :
+ 		#] simp2token : 
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.
@@ -1219,7 +1219,7 @@ doublepower:
 }
 
 /*
- 		#] simp3atoken :
+ 		#] simp3atoken : 
  		#[ simp3btoken :
 */
 
@@ -1593,7 +1593,7 @@ doublepower:;
 }
 
 /*
- 		#] simp3btoken :
+ 		#] simp3btoken : 
  		#[ simp4token :
 
 		Deal with the set[n] objects in the RHS.
@@ -1750,7 +1750,7 @@ simp4token ARG1(SBYTE *,s)
 }
 
 /*
- 		#] simp4token :
+ 		#] simp4token : 
  		#[ simp5token :
 
 	Making sure that first argument of sumfunction is not a wildcard already
@@ -1797,7 +1797,7 @@ simp5token ARG2(SBYTE *,s,int,mode)
 }
 
 /*
- 		#] simp5token :
+ 		#] simp5token : 
  		#[ simp6token :
 
 int
@@ -1811,7 +1811,7 @@ simp6token ARG2(SBYTE *,s,int,mode)
 	return(error);
 }
 
- 		#] simp6token :
+ 		#] simp6token : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

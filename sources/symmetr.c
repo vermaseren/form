@@ -1519,7 +1519,7 @@ int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
 	if ( argcount == 0 && tcount == 0 && funnycount == 0 ) {
 quicky:
 		AN.RepFunList[AN.RepFunNum++] = offset;
-		AN.RepFunList[AN.RepFunNum++] = 0;
+		AN.RepFunList[AN.RepFunNum++] = signs;
 		newpat = pattern + pattern[1];
 		if ( newpat >= AN.patstop ) {
 			if ( AN.UseFindOnly == 0 ) {
@@ -1850,6 +1850,7 @@ nextiraise:;
 	for ( i = 0; i < tcount; i++ ) cycles[i] = tcount-i;
 	AT.WorkPointer += tcount;
 	signo = 0;
+MesPrint("<1> signs = %d",signs);
 	for (;;) {
 		for ( j = 0; j < argcount; j++ ) {
 			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+j]) == 0 ) {
@@ -1961,7 +1962,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy : 
+  	#] FunMatchSy :
   	#[ MatchArgument :
 */
 
