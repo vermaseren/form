@@ -93,7 +93,6 @@
 #define BARG10(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9,xa,ya) \
 			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9,xa ya)
 #endif
-#define DECLARE(x,y) x y ;
  
 #else
 
@@ -118,7 +117,6 @@
 #define ARG10(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9,xa,ya) \
 			(y1,y2,y3,y4,y5,y6,y7,y8,y9,ya) \
 			 x1 y1;x2 y2;x3 y3;x4 y4;x5 y5;x6 y6;x7 y7;x8 y8;x9 y9;xa ya;
-#define DECLARE(x,y) x();
 
 #endif
 /*
@@ -299,7 +297,7 @@
 #define ISNOTZEROPOS(pp) ( (pp).p1 != 0 )
 #define ISPOSPOS(pp) ( (pp).p1 > 0 )
 #define ISNEGPOS(pp) ( (pp).p1 < 0 )
-DECLARE(VOID TELLFILE,(int,POSITION *))
+extern VOID TELLFILE(int,POSITION *);
 
 #define TOLONG(x) ((LONG)(x))
 #define StrIcmp(x,y) StrICont((UBYTE *)(y),(UBYTE *)(x))
@@ -358,1073 +356,1070 @@ DECLARE(VOID TELLFILE,(int,POSITION *))
 
 /**
  *	All functions (well, nearly all) are declared here.
- *	This is done with the macro DECLARE which allows us to distinguish
- *	between various flavours of the C language.
- *	This was especially relevant in the days of K&R compilers and ANSI
- *	compilers existing side by side.
  */
 
-DECLARE(VOID StartVariables,ARG0)
-DECLARE(VOID setSignalHandlers,ARG0)
-DECLARE(UBYTE *CodeToLine,(WORD,UBYTE *))
-DECLARE(INDEXENTRY *FindInIndex,(WORD,FILEDATA *,WORD))
-DECLARE(UBYTE *GetLine,(UBYTE *,LONG,WORD))
-DECLARE(UBYTE *GetOneSet,(UBYTE *,WORD *,WORD *,WORD *,WORD *,WORD))
-DECLARE(INDEXENTRY *NextFileIndex,(POSITION *))
-DECLARE(UBYTE *NextWord,(UBYTE *))
-DECLARE(WORD *PasteTerm,(PHEAD WORD,WORD *,WORD *,WORD,WORD))
-DECLARE(UBYTE *SkipExpression,(UBYTE *,WORD))
-DECLARE(UBYTE *SkipLine,(UBYTE *))
-DECLARE(UBYTE *SkipName,(UBYTE *))
-DECLARE(UBYTE *SkipOneName,(UBYTE *))
-DECLARE(UBYTE *SkipSet,(UBYTE *))
-DECLARE(UBYTE *StrCopy,(UBYTE *,UBYTE *))
-DECLARE(UBYTE *WrtPower,(UBYTE *,WORD))
-DECLARE(WORD AccumGCD,(UWORD *,WORD *,UWORD *,WORD))
-DECLARE(VOID AddArgs,(PHEAD WORD *,WORD *,WORD *))
-DECLARE(WORD AddCoef,(PHEAD WORD **,WORD **))
-DECLARE(WORD AddLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD AddPLon,(UWORD *,WORD,UWORD *,WORD,UWORD *,UWORD *))
-DECLARE(WORD AddPoly,(PHEAD WORD **,WORD **))
-DECLARE(WORD AddRat,(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(VOID AddToLine,(UBYTE *))
-DECLARE(WORD AddWild,(PHEAD WORD,WORD,WORD))
-DECLARE(WORD BigLong,(UWORD *,WORD,UWORD *,WORD))
-DECLARE(WORD BinomGen,(WORD *,WORD,WORD **,WORD,WORD,WORD,WORD,WORD,UWORD *,WORD))
-DECLARE(VOID Cconout,(WORD))
-DECLARE(WORD CheckWild,(PHEAD WORD,WORD,WORD,WORD *))
-DECLARE(WORD Chisholm,(PHEAD WORD *term,WORD level))
-DECLARE(WORD CleanExpr,(WORD))
-DECLARE(VOID CleanUp,(WORD))
-DECLARE(VOID ClearWild,(PHEAD0))
-DECLARE(WORD Commute,(WORD *,WORD *))
-DECLARE(WORD DetCommu,(WORD *))
-DECLARE(int CompArg,(WORD *,WORD *))
-DECLARE(WORD CompCoef,(WORD *, WORD *))
-DECLARE(WORD CompGroup,(PHEAD WORD,WORD **,WORD *,WORD *,WORD))
-DECLARE(WORD CompWord,(UBYTE *,char *))
-DECLARE(WORD Compare1,(PHEAD WORD *,WORD *,WORD))
-DECLARE(WORD CopyToComp,ARG0)
-DECLARE(WORD CountDo,(WORD *,WORD *))
-DECLARE(WORD CountFun,(WORD *,WORD *))
-DECLARE(WORD Deferred,(PHEAD WORD *,WORD))
-DECLARE(WORD DeleteStore,(WORD))
-DECLARE(WORD DetCurDum,(WORD *))
-DECLARE(VOID DetVars,(WORD *,WORD))
-DECLARE(WORD Distribute,(DISTRIBUTE *,WORD))
-DECLARE(WORD DivLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *,UWORD *,WORD *))
-DECLARE(WORD DivRat,(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD Divvy,(PHEAD UWORD *,WORD *,UWORD *,WORD))
-DECLARE(WORD DoDelta,(WORD *))
-DECLARE(WORD DoDelta3,(WORD *,WORD))
-DECLARE(WORD DoTableExpansion,(WORD *,WORD))
-DECLARE(WORD DoDistrib,(PHEAD WORD *,WORD))
-DECLARE(WORD DoMerge,(WORD *,WORD,WORD,WORD))
-DECLARE(WORD TestUse,(WORD *,WORD))
-DECLARE(DBASE *FindTB,(UBYTE *))
-DECLARE(int CheckTableDeclarations,(DBASE *))
-DECLARE(WORD Apply,(WORD *,WORD))
-DECLARE(int ApplyExec,(WORD *,int,WORD))
-DECLARE(WORD ApplyReset,(WORD))
-DECLARE(WORD TableReset,ARG0)
-DECLARE(VOID ReWorkT,(WORD *,WORD *,WORD))
-DECLARE(WORD DoIfStatement,(WORD *,WORD *))
-DECLARE(WORD DoModule,ARG0)
-DECLARE(WORD DoOnePow,(WORD *,WORD,WORD,WORD *,WORD *,WORD,WORD *))
-DECLARE(void DoRevert,(WORD *,WORD *))
-DECLARE(WORD DoSumF1,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD DoSumF2,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD DoTheta,(WORD *))
-DECLARE(LONG EndSort,(WORD *,int))
-DECLARE(WORD EntVar,(WORD,UBYTE *,WORD,WORD,WORD))
-DECLARE(WORD EpfCon,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD EpfFind,(PHEAD WORD *,WORD *))
-DECLARE(WORD EpfGen,(WORD,WORD *,WORD *,WORD *,WORD))
-DECLARE(WORD EqualArg,(WORD *,WORD,WORD))
-DECLARE(WORD Evaluate,(UBYTE **))
-DECLARE(int Factorial,(PHEAD WORD,UWORD *,WORD *))
-DECLARE(int Bernoulli,(WORD,UWORD *,WORD *))
-DECLARE(int FactorIn,(PHEAD WORD *,WORD))
-DECLARE(int FactorInExpr,(PHEAD WORD *,WORD))
-DECLARE(WORD FindAll,(PHEAD WORD *,WORD *,WORD,WORD *))
-DECLARE(WORD FindMulti,(PHEAD WORD *,WORD *))
-DECLARE(WORD FindOnce,(PHEAD WORD *,WORD *))
-DECLARE(WORD FindOnly,(PHEAD WORD *,WORD *))
-DECLARE(WORD FindRest,(PHEAD WORD *,WORD *))
-DECLARE(WORD FindSpecial,(WORD *))
-DECLARE(WORD FindrNumber,(WORD,VARRENUM *))
-DECLARE(VOID FiniLine,ARG0)
-DECLARE(WORD FiniTerm,(PHEAD WORD *,WORD *,WORD *,WORD,WORD))
-DECLARE(VOID FlushCon,ARG0)
-DECLARE(WORD FlushOut,(POSITION *,FILEHANDLE *,int))
-DECLARE(VOID FunLevel,(PHEAD WORD *))
-DECLARE(VOID GarbHand,ARG0)
-DECLARE(WORD GcdLong,(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(VOID GCD,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(ULONG GCD2,(ULONG,ULONG))
-DECLARE(WORD Generator,(PHEAD WORD *,WORD))
-DECLARE(LONG Get1Long,(UBYTE *))
-DECLARE(WORD GetBinom,(UWORD *,WORD *,WORD,WORD))
-DECLARE(WORD GetFromStore,(WORD *,POSITION *,RENUMBER,WORD *,WORD))
-DECLARE(WORD GetIchar,ARG0)
-DECLARE(WORD GetIword,(UBYTE *,WORD))
-DECLARE(WORD GetLong,(UBYTE *,UWORD *,WORD *))
-DECLARE(WORD GetMoreTerms,(WORD *))
-DECLARE(WORD GetMoreFromMem,(WORD *,WORD **))
-DECLARE(WORD GetObject,(UBYTE *,WORD *,WORD *,WORD))
-DECLARE(WORD GetOneTerm,(PHEAD WORD *,FILEHANDLE *,POSITION *,int))
-DECLARE(WORD GetOption,(UBYTE **))
-DECLARE(WORD GetParams,ARG0)
-DECLARE(RENUMBER GetTable,(WORD,POSITION *))
-DECLARE(WORD GetTerm,(PHEAD WORD *))
-DECLARE(WORD GetWithEcho,ARG0)
-DECLARE(WORD Glue,(PHEAD WORD *,WORD *,WORD *,WORD))
-DECLARE(WORD InFunction,(WORD *,WORD *))
-DECLARE(WORD IncLHS,ARG0)
-DECLARE(WORD IncRHS,(WORD))
-DECLARE(VOID IniGlob,ARG0)
-DECLARE(VOID IniLine,ARG0)
-DECLARE(WORD IniVars,ARG0)
-DECLARE(VOID Init2,ARG0)
-DECLARE(VOID Initialize,ARG0)
-DECLARE(WORD InsertTerm,(PHEAD WORD *,WORD,WORD,WORD *,WORD *,WORD))
-DECLARE(WORD Kraak,(UBYTE *,WORD **,WORD *,WORD,WORD))
-DECLARE(VOID LongToLine,(UWORD *,WORD))
-DECLARE(WORD LookAhead,ARG0)
-DECLARE(WORD MakeDirty,(WORD *,WORD *,WORD))
-DECLARE(VOID MarkDirty,(WORD *,WORD))
-DECLARE(WORD MakeModTable,ARG0)
-DECLARE(WORD MatchE,(WORD *,WORD *,WORD *,WORD))
-DECLARE(int MatchCy,(WORD *,WORD *,WORD *,WORD))
-DECLARE(int FunMatchCy,(WORD *,WORD *,WORD *,WORD))
-DECLARE(int FunMatchSy,(WORD *,WORD *,WORD *,WORD))
-DECLARE(int MatchArgument,(WORD *,WORD *))
-DECLARE(WORD MatchFunction,(PHEAD WORD *,WORD *,WORD *))
-DECLARE(WORD MergePatches,(WORD))
-DECLARE(WORD MesCerr,(char *, UBYTE *))
-DECLARE(WORD MesComp,(char *, UBYTE *, UBYTE *))
-DECLARE(WORD MesLong,(char *))
-DECLARE(WORD MesPar,(WORD))
-DECLARE(WORD MesSet,(WORD))
-DECLARE(WORD Modulus,(WORD *))
-DECLARE(VOID MoveDummies,(PHEAD WORD *,WORD))
-DECLARE(WORD MulLong,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD MulRat,(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(WORD Mully,(PHEAD UWORD *,WORD *,UWORD *,WORD))
-DECLARE(WORD MultDo,(WORD *,WORD *))
-DECLARE(WORD NewSort,ARG0)
-DECLARE(WORD ExtraSymbol,(WORD,WORD,WORD,WORD *))
-DECLARE(WORD Normalize,(PHEAD WORD *))
-DECLARE(WORD OpenTemp,ARG0)
-DECLARE(VOID Pack,(UWORD *,WORD *,UWORD *,WORD ))
-DECLARE(LONG PasteFile,(WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD))
-DECLARE(WORD Permute,(PERM *,WORD))
-DECLARE(WORD PolyFunMul,(PHEAD WORD *))
-DECLARE(WORD PopVariables,ARG0)
-DECLARE(WORD PrepPoly,(WORD *))
-DECLARE(WORD Processor,ARG0)
-DECLARE(WORD Product,(UWORD *,WORD *,WORD))
-DECLARE(VOID PrtLong,(UWORD *,WORD,UBYTE *))
-DECLARE(VOID PrtTerms,ARG0)
-DECLARE(VOID PrintRunningTime,ARG0)
-DECLARE(WORD PutBracket,(PHEAD WORD *))
-DECLARE(LONG PutIn,(FILEHANDLE *,POSITION *,WORD *,WORD **,int))
-DECLARE(WORD PutInStore,(INDEXENTRY *,WORD))
-DECLARE(WORD PutOut,(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD))
-DECLARE(UWORD Quotient,(UWORD *,WORD *,WORD))
-DECLARE(WORD RaisPow,(PHEAD UWORD *,WORD *,UWORD))
-DECLARE(VOID RatToLine,(UWORD *,WORD))
-DECLARE(WORD RatioFind,(PHEAD WORD *,WORD *))
-DECLARE(WORD RatioGen,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD ReNumber,(PHEAD WORD *))
-DECLARE(WORD ReadLHS,ARG0)
-DECLARE(WORD ReadRHS,(WORD))
-DECLARE(WORD ReadSnum,(UBYTE **))
-DECLARE(WORD Remain10,(UWORD *,WORD *))
-DECLARE(WORD Remain4,(UWORD *,WORD *))
-DECLARE(WORD ResetScratch,ARG0)
-DECLARE(WORD ResolveSet,(WORD *,WORD *,WORD *))
-DECLARE(WORD Reverse5,(WORD *term,WORD level))
-DECLARE(WORD RevertScratch,ARG0)
-DECLARE(WORD ScanFunctions,(PHEAD WORD *,WORD *,WORD))
-DECLARE(VOID SeekScratch,(FILEHANDLE *,POSITION *))
-DECLARE(VOID SetEndScratch,(FILEHANDLE *,POSITION *))
-DECLARE(VOID SetEndHScratch,(FILEHANDLE *,POSITION *))
-DECLARE(WORD SetFileIndex,ARG0)
-DECLARE(WORD SetParams,ARG0)
-DECLARE(WORD Sflush,(FILEHANDLE *))
-DECLARE(WORD Simplify,(PHEAD UWORD *,WORD *,UWORD *,WORD *))
-DECLARE(WORD SkipWhite,ARG0)
-DECLARE(WORD SortWild,(WORD *,WORD))
-DECLARE(FILE *LocateBase,(char **,char **))
+extern VOID   StartVariables();
+extern VOID   setSignalHandlers();
+extern UBYTE *CodeToLine(WORD,UBYTE *);
+extern INDEXENTRY *FindInIndex(WORD,FILEDATA *,WORD);
+extern UBYTE *GetLine(UBYTE *,LONG,WORD);
+extern UBYTE *GetOneSet(UBYTE *,WORD *,WORD *,WORD *,WORD *,WORD);
+extern INDEXENTRY *NextFileIndex(POSITION *);
+extern UBYTE *NextWord(UBYTE *);
+extern WORD  *PasteTerm(PHEAD WORD,WORD *,WORD *,WORD,WORD);
+extern UBYTE *SkipExpression(UBYTE *,WORD);
+extern UBYTE *SkipLine(UBYTE *);
+extern UBYTE *SkipName(UBYTE *);
+extern UBYTE *SkipOneName(UBYTE *);
+extern UBYTE *SkipSet(UBYTE *);
+extern UBYTE *StrCopy(UBYTE *,UBYTE *);
+extern UBYTE *WrtPower(UBYTE *,WORD);
+extern WORD   AccumGCD(UWORD *,WORD *,UWORD *,WORD);
+extern VOID   AddArgs(PHEAD WORD *,WORD *,WORD *);
+extern WORD   AddCoef(PHEAD WORD **,WORD **);
+extern WORD   AddLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern WORD   AddPLon(UWORD *,WORD,UWORD *,WORD,UWORD *,UWORD *);
+extern WORD   AddPoly(PHEAD WORD **,WORD **);
+extern WORD   AddRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern VOID   AddToLine(UBYTE *);
+extern WORD   AddWild(PHEAD WORD,WORD,WORD);
+extern WORD   BigLong(UWORD *,WORD,UWORD *,WORD);
+extern WORD   BinomGen(WORD *,WORD,WORD **,WORD,WORD,WORD,WORD,WORD,UWORD *,WORD);
+extern VOID   Cconout(WORD);
+extern WORD   CheckWild(PHEAD WORD,WORD,WORD,WORD *);
+extern WORD   Chisholm(PHEAD WORD *,WORD);
+extern WORD   CleanExpr(WORD);
+extern VOID   CleanUp(WORD);
+extern VOID   ClearWild(PHEAD0);
+extern WORD   Commute(WORD *,WORD *);
+extern WORD   DetCommu(WORD *);
+extern int    CompArg(WORD *,WORD *);
+extern WORD   CompCoef(WORD *, WORD *);
+extern WORD   CompGroup(PHEAD WORD,WORD **,WORD *,WORD *,WORD);
+extern WORD   CompWord(UBYTE *,char *);
+extern WORD   Compare1(PHEAD WORD *,WORD *,WORD);
+extern WORD   CopyToComp();
+extern WORD   CountDo(WORD *,WORD *);
+extern WORD   CountFun(WORD *,WORD *);
+extern WORD   Deferred(PHEAD WORD *,WORD);
+extern WORD   DeleteStore(WORD);
+extern WORD   DetCurDum(WORD *);
+extern VOID   DetVars(WORD *,WORD);
+extern WORD   Distribute(DISTRIBUTE *,WORD);
+extern WORD   DivLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *,UWORD *,WORD *);
+extern WORD   DivRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern WORD   Divvy(PHEAD UWORD *,WORD *,UWORD *,WORD);
+extern WORD   DoDelta(WORD *);
+extern WORD   DoDelta3(WORD *,WORD);
+extern WORD   DoTableExpansion(WORD *,WORD);
+extern WORD   DoDistrib(PHEAD WORD *,WORD);
+extern WORD   DoMerge(WORD *,WORD,WORD,WORD);
+extern WORD   TestUse(WORD *,WORD);
+extern DBASE *FindTB(UBYTE *);
+extern int    CheckTableDeclarations(DBASE *);
+extern WORD   Apply(WORD *,WORD);
+extern int    ApplyExec(WORD *,int,WORD);
+extern WORD   ApplyReset(WORD);
+extern WORD   TableReset();
+extern VOID   ReWorkT(WORD *,WORD *,WORD);
+extern WORD   DoIfStatement(WORD *,WORD *);
+extern WORD   DoModule();
+extern WORD   DoOnePow(WORD *,WORD,WORD,WORD *,WORD *,WORD,WORD *);
+extern void   DoRevert(WORD *,WORD *);
+extern WORD   DoSumF1(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   DoSumF2(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   DoTheta(WORD *);
+extern LONG   EndSort(WORD *,int);
+extern WORD   EntVar(WORD,UBYTE *,WORD,WORD,WORD);
+extern WORD   EpfCon(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   EpfFind(PHEAD WORD *,WORD *);
+extern WORD   EpfGen(WORD,WORD *,WORD *,WORD *,WORD);
+extern WORD   EqualArg(WORD *,WORD,WORD);
+extern WORD   Evaluate(UBYTE **);
+extern int    Factorial(PHEAD WORD,UWORD *,WORD *);
+extern int    Bernoulli(WORD,UWORD *,WORD *);
+extern int    FactorIn(PHEAD WORD *,WORD);
+extern int    FactorInExpr(PHEAD WORD *,WORD);
+extern WORD   FindAll(PHEAD WORD *,WORD *,WORD,WORD *);
+extern WORD   FindMulti(PHEAD WORD *,WORD *);
+extern WORD   FindOnce(PHEAD WORD *,WORD *);
+extern WORD   FindOnly(PHEAD WORD *,WORD *);
+extern WORD   FindRest(PHEAD WORD *,WORD *);
+extern WORD   FindSpecial(WORD *);
+extern WORD   FindrNumber(WORD,VARRENUM *);
+extern VOID   FiniLine();
+extern WORD   FiniTerm(PHEAD WORD *,WORD *,WORD *,WORD,WORD);
+extern VOID   FlushCon();
+extern WORD   FlushOut(POSITION *,FILEHANDLE *,int);
+extern VOID   FunLevel(PHEAD WORD *);
+extern VOID   GarbHand();
+extern WORD   GcdLong(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern VOID   GCD(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern ULONG  GCD2(ULONG,ULONG);
+extern WORD   Generator(PHEAD WORD *,WORD);
+extern LONG   Get1Long(UBYTE *);
+extern WORD   GetBinom(UWORD *,WORD *,WORD,WORD);
+extern WORD   GetFromStore(WORD *,POSITION *,RENUMBER,WORD *,WORD);
+extern WORD   GetIchar();
+extern WORD   GetIword(UBYTE *,WORD);
+extern WORD   GetLong(UBYTE *,UWORD *,WORD *);
+extern WORD   GetMoreTerms(WORD *);
+extern WORD   GetMoreFromMem(WORD *,WORD **);
+extern WORD   GetObject(UBYTE *,WORD *,WORD *,WORD);
+extern WORD   GetOneTerm(PHEAD WORD *,FILEHANDLE *,POSITION *,int);
+extern WORD   GetOption(UBYTE **);
+extern WORD   GetParams();
+extern RENUMBER GetTable(WORD,POSITION *);
+extern WORD   GetTerm(PHEAD WORD *);
+extern WORD   GetWithEcho();
+extern WORD   Glue(PHEAD WORD *,WORD *,WORD *,WORD);
+extern WORD   InFunction(WORD *,WORD *);
+extern WORD   IncLHS();
+extern WORD   IncRHS(WORD);
+extern VOID   IniGlob();
+extern VOID   IniLine();
+extern WORD   IniVars();
+extern VOID   Init2();
+extern VOID   Initialize();
+extern WORD   InsertTerm(PHEAD WORD *,WORD,WORD,WORD *,WORD *,WORD);
+extern WORD   Kraak(UBYTE *,WORD **,WORD *,WORD,WORD);
+extern VOID   LongToLine(UWORD *,WORD);
+extern WORD   LookAhead();
+extern WORD   MakeDirty(WORD *,WORD *,WORD);
+extern VOID   MarkDirty(WORD *,WORD);
+extern WORD   MakeModTable();
+extern WORD   MatchE(WORD *,WORD *,WORD *,WORD);
+extern int    MatchCy(WORD *,WORD *,WORD *,WORD);
+extern int    FunMatchCy(WORD *,WORD *,WORD *,WORD);
+extern int    FunMatchSy(WORD *,WORD *,WORD *,WORD);
+extern int    MatchArgument(WORD *,WORD *);
+extern WORD   MatchFunction(PHEAD WORD *,WORD *,WORD *);
+extern WORD   MergePatches(WORD);
+extern WORD   MesCerr(char *, UBYTE *);
+extern WORD   MesComp(char *, UBYTE *, UBYTE *);
+extern WORD   MesLong(char *);
+extern WORD   MesPar(WORD);
+extern WORD   MesSet(WORD);
+extern WORD   Modulus(WORD *);
+extern VOID   MoveDummies(PHEAD WORD *,WORD);
+extern WORD   MulLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern WORD   MulRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern WORD   Mully(PHEAD UWORD *,WORD *,UWORD *,WORD);
+extern WORD   MultDo(WORD *,WORD *);
+extern WORD   NewSort();
+extern WORD   ExtraSymbol(WORD,WORD,WORD,WORD *);
+extern WORD   Normalize(PHEAD WORD *);
+extern WORD   OpenTemp();
+extern VOID   Pack(UWORD *,WORD *,UWORD *,WORD );
+extern LONG   PasteFile(WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD);
+extern WORD   Permute(PERM *,WORD);
+extern WORD   PolyFunMul(PHEAD WORD *);
+extern WORD   PopVariables();
+extern WORD   PrepPoly(WORD *);
+extern WORD   Processor();
+extern WORD   Product(UWORD *,WORD *,WORD);
+extern VOID   PrtLong(UWORD *,WORD,UBYTE *);
+extern VOID   PrtTerms();
+extern VOID   PrintRunningTime();
+extern WORD   PutBracket(PHEAD WORD *);
+extern LONG   PutIn(FILEHANDLE *,POSITION *,WORD *,WORD **,int);
+extern WORD   PutInStore(INDEXENTRY *,WORD);
+extern WORD   PutOut(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD);
+extern UWORD  Quotient(UWORD *,WORD *,WORD);
+extern WORD   RaisPow(PHEAD UWORD *,WORD *,UWORD);
+extern VOID   RatToLine(UWORD *,WORD);
+extern WORD   RatioFind(PHEAD WORD *,WORD *);
+extern WORD   RatioGen(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   ReNumber(PHEAD WORD *);
+extern WORD   ReadLHS();
+extern WORD   ReadRHS(WORD);
+extern WORD   ReadSnum(UBYTE **);
+extern WORD   Remain10(UWORD *,WORD *);
+extern WORD   Remain4(UWORD *,WORD *);
+extern WORD   ResetScratch();
+extern WORD   ResolveSet(WORD *,WORD *,WORD *);
+extern WORD   Reverse5(WORD *term,WORD level);
+extern WORD   RevertScratch();
+extern WORD   ScanFunctions(PHEAD WORD *,WORD *,WORD);
+extern VOID   SeekScratch(FILEHANDLE *,POSITION *);
+extern VOID   SetEndScratch(FILEHANDLE *,POSITION *);
+extern VOID   SetEndHScratch(FILEHANDLE *,POSITION *);
+extern WORD   SetFileIndex();
+extern WORD   SetParams();
+extern WORD   Sflush(FILEHANDLE *);
+extern WORD   Simplify(PHEAD UWORD *,WORD *,UWORD *,WORD *);
+extern WORD   SkipWhite();
+extern WORD   SortWild(WORD *,WORD);
+extern FILE  *LocateBase(char **,char **);
 #ifdef NEWSPLITMERGE
-DECLARE(LONG SplitMerge,(PHEAD WORD **,LONG))
+extern LONG   SplitMerge(PHEAD WORD **,LONG);
 #else
-DECLARE(VOID SplitMerge,(PHEAD WORD **,LONG))
+extern VOID   SplitMerge(PHEAD WORD **,LONG);
 #endif
-DECLARE(WORD StoreTerm,(PHEAD WORD *))
-DECLARE(WORD StrCcmp,(UBYTE *, char *))
-DECLARE(VOID StrNcop,(UBYTE *, UBYTE *, WORD))
-DECLARE(WORD SubEval,(UBYTE **))
-DECLARE(VOID SubPLon,(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *))
-DECLARE(VOID Substitute,(PHEAD WORD *,WORD *,WORD))
-DECLARE(WORD SymFind,(PHEAD WORD *,WORD *))
-DECLARE(WORD SymGen,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD Symmetrize,(PHEAD WORD *,WORD *,WORD,WORD,WORD))
-DECLARE(int FullSymmetrize,(WORD *,int))
-DECLARE(WORD TakeModulus,(UWORD *,WORD *,WORD *,WORD,WORD))
-DECLARE(VOID TalToLine,(UWORD))
-DECLARE(WORD TenVec,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD TenVecFind,(PHEAD WORD *,WORD *))
-DECLARE(WORD TermRenumber,(WORD *,RENUMBER,WORD))
-DECLARE(VOID TestDrop,ARG0)
-DECLARE(WORD TestMatch,(PHEAD WORD *,WORD *))
-DECLARE(WORD TestSub,(PHEAD WORD *,WORD))
-DECLARE(LONG TimeCPU,(WORD))
-DECLARE(LONG TimeChildren,(WORD))
-DECLARE(LONG TimeWallClock,(WORD))
-DECLARE(LONG Timer,(int))
-DECLARE(LONG GetWorkerTimes,ARG0)
-DECLARE(WORD ToStorage,(EXPRESSIONS,POSITION *))
-DECLARE(VOID TokenToLine,(UBYTE *))
-DECLARE(WORD Trace4,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD Trace4Gen,(PHEAD TRACES *,WORD))
-DECLARE(WORD Trace4no,(WORD,WORD *,TRACES *))
-DECLARE(WORD TraceFind,(PHEAD WORD *,WORD *))
-DECLARE(WORD TraceN,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD TraceNgen,(PHEAD TRACES *,WORD))
-DECLARE(WORD TraceNno,(WORD,WORD *,TRACES *))
-DECLARE(WORD Traces,(PHEAD WORD *,WORD *,WORD,WORD))
-DECLARE(WORD Trick,(WORD *,TRACES *))
-DECLARE(WORD TryDo,(WORD *,WORD *,WORD))
-DECLARE(VOID UnDefine,(WORD))
-DECLARE(VOID UnPack,(UWORD *,WORD,WORD *,WORD *))
-DECLARE(WORD Unique,(UBYTE *,UBYTE *,WORD))
-DECLARE(WORD VarStore,(UBYTE *,WORD,WORD,WORD))
-DECLARE(VOID W_S_L,(WORD,LONG))
-DECLARE(VOID W_S_S,(WORD,UBYTE *))
-DECLARE(WORD WildFill,(PHEAD WORD *,WORD *,WORD *))
-DECLARE(WORD WriteAll,ARG0)
-DECLARE(WORD WriteOne,(UBYTE *,int,int))
-DECLARE(VOID WriteArgument,(WORD *))
-DECLARE(WORD WriteExpression,(WORD *,LONG))
-DECLARE(WORD WriteInnerTerm,(WORD *,WORD))
-DECLARE(VOID WriteLists,ARG0)
-DECLARE(VOID WriteSetup,ARG0)
-DECLARE(VOID WriteStats,(POSITION *,WORD))
-DECLARE(WORD WriteSubTerm,(WORD *,WORD))
-DECLARE(WORD WriteTerm,(WORD *,WORD *,WORD,WORD,WORD))
-DECLARE(WORD execarg,(WORD *,WORD))
-DECLARE(WORD execterm,(WORD *,WORD))
-DECLARE(WORD execnorm,(WORD *,WORD))
-DECLARE(VOID SpecialCleanup,(PHEAD0))
-DECLARE(int main,(int,char **))
+extern WORD   StoreTerm(PHEAD WORD *);
+extern WORD   StrCcmp(UBYTE *, char *);
+extern VOID   StrNcop(UBYTE *, UBYTE *, WORD);
+extern WORD   SubEval(UBYTE **);
+extern VOID   SubPLon(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
+extern VOID   Substitute(PHEAD WORD *,WORD *,WORD);
+extern WORD   SymFind(PHEAD WORD *,WORD *);
+extern WORD   SymGen(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   Symmetrize(PHEAD WORD *,WORD *,WORD,WORD,WORD);
+extern int    FullSymmetrize(WORD *,int);
+extern WORD   TakeModulus(UWORD *,WORD *,WORD *,WORD,WORD);
+extern VOID   TalToLine(UWORD);
+extern WORD   TenVec(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   TenVecFind(PHEAD WORD *,WORD *);
+extern WORD   TermRenumber(WORD *,RENUMBER,WORD);
+extern VOID   TestDrop();
+extern WORD   TestMatch(PHEAD WORD *,WORD *);
+extern WORD   TestSub(PHEAD WORD *,WORD);
+extern LONG   TimeCPU(WORD);
+extern LONG   TimeChildren(WORD);
+extern LONG   TimeWallClock(WORD);
+extern LONG   Timer(int);
+extern LONG   GetWorkerTimes();
+extern WORD   ToStorage(EXPRESSIONS,POSITION *);
+extern VOID   TokenToLine(UBYTE *);
+extern WORD   Trace4(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   Trace4Gen(PHEAD TRACES *,WORD);
+extern WORD   Trace4no(WORD,WORD *,TRACES *);
+extern WORD   TraceFind(PHEAD WORD *,WORD *);
+extern WORD   TraceN(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   TraceNgen(PHEAD TRACES *,WORD);
+extern WORD   TraceNno(WORD,WORD *,TRACES *);
+extern WORD   Traces(PHEAD WORD *,WORD *,WORD,WORD);
+extern WORD   Trick(WORD *,TRACES *);
+extern WORD   TryDo(WORD *,WORD *,WORD);
+extern VOID   UnDefine(WORD);
+extern VOID   UnPack(UWORD *,WORD,WORD *,WORD *);
+extern WORD   Unique(UBYTE *,UBYTE *,WORD);
+extern WORD   VarStore(UBYTE *,WORD,WORD,WORD);
+extern VOID   W_S_L(WORD,LONG);
+extern VOID   W_S_S(WORD,UBYTE *);
+extern WORD   WildFill(PHEAD WORD *,WORD *,WORD *);
+extern WORD   WriteAll();
+extern WORD   WriteOne(UBYTE *,int,int);
+extern VOID   WriteArgument(WORD *);
+extern WORD   WriteExpression(WORD *,LONG);
+extern WORD   WriteInnerTerm(WORD *,WORD);
+extern VOID   WriteLists();
+extern VOID   WriteSetup();
+extern VOID   WriteStats(POSITION *,WORD);
+extern WORD   WriteSubTerm(WORD *,WORD);
+extern WORD   WriteTerm(WORD *,WORD *,WORD,WORD,WORD);
+extern WORD   execarg(WORD *,WORD);
+extern WORD   execterm(WORD *,WORD);
+extern WORD   execnorm(WORD *,WORD);
+extern VOID   SpecialCleanup(PHEAD0);
 
-DECLARE(typedef WORD (*WCW),(EXPRESSIONS,WORD))
-DECLARE(UBYTE *strDup,(UBYTE *))
-DECLARE(WORD AddSetElement,(EXPRESSIONS,LONG))
-DECLARE(WORD AddToHide,ARG0)
-DECLARE(LONG CloseFormFile,(UBYTE *,WORD))
-DECLARE(LONG CreateFormFile,(UBYTE *,WORD))
-DECLARE(WORD DoExecute,(WORD,WORD))
-DECLARE(WORD DoSpolynomial,(EXPRESSIONS,WORD,WORD,WORD *))
-DECLARE(WORD ElimOneVar,(EXPRESSIONS,WORD))
-DECLARE(WORD FromHide,ARG0)
-DECLARE(WORD Groebner,(WORD))
-DECLARE(WORD LinSolve,(WORD))
-DECLARE(WORD MakeCommercial,(UBYTE *,LONG,LONG))
-DECLARE(WORD MakeSubs,(WORD *,WORD,WORD))
-DECLARE(WORD MulSetBracket,(WORD *,LONG,WORD *,WORD,LONG,LONG))
-DECLARE(WORD NormalForm,ARG0)
-DECLARE(LONG OpenFormFile,(UBYTE *,WORD))
-DECLARE(VOID SetScratch,(FILEHANDLE *,POSITION *))
-DECLARE(WORD SortByWeight,(EXPRESSIONS,WORD)) 
-DECLARE(WORD Spolynomial,(EXPRESSIONS,LONG,LONG,LONG,LONG,WORD *,WORD *,WORD *,WORD))
-DECLARE(WORD StepExpressions,(WORD,WORD))
-DECLARE(WORD StepGroebner,(EXPRESSIONS,WORD))
-DECLARE(WORD StepNormalForm,(EXPRESSIONS,WORD))
-DECLARE(WORD TestLinearWeights,(UBYTE *))
-DECLARE(WORD TestOneLinearWeight,(WORD))
-DECLARE(WORD ToHide,ARG0)
-DECLARE(WORD ToTriangle,(EXPRESSIONS,WORD))
-DECLARE(VOID Warning,(char *))
-DECLARE(VOID HighWarning,(char *))
-DECLARE(LONG WriteFormFile,(UBYTE *,WORD))
-DECLARE(int SpareTable,(TABLES))
+typedef WORD (*WCW)(EXPRESSIONS,WORD);
 
-DECLARE(UBYTE *strDup1,(UBYTE *,char *))
-DECLARE(VOID *Malloc,(LONG))
-DECLARE(VOID *Malloc1,(LONG,char *))
-DECLARE(int DoTail,(int,UBYTE **))
-DECLARE(int OpenInput,ARG0)
-DECLARE(int PutPreVar,(UBYTE *,UBYTE *,UBYTE *,int))
-DECLARE(VOID Error0,(char *))
-DECLARE(VOID Error1,(char *,UBYTE *))
-DECLARE(VOID Error2,(char *,char *,UBYTE *))
-DECLARE(UBYTE ReadFromStream,(STREAM *))
-DECLARE(UBYTE GetFromStream,(STREAM *))
-DECLARE(UBYTE LookInStream,(STREAM *))
-DECLARE(STREAM *OpenStream,(UBYTE *,int,int,int))
-DECLARE(int LocateFile,(UBYTE **,int))
-DECLARE(STREAM *CloseStream,(STREAM *))
-DECLARE(VOID PositionStream,(STREAM *,LONG))
-DECLARE(int ProcessOption,(UBYTE *,UBYTE *,int))
-DECLARE(int DoSetups,ARG0)
-DECLARE(VOID Terminate,(int))
-DECLARE(NAMENODE *GetNode,(NAMETREE *,UBYTE *))
-DECLARE(int AddName,(NAMETREE *,UBYTE *,WORD,WORD,int *))
-DECLARE(int GetName,(NAMETREE *,UBYTE *,WORD *,int))
-DECLARE(int GetAutoName,(UBYTE *,WORD *))
-DECLARE(int GetVar,(UBYTE *,WORD *,WORD *,int,int))
-DECLARE(int MakeDubious,(NAMETREE *,UBYTE *,WORD *))
-DECLARE(int GetOName,(NAMETREE *,UBYTE *,WORD *,int))
-DECLARE(VOID DumpTree,(NAMETREE *))
-DECLARE(VOID DumpNode,(NAMETREE *,WORD,WORD))
-DECLARE(VOID LinkTree,(NAMETREE *,WORD,WORD))
-DECLARE(VOID CopyTree,(NAMETREE *,NAMETREE *,WORD))
-DECLARE(int CompactifyTree,(NAMETREE *))
-DECLARE(NAMETREE *MakeNameTree,ARG0)
-DECLARE(VOID FreeNameTree,(NAMETREE *))
-DECLARE(int AddExpression,(UBYTE *,int,int))
-DECLARE(int AddSymbol,(UBYTE *,int,int,int))
-DECLARE(int AddDollar,(UBYTE *,WORD,WORD *,LONG))
-DECLARE(int ReplaceDollar,(WORD,WORD,WORD *,LONG))
-DECLARE(int DollarRaiseLow,(UBYTE *,LONG))
-DECLARE(int AddVector,(UBYTE *,int))
-DECLARE(int AddDubious,(UBYTE *))
-DECLARE(int AddIndex,(UBYTE *,int,int))
-DECLARE(UBYTE *DoDimension,(UBYTE *,int *,int *))
-DECLARE(int AddFunction,(UBYTE *,int,int,int,int))
-DECLARE(int CoFunction,(UBYTE *,int,int))
-DECLARE(int AddSet,(UBYTE *))
-DECLARE(int DoElements,(UBYTE *,SETS,UBYTE *))
-DECLARE(int DoTempSet,(UBYTE *,UBYTE *))
-DECLARE(int NameConflict,(int,UBYTE *))
-DECLARE(int OpenFile,(char *))
-DECLARE(int OpenAddFile,(char *))
-DECLARE(int CreateFile,(char *))
-DECLARE(int CreateLogFile,(char *))
-DECLARE(VOID CloseFile,(int))
-DECLARE(int CreateHandle,ARG0)
-DECLARE(LONG ReadFile,(int,UBYTE *,LONG))
-DECLARE(LONG ReadPosFile,(PHEAD FILEHANDLE *,UBYTE *,LONG,POSITION *))
-DECLARE(LONG WriteFileToFile,(int,UBYTE *,LONG))
-DECLARE(VOID SeekFile,(int,POSITION *,int))
-DECLARE(LONG TellFile,(int))
-DECLARE(void FlushFile,(int))
-DECLARE(int GetPosFile,(int,fpos_t *))
-DECLARE(int SetPosFile,(int,fpos_t *))
-DECLARE(VOID SynchFile,(int))
-DECLARE(VOID TruncateFile,(int))
-DECLARE(int GetChannel,(char *))
-DECLARE(int GetAppendChannel,(char *))
-DECLARE(int CloseChannel,(char *))
-DECLARE(VOID inictable,ARG0)
-DECLARE(KEYWORD *findcommand,(UBYTE *))
-DECLARE(int inicbufs,ARG0)
-DECLARE(VOID StartFiles,ARG0)
-DECLARE(UBYTE *MakeDate,ARG0)
-DECLARE(VOID PreProcessor,ARG0)
-DECLARE(VOID *FromList,(LIST *))
-DECLARE(VOID *From0List,(LIST *))
-DECLARE(VOID *FromVarList,(LIST *))
-DECLARE(int DoubleList,(VOID ***,int *,int,char *))
-DECLARE(int DoubleLList,(VOID ***,LONG *,int,char *))
-DECLARE(void DoubleBuffer,(void **,void **,int,char *))
-DECLARE(void ExpandBuffer,(void **,LONG *,int))
-DECLARE(LONG iexp,(LONG,int))
-DECLARE(int IsLikeVector,(WORD *))
-DECLARE(int CompareArgs,(WORD *,WORD *))
-DECLARE(UBYTE *SkipField,(UBYTE *,int))
-DECLARE(int StrCmp,(UBYTE *,UBYTE *))
-DECLARE(int StrICmp,(UBYTE *,UBYTE *))
-DECLARE(int StrHICmp,(UBYTE *,UBYTE *))
-DECLARE(int StrICont,(UBYTE *,UBYTE *))
-DECLARE(int ConWord,(UBYTE *,UBYTE *))
-DECLARE(int StrLen,(UBYTE *))
-DECLARE(UBYTE *GetPreVar,(UBYTE *,int))
-DECLARE(void ToGeneral,(WORD *,WORD *,WORD))
-DECLARE(int ToFast,(WORD *,WORD *))
-DECLARE(SETUPPARAMETERS *GetSetupPar,(UBYTE *))
-DECLARE(int RecalcSetups,ARG0)
-DECLARE(int AllocSetups,ARG0)
-DECLARE(SORTING *AllocSort,(LONG,LONG,LONG,LONG,int,int,LONG))
-DECLARE(int AllocScratchBuffers,ARG0)
-DECLARE(VOID AllocSortFileName,(SORTING *))
-DECLARE(UBYTE *LoadInputFile,(UBYTE *,int))
-DECLARE(UBYTE GetInput,ARG0)
-DECLARE(VOID ClearPushback,ARG0)
-DECLARE(UBYTE GetChar,(int))
-DECLARE(VOID CharOut,(UBYTE))
-DECLARE(VOID UnsetAllowDelay,ARG0)
-DECLARE(VOID PopPreVars,(int))
-DECLARE(VOID IniModule,(int))
-DECLARE(VOID IniSpecialModule,(int))
-DECLARE(int ModuleInstruction,(int *,int *))
-DECLARE(int PreProInstruction,ARG0)
-DECLARE(int LoadInstruction,(int))
-DECLARE(int LoadStatement,(int))
-DECLARE(KEYWORD *FindKeyWord,(UBYTE *,KEYWORD *,int))
-DECLARE(KEYWORD *FindInKeyWord,(UBYTE *,KEYWORD *,int))
-DECLARE(int DoDefine,(UBYTE *))
-DECLARE(int DoRedefine,(UBYTE *))
-DECLARE(int TheDefine,(UBYTE *,int))
-DECLARE(int TheUndefine,(UBYTE *))
-DECLARE(int ClearMacro,(UBYTE *))
-DECLARE(int DoUndefine,(UBYTE *))
-DECLARE(int DoInclude,(UBYTE *))
+extern UBYTE *strDup(UBYTE *);
+extern WORD   AddSetElement(EXPRESSIONS,LONG);
+extern WORD   AddToHide();
+extern LONG   CloseFormFile(UBYTE *,WORD);
+extern LONG   CreateFormFile(UBYTE *,WORD);
+extern WORD   DoExecute(WORD,WORD);
+extern WORD   DoSpolynomial(EXPRESSIONS,WORD,WORD,WORD *);
+extern WORD   ElimOneVar(EXPRESSIONS,WORD);
+extern WORD   FromHide();
+extern WORD   Groebner(WORD);
+extern WORD   LinSolve(WORD);
+extern WORD   MakeCommercial(UBYTE *,LONG,LONG);
+extern WORD   MakeSubs(WORD *,WORD,WORD);
+extern WORD   MulSetBracket(WORD *,LONG,WORD *,WORD,LONG,LONG);
+extern WORD   NormalForm();
+extern LONG   OpenFormFile(UBYTE *,WORD);
+extern VOID   SetScratch(FILEHANDLE *,POSITION *);
+extern WORD   SortByWeight(EXPRESSIONS,WORD);
+extern WORD   Spolynomial(EXPRESSIONS,LONG,LONG,LONG,LONG,WORD *,WORD *,WORD *,WORD);
+extern WORD   StepExpressions(WORD,WORD);
+extern WORD   StepGroebner(EXPRESSIONS,WORD);
+extern WORD   StepNormalForm(EXPRESSIONS,WORD);
+extern WORD   TestLinearWeights(UBYTE *);
+extern WORD   TestOneLinearWeight(WORD);
+extern WORD   ToHide();
+extern WORD   ToTriangle(EXPRESSIONS,WORD);
+extern VOID   Warning(char *);
+extern VOID   HighWarning(char *);
+extern LONG   WriteFormFile(UBYTE *,WORD);
+extern int    SpareTable(TABLES);
+
+extern UBYTE *strDup1(UBYTE *,char *);
+extern VOID  *Malloc(LONG);
+extern VOID  *Malloc1(LONG,char *);
+extern int    DoTail(int,UBYTE **);
+extern int    OpenInput();
+extern int    PutPreVar(UBYTE *,UBYTE *,UBYTE *,int);
+extern VOID   Error0(char *);
+extern VOID   Error1(char *,UBYTE *);
+extern VOID   Error2(char *,char *,UBYTE *);
+extern UBYTE  ReadFromStream(STREAM *);
+extern UBYTE  GetFromStream(STREAM *);
+extern UBYTE  LookInStream(STREAM *);
+extern STREAM *OpenStream(UBYTE *,int,int,int);
+extern int    LocateFile(UBYTE **,int);
+extern STREAM *CloseStream(STREAM *);
+extern VOID   PositionStream(STREAM *,LONG);
+extern int    ProcessOption(UBYTE *,UBYTE *,int);
+extern int    DoSetups();
+extern VOID   Terminate(int);
+extern NAMENODE *GetNode(NAMETREE *,UBYTE *);
+extern int    AddName(NAMETREE *,UBYTE *,WORD,WORD,int *);
+extern int    GetName(NAMETREE *,UBYTE *,WORD *,int);
+extern int    GetAutoName(UBYTE *,WORD *);
+extern int    GetVar(UBYTE *,WORD *,WORD *,int,int);
+extern int    MakeDubious(NAMETREE *,UBYTE *,WORD *);
+extern int    GetOName(NAMETREE *,UBYTE *,WORD *,int);
+extern VOID   DumpTree(NAMETREE *);
+extern VOID   DumpNode(NAMETREE *,WORD,WORD);
+extern VOID   LinkTree(NAMETREE *,WORD,WORD);
+extern VOID   CopyTree(NAMETREE *,NAMETREE *,WORD);
+extern int    CompactifyTree(NAMETREE *);
+extern NAMETREE *MakeNameTree();
+extern VOID   FreeNameTree(NAMETREE *);
+extern int    AddExpression(UBYTE *,int,int);
+extern int    AddSymbol(UBYTE *,int,int,int);
+extern int    AddDollar(UBYTE *,WORD,WORD *,LONG);
+extern int    ReplaceDollar(WORD,WORD,WORD *,LONG);
+extern int    DollarRaiseLow(UBYTE *,LONG);
+extern int    AddVector(UBYTE *,int);
+extern int    AddDubious(UBYTE *);
+extern int    AddIndex(UBYTE *,int,int);
+extern UBYTE *DoDimension(UBYTE *,int *,int *);
+extern int    AddFunction(UBYTE *,int,int,int,int);
+extern int    CoFunction(UBYTE *,int,int);
+extern int    AddSet(UBYTE *);
+extern int    DoElements(UBYTE *,SETS,UBYTE *);
+extern int    DoTempSet(UBYTE *,UBYTE *);
+extern int    NameConflict(int,UBYTE *);
+extern int    OpenFile(char *);
+extern int    OpenAddFile(char *);
+extern int    CreateFile(char *);
+extern int    CreateLogFile(char *);
+extern VOID   CloseFile(int);
+extern int    CreateHandle();
+extern LONG   ReadFile(int,UBYTE *,LONG);
+extern LONG   ReadPosFile(PHEAD FILEHANDLE *,UBYTE *,LONG,POSITION *);
+extern LONG   WriteFileToFile(int,UBYTE *,LONG);
+extern VOID   SeekFile(int,POSITION *,int);
+extern LONG   TellFile(int);
+extern void   FlushFile(int);
+extern int    GetPosFile(int,fpos_t *);
+extern int    SetPosFile(int,fpos_t *);
+extern VOID   SynchFile(int);
+extern VOID   TruncateFile(int);
+extern int    GetChannel(char *);
+extern int    GetAppendChannel(char *);
+extern int    CloseChannel(char *);
+extern VOID   inictable();
+extern KEYWORD *findcommand(UBYTE *);
+extern int    inicbufs();
+extern VOID   StartFiles();
+extern UBYTE *MakeDate();
+extern VOID   PreProcessor();
+extern VOID  *FromList(LIST *);
+extern VOID  *From0List(LIST *);
+extern VOID  *FromVarList(LIST *);
+extern int    DoubleList(VOID ***,int *,int,char *);
+extern int    DoubleLList(VOID ***,LONG *,int,char *);
+extern void   DoubleBuffer(void **,void **,int,char *);
+extern void   ExpandBuffer(void **,LONG *,int);
+extern LONG   iexp(LONG,int);
+extern int    IsLikeVector(WORD *);
+extern int    CompareArgs(WORD *,WORD *);
+extern UBYTE *SkipField(UBYTE *,int);
+extern int    StrCmp(UBYTE *,UBYTE *);
+extern int    StrICmp(UBYTE *,UBYTE *);
+extern int    StrHICmp(UBYTE *,UBYTE *);
+extern int    StrICont(UBYTE *,UBYTE *);
+extern int    ConWord(UBYTE *,UBYTE *);
+extern int    StrLen(UBYTE *);
+extern UBYTE *GetPreVar(UBYTE *,int);
+extern void   ToGeneral(WORD *,WORD *,WORD);
+extern int    ToFast(WORD *,WORD *);
+extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
+extern int    RecalcSetups();
+extern int    AllocSetups();
+extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG);
+extern int    AllocScratchBuffers();
+extern VOID   AllocSortFileName(SORTING *);
+extern UBYTE *LoadInputFile(UBYTE *,int);
+extern UBYTE  GetInput();
+extern VOID   ClearPushback();
+extern UBYTE  GetChar(int);
+extern VOID   CharOut(UBYTE);
+extern VOID   UnsetAllowDelay();
+extern VOID   PopPreVars(int);
+extern VOID   IniModule(int);
+extern VOID   IniSpecialModule(int);
+extern int    ModuleInstruction(int *,int *);
+extern int    PreProInstruction();
+extern int    LoadInstruction(int);
+extern int    LoadStatement(int);
+extern KEYWORD *FindKeyWord(UBYTE *,KEYWORD *,int);
+extern KEYWORD *FindInKeyWord(UBYTE *,KEYWORD *,int);
+extern int    DoDefine(UBYTE *);
+extern int    DoRedefine(UBYTE *);
+extern int    TheDefine(UBYTE *,int);
+extern int    TheUndefine(UBYTE *);
+extern int    ClearMacro(UBYTE *);
+extern int    DoUndefine(UBYTE *);
+extern int    DoInclude(UBYTE *);
 /*[14apr2004 mt]:*/
-DECLARE(int DoExternal,(UBYTE *))
-DECLARE(int DoToExternal,(UBYTE *))
-DECLARE(int DoFromExternal,(UBYTE *))
-DECLARE(int DoPrompt,(UBYTE *))
-DECLARE(int DoSetExternal,(UBYTE *))
+extern int    DoExternal(UBYTE *);
+extern int    DoToExternal(UBYTE *);
+extern int    DoFromExternal(UBYTE *);
+extern int    DoPrompt(UBYTE *);
+extern int    DoSetExternal(UBYTE *);
 /*[10may2006 mt]:*/
-DECLARE(int DoSetExternalAttr,(UBYTE *))
+extern int    DoSetExternalAttr(UBYTE *);
 /*:[10may2006 mt]*/
-DECLARE(int DoRmExternal,(UBYTE *))
+extern int    DoRmExternal(UBYTE *);
 /*:[14apr2004 mt]*/
-DECLARE(int DoMessage,(UBYTE *))
-DECLARE(int DoPreNormPoly,(UBYTE *))
-DECLARE(int DoPreOut,(UBYTE *))
-DECLARE(int DoPreAppend,(UBYTE *))
-DECLARE(int DoPreCreate,(UBYTE *))
-DECLARE(int DoPreAssign,(UBYTE *))
-DECLARE(int DoPreBreak,(UBYTE *))
-DECLARE(int DoPreDefault,(UBYTE *))
-DECLARE(int DoPreSwitch,(UBYTE *))
-DECLARE(int DoPreEndSwitch,(UBYTE *))
-DECLARE(int DoPreCase,(UBYTE *))
-DECLARE(int DoPreShow,(UBYTE *))
-DECLARE(int DoPreExchange,(UBYTE *))
-DECLARE(int DoSystem,(UBYTE *))
-DECLARE(int DoPipe,(UBYTE *))
-DECLARE(VOID StartPrepro,ARG0)
-DECLARE(int DoIfdef,(UBYTE *,int))
-DECLARE(int DoElse,(UBYTE *))
-DECLARE(int DoElseif,(UBYTE *))
-DECLARE(int DoEndif,(UBYTE *))
-DECLARE(int DoTerminate,(UBYTE *))
-DECLARE(int DoIf,(UBYTE *))
-DECLARE(int DoCall,(UBYTE *))
-DECLARE(int DoDebug,(UBYTE *))
-DECLARE(int DoDo,(UBYTE *))
-DECLARE(int DoEnddo,(UBYTE *))
-DECLARE(int DoEndprocedure,(UBYTE *))
-DECLARE(int DoProcedure,(UBYTE *))
-DECLARE(int DoPrePrint,(UBYTE *))
-DECLARE(int DoPreWrite,(UBYTE *))
-DECLARE(int DoPreClose,(UBYTE *))
-DECLARE(int DoPreRemove,(UBYTE *))
-DECLARE(int DoCommentChar,(UBYTE *))
-DECLARE(int DoPrcExtension,(UBYTE *))
-DECLARE(VOID WriteString,(int,UBYTE *,int))
-DECLARE(VOID WriteUnfinString,(int,UBYTE *,int))
-DECLARE(UBYTE *PreCalc,ARG0)
-DECLARE(UBYTE *PreEval,(UBYTE *,LONG *))
-DECLARE(VOID NumToStr,(UBYTE *,LONG))
-DECLARE(int PreCmp,(int,int,UBYTE *,int,int,UBYTE *,int))
-DECLARE(int PreEq,(int,int,UBYTE *,int,int,UBYTE *,int))
-DECLARE(UBYTE *pParseObject,(UBYTE *,int *,LONG *))
-DECLARE(UBYTE *PreIfEval,(UBYTE *,int *))
-DECLARE(int EvalPreIf,(UBYTE *))
-DECLARE(int PreLoad,(PRELOAD *,UBYTE *,UBYTE *,int,char *))
-DECLARE(int PreSkip,(UBYTE *,UBYTE *,int))
-DECLARE(UBYTE *EndOfToken,(UBYTE *))
-DECLARE(VOID SetSpecialMode,(int,int))
-DECLARE(VOID MakeGlobal,ARG0)
-DECLARE(int ExecModule,(int))
-DECLARE(int ExecStore,ARG0)
-DECLARE(VOID FullCleanUp,ARG0)
-DECLARE(int DoExecStatement,ARG0)
-DECLARE(int DoPipeStatement,ARG0)
-DECLARE(int DoPolyfun,(UBYTE *))
-DECLARE(int DoPolyratfun,(UBYTE *))
-DECLARE(int CompileStatement,(UBYTE *))
-DECLARE(UBYTE *ToToken,(UBYTE *))
-DECLARE(int GetDollar,(UBYTE *))
-DECLARE(int PutDollar,(UBYTE *))
-DECLARE(int MesWork,ARG0)
-DECLARE(int MesPrint,(char *,...))
-DECLARE(int MesCall,(char *))
-DECLARE(int Mes1arr,(char *))
-DECLARE(int Mes2arr,(char *))
-DECLARE(UBYTE *NumCopy,(WORD,UBYTE *))
-DECLARE(char *LongCopy,(LONG,char *))
-DECLARE(char *LongLongCopy,(off_t *,char *))
-DECLARE(VOID ReserveTempFiles,(int))
-DECLARE(VOID PrintTerm,(WORD *,char *))
-DECLARE(VOID PrintTermC,(WORD *,char *))
-DECLARE(VOID PrintSubTerm,(WORD *,char *))
-DECLARE(VOID PrintWords,(WORD *,LONG))
-DECLARE(int ExpandTripleDots,ARG0)
-DECLARE(LONG ComPress,(WORD **,LONG *))
-DECLARE(VOID StageSort,(FILEHANDLE *))
+extern int    DoMessage(UBYTE *);
+extern int    DoPreNormPoly(UBYTE *);
+extern int    DoPreOut(UBYTE *);
+extern int    DoPreAppend(UBYTE *);
+extern int    DoPreCreate(UBYTE *);
+extern int    DoPreAssign(UBYTE *);
+extern int    DoPreBreak(UBYTE *);
+extern int    DoPreDefault(UBYTE *);
+extern int    DoPreSwitch(UBYTE *);
+extern int    DoPreEndSwitch(UBYTE *);
+extern int    DoPreCase(UBYTE *);
+extern int    DoPreShow(UBYTE *);
+extern int    DoPreExchange(UBYTE *);
+extern int    DoSystem(UBYTE *);
+extern int    DoPipe(UBYTE *);
+extern VOID   StartPrepro();
+extern int    DoIfdef(UBYTE *,int);
+extern int    DoElse(UBYTE *);
+extern int    DoElseif(UBYTE *);
+extern int    DoEndif(UBYTE *);
+extern int    DoTerminate(UBYTE *);
+extern int    DoIf(UBYTE *);
+extern int    DoCall(UBYTE *);
+extern int    DoDebug(UBYTE *);
+extern int    DoDo(UBYTE *);
+extern int    DoEnddo(UBYTE *);
+extern int    DoEndprocedure(UBYTE *);
+extern int    DoProcedure(UBYTE *);
+extern int    DoPrePrint(UBYTE *);
+extern int    DoPreWrite(UBYTE *);
+extern int    DoPreClose(UBYTE *);
+extern int    DoPreRemove(UBYTE *);
+extern int    DoCommentChar(UBYTE *);
+extern int    DoPrcExtension(UBYTE *);
+extern VOID   WriteString(int,UBYTE *,int);
+extern VOID   WriteUnfinString(int,UBYTE *,int);
+extern UBYTE *PreCalc();
+extern UBYTE *PreEval(UBYTE *,LONG *);
+extern VOID   NumToStr(UBYTE *,LONG);
+extern int    PreCmp(int,int,UBYTE *,int,int,UBYTE *,int);
+extern int    PreEq(int,int,UBYTE *,int,int,UBYTE *,int);
+extern UBYTE *pParseObject(UBYTE *,int *,LONG *);
+extern UBYTE *PreIfEval(UBYTE *,int *);
+extern int    EvalPreIf(UBYTE *);
+extern int    PreLoad(PRELOAD *,UBYTE *,UBYTE *,int,char *);
+extern int    PreSkip(UBYTE *,UBYTE *,int);
+extern UBYTE *EndOfToken(UBYTE *);
+extern VOID   SetSpecialMode(int,int);
+extern VOID   MakeGlobal();
+extern int    ExecModule(int);
+extern int    ExecStore();
+extern VOID   FullCleanUp();
+extern int    DoExecStatement();
+extern int    DoPipeStatement();
+extern int    DoPolyfun(UBYTE *);
+extern int    DoPolyratfun(UBYTE *);
+extern int    CompileStatement(UBYTE *);
+extern UBYTE *ToToken(UBYTE *);
+extern int    GetDollar(UBYTE *);
+extern int    PutDollar(UBYTE *);
+extern int    MesWork();
+extern int    MesPrint(char *,...);
+extern int    MesCall(char *);
+extern int    Mes1arr(char *);
+extern int    Mes2arr(char *);
+extern UBYTE *NumCopy(WORD,UBYTE *);
+extern char  *LongCopy(LONG,char *);
+extern char  *LongLongCopy(off_t *,char *);
+extern VOID   ReserveTempFiles(int);
+extern VOID   PrintTerm(WORD *,char *);
+extern VOID   PrintTermC(WORD *,char *);
+extern VOID   PrintSubTerm(WORD *,char *);
+extern VOID   PrintWords(WORD *,LONG);
+extern int    ExpandTripleDots();
+extern LONG   ComPress(WORD **,LONG *);
+extern VOID   StageSort(FILEHANDLE *);
 
 #define M_alloc(x)      malloc((size_t)(x))
-DECLARE(void M_free,(VOID *,char *))
-DECLARE(void ClearWildcardNames,ARG0)
-DECLARE(int AddWildcardName,(UBYTE *))
-DECLARE(int GetWildcardName,(UBYTE *))
-DECLARE(void Globalize,(int))
-DECLARE(void ResetVariables,(int))
-DECLARE(void AddToPreTypes,(int))
-DECLARE(void MessPreNesting,(int))
-DECLARE(LONG GetStreamPosition,(STREAM *))
-DECLARE(WORD *DoubleCbuffer,(int,WORD *))
-DECLARE(WORD *AddLHS,(int))
-DECLARE(WORD *AddRHS,(int,int))
-DECLARE(int AddNtoL,(int,WORD *))
-DECLARE(int AddNtoC,(int,WORD *))
-DECLARE(VOID DoubleIfBuffers,ARG0)
-DECLARE(STREAM *CreateStream,(UBYTE *))
 
-DECLARE(int setonoff,(UBYTE *,int *,int,int))
-DECLARE(int DoPrint,(UBYTE *,int))
-DECLARE(int SetExpr,(UBYTE *,int,int))
-DECLARE(void AddToCom,(int,WORD *))
-DECLARE(int Add2ComStrings,(int,WORD *,UBYTE *,UBYTE *))
-DECLARE(int DoSymmetrize,(UBYTE *,int))
-DECLARE(int DoArgument,(UBYTE *,int))
-DECLARE(int DoBrackets,(UBYTE *,int))
-DECLARE(WORD *CountComp,(UBYTE *,WORD *))
-DECLARE(int CoAntiBracket,(UBYTE *))
-DECLARE(int CoAntiSymmetrize,(UBYTE *))
-DECLARE(int DoArgPlode,(UBYTE *,int))
-DECLARE(int CoArgExplode,(UBYTE *))
-DECLARE(int CoArgImplode,(UBYTE *))
-DECLARE(int CoArgument,(UBYTE *))
-DECLARE(int CoInside,(UBYTE *))
-DECLARE(int DoInside,(UBYTE *))
-DECLARE(int CoInExpression,(UBYTE *))
-DECLARE(int CoInParallel,(UBYTE *))
-DECLARE(int CoNotInParallel,(UBYTE *))
-DECLARE(int DoInParallel,(UBYTE *,int))
-DECLARE(int CoEndInExpression,(UBYTE *))
-DECLARE(int CoBracket,(UBYTE *))
-DECLARE(int CoCFunction,(UBYTE *))
-DECLARE(int CoCTensor,(UBYTE *))
-DECLARE(int CoCollect,(UBYTE *))
-DECLARE(int CoCompress,(UBYTE *))
-DECLARE(int CoContract,(UBYTE *))
-DECLARE(int CoCycleSymmetrize,(UBYTE *))
-DECLARE(int CoDelete,(UBYTE *))
-DECLARE(int CoTableBase,(UBYTE *))
-DECLARE(int CoApply,(UBYTE *))
-DECLARE(int CoDenominators,(UBYTE *))
-DECLARE(int CoDimension,(UBYTE *))
-DECLARE(int CoDiscard,(UBYTE *))
-DECLARE(int CoDisorder,(UBYTE *))
-DECLARE(int CoDrop,(UBYTE *))
-DECLARE(int CoElse,(UBYTE *))
-DECLARE(int CoElseIf,(UBYTE *))
-DECLARE(int CoEndArgument,(UBYTE *))
-DECLARE(int CoEndInside,(UBYTE *))
-DECLARE(int CoEndIf,(UBYTE *))
-DECLARE(int CoEndRepeat,(UBYTE *))
-DECLARE(int CoEndTerm,(UBYTE *))
-DECLARE(int CoEndWhile,(UBYTE *))
-DECLARE(int CoExit,(UBYTE *))
-DECLARE(int CoFactArg,(UBYTE *))
-DECLARE(int CoFill,(UBYTE *))
-DECLARE(int CoFillExpression,(UBYTE *))
-DECLARE(int CoFixIndex,(UBYTE *))
-DECLARE(int CoFormat,(UBYTE *))
-DECLARE(int CoGlobal,(UBYTE *))
-DECLARE(int CoGoTo,(UBYTE *))
-DECLARE(int CoId,(UBYTE *))
-DECLARE(int CoIdNew,(UBYTE *))
-DECLARE(int CoIdOld,(UBYTE *))
-DECLARE(int CoIf,(UBYTE *))
-DECLARE(int CoIfMatch,(UBYTE *))
-DECLARE(int CoIndex,(UBYTE *))
-DECLARE(int CoInsideFirst,(UBYTE *))
-DECLARE(int CoKeep,(UBYTE *))
-DECLARE(int CoLabel,(UBYTE *))
-DECLARE(int CoLoad,(UBYTE *))
-DECLARE(int CoLocal,(UBYTE *))
-DECLARE(int CoMany,(UBYTE *))
-DECLARE(int CoMerge,(UBYTE *))
-DECLARE(int CoMetric,(UBYTE *))
-DECLARE(int CoModOption,(UBYTE *))
-DECLARE(int CoModuleOption,(UBYTE *))
-DECLARE(int CoModulusGCD,(UBYTE *))
-DECLARE(int CoModulus,(UBYTE *))
-DECLARE(int CoMulti,(UBYTE *))
-DECLARE(int CoMultiply,(UBYTE *))
-DECLARE(int CoNFunction,(UBYTE *))
-DECLARE(int CoNPrint,(UBYTE *))
-DECLARE(int CoNTensor,(UBYTE *))
-DECLARE(int CoNWrite,(UBYTE *))
-DECLARE(int CoNoDrop,(UBYTE *))
-DECLARE(int CoNoSkip,(UBYTE *))
-DECLARE(int CoNormalize,(UBYTE *))
-DECLARE(int CoMakeInteger,(UBYTE *))
-DECLARE(int CoOff,(UBYTE *))
-DECLARE(int CoOn,(UBYTE *))
-DECLARE(int CoOnce,(UBYTE *))
-DECLARE(int CoOnly,(UBYTE *))
-DECLARE(int CoPolyFun,(UBYTE *))
-DECLARE(int CoPolyRatFun,(UBYTE *))
-DECLARE(int CoPolyNorm,(UBYTE *))
-DECLARE(int CoPrint,(UBYTE *))
-DECLARE(int CoPrintB,(UBYTE *))
-DECLARE(int CoProperCount,(UBYTE *))
-DECLARE(int CoUnitTrace,(UBYTE *))
-DECLARE(int CoRCycleSymmetrize,(UBYTE *))
-DECLARE(int CoRatio,(UBYTE *))
-DECLARE(int CoRedefine,(UBYTE *))
-DECLARE(int CoRenumber,(UBYTE *))
-DECLARE(int CoRepeat,(UBYTE *))
-DECLARE(int CoSave,(UBYTE *))
-DECLARE(int CoSelect,(UBYTE *))
-DECLARE(int CoSet,(UBYTE *))
-DECLARE(int CoSetExitFlag,(UBYTE *))
-DECLARE(int CoSkip,(UBYTE *))
-DECLARE(int CoSlavePatch,(UBYTE *))
-DECLARE(int CoPushHide,(UBYTE *))
-DECLARE(int CoPopHide,(UBYTE *))
-DECLARE(int CoHide,(UBYTE *))
-DECLARE(int CoNoHide,(UBYTE *))
-DECLARE(int CoUnHide,(UBYTE *))
-DECLARE(int CoNoUnHide,(UBYTE *))
-DECLARE(int CoSort,(UBYTE *))
-DECLARE(int CoSplitArg,(UBYTE *))
-DECLARE(int CoSplitFirstArg,(UBYTE *))
-DECLARE(int CoSplitLastArg,(UBYTE *))
-DECLARE(int CoSum,(UBYTE *))
-DECLARE(int CoSymbol,(UBYTE *))
-DECLARE(int CoSymmetrize,(UBYTE *))
-DECLARE(int DoTable,(UBYTE *,int))
-DECLARE(int CoTable,(UBYTE *))
-DECLARE(int CoTerm,(UBYTE *))
-DECLARE(int CoNTable,(UBYTE *))
-DECLARE(int CoCTable,(UBYTE *))
-DECLARE(int CoToTensor,(UBYTE *))
-DECLARE(int CoToVector,(UBYTE *))
-DECLARE(int CoTrace4,(UBYTE *))
-DECLARE(int CoTraceN,(UBYTE *))
-DECLARE(int CoChisholm,(UBYTE *))
-DECLARE(int CoClearTable,(UBYTE *))
-DECLARE(int DoChain,(UBYTE *,int))
-DECLARE(int CoChainin,(UBYTE *))
-DECLARE(int CoChainout,(UBYTE *))
-DECLARE(int CoTryReplace,(UBYTE *))
-DECLARE(int CoVector,(UBYTE *))
-DECLARE(int CoWhile,(UBYTE *))
-DECLARE(int CoWrite,(UBYTE *))
-DECLARE(int CoAuto,(UBYTE *))
-DECLARE(int CoTBaddto,(UBYTE *))
-DECLARE(int CoTBaudit,(UBYTE *))
-DECLARE(int CoTBcleanup,(UBYTE *))
-DECLARE(int CoTBcreate,(UBYTE *))
-DECLARE(int CoTBenter,(UBYTE *))
-DECLARE(int CoTBhelp,(UBYTE *))
-DECLARE(int CoTBload,(UBYTE *))
-DECLARE(int CoTBoff,(UBYTE *))
-DECLARE(int CoTBon,(UBYTE *))
-DECLARE(int CoTBopen,(UBYTE *))
-DECLARE(int CoTBreplace,(UBYTE *))
-DECLARE(int CoTBuse,(UBYTE *))
-DECLARE(int CoTestUse,(UBYTE *))
-DECLARE(int CoThreadBucket,(UBYTE *))
-DECLARE(int AddComString,(int,WORD *,UBYTE *,int))
-DECLARE(int CompileAlgebra,(UBYTE *,int,WORD *))
-DECLARE(int IsIdStatement,(UBYTE *))
-DECLARE(UBYTE *IsRHS,(UBYTE *,UBYTE))
-DECLARE(int ParenthesesTest,(UBYTE *))
-DECLARE(int tokenize,(UBYTE *,WORD))
-DECLARE(void WriteTokens,(SBYTE *))
-DECLARE(int simp1token,(SBYTE *))
-DECLARE(int simpwtoken,(SBYTE *))
-DECLARE(int simp2token,(SBYTE *))
-DECLARE(int simp3atoken,(SBYTE *,int))
-DECLARE(int simp3btoken,(SBYTE *,int))
-DECLARE(int simp4token,(SBYTE *))
-DECLARE(int simp5token,(SBYTE *,int))
-DECLARE(UBYTE *SkipAName,(UBYTE *))
-DECLARE(int TestTables,ARG0)
-DECLARE(int GetLabel,(UBYTE *))
-DECLARE(int CoIdExpression,(UBYTE *,int))
-DECLARE(int CoAssign,(UBYTE *))
-DECLARE(int DoExpr,(UBYTE *,int))
-DECLARE(int CompileSubExpressions,(SBYTE *))
-DECLARE(int CodeGenerator,(SBYTE *))
-DECLARE(int CompleteTerm,(WORD *,UWORD *,UWORD *,WORD,WORD,int))
-DECLARE(int InsTree,(int))
-DECLARE(void RedoTree,(CBUF *,int))
-DECLARE(void ClearTree,(int))
-DECLARE(int CatchDollar,(int))
-DECLARE(int AssignDollar,(WORD *,WORD))
-DECLARE(UBYTE *WriteDollarToBuffer,(WORD,WORD))
-DECLARE(void AddToDollarBuffer,(UBYTE *))
-DECLARE(void TermAssign,(WORD *))
-DECLARE(void WildDollars,ARG0)
-DECLARE(LONG numcommute,(WORD *,LONG *))
-DECLARE(int FullRenumber,(WORD *,WORD))
-DECLARE(int Lus,(WORD *,WORD,WORD,WORD,WORD,WORD))
-DECLARE(int FindLus,(int,int,int))
-DECLARE(int CoReplaceLoop,(UBYTE *))
-DECLARE(int CoFindLoop,(UBYTE *))
-DECLARE(int DoFindLoop,(UBYTE *,int))
-DECLARE(int CoFunPowers,(UBYTE *))
-DECLARE(int SortTheList,(int *,int))
-DECLARE(int MatchIsPossible,(WORD *,WORD *))
-DECLARE(void StudyPattern,(WORD *))
-DECLARE(WORD DolToTensor,(WORD))
-DECLARE(WORD DolToFunction,(WORD))
-DECLARE(WORD DolToVector,(WORD))
-DECLARE(WORD DolToNumber,(WORD))
-DECLARE(WORD DolToSymbol,(WORD))
-DECLARE(WORD DolToIndex,(WORD))
-DECLARE(int CoPrintTable,(UBYTE *))
-DECLARE(int CoDeallocateTable,(UBYTE *))
+extern void   M_free(VOID *,char *);
+extern void   ClearWildcardNames();
+extern int    AddWildcardName(UBYTE *);
+extern int    GetWildcardName(UBYTE *);
+extern void   Globalize(int);
+extern void   ResetVariables(int);
+extern void   AddToPreTypes(int);
+extern void   MessPreNesting(int);
+extern LONG   GetStreamPosition(STREAM *);
+extern WORD  *DoubleCbuffer(int,WORD *);
+extern WORD  *AddLHS(int);
+extern WORD  *AddRHS(int,int);
+extern int    AddNtoL(int,WORD *);
+extern int    AddNtoC(int,WORD *);
+extern VOID   DoubleIfBuffers();
+extern STREAM *CreateStream(UBYTE *);
+
+extern int    setonoff(UBYTE *,int *,int,int);
+extern int    DoPrint(UBYTE *,int);
+extern int    SetExpr(UBYTE *,int,int);
+extern void   AddToCom(int,WORD *);
+extern int    Add2ComStrings(int,WORD *,UBYTE *,UBYTE *);
+extern int    DoSymmetrize(UBYTE *,int);
+extern int    DoArgument(UBYTE *,int);
+extern int    DoBrackets(UBYTE *,int);
+extern WORD  *CountComp(UBYTE *,WORD *);
+extern int    CoAntiBracket(UBYTE *);
+extern int    CoAntiSymmetrize(UBYTE *);
+extern int    DoArgPlode(UBYTE *,int);
+extern int    CoArgExplode(UBYTE *);
+extern int    CoArgImplode(UBYTE *);
+extern int    CoArgument(UBYTE *);
+extern int    CoInside(UBYTE *);
+extern int    DoInside(UBYTE *);
+extern int    CoInExpression(UBYTE *);
+extern int    CoInParallel(UBYTE *);
+extern int    CoNotInParallel(UBYTE *);
+extern int    DoInParallel(UBYTE *,int);
+extern int    CoEndInExpression(UBYTE *);
+extern int    CoBracket(UBYTE *);
+extern int    CoCFunction(UBYTE *);
+extern int    CoCTensor(UBYTE *);
+extern int    CoCollect(UBYTE *);
+extern int    CoCompress(UBYTE *);
+extern int    CoContract(UBYTE *);
+extern int    CoCycleSymmetrize(UBYTE *);
+extern int    CoDelete(UBYTE *);
+extern int    CoTableBase(UBYTE *);
+extern int    CoApply(UBYTE *);
+extern int    CoDenominators(UBYTE *);
+extern int    CoDimension(UBYTE *);
+extern int    CoDiscard(UBYTE *);
+extern int    CoDisorder(UBYTE *);
+extern int    CoDrop(UBYTE *);
+extern int    CoElse(UBYTE *);
+extern int    CoElseIf(UBYTE *);
+extern int    CoEndArgument(UBYTE *);
+extern int    CoEndInside(UBYTE *);
+extern int    CoEndIf(UBYTE *);
+extern int    CoEndRepeat(UBYTE *);
+extern int    CoEndTerm(UBYTE *);
+extern int    CoEndWhile(UBYTE *);
+extern int    CoExit(UBYTE *);
+extern int    CoFactArg(UBYTE *);
+extern int    CoFill(UBYTE *);
+extern int    CoFillExpression(UBYTE *);
+extern int    CoFixIndex(UBYTE *);
+extern int    CoFormat(UBYTE *);
+extern int    CoGlobal(UBYTE *);
+extern int    CoGoTo(UBYTE *);
+extern int    CoId(UBYTE *);
+extern int    CoIdNew(UBYTE *);
+extern int    CoIdOld(UBYTE *);
+extern int    CoIf(UBYTE *);
+extern int    CoIfMatch(UBYTE *);
+extern int    CoIndex(UBYTE *);
+extern int    CoInsideFirst(UBYTE *);
+extern int    CoKeep(UBYTE *);
+extern int    CoLabel(UBYTE *);
+extern int    CoLoad(UBYTE *);
+extern int    CoLocal(UBYTE *);
+extern int    CoMany(UBYTE *);
+extern int    CoMerge(UBYTE *);
+extern int    CoMetric(UBYTE *);
+extern int    CoModOption(UBYTE *);
+extern int    CoModuleOption(UBYTE *);
+extern int    CoModulusGCD(UBYTE *);
+extern int    CoModulus(UBYTE *);
+extern int    CoMulti(UBYTE *);
+extern int    CoMultiply(UBYTE *);
+extern int    CoNFunction(UBYTE *);
+extern int    CoNPrint(UBYTE *);
+extern int    CoNTensor(UBYTE *);
+extern int    CoNWrite(UBYTE *);
+extern int    CoNoDrop(UBYTE *);
+extern int    CoNoSkip(UBYTE *);
+extern int    CoNormalize(UBYTE *);
+extern int    CoMakeInteger(UBYTE *);
+extern int    CoOff(UBYTE *);
+extern int    CoOn(UBYTE *);
+extern int    CoOnce(UBYTE *);
+extern int    CoOnly(UBYTE *);
+extern int    CoPolyFun(UBYTE *);
+extern int    CoPolyRatFun(UBYTE *);
+extern int    CoPolyNorm(UBYTE *);
+extern int    CoPrint(UBYTE *);
+extern int    CoPrintB(UBYTE *);
+extern int    CoProperCount(UBYTE *);
+extern int    CoUnitTrace(UBYTE *);
+extern int    CoRCycleSymmetrize(UBYTE *);
+extern int    CoRatio(UBYTE *);
+extern int    CoRedefine(UBYTE *);
+extern int    CoRenumber(UBYTE *);
+extern int    CoRepeat(UBYTE *);
+extern int    CoSave(UBYTE *);
+extern int    CoSelect(UBYTE *);
+extern int    CoSet(UBYTE *);
+extern int    CoSetExitFlag(UBYTE *);
+extern int    CoSkip(UBYTE *);
+extern int    CoSlavePatch(UBYTE *);
+extern int    CoPushHide(UBYTE *);
+extern int    CoPopHide(UBYTE *);
+extern int    CoHide(UBYTE *);
+extern int    CoNoHide(UBYTE *);
+extern int    CoUnHide(UBYTE *);
+extern int    CoNoUnHide(UBYTE *);
+extern int    CoSort(UBYTE *);
+extern int    CoSplitArg(UBYTE *);
+extern int    CoSplitFirstArg(UBYTE *);
+extern int    CoSplitLastArg(UBYTE *);
+extern int    CoSum(UBYTE *);
+extern int    CoSymbol(UBYTE *);
+extern int    CoSymmetrize(UBYTE *);
+extern int    DoTable(UBYTE *,int);
+extern int    CoTable(UBYTE *);
+extern int    CoTerm(UBYTE *);
+extern int    CoNTable(UBYTE *);
+extern int    CoCTable(UBYTE *);
+extern int    CoToTensor(UBYTE *);
+extern int    CoToVector(UBYTE *);
+extern int    CoTrace4(UBYTE *);
+extern int    CoTraceN(UBYTE *);
+extern int    CoChisholm(UBYTE *);
+extern int    CoClearTable(UBYTE *);
+extern int    DoChain(UBYTE *,int);
+extern int    CoChainin(UBYTE *);
+extern int    CoChainout(UBYTE *);
+extern int    CoTryReplace(UBYTE *);
+extern int    CoVector(UBYTE *);
+extern int    CoWhile(UBYTE *);
+extern int    CoWrite(UBYTE *);
+extern int    CoAuto(UBYTE *);
+extern int    CoTBaddto(UBYTE *);
+extern int    CoTBaudit(UBYTE *);
+extern int    CoTBcleanup(UBYTE *);
+extern int    CoTBcreate(UBYTE *);
+extern int    CoTBenter(UBYTE *);
+extern int    CoTBhelp(UBYTE *);
+extern int    CoTBload(UBYTE *);
+extern int    CoTBoff(UBYTE *);
+extern int    CoTBon(UBYTE *);
+extern int    CoTBopen(UBYTE *);
+extern int    CoTBreplace(UBYTE *);
+extern int    CoTBuse(UBYTE *);
+extern int    CoTestUse(UBYTE *);
+extern int    CoThreadBucket(UBYTE *);
+extern int    AddComString(int,WORD *,UBYTE *,int);
+extern int    CompileAlgebra(UBYTE *,int,WORD *);
+extern int    IsIdStatement(UBYTE *);
+extern UBYTE *IsRHS(UBYTE *,UBYTE);
+extern int    ParenthesesTest(UBYTE *);
+extern int    tokenize(UBYTE *,WORD);
+extern void   WriteTokens(SBYTE *);
+extern int    simp1token(SBYTE *);
+extern int    simpwtoken(SBYTE *);
+extern int    simp2token(SBYTE *);
+extern int    simp3atoken(SBYTE *,int);
+extern int    simp3btoken(SBYTE *,int);
+extern int    simp4token(SBYTE *);
+extern int    simp5token(SBYTE *,int);
+extern UBYTE *SkipAName(UBYTE *);
+extern int    TestTables();
+extern int    GetLabel(UBYTE *);
+extern int    CoIdExpression(UBYTE *,int);
+extern int    CoAssign(UBYTE *);
+extern int    DoExpr(UBYTE *,int);
+extern int    CompileSubExpressions(SBYTE *);
+extern int    CodeGenerator(SBYTE *);
+extern int    CompleteTerm(WORD *,UWORD *,UWORD *,WORD,WORD,int);
+extern int    InsTree(int);
+extern void   RedoTree(CBUF *,int);
+extern void   ClearTree(int);
+extern int    CatchDollar(int);
+extern int    AssignDollar(WORD *,WORD);
+extern UBYTE *WriteDollarToBuffer(WORD,WORD);
+extern void   AddToDollarBuffer(UBYTE *);
+extern void   TermAssign(WORD *);
+extern void   WildDollars();
+extern LONG   numcommute(WORD *,LONG *);
+extern int    FullRenumber(WORD *,WORD);
+extern int    Lus(WORD *,WORD,WORD,WORD,WORD,WORD);
+extern int    FindLus(int,int,int);
+extern int    CoReplaceLoop(UBYTE *);
+extern int    CoFindLoop(UBYTE *);
+extern int    DoFindLoop(UBYTE *,int);
+extern int    CoFunPowers(UBYTE *);
+extern int    SortTheList(int *,int);
+extern int    MatchIsPossible(WORD *,WORD *);
+extern void   StudyPattern(WORD *);
+extern WORD   DolToTensor(WORD);
+extern WORD   DolToFunction(WORD);
+extern WORD   DolToVector(WORD);
+extern WORD   DolToNumber(WORD);
+extern WORD   DolToSymbol(WORD);
+extern WORD   DolToIndex(WORD);
+extern int    CoPrintTable(UBYTE *);
+extern int    CoDeallocateTable(UBYTE *);
  
-DECLARE(int Optimize,(WORD))
-DECLARE(int LoadOpti,(WORD))
-DECLARE(int PutObject,(WORD *,int))
-DECLARE(void CleanOptiBuffer,ARG0)
-DECLARE(int PrintOptima,(WORD))
-DECLARE(int FindScratchName,ARG0)
-DECLARE(WORD MaxPowerOpti,(LONG))
-DECLARE(WORD HuntNumFactor,(LONG,WORD *,int))
-DECLARE(WORD HuntFactor,(LONG,WORD *,int))
-DECLARE(void HuntPairs,(LONG,WORD))
-DECLARE(void HuntBrackets,(LONG))
-DECLARE(int AddToOpti,(WORD *,int))
-DECLARE(LONG TestNewSca,(LONG,WORD *,WORD *))
-DECLARE(void NormOpti,(WORD *))
-DECLARE(void SortOpti,(LONG))
-DECLARE(void SplitOpti,(WORD **,LONG))
-DECLARE(void CombiOpti,ARG0)
-DECLARE(int TakeLongRoot,(UWORD *,WORD *,WORD))
-DECLARE(int TakeRatRoot,(UWORD *,WORD *,WORD))
-DECLARE(void HuntPowers,(LONG,WORD))
-DECLARE(void HuntNumBrackets,(LONG))
-DECLARE(void ClearTableTree,(TABLES))
-DECLARE(int InsTableTree,(TABLES,WORD *))
-DECLARE(void RedoTableTree,(TABLES,int))
-DECLARE(int FindTableTree,(TABLES,WORD *,int))
-DECLARE(void finishcbuf,(WORD))
-DECLARE(void clearcbuf,(WORD))
-DECLARE(void CleanUpSort,(int))
-DECLARE(FILEHANDLE *AllocFileHandle,ARG0)
-DECLARE(VOID DeAllocFileHandle,(FILEHANDLE *))
-DECLARE(VOID LowerSortLevel,ARG0)
-DECLARE(int InsideDollar,(WORD *,WORD))
-DECLARE(DOLLARS DolToTerms,(WORD))
-DECLARE(int SetExprCases,(int,int,int))
-DECLARE(int TestSelect,(WORD *,WORD *))
-DECLARE(int MakeSetupAllocs,ARG0)
-DECLARE(int TryFileSetups,ARG0)
-DECLARE(void ExchangeExpressions,(int,int))
-DECLARE(void ExchangeDollars,(int,int))
-DECLARE(int GetFirstBracket,(WORD *,int))
-DECLARE(UBYTE *PreIfDollarEval,(UBYTE *,int *))
-DECLARE(LONG TermsInDollar,(WORD))
-DECLARE(LONG TermsInExpression,(WORD))
-DECLARE(WORD *TranslateExpression,(UBYTE *))
-DECLARE(int IsSetMember,(WORD *,WORD))
-DECLARE(int IsMultipleOf,(WORD *,WORD *))
-DECLARE(int TwoExprCompare,(WORD *,WORD *,int))
-DECLARE(void UpdatePositions,ARG0)
-DECLARE(void M_check,ARG0)
-DECLARE(void M_print,ARG0)
-DECLARE(void M_check1,ARG0)
-DECLARE(void PrintTime,ARG0)
-DECLARE(WORD *PolynoAdd,(WORD *,WORD *))
-DECLARE(WORD *PolynoSub,(WORD *,WORD *))
-DECLARE(WORD *PolynoMul,(WORD *,WORD *))
-DECLARE(WORD *PolynoDiv,(WORD *,WORD *,WORD **))
-DECLARE(WORD *Polyno1Div,(WORD *,WORD *,WORD **))
-DECLARE(WORD *PolynoGCD,(WORD *,WORD *))
-DECLARE(WORD *Polyno1GCD,(WORD *,WORD *))
-DECLARE(UBYTE *PolynoPrint,(WORD *))
-DECLARE(int PolynoWrite,(WORD *))
-DECLARE(WORD *PolynoNormalize,(WORD *))
-DECLARE(WORD *PolynoUnify,(WORD *,int))
-DECLARE(WORD *PolynoIntFac,(WORD *))
-DECLARE(void PolynoPushBracket,(WORD))
-DECLARE(void PolynoPopBracket,ARG0)
-DECLARE(void PolynoStart,ARG0)
-DECLARE(void PolynoFinish,ARG0)
-DECLARE(WORD DoPolynomial,(WORD *,WORD))
-DECLARE(WORD DoPolyGetRem,(WORD *,WORD))
-DECLARE(WORD *CopyOfPolynomial,(WORD *))
-DECLARE(WORD *PolynoCoefNorm,(WORD *,WORD,WORD **,int))
-DECLARE(WORD *MakePolynomial,(WORD,int,int *))
-DECLARE(int DoPolynoNorm,(int,WORD,WORD,WORD))
+extern int    Optimize(WORD);
+extern int    LoadOpti(WORD);
+extern int    PutObject(WORD *,int);
+extern void   CleanOptiBuffer();
+extern int    PrintOptima(WORD);
+extern int    FindScratchName();
+extern WORD   MaxPowerOpti(LONG);
+extern WORD   HuntNumFactor(LONG,WORD *,int);
+extern WORD   HuntFactor(LONG,WORD *,int);
+extern void   HuntPairs(LONG,WORD);
+extern void   HuntBrackets(LONG);
+extern int    AddToOpti(WORD *,int);
+extern LONG   TestNewSca(LONG,WORD *,WORD *);
+extern void   NormOpti(WORD *);
+extern void   SortOpti(LONG);
+extern void   SplitOpti(WORD **,LONG);
+extern void   CombiOpti();
+extern int    TakeLongRoot(UWORD *,WORD *,WORD);
+extern int    TakeRatRoot(UWORD *,WORD *,WORD);
+extern void   HuntPowers(LONG,WORD);
+extern void   HuntNumBrackets(LONG);
+extern void   ClearTableTree(TABLES);
+extern int    InsTableTree(TABLES,WORD *);
+extern void   RedoTableTree(TABLES,int);
+extern int    FindTableTree(TABLES,WORD *,int);
+extern void   finishcbuf(WORD);
+extern void   clearcbuf(WORD);
+extern void   CleanUpSort(int);
+extern FILEHANDLE *AllocFileHandle();
+extern VOID   DeAllocFileHandle(FILEHANDLE *);
+extern VOID   LowerSortLevel();
+extern int    InsideDollar(WORD *,WORD);
+extern DOLLARS DolToTerms(WORD);
+extern int    SetExprCases(int,int,int);
+extern int    TestSelect(WORD *,WORD *);
+extern int    MakeSetupAllocs();
+extern int    TryFileSetups();
+extern void   ExchangeExpressions(int,int);
+extern void   ExchangeDollars(int,int);
+extern int    GetFirstBracket(WORD *,int);
+extern UBYTE *PreIfDollarEval(UBYTE *,int *);
+extern LONG   TermsInDollar(WORD);
+extern LONG   TermsInExpression(WORD);
+extern WORD   *TranslateExpression(UBYTE *);
+extern int    IsSetMember(WORD *,WORD);
+extern int    IsMultipleOf(WORD *,WORD *);
+extern int    TwoExprCompare(WORD *,WORD *,int);
+extern void   UpdatePositions();
+extern void   M_check();
+extern void   M_print();
+extern void   M_check1();
+extern void   PrintTime();
+extern WORD  *PolynoAdd(WORD *,WORD *);
+extern WORD  *PolynoSub(WORD *,WORD *);
+extern WORD  *PolynoMul(WORD *,WORD *);
+extern WORD  *PolynoDiv(WORD *,WORD *,WORD **);
+extern WORD  *Polyno1Div(WORD *,WORD *,WORD **);
+extern WORD  *PolynoGCD(WORD *,WORD *);
+extern WORD  *Polyno1GCD(WORD *,WORD *);
+extern UBYTE *PolynoPrint(WORD *);
+extern int    PolynoWrite(WORD *);
+extern WORD  *PolynoNormalize(WORD *);
+extern WORD  *PolynoUnify(WORD *,int);
+extern WORD  *PolynoIntFac(WORD *);
+extern void   PolynoPushBracket(WORD);
+extern void   PolynoPopBracket();
+extern void   PolynoStart();
+extern void   PolynoFinish();
+extern WORD   DoPolynomial(WORD *,WORD);
+extern WORD   DoPolyGetRem(WORD *,WORD);
+extern WORD  *CopyOfPolynomial(WORD *);
+extern WORD  *PolynoCoefNorm(WORD *,WORD,WORD **,int);
+extern WORD  *MakePolynomial(WORD,int,int *);
+extern int    DoPolynoNorm(int,WORD,WORD,WORD);
 /*
-DECLARE(int IsProductOf,(WORD *,WORD *))
+int IsProductOf(WORD *,WORD *);
 */
-DECLARE(POSITION *FindBracket,(EXPRESSIONS,WORD *))
-DECLARE(VOID PutBracketInIndex,(WORD *,POSITION *))
-DECLARE(void ClearBracketIndex,(WORD))
-DECLARE(VOID OpenBracketIndex,(WORD))
-DECLARE(int DoNoParallel,(UBYTE *))
-DECLARE(int DoParallel,(UBYTE *))
-DECLARE(int DoModSum,(UBYTE *))
-DECLARE(int DoModMax,(UBYTE *))
-DECLARE(int DoModMin,(UBYTE *))
-DECLARE(int DoModLocal,(UBYTE *))
-DECLARE(UBYTE *DoModDollar,(UBYTE *,int))
-DECLARE(int DoSlavePatch,(UBYTE *))
-DECLARE(int DoinParallel,(UBYTE *))
-DECLARE(int DonotinParallel,(UBYTE *))
+extern POSITION *FindBracket(EXPRESSIONS,WORD *);
+extern VOID   PutBracketInIndex(WORD *,POSITION *);
+extern void   ClearBracketIndex(WORD);
+extern VOID   OpenBracketIndex(WORD);
+extern int    DoNoParallel(UBYTE *);
+extern int    DoParallel(UBYTE *);
+extern int    DoModSum(UBYTE *);
+extern int    DoModMax(UBYTE *);
+extern int    DoModMin(UBYTE *);
+extern int    DoModLocal(UBYTE *);
+extern UBYTE *DoModDollar(UBYTE *,int);
+extern int    DoSlavePatch(UBYTE *);
+extern int    DoinParallel(UBYTE *);
+extern int    DonotinParallel(UBYTE *);
 
-DECLARE(int FlipTable,(FUNCTIONS,int))
-DECLARE(int ChainIn,(WORD *,WORD))
-DECLARE(int ChainOut,(WORD *,WORD))
-DECLARE(int PolyNorm,(PHEAD WORD *,WORD,WORD,WORD))
-DECLARE(int ArgumentImplode,(PHEAD WORD *,WORD *))
-DECLARE(int ArgumentExplode,(PHEAD WORD *,WORD *))
-DECLARE(int DenToFunction,(WORD *,WORD))
+extern int    FlipTable(FUNCTIONS,int);
+extern int    ChainIn(WORD *,WORD);
+extern int    ChainOut(WORD *,WORD);
+extern int    PolyNorm(PHEAD WORD *,WORD,WORD,WORD);
+extern int    ArgumentImplode(PHEAD WORD *,WORD *);
+extern int    ArgumentExplode(PHEAD WORD *,WORD *);
+extern int    DenToFunction(WORD *,WORD);
  
-DECLARE(WORD ReadElIf,ARG0)
-DECLARE(WORD HowMany,(WORD *,WORD *))
-DECLARE(VOID RemoveDollars,ARG0)
-DECLARE(LONG CountTerms1,(PHEAD0))
-DECLARE(LONG TermsInBracket,(PHEAD WORD *,WORD))
-DECLARE(int Crash,ARG0)
+extern WORD   ReadElIf();
+extern WORD   HowMany(WORD *,WORD *);
+extern VOID   RemoveDollars();
+extern LONG   CountTerms1(PHEAD0);
+extern LONG   TermsInBracket(PHEAD WORD *,WORD);
+extern int    Crash();
 
-void *mmalloc(size_t size,char *message);
-char *str_dup(char *str);
-void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode);
-void convertnamesblock(NAMESBLOCK *in,NAMESBLOCK *out,int mode);
-void convertiniinfo(INIINFO *in,INIINFO *out,int mode);
-int ReadIndex(DBASE *d);
-int WriteIndexBlock(DBASE *d,MLONG num);
-int WriteNamesBlock(DBASE *d,MLONG num);
-int WriteIndex(DBASE *d);
-int WriteIniInfo(DBASE *d);
-int ReadIniInfo(DBASE *d);
-int AddToIndex(DBASE *d,MLONG number);
-DBASE *GetDbase(char *filename);
-DBASE *OpenDbase(char *filename);
-char *ReadObject(DBASE *d,MLONG tablenumber,char *arguments);
-char *ReadijObject(DBASE *d,MLONG i,MLONG j,char *arguments);
-int ExistsObject(DBASE *d,MLONG tablenumber,char *arguments);
-int DeleteObject(DBASE *d,MLONG tablenumber,char *arguments);
-char *GetSubString(char *keyword,char **argv);
-int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG number);
-MLONG AddObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs);
-int Cleanup(DBASE *d);
-DBASE *NewDbase(char *name,MLONG number);
-void FreeTableBase(DBASE *d);
-int ComposeTableNames(DBASE *d);
-int PutTableNames(DBASE *d);
-MLONG AddTableName(DBASE *d,char *name,TABLES T);
-MLONG GetTableName(DBASE *d,char *name);
-MLONG FindTableNumber(DBASE *d,char *name);
-int TouchKey(DBASE *d,char *key,char *value);
-int DumpContents(DBASE *d,char *filename,MLONG from,MLONG to);
-int RunMake(int variety,char **inargv,char ***outargv,MLONG num,char *outvar);
-int handlefold(DBASE *d,char *start,char *finish,char *name,char *varname);
-int SumStart(int variety,char *outname);
-int SumStep(int variety,char **argv,MLONG num,char *outname);
-int SpecStep(int variety,char **argv1,char **argv2,MLONG num,char *outname);
-int SumFinish(int variety,char *outname);
-int LinSumStart(int variety,char *outname);
-int LinSumStep(int variety,char **argv,MLONG num,char *outname);
-int LinSumDecl(int variety,char **argv,MLONG num,char *outname);
-int LinSumFinish(int variety,char *outname);
-char *SkipString(char *);
-int ModulusGCD1(WORD modu,WORD fun1,WORD fun2,WORD *term,WORD sym);
-int MakeMono(WORD modu,WORD *t,WORD whichbuffer,WORD sym);
-int TryEnvironment(VOID);
+extern void  *mmalloc(size_t,char *);
+extern char  *str_dup(char *);
+extern void   convertblock(INDEXBLOCK *,INDEXBLOCK *,int);
+extern void   convertnamesblock(NAMESBLOCK *,NAMESBLOCK *,int);
+extern void   convertiniinfo(INIINFO *,INIINFO *,int);
+extern int    ReadIndex(DBASE *);
+extern int    WriteIndexBlock(DBASE *,MLONG);
+extern int    WriteNamesBlock(DBASE *,MLONG);
+extern int    WriteIndex(DBASE *);
+extern int    WriteIniInfo(DBASE *);
+extern int    ReadIniInfo(DBASE *);
+extern int    AddToIndex(DBASE *,MLONG);
+extern DBASE *GetDbase(char *);
+extern DBASE *OpenDbase(char *);
+extern char  *ReadObject(DBASE *,MLONG,char *);
+extern char  *ReadijObject(DBASE *,MLONG,MLONG,char *);
+extern int    ExistsObject(DBASE *,MLONG,char *);
+extern int    DeleteObject(DBASE *,MLONG,char *);
+extern char  *GetSubString(char *,char **);
+extern int    WriteObject(DBASE *,MLONG,char *,char *,MLONG);
+extern MLONG  AddObject(DBASE *,MLONG,char *,char *);
+extern int    Cleanup(DBASE *);
+extern DBASE *NewDbase(char *,MLONG);
+extern void   FreeTableBase(DBASE *);
+extern int    ComposeTableNames(DBASE *);
+extern int    PutTableNames(DBASE *);
+extern MLONG  AddTableName(DBASE *,char *,TABLES);
+extern MLONG  GetTableName(DBASE *,char *);
+extern MLONG  FindTableNumber(DBASE *,char *);
+extern int    TouchKey(DBASE *,char *,char *);
+extern int    DumpContents(DBASE *,char *,MLONG,MLONG);
+extern int    RunMake(int,char **,char ***,MLONG,char *);
+extern int    handlefold(DBASE *,char *,char *,char *,char *);
+extern int    SumStart(int,char *);
+extern int    SumStep(int,char **,MLONG,char *);
+extern int    SpecStep(int,char **,char **,MLONG,char *);
+extern int    SumFinish(int,char *);
+extern int    LinSumStart(int,char *);
+extern int    LinSumStep(int,char **,MLONG,char *);
+extern int    LinSumDecl(int,char **,MLONG,char *);
+extern int    LinSumFinish(int,char *);
+extern char  *SkipString(char *);
+extern int    ModulusGCD1(WORD,WORD,WORD,WORD *,WORD);
+extern int    MakeMono(WORD,WORD *,WORD,WORD);
+extern int    TryEnvironment();
 
 #ifdef WITHZLIB
-DECLARE(int SetupOutputGZIP,(FILEHANDLE *))
-DECLARE(int PutOutputGZIP,(FILEHANDLE *))
-DECLARE(int FlushOutputGZIP,(FILEHANDLE *))
-DECLARE(int SetupAllInputGZIP,(SORTING *))
-DECLARE(int SetupInputGZIP,(FILEHANDLE *,int))
-DECLARE(LONG GetInputGZIP,(FILEHANDLE *,int))
-DECLARE(LONG FillInputGZIP,(FILEHANDLE *,POSITION *,UBYTE *,LONG,int))
+extern int    SetupOutputGZIP(FILEHANDLE *);
+extern int    PutOutputGZIP(FILEHANDLE *);
+extern int    FlushOutputGZIP(FILEHANDLE *);
+extern int    SetupAllInputGZIP(SORTING *);
+extern int    SetupInputGZIP(FILEHANDLE *,int);
+extern LONG   GetInputGZIP(FILEHANDLE *,int);
+extern LONG   FillInputGZIP(FILEHANDLE *,POSITION *,UBYTE *,LONG,int);
 #endif
 
 #ifdef WITHPTHREADS
-DECLARE(VOID BeginIdentities,ARG0)
-DECLARE(int WhoAmI,ARG0)
-DECLARE(int StartAllThreads,(int))
-DECLARE(void StartHandleLock,ARG0)
-DECLARE(VOID TerminateAllThreads,ARG0)
-DECLARE(int GetAvailableThread,ARG0)
-DECLARE(int ConditionalGetAvailableThread,ARG0)
-DECLARE(int BalanceRunThread,(PHEAD int,WORD *,WORD))
-DECLARE(void WakeupThread,(int,int))
-DECLARE(int MasterWait,ARG0)
-DECLARE(int InParallelProcessor,ARG0)
-DECLARE(int ThreadsProcessor,(EXPRESSIONS,WORD))
-DECLARE(int ThreadsMerge,ARG0)
-DECLARE(int MasterMerge,ARG0)
-DECLARE(int PutToMaster,(PHEAD WORD *))
-DECLARE(void SetWorkerFiles,ARG0)
-DECLARE(int MakeThreadBuckets,(int,int))
-DECLARE(void Test,ARG0)
-DECLARE(int SendOneBucket,ARG0)
-DECLARE(int LoadOneThread,(int,int,THREADBUCKET *,int))
-DECLARE(void *RunSortBot,(void *))
-DECLARE(void MasterWaitAllSortBots,ARG0)
-DECLARE(int SortBotMerge,(PHEAD0))
-DECLARE(int SortBotOut,(PHEAD WORD *))
-DECLARE(void DefineSortBotTree,ARG0)
-DECLARE(int SortBotMasterMerge,ARG0)
-DECLARE(int SortBotWait,(int))
-DECLARE(void StartIdentity,ARG0)
-DECLARE(void FinishIdentity,(void *))
-DECLARE(int SetIdentity,(int *))
-DECLARE(ALLPRIVATES *InitializeOneThread,(int))
-DECLARE(void FinalizeOneThread,(int))
-DECLARE(void *RunThread,(void *))
-DECLARE(void IAmAvailable,(int))
-DECLARE(int ThreadWait,(int))
-DECLARE(int ThreadClaimedBlock,(int))
-DECLARE(int GetThread,(int))
-DECLARE(int UpdateOneThread,(int))
-DECLARE(void AlsoAvailable,(int))
-DECLARE(void AlsoRunning,(int))
-DECLARE(void MasterWaitAll,ARG0)
-DECLARE(void MasterWaitAllBlocks,ARG0)
-DECLARE(int MasterWaitThread,(int))
-DECLARE(void WakeupMasterFromThread,(int,int))
-DECLARE(int LoadReadjusted,ARG0)
-DECLARE(int IniSortBlocks,(int))
+extern VOID   BeginIdentities();
+extern int    WhoAmI();
+extern int    StartAllThreads(int);
+extern void   StartHandleLock();
+extern VOID   TerminateAllThreads();
+extern int    GetAvailableThread();
+extern int    ConditionalGetAvailableThread();
+extern int    BalanceRunThread(PHEAD int,WORD *,WORD);
+extern void   WakeupThread(int,int);
+extern int    MasterWait();
+extern int    InParallelProcessor();
+extern int    ThreadsProcessor(EXPRESSIONS,WORD);
+extern int    ThreadsMerge();
+extern int    MasterMerge();
+extern int    PutToMaster(PHEAD WORD *);
+extern void   SetWorkerFiles();
+extern int    MakeThreadBuckets(int,int);
+extern void   Test();
+extern int    SendOneBucket();
+extern int    LoadOneThread(int,int,THREADBUCKET *,int);
+extern void  *RunSortBot(void *);
+extern void   MasterWaitAllSortBots();
+extern int    SortBotMerge(PHEAD0);
+extern int    SortBotOut(PHEAD WORD *);
+extern void   DefineSortBotTree();
+extern int    SortBotMasterMerge();
+extern int    SortBotWait(int);
+extern void   StartIdentity();
+extern void   FinishIdentity(void *);
+extern int    SetIdentity(int *);
+extern ALLPRIVATES *InitializeOneThread(int);
+extern void   FinalizeOneThread(int);
+extern void  *RunThread(void *);
+extern void   IAmAvailable(int);
+extern int    ThreadWait(int);
+extern int    ThreadClaimedBlock(int);
+extern int    GetThread(int);
+extern int    UpdateOneThread(int);
+extern void   AlsoAvailable(int);
+extern void   AlsoRunning(int);
+extern void   MasterWaitAll();
+extern void   MasterWaitAllBlocks();
+extern int    MasterWaitThread(int);
+extern void   WakeupMasterFromThread(int,int);
+extern int    LoadReadjusted();
+extern int    IniSortBlocks(int);
 
 #endif
 
-DECLARE(int CopyExpression,(FILEHANDLE *,FILEHANDLE *))
+extern int    CopyExpression(FILEHANDLE *,FILEHANDLE *);
 
 /*[12dec2003 mt]:*/
-DECLARE(int set_in,(UBYTE, set_of_char))
-DECLARE(one_byte set_set,(UBYTE, set_of_char))
-DECLARE(one_byte set_del,(UBYTE, set_of_char))
-DECLARE(one_byte set_sub, (set_of_char, set_of_char, set_of_char))
-DECLARE(int DoPreAddSeparator,(UBYTE *))
-DECLARE(int DoPreRmSeparator,(UBYTE *))
+extern int    set_in(UBYTE, set_of_char);
+extern one_byte set_set(UBYTE, set_of_char);
+extern one_byte set_del(UBYTE, set_of_char);
+extern one_byte set_sub (set_of_char, set_of_char, set_of_char);
+extern int    DoPreAddSeparator(UBYTE *);
+extern int    DoPreRmSeparator(UBYTE *);
 /*:[12dec2003 mt]*/
 
 /*[14apr2004 mt]:*/
 /*See the file extcmd.c*/
 /*[08may2006 mt]:*/
 /*
-DECLARE(int openExternalChannel,(char *))
+extern int openExternalChannel(char *);
 */
-DECLARE(int openExternalChannel,(UBYTE *,int,UBYTE *,UBYTE *))
-DECLARE(int initPresetExternalChannels,(UBYTE *, int))
+extern int    openExternalChannel(UBYTE *,int,UBYTE *,UBYTE *);
+extern int    initPresetExternalChannels(UBYTE *, int);
 /*:[08may2006 mt]*/
-DECLARE(int closeExternalChannel,(int))
-DECLARE(int selectExternalChannel,(int))
-DECLARE(int getCurrentExternalChannel,(VOID))
-DECLARE(VOID closeAllExternalChannels,(VOID))
+extern int    closeExternalChannel(int);
+extern int    selectExternalChannel(int);
+extern int    getCurrentExternalChannel();
+extern VOID   closeAllExternalChannels();
 /*:[14apr2004 mt]*/
 
 /*[08may2006 mt]:*/
-/*DECLARE(int writexactly,(int,char *,size_t))*/
+/*extern int writexactly(int,char *,size_t);*/
 /*:[08may2006 mt]*/
 
 /*[17nov2005 mt]:*/
-DECLARE(typedef int (*WRITEBUFTOEXTCHANNEL),(char *,size_t) )
-DECLARE(typedef int (*GETCFROMEXTCHANNEL),() )
-DECLARE(typedef int (*SETTERMINATORFOREXTERNALCHANNEL),(char *) )
+typedef int (*WRITEBUFTOEXTCHANNEL)(char *,size_t);
+typedef int (*GETCFROMEXTCHANNEL)();
+typedef int (*SETTERMINATORFOREXTERNALCHANNEL)(char *);
 /*[08may2006 mt]:*/
-DECLARE(typedef int (*SETKILLMODEFOREXTERNALCHANNEL),(int,int) )
+typedef int (*SETKILLMODEFOREXTERNALCHANNEL)(int,int);
 /*:[08may2006 mt]*/
-DECLARE(typedef LONG (*WRITEFILE), (int,UBYTE *,LONG) )
-DECLARE(typedef WORD (*COMPARE), (PHEAD WORD *,WORD *,WORD) )
+typedef LONG (*WRITEFILE)(int,UBYTE *,LONG);
+typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
 
 #define Compare ((COMPARE)AR.CompareRoutine)
 
 #ifdef PARALLEL
-DECLARE(LONG PF_BroadcastNumberOfTerms,(LONG))
-DECLARE(int PF_Processor,(EXPRESSIONS,WORD,WORD))
+extern LONG   PF_BroadcastNumberOfTerms(LONG);
+extern int    PF_Processor(EXPRESSIONS,WORD,WORD);
 
 #endif
 
-DECLARE(UBYTE *defineChannel,(UBYTE*, HANDLERS*))
-DECLARE(int writeToChannel,(int,UBYTE *,HANDLERS*))
+extern UBYTE *defineChannel(UBYTE*, HANDLERS*);
+extern int    writeToChannel(int,UBYTE *,HANDLERS*);
 #ifdef WITHEXTERNALCHANNEL
-DECLARE(LONG WriteToExternalChannel,(int,UBYTE *,LONG))
+extern LONG   WriteToExternalChannel(int,UBYTE *,LONG);
 #endif
-DECLARE(pid_t getExternalChannelPid,ARG0)
-DECLARE(int writeBufToExtChannelOk,(char *,size_t))
-DECLARE(int getcFromExtChannelOk,ARG0)
-DECLARE(int setKillModeForExternalChannelOk,(int,int))
-DECLARE(int setTerminatorForExternalChannelOk,(char *))
-DECLARE(int getcFromExtChannelFailure,ARG0)
-DECLARE(int setKillModeForExternalChannelFailure,(int,int))
-DECLARE(int setTerminatorForExternalChannelFailure,(char *))
-DECLARE(int writeBufToExtChannelFailure,(char *,size_t))
+extern pid_t  getExternalChannelPid();
+extern int    writeBufToExtChannelOk(char *,size_t);
+extern int    getcFromExtChannelOk();
+extern int    setKillModeForExternalChannelOk(int,int);
+extern int    setTerminatorForExternalChannelOk(char *);
+extern int    getcFromExtChannelFailure();
+extern int    setKillModeForExternalChannelFailure(int,int);
+extern int    setTerminatorForExternalChannelFailure(char *);
+extern int    writeBufToExtChannelFailure(char *,size_t);
 
-DECLARE(int ReleaseTB,ARG0)
+extern int    ReleaseTB();
 
-DECLARE(int SymbolNormalize,(WORD *,WORD *,WORD))
-DECLARE(int CheckMinTerm,(WORD *,WORD *))
-DECLARE(int ReOrderSymbols,(WORD *,WORD *,WORD))
-DECLARE(int CompareSymbols,(PHEAD WORD *,WORD *,WORD))
-DECLARE(WORD *PolyAdd,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyMul,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyDiv,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyDivI,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyMul0,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyDiv0,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyRatNorm,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyFunNorm,(PHEAD WORD *,WORD))
-DECLARE(WORD *PolyFunAddRat,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyRemoveContent,(PHEAD WORD *,WORD))
-DECLARE(WORD *PolyGCD,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyGCD1,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyGCD1a,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyGCD1b,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyGCD1c,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyGCD1d,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyDiv1,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyDiv1d,(PHEAD WORD *,WORD *))
-DECLARE(WORD *PolyPseudoRem1,(PHEAD WORD *,WORD *))
-DECLARE(WORD *GetNegPow,(PHEAD WORD *))
-DECLARE(WORD *PolyNormPoly,(PHEAD WORD *))
-DECLARE(WORD PolyRatFunMul,(PHEAD WORD *))
-DECLARE(WORD *PolyTake,(PHEAD WORD *,WORD))
-DECLARE(WORD PolyGetRenumbering,(PHEAD WORD *,WORD *))
-DECLARE(WORD InvertModular,(WORD,WORD))
-DECLARE(WORD InvertLongModular,(PHEAD UWORD *,WORD,WORD,UWORD *,WORD *))
-/*DECLARE(WORD *PolyModGCD,(PHEAD WORD *,WORD *,WORD))*/
-DECLARE(int PolyModGCD,(POLYMOD *,POLYMOD *))
-DECLARE(int PolyConvertToModulus,(WORD *,POLYMOD *,WORD))
-DECLARE(WORD *PolyConvertFromModulus,(PHEAD POLYMOD *,WORD))
-DECLARE(WORD *PolyChineseRemainder,(PHEAD WORD *,WORD *,WORD *,WORD,WORD))
-DECLARE(WORD NextPrime,(PHEAD WORD))
-DECLARE(WORD ModShortPrime,(UWORD *,WORD,WORD))
-DECLARE(int AllocPolyModCoefs,(POLYMOD *,WORD))
-DECLARE(WORD DivMod,(UWORD *,WORD,WORD))
-DECLARE(int AccumTermGCD,(WORD *,WORD *))
-DECLARE(int PolyTakeSqrt,(PHEAD WORD *))
-DECLARE(int PolyTakeRoot,(PHEAD WORD *,WORD))
-DECLARE(WORD *PolyPow,(PHEAD WORD *,WORD))
-DECLARE(WORD *PolyInterpolation,(PHEAD WORD *,WORD *,WORD))
-DECLARE(WORD *PolySubs,(PHEAD WORD *,WORD,WORD))
-DECLARE(WORD *PolyNewton,(PHEAD WORD **,WORD,WORD))
-DECLARE(WORD *PolyGetNewtonCoef,(PHEAD WORD **,WORD))
-DECLARE(WORD ModPow,(WORD,WORD,WORD))
-DECLARE(WORD PolyModSubsVector,(PHEAD WORD *,WORD *,WORD,WORD,WORD,WORD,POLYMOD *))
-DECLARE(WORD *PolyGetSymbols,(PHEAD WORD *,int *))
-DECLARE(WORD *PolyGetGCDPowers,(PHEAD WORD *,WORD *,WORD *,WORD *))
-DECLARE(WORD *PolyGetConfig,(PHEAD WORD))
-DECLARE(WORD wranf,(PHEAD0))
+extern int    SymbolNormalize(WORD *,WORD *,WORD);
+extern int    CheckMinTerm(WORD *,WORD *);
+extern int    ReOrderSymbols(WORD *,WORD *,WORD);
+extern int    CompareSymbols(PHEAD WORD *,WORD *,WORD);
+extern WORD  *PolyAdd(PHEAD WORD *,WORD *);
+extern WORD  *PolyMul(PHEAD WORD *,WORD *);
+extern WORD  *PolyDiv(PHEAD WORD *,WORD *);
+extern WORD  *PolyDivI(PHEAD WORD *,WORD *);
+extern WORD  *PolyMul0(PHEAD WORD *,WORD *);
+extern WORD  *PolyDiv0(PHEAD WORD *,WORD *);
+extern WORD  *PolyRatNorm(PHEAD WORD *,WORD *);
+extern WORD  *PolyFunNorm(PHEAD WORD *,WORD);
+extern WORD  *PolyFunAddRat(PHEAD WORD *,WORD *);
+extern WORD  *PolyRemoveContent(PHEAD WORD *,WORD);
+extern WORD  *PolyGCD(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD1(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD1a(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD1b(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD1c(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD1d(PHEAD WORD *,WORD *);
+extern WORD  *PolyDiv1(PHEAD WORD *,WORD *);
+extern WORD  *PolyDiv1d(PHEAD WORD *,WORD *);
+extern WORD  *PolyPseudoRem1(PHEAD WORD *,WORD *);
+extern WORD  *GetNegPow(PHEAD WORD *);
+extern WORD  *PolyNormPoly(PHEAD WORD *);
+extern WORD   PolyRatFunMul(PHEAD WORD *);
+extern WORD  *PolyTake(PHEAD WORD *,WORD);
+extern WORD   PolyGetRenumbering(PHEAD WORD *,WORD *);
+extern WORD   InvertModular(WORD,WORD);
+extern WORD   InvertLongModular(PHEAD UWORD *,WORD,WORD,UWORD *,WORD *);
+/*WORD *PolyModGCD(PHEAD WORD *,WORD *,WORD);*/
+extern int    PolyModGCD(POLYMOD *,POLYMOD *);
+extern int    PolyConvertToModulus(WORD *,POLYMOD *,WORD);
+extern WORD  *PolyConvertFromModulus(PHEAD POLYMOD *,WORD);
+extern WORD  *PolyChineseRemainder(PHEAD WORD *,WORD *,WORD *,WORD,WORD);
+extern WORD   NextPrime(PHEAD WORD);
+extern WORD   ModShortPrime(UWORD *,WORD,WORD);
+extern int    AllocPolyModCoefs(POLYMOD *,WORD);
+extern WORD   DivMod(UWORD *,WORD,WORD);
+extern int    AccumTermGCD(WORD *,WORD *);
+extern int    PolyTakeSqrt(PHEAD WORD *);
+extern int    PolyTakeRoot(PHEAD WORD *,WORD);
+extern WORD  *PolyPow(PHEAD WORD *,WORD);
+extern WORD  *PolyInterpolation(PHEAD WORD *,WORD *,WORD);
+extern WORD  *PolySubs(PHEAD WORD *,WORD,WORD);
+extern WORD  *PolyNewton(PHEAD WORD **,WORD,WORD);
+extern WORD  *PolyGetNewtonCoef(PHEAD WORD **,WORD);
+extern WORD   ModPow(WORD,WORD,WORD);
+extern WORD   PolyModSubsVector(PHEAD WORD *,WORD *,WORD,WORD,WORD,WORD,POLYMOD *);
+extern WORD  *PolyGetSymbols(PHEAD WORD *,int *);
+extern WORD  *PolyGetGCDPowers(PHEAD WORD *,WORD *,WORD *,WORD *);
+extern WORD  *PolyGetConfig(PHEAD WORD);
+extern WORD   wranf(PHEAD0);
 
-DECLARE(WORD *EvaluateGcd,(PHEAD WORD *))
+extern WORD  *EvaluateGcd(PHEAD WORD *);
 
-DECLARE(WORD ReadSaveHeader,ARG0)
-DECLARE(WORD ReadSaveIndex,(FILEINDEX *))
-DECLARE(WORD ReadSaveExpression,(UBYTE *,UBYTE *,LONG *,LONG *))
-DECLARE(UBYTE *ReadSaveTerm32,(UBYTE *,UBYTE *,UBYTE **,UBYTE *,UBYTE *,int))
-DECLARE(WORD ReadSaveVariables,(UBYTE *,UBYTE *,LONG *,LONG *,INDEXENTRY *,LONG *))
-DECLARE(WORD WriteStoreHeader,(WORD))
+extern WORD   ReadSaveHeader();
+extern WORD   ReadSaveIndex(FILEINDEX *);
+extern WORD   ReadSaveExpression(UBYTE *,UBYTE *,LONG *,LONG *);
+extern UBYTE *ReadSaveTerm32(UBYTE *,UBYTE *,UBYTE **,UBYTE *,UBYTE *,int);
+extern WORD   ReadSaveVariables(UBYTE *,UBYTE *,LONG *,LONG *,INDEXENTRY *,LONG *);
+extern WORD   WriteStoreHeader(WORD);
 
-DECLARE(int CheckRecoveryFile,ARG0)
-DECLARE(char *RecoveryFilename,ARG0)
-DECLARE(int DoRecovery,ARG0)
-DECLARE(void DoCheckpoint,ARG0)
+extern int    CheckRecoveryFile();
+extern char  *RecoveryFilename();
+extern int    DoRecovery();
+extern void   DoCheckpoint();
 
 /*
   	#] Declarations :

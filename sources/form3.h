@@ -261,16 +261,16 @@ typedef struct FiLeS {
 #else
 #include <fcntl.h>
 #endif
-DECLARE(FILES *Uopen,(char *,char *))
-DECLARE(int Uclose,(FILES *))
-DECLARE(size_t Uread,(char *,size_t,size_t,FILES *))
-DECLARE(size_t Uwrite,(char *,size_t,size_t,FILES *))
-DECLARE(int Useek,(FILES *,off_t,int))
-DECLARE(off_t Utell,(FILES *))
-DECLARE(void Uflush,(FILES *))
-DECLARE(int Ugetpos,(FILES *,fpos_t *))
-DECLARE(int Usetpos,(FILES *,fpos_t *))
-DECLARE(void Usetbuf,(FILES *,char *))
+extern FILES *Uopen(char *,char *);
+extern int    Uclose(FILES *);
+extern size_t Uread(char *,size_t,size_t,FILES *);
+extern size_t Uwrite(char *,size_t,size_t,FILES *);
+extern int    Useek(FILES *,off_t,int);
+extern off_t  Utell(FILES *);
+extern void   Uflush(FILES *);
+extern int    Ugetpos(FILES *,fpos_t *);
+extern int    Usetpos(FILES *,fpos_t *);
+extern void   Usetbuf(FILES *,char *);
 extern FILES *Ustdout;
 #define MAX_OPEN_FILES getdtablesize()
 

@@ -221,21 +221,21 @@ extern LONG PF_maxDollarChunkSize;
    #[ function prototypes:
 */
 
-DECLARE(int PF_InitRedefinedPreVars, () )
-DECLARE(int PF_Processor, (EXPRESSIONS,WORD,WORD) )
-DECLARE(WORD PF_Deferred, (WORD *,WORD) )
-DECLARE(int PF_EndSort, () )
-DECLARE(int PF_Init, (int*,char ***) )
-DECLARE(int PF_Terminate,(int))
-DECLARE(int PF_ISendSbuf, (int,int) )
-DECLARE(int PF_PackString, (UBYTE *) )
-DECLARE(int PF_UnPackString, (UBYTE *) )
-DECLARE(int PF_BroadcastPreDollar, (WORD **, LONG *,int *) )
-DECLARE(int PF_BroadcastString, (UBYTE *)  )
-DECLARE(LONG PF_BroadcastNumberOfTerms,(LONG) )
-DECLARE(WORD PF_mkDollarsParallel, () )
-DECLARE(void PF_markPotModDollars, () )
-DECLARE(void PF_statPotModDollar,(int,int) )
+extern int  PF_InitRedefinedPreVars();
+extern int  PF_Processor(EXPRESSIONS,WORD,WORD);
+extern WORD PF_Deferred(WORD *,WORD);
+extern int  PF_EndSort();
+extern int  PF_Init(int*,char ***);
+extern int  PF_Terminate(int);
+extern int  PF_ISendSbuf(int,int);
+extern int  PF_PackString(UBYTE *);
+extern int  PF_UnPackString(UBYTE *);
+extern int  PF_BroadcastPreDollar(WORD **, LONG *,int *);
+extern int  PF_BroadcastString(UBYTE *);
+extern LONG PF_BroadcastNumberOfTerms(LONG);
+extern WORD PF_mkDollarsParallel();
+extern void PF_markPotModDollars();
+extern void PF_statPotModDollar(int,int);
 /*
    #] function prototypes:
 [:17nov2005 mt]

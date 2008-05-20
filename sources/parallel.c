@@ -14,48 +14,48 @@
 #include "form3.h"
 
 /*[17nov2005 mt:*/
-DECLARE(LONG PF_RealTime, (int))
-DECLARE(int PF_LibInit,(int*, char***))
-DECLARE(int PF_Terminate,(int))
-DECLARE(int PF_Probe,(int*))
-DECLARE(int PF_InitPackBuf,())
-DECLARE(int PF_PrintPackBuf,(char*,int) )
+LONG PF_RealTime(int);
+int PF_LibInit(int*, char***);
+int PF_Terminate(int);
+int PF_Probe(int*);
+int PF_InitPackBuf();
+int PF_PrintPackBuf(char*,int);
 #ifdef SHMEM
-DECLARE(int PF_Pack,(VOID *,LONG,int) )
-DECLARE(int PF_UnPack, (VOID*,LONG,int) )
+int PF_Pack(VOID *,LONG,int);
+int PF_UnPack(VOID*,LONG,int);
 #else
 #ifdef MPI
-DECLARE(int PF_Pack,(VOID *,LONG,MPI_Datatype) )
-DECLARE(int PF_UnPack, (VOID*,LONG,MPI_Datatype) )
+int PF_Pack(VOID *,LONG,MPI_Datatype);
+int PF_UnPack(VOID*,LONG,MPI_Datatype);
 #endif /*ifdef MPI*/
 #endif/*ifdef SHMEM*/
-DECLARE(int PF_Send, (int,int,int) )
-DECLARE(int PF_BroadCast, (int) )
-DECLARE(int PF_Receive,(int,int,int*,int*) )
-DECLARE(int PF_ISendSbuf, (int,int) )
-DECLARE(int PF_RecvWbuf, (WORD*,LONG*,int*) )
-DECLARE(int PF_WaitRbuf, (PF_BUFFER *,int,LONG *) )
-DECLARE(int PF_PackString, (UBYTE *) )
-DECLARE(int PF_UnPackString, (UBYTE *) )
-DECLARE(int PF_InitRedefinedPreVars, () )
-DECLARE(int PF_Processor, (EXPRESSIONS,WORD,WORD) )
-DECLARE(WORD PF_Deferred, (WORD *,WORD) )
-DECLARE(int PF_EndSort, () )
-DECLARE(int PF_Init, (int*,char ***) )
-DECLARE(int PF_longSingleReset, () )
-DECLARE(int PF_longMultiReset, () )
-DECLARE(int PF_longSinglePack, (UBYTE *,int,MPI_Datatype) )
-DECLARE(int PF_longSingleUnPack, (UBYTE*,LONG,MPI_Datatype) )
-DECLARE(int PF_longMultiPack, (UBYTE *,int,int,MPI_Datatype) )
-DECLARE(int PF_longMultiUnPack,(UBYTE*,int,int,MPI_Datatype) )
-DECLARE(int PF_longSingleSend, (int,int) )
-DECLARE(int PF_longSingleReceive,(int,int,int*,int*) )
-DECLARE(int PF_longBroadcast,() )
-DECLARE(int PF_IRecvRbuf,(PF_BUFFER*,int,int) )
-DECLARE(int PF_WaitAllSlaves,() )
-DECLARE(int MinDollar, (WORD) )
-DECLARE(int MaxDollar, (WORD) )
-DECLARE(int SumDollars, (WORD) )
+int PF_Send(int,int,int);
+int PF_BroadCast(int);
+int PF_Receive(int,int,int*,int*);
+int PF_ISendSbuf(int,int);
+int PF_RecvWbuf(WORD*,LONG*,int*);
+int PF_WaitRbuf(PF_BUFFER *,int,LONG *);
+int PF_PackString(UBYTE *);
+int PF_UnPackString(UBYTE *);
+int PF_InitRedefinedPreVars();
+int PF_Processor(EXPRESSIONS,WORD,WORD);
+WORD PF_Deferred(WORD *,WORD);
+int PF_EndSort();
+int PF_Init(int*,char ***);
+int PF_longSingleReset();
+int PF_longMultiReset();
+int PF_longSinglePack(UBYTE *,int,MPI_Datatype);
+int PF_longSingleUnPack(UBYTE*,LONG,MPI_Datatype);
+int PF_longMultiPack(UBYTE *,int,int,MPI_Datatype);
+int PF_longMultiUnPack(UBYTE*,int,int,MPI_Datatype);
+int PF_longSingleSend(int,int);
+int PF_longSingleReceive(int,int,int*,int*);
+int PF_longBroadcast();
+int PF_IRecvRbuf(PF_BUFFER*,int,int);
+int PF_WaitAllSlaves();
+int MinDollar(WORD);
+int MaxDollar(WORD);
+int SumDollars(WORD);
 /*:[17nov2005 mt*/
 
 PARALLELVARS PF;
