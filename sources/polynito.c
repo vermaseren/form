@@ -90,7 +90,7 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
  *	must be present in the output term.
  */
 
-int SymbolNormalize ARG3(WORD *,term,WORD *,minterm,WORD,par)
+int SymbolNormalize(WORD *term, WORD *minterm, WORD par)
 {
 	WORD buffer[7*NORMSIZE], *t, *b, *bb, *tt, *m, *tstop;
 	int i;
@@ -218,7 +218,7 @@ Nexti:;
  *	returns 1 if it does, 0 if it doesn't.
  */
 
-int CheckMinTerm ARG2(WORD *,term,WORD *,minterm)
+int CheckMinTerm(WORD *term, WORD *minterm)
 {
 	WORD *t, *tt, *m, *mm;
 	t = term+2;    tt = term + term[1];
@@ -257,7 +257,7 @@ nextm:	m += 2;
  *	poly routines. Often a reordering can make a big difference.
  */
 
-int ReOrderSymbols ARG3(WORD *,term,WORD *,slist,WORD,par)
+int ReOrderSymbols(WORD *term, WORD *slist, WORD par)
 {
 	WORD w, *t, *tt, *m, *mm;
 	t = term+1;
@@ -314,7 +314,7 @@ int ReOrderSymbols ARG3(WORD *,term,WORD *,slist,WORD,par)
  *	to that of Compare1 which is the regular compare routine in sort.c
  */
 
-int CompareSymbols BARG3(WORD *,term1,WORD *,term2,WORD,par)
+int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 {
 	int sum1, sum2;
 	WORD *t1, *t2, *tt1, *tt2;
@@ -354,7 +354,7 @@ int CompareSymbols BARG3(WORD *,term1,WORD *,term2,WORD,par)
  *	The WorkPointer is put at the end of the output.
  */
 
-WORD *PolyAdd BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyAdd(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	GETBIDENTITY
 	WORD *p, *b = AT.WorkPointer, n1, n2, n3, *p1, *p2, *bb;
@@ -428,7 +428,7 @@ WORD *PolyAdd BARG2(WORD *,Poly1,WORD *,Poly2)
  *	This is mainly for multivariate polynomials.
  */
 
-WORD *PolyMul BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *buffer = AT.WorkPointer, *b;
 	WORD *p1, *p2, *p3;
@@ -506,7 +506,7 @@ WORD *PolyMul BARG2(WORD *,Poly1,WORD *,Poly2)
  *	in its occupation of it. There are no holes. It does mean some copying.
  */
 
-WORD *PolyDiv BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyDiv(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *b = AT.WorkPointer, *bb;
 	WORD *output = b, *out;
@@ -676,7 +676,7 @@ NegPow:
  *	This routine is used to try whether we have hit on a GCD.
  */
 
-WORD *PolyDivI BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyDivI(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *poly1, *p, *p1, *p2, *p1a = 0, *p2a = 0, *t, *t1, *out;
@@ -863,7 +863,7 @@ calledfrom:;
  *	we won't have to sort again! Hence we can be very fast.
  */
 
-WORD *PolyMul0 BARG2(WORD *,Poly,WORD *,term)
+WORD *PolyMul0(PHEAD WORD *Poly, WORD *term)
 {
 	WORD *b = AT.WorkPointer, *buffer = b, *bb;
 	WORD *p = Poly, *pp, *pstop;
@@ -938,7 +938,7 @@ WORD *PolyMul0 BARG2(WORD *,Poly,WORD *,term)
  *	in its occupation of it. There are no holes. It does mean some copying.
  */
 
-WORD *PolyDiv0 BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyDiv0(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *b = AT.WorkPointer, *bb;
 	WORD *output = b, *out;
@@ -1091,7 +1091,7 @@ NegPow:
  *	We use this routine mainly internally. As in PolyTakeRoot.
  */
 
-WORD *PolyPow BARG2(WORD *,Poly,WORD,pow)
+WORD *PolyPow(PHEAD WORD *Poly, WORD pow)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t, *p, *p1;
@@ -1150,7 +1150,7 @@ WORD *PolyPow BARG2(WORD *,Poly,WORD,pow)
  *	AT.WorkPointer points at the first position after the new poly2.
  */
 
-WORD *PolyRatNorm BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *b1, *b2, *b3, *output, *out = AT.WorkPointer;
 	WORD *gcd;
@@ -1188,7 +1188,7 @@ WORD *PolyRatNorm BARG2(WORD *,Poly1,WORD *,Poly2)
  *	If par == 2 we put the two polynomials in the WorkSpace.
  */
 
-WORD *PolyFunNorm BARG2(WORD *,term,WORD,par)
+WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 {
 	WORD *oldworkpointer, *ow = AT.WorkPointer;
 	WORD buf1[9], buf2[9], *Poly1, *Poly2, *p1, *p2, *p3, *pp;
@@ -1501,7 +1501,7 @@ endnormalize:;
  *	Returns the new polyfun
  */
 
-WORD *PolyFunAddRat BARG2(WORD *,t1,WORD *,t2)
+WORD *PolyFunAddRat(PHEAD WORD *t1, WORD *t2)
 {
 	WORD *oldworkpointer = AT.WorkPointer, buf[9];
 	WORD *g1, *g2, *num1, *num2, *den1, *den2;
@@ -1740,7 +1740,7 @@ skip2:;
  *	primitive part follows it.
  */
 
-WORD *PolyRemoveContent BARG2(WORD *,Poly,WORD,par)
+WORD *PolyRemoveContent(PHEAD WORD *Poly, WORD par)
 {
 	WORD *output = AT.WorkPointer, *out;
 	WORD *term = AT.WorkPointer, *t, *tstop, *p, *p1, *tt;
@@ -1980,7 +1980,7 @@ calledfrom:
  *	There can be various strategies for such calculations.
  */
 
-WORD *PolyGCD BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 {
 #ifdef GCDALGORITHM1
 /*
@@ -2220,7 +2220,7 @@ calledfrom:
  *	The common symbols are sorted with lowest power first.
  */
 
-WORD PolyGetRenumbering BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD PolyGetRenumbering(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *s, *s1, *s2, *s3, *sstop, *p, *p1, *pstop;
@@ -2355,7 +2355,7 @@ nexti2:;
  *	There are a few special cases of course.
  */
 
-WORD *PolyTake BARG2(WORD *,Poly,WORD,numsym)
+WORD *PolyTake(PHEAD WORD *Poly, WORD numsym)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p, *p1, *p2, *p3, *g1, *g1p, *pstop, *n1;
@@ -2474,7 +2474,7 @@ simplecase:
  *	Extracts a term that contains the LCM of all negative powers.
  */
 
-WORD *GetNegPow BARG1(WORD *,Poly)
+WORD *GetNegPow(PHEAD WORD *Poly)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p1, *p2, *p3;
@@ -2546,7 +2546,7 @@ WORD *GetNegPow BARG1(WORD *,Poly)
  *	Normalizes a polynomial.
  */
  
-WORD *PolyNormPoly BARG1(WORD *,Poly)
+WORD *PolyNormPoly(PHEAD WORD *Poly)
 {
 	WORD *buffer = AT.WorkPointer;
 	WORD *p;
@@ -2600,7 +2600,7 @@ WORD *PolyNormPoly BARG1(WORD *,Poly)
  *	to be larger than 3.
  */
 
-WORD *PolyGCD1 BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyGCD1(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	switch ( AM.polygcdchoice ) {
 		case 0:
@@ -2664,7 +2664,7 @@ WORD *PolyGCD1 BARG2(WORD *,Poly1,WORD *,Poly2)
  *		checking on the constant term excludes them (but we have no proof)
  */
 
-WORD *PolyGCD1a BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyGCD1a(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer, *t, *p;
 	WORD m1, m2, numprime, usedprime, prime, aprime[1];
@@ -2968,7 +2968,7 @@ calledfrom:;
  *	This is a crude algorithm but for short polynomials usually efficient.
  */
 
-WORD *PolyGCD1b BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyGCD1b(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *p1 = AT.WorkPointer, *p2, *p3, *t;
 	LONG size, size2;
@@ -3068,7 +3068,7 @@ valueisone:
  *				goto Step 2.
  */
 
-WORD *PolyGCD1c BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *poly1, *poly2, *p, *t, *rem, *p1, *p2, *t1;
@@ -3329,7 +3329,7 @@ calledfrom:
  *	This routine will be very good with sparse polynomials.
  */
 
-WORD *PolyDiv1 BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer, *out = oldworkpointer, *s;
 	WORD *p1, *p2, *p3, size1, size2, size2a, size3, i, tmp, *num2, *den2;
@@ -3605,7 +3605,7 @@ WORD *PolyDiv1 BARG2(WORD *,Poly1,WORD *,Poly2)
  *	See Knuth vol 2, page 407.
  */
 
-WORD *PolyPseudoRem1 BARG2(WORD *,Poly1,WORD *,Poly2)
+WORD *PolyPseudoRem1(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD i,j,k,nsize,tsize,m1,m2,pow,fsize;
@@ -3790,7 +3790,7 @@ calledfrom:
  *	PolyRatFun.
  */
 
-WORD PolyRatFunMul BARG1(WORD *,term)
+WORD PolyRatFunMul(PHEAD WORD *term)
 {
 	WORD *t, *tt, *t1, *t2, *t3, *tstop, *t1stop, *t2stop, *t1a, *t2a;
 	WORD narg1, narg2;
@@ -4008,7 +4008,7 @@ tryothert2:;
  *	    x = 1*x+0*m = a2*x+b2*m
  */
 
-WORD InvertModular ARG2(WORD,xx,WORD,m)
+WORD InvertModular(WORD xx, WORD m)
 {
 	WORD a1, a2, a3;
 /*	WORD b1, b2, b3; */
@@ -4035,7 +4035,7 @@ WORD InvertModular ARG2(WORD,xx,WORD,m)
  *	Returns a^-1 mod m and b becomes m^-1 mod a
  */
 
-WORD InvertLongModular BARG5(UWORD *,a,WORD,na,WORD,m,UWORD *,b,WORD *,nb)
+WORD InvertLongModular(PHEAD UWORD *a, WORD na, WORD m, UWORD *b, WORD *nb)
 {
 	WORD na1, na2, na3, na4, b1, b2, b3, y, c, d = m, x;
 	int i;
@@ -4121,7 +4121,7 @@ WORD InvertLongModular BARG5(UWORD *,a,WORD,na,WORD,m,UWORD *,b,WORD *,nb)
  *	we never have allocation problems.
  */
 
-int PolyModGCD ARG2(POLYMOD *,Poly1,POLYMOD *,Poly2)
+int PolyModGCD(POLYMOD *Poly1, POLYMOD *Poly2)
 {
 	POLYMOD *poly = Poly1, *p;
 	WORD m1, m2, prime, x;
@@ -4186,7 +4186,7 @@ relativeprime:
  *	The input polynomial must have integer coefficients and be primitive.
  */
 
-int PolyConvertToModulus ARG3(WORD *,PolyIn,POLYMOD *,PolyOut,WORD,prime)
+int PolyConvertToModulus(WORD *PolyIn, POLYMOD *PolyOut, WORD prime)
 {
 	WORD *p, *p1, *coef, ncoef, maxpow;
 	int pow;
@@ -4220,7 +4220,7 @@ int PolyConvertToModulus ARG3(WORD *,PolyIn,POLYMOD *,PolyOut,WORD,prime)
  *	We also input the future leading coefficient at lgcd
  */
 
-WORD *PolyConvertFromModulus BARG2(POLYMOD *,PolyIn,WORD,lgcd)
+WORD *PolyConvertFromModulus(PHEAD POLYMOD *PolyIn, WORD lgcd)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t;
@@ -4287,7 +4287,7 @@ WORD *PolyConvertFromModulus BARG2(POLYMOD *,PolyIn,WORD,lgcd)
  *	Then (r1*n2*m2+r2*n1*m1)%(m1*m2) is A%(m1*m2)
  */
 
-WORD *PolyChineseRemainder BARG5(WORD *,Poly1,WORD *,Poly2,WORD *,mod1,WORD,nmod1,WORD ,mod2)
+WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod1, WORD mod2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p1,*p2,*t,*t1,*p1a,*p2a,*coef1 = 0,*coef2 = 0,ncoef1,ncoef2 = 0;
@@ -4440,7 +4440,7 @@ calledfrom:;
  */
 
 #ifdef XXXXXX
-WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
+WORD *PolyHenselUni(PHEAD WORD *Prod, POLYMOD *Poly11, POLYMOD *Poly21)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD m, m1, m2, prime = Poly11->modnum, *p, *t;
@@ -4463,7 +4463,7 @@ WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
 	for ( i = 0; i < size; i++ ) *t++ = *p++;
 	*t++ = 0;
 	AT.WorkPointer = t;
-	Prod = PolyMul0(PHEAD,Prod,oldworkpointer);
+	Prod = PolyMul0(BHEAD,Prod,oldworkpointer);
 	p -= size;
 	size = (size-1)/2;
 	tc = (UWORD)(p + size);
@@ -4497,7 +4497,7 @@ WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
 	        If Poly21 and Poly11 are not relatively prime, 
 	        put the value 1 at AT.WorkPointer and return zero.
 */
-	if ( PolyModExtGCD(PHEAD,Poly11,Poly22,&s1,&s2) ) {
+	if ( PolyModExtGCD(BHEAD,Poly11,Poly22,&s1,&s2) ) {
 		AT.WorkPointer = oldworkpointer;
 		AT.WorkPointer[0] = 1;
 		return(0);
@@ -4505,8 +4505,8 @@ WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
 /*
 	Step 4: Set poly1 = Poly11 and poly2 = Poly21
 */
-	poly1 = PolyConvertFromModulus(PHEAD,Poly11,1);
-	poly2 = PolyConvertFromModulus(PHEAD,Poly21,1);
+	poly1 = PolyConvertFromModulus(BHEAD,Poly11,1);
+	poly2 = PolyConvertFromModulus(BHEAD,Poly21,1);
 /*
 	Step 5: Set up the loop of k=1,...,kmax
 */
@@ -4585,7 +4585,7 @@ WORD *PolyHenselUni BARG3(WORD *,Prod,POLYMOD *,Poly11,POLYMOD *,Poly21)
  *	trouble that the power of a variable gets larger than the prime number.
  */
 
-WORD NextPrime BARG1(WORD,num)
+WORD NextPrime(PHEAD WORD num)
 {
 	int i, j;
 	WORD *newpl;
@@ -4639,7 +4639,7 @@ nexti:;
  *	Takes the Long integer a and determines the remainder when divided by x.
  */
 
-WORD ModShortPrime ARG3(UWORD *,a,WORD,na,WORD,x)
+WORD ModShortPrime(UWORD *a, WORD na, WORD x)
 {
 	WORD m;
 	if ( na == 0 ) return(0);
@@ -4658,7 +4658,7 @@ WORD ModShortPrime ARG3(UWORD *,a,WORD,na,WORD,x)
  *	It can also update an existing allocation.
  */
 
-int AllocPolyModCoefs ARG2(POLYMOD *,polymod,WORD,size)
+int AllocPolyModCoefs(POLYMOD *polymod, WORD size)
 {
 	LONG newsize;
 	int i;
@@ -4697,7 +4697,7 @@ int AllocPolyModCoefs ARG2(POLYMOD *,polymod,WORD,size)
  *	in which case there isn't much extra work.
  */
 
-int AccumTermGCD ARG2(WORD *,term1,WORD *,term2)
+int AccumTermGCD(WORD *term1, WORD *term2)
 {
 	WORD size1, nsize1, pow1, *coef1, *t1, i, j;
 	WORD size2, nsize2, pow2, *coef2, *t2;
@@ -4770,7 +4770,7 @@ nexti:;
  *	No funnies with two solutions!!!!
  */
 
-int PolyTakeSqrt BARG1(WORD *,Poly)
+int PolyTakeSqrt(PHEAD WORD *Poly)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *num, *outpoly, *divpoly, m, m2, size1;
@@ -4913,7 +4913,7 @@ noroot:;
  *	If the root doesn't exist the return value is -1.
  */
 
-int PolyTakeRoot BARG2(WORD *,Poly,WORD,n)
+int PolyTakeRoot(PHEAD WORD *Poly, WORD n)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *num, *outpoly, *divpoly, m, mn, size1;
@@ -5082,7 +5082,7 @@ noroot:;
  */
 
 #ifdef XXXXXXX
-WORD *PolyInterpolation BARG3(WORD *,Poly1,WORD *,Poly2,WORD,numsym)
+WORD *PolyInterpolation(PHEAD WORD *Poly1, WORD *Poly2, WORD numsym)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	LONG oldpworkpointer = AT.pWorkPointer;
@@ -5150,7 +5150,7 @@ WORD *PolyInterpolation BARG3(WORD *,Poly1,WORD *,Poly2,WORD,numsym)
  *	but this could take some space when we have high powers.
  */
 
-WORD *PolySubs BARG3(WORD *,Poly,WORD,value,WORD,numsym)
+WORD *PolySubs(PHEAD WORD *Poly, WORD value, WORD numsym)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p, *t, *p1, *t1;
@@ -5446,7 +5446,7 @@ calledfrom:;
  *	a(m) = sum_(i,0,m,P(m-i)*sign_(i)*binom_(m,i))/m!;
  */
 
-WORD *PolyNewton BARG3(WORD **,Polynomials,WORD,num,WORD,numsym)
+WORD *PolyNewton(PHEAD WORD **Polynomials, WORD num, WORD numsym)
 {
 	WORD *accum = AT.WorkPointer;
 	WORD *t, *p, *t1, *p1, *p2, *coef, ncoef;
@@ -5552,7 +5552,7 @@ WORD *PolyNewton BARG3(WORD **,Polynomials,WORD,num,WORD,numsym)
  *	Note: This can be more efficient if we tabulate the binomials.
  */
 
-WORD *PolyGetNewtonCoef BARG2(WORD **,Polynomials,WORD,num)
+WORD *PolyGetNewtonCoef(PHEAD WORD **Polynomials, WORD num)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t, *p, *p1, *t1, *coef, icoef, ncoef, *temp, *bino, nbino, *accum;
@@ -5678,7 +5678,7 @@ calledfrom:;
 
 #define MINIMUMSUCCESRATE 3
 
-WORD *PolyGetGCDPowers BARG4(WORD *,Poly1,WORD *,Poly2,WORD *,plist1,WORD *,plist2)
+WORD *PolyGetGCDPowers(PHEAD WORD *Poly1, WORD *Poly2, WORD *plist1, WORD *plist2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	int i, numvars, success;
@@ -5787,7 +5787,8 @@ WORD *PolyGetGCDPowers BARG4(WORD *,Poly1,WORD *,Poly2,WORD *,plist1,WORD *,plis
  *		If the result isn't 'complete' we return -1.
  */
 
-WORD PolyModSubsVector BARG7(WORD *,Poly,WORD *,values,WORD,num,WORD,prime,WORD,numsym,WORD,maxi,POLYMOD *,pm)
+WORD PolyModSubsVector(PHEAD WORD *Poly, WORD *values, WORD num, WORD prime, WORD numsym,
+                       WORD maxi, POLYMOD *pm)
 {
 	WORD *p, *p1, *coef, ncoef, correction = 0;
 	int i, pow, minpow = maxi;
@@ -5880,7 +5881,7 @@ zerovalue:;
  *		Calculates ( num to the power pow ) % prime;
  */
 
-WORD ModPow ARG3(WORD,num,WORD,pow,WORD,prime)
+WORD ModPow(WORD num, WORD pow, WORD prime)
 {
 	int sign;
 	int npow;
@@ -5922,7 +5923,7 @@ WORD ModPow ARG3(WORD,num,WORD,pow,WORD,prime)
  *		The value of *maxi is the maximum 'dimension' of the polynomial.
  */
 
-WORD *PolyGetSymbols BARG2(WORD *,Poly,int *,maxi)
+WORD *PolyGetSymbols(PHEAD WORD *Poly, int *maxi)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p, *p1, *t;
@@ -6018,7 +6019,7 @@ WORD *PolyGetSymbols BARG2(WORD *,Poly,int *,maxi)
  *		AT the moment we use a decent random number generator.
  */
 
-WORD *PolyGetConfig BARG1(WORD,numvars)
+WORD *PolyGetConfig(PHEAD WORD numvars)
 {
 	WORD *oldworkspace = AT.WorkPointer;
 	int i;

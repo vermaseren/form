@@ -25,7 +25,7 @@ static UBYTE underscore[2] = {'_',0};
 	par == -1: after error. Just make zero for now.
 */
 
-int CatchDollar ARG1(int,par)
+int CatchDollar(int par)
 {
 	GETIDENTITY
 	CBUF *C = cbuf + AC.cbufnum;
@@ -203,7 +203,7 @@ onerror:
 	and MODMIN cases.
 */
 
-int AssignDollar ARG2(WORD *,term,WORD,level)
+int AssignDollar(WORD *term, WORD level)
 {
 	GETIDENTITY
 	CBUF *C = cbuf+AM.rbufnum;
@@ -557,7 +557,7 @@ NoChange:;
 	If par==1 we insist on normal mode
 */
 
-UBYTE *WriteDollarToBuffer ARG2(WORD,numdollar,WORD,par)
+UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 {
 	DOLLARS d = Dollars+numdollar;
 	UBYTE *s, *oldcurbufwrt = AO.CurBufWrt;
@@ -636,7 +636,7 @@ UBYTE *WriteDollarToBuffer ARG2(WORD,numdollar,WORD,par)
   	#[ AddToDollarBuffer :
 */
 
-void AddToDollarBuffer ARG1(UBYTE *,s)
+void AddToDollarBuffer(UBYTE *s)
 {
 	int i;
 	UBYTE *t = s, *u, *newdob;
@@ -669,7 +669,7 @@ void AddToDollarBuffer ARG1(UBYTE *,s)
   	#[ TermAssign :
 */
 
-void TermAssign ARG1(WORD *,term)
+void TermAssign(WORD *term)
 {
 	DOLLARS d;
 	WORD *t, *tstop, *astop, *w, *m;
@@ -727,7 +727,7 @@ void TermAssign ARG1(WORD *,term)
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
 */
 
-void WildDollars ARG0
+void WildDollars()
 {
 	GETIDENTITY
 	DOLLARS d;
@@ -883,7 +883,7 @@ void WildDollars ARG0
   	#[ DolToTensor :    with LOCK
 */
 
-WORD DolToTensor ARG1(WORD,numdollar)
+WORD DolToTensor(WORD numdollar)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + numdollar;
@@ -944,7 +944,7 @@ WORD DolToTensor ARG1(WORD,numdollar)
   	#[ DolToFunction :  with LOCK
 */
 
-WORD DolToFunction ARG1(WORD,numdollar)
+WORD DolToFunction(WORD numdollar)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + numdollar;
@@ -1001,7 +1001,7 @@ WORD DolToFunction ARG1(WORD,numdollar)
   	#[ DolToVector :    with LOCK
 */
 
-WORD DolToVector ARG1(WORD,numdollar)
+WORD DolToVector(WORD numdollar)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + numdollar;
@@ -1065,7 +1065,7 @@ WORD DolToVector ARG1(WORD,numdollar)
   	#[ DolToNumber :
 */
 
-WORD DolToNumber ARG1(WORD,numdollar)
+WORD DolToNumber(WORD numdollar)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + numdollar;
@@ -1124,7 +1124,7 @@ WORD DolToNumber ARG1(WORD,numdollar)
   	#[ DolToSymbol :    with LOCK
 */
 
-WORD DolToSymbol ARG1(WORD,numdollar)
+WORD DolToSymbol(WORD numdollar)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + numdollar;
@@ -1178,7 +1178,7 @@ WORD DolToSymbol ARG1(WORD,numdollar)
   	#[ DolToIndex :     with LOCK
 */
 
-WORD DolToIndex ARG1(WORD,numdollar)
+WORD DolToIndex(WORD numdollar)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + numdollar;
@@ -1254,7 +1254,7 @@ WORD DolToIndex ARG1(WORD,numdollar)
 	an expression (type = DOLTERMS). Otherwise it returns zero.
 */
 
-DOLLARS DolToTerms ARG1(WORD,numdollar)
+DOLLARS DolToTerms(WORD numdollar)
 {
 	GETIDENTITY
 	LONG size;
@@ -1358,8 +1358,7 @@ DOLLARS DolToTerms ARG1(WORD,numdollar)
   	#[ DoInside :
 */
 
-int
-DoInside ARG1(UBYTE *,s)
+int DoInside(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -1424,8 +1423,7 @@ skipdol:	error = 1;
 	In the end we sort and redefine $a.
 */
 
-int
-InsideDollar ARG2(WORD *,ll,WORD,level)
+int InsideDollar(WORD *ll, WORD level)
 {
 	GETIDENTITY
 	int numvar = (int)(ll[1]-3), j, error = 0;
@@ -1512,7 +1510,7 @@ idcall:;
   	#[ ExchangeDollars :
 */
 
-void ExchangeDollars ARG2(int,num1,int,num2)
+void ExchangeDollars(int num1, int num2)
 {
 	DOLLARS d1, d2;
 	WORD node1, node2;
@@ -1530,7 +1528,7 @@ void ExchangeDollars ARG2(int,num1,int,num2)
   	#[ TermsInDollar :
 */
 
-LONG TermsInDollar ARG1(WORD,num)
+LONG TermsInDollar(WORD num)
 {
 	GETIDENTITY
 	DOLLARS d = Dollars + num;
@@ -1589,8 +1587,7 @@ LONG TermsInDollar ARG1(WORD,num)
 		_productof(expr)
 */
 
-UBYTE *
-PreIfDollarEval ARG2(UBYTE *,s,int *,value)
+UBYTE *PreIfDollarEval(UBYTE *s, int *value)
 {
 	GETIDENTITY
 	UBYTE *s1,*s2,*s3,*s4,*s5,*t,c,c1,c2,c3;
@@ -1772,7 +1769,7 @@ onerror:
   	#[ TranslateExpression :
 */
 
-WORD *TranslateExpression ARG1(UBYTE *,s)
+WORD *TranslateExpression(UBYTE *s)
 {
 	GETIDENTITY
 	CBUF *C = cbuf+AC.cbufnum;
@@ -1828,7 +1825,7 @@ WORD *TranslateExpression ARG1(UBYTE *,s)
 	For the special sets: if more than one term: no match!!!
 */
 
-int IsSetMember ARG2(WORD *,buffer,WORD,numset)
+int IsSetMember(WORD *buffer, WORD numset)
 {
 	WORD *t = buffer, *tt, num, csize, num1;
 	WORD bufterm[4];
@@ -1984,7 +1981,7 @@ int IsSetMember ARG2(WORD *,buffer,WORD,numset)
 	Checks whether the expression in buf1 is a single term multiple of 
 	the expression in buf2.
 
-int IsProductOf ARG2(WORD *,buf1,WORD *,buf2)
+int IsProductOf(WORD *buf1, WORD *buf2)
 {
 	return(0);
 }
@@ -1997,7 +1994,7 @@ int IsProductOf ARG2(WORD *,buf1,WORD *,buf2)
 	the expression in buf2.
 */
 
-int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
+int IsMultipleOf(WORD *buf1, WORD *buf2)
 {
 	GETIDENTITY
 	LONG num1, num2;
@@ -2070,7 +2067,7 @@ int IsMultipleOf ARG2(WORD *,buf1,WORD *,buf2)
 	Compares the expressions in buf1 and buf2 according to oprtr
 */
 
-int TwoExprCompare ARG3(WORD *,buf1,WORD *,buf2,int,oprtr)
+int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 {
 	GETIDENTITY
 	WORD *t1, *t2, cond;
@@ -2149,7 +2146,7 @@ int TwoExprCompare ARG3(WORD *,buf1,WORD *,buf2,int,oprtr)
 static UWORD *dscrat = 0;
 static WORD ndscrat;
 
-int DollarRaiseLow ARG2(UBYTE *,name,LONG,value)
+int DollarRaiseLow(UBYTE *name, LONG value)
 {
 	GETIDENTITY
 	int num;
@@ -2237,7 +2234,7 @@ int DollarRaiseLow ARG2(UBYTE *,name,LONG,value)
 
 #ifdef PARALLEL /* [04dec2002 df] */
 
-int MinDollar ARG1(WORD, index)
+int MinDollar(WORD index)
 {
   int i, error=0, res;
   WORD *where, size, *r, *t;
@@ -2337,7 +2334,7 @@ int MinDollar ARG1(WORD, index)
 
 #ifdef PARALLEL /* [04dec2002 df] */
 
-int MaxDollar ARG1(WORD, index)
+int MaxDollar(WORD index)
 {
   int i, error=0, res;
   WORD *where, size, *r, *t;
@@ -2424,7 +2421,7 @@ int MaxDollar ARG1(WORD, index)
 
 #ifdef PARALLEL /* [04dec2002 df] */
 
-int SumDollars ARG1(WORD, index)
+int SumDollars(WORD index)
 {
   GETIDENTITY
   int i,j, error = 0;

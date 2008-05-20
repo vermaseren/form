@@ -194,7 +194,7 @@ void convertiniinfo(INIINFO *in,INIINFO *out,int mode)
  		#[ LocateBase :
 */
 
-FILE *LocateBase ARG2(char **,name,char **,newname)
+FILE *LocateBase(char **name, char **newname)
 {
 	FILE *handle;
 	int  namesize, i;

@@ -35,8 +35,7 @@ OpenTemp()
  		#[ SeekScratch :
 */
 
-VOID
-SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
+VOID SeekScratch(FILEHANDLE *fi, POSITION *pos)
 {
 	*pos = fi->POposition;
 	ADDPOS(*pos,(TOLONG(fi->POfill)-TOLONG(fi->PObuffer)));
@@ -47,8 +46,7 @@ SeekScratch ARG2(FILEHANDLE *,fi,POSITION *,pos)
  		#[ SetEndScratch :
 */
 
-VOID
-SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
+VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
 {
 	if ( f->handle < 0 ) {
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
@@ -62,8 +60,7 @@ SetEndScratch ARG2(FILEHANDLE *,f,POSITION *,position)
  		#[ SetEndHScratch :
 */
 
-VOID
-SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
+VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 {
 	if ( f->handle < 0 ) {
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
@@ -77,8 +74,7 @@ SetEndHScratch ARG2(FILEHANDLE *,f,POSITION *,position)
  		#[ SetScratch :
 */
 
-VOID
-SetScratch ARG2(FILEHANDLE *,f,POSITION *,position)
+VOID SetScratch(FILEHANDLE *f, POSITION *position)
 {
 	GETIDENTITY
 	POSITION possize;
@@ -222,7 +218,7 @@ ResetScratch()
 
 */
 
-int CoSave ARG1(UBYTE *,inp)
+int CoSave(UBYTE *inp)
 {
 	GETIDENTITY
 	UBYTE *p, c;
@@ -417,7 +413,7 @@ SavWrt:
  		#[ CoLoad :
 */
 
-int CoLoad ARG1(UBYTE *,inp)
+int CoLoad(UBYTE *inp)
 {
 	GETIDENTITY
 	INDEXENTRY *ind;
@@ -609,8 +605,7 @@ LoadRead:
 		If par > 0 we have to remove the expressions from the namelists.
 */
 
-WORD
-DeleteStore ARG1(WORD,par)
+WORD DeleteStore(WORD par)
 {
 	GETIDENTITY
 	char *s;
@@ -684,8 +679,7 @@ DeleteStore ARG1(WORD,par)
 
 */
 
-WORD
-PutInStore ARG2(INDEXENTRY *,ind,WORD,num)
+WORD PutInStore(INDEXENTRY *ind, WORD num)
 {
 	GETIDENTITY
 	INDEXENTRY *newind;
@@ -804,8 +798,7 @@ PutErrS:
 		the same file. Hence we need to be careful about SeekFile and locks.
 */
  
-WORD
-GetTerm BARG1(WORD *,term)
+WORD GetTerm(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *inp, i, j = 0, len;
@@ -1069,8 +1062,7 @@ GTerr:
 		Note: we cannot use ReadPosFile when running in the master thread.
 */
 
-WORD
-GetOneTerm BARG4(WORD *,term,FILEHANDLE *,fi,POSITION *,pos,int,par)
+WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 {
 	GETBIDENTITY
 	WORD i, *p;
@@ -1227,8 +1219,7 @@ ErrGet:
 	has a term in 'hold', so the AR.KeptInHold flag must be turned on.
 */
 
-WORD
-GetMoreTerms ARG1(WORD *,term)
+WORD GetMoreTerms(WORD *term)
 {
 	GETIDENTITY
 	WORD *t, *r, *m, *h, *tstop, i, inc, same;
@@ -1324,8 +1315,7 @@ FullTerm:
 
 */
 
-WORD
-GetMoreFromMem ARG2(WORD *,term,WORD **,tpoin)
+WORD GetMoreFromMem(WORD *term, WORD **tpoin)
 {
 	GETIDENTITY
 	WORD *t, *r, *m, *h, *tstop, i, j, inc, same;
@@ -1432,9 +1422,7 @@ FullTerm:
 
 static int gfs = 0;
 
-WORD
-GetFromStore ARG5(WORD *,to,POSITION *,position,RENUMBER,renumber,
-	WORD *,InCompState,WORD,nexpr)
+WORD GetFromStore(WORD *to, POSITION *position, RENUMBER renumber, WORD *InCompState, WORD nexpr)
 {
 	GETIDENTITY
 	LONG RetCode, num, first = 0;
@@ -1631,8 +1619,7 @@ PastErr:
 
 */
 
-VOID
-DetVars ARG2(WORD *,term,WORD,par)
+VOID DetVars(WORD *term, WORD par)
 {
 	GETIDENTITY
 	WORD *stopper;
@@ -1819,8 +1806,7 @@ Tensors:
 
 */
 
-WORD
-ToStorage ARG2(EXPRESSIONS,e,POSITION *,length)
+WORD ToStorage(EXPRESSIONS e, POSITION *length)
 {
 	GETIDENTITY
 	WORD *w, i, j;
@@ -2029,8 +2015,7 @@ ErrInSto:
  		#[ NextFileIndex :
 */
 
-INDEXENTRY *
-NextFileIndex ARG1(POSITION *,indexpos)
+INDEXENTRY *NextFileIndex(POSITION *indexpos)
 {
 	GETIDENTITY
 	if ( AR.StoreData.Handle <= 0 ) {
@@ -2131,8 +2116,7 @@ SetFileIndex()
  		#[ VarStore :
 */
 
-WORD
-VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
+WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 {
 	GETIDENTITY
 	UBYTE *t, *u;
@@ -2181,8 +2165,7 @@ VarStore ARG4(UBYTE *,s,WORD,n,WORD,name,WORD,namesize)
 
 */
 
-WORD
-TermRenumber ARG3(WORD *,term,RENUMBER,renumber,WORD,nexpr)
+WORD TermRenumber(WORD *term, RENUMBER renumber, WORD nexpr)
 {
 	WORD *stopper;
 /*!!!
@@ -2342,8 +2325,7 @@ ErrR:
  		#[ FindrNumber :
 */
 
-WORD
-FindrNumber ARG2(WORD,n,VARRENUM *,v)
+WORD FindrNumber(WORD n, VARRENUM *v)
 {
 	WORD *hi,*med,*lo;
 	hi = v->hi;
@@ -2418,8 +2400,7 @@ ErrFindr2:
 
 */
 
-INDEXENTRY *
-FindInIndex ARG3(WORD,expr,FILEDATA *,f,WORD,par)
+INDEXENTRY *FindInIndex(WORD expr, FILEDATA *f, WORD par)
 {
 	GETIDENTITY
 	INDEXENTRY *ind;
@@ -2578,8 +2559,7 @@ ErrGt2:
 		For the rest is the reloading during execution not thread safe.
 */
 
-RENUMBER
-GetTable ARG2(WORD,expr,POSITION *,position)
+RENUMBER GetTable(WORD expr, POSITION *position)
 {
 	GETIDENTITY
 	WORD i, j;
@@ -2959,8 +2939,7 @@ ErrGt2:
 		AS.outputslock.
 */
 
-int
-CopyExpression ARG2(FILEHANDLE *,from,FILEHANDLE *,to)
+int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 {
 	POSITION posfrom, poscopy;
 	LONG fullsize,i;
@@ -3153,8 +3132,7 @@ WriteTrailer:
  *  @param  p       pointer to data
  *  @param  length  length of data in bytes
  */
-VOID
-FlipN ARG2(UBYTE *,p,int,length)
+VOID FlipN(UBYTE *p, int length)
 {
 	UBYTE *q, buf;
 	q = p + length;
@@ -3173,8 +3151,7 @@ FlipN ARG2(UBYTE *,p,int,length)
  *  
  *  @param  p  pointer to data
  */
-VOID
-Flip16 ARG1(UBYTE *,p)
+VOID Flip16(UBYTE *p)
 {
 	INT16 in = *((INT16 *)p);
 	INT16 out = ( (((in) >> 8) & 0x00FF) | (((in) << 8) & 0xFF00) );
@@ -3182,8 +3159,7 @@ Flip16 ARG1(UBYTE *,p)
 }
 
 /** @see Flip16() */
-VOID
-Flip32 ARG1(UBYTE *,p)
+VOID Flip32(UBYTE *p)
 {
 	INT32 in = *((INT32 *)p);
 	INT32 out =
@@ -3194,8 +3170,7 @@ Flip32 ARG1(UBYTE *,p)
 
 /** @see Flip16() */
 #ifdef INT64
-VOID
-Flip64 ARG1(UBYTE *,p)
+VOID Flip64(UBYTE *p)
 {
 	INT64 in = *((INT64 *)p);
 	INT64 out =
@@ -3206,13 +3181,11 @@ Flip64 ARG1(UBYTE *,p)
 	*((INT64 *)p) = out;
 }
 #else
-VOID
-Flip64 ARG1(UBYTE *,p) { FlipN(p, 8); }
+VOID Flip64(UBYTE *p) { FlipN(p, 8); }
 #endif /* INT64 */
 
 /** @see Flip16() */
-VOID
-Flip128 ARG1(UBYTE *,p) { FlipN(p, 16); }
+VOID Flip128(UBYTE *p) { FlipN(p, 16); }
 
 /*
  		#] Flip :
@@ -3230,8 +3203,7 @@ Flip128 ARG1(UBYTE *,p) { FlipN(p, 16); }
  *  @param  slen number of bytes of input
  *  @param  dlen number of bytes of output
  */
-VOID
-ResizeDataBE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
+VOID ResizeDataBE(UBYTE *src, int slen, UBYTE *dst, int dlen)
 {
 	if ( slen > dlen ) {
 		src += slen - dlen;
@@ -3247,8 +3219,7 @@ ResizeDataBE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
 /**
  *  The same as ResizeDataBE() but for little-endian machines.
  */
-VOID
-ResizeDataLE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
+VOID ResizeDataLE(UBYTE *src, int slen, UBYTE *dst, int dlen)
 {
 	if ( slen > dlen ) {
 		while ( dlen-- ) { *dst++ = *src++; }
@@ -3272,15 +3243,13 @@ ResizeDataLE ARG4(UBYTE *,src,int,slen,UBYTE *,dst,int,dlen)
  *  @param  src  pointer to input data
  *  @param  dst  pointer to output data
  */
-VOID
-Resize16t16 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize16t16(UBYTE *src, UBYTE *dst)
 {
 	*((INT16 *)dst) = *((INT16 *)src);
 }
 
 /** @see Resize16t16() */
-VOID
-Resize16t32 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize16t32(UBYTE *src, UBYTE *dst)
 {
 	INT16 in = *((INT16 *)src);
 	INT32 out = (INT32)in;
@@ -3289,70 +3258,58 @@ Resize16t32 ARG2(UBYTE *,src,UBYTE *,dst)
 
 /** @see Resize16t16() */
 #ifdef INT64
-VOID
-Resize16t64 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize16t64(UBYTE *src, UBYTE *dst)
 {
 	INT16 in = *((INT16 *)src);
 	INT64 out = (INT64)in;
 	*((INT64 *)dst) = out;
 }
 #else
-VOID
-Resize16t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 2, dst, 8); }
+VOID Resize16t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 2, dst, 8); }
 #endif /* INT64 */
 
 /** @see Resize16t16() */
-VOID
-Resize16t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 2, dst, 16); }
+VOID Resize16t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 2, dst, 16); }
 
 /** @see Resize16t16() */
-VOID
-Resize32t32 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize32t32(UBYTE *src, UBYTE *dst)
 {
 	*((INT32 *)dst) = *((INT32 *)src);
 }
 
 /** @see Resize16t16() */
 #ifdef INT64
-VOID
-Resize32t64 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize32t64(UBYTE *src, UBYTE *dst)
 {
 	INT32 in = *((INT32 *)src);
 	INT64 out = (INT64)in;
 	*((INT64 *)dst) = out;
 }
 #else
-VOID
-Resize32t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 4, dst, 8); }
+VOID Resize32t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 4, dst, 8); }
 #endif /* INT64 */
 
 /** @see Resize16t16() */
-VOID
-Resize32t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 4, dst, 16); }
+VOID Resize32t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 4, dst, 16); }
 
 /** @see Resize16t16() */
 #ifdef INT64
-VOID
-Resize64t64 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize64t64(UBYTE *src, UBYTE *dst)
 {
 	*((INT64 *)dst) = *((INT64 *)src);
 }
 #else
-VOID
-Resize64t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 8); }
+VOID Resize64t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 8); }
 #endif /* INT64 */
 
 /** @see Resize16t16() */
-VOID
-Resize64t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 16); }
+VOID Resize64t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 16); }
 
 /** @see Resize16t16() */
-VOID
-Resize128t128 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 16); }
+VOID Resize128t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 16); }
 
 /** @see Resize16t16() */
-VOID
-Resize32t16 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize32t16(UBYTE *src, UBYTE *dst)
 {
 	INT32 in = *((INT32 *)src);
 	INT16 out = (INT16)in;
@@ -3366,8 +3323,7 @@ Resize32t16 ARG2(UBYTE *,src,UBYTE *,dst)
  *  The resizeFlag in struct O_const will be used to signal the result of the
  *  checking. This flag is used by CoLoad().
  */
-VOID
-Resize32t16NC ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize32t16NC(UBYTE *src, UBYTE *dst)
 {
 	INT32 in = *((INT32 *)src);
 	INT16 out = (INT16)in;
@@ -3376,8 +3332,7 @@ Resize32t16NC ARG2(UBYTE *,src,UBYTE *,dst)
 
 #ifdef INT64
 /** @see Resize16t16() */
-VOID
-Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize64t16(UBYTE *src, UBYTE *dst)
 {
 	INT64 in = *((INT64 *)src);
 	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
@@ -3385,8 +3340,7 @@ Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst)
 	*((INT16 *)dst) = out;
 }
 /** @see Resize32t16NC() */
-VOID
-Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize64t16NC(UBYTE *src, UBYTE *dst)
 {
 	INT64 in = *((INT64 *)src);
 	INT16 out = (INT16)in;
@@ -3394,17 +3348,14 @@ Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst)
 }
 #else
 /** @see Resize16t16() */
-VOID
-Resize64t16 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 2); }
+VOID Resize64t16(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 2); }
 /** @see Resize32t16NC() */
-VOID
-Resize64t16NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 2); }
+VOID Resize64t16NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 2); }
 #endif /* INT64 */
 
 #ifdef INT64
 /** @see Resize16t16() */
-VOID
-Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize64t32(UBYTE *src, UBYTE *dst)
 {
 	INT64 in = *((INT64 *)src);
 	if ( in > ((INT64)1<<31)-1 || in < -((INT64)1<<31)+1 ) AO.resizeFlag |= 1;
@@ -3412,8 +3363,7 @@ Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst)
 	*((INT32 *)dst) = out;
 }
 /** @see Resize32t16NC() */
-VOID
-Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst)
+VOID Resize64t32NC(UBYTE *src, UBYTE *dst)
 {
 	INT64 in = *((INT64 *)src);
 	INT32 out = (INT32)in;
@@ -3421,36 +3371,28 @@ Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst)
 }
 #else
 /** @see Resize16t16() */
-VOID
-Resize64t32 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 4); }
+VOID Resize64t32(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 4); }
 /** @see Resize32t16NC() */
-VOID
-Resize64t32NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 8, dst, 4); }
+VOID Resize64t32NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 4); }
 #endif /* INT64 */
 
 /** @see Resize16t16() */
-VOID
-Resize128t16 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 2); }
+VOID Resize128t16(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 2); }
 
 /** @see Resize32t16NC() */
-VOID
-Resize128t16NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 2); }
+VOID Resize128t16NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 2); }
 
 /** @see Resize16t16() */
-VOID
-Resize128t32 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 4); }
+VOID Resize128t32(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 4); }
 
 /** @see Resize32t16NC() */
-VOID
-Resize128t32NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 4); }
+VOID Resize128t32NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 4); }
 
 /** @see Resize16t16() */
-VOID
-Resize128t64 ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
+VOID Resize128t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /** @see Resize32t16NC() */
-VOID
-Resize128t64NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
+VOID Resize128t64NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /*
 		#] Resize :
@@ -3463,8 +3405,7 @@ Resize128t64NC ARG2(UBYTE *,src,UBYTE *,dst) { AO.ResizeData(src, 16, dst, 8); }
  *
  *  @param  p  pointer to WORD containing exponent
  */
-VOID
-CheckPower32 ARG1(UBYTE *,p)
+VOID CheckPower32(UBYTE *p)
 {
 	if ( *((INT32 *)p) < -MAXPOWER ) {
 		AO.powerFlag |= 0x01;
@@ -3484,8 +3425,7 @@ CheckPower32 ARG1(UBYTE *,p)
  *
  *  @param  p  pointer to WORD containing vector code
  */
-VOID
-RenumberVec32 ARG1(UBYTE *,p)
+VOID RenumberVec32(UBYTE *p)
 {
 	INT32 wildoffset = *((INT32 *)AO.SaveHeader.wildoffset);
 	INT32 in = *((INT32 *)p);
@@ -3512,8 +3452,7 @@ RenumberVec32 ARG1(UBYTE *,p)
  *  @param  bend  end of input
  *  @param  top   end of buffer
  */
-VOID
-ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
+VOID ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 {
 	int i;
 	INT32 sign;
@@ -3621,8 +3560,7 @@ ResizeCoeff32 ARG3(UBYTE **,bout,UBYTE *,bend, UBYTE *,top)
  *  @param  handle  specifies open file to which header will be written
  *  @return         = 0 everything okay, != 0 an error occurred
  */
-WORD
-WriteStoreHeader ARG1(WORD,handle)
+WORD WriteStoreHeader(WORD handle)
 {
 	/* template of the STOREHEADER */
 	static STOREHEADER sh = {
@@ -3675,8 +3613,7 @@ WriteStoreHeader ARG1(WORD,handle)
  *  @param  size  size in bytes
  *  @return       log_2(size) - 1
  */
-unsigned int
-CompactifySizeof ARG1(unsigned int,size)
+unsigned int CompactifySizeof(unsigned int size)
 {
 	switch ( size ) {
 		case  2: return 0;
@@ -3811,8 +3748,7 @@ ReadSaveHeader()
  *                   point to allocated, big enough memory.
  *  @return          = 0 everything okay, != 0 an error occurred
  */
-WORD
-ReadSaveIndex ARG1(FILEINDEX *,fileind)
+WORD ReadSaveIndex(FILEINDEX *fileind)
 {
 	/* do we need some translation for the FILEINDEX? */
 	if ( AO.transFlag ) {
@@ -3998,8 +3934,8 @@ ReadSaveIndex ARG1(FILEINDEX *,fileind)
  *                   variable structure
  *  @return          = 0 everything okay, != 0 an error occurred
  */
-WORD
-ReadSaveVariables ARG6(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize,INDEXENTRY *,ind,LONG *,stage)
+WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
+                       INDEXENTRY *ind, LONG *stage)
 {
 	/* do we need some translation for the variables? */
 	if ( AO.transFlag ) {
@@ -4734,8 +4670,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
  *  @param  outsize  number of written bytes
  *  @return          = 0 everything okay, != 0 an error occurred
  */
-WORD
-ReadSaveExpression ARG4(UBYTE *,buffer,UBYTE *,top,LONG *,size,LONG *,outsize)
+WORD ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 {
 	if ( AO.transFlag ) {
 		UBYTE *in, *end, *out, *outend, *p, *inend;

@@ -36,8 +36,7 @@
 
 */
 
-WORD
-WildFill BARG3(WORD *,to,WORD *,from,WORD *,sub)
+WORD WildFill(PHEAD WORD *to, WORD *from, WORD *sub)
 {
 	GETBIDENTITY
 	WORD i, j, *s, *t, *m, len, dflag, odirt, adirt;
@@ -1278,8 +1277,7 @@ ss10:							*m++ = *t++;
 		substituted. This is ready for further wildcard substitutions.
 */
 
-WORD
-ResolveSet ARG3(WORD *,from,WORD *,to,WORD *,subs)
+WORD ResolveSet(WORD *from, WORD *to, WORD *subs)
 {
 	GETIDENTITY
 	WORD *m, *s, *w, j, i, ii, i3, flag, num;
@@ -1436,8 +1434,7 @@ GotOne:;
 
 */
 
-VOID
-ClearWild BARG0
+VOID ClearWild(PHEAD0)
 {
 	GETBIDENTITY
 	WORD n, nn, *w;
@@ -1463,8 +1460,7 @@ ClearWild BARG0
 
 */
 
-WORD
-AddWild BARG3(WORD,oldnumber,WORD,type,WORD,newnumber)
+WORD AddWild(PHEAD WORD oldnumber, WORD type, WORD newnumber)
 {
 	GETBIDENTITY
 	WORD *w, *m, n, k, i = -1;
@@ -1708,8 +1704,7 @@ FlipOn:
 		or-ed with EATTENSOR which is at least 8192.
 */
 
-WORD
-CheckWild BARG4(WORD,oldnumber,WORD,type,WORD,newnumber,WORD *,newval)
+WORD CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 {
 	GETBIDENTITY
 	WORD *w, *m, *s, n, old2;
@@ -2386,8 +2381,7 @@ NoM:
 	For the syntax see   Denominators,function;
 */
 
-int
-DenToFunction ARG2(WORD *,term,WORD,numfun)
+int DenToFunction(WORD *term, WORD numfun)
 {
 	int action = 0;
 	WORD *t, *tstop, *tnext, *arg, *argstop, *targ;

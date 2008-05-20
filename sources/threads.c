@@ -87,7 +87,7 @@ static LONG numberofterms;
  *	Starts our identity administration.
  */
 
-void StartIdentity ARG0
+void StartIdentity()
 {
 	pthread_key_create(&identitykey,FinishIdentity);
 }
@@ -113,7 +113,7 @@ void FinishIdentity(void *keyp)
  *	Assigns an integer value to a thread, starting at zero.
  */
 
-int SetIdentity ARG1(int *,identityretval)
+int SetIdentity(int *identityretval)
 {
 	LOCK(numberofthreadslock);
 	*identityretval = identityofthreads++;
@@ -145,7 +145,7 @@ int pcounter = 0;
  *	one of the BARG macros rather than the ARG macros.
  */
 
-int WhoAmI ARG0
+int WhoAmI()
 {
 	int *identity;
 /*
@@ -176,8 +176,7 @@ int WhoAmI ARG0
  *	at the startup of TFORM.
  */
 
-VOID
-BeginIdentities ARG0
+VOID BeginIdentities()
 {
 	StartIdentity();
 	SetIdentity(&identityretval);
@@ -194,7 +193,7 @@ BeginIdentities ARG0
  *	specific data in this file.
  */
 
-void StartHandleLock ARG0
+void StartHandleLock()
 {
 	AM.handlelock = dummylock;
 }
@@ -220,7 +219,7 @@ void StartHandleLock ARG0
  *	@return  Standard return conventions (OK -> 0)
  */
 
-int StartAllThreads ARG1(int,number)
+int StartAllThreads(int number)
 {
 	int identity, j, dummy, mul;
 	ALLPRIVATES *B;
@@ -333,7 +332,7 @@ UBYTE *scratchname[] = { (UBYTE *)"scratchsize",
  *		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers.
  */
 
-ALLPRIVATES *InitializeOneThread ARG1(int,identity)
+ALLPRIVATES *InitializeOneThread(int identity)
 {
 	WORD *t, *ScratchBuf;
 	int i, j, bsize, *bp;
@@ -721,7 +720,7 @@ OnError:;
  *	                late stage during clean up, we don't want to run any risks.
  */
 
-void FinalizeOneThread ARG1(int,identity)
+void FinalizeOneThread(int identity)
 {
 	timerinfo[identity] = TimeCPU(1);
 }
@@ -736,7 +735,7 @@ void FinalizeOneThread ARG1(int,identity)
  *	to do it ourselves.
  */
 
-VOID TerminateAllThreads ARG0
+VOID TerminateAllThreads()
 {
 	int i;
 	for ( i = 1; i <= numberofworkers; i++ ) {
@@ -787,7 +786,7 @@ VOID TerminateAllThreads ARG0
  *	                       threadbucketsize statement.
  */
 
-int MakeThreadBuckets ARG2(int,number,int,par)
+int MakeThreadBuckets(int number, int par)
 {
 	int i;
 	LONG sizethreadbuckets;
@@ -841,7 +840,7 @@ int MakeThreadBuckets ARG2(int,number,int,par)
  *	To be called at the end of the TFORM run.
  */
 
-LONG GetWorkerTimes ARG0
+LONG GetWorkerTimes()
 {
 	LONG retval = 0;
 	int i;
@@ -863,7 +862,7 @@ LONG GetWorkerTimes ARG0
  *	@param identity The TFORM defined integer thread identifier.
  */
 
-int UpdateOneThread ARG1(int,identity)
+int UpdateOneThread(int identity)
 {
 	ALLPRIVATES *B = AB[identity], *B0 = AB[0];
 	AR.GetFile = AR0.GetFile;
@@ -897,7 +896,7 @@ int UpdateOneThread ARG1(int,identity)
  *	@return Standard return convention (OK -> 0)
  */
 
-int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
+int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 {
 	WORD *t1, *t2;
 	ALLPRIVATES *B = AB[identity], *B0 = AB[from];
@@ -985,7 +984,7 @@ int LoadOneThread ARG4(int,from,int,identity,THREADBUCKET *,thr,int,par)
  *	@return Standard return convention (OK -> 0)
  */
 
-int BalanceRunThread BARG3(int,identity,WORD,*term,WORD,level)
+int BalanceRunThread(PHEAD int identity, WORD *term, WORD level)
 {
 	GETBIDENTITY
 	ALLPRIVATES *BB;
@@ -1023,7 +1022,7 @@ int BalanceRunThread BARG3(int,identity,WORD,*term,WORD,level)
  *	Initializes the scratch files at the start of the execution of a module.
  */
 
-void SetWorkerFiles ARG0
+void SetWorkerFiles()
 {
 	int id;
 	ALLPRIVATES *B, *B0 = AB[0];
@@ -1103,7 +1102,7 @@ void SetWorkerFiles ARG0
  *	the corresponding action. After this it goes back to sleep.
  */
 
-void *RunThread ARG1(void *,dummy)
+void *RunThread(void *dummy)
 {
 	WORD *term, *ttin, *tt, *ttco, *oldwork;
 	int identity, wakeupsignal, identityretv, i, tobereleased, errorcode;
@@ -1515,7 +1514,7 @@ EndOfThread:;
 
 #ifdef WITHSORTBOTS
 
-void *RunSortBot ARG1(void *,dummy)
+void *RunSortBot(void *dummy)
 {
 	int identity, wakeupsignal, identityretv;
 	ALLPRIVATES *B, *BB;
@@ -1592,7 +1591,7 @@ EndOfThread:;
  *	@param identity The identity thread that signals its availability.
  */
 
-void IAmAvailable ARG1(int,identity)
+void IAmAvailable(int identity)
 {
 	int top;
 	LOCK(availabilitylock);
@@ -1622,7 +1621,7 @@ void IAmAvailable ARG1(int,identity)
  *	(writing point and reading point). Still to be investigated.
  */
 
-int GetAvailableThread ARG0
+int GetAvailableThread()
 {
 	int retval = -1;
 	LOCK(availabilitylock);
@@ -1650,7 +1649,7 @@ int GetAvailableThread ARG0
  *	@return the identity of an available thread or -1 if none is available.
  */
 
-int ConditionalGetAvailableThread ARG0
+int ConditionalGetAvailableThread()
 {
 	int retval = -1;
 	if ( topofavailables > 0 ) {
@@ -1684,7 +1683,7 @@ int ConditionalGetAvailableThread ARG0
  *	@return The number of the thread if it was available. -1 otherwise.
  */
 
-int GetThread ARG1(int,identity)
+int GetThread(int identity)
 {
 	int retval = -1, j;
 	LOCK(availabilitylock);
@@ -1715,7 +1714,7 @@ int GetThread ARG1(int,identity)
  *	@return The number of the wake-up signal.
  */
 
-int ThreadWait ARG1(int,identity)
+int ThreadWait(int identity)
 {
 	int retval, top, j;
 	LOCK(wakeuplocks[identity]);
@@ -1759,7 +1758,7 @@ int ThreadWait ARG1(int,identity)
  *	@return The number of the wake-up signal.
  */
 
-int SortBotWait ARG1(int,identity)
+int SortBotWait(int identity)
 {
 	int retval;
 	LOCK(wakeuplocks[identity]);
@@ -1800,7 +1799,7 @@ int SortBotWait ARG1(int,identity)
  *	master will get signalled that it can continue.
  */
 
-int ThreadClaimedBlock ARG1(int,identity)
+int ThreadClaimedBlock(int identity)
 {
 	LOCK(availabilitylock);
 	numberclaimed++;	
@@ -1828,7 +1827,7 @@ int ThreadClaimedBlock ARG1(int,identity)
  *	The return value is the identity of the process that wakes up the master.
  */
 
-int MasterWait ARG0
+int MasterWait()
 {
 	int retval;
 	LOCK(wakeupmasterlock);
@@ -1851,7 +1850,7 @@ int MasterWait ARG0
  *	The return value is the value of the signal.
  */
 
-int MasterWaitThread ARG1(int,identity)
+int MasterWaitThread(int identity)
 {
 	int retval;
 	LOCK(wakeupmasterthreadlocks[identity]);
@@ -1875,7 +1874,7 @@ int MasterWaitThread ARG1(int,identity)
  *	It goes to sleep and waits for a wakeup call in ThreadWait
  */
 
-void MasterWaitAll ARG0
+void MasterWaitAll()
 {
 	LOCK(wakeupmasterlock);
 	while ( topofavailables < numberofworkers ) {
@@ -1897,7 +1896,7 @@ void MasterWaitAll ARG0
  *	sortbots to start their task.
  */
 
-void MasterWaitAllSortBots ARG0
+void MasterWaitAllSortBots()
 {
 	LOCK(wakeupsortbotlock);
 	while ( topsortbotavailables < numberofsortbots ) {
@@ -1919,7 +1918,7 @@ void MasterWaitAllSortBots ARG0
  *	It goes to sleep and waits for a wakeup call.
  */
 
-void MasterWaitAllBlocks ARG0
+void MasterWaitAllBlocks()
 {
 	LOCK(wakeupmasterlock);
 	while ( numberclaimed < numberofworkers ) {
@@ -1941,7 +1940,7 @@ void MasterWaitAllBlocks ARG0
  *	@param signalnumber The signal with which it should be woken up.
  */
 
-void WakeupThread ARG2(int,identity,int,signalnumber)
+void WakeupThread(int identity, int signalnumber)
 {
 	if ( signalnumber == 0 ) {
 		LOCK(ErrorMessageLock);
@@ -1967,7 +1966,7 @@ void WakeupThread ARG2(int,identity,int,signalnumber)
  *	@param signalnumber The signal with which the master should be woken up.
  */
 
-void WakeupMasterFromThread ARG2(int,identity,int,signalnumber)
+void WakeupMasterFromThread(int identity, int signalnumber)
 {
 	if ( signalnumber == 0 ) {
 		LOCK(ErrorMessageLock);
@@ -1990,7 +1989,7 @@ void WakeupMasterFromThread ARG2(int,identity,int,signalnumber)
  *	It prepares the thread and then wakes it up.
  */
 
-int SendOneBucket ARG0
+int SendOneBucket()
 {
 	ALLPRIVATES *B0 = AB[0];
 	THREADBUCKET *thr = 0;
@@ -2048,8 +2047,7 @@ int SendOneBucket ARG0
  *	efficiency in the running of the Multiple Zeta Values program.
  */
 
-int
-InParallelProcessor ARG0
+int InParallelProcessor()
 {
 	GETIDENTITY
 	int i, id, retval = 0, num = 0;
@@ -2119,8 +2117,7 @@ InParallelProcessor ARG0
  *	                      the output is written. This saves diskspace.
  */
 
-int
-ThreadsProcessor ARG2(EXPRESSIONS,e,WORD,LastExpression)
+int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 {
 	ALLPRIVATES *B0 = AB[0];
 	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0;
@@ -2547,7 +2544,7 @@ ProcErr:;
  *	from a thread that has not done anything yet.
  */
 
-int LoadReadjusted ARG0
+int LoadReadjusted()
 {
 	ALLPRIVATES *B0 = AB[0];
 	THREADBUCKET *thr = 0, *thrtogo = 0;
@@ -2810,8 +2807,7 @@ intercepted:;
  *		contiguous (done in MasterMerge).
  */
 
-int
-PutToMaster BARG1(WORD *,term)
+int PutToMaster(PHEAD WORD *term)
 {
 	int i,j,nexti,ret = 0;
 	WORD *t, *fill, *top, zero = 0;
@@ -2868,7 +2864,7 @@ PutToMaster BARG1(WORD *,term)
  */
 
 int
-SortBotOut BARG1(WORD *,term)
+SortBotOut(PHEAD WORD *term)
 {
 	WORD im;
 
@@ -2915,8 +2911,7 @@ SortBotOut BARG1(WORD *,term)
  *	This routine is run by the master when we don't use the sortbots.
  */
 
-int
-MasterMerge ARG0
+int MasterMerge()
 {
 	ALLPRIVATES *B0 = AB[0], *B = 0;
 	SORTING *S = AT0.SS;
@@ -3363,8 +3358,7 @@ ReturnError:
  *	This routine is run as master. Hence B = B0. Etc.
  */
 
-int
-SortBotMasterMerge ARG0
+int SortBotMasterMerge()
 {
 	FILEHANDLE *fin, *fout;
 	ALLPRIVATES *B = AB[0], *BB;
@@ -3478,8 +3472,7 @@ SortBotMasterMerge ARG0
  *	a single sorted stream.
  */
 
-int
-SortBotMerge BARG0
+int SortBotMerge(PHEAD0)
 {
 	GETBIDENTITY
 	ALLPRIVATES *Bin1 = AB[AT.SortBotIn1],*Bin2 = AB[AT.SortBotIn2];
@@ -3886,7 +3879,7 @@ static int SortBlocksInitialized = 0;
  *	simultaneously. See also the commentary at the routine MasterMerge.
  */
 
-int IniSortBlocks ARG1(int,numworkers)
+int IniSortBlocks(int numworkers)
 {
 	ALLPRIVATES *B;
 	SORTING *S;
@@ -3970,8 +3963,7 @@ int IniSortBlocks ARG1(int,numworkers)
  *	system by telling the sortbot which threads provide their input.
  */
 
-void
-DefineSortBotTree ARG0
+void DefineSortBotTree()
 {
 	ALLPRIVATES *B;
 	int n, i, from;
@@ -3997,7 +3989,7 @@ DefineSortBotTree ARG0
  *	Testing routine for debugging purposes. Obsolete?
  */
 
-void Test ARG0
+void Test()
 {
 	int j;
 	for ( j = 1; j <= numberofworkers; j++ ) {

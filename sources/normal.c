@@ -27,8 +27,7 @@
 
 */
 
-WORD
-Commute ARG2(WORD *,fleft,WORD *,fright)
+WORD Commute(WORD *fleft, WORD *fright)
 {
 	if ( *fleft >= GAMMA && *fleft <= GAMMASEVEN
 	  && *fright >= GAMMA && *fright <= GAMMASEVEN ) {
@@ -53,8 +52,7 @@ Commute ARG2(WORD *,fleft,WORD *,fright)
 
 */
 
-WORD
-Normalize BARG1(WORD *,term)
+WORD Normalize(PHEAD WORD *term)
 {
 /*
   	#[ Declarations :
@@ -2962,8 +2960,7 @@ OverWork:
  		#[ ExtraSymbol :
 */
 
-WORD
-ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
+WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym)
 {
 	WORD *m, i;
 	i = nsym;
@@ -3012,8 +3009,7 @@ ExtraSymbol ARG4(WORD,sym,WORD,pow,WORD,nsym,WORD *,ppsym)
  		#[ DoTheta :
 */
 
-WORD
-DoTheta ARG1(WORD *,t)
+WORD DoTheta(WORD *t)
 {
 	GETIDENTITY
 	WORD k, *r1, *r2, *tstop, type;
@@ -3110,8 +3106,7 @@ DoTheta ARG1(WORD *,t)
  		#[ DoDelta :
 */
 
-WORD
-DoDelta ARG1(WORD *,t)
+WORD DoDelta(WORD *t)
 {
 	WORD k, *r1, *r2, *tstop, isnum, isnum2, type = *t;
 	if ( AC.BracketNormalize ) return(-1);
@@ -3178,7 +3173,7 @@ argnonzero:
  		#[ DoRevert :
 */
 
-void DoRevert ARG2(WORD *,fun,WORD *,tmp)
+void DoRevert(WORD *fun, WORD *tmp)
 {
 	WORD *t, *r, *m, *to, *tt, *mm, i, j;
 	to = fun + fun[1];
@@ -3266,7 +3261,7 @@ void DoRevert ARG2(WORD *,fun,WORD *,tmp)
 
 #define MAXNUMBEROFNONCOMTERMS 2
 
-WORD DetCommu ARG1(WORD *,terms)
+WORD DetCommu(WORD *terms)
 {
 	WORD *t, *tnext, *tstop;
 	WORD num = 0;
@@ -3332,7 +3327,7 @@ WORD DetCommu ARG1(WORD *,terms)
      proces.c:		if ( Normalize(BHEAD term) ) goto PolyCall;
 */
 
-WORD *EvaluateGcd BARG1(WORD *,subterm)
+WORD *EvaluateGcd(PHEAD WORD *subterm)
 {
 	WORD *oldworkpointer = AT.WorkPointer, *work1, *work2, *work3;
 	WORD *t, *tt, *ttt, *t1, *t2, *t3, *t4, *tstop;

@@ -41,8 +41,7 @@ static UBYTE deflogname[] = "formsession.log";
 
 #define TAKEPATH(x) if(s[1]== '=' ){x=s+2;} else{x=*argv++;argc--;}
 
-int
-DoTail ARG2(int,argc,UBYTE **,argv)
+int DoTail(int argc, UBYTE **argv)
 {
 	int errorflag = 0, onlyversion = 1;
 	UBYTE *s, *t, *copy;
@@ -248,8 +247,7 @@ printversion:;
 		.clear instructions if so desired without using interpretation
 */
 
-int
-OpenInput ARG0
+int OpenInput()
 {
 	int oldNoShowInput = AC.NoShowInput;
 	UBYTE c;
@@ -335,8 +333,7 @@ OpenInput ARG0
 UBYTE *emptystring = (UBYTE *)".";
 UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
 
-VOID
-ReserveTempFiles ARG1(int,par)
+VOID ReserveTempFiles(int par)
 {
 	GETIDENTITY
 	SETUPPARAMETERS *sp;
@@ -534,8 +531,7 @@ classic:;
 ALLPRIVATES *DummyPointer = 0;
 #endif
 
-VOID
-StartVariables ARG0
+VOID StartVariables()
 {
 	int i, ii;
 	PUTZERO(AM.zeropos);
@@ -975,11 +971,9 @@ static int trappedTerminate = 0;
 /*INTSIGHANDLER : some systems require a signal handler to return an integer,
   so define the macro INTSIGHANDLER if compiler fails:*/
 #ifdef INTSIGHANDLER
-static int 
-onErrSig ARG1(int, i)
+static int onErrSig(int i)
 #else
-static VOID 
-onErrSig ARG1(int, i)
+static VOID onErrSig(int i)
 #endif
 {
 	if (exitInProgress){
@@ -997,11 +991,9 @@ onErrSig ARG1(int, i)
 }
 
 #ifdef INTSIGHANDLER
-static VOID 
-setNewSig ARG2( int, i, int, (*handler)(int))
+static VOID setNewSig(int i, int (*handler)(int))
 #else
-static VOID 
-setNewSig ARG2( int, i, void, (*handler)(int))
+static VOID setNewSig(int i, void (*handler)(int))
 #endif
 {
 	if(! (i<NSIG) )/* Invalid signal -- see comments in the file */
@@ -1011,8 +1003,7 @@ setNewSig ARG2( int, i, void, (*handler)(int))
 		signal(i,handler);
 }
 
-VOID
-setSignalHandlers ARG0
+VOID setSignalHandlers()
 {
 	/* Reset various unrecoverable error signals:*/
 	setNewSig(SIGSEGV,onErrSig);
@@ -1046,8 +1037,7 @@ setSignalHandlers ARG0
 ALLPRIVATES *ABdummy[10];
 #endif
 
-int
-main ARG2(int,argc,char **,argv)
+int main(int argc, char **argv)
 {
 	UBYTE buf[21]; /* long enough for 64 bit integers */
 	char *sa;
@@ -1208,8 +1198,7 @@ main ARG2(int,argc,char **,argv)
 
 */
 
-VOID
-CleanUp ARG1(WORD,par)
+VOID CleanUp(WORD par)
 {
 	GETIDENTITY
 	int i;
@@ -1276,8 +1265,7 @@ dontremove:;
 
 static int firstterminate = 1;
 
-VOID
-Terminate ARG1(int,errorcode)
+VOID Terminate(int errorcode)
 {
 	if ( errorcode && firstterminate ) {
 		firstterminate = 0;
@@ -1348,7 +1336,7 @@ Terminate ARG1(int,errorcode)
  		#[ PrintRunningTime :
 */
 
-VOID PrintRunningTime ARG0
+VOID PrintRunningTime()
 {
 #ifdef WITHPTHREADS
 	LONG mastertime;

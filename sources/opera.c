@@ -29,8 +29,7 @@
 
 */
 
-WORD
-EpfFind BARG2(WORD *,term,WORD *,params)
+WORD EpfFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r, n1 = 0, n2, min = -1, count, fac;
@@ -183,8 +182,7 @@ AllLev:
 
 */
 
-WORD
-EpfCon BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD EpfCon(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *kron, *perm, *termout, *tstop, size2;
@@ -254,8 +252,7 @@ EpfCall:
  		#[ EpfGen :				WORD EpfGen(number,inlist,kron,perm,sgn)
 */
 
-WORD
-EpfGen ARG5(WORD,number,WORD *,inlist,WORD *,kron,WORD *,perm,WORD,sgn)
+WORD EpfGen(WORD number, WORD *inlist, WORD *kron, WORD *perm, WORD sgn)
 {
 	WORD i, *in2, k, a;
 	if ( !sgn ) {
@@ -304,8 +301,7 @@ EpfGen ARG5(WORD,number,WORD *,inlist,WORD *,kron,WORD *,perm,WORD,sgn)
 
 */
 
-WORD
-Trick ARG2(WORD *,in,TRACES *,t)
+WORD Trick(WORD *in, TRACES *t)
 {
 	WORD n, n1;
 	n = t->stap;
@@ -392,8 +388,7 @@ Trick ARG2(WORD *,in,TRACES *,t)
 
 */
 
-WORD
-Trace4no ARG3(WORD,number,WORD *,kron,TRACES *,t)
+WORD Trace4no(WORD number, WORD *kron, TRACES *t)
 {
 	WORD i;
 	WORD *p, *m;
@@ -669,8 +664,7 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 
 */
 
-WORD
-Trace4 BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	TRACES *t;
@@ -832,8 +826,7 @@ Trace4 BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 
 */
 
-WORD
-Trace4Gen BARG2(TRACES *,t,WORD,number)
+WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 {
 	GETBIDENTITY
 	WORD *termout, *stop;
@@ -1318,8 +1311,7 @@ TracCall:
 
 */
 
-WORD
-TraceNno ARG3(WORD,number,WORD *,kron,TRACES *,t)
+WORD TraceNno(WORD number, WORD *kron, TRACES *t)
 {
 	WORD i, j, a, *p;
 	if ( !t->sgn ) {
@@ -1360,8 +1352,7 @@ TraceNno ARG3(WORD,number,WORD *,kron,TRACES *,t)
  		#[ TraceN :				WORD TraceN(term,params,num,level)
 */
 
-WORD
-TraceN BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	TRACES *t;
@@ -1425,8 +1416,7 @@ TraceN BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
 
 */
 
-WORD
-TraceNgen BARG2(TRACES *,t,WORD,number)
+WORD TraceNgen(PHEAD TRACES *t, WORD number)
 {
 	GETBIDENTITY
 	WORD *termout, *stop;
@@ -1811,8 +1801,7 @@ TracCall:
 
 */
 
-WORD
-Traces BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD Traces(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	switch ( AT.TMout[2] ) {	/* Subtype gives dimension */
@@ -1834,8 +1823,7 @@ Traces BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
  		#[ TraceFind :			WORD TraceFind(term,params)
 */
 
-WORD
-TraceFind BARG2(WORD *,term,WORD *,params)
+WORD TraceFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *p, *m, *to;
@@ -1945,8 +1933,7 @@ F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
 		is applied (SR is the reversed string).
 */
 
-WORD
-Chisholm BARG2(WORD *,term,WORD,level)
+WORD Chisholm(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m, *s, *tt, *rr;
@@ -2160,8 +2147,7 @@ ChisCall:
  		#[ TenVecFind :			WORD TenVecFind(term,params)
 */
 
-WORD
-TenVecFind BARG2(WORD *,term,WORD *,params)
+WORD TenVecFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *w, *m, *tstop;
@@ -2295,8 +2281,7 @@ match:
  		#[ TenVec :				WORD TenVec(term,params,num,level)
 */
 
-WORD
-TenVec BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD TenVec(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m, *w, *termout, *tstop, *outlist, *ou, *ww, *mm;

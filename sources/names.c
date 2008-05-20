@@ -20,8 +20,7 @@
   	#[ GetNode :
 */
 
-NAMENODE *
-GetNode ARG2(NAMETREE *,nametree,UBYTE *,name)
+NAMENODE *GetNode(NAMETREE *nametree, UBYTE *name)
 {
 	NAMENODE *n;
 	int node, newnode, i;
@@ -43,8 +42,7 @@ GetNode ARG2(NAMETREE *,nametree,UBYTE *,name)
   	#[ AddName :
 */
 
-int
-AddName ARG5(NAMETREE *,nametree,UBYTE *,name,WORD,type,WORD,number,int *,nodenum)
+int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenum)
 {
 	NAMENODE *n, *nn, *nnn;
 	UBYTE *s, *ss, *sss;
@@ -225,8 +223,7 @@ AddName ARG5(NAMETREE *,nametree,UBYTE *,name,WORD,type,WORD,number,int *,nodenu
 	3: call GetAutoName and return its values.
 */
 
-int
-GetName ARG4(NAMETREE *,nametree,UBYTE *,name,WORD *,number,int,par)
+int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 {
 	NAMENODE *n;
 	int node, newnode, i;
@@ -284,8 +281,7 @@ NotFound:;
 	routine.
 */
 
-int
-GetOName ARG4(NAMETREE *,nametree,UBYTE *,name,WORD *,number,int,par)
+int GetOName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 {
 	int retval = GetName(nametree,name,number,par);
 	switch ( retval ) {
@@ -304,7 +300,7 @@ GetOName ARG4(NAMETREE *,nametree,UBYTE *,name,WORD *,number,int,par)
 	This routine gets the automatic declarations
 */
 
-int GetAutoName ARG2(UBYTE *,name,WORD *,number)
+int GetAutoName(UBYTE *name, WORD *number)
 {
 	UBYTE *s, c;
 	int type;
@@ -349,8 +345,7 @@ int GetAutoName ARG2(UBYTE *,name,WORD *,number)
   	#[ GetVar :
 */
 
-int
-GetVar ARG5(UBYTE *,name,WORD *,type,WORD *,number,int,wantedtype,int,par)
+int GetVar(UBYTE *name, WORD *type, WORD *number, int wantedtype, int par)
 {
 	WORD funnum;
 	int typ;
@@ -383,8 +378,7 @@ GetVar ARG5(UBYTE *,name,WORD *,type,WORD *,number,int,wantedtype,int,par)
   	#[ EntVar :
 */
 
-WORD
-EntVar ARG5(WORD,type,UBYTE *,name,WORD,x,WORD,y,WORD,z)
+WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z)
 {
 	switch ( type ) {
 		case CSYMBOL:
@@ -417,7 +411,7 @@ EntVar ARG5(WORD,type,UBYTE *,name,WORD,x,WORD,y,WORD,z)
   	#[ GetDollar :
 */
 
-int GetDollar ARG1(UBYTE *,name)
+int GetDollar(UBYTE *name)
 {
 	WORD number;
 	if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) return(-1);
@@ -429,8 +423,7 @@ int GetDollar ARG1(UBYTE *,name)
   	#[ DumpTree :
 */
 
-VOID
-DumpTree ARG1(NAMETREE *,nametree)
+VOID DumpTree(NAMETREE *nametree)
 {
 	if ( nametree->headnode >= 0
 		&& nametree->namebuffer && nametree->namenode ) {
@@ -443,8 +436,7 @@ DumpTree ARG1(NAMETREE *,nametree)
   	#[ DumpNode :
 */
 
-VOID
-DumpNode ARG3(NAMETREE *,nametree,WORD,node,WORD,depth)
+VOID DumpNode(NAMETREE *nametree, WORD node, WORD depth)
 {
 	NAMENODE *n;
 	int i;
@@ -463,8 +455,7 @@ DumpNode ARG3(NAMETREE *,nametree,WORD,node,WORD,depth)
   	#[ CompactifyTree :
 */
 
-int
-CompactifyTree ARG1(NAMETREE *,nametree)
+int CompactifyTree(NAMETREE *nametree)
 {
 	NAMETREE newtree;
 	NAMENODE *n;
@@ -526,8 +517,7 @@ CompactifyTree ARG1(NAMETREE *,nametree)
   	#[ CopyTree :
 */
 
-VOID
-CopyTree ARG3(NAMETREE *,newtree,NAMETREE *,oldtree,WORD,node)
+VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node)
 {
 	NAMENODE *n, *m;
 	UBYTE *s, *t;
@@ -591,8 +581,7 @@ CopyTree ARG3(NAMETREE *,newtree,NAMETREE *,oldtree,WORD,node)
   	#[ LinkTree :
 */
 
-VOID
-LinkTree ARG3(NAMETREE *,tree,WORD,offset,WORD,numnodes)
+VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
 {
 /*
 	Makes the tree into a binary tree
@@ -623,8 +612,7 @@ LinkTree ARG3(NAMETREE *,tree,WORD,offset,WORD,numnodes)
   	#[ MakeNameTree :
 */
 
-NAMETREE *
-MakeNameTree ARG0
+NAMETREE *MakeNameTree()
 {
 	NAMETREE *n;
 	n = (NAMETREE *)Malloc1(sizeof(NAMETREE),"new nametree");
@@ -643,8 +631,7 @@ MakeNameTree ARG0
   	#[ FreeNameTree :
 */
 
-VOID
-FreeNameTree ARG1(NAMETREE *,n)
+VOID FreeNameTree(NAMETREE *n)
 {
 	if ( n ) {
 		if ( n->namebuffer ) M_free(n->namebuffer,"nametree->namebuffer");
@@ -659,12 +646,12 @@ FreeNameTree ARG1(NAMETREE *,n)
   	#[ WildcardNames :
 */
 
-void ClearWildcardNames ARG0
+void ClearWildcardNames()
 {
 	AC.NumWildcardNames = 0;
 }
 
-int AddWildcardName ARG1(UBYTE *,name)
+int AddWildcardName(UBYTE *name)
 {
 	GETIDENTITY
 	int size = 0, tocopy, i;
@@ -708,7 +695,7 @@ int AddWildcardName ARG1(UBYTE *,name)
 	return(AC.NumWildcardNames);
 }
 
-int GetWildcardName ARG1(UBYTE *,name)
+int GetWildcardName(UBYTE *name)
 {
 	UBYTE *s, *t;
 	int i;
@@ -730,8 +717,7 @@ int GetWildcardName ARG1(UBYTE *,name)
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int
-AddSymbol ARG4(UBYTE *,name,int,minpow,int,maxpow,int,cplx)
+int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
 {
 	int nodenum, numsymbol = AC.Symbols->num;
 	UBYTE *s = name;
@@ -754,8 +740,7 @@ AddSymbol ARG4(UBYTE *,name,int,minpow,int,maxpow,int,cplx)
 	Note that we know already that the parentheses match properly
 */
 
-int
-CoSymbol ARG1(UBYTE *,s)
+int CoSymbol(UBYTE *s)
 {
 	int type, error = 0, minpow, maxpow, cplx;
 	WORD numsymbol;
@@ -841,8 +826,7 @@ eol:	while ( *s == ',' ) s++;
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int
-AddIndex ARG3(UBYTE *,name,int,dim,int,dim4)
+int AddIndex(UBYTE *name, int dim, int dim4)
 {
 	int nodenum, numindex = AC.Indices->num;
 	INDICES ind = (INDICES)FromVarList(AC.Indices);
@@ -864,8 +848,7 @@ AddIndex ARG3(UBYTE *,name,int,dim,int,dim4)
 	Index declarations. name[={number|symbol[:othersymbol]}]
 */
 
-int
-CoIndex ARG1(UBYTE *,s)
+int CoIndex(UBYTE *s)
 {
 	int type, error = 0, dim, dim4;
 	WORD numindex;
@@ -912,8 +895,7 @@ eol:	while ( *s == ',' ) s++;
   	#[ DoDimension :
 */
 
-UBYTE *
-DoDimension ARG3(UBYTE *,s,int *,dim,int *,dim4)
+UBYTE *DoDimension(UBYTE *s, int *dim, int *dim4)
 {
 	UBYTE c, *t = s;
 	int type, error = 0;
@@ -968,8 +950,7 @@ illeg:	MesPrint("&Illegal dimension specification. Should be number, symbol or s
   	#[ CoDimension :
 */
 
-int
-CoDimension ARG1(UBYTE *,s)
+int CoDimension(UBYTE *s)
 {
 	s = DoDimension(s,&AC.lDefDim,&AC.lDefDim4);
 	if ( s == 0 ) return(1);
@@ -987,8 +968,7 @@ CoDimension ARG1(UBYTE *,s)
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int
-AddVector ARG2(UBYTE *,name,int,cplx)
+int AddVector(UBYTE *name, int cplx)
 {
 	int nodenum, numvector = AC.Vectors->num;
 	VECTORS v = (VECTORS)FromVarList(AC.Vectors);
@@ -1008,8 +988,7 @@ AddVector ARG2(UBYTE *,name,int,cplx)
 	Vector declarations. The descriptor string is "(,%n)"
 */
 
-int
-CoVector ARG1(UBYTE *,s)
+int CoVector(UBYTE *s)
 {
 	int type, error = 0;
 	WORD numvector;
@@ -1044,8 +1023,7 @@ CoVector ARG1(UBYTE *,s)
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int
-AddFunction ARG5(UBYTE *,name,int,comm,int,istensor,int,cplx,int,symprop)
+int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop)
 {
 	int nodenum, numfunction = AC.Functions->num;
 	FUNCTIONS fun = (FUNCTIONS)FromVarList(AC.Functions);
@@ -1072,8 +1050,7 @@ AddFunction ARG5(UBYTE *,name,int,comm,int,istensor,int,cplx,int,symprop)
 	The third parameter tells whether we have a tensor.
 */
 
-int
-CoFunction ARG3(UBYTE *,s,int,comm,int,istensor)
+int CoFunction(UBYTE *s, int comm, int istensor)
 {
 	int type, error = 0, cplx, symtype;
 	WORD numfunction, reverseorder = 0;
@@ -1172,10 +1149,10 @@ eol:	while ( *s == ',' ) s++;
 	return(error);
 }
 
-int CoNFunction ARG1(UBYTE *,s) { return(CoFunction(s,1,0)); }
-int CoCFunction ARG1(UBYTE *,s) { return(CoFunction(s,0,0)); }
-int CoNTensor ARG1(UBYTE *,s) { return(CoFunction(s,1,2)); }
-int CoCTensor ARG1(UBYTE *,s) { return(CoFunction(s,0,2)); }
+int CoNFunction(UBYTE *s) { return(CoFunction(s,1,0)); }
+int CoCFunction(UBYTE *s) { return(CoFunction(s,0,0)); }
+int CoNTensor(UBYTE *s) { return(CoFunction(s,1,2)); }
+int CoCTensor(UBYTE *s) { return(CoFunction(s,0,2)); }
 
 /*
   	#] CoFunction + ...: 
@@ -1209,8 +1186,7 @@ int CoCTensor ARG1(UBYTE *,s) { return(CoFunction(s,0,2)); }
 
 static int nwarntab = 1;
 
-int
-DoTable ARG2(UBYTE *,s,int,par)
+int DoTable(UBYTE *s, int par)
 {
 	GETIDENTITY
 	UBYTE *name, *p, *inp, c;
@@ -1505,8 +1481,7 @@ DoTable ARG2(UBYTE *,s,int,par)
   	#[ CoTable :
 */
 
-int
-CoTable ARG1(UBYTE *,s)
+int CoTable(UBYTE *s)
 {
 	return(DoTable(s,2));
 }
@@ -1516,8 +1491,7 @@ CoTable ARG1(UBYTE *,s)
   	#[ CoNTable :
 */
 
-int
-CoNTable ARG1(UBYTE *,s)
+int CoNTable(UBYTE *s)
 {
 	return(DoTable(s,0));
 }
@@ -1527,8 +1501,7 @@ CoNTable ARG1(UBYTE *,s)
   	#[ CoCTable :
 */
 
-int
-CoCTable ARG1(UBYTE *,s)
+int CoCTable(UBYTE *s)
 {
 	return(DoTable(s,1));
 }
@@ -1538,8 +1511,7 @@ CoCTable ARG1(UBYTE *,s)
   	#[ AddSet :
 */
 
-int
-AddSet ARG1(UBYTE *,name)
+int AddSet(UBYTE *name)
 {
 	int nodenum, numset = AC.SetList.num;
 	SETS set = (SETS)FromVarList(&AC.SetList);
@@ -1567,8 +1539,7 @@ AddSet ARG1(UBYTE *,name)
   	#[ DoElements :
 */
 
-int
-DoElements ARG3(UBYTE *,s,SETS,set,UBYTE *,name)
+int DoElements(UBYTE *s, SETS set, UBYTE *name)
 {
 	int type, error = 0, x, sgn, i;
 	WORD numset, *e;
@@ -1717,8 +1688,7 @@ DoElements ARG3(UBYTE *,s,SETS,set,UBYTE *,name)
 	Set declarations.
 */
 
-int
-CoSet ARG1(UBYTE *,s)
+int CoSet(UBYTE *s)
 {
 	int type, error = 0;
 	UBYTE *name, c;
@@ -1765,8 +1735,7 @@ CoSet ARG1(UBYTE *,s)
 		From and to refer to the contents. They exclude the {}.
 */
 
-int
-DoTempSet ARG2(UBYTE *,from,UBYTE *,to)
+int DoTempSet(UBYTE *from, UBYTE *to)
 {
 	int i, num, j, sgn;
 	WORD *e, *ep;
@@ -1858,7 +1827,7 @@ DoTempSet ARG2(UBYTE *,from,UBYTE *,to)
 		Proper action in .store and .clear
 */
 
-int CoAuto ARG1(UBYTE *,inp)
+int CoAuto(UBYTE *inp)
 {
 	int retval;
 
@@ -1888,8 +1857,7 @@ int CoAuto ARG1(UBYTE *,inp)
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int
-AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
+int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 {
 	int nodenum, numdollar = AP.DollarList.num;
 	WORD *s, *t;
@@ -1931,8 +1899,7 @@ AddDollar ARG4(UBYTE *,name,WORD,type,WORD *,start,LONG,size)
 	Not in use????
 */
 
-int
-ReplaceDollar ARG4(WORD,number,WORD,newtype,WORD *,newstart,LONG,newsize)
+int ReplaceDollar(WORD number, WORD newtype, WORD *newstart, LONG newsize)
 {
 	int error = 0;
 	DOLLARS dol = Dollars + number;
@@ -1965,8 +1932,7 @@ ReplaceDollar ARG4(WORD,number,WORD,newtype,WORD *,newstart,LONG,newsize)
 	This adds a variable of which we do not know the proper type.
 */
 
-int
-AddDubious ARG1(UBYTE *,name)
+int AddDubious(UBYTE *name)
 {
 	int nodenum, numdubious = AC.DubiousList.num;
 	DUBIOUSV dub = (DUBIOUSV)FromVarList(&AC.DubiousList);
@@ -1980,8 +1946,7 @@ AddDubious ARG1(UBYTE *,name)
   	#[ MakeDubious :
 */
 
-int
-MakeDubious ARG3(NAMETREE *,nametree,UBYTE *,name,WORD *,number)
+int MakeDubious(NAMETREE *nametree, UBYTE *name, WORD *number)
 {
 	NAMENODE *n;
 	int node, newnode, i;
@@ -2016,8 +1981,7 @@ static char *nametype[] = { "symbol", "index", "vector", "function",
 		"set", "expression" };
 static char *plural[] = { "","n","","","","n" };
 
-int
-NameConflict ARG2(int,type,UBYTE *,name)
+int NameConflict(int type, UBYTE *name)
 {
 	if ( type == NAMENOTFOUND ) {
 		MesPrint("&%s has not been declared",name);
@@ -2033,8 +1997,7 @@ NameConflict ARG2(int,type,UBYTE *,name)
   	#[ AddExpression :
 */
 
-int
-AddExpression ARG3(UBYTE *,name,int,x,int,y)
+int AddExpression(UBYTE *name, int x, int y)
 {
 	int nodenum, numexpr = AC.ExpressionList.num;
 	EXPRESSIONS expr = (EXPRESSIONS)FromVarList(&AC.ExpressionList);
@@ -2074,7 +2037,7 @@ AddExpression ARG3(UBYTE *,name,int,x,int,y)
   	#[ GetLabel :
 */
 
-int GetLabel ARG1(UBYTE *,name)
+int GetLabel(UBYTE *name)
 {
 	int i;
 	LONG newnum;
@@ -2119,7 +2082,7 @@ int GetLabel ARG1(UBYTE *,name)
 	par = 2  All variables (after each .clear)
 */
 
-void ResetVariables ARG1(int, par)
+void ResetVariables(int par)
 {
 	int i, j;
 	TABLES T;
@@ -2415,7 +2378,7 @@ void ResetVariables ARG1(int, par)
   	#[ RemoveDollars :
 */
 
-void RemoveDollars ARG0
+void RemoveDollars()
 {
 	DOLLARS d;
 	CBUF *C = cbuf + AM.dbufnum;
@@ -2442,7 +2405,7 @@ void RemoveDollars ARG0
   	#[ Globalize :
 */
 
-void Globalize ARG1(int,par)
+void Globalize(int par)
 {
 	int i, j;
 	WORD *tp;

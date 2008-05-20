@@ -29,8 +29,7 @@
 
 #define CHECKPOLY {if(polyflag)MesPrint("&Illegal use of polynomial function"); polyflag = 0; }
 
-int
-tokenize ARG2(UBYTE *,in,WORD,leftright)
+int tokenize(UBYTE *in, WORD leftright)
 {
 	int error = 0, object, funlevel = 0, bracelevel = 0, explevel = 0, numexp;
 	int polyflag = 0;
@@ -521,8 +520,7 @@ char *ttypes[] = { "\n", "S", "I", "V", "F", "set", "E", "dotp", "#",
    ",", "((", "))", "*", "/", "^", "+", "-", "!", "end", "{{", "}}",
    "N_?", "conj", "()", "#d", "^d", "_", "snum"  };
 
-void
-WriteTokens ARG1(SBYTE *,in)
+void WriteTokens(SBYTE *in)
 {
 	int numinline = 0, x, n = sizeof(ttypes)/sizeof(char *);
 	char outbuf[81], *s, *out, c;
@@ -570,8 +568,7 @@ writenumber:
 		This means sets with a fixed argument like setname[3].
 */
 
-int
-simp1token ARG1(SBYTE *,s)
+int simp1token(SBYTE *s)
 {
 	int error = 0, n, i, base;
 	WORD numsub;
@@ -660,8 +657,7 @@ if ( n < 0 ) {
 		We still need the ? because of the wildcarding offset in code generation
 */
 
-int
-simpwtoken ARG1(SBYTE *,s)
+int simpwtoken(SBYTE *s)
 {
 	int error = 0, first = 1, notflag;
 	WORD num, numto, numdollar, *w = AC.WildC, *wstart, *wtop;
@@ -815,8 +811,7 @@ firsterr:		if ( first ) {
 		It also replaces /fac_() by *invfac_() and /invfac_() by *fac_()
 */
 
-int
-simp2token ARG1(SBYTE *,s)
+int simp2token(SBYTE *s)
 {
 	SBYTE *to, *fill, *t, *v, *w, *s0 = s;
 	int error = 0, n;
@@ -999,8 +994,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 			/vect /index /vect(anything) /vect(anything)^power
 */
 
-int
-simp3atoken ARG2(SBYTE *,s,int,mode)
+int simp3atoken(SBYTE *s, int mode)
 {
 	int error = 0, n, numexp = 0, denom, base, numprot, i;
 	SBYTE *t, c;
@@ -1223,8 +1217,7 @@ doublepower:
  		#[ simp3btoken :
 */
 
-int
-simp3btoken ARG2(SBYTE *,s,int,mode)
+int simp3btoken(SBYTE *s, int mode)
 {
 	int error = 0, i, numprot, n, denom, base, inset = 0, dotp, sube = 0;
 	SBYTE *t, c, *fill, *ff, *ss;
@@ -1599,8 +1592,7 @@ doublepower:;
 		Deal with the set[n] objects in the RHS.
 */
 
-int
-simp4token ARG1(SBYTE *,s)
+int simp4token(SBYTE *s)
 {
 	int error = 0, n, nsym, settype;
 	WORD i, *w, *wstop, level;
@@ -1756,8 +1748,7 @@ simp4token ARG1(SBYTE *,s)
 	Making sure that first argument of sumfunction is not a wildcard already
 */
 
-int
-simp5token ARG2(SBYTE *,s,int,mode)
+int simp5token(SBYTE *s, int mode)
 {
 	int error = 0, n, type;
 	WORD *w, *wstop;
@@ -1800,8 +1791,7 @@ simp5token ARG2(SBYTE *,s,int,mode)
  		#] simp5token : 
  		#[ simp6token :
 
-int
-simp6token ARG2(SBYTE *,s,int,mode)
+int simp6token(SBYTE *s, int mode)
 {
 	int error = 0;
 	int n;

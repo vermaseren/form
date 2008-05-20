@@ -103,8 +103,7 @@ static WORD one = 1;
 	Collect,functionname
 */
 
-int
-CoCollect ARG1(UBYTE *,s)
+int CoCollect(UBYTE *s)
 {
 /*	--------------change 17-feb-2003 Added percentage */
 	WORD numfun;
@@ -166,8 +165,7 @@ syntaxerror:
   	#[ setonoff :
 */
 
-int
-setonoff ARG4(UBYTE *,s,int *,flag,int,onvalue,int,offvalue)
+int setonoff(UBYTE *s, int *flag, int onvalue, int offvalue)
 {
 	if ( StrICmp(s,(UBYTE *)"on") == 0 ) *flag = onvalue;
 	else if ( StrICmp(s,(UBYTE *)"off") == 0 ) *flag = offvalue;
@@ -183,7 +181,8 @@ setonoff ARG4(UBYTE *,s,int *,flag,int,onvalue,int,offvalue)
   	#[ CoCompress :
 */
 
-int CoCompress ARG1(UBYTE *,s) {
+int CoCompress(UBYTE *s)
+{
 	GETIDENTITY
 	UBYTE *t, c;
 	if ( StrICmp(s,(UBYTE *)"on") == 0 ) {
@@ -231,7 +230,7 @@ int CoCompress ARG1(UBYTE *,s) {
   	#[ CoOff :
 */
 
-int CoOff ARG1(UBYTE *,s)
+int CoOff(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -269,7 +268,7 @@ int CoOff ARG1(UBYTE *,s)
   	#[ CoOn :
 */
 
-int CoOn ARG1(UBYTE *,s)
+int CoOn(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -517,22 +516,21 @@ int CoOn ARG1(UBYTE *,s)
   	#[ CoInsideFirst :
 */
 
-int CoInsideFirst ARG1(UBYTE *,s) { return(setonoff(s,&AC.insidefirst,1,0)); }
+int CoInsideFirst(UBYTE *s) { return(setonoff(s,&AC.insidefirst,1,0)); }
 
 /*
   	#] CoInsideFirst : 
   	#[ CoProperCount :
 */
 
-int CoProperCount ARG1(UBYTE *,s) { return(setonoff(s,&AC.BottomLevel,1,0)); }
+int CoProperCount(UBYTE *s) { return(setonoff(s,&AC.BottomLevel,1,0)); }
 
 /*
   	#] CoProperCount : 
   	#[ CoDelete :
 */
 
-int
-CoDelete ARG1(UBYTE *,s)
+int CoDelete(UBYTE *s)
 {
 	if ( StrICmp(s,(UBYTE *)"storage") == 0 ) {
 		if ( DeleteStore(1) < 0 ) {
@@ -552,8 +550,7 @@ CoDelete ARG1(UBYTE *,s)
   	#[ CoFormat :
 */
 
-int
-CoFormat ARG1(UBYTE *,s)
+int CoFormat(UBYTE *s)
 {
 	int error = 0, x;
 	KEYWORD *key;
@@ -628,8 +625,7 @@ CoFormat ARG1(UBYTE *,s)
   	#[ CoKeep :
 */
 
-int
-CoKeep ARG1(UBYTE *,s)
+int CoKeep(UBYTE *s)
 {
 	if ( StrICmp(s,(UBYTE *)"brackets") == 0 ) AC.ComDefer = 1;
 	else { MesPrint("&Unknown option: '%s'",s); return(1); }
@@ -641,8 +637,7 @@ CoKeep ARG1(UBYTE *,s)
   	#[ CoFixIndex :
 */
 
-int
-CoFixIndex ARG1(UBYTE *,s)
+int CoFixIndex(UBYTE *s)
 {
 	int x, y, error = 0;
 	while ( *s ) {
@@ -676,8 +671,7 @@ proper:		MesPrint("&Proper syntax is: FixIndex,number:value[,number,value];");
   	#[ CoMetric :
 */
 
-int
-CoMetric ARG1(UBYTE *,s)
+int CoMetric(UBYTE *s)
 { DUMMYUSE(s); MesPrint("&The metric statement does not do anything yet"); return(1); }
 
 /*
@@ -685,8 +679,7 @@ CoMetric ARG1(UBYTE *,s)
   	#[ DoPrint :
 */
 
-int
-DoPrint ARG2(UBYTE *,s,int,par)
+int DoPrint(UBYTE *s, int par)
 {
 	int i, error = 0, numdol = 0, type;
 	UBYTE *name, c, *t;
@@ -824,32 +817,28 @@ illeg:			MesPrint("&Illegal option in (n)print statement");
   	#[ CoPrint :
 */
 
-int
-CoPrint ARG1(UBYTE *,s) { return(DoPrint(s,PRINTON)); }
+int CoPrint(UBYTE *s) { return(DoPrint(s,PRINTON)); }
 
 /*
   	#] CoPrint : 
   	#[ CoPrintB :
 */
 
-int
-CoPrintB ARG1(UBYTE *,s) { return(DoPrint(s,PRINTCONTENT)); }
+int CoPrintB(UBYTE *s) { return(DoPrint(s,PRINTCONTENT)); }
 
 /*
   	#] CoPrintB : 
   	#[ CoNPrint :
 */
 
-int
-CoNPrint ARG1(UBYTE *,s) { return(DoPrint(s,PRINTOFF)); }
+int CoNPrint(UBYTE *s) { return(DoPrint(s,PRINTOFF)); }
 
 /*
   	#] CoNPrint : 
   	#[ CoPushHide :
 */
 
-int
-CoPushHide ARG1(UBYTE *,s)
+int CoPushHide(UBYTE *s)
 {
 	GETIDENTITY
 	WORD *ScratchBuf;
@@ -893,8 +882,7 @@ CoPushHide ARG1(UBYTE *,s)
   	#[ CoPopHide :
 */
 
-int
-CoPopHide ARG1(UBYTE *,s)
+int CoPopHide(UBYTE *s)
 {
 	int i;
 	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
@@ -929,8 +917,7 @@ CoPopHide ARG1(UBYTE *,s)
   	#[ SetExprCases :
 */
 
-int
-SetExprCases ARG3(int,par,int,setunset,int,val)
+int SetExprCases(int par, int setunset, int val)
 {
 	switch ( par ) {
 		case SKIP:
@@ -1039,8 +1026,7 @@ SetExprCases ARG3(int,par,int,setunset,int,val)
   	#[ SetExpr :
 */
 
-int
-SetExpr ARG3(UBYTE *,s,int,setunset,int,par)
+int SetExpr(UBYTE *s, int setunset, int par)
 {
 	WORD *w, numexpr;
 	int error = 0, i;
@@ -1082,39 +1068,35 @@ SetExpr ARG3(UBYTE *,s,int,setunset,int,par)
   	#[ CoDrop :
 */
 
-int
-CoDrop ARG1(UBYTE *,s) { return(SetExpr(s,1,DROP)); }
+int CoDrop(UBYTE *s) { return(SetExpr(s,1,DROP)); }
 
 /*
   	#] CoDrop : 
   	#[ CoNoDrop :
 */
 
-int
-CoNoDrop ARG1(UBYTE *,s) { return(SetExpr(s,0,DROP)); }
+int CoNoDrop(UBYTE *s) { return(SetExpr(s,0,DROP)); }
 
 /*
   	#] CoNoDrop : 
   	#[ CoSkip :
 */
 
-int
-CoSkip ARG1(UBYTE *,s) { return(SetExpr(s,1,SKIP)); }
+int CoSkip(UBYTE *s) { return(SetExpr(s,1,SKIP)); }
 
 /*
   	#] CoSkip : 
   	#[ CoNoSkip :
 */
 
-int
-CoNoSkip ARG1(UBYTE *,s) { return(SetExpr(s,0,SKIP)); }
+int CoNoSkip(UBYTE *s) { return(SetExpr(s,0,SKIP)); }
 
 /*
   	#] CoNoSkip : 
   	#[ CoHide :
 */
 
-int CoHide ARG1(UBYTE *,inp) {
+int CoHide(UBYTE *inp) {
 	GETIDENTITY
 	WORD *ScratchBuf;
 	if ( AR.Fscr[2].PObuffer == 0 ) {
@@ -1132,29 +1114,28 @@ int CoHide ARG1(UBYTE *,inp) {
   	#[ CoNoHide :
 */
 
-int CoNoHide ARG1(UBYTE *,inp) { return(SetExpr(inp,0,HIDE)); }
+int CoNoHide(UBYTE *inp) { return(SetExpr(inp,0,HIDE)); }
 
 /*
   	#] CoNoHide : 
   	#[ CoUnHide :
 */
 
-int CoUnHide ARG1(UBYTE *,inp) { return(SetExpr(inp,1,UNHIDE)); }
+int CoUnHide(UBYTE *inp) { return(SetExpr(inp,1,UNHIDE)); }
 
 /*
   	#] CoUnHide : 
   	#[ CoNoUnHide :
 */
 
-int CoNoUnHide ARG1(UBYTE *,inp) { return(SetExpr(inp,0,UNHIDE)); }
+int CoNoUnHide(UBYTE *inp) { return(SetExpr(inp,0,UNHIDE)); }
 
 /*
   	#] CoNoUnHide : 
   	#[ AddToCom :
 */
 
-void
-AddToCom ARG2(int,n,WORD *,array)
+void AddToCom(int n, WORD *array)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 #ifdef COMPBUFDEBUG
@@ -1169,8 +1150,7 @@ AddToCom ARG2(int,n,WORD *,array)
   	#[ AddComString :
 */
 
-int
-AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
+int AddComString(int n, WORD *array, UBYTE *thestring, int par)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s = thestring, *w;
@@ -1229,8 +1209,7 @@ AddComString ARG4(int,n,WORD *,array,UBYTE *,thestring,int,par)
   	#[ Add2ComStrings :
 */
 
-int
-Add2ComStrings ARG4(int,n,WORD *,array,UBYTE *,string1,UBYTE *,string2)
+int Add2ComStrings(int n, WORD *array, UBYTE *string1, UBYTE *string2)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *s1 = string1, *s2 = string2, *w;
@@ -1271,8 +1250,7 @@ Add2ComStrings ARG4(int,n,WORD *,array,UBYTE *,string1,UBYTE *,string2)
   	#[ CoDiscard :
 */
 
-int
-CoDiscard ARG1(UBYTE *,s)
+int CoDiscard(UBYTE *s)
 {
 	if ( *s == 0 ) {
 		Add2Com(TYPEDISCARD)
@@ -1295,8 +1273,7 @@ CoDiscard ARG1(UBYTE *,s)
 
 static WORD ccarray[5] = { TYPEOPERATION,5,CONTRACT,0,0 };
 
-int
-CoContract ARG1(UBYTE *,s)
+int CoContract(UBYTE *s)
 {
 	int x;
 	if ( *s == ':' ) {
@@ -1325,8 +1302,7 @@ proper:		MesPrint("&Illegal number in contract statement");
   	#[ CoGoTo :
 */
 
-int
-CoGoTo ARG1(UBYTE *,inp)
+int CoGoTo(UBYTE *inp)
 {
 	UBYTE *s = inp;
 	int x;
@@ -1345,8 +1321,7 @@ CoGoTo ARG1(UBYTE *,inp)
   	#[ CoLabel :
 */
 
-int
-CoLabel ARG1(UBYTE *,inp)
+int CoLabel(UBYTE *inp)
 {
 	UBYTE *s = inp;
 	int x;
@@ -1369,8 +1344,7 @@ CoLabel ARG1(UBYTE *,inp)
 		scale is for normalize
 */
 
-int
-DoArgument ARG2(UBYTE *,s,int,par)
+int DoArgument(UBYTE *s, int par)
 {
 	GETIDENTITY
 	UBYTE *name, *t, *v, c;
@@ -1604,16 +1578,14 @@ nofun:					MesPrint("&%s is not a function or a set of functions"
   	#[ CoArgument :
 */
 
-int
-CoArgument ARG1(UBYTE *,s) { return(DoArgument(s,TYPEARG)); }
+int CoArgument(UBYTE *s) { return(DoArgument(s,TYPEARG)); }
 
 /*
   	#] CoArgument : 
   	#[ CoEndArgument :
 */
 
-int
-CoEndArgument ARG1(UBYTE *,s)
+int CoEndArgument(UBYTE *s)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
@@ -1640,16 +1612,14 @@ CoEndArgument ARG1(UBYTE *,s)
   	#[ CoInside :
 */
 
-int
-CoInside ARG1(UBYTE *,s) { return(DoInside(s)); }
+int CoInside(UBYTE *s) { return(DoInside(s)); }
 
 /*
   	#] CoInside : 
   	#[ CoEndInside :
 */
 
-int
-CoEndInside ARG1(UBYTE *,s)
+int CoEndInside(UBYTE *s)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
@@ -1676,48 +1646,42 @@ CoEndInside ARG1(UBYTE *,s)
   	#[ CoNormalize :
 */
 
-int
-CoNormalize ARG1(UBYTE *,s) { return(DoArgument(s,TYPENORM)); }
+int CoNormalize(UBYTE *s) { return(DoArgument(s,TYPENORM)); }
 
 /*
   	#] CoNormalize : 
   	#[ CoMakeInteger :
 */
 
-int
-CoMakeInteger ARG1(UBYTE *,s) { return(DoArgument(s,TYPENORM4)); }
+int CoMakeInteger(UBYTE *s) { return(DoArgument(s,TYPENORM4)); }
 
 /*
   	#] CoMakeInteger : 
   	#[ CoSplitArg :
 */
 
-int
-CoSplitArg ARG1(UBYTE *,s) { return(DoArgument(s,TYPESPLITARG)); }
+int CoSplitArg(UBYTE *s) { return(DoArgument(s,TYPESPLITARG)); }
 
 /*
   	#] CoSplitArg : 
   	#[ CoSplitFirstArg :
 */
 
-int
-CoSplitFirstArg ARG1(UBYTE *,s) { return(DoArgument(s,TYPESPLITFIRSTARG)); }
+int CoSplitFirstArg(UBYTE *s) { return(DoArgument(s,TYPESPLITFIRSTARG)); }
 
 /*
   	#] CoSplitFirstArg : 
   	#[ CoSplitLastArg :
 */
 
-int
-CoSplitLastArg ARG1(UBYTE *,s) { return(DoArgument(s,TYPESPLITLASTARG)); }
+int CoSplitLastArg(UBYTE *s) { return(DoArgument(s,TYPESPLITLASTARG)); }
 
 /*
   	#] CoSplitLastArg : 
   	#[ CoFactArg :
 */
 
-int
-CoFactArg ARG1(UBYTE *,s) { return(DoArgument(s,TYPEFACTARG)); }
+int CoFactArg(UBYTE *s) { return(DoArgument(s,TYPEFACTARG)); }
 
 /*
   	#] CoFactArg : 
@@ -1730,8 +1694,7 @@ CoFactArg ARG1(UBYTE *,s) { return(DoArgument(s,TYPEFACTARG)); }
         RCycleSymmetrize Fun[:[number]] [Fields]-> par = 3;
 */
 
-int
-DoSymmetrize ARG2(UBYTE *,s,int,par)
+int DoSymmetrize(UBYTE *s, int par)
 {
 	GETIDENTITY
 	int extra = 0, error = 0, err, fix, x, groupsize, num, i;
@@ -1851,40 +1814,35 @@ illarg:		MesPrint("&Illegal argument");
   	#[ CoSymmetrize :
 */
 
-int
-CoSymmetrize ARG1(UBYTE *,s) { return(DoSymmetrize(s,SYMMETRIC)); }
+int CoSymmetrize(UBYTE *s) { return(DoSymmetrize(s,SYMMETRIC)); }
 
 /*
   	#] CoSymmetrize : 
   	#[ CoAntiSymmetrize :
 */
 
-int
-CoAntiSymmetrize ARG1(UBYTE *,s) { return(DoSymmetrize(s,ANTISYMMETRIC)); }
+int CoAntiSymmetrize(UBYTE *s) { return(DoSymmetrize(s,ANTISYMMETRIC)); }
 
 /*
   	#] CoAntiSymmetrize : 
   	#[ CoCycleSymmetrize :
 */
 
-int
-CoCycleSymmetrize ARG1(UBYTE *,s) { return(DoSymmetrize(s,CYCLESYMMETRIC)); }
+int CoCycleSymmetrize(UBYTE *s) { return(DoSymmetrize(s,CYCLESYMMETRIC)); }
 
 /*
   	#] CoCycleSymmetrize : 
   	#[ CoRCycleSymmetrize :
 */
 
-int
-CoRCycleSymmetrize ARG1(UBYTE *,s) { return(DoSymmetrize(s,RCYCLESYMMETRIC)); }
+int CoRCycleSymmetrize(UBYTE *s) { return(DoSymmetrize(s,RCYCLESYMMETRIC)); }
 
 /*
   	#] CoRCycleSymmetrize : 
   	#[ CoWrite :
 */
 
-int
-CoWrite ARG1(UBYTE *,s)
+int CoWrite(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *option;
@@ -1909,8 +1867,7 @@ CoWrite ARG1(UBYTE *,s)
   	#[ CoNWrite :
 */
 
-int
-CoNWrite ARG1(UBYTE *,s)
+int CoNWrite(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *option;
@@ -1937,8 +1894,7 @@ CoNWrite ARG1(UBYTE *,s)
 
 static WORD ratstring[6] = { TYPEOPERATION, 6, RATIO, 0, 0, 0 };
 
-int
-CoRatio ARG1(UBYTE *,s)
+int CoRatio(UBYTE *s)
 {
 	UBYTE c, *t;
 	int i, type, error = 0;
@@ -1978,8 +1934,7 @@ CoRatio ARG1(UBYTE *,s)
 	This value is inside a string that must be stored.
 */
 
-int
-CoRedefine ARG1(UBYTE *,s)
+int CoRedefine(UBYTE *s)
 {
 	UBYTE *name, c, *args = 0;
 	int numprevar;
@@ -2084,8 +2039,7 @@ illargs:;
 	renumber,1                    All permutations (could be slow)
 */
 
-int
-CoRenumber ARG1(UBYTE *,s)
+int CoRenumber(UBYTE *s)
 {
 	int x;
 	UBYTE *inp;
@@ -2106,8 +2060,7 @@ CoRenumber ARG1(UBYTE *,s)
   	#[ CoSum :
 */
 
-int
-CoSum ARG1(UBYTE *,s)
+int CoSum(UBYTE *s)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	UBYTE *ss = 0, c, *t;
@@ -2227,8 +2180,7 @@ CoSum ARG1(UBYTE *,s)
 
 static WORD cttarray[7] = { TYPEOPERATION,7,TENVEC,0,0,1,0 };
 
-int
-CoToTensor ARG1(UBYTE *,s)
+int CoToTensor(UBYTE *s)
 {
 	UBYTE *t, c, *args[2], cc[2];
 	int j, type, error = 0, ex = 0;
@@ -2369,8 +2321,7 @@ proper:		MesPrint("&Syntax error in ToTensor statement");
 
 static WORD ctvarray[6] = { TYPEOPERATION,6,TENVEC,0,0,0 };
 
-int
-CoToVector ARG1(UBYTE *,s)
+int CoToVector(UBYTE *s)
 {
 	UBYTE *t, c;
 	int j, type, error = 0;
@@ -2440,8 +2391,7 @@ proper:		MesPrint("&Arguments of ToVector statement should be a vector and a ten
   	#[ CoTrace4 :
 */
 
-int
-CoTrace4 ARG1(UBYTE *,s)
+int CoTrace4(UBYTE *s)
 {
 	int error = 0, type, option = CHISHOLM;
 	UBYTE *t, c;
@@ -2523,8 +2473,7 @@ tests:	s = SkipAName(s);
   	#[ CoTraceN :
 */
 
-int
-CoTraceN ARG1(UBYTE *,s)
+int CoTraceN(UBYTE *s)
 {
 	WORD numindex, one = 1;
 	int type;
@@ -2579,8 +2528,7 @@ tests:	s = SkipAName(s);
   	#[ CoChisholm :
 */
 
-int
-CoChisholm ARG1(UBYTE *,s)
+int CoChisholm(UBYTE *s)
 {
 	int error = 0, type, option = CHISHOLM;
 	UBYTE *t, c;
@@ -2662,8 +2610,7 @@ tests:	s = SkipAName(s);
 	Syntax: Chainxx functionname;
 */
 
-int
-DoChain ARG2(UBYTE *,s,int,option)
+int DoChain(UBYTE *s, int option)
 {
 	WORD numfunc,type;
 	if ( *s == '$' ) {
@@ -2707,8 +2654,7 @@ tests:	s = SkipAName(s);
 	Syntax: Chainin functionname;
 */
 
-int
-CoChainin ARG1(UBYTE *,s)
+int CoChainin(UBYTE *s)
 {
 	return(DoChain(s,TYPECHAININ));
 }
@@ -2720,8 +2666,7 @@ CoChainin ARG1(UBYTE *,s)
 	Syntax: Chainout functionname;
 */
 
-int
-CoChainout ARG1(UBYTE *,s)
+int CoChainout(UBYTE *s)
 {
 	return(DoChain(s,TYPECHAINOUT));
 }
@@ -2731,8 +2676,7 @@ CoChainout ARG1(UBYTE *,s)
   	#[ CoExit :
 */
 
-int
-CoExit ARG1(UBYTE *,s)
+int CoExit(UBYTE *s)
 {
 	UBYTE *name;
 	WORD code = TYPEEXIT;
@@ -2759,8 +2703,7 @@ CoExit ARG1(UBYTE *,s)
   	#[ CoInParallel :
 */
 
-int
-CoInParallel ARG1(UBYTE *,s)
+int CoInParallel(UBYTE *s)
 {
 	return(DoInParallel(s,1));
 }
@@ -2770,8 +2713,7 @@ CoInParallel ARG1(UBYTE *,s)
   	#[ CoNotInParallel :
 */
 
-int
-CoNotInParallel ARG1(UBYTE *,s)
+int CoNotInParallel(UBYTE *s)
 {
 	return(DoInParallel(s,0));
 }
@@ -2786,8 +2728,7 @@ CoNotInParallel ARG1(UBYTE *,s)
 	NotInParallel,names;
 */
 
-int
-DoInParallel ARG2(UBYTE *,s,int,par)
+int DoInParallel(UBYTE *s, int par)
 {
 #ifdef WITHPTHREADS
 	EXPRESSIONS e;
@@ -2855,8 +2796,7 @@ DoInParallel ARG2(UBYTE *,s,int,par)
   	#[ CoInExpression :
 */
 
-int
-CoInExpression ARG1(UBYTE *,s)
+int CoInExpression(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -2910,8 +2850,7 @@ CoInExpression ARG1(UBYTE *,s)
   	#[ CoEndInExpression :
 */
 
-int
-CoEndInExpression ARG1(UBYTE *,s)
+int CoEndInExpression(UBYTE *s)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
@@ -2938,8 +2877,7 @@ CoEndInExpression ARG1(UBYTE *,s)
   	#[ CoSetExitFlag :
 */
 
-int
-CoSetExitFlag ARG1(UBYTE *,s)
+int CoSetExitFlag(UBYTE *s)
 {
 	if ( *s ) {
 		MesPrint("&Illegal syntax for the SetExitFlag statement");
@@ -2953,8 +2891,7 @@ CoSetExitFlag ARG1(UBYTE *,s)
   	#] CoSetExitFlag : 
   	#[ CoTryReplace :
 */
-
-int CoTryReplace ARG1(UBYTE *,p)
+int CoTryReplace(UBYTE *p)
 {
 	GETIDENTITY
 	UBYTE *name, c;
@@ -3047,7 +2984,7 @@ int CoTryReplace ARG1(UBYTE *,p)
   	#[ CoModulus :
 */
 
-int CoModulus ARG1(UBYTE *,inp)
+int CoModulus(UBYTE *inp)
 {
 	UBYTE *p, c;
 	WORD sign = 1, Retval;
@@ -3099,7 +3036,7 @@ int CoModulus ARG1(UBYTE *,inp)
   	#[ CoRepeat :
 */
 
-int CoRepeat ARG1(UBYTE *,inp)
+int CoRepeat(UBYTE *inp)
 {
 	int error = 0;
 	AC.RepSumCheck[AC.RepLevel] = AC.IfLevel + AC.arglevel + AC.insidelevel
@@ -3123,7 +3060,7 @@ int CoRepeat ARG1(UBYTE *,inp)
   	#[ CoEndRepeat :
 */
 
-int CoEndRepeat ARG1(UBYTE *,inp)
+int CoEndRepeat(UBYTE *inp)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	int level, error = 0, repeatlevel = 0;
@@ -3162,7 +3099,7 @@ int CoEndRepeat ARG1(UBYTE *,inp)
 		No subterms and arguments are allowed.
 */
 
-int DoBrackets ARG2(UBYTE *,inp,int, par)
+int DoBrackets(UBYTE *inp, int par)
 {
 	GETIDENTITY
 	UBYTE *p, *pp, c;
@@ -3272,7 +3209,7 @@ redo:	AR.BracketOn++;
   	#[ CoBracket :
 */
 
-int CoBracket ARG1(UBYTE *,inp)
+int CoBracket(UBYTE *inp)
 { return(DoBrackets(inp,0)); }
 
 /*
@@ -3280,7 +3217,7 @@ int CoBracket ARG1(UBYTE *,inp)
   	#[ CoAntiBracket :
 */
 
-int CoAntiBracket ARG1(UBYTE *,inp)
+int CoAntiBracket(UBYTE *inp)
 { return(DoBrackets(inp,1)); }
 
 /*
@@ -3308,7 +3245,7 @@ int CoAntiBracket ARG1(UBYTE *,inp)
 		Currently only used in the if statement
 */
 
-WORD *CountComp ARG2(UBYTE *,inp, WORD *,to)
+WORD *CountComp(UBYTE *inp, WORD *to)
 {
 	GETIDENTITY
 	UBYTE *p, c;
@@ -3498,7 +3435,7 @@ skipfield:			while ( *p && *p != ')' && *p != ',' ) p++;
 
 static UWORD *CIscratC = 0;
 
-int CoIf ARG1(UBYTE *,inp)
+int CoIf(UBYTE *inp)
 {
 	GETIDENTITY
 	int error = 0, level;
@@ -3880,7 +3817,7 @@ endofif:;
   	#[ CoElse :
 */
 
-int CoElse ARG1(UBYTE *,p)
+int CoElse(UBYTE *p)
 {
 	int error = 0;
 	CBUF *C = cbuf+AC.cbufnum;
@@ -3905,7 +3842,7 @@ int CoElse ARG1(UBYTE *,p)
   	#[ CoElseIf :
 */
 
-int CoElseIf ARG1(UBYTE *,inp)
+int CoElseIf(UBYTE *inp)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	if ( AC.IfLevel <= 0 ) { MesPrint("&elseif statement without if"); return(1); }
@@ -3932,7 +3869,7 @@ int CoElseIf ARG1(UBYTE *,inp)
 		elseif ( .. )
 */
 
-int CoEndIf ARG1(UBYTE *,inp)
+int CoEndIf(UBYTE *inp)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD i = C->numlhs, to, k = -AC.IfLevel;
@@ -3974,7 +3911,7 @@ int CoEndIf ARG1(UBYTE *,inp)
   	#[ CoWhile :
 */
 
-int CoWhile ARG1(UBYTE *,inp)
+int CoWhile(UBYTE *inp)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD startnum = C->numlhs + 1;
@@ -3995,7 +3932,7 @@ int CoWhile ARG1(UBYTE *,inp)
   	#[ CoEndWhile :
 */
 
-int CoEndWhile ARG1(UBYTE *,inp)
+int CoEndWhile(UBYTE *inp)
 {
 	int error = 0;
 	WORD i;
@@ -4023,7 +3960,7 @@ static char *messfind[] = {
 	};
 static WORD comfindloop[7] = { TYPEFINDLOOP,7,0,0,0,0,0 };
 
-int DoFindLoop ARG2(UBYTE *,inp,int,mode)
+int DoFindLoop(UBYTE *inp, int mode)
 {
 	UBYTE *s, c;
 	WORD funnum, nargs = 0, nloop = 0, indexnum = 0, outfun = 0;
@@ -4137,7 +4074,7 @@ syntax:	MesPrint("&Proper syntax is:");
   	#[ CoFindLoop :
 */
 
-int CoFindLoop ARG1(UBYTE *,inp)
+int CoFindLoop(UBYTE *inp)
 { return(DoFindLoop(inp,FINDLOOP)); }
 
 /*
@@ -4145,7 +4082,7 @@ int CoFindLoop ARG1(UBYTE *,inp)
   	#[ CoReplaceLoop :
 */
 
-int CoReplaceLoop ARG1(UBYTE *,inp)
+int CoReplaceLoop(UBYTE *inp)
 { return(DoFindLoop(inp,REPLACELOOP)); }
 
 /*
@@ -4159,7 +4096,7 @@ static UBYTE *FunPowOptions[] = {
 	,(UBYTE *)"allfunpowers"
 	};
 
-int CoFunPowers ARG1(UBYTE *,inp)
+int CoFunPowers(UBYTE *inp)
 {
 	UBYTE *option, c;
 	int i, maxoptions = sizeof(FunPowOptions)/sizeof(UBYTE *);
@@ -4186,7 +4123,7 @@ int CoFunPowers ARG1(UBYTE *,inp)
   	#[ CoUnitTrace :
 */
 
-int CoUnitTrace ARG1(UBYTE *,s)
+int CoUnitTrace(UBYTE *s)
 {
 	WORD num;
 	if ( FG.cTable[*s] == 1 ) {
@@ -4221,8 +4158,8 @@ nogood:		MesPrint("&Value of UnitTrace should be a (positive) number or a symbol
 		(or the corresponding term statement)
 */
 
-int
-CoTerm ARG1(UBYTE *,s) {
+int CoTerm(UBYTE *s)
+{
 	GETIDENTITY
 	WORD *w = AT.WorkPointer;
 	int error = 0;
@@ -4270,8 +4207,7 @@ CoTerm ARG1(UBYTE *,s) {
   	#[ CoEndTerm :
 */
 
-int
-CoEndTerm ARG1(UBYTE *,s)
+int CoEndTerm(UBYTE *s)
 {
 	CBUF *C = cbuf+AC.cbufnum;
 	while ( *s == ',' ) s++;
@@ -4299,8 +4235,8 @@ CoEndTerm ARG1(UBYTE *,s)
   	#[ CoSort :
 */
 
-int
-CoSort ARG1(UBYTE *,s) {
+int CoSort(UBYTE *s)
+{
 	GETIDENTITY
 	WORD *w = AT.WorkPointer;
 	int error = 0;
@@ -4339,8 +4275,7 @@ CoSort ARG1(UBYTE *,s) {
 	Collect,functionname
 */
 
-int
-CoPolyFun ARG1(UBYTE *,s)
+int CoPolyFun(UBYTE *s)
 {
 	GETIDENTITY
 	WORD numfun;
@@ -4377,8 +4312,7 @@ CoPolyFun ARG1(UBYTE *,s)
 	Collect,functionname
 */
 
-int
-CoPolyRatFun ARG1(UBYTE *,s)
+int CoPolyRatFun(UBYTE *s)
 {
 	GETIDENTITY
 	WORD numfun;
@@ -4413,8 +4347,7 @@ CoPolyRatFun ARG1(UBYTE *,s)
   	#[ CoMerge :
 */
 
-int
-CoMerge ARG1(UBYTE *,inp)
+int CoMerge(UBYTE *inp)
 {
 	UBYTE *s = inp;
 	int type;
@@ -4466,7 +4399,7 @@ tests:	s = SkipAName(s);
   	#[ CoSlavePatch :
 */
 
-int CoSlavePatch ARG1(UBYTE *,s)
+int CoSlavePatch(UBYTE *s)
 {
 	LONG x;
 	while ( *s == ',' || *s == '=' ) s++;
@@ -4484,7 +4417,7 @@ int CoSlavePatch ARG1(UBYTE *,s)
   	#[ CoThreadBucket :
 */
 
-int CoThreadBucket ARG1(UBYTE *,s)
+int CoThreadBucket(UBYTE *s)
 {
 	LONG x;
 	while ( *s == ',' || *s == '=' ) s++;
@@ -4511,8 +4444,7 @@ int CoThreadBucket ARG1(UBYTE *,s)
 	ModulusGCD,m,x,fun1,fun2;
 */
 
-int
-CoModulusGCD ARG1(UBYTE *,s)
+int CoModulusGCD(UBYTE *s)
 {
 	UBYTE *t, c;
 	LONG x = 0;
@@ -4609,8 +4541,7 @@ CoModulusGCD ARG1(UBYTE *,s)
   	#[ CoPolyNorm :
 */
 
-int
-CoPolyNorm ARG1(UBYTE *,s)
+int CoPolyNorm(UBYTE *s)
 {
 	UBYTE c, *t;
 	int i, type, error = 0;
@@ -4664,8 +4595,7 @@ nofunc:			MesPrint("&%s is not a CFunction",t);
 	  (not yet implemented)
 */
 
-int
-DoArgPlode ARG2(UBYTE *,s,int,par)
+int DoArgPlode(UBYTE *s, int par)
 {
 	GETIDENTITY
 	WORD numfunc, type, error = 0, *w, n;
@@ -4717,24 +4647,21 @@ DoArgPlode ARG2(UBYTE *,s,int,par)
   	#[ CoArgExplode :
 */
 
-int
-CoArgExplode ARG1(UBYTE *,s) { return(DoArgPlode(s,TYPEARGEXPLODE)); }
+int CoArgExplode(UBYTE *s) { return(DoArgPlode(s,TYPEARGEXPLODE)); }
 
 /*
   	#] CoArgExplode : 
   	#[ CoArgImplode :
 */
 
-int
-CoArgImplode ARG1(UBYTE *,s) { return(DoArgPlode(s,TYPEARGIMPLODE)); }
+int CoArgImplode(UBYTE *s) { return(DoArgPlode(s,TYPEARGIMPLODE)); }
 
 /*
   	#] CoArgImplode : 
   	#[ CoClearTable :
 */
 
-int
-CoClearTable ARG1(UBYTE *,s)
+int CoClearTable(UBYTE *s)
 {
 	UBYTE c, *t;
 	int j, type, error = 0;
@@ -4810,8 +4737,7 @@ nofunc:		MesPrint("&%s is not a sparse table",t);
   	#[ CoDenominators :
 */
 
-int
-CoDenominators ARG1(UBYTE *,s)
+int CoDenominators(UBYTE *s)
 {
 	WORD numfun;
 	int type;

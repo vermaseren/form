@@ -62,8 +62,7 @@ char *toterms[] = { "   ", " >>", "-->" };
  *		S->GenTerms.
  */
 
-VOID
-WriteStats ARG2(POSITION *,plspace,WORD,par)
+VOID WriteStats(POSITION *plspace, WORD par)
 {
 	GETIDENTITY
 	LONG millitime, y = 0x7FFFFFFFL >> 1;
@@ -572,8 +571,7 @@ NewSort()
  *		@return If negative: error. If positive: number of words in output.
  */
 
-LONG
-EndSort ARG2(WORD *,buffer,int,par)
+LONG EndSort(WORD *buffer, int par)
 {
   GETIDENTITY
   SORTING *S = AT.SS;
@@ -1024,8 +1022,7 @@ RetRetval:
  *	                own independent gzip encoding.
  */
 
-LONG
-PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,npat)
+LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int npat)
 {
 	LONG i, RetCode;
 	WORD *from, *to;
@@ -1082,8 +1079,7 @@ PutIn ARG5(FILEHANDLE *,file,POSITION *,position,WORD *,buffer,WORD **,take,int,
  *	@param fi  The filesystem (or its cache) to which the patch should be written
  */
 
-WORD
-Sflush ARG1(FILEHANDLE *,fi)
+WORD Sflush(FILEHANDLE *fi)
 {
 	GETIDENTITY
 	LONG size, RetCode;
@@ -1167,8 +1163,7 @@ Sflush ARG1(FILEHANDLE *,fi)
  *	@param ncomp    Information about what type of compression should be used
  */
 
-WORD
-PutOut BARG4(WORD *,term,POSITION *,position,FILEHANDLE *,fi,WORD,ncomp)
+WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 {
 	GETBIDENTITY
 	WORD i, *p, ret, *r, *rr, j, k, first;
@@ -1454,8 +1449,7 @@ nocompress:
  *	@return   Regular conventions (OK -> 0).
  */
 
-WORD
-FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
+WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 {
 	GETIDENTITY
 	LONG size, RetCode;
@@ -1639,8 +1633,7 @@ FlushOut ARG3(POSITION *,position,FILEHANDLE *,fi,int,compr)
  *		The resulting term is left in *ps1.
  */
 
-WORD
-AddCoef BARG2(WORD **,ps1,WORD **,ps2)
+WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -1757,8 +1750,7 @@ RegEnd:
  *		@return If zero the terms cancel. Otherwise the new term is in *ps1.
  */
 
-WORD
-AddPoly BARG2(WORD **,ps1,WORD **,ps2)
+WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -1905,8 +1897,7 @@ AddPoly BARG2(WORD **,ps1,WORD **,ps2)
  *	@param m  Pointer to where the answer should be.
  */
 
-VOID
-AddArgs BARG3(WORD *,s1,WORD *,s2,WORD *,m)
+VOID AddArgs(PHEAD WORD *s1, WORD *s2, WORD *m)
 {
 	GETBIDENTITY
 	WORD i1, i2;
@@ -2187,8 +2178,7 @@ twogen:
  *	        <0	term2 comes first.
  */
 
-WORD
-Compare1 BARG3(WORD *,term1,WORD *,term2,WORD,level)
+WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -2601,7 +2591,7 @@ NoPoly:
  *		@return   Total number of words needed for the compressed result.
  */
 
-LONG ComPress ARG2(WORD **,ss,LONG *,n)
+LONG ComPress(WORD **ss, LONG *n)
 {
 	GETIDENTITY
 	WORD *t, *s, j, k;
@@ -2766,8 +2756,7 @@ LONG ComPress ARG2(WORD **,ss,LONG *,n)
 
 #ifdef NEWSPLITMERGE
 
-LONG
-SplitMerge BARG2(WORD **,Pointer,LONG,number)
+LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -2860,8 +2849,7 @@ SplitMerge BARG2(WORD **,Pointer,LONG,number)
 
 #else
 
-VOID
-SplitMerge BARG2(WORD **,Pointer,LONG,number)
+VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -3060,8 +3048,7 @@ GarbHand()
  *
  */
 
-WORD
-MergePatches ARG1(WORD,par)
+WORD MergePatches(WORD par)
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;
@@ -3774,8 +3761,7 @@ PatCall2:;
  *	@return  Regular return conventions (OK -> 0)
  */
 
-WORD
-StoreTerm BARG1(WORD *,term)
+WORD StoreTerm(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -3899,8 +3885,7 @@ StoreCall:
  *		can be merged in one pass.
  */
 
-VOID
-StageSort ARG1(FILEHANDLE *,fout)
+VOID StageSort(FILEHANDLE *fout)
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;
@@ -3974,8 +3959,7 @@ StageSort ARG1(FILEHANDLE *,fout)
  *	@return  Normal conventions (OK -> 0)
  */
 
-WORD
-SortWild ARG2(WORD *,w,WORD,nw)
+WORD SortWild(WORD *w, WORD nw)
 {
 	GETIDENTITY
 	WORD *v, *s, *m, k, i;
@@ -4067,7 +4051,7 @@ SortWild ARG2(WORD *,w,WORD,nw)
  *		Partially or completely frees function sort buffers.
  */
 
-void CleanUpSort ARG1(int,num)
+void CleanUpSort(int num)
 {
 	GETIDENTITY
 	SORTING *S;
@@ -4137,7 +4121,7 @@ void CleanUpSort ARG1(int,num)
  *		Lowers the level in the sort system.
  */
 
-VOID LowerSortLevel ARG0
+VOID LowerSortLevel()
 {
 	GETIDENTITY
 	if ( AR.sLevel >= 0 ) {

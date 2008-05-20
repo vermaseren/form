@@ -68,8 +68,7 @@
 	  are errors that occur in TFORM only and that may indicate problems.
 */
 
-WORD
-TestMatch BARG2(WORD *,term,WORD *,level)
+WORD TestMatch(PHEAD WORD *term, WORD *level)
 {
 	GETBIDENTITY
 	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm;
@@ -441,8 +440,7 @@ nextlevel:;
 
 */
 
-VOID
-Substitute BARG3(WORD *,term,WORD *,pattern,WORD,power)
+VOID Substitute(PHEAD WORD *term, WORD *pattern, WORD power)
 {
 	GETBIDENTITY
 	WORD *TemTerm;
@@ -971,8 +969,7 @@ SubCoef:
 	exponent, denominator.
 
 
-WORD
-FindSpecial ARG1(WORD *,term)
+WORD FindSpecial(WORD *term)
 {
 	WORD *t;
 	WORD *tstop;
@@ -1000,8 +997,7 @@ FindSpecial ARG1(WORD *,term)
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
-WORD
-FindAll BARG4(WORD *,term,WORD *,pattern,WORD,level,WORD *,par)
+WORD FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r;
@@ -1452,7 +1448,7 @@ LeVect:				m = AT.WorkPointer;
 		occur anywhere in the term
 */
 
-int TestSelect ARG2(WORD *,term,WORD *,setp)
+int TestSelect(WORD *term, WORD *setp)
 {
 	WORD *tstop, *t, *s, *el, *elstop, *termstop, *tt, n, ns;
 	GETSTOP(term,tstop);

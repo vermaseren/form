@@ -27,8 +27,7 @@ PFDOLLARS *PFDollars;
 		par == 0 after .sort
 */
 
-WORD
-CleanExpr ARG1(WORD,par)
+WORD CleanExpr(WORD par)
 {
 	GETIDENTITY
 	WORD j, n, i;
@@ -225,8 +224,7 @@ PopVariables()
  		#[ MakeGlobal :
 */
 
-VOID
-MakeGlobal ARG0
+VOID MakeGlobal()
 {
 	WORD i, *p, *m;
 	Globalize(0);
@@ -343,8 +341,7 @@ TestDrop()
  		#[ DoExecute :
 */
 
-WORD
-DoExecute ARG2(WORD,par,WORD,skip)
+WORD DoExecute(WORD par, WORD skip)
 {
 	GETIDENTITY
 	WORD RetCode = 0;
@@ -661,8 +658,7 @@ skipexec:
 	15-oct-1991
 */
 
-WORD
-PutBracket BARG1(WORD *,termin)
+WORD PutBracket(PHEAD WORD *termin)
 {
 	GETBIDENTITY
 	WORD *t, *t1, *b, i, j, *lastfun;
@@ -951,7 +947,7 @@ nextdot:;
  		#[ SpecialCleanup :
 */
 
-VOID SpecialCleanup BARG0
+VOID SpecialCleanup(PHEAD0)
 {
 	GETBIDENTITY
 	if ( AT.previousEfactor ) M_free(AT.previousEfactor,"Efactor cache");
@@ -965,7 +961,7 @@ VOID SpecialCleanup BARG0
  		#[ ExchangeExpressions :
 */
 
-void ExchangeExpressions ARG2(int,num1,int,num2)
+void ExchangeExpressions(int num1, int num2)
 {
 	GETIDENTITY
 	WORD node1, node2, namesize, TMproto[SUBEXPSIZE];
@@ -1039,7 +1035,7 @@ void ExchangeExpressions ARG2(int,num1,int,num2)
  		#[ GetFirstBracket :
 */
 
-int GetFirstBracket ARG2(WORD *,term,int,num)
+int GetFirstBracket(WORD *term, int num)
 {
 /*
 		Gets the first bracket of the expression 'num'
@@ -1144,7 +1140,7 @@ int GetFirstBracket ARG2(WORD *,term,int,num)
  		#[ TermsInExpression :
 */
 
-LONG TermsInExpression ARG1(WORD,num)
+LONG TermsInExpression(WORD num)
 {
 	LONG x = Expressions[num].counter;
 	if ( x >= 0 ) return(x);
@@ -1186,8 +1182,7 @@ void UpdatePositions()
 		Is mainly an adaptation of the routine Deferred in proces.c
 */
 
-LONG
-CountTerms1 BARG0
+LONG CountTerms1(PHEAD0)
 {
 	GETBIDENTITY
 	POSITION oldposition, startposition;
@@ -1307,7 +1302,7 @@ Thatsit:;
 #define BRACKETOTHEREXPR 3
 #define NOBRACKETACTIVE 4
 
-LONG TermsInBracket BARG2(WORD *,term,WORD,level)
+LONG TermsInBracket(PHEAD WORD *term, WORD level)
 {
 	WORD *t, *tstop, *b, *tt, *n1, *n2;
 	int type = 0, i, num;

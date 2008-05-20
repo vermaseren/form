@@ -37,7 +37,7 @@ static int   PF_packpos=0;
 */
 static LONG PF_packsize=0;
 
-static int PF_longPackInit ARG0;
+static int PF_longPackInit();
 /*:[12oct2005 mt]*/
 
 
@@ -54,8 +54,7 @@ static MPI_Status PF_status;
 */
 double PF_starttime;
 
-LONG
-PF_RealTime ARG1(int,i)
+LONG PF_RealTime(int i)
 {
   if( i == PF_RESET ){
 	PF_starttime = MPI_Wtime();
@@ -70,8 +69,7 @@ PF_RealTime ARG1(int,i)
 /*[04oct2005 mt]:*/
 LONG PF_maxDollarChunkSize=0;
 /*:[04oct2005 mt]*/
-int 
-PF_LibInit ARG2(int*,argcp,char***,argvp)
+int PF_LibInit(int *argcp, char ***argvp)
 {  
   int ret;
   ret = MPI_Init(argcp,argvp);
@@ -144,8 +142,7 @@ PF_LibInit ARG2(int*,argcp,char***,argvp)
   Exits mpi, when there is an error either indicated or happening,
   returnvalue is 1, else returnvalue is 0
 */ 
-int 
-PF_Terminate ARG1(int,error)
+int PF_Terminate(int error)
 {
   return(MPI_Finalize());
 }
@@ -161,8 +158,7 @@ I have canged the function PF_Probe : it must return the actual source, and bloc
 if source == PF_ANY_SOURCE
 	General Send and Receive Function for packed buffers
 */
-int 
-PF_Probe ARG1(int,src)
+int PF_Probe(int src)
 {
   int ret,flag,tag;
 
@@ -179,8 +175,7 @@ PF_Probe ARG1(int,src)
 /*
   	#[ int  PF_Probe(int*) :
 */
-int 
-PF_Probe ARG1(int*,src)
+int PF_Probe(int *src)
 {
 	int ret,flag,tag;
 	if(*src == PF_ANY_SOURCE){/*Blocking call*/
@@ -198,8 +193,7 @@ PF_Probe ARG1(int*,src)
   	#[ the packbuffer :
 */
 
-int 
-PF_InitPackBuf ARG0
+int PF_InitPackBuf()
 {
 	/*[12oct2005 mt:*/
 	/*This is defenitely not the best place for allocating the
@@ -216,8 +210,7 @@ PF_InitPackBuf ARG0
 	return(0);
 }
 
-int
-PF_PrintPackBuf ARG2(char*,s,int,size)
+int PF_PrintPackBuf(char *s, int size)
 {
   int i;
   printf("[%d] %s: ",PF.me,s);
@@ -229,8 +222,7 @@ PF_PrintPackBuf ARG2(char*,s,int,size)
   	#] the packbuffer :
   	#[ int  PF_Pack(VOID*,LONG,MPI_Datatype) :
 */
-int 
-PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
+int PF_Pack(VOID *buffer, LONG count, MPI_Datatype type)
 {
   int ret,bytes,pos;
 
@@ -248,8 +240,8 @@ PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
   	#] int  PF_Pack(VOID*,LONG,MPI_Datatype) :
   	#[ int  PF_Send(int,int,int) :
 */
-int 
-PF_Send ARG3(int,to,int,tag,int,par){  
+int PF_Send(int to, int tag, int par)
+{
   int ret,size;
 
   if(!par){
@@ -266,8 +258,7 @@ PF_Send ARG3(int,to,int,tag,int,par){
   	#] int  PF_Send(int,int,int) :
   	#[ int  PF_BroadCast(int) :
 */
-int 
-PF_BroadCast ARG1(int,par)
+int PF_BroadCast(int par)
 {
   int ret;
 /*[02dec2003 mt]:*/
@@ -305,8 +296,7 @@ int pos=PF_packpos;
   	#] int  PF_BroadCast(int) :
   	#[ int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
 */
-int 
-PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
+int PF_UnPack(VOID *buffer, LONG count, MPI_Datatype type)
 {
   int ret;
 
@@ -320,8 +310,7 @@ PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
   	#] int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
   	#[ int  PF_Receive(int,int,int*,int*):
 */
-int 
-PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
+int PF_Receive(int src, int tag, int *srcp, int *tagp)
 {  
   int ret;
 
@@ -348,8 +337,8 @@ PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
 */
 static int PF_finished;
 
-int 
-PF_ISendSbuf ARG2(int,to,int,tag){  
+int PF_ISendSbuf(int to, int tag)
+{
   PF_BUFFER *s = PF.sbuf;
   int a=s->active;
   int size = s->fill[a] - s->buff[a];
@@ -415,8 +404,7 @@ PF_ISendSbuf ARG2(int,to,int,tag){
 
   Blocking receive of a WORD buffer
 */
-int 
-PF_RecvWbuf ARG3(WORD*,b,LONG*,s,int*,src)
+int PF_RecvWbuf(WORD *b, LONG *s, int *src)
 {  
   int tag,i,r=0;
 
@@ -437,8 +425,7 @@ PF_RecvWbuf ARG3(WORD*,b,LONG*,s,int*,src)
 	 post nonblocking receive for the active receive buffer 
 	 the buffer is filled from full to stop
 */
-int
-PF_IRecvRbuf ARG3(PF_BUFFER*,r,int,bn,int,from)
+int PF_IRecvRbuf(PF_BUFFER *r, int bn, int from)
 {
   int ret;
   r->type[bn] = PF_WORD;
@@ -464,7 +451,7 @@ PF_IRecvRbuf ARG3(PF_BUFFER*,r,int,bn,int,from)
   If the receive is allready finished, just return the flag and size, 
   else wait for it to finish, but also check for other pending receives. 
 */ 
-int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
+int PF_WaitRbuf(PF_BUFFER *r, int bn, LONG *size)
 {
   int ret,rsize;
 
@@ -507,8 +494,7 @@ int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
 	so all 3 characters will be packed.
 */
 
-int 
-PF_PackString ARG1(UBYTE *,str)
+int PF_PackString(UBYTE *str)
 {
 	int ret,buflength,bytes,length;
 
@@ -569,8 +555,7 @@ the trailing zero!). It returns the number of unpacked bytes, so if
 then the rest must be appended to (str+length). On error, the function
 returns the negative error code.
 */
-int 
-PF_UnPackString ARG1(UBYTE *,str)
+int PF_UnPackString(UBYTE *str)
 {
 
 	int ret,length;
@@ -702,8 +687,7 @@ static int PF_longPackN=0;
 /*
    #[ PF_longMultiNewCell:
 */
-static FORM_INLINE int
-PF_longMultiNewCell ARG0
+static FORM_INLINE int PF_longMultiNewCell()
 {
 	/*Allocate a new cell:*/
 	PF_longMultiTop->next = (PF_LONGMULTI *)
@@ -730,8 +714,7 @@ PF_longMultiNewCell ARG0
 /*
    #[ PF_longMultiPack2NextCell:
 */
-static FORM_INLINE int
-PF_longMultiPack2NextCell ARG0
+static FORM_INLINE int PF_longMultiPack2NextCell()
 {
 	/*Is there a free cell in the chain?*/
 	if(PF_longMultiTop->next == NULL){
@@ -761,8 +744,7 @@ PF_longMultiPack2NextCell ARG0
 /*
    #[ PF_longMultiNewChunkAdded:
 */
-static FORM_INLINE int
-PF_longMultiNewChunkAdded ARG1 (int,n)
+static FORM_INLINE int PF_longMultiNewChunkAdded(int n)
 {
 /*Store the list tail:*/
 PF_LONGMULTI *MemCell=PF_longMultiLastChunk->next;
@@ -797,8 +779,7 @@ int pos=PF_longPackTop;
 /*
    #[ PF_longCopyChunk:
 */
-static FORM_INLINE void
-PF_longCopyChunk ARG3 (int *, to, int *, from, int, n)
+static FORM_INLINE void PF_longCopyChunk(int *to, int *from, int n)
 {
 	for(;n>0;n--)*to++=*from++;
 }/*PF_longCopyChunk*/
@@ -811,8 +792,7 @@ PF_longCopyChunk ARG3 (int *, to, int *, from, int, n)
 /* If n == 0, the chunk must be increased by 1*PF_packsize and 
 	re-allocated. If n>0, the chunk must be increased by n*PF_packsize
 	without re-allocation.*/
-int
-PF_longAddChunk ARG1 (int,n)
+int PF_longAddChunk(int n)
 {
 int mustRealloc;
 UBYTE *newbuf;
@@ -861,8 +841,7 @@ UBYTE *newbuf;
 /* "count" of "type" elements in an input buffer occupy "bytes" bytes.
 	We know from the algorithm, that it is too many. How to split 
 	the buffer so that the head fits to rest of a storage buffer?*/
-static FORM_INLINE int 
-PF_longMultiHowSplit ARG3(int,count,MPI_Datatype,type,int,bytes)
+static FORM_INLINE int PF_longMultiHowSplit(int count, MPI_Datatype type, int bytes)
 {
 int ret,items,totalbytes;
 
@@ -899,8 +878,7 @@ int ret,items,totalbytes;
 /*
    #[ PF_longPackInit:
 */
-static int
-PF_longPackInit ARG0
+static int PF_longPackInit()
 {
 int ret;
 	PF_longPackBuf=
@@ -939,8 +917,7 @@ int ret;
 /*
    #[ PF_longMultiPreparePrefix:
 */
-static FORM_INLINE int
-PF_longMultiPreparePrefix ARG0
+static FORM_INLINE int PF_longMultiPreparePrefix()
 {
 int ret;
 PF_LONGMULTI *thePrefix;
@@ -1001,8 +978,7 @@ int i=PF_longPackN;
 /*
    #[ PF_longMultiProcessPrefix:
 */
-static FORM_INLINE int
-PF_longMultiProcessPrefix ARG0
+static FORM_INLINE int PF_longMultiProcessPrefix()
 {
 int ret,i;
 	/*We have PF_longPackN records packed in PF_longMultiRoot->buffer,
@@ -1046,8 +1022,7 @@ int ret,i;
 /*
    #[ PF_longSingleReset
 */
-int 
-PF_longSingleReset ARG0
+int PF_longSingleReset()
 {
 int ret;
 	PF_longPackPos=0;
@@ -1063,8 +1038,7 @@ int ret;
 	return(0);
 }/*PF_longSingleReset*/
 
-int 
-PF_longMultiReset ARG0
+int PF_longMultiReset()
 {
 int ret, theone=1;
 	PF_longMultiRoot->packpos=0;
@@ -1085,8 +1059,7 @@ int ret, theone=1;
 /*
    #[ int PF_longSinglePack :
 */
-int 
-PF_longSinglePack ARG3(UBYTE *,buffer,int,count,MPI_Datatype,type)
+int PF_longSinglePack(UBYTE *buffer, int count, MPI_Datatype type)
 {
 	int ret,bytes;
 
@@ -1110,8 +1083,7 @@ PF_longSinglePack ARG3(UBYTE *,buffer,int,count,MPI_Datatype,type)
 /*
    #[ PF_longSingleUnPack:
 */
-int
-PF_longSingleUnPack ARG3(UBYTE*,buffer,LONG,count,MPI_Datatype,type)
+int PF_longSingleUnPack(UBYTE *buffer, LONG count, MPI_Datatype type)
 {
 int ret;
 	ret = MPI_Unpack(PF_longPackBuf,PF_longPackTop,&PF_longPackPos,
@@ -1125,8 +1097,7 @@ int ret;
 /*
    #[ PF_longMultiPack:
 */
-int 
-PF_longMultiPack ARG4(UBYTE *,buffer,int,count,int,eSize,MPI_Datatype,type)
+int PF_longMultiPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 {
 	int ret,items;
 
@@ -1171,8 +1142,7 @@ PF_longMultiPack ARG4(UBYTE *,buffer,int,count,int,eSize,MPI_Datatype,type)
 /*
    #[ PF_longMultiUnPack:
 */
-int
-PF_longMultiUnPack ARG4(UBYTE*,buffer,int,count,int,eSize,MPI_Datatype,type)
+int PF_longMultiUnPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 {
 int ret;
 	if(PF_longPackN < 2){/*Just unpack the buffer from the single cell*/
@@ -1233,8 +1203,7 @@ int ret;
 /*
    #[ PF_longSingleSend:
 */
-int
-PF_longSingleSend ARG2(int,to,int,tag)
+int PF_longSingleSend(int to, int tag)
 {
 int ret,pos=0;
 	/*Note, here we assume that this function couldn't be used 
@@ -1263,8 +1232,7 @@ int ret,pos=0;
 /*
    #[ PF_longSingleReceive:
 */
-int
-PF_longSingleReceive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
+int PF_longSingleReceive(int src, int tag, int *srcp, int *tagp)
 {
 int ret,missed,oncemore;
 	do{
@@ -1309,8 +1277,7 @@ int ret,missed,oncemore;
 /*
    #[ PF_longBroadcast:
 */
-int
-PF_longBroadcast ARG0
+int PF_longBroadcast()
 {
 int ret,i;
 

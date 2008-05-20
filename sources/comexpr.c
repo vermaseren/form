@@ -31,21 +31,21 @@ static struct id_options {
   	#[ CoLocal :
 */
 
-int CoLocal ARG1(UBYTE *,inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
+int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
   	#] CoLocal : 
   	#[ CoGlobal :
 */
 
-int CoGlobal ARG1(UBYTE *,inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
+int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
   	#] CoGlobal : 
   	#[ DoExpr:
 */
 
-int DoExpr ARG2(UBYTE *,inp,int,type)
+int DoExpr(UBYTE *inp, int type)
 {
 	GETIDENTITY
 	int error = 0;
@@ -242,7 +242,7 @@ int DoExpr ARG2(UBYTE *,inp,int,type)
   	#[ CoIdOld :
 */
 
-int CoIdOld ARG1(UBYTE *,inp)
+int CoIdOld(UBYTE *inp)
 {
 	AC.idoption = 0;
 	return(CoIdExpression(inp,TYPEIDOLD));
@@ -253,7 +253,7 @@ int CoIdOld ARG1(UBYTE *,inp)
   	#[ CoId :
 */
 
-int CoId ARG1(UBYTE *,inp)
+int CoId(UBYTE *inp)
 {
 	AC.idoption = 0;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -264,7 +264,7 @@ int CoId ARG1(UBYTE *,inp)
   	#[ CoIdNew :
 */
 
-int CoIdNew ARG1(UBYTE *,inp)
+int CoIdNew(UBYTE *inp)
 {
 	AC.idoption = 0;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -275,7 +275,7 @@ int CoIdNew ARG1(UBYTE *,inp)
   	#[ CoDisorder :
 */
 
-int CoDisorder ARG1(UBYTE *,inp)
+int CoDisorder(UBYTE *inp)
 {
 	AC.idoption = SUBDISORDER;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -286,7 +286,7 @@ int CoDisorder ARG1(UBYTE *,inp)
   	#[ CoMany :
 */
 
-int CoMany ARG1(UBYTE *,inp)
+int CoMany(UBYTE *inp)
 {
 	AC.idoption = SUBMANY;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -297,7 +297,7 @@ int CoMany ARG1(UBYTE *,inp)
   	#[ CoMulti :
 */
 
-int CoMulti ARG1(UBYTE *,inp)
+int CoMulti(UBYTE *inp)
 {
 	AC.idoption = SUBMULTI;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -308,7 +308,7 @@ int CoMulti ARG1(UBYTE *,inp)
   	#[ CoIfMatch :
 */
 
-int CoIfMatch ARG1(UBYTE *,inp)
+int CoIfMatch(UBYTE *inp)
 {
 	AC.idoption = SUBAFTER;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -319,7 +319,7 @@ int CoIfMatch ARG1(UBYTE *,inp)
   	#[ CoOnce :
 */
 
-int CoOnce ARG1(UBYTE *,inp)
+int CoOnce(UBYTE *inp)
 {
 	AC.idoption = SUBONCE;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -330,7 +330,7 @@ int CoOnce ARG1(UBYTE *,inp)
   	#[ CoOnly :
 */
 
-int CoOnly ARG1(UBYTE *,inp)
+int CoOnly(UBYTE *inp)
 {
 	AC.idoption = SUBONLY;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -341,7 +341,7 @@ int CoOnly ARG1(UBYTE *,inp)
   	#[ CoSelect :
 */
 
-int CoSelect ARG1(UBYTE *,inp)
+int CoSelect(UBYTE *inp)
 {
 	AC.idoption = SUBSELECT;
 	return(CoIdExpression(inp,TYPEIDNEW));
@@ -354,7 +354,7 @@ int CoSelect ARG1(UBYTE *,inp)
 	First finish dealing with secondary keywords
 */
 
-int CoIdExpression ARG2(UBYTE *,inp,int,type)
+int CoIdExpression(UBYTE *inp, int type)
 {
 	GETIDENTITY
 	int i, j, idhead, error = 0, MinusSign = 0, opt, retcode;
@@ -803,7 +803,7 @@ AllDone:
 static WORD mularray[13] = { TYPEMULT, SUBEXPSIZE+3, 0, SUBEXPRESSION,
 		SUBEXPSIZE, 0, 1, 0, 0, 0, 0, 0, 0 };
 
-int CoMultiply ARG1(UBYTE *,inp)
+int CoMultiply(UBYTE *inp)
 {
 	UBYTE *p;
 	int error = 0, RetCode;
@@ -841,7 +841,7 @@ int CoMultiply ARG1(UBYTE *,inp)
 	Special additions for tablebase-like tables added 12-aug-2002
 */
 
-int CoFill ARG1(UBYTE *,inp)
+int CoFill(UBYTE *inp)
 {
 	GETIDENTITY
 	WORD error = 0, x, funnum, type, *oldwp = AT.WorkPointer;
@@ -1102,7 +1102,7 @@ redef:;
 	have been bracketed before.
 */
 
-int CoFillExpression ARG1(UBYTE *,inp)
+int CoFillExpression(UBYTE *inp)
 {
 	GETIDENTITY
 	UBYTE *p, c;
@@ -1462,7 +1462,7 @@ noway:
 	We make use of the regular write routines.
 */
 
-int CoPrintTable ARG1(UBYTE *,inp)
+int CoPrintTable(UBYTE *inp)
 {
 	GETIDENTITY
 	int fflag = 0, sflag = 0, addflag = 0, error = 0, sum, i, j;
@@ -1630,7 +1630,7 @@ finally:
 static WORD AssignLHS[14] = { TYPEASSIGN, 3+SUBEXPSIZE, 0,
 							SUBEXPRESSION, SUBEXPSIZE, 0, 1, 0, 0,0,0,0,0 };
 
-int CoAssign ARG1(UBYTE *,inp)
+int CoAssign(UBYTE *inp)
 {
 	int error = 0, retcode;
 	UBYTE *name;
@@ -1715,7 +1715,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 	        never been any fill statements.
 */
 
-int CoDeallocateTable ARG1(UBYTE *,inp)
+int CoDeallocateTable(UBYTE *inp)
 {
 	UBYTE *p, c;
 	TABLES T = 0;

@@ -50,8 +50,7 @@
 
 */
 
-WORD
-ReNumber BARG1(WORD *,term)
+WORD ReNumber(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *d, *e, **p, **f;
@@ -98,8 +97,7 @@ ReNumber BARG1(WORD *,term)
 
 */
 
-VOID
-FunLevel BARG1(WORD *,term)
+VOID FunLevel(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *r, *fun;
@@ -213,8 +211,7 @@ FunLevel BARG1(WORD *,term)
  		#[ DetCurDum :
 */
 
-WORD
-DetCurDum ARG1(WORD *,t)
+WORD DetCurDum(WORD *t)
 {
 	WORD maxval = AM.IndDum;
 	WORD maxtop = maxval + MAXDUMMIES;
@@ -285,7 +282,7 @@ Singles:
 		arguments inside functions inside functions.
 */
 
-int FullRenumber ARG2(WORD *,term,WORD,par)
+int FullRenumber(WORD *term, WORD par)
 {
 	GETIDENTITY
 	WORD *d, **p, **f, *w, *t, *best, *stac, *perm, a, *termtry;
@@ -397,7 +394,7 @@ Return0:
 		always been missing. Routine made 29-jan-2007.
 */
 
-VOID MoveDummies BARG2(WORD *,term,WORD,shift)
+VOID MoveDummies(PHEAD WORD *term, WORD shift)
 {
 	GETBIDENTITY
 	WORD maxval = AM.IndDum;
@@ -468,8 +465,7 @@ Singles:
 
 */
 
-WORD
-CountDo ARG2(WORD *,term,WORD *,instruct)
+WORD CountDo(WORD *term, WORD *instruct)
 {
 	WORD *m, *r, i, j, count = 0;
 	WORD *stopper, *tstop, *r1 = 0, *r2 = 0;
@@ -623,8 +619,7 @@ NextFF:
 
 */
 
-WORD
-CountFun ARG2(WORD *,term,WORD *,countfun)
+WORD CountFun(WORD *term, WORD *countfun)
 {
 	WORD *m, *r, i, j, count = 0, *instruct, *stopper, *tstop;
 	m = countfun;
@@ -786,8 +781,7 @@ VectInd:		i = term[1] - 2;
  		#[ MultDo :
 */
 
-WORD
-MultDo ARG2(WORD *,term,WORD *,pattern)
+WORD MultDo(WORD *term, WORD *pattern)
 {
 	GETIDENTITY
 	WORD *t, *r, i;
@@ -815,8 +809,7 @@ MultDo ARG2(WORD *,term,WORD *,pattern)
  		#[ TryDo :
 */
 
-WORD
-TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
+WORD TryDo(WORD *term, WORD *pattern, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *r, *m, i, j;
@@ -859,8 +852,7 @@ TryDo ARG3(WORD *,term,WORD *,pattern,WORD,level)
 		because there is no knowing how long the field will be.
 */
 
-WORD
-DoDistrib BARG2(WORD *,term,WORD,level)
+WORD DoDistrib(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r = 0, *stop, *tstop, *termout, *endhead, *starttail, *parms;
@@ -1113,8 +1105,7 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 		Returns 1 if the arguments in the field are identical.
 */
 
-WORD
-EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
+WORD EqualArg(WORD *parms, WORD num1, WORD num2)
 {
 	WORD *t1, *t2;
 	WORD i;
@@ -1140,8 +1131,7 @@ EqualArg ARG3(WORD *,parms,WORD,num1,WORD,num2)
  		#[ DoDelta3 :
 */
 
-WORD
-DoDelta3 ARG2(WORD *,term,WORD,level)
+WORD DoDelta3(WORD *term, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *m, *m1, *m2, *stopper, *tstop, *termout, *dels, *taken;
@@ -1334,7 +1324,7 @@ nextk:;
 	option = 0 (all): generate identical results with combinatorics (default)
 */
 
-WORD DoMerge ARG4(WORD *,term,WORD,level,WORD,fun,WORD,option)
+WORD DoMerge(WORD *term, WORD level, WORD fun, WORD option)
 {
 	GETIDENTITY
 	WORD n = fun, n1, n2, j1, j2, *j, k1, k2;

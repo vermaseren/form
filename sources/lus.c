@@ -28,7 +28,7 @@
 	          if < 0 we look for all loops.
 */
 
-int Lus ARG6(WORD *,term,WORD,funnum,WORD,loopsize,WORD,numargs,WORD,outfun,WORD,mode)
+int Lus(WORD *term, WORD funnum, WORD loopsize, WORD numargs, WORD outfun, WORD mode)
 {
 	GETIDENTITY
 	WORD *w, *t, *tt, *m, *r, **loc, *tstop, minloopsize;
@@ -435,7 +435,7 @@ Success:;
   	#[ FindLus :
 */
 
-int FindLus ARG3(int, from, int, level, int, openindex)
+int FindLus(int from, int level, int openindex)
 {
 	GETIDENTITY
 	int i, j, k, jj, *alist, *blist, *w, *m, partner;
@@ -498,7 +498,7 @@ int FindLus ARG3(int, from, int, level, int, openindex)
   	#[ SortTheList :
 */
 
-int SortTheList ARG2(int *,slist,int,num)
+int SortTheList(int *slist, int num)
 {
 	GETIDENTITY
 	int i, nleft, nright, *t1, *t2, *t3, *rlist;

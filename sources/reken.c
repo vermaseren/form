@@ -32,8 +32,7 @@
 
 */
 
-VOID
-Pack ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
+VOID Pack(UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	WORD c, sgn = 1, i;
 	UWORD *to,*from;
@@ -71,8 +70,7 @@ Pack ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
 
 */
 
-VOID
-UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
+VOID UnPack(UWORD *a, WORD na, WORD *denom, WORD *numer)
 {
 	UWORD *pos;
 	WORD i, sgn = na;
@@ -98,8 +96,7 @@ UnPack ARG4(UWORD *,a,WORD,na,WORD *,denom,WORD *,numer)
 
 */
 
-WORD
-Mully BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
+WORD Mully(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETBIDENTITY
 	UWORD *d, *e;
@@ -149,8 +146,7 @@ MullyEr:
 
 */
 
-WORD
-Divvy BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
+WORD Divvy(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETBIDENTITY
 	UWORD *d,*e;
@@ -193,8 +189,7 @@ DivvyEr:
  		#[ AddRat :			WORD AddRat(a,na,b,nb,c,nc)
 */
 
-WORD
-AddRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	UWORD *d, *e, *f, *g;
@@ -351,8 +346,7 @@ AddRer:
 
 */
 
-WORD
-MulRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	WORD i;
 	WORD sgn = 1;
@@ -481,8 +475,7 @@ MulRer:
 
 */
 
-WORD
-DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	WORD i, j;
@@ -512,8 +505,7 @@ DivRat BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 
 */
 
-WORD
-Simplify BARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD *,nb)
+WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 {
 	GETBIDENTITY
 	UWORD *x1,*x2,*x3;
@@ -631,7 +623,7 @@ SimpErr:
 		the GCD of the numerators divided by the GCD of the denominators
 */
 
-WORD AccumGCD ARG4(UWORD *,a,WORD *,na,UWORD *,b,WORD,nb)
+WORD AccumGCD(UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETIDENTITY
 	WORD nna,nnb,numa,numb,dena,denb,numc,denc;
@@ -670,7 +662,7 @@ AccErr:
  		#[ TakeRatRoot:
 */
 
-int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
+int TakeRatRoot(UWORD *a, WORD *n, WORD power)
 {
 	WORD numer,denom, nn;
 	if ( ( power & 1 ) == 0 && *n < 0 ) return(1);
@@ -695,8 +687,7 @@ int TakeRatRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
 
 */
 
-WORD
-AddLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	WORD sgn;
 	if ( na < 0 ) {
@@ -737,8 +728,7 @@ AddLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 	c can be a or b.
 */
 
-WORD
-AddPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,UWORD *,nc)
+WORD AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, UWORD *nc)
 {
 	UWORD carry = 0, e, nd = 0;
 	while ( na && nb ) {
@@ -791,8 +781,7 @@ AddPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,UWORD *,nc)
 
 */
 
-VOID
-SubPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+VOID SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	UWORD borrow = 0, e, nd = 0;
 	while ( nb ) {
@@ -830,8 +819,7 @@ SubPLon ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
 
 */
 
-WORD
-MulLong ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	WORD sgn = 1;
 	UWORD i, *ic, *ia;
@@ -938,8 +926,7 @@ MulLov:
 
 */
 
-WORD
-BigLong ARG4(UWORD *,a,WORD,na,UWORD *,b,WORD,nb)
+WORD BigLong(UWORD *a, WORD na, UWORD *b, WORD nb)
 {
 	a += na;
 	b += nb;
@@ -967,9 +954,8 @@ BigLong ARG4(UWORD *,a,WORD,na,UWORD *,b,WORD,nb)
 
 */
 
-WORD
-DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
-			,WORD *,nc,UWORD *,d,WORD *,nd)
+WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
+             WORD *nc, UWORD *d, WORD *nd)
 {
 	WORD sgn = 1, ne, nf, ng, nh;
 	WORD i, ni;
@@ -1209,8 +1195,7 @@ DivLong ARG8(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c
 
 */
 
-WORD
-RaisPow BARG3(UWORD *,a,WORD *,na,UWORD,b)
+WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 {
 	GETBIDENTITY
 	WORD i, nu;
@@ -1268,8 +1253,7 @@ RaisOvl:
 
 */
 
-WORD
-Product ARG3(UWORD *,a,WORD *,na,WORD,b)
+WORD Product(UWORD *a, WORD *na, WORD b)
 {
 	WORD i, sgn = 1;
 	RLONG t, u;
@@ -1304,8 +1288,7 @@ Product ARG3(UWORD *,a,WORD *,na,WORD,b)
 
 */
 
-UWORD
-Quotient ARG3(UWORD *,a,WORD *,na,WORD,b)
+UWORD Quotient(UWORD *a, WORD *na, WORD b)
 {
 	RLONG v, t;
 	WORD i, j, sgn = 1;
@@ -1344,8 +1327,7 @@ Quotient ARG3(UWORD *,a,WORD *,na,WORD,b)
 
 */
 
-WORD
-Remain10 ARG2(UWORD *,a,WORD *,na)
+WORD Remain10(UWORD *a, WORD *na)
 {
 	WORD i;
 	RLONG t, u;
@@ -1372,8 +1354,7 @@ Remain10 ARG2(UWORD *,a,WORD *,na)
 
 */
 
-WORD
-Remain4 ARG2(UWORD *,a,WORD *,na)
+WORD Remain4(UWORD *a, WORD *na)
 {
 	WORD i;
 	RLONG t, u;
@@ -1399,8 +1380,7 @@ Remain4 ARG2(UWORD *,a,WORD *,na)
 
 */
 
-VOID
-PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
+VOID PrtLong(UWORD *a, WORD na, UBYTE *s)
 {
 	GETIDENTITY
 	WORD q, i;
@@ -1460,8 +1440,7 @@ PrtLong ARG3(UWORD *,a,WORD,na,UBYTE *,s)
 	is accumulated.
 */
 
-WORD
-GetLong ARG3(UBYTE *,s,UWORD *,a,WORD *,na)
+WORD GetLong(UBYTE *s, UWORD *a, WORD *na)
 {
 /*
 	UWORD digit;
@@ -1524,8 +1503,7 @@ GetLong ARG3(UBYTE *,s,UWORD *,a,WORD *,na)
 		else naa = 1;            \
 	}
 
-VOID
-GCD ARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+VOID GCD(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	int ja = 0, jb = 0, j;
 	UWORD *r,*t;
@@ -1682,8 +1660,7 @@ toobad:
   	#[ Old Routine :
 */
 
-WORD
-GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	if ( !na || !nb ) {
@@ -1954,8 +1931,7 @@ GcdErr:
 	of GCDMAX.
 */
 
-WORD
-GcdLong BARG6(UWORD *,a,WORD,na,UWORD *,b,WORD,nb,UWORD *,c,WORD *,nc)
+WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	UWORD x,y,z;
@@ -2275,8 +2251,7 @@ GcdErr:
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
-WORD
-GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
+WORD GetBinom(UWORD *a, WORD *na, WORD i1, WORD i2)
 {
 	GETIDENTITY
 	WORD j, k, l;
@@ -2322,7 +2297,7 @@ GetBinom ARG4(UWORD *,a,WORD *,na,WORD,i1,WORD,i2)
 	Note: power should be positive!
 */
 
-int TakeLongRoot ARG3(UWORD *,a,WORD *,n,WORD,power)
+int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 {
 	GETIDENTITY
 	int numbits, guessbits, i;
@@ -2433,8 +2408,7 @@ TLcall:
 */
 /* #define 64SAVE */
 
-WORD
-CompCoef ARG2(WORD *,term1,WORD *,term2)
+WORD CompCoef(WORD *term1, WORD *term2)
 {
 	GETIDENTITY
 	UWORD *c;
@@ -2492,8 +2466,7 @@ CompCoef ARG2(WORD *,term1,WORD *,term2)
 
 */
 
-WORD
-Modulus ARG1(WORD *,term)
+WORD Modulus(WORD *term)
 {
 	WORD *t;
 	WORD n1;
@@ -2529,8 +2502,7 @@ Modulus ARG1(WORD *,term)
 
 */
 
-WORD
-TakeModulus ARG5(UWORD *,a,WORD *,na,WORD *,cmodvec,WORD,ncmod,WORD,par)
+WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 {
 	GETIDENTITY
 	UWORD *c, *d, *e, *f, *g, *h;
@@ -2712,8 +2684,7 @@ MakeModTable()
 		AT.factorials: the array with stored factorials
 */
 
-int
-Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
+int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 {
 	GETBIDENTITY
 	UWORD *b, *c;
@@ -2793,8 +2764,7 @@ Factorial BARG3(WORD,n,UWORD *,a,WORD *,na)
 		AT.bernoullis: the array with stored Bernoulli numbers
 */
 
-int
-Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
+int Bernoulli(WORD n, UWORD *a, WORD *na)
 {
 	GETIDENTITY
 	UWORD *b, *c, *scrib, *ntop, *ntop1;
@@ -2917,7 +2887,7 @@ Bernoulli ARG3(WORD,n,UWORD *,a,WORD *,na)
 #define NPAIR2 89
 #define WARMUP 6
 
-void wranfnew BARG0
+void wranfnew(PHEAD0)
 {
 	int i;
 	LONG j;
@@ -2933,7 +2903,7 @@ void wranfnew BARG0
 	}
 }
 
-WORD wranf BARG0
+WORD wranf(PHEAD0)
 {
 	int imax = NPAIR2-1;
 	ULONG i, ii;

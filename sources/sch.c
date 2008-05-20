@@ -38,8 +38,7 @@ static int lowestlevel = 1;
  		#[ StrCopy :			UBYTE *StrCopy(from,to)
 */
 
-UBYTE *
-StrCopy ARG2(UBYTE *,from,UBYTE *,to)
+UBYTE *StrCopy(UBYTE *from, UBYTE *to)
 {
 	while( ( *to++ = *from++ ) != 0 );
 	return(to-1);
@@ -54,8 +53,7 @@ StrCopy ARG2(UBYTE *,from,UBYTE *,to)
 
 */
 
-VOID
-AddToLine ARG1(UBYTE *,s)
+VOID AddToLine(UBYTE *s)
 {
 	UBYTE *Out;
 	LONG num;
@@ -137,8 +135,7 @@ AddToLine ARG1(UBYTE *,s)
  		#[ FiniLine :			VOID FiniLine()
 */
 
-VOID
-FiniLine()
+VOID FiniLine()
 {
 	UBYTE *Out;
 	WORD i;
@@ -216,8 +213,7 @@ FiniLine()
 
 */
 
-VOID
-IniLine()
+VOID IniLine()
 {
 	UBYTE *Out;
 	Out = AO.OutputLine;
@@ -249,8 +245,7 @@ IniLine()
 
 static UBYTE *LLscratch = 0;
 
-VOID
-LongToLine ARG2(UWORD *,a,WORD,na)
+VOID LongToLine(UWORD *a, WORD na)
 {
 	UBYTE *OutScratch;
 	if ( LLscratch == 0 ) {
@@ -284,8 +279,7 @@ LongToLine ARG2(UWORD *,a,WORD,na)
 static UBYTE *RLscratch = 0;
 static UWORD *RLscratE = 0;
 
-VOID
-RatToLine ARG2(UWORD *,a,WORD,na)
+VOID RatToLine(UWORD *a, WORD na)
 {
 	GETIDENTITY
 	WORD adenom, anumer;
@@ -431,8 +425,7 @@ RatToLine ARG2(UWORD *,a,WORD,na)
 
 */
 
-VOID
-TalToLine ARG1(UWORD,x)
+VOID TalToLine(UWORD x)
 {
 	UBYTE t[BITSINWORD/3+1];
 	UBYTE *s;
@@ -461,8 +454,7 @@ TalToLine ARG1(UWORD,x)
 	digits!
 */
 
-VOID
-TokenToLine ARG1(UBYTE *,s)
+VOID TokenToLine(UBYTE *s)
 {
 	UBYTE *t, *Out;
 	LONG num, i = 0, j;
@@ -564,8 +556,7 @@ TokenToLine ARG1(UBYTE *,s)
 
 */
 
-UBYTE *
-CodeToLine ARG2(WORD,number,UBYTE *,Out)
+UBYTE *CodeToLine(WORD number, UBYTE *Out)
 {
 	Out = StrCopy((UBYTE *)"(",Out);
 	Out = NumCopy(number,Out);
@@ -578,8 +569,7 @@ CodeToLine ARG2(WORD,number,UBYTE *,Out)
  		#[ PrtTerms :			VOID PrtTerms()
 */
 
-VOID
-PrtTerms()
+VOID PrtTerms()
 {
 	UWORD a[2];
 	WORD na;
@@ -601,8 +591,7 @@ PrtTerms()
  		#[ WrtPower :
 */
 
-UBYTE *
-WrtPower ARG2(UBYTE *,Out,WORD,Power)
+UBYTE *WrtPower(UBYTE *Out, WORD Power)
 {
 	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE
 		 || AC.OutputMode == REDUCEMODE ) {
@@ -638,7 +627,7 @@ WrtPower ARG2(UBYTE *,Out,WORD,Power)
  		#[ PrintTime :
 */
 
-void PrintTime ARG0
+void PrintTime()
 {
 	LONG millitime = TimeCPU(1);
 	WORD timepart = (WORD)(millitime%1000);
@@ -664,8 +653,7 @@ static UBYTE *rsymname[] = {
 	 (UBYTE *)"(-cyclic)",(UBYTE *)"(-reversecyclic)"
 	,(UBYTE *)"(-symmetric)",(UBYTE *)"(-antisymmetric)" };
 
-VOID
-WriteLists()
+VOID WriteLists()
 {
 	GETIDENTITY
 	WORD i, j, k, *skip;
@@ -1023,8 +1011,7 @@ WriteLists()
 		WriteExpression and the fast field is dealt with here.
 */
 
-VOID
-WriteArgument ARG1(WORD *,t)
+VOID WriteArgument(WORD *t)
 {
 	UBYTE buffer[180];
 	UBYTE *Out;
@@ -1110,8 +1097,7 @@ UBYTE *specfunnames[NUMSPECS] = {
 	, (UBYTE *)"invfac" };
 */
 
-WORD
-WriteSubTerm ARG2(WORD *,sterm,WORD,first)
+WORD WriteSubTerm(WORD *sterm, WORD first)
 {
 	UBYTE buffer[80];
 	UBYTE *Out, closepar[2] = { (UBYTE)')', 0};
@@ -1397,8 +1383,7 @@ WriteSubTerm ARG2(WORD *,sterm,WORD,first)
 
 */
 
-WORD
-WriteInnerTerm ARG2(WORD *,term,WORD,first)
+WORD WriteInnerTerm(WORD *term, WORD first)
 {
 	WORD *t, *s, *s1, *s2, n, i, pow;
 	t = term;
@@ -1536,8 +1521,7 @@ WriteInnerTerm ARG2(WORD *,term,WORD,first)
 
 */
 
-WORD
-WriteTerm ARG5(WORD *,term,WORD *,lbrac,WORD,first,WORD,prtf,WORD,br)
+WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 {
 	WORD *t, *stopper, *b, n;
 	if ( *lbrac >= 0 ) {
@@ -1805,8 +1789,7 @@ WrtTmes:				t = term;
 
 */
 
-WORD
-WriteExpression ARG2(WORD *,terms,LONG,ltot)
+WORD WriteExpression(WORD *terms, LONG ltot)
 {
 	WORD *stopper;
 	WORD first, btot;
@@ -1837,8 +1820,7 @@ WriteExpression ARG2(WORD *,terms,LONG,ltot)
 		Writes all expressions that should be written
 */
 
-WORD
-WriteAll()
+WORD WriteAll()
 {
 	GETIDENTITY
 	WORD lbrac, first;
@@ -1981,8 +1963,7 @@ AboWrite:
 		Writes one expression from the preprocessor
 */
 
-WORD
-WriteOne ARG3(UBYTE *,name,int,alreadyinline,int,nosemi)
+WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 {
 	GETIDENTITY
 	WORD number;

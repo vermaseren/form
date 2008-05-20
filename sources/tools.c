@@ -45,8 +45,7 @@ long numfrees = 0;
  		#[ LoadInputFile :
 */
 
-UBYTE *
-LoadInputFile ARG2(UBYTE *,filename,int,type)
+UBYTE *LoadInputFile(UBYTE *filename, int type)
 {
 	int handle;
 	long filesize;
@@ -77,8 +76,7 @@ LoadInputFile ARG2(UBYTE *,filename,int,type)
  		#[ ReadFromStream :
 */
 
-UBYTE
-ReadFromStream ARG1(STREAM *,stream)
+UBYTE ReadFromStream(STREAM *stream)
 {
 	UBYTE c;
 	POSITION scrpos;
@@ -144,8 +142,7 @@ ReadFromStream ARG1(STREAM *,stream)
  		#[ GetFromStream :
 */
 
-UBYTE
-GetFromStream ARG1(STREAM *,stream)
+UBYTE GetFromStream(STREAM *stream)
 {
 	UBYTE c1, c2;
 	if ( stream->isnextchar > 0 ) {
@@ -168,8 +165,7 @@ GetFromStream ARG1(STREAM *,stream)
  		#[ LookInStream :
 */
 
-UBYTE
-LookInStream ARG1(STREAM *,stream)
+UBYTE LookInStream(STREAM *stream)
 {
 	UBYTE c = GetFromStream(stream);
 	UngetFromStream(stream,c);
@@ -181,8 +177,7 @@ LookInStream ARG1(STREAM *,stream)
  		#[ OpenStream :
 */
 
-STREAM *
-OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
+STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 {
 	STREAM *stream;
 	UBYTE *rhsofvariable, *s, *newname;
@@ -334,8 +329,7 @@ OpenStream ARG4(UBYTE *,name,int,type,int,prevarmode,int,raiselow)
  		#[ LocateFile :
 */
 
-int
-LocateFile ARG2(UBYTE **,name,int,type)
+int LocateFile(UBYTE **name, int type)
 {
 	int handle, namesize, i;
 	UBYTE *s, *to, *u1, *u2, *newname, *indir;	
@@ -414,8 +408,7 @@ LocateFile ARG2(UBYTE **,name,int,type)
  		#[ CloseStream :
 */
 
-STREAM *
-CloseStream ARG1(STREAM *,stream)
+STREAM *CloseStream(STREAM *stream)
 {
 	int newstr = stream->previous, sgn;
 	UBYTE *t, numbuf[24];
@@ -508,7 +501,7 @@ CloseStream ARG1(STREAM *,stream)
  		#[ CreateStream :
 */
 
-STREAM *CreateStream ARG1(UBYTE *,where)
+STREAM *CreateStream(UBYTE *where)
 {
 	STREAM *newstreams;
 	int numnewstreams,i;
@@ -539,8 +532,7 @@ STREAM *CreateStream ARG1(UBYTE *,where)
  		#[ GetStreamPosition :
 */
 
-LONG
-GetStreamPosition ARG1(STREAM *,stream)
+LONG GetStreamPosition(STREAM *stream)
 {
 	return(stream->bufferposition + ((LONG)stream->pointer-(LONG)stream->buffer));
 }
@@ -550,8 +542,7 @@ GetStreamPosition ARG1(STREAM *,stream)
  		#[ PositionStream :
 */
 
-VOID
-PositionStream ARG2(STREAM *,stream,LONG,position)
+VOID PositionStream(STREAM *stream, LONG position)
 {
 	POSITION scrpos;
 	if ( position >= stream->bufferposition
@@ -581,8 +572,7 @@ PositionStream ARG2(STREAM *,stream,LONG,position)
  		#[ StartFiles :
 */
 
-VOID
-StartFiles ARG0
+VOID StartFiles()
 {
 	int i = CreateHandle();
 	filelist[i] = Ustdout;
@@ -609,8 +599,7 @@ StartFiles ARG0
  		#[ OpenFile :
 */
 
-int
-OpenFile ARG1(char *,name)
+int OpenFile(char *name)
 {
 	FILES *f;
 	int i;
@@ -629,8 +618,7 @@ OpenFile ARG1(char *,name)
  		#[ OpenAddFile :
 */
 
-int
-OpenAddFile ARG1(char *,name)
+int OpenAddFile(char *name)
 {
 	FILES *f;
 	int i;
@@ -651,8 +639,7 @@ OpenAddFile ARG1(char *,name)
  		#[ CreateFile :
 */
 
-int
-CreateFile ARG1(char *,name)
+int CreateFile(char *name)
 {
 	FILES *f;
 	int i;
@@ -669,8 +656,7 @@ CreateFile ARG1(char *,name)
  		#[ CreateLogFile :
 */
 
-int
-CreateLogFile ARG1(char *,name)
+int CreateLogFile(char *name)
 {
 	FILES *f;
 	int i;
@@ -688,8 +674,7 @@ CreateLogFile ARG1(char *,name)
  		#[ CloseFile :
 */
 
-VOID
-CloseFile ARG1(int,handle)
+VOID CloseFile(int handle)
 {
 	if ( handle >= 0 ) {
 		FILES *f;	/* we need this variable to be thread-safe */
@@ -713,8 +698,7 @@ CloseFile ARG1(int,handle)
 		Conclusion: MALLOCDEBUG will have to be a bit unsafe
 */
 
-int
-CreateHandle ARG0
+int CreateHandle()
 {
 	int i, j;
 #ifndef MALLOCDEBUG
@@ -767,8 +751,7 @@ CreateHandle ARG0
  		#[ ReadFile :
 */
 
-LONG
-ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
+LONG ReadFile(int handle, UBYTE *buffer, LONG size)
 {
 	LONG inbuf = 0, r;
 	FILES *f;
@@ -818,8 +801,7 @@ ReadFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 		In the test program much bigger values gave a slower program.
 */
 
-LONG
-ReadPosFile BARG4(FILEHANDLE *,fi,UBYTE *,buffer,LONG,size,POSITION *,pos)
+LONG ReadPosFile(PHEAD FILEHANDLE *fi, UBYTE *buffer, LONG size, POSITION *pos)
 {
 	GETBIDENTITY
 	LONG i, retval = 0;
@@ -883,8 +865,7 @@ ReadPosFile BARG4(FILEHANDLE *,fi,UBYTE *,buffer,LONG,size,POSITION *,pos)
  		#[ WriteFile :
 */
 
-LONG
-WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
+LONG WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 {
 	FILES *f;
 	LONG retval, totalwritten = 0, stilltowrite;
@@ -906,7 +887,7 @@ WriteFileToFile ARG3(int,handle,UBYTE *,buffer,LONG,size)
 /*[17nov2005]:*/
 WRITEFILE WriteFile = &WriteFileToFile;
 /*
-LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
+LONG (*WriteFile)(int handle, UBYTE *buffer, LONG size) = &WriteFileToFile;
 */
 /*:[17nov2005]*/
 
@@ -915,8 +896,7 @@ LONG (*WriteFile) ARG3 (int,handle,UBYTE *,buffer,LONG,size) = &WriteFileToFile;
  		#[ SeekFile :
 */
 
-VOID
-SeekFile ARG3(int,handle,POSITION *,offset,int,origin)
+VOID SeekFile(int handle, POSITION *offset, int origin)
 {
 	FILES *f;
 	LOCK(AM.handlelock);
@@ -941,8 +921,7 @@ SeekFile ARG3(int,handle,POSITION *,offset,int,origin)
  		#[ TellFile :
 */
 
-LONG
-TellFile ARG1(int,handle)
+LONG TellFile(int handle)
 {
 	POSITION pos;
 	TELLFILE(handle,&pos);
@@ -952,8 +931,7 @@ TellFile ARG1(int,handle)
 	return(BASEPOSITION(pos));
 }
 
-VOID
-TELLFILE ARG2(int,handle,POSITION *,position)
+VOID TELLFILE(int handle, POSITION *position)
 {
 	FILES *f;
 	LOCK(AM.handlelock);
@@ -967,7 +945,7 @@ TELLFILE ARG2(int,handle,POSITION *,position)
  		#[ FlushFile :
 */
 
-void FlushFile ARG1(int,handle)
+void FlushFile(int handle)
 {
 	FILES *f;
 	LOCK(AM.handlelock);
@@ -981,8 +959,7 @@ void FlushFile ARG1(int,handle)
  		#[ GetPosFile :
 */
 
-int
-GetPosFile ARG2(int,handle,fpos_t *,pospointer)
+int GetPosFile(int handle, fpos_t *pospointer)
 {
 	FILES *f;
 	LOCK(AM.handlelock);
@@ -996,8 +973,7 @@ GetPosFile ARG2(int,handle,fpos_t *,pospointer)
  		#[ SetPosFile :
 */
 
-int
-SetPosFile ARG2(int,handle,fpos_t *,pospointer)
+int SetPosFile(int handle, fpos_t *pospointer)
 {
 	FILES *f;
 	LOCK(AM.handlelock);
@@ -1017,7 +993,7 @@ SetPosFile ARG2(int,handle,fpos_t *,pospointer)
 		is very slow.
 */
 
-VOID SynchFile ARG1(int,handle)
+VOID SynchFile(int handle)
 {
 	FILES *f;
 	if ( handle >= 0 ) {
@@ -1039,7 +1015,7 @@ VOID SynchFile ARG1(int,handle)
 		is very slow.
 */
 
-VOID TruncateFile ARG1(int,handle)
+VOID TruncateFile(int handle)
 {
 	FILES *f;
 	if ( handle >= 0 ) {
@@ -1058,8 +1034,7 @@ VOID TruncateFile ARG1(int,handle)
 		handle. If not, we open the file first and add it to the buffers.
 */
 
-int
-GetChannel ARG1(char *,name)
+int GetChannel(char *name)
 {
 	CHANNEL *ch;
 	int i;
@@ -1090,8 +1065,7 @@ GetChannel ARG1(char *,name)
 		handle. If not, we open the file first and add it to the buffers.
 */
 
-int
-GetAppendChannel ARG1(char *,name)
+int GetAppendChannel(char *name)
 {
 	CHANNEL *ch;
 	int i;
@@ -1121,8 +1095,7 @@ GetAppendChannel ARG1(char *,name)
 		Checks whether we have this file already. If so, we close it.
 */
 
-int
-CloseChannel ARG1(char *,name)
+int CloseChannel(char *name)
 {
 	int i;
 	for ( i = 0; i < NumOutputChannels; i++ ) {
@@ -1145,8 +1118,7 @@ CloseChannel ARG1(char *,name)
  		#[ StrCmp :
 */
 
-int
-StrCmp ARG2(UBYTE *,s1,UBYTE *,s2)
+int StrCmp(UBYTE *s1, UBYTE *s2)
 {
 	while ( *s1 && *s1 == *s2 ) { s1++; s2++; }
 	return((int)*s1-(int)*s2);
@@ -1157,8 +1129,7 @@ StrCmp ARG2(UBYTE *,s1,UBYTE *,s2)
  		#[ StrICmp :
 */
 
-int
-StrICmp ARG2(UBYTE *,s1,UBYTE *,s2)
+int StrICmp(UBYTE *s1, UBYTE *s2)
 {
 	while ( *s1 && tolower(*s1) == tolower(*s2) ) { s1++; s2++; }
 	return((int)tolower(*s1)-(int)tolower(*s2));
@@ -1169,8 +1140,7 @@ StrICmp ARG2(UBYTE *,s1,UBYTE *,s2)
  		#[ StrHICmp :
 */
 
-int
-StrHICmp ARG2(UBYTE *,s1,UBYTE *,s2)
+int StrHICmp(UBYTE *s1, UBYTE *s2)
 {
 	while ( *s1 && tolower(*s1) == *s2 ) { s1++; s2++; }
 	return((int)tolower(*s1)-(int)(*s2));
@@ -1181,8 +1151,7 @@ StrHICmp ARG2(UBYTE *,s1,UBYTE *,s2)
  		#[ StrICont :
 */
 
-int
-StrICont ARG2(UBYTE *,s1,UBYTE *,s2)
+int StrICont(UBYTE *s1, UBYTE *s2)
 {
 	while ( *s1 && tolower(*s1) == tolower(*s2) ) { s1++; s2++; }
 	if ( *s1 == 0 ) return(0);
@@ -1194,8 +1163,7 @@ StrICont ARG2(UBYTE *,s1,UBYTE *,s2)
  		#[ ConWord :
 */
 
-int
-ConWord ARG2(UBYTE *,s1,UBYTE *,s2)
+int ConWord(UBYTE *s1, UBYTE *s2)
 {
 	while ( *s1 && ( tolower(*s1) == tolower(*s2) ) ) { s1++; s2++; }
 	if ( *s1 == 0 ) return(1);
@@ -1207,8 +1175,7 @@ ConWord ARG2(UBYTE *,s1,UBYTE *,s2)
  		#[ StrLen :
 */
 
-int
-StrLen ARG1(UBYTE *,s)
+int StrLen(UBYTE *s)
 {
 	int i = 0;
 	while ( *s ) { s++; i++; }
@@ -1220,8 +1187,7 @@ StrLen ARG1(UBYTE *,s)
  		#[ NumToStr :
 */
 
-VOID
-NumToStr ARG2(UBYTE *,s,LONG,x)
+VOID NumToStr(UBYTE *s, LONG x)
 {
 	UBYTE *t, str[24];
 	t = str;
@@ -1244,8 +1210,7 @@ NumToStr ARG2(UBYTE *,s,LONG,x)
 		The type of output is given by type, the string by str and the
 		number of characters in it by num
 */
-VOID
-WriteString ARG3(int,type,UBYTE *,str,int,num)
+VOID WriteString(int type, UBYTE *str, int num)
 {
 	int error = 0;
 
@@ -1279,8 +1244,7 @@ WriteString ARG3(int,type,UBYTE *,str,int,num)
 		number of characters in it by num
 */
 
-VOID
-WriteUnfinString ARG3(int,type,UBYTE *,str,int,num)
+VOID WriteUnfinString(int type, UBYTE *str, int num)
 {
 	int error = 0;
 
@@ -1309,8 +1273,7 @@ WriteUnfinString ARG3(int,type,UBYTE *,str,int,num)
 		is not enough memory.
 */
 
-UBYTE *
-strDup1 ARG2(UBYTE *,instring,char *,ifwrong)
+UBYTE *strDup1(UBYTE *instring, char *ifwrong)
 {
 	UBYTE *s = instring, *to;
 	while ( *s ) s++;
@@ -1325,8 +1288,7 @@ strDup1 ARG2(UBYTE *,instring,char *,ifwrong)
  		#[ EndOfToken :
 */
 
-UBYTE *
-EndOfToken ARG1(UBYTE *,s)
+UBYTE *EndOfToken(UBYTE *s)
 {
 	UBYTE c;
 	while ( ( c = (UBYTE)(FG.cTable[*s]) ) == 0 || c == 1 ) s++;
@@ -1338,8 +1300,7 @@ EndOfToken ARG1(UBYTE *,s)
  		#[ ToToken :
 */
 
-UBYTE *
-ToToken ARG1(UBYTE *,s)
+UBYTE *ToToken(UBYTE *s)
 {
 	UBYTE c;
 	while ( *s && ( c = (UBYTE)(FG.cTable[*s]) ) != 0 && c != 1 ) s++;
@@ -1354,8 +1315,7 @@ ToToken ARG1(UBYTE *,s)
 	par is the number of parentheses that still has to be closed.
 */
  
-UBYTE *
-SkipField ARG2(UBYTE *,s,int,level)
+UBYTE *SkipField(UBYTE *s, int level)
 {
 	while ( *s ) {
 		if ( *s == ',' && level == 0 ) return(s);
@@ -1382,8 +1342,7 @@ SkipField ARG2(UBYTE *,s,int,level)
 
 */
 
-WORD
-ReadSnum ARG1(UBYTE **,p)
+WORD ReadSnum(UBYTE **p)
 {
 	LONG x = 0;
 	UBYTE *s;
@@ -1407,8 +1366,7 @@ ReadSnum ARG1(UBYTE **,p)
 
 */
 
-UBYTE *
-NumCopy ARG2(WORD,x,UBYTE *,to)
+UBYTE *NumCopy(WORD x, UBYTE *to)
 {
 	UBYTE *s;
 	WORD i = 0, j;
@@ -1431,8 +1389,7 @@ NumCopy ARG2(WORD,x,UBYTE *,to)
 
 */
 
-char *
-LongCopy ARG2(LONG,x,char *,to)
+char *LongCopy(LONG x, char *to)
 {
 	char *s;
 	WORD i = 0, j;
@@ -1455,8 +1412,7 @@ LongCopy ARG2(LONG,x,char *,to)
 	Bugfix feb 2003. y was not pointer!
 */
 
-char *
-LongLongCopy ARG2(off_t *,y,char *,to)
+char *LongLongCopy(off_t *y, char *to)
 {
 	off_t x = *y;
 	char *s;
@@ -1487,8 +1443,7 @@ static char notime[] = "";
 #endif
 #endif
 
-UBYTE *
-MakeDate ARG0
+UBYTE *MakeDate()
 {
 #ifdef ANSI
 	time_t tp;
@@ -1510,8 +1465,7 @@ MakeDate ARG0
  		#[ set_in :
          Returns 1 if ch is in set ; 0 if ch is not in set:
 */
-int 
-set_in ARG2(UBYTE, ch, set_of_char, set)
+int set_in(UBYTE ch, set_of_char set)
 {
 	set += ch/8;
 	switch (ch % 8){
@@ -1531,8 +1485,7 @@ set_in ARG2(UBYTE, ch, set_of_char, set)
  		#[ set_set :
 			sets ch into set; returns *set:
 */
-one_byte 
-set_set ARG2(UBYTE, ch, set_of_char, set)
+one_byte set_set(UBYTE ch, set_of_char set)
 {
 	one_byte tmp=(one_byte)set;
 	set += ch/8;
@@ -1553,8 +1506,7 @@ set_set ARG2(UBYTE, ch, set_of_char, set)
  		#[ set_del :
 			deletes ch from set; returns *set:
 */
-one_byte 
-set_del ARG2(UBYTE, ch, set_of_char, set)
+one_byte set_del(UBYTE ch, set_of_char set)
 {
 	one_byte tmp=(one_byte)set;
 	set += ch/8;
@@ -1576,8 +1528,7 @@ set_del ARG2(UBYTE, ch, set_of_char, set)
 			returns *set = set1\set2. This function may be usd for initialising,
 				set_sub(a,a,a) => now a is empty set :
 */
-one_byte 
-set_sub ARG3(set_of_char, set, set_of_char, set1, set_of_char, set2)
+one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 {
 	one_byte tmp=(one_byte)set;
 	int i=0,j=0;
@@ -1610,8 +1561,7 @@ char *dummymessage = "Malloc";
 INILOCK(MallocLock);
 #endif
  
-VOID *
-Malloc ARG1(LONG,size)
+VOID *Malloc(LONG size)
 {
 	VOID *mem;
 #ifdef MALLOCDEBUG
@@ -1693,8 +1643,7 @@ Malloc ARG1(LONG,size)
 		Gives the user some idea of what is happening.
 */
 
-VOID *
-Malloc1 ARG2(LONG,size,char *,messageifwrong)
+VOID *Malloc1(LONG size, char *messageifwrong)
 {
 	VOID *mem;
 #ifdef MALLOCDEBUG
@@ -1760,7 +1709,7 @@ Malloc1 ARG2(LONG,size,char *,messageifwrong)
  		#[ M_free :
 */
 
-void M_free ARG2(VOID *,x,char *,where)
+void M_free(VOID *x, char *where)
 {
 #ifdef MALLOCDEBUG
 	char *t = (char *)x;
@@ -1870,7 +1819,7 @@ void M_check()
 	}
 }
 
-void M_print ARG0
+void M_print()
 {
 	int i;
 	MesPrint("We have the following memory allocations left:");
@@ -1895,8 +1844,7 @@ void M_print() {}
 	If the list has not been initialized yet we start with 10 elements.
 */
 
-VOID *
-FromList ARG1(LIST *,L)
+VOID *FromList(LIST *L)
 {
 	void *newlist;
 	int i, *old, *newL;
@@ -1922,8 +1870,7 @@ FromList ARG1(LIST *,L)
 		Same as FromList, but we zero excess variables.
 */
 
-VOID *
-From0List ARG1(LIST *,L)
+VOID *From0List(LIST *L)
 {
 	void *newlist;
 	int i, *old, *newL;
@@ -1952,8 +1899,7 @@ From0List ARG1(LIST *,L)
 	We allow at most MAXVARIABLES elements!
 */
 
-VOID *
-FromVarList ARG1(LIST *,L)
+VOID *FromVarList(LIST *L)
 {
 	void *newlist;
 	int i, *old, *newL;
@@ -1995,8 +1941,7 @@ FromVarList ARG1(LIST *,L)
  		#[ DoubleList :
 */
 
-int
-DoubleList ARG4(VOID ***,lijst,int *,oldsize,int,objectsize,char *,nameoftype)
+int DoubleList(VOID ***lijst, int *oldsize, int objectsize, char *nameoftype)
 {
 	VOID **newlist;
 	LONG i, newsize, fullsize;
@@ -2048,8 +1993,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
  		#[ DoubleLList :
 */
 
-int
-DoubleLList ARG4(VOID ***,lijst,LONG *,oldsize,int,objectsize,char *,nameoftype)
+int DoubleLList(VOID ***lijst, LONG *oldsize, int objectsize, char *nameoftype)
 {
 	VOID **newlist;
 	LONG i, newsize, fullsize;
@@ -2097,8 +2041,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 	else { newsize = 100; u = (x *)Malloc1(newsize*sizeof(x),text); } \
 	*start = (void *)u; *stop = (void *)(u+newsize); }
 
-void
-DoubleBuffer ARG4(void **,start,void **,stop,int,size,char *,text)
+void DoubleBuffer(void **start, void **stop, int size, char *text)
 {
 	long oldsize, newsize, i;
 	if ( size == sizeof(char) ) DODOUBLE(char)
@@ -2123,7 +2066,7 @@ DoubleBuffer ARG4(void **,start,void **,stop,int,size,char *,text)
 		while ( --i >= 0 ) *t++ = *m++; M_free(*buffer,"ExpandBuffer"); \
 	} *buffer = newbuffer; *oldsize = newsize; }
 
-void ExpandBuffer ARG3(void **,buffer,LONG *,oldsize,int,type)
+void ExpandBuffer(void **buffer, LONG *oldsize, int type)
 {
 	LONG newsize, i;
 	if ( *oldsize <= 0 ) { newsize = 100; }
@@ -2147,8 +2090,7 @@ void ExpandBuffer ARG3(void **,buffer,LONG *,oldsize,int,type)
 		Returnvalue is long, regardless of overflow.
 */
 
-LONG
-iexp ARG2(LONG,x,int,p)
+LONG iexp(LONG x, int p)
 {
 	int sign;
 	LONG y;
@@ -2178,8 +2120,7 @@ iexp ARG2(LONG,x,int,p)
 		If par == 0 we need the argument header also.
 */
 
-void
-ToGeneral ARG3(WORD *,r,WORD *,m,WORD,par)
+void ToGeneral(WORD *r, WORD *m, WORD par)
 {
 	WORD *mm = m, j, k;
 	if ( par ) m++;
@@ -2218,8 +2159,7 @@ MakeSize:
 		If there was no conversion m hasn't been touched.
 */
 
-int
-ToFast ARG2(WORD *,r,WORD *,m)
+int ToFast(WORD *r, WORD *m)
 {
 	WORD i;
 	if ( *r == ARGHEAD ) { *m++ = -SNUMBER; *m++ = 0; return(1); }
@@ -2272,8 +2212,7 @@ ToFast ARG2(WORD *,r,WORD *,m)
 		            -1: may be an index
 */
 
-int
-IsLikeVector ARG1(WORD *,arg)
+int IsLikeVector(WORD *arg)
 {
 	WORD *sstop, *t, *tstop;
 	if ( *arg < 0 ) {
@@ -2301,8 +2240,7 @@ IsLikeVector ARG1(WORD *,arg)
  		#[ CompareArgs :
 */
 
-int
-CompareArgs ARG2(WORD *,arg1,WORD *,arg2)
+int CompareArgs(WORD *arg1, WORD *arg2)
 {
 	int i1,i2;
 	if ( *arg1 > 0 ) {
@@ -2333,7 +2271,7 @@ CompareArgs ARG2(WORD *,arg1,WORD *,arg2)
 	returns 1 if arg1 comes first, -1 if arg2 comes first, 0 if equal
 */
 
-int CompArg ARG2(WORD *,s1, WORD *,s2)
+int CompArg(WORD *s1, WORD *s2)
 {
 	GETIDENTITY
 	WORD *st1, *st2, x[7];
@@ -2489,8 +2427,7 @@ argerror:
 
 #include <sys/timeb.h>
 
-LONG
-TimeWallClock ARG1(WORD,par)
+LONG TimeWallClock(WORD par)
 {
 	struct timeb tp;
 	ftime(&tp);
@@ -2510,8 +2447,7 @@ TimeWallClock ARG1(WORD,par)
  		#[ TimeChildren :
 */
 
-LONG
-TimeChildren ARG1(WORD,par)
+LONG TimeChildren(WORD par)
 {
 	if ( par ) return(Timer(1)-AM.OldChildTime);
 	AM.OldChildTime = Timer(1);
@@ -2523,8 +2459,7 @@ TimeChildren ARG1(WORD,par)
  		#[ TimeCPU :
 */
 
-LONG
-TimeCPU ARG1(WORD,par)
+LONG TimeCPU(WORD par)
 {
 	GETIDENTITY
 	if ( par ) return(Timer(0)-AR.OldTime);
@@ -2541,8 +2476,7 @@ TimeCPU ARG1(WORD,par)
 
 #include <time.h>
 
-LONG
-Timer ARG1(int,par)
+LONG Timer(int par)
 {
 	long t;
 	if ( par == 1 ) { return(0); }
@@ -2563,8 +2497,7 @@ Timer ARG1(int,par)
 #include <sys/time.h>
 #include <sys/resource.h>
 
-LONG
-Timer ARG1(int,par)
+LONG Timer(int par)
 {
     struct rusage rusage;
 	if ( par == 1 ) {
@@ -2711,8 +2644,7 @@ LONG Timer(int par)
 #else
 
 #ifdef ANSI
-LONG
-Timer ARG1(int,par)
+LONG Timer(int par)
 {
 #ifdef ALPHA
 /* 	clock_t t,tikken = clock();									  */
@@ -2860,7 +2792,7 @@ LONG Timer(int par)
 		Routine for debugging purposes
 */
 
-int Crash ARG0
+int Crash()
 {
 	int retval;
 #ifdef DEBUGGING

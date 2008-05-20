@@ -13,8 +13,7 @@
   	#[ inicbufs :
 */
 
-int
-inicbufs ARG0
+int inicbufs()
 {
 	int i, num = AC.cbufList.num;
 	CBUF *C = cbuf;
@@ -50,7 +49,7 @@ inicbufs ARG0
   	#[ finishcbuf :
 */
 
-void finishcbuf ARG1(WORD,num)
+void finishcbuf(WORD num)
 {
 	CBUF *C = cbuf+num;
 	if ( C->Buffer ) M_free(C->Buffer,"compiler buffer");
@@ -72,7 +71,7 @@ void finishcbuf ARG1(WORD,num)
   	#[ clearcbuf :
 */
 
-void clearcbuf ARG1(WORD,num)
+void clearcbuf(WORD num)
 {
 	CBUF *C = cbuf+num;
 	if ( C->boomlijst ) M_free(C->boomlijst,"compiler buffer");
@@ -92,8 +91,7 @@ void clearcbuf ARG1(WORD,num)
   	#[ DoubleCbuffer :
 */
 
-WORD *
-DoubleCbuffer ARG2(int,num,WORD *,w)
+WORD *DoubleCbuffer(int num, WORD *w)
 {
 	CBUF *C = cbuf + num;
 	long newsize = C->BufferSize*2;
@@ -126,7 +124,7 @@ DoubleCbuffer ARG2(int,num,WORD *,w)
   	#[ AddLHS :
 */
 
-WORD *AddLHS ARG1(int,num)
+WORD *AddLHS(int num)
 {
 	CBUF *C = cbuf + num;
 	C->numlhs++;
@@ -144,7 +142,7 @@ WORD *AddLHS ARG1(int,num)
   	#[ AddRHS :
 */
 
-WORD *AddRHS ARG2(int,num,int,type)
+WORD *AddRHS(int num, int type)
 {
 	LONG fullsize, *lold, newsize;
 	int i;
@@ -207,7 +205,7 @@ restart:;
   	#[ AddNtoL :
 */
 
-int AddNtoL ARG2(int,n,WORD *,array)
+int AddNtoL(int n, WORD *array)
 {
 	int i;
 	CBUF *C = cbuf+AC.cbufnum;
@@ -225,7 +223,7 @@ int AddNtoL ARG2(int,n,WORD *,array)
   	#[ AddNtoC :
 */
 
-int AddNtoC ARG2(int,n,WORD *,array)
+int AddNtoC(int n, WORD *array)
 {
 	int i;
 	WORD *w;
@@ -259,7 +257,7 @@ int AddNtoC ARG2(int,n,WORD *,array)
                         If it was in the tree, it returns the tree 'value'.
 */
 
-int InsTree ARG1(int,h)
+int InsTree(int h)
 {
 	CBUF *C = cbuf + AC.cbufnum;
 	COMPTREE *boomlijst = C->boomlijst, *q = boomlijst + C->rootnum, *p, *s;
@@ -440,7 +438,7 @@ balance:;
   	#[ RedoTree :
 */
 
-void RedoTree ARG2(CBUF *,C,int,size)
+void RedoTree(CBUF *C, int size)
 {
 	COMPTREE *newboomlijst;
 	int i;
@@ -458,7 +456,7 @@ void RedoTree ARG2(CBUF *,C,int,size)
   	#[ ClearTree :
 */
 
-void ClearTree ARG1(int,i)
+void ClearTree(int i)
 {
 	CBUF *C = cbuf + i;
 	COMPTREE *root = C->boomlijst;
@@ -479,7 +477,7 @@ void ClearTree ARG1(int,i)
 	Returns the number of non-commuting terms in the expression
 */
 
-LONG numcommute ARG2(WORD *,terms,LONG *,numterms)
+LONG numcommute(WORD *terms, LONG *numterms)
 {
 	LONG num = 0;
 	WORD *t, *m;

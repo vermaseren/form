@@ -47,8 +47,7 @@ static KEYWORD ModuleOptions[] = {
 	,{"sum",				DoModSum,		MODSUM,			0}
 };
 
-int
-ModuleInstruction ARG2(int *,moduletype,int *,specialtype)
+int ModuleInstruction(int *moduletype, int *specialtype)
 {
 	UBYTE *t, *s, *u, c;
 	KEYWORD *key;
@@ -114,8 +113,7 @@ ModuleInstruction ARG2(int *,moduletype,int *,specialtype)
 	ModuleOption, options;
 */
 
-int
-CoModuleOption ARG1(UBYTE *,s)
+int CoModuleOption(UBYTE *s)
 {
 	UBYTE *t,*tt,c;
 	KEYWORD *option;
@@ -168,8 +166,7 @@ CoModuleOption ARG1(UBYTE *,s)
 	ModuleOption statement.
 */
 
-int
-CoModOption ARG1(UBYTE *,s)
+int CoModOption(UBYTE *s)
 {
 	UBYTE *t,c;
 	int error = 0;
@@ -208,8 +205,7 @@ CoModOption ARG1(UBYTE *,s)
  		#[ SetSpecialMode :
 */
 
-VOID
-SetSpecialMode ARG2(int,moduletype,int,specialtype)
+VOID SetSpecialMode(int moduletype, int specialtype)
 {
 	DUMMYUSE(moduletype); DUMMYUSE(specialtype);
 }
@@ -218,8 +214,7 @@ SetSpecialMode ARG2(int,moduletype,int,specialtype)
  		#] SetSpecialMode :
  		#[ MakeGlobal :
 
-VOID
-MakeGlobal ARG0
+VOID MakeGlobal()
 {
 }
 
@@ -227,8 +222,7 @@ MakeGlobal ARG0
  		#[ ExecModule :
 */
 
-int
-ExecModule ARG1(int,moduletype)
+int ExecModule(int moduletype)
 {
 	return(DoExecute(moduletype,0));
 }
@@ -238,8 +232,7 @@ ExecModule ARG1(int,moduletype)
  		#[ ExecStore :
 */
 
-int
-ExecStore ARG0
+int ExecStore()
 {
 	return(0);
 }
@@ -254,8 +247,7 @@ ExecStore ARG0
 			What to do with files we write to
 */
 
-VOID
-FullCleanUp ARG0
+VOID FullCleanUp()
 {
 	int j;
 
@@ -315,8 +307,7 @@ FullCleanUp ARG0
  		#[ DoPolyfun :
 */
 
-int
-DoPolyfun ARG1(UBYTE *,s)
+int DoPolyfun(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -361,8 +352,7 @@ DoPolyfun ARG1(UBYTE *,s)
  		#[ DoPolyratfun :
 */
 
-int
-DoPolyratfun ARG1(UBYTE *,s)
+int DoPolyratfun(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -407,7 +397,7 @@ DoPolyratfun ARG1(UBYTE *,s)
  		#[ DoNoParallel :
 */
 
-int DoNoParallel ARG1(UBYTE *,s)
+int DoNoParallel(UBYTE *s)
 {
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
 		/*[30jan2004 mt]:*/
@@ -425,7 +415,7 @@ int DoNoParallel ARG1(UBYTE *,s)
  		#[ DoParallel :
 */
 
-int DoParallel ARG1(UBYTE *,s)
+int DoParallel(UBYTE *s)
 {
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
 		/*[30jan2004 mt]:*/ 
@@ -450,7 +440,7 @@ int DoParallel ARG1(UBYTE *,s)
  		#[ DoModSum :
 */
 
-int DoModSum ARG1(UBYTE *,s)
+int DoModSum(UBYTE *s)
 {
 	while ( *s == ',' ) s++;
 	if ( *s != '$' ) {
@@ -470,7 +460,7 @@ int DoModSum ARG1(UBYTE *,s)
  		#[ DoModMax :
 */
 
-int DoModMax ARG1(UBYTE *,s)
+int DoModMax(UBYTE *s)
 {
 	while ( *s == ',' ) s++;
 	if ( *s != '$' ) {
@@ -490,7 +480,7 @@ int DoModMax ARG1(UBYTE *,s)
  		#[ DoModMin :
 */
 
-int DoModMin ARG1(UBYTE *,s)
+int DoModMin(UBYTE *s)
 {
 	while ( *s == ',' ) s++;
 	if ( *s != '$' ) {
@@ -510,7 +500,7 @@ int DoModMin ARG1(UBYTE *,s)
  		#[ DoModLocal :
 */
 
-int DoModLocal ARG1(UBYTE *,s)
+int DoModLocal(UBYTE *s)
 {
 	while ( *s == ',' ) s++;
 	if ( *s != '$' ) {
@@ -530,7 +520,7 @@ int DoModLocal ARG1(UBYTE *,s)
  		#[ DoSlavePatch :
 */
 
-int DoSlavePatch ARG1(UBYTE *,s)
+int DoSlavePatch(UBYTE *s)
 {
 	LONG x;
 	while ( *s == ',' || *s == '=' ) s++;
@@ -548,7 +538,7 @@ int DoSlavePatch ARG1(UBYTE *,s)
  		#[ DoModDollar :
 */
 
-UBYTE * DoModDollar ARG2(UBYTE *,s,int,type)
+UBYTE * DoModDollar(UBYTE *s, int type)
 {
 	UBYTE *name, c;
 	WORD number;
@@ -627,7 +617,7 @@ UBYTE * DoModDollar ARG2(UBYTE *,s,int,type)
 		comes after the definition of the expressions.
 */
 
-int DoinParallel ARG1(UBYTE *,s)
+int DoinParallel(UBYTE *s)
 {
 	return(DoInParallel(s,1));
 }
@@ -637,7 +627,7 @@ int DoinParallel ARG1(UBYTE *,s)
  		#[ DonotinParallel :
 */
 
-int DonotinParallel ARG1(UBYTE *,s)
+int DonotinParallel(UBYTE *s)
 {
 	return(DoInParallel(s,0));
 }
@@ -649,8 +639,7 @@ int DonotinParallel ARG1(UBYTE *,s)
  		#[ DoExecStatement :
 */
 
-int
-DoExecStatement ARG0
+int DoExecStatement()
 {
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
@@ -667,8 +656,7 @@ DoExecStatement ARG0
  		#[ DoPipeStatement :
 */
 
-int
-DoPipeStatement ARG0
+int DoPipeStatement()
 {
 #ifdef WITHPIPE
 	FLUSHCONSOLE;

@@ -32,8 +32,7 @@
 	to any of these sets.
 */
 
-WORD
-FindOnly BARG2(WORD *,term,WORD *,pattern)
+WORD FindOnly(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m;
@@ -391,8 +390,7 @@ EndLoop:;
 
 */
 
-WORD
-FindOnce BARG2(WORD *,term,WORD *,pattern)
+WORD FindOnce(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m;
@@ -927,8 +925,7 @@ EndLoop:;
 
 */
 
-WORD
-FindMulti BARG2(WORD *,term,WORD *,pattern)
+WORD FindMulti(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m, *p;
@@ -1044,8 +1041,7 @@ FindMulti BARG2(WORD *,term,WORD *,pattern)
 
 */
 
-WORD
-FindRest BARG2(WORD *,term,WORD *,pattern)
+WORD FindRest(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m;

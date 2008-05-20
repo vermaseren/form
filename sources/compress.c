@@ -43,8 +43,7 @@
 	Routine prepares a gzip output stream for the given file.
 */
 
-int
-SetupOutputGZIP ARG1(FILEHANDLE *,f)
+int SetupOutputGZIP(FILEHANDLE *f)
 {
 	GETIDENTITY
 
@@ -112,8 +111,7 @@ SetupOutputGZIP ARG1(FILEHANDLE *,f)
 	Upon exit the input buffer will be cleared.
 */
 
-int
-PutOutputGZIP ARG1(FILEHANDLE *,f)
+int PutOutputGZIP(FILEHANDLE *f)
 {
 	int zerror;
 /*
@@ -196,8 +194,7 @@ PutOutputGZIP ARG1(FILEHANDLE *,f)
 	Both buffers will be cleared.
 */
 
-int
-FlushOutputGZIP ARG1(FILEHANDLE *,f)
+int FlushOutputGZIP(FILEHANDLE *f)
 {
 	int zerror;
 /*
@@ -321,8 +318,7 @@ FlushOutputGZIP ARG1(FILEHANDLE *,f)
 	Routine prepares all gzip input streams for a merge.
 */
 
-int
-SetupAllInputGZIP ARG1(SORTING *,S)
+int SetupAllInputGZIP(SORTING *S)
 {
 	GETIDENTITY
 	int i, NumberOpened = 0;
@@ -401,8 +397,7 @@ SetupAllInputGZIP ARG1(SORTING *,S)
 	The return value is the number of bytes in the buffer.
 */
 
-LONG
-FillInputGZIP ARG5(FILEHANDLE *,f,POSITION *,position,UBYTE *,buffer,LONG,buffersize,int,numstream)
+LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffersize, int numstream)
 {
 	GETIDENTITY
 	int zerror;

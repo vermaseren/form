@@ -13,9 +13,9 @@
 /*See the file extcmd.c*/
 
 #ifdef REMOVEDBY_MT
-extern int (*writeBufToExtChannel) ARG2(char *,buf, size_t,n);
-extern int (*getcFromExtChannel) ARG0 ;
-extern int (*setTerminatorForExternalChannel) ARG1 (char *,newterminator);
+extern int (*writeBufToExtChannel)(char *buf, size_t n);
+extern int (*getcFromExtChannel)();
+extern int (*setTerminatorForExternalChannel)(char *newterminator);
 #endif
 extern WRITEBUFTOEXTCHANNEL writeBufToExtChannel;
 extern GETCFROMEXTCHANNEL getcFromExtChannel;
@@ -23,7 +23,7 @@ extern SETTERMINATORFOREXTERNALCHANNEL setTerminatorForExternalChannel;
 extern SETKILLMODEFOREXTERNALCHANNEL setKillModeForExternalChannel;
 
 /*
-extern LONG (*WriteFile)  ARG3 (int,handle,UBYTE *,buffer,LONG,number);
+extern LONG (*WriteFile)(int handle, UBYTE *buffer, LONG number);
 */
 extern WRITEFILE WriteFile;
 /*:[17nov2005 mt]*/

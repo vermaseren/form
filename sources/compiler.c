@@ -208,8 +208,7 @@ LONG insubexpbuffers = 0;
 		Search in table 2 can be binary.
 */
 
-VOID
-inictable ARG0
+VOID inictable()
 {
 	KEYWORD *k = com1commands;
 	int i, j, ksize;
@@ -235,8 +234,7 @@ inictable ARG0
 		in the calling routine.
 */
 
-KEYWORD *
-findcommand ARG1(UBYTE *,in)
+KEYWORD *findcommand(UBYTE *in)
 {
 	int hi, med, lo, i;
 	UBYTE *s, c;
@@ -280,7 +278,7 @@ findcommand ARG1(UBYTE *,in)
  		#[ ParenthesesTest :
 */
 
-int ParenthesesTest ARG1(UBYTE *,sin)
+int ParenthesesTest(UBYTE *sin)
 {
 	WORD L1 = 0, L2 = 0, L3 = 0;
 	UBYTE *s = sin;
@@ -330,8 +328,7 @@ int ParenthesesTest ARG1(UBYTE *,sin)
 		is extended later.
 */
 
-UBYTE *
-SkipAName ARG1(UBYTE *,s)
+UBYTE *SkipAName(UBYTE *s)
 {
 	UBYTE *t = s;
 	if ( *s == '[' ) {
@@ -359,8 +356,7 @@ SkipAName ARG1(UBYTE *,s)
  		#[ IsRHS :
 */
 
-UBYTE *
-IsRHS ARG2(UBYTE *,s,UBYTE,c)
+UBYTE *IsRHS(UBYTE *s, UBYTE c)
 {
 	while ( *s && *s != c ) {
 		if ( *s == '[' ) {
@@ -406,8 +402,7 @@ IsRHS ARG2(UBYTE *,s,UBYTE,c)
  		#[ IsIdStatement :
 */
 
-int
-IsIdStatement ARG1(UBYTE *,s)
+int IsIdStatement(UBYTE *s)
 {
 	DUMMYUSE(s);
 	return(0);
@@ -421,8 +416,7 @@ IsIdStatement ARG1(UBYTE *,s)
 		or an error code (< 0)
 */
 
-int
-CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
+int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 {
 	GETIDENTITY
 	int error;
@@ -460,8 +454,7 @@ CompileAlgebra ARG3(UBYTE *,s,int,leftright,WORD *,prototype)
 
 */
 
-int
-CompileStatement ARG1(UBYTE *,in)
+int CompileStatement(UBYTE *in)
 {
 	KEYWORD *k;
 	UBYTE *s;
@@ -566,7 +559,7 @@ CompileStatement ARG1(UBYTE *,in)
  		#[ TestTables :
 */
 
-int TestTables ARG0
+int TestTables()
 {
 	FUNCTIONS f = functions;
 	TABLES t;
@@ -610,7 +603,7 @@ int TestTables ARG0
 		to the prototype.
 */
 
-int CompileSubExpressions ARG1(SBYTE *,tokens)
+int CompileSubExpressions(SBYTE *tokens)
 {
 	GETIDENTITY
 	SBYTE *fill = tokens, *s = tokens, *t;
@@ -734,7 +727,7 @@ int CompileSubExpressions ARG1(SBYTE *,tokens)
 
 static UWORD *CGscrat7 = 0;
 
-int CodeGenerator ARG1(SBYTE *,tokens)
+int CodeGenerator(SBYTE *tokens)
 {
 	GETIDENTITY
 	SBYTE *s = tokens, c;
@@ -1751,7 +1744,7 @@ OverWork:
 		Puts it in the buffer
 */
 
-int CompleteTerm ARG6(WORD *,term,UWORD *,numer,UWORD *,denom,WORD,nnum,WORD,nden,int,sign)
+int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, int sign)
 {
 	int nsize, i;
 	WORD *t;

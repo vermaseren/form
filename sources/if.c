@@ -84,8 +84,7 @@
 		Note that the whole setup asks for recursions.
 */
 
-WORD
-DoIfStatement ARG2(WORD *,ifcode,WORD *,term)
+WORD DoIfStatement(WORD *ifcode, WORD *term)
 {
 	GETIDENTITY
 	WORD *ifstop, *ifp;
@@ -512,8 +511,7 @@ SkipCond:
 		Most of the code comes from TestMatch.
 */
 
-WORD
-HowMany ARG2(WORD *,ifcode,WORD *,term)
+WORD HowMany(WORD *ifcode, WORD *term)
 {
 	GETIDENTITY
 	WORD *m, *t, *r, *w, power, RetVal, i, topje, *newterm;
@@ -668,7 +666,7 @@ HowMany ARG2(WORD *,ifcode,WORD *,term)
  		#[ DoubleIfBuffers :
 */
 
-VOID DoubleIfBuffers ARG0
+VOID DoubleIfBuffers()
 {
 	int newmax, i;
 	WORD *newsumcheck;

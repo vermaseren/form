@@ -484,7 +484,7 @@ void print_R()
  *  states in FORM, so that the execution can recommence in preprocessor() as
  *  if no restart of FORM had occured.
  */
-int DoRecovery ARG0
+int DoRecovery()
 {
 	GETIDENTITY
 	FILE *fd;
@@ -1063,7 +1063,7 @@ int DoRecovery ARG0
  *  it renames this intermediate file to the final recovery file. Then it copies
  *  the sort and store files if necessary.
  */
-int DoSnapshot ARG0
+int DoSnapshot()
 {
 	GETIDENTITY
 	FILE *fd;
@@ -1490,7 +1490,7 @@ int DoSnapshot ARG0
  *  Checks whether a snapshot should be done. Calls DoSnapshot() to create the
  *  snapshot.
  */
-void DoCheckpoint ARG0
+void DoCheckpoint()
 {
 	int error;
 	LONG timestamp = Timer(0);

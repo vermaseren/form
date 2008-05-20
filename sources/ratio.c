@@ -33,8 +33,7 @@
 
 */
 
-WORD
-RatioFind BARG2(WORD *,term,WORD *,params)
+WORD RatioFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r;
@@ -142,8 +141,7 @@ We have to revise the code for the second case.
 
 */
 
-WORD
-RatioGen BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD RatioGen(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m;
@@ -293,10 +291,8 @@ RatioCall:
 
 */
 
-WORD
-BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
-			 ,WORD,x2,WORD,pow1,WORD,pow2
-                         ,WORD,sign,UWORD *,coef,WORD,ncoef)
+WORD BinomGen(WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
+              WORD pow1, WORD pow2, WORD sign, UWORD *coef, WORD ncoef)
 {
 	GETIDENTITY
 	WORD *t, *r;
@@ -368,8 +364,7 @@ BinomGen ARG10(WORD *,term,WORD,level,WORD **,tstops,WORD,x1
 
 */
 
-WORD
-DoSumF1 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
+WORD DoSumF1(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 {
 	GETBIDENTITY
 	WORD *termout, *t, extractbuff = AT.TMbuff;
@@ -435,8 +430,7 @@ SumF1Call:
 
 */
 
-WORD
-Glue BARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
+WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 {
 	GETBIDENTITY
 	UWORD *coef;
@@ -495,8 +489,7 @@ Glue BARG4(WORD *,term1,WORD *,term2,WORD *,sub,WORD,insert)
  		#[ DoSumF2 :
 */
 
-WORD
-DoSumF2 BARG4(WORD *,term,WORD *,params,WORD,replac,WORD,level)
+WORD DoSumF2(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 {
 	GETBIDENTITY
 	WORD *termout, *t, *from, *sub, *to, extractbuff = AT.TMbuff;

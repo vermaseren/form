@@ -27,8 +27,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
  		#[ Error0 :
 */
 
-VOID
-Error0 ARG1(char *,s)
+VOID Error0(char *s)
 {
 	MesPrint("=== %s",s);
 	Terminate(-1);
@@ -39,8 +38,7 @@ Error0 ARG1(char *,s)
  		#[ Error1 :
 */
 
-VOID
-Error1 ARG2(char *,s,UBYTE *,t)
+VOID Error1(char *s, UBYTE *t)
 {
 	MesPrint("@%s %s",s,t);
 	Terminate(-1);
@@ -51,8 +49,7 @@ Error1 ARG2(char *,s,UBYTE *,t)
  		#[ Error2 :
 */
 
-VOID
-Error2 ARG3(char *,s1,char *,s2,UBYTE *,t)
+VOID Error2(char *s1, char *s2, UBYTE *t)
 {
 	MesPrint("@%s%s %s",s1,s2,t);
 	Terminate(-1);
@@ -63,8 +60,7 @@ Error2 ARG3(char *,s1,char *,s2,UBYTE *,t)
  		#[ MesWork :
 */
 
-int
-MesWork ARG0
+int MesWork()
 {
 	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
@@ -121,8 +117,7 @@ va_dcl
 	WORD *array;
 	UBYTE *oldoutfill = AO.OutputLine;
 	/*[19apr2004 mt]:*/
-   LONG	
-	(*OldWrite) ARG3(int,handle,UBYTE *,buffer,LONG,size) = WriteFile;
+	LONG (*OldWrite)(int handle, UBYTE *buffer, LONG size) = WriteFile;
 	/*:[19apr2004 mt]*/
 	va_list ap;
 #ifdef ANSI
@@ -619,8 +614,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
  		#[ Warning :
 */
 
-VOID
-Warning ARG1(char *,s)
+VOID Warning(char *s)
 {
 	iswarning = 1;
 	if ( AC.WarnFlag ) MesPrint("&Warning: %s",s);
@@ -632,8 +626,7 @@ Warning ARG1(char *,s)
  		#[ HighWarning :
 */
 
-VOID
-HighWarning ARG1(char *,s)
+VOID HighWarning(char *s)
 {
 	iswarning = 1;
 	if ( AC.WarnFlag >= 2 ) MesPrint("&Warning: %s",s);
@@ -645,8 +638,7 @@ HighWarning ARG1(char *,s)
  		#[ MesCall :
 */
 
-int
-MesCall ARG1(char *,s)
+int MesCall(char *s)
 {
 	return(MesPrint((char *)"Called from %s",s));
 }
@@ -656,8 +648,7 @@ MesCall ARG1(char *,s)
  		#[ MesCerr :
 */
 
-WORD
-MesCerr ARG2(char *,s,UBYTE *,t)
+WORD MesCerr(char *s, UBYTE *t)
 {
 	UBYTE *u, c;
 	WORD i = 11;
@@ -676,8 +667,7 @@ MesCerr ARG2(char *,s,UBYTE *,t)
  		#[ MesComp :
 */
 
-WORD
-MesComp ARG3(char *,s,UBYTE *,p,UBYTE *,q)
+WORD MesComp(char *s, UBYTE *p, UBYTE *q)
 {
 	UBYTE c;
 	c = *++q; *q = 0;
@@ -691,8 +681,7 @@ MesComp ARG3(char *,s,UBYTE *,p,UBYTE *,q)
  		#[ PrintTerm :
 */
 
-VOID
-PrintTerm ARG2(WORD *,term,char *,where)
+VOID PrintTerm(WORD *term, char *where)
 {
 	UBYTE OutBuf[140];
 	WORD *t, x;
@@ -722,8 +711,7 @@ PrintTerm ARG2(WORD *,term,char *,where)
  		#[ PrintTermC :
 */
 
-VOID
-PrintTermC ARG2(WORD *,term,char *,where)
+VOID PrintTermC(WORD *term, char *where)
 {
 	UBYTE OutBuf[140];
 	WORD *t, x;
@@ -757,8 +745,7 @@ PrintTermC ARG2(WORD *,term,char *,where)
  		#[ PrintSubTerm :
 */
 
-VOID
-PrintSubTerm ARG2(WORD *,term,char *,where)
+VOID PrintSubTerm(WORD *term, char *where)
 {
 	UBYTE OutBuf[140];
 	WORD *t;
@@ -780,8 +767,7 @@ PrintSubTerm ARG2(WORD *,term,char *,where)
  		#[ PrintWords :
 */
 
-VOID
-PrintWords ARG2(WORD *,buffer,LONG,number)
+VOID PrintWords(WORD *buffer, LONG number)
 {
 	UBYTE OutBuf[140];
 	WORD *t;

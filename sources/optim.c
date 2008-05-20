@@ -56,7 +56,7 @@ static LONG *multiplicities = 0, multiplicitysize = 0;
   	#[ Optimize:
 */
 
-int Optimize ARG1(WORD,numexpr)
+int Optimize(WORD numexpr)
 {
 	int retval;
 /*	WORD powmax; */
@@ -100,7 +100,7 @@ int Optimize ARG1(WORD,numexpr)
   	#[ LoadOpti:
 */
 
-int LoadOpti ARG1(WORD,numexpr)
+int LoadOpti(WORD numexpr)
 {
 	GETIDENTITY
 	WORD *term, *t, *tstop, *m, *mstop, *oldwork = AT.WorkPointer, *tbuf, *w, nc;
@@ -207,7 +207,7 @@ int LoadOpti ARG1(WORD,numexpr)
   	#[ CleanOptiBuffer:
 */
 
-void CleanOptiBuffer ARG0
+void CleanOptiBuffer()
 {
 	LONG i;
 	if ( scanumber > 0 ) {
@@ -238,7 +238,7 @@ void CleanOptiBuffer ARG0
   	#[ PutObject:
 */
 
-int PutObject ARG2(WORD *,object,int,type)
+int PutObject(WORD *object, int type)
 {
 	int i, k;
 	WORD *obj, *o, *oo, *t, *newobjbuffer;
@@ -336,7 +336,7 @@ int PutObject ARG2(WORD *,object,int,type)
   	#[ AddToOpti:
 */
 
-int AddToOpti ARG2(WORD *,term,int,num)
+int AddToOpti(WORD *term, int num)
 {
 	LONG newnumber, i;
 	WORD *w;
@@ -395,7 +395,7 @@ int AddToOpti ARG2(WORD *,term,int,num)
   	#[ FindScratchName:
 */
 
-int FindScratchName ARG0
+int FindScratchName()
 {
 	int i, j, k, l, m;
 	WORD number;
@@ -520,7 +520,7 @@ int FindScratchName ARG0
   	#[ PrintOptima:
 */
 
-int PrintOptima ARG1(WORD,numexpr)
+int PrintOptima(WORD numexpr)
 {
 	UBYTE obuffer[80];
 	WORD *obj, stermbuf[10], *t, *m, n, oldskip = AO.OutSkip;
@@ -671,7 +671,7 @@ nexti:;
   	#[ MaxPowerOpti:
 */
 
-WORD MaxPowerOpti ARG1(LONG,number)
+WORD MaxPowerOpti(LONG number)
 {
 	SCALAR *sca = scabuffer + number;
 	WORD pow = 0, *t, *m;
@@ -693,7 +693,7 @@ WORD MaxPowerOpti ARG1(LONG,number)
   	#[ HuntNumFactor:
 */
 
-WORD HuntNumFactor ARG3(LONG,number,WORD *,coef,int,par)
+WORD HuntNumFactor(LONG number, WORD *coef, int par)
 {
 	GETIDENTITY
 	SCALAR *sca = scabuffer + number, *ss;
@@ -794,7 +794,7 @@ ExitHunt:
 	The return value is the size of the factor, or zero if the factor is 1.
 */
 
-WORD HuntFactor ARG3(LONG,number,WORD *,factor,int,par)
+WORD HuntFactor(LONG number, WORD *factor, int par)
 {
 	GETIDENTITY
 	SCALAR *sca, *scb;
@@ -925,7 +925,7 @@ loosethis:		fr = fm + 3; frr = fm;
 	coefficient of the term.
 */
 
-void HuntPairs ARG2(LONG,number,WORD,power)
+void HuntPairs(LONG number, WORD power)
 {
 	GETIDENTITY
 	SCALAR *sca = scabuffer + number;
@@ -1135,7 +1135,7 @@ nextterm:;
 	It keeps doing this till there are no more objects like this.
 */
 
-void HuntBrackets ARG1(LONG,number)
+void HuntBrackets(LONG number)
 {
 	GETIDENTITY
 	SCALAR *sca = scabuffer + number;
@@ -1348,7 +1348,7 @@ nextt:;
 	Makes a bracket of them. in the style of 2*(a+b)+c.
 */
 
-void HuntNumBrackets ARG1(LONG,number)
+void HuntNumBrackets(LONG number)
 {
 	DUMMYUSE(number);
 }
@@ -1364,7 +1364,7 @@ void HuntNumBrackets ARG1(LONG,number)
 	a+b will become a new sca
 */
 
-void HuntPowers ARG2(LONG,number,WORD,power)
+void HuntPowers(LONG number, WORD power)
 {
 	GETIDENTITY
 	SCALAR *sca = scabuffer + number;
@@ -1504,7 +1504,7 @@ callHP:
 	We try to express the bigger sca's into smaller sca's
 */
 
-void CombiOpti ARG0
+void CombiOpti()
 {
 	LONG i1, i2;
 	SCALAR *sca1, *sca2;
@@ -1615,7 +1615,7 @@ nexti2:;
   	#[ TestNewSca:
 */
 
-LONG TestNewSca ARG3(LONG,number,WORD *,coef,WORD *,ncoef)
+LONG TestNewSca(LONG number, WORD *coef, WORD *ncoef)
 {
 	GETIDENTITY
 	SCALAR *sca = scabuffer + number, *s;
@@ -1681,7 +1681,7 @@ LONG TestNewSca ARG3(LONG,number,WORD *,coef,WORD *,ncoef)
   	#[ NormOpti:
 */
 
-void NormOpti ARG1(WORD *,term)
+void NormOpti(WORD *term)
 {
 	WORD *t, *m, *w, *tt, a;
 	tt = m = term + term[2] + 4; t = term + *term;
@@ -1703,7 +1703,7 @@ void NormOpti ARG1(WORD *,term)
   	#[ SortOpti:
 */
 
-void SortOpti ARG1(LONG,number)
+void SortOpti(LONG number)
 {
 	SCALAR *sca = scabuffer + number;
 	WORD *newbuffer, *t, *m, **p, j;
@@ -1746,7 +1746,7 @@ void SortOpti ARG1(LONG,number)
 	SplitMerge for the SortOpti routine.
 */
 
-void SplitOpti ARG2(WORD **,pointers,LONG,number)
+void SplitOpti(WORD **pointers, LONG number)
 {
 	WORD *t1, *t2, *m1, *m2, **p;
 	int n;

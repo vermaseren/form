@@ -88,8 +88,8 @@ WORD *PF_shared_buff;
 
 /*[17nov2005 mt:*/
 /* moved in the beginning of the file:
-int PF_PackString ARG1(UBYTE *,str);
-int PF_UnPackString ARG1(UBYTE *,str);
+int PF_PackString(UBYTE *str);
+int PF_UnPackString(UBYTE *str);
 */
 /*:[17nov2005 mt*/
 
@@ -122,8 +122,7 @@ static LONG PF_statsinterval;/* timeinterval for printing statistics */
 
 */
 
-int
-PF_Statistics ARG2(LONG**,stats,int,proc)
+int PF_Statistics(LONG **stats, int proc)
 {
   GETIDENTITY
   SORTING *S = AT.SS;
@@ -231,8 +230,7 @@ static  UWORD *PF_ScratchSpace;  /* used in PF_GetLosers */
   Maybe this should be really hidden in the send/recv routines and pvm/mpi 
   files, it is only comlicated because of nonblocking send/receives!
 */
-PF_BUFFER*
-PF_AllocBuf ARG3(int,nbufs,LONG,bsize,WORD,free)
+PF_BUFFER* PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 {
   PF_BUFFER *buf;
   UBYTE *p,*stop;
@@ -305,8 +303,7 @@ PF_AllocBuf ARG3(int,nbufs,LONG,bsize,WORD,free)
   and initializes these with (hopefully) correct values
 
 */
-int
-PF_InitTree ARG0
+int PF_InitTree()
 {
   GETIDENTITY
   PF_BUFFER **rbuf = PF.rbufs;
@@ -443,8 +440,7 @@ PF_InitTree ARG0
   PF_term[0][0] == 0 (see InitTree), so PF_term[0] can be used to be the 
   returnvalue for a zero term (== no more terms);
 */
-WORD* 
-PF_PutIn ARG1(int,src)
+WORD* PF_PutIn(int src)
 {
   int tag;
   WORD im,r;
@@ -544,8 +540,7 @@ newterms:
   all the leaves of the tree.
   
 */
-int
-PF_GetLoser ARG1(NODE,*n)
+int PF_GetLoser(NODE *n)
 {
   GETIDENTITY
   WORD comp;
@@ -721,8 +716,7 @@ cancelled:
   outputfile. 
 
 */ 
-int 
-PF_EndSort ARG0
+int PF_EndSort()
 {
   GETIDENTITY
   FILEHANDLE *fout = AR.outfile;
@@ -863,8 +857,7 @@ static  WORD *PF_CurrentBracket;
     PF_CurrentBracket
 
 */
-WORD
-PF_GetTerm ARG1(WORD *,term)
+WORD PF_GetTerm(WORD *term)
 {
   GETIDENTITY
   FILEHANDLE *fi = AR.infile;
@@ -1057,8 +1050,7 @@ RegRet:
 	 Picks up the deferred brackets.
 */
 
-WORD
-PF_Deferred ARG2(WORD *,term,WORD,level)
+WORD PF_Deferred(WORD *term, WORD level)
 {
   GETIDENTITY
   WORD *bra,*bp,*bstop;
@@ -1160,7 +1152,7 @@ PF_Deferred ARG2(WORD *,term,WORD,level)
 */
 static LONG **PF_W4Sstats=0;
 
-int PF_Wait4Slave ARG1(int,par)
+int PF_Wait4Slave(int par)
 {
   int i,j,tag,next=PF_ANY_SOURCE,src=PF_ANY_SOURCE;
   UBYTE *has_sent=0;
@@ -1259,8 +1251,7 @@ recv:
   slave.*/
 static LONG **PF_W4Sstats=0;
 
-int 
-PF_Wait4Slave ARG1(int,src)
+int PF_Wait4Slave(int src)
 {
   int j,tag,next;
 
@@ -1294,8 +1285,7 @@ PF_Wait4Slave ARG1(int,src)
 		Messages from slaves will be read only after all slaves are ready, 
 		further in caller function.
 */
-int 
-PF_WaitAllSlaves ARG0
+int PF_WaitAllSlaves()
 {
 	int i,readySlaves,tag,next=PF_ANY_SOURCE;
 	UBYTE *has_sent=0;
@@ -1401,8 +1391,7 @@ PF_WaitAllSlaves ARG0
   but PF_GetTerm gets terms from the master ( not directly from infile).
 
 */
-int
-PF_Processor ARG3( EXPRESSIONS,e,WORD,i,WORD,LastExpression)
+int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 {
   GETIDENTITY
   WORD *term = AT.WorkPointer;
@@ -1871,7 +1860,8 @@ in pre.c.*/
 	 PF_LibInit should do all library dependent initializations.
 	 Then PF_Init should do all the library independent stuff.
 */
-int PF_Init ARG2(int*,argc,char ***,argv){
+int PF_Init(int *argc, char ***argv)
+{
   UBYTE *fp,*ubp;
   char *c;
   int fpsize=0,s;
@@ -2008,8 +1998,7 @@ int PF_Init ARG2(int*,argc,char ***,argv){
 preprocessor if-expression 'termsin', see pre.c. The procedure assumes that 
 x is the value obtained my the master and simply broadcasts it to all slaves.
 */
-LONG
-PF_BroadcastNumberOfTerms ARG1 (LONG,x)
+LONG PF_BroadcastNumberOfTerms(LONG x)
 {
 /*		 Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
        No if(AC.mparallelflag==PARALLELFLAG) !!
@@ -2034,8 +2023,7 @@ PF_BroadcastNumberOfTerms ARG1 (LONG,x)
   	#] PF_BroadcastNumberOfTerms :
   	#[ PF_InitRedefinedPreVars :
 */
-int
-PF_InitRedefinedPreVars ARG0
+int PF_InitRedefinedPreVars()
 {
 /*		 Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
        No if(AC.mparallelflag==PARALLELFLAG) !!
@@ -2123,8 +2111,7 @@ PF_InitRedefinedPreVars ARG0
 /* 
 
 */
-int
-PF_BroadcastString ARG1 (UBYTE *,str)
+int PF_BroadcastString(UBYTE *str)
 {
 int clength=0;/*If string does not fit to the PF_buffer, it 
 	will be split into chanks. Next chank is started at  str+clength*/
@@ -2173,8 +2160,7 @@ parameters.
 
 The function returns 0 on success.
 */
-int
-PF_BroadcastPreDollar ARG3 (WORD **, dbuffer, LONG *, newsize, int *, numterms)
+int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 {
 int err=0;
 LONG i;
@@ -2331,7 +2317,7 @@ Since NumPotModdollars>0, then NumDollars>0.
 /*
 	The function returns 0 in success, or -1.
 */
-WORD PF_mkDollarsParallel ARG0
+WORD PF_mkDollarsParallel()
 {
 int i,j,nSlave,src, index, namesize;
 UBYTE *name, *p, *textdoll;
@@ -2680,8 +2666,7 @@ static int PF_potModDollsTop=0;
 static int PF_potModDollsN=-1;
 #define PDLSTDELTA 16
 
-void 
-PF_statPotModDollar ARG2(int, dollarnum, int, valToAdd)
+void PF_statPotModDollar(int dollarnum, int valToAdd)
 {
 	if(dollarnum>=PF_potModDollsTop){
 		/*increase the array*/
@@ -2698,8 +2683,7 @@ PF_statPotModDollar ARG2(int, dollarnum, int, valToAdd)
 		PF_potModDollsN=dollarnum;
 }/*PF_statPotModDollar*/
 
-void
-PF_markPotModDollars ARG0
+void PF_markPotModDollars()
 {
 int i;
 	for(i=0; i<=PF_potModDollsN; i++){

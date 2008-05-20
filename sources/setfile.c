@@ -84,8 +84,7 @@ SETUPPARAMETERS setupparameters[] =
  		#[ DoSetups :
 */
 
-int
-DoSetups ARG0
+int DoSetups()
 {
 	UBYTE *setbuffer, *s, *t, *u, c;
 	int errors = 0;
@@ -133,8 +132,7 @@ DoSetups ARG0
 
 static char *proop1[3] = { "Setup file", "Setups in .frm file", "Setup in environment" };
 
-int
-ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
+int ProcessOption(UBYTE *s1, UBYTE *s2, int filetype)
 {
 	SETUPPARAMETERS *sp;
 	int n;
@@ -202,8 +200,7 @@ ProcessOption ARG3(UBYTE *,s1,UBYTE *,s2,int,filetype)
  		#[ GetSetupPar :
 */
 
-SETUPPARAMETERS *
-GetSetupPar ARG1(UBYTE *,s)
+SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 {
 	int hi, med, lo, i;
 	lo = 0;
@@ -223,8 +220,7 @@ GetSetupPar ARG1(UBYTE *,s)
  		#[ RecalcSetups :
 */
 
-int
-RecalcSetups ARG0
+int RecalcSetups()
 {
 	SETUPPARAMETERS *sp, *sp1;
 
@@ -276,8 +272,7 @@ RecalcSetups ARG0
  		#[ AllocSetups :
 */
 
-int
-AllocSetups ARG0
+int AllocSetups()
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize, l;
@@ -624,8 +619,7 @@ AllocSetups ARG0
  		#[ WriteSetup :
 */
 
-VOID
-WriteSetup ARG0
+VOID WriteSetup()
 {
 	int n = sizeof(setupparameters)/sizeof(SETUPPARAMETERS);
 	SETUPPARAMETERS *sp;
@@ -672,9 +666,8 @@ WriteSetup ARG0
 		in a later stage for the function and subroutine sort buffers.
 */
 
-SORTING *
-AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
-	,int,MaxPatches,int,MaxFpatches,LONG,IOsize)
+SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsInSmall,
+                   int MaxPatches, int MaxFpatches, LONG IOsize)
 {
 	LONG allocation,longer,terms2insmall,sortsize,longerp;
 	LONG IObuffersize = IOsize;
@@ -793,8 +786,7 @@ AllocSort ARG7(LONG,LargeSize,LONG,SmallSize,LONG,SmallEsize,LONG,TermsInSmall
  		#[ AllocSortFileName :
 */
 
-VOID
-AllocSortFileName ARG1(SORTING *,sort)
+VOID AllocSortFileName(SORTING *sort)
 {
 	GETIDENTITY
 	char *s, *t;
@@ -819,7 +811,7 @@ AllocSortFileName ARG1(SORTING *,sort)
  		#[ AllocFileHandle :
 */
 
-FILEHANDLE *AllocFileHandle ARG0
+FILEHANDLE *AllocFileHandle()
 {
 	GETIDENTITY
 	LONG allocation;
@@ -869,7 +861,7 @@ FILEHANDLE *AllocFileHandle ARG0
 		Made to repair deallocation of AN.filenum. 21-sep-2000
 */
 
-void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
+void DeAllocFileHandle(FILEHANDLE *fh)
 {
 	GETIDENTITY
 	if ( fh->handle >= 0 ) {
@@ -886,7 +878,7 @@ void DeAllocFileHandle ARG1(FILEHANDLE *,fh)
  		#[ MakeSetupAllocs :
 */
 
-int MakeSetupAllocs ARG0
+int MakeSetupAllocs()
 {
 	if ( RecalcSetups() || AllocSetups() ) return(1);
 	else return(0);
@@ -1003,7 +995,7 @@ int TryEnvironment()
 #define SETNUMBUF(x) { x = buffer; buffer += (AM.MaxTal+4); }
 #define SETNUMBUFN(x,n) { x = buffer; buffer += (AM.MaxTal+4)*n; }
 
-int AllocScratchBuffers ARG0
+int AllocScratchBuffers()
 {
 	GETIDENTITY
 	UWORD *buffer;

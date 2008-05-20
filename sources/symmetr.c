@@ -23,8 +23,7 @@
 		general routine for symmetric and antisymmetric tensors!
 */
 
-WORD
-MatchE ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
+WORD MatchE(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
 	GETIDENTITY
 	WORD *m, *t, *r, i, retval;
@@ -402,8 +401,7 @@ NoCaseB:		m = AN.WildValue;
 		hit in the assignment of wildcards though.
 */
 
-WORD
-Permute ARG2(PERM *,perm,WORD,first)
+WORD Permute(PERM *perm, WORD first)
 {
 	WORD *s, c, i, j;
 	if ( first ) {
@@ -435,8 +433,7 @@ Permute ARG2(PERM *,perm,WORD,first)
   	#[ Distribute :
 */
 
-WORD
-Distribute ARG2(DISTRIBUTE *,d,WORD,first)
+WORD Distribute(DISTRIBUTE *d, WORD first)
 {
 	WORD *to, *from, *inc, *from2, i, j;
 	if ( first ) {
@@ -497,7 +494,7 @@ Distribute ARG2(DISTRIBUTE *,d,WORD,first)
 		is more than one choice for i1.
 */
 
-int MatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
+int MatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
@@ -993,7 +990,7 @@ nomatch:;
 		Like MatchCy, but now for general functions.
 */
 
-int FunMatchCy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
+int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
@@ -1451,7 +1448,7 @@ nomatch:;
 		Like MatchE, but now for general functions.
 */
 
-int FunMatchSy ARG4(WORD *,pattern,WORD *,fun,WORD *,inter,WORD,par)
+int FunMatchSy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
@@ -1966,7 +1963,7 @@ NoSuccess:
   	#[ MatchArgument :
 */
 
-int MatchArgument ARG2(WORD *,arg,WORD *,pat)
+int MatchArgument(WORD *arg, WORD *pat)
 {
 	GETIDENTITY
 	WORD *m = pat, *t = arg, i, j, newvalue;

@@ -22,8 +22,7 @@
 		function
 */
 
-WORD
-MakeDirty ARG3(WORD *,term,WORD *,x,WORD,par)
+WORD MakeDirty(WORD *term, WORD *x, WORD par)
 {
 	WORD *next, *n;
 	if ( !par ) {
@@ -69,7 +68,7 @@ MakeDirty ARG3(WORD *,term,WORD *,x,WORD,par)
 		it safe.
 */
 
-void MarkDirty ARG2(WORD *,term,WORD,flags)
+void MarkDirty(WORD *term, WORD flags)
 {
 	WORD *t, *r, *m, *tstop;
 	GETSTOP(term,tstop);
@@ -126,9 +125,8 @@ void MarkDirty ARG2(WORD *,term,WORD,flags)
 		Lijst[0]....  The groups.
 */
 
-WORD
-Symmetrize BARG5(WORD *,func,WORD *,Lijst,WORD,ngroups,WORD,gsize,
-		WORD,type)
+WORD Symmetrize(PHEAD WORD *func, WORD *Lijst, WORD ngroups, WORD gsize,
+                WORD type)
 {
 	GETBIDENTITY
 	WORD **args,**arg,nargs;
@@ -287,8 +285,7 @@ recycle:
 			1 if they are OK.
 */
 
-WORD
-CompGroup BARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
+WORD CompGroup(PHEAD WORD type, WORD **args, WORD *a1, WORD *a2, WORD num)
 {
 	GETBIDENTITY
 	WORD *t1, *t2, i1, i2, n, k;
@@ -388,7 +385,7 @@ CompGroup BARG5(WORD,type,WORD **,args,WORD *,a1,WORD *,a2,WORD,num)
 		bit 2: there was a permutation.
 */
 
-int FullSymmetrize ARG2(WORD *,fun,int,type)
+int FullSymmetrize(WORD *fun, int type)
 {
 	GETIDENTITY
 	WORD *Lijst, count = 0;
@@ -433,8 +430,7 @@ int FullSymmetrize ARG2(WORD *,fun,int,type)
 					   >0 -> must have right number of arguments
 */
 
-WORD
-SymGen BARG4(WORD *,term,WORD *,params,WORD,num,WORD,level)
+WORD SymGen(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m;
@@ -549,8 +545,7 @@ NextFun:
 
 */
 
-WORD
-SymFind BARG2(WORD *,term,WORD *,params)
+WORD SymFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m;
@@ -608,7 +603,7 @@ NextFun:
 		This one always takes less space.
 */
 
-int ChainIn ARG2(WORD *,term,WORD,funnum)
+int ChainIn(WORD *term, WORD funnum)
 {
 	GETIDENTITY
 	WORD *t, *tend, *m, *tt, *ts;
@@ -656,7 +651,7 @@ int ChainIn ARG2(WORD *,term,WORD,funnum)
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
 */
 
-int ChainOut ARG2(WORD *,term,WORD,funnum)
+int ChainOut(WORD *term, WORD funnum)
 {
 	GETIDENTITY
 	WORD *t, *tend, *tt, *ts, *w, *ws;
@@ -737,8 +732,7 @@ int ChainOut ARG2(WORD *,term,WORD,funnum)
 			we cannot go back at the moment to continue searching.
 */
 
-WORD
-MatchFunction BARG3(WORD *,pattern,WORD *,interm,WORD *,wilds)
+WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, i;
@@ -1414,8 +1408,7 @@ NoCaseB:
 		AN.terstart: address of entire term;
 */
 
-WORD
-ScanFunctions BARG3(WORD *,inpat,WORD *,inter,WORD,par)
+WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 {
 	GETBIDENTITY
 	WORD i, *m, *t, *r, sym, psym;

@@ -83,7 +83,7 @@
 
 	List of all public functions:
 	int openExternalChannel(UBYTE *cmd,int daemonize,UBYTE *shellname, UBYTE * stderrname);
-	int initPresetExternalChannels ARG2(UBYTE *,theline, int, thetimeout);
+	int initPresetExternalChannels(UBYTE *theline, int thetimeout);
 	int setTerminatorForExternalChannel(char *newterminaror);
 	int setKillModeForExternalChannel(int signum, int sentToWholeGroup);
 	int closeExternalChannel(int n);
@@ -143,22 +143,6 @@ Uncomment to get a self-consistent program:
 	from declare.h:
 */
 #define VOID void
-#define ARG0 (VOID)
-#define ARG1(x1,y1) (x1 y1)
-#define ARG2(x1,y1,x2,y2) (x1 y1,x2 y2)
-#define ARG3(x1,y1,x2,y2,x3,y3) (x1 y1,x2 y2,x3 y3)
-#define ARG4(x1,y1,x2,y2,x3,y3,x4,y4) (x1 y1,x2 y2,x3 y3,x4 y4)
-#define ARG5(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5) (x1 y1,x2 y2,x3 y3,x4 y4,x5 y5)
-#define ARG6(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6) \
-			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6)
-#define ARG7(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7) \
-			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7)
-#define ARG8(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8) \
-			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8)
-#define ARG9(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9) \
-			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9)
-#define ARG10(x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8,x9,y9,xa,ya) \
-			(x1 y1,x2 y2,x3 y3,x4 y4,x5 y5,x6 y6,x7 y7,x8 y8,x9 y9,xa ya)
 
 /* 
 	From form3.h:
@@ -166,11 +150,10 @@ Uncomment to get a self-consistent program:
 typedef unsigned char UBYTE;
 
 /*The following variables should be defined in variable.h:*/
-extern int (*writeBufToExtChannel) ARG2(char *,buffer, size_t,n);
-extern int (*getcFromExtChannel) ARG0 ;
-extern int (*setTerminatorForExternalChannel) ARG1 (char *,buffer);
-extern int (*setKillModeForExternalChannel) 
-					ARG2 (int, signum, int, sentToWholeGroup);
+extern int (*writeBufToExtChannel)(char *buffer, size_t n);
+extern int (*getcFromExtChannel)();
+extern int (*setTerminatorForExternalChannel)(char *buffer);
+extern int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup);
 
 #else /*ifdef SELFTEST*/
 #include "form3.h"
@@ -181,56 +164,48 @@ extern int (*setKillModeForExternalChannel)
 */
 
 /*Non-initialized variant of public functions:*/
-int
-writeBufToExtChannelFailure ARG2(char *,buf, size_t, count)
+int writeBufToExtChannelFailure(char *buf, size_t count)
 {
 	DUMMYUSE(buf); DUMMYUSE(count);
 	return(-1);
 }/*writeBufToExtChannelFailure*/
 
-int 
-setTerminatorForExternalChannelFailure ARG1 (char *,newTerminator)
+int setTerminatorForExternalChannelFailure(char *newTerminator)
 {
 	DUMMYUSE(newTerminator);
 	return(-1);
 }/*setTerminatorForExternalChannelFailure*/
 
-int
-setKillModeForExternalChannelFailure ARG2 (int, signum, int, sentToWholeGroup)
+int setKillModeForExternalChannelFailure(int signum, int sentToWholeGroup)
 {
 	DUMMYUSE(signum); DUMMYUSE(sentToWholeGroup);
 	return(-1);
 }/*setKillModeForExternalChannelFailure*/
 
-int 
-getcFromExtChannelFailure ARG0
+int getcFromExtChannelFailure()
 {
 	return(-2);
 }/*getcFromExtChannelFailure*/
 
-int (*writeBufToExtChannel) ARG2(char *,buffer, size_t,n)=
-	&writeBufToExtChannelFailure;
-int (*setTerminatorForExternalChannel) ARG1 (char *,buffer)=
+int (*writeBufToExtChannel)(char *buffer, size_t n) = &writeBufToExtChannelFailure;
+int (*setTerminatorForExternalChannel)(char *buffer) =
 	&setTerminatorForExternalChannelFailure;
-int (*setKillModeForExternalChannel) ARG2 (int, signum, int, sentToWholeGroup)=
+int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup) =
 	&setKillModeForExternalChannelFailure;
-int (*getcFromExtChannel) ARG0 = &getcFromExtChannelFailure;
+int (*getcFromExtChannel)() = &getcFromExtChannelFailure;
 /*
   	#] FailureFunctions: 
   	#[ Stubs :
 */
 #ifndef WITHEXTERNALCHANNEL
 /*Stubs for public functions:*/
-int openExternalChannel ARG4 (UBYTE *,cmd,\
-								int, daemonize,\
-								UBYTE *,shellname, \
-								UBYTE *, stderrname){return(-1)};
-int initPresetExternalChannels ARG2(UBYTE *,theline, int, thetimeout)
-{return(-1)};
-int closeExternalChannel ARG1(int, n){return(-1)};
-int selectExternalChannelARG1(int, n){return(-1)};
-int getCurrentExternalChannel ARG0 {return(0)};
-void closeAllExternalChannels ARG0{};
+int openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stderrname)
+{ return(-1) };
+int initPresetExternalChannels(UBYTE *theline, int thetimeout) { return(-1) };
+int closeExternalChannel(int n) { return(-1) };
+int selectExternalChannel(int n) { return(-1) };
+int getCurrentExternalChannel() { return(0) };
+void closeAllExternalChannels() {};
 #else /*ifndef WITHEXTERNALCHANNEL*/
 /*
   	#] Stubs : 
@@ -313,7 +288,7 @@ void M_free(void *p,char *c)
 	return(free(p));
 }
 
-char *strDup1 ARG2(UBYTE *,instring,char *,ifwrong)
+char *strDup1(UBYTE *instring, char *ifwrong)
 {
 	UBYTE *s = instring, *to;
 	while ( *s ) s++;
@@ -336,8 +311,7 @@ int PutPreVar(UBYTE *a,UBYTE *b,UBYTE *c,int i)
 */
 
 /*Initialize one cell of handler:*/
-static FORM_INLINE VOID 
-extHandlerInit ARG1(EXTHANDLE *,h)
+static FORM_INLINE VOID extHandlerInit(EXTHANDLE *h)
 {
 	h->pid=-1;
 	h->gpid=-1;
@@ -350,8 +324,7 @@ extHandlerInit ARG1(EXTHANDLE *,h)
 }/*extHandlerInit*/
 
 /* Copies each field of handler:*/
-static FORM_INLINE VOID 
-extHandlerSwallowCopy ARG2(EXTHANDLE *,to, EXTHANDLE *,from)
+static FORM_INLINE VOID extHandlerSwallowCopy(EXTHANDLE *to, EXTHANDLE *from)
 {
 	to->pid=from->pid;
 	to->gpid=from->gpid;
@@ -372,7 +345,7 @@ extHandlerSwallowCopy ARG2(EXTHANDLE *,to, EXTHANDLE *,from)
 /*Allocates memory for fields of handler which have no fixed
  storage size and initializes some fields:*/
 static FORM_INLINE VOID 
-extHandlerAlloc ARG4 (EXTHANDLE *,h,char *,cmd,char *,shellname,char *,stderrname)
+extHandlerAlloc(EXTHANDLE *h, char *cmd, char *shellname, char *stderrname)
 {
 	h->IBfill=h->IBfull=h->INbuf=
 				Malloc1(DELTA_EXT_BUF,"External channel buffer");
@@ -394,8 +367,7 @@ extHandlerAlloc ARG4 (EXTHANDLE *,h,char *,cmd,char *,shellname,char *,stderrnam
 }/*extHandlerAlloc*/
 
 /*Disallocates dynamically allocated fields of a handler:*/
-static FORM_INLINE VOID 
-extHandlerFree ARG1(EXTHANDLE *,h)
+static FORM_INLINE VOID extHandlerFree(EXTHANDLE *h)
 {
 	if(h->stderrname) M_free(h->stderrname,"External channel stderr name");
 	if(h->shellname) M_free(h->shellname,"External channel shell name");
@@ -406,8 +378,7 @@ extHandlerFree ARG1(EXTHANDLE *,h)
 }/*extHandlerFree*/
 /* Closes all descriptors, kills the external process, frees all internal fields,
 BUT does NOT free the main container:*/
-static VOID
-destroyExternalChannel ARG1(EXTHANDLE *,h)
+static VOID destroyExternalChannel(EXTHANDLE *h)
 {
 	/*Note, this function works in parallel mode correctly, see comments below.*/
 
@@ -444,8 +415,7 @@ ssize_t res;
 }/*read2b*/
 
 /*Wrapper to the write() syscall, to handle possible interrupts by unblocked signals:*/
-static FORM_INLINE ssize_t 
-writeFromb ARG3(int, fd, char *,buf, size_t, count)
+static FORM_INLINE ssize_t writeFromb(int fd, char *buf, size_t count)
 {
 ssize_t res;
 	if( (res=write(fd,buf,count)) <1 )/*Is write interrupted by a signal?:*/
@@ -456,8 +426,7 @@ ssize_t res;
 }/*writeFromb*/
 
 /* Read one (binary) PID from the file descriptor fd:*/
-static FORM_INLINE pid_t 
-readpid ARG1(int, fd)
+static FORM_INLINE pid_t readpid(int fd)
 {
 pid_t tmp;
 	if(read2b(fd,(char*)&tmp,sizeof(pid_t))!=sizeof(pid_t))
@@ -466,8 +435,7 @@ pid_t tmp;
 }/*readpid*/
 
 /* Writeone (binary) PID to the file descriptor fd:*/
-static FORM_INLINE pid_t 
-writepid ARG2(int, fd, pid_t, thepid)
+static FORM_INLINE pid_t writepid(int fd, pid_t thepid)
 {
 	if(writeFromb(fd,(char*)&thepid,sizeof(pid_t))!=sizeof(pid_t))
 	  return (pid_t)-1;
@@ -477,8 +445,7 @@ writepid ARG2(int, fd, pid_t, thepid)
 /*Wrtites exactly count bytes from the  buffer buf into the descriptor fd, independently on
   nonblocked signals and the MPU/buffer hits. Returns 0 or -1:
 */
-static FORM_INLINE int 
-writexactly ARG3(int, fd, char *,buf, size_t, count)
+static FORM_INLINE int writexactly(int fd, char *buf, size_t count)
 {
 ssize_t i;
 int j=0,n=0;
@@ -497,7 +464,7 @@ int j=0,n=0;
 /* Set the FD_CLOEXEC  flag of desc if value is nonzero,
  or clear the flag if value is 0.
  Return 0 on success, or -1 on error with errno  set. */
-static int set_cloexec_flag ARG2(int, desc, int, value)
+static int set_cloexec_flag(int desc, int value)
 {
 int oldflags = fcntl (desc, F_GETFD, 0);
 	/* If reading the flags failed, return error indication now.*/
@@ -515,7 +482,7 @@ int oldflags = fcntl (desc, F_GETFD, 0);
 /* Adds the integer fd to the array fifo of length top+1 so that 
 the array is ascendantly ordered. It is supposed that all 0 -- top-1
 elements in the array are already ordered:*/
-static VOID pushDescriptor ARG3(int *,fifo, int, top, int, fd)
+static VOID pushDescriptor(int *fifo, int top, int fd)
 {
 int ins=top-1;
 	if( fifo[ins]<=fd )
@@ -533,8 +500,7 @@ int ins=top-1;
 
 /*Close all descriptors greate or equal than startFrom except those
   listed in the ascendantly ordered array usedFd of length top:*/
-static FORM_INLINE VOID 
-closeAllDescriptors ARG3(int, startFrom,int *,usedFd, int, top)
+static FORM_INLINE VOID closeAllDescriptors(int startFrom, int *usedFd, int top)
 {
 int n,maxfd;
 	for(n=0;n<top; n++){
@@ -551,7 +517,7 @@ int n,maxfd;
 
 typedef int L_APIPE[2];
 /*Closes both pipe descriptors if not -1:*/
-static VOID closepipe ARG1(L_APIPE *,thepipe)
+static VOID closepipe(L_APIPE *thepipe)
 {
   if( (*thepipe)[0] != -1) close ((*thepipe)[0]);
   if( (*thepipe)[1] != -1) close ((*thepipe)[1]);
@@ -560,8 +526,7 @@ static VOID closepipe ARG1(L_APIPE *,thepipe)
 /*Parses the cmd line like "sh -c myprg", passes each option to the
   correspondinig element of argv, ends agrv by NULL. Returns the 
   number of stored argv elements, or -1 if fails:*/
-static FORM_INLINE 
-int parseline ARG2(char **,argv, char *,cmd)
+static FORM_INLINE int parseline(char **argv, char *cmd)
 {
 int n=0;
 	while(*cmd != '\0'){
@@ -582,7 +547,7 @@ int n=0;
 /*Reads positive decimal number (not bigger than maxnum)
   from the string and returns it;
   the pointer *b is set to the next non-converted character:*/
-static long str2i ARG3(char *,str, char **,b,long,maxnum)
+static long str2i(char *str, char **b, long maxnum)
 {
 long n=0;
 	/*Eat trailing spaces:*/
@@ -600,8 +565,7 @@ long n=0;
 /*Converts long integer to a decimal representation.
   For portability reasons we cannot use LongCopy from tools.c
   since theoretically LONG may be smaller than pid_t:*/
-static char *
-l2s ARG2(long,x,char *,to)
+static char *l2s(long x, char *to)
 {
 	char *s;
 	int i = 0, j;
@@ -617,7 +581,7 @@ l2s ARG2(long,x,char *,to)
 
 /*like strcat() but returns the pointer to the end of the 
 resulting string:*/
-static  FORM_INLINE char * addStr ARG2(char *, to, char *, from)
+static  FORM_INLINE char *addStr(char *to, char *from)
 {
 	while(  (*to++ = *from++)!='\0' );
 	return(to-1);
@@ -626,8 +590,7 @@ static  FORM_INLINE char * addStr ARG2(char *, to, char *, from)
 
 /*Try to write (atomically) short buffer (of length count) to fd.
   timeout is a timeout in millisecs. Returns number of writen bytes or -1:*/
-static FORM_INLINE ssize_t 
-writeSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
+static FORM_INLINE ssize_t writeSome(int fd, char *buf, size_t count, int timeout)
 {
 	ssize_t res = 0;
 	fd_set wfds;
@@ -676,8 +639,7 @@ writeSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
 /*Try to read short buffer (of length not more than count)
   from fd. timeout is a timeout in millisecs. Returns number 
   of writen bytes or -1: */
-static FORM_INLINE ssize_t 
-readSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
+static FORM_INLINE ssize_t readSome(int fd, char *buf, size_t count, int timeout)
 {
 	ssize_t res = 0;
 	fd_set rfds;
@@ -723,8 +685,7 @@ readSome ARG4(int, fd, char *,buf, size_t, count, int, timeout)
 /*Copies (deep copy) newTerminator to thehandler->terminator. Returns 0 if 
   newTerminator fits to the buffer, or !0 if it does not fit. ATT! In the 
   latter case thehandler->terminator is NOT '\0' terminated! */
-int 
-setTerminatorForExternalChannelOk ARG1( char *,newTerminator)
+int setTerminatorForExternalChannelOk(char *newTerminator)
 {
 int i=DELTA_EXT_BUF;
 /*
@@ -747,8 +708,7 @@ char *t=externalChannelsListTop->terminator;
 }/*setTerminatorForExternalChannelOk*/
 
 /*Interface to change handler fields "killSignal" and "gpid"*/
-int
-setKillModeForExternalChannelOk ARG2(int, signum, int, sentToWholeGroup)
+int setKillModeForExternalChannelOk(int signum, int sentToWholeGroup)
 {
 	if(signum<0)
 		return(-1);
@@ -776,8 +736,7 @@ setKillModeForExternalChannelOk ARG2(int, signum, int, sentToWholeGroup)
 returns EOF. If the external process is finished completely, the function closes 
 the channel (and returns EOF). If the external process was finished, the function
 returns EOF:*/
-int 
-getcFromExtChannelOk ARG0
+int getcFromExtChannelOk()
 {
 mysighandler_t oldPIPE;
 EXTHANDLE *h;
@@ -917,8 +876,7 @@ int ret;
 /*Writes exactly count bytes from the buffer buf to the external channel thehandler
   Returns 0 (on success) or -1:
 */
-int 
-writeBufToExtChannelOk ARG2(char *,buf, size_t, count)
+int writeBufToExtChannelOk(char *buf, size_t count)
 {
 
 int ret;
@@ -947,17 +905,17 @@ mysighandler_t oldPIPE;
   	#[ do_run_cmd :
 */
 /*The function returns PID of the started command*/
-static FORM_INLINE pid_t do_run_cmd ARG7(
-	int *,fdsend,
-	int *,fdreceive,
-	int *,gpid, /*returns group process ID*/
-	int, ttymode,
+static FORM_INLINE pid_t do_run_cmd(
+	int *fdsend,
+	int *fdreceive,
+	int *gpid, /*returns group process ID*/
+	int ttymode,
 					 /*
 					  &8 - daemonizeing 
 					  &16 - setsid()*/
-	char *,cmd,
-	char *,argv[],
-	char *,stderrname
+	char *cmd,
+	char *argv[],
+	char *stderrname
 	)
 {
 int fdin[2]={-1,-1}, fdout[2]={-1,-1}, fdsig[2]={-1,-1};
@@ -1153,13 +1111,13 @@ mysighandler_t oldPIPE=NULL;
   stderr will be re-directed to stderrname (if !=NULL). Returns PID of 
   the started process. Stdin will be available as fdsend, and stdout 
   will be available as fdreceive:*/
-static FORM_INLINE pid_t run_cmd ARG7(char *,cmd, 
-									 int *,fdsend,
-									 int *,fdreceive,
-									 int *,gpid,
-									 int, daemonize,
-									 char *,shellpath,
-									 char *,stderrname )
+static FORM_INLINE pid_t run_cmd(char *cmd, 
+								 int *fdsend,
+								 int *fdreceive,
+								 int *gpid,
+								 int daemonize,
+								 char *shellpath,
+								 char *stderrname )
 {
 char **argv;
 pid_t thepid;
@@ -1216,13 +1174,13 @@ typedef struct{
 
 /* Creates a new external channel starting the command cmd (if cmd !=NULL)
 	or using informaion from (ECINFOSTRUCT *)shellname, if cmd ==NULL:*/
-static FORM_INLINE void* createExternalChannel ARG5(
-					  EXTHANDLE *,h,
-					  char *,cmd, /*Command to run or NULL*/
+static FORM_INLINE void *createExternalChannel(
+					  EXTHANDLE *h,
+					  char *cmd, /*Command to run or NULL*/
 					  /*0 --neither setsid nor daemonize, !=0 -- full daemonization:*/
-					  int, daemonize,
-					  char *,shellname,/* The shell (like "/bin/sh -c") or NULL*/
-					  char *,stderrname/*filename to redirect stderr or NULL*/
+					  int daemonize,
+					  char *shellname,/* The shell (like "/bin/sh -c") or NULL*/
+					  char *stderrname/*filename to redirect stderr or NULL*/
 																)
 {
 	int fdreceive=0;
@@ -1293,8 +1251,7 @@ static FORM_INLINE void* createExternalChannel ARG5(
   	#] createExternalChannel : 
   	#[ openExternalChannel :
 */
-int openExternalChannel 
-ARG4(UBYTE *,cmd,int,daemonize,UBYTE *,shellname,UBYTE *,stderrname)
+int openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stderrname)
 {
 EXTHANDLE *h=externalChannelsListTop;
 int i=0;
@@ -1346,8 +1303,7 @@ int i=0;
 */
 /*Just simpe wrapper to invoke  openExternalChannel()
 	from initPresetExternalChannels():*/
-static FORM_INLINE int 
-openPresetExternalChannel ARG3(int, fdin,int, fdout,pid_t, theppid)
+static FORM_INLINE int openPresetExternalChannel(int fdin, int fdout, pid_t theppid)
 {
 ECINFOSTRUCT inf;
 	inf.fdin=fdin; inf.fdout=fdout;inf.theppid=theppid;
@@ -1377,7 +1333,7 @@ used.
 this comma-separated list of the  desctiptor pairs and tries to 
 initialize each of channel during thetimeout milliseconds:*/
 
-int initPresetExternalChannels ARG2(UBYTE *,theline, int, thetimeout)
+int initPresetExternalChannels(UBYTE *theline, int thetimeout)
 {
 	int i, nchannels = 0;
 	int pidln;           /*The length of FORM PID in pidtxt*/
@@ -1458,7 +1414,7 @@ channel (0, if there was no current channel, or -1, if the external
 channel descriptor is invalid).  If n == 0, the function undefine the
 current external channel:
 */
-int selectExternalChannel ARG1(int, n)
+int selectExternalChannel(int n)
 {
 int ret=0;
 	if(externalChannelsListTop!=0)
@@ -1498,7 +1454,7 @@ Destroys the opened external channel with the descriptor n. It returns
 was the current one, the current channel becomes undefined. If n==0,
 the function closes the current external channel.
 */
-int closeExternalChannel ARG1(int, n)
+int closeExternalChannel(int n)
 {
 	if(n==0)
 		n=externalChannelsListTop-externalChannelsList;
@@ -1527,7 +1483,7 @@ int closeExternalChannel ARG1(int, n)
   	#] closeExternalChannel : 
   	#[ closeAllExternalChannels :
 */
-void closeAllExternalChannels  ARG0
+void closeAllExternalChannels()
 {
 int i;
 	for(i=0; i<externalChannelsListFill; i++)
@@ -1549,7 +1505,7 @@ int i;
   	#] closeAllExternalChannels : 
   	#[ getExternalChannelPid :
 */
-pid_t getExternalChannelPid ARG0
+pid_t getExternalChannelPid()
 {
   if(externalChannelsListTop!=0)
 		return(externalChannelsListTop ->pid);
@@ -1560,8 +1516,7 @@ pid_t getExternalChannelPid ARG0
   	#[ getCurrentExternalChannel :
 */
 
-int 
-getCurrentExternalChannel ARG0
+int getCurrentExternalChannel()
 {
 
 	if(externalChannelsListTop>0)
@@ -1600,7 +1555,7 @@ int main (void)
 	int i, j, k,last;
 	long long s = 0;
 
-	/*openExternalChannel ARG4(UBYTE *,cmd,int,daemonize,UBYTE *,shellname,UBYTE *,stderrname)*/
+	/*openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stderrname)*/
 
 	help();
 

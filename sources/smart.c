@@ -30,7 +30,7 @@
 	be matched best. If the order should be different we can change it here.
 */
 
-void StudyPattern ARG1(WORD *,lhs)
+void StudyPattern(WORD *lhs)
 {
 	GETIDENTITY
 	WORD *fullproto, *pat, *p, *p1, *p2, *pstop, *info, f;
@@ -224,7 +224,7 @@ void StudyPattern ARG1(WORD *,lhs)
 	symmetry related wildcarding.
 */
 
-int MatchIsPossible ARG2(WORD *,pattern,WORD *,term)
+int MatchIsPossible(WORD *pattern, WORD *term)
 {
 	GETIDENTITY
 	WORD *info = pattern + *pattern;

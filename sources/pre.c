@@ -77,8 +77,7 @@ static KEYWORD precommands[] = {
 		If there are no more streams we let this be known.
 */
 
-UBYTE
-GetInput ARG0
+UBYTE GetInput()
 {
 	UBYTE c;
 	while ( AC.CurrentStream ) {
@@ -107,7 +106,7 @@ GetInput ARG0
  		#[ ClearPushback :
 */
 
-VOID ClearPushback ARG0
+VOID ClearPushback()
 {
 	pushbackchar = 0;
 }
@@ -125,8 +124,7 @@ VOID ClearPushback ARG0
 		then using it to escape an object in the parent stream.
 */
 
-UBYTE
-GetChar ARG1(int,level)
+UBYTE GetChar(int level)
 {
 	UBYTE namebuf[MAXPRENAMESIZE+2], c, *s, *t;
 	static UBYTE lastchar, charinbuf = 0;
@@ -335,8 +333,7 @@ higherlevel:
  		#[ CharOut :
 */
 
-VOID
-CharOut ARG1(UBYTE,c)
+VOID CharOut(UBYTE c)
 {
 	if ( c == LINEFEED ) {
 		AM.OutBuffer[AP.InOutBuf++] = c;
@@ -357,8 +354,7 @@ CharOut ARG1(UBYTE,c)
  		#[ UnsetAllowDelay :
 */
 
-VOID
-UnsetAllowDelay ARG0
+VOID UnsetAllowDelay()
 {
 	if ( ThePreVar->nargs > 0 )
 			AP.AllowDelay = 0;
@@ -380,8 +376,7 @@ UnsetAllowDelay ARG0
 static UBYTE *yes = (UBYTE *)"1";
 static UBYTE *no  = (UBYTE *)"0";
 
-UBYTE *
-GetPreVar ARG2(UBYTE *,name,int,flag)
+UBYTE *GetPreVar(UBYTE *name, int flag)
 {
 	GETIDENTITY
 	int i, mode;
@@ -460,8 +455,7 @@ GetPreVar ARG2(UBYTE *,name,int,flag)
 		This should only occur when the name starts with a ?
 */
 
-int
-PutPreVar ARG4(UBYTE *,name,UBYTE *,value,UBYTE *,args,int,mode)
+int PutPreVar(UBYTE *name, UBYTE *value, UBYTE *args, int mode)
 {
 	int i, ii, num = 2, nnum = 2, numargs = 0;
 	UBYTE *s, *t, *u = 0;
@@ -557,8 +551,7 @@ PutPreVar ARG4(UBYTE *,name,UBYTE *,value,UBYTE *,args,int,mode)
  		#[ PopPreVars :
 */
 
-VOID
-PopPreVars ARG1(int,tonumber)
+VOID PopPreVars(int tonumber)
 {
 	PREVAR *p = &(PreVar[NumPre]);
 	while ( NumPre > tonumber ) {
@@ -573,8 +566,7 @@ PopPreVars ARG1(int,tonumber)
  		#[ IniModule :
 */
 
-VOID
-IniModule ARG1(int,type)
+VOID IniModule(int type)
 {
 	GETIDENTITY
 	WORD **w, i;
@@ -657,8 +649,7 @@ IniModule ARG1(int,type)
  		#[ IniSpecialModule :
 */
 
-VOID
-IniSpecialModule ARG1(int,type)
+VOID IniSpecialModule(int type)
 {
 	DUMMYUSE(type);
 }
@@ -668,8 +659,7 @@ IniSpecialModule ARG1(int,type)
  		#[ PreProcessor :
 */
 
-VOID
-PreProcessor ARG0
+VOID PreProcessor()
 {
 	int moduletype = FIRSTMODULE;
 	int specialtype = 0;
@@ -872,8 +862,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
  		#[ PreProInstruction :
 */
 
-int
-PreProInstruction ARG0
+int PreProInstruction()
 {
 	UBYTE *s, *t;
 	KEYWORD *key;
@@ -954,8 +943,7 @@ To be added:
 	of preprocessor variables.
 */
 
-int
-LoadInstruction ARG1(int,mode)
+int LoadInstruction(int mode)
 {
 	UBYTE *s, *sstart, *t, c, cp;
 	LONG position, fillpos = 0;
@@ -1140,8 +1128,7 @@ dodollar:		s = sstart;
 
 */
 
-int
-LoadStatement ARG1(int,type)
+int LoadStatement(int type)
 {
 	UBYTE *s, c, cp;
 	int retval = 0, stringlevel = 0;
@@ -1238,7 +1225,7 @@ blank:			if ( AP.eat ) continue;
  		#[ ExpandTripleDots :
 */
 
-int ExpandTripleDots ARG0
+int ExpandTripleDots()
 {
 	UBYTE *s, *s1, *s2, *n1, *n2, *t1, *t2, *startp, operator1, operator2, c, cc;
 	UBYTE *nBuffer, *strngs;
@@ -1512,8 +1499,7 @@ theend:			M_free(nums,"Expand ...");
  		#[ FindKeyWord :
 */
 
-KEYWORD *
-FindKeyWord ARG3(UBYTE *,theword,KEYWORD *,table,int,size)
+KEYWORD *FindKeyWord(UBYTE *theword, KEYWORD *table, int size)
 {
 	int low,med,hi;
 	UBYTE *s1, *s2;
@@ -1544,8 +1530,7 @@ FindKeyWord ARG3(UBYTE *,theword,KEYWORD *,table,int,size)
  		#[ FindInKeyWord :
 */
 
-KEYWORD *
-FindInKeyWord ARG3(UBYTE *,theword,KEYWORD *,table,int,size)
+KEYWORD *FindInKeyWord(UBYTE *theword, KEYWORD *table, int size)
 {
 	int i;
 	UBYTE *s1, *s2;
@@ -1564,8 +1549,7 @@ FindInKeyWord ARG3(UBYTE *,theword,KEYWORD *,table,int,size)
  		#[ TheDefine :
 */
 
-int
-TheDefine ARG2(UBYTE *,s,int,mode)
+int TheDefine(UBYTE *s, int mode)
 {
 #ifdef SCANSTRING
 	UBYTE *name, *value, *t, one[] = "1";
@@ -1643,8 +1627,7 @@ illargs:;
  		#[ DoCommentChar :
 */
 
-int
-DoCommentChar ARG1(UBYTE *,s)
+int DoCommentChar(UBYTE *s)
 {
 	UBYTE c;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -1675,8 +1658,7 @@ DoCommentChar ARG1(UBYTE *,s)
 		Note: at the moment of the assign there cannot be an 'open' statement.
 */
 
-int
-DoPreAssign ARG1(UBYTE *,s)
+int DoPreAssign(UBYTE *s)
 {
 	int error = 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) {
@@ -1704,8 +1686,7 @@ DoPreAssign ARG1(UBYTE *,s)
  		#[ DoDefine :
 */
 
-int
-DoDefine ARG1(UBYTE *,s)
+int DoDefine(UBYTE *s)
 {
 	return(TheDefine(s,0));
 }
@@ -1715,8 +1696,7 @@ DoDefine ARG1(UBYTE *,s)
  		#[ DoRedefine :
 */
 
-int
-DoRedefine ARG1(UBYTE *,s)
+int DoRedefine(UBYTE *s)
 {
 	return(TheDefine(s,1));
 }
@@ -1728,8 +1708,7 @@ DoRedefine ARG1(UBYTE *,s)
 		Undefines the arguments of a macro after its use.
 */
 
-int
-ClearMacro ARG1(UBYTE *,name)
+int ClearMacro(UBYTE *name)
 {
 	int i;
 	PREVAR *p;
@@ -1753,8 +1732,7 @@ ClearMacro ARG1(UBYTE *,name)
  		#[ TheUndefine :
 */
 
-int
-TheUndefine ARG1(UBYTE *,name)
+int TheUndefine(UBYTE *name)
 {
 	int i;
 	PREVAR *p;
@@ -1779,8 +1757,7 @@ TheUndefine ARG1(UBYTE *,name)
  		#[ DoUndefine :
 */
 
-int
-DoUndefine ARG1(UBYTE *,s)
+int DoUndefine(UBYTE *s)
 {
 	UBYTE *name, *t;
 	int error = 0;
@@ -1829,8 +1806,7 @@ illname:;
  		#[ DoInclude :
 */
 
-int
-DoInclude ARG1(UBYTE *,s)
+int DoInclude(UBYTE *s)
 {
 	UBYTE *name = s, *fold, *t, c, c1 = 0, c2 = 0, c3 = 0;
 	int str1offset, withnolist = AC.NoShowInput;
@@ -1972,8 +1948,7 @@ nofold:
 			#exchange $var1,$var2
 */
 
-int
-DoPreExchange ARG1(UBYTE *,s)
+int DoPreExchange(UBYTE *s)
 {
 	int error = 0;
 	UBYTE *s1, *s2;
@@ -2034,8 +2009,7 @@ syntax:
  		#[ DoCall :
 */
 
-int
-DoCall ARG1(UBYTE *,s)
+int DoCall(UBYTE *s)
 {
 	UBYTE *t, *u, *v, *name, c, cp, *args1, *args2, *t1, *t2, *wild = 0;
 	int bratype = 0, wildargs = 0, inwildargs = 0, nwildargs = 0;
@@ -2204,8 +2178,7 @@ wrongfile:;
  		#[ DoDebug :
 */
 
-int
-DoDebug ARG1(UBYTE *,s)
+int DoDebug(UBYTE *s)
 {
 	int x;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -2242,8 +2215,7 @@ nonumber:
  		#[ DoTerminate :
 */
 
-int
-DoTerminate ARG1(UBYTE *,s)
+int DoTerminate(UBYTE *s)
 {
 	int x;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -2275,8 +2247,7 @@ nonumber:
 		Work started 11-jan-2005 JV
 */
 
-int
-DoDo ARG1(UBYTE *,s)
+int DoDo(UBYTE *s)
 {
 	UBYTE *t, c, *u, *uu;
 	DOLOOP *loop;
@@ -2428,8 +2399,7 @@ illdo:;
  		#[ DoElse :
 */
 
-int
-DoElse ARG1(UBYTE *,s)
+int DoElse(UBYTE *s)
 {
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
 		if ( AP.PreIfLevel <= 0 ) MesPrint("@%#else without corresponding %#if");
@@ -2466,8 +2436,7 @@ DoElse ARG1(UBYTE *,s)
  		#[ DoElseif :
 */
 
-int
-DoElseif ARG1(UBYTE *,s)
+int DoElseif(UBYTE *s)
 {
 	int condition;
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
@@ -2502,8 +2471,7 @@ DoElseif ARG1(UBYTE *,s)
 		After that we have to close the stream and start a new one.
 */
 
-int
-DoEnddo ARG1(UBYTE *,s)
+int DoEnddo(UBYTE *s)
 {
 	DOLOOP *loop;
 	UBYTE *t, *tt, *value, numstr[16];
@@ -2634,8 +2602,7 @@ finish:;
  		#[ DoEndif :
 */
 
-int
-DoEndif ARG1(UBYTE *,s)
+int DoEndif(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEIF ) {
@@ -2663,8 +2630,7 @@ DoEndif ARG1(UBYTE *,s)
 		if loadmode > 1 the procedure was defined locally.
 */
 
-int
-DoEndprocedure ARG1(UBYTE *,s)
+int DoEndprocedure(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEPROCEDURE ) {
@@ -2690,8 +2656,7 @@ DoEndprocedure ARG1(UBYTE *,s)
  		#[ DoIf :
 */
 
-int
-DoIf ARG1(UBYTE *,s)
+int DoIf(UBYTE *s)
 {
 	int condition;
 	AddToPreTypes(PRETYPEIF);
@@ -2714,8 +2679,7 @@ DoIf ARG1(UBYTE *,s)
  		#[ DoIfdef :
 */
 
-int
-DoIfdef ARG2(UBYTE *,s,int,par)
+int DoIfdef(UBYTE *s, int par)
 {
 	int condition;
 	AddToPreTypes(PRETYPEIF);
@@ -2739,8 +2703,7 @@ DoIfdef ARG2(UBYTE *,s,int,par)
  		#[ DoMessage :
 */
 
-int
-DoMessage ARG1(UBYTE *,s)
+int DoMessage(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -2754,8 +2717,7 @@ DoMessage ARG1(UBYTE *,s)
  		#[ DoPipe :
 */
 
-int
-DoPipe ARG1(UBYTE *,s)
+int DoPipe(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -2781,8 +2743,7 @@ Error0("Temporary pipes not supported in parallel mode");
  		#[ DoPrcExtension :
 */
 
-int
-DoPrcExtension ARG1(UBYTE *,s)
+int DoPrcExtension(UBYTE *s)
 {
 	UBYTE *t, *u, c;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -2816,8 +2777,7 @@ DoPrcExtension ARG1(UBYTE *,s)
  		#[ DoPreOut :
 */
 
-int
-DoPreOut ARG1(UBYTE *,s)
+int DoPreOut(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -2840,8 +2800,7 @@ DoPreOut ARG1(UBYTE *,s)
  		#[ DoPrePrint :
 */
 
-int
-DoPrePrint ARG1(UBYTE *,s)
+int DoPrePrint(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -2857,8 +2816,7 @@ DoPrePrint ARG1(UBYTE *,s)
 		#append <filename>
 */
 
-int
-DoPreAppend ARG1(UBYTE *,s)
+int DoPreAppend(UBYTE *s)
 {
 	UBYTE *name, *to;
 
@@ -2900,8 +2858,7 @@ improper:
 		#create <filename>
 */
 
-int
-DoPreCreate ARG1(UBYTE *,s)
+int DoPreCreate(UBYTE *s)
 {
 	UBYTE *name, *to;
 
@@ -2940,8 +2897,7 @@ improper:
  		#[ DoPreRemove :
 */
 
-int
-DoPreRemove ARG1(UBYTE *,s)
+int DoPreRemove(UBYTE *s)
 {
 	UBYTE *name, *to;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -2973,8 +2929,7 @@ DoPreRemove ARG1(UBYTE *,s)
  		#[ DoPreClose :
 */
 
-int
-DoPreClose ARG1(UBYTE *,s)
+int DoPreClose(UBYTE *s)
 {
 	UBYTE *name, *to;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -3016,8 +2971,7 @@ DoPreClose ARG1(UBYTE *,s)
 		%s	string (to be found among the objects) (with or without "")
 */
 
-int
-DoPreWrite ARG1(UBYTE *,s)
+int DoPreWrite(UBYTE *s)
 {
 	HANDLERS h;
 
@@ -3053,8 +3007,7 @@ DoPreWrite ARG1(UBYTE *,s)
 		preprocessor variables.
 */
 
-int
-DoProcedure ARG1(UBYTE *,s)
+int DoProcedure(UBYTE *s)
 {
 	UBYTE c;
 	PROCEDURE *p;
@@ -3096,7 +3049,7 @@ DoProcedure ARG1(UBYTE *,s)
  		#[ DoPreBreak :
 */
 
-int DoPreBreak ARG1(UBYTE *,s)
+int DoPreBreak(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3120,7 +3073,7 @@ int DoPreBreak ARG1(UBYTE *,s)
  		#[ DoPreCase :
 */
 
-int DoPreCase ARG1(UBYTE *,s)
+int DoPreCase(UBYTE *s)
 {
 	UBYTE *t;
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3159,7 +3112,7 @@ int DoPreCase ARG1(UBYTE *,s)
  		#[ DoPreDefault :
 */
 
-int DoPreDefault ARG1(UBYTE *,s)
+int DoPreDefault(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3183,7 +3136,7 @@ int DoPreDefault ARG1(UBYTE *,s)
  		#[ DoPreEndSwitch :
 */
 
-int DoPreEndSwitch ARG1(UBYTE *,s)
+int DoPreEndSwitch(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3210,7 +3163,7 @@ int DoPreEndSwitch ARG1(UBYTE *,s)
 		We have to store it somewhere.
 */
 
-int DoPreSwitch ARG1(UBYTE *,s)
+int DoPreSwitch(UBYTE *s)
 {
 	UBYTE *t, *switchstring, **newstrings;
 	int newnum, i, *newmodes;
@@ -3264,8 +3217,7 @@ int DoPreSwitch ARG1(UBYTE *,s)
 		Print the contents of the preprocessor variables
 */
 
-int
-DoPreShow ARG1(UBYTE *,s)
+int DoPreShow(UBYTE *s)
 {
 	int i;
 	UBYTE *name, c;
@@ -3298,8 +3250,7 @@ DoPreShow ARG1(UBYTE *,s)
  		#[ DoSystem :
 */
 
-int
-DoSystem ARG1(UBYTE *,s)
+int DoSystem(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3328,7 +3279,7 @@ DoSystem ARG1(UBYTE *,s)
 		F or $a will be overwritten by the result.
 */
 
-int DoPreNormPoly ARG1(UBYTE *,s)
+int DoPreNormPoly(UBYTE *s)
 {
 	GETIDENTITY
 	int par, error = 0;
@@ -3457,8 +3408,7 @@ syntax:
 		Note: The current instruction is already in the preStart buffer
 */
 
-int
-PreLoad ARG5(PRELOAD *,p,UBYTE *,start,UBYTE *,stop,int,mode,char *,message)
+int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 {
 	UBYTE *s, *t, *top, *newbuffer, c;
 	LONG i, ppsize, linenum = AC.CurrentStream->linenumber;
@@ -3536,8 +3486,7 @@ PreLoad ARG5(PRELOAD *,p,UBYTE *,start,UBYTE *,stop,int,mode,char *,message)
 
 #define SKIPBUFSIZE 20
 
-int
-PreSkip ARG3(UBYTE *,start,UBYTE *,stop,int,mode)
+int PreSkip(UBYTE *start, UBYTE *stop, int mode)
 {
 	UBYTE *s, *t, buffer[SKIPBUFSIZE+2], c;
 	LONG i, linenum = AC.CurrentStream->linenumber;
@@ -3592,8 +3541,7 @@ PreSkip ARG3(UBYTE *,start,UBYTE *,stop,int,mode)
  		#[ StartPrepro :
 */
 
-VOID
-StartPrepro ARG0
+VOID StartPrepro()
 {
 	AP.MaxPreIfLevel = 2;
 	if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
@@ -3619,8 +3567,7 @@ StartPrepro ARG0
 		An error gives a return value of -1
 */
 
-int
-EvalPreIf ARG1(UBYTE *,s)
+int EvalPreIf(UBYTE *s)
 {
 	UBYTE *t, *u;
 	int val;
@@ -3655,8 +3602,7 @@ EvalPreIf ARG1(UBYTE *,s)
 			3: cmplevel: a > b or a >= b or a < b or a <= b or a >~ b etc
 */
 
-UBYTE *
-PreIfEval ARG2(UBYTE *,s,int *,value)
+UBYTE *PreIfEval(UBYTE *s, int *value)
 {
 	int orlevel = 0, andlevel = 0, eqlevel = 0, cmplevel = 0;
 	int type, val;
@@ -3784,8 +3730,7 @@ illoper:
  		#[ PreCmp :
 */
 
-int
-PreCmp ARG7(int,type,int,val,UBYTE *,t,int,type2,int,val2,UBYTE *,t2,int,cmpop)
+int PreCmp(int type, int val, UBYTE *t, int type2, int val2, UBYTE *t2, int cmpop)
 {
 	if ( type == 2 || type2 == 2 || cmpop < -2 || cmpop > 2 ) {
 		if ( cmpop < 0 && cmpop > -3 ) cmpop -= 2;
@@ -3809,8 +3754,7 @@ PreCmp ARG7(int,type,int,val,UBYTE *,t,int,type2,int,val2,UBYTE *,t2,int,cmpop)
  		#[ PreEq :
 */
 
-int
-PreEq ARG7(int,type,int,val,UBYTE *,t,int,type2,int,val2,UBYTE *,t2,int,eqop)
+int PreEq(int type, int val, UBYTE *t, int type2, int val2, UBYTE *t2, int eqop)
 {
 	UBYTE str[20];
 	if ( type == 2 || type2 == 2 ) {
@@ -3839,8 +3783,7 @@ PreEq ARG7(int,type,int,val,UBYTE *,t,int,type2,int,val2,UBYTE *,t2,int,eqop)
 		we try to interprete it as a string.
 */
 
-UBYTE *
-pParseObject ARG3(UBYTE *,s,int *,type,LONG *,val2)
+UBYTE *pParseObject(UBYTE *s, int *type, LONG *val2)
 {
 	UBYTE *t, c;
 	int sign, val = 0;
@@ -4047,8 +3990,7 @@ illend:
 		a stream.
 */
 
-UBYTE *
-PreCalc ARG0
+UBYTE *PreCalc()
 {
 	UBYTE *buff, *s = 0, *t, *newb, c;
 	int size, i, n, parlevel = 0, bralevel = 0;
@@ -4124,8 +4066,7 @@ setstring:;
 		+, -, *, /, %, &, |, ^, !,  ^% (postfix 2log), ^/ (postfix sqrt)
 */
 
-UBYTE *
-PreEval ARG2(UBYTE *,s,LONG *,x)
+UBYTE *PreEval(UBYTE *s, LONG *x)
 {
 	LONG y, z, a;
 	int tobemultiplied, tobeadded = 1, expsign, i;
@@ -4269,7 +4210,7 @@ PreEval ARG2(UBYTE *,s,LONG *,x)
  		#[ AddToPreTypes :
 */
 
-void AddToPreTypes ARG1(int,type)
+void AddToPreTypes(int type)
 {
 	if ( AP.NumPreTypes >= AP.MaxPreTypes ) {
 		int i, *newlist = (int *)Malloc1(sizeof(int)*(2*AP.MaxPreTypes+1)
@@ -4287,7 +4228,7 @@ void AddToPreTypes ARG1(int,type)
  		#[ MessPreNesting :
 */
 
-void MessPreNesting ARG1(int,par)
+void MessPreNesting(int par)
 {
 	MesPrint("@(%d)Illegal nesting of %#if, %#do, %#procedure and/or %#switch",par);
 }
@@ -4310,8 +4251,7 @@ void MessPreNesting ARG1(int,par)
 		Characters ' ', '\t' and '"' are ignored!
 */
 
-int
-DoPreAddSeparator ARG1(UBYTE *,s)
+int DoPreAddSeparator(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -4336,8 +4276,7 @@ DoPreAddSeparator ARG1(UBYTE *,s)
 
 		Characters ' ', '\t' and '"' are ignored!
 */
-int
-DoPreRmSeparator ARG1(UBYTE *,s)
+int DoPreRmSeparator(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -4354,8 +4293,7 @@ DoPreRmSeparator ARG1(UBYTE *,s)
 
 		#external ["prevar"] command
 */
-int
-DoExternal ARG1(UBYTE *,s)
+int DoExternal(UBYTE *s)
 { 
 	UBYTE *prevar=0;
 	int externalD= 0;
@@ -4431,8 +4369,7 @@ DoExternal ARG1(UBYTE *,s)
  		#[ DoPrompt:
 			#prompt string
 */
-int
-DoPrompt ARG1(UBYTE *,s)
+int DoPrompt(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -4461,8 +4398,7 @@ DoPrompt ARG1(UBYTE *,s)
 			#setexternal n
 */
 
-int
-DoSetExternal ARG1(UBYTE *,s)
+int DoSetExternal(UBYTE *s)
 {
 	int n=0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -4492,8 +4428,7 @@ DoSetExternal ARG1(UBYTE *,s)
  		#[ DoSetExternalAttr:
 */
 
-static FORM_INLINE UBYTE *
-pickupword ARG1(UBYTE *,s)
+static FORM_INLINE UBYTE *pickupword(UBYTE *s)
 {
 
 	for(;*s>' ';s++)switch(*s){
@@ -4507,8 +4442,7 @@ pickupword ARG1(UBYTE *,s)
 /*Returns 0 if the first string (case insensitively) equal to
   the beginning of the second string (of length n):
 */
-static int
-strINCmp ARG3(UBYTE *,a,UBYTE *,b,int,n)
+static int strINCmp(UBYTE *a, UBYTE *b, int n)
 {
 	for(;n>0;n--)if(tolower(*a++)!=tolower(*b++))
 		return(1);
@@ -4529,8 +4463,7 @@ strINCmp ARG3(UBYTE *,a,UBYTE *,b,int,n)
 /*
 	Expects comma-separated list of pairs name=value
 */
-int
-DoSetExternalAttr ARG1(UBYTE *,s)
+int DoSetExternalAttr(UBYTE *s)
 {
 	int lnam,lval;
 	UBYTE *nam,*val;
@@ -4641,8 +4574,7 @@ DoSetExternalAttr ARG1(UBYTE *,s)
 			#rmexternal [n] (if 0, close all)
 */
 
-int
-DoRmExternal ARG1(UBYTE *,s)
+int DoRmExternal(UBYTE *s)
 {
 	int n = -1;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -4702,8 +4634,7 @@ DoRmExternal ARG1(UBYTE *,s)
 
 */
 
-int
-DoFromExternal ARG1(UBYTE *,s)
+int DoFromExternal(UBYTE *s)
 {
 	/*[02feb2006 mt]:*/
 	UBYTE *prevar=0; 
@@ -4880,8 +4811,7 @@ DoFromExternal ARG1(UBYTE *,s)
 #ifdef WITHEXTERNALCHANNEL
 
 /*A wrapper to writeBufToExtChannel, see the file extcmd.c:*/
-LONG
-WriteToExternalChannel ARG3(int,handle,UBYTE *,buffer,LONG,size)
+LONG WriteToExternalChannel(int handle, UBYTE *buffer, LONG size)
 {
 	/*ATT! handle is not used! Actual output is performed to
 	 	the current external channel, see extcmd.c!*/
@@ -4892,12 +4822,10 @@ WriteToExternalChannel ARG3(int,handle,UBYTE *,buffer,LONG,size)
 }
 #endif /*ifdef WITHEXTERNALCHANNEL*/
 
-int
-DoToExternal ARG1(UBYTE *,s)
+int DoToExternal(UBYTE *s)
 {
    HANDLERS h;
-   LONG	
-	(*OldWrite) ARG3(int,handle,UBYTE *,buffer,LONG,size) = WriteFile;
+   LONG	(*OldWrite)(int handle, UBYTE *buffer, LONG size) = WriteFile;
 	int ret=-1;
 #ifdef WITHEXTERNALCHANNEL
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -4936,8 +4864,7 @@ DoToExternal ARG1(UBYTE *,s)
  		#[ defineChannel :
 */
  
-UBYTE *
-defineChannel ARG2(UBYTE*,s, HANDLERS*,h)
+UBYTE *defineChannel(UBYTE *s, HANDLERS *h)
 {
 	UBYTE *name,*to;
 
@@ -4972,8 +4899,7 @@ defineChannel ARG2(UBYTE*,s, HANDLERS*,h)
  		#[ writeToChannel :
 */
  
-int
-writeToChannel ARG3(int,wtype,UBYTE *,s,HANDLERS*,h)
+int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 {
 	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
 	WORD  num;

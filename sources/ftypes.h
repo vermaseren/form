@@ -7,9 +7,23 @@
  *	a good way of testing the code.
  */
  
+/**
+ *	The next macros were introduced when TFORM was programmed. In the case of
+ *	workers, each worker may need some private data. These can in principle be
+ *	accessed by some posix calls but that is unnecessarily slow. The passing of
+ *	a pointer to the complete data struct with private data will be much faster.
+ *	And anyway, there would have to be a macro that either makes the posix call
+ *	(TFORM) or doesn't (FORM). The solution by having macro's that either pass
+ *	the pointer (TFORM) or don't pass it (FORM) is seen as the best solution.
+ *
+ *	In the declarations and the calling of the functions we have to use the
+ *	PHEAD or the BHEAD macro, respectively, if the pointer is to be passed.
+ *	These macro's contain the comma as well. Hence we need special macro's if
+ *	there are no other arguments. These are called PHEAD0 and BHEAD0.
+ */
 #ifdef WITHPTHREADS
-#define PHEAD  ALLPRIVATES *,
-#define PHEAD0 ALLPRIVATES *
+#define PHEAD  ALLPRIVATES *B,
+#define PHEAD0 ALLPRIVATES *B
 #define BHEAD  B,
 #define BHEAD0 B
 #else

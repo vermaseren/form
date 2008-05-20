@@ -402,8 +402,7 @@ ProcErr:
  *	This routine is one of the most important routines in FORM.
  */
 
-WORD
-TestSub BARG2(WORD *,term,WORD,level)
+WORD TestSub(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, retvalue, funflag, j;
@@ -1426,8 +1425,7 @@ EndTest2:;
  *		Special attention should be given to nested functions!
  */
 
-WORD
-InFunction ARG2(WORD *,term,WORD *,termout)
+WORD InFunction(WORD *term, WORD *termout)
 {
 	GETIDENTITY
 	WORD *m, *t, *r, *rr, sign = 1;
@@ -1935,8 +1933,8 @@ InFunc:
  *		@return  Normal conventions (OK = 0).
  */
 
-WORD
-InsertTerm BARG6(WORD *,term,WORD,replac,WORD,extractbuff,WORD *,position,WORD *,termout,WORD,tepos)
+WORD InsertTerm(PHEAD WORD *term, WORD replac, WORD extractbuff, WORD *position, WORD *termout,
+                WORD tepos)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, i, l2, j;
@@ -2062,9 +2060,8 @@ InsCall:
  *		@return Normal conventions (OK = 0).
  */
 
-LONG
-PasteFile ARG7(WORD,number,WORD *,accum,POSITION *,position,WORD **,accfill
-			  ,RENUMBER,renumber,WORD *,freeze,WORD,nexpr)
+LONG PasteFile(WORD number, WORD *accum, POSITION *position, WORD **accfill,
+               RENUMBER renumber, WORD *freeze, WORD nexpr)
 {
 	GETIDENTITY
 	WORD *r, l, *m, i;
@@ -2185,8 +2182,7 @@ PasErr:
  *		of the accumulator into a proper term that still needs to be normalized.
  */
 
-WORD *
-PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
+WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD divby)
 {
 	GETBIDENTITY
 	WORD *t, *r, x, y, z;
@@ -2251,8 +2247,7 @@ PasteTerm BARG5(WORD,number,WORD *,accum,WORD *,position,WORD,times,WORD,divby)
  *		@param tepos   the position of the subterm in term to be replaced
  */
 
-WORD
-FiniTerm BARG5(WORD *,term,WORD *,accum,WORD *,termout,WORD,number,WORD,tepos)
+WORD FiniTerm(PHEAD WORD *term, WORD *accum, WORD *termout, WORD number, WORD tepos)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, i, numacc, l2, ipp;
@@ -2445,8 +2440,7 @@ static long debugcounter = 0;
  *		sorting routines.
  */
 
-WORD
-Generator BARG2(WORD *,term,WORD,level)
+WORD Generator(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0, *StartBuf;
@@ -3427,9 +3421,8 @@ OverWork:
  *			          be matched.
  */
 
-WORD
-DoOnePow ARG7(WORD *,term,WORD,power,WORD,nexp,WORD *,accum
-			 ,WORD *,aa,WORD,level,WORD *,freeze)
+WORD DoOnePow(WORD *term, WORD power, WORD nexp, WORD * accum,
+              WORD *aa, WORD level, WORD *freeze)
 {
 	GETIDENTITY
 	POSITION oldposition, startposition;
@@ -3616,8 +3609,7 @@ PowCall2:;
  *		             multiplying term by term we call Generator again.
  */
 
-WORD
-Deferred BARG2(WORD *,term,WORD,level)
+WORD Deferred(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	POSITION startposition;
@@ -3762,8 +3754,7 @@ DefCall:;
  *		be too complicated.
  */
 
-WORD
-PrepPoly ARG1(WORD *,term)
+WORD PrepPoly(WORD *term)
 {
 	GETIDENTITY
 	WORD count = 0, i, jcoef, ncoef, j;
@@ -4189,8 +4180,7 @@ IllegalContent:
  *		@return Normal conventions (OK = 0).
  */
 
-WORD
-PolyFunMul BARG1(WORD *,term)
+WORD PolyFunMul(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *tt1, *tt2, *arg1, *arg2;

@@ -42,7 +42,7 @@ static UBYTE *tablebase = (UBYTE *)"tablebase";
   	#[ ClearTableTree :
 */
 
-void ClearTableTree ARG1(TABLES,T)
+void ClearTableTree(TABLES T)
 {
 	COMPTREE *root;
 	if ( T->boomlijst == 0 ) {
@@ -72,7 +72,7 @@ void ClearTableTree ARG1(TABLES,T)
 		This number is always > 0, because we start from 1.
 */
 
-int InsTableTree ARG2(TABLES,T,WORD *,tp)
+int InsTableTree(TABLES T, WORD *tp)
 {
 	COMPTREE *boomlijst, *q, *p, *s;
 	WORD *v1, *v2, *v3;
@@ -230,7 +230,7 @@ balance:;
 	Hence we choose the slow solution for now.
 */
 
-void RedoTableTree ARG2(TABLES,T,int,newsize)
+void RedoTableTree(TABLES T, int newsize)
 {
 	WORD *tp;
 	int i;
@@ -255,7 +255,7 @@ void RedoTableTree ARG2(TABLES,T,int,newsize)
 		for inc = 2. For inc = 1 we have just a list of indices.
 */
 
-int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
+int FindTableTree(TABLES T, WORD *tp, int inc)
 {
 	COMPTREE *boomlijst = T->boomlijst, *q = boomlijst + T->rootnum, *p;
 	WORD *v1, *v2, *v3;
@@ -290,7 +290,7 @@ int FindTableTree ARG3(TABLES,T,WORD *,tp,int,inc)
   	#[ DoTableExpansion :
 */
 
-WORD DoTableExpansion ARG2(WORD *,term,WORD,level)
+WORD DoTableExpansion(WORD *term, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *stopper, *termout, *m, *mm, *tp, *r;
@@ -539,7 +539,7 @@ static KEYWORD tboptions[] = {
 
 static UBYTE *tablebasename = 0;
 
-int CoTableBase ARG1(UBYTE *,s)
+int CoTableBase(UBYTE *s)
 {
 	UBYTE *option, c, *t;
 	int i,optlistsize = sizeof(tboptions)/sizeof(KEYWORD), error = 0;
@@ -583,7 +583,7 @@ proper:;
 	Flips the table between use as 'stub' and regular use
 */
 
-int FlipTable ARG2(FUNCTIONS,f,int,type)
+int FlipTable(FUNCTIONS f, int type)
 {
 	TABLES T, TT;
 	T = f->tabl;
@@ -606,7 +606,7 @@ int FlipTable ARG2(FUNCTIONS,f,int,type)
 	ResetVariables and the Globalize routines.
 */
 
-int SpareTable ARG1(TABLES,TT)
+int SpareTable(TABLES TT)
 {
 	TABLES T;
 	T = (TABLES)Malloc1(sizeof(struct TaBlEs),"table");
@@ -646,7 +646,7 @@ int SpareTable ARG1(TABLES,TT)
 	Looks for a tablebase with the given name in the active tablebases.
 */
 
-DBASE *FindTB ARG1(UBYTE *,name)
+DBASE *FindTB(UBYTE *name)
 {
 	DBASE *d;
 	int i;
@@ -668,7 +668,7 @@ DBASE *FindTB ARG1(UBYTE *,name)
 	Note that tablebasename is a static variable, defined in CoTableBase
 */
 
-int CoTBcreate ARG1(UBYTE *,s)
+int CoTBcreate(UBYTE *s)
 {
 	DUMMYUSE(s);
 	if ( FindTB(tablebasename) != 0 ) {
@@ -684,7 +684,7 @@ int CoTBcreate ARG1(UBYTE *,s)
   	#[ CoTBopen :
 */
 
-int CoTBopen ARG1(UBYTE *,s)
+int CoTBopen(UBYTE *s)
 {
 	DBASE *d;
 	DUMMYUSE(s);
@@ -702,7 +702,7 @@ int CoTBopen ARG1(UBYTE *,s)
   	#[ CoTBaddto :
 */
 
-int CoTBaddto ARG1(UBYTE *,s)
+int CoTBaddto(UBYTE *s)
 {
 	GETIDENTITY
 	DBASE *d;
@@ -867,7 +867,7 @@ tableabort:;
 	one by one to the compiler as Fill statements.
 */
 
-int CoTBenter ARG1(UBYTE *,s)
+int CoTBenter(UBYTE *s)
 {
 	DBASE *d;
 	MLONG basenumber;
@@ -1020,7 +1020,7 @@ int CoTBenter ARG1(UBYTE *,s)
 	No arguments means all tables.
 */
 
-int CoTestUse ARG1(UBYTE *,s)
+int CoTestUse(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *tablename, c;
@@ -1065,7 +1065,7 @@ int CoTestUse ARG1(UBYTE *,s)
 		before, they are declared here.
 */
 
-int CheckTableDeclarations ARG1(DBASE *,d)
+int CheckTableDeclarations(DBASE *d)
 {
 	WORD type, funnum;
 	UBYTE *s, *ss, *t, *command = 0;
@@ -1134,7 +1134,7 @@ int CheckTableDeclarations ARG1(DBASE *,d)
 		If no tables are specified all tables are taken.
 */
 
-int CoTBload ARG1(UBYTE *,ss)
+int CoTBload(UBYTE *ss)
 {
 	DBASE *d;
 	UBYTE *s, *name, *t, *r, *command, *arguments, *tail;
@@ -1290,7 +1290,7 @@ finishup:;
 	We need the arguments of TestUse to see for which tables it is to be done
 */
 
-WORD TestUse ARG2(WORD *,term,WORD,level)
+WORD TestUse(WORD *term, WORD level)
 {
 	WORD *tstop, *t, *m, *tstart, tabnum;
 	WORD *funs, numfuns, error = 0;
@@ -1349,7 +1349,7 @@ WORD TestUse ARG2(WORD *,term,WORD,level)
   	#[ CoTBaudit :
 */
 
-int CoTBaudit ARG1(UBYTE *,s)
+int CoTBaudit(UBYTE *s)
 {
 	DBASE *d;
 	UBYTE *name, *tail;
@@ -1389,7 +1389,7 @@ int CoTBaudit ARG1(UBYTE *,s)
   	#[ CoTBon :
 */
 
-int CoTBon ARG1(UBYTE *,s)
+int CoTBon(UBYTE *s)
 {
 	DBASE *d;
 	UBYTE *ss, c;
@@ -1420,7 +1420,7 @@ int CoTBon ARG1(UBYTE *,s)
   	#[ CoTBoff :
 */
 
-int CoTBoff ARG1(UBYTE *,s)
+int CoTBoff(UBYTE *s)
 {
 	DBASE *d;
 	UBYTE *ss, c;
@@ -1451,7 +1451,7 @@ int CoTBoff ARG1(UBYTE *,s)
   	#[ CoTBcleanup :
 */
 
-int CoTBcleanup ARG1(UBYTE *,s)
+int CoTBcleanup(UBYTE *s)
 {
 	DUMMYUSE(s);
 	MesPrint("&TableBase Cleanup statement not yet implemented");
@@ -1463,7 +1463,7 @@ int CoTBcleanup ARG1(UBYTE *,s)
   	#[ CoTBreplace :
 */
 
-int CoTBreplace ARG1(UBYTE *,s)
+int CoTBreplace(UBYTE *s)
 {
 	DUMMYUSE(s);
 	MesPrint("&TableBase Replace statement not yet implemented");
@@ -1478,7 +1478,7 @@ int CoTBreplace ARG1(UBYTE *,s)
 	table elements to be loaded
 */
 
-int CoTBuse ARG1(UBYTE *,s)
+int CoTBuse(UBYTE *s)
 {
 	GETIDENTITY
 	DBASE *d;
@@ -1669,7 +1669,7 @@ int CoTBuse ARG1(UBYTE *,s)
 	Possibly to be followed by names of tables.
 */
 
-int CoApply ARG1(UBYTE *,s)
+int CoApply(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *tablename, c;
@@ -1756,7 +1756,7 @@ char *helptb[] = {
 	,""
 		};
 
-int CoTBhelp ARG1(UBYTE *,s)
+int CoTBhelp(UBYTE *s)
 {
 	int i, ii = sizeof(helptb)/sizeof(char *);
 	DUMMYUSE(s);
@@ -1772,7 +1772,7 @@ int CoTBhelp ARG1(UBYTE *,s)
 	This gains one space. Hence we have to be very careful
 */
 
-VOID ReWorkT ARG3(WORD *,term,WORD *,funs,WORD,numfuns)
+VOID ReWorkT(WORD *term, WORD *funs, WORD numfuns)
 {
 	WORD *tstop, *tend, *m, *t, *tt, *mm, *mmm, *r, *rr;
 	int i, j;
@@ -1853,7 +1853,7 @@ inc:		j = t[1];
   	#[ Apply :
 */
 
-WORD Apply ARG2(WORD *,term,WORD,level)
+WORD Apply(WORD *term, WORD level)
 {
 	WORD *funs, numfuns;
 	TABLES T;
@@ -1912,7 +1912,7 @@ WORD Apply ARG2(WORD *,term,WORD,level)
 	there was a substitution.
 */
 
-int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
+int ApplyExec(WORD *term, int maxtogo, WORD level)
 {
 	GETIDENTITY
 	WORD rhsnumber, *Tpattern, *funs, numfuns, funnum;
@@ -2129,7 +2129,7 @@ int ApplyExec ARG3(WORD *,term,int,maxtogo,WORD,level)
   	#[ ApplyReset :
 */
 
-WORD ApplyReset ARG1(WORD,level)
+WORD ApplyReset(WORD level)
 {
 	WORD *funs, numfuns;
 	TABLES T;
@@ -2165,7 +2165,7 @@ WORD ApplyReset ARG1(WORD,level)
   	#[ TableReset :
 */
 
-WORD TableReset ARG0
+WORD TableReset()
 {
 	TABLES T;
 	int i;
@@ -2192,7 +2192,7 @@ int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 	Releases all TableBases
 */
 
-int ReleaseTB ARG0
+int ReleaseTB()
 {
 	DBASE *d;
 	int i;

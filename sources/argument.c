@@ -25,8 +25,7 @@
 	need to insert a different value (C->lhs[level][2]).
 */
 
-WORD
-execarg ARG2(WORD *,term,WORD,level)
+WORD execarg(WORD *term, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *r, *m, *v;
@@ -1399,8 +1398,7 @@ execargerr:
   	#[ execterm :
 */
 
-WORD
-execterm ARG2(WORD *,term,WORD,level)
+WORD execterm(WORD *term, WORD level)
 {
 	GETIDENTITY
 	CBUF *C = cbuf+AM.rbufnum;
@@ -1459,8 +1457,7 @@ exectermerr:
   	#[ ArgumentImplode :
 */
 
-int
-ArgumentImplode BARG2(WORD *,term,WORD *,thelist)
+int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 {
 	WORD *liststart, *liststop, *inlist;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
@@ -1525,8 +1522,7 @@ ArgumentImplode BARG2(WORD *,term,WORD *,thelist)
   	#[ ArgumentExplode :
 */
 
-int
-ArgumentExplode BARG2(WORD *,term,WORD *,thelist)
+int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 {
 	WORD *liststart, *liststop, *inlist;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;

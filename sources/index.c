@@ -35,8 +35,7 @@
   	#[ FindBracket :
 */
 
-POSITION *
-FindBracket ARG2(EXPRESSIONS,e,WORD *,bracket)
+POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 {
 	GETIDENTITY
 	BRACKETINDEX *bi;
@@ -258,8 +257,7 @@ found:
 	DON'T forget AR.SortType to be put into e->bracketinfo->SortType
 */
 
-VOID
-PutBracketInIndex ARG2(WORD *,term,POSITION *,newpos)
+VOID PutBracketInIndex(WORD *term, POSITION *newpos)
 {
 	GETIDENTITY
 	BRACKETINDEX *bi, *b1, *b2, *b3;
@@ -449,8 +447,7 @@ bracketdone:
   	#[ ClearBracketIndex :
 */
 
-void
-ClearBracketIndex ARG1(WORD,numexp)
+void ClearBracketIndex(WORD numexp)
 {
 	BRACKETINFO *b = Expressions[numexp].bracketinfo;
 	if ( b == 0 ) return;
@@ -469,8 +466,7 @@ ClearBracketIndex ARG1(WORD,numexp)
 	Note: This routine is thread-safe
 */
 
-VOID
-OpenBracketIndex ARG1(WORD,nexpr)
+VOID OpenBracketIndex(WORD nexpr)
 {
 	EXPRESSIONS e = Expressions + nexpr;
 	BRACKETINFO *bi;

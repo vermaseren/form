@@ -126,7 +126,7 @@ endif
 
 if BUILD_PARFORM
 parform% : override CC = @MPICOMPILER@
-parfor% : override LINK = @MPICOMPILER@
+parfor% : override LINK = @MPICOMPILER@ -o parform
 bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
 parform_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG

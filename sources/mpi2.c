@@ -30,7 +30,7 @@ extern WORD      *PF_shared_buff;
 */
 double PF_starttime;
 
-LONG PF_RealTime ARG1(int,i)
+LONG PF_RealTime(int i)
 {
   if( i == PF_RESET ){
 	PF_starttime = MPI_Wtime();
@@ -42,8 +42,7 @@ LONG PF_RealTime ARG1(int,i)
   	#] LONG PF_RealTime(int) :
   	#[ int  PF_LibInit(int*,char***) :
 */
-int 
-PF_LibInit ARG2(int*,argcp,char***,argvp)
+int PF_LibInit(int *argcp, char ***argvp)
 {  
   int ret,i,process_rank;
   
@@ -94,8 +93,7 @@ PF_LibInit ARG2(int*,argcp,char***,argvp)
   Exits mpi, when there is an error either indicated or happening,
   returnvalue is 1, else returnvalue is 0
 */ 
-int 
-PF_Terminate ARG1(int,error)
+int PF_Terminate(int error)
 {
   // here some cleaning code should be added ...
   return(MPI_Finalize());
@@ -107,8 +105,7 @@ PF_Terminate ARG1(int,error)
   General Send and Receive Function for packed buffers
 */
 /*[02nov2003 mt] Look at PF_Probe in mpi.c:*/
-int 
-PF_Probe ARG1(int,src)
+int PF_Probe(int src)
 {
   int ret,flag,tag;
 
@@ -125,7 +122,7 @@ PF_Probe ARG1(int,src)
     MPI memory allocation function for slave buffers
 */ 
 
-WORD* PF_AllocBuf1 ARG1(LONG, bsize)
+WORD *PF_AllocBuf1(LONG bsize)
 {
  WORD* mem_pointer;
  int error;
@@ -145,7 +142,7 @@ WORD* PF_AllocBuf1 ARG1(LONG, bsize)
     Initialization of shared windows for all running processes
 */
 
-int PF_SMWin_Init ARG0
+int PF_SMWin_Init()
 {
   int error;
   
@@ -168,8 +165,7 @@ static UBYTE *PF_packbuf;
 static UBYTE *PF_packstop;
 static int   PF_packpos;
 
-int 
-PF_InitPackBuf ARG0
+int PF_InitPackBuf()
 {
   if(!PF_packbuf){ 
 	PF_packbuf = (UBYTE *)Malloc1(sizeof(UBYTE)*PF.packsize,"");
@@ -180,8 +176,7 @@ PF_InitPackBuf ARG0
   return(0);
 }
 
-int
-PF_PrintPackBuf ARG2(char*,s,int,size)
+int PF_PrintPackBuf(char *s, int size)
 {
   int i;
   printf("[%d] %s: ",PF.me,s);
@@ -193,8 +188,7 @@ PF_PrintPackBuf ARG2(char*,s,int,size)
   	#] the packbuffer :
   	#[ int  PF_Pack(VOID*,LONG,MPI_Datatype) :
 */
-int 
-PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
+int PF_Pack(VOID *buffer, LONG count, MPI_Datatype type)
 {
   int ret,bytes,pos;
 
@@ -212,8 +206,8 @@ PF_Pack ARG3(VOID *,buffer,LONG,count,MPI_Datatype,type)
   	#] int  PF_Pack(VOID*,LONG,MPI_Datatype) :
   	#[ int  PF_Send(int,int,int) :
 */
-int 
-PF_Send ARG3(int,to,int,tag,int,par){  
+int PF_Send(int to, int tag, int par)
+{
   int ret,size;
 
   if(!par){
@@ -230,8 +224,7 @@ PF_Send ARG3(int,to,int,tag,int,par){
   	#] int  PF_Send(int,int,int) :
   	#[ int  PF_BroadCast(int) :
 */
-int 
-PF_BroadCast ARG1(int,par)
+int PF_BroadCast(int par)
 {
   int ret;
 
@@ -250,8 +243,7 @@ PF_BroadCast ARG1(int,par)
   	#] int  PF_BroadCast(int) :
   	#[ int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
 */
-int 
-PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
+int PF_UnPack(VOID *buffer, LONG count, MPI_Datatype type)
 {
   int ret;
 
@@ -265,8 +257,7 @@ PF_UnPack ARG3(VOID*,buffer,LONG,count,MPI_Datatype,type)
   	#] int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
   	#[ int  PF_Receive(int,int,int*,int*):
 */
-int 
-PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
+int PF_Receive(int src, int tag, int *srcp, int *tagp)
 {  
   int ret,size = (int)PF.packsize;
 
@@ -293,8 +284,8 @@ PF_Receive ARG4(int,src,int,tag,int*,srcp,int*,tagp)
 */
 static int PF_finished;
 
-int 
-PF_ISendSbuf ARG2(int,to,int,tag){  
+int PF_ISendSbuf(int to, int tag)
+{
   PF_BUFFER *s = PF.sbuf;
   int a=s->active;
   int size = s->fill[a] - s->buff[a];
@@ -359,8 +350,7 @@ PF_ISendSbuf ARG2(int,to,int,tag){
 
   Blocking receive of a WORD buffer
 */
-int 
-PF_RecvWbuf ARG3(WORD*,b,LONG*,s,int*,src)
+int PF_RecvWbuf(WORD *b, LONG *s, int *src)
 {  
   int tag,i,r=0;
 
@@ -382,8 +372,7 @@ PF_RecvWbuf ARG3(WORD*,b,LONG*,s,int*,src)
 	 post nonblocking receive for the active receive buffer 
 	 the buffer is filled from full to stop
 */
-int
-PF_IRecvRbuf ARG3(PF_BUFFER*,r,int,bn,int,from)
+int PF_IRecvRbuf(PF_BUFFER *r, int bn, int from)
 {
   int ret;
   r->type[bn] = PF_WORD;
@@ -409,7 +398,7 @@ PF_IRecvRbuf ARG3(PF_BUFFER*,r,int,bn,int,from)
   If the receive is allready finished, just return the flag and size, 
   else wait for it to finish, but also check for other pending receives. 
 */ 
-int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
+int PF_WaitRbuf(PF_BUFFER *r, int bn, LONG *size)
 {
   int ret,rsize;
 
@@ -439,7 +428,8 @@ int PF_WaitRbuf ARG3(PF_BUFFER *,r,int,bn,LONG *,size)
   	#] int  PF_WaitRbuf(PF_BUFFER *,int,LONG*) :
   	#[ int  PF_Put_origin(int) :
 */
-int PF_Put_origin ARG1(int,to){  
+int PF_Put_origin(int to)
+{  
   
   PF_BUFFER *s = PF.sbuf;
   int a=s->active;
@@ -474,8 +464,7 @@ int PF_Put_origin ARG1(int,to){
 
    Synhronization for put operation on target
 */
-int 
-PF_Put_target ARG1(int,src)
+int PF_Put_target(int src)
 {  
   int tag,i,r=0;
   

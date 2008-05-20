@@ -21,7 +21,7 @@
 	In ModulusGCD1 we assume that m fits inside a WORD.
 */
 
-int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
+int ModulusGCD1(WORD modu, WORD fun1, WORD fun2, WORD *term, WORD sym)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *t1 = 0, n1 = 0, n2, *m1, *m2, i, x1, offset;
@@ -122,7 +122,7 @@ int ModulusGCD1 ARG5(WORD,modu,WORD,fun1,WORD,fun2,WORD *,term,WORD,sym)
   	#[ MakeMono :
 */
 
-int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
+int MakeMono(WORD modu, WORD *t, WORD whichbuffer, WORD sym)
 {
 	GETIDENTITY
 	WORD *tstop = t + t[1], *tt, *ttt, cs, maxpow, i, n, *m, *w1, *w2, rl;
@@ -214,7 +214,7 @@ int MakeMono ARG4(WORD,modu,WORD,*t,WORD,whichbuffer,WORD,sym)
 	Takes the modulus a%b and returns it. We assume that b fits inside a word.
 */
 
-WORD DivMod ARG3(UWORD *,a,WORD,na,WORD,b)
+WORD DivMod(UWORD *a, WORD na, WORD b)
 {
 	int la;
 	long x = 0;
@@ -232,7 +232,7 @@ WORD DivMod ARG3(UWORD *,a,WORD,na,WORD,b)
 	The remainder is returned.
 */
 
-WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
+WORD DivShort(UWORD *a, WORD na, UWORD b, UWORD *c, WORD *nc)
 {
 	int la, lb;
 	long x = 0, y;
@@ -261,7 +261,7 @@ WORD DivShort ARG5(UWORD *,a,WORD,na,UWORD,b,UWORD *,c,WORD *,nc)
 	add memory as easily as dollars are rather volatile.
 */
 
-int FactorIn BARG2(WORD *,term,WORD,level)
+int FactorIn(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *m, *mm, *oldwork, *mstop, *n1, *n2, *n3, *n4, *n1stop, *n2stop;
@@ -632,7 +632,7 @@ onerror:
 	of the others, or even whether a certain factor is under construction.
 */
 
-int FactorInExpr BARG2(WORD *,term,WORD,level)
+int FactorInExpr(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *m, *oldwork, *mstop, *n1, *n2, *n3, *n4, *n1stop, *n2stop;

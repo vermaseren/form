@@ -38,7 +38,7 @@ extern "C" lseek();
   	#[ Uopen :
 */
 
-FILES *Uopen ARG2(char *,filename,char *,mode)
+FILES *Uopen(char *filename, char *mode)
 {
 	FILES *f = (FILES *)Malloc1(sizeof(FILES),"Uopen");
 	int flags = 0, rights = 0644;
@@ -66,7 +66,7 @@ FILES *Uopen ARG2(char *,filename,char *,mode)
   	#[ Uclose :
 */
 
-int Uclose ARG1(FILES *,f)
+int Uclose(FILES *f)
 {
 	int retval;
 	if ( f ) {
@@ -83,7 +83,7 @@ int Uclose ARG1(FILES *,f)
 */
 
 
-size_t Uread ARG4(char *,ptr,size_t,size,size_t,nobj,FILES *,f)
+size_t Uread(char *ptr, size_t size, size_t nobj, FILES *f)
 {
 /*[13jul2005 mt]:*/
 #ifdef SAFESIGNAL
@@ -110,7 +110,7 @@ size_t ret;
   	#[ Uwrite :
 */
 
-size_t Uwrite ARG4(char *,ptr,size_t,size,size_t,nobj,FILES *,f)
+size_t Uwrite(char *ptr, size_t size, size_t nobj, FILES *f)
 {
 /*[13jul2005 mt]:*/
 #ifdef SAFESIGNAL
@@ -137,7 +137,7 @@ size_t thesize=size*nobj;
   	#[ Useek :
 */
 
-int Useek ARG3(FILES *,f,off_t,offset,int,origin)
+int Useek(FILES *f, off_t offset, int origin)
 {
 	if ( f && ( lseek(f->descriptor,offset,origin) >= 0 ) ) return(0);
 	return(-1);
@@ -148,7 +148,7 @@ int Useek ARG3(FILES *,f,off_t,offset,int,origin)
   	#[ Utell :
 */
 
-off_t Utell ARG1(FILES *,f)
+off_t Utell(FILES *f)
 {
 	if ( f ) return((off_t)lseek(f->descriptor,0L,SEEK_CUR));
 	else return(-1);
@@ -159,14 +159,14 @@ off_t Utell ARG1(FILES *,f)
   	#[ Uflush :
 */
 
-void Uflush ARG1(FILES *,f) { DUMMYUSE(f); }
+void Uflush(FILES *f) { DUMMYUSE(f); }
 
 /*
   	#] Uflush : 
   	#[ Ugetpos :
 */
 
-int Ugetpos ARG2(FILES *,f,fpos_t *,ptr)
+int Ugetpos(FILES *f, fpos_t *ptr)
 {
 	DUMMYUSE(f); DUMMYUSE(ptr);
 	return(-1);
@@ -177,7 +177,7 @@ int Ugetpos ARG2(FILES *,f,fpos_t *,ptr)
   	#[ Usetpos :
 */
 
-int Usetpos ARG2(FILES *,f,fpos_t *,ptr)
+int Usetpos(FILES *f,fpos_t *ptr)
 {
 	DUMMYUSE(f); DUMMYUSE(ptr);
 	return(-1);
@@ -188,7 +188,7 @@ int Usetpos ARG2(FILES *,f,fpos_t *,ptr)
   	#[ Usetbuf :
 */
 
-void Usetbuf ARG2(FILES *,f,char *,ptr) { DUMMYUSE(f); DUMMYUSE(ptr); }
+void Usetbuf(FILES *f, char *ptr) { DUMMYUSE(f); DUMMYUSE(ptr); }
 
 /*
   	#] Usetbuf : 

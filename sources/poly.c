@@ -26,7 +26,7 @@
 		Easy: just send everything to the sort routines
 */
 
-WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
+WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 {
 	GETIDENTITY
 	WORD *t, *pbuffer;
@@ -56,7 +56,7 @@ WORD *PolynoAdd ARG2(WORD *,poly1,WORD *,poly2)
 		other with the sign of the coefficient flipped.
 */
 
-WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
+WORD *PolynoSub(WORD *poly1, WORD *poly2)
 {
 	GETIDENTITY
 	WORD *t, *tt, *pbuffer;
@@ -88,7 +88,7 @@ WORD *PolynoSub ARG2(WORD *,poly1,WORD *,poly2)
 		Multiply term by term, normalize and put new bracket info if needed.
 */
 
-WORD *PolynoMul ARG2(WORD *,poly1,WORD *,poly2)
+WORD *PolynoMul(WORD *poly1, WORD *poly2)
 {
 	GETIDENTITY
 	WORD *t, *tt, *pbuffer, *w, *t1, *tstop1, *tstop2, *oldwork = AT.WorkPointer;
@@ -163,7 +163,7 @@ abortion:
  		#[ PolynoDiv :
 */
 
-WORD *PolynoDiv ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
+WORD *PolynoDiv(WORD *poly1, WORD *poly2, WORD **polyrem)
 {
 	GETIDENTITY
 	WORD *t, *t1, *t2, *t1stop, *t2stop, *oldwork = AT.WorkPointer, *w = 0;
@@ -293,7 +293,7 @@ aborteer:
 		Division of polynomials in a single variable
 */
 
-WORD *Polyno1Div ARG3(WORD *,poly1,WORD *,poly2,WORD **,polyrem)
+WORD *Polyno1Div(WORD *poly1, WORD *poly2, WORD **polyrem)
 {
 	GETIDENTITY
 	WORD *t1, *t2, *n3, *t1stop, *t2stop, *n1, *n2;
@@ -467,7 +467,7 @@ aborteer:
 		Note the abundant recursions here.
 */
 
-WORD *PolynoGCD ARG2(WORD *,poly1,WORD *,poly2)
+WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 {
 	GETIDENTITY
 	WORD lowestsymbol = 2*MAXPOWER, only1 = 2, curpow;
@@ -710,7 +710,7 @@ aborteer:
  		#[ Polyno1GCD :
 */
 
-WORD *Polyno1GCD ARG2(WORD *,poly1,WORD *,poly2)
+WORD *Polyno1GCD(WORD *poly1, WORD *poly2)
 {
 	WORD *n1, *n2, *n3 = 0, *n4 = 0, *t1, *t2, *t1stop, *t2stop;
 #ifdef POLYDEBUG
@@ -772,7 +772,7 @@ isone:
  		#[ PolynoPrint :
 */
 
-UBYTE *PolynoPrint ARG1(WORD *,poly)
+UBYTE *PolynoPrint(WORD *poly)
 {
 	UBYTE *s;
 	WORD *t, lbrac = 0, first = 0;
@@ -815,7 +815,7 @@ UBYTE *PolynoPrint ARG1(WORD *,poly)
  		#[ PolynoWrite :
 */
 
-int PolynoWrite ARG1(WORD *,poly)
+int PolynoWrite(WORD *poly)
 {
 	GETIDENTITY
 	WORD *m, j, olddefer = AR.DeferFlag, first, lbrac;
@@ -857,7 +857,7 @@ abowrite:
  		#[ PolynoPushBracket :
 */
 
-void PolynoPushBracket ARG1(WORD,numofsymbol)
+void PolynoPushBracket(WORD numofsymbol)
 {
 	GETIDENTITY
 	WORD *pnew;
@@ -902,7 +902,7 @@ void PolynoPushBracket ARG1(WORD,numofsymbol)
  		#[ PolynoPopBracket :
 */
 
-void PolynoPopBracket ARG0
+void PolynoPopBracket()
 {
 	GETIDENTITY
 	if ( AN.polyblevel == 0 ) {
@@ -925,7 +925,7 @@ void PolynoPopBracket ARG0
  		#[ PolynoStart :
 */
 
-void PolynoStart ARG0
+void PolynoStart()
 {
 	GETIDENTITY
 	if ( AN.doingpoly == 0 ) {
@@ -950,7 +950,7 @@ void PolynoStart ARG0
  		#[ PolynoFinish :
 */
 
-void PolynoFinish ARG0
+void PolynoFinish()
 {
 	GETIDENTITY
 	AN.doingpoly--;
@@ -967,7 +967,7 @@ void PolynoFinish ARG0
  		#[ PolynoNormalize :
 */
 
-WORD *PolynoNormalize ARG1(WORD *,poly)
+WORD *PolynoNormalize(WORD *poly)
 {
 	GETIDENTITY
 	WORD *t = poly, *oldwork = AT.WorkPointer, *w, *pbuffer;
@@ -1029,7 +1029,7 @@ aborteer:
  		#[ DoPolynomial :
 */
 
-WORD DoPolynomial ARG2(WORD *,term,WORD,level)
+WORD DoPolynomial(WORD *term, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *n1 = 0, *n2 = 0, *n3 = 0, *n4 = 0, *n5, *oldwork = AT.WorkPointer;
@@ -1146,7 +1146,7 @@ aborteer:
  		#[ DoPolyGetRem :
 */
 
-WORD DoPolyGetRem ARG2(WORD *,term,WORD,level)
+WORD DoPolyGetRem(WORD *term, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *oldwork = AT.WorkPointer;
@@ -1196,7 +1196,7 @@ WORD DoPolyGetRem ARG2(WORD *,term,WORD,level)
  		#[ CopyOfPolynomial :
 */
 
-WORD *CopyOfPolynomial ARG1(WORD *,poly)
+WORD *CopyOfPolynomial(WORD *poly)
 {
 	WORD *n1, *n2, *thecopy;
 	LONG thesize;
@@ -1217,7 +1217,7 @@ WORD *CopyOfPolynomial ARG1(WORD *,poly)
 		if par == 0 we remove the original.
 */
 
-WORD *PolynoUnify ARG2(WORD *,poly,int,par)
+WORD *PolynoUnify(WORD *poly, int par)
 {
 	GETIDENTITY
 	WORD *n, *n1, *t, *t1, *n2, *tstop, *oldwork = AT.WorkPointer;
@@ -1308,7 +1308,7 @@ WORD *PolynoUnify ARG2(WORD *,poly,int,par)
 		if ( par == 2 ) the GCD is returned in factor.
 */
 
-WORD *PolynoCoefNorm ARG4(WORD *,poly,WORD,x,WORD **,factor,int,par)
+WORD *PolynoCoefNorm(WORD *poly, WORD x, WORD **factor, int par)
 {
 	WORD *n1 = 0, *t1, *t, *b, *b1 = 0, *b2 = 0, *b3, *G1 = 0, *tstop, curpow;
 	LONG outsize;
@@ -1389,7 +1389,7 @@ aborteer:
 		(*onevar = 1)
 */
 
-WORD *MakePolynomial ARG3(WORD,numexp,int,par,int *,onevar)
+WORD *MakePolynomial(WORD numexp, int par, int *onevar)
 {
 	GETIDENTITY
 	WORD *n1 = 0, *m, *mstop, *mm;
@@ -1444,7 +1444,7 @@ aborteer:
  		#[ DoPolynoNorm :
 */
 
-int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
+int DoPolynoNorm(int par, WORD numexp, WORD numsym, WORD numdol)
 {
 	GETIDENTITY
 	WORD *n1, *n2, *n;
@@ -1536,7 +1536,7 @@ int DoPolynoNorm ARG4(int,par,WORD,numexp,WORD,numsym,WORD,numdol)
 		calculations;
 */
 
-WORD *PolynoIntFac ARG1(WORD *,poly)
+WORD *PolynoIntFac(WORD *poly)
 {
 	GETIDENTITY
 	WORD *t, *w, *oldwork = AT.WorkPointer, *pbuffer;
@@ -1626,7 +1626,7 @@ PIFerror:
 	in which numerator and denominator are the names of two CFunctions.
 */
 
-int PolyNorm BARG4(WORD *,term,WORD,level,WORD,numerator,WORD,denominator)
+int PolyNorm(PHEAD WORD *term, WORD level, WORD numerator, WORD denominator)
 {
 	DUMMYUSE(term); DUMMYUSE(level); DUMMYUSE(numerator); DUMMYUSE(denominator);
 	return(0);
