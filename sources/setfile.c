@@ -680,6 +680,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 /*		i += 11; */
 		i += 16;
 	}
+	if ( MaxFpatches < 4 ) MaxFpatches = 4;
 	longer = MaxPatches > MaxFpatches ? MaxPatches : MaxFpatches;
 	longerp = longer;
 	while ( (1 << j) < longerp ) j++;
@@ -782,7 +783,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -1086,7 +1087,7 @@ int AllocScratchBuffers()
 }
 
 /*
- 		#] AllocScratchBuffers :
+ 		#] AllocScratchBuffers : 
 	#] Setups :
 */
 

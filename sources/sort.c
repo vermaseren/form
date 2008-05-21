@@ -3231,7 +3231,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
 	The old code had to be replaced because all output needs to go
 	through PutOut. For this we have to go term by term and keep
@@ -3284,7 +3284,7 @@ ConMer:
 			SetupOutputGZIP(fout);
 			SetupAllInputGZIP(S);
 			m1 = m2 = (WORD *)(((UBYTE *)(S->sBuffer)) + 2*AM.MaxTer);
-			PUTZERO(position2);
+			position2 = S->iPatches[0];
 			while ( ( length = FillInputGZIP(fin,&position2,
 					(((UBYTE *)(S->sBuffer))+2*AM.MaxTer),
 					(S->SmallEsize*sizeof(WORD)-2*AM.MaxTer),0) ) > 0 ) {
@@ -3651,6 +3651,7 @@ EndOfAll:
 		(S->fPatchN)++;
 		S->fPatches[S->fPatchN] = position;
 		if ( ISNOTZEROPOS(AN.OldPosIn) ) {		/* We are not done */
+
 			SeekFile(fin->handle,&(AN.OldPosIn),SEEK_SET);
 /*
 			We don't need extra provisions for the zlib compression here.
