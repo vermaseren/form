@@ -28,8 +28,10 @@
 
 #endif /* USE_AUTOCONF */
 
+#ifdef __GNU_C__
 #if __STDC_VERSION__ < 199901L
 #define inline
+#endif
 #endif
 #define FORM_INLINE inline
 
