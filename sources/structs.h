@@ -1,6 +1,17 @@
 /** @file structs.h
  *
  *  Contains definitions for global structs.
+ *
+ *  !!!CAUTION!!!
+ *  Changes in this file will most likely have consequences for the recovery
+ *  mechanism (see checkpoint.c). You need to care for the code in checkpoint.c
+ *  as well and modify the code there accordingly!
+ *
+ *  The marker [D] is used in comments in this file to mark pointers to which
+ *  dynamically allocated memory is assigned by a call to malloc() during
+ *  runtime (in contrast to pointers that point into already allocated memory).
+ *  This information is especially helpful if one needs to know which pointers
+ *  need to be freed (cf. checkpoint.c).
  */
  
 #ifndef __STRUCTS__
@@ -141,28 +152,34 @@ typedef struct FiLeDaTa {
 
 /**
  *
+ *  Contains the pointers to an array in which a binary search will be
+ *  performed.
  */
 
-typedef struct VaRrEnUm {		/* Pointers to an array in which a */
-	WORD		*start;			/* binary search will be performed */
-	WORD		*lo;
-	WORD		*hi;
+typedef struct VaRrEnUm {
+	WORD  *start;  /**< Start point for search. Points inbetween lo and hi */
+	WORD  *lo;     /**< Start of memory area */
+	WORD  *hi;     /**< End of memory area */
 } VARRENUM;
 
 /**
  *
+ *  Only symb.lo gets dynamically allocated. All other pointers points into this
+ *  memory.
  */
 
 typedef struct ReNuMbEr {
-	VARRENUM	symb;			/* First stage renumbering */
-	VARRENUM	indi;
-	VARRENUM	vect;
-	VARRENUM	func;
-	WORD		*symnum;		/* Second stage renumbering */
-	WORD		*indnum;
-	WORD		*vecnum;
-	WORD		*funnum;
-	POSITION	startposition;
+	/* First stage renumbering */
+	VARRENUM   symb;          /**< Symbols */
+	VARRENUM   indi;          /**< Indices */
+	VARRENUM   vect;          /**< Vectors */
+	VARRENUM   func;          /**< Functions */
+	/* Second stage renumbering */
+	WORD       *symnum;       /**< Renumbered symbols */
+	WORD       *indnum;       /**< Renumbered indices */
+	WORD       *vecnum;       /**< Renumbered vectors */
+	WORD       *funnum;       /**< Renumbered functions */
+	POSITION   startposition;
 	PADPOINTER(0,0,0,0);
 } *RENUMBER;
 
@@ -183,21 +200,21 @@ typedef struct {
 */
 
 /**
- *	Much information is stored in arrays of which we can double the size
- *	if the array proves to be too small. Such arrays are controled by
- *	a variable of type LIST. The routines that expand the lists are in the
- *	file tools.c
+ *  Much information is stored in arrays of which we can double the size
+ *  if the array proves to be too small. Such arrays are controled by
+ *  a variable of type #LIST. The routines that expand the lists are in the
+ *  file tools.c
  */
 
 typedef struct {
-	void *lijst;       /**< holds space for "maxnum" elements of size "size" each */
-	char *message;     /**< text for Malloc1 when allocating lijst */
-	int num;           /**< number of elements in lijst */
-	int maxnum;        /**< max number of elements in lijst */
-	int size;          /**< size of one element in lijst */
-	int numglobal;
-	int numtemp;       /* At the moment only needed for sets and setstore */
-	int numclear;      /* Only for the clear instruction */
+	void *lijst;       /**< [D] Holds space for "maxnum" elements of size "size" each */
+	char *message;     /**< Text for Malloc1 when allocating lijst. Set to constant string. */
+	int num;           /**< Number of elements in lijst. */
+	int maxnum;        /**< Maximum number of elements in lijst. */
+	int size;          /**< Size of one element in lijst. */
+	int numglobal;     /**< Marker for position when .global is executed. */
+	int numtemp;       /**< At the moment only needed for sets and setstore. */
+	int numclear;      /**< Only for the clear instruction. */
 	PADPOINTER(0,6,0,0);
 } LIST;
 
@@ -226,16 +243,16 @@ typedef struct NameLi {         /* For fast namesearching */
 } NAMELIST;
 
 /**
- *	The names of variables are kept in an array. Elements of type #NAMENODE
- *	define a tree (that is kept balanced) that make it easy and fast to look for
- *	variables. See also #NAMETREE.
+ *  The names of variables are kept in an array. Elements of type #NAMENODE
+ *  define a tree (that is kept balanced) that make it easy and fast to look for
+ *  variables. See also #NAMETREE.
  */
- 
+
 typedef struct NaMeNode {
 	LONG name;      /**< Offset into NAMETREE::namebuffer. */
-	WORD parent;    /**< Equal -1 if no parent. */
-	WORD left;      /**< Equal -1 if no child. */
-	WORD right;     /**< Equal -1 if no child. */
+	WORD parent;    /**< =-1 if no parent. */
+	WORD left;      /**< =-1 if no child. */
+	WORD right;     /**< =-1 if no child. */
 	WORD balance;   /**< Used for the balancing of the tree. */
 	WORD type;      /**< Type associated with the name. See @ref CompilerTypes "compiler types". */
 	WORD number;    /**< Number of variable in #LIST's like for example C_const::SymbolList. */
@@ -243,29 +260,30 @@ typedef struct NaMeNode {
 } NAMENODE;
 
 /**
- *	A struct of type #NAMETREE controls a complete (balanced) tree of names
- *	for the compiler. The compiler maintains several of such trees and the
- *	system has been set up in such a way that one could define more of them
- *	if we ever want to work with local name spaces.
+ *  A struct of type #NAMETREE controls a complete (balanced) tree of names
+ *  for the compiler. The compiler maintains several of such trees and the
+ *  system has been set up in such a way that one could define more of them
+ *  if we ever want to work with local name spaces.
  */
 
 typedef struct NaMeTree {
-	NAMENODE *namenode;      /** Vector of #NAMENODE's. Number of elements is #nodesize.
-	                             Dynamically allocated. */
-	LONG     nodesize;       /** Maximum number elements in #namenode. */
-	LONG     nodefill;       /** Number of used nodes in #namenode. */
-	UBYTE    *namebuffer;    /** Buffer that holds all the name strings refered to by the
-	                             NAMENODE's. Allocation size is #namesize. Dynamically allocated. */
-	LONG     namesize;       /** Allocation size of #namebuffer in bytes. */
-	LONG     namefill;       /** Number of bytes occupied. */
-	LONG     oldnamefill;    /** UNUSED */
-	LONG     oldnodefill;    /** UNUSED */
-	LONG     globalnamefill; /** Set by .global statement to the value of #namefill. When a .store
-	                             command is processed, this value will be used to reset namefill. */
-	LONG     globalnodefill; /** Same usage as #globalnamefill, but for nodefill. */
-	LONG     clearnamefill;
-	LONG     clearnodefill;
-	WORD     headnode;       /** Offset in #namenode of head node. Equal -1 if tree is empty. */
+	NAMENODE *namenode;      /**< [D] Vector of #NAMENODE's. Number of elements is #nodesize.
+	                              =0 if no memory has been allocated. */
+	LONG     nodesize;       /**< Maximum number of elements in #namenode. */
+	LONG     nodefill;       /**< Number of currently used nodes in #namenode. */
+	UBYTE    *namebuffer;    /**< [D] Buffer that holds all the name strings refered to by the
+	                              NAMENODE's. Allocation size is #namesize. =0 if no memory
+	                              has been allocated. */
+	LONG     namesize;       /**< Allocation size of #namebuffer in bytes. */
+	LONG     namefill;       /**< Number of bytes occupied. */
+	LONG     oldnamefill;    /**< UNUSED */
+	LONG     oldnodefill;    /**< UNUSED */
+	LONG     globalnamefill; /**< Set by .global statement to the value of #namefill. When a .store
+	                              command is processed, this value will be used to reset namefill.*/
+	LONG     globalnodefill; /**< Same usage as #globalnamefill, but for nodefill. */
+	LONG     clearnamefill;  /**< Marks the reset point used by the .clear statement. */
+	LONG     clearnodefill;  /**< Marks the reset point used by the .clear statement. */
+	WORD     headnode;       /**< Offset in #namenode of head node. =-1 if tree is empty. */
 	PADPOINTER(10,0,1,0);
 } NAMETREE;
 
@@ -278,11 +296,11 @@ typedef struct NaMeTree {
  */
 
 typedef struct tree {
-	int parent;
-	int left;    /* left child (if not -1) */
-	int right;   /* right child (if not -1) */
-	int value;   /* the object to be sorted and searched */
-	int blnce;   /* balance factor */
+	int parent;  /**< Index of parent */
+	int left;    /**< Left child (if not -1) */
+	int right;   /**< Right child (if not -1) */
+	int value;   /**< The object to be sorted and searched */
+	int blnce;   /**< Balance factor */
 } COMPTREE;
 
 /**
@@ -290,9 +308,9 @@ typedef struct tree {
  */
  
 typedef struct MiNmAx {
-    WORD mini;          /* minimum value */
-    WORD maxi;          /* maximum value */
-    WORD size;          /* value of one unit in this position */
+	WORD mini;          /**< Minimum value */
+	WORD maxi;          /**< Maximum value */
+	WORD size;          /**< Value of one unit in this position. */
 } MINMAX;
 
 /**
@@ -311,55 +329,60 @@ typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
  */
 
 typedef struct BrAcKeTiNfO {
-	BRACKETINDEX *indexbuffer;
-	WORD *bracketbuffer;
-	LONG bracketbuffersize;
-	LONG indexbuffersize;
-	LONG bracketfill;
-	LONG indexfill;
-	WORD SortType;				/* The sorting criterium used (like POWERFIRST etc) */
+	BRACKETINDEX *indexbuffer; /**< [D] */
+	WORD  *bracketbuffer;      /**< [D] */
+	LONG  bracketbuffersize;
+	LONG  indexbuffersize;
+	LONG  bracketfill;
+	LONG  indexfill;
+	WORD  SortType;            /**< The sorting criterium used (like POWERFIRST etc) */
 	PADPOINTER(4,0,1,0);
 } BRACKETINFO;
 
 /**
  *
+ *  buffers, mm, flags, and prototype are always dynamically allocated,
+ *  tablepointers only if needed (=0 if unallocated),
+ *  boomlijst and argtail only for sparse tables.
+ *
+ *  Allocation is done for both the normal and the stub instance (spare),
+ *  except for prototype and argtail which share memory.
  */
- 
+
 typedef struct TaBlEs {
-    WORD    *tablepointers; /* start in tablepointers table. Dynamically allocated. */
+	WORD    *tablepointers; /**< [D] Start in tablepointers table. */
 #ifdef WITHPTHREADS
-    WORD    **prototype;    /* The wildcard prototyping for arguments */
-    WORD    **pattern;      /* The pattern with which to match the arguments */
+	WORD    **prototype;    /**< [D] The wildcard prototyping for arguments */
+	WORD    **pattern;      /**< The pattern with which to match the arguments */
 #else
-    WORD    *prototype;     /* The wildcard prototyping for arguments */
-    WORD    *pattern;       /* The pattern with which to match the arguments */
+	WORD    *prototype;     /**< [D] The wildcard prototyping for arguments */
+	WORD    *pattern;       /**< The pattern with which to match the arguments */
 #endif
 	int     prototypeSize;  /**< Size of allocated memory for prototype in bytes. */
-	MINMAX	*mm;		    /* Array bounds, dimension by dimension. Dynamically allocated. Number of elements in numind. */
-	WORD	*flags;         /* Is element in use ? etc. Dynamically allocated. Number of elements in numind. */
-	COMPTREE *boomlijst;	/* Tree for searching in sparse tables */
-	UBYTE	*argtail;       /* The arguments in characters. For tablebase
-                               Starts with parenthesis to indicate tail */
-	struct TaBlEs *spare;   /* For tablebase. Alternatingly stubs and real */
-	WORD	*buffers;		/* When we use more than one compiler buffer. Points to dynamically
-	                           allocated memory. */
-    LONG    totind;         /* Total number requested */
-    LONG    reserved;       /* total reservation in tablepointers for sparse */
-	LONG	defined;		/* Number of table elements that are defined */
-	LONG	mdefined;		/* same but after .global */
-    int     numind;         /* Number of array indices */
-    int     bounds;         /* array bounds check on/off. */
-    int     strict;         /* >0: all must be defined. <0: undefined not substitute */
-    int     sparse;         /* > 0 --> sparse table */
-	int		numtree;		/* For the tree for sparse tables */
-	int		rootnum;        /* For the tree for sparse tables */
-	int		MaxTreeSize;    /* For the tree for sparse tables */
-	WORD	bufnum;			/* Each table potentially its own buffer */
-	WORD	bufferssize;    /* When we use more than one compiler buffer */
-	WORD	buffersfill;	/* When we use more than one compiler buffer */
-	WORD	tablenum;       /* For testing of tableuse */
-	WORD	mode;			/* 0: normal, 1: stub */
-	WORD	numdummies;		/*  */
+	MINMAX  *mm;            /**< [D] Array bounds, dimension by dimension. # elements = numind. */
+	WORD    *flags;         /**< [D] Is element in use ? etc. # elements = numind. */
+	COMPTREE *boomlijst;    /**< [D] Tree for searching in sparse tables */
+	UBYTE   *argtail;       /**< [D] The arguments in characters. Starts for tablebase
+	                             with parenthesis to indicate tail */
+	struct TaBlEs *spare;   /**< [D] For tablebase. Alternatingly stubs and real */
+	WORD    *buffers;       /**< [D] When we use more than one compiler buffer. */
+	LONG    totind;         /**< Total number requested */
+	LONG    reserved;       /**< Total reservation in tablepointers for sparse */
+	LONG    defined;        /**< Number of table elements that are defined */
+	LONG    mdefined;       /**< Same as defined but after .global */
+	int     numind;         /**< Number of array indices */
+	int     bounds;         /**< Array bounds check on/off. */
+	int     strict;         /**< >0: all must be defined. <0: undefined not substitute */
+	int     sparse;         /**< > 0 --> sparse table */
+	int     numtree;        /**< For the tree for sparse tables */
+	int     rootnum;        /**< For the tree for sparse tables */
+	int     MaxTreeSize;    /**< For the tree for sparse tables */
+	WORD    bufnum;         /**< Each table potentially its own buffer */
+	WORD    bufferssize;    /**< When we use more than one compiler buffer */
+	WORD    buffersfill;    /**< When we use more than one compiler buffer */
+	WORD    tablenum;       /**< For testing of tableuse */
+	WORD    mode;           /**< 0: normal, 1: stub */
+	WORD    numdummies;     /**<  */
 	PADPOINTER(4,7,6,0);
 } *TABLES;
 
@@ -371,7 +394,8 @@ typedef struct ExPrEsSiOn {
 	RENUMBER renum;			/* For Renumbering of global stored expressions */
 	BRACKETINFO *bracketinfo;
 	BRACKETINFO *newbracketinfo;
-	WORD	*renumlists;
+	WORD	*renumlists;    /**< Allocated only for threaded version if variables exist,
+	                             else points to AN.dummyrenumlist */
 	WORD	*inmem;			/* If in memory like e.g. a polynomial */
 	POSITION	onfile;
 	POSITION	prototype;
@@ -442,21 +466,22 @@ typedef struct VeCtOr {			/* Don't change unless altering .sav too */
 } *VECTORS;
 
 /**
- *
+ *  Contains all information about a function. Also used for tables.
+ *  It is used in the #LIST elements of #AC.
  */
 
-typedef struct FuNcTiOn {		/* Don't change unless altering .sav too */
-	TABLES	tabl;				/**< Used if redefined as table. Is != 0 if function is a table */
-	LONG	symminfo;			/* Info regarding symm properties offset in buffer */
-	LONG	name;				/* Location in names buffer */
-	WORD	commute;			/* commutation properties */
-	WORD	complex;			/* Properties under complex conjugation */
-	WORD	number;				/* Number when stored in file */
-	WORD	flags;				/* Used to indicate usage when storing */
-	WORD    spec;				/* Regular, Tensor, etc */
-	WORD	symmetric;			/* > 0 if symmetric properties */
-	WORD	node;
-	WORD	namesize;
+typedef struct FuNcTiOn {  /* Don't change unless altering .sav too */
+	TABLES  tabl;          /**< Used if redefined as table. != 0 if function is a table */
+	LONG    symminfo;      /**< Info regarding symm properties offset in buffer */
+	LONG    name;          /**< Location in namebuffer of #NAMETREE */
+	WORD    commute;       /**< Commutation properties */
+	WORD    complex;       /**< Properties under complex conjugation */
+	WORD    number;        /**< Number when stored in file */
+	WORD    flags;         /**< Used to indicate usage when storing */
+	WORD    spec;          /**< Regular, Tensor, etc. See @ref FunSpecs. */
+	WORD    symmetric;     /**< > 0 if symmetric properties */
+	WORD    node;          /**< Location in namenode of #NAMETREE */
+	WORD    namesize;      /**< Length of the name */
 	PADPOINTER(2,0,8,0);
 } *FUNCTIONS;
 
@@ -625,11 +650,11 @@ typedef struct FiLe {
  */
  
 typedef struct StreaM {
-	UBYTE *buffer;        /**< dynamically allocated. size in buffersize */
+	UBYTE *buffer;        /**< [D] Size in buffersize */
 	UBYTE *pointer;       /**< pointer into buffer memory */
 	UBYTE *top;           /**< pointer into buffer memory */
-	UBYTE *FoldName;      /**< dynamically allocated. */
-	UBYTE *name;          /**< dynamically allocated. */
+	UBYTE *FoldName;      /**< [D] */
+	UBYTE *name;          /**< [D] */
 	UBYTE *pname;         /**< for DOLLARSTREAM and PREVARSTREAM it points always to name, else it
 	                           is undefined */
 	off_t fileposition;
@@ -829,15 +854,15 @@ typedef struct {
  */
 
 typedef struct CbUf {
-	WORD *Buffer;         /**< dynamically allocated. size in BufferSize */
+	WORD *Buffer;         /**< [D] Size in BufferSize */
 	WORD *Top;            /**< pointer to the end of the Buffer memory */
 	WORD *Pointer;        /**< pointer into the Buffer memory */
-	WORD **lhs;           /**< dynamically allocated. size in maxlhs. list of pointers into Buffer. */
-	WORD **rhs;           /**< dynamically allocated. size in maxrhs. list of pointers into Buffer. */
+	WORD **lhs;           /**< [D] Size in maxlhs. list of pointers into Buffer. */
+	WORD **rhs;           /**< [D] Size in maxrhs. list of pointers into Buffer. */
 	LONG *CanCommu;       /**< points into rhs memory behind WORD* area. */
 	LONG *NumTerms;       /**< points into rhs memory behind CanCommu area */
 	WORD *numdum;         /**< points into rhs memory behind NumTerms */
-	COMPTREE *boomlijst;  /**< dynamically allocated. number elements in MaxTreeSize */
+	COMPTREE *boomlijst;  /**< [D] Number elements in MaxTreeSize */
 	LONG BufferSize;      /**< Number of allocated WORD's in Buffer */
 	int numlhs;
 	int numrhs;
@@ -855,12 +880,12 @@ typedef struct CbUf {
  *	When we read input from text files we have to remember not only their
  *	handle but also their name. This is needed for error messages.
  *	Hence we call such a file a channel and reserve a struct of type
- *	CHANNEL to allow to lay this link.
+ *	#CHANNEL to allow to lay this link.
  */
 
 typedef struct ChAnNeL {
-	char *name;
-	int handle;
+	char *name;          /**< [D] Name of the channel */
+	int handle;          /**< File handle */
 	PADPOINTER(0,1,0,0);
 } CHANNEL;
 
@@ -1098,31 +1123,32 @@ typedef struct {
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
+
 /**
- *	The M_const struct is part of the global data and resides in the
- *	ALLGLOBALS struct A under the name M
- *	We see it used with the macro AM as in AM.S0
- *	It contains global settings at startup or .clear
+ *	The M_const struct is part of the global data and resides in the #ALLGLOBALS
+ *	struct #A under the name #M.
+ *	We see it used with the macro #AM as in AM.S0.
+ *	It contains global settings at startup or .clear.
  */
 
 struct M_const {
-    SORTING *S0;                   /* (M) The main sort buffer */
-    WORD    *gcmod;                /* (M) Global setting of modulus. Pointer to value */
-    WORD    *gpowmod;              /* (M) Global setting printing as powers. Pointer. */
+    SORTING *S0;                   /**< [D] The main sort buffer */
+    WORD    *gcmod;                /**< Global setting of modulus. Uses AC.cmod's memory */
+    WORD    *gpowmod;              /**< Global setting printing as powers. Uses AC.cmod's memory */
     UBYTE   *TempDir;              /* (M) Path with where the temporary files go */
-    UBYTE *IncDir;                 /* (M) Directory path for include files */
-    UBYTE *InputFileName;          /* (M) */
-    UBYTE *LogFileName;            /* (M) */
-    UBYTE *OutBuffer;              /* (M) Output buffer in pre.c */
-    UBYTE *Path;                   /* (M) */
-    UBYTE *SetupDir;               /* (M) Directory with setup file */
-    UBYTE *SetupFile;              /* (M) Name of setup file */
-    UBYTE *Zip1Buffer;             /* (M) First Zip compression buffer */
-    UBYTE *Zip2Buffer;             /* (M) Second Zip compression buffer */
+    UBYTE   *IncDir;               /* (M) Directory path for include files */
+    UBYTE   *InputFileName;        /* (M) */
+    UBYTE   *LogFileName;          /* (M) */
+    UBYTE   *OutBuffer;            /* (M) Output buffer in pre.c */
+    UBYTE   *Path;                 /* (M) */
+    UBYTE   *SetupDir;             /* (M) Directory with setup file */
+    UBYTE   *SetupFile;            /* (M) Name of setup file */
+    UBYTE   *Zip1Buffer;           /* (M) First Zip compression buffer */
+    UBYTE   *Zip2Buffer;           /* (M) Second Zip compression buffer */
     POSITION zeropos;              /* (M) is zero */
 #ifdef WITHPTHREADS
-	pthread_mutex_t handlelock;    /* (M) */
-	pthread_mutex_t storefilelock; /* (M) */
+    pthread_mutex_t handlelock;    /* (M) */
+    pthread_mutex_t storefilelock; /* (M) */
     LONG    ThreadScratSize;       /* (M) Size of Fscr[0/2] buffers of the workers */
     LONG    ThreadScratOutSize;    /* (M) Size of Fscr[1] buffers of the workers */
 #endif
@@ -1142,8 +1168,8 @@ struct M_const {
     LONG    gSlavePatchSize;       /* (M) */
     LONG    shmWinSize;            /* (M) size for shared memory window used in communications */
     LONG    OldChildTime;          /* (M) Zero time. Needed in timer. */
-	LONG	OldSecTime;            /* (M) Zero time for measuring wall clock time */
-	LONG	OldMilliTime;          /* (M) Same, but milli seconds */
+    LONG    OldSecTime;            /* (M) Zero time for measuring wall clock time */
+    LONG    OldMilliTime;          /* (M) Same, but milli seconds */
     LONG    WorkSize;              /* (M) Size of WorkSpace */
     LONG    gThreadBucketSize;     /* (C) */
     LONG    ggThreadBucketSize;    /* (C) */
@@ -1185,8 +1211,8 @@ struct M_const {
     int     resetTimeOnClear;      /* (M) */
     int     gcNumDollars;          /* () number of dollars for .clear */
     int     MultiRun;
-    int     gNoSpacesInNumbers;    /*     For very long numbers */
-    int     ggNoSpacesInNumbers;   /*     For very long numbers */
+    int     gNoSpacesInNumbers;    /* For very long numbers */
+    int     ggNoSpacesInNumbers;   /* For very long numbers */
     int     polygcdchoice;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
@@ -1234,9 +1260,9 @@ struct M_const {
     WORD    exitflag;              /* (R) For the exit statement */
     WORD    NumStoreCaches;        /* () Number of storage caches per processor */
     WORD    gIndentSpace;          /* For indentation in output */
-	WORD	ggIndentSpace;
-    WORD    gShortStatsMax;        /* For  On FewerStatistics 10; */
-    WORD    ggShortStatsMax;       /* For  On FewerStatistics 10; */
+    WORD    ggIndentSpace;
+    WORD    gShortStatsMax;        /**< For  On FewerStatistics 10; */
+    WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
 };
 /*
  		#] M :
@@ -1300,84 +1326,83 @@ struct P_const {
 */
 
 /**
- *  The C_const struct is part of the global data and resides in the
- *  #ALLGLOBALS struct #A under the name #C.
+ *  The C_const struct is part of the global data and resides in the #ALLGLOBALS
+ *  struct #A under the name #C.
  *  We see it used with the macro #AC as in AC.exprnames.
  *  It contains variables that involve the compiler and objects set during
  *  compilation.
  */
 
 struct C_const {
-    set_of_char separators;        /* (C) Separators in #call and #do */
-    NAMETREE *dollarnames;         /* (C) Names of dollar variables */
-    NAMETREE *exprnames;           /* (C) Names of expressions */
-    NAMETREE *varnames;            /* (C) Names of regular variables */
-    LIST ChannelList;              /* (C) Used for the #write. */
+    set_of_char separators;        /**< Separators in #call and #do */
+    NAMETREE *dollarnames;         /**< [D] Names of dollar variables */
+    NAMETREE *exprnames;           /**< [D] Names of expressions */
+    NAMETREE *varnames;            /**< [D] Names of regular variables */
+    LIST    ChannelList;           /**< Used for the #write statement. Contains #CHANNEL */
                                    /*     Later also for write? */
-    LIST DubiousList;              /* (C) List of dubious variables
-                                       If not empty -> no execution */
-    LIST FunctionList;             /* (C) List of functions and properties */
-    LIST ExpressionList;           /* (C) List of expressions, locations etc. */
-    LIST IndexList;                /* (C) List of indices */
-    LIST SetElementList;           /* (C) List of all elements of all sets */
-    LIST SetList;                  /* (C) List of the sets */
-    LIST SymbolList;               /* (C) List of the symbols and their properties */
-    LIST VectorList;               /* (C) List of the vectors */
-    LIST PotModDolList;            /* (C) Potentially changed dollars */
-    LIST ModOptDolList;            /* (C) Module Option Dollars list */
-    LIST TableBaseList;            /* (C) TableBase list */
+    LIST    DubiousList;           /**< List of dubious variables. Contains #DUBIOUSV.
+                                        If not empty -> no execution */
+    LIST    FunctionList;          /**< List of functions and properties. Contains #FUNCTIONS */
+    LIST    ExpressionList;        /**< List of expressions, locations etc. */
+    LIST    IndexList;             /**< List of indices */
+    LIST    SetElementList;        /**< List of all elements of all sets */
+    LIST    SetList;               /**< List of the sets */
+    LIST    SymbolList;            /**< List of the symbols and their properties */
+    LIST    VectorList;            /**< List of the vectors */
+    LIST    PotModDolList;         /**< Potentially changed dollars */
+    LIST    ModOptDolList;         /**< Module Option Dollars list */
+    LIST    TableBaseList;         /**< TableBase list */
 /*
- * Compile buffer variables
- */
-    LIST     cbufList;              /* (C) List of compiler buffers */
-    int      cbufnum;               /* (R) current compiler buffer */
-
+    Compile buffer variables
+*/
+    LIST    cbufList;              /**< List of compiler buffers */
+    int     cbufnum;               /**< Current compiler buffer */
 /*
     Objects for auto declarations
 */
-    LIST AutoSymbolList;           /* (C) */
-    LIST AutoIndexList;            /* (C) */
-    LIST AutoVectorList;           /* (C) */
-    LIST AutoFunctionList;         /* (C) */
-    NAMETREE *autonames;           /* (C) Names in autodeclare */
+    LIST    AutoSymbolList;        /* (C) */
+    LIST    AutoIndexList;         /* (C) */
+    LIST    AutoVectorList;        /* (C) */
+    LIST    AutoFunctionList;      /* (C) */
+    NAMETREE *autonames;           /**< [D] Names in autodeclare */
 
-    LIST *Symbols;                 /* (C) Pointer for autodeclare. Which list is
-                                       it searching. Later also for subroutines */
-    LIST *Indices;                 /* (C) id. */
-    LIST *Vectors;                 /* (C) id. */
-    LIST *Functions;               /* (C) id. */
+    LIST    *Symbols;              /* (C) Pointer for autodeclare. Which list is
+                                      it searching. Later also for subroutines */
+    LIST    *Indices;              /* (C) id. */
+    LIST    *Vectors;              /* (C) id. */
+    LIST    *Functions;            /* (C) id. */
     NAMETREE **activenames;        /** (C) Pointer for AutoDeclare statement. Points either to
                                            varnames or autonames. */
     int     AutoDeclareFlag;       /** (C) Mode of looking for names. Set to NOAUTO (=0) or
                                            WITHAUTO (=2), cf. AutoDeclare statement */
-    STREAM  *Streams;              /**< (C) The input streams. dynamically allocated. */
+    STREAM  *Streams;              /**< [D] The input streams. */
     STREAM  *CurrentStream;        /**< (C) The current input stream.
                                        Streams are: do loop, file, prevariable. points into Streams memory. */
-    LONG    *termstack;            /* (C) Last term statement {offset} */
-    LONG    *termsortstack;        /* (C) Last sort statement {offset} */
-    WORD    *cmod;                 /**< (C) Local setting of modulus. Pointer to value. Dynamically allocated */
-    WORD    *powmod;               /**< (C) Local setting printing as powers. Pointer. Points into cmod memory */
-    UWORD   *modpowers;            /* (C) The conversion table for mod-> powers. */
+    LONG    *termstack;            /**< [D] Last term statement {offset} */
+    LONG    *termsortstack;        /**< [D] Last sort statement {offset} */
+    WORD    *cmod;                 /**< [D] Local setting of modulus. Pointer to value. */
+    WORD    *powmod;               /**< Local setting printing as powers. Points into cmod memory */
+    UWORD   *modpowers;            /**< [D] The conversion table for mod-> powers. */
     WORD    *ProtoType;            /* (C) The subexpression prototype {wildcards} */
     WORD    *WildC;                /* (C) Filling point for wildcards. */
-    LONG    *IfHeap;               /* (C) Keeps track of where to go in if */
-    LONG    *IfCount;              /* (C) Keeps track of where to go in if */
-    LONG    *IfStack;              /* (C) Keeps track of where to go in if */
-    UBYTE   *iBuffer;              /* (C) Compiler input buffer */
-    UBYTE   *iPointer;             /* (C) Running pointer in the compiler input buffer */
-    UBYTE   *iStop;                /* (C) Top of iBuffer. */
-    UBYTE   **LabelNames;          /**< (C) List of names in label statements. Dynamically allocated. */
-    WORD    *FixIndices;           /* (C) Buffer of fixed indices */
-    WORD    *termsumcheck;         /* (C) checking of nesting */
-    UBYTE   *WildcardNames;        /* (C) Names of ?a variables */
-    int     *Labels;               /**< (C) Label information for during run. Pointer into LabelNames memory. */
-    SBYTE   *tokens;               /* (C) Array with tokens for tokenizer */
-    SBYTE   *toptokens;            /* (C) Top of tokens */
-    SBYTE   *endoftokens;          /* (C) end of the actual tokens */
-    WORD    *tokenarglevel;        /* (C) keeps track of function arguments */
+    LONG    *IfHeap;               /**< [D] Keeps track of where to go in if */
+    LONG    *IfCount;              /**< [D] Keeps track of where to go in if */
+    LONG    *IfStack;              /**< Keeps track of where to go in if. Points into IfHeap-memory */
+    UBYTE   *iBuffer;              /**< [D] Compiler input buffer */
+    UBYTE   *iPointer;             /**< Running pointer in the compiler input buffer */
+    UBYTE   *iStop;                /**< Top of iBuffer */
+    UBYTE   **LabelNames;          /**< [D] List of names in label statements */
+    WORD    *FixIndices;           /**< [D] Buffer of fixed indices */
+    WORD    *termsumcheck;         /**< [D] Checking of nesting */
+    UBYTE   *WildcardNames;        /**< [D] Names of ?a variables */
+    int     *Labels;               /**< Label information for during run. Pointer into LabelNames memory. */
+    SBYTE   *tokens;               /**< [D] Array with tokens for tokenizer */
+    SBYTE   *toptokens;            /**< Top of tokens */
+    SBYTE   *endoftokens;          /**< End of the actual tokens */
+    WORD    *tokenarglevel;        /**< [D] Keeps track of function arguments */
 #ifdef WITHPTHREADS
-    LONG    *inputnumbers;         /**< For redefine. dynamically allocated. */
-    WORD    *pfirstnum;            /**< For redefine. points into inputnumbers memory. */
+    LONG    *inputnumbers;         /**< [D] For redefine */
+    WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
 #endif
     LONG    argstack[MAXNEST];     /* (C) {contents} Stack for nesting of Argument */
     LONG    insidestack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
@@ -1470,7 +1495,7 @@ struct C_const {
     WORD    DidClean;              /* (C) Test whether nametree needs cleaning */
     WORD    IfLevel;               /* (C) */
     WORD    WhileLevel;            /* (C) */
-    WORD    *IfSumCheck;           /* (C) Keeps track of where to go in if */
+    WORD    *IfSumCheck;           /**< [D] Keeps track of where to go in if */
     WORD    LogHandle;             /* (C) The Log File */
     WORD    LineLength;            /* (C) */
     WORD    StoreHandle;           /* (C) Handle of .str file */
@@ -1489,15 +1514,13 @@ struct C_const {
                                         -1 : do recovery from snapshot, set by command line option;
                                         0 : do nothing; 1 : create snapshots, set by On checkpoint
                                         statement */
-    LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)) */
-    char    *CheckpointRunAfter;   /**< Filename of script to be executed _before_ creating the
-                                        snapshot. Dynamically allocated in startup.c. NULL if no
-                                        script shall be executed. */
-    char    *CheckpointRunBefore;  /**< Filename of script to be executed _after_ having created
-                                        the snapshot. Dynamically allocated in startup.c. NULL if
-                                        no script shall be executed. */
-    LONG    CheckpointInterval;    /**< Timeinterval in milliseconds for snapshots. 0 if snapshots
-                                        shall be created at the end of _every_ module. */
+    LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)).*/
+    char    *CheckpointRunAfter;   /**< [D] Filename of script to be executed _before_ creating the
+                                        snapshot. =0 if no script shall be executed. */
+    char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
+                                        created the snapshot. =0 if no script shall be executed.*/
+    LONG    CheckpointInterval;    /**< Time interval in milliseconds for snapshots. =0 if
+                                        snapshots shall be created at the end of _every_ module.*/
 };
 /*
  		#] C :

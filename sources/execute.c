@@ -156,8 +156,7 @@ WORD CleanExpr(WORD par)
 
 */
 
-WORD
-PopVariables()
+WORD PopVariables()
 {
 	GETIDENTITY
 	WORD j, retval;
@@ -275,8 +274,7 @@ VOID MakeGlobal()
  		#[ TestDrop :
 */
 
-VOID
-TestDrop()
+VOID TestDrop()
 {
 	EXPRESSIONS e;
 	WORD j;

@@ -3,6 +3,8 @@
  *  Contains all functions that deal with the recovery mechanism controlled and
  *  activated by the On Checkpoint switch.
  *
+ *  TODO: short description of how to modify the recovery code in case structs.h
+ *  gets altered.
  */
 /*
   	#[ Includes :
@@ -84,26 +86,28 @@ char *RecoveryFilename()
   	#[ Debugging :
 */
 
-void print_BYTE(void *p)
+#ifdef PRINTDEBUG
+
+static void print_BYTE(void *p)
 {
-	UBYTE h = (*((UBYTE*)p) >> 4);
-	UBYTE l = (*((UBYTE*)p) & 0x0F);
+	UBYTE h = (UBYTE)(*((UBYTE*)p) >> 4);
+	UBYTE l = (UBYTE)(*((UBYTE*)p) & 0x0F);
 	if ( h > 9 ) h += 55; else h += 48;
 	if ( l > 9 ) l += 55; else l += 48;
 	printf("%c%c ", h, l);
 }
 
-void print_STR(UBYTE *p)
+static void print_STR(UBYTE *p)
 {
 	if ( p ) {
-		printf("%s\n", p);
+		printf("%s\n", (char*)p);
 	}
 	else {
 		printf("NULL\n");
 	}
 }
 
-void print_WORDB(WORD *buf, WORD *top)
+static void print_WORDB(WORD *buf, WORD *top)
 {
 	int i = 0;
 	while ( buf < top ) {
@@ -114,7 +118,7 @@ void print_WORDB(WORD *buf, WORD *top)
 	if ( i % 40 ) printf("\n");
 }
 
-void print_VOIDP(void *p, size_t size)
+static void print_VOIDP(void *p, size_t size)
 {
 	size_t i;
 	if ( p ) {
@@ -130,7 +134,7 @@ void print_VOIDP(void *p, size_t size)
 	}
 }
 
-void print_CHARS(UBYTE *p, size_t size)
+static void print_CHARS(UBYTE *p, size_t size)
 {
 	size_t i;
 	for ( i=0; i<size; ++i ) {
@@ -141,7 +145,7 @@ void print_CHARS(UBYTE *p, size_t size)
 	printf("\n");
 }
 
-void print_INTV(int *p, size_t size)
+static void print_INTV(int *p, size_t size)
 {
 	size_t i;
 	for ( i=1; i<=size; ++i ) {
@@ -151,7 +155,7 @@ void print_INTV(int *p, size_t size)
 	if ( ((i-1) % 8) ) printf("\n");
 }
 
-void print_PRELOAD(PRELOAD *l)
+static void print_PRELOAD(PRELOAD *l)
 {
 	if ( l->size ) {
 		print_CHARS(l->buffer, l->size);
@@ -159,7 +163,7 @@ void print_PRELOAD(PRELOAD *l)
 	printf("%ld\n", l->size);
 }
 
-void print_PREVAR(PREVAR *l)
+static void print_PREVAR(PREVAR *l)
 {
 	printf("%s\n", l->name);
 	printf("%s\n", l->value);
@@ -168,7 +172,7 @@ void print_PREVAR(PREVAR *l)
 	printf("%d\n", l->wildarg);
 }
 
-void print_DOLLARS(DOLLARS l)
+static void print_DOLLARS(DOLLARS l)
 {
 	print_VOIDP(l->where, l->size);
 	printf("%ld\n", l->size);
@@ -181,7 +185,7 @@ void print_DOLLARS(DOLLARS l)
 	printf("%d\n", l->reserved);
 }
 
-void print_LIST(LIST *l)
+static void print_LIST(LIST *l)
 {
 	print_VOIDP(l->lijst, l->size);
 	printf("%s\n", l->message);
@@ -193,7 +197,7 @@ void print_LIST(LIST *l)
 	printf("%d\n", l->numclear);
 }
 
-void print_DOLOOP(DOLOOP *l)
+static void print_DOLOOP(DOLOOP *l)
 {
 	print_PRELOAD(&(l->p));
 	printf("%s\n", l->name);
@@ -210,14 +214,14 @@ void print_DOLOOP(DOLOOP *l)
 	printf("%d\n", l->firstloopcall);
 }
 
-void print_PROCEDURE(PROCEDURE *l)
+static void print_PROCEDURE(PROCEDURE *l)
 {
 	print_PRELOAD(&(l->p));
 	printf("%s\n", l->name);
 	printf("%d\n", l->loadmode);
 }
 
-void print_NAMETREE(NAMETREE *t)
+static void print_NAMETREE(NAMETREE *t)
 {
 	int i;
 	for ( i=0; i<t->nodefill; ++i ) {
@@ -239,7 +243,7 @@ void print_NAMETREE(NAMETREE *t)
 	printf("%d\n", t->headnode);
 }
 
-void print_STREAM(STREAM *t)
+static void print_STREAM(STREAM *t)
 {
 	print_CHARS(t->buffer, t->buffersize);
 	print_STR(t->FoldName);
@@ -253,7 +257,7 @@ void print_STREAM(STREAM *t)
 	printf("%d\n", t->handle);
 }
 
-void print_C()
+static void print_C()
 {
 	int i;
 	printf("%%%% C_const\n");
@@ -325,7 +329,7 @@ void print_C()
 
 }
 
-void print_P()
+static void print_P()
 {
 	int i;
 	printf("%%%% P_const\n");
@@ -378,7 +382,7 @@ void print_P()
 	printf("%c\n", AP.cComChar);
 }
 
-void print_R()
+static void print_R()
 {
 	GETIDENTITY
 	size_t i;
@@ -390,6 +394,8 @@ void print_R()
 	}
 }
 
+#endif /* ifdef PRINTDEBUG */
+
 /*
   	#] Debugging :
   	#[ Helper Macros :
@@ -400,12 +406,17 @@ void print_R()
 /* freeing memory */
 
 #define R_FREE(ARG) \
-	M_free(ARG, #ARG);
+	if ( ARG ) M_free(ARG, #ARG);
 
 #define R_FREE_NAMETREE(ARG) \
-	if ( ARG->namenode ) R_FREE(ARG->namenode); \
-	if ( ARG->namebuffer ) R_FREE(ARG->namebuffer); \
+	R_FREE(ARG->namenode); \
+	R_FREE(ARG->namebuffer); \
 	R_FREE(ARG);
+
+#define R_FREE_STREAM(ARG) \
+	R_FREE(ARG.buffer); \
+	R_FREE(ARG.FoldName); \
+	R_FREE(ARG.name);
 
 /* reading a single variable */
 
@@ -539,9 +550,12 @@ int DoRecovery()
 	R_SET(AM.gThreadBalancing, int);
 	R_SET(AM.gThreadSortFileSynch, int);
 	R_SET(AM.gSortType, int);
+	R_SET(AM.gShortStatsMax, WORD);
 
 	/* #] AM */
 	/* #[ AC */
+
+	/* #[ AC free pointers */
 
 	/* AC will be overwritten by data from the recovery file, therefore
 	 * dynamically allocated memory must be freed first. */
@@ -549,10 +563,125 @@ int DoRecovery()
 	R_FREE_NAMETREE(AC.dollarnames);
 	R_FREE_NAMETREE(AC.exprnames);
 	R_FREE_NAMETREE(AC.varnames);
-	/* TODO free stuff */
+	for ( i=0; i<AC.ChannelList.num; ++i ) {
+		R_FREE(channels[i].name);
+	}
+	R_FREE(AC.ChannelList.lijst);
+	R_FREE(AC.DubiousList.lijst);
+	for ( i=0; i<AC.FunctionList.num; ++i ) {
+		TABLES T = functions[i].tabl;
+		if ( T ) {
+			R_FREE(T->buffers);
+			R_FREE(T->mm);
+			R_FREE(T->flags);
+			R_FREE(T->prototype);
+			R_FREE(T->tablepointers);
+			if ( T->sparse ) {
+				R_FREE(T->boomlijst);
+				R_FREE(T->argtail);
+			}
+			if ( T->spare ) {
+				R_FREE(T->spare->buffers);
+				R_FREE(T->spare->mm);
+				R_FREE(T->spare->flags);
+				R_FREE(T->spare->tablepointers);
+				if ( T->spare->sparse ) {
+					R_FREE(T->spare->boomlijst);
+				}
+				R_FREE(T->spare);
+			}
+			R_FREE(T);
+		}
+	}
+	R_FREE(AC.FunctionList.lijst);
+	for ( i=0; i<AC.ExpressionList.num; ++i ) {
+		if ( Expressions[i].renum ) {
+			R_FREE(Expressions[i].renum->symb.lo);
+			R_FREE(Expressions[i].renum);
+		}
+		if ( Expressions[i].bracketinfo ) {
+			R_FREE(Expressions[i].bracketinfo->indexbuffer);
+			R_FREE(Expressions[i].bracketinfo->bracketbuffer);
+			R_FREE(Expressions[i].bracketinfo);
+		}
+		if ( Expressions[i].newbracketinfo ) {
+			R_FREE(Expressions[i].newbracketinfo->indexbuffer);
+			R_FREE(Expressions[i].newbracketinfo->bracketbuffer);
+			R_FREE(Expressions[i].newbracketinfo);
+		}
+		if ( Expressions[i].renumlists != AN.dummyrenumlist ) { 
+			R_FREE(Expressions[i].renumlists);
+		}
+		R_FREE(Expressions[i].inmem);
+	}
+	R_FREE(AC.ExpressionList.lijst);
+	R_FREE(AC.IndexList.lijst);
+	R_FREE(AC.SetElementList.lijst);
+	R_FREE(AC.SetList.lijst);
+	R_FREE(AC.SymbolList.lijst);
+	R_FREE(AC.VectorList.lijst);
+	R_FREE(AC.PotModDolList.lijst);
+#ifdef WITHPTHREADS
+	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
+		if ( ModOptdollars[i].dstruct ) {
+			R_FREE(ModOptdollars[i].dstruct->where);
+			R_FREE(ModOptdollars[i].dstruct);
+		}
+	}
+#endif
+	R_FREE(AC.ModOptDolList.lijst);
+	for ( i=0; i<AC.TableBaseList.num; ++i ) {
+		R_FREE(tablebases[i].iblocks);
+		R_FREE(tablebases[i].nblocks);
+		R_FREE(tablebases[i].name);
+		R_FREE(tablebases[i].fullname);
+		R_FREE(tablebases[i].tablenames);
+	}
+	R_FREE(AC.TableBaseList.lijst);
+	for ( i=0; i<AC.cbufList.num; ++i ) {
+		R_FREE(cbuf[i].Buffer);
+		R_FREE(cbuf[i].lhs);
+		R_FREE(cbuf[i].rhs);
+		R_FREE(cbuf[i].boomlijst);
+	}
+	R_FREE(AC.cbufList.lijst);
+	R_FREE(AC.AutoSymbolList.lijst);
+	R_FREE(AC.AutoIndexList.lijst);
+	R_FREE(AC.AutoVectorList.lijst);
+	/* Tables cannot be auto-declared, therefore no extra code here */
+	R_FREE(AC.AutoFunctionList.lijst);
+	R_FREE_NAMETREE(AC.autonames);
+	for ( i=0; i<AC.NumStreams; ++i ) {
+		R_FREE_STREAM(AC.Streams[i]);
+	}
+	R_FREE(AC.Streams);
+	R_FREE(AC.termstack);
+	R_FREE(AC.termsortstack);
+	R_FREE(AC.cmod);
+	R_FREE(AC.modpowers);
+	R_FREE(AC.IfHeap);
+	R_FREE(AC.IfCount);
+	R_FREE(AC.iBuffer);
+	for ( i=0; i<AC.NumLabels; ++i ) {
+		R_FREE(AC.LabelNames[i]);
+	}
+	R_FREE(AC.LabelNames);
+	R_FREE(AC.FixIndices);
+	R_FREE(AC.termsumcheck);
+	R_FREE(AC.WildcardNames);
+	R_FREE(AC.tokens);
+	R_FREE(AC.tokenarglevel);
+#ifdef WITHPTHREADS
+	R_FREE(AC.inputnumbers);
+#endif
+	R_FREE(AC.IfSumCheck);
+	R_FREE(AC.CheckpointRunAfter);
+	R_FREE(AC.CheckpointRunBefore);
+
+	/* #] AC free pointers */
 
 	/* first we copy AC as a whole and then restore the pointer structures step
-	 * by step. */
+	   by step. */
 
 	AC = *((struct C_const*)p); p = (unsigned char*)p + sizeof(struct C_const);
 	
@@ -748,7 +877,7 @@ int DoRecovery()
 		}
 		if ( AC.Streams[i].type == FILESTREAM ) {
 			/* TODO check whether a FILESTREAM is already open or not!
-			 * for now we assume that it is ... BIG BUG! */
+			   for now we assume that it is ... BIG BUG! */
 			org2 = AC.Streams[i].buffer;
 			AC.Streams[i].buffer = (UBYTE*)Malloc1(AC.Streams[i].buffersize, "buffer");
 			ofs = AC.Streams[i].buffer - (UBYTE*)org2;
@@ -826,6 +955,11 @@ int DoRecovery()
 	/* #] AC */
 	/* #[ AP */
 
+	/* #[ AP free pointers */
+
+	/* AP will be overwritten by data from the recovery file, therefore
+	 * dynamically allocated memory must be freed first. */
+
 	for ( i=0; i<AP.DollarList.num; ++i ) {
 		if ( Dollars[i].size ) {
 			R_FREE(Dollars[i].where);
@@ -874,7 +1008,12 @@ int DoRecovery()
 	R_FREE(AP.PreIfStack);
 	R_FREE(AP.PreSwitchModes);
 	R_FREE(AP.PreTypes);
+
+	/* #] AP free pointers */
 	
+	/* first we copy AP as a whole and then restore the pointer structures step
+	   by step. */
+
 	AP = *((struct P_const*)p); p = (unsigned char*)p + sizeof(struct P_const);
 #ifdef WITHPTHREADS
 	AP.PreVarLock = dummylock;
@@ -1040,7 +1179,7 @@ int DoRecovery()
 		strcpy(syscmdstore+7+i, FG.fname);
 		system(syscmdstore);
 
-		AR.StoreData.Handle = OpenFile(FG.fname);
+		AR.StoreData.Handle = (WORD)OpenFile(FG.fname);
 
 		free(syscmdstore);
 	}
@@ -1063,7 +1202,7 @@ int DoRecovery()
  *  it renames this intermediate file to the final recovery file. Then it copies
  *  the sort and store files if necessary.
  */
-int DoSnapshot()
+static int DoSnapshot()
 {
 	GETIDENTITY
 	FILE *fd;
@@ -1112,6 +1251,7 @@ int DoSnapshot()
 	S_WRITE_B(&AM.gThreadBalancing, sizeof(int));
 	S_WRITE_B(&AM.gThreadSortFileSynch, sizeof(int));
 	S_WRITE_B(&AM.gSortType, sizeof(int));
+	S_WRITE_B(&AM.gShortStatsMax, sizeof(WORD));
 
 	/* #] AM */
 	/* #[ AC */

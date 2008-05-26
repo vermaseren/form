@@ -34,8 +34,7 @@ WORD printscratch[2];
  *	        return on the spot by calling Terminate.
  */
  
-WORD
-Processor()
+WORD Processor()
 {
 	GETIDENTITY
 	WORD *term, *t, i, retval = 0;

@@ -491,8 +491,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
  *		@return Regular convention (OK -> 0)
  */
 
-WORD
-NewSort()
+WORD NewSort()
 {
 	GETIDENTITY
 	SORTING *S, **newFS;
@@ -2932,8 +2931,7 @@ VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
  *		polyfun or polyratfun is active.
  */
 
-VOID
-GarbHand()
+VOID GarbHand()
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;

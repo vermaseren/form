@@ -6,8 +6,13 @@
 /** @file minos.h
  *
  *  Contains all needed declarations and definitions for the tablebase
- *	low level file routines. These have been taken from the minos database
- *	system and modified somewhat.
+ *  low level file routines. These have been taken from the minos database
+ *  system and modified somewhat.
+ *
+ *  !!!CAUTION!!!
+ *  Changes in this file will most likely have consequences for the recovery
+ *  mechanism (see checkpoint.c). You need to care for the code in checkpoint.c
+ *  as well and modify the code there accordingly!
  */
 
 #include <stdio.h>

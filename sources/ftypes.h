@@ -606,10 +606,18 @@ typedef int (*TFUN1)();
 #define PRINTLFILE 4
 #define PRINTONETERM 8
 
+/**
+ *  @name Defines: function specs
+ *  Function specifications.
+ *  @anchor FunSpecs
+ */
+
+/*@{*/
 #define GENERALFUNCTION 0
 #define FASTFUNCTION 1
 #define TENSORFUNCTION 2
 #define GAMMAFUNCTION 4
+/*@}*/
 
 /*
 	Special sets

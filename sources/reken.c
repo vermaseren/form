@@ -2593,8 +2593,7 @@ ModErr:
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
-WORD
-MakeModTable()
+WORD MakeModTable()
 {
 	LONG size, i, j, n;
 	n = ABS(AC.ncmod);

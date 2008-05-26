@@ -763,8 +763,7 @@ VOID StartVariables()
 		This routine initializes the parameters that may change during the run.
 */
 
-WORD
-IniVars()
+WORD IniVars()
 {
 #ifdef WITHPTHREADS
 	GETIDENTITY
