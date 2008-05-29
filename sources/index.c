@@ -490,12 +490,33 @@ VOID OpenBracketIndex(WORD nexpr)
 */
 
 /*
-	Still to do:
-x	1: make sure the last ->next gets set.
-	2: make sure everything that needs saving is saved.
-x	3: Before first putting: make an empty index.
-x	4: Put the clearing in the right spot.
+	The next routines are for indexing the local output files in a parallel
+	sort. This indexing is needed to get a fast determination of the 
+	splitting terms needed to divide the terms evenly over the processors.
+	Actually this method works well for ParFORM, but may not work well
+	for TFORM.
 
-x	a: compiler action
-x	b: figure out where to put the various codes.
+  	#[ PutTermInIndex :
+
+	Puts a term in the term index.
+	Action:
+		if the index hasn't reached its full size
+			if there is room, put the term
+			if there is no room: extend the buffer, put the term
+		else
+			check if the last term has a number of the type skip*m+1
+				if no, overwrite the last term
+				if yes, check whether there is room for one more term
+					yes: add the term
+					no: drop all even terms, compress the list,
+						multiply skip by 2, and add this term.
+*/
+
+int PutTermInIndex(WORD *term,POSITION *position)
+{
+	return(0);
+}
+
+/*
+  	#] PutTermInIndex :
 */

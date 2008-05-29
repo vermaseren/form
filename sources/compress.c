@@ -37,7 +37,7 @@
 */
 
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ SetupOutputGZIP :
 
 	Routine prepares a gzip output stream for the given file.
@@ -101,7 +101,7 @@ int SetupOutputGZIP(FILEHANDLE *f)
 }
 
 /*
-  	#] SetupOutputGZIP : 
+  	#] SetupOutputGZIP :
   	#[ PutOutputGZIP :
 
 	Routine is called when the PObuffer of f is full.
@@ -186,7 +186,7 @@ int PutOutputGZIP(FILEHANDLE *f)
 }
 
 /*
-  	#] PutOutputGZIP : 
+  	#] PutOutputGZIP :
   	#[ FlushOutputGZIP :
 
 	Routine is called to flush a stream. The compression of the input buffer
@@ -312,10 +312,14 @@ int FlushOutputGZIP(FILEHANDLE *f)
 }
 
 /*
-  	#] FlushOutputGZIP : 
+  	#] FlushOutputGZIP :
   	#[ SetupAllInputGZIP :
 
 	Routine prepares all gzip input streams for a merge.
+
+	Problem (29-may-2008): If we never use GZIP compression, this routine
+	will still allocate the array space. This is an enormous amount!
+	It places an effective restriction on the value of SortIOsize
 */
 
 int SetupAllInputGZIP(SORTING *S)
@@ -323,6 +327,14 @@ int SetupAllInputGZIP(SORTING *S)
 	GETIDENTITY
 	int i, NumberOpened = 0;
 	z_streamp zsp;
+/*
+	This code was added 29-may-2008 by JV to prevent further processing if
+	there is no compression at all (usually).
+*/
+	for ( i = 0; i < S->inNum; i++ ) {
+		if ( S->fpincompressed[i] ) break;
+	}
+	if ( i >= S->inNum ) return(0);
 
 	if ( S->zsparray == 0 ) {
 		S->zsparray = (z_streamp)Malloc1(sizeof(z_stream)*S->MaxFpatches,"input zstreams");
@@ -333,7 +345,12 @@ int SetupAllInputGZIP(SORTING *S)
 			Terminate(-1);
 		}
 		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef),"input raw buffers");
+/*
+		This seems to be one of the really stupid errors:
+		We allocate way too much space. Way way way too much.
 		AN.ziobufnum  = (Bytef **)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef *),"input raw pointers");
+*/
+		AN.ziobufnum  = (Bytef **)Malloc1(S->MaxFpatches*sizeof(Bytef *),"input raw pointers");
 		if ( AN.ziobuffers == 0 || AN.ziobufnum == 0 ) {
 			LOCK(ErrorMessageLock);
 			MesCall("SetupAllInputGZIP");
@@ -388,7 +405,7 @@ int SetupAllInputGZIP(SORTING *S)
 }
 
 /*
-  	#] SetupAllInputGZIP : 
+  	#] SetupAllInputGZIP :
   	#[ FillInputGZIP :
 
 	Routine is called when we need new input in the specified buffer.

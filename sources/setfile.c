@@ -617,6 +617,18 @@ int AllocSetups()
 /*
  		#] AllocSetups : 
  		#[ WriteSetup :
+
+	The routine writes the values of the setup parameters.
+	We should do this better. (JV, 21-may-2008)
+	The way it should be done is:
+		a: write the raw values.
+		b: give readjusted values.
+		c: give derived values.
+	Because this is a difficult subject, it would be nice to have a LaTeX
+	document that explains this all exactly. There should then be a 
+	mechanism to poke the values of the setup into the LaTeX document.
+	probably the easiest way is to make a file with lots of \def definitions
+	and have that included into the LaTeX file.
 */
 
 VOID WriteSetup()
@@ -671,6 +683,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 {
 	LONG allocation,longer,terms2insmall,sortsize,longerp;
 	LONG IObuffersize = IOsize;
+	LONG IOtry;
 	SORTING *sort;
 	int i = 0, j = 0;
 	char *s;
@@ -709,6 +722,10 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 			LargeSize  = MaxFpatches*((IObuffersize+COMPINC)*sizeof(WORD)+2*AM.MaxTer)
 				- SmallEsize;
 	}
+
+	IOtry = ((LargeSize+SmallEsize)/MaxFpatches-2*AM.MaxTer)/sizeof(WORD)-COMPINC;
+
+	if ( IObuffersize < IOtry ) IObuffersize = IOtry;
 
 	allocation =
 		 3*sizeof(POSITION)*(LONG)longer				/* Filepositions!! */
@@ -768,7 +785,8 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	sort->file.pthreadslock = dummylock;
 #endif
 #ifdef WITHZLIB
-	sort->file.ziosize = IOsize;
+/*	sort->file.ziosize = IOsize; */
+	sort->file.ziosize = IObuffersize*sizeof(WORD);
 #endif
 	if ( AM.S0 != 0 ) {
 		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
