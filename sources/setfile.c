@@ -135,12 +135,70 @@ static char *proop1[3] = { "Setup file", "Setups in .frm file", "Setup in enviro
 int ProcessOption(UBYTE *s1, UBYTE *s2, int filetype)
 {
 	SETUPPARAMETERS *sp;
-	int n;
-	UBYTE *s, *t;
+	int n, giveback = 0, error = 0;
+	UBYTE *s, *t, *s2ret;
 	long x;
 	sp = GetSetupPar(s1);
 	if ( sp ) {
+/*
+		We check now whether there are `' variables to be looked up in the
+		environment. This is new (30-may-2008). This is only allowed in s2.
+*/
+restart:;
+		{
+			UBYTE *s3,*s4,*s5,*s6, c, *start;
+			int n1,n2,n3;
+			s = s2;
+			while ( *s ) {
+				if ( *s == '\\' ) s += 2;
+				else if ( *s == '`' ) {
+					start = s; s++;
+					while ( *s && *s != '\'' ) {
+						if ( *s == '\\' ) s++;
+						s++;
+					}
+					if ( *s == 0 ) {
+						MesPrint("%s: Illegal use of ` character for parameter %s"
+						,proop1[filetype],s1);
+						return(1);
+					}
+					c = *s; *s = 0;
+					s3 = (UBYTE *)getenv((char *)(start+1));
+					if ( s3 == 0 ) {
+						MesPrint("%s: Cannot find environment variable %s for parameter %s"
+						,proop1[filetype],start+1,s1);
+						return(1);
+						
+					}
+					*s = c; s++;
+					n1 = start - s2; s4 = s3; n2 = 0;
+					while ( *s4 ) {
+						if ( *s4 == '\\' ) { s4++; n2++; }
+						s4++; n2++;
+					}
+					s4 = s; n3 = 0;
+					while ( *s4 ) {
+						if ( *s4 == '\\' ) { s4++; n3++; }
+						s4++; n3++;
+					}
+					s4 = (UBYTE *)Malloc1((n1+n2+n3+1)*sizeof(UBYTE),"environment in setup");
+					s5 = s2; s6 = s4;
+					while ( n1-- > 0 ) *s6++ = *s5++;
+					s5 = s3;
+					while ( n2-- > 0 ) *s6++ = *s5++;
+					s5 = s;
+					while ( n3-- > 0 ) *s6++ = *s5++;
+					*s6 = 0;
+					if ( giveback ) M_free(s2,"environment in setup");
+					s2 = s4;
+					giveback = 1;
+					goto restart;
+				}
+				else s++;
+			}
+		}
 		n = sp->type;
+		s2ret = s2;
 		switch ( n ) {
 			case NUMERICALVALUE:
 			        ParseNumber(x,s2);
@@ -150,11 +208,11 @@ int ProcessOption(UBYTE *s1, UBYTE *s2, int filetype)
 				if ( *s2 && *s2 != ' ' && *s2 != '\t' ) {
 					MesPrint("%s: Numerical value expected for parameter %s"
 					,proop1[filetype],s1);
-					return(1);
+					error = 1; break;
 				}
 				sp->value = x;
 				sp->flags = USEDFLAG;
-				return(0);
+				break;
 			case STRINGVALUE:
 				s = s2; t = s2;
 				while ( *s ) {
@@ -165,10 +223,10 @@ int ProcessOption(UBYTE *s1, UBYTE *s2, int filetype)
 				*t = 0;
 				sp->value = (long)strDup1(s2,"Process option");
 				sp->flags = USEDFLAG;
-				return(0);
+				break;
 			case PATHVALUE:
 				MesPrint("Setups: PATHVALUE not yet implemented");
-				return(1);
+				error = 1; break;
 			case ONOFFVALUE:
 				if ( tolower(*s2) == 'o' && tolower(s2[1]) == 'n'
 				&& ( s2[2] == 0 || s2[2] == ' ' || s2[2] == '\t' ) )
@@ -180,19 +238,22 @@ int ProcessOption(UBYTE *s1, UBYTE *s2, int filetype)
 				else {
 					MesPrint("%s: Unrecognized option for parameter %s: %s"
 					,proop1[filetype],s1,s2);
-					return(1);
+					error = 1; break;
 				}
 				sp->flags = USEDFLAG;
-				return(0);
+				break;
 			default:
 				Error1("Error in setupparameter table for:",s1);
-				return(1);
+				error = 1;
+				break;
 		}
 	}
 	else {
 		MesPrint("%s: Keyword not recognized: %s",proop1[filetype],s1);
-		return(1);
+		error = 1;
 	}
+	if ( giveback ) M_free(s2ret,"environment in setup");
+	return(error);
 }
 
 /*
@@ -801,7 +862,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -923,7 +984,7 @@ int TryFileSetups()
 	int oldstream;
 	int error = 0, eqnum;
 	int oldNoShowInput = AC.NoShowInput;
-	UBYTE buff[SETBUFSIZE], *s, *t, *u, *settop, c;
+	UBYTE buff[SETBUFSIZE+1], *s, *t, *u, *settop, c;
 	long linenum, prevline;
 
 	if ( AC.CurrentStream == 0 ) return(error);
@@ -954,11 +1015,11 @@ int TryFileSetups()
 		while ( c != LINEFEED ) {
 			*s++ = c;
 			c = GetInput();
-			if ( c != LINEFEED && c == '\r' ) continue;
+			if ( c != LINEFEED && c != '\r' ) continue;
 			if ( s >= settop ) {
 				while ( c != '\n' && c != ENDOFINPUT ) c = GetInput();
 				MesPrint("Setups in .frm file: Line too long. setup ignored");
-				continue;
+				error++; goto nextline;
 			}
 		}
 		*s++ = '\n';
@@ -970,6 +1031,7 @@ int TryFileSetups()
 		while ( *s && *s != '\n' && *s != '\r' ) s++;
 		if ( *s ) *s++ = 0;
 		error += ProcessOption(t,u,1);
+nextline:;
 	}
 	AC.NoShowInput = oldNoShowInput;
 	AC.CurrentStream = AC.Streams + oldstream;
@@ -982,7 +1044,7 @@ int TryFileSetups()
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 

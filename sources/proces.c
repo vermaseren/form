@@ -1125,11 +1125,13 @@ DoSpec:
 										AT.WorkPointer = r;
 										goto EndTest;
 									}
+/*
 									if ( !*r ) {
 										LowerSortLevel();
 										AT.WorkPointer = r;
 										return(0);
 									}
+*/
 								}
 							}
 							if ( *r ) StoreTerm(BHEAD r);

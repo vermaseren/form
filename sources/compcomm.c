@@ -264,7 +264,7 @@ int CoOff(UBYTE *s)
 }
 
 /*
-  	#] CoOff :
+  	#] CoOff : 
   	#[ CoOn :
 */
 

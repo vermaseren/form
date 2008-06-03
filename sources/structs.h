@@ -17,7 +17,9 @@
 #ifndef __STRUCTS__
 
 #define __STRUCTS__
-
+#ifdef _MSC_VER
+#include <wchar.h>
+#endif
 /*
   	#[ sav&store :
 */
@@ -195,7 +197,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -588,7 +590,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
 
@@ -679,7 +681,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -737,7 +739,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
 
@@ -844,7 +846,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -1119,7 +1121,7 @@ typedef struct {
 } POLYPADIC;
 
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1321,7 +1323,7 @@ struct P_const {
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1554,7 +1556,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1618,7 +1620,7 @@ struct R_const {
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1941,7 +1943,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -1987,10 +1989,12 @@ struct O_const {
     long    wrapnum;               /* (O) For statistics time. wrap around */
 #endif
 #endif
-#ifdef WINDOWS
-    long    wrap;                  /* (O) For statistics time. wrap around */
-    long    wrapnum;               /* (O) For statistics time. wrap around */
+/*
+#ifdef _MSC_VER
+    long    wrap;
+    long    wrapnum;
 #endif
+*/
     LONG    NumInBrack;            /* (O) For typing [] option in print */
     LONG    wlen;                  /* (O) Used to store files. */
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
@@ -2008,7 +2012,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2034,7 +2038,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X : 
+ 		#] X :
  		#[ Definitions :
 */
 
@@ -2086,7 +2090,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
     #] A :
   	#[ FG :
 */
@@ -2123,7 +2127,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

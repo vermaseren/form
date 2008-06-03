@@ -59,6 +59,9 @@ int DoTail(int argc, UBYTE **argv)
 		onlyversion = 0;
 		goto printversion;
 	}
+#ifdef _MSC_VER
+	printf("Starting Form \n");
+#endif
 	while ( argc >= 1 ) {
 		s = *argv++; argc--;
 		if ( *s == '-' || ( *s == '/' && ( argc > 0 || AM.Interact ) ) ) {
@@ -240,7 +243,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -315,7 +318,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput : 
+ 		#] OpenInput :
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -523,7 +526,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles : 
+ 		#] ReserveTempFiles :
  		#[ StartVariables :
 */
 
@@ -757,7 +760,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -958,7 +961,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars : 
+ 		#] IniVars :
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1028,7 +1031,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers : 
+ 		#] Signal handlers :
  		#[ main :
 */
 
@@ -1188,7 +1191,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main : 
+ 		#] main :
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1258,7 +1261,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -1363,6 +1366,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 

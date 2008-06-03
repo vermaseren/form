@@ -41,7 +41,7 @@ extern long numfrees;
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 */
@@ -478,7 +478,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 }
 
 /*
- 		#] WriteStats : 
+ 		#] WriteStats :
  		#[ NewSort :				WORD NewSort()
 */
 /**
@@ -543,7 +543,7 @@ WORD NewSort()
 }
 
 /*
- 		#] NewSort : 
+ 		#] NewSort :
  		#[ EndSort :				WORD EndSort(buffer,par)
 */
 /**
@@ -1003,7 +1003,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort : 
+ 		#] EndSort :
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -1068,7 +1068,7 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 }
 
 /*
- 		#] PutIn : 
+ 		#] PutIn :
  		#[ Sflush :					WORD Sflush(file)
 */
 /**
@@ -1137,7 +1137,7 @@ WORD Sflush(FILEHANDLE *fi)
 }
 
 /*
- 		#] Sflush : 
+ 		#] Sflush :
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 */
 /**
@@ -1436,7 +1436,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut : 
+ 		#] PutOut :
  		#[ FlushOut :				WORD Flushout(position,file,compr)
 */
 /**
@@ -1615,7 +1615,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 }
 
 /*
- 		#] FlushOut : 
+ 		#] FlushOut :
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**
@@ -1721,7 +1721,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef : 
+ 		#] AddCoef :
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 */
 /**
@@ -1883,14 +1883,14 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 }
 
 /*
- 		#] AddPoly : 
+ 		#] AddPoly :
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
  
 #define INSLENGTH(x)  w[1] = FUNHEAD+ARGHEAD+x; w[FUNHEAD] = ARGHEAD+x;
 
 /**
- *	Adds the arguments of two occurrences the PolyFun.
+ *	Adds the arguments of two occurrences of the PolyFun.
  *	@param s1 Pointer to the first occurrence.
  *	@param s2 Pointer to the second occurrence.
  *	@param m  Pointer to where the answer should be.
@@ -2131,6 +2131,7 @@ twogen:
 					if ( AC.ncmod != 0 ) {
 						if ( Modulus(mm) ) Terminate(-1);
 						if ( !*mm ) m = mm;
+						else m = mm + *mm;
 					}
 				}
 			}
@@ -2149,7 +2150,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs : 
+ 		#] AddArgs :
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
 */
 /**
@@ -2569,7 +2570,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 : 
+ 		#] Compare1 :
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
@@ -2626,7 +2627,7 @@ LONG ComPress(WORD **ss, LONG *n)
 		ss = sss;
 	}
 
-			#] debug : 
+			#] debug :
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
@@ -2719,13 +2720,13 @@ LONG ComPress(WORD **ss, LONG *n)
 		FiniLine();
 	}
 
-			#] debug : 
+			#] debug :
 */
 	return(size);
 }
 
 /*
- 		#] ComPress : 
+ 		#] ComPress :
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 */
 /**
@@ -2913,7 +2914,7 @@ VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
 #endif
 
 /*
- 		#] SplitMerge : 
+ 		#] SplitMerge :
  		#[ GarbHand :				VOID GarbHand()
 */
 /**
@@ -3027,7 +3028,7 @@ VOID GarbHand()
 }
 
 /*
- 		#] GarbHand : 
+ 		#] GarbHand :
  		#[ MergePatches :			WORD MergePatches(par)
 */
 /**
@@ -3875,7 +3876,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm : 
+ 		#] StoreTerm :
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**
@@ -3942,7 +3943,7 @@ VOID StageSort(FILEHANDLE *fout)
 }
 
 /*
- 		#] StageSort : 
+ 		#] StageSort :
  		#[ SortWild :				WORD SortWild(w,nw)
 */
 /**
@@ -4043,7 +4044,7 @@ WORD SortWild(WORD *w, WORD nw)
 }
 
 /*
- 		#] SortWild : 
+ 		#] SortWild :
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 */
 /**
@@ -4113,7 +4114,7 @@ void CleanUpSort(int num)
 }
 
 /*
- 		#] CleanUpSort : 
+ 		#] CleanUpSort :
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 /**
@@ -4130,6 +4131,6 @@ VOID LowerSortLevel()
 }
 
 /*
- 		#] LowerSortLevel : 
+ 		#] LowerSortLevel :
 	#] SortUtilities :
 */

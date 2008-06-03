@@ -274,6 +274,10 @@ higherlevel:
 					}
 					GetPreVar(namebuf,WITHERROR);
 					p = ThePreVar;
+					if ( p == 0 ) {
+						MesPrint("@Illegal use of arguments in preprocessor variable %s",namebuf);
+						Terminate(-1);
+					}
 					if ( p->nargs <= 0 || ( p->wildarg == 0 && nargs != p->nargs )
 						|| ( p->wildarg > 0 && nargs < p->nargs-1 ) ) {
 						MesPrint("@Arguments of macro %s do not match",namebuf);
@@ -356,8 +360,9 @@ VOID CharOut(UBYTE c)
 
 VOID UnsetAllowDelay()
 {
-	if ( ThePreVar->nargs > 0 )
-			AP.AllowDelay = 0;
+	if ( ThePreVar != 0 ) {
+		if ( ThePreVar->nargs > 0 ) AP.AllowDelay = 0;
+	}
 }
 
 /*
@@ -422,6 +427,7 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		else mode = -1;
 		*t++ = '_';
 		if ( mode >= 0 ) {
+			ThePreVar = 0;
 			if ( *t ) {
 				if ( GetName(AC.exprnames,t,&number,NOAUTO) == CEXPRESSION ) {
 					if ( ( Expressions[number].vflags & ( 1 << mode ) ) != 0 )
@@ -438,6 +444,10 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 				else return(no);
 			}
 		}
+	}
+	if ( ( t = (UBYTE *)(getenv((char *)(name))) ) != 0 ) {
+		ThePreVar = 0;
+		return(t);
 	}
 	if ( flag == WITHERROR ) {
 		Error1("Undefined preprocessor variable",name);

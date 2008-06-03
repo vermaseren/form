@@ -203,6 +203,19 @@ extern VOID TELLFILE(int,POSITION *);
 #define WantAddPositions(x) while((AT.posWorkPointer+(x))>AR.posWorkSize)\
 	ExpandBuffer((void **)(&AT.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
 
+#ifdef _MSC_VER
+long WinTimer();
+/* #define SEPARATOR `\\` */
+#define ftruncate(ARG1,ARG2) _chsize(ARG1,ARG2)
+/* If arg2 > 4GB _chsize_s should be used... */
+#define fsync(ARG1) _commit(ARG1)
+/* inline is strictly speaking only available in C++, Micrsoft 
+   supports it under C via __inline  */
+#define FORM_INLINE __inline
+#else
+#define FORM_INLINE inline
+#endif
+
 /*
   	#] Macro's :
   	#[ Thread objects :
@@ -1228,7 +1241,6 @@ extern int    writeToChannel(int,UBYTE *,HANDLERS*);
 #ifdef WITHEXTERNALCHANNEL
 extern LONG   WriteToExternalChannel(int,UBYTE *,LONG);
 #endif
-extern pid_t  getExternalChannelPid(VOID);
 extern int    writeBufToExtChannelOk(char *,size_t);
 extern int    getcFromExtChannelOk(VOID);
 extern int    setKillModeForExternalChannelOk(int,int);

@@ -33,7 +33,14 @@
 #define inline
 #endif
 #endif
-#define FORM_INLINE inline
+
+#ifdef _WIN64
+#define MYWIN64
+#else
+#ifdef _WIN32
+#define MYWIN32
+#endif
+#endif
 
 /*
 #define ITHREADS
@@ -69,8 +76,8 @@
 #define ANSI
 #endif
 
-#ifdef WINDOWS
-#include <sys/farptr.h>
+#ifdef _MSC_VER
+/* #include <sys/farptr.h> */
 #define ANSI
 #endif
 
@@ -168,6 +175,11 @@
 #define BITSINSHORT 16
 #define SHORTMASK 0xFFFF
 #define WORDSIZE32 1
+/* ENDIANNESS */
+#define INT16 short
+#define INT32 int
+#define INT64 long
+#undef INT128
 /*
    #] Alphaversion with 32 bits per WORD 
 */
@@ -181,6 +193,28 @@
 #define ANSI
 
 #include <ctype.h>
+   typedef void VOID;
+   typedef char SBYTE;
+   typedef int WORD;
+   typedef long LONG;
+   typedef unsigned char UBYTE;
+   typedef unsigned int UWORD;
+   typedef unsigned int UINT;
+   typedef unsigned long ULONG;
+   typedef unsigned long RLONG;
+   typedef UWORD FLOAT;
+   typedef short SHORT;
+#define BITSINSHORT 16
+#define SHORTMASK 0xFFFF
+#define WORDSIZE32 1
+/* ENDIANNESS */
+#define INT16 short
+#define INT32 int
+#define INT64 long
+#undef INT128
+#endif
+
+#ifdef MYWIN64
    typedef void VOID;
    typedef char SBYTE;
    typedef int WORD;
@@ -217,8 +251,8 @@
 #include <stdarg.h>
 #include <time.h>
 #endif
-#ifdef WINDOWS
-#include "windows.h"
+#ifdef _MSC_VER
+#include "fwin.h"
 #endif
 #ifdef mBSD
 #include "unix.h"

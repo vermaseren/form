@@ -1,4 +1,4 @@
-
+ 
 /** @file windows.h
  *
  *  Settings for a 32 bits windows computer.
@@ -16,6 +16,26 @@
 #define ALTSEPARATOR '/'
 #define WITH_ENV
 
+#ifdef MYWIN64
+
+#define BITSINWORD 32
+#define BITSINLONG 64
+#define TOPBITONLY 0x080000000L
+#define TOPLONGBITONLY 0x8000000000000000L
+#define SPECMASK 0x80000000
+#define WILDMASK 0x40000000
+#define WORDMASK 0x0FFFFFFFFL
+#define MAXPOSITIVE 0x07FFFFFFFL
+#define FULLMAX  0x100000000L
+#define AWORDMASK 0xFFFFFFFF00000000L
+#define MAXLONG 0x7FFFFFFFFFFFFFFFL
+#define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[8-((8*(lo)+4*(in)+4*(wo)+(by))&7)]
+#define PADLONG(in,wo,by) UBYTE d_u_m_m_y[8-((4*(wo)+(by))&7)]
+#define PADINT(wo,by) UBYTE d_u_m_m_y[4-((4*(wo)+(by))&3)]
+#define PADWORD(by) UBYTE d_u_m_m_y[4-((by)&1)]
+
+#else
+
 #define BITSINWORD 16
 #define BITSINLONG 32
 #define TOPBITONLY 0x08000L
@@ -32,4 +52,4 @@
 #define PADINT(wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
 #define PADWORD(by) UBYTE d_u_m_m_y[2-((by)&1)]
 
-
+#endif

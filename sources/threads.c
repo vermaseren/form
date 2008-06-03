@@ -78,7 +78,7 @@ static LONG numberofterms;
 #endif
 
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Identity :
  		#[ StartIdentity :
 */
@@ -115,6 +115,10 @@ void FinishIdentity(void *keyp)
 
 int SetIdentity(int *identityretval)
 {
+#ifdef _MSC_VER
+	printf("addr %d\n",&numberofthreadslock);
+	printf("size %d\n",sizeof(numberofthreadslock));
+#endif
 	LOCK(numberofthreadslock);
 	*identityretval = identityofthreads++;
 	UNLOCK(numberofthreadslock);
@@ -184,7 +188,7 @@ VOID BeginIdentities()
 
 /*
  		#] BeginIdentities :
-  	#] Identity : 
+  	#] Identity :
   	#[ StartHandleLock :
 */
 /**
@@ -199,7 +203,7 @@ void StartHandleLock()
 }
 
 /*
-  	#] StartHandleLock : 
+  	#] StartHandleLock :
   	#[ StartAllThreads :
 */
 /**
@@ -297,7 +301,7 @@ int StartAllThreads(int number)
 }
 
 /*
-  	#] StartAllThreads : 
+  	#] StartAllThreads :
   	#[ InitializeOneThread :
 */
 /**
@@ -726,7 +730,7 @@ void FinalizeOneThread(int identity)
 }
 
 /*
-  	#] FinalizeOneThread : 
+  	#] FinalizeOneThread :
   	#[ TerminateAllThreads :
 */
 /**
@@ -758,7 +762,7 @@ VOID TerminateAllThreads()
 }
 
 /*
-  	#] TerminateAllThreads : 
+  	#] TerminateAllThreads :
   	#[ MakeThreadBuckets :
 */
 /**
@@ -832,7 +836,7 @@ int MakeThreadBuckets(int number, int par)
 }
 
 /*
-  	#] MakeThreadBuckets : 
+  	#] MakeThreadBuckets :
   	#[ GetWorkerTimes :
 */
 /**
@@ -853,7 +857,7 @@ LONG GetWorkerTimes()
 }
 
 /*
-  	#] GetWorkerTimes : 
+  	#] GetWorkerTimes :
   	#[ UpdateOneThread :
 */
 /**
@@ -880,7 +884,7 @@ int UpdateOneThread(int identity)
 }
 
 /*
-  	#] UpdateOneThread : 
+  	#] UpdateOneThread :
   	#[ LoadOneThread :
 */
 /**
@@ -966,7 +970,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 }
 
 /*
-  	#] LoadOneThread : 
+  	#] LoadOneThread :
   	#[ BalanceRunThread :
 */
 /**
@@ -1015,7 +1019,7 @@ int BalanceRunThread(PHEAD int identity, WORD *term, WORD level)
 }
 
 /*
-  	#] BalanceRunThread : 
+  	#] BalanceRunThread :
   	#[ SetWorkerFiles :
 */
 /**
@@ -1092,7 +1096,7 @@ void SetWorkerFiles()
 }
 
 /*
-  	#] SetWorkerFiles : 
+  	#] SetWorkerFiles :
   	#[ RunThread :
 */
 /**
@@ -1502,7 +1506,7 @@ EndOfThread:;
 }
 
 /*
-  	#] RunThread : 
+  	#] RunThread :
   	#[ RunSortBot :
 */
 /**
@@ -1577,7 +1581,7 @@ EndOfThread:;
 #endif
 
 /*
-  	#] RunSortBot : 
+  	#] RunSortBot :
   	#[ IAmAvailable :
 */
 /**
@@ -1610,7 +1614,7 @@ void IAmAvailable(int identity)
 }
 
 /*
-  	#] IAmAvailable : 
+  	#] IAmAvailable :
   	#[ GetAvailableThread :
 */
 /**
@@ -1639,7 +1643,7 @@ int GetAvailableThread()
 }
 
 /*
-  	#] GetAvailableThread : 
+  	#] GetAvailableThread :
   	#[ ConditionalGetAvailableThread :
 */
 /**
@@ -1671,7 +1675,7 @@ int ConditionalGetAvailableThread()
 }
 
 /*
-  	#] ConditionalGetAvailableThread : 
+  	#] ConditionalGetAvailableThread :
   	#[ GetThread :
 */
 /**
@@ -1702,7 +1706,7 @@ int GetThread(int identity)
 }
 
 /*
-  	#] GetThread : 
+  	#] GetThread :
   	#[ ThreadWait :
 */
 /**
@@ -1744,7 +1748,7 @@ int ThreadWait(int identity)
 }
 
 /*
-  	#] ThreadWait : 
+  	#] ThreadWait :
   	#[ SortBotWait :
 */
  
@@ -1786,7 +1790,7 @@ int SortBotWait(int identity)
 #endif
 
 /*
-  	#] SortBotWait : 
+  	#] SortBotWait :
   	#[ ThreadClaimedBlock :
 */
 /**
@@ -1817,7 +1821,7 @@ int ThreadClaimedBlock(int identity)
 }
 
 /*
-  	#] ThreadClaimedBlock : 
+  	#] ThreadClaimedBlock :
   	#[ MasterWait :
 */
 /**
@@ -1841,7 +1845,7 @@ int MasterWait()
 }
 
 /*
-  	#] MasterWait : 
+  	#] MasterWait :
   	#[ MasterWaitThread :
 */
 /**
@@ -1865,7 +1869,7 @@ int MasterWaitThread(int identity)
 }
 
 /*
-  	#] MasterWaitThread : 
+  	#] MasterWaitThread :
   	#[ MasterWaitAll :
 */
 /**
@@ -1885,7 +1889,7 @@ void MasterWaitAll()
 }
 
 /*
-  	#] MasterWaitAll : 
+  	#] MasterWaitAll :
   	#[ MasterWaitAllSortBots :
 */
  
@@ -1909,7 +1913,7 @@ void MasterWaitAllSortBots()
 #endif
 
 /*
-  	#] MasterWaitAllSortBots : 
+  	#] MasterWaitAllSortBots :
   	#[ MasterWaitAllBlocks :
 */
 /**
@@ -1929,7 +1933,7 @@ void MasterWaitAllBlocks()
 }
 
 /*
-  	#] MasterWaitAllBlocks : 
+  	#] MasterWaitAllBlocks :
   	#[ WakeupThread :
 */
 /**
@@ -1955,7 +1959,7 @@ void WakeupThread(int identity, int signalnumber)
 }
 
 /*
-  	#] WakeupThread : 
+  	#] WakeupThread :
   	#[ WakeupMasterFromThread :
 */
 /**
@@ -1981,7 +1985,7 @@ void WakeupMasterFromThread(int identity, int signalnumber)
 }
 
 /*
-  	#] WakeupMasterFromThread : 
+  	#] WakeupMasterFromThread :
   	#[ SendOneBucket :
 */
 /**
@@ -2025,7 +2029,7 @@ int SendOneBucket()
 }
 
 /*
-  	#] SendOneBucket : 
+  	#] SendOneBucket :
   	#[ InParallelProcessor :
 */
 /**
@@ -2093,7 +2097,7 @@ int InParallelProcessor()
 }
 
 /*
-  	#] InParallelProcessor : 
+  	#] InParallelProcessor :
   	#[ ThreadsProcessor :
 */
 /**
@@ -2523,7 +2527,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor : 
+  	#] ThreadsProcessor :
   	#[ LoadReadjusted :
 */
 /**
@@ -2746,7 +2750,7 @@ intercepted:;
 }
 
 /*
-  	#] LoadReadjusted : 
+  	#] LoadReadjusted :
   	#[ SortStrategy :
 */
 /**
@@ -2782,7 +2786,7 @@ intercepted:;
  *	completely.
 */
 /*
-  	#] SortStrategy : 
+  	#] SortStrategy :
   	#[ PutToMaster :
 */
 /**
@@ -2849,7 +2853,7 @@ int PutToMaster(PHEAD WORD *term)
 }
 
 /*
-  	#] PutToMaster : 
+  	#] PutToMaster :
   	#[ SortBotOut :
 */
  
@@ -2891,7 +2895,7 @@ SortBotOut(PHEAD WORD *term)
 #endif
 
 /*
-  	#] SortBotOut : 
+  	#] SortBotOut :
   	#[ MasterMerge :
 */
 /**
@@ -3337,7 +3341,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge : 
+  	#] MasterMerge :
   	#[ SortBotMasterMerge :
 */
  
@@ -3461,7 +3465,7 @@ int SortBotMasterMerge()
 #endif
 
 /*
-  	#] SortBotMasterMerge : 
+  	#] SortBotMasterMerge :
   	#[ SortBotMerge :
 */
  
@@ -3867,7 +3871,7 @@ ReturnError:;
 #endif
 
 /*
-  	#] SortBotMerge : 
+  	#] SortBotMerge :
   	#[ IniSortBlocks :
 */
  
@@ -3952,7 +3956,7 @@ int IniSortBlocks(int numworkers)
 }
 
 /*
-  	#] IniSortBlocks : 
+  	#] IniSortBlocks :
   	#[ DefineSortBotTree :
 */
  
@@ -3982,7 +3986,7 @@ void DefineSortBotTree()
 #endif
 
 /*
-  	#] DefineSortBotTree : 
+  	#] DefineSortBotTree :
   	#[ Test :
 */
 /**
@@ -4002,6 +4006,6 @@ void Test()
 }
 
 /*
-  	#] Test : 
+  	#] Test :
 */
 #endif

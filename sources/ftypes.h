@@ -159,6 +159,7 @@
 
 #ifndef ALPHA
 #ifndef OPTERON
+#ifndef MYWIN64
 #ifndef VOID
 typedef void VOID;
 #endif
@@ -183,6 +184,7 @@ typedef short SHORT;
 #define INT32 int
 #undef INT64
 #undef INT128
+#endif
 #endif
 #endif
 
