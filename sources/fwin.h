@@ -1,5 +1,5 @@
  
-/** @file windows.h
+/** @file fwin.h
  *
  *  Settings for a 32 bits windows computer.
  */

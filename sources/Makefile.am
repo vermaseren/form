@@ -16,6 +16,7 @@ SRCBASE = \
 	fsizes.h \
 	ftypes.h \
 	function.c \
+	fwin.h \
 	if.c \
 	index.c \
 	inivar.h \
@@ -52,8 +53,7 @@ SRCBASE = \
 	unixfile.c \
 	unix.h \
 	variable.h \
-	wildcard.c \
-	windows.h
+	wildcard.c
 
 SRCPARALLEL = \
 	mpi.c \

@@ -1148,7 +1148,8 @@ int main(int argc, char **argv)
 	if ( CheckRecoveryFile() ) {
 		if ( AC.CheckpointFlag != -1 ) {
 			/* recovery file exists but recovery option is not given */
-			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
+			MesPrint("The recovery file %s exists, but the", RecoveryFilename()); 
+			MesPrint("recovery option -R has not been given!");
 			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
 			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
 			Terminate(-1);
