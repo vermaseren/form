@@ -71,9 +71,7 @@ WORD Normalize(PHEAD WORD *term)
 	WORD pdot[3*NORMSIZE],*ppdot,ndot;
 	WORD pdel[2*NORMSIZE],*ppdel,ndel;
 	WORD pind[NORMSIZE],nind;
-	WORD ngam;
 	WORD *peps[NORMSIZE/3],neps;
-	WORD nexp;
 	WORD *pden[NORMSIZE/3],nden;
 	WORD *pcom[NORMSIZE],ncom;
 	WORD *pnco[NORMSIZE],nnco;
@@ -119,7 +117,7 @@ Restart:
   	#] Setup :
   	#[ First scan :
 */
-	nsym = nvec = ndot = ndel = ngam = neps = nexp = nden = 
+	nsym = nvec = ndot = ndel = neps = nden = 
 	nind = ncom = nnco = ncon = 0;
 	ppsym = psym;
 	ppvec = pvec;
@@ -3336,7 +3334,7 @@ WORD *EvaluateGcd(PHEAD WORD *subterm)
 	WORD *lnum=AT.n_llnum+1;
 	WORD *num1, *num2, *num3, *den1, *den2, *den3;
 	WORD sizenum1, sizenum2, sizenum3, sizeden1, sizeden2, sizeden3;
-	int i, isnumeric = 0, numarg = 0, sizearg;
+	int i, isnumeric = 0, numarg = 0 /*, sizearg */;
 	long size;
 /*
 	Step 1: Look for -SNUMBER or -SYMBOL arguments.
@@ -3574,7 +3572,9 @@ gcdillegal:;
 	t = subterm + FUNHEAD;
 	AT.WorkPointer += AM.MaxTer/sizeof(WORD);
 	work2 = AT.WorkPointer;
+/*
 	sizearg = subterm[1];
+*/
 	i = 0; work3 = 0;
 	while ( t < tt ) {
 		i++;
@@ -3582,7 +3582,9 @@ gcdillegal:;
 		ttt = t + *t; ct = *ttt; *ttt = 0;
 		t = PolyNormPoly(BHEAD t+ARGHEAD);
 		if ( *work1 < AT.WorkPointer-work1 ) {
+/*
 			sizearg = AT.WorkPointer-work1;
+*/
 			numarg = i;
 			work3 = work1;
 		}

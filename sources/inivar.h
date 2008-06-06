@@ -207,5 +207,7 @@ UBYTE BufferForOutput[260];
 
 char *setupfilename = "form.set";
 
+#ifdef WITHPTHREADS
 INILOCK(ErrorMessageLock);
 INILOCK(FileReadLock);
+#endif

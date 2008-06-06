@@ -500,6 +500,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					}
 					else
 						break;
+/*
 #ifdef GZIPDEBUG
 					LOCK(ErrorMessageLock);
 					MesPrint("%wClosing stream %d",numstream);
@@ -517,6 +518,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 #endif
 					if ( inflateEnd(zsp) == Z_OK ) return(readsize);
 					break;
+*/
 				}
 /*
 				Read more input

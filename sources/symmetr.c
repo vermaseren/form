@@ -35,8 +35,8 @@ WORD MatchE(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 	WORD *OldWork, nwstore;
 	PERM perm1,perm2;
 	DISTRIBUTE distr;
-	WORD *newpat, *newter, *instart, offset;
-	instart = fun;
+	WORD *newpat, /* *newter, *instart, */ offset;
+/*	instart = fun; */
 	offset = WORDDIF(fun,AN.terstart);
 	if ( pattern[1] != fun[1] ) return(0);
 	if ( *pattern >= FUNCTION+WILDOFFSET ) {
@@ -85,7 +85,7 @@ WORD MatchE(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 				else return(1);
 			}
 			else {
-				newter = instart;
+/*				newter = instart; */
 				retval = ScanFunctions(BHEAD newpat,inter,par);
 			}
 			if ( retval == 0 ) {
@@ -111,7 +111,7 @@ WORD MatchE(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 				}
 				else return(1);
 			}
-			newter = instart;
+/*			newter = instart; */
 			i = ScanFunctions(BHEAD newpat,inter,par);
 			return(i);
 		}
@@ -360,7 +360,7 @@ NextWV:
 					else return(1);
 				}
 				else {
-					newter = instart;
+/*					newter = instart; */
 					if ( ScanFunctions(BHEAD newpat,inter,par) ) { return(1); }
 				}
 /*
@@ -383,7 +383,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE : 
+  	#] MatchE :
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -1959,7 +1959,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy :
+  	#] FunMatchSy : 
   	#[ MatchArgument :
 */
 

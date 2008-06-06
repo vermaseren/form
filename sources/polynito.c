@@ -1191,7 +1191,7 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 {
 	WORD *oldworkpointer, *ow = AT.WorkPointer;
-	WORD buf1[9], buf2[9], *Poly1, *Poly2, *p1, *p2, *p3, *pp;
+	WORD buf1[9], buf2[9], *Poly1, *Poly2, *p1, *p2, *pp;
 	WORD oldvalue, *t, *tt, *tstop, i, j, *np;
 	LONG size;
 	VOID *oldcompareroutine = AR.CompareRoutine;
@@ -1304,7 +1304,7 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 	}
 	oldvalue = *tstop; *tstop = 0; /* For the general case */
 /*
-  	#] Step 1 : 
+  	#] Step 1 :
   	#[ Step 2 : get rid of negative powers
 */
 	np = GetNegPow(BHEAD Poly1);
@@ -1322,7 +1322,7 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		Poly2 = PolyMul0(BHEAD Poly2,np);
 	}
 /*
-  	#] Step 2 : 
+  	#] Step 2 :
   	#[ Step 3 : sort the denominator, sort the numerator
 */
 	if ( Poly1[*Poly1] != 0 ) {
@@ -1369,7 +1369,7 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		AT.WorkPointer = p2+1;
 	}
 /*
-  	#] Step 3 : 
+  	#] Step 3 :
   	#[ Step 4 : normalize the denominator and put the factor in the numerator.
 	Potentially there are two normalizations: a: first term has coefficient 1.
 	b: all coefficients are integers and their GCD is one.
@@ -1408,14 +1408,13 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 	Poly2 = PolyMul0(BHEAD Poly2,tt);
 endnormalize:;
 /*
-  	#] Step 4 : 
+  	#] Step 4 :
   	#[ Step 5 : determine the GCD and divide it out (PolyRatNorm)
 */
 	p1 = AT.WorkPointer;
 	p2 = PolyRatNorm(BHEAD Poly1,Poly2);
-	p3 = AT.WorkPointer;
 /*
-  	#] Step 5 : 
+  	#] Step 5 :
   	#[ Step 6 : insert the result in term
 
 	Note that if the denominator is trivial we switch to the other notation
@@ -1481,7 +1480,7 @@ endnormalize:;
 		NCOPY(t,p2,size)
 	}
 /*
-  	#] Step 6 : 
+  	#] Step 6 :
 */
 	t++;
 	if ( par == 0 ) AT.WorkPointer = oldworkpointer;
@@ -2670,7 +2669,7 @@ WORD *PolyGCD1a(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD m1, m2, numprime, usedprime, prime, aprime[1];
 	WORD *coef,ncoef,*gcdcoef,ngcdcoef,lgcd,*term;
 	WORD *poly1, *poly2, *poly3, *poly4, size1, size2;
-	WORD *poly1a, *poly2a, *poly1arem, *poly2arem;
+	WORD *poly1a, *poly2a, *poly1arem /*, *poly2arem */;
 	WORD *content1, *content2, numsize, gcdpow;
 	LONG size;
 	int i, first = 1;
@@ -2929,7 +2928,7 @@ multipleofpoly2:
 	}
 	if ( AN.getdivgcd ) {
 		poly2a = AT.WorkPointer;
-		poly2arem = PolyDiv(BHEAD Poly2,poly2);
+		/* poly2arem = */ PolyDiv(BHEAD Poly2,poly2);
 		t = oldworkpointer; p = poly2; while ( *p ) p += *p;
 		size = p - poly2 + 1; p = poly2; NCOPY(t,p,size);
 		AN.poly1a = t; size = poly2a - poly1a; p = poly1a; NCOPY(t,p,size);
@@ -3033,17 +3032,17 @@ valueisone:
 		p2 = t; NCOPY(t,p3,size);
 		if ( *p2 == 0 ) {
 			AT.WorkPointer = p2;
-			return(p1);
+			break;
 		}
 		if ( p2[*p2] == 0
 		&& ABS(p2[*p2-1]) == *p2-1 ) {
 			p1[0] = 4; p1[1] = 1; p1[2] = 1; p1[3] = 3; p1[4] = 0;
 			AT.WorkPointer = p1+5;
-			return(p1);
+			break;
 		}
 		AT.WorkPointer = t;
 	}
-	return(0);
+	return(p1);
 }
 
 /* 
@@ -3316,7 +3315,7 @@ calledfrom:
 
 /*
  		#] Algorithm 3 : 
-  	#] PolyGCD1 : 
+  	#] PolyGCD1 :
   	#[ PolyDiv1 :
 */
 /**
@@ -3333,7 +3332,7 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer, *out = oldworkpointer, *s;
 	WORD *p1, *p2, *p3, size1, size2, size2a, size3, i, tmp, *num2, *den2;
-	WORD *num1, *num3, inwork, *Poly3, *terms, *term, *termfill;
+	WORD *num1, *num3, /* inwork, */ *Poly3, *terms, *term, *termfill;
 	LONG size;
 
 	if ( *Poly2 == 0 ) {
@@ -3521,9 +3520,9 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 		Poly1 = PolyMul0(BHEAD Poly1,num2-1);
 		num2[-1] = tmp;
 		for ( i = 0; i < size2a; i++ ) { tmp = num2[i]; num2[i] = den2[i]; den2[i] = tmp; }
-		inwork = 1;		/* Indicates that Poly1 is now in the workspace */
+/*		inwork = 1;		Indicates that Poly1 is now in the workspace */
 	}
-	else inwork = 0;	/* Indicates that Poly1 is not yet in the workspace */
+/*	else inwork = 0;	Indicates that Poly1 is not yet in the workspace */
 /*
 	Now go through the loop in which we take out the lead power of Poly1
 */
@@ -3571,7 +3570,7 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyDiv1 : 
+  	#] PolyDiv1 :
   	#[ PolyPseudoRem1 :
 */
 /**

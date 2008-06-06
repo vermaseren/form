@@ -835,7 +835,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 */
 #ifdef WITHGMP
 	if (na > 3 && nb > 3) {
-		mp_limb_t res;
+/*		mp_limb_t res;  */
 		UWORD *to, *from;
 		int j;
 		GETIDENTITY
@@ -873,9 +873,11 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			ic = AN.DLscratB;
 		}
 		if ( na < nb ) {
-			res = mpn_mul((mp_ptr)ic, (mp_srcptr)b, nb/GMPSPREAD, (mp_srcptr)a, na/GMPSPREAD);
+			/* res = */
+			mpn_mul((mp_ptr)ic, (mp_srcptr)b, nb/GMPSPREAD, (mp_srcptr)a, na/GMPSPREAD);
 		} else {
-			res = mpn_mul((mp_ptr)ic, (mp_srcptr)a, na/GMPSPREAD, (mp_srcptr)b, nb/GMPSPREAD);
+			/* res = */
+			mpn_mul((mp_ptr)ic, (mp_srcptr)a, na/GMPSPREAD, (mp_srcptr)b, nb/GMPSPREAD);
 		}
 		while ( ic[i-1] == 0 ) i--;
 		*nc = i;
@@ -891,7 +893,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 #endif
 /*
-  	#] GMP stuff : 
+  	#] GMP stuff :
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -919,7 +921,7 @@ MulLov:
 }
 
 /*
- 		#] MulLong : 
+ 		#] MulLong :
  		#[ BigLong :		WORD BigLong(a,na,b,nb)
 
 	Returns > 0 if a > b, < 0 if b > a and 0 if a == b
@@ -1961,7 +1963,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 */
 #ifdef WITHGMP
 	if ( na > 3 && nb > 3 ) {
-		int i;
+		int ii;
 		mp_limb_t *upa, *upb, *upc, xx;
 		UWORD *uw;
 		unsigned int tcounta, tcountb, tcounta1, tcountb1;
@@ -1971,7 +1973,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		upa = (mp_limb_t *)(AN.GLscrat6);
 		ana = na; tcounta1 = 0;
 		while ( a[0] == 0 ) { a++; ana--; tcounta1++; }
-		for ( i = 0; i < ana; i++ ) { *uw++ = *a++; }
+		for ( ii = 0; ii < ana; ii++ ) { *uw++ = *a++; }
 		if ( ( ana & 1 ) != 0 ) { *uw = 0; ana++; }
 		ana >>= 1;
 
@@ -1979,7 +1981,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		upb = (mp_limb_t *)(AN.GLscrat7);
 		anb = nb; tcountb1 = 0;
 		while ( b[0] == 0 ) { b++; anb--; tcountb1++; }
-		for ( i = 0; i < anb; i++ ) { *uw++ = *b++; }
+		for ( ii = 0; ii < anb; ii++ ) { *uw++ = *b++; }
 		if ( ( anb & 1 ) != 0 ) { *uw = 0; anb++; }
 		anb >>= 1;
 
@@ -2020,8 +2022,8 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 		uw = (UWORD *)upc; anc *= 2;
 		while ( uw[anc-1] == 0 ) anc--;
-		for ( i = 0; i < tcounta; i++ ) *c++ = 0;
-		for ( i = 0; i < anc; i++ ) *c++ = *uw++;
+		for ( ii = 0; ii < tcounta; ii++ ) *c++ = 0;
+		for ( ii = 0; ii < anc; ii++ ) *c++ = *uw++;
 		*nc = anc + tcounta;
 
 		return(0);
@@ -2397,7 +2399,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2886,7 +2888,7 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 #define NPAIR2 89
 #define WARMUP 6
 
-void wranfnew(PHEAD0)
+static void wranfnew(PHEAD0)
 {
 	int i;
 	LONG j;
@@ -2934,6 +2936,6 @@ WORD wranf(PHEAD0)
 }
 
 /*
- 		#] wranf :
-  	#] Functions :
+ 		#] wranf : 
+  	#] Functions : 
 */

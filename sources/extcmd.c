@@ -166,9 +166,9 @@ extern int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup);
 #else /*ifdef SELFTEST*/
 #include "form3.h"
 #endif /*ifdef SELFTEST ... else*/
-
+/*
 pid_t  getExternalChannelPid(VOID);
-
+*/
 /*
   	#] Selftest initializing:
   	#[ FailureFunctions:
@@ -1516,12 +1516,14 @@ int i;
   	#] closeAllExternalChannels :
   	#[ getExternalChannelPid :
 */
+#ifdef SELFTEST
 pid_t getExternalChannelPid()
 {
   if(externalChannelsListTop!=0)
 		return(externalChannelsListTop ->pid);
   return(-1);
 }/*getExternalChannelPid*/
+#endif
 /*
   	#] getExternalChannelPid :
   	#[ getCurrentExternalChannel :

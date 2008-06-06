@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -31,7 +31,7 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use : 
+  	#] syntax and use :
   	#[ FindBracket :
 */
 
@@ -40,13 +40,12 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 	GETIDENTITY
 	BRACKETINDEX *bi;
 	LONG hi, low, med;
-	int i, iexpr;
+	int i;
 	WORD oldsorttype = AR.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
 	WORD *tstop, *cp, a[4];
 	FILEHANDLE *fi;
 	POSITION auxpos, toppos;
 
-	iexpr = e - Expressions;
 	switch ( e->status ) {
 		case UNHIDELEXPRESSION:
 		case UNHIDEGEXPRESSION:
@@ -101,7 +100,6 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 	The bracket is now either bi itself or between bi and the next one
 	or it is not present at all.
 */
-/*	AN.theposition = AS.OldOnFile[iexpr]; */
 	AN.theposition = e->onfile;
 	ADD2POS(AN.theposition,bi->start);
 /*
@@ -130,11 +128,9 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 */
 	if ( fi->handle < 0 ) {
 		p = (WORD *)((UBYTE *)(fi->PObuffer)
-/*			 + BASEPOSITION(AS.OldOnFile[iexpr]) */
 			 + BASEPOSITION(e->onfile)
 			 + BASEPOSITION(bi->start));
 		pstop = (WORD *)((UBYTE *)(fi->PObuffer)
-/*			 + BASEPOSITION(AS.OldOnFile[iexpr]) */
 			 + BASEPOSITION(e->onfile)
 			 + BASEPOSITION(bi->next));
 		while ( p < pstop ) {
@@ -198,7 +194,6 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 		return(0);	/* Bracket does not exist */
 	}
 	else {
-/*		toppos = AS.OldOnFile[iexpr]; */
 		toppos = e->onfile;
 		ADD2POS(toppos,bi->next);
 		cp = AR.CompressPointer;
@@ -245,7 +240,7 @@ found:
 }
 
 /*
-  	#] FindBracket : 
+  	#] FindBracket :
   	#[ PutBracketInIndex :
 
 	Call via
@@ -443,7 +438,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex : 
+  	#] PutBracketInIndex :
   	#[ ClearBracketIndex :
 */
 
@@ -460,7 +455,7 @@ void ClearBracketIndex(WORD numexp)
 }
 
 /*
-  	#] ClearBracketIndex : 
+  	#] ClearBracketIndex :
   	#[ OpenBracketIndex :
 
 	Note: This routine is thread-safe
@@ -486,7 +481,7 @@ VOID OpenBracketIndex(WORD nexpr)
 }
 
 /*
-  	#] OpenBracketIndex : 
+  	#] OpenBracketIndex :
 */
 
 /*
@@ -510,13 +505,11 @@ VOID OpenBracketIndex(WORD nexpr)
 					yes: add the term
 					no: drop all even terms, compress the list,
 						multiply skip by 2, and add this term.
-*/
 
 int PutTermInIndex(WORD *term,POSITION *position)
 {
 	return(0);
 }
 
-/*
   	#] PutTermInIndex :
 */

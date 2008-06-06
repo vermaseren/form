@@ -337,10 +337,10 @@ int AllocSetups()
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize, l;
-	int size, MaxPatches, MaxFpatches, error = 0;
+	int MaxPatches, MaxFpatches, error = 0;
 	UBYTE *s;
 #ifndef WITHPTHREADS
-	int j;
+	int j, size;
 #endif
 	sp = GetSetupPar((UBYTE *)"threads");
 	if ( sp->value > 0 ) AM.totalnumberofthreads = sp->value+1;
@@ -415,12 +415,21 @@ int AllocSetups()
 	Space during calculations
 */
 	sp = GetSetupPar((UBYTE *)"maxnumbersize");
+/*
 	size = ( sp->value + 11 ) & (-4);
 	AM.MaxTal = size - 2;
 	if ( AM.MaxTal > (AM.MaxTer/sizeof(WORD)-2)/2 )
 				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
 	if ( AM.MaxTal < (AM.MaxTer/sizeof(WORD)-2)/4 )
 				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/4;
+*/
+/*
+	There is too much confusion about MaxTal cq maxnumbersize.
+	It seems better to fix it at its maximum value. This way we only worry
+	about maxtermsize. This can be understood better by the 'innocent' user.
+*/
+	AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
+
 	AM.MaxTal &= -sizeof(WORD)*2;
 	sp->value = AM.MaxTal;
 /*
@@ -676,7 +685,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups : 
+ 		#] AllocSetups :
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -1044,7 +1053,7 @@ nextline:;
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 

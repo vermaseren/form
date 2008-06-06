@@ -42,6 +42,18 @@
 #endif
 #endif
 
+#ifdef _MSC_VER
+#include <windows.h>
+#include <psapi.h>
+#include <Winsock.h>
+#undefine WORD
+#undefine LONG
+#undefine SHORT
+#undefine BYTE
+#undefine UBYTE
+#undefine SBYTE
+#endif
+
 /*
 #define ITHREADS
 #define WITHPCOUNTER

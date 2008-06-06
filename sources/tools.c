@@ -2491,11 +2491,11 @@ LONG TimeCPU(WORD par)
 #ifdef WINDOWS
 */
 #ifdef _MSC_VER
-
+/*
 #include <windows.h>
 #include <psapi.h>
 #include <Winsock.h>
-
+*/
 LONG WinTimer(){
 
   static int initialized = 0;

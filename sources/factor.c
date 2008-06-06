@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ ModulusGCD1 :
 
 	For experimentation
@@ -118,7 +118,7 @@ int ModulusGCD1(WORD modu, WORD fun1, WORD fun2, WORD *term, WORD sym)
 }
 
 /*
-  	#] ModulusGCD1 : 
+  	#] ModulusGCD1 :
   	#[ MakeMono :
 */
 
@@ -208,7 +208,7 @@ int MakeMono(WORD modu, WORD *t, WORD whichbuffer, WORD sym)
 }
 
 /*
-  	#] MakeMono : 
+  	#] MakeMono :
   	#[ DivMod :
 
 	Takes the modulus a%b and returns it. We assume that b fits inside a word.
@@ -225,12 +225,11 @@ WORD DivMod(UWORD *a, WORD na, WORD b)
 }
 
 /*
-  	#] DivMod : 
+  	#] DivMod :
   	#[ DivShort :
 
 	Divides the long integer a by the short word b. Result in c.
 	The remainder is returned.
-*/
 
 WORD DivShort(UWORD *a, WORD na, UWORD b, UWORD *c, WORD *nc)
 {
@@ -251,8 +250,7 @@ WORD DivShort(UWORD *a, WORD na, UWORD b, UWORD *c, WORD *nc)
 	return ( (UWORD)x );
 }
 
-/*
-  	#] DivShort : 
+  	#] DivShort :
   	#[ FactorIn :
 
 	This routine tests for a factor in a dollar expression.
@@ -382,7 +380,7 @@ int FactorIn(PHEAD WORD *term, WORD level)
 					break;
 				}
 /*
-			#] SYMBOL : 
+			#] SYMBOL :
 			#[ DOTPRODUCT :
 */
 				else if ( *m == DOTPRODUCT ) {
@@ -416,7 +414,7 @@ int FactorIn(PHEAD WORD *term, WORD level)
 					break;
 				}
 /*
-			#] DOTPRODUCT : 
+			#] DOTPRODUCT :
 			#[ VECTOR :
 */
 				else if ( *m == VECTOR ) {
@@ -448,7 +446,7 @@ nextn1:					n1 += 2;
 					break;
 				}
 /*
-			#] VECTOR : 
+			#] VECTOR :
 			#[ REMAINDER :
 */
 				else {
@@ -464,7 +462,7 @@ nextn1:					n1 += 2;
 					goto nextm;  /* match */
 				}
 /*
-			#] REMAINDER : 
+			#] REMAINDER :
 */
 			}
             if ( r1 >= r2 ) { /* no factor! */
@@ -619,7 +617,7 @@ onerror:
 }
 
 /*
-  	#] FactorIn : 
+  	#] FactorIn :
   	#[ FactorInExpr :
 
 	This routine tests for a factor in an active or hidden expression.
@@ -844,7 +842,7 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 					break;
 				}
 /*
-			#] SYMBOL : 
+			#] SYMBOL :
 			#[ DOTPRODUCT :
 */
 				else if ( *m == DOTPRODUCT ) {
@@ -878,7 +876,7 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 					break;
 				}
 /*
-			#] DOTPRODUCT : 
+			#] DOTPRODUCT :
 			#[ VECTOR :
 */
 				else if ( *m == VECTOR ) {
@@ -910,7 +908,7 @@ nextn1:					n1 += 2;
 					break;
 				}
 /*
-			#] VECTOR : 
+			#] VECTOR :
 			#[ REMAINDER :
 */
 				else {
@@ -926,7 +924,7 @@ nextn1:					n1 += 2;
 					goto nextm;  /* match */
 				}
 /*
-			#] REMAINDER : 
+			#] REMAINDER :
 */
 			}
             if ( r1 >= r2 ) { /* no factor! */
@@ -1064,6 +1062,6 @@ onerror:
 }
 
 /*
-  	#] FactorInExpr : 
+  	#] FactorInExpr :
 */
 
