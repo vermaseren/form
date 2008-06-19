@@ -40,7 +40,7 @@ long numfrees = 0;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -72,7 +72,7 @@ UBYTE *LoadInputFile(UBYTE *filename, int type)
 }
 
 /*
- 		#] LoadInputFile :
+ 		#] LoadInputFile : 
  		#[ ReadFromStream :
 */
 
@@ -138,7 +138,7 @@ UBYTE ReadFromStream(STREAM *stream)
 }
 
 /*
- 		#] ReadFromStream :
+ 		#] ReadFromStream : 
  		#[ GetFromStream :
 */
 
@@ -161,7 +161,7 @@ UBYTE GetFromStream(STREAM *stream)
 }
 
 /*
- 		#] GetFromStream :
+ 		#] GetFromStream : 
  		#[ LookInStream :
 */
 
@@ -173,7 +173,7 @@ UBYTE LookInStream(STREAM *stream)
 }
 
 /*
- 		#] LookInStream :
+ 		#] LookInStream : 
  		#[ OpenStream :
 */
 
@@ -325,7 +325,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 }
 
 /*
- 		#] OpenStream :
+ 		#] OpenStream : 
  		#[ LocateFile :
 */
 
@@ -412,7 +412,7 @@ int LocateFile(UBYTE **name, int type)
 }
 
 /*
- 		#] LocateFile :
+ 		#] LocateFile : 
  		#[ CloseStream :
 */
 
@@ -505,7 +505,7 @@ STREAM *CloseStream(STREAM *stream)
 }
 
 /*
- 		#] CloseStream :
+ 		#] CloseStream : 
  		#[ CreateStream :
 */
 
@@ -536,7 +536,7 @@ STREAM *CreateStream(UBYTE *where)
 }
 
 /*
- 		#] CreateStream :
+ 		#] CreateStream : 
  		#[ GetStreamPosition :
 */
 
@@ -546,7 +546,7 @@ LONG GetStreamPosition(STREAM *stream)
 }
 
 /*
- 		#] GetStreamPosition :
+ 		#] GetStreamPosition : 
  		#[ PositionStream :
 */
 
@@ -574,8 +574,8 @@ VOID PositionStream(STREAM *stream, LONG position)
 }
 
 /*
- 		#] PositionStream :
-  	#] Streams :
+ 		#] PositionStream : 
+  	#] Streams : 
   	#[ Files :
  		#[ StartFiles :
 */
@@ -603,7 +603,7 @@ VOID StartFiles()
 }
 
 /*
- 		#] StartFiles :
+ 		#] StartFiles : 
  		#[ OpenFile :
 */
 
@@ -622,7 +622,7 @@ int OpenFile(char *name)
 }
 
 /*
- 		#] OpenFile :
+ 		#] OpenFile : 
  		#[ OpenAddFile :
 */
 
@@ -643,7 +643,7 @@ int OpenAddFile(char *name)
 }
 
 /*
- 		#] OpenAddFile :
+ 		#] OpenAddFile : 
  		#[ CreateFile :
 */
 
@@ -660,7 +660,7 @@ int CreateFile(char *name)
 }
 
 /*
- 		#] CreateFile :
+ 		#] CreateFile : 
  		#[ CreateLogFile :
 */
 
@@ -678,7 +678,7 @@ int CreateLogFile(char *name)
 }
 
 /*
- 		#] CreateLogFile :
+ 		#] CreateLogFile : 
  		#[ CloseFile :
 */
 
@@ -696,7 +696,7 @@ VOID CloseFile(int handle)
 }
 
 /*
- 		#] CloseFile :
+ 		#] CloseFile : 
  		#[ CreateHandle :
 
 		We need a lock here.
@@ -755,7 +755,7 @@ int CreateHandle()
 }
 
 /*
- 		#] CreateHandle :
+ 		#] CreateHandle : 
  		#[ ReadFile :
 */
 
@@ -784,7 +784,7 @@ LONG ReadFile(int handle, UBYTE *buffer, LONG size)
 }
 
 /*
- 		#] ReadFile :
+ 		#] ReadFile : 
  		#[ ReadPosFile :
 
 		Gets words from a file(handle).
@@ -869,7 +869,7 @@ LONG ReadPosFile(PHEAD FILEHANDLE *fi, UBYTE *buffer, LONG size, POSITION *pos)
 }
 
 /*
- 		#] ReadPosFile :
+ 		#] ReadPosFile : 
  		#[ WriteFile :
 */
 
@@ -900,7 +900,7 @@ LONG (*WriteFile)(int handle, UBYTE *buffer, LONG size) = &WriteFileToFile;
 /*:[17nov2005]*/
 
 /*
- 		#] WriteFile :
+ 		#] WriteFile : 
  		#[ SeekFile :
 */
 
@@ -925,7 +925,7 @@ VOID SeekFile(int handle, POSITION *offset, int origin)
 }
 
 /*
- 		#] SeekFile :
+ 		#] SeekFile : 
  		#[ TellFile :
 */
 
@@ -949,7 +949,7 @@ VOID TELLFILE(int handle, POSITION *position)
 }
 
 /*
- 		#] TellFile :
+ 		#] TellFile : 
  		#[ FlushFile :
 */
 
@@ -963,7 +963,7 @@ void FlushFile(int handle)
 }
 
 /*
- 		#] FlushFile :
+ 		#] FlushFile : 
  		#[ GetPosFile :
 */
 
@@ -977,7 +977,7 @@ int GetPosFile(int handle, fpos_t *pospointer)
 }
 
 /*
- 		#] GetPosFile :
+ 		#] GetPosFile : 
  		#[ SetPosFile :
 */
 
@@ -991,7 +991,7 @@ int SetPosFile(int handle, fpos_t *pospointer)
 }
 
 /*
- 		#] SetPosFile :
+ 		#] SetPosFile : 
  		#[ SynchFile :
 
 		It may be that when we use many sort files at the same time there
@@ -1017,7 +1017,7 @@ VOID SynchFile(int handle)
 }
 
 /*
- 		#] SynchFile :
+ 		#] SynchFile : 
  		#[ TruncateFile :
 
 		It may be that when we use many sort files at the same time there
@@ -1043,7 +1043,7 @@ VOID TruncateFile(int handle)
 }
 
 /*
- 		#] TruncateFile :
+ 		#] TruncateFile : 
  		#[ GetChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -1074,7 +1074,7 @@ int GetChannel(char *name)
 }
 
 /*
- 		#] GetChannel :
+ 		#] GetChannel : 
  		#[ GetAppendChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -1105,7 +1105,7 @@ int GetAppendChannel(char *name)
 }
 
 /*
- 		#] GetAppendChannel :
+ 		#] GetAppendChannel : 
  		#[ CloseChannel :
 
 		Checks whether we have this file already. If so, we close it.
@@ -1128,8 +1128,8 @@ int CloseChannel(char *name)
 }
 
 /*
- 		#] CloseChannel :
-  	#] Files :
+ 		#] CloseChannel : 
+  	#] Files : 
   	#[ Strings :
  		#[ StrCmp :
 */
@@ -1141,7 +1141,7 @@ int StrCmp(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrCmp :
+ 		#] StrCmp : 
  		#[ StrICmp :
 */
 
@@ -1152,7 +1152,7 @@ int StrICmp(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrICmp :
+ 		#] StrICmp : 
  		#[ StrHICmp :
 */
 
@@ -1163,7 +1163,7 @@ int StrHICmp(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrHICmp :
+ 		#] StrHICmp : 
  		#[ StrICont :
 */
 
@@ -1175,7 +1175,7 @@ int StrICont(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrICont :
+ 		#] StrICont : 
  		#[ ConWord :
 */
 
@@ -1187,7 +1187,7 @@ int ConWord(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] ConWord :
+ 		#] ConWord : 
  		#[ StrLen :
 */
 
@@ -1199,7 +1199,7 @@ int StrLen(UBYTE *s)
 }
 
 /*
- 		#] StrLen :
+ 		#] StrLen : 
  		#[ NumToStr :
 */
 
@@ -1218,7 +1218,7 @@ VOID NumToStr(UBYTE *s, LONG x)
 }
 
 /*
- 		#] NumToStr :
+ 		#] NumToStr : 
  		#[ WriteString :
 
 		Writes a characterstring to the various outputs.
@@ -1251,7 +1251,7 @@ VOID WriteString(int type, UBYTE *str, int num)
 }
 
 /*
- 		#] WriteString :
+ 		#] WriteString : 
  		#[ WriteUnfinString :
 
 		Writes a characterstring to the various outputs.
@@ -1281,7 +1281,7 @@ VOID WriteUnfinString(int type, UBYTE *str, int num)
 }
 
 /*
- 		#] WriteUnfinString :
+ 		#] WriteUnfinString : 
  		#[ strDup1 :
 
 		string duplication with message passing for Malloc1, allowing
@@ -1300,7 +1300,7 @@ UBYTE *strDup1(UBYTE *instring, char *ifwrong)
 }
 
 /*
- 		#] strDup1 :
+ 		#] strDup1 : 
  		#[ EndOfToken :
 */
 
@@ -1312,7 +1312,7 @@ UBYTE *EndOfToken(UBYTE *s)
 }
 
 /*
- 		#] EndOfToken :
+ 		#] EndOfToken : 
  		#[ ToToken :
 */
 
@@ -1324,7 +1324,7 @@ UBYTE *ToToken(UBYTE *s)
 }
 
 /*
- 		#] ToToken :
+ 		#] ToToken : 
  		#[ SkipField :
 
 	Skips from s to the end of a declaration field.
@@ -1349,7 +1349,7 @@ UBYTE *SkipField(UBYTE *s, int level)
 }
 
 /*
- 		#] SkipField :
+ 		#] SkipField : 
  		#[ ReadSnum :			WORD ReadSnum(p)
 
 		Reads a number that should fit in a word.
@@ -1375,7 +1375,7 @@ WORD ReadSnum(UBYTE **p)
 }
 
 /*
- 		#] ReadSnum :
+ 		#] ReadSnum : 
  		#[ NumCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1398,7 +1398,7 @@ UBYTE *NumCopy(WORD x, UBYTE *to)
 }
 
 /*
- 		#] NumCopy :
+ 		#] NumCopy : 
  		#[ LongCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1421,7 +1421,7 @@ char *LongCopy(LONG x, char *to)
 }
 
 /*
- 		#] LongCopy :
+ 		#] LongCopy : 
  		#[ LongLongCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1445,7 +1445,7 @@ char *LongLongCopy(off_t *y, char *to)
 }
 
 /*
- 		#] LongLongCopy :
+ 		#] LongLongCopy : 
  		#[ MakeDate :
 
 		Routine produces a string with the date and time of the run
@@ -1477,7 +1477,7 @@ UBYTE *MakeDate()
 }
 
 /*
- 		#] MakeDate :
+ 		#] MakeDate : 
  		#[ set_in :
          Returns 1 if ch is in set ; 0 if ch is not in set:
 */
@@ -1497,7 +1497,7 @@ int set_in(UBYTE ch, set_of_char set)
 	return(-1);
 }/*set_in*/
 /*
- 		#] set_in :
+ 		#] set_in : 
  		#[ set_set :
 			sets ch into set; returns *set:
 */
@@ -1518,7 +1518,7 @@ one_byte set_set(UBYTE ch, set_of_char set)
 	return(tmp);
 }/*set_set*/
 /*
- 		#] set_set :
+ 		#] set_set : 
  		#[ set_del :
 			deletes ch from set; returns *set:
 */
@@ -1539,7 +1539,7 @@ one_byte set_del(UBYTE ch, set_of_char set)
 	return(tmp);
 }/*set_del*/
 /*
- 		#] set_del :
+ 		#] set_del : 
  		#[ set_sub :
 			returns *set = set1\set2. This function may be usd for initialising,
 				set_sub(a,a,a) => now a is empty set :
@@ -1564,8 +1564,8 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 	return(tmp);
 }/*set_sub*/
 /*
- 		#] set_sub :
-  	#] Strings :
+ 		#] set_sub : 
+  	#] Strings : 
   	#[ Mixed :
  		#[ Malloc :
 
@@ -1652,7 +1652,7 @@ VOID *Malloc(LONG size)
 }
 
 /*
- 		#] Malloc :
+ 		#] Malloc : 
  		#[ Malloc1 :
 
 		Malloc with more detailed error message.
@@ -1721,7 +1721,7 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 }
 
 /*
- 		#] Malloc1 :
+ 		#] Malloc1 : 
  		#[ M_free :
 */
 
@@ -1786,7 +1786,7 @@ void M_free(VOID *x, char *where)
 }
 
 /*
- 		#] M_free :
+ 		#] M_free : 
  		#[ M_check :
 */
 
@@ -1852,7 +1852,144 @@ void M_print() {}
 #endif
 
 /*
- 		#] M_check :
+ 		#] M_check : 
+ 		#[ TermMalloc :
+*/
+/**
+ *	Provides memory for one term (or one small polynomial)
+ *	This means that the memory is limited to a buffer of size AM.MaxTer
+ *	plus a few extra words.
+ *	In parallel versions, each worker has its own memory pool.
+ *
+ *	The way we use the memory is by:
+ *	term = TermMalloc(BHEAD0);
+ *	and later we free it by
+ *	TermFree(BHEAD term);
+ *
+ *	Layout:
+ *		We have a list of available pointers to buffers:  AT.TermMemHeap
+ *		Its size is AT.TermMemMax
+ *		We take from the top (indicated by AT.TermMemTop).
+ *		When we run out of buffers we assign new ones (doubling the amount)
+ *		and we have to extend the AT.TermMemHeap array.
+ *	Important:
+ *		There is no checking that the returned memory is legal, ie is
+ *		memory that was handed out earlier.
+ */
+
+#define TERMMEMSTARTNUM 16
+#define TERMEXTRAWORDS 10
+
+VOID TermMallocAddMemory(PHEAD0)
+{
+	WORD *newbufs;
+	int i, extra;
+	if ( AT.TermMemMax == 0 ) extra = TERMMEMSTARTNUM;
+	else                      extra = AT.TermMemMax;
+	if ( AT.TermMemHeap ) M_free(AT.TermMemHeap,"TermMalloc");
+	newbufs = (WORD *)Malloc1(extra*(AM.MaxTer+TERMEXTRAWORDS)*sizeof(WORD),"TermMalloc");
+	AT.TermMemHeap = (WORD **)Malloc1((extra+AT.TermMemMax)*sizeof(WORD *),"TermMalloc");
+	for ( i = 0; i < extra; i++ ) {
+		AT.TermMemHeap[i] = newbufs + i*(AM.MaxTer+TERMEXTRAWORDS);
+	}
+	AT.TermMemTop = extra;
+	AT.TermMemMax += extra;
+/*
+MesPrint("AT.TermMemMax is now %l",AT.TermMemMax);
+*/
+}
+
+#ifndef MEMORYMACROS
+
+WORD *TermMalloc2(PHEAD char *text)
+{
+	if ( AT.TermMemTop <= 0 ) TermMallocAddMemory(BHEAD0);
+/*
+MesPrint("TermMalloc: %s, %l",text,AT.TermMemTop);
+*/
+	return(AT.TermMemHeap[--AT.TermMemTop]);
+}
+ 
+VOID TermFree2(PHEAD WORD *TermMem, char *text)
+{
+	AT.TermMemHeap[AT.TermMemTop++] = TermMem;
+/*
+MesPrint("TermFree: %s, %l",text,AT.TermMemTop);
+*/
+}
+
+#endif
+
+/*
+ 		#] TermMalloc :
+ 		#[ NumberMalloc :
+*/
+/**
+ *	Provides memory for one Long number
+ *	This means that the memory is limited to a buffer of size AM.MaxTal
+ *	In parallel versions, each worker has its own memory pool.
+ *
+ *	The way we use the memory is by:
+ *	num = NumberMalloc(BHEAD0); Number = AT.NumberMemHeap[num];
+ *	and later we free it by
+ *	NumberFree(BHEAD num);
+ *
+ *	Layout:
+ *		We have a list of available pointers to buffers:  AT.NumberMemHeap
+ *		Its size is AT.NumberMemMax
+ *		We take from the top (indicated by AT.NumberMemTop).
+ *		When we run out of buffers we assign new ones (doubling the amount)
+ *		and we have to extend the AT.NumberMemHeap array.
+ *	Important:
+ *		There is no checking on the returned memory!!!!
+ */
+
+#define NUMBERMEMSTARTNUM 16
+#define NUMBEREXTRAWORDS 10L
+
+VOID NumberMallocAddMemory(PHEAD0)
+{
+	UWORD *newbufs;
+	WORD extra;
+	int i;
+	if ( AT.NumberMemMax == 0 ) extra = NUMBERMEMSTARTNUM;
+	else                        extra = AT.NumberMemMax;
+	if ( AT.NumberMemHeap ) M_free(AT.NumberMemHeap,"NumberMalloc");
+	newbufs = (UWORD *)Malloc1(extra*(AM.MaxTal+NUMBEREXTRAWORDS)*sizeof(UWORD),"NumberMalloc");
+	AT.NumberMemHeap = (UWORD **)Malloc1((extra+AT.NumberMemMax)*sizeof(UWORD *),"NumberMalloc");
+	for ( i = 0; i < extra; i++ ) {
+		AT.NumberMemHeap[i] = newbufs + i*(LONG)(AM.MaxTal+NUMBEREXTRAWORDS);
+	}
+	AT.NumberMemTop = extra;
+	AT.NumberMemMax += extra;
+/*
+MesPrint("AT.NumberMemMax is now %l",AT.NumberMemMax);
+*/
+}
+
+#ifndef MEMORYMACROS
+
+UWORD *NumberMalloc2(PHEAD char *text)
+{
+	if ( AT.NumberMemTop <= 0 ) NumberMallocAddMemory(BHEAD0);
+/*
+MesPrint("NumberMalloc: %s, %l",text,AT.NumberMemTop);
+*/
+	return(AT.NumberMemHeap[--AT.NumberMemTop]);
+}
+ 
+VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
+{
+	AT.NumberMemHeap[AT.NumberMemTop++] = NumberMem;
+/*
+MesPrint("NumberFree: %s, %l",text,AT.NumberMemTop);
+*/
+}
+
+#endif
+
+/*
+ 		#] NumberMalloc :
  		#[ FromList :
 
 	Returns the next object in a list.
@@ -1880,7 +2017,7 @@ VOID *FromList(LIST *L)
 }
 
 /*
- 		#] FromList :
+ 		#] FromList : 
  		#[ From0List :
 
 		Same as FromList, but we zero excess variables.
@@ -1906,7 +2043,7 @@ VOID *From0List(LIST *L)
 }
 
 /*
- 		#] From0List :
+ 		#] From0List : 
  		#[ FromVarList :
 
 	Returns the next object in a list of variables.
@@ -1953,7 +2090,7 @@ VOID *FromVarList(LIST *L)
 }
 
 /*
- 		#] FromVarList :
+ 		#] FromVarList : 
  		#[ DoubleList :
 */
 
@@ -2005,7 +2142,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 }
 
 /*
- 		#] DoubleList :
+ 		#] DoubleList : 
  		#[ DoubleLList :
 */
 
@@ -2046,7 +2183,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 }
 
 /*
- 		#] DoubleLList :
+ 		#] DoubleLList : 
  		#[ DoubleBuffer :
 */
 
@@ -2072,7 +2209,7 @@ void DoubleBuffer(void **start, void **stop, int size, char *text)
 }
 
 /*
- 		#] DoubleBuffer :
+ 		#] DoubleBuffer : 
  		#[ ExpandBuffer :
 */
 
@@ -2099,7 +2236,7 @@ void ExpandBuffer(void **buffer, LONG *oldsize, int type)
 }
 
 /*
- 		#] ExpandBuffer :
+ 		#] ExpandBuffer : 
  		#[ iexp :
 
 		Raises the long integer y to the power p.
@@ -2128,7 +2265,7 @@ LONG iexp(LONG x, int p)
 }
 
 /*
- 		#] iexp :
+ 		#] iexp : 
  		#[ ToGeneral :
 
 		Convert a fast argument to a general argument
@@ -2164,7 +2301,7 @@ MakeSize:
 }
 
 /*
- 		#] ToGeneral :
+ 		#] ToGeneral : 
  		#[ ToFast :
 
 		Checks whether an argument can be converted to fast notation
@@ -2219,7 +2356,7 @@ int ToFast(WORD *r, WORD *m)
 }
 
 /*
- 		#] ToFast :
+ 		#] ToFast : 
  		#[ IsLikeVector :
 
 		Routine determines whether a function argument is like a vector.
@@ -2252,7 +2389,7 @@ int IsLikeVector(WORD *arg)
 }
 
 /*
- 		#] IsLikeVector :
+ 		#] IsLikeVector : 
  		#[ CompareArgs :
 */
 
@@ -2281,7 +2418,7 @@ int CompareArgs(WORD *arg1, WORD *arg2)
 }
 
 /*
- 		#] CompareArgs :
+ 		#] CompareArgs : 
  		#[ CompArg :
 
 	returns 1 if arg1 comes first, -1 if arg2 comes first, 0 if equal
@@ -2437,7 +2574,7 @@ argerror:
 }
 
 /*
- 		#] CompArg :
+ 		#] CompArg : 
  		#[ TimeWallClock :
 */
 
@@ -2459,7 +2596,7 @@ LONG TimeWallClock(WORD par)
 }
 
 /*
- 		#] TimeWallClock :
+ 		#] TimeWallClock : 
  		#[ TimeChildren :
 */
 
@@ -2471,7 +2608,7 @@ LONG TimeChildren(WORD par)
 }
 
 /*
- 		#] TimeChildren :
+ 		#] TimeChildren : 
  		#[ TimeCPU :
 */
 
@@ -2484,7 +2621,7 @@ LONG TimeCPU(WORD par)
 }
 
 /*
- 		#] TimeCPU :
+ 		#] TimeCPU : 
  		#[ Timer :
 */
 /*
@@ -2840,7 +2977,7 @@ LONG Timer(int par)
 #endif
 
 /*
- 		#] Timer :
+ 		#] Timer : 
  		#[ Crash :
 
 		Routine for debugging purposes
@@ -2859,6 +2996,6 @@ int Crash()
 }
 
 /*
- 		#] Crash :
+ 		#] Crash : 
   	#] Mixed :
 */

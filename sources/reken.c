@@ -110,13 +110,7 @@ WORD Mully(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 	if ( *na < 0 ) { sgn = -sgn; *na = -*na; }
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
 	UnPack(a,*na,&adenom,&anumer);
-#ifdef INDIVIDUALALLOC
-	if ( AN.Myscrat1 == 0 ) {
-		AN.Myscrat1 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Mully");
-		AN.Myscrat2 = AN.Myscrat1 + AM.MaxTal+2;
-	}
-#endif
-	d = AN.Myscrat1; e = AN.Myscrat2;
+	d = NumberMalloc("Mully"); e = NumberMalloc("Mully");
 	for ( i = 0; i < nb; i++ ) { e[i] = *b++; }
 	ne = nb;
 	if ( Simplify(BHEAD a+*na,&adenom,e,&ne) ) goto MullyEr;
@@ -130,11 +124,13 @@ WORD Mully(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 	for ( i = 0; i < *na; i++ ) { a[i] = *b++; }
 	Pack(a,na,e,ne);
 	if ( sgn < 0 ) *na = -*na;
+	NumberFree(d,"Mully"); NumberFree(e,"Mully");
 	return(0);
 MullyEr:
 	LOCK(ErrorMessageLock);
 	MesCall("Mully");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(d,"Mully"); NumberFree(e,"Mully");
 	SETERROR(-1)
 }
 
@@ -152,20 +148,13 @@ WORD Divvy(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 	UWORD *d,*e;
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
-#ifdef INDIVIDUALALLOC
-	if ( AN.Dyscrat1 == 0 ) {
-		AN.Dyscrat1 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Divvy");
-		AN.Dyscrat2 = AN.Dyscrat1 + AM.MaxTal+2;
-	}
-#endif
-	d = AN.Dyscrat1;
-	e = AN.Dyscrat2;
 	if ( !nb ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Division by zero in Divvy");
 		UNLOCK(ErrorMessageLock);
 		return(-1);
 	}
+	d = NumberMalloc("Divvy"); e = NumberMalloc("Divvy");
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
 	if ( *na < 0 ) { sgn = -sgn; *na = -*na; }
 	UnPack(a,*na,&adenom,&anumer);
@@ -176,11 +165,13 @@ WORD Divvy(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 	*na = anumer;
 	Pack(a,na,d,nd);
 	if ( sgn < 0 ) *na = -*na;
+	NumberFree(d,"Divvy"); NumberFree(e,"Divvy");
 	return(0);
 DivvyEr:
 	LOCK(ErrorMessageLock);
 	MesCall("Divvy");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(d,"Divvy"); NumberFree(e,"Divvy");
 	SETERROR(-1)
 }
 
@@ -256,14 +247,6 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	UnPack(b,nb,&bdenom,&bnumer);
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
-#ifdef INDIVIDUALALLOC
-	if ( AN.ARscrat1 == 0 ) {
-		AN.ARscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"AddRat");
-		AN.ARscrat2 = AN.ARscrat1 + AM.MaxTal+2;
-		AN.ARscrat3 = AN.ARscrat2 + AM.MaxTal+2;
-		AN.ARscrat4 = AN.ARscrat3 + AM.MaxTal+2;
-	}
-#endif
 	if ( na == 1 && nb == 1 ) {
 		RLONG t1, t2, t3;
 		t3 = ((RLONG)a[1])*((RLONG)b[1]);
@@ -296,14 +279,15 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			else *nc = 1;
 		}
 		if ( anumer < 0 ) *nc = -*nc;
-		d = AN.ARscrat1;
+		d = NumberMalloc("AddRat");
 		d[0] = (UWORD)t3;
 		if ( ( d[1] = (UWORD)(t3 >> BITSINWORD) ) != 0 ) nd = 2;
 		else nd = 1;
-		if ( Simplify(BHEAD c,nc,d,&nd) ) goto AddRer;
+		if ( Simplify(BHEAD c,nc,d,&nd) ) goto AddRer1;
 	}
 	else {
-		d = AN.ARscrat1; e = AN.ARscrat2; f = AN.ARscrat3; g = AN.ARscrat4;
+		d = NumberMalloc("AddRat"); e = NumberMalloc("AddRat");
+		f = NumberMalloc("AddRat"); g = NumberMalloc("AddRat");
 		if ( GcdLong(BHEAD a+na,adenom,b+nb,bdenom,d,&nd) ) goto AddRer;
 		if ( *d == 1 && nd == 1 ) nd = 0;
 		if ( nd ) {
@@ -317,7 +301,11 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			if ( MulLong(b+nb,bdenom,a,anumer,g,&ng) ) goto AddRer;
 		}
 		if ( AddLong(c,*nc,g,ng,c,nc) ) goto AddRer;
-		if ( !*nc ) return(0);
+		if ( !*nc ) {
+			NumberFree(g,"AddRat"); NumberFree(f,"AddRat");
+			NumberFree(e,"AddRat"); NumberFree(d,"AddRat");
+			return(0);
+		}
 		if ( nd ) {
 			if ( Simplify(BHEAD c,nc,d,&nd) ) goto AddRer;
 			if ( MulLong(e,ne,d,nd,g,&ng) ) goto AddRer;
@@ -326,10 +314,15 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		else {
 			if ( MulLong(a+na,adenom,b+nb,bdenom,d,&nd) ) goto AddRer;
 		}
+		NumberFree(g,"AddRat"); NumberFree(f,"AddRat"); NumberFree(e,"AddRat");
 	}
 	Pack(c,nc,d,nd);
+	NumberFree(d,"AddRat");
 	return(0);
 AddRer:
+	NumberFree(g,"AddRat"); NumberFree(f,"AddRat"); NumberFree(e,"AddRat");
+AddRer1:
+	NumberFree(d,"AddRat");
 	LOCK(ErrorMessageLock);
 	MesCall("AddRat");
 	UNLOCK(ErrorMessageLock);
@@ -337,7 +330,7 @@ AddRer:
 }
 
 /*
- 		#] AddRat : 
+ 		#] AddRat :
  		#[ MulRat :			WORD MulRat(a,na,b,nb,c,nc)
 
 	Multiplies the rationals a and b. The Gcd of the individual
@@ -383,32 +376,30 @@ WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	if ( !na || !nb ) { *nc = 0; return(0); }
 	if ( na != 1 || nb != 1 ) {
 		GETBIDENTITY
-		UWORD *xd,*xe;
-		UWORD *xf,*xg;
+		UWORD *xd,*xe, *xf,*xg;
 		WORD dden, dnumr, eden, enumr;
 		UnPack(a,na,&dden,&dnumr);
 		UnPack(b,nb,&eden,&enumr);
-#ifdef INDIVIDUALALLOC
-		if ( AN.MRscrat1 == 0 ) {
-			AN.MRscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"MulRat");
-			AN.MRscrat2 = AN.MRscrat1 + AM.MaxTal+2;
-			AN.MRscrat3 = AN.MRscrat2 + AM.MaxTal+2;
-			AN.MRscrat4 = AN.MRscrat3 + AM.MaxTal+2;
-		}
-#endif
-		xd = AN.MRscrat3; xf = AN.MRscrat4;
+		xd = NumberMalloc("MulRat"); xf = NumberMalloc("MulRat");
 		for ( i = 0; i < dnumr; i++ ) xd[i] = a[i];
 		a += na;
 		for ( i = 0; i < dden; i++ ) xf[i] = a[i];
-		xe = AN.MRscrat1; xg = AN.MRscrat2;
+		xe = NumberMalloc("MulRat"); xg = NumberMalloc("MulRat");
 		for ( i = 0; i < enumr; i++ ) xe[i] = b[i];
 		b += nb;
 		for ( i = 0; i < eden; i++ ) xg[i] = b[i];
-		if ( Simplify(BHEAD xd,&dnumr,xg,&eden) ) goto MulRer;
-		if ( Simplify(BHEAD xe,&enumr,xf,&dden) ) goto MulRer;
-		if ( MulLong(xd,dnumr,xe,enumr,c,nc) ) goto MulRer;
-		if ( MulLong(xf,dden,xg,eden,xd,&dnumr) ) goto MulRer;
+		if ( Simplify(BHEAD xd,&dnumr,xg,&eden) ||
+		     Simplify(BHEAD xe,&enumr,xf,&dden) ||
+		     MulLong(xd,dnumr,xe,enumr,c,nc) ||
+		     MulLong(xf,dden,xg,eden,xd,&dnumr) ) {
+			LOCK(ErrorMessageLock);
+			MesCall("MulRat");
+			UNLOCK(ErrorMessageLock);
+			NumberFree(xd,"MulRat"); NumberFree(xe,"MulRat"); NumberFree(xf,"MulRat"); NumberFree(xg,"MulRat");
+			SETERROR(-1)
+		}
 		Pack(c,nc,xd,dnumr);
+		NumberFree(xd,"MulRat"); NumberFree(xe,"MulRat"); NumberFree(xf,"MulRat"); NumberFree(xg,"MulRat");
 	}
 	else {
 		UWORD y;
@@ -460,11 +451,6 @@ WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 	if ( sgn < 0 ) *nc = -*nc;
 	return(0);
-MulRer:
-	LOCK(ErrorMessageLock);
-	MesCall("MulRat");
-	UNLOCK(ErrorMessageLock);
-	SETERROR(-1)
 }
 
 /*
@@ -512,19 +498,14 @@ WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 	UWORD *x4;
 	WORD n1,n2,n3,n4,sgn = 1;
 	WORD i;
+	UWORD *Siscrat5, *Siscrat6, *Siscrat7, *Siscrat8;
 	if ( *na < 0 ) { *na = -*na; sgn = -sgn; }
 	if ( *nb < 0 ) { *nb = -*nb; sgn = -sgn; }
-#ifdef INDIVIDUALALLOC
-	if ( AN.Siscrat5 == 0 ) {
-		AN.Siscrat5 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"Simplify");
-		AN.Siscrat6 = AN.Siscrat5 + AM.MaxTal+2;
-		AN.Siscrat7 = AN.Siscrat6 + AM.MaxTal+2;
-		AN.Siscrat8 = AN.Siscrat7 + AM.MaxTal+2;
-	}
-#endif
-	x1 = AN.Siscrat8; x2 = AN.Siscrat7;
+	Siscrat5 = NumberMalloc("Simplify"); Siscrat6 = NumberMalloc("Simplify"); 
+	Siscrat7 = NumberMalloc("Simplify"); Siscrat8 = NumberMalloc("Simplify"); 
+	x1 = Siscrat8; x2 = Siscrat7;
 	if ( *nb == 1 ) {
-		x3 = AN.Siscrat6;
+		x3 = Siscrat6;
 		if ( DivLong(a,*na,b,*nb,x1,&n1,x2,&n2) ) goto SimpErr;
 		if ( !n2 ) {
 			for ( i = 0; i < n1; i++ ) *a++ = *x1++;
@@ -550,10 +531,10 @@ WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 		NCOPY(x1,x3,i);
 		x3 = b; n2 = i = *nb;
 		NCOPY(x2,x3,i);
-		x4 = AN.Siscrat5;
-		x2 = AN.Siscrat6;
-		x3 = AN.Siscrat7;
-		if ( GcdLong(BHEAD AN.Siscrat8,n1,AN.Siscrat7,n2,x2,&n3) ) goto SimpErr;
+		x4 = Siscrat5;
+		x2 = Siscrat6;
+		x3 = Siscrat7;
+		if ( GcdLong(BHEAD Siscrat8,n1,Siscrat7,n2,x2,&n3) ) goto SimpErr;
 		n2 = n3;
 		if ( *x2 != 1 || n2 != 1 ) {
 			DivLong(a,*na,x2,n2,x1,&n1,x4,&n4);
@@ -566,12 +547,12 @@ WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 	}
 #endif
 	else {
-		x4 = AN.Siscrat5;
+		x4 = Siscrat5;
 		n1 = i = *na; x3 = a;
 		NCOPY(x1,x3,i);
 		x3 = b; n2 = i = *nb;
 		NCOPY(x2,x3,i);
-		x1 = AN.Siscrat8; x2 = AN.Siscrat7; x3 = AN.Siscrat6;
+		x1 = Siscrat8; x2 = Siscrat7; x3 = Siscrat6;
 		for(;;){
 			if ( DivLong(x1,n1,x2,n2,x4,&n4,x3,&n3) ) goto SimpErr;
 			if ( !n3 ) break;
@@ -581,7 +562,7 @@ WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 				break;
 			}
 			if ( DivLong(x2,n2,x3,n3,x4,&n4,x1,&n1) ) goto SimpErr;
-			if ( !n1 ) { x2 = x3; n2 = n3; x3 = AN.Siscrat7; break; }
+			if ( !n1 ) { x2 = x3; n2 = n3; x3 = Siscrat7; break; }
 			if ( n3 == 1 ) {
 				while ( ( *x2 = (*x3) % (*x1) ) != 0 ) { *x3 = *x1; *x1 = *x2; }
 				*x2 = *x1;
@@ -589,7 +570,7 @@ WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 				break;
 			}
 			if ( DivLong(x3,n3,x1,n1,x4,&n4,x2,&n2) ) goto SimpErr;
-			if ( !n2 ) { x2 = x1; n2 = n1; x1 = AN.Siscrat7; break; }
+			if ( !n2 ) { x2 = x1; n2 = n1; x1 = Siscrat7; break; }
 			if ( n1 == 1 ) {
 				while ( ( *x3 = (*x1) % (*x2) ) != 0 ) { *x1 = *x2; *x2 = *x3; }
 				break;
@@ -605,11 +586,15 @@ WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 		}
 	}
 	if ( sgn < 0 ) *na = -*na;
+	NumberFree(Siscrat5,"Simplify"); NumberFree(Siscrat6,"Simplify");
+	NumberFree(Siscrat7,"Simplify"); NumberFree(Siscrat8,"Simplify");
 	return(0);
 SimpErr:
 	LOCK(ErrorMessageLock);
 	MesCall("Simplify");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(Siscrat5,"Simplify"); NumberFree(Siscrat6,"Simplify");
+	NumberFree(Siscrat7,"Simplify"); NumberFree(Siscrat8,"Simplify");
 	SETERROR(-1)
 }
 
@@ -627,33 +612,27 @@ WORD AccumGCD(UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETIDENTITY
 	WORD nna,nnb,numa,numb,dena,denb,numc,denc;
+	UWORD *GCDbuffer = NumberMalloc("AccumGCD");
 	int i;
-#ifdef INDIVIDUALALLOC
-	if ( AN.GCDbuffer == 0 ) {
-		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
-		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
-		AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
-		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
-		AN.LCMc = AN.LCMb + AM.MaxTal+2;
-	}
-#endif
 	nna = *na; if ( nna < 0 ) nna = -nna; nna = (nna-1)/2;
 	nnb = nb;  if ( nnb < 0 ) nnb = -nnb; nnb = (nnb-1)/2;
 	UnPack(a,nna,&dena,&numa);
 	UnPack(b,nnb,&denb,&numb);
-	if ( GcdLong(BHEAD a,numa,b,numb,AN.GCDbuffer,&numc) ) goto AccErr;
+	if ( GcdLong(BHEAD a,numa,b,numb,GCDbuffer,&numc) ) goto AccErr;
 	numa = numc;
-	for ( i = 0; i < numa; i++ ) a[i] = AN.GCDbuffer[i];
-	if ( GcdLong(BHEAD a+nna,dena,b+nnb,denb,AN.GCDbuffer,&denc) ) goto AccErr;
+	for ( i = 0; i < numa; i++ ) a[i] = GCDbuffer[i];
+	if ( GcdLong(BHEAD a+nna,dena,b+nnb,denb,GCDbuffer,&denc) ) goto AccErr;
 	dena = denc;
-	for ( i = 0; i < dena; i++ ) a[i+nna] = AN.GCDbuffer[i];
+	for ( i = 0; i < dena; i++ ) a[i+nna] = GCDbuffer[i];
 	Pack(a,&numa,a+nna,dena);
 	*na = INCLENG(numa);
+	NumberFree(GCDbuffer,"AccumGCD");
 	return(0);
 AccErr:
 	LOCK(ErrorMessageLock);
 	MesCall("AccumGCD");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(GCDbuffer,"AccumGCD");
 	SETERROR(-1)
 }
 
@@ -679,7 +658,7 @@ int TakeRatRoot(UWORD *a, WORD *n, WORD power)
 
 /*
  		#] TakeRatRoot: 
-  	#] RekenRational : 
+  	#] RekenRational :
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -839,38 +818,31 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		UWORD *to, *from;
 		int j;
 		GETIDENTITY
-#ifdef INDIVIDUALALLOC
-		if ( AN.DLscrat9 == 0 ) {
-			AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"MulLong");
-			AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
-			AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
-			AN.DLscratC = AN.DLscratB + AM.MaxTal+4;
-		}
-#endif
+		UWORD *DLscrat9 = NumberMalloc("MulLong"), *DLscratA = NumberMalloc("MulLong"), *DLscratB = NumberMalloc("MulLong");
 #if ( GMPSPREAD != 1 )
 		if ( na & 1 ) {
-			from = a; a = to = AN.DLscrat9; j = na; NCOPY(to, from, j);
+			from = a; a = to = DLscrat9; j = na; NCOPY(to, from, j);
 			a[na++] = 0;
 			++*nc;
 		} else
 #endif
 		if ( (long)a & (sizeof(mp_limb_t)-1) ) {
-			from = a; a = to = AN.DLscrat9; j = na; NCOPY(to, from, j);
+			from = a; a = to = DLscrat9; j = na; NCOPY(to, from, j);
 		}
 
 #if ( GMPSPREAD != 1 )
 		if ( nb & 1 ) {
-			from = b; b = to = AN.DLscratA; j = nb; NCOPY(to, from, j);
+			from = b; b = to = DLscratA; j = nb; NCOPY(to, from, j);
 			b[nb++] = 0;
 			++*nc;
 		} else
 #endif
 		if ( (long)b & (sizeof(mp_limb_t)-1) ) {
-			from = b; b = to = AN.DLscratA; j = nb; NCOPY(to, from, j);
+			from = b; b = to = DLscratA; j = nb; NCOPY(to, from, j);
 		}
 
 		if ( ( *nc > i ) || ( (long)c & (sizeof(mp_limb_t)-1) ) ) {
-			ic = AN.DLscratB;
+			ic = DLscratB;
 		}
 		if ( na < nb ) {
 			/* res = */
@@ -889,11 +861,12 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			j = *nc; NCOPY(c, ic, j);
 		}
 		if ( sgn < 0 ) *nc = -(*nc);
+		NumberFree(DLscrat9,"MulLong"); NumberFree(DLscratA,"MulLong"); NumberFree(DLscratB,"MulLong");
 		return(0);
 	}
 #endif
 /*
-  	#] GMP stuff :
+  	#] GMP stuff : 
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -921,7 +894,7 @@ MulLov:
 }
 
 /*
- 		#] MulLong :
+ 		#] MulLong : 
  		#[ BigLong :		WORD BigLong(a,na,b,nb)
 
 	Returns > 0 if a > b, < 0 if b > a and 0 if a == b
@@ -963,7 +936,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 	WORD i, ni;
 	UWORD *w1, *w2;
 	RLONG t, v;
-	UWORD *e, *f, *g, norm, estim;
+	UWORD *e, *f, *ff, *g, norm, estim, *DLscrat9, *DLscratA, *DLscratB, *DLscratC;
 	RLONG esthelp;
 	if ( !nb ) {
 		LOCK(ErrorMessageLock);
@@ -1018,15 +991,6 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 	}
 	else {
 		GETIDENTITY
-
-#ifdef INDIVIDUALALLOC
-		if ( AN.DLscrat9 == 0 ) {
-			AN.DLscrat9 = (UWORD *)Malloc1(4*(AM.MaxTal+4)*sizeof(UWORD),"DivLong");
-			AN.DLscratA = AN.DLscrat9 + AM.MaxTal+4;
-			AN.DLscratB = AN.DLscratA + AM.MaxTal+4;
-			AN.DLscratC = AN.DLscratB + AM.MaxTal+4;
-		}
-#endif
 /*
  		#[ GMP stuff :
 
@@ -1040,30 +1004,32 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		if ( na > 4 && nb > 3 ) {
 		  UWORD *ic, *id, *to, *from;
 		  int j = na - nb;
+		  DLscrat9 = NumberMalloc("DivLong"); DLscratA = NumberMalloc("DivLong");
+		  DLscratB = NumberMalloc("DivLong"); DLscratC = NumberMalloc("DivLong");
 
 #if ( GMPSPREAD != 1 )
 		  if ( na & 1 ) {
-			from = a; a = to = AN.DLscrat9; i = na; NCOPY(to, from, i);
+			from = a; a = to = DLscrat9; i = na; NCOPY(to, from, i);
 			a[na++] = 0;
 		  } else
 #endif
 		  if ( (long)a & (sizeof(mp_limb_t)-1) ) {
-			from = a; a = to = AN.DLscrat9; i = na; NCOPY(to, from, i);
+			from = a; a = to = DLscrat9; i = na; NCOPY(to, from, i);
 		  }
 
 #if ( GMPSPREAD != 1 )
 		  if ( nb & 1 ) {
-			from = b; b = to = AN.DLscratA; i = nb; NCOPY(to, from, i);
+			from = b; b = to = DLscratA; i = nb; NCOPY(to, from, i);
 			b[nb++] = 0;
 		  } else
 #endif
 		  if ( ( (long)b & (sizeof(mp_limb_t)-1) ) != 0 ) {
-			from = b; b = to = AN.DLscratA; i = nb; NCOPY(to, from, i);
+			from = b; b = to = DLscratA; i = nb; NCOPY(to, from, i);
 		  }
-		  if ( ( (long)c & (sizeof(mp_limb_t)-1) ) != 0 ) ic = AN.DLscratB;
+		  if ( ( (long)c & (sizeof(mp_limb_t)-1) ) != 0 ) ic = DLscratB;
 		  else                                            ic = c;
 
-		  if ( ( (long)d & (sizeof(mp_limb_t)-1) ) != 0 ) id = AN.DLscratC;
+		  if ( ( (long)d & (sizeof(mp_limb_t)-1) ) != 0 ) id = DLscratC;
 		  else                                            id = d;
 		  mpn_tdiv_qr((mp_limb_t *)ic,(mp_limb_t *)id,(mp_size_t)0,
 			(const mp_limb_t *)a,(mp_size_t)(na/GMPSPREAD),
@@ -1076,6 +1042,8 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		  j++; *nd = j;
 		  if ( d != id ) { NCOPY(d,id,j); }
 		  if ( sgn < 0 ) { *nc = -(*nc); *nd = -(*nd); }
+		  NumberFree(DLscrat9,"DivLong"); NumberFree(DLscratA,"DivLong");
+		  NumberFree(DLscratB,"DivLong"); NumberFree(DLscratC,"DivLong");
 		  return(0);
 		}
 #endif
@@ -1084,14 +1052,17 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 */
 		/* Start with normalization operation */
  
-		e = AN.DLscratB; f = AN.DLscratA; g = AN.DLscrat9;
+		e = NumberMalloc("DivLong"); f = NumberMalloc("DivLong"); g = NumberMalloc("DivLong");
 		if ( b[nb-1] == (FULLMAX-1) ) norm = 1;
 		else {
 			norm = (UWORD)(((ULONG)FULLMAX) / (ULONG)((b[nb-1]+1L)));
 		}
 		f[na] = 0;
-		if(MulLong(b,nb,&norm,1,e,&ne))return(-1);
-		if(MulLong(a,na,&norm,1,f,&nf))return(-1);
+		if ( MulLong(b,nb,&norm,1,e,&ne) ||
+		     MulLong(a,na,&norm,1,f,&nf) ) {
+			NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
+			return(-1);
+		}
 		if ( BigLong(f+nf-ne,ne,e,ne) >= 0 ) {
 			SubPLon(f+nf-ne,ne,e,ne,f+nf-ne,&nh);
 			w1 = c + (nf-ne);
@@ -1142,6 +1113,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 						AO.OutSkip = 0;
 						FiniLine();
 						UNLOCK(ErrorMessageLock);
+						NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
 						return(-1);
 					}
 				}
@@ -1156,8 +1128,8 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 
 		if ( nh > 0 ) {
 			if ( norm == 1 ) {
-				*nd = i = nh;
-				NCOPY(d,f,i);
+				*nd = i = nh; ff = f;
+				NCOPY(d,ff,i);
 			}
 			else {
 				w1 = f+nh;
@@ -1177,12 +1149,14 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 					LOCK(ErrorMessageLock);
 					MesPrint("Error in DivLong");
 					UNLOCK(ErrorMessageLock);
+					NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
 					return(-1);
 				}
 				if ( !*(d+nh-1) ) (*nd)--;
 			}
 		}
 		else { *nd = 0; }
+		NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
 	}
 	if ( sgn < 0 ) { *nc = -(*nc); *nd = -(*nd); }
 	return(0);
@@ -1202,18 +1176,13 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 	GETBIDENTITY
 	WORD i, nu;
 	UWORD *it, *iu, c;
-	UWORD *is;
+	UWORD *is, *iss;
 	WORD ns, nt, nmod;
 	nmod = ABS(AC.ncmod);
-#ifdef INDIVIDUALALLOC
-	if ( AN.RPscratA == 0 ) {
-		AN.RPscratA = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"RaisPow");
-		AN.RPscratB = AN.RPscratA + AM.MaxTal+2;
-	}
-#endif
-	is = AN.RPscratB;
 	if ( !*na || ( ( *na == 1 ) && ( *a == 1 ) ) ) return(0);
-	for ( i = 0; i < *na; i++ ) *is++ = a[i];
+	is = NumberMalloc("RaisPow");
+	it = NumberMalloc("RaisPow");
+	for ( i = 0; i < *na; i++ ) is[i] = a[i];
 	ns = *na;
 	c = b;
 	for ( i = 0; i < BITSINWORD; i++ ) {
@@ -1222,8 +1191,6 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 	}
 	i--;
 	c = 1 << i;
-	is = AN.RPscratB;
-	it = AN.RPscratA;
 	while ( --i >= 0 ) {
 		c >>= 1;
 		if(MulLong(is,ns,is,ns,it,&nt)) goto RaisOvl;
@@ -1238,12 +1205,14 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 			if ( DivLong(is,ns,(UWORD *)AC.cmod,nmod,it,&nt,is,&ns) ) goto RaisOvl;
 		}
 	}
-	if ( ( *na = i = ns ) > 0 ) NCOPY(a,is,i);
+	if ( ( *na = i = ns ) > 0 ) { iss = is; NCOPY(a,iss,i); }
+	NumberFree(is,"RaisPow"); NumberFree(it,"RaisPow");
 	return(0);
 RaisOvl:
 	LOCK(ErrorMessageLock);
 	MesCall("RaisPow");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(is,"RaisPow"); NumberFree(it,"RaisPow");
 	SETERROR(-1)
 }
 
@@ -1389,12 +1358,7 @@ VOID PrtLong(UWORD *a, WORD na, UBYTE *s)
 	UBYTE *sa, *sb;
 	UBYTE c;
 	UWORD *bb, *b;
-#ifdef INDIVIDUALALLOC
-	if ( AN.PLscratA == 0 ) {
-		AN.PLscratA = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"PrtLong");
-	}
-#endif
-	b = AN.PLscratA;
+	b = NumberMalloc("PrtLong");
 	bb = b;
 	i = na; while ( --i >= 0 ) *bb++ = *a++;
 	a = b;
@@ -1429,6 +1393,7 @@ VOID PrtLong(UWORD *a, WORD na, UBYTE *s)
 	}
 	else *s++ = '0';
 	*s = '\0';
+	NumberFree(b,"PrtLong");
 }
 
 /*
@@ -1568,14 +1533,7 @@ out:
 	The loop recognizes the case that na-nb >= 1
 	In that case we just have to divide!
 */
-#ifdef INDIVIDUALALLOC
-	if ( AN.GCscrat6 == 0 ) {
-		AN.GCscrat6 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"GCD");
-		AN.GCscrat7 = AN.GCscrat6 + AM.MaxTal+2;
-		AN.GCscrat8 = AN.GCscrat7 + AM.MaxTal+2;
-	}
-#endif
-	r = x1 = AN.GCscrat6; t = x2 = AN.GCscrat7; x3 = AN.GCscrat8;
+	r = x1 = NumberMalloc("GCD"); t = x2 = NumberMalloc("GCD"); x3 = NumberMalloc("GCD");
 	j = na;
 	NCOPY(r,a,j);
 	j = nb;
@@ -1605,6 +1563,7 @@ toobad:
 		c[0] = (UWORD)v;
 		if ( ( c[1] = (UWORD)(v >> BITSINWORD) ) != 0 ) *nc = 2+ja;
 		else *nc = 1+ja;
+		NumberFree(x1,"GCD"); NumberFree(x2,"GCD"); NumberFree(x3,"GCD");
 		return;
 	}
 	if ( na == 1 ) {
@@ -1617,6 +1576,7 @@ toobad:
 #endif
 		c[0] = ui;
 		*nc = 1 + ja;
+		NumberFree(x1,"GCD"); NumberFree(x2,"GCD"); NumberFree(x3,"GCD");
 		return;
 	}
 	ia = 1; ib = 0; ic = 0; id = 1;
@@ -1673,13 +1633,6 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
-#ifdef INDIVIDUALALLOC
-	if ( AN.GLscrat6 == 0 ) {
-		AN.GLscrat6 = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"GcdLong");
-		AN.GLscrat7 = AN.GLscrat6 + AM.MaxTal+2;
-		AN.GLscrat8 = AN.GLscrat7 + AM.MaxTal+2;
-	}
-#endif
 	if ( na == 1 && nb == 1 ) {
 #ifdef EXTRAGCD2
 		*c = (UWORD)GCD2((ULONG)*a,(ULONG)*b);
@@ -1727,17 +1680,18 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		GCD(a,na,b,nb,c,nc);
 #else
 #ifdef NEWGCD
-		UWORD *x3,*x1,*x2;
+		UWORD *x3,*x1,*x2, *GLscrat7, *GLscrat8;
 		WORD n1,n2,n3,n4;
 		WORD i, j;
 		x1 = c; x3 = a; n1 = i = na;
 		NCOPY(x1,x3,i);
-		x2 = AN.GLscrat8; x3 = b; n2 = i = nb;
+		GLscrat7 = NumberMalloc("GcdLong"); GLscrat8 = NumberMalloc("GcdLong");
+		x2 = GLscrat8; x3 = b; n2 = i = nb;
 		NCOPY(x2,x3,i);
 		x1 = c; i = 0;
 		while ( x1[0] == 0 ) { i += BITSINWORD; x1++; n1--; }
 		while ( ( x1[0] & 1 ) == 0 ) { i++; SCHUIF(x1,n1) }
-		x2 = AN.GLscrat8; j = 0;
+		x2 = GLscrat8; j = 0;
 		while ( x2[0] == 0 ) { j += BITSINWORD; x2++; n2--; }
 		while ( ( x2[0] & 1 ) == 0 ) { j++; SCHUIF(x2,n2) }
 		if ( j > i ) j = i;		/* powers of two in GCD */
@@ -1753,7 +1707,7 @@ firstbig:
 				}
 				while ( ( x1[0] & 1 ) == 0 ) SCHUIF(x1,n1)
 				if ( n1 == 1 ) {
-					if ( DivLong(x2,n2,x1,n1,AN.GLscrat7,&n3,x2,&n4) ) goto GcdErr;
+					if ( DivLong(x2,n2,x1,n1,GLscrat7,&n3,x2,&n4) ) goto GcdErr;
 					n2 = n4;
 					if ( n2 == 0 ) {
 						i = n1; x2 = c; NCOPY(x2,x1,i);
@@ -1784,7 +1738,7 @@ lastbig:
 				}
 				while ( ( x2[0] & 1 ) == 0 ) SCHUIF(x2,n2)
 				if ( n2 == 1 ) {
-					if ( DivLong(x1,n1,x2,n2,AN.GLscrat7,&n3,x1,&n4) ) goto GcdErr;
+					if ( DivLong(x1,n1,x2,n2,GLscrat7,&n3,x1,&n4) ) goto GcdErr;
 					n1 = n4;
 					if ( n1 == 0 ) {
 						x1 = c;
@@ -1837,24 +1791,30 @@ lastbig:
 			}
 		}
 		*nc = n1;
+		NumberFree(GLscrat7,"GcdLong"); NumberFree(GLscrat8,"GcdLong");
 #else
-		UWORD *x1,*x2,*x3,*x4;
+		UWORD *x1,*x2,*x3,*x4,*c1,*c2;
 		WORD n1,n2,n3,n4,i;
 		x1 = c; x3 = a; n1 = i = na;
 		NCOPY(x1,x3,i);
-		x2 = AN.GLscrat8; x3 = b; n2 = i = nb;
-		NCOPY(x2,x3,i);
-		x1 = c; x2 = AN.GLscrat8; x3 = AN.GLscrat7; x4 = AN.GLscrat6;
+		x1 = c; c1 = x2 = NumberMalloc("GcdLong"); x3 = NumberMalloc("GcdLong"); x4 = NumberMalloc("GcdLong");
+		c2 = b; n2 = i = nb;
+		NCOPY(c1,c2,i);
 		for(;;){
 			if ( DivLong(x1,n1,x2,n2,x4,&n4,x3,&n3) ) goto GcdErr;
 			if ( !n3 ) { x1 = x2; n1 = n2; break; }
 			if ( DivLong(x2,n2,x3,n3,x4,&n4,x1,&n1) ) goto GcdErr;
 			if ( !n1 ) { x1 = x3; n1 = n3; break; }
 			if ( DivLong(x3,n3,x1,n1,x4,&n4,x2,&n2) ) goto GcdErr;
-			if ( !n2 ) { *nc = n1; return(0); }
+			if ( !n2 ) {
+				*nc = n1;
+				NumberFree(x2,"GcdLong"); NumberFree(x3,"GcdLong"); NumberFree(x4,"GcdLong");
+				return(0);
+			}
 		}
 		*nc = i = n1;
 		NCOPY(c,x1,i);
+		NumberFree(x2,"GcdLong"); NumberFree(x3,"GcdLong"); NumberFree(x4,"GcdLong");
 #endif
 #endif
 	}
@@ -1938,6 +1898,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	GETBIDENTITY
 	UWORD x,y,z;
 	UWORD *x1,*x2,*x3,*x4,*x5,*d;
+	UWORD *GLscrat6, *GLscrat7, *GLscrat8, *GLscrat9, *GLscrat10;
 	WORD n1,n2,n3,n4,n5,i;
 	RLONG lx,ly,lz;
 	LONG ma1, ma2, mb1, mb2, mc1, mc2, m;
@@ -1949,15 +1910,6 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
-#ifdef INDIVIDUALALLOC
-	if ( AN.GLscrat6 == 0 ) {
-		AN.GLscrat6 = (UWORD *)Malloc1(5*(AM.MaxTal+4)*sizeof(UWORD),"GcdLong");
-		AN.GLscrat7 = AN.GLscrat6 + AM.MaxTal+4;
-		AN.GLscrat8 = AN.GLscrat7 + AM.MaxTal+4;
-		AN.GLscrat9 = AN.GLscrat8 + AM.MaxTal+4;
-		AN.GLscrat10 = AN.GLscrat9 + AM.MaxTal+4;
-	}
-#endif
 /*
   	#[ GMP stuff :
 */
@@ -1965,20 +1917,20 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	if ( na > 3 && nb > 3 ) {
 		int ii;
 		mp_limb_t *upa, *upb, *upc, xx;
-		UWORD *uw;
+		UWORD *uw, *u1, *u2;
 		unsigned int tcounta, tcountb, tcounta1, tcountb1;
 		mp_size_t ana, anb, anc;
 
-		uw = AN.GLscrat6;
-		upa = (mp_limb_t *)(AN.GLscrat6);
+		u1 = uw = NumberMalloc("GcdLong");
+		upa = (mp_limb_t *)u1;
 		ana = na; tcounta1 = 0;
 		while ( a[0] == 0 ) { a++; ana--; tcounta1++; }
 		for ( ii = 0; ii < ana; ii++ ) { *uw++ = *a++; }
 		if ( ( ana & 1 ) != 0 ) { *uw = 0; ana++; }
 		ana >>= 1;
 
-		uw = AN.GLscrat7;
-		upb = (mp_limb_t *)(AN.GLscrat7);
+		u2 = uw = NumberMalloc("GcdLong");
+		upb = (mp_limb_t *)u2;
 		anb = nb; tcountb1 = 0;
 		while ( b[0] == 0 ) { b++; anb--; tcountb1++; }
 		for ( ii = 0; ii < anb; ii++ ) { *uw++ = *b++; }
@@ -2001,7 +1953,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			if ( upb[anb-1] == 0 ) anb--;
 		}
 
-		upc = (mp_limb_t *)(AN.GLscrat8);
+		upc = (mp_limb_t *)(NumberMalloc("GcdLong"));
 		if ( ( ana > anb ) || ( ( ana == anb ) && ( upa[ana-1] >= upb[ana-1] ) ) ) {
 			anc = mpn_gcd(upc,upa,ana,upb,anb);
 		}
@@ -2025,14 +1977,63 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		for ( ii = 0; ii < tcounta; ii++ ) *c++ = 0;
 		for ( ii = 0; ii < anc; ii++ ) *c++ = *uw++;
 		*nc = anc + tcounta;
-
+		NumberFree(u1,"GcdLong"); NumberFree(u2,"GcdLong"); NumberFree((UWORD *)(upc),"GcdLong");
 		return(0);
 	}
 #endif
 /*
   	#] GMP stuff : 
 */
+/*
+  	#[ Easy cases :
+*/
+	if ( na == 1 && nb == 1 ) {
+		x = *a;
+		y = *b;
+		do { z = x % y; x = y; } while ( ( y = z ) != 0 );
+		*c = x;
+		*nc = 1;
+		return(0);
+	}
+	else if ( na <= 2 && nb <= 2 ) {
+		if ( na == 2 ) { lx = (((RLONG)(a[1]))<<BITSINWORD) + *a; }
+		else { lx = *a; }
+		if ( nb == 2 ) { ly = (((RLONG)(b[1]))<<BITSINWORD) + *b; }
+		else { ly = *b; }
+		if ( lx < ly ) { lz = lx; lx = ly; ly = lz; }
+#if ( BITSINWORD == 16 )
+		do {
+			lz = lx % ly; lx = ly;
+		} while ( ( ly = lz ) != 0 );
+#else
+		do {
+			lz = lx % ly; lx = ly;
+		} while ( ( ly = lz ) != 0 && ( lx & AWORDMASK ) != 0 );
+		if ( ly ) {
+			x = (UWORD)lx; y = (UWORD)ly;
+			do { *c = x % y; x = y; } while ( ( y = *c ) != 0 );
+			*c = x;
+			*nc = 1;
+		}
+		else
+#endif
+		{
+			*c++ = (UWORD)lx;
+			if ( ( *c = (UWORD)(lx >> BITSINWORD) ) != 0 ) *nc = 2;
+			else *nc = 1;
+		}
+		return(0);
+	}
+/*
+  	#] Easy cases : 
+*/
+	GLscrat6 = NumberMalloc("GcdLong"); GLscrat7 = NumberMalloc("GcdLong");
+	GLscrat8 = NumberMalloc("GcdLong");
+	GLscrat9 = NumberMalloc("GcdLong"); GLscrat10 = NumberMalloc("GcdLong");
 restart:;
+/*
+  	#[ Easy cases :
+*/
 	if ( na == 1 && nb == 1 ) {
 		x = *a;
 		y = *b;
@@ -2068,9 +2069,13 @@ restart:;
 			else *nc = 1;
 		}
 	}
+/*
+  	#] Easy cases : 
+  	#[ Original code :
+*/
 	else if ( na < GCDMAX || nb < GCDMAX || na != nb ) {
 		if ( na < nb ) {
-			x2 = AN.GLscrat8; x3 = a; n2 = i = na;
+			x2 = GLscrat8; x3 = a; n2 = i = na;
 			NCOPY(x2,x3,i);
 			x1 = c; x3 = b; n1 = i = nb;
 			NCOPY(x1,x3,i);
@@ -2078,16 +2083,16 @@ restart:;
 		else {
 			x1 = c; x3 = a; n1 = i = na;
 			NCOPY(x1,x3,i);
-			x2 = AN.GLscrat8; x3 = b; n2 = i = nb;
+			x2 = GLscrat8; x3 = b; n2 = i = nb;
 			NCOPY(x2,x3,i);
 		}
-		x1 = c; x2 = AN.GLscrat8; x3 = AN.GLscrat7; x4 = AN.GLscrat6;
+		x1 = c; x2 = GLscrat8; x3 = GLscrat7; x4 = GLscrat6;
 		for(;;){
 			if ( DivLong(x1,n1,x2,n2,x4,&n4,x3,&n3) ) goto GcdErr;
 			if ( !n3 ) { x1 = x2; n1 = n2; break; }
 			if ( n2 <= 2 ) { a = x2; b = x3; na = n2; nb = n3; goto restart; }
 			if ( n3 >= GCDMAX && n2 == n3 ) {
-				a = AN.GLscrat9; b = AN.GLscrat10; na = n2; nb = n3;
+				a = GLscrat9; b = GLscrat10; na = n2; nb = n3;
 				for ( i = 0; i < na; i++ ) a[i] = x2[i];
 				for ( i = 0; i < nb; i++ ) b[i] = x3[i];
 				goto newtrick;
@@ -2096,16 +2101,16 @@ restart:;
 			if ( !n1 ) { x1 = x3; n1 = n3; break; }
 			if ( n3 <= 2 ) { a = x3; b = x1; na = n3; nb = n1; goto restart; }
 			if ( n1 >= GCDMAX && n1 == n3 ) {
-				a = AN.GLscrat9; b = AN.GLscrat10; na = n3; nb = n1;
+				a = GLscrat9; b = GLscrat10; na = n3; nb = n1;
 				for ( i = 0; i < na; i++ ) a[i] = x3[i];
 				for ( i = 0; i < nb; i++ ) b[i] = x1[i];
 				goto newtrick;
 			}
 			if ( DivLong(x3,n3,x1,n1,x4,&n4,x2,&n2) ) goto GcdErr;
-			if ( !n2 ) { *nc = n1; return(0); }
+			if ( !n2 ) { *nc = n1; goto normalend; }
 			if ( n1 <= 2 ) { a = x1; b = x2; na = n1; nb = n2; goto restart; }
 			if ( n2 >= GCDMAX && n2 == n1 ) {
-				a = AN.GLscrat9; b = AN.GLscrat10; na = n1; nb = n2;
+				a = GLscrat9; b = GLscrat10; na = n1; nb = n2;
 				for ( i = 0; i < na; i++ ) a[i] = x1[i];
 				for ( i = 0; i < nb; i++ ) b[i] = x2[i];
 				goto newtrick;
@@ -2114,6 +2119,10 @@ restart:;
 		*nc = i = n1;
 		NCOPY(c,x1,i);
 	}
+/*
+  	#] Original code : 
+  	#[ New code :
+*/
 	else {
 /*
 		This is the new algorithm starting at step 3.
@@ -2143,10 +2152,10 @@ newtrick:;
 	7: Now construct the new quantities
 		a = ma1*aa+ma2*bb and b = mb1*aa+mb2*bb
 */
-		x1 = AN.GLscrat6;
-		x2 = AN.GLscrat7;
-		x3 = AN.GLscrat8;
-		x5 = AN.GLscrat10;
+		x1 = GLscrat6;
+		x2 = GLscrat7;
+		x3 = GLscrat8;
+		x5 = GLscrat10;
 		if ( ma1 < 0 ) {
 			ma1 = -ma1;
 			x1[0] = (UWORD)ma1;
@@ -2206,8 +2215,8 @@ newtrick:;
 		if ( MulLong(b,nb,x1,n1,x3,&n3) ) goto GcdErr;
 		if ( AddLong(x2,n2,x3,n3,x5,&n5) ) goto GcdErr;
 		a = c; na = n4; b = x5; nb = n5;
-		if ( nb == 0 ) { *nc = n4; return(0); }
-		x4 = AN.GLscrat9; 
+		if ( nb == 0 ) { *nc = n4; goto normalend; }
+		x4 = GLscrat9; 
 		for ( i = 0; i < na; i++ ) x4[i] = a[i];
 		a = x4;
 		if ( na < 0 ) na = -na;
@@ -2231,18 +2240,26 @@ newtrick:;
 			if ( n4 == 0 ) {
 				*nc = nb;
 				for ( i = 0; i < nb; i++ ) c[i] = b[i];
-				return(0);
+				goto normalend;
 			}
 			if ( n4 < 0 ) n4 = -n4;
 			a = b; na = nb; b = x4; nb = n4;
 		}
 		goto restart;
+/*
+  	#] New code : 
+*/
 	}
+normalend:
+	NumberFree(GLscrat6,"GcdLong"); NumberFree(GLscrat7,"GcdLong"); NumberFree(GLscrat8,"GcdLong");
+	NumberFree(GLscrat9,"GcdLong"); NumberFree(GLscrat10,"GcdLong");
 	return(0);
 GcdErr:
 	LOCK(ErrorMessageLock);
 	MesCall("GcdLong");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(GLscrat6,"GcdLong"); NumberFree(GLscrat7,"GcdLong"); NumberFree(GLscrat8,"GcdLong");
+	NumberFree(GLscrat9,"GcdLong"); NumberFree(GLscrat10,"GcdLong");
 	SETERROR(-1)
 }
 
@@ -2257,33 +2274,26 @@ WORD GetBinom(UWORD *a, WORD *na, WORD i1, WORD i2)
 {
 	GETIDENTITY
 	WORD j, k, l;
+	UWORD *GBscrat3, *GBscrat4;
 	if ( i1-i2 < i2 ) i2 = i1-i2;
 	if ( i2 == 0 ) { *a = 1; *na = 1; return(0); }
 	if ( i2 > i1 ) { *a = 0; *na = 0; return(0); }
 	*a = i1; *na = 1;
-#ifdef INDIVIDUALALLOC
-	if ( AN.GBscrat3 == 0 ) {
-		AN.GBscrat3 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"GetBinom");
-		AN.GBscrat4 = AN.GBscrat3 + AM.MaxTal+2;
-	}
-#endif
+	GBscrat3 = NumberMalloc("GetBinom"); GBscrat4 = NumberMalloc("GetBinom");
 	for ( j = 2; j <= i2; j++ ) {
-		AN.GBscrat3[0] = i1+1-j;
-		if ( MulLong(a,*na,AN.GBscrat3,(WORD)1,AN.GBscrat4,&k) ) {
-			LOCK(ErrorMessageLock);
-			MesCall("GetBinom");
-			UNLOCK(ErrorMessageLock);
-			SETERROR(-1)
-		}
-		AN.GBscrat3[0] = j;
-		if ( DivLong(AN.GBscrat4,k,AN.GBscrat3,(WORD)1,a,na,AN.GBscrat3,&l) ) {
-			LOCK(ErrorMessageLock);
-			MesCall("GetBinom");
-			UNLOCK(ErrorMessageLock);
-			SETERROR(-1)
-		}
+		GBscrat3[0] = i1+1-j;
+		if ( MulLong(a,*na,GBscrat3,(WORD)1,GBscrat4,&k) ) goto CalledFrom;
+		GBscrat3[0] = j;
+		if ( DivLong(GBscrat4,k,GBscrat3,(WORD)1,a,na,GBscrat3,&l) ) goto CalledFrom;
 	}
+	NumberFree(GBscrat3,"GetBinom"); NumberFree(GBscrat4,"GetBinom");
 	return(0);
+CalledFrom:
+	LOCK(ErrorMessageLock);
+	MesCall("GetBinom");
+	UNLOCK(ErrorMessageLock);
+	NumberFree(GBscrat3,"GetBinom"); NumberFree(GBscrat4,"GetBinom");
+	SETERROR(-1)
 }
 
 /*
@@ -2332,14 +2342,6 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 	guessbits = numbits / power;
 	if ( guessbits <= 0 ) return(1); /* root < 2 and 1 we did already */
 	nb = guessbits/BITSINWORD;
-#ifdef INDIVIDUALALLOC
-	if ( AN.TLscrat1 == 0 ) {
-		AN.TLscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"TakeLongRoot");
-		AN.TLscrat2 = AN.TLscrat1 + AM.MaxTal + 2;
-		AN.TLscrat3 = AN.TLscrat2 + AM.MaxTal + 2;
-		AN.TLscrat4 = AN.TLscrat3 + AM.MaxTal + 2;
-	}
-#endif
 /*
 	The recursion is:
 	(b'-b) = (a/b^(power-1)-b)/n
@@ -2349,7 +2351,8 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 	Termination can be tricky. When a/c has no remainder and = b we have a root.
 	When d = b but the remainder of a/c != 0, there is definitely no root.
 */
-	b = AN.TLscrat1; c = AN.TLscrat2; d = AN.TLscrat3; e = AN.TLscrat4; 
+	b = NumberMalloc("TakeLongRoot"); c = NumberMalloc("TakeLongRoot");
+	d = NumberMalloc("TakeLongRoot"); e = NumberMalloc("TakeLongRoot"); 
 	for ( i = 0; i < nb; i++ ) { b[i] = 0; }
 	b[nb] = 1 << (guessbits%BITSINWORD);
 	nb++;
@@ -2363,10 +2366,16 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 		nb = -nb;
 		if ( nc == 0 ) {
 			if ( ne == 0 ) break;
-			else return(1);
+			else {
+				NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
+				NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
+				return(1);
+			}
 		}
 		DivLong(c,nc,(UWORD *)(&power),1,d,&nd,e,&ne);
 		if ( nd == 0 ) {
+			NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
+			NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
 			return(1);
 /*
 			This code tries b+1 as a final possibility.
@@ -2379,7 +2388,11 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 			nb = -nb;
 			if ( SubLong(d,nd,b,nb,c,&nc) ) goto TLcall;
 			nb = -nb;
-			if ( nc != 0 ) return(1);
+			if ( nc != 0 ) {
+				NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
+				NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
+				return(1);
+			}
 			break;
 */
 		}
@@ -2388,18 +2401,22 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 	for ( i = 0; i < nb; i++ ) a[i] = b[i];
 	if ( *n < 0 ) *n = -nb;
 	else          *n =  nb;
+	NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
+	NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
 	return(0);
 TLcall:
 	LOCK(ErrorMessageLock);
 	MesCall("TakeLongRoot");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
+	NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
 	Terminate(-1);
 	return(-1);
 }
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2417,12 +2434,6 @@ WORD CompCoef(WORD *term1, WORD *term2)
 	WORD n1,n2,n3,*a;
 	GETCOEF(term1,n1);
 	GETCOEF(term2,n2);
-#ifdef INDIVIDUALALLOC
-	if ( AN.CCscratE == 0 ) {
-		AN.CCscratE = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"CompCoef");
-	}
-#endif
-	c = AN.CCscratE;
 	if ( term1[1] == 0 && n1 == 1 ) {
 		if ( term2[1] == 0 && n2 == 1 ) return(0);
 		if ( n2 < 0 ) return(1);
@@ -2450,12 +2461,15 @@ WORD CompCoef(WORD *term1, WORD *term2)
 	The next call should get dedicated code, as AddRat does more than
 	strictly needed. Also more attention should be given to overflow.
 */
+	c = NumberMalloc("CompCoef");
 	if ( AddRat(BHEAD (UWORD *)term1,n1,(UWORD *)term2,-n2,c,&n3) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("CompCoef");
 		UNLOCK(ErrorMessageLock);
+		NumberFree(c,"CompCoef");
 		SETERROR(-1)
 	}
+	NumberFree(c,"CompCoef");
 	return(n3);
 }
 
@@ -2518,21 +2532,12 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 	n1 = *na;
 	if ( !par ) UnPack(a,n1,&tdenom,&tnumer);
 	else { tnumer = n1; }
-#ifdef INDIVIDUALALLOC
-	if ( AT.TMscrat1 == 0 ) {
-		AT.TMscrat1 = (UWORD *)Malloc1(6*(AM.MaxTal+2)*sizeof(UWORD),"TakeModulus");
-		AT.TMscrat2 = AT.TMscrat1 + AM.MaxTal+2;
-		AT.TMscrat3 = AT.TMscrat2 + AM.MaxTal+2;
-		AT.TMscrat4 = AT.TMscrat3 + AM.MaxTal+2;
-		AT.TMscrat5 = AT.TMscrat4 + AM.MaxTal+2;
-		AT.TMscrat6 = AT.TMscrat5 + AM.MaxTal+2;
-	}
-#endif
-	c = AT.TMscrat1; d = AT.TMscrat2; e = AT.TMscrat3; f = AT.TMscrat4; g = AT.TMscrat5; h = AT.TMscrat6;
+	c = NumberMalloc("TakeModulus"); d = NumberMalloc("TakeModulus"); e = NumberMalloc("TakeModulus");
+	f = NumberMalloc("TakeModulus"); g = NumberMalloc("TakeModulus"); h = NumberMalloc("TakeModulus");
 	n1 = ABS(n1);
 	if ( DivLong(a,tnumer,(UWORD *)cmodvec,nmod,
 		c,&nh,a,&tnumer) ) goto ModErr;
-	if ( par ) { *na = tnumer; return(0); }
+	if ( par ) { *na = tnumer; goto normalreturn; }
 	if ( DivLong(a+n1,tdenom,(UWORD *)cmodvec,nmod,c,&nh,a+n1,&tdenom) ) goto ModErr;
 	if ( !tdenom ) {
 		LOCK(ErrorMessageLock);
@@ -2551,6 +2556,8 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 			FiniLine();
 		}
 		UNLOCK(ErrorMessageLock);
+		NumberFree(c,"TakeModulus"); NumberFree(d,"TakeModulus"); NumberFree(e,"TakeModulus");
+		NumberFree(f,"TakeModulus"); NumberFree(g,"TakeModulus"); NumberFree(h,"TakeModulus");
 		return(-1);
 	}
 	x2 = (UWORD *)cmodvec; x1 = c; i = nmod; while ( --i >= 0 ) *x1++ = *x2++;
@@ -2576,17 +2583,22 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 	if ( y5 < 0 && AddLong((UWORD *)cmodvec,nmod,x5,y5,x5,&y5) ) goto ModErr;
 	if ( MulLong(a,tnumer,x5,y5,c,&y3) ) goto ModErr;
 	if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;
-	if ( !tdenom ) { *na = 0; return(0); }
+	if ( !tdenom ) { *na = 0; goto normalreturn; }
 	if ( tdenom < 0 ) SubPLon((UWORD *)cmodvec,nmod,a,-tdenom,a,&tdenom);
 	*na = i = tdenom;
 	a += i;
 	*a++ = 1;
 	while ( --i > 0 ) *a++ = 0;
+normalreturn:
+	NumberFree(c,"TakeModulus"); NumberFree(d,"TakeModulus"); NumberFree(e,"TakeModulus");
+	NumberFree(f,"TakeModulus"); NumberFree(g,"TakeModulus"); NumberFree(h,"TakeModulus");
 	return(0);
 ModErr:
 	LOCK(ErrorMessageLock);
 	MesCall("TakeModulus");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(c,"TakeModulus"); NumberFree(d,"TakeModulus"); NumberFree(e,"TakeModulus");
+	NumberFree(f,"TakeModulus"); NumberFree(g,"TakeModulus"); NumberFree(h,"TakeModulus");
 	SETERROR(-1)
 }
 
@@ -2635,26 +2647,22 @@ WORD MakeModTable()
 	else {
 		GETIDENTITY
 		WORD nScrat, n2;
-#ifdef INDIVIDUALALLOC
-		if ( AN.MMscrat7 == 0 ) {
-			AN.MMscrat7 = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"MakeModTable");
-			AN.MMscratC = AN.MMscrat7 + AM.MaxTal+2;
-		}
-#endif
-		*AN.MMscratC = 1;
+		UWORD *MMscrat7 = NumberMalloc("MakeModTable"), *MMscratC = NumberMalloc("MakeModTable");
+		*MMscratC = 1;
 		nScrat = 1;
 		j = size << 1;
 		for ( i = 0; i < j; i+=2 ) { AC.modpowers[i] = 0; AC.modpowers[i+1] = 0; }
 		for ( i = 0; i < size; i++ ) {
-			j = *AN.MMscratC + (((LONG)AN.MMscratC[1])<<BITSINWORD);
+			j = *MMscratC + (((LONG)MMscratC[1])<<BITSINWORD);
 			j <<= 1;
 			AC.modpowers[j] = (WORD)(i & WORDMASK);
 			AC.modpowers[j+1] = (WORD)(i >> BITSINWORD);
-			MulLong((UWORD *)AN.MMscratC,nScrat,(UWORD *)AC.powmod,
-			AC.npowmod,(UWORD *)AN.MMscrat7,&n2);
-			TakeModulus(AN.MMscrat7,&n2,AC.cmod,AC.ncmod,1);
-			*AN.MMscratC = *AN.MMscrat7; AN.MMscratC[1] = AN.MMscrat7[1]; nScrat = n2;
+			MulLong((UWORD *)MMscratC,nScrat,(UWORD *)AC.powmod,
+			AC.npowmod,(UWORD *)MMscrat7,&n2);
+			TakeModulus(MMscrat7,&n2,AC.cmod,AC.ncmod,1);
+			*MMscratC = *MMscrat7; MMscratC[1] = MMscrat7[1]; nScrat = n2;
 		}
+		NumberFree(MMscrat7,"MakeModTable"); NumberFree(MMscratC,"MakeModTable");
 		j = size << 1;
 		for ( i = 4; i < j; i+=2 ) {
 			if ( AC.modpowers[i] == 0 && AC.modpowers[i+1] == 0 ) {

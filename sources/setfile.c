@@ -79,7 +79,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -126,7 +126,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -257,7 +257,7 @@ restart:;
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -277,7 +277,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -329,7 +329,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -678,9 +678,6 @@ int AllocSetups()
 		AM.TempDir = strDup1((UBYTE *)(sp->value),"tempdir");
 	}
 */
-#ifndef WITHPTHREADS
-	AllocScratchBuffers();
-#endif
 	return(error);
 }
 
@@ -740,7 +737,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -871,7 +868,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -896,7 +893,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName : 
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -944,7 +941,7 @@ FILEHANDLE *AllocFileHandle()
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -963,7 +960,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -974,7 +971,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1053,7 +1050,7 @@ nextline:;
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -1078,105 +1075,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
- 		#[ AllocScratchBuffers :
-*/
-
-#define SETNUMBUF(x) { x = buffer; buffer += (AM.MaxTal+4); }
-#define SETNUMBUFN(x,n) { x = buffer; buffer += (AM.MaxTal+4)*n; }
-
-int AllocScratchBuffers()
-{
-	GETIDENTITY
-	UWORD *buffer;
-	int numbuffers;
-	numbuffers = 63;
-#ifdef EXTRAGCD
-	numbuffers += 3;
-#endif
-#ifdef CHINREM
-	numbuffers += 3;
-#endif
-	buffer = (UWORD *)Malloc1(numbuffers*(AM.MaxTal+4)*sizeof(UWORD),"Scrat buffers");
-	if ( buffer == 0 ) return(-1);
-
-	SETNUMBUFN(AN.EAscrat,2)
-#ifdef CHINREM
-	SETNUMBUF(AN.CRscrat1)
-	SETNUMBUF(AN.CRscrat2)
-	SETNUMBUF(AN.CRscrat3)
-#endif
-	SETNUMBUF(AN.GCDbuffer)
-	SETNUMBUF(AN.GCDbuffer2)
-	SETNUMBUF(AN.LCMbuffer)
-	SETNUMBUF(AN.LCMb)
-	SETNUMBUF(AN.LCMc)
-	SETNUMBUF(AN.DIscratC)
-	SETNUMBUF(AN.DIscratD)
-	SETNUMBUFN(AN.DIscratE,2)
-	SETNUMBUF(AN.PIFscrat )
-	SETNUMBUF(AN.PIFscrat1)
-	SETNUMBUF(AN.PIFscrat2)
-	SETNUMBUF(AN.Myscrat1)
-	SETNUMBUF(AN.Myscrat2)
-	SETNUMBUF(AN.Dyscrat1)
-	SETNUMBUF(AN.Dyscrat2)
-	SETNUMBUF(AN.ARscrat1)
-	SETNUMBUF(AN.ARscrat2)
-	SETNUMBUF(AN.ARscrat3)
-	SETNUMBUF(AN.ARscrat4)
-	SETNUMBUF(AN.MRscrat1)
-	SETNUMBUF(AN.MRscrat2)
-	SETNUMBUF(AN.MRscrat3)
-	SETNUMBUF(AN.MRscrat4)
-	SETNUMBUF(AN.Siscrat5)
-	SETNUMBUF(AN.Siscrat6)
-	SETNUMBUF(AN.Siscrat7)
-	SETNUMBUF(AN.Siscrat8)
-	SETNUMBUF(AN.DLscrat9)
-	SETNUMBUF(AN.DLscratA)
-	SETNUMBUF(AN.DLscratB)
-	SETNUMBUF(AN.DLscratC)
-	SETNUMBUF(AN.RPscratA)
-	SETNUMBUF(AN.RPscratB)
-	SETNUMBUF(AN.PLscratA)
-#ifdef EXTRAGCD
-	SETNUMBUF(AN.GCscrat6)
-	SETNUMBUF(AN.GCscrat7)
-	SETNUMBUF(AN.GCscrat8)
-#endif
-	SETNUMBUF(AN.GLscrat6)
-	SETNUMBUF(AN.GLscrat7)
-	SETNUMBUF(AN.GLscrat8)
-	SETNUMBUF(AN.GLscrat9)
-	SETNUMBUF(AN.GLscrat10)
-	SETNUMBUF(AN.GBscrat3)
-	SETNUMBUF(AN.GBscrat4)
-	SETNUMBUF(AN.TLscrat1)
-	SETNUMBUF(AN.TLscrat2)
-	SETNUMBUF(AN.TLscrat3)
-	SETNUMBUF(AN.TLscrat4)
-	SETNUMBUF(AN.CCscratE)
-	SETNUMBUF(AT.TMscrat1)
-	SETNUMBUF(AT.TMscrat2)
-	SETNUMBUF(AT.TMscrat3)
-	SETNUMBUF(AT.TMscrat4)
-	SETNUMBUF(AT.TMscrat5)
-	SETNUMBUF(AT.TMscrat6)
-	SETNUMBUF(AN.MMscrat7)
-	SETNUMBUF(AN.MMscratC)
-
-	SETNUMBUF(AN.POscrat1)
-	SETNUMBUF(AN.POscrat2)
-	SETNUMBUF(AN.POscrat3)
-	SETNUMBUF(AN.POscrat4)
-	SETNUMBUF(AN.POscratg)
-	SETNUMBUF(AN.POscrath)
-	return(0);
-}
-
-/*
- 		#] AllocScratchBuffers : 
+ 		#] TryEnvironment :
 	#] Setups :
 */
 

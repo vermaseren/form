@@ -264,8 +264,16 @@ NextWV:
 			wv += wv[1];
 			n--;
 			if ( n > 0 ) {
-				while ( *wv == FROMSET || *wv == SETTONUM
-				|| ( *wv == LOADDOLLAR && n > 0 ) ) { wv += wv[1]; wm++; n--; }
+				while ( n > 0 && ( *wv == FROMSET || *wv == SETTONUM
+				|| *wv == LOADDOLLAR ) ) { wv += wv[1]; wm++; n--; }
+/*              
+                Freak problem: doesn't test for n and ran into a reamining
+                code equal to SETTONUM followed by a big number and then
+                ran out of the memory.
+
+                while ( *wv == FROMSET || *wv == SETTONUM
+                || ( *wv == LOADDOLLAR && n > 0 ) ) { wv += wv[1]; wm++; n--; }
+*/
 			}
 		} while ( n > 0 );
 	}

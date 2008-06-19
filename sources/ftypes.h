@@ -352,6 +352,7 @@ typedef int (*TFUN1)();
 #define SETEXP 11
 #define FUNCTION 20
 
+#define ARGFIELD 15
 #define SNUMBER 16
 #define LNUMBER 17
 #define HAAKJE 18

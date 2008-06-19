@@ -428,8 +428,6 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.comind[5] = 1;
 		AT.comind[6] = 3;
 
-		AllocScratchBuffers();
-
 		AT.inprimelist = -1;
 		AT.sizeprimelist = 0;
 		AT.primelist = 0;
@@ -700,7 +698,6 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		}		
 	}
 	ReserveTempFiles(2);
-	AllocScratchBuffers();
 	return(B);
 OnError:;
 	LOCK(ErrorMessageLock);

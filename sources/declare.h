@@ -217,6 +217,30 @@ long WinTimer();
 #endif
 
 /*
+	Macro's for memory management. This can be done by routines, but that
+	would be slower. Inline routines could do this, but we don't want to
+	leave this to the friendliness of the compiler(s).
+	The routines can be found in the file tools.c
+*/
+#define MEMORYMACROS
+
+#ifdef MEMORYMACROS
+
+#define TermMalloc(x) ( (AT.TermMemTop <= 0 ) ? TermMallocAddMemory(BHEAD0), AT.TermMemHeap[--AT.TermMemTop]: AT.TermMemHeap[--AT.TermMemTop] )
+#define NumberMalloc(x) ( (AT.NumberMemTop <= 0 ) ? NumberMallocAddMemory(BHEAD0), AT.NumberMemHeap[--AT.NumberMemTop]: AT.NumberMemHeap[--AT.NumberMemTop] )
+#define TermFree(TermMem,x) AT.TermMemHeap[AT.TermMemTop++] = (WORD *)(TermMem)
+#define NumberFree(NumberMem,x) AT.NumberMemHeap[AT.NumberMemTop++] = (UWORD *)(NumberMem)
+
+#else
+
+#define TermMalloc(x) TermMalloc2(BHEAD (char *)(x))
+#define NumberMalloc(x) NumberMalloc2(BHEAD (char *)(x))
+#define TermFree(x,y) TermFree2(BHEAD (WORD *)(x),(char *)(y))
+#define NumberFree(x,y) NumberFree2(BHEAD (UWORD *)(x),(char *)(y))
+
+#endif
+
+/*
   	#] Macro's :
   	#[ Thread objects :
 */
@@ -643,7 +667,6 @@ extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
 extern int    RecalcSetups(VOID);
 extern int    AllocSetups(VOID);
 extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG);
-extern int    AllocScratchBuffers(VOID);
 extern VOID   AllocSortFileName(SORTING *);
 extern UBYTE *LoadInputFile(UBYTE *,int);
 extern UBYTE  GetInput(VOID);
@@ -1286,7 +1309,7 @@ extern WORD   InvertLongModular(PHEAD UWORD *,WORD,WORD,UWORD *,WORD *);
 extern int    PolyModGCD(POLYMOD *,POLYMOD *);
 extern int    PolyConvertToModulus(WORD *,POLYMOD *,WORD);
 extern WORD  *PolyConvertFromModulus(PHEAD POLYMOD *,WORD);
-extern WORD  *PolyChineseRemainder(PHEAD WORD *,WORD *,WORD *,WORD,WORD);
+extern WORD  *PolyChineseRemainder(PHEAD WORD *,WORD *,WORD *,WORD,WORD,UWORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
 extern WORD   ModShortPrime(UWORD *,WORD,WORD);
 extern int    AllocPolyModCoefs(POLYMOD *,WORD);
@@ -1319,6 +1342,15 @@ extern int    CheckRecoveryFile(VOID);
 extern char  *RecoveryFilename(VOID);
 extern int    DoRecovery(VOID);
 extern void   DoCheckpoint(VOID);
+
+extern VOID NumberMallocAddMemory(PHEAD0);
+extern VOID TermMallocAddMemory(PHEAD0);
+#ifndef MEMORYMACROS
+extern WORD *TermMalloc2(PHEAD char *text);
+extern VOID TermFree2(PHEAD WORD *term,char *text);
+extern UWORD *NumberMalloc2(PHEAD char *text);
+extern VOID NumberFree2(PHEAD UWORD *NumberMem,char *text);
+#endif
 
 /*
   	#] Declarations :

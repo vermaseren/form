@@ -9,7 +9,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ If statement :
  		#[ Syntax :
 
@@ -91,14 +91,6 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 	UWORD *coef1 = 0, *coef2, *coef3, *cc;
 	WORD ncoef1, ncoef2, ncoef3, i = 0, first, *r, acoef, ismul1, ismul2, j;
 	UWORD *Spac1, *Spac2;
-#ifdef INDIVIDUALALLOC
-	if ( AN.DIscratC == 0 ) {
-		AN.DIscratC = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"DoIfStatement");
-		AN.DIscratD = AN.DIscratC + AM.MaxTal + 2;
-		AN.DIscratE = AN.DIscratD + AM.MaxTal + 2;
-	}
-#endif
-	coef3 = AN.DIscratC; Spac1 = AN.DIscratD; Spac2 = AN.DIscratE;
 	ifstop = ifcode + ifcode[1];
 	ifp = ifcode + 3;
 	if ( ifp >= ifstop ) return(1);
@@ -169,6 +161,9 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 /*
 	Here is the composite condition.
 */
+	coef3 = NumberMalloc("DoIfStatement");
+	Spac1 = NumberMalloc("DoIfStatement");
+	Spac2 = (UWORD *)(TermMalloc("DoIfStatement"));
 	ncoef1 = 0; first = 1; ismul1 = 0;
 	do {
 		if ( !first ) {
@@ -453,6 +448,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 					goto donemul;
 				}
 				else if ( AddRat(BHEAD coef1,ncoef1,coef2,-ncoef2,coef3,&ncoef3) ) {
+					NumberFree(coef3,"DoIfStatement"); NumberFree(Spac1,"DoIfStatement"); TermFree(Spac2,"DoIfStatement");
 					MesCall("DoIfStatement"); return(-1);
 				}
 				switch ( ifp[-2] ) {
@@ -497,12 +493,13 @@ SkipCond:
 		ifp += ifp[1];
 	} while ( ifp < ifstop );
 
+	NumberFree(coef3,"DoIfStatement"); NumberFree(Spac1,"DoIfStatement"); TermFree(Spac2,"DoIfStatement");
 	if ( ncoef1 ) return(1);
 	else return(0);
 }
 
 /*
- 		#] DoIfStatement : 
+ 		#] DoIfStatement :
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -698,6 +695,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement : 
+  	#] If statement :
 */
 

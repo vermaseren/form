@@ -18,7 +18,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Polyno :
  		#[ PolynoAdd :
 
@@ -48,7 +48,7 @@ WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 }
 
 /*
- 		#] PolynoAdd : 
+ 		#] PolynoAdd :
  		#[ PolynoSub :
 
 		Subtraction of two polynomials.
@@ -82,7 +82,7 @@ WORD *PolynoSub(WORD *poly1, WORD *poly2)
 }
 
 /*
- 		#] PolynoSub : 
+ 		#] PolynoSub :
  		#[ PolynoMul :
 
 		Multiply term by term, normalize and put new bracket info if needed.
@@ -159,7 +159,7 @@ abortion:
 }
 
 /*
- 		#] PolynoMul : 
+ 		#] PolynoMul :
  		#[ PolynoDiv :
 */
 
@@ -287,7 +287,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoDiv : 
+ 		#] PolynoDiv :
  		#[ Polyno1Div :
 
 		Division of polynomials in a single variable
@@ -450,7 +450,7 @@ aborteer:
 }
 
 /*
- 		#] Polyno1Div : 
+ 		#] Polyno1Div :
  		#[ PolynoGCD :
 
 		GCD of two multivariate polynomials:
@@ -706,7 +706,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoGCD : 
+ 		#] PolynoGCD :
  		#[ Polyno1GCD :
 */
 
@@ -768,7 +768,7 @@ isone:
 }
 
 /*
- 		#] Polyno1GCD : 
+ 		#] Polyno1GCD :
  		#[ PolynoPrint :
 */
 
@@ -811,7 +811,7 @@ UBYTE *PolynoPrint(WORD *poly)
 }
 
 /*
- 		#] PolynoPrint : 
+ 		#] PolynoPrint :
  		#[ PolynoWrite :
 */
 
@@ -853,7 +853,7 @@ abowrite:
 }
 
 /*
- 		#] PolynoWrite : 
+ 		#] PolynoWrite :
  		#[ PolynoPushBracket :
 */
 
@@ -898,7 +898,7 @@ void PolynoPushBracket(WORD numofsymbol)
 }
 
 /*
- 		#] PolynoPushBracket : 
+ 		#] PolynoPushBracket :
  		#[ PolynoPopBracket :
 */
 
@@ -921,7 +921,7 @@ void PolynoPopBracket()
 }
 
 /*
- 		#] PolynoPopBracket : 
+ 		#] PolynoPopBracket :
  		#[ PolynoStart :
 */
 
@@ -946,7 +946,7 @@ void PolynoStart()
 }
 
 /*
- 		#] PolynoStart : 
+ 		#] PolynoStart :
  		#[ PolynoFinish :
 */
 
@@ -963,7 +963,7 @@ void PolynoFinish()
 }
 
 /*
- 		#] PolynoFinish : 
+ 		#] PolynoFinish :
  		#[ PolynoNormalize :
 */
 
@@ -1025,7 +1025,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoNormalize : 
+ 		#] PolynoNormalize :
  		#[ DoPolynomial :
 */
 
@@ -1142,7 +1142,7 @@ aborteer:
 }
 
 /*
- 		#] DoPolynomial : 
+ 		#] DoPolynomial :
  		#[ DoPolyGetRem :
 */
 
@@ -1192,7 +1192,7 @@ WORD DoPolyGetRem(WORD *term, WORD level)
 }
 
 /*
- 		#] DoPolyGetRem : 
+ 		#] DoPolyGetRem :
  		#[ CopyOfPolynomial :
 */
 
@@ -1210,7 +1210,7 @@ WORD *CopyOfPolynomial(WORD *poly)
 }
 
 /*
- 		#] CopyOfPolynomial : 
+ 		#] CopyOfPolynomial :
  		#[ PolynoUnify :
 
 		Divides all terms by the coefficient of the first term
@@ -1295,7 +1295,7 @@ WORD *PolynoUnify(WORD *poly, int par)
 }
 
 /*
- 		#] PolynoUnify : 
+ 		#] PolynoUnify :
  		#[ PolynoCoefNorm :
 
 		Routine takes a polynomial, brackets it in x, determines the
@@ -1380,7 +1380,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoCoefNorm : 
+ 		#] PolynoCoefNorm :
  		#[ MakePolynomial :
 
 		Converts an expression (par == 0) or a $-expression (par == 1)
@@ -1440,7 +1440,7 @@ aborteer:
 }
 
 /*
- 		#] MakePolynomial : 
+ 		#] MakePolynomial :
  		#[ DoPolynoNorm :
 */
 
@@ -1526,11 +1526,11 @@ int DoPolynoNorm(int par, WORD numexp, WORD numsym, WORD numdol)
 }
 
 /*
- 		#] DoPolynoNorm : 
+ 		#] DoPolynoNorm :
  		#[ PolynoIntFac :
 
 		Normalizes the polynomial such that all coefficients are integers.
-		We use AN.PIFscrat to collect the least common multiple of all
+		We use PIFscrat to collect the least common multiple of all
 		denominators.
 		This representation is selected to optimize wrt further GCD
 		calculations;
@@ -1541,19 +1541,14 @@ WORD *PolynoIntFac(WORD *poly)
 	GETIDENTITY
 	WORD *t, *w, *oldwork = AT.WorkPointer, *pbuffer;
 	WORD n,n1,ncoef,i;
-	WORD *coef;
+	WORD *coef, PIFnscrat, PIFnscrat1, PIFnscrat2;
+	UWORD *PIFscrat = NumberMalloc("PolynoIntFac"), 
+	      *PIFscrat1 = NumberMalloc("PolynoIntFac"), *PIFscrat2 = NumberMalloc("PolynoIntFac");
 	if ( ( poly = PolynoUnify(poly,1) ) == 0 ) goto PIFerror;
-#ifdef INDIVIDUALALLOC
-	if ( AN.PIFscrat == 0 ) {
-		AN.PIFscrat = (UWORD *)Malloc1(3*(AM.MaxTal+2)*sizeof(UWORD),"PolynoIntFac");
-		AN.PIFscrat1 = AN.PIFscrat +(AM.MaxTal+2);
-		AN.PIFscrat2 = AN.PIFscrat1+(AM.MaxTal+2);
-	}
-#endif
 /*
-	Collect the least common multiple in AN.PIFscrat
+	Collect the least common multiple in PIFscrat
 */
-	AN.PIFnscrat = 1; *AN.PIFscrat = 1; /* Start at value 1 */
+	PIFnscrat = 1; *PIFscrat = 1; /* Start at value 1 */
 	for ( t = poly; *t; ) {
 		t += *t;
 		n = (ABS(t[-1])-1)/2;
@@ -1561,23 +1556,23 @@ WORD *PolynoIntFac(WORD *poly)
 		while ( n > 1 && w[-1] == 0 ) { w--; n--; }
 		w -= n;
 		if ( n == 1 && *w == 1 ) continue; /* Take the easiest case */
-		if ( GcdLong(BHEAD AN.PIFscrat,AN.PIFnscrat,(UWORD *)w,n,AN.PIFscrat1,&AN.PIFnscrat1) )
+		if ( GcdLong(BHEAD PIFscrat,PIFnscrat,(UWORD *)w,n,PIFscrat1,&PIFnscrat1) )
 			goto PIFerror;
-		if ( DivLong(AN.PIFscrat,AN.PIFnscrat,AN.PIFscrat1,AN.PIFnscrat1,AN.PIFscrat2,&AN.PIFnscrat2,AN.PIFscrat1,&n1) )
+		if ( DivLong(PIFscrat,PIFnscrat,PIFscrat1,PIFnscrat1,PIFscrat2,&PIFnscrat2,PIFscrat1,&n1) )
 			goto PIFerror;
-		if ( MulLong(AN.PIFscrat2,AN.PIFnscrat2,(UWORD *)w,n,AN.PIFscrat,&AN.PIFnscrat) )
+		if ( MulLong(PIFscrat2,PIFnscrat2,(UWORD *)w,n,PIFscrat,&PIFnscrat) )
 			goto PIFerror;
 	}
-	n = AN.PIFnscrat;
+	n = PIFnscrat;
 /*
 	Now multiply the whole polynomial with this constant.
 */
-	if ( NewSort() ) { return(0); }
-	if ( NewSort() ) { LowerSortLevel(); return(0); }
+	if ( NewSort() ) goto PIFerror;
+	if ( NewSort() ) goto PIFerror1;
 	for ( t = poly; *t; ) {
 		w = oldwork;
 		i = *t;
-		if ( w + i + 2*AN.PIFnscrat > AT.WorkTop ) {
+		if ( w + i + 2*PIFnscrat > AT.WorkTop ) {
 			LOCK(ErrorMessageLock);
 			MesWork();
 			UNLOCK(ErrorMessageLock);
@@ -1588,7 +1583,7 @@ WORD *PolynoIntFac(WORD *poly)
 		ncoef = w[*w-1];
 		coef = w + *w - ABS(ncoef);		
 		ncoef = REDLENG(ncoef);
-		if ( Mully(BHEAD (UWORD *)coef,&ncoef,AN.PIFscrat,AN.PIFnscrat) ) goto PIFerror1;
+		if ( Mully(BHEAD (UWORD *)coef,&ncoef,PIFscrat,PIFnscrat) ) goto PIFerror1;
 		ncoef = INCLENG(ncoef);
         n1 = ABS(ncoef);
 		coef[n1-1] = ncoef;
@@ -1598,6 +1593,7 @@ WORD *PolynoIntFac(WORD *poly)
 	AT.WorkPointer = oldwork;
 	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) goto PIFerror1;
 	LowerSortLevel();
+	NumberFree(PIFscrat,"PolynoIntFac"); NumberFree(PIFscrat1,"PolynoIntFac"); NumberFree(PIFscrat2,"PolynoIntFac");
 	return(pbuffer);
 PIFerror1:
 	LowerSortLevel();
@@ -1605,11 +1601,12 @@ PIFerror:
 	LOCK(ErrorMessageLock);
 	MesCall("PolynoIntFac");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(PIFscrat,"PolynoIntFac"); NumberFree(PIFscrat1,"PolynoIntFac"); NumberFree(PIFscrat2,"PolynoIntFac");
 	return(0);
 }
 
 /*
- 		#] PolynoIntFac : 
+ 		#] PolynoIntFac :
 	#] Polyno :
   	#[ PolyNorm :
 
@@ -1633,5 +1630,5 @@ int PolyNorm(PHEAD WORD *term, WORD level, WORD numerator, WORD denominator)
 }
 
 /*
-  	#] PolyNorm : 
+  	#] PolyNorm :
 */

@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] include : 
+  	#] include :
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -38,6 +38,7 @@ WORD execarg(WORD *term, WORD level)
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
 	WORD kLCM = 0, kGCD = 0, kGCD2, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
 	int ii;
+	UWORD *EAscrat, *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
 	AT.WorkPointer += *term;
 	start = C->lhs[level];
 	AR.Cnumlhs = start[2];
@@ -293,13 +294,10 @@ HaveTodo:
 						determine for all elements of this argument the LCM of
 						the denominators and the GCD of the numerators.
 */
-						if ( AN.GCDbuffer == 0 ) {
-							AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
-							AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
-							AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
-							AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
-							AN.LCMc = AN.LCMb + AM.MaxTal+2;
-						}
+						GCDbuffer = NumberMalloc("execarg");
+						GCDbuffer2 = NumberMalloc("execarg");
+						LCMbuffer = NumberMalloc("execarg");
+						LCMb = NumberMalloc("execarg"); LCMc = NumberMalloc("execarg");
 						r4 = r + *r;
 						r1 = r + ARGHEAD;
 /*
@@ -312,12 +310,12 @@ HaveTodo:
 						k = REDLENG(j);
 						if ( k < 0 ) k = -k;
 						while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-						for ( kGCD = 0; kGCD < k; kGCD++ ) AN.GCDbuffer[kGCD] = r3[kGCD];
+						for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
 						k = REDLENG(j);
 						if ( k < 0 ) k = -k;
 						r3 += k;
 						while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-						for ( kLCM = 0; kLCM < k; kLCM++ ) AN.LCMbuffer[kLCM] = r3[kLCM];
+						for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
 						r1 = r2;
 /*
 						Now go through the rest of the terms in this argument.
@@ -329,37 +327,43 @@ HaveTodo:
 							k = REDLENG(j);
 							if ( k < 0 ) k = -k;
 							while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-							if ( ( ( AN.GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+							if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
 /*
 								GCD is already 1
 */
 							}
 							else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-								if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer2,&kGCD2) ) {
+								if ( GcdLong(BHEAD GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer2,&kGCD2) ) {
+									NumberFree(GCDbuffer,"execarg");
+									NumberFree(GCDbuffer2,"execarg");
+									NumberFree(LCMbuffer,"execarg");
+									NumberFree(LCMb,"execarg"); NumberFree(LCMc,"execarg");
 									goto execargerr;
 								}
 								kGCD = kGCD2;
-								for ( ii = 0; ii < kGCD; ii++ ) AN.GCDbuffer[ii] = AN.GCDbuffer2[ii];
+								for ( ii = 0; ii < kGCD; ii++ ) GCDbuffer[ii] = GCDbuffer2[ii];
 							}
 							else {
-								kGCD = 1; AN.GCDbuffer[0] = 1;
+								kGCD = 1; GCDbuffer[0] = 1;
 							}
 							k = REDLENG(j);
 							if ( k < 0 ) k = -k;
 							r3 += k;
 							while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-							if ( ( ( AN.LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+							if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
 								for ( kLCM = 0; kLCM < k; kLCM++ )
-									AN.LCMbuffer[kLCM] = r3[kLCM];
+									LCMbuffer[kLCM] = r3[kLCM];
 							}
 							else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
-								if ( GcdLong(BHEAD AN.LCMbuffer,kLCM,(UWORD *)r3,k,AN.LCMb,&kkLCM) ) {
+								if ( GcdLong(BHEAD LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
+									NumberFree(GCDbuffer,"execarg"); NumberFree(GCDbuffer2,"execarg");
+									NumberFree(LCMbuffer,"execarg"); NumberFree(LCMb,"execarg"); NumberFree(LCMc,"execarg");
 									goto execargerr;
 								}
-								DivLong((UWORD *)r3,k,AN.LCMb,kkLCM,AN.LCMb,&kkLCM,AN.LCMc,&jLCM);
-								MulLong(AN.LCMbuffer,kLCM,AN.LCMb,kkLCM,AN.LCMc,&jLCM);
+								DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
+								MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
 								for ( kLCM = 0; kLCM < jLCM; kLCM++ )
-									AN.LCMbuffer[kLCM] = AN.LCMc[kLCM];
+									LCMbuffer[kLCM] = LCMc[kLCM];
 							}
 							else {} /* LCM doesn't change */
 							r1 = r2;
@@ -367,15 +371,15 @@ HaveTodo:
 /*
 						Now put the factor together: GCD/LCM
 */
-						r3 = (WORD *)(AN.GCDbuffer);
+						r3 = (WORD *)(GCDbuffer);
 						if ( kGCD == kLCM ) {
 							for ( jGCD = 0; jGCD < kGCD; jGCD++ )
-								r3[jGCD+kGCD] = AN.LCMbuffer[jGCD];
+								r3[jGCD+kGCD] = LCMbuffer[jGCD];
 							k = kGCD;
 						}
 						else if ( kGCD > kLCM ) {
 							for ( jGCD = 0; jGCD < kLCM; jGCD++ )
-								r3[jGCD+kGCD] = AN.LCMbuffer[jGCD];
+								r3[jGCD+kGCD] = LCMbuffer[jGCD];
 							for ( jGCD = kLCM; jGCD < kGCD; jGCD++ )
 								r3[jGCD+kGCD] = 0;
 							k = kGCD;
@@ -384,9 +388,11 @@ HaveTodo:
 							for ( jGCD = kGCD; jGCD < kLCM; jGCD++ )
 								r3[jGCD] = 0;
 							for ( jGCD = 0; jGCD < kLCM; jGCD++ )
-								r3[jGCD+kLCM] = AN.LCMbuffer[jGCD];
+								r3[jGCD+kLCM] = LCMbuffer[jGCD];
 							k = kLCM;
 						}
+						NumberFree(GCDbuffer,"execarg"); NumberFree(GCDbuffer2,"execarg");
+						NumberFree(LCMbuffer,"execarg"); NumberFree(LCMb,"execarg"); NumberFree(LCMc,"execarg");
 						j = 2*k+1;
 /*
 						Now we have to correct the overal factor
@@ -1278,26 +1284,21 @@ nextterm:						mm = mnext;
 					and to divide it out.
 */
 					t = r5;
+					EAscrat = (UWORD *)(TermMalloc("execarg"));
 					if ( t + *t == r3 ) goto oneterm;
-#ifdef INDIVIDUALALLOC
-					if ( AN.EAscrat == 0 ) {
-						AN.EAscrat = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD)
-								,"execarg");
-					}
-#endif
 					GETSTOP(t,r6);
 					ngcd = t[t[0]-1];
 					i = abs(ngcd)-1;
-					while ( --i >= 0 ) AN.EAscrat[i] = r6[i];
+					while ( --i >= 0 ) EAscrat[i] = r6[i];
 					t += *t;
 					while ( t < r3 ) {
 						GETSTOP(t,r6);
 						i = t[t[0]-1];
-						if ( AccumGCD(AN.EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
-						if ( ngcd == 3 && AN.EAscrat[0] == 1 && AN.EAscrat[1] == 1 ) break;
+						if ( AccumGCD(EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
+						if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
 						t += *t;
 					}
- 					if ( ngcd != 3 || AN.EAscrat[0] != 1 || AN.EAscrat[1] != 1 ) {
+ 					if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
 						if ( pow ) ngcd = -ngcd;
 						t = r5; r9 = r1; *r1++ = t[-ARGHEAD]; *r1++ = 1;
 						FILLARG(r1); ngcd = REDLENG(ngcd);
@@ -1307,7 +1308,7 @@ nextterm:						mm = mnext;
 							while ( r7 < r6) *r1++ = *r7++;
 							t += *t;
 							i = REDLENG(t[-1]);
-							if ( DivRat(BHEAD (UWORD *)r6,i,AN.EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
+							if ( DivRat(BHEAD (UWORD *)r6,i,EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
 							nq = INCLENG(nq);
 							i = ABS(nq)-1;
 							r1 += i; *r1++ = nq; *r8 = r1-r8;
@@ -1320,7 +1321,7 @@ nextterm:						mm = mnext;
 						&& factor[3] == -3 ) || pow == 0 ) {
 							r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
 							FILLARG(r1); *r1++ = i+2;
-							for ( j = 0; j < i; j++ ) *r1++ = AN.EAscrat[j];
+							for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
 							*r1++ = ngcd;
 							if ( ToFast(r9,r9) ) r1 = r9+2;
 						}
@@ -1330,17 +1331,17 @@ nextterm:						mm = mnext;
 							*r1++ = -SNUMBER; *r1++ = -1;
 							r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
 							FILLARG(r1); *r1++ = i+2;
-							for ( j = 0; j < i; j++ ) *r1++ = AN.EAscrat[j];
+							for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
 							*r1++ = ngcd;
 							if ( ToFast(r9,r9) ) r1 = r9+2;
 						}
 						else {
 							if ( ngcd < 0 ) ngcd = -ngcd;
 							if ( pow ) { *r1++ = -SNUMBER; *r1++ = -1; }
-							if ( ngcd != 3 || AN.EAscrat[0] != 1 || AN.EAscrat[1] != 1 ) {
+							if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
 								r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
 								FILLARG(r1); *r1++ = i+2;
-								for ( j = 0; j < i; j++ ) *r1++ = AN.EAscrat[j];
+								for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
 								*r1++ = ngcd;
 								if ( ToFast(r9,r9) ) r1 = r9+2;
 							}
@@ -1361,6 +1362,7 @@ oneterm:;
 						while ( t < m ) *r1++ = *t++;
 						}
 					}
+					TermFree(EAscrat,"execarg");
 				}
 				r2[1] = r1 - r2;
 				v[2] = DIRTYFLAG;
@@ -1394,7 +1396,7 @@ execargerr:
 }
 
 /*
-  	#] execarg : 
+  	#] execarg :
   	#[ execterm :
 */
 
@@ -1453,7 +1455,7 @@ exectermerr:
 }
 
 /*
-  	#] execterm : 
+  	#] execterm :
   	#[ ArgumentImplode :
 */
 
@@ -1518,7 +1520,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentImplode : 
+  	#] ArgumentImplode :
   	#[ ArgumentExplode :
 */
 
@@ -1583,6 +1585,6 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentExplode : 
+  	#] ArgumentExplode :
 */
 

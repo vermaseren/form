@@ -14,7 +14,7 @@
 static UBYTE underscore[2] = {'_',0};
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CatchDollar :
 
 	Works out a dollar expression during compile type.
@@ -186,7 +186,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar : 
+  	#] CatchDollar :
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -277,7 +277,7 @@ NoChangeZero:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		d->type = DOLZERO;
 		d->where[0] = 0;
@@ -355,7 +355,7 @@ NoChangeOne:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		if ( d->size < 5 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
@@ -496,7 +496,7 @@ HandleDolZero1:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		d->type = DOLTERMS;
 		if ( d->where && d->where != &(AM.dollarzero) ) { M_free(d->where,"dollar contents"); d->where = 0; }
@@ -546,7 +546,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar : 
+  	#] AssignDollar :
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -665,7 +665,7 @@ void AddToDollarBuffer(UBYTE *s)
 }
 
 /*
-  	#] AddToDollarBuffer : 
+  	#] AddToDollarBuffer :
   	#[ TermAssign :
 */
 
@@ -721,7 +721,7 @@ void TermAssign(WORD *term)
 }
 
 /*
-  	#] TermAssign : 
+  	#] TermAssign :
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
@@ -879,7 +879,7 @@ void WildDollars()
 }
 
 /*
-  	#] WildDollars : 
+  	#] WildDollars :
   	#[ DolToTensor :    with LOCK
 */
 
@@ -940,7 +940,7 @@ WORD DolToTensor(WORD numdollar)
 }
 
 /*
-  	#] DolToTensor : 
+  	#] DolToTensor :
   	#[ DolToFunction :  with LOCK
 */
 
@@ -997,7 +997,7 @@ WORD DolToFunction(WORD numdollar)
 }
 
 /*
-  	#] DolToFunction : 
+  	#] DolToFunction :
   	#[ DolToVector :    with LOCK
 */
 
@@ -1061,7 +1061,7 @@ WORD DolToVector(WORD numdollar)
 }
 
 /*
-  	#] DolToVector : 
+  	#] DolToVector :
   	#[ DolToNumber :
 */
 
@@ -1120,7 +1120,7 @@ WORD DolToNumber(WORD numdollar)
 }
 
 /*
-  	#] DolToNumber : 
+  	#] DolToNumber :
   	#[ DolToSymbol :    with LOCK
 */
 
@@ -1174,7 +1174,7 @@ WORD DolToSymbol(WORD numdollar)
 }
 
 /*
-  	#] DolToSymbol : 
+  	#] DolToSymbol :
   	#[ DolToIndex :     with LOCK
 */
 
@@ -1246,7 +1246,7 @@ WORD DolToIndex(WORD numdollar)
 }
 
 /*
-  	#] DolToIndex : 
+  	#] DolToIndex :
   	#[ DolToTerms :
 
 	Returns a struct of type DOLLARS which contains a copy of the
@@ -1354,7 +1354,7 @@ DOLLARS DolToTerms(WORD numdollar)
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DoInside :
 */
 
@@ -1412,7 +1412,7 @@ skipdol:	error = 1;
 }
 
 /*
-  	#] DoInside : 
+  	#] DoInside :
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -1506,7 +1506,7 @@ idcall:;
 }
 
 /*
-  	#] InsideDollar : 
+  	#] InsideDollar :
   	#[ ExchangeDollars :
 */
 
@@ -1524,7 +1524,7 @@ void ExchangeDollars(int num1, int num2)
 }
 
 /*
-  	#] ExchangeDollars : 
+  	#] ExchangeDollars :
   	#[ TermsInDollar :
 */
 
@@ -1573,7 +1573,7 @@ LONG TermsInDollar(WORD num)
 }
 
 /*
-  	#] TermsInDollar : 
+  	#] TermsInDollar :
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.
@@ -1765,7 +1765,7 @@ onerror:
 }
 
 /*
-  	#] PreIfDollarEval : 
+  	#] PreIfDollarEval :
   	#[ TranslateExpression :
 */
 
@@ -1817,7 +1817,7 @@ WORD *TranslateExpression(UBYTE *s)
 }
 
 /*
-  	#] TranslateExpression : 
+  	#] TranslateExpression :
   	#[ IsSetMember :
 
 	Checks whether the expression in the buffer can be seen as an element
@@ -1975,7 +1975,7 @@ int IsSetMember(WORD *buffer, WORD numset)
 }
 
 /*
-  	#] IsSetMember : 
+  	#] IsSetMember :
   	#[ IsProductOf :
 
 	Checks whether the expression in buf1 is a single term multiple of 
@@ -1987,7 +1987,7 @@ int IsProductOf(WORD *buf1, WORD *buf2)
 }
 
 
-  	#] IsProductOf : 
+  	#] IsProductOf :
   	#[ IsMultipleOf :
 
 	Checks whether the expression in buf1 is a numerical multiple of 
@@ -1999,6 +1999,7 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 	GETIDENTITY
 	LONG num1, num2;
 	WORD *t1, *t2, *m1, *m2, *r1, *r2, nc1, nc2, ni1, ni2;
+	UWORD *IfScrat1, *IfScrat2;
 	int i, j;
 	if ( *buf1 == 0 && *buf2 == 0 ) return(1);
 /*
@@ -2024,44 +2025,45 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 /*
 	Now we have to test the constant factor
 */
-	if ( AN.IfScrat1 == 0 ) {
-		AN.IfScrat1 = (UWORD *)Malloc1((2*AM.MaxTal+2)*sizeof(UWORD),"AN.IfScrat1");
-	}
-	if ( AN.IfScrat2 == 0 ) {
-		AN.IfScrat2 = (UWORD *)Malloc1((2*AM.MaxTal+2)*sizeof(UWORD),"AN.IfScrat2");
-	}
+	IfScrat1 = (UWORD *)(TermMalloc("IsMultipleOf")); IfScrat2 = (UWORD *)(TermMalloc("IsMultipleOf"));
 	t1 = buf1; t2 = buf2;
 	t1 += *t1; t2 += *t2;
 	if ( *t1 == 0 && *t2 == 0 ) return(1);
 	r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 	nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
-	if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat1,&ni1) ) {
+	if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat1,&ni1) ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("@Called from MultipleOf in $( )");
 		UNLOCK(ErrorMessageLock);
+		TermFree(IfScrat1,"IsMultipleOf"); TermFree(IfScrat2,"IsMultipleOf");
 		Terminate(-1);
 	}
 	while ( *t1 ) {
 		t1 += *t1; t2 += *t2;
 		r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 		nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
-		if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,AN.IfScrat2,&ni2) ) {
+		if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat2,&ni2) ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("@Called from MultipleOf in $( )");
 			UNLOCK(ErrorMessageLock);
+			TermFree(IfScrat1,"IsMultipleOf"); TermFree(IfScrat2,"IsMultipleOf");
 			Terminate(-1);
 		}
 		if ( ni1 != ni2 ) return(0);
 		i = 2*ABS(ni1);
 		for ( j = 0; j < i; j++ ) {
-			if ( AN.IfScrat1[j] != AN.IfScrat2[j] ) return(0);
+			if ( IfScrat1[j] != IfScrat2[j] ) {
+				TermFree(IfScrat1,"IsMultipleOf"); TermFree(IfScrat2,"IsMultipleOf");
+				return(0);
+			}
 		}
 	}
+	TermFree(IfScrat1,"IsMultipleOf"); TermFree(IfScrat2,"IsMultipleOf");
 	return(1);
 }
 
 /*
-  	#] IsMultipleOf : 
+  	#] IsMultipleOf :
   	#[ TwoExprCompare :
 
 	Compares the expressions in buf1 and buf2 according to oprtr
@@ -2136,7 +2138,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 }
 
 /*
-  	#] TwoExprCompare : 
+  	#] TwoExprCompare :
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
@@ -2224,7 +2226,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 }
 
 /*
-  	#] DollarRaiseLow : 
+  	#] DollarRaiseLow :
  		#[ MinDollar  :
 
         finds the minimum dollar variable among dollar variables 
@@ -2324,7 +2326,7 @@ int MinDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MinDollar  : 
+ 		#] MinDollar  :
  		#[ MaxDollar  :
 
         finds the maximum dollar variable among dollar variables 
@@ -2412,7 +2414,7 @@ int MaxDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MaxDollar  : 
+ 		#] MaxDollar  :
  		#[ SumDollars :
 
         sums the dollar variable content in PFDollars[number].slavebuf
@@ -2514,6 +2516,6 @@ cleanup:;
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] SumDollars : 
+ 		#] SumDollars :
 */
 

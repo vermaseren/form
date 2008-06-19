@@ -19,7 +19,7 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
 #define PRINTPOLY(s,x) { WORD i, *pp = x; while ( *pp ) pp += *pp; i = pp - x + 1; MesPrint("%s %a",s,i,x); }
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Notation :
 
 	We use several notations internally to deal with polynomials.
@@ -68,7 +68,7 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
 	To not exhaust the WorkSpace too quickly we have to copy polynomials
 	down in the WorkSpace frequently. This is a slight inefficiency.
 
-  	#] Notation : 
+  	#] Notation :
   	#[ SymbolNormalize :
 */
 /**
@@ -209,7 +209,7 @@ Nexti:;
 }
 
 /*
-  	#] SymbolNormalize : 
+  	#] SymbolNormalize :
   	#[ CheckMinTerm :
 */
 /**
@@ -242,7 +242,7 @@ nextm:	m += 2;
 }
 
 /*
-  	#] CheckMinTerm : 
+  	#] CheckMinTerm :
   	#[ ReOrderSymbols :
 */
 /**
@@ -298,7 +298,7 @@ int ReOrderSymbols(WORD *term, WORD *slist, WORD par)
 }
 
 /*
-  	#] ReOrderSymbols : 
+  	#] ReOrderSymbols :
   	#[ CompareSymbols :
 */
 /**
@@ -342,7 +342,7 @@ int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 }
 
 /*
-  	#] CompareSymbols : 
+  	#] CompareSymbols :
   	#[ PolyAdd :
 */
 /**
@@ -420,7 +420,7 @@ WORD *PolyAdd(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyAdd : 
+  	#] PolyAdd :
   	#[ PolyMul :
 */
 /**
@@ -486,7 +486,7 @@ WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyMul : 
+  	#] PolyMul :
   	#[ PolyDiv :
 */
 /**
@@ -621,7 +621,7 @@ NegPow:
 		*b++ = 0;
 		AT.WorkPointer = b;
 /*
- 		#] Get q : 
+ 		#] Get q :
 
 		Compute poly1 - q*Poly2
 */
@@ -662,7 +662,7 @@ NegPow:
 }
 
 /*
-  	#] PolyDiv : 
+  	#] PolyDiv :
   	#[ PolyDivI :
 */
 /**
@@ -686,14 +686,7 @@ WORD *PolyDivI(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD size1, size2;
 	int dop1, dop2, i;
 	LONG size;
-#ifdef INDIVIDUALALLOC
-	if ( AN.ARscrat1 == 0 ) {
-		AN.ARscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"PolyDivI");
-		AN.ARscrat2 = AN.ARscrat1 + AM.MaxTal+2;
-		AN.ARscrat3 = AN.ARscrat2 + AM.MaxTal+2;
-		AN.ARscrat4 = AN.ARscrat3 + AM.MaxTal+2;
-	}
-#endif
+	UWORD *ARscrat1 = NumberMalloc("PolyDivI"), *ARscrat2 = NumberMalloc("PolyDivI");
 	p = Poly1; while ( *p ) p += *p; size = p - Poly1 + 1;
 	p = Poly1; poly1 = p1 = AT.WorkPointer; NCOPY(p1,p,size);
 	AT.WorkPointer = p1;
@@ -713,7 +706,7 @@ WORD *PolyDivI(PHEAD WORD *Poly1, WORD *Poly2)
 			coef1 = poly1+5; ncoef1 = poly1[*poly1-1];
 			if ( ncoef1 < 0 ) ncoef1 = (ncoef1+1)/2;
 			else              ncoef1 = (ncoef1-1)/2;
-			factor = (WORD *)(AN.ARscrat1);
+			factor = (WORD *)(ARscrat1);
 			DivLong((UWORD *)coef1,ncoef1,
 			        (UWORD *)coef,ncoef,
 			        (UWORD *)factor,&nfactor,
@@ -751,10 +744,10 @@ WORD *PolyDivI(PHEAD WORD *Poly1, WORD *Poly2)
 				dop1 = dop2 = 1;
 				if ( MulLong((UWORD *)coef2,ncoef2,
 				             (UWORD *)factor,nfactor,
-				             (UWORD *)(AN.ARscrat2),&size1) ) goto calledfrom;
+				             (UWORD *)(ARscrat2),&size1) ) goto calledfrom;
 				size1 = -size1;
 				AddLong((UWORD *)coef1,ncoef1,
-				        (UWORD *)(AN.ARscrat2),size1,
+				        (UWORD *)(ARscrat2),size1,
 				        (UWORD *)t,&size2);
 			}
 			else if ( pow1 > pow2+delta ) {
@@ -840,21 +833,24 @@ WORD *PolyDivI(PHEAD WORD *Poly1, WORD *Poly2)
 		}
 		AT.WorkPointer = p1;
 	}
+	NumberFree(ARscrat1,"PolyDivI"); NumberFree(ARscrat2,"PolyDivI");
 	return(oldworkpointer);
 nogo:
 	oldworkpointer[0] = 0;
 	AT.WorkPointer = oldworkpointer;
+	NumberFree(ARscrat1,"PolyDivI"); NumberFree(ARscrat2,"PolyDivI");
 	return(oldworkpointer);
 calledfrom:;
 	LOCK(ErrorMessageLock);
 	MesCall("PolyDivI");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(ARscrat1,"PolyDivI"); NumberFree(ARscrat2,"PolyDivI");
 	Terminate(-1);
 	return(0);
 }
 
 /*
-  	#] PolyDivI : 
+  	#] PolyDivI :
   	#[ PolyMul0 :
 */
 /**
@@ -921,7 +917,7 @@ WORD *PolyMul0(PHEAD WORD *Poly, WORD *term)
 }
 
 /*
-  	#] PolyMul0 : 
+  	#] PolyMul0 :
   	#[ PolyDiv0 :
 */
 /**
@@ -1039,7 +1035,7 @@ NegPow:
 		bb[0] = b - bb;
 		AT.WorkPointer = b;
 /*
- 		#] Get q : 
+ 		#] Get q :
 
 		Compute poly1 - q*Poly2
 */
@@ -1069,7 +1065,7 @@ NegPow:
 }
 
 /*
-  	#] PolyDiv0 : 
+  	#] PolyDiv0 :
   	#[ PolyPow :
 */
 /**
@@ -1138,7 +1134,7 @@ WORD *PolyPow(PHEAD WORD *Poly, WORD pow)
 }
 
 /*
-  	#] PolyPow : 
+  	#] PolyPow :
   	#[ PolyRatNorm :
 */
 /**
@@ -1177,7 +1173,7 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyRatNorm : 
+  	#] PolyRatNorm :
   	#[ PolyFunNorm :
 */
 /**
@@ -1491,7 +1487,7 @@ endnormalize:;
 }
 
 /*
-  	#] PolyFunNorm : 
+  	#] PolyFunNorm :
   	#[ PolyFunAddRat :
 */
 /**
@@ -1630,7 +1626,7 @@ skip2:;
 		AT.WorkPointer = p1;
 		return(oldworkpointer);
 /*
- 		#] 1,1 : 
+ 		#] 1,1 :
 */
 	}
 	else if ( narg1 == 2 && narg2 == 2 ) {	/* what we are here for */
@@ -1657,26 +1653,26 @@ skip2:;
 		return(0);
 	}
 /*
-  	#] Step 1: 
+  	#] Step 1:
   	#[ Step 2: Get g1 = GCD of the two denominators. r1 = den1/g1, r2 = den2/g1
 */
 	g1   = PolyGCD(BHEAD den1,den2);
 	r1   = PolyDiv0(BHEAD den1,g1);
 	r2   = PolyDiv0(BHEAD den2,g1);
 /*
-  	#] Step 2: 
+  	#] Step 2:
   	#[ Step 3: compute numn = r2*num1+r1*num2
 */
 	m1   = PolyMul(BHEAD num1,r2);
 	m2   = PolyMul(BHEAD num2,r1);
 	numn = PolyAdd(BHEAD m1,m2);
 /*
-  	#] Step 3: 
+  	#] Step 3:
   	#[ Step 4: compute g2 = gcd of numn and g1.
 */
 	g2   = PolyGCD(BHEAD numn,g1);
 /*
-  	#] Step 4: 
+  	#] Step 4:
   	#[ Step 5: output is num3 = numn/g2, den3 = r1*r2*(g1/g2)
 */
 	num3 = PolyDiv0(BHEAD numn,g2);
@@ -1684,7 +1680,7 @@ skip2:;
 	r1   = PolyMul(BHEAD r1,r2);
 	den3 = PolyMul(BHEAD r1,g1);
 /*
-  	#] Step 5: 
+  	#] Step 5:
   	#[ Step 6: put the new polyfun in the buffer.
 */
 	newsize = (g1-num3) + (AT.WorkPointer-den3) + FUNHEAD + 2*ARGHEAD - 2;
@@ -1716,13 +1712,13 @@ skip2:;
 	oldworkpointer[1] = p1 - oldworkpointer;
 	AT.WorkPointer = p1;
 /*
-  	#] Step 6: 
+  	#] Step 6:
 */
 	return(oldworkpointer);
 }
 
 /*
-  	#] PolyFunAddRat : 
+  	#] PolyFunAddRat :
   	#[ PolyRemoveContent :
 */
 /**
@@ -1745,6 +1741,7 @@ WORD *PolyRemoveContent(PHEAD WORD *Poly, WORD par)
 	WORD *term = AT.WorkPointer, *t, *tstop, *p, *p1, *tt;
 	WORD *num, *den, numsize, densize;
 	WORD buffer[7*NORMSIZE], *b;
+	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
 	int i, j, sign;
 	LONG size;
 	WORD size1, size2, size3, LCMsize, GCDsize;
@@ -1784,15 +1781,8 @@ WORD *PolyRemoveContent(PHEAD WORD *Poly, WORD par)
 		This code is similar to the code of the MakeInteger command and we
 		can use the same buffers for it.
 */
-#ifdef INDIVIDUALALLOC
-		if ( AN.GCDbuffer == 0 ) {
-			AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
-			AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
-			AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
-			AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
-			AN.LCMc = AN.LCMb + AM.MaxTal+2;
-		}
-#endif
+		GCDbuffer = NumberMalloc("PolyRemoveContent"); GCDbuffer2 = NumberMalloc("PolyRemoveContent");
+		LCMbuffer = NumberMalloc("PolyRemoveContent"); LCMb = NumberMalloc("PolyRemoveContent"); LCMc = NumberMalloc("PolyRemoveContent");
 /*
 		Put the numerator of the first term in the GCD buffer.
 		Put the denominator of the first term in the LCM buffer.
@@ -1805,8 +1795,8 @@ WORD *PolyRemoveContent(PHEAD WORD *Poly, WORD par)
 		num = p - i; i = (i-1)/2; den = num + i; numsize = densize = i;
 		while ( numsize > 1 && num[numsize-1] == 0 ) numsize--;
 		while ( densize > 1 && den[densize-1] == 0 ) densize--;
-		for ( i = 0; i < numsize; i++ ) AN.GCDbuffer[i] = num[i];
-		for ( i = 0; i < densize; i++ ) AN.LCMbuffer[i] = den[i];
+		for ( i = 0; i < numsize; i++ ) GCDbuffer[i] = num[i];
+		for ( i = 0; i < densize; i++ ) LCMbuffer[i] = den[i];
 		GCDsize = numsize; LCMsize = densize;
 		if ( num > Poly+1 ) {	/* Copy the symbols to buffer */
 			i = Poly[2]; b = buffer; p1 = Poly+1; NCOPY(b,p1,i);
@@ -1847,39 +1837,39 @@ nexti:;
 					buffer[1] = 2;
 				}
 			}
-			if ( GCDsize > 1 || AN.GCDbuffer[0] != 1 ) {
+			if ( GCDsize > 1 || GCDbuffer[0] != 1 ) {
 				if ( numsize > 1 || num[0] != 1 ) {
 					if ( GcdLong(BHEAD (UWORD *)num,numsize,
-					                   (UWORD *)AN.GCDbuffer,GCDsize,
-					                   (UWORD *)AN.GCDbuffer2,&size2) ) goto calledfrom;
+					                   (UWORD *)GCDbuffer,GCDsize,
+					                   (UWORD *)GCDbuffer2,&size2) ) goto calledfrom;
 					GCDsize = ABS(size2);
-					for ( i = 0; i < GCDsize; i++ ) AN.GCDbuffer[i] = AN.GCDbuffer2[i];
+					for ( i = 0; i < GCDsize; i++ ) GCDbuffer[i] = GCDbuffer2[i];
 				}
 				else {
-					GCDsize = 1; AN.GCDbuffer[0] = 1;
+					GCDsize = 1; GCDbuffer[0] = 1;
 				}
 			}
 			if ( densize > 1 || den[0] != 1 ) {
-				if ( LCMsize == 1 && AN.LCMbuffer[0] == 1 ) {
+				if ( LCMsize == 1 && LCMbuffer[0] == 1 ) {
 					LCMsize = densize;
-					for ( i = 0; i < LCMsize; i++ ) AN.LCMbuffer[i] = den[i];
+					for ( i = 0; i < LCMsize; i++ ) LCMbuffer[i] = den[i];
 				}
 				else {
-					if ( DivLong((UWORD *)AN.LCMbuffer,LCMsize,
+					if ( DivLong((UWORD *)LCMbuffer,LCMsize,
 					             (UWORD *)den,densize,
-					             (UWORD *)AN.LCMb,&size2,
-					             (UWORD *)AN.LCMc,&size3) ) goto calledfrom;
+					             (UWORD *)LCMb,&size2,
+					             (UWORD *)LCMc,&size3) ) goto calledfrom;
 					if ( size3 != 0 ) {	/* There is a remainder */
-						if ( GcdLong(BHEAD (UWORD *)AN.LCMbuffer,LCMsize,
+						if ( GcdLong(BHEAD (UWORD *)LCMbuffer,LCMsize,
 						                   (UWORD *)den,densize,
-						                   (UWORD *)AN.LCMb,&size2) ) goto calledfrom;
-						if ( MulLong((UWORD *)AN.LCMbuffer,LCMsize,
+						                   (UWORD *)LCMb,&size2) ) goto calledfrom;
+						if ( MulLong((UWORD *)LCMbuffer,LCMsize,
 						             (UWORD *)den,densize,
-						             (UWORD *)AN.LCMc,&size3) ) goto calledfrom;
-						if ( DivLong((UWORD *)AN.LCMc,size3,
-						             (UWORD *)AN.LCMb,size2,
-						             (UWORD *)AN.LCMbuffer,&LCMsize,
-						             (UWORD *)AN.GCDbuffer2,&size1) ) goto calledfrom;
+						             (UWORD *)LCMc,&size3) ) goto calledfrom;
+						if ( DivLong((UWORD *)LCMc,size3,
+						             (UWORD *)LCMb,size2,
+						             (UWORD *)LCMbuffer,&LCMsize,
+						             (UWORD *)GCDbuffer2,&size1) ) goto calledfrom;
 					}
 				}
 			}
@@ -1893,17 +1883,17 @@ nexti:;
 */
 		out = output;
 		if ( LCMsize > GCDsize ) {
-			for ( i = GCDsize; i < LCMsize; i++ ) AN.GCDbuffer[i] = 0;
+			for ( i = GCDsize; i < LCMsize; i++ ) GCDbuffer[i] = 0;
 			j = LCMsize;
 		}
 		else if ( GCDsize > LCMsize ) {
-			for ( i = LCMsize; i < GCDsize; i++ ) AN.LCMbuffer[i] = 0;
+			for ( i = LCMsize; i < GCDsize; i++ ) LCMbuffer[i] = 0;
 			j = GCDsize;
 		}
 		else j = GCDsize;
 		*out++ = 2*j+2;
-		for ( i = 0; i < j; i++ ) *out++ = AN.GCDbuffer[i];
-		for ( i = 0; i < j; i++ ) *out++ = AN.LCMbuffer[i];
+		for ( i = 0; i < j; i++ ) *out++ = GCDbuffer[i];
+		for ( i = 0; i < j; i++ ) *out++ = LCMbuffer[i];
 		*out = 2*j+1;
 		if ( sign < 0 ) *out = -*out;
 		out++; *out++ = 0; output = out;
@@ -1939,16 +1929,16 @@ nextsymbol:;
 			else {
 				while ( t < num ) *out++ = *t++;
 			}
-			if ( DivLong((UWORD *)AN.LCMbuffer,LCMsize,
+			if ( DivLong((UWORD *)LCMbuffer,LCMsize,
 			             (UWORD *)den,densize,
-			             (UWORD *)AN.LCMb,&size2,
-			             (UWORD *)AN.LCMc,&size3) ) goto calledfrom;
+			             (UWORD *)LCMb,&size2,
+			             (UWORD *)LCMc,&size3) ) goto calledfrom;
 			if ( DivLong((UWORD *)num,numsize,
-			             (UWORD *)AN.GCDbuffer,GCDsize,
-			             (UWORD *)AN.GCDbuffer2,&size1,
-			             (UWORD *)AN.LCMc,&size3) ) goto calledfrom;
-			if ( MulLong((UWORD *)AN.GCDbuffer2,size1,
-			             (UWORD *)AN.LCMb,size2,
+			             (UWORD *)GCDbuffer,GCDsize,
+			             (UWORD *)GCDbuffer2,&size1,
+			             (UWORD *)LCMc,&size3) ) goto calledfrom;
+			if ( MulLong((UWORD *)GCDbuffer2,size1,
+			             (UWORD *)LCMb,size2,
 			             (UWORD *)out,&size3) ) goto calledfrom;
 			out += size3;
 			*out++ = 1;
@@ -1960,18 +1950,22 @@ nextsymbol:;
 		}
 		*out++ = 0;
 		AT.WorkPointer = out;
+		NumberFree(GCDbuffer,"PolyRemoveContent"); NumberFree(GCDbuffer2,"PolyRemoveContent");
+		NumberFree(LCMbuffer,"PolyRemoveContent"); NumberFree(LCMb,"PolyRemoveContent"); NumberFree(LCMc,"PolyRemoveContent");
 	}
 	return(output);
 calledfrom:
 	LOCK(ErrorMessageLock);
 	MesCall("PolyRemoveContent");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(GCDbuffer,"PolyRemoveContent"); NumberFree(GCDbuffer2,"PolyRemoveContent");
+	NumberFree(LCMbuffer,"PolyRemoveContent"); NumberFree(LCMb,"PolyRemoveContent"); NumberFree(LCMc,"PolyRemoveContent");
 	Terminate(-1);
 	return(0);
 }
 
 /*
-  	#] PolyRemoveContent : 
+  	#] PolyRemoveContent :
   	#[ PolyGCD :
 */
 /**
@@ -1998,7 +1992,7 @@ WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 		7: free(n1), n1'=n2', n2'=n3' go to 5
 		Note the abundant recursions here.
 
- 		#] Algorithm: 
+ 		#] Algorithm:
  		#[ Declarations:
 */
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -2009,7 +2003,7 @@ WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD pow, numsym1, numsym2, x;
 	VOID *oldcompare = AR.CompareRoutine;
 /*
- 		#] Declarations: 
+ 		#] Declarations:
  		#[ Special cases:
 */
 	if ( *Poly1 == 0 || ( Poly1[*Poly1] == 0 && ABS(Poly1[*Poly1-1]) == *Poly1-1 ) )
@@ -2017,7 +2011,7 @@ WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 	if ( *Poly2 == 0 || ( Poly2[*Poly2] == 0 && ABS(Poly2[*Poly2-1]) == *Poly2-1 ) )
 		goto gcdisone;
 /*
- 		#] Special cases: 
+ 		#] Special cases:
  		#[ Determine the order of the variables:
 */
 
@@ -2037,7 +2031,7 @@ gcdisone:
 		return(oldworkpointer);
 	}
 /*
- 		#] Determine the order of the variables: 
+ 		#] Determine the order of the variables:
  		#[ Copy the polynomials and renumber them:
 
 	Note that we have to copy the terms before renumbering or we might
@@ -2089,7 +2083,7 @@ gcdisone:
 		x = numsym1; numsym1 = numsym2; numsym2 = x;
 	}
 /*
- 		#] Copy the polynomials and renumber them: 
+ 		#] Copy the polynomials and renumber them:
  		#[ Determine gcd's of the coefficients of the first variable:
 
 	First copy the part of poly1 with the highest power to g1.
@@ -2132,7 +2126,7 @@ gcdisone:
 		AT.WorkPointer = p1;
 	}
 /*
- 		#] Determine gcd's of the coefficients of the first variable: 
+ 		#] Determine gcd's of the coefficients of the first variable:
  		#[ The loop:
 */
 	for(;;) {
@@ -2156,7 +2150,7 @@ gcdisone:
 		POLYCOPY(n2p,n3p);
 	}
 /*
- 		#] The loop: 
+ 		#] The loop:
  		#[ Renumber the gcd back and copy it into place:
 */
 finishup:
@@ -2185,7 +2179,7 @@ finishup:
 	p1 = oldworkpointer; while ( *p1 ) p1 += *p1; p1++; AT.WorkPointer = p1;
 	return(oldworkpointer);
 /*
- 		#] Renumber the gcd back and copy it into place: 
+ 		#] Renumber the gcd back and copy it into place:
 */
 calledfrom:
 	AT.WorkPointer = oldworkpointer;
@@ -2206,7 +2200,7 @@ calledfrom:
 }
 
 /*
-  	#] PolyGCD : 
+  	#] PolyGCD :
   	#[ PolyGetRenumbering :
 */
 /**
@@ -2341,7 +2335,7 @@ nexti2:;
 }
 
 /*
-  	#] PolyGetRenumbering : 
+  	#] PolyGetRenumbering :
   	#[ PolyTake :
 */
 /**
@@ -2466,7 +2460,7 @@ simplecase:
 }
 
 /*
-  	#] PolyTake : 
+  	#] PolyTake :
   	#[ GetNegPow :
 */
 /**
@@ -2538,7 +2532,7 @@ WORD *GetNegPow(PHEAD WORD *Poly)
 }
 
 /*
-  	#] GetNegPow : 
+  	#] GetNegPow :
   	#[ PolyNormPoly :
 */
 /**
@@ -2573,7 +2567,7 @@ WORD *PolyNormPoly(PHEAD WORD *Poly)
 }
 
 /*
-  	#] PolyNormPoly : 
+  	#] PolyNormPoly :
   	#[ PolyGCD1 :
  		#[ Generic routine :
 */
@@ -2630,7 +2624,8 @@ WORD *PolyGCD1(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
- 		#] Generic routine : 
+ 		#] Generic routine :
+
  		#[ Algorithm 1 : The modular method
 */
 /**
@@ -2676,22 +2671,8 @@ WORD *PolyGCD1a(PHEAD WORD *Poly1, WORD *Poly2)
 /*
   	#[ Step C1 :
 */
-#ifdef INDIVIDUALALLOC
-	if ( AN.POscrat1 == 0 ) {
-		AN.POscrat1 = (UWORD *)Malloc1(6*(AM.MaxTal+4)*sizeof(UWORD),"PolyGCD1a");
-		AN.POscrat2 = AN.POscrat1 + AM.MaxTal+4;
-		AN.POscrat3 = AN.POscrat2 + AM.MaxTal+4;
-		AN.POscrat4 = AN.POscrat3 + AM.MaxTal+4;
-		AN.POscratg = AN.POscrat4 + AM.MaxTal+4;
-		AN.POscrath = AN.POscratg + AM.MaxTal+4;
-	}
-	if ( AN.ARscrat1 == 0 ) {
-		AN.ARscrat1 = (UWORD *)Malloc1(4*(AM.MaxTal+2)*sizeof(UWORD),"PolyGCD1a");
-		AN.ARscrat2 = AN.ARscrat1 + AM.MaxTal+2;
-		AN.ARscrat3 = AN.ARscrat2 + AM.MaxTal+2;
-		AN.ARscrat4 = AN.ARscrat3 + AM.MaxTal+2;
-	}
-#endif
+	UWORD *POscratg = (UWORD *)(TermMalloc("PolyGCD1a"));
+	WORD nPOscrata;
 restart:;
 /*
 	Get the contents and the primitive parts:
@@ -2791,7 +2772,7 @@ relativeprime:
 				AN.poly2a = 0;
 				AN.getdivgcd = 0;
 			}
-			return(oldworkpointer);
+			goto normalreturn;
 		}
 		else if ( AN.polymod1.polysize == Poly2[4] &&
 			AN.polymod1.polysize == gcdpow ) goto multipleofpoly2;
@@ -2808,8 +2789,8 @@ relativeprime:
 			aprime[0] = prime;
 			if ( MulLong((UWORD *)coef,ncoef,
 			             (UWORD *)(&aprime),1,
-			             (UWORD *)AN.POscratg,&AN.nPOscrata) ) goto calledfrom;
-			poly3 = PolyChineseRemainder(BHEAD poly4,poly3,coef,ncoef,prime);
+			             (UWORD *)POscratg,&nPOscrata) ) goto calledfrom;
+			poly3 = PolyChineseRemainder(BHEAD poly4,poly3,coef,ncoef,prime,POscratg,nPOscrata);
 		}
 /*
 		Now we test whether poly3 divides poly1 and poly2. If so, it is
@@ -2853,20 +2834,20 @@ relativeprime:
 					AN.getdivgcd = 0;
 				}
 				AT.WorkPointer = t;
-				return(oldworkpointer);
+				goto normalreturn;
 			}
 		}
 		AT.WorkPointer = poly1a;
 /*
-		Now copy AN.POscratg to coef and put poly3 after it and call it poly4.
+		Now copy POscratg to coef and put poly3 after it and call it poly4.
 */
 		if ( numprime == 0 ) {
 			t = coef; *t++ = prime; ncoef = 1;
 		}
 		else {
 			t = coef;
-			for ( i = 0; i < AN.nPOscrata; i++ ) *t++ = AN.POscratg[i];
-			ncoef = AN.nPOscrata;
+			for ( i = 0; i < nPOscrata; i++ ) *t++ = POscratg[i];
+			ncoef = nPOscrata;
 		}
 		p = poly3; while ( *p ) p += *p; size = p - poly3 + 1;
 		poly4 = t; p = poly3; NCOPY(t,p,size);
@@ -2885,16 +2866,16 @@ multipleofpoly2:
 	if ( ncoef < 0 ) ncoef = (ncoef+1)/2; else ncoef = (ncoef-1)/2;
 	if ( ngcdcoef == 1 && gcdcoef[0] == 1 ) {
 		size1 = ABS(ncoef);
-		for ( i = 0; i < size1; i++ ) AN.POscratg[i] = coef[i];
+		for ( i = 0; i < size1; i++ ) POscratg[i] = coef[i];
 		size1 = ncoef;
 	}
 	else {
 		DivLong((UWORD *)coef,ncoef,
 		        (UWORD *)gcdcoef,ngcdcoef,
-	    	    (UWORD *)(AN.POscratg),&size1,
+	    	    (UWORD *)(POscratg),&size1,
 	        	(UWORD *)(AT.WorkPointer),&size2);
 	}
-	if ( AN.nPOscrata == 1 && AN.POscratg[0] == 1 ) {
+	if ( nPOscrata == 1 && POscratg[0] == 1 ) {
 		term = content1;
 	}
 	else {
@@ -2902,7 +2883,7 @@ multipleofpoly2:
 		t = term; p = content1; NCOPY(t,p,i);
 		size2 = t[-1]; numsize = ABS(size2);
 		if ( size2 < 0 ) size2 = (size2+1)/2; else size2 = (size2-1)/2;
-		Divvy(BHEAD (UWORD *)(t-numsize),&size2,(UWORD *)(AN.POscratg),size1);
+		Divvy(BHEAD (UWORD *)(t-numsize),&size2,(UWORD *)(POscratg),size1);
 		size1 = ABS(size2); size1 = 2*size1+1;
 		t -= numsize-size1;
 		if ( size2 < 0 ) size1 = -size1;
@@ -2940,17 +2921,20 @@ multipleofpoly2:
 		size = p - poly2 + 1; p = poly2; NCOPY(t,p,size);
 	}
 	AT.WorkPointer = t;
+normalreturn:
+	TermFree(POscratg,"PolyGCD1a");
 	return(oldworkpointer);
 calledfrom:;
 	LOCK(ErrorMessageLock);
 	MesCall("PolyGCD1a");
 	UNLOCK(ErrorMessageLock);
+	TermFree(POscratg,"PolyGCD1a");
 	Terminate(-1);
 	return(0);
 }
 
 /*
- 		#] Algorithm 1 : 
+ 		#] Algorithm 1 :
  		#[ Algorithm 2 : The classical method
 */
 /**
@@ -3046,7 +3030,8 @@ valueisone:
 }
 
 /* 
- 		#] Algorithm 2 : 
+ 		#] Algorithm 2 :
+
  		#[ Algorithm 3 : The subresultant method
 */
 /**
@@ -3076,21 +3061,11 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD numsize1, numsize2;
 	int sign, counter, maxcount;
 	LONG size;
+	UWORD *POscrat1 = NumberMalloc("PolyGCD1c"), *POscrat2 = NumberMalloc("PolyGCD1c");
+	UWORD *POscratg = NumberMalloc("PolyGCD1c"), *POscrath = NumberMalloc("PolyGCD1c");
 /*
   	#[ Step C1 :
-*/
-#ifdef INDIVIDUALALLOC
 
-	if ( AN.POscrat1 == 0 ) {
-		AN.POscrat1 = (UWORD *)Malloc1(6*(AM.MaxTal+4)*sizeof(UWORD),"PolyGCD1c");
-		AN.POscrat2 = AN.POscrat1 + AM.MaxTal+4;
-		AN.POscrat3 = AN.POscrat2 + AM.MaxTal+4;
-		AN.POscrat4 = AN.POscrat3 + AM.MaxTal+4;
-		AN.POscratg = AN.POscrat4 + AM.MaxTal+4;
-		AN.POscrath = AN.POscratg + AM.MaxTal+4;
-	}
-#endif
-/*
 	Make sure that the first polynomial has the highest power
 */
 	if ( Poly1[4] < Poly2[4] ) { p = Poly1; Poly1 = Poly2; Poly2 = p; }
@@ -3122,10 +3097,10 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 /*
 	Now set the variables g and h to their starting values.
 */
-	AN.POscratg[0] = 1; sizeg = 1;
-	AN.POscrath[0] = 1; sizeh = 1;
+	POscratg[0] = 1; sizeg = 1;
+	POscrath[0] = 1; sizeh = 1;
 /*
-  	#] Step C1 : 
+  	#] Step C1 :
 
 	And now the loop
 */
@@ -3161,7 +3136,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			goto finished;
 		}
 /*
- 		#] Step C2 : 
+ 		#] Step C2 :
  		#[ Step C3 :
 
 		Put poly2 where once was poly1
@@ -3169,26 +3144,26 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 		p1 = poly2; while ( *p1 ) p1 += *p1; p1++; size = p1 - poly2;
 		p1 = poly1; p2 = poly2; NCOPY(p1,p2,size);
 /*
-		Compute g*h^delta. We put it in AN.POscrat2
-		We have AN.POscrat1 to store h^delta for later.
+		Compute g*h^delta. We put it in POscrat2
+		We have POscrat1 to store h^delta for later.
 */
 		if ( delta == 0 ) {
-			AN.POscrat1[0] = 1; sizehh = 1;
+			POscrat1[0] = 1; sizehh = 1;
 			size = ABS(sizeg);
-			for ( i = 0; i < size; i++ ) AN.POscrat2[i] = AN.POscratg[i];
+			for ( i = 0; i < size; i++ ) POscrat2[i] = POscratg[i];
 			sizef = sizeg;
 		}
 		else {
 			size = ABS(sizeh);
-			for ( i = 0; i < size; i++ ) AN.POscrat1[i] = AN.POscrath[i];
+			for ( i = 0; i < size; i++ ) POscrat1[i] = POscrath[i];
 			sizehh = sizeh;
 			if ( delta > 1 ) {
-				if ( RaisPow(BHEAD (UWORD *)AN.POscrat1,&sizehh,
+				if ( RaisPow(BHEAD (UWORD *)POscrat1,&sizehh,
 				                   (UWORD)delta) ) goto calledfrom;
 			}
-			if ( MulLong((UWORD *)AN.POscrat1,sizehh,
-			             (UWORD *)AN.POscratg,sizeg,
-			             (UWORD *)AN.POscrat2,&sizef) ) goto calledfrom;
+			if ( MulLong((UWORD *)POscrat1,sizehh,
+			             (UWORD *)POscratg,sizeg,
+			             (UWORD *)POscrat2,&sizef) ) goto calledfrom;
 		}
 /*
 			poly2 = rem/(g*h^delta)
@@ -3208,7 +3183,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			}
 			*p1++ = *t++;
 			DivLong((UWORD *)t,(ABS(p2[-1])-1)/2,
-			        (UWORD *)AN.POscrat2,sizef,
+			        (UWORD *)POscrat2,sizef,
 			        (UWORD *)p1,&size1,
 			        (UWORD *)AT.WorkPointer,&size2);
 			if ( size2 != 0 ) { /* The remainder should have been zero! */
@@ -3231,12 +3206,12 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 /*
 		Next we have to update the values of g and h
 		        g = l(poly1); h = h^(1-delta)*g^delta;
-		We have h^delta still in AN.POscrat1
+		We have h^delta still in POscrat1
 		To compute: g, g^delta, h*g^delta, h*g^delta/h^delta
 */
 		sizeg = (ABS(poly1[*poly1-1])-1)/2;
 		for ( i = 0; i < sizeg; i++ ) {
-			AT.WorkPointer[i] = AN.POscratg[i] = poly1[5+i];
+			AT.WorkPointer[i] = POscratg[i] = poly1[5+i];
 		}
 		if ( poly1[*poly1-1] < 0 ) sizeg = -sizeg;
 		if ( delta == 0 ) {
@@ -3250,7 +3225,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 */
 			sizegg = ABS(sizeg);
 			for ( i = 0; i < sizegg; i++ ) {
-				AN.POscrath[i] = AN.POscratg[i];
+				POscrath[i] = POscratg[i];
 			}
 			sizeh = sizeg;
 		}
@@ -3266,15 +3241,15 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			h*g^delta
 */
 			if ( MulLong((UWORD *)AT.WorkPointer,sizegg,
-			             (UWORD *)AN.POscrath,sizeh,
+			             (UWORD *)POscrath,sizeh,
 			             (UWORD *)t,&sizegh) ) goto calledfrom;
 /*
 			h*g^delta/h^delta
 */
 			DivLong((UWORD *)t,sizegh,
-			        (UWORD *)AN.POscrat1,sizehh,
-			        (UWORD *)AN.POscrath,&sizeh,
-			        (UWORD *)AN.POscrat2,&sizegg);
+			        (UWORD *)POscrat1,sizehh,
+			        (UWORD *)POscrath,&sizeh,
+			        (UWORD *)POscrat2,&sizegg);
 			if ( sizegg != 0 ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("Irregularity in PolyGCD1c");
@@ -3290,12 +3265,12 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
             size = AT.WorkPointer - p2;
             poly2 = p1; NCOPY(p1,p2,size);
             AT.WorkPointer = p1;
-            AN.POscratg[0] = 1; sizeg = 1;
-            AN.POscrath[0] = 1; sizeh = 1;
+            POscratg[0] = 1; sizeg = 1;
+            POscrath[0] = 1; sizeh = 1;
             counter = 0;
         }
 /*
- 		#] Step C3 : 
+ 		#] Step C3 :
 */
 	}
 finished:
@@ -3304,17 +3279,21 @@ finished:
 t = oldworkpointer; while ( *t ) { AN.currentTerm = t; MesPrint("GCD1-out: %t"); t += *t; }
 AN.currentTerm = old;
 */
+	NumberFree(POscrat1,"PolyGCD1c"); NumberFree(POscrat2,"PolyGCD1c");
+	NumberFree(POscratg,"PolyGCD1c"); NumberFree(POscrath,"PolyGCD1c");
 	return(oldworkpointer);
 calledfrom:
 	LOCK(ErrorMessageLock);
 	MesCall("PolyGCD1c");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(POscrat1,"PolyGCD1c"); NumberFree(POscrat2,"PolyGCD1c");
+	NumberFree(POscratg,"PolyGCD1c"); NumberFree(POscrath,"PolyGCD1c");
 	Terminate(-1);
 	return(0);
 }
 
 /*
- 		#] Algorithm 3 : 
+ 		#] Algorithm 3 :
   	#] PolyGCD1 :
   	#[ PolyDiv1 :
 */
@@ -3571,6 +3550,7 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 
 /*
   	#] PolyDiv1 :
+
   	#[ PolyPseudoRem1 :
 */
 /**
@@ -3611,6 +3591,7 @@ WORD *PolyPseudoRem1(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD *polyin, *polyout, *p, *p1, *p2, *t, *coef, ncoef, *tcoef;
 	WORD **poly2coef, *poly2size;
 	LONG size;
+	UWORD *POscrat1 = NumberMalloc("PolyPseudoRem1"), *POscrat2 = NumberMalloc("PolyPseudoRem1");
 /*
   	#[ Step 0: Make an index of coefficients of Poly2
 
@@ -3653,13 +3634,13 @@ WORD *PolyPseudoRem1(PHEAD WORD *Poly1, WORD *Poly2)
 	}
 	AT.WorkPointer += m2+1;
 /*
-  	#] Step 0: Make an index of coefficients of Poly2 
+  	#] Step 0: Make an index of coefficients of Poly2
   	#[ Copy Poly1 :
 */
 	POLYCOPY(polyin,Poly1)
 	Poly1 = polyin;
 /*
-  	#] Copy Poly1 : 
+  	#] Copy Poly1 :
 
 		for ( k = m1-m2; k >= 0; k-- ) {
 			q(k) = polyin(m2+k)*Poly2(m2)^k
@@ -3718,18 +3699,18 @@ equal:;
 				if ( p[-1] < 0 ) nsize = (p[-1]+1)/2; else nsize = (p[-1]-1)/2;
 				if ( MulLong((UWORD *)poly2coef[m2],poly2size[m2],
 				             (UWORD *)tcoef,nsize,
-				             (UWORD *)AN.POscrat1,&tsize) ) goto calledfrom;
+				             (UWORD *)POscrat1,&tsize) ) goto calledfrom;
 			}
 			if ( j >= k ) {
 				if ( MulLong((UWORD *)poly2coef[j-k],poly2size[j-k],
 				             (UWORD *)coef,ncoef,
-				             (UWORD *)AN.POscrat2,&nsize) ) goto calledfrom;
+				             (UWORD *)POscrat2,&nsize) ) goto calledfrom;
 				nsize = -nsize;
-				if ( AddLong((UWORD *)AN.POscrat1,tsize,
-				             (UWORD *)AN.POscrat2,nsize,
+				if ( AddLong((UWORD *)POscrat1,tsize,
+				             (UWORD *)POscrat2,nsize,
 				             (UWORD *)t,&fsize) ) goto calledfrom;
 				tsize = fsize; if ( fsize < 0 ) fsize = -fsize;
-				for ( i = 0; i < fsize; i++ ) AN.POscrat1[i] = t[i];
+				for ( i = 0; i < fsize; i++ ) POscrat1[i] = t[i];
 			}
 			if ( tsize != 0 ) {
 				nsize = ABS(tsize);
@@ -3743,7 +3724,7 @@ equal:;
 				else {
 					*t++ = 2+2*nsize;
 				}
-				for ( i = 0; i < nsize; i++ ) *t++ = AN.POscrat1[i];
+				for ( i = 0; i < nsize; i++ ) *t++ = POscrat1[i];
 				*t++ = 1;
 				for ( i = 1; i < nsize; i++ ) *t++ = 0;
 				nsize = 2*nsize+1; if ( tsize < 0 ) nsize = -nsize;
@@ -3758,7 +3739,7 @@ equal:;
 		if ( *polyin == 0 ) {
 			*oldworkpointer = 0;
 			AT.WorkPointer = oldworkpointer + 1;
-			return(oldworkpointer);
+			goto normalreturn;
 		}
 	}
 /*
@@ -3768,17 +3749,20 @@ equal:;
 	p = oldworkpointer; p1 = polyin;
 	NCOPY(p,p1,size);
 	AT.WorkPointer = p;
+normalreturn:;
+	NumberFree(POscrat1,"PolyPseudoRem1"); NumberFree(POscrat2,"PolyPseudoRem1");
 	return(oldworkpointer);
 calledfrom:
 	LOCK(ErrorMessageLock);
 	MesCall("PolyPseudoRem1");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(POscrat1,"PolyPseudoRem1"); NumberFree(POscrat2,"PolyPseudoRem1");
 	Terminate(-1);
 	return(0);
 }
 
 /*
-  	#] PolyPseudoRem1 : 
+  	#] PolyPseudoRem1 :
   	#[ PolyRatFunMul :
 */
 /**
@@ -3994,7 +3978,7 @@ tryothert2:;
 }
 
 /*
-  	#] PolyRatFunMul : 
+  	#] PolyRatFunMul :
   	#[ InvertModular :
 */
 /**
@@ -4026,7 +4010,8 @@ WORD InvertModular(WORD xx, WORD m)
 	return((WORD)a2);
 }
 /*
-  	#] InvertModular : 
+  	#] InvertModular :
+
   	#[ InvertLongModular :
 */
 /**
@@ -4039,6 +4024,7 @@ WORD InvertLongModular(PHEAD UWORD *a, WORD na, WORD m, UWORD *b, WORD *nb)
 	WORD na1, na2, na3, na4, b1, b2, b3, y, c, d = m, x;
 	int i;
 	LONG z, yy;
+	UWORD *POscrat1, *POscrat2, *POscrat3, *POscrat4;
 /*
 	The special case that a < m
 */
@@ -4062,49 +4048,53 @@ WORD InvertLongModular(PHEAD UWORD *a, WORD na, WORD m, UWORD *b, WORD *nb)
 		if ( b2 < 0 ) b2 += a[0];
 		return(b2);              /* this is a^-1 mod m */
 	}
+	POscrat1 = NumberMalloc("InvertModular"); POscrat2 = NumberMalloc("InvertModular");
+	POscrat3 = NumberMalloc("InvertModular"); POscrat4 = NumberMalloc("InvertModular");
 /*
 	First the long division
 		a = na1*m + b1*a
 		m = na2*m + b2*a
 */
-	na2 = na; z = (LONG)(a[--na2]); AN.POscrat2[na2] = (UWORD)(z/d); yy = z%d;
+	na2 = na; z = (LONG)(a[--na2]); POscrat2[na2] = (UWORD)(z/d); yy = z%d;
 	while ( na2 > 0 ) {
 		na2--; z = (yy<<BITSINWORD) + a[na2];
-		AN.POscrat2[na2] = (UWORD)(z/d); yy = z%d;
+		POscrat2[na2] = (UWORD)(z/d); yy = z%d;
 	}
-	na2 = na; if ( AN.POscrat2[na2-1] == 0 ) na2--;
+	na2 = na; if ( POscrat2[na2-1] == 0 ) na2--;
 	b1 = 0; b2 = 1;
-	na1 = 1; AN.POscrat1[0] = 1; na2 = -na2;
+	na1 = 1; POscrat1[0] = 1; na2 = -na2;
 	x = (WORD)yy;
 	for(;;) {
 		c = d/x; y = d%x;
 		if ( y == 0 ) break;
-		MulLong((UWORD *)(AN.POscrat2),na2,
+		MulLong((UWORD *)(POscrat2),na2,
 		        (UWORD *)(&c),-1,
-		        (UWORD *)(AN.POscrat4),&na4);
-		AddLong((UWORD *)(AN.POscrat4),na4,
-		        (UWORD *)(AN.POscrat1),na1,
-		        (UWORD *)(AN.POscrat3),&na3);
+		        (UWORD *)(POscrat4),&na4);
+		AddLong((UWORD *)(POscrat4),na4,
+		        (UWORD *)(POscrat1),na1,
+		        (UWORD *)(POscrat3),&na3);
 		na1 = na2; na4 = ABS(na1);
-		for ( i = 0; i < na4; i++ ) AN.POscrat1[i] = AN.POscrat2[i];
+		for ( i = 0; i < na4; i++ ) POscrat1[i] = POscrat2[i];
 		na2 = na3; na4 = ABS(na2);
-		for ( i = 0; i < na4; i++ ) AN.POscrat2[i] = AN.POscrat3[i];
+		for ( i = 0; i < na4; i++ ) POscrat2[i] = POscrat3[i];
 		b3 = b1-c*b2; b1 = b2; b2 = b3;
 		d = x; x = y;
 	}
 	if ( na2 < 0 ) {
-		AddLong((UWORD *)(AN.POscrat2),na2,a,na,b,nb);
+		AddLong((UWORD *)(POscrat2),na2,a,na,b,nb);
 	}
 	else {
-		for ( i = 0; i < na2; i++ ) b[i] = AN.POscrat2[i];
+		for ( i = 0; i < na2; i++ ) b[i] = POscrat2[i];
 		*nb = na2;
 	}
 	if ( b2 < 0 ) b2 += m;
+	NumberFree(POscrat1,"InvertModular"); NumberFree(POscrat2,"InvertModular");
+	NumberFree(POscrat3,"InvertModular"); NumberFree(POscrat4,"InvertModular");
 	return(b2);  /* this is a^-1 mod m */
 }
 
 /*
-  	#] InvertLongModular : 
+  	#] InvertLongModular :
   	#[ PolyModGCD :
 */
 /**
@@ -4174,7 +4164,7 @@ relativeprime:
 }
 
 /*
-  	#] PolyModGCD : 
+  	#] PolyModGCD :
   	#[ PolyConvertToModulus :
 */
 /**
@@ -4209,7 +4199,7 @@ int PolyConvertToModulus(WORD *PolyIn, POLYMOD *PolyOut, WORD prime)
 }
 
 /*
-  	#] PolyConvertToModulus : 
+  	#] PolyConvertToModulus :
   	#[ PolyConvertFromModulus :
 */
 /**
@@ -4261,7 +4251,8 @@ WORD *PolyConvertFromModulus(PHEAD POLYMOD *PolyIn, WORD lgcd)
 }
 
 /*
-  	#] PolyConvertFromModulus : 
+  	#] PolyConvertFromModulus :
+
   	#[ PolyChineseRemainder :
 */
 /**
@@ -4286,7 +4277,7 @@ WORD *PolyConvertFromModulus(PHEAD POLYMOD *PolyIn, WORD lgcd)
  *	Then (r1*n2*m2+r2*n1*m1)%(m1*m2) is A%(m1*m2)
  */
 
-WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod1, WORD mod2)
+WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod1, WORD mod2, UWORD *POscratg, WORD nPOscrata)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p1,*p2,*t,*t1,*p1a,*p2a,*coef1 = 0,*coef2 = 0,ncoef1,ncoef2 = 0;
@@ -4294,14 +4285,17 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 	WORD pow1 = 0,pow2 = 0,numsym,two = 2,nhalf;
 	WORD size1, size2, size3, size4, size5;
 	int dop1,dop2,i;
+	UWORD *POscrat1 = NumberMalloc("PolyChineseRemainder"), *POscrat2 = NumberMalloc("PolyChineseRemainder");
+	UWORD *POscrat3 = NumberMalloc("PolyChineseRemainder"), *POscrat4 = NumberMalloc("PolyChineseRemainder");
+	UWORD *POscrath = NumberMalloc("PolyChineseRemainder");
 /*
 	First a few things for the infrastructure. We need to know mod1*mod2/2
-		mod1*mod2 sits in (AN.POscratg,AN.nPOscrata)
-	We put mod1*mod2/2 in AN.POscrath
+		mod1*mod2 sits in (POscratg,nPOscrata)
+	We put mod1*mod2/2 in POscrath
 */
-	DivLong((UWORD *)AN.POscratg,AN.nPOscrata,
+	DivLong((UWORD *)POscratg,nPOscrata,
 	        (UWORD *)&two,1,
-			(UWORD *)AN.POscrath,&nhalf,
+			(UWORD *)POscrath,&nhalf,
 			(UWORD *)(AT.WorkPointer),&ncoef1);
 /*
 	Next determine the inverses mod1^-1 mod mod2 and mod2^-1 mod mod1
@@ -4309,13 +4303,13 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 	Be careful: the POscrat arrays are also used in InvertLongModular.
 	Here it works out just right.
 */
-	inv1 = InvertLongModular(BHEAD (UWORD *)mod1,nmod1,mod2,AN.POscrat3,&ninv2);
+	inv1 = InvertLongModular(BHEAD (UWORD *)mod1,nmod1,mod2,POscrat3,&ninv2);
 	if ( MulLong((UWORD *)mod1,nmod1,
 	             (UWORD *)&inv1,1,
-	             AN.POscrat1,&size1) ) goto calledfrom;
-	if ( MulLong(AN.POscrat3,ninv2,
+	             POscrat1,&size1) ) goto calledfrom;
+	if ( MulLong(POscrat3,ninv2,
 	             (UWORD *)&mod2,1,
-	             AN.POscrat2,&size2) ) goto calledfrom;
+	             POscrat2,&size2) ) goto calledfrom;
 
 	numsym = 0;
 	p1 = Poly1;
@@ -4352,13 +4346,13 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 			We need coef1*(inv2*mod2)+coef2*(inv1*mod1)
 */
 			dop1 = 1; dop2 = 1;
-			if ( MulLong(AN.POscrat1,size1,
+			if ( MulLong(POscrat1,size1,
 			             (UWORD *)coef2,ncoef2,
-			             AN.POscrat3,&size3) ) goto calledfrom;
-			if ( MulLong(AN.POscrat2,size2,
+			             POscrat3,&size3) ) goto calledfrom;
+			if ( MulLong(POscrat2,size2,
 			             (UWORD *)coef1,ncoef1,
-			             AN.POscrat4,&size4) ) goto calledfrom;
-			AddLong(AN.POscrat3,size3,AN.POscrat4,size4,AN.POscrat3,&size3);
+			             POscrat4,&size4) ) goto calledfrom;
+			AddLong(POscrat3,size3,POscrat4,size4,POscrat3,&size3);
 		}
 		else if ( pow1 > pow2 ) {
 			if ( pow1 > 0 ) {
@@ -4369,9 +4363,9 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 			Combine coef1 and zero
 */
 			dop1 = 1; dop2 = 0;
-			if ( MulLong(AN.POscrat2,size2,
+			if ( MulLong(POscrat2,size2,
 			             (UWORD *)coef1,ncoef1,
-			             AN.POscrat3,&size3) ) goto calledfrom;
+			             POscrat3,&size3) ) goto calledfrom;
 		}
 		else {
 			if ( pow2 > 0 ) {
@@ -4382,20 +4376,20 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 /*
 			Combine coef2 and zero
 */
-			if ( MulLong(AN.POscrat1,size1,
+			if ( MulLong(POscrat1,size1,
 			             (UWORD *)coef2,ncoef2,
-			             AN.POscrat3,&size3) ) goto calledfrom;
+			             POscrat3,&size3) ) goto calledfrom;
 		}
-		DivLong(AN.POscrat3,size3,AN.POscratg,AN.nPOscrata,
-		        AN.POscrat4,&size4,(UWORD *)t,&size5);
+		DivLong(POscrat3,size3,POscratg,nPOscrata,
+		        POscrat4,&size4,(UWORD *)t,&size5);
 		if ( size5 > 0 ) {
-			if ( BigLong((UWORD *)t,size5,AN.POscrath,nhalf) > 0 ) {
-				AddLong((UWORD *)t,size5,AN.POscratg,-AN.nPOscrata,(UWORD *)t,&size5);
+			if ( BigLong((UWORD *)t,size5,POscrath,nhalf) > 0 ) {
+				AddLong((UWORD *)t,size5,POscratg,-nPOscrata,(UWORD *)t,&size5);
 			}
 		}
 		else {
-			if ( BigLong((UWORD *)t,-size5,AN.POscrath,nhalf) > 0 ) {
-				AddLong((UWORD *)t,size5,AN.POscratg,AN.nPOscrata,(UWORD *)t,&size5);
+			if ( BigLong((UWORD *)t,-size5,POscrath,nhalf) > 0 ) {
+				AddLong((UWORD *)t,size5,POscratg,nPOscrata,(UWORD *)t,&size5);
 			}
 		}
 		size3 = ABS(size5);
@@ -4413,17 +4407,21 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 	}
 	*t++ = 0;
 	AT.WorkPointer = t;
+	NumberFree(POscrat1,"PolyChineseRemainder"); NumberFree(POscrat2,"PolyChineseRemainder"); NumberFree(POscrat3,"PolyChineseRemainder");
+	NumberFree(POscrat4,"PolyChineseRemainder"); NumberFree(POscrath,"PolyChineseRemainder");
 	return(oldworkpointer);
 calledfrom:;
 	LOCK(ErrorMessageLock);
 	MesCall("PolyChineseRemainder");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(POscrat1,"PolyChineseRemainder"); NumberFree(POscrat2,"PolyChineseRemainder"); NumberFree(POscrat3,"PolyChineseRemainder");
+	NumberFree(POscrat4,"PolyChineseRemainder"); NumberFree(POscrath,"PolyChineseRemainder");
 	Terminate(-1);
 	return(0);
 }
 
 /*
-  	#] PolyChineseRemainder : 
+  	#] PolyChineseRemainder :
   	#[ PolyHenselUni :
 */
 /**
@@ -4569,7 +4567,7 @@ WORD *PolyHenselUni(PHEAD WORD *Prod, POLYMOD *Poly11, POLYMOD *Poly21)
 #endif
 
 /*
-  	#] PolyHenselUni : 
+  	#] PolyHenselUni :
   	#[ NextPrime :
 */
 /**
@@ -4631,7 +4629,7 @@ nexti:;
 }
  
 /*
-  	#] NextPrime : 
+  	#] NextPrime :
   	#[ ModShortPrime :
 */
 /**
@@ -4649,7 +4647,7 @@ WORD ModShortPrime(UWORD *a, WORD na, WORD x)
 }
 
 /*
-  	#] ModShortPrime : 
+  	#] ModShortPrime :
   	#[ AllocPolyModCoefs :
 */
 /**
@@ -4686,7 +4684,7 @@ int AllocPolyModCoefs(POLYMOD *polymod, WORD size)
 }
 
 /*
-  	#] AllocPolyModCoefs : 
+  	#] AllocPolyModCoefs :
   	#[ AccumTermGCD :
 */
 /**
@@ -4755,7 +4753,7 @@ nexti:;
 }
 
 /*
-  	#] AccumTermGCD : 
+  	#] AccumTermGCD :
   	#[ PolyTakeSqrt :
 */
 /**
@@ -4901,7 +4899,7 @@ noroot:;
 }
 
 /*
-  	#] PolyTakeSqrt : 
+  	#] PolyTakeSqrt :
   	#[ PolyTakeRoot :
 */
 /**
@@ -5065,7 +5063,7 @@ noroot:;
 }
 
 /*
-  	#] PolyTakeRoot : 
+  	#] PolyTakeRoot :
   	#[ PolyMulti :
  		#[ PolyInterpolation :
 */
@@ -5129,7 +5127,7 @@ WORD *PolyInterpolation(PHEAD WORD *Poly1, WORD *Poly2, WORD numsym)
 }
 #endif
 /*
- 		#] PolyInterpolation : 
+ 		#] PolyInterpolation :
  		#[ PolySubs :
 */
 /**
@@ -5154,6 +5152,7 @@ WORD *PolySubs(PHEAD WORD *Poly, WORD value, WORD numsym)
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *p, *t, *p1, *t1;
 	WORD *coef, ncoef, nscrat, mscrat, pow;
+	UWORD *DLscrat9, *DLscratA, *DLscratB;
 	int first = 1, i, i1, i2;
 
 	t = oldworkpointer;
@@ -5170,7 +5169,8 @@ WORD *PolySubs(PHEAD WORD *Poly, WORD value, WORD numsym)
 		AT.WorkPointer = t;
 		return(oldworkpointer);
 	}
-
+	DLscrat9 = NumberMalloc("PolySubs"); DLscratA = NumberMalloc("PolySubs");
+	DLscratB = NumberMalloc("PolySubs");
 	while ( *p ) {
 		p1 = p;
 		p += *p;
@@ -5192,10 +5192,10 @@ addcoef1:;
 				if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
 				else             ncoef = (ncoef-1)/2;
 				if ( AddLong((UWORD *)coef,ncoef,
-				             (UWORD *)AN.DLscrat9,nscrat,
-				             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+				             (UWORD *)DLscrat9,nscrat,
+				             (UWORD *)DLscrat9,&nscrat) ) goto calledfrom;
 				ncoef = ABS(nscrat);
-				for ( i = 0; i < ncoef; i++ ) *t++ = AN.DLscrat9[i];
+				for ( i = 0; i < ncoef; i++ ) *t++ = DLscrat9[i];
 				*t++ = 1;
 				for ( i = 1; i < ncoef; i++ ) *t++ = 0;
 				ncoef = 2*ncoef+1; if ( nscrat < 0 ) ncoef = -ncoef;
@@ -5222,17 +5222,17 @@ addcoef1:;
 				if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
 				else             ncoef = (ncoef-1)/2;
 				if ( AddLong((UWORD *)coef,ncoef,
-				             (UWORD *)AN.DLscrat9,nscrat,
-				             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+				             (UWORD *)DLscrat9,nscrat,
+				             (UWORD *)DLscrat9,&nscrat) ) goto calledfrom;
 				if ( value < 0 ) {
-					AN.DLscratA[0] = -value; mscrat = -1;
+					DLscratA[0] = -value; mscrat = -1;
 				}
 				else {
-					AN.DLscratA[0] = value; mscrat = 1;
+					DLscratA[0] = value; mscrat = 1;
 				}
-				if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
-				if ( MulLong((UWORD *)AN.DLscrat9,nscrat,
-				             (UWORD *)AN.DLscratA,mscrat,
+				if ( pow > 1 ) RaisPow(BHEAD DLscratA,&mscrat,pow);
+				if ( MulLong((UWORD *)DLscrat9,nscrat,
+				             (UWORD *)DLscratA,mscrat,
 				             (UWORD *)t,&ncoef) ) goto calledfrom;
 				nscrat = ncoef; if ( ncoef < 0 ) ncoef = -ncoef;
 				t += ncoef;
@@ -5250,7 +5250,7 @@ addcoef1:;
 				if ( nscrat < 0 ) nscrat = (nscrat+1)/2;
 				else              nscrat = (nscrat-1)/2;
 				ncoef = ABS(nscrat);
-				for ( i = 0; i < ncoef; i++ ) AN.DLscrat9[i] = coef[i];
+				for ( i = 0; i < ncoef; i++ ) DLscrat9[i] = coef[i];
 				first = 0;
 			}
 			else {
@@ -5259,18 +5259,18 @@ addcoef1:;
 				if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
 				else             ncoef = (ncoef-1)/2;
 				if ( AddLong((UWORD *)coef,ncoef,
-				             (UWORD *)AN.DLscrat9,nscrat,
-				             (UWORD *)AN.DLscratB,&ncoef) ) goto calledfrom;
+				             (UWORD *)DLscrat9,nscrat,
+				             (UWORD *)DLscratB,&ncoef) ) goto calledfrom;
 				if ( value < 0 ) {
-					AN.DLscratA[0] = -value; mscrat = -1;
+					DLscratA[0] = -value; mscrat = -1;
 				}
 				else {
-					AN.DLscratA[0] = value; mscrat = 1;
+					DLscratA[0] = value; mscrat = 1;
 				}
-				if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
-				if ( MulLong((UWORD *)AN.DLscratB,ncoef,
-				             (UWORD *)AN.DLscratA,mscrat,
-				             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+				if ( pow > 1 ) RaisPow(BHEAD DLscratA,&mscrat,pow);
+				if ( MulLong((UWORD *)DLscratB,ncoef,
+				             (UWORD *)DLscratA,mscrat,
+				             (UWORD *)DLscrat9,&nscrat) ) goto calledfrom;
 			}
 		}
 		else {
@@ -5294,24 +5294,24 @@ terminates:;
 					else             ncoef = (ncoef-1)/2;
 					if ( p1[p1[2]-1] == numsym ) {	/* add and multiply */
 						while ( p1 < coef ) *t++ = *p1++;
-						if ( AddLong((UWORD *)AN.DLscrat9,nscrat,
+						if ( AddLong((UWORD *)DLscrat9,nscrat,
 						             (UWORD *)coef,ncoef,
-						             (UWORD *)AN.DLscratB,&ncoef) ) goto calledfrom;
+						             (UWORD *)DLscratB,&ncoef) ) goto calledfrom;
 						pow = coef[-1];
 						if ( value < 0 ) {
-							AN.DLscratA[0] = -value; mscrat = -1;
+							DLscratA[0] = -value; mscrat = -1;
 						}
 						else {
-							AN.DLscratA[0] = value; mscrat = 1;
+							DLscratA[0] = value; mscrat = 1;
 						}
-						if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
-						if ( MulLong((UWORD *)AN.DLscratB,ncoef,
-						             (UWORD *)AN.DLscratA,mscrat,
+						if ( pow > 1 ) RaisPow(BHEAD DLscratA,&mscrat,pow);
+						if ( MulLong((UWORD *)DLscratB,ncoef,
+						             (UWORD *)DLscratA,mscrat,
 						             (UWORD *)t,&nscrat) ) goto calledfrom;
 					}
 					else {	/* only add */
 						while ( p1 < coef ) *t++ = *p1++;
-						if ( AddLong((UWORD *)AN.DLscrat9,nscrat,
+						if ( AddLong((UWORD *)DLscrat9,nscrat,
 						             (UWORD *)coef,ncoef,
 						             (UWORD *)t,&nscrat) ) goto calledfrom;
 					}
@@ -5347,19 +5347,19 @@ terminates:;
 					if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
 					else             ncoef = (ncoef-1)/2;
 					nscrat = ABS(ncoef);
-					for ( i = 0; i < nscrat; i++ ) AN.DLscratB[i] = coef[i];
+					for ( i = 0; i < nscrat; i++ ) DLscratB[i] = coef[i];
 					pow = coef[-1];
 					if ( i1 == i2 ) pow -= p[p[2]];
 					if ( value < 0 ) {
-						AN.DLscratA[0] = -value; mscrat = -1;
+						DLscratA[0] = -value; mscrat = -1;
 					}
 					else {
-						AN.DLscratA[0] = value; mscrat = 1;
+						DLscratA[0] = value; mscrat = 1;
 					}
-					if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
-					if ( MulLong((UWORD *)AN.DLscratB,ncoef,
-					             (UWORD *)AN.DLscratA,mscrat,
-					             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+					if ( pow > 1 ) RaisPow(BHEAD DLscratA,&mscrat,pow);
+					if ( MulLong((UWORD *)DLscratB,ncoef,
+					             (UWORD *)DLscratA,mscrat,
+					             (UWORD *)DLscrat9,&nscrat) ) goto calledfrom;
 					first = 0;
 				}
 				else {	/* accumulate with a Horner scheme */
@@ -5367,38 +5367,40 @@ terminates:;
 					coef = p - ABS(ncoef);
 					if ( ncoef < 0 ) ncoef = (ncoef+1)/2;
 					else             ncoef = (ncoef-1)/2;
-					if ( AddLong((UWORD *)AN.DLscrat9,nscrat,
+					if ( AddLong((UWORD *)DLscrat9,nscrat,
 					             (UWORD *)coef,ncoef,
-					             (UWORD *)AN.DLscratB,&ncoef) ) goto calledfrom;
+					             (UWORD *)DLscratB,&ncoef) ) goto calledfrom;
 					pow = coef[-1];
 					if ( i1 == i2 ) pow -= p[p[2]];
 					if ( value < 0 ) {
-						AN.DLscratA[0] = -value; mscrat = -1;
+						DLscratA[0] = -value; mscrat = -1;
 					}
 					else {
-						AN.DLscratA[0] = value; mscrat = 1;
+						DLscratA[0] = value; mscrat = 1;
 					}
-					if ( pow > 1 ) RaisPow(BHEAD AN.DLscratA,&mscrat,pow);
-					if ( MulLong((UWORD *)AN.DLscratB,ncoef,
-					             (UWORD *)AN.DLscratA,mscrat,
-					             (UWORD *)AN.DLscrat9,&nscrat) ) goto calledfrom;
+					if ( pow > 1 ) RaisPow(BHEAD DLscratA,&mscrat,pow);
+					if ( MulLong((UWORD *)DLscratB,ncoef,
+					             (UWORD *)DLscratA,mscrat,
+					             (UWORD *)DLscrat9,&nscrat) ) goto calledfrom;
 				}
 			}
 		}
 	}
 	*t++ = 0;
 	AT.WorkPointer = t;
+	NumberFree(DLscrat9,"PolySubs"); NumberFree(DLscratA,"PolySubs"); NumberFree(DLscratB,"PolySubs");
 	return(oldworkpointer);
 calledfrom:;
 	LOCK(ErrorMessageLock);
 	MesCall("PolySubs");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(DLscrat9,"PolySubs"); NumberFree(DLscratA,"PolySubs"); NumberFree(DLscratB,"PolySubs");
 	Terminate(-1);
 	return(0);
 }
 
 /*
- 		#] PolySubs : 
+ 		#] PolySubs :
  		#[ PolyNewton :
 */
 /**
@@ -5540,7 +5542,7 @@ WORD *PolyNewton(PHEAD WORD **Polynomials, WORD num, WORD numsym)
 }
 
 /*
- 		#] PolyNewton : 
+ 		#] PolyNewton :
  		#[ PolyGetNewtonCoef :
 */
 /**
@@ -5635,7 +5637,7 @@ calledfrom:;
 }
 
 /*
- 		#] PolyGetNewtonCoef : 
+ 		#] PolyGetNewtonCoef :
  		#[ PolyGetGCDPowers :
 */
 /**
@@ -5761,7 +5763,7 @@ WORD *PolyGetGCDPowers(PHEAD WORD *Poly1, WORD *Poly2, WORD *plist1, WORD *plist
 }
 
 /*
- 		#] PolyGetGCDPowers : 
+ 		#] PolyGetGCDPowers :
  		#[ PolyModSubsVector :
 */
 /**
@@ -5873,7 +5875,7 @@ zerovalue:;
 }
 
 /*
- 		#] PolyModSubsVector : 
+ 		#] PolyModSubsVector :
  		#[ ModPow :
 */
 /**
@@ -5913,7 +5915,7 @@ WORD ModPow(WORD num, WORD pow, WORD prime)
 }
 
 /*
- 		#] ModPow : 
+ 		#] ModPow :
  		#[ PolyGetSymbols :
 */
 /**
@@ -6004,7 +6006,7 @@ WORD *PolyGetSymbols(PHEAD WORD *Poly, int *maxi)
 }
 
 /*
- 		#] PolyGetSymbols : 
+ 		#] PolyGetSymbols :
  		#[ PolyGetConfig :
 */
 /**
@@ -6028,6 +6030,6 @@ WORD *PolyGetConfig(PHEAD WORD numvars)
 }
 
 /*
- 		#] PolyGetConfig : 
-  	#] PolyMulti : 
+ 		#] PolyGetConfig :
+  	#] PolyMulti :
 */

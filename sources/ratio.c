@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Ratio :
 
 	These are the special operations regarding simple polynomials.
@@ -110,7 +110,7 @@ We have to revise the code for the second case.
 }
 
 /*
- 		#] RatioFind : 
+ 		#] RatioFind :
  		#[ RatioGen :
 
 		The algoritm:
@@ -284,7 +284,7 @@ RatioCall:
 }
 
 /*
- 		#] RatioGen : 
+ 		#] RatioGen :
  		#[ BinomGen :
 
 		Routine for the generation of terms in a binomialtype expansion.
@@ -343,7 +343,7 @@ WORD BinomGen(WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
 }
 
 /*
- 		#] BinomGen : 
+ 		#] BinomGen :
  		#[ DoSumF1 :
 
 		Routine expands a sum_ function.
@@ -420,7 +420,7 @@ SumF1Call:
 }
 
 /*
- 		#] DoSumF1 : 
+ 		#] DoSumF1 :
  		#[ Glue :
 
 		Routine multiplies two terms. The second term is subject
@@ -435,9 +435,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 	GETBIDENTITY
 	UWORD *coef;
 	WORD ncoef, *t, *t1, *t2, i, nc2, nc3, old, newer;
-	if ( AN.GlScratC == 0 )
-		AN.GlScratC = (UWORD *)Malloc1(2*(AM.MaxTal+2)*sizeof(UWORD),"Glue");
-	coef = AN.GlScratC;
+	coef = (UWORD *)(TermMalloc("Glue"));
 	t = term1;
 	t += *t;
 	i = t[-1];
@@ -460,6 +458,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 		LOCK(ErrorMessageLock);
 		MesCall("Glue");
 		UNLOCK(ErrorMessageLock);
+		TermFree(coef,"Glue");
 		SETERROR(-1)
 	}
 	i = (ABS(nc3))<<1;
@@ -481,11 +480,12 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 	t2 = t;
 	i = old - insert;
 	NCOPY(t1,t2,i);
+	TermFree(coef,"Glue");
 	return(0);
 }
 
 /*
- 		#] Glue : 
+ 		#] Glue :
  		#[ DoSumF2 :
 */
 
@@ -564,7 +564,7 @@ SumF2Call:
 }
 
 /*
- 		#] DoSumF2 : 
+ 		#] DoSumF2 :
   	#] Ratio :
 */
 

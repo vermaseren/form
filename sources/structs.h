@@ -197,7 +197,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -393,28 +393,28 @@ typedef struct TaBlEs {
  */
 
 typedef struct ExPrEsSiOn {
-	RENUMBER renum;         /**< [D] For Renumbering of global stored expressions. =0 if unallocated. */
+	RENUMBER renum;			/* For Renumbering of global stored expressions */
 	BRACKETINFO *bracketinfo;
 	BRACKETINFO *newbracketinfo;
-	WORD     *renumlists;   /**< Allocated only for threaded version if variables exist,
+	WORD	*renumlists;    /**< Allocated only for threaded version if variables exist,
 	                             else points to AN.dummyrenumlist */
-	WORD     *inmem;        /* If in memory like e.g. a polynomial */
-	POSITION onfile;
-	POSITION prototype;
-	LONG     counter;
-	LONG     name;
-	WORD     hidelevel;
-	WORD     vflags;        /* Various flags */
-	WORD     printflag;
-	WORD     status;
-	WORD     replace;
-	WORD     node;
-	WORD     whichbuffer;
-	WORD     namesize;
-	WORD     compression;
-	WORD     numdummies;
+	WORD	*inmem;			/* If in memory like e.g. a polynomial */
+	POSITION	onfile;
+	POSITION	prototype;
+	LONG	counter;
+	LONG	name;
+	WORD	hidelevel;
+	WORD	vflags;			/* Various flags */
+	WORD	printflag;
+	WORD	status;
+	WORD	replace;
+	WORD	node;
+	WORD	whichbuffer;
+	WORD	namesize;
+	WORD	compression;
+	WORD	numdummies;
 #ifdef WITHPTHREADS
-	WORD     partodo;       /* Whether to be done in parallel mode */
+	WORD	partodo;		/* Whether to be done in parallel mode */
 	PADPOINTER(2,0,11,0);
 #else
 	PADPOINTER(2,0,10,0);
@@ -512,24 +512,20 @@ typedef struct DuBiOuS {		/* Undeclared objects. Just for compiler. */
 	PADLONG(0,2,0);
 } *DUBIOUSV;
 
-/**
- *
- */
-
 typedef struct DoLlArS {
-	WORD  *where;         /**< [D] A pointer(!) to the object */
-	LONG  size;           /**< The number of words */
-	LONG  name;
+	WORD	*where;				/* A pointer(!) to the object */
+	LONG	size;				/* The number of words */
+	LONG	name;
 #ifdef WITHPTHREADS
-	pthread_mutex_t pthreadslockread;
-	pthread_mutex_t pthreadslockwrite;
+	pthread_mutex_t	pthreadslockread;
+	pthread_mutex_t	pthreadslockwrite;
 #endif
-	WORD  type;
-	WORD  node;
-	WORD  index;
-	WORD  zero;
-	WORD  numdummies;
-	WORD  reserved;
+	WORD	type;
+	WORD	node;
+	WORD	index;
+	WORD	zero;
+	WORD	numdummies;
+	WORD	reserved;
 	PADPOINTER(2,0,6,0);
 } *DOLLARS;
 
@@ -594,51 +590,51 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
 /**
- *  The type FILEHANDLE is the struct that controls all relevant information
- *  of a file, whether it is open or not. The file may even not yet exist.
- *  There is a system of caches (PObuffer) and as long as the information
- *  to be written still fits inside the cache the file may never be
- *  created. There are variables that can store information about different
- *  types of files, like scratch files or sort files.
- *  Depending on what is available in the system we may also have information
- *  about gzip compression (currently sort file only) or locks (TFORM).
+ *	The type FILEHANDLE is the struct that controls all relevant information
+ *	of a file, whether it is open or not. The file may even not yet exist.
+ *	There is a system of caches (PObuffer) and as long as the information
+ *	to be written still fits inside the cache the file may never be
+ *	created. There are variables that can store information about different
+ *	types of files, like scratch files or sort files.
+ *	Depending on what is available in the system we may also have information
+ *	about gzip compression (currently sort file only) or locks (TFORM).
  */
 
 typedef struct FiLe {
-	WORD  *PObuffer;     /**< [D] Address of the intermediate buffer */
-	WORD  *POstop;       /**< End of the buffer */
-	WORD  *POfill;       /**< Fill position of the buffer */
-	WORD  *POfull;       /**< Full buffer when only cached */
+    WORD *PObuffer;             /* Address of the intermediate buffer */
+    WORD *POstop;               /* End of the buffer */
+    WORD *POfill;               /* Fill position of the buffer */
+    WORD *POfull;               /* Full buffer when only cached */
 #ifdef WITHPTHREADS
-	WORD  *wPObuffer;    /**< [D] Address of the intermediate worker buffer */
-	WORD  *wPOstop;      /**< End of the worker buffer */
-	WORD  *wPOfill;      /**< Fill position of the worker buffer */
-	WORD  *wPOfull;      /**< Full buffer when only worker cached */
+    WORD *wPObuffer;             /* Address of the intermediate worker buffer */
+    WORD *wPOstop;               /* End of the worker buffer */
+    WORD *wPOfill;               /* Fill position of the worker buffer */
+    WORD *wPOfull;               /* Full buffer when only worker cached */
 #endif
-	char  *name;         /**< [D] Name of the file */
+	char *name;					/* name of the file */
 #ifdef WITHZLIB
-	z_streamp zsp;       /* The pointer to the stream struct for gzip */
-	Bytef *ziobuffer;    /* The output buffer for compression */
+	z_streamp zsp;				/* The pointer to the stream struct for gzip */
+	Bytef *ziobuffer;			/* The output buffer for compression */
 #endif
-	POSITION POposition; /* File position */
-	POSITION filesize;   /* Because SEEK_END is unsafe on IBM */
-	ULONG numblocks;     /* Number of blocks in file */
-	ULONG inbuffer;      /* Block in the buffer */
-	LONG  POsize;        /* size of the buffer */
+	POSITION POposition;    	/* File position */
+    POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
+	ULONG numblocks;			/* Number of blocks in file */
+	ULONG inbuffer;				/* Block in the buffer */
+    LONG POsize;                /* size of the buffer */
 #ifdef WITHZLIB
-	LONG  ziosize;       /* size of the zoutbuffer */
+    LONG ziosize;               /* size of the zoutbuffer */
 #endif
 #ifdef WITHPTHREADS
-	LONG  wPOsize;       /* size of the worker buffer */
-	pthread_mutex_t pthreadslock;
+    LONG wPOsize;                /* size of the worker buffer */
+	pthread_mutex_t	pthreadslock;
 #endif
-	int handle;          /**< Our own handle. Equal -1 if no file exists. */
-	int active;          /* File is open or closed. Not used. */
+    int handle;					/**< Our own handle. Equal -1 if no file exists. */
+	int active;					/* File is open or closed. Not used. */
 #ifdef WITHZLIB
 	PADPOINTER(4,2,1,0);
 #else
@@ -647,14 +643,14 @@ typedef struct FiLe {
 } FILEHANDLE;
 
 /**
- *  Input is read from 'streams' which are represented by objects of type
- *  STREAM. A stream can be a file, a do-loop, a procedure, the string value
- *  of a preprocessor variable .....
- *  When a new stream is opened we have to keep information about where
- *  to fall back in the parent stream to allow this to happen even in the
- *  middle of reading names etc as would be the case with a`i'b
+ *	Input is read from 'streams' which are represented by objects of type
+ *	STREAM. A stream can be a file, a do-loop, a procedure, the string value
+ *	of a preprocessor variable .....
+ *	When a new stream is opened we have to keep information about where
+ *	to fall back in the parent stream to allow this to happen even in the
+ *	middle of reading names etc as would be the case with a`i'b
  */
-
+ 
 typedef struct StreaM {
 	UBYTE *buffer;        /**< [D] Size in buffersize */
 	UBYTE *pointer;       /**< pointer into buffer memory */
@@ -666,18 +662,18 @@ typedef struct StreaM {
 	off_t fileposition;
 	off_t linenumber;
 	off_t prevline;
-	long  buffersize;
-	long  bufferposition;
-	long  inbuffer;
-	int   previous;
-	int   handle;
-	int   type;
-	int   prevars;
-	int   previousNoShowInput;
-	int   eqnum;
-	int   afterwards;
-	int   olddelay;
-	int   oldnoshowinput;
+	long buffersize;
+	long bufferposition;
+	long inbuffer;
+	int previous;
+	int handle;
+	int type;
+	int prevars;
+	int previousNoShowInput;
+	int eqnum;
+	int afterwards;
+	int olddelay;
+	int oldnoshowinput;
 	UBYTE isnextchar;
 	UBYTE nextchar[2];
 	UBYTE reserved;
@@ -685,7 +681,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -743,50 +739,50 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
 
 /**
- *  An element of the type PREVAR is needed for each preprocessor variable.
+ *	An element of the type PREVAR is needed for each preprocessor variable.
  */
-
+ 
 typedef struct pReVaR {
-	UBYTE *name;      /**< [D] */
-	UBYTE *value;     /**< points into memory of name */
-	UBYTE *argnames;  /**< names of arguments, zero separated. points into memory of name */
-	int   nargs;      /**< 0 = regular, >= 1: number of macro arguments. total number */
-	int   wildarg;    /**< The number of a potential ?var. If none: 0. wildarg<nargs */
+	UBYTE *name;		/**< allocated */
+	UBYTE *value;		/**< points into memory of name */
+	UBYTE *argnames;	/**< names of arguments, zero separated. points into memory of name */
+	int nargs;			/**< 0 = regular, >= 1: number of macro arguments. total number */
+	int wildarg;		/**< The number of a potential ?var. If none: 0. wildarg<nargs */
 	PADPOINTER(0,2,0,0);
 } PREVAR;
 
 /**
- *  Used by the preprocessor to load the contents of a doloop or a procedure.
- *  The struct PRELOAD is used both in the DOLOOP and PROCEDURE structs.
+ *	Used by the preprocessor to load the contents of a doloop or a procedure.
+ *	The struct PRELOAD is used both in the DOLOOP and PROCEDURE structs.
  */
 
 typedef struct {
-	UBYTE *buffer;
-	LONG  size;
+	UBYTE	*buffer;
+    LONG	size;
 	PADPOINTER(1,0,0,0);
 } PRELOAD;
 
 /**
- *  An element of the type PROCEDURE is needed for each procedure in the system.
+ *	An element of the type PROCEDURE is needed for each procedure in the system.
  */
 
 typedef struct {
 	PRELOAD p;
-	UBYTE   *name;     /**< [D] */
-	int     loadmode;
+	UBYTE	*name;
+	int		loadmode;
 	PADPOINTER(0,1,0,0);
 } PROCEDURE;
 
 /**
- *  Each preprocessor do loop has a struct of type DOLOOP to keep track
- *  of all relevant parameters like where the beginning of the loop is,
- *  what the boundaries, increment and value of the loop parameter are, etc.
- *  Also we keep the whole loop inside a buffer of type PRELOAD
+ *	Each preprocessor do loop has a struct of type DOLOOP to keep track
+ *	of all relevant parameters like where the beginning of the loop is,
+ *	what the boundaries, increment and value of the loop parameter are, etc.
+ *	Also we keep the whole loop inside a buffer of type PRELOAD
  */
 
 typedef struct DoLoOp {
@@ -794,15 +790,15 @@ typedef struct DoLoOp {
 	UBYTE *name;        /**< pointer into PRELOAD buffer */
 	UBYTE *vars;        /* for {} or name of expression */
 	UBYTE *contents;
-	UBYTE *dollarname;  /**< [D] For loop over terms in expression. */
-	LONG  startlinenumber;
-	LONG  firstnum;
-	LONG  lastnum;
-	LONG  incnum;
-	int   type;
-	int   NoShowInput;
-	int   errorsinloop;
-	int   firstloopcall;
+	UBYTE *dollarname;  /**< For loop over terms in expression. Allocated with Malloc1() */
+	LONG startlinenumber;
+	LONG firstnum;
+	LONG lastnum;
+	LONG incnum;
+	int type;
+	int NoShowInput;
+	int errorsinloop;
+	int firstloopcall;
 	PADPOINTER(4,4,0,0);
 } DOLOOP;
 
@@ -850,7 +846,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -1125,7 +1121,7 @@ typedef struct {
 } POLYPADIC;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1271,63 +1267,63 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
- *  The P_const struct is part of the global data and resides in the
- *  ALLGLOBALS struct A under the name P
- *  We see it used with the macro AP as in AP.InOutBuf
- *  It contains objects that have dealings with the preprocessor.
+ *	The P_const struct is part of the global data and resides in the
+ *	ALLGLOBALS struct A under the name P
+ *	We see it used with the macro AP as in AP.InOutBuf
+ *	It contains objects that have dealings with the preprocessor.
  */
 
 struct P_const {
-	LIST  DollarList;           /* (R) Dollar variables. Contains pointers
-	                                   to contents of the variables.*/
-	LIST  PreVarList;           /* (R) List of preprocessor variables
-	                                   Points to contents. Can be changed */
-	LIST  LoopList;             /* (P) List of do loops */
-	LIST  ProcList;             /* (P) List of procedures */
-	LIST  ChDollarList;         /* (P) List of Dollars changed by PP in module */
-	UBYTE **PreSwitchStrings;   /* (P) The string in a switch */
-	UBYTE *preStart;            /* (P) Preprocessor instruction buffer */
-	UBYTE *preStop;             /* (P) end of preStart */
-	UBYTE *preFill;             /* (P) Filling point in preStart */
-	UBYTE *procedureExtension;  /* (P) Extension for procedure files (prc) */
-	UBYTE *cprocedureExtension; /* (P) Extension after .clear */
-	int   *PreIfStack;          /* (P) Tracks nesting of #if */
-	int   *PreSwitchModes;      /* (P) Stack of switch status */
-	int   *PreTypes;            /* (P) stack of #call, #do etc nesting */
+    LIST DollarList;               /* (R) Dollar variables. Contains pointers
+                                       to contents of the variables.*/
+    LIST PreVarList;               /* (R) List of preprocessor variables
+                                       Points to contents. Can be changed */
+    LIST LoopList;                 /* (P) List of do loops */
+    LIST ProcList;                 /* (P) List of procedures */
+    LIST ChDollarList;             /* (P) List of Dollars changed by PP in module */
+    UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
+    UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
+    UBYTE *preStop;                /* (P) end of preStart */
+    UBYTE *preFill;                /* (P) Filling point in preStart */
+	UBYTE *procedureExtension;     /* (P) Extension for procedure files (prc) */
+	UBYTE *cprocedureExtension;    /* (P) Extension after .clear */
+    int *PreIfStack;               /* (P) Tracks nesting of #if */
+    int *PreSwitchModes;           /* (P) Stack of switch status */
+    int *PreTypes;                 /* (P) stack of #call, #do etc nesting */
 #ifdef WITHPTHREADS
-	pthread_mutex_t PreVarLock; /* (P) */
+	pthread_mutex_t PreVarLock;    /* (P) */
 #endif
-	int   PreAssignFlag;        /* (C) Indicates #assign -> catch dollar */
-	int   PreContinuation;      /* (C) Indicates whether the statement is new */
-	LONG  InOutBuf;             /* (P) Characters in the output buf in pre.c */
-	LONG  pSize;                /* (P) size of preStart */
-	int   PreproFlag;           /* (P) Internal use to mark work on prepro instr. */
-	int   iBufError;            /* (P) Flag for errors with input buffer */
-	int   PreOut;               /* (P) Flag for #+ #- */
-	int   PreSwitchLevel;       /* (P) Nesting of #switch */
-	int   NumPreSwitchStrings;  /* (P) Size of PreSwitchStrings */
-	int   MaxPreTypes;          /* (P) Size of PreTypes */
-	int   NumPreTypes;          /* (P) Number of nesting objects in PreTypes */
-	int   MaxPreIfLevel;        /* (C) Maximum number of nested #if. Dynamic */
-	int   PreIfLevel;           /* (C) Current position if PreIfStack */
-	int   DelayPrevar;          /* (P) Delaying prevar substitution */
-	int   AllowDelay;           /* (P) Allow delayed prevar substitution */
-	int   lhdollarerror;        /* (R) */
-	int   eat;                  /* () */
-	int   gNumPre;              /* (P) Number of preprocessor variables for .clear */
-	int   PreDebug;             /* (C) */
-	WORD  DebugFlag;            /* (P) For debugging purposes */
-	WORD  preError;             /* (?) used but not defined */
-	UBYTE ComChar;              /* (P) Commentary character */
-	UBYTE cComChar;             /* (P) Old commentary character for .clear */
+    int     PreAssignFlag;         /* (C) Indicates #assign -> catch dollar */
+    int     PreContinuation;       /* (C) Indicates whether the statement is new */
+    LONG    InOutBuf;              /* (P) Characters in the output buf in pre.c */
+    LONG    pSize;                 /* (P) size of preStart */
+    int     PreproFlag;            /* (P) Internal use to mark work on prepro instr. */
+    int     iBufError;             /* (P) Flag for errors with input buffer */
+    int     PreOut;                /* (P) Flag for #+ #- */
+    int     PreSwitchLevel;        /* (P) Nesting of #switch */
+    int     NumPreSwitchStrings;   /* (P) Size of PreSwitchStrings */
+    int     MaxPreTypes;           /* (P) Size of PreTypes */
+    int     NumPreTypes;           /* (P) Number of nesting objects in PreTypes */
+    int     MaxPreIfLevel;         /* (C) Maximum number of nested #if. Dynamic */
+    int     PreIfLevel;            /* (C) Current position if PreIfStack */
+    int     DelayPrevar;           /* (P) Delaying prevar substitution */
+    int     AllowDelay;            /* (P) Allow delayed prevar substitution */
+    int     lhdollarerror;         /* (R) */
+	int		eat;                   /* () */
+	int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
+    int     PreDebug;              /* (C) */
+    WORD    DebugFlag;             /* (P) For debugging purposes */
+    WORD    preError;              /* (?) used but not defined */
+    UBYTE   ComChar;               /* (P) Commentary character */
+    UBYTE   cComChar;              /* (P) Old commentary character for .clear */
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1521,15 +1517,15 @@ struct C_const {
                                         0 : do nothing; 1 : create snapshots, set by On checkpoint
                                         statement */
     LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)).*/
-    char    *CheckpointRunAfter;   /**< [D] Filename of script to be executed _after_ creating the
+    char    *CheckpointRunAfter;   /**< [D] Filename of script to be executed _before_ creating the
                                         snapshot. =0 if no script shall be executed. */
-    char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _before_ having
+    char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
                                         created the snapshot. =0 if no script shall be executed.*/
     LONG    CheckpointInterval;    /**< Time interval in milliseconds for snapshots. =0 if
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1560,7 +1556,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1624,7 +1620,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1661,12 +1657,6 @@ struct T_const {
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
 	WORD    *primelist;
-    UWORD   *TMscrat1;             /* () Scratch for TakeModulus */
-    UWORD   *TMscrat2;             /* () Scratch for TakeModulus */
-    UWORD   *TMscrat3;             /* () Scratch for TakeModulus */
-    UWORD   *TMscrat4;             /* () Scratch for TakeModulus */
-    UWORD   *TMscrat5;             /* () Scratch for TakeModulus */
-    UWORD   *TMscrat6;             /* () Scratch for TakeModulus */
     WORD    *lastpolyrem;          /* () Remainder after PolyDiv_ */
     long    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     long    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
@@ -1674,6 +1664,8 @@ struct T_const {
     WORD    *TMaddr;               /* (R) buffer for TestSub */
     WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
+    WORD    **TermMemHeap;        /* For TermMalloc. Set zero in Checkpoint */
+    UWORD    **NumberMemHeap;      /* For NumberMalloc. Set zero in Checkpoint */
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
@@ -1691,6 +1683,10 @@ struct T_const {
 #endif
 #endif
     int     wranfcall;
+    int     TermMemMax;            /* For TermMalloc. Set zero in Checkpoint */
+    int     TermMemTop;            /* For TermMalloc. Set zero in Checkpoint */
+    int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
+    int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
@@ -1758,13 +1754,10 @@ struct N_const {
     WORD    *findPattern;          /* (N) For wildcard pattern matching */
     WORD    *brackbuf;             /* () Used in poly */
     WORD    *polybrackets;         /* () Used in poly */
-	UWORD	*EAscrat;              /* () Used in execarg */
 #ifdef WITHZLIB
 	Bytef	**ziobufnum;           /* () Used in compress.c */
 	Bytef	*ziobuffers;           /* () Used in compress.c */
 #endif
-	UWORD	*IfScrat1;             /* () Used in dollar.c */
-	UWORD	*IfScrat2;             /* () Used in dollar.c */
 	WORD	*dummyrenumlist;       /* () Used in execute.c and store.c */
 	WORD	*mgscr1;               /* () Used in factor.c */
 	WORD	*mgscr2;               /* () Used in factor.c */
@@ -1783,55 +1776,6 @@ struct N_const {
 	TRACES	*tracestack;           /* () used in opera.c */
 	WORD	*selecttermundo;       /* () Used in pattern.c */
 	WORD	*patternbuffer;        /* () Used in pattern.c */
-	UWORD	*GlScratC;             /* () Used in ratio.c */
-	UWORD	*Myscrat1;             /* () Used in reken.c */
-	UWORD   *Myscrat2;             /* () Used in reken.c */
-	UWORD	*Dyscrat1;             /* () Used in reken.c */
-	UWORD	*Dyscrat2;             /* () Used in reken.c */
-	UWORD	*ARscrat1;             /* () Used in reken.c */
-	UWORD	*ARscrat2;             /* () Used in reken.c */
-	UWORD	*ARscrat3;             /* () Used in reken.c */
-	UWORD	*ARscrat4;             /* () Used in reken.c */
-	UWORD	*MRscrat1;             /* () Used in reken.c */
-	UWORD	*MRscrat2;             /* () Used in reken.c */
-	UWORD	*MRscrat3;             /* () Used in reken.c */
-	UWORD	*MRscrat4;             /* () Used in reken.c */
-	UWORD	*Siscrat5;             /* () Used in reken.c */
-	UWORD	*Siscrat6;             /* () Used in reken.c */
-	UWORD	*Siscrat7;             /* () Used in reken.c */
-	UWORD	*Siscrat8;             /* () Used in reken.c */
-	UWORD	*DLscrat9;             /* () Used in reken.c */
-	UWORD	*DLscratA;             /* () Used in reken.c */
-	UWORD	*DLscratB;             /* () Used in reken.c */
-	UWORD	*DLscratC;             /* () Used in reken.c */
-	UWORD	*RPscratA;             /* () Used in reken.c */
-	UWORD	*RPscratB;             /* () Used in reken.c */
-	UWORD	*PLscratA;             /* () Used in reken.c */
-#ifdef EXTRAGCD
-	UWORD	*GCscrat6;             /* () Used in reken.c */
-	UWORD	*GCscrat7;             /* () Used in reken.c */
-	UWORD	*GCscrat8;             /* () Used in reken.c */
-#endif
-	UWORD	*GLscrat6;             /* () Used in reken.c */
-	UWORD	*GLscrat7;             /* () Used in reken.c */
-	UWORD	*GLscrat8;             /* () Used in reken.c */
-	UWORD	*GLscrat9;             /* () Used in reken.c */
-	UWORD	*GLscrat10;            /* () Used in reken.c */
-	UWORD	*GBscrat3;             /* () Used in reken.c */
-	UWORD	*GBscrat4;             /* () Used in reken.c */
-	UWORD	*TLscrat1;             /* () Used in reken.c */
-	UWORD	*TLscrat2;             /* () Used in reken.c */
-	UWORD	*TLscrat3;             /* () Used in reken.c */
-	UWORD	*TLscrat4;             /* () Used in reken.c */
-	UWORD	*CCscratE;             /* () Used in reken.c */
-	UWORD	*MMscrat7;             /* () Used in reken.c */
-	UWORD	*MMscratC;             /* () Used in reken.c */
-	UWORD	*POscrat1;             /* () Used in polynito.c */
-	UWORD	*POscrat2;             /* () Used in polynito.c */
-	UWORD	*POscrat3;             /* () Used in polynito.c */
-	UWORD	*POscrat4;             /* () Used in polynito.c */
-	UWORD	*POscratg;             /* () Used in polynito.c */
-	UWORD	*POscrath;             /* () Used in polynito.c */
 	WORD	*PoinScratch[300];     /* () used in reshuf.c */
 	WORD	*FunScratch[300];      /* () used in reshuf.c */
 	FUN_INFO *FunInfo;             /* () Used in smart.c */
@@ -1840,27 +1784,11 @@ struct N_const {
 	UWORD	*SoScratC;             /* () Used in sort.c */
 	WORD	*listinprint;          /* () Used in proces.c and message.c */
 	WORD	*currentTerm;          /* () Used in proces.c and message.c */
-	UWORD	*GCDbuffer;            /* () Used in argument.c and factor.c */
-	UWORD	*GCDbuffer2;           /* () Used in argument.c and factor.c */
-	UWORD	*LCMbuffer;            /* () Used in argument.c and factor.c */
-	UWORD	*LCMb;                 /* () Used in argument.c and factor.c */
-	UWORD	*LCMc;                 /* () Used in argument.c and factor.c */
-#ifdef CHINREM
-	UWORD	*CRscrat1;             /* () Used in factor.c */
-	UWORD	*CRscrat2;             /* () Used in factor.c */
-	UWORD	*CRscrat3;             /* () Used in factor.c */
-#endif
 	WORD	**arglist;             /* () Used in function.c */
-	UWORD	*DIscratC;             /* () Used in if.c */
-	UWORD	*DIscratD;             /* () Used in if.c */
-	UWORD	*DIscratE;             /* () Used in if.c */
 	int		*tlistbuf;             /* () used in lus.c */
 #ifdef WHICHSUBEXPRESSION
 	UWORD	*BinoScrat;            /* () Used in proces.c */
 #endif
-	UWORD	*PIFscrat;             /* () Used in poly.c */
-	UWORD	*PIFscrat1;            /* () Used in poly.c */
-	UWORD	*PIFscrat2;            /* () Used in poly.c */
 	WORD	*compressSpace;        /* () Used in sort.c */
 	WORD	*poly1a;
 	WORD	*poly2a;
@@ -1931,23 +1859,14 @@ struct N_const {
 	WORD	patternbuffersize;     /* () Used in pattern.c */
 	WORD	numlistinprint;        /* () Used in process.c */
 	WORD	getdivgcd;
-	WORD	nPOscrata;
-#ifdef CHINREM
-	WORD	nCRscrat1;             /* () Used in factor.c */
-	WORD	nCRscrat2;             /* () Used in factor.c */
-	WORD	nCRscrat3;             /* () Used in factor.c */
-#endif
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
 #endif
-	WORD	PIFnscrat;             /* () Used in poly.c */
-	WORD	PIFnscrat1;            /* () Used in poly.c */
-	WORD	PIFnscrat2;            /* () Used in poly.c */
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2016,7 +1935,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2042,7 +1961,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X :
+ 		#] X : 
  		#[ Definitions :
 */
 
@@ -2094,7 +2013,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
     #] A :
   	#[ FG :
 */
@@ -2131,7 +2050,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

@@ -264,6 +264,7 @@ int FactorIn(PHEAD WORD *term, WORD level)
 	GETBIDENTITY
 	WORD *t, *tstop, *m, *mm, *oldwork, *mstop, *n1, *n2, *n3, *n4, *n1stop, *n2stop;
 	WORD *r1, *r2, *r3, *r4, j, k, kGCD, kGCD2, kLCM, jGCD, kkLCM, jLCM, size;
+	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
 	int fromwhere = 0, i;
 	DOLLARS d;
 	t = term; GETSTOP(t,tstop); t++;
@@ -486,15 +487,8 @@ nofactor:;
 	For the coefficient we have to determine the LCM of the denominators
 	and the GCD of the numerators.
 */
-#ifdef INDIVIDUALALLOC
-	if ( AN.GCDbuffer == 0 ) {
-		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
-		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
-		AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
-		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
-		AN.LCMc = AN.LCMb + AM.MaxTal+2;
-	}
-#endif
+	GCDbuffer = NumberMalloc("FactorIn"); GCDbuffer2 = NumberMalloc("FactorIn");
+	LCMbuffer = NumberMalloc("FactorIn"); LCMb = NumberMalloc("FactorIn"); LCMc = NumberMalloc("FactorIn");
 	r1 = d->where;
 /*
 	First take the first term to load up the LCM and the GCD
@@ -505,12 +499,12 @@ nofactor:;
 	k = REDLENG(j);
 	if ( k < 0 ) k = -k;
 	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-	for ( kGCD = 0; kGCD < k; kGCD++ ) AN.GCDbuffer[kGCD] = r3[kGCD];
+	for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
 	k = REDLENG(j);
 	if ( k < 0 ) k = -k;
 	r3 += k;
 	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-	for ( kLCM = 0; kLCM < k; kLCM++ ) AN.LCMbuffer[kLCM] = r3[kLCM];
+	for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
 	r1 = r2;
 /*
 	Now go through the rest of the terms in this dollar buffer.
@@ -522,37 +516,37 @@ nofactor:;
 		k = REDLENG(j);
 		if ( k < 0 ) k = -k;
 		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-		if ( ( ( AN.GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+		if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
 /*
 			GCD is already 1
 */
 		}
 		else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-			if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer2,&kGCD2) ) {
+			if ( GcdLong(BHEAD GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer2,&kGCD2) ) {
 				goto onerror;
 			}
 			kGCD = kGCD2;
-			for ( i = 0; i < kGCD; i++ ) AN.GCDbuffer[i] = AN.GCDbuffer2[i];
+			for ( i = 0; i < kGCD; i++ ) GCDbuffer[i] = GCDbuffer2[i];
 		}
 		else {
-			kGCD = 1; AN.GCDbuffer[0] = 1;
+			kGCD = 1; GCDbuffer[0] = 1;
 		}
 		k = REDLENG(j);
 		if ( k < 0 ) k = -k;
 		r3 += k;
 		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-		if ( ( ( AN.LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+		if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
 			for ( kLCM = 0; kLCM < k; kLCM++ )
-				AN.LCMbuffer[kLCM] = r3[kLCM];
+				LCMbuffer[kLCM] = r3[kLCM];
 		}
 		else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
-			if ( GcdLong(BHEAD AN.LCMbuffer,kLCM,(UWORD *)r3,k,AN.LCMb,&kkLCM) ) {
+			if ( GcdLong(BHEAD LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
 				goto onerror;
 			}
-			DivLong((UWORD *)r3,k,AN.LCMb,kkLCM,AN.LCMb,&kkLCM,AN.LCMc,&jLCM);
-			MulLong(AN.LCMbuffer,kLCM,AN.LCMb,kkLCM,AN.LCMc,&jLCM);
+			DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
+			MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
 			for ( kLCM = 0; kLCM < jLCM; kLCM++ )
-				AN.LCMbuffer[kLCM] = AN.LCMc[kLCM];
+				LCMbuffer[kLCM] = LCMc[kLCM];
 		}
 		else {} /* LCM doesn't change */
 		r1 = r2;
@@ -560,15 +554,15 @@ nofactor:;
 /*
 	Now put the factor together: GCD/LCM
 */
-	r3 = (WORD *)(AN.GCDbuffer);
+	r3 = (WORD *)(GCDbuffer);
 	if ( kGCD == kLCM ) {
 		for ( jGCD = 0; jGCD < kGCD; jGCD++ )
-			r3[jGCD+kGCD] = AN.LCMbuffer[jGCD];
+			r3[jGCD+kGCD] = LCMbuffer[jGCD];
 		k = kGCD;
 	}
 	else if ( kGCD > kLCM ) {
 		for ( jGCD = 0; jGCD < kLCM; jGCD++ )
-			r3[jGCD+kGCD] = AN.LCMbuffer[jGCD];
+			r3[jGCD+kGCD] = LCMbuffer[jGCD];
 		for ( jGCD = kLCM; jGCD < kGCD; jGCD++ )
 			r3[jGCD+kGCD] = 0;
 		k = kGCD;
@@ -577,7 +571,7 @@ nofactor:;
 		for ( jGCD = kGCD; jGCD < kLCM; jGCD++ )
 			r3[jGCD] = 0;
 		for ( jGCD = 0; jGCD < kLCM; jGCD++ )
-			r3[jGCD+kLCM] = AN.LCMbuffer[jGCD];
+			r3[jGCD+kLCM] = LCMbuffer[jGCD];
 		k = kLCM;
 	}
 	j = 2*k+1;
@@ -604,20 +598,24 @@ nofactor:;
 	m += k;
 	*mm = (WORD)(m - mm);
 	AT.WorkPointer = m;
-	if ( Generator(BHEAD mm,level) ) return(-1);
+	if ( Generator(BHEAD mm,level) ) goto onerror;
 	AT.WorkPointer = oldwork;
 	if ( fromwhere == 0 ) M_free(d,"Dollar in FactorIn");
+	NumberFree(GCDbuffer,"FactorIn"); NumberFree(GCDbuffer2,"FactorIn");
+	NumberFree(LCMbuffer,"FactorIn"); NumberFree(LCMb,"FactorIn"); NumberFree(LCMc,"FactorIn");
 	return(0);
 onerror:
 	AT.WorkPointer = oldwork;
 	LOCK(ErrorMessageLock);
 	MesCall("FactorIn");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(GCDbuffer,"FactorIn"); NumberFree(GCDbuffer2,"FactorIn");
+	NumberFree(LCMbuffer,"FactorIn"); NumberFree(LCMb,"FactorIn"); NumberFree(LCMc,"FactorIn");
 	return(-1);
 }
 
 /*
-  	#] FactorIn :
+  	#] FactorIn : 
   	#[ FactorInExpr :
 
 	This routine tests for a factor in an active or hidden expression.
@@ -643,6 +641,9 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	FILEHANDLE *file = 0;
 	POSITION position, oldposition, startposition;
 	WORD *oldcpointer = AR.CompressPointer;
+	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
+	GCDbuffer = NumberMalloc("FactorInExpr"); GCDbuffer2 = NumberMalloc("FactorInExpr");
+	LCMbuffer = NumberMalloc("FactorInExpr"); LCMb = NumberMalloc("FactorInExpr"); LCMc = NumberMalloc("FactorInExpr");
 	t = term; GETSTOP(t,tstop); t++;
 	while ( t < tstop ) {
 		if ( *t == FACTORIN && t[1] == FUNHEAD+2 && t[FUNHEAD] == -EXPRESSION ) {
@@ -655,6 +656,8 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 		LOCK(ErrorMessageLock);
 		MesPrint("Internal error. Could not find proper factorin_ function.");
 		UNLOCK(ErrorMessageLock);
+		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
 	}
 	oldwork = AT.WorkPointer;
@@ -711,6 +714,8 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 			LOCK(ErrorMessageLock);
 			MesPrint("Error: factorin_ cannot determine factors in stored expressions.");
 			UNLOCK(ErrorMessageLock);
+			NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+			NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 			return(-1);
 		case DROPPEDEXPRESSION:
 /*
@@ -722,13 +727,21 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 			while ( n1 < tstop ) *m++ = *n1++;
 			*oldwork = m - oldwork;
 			AT.WorkPointer = m;
-			if ( Generator(BHEAD oldwork,level) ) return(-1);
+			if ( Generator(BHEAD oldwork,level) ) {
+				NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+				NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
+				return(-1);
+			}
 			AT.WorkPointer = oldwork;
+			NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+			NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 			return(0);
 		default:
 			LOCK(ErrorMessageLock);
 			MesPrint("Error: Illegal expression in factorinexpr.");
 			UNLOCK(ErrorMessageLock);
+			NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+			NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 			return(-1);
 	}
 /*
@@ -736,15 +749,6 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	For the coefficient we have to determine the LCM of the denominators
 	and the GCD of the numerators.
 */
-#ifdef INDIVIDUALALLOC
-	if ( AN.GCDbuffer == 0 ) {
-		AN.GCDbuffer  = (UWORD *)Malloc1(5*(AM.MaxTal+2)*sizeof(UWORD),"GCDbuffer");
-		AN.GCDbuffer2 = AN.GCDbuffer + AM.MaxTal+2;
-		AN.LCMbuffer  = AN.GCDbuffer2 + AM.MaxTal+2;
-		AN.LCMb = AN.LCMbuffer + AM.MaxTal+2;
-		AN.LCMc = AN.LCMb + AM.MaxTal+2;
-	}
-#endif
 	position = AS.OldOnFile[expr];
 	AR.DeferFlag = 0; AR.KeptInHold = newhold; AR.GetFile = newgetfile;
 	SeekScratch(file,&oldposition);
@@ -753,6 +757,8 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 		LOCK(ErrorMessageLock);
 		MesPrint("Expression %d has problems in scratchfile",expr);
 		UNLOCK(ErrorMessageLock);
+		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
 	}
 	SeekScratch(file,&startposition);
@@ -782,12 +788,12 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	if ( k < 0 ) { k = -k; sign = -1; }
 	else { sign = 1; }
 	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-	for ( kGCD = 0; kGCD < k; kGCD++ ) AN.GCDbuffer[kGCD] = r3[kGCD];
+	for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
 	k = REDLENG(j);
 	if ( k < 0 ) k = -k;
 	r3 += k;
 	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-	for ( kLCM = 0; kLCM < k; kLCM++ ) AN.LCMbuffer[kLCM] = r3[kLCM];
+	for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
 /*
 	The copy and the coefficient are in place. Now search through the terms.
 */
@@ -950,37 +956,37 @@ nofactor:;
 		k = REDLENG(j);
 		if ( k < 0 ) k = -k;
 		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-		if ( ( ( AN.GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+		if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
 /*
 			GCD is already 1
 */
 		}
 		else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
-			if ( GcdLong(BHEAD AN.GCDbuffer,kGCD,(UWORD *)r3,k,AN.GCDbuffer2,&kGCD2) ) {
+			if ( GcdLong(BHEAD GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer2,&kGCD2) ) {
 				goto onerror;
 			}
 			kGCD = kGCD2;
-			for ( i = 0; i < kGCD; i++ ) AN.GCDbuffer[i] = AN.GCDbuffer2[i];
+			for ( i = 0; i < kGCD; i++ ) GCDbuffer[i] = GCDbuffer2[i];
 		}
 		else {
-			kGCD = 1; AN.GCDbuffer[0] = 1;
+			kGCD = 1; GCDbuffer[0] = 1;
 		}
 		k = REDLENG(j);
 		if ( k < 0 ) k = -k;
 		r3 += k;
 		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
-		if ( ( ( AN.LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+		if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
 			for ( kLCM = 0; kLCM < k; kLCM++ )
-				AN.LCMbuffer[kLCM] = r3[kLCM];
+				LCMbuffer[kLCM] = r3[kLCM];
 		}
 		else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
-			if ( GcdLong(BHEAD AN.LCMbuffer,kLCM,(UWORD *)r3,k,AN.LCMb,&kkLCM) ) {
+			if ( GcdLong(BHEAD LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
 				goto onerror;
 			}
-			DivLong((UWORD *)r3,k,AN.LCMb,kkLCM,AN.LCMb,&kkLCM,AN.LCMc,&jLCM);
-			MulLong(AN.LCMbuffer,kLCM,AN.LCMb,kkLCM,AN.LCMc,&jLCM);
+			DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
+			MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
 			for ( kLCM = 0; kLCM < jLCM; kLCM++ )
-				AN.LCMbuffer[kLCM] = AN.LCMc[kLCM];
+				LCMbuffer[kLCM] = LCMc[kLCM];
 		}
 		else {} /* LCM doesn't change */
 	}
@@ -990,8 +996,8 @@ nofactor:;
 	Now put the term together in oldwork: GCD/LCM
 	We have already the algebraic contents there.
 */
-	r3 = (WORD *)(AN.GCDbuffer);
-	r4 = (WORD *)(AN.LCMbuffer);
+	r3 = (WORD *)(GCDbuffer);
+	r4 = (WORD *)(LCMbuffer);
 	r1 = oldwork + *oldwork;
 	if ( kGCD == kLCM ) {
 		for ( jGCD = 0; jGCD < kGCD; jGCD++ ) *r1++ = *r3++;
@@ -1032,6 +1038,8 @@ PutTheFactor:;
 		MesWork();
 		MesPrint("Called from factorin_");
 		UNLOCK(ErrorMessageLock);
+		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
 	}
 	n1 = oldwork; n2 = term; while ( n2 < t ) *n1++ = *n2++;
@@ -1048,9 +1056,15 @@ PutTheFactor:;
        n1 += k; n1[-1] = size;
 	*oldwork = n1 - oldwork;
 	AT.WorkPointer = n1;
-	if ( Generator(BHEAD oldwork,level) ) return(-1);
+	if ( Generator(BHEAD oldwork,level) ) {
+		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
+		return(-1);
+	}
 	AT.WorkPointer = oldwork;
 	AR.CompressPointer = oldcpointer;
+	NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+	NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 	return(0);
 onerror:
 	AT.WorkPointer = oldwork;
@@ -1058,6 +1072,8 @@ onerror:
 	LOCK(ErrorMessageLock);
 	MesCall("FactorInExpr");
 	UNLOCK(ErrorMessageLock);
+	NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
+	NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 	return(-1);
 }
 
