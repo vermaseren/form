@@ -2485,10 +2485,11 @@ MesPrint("index: size: %d",ind->size);
 			} while ( --i > 0 );
 		}
 		f->Position = f->Index.next;
-		if ( ISEQUALPOS(f->Position,stindex) && !AO.bufferedInd ) goto ErrGetTab;
 #ifndef SYSDEPENDENTSAVE
+		if ( !ISNOTZEROPOS(f->Position) ) ADDPOS(f->Position,sizeof(STOREHEADER));
 		number = sizeof(struct FiLeInDeX);
 #endif
+		if ( ISEQUALPOS(f->Position,stindex) && !AO.bufferedInd ) goto ErrGetTab;
 		if ( !par ) {
 			SeekFile(AR.StoreData.Handle,&(f->Position),SEEK_SET);
 			if ( ISNOTEQUALPOS(f->Position,AR.StoreData.Position) ) goto ErrGt2;

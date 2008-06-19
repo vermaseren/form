@@ -95,8 +95,6 @@ typedef struct {
  *  Defines the structure of an entry in a file index (see struct FiLeInDeX).
  *  
  *  It represents one expression in the file.
- *
- *  It is always 512 bytes long.
  */
 typedef struct InDeXeNtRy {
 	POSITION	position;		/**< Position of the expression itself */
