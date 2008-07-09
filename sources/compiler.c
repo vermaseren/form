@@ -147,12 +147,14 @@ static KEYWORD com2commands[] = {
 	,{"select",         (TFUN)CoSelect,           STATEMENT,    PARTEST}
 	,{"set",            (TFUN)CoSet,              DECLARATION,  PARTEST}
 	,{"setexitflag",    (TFUN)CoSetExitFlag,      STATEMENT,    PARTEST}
+	,{"shuffle",        (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"skip",           (TFUN)CoSkip,             SPECIFICATION,PARTEST}
 	,{"slavepatchsize", (TFUN)CoSlavePatch,       DECLARATION,  PARTEST}
 	,{"sort",           (TFUN)CoSort,             STATEMENT,    PARTEST}
 	,{"splitarg",       (TFUN)CoSplitArg,         STATEMENT,    PARTEST}
 	,{"splitfirstarg",  (TFUN)CoSplitFirstArg,    STATEMENT,    PARTEST}
 	,{"splitlastarg",   (TFUN)CoSplitLastArg,     STATEMENT,    PARTEST}
+	,{"stuffle",        (TFUN)CoStuffle,          STATEMENT,    PARTEST}
 	,{"sum",            (TFUN)CoSum,              STATEMENT,    PARTEST}
 	,{"table",          (TFUN)CoTable,            DECLARATION,  PARTEST}
 	,{"tablebase",      (TFUN)CoTableBase,        DECLARATION,  PARTEST}
@@ -199,7 +201,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 

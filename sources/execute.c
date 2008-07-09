@@ -174,8 +174,41 @@ WORD PopVariables()
 	AC.lUnitTrace = AM.gUnitTrace;
 	AC.lDefDim = AM.gDefDim;
 	AC.lDefDim4 = AM.gDefDim4;
-	AC.ncmod = AM.gncmod;
+	if ( AC.halfmod ) {
+		if ( AC.ncmod == AM.gncmod && AC.modmode == AM.gmodmode ) {
+			j = ABS(AC.ncmod);
+			while ( --j >= 0 ) {
+				if ( AC.cmod[j] != AM.gcmod[j] ) break;
+			}
+			if ( j >= 0 ) {
+				M_free(AC.halfmod,"halfmod");
+				AC.halfmod = 0; AC.nhalfmod = 0;
+			}
+		}
+		else {
+			M_free(AC.halfmod,"halfmod");
+			AC.halfmod = 0; AC.nhalfmod = 0;
+		}
+	}
+	if ( AC.modinverses ) {
+		if ( AC.ncmod == AM.gncmod && AC.modmode == AM.gmodmode ) {
+			j = ABS(AC.ncmod);
+			while ( --j >= 0 ) {
+				if ( AC.cmod[j] != AM.gcmod[j] ) break;
+			}
+			if ( j >= 0 ) {
+				M_free(AC.halfmod,"modinverses");
+				AC.modinverses = 0;
+			}
+		}
+		else {
+			M_free(AC.halfmod,"modinverses");
+			AC.modinverses = 0;
+		}
+	}
+	AN.ncmod = AC.ncmod = AM.gncmod;
 	AC.npowmod = AM.gnpowmod;
+	AC.modmode = AM.gmodmode;
 	AC.funpowers = AM.gfunpowers;
 	AC.lPolyFun = AM.gPolyFun;
 	AC.lPolyFunType = AM.gPolyFunType;
@@ -238,6 +271,7 @@ VOID MakeGlobal()
 	AM.gDefDim4 = AC.lDefDim4;
 	AM.gncmod = AC.ncmod;
 	AM.gnpowmod = AC.npowmod;
+	AM.gmodmode = AC.modmode;
 	AM.gOutputMode = AC.OutputMode;
 	AM.gOutputSpaces = AC.OutputSpaces;
 	AM.gOutNumberType = AC.OutNumberType;
@@ -568,6 +602,12 @@ WORD DoExecute(WORD par, WORD skip)
 /*
 	Cleanup:
 */
+#ifdef JV_IS_WRONG
+/*
+	Giving back this memory gives way too much activity with Malloc1
+	Better to keep it and just put the number of used objects to zero (JV)
+	If you put the lijst equal to NULL, please also make maxnum = 0
+*/
 	if ( ModOptdollars ) M_free(ModOptdollars, "ModOptdollars pointer");
 	if ( PotModdollars ) M_free(PotModdollars, "PotModdollars pointer");
 	
@@ -575,7 +615,7 @@ WORD DoExecute(WORD par, WORD skip)
 	AC.ModOptDolList.lijst = NULL;
 	/* PotModdollars changed to AC.PotModDolList.lijst because AIX C compiler complained. MF 30/07/2003. */
 	AC.PotModDolList.lijst = NULL;
-
+#endif
 	NumPotModdollars = 0;
 	NumModOptdollars = 0;
 

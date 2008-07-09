@@ -3393,7 +3393,7 @@ static void Resize128t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8
 static void Resize128t64NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /*
-		#] Resize :
+ 		#] Resize : 
  		#[ CheckPower and RenumberVec :
 */
 
@@ -4236,7 +4236,7 @@ RSVEnd:
 }
 
 /*
- 		#] ReadSaveVariables :
+ 		#] ReadSaveVariables : 
  		#[ ReadSaveTerm :
 */
 

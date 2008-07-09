@@ -783,7 +783,10 @@ WORD IniVars()
 	AR.Eside = 0;
 	AC.DumNum = 0;
 	AC.ncmod = AM.gncmod = 0;
+	AC.modmode = AM.gmodmode = 0;
 	AC.npowmod = AM.gnpowmod = 0;
+	AC.halfmod = 0; AC.nhalfmod = 0;
+	AC.modinverses = 0;
 	AC.lPolyFun = AM.gPolyFun = 0;
 	AC.lPolyFunType = AM.gPolyFunType = 0;
 	AC.DirtPow = 0;

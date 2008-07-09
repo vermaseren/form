@@ -103,6 +103,39 @@ void MarkDirty(WORD *term, WORD flags)
 
 /*
  		#] MarkDirty : 
+ 		#[ PolyFunDirty :
+
+		Routine marks the PolyFun or the PolyRatFun dirty.
+		This is used when there is modular calculus and the modulus
+		has cahnged for the current module.
+*/
+
+void PolyFunDirty(PHEAD WORD *term)
+{
+	WORD *t, *tstop, *endarg;
+	tstop = term + *term;
+	tstop -= ABS(tstop[-1]);
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *t == AR.PolyFun ) {
+			endarg = t + t[1];
+			t[2] |= DIRTYFLAG;
+			t += FUNHEAD;
+			while ( t < endarg ) {
+				if ( *t > 0 ) {
+					t[1] |= DIRTYFLAG;
+				}
+				NEXTARG(t);
+			}
+		}
+		else {
+			t += t[1];
+		}
+	}
+}
+
+/*
+ 		#] PolyFunDirty :
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 

@@ -23,6 +23,7 @@
 		for ( i = 0, t = 0, v = (RLONG)norm; i < nb; i++ ) \
 		  { t += b[i] * v; e[i] = t; t >>= BITSINWORD; }   \
 		ne = nb; if ( t ) e[ne++] = t;     }
+#define StuffAdd(x,y)  (((x)<0?-1:1)*(y)+((y)<0?-1:1)*(x))
  
 #define TOKENTOLINE(x,y) if ( AC.OutputSpaces == NOSPACEFORMAT ) { \
 		TokenToLine((UBYTE *)(y)); } else { TokenToLine((UBYTE *)(x)); }
@@ -79,6 +80,10 @@
 #define BACKINOUT { FILEHANDLE *ffFi = AR.outfile; POSITION posi; \
 	AR.outfile = AR.infile; AR.infile = ffFi; \
 	SetEndScratch(AR.infile,&posi); }
+
+#define CopyArg(to,from) { if ( *from > 0 ) { int ica = *from; NCOPY(to,from,ica) } \
+		else if ( *from <= -FUNCTION ) *to++ = *from++;  \
+		else { *to++ = *from++; *to++ = *from++; } }
 
 #if ARGHEAD > 2
 #define FILLARG(w) { int i = ARGHEAD-2; while ( --i >= 0 ) *w++ = 0; }
@@ -337,7 +342,12 @@ extern WORD   DoDelta(WORD *);
 extern WORD   DoDelta3(WORD *,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
-extern WORD   DoMerge(WORD *,WORD,WORD,WORD);
+extern WORD   DoShuffle(WORD *,WORD,WORD,WORD);
+extern int    Shuffle(PHEAD WORD *, WORD *, WORD *);
+extern int    FinishShuffle(PHEAD WORD *);
+extern WORD   DoStuffle(WORD *,WORD,WORD,WORD);
+extern int    Stuffle(PHEAD WORD *, WORD *, WORD *);
+extern int    FinishStuffle(PHEAD WORD *);
 extern WORD   TestUse(WORD *,WORD);
 extern DBASE *FindTB(UBYTE *);
 extern int    CheckTableDeclarations(DBASE *);
@@ -411,6 +421,7 @@ extern VOID   LongToLine(UWORD *,WORD);
 extern WORD   LookAhead(VOID);
 extern WORD   MakeDirty(WORD *,WORD *,WORD);
 extern VOID   MarkDirty(WORD *,WORD);
+extern VOID   PolyFunDirty(PHEAD WORD *);
 extern WORD   MakeModTable(VOID);
 extern WORD   MatchE(WORD *,WORD *,WORD *,WORD);
 extern int    MatchCy(WORD *,WORD *,WORD *,WORD);
@@ -451,6 +462,9 @@ extern WORD   PutInStore(INDEXENTRY *,WORD);
 extern WORD   PutOut(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD);
 extern UWORD  Quotient(UWORD *,WORD *,WORD);
 extern WORD   RaisPow(PHEAD UWORD *,WORD *,UWORD);
+extern int    NormalModulus(UWORD *,WORD *);
+extern int    MakeInverses(VOID);
+extern int    GetModInverses(WORD,WORD,WORD *,WORD *);
 extern VOID   RatToLine(UWORD *,WORD);
 extern WORD   RatioFind(PHEAD WORD *,WORD *);
 extern WORD   RatioGen(PHEAD WORD *,WORD *,WORD,WORD);
@@ -652,6 +666,7 @@ extern void   DoubleBuffer(void **,void **,int,char *);
 extern void   ExpandBuffer(void **,LONG *,int);
 extern LONG   iexp(LONG,int);
 extern int    IsLikeVector(WORD *);
+extern int    AreArgsEqual(WORD *,WORD *);
 extern int    CompareArgs(WORD *,WORD *);
 extern UBYTE *SkipField(UBYTE *,int);
 extern int    StrCmp(UBYTE *,UBYTE *);
@@ -863,6 +878,7 @@ extern int    CoLoad(UBYTE *);
 extern int    CoLocal(UBYTE *);
 extern int    CoMany(UBYTE *);
 extern int    CoMerge(UBYTE *);
+extern int    CoStuffle(UBYTE *);
 extern int    CoMetric(UBYTE *);
 extern int    CoModOption(UBYTE *);
 extern int    CoModuleOption(UBYTE *);
@@ -1250,8 +1266,12 @@ typedef int (*SETKILLMODEFOREXTERNALCHANNEL)(int,int);
 /*:[08may2006 mt]*/
 typedef LONG (*WRITEFILE)(int,UBYTE *,LONG);
 typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
+typedef WORD (*FINISHUFFLE)(PHEAD WORD *);
+typedef WORD (*DO_UFFLE)(WORD *,WORD,WORD,WORD);
 
 #define Compare ((COMPARE)AR.CompareRoutine)
+#define FiniShuffle ((FINISHUFFLE)AN.SHvar.finishuf)
+#define DoShtuffle ((DO_UFFLE)AN.SHvar.do_uffle)
 
 #ifdef PARALLEL
 extern LONG   PF_BroadcastNumberOfTerms(LONG);

@@ -939,6 +939,8 @@ VOID WriteLists()
 		LongToLine((UWORD *)AC.cmod,ABS(AC.ncmod));
 		if ( AC.ncmod > 0 ) TokenToLine((UBYTE *)" with powerreduction");
 		else			 TokenToLine((UBYTE *)" without powerreduction");
+		if ( ( AC.modmode & POSNEG ) != 0 ) TokenToLine((UBYTE *)" centered around 0");
+		else                                TokenToLine((UBYTE *)" positive numbers only");
 		FiniLine();
 	}
 	if ( AC.lDefDim != 4 ) {

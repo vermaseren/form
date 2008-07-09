@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Normalize :
  		#[ Commute :
 
@@ -42,7 +42,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute :
+ 		#] Commute : 
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -89,7 +89,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations :
+  	#] Declarations : 
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -114,7 +114,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup :
+  	#] Setup : 
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -226,7 +226,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER :
+			#] TO SNUMBER : 
 */
 						t += 2;
 						goto NextSymbol;
@@ -748,6 +748,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 				else pcom[ncom++] = t;
 				break;
 			case MODFUNCTION:
+			case MOD2FUNCTION:
 /*
 				Mod function. Does work if two arguments and the
 				second argument is a positive short number
@@ -773,8 +774,14 @@ multermnum:			if ( x == 0 ) goto NormZero;
 						WORD ncmod = 1;
 						WORD cmod = ttt[*ttt+1];
 						iii = REDLENG(iii);
-						if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,&cmod,ncmod,0) )
-							goto FromNorm;
+						if ( *t == MODFUNCTION ) {
+							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,&cmod,ncmod,UNPACK) )
+								goto FromNorm;
+						}
+						else {
+							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,&cmod,ncmod,UNPACK|POSNEG) )
+								goto FromNorm;
+						}
 						*((UWORD *)lnum) = ttt[ARGHEAD+1];
 						if ( *lnum == 0 ) goto NormZero;
 						nnum = 1;
@@ -1626,7 +1633,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -1775,7 +1782,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators :
+  	#] Easy denominators : 
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -2009,7 +2016,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions :
+  	#] Index Contractions : 
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2160,7 +2167,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions :
+  	#] NonCommuting Functions : 
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2337,7 +2344,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions :
+  	#] Commuting Functions : 
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2425,7 +2432,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors :
+  	#] LeviCivita tensors : 
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2456,7 +2463,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta :
+  	#] Delta : 
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2478,7 +2485,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices :
+  	#] Loose Vectors/Indices : 
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2507,7 +2514,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors :
+  	#] Vectors : 
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2577,7 +2584,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts :
+  	#] Dotproducts : 
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2601,7 +2608,7 @@ NextI:;
 					   ( t[1] < 2*MAXPOWER ) && ( t[1] > -2*MAXPOWER ) ) {
 					if ( i <= 2 || t[2] != *t ) goto NormZero;
 				}
-				if ( AC.ncmod == 1 ) {
+				if ( AN.ncmod == 1 && ( AC.modmode & ALSOPOWERS ) != 0 ) {
 					if ( AC.cmod[0] == 1 ) t[1] = 0;
 					else if ( t[1] >= 0 ) t[1] = 1 + (t[1]-1)%(AC.cmod[0]-1);
 					else {
@@ -2873,7 +2880,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements :
+ 		#] normalize replacements : 
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -2949,7 +2956,7 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish :
+  	#] Errors and Finish : 
 */
 }
 
@@ -3003,7 +3010,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym)
 }
 
 /*
- 		#] ExtraSymbol :
+ 		#] ExtraSymbol : 
  		#[ DoTheta :
 */
 
@@ -3100,7 +3107,7 @@ WORD DoTheta(WORD *t)
 }
 
 /*
- 		#] DoTheta :
+ 		#] DoTheta : 
  		#[ DoDelta :
 */
 
@@ -3167,7 +3174,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta :
+ 		#] DoDelta : 
  		#[ DoRevert :
 */
 
@@ -3242,7 +3249,7 @@ void DoRevert(WORD *fun, WORD *tmp)
 }
 
 /*
- 		#] DoRevert :
+ 		#] DoRevert : 
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3305,7 +3312,7 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu :
+  	#] DetCommu : 
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3626,5 +3633,5 @@ FromGCD:
 }
 
 /*
-  	#] EvaluateGcd :
+  	#] EvaluateGcd : 
 */

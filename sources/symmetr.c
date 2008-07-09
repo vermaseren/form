@@ -391,7 +391,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE :
+  	#] MatchE : 
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -2229,7 +2229,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 */
 	else return(0);
 /*
-	And now the success: (wc = 2 means that there was a woldcard involved)
+	And now the success: (wc = 2 means that there was a wildcard involved)
 */
 	return(wc);
 }

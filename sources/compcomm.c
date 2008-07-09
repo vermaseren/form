@@ -97,7 +97,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ CoCollect :
 
 	Collect,functionname
@@ -512,7 +512,7 @@ int CoOn(UBYTE *s)
 }
 
 /*
-  	#] CoOn :
+  	#] CoOn : 
   	#[ CoInsideFirst :
 */
 
@@ -2982,10 +2982,21 @@ int CoTryReplace(UBYTE *p)
 /*
   	#] CoTryReplace : 
   	#[ CoModulus :
+
+	Old syntax:  Modulus [-] number [:number]
+	New syntax:  Modulus [option(s)] number
+	    Options are: NoFunctions/CoefficientsOnly/AlsoFunctions
+	                 PlusMin/Positive
+	                 InverseTable
+	                 PrintPowersOf(number)
+	                 AlsoPowers/NoPowers
+	Notice: We change the defaults. This may cause problems to some.
 */
 
 int CoModulus(UBYTE *inp)
 {
+#ifdef OLDMODULUS
+/*	#[ Old Syntax : */
 	UBYTE *p, c;
 	WORD sign = 1, Retval;
 	while ( *inp == '-' || *inp == '+' ) {
@@ -3004,7 +3015,7 @@ int CoModulus(UBYTE *inp)
 	Retval = GetLong(p,(UWORD *)AC.cmod,&AC.ncmod);
 	if ( sign < 0 ) AC.ncmod = -AC.ncmod;
 	*p = c;
-	if ( c == 0 ) return(Retval);
+	if ( c == 0 ) goto regular;
 	else if ( c != ':' ) {
 		MesPrint("&Illegal option for modulus %s",inp);
 		if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
@@ -3021,18 +3032,127 @@ int CoModulus(UBYTE *inp)
 		return(1);
 	}
 	if ( GetLong(p,(UWORD *)AC.powmod,&AC.npowmod) ) Retval = -1;
-	if ( TakeModulus((UWORD *)AC.powmod,&AC.npowmod,AC.cmod,AC.ncmod,1) ) Retval = -1;
+	if ( TakeModulus((UWORD *)AC.powmod,&AC.npowmod,AC.cmod,AC.ncmod,NOUNPACK) ) Retval = -1;
 	if ( AC.npowmod == 0 ) {
 		MesPrint("&Improper value for generator");
 		Retval = -1;
 	}
 	if ( MakeModTable() ) Retval = -1;
 	AC.DirtPow = 1;
+regular:
+	AN.ncmod = AC.ncmod;
+	if ( AC.halfmod ) {
+		M_free(AC.halfmod,"halfmod");
+		AC.halfmod = 0; AC.nhalfmod = 0;
+	}
+	if ( AC.modinverses ) {
+		M_free(AC.halfmod,"modinverses");
+		AC.modinverses = 0;
+	}
 	return(Retval);
+/*	#] Old Syntax : */ 
+#else
+	GETIDENTITY
+	int Retval = 0, sign = 1;
+	UBYTE *p, c;
+	while ( *inp == ',' || *inp == ' ' || *inp == '\t' ) inp++;
+	if ( *inp == 0 ) {
+		MesPrint("&Modulus statement with no parameters!!!");
+		return(1);
+	}
+	AC.modmode = 0;
+	while ( FG.cTable[*inp] == 0 ) {
+		p = inp;
+		while ( FG.cTable[*inp] == 0 ) inp++;
+		c = *inp; *inp = 0;
+		if ( StrICmp(p,(UBYTE *)"nofunctions") == 0 ) {
+			AC.modmode &= ~ALSOFUNARGS;
+		}
+		else if ( StrICmp(p,(UBYTE *)"alsofunctions") == 0 ) {
+			AC.modmode |= ALSOFUNARGS;
+		}
+		else if ( StrICmp(p,(UBYTE *)"coefficientsonly") == 0 ) {
+			AC.modmode &= ~ALSOFUNARGS;
+			AC.modmode &= ~ALSOPOWERS;
+			sign = -1;
+		}
+		else if ( StrICmp(p,(UBYTE *)"plusmin") == 0 ) {
+			AC.modmode |= POSNEG;
+		}
+		else if ( StrICmp(p,(UBYTE *)"positive") == 0 ) {
+			AC.modmode &= ~POSNEG;
+		}
+		else if ( StrICmp(p,(UBYTE *)"inversetable") == 0 ) {
+			AC.modmode |= INVERSETABLE;
+		}
+		else if ( StrICmp(p,(UBYTE *)"printpowersof") == 0 ) {
+			*inp = c;
+			if ( *inp != '(' ) {
+badsyntax:
+				MesPrint("&Bad syntax in argument of PrintPowersOf(number) in Modulus statement");
+				return(1);
+			}
+			while ( *inp == ',' || *inp == ' ' || *inp == '\t' ) inp++;
+			inp++; p = inp;
+			if ( FG.cTable[*inp] != 1 ) goto badsyntax;
+			do { inp++; } while ( FG.cTable[*inp] == 1 );
+			c = *inp; *inp = 0;
+			if ( GetLong(p,(UWORD *)AC.powmod,&AC.npowmod) ) Retval = -1;
+			if ( TakeModulus((UWORD *)AC.powmod,&AC.npowmod,AC.cmod,AC.ncmod,NOUNPACK) ) Retval = -1;
+			if ( AC.npowmod == 0 ) {
+				MesPrint("&Improper value for generator");
+				Retval = -1;
+			}
+			if ( MakeModTable() ) Retval = -1;
+			AC.DirtPow = 1;
+			*inp = c;
+			while ( *inp == ',' || *inp == ' ' || *inp == '\t' ) inp++;
+			if ( *inp != ')' ) goto badsyntax;
+			inp++;
+			c = *inp;
+		}
+		else if ( StrICmp(p,(UBYTE *)"alsopowers") == 0 ) {
+			AC.modmode |= ALSOPOWERS;
+			sign =  1;
+		}
+		else if ( StrICmp(p,(UBYTE *)"nopowers") == 0 ) {
+			AC.modmode &= ~ALSOPOWERS;
+			sign = -1;
+		}
+		else {
+			MesPrint("&Unrecognized option %s in Modulus statement",inp);
+			return(1);
+		}
+		*inp = c;
+		while ( *inp == ',' || *inp == ' ' || *inp == '\t' ) inp++;
+		if ( *inp == 0 ) {
+			MesPrint("&Modulus statement with no value!!!");
+			return(1);
+		}
+	}
+	p = inp;
+	if ( FG.cTable[*inp] != 1 ) {
+		MesPrint("&Invalid value for modulus:%s",inp);
+		if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
+		AC.modpowers = 0;
+		AN.ncmod = AC.ncmod = 0;
+		if ( AC.halfmod ) M_free(AC.halfmod,"halfmod");
+		AC.halfmod = 0; AC.nhalfmod = 0;
+		if ( AC.modinverses ) M_free(AC.halfmod,"modinverses");
+		AC.modinverses = 0;
+		return(1);
+	}
+	do { inp++; } while ( FG.cTable[*inp] == 1 );
+	c = *inp; *inp = 0;
+	Retval = GetLong(p,(UWORD *)AC.cmod,&AC.ncmod);
+	if ( sign < 0 ) AC.ncmod = -AC.ncmod;
+	AN.ncmod = AC.ncmod;
+	return(Retval);
+#endif
 }
 
 /*
-  	#] CoModulus : 
+  	#] CoModulus :
   	#[ CoRepeat :
 */
 
@@ -4370,7 +4490,7 @@ int CoMerge(UBYTE *inp)
 		}
 tests:	s = SkipAName(s);
 		if ( *s != 0 ) {
-			MesPrint("&Merge should have a single function or $variable for its argument");
+			MesPrint("&Merge/shuffle should have a single function or $variable for its argument");
 			return(1);
 		}
 	}
@@ -4396,6 +4516,65 @@ tests:	s = SkipAName(s);
 
 /*
   	#] CoMerge : 
+  	#[ CoStuffle :
+
+	Important for future options: The bit, given by 256 (bit 8) is reserved
+	internally for keeping track of the sign in the number of Stuffle
+	additions.
+*/
+
+int CoStuffle(UBYTE *inp)
+{
+	UBYTE *s = inp, *ss, c;
+	int type;
+	WORD numfunc, option = 0;
+	if ( tolower(s[0]) == 'o' && tolower(s[1]) == 'n' && tolower(s[2]) == 'c' &&
+	     tolower(s[3]) == 'e' && tolower(s[4]) == ',' ) {
+		option = 1; s += 5;
+	}
+	else if ( tolower(s[0]) == 'a' && tolower(s[1]) == 'l' && tolower(s[2]) == 'l' &&
+	     tolower(s[3]) == ',' ) {
+		option = 0; s += 4;
+	}
+	ss = SkipAName(s);
+	c = *ss; *ss = 0;
+	if ( *s == '$' ) {
+		if ( ( type = GetName(AC.dollarnames,s+1,&numfunc,NOAUTO) ) == CDOLLAR )
+			numfunc = -numfunc;
+		else {
+			MesPrint("&%s is undefined",s);
+			numfunc = AddDollar(s+1,DOLINDEX,&one,1);
+			return(1);
+		}
+tests:	*ss = c;
+		if ( *ss != '+' && *ss != '-' && ss[1] != 0 ) {
+			MesPrint("&Stuffle should have a single function or $variable for its argument, followed by either + or -");
+			return(1);
+		}
+		if ( *ss == '-' ) option += 2;
+	}
+	else if ( ( type = GetName(AC.varnames,s,&numfunc,WITHAUTO) ) == CFUNCTION ) {
+		numfunc += FUNCTION;
+		goto tests;
+	}
+	else if ( type != -1 ) {
+		if ( type != CDUBIOUS ) {
+			NameConflict(type,s);
+			type = MakeDubious(AC.varnames,s,&numfunc);
+		}
+		return(1);
+	}
+	else {
+		MesPrint("&%s is not a function",s);
+		numfunc = AddFunction(s,0,0,0,0) + FUNCTION;
+		return(1);
+	}
+	Add4Com(TYPESTUFFLE,numfunc,option);
+	return(0);
+}
+
+/*
+  	#] CoStuffle : 
   	#[ CoSlavePatch :
 */
 

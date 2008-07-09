@@ -129,6 +129,7 @@ static struct fixedfun {
 	,{"nargs_"   ,0 ,0                ,0               ,0} /* NUMARGSFUN */
 	,{"sign_"    ,0 ,0                ,0               ,0} /* SIGNFUN */
 	,{"mod_"     ,0 ,0                ,0               ,0} /* MODFUNCTION */
+	,{"mod2_"    ,0 ,0                ,0               ,0} /* MOD2FUNCTION */
 	,{"min_"     ,0 ,0                ,0               ,0} /* MINFUNCTION */
 	,{"max_"     ,0 ,0                ,0               ,0} /* MAXFUNCTION */
 	,{"abs_"     ,0 ,0                ,0               ,0} /* ABSFUNCTION */

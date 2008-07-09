@@ -127,7 +127,7 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 			AT.WorkPointer = w;
 			tt += *tt;
 			if ( Normalize(BHEAD oldwork) ) goto abortion;
-			if ( AC.ncmod != 0 ) {
+			if ( AN.ncmod != 0 ) {
 				if ( Modulus(oldwork) ) goto abortion;
 				if ( *oldwork == 0 ) continue;
 			}
@@ -995,7 +995,7 @@ WORD *PolynoNormalize(WORD *poly)
 			UNLOCK(ErrorMessageLock);
 			goto aborteer;
 		}
-		if ( AC.ncmod != 0 ) {
+		if ( AN.ncmod != 0 ) {
 			if ( Modulus(oldwork) ) goto aborteer;
 			if ( *oldwork == 0 ) continue;
 		}
@@ -1475,7 +1475,8 @@ int DoPolynoNorm(int par, WORD numexp, WORD numsym, WORD numdol)
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
-				LOCK(d->pthreadslockwrite);
+/*				LOCK(d->pthreadslockwrite); */
+				LOCK(d->pthreadslockread);
 			}
 		}
 	}
@@ -1520,7 +1521,10 @@ int DoPolynoNorm(int par, WORD numexp, WORD numsym, WORD numdol)
 	}
 	else retval = -1;
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockwrite); }
+	if ( dtype > 0 && dtype != MODLOCAL ) {
+/*		UNLOCK(d->pthreadslockwrite); */
+		UNLOCK(d->pthreadslockread);
+	}
 #endif
 	return(retval);
 }

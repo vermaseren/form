@@ -198,7 +198,7 @@ int MakeMono(WORD modu, WORD *t, WORD whichbuffer, WORD sym)
 		rl = (cs-1)/2;
 		w1 = AT.WorkPointer; w2 = ttt - cs;
 		for ( i = 0; i < rl; i++ ) { *w1++ = *w2++; *w1++ = *w2++; }
-		if ( TakeModulus((UWORD *)(AT.WorkPointer),&rl,&cmod,ncmod,0) < 0 ) {
+		if ( TakeModulus((UWORD *)(AT.WorkPointer),&rl,&cmod,ncmod,UNPACK) < 0 ) {
 			return(-1);
 		}
 		m[n] = *(AT.WorkPointer);

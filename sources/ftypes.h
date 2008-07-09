@@ -381,63 +381,64 @@ typedef int (*TFUN1)();
 #define NUMARGSFUN 41
 #define SIGNFUN 42
 #define MODFUNCTION 43
-#define MINFUNCTION 44
-#define MAXFUNCTION 45
-#define ABSFUNCTION 46
-#define SIGFUNCTION 47
-#define INTFUNCTION 48
-#define THETA 49
-#define THETA2 50
-#define DELTA2 51
-#define DELTAP 52
-#define BERNOULLIFUNCTION 53
-#define COUNTFUNCTION 54
-#define MATCHFUNCTION 55
-#define PATTERNFUNCTION 56
-#define TERMFUNCTION 57
-#define CONJUGATION 58
-#define ROOTFUNCTION 59
-#define TABLEFUNCTION 60
-#define FIRSTBRACKET 61
-#define TERMSINEXPR 62
-#define NUMTERMSFUN 63
-#define GCDFUNCTION 64
-#define POLYNOMIAL 65
-#define POLYNOADD 66
-#define POLYNOSUB 67
-#define POLYNOMUL 68
-#define POLYNODIV 69
-#define POLYNOREM 70
-#define POLYNOGCD 71
-#define POLYNOINTFAC 72
-#define POLYNONORM 73
-#define POLYNOFACT 74
-#define POLYNOGETREM 75
-#define MAXPOWEROF 76
-#define MINPOWEROF 77
-#define TABLESTUB 78
-#define FACTORIN 79
-#define TERMSINBRACKET 80
+#define MOD2FUNCTION 44
+#define MINFUNCTION 45
+#define MAXFUNCTION 46
+#define ABSFUNCTION 47
+#define SIGFUNCTION 48
+#define INTFUNCTION 49
+#define THETA 50
+#define THETA2 51
+#define DELTA2 52
+#define DELTAP 53
+#define BERNOULLIFUNCTION 54
+#define COUNTFUNCTION 55
+#define MATCHFUNCTION 56
+#define PATTERNFUNCTION 57
+#define TERMFUNCTION 58
+#define CONJUGATION 59
+#define ROOTFUNCTION 60
+#define TABLEFUNCTION 61
+#define FIRSTBRACKET 62
+#define TERMSINEXPR 63
+#define NUMTERMSFUN 64
+#define GCDFUNCTION 65
+#define POLYNOMIAL 66
+#define POLYNOADD 67
+#define POLYNOSUB 68
+#define POLYNOMUL 69
+#define POLYNODIV 70
+#define POLYNOREM 71
+#define POLYNOGCD 72
+#define POLYNOINTFAC 73
+#define POLYNONORM 74
+#define POLYNOFACT 75
+#define POLYNOGETREM 76
+#define MAXPOWEROF 77
+#define MINPOWEROF 78
+#define TABLESTUB 79
+#define FACTORIN 80
+#define TERMSINBRACKET 81
 
-#define SQRTFUNCTION 81
-#define LNFUNCTION 82
-#define SINFUNCTION 83
-#define COSFUNCTION 84
-#define TANFUNCTION 85
-#define ASINFUNCTION 86
-#define ACOSFUNCTION 87
-#define ATANFUNCTION 88
-#define ATAN2FUNCTION 89
-#define SINHFUNCTION 90
-#define COSHFUNCTION 91
-#define TANHFUNCTION 92
-#define ASINHFUNCTION 93
-#define ACOSHFUNCTION 94
-#define ATANHFUNCTION 95
-#define LI2FUNCTION 96
-#define LINFUNCTION 97
+#define SQRTFUNCTION 82
+#define LNFUNCTION 83
+#define SINFUNCTION 84
+#define COSFUNCTION 85
+#define TANFUNCTION 86
+#define ASINFUNCTION 87
+#define ACOSFUNCTION 88
+#define ATANFUNCTION 89
+#define ATAN2FUNCTION 90
+#define SINHFUNCTION 91
+#define COSHFUNCTION 92
+#define TANHFUNCTION 93
+#define ASINHFUNCTION 94
+#define ACOSHFUNCTION 95
+#define ATANHFUNCTION 96
+#define LI2FUNCTION 97
+#define LINFUNCTION 98
 
-#define MAXBUILTINFUNCTION 97
+#define MAXBUILTINFUNCTION 98
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist
@@ -518,6 +519,7 @@ typedef int (*TFUN1)();
 #define TYPEARGIMPLODE 67
 #define TYPEARGEXPLODE 68
 #define TYPEDENOMINATORS 69
+#define TYPESTUFFLE 70
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
@@ -802,6 +804,19 @@ typedef int (*TFUN1)();
 
 #define ELEMENTUSED 1
 #define ELEMENTLOADED 2
+/*
+	Variables for the modulus statement, flags in AC.modmode
+	For explanation, see CoModulus
+*/
+#define POSNEG 0x1
+#define INVERSETABLE 0x2
+#define COEFFICIENTSONLY 0x4
+#define ALSOPOWERS 0x8
+#define ALSOFUNARGS 0x10
+
+#define POSITIVEONLY 0
+#define UNPACK 0x80
+#define NOUNPACK 0
 
 #ifdef WITHPTHREADS
 /*

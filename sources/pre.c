@@ -407,20 +407,25 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
     	sprintf(timestring,"%ld.%1d%1d",millitime,timepart1,timepart2);
 		return((UBYTE *)timestring);
 	}
+	t = name;
+	while ( *t && *t != '_' ) t++;
 	for ( i = NumPre-1; i >= 0; i-- ) {
-		if ( StrCmp(name,PreVar[i].name) == 0 ) {
+		if ( *t == '_' && ( StrICmp(name,PreVar[i].name) == 0 ) ) {
+			if ( c ) *tt = c;
+			ThePreVar = PreVar+i;
+			return(PreVar[i].value);
+		}
+		else if ( StrCmp(name,PreVar[i].name) == 0 ) {
 			if ( c ) *tt = c;
 			ThePreVar = PreVar+i;
 			return(PreVar[i].value);
 		}
 	}
-	t = name;
-	while ( *t && *t != '_' ) t++;
 	if ( *t == '_' ) {
 		*t = 0;
-		if ( StrCmp(name,(UBYTE *)"UNCHANGED") == 0 ) mode = 1;
-		else if ( StrCmp(name,(UBYTE *)"ZERO") == 0 ) mode = 0;
-		else if ( StrCmp(name,(UBYTE *)"SHOWINPUT") == 0 ) {
+		if ( StrICmp(name,(UBYTE *)"UNCHANGED") == 0 ) mode = 1;
+		else if ( StrICmp(name,(UBYTE *)"ZERO") == 0 ) mode = 0;
+		else if ( StrICmp(name,(UBYTE *)"SHOWINPUT") == 0 ) {
 			*t++ = '_';
 			if ( c ) *tt = c;
 			if ( AC.NoShowInput > 0 ) return(no);
@@ -3428,7 +3433,7 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 {
 	UBYTE *s, *t, *top, *newbuffer, c;
 	LONG i, ppsize, linenum = AC.CurrentStream->linenumber;
-	int size1, size2, level, com=0, last=1;
+	int size1, size2, level, com=0, last=1, strng = 0;
 	p->size = AP.pSize;
 	p->buffer = (UBYTE *)Malloc1(p->size+1,message);
 	top = p->buffer + p->size - 2;
@@ -3448,6 +3453,9 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 		if ( c == AP.ComChar && last == 1 ) com = 1;
 		if ( c == LINEFEED ) { last = 1; com = 0; }
 		else last = 0;
+
+		if ( ( c == '"' ) && ( com == 0 ) ) { strng ^= 1; }
+
 		if ( ( c == '#' ) && ( com == 0 ) ) i = 0;
 		else i++;
 
@@ -3462,7 +3470,8 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 			top = p->buffer + p->size - 2;
 		}
 		*t++ = c;
-		if ( ( i == size2 ) && ( com == 0 ) ) {
+		if ( strng == 0 ) {
+		  if ( ( i == size2 ) && ( com == 0 ) ) {
 			*t = 0;
 			if ( StrICmp(t-size2,(UBYTE *)(stop)) == 0 ) {
 				while ( ( c = GetInput() ) != LINEFEED && c != ENDOFINPUT ) {}
@@ -3471,8 +3480,8 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 				if ( c == ENDOFINPUT ) Error1("Missing #",stop);
 				*t++ = LINEFEED; *t = 0;
 			}
-		}
-		if ( ( i == size1 ) && mode && ( com == 0 ) ) {
+		  }
+		  if ( ( i == size1 ) && mode && ( com == 0 ) ) {
 			*t = 0;
 			if ( StrICmp(t-size1,(UBYTE *)(start)) == 0 ) {
 /*
@@ -3481,10 +3490,11 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 */
 				level++;
 			}
-		}
-		if ( i == 1 && t[-2] == LINEFEED ) {
+		  }
+		  if ( i == 1 && t[-2] == LINEFEED ) {
 			if ( c == '-' )      AC.NoShowInput = 1;
 			else if ( c == '+' ) AC.NoShowInput = 0;
+		  }
 		}
 	}
 	*t++ = LINEFEED;
@@ -3493,7 +3503,7 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 }
 
 /*
- 		#] PreLoad : 
+ 		#] PreLoad :
  		#[ PreSkip :
 
 		Skips a loop or procedure.

@@ -1118,6 +1118,23 @@ typedef struct {
 	WORD	modnum;				/* The prime number of the modulus */
 } POLYPADIC;
 
+typedef struct {
+	WORD	*outterm;            /* Used in DoShuffle/Merge/FinishShuffle system */
+	WORD	*outfun;
+	WORD	*incoef;
+	WORD	*stop1;
+	WORD	*stop2;
+	WORD	*ststop1;
+	WORD	*ststop2;
+	void    *finishuf;
+	void    *do_uffle;
+	LONG	combilast;
+	WORD	nincoef;
+	WORD	level;
+	WORD	thefunction;
+	WORD	option;
+} SHvariables;
+
 /*
   	#] Varia : 
     #[ A :
@@ -1220,6 +1237,7 @@ struct M_const {
     WORD    WilInd;                /* (M) Offset for wildcard indices */
     WORD    gncmod;                /* (M) Global setting of modulus. size of gcmod */
     WORD    gnpowmod;              /* (M) Global printing as powers. size gpowmod */
+    WORD    gmodmode;              /* (M) Global mode for modulus */
     WORD    gUnitTrace;            /* (M) Global value of Tr[1] */
     WORD    gOutputMode;           /* (M) */
     WORD    gOutputSpaces;         /* (M) */
@@ -1383,6 +1401,7 @@ struct C_const {
     WORD    *cmod;                 /**< [D] Local setting of modulus. Pointer to value. */
     WORD    *powmod;               /**< Local setting printing as powers. Points into cmod memory */
     UWORD   *modpowers;            /**< [D] The conversion table for mod-> powers. */
+	UWORD   *halfmod;              /* (C) half the modulus when not zero */
     WORD    *ProtoType;            /* (C) The subexpression prototype {wildcards} */
     WORD    *WildC;                /* (C) Filling point for wildcards. */
     LONG    *IfHeap;               /**< [D] Keeps track of where to go in if */
@@ -1400,9 +1419,11 @@ struct C_const {
     SBYTE   *toptokens;            /**< Top of tokens */
     SBYTE   *endoftokens;          /**< End of the actual tokens */
     WORD    *tokenarglevel;        /**< [D] Keeps track of function arguments */
+	UWORD   *modinverses;          /* Table for inverses of primes */
 #ifdef WITHPTHREADS
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
+    pthread_mutex_t halfmodlock;   /* () Lock for adding buffer for halfmod */
 #endif
     LONG    argstack[MAXNEST];     /* (C) {contents} Stack for nesting of Argument */
     LONG    insidestack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
@@ -1481,6 +1502,8 @@ struct C_const {
     WORD    DumNum;                /* (C) */
     WORD    ncmod;                 /* (C) Local setting of modulus. size of cmod */
     WORD    npowmod;               /* (C) Local printing as powers. size powmod */
+    WORD    modmode;               /* (C) Mode for modulus calculus */
+	WORD	nhalfmod;              /* relevant word size of halfmod when defined */
     WORD    DirtPow;               /* (C) Flag for changes in printing mod powers */
     WORD    lUnitTrace;            /* (C) Local value of Tr[1] */
     WORD    NwildC;                /* (C) Wildcard counter */
@@ -1523,7 +1546,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1711,7 +1734,7 @@ struct T_const {
 	WORD    sizeprimelist;
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1765,12 +1788,6 @@ struct N_const {
 	int		*funinds;              /* () Used in lus.c */
 	UWORD	*NoScrat2;             /* () Used in normal.c */
 	WORD	*ReplaceScrat;         /* () Used in normal.c */
-/*
-	WORD	*st;
-	WORD	*sm;
-	WORD	*sr;
-	WORD	*sc;
-*/
 	TRACES	*tracestack;           /* () used in opera.c */
 	WORD	*selecttermundo;       /* () Used in pattern.c */
 	WORD	*patternbuffer;        /* () Used in pattern.c */
@@ -1793,6 +1810,7 @@ struct N_const {
 #ifdef WITHPTHREADS
 	THREADBUCKET *threadbuck;
 #endif
+	UWORD	*SHcombi;
 	POLYMOD polymod1;              /* For use in PolyModGCD and calling routines */
 	POLYMOD polymod2;              /* For use in PolyModGCD and calling routines */
     POSITION OldPosIn;             /* (R) Used in sort. */
@@ -1812,6 +1830,8 @@ struct N_const {
 	LONG	last2;                 /* () Used in proces.c */
 	LONG	last3;                 /* () Used in proces.c */
 #endif
+	SHvariables SHvar;
+	LONG	SHcombisize;
     int     NumTotWildArgs;        /* (N) Used in pattern matching */
     int     UseFindOnly;           /* (N) Controls pattern routines */
     int     UsedOtherFind;         /* (N) Controls pattern routines */
@@ -1857,6 +1877,7 @@ struct N_const {
 	WORD	patternbuffersize;     /* () Used in pattern.c */
 	WORD	numlistinprint;        /* () Used in process.c */
 	WORD	getdivgcd;
+    WORD    ncmod;                 /* () used as some type of flag to disable */
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */

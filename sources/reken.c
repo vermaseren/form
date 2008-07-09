@@ -330,7 +330,7 @@ AddRer1:
 }
 
 /*
- 		#] AddRat :
+ 		#] AddRat : 
  		#[ MulRat :			WORD MulRat(a,na,b,nb,c,nc)
 
 	Multiplies the rationals a and b. The Gcd of the individual
@@ -658,7 +658,7 @@ int TakeRatRoot(UWORD *a, WORD *n, WORD power)
 
 /*
  		#] TakeRatRoot: 
-  	#] RekenRational :
+  	#] RekenRational : 
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -1178,7 +1178,7 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 	UWORD *it, *iu, c;
 	UWORD *is, *iss;
 	WORD ns, nt, nmod;
-	nmod = ABS(AC.ncmod);
+	nmod = ABS(AN.ncmod);
 	if ( !*na || ( ( *na == 1 ) && ( *a == 1 ) ) ) return(0);
 	is = NumberMalloc("RaisPow");
 	it = NumberMalloc("RaisPow");
@@ -1205,6 +1205,9 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 			if ( DivLong(is,ns,(UWORD *)AC.cmod,nmod,it,&nt,is,&ns) ) goto RaisOvl;
 		}
 	}
+	if ( ( nmod != 0 ) && ( ( AC.modmode & POSNEG ) != 0 ) ) {
+		NormalModulus(is,&ns);
+	}
 	if ( ( *na = i = ns ) > 0 ) { iss = is; NCOPY(a,iss,i); }
 	NumberFree(is,"RaisPow"); NumberFree(it,"RaisPow");
 	return(0);
@@ -1218,6 +1221,116 @@ RaisOvl:
 
 /*
  		#] RaisPow : 
+ 		#[ NormalModulus :  int NormalModulus(UWORD *a,WORD *na)
+*/
+/**
+ *	Brings a modular representation in the range -p/2 to +p/2
+ *	The return value tells whether anything was done.
+ *	Routine made in the general modulus revamp of July 2008 (JV).
+ */
+
+int NormalModulus(UWORD *a,WORD *na)
+{
+	WORD n;
+	if ( AC.halfmod == 0 ) {
+	  LOCK(AC.halfmodlock);
+	  if ( AC.halfmod == 0 ) {
+		UWORD two[1],remain[1];
+		WORD dummy;
+		two[0] = 2;
+		AC.halfmod = (UWORD *)Malloc1((ABS(AC.ncmod))*sizeof(UWORD),"halfmod");
+		DivLong((UWORD *)AC.cmod,(ABS(AC.ncmod)),two,1
+				,(UWORD *)AC.halfmod,&(AC.nhalfmod),remain,&dummy);
+	  }
+	  UNLOCK(AC.halfmodlock);
+	}
+	n = ABS(*na);
+	if ( BigLong(a,n,AC.halfmod,AC.nhalfmod) > 0 ) {
+		SubPLon((UWORD *)AC.cmod,(ABS(AC.ncmod)),a,n,a,&n);
+		if ( *na > 0 ) { *na = -n; }
+		else { *na = n; }
+		return(1);
+	}
+	return(0);
+}
+
+/*
+ 		#] NormalModulus : 
+ 		#[ MakeInverses :
+*/
+/**
+ *	Makes a table of inverses in modular calculus
+ *	The modulus is in AC.cmod and AC.ncmod
+ *	One should notice that the table of inverses can only be made if
+ *	the modulus fits inside a single FORM word. Otherwise the table lookup
+ *	becomes too difficult and the table too long.
+ */
+
+int MakeInverses()
+{
+	WORD n = ABS(AC.ncmod), i, inv2;
+	if ( AC.ncmod != 1 ) return(1);
+	if ( AC.modinverses == 0 ) {
+	  LOCK(AC.halfmodlock);
+	  if ( AC.modinverses == 0 ) {
+		AC.modinverses = (UWORD *)Malloc1(n*sizeof(UWORD),"modinverses");
+		AC.modinverses[0] = 0;
+		AC.modinverses[1] = 1;
+		for ( i = 2; i < AC.cmod[0]; i++ ) {
+			if ( GetModInverses(i,(WORD)(AC.cmod[0]),
+						(WORD *)(&(AC.modinverses[i])),&inv2) ) {
+				SETERROR(-1)
+			}
+		}
+	  }
+	  UNLOCK(AC.halfmodlock);
+	}
+	return(0);
+}
+
+/*
+ 		#] MakeInverses : 
+ 		#[ GetModInverses :
+*/
+/**
+ *	Input m1 and m2, which are relative prime.
+ *	determines a*m1+b*m2 = 1  (and 1 is the gcd of m1 and m2)
+ *	then a*m1 = 1 mod m2 and hence im1 = a.
+ *	and  b*m2 = 1 mod m1 and hence im2 = b.
+ *	Set m1 = 0*m1+1*m2 = a1*m1+b1*m2
+ *	    m2 = 1*m1+0*m2 = a2*m1+b2*m2
+ *	If everything is OK, the return value is zero
+ */
+
+int GetModInverses(WORD m1, WORD m2, WORD *im1, WORD *im2)
+{
+	WORD a1, a2, a3;
+	WORD b1, b2, b3;
+	WORD x = m1, y, c, d = m2;
+	if ( x <= 1 || d <= 1 ) goto somethingwrong;
+	a1 = 0; a2 = 1;
+	b1 = 1; b2 = 0;
+	for(;;) {
+		c = d/x; y = d%x; /* a good compiler makes this faster than y=d-c*x */
+		if ( y == 0 ) break;
+		a3 = a1-c*a2; a1 = a2; a2 = a3;
+		b3 = b1-c*b2; b1 = b2; b2 = b3;
+		d = x; x = y;
+	}
+	if ( x != 1 ) goto somethingwrong;
+	if ( a2 < 0 ) a2 += m2;
+	if ( b2 < 0 ) b2 += m1;
+	*im1 = a2;
+	*im2 = b2;
+	return(0);
+somethingwrong:
+	LOCK(ErrorMessageLock);
+	MesPrint("Error trying to determine inverses in GetModInverses");
+	UNLOCK(ErrorMessageLock);
+	return(-1);
+}
+/*
+ 		#] GetModInverses : 
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -2488,7 +2601,7 @@ WORD Modulus(WORD *term)
 	WORD n1;
 	t = term;
 	GETCOEF(t,n1);
-	if ( TakeModulus((UWORD *)t,&n1,AC.cmod,AC.ncmod,0) ) {
+	if ( TakeModulus((UWORD *)t,&n1,AC.cmod,AC.ncmod,UNPACK) ) {
 		LOCK(ErrorMessageLock);
 		MesCall("Modulus");
 		UNLOCK(ErrorMessageLock);
@@ -2496,14 +2609,20 @@ WORD Modulus(WORD *term)
 	}
 	if ( !n1 ) {
 		*term = 0;
+		return(0);
 	}
-	else {
+	else if ( n1 > 0 ) {
 		n1 <<= 1;
 		t += n1;		/* Note that n1 >= 0 */
 		n1++;
-		*t++ = n1;
-		*term = WORDDIF(t,term);
 	}
+	else if ( n1 < 0 ) {
+		n1 *= 2;
+		t += -n1;
+		n1--;
+	}
+	*t++ = n1;
+	*term = WORDDIF(t,term);
 	return(0);
 }
 
@@ -2516,6 +2635,11 @@ WORD Modulus(WORD *term)
 		number wrt which we need the modulus.
 		The result is returned in a and na again.
 
+		If par == NOUNPACK we only do a single number, not a fraction.
+		In addition we don't do fancy. We want a positive number and
+		the input was supposed to be positive.
+		We don't pack the result. The calling routine is responsible for that.
+		This may not be a good idea. To be checked.
 */
 
 WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
@@ -2527,17 +2651,62 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 	WORD y3,y1,y5,y6;
 	WORD n1, i, y2, y4;
 	WORD nh, tdenom, tnumer, nmod;
+	LONG x;
 	if ( ncmod == 0 ) return(0);		/* No modulus operation */
 	nmod = ABS(ncmod);
 	n1 = *na;
-	if ( !par ) UnPack(a,n1,&tdenom,&tnumer);
+	if ( ( par & UNPACK ) != 0 ) UnPack(a,n1,&tdenom,&tnumer);
 	else { tnumer = n1; }
+/*
+	We fish out the special case that the coefficient is short as well. 
+	There is no need to make lots of calls etc
+*/
+	if ( ( ( par & UNPACK ) == 0 ) && nmod == 1 && ( n1 == 1 || n1 == -1 ) ) {
+		goto simplecase;
+	}
+	else if ( nmod == 1 && ( n1 == 3 || n1 == -3 ) ) {
+		if ( a[1] != 1 ) {
+			a[1] = a[1] % cmodvec[0];
+			if ( a[1] == 0 ) {
+				MesPrint("Division by zero in short modulus arithmetic");
+				return(-1);
+			}
+			y1 = 0;
+			if ( AC.modinverses != 0 ) {
+				y1 = AC.modinverses[a[1]];
+			}
+			else {
+				GetModInverses(a[1],cmodvec[0],&y1,&y2);
+			}
+			x = a[0];
+			a[0] = (x*y1) % cmodvec[0];
+			a[1] = 1;
+		}
+		else {
+simplecase:
+			a[0] = a[0] % cmodvec[0];
+		}
+		if ( ( AC.modmode & POSNEG ) != 0 ) {
+			if ( a[0] > cmodvec[0]/2 ) {
+				a[0] =  cmodvec[0] - a[0];
+				*na = -*na;
+			}
+		}
+		else if ( *na < 0 ) {
+			*na = 1; a[0] = cmodvec[0] - a[0];
+		}
+		return(0);
+	}
+
+
 	c = NumberMalloc("TakeModulus"); d = NumberMalloc("TakeModulus"); e = NumberMalloc("TakeModulus");
 	f = NumberMalloc("TakeModulus"); g = NumberMalloc("TakeModulus"); h = NumberMalloc("TakeModulus");
 	n1 = ABS(n1);
 	if ( DivLong(a,tnumer,(UWORD *)cmodvec,nmod,
 		c,&nh,a,&tnumer) ) goto ModErr;
-	if ( par ) { *na = tnumer; goto normalreturn; }
+	if ( ( par & UNPACK ) == 0 ) {
+		*na = tnumer; goto normalreturn;
+	}
 	if ( DivLong(a+n1,tdenom,(UWORD *)cmodvec,nmod,c,&nh,a+n1,&tdenom) ) goto ModErr;
 	if ( !tdenom ) {
 		LOCK(ErrorMessageLock);
@@ -2560,10 +2729,17 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 		NumberFree(f,"TakeModulus"); NumberFree(g,"TakeModulus"); NumberFree(h,"TakeModulus");
 		return(-1);
 	}
-	x2 = (UWORD *)cmodvec; x1 = c; i = nmod; while ( --i >= 0 ) *x1++ = *x2++;
-	x1 = c; x2 = a+n1; x3 = d; x4 = e; x5 = f; x6 = g;
-	y1 = nmod; y2 = tdenom; y4 = 0; y5 = 1; *x5 = 1;
-	for(;;) {
+	if ( AC.modinverses != 0 && ( tdenom == 1 || tdenom == -1 ) ) {
+		*d = AC.modinverses[a[n1]]; y1 = 1; y2 = tdenom;
+		if ( MulLong(a,tnumer,d,y1,c,&y3) ) goto ModErr;
+		if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;
+		if ( y2 < 0 ) tdenom = -tdenom;
+	}
+	else {
+	  x2 = (UWORD *)cmodvec; x1 = c; i = nmod; while ( --i >= 0 ) *x1++ = *x2++;
+	  x1 = c; x2 = a+n1; x3 = d; x4 = e; x5 = f; x6 = g;
+	  y1 = nmod; y2 = tdenom; y4 = 0; y5 = 1; *x5 = 1;
+	  for(;;) {
 		if ( DivLong(x1,y1,x2,y2,h,&nh,x3,&y3) ) goto ModErr;
 		if ( MulLong(x5,y5,h,nh,x6,&y6) ) goto ModErr;
 		if ( AddLong(x4,y4,x6,-y6,x6,&y6) ) goto ModErr;
@@ -2579,13 +2755,20 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 		}
 		x7 = x1; x1 = x2; y1 = y2; x2 = x3; y2 = y3; x3 = x7;
 		x8 = x4; x4 = x5; y4 = y5; x5 = x6; y5 = y6; x6 = x8;
+	  }
+	  if ( y5 < 0 && AddLong((UWORD *)cmodvec,nmod,x5,y5,x5,&y5) ) goto ModErr;
+	  if ( MulLong(a,tnumer,x5,y5,c,&y3) ) goto ModErr;
+	  if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;
 	}
-	if ( y5 < 0 && AddLong((UWORD *)cmodvec,nmod,x5,y5,x5,&y5) ) goto ModErr;
-	if ( MulLong(a,tnumer,x5,y5,c,&y3) ) goto ModErr;
-	if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;
 	if ( !tdenom ) { *na = 0; goto normalreturn; }
-	if ( tdenom < 0 ) SubPLon((UWORD *)cmodvec,nmod,a,-tdenom,a,&tdenom);
-	*na = i = tdenom;
+	if ( ( AC.modmode & POSNEG ) != 0 ) {
+		NormalModulus(a,&tdenom);
+	}
+	else if ( tdenom < 0 ) {
+		SubPLon((UWORD *)cmodvec,nmod,a,-tdenom,a,&tdenom);
+	}
+	*na = tdenom;
+	i = ABS(tdenom);
 	a += i;
 	*a++ = 1;
 	while ( --i > 0 ) *a++ = 0;
@@ -2603,7 +2786,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus : 
+ 		#] TakeModulus :
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2659,7 +2842,7 @@ WORD MakeModTable()
 			AC.modpowers[j+1] = (WORD)(i >> BITSINWORD);
 			MulLong((UWORD *)MMscratC,nScrat,(UWORD *)AC.powmod,
 			AC.npowmod,(UWORD *)MMscrat7,&n2);
-			TakeModulus(MMscrat7,&n2,AC.cmod,AC.ncmod,1);
+			TakeModulus(MMscrat7,&n2,AC.cmod,AC.ncmod,NOUNPACK);
 			*MMscratC = *MMscrat7; MMscratC[1] = MMscrat7[1]; nScrat = n2;
 		}
 		NumberFree(MMscrat7,"MakeModTable"); NumberFree(MMscratC,"MakeModTable");
@@ -2680,7 +2863,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms : 
+  	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 

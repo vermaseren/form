@@ -1650,9 +1650,12 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	if ( AC.ncmod != 0 ) {	/* Note that coefficients are positive! */
-		if ( BigLong(OutCoef,OutLen,(UWORD *)AC.cmod,ABS(AC.ncmod)) >= 0 ) {
-			SubPLon(OutCoef,OutLen,(UWORD *)AC.cmod,ABS(AC.ncmod),OutCoef,&OutLen);
+	if ( AN.ncmod != 0 ) {	/* Note that coefficients are positive! */
+		if ( ( AC.modmode & POSNEG ) != 0 ) {
+			NormalModulus(OutCoef,&OutLen);
+		}
+		else if ( BigLong(OutCoef,OutLen,(UWORD *)AC.cmod,ABS(AN.ncmod)) >= 0 ) {
+			SubPLon(OutCoef,OutLen,(UWORD *)AC.cmod,ABS(AN.ncmod),OutCoef,&OutLen);
 			OutCoef[OutLen] = 1;
 			for ( i = 1; i < OutLen; i++ ) OutCoef[OutLen+i] = 0;
 		}
@@ -2003,7 +2006,7 @@ VOID AddArgs(PHEAD WORD *s1, WORD *s2, WORD *m)
 						x1 = (LONG)s1[FUNHEAD+1] + (LONG)s2[FUNHEAD+1];
 						if ( x1 < 0 ) { i1 = (WORD)(-x1); i2 = -3; }
 						else { i1 = (WORD)x1; i2 = 3; }
-						if ( x1 && AC.ncmod != 0 ) {
+						if ( x1 && AN.ncmod != 0 ) {
 							m[0] = 4;
 							m[1] = i1;
 							m[2] = 1;
@@ -2128,7 +2131,7 @@ twogen:
 					m += ABS(i1);
 					m[-1] = i1;
 					*mm = WORDDIF(m,mm);
-					if ( AC.ncmod != 0 ) {
+					if ( AN.ncmod != 0 ) {
 						if ( Modulus(mm) ) Terminate(-1);
 						if ( !*mm ) m = mm;
 						else m = mm + *mm;
@@ -3480,10 +3483,13 @@ OneTerm:
 						SETERROR(-1)
 					  }
 
-					  if ( AC.ncmod != 0 ) {
-						if ( BigLong(coef,r3,(UWORD *)AC.cmod,ABS(AC.ncmod)) >= 0 ) {
+					  if ( AN.ncmod != 0 ) {
+						if ( ( AC.modmode & POSNEG ) != 0 ) {
+							NormalModulus(coef,&r3);
+						}
+						else if ( BigLong(coef,r3,(UWORD *)AC.cmod,ABS(AN.ncmod)) >= 0 ) {
 							WORD ii;
-							SubPLon(coef,r3,(UWORD *)AC.cmod,ABS(AC.ncmod),coef,&r3);
+							SubPLon(coef,r3,(UWORD *)AC.cmod,ABS(AN.ncmod),coef,&r3);
 							coef[r3] = 1;
 							for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 						}

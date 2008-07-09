@@ -661,10 +661,13 @@ newright:
 	  rclen = ( (rclen > 0) ? (rclen-1) : (rclen+1) ) >> 1;
 	  newcpos = PF_ScratchSpace;
 	  if(AddRat(BHEAD (UWORD *)lcpos,lclen,(UWORD *)rcpos,rclen,newcpos,&newnlen)) return(-1);
-	  if( AC.ncmod != 0 ) {
-		if( BigLong(newcpos,newnlen,(UWORD *)AC.cmod,ABS(AC.ncmod)) >=0 ){
+	  if( AN.ncmod != 0 ) {
+		if ( ( AC.modmode & POSNEG ) != 0 ) {
+			NormalModulus(coef,&r3);
+		}
+		if( BigLong(newcpos,newnlen,(UWORD *)AC.cmod,ABS(AN.ncmod)) >=0 ){
 		  WORD ii;
-		  SubPLon(newcpos,newnlen,(UWORD *)AC.cmod,ABS(AC.ncmod),newcpos,&newnlen);
+		  SubPLon(newcpos,newnlen,(UWORD *)AC.cmod,ABS(AN.ncmod),newcpos,&newnlen);
 		  newcpos[newnlen] = 1;
 		  for ( ii = 1; ii < newnlen; ii++ ) newcpos[newnlen+ii] = 0;
 		}

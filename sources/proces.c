@@ -160,6 +160,7 @@ WORD Processor()
 				AN.RepPoint = AT.RepCount + 1;
 				AR.CurDum = ReNumber(BHEAD term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
 				if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				}
@@ -243,6 +244,7 @@ commonread:;
 					  AN.RepPoint = AT.RepCount + 1;
 					  AR.CurDum = ReNumber(BHEAD term);
 					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+					  if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
 					  if ( Generator(BHEAD term,0) ) {
 						LowerSortLevel(); goto ProcErr;
 					  }
@@ -404,7 +406,7 @@ ProcErr:
 WORD TestSub(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
-	WORD *m, *t, *r, retvalue, funflag, j;
+	WORD *m, *t, *r, retvalue, funflag, j, oldncmod;
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum;
 	NESTING n;
 	CBUF *C = cbuf+AT.ebufnum;
@@ -1046,9 +1048,14 @@ DoSpec:
 		AT.NestPoin->termsize = t;
 		if ( AT.NestPoin == AT.Nest ) AN.EndNest = t + *t;
 		t++;
+		oldncmod = AN.ncmod;
 		if ( t < m ) do {
 			if ( *t < FUNCTION ) {
 				t += t[1]; continue;
+			}
+			if ( AN.ncmod && ( ( AC.modmode & ALSOFUNARGS ) == 0 ) ) {
+				if ( *t != AR.PolyFun ) AN.ncmod = 0;
+				else                    AN.ncmod = oldncmod;
 			}
 			r = t + t[1];
 			funnum = *t;
@@ -1088,6 +1095,7 @@ DoSpec:
 								AT.NestPoin--;
 								AN.TeInFun++;
 								AR.TePos = 0;
+								AN.ncmod = oldncmod;
 								return(retvalue);
 							}
 							AT.RecFlag--;
@@ -1118,7 +1126,7 @@ DoSpec:
 							if ( Normalize(BHEAD r) ) {
 								LowerSortLevel(); goto EndTest;
 							}
-							if ( AC.ncmod != 0 ) {
+							if ( AN.ncmod != 0 ) {
 								if ( *r ) {
 									if ( Modulus(r) ) {
 										LowerSortLevel();
@@ -1209,6 +1217,7 @@ DoSpec:
 							if ( AR.Eside != LHSIDE ) {
 								AN.TeInFun = 1; AR.TePos = 0;
 								AT.TMbuff = AM.dbufnum; t1[2] |= DIRTYFLAG;
+								AN.ncmod = oldncmod;
 								return(1);
 							}
 							AC.lhdollarflag = 1;
@@ -1218,7 +1227,24 @@ DoSpec:
 						if ( AR.Eside != LHSIDE ) {
 							AN.TeInFun = 1; AR.TePos = 0;
 							t1[2] |= DIRTYFLAG;
+							AN.ncmod = oldncmod;
 							return(1);
+						}
+					}
+					else if ( AN.ncmod != 0 && *t == -SNUMBER ) {
+						if ( AN.ncmod == 1 || AN.ncmod == -1 ) {
+							isp = AC.cmod[0];
+							isp = t[1] % isp;
+							if ( ( AC.modmode & POSNEG ) != 0 ) {
+								if ( isp > AC.cmod[0]/2 ) isp = isp - AC.cmod[0];
+								else if ( -isp > AC.cmod[0]/2 ) isp = isp + AC.cmod[0];
+							}
+							else {
+								if ( isp < 0 ) isp += AC.cmod[0];
+							}
+							if ( isp <= MAXPOSITIVE && isp >= -MAXPOSITIVE ) {
+								t[1] = isp;
+							}
 						}
 					}
 					NEXTARG(t)
@@ -1304,6 +1330,7 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 						i *= TABLEEXTENSION;
 						if ( T->tablepointers[i] == -1 ) {
 teststrict:					if ( T->strict == -2 ) {
+								AN.ncmod = oldncmod;
 								term[0] = 0; return(0);
 							}
 							if ( T->strict < 0 ) goto NextFun;
@@ -1346,7 +1373,10 @@ caughttable:
 /*					if ( MatchFunction(BHEAD T->pattern,t1,&wilds) > 0 ) {  } */
 					if ( MatchFunction(BHEAD Tpattern,t1,&wilds) > 0 ) {
 						AT.WorkPointer = oldwork;
-						if ( AT.NestPoin != AT.Nest ) return(1);
+						if ( AT.NestPoin != AT.Nest ) {
+							AN.ncmod = oldncmod;
+							return(1);
+						}
 
 						m = AN.FullProto;
 						retvalue = m[2] = rhsnumber;
@@ -1377,6 +1407,7 @@ caughttable:
 						AN.TeSuOut = -1;
 						if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 						AT.TMbuff = tbufnum;
+						AN.ncmod = oldncmod;
 						return(retvalue);
 					}
 					AT.WorkPointer = oldwork;
@@ -1391,6 +1422,7 @@ NextFun:;
 							AN.TeInFun = 1;
 							AR.TePos = 0;
 							AT.TMbuff = AM.dbufnum;
+							AN.ncmod = oldncmod;
 							return(1);
 						}
 						AC.lhdollarflag = 1;
@@ -1399,6 +1431,7 @@ NextFun:;
 				}
 			}
 			t = r;
+			AN.ncmod = oldncmod;
 		} while ( t < m );
 	}
 	return(0);
@@ -1415,7 +1448,7 @@ EndTest2:;
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
- *		Makes the replacement the subexpression with the number 'replac'
+ *		Makes the replacement of the subexpression with the number 'replac'
  *		in a function argument. Additional information is passed in some
  *		of the AR, AN, AT variables.
  *
@@ -1429,7 +1462,7 @@ EndTest2:;
 WORD InFunction(WORD *term, WORD *termout)
 {
 	GETIDENTITY
-	WORD *m, *t, *r, *rr, sign = 1;
+	WORD *m, *t, *r, *rr, sign = 1, oldncmod;
 	WORD *u, *v, *w, *from, *to, 
 		ipp, olddefer = AR.DeferFlag, oldPolyFun = AR.PolyFun, i, j;
 	LONG numterms;
@@ -1471,11 +1504,15 @@ WORD InFunction(WORD *term, WORD *termout)
 			r = t + t[1];
 			u = t;
 			t += FUNHEAD;
+			oldncmod = AN.ncmod;
 			while ( t < r ) {	/* t points at an argument */
 				if ( *t > 0 && t[1] ) {	/* Argument has been modified */
 
 					/* This whole argument must be redone */
 
+					if ( ( AN.ncmod != 0 )
+						&& ( ( AC.modmode & ALSOFUNARGS ) == 0 )
+						&& ( *u != AR.PolyFun ) ) { AN.ncmod = 0; }
 					AR.DeferFlag = 0;
 					v = t + *t;
 					t += ARGHEAD;		/* First term */
@@ -1496,6 +1533,7 @@ WORD InFunction(WORD *term, WORD *termout)
 						m = to;
                         if ( AT.WorkPointer < m+*m ) AT.WorkPointer = m + *m;
 						if ( Generator(BHEAD m,AR.Cnumlhs) ) {
+							AN.ncmod = oldncmod;
 							LowerSortLevel(); goto InFunc;
 						}
 					}
@@ -1505,7 +1543,10 @@ WORD InFunction(WORD *term, WORD *termout)
 					/* to is new argument */
 
 					to -= ARGHEAD;
-					if ( EndSort(m,0) < 0 ) goto InFunc;
+					if ( EndSort(m,0) < 0 ) {
+						AN.ncmod = oldncmod;
+						goto InFunc;
+					}
 					AR.PolyFun = oldPolyFun;
 					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
 						AR.CompareRoutine = &Compare1;
@@ -1523,6 +1564,7 @@ WORD InFunction(WORD *term, WORD *termout)
 					while ( t < r ) *m++ = *t++;
 					*termout = WORDDIF(m,termout);
 					AR.DeferFlag = olddefer;
+					AN.ncmod = oldncmod;
 					return(0);
 				}
 				else if ( *t == -DOLLAREXPRESSION ) {
@@ -1552,6 +1594,10 @@ WORD InFunction(WORD *term, WORD *termout)
 						}
 					}
 #endif
+					oldncmod = AN.ncmod;
+					if ( ( AN.ncmod != 0 )
+						&& ( ( AC.modmode & ALSOFUNARGS ) == 0 )
+						&& ( *u != AR.PolyFun ) ) { AN.ncmod = 0; }
 					AR.DeferFlag = 0;
 					v = t + 2;
 					w = 0;	/* to appease the compilers warning devices */
@@ -1700,6 +1746,7 @@ WORD InFunction(WORD *term, WORD *termout)
 					while ( t < r ) *m++ = *t++;
 					*termout = WORDDIF(m,termout);
 					AR.DeferFlag = olddefer;
+					AN.ncmod = oldncmod;
 					return(0);
 				}
 				}
@@ -1770,6 +1817,10 @@ WORD InFunction(WORD *term, WORD *termout)
 						}
 					}
 #endif
+					oldncmod = AN.ncmod;
+					if ( ( AN.ncmod != 0 )
+						&& ( ( AC.modmode & ALSOFUNARGS ) == 0 )
+						&& ( *u != AR.PolyFun ) ) { AN.ncmod = 0; }
 					m = termout; w = 0;
 					while ( from < t ) {
 						if ( from == u ) w = m;
@@ -1797,6 +1848,7 @@ wrongtype:;
 								MesPrint("$%s has wrong type for tensor substitution",
 								AC.dollarnames->namebuffer+d->name);
 								UNLOCK(ErrorMessageLock);
+								AN.ncmod = oldncmod;
 								return(-1);
 							}
 							break;
@@ -1862,6 +1914,7 @@ wrongtype:;
 							MesPrint("$%s is undefined in tensor substitution",
 							AC.dollarnames->namebuffer+d->name);
 							UNLOCK(ErrorMessageLock);
+							AN.ncmod = oldncmod;
 							return(-1);
 					}
 #ifdef WITHPTHREADS
@@ -1873,6 +1926,7 @@ wrongtype:;
 					while ( from < term ) *m++ = *from++;
 					if ( sign < 0 ) m[-1] = -m[-1];
 					*termout = m - termout;
+					AN.ncmod = oldncmod;
 					return(0);
 				}
 				else {
@@ -2334,7 +2388,7 @@ NoWild:				r = accum;
 						goto FiniCall;
 					}
 					if ( MulRat(BHEAD (UWORD *)coef,l1,(UWORD *)r,l2,(UWORD *)coef,&l1) ) goto FiniCall;
-					if ( AC.ncmod != 0 && TakeModulus((UWORD *)coef,&l1,AC.cmod,AC.ncmod,0) ) goto FiniCall;
+					if ( AN.ncmod != 0 && TakeModulus((UWORD *)coef,&l1,AC.cmod,AN.ncmod,UNPACK|AC.modmode) ) goto FiniCall;
 				}
 				accum += *accum;
 			} while ( --numacc >= 0 );
@@ -2497,7 +2551,7 @@ SkipCount:	level++;
 					if ( Deferred(BHEAD term,level) ) goto GenCall;
 					goto Return0;
 				}
-				if ( AC.ncmod != 0 ) {
+				if ( AN.ncmod != 0 ) {
 					if ( Modulus(term) ) goto GenCall;
 					if ( !*term ) goto Return0;
 				}
@@ -2915,7 +2969,13 @@ CommonEnd:
 					break;
 				  case TYPEMERGE:
 					AT.WorkPointer = term + *term;
-					if ( DoMerge(term,level,C->lhs[level][2],C->lhs[level][3]) )
+					if ( DoShuffle(term,level,C->lhs[level][2],C->lhs[level][3]) )
+						goto GenCall;
+					AT.WorkPointer = term + *term;
+					goto Return0;
+				  case TYPESTUFFLE:
+					AT.WorkPointer = term + *term;
+					if ( DoStuffle(term,level,C->lhs[level][2],C->lhs[level][3]) )
 						goto GenCall;
 					AT.WorkPointer = term + *term;
 					goto Return0;
@@ -3003,6 +3063,7 @@ AutoGen:	i = *AT.TMout;
 
 	if ( AN.TeInFun ) {	/* Match in function argument */
 		if ( AN.TeInFun < 0 && !AN.TeSuOut ) {
+
 			if ( AR.TePos >= 0 ) goto AutoGen;
 			if ( AN.TeInFun == -1 && DoDistrib(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -2 && DoDelta3(term,level) ) goto GenCall;
@@ -3950,7 +4011,7 @@ WORD PrepPoly(WORD *term)
 				else ncoef++;
 				*m++ = ncoef;
 				*ww = WORDDIF(m,ww);
-				if ( AC.ncmod != 0 ) {
+				if ( AN.ncmod != 0 ) {
 					if ( Modulus(ww) ) Terminate(-1);
 					if ( *ww == 0 ) return(1);
 					m = ww + *ww;
@@ -4123,7 +4184,7 @@ IllegalContent:
 				else ncoef++;
 				*m++ = ncoef;
 				*ww = WORDDIF(m,ww);
-				if ( AC.ncmod != 0 ) {
+				if ( AN.ncmod != 0 ) {
 					if ( Modulus(ww) ) Terminate(-1);
 					if ( *ww == 0 ) return(1);
 					m = ww + *ww;
@@ -4292,14 +4353,14 @@ retry:
 				l1 = REDLENG(*t);
 				if ( MulRat(BHEAD (UWORD *)m,l3,(UWORD *)tt1,l1,(UWORD *)m,&l4) ) {
 					LowerSortLevel(); goto PolyCall; }
-				if ( AC.ncmod != 0 && TakeModulus((UWORD *)m,&l4,AC.cmod,AC.ncmod,0) ) {
+				if ( AN.ncmod != 0 && TakeModulus((UWORD *)m,&l4,AC.cmod,AN.ncmod,UNPACK|AC.modmode) ) {
 					LowerSortLevel(); goto PolyCall; }
 				if ( l4 == 0 ) continue;
 				t = t2 + *t2 - 1;
 				l2 = REDLENG(*t);
 				if ( MulRat(BHEAD (UWORD *)m,l4,(UWORD *)tt2,l2,(UWORD *)m,&l3) ) {
 					LowerSortLevel(); goto PolyCall; }
-				if ( AC.ncmod != 0 && TakeModulus((UWORD *)m,&l3,AC.cmod,AC.ncmod,0) ) {
+				if ( AN.ncmod != 0 && TakeModulus((UWORD *)m,&l3,AC.cmod,AN.ncmod,UNPACK|AC.modmode) ) {
 					LowerSortLevel(); goto PolyCall; }
 			}
 			else {
@@ -4310,7 +4371,7 @@ retry:
 				l2 = REDLENG(*t);
 				if ( MulRat(BHEAD (UWORD *)tt1,l1,(UWORD *)tt2,l2,(UWORD *)m,&l3) ) {
 					LowerSortLevel(); goto PolyCall; }
-				if ( AC.ncmod != 0 && TakeModulus((UWORD *)m,&l3,AC.cmod,AC.ncmod,0) ) {
+				if ( AN.ncmod != 0 && TakeModulus((UWORD *)m,&l3,AC.cmod,AN.ncmod,UNPACK|AC.modmode) ) {
 					LowerSortLevel(); goto PolyCall; }
 			}
 			if ( l3 == 0 ) continue;

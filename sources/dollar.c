@@ -248,7 +248,8 @@ int AssignDollar(WORD *term, WORD level)
 */
 #ifdef WITHPTHREADS
 		if ( dtype > 0 ) {
-			LOCK(d->pthreadslockwrite);
+/*			LOCK(d->pthreadslockwrite); */
+			LOCK(d->pthreadslockread);
 NewValIsZero:;
 			switch ( d->type ) {
 				case DOLZERO: goto NoChangeZero;
@@ -272,7 +273,8 @@ NewValIsZero:;
 			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 			cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
 NoChangeZero:;
-			UNLOCK(d->pthreadslockwrite);
+/*			UNLOCK(d->pthreadslockwrite); */
+			UNLOCK(d->pthreadslockread);
 			return(0);
 		}
 #endif
@@ -291,7 +293,8 @@ NoChangeZero:;
 */
 #ifdef WITHPTHREADS
 		if ( dtype > 0 ) {
-			LOCK(d->pthreadslockwrite);
+/*			LOCK(d->pthreadslockwrite); */
+			LOCK(d->pthreadslockread);
 			if ( d->size < 5 ) {
 				WORD oldsize, *oldwhere, i;
 				oldsize = d->size; oldwhere = d->where;
@@ -350,7 +353,8 @@ HandleDolZero:;
 			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 			cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
 NoChangeOne:;
-			UNLOCK(d->pthreadslockwrite);
+/*			UNLOCK(d->pthreadslockwrite); */
+			UNLOCK(d->pthreadslockread);
 			return(0);
 		}
 #endif
@@ -379,7 +383,10 @@ NoChangeOne:;
 	Otherwise the lock could be placed later.
 */
 #ifdef WITHPTHREADS
-	if ( dtype == MODSUM ) { LOCK(d->pthreadslockwrite); }
+	if ( dtype == MODSUM ) {
+/*		LOCK(d->pthreadslockwrite); */
+		LOCK(d->pthreadslockread);
+	}
 #endif
 /*
 	The following case cannot occur. We treated it already
@@ -415,7 +422,10 @@ NoChangeOne:;
 		numterms = 0; t = ss; while ( *t ) { numterms++; t += *t; }
 	}
 #ifdef WITHPTHREADS
-	if ( dtype != MODSUM ) { LOCK(d->pthreadslockwrite); }
+	if ( dtype != MODSUM ) {
+/*		LOCK(d->pthreadslockwrite); */
+		LOCK(d->pthreadslockread);
+	}
 #endif
 	if ( numterms == 0 ) {
 /*
@@ -540,7 +550,8 @@ HandleDolZero1:;
 	}
 #ifdef WITHPTHREADS
 NoChange:;
-	UNLOCK(d->pthreadslockwrite);
+/*	UNLOCK(d->pthreadslockwrite); */
+	UNLOCK(d->pthreadslockread);
 #endif
 	return(0);
 }
@@ -1451,7 +1462,8 @@ int InsideDollar(WORD *ll, WORD level)
 					d = ModOptdollars[nummodopt].dstruct+identity;
 				}
 				else {
-					LOCK(d->pthreadslockwrite);
+/*					LOCK(d->pthreadslockwrite); */
+					LOCK(d->pthreadslockread);
 				}
 			}
 		}
@@ -1492,7 +1504,10 @@ int InsideDollar(WORD *ll, WORD level)
 		Now we have a little cleaning up to do
 */
 #ifdef WITHPTHREADS
-		if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockwrite); }
+		if ( dtype > 0 && dtype != MODLOCAL ) {
+/*			UNLOCK(d->pthreadslockwrite); */
+			UNLOCK(d->pthreadslockread);
+		}
 #endif
 		M_free(newd,"Copy of dollar variable");
 	  }

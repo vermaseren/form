@@ -272,6 +272,7 @@ int StartAllThreads(int number)
 	AS.inputslock = dummylock;
 	AS.outputslock = dummylock;
 	AP.PreVarLock = dummylock;
+	AC.halfmodlock = dummylock;
 	MakeThreadBuckets(number,0);
 /*
 	Now we wait for the workers to finish their startup.
@@ -958,6 +959,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 	}
 	AN.ninterms = AN0.ninterms;
 	AN.TeInFun = 0;
+	AN.ncmod = AC.ncmod;
 	AT.BrackBuf = AT0.BrackBuf;
 /*
 	The relevant variables and the term are in their place.
@@ -1196,6 +1198,7 @@ void *RunThread(void *dummy)
 				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				  if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("Thread %w executing term:");
@@ -1437,6 +1440,7 @@ bucketstolen:;
 				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				  if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				  }
@@ -1534,6 +1538,7 @@ void *RunSortBot(void *dummy)
 				AR.SortType = AC.SortType;
 				AT.SS->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
 				AT.SS->PolyWise = 0;
+				AN.ncmod = AC.ncmod;
 				LOCK(AT.SB.MasterBlockLock[1]);
 				BB = AB[AT.SortBotIn1];
 				LOCK(BB->T.SB.MasterBlockLock[BB->T.SB.MasterNumBlocks]);
@@ -1541,7 +1546,7 @@ void *RunSortBot(void *dummy)
 				LOCK(BB->T.SB.MasterBlockLock[BB->T.SB.MasterNumBlocks]);
 				AT.SB.FillBlock = 1;
 				AT.SB.MasterFill[1] = AT.SB.MasterStart[1];
-SETBASEPOSITION(AN.theposition,0);
+				SETBASEPOSITION(AN.theposition,0);
 				break;
 /*
 			#] INISORTBOT :
@@ -2121,10 +2126,10 @@ int InParallelProcessor()
 int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 {
 	ALLPRIVATES *B0 = AB[0];
-	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0;
-	LONG dd = 0, ddd, thrbufsiz, thrbufsiz0, numbucket = 0, numpasses;
-	LONG numinput = 1;
-	WORD *oldworkpointer = AT0.WorkPointer, *tt, *ttco = 0, *t1, ter;
+	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0, bra = 0, first = 1;
+	LONG dd = 0, ddd, thrbufsiz, thrbufsiz0, thrbufsiz2, numbucket = 0, numpasses;
+	LONG numinput = 1, num, i;
+	WORD *oldworkpointer = AT0.WorkPointer, *tt, *ttco = 0, *t1 = 0, ter, *tstop = 0, *t2;
 	THREADBUCKET *thr = 0;
 	numberoffullbuckets = 0;
 /*
@@ -2160,7 +2165,7 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 
 	The number of terms in the expression is in e->counter
 */
-	thrbufsiz = AC.ThreadBucketSize-1;
+	thrbufsiz2 = thrbufsiz = AC.ThreadBucketSize-1;
 	if ( ( e->counter / ( numberofworkers * 5 ) ) < thrbufsiz ) {
 		thrbufsiz = e->counter / ( numberofworkers * 5 ) - 1;
 		if ( thrbufsiz < 0 ) thrbufsiz = 0;
@@ -2185,6 +2190,17 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 			thr->deferbuffer[defcount++] = AR0.DefPosition;
 			ttco = thr->compressbuffer; t1 = AR0.CompressBuffer; j = *t1;
 			NCOPY(ttco,t1,j);
+		}
+		else if ( first && ( AC.CollectFun == 0 ) ) { /* Brackets ? */
+			first = 0;
+			t1 = tstop = thr->threadbuffer;
+			tstop += *tstop; tstop -= ABS(tstop[-1]);
+			t1++;
+			while ( t1 < tstop ) {
+				if ( t1[0] == HAAKJE ) { bra = 1; break; }
+				t1 += t1[1];
+			}
+			t1 = thr->threadbuffer;
 		}
 /*
 		Check whether we have a collect,function going. If so execute it.
@@ -2216,6 +2232,7 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 				if ( numpasses == 0 ) thrbufsiz = thrbufsiz0;
 				else                  thrbufsiz = thrbufsiz0 / (2 << numpasses);
 			}
+			thrbufsiz2 = thrbufsiz + thrbufsiz/5; /* for completing brackets */
 		}
 /*
 		we have already 1+dd terms
@@ -2244,7 +2261,57 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 				}
 				dd += ddd;
 			}
+			t1 = tt;
 			tt += *tt;
+		}
+/*
+		Check whether there are regular brackets and if we have no DeferFlag
+		and no collect, we try to add more terms till we finish the current
+		bracket. We should however not overdo it. Let us say: up to 20%
+		more terms are allowed.
+*/
+		if ( bra ) {
+			tstop = t1 + *t1; tstop -= ABS(tstop[-1]);
+			t2 = t1+1;
+			while ( t2 < tstop ) {
+				if ( t2[0] == HAAKJE ) { break; }
+				t2 += t2[1];
+			}
+			if ( t2[0] == HAAKJE ) {
+			  t2 += t2[1]; num = t2 - t1;
+			  while ( ( dd < thrbufsiz2 ) &&
+				( tt - thr->threadbuffer ) < ( thr->threadbuffersize - AM.MaxTer - 2 ) ) {
+/*
+				First check:
+*/
+				if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket();
+/*
+				There is room in the bucket. Fill yet another term.
+*/
+				if ( GetTerm(B0,tt) == 0 ) { endofinput = 1; break; }
+/*
+				Same bracket?
+*/
+				tstop = tt + *tt; tstop -= ABS(tstop[-1]);
+				if ( tstop-tt < num ) { /* Different: abort */
+					AR0.KeptInHold = 1;
+					break;
+				}
+				for ( i = 1; i < num; i++ ) {
+					if ( t1[i] != tt[i] ) break;
+				}
+				if ( i < num ) { /* Different: abort */
+					AR0.KeptInHold = 1;
+					break;
+				}
+/*
+				Same bracket. We need this term.
+*/
+				dd++;
+				thr->totnum++;
+				tt += *tt;
+			  }
+			}
 		}
 		thr->ddterms = dd; /* total number of terms including keep brackets */
 		thr->firstterm = numinput;
@@ -3129,10 +3196,13 @@ OneTerm:
 						SETERROR(-1)
 					}
 
-					if ( AC.ncmod != 0 ) {
-						if ( BigLong(coef,r3,(UWORD *)AC.cmod,ABS(AC.ncmod)) >= 0 ) {
+					if ( AN.ncmod != 0 ) {
+						if ( ( AC.modmode & POSNEG ) != 0 ) {
+							NormalModulus(coef,&r3);
+						}
+						else if ( BigLong(coef,r3,(UWORD *)AC.cmod,ABS(AN.ncmod)) >= 0 ) {
 							WORD ii;
-							SubPLon(coef,r3,(UWORD *)AC.cmod,ABS(AC.ncmod),coef,&r3);
+							SubPLon(coef,r3,(UWORD *)AC.cmod,ABS(AN.ncmod),coef,&r3);
 							coef[r3] = 1;
 							for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 						}
@@ -3661,9 +3731,12 @@ next2:		im = *term2;
 					SETERROR(-1)
 				}
 
-				if ( AC.ncmod != 0 ) {
-					if ( BigLong(coef,r3,(UWORD *)AC.cmod,ABS(AC.ncmod)) >= 0 ) {
-						SubPLon(coef,r3,(UWORD *)AC.cmod,ABS(AC.ncmod),coef,&r3);
+				if ( AN.ncmod != 0 ) {
+					if ( ( AC.modmode & POSNEG ) != 0 ) {
+						NormalModulus(coef,&r3);
+					}
+					else if ( BigLong(coef,r3,(UWORD *)AC.cmod,ABS(AN.ncmod)) >= 0 ) {
+						SubPLon(coef,r3,(UWORD *)AC.cmod,ABS(AN.ncmod),coef,&r3);
 						coef[r3] = 1;
 						for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 					}

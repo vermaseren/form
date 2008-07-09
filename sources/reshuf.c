@@ -1311,28 +1311,34 @@ nextk:;
 /*
  		#] DoDelta3 : 
   	#] Distribute : 
-  	#[ DoMerge :
+  	#[ DoShuffle :
 
 	Merges the arguments of all occurrences of function fun into a
 	single occurrence of fun. The opposite of Distrib_
 	Syntax:
-		Merge[,once|all],fun;
-		Merge[,once|all],$fun;
+		Shuffle[,once|all],fun;
+		Shuffle[,once|all],$fun;
 	The expansion of the dollar should give a single function.
 	The dollar is indicated as usual with a negative value.
 	option = 1 (once): generate identical results only once
 	option = 0 (all): generate identical results with combinatorics (default)
 */
 
-WORD DoMerge(WORD *term, WORD level, WORD fun, WORD option)
+/*
+	We use the Shuffle routine which has a large amount of combinatorics.
+	It doesn't have grouped combinatorics as in (0,1,2)*(0,1,3) where the
+	groups (0,1) also cause double terms.
+*/
+
+WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
 {
 	GETIDENTITY
-	WORD n = fun, n1, n2, j1, j2, *j, k1, k2;
-	WORD *t, *tt, *m, *tstop, *t1, *t2, *t1stop, *t2stop, *m1, *m2, *termout, *mm;
-	WORD *r1, *r2;
-	int i;
-	LONG p, p1, p2;
-	DUMMYUSE(option);
+	SHvariables SHback, *SH = &(AN.SHvar);
+	WORD *t1, *t2, *tstop, ncoef, n = fun, *to, *from;
+	int i, error;
+	LONG k;
+	UWORD *newcombi;
+
 	if ( n < 0 ) {
 		if ( ( n = DolToFunction(-n) ) == 0 ) {
 			LOCK(ErrorMessageLock);
@@ -1341,133 +1347,620 @@ WORD DoMerge(WORD *term, WORD level, WORD fun, WORD option)
 			return(1);
 		}
 	}
-	if ( AT.WorkPointer + 2*(*term) + AM.MaxTal > AT.WorkTop ) {
+	if ( AT.WorkPointer + 3*(*term) + AM.MaxTal > AT.WorkTop ) {
 		LOCK(ErrorMessageLock);
 		MesWork();
 		UNLOCK(ErrorMessageLock);
 		return(-1);
 	}
-/*
-	Now we have the number of a function in n.
-*/
-restart:;
-	tt = term+*term;
-	tstop = tt - ABS(tt[-1]);
-	t = term + 1; t1 = 0; t2 = 0;
-	while ( t < tstop ) {
-		if ( *t == n ) {
-			if ( t1 != 0 ) { t2 = t; break; }
-			t1 = t;
+
+	tstop = term + *term;
+	ncoef = tstop[-1];
+	tstop -= ABS(ncoef);
+	t1 = term + 1;
+	while ( t1 < tstop ) {
+		if ( ( *t1 == n ) && ( t1+t1[1] < tstop ) && ( t1[1] > FUNHEAD ) ) {
+			t2 = t1 + t1[1];
+			if ( t2 >= tstop ) {
+				return(Generator(BHEAD term,level));
+			}
+			while ( t2 < tstop ) {
+				if ( ( *t2 == n ) && ( t2[1] > FUNHEAD ) ) break;
+				t2 += t2[1];
+			}
+			if ( t2 < tstop ) break;
 		}
-		t += t[1];
+		t1 += t1[1];
 	}
-	if ( t >= tstop ) {
+	if ( t1 >= tstop ) {
 		return(Generator(BHEAD term,level));
 	}
-	if ( t1[1] == FUNHEAD || t2[1] == FUNHEAD ) {
-		if ( t2[1] == FUNHEAD ) { t = t1; t1 = t2; t2 = t; }
-		m1 = t1; m2 = t1+t1[1]; m = term + *term;
-		while ( m2 < m ) *m1++ = *m2++;
-		*term = m1 - term;
-		goto restart;
+	*AN.RepPoint = 1;
+/*
+	Now we have two occurrences of the function.
+	Back up all relevant variables and load all the stuff that needs to be
+	passed on.
+*/
+	SHback = AN.SHvar;
+	SH->finishuf = &FinishShuffle;
+	SH->do_uffle = &DoShuffle;
+	SH->outterm = AT.WorkPointer;
+	AT.WorkPointer += *term;
+	SH->stop1 = t1 + t1[1];
+	SH->stop2 = t2 + t2[1];
+	SH->thefunction = n;
+	SH->option = option;
+	SH->level = level;
+	SH->incoef = tstop;
+	SH->nincoef = ncoef;
+
+	if ( AN.SHcombi == 0 || AN.SHcombisize == 0 ) {
+		AN.SHcombisize = 200;
+		AN.SHcombi = (UWORD *)Malloc1(AN.SHcombisize*sizeof(UWORD),"AN.SHcombi");
+		SH->combilast = 0;
+		SHback.combilast = 0;
 	}
-/*
-	We have now two occurrences in t1 and t2, both with argument(s)
-	Make lists of the arguments.
-*/
-	m1 = t1; m2 = t2;
-	t1stop = t1 + t1[1]; t2stop = t2 + t2[1];
-	t1 += FUNHEAD; t2 += FUNHEAD;
-	p = p1 = AT.pWorkPointer;
-	n1 = 0;
-	t = t1;
-	while ( t < t1stop ) { n1++; NEXTARG(t); }
-	n2 = 0;
-	t = t2;
-	while ( t < t2stop ) { n2++; NEXTARG(t); }
-	WantAddPointers(n1+n2+2);
-	while ( t1 < t1stop ) { AT.pWorkSpace[p] = t1; p++; NEXTARG(t1); }
-	AT.pWorkSpace[p] = t1stop; p++;
-	p2 = p;
-	while ( t2 < t2stop ) { AT.pWorkSpace[p] = t2; p++; NEXTARG(t2); }
-	AT.pWorkSpace[p] = t2stop; p++;
-	AT.pWorkPointer = p;
-/*
-	Now start filling
-*/
-	j = AT.WorkPointer; AT.WorkPointer += n1+1;
-	for ( i = 0; i < n1; i++ ) j[i] = 0;
-	termout = AT.WorkPointer;
-	for (;;) {
-		m = termout;
-		t = term; while ( t < m1 ) *m++ = *t++;
-		mm = m;
-		for ( i = 0; i < FUNHEAD; i++ ) *m++ = *t++;
-		j1 = n1-1;
-		r1 = m1+FUNHEAD; r2 = m2+FUNHEAD;
-		for ( k1 = 0, k2 = 0; k1 < n1; ) {
-			if ( j[k1] <= k2 ) {	/* copy from 1 */
-				r1 = AT.pWorkSpace[p1+k1];
-				r2 = AT.pWorkSpace[p1+k1+1];
-				while ( r1 < r2 ) *m++ = *r1++;
-				k1++;
-			}
-			else { /* copy from 2 */
-				while ( k2 < j[k1] ) {
-					r1 = AT.pWorkSpace[p2+k2];
-					r2 = AT.pWorkSpace[p2+k2+1];
-					while ( r1 < r2 ) *m++ = *r1++;
-					k2++;
-				}
-			}
-		}
-		while ( k2 < n2 ) {
-			r1 = AT.pWorkSpace[p2+k2];
-			r2 = AT.pWorkSpace[p2+k2+1];
-			while ( r1 < r2 ) *m++ = *r1++;
-			k2++;
-		}
-		mm[1] = m - mm;
-		t = t1stop;
-		while ( t < m2 ) *m++ = *t++;
-		t = t2stop;
-		while ( t < tt ) *m++ = *t++;
-		*termout = m - termout;
-		AT.WorkPointer = m;
-		if ( Generator(BHEAD termout,level) ) goto Mergecall;
-/*
-		Raise configuration
-*/
-raise:;
-		j[j1]++;
-		if ( j[j1] > n2 ) {
-			while ( ( j[j1] > n2 ) && ( j1 >= 0 ) ) { j1--; }
-			if ( j1 < 0 ) break;
-			goto raise;
-		}
-		{
-			j2 = j[j1++];
-			while ( j1 < n1 ) { j[j1] = j2; j1++; }
-			j1--;
+	else {
+		SH->combilast += AN.SHcombi[SH->combilast]+1;
+		if ( SH->combilast >= AN.SHcombisize - 100 ) {
+			newcombi = (UWORD *)Malloc1(2*AN.SHcombisize*sizeof(UWORD),"AN.SHcombi");
+			for ( k = 0; k < AN.SHcombisize; k++ ) newcombi[k] = AN.SHcombi[k];
+			M_free(AN.SHcombi,"AN.SHcombi");
+			AN.SHcombi = newcombi;
+			AN.SHcombisize *= 2;
 		}
 	}
+	AN.SHcombi[SH->combilast] = 1;
+	AN.SHcombi[SH->combilast+1] = 1;
+
+	i = t1-term; to = SH->outterm; from = term;
+	NCOPY(to,from,i)
+	SH->outfun = to;
+	for ( i = 0; i < FUNHEAD; i++ ) { *to++ = t1[i]; }
+
+	error = Shuffle(BHEAD t1+FUNHEAD,t2+FUNHEAD,to);
+
+	AT.WorkPointer = SH->outterm;
+	AN.SHvar = SHback;
+	if ( error ) {
+		MesCall("DoShuffle");
+		return(-1);
+	}
+	return(0);
+}
+
 /*
-	Combinatorics: n,m identical arguments give binom_(n+m,n)
-	strings of n+m arguments.
+  	#] DoShuffle : 
+  	#[ Shuffle :
+
+	How to make shuffles:
+
+	We have two lists of arguments. We have to make a single
+	shuffle of them. All combinations. Doubles should have as
+	much as possible a combinatorics factor. Sometimes this is
+	very difficult as in:
+		(0,1,2)x(0,1,3) = -> (0,1) is a repeated pattern and the
+		factor on that is difficult
+	Simple way: (without combinatorics)
+		repeat id  f0(?c)*f(x1?,?a)*f(x2?,?b) =
+						+f0(?c,x1)*f(?a)*f(x2,?b)
+						+f0(?c,x2)*f(x1,?a)*f(?b);
+	Refinement:
+			if ( x1 == x2 ) check how many more there are of the same.
+			--> (n1,x) and (n2,x)
+			id  f0(?c)*f1((n1,x),?b)*f2((n2,x),?c) =
+					+binom_(n1+n2,n1)*f0(?c,(n1+n2,x))*f1(?a)*f2(?b)
+					+sum_(j,0,n1-1,binom_(n2+j,j)*f0(?c,(j+n2,x))
+							*f1((n1-j),?a)*f2(?b))*force2
+					+sum_(j,0,n2-1,binom_(n1+j,j)*f0(?c,(j+n1,x))
+							*f1(?a)*f2((n2-j),?b))*force1
+	The force operation can be executed directly
+
+	The next question is how to program this: recursively or linearly
+	which would require simulation of a recursion. Recursive is clearest
+	but we need to pass a number of arguments from the calling routine
+	to the final routine. This is done with AN.SHvar.
+
+	We need space for the accumulation of the combinatoric factors.
 */
 
-	AT.WorkPointer = j;
-	AT.pWorkPointer = p1;
+int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
+{
+	WORD *t, *fr, *next1, *next2, na, *fn1, *fn2, *tt;
+	int i, n, n1, n2, j;
+	LONG combilast;
+	SHvariables *SH = &(AN.SHvar);
+	if ( from1 == SH->stop1 && from2 == SH->stop2 ) {
+		return(FiniShuffle(BHEAD to));
+	}
+	else if ( from1 == SH->stop1 ) {
+		i = SH->stop2 - from2; t = to; tt = from2; NCOPY(t,tt,i)
+		return(FiniShuffle(BHEAD t));
+	}
+	else if ( from2 == SH->stop2 ) {
+		i = SH->stop1 - from1; t = to; tt = from1; NCOPY(t,tt,i)
+		return(FiniShuffle(BHEAD t));
+	}
+/*
+	Compare lead arguments
+*/
+	if ( AreArgsEqual(from1,from2) ) {
+/*
+		First find out how many of each
+*/
+		next1 = from1; n1 = 1; NEXTARG(next1)
+		while ( ( next1 < SH->stop1 ) && AreArgsEqual(from1,next1) ) {
+			n1++; NEXTARG(next1)
+		}
+		next2 = from2; n2 = 1; NEXTARG(next2)
+		while ( ( next2 < SH->stop2 ) && AreArgsEqual(from2,next2) ) {
+			n2++; NEXTARG(next2)
+		}
+		combilast = SH->combilast;
+/*
+			+binom_(n1+n2,n1)*f0(?c,(n1+n2,x))*f1(?a)*f2(?b)
+*/
+		t = to;
+		n = n1 + n2;
+		while ( --n >= 0 ) { fr = from1; CopyArg(t,fr) }
+		if ( GetBinom((UWORD *)(t),&na,n1+n2,n1) ) goto shuffcall;
+		if ( combilast + AN.SHcombi[combilast] + na + 2 >= AN.SHcombisize ) {
+/*
+			We need more memory in this stack. Fortunately this is the
+			only place where we have to do this, because the other factors
+			are definitely smaller.
+			Layout:   size, LongInteger, size, LongInteger, .....
+			We start pointing at the last one.
+*/
+			UWORD *combi = (UWORD *)Malloc1(2*AN.SHcombisize*2,"AN.SHcombi");
+			LONG jj;
+			for ( jj = 0; jj < AN.SHcombisize; jj++ ) combi[jj] = AN.SHcombi[jj];
+			AN.SHcombisize *= 2;
+			M_free(AN.SHcombi,"AN.SHcombi");
+			AN.SHcombi = combi;
+		}
+		if ( MulLong((UWORD *)(AN.SHcombi+combilast+1),AN.SHcombi[combilast],
+		             (UWORD *)(t),na,
+					 (UWORD *)(AN.SHcombi+combilast+AN.SHcombi[combilast]+2),
+					 (WORD *)(AN.SHcombi+combilast+AN.SHcombi[combilast]+1)) ) goto shuffcall;
+		SH->combilast = combilast + AN.SHcombi[combilast] + 1;
+		if ( next1 >= SH->stop1 ) {
+			fr = next2; i = SH->stop2 - fr;
+			NCOPY(t,fr,i)
+			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+		}
+		else if ( next2 >= SH->stop2 ) {
+			fr = next1; i = SH->stop1 - fr;
+			NCOPY(t,fr,i)
+			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+		}
+		else {
+			if ( Shuffle(BHEAD next1,next2,t) ) goto shuffcall;
+		}
+		SH->combilast = combilast;
+/*
+			+sum_(j,0,n1-1,binom_(n2+j,j)*f0(?c,(j+n2,x))
+					*f1((n1-j),?a)*f2(?b))*force2
+*/
+		if ( next2 < SH->stop2 ) {
+		 t = to;
+		 n = n2;
+		 while ( --n >= 0 ) { fr = from1; CopyArg(t,fr) }
+		 for ( j = 0; j < n1; j++ ) {
+		  if ( GetBinom((UWORD *)(t),&na,n2+j,j) ) goto shuffcall;
+		  if ( MulLong((UWORD *)(AN.SHcombi+combilast+1),AN.SHcombi[combilast],
+		               (UWORD *)(t),na,
+		               (UWORD *)(AN.SHcombi+combilast+AN.SHcombi[combilast]+2),
+		               (WORD *)(AN.SHcombi+combilast+AN.SHcombi[combilast]+1)) ) goto shuffcall;
+		  SH->combilast = combilast + AN.SHcombi[combilast] + 1;
+		  if ( j > 0 ) { fr = from1; CopyArg(t,fr) }
+		  fn2 = next2; tt = t;
+		  CopyArg(tt,fn2)
+
+		  if ( fn2 >= SH->stop2 ) {
+			n = n1-j;
+			while ( --n >= 0 ) { fr = from1; CopyArg(tt,fr) }
+			fr = next1; i = SH->stop1 - fr;
+			NCOPY(tt,fr,i)
+			if ( FiniShuffle(BHEAD tt) ) goto shuffcall;
+		  }
+		  else {
+			n = j; fn1 = from1; while ( --n >= 0 ) { NEXTARG(fn1) }
+			if ( Shuffle(BHEAD fn1,fn2,tt) ) goto shuffcall;
+		  }
+		  SH->combilast = combilast;
+		 }
+		}
+/*
+			+sum_(j,0,n2-1,binom_(n1+j,j)*f0(?c,(j+n1,x))
+					*f1(?a)*f2((n2-j),?b))*force1
+*/
+		if ( next1 < SH->stop1 ) {
+		 t = to;
+		 n = n1;
+		 while ( --n >= 0 ) { fr = from1; CopyArg(t,fr) }
+		 for ( j = 0; j < n2; j++ ) {
+		  if ( GetBinom((UWORD *)(t),&na,n1+j,j) ) goto shuffcall;
+		  if ( MulLong((UWORD *)(AN.SHcombi+combilast+1),AN.SHcombi[combilast],
+		               (UWORD *)(t),na,
+		               (UWORD *)(AN.SHcombi+combilast+AN.SHcombi[combilast]+2),
+		               (WORD *)(AN.SHcombi+combilast+AN.SHcombi[combilast]+1)) ) goto shuffcall;
+		  SH->combilast = combilast + AN.SHcombi[combilast] + 1;
+		  if ( j > 0 ) { fr = from1; CopyArg(t,fr) }
+		  fn1 = next1; tt = t;
+		  CopyArg(tt,fn1)
+
+		  if ( fn1 >= SH->stop1 ) {
+			n = n2-j;
+			while ( --n >= 0 ) { fr = from1; CopyArg(tt,fr) }
+			fr = next2; i = SH->stop2 - fr;
+			NCOPY(tt,fr,i)
+			if ( FiniShuffle(BHEAD tt) ) goto shuffcall;
+		  }
+		  else {
+			n = j; fn2 = from2; while ( --n >= 0 ) { NEXTARG(fn2) }
+			if ( Shuffle(BHEAD fn1,fn2,tt) ) goto shuffcall;
+		  }
+		  SH->combilast = combilast;
+		 }
+		}
+	}
+	else {
+/*
+		Argument from first list
+*/
+		t = to;
+		fr = from1;
+		CopyArg(t,fr)
+		if ( fr >= SH->stop1 ) {
+			fr = from2; i = SH->stop2 - fr;
+			NCOPY(t,fr,i)
+			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+		}
+		else {
+			if ( Shuffle(BHEAD fr,from2,t) ) goto shuffcall;
+		}
+/*
+		Argument from second list
+*/
+		t = to;
+		fr = from2;
+		CopyArg(t,fr)
+		if ( fr >= SH->stop2 ) {
+			fr = from1; i = SH->stop1 - fr;
+			NCOPY(t,fr,i)
+			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+		}
+		else {
+			if ( Shuffle(BHEAD from1,fr,t) ) goto shuffcall;
+		}
+	}
 	return(0);
-Mergecall:
-	AT.WorkPointer = j;
-	AT.pWorkPointer = p1;
-	LOCK(ErrorMessageLock);
-	MesCall("DoMerge");
-	UNLOCK(ErrorMessageLock);
+shuffcall:
+	MesCall("Shuffle");
 	return(-1);
 }
 
 /*
-  	#] DoMerge : 
+  	#] Shuffle : 
+  	#[ FinishShuffle :
+
+	The complications here are:
+	1: We want to save space. We put the output term in 'out' straight
+	   on top of what we produced thusfar. We have to copy the early
+	   piece because once the term goes back to Generator, Normalize can
+	   change it in situ
+	2: There can be other occurrence of the function between the two
+	   that we did. For shuffles that isn't likely, but we use this
+	   routine also for the stuffles and there it can happen.
+*/
+
+int FinishShuffle(PHEAD WORD *fini)
+{
+	WORD *t, *t1, *oldworkpointer = AT.WorkPointer, *tcoef, ntcoef, *out;
+	int i;
+	SHvariables *SH = &(AN.SHvar);
+	SH->outfun[1] = fini - SH->outfun;
+
+	out = fini; i = fini - SH->outterm; t = SH->outterm;
+	NCOPY(fini,t,i)
+	t = SH->stop1;
+	t1 = t + t[1];
+	while ( t1 < SH->stop2 ) { t = t1; t1 = t + t[1]; }
+	t1 = SH->stop1;
+	while ( t1 < t ) *fini++ = *t1++;
+	t = SH->stop2;
+	while ( t < SH->incoef ) *fini++ = *t++;
+	tcoef = fini;
+	ntcoef = SH->nincoef;
+	i = ABS(ntcoef);
+	NCOPY(fini,t,i);
+	ntcoef = REDLENG(ntcoef);
+	Mully(BHEAD (UWORD *)tcoef,&ntcoef,
+		(UWORD *)(AN.SHcombi+SH->combilast+1),AN.SHcombi[SH->combilast]);
+	ntcoef = INCLENG(ntcoef);
+	fini = tcoef + ABS(ntcoef);
+	if ( ( ( SH->option & 2 ) != 0 ) && ( ( SH->option & 256 ) != 0 ) ) ntcoef = -ntcoef;
+	fini[-1] = ntcoef;
+	i = *out = fini - out;
+/*
+	Now check whether we have to do more
+*/
+	AT.WorkPointer = out + *out;
+	if ( ( SH->option & 1 ) == 1 ) {
+		if ( Generator(BHEAD out,SH->level) ) goto Finicall;
+	}
+	else {
+		if ( DoShtuffle(out,SH->level,SH->thefunction,SH->option) ) goto Finicall;
+	}
+	AT.WorkPointer = oldworkpointer;
+	return(0);
+Finicall:
+	AT.WorkPointer = oldworkpointer;
+	MesCall("FinishShuffle");
+	return(-1);
+}
+
+/*
+  	#] FinishShuffle : 
+  	#[ DoStuffle :
+
+	Stuffling is a variation of shuffling.
+	In the stuffling we insist that the arguments are (short) integers. nonzero.
+	The stuffle sum is x st y = sig_(x)*sig_(y)*(abs(x)+abs(y))
+	The way we do this is:
+		1: count the arguments in each function: n1, n2
+		2: take the minimum minval = min(n1,n2).
+		3: for ( j = 0; j <= min; j++ ) take j elements in each of the lists.
+		4: the j+1 groups of remaining arguments have to each be shuffled
+		5: the j selected pairs have to be stuffle added.
+	We can use many of the shuffle things.
+	Considering the recursive nature of the generation we actually don't
+	need to know n1, n2, minval.
+*/
+
+WORD DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
+{
+	GETIDENTITY
+	SHvariables SHback, *SH = &(AN.SHvar);
+	WORD *t1, *t2, *tstop, *t1stop, *t2stop, ncoef, n = fun, *to, *from;
+	WORD *r1, *r2;
+	int i, error;
+	LONG k;
+	UWORD *newcombi;
+
+	if ( n < 0 ) {
+		if ( ( n = DolToFunction(-n) ) == 0 ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("$-variable in merge statement did not evaluate to a function.");
+			UNLOCK(ErrorMessageLock);
+			return(1);
+		}
+	}
+	if ( AT.WorkPointer + 3*(*term) + AM.MaxTal > AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+
+	tstop = term + *term;
+	ncoef = tstop[-1];
+	tstop -= ABS(ncoef);
+	t1 = term + 1;
+retry1:;
+	while ( t1 < tstop ) {
+		if ( ( *t1 == n ) && ( t1+t1[1] < tstop ) && ( t1[1] > FUNHEAD ) ) {
+			t2 = t1 + t1[1];
+			if ( t2 >= tstop ) {
+				return(Generator(BHEAD term,level));
+			}
+retry2:;
+			while ( t2 < tstop ) {
+				if ( ( *t2 == n ) && ( t2[1] > FUNHEAD ) ) break;
+				t2 += t2[1];
+			}
+			if ( t2 < tstop ) break;
+		}
+		t1 += t1[1];
+	}
+	if ( t1 >= tstop ) {
+		return(Generator(BHEAD term,level));
+	}
+/*
+	Next we have to check that the arguments are of the correct type
+	At the same time we can count them.
+*/
+	t1stop = t1 + t1[1];
+	r1 = t1 + FUNHEAD;
+	while ( r1 < t1stop ) {
+		if ( *r1 != -SNUMBER ) break;
+		if ( r1[1] == 0 ) break;
+		r1 += 2;
+	}
+	if ( r1 < t1stop ) { t1 = t2; goto retry1; }
+	t2stop = t2 + t2[1];
+	r2 = t2 + FUNHEAD;
+	while ( r2 < t2stop ) {
+		if ( *r2 != -SNUMBER ) break;
+		if ( r2[1] == 0 ) break;
+		r2 += 2;
+	}
+	if ( r2 < t2stop ) { t2 = t2 + t2[1]; goto retry2; }
+/*
+	OK, now we got two objects that can be used.
+*/
+	*AN.RepPoint = 1;
+
+	SHback = AN.SHvar;
+	SH->finishuf = &FinishStuffle;
+	SH->do_uffle = &DoStuffle;
+	SH->outterm = AT.WorkPointer;
+	AT.WorkPointer += *term;
+	SH->ststop1 = t1 + t1[1];
+	SH->ststop2 = t2 + t2[1];
+	SH->thefunction = n;
+	SH->option = option;
+	SH->level = level;
+	SH->incoef = tstop;
+	SH->nincoef = ncoef;
+
+	if ( AN.SHcombi == 0 || AN.SHcombisize == 0 ) {
+		AN.SHcombisize = 200;
+		AN.SHcombi = (UWORD *)Malloc1(AN.SHcombisize*sizeof(UWORD),"AN.SHcombi");
+		SH->combilast = 0;
+		SHback.combilast = 0;
+	}
+	else {
+		SH->combilast += AN.SHcombi[SH->combilast]+1;
+		if ( SH->combilast >= AN.SHcombisize - 100 ) {
+			newcombi = (UWORD *)Malloc1(2*AN.SHcombisize*sizeof(UWORD),"AN.SHcombi");
+			for ( k = 0; k < AN.SHcombisize; k++ ) newcombi[k] = AN.SHcombi[k];
+			M_free(AN.SHcombi,"AN.SHcombi");
+			AN.SHcombi = newcombi;
+			AN.SHcombisize *= 2;
+		}
+	}
+	AN.SHcombi[SH->combilast] = 1;
+	AN.SHcombi[SH->combilast+1] = 1;
+
+	i = t1-term; to = SH->outterm; from = term;
+	NCOPY(to,from,i)
+	SH->outfun = to;
+	for ( i = 0; i < FUNHEAD; i++ ) { *to++ = t1[i]; }
+
+	error = Stuffle(BHEAD t1+FUNHEAD,t2+FUNHEAD,to);
+
+	AT.WorkPointer = SH->outterm;
+	AN.SHvar = SHback;
+	if ( error ) {
+		MesCall("DoStuffle");
+		return(-1);
+	}
+	return(0);
+}
+
+/*
+  	#] DoStuffle : 
+  	#[ Stuffle :
+
+	The way to generate the stuffles
+	1: select an argument in the first  list (for(j1=0;j1<last;j1++))
+	2: select an argument in the second list (for(j2=0;j2<last;j2++))
+	3: put values for SH->ststop1 and SH->ststop2 at these arguments.
+	4: generate all shuffles of the arguments in front.
+	5: Then put the stuffle sum of arg(j1) and arg(j2)
+	6: Then continue calling Stuffle
+	7: Once one gets exhausted, we can clean up the list and call FinishShuffle
+	8: if ( ( SH->option & 2 ) != 0 ) the stuffle sum is negative.
+*/
+
+int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
+{
+	WORD *t, *tf, *next1, *next2, *st1, *st2, *save1, *save2;
+	SHvariables *SH = &(AN.SHvar);
+	int i, retval;
+/*
+	First the special cases (exhausted list(s)):
+*/
+	save1 = SH->stop1; save2 = SH->stop2;
+	if ( from1 >= SH->ststop1 && from2 == SH->ststop2 ) {
+		SH->stop1 = SH->ststop1;
+		SH->stop2 = SH->ststop2;
+		retval = FinishShuffle(BHEAD to);
+		SH->stop1 = save1; SH->stop2 = save2;
+		return(retval);
+	}
+	else if ( from1 >= SH->ststop1 ) {
+		i = SH->ststop2 - from2; t = to; tf = from2; NCOPY(t,tf,i)
+		SH->stop1 = SH->ststop1;
+		SH->stop2 = SH->ststop2;
+		retval = FinishShuffle(BHEAD t);
+		SH->stop1 = save1; SH->stop2 = save2;
+		return(retval);
+	}
+	else if ( from2 >= SH->ststop2 ) {
+		i = SH->ststop1 - from1; t = to; tf = from1; NCOPY(t,tf,i)
+		SH->stop1 = SH->ststop1;
+		SH->stop2 = SH->ststop2;
+		retval = FinishShuffle(BHEAD t);
+		SH->stop1 = save1; SH->stop2 = save2;
+		return(retval);
+	}
+/*
+	Now the case that we have no stuffle sums.
+*/
+	SH->stop1 = SH->ststop1;
+	SH->stop2 = SH->ststop2;
+	SH->finishuf = &FinishShuffle;
+	if ( Shuffle(BHEAD from1,from2,to) ) goto stuffcall;
+	SH->finishuf = &FinishStuffle;
+/*
+	Now we have to select a pair, one from 1 and one from 2.
+*/
+	st1 = from1; next1 = st1+2;
+	while ( next1 <= SH->ststop1 ) {
+		st2 = from2; next2 = st2+2;
+		while ( next2 <= SH->ststop2 ) {
+			SH->stop1 = st1;
+			SH->stop2 = st2;
+			if ( st1 == from1 && st2 == from2 ) {
+				t = to; *t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+				SH->option ^= 256;
+				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
+				SH->option ^= 256;
+			}
+			else if ( st1 == from1 ) {
+				i = st2-from2;
+				t = to; tf = from2; NCOPY(t,tf,i)
+				*t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+				SH->option ^= 256;
+				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
+				SH->option ^= 256;
+			}
+			else if ( st2 == from2 ) {
+				i = st1-from1;
+				t = to; tf = from1; NCOPY(t,tf,i)
+				*t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+				SH->option ^= 256;
+				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
+				SH->option ^= 256;
+			}
+			else {
+				if ( Shuffle(BHEAD from1,from2,to) ) goto stuffcall;
+			}
+			st2 = next2; next2 += 2;
+		}
+		st1 = next1; next1 += 2;
+	}
+	SH->stop1 = save1; SH->stop2 = save2;
+	return(0);
+stuffcall:;
+	MesCall("Stuffle");
+	return(-1);
+}
+
+/*
+  	#] Stuffle : 
+  	#[ FinishStuffle :
+
+	The program only comes here from the Shuffle routine.
+	It should add the stuffle sum and then call Stuffle again.
+*/
+
+int FinishStuffle(PHEAD WORD *fini)
+{
+	SHvariables *SH = &(AN.SHvar);
+	*fini++ = -SNUMBER; *fini++ = StuffAdd(SH->stop1[1],SH->stop2[1]);
+	SH->option ^= 256;
+	if ( Stuffle(BHEAD SH->stop1+2,SH->stop2+2,fini) ) goto stuffcall;
+	SH->option ^= 256;
+	return(0);
+stuffcall:;
+	MesCall("FinishStuffle");
+	return(-1);
+}
+
+/*
+  	#] FinishStuffle : 
 */

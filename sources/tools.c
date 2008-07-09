@@ -1921,7 +1921,7 @@ MesPrint("TermFree: %s, %l",text,AT.TermMemTop);
 #endif
 
 /*
- 		#] TermMalloc :
+ 		#] TermMalloc : 
  		#[ NumberMalloc :
 */
 /**
@@ -1989,7 +1989,7 @@ MesPrint("NumberFree: %s, %l",text,AT.NumberMemTop);
 #endif
 
 /*
- 		#] NumberMalloc :
+ 		#] NumberMalloc : 
  		#[ FromList :
 
 	Returns the next object in a list.
@@ -2390,6 +2390,25 @@ int IsLikeVector(WORD *arg)
 
 /*
  		#] IsLikeVector : 
+ 		#[ AreArgsEqual :
+*/
+
+int AreArgsEqual(WORD *arg1, WORD *arg2)
+{
+	int i;
+	if ( *arg2 != *arg1 ) return(0);
+	if ( *arg1 > 0 ) {
+		i = *arg1;
+		while ( --i > 0 ) { if ( arg1[i] != arg2[i] ) return(0); }
+		return(1);
+	}
+	else if ( *arg1 <= -FUNCTION ) return(1);
+	else if ( arg1[1] == arg2[1] ) return(1);
+	return(0);
+}
+
+/*
+ 		#] AreArgsEqual :
  		#[ CompareArgs :
 */
 

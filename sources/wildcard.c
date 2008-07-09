@@ -1246,7 +1246,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 */
 		}
 		t = uu;
@@ -1261,7 +1261,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill :
+ 		#] WildFill : 
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -2194,6 +2194,7 @@ NoMnot:
 				}
 				else if ( n2 >= 0 ) {
 					*newval = *(w - Sets[j].first + Sets[n2].first);
+					if ( *newval > MAXPOWER ) *newval -= 2*MAXPOWER;
 					if ( dirty && *newval != oldval ) {
 						*newval = oldval; goto NoMatch;
 					}
@@ -2356,6 +2357,7 @@ NoMnot:
 				}
 				else if ( n2 >= 0 ) {
 					*newval = *(w - Sets[j].first + Sets[n2].first);
+					if ( *newval > MAXPOWER ) *newval -= 2*MAXPOWER;
 					if ( dirty && *newval != oldval ) {
 						*newval = oldval; goto NoMatch;
 					}
@@ -2373,7 +2375,7 @@ NoM:
 }
 
 /*
- 		#] CheckWild : 
+ 		#] CheckWild :
  	#] Wildcards :
   	#[ DenToFunction :
 
