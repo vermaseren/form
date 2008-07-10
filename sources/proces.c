@@ -160,7 +160,10 @@ WORD Processor()
 				AN.RepPoint = AT.RepCount + 1;
 				AR.CurDum = ReNumber(BHEAD term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
+				if ( AN.ncmod ) {
+					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+				}
 				if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				}
@@ -244,7 +247,10 @@ commonread:;
 					  AN.RepPoint = AT.RepCount + 1;
 					  AR.CurDum = ReNumber(BHEAD term);
 					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-					  if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
+					  if ( AN.ncmod ) {
+						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+						else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+					  }
 					  if ( Generator(BHEAD term,0) ) {
 						LowerSortLevel(); goto ProcErr;
 					  }
@@ -1133,13 +1139,6 @@ DoSpec:
 										AT.WorkPointer = r;
 										goto EndTest;
 									}
-/*
-									if ( !*r ) {
-										LowerSortLevel();
-										AT.WorkPointer = r;
-										return(0);
-									}
-*/
 								}
 							}
 							if ( *r ) StoreTerm(BHEAD r);
@@ -1203,12 +1202,14 @@ DoSpec:
 
 								It seems better to restart.
 */
+								AN.ncmod = oldncmod;
 								goto ReStart;
 							}
 /*
 							And size changes here?????
 */
 						}
+						AN.ncmod = oldncmod;
 						goto ReStart;
 					}
 					else if ( *t == -DOLLAREXPRESSION ) {

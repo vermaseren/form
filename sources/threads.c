@@ -1198,7 +1198,10 @@ void *RunThread(void *dummy)
 				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				  if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  if ( AN.ncmod ) {
+					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  }
 				  if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("Thread %w executing term:");
@@ -1440,7 +1443,10 @@ bucketstolen:;
 				  AN.RepPoint = AT.RepCount + 1;
 				  AR.CurDum = ReNumber(BHEAD term);
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				  if ( AN.ncmod && AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  if ( AN.ncmod ) {
+					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  }
 				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				  }
