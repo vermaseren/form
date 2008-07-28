@@ -1160,8 +1160,7 @@ int main(int argc, char **argv)
 	else {
 		if ( AC.CheckpointFlag == -1 ) {
 			/* recovery option given but recovery file does not exist */
-			MesPrint("Option -R for recovery has been given, but the recovery file");
-			MesPrint("%s does not exist!", RecoveryFilename());
+			MesPrint("Option -R for recovery has been given, but the recovery file %s does not exist!", RecoveryFilename());
 			Terminate(-1);
 		}
 	}
@@ -1252,6 +1251,12 @@ dontremove:;
 		}
 #endif
 	}
+	}
+/*
+	Remove recovery file on exit if everything went well
+*/
+	if ( par == 0 ) {
+		DeleteRecoveryFile();
 	}
 /*
 	Now the final message concerning the total time

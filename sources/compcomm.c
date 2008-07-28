@@ -341,7 +341,7 @@ int CoOn(UBYTE *s)
 						interval *= 86400;
 					}
 					else {
-						MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
+						MesPrint("&Unrecognized time interval in ON Checkpoint statement: %s", t);
 						return(-1);
 					}
 					AC.CheckpointInterval = interval * 1000; /* in milliseconds */

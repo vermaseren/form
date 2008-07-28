@@ -49,6 +49,15 @@ static char *hidefile = FNAME(hid);
  */
 static char *storefile = FNAME(str);
 
+/**
+ *  >0 if at least once the respective file has been created.
+ *  Checked by DeleteRecoveryFile().
+ */
+static int done_snapshot = 0;
+static int done_storecopy = 0;
+static int done_sortcopy = 0;
+static int done_hidecopy = 0;
+
 static int syscmdinit = 0;
 static char *syscmdstore;
 static char *syscmdsort;
@@ -74,6 +83,32 @@ int CheckRecoveryFile()
 
 /*
   	#] CheckRecoveryFile :
+  	#[ DeleteRecoveryFile :
+*/
+
+/**
+ *  Deletes the recovery files. It is called by CleanUp() in the case of a
+ *  successful completion.
+ */
+void DeleteRecoveryFile()
+{
+	/* do it only if we have been _writing_ to the files */
+	if ( done_snapshot ) {
+		remove(recoveryfile);
+	}
+	if ( done_storecopy ) {
+		remove(storefile);
+	}
+	if ( done_sortcopy ) {
+		remove(sortfile);
+	}
+	if ( done_hidecopy ) {
+		remove(hidefile);
+	}
+}
+
+/*
+  	#] DeleteRecoveryFile :
   	#[ RecoveryFilename :
 */
 
@@ -149,14 +184,50 @@ static void print_CHARS(UBYTE *p, size_t size)
 	printf("\n");
 }
 
+static void print_WORDV(WORD *p, size_t size)
+{
+	size_t i;
+	if ( p ) {
+		for ( i=1; i<=size; ++i ) {
+			printf("%d ", *p);
+			p++;
+			if ( (i % 8) == 0 ) printf("\n");
+		}
+		if ( ((i-1) % 8) ) printf("\n");
+	}
+	else {
+		printf("NULL\n");
+	}
+}
+
 static void print_INTV(int *p, size_t size)
 {
 	size_t i;
-	for ( i=1; i<=size; ++i ) {
-		printf("%d ", *p++);
-		if ( (i % 8) == 0 ) printf("\n");
+	if ( p ) {
+		for ( i=1; i<=size; ++i ) {
+			printf("%d ", *p++);
+			if ( (i % 8) == 0 ) printf("\n");
+		}
+		if ( ((i-1) % 8) ) printf("\n");
 	}
-	if ( ((i-1) % 8) ) printf("\n");
+	else {
+		printf("NULL\n");
+	}
+}
+
+static void print_LONGV(long *p, size_t size)
+{
+	size_t i;
+	if ( p ) {
+		for ( i=1; i<=size; ++i ) {
+			printf("%ld ", *p++);
+			if ( (i % 8) == 0 ) printf("\n");
+		}
+		if ( ((i-1) % 8) ) printf("\n");
+	}
+	else {
+		printf("NULL\n");
+	}
 }
 
 static void print_PRELOAD(PRELOAD *l)
@@ -170,8 +241,8 @@ static void print_PRELOAD(PRELOAD *l)
 static void print_PREVAR(PREVAR *l)
 {
 	printf("%s\n", l->name);
-	printf("%s\n", l->value);
-	if ( l->nargs ) printf("%s\n", l->argnames);
+	print_STR(l->value);
+	if ( l->nargs ) print_STR(l->argnames);
 	printf("%d\n", l->nargs);
 	printf("%d\n", l->wildarg);
 }
@@ -204,10 +275,10 @@ static void print_LIST(LIST *l)
 static void print_DOLOOP(DOLOOP *l)
 {
 	print_PRELOAD(&(l->p));
-	printf("%s\n", l->name);
-	printf("%s\n", l->vars);
-	printf("%s\n", l->contents);
-	if ( l->dollarname ) printf("%s\n", l->dollarname);
+	print_STR(l->name);
+	print_STR(l->vars);
+	print_STR(l->contents);
+	print_STR(l->dollarname);
 	printf("%ld\n", l->startlinenumber);
 	printf("%ld\n", l->firstnum);
 	printf("%ld\n", l->lastnum);
@@ -221,7 +292,7 @@ static void print_DOLOOP(DOLOOP *l)
 static void print_PROCEDURE(PROCEDURE *l)
 {
 	print_PRELOAD(&(l->p));
-	printf("%s\n", l->name);
+	print_STR(l->name);
 	printf("%d\n", l->loadmode);
 }
 
@@ -247,9 +318,36 @@ static void print_NAMETREE(NAMETREE *t)
 	printf("%d\n", t->headnode);
 }
 
+static void print_CBUF(CBUF *c)
+{
+	int i;
+	print_WORDV(c->Buffer, c->BufferSize);
+	printf("%d\n", *c->Pointer);
+	/*
+	printf("%p\n", c->Buffer);
+	printf("%p\n", c->lhs);
+	printf("%p\n", c->rhs);
+	for ( i=0; i<c->numlhs; ++i ) {
+		printf("%p\n", c->lhs[i]);
+		if ( c->lhs[i]) printf("%d\n", *(c->lhs[i]));
+	}
+	for ( i=0; i<c->numrhs; ++i ) {
+		printf("%p\n", c->rhs[i]);
+		if ( c->rhs[i]) printf("%d\n", *(c->rhs[i]));
+	}
+	*/
+	printf("%ld\n", *c->CanCommu);
+	printf("%ld\n", *c->NumTerms);
+	printf("%d\n", *c->numdum);
+	for ( i=0; i<c->MaxTreeSize; ++i ) {
+		printf("%d %d %d %d %d\n", c->boomlijst[i].parent, c->boomlijst[i].left, c->boomlijst[i].right,
+				c->boomlijst[i].value, c->boomlijst[i].blnce);
+	}
+}
+
 static void print_STREAM(STREAM *t)
 {
-	print_CHARS(t->buffer, t->buffersize);
+	print_CHARS(t->buffer, t->inbuffer);
 	print_STR(t->FoldName);
 	print_STR(t->name);
 	if ( t->type == PREVARSTREAM || t->type == DOLLARSTREAM ) {
@@ -259,6 +357,221 @@ static void print_STREAM(STREAM *t)
 	printf("%ld\n", (long)t->linenumber);
 	printf("%ld\n", (long)t->prevline);
 	printf("%d\n", t->handle);
+}
+
+static void print_M()
+{
+	printf("%%%% M_const\n");
+	printf("%d\n", *AM.gcmod);
+	printf("%d\n", *AM.gpowmod);
+	print_STR(AM.TempDir);
+	print_STR(AM.IncDir);
+	print_STR(AM.InputFileName);
+	print_STR(AM.LogFileName);
+	print_STR(AM.OutBuffer);
+	print_STR(AM.Path);
+	print_STR(AM.SetupDir);
+	print_STR(AM.SetupFile);
+	printf("--MARK  1\n");
+	printf("%ld\n", (long int)BASEPOSITION(AM.zeropos));
+#ifdef WITHPTHREADS
+	printf("%ld\n", AM.ThreadScratSize);
+	printf("%ld\n", AM.ThreadScratOutSize);
+#endif
+	printf("%ld\n", AM.MaxTer);
+	printf("%ld\n", AM.CompressSize);
+	printf("%ld\n", AM.ScratSize);
+	printf("%ld\n", AM.SizeStoreCache);
+	printf("%ld\n", AM.MaxStreamSize);
+	printf("%ld\n", AM.SIOsize);
+	printf("%ld\n", AM.SLargeSize);
+	printf("%ld\n", AM.SSmallEsize);
+	printf("%ld\n", AM.SSmallSize);
+	printf("--MARK  2\n");
+	printf("%ld\n", AM.STermsInSmall);
+	printf("%ld\n", AM.MaxBracketBufferSize);
+	printf("%ld\n", AM.ZipBufferSize);
+	printf("%ld\n", AM.hSlavePatchSize);
+	printf("%ld\n", AM.gSlavePatchSize);
+	printf("%ld\n", AM.shmWinSize);
+	printf("%ld\n", AM.OldChildTime);
+	printf("%ld\n", AM.OldSecTime);
+	printf("%ld\n", AM.OldMilliTime);
+	printf("%ld\n", AM.WorkSize);
+	printf("%ld\n", AM.gThreadBucketSize);
+	printf("--MARK  3\n");
+	printf("%ld\n", AM.ggThreadBucketSize);
+	printf("%d\n", AM.FileOnlyFlag);
+	printf("%d\n", AM.Interact);
+	printf("%d\n", AM.MaxParLevel);
+	printf("%d\n", AM.OutBufSize);
+	printf("%d\n", AM.SMaxFpatches);
+	printf("%d\n", AM.SMaxPatches);
+	printf("%d\n", AM.StdOut);
+	printf("%d\n", AM.ginsidefirst);
+	printf("%d\n", AM.gDefDim);
+	printf("%d\n", AM.gDefDim4);
+	printf("--MARK  4\n");
+	printf("%d\n", AM.NumFixedSets);
+	printf("%d\n", AM.NumFixedFunctions);
+	printf("%d\n", AM.rbufnum);
+	printf("%d\n", AM.dbufnum);
+	printf("%d\n", AM.SkipClears);
+	printf("%d\n", AM.gfunpowers);
+	printf("%d\n", AM.gStatsFlag);
+	printf("%d\n", AM.gNamesFlag);
+	printf("%d\n", AM.gCodesFlag);
+	printf("%d\n", AM.gSortType);
+	printf("%d\n", AM.gproperorderflag);
+	printf("--MARK  5\n");
+	printf("%d\n", AM.hparallelflag);
+	printf("%d\n", AM.gparallelflag);
+	printf("%d\n", AM.totalnumberofthreads);
+	printf("%d\n", AM.gThreadStats);
+	printf("%d\n", AM.ggThreadStats);
+	printf("%d\n", AM.gFinalStats);
+	printf("%d\n", AM.ggFinalStats);
+	printf("%d\n", AM.gThreadsFlag);
+	printf("%d\n", AM.ggThreadsFlag);
+	printf("%d\n", AM.gThreadBalancing);
+	printf("%d\n", AM.ggThreadBalancing);
+	printf("%d\n", AM.gThreadSortFileSynch);
+	printf("%d\n", AM.ggThreadSortFileSynch);
+	printf("%d\n", AM.maxFlevels);
+	printf("--MARK  6\n");
+	printf("%d\n", AM.resetTimeOnClear);
+	printf("%d\n", AM.gcNumDollars);
+	printf("%d\n", AM.MultiRun);
+	printf("%d\n", AM.gNoSpacesInNumbers);
+	printf("%d\n", AM.ggNoSpacesInNumbers);
+	printf("%d\n", AM.polygcdchoice);
+	printf("%d\n", AM.MaxTal);
+	printf("%d\n", AM.IndDum);
+	printf("%d\n", AM.DumInd);
+	printf("%d\n", AM.WilInd);
+	printf("%d\n", AM.gncmod);
+	printf("%d\n", AM.gnpowmod);
+	printf("%d\n", AM.gmodmode);
+	printf("--MARK  7\n");
+	printf("%d\n", AM.gUnitTrace);
+	printf("%d\n", AM.gOutputMode);
+	printf("%d\n", AM.gOutputSpaces);
+	printf("%d\n", AM.gOutNumberType);
+	printf("%d %d %d %d\n", AM.gUniTrace[0], AM.gUniTrace[1], AM.gUniTrace[2], AM.gUniTrace[3]);
+	printf("%d\n", AM.MaxWildcards);
+	printf("%d\n", AM.mTraceDum);
+	printf("%d\n", AM.OffsetIndex);
+	printf("%d\n", AM.OffsetVector);
+	printf("%d\n", AM.RepMax);
+	printf("%d\n", AM.LogType);
+	printf("%d\n", AM.ggStatsFlag);
+	printf("%d\n", AM.gLineLength);
+	printf("%d\n", AM.qError);
+	printf("--MARK  8\n");
+	printf("%d\n", AM.FortranCont);
+	printf("%d\n", AM.HoldFlag);
+	printf("%d %d %d %d %d\n", AM.Ordering[0], AM.Ordering[1], AM.Ordering[2], AM.Ordering[3], AM.Ordering[4]);
+	printf("%d %d %d %d %d\n", AM.Ordering[5], AM.Ordering[6], AM.Ordering[7], AM.Ordering[8], AM.Ordering[9]);
+	printf("%d %d %d %d %d\n", AM.Ordering[10], AM.Ordering[11], AM.Ordering[12], AM.Ordering[13], AM.Ordering[14]);
+	printf("%d\n", AM.silent);
+	printf("%d\n", AM.tracebackflag);
+	printf("%d\n", AM.expnum);
+	printf("%d\n", AM.denomnum);
+	printf("%d\n", AM.facnum);
+	printf("%d\n", AM.invfacnum);
+	printf("%d\n", AM.sumnum);
+	printf("%d\n", AM.sumpnum);
+	printf("--MARK  9\n");
+	printf("%d\n", AM.OldOrderFlag);
+	printf("%d\n", AM.termfunnum);
+	printf("%d\n", AM.matchfunnum);
+	printf("%d\n", AM.countfunnum);
+	printf("%d\n", AM.polyfunnum);
+	printf("%d\n", AM.polygetremnum);
+	printf("%d\n", AM.polytopnum);
+	printf("%d\n", AM.gPolyFun);
+	printf("%d\n", AM.gPolyFunType);
+	printf("%d\n", AM.safetyfirst);
+	printf("--MARK 10\n");
+	printf("%d\n", AM.dollarzero);
+	printf("%d\n", AM.atstartup);
+	printf("%d\n", AM.exitflag);
+	printf("%d\n", AM.NumStoreCaches);
+	printf("%d\n", AM.gIndentSpace);
+	printf("%d\n", AM.ggIndentSpace);
+	printf("%d\n", AM.gShortStatsMax);
+	printf("%d\n", AM.ggShortStatsMax);
+	printf("%%%% END M_const\n");
+	fflush(0);
+}
+
+static void print_P()
+{
+	int i;
+	printf("%%%% P_const\n");
+	print_LIST(&AP.DollarList);
+	for ( i=0; i<AP.DollarList.num; ++i ) {
+		print_DOLLARS(&(Dollars[i]));
+	}
+	printf("--MARK  1\n");
+	print_LIST(&AP.PreVarList);
+	for ( i=0; i<AP.PreVarList.num; ++i ) {
+		print_PREVAR(&(PreVar[i]));
+	}
+	printf("--MARK  2\n");
+	print_LIST(&AP.LoopList);
+	for ( i=0; i<AP.LoopList.num; ++i ) {
+		print_DOLOOP(&(DoLoops[i]));
+	}
+	printf("--MARK  3\n");
+	print_LIST(&AP.ProcList);
+	for ( i=0; i<AP.ProcList.num; ++i ) {
+		print_PROCEDURE(&(Procedures[i]));
+	}
+	printf("--MARK  4\n");
+	print_LIST(&AP.ChDollarList);
+	for ( i=0; i<AP.ChDollarList.num; ++i ) {
+		printf("%d\n", ((WORD *)(AP.ChDollarList.lijst))[i]);
+	}
+	printf("\n");
+	printf("--MARK  5\n");
+	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
+		print_STR(AP.PreSwitchStrings[i]);
+	}
+	printf("%d\n", AP.preStop-AP.preStart);
+	if ( AP.preFill ) printf("%d\n", AP.preFill-AP.preStart);
+	print_CHARS(AP.preStart, AP.pSize);
+	printf("%s\n", AP.procedureExtension);
+	printf("%s\n", AP.cprocedureExtension);
+	print_INTV(AP.PreIfStack, AP.MaxPreIfLevel);
+	print_INTV(AP.PreSwitchModes, AP.NumPreSwitchStrings+1);
+	print_INTV(AP.PreTypes, AP.NumPreTypes+1);
+	printf("%d\n", AP.PreAssignFlag);
+	printf("--MARK  6\n");
+	printf("%d\n", AP.PreContinuation);
+	printf("%ld\n", AP.InOutBuf);
+	printf("%ld\n", AP.pSize);
+	printf("%d\n", AP.PreproFlag);
+	printf("%d\n", AP.iBufError);
+	printf("%d\n", AP.PreOut);
+	printf("%d\n", AP.PreSwitchLevel);
+	printf("%d\n", AP.NumPreSwitchStrings);
+	printf("%d\n", AP.MaxPreTypes);
+	printf("--MARK  7\n");
+	printf("%d\n", AP.NumPreTypes);
+	printf("%d\n", AP.DelayPrevar);
+	printf("%d\n", AP.AllowDelay);
+	printf("%d\n", AP.lhdollarerror);
+	printf("%d\n", AP.eat);
+	printf("%d\n", AP.gNumPre);
+	printf("%d\n", AP.PreDebug);
+	printf("--MARK  8\n");
+	printf("%d\n", AP.DebugFlag);
+	printf("%d\n", AP.preError);
+	printf("%c\n", AP.ComChar);
+	printf("%c\n", AP.cComChar);
+	printf("%%%% END P_const\n");
+	fflush(0);
 }
 
 static void print_C()
@@ -279,11 +592,14 @@ static void print_C()
 	print_NAMETREE(AC.dollarnames);
 	print_NAMETREE(AC.exprnames);
 	print_NAMETREE(AC.varnames);
+	printf("--MARK  1\n");
 	print_LIST(&AC.ChannelList);
 	for ( i=0; i<AC.ChannelList.num; ++i ) {
 		printf("%s %d\n", channels[i].name, channels[i].handle);
 	}
+	printf("--MARK  2\n");
 	print_LIST(&AC.DubiousList);
+	printf("--MARK  3\n");
 	print_LIST(&AC.FunctionList);
 	for ( i=0; i<AC.FunctionList.num; ++i ) {
 		if ( functions[i].tabl ) {
@@ -293,10 +609,12 @@ static void print_C()
 		printf("%ld\n", functions[i].name);
 		printf("%d\n", functions[i].namesize);
 	}
+	printf("--MARK  4\n");
 	print_LIST(&AC.ExpressionList);
 	print_LIST(&AC.IndexList);
 	print_LIST(&AC.SetElementList);
 	print_LIST(&AC.SetList);
+	printf("--MARK  5\n");
 	print_LIST(&AC.SymbolList);
 	print_LIST(&AC.VectorList);
 	print_LIST(&AC.PotModDolList);
@@ -304,7 +622,11 @@ static void print_C()
 	print_LIST(&AC.TableBaseList);
 
 	print_LIST(&AC.cbufList);
+	for ( i=0; i<AC.cbufList.num; ++i ) {
+		print_CBUF(cbuf+i);
+	}
 	printf("%d\n", AC.cbufnum);
+	printf("--MARK  6\n");
 
 	print_LIST(&AC.AutoSymbolList);
 	print_LIST(&AC.AutoIndexList);
@@ -312,90 +634,217 @@ static void print_C()
 	print_LIST(&AC.AutoFunctionList);
 
 	print_NAMETREE(AC.autonames);
+	printf("--MARK  7\n");
 
 	print_LIST(AC.Symbols);
 	print_LIST(AC.Indices);
 	print_LIST(AC.Vectors);
 	print_LIST(AC.Functions);
+	printf("--MARK  8\n");
 
 	print_NAMETREE(*AC.activenames);
 	
+	printf("--MARK  9\n");
+
 	printf("%d\n", AC.AutoDeclareFlag);
 
 	for ( i=0; i<AC.NumStreams; ++i ) {
 		print_STREAM(AC.Streams+i);
 	}
 	print_STREAM(AC.CurrentStream);
+	printf("--MARK 10\n");
 
-	/* ... */
+	print_LONGV(AC.termstack, AC.maxtermlevel);
+	print_LONGV(AC.termsortstack, AC.maxtermlevel);
+	print_VOIDP(AC.cmod, AM.MaxTal*4*sizeof(UWORD));
+	print_WORDV(AC.cmod, 1);
+	print_WORDV(AC.powmod, 1);
+	print_WORDV((WORD*)AC.modpowers, 1);
+	print_WORDV((WORD*)AC.halfmod, 1);
+	printf("--MARK 10-2\n");
+	/*
+	print_WORDV(AC.ProtoType, AC.ProtoType[1]);
+	print_WORDV(AC.WildC, 1);
+	*/
+
+	printf("--MARK 11\n");
+	/* IfHeap ... Labels */
 
 	print_CHARS((UBYTE*)AC.tokens, AC.toptokens-AC.tokens);
+	printf("%d\n", AC.endoftokens-AC.tokens);
+	print_WORDV(AC.tokenarglevel, AM.MaxParLevel);
+	print_WORDV((WORD*)AC.modinverses, ABS(AC.ncmod));
+#ifdef WITHPTHREADS
+	print_LONGV(AC.inputnumbers, AC.sizepfirstnum+AC.sizepfirstnum*sizeof(WORD)/sizeof(LONG));
+	print_WORDV(AC.pfirstnum, 1);
+#endif
+	printf("--MARK 12\n");
+    print_LONGV(AC.argstack, MAXNEST);
+    print_LONGV(AC.insidestack, MAXNEST);
+    print_LONGV(AC.inexprstack, MAXNEST);
+	printf("%ld\n", AC.iBufferSize);
+	printf("%ld\n", AC.TransEname);
+	printf("%ld\n", AC.SlavePatchSize);
+	printf("%ld\n", AC.mSlavePatchSize);
+	printf("%ld\n", AC.CModule);
+	printf("%ld\n", AC.ThreadBucketSize);
+	printf("%d\n", AC.NoShowInput);
+	printf("%d\n", AC.ShortStats);
+	printf("%d\n", AC.compiletype);
+	printf("%d\n", AC.firstconstindex);
+	printf("%d\n", AC.insidefirst);
+	printf("%d\n", AC.minsidefirst);
+	printf("%d\n", AC.wildflag);
+	printf("%d\n", AC.NumLabels);
+	printf("%d\n", AC.MaxLabels);
+	printf("--MARK 13\n");
+	printf("%d\n", AC.lDefDim);
+	printf("%d\n", AC.lDefDim4);
+	printf("%d\n", AC.NumWildcardNames);
+	printf("%d\n", AC.WildcardBufferSize);
+	printf("%d\n", AC.MaxIf);
+	printf("%d\n", AC.NumStreams);
+	printf("%d\n", AC.MaxNumStreams);
+	printf("%d\n", AC.firstctypemessage);
+	printf("%d\n", AC.tablecheck);
+	printf("%d\n", AC.idoption);
+	printf("%d\n", AC.BottomLevel);
+	printf("%d\n", AC.CompileLevel);
+	printf("%d\n", AC.TokensWriteFlag);
+	printf("%d\n", AC.UnsureDollarMode);
+	printf("%d\n", AC.outsidefun);
+	printf("%d\n", AC.funpowers);
+	printf("--MARK 14\n");
+	printf("%d\n", AC.WarnFlag);
+	printf("%d\n", AC.StatsFlag);
+	printf("%d\n", AC.NamesFlag);
+	printf("%d\n", AC.CodesFlag);
+	printf("%d\n", AC.SetupFlag);
+	printf("%d\n", AC.SortType);
+	printf("%d\n", AC.lSortType);
+	printf("%d\n", AC.ThreadStats);
+	printf("%d\n", AC.FinalStats);
+	printf("%d\n", AC.ThreadsFlag);
+	printf("%d\n", AC.ThreadBalancing);
+	printf("%d\n", AC.ThreadSortFileSynch);
+	printf("%d\n", AC.BracketNormalize);
+	printf("%d\n", AC.maxtermlevel);
+	printf("%d\n", AC.dumnumflag);
+	printf("--MARK 15\n");
+	printf("%d\n", AC.bracketindexflag);
+	printf("%d\n", AC.parallelflag);
+	printf("%d\n", AC.mparallelflag);
+	printf("%d\n", AC.properorderflag);
+	printf("%d\n", AC.vetofilling);
+	printf("%d\n", AC.tablefilling);
+	printf("%d\n", AC.vetotablebasefill);
+	printf("%d\n", AC.exprfillwarning);
+	printf("%d\n", AC.lhdollarflag);
+	printf("%d\n", AC.NoCompress);
+#ifdef WITHPTHREADS
+	printf("%d\n", AC.numpfirstnum);
+	printf("%d\n", AC.sizepfirstnum);
+	printf("%d\n", AC.numpartodo);
+#endif
+	printf("%d\n", AC.RepLevel);
+	printf("%d\n", AC.arglevel);
+	printf("%d\n", AC.insidelevel);
+	printf("%d\n", AC.inexprlevel);
+	printf("%d\n", AC.termlevel);
+	printf("--MARK 16\n");
+	print_WORDV(AC.argsumcheck, MAXNEST);
+	print_WORDV(AC.insidesumcheck, MAXNEST);
+	print_WORDV(AC.inexprsumcheck, MAXNEST);
+	printf("%d\n", AC.MustTestTable);
+	printf("%d\n", AC.DumNum);
+	printf("%d\n", AC.ncmod);
+	printf("%d\n", AC.npowmod);
+	printf("%d\n", AC.modmode);
+	printf("%d\n", AC.nhalfmod);
+	printf("%d\n", AC.DirtPow);
+	printf("%d\n", AC.lUnitTrace);
+	printf("%d\n", AC.NwildC);
+	printf("%d\n", AC.ComDefer);
+	printf("%d\n", AC.CollectFun);
+	printf("%d\n", AC.AltCollectFun);
+	printf("--MARK 17\n");
+	printf("%d\n", AC.OutputMode);
+	printf("%d\n", AC.OutputSpaces);
+	printf("%d\n", AC.OutNumberType);
+	print_WORDV(AC.lUniTrace, 4);
+	print_WORDV(AC.RepSumCheck, MAXREPEAT);
+	printf("%d\n", AC.DidClean);
+	printf("%d\n", AC.IfLevel);
+	printf("%d\n", AC.WhileLevel);
+	print_WORDV(AC.IfSumCheck, sizeof(WORD)*(AC.MaxIf+1));
+	printf("%d\n", AC.LogHandle);
+	printf("%d\n", AC.LineLength);
+	printf("%d\n", AC.StoreHandle);
+	printf("%d\n", AC.HideLevel);
+	printf("%d\n", AC.lPolyFun);
+	printf("%d\n", AC.lPolyFunType);
+	printf("%d\n", AC.SymChangeFlag);
+	printf("%d\n", AC.CollectPercentage);
+	printf("%d\n", AC.ShortStatsMax);
+	printf("--MARK 18\n");
 
-}
+	print_CHARS(AC.Commercial, COMMERCIALSIZE+2);
 
-static void print_P()
-{
-	int i;
-	printf("%%%% P_const\n");
-	print_LIST(&AP.DollarList);
-	for ( i=0; i<AP.DollarList.num; ++i ) {
-		print_DOLLARS(&(Dollars[i]));
-	}
-	print_LIST(&AP.PreVarList);
-	for ( i=0; i<AP.PreVarList.num; ++i ) {
-		print_PREVAR(&(PreVar[i]));
-	}
-	print_LIST(&AP.LoopList);
-	for ( i=0; i<AP.LoopList.num; ++i ) {
-		print_DOLOOP(&(DoLoops[i]));
-	}
-	print_LIST(&AP.ProcList);
-	for ( i=0; i<AP.ProcList.num; ++i ) {
-		print_PROCEDURE(&(Procedures[i]));
-	}
-	print_LIST(&AP.ChDollarList);
-	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
-		print_STR(AP.PreSwitchStrings[i]);
-	}
-	printf("%p\n", AP.preStart);
-	printf("%p\n", AP.preStop);
-	printf("%p\n", AP.preFill);
-	print_CHARS(AP.preStart, AP.pSize);
-	printf("%s\n", AP.procedureExtension);
-	printf("%s\n", AP.cprocedureExtension);
-	print_INTV(AP.PreIfStack, AP.MaxPreIfLevel);
-	print_INTV(AP.PreSwitchModes, AP.NumPreSwitchStrings+1);
-	print_INTV(AP.PreTypes, AP.NumPreTypes+1);
-	printf("%ld\n", AP.InOutBuf);
-	printf("%ld\n", AP.pSize);
-	printf("%d\n", AP.PreproFlag);
-	printf("%d\n", AP.iBufError);
-	printf("%d\n", AP.PreOut);
-	printf("%d\n", AP.PreSwitchLevel);
-	printf("%d\n", AP.NumPreSwitchStrings);
-	printf("%d\n", AP.MaxPreTypes);
-	printf("%d\n", AP.NumPreTypes);
-	printf("%d\n", AP.DelayPrevar);
-	printf("%d\n", AP.AllowDelay);
-	printf("%d\n", AP.lhdollarerror);
-	printf("%d\n", AP.eat);
-	printf("%d\n", AP.gNumPre);
-	printf("%d\n", AP.DebugFlag);
-	printf("%d\n", AP.preError);
-	printf("%c\n", AP.ComChar);
-	printf("%c\n", AP.cComChar);
+	printf("%d\n", AC.CheckpointFlag);
+	printf("%ld\n", AC.CheckpointStamp);
+	print_STR((unsigned char*)AC.CheckpointRunAfter);
+	print_STR((unsigned char*)AC.CheckpointRunBefore);
+	printf("%ld\n", AC.CheckpointInterval);
+
+	printf("%%%% END C_const\n");
+	fflush(0);
 }
 
 static void print_R()
 {
 	GETIDENTITY
 	size_t i;
+	printf("%%%% R_const\n");
 	printf("%s\n", AR.infile->name);
 	printf("%s\n", AR.outfile->name);
 	printf("%s\n", AR.hidefile->name);
 	for ( i=0; i<3; ++i ) {
 		print_WORDB(AR.Fscr[i].PObuffer, AR.Fscr[i].POfull);
 	}
+	/* ... */
+	printf("%ld\n", AR.OldTime);
+	printf("%ld\n", AR.InInBuf);
+	printf("%ld\n", AR.pWorkSize);
+	printf("%ld\n", AR.lWorkSize);
+	printf("%ld\n", AR.posWorkSize);
+	printf("%d\n", AR.NoCompress);
+	printf("%d\n", AR.gzipCompress);
+	printf("%d\n", AR.Cnumlhs);
+#ifdef WITHPTHREADS
+	printf("%d\n", AR.exprtodo);
+#endif
+	printf("%d\n", AR.GetFile);
+	printf("%d\n", AR.KeptInHold);
+	printf("%d\n", AR.BracketOn);
+	printf("%d\n", AR.MaxBracket);
+	printf("%d\n", AR.CurDum);
+	printf("%d\n", AR.DeferFlag);
+	printf("%d\n", AR.TePos);
+	printf("%d\n", AR.sLevel);
+	printf("%d\n", AR.Stage4Name);
+	printf("%d\n", AR.GetOneFile);
+	printf("%d\n", AR.PolyFun);
+	printf("%d\n", AR.PolyFunType);
+	printf("%d\n", AR.Eside);
+	printf("%d\n", AR.MaxDum);
+	printf("%d\n", AR.level);
+	printf("%d\n", AR.expchanged);
+	printf("%d\n", AR.expflags);
+	printf("%d\n", AR.CurExpr);
+	printf("%d\n", AR.SortType);
+	printf("%d\n", AR.ShortSortCount);
+	printf("%%%% END R_const\n");
+	fflush(0);
 }
 
 #endif /* ifdef PRINTDEBUG */
@@ -548,6 +997,9 @@ int DoRecovery()
 	R_SET(AM.gPolyFun, WORD);
 	R_SET(AM.gPolyFunType, WORD);
 	R_SET(AM.gSlavePatchSize, LONG);
+	R_SET(AM.OldChildTime, LONG);
+	R_SET(AM.OldSecTime, LONG);
+	R_SET(AM.OldMilliTime, LONG);
 	R_SET(AM.gproperorderflag, int);
 	R_SET(AM.gThreadBucketSize, LONG);
 	R_SET(AM.gThreadStats, int);
@@ -557,6 +1009,10 @@ int DoRecovery()
 	R_SET(AM.gThreadSortFileSynch, int);
 	R_SET(AM.gSortType, int);
 	R_SET(AM.gShortStatsMax, WORD);
+
+#ifdef PRINTDEBUG
+	print_M();
+#endif
 
 	/* #] AM */
 	/* #[ AC */
@@ -705,6 +1161,7 @@ int DoRecovery()
 	AC.ChannelList.message = "channel buffer";
 
 	AC.DubiousList.message = "ambiguous variable";
+
 	(void)FromVarList(&AC.DubiousList);
 
 	R_COPY_LIST(AC.FunctionList);
@@ -732,7 +1189,7 @@ int DoRecovery()
 			R_COPY_B(tabl->prototype, tabl->prototypeSize, WORD*);
 			ofs = tabl->prototype - (WORD*)org;
 #endif
-			tabl->pattern += ofs;
+			if ( tabl->pattern ) tabl->pattern += ofs;
 			R_COPY_B(tabl->mm, tabl->numind*sizeof(MINMAX), MINMAX*);
 			R_COPY_B(tabl->flags, tabl->numind*sizeof(WORD), WORD*);
 			if ( tabl->sparse ) {
@@ -889,11 +1346,11 @@ int DoRecovery()
 		cbuf[i].Pointer += ofs;
 		R_COPY_B(cbuf[i].lhs, cbuf[i].maxlhs*sizeof(WORD*), WORD**);
 		for ( j=0; j<cbuf[i].numlhs; ++j ) {
-			cbuf[i].lhs[j] += ofs;
+			if ( cbuf[i].lhs[j] ) cbuf[i].lhs[j] += ofs;
 		}
 		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)), WORD**);
 		for ( j=0; j<cbuf[i].numrhs; ++j ) {
-			cbuf[i].rhs[j] += ofs;
+			if ( cbuf[i].rhs[j] ) cbuf[i].rhs[j] += ofs;
 		}
 		cbuf[i].CanCommu = (LONG*)((WORD*)cbuf[i].CanCommu + ofs);
 		cbuf[i].NumTerms = (LONG*)((WORD*)cbuf[i].NumTerms + ofs);
@@ -926,14 +1383,17 @@ int DoRecovery()
 	for ( i=0; i<AC.NumStreams; ++i ) {
 		if ( AC.Streams[i].type != FILESTREAM ) {
 			org2 = AC.Streams[i].buffer;
-			R_COPY_B(AC.Streams[i].buffer, AC.Streams[i].buffersize, UBYTE*);
+			if ( AC.Streams[i].inbuffer ) {
+				R_COPY_B(AC.Streams[i].buffer, AC.Streams[i].inbuffer, UBYTE*);
+			}
 			ofs = AC.Streams[i].buffer - (UBYTE*)org2;
 			AC.Streams[i].pointer += ofs;
 			AC.Streams[i].top += ofs;
 		}
 		else {
-			p = (unsigned char*)p + AC.Streams[i].buffersize;
+			p = (unsigned char*)p + AC.Streams[i].inbuffer;
 		}
+		AC.Streams[i].buffersize = AC.Streams[i].inbuffer;
 		R_COPY_S(AC.Streams[i].FoldName,UBYTE*);
 		R_COPY_S(AC.Streams[i].name,UBYTE*);
 		if ( AC.Streams[i].type == PREVARSTREAM || AC.Streams[i].type == DOLLARSTREAM ) {
@@ -1052,6 +1512,10 @@ int DoRecovery()
 	R_COPY_S(AC.CheckpointRunAfter,char*);
 	R_COPY_S(AC.CheckpointRunBefore,char*);
 
+#ifdef PRINTDEBUG
+	print_C();
+#endif
+
 	/* #] AC */
 	/* #[ AP */
 
@@ -1128,12 +1592,8 @@ int DoRecovery()
 		org = PreVar[i].name;
 		R_COPY_B(PreVar[i].name, size, UBYTE*);
 		ofs = PreVar[i].name - (UBYTE*)org;
-		if ( PreVar[i].value ) {
-			PreVar[i].value += ofs;
-		}
-		if ( PreVar[i].argnames ) {
-			PreVar[i].argnames += ofs;
-		}
+		if ( PreVar[i].value ) PreVar[i].value += ofs;
+		if ( PreVar[i].argnames ) PreVar[i].argnames += ofs;
 	}
 	AP.PreVarList.message = "PreVariable";
 
@@ -1142,9 +1602,9 @@ int DoRecovery()
 		org = DoLoops[i].p.buffer;
 		R_COPY_B(DoLoops[i].p.buffer, DoLoops[i].p.size, UBYTE*);
 		ofs = DoLoops[i].p.buffer - (UBYTE*)org;
-		DoLoops[i].name += ofs;
-		DoLoops[i].vars += ofs;
-		DoLoops[i].contents += ofs;
+		if ( DoLoops[i].name ) DoLoops[i].name += ofs;
+		if ( DoLoops[i].vars ) DoLoops[i].vars += ofs;
+		if ( DoLoops[i].contents ) DoLoops[i].contents += ofs;
 		R_COPY_S(DoLoops[i].dollarname,UBYTE*);
 	}
 	AP.LoopList.message = "doloop";
@@ -1168,10 +1628,8 @@ int DoRecovery()
 	org = AP.preStart;
 	R_COPY_B(AP.preStart, AP.pSize, UBYTE*);
 	ofs = AP.preStart - (UBYTE*)org;
-	if ( AP.preFill ) {
-		AP.preFill += ofs;
-	}
-	AP.preStop += ofs;
+	if ( AP.preFill ) AP.preFill += ofs;
+	if ( AP.preStop ) AP.preStop += ofs;
 
 	R_COPY_S(AP.procedureExtension,UBYTE*);
 	R_COPY_S(AP.cprocedureExtension,UBYTE*);
@@ -1179,6 +1637,10 @@ int DoRecovery()
 	R_COPY_B(AP.PreIfStack, AP.MaxPreIfLevel*sizeof(int), int*);
 	R_COPY_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*sizeof(int), int*);
 	R_COPY_B(AP.PreTypes, (AP.MaxPreTypes+1)*sizeof(int), int*);
+
+#ifdef PRINTDEBUG
+	print_P();
+#endif
 
 	/* #] AP */
 	/* #[ AR */
@@ -1195,9 +1657,6 @@ int DoRecovery()
 	for ( i=0; i<5; ++i ) {
 		FILEHANDLE *fh = (i<3) ? AR.Fscr+i : AR.FoStage4+i-3;
 		R_FREE(fh->PObuffer);
-#ifdef WITHPTHREADS
-		R_FREE(fh->wPObuffer);
-#endif
 		namebuf[i] = fh->name;
 #ifdef WITHZLIB
 		R_FREE(fh->zsp);
@@ -1211,14 +1670,20 @@ int DoRecovery()
 	/* first we copy AR as a whole and then restore the pointer structures step
 	   by step. */
 
-	org = AR.Fscr;
+	ofs = AR.infile - AR.Fscr;
 
 	AR = *((struct R_const*)p); p = (unsigned char*)p + sizeof(struct R_const);
 
-	ofs = AR.Fscr - (FILEHANDLE*)org;
-	AR.infile += ofs;
-	AR.outfile += ofs;
-	AR.hidefile += ofs;
+	if ( ofs ) {
+		AR.infile = AR.Fscr+1;
+		AR.outfile = AR.Fscr;
+		AR.hidefile = AR.Fscr+2;
+	}
+	else {
+		AR.infile = AR.Fscr;
+		AR.outfile = AR.Fscr+1;
+		AR.hidefile = AR.Fscr+2;
+	}
 
 	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
 		i = strlen(storefile);
@@ -1324,9 +1789,20 @@ int DoRecovery()
 		free(syscmdsort);
 	}
 
+	AR.pWorkSize = 0;
+	AR.lWorkSize = 0;
+	AR.posWorkSize = 0;
+	AR.MaxBracket = 0;
+
+#ifdef PRINTDEBUG
+	print_R();
+#endif
+
 	/* #] AR */
 
 	if ( fclose(fd) ) return(__LINE__);
+
+	free(buf);
 
 	/* cares about data in S_const */
 	UpdatePositions();
@@ -1381,6 +1857,7 @@ static int DoSnapshot()
 	S_WRITE_B(&AM.gDefDim4, sizeof(int));
 	S_WRITE_B(&AM.gncmod, sizeof(WORD));
 	S_WRITE_B(&AM.gnpowmod, sizeof(WORD));
+	S_WRITE_B(&AM.gmodmode, sizeof(WORD));
 	S_WRITE_B(&AM.gOutputMode, sizeof(WORD));
 	S_WRITE_B(&AM.gOutputSpaces, sizeof(WORD));
 	S_WRITE_B(&AM.gOutNumberType, sizeof(WORD));
@@ -1388,6 +1865,9 @@ static int DoSnapshot()
 	S_WRITE_B(&AM.gPolyFun, sizeof(WORD));
 	S_WRITE_B(&AM.gPolyFunType, sizeof(WORD));
 	S_WRITE_B(&AM.gSlavePatchSize, sizeof(LONG));
+	S_WRITE_B(&AM.OldChildTime, sizeof(LONG));
+	S_WRITE_B(&AM.OldSecTime, sizeof(LONG));
+	S_WRITE_B(&AM.OldMilliTime, sizeof(LONG));
 	S_WRITE_B(&AM.gproperorderflag, sizeof(int));
 	S_WRITE_B(&AM.gThreadBucketSize, sizeof(LONG));
 	S_WRITE_B(&AM.gThreadStats, sizeof(int));
@@ -1567,7 +2047,9 @@ static int DoSnapshot()
 
 	S_WRITE_B(AC.Streams, AC.MaxNumStreams*sizeof(STREAM));
 	for ( i=0; i<AC.NumStreams; ++i ) {
-		S_WRITE_B(AC.Streams[i].buffer, AC.Streams[i].buffersize);
+		if ( AC.Streams[i].inbuffer ) {
+			S_WRITE_B(AC.Streams[i].buffer, AC.Streams[i].inbuffer);
+		}
 		S_WRITE_S(AC.Streams[i].FoldName);
 		S_WRITE_S(AC.Streams[i].name);
 	}
@@ -1727,6 +2209,12 @@ static int DoSnapshot()
 	 * additional memory requirements as a read/write approach would have.
 	 * as a drawback we might get portability problems. */
 
+	/* copy store file if necessary */
+	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
+		if ( system(syscmdstore) ) return(__LINE__);
+		done_storecopy = 1;
+	}
+
 	/* copy sort file if necessary */
 	if ( AR.infile->handle >= 0 ) {
 		l = strlen(AR.infile->name);
@@ -1738,17 +2226,36 @@ static int DoSnapshot()
 
 		if ( system(syscmdsort) ) return(__LINE__);
 		free(syscmdsort);
+		done_sortcopy = 1;
 	}
 
-	/* copy store file if necessary */
-	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
-		if ( system(syscmdstore) ) return(__LINE__);
+	/* copy hide file if necessary */
+	if ( AR.hidefile->handle >= 0 ) {
+		l = strlen(AR.hidefile->name);
+		syscmdsort = (char*)Malloc1(l+strlen(hidefile)+8, "syscmdsort");
+		strcpy(syscmdsort, "cp -f ");
+		strcpy(syscmdsort+6, AR.hidefile->name);
+		syscmdsort[6+l] = ' ';
+		strcpy(syscmdsort+7+l, hidefile);
+
+		if ( system(syscmdsort) ) return(__LINE__);
+		free(syscmdsort);
+		done_hidecopy = 1;
 	}
 
 	/* make the intermediate file the recovery file */
 	if ( rename(intermedfile, recoveryfile) ) return(__LINE__);
 
+	done_snapshot = 1;
+
 	printf("done.\n");
+
+#ifdef PRINTDEBUG
+	print_M();
+	print_C();
+	print_P();
+	print_R();
+#endif
 
 	return(0);
 }
@@ -1767,9 +2274,9 @@ void DoCheckpoint()
 	int error;
 	LONG timestamp = Timer(0);
 
-	if ( timestamp - AC.CheckpointStamp > AC.CheckpointInterval ) {
+	if ( timestamp - AC.CheckpointStamp >= AC.CheckpointInterval ) {
 		char argbuf[20];
-		int dosnapshot = 1;
+		int retvalue = 0;
 		if ( AC.CheckpointRunBefore ) {
 			size_t l, l2;
 			char *str;
@@ -1780,14 +2287,14 @@ void DoCheckpoint()
 			strcpy(str, AC.CheckpointRunBefore);
 			*(str+l) = ' ';
 			strcpy(str+l+1, argbuf);
-			if ( system(str) ) {
-				MesPrint("Error calling script before recovery.\n");
-				dosnapshot = 0;
+			retvalue = system(str);
+			if ( retvalue ) {
+				MesPrint("Script returned error -> no recovery file will be created.\n");
 			}
 		}
-		if ( dosnapshot ) {
-			if ( DoSnapshot() ) {
-				printf("Error creating recovery files: %d\n", error); fflush(0);
+		if ( retvalue == 0 ) {
+			if ( (error = DoSnapshot()) ) {
+				MesPrint("Error creating recovery files: %d\n", error);
 			}
 		}
 		if ( AC.CheckpointRunAfter ) {
@@ -1800,12 +2307,13 @@ void DoCheckpoint()
 			strcpy(str, AC.CheckpointRunAfter);
 			*(str+l) = ' ';
 			strcpy(str+l+1, argbuf);
-			if ( system(str) ) {
+			retvalue = system(str);
+			if ( retvalue ) {
 				MesPrint("Error calling script after recovery.\n");
 			}
 		}
+		AC.CheckpointStamp = Timer(0);
 	}
-	AC.CheckpointStamp = Timer(0);
 }
 
 /*

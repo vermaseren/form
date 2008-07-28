@@ -1359,6 +1359,7 @@ extern WORD   ReadSaveVariables(UBYTE *,UBYTE *,LONG *,LONG *,INDEXENTRY *,LONG 
 extern WORD   WriteStoreHeader(WORD);
 
 extern int    CheckRecoveryFile(VOID);
+extern void   DeleteRecoveryFile(VOID);
 extern char  *RecoveryFilename(VOID);
 extern int    DoRecovery(VOID);
 extern void   DoCheckpoint(VOID);

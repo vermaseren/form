@@ -10,7 +10,7 @@
 
 #include "config.h"
 
-#else /* USE_AUTOCONF */
+#else /* def HAVE_CONFIG_H */
 
 #define VERSION "3.2"
 #define MAJORVERSION 3
@@ -26,7 +26,7 @@
 #define WITHZLIB
 #define WITHGMP
 
-#endif /* USE_AUTOCONF */
+#endif /* def HAVE_CONFIG_H */
 
 #ifdef __GNU_C__
 #if __STDC_VERSION__ < 199901L
