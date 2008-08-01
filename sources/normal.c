@@ -775,11 +775,13 @@ multermnum:			if ( x == 0 ) goto NormZero;
 						WORD cmod = ttt[*ttt+1];
 						iii = REDLENG(iii);
 						if ( *t == MODFUNCTION ) {
-							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,&cmod,ncmod,UNPACK) )
+							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1)
+							,&iii,&cmod,ncmod,UNPACK|NOINVERSES) )
 								goto FromNorm;
 						}
 						else {
-							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1),&iii,&cmod,ncmod,UNPACK|POSNEG) )
+							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1)
+							,&iii,&cmod,ncmod,UNPACK|POSNEG|NOINVERSES) )
 								goto FromNorm;
 						}
 						*((UWORD *)lnum) = ttt[ARGHEAD+1];
@@ -1633,7 +1635,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2636,7 +2638,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols :
+  	#] Symbols : 
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -3634,4 +3636,21 @@ FromGCD:
 
 /*
   	#] EvaluateGcd : 
+  	#[ DropCoefficient :
+*/
+
+void DropCoefficient(PHEAD WORD *term)
+{
+	WORD *t = term + *term;
+	WORD n, na;
+	n = t[-1]; na = ABS(n);
+	t -= na;
+	if ( n == 3 && t[0] == 1 && t[1] == 1 ) return;
+	*AN.RepPoint = 1;
+	t[0] = 1; t[1] = 1; t[2] = 3;
+	*term -= (na-3);
+}
+
+/*
+  	#] DropCoefficient : 
 */

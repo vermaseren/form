@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] include :
+  	#] include : 
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -1396,7 +1396,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -1455,7 +1455,7 @@ exectermerr:
 }
 
 /*
-  	#] execterm :
+  	#] execterm : 
   	#[ ArgumentImplode :
 */
 
@@ -1463,6 +1463,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 {
 	WORD *liststart, *liststop, *inlist;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
+	int action = 0;
 	liststop = thelist + thelist[1];
 	liststart = thelist + 2;
 	t = term;
@@ -1486,6 +1487,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 							*w++ = -SNUMBER;
 							*w++ = ncount * tt[1];
 							tt += 2;
+							action = 1;
 						}
 						else {
 							while ( ttt < tt ) *w++ = *ttt++;
@@ -1516,6 +1518,9 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 		}
 		t += t[1];
 	}
+	if ( action ) {
+		if ( Normalize(BHEAD term) ) return(-1);
+	}
 	return(0);
 }
 
@@ -1528,6 +1533,7 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 {
 	WORD *liststart, *liststop, *inlist;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
+	int action = 0;
 	liststop = thelist + thelist[1];
 	liststart = thelist + 2;
 	t = term;
@@ -1554,6 +1560,7 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 							if ( tt[1] < 0 ) *w++ = -1;
 							else             *w++ =  1;
 							tt += 2;
+							action = 1;
 						}
 						else {
 							*w++ = *tt++; *w++ = *tt++;
@@ -1580,6 +1587,9 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 			}
 		}
 		t += t[1];
+	}
+	if ( action ) {
+		if ( Normalize(BHEAD term) ) return(-1);
 	}
 	return(0);
 }

@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ MatchE :					WORD MatchE(pattern,fun,inter,par)
 
 		Pattern and fun point at a Levi-Civita tensor.
@@ -391,7 +391,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE : 
+  	#] MatchE :
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -437,7 +437,7 @@ WORD Permute(PERM *perm, WORD first)
 }
 
 /*
-  	#] Permute : 
+  	#] Permute :
   	#[ Distribute :
 */
 
@@ -488,7 +488,7 @@ WORD Distribute(DISTRIBUTE *d, WORD first)
 }
 
 /*
-  	#] Distribute : 
+  	#] Distribute :
   	#[ MatchCy :
 
 		Matching of (r)cyclic tensors.
@@ -711,7 +711,7 @@ int MatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 1: 
+  	#] Case 1:
   	#[ Case 2: One FUNNYWILD. Fix its length.
 */
 	if ( funnycount == 1 ) {
@@ -810,7 +810,7 @@ int MatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 2: 
+  	#] Case 2:
   	#[ Case 3: More than one FUNNYWILD. Complicated.
 */
 
@@ -968,7 +968,7 @@ int MatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		(thewildcards[iraise-1])++;
 	}
 /*
-  	#] Case 3: 
+  	#] Case 3:
 */
 NoSuccess:
 	if ( oldwilval > 0 ) {
@@ -991,7 +991,7 @@ nomatch:;
 }
 
 /*
-  	#] MatchCy : 
+  	#] MatchCy :
   	#[ FunMatchCy :
 
 		Matching of (r)cyclic functions.
@@ -1198,7 +1198,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 1: 
+  	#] Case 1:
   	#[ Case 2: One -ARGWILD. Fix its length.
 */
 	if ( funnycount == 1 ) {
@@ -1283,7 +1283,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 2: 
+  	#] Case 2:
   	#[ Case 3: More than one -ARGWILD. Complicated.
 */
 
@@ -1427,7 +1427,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		(thewildcards[iraise-1])++;
 	}
 /*
-  	#] Case 3: 
+  	#] Case 3:
 */
 NoSuccess:
 	if ( oldwilval > 0 ) {
@@ -1449,7 +1449,7 @@ nomatch:;
 }
 
 /*
-  	#] FunMatchCy : 
+  	#] FunMatchCy :
   	#[ FunMatchSy :
 
 		Matching of (anti)symmetric functions.
@@ -1855,7 +1855,7 @@ nextiraise:;
 	for ( i = 0; i < tcount; i++ ) cycles[i] = tcount-i;
 	AT.WorkPointer += tcount;
 	signo = 0;
-MesPrint("<1> signs = %d",signs);
+/*MesPrint("<1> signs = %d",signs);*/
 	for (;;) {
 		for ( j = 0; j < argcount; j++ ) {
 			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+j]) == 0 ) {
@@ -1967,7 +1967,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy : 
+  	#] FunMatchSy :
   	#[ MatchArgument :
 */
 
@@ -2064,7 +2064,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Both fast : 
+  	#] Both fast :
   	#[ Fast arg :
 */
 	else if ( *m > 0 && *t <= -FUNCTION ) {
@@ -2096,7 +2096,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast arg : 
+  	#] Fast arg :
   	#[ Fast pat :
 */
 	else if ( *m < 0 && *t > 0 ) {
@@ -2123,7 +2123,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast pat : 
+  	#] Fast pat :
   	#[ Both general :
 */
 	else if ( *m > 0 && *t > 0 ) {
@@ -2225,7 +2225,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 	}
 /*
-  	#] Both general : 
+  	#] Both general :
 */
 	else return(0);
 /*
@@ -2235,5 +2235,5 @@ IndAll:			i = m[1] - WILDOFFSET;
 }
 
 /*
-  	#] MatchArgument : 
+  	#] MatchArgument :
 */

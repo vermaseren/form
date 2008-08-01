@@ -285,6 +285,14 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		else nd = 1;
 		if ( Simplify(BHEAD c,nc,d,&nd) ) goto AddRer1;
 	}
+/*
+	else if ( a[na] == 1 && b[nb] == 1 && adenom == 1 && bdenom == 1 ) {
+		if ( AddLong(a,na,b,nb,c,&nc) ) goto AddRer2;
+		i = ABS(nc); d = c + i; *d++ = 1;
+		while ( --i > 0 ) *d++ = 0 ;
+		return(0);
+	}
+*/
 	else {
 		d = NumberMalloc("AddRat"); e = NumberMalloc("AddRat");
 		f = NumberMalloc("AddRat"); g = NumberMalloc("AddRat");
@@ -323,6 +331,7 @@ AddRer:
 	NumberFree(g,"AddRat"); NumberFree(f,"AddRat"); NumberFree(e,"AddRat");
 AddRer1:
 	NumberFree(d,"AddRat");
+/* AddRer2: */
 	LOCK(ErrorMessageLock);
 	MesCall("AddRat");
 	UNLOCK(ErrorMessageLock);
@@ -1268,7 +1277,7 @@ int NormalModulus(UWORD *a,WORD *na)
 
 int MakeInverses()
 {
-	WORD n = ABS(AC.ncmod), i, inv2;
+	WORD n = AC.cmod[0], i, inv2;
 	if ( AC.ncmod != 1 ) return(1);
 	if ( AC.modinverses == 0 ) {
 	  LOCK(AC.halfmodlock);
@@ -1276,8 +1285,8 @@ int MakeInverses()
 		AC.modinverses = (UWORD *)Malloc1(n*sizeof(UWORD),"modinverses");
 		AC.modinverses[0] = 0;
 		AC.modinverses[1] = 1;
-		for ( i = 2; i < AC.cmod[0]; i++ ) {
-			if ( GetModInverses(i,(WORD)(AC.cmod[0]),
+		for ( i = 2; i < n; i++ ) {
+			if ( GetModInverses(i,n,
 						(WORD *)(&(AC.modinverses[i])),&inv2) ) {
 				SETERROR(-1)
 			}
@@ -2664,7 +2673,7 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 	if ( ( ( par & UNPACK ) == 0 ) && nmod == 1 && ( n1 == 1 || n1 == -1 ) ) {
 		goto simplecase;
 	}
-	else if ( nmod == 1 && ( n1 == 3 || n1 == -3 ) ) {
+	else if ( nmod == 1 && ( n1 == 1 || n1 == -1 ) ) {
 		if ( a[1] != 1 ) {
 			a[1] = a[1] % cmodvec[0];
 			if ( a[1] == 0 ) {
@@ -2672,7 +2681,7 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 				return(-1);
 			}
 			y1 = 0;
-			if ( AC.modinverses != 0 ) {
+			if ( ( AC.modinverses != 0 ) && ( ( par & NOINVERSES ) == 0 ) ) {
 				y1 = AC.modinverses[a[1]];
 			}
 			else {
@@ -2686,6 +2695,7 @@ WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
 simplecase:
 			a[0] = a[0] % cmodvec[0];
 		}
+		if ( a[0] == 0 ) { *na = 0; return(0); }
 		if ( ( AC.modmode & POSNEG ) != 0 ) {
 			if ( a[0] > cmodvec[0]/2 ) {
 				a[0] =  cmodvec[0] - a[0];
@@ -2697,15 +2707,35 @@ simplecase:
 		}
 		return(0);
 	}
-
-
 	c = NumberMalloc("TakeModulus"); d = NumberMalloc("TakeModulus"); e = NumberMalloc("TakeModulus");
 	f = NumberMalloc("TakeModulus"); g = NumberMalloc("TakeModulus"); h = NumberMalloc("TakeModulus");
 	n1 = ABS(n1);
 	if ( DivLong(a,tnumer,(UWORD *)cmodvec,nmod,
 		c,&nh,a,&tnumer) ) goto ModErr;
+	if ( tnumer == 0 ) { *na = 0; goto normalreturn; }
 	if ( ( par & UNPACK ) == 0 ) {
-		*na = tnumer; goto normalreturn;
+		if ( ( AC.modmode & POSNEG ) != 0 ) {
+			NormalModulus(a,&tnumer);
+		}
+		else if ( tnumer < 0 ) {
+			SubPLon((UWORD *)cmodvec,nmod,a,-tnumer,a,&tnumer);
+		}
+		*na = tnumer;
+		goto normalreturn;
+	}
+	if ( tdenom == 1 && a[n1] == 1 ) {
+		if ( ( AC.modmode & POSNEG ) != 0 ) {
+			NormalModulus(a,&tnumer);
+		}
+		else if ( tnumer < 0 ) {
+			SubPLon((UWORD *)cmodvec,nmod,a,-tnumer,a,&tnumer);
+		}
+		*na = tnumer;
+		i = ABS(tnumer);
+		a += i;
+		*a++ = 1;
+		while ( --i > 0 ) *a++ = 0;
+		goto normalreturn;
 	}
 	if ( DivLong(a+n1,tdenom,(UWORD *)cmodvec,nmod,c,&nh,a+n1,&tdenom) ) goto ModErr;
 	if ( !tdenom ) {
@@ -2729,7 +2759,8 @@ simplecase:
 		NumberFree(f,"TakeModulus"); NumberFree(g,"TakeModulus"); NumberFree(h,"TakeModulus");
 		return(-1);
 	}
-	if ( AC.modinverses != 0 && ( tdenom == 1 || tdenom == -1 ) ) {
+	if ( ( AC.modinverses != 0 ) && ( ( par & NOINVERSES ) == 0 )
+	&& ( tdenom == 1 || tdenom == -1 ) ) {
 		*d = AC.modinverses[a[n1]]; y1 = 1; y2 = tdenom;
 		if ( MulLong(a,tnumer,d,y1,c,&y3) ) goto ModErr;
 		if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;

@@ -520,6 +520,7 @@ typedef int (*TFUN1)();
 #define TYPEARGEXPLODE 68
 #define TYPEDENOMINATORS 69
 #define TYPESTUFFLE 70
+#define TYPEDROPCOEFFICIENT 71
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
@@ -581,6 +582,7 @@ typedef int (*TFUN1)();
 #define DROP 2
 #define HIDE 3
 #define UNHIDE 4
+#define INTOHIDE 5
 
 /*
 	Types of expressions
@@ -603,6 +605,8 @@ typedef int (*TFUN1)();
 #define DROPHGEXPRESSION 15
 #define UNHIDELEXPRESSION 12
 #define UNHIDEGEXPRESSION 16
+#define INTOHIDELEXPRESSION 17
+#define INTOHIDEGEXPRESSION 18
 
 #define PRINTOFF 0
 #define PRINTON 1
@@ -813,6 +817,8 @@ typedef int (*TFUN1)();
 #define COEFFICIENTSONLY 0x4
 #define ALSOPOWERS 0x8
 #define ALSOFUNARGS 0x10
+#define ALSODOLLARS 0x20
+#define NOINVERSES 0x40
 
 #define POSITIVEONLY 0
 #define UNPACK 0x80

@@ -41,7 +41,7 @@ extern long numfrees;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 */
@@ -478,7 +478,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 }
 
 /*
- 		#] WriteStats :
+ 		#] WriteStats : 
  		#[ NewSort :				WORD NewSort()
 */
 /**
@@ -543,7 +543,7 @@ WORD NewSort()
 }
 
 /*
- 		#] NewSort :
+ 		#] NewSort : 
  		#[ EndSort :				WORD EndSort(buffer,par)
 */
 /**
@@ -1003,7 +1003,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -1068,7 +1068,7 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 }
 
 /*
- 		#] PutIn :
+ 		#] PutIn : 
  		#[ Sflush :					WORD Sflush(file)
 */
 /**
@@ -1137,7 +1137,7 @@ WORD Sflush(FILEHANDLE *fi)
 }
 
 /*
- 		#] Sflush :
+ 		#] Sflush : 
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 */
 /**
@@ -1239,6 +1239,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 			PrintTerm(term,"PutOut");
 #endif
 			MesPrint("ncomp = %d, AR.NoCompress = %d, AR.sLevel = %d",ncomp,AR.NoCompress,AR.sLevel);
+			MesPrint("File %s, position %p",fi->name,position);
 			UNLOCK(ErrorMessageLock);
 	}
 
@@ -1343,7 +1344,7 @@ nocompress:
 		do {
 			if ( p >= fi->POstop ) {
 #ifdef PARALLEL /* [16mar1998 ar] */
-			  if ( fi == AR.outfile && PF.me != MASTER && PF.parallel ){
+			  if ( ( fi == AR.outfile || fi == AR.hidefile ) && PF.me != MASTER && PF.parallel ){
 				PF_BUFFER *sbuf = PF.sbuf;
 				sbuf->fill[sbuf->active] = fi->POstop;
 				PF_ISendSbuf(MASTER,PF_BUFFER_MSGTAG);
@@ -1436,8 +1437,8 @@ nocompress:
 }
 
 /*
- 		#] PutOut :
- 		#[ FlushOut :				WORD Flushout(position,file,compr)
+ 		#] PutOut : 
+ 		#[ FlushOut :				WORD FlushOut(position,file,compr)
 */
 /**
  *	Completes output to an output file and writes the trailing zero.
@@ -1457,7 +1458,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
 
-  if (PF.me != MASTER && fi == AR.outfile && PF.parallel ){
+  if (PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel ){
 	PF_BUFFER *sbuf = PF.sbuf;
 	if ( fi->POfill >= fi->POstop ){
 	  sbuf->fill[sbuf->active] = fi->POstop;
@@ -1615,7 +1616,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 }
 
 /*
- 		#] FlushOut :
+ 		#] FlushOut : 
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**
@@ -1650,7 +1651,7 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	if ( AN.ncmod != 0 ) {	/* Note that coefficients are positive! */
+	if ( AN.ncmod != 0 ) {
 		if ( ( AC.modmode & POSNEG ) != 0 ) {
 			NormalModulus(OutCoef,&OutLen);
 		}
@@ -1724,7 +1725,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef :
+ 		#] AddCoef : 
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 */
 /**
@@ -1886,7 +1887,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 }
 
 /*
- 		#] AddPoly :
+ 		#] AddPoly : 
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
  
@@ -2153,7 +2154,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs :
+ 		#] AddArgs : 
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
 */
 /**
@@ -2573,7 +2574,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 :
+ 		#] Compare1 : 
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
@@ -2630,7 +2631,7 @@ LONG ComPress(WORD **ss, LONG *n)
 		ss = sss;
 	}
 
-			#] debug :
+			#] debug : 
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
@@ -2723,13 +2724,13 @@ LONG ComPress(WORD **ss, LONG *n)
 		FiniLine();
 	}
 
-			#] debug :
+			#] debug : 
 */
 	return(size);
 }
 
 /*
- 		#] ComPress :
+ 		#] ComPress : 
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 */
 /**
@@ -2917,7 +2918,7 @@ VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
 #endif
 
 /*
- 		#] SplitMerge :
+ 		#] SplitMerge : 
  		#[ GarbHand :				VOID GarbHand()
 */
 /**
@@ -3031,7 +3032,7 @@ VOID GarbHand()
 }
 
 /*
- 		#] GarbHand :
+ 		#] GarbHand : 
  		#[ MergePatches :			WORD MergePatches(par)
 */
 /**
@@ -3193,7 +3194,7 @@ ConMer:
 	else {	/* Load the patches */
 		S->lPatch = (S->inNum);
 #ifdef PARALLEL /* [16aug1998 ar] */
-		if ( S->lPatch > 1 || fout == AR.outfile) {
+		if ( S->lPatch > 1 || fout == AR.outfile || fout == AR.hidefile ) {
 #else
 		if ( S->lPatch > 1 ) {
 #endif /* PARALLEL [16aug1998 ar] */
@@ -3233,7 +3234,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	The old code had to be replaced because all output needs to go
 	through PutOut. For this we have to go term by term and keep
@@ -3755,7 +3756,7 @@ PatCall2:;
 }
 
 /*
- 		#] MergePatches :
+ 		#] MergePatches : 
  		#[ StoreTerm :				WORD StoreTerm(term)
 */
 /**
@@ -3882,7 +3883,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm :
+ 		#] StoreTerm : 
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**
@@ -3949,7 +3950,7 @@ VOID StageSort(FILEHANDLE *fout)
 }
 
 /*
- 		#] StageSort :
+ 		#] StageSort : 
  		#[ SortWild :				WORD SortWild(w,nw)
 */
 /**
@@ -4050,7 +4051,7 @@ WORD SortWild(WORD *w, WORD nw)
 }
 
 /*
- 		#] SortWild :
+ 		#] SortWild : 
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 */
 /**
@@ -4120,7 +4121,7 @@ void CleanUpSort(int num)
 }
 
 /*
- 		#] CleanUpSort :
+ 		#] CleanUpSort : 
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 /**
@@ -4137,6 +4138,6 @@ VOID LowerSortLevel()
 }
 
 /*
- 		#] LowerSortLevel :
+ 		#] LowerSortLevel : 
 	#] SortUtilities :
 */

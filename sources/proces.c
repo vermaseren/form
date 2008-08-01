@@ -12,7 +12,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -46,7 +46,7 @@ WORD Processor()
 	int firstterm;
 	CBUF *CC = cbuf+AT.ebufnum;
 	WORD **w;
-	FILEHANDLE *curfile;
+	FILEHANDLE *curfile, *oldoutfile = AR.outfile;
 	if ( CC->numrhs > 0 || CC->numlhs > 0 ) {
 		if ( CC->rhs ) {
 			w = CC->rhs; i = CC->numrhs;
@@ -74,10 +74,11 @@ WORD Processor()
 	C->rhs[C->numrhs+1] = C->Pointer;
 	AR.KeptInHold = 0;
 	if ( AC.CollectFun ) AR.DeferFlag = 0;
+	AR.outtohide = 0;
 /*
 		Next determine the last expression. This is used for removing the
 		input file when the final stage of the sort of this expression is
-		reached. That can safe up to 1/3 in disk space.
+		reached. That can save up to 1/3 in disk space.
 */
 	for ( i = NumExpressions-1; i >= 0; i-- ) {
 		e = Expressions+i;
@@ -85,6 +86,7 @@ WORD Processor()
 		|| e->status == HIDELEXPRESSION || e->status == HIDEGEXPRESSION
 		|| e->status == SKIPLEXPRESSION || e->status == SKIPGEXPRESSION
 		|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+		|| e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION
 		) break;
 	}
 	last = i;
@@ -178,7 +180,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -194,6 +196,9 @@ WORD Processor()
 #endif
 				curfile = AR.hidefile;
 				goto commonread;
+			case INTOHIDELEXPRESSION:
+			case INTOHIDEGEXPRESSION:
+				AR.outtohide = 1;
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
 				AR.GetFile = 0;
@@ -217,9 +222,16 @@ commonread:;
 				}
 				if ( AC.bracketindexflag ) OpenBracketIndex(i);
 				term[3] = i;
-				SeekScratch(AR.outfile,&position);
-				e->onfile = position;
-				if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+				if ( AR.outtohide ) {
+					SeekScratch(AR.hidefile,&position);
+					e->onfile = position;
+					if ( PutOut(BHEAD term,&position,AR.hidefile,0) < 0 ) goto ProcErr;
+				}
+				else {
+					SeekScratch(AR.outfile,&position);
+					e->onfile = position;
+					if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
+				}
 				AR.DeferFlag = AC.ComDefer;
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
@@ -269,7 +281,12 @@ commonread:;
 							AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 						}
 					}
+					if ( AR.outtohide ) AR.outfile = AR.hidefile;
 					if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
+					if ( AR.outtohide ) {
+						AR.outfile = oldoutfile;
+						AR.hidefile->POfull = AR.hidefile->POfill;
+					}
 					e->numdummies = AR.MaxDum - AM.IndDum;
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
@@ -278,6 +295,7 @@ commonread:;
 				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
 				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
 				AR.GetFile = 0;
+				AR.outtohide = 0;
 #endif
 				break;
 			case SKIPLEXPRESSION:
@@ -1445,7 +1463,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -1969,7 +1987,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2098,7 +2116,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2214,7 +2232,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2289,7 +2307,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2464,7 +2482,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3034,10 +3052,13 @@ CommonEnd:
 				  case TYPEDENOMINATORS:
 					DenToFunction(term,C->lhs[level][2]);
 					break;
+				  case TYPEDROPCOEFFICIENT:
+					DropCoefficient(BHEAD term);
+					break;
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3458,7 +3479,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -3655,7 +3676,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -3797,7 +3818,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4033,7 +4054,7 @@ WORD PrepPoly(WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4211,7 +4232,7 @@ IllegalContent:
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4231,7 +4252,7 @@ IllegalContent:
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4441,6 +4462,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

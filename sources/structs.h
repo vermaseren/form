@@ -1172,6 +1172,7 @@ struct M_const {
     LONG    MaxTer;                /* (M) Maximum term size. Fixed at setup. In Bytes!!!*/
     LONG    CompressSize;          /* (M) Size of Compress buffer */
     LONG    ScratSize;             /* (M) Size of Fscr[] buffers */
+    LONG    HideSize;              /* (M) Size of Fscr[2] buffer */
     LONG    SizeStoreCache;        /* (M) Size of the chaches for reading global expr. */
     LONG    MaxStreamSize;         /* (M) Maximum buffer size in reading streams */
     LONG    SIOsize;               /* (M) Sort InputOutput buffer size */
@@ -1283,7 +1284,7 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1546,7 +1547,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1615,6 +1616,7 @@ struct R_const {
     int     NoCompress;            /* (R) Controls native compression */
     int     gzipCompress;          /* (R) Controls gzip compression */
     int     Cnumlhs;               /* Local copy of cbuf[rbufnum].numlhs */
+	int     outtohide;             /* Indicates that output is directly to hide */
 #ifdef WITHPTHREADS
     int     exprtodo;              /* The expression to do in parallel mode */
 #endif

@@ -21,6 +21,7 @@ char procedureextension[] = "prc";
 #define STRINGVALUE 1
 #define PATHVALUE 2
 #define ONOFFVALUE 3
+#define DEFINEVALUE 4
 
 SETUPPARAMETERS setupparameters[] = 
 {
@@ -29,9 +30,11 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"compresssize",          NUMERICALVALUE, 0, (long)COMPRESSBUFFER}
 	,{(UBYTE *)"constindex",            NUMERICALVALUE, 0, (long)NUMFIXED}
 	,{(UBYTE *)"continuationlines",     NUMERICALVALUE, 0, (long)FORTRANCONTINUATIONLINES}
+	,{(UBYTE *)"define",                   DEFINEVALUE, 0, (long)0}
 	,{(UBYTE *)"dotchar",                  STRINGVALUE, 0, (long)dotchar}
 	,{(UBYTE *)"filepatches",           NUMERICALVALUE, 0, (long)MAXFPATCHES}
 	,{(UBYTE *)"functionlevels",        NUMERICALVALUE, 0, (long)MAXFLEVELS}
+	,{(UBYTE *)"hidesize",              NUMERICALVALUE, 0, (long)0}
 	,{(UBYTE *)"incdir",                     PATHVALUE, 0, (long)curdirp}
 	,{(UBYTE *)"indentspace",           NUMERICALVALUE, 0, (long)INDENTSPACE}
 	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (long)1}
@@ -86,7 +89,7 @@ SETUPPARAMETERS setupparameters[] =
 
 int DoSetups()
 {
-	UBYTE *setbuffer, *s, *t, *u, c;
+	UBYTE *setbuffer, *s, *t, *u /*, c */;
 	int errors = 0;
 	setbuffer = LoadInputFile((UBYTE *)setupfilename,SETUPFILE);
 	if ( setbuffer ) {
@@ -103,9 +106,11 @@ int DoSetups()
 			else if ( tolower(*s) < 'a' || tolower(*s) > 'z' ) {
 				t = s;
 				while ( *s && *s != '\n' ) s++;
+/*
 				c = *s; *s = 0;
 				Error1("Setup file: Illegal statement: ",t);
 				errors++; *s = c;
+*/
 			}
 			else {
 				t = s; /* name of the option */
@@ -241,6 +246,13 @@ restart:;
 					error = 1; break;
 				}
 				sp->flags = USEDFLAG;
+				break;
+			case DEFINEVALUE:
+/*
+				if ( sp->value ) M_free((UBYTE *)(sp->value),"Process option");
+				sp->value = (long)strDup1(s2,"Process option");
+*/
+				if ( TheDefine(s2,2) ) error = 1;
 				break;
 			default:
 				Error1("Error in setupparameter table for:",s1);
@@ -453,6 +465,12 @@ int AllocSetups()
 	sp = GetSetupPar((UBYTE *)"scratchsize");
 	AM.ScratSize = sp->value/sizeof(WORD);
 	if ( AM.ScratSize < 4*AM.MaxTer ) AM.ScratSize = 4*AM.MaxTer;
+	AM.HideSize = AM.ScratSize;
+	sp = GetSetupPar((UBYTE *)"hidesize");
+	if ( sp->value > 0 ) {
+		AM.HideSize = sp->value/sizeof(WORD);
+		if ( AM.HideSize < 4*AM.MaxTer ) AM.HideSize = 4*AM.MaxTer;
+	}
 #ifdef WITHPTHREADS
 	sp = GetSetupPar((UBYTE *)"threadscratchsize");
 	AM.ThreadScratSize = sp->value/sizeof(WORD);
@@ -730,6 +748,11 @@ VOID WriteSetup()
 					MesPrint("   %s: OFF",sp->parameter);
 				else if ( sp->value == 1 )
 					MesPrint("   %s: ON",sp->parameter);
+				break;
+			case DEFINEVALUE:
+/*
+				MesPrint("   %s: '%s'",sp->parameter,(UBYTE *)(sp->value));
+*/
 				break;
 		}
 	}

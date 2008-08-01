@@ -197,18 +197,20 @@ WORD PopVariables()
 				if ( AC.cmod[j] != AM.gcmod[j] ) break;
 			}
 			if ( j >= 0 ) {
-				M_free(AC.halfmod,"modinverses");
+				M_free(AC.modinverses,"modinverses");
 				AC.modinverses = 0;
 			}
 		}
 		else {
-			M_free(AC.halfmod,"modinverses");
+			M_free(AC.modinverses,"modinverses");
 			AC.modinverses = 0;
 		}
 	}
 	AN.ncmod = AC.ncmod = AM.gncmod;
 	AC.npowmod = AM.gnpowmod;
 	AC.modmode = AM.gmodmode;
+	if ( ( ( AC.modmode & INVERSETABLE ) != 0 ) && ( AC.modinverses == 0 ) )
+			MakeInverses();
 	AC.funpowers = AM.gfunpowers;
 	AC.lPolyFun = AM.gPolyFun;
 	AC.lPolyFunType = AM.gPolyFunType;
@@ -360,6 +362,12 @@ VOID TestDrop()
 				break;
 			case HIDDENLEXPRESSION:
 			case HIDDENGEXPRESSION:
+				break;
+			case INTOHIDELEXPRESSION:
+				e->status = HIDDENLEXPRESSION;
+				break;
+			case INTOHIDEGEXPRESSION:
+				e->status = HIDDENGEXPRESSION;
 				break;
 			default:
 				ClearBracketIndex(j);

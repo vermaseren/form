@@ -447,7 +447,12 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AR.CurDum = AM.IndDum;
 	for ( j = 0; j < 3; j++ ) {
 		if ( identity == 0 ) {
-			ScratchSize[j] = AM.ScratSize;
+			if ( j == 2 ) {
+				ScratchSize[j] = AM.HideSize;
+			}
+			else {
+				ScratchSize[j] = AM.ScratSize;
+			}
 			if ( ScratchSize[j] < 10*AM.MaxTer ) ScratchSize[j] = 10 * AM.MaxTer;
 		}
 		else {
@@ -1387,7 +1392,7 @@ bucketstolen:;
 
 				EXPRESSIONS e = Expressions + AR.exprtodo;
 				POSITION position, outposition;
-				FILEHANDLE *fi, *fout;
+				FILEHANDLE *fi, *fout, *oldoutfile;
 				LONG dd = 0;
 				i = AR.exprtodo;
 				AR.CurExpr = i;
@@ -1470,15 +1475,22 @@ bucketstolen:;
 */
 				SeekScratch(fout,&outposition);
 				LOCK(AS.outputslock);
+				oldoutfile = AB[0]->R.outfile;
+				if ( e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION ) {
+					AB[0]->R.outfile = AB[0]->R.hidefile;
+				}
 				SeekScratch(AB[0]->R.outfile,&position);
 				e->onfile = position;
 				if ( CopyExpression(fout,AB[0]->R.outfile) < 0 ) {
+					AB[0]->R.outfile = oldoutfile;
 					UNLOCK(AS.outputslock);
 					LOCK(ErrorMessageLock);
 					MesPrint("Error copying output of 'InParallel' expression to master. Thread: %d",identity);
 					UNLOCK(ErrorMessageLock);
-ProcErr:			Terminate(-1);
+					goto ProcErr;
 				}
+				AB[0]->R.outfile = oldoutfile;
+				AB[0]->R.hidefile->POfull = AB[0]->R.hidefile->POfill;
 				UNLOCK(AS.outputslock);
 
 				if ( fout->handle >= 0 ) {	/* Now get rid of the file */
@@ -1509,6 +1521,9 @@ EndOfThread:;
 	This is the end of the thread. We cleanup and exit.
 */
 	FinalizeOneThread(identity);
+	return(0);
+ProcErr:
+	Terminate(-1);
 	return(0);
 }
 
@@ -2070,7 +2085,8 @@ int InParallelProcessor()
 			e = Expressions+i;
 			if ( e->partodo <= 0 ) continue;
 			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
-			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION ) {
+			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+			|| e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION ) {
 			}
 			else {
 				e->partodo = 0;
@@ -2137,6 +2153,7 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 	LONG numinput = 1, num, i;
 	WORD *oldworkpointer = AT0.WorkPointer, *tt, *ttco = 0, *t1 = 0, ter, *tstop = 0, *t2;
 	THREADBUCKET *thr = 0;
+	FILEHANDLE *oldoutfile = AR0.outfile;
 	numberoffullbuckets = 0;
 /*
 	Start up all threads. The lock needs to be around the whole loop
@@ -2565,10 +2582,13 @@ NextBucket:;
 */
 	oldgzipCompress = AR0.gzipCompress;
 	AR0.gzipCompress = 0;
+	if ( AR0.outtohide ) AR0.outfile = AR0.hidefile;
 	if ( MasterMerge() < 0 ) {
+		if ( AR0.outtohide ) AR0.outfile = oldoutfile;
 		AR0.gzipCompress = oldgzipCompress;
 		goto ProcErr;
 	}
+	if ( AR0.outtohide ) AR0.outfile = oldoutfile;
 	AR0.gzipCompress = oldgzipCompress;
 /*
 	Now wait for all threads to be ready to give them the cleaning up signal.

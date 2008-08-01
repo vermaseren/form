@@ -92,6 +92,7 @@ static KEYWORD com2commands[] = {
 	,{"denominators",   (TFUN)CoDenominators,     STATEMENT,    PARTEST}
 	,{"disorder",       (TFUN)CoDisorder,         STATEMENT,    PARTEST}
 	,{"drop",           (TFUN)CoDrop,             SPECIFICATION,PARTEST}
+	,{"dropcoefficient",(TFUN)CoDropCoefficient,  STATEMENT,    PARTEST}
 	,{"else",           (TFUN)CoElse,             STATEMENT,    PARTEST}
 	,{"elseif",         (TFUN)CoElseIf,           STATEMENT,    PARTEST}
 	,{"endargument",    (TFUN)CoEndArgument,      STATEMENT,    PARTEST}
@@ -113,6 +114,7 @@ static KEYWORD com2commands[] = {
 	,{"inparallel",     (TFUN)CoInParallel,       SPECIFICATION,PARTEST}
 	,{"inside",         (TFUN)CoInside,           STATEMENT,    PARTEST}
 	,{"insidefirst",    (TFUN)CoInsideFirst,      DECLARATION,  PARTEST}
+	,{"intohide",       (TFUN)CoIntoHide,         SPECIFICATION,PARTEST}
 	,{"keep",           (TFUN)CoKeep,             SPECIFICATION,PARTEST}
 	,{"makeinteger",    (TFUN)CoMakeInteger,      STATEMENT,    PARTEST}
 	,{"many",           (TFUN)CoMany,             STATEMENT,    PARTEST}
@@ -1761,7 +1763,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term
