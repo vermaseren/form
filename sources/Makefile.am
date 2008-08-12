@@ -65,7 +65,7 @@ COMPILEFLAGS=
 LINKFLAGS=-static -s
 # for debugging versions
 DEBUGCOMPILEFLAGS=-g -Wall
-DEBUGLINKFLAGS=-static -g
+DEBUGLINKFLAGS=-g
 
 # compiler specific parameters
 if USINGGCC

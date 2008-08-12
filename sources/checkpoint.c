@@ -1611,7 +1611,9 @@ int DoRecovery()
 
 	R_COPY_LIST(AP.ProcList);
 	for ( i=0; i<AP.ProcList.num; ++i ) {
-		R_COPY_B(Procedures[i].p.buffer, Procedures[i].p.size, UBYTE*);
+		if ( Procedures[i].p.size ) {
+			R_COPY_B(Procedures[i].p.buffer, Procedures[i].p.size, UBYTE*);
+		}
 		R_COPY_S(Procedures[i].name,UBYTE*);
 	}
 	AP.ProcList.message = "procedure";
@@ -2146,7 +2148,9 @@ static int DoSnapshot()
 
 	S_WRITE_LIST(AP.ProcList);
 	for ( i=0; i<AP.ProcList.num; ++i ) {
-		S_WRITE_B(Procedures[i].p.buffer, Procedures[i].p.size);
+		if ( Procedures[i].p.size ) {
+			S_WRITE_B(Procedures[i].p.buffer, Procedures[i].p.size);
+		}
 		S_WRITE_S(Procedures[i].name);
 	}
 
