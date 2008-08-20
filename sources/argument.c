@@ -1396,7 +1396,7 @@ execargerr:
 }
 
 /*
-  	#] execarg : 
+  	#] execarg :
   	#[ execterm :
 */
 
@@ -1525,7 +1525,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentImplode :
+  	#] ArgumentImplode : 
   	#[ ArgumentExplode :
 */
 
@@ -1595,6 +1595,21 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentExplode :
+  	#] ArgumentExplode : 
+  	#[ DoRepArg :
+
+	Too be filled in.
+	It makes replacements in the style of replace_, but only in the indicated
+	arguments of the indicated functions.
+	Notice though that it will also replace numbers!!!!!
+*/
+
+int DoRepArg(PHEAD WORD *term,int level)
+{
+	return(Generator(BHEAD term,level));
+}
+
+/*
+  	#] DoRepArg :
 */
 

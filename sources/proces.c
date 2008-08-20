@@ -45,7 +45,7 @@ WORD Processor()
 	CBUF *C = cbuf+AC.cbufnum;
 	int firstterm;
 	CBUF *CC = cbuf+AT.ebufnum;
-	WORD **w;
+	WORD **w, *cpo, *cbo;
 	FILEHANDLE *curfile, *oldoutfile = AR.outfile;
 	if ( CC->numrhs > 0 || CC->numlhs > 0 ) {
 		if ( CC->rhs ) {
@@ -353,14 +353,17 @@ commonread:;
 				}
 				term[3] = i;
 				AR.DeferFlag = 0;
-				SetEndScratch(AR.hidefile,&position);
+				SetEndHScratch(AR.hidefile,&position);
 				e->onfile = position;
 				*AM.S0->sBuffer = 0; firstterm = -1;
+				cbo = cpo = AM.S0->sBuffer;
 				do {
 					WORD *oldipointer = AR.CompressPointer;
+					WORD *oldibuffer = AR.CompressBuffer;
 					WORD *comprtop = AR.ComprTop;
 					AR.ComprTop = AM.S0->sTop;
-					AR.CompressPointer = AM.S0->sBuffer;
+					AR.CompressPointer = cpo;
+					AR.CompressBuffer = cbo;
 					if ( firstterm > 0 ) {
 						if ( PutOut(BHEAD term,&position,AR.hidefile,1) < 0 ) goto ProcErr;
 					}
@@ -372,7 +375,10 @@ commonread:;
 						if ( PutOut(BHEAD term,&position,AR.hidefile,-1) < 0 ) goto ProcErr;
 						firstterm++;
 					}
+					cpo = AR.CompressPointer;
+					cbo = AR.CompressBuffer;
 					AR.CompressPointer = oldipointer;
+					AR.CompressBuffer = oldibuffer;
 					AR.ComprTop = comprtop;
 				} while ( GetTerm(BHEAD term) );
 				if ( FlushOut(&position,AR.hidefile,1) ) goto ProcErr;
@@ -3055,6 +3061,12 @@ CommonEnd:
 				  case TYPEDROPCOEFFICIENT:
 					DropCoefficient(BHEAD term);
 					break;
+				  case TYPEREPARG:
+					AT.WorkPointer = term + *term;
+					if ( DoRepArg(BHEAD term,level) )
+						goto GenCall;
+					AT.WorkPointer = term + *term;
+					goto Return0;
 				}
 				goto SkipCount;
 /*

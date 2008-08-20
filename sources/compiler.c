@@ -145,6 +145,7 @@ static KEYWORD com2commands[] = {
 	,{"ratio",          (TFUN)CoRatio,            STATEMENT,    PARTEST}
 	,{"renumber",       (TFUN)CoRenumber,         STATEMENT,    PARTEST}
 	,{"repeat",         (TFUN)CoRepeat,           STATEMENT,    PARTEST}
+	,{"replaceinarg",   (TFUN)CoReplaceInArg,     STATEMENT,    PARTEST}
 	,{"replaceloop",    (TFUN)CoReplaceLoop,      STATEMENT,    PARTEST}
 	,{"select",         (TFUN)CoSelect,           STATEMENT,    PARTEST}
 	,{"set",            (TFUN)CoSet,              DECLARATION,  PARTEST}

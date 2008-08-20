@@ -521,6 +521,7 @@ typedef int (*TFUN1)();
 #define TYPEDENOMINATORS 69
 #define TYPESTUFFLE 70
 #define TYPEDROPCOEFFICIENT 71
+#define TYPEREPARG 72
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.

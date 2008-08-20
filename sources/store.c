@@ -55,7 +55,7 @@ VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndScratch : 
+ 		#] SetEndScratch :
  		#[ SetEndHScratch :
 */
 
@@ -65,11 +65,11 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
 	}
 	else *position = f->filesize;
-	SetScratch(f,position);
+/*	SetScratch(f,position); */
 }
 
 /*
- 		#] SetEndHScratch : 
+ 		#] SetEndHScratch :
  		#[ SetScratch :
 */
 
