@@ -1519,7 +1519,7 @@ struct C_const {
     WORD    DidClean;              /* (C) Test whether nametree needs cleaning */
     WORD    IfLevel;               /* (C) */
     WORD    WhileLevel;            /* (C) */
-    WORD    *IfSumCheck;           /**< [D] Keeps track of where to go in if */
+    WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
     WORD    LogHandle;             /* (C) The Log File */
     WORD    LineLength;            /* (C) */
     WORD    StoreHandle;           /* (C) Handle of .str file */

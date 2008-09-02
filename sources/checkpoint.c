@@ -15,6 +15,10 @@
 #include <errno.h>
 
 /*
+#define PRINTDEBUG
+*/
+
+/*
   	#] Includes :
   	#[ filenames and system commands :
 */
@@ -39,7 +43,7 @@ static char *intermedfile = FNAME(XXX);
 /**
  *  filename of sort file copy
  */
-static char *sortfile = FNAME(in);
+static char *sortfile = FNAME(out);
 /**
  *  filename of hide file copy
  */
@@ -252,6 +256,7 @@ static void print_DOLLARS(DOLLARS l)
 	print_VOIDP(l->where, l->size);
 	printf("%ld\n", l->size);
 	printf("%ld\n", l->name);
+	printf("%s\n", AC.dollarnames->namebuffer+l->name);
 	printf("%d\n", l->type);
 	printf("%d\n", l->node);
 	printf("%d\n", l->index);
@@ -276,9 +281,13 @@ static void print_DOLOOP(DOLOOP *l)
 {
 	print_PRELOAD(&(l->p));
 	print_STR(l->name);
-	print_STR(l->vars);
+	if ( l->type != NUMERICALLOOP ) {
+		print_STR(l->vars);
+	}
 	print_STR(l->contents);
-	print_STR(l->dollarname);
+	if ( l->type != LISTEDLOOP && l->type != NUMERICALLOOP ) {
+		print_STR(l->dollarname);
+	}
 	printf("%ld\n", l->startlinenumber);
 	printf("%ld\n", l->firstnum);
 	printf("%ld\n", l->lastnum);
@@ -323,19 +332,18 @@ static void print_CBUF(CBUF *c)
 	int i;
 	print_WORDV(c->Buffer, c->BufferSize);
 	printf("%d\n", *c->Pointer);
+	printf("%ld\n", c->Top-c->Buffer);
 	/*
 	printf("%p\n", c->Buffer);
 	printf("%p\n", c->lhs);
 	printf("%p\n", c->rhs);
+	*/
 	for ( i=0; i<c->numlhs; ++i ) {
-		printf("%p\n", c->lhs[i]);
 		if ( c->lhs[i]) printf("%d\n", *(c->lhs[i]));
 	}
 	for ( i=0; i<c->numrhs; ++i ) {
-		printf("%p\n", c->rhs[i]);
 		if ( c->rhs[i]) printf("%d\n", *(c->rhs[i]));
 	}
-	*/
 	printf("%ld\n", *c->CanCommu);
 	printf("%ld\n", *c->NumTerms);
 	printf("%d\n", *c->numdum);
@@ -348,6 +356,7 @@ static void print_CBUF(CBUF *c)
 static void print_STREAM(STREAM *t)
 {
 	print_CHARS(t->buffer, t->inbuffer);
+	printf("%ld\n", t->pointer-t->buffer);
 	print_STR(t->FoldName);
 	print_STR(t->name);
 	if ( t->type == PREVARSTREAM || t->type == DOLLARSTREAM ) {
@@ -356,7 +365,25 @@ static void print_STREAM(STREAM *t)
 	printf("%ld\n", (long)t->fileposition);
 	printf("%ld\n", (long)t->linenumber);
 	printf("%ld\n", (long)t->prevline);
+	printf("%ld\n", t->buffersize);
+	printf("%ld\n", t->bufferposition);
+	printf("%ld\n", t->inbuffer);
+	printf("%d\n", t->previous);
 	printf("%d\n", t->handle);
+	printf("%d == ", t->type);
+	switch ( t->type ) {
+		case FILESTREAM: printf("FILESTREAM"); break;
+		case PREVARSTREAM: printf("PREVARSTREAM"); break;
+		case PREREADSTREAM: printf("PREREADSTREAM"); break;
+		case PIPESTREAM: printf("PIPESTREAM"); break;
+		case PRECALCSTREAM: printf("PRECALCSTREAM"); break;
+		case DOLLARSTREAM: printf("DOLLARSTREAM"); break;
+		case PREREADSTREAM2: printf("PREREADSTREAM2"); break;
+		case EXTERNALCHANNELSTREAM: printf("EXTERNALCHANNELSTREAM"); break;
+		default: printf("UNKNOWN");
+	}
+	printf("\n");
+	/* ... */
 }
 
 static void print_M()
@@ -538,8 +565,8 @@ static void print_P()
 	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
 		print_STR(AP.PreSwitchStrings[i]);
 	}
-	printf("%d\n", AP.preStop-AP.preStart);
-	if ( AP.preFill ) printf("%d\n", AP.preFill-AP.preStart);
+	printf("%ld\n", AP.preStop-AP.preStart);
+	if ( AP.preFill ) printf("%ld\n", AP.preFill-AP.preStart);
 	print_CHARS(AP.preStart, AP.pSize);
 	printf("%s\n", AP.procedureExtension);
 	printf("%s\n", AP.cprocedureExtension);
@@ -621,11 +648,14 @@ static void print_C()
 	print_LIST(&AC.ModOptDolList);
 	print_LIST(&AC.TableBaseList);
 
+	/*
 	print_LIST(&AC.cbufList);
 	for ( i=0; i<AC.cbufList.num; ++i ) {
+		printf("cbufList.num == %d\n", i);
 		print_CBUF(cbuf+i);
 	}
 	printf("%d\n", AC.cbufnum);
+	*/
 	printf("--MARK  6\n");
 
 	print_LIST(&AC.AutoSymbolList);
@@ -649,6 +679,7 @@ static void print_C()
 	printf("%d\n", AC.AutoDeclareFlag);
 
 	for ( i=0; i<AC.NumStreams; ++i ) {
+		printf("Stream %d\n", i);
 		print_STREAM(AC.Streams+i);
 	}
 	print_STREAM(AC.CurrentStream);
@@ -671,7 +702,7 @@ static void print_C()
 	/* IfHeap ... Labels */
 
 	print_CHARS((UBYTE*)AC.tokens, AC.toptokens-AC.tokens);
-	printf("%d\n", AC.endoftokens-AC.tokens);
+	printf("%ld\n", AC.endoftokens-AC.tokens);
 	print_WORDV(AC.tokenarglevel, AM.MaxParLevel);
 	print_WORDV((WORD*)AC.modinverses, ABS(AC.ncmod));
 #ifdef WITHPTHREADS
@@ -776,7 +807,7 @@ static void print_C()
 	printf("%d\n", AC.DidClean);
 	printf("%d\n", AC.IfLevel);
 	printf("%d\n", AC.WhileLevel);
-	print_WORDV(AC.IfSumCheck, sizeof(WORD)*(AC.MaxIf+1));
+	print_WORDV(AC.IfSumCheck, (AC.MaxIf+1));
 	printf("%d\n", AC.LogHandle);
 	printf("%d\n", AC.LineLength);
 	printf("%d\n", AC.StoreHandle);
@@ -805,10 +836,14 @@ static void print_R()
 	GETIDENTITY
 	size_t i;
 	printf("%%%% R_const\n");
+	printf("%ld\n", AR.infile-AR.Fscr);
 	printf("%s\n", AR.infile->name);
+	printf("%ld\n", AR.outfile-AR.Fscr);
 	printf("%s\n", AR.outfile->name);
+	printf("%ld\n", AR.hidefile-AR.Fscr);
 	printf("%s\n", AR.hidefile->name);
 	for ( i=0; i<3; ++i ) {
+		printf("FSCR %d\n", i);
 		print_WORDB(AR.Fscr[i].PObuffer, AR.Fscr[i].POfull);
 	}
 	/* ... */
@@ -934,7 +969,7 @@ static void print_R()
 /* DOLLAR */
 
 #define S_WRITE_DOLLAR(ARG) \
-	if ( ARG.size ) { \
+	if ( ARG.size && ARG.where != &(AM.dollarzero) ) { \
 		S_WRITE_B(ARG.where, ARG.size*sizeof(WORD)) \
 	}
 
@@ -948,16 +983,20 @@ static void print_R()
  *  states in FORM, so that the execution can recommence in preprocessor() as
  *  if no restart of FORM had occured.
  */
-int DoRecovery()
+int DoRecovery(int *moduletype)
 {
 	GETIDENTITY
 	FILE *fd;
 	POSITION pos;
 	void *buf, *p;
-	int size, i, j;
+	long size;
+	int i, j;
 	void *org, *org2;
-	char *namebuf[5];
-	int ofs;
+	char *namebufout, *namebufhide;
+	long ofs;
+	void *oldAMdollarzero;
+	LIST PotModDolListBackup;
+	LIST ModOptDolListBackup;
 
 	printf("Recovering ... "); fflush(0);
 
@@ -971,6 +1010,9 @@ int DoRecovery()
 
 	/* pointer p will go through the buffer in the following */
 	p = buf;
+
+	/* read moduletype */
+	R_SET(*moduletype, int);
 
 	/* #[ AM */
 
@@ -1009,6 +1051,7 @@ int DoRecovery()
 	R_SET(AM.gThreadSortFileSynch, int);
 	R_SET(AM.gSortType, int);
 	R_SET(AM.gShortStatsMax, WORD);
+	R_SET(oldAMdollarzero, void*);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -1082,16 +1125,6 @@ int DoRecovery()
 	R_FREE(AC.SetList.lijst);
 	R_FREE(AC.SymbolList.lijst);
 	R_FREE(AC.VectorList.lijst);
-	R_FREE(AC.PotModDolList.lijst);
-#ifdef WITHPTHREADS
-	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
-		if ( ModOptdollars[i].dstruct ) {
-			R_FREE(ModOptdollars[i].dstruct->where);
-			R_FREE(ModOptdollars[i].dstruct);
-		}
-	}
-#endif
-	R_FREE(AC.ModOptDolList.lijst);
 	for ( i=0; i<AC.TableBaseList.num; ++i ) {
 		R_FREE(tablebases[i].iblocks);
 		R_FREE(tablebases[i].nblocks);
@@ -1144,6 +1177,10 @@ int DoRecovery()
 
 	/* #] AC free pointers */
 
+	/* backup some lists in order to restore it to the initial setup */
+	PotModDolListBackup = AC.PotModDolList;
+	ModOptDolListBackup = AC.ModOptDolList;
+
 	/* first we copy AC as a whole and then restore the pointer structures step
 	   by step. */
 
@@ -1160,9 +1197,13 @@ int DoRecovery()
 	}
 	AC.ChannelList.message = "channel buffer";
 
+	AC.DubiousList.lijst = 0;
 	AC.DubiousList.message = "ambiguous variable";
-
-	(void)FromVarList(&AC.DubiousList);
+	AC.DubiousList.num =
+	AC.DubiousList.maxnum =
+	AC.DubiousList.numglobal =
+	AC.DubiousList.numtemp =
+	AC.DubiousList.numclear = 0;
 
 	R_COPY_LIST(AC.FunctionList);
 	for ( i=0; i<AC.FunctionList.num; ++i ) {
@@ -1185,11 +1226,24 @@ int DoRecovery()
 #ifdef WITHPTHREADS
 			R_COPY_B(tabl->prototype, tabl->prototypeSize, WORD**);
 			ofs = tabl->prototype - (WORD**)org;
+			for ( j=0; j<AM.totalnumberofthreads; ++j ) {
+				if ( tabl->prototype[j] ) {
+					tabl->prototype[j] = (WORD*)((WORD**)(tabl->prototype[j]) + ofs);
+				}
+			}
+			if ( tabl->pattern ) {
+				tabl->pattern += ofs;
+				for ( j=0; j<AM.totalnumberofthreads; ++j ) {
+					if ( tabl->pattern[j] ) {
+						tabl->pattern[j] = (WORD*)((WORD**)(tabl->pattern[j]) + ofs);
+					}
+				}
+			}
 #else
 			R_COPY_B(tabl->prototype, tabl->prototypeSize, WORD*);
 			ofs = tabl->prototype - (WORD*)org;
-#endif
 			if ( tabl->pattern ) tabl->pattern += ofs;
+#endif
 			R_COPY_B(tabl->mm, tabl->numind*sizeof(MINMAX), MINMAX*);
 			R_COPY_B(tabl->flags, tabl->numind*sizeof(WORD), WORD*);
 			if ( tabl->sparse ) {
@@ -1254,21 +1308,13 @@ int DoRecovery()
 		}
 		if ( ex->bracketinfo ) {
 			R_COPY_B(ex->bracketinfo, sizeof(BRACKETINFO), BRACKETINFO*);
-			if ( ex->bracketinfo->indexbuffer ) {
-				R_COPY_B(ex->bracketinfo->indexbuffer, ex->bracketinfo->indexbuffersize, BRACKETINDEX*);
-			}
-			if ( ex->bracketinfo->bracketbuffer ) {
-				R_COPY_B(ex->bracketinfo->bracketbuffer, ex->bracketinfo->bracketbuffersize, WORD*);
-			}
+			R_COPY_B(ex->bracketinfo->indexbuffer, ex->bracketinfo->indexbuffersize*sizeof(BRACKETINDEX), BRACKETINDEX*);
+			R_COPY_B(ex->bracketinfo->bracketbuffer, ex->bracketinfo->bracketbuffersize*sizeof(WORD), WORD*);
 		}
 		if ( ex->newbracketinfo ) {
 			R_COPY_B(ex->newbracketinfo, sizeof(BRACKETINFO), BRACKETINFO*);
-			if ( ex->newbracketinfo->indexbuffer ) {
-				R_COPY_B(ex->newbracketinfo->indexbuffer, ex->newbracketinfo->indexbuffersize, BRACKETINDEX*);
-			}
-			if ( ex->newbracketinfo->bracketbuffer ) {
-				R_COPY_B(ex->newbracketinfo->bracketbuffer, ex->newbracketinfo->bracketbuffersize, WORD*);
-			}
+			R_COPY_B(ex->newbracketinfo->indexbuffer, ex->newbracketinfo->indexbuffersize*sizeof(BRACKETINDEX), BRACKETINDEX*);
+			R_COPY_B(ex->newbracketinfo->bracketbuffer, ex->newbracketinfo->bracketbuffersize*sizeof(WORD), WORD*);
 		}
 #ifdef WITHPTHREADS
 		ex->renumlists = 0;
@@ -1292,21 +1338,9 @@ int DoRecovery()
 	AC.SymbolList.message = "symbol";
 	R_COPY_LIST(AC.VectorList);
 	AC.VectorList.message = "vector";
-	R_COPY_LIST(AC.PotModDolList);
-	AC.PotModDolList.message = "potentially modified dollar";
 
-	R_COPY_LIST(AC.ModOptDolList);
-#ifdef WITHPTHREADS
-	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
-		R_COPY_B(ModOptdollars[i].dstruct, sizeof(struct DoLlArS), DOLLARS);
-		if ( ModOptdollars[i].dstruct->size ) {
-			R_COPY_B(ModOptdollars[i].dstruct->where, ModOptdollars[i].dstruct->size*sizeof(WORD), WORD*);
-		}
-		ModOptdollars[i].dstruct->pthreadslockread = dummylock;
-		ModOptdollars[i].dstruct->pthreadslockwrite = dummylock;
-	}
-#endif /* ifdef WITHPTHREADS */
-	AC.ModOptDolList.message = "moduleoptiondollar";
+	AC.PotModDolList = PotModDolListBackup;
+	AC.ModOptDolList = ModOptDolListBackup;
 
 	R_COPY_LIST(AC.TableBaseList);
 	for ( i=0; i<AC.TableBaseList.num; ++i ) {
@@ -1345,16 +1379,18 @@ int DoRecovery()
 		cbuf[i].Top += ofs;
 		cbuf[i].Pointer += ofs;
 		R_COPY_B(cbuf[i].lhs, cbuf[i].maxlhs*sizeof(WORD*), WORD**);
-		for ( j=0; j<cbuf[i].numlhs; ++j ) {
+		for ( j=1; j<=cbuf[i].numlhs; ++j ) {
 			if ( cbuf[i].lhs[j] ) cbuf[i].lhs[j] += ofs;
 		}
+		org = cbuf[i].rhs;
 		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)), WORD**);
-		for ( j=0; j<cbuf[i].numrhs; ++j ) {
+		for ( j=1; j<=cbuf[i].numrhs; ++j ) {
 			if ( cbuf[i].rhs[j] ) cbuf[i].rhs[j] += ofs;
 		}
-		cbuf[i].CanCommu = (LONG*)((WORD*)cbuf[i].CanCommu + ofs);
-		cbuf[i].NumTerms = (LONG*)((WORD*)cbuf[i].NumTerms + ofs);
-		cbuf[i].numdum += ofs;
+		ofs = (char*)cbuf[i].rhs - (char*)org;
+		cbuf[i].CanCommu = (LONG*)((char*)cbuf[i].CanCommu + ofs);
+		cbuf[i].NumTerms = (LONG*)((char*)cbuf[i].NumTerms + ofs);
+		cbuf[i].numdum = (WORD*)((char*)cbuf[i].numdum + ofs);
 		if ( cbuf[i].boomlijst ) {
 			R_COPY_B(cbuf[i].boomlijst, cbuf[i].MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
 		}
@@ -1456,7 +1492,8 @@ int DoRecovery()
 	}
 
 	org = AC.iBuffer;
-	R_COPY_B(AC.iBuffer, AC.iBufferSize+1, UBYTE*);
+	ofs = AC.iStop - AC.iBuffer + 2;
+	R_COPY_B(AC.iBuffer, ofs, UBYTE*);
 	ofs = AC.iBuffer - (UBYTE*)org;
 	AC.iPointer += ofs;
 	AC.iStop += ofs;
@@ -1479,17 +1516,21 @@ int DoRecovery()
 
 	R_COPY_B(AC.WildcardNames, AC.WildcardBufferSize, UBYTE*);
 
-	size = AC.toptokens - AC.tokens;
-	if ( size ) {
-		org = AC.tokens;
-		R_COPY_B(AC.tokens, size, SBYTE*);
-		ofs = AC.tokens - (SBYTE*)org;
-		AC.endoftokens += ofs;
+	if ( AC.tokens ) {
+		size = AC.toptokens - AC.tokens;
+		if ( size ) {
+			org = AC.tokens;
+			R_COPY_B(AC.tokens, size, SBYTE*);
+			ofs = AC.tokens - (SBYTE*)org;
+			AC.endoftokens += ofs;
+			AC.toptokens += ofs;
+		}
+		else {
+			AC.tokens = 0;
+			AC.endoftokens = AC.tokens;
+			AC.toptokens = AC.tokens;
+		}
 	}
-	else {
-		AC.endoftokens = AC.tokens;
-	}
-	AC.toptokens = AC.tokens + size;
 
 	R_COPY_B(AC.tokenarglevel, AM.MaxParLevel*sizeof(WORD), WORD*);
 
@@ -1552,7 +1593,7 @@ int DoRecovery()
 
 	R_FREE(AP.ChDollarList.lijst);
 
-	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
+	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		R_FREE(AP.PreSwitchStrings[i]);
 	}
 	R_FREE(AP.PreSwitchStrings);
@@ -1576,7 +1617,7 @@ int DoRecovery()
 	R_COPY_LIST(AP.DollarList);
 	for ( i=0; i<AP.DollarList.num; ++i ) {
 		size = Dollars[i].size * sizeof(WORD);
-		if ( size ) {
+		if ( size && Dollars[i].where != oldAMdollarzero ) {
 			R_COPY_B(Dollars[i].where, size, void*);
 		}
 #ifdef WITHPTHREADS
@@ -1605,7 +1646,9 @@ int DoRecovery()
 		if ( DoLoops[i].name ) DoLoops[i].name += ofs;
 		if ( DoLoops[i].vars ) DoLoops[i].vars += ofs;
 		if ( DoLoops[i].contents ) DoLoops[i].contents += ofs;
-		R_COPY_S(DoLoops[i].dollarname,UBYTE*);
+		if ( DoLoops[i].type == ONEEXPRESSION ) {
+			R_COPY_S(DoLoops[i].dollarname,UBYTE*);
+		}
 	}
 	AP.LoopList.message = "doloop";
 
@@ -1623,7 +1666,7 @@ int DoRecovery()
 
 	size = (AP.NumPreSwitchStrings+1)*sizeof(UBYTE*);
 	R_COPY_B(AP.PreSwitchStrings, size, UBYTE**);
-	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
+	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		R_COPY_S(AP.PreSwitchStrings[i],UBYTE*);
 	}
 
@@ -1647,35 +1690,7 @@ int DoRecovery()
 	/* #] AP */
 	/* #[ AR */
 
-	/* #[ AR free pointers */
-
-	/* AR will be overwritten by data from the recovery file, therefore
-	 * dynamically allocated memory must be freed first. */
-
-	CloseFile(AR.StoreData.Handle);
-
-	R_FREE(AR.CompressBuffer);
-
-	for ( i=0; i<5; ++i ) {
-		FILEHANDLE *fh = (i<3) ? AR.Fscr+i : AR.FoStage4+i-3;
-		R_FREE(fh->PObuffer);
-		namebuf[i] = fh->name;
-#ifdef WITHZLIB
-		R_FREE(fh->zsp);
-		R_FREE(fh->ziobuffer);
-#endif
-		/* no files should be opened -> nothing to do with handle */
-	}
-
-	/* #] AR free pointers */
-	
-	/* first we copy AR as a whole and then restore the pointer structures step
-	   by step. */
-
-	ofs = AR.infile - AR.Fscr;
-
-	AR = *((struct R_const*)p); p = (unsigned char*)p + sizeof(struct R_const);
-
+	R_SET(ofs,long);
 	if ( ofs ) {
 		AR.infile = AR.Fscr+1;
 		AR.outfile = AR.Fscr;
@@ -1687,88 +1702,102 @@ int DoRecovery()
 		AR.hidefile = AR.Fscr+2;
 	}
 
-	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
-		i = strlen(storefile);
-		syscmdstore = (char*)malloc(i+strlen(FG.fname)+8);
-		strcpy(syscmdstore, "cp -f ");
-		strcpy(syscmdstore+6, storefile);
-		syscmdstore[6+i] = ' ';
-		strcpy(syscmdstore+7+i, FG.fname);
-		if ( system(syscmdstore) ) {
-			MesPrint("ERROR: Could not copy old store file %s!\n",storefile);
-			Terminate(-1);
-		}
+	/* #[ AR free pointers */
 
-		AR.StoreData.Handle = (WORD)OpenFile(FG.fname);
-		SeekFile(AR.StoreData.Handle, &AR.StoreData.Position, SEEK_SET);
+	/* Parts of AR will be overwritten by data from the recovery file, therefore
+	 * dynamically allocated memory must be freed first. */
 
-		free(syscmdstore);
+	namebufout = AR.outfile->name;
+	namebufhide = AR.hidefile->name;
+	R_FREE(AR.outfile->PObuffer);
+#ifdef WITHZLIB
+	R_FREE(AR.outfile->zsp);
+	R_FREE(AR.outfile->ziobuffer);
+#endif
+	namebufhide = AR.hidefile->name;
+	R_FREE(AR.hidefile->PObuffer);
+#ifdef WITHZLIB
+	R_FREE(AR.hidefile->zsp);
+	R_FREE(AR.hidefile->ziobuffer);
+#endif
+	/* no files should be opened -> nothing to do with handle */
+
+	/* #] AR free pointers */
+	
+	/* outfile */
+	R_SET(*AR.outfile, FILEHANDLE);
+	org = AR.outfile->PObuffer;
+	size = AR.outfile->POfull - AR.outfile->PObuffer;
+	AR.outfile->PObuffer = (WORD*)Malloc1(AR.outfile->POsize, "PObuffer");
+	if ( size ) {
+		memcpy(AR.outfile->PObuffer, p, size*sizeof(WORD));
+		p = (unsigned char*)p + size*sizeof(WORD);
 	}
-
-	AR.CompressPointer =
-	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
-	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
-
-	/* this assignment causes a warning which actually should not be ignored. */ 
-	AR.CompareRoutine = &(Compare1); /* to be fixed! */
-
-	/* we treat all FILEHANDLEs the same, but in pratice only the in and hidden
-	 * file will have non-trivial data to restore. */
-	for ( i=0; i<5; ++i ) {
-		FILEHANDLE *fh = (i<3) ? AR.Fscr+i : AR.FoStage4+i-3;
-		org = fh->PObuffer;
-		fh->PObuffer = (WORD*)Malloc1(fh->POsize, "PObuffer");
-		ofs = fh->PObuffer - (WORD*)org;
-		fh->POstop += ofs;
-		fh->POfill += ofs;
-		fh->POfull += ofs;
-		size = fh->POfull - fh->PObuffer;
-		if ( size ) {
-			memcpy(fh->PObuffer, p, size*sizeof(WORD));
-			p = (unsigned char*)p + size*sizeof(WORD);
-		}
-		fh->name = namebuf[i];
+	ofs = AR.outfile->PObuffer - (WORD*)org;
+	AR.outfile->POstop += ofs;
+	AR.outfile->POfill += ofs;
+	AR.outfile->POfull += ofs;
+	AR.outfile->name = namebufout;
 #ifdef WITHPTHREADS
-		org = fh->wPObuffer;
-		size = fh->wPOfull - fh->wPObuffer;
-		ofs = fh->wPObuffer - (WORD*)org;
-		fh->wPOstop += ofs;
-		fh->wPOfill += ofs;
-		fh->wPOfull += ofs;
-		fh->pthreadslock = dummylock;
+	AR.outfile->wPObuffer = AR.outfile->PObuffer;
+	AR.outfile->wPOstop = AR.outfile->POstop;
+	AR.outfile->wPOfill = AR.outfile->POfill;
+	AR.outfile->wPOfull = AR.outfile->POfull;
 #endif
 #ifdef WITHZLIB
-		/* zsp and ziobuffer will be allocated when used */
-		fh->zsp = 0;
-		fh->ziobuffer = 0;
+	/* zsp and ziobuffer will be allocated when used */
+	AR.outfile->zsp = 0;
+	AR.outfile->ziobuffer = 0;
 #endif
-		/* for debugging purposes */
-		if ( fh->handle >= 0 && fh != AR.infile && fh != AR.hidefile ) {
-			MesPrint("WARNING: something weird is happening. FILEHANDLE %d is active!\n", i);
-		}
-	}
-
-	if ( AR.infile->handle >= 0 ) {
+	/* reopen old outfile */
+	if ( AR.outfile->handle >= 0 ) {
 		i = strlen(sortfile);
-		syscmdsort = (char*)malloc(i+strlen(AR.infile->name)+8);
+		syscmdsort = (char*)malloc(i+strlen(AR.outfile->name)+8);
 		strcpy(syscmdsort, "cp -f ");
 		strcpy(syscmdsort+6, sortfile);
 		syscmdsort[6+i] = ' ';
-		strcpy(syscmdsort+7+i, AR.infile->name);
+		strcpy(syscmdsort+7+i, AR.outfile->name);
 		if ( system(syscmdsort) ) {
-			MesPrint("ERROR: Could not copy old input sort file %s!\n",sortfile);
+			MesPrint("ERROR: Could not copy old output sort file %s!\n",sortfile);
 			Terminate(-1);
 		}
-
-		AR.infile->handle = OpenFile(AR.infile->name);
-		if ( AR.infile->handle == -1 ) {
-			MesPrint("ERROR: Could not reopen input sort file %s!\n",AR.infile->name);
+		AR.outfile->handle = OpenFile(AR.outfile->name);
+		if ( AR.outfile->handle == -1 ) {
+			MesPrint("ERROR: Could not reopen output sort file %s!\n",AR.outfile->name);
 			Terminate(-1);
 		}
-		SeekFile(AR.infile->handle, &AR.infile->POposition, SEEK_SET);
-
+		SeekFile(AR.outfile->handle, &AR.outfile->POposition, SEEK_SET);
 		free(syscmdsort);
 	}
+
+	/* hidefile */
+	R_SET(*AR.hidefile, FILEHANDLE);
+	AR.hidefile->name = namebufhide;
+	if ( AR.hidefile->PObuffer ) {
+		org = AR.hidefile->PObuffer;
+		size = AR.hidefile->POfull - AR.hidefile->PObuffer;
+		AR.hidefile->PObuffer = (WORD*)Malloc1(AR.hidefile->POsize, "PObuffer");
+		if ( size ) {
+			memcpy(AR.hidefile->PObuffer, p, size*sizeof(WORD));
+			p = (unsigned char*)p + size*sizeof(WORD);
+		}
+		ofs = AR.hidefile->PObuffer - (WORD*)org;
+		AR.hidefile->POstop += ofs;
+		AR.hidefile->POfill += ofs;
+		AR.hidefile->POfull += ofs;
+#ifdef WITHPTHREADS
+		AR.hidefile->wPObuffer = AR.hidefile->PObuffer;
+		AR.hidefile->wPOstop = AR.hidefile->POstop;
+		AR.hidefile->wPOfill = AR.hidefile->POfill;
+		AR.hidefile->wPOfull = AR.hidefile->POfull;
+#endif
+	}
+#ifdef WITHZLIB
+		/* zsp and ziobuffer will be allocated when used */
+		AR.hidefile->zsp = 0;
+		AR.hidefile->ziobuffer = 0;
+#endif
+	/* reopen old hidefile */
 	if ( AR.hidefile->handle >= 0 ) {
 		i = strlen(hidefile);
 		syscmdsort = (char*)malloc(i+strlen(AR.hidefile->name)+8);
@@ -1780,27 +1809,82 @@ int DoRecovery()
 			MesPrint("ERROR: Could not copy old hide file %s!\n",hidefile);
 			Terminate(-1);
 		}
-
 		AR.hidefile->handle = OpenFile(AR.hidefile->name);
 		if ( AR.hidefile->handle == -1 ) {
 			MesPrint("ERROR: Could not reopen hide file %s!\n",AR.hidefile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.hidefile->handle, &AR.hidefile->POposition, SEEK_SET);
-
 		free(syscmdsort);
 	}
 
-	AR.pWorkSize = 0;
-	AR.lWorkSize = 0;
-	AR.posWorkSize = 0;
-	AR.MaxBracket = 0;
+	/* store file */
+	R_SET(pos, POSITION);
+	if ( ISNOTZEROPOS(pos) ) {
+		CloseFile(AR.StoreData.Handle);
+		R_SET(AR.StoreData, FILEDATA);
+		i = strlen(storefile);
+		syscmdstore = (char*)malloc(i+strlen(FG.fname)+8);
+		strcpy(syscmdstore, "cp -f ");
+		strcpy(syscmdstore+6, storefile);
+		syscmdstore[6+i] = ' ';
+		strcpy(syscmdstore+7+i, FG.fname);
+		if ( system(syscmdstore) ) {
+			MesPrint("ERROR: Could not copy old store file %s!\n",storefile);
+			Terminate(-1);
+		}
+		AR.StoreData.Handle = (WORD)OpenFile(FG.fname);
+		SeekFile(AR.StoreData.Handle, &AR.StoreData.Position, SEEK_SET);
+		free(syscmdstore);
+	}
+
+	R_SET(AR.DefPosition, POSITION);
+	R_SET(AR.OldTime, LONG);
+	R_SET(AR.InInBuf, LONG);
+	R_SET(AR.gzipCompress, int);
+
+	R_SET(AR.GetFile, WORD);
+	R_SET(AR.KeptInHold, WORD);
+	R_SET(AR.BracketOn, WORD);
+	R_SET(AR.MaxBracket, WORD);
+	R_SET(AR.CurDum, WORD);
+	R_SET(AR.DeferFlag, WORD);
+	R_SET(AR.TePos, WORD);
+	R_SET(AR.sLevel, WORD);
+	R_SET(AR.Stage4Name, WORD);
+	R_SET(AR.GetOneFile, WORD);
+	R_SET(AR.PolyFun, WORD);
+	R_SET(AR.PolyFunType, WORD);
+	R_SET(AR.Eside, WORD);
+	R_SET(AR.MaxDum, WORD);
+	R_SET(AR.level, WORD);
+	R_SET(AR.expchanged, WORD);
+	R_SET(AR.expflags, WORD);
+	R_SET(AR.CurExpr, WORD);
+	R_SET(AR.SortType, WORD);
+	R_SET(AR.ShortSortCount, WORD);
+
+	/* this is usually done in Process(), but sometimes FORM doesn't
+	   end up executing Process() before it uses the AR.CompressPointer,
+	   so we need to explicitely set it here. */
+	AR.CompressPointer = AR.CompressBuffer;
 
 #ifdef PRINTDEBUG
 	print_R();
 #endif
 
 	/* #] AR */
+
+#ifdef WITHPTHREADS
+	/* read timing information of individual threads */
+	R_SET(i, int);
+	for ( j=1; j<=AM.totalnumberofthreads; ++j ) {
+		/* ... and correcting OldTime */
+		AB[j]->R.OldTime = -(*((LONG*)p+j));
+	}
+	WriteTimerInfo((LONG*)p);
+	p = (unsigned char*)p + i*sizeof(LONG);
+#endif /* ifdef WITHPTHREADS */
 
 	if ( fclose(fd) ) return(__LINE__);
 
@@ -1809,7 +1893,7 @@ int DoRecovery()
 	/* cares about data in S_const */
 	UpdatePositions();
 
-	printf("done.\n");
+	printf("done.\n"); fflush(0);
 
 	return(0);
 }
@@ -1825,13 +1909,18 @@ int DoRecovery()
  *  it renames this intermediate file to the final recovery file. Then it copies
  *  the sort and store files if necessary.
  */
-static int DoSnapshot()
+static int DoSnapshot(int moduletype)
 {
 	GETIDENTITY
 	FILE *fd;
 	POSITION pos;
-	int i, j, l;
+	int i, j;
+	long l;
 	WORD *w;
+	void *adr;
+#ifdef WITHPTHREADS
+	LONG *longp;
+#endif /* ifdef WITHPTHREADS */
 
 	printf("Saving recovery point ... "); fflush(0);
 
@@ -1839,6 +1928,9 @@ static int DoSnapshot()
 
 	/* reserve space in the file for a length field */
 	if ( fwrite(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
+
+	/* write moduletype */
+	if ( fwrite(&moduletype, sizeof(int), 1, fd) != 1 ) return(__LINE__);
 
 	/* #[ AM */
 
@@ -1879,6 +1971,8 @@ static int DoSnapshot()
 	S_WRITE_B(&AM.gThreadSortFileSynch, sizeof(int));
 	S_WRITE_B(&AM.gSortType, sizeof(int));
 	S_WRITE_B(&AM.gShortStatsMax, sizeof(WORD));
+	adr = &AM.dollarzero;
+	S_WRITE_B(&adr, sizeof(void*));
 
 	/* #] AM */
 	/* #[ AC */
@@ -1970,13 +2064,13 @@ static int DoSnapshot()
 		}
 		if ( ex->bracketinfo ) {
 			S_WRITE_B(ex->bracketinfo, sizeof(BRACKETINFO));
-			S_WRITE_B(ex->bracketinfo->indexbuffer, ex->bracketinfo->indexbuffersize);
-			S_WRITE_B(ex->bracketinfo->bracketbuffer, ex->bracketinfo->bracketbuffersize);
+			S_WRITE_B(ex->bracketinfo->indexbuffer, ex->bracketinfo->indexbuffersize*sizeof(BRACKETINDEX));
+			S_WRITE_B(ex->bracketinfo->bracketbuffer, ex->bracketinfo->bracketbuffersize*sizeof(WORD));
 		}
 		if ( ex->newbracketinfo ) {
 			S_WRITE_B(ex->newbracketinfo, sizeof(BRACKETINFO));
-			S_WRITE_B(ex->newbracketinfo->indexbuffer, ex->newbracketinfo->indexbuffersize);
-			S_WRITE_B(ex->newbracketinfo->bracketbuffer, ex->newbracketinfo->bracketbuffersize);
+			S_WRITE_B(ex->newbracketinfo->indexbuffer, ex->newbracketinfo->indexbuffersize*sizeof(BRACKETINDEX));
+			S_WRITE_B(ex->newbracketinfo->bracketbuffer, ex->newbracketinfo->bracketbuffersize*sizeof(WORD));
 		}
 		/* don't need to write ex->renumlists */
 		if ( ex->inmem ) {
@@ -1995,15 +2089,6 @@ static int DoSnapshot()
 	S_WRITE_LIST(AC.SetList);
 	S_WRITE_LIST(AC.SymbolList);
 	S_WRITE_LIST(AC.VectorList);
-	S_WRITE_LIST(AC.PotModDolList);
-
-	S_WRITE_LIST(AC.ModOptDolList);
-#ifdef WITHPTHREADS
-	for ( i=0; i<AC.ModOptDolList.num; ++i ) {
-		S_WRITE_B(ModOptdollars[i].dstruct, sizeof(struct DoLlArS));
-		S_WRITE_DOLLAR((*ModOptdollars[i].dstruct));
-	}
-#endif /* ifdef WITHPTHREADS */
 
 	S_WRITE_LIST(AC.TableBaseList);
 	for ( i=0; i<AC.TableBaseList.num; ++i ) {
@@ -2071,7 +2156,8 @@ static int DoSnapshot()
 		S_WRITE_B(AC.IfCount, sizeof(LONG)*(AC.MaxIf+1));
 	}
 
-	S_WRITE_B(AC.iBuffer, AC.iBufferSize+1);
+	l = AC.iStop - AC.iBuffer + 2;
+	S_WRITE_B(AC.iBuffer, l);
 
 	if ( AC.LabelNames ) {
 		S_WRITE_B(AC.LabelNames, AC.MaxLabels*(sizeof(UBYTE*)+sizeof(WORD)));
@@ -2088,9 +2174,11 @@ static int DoSnapshot()
 
 	S_WRITE_B(AC.WildcardNames, AC.WildcardBufferSize);
 
-	l = AC.toptokens - AC.tokens;
-	if ( l ) {
-		S_WRITE_B(AC.tokens, l);
+	if ( AC.tokens ) {
+		l = AC.toptokens - AC.tokens;
+		if ( l ) {
+			S_WRITE_B(AC.tokens, l);
+		}
 	}
 
 	S_WRITE_B(AC.tokenarglevel, AM.MaxParLevel*sizeof(WORD));
@@ -2157,7 +2245,7 @@ static int DoSnapshot()
 	S_WRITE_LIST(AP.ChDollarList);
 	
 	S_WRITE_B(AP.PreSwitchStrings, (AP.NumPreSwitchStrings+1)*sizeof(UBYTE*));
-	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
+	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		S_WRITE_S(AP.PreSwitchStrings[i]);
 	}
 
@@ -2173,21 +2261,64 @@ static int DoSnapshot()
 	/* #] AP */
 	/* #[ AR */
 
-	/* we write AR as a whole and then write all additional data step by step.
-	 * the additional data is basically the FILEHANDLE for the out- and
-	 * hidefile. */
-
-	S_WRITE_B(&AR, sizeof(struct R_const));
-
-	for ( i=0; i<5; ++i ) {
-		FILEHANDLE *fh = (i<3) ? AR.Fscr+i : AR.FoStage4+i-3;
-		l = fh->POfull - fh->PObuffer;
-		if ( l ) {
-			S_WRITE_B(fh->PObuffer, l*sizeof(WORD));
-		}
+	/* to remember which entry in AR.Fscr corresponds to the infile */
+	l = AR.infile - AR.Fscr;
+	S_WRITE_B(&l, sizeof(long));
+	
+	/* write the FILEHANDLEs */
+	S_WRITE_B(AR.outfile, sizeof(FILEHANDLE));
+	l = AR.outfile->POfull - AR.outfile->PObuffer;
+	if ( l ) {
+		S_WRITE_B(AR.outfile->PObuffer, l*sizeof(WORD));
+	}
+	S_WRITE_B(AR.hidefile, sizeof(FILEHANDLE));
+	l = AR.hidefile->POfull - AR.hidefile->PObuffer;
+	if ( l ) {
+		S_WRITE_B(AR.hidefile->PObuffer, l*sizeof(WORD));
 	}
 
+	S_WRITE_B(&AR.StoreData.Fill, sizeof(POSITION));
+	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
+		S_WRITE_B(&AR.StoreData, sizeof(FILEDATA));
+	}
+
+	S_WRITE_B(&AR.DefPosition, sizeof(POSITION));
+
+	l = TimeCPU(1); l = -l;
+	S_WRITE_B(&l, sizeof(LONG));
+
+	S_WRITE_B(&AR.InInBuf, sizeof(LONG));
+	S_WRITE_B(&AR.gzipCompress, sizeof(int));
+
+	S_WRITE_B(&AR.GetFile, sizeof(WORD));
+	S_WRITE_B(&AR.KeptInHold, sizeof(WORD));
+	S_WRITE_B(&AR.BracketOn, sizeof(WORD));
+	S_WRITE_B(&AR.MaxBracket, sizeof(WORD));
+	S_WRITE_B(&AR.CurDum, sizeof(WORD));
+	S_WRITE_B(&AR.DeferFlag, sizeof(WORD));
+	S_WRITE_B(&AR.TePos, sizeof(WORD));
+	S_WRITE_B(&AR.sLevel, sizeof(WORD));
+	S_WRITE_B(&AR.Stage4Name, sizeof(WORD));
+	S_WRITE_B(&AR.GetOneFile, sizeof(WORD));
+	S_WRITE_B(&AR.PolyFun, sizeof(WORD));
+	S_WRITE_B(&AR.PolyFunType, sizeof(WORD));
+	S_WRITE_B(&AR.Eside, sizeof(WORD));
+	S_WRITE_B(&AR.MaxDum, sizeof(WORD));
+	S_WRITE_B(&AR.level, sizeof(WORD));
+	S_WRITE_B(&AR.expchanged, sizeof(WORD));
+	S_WRITE_B(&AR.expflags, sizeof(WORD));
+	S_WRITE_B(&AR.CurExpr, sizeof(WORD));
+	S_WRITE_B(&AR.SortType, sizeof(WORD));
+	S_WRITE_B(&AR.ShortSortCount, sizeof(WORD));
+
 	/* #] AR */
+
+#ifdef WITHPTHREADS
+	/* write timing information of individual threads */
+	i = GetTimerInfo(&longp);
+	S_WRITE_B(&i, sizeof(int));
+	S_WRITE_B(longp, i*sizeof(LONG));
+#endif /* ifdef WITHPTHREADS */
 
 	/* save length of data at the beginning of the file */
 	SETBASEPOSITION(pos, (ftell(fd)));
@@ -2252,7 +2383,7 @@ static int DoSnapshot()
 
 	done_snapshot = 1;
 
-	printf("done.\n");
+	printf("done.\n"); fflush(0);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -2273,7 +2404,7 @@ static int DoSnapshot()
  *  Checks whether a snapshot should be done. Calls DoSnapshot() to create the
  *  snapshot.
  */
-void DoCheckpoint()
+void DoCheckpoint(int moduletype)
 {
 	int error;
 	LONG timestamp = Timer(0);
@@ -2297,7 +2428,7 @@ void DoCheckpoint()
 			}
 		}
 		if ( retvalue == 0 ) {
-			if ( (error = DoSnapshot()) ) {
+			if ( (error = DoSnapshot(moduletype)) ) {
 				MesPrint("Error creating recovery files: %d\n", error);
 			}
 		}

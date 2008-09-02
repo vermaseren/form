@@ -840,6 +840,48 @@ int MakeThreadBuckets(int number, int par)
 
 /*
   	#] MakeThreadBuckets :
+  	#[ GetTimerInfo :
+*/
+
+/**
+ *  Returns a pointer to the static timerinfo together with information about
+ *  its size. This is used by the checkpoint code to save this information in
+ *  the recovery file.
+ */
+int GetTimerInfo(LONG** ti)
+{
+	*ti = timerinfo;
+#ifdef WITHSORTBOTS
+	return AM.totalnumberofthreads*2;
+#else
+	return AM.totalnumberofthreads;
+#endif
+}
+
+/*
+  	#] GetTimerInfo :
+  	#[ WriteTimerInfo :
+*/
+
+/**
+ *  Writes data into the static timerinfo variable. This is used by the
+ *  checkpoint code to restore the correct timings for the individual threads.
+ */
+void WriteTimerInfo(LONG* ti)
+{
+	int i;
+#ifdef WITHSORTBOTS
+	int max = AM.totalnumberofthreads*2;
+#else
+	int max = AM.totalnumberofthreads;
+#endif
+	for ( i=0; i<max; ++i ) {
+		timerinfo[i] = ti[i];
+	}
+}
+
+/*
+  	#] WriteTimerInfo :
   	#[ GetWorkerTimes :
 */
 /**
@@ -1515,6 +1557,9 @@ bucketstolen:;
 				Terminate(-1);
 				break;
 		}
+		/* we need the following update in case we are using checkpoints. then we
+		   need to readjust the clocks when recovering using this information */
+		timerinfo[identity] = TimeCPU(1);
 	}
 EndOfThread:;
 /*

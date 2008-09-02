@@ -690,7 +690,7 @@ VOID PreProcessor()
 	AP.PreContinuation = 0;
 	AP.gNumPre = NumPre;
 
-	if ( AC.CheckpointFlag == -1 ) DoRecovery();
+	if ( AC.CheckpointFlag == -1 ) DoRecovery(&moduletype);
 	AC.CheckpointStamp = Timer(0);
 
 	for(;;) {
@@ -817,7 +817,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( AC.exprfillwarning > 0 ) {
 					AC.exprfillwarning = 0;
 				}
-				if ( AC.CheckpointFlag ) DoCheckpoint();
+				if ( AC.CheckpointFlag ) DoCheckpoint(moduletype);
 				break;  /* start a new module */
 			}
 			else {
