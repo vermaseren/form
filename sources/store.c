@@ -134,6 +134,7 @@ WORD RevertScratch()
 	FILEHANDLE *f;
 	if ( AR.infile->handle >= 0 && AR.infile->handle != AR.outfile->handle ) {
 		CloseFile(AR.infile->handle);
+		AR.infile->handle = -1;
 		remove(AR.infile->name);
 	}
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
@@ -397,7 +398,10 @@ NextExpr:;
 		}
 	}
 EndSave:
-	if ( !AP.preError ) CloseFile(AO.SaveData.Handle);
+	if ( !AP.preError ) {
+		CloseFile(AO.SaveData.Handle);
+		AO.SaveData.Handle = -1;
+	}
 	return(error);
 SavWrt:
 	MesPrint("WriteError");
@@ -582,6 +586,7 @@ EndLoad:
 	}
 #endif
 	CloseFile(AO.SaveData.Handle);
+	AO.SaveData.Handle = -1;
 	return(error);
 LoadWrt:
 	MesPrint("WriteError");
@@ -643,6 +648,7 @@ WORD DeleteStore(WORD par)
 		}
 		AR.StoreData.Handle = -1;
 		CloseFile(AC.StoreHandle);
+		AC.StoreHandle = -1;
 		{
 /*
 			Knock out the storage caches (25-apr-1990!)
@@ -3333,8 +3339,8 @@ static void Resize32t16NC(UBYTE *src, UBYTE *dst)
 static void Resize64t16(UBYTE *src, UBYTE *dst)
 {
 	INT64 in = *((INT64 *)src);
-	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
 	INT16 out = (INT16)in;
+	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
 	*((INT16 *)dst) = out;
 }
 /** @see Resize32t16NC() */
@@ -3356,8 +3362,8 @@ static void Resize64t16NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 2
 static void Resize64t32(UBYTE *src, UBYTE *dst)
 {
 	INT64 in = *((INT64 *)src);
-	if ( in > ((INT64)1<<31)-1 || in < -((INT64)1<<31)+1 ) AO.resizeFlag |= 1;
 	INT32 out = (INT32)in;
+	if ( in > ((INT64)1<<31)-1 || in < -((INT64)1<<31)+1 ) AO.resizeFlag |= 1;
 	*((INT32 *)dst) = out;
 }
 /** @see Resize32t16NC() */
