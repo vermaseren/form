@@ -3,8 +3,42 @@
  *  Contains all functions that deal with the recovery mechanism controlled and
  *  activated by the On Checkpoint switch.
  *
- *  TODO: short description of how to modify the recovery code in case structs.h
- *  gets altered.
+ *  The main function are DoCheckpoint, DoRecovery, and DoSnapshot. If the
+ *  checkpoints are activated DoCheckpoint is called every time a module is
+ *  finished executing. If the conditions for the creation of a recovery
+ *  snapshot are met DoCheckpoint calls DoSnapshot. DoRecovery is called once
+ *  when FORM starts up with the command line argument -R. Most of the other
+ *  code contains debugging facilities that are only compiled if the macro
+ *  PRINTDEBUG is defined.
+ *
+ *  The recovery mechanism is atomic, i.e. only if everything went well, the
+ *  final recovery file is created (and the older one overwritten) in a single
+ *  step (copying). If some errors occur, a warning is issued and the program
+ *  continues without having created a new recovery file. The only situation in
+ *  which the creation of the recovery data leads to a termination of the
+ *  running program is if not enough disk or memory space is left.
+ *
+ *  DoRecovery and DoSnapshot do the loading and saving of the recovery data,
+ *  respectively. Every change in one functions needs to be accompanied by the
+ *  appropriate change in the other function. The structure of both functions is
+ *  quite similar. They handle the relevant global structs one after the other
+ *  and then care about the copying of the hide and scratch files.
+ *
+ *  The names of the recovery, scratch and hide files are hard-coded in the
+ *  variables in fold "filenames and system commands".
+ *
+ *  If the global structs AM,AP,AC,AR are changed, DoRecovery and DoSnapshot
+ *  usually also have to be changed. Some structs are read/written as a whole
+ *  (AP,AC), some are read/written only partly as a selection of their
+ *  individual elements (AM,AR). If AM or AR have been changed by adding or
+ *  removing an element that is important for the runtime status, then the
+ *  reading/writing statements have to be added to or removed from DoRecovery
+ *  and DoSnapshot. If AP or AC are changed, then for non-pointer variables (in
+ *  the case of a struct it also means that none of its elements is a pointer)
+ *  nothing has to be changed in the functions here. If pointers are involved,
+ *  extra code has to be added (or removed). See the comments of DoRecovery and
+ *  DoSnapshot.
+ *
  */
 /*
   	#[ Includes :
@@ -981,7 +1015,26 @@ static void print_R()
 /**
  *  Reads from the recovery file and restores all necessary variables and
  *  states in FORM, so that the execution can recommence in preprocessor() as
- *  if no restart of FORM had occured.
+ *  if no restart of FORM had occurred.
+ *
+ *  The recovery file is read into memory as a whole. The pointer p then points
+ *  into this memory at the next non-processed data. The macros by which
+ *  variables are restored, like R_SET, automatically increase p appropriately.
+ *
+ *  If something goes wrong, the function returns with a non-zero value.
+ *
+ *  Allocated memory that would be lost when overwriting the global structs with
+ *  data from the file is freed first. A major part of the code deals with the
+ *  restoration of pointers. The idiom we use is to memorize the original
+ *  pointer value (org), allocate new memory and copy the data from the file
+ *  into this memory, calculate the offset between the old pointer value
+ *  and the new allocated memory position (ofs), and then correct all affected
+ *  pointers (+=ofs).
+ *
+ *  We rely on the fact that several variables (especially in AM) are already
+ *  assigned the correct values by the startup functions. That means, in
+ *  principle, that a change in the setup files between snapshot creation and
+ *  recovery will be noticed.
  */
 int DoRecovery(int *moduletype)
 {
@@ -1908,6 +1961,15 @@ int DoRecovery(int *moduletype)
  *  writes first to an intermediate file and then only if everything went well
  *  it renames this intermediate file to the final recovery file. Then it copies
  *  the sort and store files if necessary.
+ *
+ *  The data is directly written to file from the structs or struct element.
+ *
+ *  No data is changed in the global structs and this function should never crash.
+ *  Honorably exception might be: not enough memory for the allocation of the
+ *  command strings (usually less than 100 bytes), or not enough disk space for
+ *  the recovery file and the copies of the hide/scratch/store files.
+ *
+ *  If something goes wrong, the function returns with a non-zero value.
  */
 static int DoSnapshot(int moduletype)
 {
@@ -2351,11 +2413,11 @@ static int DoSnapshot(int moduletype)
 	}
 
 	/* copy sort file if necessary */
-	if ( AR.infile->handle >= 0 ) {
-		l = strlen(AR.infile->name);
+	if ( AR.outfile->handle >= 0 ) {
+		l = strlen(AR.outfile->name);
 		syscmdsort = (char*)Malloc1(l+strlen(sortfile)+8, "syscmdsort");
 		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, AR.infile->name);
+		strcpy(syscmdsort+6, AR.outfile->name);
 		syscmdsort[6+l] = ' ';
 		strcpy(syscmdsort+7+l, sortfile);
 
