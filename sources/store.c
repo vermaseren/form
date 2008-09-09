@@ -55,7 +55,7 @@ VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndScratch :
+ 		#] SetEndScratch : 
  		#[ SetEndHScratch :
 */
 
@@ -65,6 +65,7 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
 	}
 	else *position = f->filesize;
+	f->POfill = f->POfull;
 /*	SetScratch(f,position); */
 }
 
@@ -78,6 +79,12 @@ VOID SetScratch(FILEHANDLE *f, POSITION *position)
 	GETIDENTITY
 	POSITION possize;
 	LONG size;
+/*
+MesPrint("SetScratch to position %15p",position);
+MesPrint("POposition = %15p, offset = %l, fill = %l"
+		,&(f->POposition),(f->POfull-f->PObuffer)*sizeof(WORD)
+		,(f->POfill-f->PObuffer)*sizeof(WORD));
+*/
 	if ( ISLESSPOS(*position,f->POposition) ||
 	ISGEPOSINC(*position,f->POposition,(f->POfull-f->PObuffer)*sizeof(WORD)) ) {
 		if ( f->handle < 0 ) {
@@ -120,7 +127,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch : 
+ 		#] SetScratch :
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes

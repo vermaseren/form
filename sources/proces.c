@@ -76,6 +76,13 @@ WORD Processor()
 	if ( AC.CollectFun ) AR.DeferFlag = 0;
 	AR.outtohide = 0;
 /*
+	MesPrint("Status at the start of Processor (HideLevel = %d)",AC.HideLevel);
+	for ( i = 0; i < NumExpressions; i++ ) {
+		e = Expressions+i;
+		ExprStatus(e);
+	}
+*/
+/*
 		Next determine the last expression. This is used for removing the
 		input file when the final stage of the sort of this expression is
 		reached. That can save up to 1/3 in disk space.
@@ -199,6 +206,7 @@ WORD Processor()
 			case INTOHIDELEXPRESSION:
 			case INTOHIDEGEXPRESSION:
 				AR.outtohide = 1;
+				AR.hidefile->POfill = AR.hidefile->POfull;
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
 				AR.GetFile = 0;
@@ -400,6 +408,13 @@ commonread:;
 	}
 	AR.DeferFlag = 0;
 	AT.WorkPointer = term;
+/*
+	MesPrint("Status at the end of Processor (HideLevel = %d)",AC.HideLevel);
+	for ( i = 0; i < NumExpressions; i++ ) {
+		e = Expressions+i;
+		ExprStatus(e);
+	}
+*/
 	return(retval);
 ProcErr:
 	AT.WorkPointer = term;

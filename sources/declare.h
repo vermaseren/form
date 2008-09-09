@@ -1380,6 +1380,8 @@ extern UWORD *NumberMalloc2(PHEAD char *text);
 extern VOID NumberFree2(PHEAD UWORD *NumberMem,char *text);
 #endif
 
+extern void ExprStatus(EXPRESSIONS);
+
 /*
   	#] Declarations :
 */
