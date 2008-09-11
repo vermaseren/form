@@ -558,6 +558,13 @@ typedef int (*TFUN1)();
 #define WILDCARDS 16
 #define SETNUMBER 17
 #define LOADDOLLAR 18
+/*
+	Some new types of wildcards that hold only for function arguments.
+*/
+#define NUMTONUM 20
+#define NUMTOSYM 21
+#define NUMTOIND 22
+#define NUMTOSUB 23
 
 /*
 	Dirty flags (introduced when functions got a field with a dirty flag)

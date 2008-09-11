@@ -1156,13 +1156,36 @@ DEBUG(MesPrint("Thread %w(c): s[3] = %d, w=(%d,%d,%d,%d)",s[3],w[0],w[1],w[2],w[
 								}
 								m++; t++;
 							}
+							else if ( *t == -SNUMBER ) {
+								*m++ = *t++;
+								*m = *t;
+								s = subs;
+								for ( j = 0; j < i; j++ ) {
+									if ( *t == s[2] && *s >= NUMTONUM && *s <= NUMTOSUB ) {
+										dirty = 1; v[2] |= DIRTYFLAG;
+										if ( *s == NUMTONUM ) *m = s[3];
+										else if ( *s == NUMTOSYM ) {
+											m[-1] = -SYMBOL;
+											*m = s[3];
+										}
+										else if ( *s == NUMTOIND ) {
+											m[-1] = -INDEX;
+											*m = s[3];
+										}
+										else if ( *s == NUMTOSUB ) goto ToSub;
+										break;
+									}
+									s += s[1];
+								}
+								m++; t++;
+							}
 							else {
 ss9:							*m++ = *t++;
 ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments : 
+			#] Simple arguments :
 */
 						}
 						else {
@@ -1246,7 +1269,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 */
 		}
 		t = uu;
@@ -1261,7 +1284,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill : 
+ 		#] WildFill :
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -2375,7 +2398,7 @@ NoM:
 }
 
 /*
- 		#] CheckWild :
+ 		#] CheckWild : 
  	#] Wildcards :
   	#[ DenToFunction :
 

@@ -1200,8 +1200,14 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 #ifdef ALLLOCK
 				LOCK(fi->pthreadslock);
 #endif
+				if ( fi == AR.hidefile ) {
+					LOCK(AS.inputslock);
+				}
 				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 				if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
+					if ( fi == AR.hidefile ) {
+						UNLOCK(AS.inputslock);
+					}
 #ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
 #endif
@@ -1216,6 +1222,9 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 				ADDPOS(fi->filesize,fi->POsize);
 				p = fi->PObuffer;
 				ADDPOS(fi->POposition,fi->POsize);
+				if ( fi == AR.hidefile ) {
+					UNLOCK(AS.inputslock);
+				}
 #ifdef ALLLOCK
 				UNLOCK(fi->pthreadslock);
 #endif
@@ -1386,8 +1395,14 @@ nocompress:
 #ifdef ALLLOCK
 				  LOCK(fi->pthreadslock);
 #endif
+				  if ( fi == AR.hidefile ) {
+					LOCK(AS.inputslock);
+				  }
 				  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 				  if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
+					if ( fi == AR.hidefile ) {
+						UNLOCK(AS.inputslock);
+					}
 #ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
 #endif
@@ -1402,6 +1417,9 @@ nocompress:
 				  ADDPOS(fi->filesize,fi->POsize);
 				  p = fi->PObuffer;
 				  ADDPOS(fi->POposition,fi->POsize);
+				  if ( fi == AR.hidefile ) {
+					UNLOCK(AS.inputslock);
+				  }
 #ifdef ALLLOCK
 				  UNLOCK(fi->pthreadslock);
 #endif
@@ -1458,21 +1476,21 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
 
-  if (PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel ){
-	PF_BUFFER *sbuf = PF.sbuf;
-	if ( fi->POfill >= fi->POstop ){
-	  sbuf->fill[sbuf->active] = fi->POstop;
-	  PF_ISendSbuf(MASTER,PF_BUFFER_MSGTAG);
-	  fi->POfull = fi->POfill = fi->PObuffer = sbuf->buff[sbuf->active];
-	  fi->POstop = sbuf->stop[sbuf->active];
+	if (PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel ){
+		PF_BUFFER *sbuf = PF.sbuf;
+		if ( fi->POfill >= fi->POstop ){
+		  sbuf->fill[sbuf->active] = fi->POstop;
+		  PF_ISendSbuf(MASTER,PF_BUFFER_MSGTAG);
+		  fi->POfull = fi->POfill = fi->PObuffer = sbuf->buff[sbuf->active];
+		  fi->POstop = sbuf->stop[sbuf->active];
+		}
+		*(fi->POfill)++ = 0;
+		sbuf->fill[sbuf->active] = fi->POfill;
+		PF_ISendSbuf(MASTER,PF_ENDBUFFER_MSGTAG);
+		fi->PObuffer = fi->POfill = fi->POfull = sbuf->buff[sbuf->active];
+		fi->POstop = sbuf->stop[sbuf->active];
+		return(0);
 	}
-	*(fi->POfill)++ = 0;
-	sbuf->fill[sbuf->active] = fi->POfill;
-	PF_ISendSbuf(MASTER,PF_ENDBUFFER_MSGTAG);
-	fi->PObuffer = fi->POfill = fi->POfull = sbuf->buff[sbuf->active];
-	fi->POstop = sbuf->stop[sbuf->active];
-	return(0);
-  }
 #endif /* PARALLEL [16mar1998 ar] */
 	if ( fi->POfill >= fi->POstop ) {
 		if ( fi->handle < 0 ) {
@@ -1505,11 +1523,17 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 #ifdef ALLLOCK
 		  LOCK(fi->pthreadslock);
 #endif
+		  if ( fi == AR.hidefile ) {
+			LOCK(AS.inputslock);
+		  }
 		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
 		  if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
 #ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
 #endif
+			if ( fi == AR.hidefile ) {
+				UNLOCK(AS.inputslock);
+			}
 			LOCK(ErrorMessageLock);
 			MesPrint("Write error while sorting. Disk full?");
 			MesPrint("Attempt to write %l bytes on file %d at position %15p",
@@ -1521,11 +1545,14 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		  ADDPOS(fi->filesize,fi->POsize);
 		  fi->POfill = fi->PObuffer;
 		  ADDPOS(fi->POposition,fi->POsize);
+		  if ( fi == AR.hidefile ) {
+			UNLOCK(AS.inputslock);
+		  }
 #ifdef ALLLOCK
 		  UNLOCK(fi->pthreadslock);
 #endif
 #ifdef WITHPTHREADS
-		  if ( AS.MasterSort && AC.ThreadSortFileSynch ) {
+		  if ( AS.MasterSort && AC.ThreadSortFileSynch && fi != AR.hidefile ) {
 			if ( fi->handle >= 0 ) SynchFile(fi->handle);
 		  }
 #endif
@@ -1558,11 +1585,20 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 #ifdef ALLLOCK
 		  LOCK(fi->pthreadslock);
 #endif
+		  if ( fi == AR.hidefile ) {
+			LOCK(AS.inputslock);
+		  }
 		  SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+/*
+		  MesPrint("FlushOut: writing %l bytes to position %12p",size,&(fi->POposition));
+*/
 		  if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),size) ) != size ) {
 #ifdef ALLLOCK
 			UNLOCK(fi->pthreadslock);
 #endif
+			if ( fi == AR.hidefile ) {
+				UNLOCK(AS.inputslock);
+			}
 			LOCK(ErrorMessageLock);
 			MesPrint("Write error while finishing sorting. Disk full?");
 			MesPrint("Attempt to write %l bytes on file %d at position %15p",
@@ -1574,6 +1610,9 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		  ADDPOS(fi->filesize,size);
 		  ADDPOS(fi->POposition,size);
 		  fi->POfill = fi->PObuffer;
+		  if ( fi == AR.hidefile ) {
+			UNLOCK(AS.inputslock);
+		  }
 #ifdef ALLLOCK
 		  UNLOCK(fi->pthreadslock);
 #endif
@@ -1616,7 +1655,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 }
 
 /*
- 		#] FlushOut : 
+ 		#] FlushOut :
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**

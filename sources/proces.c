@@ -4,6 +4,7 @@
  *	the virtual machine. All other files are to help these routines.
  */
 /*
+#define HIDEDEBUG
   	#[ Includes : proces.c
 */
 
@@ -75,13 +76,13 @@ WORD Processor()
 	AR.KeptInHold = 0;
 	if ( AC.CollectFun ) AR.DeferFlag = 0;
 	AR.outtohide = 0;
-/*
+#ifdef HIDEDEBUG
 	MesPrint("Status at the start of Processor (HideLevel = %d)",AC.HideLevel);
 	for ( i = 0; i < NumExpressions; i++ ) {
 		e = Expressions+i;
 		ExprStatus(e);
 	}
-*/
+#endif
 /*
 		Next determine the last expression. This is used for removing the
 		input file when the final stage of the sort of this expression is
@@ -200,6 +201,14 @@ WORD Processor()
 	            if ( PF.me == MASTER ) SetScratch(AR.hidefile,&(e->onfile));
 #else
 				SetScratch(AR.hidefile,&(e->onfile));
+#ifdef HIDEDEBUG
+				MesPrint("Hidefile: %15p, %15p, %15p",&(e->onfile)
+				,&(AR.hidefile->POposition),&(AR.hidefile->filesize));
+				MesPrint("Set hidefile to buffer position %l/%l"
+					,(AR.hidefile->POfill-AR.hidefile->PObuffer)*sizeof(WORD)
+					,(AR.hidefile->POfull-AR.hidefile->PObuffer)*sizeof(WORD)
+				);
+#endif
 #endif
 				curfile = AR.hidefile;
 				goto commonread;
@@ -224,6 +233,10 @@ commonread:;
 				}
 #else
 				if ( GetTerm(BHEAD term) <= 0 ) {
+#ifdef HIDEDEBUG
+					MesPrint("Error condition 1a");
+					ExprStatus(e);
+#endif
 					MesPrint("Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
@@ -317,6 +330,10 @@ commonread:;
 				AR.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(BHEAD term) <= 0 ) {
+#ifdef HIDEDEBUG
+					MesPrint("Error condition 1b");
+					ExprStatus(e);
+#endif
 					MesPrint("Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
@@ -355,6 +372,10 @@ commonread:;
 				AR.GetFile = 0;
 				SetScratch(AR.infile,&(e->onfile));
 				if ( GetTerm(BHEAD term) <= 0 ) {
+#ifdef HIDEDEBUG
+					MesPrint("Error condition 1c");
+					ExprStatus(e);
+#endif
 					MesPrint("Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
@@ -363,6 +384,19 @@ commonread:;
 				AR.DeferFlag = 0;
 				SetEndHScratch(AR.hidefile,&position);
 				e->onfile = position;
+#ifdef HIDEDEBUG
+				if ( AR.hidefile->handle >= 0 ) {
+					POSITION possize,pos;
+					PUTZERO(possize);
+					PUTZERO(pos);
+					SeekFile(AR.hidefile->handle,&pos,SEEK_CUR);
+					SeekFile(AR.hidefile->handle,&possize,SEEK_END);
+					SeekFile(AR.hidefile->handle,&pos,SEEK_SET);
+					MesPrint("Processor Hide1: filesize(th) = %12p, filesize(ex) = %12p",&(position),
+							&(possize));
+					MesPrint("    in buffer: %l",(AR.hidefile->POfill-AR.hidefile->PObuffer)*sizeof(WORD));
+				}
+#endif
 				*AM.S0->sBuffer = 0; firstterm = -1;
 				cbo = cpo = AM.S0->sBuffer;
 				do {
@@ -389,8 +423,34 @@ commonread:;
 					AR.CompressBuffer = oldibuffer;
 					AR.ComprTop = comprtop;
 				} while ( GetTerm(BHEAD term) );
+#ifdef HIDEDEBUG
+				if ( AR.hidefile->handle >= 0 ) {
+					POSITION possize,pos;
+					PUTZERO(possize);
+					PUTZERO(pos);
+					SeekFile(AR.hidefile->handle,&pos,SEEK_CUR);
+					SeekFile(AR.hidefile->handle,&possize,SEEK_END);
+					SeekFile(AR.hidefile->handle,&pos,SEEK_SET);
+					MesPrint("Processor Hide2: filesize(th) = %12p, filesize(ex) = %12p",&(position),
+							&(possize));
+					MesPrint("    in buffer: %l",(AR.hidefile->POfill-AR.hidefile->PObuffer)*sizeof(WORD));
+				}
+#endif
 				if ( FlushOut(&position,AR.hidefile,1) ) goto ProcErr;
 				AR.hidefile->POfull = AR.hidefile->POfill;
+#ifdef HIDEDEBUG
+				if ( AR.hidefile->handle >= 0 ) {
+					POSITION possize,pos;
+					PUTZERO(possize);
+					PUTZERO(pos);
+					SeekFile(AR.hidefile->handle,&pos,SEEK_CUR);
+					SeekFile(AR.hidefile->handle,&possize,SEEK_END);
+					SeekFile(AR.hidefile->handle,&pos,SEEK_SET);
+					MesPrint("Processor Hide3: filesize(th) = %12p, filesize(ex) = %12p",&(position),
+							&(possize));
+					MesPrint("    in buffer: %l",(AR.hidefile->POfill-AR.hidefile->PObuffer)*sizeof(WORD));
+				}
+#endif
 				break;
 			case DROPPEDEXPRESSION:
 			case DROPLEXPRESSION:
@@ -408,13 +468,13 @@ commonread:;
 	}
 	AR.DeferFlag = 0;
 	AT.WorkPointer = term;
-/*
+#ifdef HIDEDEBUG
 	MesPrint("Status at the end of Processor (HideLevel = %d)",AC.HideLevel);
 	for ( i = 0; i < NumExpressions; i++ ) {
 		e = Expressions+i;
 		ExprStatus(e);
 	}
-*/
+#endif
 	return(retval);
 ProcErr:
 	AT.WorkPointer = term;

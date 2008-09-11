@@ -63,9 +63,20 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 {
 	if ( f->handle < 0 ) {
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
+		f->POfill = f->POfull;
 	}
-	else *position = f->filesize;
-	f->POfill = f->POfull;
+	else {
+/*
+		POSITION possize;
+		PUTZERO(possize);
+		SeekFile(f->handle,&possize,SEEK_END);
+		MesPrint("SetEndHScratch: filesize(th) = %12p, filesize(ex) = %12p",&(f->filesize),
+				&(possize));
+*/
+		*position = f->filesize;
+		f->POposition = f->filesize;
+		f->POfill = f->POfull = f->PObuffer;
+	}
 /*	SetScratch(f,position); */
 }
 
@@ -101,6 +112,9 @@ MesPrint("POposition = %15p, offset = %l, fill = %l"
 			MesPrint("Cannot position file in SetScratch");
 			Terminate(-1);
 		}
+/*
+			MesPrint("SetScratch1: position = %12p, size = %l, address = %x",position,f->POsize,f->PObuffer);
+*/
 		if ( ( size = ReadFile(f->handle,(UBYTE *)(f->PObuffer),f->POsize) ) < 0
 		|| ( size & 1 ) != 0 ) {
 			UNLOCK(AS.inputslock);
@@ -108,7 +122,9 @@ MesPrint("POposition = %15p, offset = %l, fill = %l"
 			Terminate(-1);
 		}
 		UNLOCK(AS.inputslock);
-		if ( size == 0 ) { f->PObuffer[0] = 0; }
+		if ( size == 0 ) {
+			f->PObuffer[0] = 0;
+		}
 		f->POfill = f->PObuffer;
 		f->POposition = *position;
 #ifdef WORD2
@@ -117,6 +133,11 @@ MesPrint("POposition = %15p, offset = %l, fill = %l"
 		AR.InInBuf = size / TABLESIZE(WORD,UBYTE);
 #endif
 		f->POfull = f->PObuffer + AR.InInBuf;
+/*
+			MesPrint("SetScratch2: size = %l, InInBuf = %l, fill = %l, full = %l"
+			,size,AR.InInBuf,(f->POfill-f->PObuffer)*sizeof(WORD)
+			,(f->POfull-f->PObuffer)*sizeof(WORD));
+*/
 	}
 	else {
 endpos:

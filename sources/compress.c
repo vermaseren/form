@@ -37,7 +37,7 @@
 */
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ SetupOutputGZIP :
 
 	Routine prepares a gzip output stream for the given file.
@@ -101,7 +101,7 @@ int SetupOutputGZIP(FILEHANDLE *f)
 }
 
 /*
-  	#] SetupOutputGZIP :
+  	#] SetupOutputGZIP : 
   	#[ PutOutputGZIP :
 
 	Routine is called when the PObuffer of f is full.
@@ -113,6 +113,7 @@ int SetupOutputGZIP(FILEHANDLE *f)
 
 int PutOutputGZIP(FILEHANDLE *f)
 {
+	GETIDENTITY
 	int zerror;
 /*
 	First set the number of bytes in the input
@@ -138,9 +139,15 @@ int PutOutputGZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 			LOCK(f->pthreadslock);
 #endif
+			if ( f == AR.hidefile ) {
+				LOCK(AS.inputslock);
+			}
 			SeekFile(f->handle,&(f->POposition),SEEK_SET);
 			if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->ziosize)
 						!= f->ziosize ) {
+				if ( f == AR.hidefile ) {
+					UNLOCK(AS.inputslock);
+				}
 #ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
 #endif
@@ -148,6 +155,9 @@ int PutOutputGZIP(FILEHANDLE *f)
 				MesPrint("%wWrite error during compressed sort. Disk full?");
 				UNLOCK(ErrorMessageLock);
 				return(-1);
+			}
+			if ( f == AR.hidefile ) {
+				UNLOCK(AS.inputslock);
 			}
 #ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
@@ -186,7 +196,7 @@ int PutOutputGZIP(FILEHANDLE *f)
 }
 
 /*
-  	#] PutOutputGZIP :
+  	#] PutOutputGZIP : 
   	#[ FlushOutputGZIP :
 
 	Routine is called to flush a stream. The compression of the input buffer
@@ -196,6 +206,7 @@ int PutOutputGZIP(FILEHANDLE *f)
 
 int FlushOutputGZIP(FILEHANDLE *f)
 {
+	GETIDENTITY
 	int zerror;
 /*
 	Set the proper parameters
@@ -217,9 +228,15 @@ int FlushOutputGZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 			LOCK(f->pthreadslock);
 #endif
+			if ( f == AR.hidefile ) {
+				UNLOCK(AS.inputslock);
+			}
 			SeekFile(f->handle,&(f->POposition),SEEK_SET);
 			if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->ziosize)
 						!= f->ziosize ) {
+				if ( f == AR.hidefile ) {
+					UNLOCK(AS.inputslock);
+				}
 #ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
 #endif
@@ -227,6 +244,9 @@ int FlushOutputGZIP(FILEHANDLE *f)
 				MesPrint("%wWrite error during compressed sort. Disk full?");
 				UNLOCK(ErrorMessageLock);
 				return(-1);
+			}
+			if ( f == AR.hidefile ) {
+				UNLOCK(AS.inputslock);
 			}
 #ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
@@ -258,9 +278,15 @@ int FlushOutputGZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 		LOCK(f->pthreadslock);
 #endif
+		if ( f == AR.hidefile ) {
+			LOCK(AS.inputslock);
+		}
 		SeekFile(f->handle,&(f->POposition),SEEK_SET);
 		if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->zsp->total_out)
 						!= f->zsp->total_out ) {
+			if ( f == AR.hidefile ) {
+				UNLOCK(AS.inputslock);
+			}
 #ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
 #endif
@@ -268,6 +294,9 @@ int FlushOutputGZIP(FILEHANDLE *f)
 			MesPrint("%wWrite error during compressed sort. Disk full?");
 			UNLOCK(ErrorMessageLock);
 			return(-1);
+		}
+		if ( f == AR.hidefile ) {
+			LOCK(AS.inputslock);
 		}
 #ifdef ALLLOCK
 		UNLOCK(f->pthreadslock);
