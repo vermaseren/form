@@ -201,12 +201,14 @@ WORD Processor()
 	            if ( PF.me == MASTER ) SetScratch(AR.hidefile,&(e->onfile));
 #else
 				SetScratch(AR.hidefile,&(e->onfile));
+				AR.InInBuf = AR.hidefile->POfull-AR.hidefile->POfill;
 #ifdef HIDEDEBUG
-				MesPrint("Hidefile: %15p, %15p, %15p",&(e->onfile)
+				MesPrint("Hidefile: onfile: %15p, POposition: %15p, filesize: %15p",&(e->onfile)
 				,&(AR.hidefile->POposition),&(AR.hidefile->filesize));
-				MesPrint("Set hidefile to buffer position %l/%l"
+				MesPrint("Set hidefile to buffer position %l/%l; AR.InInBuf = %l"
 					,(AR.hidefile->POfill-AR.hidefile->PObuffer)*sizeof(WORD)
 					,(AR.hidefile->POfull-AR.hidefile->PObuffer)*sizeof(WORD)
+					,AR.InInBuf
 				);
 #endif
 #endif

@@ -4,6 +4,7 @@
  *  independent save-files.
  */
 /*
+#define HIDEDEBUG
   	#[ Includes : store.c
 */
 
@@ -66,13 +67,13 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 		f->POfill = f->POfull;
 	}
 	else {
-/*
+#ifdef HIDEDEBUG
 		POSITION possize;
 		PUTZERO(possize);
 		SeekFile(f->handle,&possize,SEEK_END);
 		MesPrint("SetEndHScratch: filesize(th) = %12p, filesize(ex) = %12p",&(f->filesize),
 				&(possize));
-*/
+#endif
 		*position = f->filesize;
 		f->POposition = f->filesize;
 		f->POfill = f->POfull = f->PObuffer;
@@ -90,12 +91,12 @@ VOID SetScratch(FILEHANDLE *f, POSITION *position)
 	GETIDENTITY
 	POSITION possize;
 	LONG size;
-/*
-MesPrint("SetScratch to position %15p",position);
-MesPrint("POposition = %15p, offset = %l, fill = %l"
+#ifdef HIDEDEBUG
+	MesPrint("SetScratch to position %15p",position);
+	MesPrint("POposition = %15p, full = %l, fill = %l"
 		,&(f->POposition),(f->POfull-f->PObuffer)*sizeof(WORD)
 		,(f->POfill-f->PObuffer)*sizeof(WORD));
-*/
+#endif
 	if ( ISLESSPOS(*position,f->POposition) ||
 	ISGEPOSINC(*position,f->POposition,(f->POfull-f->PObuffer)*sizeof(WORD)) ) {
 		if ( f->handle < 0 ) {
@@ -112,9 +113,9 @@ MesPrint("POposition = %15p, offset = %l, fill = %l"
 			MesPrint("Cannot position file in SetScratch");
 			Terminate(-1);
 		}
-/*
+#ifdef HIDEDEBUG
 			MesPrint("SetScratch1: position = %12p, size = %l, address = %x",position,f->POsize,f->PObuffer);
-*/
+#endif
 		if ( ( size = ReadFile(f->handle,(UBYTE *)(f->PObuffer),f->POsize) ) < 0
 		|| ( size & 1 ) != 0 ) {
 			UNLOCK(AS.inputslock);
@@ -133,11 +134,11 @@ MesPrint("POposition = %15p, offset = %l, fill = %l"
 		AR.InInBuf = size / TABLESIZE(WORD,UBYTE);
 #endif
 		f->POfull = f->PObuffer + AR.InInBuf;
-/*
+#ifdef HIDEDEBUG
 			MesPrint("SetScratch2: size = %l, InInBuf = %l, fill = %l, full = %l"
 			,size,AR.InInBuf,(f->POfill-f->PObuffer)*sizeof(WORD)
 			,(f->POfull-f->PObuffer)*sizeof(WORD));
-*/
+#endif
 	}
 	else {
 endpos:
