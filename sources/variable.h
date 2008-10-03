@@ -87,6 +87,10 @@ extern FILE **FileStructs;
 #define NumDubious AC.DubiousList.num
 #define Expressions ((EXPRESSIONS)(AC.ExpressionList.lijst))
 #define NumExpressions AC.ExpressionList.num
+#define autofunctions ((FUNCTIONS)(AC.AutoFunctionList.lijst))
+#define autoindices ((INDICES)(AC.AutoIndexList.lijst))
+#define autosymbols ((SYMBOLS)(AC.AutoSymbolList.lijst))
+#define autovectors ((VECTORS)(AC.AutoVectorList.lijst))
 
 /*[28sep2005 mt]:*/
 /*This code is never used*/

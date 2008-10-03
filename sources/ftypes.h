@@ -832,6 +832,11 @@ typedef int (*TFUN1)();
 #define UNPACK 0x80
 #define NOUNPACK 0
 
+#define VARNAMES 0
+#define AUTONAMES 1
+#define EXPRNAMES 2
+#define DOLLARNAMES 3
+
 #ifdef WITHPTHREADS
 /*
 	Signals that the workers have to react to

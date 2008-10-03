@@ -164,7 +164,7 @@ WORD PopVariables()
 	retval = CleanExpr(1);
 	ResetVariables(1);
 
-	if ( AC.DidClean ) CompactifyTree(AC.exprnames);
+	if ( AC.DidClean ) CompactifyTree(AC.exprnames,EXPRNAMES);
 
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
@@ -675,7 +675,7 @@ skipexec:
 	}
 	else {
 		if ( CleanExpr(0) ) RetCode = -1;
-		if ( AC.DidClean ) CompactifyTree(AC.exprnames);
+		if ( AC.DidClean ) CompactifyTree(AC.exprnames,EXPRNAMES);
 		ResetVariables(0);
 		CleanUpSort(-1);
 	}

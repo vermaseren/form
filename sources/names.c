@@ -455,7 +455,7 @@ VOID DumpNode(NAMETREE *nametree, WORD node, WORD depth)
   	#[ CompactifyTree :
 */
 
-int CompactifyTree(NAMETREE *nametree)
+int CompactifyTree(NAMETREE *nametree,WORD par)
 {
 	NAMETREE newtree;
 	NAMENODE *n;
@@ -492,7 +492,7 @@ int CompactifyTree(NAMETREE *nametree)
 	newtree.nodefill = 0; newtree.nodesize = 2*j;
 	newtree.namebuffer = (UBYTE *)Malloc1(2*ns,"compactify namestree");
 	newtree.namefill = 0; newtree.namesize = 2*ns;
-	CopyTree(&newtree,nametree,nametree->headnode);
+	CopyTree(&newtree,nametree,nametree->headnode,par);
 	newtree.namenode[newtree.nodefill>>1].parent = -1;
 	LinkTree(&newtree,(WORD)0,newtree.nodefill);
 	newtree.headnode = newtree.nodefill >> 1;
@@ -508,7 +508,7 @@ int CompactifyTree(NAMETREE *nametree)
 	nametree->oldnodefill = newtree.nodefill;
 	nametree->headnode    = newtree.headnode;
 
-/* DumpTree(nametree); */
+/*	DumpTree(nametree); */
 	return(0);
 }
 
@@ -517,12 +517,12 @@ int CompactifyTree(NAMETREE *nametree)
   	#[ CopyTree :
 */
 
-VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node)
+VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 {
 	NAMENODE *n, *m;
 	UBYTE *s, *t;
 	n = oldtree->namenode+node;
-	if ( n->left >= 0 ) CopyTree(newtree,oldtree,n->left);
+	if ( n->left >= 0 ) CopyTree(newtree,oldtree,n->left,par);
 	if ( n->type != CDELETE ) {
 		m = newtree->namenode+newtree->nodefill;
 		m->type = n->type;
@@ -532,20 +532,44 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node)
 		m->balance = 0;
 		switch ( n->type ) {
 			case CSYMBOL:
-				symbols[n->number].name = newtree->namefill;
-				symbols[n->number].node = newtree->nodefill;
+				if ( par == AUTONAMES ) {
+					autosymbols[n->number].name = newtree->namefill;
+					autosymbols[n->number].node = newtree->nodefill;
+				}
+				else {
+					symbols[n->number].name = newtree->namefill;
+					symbols[n->number].node = newtree->nodefill;
+				}
 				break;
 			case CINDEX :
-				indices[n->number].name = newtree->namefill;
-				indices[n->number].node = newtree->nodefill;
+				if ( par == AUTONAMES ) {
+					autoindices[n->number].name = newtree->namefill;
+					autoindices[n->number].node = newtree->nodefill;
+				}
+				else {
+					indices[n->number].name = newtree->namefill;
+					indices[n->number].node = newtree->nodefill;
+				}
 				break;
 			case CVECTOR:
-				vectors[n->number].name = newtree->namefill;
-				vectors[n->number].node = newtree->nodefill;
+				if ( par == AUTONAMES ) {
+					autovectors[n->number].name = newtree->namefill;
+					autovectors[n->number].node = newtree->nodefill;
+				}
+				else {
+					vectors[n->number].name = newtree->namefill;
+					vectors[n->number].node = newtree->nodefill;
+				}
 				break;
 			case CFUNCTION:
-				functions[n->number].name = newtree->namefill;
-				functions[n->number].node = newtree->nodefill;
+				if ( par == AUTONAMES ) {
+					autofunctions[n->number].name = newtree->namefill;
+					autofunctions[n->number].node = newtree->nodefill;
+				}
+				else {
+					functions[n->number].name = newtree->namefill;
+					functions[n->number].node = newtree->nodefill;
+				}
 				break;
 			case CSET:
 				Sets[n->number].name = newtree->namefill;
@@ -573,11 +597,11 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node)
 		while ( *t ) { *s++ = *t++; newtree->namefill++; }
 		*s = 0; newtree->namefill++;
 	}
-	if ( n->right >= 0 ) CopyTree(newtree,oldtree,n->right);
+	if ( n->right >= 0 ) CopyTree(newtree,oldtree,n->right,par);
 }
 
 /*
-  	#] CopyTree : 
+  	#] CopyTree :
   	#[ LinkTree :
 */
 
@@ -2145,7 +2169,7 @@ void ResetVariables(int par)
 		AC.DubiousList.num = AC.DubiousList.numglobal = AC.DubiousList.numclear;
 		AC.SetElementList.numtemp = AC.SetElementList.num =
 			AC.SetElementList.numglobal = AC.SetElementList.numclear;
-		CompactifyTree(AC.varnames);
+		CompactifyTree(AC.varnames,VARNAMES);
 		AC.varnames->namefill = AC.varnames->globalnamefill = AC.varnames->clearnamefill;
 		AC.varnames->nodefill = AC.varnames->globalnodefill = AC.varnames->clearnodefill;
 
@@ -2193,7 +2217,7 @@ void ResetVariables(int par)
 		}
 		AC.AutoFunctionList.num = AC.AutoFunctionList.numglobal
 							   = AC.AutoFunctionList.numclear;
-		CompactifyTree(AC.autonames);
+		CompactifyTree(AC.autonames,AUTONAMES);
 		AC.autonames->namefill = AC.autonames->globalnamefill
 							  = AC.autonames->clearnamefill;
 		AC.autonames->nodefill = AC.autonames->globalnodefill
@@ -2320,7 +2344,7 @@ void ResetVariables(int par)
 		AC.DubiousList.num = AC.DubiousList.numglobal;
 		AC.SetElementList.numtemp = AC.SetElementList.num =
 			AC.SetElementList.numglobal;
-		CompactifyTree(AC.varnames);
+		CompactifyTree(AC.varnames,VARNAMES);
 		AC.varnames->namefill = AC.varnames->globalnamefill;
 		AC.varnames->nodefill = AC.varnames->globalnodefill;
 
@@ -2365,7 +2389,7 @@ void ResetVariables(int par)
 		}
 		AC.AutoFunctionList.num = AC.AutoFunctionList.numglobal;
 
-		CompactifyTree(AC.autonames);
+		CompactifyTree(AC.autonames,AUTONAMES);
 
 		AC.autonames->namefill = AC.autonames->globalnamefill;
 		AC.autonames->nodefill = AC.autonames->globalnodefill;
@@ -2393,7 +2417,7 @@ void RemoveDollars()
 		AC.dollarnames->namenode[d->node].type = CDELETE;
 	  }
 	  AP.DollarList.num = AM.gcNumDollars;
-	  CompactifyTree(AC.dollarnames);
+	  CompactifyTree(AC.dollarnames,DOLLARNAMES);
 
 	  C->numrhs = C->mnumrhs;
 	  C->numlhs = C->mnumlhs;

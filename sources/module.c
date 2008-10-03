@@ -273,7 +273,7 @@ VOID FullCleanUp()
 		AC.DidClean = 1;
 	}
 
-	CompactifyTree(AC.exprnames);
+	CompactifyTree(AC.exprnames,EXPRNAMES);
 
 	AP.ComChar = AP.cComChar;
 	if ( AP.procedureExtension ) M_free(AP.procedureExtension,"procedureextension");
