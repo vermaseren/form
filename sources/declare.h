@@ -1365,6 +1365,7 @@ extern UBYTE *ReadSaveTerm32(UBYTE *,UBYTE *,UBYTE **,UBYTE *,UBYTE *,int);
 extern WORD   ReadSaveVariables(UBYTE *,UBYTE *,LONG *,LONG *,INDEXENTRY *,LONG *);
 extern WORD   WriteStoreHeader(WORD);
 
+extern void   InitRecovery(VOID);
 extern int    CheckRecoveryFile(VOID);
 extern void   DeleteRecoveryFile(VOID);
 extern char  *RecoveryFilename(VOID);

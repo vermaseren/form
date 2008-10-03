@@ -1148,6 +1148,7 @@ int main(int argc, char **argv)
 #endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
+	InitRecovery();
 	if ( CheckRecoveryFile() ) {
 		if ( AC.CheckpointFlag != -1 ) {
 			/* recovery file exists but recovery option is not given */

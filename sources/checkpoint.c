@@ -60,32 +60,29 @@
 /**
  *  basename of recovery files
  */
-#define RECOVERYBASENAME "FORMrecv"
-
-#define FNAME(X) RECOVERYBASENAME "." #X
-
+static char *basename = "FORMrecv";
 /**
  *  filename for the recovery file
  */
-static char *recoveryfile = FNAME(tmp);
+static char *recoveryfile = 0;
 /**
  *  filename for the intermediate recovery file. only if the write is
  *  completely successful, this file will be moved/renamed to the one
  *  named by recoveryfile. this offers atomicity for the snapshot generation.
  */
-static char *intermedfile = FNAME(XXX);
+static char *intermedfile = 0;
 /**
  *  filename of sort file copy
  */
-static char *sortfile = FNAME(out);
+static char *sortfile = 0;
 /**
  *  filename of hide file copy
  */
-static char *hidefile = FNAME(hid);
+static char *hidefile = 0;
 /**
  *  filename of store file copy
  */
-static char *storefile = FNAME(str);
+static char *storefile = 0;
 
 /**
  *  >0 if at least once the respective file has been created.
@@ -160,6 +157,48 @@ char *RecoveryFilename()
 
 /*
   	#] RecoveryFilename :
+  	#[ InitRecovery :
+*/
+
+/**
+ *  Utility function for InitRecovery().
+ */
+static char *InitName(char *str, char *ext)
+{
+	char *s, *d = str;
+	if ( AM.TempDir ) {
+		s = (char*)AM.TempDir;
+		while ( *s ) { *d++ = *s++; }
+		*d++ = SEPARATOR;
+	}
+	s = basename;
+	while ( *s ) { *d++ = *s++; }
+	*d++ = '.';
+	s = ext;
+	while ( *s ) { *d++ = *s++; }
+	*d++ = 0;
+	return d;
+}
+
+/**
+ *  Sets up the strings for the filenames of the recovery files.
+ *  This functions should only be called once to avoid memory leaks and after
+ *  AM.TempDir has been initialized.
+ */
+void InitRecovery()
+{
+	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
+
+	recoveryfile = (char*)malloc(5*(lenpath+strlen(basename)+4+1));
+	intermedfile = InitName(recoveryfile, "tmp");
+	sortfile     = InitName(intermedfile, "XXX");
+	hidefile     = InitName(sortfile, "out");
+	storefile    = InitName(hidefile, "hid");
+	               InitName(storefile, "str");
+}
+
+/*
+  	#] InitRecovery :
   	#[ Debugging :
 */
 
