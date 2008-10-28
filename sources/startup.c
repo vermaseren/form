@@ -1148,6 +1148,18 @@ int main(int argc, char **argv)
 #endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
+	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+	AS.MultiThreaded = 0;
+#ifdef WITHPTHREADS
+	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
+	ReserveTempFiles(1);
+	if ( StartAllThreads(AM.totalnumberofthreads) ) {
+		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
+		Terminate(-1);
+	}
+#else
+	ReserveTempFiles(0);
+#endif
 	InitRecovery();
 	if ( CheckRecoveryFile() ) {
 		if ( AC.CheckpointFlag != -1 ) {
@@ -1165,18 +1177,6 @@ int main(int argc, char **argv)
 			Terminate(-1);
 		}
 	}
-	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
-	AS.MultiThreaded = 0;
-#ifdef WITHPTHREADS
-	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
-	ReserveTempFiles(1);
-	if ( StartAllThreads(AM.totalnumberofthreads) ) {
-		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
-		Terminate(-1);
-	}
-#else
-	ReserveTempFiles(0);
-#endif
 	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
 	IniVars();

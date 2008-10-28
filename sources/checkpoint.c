@@ -64,38 +64,36 @@ static char *basename = "FORMrecv";
 /**
  *  filename for the recovery file
  */
+static char *i_recoveryfile = 0;
 static char *recoveryfile = 0;
-/**
- *  filename for the intermediate recovery file. only if the write is
- *  completely successful, this file will be moved/renamed to the one
- *  named by recoveryfile. this offers atomicity for the snapshot generation.
- */
-static char *intermedfile = 0;
-/**
- *  filename of sort file copy
- */
-static char *sortfile = 0;
 /**
  *  filename of hide file copy
  */
+static char *i_hidefile = 0;
 static char *hidefile = 0;
 /**
  *  filename of store file copy
  */
+static char *i_storefile = 0;
 static char *storefile = 0;
+/**
+ *  filename of scratch file copy
+ */
+static char *outfile = 0;
+/**
+ *  strings for system command to copy files
+ */
+static char *syscmdhide = 0;
+static char *syscmdstore = 0;
 
 /**
  *  >0 if at least once the respective file has been created.
  *  Checked by DeleteRecoveryFile().
  */
 static int done_snapshot = 0;
-static int done_storecopy = 0;
-static int done_sortcopy = 0;
 static int done_hidecopy = 0;
-
-static int syscmdinit = 0;
-static char *syscmdstore;
-static char *syscmdsort;
+static int done_storecopy = 0;
+static int done_outcopy = 0;
 
 /*
   	#] filenames and system commands :
@@ -131,14 +129,14 @@ void DeleteRecoveryFile()
 	if ( done_snapshot ) {
 		remove(recoveryfile);
 	}
+	if ( done_hidecopy ) {
+		remove(hidefile);
+	}
 	if ( done_storecopy ) {
 		remove(storefile);
 	}
-	if ( done_sortcopy ) {
-		remove(sortfile);
-	}
-	if ( done_hidecopy ) {
-		remove(hidefile);
+	if ( done_outcopy ) {
+		remove(outfile);
 	}
 }
 
@@ -183,18 +181,35 @@ static char *InitName(char *str, char *ext)
 /**
  *  Sets up the strings for the filenames of the recovery files.
  *  This functions should only be called once to avoid memory leaks and after
- *  AM.TempDir has been initialized.
+ *  AM.TempDir has been initialized and ReserveTempFiles() been called.
  */
 void InitRecovery()
 {
-	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
+	GETIDENTITY
+	int l = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
 
-	recoveryfile = (char*)malloc(5*(lenpath+strlen(basename)+4+1));
-	intermedfile = InitName(recoveryfile, "tmp");
-	sortfile     = InitName(intermedfile, "XXX");
-	hidefile     = InitName(sortfile, "out");
-	storefile    = InitName(hidefile, "hid");
-	               InitName(storefile, "str");
+	recoveryfile   = (char*)malloc(7*(l+strlen(basename)+4+1));
+	i_recoveryfile = InitName(recoveryfile, "tmp");
+	hidefile       = InitName(i_recoveryfile, "XXX");
+	i_hidefile     = InitName(hidefile, "hid");
+	storefile      = InitName(i_hidefile, "hXX");
+	i_storefile    = InitName(storefile, "str");
+	outfile        = InitName(i_storefile, "sXX");
+	                 InitName(outfile, "out");
+
+	l = strlen(AR.hidefile->name);
+	syscmdhide = (char*)malloc(l+strlen(i_hidefile)+8);
+	strcpy(syscmdhide, "cp -f ");
+	strcpy(syscmdhide+6, AR.hidefile->name);
+	syscmdhide[6+l] = ' ';
+	strcpy(syscmdhide+7+l, i_hidefile);
+
+	l = strlen(FG.fname);
+	syscmdstore = (char*)malloc(l+strlen(i_storefile)+8);
+	strcpy(syscmdstore, "cp -f ");
+	strcpy(syscmdstore+6, FG.fname);
+	syscmdstore[6+l] = ' ';
+	strcpy(syscmdstore+7+l, i_storefile);
 }
 
 /*
@@ -987,7 +1002,7 @@ static void print_R()
 /* general buffer */
 
 #define R_COPY_B(VAR,SIZE,CAST) \
-	VAR = (CAST)Malloc1(SIZE,#VAR); \
+	VAR = (CAST)malloc(SIZE); \
 	memcpy(VAR, p, SIZE); p = (unsigned char*)p + SIZE;
 
 #define S_WRITE_B(BUF,LEN) \
@@ -1097,7 +1112,7 @@ int DoRecovery(int *moduletype)
 	/* load the complete recovery file into a buffer */
 	if ( fread(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
 	size = BASEPOSITION(pos) - sizeof(POSITION);
-	buf = Malloc1(size, "recovery buffer");
+	buf = malloc(size);
 	if ( fread(buf, size, 1, fd) != 1 ) return(__LINE__);
 
 	/* pointer p will go through the buffer in the following */
@@ -1529,7 +1544,7 @@ int DoRecovery(int *moduletype)
 		}
 		if ( AC.Streams[i].type == FILESTREAM ) {
 			org2 = AC.Streams[i].buffer;
-			AC.Streams[i].buffer = (UBYTE*)Malloc1(AC.Streams[i].buffersize, "buffer");
+			AC.Streams[i].buffer = (UBYTE*)malloc(AC.Streams[i].buffersize);
 			ofs = AC.Streams[i].buffer - (UBYTE*)org2;
 			AC.Streams[i].pointer += ofs;
 			AC.Streams[i].top += ofs;
@@ -1820,7 +1835,7 @@ int DoRecovery(int *moduletype)
 	R_SET(*AR.outfile, FILEHANDLE);
 	org = AR.outfile->PObuffer;
 	size = AR.outfile->POfull - AR.outfile->PObuffer;
-	AR.outfile->PObuffer = (WORD*)Malloc1(AR.outfile->POsize, "PObuffer");
+	AR.outfile->PObuffer = (WORD*)malloc(AR.outfile->POsize);
 	if ( size ) {
 		memcpy(AR.outfile->PObuffer, p, size*sizeof(WORD));
 		p = (unsigned char*)p + size*sizeof(WORD);
@@ -1843,23 +1858,16 @@ int DoRecovery(int *moduletype)
 #endif
 	/* reopen old outfile */
 	if ( AR.outfile->handle >= 0 ) {
-		i = strlen(sortfile);
-		syscmdsort = (char*)malloc(i+strlen(AR.outfile->name)+8);
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, sortfile);
-		syscmdsort[6+i] = ' ';
-		strcpy(syscmdsort+7+i, AR.outfile->name);
-		if ( system(syscmdsort) ) {
-			MesPrint("ERROR: Could not copy old output sort file %s!\n",sortfile);
+		if ( link(outfile, AR.outfile->name) ) {
+			MesPrint("ERROR: Could not make hardlink to old output scratch file %s!\n", outfile);
 			Terminate(-1);
 		}
 		AR.outfile->handle = OpenFile(AR.outfile->name);
 		if ( AR.outfile->handle == -1 ) {
-			MesPrint("ERROR: Could not reopen output sort file %s!\n",AR.outfile->name);
+			MesPrint("ERROR: Could not reopen output scratch file %s!\n", AR.outfile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.outfile->handle, &AR.outfile->POposition, SEEK_SET);
-		free(syscmdsort);
 	}
 
 	/* hidefile */
@@ -1868,7 +1876,7 @@ int DoRecovery(int *moduletype)
 	if ( AR.hidefile->PObuffer ) {
 		org = AR.hidefile->PObuffer;
 		size = AR.hidefile->POfull - AR.hidefile->PObuffer;
-		AR.hidefile->PObuffer = (WORD*)Malloc1(AR.hidefile->POsize, "PObuffer");
+		AR.hidefile->PObuffer = (WORD*)malloc(AR.hidefile->POsize);
 		if ( size ) {
 			memcpy(AR.hidefile->PObuffer, p, size*sizeof(WORD));
 			p = (unsigned char*)p + size*sizeof(WORD);
@@ -1891,28 +1899,31 @@ int DoRecovery(int *moduletype)
 #endif
 	/* reopen old hidefile */
 	if ( AR.hidefile->handle >= 0 ) {
+		char *oldsyscmdhide = syscmdhide;
 		i = strlen(hidefile);
-		syscmdsort = (char*)malloc(i+strlen(AR.hidefile->name)+8);
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, hidefile);
-		syscmdsort[6+i] = ' ';
-		strcpy(syscmdsort+7+i, AR.hidefile->name);
-		if ( system(syscmdsort) ) {
-			MesPrint("ERROR: Could not copy old hide file %s!\n",hidefile);
+		syscmdhide = (char*)malloc(i+strlen(AR.hidefile->name)+8);
+		strcpy(syscmdhide, "cp -f ");
+		strcpy(syscmdhide+6, hidefile);
+		syscmdhide[6+i] = ' ';
+		strcpy(syscmdhide+7+i, AR.hidefile->name);
+		if ( system(syscmdhide) ) {
+			MesPrint("ERROR: Could not copy old hide file %s!\n", hidefile);
 			Terminate(-1);
 		}
 		AR.hidefile->handle = OpenFile(AR.hidefile->name);
 		if ( AR.hidefile->handle == -1 ) {
-			MesPrint("ERROR: Could not reopen hide file %s!\n",AR.hidefile->name);
+			MesPrint("ERROR: Could not reopen hide file %s!\n", AR.hidefile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.hidefile->handle, &AR.hidefile->POposition, SEEK_SET);
-		free(syscmdsort);
+		free(syscmdhide);
+		syscmdhide = oldsyscmdhide;
 	}
 
 	/* store file */
 	R_SET(pos, POSITION);
 	if ( ISNOTZEROPOS(pos) ) {
+		char *oldsyscmdstore = syscmdstore;
 		CloseFile(AR.StoreData.Handle);
 		R_SET(AR.StoreData, FILEDATA);
 		i = strlen(storefile);
@@ -1922,12 +1933,13 @@ int DoRecovery(int *moduletype)
 		syscmdstore[6+i] = ' ';
 		strcpy(syscmdstore+7+i, FG.fname);
 		if ( system(syscmdstore) ) {
-			MesPrint("ERROR: Could not copy old store file %s!\n",storefile);
+			MesPrint("ERROR: Could not copy old store file %s!\n", storefile);
 			Terminate(-1);
 		}
 		AR.StoreData.Handle = (WORD)OpenFile(FG.fname);
 		SeekFile(AR.StoreData.Handle, &AR.StoreData.Position, SEEK_SET);
 		free(syscmdstore);
+		syscmdstore = oldsyscmdstore;
 	}
 
 	R_SET(AR.DefPosition, POSITION);
@@ -1958,7 +1970,7 @@ int DoRecovery(int *moduletype)
 
 	/* this is usually done in Process(), but sometimes FORM doesn't
 	   end up executing Process() before it uses the AR.CompressPointer,
-	   so we need to explicitely set it here. */
+	   so we need to explicitly set it here. */
 	AR.CompressPointer = AR.CompressBuffer;
 
 #ifdef PRINTDEBUG
@@ -2025,7 +2037,7 @@ static int DoSnapshot(int moduletype)
 
 	printf("Saving recovery point ... "); fflush(0);
 
-	if ( !(fd = fopen(intermedfile, "w")) ) return(__LINE__);
+	if ( !(fd = fopen(i_recoveryfile, "w")) ) return(__LINE__);
 
 	/* reserve space in the file for a length field */
 	if ( fwrite(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
@@ -2429,21 +2441,8 @@ static int DoSnapshot(int moduletype)
 
 	if ( fclose(fd) ) return(__LINE__);
 
-	/* prepare strings for system command */
-	if ( !syscmdinit ) {
-		l = strlen(FG.fname);
-		syscmdstore = (char*)Malloc1(l+strlen(storefile)+8, "syscmdstore");
-		strcpy(syscmdstore, "cp -f ");
-		strcpy(syscmdstore+6, FG.fname);
-		syscmdstore[6+l] = ' ';
-		strcpy(syscmdstore+7+l, storefile);
-
-		syscmdinit = 1;
-	}
-
-	/* for copying we are using the system command. it is fast and has no
-	 * additional memory requirements as a read/write approach would have.
-	 * as a drawback we might get portability problems. */
+	/* now all internal data has been written to an intermediate file. next, we
+	   copy the hide and store files - if they exist - to intermediate files. */
 
 	/* copy store file if necessary */
 	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
@@ -2451,39 +2450,31 @@ static int DoSnapshot(int moduletype)
 		done_storecopy = 1;
 	}
 
-	/* copy sort file if necessary */
-	if ( AR.outfile->handle >= 0 ) {
-		l = strlen(AR.outfile->name);
-		syscmdsort = (char*)Malloc1(l+strlen(sortfile)+8, "syscmdsort");
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, AR.outfile->name);
-		syscmdsort[6+l] = ' ';
-		strcpy(syscmdsort+7+l, sortfile);
-
-		if ( system(syscmdsort) ) return(__LINE__);
-		free(syscmdsort);
-		done_sortcopy = 1;
-	}
-
 	/* copy hide file if necessary */
 	if ( AR.hidefile->handle >= 0 ) {
-		l = strlen(AR.hidefile->name);
-		syscmdsort = (char*)Malloc1(l+strlen(hidefile)+8, "syscmdsort");
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, AR.hidefile->name);
-		syscmdsort[6+l] = ' ';
-		strcpy(syscmdsort+7+l, hidefile);
-
-		if ( system(syscmdsort) ) return(__LINE__);
-		free(syscmdsort);
+		if ( system(syscmdhide) ) return(__LINE__);
 		done_hidecopy = 1;
 	}
+	
+	/* the final step is the (almost) atomic replacement of previous recovery
+	   files by the current intermediate ones. we move(rename) all intermediate
+	   files to their final name. to preserve the scratch file we make a
+	   hardlink to that file. */
 
-	/* make the intermediate file the recovery file */
-	if ( rename(intermedfile, recoveryfile) ) return(__LINE__);
+	if ( done_storecopy ) {
+		if ( rename(i_storefile, storefile) ) return(__LINE__);
+	}
+	if ( done_hidecopy ) {
+		if ( rename(i_hidefile, hidefile) ) return(__LINE__);
+	}
+	if  ( AR.outfile->handle >= 0 ) {
+		unlink(outfile);
+		if ( link(AR.outfile->name, outfile) ) return(__LINE__);
+		done_outcopy = 1;
+	}
+	if ( rename(i_recoveryfile, recoveryfile) ) return(__LINE__);
 
 	done_snapshot = 1;
-
 	printf("done.\n"); fflush(0);
 
 #ifdef PRINTDEBUG
@@ -2519,7 +2510,7 @@ void DoCheckpoint(int moduletype)
 			l = strlen(AC.CheckpointRunBefore);
 			NumToStr((UBYTE*)argbuf, AC.CModule);
 			l2 = strlen(argbuf);
-			str = (char*)Malloc1(l+l2+2, "callbefore");
+			str = (char*)malloc(l+l2+2);
 			strcpy(str, AC.CheckpointRunBefore);
 			*(str+l) = ' ';
 			strcpy(str+l+1, argbuf);
@@ -2539,7 +2530,7 @@ void DoCheckpoint(int moduletype)
 			l = strlen(AC.CheckpointRunAfter);
 			NumToStr((UBYTE*)argbuf, AC.CModule);
 			l2 = strlen(argbuf);
-			str = (char*)Malloc1(l+l2+2, "callafter");
+			str = (char*)malloc(l+l2+2);
 			strcpy(str, AC.CheckpointRunAfter);
 			*(str+l) = ' ';
 			strcpy(str+l+1, argbuf);
