@@ -257,6 +257,7 @@ int CoSave(UBYTE *inp)
 	INDEXENTRY *indold;
 	WORD TMproto[SUBEXPSIZE];
 	POSITION scrpos, scrpos1, filesize;
+	while ( *inp == ',' ) inp++;
 	p = inp;
 
 #ifdef PARALLEL
@@ -264,7 +265,8 @@ int CoSave(UBYTE *inp)
 #endif
 
 	if ( !*p ) return(MesPrint("No filename in save statement"));
-	if ( FG.cTable[*p] ) return(MesPrint("Illegal filename"));
+	if ( FG.cTable[*p] && ( *p != SEPARATOR ) && ( *p != ALTSEPARATOR ) )
+				return(MesPrint("Illegal filename"));
 	while ( *++p && *p != ',' ) {}
 	c = *p;
 	*p = 0;
@@ -453,13 +455,15 @@ int CoLoad(UBYTE *inp)
 	WORD type, number, silentload = 0;
 	WORD TMproto[SUBEXPSIZE];
 	POSITION scrpos;
+	while ( *inp == ',' ) inp++;
 	p = inp;
 	if ( ( *p == ',' && p[1] == '-' ) || *p == '-' ) {
 		if ( *p == ',' ) p++;
 		p++;
 		if ( *p == 's' || *p == 'S' ) {
 			silentload = 1;
-			while ( *p && ( *p != ',' && *p != '-' && *p != '+' ) ) p++;
+			while ( *p && ( *p != ',' && *p != '-' && *p != '+'
+			&& *p != SEPARATOR && *p != ALTSEPARATOR ) ) p++;
 		}
 		else if ( *p != ',' ) {
 			return(MesPrint("Illegal option in Load statement"));
@@ -468,7 +472,8 @@ int CoLoad(UBYTE *inp)
 	}
 	inp = p;
 	if ( !*p ) return(MesPrint("No filename in load statement"));
-	if ( FG.cTable[*p] ) return(MesPrint("Illegal filename"));
+	if ( FG.cTable[*p] && ( *p != SEPARATOR ) && ( *p != ALTSEPARATOR ) )
+				return(MesPrint("Illegal filename"));
 	while ( *++p && *p != ',' ) {}
 	c = *p;
 	*p = 0;

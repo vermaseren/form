@@ -663,7 +663,7 @@ newright:
 	  if(AddRat(BHEAD (UWORD *)lcpos,lclen,(UWORD *)rcpos,rclen,newcpos,&newnlen)) return(-1);
 	  if( AN.ncmod != 0 ) {
 		if ( ( AC.modmode & POSNEG ) != 0 ) {
-			NormalModulus(coef,&r3);
+			NormalModulus(newcpos,&newnlen);
 		}
 		if( BigLong(newcpos,newnlen,(UWORD *)AC.cmod,ABS(AN.ncmod)) >=0 ){
 		  WORD ii;
@@ -782,7 +782,7 @@ int PF_EndSort()
 	 work. The smallest term needs to be copied to the outbuf: use PutOut.
   */
   PF_InitTree();
-  S->PolyFlag = AR.PolyFun ? S->PolyFunType : 0;
+  S->PolyFlag = AR.PolyFun ? AR.PolyFunType : 0;
   *AR.CompressPointer = 0;
   PUTZERO(position);
 /*[25nov2003 mt]:*/

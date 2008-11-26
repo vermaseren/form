@@ -123,7 +123,7 @@ WORD Processor()
 	for ( i = 0; i < NumExpressions; i++ ) {
 		e = Expressions+i;
 #ifdef WITHPTHREADS
-		if ( AC.numpartodo > 0 && e->partodo > 0 ) {
+		if ( AC.numpartodo > 0 && e->partodo > 0 && numberofworkers >= 2 ) {
 			e->partodo = 0;
 			continue;
 		}
