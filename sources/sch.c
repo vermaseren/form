@@ -851,8 +851,14 @@ VOID WriteLists()
 							}
 							break;
 						case CINDEX:
-							if ( number >= AM.OffsetIndex + WILDOFFSET ) {
-								StrCopy(VARNAME(indices,number
+							if ( number >= AM.IndDum ) {
+								Out = StrCopy((UBYTE *)"N",OutScr);
+								Out = NumCopy(number-(AM.IndDum),Out);
+								StrCopy((UBYTE *)"_?",Out);
+								TokenToLine(OutScr);
+							}
+							else if ( number >= AM.OffsetIndex + WILDOFFSET ) {
+								Out = StrCopy(VARNAME(indices,number
 								-AM.OffsetIndex-WILDOFFSET),OutScr);
 								StrCopy((UBYTE *)"?",Out);
 								TokenToLine(OutScr);
@@ -867,7 +873,7 @@ VOID WriteLists()
 							break;
 						case CVECTOR:
 							if ( number >= AM.OffsetVector + WILDOFFSET ) {
-								StrCopy(VARNAME(vectors,number
+								Out = StrCopy(VARNAME(vectors,number
 								-AM.OffsetVector-WILDOFFSET),OutScr);
 								StrCopy((UBYTE *)"?",Out);
 								TokenToLine(OutScr);
@@ -877,7 +883,7 @@ VOID WriteLists()
 							break;
 						case CFUNCTION:
 							if ( number >= FUNCTION + WILDOFFSET ) {
-								StrCopy(VARNAME(functions,number
+								Out = StrCopy(VARNAME(functions,number
 								-FUNCTION-WILDOFFSET),OutScr);
 								StrCopy((UBYTE *)"?",Out);
 								TokenToLine(OutScr);

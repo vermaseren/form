@@ -372,7 +372,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	this has been 'corrected' and suddenly getruage doesn't work anymore the
 	way it used to. Now we need
 		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&AR.timing)
-	which is declared in <time.h> and we need -ltr extra in the link statement.
+	which is declared in <time.h> and we need -lrt extra in the link statement.
 	(this is at least the case on blade02 at DESY-Zeuthen).
 	See also the code in tools.c at the routine Timer.
 	We may still have to include more stuff there.

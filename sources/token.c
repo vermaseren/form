@@ -886,8 +886,8 @@ int simp2token(SBYTE *s)
 					}
 				}
 			}
-			if ( ( fill[-1] == TFUNOPEN || fill[-1] == TCOMMA )
-			&& ( t[1] == TFUNCLOSE || t[1] == TCOMMA ) ) {
+			if ( fill > to && ( ( fill[-1] == TFUNOPEN || fill[-1] == TCOMMA )
+			&& ( t[1] == TFUNCLOSE || t[1] == TCOMMA ) ) ) {
 				v = s + 1;
 				switch ( *v ) {
 					case TMINUS:
@@ -980,7 +980,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token : 
+ 		#] simp2token :
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.

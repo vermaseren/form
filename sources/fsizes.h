@@ -11,12 +11,16 @@
 /*
 	The following variables are default sizes. They can be changed
 	into values read from the setup file
+
+    Remark (21-dec-2008 JV): WILDOFFSET*3 should be larger than WILDMASK!!!!
+		old value was WILDOFFSET 200000100
+		be careful with old .sav files!!!
 */
 #ifdef WORDSIZE32
 #define MAXPOWER 500000000
 #define MAXVARIABLES 200000050
 #define MAXDOLLARVARIABLES 1000000000L
-#define WILDOFFSET 200000100
+#define WILDOFFSET 400000100
 #define MAXINNAMETREE 2000000000
 #define MAXDUMMIES 100000000
 #define WORKBUFFER 2000000

@@ -18,7 +18,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Polyno :
  		#[ PolynoAdd :
 
@@ -48,7 +48,7 @@ WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 }
 
 /*
- 		#] PolynoAdd :
+ 		#] PolynoAdd : 
  		#[ PolynoSub :
 
 		Subtraction of two polynomials.
@@ -82,7 +82,7 @@ WORD *PolynoSub(WORD *poly1, WORD *poly2)
 }
 
 /*
- 		#] PolynoSub :
+ 		#] PolynoSub : 
  		#[ PolynoMul :
 
 		Multiply term by term, normalize and put new bracket info if needed.
@@ -159,7 +159,7 @@ abortion:
 }
 
 /*
- 		#] PolynoMul :
+ 		#] PolynoMul : 
  		#[ PolynoDiv :
 */
 
@@ -450,7 +450,7 @@ aborteer:
 }
 
 /*
- 		#] Polyno1Div :
+ 		#] Polyno1Div : 
  		#[ PolynoGCD :
 
 		GCD of two multivariate polynomials:
@@ -512,8 +512,16 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 			t += t[1];
 			while ( b < t ) {
 				if ( *b < lowestsymbol ) {
+/*
+	Comment (20-dec-2008:JV) It seems that we have problems with the 
+	following pair of polynomials: x*y+1; y^2+1; depensing on the order 
+	they are fed in, we may get into a loop here. It has now be
+	changed to 'absolute numbers'.
+
 					if ( lowestsymbol != 2*MAXPOWER ) only1 = 0;
-					else { only1 = 1; lowestsymbol = *b; }
+					else
+*/
+						{ only1 = 1; lowestsymbol = *b; }
 				}
 				else if ( *b > lowestsymbol ) only1 = 0;
 				b += 2;
@@ -529,8 +537,11 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 			t += t[1];
 			while ( b < t ) {
 				if ( *b < lowestsymbol ) {
+/*
 					if ( lowestsymbol != 2*MAXPOWER ) only1 = 0;
-					else { only1 = 1; lowestsymbol = *b; }
+					else
+*/
+						{ only1 = 1; lowestsymbol = *b; }
 				}
 				else if ( *b > lowestsymbol ) only1 = 0;
 				b += 2;
@@ -768,7 +779,7 @@ isone:
 }
 
 /*
- 		#] Polyno1GCD :
+ 		#] Polyno1GCD : 
  		#[ PolynoPrint :
 */
 
@@ -853,7 +864,7 @@ abowrite:
 }
 
 /*
- 		#] PolynoWrite :
+ 		#] PolynoWrite : 
  		#[ PolynoPushBracket :
 */
 
@@ -898,7 +909,7 @@ void PolynoPushBracket(WORD numofsymbol)
 }
 
 /*
- 		#] PolynoPushBracket :
+ 		#] PolynoPushBracket : 
  		#[ PolynoPopBracket :
 */
 
@@ -921,7 +932,7 @@ void PolynoPopBracket()
 }
 
 /*
- 		#] PolynoPopBracket :
+ 		#] PolynoPopBracket : 
  		#[ PolynoStart :
 */
 
@@ -946,7 +957,7 @@ void PolynoStart()
 }
 
 /*
- 		#] PolynoStart :
+ 		#] PolynoStart : 
  		#[ PolynoFinish :
 */
 
@@ -963,7 +974,7 @@ void PolynoFinish()
 }
 
 /*
- 		#] PolynoFinish :
+ 		#] PolynoFinish : 
  		#[ PolynoNormalize :
 */
 
@@ -1025,7 +1036,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoNormalize :
+ 		#] PolynoNormalize : 
  		#[ DoPolynomial :
 */
 
@@ -1142,7 +1153,7 @@ aborteer:
 }
 
 /*
- 		#] DoPolynomial :
+ 		#] DoPolynomial : 
  		#[ DoPolyGetRem :
 */
 
@@ -1192,7 +1203,7 @@ WORD DoPolyGetRem(WORD *term, WORD level)
 }
 
 /*
- 		#] DoPolyGetRem :
+ 		#] DoPolyGetRem : 
  		#[ CopyOfPolynomial :
 */
 
@@ -1210,7 +1221,7 @@ WORD *CopyOfPolynomial(WORD *poly)
 }
 
 /*
- 		#] CopyOfPolynomial :
+ 		#] CopyOfPolynomial : 
  		#[ PolynoUnify :
 
 		Divides all terms by the coefficient of the first term
@@ -1295,7 +1306,7 @@ WORD *PolynoUnify(WORD *poly, int par)
 }
 
 /*
- 		#] PolynoUnify :
+ 		#] PolynoUnify : 
  		#[ PolynoCoefNorm :
 
 		Routine takes a polynomial, brackets it in x, determines the
@@ -1380,7 +1391,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoCoefNorm :
+ 		#] PolynoCoefNorm : 
  		#[ MakePolynomial :
 
 		Converts an expression (par == 0) or a $-expression (par == 1)
@@ -1440,7 +1451,7 @@ aborteer:
 }
 
 /*
- 		#] MakePolynomial :
+ 		#] MakePolynomial : 
  		#[ DoPolynoNorm :
 */
 
@@ -1530,7 +1541,7 @@ int DoPolynoNorm(int par, WORD numexp, WORD numsym, WORD numdol)
 }
 
 /*
- 		#] DoPolynoNorm :
+ 		#] DoPolynoNorm : 
  		#[ PolynoIntFac :
 
 		Normalizes the polynomial such that all coefficients are integers.
@@ -1610,7 +1621,7 @@ PIFerror:
 }
 
 /*
- 		#] PolynoIntFac :
+ 		#] PolynoIntFac : 
 	#] Polyno :
   	#[ PolyNorm :
 
@@ -1634,5 +1645,5 @@ int PolyNorm(PHEAD WORD *term, WORD level, WORD numerator, WORD denominator)
 }
 
 /*
-  	#] PolyNorm :
+  	#] PolyNorm : 
 */

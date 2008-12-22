@@ -28,6 +28,9 @@
 	Task of this routine: To study the functions, their symmetry properties
 	and their wildcards to determine in which order the functions can
 	be matched best. If the order should be different we can change it here.
+
+	Problem encountered 22-dec-2008 (JV): we don't take noncommuting
+	functions into account.
 */
 
 void StudyPattern(WORD *lhs)
@@ -133,12 +136,14 @@ void StudyPattern(WORD *lhs)
 /*
 	We have the information in the array AN.FunInfo.
 	We sort things and then write the sorted pattern.
+	Of course we may not play with the order of the noncommuting functions.
 	Of course we have to become even smarter in the future and look during
 	the sorting which wildcards are asigned when.
 	But for now this should do.
 */
+	for ( nc = numfun-1; nc >= 0; nc-- ) { if ( AN.FunInfo[nc].commute ) break; }
 	finf = AN.FunInfo;
-	for ( i = 1; i < numfun; i++ ) {
+	for ( i = nc+1; i < numfun; i++ ) {
 		fmin = finf; finf++;
 		if ( ( finf->symmet < fmin->symmet ) || (
 		( finf->symmet == fmin->symmet ) &&
@@ -169,7 +174,6 @@ void StudyPattern(WORD *lhs)
 	copy it back. Be careful with the non-commutative functions. There the
 	worst one should decide.
 */
-	for ( nc = numfun-1; nc >= 0; nc-- ) { if ( AN.FunInfo[nc].commute ) break; }
 	p = pat + 1;
 	p2 = info;
 	for ( i = 0; i < numfun; i++ ) {
@@ -217,7 +221,7 @@ void StudyPattern(WORD *lhs)
 }
 
 /*
-  	#] StudyPattern : 
+  	#] StudyPattern :
   	#[ MatchIsPossible :
 
 	We come here when there are functions and there is nontrivial
@@ -342,5 +346,5 @@ NotPossible:
 }
 
 /*
-  	#] MatchIsPossible : 
+  	#] MatchIsPossible :
 */
