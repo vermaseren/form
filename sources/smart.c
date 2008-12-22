@@ -142,8 +142,9 @@ void StudyPattern(WORD *lhs)
 	But for now this should do.
 */
 	for ( nc = numfun-1; nc >= 0; nc-- ) { if ( AN.FunInfo[nc].commute ) break; }
+
 	finf = AN.FunInfo;
-	for ( i = nc+1; i < numfun; i++ ) {
+	for ( i = nc+2; i < numfun; i++ ) {
 		fmin = finf; finf++;
 		if ( ( finf->symmet < fmin->symmet ) || (
 		( finf->symmet == fmin->symmet ) &&
@@ -153,7 +154,7 @@ void StudyPattern(WORD *lhs)
 			funscratch = AN.FunInfo[i];
 			AN.FunInfo[i] = AN.FunInfo[i-1];
 			AN.FunInfo[i-1] = funscratch;
-			for ( j = i-1; j > 0; j-- ) {
+			for ( j = i-1; j > nc; j-- ) {
 				f1 = AN.FunInfo+j;
 				f2 = f1-1;
 				if ( ( f1->symmet < f2->symmet ) || (
