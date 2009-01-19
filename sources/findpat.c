@@ -1044,7 +1044,7 @@ WORD FindMulti(PHEAD WORD *term, WORD *pattern)
 WORD FindRest(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
-	WORD *t, *m;
+	WORD *t, *m, *tt;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
 	WORD n, *p, nq;
@@ -1089,21 +1089,25 @@ WORD FindRest(PHEAD WORD *term, WORD *pattern)
 			} while ( m < mstop && *m >= FUNCTION );
 			AT.WorkPointer += n;
 			while ( t < tstop && *t == SUBEXPRESSION ) t += t[1];
-			xstop = t;
+			tt = xstop = t;
 			nq = 0;
 			while ( t < tstop && ( *t >= FUNCTION || *t == SUBEXPRESSION ) ) {
+				if ( *t != SUBEXPRESSION ) {
+					nq++;
+					if ( functions[*t-FUNCTION].commute ) tt = t + t[1];
+				}
 				t += t[1];
-				nq++;
 			}
 			if ( nq < n ) return(0);
 			AN.terstart = term;
 			AN.terstop = t;
+			AN.terfirstcomm = tt;
 			AN.patstop = m;
 			AN.NumTotWildArgs = ntwa;
 			if ( !ScanFunctions(BHEAD ystop,xstop,0) ) return(0);
 		}
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -1191,7 +1195,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 			} while ( m < ystop );
 		}
 /*
-			#] VECTORS :
+			#] VECTORS : 
 			#[ INDICES :
 */
 		else if ( *m == INDEX ) {
@@ -1246,7 +1250,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 */
 		}
 /*
-			#] INDICES :
+			#] INDICES : 
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {

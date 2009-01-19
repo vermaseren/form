@@ -62,10 +62,14 @@ VOID AddToLine(UBYTE *s)
 	Out = AO.OutFill;
 	while ( *s ) {
 		if ( Out >= AO.OutStop ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				*Out++ = fcontchar;
+			}
 #ifdef WITHRETURN
 			*Out++ = CARRIAGERETURN;
 #endif
 			*Out++ = LINEFEED;
+			AO.FortFirst = 0;
 			num = Out - AO.OutputLine;
  
 			if ( AC.LogHandle >= 0 ) {
@@ -143,15 +147,20 @@ VOID FiniLine()
 	if ( AO.OutInBuffer ) return;
 	Out = AO.OutFill;
 	while ( Out > AO.OutputLine ) {
-		if ( Out[-1] != ' ' ) break;
-		Out--;
+		if ( Out[-1] == ' ' ) Out--;
+		else break;
 	}
 	i = (WORD)(Out-AO.OutputLine);
 	if ( noextralinefeed == 0 ) {
+		if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90
+			&& Out > AO.OutputLine ) {
+			*Out++ = fcontchar;
+		}
 #ifdef WITHRETURN
 		*Out++ = CARRIAGERETURN;
 #endif
 		*Out++ = LINEFEED;
+		AO.FortFirst = 0;
 	}
 	num = Out - AO.OutputLine;
  
@@ -334,21 +343,54 @@ VOID RatToLine(UWORD *a, WORD na)
 		  LongToLine(a,anumer);
 		  a += na;
 		  if ( anumer && !( adenom == 1 && *a == 1 ) ) {
-			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				if ( AC.Fortran90Kind ) {
+					AddToLine(AC.Fortran90Kind);
+					AddToLine((UBYTE *)"/");
+				}
+				else {
+					AddToLine((UBYTE *)"./");
+				}
+			}
+			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
 				if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0/"); }
 				else { AddToLine((UBYTE *)"./"); }
 			}
 			else AddToLine((UBYTE *)"/");
 			LongToLine(a,adenom);
-			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				if ( AC.Fortran90Kind ) {
+					AddToLine(AC.Fortran90Kind);
+				}
+				else {
+					AddToLine((UBYTE *)".");
+				}
+			}
+			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
 				if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0"); }
 				else { AddToLine((UBYTE *)"."); }
 			}
 		  }
 		  else if ( anumer > 1 && ( AC.OutputMode == FORTRANMODE
 		  || AC.OutputMode == CMODE ) ) {
-			if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0"); }
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				if ( AC.Fortran90Kind ) {
+					AddToLine(AC.Fortran90Kind);
+				}
+				else {
+					AddToLine((UBYTE *)".");
+				}
+			}
+			else if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0"); }
 			else { AddToLine((UBYTE *)"."); }
+		  }
+		  else if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				if ( AC.Fortran90Kind ) {
+					AddToLine(AC.Fortran90Kind);
+				}
+				else {
+					AddToLine((UBYTE *)".");
+				}
 		  }
 		  else if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE )
 		  && AO.DoubleFlag ) {
@@ -464,10 +506,14 @@ VOID TokenToLine(UBYTE *s)
 	while ( i > 0 ) {
 		if ( ( Out + i ) >= AO.OutStop && ( ( i < ((AC.LineLength-AO.OutSkip)>>1) )
 		|| ( (AO.OutStop-Out) < (i>>2) ) ) ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				*Out++ = fcontchar;
+			}
 #ifdef WITHRETURN
 			*Out++ = CARRIAGERETURN;
 #endif
 			*Out++ = LINEFEED;
+			AO.FortFirst = 0;
 			num = Out - AO.OutputLine; 
 			if ( AC.LogHandle >= 0 ) {
 				if ( WriteFile(AC.LogHandle,AO.OutputLine+startinline,
@@ -1532,6 +1578,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 {
 	WORD *t, *stopper, *b, n;
+	int oldIsFortran90 = AC.IsFortran90;
 	if ( *lbrac >= 0 ) {
 		t = term + 1;
 		stopper = (term + *term - 1);
@@ -1566,13 +1613,24 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 					if ( ( prtf & PRINTCONTENTS ) ) PrtTerms();
 					TOKENTOLINE(" )",")")
 					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
+					AC.IsFortran90 = ISNOTFORTRAN90;
 					FiniLine();
+					AC.IsFortran90 = oldIsFortran90;
 					if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE
 						&& AC.OutputSpaces == NORMALFORMAT ) FiniLine();
 				}
 				else {
 					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
-					if ( !first ) FiniLine();
+					if ( AO.FortFirst == 0 ) {
+						if ( !first ) {
+							AC.IsFortran90 = ISNOTFORTRAN90;
+							FiniLine();
+							AC.IsFortran90 = oldIsFortran90;
+						}
+					}
+/*
+					else AO.FortFirst = 0;
+*/
 				}
 				if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 				 && !first ) {
@@ -1674,7 +1732,11 @@ WrtTmes:				t = term;
 			if ( ( prtf & PRINTCONTENTS ) != 0 ) PrtTerms();
 			TokenToLine((UBYTE *)" )");
 			if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
-			FiniLine();
+			if ( AO.FortFirst == 0 ) {
+				AC.IsFortran90 = ISNOTFORTRAN90;
+				FiniLine();
+				AC.IsFortran90 = oldIsFortran90;
+			}
 			if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE
 				 && AC.OutputSpaces == NORMALFORMAT ) FiniLine();
 			if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
@@ -1730,23 +1792,27 @@ WrtTmes:				t = term;
 	if ( !br ) AO.IsBracket = 0;
 	if ( ( AO.InFbrack >= AM.FortranCont ) && lowestlevel ) {
 		if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
-		FiniLine();
 		if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 		 && !first ) {
 			WORD oldmode = AC.OutputMode;
-			AC.OutputMode = 0;
-			IniLine();
-			AC.OutputMode = oldmode;
-			AO.OutSkip = 7;
 			if ( AO.FortFirst == 0 ) {
+				AC.IsFortran90 = ISNOTFORTRAN90;
+				FiniLine();
+				AC.IsFortran90 = oldIsFortran90;
+				AC.OutputMode = 0;
+				IniLine();
+				AC.OutputMode = oldmode;
+				AO.OutSkip = 7;
 				TokenToLine(AO.CurBufWrt);
 				TOKENTOLINE(" = ","=")
 				TokenToLine(AO.CurBufWrt);
 			}
 			else {
 				AO.FortFirst = 0;
+/*
 				TokenToLine(AO.CurBufWrt);
 				TOKENTOLINE(" = ","=")
+*/
 			}
 /*
 			TokenToLine(AO.CurBufWrt);
@@ -1757,6 +1823,7 @@ WrtTmes:				t = term;
 */
 		}
 		else if ( AC.OutputMode == CMODE && !first ) {
+			FiniLine();
 			IniLine();
 			if ( AO.FortFirst == 0 ) {
 				TokenToLine(AO.CurBufWrt);
@@ -1776,7 +1843,10 @@ WrtTmes:				t = term;
 			}
 */
 		}
-		else IniLine();
+		else {
+			FiniLine();
+			IniLine();
+		}
 		AO.InFbrack = 0;
 	}
 	if ( WriteInnerTerm(term,first) ) goto WrtTmes;
@@ -1833,6 +1903,7 @@ WORD WriteAll()
 	GETIDENTITY
 	WORD lbrac, first;
 	WORD *t, *stopper, n, prtf;
+	int oldIsFortran90 = AC.IsFortran90;
 	POSITION pos;
 	FILEHANDLE *f;
 #ifdef PARALLEL
@@ -1913,14 +1984,21 @@ WORD WriteAll()
 			TOKENTOLINE(" =","=");
 			lbrac = 0;
 			AO.InFbrack = 0;
-			AO.FortFirst = 0;
+			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
+				AO.FortFirst = 1;
+			else
+				AO.FortFirst = 0;
 			first = 1;
 			while ( GetTerm(BHEAD AO.termbuf) ) {
 				WORD *m;
 				GETSTOP(AO.termbuf,m);
-				if ( first ) {
-					FiniLine();
-					IniLine();
+				if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
+				&& ( ( prtf & PRINTONETERM ) != 0 ) ) {}
+				else {
+					if ( first ) {
+						FiniLine();
+						IniLine();
+					}
 				}
 				if ( ( prtf & PRINTONETERM ) != 0 ) first = 0;
 				if ( WriteTerm(AO.termbuf,&lbrac,first,prtf,0) )
@@ -1940,7 +2018,9 @@ WORD WriteAll()
 			if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE )
 				TokenToLine((UBYTE *)";");
 			AO.OutSkip = 3;
+			AC.IsFortran90 = ISNOTFORTRAN90;
 			FiniLine();
+			AC.IsFortran90 = oldIsFortran90;
 		}
 		else {
 			do { } while ( GetTerm(BHEAD AO.termbuf) );

@@ -677,7 +677,7 @@ int TakeRatRoot(UWORD *a, WORD *n, WORD power)
 
 WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
-	WORD sgn;
+	WORD sgn, res;
 	if ( na < 0 ) {
 		if ( nb < 0 ) {
 			if ( AddPLon(a,-na,b,-nb,c,(UWORD *)nc) ) return(-1);
@@ -696,19 +696,23 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		}
 		else { return( AddPLon(a,na,b,nb,c,(UWORD *)nc) ); }
 	}
-	if ( BigLong(a,na,b,nb) >= 0 ) {
+	if ( ( res = BigLong(a,na,b,nb) ) > 0 ) {
 		SubPLon(a,na,b,nb,c,nc);
 		if ( sgn < 0 ) *nc = -*nc;
 	}
-	else {
+	else if ( res < 0 ) {
 		SubPLon(b,nb,a,na,c,nc);
 		if ( sgn > 0 ) *nc = -*nc;
+	}
+	else {
+		*nc = 0;
+		*c = 0;
 	}
 	return(0);
 }
 
 /*
- 		#] AddLong : 
+ 		#] AddLong :
  		#[ AddPLon :		WORD AddPLon(a,na,b,nb,c,nc)
 
 	Adds two long integers a and b and puts the result in c.
@@ -792,12 +796,12 @@ VOID SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		else *c++ = *a++;
 		na--; nd++;
 	}
-	while ( !*--c && nd ) { nd--; }
+	while ( nd && !*--c ) { nd--; }
 	*nc = (WORD)nd;
 }
 
 /*
- 		#] SubPLon : 
+ 		#] SubPLon :
  		#[ MulLong :		WORD MulLong(a,na,b,nb,c,nc)
 
 	Does a Long multiplication. Assumes that WORD is half the size
@@ -2538,7 +2542,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2817,7 +2821,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus :
+ 		#] TakeModulus : 
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2894,7 +2898,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms :
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 

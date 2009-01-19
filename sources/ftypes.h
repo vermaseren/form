@@ -319,6 +319,9 @@ typedef int (*TFUN1)();
 #define NORMALFORMAT 0
 #define NOSPACEFORMAT 1
 
+#define ISNOTFORTRAN90 0
+#define ISFORTRAN90 1
+
 #define ALSOREVERSE 1
 #define CHISHOLM 2
 #define NOTRICK 16

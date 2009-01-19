@@ -243,7 +243,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -318,7 +318,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -526,7 +526,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -568,6 +568,8 @@ VOID StartVariables()
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
 	AC.LineLength = 79;
+	AM.gIsFortran90 = AC.IsFortran90 = ISNOTFORTRAN90;
+	AM.gFortran90Kind = AC.Fortran90Kind = 0;
 	AC.exprfillwarning = 0;
 	AM.gLineLength = 79;
 	AM.OutBufSize = 80;
@@ -964,7 +966,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1034,7 +1036,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1047,6 +1049,8 @@ int main(int argc, char **argv)
 	UBYTE buf[21]; /* long enough for 64 bit integers */
 	char *sa;
 	int i = sizeof(A);
+
+	iniTools();
 
 #ifdef WITHPTHREADS
 	AB = ABdummy;
@@ -1148,18 +1152,6 @@ int main(int argc, char **argv)
 #endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
-	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
-	AS.MultiThreaded = 0;
-#ifdef WITHPTHREADS
-	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
-	ReserveTempFiles(1);
-	if ( StartAllThreads(AM.totalnumberofthreads) ) {
-		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
-		Terminate(-1);
-	}
-#else
-	ReserveTempFiles(0);
-#endif
 	InitRecovery();
 	if ( CheckRecoveryFile() ) {
 		if ( AC.CheckpointFlag != -1 ) {
@@ -1177,6 +1169,18 @@ int main(int argc, char **argv)
 			Terminate(-1);
 		}
 	}
+	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+	AS.MultiThreaded = 0;
+#ifdef WITHPTHREADS
+	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
+	ReserveTempFiles(1);
+	if ( StartAllThreads(AM.totalnumberofthreads) ) {
+		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
+		Terminate(-1);
+	}
+#else
+	ReserveTempFiles(0);
+#endif
 	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
 	IniVars();
@@ -1194,7 +1198,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1270,7 +1274,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1343,7 +1347,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
  		#[ PrintRunningTime :
 */
 
@@ -1375,6 +1379,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 

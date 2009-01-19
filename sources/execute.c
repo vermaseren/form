@@ -223,6 +223,14 @@ WORD PopVariables()
 	AC.ThreadsFlag = AM.gThreadsFlag;
 	AC.ThreadBalancing = AM.gThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch;
+	AC.IsFortran90 = AM.gIsFortran90;
+	if ( AC.Fortran90Kind ) {
+		M_free(AC.Fortran90Kind,"Fortran90 Kind");
+		AC.Fortran90Kind = 0;
+	}
+	if ( AM.gFortran90Kind ) {
+		AC.Fortran90Kind = strDup1(AM.gFortran90Kind,"Fortran90 Kind");
+	}
 	if ( AC.ThreadsFlag && AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	{
 		WORD *p, *m;
@@ -289,6 +297,14 @@ VOID MakeGlobal()
 	AM.gThreadsFlag = AC.ThreadsFlag;
 	AM.gThreadBalancing = AC.ThreadBalancing;
 	AM.gThreadSortFileSynch = AC.ThreadSortFileSynch;
+	AM.gIsFortran90 = AC.IsFortran90;
+	if ( AM.gFortran90Kind ) {
+		M_free(AM.gFortran90Kind,"Fortran 90 Kind");
+		AM.gFortran90Kind = 0;
+	}
+	if ( AC.Fortran90Kind ) {
+		AM.gFortran90Kind = strDup1(AC.Fortran90Kind,"Fortran 90 Kind");
+	}
 	p = AM.gcmod;
 	m = AC.cmod;
 	i = ABS(AC.ncmod);

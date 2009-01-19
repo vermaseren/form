@@ -1185,7 +1185,7 @@ ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments :
+			#] Simple arguments : 
 */
 						}
 						else {
@@ -1269,7 +1269,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 */
 		}
 		t = uu;
@@ -1284,7 +1284,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill :
+ 		#] WildFill : 
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -2390,6 +2390,7 @@ NoMnot:
 			i++;
 		} while ( ++w < m ); }
 		if ( notflag ) return(0);
+		AN.oldtype = old2; AN.oldvalue = oldval; goto NoMatch;
 	}
 	else { return(0); }
 
@@ -2398,7 +2399,7 @@ NoM:
 }
 
 /*
- 		#] CheckWild : 
+ 		#] CheckWild :
  	#] Wildcards :
   	#[ DenToFunction :
 

@@ -18,6 +18,7 @@ static KEYWORD formatoptions[] = {
 	,{"doublefortran",	(TFUN)0,	DOUBLEFORTRANMODE,	0}
 	,{"float",			(TFUN)0,	0,					2}
 	,{"fortran",		(TFUN)0,	FORTRANMODE,		0}
+	,{"fortran90",		(TFUN)0,	FORTRANMODE,		4}
 	,{"maple",			(TFUN)0,	MAPLEMODE,			0}
 	,{"mathematica",	(TFUN)0,	MATHEMATICAMODE,	0}
 	,{"nospaces",		(TFUN)0,	NOSPACEFORMAT,		3}
@@ -97,7 +98,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ CoCollect :
 
 	Collect,functionname
@@ -554,6 +555,7 @@ int CoFormat(UBYTE *s)
 {
 	int error = 0, x;
 	KEYWORD *key;
+	UBYTE *ss;
 	if ( FG.cTable[*s] == 1 ) {
 		x = 0;
 		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
@@ -579,6 +581,14 @@ int CoFormat(UBYTE *s)
 			sizeof(formatoptions)/sizeof(KEYWORD));
 		if ( key ) {
 			if ( key->flags == 0 ) {
+				if ( key->type == FORTRANMODE || key->type == PFORTRANMODE
+				|| key->type == DOUBLEFORTRANMODE || key->type == VORTRANMODE ) {
+					AC.IsFortran90 = ISNOTFORTRAN90;
+					if ( AC.Fortran90Kind ) {
+						M_free(AC.Fortran90Kind,"Fortran90 Kind");
+						AC.Fortran90Kind = 0;
+					}
+				}
 				AO.DoubleFlag = 0;
 				AC.OutputMode = key->type & NODOUBLEMASK;
 				if ( ( key->type & DOUBLEPRECISIONFLAG ) != 0 ) {
@@ -613,6 +623,26 @@ int CoFormat(UBYTE *s)
 			else if ( key->flags == 3 ) {
 				AC.OutputSpaces = key->type;
 			}
+			else if ( key->flags == 4 ) {
+				AC.IsFortran90 = ISFORTRAN90;
+				if ( AC.Fortran90Kind ) {
+					M_free(AC.Fortran90Kind,"Fortran90 Kind");
+					AC.Fortran90Kind = 0;
+				}
+				while ( FG.cTable[*s] <= 1 ) s++;
+				if ( *s == ',' ) {
+					s++; ss = s;
+					while ( *ss && *ss != ',' ) ss++;
+					if ( *ss == ',' ) {
+						MesPrint("&No white space or comma's allowed in Fortran90 option: %s",s); error = 1;
+					}
+					else {
+						AC.Fortran90Kind = strDup1(s,"Fortran90 Kind");
+					}
+				}
+				AO.DoubleFlag = 0;
+				AC.OutputMode = key->type & NODOUBLEMASK;
+			}
 		}
 		else { MesPrint("&Unknown option: %s",s); error = 1; }
 		AC.LineLength = 72;
@@ -621,7 +651,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat : 
+  	#] CoFormat :
   	#[ CoKeep :
 */
 
@@ -1632,7 +1662,7 @@ nofun:					MesPrint("&%s is not a function or a set of functions"
 }
 
 /*
-  	#] DoArgument :
+  	#] DoArgument : 
   	#[ CoArgument :
 */
 
@@ -1673,7 +1703,7 @@ int CoEndArgument(UBYTE *s)
 int CoReplaceInArg(UBYTE *s) { return(DoArgument(s,TYPEREPARG)); }
 
 /*
-  	#] CoReplaceInArg :
+  	#] CoReplaceInArg : 
   	#[ CoInside :
 */
 

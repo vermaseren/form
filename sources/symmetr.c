@@ -10,17 +10,21 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ MatchE :					WORD MatchE(pattern,fun,inter,par)
 
-		Pattern and fun point at a Levi-Civita tensor.
+		Matches symmetric and antisymmetric tensors.
+		Pattern and fun point at a tensor.
 		Problem is the wildcarding and all its possible permutations.
 		This routine loops over all of them and calls for each
 		possible wildcarding the recursion in ScanFunctions.
 		Note that this can be very costly.
 
-		NOTE: If we make a flag for the sign we can make this into a
-		general routine for symmetric and antisymmetric tensors!
+		Originally this routine did only Levi Civita tensors and hence
+		it dealt only with commuting objects.
+		Because of the backtracking we cannot fall back to the calling
+		ScanFunctions routine and check the sequence of functions when
+		non-commuting objects are involved.
 */
 
 WORD MatchE(WORD *pattern, WORD *fun, WORD *inter, WORD par)
@@ -391,7 +395,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE :
+  	#] MatchE : 
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -437,7 +441,7 @@ WORD Permute(PERM *perm, WORD first)
 }
 
 /*
-  	#] Permute :
+  	#] Permute : 
   	#[ Distribute :
 */
 
@@ -488,7 +492,7 @@ WORD Distribute(DISTRIBUTE *d, WORD first)
 }
 
 /*
-  	#] Distribute :
+  	#] Distribute : 
   	#[ MatchCy :
 
 		Matching of (r)cyclic tensors.
@@ -991,7 +995,7 @@ nomatch:;
 }
 
 /*
-  	#] MatchCy :
+  	#] MatchCy : 
   	#[ FunMatchCy :
 
 		Matching of (r)cyclic functions.
@@ -1198,7 +1202,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 1:
+  	#] Case 1: 
   	#[ Case 2: One -ARGWILD. Fix its length.
 */
 	if ( funnycount == 1 ) {
@@ -1283,7 +1287,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 2:
+  	#] Case 2: 
   	#[ Case 3: More than one -ARGWILD. Complicated.
 */
 
@@ -1427,7 +1431,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		(thewildcards[iraise-1])++;
 	}
 /*
-  	#] Case 3:
+  	#] Case 3: 
 */
 NoSuccess:
 	if ( oldwilval > 0 ) {
@@ -1449,7 +1453,7 @@ nomatch:;
 }
 
 /*
-  	#] FunMatchCy :
+  	#] FunMatchCy : 
   	#[ FunMatchSy :
 
 		Matching of (anti)symmetric functions.
@@ -1967,7 +1971,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy :
+  	#] FunMatchSy : 
   	#[ MatchArgument :
 */
 
@@ -2064,7 +2068,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Both fast :
+  	#] Both fast : 
   	#[ Fast arg :
 */
 	else if ( *m > 0 && *t <= -FUNCTION ) {
@@ -2096,7 +2100,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast arg :
+  	#] Fast arg : 
   	#[ Fast pat :
 */
 	else if ( *m < 0 && *t > 0 ) {
@@ -2123,7 +2127,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast pat :
+  	#] Fast pat : 
   	#[ Both general :
 */
 	else if ( *m > 0 && *t > 0 ) {
@@ -2225,7 +2229,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 	}
 /*
-  	#] Both general :
+  	#] Both general : 
 */
 	else return(0);
 /*
@@ -2235,5 +2239,5 @@ IndAll:			i = m[1] - WILDOFFSET;
 }
 
 /*
-  	#] MatchArgument :
+  	#] MatchArgument : 
 */

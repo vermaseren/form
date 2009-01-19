@@ -1655,7 +1655,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 }
 
 /*
- 		#] FlushOut :
+ 		#] FlushOut : 
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**
@@ -2865,7 +2865,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( i > 0 ) { *pp3 = 0; i--; }
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
-	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
+	while ( nleft > 0 && nright > 0 && *pp1 && *pp2 ) {
 		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
@@ -2882,8 +2882,8 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 		  *pp1++ = 0; *pp2++ = 0; nleft--; nright--;
 		}
 	}
-	while ( *pp1 && --nleft  >= 0 ) { *pp3++ = *pp1; *pp1++ = 0; }
-	while ( *pp2 && --nright >= 0 ) { *pp3++ = *pp2++; }
+	while ( --nleft  >= 0 && *pp1 ) { *pp3++ = *pp1; *pp1++ = 0; }
+	while ( --nright >= 0 && *pp2 ) { *pp3++ = *pp2++; }
 	nleft = pp3 - Pointer;
 	while ( pp3 < pptop ) *pp3++ = 0;
 	AN.InScratch = 0;
@@ -2957,7 +2957,7 @@ VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
 #endif
 
 /*
- 		#] SplitMerge : 
+ 		#] SplitMerge :
  		#[ GarbHand :				VOID GarbHand()
 */
 /**

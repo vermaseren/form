@@ -753,7 +753,7 @@ WORD PutInStore(INDEXENTRY *ind, WORD num)
 #ifndef SYSDEPENDENTSAVE
 	/* prepare look-up table for tensor functions */
 	if ( ind->nfunctions ) {
-		AO.tensorList = (UBYTE *)malloc(MAXSAVEFUNCTION);
+		AO.tensorList = (UBYTE *)Malloc1(MAXSAVEFUNCTION,"PutInStore");
 	}
 	SETBASEPOSITION(scrpos, DIFBASE(ind->position,ind->variables));
 	/* copy variables first */
@@ -801,7 +801,7 @@ WORD PutInStore(INDEXENTRY *ind, WORD num)
 	} while ( ISPOSPOS(scrpos) );
 	/* free look-up table for tensor functions */
 	if ( ind->nfunctions ) {
-		free(AO.tensorList);
+		M_free(AO.tensorList,"PutInStore");
 	}
 	scrpos = AR.StoreData.Position;
 	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);

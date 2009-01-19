@@ -135,7 +135,7 @@ void PolyFunDirty(PHEAD WORD *term)
 }
 
 /*
- 		#] PolyFunDirty :
+ 		#] PolyFunDirty : 
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -1436,9 +1436,36 @@ NoCaseB:
  		#] MatchFunction : 
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
+		Finds in which functions to look for a match.
+		inpat is the start of the pattern still to be matched.
+		inter is the start of the term still to be matched.
+		par gives information about commutativity.
+			par = 0: nothing special
+			par = 1: regular noncommuting function
+			par = 2: GAMMA function
+
 		AN.patstop: end of the functions field in the search pattern
 		AN.terstop: end of the functions field in the target pattern
 		AN.terstart: address of entire term;
+
+		The actual matching of the functions and their arguments is done
+		in a number of different routines. Mainly MatchFunction when there
+		are no symmetry properties.
+		Also: MatchE
+		      MatchCy
+		      FunMatchSy
+		      FunMatchCy
+
+		The main problem here is backtracking, ie continuing with wildcard
+		possibilities when a first assignment doesn't work.
+		Important note: this was completely forgotten in the symmetric
+		functions till 6-jan-2009. As of the moment this still has to
+		be fixed.
+
+	New scheme to be implemented for non-commuting objects:
+	When we are matching a second (or higher) function, any match can only
+	be directly after the last matched non-commuting function or a commuting
+	function. This will take care of whatever happens in MatchE etc.
 */
 
 WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
@@ -1474,6 +1501,54 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 	}
 	AT.WorkPointer = t;
 	do {
+#ifndef NEWCOMMUTE
+/*
+		Find an eligible unsubstituted function
+*/
+		if ( AN.RepFunNum > 0 ) {
+/*
+			First try a non-commuting function, just after the last
+			substituted non-commuting function.
+*/
+			if ( *inter >= FUNCTION && functions[*inter-FUNCTION].commute ) {
+				do {
+					offset = WORDDIF(inter,AN.terstart);
+					for ( i = 0; i < AN.RepFunNum; i += 2 ) {
+						if ( AN.RepFunList[i] >= offset ) break;
+					}
+					if ( i >= AN.RepFunNum ) break;
+					inter += inter[1];
+				} while ( inter < AN.terfirstcomm );
+				if ( inter < AN.terfirstcomm ) { /* Check that it is directly after */
+					for ( i = 0; i < AN.RepFunNum; i += 2 ) {
+						if ( functions[AN.terstart[AN.RepFunList[i]]-FUNCTION].commute
+						&& AN.RepFunList[i]+AN.terstart[AN.RepFunList[i]+1] == offset ) break;
+					}
+					if ( i < AN.RepFunNum ) goto trythis;
+				}
+				inter = AN.terfirstcomm;
+			}
+/*
+			Now try one of the commuting functions
+*/
+			while ( inter < AN.terstop ) {
+				offset = WORDDIF(inter,AN.terstart);
+				for ( i = 0; i < AN.RepFunNum; i += 2 ) {
+					if ( AN.RepFunList[i] == offset ) break;
+				}
+				if ( i >= AN.RepFunNum ) break;
+				inter += inter[1];
+			}
+			if ( inter >= AN.terstop ) { AT.WorkPointer = OldWork; return(0); }
+trythis:;
+		}
+		else {
+/*
+			The first function can be anywhere. We have no problems.
+*/
+			offset = WORDDIF(inter,AN.terstart);
+		}
+#else
 		/* first find an unsubstituted function */
 		do {
 			offset = WORDDIF(inter,AN.terstart);
@@ -1484,6 +1559,7 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 			inter += inter[1];
 		} while ( inter < AN.terstop );
 		if ( inter >= AN.terstop ) { AT.WorkPointer = OldWork; return(0); }
+#endif
 		wilds = 0;
 		/* We found one */
 		if ( *inter >= FUNCTION && *inpat >= FUNCTION ) {
@@ -1544,28 +1620,6 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 			}
 			else if ( par > 0 ) { SetStop = 1; goto maybenext; }
 		}
-/*
-		if ( *inter == *inpat && *inter >= FUNCTION
-		&& functions[*inter-FUNCTION].spec >= TENSORFUNCTION
-		&& ( inpat[1] != FUNHEAD+2 || inpat[FUNHEAD] != FUNNYWILD ) ) {
-			if ( ( sym = (functions[*inter-FUNCTION].symmetric & ~REVERSEORDER) )
-			 == ANTISYMMETRIC || sym == SYMMETRIC ) {
-				if ( MatchE(inpat,inter,instart,par) ) goto OnSuccess;
-			}
-			else if ( sym == CYCLESYMMETRIC || sym == RCYCLESYMMETRIC ) {
-				if ( MatchCy(inpat,inter,instart,par) ) goto OnSuccess;
-			}
-			else goto rewild;
-		}
-		else if ( *inter == *inpat && *inter >= FUNCTION
-		&& functions[*inter-FUNCTION].spec == 0
-		&& ( sym = (functions[*inter-FUNCTION].symmetric & ~REVERSEORDER) ) != 0 ) {
-			if ( sym == CYCLESYMMETRIC || sym == RCYCLESYMMETRIC ) {
-				if ( FunMatchCy(inpat,inter,instart,par) ) goto OnSuccess;
-			}
-			else goto rewild;
-		}
-*/
 		else {
 rewild:
 		if ( *inter != SUBEXPRESSION && MatchFunction(BHEAD inpat,inter,&wilds) ) {
@@ -1708,7 +1762,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions : 
+ 		#] ScanFunctions :
 	#] Patterns :
 */
 
