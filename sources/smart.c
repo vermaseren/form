@@ -154,7 +154,7 @@ void StudyPattern(WORD *lhs)
 			funscratch = AN.FunInfo[i];
 			AN.FunInfo[i] = AN.FunInfo[i-1];
 			AN.FunInfo[i-1] = funscratch;
-			for ( j = i-1; j > nc; j-- ) {
+			for ( j = i-1; j > nc && j > 0; j-- ) {
 				f1 = AN.FunInfo+j;
 				f2 = f1-1;
 				if ( ( f1->symmet < f2->symmet ) || (
