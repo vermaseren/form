@@ -12,15 +12,15 @@
 
 #else /* def HAVE_CONFIG_H */
 
-#define VERSION "3.2"
+#define VERSION "3.3"
 #define MAJORVERSION 3
-#define MINORVERSION 2
+#define MINORVERSION 3
 /* #define BETAVERSION */
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "16-apr-2007"
+#define PRODUCTIONDATE "23-jan-2009"
 #endif
 
 #define WITHZLIB

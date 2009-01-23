@@ -3673,7 +3673,7 @@ int CoIf(UBYTE *inp)
 	WORD *w, *ww, *u, *s, *OldWork, *OldSpace = AT.WorkSpace;
 	WORD gotexp = 0;		/* Indicates whether there can be a condition */
 	WORD lenpp, lenlev, ncoef, i, number;
-	UBYTE *p, *pp, c;
+	UBYTE *p, *pp, *ppp, c;
 	CBUF *C = cbuf+AC.cbufnum;
 	LONG x;
 
@@ -3810,7 +3810,10 @@ OnlyNum:
 				This has to be modified in the future.
 */
 				AT.WorkSpace = AT.WorkPointer = w;
-				AC.idoption = SUBMULTI;
+				ppp = inp;
+				while ( FG.cTable[*ppp] == 0 && ppp < p ) ppp++;
+				if ( *ppp == ',' ) AC.idoption = 0;
+				else AC.idoption = SUBMULTI;
 				level = CoIdExpression(inp,TYPEIF);
 				AT.WorkSpace = OldSpace;
 				AT.WorkPointer = OldWork;
@@ -4044,7 +4047,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf : 
+  	#] CoIf :
   	#[ CoElse :
 */
 

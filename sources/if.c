@@ -574,8 +574,24 @@ WORD HowMany(WORD *ifcode, WORD *term)
 		case SUBONLY :
 			/* Must be an exact match */
 			AN.UseFindOnly = 1; AN.ForFindOnly = 0;
-			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind ||
-				FindOnly(BHEAD term,m) ) ) RetVal = 1;
+/*
+		Copy the term first to scratchterm. This is needed
+		because of the Substitute.
+*/
+			i = *term;
+			t = term; newterm = r = AT.WorkPointer;
+			NCOPY(r,t,i); AT.WorkPointer = r;
+			RetVal = 0;
+			if ( FindRest(BHEAD newterm,m) && ( AN.UsedOtherFind ||
+				FindOnly(BHEAD newterm,m) ) ) {
+				Substitute(BHEAD newterm,m,1);
+				if ( numdollars ) {
+					WildDollars();
+					numdollars = 0;
+				}
+				ClearWild(BHEAD0);
+				RetVal = 1;
+			}
 			else RetVal = 0;
 			break;
 		case SUBMANY :
@@ -629,9 +645,24 @@ WORD HowMany(WORD *ifcode, WORD *term)
 			}
 			break;
 		case SUBONCE :
+/*
+		Copy the term first to scratchterm. This is needed
+		because of the Substitute.
+*/
+			i = *term;
+			t = term; newterm = r = AT.WorkPointer;
+			NCOPY(r,t,i); AT.WorkPointer = r;
+			RetVal = 0;
 			AN.UseFindOnly = 0;
-			if ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind || FindOnce(BHEAD term,m) ) )
+			if ( FindRest(BHEAD newterm,m) && ( AN.UsedOtherFind || FindOnce(BHEAD newterm,m) ) ) {
+				Substitute(BHEAD newterm,m,1);
+				if ( numdollars ) {
+					WildDollars();
+					numdollars = 0;
+				}
+				ClearWild(BHEAD0);
 				RetVal = 1;
+			}
 			else RetVal = 0;
 			break;
 		case SUBMULTI :
@@ -659,7 +690,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 }
 
 /*
- 		#] HowMany : 
+ 		#] HowMany :
  		#[ DoubleIfBuffers :
 */
 

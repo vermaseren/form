@@ -101,7 +101,7 @@ int DoTail(int argc, UBYTE **argv)
 							break;
 				case 'L': /* Make log file with only final statistics */
 							AM.LogType = 1;  break;
-				case 'M': /* Multirun. Becareful with tempfiles */
+				case 'M': /* Multirun. Name of tempfiles will contain PID */
 							AM.MultiRun = 1;
 							break;
 				case 'm': /* Read number of threads */
@@ -111,7 +111,7 @@ int DoTail(int argc, UBYTE **argv)
 							while ( *s >= '0' && *s <= '9' )
 								threadnum = 10*threadnum + *s++ - '0';
 							if ( *s ) {
-								Error1("Illegal value for option m: ",t);
+								Error1("Illegal value for option m or w: ",t);
 								errorflag++;
 							}
 /*							if ( threadnum == 1 ) threadnum = 0; */
@@ -149,6 +149,9 @@ int DoTail(int argc, UBYTE **argv)
 					break;
 				case 'q': /* Quiet option. Only output */
 							AM.silent = 1; break;
+				case 'R': /* recover from saved snapshot */
+							AC.CheckpointFlag = -1;
+							break;
 				case 's': /* Next arg is dir with form.set to be used */
 							if ( s[1] == 'i' ) { /* compatibility */
 								AM.silent = 1; break;
@@ -178,9 +181,6 @@ printversion:;
 							break;
 				case 'y': /* Preprocessor dumps output. No compilation. */
 							AP.PreDebug = PREPROONLY;   break;
-				case 'R': /* recover from saved snapshot */
-							AC.CheckpointFlag = -1;
-							break;
 				default:
 						if ( FG.cTable[*s] == 1 ) {
 							AM.SkipClears = 0; t = s;
@@ -243,7 +243,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -762,7 +762,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
