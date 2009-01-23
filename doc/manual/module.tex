@@ -234,19 +234,22 @@ before making a very large run.
 \section{Checkpoints}
 \label{checkpoints}
 
-If FORM programs have to run for a long time the reliability of the hardware
-(computer system or network) or of the software infrastructure becomes a critical
-issue. Program termination due to unforeseen failures may waste days or weeks of
-invested execution time. The checkpoint mechanism was introduced to protect long
-running FORM programs as good as possible from such accidental interruptions.
-With activated checkpoints FORM will save its internal state and data from time
-to time on the hard disk. This data then allows to recover from a crash.
+If\index{checkpoints} FORM programs have to run for a long time the 
+reliability of the hardware(computer system or network) or of the software 
+infrastructure becomes a critical issue. Program 
+termination\index{termination} due to unforeseen failures may waste days or 
+weeks of invested execution time. The checkpoint mechanism was introduced 
+to protect long running FORM programs as good as possible from such 
+accidental interruptions. With activated checkpoints FORM will save its 
+internal state and data from time to time on the hard disk. This data then 
+allows a recovery from a crash\index{crash}.
 
-The checkpoint mechanism can be activated or deactivated by {\tt On} and {\tt
-Off} statements. If the user has activated checkpoints recovery data will be
-written to disk at the end of a module execution. Options allow to influence the
-details of the saving mechanism. If a program is terminated during execution FORM
-can be restarted with the {\tt -R} option and it will continue its execution at
+The checkpoint mechanism can be activated or deactivated by {\tt 
+On}\index{on} and {\tt Off}\index{off} statements. If the user has 
+activated checkpoints recovery\index{recovery} data will be written to disk 
+at the end of a module execution. Options allow to influence the details of 
+the saving mechanism. If a program is terminated during execution FORM can 
+be restarted with the {\tt -R} option and it will continue its execution at 
 the last saved recovery point.
 
 The syntax of the checkpoint activation and deactivation is
@@ -256,50 +259,53 @@ The syntax of the checkpoint activation and deactivation is
 \end{verbatim}
 
 If no options are given the recovery data will be saved at the end of every
-module. If one gives a time
+module\index{module}. If one gives a time\index{time}
 \begin{verbatim}
     On checkpoint <NUMBER>[<UNIT>];
 \end{verbatim}
-the saving will only be done if the given time has passed after the last saving.
-Possible unit specifiers are {\tt s, m, h, d} and the number will then be
-interpreted as seconds, minutes, hours, or days, respectively. The default unit
-is seconds.
+the saving will only be done if the given time has passed after the last 
+saving.Possible unit specifiers are {\tt s, m, h, d} and the number will 
+then be interpreted as seconds, minutes, hours, or days, respectively. The 
+default unit is seconds.
 
-If one needs to run a script before or after the saving one can specify a script
-filename.
+If one needs to run a script\index{run a script} before or after the saving 
+one can specify a scriptfilename.
 \begin{verbatim}
     On checkpoint runbefore="<SCRIPTFILENAME>";
     On checkpoint runafter="<SCRIPTFILENAME>";
     On checkpoint run="<SCRIPTFILENAME>";
 \end{verbatim}
-The option {\tt run} sets both the scripts to be run before and after saving.
-The scripts must have the executable flag set and they must reside in the
-execution path of the shell (unless the filename already contains the proper
-path).
+The option {\tt run}\index{run} sets both the scripts to be run before and 
+after saving.The scripts must have the executable flag set and they must 
+reside in the execution path of the shell\index{shell} (unless the filename 
+already contains the proper path).
 
-The scripts receive the module number as an argument (accessible as \$1 inside
-the script). The return value of the script running before the saving will be
-interpreted. If the script returns an error (non-zero return value) a message
-will be issued and the saving will be skipped. 
+The scripts receive the module number\index{module number} as an argument 
+(accessible as \$1 insidethe script). The return value of the script 
+running before the saving will be interpreted. If the script returns an 
+error (non-zero return value) a message will be issued and the saving will 
+be skipped. 
 
-The recovery data will be written to files named {\tt FORMrecv.*} with various
-name extensions. If a file {\tt FORMrecv.tmp} exists FORM will not run unless
-one gives it the recovery option {\tt -R}. This is to prevent the unintentional
-loss of recovery data. If FORM terminates successfully all the additional data
-files will be removed.
+The recovery data will be written to files named {\tt FORMrecv.*} with 
+various name extensions. If a file {\tt FORMrecv.tmp} exists FORM will not 
+run unless one gives it the recovery option\index{recovery option}
+{\tt -R}. This is to prevent the unintentional loss of recovery data. If 
+FORM terminates successfully all the additional data files will be removed.
 
-The additional recovery files will be created in the directory containing the
-scratch files.  The extra files will occupy roughly as much space as the scratch
-files and the save and hide files combined. This extra space must be made
+The additional recovery files will be created in the directory containing 
+the scratch files.  The extra files will occupy roughly as much space as 
+the scratch files\index{scratch files} and the save\index{save files} and 
+hide files\index{hide files} combined. This extra space must be made 
 available, of course.
 
-If recovery data exists and FORM is started with the {\tt -R} option FORM will
-continue execution after the last module that successfully wrote the recovery
-data. All the command line parameters that have been given to the crashed FORM
-program must also be given to the recovering FORM program.  The input files are
-not part of the recovery data and will be read in anew when recovering.
-Therefore it is strongly discouraged to change any of these files between saving
-and recovery.
+If recovery data exists and FORM is started with the {\tt -R} option FORM 
+will continue execution after the last module that successfully wrote the 
+recovery data. All the command line parameters that have been given to the 
+crashed FORM program\index{crashed FORM program} must also be given to the 
+recovering FORM program. The input files are not part of the recovery data 
+and will be read in anew when recovering. Therefore it is strongly 
+discouraged to change any of these files between saving and recovery.
 
 At the moment, the recovery mechanism is only implemented for sequential FORM
-and threaded TFORM.  ParFORM support is planned for the future.
+and multi-threaded TFORM.  ParFORM support is planned for the future.
+

@@ -35,6 +35,12 @@ sizes of the buffers are given in bytes, unless mentioned otherwise. A word
 is 2 bytes for 32\index{32 bits} bit machines and 4 bytes for 64\index{64 
 bits} bit machines.
 
+In FORM version 3.3 and later, it is also allowed to define 
+preprocessor variables\index{preprocessor variables} (see also 
+\ref{preprovariables}) in the setup file. In addition one can use 
+preprocessor variables in the setup, provided it is not in the name of the 
+parameter/keyword.
+
 \leftvitem{3.8cm}{bracketindexsize\index{setup!bracketindexsize}\index{bracketindexsize}}
 \rightvitem{12.6cm}{Maximum size in bytes of any individual index of a 
 bracketted expression. Each expression will have its own index. The index 
@@ -69,6 +75,16 @@ it should not go much beyond 1000 on a 32\index{32 bits} bit machine. On a
 compiler will allow. This limits the number of continuation lines, when the 
 output option `Format Fortran' (see \ref{substaformat}) is selected.}
 
+\leftvitem{3.8cm}{Define\index{setup!define}\index{define}}
+\rightvitem{12.6cm}{The syntax is as in the \#define instruction in the 
+preprocessor (see \ref{preprovariables}), with the remark that in the setup 
+file there should be no leading \# character as that would make the line 
+into commentary. Example: \hfill \\
+{\tt\ \ \ \ define MODULUS "31991"} \hfill \\
+which could be used 
+at a later point in the program to activate a modulus statement (see 
+\ref{substamodulus}).}
+
 \leftvitem{3.8cm}{DotChar\index{setup!dotchar}\index{dotchar}}
 \rightvitem{12.6cm}{There should be a single character following this name 
 (and the blank(s) after it). This character will be used instead of the \_, 
@@ -81,6 +97,12 @@ recognize this character as belonging to a variable name.}
 \leftvitem{3.8cm}{FunctionLevels\index{setup!functionlevels}\index{functionlevels}}
 \rightvitem{12.6cm}{The maximum number of levels that may occur, when 
 functions have functions in their arguments.}
+
+\leftvitem{3.8cm}{HideSize\index{setup!hidesize}\index{hidesize}}
+\rightvitem{12.6cm}{The size of the hide buffer. The size of this buffer is 
+normally set equal to scratchsize (see below). If one uses the setting of 
+HideSize after the setting of ScratchSize, one can give the hide buffer its 
+own size. There are cases that this can make the program faster.}
  
 \leftvitem{3.8cm}{IncDir\index{setup!incdir}\index{incdir}}
 \rightvitem{12.6cm}{Directory (or path of directories) in which FORM will 
@@ -88,7 +110,10 @@ look for files if they are not to be found in the current directory. This
 involves files for the \#include\index{\#include} and \#call\index{\#call} 
 instructions. This variable takes precedence over the 
 Path\index{setup!path}\index{path} variable.}
- 
+
+%\leftvitem{3.8cm}{IndentSpace\index{setup!indentspace}\index{indentspace}}
+%\rightvitem{12.6cm}{}
+
 \leftvitem{3.8cm}{InsideFirst\index{setup!insidefirst}\index{insidefirst}}
 \rightvitem{12.6cm}{Not having any effect at the moment.}
  
@@ -144,6 +169,12 @@ per processor.}
 \rightvitem{12.6cm}{When this word is mentioned, the default setting for the 
 statistics is that no run time statistics will be shown. Ordinarily they 
 will be shown.}
+
+\leftvitem{3.8cm}{NwriteThreadStatistics\index{setup!nwritethreadstatistics}
+\index{nwritethreadstatistics}}
+\rightvitem{12.6cm}{This variable has the values ON or OFF. It controls for 
+TFORM whether the statistics of the individual threads will be printed. The 
+default value is ON.}
  
 \leftvitem{3.8cm}{OldOrder\index{setup!oldorder}\index{oldorder}}
 \rightvitem{12.6cm}{A special flag (values ON/OFF) by which one can still 
@@ -163,8 +194,10 @@ look for files if they are not to be found in the current directory. This
 involves files for the \#include\index{\#include} and \#call\index{\#call} 
 instructions. FORM will test this path after a potential path specified as 
 IncDir\index{setup!incdir}\index{incdir}.}
- 
 
+%\leftvitem{3.8cm}{PolyGCDchoice\index{setup!polygcdchoice}\index{polygcdchoice}}
+%\rightvitem{12.6cm}{}
+ 
 \leftvitem{3.8cm}{ProcedureExtension\index{setup!procedureEetension}\index{procedureextension}}
 \rightvitem{12.6cm}{The extension that will be used by FORM for finding the 
 procedures that are in separate files. Restrictions on the strings used are 
@@ -185,7 +218,8 @@ or three of these buffers, depending on whether the hide\index{hide}
 facility is being used (see \ref{substahide}). These buffers must have a 
 size that is at least as large as the MaxTermSize\index{maxtermsize}. These 
 buffers act as caches for the files with the extension .sc1\index{.sc1}, 
-.sc2\index{.sc2} and .sc3\index{.sc3}.}
+.sc2\index{.sc2} and .sc3\index{.sc3}. See also the HideSize parameter 
+above for the independent setting of the size of the hide buffer.}
 
 \leftvitem{3.8cm}{SizeStoreCache\index{setup!sizestorecache}\index{sizestorecache}}
 \rightvitem{12.6cm}{The size of the caches\index{caches} that are used for 
@@ -391,49 +425,58 @@ bit bigger when potential conflicts with MaxTermSize occur.
 
 The default settings are
 \begin{center}
-\begin{tabular}{lr}
-bracketindexsize &      200000 \\
-commentchar &           $*$ \\
-compresssize &          30000 \\
-constindex &            128 \\
-continuationlines &     15 \\
-dotchar &               . \\
-filepatches &           128 \\
-functionlevels &        30 \\
-incdir &                . \\
-insidefirst &           ON \\
-largepatches &          128 \\
-largesize &             10000000 \\
-maxnumbersize &         200 \\
-maxtermsize &           2000 \\
-maxwildcards &          100 \\
-numstorecaches &        4 \\
-nwritestatistics &      OFF \\
-oldorder &              OFF \\
-parentheses &           100 \\
-path &                  . \\
-scratchsize &           3000000 \\
-sizestorecache &        32768 \\
-slavepatchsize &        10 \\
-smallextension &        3000000 \\
-smallsize &             2500000 \\
-sortiosize &            100000 \\
-sorttype &              lowfirst \\
-subfilepatches &        32 \\
-sublargepatches &       64 \\
-sublargesize &          1000000 \\
-subsmallextension &     300000 \\
-subsmallsize &          200000 \\
-subsortiosize &         32768 \\
-subtermsinsmall &       8000 \\
-tempdir &               . \\
-termsinsmall &          50000 \\
-threadbucketsize &      500 \\
-threadloadbalancing &   ON \\
-threads &               0 \\
-threadsortfilesynch &   OFF \\
-workspace &             1000000 \\
-%zipsize &               32768 \\
+\begin{tabular}{lrr}
+Variable         &      32-bits       &    64-bits   \\ \hline
+bracketindexsize &      200000        & 200000 \\
+commentchar &           $*$           & $*$ \\
+compresssize &          90000         & 90000 \\
+constindex &            128           & 128 \\
+continuationlines &     15            & 15 \\
+dotchar &               .             & . \\
+filepatches &           256           & 256 \\
+functionlevels &        30            & 30 \\
+hidesize &              50000000      & 50000000 \\
+incdir &                .             & . \\
+%indentspace &                        & \\
+insidefirst &           ON            & ON \\
+largepatches &          256           & 256 \\
+largesize &             50000000      & 50000000 \\
+maxnumbersize &         200           & 200 \\
+maxtermsize &           10000         & 40000 \\
+maxwildcards &          100           & 100 \\
+nospacesinnumbers &     OFF           & OFF \\
+numstorecaches &        4             & 4 \\
+nwritefinalstatistics & OFF           & OFF \\
+nwritestatistics &      OFF           & OFF \\
+nwritethreadstatistics &OFF           & OFF \\
+oldorder &              OFF           & OFF \\
+parentheses &           100           & 100 \\
+path &                  .             & . \\
+%polygcdchoice &        0             & 0 \\
+scratchsize &           50000000      & 50000000 \\
+sizestorecache &        32768         & 32768 \\
+slavepatchsize &        10            & 10 \\
+smallextension &        20000000      & 20000000 \\
+smallsize &             10000000      & 10000000 \\
+sortiosize &            100000        & 100000 \\
+sorttype &              lowfirst      & lowfirst \\
+subfilepatches &        64            & 64 \\
+sublargepatches &       64            & 64 \\
+sublargesize &          4000000       & 4000000 \\
+subsmallextension &     800000        & 800000 \\
+subsmallsize &          500000        & 500000 \\
+subsortiosize &         32768         & 32768 \\
+subtermsinsmall &       10000         & 10000 \\
+tempdir &               .             & . \\
+termsinsmall &          100000        & 100000 \\
+threadbucketsize &      500           & 500 \\
+threadloadbalancing &   ON            & ON \\
+threads &               0             & 0 \\
+threadsortfilesynch &   OFF           & OFF \\
+threadscratchoutsize &  2500000       & 2500000 \\
+threadscratchsize &     100000        & 100000 \\
+workspace &             1000000       & 2000000
+%zipsize &               32768        & 32768
 \end{tabular}
 \end{center}
 If one compares these numbers with the corresponding numbers for older 
@@ -448,3 +491,12 @@ zeroes) and giga (9 zeroes) as in 10M for 10000000.
 
 To find out what the setup values are, one can use the `ON,setup;' 
 statement (\ref{substaon});
+
+In version 3.3 and later one may use environment\index{environment} 
+variables for the values of the setup parameters, either in the setup file 
+or at the beginning of the .frm file. The environment variable is used as a 
+preprocessor variable in the sense that its name is enclosed in a 
+backquote-quote pair as in \verb:`VARNAME':. The variable will be looked 
+for and if found it will be substituted. This can however not be done in a 
+recursive way, because the regular routines that take care of the 
+preprocessor variables are not active yet when the setups are read.

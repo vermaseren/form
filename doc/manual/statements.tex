@@ -802,7 +802,10 @@ which the second acts as a denominator and the first as a numerator:
 \end{verbatim}
 For more about this one should consult the part on the 
 PolyRatFun\index{polyratfun} statement 
-(\ref{substapolyratfun}) and the chapter on polynomials.
+(\ref{substapolyratfun}) and the chapter on polynomials (still to be 
+included because the current version can handle only polynomials in a 
+single variable and is also not optimized for many occurrences that have 
+identical denominators).
 \vspace{10mm}
 
 %--#] denominators : 
@@ -914,6 +917,28 @@ completely they are removed. See also the ndrop
 statement~\ref{substandrop}. \vspace{10mm}
 
 %--#] drop : 
+%--#[ dropcoefficient :
+
+\section{dropcoefficient}
+\label{substadropcoefficient}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & DropCoefficient;
+\end{tabular} \vspace{4mm}
+
+\noindent This statement replaces the coefficient of the current term by 
+one. In principle it has the same effect as
+\begin{verbatim}
+   Multiply 1/coeff_;
+\end{verbatim}
+but there is always the philosophical issue what is the coefficient once 
+one enters function arguments. Inside an 
+Argument/EndArgument\index{argument}\index{endargument} environment this 
+statement would drop the coefficient of the terms inside the argument.
+\vspace{10mm}
+
+%--#] dropcoefficient : 
 %--#[ else :
 
 \section{else}
@@ -1412,6 +1437,27 @@ the setup file (see \ref{setup}). Its default is the underscore character.}
 double floating point numbers, because some compilers convert numbers like 
 1. into 1.E0. With this format FORM will force double precision by using 
 1.D0.}
+
+\leftvitem{3cm}{fortran90\index{fortran90}\index{format!fortran90}}
+\rightvitem{13cm}{Similar to the fortran option, but prints the 
+continuation lines according to the syntax of Fortran 90. If the fortran90 
+option is followed by a comma and a string that does not contain white space 
+or other comma's, this string is attached to all numbers in coefficients of 
+terms. Example: \hfill \\
+{\tt\ \ \ \ \ \ Format Fortran90,.0\_ki;} \hfill \\
+%\begin{verbatim}
+%   Format Fortran90,.0_ki;
+%\end{verbatim}
+which would give in the printout: \hfill \\
+{\tt\ \ \ \ \ \ +23.0\_ki/32.0\_ki*a**2\& } \hfill \\
+{\tt\ \ \ \ \&\ +34.0\_ki/1325.0\_ki*a**3} \hfill \\
+%\begin{verbatim}
+%       +23.0_ki/32.0_ki*a**2&
+%     & +34.0_ki/1325.0_ki*a**3
+%\end{verbatim}
+When there is no string attached it defaults to a period as in the regular 
+Fortran option.
+}
 
 \leftvitem{3cm}{C\index{C}\index{format!C}}
 \rightvitem{13cm}{Output will be C compatible. The
@@ -2088,6 +2134,38 @@ The user should try to use the insidefirst option of the on (see
 \ref{substaon}) or the off (see \ref{substaoff}) statements. \vspace{10mm}
 
 %--#] insidefirst : 
+%--#[ intohide :
+
+\section{intohide}
+\label{substaintohide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & intohide; \\
+       & intohide {\tt<}list of expressions{\tt>};
+\\ See also & hide (\ref{substahide})
+\end{tabular} \vspace{4mm}
+
+\noindent In the first variety this statement marks all currently active 
+expressions for being put in hidden\index{hide} storage at the end of the 
+module, after it has been processed. In the second variety it marks only 
+the specified active\index{active expressions} expressions as such. 
+\vspace{4mm}
+
+\noindent The difference with the hide (\ref{substahide}) statement is 
+that in the hide statement the expression is copied immediately into the 
+hide system and it will not be processed in the current module, while in 
+the intohide statement the expression is first processed and its final 
+output in this module is sent to the hide system rather than to the regular 
+scratch system. The effect is the same as not putting the intohide 
+statement in the current module and putting a hide statement in the next, 
+but it saves one copy operation and it is possibly a bit more economical 
+with the disk space.
+\vspace{4mm}
+
+\noindent Note that a .store instruction will simultaneously remove all 
+expressions from the hide system. \vspace{10mm}
+%--#] intohide : 
 %--#[ keep :
 
 \section{keep}
@@ -2266,10 +2344,21 @@ is just a shorthand notation for
 \vspace{10mm}
 
 %--#] many : 
-%--#[ merge : To do <--------
+%--#[ merge :
 %
-%	See in reshuf.c
-%	Opposite of distrib_
+\section{merge}
+\label{substamerge}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & merge,functionname; \\
+       & merge,once,functionname;
+\\ See also & shuffle (\ref{substashuffle})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement is exactly the same as the shuffle\index{shuffle} 
+statement (see \ref{substashuffle}).
+\vspace{10mm}
 %
 %--#] merge : 
 %--#[ metric :
@@ -2445,6 +2534,7 @@ powers of the generator.\vspace{10mm}
 %	Takes all occurrences of function f1 in the variable x.
 %	Takes the arguments mod m and determines their GCD.
 %	Puts the result in f2. Leaves the f1.
+%	Because it doesn't work too well yet is isn't officially supported.
 %
 %--#] modulusgcd : 
 %--#[ multi :
@@ -2961,6 +3051,16 @@ premium. The digit indicates the compression level. Zero means no
 compression and 9 is the highest level. The default level is 6. Above that 
 the compression becomes very slow and doesn't gain very much extra.}
 
+\leftvitem{3cm}{fewerstatistics\index{on!fewerstatistics}}
+\rightvitem{13cm}{Determines how many of the statistics FORM prints when a 
+small buffer is full. The keyword can be followed by a positive integer in 
+which case one out of that many of these statistics will be printed. If no 
+number is given the default value of 10 is used. When the number that 
+follows is zero, this feature is turned off (same effect as the value one).}
+
+\leftvitem{3cm}{fewerstats\index{on!fewerstats}}
+\rightvitem{13cm}{Same as the above fewerstatistics.}
+
 \leftvitem{3cm}{finalstats\index{on!finalstats}}
 \rightvitem{13cm}{Determines whether FORM prints a final line of run time 
 statistics at the end of the run. Default is on.}
@@ -2968,6 +3068,9 @@ statistics at the end of the run. Default is on.}
 \leftvitem{3cm}{highfirst\index{on!highfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
 powers come before low powers.}
+
+%\leftvitem{3cm}{indentspace\index{on!indentspace}}
+%\rightvitem{13cm}{Not active at the moment.}
 
 \leftvitem{3cm}{insidefirst\index{on!insidefirst}}
 \rightvitem{13cm}{Not active at the moment.}
@@ -3054,7 +3157,7 @@ is on.}
 is the default.}
 \vspace{10mm}
 
-%--#] on : 
+%--#] on :
 %--#[ once :
  
 \section{once}
@@ -3196,7 +3299,7 @@ moment of writing (15-nov-2007), the polyratfun only supports rational
 polynomials in a single variable.
 \vspace{10mm}
 
-%--#] polyratfun :
+%--#] polyratfun : 
 %--#[ pophide :
 
 \section{pophide}
@@ -3883,6 +3986,73 @@ program after execution\index{execution} of the current module has
 finished. \vspace{10mm}
 
 %--#] setexitflag : 
+%--#[ shuffle :
+%
+\section{shuffle}
+\label{substashuffle}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & shuffle,functionname; \\
+       & shuffle,once,functionname;
+\\ See also & stuffle (\ref{substastuffle}) \\
+            & merge (\ref{substamerge})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement is exactly the same as the merge\index{merge} 
+statement. It takes two occurrences of the mentioned function and outputs 
+terms, each with one function in which the two argument lists have been 
+merged in all different ways, keeping the relative ordering of the two 
+lists preserved. It is the opposite of the 
+distrib\_\index{distrib\_}\index{function!distrib\_} function (see 
+\ref{fundistrib}). Hence
+\begin{verbatim}
+   Local F = f(a,b)*f(c,d);
+   shuffle,f;
+\end{verbatim}
+will result in
+\begin{verbatim}
+      +f(a,b,c,d)+f(a,c,b,d)+f(a,c,d,b)+f(c,a,b,d)+f(c,a,d,b)+f(c,d,a,b)
+\end{verbatim}
+One can also obtain the same result with the statements
+\begin{verbatim}
+   Multiply,ff;
+   repeat id f(x1?,?a)*f(x2?,?b)*ff(?c) =
+            +f(?a)*f(x2,?b)*ff(?c,x1)
+            +f(x1,?a)*f(?b)*ff(?c,x2);
+   id f(?a)*f(?b)*ff(?c) = f(?c,?a,?b);
+\end{verbatim}
+but the advantage of the shuffle statement is that is also does a certain 
+amount of combinatorics when there are identical arguments. Unfortunately 
+the combinatorics doesn't extend over groups of arguments that are 
+identical as in
+\begin{verbatim}
+    CF  f;
+    L   F = f(0,1,0,1,0,1)*f(0,1,0,1,0,1);
+    Shuffle,f;
+    .end
+
+Time =       0.00 sec    Generated terms =        141
+               F         Terms in output =         32
+                         Bytes used      =        892
+\end{verbatim}
+It does get the combinatorics between two zeroes or two ones, but it cannot 
+handle the groups. The explicit method above however doesn't do any 
+combinatorics and generates 924 terms.
+
+One of the applications of this statement is in the field of harmonic 
+sums\index{harmonic sum}, 
+harmonic polylogarithms\index{harmonic polylogarithm} and multiple zeta 
+values\index{multiple zeta value}\index{MZV}. Its twin brother is the 
+stuffle statement\index{stuffle} (see \ref{substastuffle}.
+
+When the option once is mentioned, only one pair will be contracted this 
+way. Without this option all occurrences of the function inside a term will 
+be treated till there are only terms with a single occurrence of the 
+function.
+\vspace{10mm}
+%
+%--#] shuffle : 
 %--#[ skip :
 
 \section{skip}
@@ -4052,6 +4222,80 @@ indicating the arguments that should be treated. If no arguments are
 specified all arguments will be treated. \vspace{10mm}
 
 %--#] splitlastarg : 
+%--#[ stuffle :
+%
+\section{stuffle}
+\label{substastuffle}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & stuffle,functionname+; \\
+       & stuffle,functionname-; \\
+       & stuffle,once,functionname+; \\
+       & stuffle,once,functionname-; \\
+\\ See also & stuffle (\ref{substashuffle})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement 
+takes two occurrences of the mentioned function and outputs 
+terms, each with one function in which the two argument lists have been 
+merged according to the rules for nested sums. The plus and minus signs 
+refer to ones favorite definition for nested sums. In the case of the plus 
+sign, the definition is
+\begin{eqnarray}
+    \sum_{i=1}^N \sum_{i=1}^N & = & \sum_{i=1}^N \sum_{j=1}^{i-1}
+        + \sum_{j=1}^N \sum_{i=1}^{j-1}
+        + \sum_{i=j=1}^N
+\end{eqnarray}
+while in the case of the minus the definition is
+\begin{eqnarray}
+    \sum_{i=1}^N \sum_{i=1}^N & = & \sum_{i=1}^N \sum_{j=1}^{i}
+        + \sum_{j=1}^N \sum_{i=1}^{j}
+        - \sum_{i=j=1}^N
+\end{eqnarray}
+It is assumed that we have harmonic sums\index{harmonic sum} (see the 
+summer library in the FORM distribution). For such sums we expect 
+functions with lists of nonzero integer arguments. Example:
+\begin{verbatim}
+    CF  S,R;
+    Symbols N,n;
+    L   F = S(R(1,-3),N)*S(R(-5,1),N);
+    id  S(R(?a),n?)*S(R(?b),n?) = S(?a)*S(?b)*R(n);
+    Stuffle,S-;
+    id  S(?a)*R(n?) = S(R(?a),n);
+    Print +s;
+    .end
+
+Time =       0.00 sec    Generated terms =         12
+               F         Terms in output =         12
+                         Bytes used      =        462
+
+   F =
+       + S(R(-6,-4),N)
+       - S(R(-6,-3,1),N)
+       - S(R(-6,1,-3),N)
+       - S(R(-5,1,-4),N)
+       + S(R(-5,1,-3,1),N)
+       + 2*S(R(-5,1,1,-3),N)
+       - S(R(-5,2,-3),N)
+       - S(R(1,-5,-4),N)
+       + S(R(1,-5,-3,1),N)
+       + S(R(1,-5,1,-3),N)
+       + S(R(1,-3,-5,1),N)
+       - S(R(1,8,1),N)
+      ;
+\end{verbatim}
+The above program is equivalent to the basis procedure in the summer 
+library. As with the shuffle\index{shuffle} statement (see 
+\ref{substashuffle}) a certain amount of combinatorics has been built in.
+
+When the option once is mentioned, only one pair will be contracted this 
+way. Without this option all occurrences of the function inside a term will 
+be treated till there are only terms with a single occurrence of the 
+function.
+\vspace{10mm}
+%
+%--#] stuffle : 
 %--#[ sum :
 
 \section{sum}
@@ -4617,27 +4861,6 @@ the current term, the current term is replaced by the new variety.
 \vspace{10mm}
 
 %--#] tryreplace : 
-%--#[ unittrace :
-
-\section{unittrace}
-\label{substaunittrace}
-
-\noindent \begin{tabular}{ll}
-Type & Declaration statement\\
-Syntax & u[nittrace] {\tt<}value{\tt>}; \\
-See also & trace4 (\ref{substatrace}), tracen (\ref{substatracen}),
-    chisholm (\ref{substachisholm})
-    and the chapter on gamma algebra (\ref{gammaalgebra})
-\end{tabular} \vspace{4mm}
-
-\noindent Sets\index{unittrace} the value of the trace of the 
-unit\index{unit matrix} matrix\index{matrix!unit} in the Dirac\index{Dirac} 
-algebra\index{algebra!Dirac} (i.e. the object \verb:g1_(n): for trace line 
-\verb:n:)). The parameter \verb:value: can be either a short positive 
-number or any symbol with the exception of \verb:i_:. See also 
-chapter~\ref{gammaalgebra}. \vspace{10mm}
-
-%--#] unittrace : 
 %--#[ unhide :
 
 \section{unhide}
@@ -4672,6 +4895,27 @@ again) and then send the relevant expressions back to the hide system.
 \vspace{10mm}
 
 %--#] unhide : 
+%--#[ unittrace :
+
+\section{unittrace}
+\label{substaunittrace}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & u[nittrace] {\tt<}value{\tt>}; \\
+See also & trace4 (\ref{substatrace}), tracen (\ref{substatracen}),
+    chisholm (\ref{substachisholm})
+    and the chapter on gamma algebra (\ref{gammaalgebra})
+\end{tabular} \vspace{4mm}
+
+\noindent Sets\index{unittrace} the value of the trace of the 
+unit\index{unit matrix} matrix\index{matrix!unit} in the Dirac\index{Dirac} 
+algebra\index{algebra!Dirac} (i.e. the object \verb:g1_(n): for trace line 
+\verb:n:)). The parameter \verb:value: can be either a short positive 
+number or any symbol with the exception of \verb:i_:. See also 
+chapter~\ref{gammaalgebra}. \vspace{10mm}
+
+%--#] unittrace : 
 %--#[ vectors :
 
 \section{vectors}
@@ -4689,6 +4933,52 @@ Syntax & v[ectors] {\tt<}list of vectors to be declared{\tt>};
 \vspace{10mm}
 
 %--#] vectors : 
+%--#[ while :
+
+\section{while}
+\label{substawhile}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & while ( condition );
+\\ See also & endwhile (\ref{substaendwhile}), repeat (\ref{substarepeat}),
+            if (\ref{substaif})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{while} starts the while 
+environment\index{environment!while}. It should be paired with an 
+endwhile\index{endwhile} statement (see \ref{substaendwhile}) which 
+terminates the while environment. The statements between the while and the 
+endwhile statements will be executed as long as the condition is met. For 
+the description of the condition one should consult the if\index{if} 
+statement (see \ref{substaif}). The while/endwhile combination is 
+equivalent to the construction
+\begin{verbatim}
+   repeat;
+      if ( condition );
+
+
+      endif;
+   endrepeat;
+\end{verbatim}
+If only a single statement is inside the environment one can also use
+\begin{verbatim}
+   while ( condition ) statement;
+\end{verbatim}
+Of course one should try to avoid infinite\index{infinite loop} 
+loops\index{loops!infinite}. In order to maximize the speed of {\FORM} not 
+all internal stacks are protected and hence the result may be that {\FORM} 
+may crash. It is also possible that {\FORM} may detect a shortage of buffer 
+space and quit with an error message. \vspace{4mm}
+
+\noindent For each term for which execution reaches the endwhile statement, 
+control is brought back to the while statement. For each term that reaches 
+the while statement the condition is checked and if it is met, the 
+statements inside the environment are executed again on this term. If the 
+condition is not met, execution continues after the endwhile statement. 
+\vspace{10mm}
+
+%--#] while : 
 %--#[ write :
 
 \section{write}
@@ -4750,50 +5040,4 @@ converted. The keywords are: \vspace{4mm}
 \vspace{10mm}
 
 %--#] write : 
-%--#[ while :
-
-\section{while}
-\label{substawhile}
-
-\noindent \begin{tabular}{ll}
-Type & Executable statement\\
-Syntax & while ( condition );
-\\ See also & endwhile (\ref{substaendwhile}), repeat (\ref{substarepeat}),
-            if (\ref{substaif})
-\end{tabular} \vspace{4mm}
-
-\noindent This statement\index{while} starts the while 
-environment\index{environment!while}. It should be paired with an 
-endwhile\index{endwhile} statement (see \ref{substaendwhile}) which 
-terminates the while environment. The statements between the while and the 
-endwhile statements will be executed as long as the condition is met. For 
-the description of the condition one should consult the if\index{if} 
-statement (see \ref{substaif}). The while/endwhile combination is 
-equivalent to the construction
-\begin{verbatim}
-   repeat;
-      if ( condition );
-
-
-      endif;
-   endrepeat;
-\end{verbatim}
-If only a single statement is inside the environment one can also use
-\begin{verbatim}
-   while ( condition ) statement;
-\end{verbatim}
-Of course one should try to avoid infinite\index{infinite loop} 
-loops\index{loops!infinite}. In order to maximize the speed of {\FORM} not 
-all internal stacks are protected and hence the result may be that {\FORM} 
-may crash. It is also possible that {\FORM} may detect a shortage of buffer 
-space and quit with an error message. \vspace{4mm}
-
-\noindent For each term for which execution reaches the endwhile statement, 
-control is brought back to the while statement. For each term that reaches 
-the while statement the condition is checked and if it is met, the 
-statements inside the environment are executed again on this term. If the 
-condition is not met, execution continues after the endwhile statement. 
-\vspace{10mm}
-
-%--#] while : 
 

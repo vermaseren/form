@@ -262,14 +262,17 @@ spinline indices are both numeric.
 %not integers, nothing is done.
 \noindent \verb:gcd_(x1,...,xn): is replaced by the greatest common divisor 
 of the arguments. The arguments can be any combination of numbers and/or 
-symbols. Any other objects will be a run time error. The arguments can be 
+symbols (but currently multivariate polynomials have not been implemented). 
+Any other objects will be a run time error. The arguments can be 
 polynomials in which case the routines for `simple' polynomials are used. 
 These routines put intermediate results in the workspace. The gcd of two 
 polynomials is normalized such that the lead term has coefficient one. If 
 however there is also an argument that is just a number the answer will be 
 a number that is the gcd of all numbers in all arguments. When fractions 
 are involved, the gcd is defined as the gcd of the numerators, divided by 
-the gcd of the denominators.
+the gcd of the denominators. In the current version this function gives 
+only correct results for univariate polynomials and/or numbers. A more 
+powerful version is being worked at.
 
 \section{gi\_}\index{gi\_}\index{function!gi\_}
 \label{fungi}
@@ -443,7 +446,10 @@ mechanism.
 \begin{verbatim}
     Multiply replace_(x,y,y,x);
 \end{verbatim}
-will exchange x and y.
+will exchange x and y. Because there is no definite order in which multiple 
+replace\_ functions are treated, one should not use more than a single one 
+at the same time inside a term. At times multiple replace\_ functions may 
+lead to confusion inside FORM.
 
 \section{reverse\_}\index{reverse\_}\index{function!reverse\_}
 \label{funreverse}

@@ -62,13 +62,19 @@ any longer.
 \noindent \begin{tabular}{ll}
 VERSION\_     &\index{VERSION\_} The current version as the 3 in 3.2.\\
 SUBVERSION\_  &\index{SUBVERSION\_} The sub-version as the 2 in 3.2.\\
-NAMEVERSION\_ &\index{NAMEVERSION\_} For special versions that are experimental. Otherwise 
-                empty.\\
+NAMEVERSION\_ &\index{NAMEVERSION\_} For special versions that are 
+                experimental. Otherwise empty.\\
 NAME\_        &\index{NAME\_} The name of the program file.\\
 DATE\_        &\index{DATE\_} The date of the current run.\\
 CMODULE\_     &\index{CMODULE\_} The number of the current module.\\
 SHOWINPUT\_   &\index{SHOWINPUT\_} If input listing is on: 1, if off: 0.
 \end{tabular}
+
+\noindent If FORM cannot find a preprocessor variable, because it has 
+neither been defined by the user, nor is it one of the built in variables, 
+it will look in the systems environment\index{environment} to see whether 
+there is an environment variable by that name. If this is the case its 
+string value will be substituted.
 
 %--#] The preprocessor variables :
 %--#[ Calculator :
