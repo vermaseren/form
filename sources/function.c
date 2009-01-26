@@ -1475,6 +1475,7 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 	WORD *newpat, *newter, *instart, *oinpat = 0, *ointer = 0;
 	WORD nwstore, offset, *OldWork, SetStop = 0, oRepFunNum = AN.RepFunNum;
 	WORD wilds, wildargs = 0, wildeat = 0, *wildargtaken;
+	WORD *Oterfirstcomm = AN.terfirstcomm;
 	CBUF *C = cbuf+AT.ebufnum;
 	int ntwa = AN.NumTotWildArgs;
 	LONG oldcpointer = C->Pointer - C->Buffer;
@@ -1617,12 +1618,15 @@ trythis:;
 					else goto rewild;
 				}
 				else goto rewild;
+				AN.terfirstcomm = Oterfirstcomm;
 			}
 			else if ( par > 0 ) { SetStop = 1; goto maybenext; }
 		}
 		else {
 rewild:
+		AN.terfirstcomm = Oterfirstcomm;
 		if ( *inter != SUBEXPRESSION && MatchFunction(BHEAD inpat,inter,&wilds) ) {
+			AN.terfirstcomm = Oterfirstcomm;
 			if ( wilds ) {
 				wildargs = AN.WildArgs;
 				wildeat = AN.WildEat;
@@ -1658,24 +1662,41 @@ rewild:
 				if ( *inter == GAMMA && inpat[1] <
 				inter[1] - AN.RepFunList[AN.RepFunNum-1] ) {
 					if ( ScanFunctions(BHEAD newpat,newter,2) ) goto OnSuccess;
+					AN.terfirstcomm = Oterfirstcomm;
 				}
+				else if ( *newter ==  SUBEXPRESSION ) {}
 				else if ( functions[*inter-FUNCTION].commute ) {
 					if ( ScanFunctions(BHEAD newpat,newter,1) ) goto OnSuccess;
+					AN.terfirstcomm = Oterfirstcomm;
+					if ( ( *newpat < (FUNCTION+WILDOFFSET)
+						&& ( functions[*newpat-FUNCTION].commute == 0 ) ) ||
+						( *newpat >= (FUNCTION+WILDOFFSET)
+						&& ( functions[*newpat-FUNCTION-WILDOFFSET].commute == 0 ) ) ) {
+						newter = AN.terfirstcomm;
+						if ( newter < AN.terstop && ScanFunctions(BHEAD newpat,newter,1) ) goto OnSuccess;
+					}
 				}
 				else {
 					if ( ScanFunctions(BHEAD newpat,instart,1) ) goto OnSuccess;
+					AN.terfirstcomm = Oterfirstcomm;
 				}
 				SetStop = par;
 			}
-			else if ( par && inter > instart && ( ( *inpat < (FUNCTION+WILDOFFSET)
-			&& functions[*inpat-FUNCTION].commute ) ||
-			( *inpat >= (FUNCTION+WILDOFFSET)
-			&& functions[*inpat-FUNCTION-WILDOFFSET].commute ) ) ) {
-				SetStop = 1;
-			}
 			else {
-				newter = instart;
-				if ( ScanFunctions(BHEAD newpat,newter,par) ) goto OnSuccess;
+/*
+				Shouldn't this be newpat instead of inpat?????
+*/
+				if ( par && inter > instart && ( ( *newpat < (FUNCTION+WILDOFFSET)
+				&& functions[*newpat-FUNCTION].commute ) ||
+				( *newpat >= (FUNCTION+WILDOFFSET)
+				&& functions[*newpat-FUNCTION-WILDOFFSET].commute ) ) ) {
+					SetStop = 1;
+				}
+				else {
+					newter = instart;
+					if ( ScanFunctions(BHEAD newpat,newter,par) ) goto OnSuccess;
+					AN.terfirstcomm = Oterfirstcomm;
+				}
 			}
 /*
 			Restore the old Wildcard assignments
@@ -1717,6 +1738,7 @@ maybenext:
 	AT.WorkPointer = OldWork;
 	return(0);
 OnSuccess:
+	AN.terfirstcomm = Oterfirstcomm;
 /*
 	Now the disorder test
 */
