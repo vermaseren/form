@@ -325,7 +325,7 @@ be only one bracket or antibracket (see \ref{substaabrackets}) statement
 in each module. If there is more than one, only the last one has an effect. 
 \vspace{4mm}
 
-\noindent The presense of a $+$ or $-$ after the bracket (or anti bracket) 
+\noindent The presence of a $+$ or $-$ after the bracket (or anti bracket) 
 refers to potential indexing of the brackets\index{brackets!indexing}. 
 Usually {\FORM} has the information inside the terms in an expression. If 
 it needs to search for a particular bracket it does so by starting at the 
@@ -358,7 +358,7 @@ See also & functions (\ref{substafunctions}), nfunctions (\ref{substanfunctions}
 \noindent This statement declares commuting\index{commuting} 
 functions\index{functions!commuting}. The name of a 
 function can be followed by some information that specifies additional 
-properties of the preceeding function. These can be (name indicates the 
+properties of the preceding function. These can be (name indicates the 
 name of the function to be declared): \vspace{4mm}
 
 \leftvitem{4.1cm}{name{\hash}r}
@@ -525,7 +525,7 @@ Syntax & collect {\tt<}name of function{\tt>}; \\
 \noindent Upon processing\index{collect} the expressions (hence expressions 
 in hide as well as skipped expressions do not take part in this) the 
 contents of the brackets\index{brackets} (if there was a bracket or 
-antibracket\index{antibracket} statement in the preceeding module) are 
+antibracket\index{antibracket} statement in the preceding module) are 
 collected and put inside the argument of the named function. Hence if the 
 expression \verb:F: is given by
 \begin{verbatim}
@@ -719,7 +719,7 @@ See also & symmetrize (\ref{substasymmetrize}), antisymmetrize
 in the section on the symmetrize statements (see \ref{substasymmetrize}). 
 \vspace{4mm}
 
-\noindent The action of this stament is to cycle-symmetrize the (specified) 
+\noindent The action of this statement is to cycle-symmetrize the (specified) 
 arguments of the functions that are mentioned. This means that the 
 arguments are brought to `natural order' in the notation of FORM by trying 
 cyclic permutations of the arguments or groups of arguments. The `natural 
@@ -845,7 +845,7 @@ declared or declarable because of an auto-declaration (see
 \rightvitem{12cm}{The symbols\index{symbols} must be the names of symbols, 
 either previously declared or declarable because of an auto-declaration 
 (see \ref{substaautodeclare}). The first symbol will be the default 
-dimension. The second symbol will be the the first symbol minus 4. It will 
+dimension. The second symbol will be the first symbol minus 4. It will 
 be used as such in the trace\index{trace contractions} 
 contractions\index{contractions!trace}. See also \ref{substatracen} and 
 \ref{substaindex}.}
@@ -1347,7 +1347,7 @@ Syntax & fillexpression {\tt<}table{\tt>} = {\tt<}expression{\tt>}({\tt<}x1{\tt>
 \noindent Used\index{fillexpression} to dynamically\index{dynamical loading}
 load\index{loading dynamically} a table\index{table} during runtime. When 
 there are n symbols (here called x1 to xn) it is assumed that the table is 
-n-dimensional. The expression must previously have been bracketted in these 
+n-dimensional. The expression must previously have been bracketed in these 
 symbols and each of the brackets\index{brackets} has the effect of a 
 fill\index{fill} statement in which the powers of the x1 to xn refer to the 
 table elements. Brackets that do not have a corresponding table element are 
@@ -1461,7 +1461,7 @@ Fortran option.
 
 \leftvitem{3cm}{C\index{C}\index{format!C}}
 \rightvitem{13cm}{Output will be C compatible. The
-exponent\index{exponent operator} operator ($\wedge$) is represeted by the 
+exponent\index{exponent operator} operator ($\wedge$) is represented by the 
 function pow\index{pow}. It is the responsibility of the user that this 
 function will be properly defined. Dotproducts are printed with the 
 `dotchar'\index{dotchar} in the place of the period between the vectors. 
@@ -1931,7 +1931,7 @@ as object 2.}
 If the condition for true is not met, false is returned. Several of the 
 above compares can be combined with logical operators. For this it is 
 necessary to enclose the above compares within parentheses. This forces 
-FORM to interprete the hierarchy\index{hierarchy} of the operators 
+FORM to interpret the hierarchy\index{hierarchy} of the operators 
 properly. The extra logical operators are
  
 \leftvitem{2cm}{$||$}
@@ -2065,7 +2065,7 @@ TFORM\index{TFORM}. It causes
 expressions are distributed over the processors and the expressions are 
 executed one by one. This isn't very efficient for small expressions 
 because there is a certain amount of overhead. When there are many small 
-expressions, this stamement can cause each expression to be executed by its 
+expressions, this statement can cause each expression to be executed by its 
 own processor. A consequence is that the expressions now can finish in a 
 semi-random order and hence may end up in the output in a order that is 
 different from when this statement isn't used. The proper order is restored 
@@ -2105,7 +2105,7 @@ statement (see \ref{substaargument}) but with
 \$-variables\index{\$-variable} instead of with functions. An inside 
 statement should be paired with an endinside\index{endinside} statement 
 (see \ref{substaendinside}) inside the same module. The statements 
-inbetween will then be executed on the contents of the \$-variables that 
+in-between will then be executed on the contents of the \$-variables that 
 are mentioned. One should pay some attention to the order of the action. 
 The \$-variables are treated sequentially. Hence, after the first one has 
 been treated its contents are substituted by the new value. Then the second 
@@ -2298,8 +2298,8 @@ coefficients\index{coefficients!integer} with a their greatest common
 divider being one. This still leaves the possibility that the first term of 
 this argument may be negative. If this is not desired one can first 
 normalize\index{normalize} the argument and then make its coefficients 
-integer. The overal factor that is needed to make the coefficients like 
-described is taken from the overal factor of the complete term. Example
+integer. The overall factor that is needed to make the coefficients like 
+described is taken from the overall factor of the complete term. Example
 \begin{verbatim}
     S   a,b,c;
     CF  f;
@@ -2491,7 +2491,7 @@ Syntax & m[odulus] {\tt<}value{\tt>};
 
 \noindent Defines all calculus to be modulus\index{modulus} the given 
 number, provided this number is positive. If this number is less than the 
-(installation dependend but at least 10000) maximum power for symbols and 
+(installation dependent but at least 10000) maximum power for symbols and 
 dotproducts the powers of symbols and dotproducts are reduced with the 
 relation $x^{value} = x$.
 
@@ -3039,7 +3039,7 @@ detailed information.}
 \leftvitem{3cm}{compress\index{on!compress}}
 \rightvitem{13cm}{Turns compression mode on. This compression is a 
 relatively simple compression that hardly costs extra computer time but 
-saves roughly a factor two in diskstorage. The old statement was `compress 
+saves roughly a factor two in disk storage. The old statement was `compress 
 on' but this should be avoided in the future. This setting is the default.}
 
 \leftvitem{3cm}{compress,gzip\index{gzip}}
@@ -3139,7 +3139,7 @@ parameters in the setup file (see \ref{setup}).}
 \rightvitem{13cm}{Same as `On statistics'.}
  
 \leftvitem{3cm}{threadloadbalancing\index{on!threadloadbalancing}}
-\rightvitem{13cm}{Causes the loadbalancing mechanism in TFORM to be turned 
+\rightvitem{13cm}{Causes the load balancing mechanism in TFORM to be turned 
 on or off. Default is on. Ignored by other versions of FORM.}
  
 \leftvitem{3cm}{threads\index{on!threads}}
@@ -3338,7 +3338,7 @@ Syntax & Print [{\tt<}options{\tt>}]; \\
 \noindent General purpose print\index{print} statement. Has three modes. In 
 the first two modes flags are set for the printing of expressions after the 
 current module has been finished. The third mode concerns printing during 
-execution. This allows the printing of indivudual terms or 
+execution. This allows the printing of individual terms or 
 \$-variables\index{\$-variable} on a term by term basis. It should be 
 considered as a useful debugging\index{debugging} device.
 
@@ -3626,7 +3626,7 @@ See also & symmetrize (\ref{substasymmetrize}), cyclesymmetrize
 in the section on the symmetrize\index{symmetrize} statement (see 
 \ref{substasymmetrize}). \vspace{4mm}
 
-\noindent The action of this stament is to
+\noindent The action of this statement is to
 reverse\index{reverse cycle symmetrize}-cycle-symmetrize
 \index{symmetrize!reverse cycle} the (specified) arguments of the functions 
 that are mentioned. This means that the arguments are brought to `natural 
@@ -3727,7 +3727,7 @@ endrepeat\index{endrepeat} statement (see \ref{substaendrepeat}). The
 repeat statement and its matching endrepeat statement should be inside the 
 same module. \vspace{4mm}
 
-\noindent The staments inside the repeat environment should all be 
+\noindent The statements inside the repeat environment should all be 
 executable statements (or print statements) and if any of the executable 
 statements inside the environment has changed the current term, the action 
 of the endrepeat statement will be to bring control back to the beginning 
@@ -3914,7 +3914,7 @@ This will be changed in the future.
 
 \noindent Together with the load\index{load} statement (see 
 \ref{substaload}) the save statement provides a mechanism to transfer data 
-in internal notation from one program to another. It is the prefered method 
+in internal notation from one program to another. It is the preferred method 
 to keep results of a lengthy job for further analysis without the need for 
 the long initial running time.
 
@@ -4449,7 +4449,7 @@ Again, groups that contain a number that is greater than the number of
 arguments of the function will be ignored.}
 \vspace{3mm}
 
-\noindent The action of this stament is to symmetrize the 
+\noindent The action of this statement is to symmetrize the 
 (specified) arguments of the functions that are mentioned. This means that 
 the arguments are brought to `natural order' in the notation of FORM by 
 trying permutations\index{permutation} of the arguments or groups of 
@@ -4487,7 +4487,7 @@ See also & functions (\ref{substafunctions}), ctable (\ref{substactable}),
 very special instance of a function. Hence it can be either 
 commuting\index{commuting} or noncommuting\index{noncommuting}. The table 
 statement declares its function to be commuting. A noncommuting table is 
-declared with the ntable\index{ntable} statement (se \ref{substantable}). A 
+declared with the ntable\index{ntable} statement (see \ref{substantable}). A 
 table has a number of table\index{table indices} indices (at least one!) 
 and after that it can have a number of regular function arguments with or 
 without wildcarding. The table indices can come in two varieties: 

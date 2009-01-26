@@ -205,7 +205,7 @@ the program isn't progressing very much.
 For debugging purposes the term by term print\index{print} statement (see 
 \ref{substaprint}) is equipped with the \verb:%W: and \verb:%w: format 
 strings. The first will cause the printing of the number of the current 
-thread and the CPU-time used thusfar in that thread. The second will only 
+thread and the CPU-time used thus far in that thread. The second will only 
 print the number of the current thread. The thread with the number zero is 
 the master thread. Putting a statement like
 \begin{verbatim}
@@ -240,9 +240,9 @@ To be addressed:
 \begin{itemize}
 \item How to run ParFORM. Selection of processors.
 \item How ParFORM runs (like one worker per processor and the master with 
-its own processor and waiting in loops rather than working with wakup 
+its own processor and waiting in loops rather than working with wakeup 
 signals).
-\item Special commands for controling its performance.
+\item Special commands for controlling its performance.
 \item Buffer sizes.
 \item etc.
 \end{itemize}
@@ -358,7 +358,7 @@ will execute inside a single worker while
     .end
 \end{verbatim}
 will make the first expansion inside a single worker and the more costly 
-subsitution can be made in parallel. A better load\index{load balancing} 
+substitution can be made in parallel. A better load\index{load balancing} 
 balancing algorithm in which at any node in the expansion tree tasks can be 
 given to idle workers would solve this problem, but due to some 
 complications this has not yet been implemented. The structure of FORM will 

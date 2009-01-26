@@ -63,14 +63,14 @@ sort, the extension space becomes exhausted, FORM will make a
 garbage\index{garbage collection} 
 collection of the entire extended small buffer. This will always result in 
 the extension space becoming empty again, because the notation of the terms 
-in FORM is such the the new combined term will at most occupy an amount 
+in FORM is such the new combined term will at most occupy an amount 
 of space equal to the sum of the spaces of the original two terms. In older 
 versions of FORM this garbage collection was executed by means of a 
 temporary disk file. In the new version it is done inside the memory by 
 temporarily allocating a new buffer. Anyway such garbage collections are 
 relatively rare.
 
-In the above example, the sorting occured because the generation of terms 
+In the above example, the sorting occurred because the generation of terms 
 was finished. Hence the sorted output is written away in such a way that it 
 can be used as input for a potential next module (or to be printed). 
 Hence let us change the size of the small buffer:
@@ -118,10 +118,10 @@ size of the buffer to something comparable to the memory size of the
 computer and several programs are running at the same time. Anyway, 
 swapping will not affect the large buffer very much. \FORM\ will merge the 
 `patches' by going sequentially through them with a method called 
-`tree\index{tree of loosers} of loosers' in the book by Knuth\index{Knuth} 
+`tree\index{tree of losers} of losers' in the book by Knuth\index{Knuth} 
 (the art of computer programming, vol. 3). Because it goes sequentially 
 through the patches, uses all the information it reads and never needs it 
-again, this method is indeed rather well resistent to swapping.
+again, this method is indeed rather well resistant to swapping.
 
 The next complication is of course when the large buffer is full. This can 
 be either because its byte space is full, or because the maximum number of 

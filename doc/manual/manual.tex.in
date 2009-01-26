@@ -1,5 +1,10 @@
 \documentclass[11pt]{report}
 %\usepackage{index}
+
+\makeatletter
+\renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
+\makeatother
+
 \usepackage{makeidx}
 
 \newcommand{\pfill}{\hfill}
@@ -45,7 +50,7 @@
 \title{\Huge FORM \\ \Large version
 @VERSION@
 \\ \huge Reference manual}
-\date{2-nov-2007}
+\date{24-jan-2009}
 \author{J.A.M.Vermaseren}
 \end{titlepage}
 \maketitle
