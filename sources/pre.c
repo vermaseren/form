@@ -1536,7 +1536,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots :
+ 		#] ExpandTripleDots : 
  		#[ FindKeyWord :
 */
 
@@ -1774,30 +1774,48 @@ int ClearMacro(UBYTE *name)
 /*
  		#] ClearMacro : 
  		#[ TheUndefine :
+
+		There is a complication here. If there are redefine statements
+		they will be pointing at the wrong variable if their number is
+		greater than the number of the variable we pop.
 */
 
 int TheUndefine(UBYTE *name)
 {
-	int i;
+	int i, inum, error = 0;
 	PREVAR *p;
 	for ( i = NumPre-1, p = &(PreVar[NumPre-1]); i >= 0; i--, p-- ) {
 		if ( StrCmp(name,p->name) == 0 ) {
 			M_free(p->name,"undefining PreVar");
 			NumPre--;
+			inum = i;
 			while ( i < NumPre ) {
 				p->name  = p[1].name;
 				p->value = p[1].value;
 				p++; i++;
 			}
 			p->name = 0; p->value = 0;
+			{
+				CBUF *CC = cbuf + AC.cbufnum;
+				int j;
+				for ( j = 1; j <= CC->numlhs; j++ ) {
+					if ( CC->lhs[j][0] == TYPEREDEFPRE ) {
+						if ( CC->lhs[j][2] > inum ) CC->lhs[j][2]--;
+						else if ( CC->lhs[j][2] == inum ) {
+							MesPrint("@Conflict between undefining a preprocessor variable and a redefine statement");
+							error = 1;
+						}
+					}
+				}
+			}
 			break;
 		}
 	}
-	return(0);
+	return(error);
 }
 
 /*
- 		#] TheUndefine : 
+ 		#] TheUndefine :
  		#[ DoUndefine :
 */
 
@@ -1846,7 +1864,7 @@ illname:;
 }
 
 /*
- 		#] DoUndefine : 
+ 		#] DoUndefine :
  		#[ DoInclude :
 */
 
