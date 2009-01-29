@@ -1,9 +1,8 @@
 m4_define([FORM_MAJORVERSION], [3])
-m4_define([FORM_MINORVERSION], [2])
+m4_define([FORM_MINORVERSION], [3])
 m4_define([FORM_VERSION], [FORM_MAJORVERSION.FORM_MINORVERSION])
 # set to 'yes' for beta verstions
 m4_define([VERSION_IS_BETA], [no])
-m4_define([ALTERNATE_PRODUCTION_DATE], ["16-apr-2007"])
 
 ########################################
 
@@ -17,18 +16,10 @@ AM_INIT_AUTOMAKE([gnu 1.7 dist-bzip2])
 AC_DEFINE(MAJORVERSION, FORM_MAJORVERSION, [Major version of FORM.])
 AC_DEFINE(MINORVERSION, FORM_MINORVERSION, [Minor version of FORM.])
 
-version_is_beta=VERSION_IS_BETA
-AS_IF([test "x$version_is_beta" = xyes],
-	[AC_DEFINE(BETAVERSION, , [Defined for beta versions.])])
-
-AC_DEFINE_UNQUOTED(FORM_PRODUCTIONDATE, ALTERNATE_PRODUCTION_DATE,
-	[If __DATE__ is not available, use this as the production date of FORM.])
-AH_VERBATIM([__DATE__],
+AH_VERBATIM([PRODUCTIONDATE],
 [/* Set production date. */
-#ifdef __DATE__
+#ifndef PRODUCTIONDATE
 #define PRODUCTIONDATE __DATE__
-#else
-#define PRODUCTIONDATE FORM_PRODUCTIONDATE
 #endif])
 
 # Check for programs

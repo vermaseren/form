@@ -50,8 +50,10 @@
 \title{\Huge FORM \\ \Large version
 @VERSION@
 \\ \huge Reference manual}
-\date{24-jan-2009}
-\author{J.A.M.Vermaseren}
+\date{
+\input{manualdate.tex}
+}
+\author{J.A.M.Vermaseren, M.Tentyukov and J.Vollinga}
 \end{titlepage}
 \maketitle
 %\clearemptydoublepage

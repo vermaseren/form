@@ -60,11 +60,14 @@ SRCPARALLEL = \
 	parallel.c \
 	parallel.h
 
+# consider argument DATE
+DATEFLAG=$(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)\"'"; fi))
+
 # for release versions
-COMPILEFLAGS=
+COMPILEFLAGS=$(DATEFLAG)
 LINKFLAGS=-static -s
 # for debugging versions
-DEBUGCOMPILEFLAGS=-g -Wall
+DEBUGCOMPILEFLAGS=-g -Wall $(DATEFLAG)
 DEBUGLINKFLAGS=-g
 
 # compiler specific parameters
