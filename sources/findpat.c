@@ -1124,9 +1124,9 @@ WORD FindRest(PHEAD WORD *term, WORD *pattern)
 					m += 2; t += 2;
 				}
 				else if ( *m >= (AM.OffsetVector+WILDOFFSET) ) {
-					if ( t < tstop ) {
+					if ( t < xstop ) {
 						p = older + n;
-						do { *p++ = *t++; n++; } while ( t < tstop );
+						do { *p++ = *t++; n++; } while ( t < xstop );
 					}
 					p = older;
 					nq = n;
@@ -1162,7 +1162,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 				}
 				else if ( *m <= *t && 
 				m[1] >= (AM.OffsetIndex + WILDOFFSET) ) {
-					if ( *m == *t && t < tstop ) {
+					if ( *m == *t && t < xstop ) {
 						p = older;
 						p += n;
 						*p++ = *t++;
