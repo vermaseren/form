@@ -5030,7 +5030,7 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 				to = Out;
 				fstring++;
 			}
-			else if ( *fstring == 't' ) *to++ = '\t';
+			else if ( *fstring == 't' ) { *to++ = '\t'; fstring++; }
 			else if ( *fstring == 'b' ) { *to++ = '\\'; fstring++; }
 			else *to++ = *fstring++;
 		}
