@@ -287,7 +287,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoDiv :
+ 		#] PolynoDiv : 
  		#[ Polyno1Div :
 
 		Division of polynomials in a single variable
@@ -436,6 +436,7 @@ dosub:
 		AT.WorkPointer = ow;
 		if ( EndSort((WORD *)((VOID *)(&n3)),2) < 0 ) { LowerSortLevel(); goto aborteer; }
 		LowerSortLevel();
+		if ( n1 != poly1 && n1 != poly2 ) M_free(n1,"$-sort space");
 		n1 = n3;
 	}
 	*polyrem = CopyOfPolynomial(n1);
@@ -450,7 +451,7 @@ aborteer:
 }
 
 /*
- 		#] Polyno1Div : 
+ 		#] Polyno1Div :
  		#[ PolynoGCD :
 
 		GCD of two multivariate polynomials:
@@ -554,6 +555,8 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 		if ( ( n1 = PolynoUnify(poly1,1) ) == 0 ) goto aborteer;
 		if ( ( n2 = PolynoUnify(poly2,1) ) == 0 ) goto aborteer;
 		G1 = Polyno1GCD(n1,n2);
+		if ( n1 != poly1 && n1 != poly2 ) M_free(n1,"PolynoUnify");
+		if ( n2 != poly1 && n2 != poly2 ) M_free(n2,"PolynoUnify");
 		PolynoPopBracket();
 		return(G1);
 	}
@@ -717,7 +720,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoGCD :
+ 		#] PolynoGCD : 
  		#[ Polyno1GCD :
 */
 
@@ -822,7 +825,7 @@ UBYTE *PolynoPrint(WORD *poly)
 }
 
 /*
- 		#] PolynoPrint :
+ 		#] PolynoPrint : 
  		#[ PolynoWrite :
 */
 
