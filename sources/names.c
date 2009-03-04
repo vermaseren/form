@@ -2078,7 +2078,7 @@ int GetLabel(UBYTE *name)
 			MesPrint("&More than 32765 labels in one module. Please simplify.");
 			Terminate(-1);
 		}
-		NewLabelNames = (UBYTE **)Malloc1((sizeof(UBYTE *)+sizeof(WORD))
+		NewLabelNames = (UBYTE **)Malloc1((sizeof(UBYTE *)+sizeof(int))
 				*newnum,"Labels");
 		NewLabel = (int *)(NewLabelNames+newnum);
 		for ( i = 0; i< AC.MaxLabels; i++ ) {
