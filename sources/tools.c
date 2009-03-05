@@ -251,7 +251,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			stream->linenumber = AC.CurrentStream->linenumber;
 			stream->prevline = AC.CurrentStream->prevline;
 			stream->eqnum = AC.CurrentStream->eqnum;
-			stream->pname = name;
+			stream->pname = strDup1(name,"stream->pname");
 			stream->olddelay = AP.AllowDelay;
 			UnsetAllowDelay();
 			break;
@@ -266,7 +266,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			stream->linenumber = AC.CurrentStream->linenumber;
 			stream->prevline= AC.CurrentStream->prevline;
 			stream->eqnum = AC.CurrentStream->eqnum;
-			stream->pname = name;
+			stream->pname = strDup1(name,"stream->pname");
 			/* We 'stole' the buffer. Later we can free it. */
 			AO.DollarOutSizeBuffer = 0;
 			AO.DollarOutBuffer = 0;
@@ -522,6 +522,10 @@ STREAM *CloseStream(STREAM *stream)
 	if ( stream->type == PREVARSTREAM ) {
 		AP.AllowDelay = stream->olddelay;
 		ClearMacro(stream->pname);
+		M_free(stream->pname,"stream->pname");
+	}
+	else if ( stream->type == DOLLARSTREAM ) {
+		M_free(stream->pname,"stream->pname");
 	}
 	AC.NumStreams--;
 	if ( newstr >= 0 ) return(AC.Streams + newstr);

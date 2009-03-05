@@ -236,8 +236,9 @@ donumber:		i = 0;
 						}
 						*out++ = TDOLLAR;
 						object = 1;
-						if ( ( AC.exprfillwarning == 0 ) && ( out[-2] != TWILDCARD ) ) {
-								AC.exprfillwarning = 1;
+						if ( ( AC.exprfillwarning == 0 ) &&
+						     ( ( out > AC.tokens+1 ) && ( out[-2] != TWILDCARD ) ) ) {
+							AC.exprfillwarning = 1;
 						}
 						goto donumber;
 					}

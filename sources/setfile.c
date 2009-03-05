@@ -362,6 +362,9 @@ int AllocSetups()
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 	AP.preStart = (UBYTE *)Malloc1(AP.pSize,"instruction buffer");
 	AP.preStop = AP.preStart + AP.pSize - 3;
+	/* AP.PreIfStack is already allocated in StartPrepro(), but to be sure we
+	   "if" the freeing */
+	if ( AP.PreIfStack ) M_free(AP.PreIfStack,"PreIfStack");
 	AP.PreIfStack = (int *)Malloc1(AP.MaxPreIfLevel*sizeof(int),
 				"Preprocessor if stack");
 	AP.PreIfStack[0] = EXECUTINGIF;
