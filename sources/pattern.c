@@ -123,24 +123,44 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 #ifdef WITHPTHREADS
 /*
 		Here we need to make a copy of the subexpression object because we
-		will be writing the values of the wildcards in it. We copy it into
-		the private version of the compiler buffer that is used for scratch
-		space. It will get popped when Generator returns.
+		will be writing the values of the wildcards in it. 
+		Originally we copied it into the private version of the compiler buffer
+		that is used for scratch space (ebufnum). This caused errors in the
+		routines like ScanFunctions when the ebufnum Buffer was expanded
+		and inpat was still pointing at the old Buffer. This expansion
+		could be done in AddWild and hence cannot be fixed at > 100 places.
+		The solution is to use AN.patternbuffer (JV 16-mar-2009).
 */
 	{
-		WORD *ma = AddRHS(AT.ebufnum,1);
-		WORD *ta = ll;
+		WORD *ta = ll, *ma;
 		int ja = ta[1];
+/*
+		New code (16-mar-2009) JV
+*/
+		if ( ( ja + 2 ) > AN.patternbuffersize ) {
+			if ( AN.patternbuffer ) M_free(AN.patternbuffer,"AN.patternbuffer");
+			AN.patternbuffersize = 2 * ja + 2;
+			AN.patternbuffer = (WORD *)Malloc1(AN.patternbuffersize * sizeof(WORD),
+					"AN.patternbuffer");
+		}
+		ma = AN.patternbuffer;
+		m = ma + IDHEAD;
+		NCOPY(ma,ta,ja);
+		*ma = 0;
+/*
+		Old code
+
+		WORD *ma = AddRHS(AT.ebufnum,1);
 		CBUF *CC = cbuf+AT.ebufnum;
 		if ( ( ma+ja+2 ) > CC->Top ) {
 			ma = DoubleCbuffer(AT.ebufnum,ma);
 		}
 		m = ma + IDHEAD;
-/*		ll = ma; */
 		NCOPY(ma,ta,ja);
 		*ma++ = 0;
 		CC->rhs[CC->numrhs+1] = ma;
 		CC->Pointer = ma;
+*/
 	}
 #else
 	m = ll + IDHEAD;
@@ -155,6 +175,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 */
 	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
 		AR.Eside = LHSIDEX;
+/*
+		Copy into WorkSpace. This means that AN.patternbuffer will be free.
+*/
 		ww = AT.WorkPointer; i = m[0]; mm = m;
 		NCOPY(ww,mm,i);
 		*StartWork += 3;
@@ -206,7 +229,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		AT.WorkPointer = ww = StartWork;
 	}
 /*
- 		#] Expand dollars : 
+ 		#] Expand dollars :
 
 	AT.WorkPointer = ww = term + *term;
 */
@@ -433,7 +456,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch : 
+ 		#] TestMatch :
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 
 	The current version doesn't scan function arguments yet. 7-Apr-1988
@@ -1441,7 +1464,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll :
+ 		#] FindAll : 
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp
