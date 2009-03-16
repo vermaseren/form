@@ -484,7 +484,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -3568,7 +3568,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -3609,7 +3609,9 @@ WORD DoOnePow(WORD *term, WORD power, WORD nexp, WORD * accum,
 	WORD olddummies = AR.CurDum;
 	WORD extradummies = Expressions[nexp].numdummies;
 	type = Expressions[nexp].status;
-	if ( type == HIDDENLEXPRESSION || type == HIDDENGEXPRESSION ) {
+	if ( type == HIDDENLEXPRESSION || type == HIDDENGEXPRESSION
+	 || type == DROPHLEXPRESSION || type == DROPHGEXPRESSION
+	 || type == UNHIDELEXPRESSION || type == UNHIDEGEXPRESSION ) {
 		AR.GetOneFile = 2; fi = AR.hidefile;
 	}
 	else {
@@ -3765,7 +3767,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -3907,7 +3909,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
