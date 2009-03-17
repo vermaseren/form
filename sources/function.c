@@ -1270,6 +1270,7 @@ IndAll:				i = m[1] - WILDOFFSET;
 				WORD oRepFunNum;
 				WORD *oRepFunList;
 				WORD *oterstart,*oterstop,*opatstop;
+				WORD oExpectedSign;
 				WORD wildargs, wildeat;
 /*
 				Not an exact match here.
@@ -1315,6 +1316,17 @@ IndAll:				i = m[1] - WILDOFFSET;
 				AT.WorkPointer = cto;
 				ci = msizcoef;
 				cfrom = mtrmstop;
+				--ci;
+				if ( abs(*--cfrom) != abs(*--cto) ) {
+					AT.WorkPointer = csav;
+					AN.RepFunList = oRepFunList;
+					AN.RepFunNum = oRepFunNum;
+					AN.terstart = oterstart;
+					AN.terstop = oterstop;
+					AN.patstop = opatstop;
+					goto endofloop;
+				}
+				i = (*cfrom != *cto) ? 1 : 0; /* buffer AN.ExpectedSign until we are beyond the goto */
 				while ( --ci >= 0 ) {
 					if ( *--cfrom != *--cto ) {
 						AT.WorkPointer = csav;
@@ -1326,6 +1338,8 @@ IndAll:				i = m[1] - WILDOFFSET;
 						goto endofloop;
 					}
 				}
+				oExpectedSign =  AN.ExpectedSign; /* buffer AN.ExpectedSign until we are beyond FindRest/FindOnly */
+				AN.ExpectedSign = i;
 				*m -= msizcoef;
 				wildargs = AN.WildArgs;
 				wildeat = AN.WildEat;
@@ -1342,9 +1356,11 @@ IndAll:				i = m[1] - WILDOFFSET;
 					AN.patstop = opatstop;
 					AN.WildArgs = wildargs;
 					AN.WildEat = wildeat;
+					AN.ExpectedSign = oExpectedSign;
 					for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 					goto endofloop;
 				}
+				AN.ExpectedSign = oExpectedSign;
 				AN.WildArgs = wildargs;
 				AN.WildEat = wildeat;
 				for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];

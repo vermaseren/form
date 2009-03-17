@@ -1861,6 +1861,7 @@ nextiraise:;
 	signo = 0;
 /*MesPrint("<1> signs = %d",signs);*/
 	for (;;) {
+		WORD oRepFunNum = AN.RepFunNum;
 		for ( j = 0; j < argcount; j++ ) {
 			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+j]) == 0 ) {
 				break;
@@ -1896,6 +1897,15 @@ nextiraise:;
 			}
 			newpat = pattern + pattern[1];
 			if ( newpat >= AN.patstop ) {
+				WORD countsgn, sgn = 0;
+				for ( countsgn = oRepFunNum+1; countsgn < AN.RepFunNum; countsgn += 2 ) {
+					if ( AN.RepFunList[countsgn] ) sgn ^= 1;
+				}
+				if ( sgn == AN.ExpectedSign ) {
+					AT.WorkPointer = oldworkpointer;
+					AT.pWorkPointer = oww;
+					return(1);
+				}
 				if ( AN.UseFindOnly == 0 ) {
 					if ( FindOnce(BHEAD AN.findTerm,AN.findPattern) ) {
 						AT.WorkPointer = oldworkpointer;
@@ -1903,21 +1913,22 @@ nextiraise:;
 						AN.UsedOtherFind = 1;
 						return(1);
 					}
-					j = 0;
 				}
-				else {
+				j = 0;
+			}
+			else j = ScanFunctions(BHEAD newpat,inter,par);
+			if ( j ) {
+				WORD countsgn, sgn = 0;
+				for ( countsgn = oRepFunNum+1; countsgn < AN.RepFunNum; countsgn += 2 ) {
+					if ( AN.RepFunList[countsgn] ) sgn ^= 1;
+				}
+				if ( sgn == AN.ExpectedSign ) {
 					AT.WorkPointer = oldworkpointer;
 					AT.pWorkPointer = oww;
 					return(1);
 				}
 			}
-			else j = ScanFunctions(BHEAD newpat,inter,par);
-			if ( j ) {
-				AT.WorkPointer = oldworkpointer;
-				AT.pWorkPointer = oww;
-				return(j);
-			}
-			AN.RepFunNum -= 2;
+			AN.RepFunNum = oRepFunNum;
 			i = argcount - 1;
 		}
 		else i = j;

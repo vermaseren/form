@@ -1889,6 +1889,7 @@ struct N_const {
 	WORD	numlistinprint;        /* () Used in process.c */
 	WORD	getdivgcd;
     WORD    ncmod;                 /* () used as some type of flag to disable */
+	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
