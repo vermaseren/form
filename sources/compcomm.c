@@ -331,7 +331,7 @@ int CoOn(UBYTE *s)
 					interval = 0;
 					t = s;
 					while ( FG.cTable[*s] == 1 ) { interval = 10*interval + *s++ - '0'; }
-					if ( *s == 's' || *s == 'S' ) { }
+					if ( *s == 's' || *s == 'S' || *s == ',' || FG.cTable[*s] == 6 || FG.cTable[*s] == 10 ) { }
 					else if ( *s == 'm' || *s == 'M' ) {
 						interval *= 60;
 					}
@@ -349,99 +349,57 @@ int CoOn(UBYTE *s)
 					++s;
 				}
 				else if ( *s ) {
+					int type;
 					t = s;
 					while ( FG.cTable[*s] == 0 ) s++;
 					c = *s; *s = 0;
 					if ( StrICmp(t,(UBYTE *)"run") == 0 ) {
-						*s = c;
-						while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-						if ( FG.cTable[*s] != 9 ) {
-							MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-							return(-1);
-						}
-						t = ++s;
-						while ( *s ) {
-							if ( FG.cTable[*s] == 9 ) {
-								if ( AC.CheckpointRunAfter ) {
-									free(AC.CheckpointRunAfter);
-								}
-								AC.CheckpointRunAfter = Malloc1(s-t+1, "AC.CheckpointRunAfter");
-								if ( AC.CheckpointRunBefore ) {
-									free(AC.CheckpointRunBefore);
-								}
-								AC.CheckpointRunBefore = Malloc1(s-t+1, "AC.CheckpointRunBefore");
-								c = *s; *s = 0;
-								StrCopy(t, (UBYTE*)AC.CheckpointRunAfter);
-								StrCopy(t, (UBYTE*)AC.CheckpointRunBefore);
-								*s = c;
-								break;
-							}
-							++s;
-						}
-						if ( FG.cTable[*s] != 9 ) {
-							MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-							return(-1);
-						}
-						++s;
+						type = 3;
 					}
 					else if ( StrICmp(t,(UBYTE *)"runafter") == 0 ) {
-						*s = c;
-						while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-						if ( FG.cTable[*s] != 9 ) {
-							MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-							return(-1);
-						}
-						t = ++s;
-						while ( *s ) {
-							if ( FG.cTable[*s] == 9 ) {
-								if ( AC.CheckpointRunAfter ) {
-									free(AC.CheckpointRunAfter);
-								}
-								AC.CheckpointRunAfter = Malloc1(s-t+1, "AC.CheckpointRunAfter");
-								c = *s; *s = 0;
-								StrCopy(t, (UBYTE*)AC.CheckpointRunAfter);
-								*s = c;
-								break;
-							}
-							++s;
-						}
-						if ( FG.cTable[*s] != 9 ) {
-							MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-							return(-1);
-						}
-						++s;
+						type = 2;
 					}
 					else if ( StrICmp(t,(UBYTE *)"runbefore") == 0 ) {
-						*s = c;
-						while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-						if ( FG.cTable[*s] != 9 ) {
-							MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-							return(-1);
-						}
-						t = ++s;
-						while ( *s ) {
-							if ( FG.cTable[*s] == 9 ) {
-								if ( AC.CheckpointRunBefore ) {
-									free(AC.CheckpointRunBefore);
-								}
-								AC.CheckpointRunBefore = Malloc1(s-t+1, "AC.CheckpointRunBefore");
-								c = *s; *s = 0;
-								StrCopy(t, (UBYTE*)AC.CheckpointRunBefore);
-								*s = c;
-								break;
-							}
-							++s;
-						}
-						if ( FG.cTable[*s] != 9 ) {
-							MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-							return(-1);
-						}
-						++s;
+						type = 1;
 					}
 					else {
 						MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
 						return(-1);
 					}
+					*s = c;
+					if ( *s != '=' && FG.cTable[*(s+1)] != 9 ) {
+						MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
+						return(-1);
+					}
+					++s;
+					t = ++s;
+					while ( *s ) {
+						if ( FG.cTable[*s] == 9 ) {
+							c = *s; *s = 0;
+							if ( type & 1 ) {
+								if ( AC.CheckpointRunBefore ) {
+									free(AC.CheckpointRunBefore);
+								}
+								AC.CheckpointRunBefore = Malloc1(s-t+1, "AC.CheckpointRunBefore");
+								StrCopy(t, (UBYTE*)AC.CheckpointRunBefore);
+							}
+							if ( type & 2 ) {
+								if ( AC.CheckpointRunAfter ) {
+									free(AC.CheckpointRunAfter);
+								}
+								AC.CheckpointRunAfter = Malloc1(s-t+1, "AC.CheckpointRunAfter");
+								StrCopy(t, (UBYTE*)AC.CheckpointRunAfter);
+							}
+							*s = c;
+							break;
+						}
+						++s;
+					}
+					if ( FG.cTable[*s] != 9 ) {
+						MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
+						return(-1);
+					}
+					++s;
 				}
 			}
 			MesPrint("Checkpoints activated.");
