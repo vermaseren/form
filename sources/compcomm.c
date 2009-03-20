@@ -364,7 +364,7 @@ int CoOn(UBYTE *s)
 					}
 					else {
 						MesPrint("&Unrecognized option in ON Checkpoint statement: %s", t);
-						return(-1);
+						*s = c; return(-1);
 					}
 					*s = c;
 					if ( *s != '=' && FG.cTable[*(s+1)] != 9 ) {
