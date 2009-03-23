@@ -255,6 +255,12 @@ int CoOff(UBYTE *s)
 		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
 			AR.gzipCompress = 0;
 		}
+		if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
+			AC.CheckpointInterval = 0;
+			if ( AC.CheckpointRunBefore ) { free(AC.CheckpointRunBefore); AC.CheckpointRunBefore = NULL; }
+			if ( AC.CheckpointRunAfter ) { free(AC.CheckpointRunAfter); AC.CheckpointRunAfter = NULL; }
+			MesPrint("Checkpoints deactivated.");
+		}
 		if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
 			AS.MultiThreaded = 0;
 		}
@@ -324,31 +330,35 @@ int CoOn(UBYTE *s)
 			}
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
+			AC.CheckpointInterval = 0;
+			if ( AC.CheckpointRunBefore ) { free(AC.CheckpointRunBefore); AC.CheckpointRunBefore = NULL; }
+			if ( AC.CheckpointRunAfter ) { free(AC.CheckpointRunAfter); AC.CheckpointRunAfter = NULL; }
 			*s = c;
 			while ( *s ) {
 				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 				if ( FG.cTable[*s] == 1 ) {
 					interval = 0;
 					t = s;
-					while ( FG.cTable[*s] == 1 ) { interval = 10*interval + *s++ - '0'; }
-					if ( *s == 's' || *s == 'S' || *s == ',' || FG.cTable[*s] == 6 || FG.cTable[*s] == 10 ) { }
+					do { interval = 10*interval + *s++ - '0'; } while ( FG.cTable[*s] == 1 );
+					if ( *s == 's' || *s == 'S' ) {
+						s++;
+					}
 					else if ( *s == 'm' || *s == 'M' ) {
-						interval *= 60;
+						interval *= 60; s++;
 					}
 					else if ( *s == 'h' || *s == 'H' ) {
-						interval *= 3600;
+						interval *= 3600; s++;
 					}
 					else if ( *s == 'd' || *s == 'D' ) {
-						interval *= 86400;
+						interval *= 86400; s++;
 					}
-					else {
+					if ( *s != ',' && FG.cTable[*s] != 6 && FG.cTable[*s] != 10 ) {
 						MesPrint("&Unrecognized time interval in ON Checkpoint statement: %s", t);
 						return(-1);
 					}
 					AC.CheckpointInterval = interval * 1000; /* in milliseconds */
-					++s;
 				}
-				else if ( *s ) {
+				else if ( FG.cTable[*s] == 0 ) {
 					int type;
 					t = s;
 					while ( FG.cTable[*s] == 0 ) s++;
@@ -378,17 +388,21 @@ int CoOn(UBYTE *s)
 							c = *s; *s = 0;
 							if ( type & 1 ) {
 								if ( AC.CheckpointRunBefore ) {
-									free(AC.CheckpointRunBefore);
+									free(AC.CheckpointRunBefore); AC.CheckpointRunBefore = NULL;
 								}
-								AC.CheckpointRunBefore = Malloc1(s-t+1, "AC.CheckpointRunBefore");
-								StrCopy(t, (UBYTE*)AC.CheckpointRunBefore);
+								if ( s-t > 0 ) {
+									AC.CheckpointRunBefore = Malloc1(s-t+1, "AC.CheckpointRunBefore");
+									StrCopy(t, (UBYTE*)AC.CheckpointRunBefore);
+								}
 							}
 							if ( type & 2 ) {
 								if ( AC.CheckpointRunAfter ) {
-									free(AC.CheckpointRunAfter);
+									free(AC.CheckpointRunAfter); AC.CheckpointRunAfter = NULL;
 								}
-								AC.CheckpointRunAfter = Malloc1(s-t+1, "AC.CheckpointRunAfter");
-								StrCopy(t, (UBYTE*)AC.CheckpointRunAfter);
+								if ( s-t > 0 ) {
+									AC.CheckpointRunAfter = Malloc1(s-t+1, "AC.CheckpointRunAfter");
+									StrCopy(t, (UBYTE*)AC.CheckpointRunAfter);
+								}
 							}
 							*s = c;
 							break;
