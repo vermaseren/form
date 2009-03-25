@@ -1383,6 +1383,7 @@ extern VOID NumberFree2(PHEAD UWORD *NumberMem,char *text);
 
 extern void ExprStatus(EXPRESSIONS);
 extern VOID iniTools(VOID);
+extern int TestTerm(WORD *);
 
 /*
   	#] Declarations :

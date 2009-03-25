@@ -68,7 +68,7 @@ static KEYWORD precommands[] = {
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	# [ PreProcessor :
  		#[ GetInput :
 
@@ -102,7 +102,7 @@ UBYTE GetInput()
 }
 
 /*
- 		#] GetInput :
+ 		#] GetInput : 
  		#[ ClearPushback :
 */
 
@@ -112,7 +112,7 @@ VOID ClearPushback()
 }
 
 /*
- 		#] ClearPushback :
+ 		#] ClearPushback : 
  		#[ GetChar :
 
 		Reads one character. If it encounters a quote it immediately
@@ -333,7 +333,7 @@ higherlevel:
 }
 
 /*
- 		#] GetChar :
+ 		#] GetChar : 
  		#[ CharOut :
 */
 
@@ -354,7 +354,7 @@ VOID CharOut(UBYTE c)
 }
 
 /*
- 		#] CharOut :
+ 		#] CharOut : 
  		#[ UnsetAllowDelay :
 */
 
@@ -366,7 +366,7 @@ VOID UnsetAllowDelay()
 }
 
 /*
- 		#] UnsetAllowDelay :
+ 		#] UnsetAllowDelay : 
  		#[ GetPreVar :
 
 		We use the model of a heap. If the same name has been used more
@@ -467,7 +467,7 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 }
 
 /*
- 		#] GetPreVar :
+ 		#] GetPreVar : 
  		#[ PutPreVar :
 
 		If mode == 1 we see whether we can see this as a redefinition.
@@ -568,7 +568,7 @@ int PutPreVar(UBYTE *name, UBYTE *value, UBYTE *args, int mode)
 }
 
 /*
- 		#] PutPreVar :
+ 		#] PutPreVar : 
  		#[ PopPreVars :
 */
 
@@ -583,7 +583,7 @@ VOID PopPreVars(int tonumber)
 }
 
 /*
- 		#] PopPreVars :
+ 		#] PopPreVars : 
  		#[ IniModule :
 */
 
@@ -661,6 +661,9 @@ VOID IniModule(int type)
 	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	else AS.MultiThreaded = 0;
 	AC.numpartodo = 0;
+	for ( i = 1; i < AM.totalnumberofthreads; i++ ) {
+		AB[i]->T.S0->PolyWise = 0;
+	}
 #endif
 	OpenTemp();
 }
@@ -676,7 +679,7 @@ VOID IniSpecialModule(int type)
 }
 
 /*
- 		#] IniSpecialModule :
+ 		#] IniSpecialModule : 
  		#[ PreProcessor :
 */
 
@@ -817,7 +820,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( AC.exprfillwarning > 0 ) {
 					AC.exprfillwarning = 0;
 				}
-				if ( AC.CheckpointFlag && error1 == 0 && error2 == 0 ) DoCheckpoint(moduletype);
+				if ( AC.CheckpointFlag ) DoCheckpoint(moduletype);
 				break;  /* start a new module */
 			}
 			else {
@@ -879,7 +882,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor :
+ 		#] PreProcessor : 
  		#[ PreProInstruction :
 */
 
@@ -950,7 +953,7 @@ retry:;
 }
 
 /*
- 		#] PreProInstruction :
+ 		#] PreProInstruction : 
  		#[ LoadInstruction :
 
 		0:  preprocessor instruction that may involve matching of brackets
@@ -1144,7 +1147,7 @@ dodollar:		s = sstart;
 }
 
 /*
- 		#] LoadInstruction :
+ 		#] LoadInstruction : 
  		#[ LoadStatement :
 
 */
@@ -1242,7 +1245,7 @@ blank:			if ( AP.eat ) continue;
 }
 
 /*
- 		#] LoadStatement :
+ 		#] LoadStatement : 
  		#[ ExpandTripleDots :
 */
 
@@ -1536,7 +1539,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots :
+ 		#] ExpandTripleDots : 
  		#[ FindKeyWord :
 */
 
@@ -1567,7 +1570,7 @@ KEYWORD *FindKeyWord(UBYTE *theword, KEYWORD *table, int size)
 }
 
 /*
- 		#] FindKeyWord :
+ 		#] FindKeyWord : 
  		#[ FindInKeyWord :
 */
 
@@ -1586,7 +1589,7 @@ KEYWORD *FindInKeyWord(UBYTE *theword, KEYWORD *table, int size)
 }
 
 /*
- 		#] FindInKeyWord :
+ 		#] FindInKeyWord : 
  		#[ TheDefine :
 */
 
@@ -1667,7 +1670,7 @@ illargs:;
 }
 
 /*
- 		#] TheDefine :
+ 		#] TheDefine : 
  		#[ DoCommentChar :
 */
 
@@ -1692,7 +1695,7 @@ int DoCommentChar(UBYTE *s)
 }
 
 /*
- 		#] DoCommentChar :
+ 		#] DoCommentChar : 
  		#[ DoPreAssign :
 
 		Routine assigns a 'value' to a $variable.
@@ -1726,7 +1729,7 @@ int DoPreAssign(UBYTE *s)
 }
 
 /*
- 		#] DoPreAssign :
+ 		#] DoPreAssign : 
  		#[ DoDefine :
 */
 
@@ -1736,7 +1739,7 @@ int DoDefine(UBYTE *s)
 }
 
 /*
- 		#] DoDefine :
+ 		#] DoDefine : 
  		#[ DoRedefine :
 */
 
@@ -1746,7 +1749,7 @@ int DoRedefine(UBYTE *s)
 }
 
 /*
- 		#] DoRedefine :
+ 		#] DoRedefine : 
  		#[ ClearMacro :
 
 		Undefines the arguments of a macro after its use.
@@ -1772,7 +1775,7 @@ int ClearMacro(UBYTE *name)
 }
 
 /*
- 		#] ClearMacro :
+ 		#] ClearMacro : 
  		#[ TheUndefine :
 
 		There is a complication here. If there are redefine statements
@@ -1815,7 +1818,7 @@ int TheUndefine(UBYTE *name)
 }
 
 /*
- 		#] TheUndefine :
+ 		#] TheUndefine : 
  		#[ DoUndefine :
 */
 
@@ -1867,7 +1870,7 @@ illname:;
 }
 
 /*
- 		#] DoUndefine :
+ 		#] DoUndefine : 
  		#[ DoInclude :
 */
 
@@ -2004,7 +2007,7 @@ nofold:
 }
 
 /*
- 		#] DoInclude :
+ 		#] DoInclude : 
  		#[ DoPreExchange :
 
 		Exchanges the names of expressions or the contents of dollars
@@ -2070,7 +2073,7 @@ syntax:
 }
 
 /*
- 		#] DoPreExchange :
+ 		#] DoPreExchange : 
  		#[ DoCall :
 */
 
@@ -2239,7 +2242,7 @@ wrongfile:;
 }
 
 /*
- 		#] DoCall :
+ 		#] DoCall : 
  		#[ DoDebug :
 */
 
@@ -2276,7 +2279,7 @@ nonumber:
 }
 
 /*
- 		#] DoDebug :
+ 		#] DoDebug : 
  		#[ DoTerminate :
 */
 
@@ -2299,7 +2302,7 @@ nonumber:
 }
 
 /*
- 		#] DoTerminate :
+ 		#] DoTerminate : 
  		#[ DoDo :
 
 		The do loop has two varieties:
@@ -2460,7 +2463,7 @@ illdo:;
 }
 
 /*
- 		#] DoDo :
+ 		#] DoDo : 
  		#[ DoElse :
 */
 
@@ -2497,7 +2500,7 @@ int DoElse(UBYTE *s)
 }
 
 /*
- 		#] DoElse :
+ 		#] DoElse : 
  		#[ DoElseif :
 */
 
@@ -2529,7 +2532,7 @@ int DoElseif(UBYTE *s)
 }
 
 /*
- 		#] DoElseif :
+ 		#] DoElseif : 
  		#[ DoEnddo :
 
 		At the first call there is no stream yet.
@@ -2663,7 +2666,7 @@ finish:;
 }
 
 /*
- 		#] DoEnddo :
+ 		#] DoEnddo : 
  		#[ DoEndif :
 */
 
@@ -2686,7 +2689,7 @@ int DoEndif(UBYTE *s)
 }
 
 /*
- 		#] DoEndif :
+ 		#] DoEndif : 
  		#[ DoEndprocedure :
 
 		Action is simple: close the current stream if it is still
@@ -2717,7 +2720,7 @@ int DoEndprocedure(UBYTE *s)
 }
 
 /*
- 		#] DoEndprocedure :
+ 		#] DoEndprocedure : 
  		#[ DoIf :
 */
 
@@ -2740,7 +2743,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf :
+ 		#] DoIf : 
  		#[ DoIfdef :
 */
 
@@ -2764,7 +2767,7 @@ int DoIfdef(UBYTE *s, int par)
 }
 
 /*
- 		#] DoIfdef :
+ 		#] DoIfdef : 
  		#[ DoMessage :
 */
 
@@ -2778,7 +2781,7 @@ int DoMessage(UBYTE *s)
 }
 
 /*
- 		#] DoMessage :
+ 		#] DoMessage : 
  		#[ DoPipe :
 */
 
@@ -2804,7 +2807,7 @@ Error0("Temporary pipes not supported in parallel mode");
 }
 
 /*
- 		#] DoPipe :
+ 		#] DoPipe : 
  		#[ DoPrcExtension :
 */
 
@@ -2838,7 +2841,7 @@ int DoPrcExtension(UBYTE *s)
 }
 
 /*
- 		#] DoPrcExtension :
+ 		#] DoPrcExtension : 
  		#[ DoPreOut :
 */
 
@@ -2861,7 +2864,7 @@ int DoPreOut(UBYTE *s)
 }
 
 /*
- 		#] DoPreOut :
+ 		#] DoPreOut : 
  		#[ DoPrePrint :
 */
 
@@ -2874,7 +2877,7 @@ int DoPrePrint(UBYTE *s)
 }
 
 /*
- 		#] DoPrePrint :
+ 		#] DoPrePrint : 
  		#[ DoPreAppend :
 
 		Syntax:
@@ -2916,7 +2919,7 @@ improper:
 }
 
 /*
- 		#] DoPreAppend :
+ 		#] DoPreAppend : 
  		#[ DoPreCreate :
 
 		Syntax:
@@ -2958,7 +2961,7 @@ improper:
 }
 
 /*
- 		#] DoPreCreate :
+ 		#] DoPreCreate : 
  		#[ DoPreRemove :
 */
 
@@ -2990,7 +2993,7 @@ int DoPreRemove(UBYTE *s)
 }
 
 /*
- 		#] DoPreRemove :
+ 		#] DoPreRemove : 
  		#[ DoPreClose :
 */
 
@@ -3020,7 +3023,7 @@ int DoPreClose(UBYTE *s)
 }
 
 /*
- 		#] DoPreClose :
+ 		#] DoPreClose : 
  		#[ DoPreWrite :
 
 		Syntax:
@@ -3058,7 +3061,7 @@ int DoPreWrite(UBYTE *s)
 }
 
 /*
- 		#] DoPreWrite :
+ 		#] DoPreWrite : 
  		#[ DoProcedure :
 
 		We have to read this procedure into a buffer.
@@ -3110,7 +3113,7 @@ int DoProcedure(UBYTE *s)
 }
 
 /*
- 		#] DoProcedure :
+ 		#] DoProcedure : 
  		#[ DoPreBreak :
 */
 
@@ -3134,7 +3137,7 @@ int DoPreBreak(UBYTE *s)
 }
 
 /*
- 		#] DoPreBreak :
+ 		#] DoPreBreak : 
  		#[ DoPreCase :
 */
 
@@ -3173,7 +3176,7 @@ int DoPreCase(UBYTE *s)
 }
 
 /*
- 		#] DoPreCase :
+ 		#] DoPreCase : 
  		#[ DoPreDefault :
 */
 
@@ -3197,7 +3200,7 @@ int DoPreDefault(UBYTE *s)
 }
 
 /*
- 		#] DoPreDefault :
+ 		#] DoPreDefault : 
  		#[ DoPreEndSwitch :
 */
 
@@ -3221,7 +3224,7 @@ int DoPreEndSwitch(UBYTE *s)
 }
 
 /*
- 		#] DoPreEndSwitch :
+ 		#] DoPreEndSwitch : 
  		#[ DoPreSwitch :
 
 		There should be a string after this.
@@ -3276,7 +3279,7 @@ int DoPreSwitch(UBYTE *s)
 }
 
 /*
- 		#] DoPreSwitch :
+ 		#] DoPreSwitch : 
  		#[ DoPreShow :
 
 		Print the contents of the preprocessor variables
@@ -3311,7 +3314,7 @@ int DoPreShow(UBYTE *s)
 }
 
 /*
- 		#] DoPreShow :
+ 		#] DoPreShow : 
  		#[ DoSystem :
 */
 
@@ -3334,7 +3337,7 @@ int DoSystem(UBYTE *s)
 }
 
 /*
- 		#] DoSystem :
+ 		#] DoSystem : 
  		#[ DoPreNormPoly :
 
 		Syntax #NormPoly(F,x,$b) or #NormPoly($a,x,$b)
@@ -3466,7 +3469,7 @@ syntax:
 }
 
 /*
- 		#] DoPreNormPoly :
+ 		#] DoPreNormPoly : 
  		#[ PreLoad :
 
 		Loads a loop or procedure into a special buffer.
@@ -3547,7 +3550,7 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 }
 
 /*
- 		#] PreLoad :
+ 		#] PreLoad : 
  		#[ PreSkip :
 
 		Skips a loop or procedure.
@@ -3607,7 +3610,7 @@ int PreSkip(UBYTE *start, UBYTE *stop, int mode)
 }
 
 /*
- 		#] PreSkip :
+ 		#] PreSkip : 
  		#[ StartPrepro :
 */
 
@@ -3628,7 +3631,7 @@ VOID StartPrepro()
 }
 
 /*
- 		#] StartPrepro :
+ 		#] StartPrepro : 
  		#[ EvalPreIf :
 
 		Evaluates the condition in an if instruction.
@@ -3655,7 +3658,7 @@ int EvalPreIf(UBYTE *s)
 }
 
 /*
- 		#] EvalPreIf :
+ 		#] EvalPreIf : 
  		#[ PreIfEval :
 
 		Used for recursions in the evaluation of a preprocessor if-condition.
@@ -3796,7 +3799,7 @@ illoper:
 }
 
 /*
- 		#] PreIfEval :
+ 		#] PreIfEval : 
  		#[ PreCmp :
 */
 
@@ -3820,7 +3823,7 @@ int PreCmp(int type, int val, UBYTE *t, int type2, int val2, UBYTE *t2, int cmpo
 }
 
 /*
- 		#] PreCmp :
+ 		#] PreCmp : 
  		#[ PreEq :
 */
 
@@ -3841,7 +3844,7 @@ int PreEq(int type, int val, UBYTE *t, int type2, int val2, UBYTE *t2, int eqop)
 }
 
 /*
- 		#] PreEq :
+ 		#] PreEq : 
  		#[ pParseObject :
 
 		Parses a preprocessor object. We can have:
@@ -4048,7 +4051,7 @@ illend:
 }
 
 /*
- 		#] pParseObject :
+ 		#] pParseObject : 
  		#[ PreCalc :
  
 		To be called when a { is encountered.
@@ -4129,7 +4132,7 @@ setstring:;
 }
 
 /*
- 		#] PreCalc :
+ 		#] PreCalc : 
  		#[ PreEval :
 
 		Operations are:
@@ -4276,7 +4279,7 @@ UBYTE *PreEval(UBYTE *s, LONG *x)
 }
 
 /*
- 		#] PreEval :
+ 		#] PreEval : 
  		#[ AddToPreTypes :
 */
 
@@ -4294,7 +4297,7 @@ void AddToPreTypes(int type)
 }
 
 /*
- 		#] AddToPreTypes :
+ 		#] AddToPreTypes : 
  		#[ MessPreNesting :
 */
 
@@ -4304,7 +4307,7 @@ void MessPreNesting(int par)
 }
 
 /*
- 		#] MessPreNesting :
+ 		#] MessPreNesting : 
  		#[ DoPreAddSeparator :
 
 		Preprocessor directives "addseparator" and "rmseparator" add/remove 
@@ -4339,7 +4342,7 @@ int DoPreAddSeparator(UBYTE *s)
 }
 
 /*
- 		#] DoPreAddSeparator :
+ 		#] DoPreAddSeparator : 
  		#[ DoPreRmSeparator :
 
 		See commentary with DoPreAddSeparator
@@ -4358,7 +4361,7 @@ int DoPreRmSeparator(UBYTE *s)
 }
 
 /*
- 		#] DoPreRmSeparator :
+ 		#] DoPreRmSeparator : 
  		#[ DoExternal:
 
 		#external ["prevar"] command
@@ -4435,7 +4438,7 @@ int DoExternal(UBYTE *s)
 }
 
 /*
- 		#] DoExternal:
+ 		#] DoExternal: 
  		#[ DoPrompt:
 			#prompt string
 */
@@ -4463,7 +4466,7 @@ int DoPrompt(UBYTE *s)
 #endif /*ifdef WITHEXTERNALCHANNEL ... else*/
 }
 /*
- 		#] DoPrompt:
+ 		#] DoPrompt: 
  		#[ DoSetExternal:
 			#setexternal n
 */
@@ -4494,7 +4497,7 @@ int DoSetExternal(UBYTE *s)
 #endif /*ifdef WITHEXTERNALCHANNEL ... else*/
 }
 /*
- 		#] DoSetExternal:
+ 		#] DoSetExternal: 
  		#[ DoSetExternalAttr:
 */
 
@@ -4639,7 +4642,7 @@ int DoSetExternalAttr(UBYTE *s)
 #endif /*ifdef WITHEXTERNALCHANNEL ... else*/
 }
 /*
- 		#] DoSetExternalAttr:
+ 		#] DoSetExternalAttr: 
  		#[ DoRmExternal:
 			#rmexternal [n] (if 0, close all)
 */
@@ -4682,7 +4685,7 @@ int DoRmExternal(UBYTE *s)
 
 }
 /*
- 		#] DoRmExternal:
+ 		#] DoRmExternal: 
  		#[ DoFromExternal :
 				#fromexternal 
 					is used to read the text from the running external
@@ -4873,7 +4876,7 @@ int DoFromExternal(UBYTE *s)
 }
 
 /*
- 		#] DoFromExternal :
+ 		#] DoFromExternal : 
  		#[ DoToExternal :
 			#toexetrnal
 */
@@ -4930,7 +4933,7 @@ int DoToExternal(UBYTE *s)
 }
 
 /*
- 		#] DoToExternal :
+ 		#] DoToExternal : 
  		#[ defineChannel :
 */
  
@@ -4965,7 +4968,7 @@ UBYTE *defineChannel(UBYTE *s, HANDLERS *h)
 }
 
 /*
- 		#] defineChannel :
+ 		#] defineChannel : 
  		#[ writeToChannel :
 */
  
@@ -5282,6 +5285,6 @@ ReturnWithError:
 }
 
 /*
- 		#] writeToChannel :
+ 		#] writeToChannel : 
  	# ] PreProcessor :
 */
