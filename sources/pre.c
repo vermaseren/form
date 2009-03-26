@@ -820,7 +820,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( AC.exprfillwarning > 0 ) {
 					AC.exprfillwarning = 0;
 				}
-				if ( AC.CheckpointFlag ) DoCheckpoint(moduletype);
+				if ( AC.CheckpointFlag && error1 == 0 && error2 == 0 ) DoCheckpoint(moduletype);
 				break;  /* start a new module */
 			}
 			else {
