@@ -1527,6 +1527,7 @@ int FunMatchSy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 	if ( argcount < tcount && funnycount == 0 ) return(0);
 	if ( argcount == 0 && tcount == 0 && funnycount == 0 ) {
 quicky:
+		if ( signs != AN.ExpectedSign ) goto NoSuccess;
 		AN.RepFunList[AN.RepFunNum++] = offset;
 		AN.RepFunList[AN.RepFunNum++] = signs;
 		newpat = pattern + pattern[1];
