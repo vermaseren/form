@@ -712,7 +712,7 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 }
 
 /*
- 		#] AddLong :
+ 		#] AddLong : 
  		#[ AddPLon :		WORD AddPLon(a,na,b,nb,c,nc)
 
 	Adds two long integers a and b and puts the result in c.
@@ -801,7 +801,7 @@ VOID SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 }
 
 /*
- 		#] SubPLon :
+ 		#] SubPLon : 
  		#[ MulLong :		WORD MulLong(a,na,b,nb,c,nc)
 
 	Does a Long multiplication. Assumes that WORD is half the size
@@ -2542,7 +2542,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2796,7 +2796,7 @@ simplecase:
 	  if ( DivLong(c,y3,(UWORD *)cmodvec,nmod,d,&y5,a,&tdenom) ) goto ModErr;
 	}
 	if ( !tdenom ) { *na = 0; goto normalreturn; }
-	if ( ( AC.modmode & POSNEG ) != 0 ) {
+	if ( ( ( AC.modmode & POSNEG ) != 0 ) && ( ( par & FROMFUNCTION ) == 0 ) ) {
 		NormalModulus(a,&tdenom);
 	}
 	else if ( tdenom < 0 ) {
@@ -2821,7 +2821,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus : 
+ 		#] TakeModulus :
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2898,7 +2898,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms : 
+  	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 

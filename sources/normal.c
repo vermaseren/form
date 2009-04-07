@@ -89,7 +89,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations : 
+  	#] Declarations :
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -754,7 +754,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 				second argument is a positive short number
 */
 				if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SNUMBER
-					&& t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+3] > 0 ) {
+					&& t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+3] > 1 ) {
 					WORD tmod;
 					tmod = t[FUNHEAD+1]%t[FUNHEAD+3];
 					if ( tmod < 0 ) tmod += t[FUNHEAD+3];
@@ -765,7 +765,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 				}
 				else if ( t[1] > t[FUNHEAD+2] && t[FUNHEAD] > 0
 				&& t[FUNHEAD+t[FUNHEAD]] == -SNUMBER
-				&& t[FUNHEAD+t[FUNHEAD]+1] > 0
+				&& t[FUNHEAD+t[FUNHEAD]+1] > 1
 				&& t[1] == FUNHEAD+2+t[FUNHEAD] ) {
 					WORD *ttt = t+FUNHEAD, iii;
 					iii = ttt[*ttt-1];
@@ -795,6 +795,74 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					if ( *lnum == 0 ) goto NormZero;
 					nnum = 1;
 					goto MulIn;
+				}
+				else if ( ( ( t[FUNHEAD] < 0 ) && ( t[FUNHEAD] == -SNUMBER )
+				&& ( t[1] >= ( FUNHEAD+6+ARGHEAD ) )
+				&& ( t[FUNHEAD+2] >= 4+ARGHEAD )
+				&& ( t[t[1]-1] == t[FUNHEAD+2+ARGHEAD]-1 ) ) ||
+				( ( t[FUNHEAD] > 0 )
+				&& ( t[FUNHEAD]-ARGHEAD-1 == ABS(t[FUNHEAD+t[FUNHEAD]-1]) )
+				&& ( t[FUNHEAD+t[FUNHEAD]]-ARGHEAD-1 == t[t[1]-1] ) ) ) {
+/*
+					Check that the last (long) number is integer
+*/
+					WORD *ttt = t + t[1], iii, iii1;
+					UWORD coefbuf[2], *coef2, ncoef2;
+					iii = (ttt[-1]-1)/2;
+					ttt -= iii;
+					if ( ttt[-1] != 1 ) {
+exitfromhere:
+						pcom[ncom++] = t;
+						break;
+					}
+					iii--;
+					for ( iii1 = 0; iii1 < iii; iii1++ ) {
+						if ( ttt[iii1] != 0 ) goto exitfromhere;
+					}
+/*
+					Now we have a hit!
+					The first argument will be put in lnum.
+					It will be a rational.
+					The second argument will be a long integer in coef2.
+*/
+					ttt = t + FUNHEAD;
+					if ( *ttt < 0 ) {
+						if ( ttt[1] < 0 ) {
+							nnum = -1; lnum[0] = -ttt[1]; lnum[1] = 1;
+						}
+						else {
+							nnum = 1; lnum[0] = ttt[1]; lnum[1] = 1;
+						}
+					}
+					else {
+						nnum = ABS(ttt[ttt[0]-1] - 1);
+						for ( iii = 0; iii < nnum; iii++ ) {
+							lnum[iii] = ttt[ARGHEAD+1+iii];
+						}
+						nnum = nnum/2;
+						if ( ttt[ttt[0]-1] < 0 ) nnum = -nnum;
+					}
+					NEXTARG(ttt);
+					if ( *ttt < 0 ) {
+						coef2 = coefbuf;
+						ncoef2 = 3; *coef2 = (UWORD)(ttt[1]);
+						coef2[1] = 1;
+					}
+					else {
+						coef2 = (UWORD *)(ttt+ARGHEAD+1);
+						ncoef2 = (ttt[ttt[0]-1]-1)/2;
+					}
+					if ( TakeModulus((UWORD *)lnum,&nnum,(WORD *)coef2,ncoef2,
+									UNPACK|NOINVERSES|FROMFUNCTION) ) {
+						goto FromNorm;
+					}
+/*
+					Do we have to pack? No, because the answer is not a fraction
+*/
+					ncoef = REDLENG(ncoef);
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) )
+							goto FromNorm;
+					ncoef = INCLENG(ncoef);
 				}
 				else pcom[ncom++] = t;
 				break;
@@ -2958,7 +3026,7 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 

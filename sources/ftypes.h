@@ -834,6 +834,7 @@ typedef int (*TFUN1)();
 #define POSITIVEONLY 0
 #define UNPACK 0x80
 #define NOUNPACK 0
+#define FROMFUNCTION 0x100
 
 #define VARNAMES 0
 #define AUTONAMES 1
