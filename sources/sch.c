@@ -111,13 +111,26 @@ VOID AddToLine(UBYTE *s)
 #endif
 				}
 			}
+			/* thomasr 23/04/09: A continuation line has been started.
+			 * In Fortran90 we do not want a space after the initial
+			 * '&' character otherwise we might end up with something
+			 * like:
+			 *    ...  2.&
+			 *  & 0 ...
+			 */
 			startinline = 0;
 			for ( i = 0; i < AO.OutSkip; i++ ) AO.OutputLine[i] = ' ';
 			Out = AO.OutputLine + AO.OutSkip;
 			if ( ( AC.OutputMode == FORTRANMODE
 			 || AC.OutputMode == PFORTRANMODE ) && AO.OutSkip == 7 ) {
-				Out[-2] = fcontchar;
-				Out[-1] = ' ';
+				/* thomasr 23/04/09: fix leading blank in fortran90 mode */
+				if(AC.IsFortran90 == ISFORTRAN90) {
+					Out[-1] = fcontchar;
+				}
+				else {
+					Out[-2] = fcontchar;
+					Out[-1] = ' ';
+				}
 			}
 			if ( AO.IsBracket ) { *Out++ = ' ';
 				if ( AC.OutputSpaces == NORMALFORMAT ) {
