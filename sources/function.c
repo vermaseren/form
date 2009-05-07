@@ -798,6 +798,7 @@ WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 		if ( *m >= (FUNCTION + WILDOFFSET) ) { i--; m++; t++; }
 		do { if ( *m++ != *t++ ) break; } while ( --i > 0 );
 		if ( i <= 0 ) {			/* Arguments match */
+			if ( AN.ExpectedSign ) return(0);
 			i = *pattern - WILDOFFSET;
 			if ( i >= FUNCTION ) {
 				if ( *interm != GAMMA
