@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -31,7 +31,7 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use :
+  	#] syntax and use : 
   	#[ FindBracket :
 */
 
@@ -240,7 +240,7 @@ found:
 }
 
 /*
-  	#] FindBracket :
+  	#] FindBracket : 
   	#[ PutBracketInIndex :
 
 	Call via
@@ -301,8 +301,14 @@ VOID PutBracketInIndex(WORD *term, POSITION *newpos)
 			}
 			if ( i < *term - 3 ) {
 problems:;
+				*term = oldsize; oldt[0] = HAAKJE; oldt[1] = oldhs; oldt[2] = oldh;
 				LOCK(ErrorMessageLock);
 				MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
+#ifdef WITHPTHREADS
+				MesPrint("Worker = %w");
+#endif
+				PrintTerm(term,"term into index");
+				PrintTerm(b->bracketbuffer+bi->bracket,"Last in index");
 				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
@@ -455,7 +461,7 @@ void ClearBracketIndex(WORD numexp)
 }
 
 /*
-  	#] ClearBracketIndex :
+  	#] ClearBracketIndex : 
   	#[ OpenBracketIndex :
 
 	Note: This routine is thread-safe
@@ -481,7 +487,7 @@ VOID OpenBracketIndex(WORD nexpr)
 }
 
 /*
-  	#] OpenBracketIndex :
+  	#] OpenBracketIndex : 
 */
 
 /*
@@ -511,5 +517,5 @@ int PutTermInIndex(WORD *term,POSITION *position)
 	return(0);
 }
 
-  	#] PutTermInIndex :
+  	#] PutTermInIndex : 
 */

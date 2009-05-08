@@ -238,7 +238,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -1356,11 +1356,15 @@ int CoFillExpression(UBYTE *inp)
 			}
 			weneedit = 1;
 			if ( T->sparse ) {
-				pw = oldwork + T->numind;
+				if ( numsym < 0 ) pw = oldwork + 1;
+				else              pw = oldwork + T->numind;
 				i = FindTableTree(T,pw,1);
 				if ( i >= 0 ) {
 					sum = i+T->numind;
-					C->rhs[T->tablepointers[sum]] = C->Pointer; /*-----*/
+/*
+Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
+*/
+					C->Pointer--; /* Back up over the zero */
 					goto newentry;
 				}
 				if ( T->totind >= T->reserved ) {
@@ -1451,7 +1455,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax

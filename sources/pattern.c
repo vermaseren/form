@@ -115,7 +115,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else return(0);
 	}
 /*
- 		#] Preliminaries : 
+ 		#] Preliminaries :
 */
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -174,6 +174,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
  		#[ Expand dollars :
 */
 	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
+		WORD oldRepPoint = *AN.RepPoint;
 		AR.Eside = LHSIDEX;
 /*
 		Copy into WorkSpace. This means that AN.patternbuffer will be free.
@@ -227,6 +228,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		*mm = 0;
 
 		AT.WorkPointer = ww = StartWork;
+		*AN.RepPoint = oldRepPoint;
 	}
 /*
  		#] Expand dollars :
