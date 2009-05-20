@@ -1693,6 +1693,13 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 	if ( AN.ncmod != 0 ) {
 		if ( ( AC.modmode & POSNEG ) != 0 ) {
 			NormalModulus(OutCoef,&OutLen);
+/*
+			We had forgotten that this can also become smaller but the
+			denominator isn't there. Correct in the other case
+			17-may-2009 [JV]
+*/
+			j = ABS(OutLen); OutCoef[j] = 1;
+			for ( i = 1; i < j; i++ ) OutCoef[j+i] = 0;
 		}
 		else if ( BigLong(OutCoef,OutLen,(UWORD *)AC.cmod,ABS(AN.ncmod)) >= 0 ) {
 			SubPLon(OutCoef,OutLen,(UWORD *)AC.cmod,ABS(AN.ncmod),OutCoef,&OutLen);
@@ -1764,7 +1771,7 @@ RegEnd:
 }
 
 /*
- 		#] AddCoef : 
+ 		#] AddCoef :
  		#[ AddPoly :				WORD AddPoly(pterm1,pterm2)
 */
 /**
