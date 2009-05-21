@@ -798,7 +798,7 @@ WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 		if ( *m >= (FUNCTION + WILDOFFSET) ) { i--; m++; t++; }
 		do { if ( *m++ != *t++ ) break; } while ( --i > 0 );
 		if ( i <= 0 ) {			/* Arguments match */
-			if ( AN.ExpectedSign ) return(0);
+			if ( AN.SignCheck && AN.ExpectedSign ) return(0);
 			i = *pattern - WILDOFFSET;
 			if ( i >= FUNCTION ) {
 				if ( *interm != GAMMA
@@ -865,6 +865,7 @@ WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 			AddWild(BHEAD m[FUNHEAD]-WILDOFFSET,INDTOIND,newvalue);
 			
 			AT.WorkPointer = OldWork;
+			if ( AN.SignCheck && AN.ExpectedSign ) return(0);
 			return(1);		/* m was eaten. we have a match! */
 		}
 		if ( i < 0 ) goto NoCaseB;	/* Pattern longer than target */
@@ -949,7 +950,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA : 
+ 		#] GAMMA :
  		#[ Tensors :
 */
 	}
@@ -1032,6 +1033,7 @@ toploop:
 			else goto endloop;
 			m++; t++;
 		}
+		if ( AN.SignCheck && AN.ExpectedSign ) goto endloop;
 		AT.WorkPointer = OldWork;
 		if ( AN.WildArgs > 1 ) *wilds = 2;
 		return(1);		/* m was eaten. we have a match! */
@@ -1077,7 +1079,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors : 
+ 		#] Tensors :
 */
 	}
 /*
@@ -1386,8 +1388,10 @@ IndAll:				i = m[1] - WILDOFFSET;
 		t = argtstop;						/* Next argument */
 		m = argmstop;
 	}
+	if ( AN.SignCheck && AN.ExpectedSign ) goto endofloop;
 	AT.WorkPointer = OldWork;
 	if ( AN.WildArgs > 1 ) *wilds = 1;
+	if ( AN.SignCheck && AN.ExpectedSign ) return(0);
 	return(1);		/* m was eaten. we have a match! */
 
 endofloop:;
@@ -1450,7 +1454,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction : 
+ 		#] MatchFunction :
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		Finds in which functions to look for a match.
@@ -1479,6 +1483,14 @@ NoCaseB:
 		functions till 6-jan-2009. As of the moment this still has to
 		be fixed.
 
+		Functions inside functions can cause problems when antisymmetric
+		functions are involved. The sign of the term may be at stake.
+		At the lowest level this is no problem but in f(-fas(n2,n1)) this
+		plays a role. Next is when we have a product of functions inside
+		an argument. The strategy must be that we test the sign only at the
+		last function. Hence, when inpat+inpat[1] >= AN.patstop.
+		We might relax that to the last antisymmetric function at a later stage.
+
 	New scheme to be implemented for non-commuting objects:
 	When we are matching a second (or higher) function, any match can only
 	be directly after the last matched non-commuting function or a commuting
@@ -1497,6 +1509,11 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 	int ntwa = AN.NumTotWildArgs;
 	LONG oldcpointer = C->Pointer - C->Buffer;
 	instart = inter;
+/*
+	Only active for the last function in the pattern.
+	The actual test on the sign is in MatchFunction or the symmetric functions
+*/
+	AN.SignCheck = ( inpat + inpat[1] >= AN.patstop ) ? 1 : 0;
 /*
 			Store the current Wildcard assignments
 */
@@ -1801,7 +1818,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions :
+ 		#] ScanFunctions : 
 	#] Patterns :
 */
 

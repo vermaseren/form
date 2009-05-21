@@ -115,7 +115,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else return(0);
 	}
 /*
- 		#] Preliminaries :
+ 		#] Preliminaries : 
 */
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -231,7 +231,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		*AN.RepPoint = oldRepPoint;
 	}
 /*
- 		#] Expand dollars :
+ 		#] Expand dollars : 
 
 	AT.WorkPointer = ww = term + *term;
 */
@@ -458,7 +458,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch :
+ 		#] TestMatch : 
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 
 	The current version doesn't scan function arguments yet. 7-Apr-1988
@@ -1025,7 +1025,7 @@ WORD FindSpecial(WORD *term)
 WORD FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
 {
 	GETBIDENTITY
-	WORD *t, *m, *r;
+	WORD *t, *m, *r, *mm;
 	WORD *tstop, *mstop, *TwoProto, *vwhere = 0, oldv, oldvv, vv, level2;
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;
     WORD fromindex, *intens;
@@ -1203,9 +1203,16 @@ TwoPV:							m = AT.WorkPointer;
 									}
 									t = TwoProto;
 									vwhere = m + 3+SUBEXPSIZE;
+									mm = m;
 									nq = t[1];
 									t[3] = 1;
 									NCOPY(m,t,nq);
+/*
+		The next two lines repair a bug. without them it takes twice
+		the rhs of the first vector.
+*/
+									mm[2] = C->lhs[level][IDHEAD+2];
+									mm[4] = C->lhs[level][IDHEAD+4];
 									m[-1] = AR.CurDum;
 									if ( vv >= OffNum ) *vwhere = oldvv;
 								} while ( --i > 0 );
@@ -1466,7 +1473,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll : 
+ 		#] FindAll :
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp

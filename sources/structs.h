@@ -1286,7 +1286,7 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1890,6 +1890,7 @@ struct N_const {
 	WORD	getdivgcd;
     WORD    ncmod;                 /* () used as some type of flag to disable */
 	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
+	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
@@ -1897,7 +1898,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**

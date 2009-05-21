@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ MatchE :					WORD MatchE(pattern,fun,inter,par)
 
 		Matches symmetric and antisymmetric tensors.
@@ -395,7 +395,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE : 
+  	#] MatchE :
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -441,7 +441,7 @@ WORD Permute(PERM *perm, WORD first)
 }
 
 /*
-  	#] Permute : 
+  	#] Permute :
   	#[ Distribute :
 */
 
@@ -492,7 +492,7 @@ WORD Distribute(DISTRIBUTE *d, WORD first)
 }
 
 /*
-  	#] Distribute : 
+  	#] Distribute :
   	#[ MatchCy :
 
 		Matching of (r)cyclic tensors.
@@ -995,7 +995,7 @@ nomatch:;
 }
 
 /*
-  	#] MatchCy : 
+  	#] MatchCy :
   	#[ FunMatchCy :
 
 		Matching of (r)cyclic functions.
@@ -1202,7 +1202,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 1: 
+  	#] Case 1:
   	#[ Case 2: One -ARGWILD. Fix its length.
 */
 	if ( funnycount == 1 ) {
@@ -1287,7 +1287,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		goto NoSuccess;
 	}
 /*
-  	#] Case 2: 
+  	#] Case 2:
   	#[ Case 3: More than one -ARGWILD. Complicated.
 */
 
@@ -1431,7 +1431,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		(thewildcards[iraise-1])++;
 	}
 /*
-  	#] Case 3: 
+  	#] Case 3:
 */
 NoSuccess:
 	if ( oldwilval > 0 ) {
@@ -1453,7 +1453,7 @@ nomatch:;
 }
 
 /*
-  	#] FunMatchCy : 
+  	#] FunMatchCy :
   	#[ FunMatchSy :
 
 		Matching of (anti)symmetric functions.
@@ -1527,7 +1527,7 @@ int FunMatchSy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 	if ( argcount < tcount && funnycount == 0 ) return(0);
 	if ( argcount == 0 && tcount == 0 && funnycount == 0 ) {
 quicky:
-		if ( signs != AN.ExpectedSign ) goto NoSuccess;
+		if ( AN.SignCheck && signs != AN.ExpectedSign ) goto NoSuccess;
 		AN.RepFunList[AN.RepFunNum++] = offset;
 		AN.RepFunList[AN.RepFunNum++] = signs;
 		newpat = pattern + pattern[1];
@@ -1902,7 +1902,7 @@ nextiraise:;
 				for ( countsgn = oRepFunNum+1; countsgn < AN.RepFunNum; countsgn += 2 ) {
 					if ( AN.RepFunList[countsgn] ) sgn ^= 1;
 				}
-				if ( sgn == AN.ExpectedSign ) {
+				if ( AN.SignCheck == 0 || sgn == AN.ExpectedSign ) {
 					AT.WorkPointer = oldworkpointer;
 					AT.pWorkPointer = oww;
 					return(1);
@@ -1923,7 +1923,7 @@ nextiraise:;
 				for ( countsgn = oRepFunNum+1; countsgn < AN.RepFunNum; countsgn += 2 ) {
 					if ( AN.RepFunList[countsgn] ) sgn ^= 1;
 				}
-				if ( sgn == AN.ExpectedSign ) {
+				if ( AN.SignCheck == 0 || sgn == AN.ExpectedSign ) {
 					AT.WorkPointer = oldworkpointer;
 					AT.pWorkPointer = oww;
 					return(1);
@@ -1983,7 +1983,7 @@ NoSuccess:
 }
 
 /*
-  	#] FunMatchSy : 
+  	#] FunMatchSy :
   	#[ MatchArgument :
 */
 
@@ -2080,7 +2080,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Both fast : 
+  	#] Both fast :
   	#[ Fast arg :
 */
 	else if ( *m > 0 && *t <= -FUNCTION ) {
@@ -2112,7 +2112,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast arg : 
+  	#] Fast arg :
   	#[ Fast pat :
 */
 	else if ( *m < 0 && *t > 0 ) {
@@ -2139,7 +2139,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		else return(0);
 	}
 /*
-  	#] Fast pat : 
+  	#] Fast pat :
   	#[ Both general :
 */
 	else if ( *m > 0 && *t > 0 ) {
@@ -2241,7 +2241,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 	}
 /*
-  	#] Both general : 
+  	#] Both general :
 */
 	else return(0);
 /*
@@ -2251,5 +2251,5 @@ IndAll:			i = m[1] - WILDOFFSET;
 }
 
 /*
-  	#] MatchArgument : 
+  	#] MatchArgument :
 */
