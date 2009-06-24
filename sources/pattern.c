@@ -18,7 +18,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Patterns :
  		#[ Rules :
 
@@ -36,7 +36,7 @@
 		6:	x^n? can revert to n = 0 if there is no power of x.
 		7:	x?^n? must match some x. There could be an ambiguity otherwise.
 
- 		#] Rules : 
+ 		#] Rules :
  		#[ TestMatch :			WORD TestMatch(term,level)
 */
 
@@ -73,7 +73,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	GETBIDENTITY
 	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm;
 	WORD power = 0, match = 0, /* *rep, */ i, msign = 0;
-	int numdollars = 0;
+	int numdollars = 0, protosize;
 	CBUF *C = cbuf+AM.rbufnum;
 	do {
 /*
@@ -115,7 +115,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else return(0);
 	}
 /*
- 		#] Preliminaries : 
+ 		#] Preliminaries :
 */
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -167,6 +167,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 #endif
 	AN.FullProto = m;
 	AN.WildValue = w = m + SUBEXPSIZE;
+	protosize = IDHEAD + m[1];
 	m += m[1];
 	AN.WildStop = m;
 	StartWork = ww;
@@ -174,7 +175,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
  		#[ Expand dollars :
 */
 	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
-		WORD oldRepPoint = *AN.RepPoint;
+		WORD oldRepPoint = *AN.RepPoint, olddefer = AR.DeferFlag;
 		AR.Eside = LHSIDEX;
 /*
 		Copy into WorkSpace. This means that AN.patternbuffer will be free.
@@ -184,14 +185,17 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		*StartWork += 3;
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
+		AR.DeferFlag = 0;
 		NewSort();
 		if ( Generator(BHEAD StartWork,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = OldWork;
+			AR.DeferFlag = olddefer;
 			return(-1);
 		}
 		AT.WorkPointer = ww;
 		if ( EndSort(ww,0) < 0 ) {}
+		AR.DeferFlag = olddefer;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AP.lhdollarerror == 0 ) {
 /*
@@ -214,16 +218,21 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			return(-1);
 		}
 		*m -= m[*m-1];
-		if ( ( *m + 1 ) > AN.patternbuffersize ) {
+		if ( ( *m + 1 + protosize ) > AN.patternbuffersize ) {
 			if ( AN.patternbuffer ) M_free(AN.patternbuffer,"AN.patternbuffer");
-			AN.patternbuffersize = 2 * (*m) + 2;
+			AN.patternbuffersize = 2 * (*m) + 2 + protosize;
 			AN.patternbuffer = (WORD *)Malloc1(AN.patternbuffersize * sizeof(WORD),
 					"AN.patternbuffer");
+			mm = ll; ww = AN.patternbuffer; i = protosize;
+			NCOPY(ww,mm,i);
+			AN.FullProto = AN.patternbuffer + IDHEAD;
+			AN.WildValue = w = AN.FullProto + SUBEXPSIZE;
+			AN.WildStop = AN.patternbuffer + protosize;
 		}
-		mm = AN.patternbuffer;
+		mm = AN.patternbuffer + protosize;
 		i = *m;
 		NCOPY(mm,m,i);
-		m = AN.patternbuffer;
+		m = AN.patternbuffer + protosize;
 		AR.Eside = RHSIDE;
 		*mm = 0;
 
@@ -231,7 +240,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		*AN.RepPoint = oldRepPoint;
 	}
 /*
- 		#] Expand dollars : 
+ 		#] Expand dollars :
 
 	AT.WorkPointer = ww = term + *term;
 */
@@ -250,6 +259,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		return(-1);
 	}
 	AN.DisOrderFlag = ll[2] & SUBDISORDER;
+	AN.nogroundlevel = 0;
 	switch ( ll[2] & SUBMASK ) {
 		case SUBONLY :
 			/* Must be an exact match */
@@ -293,6 +303,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 							AN.RepFunNum = 0;
 						}
 */
+						AN.nogroundlevel = 0;
 					} while ( FindRest(BHEAD term,m) && ( AN.UsedOtherFind ||
 							FindOnce(BHEAD term,m) ) );
 					match = 1;
@@ -458,7 +469,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch : 
+ 		#] TestMatch :
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 
 	The current version doesn't scan function arguments yet. 7-Apr-1988
@@ -582,7 +593,7 @@ SubsL2:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] SYMBOLS : 
+			#] SYMBOLS :
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -702,7 +713,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS : 
+			#] DOTPRODUCTS :
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -762,7 +773,7 @@ SubsL5:								fill += nq;
 			m += m[1];
 		}
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -838,7 +849,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] VECTORS : 
+			#] VECTORS :
 			#[ INDICES :
 
 			Currently without wildcards
@@ -890,7 +901,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] INDICES : 
+			#] INDICES :
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -957,7 +968,7 @@ SubsL6:				nq = WORDDIF(fill,subterm);
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DELTAS : 
+			#] DELTAS :
 */
 EndLoop:;
 	} while ( m < mstop ); }
@@ -987,7 +998,7 @@ SubCoef:
 }
 
 /*
- 		#] Substitute : 
+ 		#] Substitute :
  		#[ FindSpecial :		WORD FindSpecial(term)
 
 	Routine to detect symplifications regarding the special functions
@@ -1018,7 +1029,7 @@ WORD FindSpecial(WORD *term)
 	return(0);
 }
 
- 		#] FindSpecial : 
+ 		#] FindSpecial :
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
@@ -1699,7 +1710,7 @@ dotensor:
 }
 
 /*
- 		#] TestSelect : 
+ 		#] TestSelect :
   	#] Patterns :
 */
 

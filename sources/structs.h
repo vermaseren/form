@@ -1865,7 +1865,7 @@ struct N_const {
 	int		filenum;               /* () used in setfile.c */
 	int		compressSize;          /* () Used in sort.c */
 	int		polysortflag;
-    int     reserved;
+    int     nogroundlevel;         /* () Used to see whether pattern matching at groundlevel */
 	WORD	RenumScratch[300];     /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */

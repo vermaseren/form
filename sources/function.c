@@ -950,7 +950,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA :
+ 		#] GAMMA : 
  		#[ Tensors :
 */
 	}
@@ -1079,7 +1079,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors :
+ 		#] Tensors : 
 */
 	}
 /*
@@ -1348,8 +1348,10 @@ IndAll:				i = m[1] - WILDOFFSET;
 				wildeat = AN.WildEat;
 				for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AT.WildArgTaken[i];
 				AN.ForFindOnly = 0; AN.UseFindOnly = 1;
+				AN.nogroundlevel++;
 				if ( FindRest(BHEAD csav,m) && ( AN.UsedOtherFind || FindOnly(BHEAD csav,m) ) ) {}
 				else {
+nomatch:
 					*m += msizcoef;
 					AT.WorkPointer = csav;
 					AN.RepFunList = oRepFunList;
@@ -1360,9 +1362,14 @@ IndAll:				i = m[1] - WILDOFFSET;
 					AN.WildArgs = wildargs;
 					AN.WildEat = wildeat;
 					AN.ExpectedSign = oExpectedSign;
+					AN.nogroundlevel--;
 					for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 					goto endofloop;
 				}
+				if ( *m == 1 || m[1] < FUNCTION ) {
+					if ( AN.ExpectedSign ) goto nomatch;
+				}
+				AN.nogroundlevel--;
 				AN.ExpectedSign = oExpectedSign;
 				AN.WildArgs = wildargs;
 				AN.WildEat = wildeat;
@@ -1513,7 +1520,12 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 	Only active for the last function in the pattern.
 	The actual test on the sign is in MatchFunction or the symmetric functions
 */
-	AN.SignCheck = ( inpat + inpat[1] >= AN.patstop ) ? 1 : 0;
+	if ( AN.nogroundlevel ) {
+		AN.SignCheck = ( inpat + inpat[1] >= AN.patstop ) ? 1 : 0;
+	}
+	else {
+		AN.SignCheck = 0;
+	}
 /*
 			Store the current Wildcard assignments
 */
