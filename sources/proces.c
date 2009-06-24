@@ -2642,7 +2642,6 @@ Renormalize:
 		do {
 SkipCount:	level++;
 			if ( level > AR.Cnumlhs ) {
-MesPrint(" :: AR.DeferFlag = %d, AR.sLevel = %d",AR.DeferFlag,AR.sLevel);
 				if ( AR.DeferFlag && AR.sLevel <= 0 ) {
 #ifdef PARALLEL
 					/*[17sen2003 mt]: */
