@@ -1639,7 +1639,7 @@ int DoRecovery(int *moduletype)
 	if ( AC.inputnumbers ) {
 		org = AC.inputnumbers;
 		R_COPY_B(AC.inputnumbers, AC.sizepfirstnum*(sizeof(WORD)+sizeof(LONG)), LONG*);
-		ofs = AC.inputnumbers - (LONG*)org;
+		ofs = (WORD*)AC.inputnumbers - (WORD*)org;
 		AC.pfirstnum += ofs;
 	}
 	AC.halfmodlock = dummylock;
