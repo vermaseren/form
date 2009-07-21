@@ -1016,7 +1016,7 @@ static void print_R()
 
 #define S_WRITE_LIST(LST) \
 	if ( LST.maxnum ) { \
-		S_WRITE_B(LST.lijst, LST.maxnum*LST.size) \
+		S_WRITE_B((char*)LST.lijst, LST.maxnum*LST.size) \
 	}
 
 /* NAMETREE */
@@ -1042,7 +1042,7 @@ static void print_R()
 /* DOLLAR */
 
 #define S_WRITE_DOLLAR(ARG) \
-	if ( ARG.size && ARG.where != &(AM.dollarzero) ) { \
+	if ( ARG.size && ARG.where && ARG.where != &(AM.dollarzero) ) { \
 		S_WRITE_B(ARG.where, ARG.size*sizeof(WORD)) \
 	}
 
@@ -1716,7 +1716,7 @@ int DoRecovery(int *moduletype)
 	R_COPY_LIST(AP.DollarList);
 	for ( i=0; i<AP.DollarList.num; ++i ) {
 		size = Dollars[i].size * sizeof(WORD);
-		if ( size && Dollars[i].where != oldAMdollarzero ) {
+		if ( size && Dollars[i].where && Dollars[i].where != oldAMdollarzero ) {
 			R_COPY_B(Dollars[i].where, size, void*);
 		}
 #ifdef WITHPTHREADS
@@ -1754,7 +1754,13 @@ int DoRecovery(int *moduletype)
 	R_COPY_LIST(AP.ProcList);
 	for ( i=0; i<AP.ProcList.num; ++i ) {
 		if ( Procedures[i].p.size ) {
-			R_COPY_B(Procedures[i].p.buffer, Procedures[i].p.size, UBYTE*);
+			if ( Procedures[i].loadmode != 1 ) {
+				R_COPY_B(Procedures[i].p.buffer, Procedures[i].p.size, UBYTE*);
+			}
+			else {
+				R_SET(org, void*);
+				Procedures[i].p.buffer = Procedures[(size_t)org].p.buffer;
+			}
 		}
 		R_COPY_S(Procedures[i].name,UBYTE*);
 	}
@@ -2350,7 +2356,21 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_LIST(AP.ProcList);
 	for ( i=0; i<AP.ProcList.num; ++i ) {
 		if ( Procedures[i].p.size ) {
-			S_WRITE_B(Procedures[i].p.buffer, Procedures[i].p.size);
+			if ( Procedures[i].loadmode != 1 ) {
+				S_WRITE_B(Procedures[i].p.buffer, Procedures[i].p.size);
+			}
+			else {
+				for ( j=0; j<AP.ProcList.num; ++j ) {
+					if ( Procedures[i].p.buffer == Procedures[j].p.buffer ) {
+						adr = (void*)j;
+						break;
+					}
+				}
+				if ( j == AP.ProcList.num ) {
+					printf("Error writing procedures to recovery file!\n");
+				}
+				S_WRITE_B(&adr, sizeof(void*));
+			}
 		}
 		S_WRITE_S(Procedures[i].name);
 	}
