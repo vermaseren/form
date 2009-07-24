@@ -746,6 +746,16 @@ VOID WriteLists()
 			else if ( ( symbols[i].complex & VARTYPECOMPLEX ) == VARTYPECOMPLEX ) {
 				Out = StrCopy((UBYTE *)"#c",Out);
 			}
+			else if ( ( symbols[i].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+				Out = StrCopy((UBYTE *)"#",Out);
+				if ( ( symbols[i].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+					Out = StrCopy((UBYTE *)"-",Out);
+				}
+				else {
+					Out = StrCopy((UBYTE *)"+",Out);
+				}
+				Out = NumCopy(symbols[i].maxpower,Out);
+			}
 			if ( AC.CodesFlag ) Out = CodeToLine(i,Out);
 			if ( ( symbols[i].complex & VARTYPECOMPLEX ) == VARTYPECOMPLEX ) i++;
 			StrCopy((UBYTE *)" ",Out);

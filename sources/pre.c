@@ -669,7 +669,7 @@ VOID IniModule(int type)
 }
 
 /*
- 		#] IniModule :
+ 		#] IniModule : 
  		#[ IniSpecialModule :
 */
 
@@ -1887,11 +1887,20 @@ int DoInclude(UBYTE *s)
 		while ( *s == ' ' || *s == '\t' ) s++;
 		name = s;
 	}
-	while ( *s && *s != ' ' && *s != '\t' ) {
-		if ( *s == '\\' ) s++;
-		s++;
+	if ( *s == '"' ) {
+		while ( *s && *s != '"' ) {
+			if ( *s == '\\' ) s++;
+			s++;
+		}
+		t = s++;
 	}
-	t = s;
+	else {
+		while ( *s && *s != ' ' && *s != '\t' ) {
+			if ( *s == '\\' ) s++;
+			s++;
+		}
+		t = s;
+	}
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == '#' ) {
 		*t = 0;
@@ -2007,7 +2016,7 @@ nofold:
 }
 
 /*
- 		#] DoInclude : 
+ 		#] DoInclude :
  		#[ DoPreExchange :
 
 		Exchanges the names of expressions or the contents of dollars
@@ -4900,9 +4909,9 @@ int DoToExternal(UBYTE *s)
    HANDLERS h;
    LONG	(*OldWrite)(int handle, UBYTE *buffer, LONG size) = WriteFile;
 	int ret=-1;
-#ifdef WITHEXTERNALCHANNEL
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+#ifdef WITHEXTERNALCHANNEL
 
 	h.oldsilent=AM.silent;
 	h.newlogonly = h.oldlogonly = AM.FileOnlyFlag;

@@ -6,6 +6,7 @@
  *	The distrib_ function
  *	The tryreplace statement
  */
+#define NEWCODE
 /*
   	#[ Includes : reshuf.c
 */
@@ -1728,7 +1729,9 @@ WORD DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
 	int i, error;
 	LONG k;
 	UWORD *newcombi;
-
+#ifdef NEWCODE
+	WORD *rr1, *rr2, i1, i2;
+#endif
 	if ( n < 0 ) {
 		if ( ( n = DolToFunction(-n) ) == 0 ) {
 			LOCK(ErrorMessageLock);
@@ -1771,6 +1774,7 @@ retry2:;
 	Next we have to check that the arguments are of the correct type
 	At the same time we can count them.
 */
+#ifndef NEWCODE
 	t1stop = t1 + t1[1];
 	r1 = t1 + FUNHEAD;
 	while ( r1 < t1stop ) {
@@ -1787,6 +1791,83 @@ retry2:;
 		r2 += 2;
 	}
 	if ( r2 < t2stop ) { t2 = t2 + t2[1]; goto retry2; }
+#else
+	t1stop = t1 + t1[1];
+	r1 = t1 + FUNHEAD;
+	while ( r1 < t1stop ) {
+		if ( *r1 == -SNUMBER ) {
+			if ( r1[1] == 0 ) break;
+			r1 += 2; continue;
+		}
+		else if ( *r1 == -SYMBOL ) {
+			if ( ( symbols[r1[1]].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
+						break;
+			r1 += 2; continue;
+		}
+		if ( *r1 > 0 && *r1 == r1[ARGHEAD]+ARGHEAD ) {
+			if ( ABS(r1[r1[0]-1]) == r1[0]-ARGHEAD-1 ) {}
+			else if ( r1[ARGHEAD+1] == SYMBOL ) {
+				rr1 = r1 + ARGHEAD + 3;
+				i1 = rr1[-1]-2;
+				while ( i1 > 0 ) {
+					if ( ( symbols[*rr1].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
+						break;
+					i1 -= 2; rr1 += 2;
+				}
+				if ( i1 > 0 ) break;
+			}
+			else break;
+			rr1 = r1+*r1-1;
+			i1 = (ABS(*rr1)-1)/2;
+			while ( i1 > 1 ) {
+				if ( rr1[-1] ) break;
+				i1--; rr1--;
+			}
+			if ( i1 > 1 || rr1[-1] != 1 ) break;
+			r1 += *r1;
+		}
+		else break;
+	}
+	if ( r1 < t1stop ) { t1 = t2; goto retry1; }
+	t2stop = t2 + t2[1];
+	r2 = t2 + FUNHEAD;
+
+	while ( r2 < t2stop ) {
+		if ( *r2 == -SNUMBER ) {
+			if ( r2[1] == 0 ) break;
+			r2 += 2; continue;
+		}
+		else if ( *r2 == -SYMBOL ) {
+			if ( ( symbols[r2[1]].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
+						break;
+			r2 += 2; continue;
+		}
+		if ( *r2 > 0 && *r2 == r2[ARGHEAD]+ARGHEAD ) {
+			if ( ABS(r2[r2[0]-1]) == r2[0]-ARGHEAD-1 ) {}
+			else if ( r2[ARGHEAD+1] == SYMBOL ) {
+				rr2 = r2 + ARGHEAD + 3;
+				i2 = rr2[-1]-2;
+				while ( i2 > 0 ) {
+					if ( ( symbols[*rr2].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
+						break;
+					i2 -= 2; rr2 += 2;
+				}
+				if ( i2 > 0 ) break;
+			}
+			else break;
+			rr2 = r2+*r2-1;
+			i2 = (ABS(*rr2)-1)/2;
+			while ( i2 > 1 ) {
+				if ( rr2[-1] ) break;
+				i2--; rr2--;
+			}
+			if ( i2 > 1 || rr2[-1] != 1 ) break;
+			r2 += *r2;
+		}
+		else break;
+	}
+	if ( r2 < t2stop ) { t2 = t2 + t2[1]; goto retry2; }
+#endif
 /*
 	OK, now we got two objects that can be used.
 */
@@ -1804,7 +1885,6 @@ retry2:;
 	SH->level = level;
 	SH->incoef = tstop;
 	SH->nincoef = ncoef;
-
 	if ( AN.SHcombi == 0 || AN.SHcombisize == 0 ) {
 		AN.SHcombisize = 200;
 		AN.SHcombi = (UWORD *)Malloc1(AN.SHcombisize*sizeof(UWORD),"AN.SHcombi");
@@ -1898,14 +1978,29 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 /*
 	Now we have to select a pair, one from 1 and one from 2.
 */
-	st1 = from1; next1 = st1+2;
+#ifndef NEWCODE
+	st1 = from1; next1 = st1+2;       /* <----- */
+#else
+	st1 = next1 = from1;
+	NEXTARG(next1)
+#endif
 	while ( next1 <= SH->ststop1 ) {
-		st2 = from2; next2 = st2+2;
+#ifndef NEWCODE
+		st2 = from2; next2 = st2+2;       /* <----- */
+#else
+		next2 = st2 = from2;
+		NEXTARG(next2)
+#endif
 		while ( next2 <= SH->ststop2 ) {
 			SH->stop1 = st1;
 			SH->stop2 = st2;
 			if ( st1 == from1 && st2 == from2 ) {
-				t = to; *t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+				t = to;
+#ifndef NEWCODE
+				*t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+#else
+				t = StuffRootAdd(st1,st2,t);
+#endif
 				SH->option ^= 256;
 				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
 				SH->option ^= 256;
@@ -1913,7 +2008,11 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 			else if ( st1 == from1 ) {
 				i = st2-from2;
 				t = to; tf = from2; NCOPY(t,tf,i)
+#ifndef NEWCODE
 				*t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+#else
+				t = StuffRootAdd(st1,st2,t);
+#endif
 				SH->option ^= 256;
 				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
 				SH->option ^= 256;
@@ -1921,7 +2020,11 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 			else if ( st2 == from2 ) {
 				i = st1-from1;
 				t = to; tf = from1; NCOPY(t,tf,i)
+#ifndef NEWCODE
 				*t++ = -SNUMBER; *t++ = StuffAdd(st1[1],st2[1]);
+#else
+				t = StuffRootAdd(st1,st2,t);
+#endif
 				SH->option ^= 256;
 				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
 				SH->option ^= 256;
@@ -1929,9 +2032,19 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 			else {
 				if ( Shuffle(BHEAD from1,from2,to) ) goto stuffcall;
 			}
-			st2 = next2; next2 += 2;
+#ifndef NEWCODE
+			st2 = next2; next2 += 2;       /* <----- */
+#else
+			st2 = next2;
+			NEXTARG(next2)
+#endif
 		}
-		st1 = next1; next1 += 2;
+#ifndef NEWCODE
+		st1 = next1; next1 += 2;       /* <----- */
+#else
+		st1 = next1;
+		NEXTARG(next1)
+#endif
 	}
 	SH->stop1 = save1; SH->stop2 = save2;
 	return(0);
@@ -1951,9 +2064,20 @@ stuffcall:;
 int FinishStuffle(PHEAD WORD *fini)
 {
 	SHvariables *SH = &(AN.SHvar);
+#ifdef NEWCODE
+	WORD *next1 = SH->stop1, *next2 = SH->stop2;
+	fini = StuffRootAdd(next1,next2,fini);
+#else
 	*fini++ = -SNUMBER; *fini++ = StuffAdd(SH->stop1[1],SH->stop2[1]);
+#endif
 	SH->option ^= 256;
+#ifdef NEWCODE
+	NEXTARG(next1)
+	NEXTARG(next2)
+	if ( Stuffle(BHEAD next1,next2,fini) ) goto stuffcall;
+#else
 	if ( Stuffle(BHEAD SH->stop1+2,SH->stop2+2,fini) ) goto stuffcall;
+#endif
 	SH->option ^= 256;
 	return(0);
 stuffcall:;
@@ -1963,4 +2087,276 @@ stuffcall:;
 
 /*
   	#] FinishStuffle : 
+  	#[ StuffRootAdd :
+
+	Makes the stuffle sum of two arguments.
+	The arguments can be of one of three types:
+	1: -SNUMBER,num
+	2: -SYMBOL,symbol
+	3: Numerical (long) argument.
+	4: Generic argument with (only) symbols that are roots of unity and
+	   a coefficient.
+	We have excluded the case that both t1 and t2 are of type 1:
+	The output should be written to 'to' and the new fill position should
+	be the return value.
+	`to' is inside the workspace.
+
+	The stuffle sum is sig_(t2)*t1+sig_(t1)*t2
+	or sig_(t1)*sig_(t2)*(abs_(t1)+abs_(t2))
+*/
+
+#ifdef NEWCODE
+
+WORD *StuffRootAdd(WORD *t1, WORD *t2, WORD *to)
+{
+	int type1, type2, type3, sgn, sgn1, sgn2, sgn3, pow, root, nosymbols, i;
+	WORD *tt1, *tt2, it1, it2, *t3, *r, size1, size2, size3;
+	WORD scratch[2];
+	LONG x;
+	if ( *t1 == -SNUMBER ) { type1 = 1; if ( t1[1] < 0 ) sgn1 = -1; else sgn1 = 1; }
+	else if ( *t1 == -SYMBOL ) { type1 = 2; sgn1 = 1; }
+	else if ( ABS(t1[*t1-1]) == *t1-ARGHEAD-1 ) {
+		type1 = 3; if ( t1[*t1-1] < 0 ) sgn1 = -1; else sgn1 = 1; }
+	else { type1 = 4; if ( t1[*t1-1] < 0 ) sgn1 = -1; else sgn1 = 1; }
+	if ( *t2 == -SNUMBER ) { type2 = 1; if ( t2[1] < 0 ) sgn2 = -1; else sgn2 = 1; }
+	else if ( *t2 == -SYMBOL ) { type2 = 2; sgn2 = 1; }
+	else if ( ABS(t2[*t2-1]) == *t2-ARGHEAD-1 ) {
+		type2 = 3; if ( t2[*t2-1] < 0 ) sgn2 = -1; else sgn2 = 1; }
+	else { type2 = 4; if ( t2[*t2-1] < 0 ) sgn2 = -1; else sgn2 = 1; }
+	if ( type1 > type2 ) {
+		t3 = t1; t1 = t2; t2 = t3;
+		type3 = type1; type1 = type2; type2 = type3;
+		sgn3 = sgn1; sgn1 = sgn2; sgn2 = sgn3;
+	}
+	nosymbols = 1; sgn3 = 1;
+	switch ( type1 ) {
+		case 1:
+			if ( type2 == 1 ) {
+				x  = sgn2 * t1[1];
+				x += sgn1 * t2[1];
+				if ( x > MAXPOSITIVE || x < -(MAXPOSITIVE+1) ) {
+					if ( x < 0 ) { sgn1 = -3; x = -x; }
+					else sgn1 = 3;
+					*to++ = ARGHEAD+4;
+					*to++ = 0;
+					FILLARG(to)
+					*to++ = 4; *to++ = (UWORD)x; *to++ = 1; *to++ = sgn1;
+				}
+				else { *to++ = -SNUMBER; *to++ = (WORD)x; }
+			}
+			else if ( type2 == 2 ) {
+				*to++ = ARGHEAD+8; *to++ = 0; FILLARG(to)
+				*to++ = 8; *to++ = SYMBOL; *to++ = 4; *to++ = t2[1]; *to++ = 1;
+				*to++ = ABS(t1[1])+1;
+				*to++ = 1;
+				*to++ = 3*sgn1;
+			}
+			else if ( type2 == 3 ) {
+				tt1 = (WORD *)scratch; tt1[0] = ABS(t1[1]); size1 = 1;
+				tt2 = t2+ARGHEAD+1; size2 = (ABS(t2[*t2-1])-1)/2;
+				t3 = to;
+				*to++ = 0; *to++ = 0; FILLARG(to) *to++ = 0;
+				goto DoCoeffi;
+			}
+			else {
+/*
+				t1 is (short) numeric, t2 has the symbol(s).
+*/
+				tt1 = (WORD *)scratch; tt1[0] = ABS(t1[1]); size1 = 1;
+				tt2 = t2+ARGHEAD+1; tt2 += tt2[1]; size2 = (ABS(t2[*t2-1])-1)/2;
+				t3 = to; i = tt2 - t2; r = t2;
+				NCOPY(to,r,i)
+				nosymbols = 0;
+				goto DoCoeffi;
+			}
+		break;
+		case 2:
+			if ( type2 == 2 ) {
+				if ( t1[1] == t2[1] ) {
+					if ( ( symbols[t1[1]].maxpower == 4 )
+					&& ( ( symbols[t1[1]].complex & VARTYPEMINUS ) == VARTYPEMINUS ) ) {
+						*to++ = -SNUMBER; *to++ = -2;
+					}
+					else if ( symbols[t1[1]].maxpower == 2 ) {
+						*to++ = -SNUMBER; *to++ = 2;
+					}
+					else {
+						*to++ = ARGHEAD+8; *to++ = 0; FILLARG(to)
+						*to++ = 8; *to++ = SYMBOL; *to++ = 4;
+						*to++ = t1[1]; *to++ = 2;
+						*to++ = 2; *to++ = 1; *to++ = 3;
+					}
+				}
+				else {
+					*to++ = ARGHEAD+10; *to++ = 0; FILLARG(to)
+					*to++ = 10; *to++ = SYMBOL; *to++ = 6;
+					if ( t1[1] < t2[1] ) {
+						*to++ = t1[1]; *to++ = 1; *to++ = t2[1]; *to++ = 1;
+					}
+					else {
+						*to++ = t2[1]; *to++ = 1; *to++ = t1[1]; *to++ = 1;
+					}
+					*to++ = 2; *to++ = 1; *to++ = 3;
+				}
+			}
+			else if ( type2 == 3 ) {
+				t3 = to;
+				*to++ = 0; *to++ = 0; FILLARG(to) *to++ = 0;
+				*to++ = SYMBOL; *to++ = 4; *to++ = t1[1]; *to++ = 1;
+				tt1 = scratch; tt1[1] = 1; size1 = 1;
+				tt2 = t2+ARGHEAD+1; size2 = (ABS(t2[*t2-1])-1)/2;
+				nosymbols = 0;
+				goto DoCoeffi;
+			}
+			else {
+				tt1 = scratch; tt1[0] = 1; size1 = 1;
+				t3 = to;
+				*to++ = 0; *to++ = 0; FILLARG(to) *to++ = 0;
+				*to++ = SYMBOL; *to++ = 0;
+				tt2 = t2 + ARGHEAD+3; it2 = tt2[-1]-2;
+				while ( it2 > 0 ) {
+					if ( *tt2 == t1[1] ) {
+						pow = tt2[1]+1;
+						root = symbols[*tt2].maxpower;
+						if ( pow >= root ) pow -= root;
+						if ( ( symbols[*tt2].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+							if ( ( root & 1 ) == 0 && pow >= root/2 ) {
+								pow -= root/2; sgn3 = -sgn3;
+							}
+						}
+						if ( pow != 0 ) {
+							*to++ = *tt2; *to++ = pow;
+						}
+						tt2 += 2; it2 -= 2;
+						break;
+					}
+					else if ( t1[1] < *tt2 ) {
+						*to++ = t1[1]; *to++ = 1; break;
+					}
+					else {
+						*to++ = *tt2++; *to++ = *tt2++; it2 -= 2;
+						if ( it2 <= 0 ) { *to++ = t1[1]; *to++ = 1; }
+					}
+				}
+				while ( it2 > 0 ) { *to++ = *tt2++; *to++ = *tt2++; it2 -= 2; }
+				if ( (to - t3) > ARGHEAD+3 ) {
+					t3[ARGHEAD+2] = (to-t3)-ARGHEAD-1; /* size of the SYMBOL field */
+					nosymbols = 0;
+				}
+				else {
+					to = t3+ARGHEAD+1; /* no SYMBOL field */
+				}
+				size2 = (ABS(t2[*t2-1])-1)/2;
+				goto DoCoeffi;
+			}
+		break;
+		case 3:
+			if ( type2 == 3 ) {
+/*
+				Both are numeric
+*/
+				tt1 = t1+ARGHEAD+1; size1 = (ABS(t1[*t1-1])-1)/2;
+				tt2 = t2+ARGHEAD+1; size2 = (ABS(t2[*t2-1])-1)/2;
+				t3 = to;
+				*to++ = 0; *to++ = 0; FILLARG(to) *to++ = 0;
+				goto DoCoeffi;
+			}
+			else {
+/*
+				t1 is (long) numeric, t2 has the symbol(s).
+*/
+				tt1 = t1+ARGHEAD+1; size1 = (ABS(t1[*t1-1])-1)/2;
+				tt2 = t2+ARGHEAD+1; tt2 += tt2[1]; size2 = (ABS(t2[*t2-1])-1)/2;
+				t3 = to; i = tt2 - t2; r = t2;
+				NCOPY(to,r,i)
+				nosymbols = 0;
+				goto DoCoeffi;
+			}
+		break;
+		case 4:
+/*
+			Both have roots of unity
+			1: Merge the lists and simplify if possible
+*/
+			tt1 = t1+ARGHEAD+3; it1 = tt1[-1]-2;
+			tt2 = t2+ARGHEAD+3; it2 = tt2[-1]-2;
+			t3 = to;
+			*to++ = 0; *to++ = 0; FILLARG(to)
+			*to++ = 0; *to++ = SYMBOL; *to++ = 0;
+			while ( it1 > 0 && it2 > 0 ) {
+				if ( *tt1 == *tt2 ) {
+					pow = tt1[1]+tt2[1];
+					root = symbols[*tt1].maxpower;
+					if ( pow >= root ) pow -= root;
+					if ( ( symbols[*tt1].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+						if ( ( root & 1 ) == 0 && pow >= root/2 ) {
+							pow -= root/2; sgn3 = -sgn3;
+						}
+					}
+					if ( pow != 0 ) {
+						*to++ = *tt1; *to++ = pow;
+					}
+					tt1 += 2; tt2 += 2; it1 -= 2; it2 -= 2;
+				}
+				else if ( *tt1 < *tt2 ) {
+					*to++ = *tt1++; *to++ = *tt1++; it1 -= 2;
+				}
+				else {
+					*to++ = *tt2++; *to++ = *tt2++; it2 -= 2;
+				}
+			}
+			while ( it1 > 0 ) { *to++ = *tt1++; *to++ = *tt1++; it1 -= 2; }
+			while ( it2 > 0 ) { *to++ = *tt2++; *to++ = *tt2++; it2 -= 2; }
+			if ( (to - t3) > ARGHEAD+3 ) {
+				t3[ARGHEAD+2] = (to-t3)-ARGHEAD-1; /* size of the SYMBOL field */
+				nosymbols = 0;
+			}
+			else {
+				to = t3+ARGHEAD+1; /* no SYMBOL field */
+			}
+			size1 = (ABS(t1[*t1-1])-1)/2;
+			size2 = (ABS(t2[*t2-1])-1)/2;
+/*
+			Now tt1 and tt2 are pointing at their coefficients.
+			sgn1 is the sign of 1, sgn2 is the sign of 2 and sgn3 is an extra
+			overall sign.
+*/
+DoCoeffi:
+			if ( AddLong((UWORD *)tt1,size1,(UWORD *)tt2,size2,(UWORD *)to,&size3) ) {
+				LOCK(ErrorMessageLock);
+				MesPrint("Called from StuffRootAdd");
+				UNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			sgn = sgn1*sgn2*sgn3;
+			if ( nosymbols && size3 == 1 ) {
+				if ( (UWORD)(to[0]) <= MAXPOSITIVE && sgn > 0 ) {
+					sgn1 = to[0];
+					to = t3; *to++ = -SNUMBER; *to++ = sgn1;
+				}
+				else if ( (UWORD)(to[0]) <= (MAXPOSITIVE+1) && sgn < 0 ) {
+					sgn1 = to[0];
+					to = t3; *to++ = -SNUMBER; *to++ = -sgn1;
+				}
+				else goto genericcoef;
+			}
+			else {
+genericcoef:
+				to += size3;
+				sgn = sgn*(2*size3+1);
+				*to++ = 1;
+				while ( size3 > 1 ) { *to++ = 0; size3--; }
+				*to++ = sgn;
+				t3[0] = to - t3;
+				t3[ARGHEAD] = t3[0] - ARGHEAD;
+			}
+		break;
+	}
+	return(to);
+}
+
+#endif
+
+/*
+  	#] StuffRootAdd : 
 */

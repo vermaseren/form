@@ -139,13 +139,24 @@ int DoTail(int argc, UBYTE **argv)
 							Error1("Illegal option in call of FORM: ",s);
 							errorflag++;
 						}
-					}else{
+					}else
+#else
+					if ( s[1] ) {
+						if ( ( s[1]=='i' ) && ( s[2] == 'p' ) && (s[3] == 'e' )
+						&& ( s[4] == '\0' ) ){
+							Error0("Illegal option: Pipes not supported on this system.");
+						}
+						else {
+							Error1("Illegal option: ",s);
+						}
+						errorflag++;
+					}
+					else
 #endif
+					{
 							 /* Next arg is a path variable like in environment */
 						TAKEPATH(AM.Path)
-#ifdef WITHEXTERNALCHANNEL
 					}
-#endif
 					break;
 				case 'q': /* Quiet option. Only output */
 							AM.silent = 1; break;

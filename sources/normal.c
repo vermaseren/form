@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ Commute :
 
@@ -42,7 +42,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -114,7 +114,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup : 
+  	#] Setup :
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -231,6 +231,17 @@ conscan:;
 						t += 2;
 						goto NextSymbol;
 					}
+					if ( ( symbols[*t].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+						t[1] %= symbols[*t].maxpower;
+						if ( t[1] < 0 ) t[1] += symbols[*t].maxpower;
+						if ( ( symbols[*t].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+							if ( ( ( symbols[*t].maxpower & 1 ) == 0 ) &&
+							( t[1] >= symbols[*t].maxpower/2 ) ) {
+								t[1] -= symbols[*t].maxpower/2; ncoef = -ncoef;
+							}
+						}
+						if ( t[1] == 0 ) { t += 2; goto NextSymbol; }
+					}
 					i = nsym;
 					m = ppsym;
 					if ( i > 0 ) do {
@@ -245,6 +256,16 @@ conscan:;
 								goto NormMin;
 							}
 							*m += *t;
+							if ( ( symbols[t[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+								*m %= symbols[t[-1]].maxpower;
+								if ( *m < 0 ) *m += symbols[t[-1]].maxpower;
+								if ( ( symbols[t[-1]].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+									if ( ( ( symbols[t[-1]].maxpower & 1 ) == 0 ) &&
+									( *m >= symbols[t[-1]].maxpower/2 ) ) {
+										*m -= symbols[t[-1]].maxpower/2; ncoef = -ncoef;
+									}
+								}
+							}
 							if	( *m >= 2*MAXPOWER || *m <= -2*MAXPOWER ) {
 								LOCK(ErrorMessageLock);
 								MesPrint("Power overflow during normalization");
@@ -466,7 +487,7 @@ NextSymbol:;
 						if ( *t == SUMMEDIND ) {
 							if ( t[1] < -NMIN4SHIFT ) {
 								k = -t[1]-NMIN4SHIFT;
-								k = ExtraSymbol(k,1,nsym,ppsym);
+								k = ExtraSymbol(k,1,nsym,ppsym,&ncoef);
 								nsym += k;
 								ppsym += (k << 1);
 							}
@@ -711,20 +732,125 @@ multermnum:			if ( x == 0 ) goto NormZero;
 /*
 				Numerical function giving the sign of the numerical argument
 				The sign of zero is 1.
+				If there are roots of unity they are part of the sign.
 */
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
 					if ( t[FUNHEAD+1] < 0 ) ncoef = -ncoef;
 				}
-				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] )
-				&& ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) ) {
-					if ( t[t[1]-1] < 0 ) ncoef = -ncoef;
+				else if ( ( t[1] == FUNHEAD+2 ) && ( t[FUNHEAD] == -SYMBOL )
+					&& ( ( symbols[t[FUNHEAD+1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) ) {
+					k = t[FUNHEAD+1];
+					from = m;
+					i = nsym;
+					m = ppsym;
+					if ( i > 0 ) do {
+						m -= 2;
+						if	( k == *m ) {
+							m++;
+							*m = *m + 1;
+							*m %= symbols[k].maxpower;
+							if ( ( symbols[k].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+								if ( ( ( symbols[k].maxpower & 1 ) == 0 ) &&
+								( *m >= symbols[k].maxpower/2 ) ) {
+									*m -= symbols[k].maxpower/2; ncoef = -ncoef;
+								}
+							}
+							if ( !*m ) {
+								m--;
+								while ( i < nsym )
+									{ *m = m[2]; m++; *m = m[2]; m++; i++; }
+								ppsym -= 2;
+								nsym--;
+							}
+							goto sigDoneSymbol;
+						}
+					} while ( k < *m && --i > 0 );
+					m = ppsym;
+					while ( i < nsym )
+						{ m--; m[2] = *m; m--; m[2] = *m; i++; }
+					*m++ = k;
+					*m = 1;
+					ppsym += 2;
+					nsym++;
+sigDoneSymbol:;
+					m = from;
+				}
+				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] ) ) {
+					if ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) {
+						if ( t[t[1]-1] < 0 ) ncoef = -ncoef;
+					}
+/*
+					Now we should fish out the roots of unity
+*/
+					else if ( ( t[FUNHEAD+ARGHEAD]+FUNHEAD+ARGHEAD == t[1] )
+					&& ( t[FUNHEAD+ARGHEAD+1] == SYMBOL ) ) {
+						WORD *ts = t + FUNHEAD+ARGHEAD+3;
+						WORD its = ts[-1]-2;
+						while ( its > 0 ) {
+							if ( ( *ts != 0 ) &&
+							 ( ( symbols[*ts].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY ) ) {
+								goto signogood;
+							}
+							ts += 2; its -= 2;
+						}
+/*
+						Now we have only roots of unity which should be
+						registered in the list of sysmbols.
+*/
+						if ( t[t[1]-1] < 0 ) ncoef = -ncoef;
+						ts = t + FUNHEAD+ARGHEAD+3;
+						its = ts[-1]-2;
+						from = m;
+						while ( its > 0 ) {
+							i = nsym;
+							m = ppsym;
+							if ( i > 0 ) do {
+								m -= 2;
+								if	( *ts == *m ) {
+									ts++; m++;
+									*m += *ts;
+									if ( ( symbols[ts[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+										*m %= symbols[ts[-1]].maxpower;
+										if ( *m < 0 ) *m += symbols[ts[-1]].maxpower;
+										if ( ( symbols[ts[-1]].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+											if ( ( ( symbols[ts[-1]].maxpower & 1 ) == 0 ) &&
+											( *m >= symbols[ts[-1]].maxpower/2 ) ) {
+												*m -= symbols[ts[-1]].maxpower/2; ncoef = -ncoef;
+											}
+										}
+									}
+									if ( !*m ) {
+										m--;
+										while ( i < nsym )
+											{ *m = m[2]; m++; *m = m[2]; m++; i++; }
+										ppsym -= 2;
+										nsym--;
+									}
+									ts++; its -= 2;
+									goto sigNextSymbol;
+								}
+							} while ( *ts < *m && --i > 0 );
+							m = ppsym;
+							while ( i < nsym )
+								{ m--; m[2] = *m; m--; m[2] = *m; i++; }
+							*m++ = *ts++;
+							*m = *ts++;
+							ppsym += 2;
+							nsym++; its -= 2;
+sigNextSymbol:;
+						}
+						m = from;
+					}
+					else {
+signogood:				pcom[ncom++] = t;
+					}
 				}
 				else pcom[ncom++] = t;
 				break;
 			case ABSFUNCTION:
 /*
 				Numerical function giving the absolute value of the
-				numerical argument.
+				numerical argument. Or roots of unity.
 */
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER ) {
 					k = t[FUNHEAD+1];
@@ -734,16 +860,42 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					goto MulIn;
 
 				}
+				else if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SYMBOL ) {
+					k = t[FUNHEAD+1];
+					if ( ( symbols[k].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
+						goto absnogood;
+				}
 				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] )
-				&& ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) ) {
-					WORD *ts = t + t[1] -1;
-					ncoef = REDLENG(ncoef);
-					nnum = REDLENG(*ts);	
-					if ( nnum < 0 ) nnum = -nnum;
-					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,
-					(UWORD *)(t+FUNHEAD+ARGHEAD+1),nnum,
-					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
-					ncoef = INCLENG(ncoef);
+				&& ( t[1] == FUNHEAD+ARGHEAD+t[FUNHEAD+ARGHEAD] ) ) {
+					if ( t[FUNHEAD] == ARGHEAD+1+abs(t[t[1]-1]) ) {
+						WORD *ts;
+absnosymbols:			ts = t + t[1] -1;
+						ncoef = REDLENG(ncoef);
+						nnum = REDLENG(*ts);	
+						if ( nnum < 0 ) nnum = -nnum;
+						if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,
+						(UWORD *)(ts-ABS(*ts)+1),nnum,
+						(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
+						ncoef = INCLENG(ncoef);
+					}
+/*
+					Now get rid of the roots of unity. This includes i_
+*/
+					else if ( t[FUNHEAD+ARGHEAD+1] == SYMBOL ) {
+						WORD *ts = t+FUNHEAD+ARGHEAD+1;
+						WORD its = ts[1] - 2;
+						ts += 2;
+						while ( its > 0 ) {
+							if ( *ts == 0 ) { }
+							else if ( ( symbols[*ts].complex & VARTYPEROOTOFUNITY )
+								!= VARTYPEROOTOFUNITY ) goto absnogood;
+							its -= 2; ts += 2;
+						}
+						goto absnosymbols;
+					}
+					else {
+absnogood:					pcom[ncom++] = t;
+					}
 				}
 				else pcom[ncom++] = t;
 				break;
@@ -959,7 +1111,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 						if ( gcd[*gcd-1] < *gcd-1 ) {
 							t1 = gcd+1;
 							for ( iii = 2; iii < t1[1]; iii += 2 ) {
-								change = ExtraSymbol(t1[iii],t1[iii+1],nsym,ppsym);
+								change = ExtraSymbol(t1[iii],t1[iii+1],nsym,ppsym,&ncoef);
 								nsym += change;
 								ppsym += change << 1;
 							}
@@ -1764,7 +1916,7 @@ doflags:
 			if ( t[FUNHEAD] == -SYMBOL ) {
 				WORD change;
 				t += FUNHEAD+1;
-				change = ExtraSymbol(*t,-1,nsym,ppsym);
+				change = ExtraSymbol(*t,-1,nsym,ppsym,&ncoef);
 				nsym += change;
 				ppsym += change << 1;
 				goto DropDen;
@@ -1814,7 +1966,7 @@ doflags:
 							t += 2;
 							while ( t < r ) {
 								WORD change;
-								change = ExtraSymbol(*t,-t[1],nsym,ppsym);
+								change = ExtraSymbol(*t,-t[1],nsym,ppsym,&ncoef);
 								nsym += change;
 								ppsym += change << 1;
 								t += 2;
@@ -1852,7 +2004,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators : 
+  	#] Easy denominators :
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -1887,7 +2039,7 @@ WithFix:				shortnum = k;
 					}
 					else {
 						WORD change;
-						change = ExtraSymbol((WORD)(-k),(WORD)1,nsym,ppsym);
+						change = ExtraSymbol((WORD)(-k),(WORD)1,nsym,ppsym,&ncoef);
 						nsym += change;
 						ppsym += change << 1;
 	   				}
@@ -2086,7 +2238,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions : 
+  	#] Index Contractions :
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2237,7 +2389,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions : 
+  	#] NonCommuting Functions :
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2414,7 +2566,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions : 
+  	#] Commuting Functions :
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2502,7 +2654,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors : 
+  	#] LeviCivita tensors :
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2533,7 +2685,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta : 
+  	#] Delta :
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2555,7 +2707,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices : 
+  	#] Loose Vectors/Indices :
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2584,7 +2736,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors : 
+  	#] Vectors :
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2654,7 +2806,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts : 
+  	#] Dotproducts :
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2706,7 +2858,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols : 
+  	#] Symbols :
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -2950,7 +3102,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements : 
+ 		#] normalize replacements :
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -2970,6 +3122,25 @@ NextI:;
 		return(1);
 	}
 	else {
+/*
+		The modulus part is an attempt to get the MZVs to run faster
+		26-jun-2009
+		We also insert code for this after table substitutions.
+
+		Turns out to be not very effective
+
+		if ( AN.ncmod != 0 ) {
+			ncoef = REDLENG(ncoef);
+			if ( TakeModulus((UWORD *)AT.n_coef,&ncoef,AC.cmod,AC.ncmod,UNPACK) ) {
+				LOCK(ErrorMessageLock);
+				MesCall("Modulus");
+				UNLOCK(ErrorMessageLock);
+				SETERROR(-1)
+			}
+			if ( ncoef == 0 ) goto NormZero;
+			ncoef = INCLENG(ncoef);
+		}
+*/
 		t = termout;
 		k = WORDDIF(m,t);
 		*t = k + i;
@@ -3035,7 +3206,7 @@ OverWork:
  		#[ ExtraSymbol :
 */
 
-WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym)
+WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 {
 	WORD *m, i;
 	i = nsym;
@@ -3051,6 +3222,18 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym)
 				Terminate(-1);
 			}
 			*m += pow;
+
+			if ( ( symbols[sym].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+				*m %= symbols[sym].maxpower;
+				if ( *m < 0 ) *m += symbols[sym].maxpower;
+				if ( ( symbols[sym].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
+					if ( ( ( symbols[sym].maxpower & 1 ) == 0 ) &&
+						( *m >= symbols[sym].maxpower/2 ) ) {
+						*m -= symbols[sym].maxpower/2; *ncoef = -*ncoef;
+					}
+				}
+			}
+
 			if	( *m >= 2*MAXPOWER || *m <= -2*MAXPOWER ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("Power overflow during normalization");
@@ -3080,7 +3263,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym)
 }
 
 /*
- 		#] ExtraSymbol : 
+ 		#] ExtraSymbol :
  		#[ DoTheta :
 */
 
@@ -3177,7 +3360,7 @@ WORD DoTheta(WORD *t)
 }
 
 /*
- 		#] DoTheta : 
+ 		#] DoTheta :
  		#[ DoDelta :
 */
 
@@ -3244,7 +3427,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta : 
+ 		#] DoDelta :
  		#[ DoRevert :
 */
 
@@ -3319,7 +3502,7 @@ void DoRevert(WORD *fun, WORD *tmp)
 }
 
 /*
- 		#] DoRevert : 
+ 		#] DoRevert :
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3382,7 +3565,7 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu : 
+  	#] DetCommu :
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3703,7 +3886,7 @@ FromGCD:
 }
 
 /*
-  	#] EvaluateGcd : 
+  	#] EvaluateGcd :
   	#[ DropCoefficient :
 */
 
@@ -3720,5 +3903,5 @@ void DropCoefficient(PHEAD WORD *term)
 }
 
 /*
-  	#] DropCoefficient : 
+  	#] DropCoefficient :
 */

@@ -3253,6 +3253,16 @@ AutoGen:	i = *AT.TMout;
 				*AN.RepPoint = 1;
 				AR.expchanged = 1;
 				posisub += StartBuf[posisub];
+/*
+					For multiple table substitutions it may be better to
+					do modulus arithmetic right here
+					Turns out to be not very effective.
+
+				if ( AN.ncmod != 0 ) {
+					if ( Modulus(termout) ) goto GenCall;
+					if ( !*termout ) goto Return0;
+				}
+*/
 #ifdef WITHPTHREADS
 				if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 				if ( ( AS.Balancing && CC->numrhs == 0 ) && StartBuf[posisub] ) {
@@ -3767,7 +3777,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -3909,7 +3919,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**

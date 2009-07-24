@@ -19,7 +19,7 @@ PFDOLLARS *PFDollars;
 /*:[28sep2005 mt]*/
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -148,7 +148,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -262,7 +262,7 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables :
+ 		#] PopVariables : 
  		#[ MakeGlobal :
 */
 
@@ -322,7 +322,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ TestDrop :
 */
 
@@ -393,7 +393,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop :
+ 		#] TestDrop : 
  		#[ DoExecute :
 */
 
@@ -700,7 +700,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute :
+ 		#] DoExecute : 
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1005,7 +1005,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket :
+ 		#] PutBracket : 
  		#[ SpecialCleanup :
 */
 
@@ -1017,7 +1017,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup :
+ 		#] SpecialCleanup : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1093,7 +1093,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions :
+ 		#] ExchangeExpressions : 
  		#[ GetFirstBracket :
 */
 
@@ -1210,7 +1210,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression :
+ 		#] TermsInExpression : 
  		#[ UpdatePositions :
 */
 
@@ -1237,7 +1237,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions :
+ 		#] UpdatePositions : 
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1348,7 +1348,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 :
+ 		#] CountTerms1 : 
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1539,6 +1539,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level)
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */

@@ -98,7 +98,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ CoCollect :
 
 	Collect,functionname
@@ -623,7 +623,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat :
+  	#] CoFormat : 
   	#[ CoKeep :
 */
 
@@ -3057,6 +3057,7 @@ int CoTryReplace(UBYTE *p)
 	                 InverseTable
 	                 PrintPowersOf(number)
 	                 AlsoPowers/NoPowers
+	                 AlsoDollars/NoDollars
 	Notice: We change the defaults. This may cause problems to some.
 */
 
@@ -3235,7 +3236,7 @@ badsyntax:
 }
 
 /*
-  	#] CoModulus : 
+  	#] CoModulus :
   	#[ CoRepeat :
 */
 
@@ -4019,7 +4020,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf :
+  	#] CoIf : 
   	#[ CoElse :
 */
 

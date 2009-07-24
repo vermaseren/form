@@ -2726,7 +2726,18 @@ RENUMBER GetTable(WORD expr, POSITION *position)
 					MesPrint("Warning: Conflicting complexity for %s",AT.WorkPointer);
 					error = -1;
 				}
-				if ( ( s->minpower !=
+				if ( ( s->complex & (VARTYPEROOTOFUNITY) ) !=
+				( symbols[k].complex & (VARTYPEROOTOFUNITY) ) ) {
+					MesPrint("Warning: Conflicting root of unity properties for %s",AT.WorkPointer);
+					error = -1;
+				}
+				if ( ( s->complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+					if ( s->maxpower != symbols[k].maxpower ) {
+						MesPrint("Warning: Conflicting n in n-th root of unity properties for %s",AT.WorkPointer);
+						error = -1;
+					}
+				}
+				else if ( ( s->minpower !=
 				symbols[k].minpower || s->maxpower !=
 				symbols[k].maxpower ) && AC.WarnFlag ) {
 					MesPrint("Warning: Conflicting power restrictions for %s",AT.WorkPointer);
@@ -3954,15 +3965,15 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 
 /**
  *  Reads the variables from the open file specified by AO.SaveData.Handle. It
- *  reads @e *size bytes and writes them to @e *buffer. It is called by
+ *  reads the *size bytes and writes them to the *buffer. It is called by
  *  PutInStore().
  *
  *  If translation is necessary, the data might shrink or grow in size, then
  *  @e *size is adjusted so that the reading and writing fits into the memory
- *  from @e buffer to @e top. The actual number of read bytes is returned in
+ *  from the buffer to the top. The actual number of read bytes is returned in
  *  @e *size, the number of written bytes is returned in @e *outsize.
  *
- *  If @e *size is smaller than the actual size of the variables, this function
+ *  If the *size is smaller than the actual size of the variables, this function
  *  will be called several times and needs to remember the current position in
  *  the variable structure. The parameter @e stage does this job. When
  *  ReadSaveVariables() is called for the first time, this parameter should

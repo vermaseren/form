@@ -1396,7 +1396,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -1478,16 +1478,46 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 				tt = t; ttstop = t + t[1]; w = AT.WorkPointer;
 				for ( i = 0; i < FUNHEAD; i++ ) *w++ = *tt++;
 				while ( tt < ttstop ) {
+					ncount = 0;
 					if ( *tt == -SNUMBER && tt[1] == 0 ) {
-						ncount = 1; ttt = tt;
+						ncount = 1; ttt = tt; tt += 2;
 						while ( tt < ttstop && *tt == -SNUMBER && tt[1] == 0 ) {
 							ncount++; tt += 2;
 						}
+					}
+					if ( ncount > 0 ) {
 						if ( tt < ttstop && *tt == -SNUMBER && ( tt[1] == 1 || tt[1] == -1 ) ) {
 							*w++ = -SNUMBER;
-							*w++ = ncount * tt[1];
+							*w++ = (ncount+1) * tt[1];
 							tt += 2;
 							action = 1;
+						}
+						else if ( ( tt[0] == tt[ARGHEAD] + ARGHEAD )
+						&& ( ABS(tt[tt[0]-1]) == 3 )
+						&& ( tt[tt[0]-2] == 1 )
+						&& ( tt[tt[0]-3] == 1 ) ) { /* Single term with coef +/- 1 */
+							i = *tt; NCOPY(w,tt,i)
+							w[-3] = ncount+1;
+						}
+						else if ( *tt == -SYMBOL ) {
+							*w++ = ARGHEAD+8;
+							*w++ = 0;
+							FILLARG(w)
+							*w++ = 8;
+							*w++ = SYMBOL;
+							*w++ = tt[1];
+							*w++ = 1;
+							*w++ = ncount+1; *w++ = 1; *w++ = 3;
+							tt += 2;
+						}
+						else if ( *tt <= -FUNCTION ) {
+							*w++ = ARGHEAD+FUNHEAD+4;
+							*w++ = 0;
+							FILLARG(w)
+							*w++ = -*tt++;
+							*w++ = FUNHEAD+4;
+							FILLFUN(w)
+							*w++ = ncount+1; *w++ = 1; *w++ = 3;
 						}
 						else {
 							while ( ttt < tt ) *w++ = *ttt++;
@@ -1525,15 +1555,16 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentImplode : 
+  	#] ArgumentImplode :
   	#[ ArgumentExplode :
 */
 
 int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 {
-	WORD *liststart, *liststop, *inlist;
+	WORD *liststart, *liststop, *inlist, *old;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
 	int action = 0;
+	LONG x;
 	liststop = thelist + thelist[1];
 	liststart = thelist + 2;
 	t = term;
@@ -1548,7 +1579,7 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 				tt = t; ttstop = t + t[1]; w = AT.WorkPointer;
 				for ( i = 0; i < FUNHEAD; i++ ) *w++ = *tt++;
 				while ( tt < ttstop ) {
-					if ( *tt == -SNUMBER ) {
+					if ( *tt == -SNUMBER && tt[1] != 0 ) {
 						if ( tt[1] < AM.MaxTer/((WORD)sizeof(WORD)*4)
 							&& tt[1] > -(AM.MaxTer/((WORD)sizeof(WORD)*4))
 							&& ( tt[1] > 1 || tt[1] < -1 ) ) {
@@ -1573,7 +1604,29 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 						*w++ = *tt++;
 						*w++ = *tt++;
 					}
+					else if ( tt[0] == tt[ARGHEAD]+ARGHEAD ) {
+						ttt = tt + tt[0] - 1;
+						i = (ABS(ttt[0])-1)/2; 
+						if ( i > 1 ) {
+TooMany:					old = AN.currentTerm;
+							AN.currentTerm = term;
+							MesPrint("Too many arguments in output of ArgExplode");
+							MesPrint("Term = %t");
+							AN.currentTerm = old;
+							return(-1);
+						}
+						if ( ttt[-1] != 1 ) goto NoExplode;
+						x = ttt[-2];
+						if ( 2*x > (AT.WorkTop-w)-*term ) goto TooMany;
+						ncount = x - 1;
+						while ( ncount > 0 ) {
+							*w++ = -SNUMBER; *w++ = 0; ncount--;
+						}
+						ttt[-2] = 1;
+						i = *tt; NCOPY(w,tt,i)
+					}
 					else {
+NoExplode:
 						i = *tt; NCOPY(w,tt,i)
 					}
 				}
@@ -1595,7 +1648,7 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentExplode : 
+  	#] ArgumentExplode :
   	#[ DoRepArg :
 
 	Too be filled in.
@@ -1610,6 +1663,6 @@ int DoRepArg(PHEAD WORD *term,int level)
 }
 
 /*
-  	#] DoRepArg :
+  	#] DoRepArg : 
 */
 

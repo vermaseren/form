@@ -601,7 +601,7 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 }
 
 /*
-  	#] CopyTree :
+  	#] CopyTree : 
   	#[ LinkTree :
 */
 
@@ -766,7 +766,7 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
 
 int CoSymbol(UBYTE *s)
 {
-	int type, error = 0, minpow, maxpow, cplx;
+	int type, error = 0, minpow, maxpow, cplx, sgn;
 	WORD numsymbol;
 	UBYTE *name, *oldc, c, cc;
 	do {
@@ -786,6 +786,25 @@ int CoSymbol(UBYTE *s)
 			     if ( tolower(*s) == 'r' ) cplx = VARTYPENONE;
 			else if ( tolower(*s) == 'c' ) cplx = VARTYPECOMPLEX;
 			else if ( tolower(*s) == 'i' ) cplx = VARTYPEIMAGINARY;
+			else if ( ( ( *s == '-' || *s == '+' ) && ( s[1] >= '0' && s[1] <= '9' ) )
+				 || ( *s >= '0' && *s <= '9' ) ) {
+				LONG x;
+				sgn = 0;
+				if ( *s == '-' ) { sgn = VARTYPEMINUS; s++; }
+				else if ( *s == '+' ) { sgn = 0; s++; }
+				x = *s -'0';
+				while ( s[1] >= '0' && s[9] <= '9' ) {
+					x = 10*x + (s[1] - '0');
+				}
+				if ( x >= MAXPOWER || x <= 1 ) {
+					MesPrint("&Illegal value for root of unity %s",name);
+					error = 1;
+				}
+				else {
+					maxpow = x;
+				}
+				cplx = VARTYPEROOTOFUNITY | sgn;
+			}
 			else {
 				MesPrint("&Illegal specification for complexity of symbol %s",name);
 				*oldc = c;
@@ -796,6 +815,10 @@ int CoSymbol(UBYTE *s)
 			s++; cc = *s;
 		}
 		if ( cc == '(' ) {
+			if ( ( cplx & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+				MesPrint("&Root of unity property for %s cannot be combined with power restrictions",name);
+				error = 1;
+			}
 			s++;
 			if ( *s == '-' || *s == '+' || FG.cTable[*s] == 1 ) {
 				ParseSignedNumber(minpow,s)
@@ -844,7 +867,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol : 
+  	#] CoSymbol :
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
