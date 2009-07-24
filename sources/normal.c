@@ -232,6 +232,7 @@ conscan:;
 						goto NextSymbol;
 					}
 					if ( ( symbols[*t].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+						if ( t[1] <= 2*MAXPOWER && t[1] >= -2*MAXPOWER ) {
 						t[1] %= symbols[*t].maxpower;
 						if ( t[1] < 0 ) t[1] += symbols[*t].maxpower;
 						if ( ( symbols[*t].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
@@ -241,6 +242,7 @@ conscan:;
 							}
 						}
 						if ( t[1] == 0 ) { t += 2; goto NextSymbol; }
+						}
 					}
 					i = nsym;
 					m = ppsym;

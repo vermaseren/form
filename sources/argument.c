@@ -1498,6 +1498,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 						&& ( tt[tt[0]-3] == 1 ) ) { /* Single term with coef +/- 1 */
 							i = *tt; NCOPY(w,tt,i)
 							w[-3] = ncount+1;
+							action = 1;
 						}
 						else if ( *tt == -SYMBOL ) {
 							*w++ = ARGHEAD+8;
@@ -1509,6 +1510,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 							*w++ = 1;
 							*w++ = ncount+1; *w++ = 1; *w++ = 3;
 							tt += 2;
+							action = 1;
 						}
 						else if ( *tt <= -FUNCTION ) {
 							*w++ = ARGHEAD+FUNHEAD+4;
@@ -1518,6 +1520,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 							*w++ = FUNHEAD+4;
 							FILLFUN(w)
 							*w++ = ncount+1; *w++ = 1; *w++ = 3;
+							action = 1;
 						}
 						else {
 							while ( ttt < tt ) *w++ = *ttt++;
@@ -1624,6 +1627,7 @@ TooMany:					old = AN.currentTerm;
 						}
 						ttt[-2] = 1;
 						i = *tt; NCOPY(w,tt,i)
+						action = 1;
 					}
 					else {
 NoExplode:
@@ -1648,7 +1652,7 @@ NoExplode:
 }
 
 /*
-  	#] ArgumentExplode :
+  	#] ArgumentExplode : 
   	#[ DoRepArg :
 
 	Too be filled in.
