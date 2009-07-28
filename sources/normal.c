@@ -231,7 +231,8 @@ conscan:;
 						t += 2;
 						goto NextSymbol;
 					}
-					if ( ( symbols[*t].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+					if ( ( *t < MAXPOWER && *t > -MAXPOWER )
+					 && ( symbols[*t].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 						if ( t[1] <= 2*MAXPOWER && t[1] >= -2*MAXPOWER ) {
 						t[1] %= symbols[*t].maxpower;
 						if ( t[1] < 0 ) t[1] += symbols[*t].maxpower;
@@ -258,7 +259,8 @@ conscan:;
 								goto NormMin;
 							}
 							*m += *t;
-							if ( ( symbols[t[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+							if ( ( t[-1] < MAXPOWER && t[-1] > -MAXPOWER )
+							 && ( symbols[t[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 								*m %= symbols[t[-1]].maxpower;
 								if ( *m < 0 ) *m += symbols[t[-1]].maxpower;
 								if ( ( symbols[t[-1]].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
@@ -740,7 +742,8 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					if ( t[FUNHEAD+1] < 0 ) ncoef = -ncoef;
 				}
 				else if ( ( t[1] == FUNHEAD+2 ) && ( t[FUNHEAD] == -SYMBOL )
-					&& ( ( symbols[t[FUNHEAD+1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) ) {
+					&& ( ( t[FUNHEAD+1] < MAXPOWER && t[FUNHEAD+1] > -MAXPOWER )
+					&& ( symbols[t[FUNHEAD+1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) ) {
 					k = t[FUNHEAD+1];
 					from = m;
 					i = nsym;
@@ -789,8 +792,8 @@ sigDoneSymbol:;
 						WORD *ts = t + FUNHEAD+ARGHEAD+3;
 						WORD its = ts[-1]-2;
 						while ( its > 0 ) {
-							if ( ( *ts != 0 ) &&
-							 ( ( symbols[*ts].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY ) ) {
+							if ( ( *ts != 0 ) && ( ( *ts >= MAXPOWER || *ts <= -MAXPOWER )
+							 || ( symbols[*ts].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY ) ) {
 								goto signogood;
 							}
 							ts += 2; its -= 2;
@@ -811,7 +814,8 @@ sigDoneSymbol:;
 								if	( *ts == *m ) {
 									ts++; m++;
 									*m += *ts;
-									if ( ( symbols[ts[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+									if ( ( ts[-1] < MAXPOWER && ts[-1] > -MAXPOWER ) &&
+									 ( symbols[ts[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 										*m %= symbols[ts[-1]].maxpower;
 										if ( *m < 0 ) *m += symbols[ts[-1]].maxpower;
 										if ( ( symbols[ts[-1]].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
@@ -864,7 +868,8 @@ signogood:				pcom[ncom++] = t;
 				}
 				else if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SYMBOL ) {
 					k = t[FUNHEAD+1];
-					if ( ( symbols[k].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
+					if ( ( k >= MAXPOWER || k <= -MAXPOWER )
+					 || ( symbols[k].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
 						goto absnogood;
 				}
 				else if ( ( t[FUNHEAD] > 0 ) && ( t[1] == FUNHEAD+t[FUNHEAD] )
@@ -889,7 +894,8 @@ absnosymbols:			ts = t + t[1] -1;
 						ts += 2;
 						while ( its > 0 ) {
 							if ( *ts == 0 ) { }
-							else if ( ( symbols[*ts].complex & VARTYPEROOTOFUNITY )
+							else if ( ( *ts >= MAXPOWER || *ts <= -MAXPOWER )
+							 || ( symbols[*ts].complex & VARTYPEROOTOFUNITY )
 								!= VARTYPEROOTOFUNITY ) goto absnogood;
 							its -= 2; ts += 2;
 						}
@@ -3225,7 +3231,8 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 			}
 			*m += pow;
 
-			if ( ( symbols[sym].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
+			if ( ( sym < MAXPOWER && sym > -MAXPOWER )
+			 && ( symbols[sym].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 				*m %= symbols[sym].maxpower;
 				if ( *m < 0 ) *m += symbols[sym].maxpower;
 				if ( ( symbols[sym].complex & VARTYPEMINUS ) == VARTYPEMINUS ) {
