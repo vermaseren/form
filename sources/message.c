@@ -94,11 +94,11 @@ int MesWork()
 	%x	hexadecimal. Takes 8 places. Mainly for debugging.
 	%%	%
 	%#	#
-	%!	Don't print end of line at the end
 	#   " ==> "
 	@   " ==> "   Terminates do-loops
 	&   ' --> '   Terminates do-loops
-	Each call is terminated with a new line anyway.
+	Each call is terminated with a new line.
+	Put a % at the end of the string to suppress the new line.
 */
 
 int
