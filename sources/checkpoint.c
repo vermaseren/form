@@ -373,7 +373,9 @@ static void print_DOLOOP(DOLOOP *l)
 
 static void print_PROCEDURE(PROCEDURE *l)
 {
-	print_PRELOAD(&(l->p));
+	if ( l->loadmode != 1 ) {
+		print_PRELOAD(&(l->p));
+	}
 	print_STR(l->name);
 	printf("%d\n", l->loadmode);
 }
@@ -404,8 +406,6 @@ static void print_CBUF(CBUF *c)
 {
 	int i;
 	print_WORDV(c->Buffer, c->BufferSize);
-	printf("%d\n", *c->Pointer);
-	printf("%ld\n", c->Top-c->Buffer);
 	/*
 	printf("%p\n", c->Buffer);
 	printf("%p\n", c->lhs);
@@ -1089,8 +1089,9 @@ int DoRecovery(int *moduletype)
 	void *oldAMdollarzero;
 	LIST PotModDolListBackup;
 	LIST ModOptDolListBackup;
+	WORD oldLogHandle;
 
-	printf("Recovering ... "); fflush(0);
+	MesPrint("Recovering ... %"); fflush(0);
 
 	if ( !(fd = fopen(recoveryfile, "r")) ) return(__LINE__);
 
@@ -1277,6 +1278,7 @@ int DoRecovery(int *moduletype)
 	/* backup some lists in order to restore it to the initial setup */
 	PotModDolListBackup = AC.PotModDolList;
 	ModOptDolListBackup = AC.ModOptDolList;
+	oldLogHandle = AC.LogHandle;
 
 	/* first we copy AC as a whole and then restore the pointer structures step
 	   by step. */
@@ -1459,7 +1461,7 @@ int DoRecovery(int *moduletype)
 		}
 		/* reopen file */
 		if ( ( tablebases[i].handle = fopen(tablebases[i].fullname, "r+b") ) == NULL ) {
-			MesPrint("ERROR: Could not reopen tablebase %s!\n",tablebases[i].name);
+			MesPrint("ERROR: Could not reopen tablebase %s!",tablebases[i].name);
 			Terminate(-1);
 		}
 		R_COPY_S(tablebases[i].name,char*);
@@ -1543,7 +1545,7 @@ int DoRecovery(int *moduletype)
 			if ( i ) {
 				AC.Streams[i].handle = OpenFile((char *)(AC.Streams[i].name));
 				if ( AC.Streams[i].handle == -1 ) {
-					MesPrint("ERROR: Could not reopen stream %s!\n",AC.Streams[i].name);
+					MesPrint("ERROR: Could not reopen stream %s!",AC.Streams[i].name);
 					Terminate(-1);
 				}
 			}
@@ -1648,6 +1650,8 @@ int DoRecovery(int *moduletype)
 	if ( AC.IfSumCheck ) {
 		R_COPY_B(AC.IfSumCheck, sizeof(WORD)*(AC.MaxIf+1), WORD*);
 	}
+
+	AC.LogHandle = oldLogHandle;
 
 	R_COPY_S(AC.CheckpointRunAfter,char*);
 	R_COPY_S(AC.CheckpointRunBefore,char*);
@@ -1863,16 +1867,17 @@ int DoRecovery(int *moduletype)
 		syscmdsort[6+i] = ' ';
 		strcpy(syscmdsort+7+i, AR.outfile->name);
 		if ( system(syscmdsort) ) {
-			MesPrint("ERROR: Could not copy old output sort file %s!\n",sortfile);
+			MesPrint("ERROR: Could not copy old output sort file %s!",sortfile);
 			Terminate(-1);
 		}
 		AR.outfile->handle = OpenFile(AR.outfile->name);
 		if ( AR.outfile->handle == -1 ) {
-			MesPrint("ERROR: Could not reopen output sort file %s!\n",AR.outfile->name);
+			MesPrint("ERROR: Could not reopen output sort file %s!",AR.outfile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.outfile->handle, &AR.outfile->POposition, SEEK_SET);
 		M_free(syscmdsort,"syscmdsort");
+		done_sortcopy = 1;
 	}
 
 	/* hidefile */
@@ -1911,16 +1916,17 @@ int DoRecovery(int *moduletype)
 		syscmdsort[6+i] = ' ';
 		strcpy(syscmdsort+7+i, AR.hidefile->name);
 		if ( system(syscmdsort) ) {
-			MesPrint("ERROR: Could not copy old hide file %s!\n",hidefile);
+			MesPrint("ERROR: Could not copy old hide file %s!",hidefile);
 			Terminate(-1);
 		}
 		AR.hidefile->handle = OpenFile(AR.hidefile->name);
 		if ( AR.hidefile->handle == -1 ) {
-			MesPrint("ERROR: Could not reopen hide file %s!\n",AR.hidefile->name);
+			MesPrint("ERROR: Could not reopen hide file %s!",AR.hidefile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.hidefile->handle, &AR.hidefile->POposition, SEEK_SET);
 		M_free(syscmdsort,"syscmdsort");
+		done_hidecopy = 1;
 	}
 
 	/* store file */
@@ -1935,12 +1941,13 @@ int DoRecovery(int *moduletype)
 		syscmdstore[6+i] = ' ';
 		strcpy(syscmdstore+7+i, FG.fname);
 		if ( system(syscmdstore) ) {
-			MesPrint("ERROR: Could not copy old store file %s!\n",storefile);
+			MesPrint("ERROR: Could not copy old store file %s!",storefile);
 			Terminate(-1);
 		}
 		AR.StoreData.Handle = (WORD)OpenFile(FG.fname);
 		SeekFile(AR.StoreData.Handle, &AR.StoreData.Position, SEEK_SET);
 		M_free(syscmdstore,"syscmdsort");
+		done_storecopy = 1;
 	}
 
 	R_SET(AR.DefPosition, POSITION);
@@ -1983,7 +1990,7 @@ int DoRecovery(int *moduletype)
 #ifdef WITHPTHREADS
 	/* read timing information of individual threads */
 	R_SET(i, int);
-	for ( j=1; j<=AM.totalnumberofthreads; ++j ) {
+	for ( j=1; j<AM.totalnumberofthreads; ++j ) {
 		/* ... and correcting OldTime */
 		AB[j]->R.OldTime = -(*((LONG*)p+j));
 	}
@@ -1997,8 +2004,10 @@ int DoRecovery(int *moduletype)
 
 	/* cares about data in S_const */
 	UpdatePositions();
+	AT.SS = AT.S0;
 
-	printf("done.\n"); fflush(0);
+	done_snapshot = 1;
+	MesPrint("done."); fflush(0);
 
 	return(0);
 }
@@ -2036,7 +2045,7 @@ static int DoSnapshot(int moduletype)
 	LONG *longp;
 #endif /* ifdef WITHPTHREADS */
 
-	printf("Saving recovery point ... "); fflush(0);
+	MesPrint("Saving recovery point ... %"); fflush(0);
 
 	if ( !(fd = fopen(intermedfile, "w")) ) return(__LINE__);
 
@@ -2367,7 +2376,7 @@ static int DoSnapshot(int moduletype)
 					}
 				}
 				if ( j == AP.ProcList.num ) {
-					printf("Error writing procedures to recovery file!\n");
+					MesPrint("Error writing procedures to recovery file!");
 				}
 				S_WRITE_B(&adr, sizeof(void*));
 			}
@@ -2516,7 +2525,7 @@ static int DoSnapshot(int moduletype)
 
 	done_snapshot = 1;
 
-	printf("done.\n"); fflush(0);
+	MesPrint("done."); fflush(0);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -2557,12 +2566,12 @@ void DoCheckpoint(int moduletype)
 			strcpy(str+l+1, argbuf);
 			retvalue = system(str);
 			if ( retvalue ) {
-				MesPrint("Script returned error -> no recovery file will be created.\n");
+				MesPrint("Script returned error -> no recovery file will be created.");
 			}
 		}
 		if ( retvalue == 0 ) {
 			if ( (error = DoSnapshot(moduletype)) ) {
-				MesPrint("Error creating recovery files: %d\n", error);
+				MesPrint("Error creating recovery files: %d", error);
 			}
 		}
 		if ( AC.CheckpointRunAfter ) {
@@ -2577,7 +2586,7 @@ void DoCheckpoint(int moduletype)
 			strcpy(str+l+1, argbuf);
 			retvalue = system(str);
 			if ( retvalue ) {
-				MesPrint("Error calling script after recovery.\n");
+				MesPrint("Error calling script after recovery.");
 			}
 		}
 		AC.CheckpointStamp = Timer(0);

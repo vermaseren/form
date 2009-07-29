@@ -320,9 +320,17 @@ int OpenInput()
 		AC.NoShowInput = oldNoShowInput;
 	}
 	if ( AM.LogFileName ) {
-		if ( ( AC.LogHandle = CreateLogFile((char *)(AM.LogFileName)) ) < 0 ) {
-			Error1("Cannot create logfile",AM.LogFileName);
-			return(-1);
+		if ( AC.CheckpointFlag != -1 ) {
+			if ( ( AC.LogHandle = CreateLogFile((char *)(AM.LogFileName)) ) < 0 ) {
+				Error1("Cannot create logfile",AM.LogFileName);
+				return(-1);
+			}
+		}
+		else {
+			if ( ( AC.LogHandle = OpenAddFile((char *)(AM.LogFileName)) ) < 0 ) {
+				Error1("Cannot re-open logfile",AM.LogFileName);
+				return(-1);
+			}
 		}
 	}
 	return(0);
