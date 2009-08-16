@@ -89,13 +89,6 @@ static char *storefile = 0;
  *  Checked by DeleteRecoveryFile().
  */
 static int done_snapshot = 0;
-static int done_storecopy = 0;
-static int done_sortcopy = 0;
-static int done_hidecopy = 0;
-
-static int syscmdinit = 0;
-static char *syscmdstore;
-static char *syscmdsort;
 
 /*
   	#] filenames and system commands : 
@@ -127,17 +120,10 @@ int CheckRecoveryFile()
  */
 void DeleteRecoveryFile()
 {
-	/* do it only if we have been _writing_ to the files */
 	if ( done_snapshot ) {
 		remove(recoveryfile);
-	}
-	if ( done_storecopy ) {
 		remove(storefile);
-	}
-	if ( done_sortcopy ) {
 		remove(sortfile);
-	}
-	if ( done_hidecopy ) {
 		remove(hidefile);
 	}
 }
@@ -1033,7 +1019,7 @@ static void print_R()
 #define S_WRITE_NAMETREE(ARG) \
 	S_WRITE_B(ARG, sizeof(NAMETREE)); \
 	if ( ARG->namenode ) { \
-		S_WRITE_B(ARG->namenode, ARG->nodesize * sizeof(struct NaMeNode)); \
+		S_WRITE_B(ARG->namenode, ARG->nodesize*sizeof(struct NaMeNode)); \
 	} \
 	if ( ARG->namebuffer ) { \
 		S_WRITE_B(ARG->namebuffer, ARG->namesize); \
@@ -1149,6 +1135,7 @@ int DoRecovery(int *moduletype)
 	R_FREE(AM.gFortran90Kind);
 	R_SET(AM.gFortran90Kind,UBYTE *);
 	R_COPY_S(AM.gFortran90Kind,UBYTE *);
+	R_SET(AM.safetyfirst, WORD);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -1292,7 +1279,7 @@ int DoRecovery(int *moduletype)
 	R_COPY_LIST(AC.ChannelList);
 	for ( i=0; i<AC.ChannelList.num; ++i ) {
 		R_COPY_S(channels[i].name,char*);
-		channels[i].handle = OpenAddFile(channels[i].name);
+		channels[i].handle = ReOpenFile(channels[i].name);
 	}
 	AC.ChannelList.message = "channel buffer";
 
@@ -1343,13 +1330,13 @@ int DoRecovery(int *moduletype)
 			ofs = tabl->prototype - (WORD*)org;
 			if ( tabl->pattern ) tabl->pattern += ofs;
 #endif
-			R_COPY_B(tabl->mm, tabl->numind*sizeof(MINMAX), MINMAX*);
-			R_COPY_B(tabl->flags, tabl->numind*sizeof(WORD), WORD*);
+			R_COPY_B(tabl->mm, tabl->numind*(LONG)sizeof(MINMAX), MINMAX*);
+			R_COPY_B(tabl->flags, tabl->numind*(LONG)sizeof(WORD), WORD*);
 			if ( tabl->sparse ) {
-				R_COPY_B(tabl->boomlijst, tabl->MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
+				R_COPY_B(tabl->boomlijst, tabl->MaxTreeSize*(LONG)sizeof(COMPTREE), COMPTREE*);
 				R_COPY_S(tabl->argtail,UBYTE*);
 			}
-			R_COPY_B(tabl->buffers, tabl->bufferssize*sizeof(WORD), WORD*);
+			R_COPY_B(tabl->buffers, tabl->bufferssize*(LONG)sizeof(WORD), WORD*);
 			if ( tabl->spare ) {
 				TABLES spare;
 				R_COPY_B(spare, sizeof(struct TaBlEs), TABLES);
@@ -1367,14 +1354,14 @@ int DoRecovery(int *moduletype)
 				}
 				spare->prototype = tabl->prototype;
 				spare->pattern = tabl->pattern;
-				R_COPY_B(spare->mm, spare->numind*sizeof(MINMAX), MINMAX*);
-				R_COPY_B(spare->flags, spare->numind*sizeof(WORD), WORD*);
+				R_COPY_B(spare->mm, spare->numind*(LONG)sizeof(MINMAX), MINMAX*);
+				R_COPY_B(spare->flags, spare->numind*(LONG)sizeof(WORD), WORD*);
 				if ( tabl->sparse ) {
-					R_COPY_B(spare->boomlijst, spare->MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
+					R_COPY_B(spare->boomlijst, spare->MaxTreeSize*(LONG)sizeof(COMPTREE), COMPTREE*);
 					spare->argtail = tabl->argtail;
 				}
 				spare->spare = tabl;
-				R_COPY_B(spare->buffers, spare->bufferssize*sizeof(WORD), WORD*);
+				R_COPY_B(spare->buffers, spare->bufferssize*(LONG)sizeof(WORD), WORD*);
 			}
 		}
 	}
@@ -1477,12 +1464,12 @@ int DoRecovery(int *moduletype)
 		ofs = cbuf[i].Buffer - (WORD*)org;
 		cbuf[i].Top += ofs;
 		cbuf[i].Pointer += ofs;
-		R_COPY_B(cbuf[i].lhs, cbuf[i].maxlhs*sizeof(WORD*), WORD**);
+		R_COPY_B(cbuf[i].lhs, cbuf[i].maxlhs*(LONG)sizeof(WORD*), WORD**);
 		for ( j=1; j<=cbuf[i].numlhs; ++j ) {
 			if ( cbuf[i].lhs[j] ) cbuf[i].lhs[j] += ofs;
 		}
 		org = cbuf[i].rhs;
-		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)), WORD**);
+		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)), WORD**);
 		for ( j=1; j<=cbuf[i].numrhs; ++j ) {
 			if ( cbuf[i].rhs[j] ) cbuf[i].rhs[j] += ofs;
 		}
@@ -1514,7 +1501,7 @@ int DoRecovery(int *moduletype)
 	AC.activenames = &(AC.varnames);
 
 	org = AC.Streams;
-	R_COPY_B(AC.Streams, AC.MaxNumStreams*sizeof(STREAM), STREAM*);
+	R_COPY_B(AC.Streams, AC.MaxNumStreams*(LONG)sizeof(STREAM), STREAM*);
 	for ( i=0; i<AC.NumStreams; ++i ) {
 		if ( AC.Streams[i].type != FILESTREAM ) {
 			org2 = AC.Streams[i].buffer;
@@ -1564,15 +1551,15 @@ int DoRecovery(int *moduletype)
 	AC.CurrentStream += ofs;
 
 	if ( AC.termstack ) {
-		R_COPY_B(AC.termstack, AC.maxtermlevel*sizeof(LONG), LONG*);
+		R_COPY_B(AC.termstack, AC.maxtermlevel*(LONG)sizeof(LONG), LONG*);
 	}
 
 	if ( AC.termsortstack ) {
-		R_COPY_B(AC.termsortstack, AC.maxtermlevel*sizeof(LONG), LONG*);
+		R_COPY_B(AC.termsortstack, AC.maxtermlevel*(LONG)sizeof(LONG), LONG*);
 	}
 
 	/* exception: here we also change values from struct AM */
-	R_COPY_B(AC.cmod, AM.MaxTal*4*sizeof(UWORD), WORD*);
+	R_COPY_B(AC.cmod, AM.MaxTal*4*(LONG)sizeof(UWORD), WORD*);
 	AM.gcmod = AC.cmod + AM.MaxTal;
 	AC.powmod = AM.gcmod + AM.MaxTal;
 	AM.gpowmod = AC.powmod + AM.MaxTal;
@@ -1584,10 +1571,10 @@ int DoRecovery(int *moduletype)
 
 	if ( AC.IfHeap ) {
 		org = AC.IfHeap;
-		R_COPY_B(AC.IfHeap, sizeof(LONG)*(AC.MaxIf+1), LONG*);
+		R_COPY_B(AC.IfHeap, (LONG)sizeof(LONG)*(AC.MaxIf+1), LONG*);
 		ofs = AC.IfHeap - (LONG*)org;
 		AC.IfStack += ofs;
-		R_COPY_B(AC.IfCount, sizeof(LONG)*(AC.MaxIf+1), LONG*);
+		R_COPY_B(AC.IfCount, (LONG)sizeof(LONG)*(AC.MaxIf+1), LONG*);
 	}
 
 	org = AC.iBuffer;
@@ -1599,7 +1586,7 @@ int DoRecovery(int *moduletype)
 
 	if ( AC.LabelNames ) {
 		org = AC.LabelNames;
-		R_COPY_B(AC.LabelNames, AC.MaxLabels*(sizeof(UBYTE*)+sizeof(WORD)), UBYTE**);
+		R_COPY_B(AC.LabelNames, AC.MaxLabels*(LONG)(sizeof(UBYTE*)+sizeof(WORD)), UBYTE**);
 		for ( i=0; i<AC.NumLabels; ++i ) {
 			R_COPY_S(AC.LabelNames[i],UBYTE*);
 		}
@@ -1607,10 +1594,10 @@ int DoRecovery(int *moduletype)
 		AC.Labels += ofs;
 	}
 	
-	R_COPY_B(AC.FixIndices, AM.OffsetIndex*sizeof(WORD), WORD*);
+	R_COPY_B(AC.FixIndices, AM.OffsetIndex*(LONG)sizeof(WORD), WORD*);
 
 	if ( AC.termsumcheck ) {
-		R_COPY_B(AC.termsumcheck, AC.maxtermlevel*sizeof(WORD), WORD*);
+		R_COPY_B(AC.termsumcheck, AC.maxtermlevel*(LONG)sizeof(WORD), WORD*);
 	}
 
 	R_COPY_B(AC.WildcardNames, AC.WildcardBufferSize, UBYTE*);
@@ -1631,7 +1618,7 @@ int DoRecovery(int *moduletype)
 		}
 	}
 
-	R_COPY_B(AC.tokenarglevel, AM.MaxParLevel*sizeof(WORD), WORD*);
+	R_COPY_B(AC.tokenarglevel, AM.MaxParLevel*(LONG)sizeof(WORD), WORD*);
 
 	AC.modinverses = 0;
 
@@ -1640,7 +1627,7 @@ int DoRecovery(int *moduletype)
 #ifdef WITHPTHREADS
 	if ( AC.inputnumbers ) {
 		org = AC.inputnumbers;
-		R_COPY_B(AC.inputnumbers, AC.sizepfirstnum*(sizeof(WORD)+sizeof(LONG)), LONG*);
+		R_COPY_B(AC.inputnumbers, AC.sizepfirstnum*(LONG)(sizeof(WORD)+sizeof(LONG)), LONG*);
 		ofs = (WORD*)AC.inputnumbers - (WORD*)org;
 		AC.pfirstnum += ofs;
 	}
@@ -1648,7 +1635,7 @@ int DoRecovery(int *moduletype)
 #endif /* ifdef WITHPTHREADS */
 
 	if ( AC.IfSumCheck ) {
-		R_COPY_B(AC.IfSumCheck, sizeof(WORD)*(AC.MaxIf+1), WORD*);
+		R_COPY_B(AC.IfSumCheck, (LONG)sizeof(WORD)*(AC.MaxIf+1), WORD*);
 	}
 
 	AC.LogHandle = oldLogHandle;
@@ -1762,8 +1749,8 @@ int DoRecovery(int *moduletype)
 				R_COPY_B(Procedures[i].p.buffer, Procedures[i].p.size, UBYTE*);
 			}
 			else {
-				R_SET(org, void*);
-				Procedures[i].p.buffer = Procedures[(size_t)org].p.buffer;
+				R_SET(j, int);
+				Procedures[i].p.buffer = Procedures[j].p.buffer;
 			}
 		}
 		R_COPY_S(Procedures[i].name,UBYTE*);
@@ -1773,7 +1760,7 @@ int DoRecovery(int *moduletype)
 	R_COPY_LIST(AP.ChDollarList);
 	AP.ChDollarList.message = "changeddollar";
 
-	size = (AP.NumPreSwitchStrings+1)*sizeof(UBYTE*);
+	size = (AP.NumPreSwitchStrings+1)*(LONG)sizeof(UBYTE*);
 	R_COPY_B(AP.PreSwitchStrings, size, UBYTE**);
 	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		R_COPY_S(AP.PreSwitchStrings[i],UBYTE*);
@@ -1788,9 +1775,9 @@ int DoRecovery(int *moduletype)
 	R_COPY_S(AP.procedureExtension,UBYTE*);
 	R_COPY_S(AP.cprocedureExtension,UBYTE*);
 
-	R_COPY_B(AP.PreIfStack, AP.MaxPreIfLevel*sizeof(int), int*);
-	R_COPY_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*sizeof(int), int*);
-	R_COPY_B(AP.PreTypes, (AP.MaxPreTypes+1)*sizeof(int), int*);
+	R_COPY_B(AP.PreIfStack, AP.MaxPreIfLevel*(LONG)sizeof(int), int*);
+	R_COPY_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int), int*);
+	R_COPY_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int), int*);
 
 #ifdef PRINTDEBUG
 	print_P();
@@ -1860,24 +1847,16 @@ int DoRecovery(int *moduletype)
 #endif
 	/* reopen old outfile */
 	if ( AR.outfile->handle >= 0 ) {
-		i = strlen(sortfile);
-		syscmdsort = (char*)Malloc1(i+strlen(AR.outfile->name)+8,"DoRecovery-1");
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, sortfile);
-		syscmdsort[6+i] = ' ';
-		strcpy(syscmdsort+7+i, AR.outfile->name);
-		if ( system(syscmdsort) ) {
+		if ( CopyFile(sortfile, AR.outfile->name) ) {
 			MesPrint("ERROR: Could not copy old output sort file %s!",sortfile);
 			Terminate(-1);
 		}
-		AR.outfile->handle = OpenFile(AR.outfile->name);
+		AR.outfile->handle = ReOpenFile(AR.outfile->name);
 		if ( AR.outfile->handle == -1 ) {
 			MesPrint("ERROR: Could not reopen output sort file %s!",AR.outfile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.outfile->handle, &AR.outfile->POposition, SEEK_SET);
-		M_free(syscmdsort,"syscmdsort");
-		done_sortcopy = 1;
 	}
 
 	/* hidefile */
@@ -1909,24 +1888,16 @@ int DoRecovery(int *moduletype)
 #endif
 	/* reopen old hidefile */
 	if ( AR.hidefile->handle >= 0 ) {
-		i = strlen(hidefile);
-		syscmdsort = (char*)Malloc1(i+strlen(AR.hidefile->name)+8,"DoRecovery-2");
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, hidefile);
-		syscmdsort[6+i] = ' ';
-		strcpy(syscmdsort+7+i, AR.hidefile->name);
-		if ( system(syscmdsort) ) {
+		if ( CopyFile(hidefile, AR.hidefile->name) ) {
 			MesPrint("ERROR: Could not copy old hide file %s!",hidefile);
 			Terminate(-1);
 		}
-		AR.hidefile->handle = OpenFile(AR.hidefile->name);
+		AR.hidefile->handle = ReOpenFile(AR.hidefile->name);
 		if ( AR.hidefile->handle == -1 ) {
 			MesPrint("ERROR: Could not reopen hide file %s!",AR.hidefile->name);
 			Terminate(-1);
 		}
 		SeekFile(AR.hidefile->handle, &AR.hidefile->POposition, SEEK_SET);
-		M_free(syscmdsort,"syscmdsort");
-		done_hidecopy = 1;
 	}
 
 	/* store file */
@@ -1934,26 +1905,22 @@ int DoRecovery(int *moduletype)
 	if ( ISNOTZEROPOS(pos) ) {
 		CloseFile(AR.StoreData.Handle);
 		R_SET(AR.StoreData, FILEDATA);
-		i = strlen(storefile);
-		syscmdstore = (char*)Malloc1(i+strlen(FG.fname)+8,"DoRecovery-3");
-		strcpy(syscmdstore, "cp -f ");
-		strcpy(syscmdstore+6, storefile);
-		syscmdstore[6+i] = ' ';
-		strcpy(syscmdstore+7+i, FG.fname);
-		if ( system(syscmdstore) ) {
+		if ( CopyFile(storefile, FG.fname) ) {
 			MesPrint("ERROR: Could not copy old store file %s!",storefile);
 			Terminate(-1);
 		}
-		AR.StoreData.Handle = (WORD)OpenFile(FG.fname);
+		AR.StoreData.Handle = (WORD)ReOpenFile(FG.fname);
 		SeekFile(AR.StoreData.Handle, &AR.StoreData.Position, SEEK_SET);
-		M_free(syscmdstore,"syscmdsort");
-		done_storecopy = 1;
 	}
 
 	R_SET(AR.DefPosition, POSITION);
 	R_SET(AR.OldTime, LONG);
 	R_SET(AR.InInBuf, LONG);
+
+	R_SET(AR.NoCompress, int);
 	R_SET(AR.gzipCompress, int);
+
+	R_SET(AR.outtohide, int);
 
 	R_SET(AR.GetFile, WORD);
 	R_SET(AR.KeptInHold, WORD);
@@ -1995,7 +1962,7 @@ int DoRecovery(int *moduletype)
 		AB[j]->R.OldTime = -(*((LONG*)p+j));
 	}
 	WriteTimerInfo((LONG*)p);
-	p = (unsigned char*)p + i*sizeof(LONG);
+	p = (unsigned char*)p + i*(LONG)sizeof(LONG);
 #endif /* ifdef WITHPTHREADS */
 
 	if ( fclose(fd) ) return(__LINE__);
@@ -2005,7 +1972,7 @@ int DoRecovery(int *moduletype)
 	/* cares about data in S_const */
 	UpdatePositions();
 	AT.SS = AT.S0;
-
+	
 	done_snapshot = 1;
 	MesPrint("done."); fflush(0);
 
@@ -2047,7 +2014,7 @@ static int DoSnapshot(int moduletype)
 
 	MesPrint("Saving recovery point ... %"); fflush(0);
 
-	if ( !(fd = fopen(intermedfile, "w")) ) return(__LINE__);
+	if ( !(fd = fopen(intermedfile, "wb")) ) return(__LINE__);
 
 	/* reserve space in the file for a length field */
 	if ( fwrite(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
@@ -2099,6 +2066,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&adr, sizeof(void*));
 	S_WRITE_B(&AM.gFortran90Kind,sizeof(UBYTE *));
 	S_WRITE_S(AM.gFortran90Kind);
+	S_WRITE_B(&AM.safetyfirst, sizeof(WORD));
 
 	/* #] AM */
 	/* #[ AC */
@@ -2138,13 +2106,13 @@ static int DoSnapshot(int moduletype)
 				}
 			}
 			S_WRITE_B(tabl->prototype, tabl->prototypeSize);
-			S_WRITE_B(tabl->mm, tabl->numind*sizeof(MINMAX));
-			S_WRITE_B(tabl->flags, tabl->numind*sizeof(WORD));
+			S_WRITE_B(tabl->mm, tabl->numind*(LONG)sizeof(MINMAX));
+			S_WRITE_B(tabl->flags, tabl->numind*(LONG)sizeof(WORD));
 			if ( tabl->sparse ) {
-				S_WRITE_B(tabl->boomlijst, tabl->MaxTreeSize*sizeof(COMPTREE));
+				S_WRITE_B(tabl->boomlijst, tabl->MaxTreeSize*(LONG)sizeof(COMPTREE));
 				S_WRITE_S(tabl->argtail);
 			}
-			S_WRITE_B(tabl->buffers, tabl->bufferssize*sizeof(WORD));
+			S_WRITE_B(tabl->buffers, tabl->bufferssize*(LONG)sizeof(WORD));
 			if ( tabl->spare ) {
 				TABLES spare = tabl->spare;
 				S_WRITE_B(spare, sizeof(struct TaBlEs));
@@ -2160,12 +2128,12 @@ static int DoSnapshot(int moduletype)
 							TABLEEXTENSION*sizeof(WORD)*(spare->totind));
 					}
 				}
-				S_WRITE_B(spare->mm, spare->numind*sizeof(MINMAX));
-				S_WRITE_B(spare->flags, spare->numind*sizeof(WORD));
+				S_WRITE_B(spare->mm, spare->numind*(LONG)sizeof(MINMAX));
+				S_WRITE_B(spare->flags, spare->numind*(LONG)sizeof(WORD));
 				if ( spare->sparse ) {
-					S_WRITE_B(spare->boomlijst, spare->MaxTreeSize*sizeof(COMPTREE));
+					S_WRITE_B(spare->boomlijst, spare->MaxTreeSize*(LONG)sizeof(COMPTREE));
 				}
-				S_WRITE_B(spare->buffers, spare->bufferssize*sizeof(WORD));
+				S_WRITE_B(spare->buffers, spare->bufferssize*(LONG)sizeof(WORD));
 			}
 		}
 	}
@@ -2244,10 +2212,10 @@ static int DoSnapshot(int moduletype)
 	for ( i=0; i<AC.cbufList.num; ++i ) {
 		S_WRITE_B(cbuf[i].Buffer, cbuf[i].BufferSize*sizeof(WORD));
 		/* see inicbufs in comtool.c */
-		S_WRITE_B(cbuf[i].lhs, cbuf[i].maxlhs*sizeof(WORD*));
-		S_WRITE_B(cbuf[i].rhs, cbuf[i].maxrhs*(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)));
+		S_WRITE_B(cbuf[i].lhs, cbuf[i].maxlhs*(LONG)sizeof(WORD*));
+		S_WRITE_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)));
 		if ( cbuf[i].boomlijst ) {
-			S_WRITE_B(cbuf[i].boomlijst, cbuf[i].MaxTreeSize*sizeof(COMPTREE));
+			S_WRITE_B(cbuf[i].boomlijst, cbuf[i].MaxTreeSize*(LONG)sizeof(COMPTREE));
 		}
 	}
 
@@ -2258,7 +2226,7 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_NAMETREE(AC.autonames);
 
-	S_WRITE_B(AC.Streams, AC.MaxNumStreams*sizeof(STREAM));
+	S_WRITE_B(AC.Streams, AC.MaxNumStreams*(LONG)sizeof(STREAM));
 	for ( i=0; i<AC.NumStreams; ++i ) {
 		if ( AC.Streams[i].inbuffer ) {
 			S_WRITE_B(AC.Streams[i].buffer, AC.Streams[i].inbuffer);
@@ -2268,34 +2236,34 @@ static int DoSnapshot(int moduletype)
 	}
 
 	if ( AC.termstack ) {
-		S_WRITE_B(AC.termstack, AC.maxtermlevel*sizeof(LONG));
+		S_WRITE_B(AC.termstack, AC.maxtermlevel*(LONG)sizeof(LONG));
 	}
 
 	if ( AC.termsortstack ) {
-		S_WRITE_B(AC.termsortstack, AC.maxtermlevel*sizeof(LONG));
+		S_WRITE_B(AC.termsortstack, AC.maxtermlevel*(LONG)sizeof(LONG));
 	}
 
-	S_WRITE_B(AC.cmod, AM.MaxTal*4*sizeof(UWORD));
+	S_WRITE_B(AC.cmod, AM.MaxTal*4*(LONG)sizeof(UWORD));
 
 	if ( AC.IfHeap ) {
-		S_WRITE_B(AC.IfHeap, sizeof(LONG)*(AC.MaxIf+1));
-		S_WRITE_B(AC.IfCount, sizeof(LONG)*(AC.MaxIf+1));
+		S_WRITE_B(AC.IfHeap, (LONG)sizeof(LONG)*(AC.MaxIf+1));
+		S_WRITE_B(AC.IfCount, (LONG)sizeof(LONG)*(AC.MaxIf+1));
 	}
 
 	l = AC.iStop - AC.iBuffer + 2;
 	S_WRITE_B(AC.iBuffer, l);
 
 	if ( AC.LabelNames ) {
-		S_WRITE_B(AC.LabelNames, AC.MaxLabels*(sizeof(UBYTE*)+sizeof(WORD)));
+		S_WRITE_B(AC.LabelNames, AC.MaxLabels*(LONG)(sizeof(UBYTE*)+sizeof(WORD)));
 		for ( i=0; i<AC.NumLabels; ++i ) {
 			S_WRITE_S(AC.LabelNames[i]);
 		}
 	}
 
-	S_WRITE_B(AC.FixIndices, AM.OffsetIndex*sizeof(WORD));
+	S_WRITE_B(AC.FixIndices, AM.OffsetIndex*(LONG)sizeof(WORD));
 
 	if ( AC.termsumcheck ) {
-		S_WRITE_B(AC.termsumcheck, AC.maxtermlevel*sizeof(WORD));
+		S_WRITE_B(AC.termsumcheck, AC.maxtermlevel*(LONG)sizeof(WORD));
 	}
 
 	S_WRITE_B(AC.WildcardNames, AC.WildcardBufferSize);
@@ -2307,18 +2275,18 @@ static int DoSnapshot(int moduletype)
 		}
 	}
 
-	S_WRITE_B(AC.tokenarglevel, AM.MaxParLevel*sizeof(WORD));
+	S_WRITE_B(AC.tokenarglevel, AM.MaxParLevel*(LONG)sizeof(WORD));
 
 	S_WRITE_S(AC.Fortran90Kind);
 	
 #ifdef WITHPTHREADS
 	if ( AC.inputnumbers ) {
-		S_WRITE_B(AC.inputnumbers, AC.sizepfirstnum*(sizeof(WORD)+sizeof(LONG)));
+		S_WRITE_B(AC.inputnumbers, AC.sizepfirstnum*(LONG)(sizeof(WORD)+sizeof(LONG)));
 	}
 #endif /* ifdef WITHPTHREADS */
 
 	if ( AC.IfSumCheck ) {
-		S_WRITE_B(AC.IfSumCheck, sizeof(WORD)*(AC.MaxIf+1));
+		S_WRITE_B(AC.IfSumCheck, (LONG)sizeof(WORD)*(AC.MaxIf+1));
 	}
 
 	S_WRITE_S(AC.CheckpointRunAfter);
@@ -2371,14 +2339,13 @@ static int DoSnapshot(int moduletype)
 			else {
 				for ( j=0; j<AP.ProcList.num; ++j ) {
 					if ( Procedures[i].p.buffer == Procedures[j].p.buffer ) {
-						adr = (void*)j;
 						break;
 					}
 				}
 				if ( j == AP.ProcList.num ) {
 					MesPrint("Error writing procedures to recovery file!");
 				}
-				S_WRITE_B(&adr, sizeof(void*));
+				S_WRITE_B(&j, sizeof(int));
 			}
 		}
 		S_WRITE_S(Procedures[i].name);
@@ -2386,7 +2353,7 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_LIST(AP.ChDollarList);
 	
-	S_WRITE_B(AP.PreSwitchStrings, (AP.NumPreSwitchStrings+1)*sizeof(UBYTE*));
+	S_WRITE_B(AP.PreSwitchStrings, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(UBYTE*));
 	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		S_WRITE_S(AP.PreSwitchStrings[i]);
 	}
@@ -2396,9 +2363,9 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_S(AP.procedureExtension);
 	S_WRITE_S(AP.cprocedureExtension);
 
-	S_WRITE_B(AP.PreIfStack, AP.MaxPreIfLevel*sizeof(int));
-	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*sizeof(int));
-	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*sizeof(int));
+	S_WRITE_B(AP.PreIfStack, AP.MaxPreIfLevel*(LONG)sizeof(int));
+	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int));
+	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int));
 
 	/* #] AP */
 	/* #[ AR */
@@ -2430,7 +2397,11 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&l, sizeof(LONG));
 
 	S_WRITE_B(&AR.InInBuf, sizeof(LONG));
+	
+	S_WRITE_B(&AR.NoCompress, sizeof(int));
 	S_WRITE_B(&AR.gzipCompress, sizeof(int));
+	
+	S_WRITE_B(&AR.outtohide, sizeof(int));
 
 	S_WRITE_B(&AR.GetFile, sizeof(WORD));
 	S_WRITE_B(&AR.KeptInHold, sizeof(WORD));
@@ -2459,7 +2430,7 @@ static int DoSnapshot(int moduletype)
 	/* write timing information of individual threads */
 	i = GetTimerInfo(&longp);
 	S_WRITE_B(&i, sizeof(int));
-	S_WRITE_B(longp, i*sizeof(LONG));
+	S_WRITE_B(longp, i*(LONG)sizeof(LONG));
 #endif /* ifdef WITHPTHREADS */
 
 	/* save length of data at the beginning of the file */
@@ -2470,54 +2441,19 @@ static int DoSnapshot(int moduletype)
 
 	if ( fclose(fd) ) return(__LINE__);
 
-	/* prepare strings for system command */
-	if ( !syscmdinit ) {
-		l = strlen(FG.fname);
-		syscmdstore = (char*)Malloc1(l+strlen(storefile)+8, "syscmdstore");
-		strcpy(syscmdstore, "cp -f ");
-		strcpy(syscmdstore+6, FG.fname);
-		syscmdstore[6+l] = ' ';
-		strcpy(syscmdstore+7+l, storefile);
-
-		syscmdinit = 1;
-	}
-
-	/* for copying we are using the system command. it is fast and has no
-	 * additional memory requirements as a read/write approach would have.
-	 * as a drawback we might get portability problems. */
-
 	/* copy store file if necessary */
 	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
-		if ( system(syscmdstore) ) return(__LINE__);
-		done_storecopy = 1;
+		if ( CopyFile(FG.fname, storefile) ) return(__LINE__);
 	}
 
 	/* copy sort file if necessary */
 	if ( AR.outfile->handle >= 0 ) {
-		l = strlen(AR.outfile->name);
-		syscmdsort = (char*)Malloc1(l+strlen(sortfile)+8, "syscmdsort");
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, AR.outfile->name);
-		syscmdsort[6+l] = ' ';
-		strcpy(syscmdsort+7+l, sortfile);
-
-		if ( system(syscmdsort) ) return(__LINE__);
-		M_free(syscmdsort,"syscmdsort");
-		done_sortcopy = 1;
+		if ( CopyFile(AR.outfile->name, sortfile) ) return(__LINE__);
 	}
 
 	/* copy hide file if necessary */
 	if ( AR.hidefile->handle >= 0 ) {
-		l = strlen(AR.hidefile->name);
-		syscmdsort = (char*)Malloc1(l+strlen(hidefile)+8, "syscmdsort");
-		strcpy(syscmdsort, "cp -f ");
-		strcpy(syscmdsort+6, AR.hidefile->name);
-		syscmdsort[6+l] = ' ';
-		strcpy(syscmdsort+7+l, hidefile);
-
-		if ( system(syscmdsort) ) return(__LINE__);
-		M_free(syscmdsort,"syscmdsort");
-		done_hidecopy = 1;
+		if ( CopyFile(AR.hidefile->name, hidefile) ) return(__LINE__);
 	}
 
 	/* make the intermediate file the recovery file */
