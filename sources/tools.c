@@ -672,6 +672,26 @@ int OpenAddFile(char *name)
 
 /*
  		#] OpenAddFile : 
+ 		#[ ReOpenFile :
+*/
+
+int ReOpenFile(char *name)
+{
+	FILES *f;
+	int i;
+	POSITION scrpos;
+	if ( ( f = Uopen(name,"r+b") ) == 0 ) return(-1);
+	i = CreateHandle();
+	LOCK(AM.handlelock);
+	filelist[i] = f;
+	UNLOCK(AM.handlelock);
+	TELLFILE(i,&scrpos);
+	SeekFile(i,&scrpos,SEEK_SET);
+	return(i);
+}
+
+/*
+ 		#] ReOpenFile : 
  		#[ CreateFile :
 */
 
@@ -725,6 +745,55 @@ VOID CloseFile(int handle)
 
 /*
  		#] CloseFile : 
+ 		#[ CopyFile :
+*/
+
+/** Copies a file with name *source to a file named *dest.
+ *  The involved files must not be open.
+ *  Returns non-zero if an error occurred.
+ */
+int CopyFile(char *source, char *dest)
+{
+	#define COPYFILEBUFSIZE 4096
+	FILE *in, *out;
+	size_t countin, countout;
+	char *buffer = NULL;
+	buffer = (char*)Malloc1(COPYFILEBUFSIZE, "file copy buffer");
+	
+	in = fopen(source, "rb");
+	if ( in == NULL ) {
+		perror("CopyFile: ");
+		return(1);
+	}
+	out = fopen(dest, "wb");
+	if ( out == NULL ) {
+		perror("CopyFile: ");
+		return(2);
+	}
+
+	while ( !feof(in) ) {
+		countin = fread(buffer, 1, COPYFILEBUFSIZE, in);
+		if ( countin != COPYFILEBUFSIZE ) {
+			if ( ferror(in) ) {
+				perror("CopyFile: ");
+				return(3);
+			}
+		}
+		countout = fwrite(buffer, 1, countin, out);
+		if ( countin != countout ) {
+			perror("CopyFile: ");
+			return(4);
+		}
+	}
+
+	fclose(in);
+	fclose(out);
+	
+	return(0);
+}
+
+/*
+ 		#] CopyFile : 
  		#[ CreateHandle :
 
 		We need a lock here.
