@@ -21,6 +21,7 @@ SRCBASE = \
 	index.c \
 	inivar.h \
 	lus.c \
+	mallocprotect.h \
 	message.c \
 	minos.c \
 	minos.h \
