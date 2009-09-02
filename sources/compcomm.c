@@ -567,7 +567,9 @@ int CoFormat(UBYTE *s)
 					AO.DoubleFlag = 1;
 				}
 			}
-			else if ( key->flags == 1 ) AC.OutNumberType = key->type;
+			else if ( key->flags == 1 ) {
+				AC.OutputMode = AC.OutNumberType = key->type;
+			}
 			else if ( key->flags == 2 ) {
 				while ( FG.cTable[*s] == 0 ) s++;
 				if ( *s == 0 ) AC.OutNumberType = 10;
@@ -623,7 +625,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat : 
+  	#] CoFormat :
   	#[ CoKeep :
 */
 
