@@ -831,7 +831,10 @@ dimension is changed the dimension of all dummy indices changes with it.
 Varieties: \vspace{1mm}
 
 \leftvitem{4cm}{Dimension {\tt<}number{\tt>};}
-\rightvitem{12cm}{Declares the number to be the default dimension.}
+\rightvitem{12cm}{Declares the number to be the default dimension. The number must be smaller than
+32768 on 32bit architectures or 2147483648 on 64bit architectures. Negative numbers are not allowed.
+If one wants to work with negative dimensions, the practical workaround is to use a symbolic
+dimension and later replace that symbol appropriately.}
 
 \leftvitem{4cm}{Dimension {\tt<}symbol{\tt>};}
 \rightvitem{12cm}{Symbol must be the name of a symbol, either previously 
