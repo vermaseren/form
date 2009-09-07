@@ -6,9 +6,9 @@ The objects of symbolic manipulations are expressions\index{expression}.
 Expressions are built up from terms\index{terms} and terms are composed of 
 variables. {\FORM} knows several types of variables\index{variables}, each 
 of which has special rules assigned to it. The types of variables are 
-symbols, vectors, indices, functions, sets and expressions. In addition 
+symbols, vectors, indices, functions, sets, and expressions. In addition 
 there are tensors and tables which are special functions, preprocessor 
-variables\index{variables!preprocessor} (see chapter~\ref{preprocessor}) 
+variables\index{variables!preprocessor} (see chapter~\ref{preprocessor}),
 and there are dollar variables\index{variables!dollar} (see 
 chapter~\ref{dollars}). The expressions are used either in the definition 
 of an expression or in the right hand side of an expression or a 
@@ -21,7 +21,7 @@ and  dollar variables will be replaced immediately when they are
 encountered.
 
 The right hand side of an expression can consist of symbols, vectors, 
-indices functions and elements of a set. All these objects have to be 
+indices, functions and elements of a set. All these objects have to be 
 declared before they can be used. The rules 
 connected to each of these types of variables are described in the 
 sections below.
@@ -341,7 +341,7 @@ is explained in chapter~\ref{functions}.
 
 Within the commutation classes there are several types of special 
 functions. Currently these are tensors\index{tensors} and 
-tables\index{tables}. The tables are described on page~\ref{substatable} 
+tables\index{tables}. The tables are described in section~\ref{substatable} 
 and in chapter~\ref{tablebase}.
 
 Tensors\index{tensors} are special functions. Their arguments can be 
@@ -596,7 +596,7 @@ This statement sets a flag that causes the listing of all name tables and
 default properties that are active at the moment that the compiler has 
 finished compiling the current module and all modules after. The printing 
 is just before the algebra processor takes over for the execution of the 
-module --assuming that no error condition exists--. If the `On names' is 
+module -- assuming that no error condition exists. If the `On names' is 
 specified in a module that ends with a .global-instruction, the name lists 
 will be printed at the end of each module, as printing the name lists will 
 then be the default option. If one likes to switch this flag off, this can 

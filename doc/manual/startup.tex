@@ -24,7 +24,8 @@ alphabetic characters. They are:
      properly if there are conditionals in the preprocessor phase that 
      depend on results obtained at earlier stages of the program.
 \item[-d] Next argument/option is the name of a preprocessor 
-     variable that will be defined before the run starts.
+     variable that will be defined before the run starts. A specific value can be assigned with the
+	 syntax {\tt -d VARIABLENAME=VALUE}. The default value is 1.
 \item[-D] Same as -d.
 \item[-f] Output goes only to log file.
 \item[-F] Output only to log file. Further like -L or -ll.

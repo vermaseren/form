@@ -31,7 +31,7 @@ In general function wildcards\index{wildcard!function} can only match
 functions. Even though tensors are special functions, regular function 
 wildcards cannot match tensors, and tensor wildcards cannot match 
 functions. However commuting\index{commuting} function wildcards can match 
-noncommuting\index{noncommuting} functions {\sl et vise versa}.
+noncommuting\index{noncommuting} functions {\sl et vice versa}.
 
 Index\index{wildcard!index} wildcards can only match indices. The 
 dimension of the indices is not relevant. Hence:
@@ -216,7 +216,7 @@ like the n of the previous example:
     id f(a?aa[n]) = gg[n](bb[n]);
 \end{verbatim}
 which would replace \verb:f(a2): by \verb:g2(b2):. One cannot do 
-arithmetic\index{arithmetic} with these number of the array element. 
+arithmetic\index{arithmetic} with the number of the array element. 
 Constructions like \verb:bb[n+1]: are not allowed.
 
 There is one more mechanism by which the array nature of sets can be used. 
@@ -229,12 +229,13 @@ the identity of the corresponding\index{set!corresponding element} element of
 the set bb. Hence \verb:f(a2): becomes after this statement 
 \verb:b2*f(b2):.
 
-Wildcards can also give their value directly to 
-\$-variables\index{wildcard!\$-variable}\index{\$-variable} (see the chapter of the \$-variables 
-\ref{dollars}). If a \$-variable is attached to a wildcard (if there is a 
-set restriction, it should be after the set) the \$-variable will obtain 
-the same contents as the wildcard, provided a match occurs. If there is 
-more than one match, the last match will be in the \$-variable.
+Wildcards can also give their value directly to
+\$-variables\index{wildcard!\$-variable}\index{\$-variable} (see chapter
+\ref{dollars} about the \$-variables). If a \$-variable is attached to a
+wildcard (if there is a set restriction, it should be after the set) the
+\$-variable will obtain the same contents as the wildcard, provided a match
+occurs. If there is more than one match, the last match will be in the
+\$-variable.
 \begin{verbatim}
     id f(a?$w) = f(a);
 \end{verbatim}
@@ -242,7 +243,7 @@ will put the match of a in \verb:$w:. Hence in the case of \verb:f(a2): the
 \$-variable will have the value \verb:a2:. In the case of 
 \verb:f(a2)*f(a3): the eventual value of \verb:$w: depends on the order in 
 which FORM does the matching. This is not specified and it would not be 
-good strategy to make programs that will depend on it. A future pattern 
+a good strategy to make programs that will depend on it. A future pattern 
 matcher might do it differently! But one could do things like
 \begin{verbatim}
     while ( match(f(a?$w)) );

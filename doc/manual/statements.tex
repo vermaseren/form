@@ -68,7 +68,7 @@ See also & symmetrize (\ref{substasymmetrize}), cyclesymmetrize
 \end{tabular} \vspace{4mm}
 
 \noindent The argument specifications are explained in the section on the 
-symmetrize statements (see \ref{substasymmetrize}). \vspace{4mm}
+symmetrize statements (see \ref{substasymmetrize}).\medskip
 
 \noindent The action of this statement\index{antisymmetrize} is to 
 anti-symmetrize the (specified) arguments of the functions that are 
@@ -484,8 +484,7 @@ of the number of $\gamma_5$ matrices left in the final results.}
 made to optimize with respect to the number of $\gamma_5$ matrices left.}
 
 \noindent IMPORTANT: the above identity is only valid in 4 dimensions. For 
-more details, see the chapter on gamma\index{gamma algebra} algebra 
-\ref{gammaalgebra}. \vspace{10mm}
+more details, see chapter \ref{gammaalgebra} on gamma\index{gamma algebra} algebra. \vspace{10mm}
 
 %--#] chisholm : 
 %--#[ cleartable :
@@ -546,7 +545,7 @@ The major complication\index{complication} occurs if the content of a
 bracket is so long that it will not fit inside a single term. The maximum 
 size of a term is limited by the setup parameter 
 maxtermsize\index{maxtermsize} (see \ref{setupmaxtermsize}). If this size 
-is exceed {\FORM} will split the bracket contents over more than one term, 
+is exceeded, {\FORM} will split the bracket contents over more than one term, 
 in each of which it will be inside the named function. It will issue a 
 warning that it has done so. \vspace{4mm}
 
@@ -717,7 +716,7 @@ See also & symmetrize (\ref{substasymmetrize}), antisymmetrize
 
 \noindent The argument\index{cyclesymmetrize} specifications are explained 
 in the section on the symmetrize statements (see \ref{substasymmetrize}). 
-\vspace{4mm}
+\medskip
 
 \noindent The action of this statement is to cycle-symmetrize the (specified) 
 arguments of the functions that are mentioned. This means that the 
@@ -736,7 +735,7 @@ order' may depend on the order of declaration of the variables.
 Type & Declaration\\
 Syntax & DeallocateTable,name(s) of sparse table(s);
 \\ See also & table (\ref{substatable}), fill (\ref{substafill}),
-   table bases (\ref{tablebase}).
+   table bases (\ref{tablebase})
 \end{tabular} \vspace{4mm}
 
 \noindent Works\index{deallocatetable} only for sparse\index{sparse} 
@@ -1365,7 +1364,7 @@ of the function refer to the table elements.
 
 \noindent \begin{tabular}{ll}
 Type & Declaration statement\\
-Syntax & fi[xindex] \verb:{:{\tt<}number{\tt>} {\tt<}value{\tt>}\verb:}:;
+Syntax & fi[xindex] \verb:{:{\tt<}number{\tt>}:{\tt<}value{\tt>}\verb:}:;
 \\ See also & index (\ref{substaindex}) and chapter \ref{metric}.
 \end{tabular} \vspace{4mm}
 
@@ -1403,7 +1402,7 @@ printing\index{printing} of expressions. There is a variety of options.
 characters per line. The default is 72. Numbers outside the range 1-255 are 
 corrected to 72. Positive numbers less than 39 are corrected to 39.}
 
-\leftvitem{3cm}{float\index{float}\index{format!float} \hfill \\ \ \ \ \ {\tt[}$<$number$>${\tt]}}
+\leftvitem{3cm}{float\index{float}\index{format!float} \hfill \\ \null\quad{\tt[}$<$number$>${\tt]}}
 \rightvitem{13cm}{Numbers are printed in floating\index{floating point} 
 point notation, even though internally they remain fractions. This is 
 purely cosmetic. If no number is specified the precision of the output will 
@@ -1626,8 +1625,7 @@ into a global expression. \vspace{10mm}
 \noindent \begin{tabular}{ll}
 Type & Executable statement\\
 Syntax & go[to] {\tt<}label{\tt>}; \\
-       & go to {\tt<}label{\tt>};
-\\ See also & label (\ref{substalabel})
+See also & label (\ref{substalabel})
 \end{tabular} \vspace{4mm}
 
 \noindent Causes\index{goto} processing to proceed at the indicated 
@@ -1747,7 +1745,7 @@ does not depend on which match is taken.}
 \tabitem{The pattern will match only if there is an exact match in 
 the powers of the symbols and dotproducts present.}
 
-\lefttabitem{ifmatch$->$\index{ifmatch}}
+\lefttabitem{ifmatch$-\!\!>$\index{ifmatch}}
 \tabitem{This option should be followed by the name (or number) of a 
 label\index{label}. If the pattern matches, the replacement will be made 
 after which the execution continues at the label.}
@@ -1970,7 +1968,7 @@ Hence the object (5) evaluates to true. \vspace{10mm}
 
 \noindent \begin{tabular}{ll}
 Type & Executable statement\\
-Syntax & ifmatch$->$ {\tt<}label{\tt>} {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+Syntax & ifmatch$-\!\!>$ {\tt<}label{\tt>} {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
 \\ See also & identify (\ref{substaidentify})
 \end{tabular} \vspace{4mm}
 
@@ -2174,7 +2172,7 @@ expressions from the hide system. \vspace{10mm}
 \noindent \begin{tabular}{ll}
 Type & Specification statement\\
 Syntax & keep brackets; \\
-\\ See also & bracket (\ref{substabracket}), antibracket 
+See also & bracket (\ref{substabracket}), antibracket 
      (\ref{substaabrackets}) and the chapter on brackets 
      (\ref{brackets})
 \end{tabular} \vspace{4mm}
@@ -2222,7 +2220,7 @@ Syntax & la[bel] {\tt<}name of label{\tt>};
 \end{tabular} \vspace{4mm}
 
 \noindent Places a label\index{label} at the current location. The name of 
-the label can be any name or number. Control can be transfered to the 
+the label can be any name or positive number. Control can be transfered to the 
 position of the label by a goto\index{goto} statement (see 
 \ref{substagoto}) or the ifmatch\index{ifmatch} option of an id statement 
 (see \ref{substaidentify}). The only condition is that the goto statement 
@@ -2370,6 +2368,7 @@ statement (see \ref{substashuffle}).
 Type & Declaration statement\\
 Syntax & metric {\tt<}option{\tt>};
 \end{tabular}
+\smallskip
 
 \noindent Remark: statement\index{metric} is inactive\index{inactive}. 
 Should have no effect.
@@ -2471,12 +2470,11 @@ when the order of processing of the terms is not well defined. These
 options tell \FORM\ what these \$-variables are used for. In the above 
 cases \FORM\ can take the appropriate action when gathering information 
 from the various processors. This will allow
-parallel\index{parallel execution} execution of the current module. If 
-\$-variables are used in a module and they are defined on a term by term 
-basis, the normal action of \FORM\ will be to veto parallel execution 
-unless it is clear that no confusion can occur. See also the chapters on 
-the parallel version(\ref{parallel}) and on the dollar 
-variables(\ref{pardollars}).\vspace{10mm}
+parallel\index{parallel execution} execution of the current module. If
+\$-variables are used in a module and they are defined on a term by term
+basis, the normal action of \FORM\ will be to veto parallel execution unless
+it is clear that no confusion can occur. See also chapter \ref{parallel} on
+the parallel version and section \ref{pardollars} on the dollar variables.\vspace{10mm}
 
 %--#] moduleoption : 
 %--#[ modulus :
@@ -2945,14 +2943,14 @@ a high first mode.}
 \rightvitem{13cm}{Turns the names mode off. This is the default.}
 
 \leftvitem{3cm}{nospacesinnumbers\index{off!nospacesinnumbers}}
-\rightvitem{13cm}{\label{staoffnospacesinnumbers}Makes that very long numbers are printed with leading 
-blank spaces at the beginning of a new line. The numbers are usually broken 
-up by placing a backspace character at the end of the line and then 
-continuing at the next line. For cosmetic purposes FORM puts usually a few 
-blank spaces at the beginning of the line. FORM itself can read this but 
-some programs cannot. This option can be turned off by the `on 
-nospacesinnumbers;' statement. The printing of the blank characters can be 
-restored by turning this variable off. See also page 
+\rightvitem{13cm}{\label{staoffnospacesinnumbers}\vspace{1ex}Makes that very
+long numbers are printed with leading blank spaces at the beginning of a new
+line. The numbers are usually broken up by placing a backslash character at
+the end of the line and then continuing at the next line. For cosmetic
+purposes FORM puts usually a few blank spaces at the beginning of the line.
+FORM itself can read this but some programs cannot. This option can be turned
+off by the `on nospacesinnumbers;' statement. The printing of the blank
+characters can be restored by turning this variable off. See also page 
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
 \leftvitem{3cm}{parallel\index{off!parallel}}
@@ -2989,7 +2987,7 @@ mode to the regular statistics mode in which each statistics messages takes
 three lines of text and one blank line.}
  
 \leftvitem{3cm}{threadloadbalancing\index{off!threadloadbalancing}}
-\rightvitem{13cm}{Disallows the loadbalancing of \TFORM in parallel mode. 
+\rightvitem{13cm}{\vspace{1.5ex}Disallows the loadbalancing of \TFORM\ in parallel mode. 
 In other versions of FORM this option is ignored.}
  
 \leftvitem{3cm}{threads\index{off!threads}}
@@ -2997,7 +2995,7 @@ In other versions of FORM this option is ignored.}
 In other versions of FORM this option is ignored.}
 
 \leftvitem{3cm}{threadstats\index{off!threadstats}}
-\rightvitem{13cm}{Turns off the thread by thread printing of the statitics 
+\rightvitem{13cm}{Turns off the thread by thread printing of the statistics 
 in \TFORM. Only the master thread will be printing statistics. Other 
 versions of FORM will ignore this option.}
 
@@ -3085,13 +3083,13 @@ names of all variables that have been defined by the user are printed. This
 is an inspection mode for debugging by the user. Default is off.}
 
 \leftvitem{3cm}{nospacesinnumbers\index{on!nospacesinnumbers}}
-\rightvitem{13cm}{\label{staonnospacesinnumbers}Makes that very long numbers are printed with no leading 
-blank spaces at the beginning of a new line. The numbers are usually broken 
-up by placing a backspace character at the end of the line and then 
-continuing at the next line. For cosmetic purposes FORM puts usually a few 
-blank spaces at the beginning of the line. FORM itself can read this but 
-some programs cannot. Hence this printing of the blank characters can be 
-omitted by turning this variable on. See also page 
+\rightvitem{13cm}{\label{staonnospacesinnumbers}\vspace{1ex}Makes that very
+long numbers are printed with no leading blank spaces at the beginning of a
+new line. The numbers are usually broken up by placing a backspace character
+at the end of the line and then continuing at the next line. For cosmetic
+purposes FORM puts usually a few blank spaces at the beginning of the line.
+FORM itself can read this but some programs cannot. Hence this printing of the
+blank characters can be omitted by turning this variable on. See also page
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
 \leftvitem{3cm}{parallel\index{on!parallel}}
@@ -3139,8 +3137,8 @@ parameters in the setup file (see \ref{setup}).}
 \rightvitem{13cm}{Same as `On statistics'.}
  
 \leftvitem{3cm}{threadloadbalancing\index{on!threadloadbalancing}}
-\rightvitem{13cm}{Causes the load balancing mechanism in TFORM to be turned 
-on or off. Default is on. Ignored by other versions of FORM.}
+\rightvitem{13cm}{\vspace{1.5ex}Causes the load balancing mechanism in TFORM
+to be turned on or off. Default is on. Ignored by other versions of FORM.}
  
 \leftvitem{3cm}{threads\index{on!threads}}
 \rightvitem{13cm}{Allows the running of the program in multithreaded mode 
@@ -3330,12 +3328,12 @@ Type & Print statement\\
 Syntax & Print [{\tt<}options{\tt>}]; \\
        & Print \verb:{:[{\tt<}options{\tt>}] {\tt<}expression{\tt>}\verb:}:; \\
        & Print [{\tt<}options{\tt>}] "{\tt<}format string{\tt>}" [{\tt<}objects{\tt>}];
-\\ See also & print[] (\ref{substaprintc}),
+\\ See also & print[\,] (\ref{substaprintc}),
               nprint (\ref{substanprint}),
               printtable (\ref{substaprinttable})
 \end{tabular}\vspace{4mm}
 
-\noindent General purpose print\index{print} statement. Has three modes. In 
+\noindent General purpose print\index{print} statement. It has three modes. In 
 the first two modes flags are set for the printing of expressions after the 
 current module has been finished. The third mode concerns printing during 
 execution. This allows the printing of individual terms or 
@@ -3426,7 +3424,7 @@ will be printed at the end of the print command.}
       5*b + 3*c;
 \end{verbatim}
 
-\noindent In the third mode one can also use the $+/-f$ options of the 
+\noindent In the third mode one can also use the +/--\,f options of the 
 first mode. This should be placed before the format string as in
 \begin{verbatim}
     Print +f "(%$) %t",$var;
@@ -3438,12 +3436,12 @@ more than one location in the module. \vspace{10mm}
 %--#] print : 
 %--#[ print[] :
 
-\section{print[]}
+\section{print[\,]}
 \label{substaprintc}
 
 \noindent \begin{tabular}{ll}
 Type & Output control statement\\
-Syntax & print[] \verb:{:[{\tt<}options{\tt>}] {\tt<}name{\tt>}\verb:}:;
+Syntax & print[\,] \verb:{:[{\tt<}options{\tt>}] {\tt<}name{\tt>}\verb:}:;
 \\ See also & print (\ref{substaprint})
 \end{tabular}\vspace{4mm}
 
@@ -3467,11 +3465,11 @@ are identical to those of the first two modes of the print statement.
 Type & Print statement\\
 Syntax & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>};  \\
        & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>} $>$ {\tt<}filename{\tt>}; \\
-       & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>} $>>$ {\tt<}filename{\tt>};
+       & printtable [{\tt<}options{\tt>}] {\tt<}tablename{\tt>} $>\!\!>$ {\tt<}filename{\tt>};
 \\ See also & print (\ref{substaprint}),
             table (\ref{substatable}),
             fill (\ref{substafill}),
-            fillexpression (\ref{substafillexpression}) \\ &
+            fillexpression (\ref{substafillexpression}), \\ &
             and the table\_ function (\ref{funtable})
 \end{tabular}\vspace{4mm}
 
@@ -3516,7 +3514,7 @@ file. The +f option will be ignored. There are two possibilities:
 \rightvitem{13.2cm}{The old contents of the file with name `filename' will be 
 overwritten\index{overwrite}.}
 
-\leftvitem{2.8cm}{$>>$ filename}
+\leftvitem{2.8cm}{$>\!\!>$ filename}
 \rightvitem{13.2cm}{The table will be appended\index{append} to the file 
 with the name `filename'. This allows the writing of more than one table to 
 a file.}
@@ -3624,7 +3622,7 @@ See also & symmetrize (\ref{substasymmetrize}), cyclesymmetrize
 
 \noindent The argument\index{rcyclesymmetrize} specifications are explained 
 in the section on the symmetrize\index{symmetrize} statement (see 
-\ref{substasymmetrize}). \vspace{4mm}
+\ref{substasymmetrize}). \medskip
 
 \noindent The action of this statement is to
 reverse\index{reverse cycle symmetrize}-cycle-symmetrize
@@ -3908,9 +3906,6 @@ file\index{file!store} (all global expressions that were stored in
 .store\index{.store} 
 instructions) to a file with the indicated name. If a list of expressions 
 is provided only those expressions are saved and the others are ignored. 
-Currently the contents of the save file are still 
-architecture\index{architecture dependent} dependent. 
-This will be changed in the future.
 
 \noindent Together with the load\index{load} statement (see 
 \ref{substaload}) the save statement provides a mechanism to transfer data 
@@ -3959,7 +3954,7 @@ Syntax & set {\tt<}set to be declared{\tt>}:{\tt<}element{\tt>} [{\tt<}more elem
 elements\index{elements}. Sets have a type of variables connected to them. 
 There can be sets of symbols, sets of functions, sets of vectors, sets of 
 indices and sets of numbers. For the purpose of sets tensors\index{tensor} 
-and tables\index{table} counts as functions.
+and tables\index{table} count as functions.
 
 \noindent There can also be mixed sets\index{set!mixed} of indices and 
 numbers. When a number could be either a fixed index or just a number FORM 
@@ -4044,7 +4039,7 @@ One of the applications of this statement is in the field of harmonic
 sums\index{harmonic sum}, 
 harmonic polylogarithms\index{harmonic polylogarithm} and multiple zeta 
 values\index{multiple zeta value}\index{MZV}. Its twin brother is the 
-stuffle statement\index{stuffle} (see \ref{substastuffle}.
+stuffle statement\index{stuffle} (see \ref{substastuffle}).
 
 When the option once is mentioned, only one pair will be contracted this 
 way. Without this option all occurrences of the function inside a term will 
@@ -4075,7 +4070,7 @@ This means that any bracket\index{bracket} information (see
 \ref{substabracket}) in the expression remains the way it was. Consult also 
 the nskip\index{nskip} statement in \ref{substanskip}. \vspace{4mm}
 
-\noindent Skipped expressions can be used in the expressions in the r.h.s. 
+\noindent Skipped expressions can be used in the expressions in the r.h.s.\ 
 of id\index{id} statements (see \ref{substaidentify}) or 
 multiply\index{multiply} statements (see \ref{substamultiply}), etc. 
 \vspace{10mm}

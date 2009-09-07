@@ -234,7 +234,7 @@ before making a very large run.
 \section{Checkpoints}
 \label{checkpoints}
 
-If\index{checkpoints} FORM programs have to run for a long time the 
+If\index{checkpoints} FORM programs have to run for a long time, the 
 reliability of the hardware(computer system or network) or of the software 
 infrastructure becomes a critical issue. Program 
 termination\index{termination} due to unforeseen failures may waste days or 
@@ -246,9 +246,9 @@ allows a recovery from a crash\index{crash}.
 
 The checkpoint mechanism can be activated or deactivated by {\tt 
 On}\index{on} and {\tt Off}\index{off} statements. If the user has 
-activated checkpoints recovery\index{recovery} data will be written to disk 
+activated checkpoints, recovery\index{recovery} data will be written to disk 
 at the end of a module execution. Options allow to influence the details of 
-the saving mechanism. If a program is terminated during execution FORM can 
+the saving mechanism. If a program is terminated during execution, FORM can 
 be restarted with the {\tt -R} option and it will continue its execution at 
 the last saved recovery point.
 
@@ -258,18 +258,18 @@ The syntax of the checkpoint activation and deactivation is
     Off checkpoint;
 \end{verbatim}
 
-If no options are given the recovery data will be saved at the end of every
+If no options are given, the recovery data will be saved at the end of every
 module\index{module}. If one gives a time\index{time}
 \begin{verbatim}
     On checkpoint <NUMBER>[<UNIT>];
 \end{verbatim}
 the saving will only be done if the given time has passed after the last 
-saving.Possible unit specifiers are {\tt s, m, h, d} and the number will 
+saving. Possible unit specifiers are {\tt s, m, h, d} and the number will 
 then be interpreted as seconds, minutes, hours, or days, respectively. The 
 default unit is seconds.
 
-If one needs to run a script\index{run a script} before or after the saving 
-one can specify a scriptfilename.
+If one needs to run a script\index{run a script} before or after the saving,
+one can specify a script filename.
 \begin{verbatim}
     On checkpoint runbefore="<SCRIPTFILENAME>";
     On checkpoint runafter="<SCRIPTFILENAME>";
@@ -283,14 +283,14 @@ already contains the proper path).
 The scripts receive the module number\index{module number} as an argument 
 (accessible as \$1 inside the script). The return value of the script 
 running before the saving will be interpreted. If the script returns an 
-error (non-zero return value) a message will be issued and the saving will 
+error (non-zero return value), a message will be issued and the saving will 
 be skipped. 
 
 The recovery data will be written to files named {\tt FORMrecv.*} with 
-various name extensions. If a file {\tt FORMrecv.tmp} exists FORM will not 
+various name extensions. If a file {\tt FORMrecv.tmp} exists, FORM will not 
 run unless one gives it the recovery option\index{recovery option}
 {\tt -R}. This is to prevent the unintentional loss of recovery data. If 
-FORM terminates successfully all the additional data files will be removed.
+FORM terminates successfully, all the additional data files will be removed.
 
 The additional recovery files will be created in the directory containing 
 the scratch files.  The extra files will occupy roughly as much space as 
@@ -298,7 +298,7 @@ the scratch files\index{scratch files} and the save\index{save files} and
 hide files\index{hide files} combined. This extra space must be made 
 available, of course.
 
-If recovery data exists and FORM is started with the {\tt -R} option FORM 
+If recovery data exists and FORM is started with the {\tt -R} option, FORM 
 will continue execution after the last module that successfully wrote the 
 recovery data. All the command line parameters that have been given to the 
 crashed FORM program\index{crashed FORM program} must also be given to the 

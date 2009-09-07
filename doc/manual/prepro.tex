@@ -307,8 +307,8 @@ looks for this procedure, first in its procedure
 buffers\index{buffer!procedure} (for procedures that were defined in the 
 regular text stream as explained under the \#procedure\index{\#procedure} 
 instruction), then it looks for a file by the name procname.prc in the 
-current directory, and if it still has not found the procedure it looks in 
-the directories indicated the path\index{path} variable in either the setup 
+current directory, and if it still has not found the procedure, it looks in 
+the directories indicated by the path\index{path} variable in either the setup 
 file or at the start of the program (see chapter \ref{setup} on the setup 
 file). Next it looks for the -p option in the command that started FORM 
 (see the chapter on running FORM). If this -p option has not been used FORM 
@@ -379,7 +379,7 @@ regular functions:
     .end
 \end{verbatim}
 We also see here that the rules about delayed substitution (see also the 
-\#define\index{\#define} instruction on page \ref{predefine}) apply. The 
+\#define\index{\#define} instruction in section \ref{predefine}) apply. The 
 use of `!b' cancels the delayed substitution that is asked for in the 
 definition of b.
 
@@ -654,7 +654,7 @@ the loop would be terminated. Afterwards, when the statement is being
 executed it would refer to a variable that does not exist any longer. 
 
 If one wants to make a loop over the externals of the brackets of an 
-expression only one needs to do some work. Assume we have the expression F 
+expression only, one needs to do some work. Assume we have the expression F 
 and we want to loop over the brackets in x and y:
 \begin{verbatim}
     L   FF = F;
@@ -1300,14 +1300,10 @@ instruction.
 
 \noindent Syntax:
 
-\#remove filename
-
-\noindent or
-
 \#remove $<$filename$>$
  
-\noindent See also write (\ref{prewrite}), append (\ref{preappend},
-            create (\ref{precreate}, close (\ref{preclose})
+\noindent See also write (\ref{prewrite}), append (\ref{preappend}),
+            create (\ref{precreate}), close (\ref{preclose})
 
 \noindent Deletes\index{\#remove} the named file from the system. Under 
 UNIX\index{UNIX} this would be equivalent to the instruction
@@ -1589,8 +1585,6 @@ no return value is specified, the value -1 will be returned.
 
 \#toexternal "formatstring" $<$,variables$>$
 
-\noindent See also
-
 \noindent Sends\index{\#toexternal} the output to the current external 
 command. The semantics of the \verb|"formatstring"| and the
 \verb|[,variables]| is the same as for the \#write\index{\#write} 
@@ -1611,7 +1605,7 @@ line symbol to the end of its output.
 \noindent See also define (\ref{predefine}), redefine 
 (\ref{preredefine})
 
-\noindent in which\index{\#undefine} name refers to the name of the 
+\noindent \index{\#undefine} Name refers to the name of the 
 preprocessor variable\index{variable!preprocessor} to be undefined. This 
 statement causes the given preprocessor variable to be removed from the 
 stack of preprocessor variables. If an earlier instance of this variable 
@@ -1651,10 +1645,10 @@ that it is placed between double quotes. It will contain text that will be
 printed, and it will contain special character sequences for special 
 actions. These sequences and the corresponding actions are:
 \begin{description}
-\item[$\backslash$ n] A newline\index{newline} character.
-\item[$\backslash$ t] A tab\index{tab} character.
-\item[$\backslash$ "] A double\index{double quote} quote character.
-\item[$\backslash$ b] A backslash\index{backslash} character.
+\item[$\backslash$n] A newline\index{newline} character.
+\item[$\backslash$t] A tab\index{tab} character.
+\item[$\backslash$"] A double\index{double quote} quote character.
+\item[$\backslash$b] A backslash\index{backslash} character.
 \item[\%\%] The character \%\index{\%}.
 \item[\%] If the last character in the string, it causes the omission of a 
 linefeed\index{linefeed} at the end of the printing. Note that if this 
@@ -1760,7 +1754,7 @@ It should be noted that the various constructions like
 \#procedure\index{\#procedure}/\#endprocedure\index{\#endprocedure}, 
 \#switch\index{\#switch}/\#endswitch\index{\#endswitch} and 
 \#if\index{\#if}/\#endif\index{\#endif} all 
-create a certain environment. These environments cannot be mixed. This 
+create a certain environment. These environments cannot be interweaved. This 
 means that one cannot make code of the type
 \begin{verbatim}
 #do i = 1,5
