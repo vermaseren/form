@@ -1,0 +1,169 @@
+\section{Overview of the source code}
+
+Here we will discuss general aspects of the source code, i.e. the files contained in the directory
+\C{sources}.
+
+\FORM\ is written in ANSI C. The code is split up in header files \C{*.h} and source files
+\C{*.c}. Files usually don't come in pairs of a header file with the declarations and a source file
+with the definitions, but instead most declarations are collected in a few headers. The declaration
+of function headers is done in \C{declare.h} for example. The most prominent exceptions are
+\C{parallel.h} and \C{minos.h}.
+
+Each file usually contains many hundred lines of code. To make the files more accessible, the code
+is structure by so--called folds. If you use the editor STedi, the code will be visualized
+correctly. If you use a vi--compatible editor, it is advisable to activate folds and set the
+foldmarkers to \C{set foldmarker=\#[,\#]}
+
+% Folds in Emacs anybody??
+
+\subsection{The header files}
+
+% INDENTATION HACK to be improved!
+$\quad\;\:$\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{declare.h} & Contains the declaration of all publicly relevant functions and also some macros. \\
+\C{form3.h} & Global settings and macro definitions like word sizes. It includes several different system
+header files depending on the computer's architecture.\\
+\C{fsizes.h} & Defines macros that determine the size and lauyout of \FORM's internal data like the
+size of the work bugger etc. \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{ftypes.h} & Contains preprocessor definitions of codes used in the internal representation of
+parsed input and expressions. \\
+\C{fwin.h} & Special settings for the windows OS. \\
+\C{inivar.h} & Contains the initialization of various global variables. \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{minos.h} &  Header to the minos.c source file. \\
+\C{parallel.h} & Header to the parallel.c source file. \\
+\C{portsignals.h} & Preprocessor definition of the OS signals \FORM\ can deal with. \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{structs.h} & Contains the global structs that contain almost all of \FORM's internal data. \\
+\C{unix.h} & Special definitions for Unix--like OS. \\
+\C{variable.h} & Some convinience preprocessor definitions to ease the access to global variables. \\
+\end{tabular}
+
+\subsection{The source files}
+
+% INDENTATION HACK to be improved!
+$\quad\;\:$\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{argument.c} & TODO \\
+\C{bugtool.c} & \ldots \\
+\C{checkpoint.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{comexpr.c} &  \\
+\C{compcomm.c} &  \\
+\C{compiler.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{compress.c} &  \\
+\C{comtool.c} &  \\
+\C{dollar.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{execute.c} &  \\
+\C{extcmd.c} &  \\
+\C{factor.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{findpat.c} &  \\
+\C{function.c} &  \\
+\C{if.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{index.c} &  \\
+\C{lus.c} &  \\
+\C{message.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{minos.c} &  \\
+\C{module.c} &  \\
+\C{mpi2.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{mpi.c} &  \\
+\C{names.c} &  \\
+\C{normal.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{opera.c} &  \\
+\C{optim.c} &  \\
+\C{parallel.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{pattern.c} &  \\
+\C{poly.c} &  \\
+\C{polynito.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{pre.c} &  \\
+\C{proces.c} &  \\
+\C{ratio.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{reken.c} &  \\
+\C{reshuf.c} &  \\
+\C{sch.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{setfile.c} &  \\
+\C{smart.c} &  \\
+\C{sort.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{startup.c} &  \\
+\C{store.c} &  \\
+\C{symmetr.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{tables.c} &  \\
+\C{threads.c} &  \\
+\C{token.c} &  \\
+\end{tabular}
+
+\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
+\C{tools.c} &  \\
+\C{unixfile.c} &  \\
+\C{wildcard.c} &
+\end{tabular}
+
+% mention groups of files relevant to certain tasks? E.g. all files concerned with preprocessor
+% actions, all files concerned with sorting, etc.
+
+\subsection{The global structs}
+
+\FORM\ keeps its data in several global structs. These structs are defined in \C{structs.h}. The
+various global variables contained in these structs are grouped according to their role in the
+program. There exist the structs \C{P\_const}, \C{M\_const}, \ldots. The global variable \C{A}
+defined in \C{inivar.h} is a struct containing several of these global structs. 
+
+% A with and without threads, AB
+% contents of ?\_const structs
+% access macros to these structs
+% initialization in startup.c
+% data type preprocessor definition, e.g. WORD, to be found in form3.h and unix.h or fwin.h.
+% ALLGLOBALS ALLPRIVATES
+% structs like FILE, etc. also in structs.h
+
+\subsection{Configuration and special files}
+
+% config.h
+% tform, parform, windows special files

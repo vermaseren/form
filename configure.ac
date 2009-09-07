@@ -178,6 +178,8 @@ AC_CONFIG_FILES([
 	doc/Makefile
 	doc/manual/Makefile
 	doc/manual/manual.tex
+	doc/devref/Makefile
+	doc/devref/devref.tex
 	doc/doxygen/Makefile
 	doc/doxygen/DoxyfileHTML
 	doc/doxygen/DoxyfileLATEX

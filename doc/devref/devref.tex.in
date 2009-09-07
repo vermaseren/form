@@ -1,0 +1,148 @@
+\documentclass[11pt,titlepage]{article}
+
+\makeatletter
+\renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
+\renewcommand*\l@subsection{\@dottedtocline{2}{1.5em}{3.0em}}
+\makeatother
+
+\usepackage{makeidx}
+
+\newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
+\newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
+
+\newcommand{\C}[1]{{\tt #1}}
+\newcommand{\LINK}[1]{{\tt #1}}
+
+\newcommand{\FORM}{{\sc FORM}}
+\newcommand{\TFORM}{{\sc TFORM}}
+\newcommand{\PARFORM}{{\sc ParFORM}}
+
+\makeindex
+
+\begin{document}
+
+\thispagestyle{empty}
+\title{\Huge FORM \\ \Large version
+@VERSION@
+\\ \huge Developer's reference manual}
+\date{
+\input{devrefdate.tex}
+}
+\author{J.A.M.Vermaseren et al.}
+\maketitle
+
+\clearemptydoublepage
+\emptypage
+\clearemptydoublepage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\clearemptydoublepage
+\tableofcontents
+\clearemptydoublepage
+\emptypage
+\clearemptydoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{Initial remarks}
+
+This document is intended for people who are interested in understanding how \FORM\ works internally,
+how to find and correct bugs in the source code, and how to extend \FORM\ by implementing new
+features.
+
+It is assumed, that the source code is available, either as a package or directly via CVS access to
+the \FORM\ repository. The directory with the \FORM\ code contains many files and several
+subdirectories. The actual sources of \FORM, \TFORM, and \PARFORM\ are all in the directory \C{sources}.
+Documentation can be found in the directory \C{doc}.
+
+\input{@srcdir@/source}
+
+\section{Other parts of the FORM distribution}
+
+% other directories (doc, check, older stuff)
+% autoconf infrastructure
+
+\section{Discussion of a typical \FORM\ run}
+
+%%% What does FORM do during a typical execution.
+%%% 
+%%% Which parts of FORM do exist, when do they come into action, and how to they
+%%% interact with each other.
+%%% 
+%%% Call-graph or structured code block diagrams
+
+
+\section{In--depth discussion of the functional parts of FORM}
+
+%%% Parser
+%%% 
+%%% Compiler
+%%% 
+%%% Internal input and term codings
+%%% 
+%%% Generator
+%%% 
+%%% Sorting
+%%% 
+%%% Term canonicalization
+%%% 
+%%% Pattern matching
+%%% 
+%%% Dollar variables
+%%% 
+%%% Streams
+%%% 
+%%% Tables
+%%% 
+%%% Store files
+%%% 
+%%% Recovery mechanism
+%%% 
+%%% ...
+
+
+\section{Autoconf build--system}
+
+%%% autoconf vs. pure Makefiles
+%%% configuration
+
+\input{@srcdir@/cvs}
+
+\section{How to implement new things?}
+
+%%% New options
+%%% 
+%%% New statements
+%%% 
+%%% What to do when new global variables are needed?
+%%% 
+%%% Checklist of things to do, what to update, ...
+%%% 
+%%% Doxygen
+%%% 
+%%% autoconf settings
+
+
+\section{Various notes}
+
+%%% 32/64bit issues
+%%% 
+%%% Windows issues
+
+
+\section{Tipps on how to debug FORM}
+
+%%% Tools: gdb, ..., internal facilities, and useful settings
+%%% 
+%%% Where to look when dealing with certain problems?
+
+
+\section{\TFORM}
+
+
+\section{\PARFORM}
+
+
+\printindex
+
+\end{document}

@@ -1,1 +1,1 @@
-SUBDIRS = doxygen manual
+SUBDIRS = doxygen manual devref
