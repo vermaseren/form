@@ -625,7 +625,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat :
+  	#] CoFormat : 
   	#[ CoKeep :
 */
 
@@ -691,11 +691,11 @@ int DoPrint(UBYTE *s, int par)
 	WORD numexpr, tofile = 0;
 	CBUF *C = cbuf + AC.cbufnum;
 	while ( *s == ',' ) s++;
-	if ( s[-1] == '+' || s[-1] == '-' ) s--;
-	if ( *s == '+' && ( s[1] == 'f' || s[1] == 'F' ) ) {
+/*	if ( s[-1] == '+' || s[-1] == '-' ) s--; */
+	if ( ( *s == '+' || *s == '-' ) && ( s[1] == 'f' || s[1] == 'F' ) ) {
 		t = s + 2; while ( *t == ' ' || *t == ',' ) t++;
 		if ( *t == '"' ) {
-			tofile = 1;
+			if ( *s == '+' ) tofile = 1;
 			s = t;
 		}
 	}
@@ -2489,6 +2489,7 @@ proper:		MesPrint("&Proper syntax for Trace4 is 'Trace4[,options],index;'");
 	}
 	s = t;
 	if ( FG.cTable[*s] == 1 ) {
+retry:
 		ParseNumber(numindex,s)
 		if ( *s != 0 ) {
 			MesPrint("&Last argument of Trace4 should be an index");
@@ -2520,6 +2521,10 @@ tests:	s = SkipAName(s);
 	}
 	else if ( type != -1 ) {
 		if ( type != CDUBIOUS ) {
+			if ( ( FG.cTable[*s] != 0 ) && ( *s != '[' ) ) {
+				if ( *s == '+' && FG.cTable[s[1]] == 1 ) { s++; goto retry; }
+				goto proper;
+			}
 			NameConflict(type,s);
 			type = MakeDubious(AC.varnames,s,&numindex);
 		}
@@ -2547,9 +2552,10 @@ int CoTraceN(UBYTE *s)
 	WORD numindex, one = 1;
 	int type;
 	if ( FG.cTable[*s] == 1 ) {
+retry:
 		ParseNumber(numindex,s)
 		if ( *s != 0 ) {
-			MesPrint("&TraceN should have a single index for its argument");
+proper:		MesPrint("&TraceN should have a single index for its argument");
 			return(1);
 		}
 		if ( numindex >= AM.OffsetIndex ) {
@@ -2578,6 +2584,10 @@ tests:	s = SkipAName(s);
 	}
 	else if ( type != -1 ) {
 		if ( type != CDUBIOUS ) {
+			if ( ( FG.cTable[*s] != 0 ) && ( *s != '[' ) ) {
+				if ( *s == '+' && FG.cTable[s[1]] == 1 ) { s++; goto retry; }
+				goto proper;
+			}
 			NameConflict(type,s);
 			type = MakeDubious(AC.varnames,s,&numindex);
 		}
@@ -2593,7 +2603,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoTraceN : 
+  	#] CoTraceN :
   	#[ CoChisholm :
 */
 
@@ -3139,7 +3149,12 @@ SwitchOff:
 		return(0);
 	}
 	AC.modmode = 0;
-	while ( FG.cTable[*inp] == 0 ) {
+	if ( *inp == '-' ) {
+		sign = -1;
+		inp++;
+	}
+	else {
+	  while ( FG.cTable[*inp] == 0 ) {
 		p = inp;
 		while ( FG.cTable[*inp] == 0 ) inp++;
 		c = *inp; *inp = 0;
@@ -3213,6 +3228,7 @@ badsyntax:
 			MesPrint("&Modulus statement with no value!!!");
 			return(1);
 		}
+	  }
 	}
 	p = inp;
 	if ( FG.cTable[*inp] != 1 ) {
@@ -3238,7 +3254,7 @@ badsyntax:
 }
 
 /*
-  	#] CoModulus :
+  	#] CoModulus : 
   	#[ CoRepeat :
 */
 
@@ -3322,6 +3338,7 @@ int DoBrackets(UBYTE *inp, int par)
 	*AT.BrackBuf = 0;
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
+	if ( *p == '+' || *p == '-' ) p++;
 	if ( p[-1] == ',' && *p ) p--;
 	if ( p[-1] == '+' && *p ) { biflag = 1;  if ( *p != ',' ) { *--p = ','; } }
 	else if ( p[-1] == '-' && *p ) { biflag = -1; if ( *p != ',' ) { *--p = ','; } }

@@ -809,7 +809,7 @@ int CoMultiply(UBYTE *inp)
 	int error = 0, RetCode;
 	mularray[2] = 0;		/* right multiply is default */
 	while ( *inp == ',' ) inp++;
-	if ( inp[-1] == '-' || inp[-1] == '+' ) inp--;
+/*	if ( inp[-1] == '-' || inp[-1] == '+' ) inp--; */
 	p = SkipField(inp,0);
 	if ( *p ) {
 		*p = 0;
@@ -835,7 +835,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply : 
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1455,7 +1455,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression :
+  	#] CoFillExpression : 
   	#[ CoPrintTable :
 
 	Syntax

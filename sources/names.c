@@ -867,7 +867,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol :
+  	#] CoSymbol : 
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -950,12 +950,14 @@ UBYTE *DoDimension(UBYTE *s, int *dim, int *dim4)
 	NAMETREE **oldtree = AC.activenames;
 	*dim4 = -NMIN4SHIFT;
 	if ( FG.cTable[*s] == 1 ) {
+retry:
 		ParseNumber(*dim,s)
 		if ( *dim >= (1 << (BITSINWORD-1)) ) goto illeg;
 		*dim4 = *dim - 4;
 		return(s);
 	}
-	else if ( ( s = SkipAName(s) ) != 0 ) {
+	else if ( ( (FG.cTable[*s] == 0 ) || ( *s == '[' ) )
+		&& ( s = SkipAName(s) ) != 0 ) {
 		AC.activenames = &(AC.varnames);
 		c = *s; *s = 0;
 		if ( ( ( type = GetName(AC.exprnames,t,&numsymbol,NOAUTO) ) != NAMENOTFOUND )
@@ -984,8 +986,11 @@ UBYTE *DoDimension(UBYTE *s, int *dim, int *dim4)
 			*dim4 = -numsymbol-NMIN4SHIFT;
 		}
 	} 
+	else if ( *s == '+' && FG.cTable[s[1]] == 1 ) {
+		s++; goto retry;
+	}
 	else {
-illeg:	MesPrint("&Illegal dimension specification. Should be number, symbol or symbol:symbol");
+illeg:	MesPrint("&Illegal dimension specification. Should be number >= 0, symbol or symbol:symbol");
 		return(0);
 	}
 	AC.activenames = oldtree;
@@ -994,7 +999,7 @@ illeg:	MesPrint("&Illegal dimension specification. Should be number, symbol or s
 }
 
 /*
-  	#] DoDimension : 
+  	#] DoDimension :
   	#[ CoDimension :
 */
 
@@ -1003,7 +1008,7 @@ int CoDimension(UBYTE *s)
 	s = DoDimension(s,&AC.lDefDim,&AC.lDefDim4);
 	if ( s == 0 ) return(1);
 	if ( *s != 0 ) {
-		MesPrint("&Argument of dimension statement should be number, symbol or symbol:symbol");
+		MesPrint("&Argument of dimension statement should be number >= 0, symbol or symbol:symbol");
 		return(1);
 	}
 	return(0);
