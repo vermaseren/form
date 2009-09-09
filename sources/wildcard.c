@@ -2269,11 +2269,11 @@ NoMnot:
 				case VECTOVEC:
 					if ( *w == newnumber ) goto NoMatch;
 				case VECTOSUB:
-					if ( *w - WILDOFFSET >= AM.OffsetIndex ) {
+					if ( *w - WILDMASK >= AM.OffsetIndex ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
-						k = *w - WILDOFFSET;
+						k = *w - WILDMASK;
 						while ( --nn >= 0 ) {
 							if ( *mm && ww[2] == k && ww[0] == type ) {
 								if ( type == VECTOVEC ) {
@@ -2302,11 +2302,11 @@ NoMnot:
 				case INDTOIND:
 					if ( *w == newnumber ) goto NoMatch;
 				case INDTOSUB:
-					if ( *w - WILDOFFSET >= AM.OffsetIndex ) {
+					if ( *w - WILDMASK >= AM.OffsetIndex ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
-						k = *w - WILDOFFSET;
+						k = *w - WILDMASK;
 						while ( --nn >= 0 ) {
 							if ( *mm && ww[2] == k && ww[0] == type ) {
 								if ( type == INDTOIND ) {
@@ -2335,7 +2335,7 @@ NoMnot:
 				case FUNTOFUN:
 					if ( *w == newnumber ) goto NoMatch;
 					if ( ( type == FUNTOFUN &&
-					( k = *w - WILDOFFSET ) > FUNCTION ) ) {
+					( k = *w - WILDMASK ) > FUNCTION ) ) {
 						WORD *mm = AT.WildMask;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
