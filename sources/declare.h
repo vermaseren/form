@@ -412,7 +412,7 @@ extern WORD   InFunction(WORD *,WORD *);
 extern WORD   IncLHS(VOID);
 extern WORD   IncRHS(WORD);
 extern VOID   IniGlob(VOID);
-extern VOID   IniLine(VOID);
+extern VOID   IniLine(WORD);
 extern WORD   IniVars(VOID);
 extern VOID   Init2(VOID);
 extern VOID   Initialize(VOID);

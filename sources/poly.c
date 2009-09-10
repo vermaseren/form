@@ -451,7 +451,7 @@ aborteer:
 }
 
 /*
- 		#] Polyno1Div :
+ 		#] Polyno1Div : 
  		#[ PolynoGCD :
 
 		GCD of two multivariate polynomials:
@@ -848,7 +848,7 @@ int PolynoWrite(WORD *poly)
 	while ( *poly ) {
 		j = *poly; m = AO.termbuf;
 		while ( --j >= 0 ) *m++ = *poly++;
-		if ( first ) { FiniLine(); IniLine(); }
+		if ( first ) { FiniLine(); IniLine(0); }
 		if ( WriteTerm(AO.termbuf,&lbrac,first,PRINTON,0) ) goto abowrite;
 		first = 0;
 	}

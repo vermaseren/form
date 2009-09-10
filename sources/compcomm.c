@@ -764,7 +764,13 @@ AllExpr:
 			s++;
 			if ( tolower(*s) == 'f' ) par |= PRINTLFILE;
 			else if ( tolower(*s) == 's' ) {
-				if ( ( par & 3 ) < 2 ) par |= PRINTONETERM;
+				if ( tolower(s[1]) == 's' ) {
+					if ( ( par & 3 ) < 2 ) par |= PRINTONEFUNCTION | PRINTONETERM;
+					s++;
+				}
+				else {
+					if ( ( par & 3 ) < 2 ) par |= PRINTONETERM;
+				}
 			}
 			else {
 illeg:			MesPrint("&Illegal option in (n)print statement");
@@ -777,7 +783,16 @@ illeg:			MesPrint("&Illegal option in (n)print statement");
 			s++;
 			if ( tolower(*s) == 'f' ) par &= ~PRINTLFILE;
 			else if ( tolower(*s) == 's' ) {
-				if ( ( par & 3 ) < 0 ) par &= ~PRINTONETERM;
+				if ( tolower(s[1]) == 's' ) {
+					if ( ( par & 3 ) < 2 ) par &= ~PRINTONEFUNCTION;
+					s++;
+				}
+				else {
+					if ( ( par & 3 ) < 2 ) {
+						par &= ~PRINTONETERM;
+						par &= ~PRINTONEFUNCTION;
+					}
+				}
 			}
 			else goto illeg;
 			s++;
@@ -817,7 +832,7 @@ illeg:			MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint : 
+  	#] DoPrint :
   	#[ CoPrint :
 */
 
@@ -2603,7 +2618,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoTraceN :
+  	#] CoTraceN : 
   	#[ CoChisholm :
 */
 

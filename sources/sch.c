@@ -33,7 +33,7 @@ static int noextralinefeed = 0;
 static int lowestlevel = 1;
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ schryf-Utilities :
  		#[ StrCopy :			UBYTE *StrCopy(from,to)
 */
@@ -45,7 +45,7 @@ UBYTE *StrCopy(UBYTE *from, UBYTE *to)
 }
 
 /*
- 		#] StrCopy :
+ 		#] StrCopy : 
  		#[ AddToLine :			VOID AddToLine(s)
 
 	Puts the characters of s in the outputline. If the line becomes
@@ -148,7 +148,7 @@ VOID AddToLine(UBYTE *s)
 }
 
 /*
- 		#] AddToLine :
+ 		#] AddToLine : 
  		#[ FiniLine :			VOID FiniLine()
 */
 
@@ -228,14 +228,14 @@ VOID FiniLine()
 }
 
 /*
- 		#] FiniLine :
- 		#[ IniLine :			VOID IniLine()
+ 		#] FiniLine : 
+ 		#[ IniLine :			VOID IniLine(extrablank)
 
 	Initializes the output line for the type of output
 
 */
 
-VOID IniLine()
+VOID IniLine(WORD extrablank)
 {
 	UBYTE *Out;
 	Out = AO.OutputLine;
@@ -252,11 +252,15 @@ VOID IniLine()
 	else
 		AO.OutSkip = 6;
 	*Out++ = ' ';
+	while ( extrablank > 0 ) {
+		*Out++ = ' ';
+		extrablank--;
+	}
 	AO.OutFill = Out;
 }
 
 /*
- 		#] IniLine :
+ 		#] IniLine : 
  		#[ LongToLine :			VOID LongToLine(a,na)
 
 	Puts a Long integer in the output line. If it is only a single
@@ -291,7 +295,7 @@ VOID LongToLine(UWORD *a, WORD na)
 }
 
 /*
- 		#] LongToLine :
+ 		#] LongToLine : 
  		#[ RatToLine :			VOID RatToLine(a,na)
 
 	Puts a rational number in the output line. The sign is ignored.
@@ -471,7 +475,7 @@ VOID RatToLine(UWORD *a, WORD na)
 }
 
 /*
- 		#] RatToLine :
+ 		#] RatToLine : 
  		#[ TalToLine :			VOID TalToLine(x)
 
 	Writes the unsigned number x to the output as a single token.
@@ -496,7 +500,7 @@ VOID TalToLine(UWORD x)
 }
 
 /*
- 		#] TalToLine :
+ 		#] TalToLine : 
  		#[ TokenToLine :		VOID TokenToLine(s)
 
 	Puts s in the output buffer. If it doesn't fit the buffer is
@@ -608,7 +612,7 @@ VOID TokenToLine(UBYTE *s)
 }
 
 /*
- 		#] TokenToLine :
+ 		#] TokenToLine : 
  		#[ CodeToLine :			VOID CodeToLine(name,number,mode)
 
 	Writes a name and possibly its number to output as a single token.
@@ -624,7 +628,7 @@ UBYTE *CodeToLine(WORD number, UBYTE *Out)
 }
 
 /*
- 		#] CodeToLine :
+ 		#] CodeToLine : 
  		#[ PrtTerms :			VOID PrtTerms()
 */
 
@@ -646,7 +650,7 @@ VOID PrtTerms()
 }
 
 /*
- 		#] PrtTerms :
+ 		#] PrtTerms : 
  		#[ WrtPower :
 */
 
@@ -682,7 +686,7 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 }
 
 /*
- 		#] WrtPower :
+ 		#] WrtPower : 
  		#[ PrintTime :
 */
 
@@ -696,7 +700,7 @@ void PrintTime()
 }
 
 /*
- 		#] PrintTime :
+ 		#] PrintTime : 
   	#] schryf-Utilities :
  	#[ schryf-Writes :
  		#[ WriteLists :			VOID WriteLists()
@@ -1081,7 +1085,7 @@ VOID WriteLists()
 }
 
 /*
- 		#] WriteLists :
+ 		#] WriteLists : 
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
@@ -1160,7 +1164,7 @@ CleanUp:
 }
 
 /*
- 		#] WriteArgument :
+ 		#] WriteArgument : 
  		#[ WriteSubTerm :		WORD WriteSubTerm(sterm,first)
 
 	Writes a single subterm field to the output line.
@@ -1452,7 +1456,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 }
 
 /*
- 		#] WriteSubTerm :
+ 		#] WriteSubTerm : 
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
@@ -1504,6 +1508,14 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 		{ RatToLine((UWORD *)t,n); first = 0; }
 	else first = 1;
 	while ( s < t ) {
+		if ( ( AO.PrintType & PRINTONEFUNCTION ) != 0 ) {
+			FiniLine();
+			if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+			else IniLine(3);
+		}
+/*
+ 		#[ NEWGAMMA :
+*/
 #ifdef NEWGAMMA
 		if ( *s == GAMMA ) {	/* String them up */
 			WORD *tt,*ss;
@@ -1535,6 +1547,9 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 		}
 		else
 #endif
+/*
+ 		#] NEWGAMMA : 
+*/
 		{
 			if ( *s >= FUNCTION && AC.funpowers > 0
 			&& functions[*s-FUNCTION].spec == 0 && ( AC.funpowers == ALLFUNPOWERS ||
@@ -1659,7 +1674,7 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 				 && !first ) {
 					WORD oldmode = AC.OutputMode;
 					AC.OutputMode = 0;
-					IniLine();
+					IniLine(0);
 					AC.OutputMode = oldmode;
 					AO.OutSkip = 7;
 
@@ -1683,7 +1698,7 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 */
 				}
 				else if ( AC.OutputMode == CMODE && !first ) {
-					IniLine();
+					IniLine(0);
 					if ( AO.FortFirst == 0 ) {
 						TokenToLine(AO.CurBufWrt);
 						TOKENTOLINE(" += ","+=")
@@ -1703,7 +1718,7 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 */
 				}
 				else if ( startinline == 0 ) {
-					IniLine();
+					IniLine(0);
 				}
 				AO.InFbrack = 0;
 				if ( ( *lbrac = n ) > 0 ) {
@@ -1766,7 +1781,7 @@ WrtTmes:				t = term;
 			 && !first ) {
 				WORD oldmode = AC.OutputMode;
 				AC.OutputMode = 0;
-				IniLine();
+				IniLine(0);
 				AC.OutputMode = oldmode;
 				AO.OutSkip = 7;
 				if ( AO.FortFirst == 0 ) {
@@ -1788,7 +1803,7 @@ WrtTmes:				t = term;
 */
 			}
 			else if ( AC.OutputMode == CMODE && !first ) {
-				IniLine();
+				IniLine(0);
 				if ( AO.FortFirst == 0 ) {
 					TokenToLine(AO.CurBufWrt);
 					TOKENTOLINE(" += ","+=")
@@ -1807,7 +1822,7 @@ WrtTmes:				t = term;
 				}
 */
 			}
-			else IniLine();
+			else IniLine(0);
 			*lbrac = 0;
 			first = 1;
 		}
@@ -1823,7 +1838,7 @@ WrtTmes:				t = term;
 				FiniLine();
 				AC.IsFortran90 = oldIsFortran90;
 				AC.OutputMode = 0;
-				IniLine();
+				IniLine(0);
 				AC.OutputMode = oldmode;
 				AO.OutSkip = 7;
 				TokenToLine(AO.CurBufWrt);
@@ -1847,7 +1862,7 @@ WrtTmes:				t = term;
 		}
 		else if ( AC.OutputMode == CMODE && !first ) {
 			FiniLine();
-			IniLine();
+			IniLine(0);
 			if ( AO.FortFirst == 0 ) {
 				TokenToLine(AO.CurBufWrt);
 				TOKENTOLINE(" += ","+=")
@@ -1868,20 +1883,20 @@ WrtTmes:				t = term;
 		}
 		else {
 			FiniLine();
-			IniLine();
+			IniLine(0);
 		}
 		AO.InFbrack = 0;
 	}
 	if ( WriteInnerTerm(term,first) ) goto WrtTmes;
 	if ( ( AO.PrintType & PRINTONETERM ) != 0 ) {
 		FiniLine();
-		IniLine();
+		IniLine(0);
 	}
 	return(0);
 }
 
 /*
- 		#] WriteTerm :
+ 		#] WriteTerm : 
  		#[ WriteExpression :	WORD WriteExpression(terms,ltot)
 
 	Writes a subexpression to output.
@@ -1915,7 +1930,7 @@ WORD WriteExpression(WORD *terms, LONG ltot)
 }
 
 /*
- 		#] WriteExpression :
+ 		#] WriteExpression : 
  		#[ WriteAll :			WORD WriteAll()
 
 		Writes all expressions that should be written
@@ -2020,7 +2035,7 @@ WORD WriteAll()
 				else {
 					if ( first ) {
 						FiniLine();
-						IniLine();
+						IniLine(0);
 					}
 				}
 				if ( ( prtf & PRINTONETERM ) != 0 ) first = 0;
@@ -2068,7 +2083,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll :
+ 		#] WriteAll : 
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
@@ -2156,7 +2171,7 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 		WORD *m;
 		GETSTOP(AO.termbuf,m);
 		if ( first ) {
-			IniLine();
+			IniLine(0);
 			startinline = alreadyinline;
 			AO.OutFill = AO.OutputLine + startinline;
 		}
@@ -2165,7 +2180,7 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 		first = 0;
 	}
 	if ( first ) {
-		IniLine();
+		IniLine(0);
 		startinline = alreadyinline;
 		AO.OutFill = AO.OutputLine + startinline;
 		TOKENTOLINE(" 0","0");
@@ -2200,7 +2215,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteOne :
+ 		#] WriteOne : 
   	#] schryf-Writes :
 */
 
