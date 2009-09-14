@@ -3,7 +3,7 @@
 \label{tablebase}
 
 The tablebase\index{tablebase} statement controls a 
-database\index{database}-like structure that allows FORM to control massive 
+database\index{database}-like structure that allows \FORM\ to control massive 
 amounts of data in the form of tables and
 table\index{table elements}\index{table} elements.
 The contents of a tablebase are formed by one or more table declarations 
@@ -16,7 +16,7 @@ statement is generated and compiled that is of the form
 The function tbl\_\index{tbl\_} is a special function to make a temporary 
 table substitution. It indicates that the corresponding element can be 
 found in a tablebase that has been opened. At a later stage one can tell 
-FORM to see which table elements are actually needed and then only those 
+\FORM\ to see which table elements are actually needed and then only those 
 will be loaded from the tablebase and compiled.
 
 Tablebases have a special internal structure and the right hand sides of 
@@ -46,7 +46,7 @@ make this into a tablebase one would use the program
     TableBase "no11.tbl" addto no11fill;
     .end
 \end{verbatim}
-The include\index{\#include} instruction makes that FORM reads and compiles 
+The include\index{\#include} instruction makes that \FORM\ reads and compiles 
 the table. Then the first tablebase statement creates a new tablebase file 
 by the name no11.tbl. If such a file existed already, the old version will 
 be lost. If one would like to add to an existing tablebase, one should use 
@@ -56,7 +56,7 @@ the table, making an index of all elements that have been filled and
 putting their right hand sides, in compressed form, into the tablebase. The 
 compression is based on the zlib\index{zlib} library, provided by Jean-loup 
 Gailly\index{Gailly!Jean-loup} and Mark Adler\index{Adler!Mark} (version 
-1.1.3, July 9th, 1998) and it strikes a nice balance between speed and 
+1.2.3, July 18, 2005) and it strikes a nice balance between speed and 
 compression ratio.
 
 The tablebase can be loaded in a different program as in
@@ -86,7 +86,7 @@ Let us assume we used the load option. Hence now an occurrence of a table
 element will be replaced by the stub\index{stub function}-function 
 tbl\_\index{tbl\_}. In order to have this replaced by the actual right hand 
 side of the original fill statement we have to do some more work. At a 
-given moment we have to make FORM look which elements are actually needed. 
+given moment we have to make \FORM\ look which elements are actually needed. 
 This is done with the TestUse\index{testuse} statement as in
 \begin{verbatim}
     TestUse no11fill;
@@ -108,7 +108,7 @@ elements. In that case the profit is obvious.
 
 At this point the proper elements are available inside the system, but 
 because we have two versions of the table (one the short version with 
-tbl\_, the other the complete elements) we have to tell FORM to apply 
+tbl\_, the other the complete elements) we have to tell \FORM\ to apply 
 the proper definitions with the `apply'\index{apply} statement.
 \begin{verbatim}
     Apply;
@@ -144,7 +144,7 @@ construction like:
 It will stay in the loop until there are no more tbl\_ functions to be 
 resolved.
 
-The complete syntax (more is planned):
+\medskip\noindent The complete syntax (more is planned):
 
 %--#[ addto :
 
@@ -191,11 +191,7 @@ spaces after a parenthesis are seen as irrelevant.
 
 \noindent Syntax:
 
-Apply;
-Apply number;
-
-Apply tablename(s);
-Apply number tablename(s);
+Apply [number] [tablename(s)];
 
 \noindent See also testuse (\ref{tbltestuse}) and use (\ref{tbluse}).
 
@@ -273,7 +269,7 @@ only the tables that are mentioned have their elements treated this way.
 \noindent The tablebase must of course be open for its contents to be 
 available.
 
-\noindent If one would like FORM to only see what elements are available 
+\noindent If one would like \FORM\ to only see what elements are available 
 and load that information one should use the load\index{load} option.
 
 %--#] enter :
@@ -356,11 +352,11 @@ TableBase "file.tbl" open;
 
 \noindent This opens\index{open} an existing file with the indicated name. 
 It is assumed that the file has been created\index{create} with the 
-`create' option in a previous FORM program. It gives the user access to the 
+`create' option in a previous \FORM\ program. It gives the user access to the 
 contents of the tablebase. In addition it allows the user to add to its 
 contents.
 
-\noindent Just like with other files, FORM will look for the file in in 
+\noindent Just like with other files, \FORM\ will look for the file in in 
 current directory and in all other directories mentioned in the environment 
 variable `FORMPATH'\index{FORMPATH} (see for instance the 
 \#call\index{\#call} (\ref{precall}) and the \#include\index{\#include} 
@@ -386,7 +382,7 @@ in a stub\index{stub} function tbl\_\index{tbl\_}. If so, this indicates
 that these elements must be compiled from a tablebase, provided this has 
 not been done already. The compilation will have to be done at a time, 
 specified by the user. This can be done with the use\index{use} option. All 
-this statement does is set some flags in the internals of FORM for the 
+this statement does is set some flags in the internals of \FORM\ for the 
 table elements that are encountered in the currently active expressions.
 
 %--#] testuse :

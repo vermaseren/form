@@ -30,6 +30,7 @@
 
 \def\FORM{{\sc FORM}}
 \def\TFORM{{\sc TFORM}}
+\def\ParFORM{{\sc ParFORM}}
 \def\Andre#1{{\sl #1}}
 \def\Remark#1{{\sl #1}}
 \def\Tr{{\rm Tr}}

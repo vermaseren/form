@@ -6,9 +6,9 @@
 
 The preprocessor\index{preprocessor} is a program segment that reads and 
 edits\index{edit} the input, after which the processed input is offered to 
-the compiler\index{compiler} part of FORM. When a module\index{module} 
+the compiler\index{compiler} part of \FORM. When a module\index{module} 
 instruction is encountered by the preprocessor, the compilation is halted 
-and the module is executed. The compiler buffers are cleared and FORM 
+and the module is executed. The compiler buffers are cleared and \FORM\  
 will continue with the next module. The preprocessor acts almost purely on 
 character strings. As such it does not know about the algebraic properties 
 of the objects it processes. Additionally the preprocessor also filters out 
@@ -20,7 +20,7 @@ in a line. After this there are several possibilities.
 \begin{description}
 \item[\#:]\index{\#:} Special syntax for setup parameters at the beginning 
 of the program. See the chapter on the setup parameters.
-\item[\#-, \#+]\index{\#-}\index{\#+} Turns the listing of the input off or 
+\item[\#$-$, \#$+$]\index{\#$-$}\index{\#$+$} Turns the listing of the input off or 
 on.
 \item[\#name]\index{\#name} Preprocessor command. The syntax of the various 
 commands will be discussed below.
@@ -47,17 +47,17 @@ characters. No interpretation is given to these strings. The
 backquote/quote pairs can be nested. Hence `a`i'r' will result in the 
 preprocessor variable `i' to be substituted first. If this happens to be 
 the string "2", the result after the first substitution would be `a2r' and 
-then FORM would look for its string value.
+then \FORM\ would look for its string value.
 
-The use of the backquotes is different from the earlier versions of FORM. 
+The use of the backquotes is different from the earlier versions of \FORM. 
 There the preprocessor variables would be enclosed in a pair of quotes and 
-no nesting\index{nesting} was possible. FORM still understands this old 
+no nesting\index{nesting} was possible. \FORM\ still understands this old 
 notation because it does not lead to ambiguities. The user is however 
 strongly advised to use the new notation with the backquotes, because in 
 future versions the old\index{old notation} notation may not be recognized 
 any longer.
 
-\noindent FORM has a number of built in preprocessor variables. They are:
+\noindent \FORM\ has a number of built in preprocessor variables. They are:
 
 \noindent \begin{tabular}{ll}
 VERSION\_     &\index{VERSION\_} The current version as the 3 in 3.2.\\
@@ -70,7 +70,7 @@ CMODULE\_     &\index{CMODULE\_} The number of the current module.\\
 SHOWINPUT\_   &\index{SHOWINPUT\_} If input listing is on: 1, if off: 0.
 \end{tabular}
 
-\noindent If FORM cannot find a preprocessor variable, because it has 
+\noindent If \FORM\ cannot find a preprocessor variable, because it has 
 neither been defined by the user, nor is it one of the built in variables, 
 it will look in the systems environment\index{environment} to see whether 
 there is an environment variable by that name. If this is the case its 
@@ -83,7 +83,7 @@ string value will be substituted.
 
 Sometimes a preprocessor\index{preprocessor variable!numeric} variable 
 should be interpreted as a number and some arithmetic\index{arithmetic} 
-should be done with it. For this FORM is equipped with what is called the 
+should be done with it. For this \FORM\ is equipped with what is called the 
 preprocessor calculator\index{calculator}. When the input reading device 
 encounters a left curly\index{curly bracket} bracket\index{bracket!curly} 
 \verb:{:, it will read till the matching right curly bracket \verb:}: and 
@@ -153,7 +153,7 @@ With the comma the preprocessor will leave this untouched, and hence now
 the set is passed properly.
 
 Good use of the preprocessor calculator can make life much easier for 
-FORM. For example the following statements
+\FORM. For example the following statements
 \begin{verbatim}
     id  f(`i') = 1/(`i'+1);
     id  f(`i') = 1/{`i'+1};
@@ -212,11 +212,11 @@ First will be minus.
 %\item[,\ ,]\index{.@$,\cdots,$} Repetitions will be separated by comma's.
 %\item[:\ :]\index{.@$:\cdots:$} Repetitions will be separated by {\it single} dots.
 \end{description}
-For such a pair of operators FORM will inspect the patterns\index{pattern} 
+For such a pair of operators \FORM\ will inspect the patterns\index{pattern} 
 and see whether the differences between the two patterns are just numbers. 
 If the differences are numbers and the absolute value of the difference of 
 each matching pair is always the same (a difference of zero is allowed too; 
-it leads to no action for the pair), then FORM will expand the pattern, 
+it leads to no action for the pair), then \FORM\ will expand the pattern, 
 running from the first to the last in increments of one. For each pair the 
 counter can either run up or run down, depending on whether the number in 
 the first pattern is greater or less than the number in the second pattern. 
@@ -242,7 +242,7 @@ question mark after them to indicate that they are wildcards:
 \begin{verbatim}
     id  f(a1?,...,a4?) = g(a1,...,a4,a1+...+a4);
 \end{verbatim}
-This construction did not exist in earlier versions of FORM (version 1 and 
+This construction did not exist in earlier versions of \FORM\ (version 1 and 
 version 2). There one needed the \#do\index{\#do} instruction for many of 
 the above constructions, creating code that was very hard to read. The 
 \verb:...: operator should improve the readability of the programs very 
@@ -259,7 +259,7 @@ much.
 \#append $<$filename$>$
  
 \noindent See also write (\ref{prewrite}),
-            close (\ref{preclose}), create (\ref{precreate},
+            close (\ref{preclose}), create (\ref{precreate}),
             remove (\ref{preremove})
 
 \noindent Opens\index{\#append} the named file for writing. The file will 
@@ -302,7 +302,7 @@ a \#switch\index{\#switch}/\#endswitch construction.
 (\ref{preendprocedure})
 
 \noindent This instruction\index{\#call} calls the 
-procedure\index{procedure} with the name procname. The result is that FORM 
+procedure\index{procedure} with the name procname. The result is that \FORM\ 
 looks for this procedure, first in its procedure 
 buffers\index{buffer!procedure} (for procedures that were defined in the 
 regular text stream as explained under the \#procedure\index{\#procedure} 
@@ -310,14 +310,14 @@ instruction), then it looks for a file by the name procname.prc in the
 current directory, and if it still has not found the procedure, it looks in 
 the directories indicated by the path\index{path} variable in either the setup 
 file or at the start of the program (see chapter \ref{setup} on the setup 
-file). Next it looks for the -p option in the command that started FORM 
-(see the chapter on running FORM). If this -p option has not been used FORM 
+file). Next it looks for the -p option in the command that started \FORM\ 
+(see the chapter on running \FORM). If this -p option has not been used \FORM\ 
 will see whether there is an environment variable by the name 
 FORMPATH\index{FORMPATH}. The directories indicated there will be searched 
-for the file procname.prc. If FORM cannot find the file, there will be an 
+for the file procname.prc. If \FORM\ cannot find the file, there will be an 
 error message and execution will be stopped immediately.
 
-Once the procedure has been located, FORM reads the whole file and then 
+Once the procedure has been located, \FORM\ reads the whole file and then 
 determines whether the number of parameters is identical in the 
 \#call\index{\#call} instruction and the \#procedure\index{\#procedure} 
 instruction. A difference is a fatal error.
@@ -328,7 +328,7 @@ backslash\index{backslash} character (\verb:\:). If a string should contain
 a linefeed\index{linefeed}, one should `escape' this linefeed by putting a 
 backslash and continue on the next line.
 
-Before version 3 of FORM the syntax was different. The parentheses 
+Before version 3 of \FORM\ the syntax was different. The parentheses 
 were curly brackets and the separators the symbol \verb:|:. This was made 
 to facilitate the use of strings that might contain commas. In practise 
 however, this turned out to be far from handy. In addition the new 
@@ -344,7 +344,7 @@ and changed into
 \end{verbatim}
 Because there are many advantages to the preprocessor calculator treating 
 the parameters of the procedures before they are called (in the older 
-versions it did not do this), the notation has been changed. FORM still 
+versions it did not do this), the notation has been changed. \FORM\ still 
 understands the old notation, provided that there is no conflict with the 
 preprocessor calculator. Hence
 \begin{verbatim}
@@ -354,7 +354,7 @@ preprocessor calculator. Hence
     #call test(1,a)
 \end{verbatim}
 are all legal and give the same result, but only the last notation will 
-work in future versions of FORM.
+work in future versions of \FORM.
 
 Nowadays also the use of the argument field wildcard (see chapter 
 \ref{pattern} on pattern matching) is allowed as in the 
@@ -428,7 +428,7 @@ matching \#break instruction, or until the matching
 
 \noindent This instruction closes\index{\#close} the file\index{file!close} 
 by the given name, if such a file had been opened by the previous 
-\#write\index{\#write} instruction. Normally FORM closes all such files at 
+\#write\index{\#write} instruction. Normally \FORM\ closes all such files at 
 the end of execution. Hence the user would not have to worry about this. 
 The use of a subsequent \#write instruction with the same file name will 
 remove the old contents and hence start basically a new file. There are 
@@ -858,9 +858,7 @@ variables by their contents.
 
 \noindent Syntax:
 
-\#external $<$"prevar"$>$ systemcommand
-
-\noindent See also
+\#external ["prevar"] systemcommand
 
 \noindent Starts the command\index{\#external} in the background, 
 connecting to its standard\index{standard output}\index{standard input} 
@@ -889,28 +887,28 @@ deal with the current external command.
 
 \noindent Syntax:
 
-\#fromexternal$<$+$>$$<$-$>$ $<$"$<$\$$>$varname",$<$maxlength$>$$>$
+\#fromexternal[$+-$] ["[\$]varname" [maxlength]]
 
 \noindent Appends\index{\#fromexternal} the output of the current external 
-command to the FORM program. The semantics differ depending on the optional 
-arguments. After the external command sends the prompt\index{prompt}, FORM 
+command to the \FORM\ program. The semantics differ depending on the optional 
+arguments. After the external command sends the prompt\index{prompt}, \FORM\ 
 will continue with a next line after the line containing the \#fromexternal 
-instruction. The prompt string is not appended. The optional + or - sign 
+instruction. The prompt string is not appended. The optional $+$ or $-$ sign 
 after the name has influence on the listing of the content. The varieties 
 are:
                                                            
-\#fromexternal$<$+$>$$<$-$>$
+\#fromexternal[$+-$]
 
 \noindent The semantics is similar to the \#include\index{\#include} 
 instruction but folders are not supported. 
 
-\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname"
+\#fromexternal[$+-$] "[\$]varname"
 
 \noindent is used to read the text from the running external command into 
 the preprocessor variable varname, or into the dollar variable \$varname if 
 the name of the variable starts with the dollar sign ``\$''.
 
-\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname" maxlength
+\#fromexternal[$+-$] "[\$]varname" maxlength
 
 \noindent is used to read the text from the running external command into 
 the preprocessor (or dollar) variable varname. Only the first maxlength 
@@ -1053,30 +1051,30 @@ instruction behaves like the \#if\index{\#if} instruction.
 
 \noindent Syntax:
 
-\#include[-+] filename
+\#include[$-+$] filename
 
-\#include[-+] filename \# foldname
+\#include[$-+$] filename \# foldname
 
 \noindent The named\index{\#include} file is searched for and opened. 
 Reading\index{reading} continues from this file until its end. Then the 
 file will be closed and reading continues after the \#include instruction. 
-If a foldname\index{foldname} is specified, FORM will only read the 
+If a foldname\index{foldname} is specified, \FORM\ will only read the 
 contents of the first fold\index{fold} it encounters in the given file that 
 has the specified name.
 
 The file is searched for in the current directory, then in the path 
 specified in the path\index{path} variable in the setup file or at the 
 beginning of the program (see chapter \ref{setup} on the setup file). Next 
-it will look in the path specified in the -p option when FORM is started 
-(see the chapter on running FORM). If this option has not been used, FORM 
+it will look in the path specified in the -p option when \FORM\ is started 
+(see the chapter on running \FORM). If this option has not been used, \FORM\ 
 will look for the environment variable FORMPATH\index{FORMPATH}. If this 
-variable exists it will be interpreted as a path and FORM will search the 
+variable exists it will be interpreted as a path and \FORM\ will search the 
 indicated directories for the given file. If none is found there will be an 
 error message and execution will be halted.
 
-The optional + or - sign after the name has influence on the listing of the 
-contents of the file. A - sign will have the effect of a \#- instruction 
-during the reading of the file. A plus sign will have the effect of a \#+ 
+The optional $+$ or $-$ sign after the name has influence on the listing of the 
+contents of the file. A $-$ sign will have the effect of a \#$-$ instruction 
+during the reading of the file. A plus sign will have the effect of a \#$+$ 
 instruction during the reading of the file.
 
 A fold is defined by a starting line of the format:
@@ -1090,9 +1088,9 @@ and a closing line of the format
 in which the first character is actually the current 
 commentary\index{commentary} character (see the \#commentchar instruction). 
 All lines between two such lines are considered to be the contents of the 
-fold. If FORM decides that it needs this fold, it will read these contents 
+fold. If \FORM\ decides that it needs this fold, it will read these contents 
 and put them in its input stream. More about folds is explained in the 
-manual of the STedi editor which is also provided in the FORM 
+manual of the STedi editor which is also provided in the \FORM\ 
 distribution.
 
 %--#] include :
@@ -1137,10 +1135,10 @@ should use the \#write\index{\#write} instruction.
 
 \noindent This\index{\#pipe} forces a system command to be executed by the 
 operating system. The complete string (excluding initial blanks or tabs) is 
-passed to the operating system. Next FORM will intercept the output of 
+passed to the operating system. Next \FORM\ will intercept the output of 
 whatever is produced and read that as input. Hence, whenever output is 
-produced FORM will take action, and it will wait when no output is ready. 
-After the command has been finished, FORM will continue with the next line. 
+produced \FORM\ will take action, and it will wait when no output is ready. 
+After the command has been finished, \FORM\ will continue with the next line. 
 This instruction has only been implemented on systems that support 
 pipes\index{pipe}. This is mainly UNIX\index{UNIX} and derived systems. 
 Note that this instruction also introduces operating system dependent code. 
@@ -1204,10 +1202,10 @@ problems occurs there too, as would be the case with recursions) the new
 definition is used, and it is released again when control returns from the 
 procedure. After that the old definition will be in effect again.
 
-If the procedure is included in the regular input stream, FORM will read 
+If the procedure is included in the regular input stream, \FORM\ will read 
 the text of the procedure until the \#endprocedure\index{\#endprocedure} 
 instruction and store it in a special buffer. When the procedure is called, 
-FORM will read the procedure from this buffer, rather than from a file. In 
+\FORM\ will read the procedure from this buffer, rather than from a file. In 
 systems where file transfer is slow (very busy server with a slow network) 
 this may be faster, especially when many small procedures are called.
 
@@ -1235,7 +1233,7 @@ housekeeping.
 \noindent See also \#call (\ref{precall})
 
 \noindent The default\index{\#procedureextension} extension of procedures 
-is .prc\index{.prc} in FORM. It is however possible that this clashes with 
+is .prc\index{.prc} in \FORM. It is however possible that this clashes with 
 the extensions used by other programs like the Grace\index{Grace} system 
 (Yuasa et al, Prog. Theor. Phys. Suppl. 138(2000)18 ). In that case it is 
 possible to change the extension of the procedures in the current program. 
@@ -1261,7 +1259,7 @@ instruction (page \ref{instrclear}), whatever comes first.
 
 \noindent Syntax:
 
-\#prompt $<$newprompt$>$
+\#prompt [newprompt]
 
 \noindent Sets a new prompt\index{\#prompt} for the current external 
 command (if present) and all further (newly started) external commands.
@@ -1328,7 +1326,7 @@ be used.
 
 \noindent Syntax:
 
-\#rmexternal $<$n$>$
+\#rmexternal [n]
 
 \noindent Terminates\index{\#rmexternal} an external command. The integer 
 number n must be either the descriptor of a running external command, or 0.
@@ -1381,7 +1379,7 @@ Possible attributes are:
 \begin{description}
 \item[kill\index{kill}]
 specifies the signal to be sent to the external command 
-either before the termination of the FORM program or by the preprocessor 
+either before the termination of the \FORM\ program or by the preprocessor 
 instruction \verb|#rmexternal|. By default this is 9 (
 SIGKILL\index{SIGKILL signal}). Number 0 means that no signal will be sent.
 \item[killall\index{killall}] Indicates whether the kill signal will be sent to the whole 
@@ -1424,7 +1422,7 @@ starts a command in the subshell within the current process group with
 default attributes kill=9 and killall=true.
 The instruction \#rmexternal\index{\#rmexternal} sends the
 KILL\index{KILL signal} signal to the wholegroup, which means that also 
-FORM itself will be killed.
+\FORM\ itself will be killed.
 
 %--#] setexternalattr :
 %--#[ show :
@@ -1464,9 +1462,9 @@ Time =       0.00 sec    Generated terms =          6
                          Bytes used      =        102
 \end{verbatim}
 We see that the variable MAX has indeed the value 3. There are six 
-additional variables which have been defined by FORM itself. Hence the 
+additional variables which have been defined by \FORM\ itself. Hence the 
 trailing underscore which cannot be used in user defined names. The current 
-version of FORM is shown in the variable VERSION\_\index{VERSION\_} and the 
+version of \FORM\ is shown in the variable VERSION\_\index{VERSION\_} and the 
 name of the current program is given in the variable NAME\_\index{NAME\_}. 
 For more about the system defined preprocessor variables see 
 \ref{preprovariables}.
@@ -1503,7 +1501,7 @@ code for a number of cases that are distinguished by the value of a
 preprocessor variable. In the past this was only possible with the use of 
 folds\index{folds} in the \#include\index{\#include} instruction and the 
 corresponding include file\index{file!include} (see \ref{preinclude}). 
-Because few people have an editor like STedi (see the FORM distribution 
+Because few people have an editor like STedi (see the \FORM\ distribution 
 site) that can handle the folds in a proper way, it was judged that the 
 more common switch mechanism might be friendlier. The proper syntax of a 
 complete construction would be
@@ -1528,7 +1526,7 @@ fall-through\index{fall-through}.
 This is a way in which one can have the same statements for several cases. 
 The \#default instruction is not mandatory.
 
-FORM will look for the first case of which the string matches the string 
+\FORM\ will look for the first case of which the string matches the string 
 in the \#switch instruction. Input reading (control flow) starts after this 
 \#case instruction, and continues till either a \#break instruction is 
 encountered, or the \#endswitch is met. After that input reading continues 
@@ -1556,7 +1554,7 @@ brackets\index{bracket} of different types).
 
 \noindent This forces a system\index{\#system} command to be executed by 
 the operating system. The complete string (excluding initial blanks or 
-tabs) is passed to the operating system. FORM will then wait until control 
+tabs) is passed to the operating system. \FORM\ will then wait until control 
 is returned. Note that this instruction introduces operating system 
 dependent code. Hence it should be used with great care.
 
@@ -1568,11 +1566,11 @@ dependent code. Hence it should be used with great care.
 
 \noindent Syntax:
 
-\#terminate \verb:<:exit code\verb:>:
+\#terminate [exitcode]
  
-\noindent This forces FORM to terminate\index{\#terminate} execution 
+\noindent This forces \FORM\ to terminate\index{\#terminate} execution 
 immediately. If an exit code is given (an integer number), this will be the 
-return value that FORM gives to the shell program from which it was run. If 
+return value that \FORM\ gives to the shell program from which it was run. If 
 no return value is specified, the value -1 will be returned.
 
 %--#] terminate :
@@ -1632,7 +1630,7 @@ that is used as a loop parameter in the \#do\index{\#do} instruction.
 
 \noindent If there\index{\#write} is no file specified, the output will be 
 to the regular output\index{output channel} channel. If a file is 
-specified, FORM will look whether this file is open already. If it is open 
+specified, \FORM\ will look whether this file is open already. If it is open 
 already, the specified output will be added to the file. If it is not open 
 yet it will be opened. Any previous contents will be lost. This would be 
 equivalent to using the \#create\index{\#create} instruction first. If 
@@ -1674,10 +1672,10 @@ occurrence of \%s will look for the next variable in the list.
 list of variables. The file is searched for in the current directory, then 
 in path indicated by the path variable in the setup file or at the 
 beginning of the file (see chapter \ref{setup} on the setup file), then in 
-the path specified in the -p option when FORM is started (see the chapter 
-on running FORM). If this option has not been used, FORM will look for the 
+the path specified in the -p option when \FORM\ is started (see the chapter 
+on running \FORM). If this option has not been used, \FORM\ will look for the 
 environment variable FORMPATH\index{FORMPATH}. If this variable exists it 
-will be interpreted as a path and FORM will search the indicated 
+will be interpreted as a path and \FORM\ will search the indicated 
 directories for the given file. If none is found there will be an error 
 message and execution will be halted.
 \end{description}
@@ -1757,25 +1755,25 @@ It should be noted that the various constructions like
 create a certain environment. These environments cannot be interweaved. This 
 means that one cannot make code of the type
 \begin{verbatim}
-#do i = 1,5
- #if ( `MAX' > `i' )
-    id f(`i') = g`i'(x);
-#enddo
- some statements
-#do i = 1,5
- #endif
-#enddo
+     #do i = 1,5
+      #if ( `MAX' > `i' )
+         id f(`i') = g`i'(x);
+     #enddo
+      some statements
+     #do i = 1,5
+      #endif
+     #enddo
 \end{verbatim}
 whether this could be considered useful or not. Similarly one cannot make a 
 construction that might be very useful:
 \begin{verbatim}
-#do i = 1,5
-  #do j`i' = 1,3
-#enddo
-  some statements
-#do i = 1,5
-  #enddo
-#enddo
+     #do i = 1,5
+       #do j`i' = 1,3
+     #enddo
+       some statements
+     #do i = 1,5
+       #enddo
+     #enddo
 \end{verbatim}
 Currently the syntax does not allow this. This may change in the future.
 

@@ -3,7 +3,7 @@
 \label{functions}
 
 \noindent Functions\index{function} are objects that can have arguments. 
-There exist several types of functions in FORM. First there is the 
+There exist several types of functions in \FORM. First there is the 
 distinction between commuting\index{commuting} and 
 noncommuting\index{noncommuting} functions. Commuting functions commute 
 with all other objects. This property is used by the normalization routines 
@@ -20,7 +20,7 @@ indices or vectors for their arguments. If an argument is a vector, it is
 assumed that this vector is there as the result of an index contraction. 
 Tables are functions with automatic substitution rules. A table must have 
 at least one table\index{table index} index\index{index!table}. Each time 
-during normalization FORM will check whether an instance of a table can be 
+during normalization \FORM\ will check whether an instance of a table can be 
 substituted. This means that undefined table elements will slow the program 
 down somewhat.
 
@@ -59,7 +59,7 @@ complete set of arguments. The set can be empty. Argument field wildcards
 have a name that starts with a question mark followed by a name. They do 
 not have to be declared as there cannot be confusion.}
 
-\noindent In addition to the above syntax FORM knows a number of special 
+\noindent In addition to the above syntax \FORM\ knows a number of special 
 functions with well defined properties. All these functions have a name 
 that ends in an underscore. In addition the names of these built in objects 
 are case insensitive. This means for instance that the factorial function 
@@ -68,12 +68,12 @@ the user considers more readable. The built in functions are:
 
 \section{abs\_}\index{abs\_}\index{function!abs\_}
 \label{funabs}
-\noindent If one argument which is numerical it evaluates into the 
+\noindent With one argument that is numerical it evaluates into the 
 absolute value of the argument.
 
 \section{bernoulli\_}\index{bernoulli\_}\index{function!bernoulli\_}
 \label{funbernoulli}
-\noindent If it has one nonzero integer argument n it evaluates into 
+\noindent If it has one nonzero integer argument n, it evaluates into 
 the n-th coefficient in the power series expansion of $x/(1-e^{-x})$.
 
 \section{binom\_}\index{binom\_}\index{function!binom\_}
@@ -109,14 +109,14 @@ tensor built up from products of kronecker delta's. Each term in this
 symmetric combination is normalized to one. In principle there are 
 $n!/(2^{n/2}(n/2)!$ terms in this combination. The profit comes when some 
 or all the indices are contracted with vectors and some of these vectors 
-are identical. In that case FORM will use combinatorics to generate only 
+are identical. In that case \FORM\ will use combinatorics to generate only 
 different terms, each with the proper prefactor. This can result in great 
 time and space savings.
 
 \section{delta\_}\index{delta\_}\index{function!delta\_}
 \label{fundelta}
-\noindent If one argument and it is numerical the result is one if 
-the argument is zero and zero otherwise. If two arguments, the result is 
+\noindent With one numerical argument the result is one if 
+the argument is zero and zero otherwise. With two arguments the result is 
 one if the arguments are numerical and identical. If they are numerical and 
 they differ the result is zero. In all other cases nothing is done.
 
@@ -170,7 +170,7 @@ arguments. Example:
        + f1(x3,x4)*f2(x1,x2)
       ;
 \end{verbatim}
-When adjacent x-arguments are identical FORM uses combinatorics to avoid 
+When adjacent x-arguments are identical \FORM\ uses combinatorics to avoid 
 generating more terms than necessary.
 
 
@@ -213,7 +213,7 @@ the maximum allowable number an error will result.
 an expression\index{expression} the function is replaced by the common 
 factor in the terms of that \verb:$:-variable or expression. This common 
 factor consists in the first place of all symbolic objects that occur in 
-all terms. In addition the numerical factor consists of the QCD\index{QCD} 
+all terms. In addition the numerical factor consists of the GCD\index{GCD} 
 of all numerators and the LCM\index{LCM} of all denominators. Hence if the 
 \verb:$:-variable or expression is divided by the result of factorin\_ all 
 coefficients become integer.
@@ -294,7 +294,7 @@ In all other cases nothing is done.
 \section{invfac\_}\index{invfac\_}\index{function!invfac\_}
 \label{funinvfac}
 \noindent One divided by the factorial\index{factorial} function. If it has 
-a single nonzero integer argument n it is replaced by 1/n! but if this 
+a single nonzero integer argument n, it is replaced by 1/n!, but if this 
 results in a number bigger than the maximum allowable number an error will 
 result.
 
@@ -449,7 +449,7 @@ mechanism.
 will exchange x and y. Because there is no definite order in which multiple 
 replace\_ functions are treated, one should not use more than a single one 
 at the same time inside a term. At times multiple replace\_ functions may 
-lead to confusion inside FORM.
+lead to confusion inside \FORM.
 
 \section{reverse\_}\index{reverse\_}\index{function!reverse\_}
 \label{funreverse}
@@ -555,7 +555,7 @@ put things inside a \$-variable.
 active (or previously active during the current job) expression, the 
 function is replaced by the number\index{number of terms} of terms in this 
 expression. Stored expressions that were entered via a load statement (see 
-\ref{substaload}) are excluded from this because for them FORM would have 
+\ref{substaload}) are excluded from this because for them \FORM\ would have 
 to actually count the terms.
  
 \section{termsinbracket\_}\index{termsinbracket\_}\index{function!termsinbracket\_}
@@ -594,7 +594,7 @@ that in the future some simplifications of the arguments can be
 implemented. These functions are:
 
 \leftvitem{3cm}{sqrt\_}\index{sqrt\_}\index{function!sqrt\_}
-\rightvitem{13cm}{The regular sqare root.}
+\rightvitem{13cm}{The regular square root.}
 
 \leftvitem{3cm}{ln\_}\index{ln\_}\index{function!ln\_}
 \rightvitem{13cm}{The natural logarithm.}

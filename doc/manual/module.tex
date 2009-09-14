@@ -41,8 +41,8 @@ classes. Most notably the print statement.
 Statements must occur in such an order that no statement follows a 
 statement of a later category. The only exception is formed by the mixed 
 statements, which can occur anywhere. This is different from earlier 
-versions of FORM in which the order of the statements was not fixed. This 
-did cause a certain amount of confusion about the workings of FORM.
+versions of \FORM\ in which the order of the statements was not fixed. This 
+did cause a certain amount of confusion about the workings of \FORM.
 
 There are several types of modules.
 \begin{description}
@@ -69,7 +69,7 @@ changed by means of the ResetTimeOnClear\index{resettimeonclear} setup
 variable (see chapter \ref{setup}).
 \end{description}
 Each program must be terminated by a .end instruction. If such an 
-instruction is absent and FORM encounters an end-of-input it will issue a 
+instruction is absent and \FORM\ encounters an end-of-input it will issue a 
 warning and generate a .end instruction.
 
 Module instructions can contain a special commentary that will be printed 
@@ -103,7 +103,7 @@ statement (see \ref{substamoduleoption}).
 \end{verbatim}
 causes the given function to be treated as a polynomial\index{polyfun} 
 function. This means that its (single) argument would be treated as the 
-coefficient of the terms. The action of FORM on individual terms is
+coefficient of the terms. The action of \FORM\ on individual terms is
 \begin{enumerate}
 \item Ignore polynomial functions with more than one argument.
 \item If there is no polynomial function with a single argument, generate 
@@ -115,12 +115,12 @@ single argument.
 of the term. Replace the coefficient itself by one.
 \end{enumerate}
 If, after this, two terms differ only in the argument of their polynomial 
-function FORM will add the arguments and replace the two terms by a single 
+function \FORM\ will add the arguments and replace the two terms by a single 
 term which is identical to the two previous terms except for that the 
 argument of its polynomial function is the sum of their two arguments.
 
 It should be noted that the proper placement of .sort\index{.sort} 
-instructions in a FORM program is an art by itself. Too many .sort 
+instructions in a \FORM\ program is an art by itself. Too many .sort 
 instructions cause too much sorting, which can slow execution down 
 considerably. It can also cause the writing of intermediate expressions 
 which are much larger than necessary, if the next statements would cause 
@@ -234,13 +234,13 @@ before making a very large run.
 \section{Checkpoints}
 \label{checkpoints}
 
-If\index{checkpoints} FORM programs have to run for a long time, the 
+If\index{checkpoints} \FORM\ programs have to run for a long time, the 
 reliability of the hardware(computer system or network) or of the software 
 infrastructure becomes a critical issue. Program 
 termination\index{termination} due to unforeseen failures may waste days or 
 weeks of invested execution time. The checkpoint mechanism was introduced 
-to protect long running FORM programs as good as possible from such 
-accidental interruptions. With activated checkpoints FORM will save its 
+to protect long running \FORM\ programs as good as possible from such 
+accidental interruptions. With activated checkpoints \FORM\ will save its 
 internal state and data from time to time on the hard disk. This data then 
 allows a recovery from a crash\index{crash}.
 
@@ -248,7 +248,7 @@ The checkpoint mechanism can be activated or deactivated by {\tt
 On}\index{on} and {\tt Off}\index{off} statements. If the user has 
 activated checkpoints, recovery\index{recovery} data will be written to disk 
 at the end of a module execution. Options allow to influence the details of 
-the saving mechanism. If a program is terminated during execution, FORM can 
+the saving mechanism. If a program is terminated during execution, \FORM\ can 
 be restarted with the {\tt -R} option and it will continue its execution at 
 the last saved recovery point.
 
@@ -287,10 +287,10 @@ error (non-zero return value), a message will be issued and the saving will
 be skipped. 
 
 The recovery data will be written to files named {\tt FORMrecv.*} with 
-various name extensions. If a file {\tt FORMrecv.tmp} exists, FORM will not 
+various name extensions. If a file {\tt FORMrecv.tmp} exists, \FORM\ will not 
 run unless one gives it the recovery option\index{recovery option}
 {\tt -R}. This is to prevent the unintentional loss of recovery data. If 
-FORM terminates successfully, all the additional data files will be removed.
+\FORM\ terminates successfully, all the additional data files will be removed.
 
 The additional recovery files will be created in the directory containing 
 the scratch files.  The extra files will occupy roughly as much space as 
@@ -298,14 +298,14 @@ the scratch files\index{scratch files} and the save\index{save files} and
 hide files\index{hide files} combined. This extra space must be made 
 available, of course.
 
-If recovery data exists and FORM is started with the {\tt -R} option, FORM 
+If recovery data exists and \FORM\ is started with the {\tt -R} option, \FORM\ 
 will continue execution after the last module that successfully wrote the 
 recovery data. All the command line parameters that have been given to the 
-crashed FORM program\index{crashed FORM program} must also be given to the 
-recovering FORM program. The input files are not part of the recovery data 
+crashed \FORM\ program\index{crashed \FORM\ program} must also be given to the 
+recovering \FORM\ program. The input files are not part of the recovery data 
 and will be read in anew when recovering. Therefore it is strongly 
 discouraged to change any of these files between saving and recovery.
 
-At the moment, the recovery mechanism is only implemented for sequential FORM
-and multi-threaded TFORM.  ParFORM support is planned for the future.
+At the moment, the recovery mechanism is only implemented for sequential \FORM\
+and multi-threaded \TFORM.  \ParFORM\ support is planned for the future.
 

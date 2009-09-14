@@ -119,7 +119,7 @@ This operator has not been implemented and currently there are no plans to
 do so. 
 
 The syntax of the statement that defines symbols is given by (see also 
-p.~\ref{substasymbols}): 
+\ref{substasymbols}): 
 \begin{verbatim}
      S[ymbols]    name[#{R|I|C}][(min:max)];
 \end{verbatim}
@@ -178,7 +178,7 @@ property is used by {\FORM} to simplify terms. It is the only symbol that
 cannot be used as a dimension or a wildcard.
 
 \noindent pi\_\index{pi\_}: a reserved variable which will eventually be 
-used to indicate the variable $\pi$.
+used to indicate the variable $\omega\pi$.
 
 \noindent coeff\_\index{coeff\_}: this variable is automatically replaced 
 by the coefficient of the current term.
@@ -200,13 +200,13 @@ the dimension of the vector space in which they are defined. In {\FORM}
 this dimension is by default set to 4. If the user likes to change this 
 default, this can be done with the `Dimension'-statement. The use of this 
 command affects the dimension of all vectors and the default dimension of 
-indices. Its syntax is (see also p.~\ref{substadimension}):
+indices. Its syntax is (see also \ref{substadimension}):
 \begin{verbatim}
-     dimension number;
+     Dimension number;
 \end{verbatim}
 or
 \begin{verbatim}
-     dimension symbol;
+     Dimension symbol;
 \end{verbatim}
 The number must be a number that fits inside a {\FORM} word which is 
 an installation dependent size, but it will be at least 32767. 
@@ -214,7 +214,7 @@ The number must be positive or zero. Negative values are illegal.
 If a symbol is specified, it must have been declared before. Any symbol 
 may be used with the exception of i\_\index{i\_}. 
 
-The declaration of vectors (see p.~\ref{substavectors}) is rather 
+The declaration of vectors (see \ref{substavectors}) is rather 
 straightforward:
 \begin{verbatim}
      V[ector] name [,MoreNames];
@@ -244,7 +244,7 @@ vectors p and q (which can also be written as p.q).
 
 There are of course also indices that should not be summed over. 
 Such indices we call zero-dimensional. This is just a convention. 
-To declare indices we use the statement (see also p.~\ref{substaindex}): 
+To declare indices we use the statement (see also \ref{substaindex}): 
 \begin{verbatim}
      Index name[={number|symbol}]
                    [,othername[={number|symbol}]];
@@ -252,7 +252,7 @@ To declare indices we use the statement (see also p.~\ref{substaindex}):
 When the equals sign is used, this indicates the specification of a 
 dimension. Indices that are not followed by an equals sign get the 
 dimension that is currently the default dimension (see also 
-p.~\ref{substadimension})). The dimension can be either a number that is 
+\ref{substadimension})). The dimension can be either a number that is 
 zero or positive (zero indicates that the summation convention does not 
 apply for this index) or it can be any symbol with the exception of the 
 symbol i\_. The symbol must have been declared before. 
@@ -281,7 +281,7 @@ When two numeric indices occur inside the same Kronecker delta, a value
 is substituted for this delta. Normally this value is one, when the two 
 indices are identical and zero, when they are different. The value for 
 the diagonal elements can be changed with the 
-`FixIndex'-statement (see also p.~\ref{substafixindex}): 
+`FixIndex'-statement (see also \ref{substafixindex}): 
 \begin{verbatim}
      Fi[xIndex] number:value [,number:value];
 \end{verbatim}
@@ -381,7 +381,7 @@ colon\index{colon}, after which the elements of the set are listed. The first
 element determines the type of all the elements of the set. All 
 elements must have been declared as variables before the set-statement. 
 There can be only one set per statement. Example (see also 
-p.~\ref{substaset}): 
+\ref{substaset}): 
 \begin{verbatim}
      s    xa, xb, xc, xd, ya, x, y;
      i    mu, nu, rho;
@@ -562,7 +562,7 @@ to be declared. As such {\FORM} is a strong\index{strong typing} typing
 language. This isn't always handy. Hence it is possible to introduce some 
 rules about the automatic declaration of classes of variables. This is done 
 with the AutoDeclare\index{autodeclare} statement (see also 
-p.~\ref{substaautodeclare}). If we use the statements
+\ref{substaautodeclare}). If we use the statements
 \begin{verbatim}
      AutoDeclare Symbol x,tt;
      AutoDeclare CFunction f,t;
@@ -614,7 +614,7 @@ Sometimes indices\index{indices!dummy} are to be summed over but due to the
 evaluation procedures some terms contain the index mu and other terms 
 contain the index nu. There is a command to sum over indices in such a way 
 that {\FORM} recognizes that the exact name of the index is irrelevant. 
-This is the `sum'-statement (see also p.~\ref{substasum}): \begin{verbatim}
+This is the `sum'-statement (see also \ref{substasum}): \begin{verbatim}
    i  mu,nu;
    f  f1,f2;
    L  F=f1(mu)*f2(mu)+f1(nu)*f2(nu);
@@ -646,7 +646,7 @@ to try all $n!$ permutations, when there are n pairs of dummy indices,
 in which the scheme is not perfect. It is left as a 
 challenge for the reader to find such an example. In the case that the 
 scheme isn't sufficient one can use the Renumber statement (see 
-p.~\ref{substarenumber}) to force a complete renumbering. As this involves 
+\ref{substarenumber}) to force a complete renumbering. As this involves 
 n! attempts in which n is the number of different dummy indices, this can 
 become time consuming.
 
@@ -714,7 +714,7 @@ and next we have the module
       e_(p1,p2,p3,N12_?)*e_(N7_?,N8_?,N10_?,N11_?);
 \end{verbatim}
 Here the situation with the dummy indices becomes rather messy, and all 
-earlier versions of FORM were not prepared for this. Their answer could be:
+earlier versions of {\FORM} were not prepared for this. Their answer could be:
 \begin{verbatim}
     G =
       f(N1_?,N2_?)*f(N1_?,N2_?)*f(N1_?,N2_?)*f(N2_?,N1_?)*
@@ -742,7 +742,7 @@ Formally it is exactly the same, but what we mean is far from clear. For
 the dollar variables we considered the contracted dummy indices rare enough 
 that it doesn't merit sacrificing speed. And then there is one more little 
 caveat\index{caveat}. Global expressions that were stored with older 
-versions of FORM than version 3.2, but are read with version 3.2 or later 
+versions of {\FORM} than version 3.2, but are read with version 3.2 or later 
 would have a problem if the expression were to contain dummy indices. The 
 newer version of the .sav files\index{files!.sav} will contain information 
 about the dummy indices. {\FORM} can still read the old versions but will 

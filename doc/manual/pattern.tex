@@ -1,7 +1,7 @@
 \chapter{Pattern matching}
 \label{pattern}
 
-Substitutions\index{substitutions}\index{pattern matching} are made in FORM 
+Substitutions\index{substitutions}\index{pattern matching} are made in \FORM\  
 by specifying a generic object that should be replaced by an expression. 
 This generic object is called a pattern\index{pattern}. Patterns that the 
 user may already be familiar with are the regular expressions in many 
@@ -11,7 +11,7 @@ list only files of which the name ends in \verb:.frm:. In this case the
 value. In symbolic manipulation there will be wildcards also, but their 
 nature will be different. They are also indicated in a different way.
 
-In FORM wildcard variables are indicated by attaching a 
+In \FORM\ wildcard variables are indicated by attaching a 
 question\index{question mark} mark (?) to the name of a variable. The type 
 of the variable indicates what type of object we are looking for. Assume 
 the following id\index{id} statements:
@@ -46,7 +46,7 @@ matched by the same object in all its occurrences. Hence the above pattern
 would not match \verb:f(mu,nu):.
 
 There is one complication concerning the above rule of index wildcards only 
-matching indices. FORM writes contractions with vectors in a special 
+matching indices. \FORM\ writes contractions with vectors in a special 
 shorthand notation called Schoonschip\index{Schoonschip} notation. Hence 
 \verb:f(mu)*p(mu): becomes \verb:f(p):. This means that the substitution
 \begin{verbatim}
@@ -104,8 +104,8 @@ arguments (including no arguments) will match. Hence \verb:f(mu,nu): will
 be replaced by \verb:g(1,mu,nu):. In the case that f is a regular function 
 and g is a tensor, it is conceivable that the arguments in \verb:?name: 
 will not fit inside a tensor. For instance \verb:f(x):, with x a symbol, 
-would match and FORM would try to put the symbol inside the tensor g. This 
-would result in a runtime error. In general FORM will only accept arguments 
+would match and \FORM\ would try to put the symbol inside the tensor g. This 
+would result in a runtime error. In general \FORM\ will only accept arguments 
 that are indices or single vectors for a substitution into a tensor. The 
 object \verb:?name: is called an {\bf argument field wildcard}.
 
@@ -118,9 +118,9 @@ may involve considerable numbers of tries, especially when there are many
 occurrences of f and g in a term. One should be very careful with this.
  
 A complication is the pattern matching in functions with symmetry 
-properties. In principle FORM has to try all possible permutations before 
+properties. In principle \FORM\ has to try all possible permutations before 
 it can conclude that a match does not occur. This can become rather time 
-consuming when many wildcards are involved. FORM has a number of tricks 
+consuming when many wildcards are involved. \FORM\ has a number of tricks 
 built in, in an attempt to speed this up, but it is clear that for many 
 cases these tricks are not enough. This type of pattern matching is one of 
 the weakest aspects of `artificial intelligence' in general. It is hoped 
@@ -148,8 +148,8 @@ replace\_\index{replace\_} function:
 It just shows that one should at times be a bit careful with overuse of 
 (anti)symmetric functions. Cyclic functions do not have this restriction.
 
-When there are various possibilities for a match, FORM will just take the 
-first one it encounters. Because it is not fixed how FORM searches for 
+When there are various possibilities for a match, \FORM\ will just take the 
+first one it encounters. Because it is not fixed how \FORM\ searches for 
 matches (in future versions the order of trying may be changed without 
 notice) one should try to avoid ambiguities\index{ambiguity} as in
 \begin{verbatim}
@@ -168,8 +168,8 @@ will match \verb:f(a,b,a,b): or just \verb:f: (in which case \verb:?a: will
 have zero arguments), but it will not match \verb:f(b,b,b):.
 
 Sometimes it is useful when a search can be restricted to a limited set of 
-objects. For this FORM knows the concept of sets\index{set}. If the name of 
-a set is attached after the question mark, this is an indication for FORM 
+objects. For this \FORM\ knows the concept of sets\index{set}. If the name of 
+a set is attached after the question mark, this is an indication for \FORM\ 
 to look only for matches in which the wildcard becomes one of the members 
 of the set:
 \begin{verbatim}
@@ -242,7 +242,7 @@ occurs. If there is more than one match, the last match will be in the
 will put the match of a in \verb:$w:. Hence in the case of \verb:f(a2): the 
 \$-variable will have the value \verb:a2:. In the case of 
 \verb:f(a2)*f(a3): the eventual value of \verb:$w: depends on the order in 
-which FORM does the matching. This is not specified and it would not be 
+which \FORM\ does the matching. This is not specified and it would not be 
 a good strategy to make programs that will depend on it. A future pattern 
 matcher might do it differently! But one could do things like
 \begin{verbatim}

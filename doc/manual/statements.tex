@@ -73,7 +73,7 @@ symmetrize statements (see \ref{substasymmetrize}).\medskip
 \noindent The action of this statement\index{antisymmetrize} is to 
 anti-symmetrize the (specified) arguments of the functions that are 
 mentioned. This means that the arguments are brought to `natural order' in 
-the notation of FORM and each exchange of arguments or groups of arguments 
+the notation of \FORM\ and each exchange of arguments or groups of arguments 
 results in a minus sign in the coefficient of the term. The `natural order' 
 may depend on the order of declaration of the variables. If two arguments 
 or groups of arguments that are part in the anti-symmetrization are 
@@ -150,7 +150,7 @@ repeat statements started to become very time-consuming.
 
 \noindent For the harmonic sums, the harmonic polylogarithms and the 
 multiple zeta values one can use the summer6 and the harmpol packages in 
-the FORM distribution. They are described in the papers
+the \FORM\ distribution. They are described in the papers
 
 J.~A.~M. Vermaseren, {\it Harmonic sums, Mellin transforms and integrals},
   {\em Int. J. Mod. Phys.} {\bf A14} (1999) 2037,
@@ -720,7 +720,7 @@ in the section on the symmetrize statements (see \ref{substasymmetrize}).
 
 \noindent The action of this statement is to cycle-symmetrize the (specified) 
 arguments of the functions that are mentioned. This means that the 
-arguments are brought to `natural order' in the notation of FORM by trying 
+arguments are brought to `natural order' in the notation of \FORM\ by trying 
 cyclic permutations of the arguments or groups of arguments. The `natural 
 order' may depend on the order of declaration of the variables. 
 \vspace{10mm}
@@ -783,7 +783,7 @@ Syntax & denominators functionname;
 
 \noindent This statement\index{denominators} allows the user to rename all 
 occurrences of the built-in denominator function. This built-in function is 
-kind of an oddity inside FORM. Denominators are presented by a very special 
+kind of an oddity inside \FORM. Denominators are presented by a very special 
 function which doesn't really have a name and hence is rather hard to 
 address. In addition there are special rules connected to denominators. 
 Hence it is usually better to collect denominators inside functions that 
@@ -1143,7 +1143,7 @@ Syntax & exit ["{\tt<}string{\tt>}"];
 
 \noindent Causes execution to be aborted\index{exit}\index{aborted} 
 immediately. The string will be printed in the output. This can be used to 
-indicate where FORM ran into the exit statement. \vspace{10mm}
+indicate where \FORM\ ran into the exit statement. \vspace{10mm}
 
 %--#] exit : 
 %--#[ factarg :
@@ -1437,7 +1437,7 @@ the setup file (see \ref{setup}). Its default is the underscore character.}
 \leftvitem{3cm}{doublefortran\index{doublefortran}\index{format!doublefortran}}
 \rightvitem{13cm}{Same as the fortran mode, but fractions are printed with 
 double floating point numbers, because some compilers convert numbers like 
-1. into 1.E0. With this format FORM will force double precision by using 
+1. into 1.E0. With this format \FORM\ will force double precision by using 
 1.D0.}
 
 \leftvitem{3cm}{fortran90\index{fortran90}\index{format!fortran90}}
@@ -1716,14 +1716,14 @@ the patterns, see chapter \ref{pattern}.
 
 \lefttabitem{multi\index{multi}}
 \tabitem{This option is for combinations of symbols and dotproducts only 
-and it does not use wildcard powers. FORM determines how many times the 
+and it does not use wildcard powers. \FORM\ determines how many times the 
 pattern fits in one pattern matching action. Then the r.h.s. is substituted 
 to that power. It is the default for these kinds of patterns.}
 
 \lefttabitem{many\index{many}}
 \tabitem{This is the default for patterns that contain other objects 
 than symbols and dotproducts. The pattern is matched and taken out. Then 
-FORM tries again to match the pattern in the remainder of the term. This 
+\FORM\ tries again to match the pattern in the remainder of the term. This 
 is repeated until there is no further match. Then for each match the r.h.s. 
 is substituted (with its own wildcard substitutions).}
 
@@ -1737,7 +1737,7 @@ that this is a special case of the option 'only'.}
 
 \lefttabitem{once\index{once}}
 \tabitem{The pattern is matched only once, even if it occurs more than once 
-in the term. The first match that FORM encounters is taken. When wildcards 
+in the term. The first match that \FORM\ encounters is taken. When wildcards 
 are involved, this may depend on the order of declaration of variables. It 
 could also be installation dependent. Also the setting of 
 properorder\index{properorder} (see \ref{substaon} and \ref{substaoff}) 
@@ -1757,9 +1757,9 @@ after which the execution continues at the label.}
 \tabitem{This option is used for products of 
 noncommuting\index{noncommuting} functions\index{functions!noncommuting} or 
 tensors\index{tensors!noncommuting}. The match will only take place if the 
-order of the functions in the match is different from what FORM would have 
+order of the functions in the match is different from what \FORM\ would have 
 made of it if the functions would be commuting\index{commuting}. Hence if 
-the functions in the term are in the order that FORM would give them if 
+the functions in the term are in the order that \FORM\ would give them if 
 they would be commuting (which depends on the order of declaration) there 
 will be no match. This can be rather handy when using wildcards as in {\tt 
 F(a?)*F(b?)}.}
@@ -1866,7 +1866,7 @@ When no options are specified the result is identical to +vfd.}
 side of an id statement, including options as once\index{once}, 
 only\index{only}, multi\index{multi}, many\index{many} and 
 select\index{select} (see \ref{substaidnew}). The id of the id statement 
-should not be included. FORM will invoke the pattern\index{pattern matcher} 
+should not be included. \FORM\ will invoke the pattern\index{pattern matcher} 
 matcher and see how many times the pattern matches. This number is 
 returned. In the case of once or only this is of course at most one.}
 
@@ -1879,7 +1879,7 @@ given expressions the return value is 0.}
 \leftvitem{3cm}{findloop()\index{findloop}}
 \rightvitem{13cm}{The arguments are as in the 
 replaceloop\index{replaceloop} statement (see \ref{substareplaceloop}) with 
-the exception of the outfun which should be omitted. If FORM detects an 
+the exception of the outfun which should be omitted. If \FORM\ detects an 
 index\index{index loop} loop in the current term that fulfils the specified 
 conditions the return value is 1. It is 0 otherwise.}
  
@@ -1932,7 +1932,7 @@ as object 2.}
 If the condition for true is not met, false is returned. Several of the 
 above compares can be combined with logical operators. For this it is 
 necessary to enclose the above compares within parentheses. This forces 
-FORM to interpret the hierarchy\index{hierarchy} of the operators 
+\FORM\ to interpret the hierarchy\index{hierarchy} of the operators 
 properly. The extra logical operators are
  
 \leftvitem{2cm}{$||$}
@@ -2061,7 +2061,7 @@ Syntax & inparallel; \\
 \end{tabular} \vspace{4mm}
 
 \noindent This statement is only active in the context of 
-TFORM\index{TFORM}. It causes 
+\TFORM\index{TFORM}. It causes 
 (small) expressions to be executed side by side. Normally the terms of 
 expressions are distributed over the processors and the expressions are 
 executed one by one. This isn't very efficient for small expressions 
@@ -2114,7 +2114,7 @@ one is treated. If it uses the contents of the first variable, it will use
 the new value. If the first variable uses the contents of the second 
 variable it will use its old value. Redefining any of the listed 
 \$-variables in the range of the `inside-environment' is very dangerous. It 
-is not specified what FORM will do. Most likely it will be 
+is not specified what \FORM\ will do. Most likely it will be 
 unpleasant\index{unpleasant}. 
 \vspace{10mm}
 
@@ -2202,10 +2202,10 @@ the result will be
 \begin{verbatim}
     F = f(N1_?,x)*g(i1,y)+f(N1_?,x)*g(i1,z));
 \end{verbatim}
-because at the moment of summing over i1 FORM is not looking inside the 
+because at the moment of summing over i1 \FORM\ is not looking inside the 
 brackets and hence it never sees the second occurrence of i1. There are 
 some beneficial applications of the keep statement in the 
-`mincer'\index{mincer} package that comes with the FORM distribution. In 
+`mincer'\index{mincer} package that comes with the \FORM\ distribution. In 
 this package the most costly step was made faster by a significant factor 
 (depending on the problem) due to the keep brackets statement. 
 \vspace{10mm}
@@ -2253,7 +2253,7 @@ expressions. If a list of expressions is specified all those expressions
 are loaded and possible other expressions are ignored. If a specified 
 expression is not present, an error will result. If one does not know 
 exactly what expressions are present in a file one could load the file 
-without a list of expressions, because FORM will list all expressions that 
+without a list of expressions, because \FORM\ will list all expressions that 
 it encountered. \vspace{10mm}
 
 %--#] load : 
@@ -2502,7 +2502,7 @@ number division by zero could result. It is the responsibility of the user
 to avoid such problems.
 
 \noindent When the value in the modulus statement is either 0 or 1 the 
-statement would be meaningless. It is used as a signal to FORM that modulus 
+statement would be meaningless. It is used as a signal to \FORM\ that modulus 
 calculus should be switched off again.
 
 \noindent The reduction of powers with the relation $x^{value}=x$ can be 
@@ -2520,11 +2520,11 @@ number there exists another option. In the statement
     Modulus p:x;
 \end{verbatim}
 in which p is a prime number and x a generator (a number such that all 
-numbers mod p that are not zero can be written as powers of x) FORM will 
+numbers mod p that are not zero can be written as powers of x) \FORM\ will 
 construct a table to express all nonzero numbers less than p as powers of 
 x. This will fail if either x is not a generator or when the numbers are 
 too large for the construction of such a table. If the table can be 
-constructed FORM uses it when printing results and expresses all numbers as 
+constructed \FORM\ uses it when printing results and expresses all numbers as 
 powers of the generator.\vspace{10mm}
 
 %--#] modulus : 
@@ -2709,7 +2709,7 @@ Syntax & notinparallel; \\
 \end{tabular} \vspace{4mm}
 
 \noindent This statement is only active in the context of 
-TFORM\index{TFORM}. It vetoes (small) expressions to be executed side by 
+\TFORM\index{TFORM}. It vetoes (small) expressions to be executed side by 
 side. For a complete explanation of this type of running one should look at 
 the InParallel~\ref{substainparallel} statement. Because the default is 
 that expressions are executed one by one, the major use of this statement 
@@ -2950,15 +2950,15 @@ a high first mode.}
 long numbers are printed with leading blank spaces at the beginning of a new
 line. The numbers are usually broken up by placing a backslash character at
 the end of the line and then continuing at the next line. For cosmetic
-purposes FORM puts usually a few blank spaces at the beginning of the line.
-FORM itself can read this but some programs cannot. This option can be turned
+purposes \FORM\ puts usually a few blank spaces at the beginning of the line.
+\FORM\ itself can read this but some programs cannot. This option can be turned
 off by the `on nospacesinnumbers;' statement. The printing of the blank
 characters can be restored by turning this variable off. See also page 
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
 \leftvitem{3cm}{parallel\index{off!parallel}}
 \rightvitem{13cm}{Disallows the running of the program in parallel mode 
-(only relevant for parallel versions of FORM).}
+(only relevant for parallel versions of \FORM).}
  
 \leftvitem{3cm}{powerfirst\index{off!powerfirst}}
 \rightvitem{13cm}{Puts the sorting back into `highfirst' mode.}
@@ -2991,16 +2991,16 @@ three lines of text and one blank line.}
  
 \leftvitem{3cm}{threadloadbalancing\index{off!threadloadbalancing}}
 \rightvitem{13cm}{\vspace{1.5ex}Disallows the loadbalancing of \TFORM\ in parallel mode. 
-In other versions of FORM this option is ignored.}
+In other versions of \FORM\ this option is ignored.}
  
 \leftvitem{3cm}{threads\index{off!threads}}
 \rightvitem{13cm}{Disallows multithreaded running in \TFORM.
-In other versions of FORM this option is ignored.}
+In other versions of \FORM\ this option is ignored.}
 
 \leftvitem{3cm}{threadstats\index{off!threadstats}}
 \rightvitem{13cm}{Turns off the thread by thread printing of the statistics 
 in \TFORM. Only the master thread will be printing statistics. Other 
-versions of FORM will ignore this option.}
+versions of \FORM\ will ignore this option.}
 
 \leftvitem{3cm}{warnings\index{off!warnings}}
 \rightvitem{13cm}{Turns off the printing of warnings.}
@@ -3034,7 +3034,7 @@ warnings, even the very unimportant warnings are printed.}
 
 \leftvitem{3cm}{checkpoint\index{on!checkpoint}}
 \rightvitem{13cm}{Activates the checkpoint mechanism that allows for
-the recovery of a crashed FORM session. See \ref{checkpoints} for
+the recovery of a crashed \FORM\ session. See \ref{checkpoints} for
 detailed information.}
 
 \leftvitem{3cm}{compress\index{on!compress}}
@@ -3053,7 +3053,7 @@ compression and 9 is the highest level. The default level is 6. Above that
 the compression becomes very slow and doesn't gain very much extra.}
 
 \leftvitem{3cm}{fewerstatistics\index{on!fewerstatistics}}
-\rightvitem{13cm}{Determines how many of the statistics FORM prints when a 
+\rightvitem{13cm}{Determines how many of the statistics \FORM\ prints when a 
 small buffer is full. The keyword can be followed by a positive integer in 
 which case one out of that many of these statistics will be printed. If no 
 number is given the default value of 10 is used. When the number that 
@@ -3063,7 +3063,7 @@ follows is zero, this feature is turned off (same effect as the value one).}
 \rightvitem{13cm}{Same as the above fewerstatistics.}
 
 \leftvitem{3cm}{finalstats\index{on!finalstats}}
-\rightvitem{13cm}{Determines whether FORM prints a final line of run time 
+\rightvitem{13cm}{Determines whether \FORM\ prints a final line of run time 
 statistics at the end of the run. Default is on.}
  
 \leftvitem{3cm}{highfirst\index{on!highfirst}}
@@ -3090,15 +3090,15 @@ is an inspection mode for debugging by the user. Default is off.}
 long numbers are printed with no leading blank spaces at the beginning of a
 new line. The numbers are usually broken up by placing a backspace character
 at the end of the line and then continuing at the next line. For cosmetic
-purposes FORM puts usually a few blank spaces at the beginning of the line.
-FORM itself can read this but some programs cannot. Hence this printing of the
+purposes \FORM\ puts usually a few blank spaces at the beginning of the line.
+\FORM\ itself can read this but some programs cannot. Hence this printing of the
 blank characters can be omitted by turning this variable on. See also page
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
 \leftvitem{3cm}{parallel\index{on!parallel}}
 \rightvitem{13cm}{Allows the running of the program in parallel mode unless 
 other problems prevent this. This is of course only relevant for parallel 
-versions of FORM. The default is on.}
+versions of \FORM. The default is on.}
  
 \leftvitem{3cm}{powerfirst\index{on!powerfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
@@ -3113,9 +3113,9 @@ statistics. This setting is the default.}
  
 \leftvitem{3cm}{properorder\index{on!properorder}}
 \rightvitem{13cm}{Turns the properorder mode on. The default is off. In the 
-properorder mode FORM pays particular attention to function arguments when 
+properorder mode \FORM\ pays particular attention to function arguments when 
 bringing terms and expressions to normal form. This may cost a considerable 
-amount of extra time. In normal mode FORM is a bit sloppy (and much 
+amount of extra time. In normal mode \FORM\ is a bit sloppy (and much 
 faster) about this, resulting sometimes in an ordering that appears without 
 logic. This concerns only function arguments! This mode is mainly intended 
 for the few moments in which the proper ordering is important.}
@@ -3140,16 +3140,16 @@ parameters in the setup file (see \ref{setup}).}
 \rightvitem{13cm}{Same as `On statistics'.}
  
 \leftvitem{3cm}{threadloadbalancing\index{on!threadloadbalancing}}
-\rightvitem{13cm}{\vspace{1.5ex}Causes the load balancing mechanism in TFORM
-to be turned on or off. Default is on. Ignored by other versions of FORM.}
+\rightvitem{13cm}{\vspace{1.5ex}Causes the load balancing mechanism in \TFORM
+to be turned on or off. Default is on. Ignored by other versions of \FORM.}
  
 \leftvitem{3cm}{threads\index{on!threads}}
 \rightvitem{13cm}{Allows the running of the program in multithreaded mode 
 unless other problems prevent this. This is of course only relevant for 
-TFORM. Other versions of FORM ignore this. The default is on.}
+\TFORM. Other versions of \FORM\ ignore this. The default is on.}
  
 \leftvitem{3cm}{threadstats\index{on!threadstats}}
-\rightvitem{13cm}{Only active for TFORM. It determines whether all threads 
+\rightvitem{13cm}{Only active for \TFORM. It determines whether all threads 
 print their run time statistics or only the master thread does so. Default 
 is on.}
  
@@ -3234,7 +3234,7 @@ will result in
 Note that the external numerical coefficient\index{coefficient} is also 
 pulled inside the polyfun.
 
-\noindent If the polyfun statement has no argument, FORM reverts to its 
+\noindent If the polyfun statement has no argument, \FORM\ reverts to its 
 default mode in which no polyfun exists. This does not change any terms. If 
 one would like to remove the polyfun from the terms one has to do that 
 `manually' as in
@@ -3277,7 +3277,7 @@ will result in
 Note that the external numerical coefficient\index{coefficient} is also 
 pulled inside the polyratfun.
 
-\noindent If the polyratfun statement has no argument, FORM reverts to its 
+\noindent If the polyratfun statement has no argument, \FORM\ reverts to its 
 default mode in which no polyratfun exists. This does not change any terms.
 
 \noindent The polyratfun has many similarities with the polyfun (see 
@@ -3451,7 +3451,7 @@ Syntax & print[\,] \verb:{:[{\tt<}options{\tt>}] {\tt<}name{\tt>}\verb:}:;
 \noindent Print\index{print} statement\index{print[]} to cause the printing 
 of expressions at the end of the current module. Is like the first two 
 modes of the regular print statement (see \ref{substaprint}), but when 
-printing FORM does not print the contents of each bracket\index{bracket}, 
+printing \FORM\ does not print the contents of each bracket\index{bracket}, 
 only the number of terms inside the bracket. Is to be used in combination 
 with a bracket or an antibracket\index{antibracket} statement (see 
 \ref{substabracket} and \ref{substaabrackets}). Apart from this the options 
@@ -3486,7 +3486,7 @@ the table that have been defined and filled are written in the form of
 fill\index{fill} statements (see \ref{substafill}) in such a way that they 
 can be read in a future program to fill the table with the current 
 contents. This is especially useful when the fillexpression statement has 
-been used to dynamically extend tables based on what FORM has encountered 
+been used to dynamically extend tables based on what \FORM\ has encountered 
 during running. This way those elements will not have to be computed again 
 in future programs. 
 
@@ -3631,7 +3631,7 @@ in the section on the symmetrize\index{symmetrize} statement (see
 reverse\index{reverse cycle symmetrize}-cycle-symmetrize
 \index{symmetrize!reverse cycle} the (specified) arguments of the functions 
 that are mentioned. This means that the arguments are brought to `natural 
-order' in the notation of FORM by trying cyclic and reverse cyclic 
+order' in the notation of \FORM\ by trying cyclic and reverse cyclic 
 permutations\index{permutations} of the arguments or groups of arguments. 
 The `natural order' may depend on the order of declaration of the 
 variables. \vspace{10mm}
@@ -3692,11 +3692,11 @@ Syntax & renumber {\tt<}number{\tt>};
 
 \noindent Renumbers\index{renumber} the dummy\index{dummy} 
 indices\index{indices!dummy}. Dummy indices are indices of the type 
-\verb:N1_?:. Normally FORM tries to renumber these indices to make the 
+\verb:N1_?:. Normally \FORM\ tries to renumber these indices to make the 
 internal representation of a term `minimal'. It does not try exhaustively 
 though. Especially interference with symmetric or antisymmetric functions 
 is far from perfect. This is due to considerations of economy. With the 
-renumber statement the user can force FORM to do better. The allowable 
+renumber statement the user can force \FORM\ to do better. The allowable 
 options are:
 
 \leftvitem{1cm}{0}
@@ -3852,10 +3852,10 @@ that constitute the loop and replace them by the output function. This
 outfun will have the arguments of all the vertex functions minus the 
 contracted indices that define the loop. The order of the arguments is the 
 order in which they are encountered when following the loop. The order of 
-the arguments in the outfun depends however on the order in which FORM 
+the arguments in the outfun depends however on the order in which \FORM\ 
 encounters the vertices. Hence the outfun will often be 
 cyclesymmetric\index{symmetric!cycle}\index{cyclesymmetric} (see 
-\ref{substafunctions} and \ref{substacyclesymmetrize}). If FORM has to 
+\ref{substafunctions} and \ref{substacyclesymmetrize}). If \FORM\ has to 
 exchange indices to make a `proper loop' (i.e. giving relevance to the 
 first index as if it is something incoming and the second index as if it is 
 something outgoing) and if the vertex function is 
@@ -3885,7 +3885,7 @@ would give
 \end{verbatim}
 because the smallest loop will be taken. A number of examples can be found 
 in the package\index{package!color} `color'\index{color package} for group 
-theory\index{group theory} invariants that is part of the FORM 
+theory\index{group theory} invariants that is part of the \FORM\ 
 distribution. 
 
 \noindent A related object is the findloop\index{findloop} option of the 
@@ -3960,7 +3960,7 @@ indices and sets of numbers. For the purpose of sets tensors\index{tensor}
 and tables\index{table} count as functions.
 
 \noindent There can also be mixed sets\index{set!mixed} of indices and 
-numbers. When a number could be either a fixed index or just a number FORM 
+numbers. When a number could be either a fixed index or just a number \FORM\ 
 will keep the type of the set unfixed. This can change either when the next 
 element is a symbolic index or a number that cannot be a fixed index (like 
 a negative number). If the status does not get resolved the set can be used 
@@ -4091,8 +4091,8 @@ Syntax & slavepatchsize {\tt<}value{\tt>};
 \end{tabular}\vspace{4mm}
 
 \noindent Sets the size\index{slavepatchsize} of the buffer for sending 
-terms to the secondary processors in ParFORM\index{ParFORM}, one of the 
-parallel\index{parallel} versions of FORM (see chapter \ref{parallel}). In 
+terms to the secondary processors in \ParFORM\index{ParFORM}, one of the 
+parallel\index{parallel} versions of \FORM\ (see chapter \ref{parallel}). In 
 all other versions this statement is ignored. If the value of 
 slavepatchsize is less than the maximum term size (see \ref{setup}) it will 
 be readjusted to the value of maxtermsize\index{maxtermsize} (see 
@@ -4252,7 +4252,7 @@ while in the case of the minus the definition is
         - \sum_{i=j=1}^N
 \end{eqnarray}
 It is assumed that we have harmonic sums\index{harmonic sum} (see the 
-summer library in the FORM distribution). For such sums we expect 
+summer library in the \FORM\ distribution). For such sums we expect 
 functions with lists of nonzero integer arguments. Example:
 \begin{verbatim}
     CF  S,R;
@@ -4315,7 +4315,7 @@ index is replaced by an internal dummy\index{dummy}
 index\index{index!dummy} of the type \verb:N1_?: (or with another number 
 instead of the 1). Such indices have the current
 default\index{default dimension} dimension\index{dimension!default} and can 
-be renamed at will by FORM to bring terms into standard notation. For 
+be renamed at will by \FORM\ to bring terms into standard notation. For 
 example:
 \begin{verbatim}
    f(N2_?,N1_?)*g(N2_?,N1_?)
@@ -4365,7 +4365,7 @@ positive or negative, is allowed.}
 $x^{-4}$ and lower powers are automatically eliminated during the 
 normalization of a term. Of course any other number, positive or negative, 
 is allowed. Note that when the minimum power is positive, terms that have 
-no power of x should technically be eliminated, but FORM will not do so. 
+no power of x should technically be eliminated, but \FORM\ will not do so. 
 Such an action can be achieved at any moment with a combination of the 
 count\index{if!count}\index{count} option of an if\index{if} statement (see 
 \ref{substaif}) and a discard\index{discard} statement (see 
@@ -4449,7 +4449,7 @@ arguments of the function will be ignored.}
 
 \noindent The action of this statement is to symmetrize the 
 (specified) arguments of the functions that are mentioned. This means that 
-the arguments are brought to `natural order' in the notation of FORM by 
+the arguments are brought to `natural order' in the notation of \FORM\ by 
 trying permutations\index{permutation} of the arguments or groups of 
 arguments. The `natural order' may depend on the order of declaration of 
 the variables. \vspace{4mm}
@@ -4491,24 +4491,24 @@ and after that it can have a number of regular function arguments with or
 without wildcarding. The table indices can come in two varieties: 
 matrix\index{matrix like} like or sparse\index{sparse}. In the case of a 
 matrix like table\index{table!matrix like}, for each of the indices a range 
-has to be specified. FORM then reserves a location for each of the 
+has to be specified. \FORM\ then reserves a location for each of the 
 potential elements. For a sparse table\index{table!sparse} one only 
 specifies the number of indices. Sparse tables take less space, but they 
 require more time searching whether an element has been defined. For a 
-matrix like table FORM can look directly whether an element has been 
+matrix like table \FORM\ can look directly whether an element has been 
 defined. Hence one has a tradeoff between space and speed.\vspace{4mm}
 
 \noindent Table elements are defined with the fill\index{fill} statement (see 
 \ref{substafill}). Fill statements for table elements cannot be used before 
 the table has been declared with a table or ntable statement.\vspace{4mm}
 
-\noindent When FORM encounters an unsubstituted table it will look for its 
+\noindent When \FORM\ encounters an unsubstituted table it will look for its 
 indices. Then it can check whether the table element has been defined. If 
 not, it can either complain (when the `strict'\index{strict} option is 
 used) or continue without substitution. Note that an unsubstituted table 
-element is a rather expensive object as FORM will frequently check whether 
+element is a rather expensive object as \FORM\ will frequently check whether 
 it can be substituted (new elements can be defined in a variety of 
-ways....). If the indices match a defined table element, FORM will check 
+ways....). If the indices match a defined table element, \FORM\ will check 
 whether the remaining arguments of the table will match the function-type 
 arguments given in the table declaration in the same way regular function 
 arguments are matched. Hence these arguments can contain 
@@ -4563,16 +4563,16 @@ The table \verb:t1: is two dimensional and has 21 elements. The table
 an extra argument which can be anything that a wildcard symbol will match. 
 The table \verb:t3: is a sparse table with 4 indices.\vspace{4mm}
 
-\noindent If the computer on which FORM runs is a 32\index{32 bits} bit 
+\noindent If the computer on which \FORM\ runs is a 32\index{32 bits} bit 
 computer no table can have more than $2^{15} = 32768$ elements. On a 
 64\index{64 bits} bit computer the limit is $2^{31}$, but one should take 
 into account that each element declared causes some overhead. \vspace{4mm}
 
 \noindent If the wildcarding in the declaration of a table involves the 
 definition of a dollar variable\index{\$-variable} (this is allowed! See 
-\ref{dollars}) parallel execution of the entire remainder of the FORM 
+\ref{dollars}) parallel execution of the entire remainder of the \FORM\ 
 program is switched off. This is of course only relevant for parallel 
-versions of FORM. But if at all possible one should try to find better 
+versions of \FORM. But if at all possible one should try to find better 
 solutions than this use of dollar variables, allowing future parallel 
 processing of the program.
 
@@ -4669,18 +4669,18 @@ tablebases\index{tablebase}.\vspace{10mm}
 \noindent \begin{tabular}{ll}
 Type & Declaration\\
 Syntax & ThreadBucketSize,number;
-\\ See also & the section on TFORM (\ref{tform})
+\\ See also & the section on \TFORM (\ref{tform})
 \end{tabular} \vspace{4mm}
 
 \noindent This statement\index{threadbucketsize} is only active in 
-TFORM\index{TFORM}. In all other versions of FORM it is ignored. It sets 
+\TFORM\index{TFORM}. In all other versions of \FORM\ it is ignored. It sets 
 the size of the buckets\index{bucket} that the master\index{master} thread 
 prepares for treatment by the workers. Bigger buckets means less overhead 
 in signals, but when the buckets are too big the workers may have to wait 
 too long before getting tasks. The best bucket size is usually between 100 
 and 1000, although this depends very much on the problem. The default value 
 is currently 500. For more ways to set this variable one should consult the 
-section on TFORM (\ref{tform}). To find out what its value is, use the
+section on \TFORM\ (\ref{tform}). To find out what its value is, use the
 `ON,setup;' statement (\ref{substaon} and \ref{setup}). \vspace{10mm}
 
 %--#] threadbucketsize : 

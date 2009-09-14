@@ -1,20 +1,20 @@
 \chapter{External communication}
 \label{externalcommunication}
 
-To communicate\index{communication!external} with other programs FORM is 
+To communicate\index{communication!external} with other programs \FORM\ is 
 equipped with special commands. One set of commands is rather simple in 
 nature: the \#pipe\index{\#pipe} (see section \ref{prepipe}) and 
 \#system\index{\#system} (see section \ref{presystem}) instructions allow 
-FORM to run programs in the regular command\index{command shell} 
+\FORM\ to run programs in the regular command\index{command shell} 
 shell\index{shell}. Sometimes however much more sophistication is needed 
 because these instructions have a rather large overhead and need to start 
 new processes each time they are executed. Hence a second more extensive 
 set of instructions was developed that allows the start of an external 
 process\index{process!external}, keep it open and maintain a two way 
 communication\index{communication!two way} with it. Similarly it is 
-possible to start FORM in such a way from other programs. Many details of 
+possible to start \FORM\ in such a way from other programs. Many details of 
 the method of implementation and a number of examples are given in a 
-separate paper which can also found in the FORM site 
+separate paper which can also found in the \FORM\ site 
 (http://www.nikhef.nl/$\sim$form) under publications (look for the file 
 extform.ps\index{extform.ps} or extform.pdf\index{extform.pdf}). Here we 
 will just show the essentials and the syntax.
@@ -27,7 +27,7 @@ channel. Next we can select a channel and communicate with it. To not run
 into syntactic problems, because the external program may have different 
 ideas of what a formula should look like, one may have to install 
 filters\index{filter}. These are additional programs that should be 
-prepared before the FORM program is started that process the communication 
+prepared before the \FORM\ program is started that process the communication 
 to convert from one notation to the other.
 
 %--#[ #external :
@@ -37,7 +37,7 @@ to convert from one notation to the other.
 
 \noindent Syntax:
 
-\#external $<$"prevar"$>$ systemcommand
+\#external ["prevar"] systemcommand
 
 \noindent See also
 
@@ -67,7 +67,7 @@ deal with the current external command.
 
 \noindent Syntax:
 
-\#toexternal "formatstring" $<$,variables$>$
+\#toexternal "formatstring" [,variables]
 
 \noindent See also
 
@@ -86,28 +86,28 @@ append any newline\index{newline} symbol to the end of its output.
 
 \noindent Syntax:
 
-\#fromexternal$<$+$>$$<$-$>$ $<$"$<$\$$>$varname",$<$maxlength$>$$>$
+\#fromexternal[$+-$] ["[\$]varname" [maxlength]]
 
 \noindent Appends\index{\#fromexternal} the output of the current 
 external\index{\#external} 
-command to the FORM program. The semantics differ depending on the optional 
-arguments. After the external command sends the prompt, FORM will continue 
+command to the \FORM\ program. The semantics differ depending on the optional 
+arguments. After the external command sends the prompt, \FORM\ will continue 
 with a next line after the line containing the \#fromexternal instruction. 
 The prompt string is not appended. The optional + or - sign after the name 
 has influence on the listing of the content. The varieties are:
                                                            
-\#fromexternal$<$+$>$$<$-$>$
+\#fromexternal[$+-$]
 
 \noindent The semantics is similar to the \#include\index{\#include} 
 instruction but folders\index{folders} are not supported. 
 
-\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname"
+\#fromexternal[$+-$] "[\$]varname"
 
 \noindent is used to read the text from the running external command into 
 the preprocessor variable varname, or into the dollar variable \$varname if 
 the name of the variable starts with the dollar sign ``\$''.
 
-\#fromexternal$<$+$>$$<$-$>$ "$<$\$$>$varname" maxlength
+\#fromexternal[$+-$] "[\$]varname" maxlength
 
 \noindent is used to read the text from the running external command into 
 the preprocessor (or dollar) variable varname. Only the first maxlength 
@@ -121,7 +121,7 @@ characters are stored.
 
 \noindent Syntax:
 
-\#prompt $<$newprompt$>$
+\#prompt [newprompt]
 
 \noindent Sets\index{\#prompt} a new prompt for the current external 
 command (if present) and all further (newly started) external commands.
@@ -156,7 +156,7 @@ command.
 
 \noindent Syntax:
 
-\#rmexternal $<$n$>$
+\#rmexternal [n]
 
 \noindent Terminates an external\index{\#rmexternal} command. The integer 
 number n must be either the descriptor of a running external command, or 0.
@@ -193,7 +193,7 @@ Possible attributes are:
 \begin{description}
 \item[kill\index{kill}]
 specifies the signal to be sent to the external command either before the 
-termination of the FORM program or by the preprocessor instruction 
+termination of the \FORM\ program or by the preprocessor instruction 
 \#rmexternal\index{\#rmexternal}. By default this is 9 
 (SIGKILL\index{SIGKILL signal}). Number 0 means that no signal will be 
 sent.
@@ -235,7 +235,7 @@ starts a command in the subshell within the current process group with
 default attributes kill=9 and killall=true.
 The instruction \#rmexternal\index{\#rmexternal} sends the
 KILL\index{KILL signal} signal to the whole group, which means that also 
-FORM itself will be killed.
+\FORM\ itself will be killed.
 
 %--#] #setexternalattr :
 %--#[ An example :
@@ -306,18 +306,18 @@ Lines 29 and 30 close the external channels.
 %--#] An example :
 %--#[ Embedding :
 
-\section{Embedding FORM in other applications}
+\section{Embedding \FORM\ in other applications}
 \label{embeddingcommunication}
 
-The external channel instructions permit FORM to swallow an external 
+The external channel instructions permit \FORM\ to swallow an external 
 program. The same mechanism can be used in order to {\em 
-embed\index{embed}} FORM in other applications.
+embed\index{embed}} \FORM\ in other applications.
 
-There is a possibility to start FORM from another program providing
+There is a possibility to start \FORM\ from another program providing
 one (or more) communication channels (see below). These channels will be 
-visible from a FORM program as
+visible from a \FORM\ program as
 ``pre-opened''\index{pre-opened external channels} external channels 
-existing after FORM starts. There is no need to open them with the 
+existing after \FORM\ starts. There is no need to open them with the 
 \#external\index{\#external} instruction.
 In this case, the preprocessor variable ``PIPES\_''\index{PIPES\_} is 
 defined and is equal to the total number of the pre-opened external 
@@ -351,49 +351,49 @@ Formally, they are as follows:
 In order to activate the pre-opened external channels, the parent
 application must follow some standards. Here we describe a low-level 
 protocol\index{protocol!lowlevel}, the corresponding 
-C-interface\index{C-interface} is available from the FORM distribution site 
+C-interface\index{C-interface} is available from the \FORM\ distribution site 
 under packages and then externalchannels.
 
-Before starting FORM, the parent application must create one or more pairs 
+Before starting \FORM, the parent application must create one or more pairs 
 of pipes. A pipe\index{pipe} is a pair of file descriptors, one is for 
 reading and another is for writing. In LINUX\index{LINUX}, see ``man 2 
 pipe''. The read-only descriptor of the first pipe in the pair and the 
-write-only descriptor of the second pipe must be passed to FORM as an 
+write-only descriptor of the second pipe must be passed to \FORM\ as an 
 argument of a command line option ``\verb|-pipe|'' in ASCII decimal format. 
 The argument of the option is a comma-separated list of pairs
 ``\verb|r#,w#|'' where ``\verb|r#|'' is a read-only descriptor and 
 ``\verb|w#|'' is a write-only descriptor; alternatively, an environment 
 variable FORM\_PIPES\index{FORM\_PIPES} containing this list can be used 
 (the command line option overrides the environment variable). For example, 
-to start FORM with two pre-opened external channels the parent application 
+to start \FORM\ with two pre-opened external channels the parent application 
 has to create first four pipes. Lets us suppose the first pipe was created 
 with the descriptors 5 and 6, the second pipe has the descriptors 7 and 8, 
 the third pipe has the descriptors 9 and 10 and the fourth pipe has the 
-descriptors 11 and 12. The descriptors 5 and 8 will be used by FORM as the 
+descriptors 11 and 12. The descriptors 5 and 8 will be used by \FORM\ as the 
 input and the output for the first pre-opened external channel while the 
-descriptors 9 and 12 will be used by FORM as the input and the output for 
+descriptors 9 and 12 will be used by \FORM\ as the input and the output for 
 the second pre-opened external channel.
 
-Then the parent application must start FORM with the following 
+Then the parent application must start \FORM\ with the following 
 command line option:
 \begin{verbatim}
    -pipe 5,8,9,12
 \end{verbatim}
 
-Upon startup, FORM sends its PID\index{PID} (the Process Identifier) in 
+Upon startup, \FORM\ sends its PID\index{PID} (the Process Identifier) in 
 ASCIIdecimal format with an appended newline character to the descriptor 8 
-and then FORM will wait for the answer from the descriptor 5. The answer 
+and then \FORM\ will wait for the answer from the descriptor 5. The answer 
 must be two comma-separated integers in ASCII decimal format followed by a 
-newline character. The first integer corresponds to the FORM PID while the 
+newline character. The first integer corresponds to the \FORM\ PID while the 
 second one is the parent process PID. If the answer is not obtained after 
 some timeout, or if it is not correct (i.e. it is not a list of two 
-integers or the first integer is not the FORM PID) then FORM fails. If 
-everything is correct, FORM creates the pre-opened channel and puts its 
+integers or the first integer is not the \FORM\ PID) then \FORM\ fails. If 
+everything is correct, \FORM\ creates the pre-opened channel and puts its 
 descriptor in the preprocessor variable ``PIPE1\_''.
 
-Then FORM processes the second pair of arguments, ``\verb|9,12|''.
+Then \FORM\ processes the second pair of arguments, ``\verb|9,12|''.
 
-After all pairs have been processed FORM creates the preprocessor variable 
+After all pairs have been processed \FORM\ creates the preprocessor variable 
 ``PIPES\_'' and puts into this variable the total number of created 
 pre-opened external channels.
 

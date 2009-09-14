@@ -2,7 +2,7 @@
 \chapter{Dirac algebra}
 \label{gammaalgebra}
 
-For its use in high\index{high energy physics} energy physics FORM is 
+For its use in high\index{high energy physics} energy physics \FORM\ is 
 equipped with a built-in class of functions. These are the 
 gamma\index{gamma matrices} matrices of the Dirac\index{Dirac algebra} 
 algebra which are generically denoted by g\_\index{g\_}. The gamma matrices 
@@ -40,7 +40,7 @@ different. We introduce the following notation for convenience:
      g_(j,7_) = g7_(j)
 \end{verbatim}
 The common operation on gamma matrices is to obtain the trace\index{trace} 
-of astring of gamma matrices. This is done with the statement:
+of a string of gamma matrices. This is done with the statement:
 
 \leftvitem{4cm}{trace4\index{trace4}, j}
 \rightvitem{12cm}{Take the trace in 4 dimensions of the combination of all 
@@ -96,13 +96,13 @@ happens that there are two or more common indices in two spin lines.
 Without the symmetrize option (or with the 
 `nosymmetrize'\index{nosymmetrize} option) the first of these indices is 
 taken and the relation is applied to it. With the `symmetrize' option 
-the average over all possibilities is taken. This means of course that of 
+the average over all possibilities is taken. This means of course that if 
 there are two common indices the amount of work is doubled. There is 
 however a potentially large advantage. In some traces that involve the use of 
 $\gamma_5$ the use of automatic algorithms results often in an avalanche of 
 terms with a single Levi-Civita tensor, while symmetry arguments can show 
 that these terms should add up to zero. By working out the traces in a more 
-symmetric fashion FORM is often capable of eliminating all or nearly all of 
+symmetric fashion \FORM\ is often capable of eliminating all or nearly all of 
 these Levi-Civita tensors. Normally such an elimination is rather 
 complicated. It involves relations that have so far defied proper 
 implementation, even though people have been looking for such algorithms 
@@ -130,7 +130,7 @@ faster.
 
 \noindent Algorithms\index{algorithms}:
 
-FORM has been equipped with several built in rules to keep the 
+\FORM\ has been equipped with several built in rules to keep the 
 number of generated terms to a minimum during the evaluation of a 
 trace. These rules are:
 

@@ -1,22 +1,22 @@
 \chapter{Running FORM}
 \label{running}
 
-The proper way to invoke the running\index{running FORM} of FORM depends on 
+The proper way to invoke the running\index{running \FORM} of \FORM\ depends on 
 the operating system that is being used. Here we will consider the 
 UNIX\index{UNIX} operating system and its derivatives. The version for 
 computers with the Windows operating system use Cygwin\index{Cygwin}, which 
 is a UNIX derivative as well and hence it functions similarly. In all cases 
-a proper call of FORM is
+a proper call of \FORM\ is
 \begin{verbatim}
-	form [options] inputfile
+     form [options] inputfile
 \end{verbatim}
 The input file\index{file!input} should have a name that ends in the 
 extension \verb:.frm:. It is however not needed to specify this extension. 
-If this extension is absent, FORM will add it. Example:
+If this extension is absent, \FORM\ will add it. Example:
 \begin{verbatim}
-	form myformprogram
+     form myformprogram
 \end{verbatim}
-and FORM will look for the file \verb:myformprogram.frm:. The options are 
+and \FORM\ will look for the file \verb:myformprogram.frm:. The options are 
 separated by blanks and start with a minus sign, followed by one or more 
 alphabetic characters. They are:
 \begin{description}
@@ -39,7 +39,7 @@ alphabetic characters. They are:
 \item[-M] Put the PID (process identifier) in the name of the temporary 
      files. This makes for longer names, but gives a better guarantee of 
      uniqueness. If a file with the created name exists already it will be 
-     overwritten. This option is for when several instances of FORM are 
+     overwritten. This option is for when several instances of \FORM\ are 
      started at nearly the same time as can happen from minos or make (with 
      the make -j option).
 %\item[-n] This should be followed immediately by a number. The 
@@ -49,7 +49,7 @@ alphabetic characters. They are:
 %%%% Maybe this should become -w as well.
 \item[-p] Next argument/option is the path of a directory for 
      input, include, procedure and subroutine files.
-\item[-pipe] Indicates that FORM is started up as the receiving 
+\item[-pipe] Indicates that \FORM\ is started up as the receiving 
      end of a pipe. Action will be taken to set up the proper communication 
      channels.
 \item[-q] Quiet option. Only output expressions are printed.
@@ -63,8 +63,8 @@ alphabetic characters. They are:
 \item[-v] Only the version will be printed. The program terminates 
      immediately after it.
 \item[-w] This should be followed immediately by a number. The 
-     number indicates the number of worker threads for TFORM. All other 
-     versions of FORM ignore this parameter. It should be noted that TFORM 
+     number indicates the number of worker threads for \TFORM. All other 
+     versions of \FORM\ ignore this parameter. It should be noted that \TFORM\ 
      is a different program. For more information, please consult 
      chapter~\ref{parallel}.
 \item[-y] Run only the preprocessor and dump its output.
@@ -79,24 +79,24 @@ with the extra extension \verb:.log:.
 Example:
 \begin{center}
 \begin{verbatim}
-	form -t /LocalDisk/mydir -l myformprogram
+     form -t /LocalDisk/mydir -l myformprogram
 \end{verbatim}
 \end{center}
-FORM will run the program in the file \verb:myformprogram.frm:. Its output 
+\FORM\ will run the program in the file \verb:myformprogram.frm:. Its output 
 will both be written to the screen and into the file 
 \verb:myformprogram.log:. The temporary files (if any) will be made in the 
 directory \verb:/LocalDisk/mydir:. This last feature is very useful, 
 because writing temporary files across a network can sometimes slow things 
 down considerably.
 
-The second way to pass parameters to FORM during startup is by means of 
+The second way to pass parameters to \FORM\ during startup is by means of 
 environment\index{environment variables} variables, assuming of course that 
 the system supports them. The following variables are supported:
 \begin{description}
-\item[FORMPATH]\index{FORMPATH} The directory in which FORM will look for 
+\item[FORMPATH]\index{FORMPATH} The directory in which \FORM\ will look for 
 procedures and header files, assuming it cannot find them in the current 
 directory.
-\item[FORMTMP]\index{FORMTMP} The directory in which FORM will make its 
+\item[FORMTMP]\index{FORMTMP} The directory in which \FORM\ will make its 
 temporary files\index{file!temporary}.
 \item[FORMSETUP]\index{FORMSETUP} The full path and name of a setup 
 file\index{file!setup}.
@@ -106,22 +106,22 @@ tail and in the environment the value of the command tail will be used.
 
 The third way to pass parameters at startup is by means of a setup 
 file\index{file!setup}. 
-One of the first things FORM does is to locate such a startup file. The 
+One of the first things \FORM\ does is to locate such a startup file. The 
 procedure that is being followed for this is:
 \begin{itemize}
-\item If the command tail specifies a setup file, FORM will use this file, 
+\item If the command tail specifies a setup file, \FORM\ will use this file, 
 ignoring all other indications with respect to the setup file. This assumes 
-of course that this file exists. If it does not exist FORM passes on to the 
+of course that this file exists. If it does not exist \FORM\ passes on to the 
 next option.
-\item If the command tail specifies a path for the setup file, FORM will 
+\item If the command tail specifies a path for the setup file, \FORM\ will 
 try to open the file "form.set" in this directory. If this cannot be done 
-(by lack of rights or because the file does not exist) FORM passes on to 
+(by lack of rights or because the file does not exist) \FORM\ passes on to 
 the next option.
-\item Next FORM tries to open the file "form.set"\index{form.set} in the 
-current directory.\item If all else fails, FORM will look for the 
+\item Next \FORM\ tries to open the file "form.set"\index{form.set} in the 
+current directory.\item If all else fails, \FORM\ will look for the 
 environment parameter FORMSETUP and use its value as the name of a setup 
 file.
 \end{itemize}
-If all the above attempts fail, FORM will not use a setup file. For more 
+If all the above attempts fail, \FORM\ will not use a setup file. For more 
 information about the setup file one should consult the corresponding 
 chapter on page \ref{setup}.

@@ -2,7 +2,7 @@
 \chapter{A few notes on the use of a metric}
 \label{metric}
 
-\noindent When FORM was designed, it was decided to make its syntax more or 
+\noindent When \FORM\ was designed, it was decided to make its syntax more or 
 less independent of a choice of the metric\index{metric}. Hence statements 
 and facilities that programs like Schoonschip\index{Schoonschip} or 
 REDUCE\index{REDUCE} provide but which depend on the choice of a metric 
@@ -11,7 +11,7 @@ the metric, when the need really arises. When one makes a proper study of
 it, it turns out that one usually has to do very little or nothing. \hfill 
 \vspace{2mm}
 
-\noindent First one should realize that FORM does not know any specific 
+\noindent First one should realize that \FORM\ does not know any specific 
 metric by itself. Dotproducts are just objects of manipulation. It is 
 assumed that when a common index of two vectors is contracted, this works 
 out properly into a scalar object. This means that if one has a metric with 
@@ -19,18 +19,18 @@ upper and lower indices\index{indices!upper}\index{indices!lower}, one
 index is supposed to be an upper index and the other is supposed to be a 
 lower index. If the user does not like this, it is his/her responsibility 
 to force the system into a different action. This is reflected in the fact 
-that FORM does not have an internal metric tensor\index{tensor!metric} 
+that \FORM\ does not have an internal metric tensor\index{tensor!metric} 
 $\eta_{\mu\nu}$. It has only a Kronecker\index{Kronecker} 
 delta\index{delta!Kronecker} $\delta_{\mu\nu} =$ \verb:d_(mu,nu): with 
 \verb:p(mu)*d_(mu,nu)*q(nu): $\rightarrow$ \verb:p.q: when mu and nu are 
 summable indices\index{indices!summable}. \hfill \vspace{2mm}
 
 \noindent The dependency of a metric usually enters with statements like 
-$p^2 = \pm m^2$, which the user should provide anyway, because FORM does 
+$p^2 = \pm m^2$, which the user should provide anyway, because \FORM\ does 
 not have such knowledge. Connected to this is the choice of a 
 propagator\index{propagator} as either $\gamma_\mu p_\mu + m$ or 
 $\gamma_\mu p_\mu + i\ m$. This is also something the user should provide. 
-The only objects that FORM recognizes and that could be considered as 
+The only objects that \FORM\ recognizes and that could be considered as 
 metric-dependent are the gamma matrices\index{matrices!gamma} and the 
 Levi-Civita\index{Levi-Civita} tensor\index{tensor!Levi-Civita} 
 \verb:e_:. Because the trace of a $\gamma_5$ involves a Levi-Civita tensor, 
@@ -54,7 +54,7 @@ sign of the determinant of the metric tensor, if one would like the
 Kronecker delta to play the role of a metric tensor. Hence it is best to 
 try to avoid such a situation. \hfill \vspace{2mm}
 
-\noindent In FORM the $\gamma_5$ is an object that anticommutes with 
+\noindent In \FORM\ the $\gamma_5$ is an object that anticommutes with 
 the $\gamma_\mu$ and has $\gamma_5\gamma_5 = 1$. Its properties 
 in the trace are 
 \begin{eqnarray}
@@ -68,23 +68,23 @@ conjugation we have to replace $\gamma_5$ by $-\gamma_5$ as is not
 uncommon. \hfill \vspace{2mm}
 
 \noindent There was a time that a conjugation\index{conjugation} operation 
-was planned in FORM. As time progressed, it was realized that this would 
+was planned in \FORM. As time progressed, it was realized that this would 
 introduce problems with some of the internal objects. Hence some objects 
 have the property that they are considered imaginary\index{imaginary}. In 
-practise FORM does not do anything with this. Neither does it do anything 
+practise \FORM\ does not do anything with this. Neither does it do anything 
 with the declarations real\index{real}, complex\index{complex} and 
 imaginary\index{imaginary}. If ever a way is found to implement a conjugation 
 operator that will make everybody happy, it may still be built in. \hfill 
 \vspace{2mm}
 
 \noindent The above should give the user enough information to convert any 
-specific metric to what is needed to make FORM do what is expected from it. 
+specific metric to what is needed to make \FORM\ do what is expected from it. 
 Afterwards one can convert back, provided no metric\index{metric} specific 
 operations are done. Such metric specific things are for instance needed in 
 some types of approximations in which one substitutes objects by 
 (vector)components halfway the calculation. In that case one cannot rely on 
 that the conversions at the beginning and the end will be compensating each 
-other. For this case FORM allows the user to define a private metric. All 
+other. For this case \FORM\ allows the user to define a private metric. All 
 the tools exist to make this a success with the exception of a loss in 
 speed of course. Let us have a look at the contraction of two Levi-Civita 
 tensors in an arbitrary metric:
@@ -160,7 +160,7 @@ FixIndex\index{fixindex} (\ref{substafixindex}) statement. This one assigns
 specific values to selected diagonal elements of the Kronecker delta. Of 
 course it is the responsibility of the user to make sure that the 
 calculation will indeed run into those elements. This is by no means 
-automatic, because when FORM uses formal indices it never writes them out 
+automatic, because when \FORM\ uses formal indices it never writes them out 
 in components. Moreover, it would not be defined what would be the 
 components connected to an index. The index could run over $0,1,2,3$ or 
 over $1,2,3,4$, or maybe even over $5,7,9,11$. And what does an 
@@ -196,7 +196,7 @@ In the case that one would like to exchange the order of the summation and
 the contraction, while using the FixIndex mechanism, one needs to be more 
 careful. In that case we have to prevent the indices from being summed over 
 while they are indices of a Kronecker delta, because as long as the indices 
-are symbolic, FORM will replace \verb:d_(i1,i1): by the dimension of 
+are symbolic, \FORM\ will replace \verb:d_(i1,i1): by the dimension of 
 \verb:i1:, and that is not what we want. Hence we have to declare the 
 indices to be non-summable by giving them dimension zero:
 \begin{verbatim}
@@ -242,9 +242,9 @@ with the inner workings themselves by for instance inserting a factor $i$
 in front of the $\gamma_5$ and emulating the upper and lower indices of a 
 favorite metric, this leads from one problem to the next. Extreme care is 
 needed. This is usually done by people who have first worked with other 
-programs in which things don't work as naturally as in FORM. By the time 
+programs in which things don't work as naturally as in \FORM. By the time 
 one has really figured out how to deal with the metric and how to make use 
-of the internal algorithms of FORM, one usually does not have to do very 
+of the internal algorithms of \FORM, one usually does not have to do very 
 much again. \hfill \vspace{2mm}
 
 \noindent As in the Zen\index{Zen} saying: \hfill \vspace{2mm}
