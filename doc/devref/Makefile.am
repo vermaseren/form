@@ -3,6 +3,8 @@ TEXFILES = \
 
 MAIN = devref
 
+.PHONY: FORCE dvi html ps pdf clean-local
+
 DATEFILE = devrefdate.tex
 $(DATEFILE): FORCE
 	if [ "x$(DATE)" != x ]; then echo $(DATE) > $(DATEFILE); else echo `date +"%d %b %Y"` > $(DATEFILE); fi
@@ -18,19 +20,20 @@ $(MAIN).dvi: $(DATEFILE) $(TEXFILES)
 	${LATEX} $(MAIN).tex; \
 	${LATEX} $(MAIN).tex
 
-########## CONFIG_LATEX2HTML
-if CONFIG_LATEX2HTML
+########## CONFIG_HTLATEX
+if CONFIG_HTLATEX
+
+$(MAIN).aux: $(DATEFILE) $(MAIN).dvi
 
 html: $(DATEFILE) html/$(MAIN).html
 
 html/$(MAIN).html: $(DATEFILE) $(MAIN).aux
+	@set -e ;\
 	mkdir -p html; \
-	$(LATEX2HTML) -no_auto_link -dir html -no_navigation -split 0 -info 0 -no_address $(MAIN).tex
-
-$(MAIN).aux: $(DATEFILE) $(MAIN).dvi
+	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"
 
 endif
-########## CONFIG_LATEX2HTML
+########## CONFIG_HTLATEX
 
 ########## CONFIG_PS
 if CONFIG_PS

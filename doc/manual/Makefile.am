@@ -45,19 +45,30 @@ $(MAIN).dvi: $(DATEFILE) $(TEXFILES)
 	${LATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${LATEX} $(MAIN).tex; done
 endif
 
-########## CONFIG_LATEX2HTML
-if CONFIG_LATEX2HTML
+########## CONFIG_HTLATEX
+if CONFIG_HTLATEX
 
 $(MAIN).aux: $(DATEFILE) $(MAIN).dvi
 
 html: $(DATEFILE) html/$(MAIN).html
 
-html/$(MAIN).html: $(DATEFILE) $(MAIN).aux
+if CONFIG_MAKEINDEX
+html/$(MAIN).html: $(DATEFILE)
+	@set -e ;\
 	mkdir -p html; \
-	$(LATEX2HTML) -tex_defs -html_version 4.0,math,table -no_auto_link -dir html -no_navigation -split 0 -info 0 -no_address $(MAIN)
-#  htlatex manual "xhtml,mathml-,index=2,0" "" "-cvalidate"
+	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"; \
+	${TEX} '\def\filename{{$(MAIN)}{idx}{4dx}{ind}} \input  idxmake.4ht'; \
+	${MAKEINDEX} -o $(MAIN).ind $(MAIN).4dx; \
+	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"
+else
+html/$(MAIN).html: $(DATEFILE)
+	@set -e ;\
+	mkdir -p html; \
+	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"
 endif
-########## CONFIG_LATEX2HTML
+
+endif
+########## CONFIG_HTLATEX
 
 ########## CONFIG_PS
 if CONFIG_PS
@@ -93,7 +104,8 @@ endif
 endif
 #################### CONFIG_TEX
 
-CLEANFILES = $(addprefix $(MAIN),.ind .ilg .aux .dvi .idx .log .ps .pdf .toc) $(DATEFILE)
+CLEANFILES = $(addprefix $(MAIN),.4ct .4dx .4ix .4tc .aux .css .dvi .html .idv .idx .ilg .ind .lg .log .pdf .ps .tmp .toc .xref)
+CLEANFILES += idxmake.dvi idxmake.log $(DATEFILE) texput.log
 
 clean-local:
 	rm -rf html
