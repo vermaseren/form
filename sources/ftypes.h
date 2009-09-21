@@ -625,6 +625,7 @@ typedef int (*TFUN1)();
 #define PRINTCONTENT 3
 #define PRINTLFILE 4
 #define PRINTONETERM 8
+#define PRINTONEFUNCTION 16
 
 /**
  *  @name Defines: function specs
