@@ -44,7 +44,6 @@ static KEYWORD com1commands[] = {
 	,{"fixindex",       (TFUN)CoFixIndex,         DECLARATION,  PARTEST}
 	,{"global",         (TFUN)CoGlobal,           DEFINITION,   PARTEST}
 	,{"goto",           (TFUN)CoGoTo,             STATEMENT,    PARTEST}
-	,{"go to",          (TFUN)CoGoTo,             STATEMENT,    PARTEST}
 	,{"index",          (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
 	,{"indices",        (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
 	,{"identify",       (TFUN)CoId,               STATEMENT,    PARTEST}
