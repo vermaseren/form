@@ -21,12 +21,19 @@ TEXFILES = \
 
 MAIN = manual
 
-.PHONY: FORCE dvi html ps pdf clean-local
+.PHONY: FORCE dvi html ps pdf clean-html clean-local
 
 DATEFILE = manualdate.tex
 $(DATEFILE): FORCE
-	if [ "x$(DATE)" != x ]; then echo $(DATE) > $(DATEFILE); else echo `date +"%d %b %Y"` > $(DATEFILE); fi
+	OLDDATE=0; if [ -f $(DATEFILE) ]; then OLDDATE=$$(cat $(DATEFILE)); OLDDATE=$$(date -d "$$OLDDATE" +%Y%m%d); fi; \
+	NEWDATE=0; if [ "x$(DATE)" != x ]; then NEWDATE=$(DATE); else NEWDATE=$$(date +"%d %b %Y"); fi; \
+	if [ $$(date -d "$$NEWDATE" +%Y%m%d) -gt $$OLDDATE ]; then echo $$NEWDATE > $(DATEFILE); echo DIDIT; fi
 FORCE:
+
+HTMLCLEANFILES = idxmake.dvi idxmake.log $(addprefix $(MAIN),.4ct .4dx .4ix .4tc .aux .css .dvi .html .idv .idx .ilg .ind .lg .log .tmp .xref)
+CLEANFILES = $(MAIN).pdf $(MAIN).ps $(MAIN).toc $(DATEFILE) texput.log $(HTMLCLEANFILES)
+clean-local:
+	rm -rf html
 
 #################### CONFIG_TEX
 if CONFIG_TEX
@@ -59,12 +66,15 @@ html/$(MAIN).html: $(DATEFILE)
 	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"; \
 	${TEX} '\def\filename{{$(MAIN)}{idx}{4dx}{ind}} \input  idxmake.4ht'; \
 	${MAKEINDEX} -o $(MAIN).ind $(MAIN).4dx; \
-	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"
+	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"; \
+	sed -i 's/table.tabular {margin-left: auto; margin-right: auto;}/table.tabular {margin-left: inherit;}/' html/$(MAIN).css; \
+	rm -f $(HTMLCLEANFILES)
 else
 html/$(MAIN).html: $(DATEFILE)
 	@set -e ;\
 	mkdir -p html; \
-	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"
+	${HTLATEX} $(MAIN) "html,mathml-" "" "-dhtml/"; \
+	rm -f $(HTMLCLEANFILES)
 endif
 
 endif
@@ -103,9 +113,3 @@ endif
 
 endif
 #################### CONFIG_TEX
-
-CLEANFILES = $(addprefix $(MAIN),.4ct .4dx .4ix .4tc .aux .css .dvi .html .idv .idx .ilg .ind .lg .log .pdf .ps .tmp .toc .xref)
-CLEANFILES += idxmake.dvi idxmake.log $(DATEFILE) texput.log
-
-clean-local:
-	rm -rf html
