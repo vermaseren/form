@@ -184,6 +184,7 @@ AC_CONFIG_FILES([
 	doc/doxygen/DoxyfileHTML
 	doc/doxygen/DoxyfileLATEX
 	doc/doxygen/DoxyfilePDFLATEX
+	check/Makefile
 ])
 
 AC_OUTPUT
