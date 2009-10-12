@@ -1,5 +1,3 @@
-require 'form'
-
 #[ SparseTable1 :
 =begin
 	Bugs reported 2004-04-06 by Misha Tentukov

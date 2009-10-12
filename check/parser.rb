@@ -1,5 +1,3 @@
-require 'form'
-
 #[ NegArgument :
 =begin
 	Parser accepted negative numbers as arguments to Dimension, Tracen, ...

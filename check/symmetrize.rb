@@ -1,5 +1,3 @@
-require 'form'
-
 #[ NonZero :
 =begin
 	Bug reported 2005-09-27 by Aneesh Manohar

@@ -123,3 +123,11 @@ class FormTest < Test::Unit::TestCase
 		Regexp.new(san_str, Regexp::MULTILINE)
 	end
 end
+
+if __FILE__ == $0
+	Dir.glob(ENV['srcdir']+"/**/*.rb") do |iname|
+		if iname != $0
+			require iname
+		end
+	end
+end

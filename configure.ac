@@ -172,6 +172,10 @@ AM_CONDITIONAL(CONFIG_PDF, [test ! -z "$PDFLATEX"])
 AM_CONDITIONAL(CONFIG_MAKEINDEX, [test ! -z "$MAKEINDEX"])
 AM_CONDITIONAL(CONFIG_HTLATEX, [test ! -z "$HTLATEX"])
 
+# Check for Ruby
+AC_PATH_PROG(RUBY, ruby, "")
+AM_CONDITIONAL(CONFIG_RUBY, [test ! -z "$RUBY"])
+
 AC_CONFIG_FILES([
 	Makefile
 	sources/Makefile
@@ -227,6 +231,11 @@ echo "Type 'make <executable name>' in the source directory to"
 echo "build a specific version. Type 'make' to build all."
 echo "Type 'make install' to install the executables in"
 echo "$outputdir."
+if test ! -z "$RUBY"; then
+	echo "Type 'make check' to run automatic tests."
+else
+	echo "Ruby was not found. Automatic tests will not work."
+fi
 echo
 echo "Available documentation:"
 atleastone=no
