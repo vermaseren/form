@@ -835,7 +835,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply :
+  	#] CoMultiply : 
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1637,7 +1637,7 @@ static WORD AssignLHS[14] = { TYPEASSIGN, 3+SUBEXPSIZE, 0,
 int CoAssign(UBYTE *inp)
 {
 	int error = 0, retcode;
-	UBYTE *name;
+	UBYTE *name, c;
 	WORD number;
 	if ( *inp != '$' ) {
 nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
@@ -1649,15 +1649,19 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 	if ( AP.PreAssignFlag == 2 ) {
 		if ( *inp == '_' ) inp++;
 	}
-	if ( *inp != '=' ) {
+	if ( ( *inp == ',' && inp[1] != '=' ) && ( *inp != '=' ) ) {
 		MesPrint("&assign statement should have only a dollar variable in the LHS");
 		return(1);
 	}
+	c = *inp;
 	*inp = 0;
 	if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) {
 		number = AddDollar(name,DOLUNDEFINED,0,0);
 	}
+	*inp = c;
+	if ( c == ',' ) inp++;
 	*inp++ = '=';
+	if ( *inp == ',' ) inp++;
 /*
 	Fake a Prototype and read the RHS
 */
@@ -1710,7 +1714,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign : 
+  	#] CoAssign :
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);

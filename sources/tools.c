@@ -2828,12 +2828,12 @@ LONG Timer(int par)
     struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 	else {
 	    getrusage(RUSAGE_SELF,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 }
@@ -2881,12 +2881,12 @@ LONG Timer(int par)
 	struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 	else {
 	    getrusage(RUSAGE_SELF,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 #endif
@@ -2928,19 +2928,19 @@ LONG Timer(int par)
 		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing) ) {
 			MesPrint("Error in getting timing information");
 		}
-		return(AR.timing.tv_sec*1000+AR.timing.tv_nsec/1000000);
+		return(((LONG)(AR.timing.tv_sec))*1000+AR.timing.tv_nsec/1000000);
 	}
 	return(0);
 #else
 	struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 	else {
 	    getrusage(RUSAGE_SELF,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 #endif
@@ -2957,12 +2957,12 @@ LONG Timer(int par)
     struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 	else {
 	    getrusage(RUSAGE_SELF,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 }
@@ -2986,12 +2986,12 @@ LONG Timer(int par)
     struct rusage rusage;
 	if ( par == 1 ) {
 	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 	else {
 	    getrusage(RUSAGE_SELF,&rusage);
-    	return((rusage.ru_utime.tv_sec+rusage.ru_stime.tv_sec)*1000
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
 		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
 	}
 #else
@@ -3112,7 +3112,7 @@ LONG Timer(int par)
 #endif
 
 /*
- 		#] Timer : 
+ 		#] Timer :
  		#[ Crash :
 
 		Routine for debugging purposes
@@ -3328,6 +3328,6 @@ finish:
 }
 
 /*
- 		#] TestTerm :
+ 		#] TestTerm : 
   	#] Mixed :
 */
