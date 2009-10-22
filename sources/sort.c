@@ -882,6 +882,11 @@ RetRetval:
 #endif
 
 #ifdef PARALLEL
+/*[20oct2009 mt]:*/
+	if( (PF.exprtodo>=0) && (AR.sLevel == 0) )
+		Expressions[AR.CurExpr].counter = S->TermsLeft;
+	else
+/*:[20oct2009 mt}*/
 	if ( AR.sLevel == 0 && PF.me == MASTER) {
 		if(AC.mparallelflag == PARALLELFLAG)
 			Expressions[AR.CurExpr].counter = PF.goutterms;
@@ -1353,7 +1358,10 @@ nocompress:
 		do {
 			if ( p >= fi->POstop ) {
 #ifdef PARALLEL /* [16mar1998 ar] */
-			  if ( ( fi == AR.outfile || fi == AR.hidefile ) && PF.me != MASTER && PF.parallel ){
+/*[20oct2009 mt]:*/
+			  /*if ( ( fi == AR.outfile || fi == AR.hidefile ) && PF.me != MASTER && PF.parallel ){*/
+				if ( ( fi == AR.outfile || fi == AR.hidefile ) && PF.me != MASTER && PF.parallel && (PF.exprtodo < 0) ) {
+/*:[20oct2009 mt]*/
 				PF_BUFFER *sbuf = PF.sbuf;
 				sbuf->fill[sbuf->active] = fi->POstop;
 				PF_ISendSbuf(MASTER,PF_BUFFER_MSGTAG);
@@ -1475,8 +1483,10 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
-
-	if (PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel ){
+/*[20oct2009 mt]:*/
+	/*if (PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel ){*/
+	if ( PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel && (PF.exprtodo < 0) ) {
+/*:[20oct2009 mt]*/
 		PF_BUFFER *sbuf = PF.sbuf;
 		if ( fi->POfill >= fi->POstop ){
 		  sbuf->fill[sbuf->active] = fi->POstop;
@@ -3240,7 +3250,10 @@ ConMer:
 	else {	/* Load the patches */
 		S->lPatch = (S->inNum);
 #ifdef PARALLEL /* [16aug1998 ar] */
-		if ( S->lPatch > 1 || fout == AR.outfile || fout == AR.hidefile ) {
+		/*if ( S->lPatch > 1 || fout == AR.outfile || fout == AR.hidefile ) {*/
+/*[20oct2009 mt]:*/
+		if ( S->lPatch > 1 || ( (PF.exprtodo <0) && (fout == AR.outfile || fout == AR.hidefile ) ) ) {
+/*:[20oct2009 mt]*/
 #else
 		if ( S->lPatch > 1 ) {
 #endif /* PARALLEL [16aug1998 ar] */

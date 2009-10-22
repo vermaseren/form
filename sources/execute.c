@@ -121,6 +121,11 @@ WORD CleanExpr(WORD par)
 #ifdef WITHPTHREADS
 				e_out->partodo = 0;
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+				e_out->p_Partodo = 0;
+#endif
+/*:[20oct2009]*/
 				e_out++;
 				j++;
 				break;
@@ -554,11 +559,25 @@ WORD DoExecute(WORD par, WORD skip)
 			MesPrint("WARNING!: store module - module %l is forced to run in sequential mode.", AC.CModule);
 		AC.mparallelflag = NOPARALLEL_STORE;
 	}
+/*[20oct2009 mt]:*/
 	if ( ( AC.NumberOfRhsExprInModule > 0 ) &&
-		 ( AC.mparallelflag == PARALLELFLAG ) ) {
-		MesPrint("WARNING!: RHS expression names - module %l is forced to run in sequential mode.", AC.CModule);
-		AC.mparallelflag = NOPARALLEL_RHS;
+			( AC.mparallelflag == PARALLELFLAG ) ) {
+		if (PF.rhsInParallel) {
+			PF.mkSlaveInfile=1;
+			if(PF.me != MASTER){
+				PF.slavebuf.PObuffer=(WORD *)Malloc1(AM.ScratSize*sizeof(WORD),"PF inbuf");
+				PF.slavebuf.POsize=AM.ScratSize*sizeof(WORD);
+				PF.slavebuf.POfull = PF.slavebuf.POfill = PF.slavebuf.PObuffer;
+				PF.slavebuf.POstop= PF.slavebuf.PObuffer+AM.ScratSize;
+				PUTZERO(PF.slavebuf.POposition);
+			}/*if(PF.me != MASTER)*/
+		} 
+		else {
+			AC.mparallelflag = NOPARALLEL_RHS;
+			MesPrint("WARNING!: RHS expression names - module %l is forced to run in sequential mode.", AC.CModule);
+		}
 	}
+/*:[20oct2009 mt]*/
 #endif
 	AR.SortType = AC.SortType;
 	if ( AC.SetupFlag ) WriteSetup();
@@ -578,6 +597,21 @@ WORD DoExecute(WORD par, WORD skip)
 		}
 	}
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	AC.p_Numpartodo = 0;
+	if ( PF.numtasks >= 3 ) {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			if ( Expressions[i].p_Partodo > 0 ) AC.p_Numpartodo++;
+		}
+	}
+	else {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			Expressions[i].p_Partodo = 0;
+		}
+	}
+#endif
+/*:[20oct2009 mt]*/
 /*
 	Now the actual execution
 */

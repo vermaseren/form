@@ -103,6 +103,9 @@ dovariable:		c = *in; *in = 0;
 #ifdef PARALLEL
 										else/*RHSide*/
 											AC.NumberOfRhsExprInModule++;
+/*[20oct2009 mt]:*/
+											Expressions[number].isRhs=1;
+/*:[20oct2009 mt]*/
 #endif
 /*:[06nov2003 mt]*/
 										if ( AC.exprfillwarning == 0 ) {

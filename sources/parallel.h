@@ -25,7 +25,8 @@
 #define PF_ENDBUFFER_MSGTAG  21
 #define PF_READY_MSGTAG      30
 #define PF_ATTACH_MSGTAG     40
-#define PF_GREET_MSTAG       50
+#define PF_DATA_MSGTAG       50
+#define PF_EMPTY_MSGTAG      52
 
 /*[12oct2005 mt]:*/
 /*Better to localize this istuff in mpi.c:*/
@@ -182,6 +183,11 @@ typedef struct ParallelVars{
   /*If !=0, start of each module will be synchronized between all slaves and master:*/
   WORD synchro;  
   /*:[28nov2003 mt]*/
+  FILEHANDLE slavebuf;
+  int rhsInParallel;         /* */
+  int mkSlaveInfile;
+  int exprbufsize;
+  int exprtodo;
   LONG module;   /* for counting the modules done so far */        
   LONG ginterms; /* total interms ("on master"): PF_Proces */
   LONG numredefs; /* size of PF.redefs */
@@ -221,21 +227,25 @@ extern LONG PF_maxDollarChunkSize;
    #[ function prototypes:
 */
 
-extern int  PF_InitRedefinedPreVars();
-extern int  PF_Processor(EXPRESSIONS,WORD,WORD);
-extern WORD PF_Deferred(WORD *,WORD);
-extern int  PF_EndSort();
-extern int  PF_Init(int*,char ***);
-extern int  PF_Terminate(int);
-extern int  PF_ISendSbuf(int,int);
-extern int  PF_PackString(UBYTE *);
-extern int  PF_UnPackString(UBYTE *);
-extern int  PF_BroadcastPreDollar(WORD **, LONG *,int *);
-extern int  PF_BroadcastString(UBYTE *);
-extern LONG PF_BroadcastNumberOfTerms(LONG);
-extern WORD PF_mkDollarsParallel();
-extern void PF_markPotModDollars();
-extern void PF_statPotModDollar(int,int);
+int  PF_InitRedefinedPreVars();
+int  PF_Processor(EXPRESSIONS,WORD,WORD);
+WORD PF_Deferred(WORD *,WORD);
+int  PF_EndSort();
+int  PF_Init(int*,char ***);
+int  PF_Terminate(int);
+int  PF_ISendSbuf(int,int);
+int  PF_PackString(UBYTE *);
+int  PF_UnPackString(UBYTE *);
+int  PF_BroadcastPreDollar(WORD **, LONG *,int *);
+int  PF_BroadcastString(UBYTE *);
+LONG PF_BroadcastNumberOfTerms(LONG);
+WORD PF_mkDollarsParallel();
+void PF_markPotModDollars();
+void PF_statPotModDollar(int,int);
+int PF_broadcastRHS(void);
+int PF_SendFile(int to, FILE *fd);
+int PF_RecvFile(int from, FILE *fd);
+
 /*
    #] function prototypes:
 [:17nov2005 mt]

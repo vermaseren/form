@@ -411,6 +411,12 @@ typedef struct ExPrEsSiOn {
 	WORD	namesize;
 	WORD	compression;
 	WORD	numdummies;
+/*[20oct2009]:*/
+#ifdef PARALLEL
+   WORD p_Partodo; /* Whether to be done in parallel mode */
+   WORD isRhs; /*1 if occur in rhs, o is not.*/ /*Should be moved to vflags?*/
+#endif
+/*:[20oct2009 mt]*/
 #ifdef WITHPTHREADS
 	WORD	partodo;		/* Whether to be done in parallel mode */
 	PADPOINTER(2,0,11,0);
@@ -1534,6 +1540,9 @@ struct C_const {
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
 #ifdef PARALLEL
+/*[20oct2009 mt]:*/
+	int     p_Numpartodo;          /* for ParFORM's InParallel */
+/*:[20oct2009 mt]*/
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
 #endif

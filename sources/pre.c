@@ -609,6 +609,12 @@ VOID IniModule(int type)
 #ifdef PARALLEL
 	/*the counter will be incremented in the procedure tokenize:*/
 	AC.NumberOfRhsExprInModule=0;
+/*[20oct2009 mt]:*/
+	PF.mkSlaveInfile=0;
+	PF.slavebuf.PObuffer=NULL;
+	for(i=0; i<NumExpressions; i++)
+		Expressions[i].isRhs=0;
+/*:[20oct2009 mt]*/
 #endif
 /*:[06nov2003 mt]*/
 
@@ -665,6 +671,11 @@ VOID IniModule(int type)
 		AB[i]->T.S0->PolyWise = 0;
 	}
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	AC.p_Numpartodo = 0;
+#endif
+/*:[20oct2009 mt]*/
 	OpenTemp();
 }
 
@@ -797,6 +808,14 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 							if ( AM.safetyfirst == 0 ) AM.safetyfirst = 1;
 						}
 						retcode = ExecModule(moduletype);
+						/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+						if(PF.slavebuf.PObuffer!=NULL){
+							M_free(PF.slavebuf.PObuffer,"PF inbuf");
+							PF.slavebuf.PObuffer=NULL;
+						}
+#endif
+						/*:[20oct2009 mt]*/
 						UpdatePositions();
 						if ( retcode < 0 ) error1++;
 						if ( retcode ) error2++;

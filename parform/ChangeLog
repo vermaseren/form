@@ -419,3 +419,7 @@ The prototype of the function openExternalChannel is changed.
 getcFromExtChannelFailure() now returns -2 (formerly EOF) to 
 distinguish between fault and normal EOF condition returned 
 getcFromExtChannel()
+
+****************************************************************
+[22oct2009 mt]: too much to describe.
+RHS, InParallel, checkpoins, slow startup, dollarvars and so on.

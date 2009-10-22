@@ -2828,6 +2828,12 @@ int DoInParallel(UBYTE *s, int par)
 	EXPRESSIONS e;
 	WORD i;
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	EXPRESSIONS e;
+	WORD i;
+#endif
+/*:[20oct2009 mt]*/
 	WORD number;
 	UBYTE *t, c;
 	int error = 0;
@@ -2845,6 +2851,18 @@ int DoInParallel(UBYTE *s, int par)
 			}
 		}
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+		for ( i = NumExpressions-1; i >= 0; i-- ) {
+			e = Expressions+i;
+			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
+			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+			) {
+				e->p_Partodo = par;
+			}
+		}
+#endif
+/*:[20oct2009 mt]*/
 	}
 	else {
 		for(;;) {	/* Look for a (comma separated) list of variables */
@@ -2866,6 +2884,16 @@ int DoInParallel(UBYTE *s, int par)
 						e->partodo = par;
 					}
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+					e = Expressions+number;
+					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
+					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+					) {
+						e->p_Partodo = par;
+					}
+#endif
+/*:[20oct2009 mt]*/
 				}
 				else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
 					MesPrint("&%s is not an expression",t);

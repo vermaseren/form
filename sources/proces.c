@@ -120,6 +120,21 @@ WORD Processor()
 		retval = 1;
 	}
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+
+	if ( ( AC.NumberOfRhsExprInModule > 0 ) &&
+		( AC.mparallelflag == PARALLELFLAG ) &&
+		(PF.rhsInParallel) )
+			if(PF_broadcastRHS())
+				retval = -1;
+	PF.exprtodo=-1;/*This means, the slave does not perform inparallel*/
+	if ( ( AC.p_Numpartodo > 0 ) && PF_InParallelProcessor() ) {
+		retval = -1;
+	}
+
+#endif
+/*:[20oct2009 mt]*/
 	for ( i = 0; i < NumExpressions; i++ ) {
 		e = Expressions+i;
 #ifdef WITHPTHREADS
@@ -128,6 +143,14 @@ WORD Processor()
 			continue;
 		}
 #endif
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+		if ( AC.p_Numpartodo > 0 && e->p_Partodo > 0 && PF.numtasks > 2 ) {
+			e->p_Partodo = 0;
+			continue;
+		}
+#endif
+/*:[20oct2009 mt]*/
 		AS.CollectOverFlag = 0;
 		e->vflags &= ~ISUNMODIFIED;
 		AR.expchanged = 0;
@@ -221,11 +244,11 @@ WORD Processor()
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
 				AR.GetFile = 0;
+/*[20oct2009 mt]:*/
 #ifdef PARALLEL
-				if ( PF.me == MASTER ) SetScratch(AR.infile,&(e->onfile));
-#else
-				SetScratch(AR.infile,&(e->onfile));
+				if( ( PF.me == MASTER ) || (PF.mkSlaveInfile) )
 #endif
+/*:[20oct2009 mt]*/
 				curfile = AR.infile;
 commonread:;
 #ifdef PARALLEL
@@ -233,7 +256,12 @@ commonread:;
 					MesPrint("Error in PF_Processor");
 					goto ProcErr;
 				}
-#else
+/*[20oct2009 mt]:*/
+				if ( AC.mparallelflag != PARALLELFLAG ){
+					if(PF.me != MASTER)
+						break;
+#endif
+/*:[20oct2009 mt]*/
 				if ( GetTerm(BHEAD term) <= 0 ) {
 #ifdef HIDEDEBUG
 					MesPrint("Error condition 1a");
@@ -319,7 +347,11 @@ commonread:;
 				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
 				AR.GetFile = 0;
 				AR.outtohide = 0;
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+				}
 #endif
+}
 				break;
 			case SKIPLEXPRESSION:
 			case SKIPGEXPRESSION:

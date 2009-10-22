@@ -307,6 +307,16 @@ int PF_BroadCast(int par)
 
 /*
   	#] int  PF_BroadCast(int) :
+  	#[ int  PF_Bcast(int) :
+*/
+int PF_Bcast(void *buffer, int count)
+{
+	if(MPI_Bcast(buffer,count,MPI_BYTE,MASTER,PF_COMM)!=MPI_SUCCESS)
+		return(-1);
+	return(0);
+}
+/*
+  	#] int  PF_Bcast(int) :
   	#[ int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
 */
 
@@ -1431,4 +1441,35 @@ int PF_longBroadcast()
    #] PF_longBroadcast: 
    #] Long pack public : 
    #] Long pack stuff:
+*/
+
+/*
+   #[ int PF_RawSend:
+	Sends l bytes from buf to dest. Returns 0 on success, or -1:
+*/
+int PF_RawSend(int dest, void *buf, LONG l, int tag)
+{
+	int ret=MPI_Ssend(buf,(int)l,MPI_BYTE,dest,tag,PF_COMM);
+	if( ret != MPI_SUCCESS) return(-1);
+	return(0);
+}
+/*
+   #] int PF_RawSend:
+   #[ LONG PF_RawRecv:
+	Receives not more than thesize bytes from src,
+	returns the actual number of received bytes, or -1 on failure:
+*/
+LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag)
+{
+	MPI_Status stat;
+	int ret=MPI_Recv(buf,(int)thesize,MPI_BYTE,*src,MPI_ANY_TAG,
+				 PF_COMM,&stat);
+	if( ret != MPI_SUCCESS) return(-1);
+	if(MPI_Get_count(&stat,MPI_BYTE,&ret) != MPI_SUCCESS) return(-1);	
+	*tag = stat.MPI_TAG;
+	*src = stat.MPI_SOURCE;
+	return(ret);
+}
+/*
+   #] LONG PF_RawRecv:
 */

@@ -55,6 +55,24 @@ int PF_WaitAllSlaves();
 int MinDollar(WORD);
 int MaxDollar(WORD);
 int SumDollars(WORD);
+int PF_Bcast(void *buffer, int count);
+/*
+	Sends l bytes from buf to dest. Returns 0 on success, or -1:
+*/
+int PF_RawSend(int dest, void *buf, LONG l, int tag);
+/*
+	Receives not more than thesize bytes from src,
+	returns the actual number of received bytes, or -1 on failure:
+*/
+LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag);
+static int PF_Wait4MasterIP(int tag);
+static int PF_DoOneExpr(void);
+static int PF_ReadMaster(void);/*reads directly to its scratch!*/
+static int PF_Slave2MasterIP(int src);/*both master and slave*/
+static int PF_Master2SlaveIP(int dest, EXPRESSIONS e);
+static int PF_WalkThrough(WORD *t, LONG l, LONG chunk, LONG *count);
+static int PF_SendChunkIP(FILEHANDLE *curfile,  POSITION *position, int to, LONG thesize);
+static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize);
 
 PARALLELVARS PF;
 #ifdef MPI2
@@ -739,7 +757,9 @@ int PF_EndSort()
 	LONG size;
 	POSITION position;
 	WORD i,cc;
-	if ( AT.SS != AM.S0 || ( AC.mparallelflag != PARALLELFLAG ) ) return(0);
+
+	if( AT.SS != AM.S0 || (AC.mparallelflag != PARALLELFLAG) ||(PF.exprtodo >= 0) ) 
+		return(0);
 
 	if ( PF.me != MASTER ) {
 /* 
@@ -854,7 +874,7 @@ static  WORD *PF_CurrentBracket;
 		PF_CurrentBracket
 */
 
-WORD PF_GetTerm(WORD *term)
+static WORD PF_GetTerm(FILEHANDLE *fi,WORD *term)
 {
 	GETIDENTITY
 	FILEHANDLE *fi = AR.infile;
@@ -1069,8 +1089,10 @@ WORD PF_Deferred(WORD *term, WORD level)
 	PRINTFBUF("PF_Deferred (Bracket)",PF_CurrentBracket,*PF_CurrentBracket);
 
 	bra = bstop = PF_CurrentBracket;
-	bstop += *bstop;
-	bstop -= ABS(bstop[-1]);
+	if ( *bstop > 0 ) {
+		bstop += *bstop;
+		bstop -= ABS(bstop[-1]);
+	}
 	bra++;
 	while ( *bra != HAAKJE && bra < bstop ) bra += bra[1];
 	if ( bra >= bstop ) {	/* No deferred action! */
@@ -1144,7 +1166,7 @@ DefCall:
 
 static LONG **PF_W4Sstats = 0;
 
-int PF_Wait4Slave(int src)
+static int PF_Wait4Slave(int src)
 {
 	int j, tag, next;
 
@@ -1173,6 +1195,43 @@ int PF_Wait4Slave(int src)
 
 /*
  		#] PF_Wait4Slave :
+*/
+/*
+ 		#[ int PF_Wait4SlaveIP:
+	InParallel version. Returns tag as src.
+*/
+/*
+	array of expression numbers for PF_InParallel processor.
+	Each time the master sends expression "i" to the slave
+	"next" it sets partodoexr[next]=i:
+*/
+static WORD *partodoexr=NULL;
+static int PF_Wait4SlaveIP(int *src)
+{
+	int j,tag,next;
+
+	PF_Receive(*src,PF_ANY_MSGTAG,&next,&tag);
+	*src=tag;
+	if ( PF_W4Sstats == 0 ) {
+		PF_W4Sstats = (LONG**)Malloc1(sizeof(LONG*),"");
+		PF_W4Sstats[0] = (LONG*)Malloc1(PF_STATS_SIZE*sizeof(LONG),"");
+	}
+
+	PF_UnPack(PF_W4Sstats[0],PF_STATS_SIZE,PF_LONG);
+	if ( tag == PF_DATA_MSGTAG )
+		AR.CurExpr = partodoexr[next];
+	PF_Statistics(PF_W4Sstats,next);
+
+	PF_UnPack(&j,1,PF_INT);
+  
+	if ( j ) {
+	/* actions depending on rest of information in last message */
+	}
+  
+	return(next);
+}
+/*
+ 		#] int PF_Wait4SlaveIP:
  		#[ PF_WaitAllSlaves : (void)
 
 	This function waits until all slaves are ready to send terms back to the master.
@@ -1180,14 +1239,12 @@ int PF_Wait4Slave(int src)
 	Messages from slaves will be read only after all slaves are ready, 
 	further in caller function.
 */
-
 int PF_WaitAllSlaves()
 {
 	int i, readySlaves, tag, next = PF_ANY_SOURCE;
 	UBYTE *has_sent = 0;
-	int checkbottleneck = 0;
 
-	has_sent = (UBYTE*)Malloc1(sizeof(UBYTE)*PF.numtasks,"PF_WaitAllSlaves");
+	has_sent = (UBYTE*)Malloc1(sizeof(UBYTE)*(PF.numtasks + 1),"PF_WaitAllSlaves");
 	for ( i = 0; i < PF.numtasks; i++ ) has_sent[i] = 0;
 
 	for ( readySlaves = 1; readySlaves < PF.numtasks; ) {
@@ -1228,22 +1285,44 @@ int PF_WaitAllSlaves()
 					will wait them in infinite loop. Stupid situation - the master can
 					receive buffers from ready slaves!
 */
-				if ( ++checkbottleneck >= PF.numtasks ) {
-					if ( readySlaves == 1 ){
-/*
-							Nothing is ready, may wait any source:
-							This code is meaningfull only for 2-processor boxes
-*/
-						checkbottleneck = 0;
-						next = PF_ANY_SOURCE;
-					}
 #ifdef PF_WITH_SCHED_YIELD
 /*
 						Relinquish the processor:
 */
 					sched_yield();
 #endif
-				}
+				break;
+			case PF_DATA_MSGTAG:
+				tag=next;
+				next=PF_Wait4SlaveIP(&tag);
+/*
+	tag must be == PF_DATA_MSGTAG!
+*/
+				PF_Statistics(PF_stats,0);
+				PF_Slave2MasterIP(next);
+				PF_Master2SlaveIP(next,NULL);
+				if ( has_sent[next] == 0 ){
+					has_sent[next]=1;
+					readySlaves++;
+				}else{
+					/*error?*/
+					fprintf(stderr,"ERROR next=%d tag=%d\n",next,tag);
+				}/*if ( has_sent[next] == 0 )*/
+				break;
+			case PF_EMPTY_MSGTAG:
+				tag=next;
+				next=PF_Wait4SlaveIP(&tag);
+/*
+	tag must be == PF_EMPTY_MSGTAG!
+*/
+				PF_Master2SlaveIP(next,NULL);
+				if ( has_sent[next] == 0 ){
+					has_sent[next]=1;
+					readySlaves++;
+				}else{
+					/*error?*/
+					fprintf(stderr,"ERROR next=%d tag=%d\n",next,tag);
+				}/*if ( has_sent[next] == 0 )*/
 				break;
 			case PF_READY_MSGTAG:
 /*
@@ -1335,12 +1414,16 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 	}
 	PF.mnumredefs = 0;
 	for ( ll = 0; ll < PF.numredefs; ll++ ) PF.redef[ll] = 0;
-
+	if ( AC.mparallelflag != PARALLELFLAG )
+		return(0);
 	if ( PF.me == MASTER ) {
 /* 
  		#[ Master:
 			#[ write prototype to outfile:
 */
+		static LONG maxinterms=0;
+		static int cmaxinterms=0;
+
 		if ( PF.log && PF.module >= PF.log )
 			MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),PF.module);
 		if ( GetTerm(BHEAD term) <= 0 ) {
@@ -1408,8 +1491,23 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				}
 			}
 			if ( AC.mparallelflag == PARALLELFLAG) {
+				if(maxinterms == 0){/*First pass:*/
+					maxinterms=PF_maxinterms/100;
+					if(maxinterms<2)
+					maxinterms=2;
+				}
+
 				PRINTFBUF("PF_Processor gets",term,*term);
-				if ( termsinpatch >= PF_maxinterms || sb->fill[0] + *term >= sb->stop[0] ) {
+				if ( termsinpatch >= maxinterms || sb->fill[0] + *term >= sb->stop[0] ) {
+					if ( cmaxinterms >= PF.numtasks ) {
+						maxinterms*=2;
+						if ( maxinterms >= PF_maxinterms ) {
+							cmaxinterms=-2;
+							maxinterms = PF_maxinterms;
+						}
+					}/*if ( cmaxinterms >= PF.numtasks ) */
+					else if ( cmaxinterms >= 0 )
+						cmaxinterms++;
 					next = PF_Wait4Slave(PF_ANY_SOURCE);
 					sb->fill[next] = sb->fill[0]; sb->full[next] = sb->full[0];
 					s = sb->stop[next]; sb->stop[next] = sb->stop[0]; sb->stop[0] = s;
@@ -1447,6 +1545,8 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			}
 		}
 		PF.ginterms += dd;
+		maxinterms=0;
+		cmaxinterms=0;
 /*
 			#] loop for all terms in infile:
 			#[ Clean up & EndSort:
@@ -1549,21 +1649,27 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		PF.parallel = 1;
 #ifdef MPI2	
 		AR.infile->POfull = AR.infile->POfill = AR.infile->PObuffer = PF_shared_buff;
-#else
-		AR.infile->POfull = AR.infile->POfill = AR.infile->PObuffer;
 #endif	
+		{
+		FILEHANDLE *fi;
+			if( (AC.NumberOfRhsExprInModule) && (PF.rhsInParallel) )
+				fi=&(PF.slavebuf);
+			else
+				fi=AR.infile;
+			fi->POfull = fi->POfill = fi->PObuffer;
 
-		while ( PF_GetTerm(term) ) {
-			PF_linterms++; dd = AN.deferskipped;
-			AT.WorkPointer = term + *term;
-			AN.RepPoint = AT.RepCount + 1;
-			AR.CurDum = ReNumber(BHEAD term);
-			if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-			if ( Generator(BHEAD term,0) ) {
-				MesPrint("[%d] PF_Processor: Error in Generator",PF.me);
-				LowerSortLevel(); return(-1);
+			while ( PF_GetTerm(term) ) {
+				PF_linterms++; dd = AN.deferskipped;
+				AT.WorkPointer = term + *term;
+				AN.RepPoint = AT.RepCount + 1;
+				AR.CurDum = ReNumber(BHEAD term);
+				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				if ( Generator(BHEAD term,0) ) {
+					MesPrint("[%d] PF_Processor: Error in Generator",PF.me);
+					LowerSortLevel(); return(-1);
+				}
+				PF_linterms += dd;
 			}
-			PF_linterms += dd;
 		}
 		PF_linterms += dd;
 		if ( EndSort(AM.S0->sBuffer,0) < 0 ) return(-1);
@@ -1654,11 +1760,13 @@ int PF_Init(int *argc, char ***argv)
 	PF_LibInit(argc,argv);
 	PF_RealTime(PF_RESET);
 
-	PF_maxinterms = 10;
+	PF_maxinterms = 1000;
 	PF.log = 0;
 	PF.parallel = 0;
 	PF.module = 0;
 	PF_statsinterval = 10;
+	PF.rhsInParallel=1;
+	PF.exprbufsize=4096;/*in WORDs*/
 
 /*
 		If !=0, start of each module will be synchronized between all slaves and master
@@ -2458,4 +2566,746 @@ void PF_markPotModDollars()
 
 /*
   	#] PotModDollars:
+  	#[ PF_SetScratch:
+*/
+static void PF_SetScratch(FILEHANDLE *f,POSITION *position)
+{
+	if( 
+			( f->handle >= 0) && ISGEPOS(*position,f->POposition) && 
+			( ISGEPOSINC(*position,f->POposition,(f->POfull-f->PObuffer)*sizeof(WORD)) ==0 )
+		)/*position is inside the buffer! SetScratch() will do nothing.*/
+			f->POfull=f->PObuffer;/*force SetScratch() to re-read the position from the beginning:*/
+	SetScratch(f,position);
+}
+/*
+  	#] PF_SetScratch:
+  	#[ int PF_pushScratch:
+*/
+static int PF_pushScratch(FILEHANDLE *f)
+{
+	LONG size,RetCode;
+	if ( f->handle < 0){
+		/*Create the file*/
+		if ( ( RetCode = CreateFile(f->name) ) >= 0 ) {
+			f->handle = (WORD)RetCode;
+			PUTZERO(f->filesize);
+			PUTZERO(f->POposition);
+		}
+		else{
+			MesPrint("Cannot create scratch file %s",f->name);
+			return(-1);
+		}
+	}/*if ( f->handle < 0)*/
+	size = (f->POfill-f->PObuffer)*sizeof(WORD);
+	if( size > 0 ){
+		SeekFile(f->handle,&(f->POposition),SEEK_SET);
+		if ( WriteFile(f->handle,(UBYTE *)(f->PObuffer),size) != size ){
+			MesPrint("Error while writing to disk. Disk full?");
+			return(-1);
+		}
+		ADDPOS(f->filesize,size);
+		ADDPOS(f->POposition,size);
+		f->POfill = f->POfull=f->PObuffer;
+	}/*if( size > 0 )*/
+	return(0);
+}
+/*
+  	#] int PF_pushScratch:
+  	#[ int PF_WalkThroughExprSlave:
+	Returns <=0 if the expression is ready, or dl+1; 
+*/
+static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
+{
+WORD *t;
+LONG l=0;
+	for(;;){
+		if(curfile->POstop-curfile->POfill < dl){
+			if(PF_pushScratch(curfile))
+				return(-PF.exprbufsize-1);
+		}
+		curfile->POfill+=dl;
+		curfile->POfull=curfile->POfill;
+		l+=dl;
+		if( l >= PF.exprbufsize){
+			if( l == PF.exprbufsize){
+				if( *(curfile->POfill) == 0)/*expression is ready*/
+					return(0);
+				}
+			l-=PF.exprbufsize;
+			curfile->POfill-=l;
+			curfile->POfull=curfile->POfill;
+			return l+1;
+		}
+
+		dl=*(curfile->POfill);
+		if(dl == 0)
+			return l-PF.exprbufsize;
+		(e->counter)++;
+		if(dl<0){/*compressed term*/
+			if(curfile->POstop-curfile->POfill < 1){
+				if(PF_pushScratch(curfile))
+					return(-PF.exprbufsize-1);
+			}
+			dl=*(curfile->POfill+1)+2;		
+		}/*if(*(curfile->POfill)<0)*/
+	}/*for(;;)*/
+}
+/*
+  	#] int PF_WalkThroughExprSlave:
+  	#[ PF_WalkThroughExprMaster:
+	Returns <=0 if the expression is ready, or dl+1; 
+*/
+static int PF_WalkThroughExprMaster(FILEHANDLE *curfile, int dl)
+{
+WORD *t;
+LONG l=0;
+	for(;;){
+		if(curfile->POfull-curfile->POfill < dl){
+				POSITION pos;
+				SeekScratch(curfile,&pos);
+				PF_SetScratch(curfile,&pos);		
+		}/*if(curfile->POfull-curfile->POfill < dl)*/
+		curfile->POfill+=dl;
+		l+=dl;
+		if( l >= PF.exprbufsize){
+			if( l == PF.exprbufsize){
+				if( *(curfile->POfill) == 0)/*expression is ready*/
+					return(0);
+				}
+			l-=PF.exprbufsize;
+			curfile->POfill-=l;
+			return l+1;
+		}
+
+		dl=*(curfile->POfill);
+		if(dl == 0)
+			return l-PF.exprbufsize;
+
+		if(dl<0){/*compressed term*/
+			if(curfile->POfull-curfile->POfill < 1){
+				POSITION pos;
+				SeekScratch(curfile,&pos);
+				PF_SetScratch(curfile,&pos);
+			}/*if(curfile->POfull-curfile->POfill < 1)*/
+			dl=*(curfile->POfill+1)+2;		
+		}/*if(*(curfile->POfill)<0)*/
+	}/*for(;;)*/
+}
+/*
+  	#] PF_WalkThroughExprMaster:
+  	#[ int  PF_rhsBCastMaster:
+*/
+static int  PF_rhsBCastMaster(FILEHANDLE *curfile,EXPRESSIONS e)
+{
+	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
+	SetScratch(curfile,&(e->onfile));
+	do{
+		if( curfile->POfull-curfile->POfill < PF.exprbufsize ){
+			POSITION pos;
+			SeekScratch(curfile,&pos);
+			PF_SetScratch(curfile,&pos);
+		}/*if( curfile->POfull-curfile->POfill < PF.exprbufsize )*/
+		if ( PF_Bcast(curfile->POfill,PF.exprbufsize*sizeof(WORD)))
+			return -1;
+		l=PF_WalkThroughExprMaster(curfile,l-1);
+	}while(l>0);
+	if(l<0)/*The tail is extra, decrease POfill*/
+		curfile->POfill-=l;
+	return(0);
+}
+/*
+  	#] int PF_rhsBCastMaster:
+  	#[ int PF_rhsBCastSlave:
+*/
+static int  PF_rhsBCastSlave(FILEHANDLE *curfile,EXPRESSIONS e)
+{
+	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
+	e->counter=0;
+	do{
+		if( curfile->POstop-curfile->POfill < PF.exprbufsize ){
+			if(PF_pushScratch(curfile))
+				return(-1);
+		}/*if( curfile->POstop-curfile->POfill < PF.exprbufsize )*/
+		if ( PF_Bcast(curfile->POfill,PF.exprbufsize*sizeof(WORD)))
+			return(-1);
+		l=PF_WalkThroughExprSlave(curfile,e,l-1);
+	}while(l>0);
+	if(l<0){/*The tail is extra, decrease POfill*/
+		if(l<-PF.exprbufsize)/*error due to a PF_pushScratch() failure */
+			return(-1);
+		curfile->POfill-=l;
+	}
+	curfile->POfull=curfile->POfill;
+   if ( curfile != AR.hidefile ) AR.InInBuf = curfile->POfull-curfile->PObuffer;
+	return(0);
+}
+/*
+  	#] int PF_rhsBCastSlave:
+  	#[ int PF_broadcastRHS:
+*/
+int PF_broadcastRHS(void)/*broadcast RHS expressions*/
+{
+int i;
+FILEHANDLE *curfile;
+
+	for ( i = 0; i < NumExpressions; i++ ) {
+		EXPRESSIONS e=Expressions+i;
+		if(e->isRhs == 0)continue;
+		switch ( e->status ) {
+			case UNHIDELEXPRESSION:
+			case UNHIDEGEXPRESSION:
+				AR.GetFile = 2;
+				curfile = AR.hidefile;
+				break;
+			case LOCALEXPRESSION:
+			case GLOBALEXPRESSION:
+				AR.GetFile = 0;
+				curfile = AR.infile;
+				break;
+		}/*switch ( e->status )*/
+
+		if ( PF.me != MASTER ){
+			POSITION pos;
+			SetEndHScratch(curfile,&pos);
+			e->onfile = pos;
+			if(PF_rhsBCastSlave(curfile,e))
+				return(-1);
+		}
+		else{
+			if(PF_rhsBCastMaster(curfile,e))
+				return(-1);
+		}
+	}/*for ( i = 0; i < NumExpressions; i++ )*/
+	if ( PF.me != MASTER )
+		UpdatePositions();
+	return(0);
+}
+/*
+  	#] int PF_broadcastRHS:
+  	#[ int PF_InParallelProcessor:
+*/
+int PF_InParallelProcessor(void)
+{
+	GETIDENTITY
+	int i, next,tag;
+	EXPRESSIONS e;
+	if(PF.me == MASTER){
+		if ( PF.numtasks >= 3 ) {
+			partodoexr = (WORD*)Malloc1(sizeof(WORD)*(PF.numtasks+1),"PF_InParallelProcessor");
+			for ( i = 0; i < NumExpressions; i++ ) {
+				e = Expressions+i;
+				if ( e->p_Partodo <= 0 ) continue;
+				if ( e->counter == 0 ) { /* Expression with zero terms */
+					e->p_Partodo = 0;
+					continue;
+				}
+				switch(e->status){
+					case LOCALEXPRESSION:
+					case GLOBALEXPRESSION:
+					case UNHIDELEXPRESSION:
+					case UNHIDEGEXPRESSION:
+					case INTOHIDELEXPRESSION:
+					case INTOHIDEGEXPRESSION:
+						tag=PF_ANY_SOURCE;
+						next=PF_Wait4SlaveIP(&tag);
+						if(next<0)
+							return(-1);
+						if(tag == PF_DATA_MSGTAG){
+							PF_Statistics(PF_stats,0);
+							if(PF_Slave2MasterIP(next))
+								return(-1);
+						}
+						if(PF_Master2SlaveIP(next,e))
+							return(-1);
+						partodoexr[next]=i;
+						break;
+					default:
+						e->p_Partodo = 0;
+						continue;
+				}/*switch(e->status)*/
+			}/*for ( i = 0; i < NumExpressions; i++ )*/
+			/*Here some slaves are working, other are waiting on PF_Send. 
+				Wait all of them.*/
+			/*At this point no new slaves may be launched so PF_WaitAllSlaves()
+				does not modify partodoexr[].*/
+			if(PF_WaitAllSlaves())
+				return(-1);
+			/**/
+			if ( AC.CollectFun ) AR.DeferFlag = 0;
+			if(partodoexr){
+ 				M_free(partodoexr,"PF_InParallelProcessor");
+				partodoexr=NULL;
+			}/*if(partodoexr)*/
+		}/*if ( PF.numtasks >= 3 ) */
+		else {
+			for ( i = 0; i < NumExpressions; i++ ) {
+				Expressions[i].p_Partodo = 0;
+			}
+		}
+		return(0);
+	}/*if(PF.me == MASTER)*/
+	/*Slave:*/
+	if(PF_Wait4MasterIP(PF_EMPTY_MSGTAG))
+		return(-1);
+	/*master is ready to listen to me*/	
+	do{
+		WORD *oldwork= AT.WorkPointer;
+		tag=PF_ReadMaster();/*reads directly to its scratch!*/
+		if(tag<0)
+			return(-1);
+		if(tag == PF_DATA_MSGTAG){
+			oldwork = AT.WorkPointer;
+			if(PF_DoOneExpr())/*the processor*/
+				return(-1);
+			if(PF_Wait4MasterIP(PF_DATA_MSGTAG))
+				return(-1);
+			if(PF_Slave2MasterIP(PF.me))/*both master and slave*/
+				return(-1);
+			AT.WorkPointer=oldwork;
+		}/*if(tag == PF_DATA_MSGTAG)*/
+	}while(tag!=PF_EMPTY_MSGTAG);
+	PF.exprtodo=-1;
+	return(0);
+}/*PF_InParallelProcessor*/
+/*
+  	#] int PF_InParallelProcessor:
+  	#[ int PF_Wait4MasterIP:
+*/
+static int PF_Wait4MasterIP(int tag)
+{
+	  int follow = 0;
+	  LONG size,cpu,space = 0;
+	  
+	  if(PF.log){
+		fprintf(stderr,"[%d] Starting to send to Master\n",PF.me);
+		fflush(stderr);
+	  }
+
+	  PF_Send(MASTER,tag,0);
+	  cpu = TimeCPU(1);
+	  PF_Pack(&cpu               ,1,PF_LONG);         
+	  PF_Pack(&space             ,1,PF_LONG);          
+	  PF_Pack(&PF_linterms       ,1,PF_LONG);   
+	  PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
+	  PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
+	  PF_Pack(&follow            ,1,PF_INT );
+
+	  if(PF.log){
+		fprintf(stderr,"[%d] Now sending with tag = %d\n",PF.me,tag);
+		fflush(stderr);
+	  }
+
+	  PF_Send(MASTER,tag,1);
+	  
+	  if(PF.log){
+		fprintf(stderr,"[%d] returning from send\n",PF.me);
+		fflush(stderr);
+	  }
+		return(0);
+}
+/*
+  	#] int PF_Wait4MasterIP:
+  	#[ int PF_DoOneExpr:
+*/
+static int PF_DoOneExpr(void)/*the processor*/
+{
+				EXPRESSIONS e = Expressions + PF.exprtodo;
+				POSITION position, outposition;
+				FILEHANDLE *fi, *fout;
+				LONG dd = 0;
+				int i;
+				WORD *term;
+
+				i = PF.exprtodo;
+				AR.CurExpr = i;
+				AR.SortType = AC.SortType;
+
+				position = AS.OldOnFile[i];
+				if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION ) {
+					AR.GetFile = 2; fi = AR.hidefile;
+				}
+				else {
+					AR.GetFile = 0; fi = AR.infile;
+				}
+				SetScratch(fi,&position);
+				term = AT.WorkPointer;
+				if ( GetTerm(BHEAD term) <= 0 ) {
+					MesPrint("Expression %d has problems in scratchfile",i);
+					Terminate(-1);
+				}
+				if ( AC.bracketindexflag ) OpenBracketIndex(i);
+				term[3] = i;
+				PUTZERO(outposition);
+				fout = AR.outfile;
+				fout->POfill = fout->POfull = fout->PObuffer;
+				fout->POposition = outposition;
+				if ( fout->handle >= 0 ) {
+					fout->POposition = outposition;
+				}
+				if ( PutOut(BHEAD term,&outposition,fout,0) < 0 ) 
+					return(-1);
+				AR.DeferFlag = AC.ComDefer;
+
+/*				AR.sLevel = AB[0]->R.sLevel;*/
+				term = AT.WorkPointer;
+				NewSort();
+				AR.MaxDum = AM.IndDum;
+				AN.ninterms = 0;
+				while ( GetTerm(BHEAD term) ) {
+				  SeekScratch(fi,&position);
+				  AN.ninterms++; dd = AN.deferskipped;
+				  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
+					if ( GetMoreTerms(term) < 0 ) {
+					  LowerSortLevel(); return(-1);
+					}
+				    SeekScratch(fi,&position);
+				  }
+				  AT.WorkPointer = term + *term;
+				  AN.RepPoint = AT.RepCount + 1;
+				  AR.CurDum = ReNumber(BHEAD term);
+				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				  if ( AN.ncmod ) {
+					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  }
+				  if ( Generator(BHEAD term,0) ) {
+					LowerSortLevel(); return(-1);
+				  }
+				  AN.ninterms += dd;
+				  SetScratch(fi,&position);
+				  AR.InInBuf = (fi->POfull-fi->PObuffer)
+						-DIFBASE(position,fi->POposition)/sizeof(WORD);
+				}
+				AN.ninterms += dd;
+				if ( EndSort(AM.S0->sBuffer,0) < 0 ) return(-1);
+				e->numdummies = AR.MaxDum - AM.IndDum;
+				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
+				else                      e->vflags |= ISZERO;
+				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
+				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
+				AR.GetFile = 0;
+ 				fout->POfull = fout->POfill;
+	return(0);
+}
+/*
+  	#] int PF_DoOneExpr:
+  	#[ int PF_Slave2MasterIP:
+*/
+
+typedef struct bufIPstruct{
+	LONG i;
+	struct ExPrEsSiOn e;
+}bufIPstruct_t;
+
+static int PF_Slave2MasterIP(int src)/*both master and slave*/
+{
+EXPRESSIONS e;
+bufIPstruct_t exprData;
+int i,tag,l;
+FILEHANDLE *fout=AR.outfile;
+POSITION pos;
+	/*Here we know the length of data to send in advance:
+		slave has the only one expression in its scratch file, and it sends
+		this information to the master.*/
+	if(PF.me != MASTER){/*slave*/
+		e = Expressions + PF.exprtodo;
+		/*Fill in the expression data:*/
+		memcpy(&(exprData.e), e, sizeof(struct ExPrEsSiOn));
+		SeekScratch(fout,&pos);
+		exprData.i=BASEPOSITION(pos);
+		/*Send the metadata:*/
+		if(PF_RawSend(MASTER,&exprData,sizeof(bufIPstruct_t),0))
+			return(-1);
+		i=exprData.i;
+		SETBASEPOSITION(pos,0);
+		do{
+			int blen=PF.exprbufsize*sizeof(WORD);
+			if(i<blen)
+				blen=i;
+			l=PF_SendChunkIP(fout,&pos, MASTER, blen);
+			/*Here always l == blen!*/
+			if(l<0)
+				return(-1);
+			ADDPOS(pos,l);
+			i-=l;
+		}while(i>0);
+		if ( fout->handle >= 0 ) { /* Now get rid of the file */
+			CloseFile(fout->handle);
+			fout->handle = -1;
+			remove(fout->name);
+			PUTZERO(fout->POposition);
+			PUTZERO(fout->filesize);
+			fout->POfill = fout->POfull = fout->PObuffer;
+		}
+		return(0);
+	}/*if(PF.me != MASTER)*/
+	/*Master*/
+	/*partodoexr[src] is the number of expression.*/
+	e = Expressions +partodoexr[src];
+	/*Get metadata:*/
+	if (PF_RawRecv(&src, &exprData,sizeof(bufIPstruct_t),&i)!= sizeof(bufIPstruct_t))
+		return(-1);
+	/*Fill in the expression data:*/
+	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn));
+	SeekScratch(fout,&pos);
+	e->onfile = pos;
+	i=exprData.i;
+	while(i>0){
+		int blen=PF.exprbufsize*sizeof(WORD);
+		if(i<blen)
+			blen=i;
+		l=PF_RecvChunkIP(fout,src,blen);
+		/*Here always l == blen!*/
+		if(l<0)
+			return(-1);
+		i-=l;
+	}
+	return(0);
+}
+/*
+  	#] int PF_Slave2MasterIP:
+  	#[ int PF_Master2SlaveIP:
+*/
+static int PF_Master2SlaveIP(int dest, EXPRESSIONS e)
+{
+bufIPstruct_t exprData;
+FILEHANDLE *fi;
+POSITION pos;
+int i,l;
+LONG ll=0,count=0;
+WORD *t;
+	if(e==NULL){/*Say to the slave that no more job:*/
+		if(PF_RawSend(dest,&exprData,sizeof(bufIPstruct_t),PF_EMPTY_MSGTAG))
+			return(-1);
+		return(0);
+	}
+	memcpy(&(exprData.e), e, sizeof(struct ExPrEsSiOn));
+	exprData.i=e-Expressions;
+	if(AC.StatsFlag){
+		MesPrint("");
+		MesPrint(" Sending expression %s to slave %d",EXPRNAME(exprData.i),dest);
+	}
+	if(PF_RawSend(dest,&exprData,sizeof(bufIPstruct_t),PF_DATA_MSGTAG))
+		return(-1);
+	if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION )
+		fi = AR.hidefile;
+	else
+		fi = AR.infile;
+	pos=e->onfile;
+	SetScratch(fi,&pos);
+	do{
+		l=PF_SendChunkIP(fi, &pos, dest, PF.exprbufsize*sizeof(WORD));
+		if(l<0)
+			return(-1);		
+		t=fi->PObuffer+ (DIFBASE(pos,fi->POposition))/sizeof(WORD);		
+		ll=PF_WalkThrough(t,ll,l/sizeof(WORD),&count);
+		ADDPOS(pos,l);
+	}while(ll>-2);
+	return(0);
+}
+/*
+  	#] int PF_Master2SlaveIP:
+  	#[ int PF_ReadMaster:
+*/
+static int PF_ReadMaster(void)/*reads directly to its scratch!*/
+{
+	bufIPstruct_t exprData;
+	int tag,m=MASTER;
+	EXPRESSIONS e;
+	FILEHANDLE *fi;
+	POSITION pos;
+	LONG count=0;
+	WORD *t;
+	LONG ll=0;
+	int l;
+	/*Get metadata:*/
+	if (PF_RawRecv(&m, &exprData,sizeof(bufIPstruct_t),&tag)!= sizeof(bufIPstruct_t))
+		return(-1);
+
+	if(tag == PF_EMPTY_MSGTAG)/*No data, no job*/
+		return(tag);
+
+	/*data expected, tag must be == PF_DATA_MSTAG!*/
+	PF.exprtodo=exprData.i;
+	e=Expressions + PF.exprtodo;
+	/*Fill in the expression data:*/
+	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn));
+	if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION )
+		fi = AR.hidefile;
+	else
+		fi = AR.infile;
+	SetEndHScratch(fi,&pos);
+	e->onfile=AS.OldOnFile[PF.exprtodo]=pos;
+
+	do{
+		l=PF_RecvChunkIP(fi,MASTER,PF.exprbufsize*sizeof(WORD));
+		if(l<0)
+			return(-1);		
+		t=fi->POfull-l/sizeof(WORD);		
+		ll=PF_WalkThrough(t,ll,l/sizeof(WORD),&count);
+	}while(ll>-2);
+	/*Now -ll-2 is the number of "extra" elements transferred from the master.*/
+	fi->POfull-=-ll-2;
+	fi->POfill=fi->POfull;
+	return(PF_DATA_MSGTAG);
+}
+/*
+  	#] int PF_ReadMaster:
+  	#[ int PF_SendChunkIP:
+	thesize is in bytes. Returns the number of sent bytes or <0 on error:
+*/
+static int PF_SendChunkIP(FILEHANDLE *curfile,  POSITION *position, int to, LONG thesize)
+{
+	LONG l=thesize;
+	if(
+		ISLESSPOS(*position,curfile->POposition) ||
+   	ISGEPOSINC(*position,curfile->POposition,
+         ((curfile->POfull-curfile->PObuffer)*sizeof(WORD)-thesize) )
+		){
+		if(curfile->handle< 0)
+			l=(curfile->POfull-curfile->PObuffer)*sizeof(WORD) - (LONG)(position->p1);
+		else{
+			PF_SetScratch(curfile,position);
+			if(
+				ISGEPOSINC(*position,curfile->POposition,
+				((curfile->POfull-curfile->PObuffer)*sizeof(WORD)-thesize) )				
+				)
+			l=(curfile->POfull-curfile->PObuffer)*sizeof(WORD) - (LONG)position->p1;
+		}
+	}
+	/*Now we are able to sent l bytes from the 
+		curfile->PObuffer[position-curfile->POposition]*/
+	if(PF_RawSend(to,curfile->PObuffer+ (DIFBASE(*position,curfile->POposition))/sizeof(WORD),l,0))
+		return(-1);
+	return(l);
+}
+/*
+  	#] int PF_SendChunkIP:
+  	#[ int PF_RecvChunkIP:
+	thesize is in bytes. Returns the number of sent bytes or <0 on error:
+*/
+static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize)
+{
+	LONG receivedBytes;
+
+	if( (curfile->POstop - curfile->POfull)*sizeof(WORD) < thesize )
+		if(PF_pushScratch(curfile))
+			return(-1);
+	/*Now there is enough space from curfile->POfill to curfile->POstop*/
+	{/*Block:*/
+		int tag=0;
+		receivedBytes=PF_RawRecv(&from,curfile->POfull,thesize,&tag);
+	}/*:Block*/
+	if(receivedBytes >= 0 ){
+		curfile->POfull+=receivedBytes/sizeof(WORD);
+		curfile->POfill=curfile->POfull;
+	}/*if(receivedBytes >= 0 )*/
+	return(receivedBytes);
+}
+/*
+  	#] int PF_RecvChunkIP:
+*/
+
+/*
+  	#[ int PF_WalkThrough:
+	Returns:
+	>=  0 -- initial offset,
+		-1 -- the first element of t contains the length of the tail of compressed term,
+	<= -2 -- -(d+2), where d is the number of extra transferred elements.
+	Expects: 
+	l -- initial offset or -1,
+	chunk -- number of transferred elements (not bytes!)
+	*count -- incremented each time a new term is found
+*/
+static int PF_WalkThrough(WORD *t, LONG l, LONG chunk, LONG *count)
+{
+	if(l<0) /*==-1!*/
+		l=(*t)+1;/*the first element of t contains the length of 
+						the tail of compressed term*/
+	else{
+		if(l>=chunk)/*next term is out of the chunk*/
+			return(l-chunk);
+		t+=l;
+		chunk-=l;/*note, l was less than chunk so chunk >0!*/
+		l=*t;
+	}
+	/*Main loop:*/
+	while(l!=0){
+		if(l>0){/*an offset to the next term*/
+			if(l<chunk){
+				t+=l;
+				chunk-=l;/*note, l was less than chunk so chunk >0!*/
+				l=*t;
+				(*count)++;
+			}/*if(l<chunk)*/
+			else
+				return(l-chunk);
+		}/*if(l>0)*/
+		else{ /* l<0 */
+			if(chunk < 2)/*i.e., chunk == 1*/
+				return(-1);/*the first WORD in the next chunk is length of the tail of the compressed term*/
+			l=*(t+1)+2;/*+2 since 
+					1. t points to the length field -1,
+					2. the size of a tail of compressed term is equal to the number of WORDs in this tail*/
+		}
+	}/*while(l!=0)*/
+	return(-1-chunk);/* -(2+(chunk-1)), chunk>0 ! */
+}
+/*
+  	#] int PF_WalkThrough:
+  	#[ PF_SendFile:
+*/
+#define PF_SNDFILEBUFSIZE 4096
+
+int PF_SendFile(int to, FILE *fd)
+{
+	size_t len=0;
+	if(fd == NULL){
+		if(PF_RawSend(to,&to,sizeof(int),PF_EMPTY_MSGTAG))
+			return(-1);
+		return(0);
+	}
+	for(;;){
+		char buf[PF_SNDFILEBUFSIZE];
+		size_t l;
+		l=fread(buf, 1, PF_SNDFILEBUFSIZE, fd);
+		len+=l;
+		if(l==PF_SNDFILEBUFSIZE){
+			if(PF_RawSend(to,buf,PF_SNDFILEBUFSIZE,PF_BUFFER_MSGTAG))
+				return(-1);
+		}
+		else{
+			if(PF_RawSend(to,buf,l,PF_ENDBUFFER_MSGTAG))
+				return(-1);
+			break;
+		}
+	}/*for(;;)*/
+	return(len);
+}
+/*
+  	#] PF_SendFile:
+  	#[ int PF_RecvFile:
+*/
+int PF_RecvFile(int from, FILE *fd)
+{
+	size_t len=0;
+	int tag;
+	do{
+		char buf[PF_SNDFILEBUFSIZE];
+		int l;
+			l=PF_RawRecv(&from,buf,PF_SNDFILEBUFSIZE,&tag);
+			if(l<0)
+				return(-1);
+			if(tag == PF_EMPTY_MSGTAG)
+				return(0);
+
+			if( fwrite(buf,l,1,fd)!=1 )
+				return(-1);
+			len+=l;
+	}while(tag!=PF_ENDBUFFER_MSGTAG);
+	return(len);
+}
+/*
+  	#] int PF_RecvFile:
 */

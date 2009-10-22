@@ -18,6 +18,12 @@
  *  which the creation of the recovery data leads to a termination of the
  *  running program is if not enough disk or memory space is left.
  *
+ *  For ParFORM each slave creates its own recovery file, sends it to the 
+ *  master and then it deletes the recovery file. The master stores all the 
+ *  recovery files and on recovery it feeds these files to the slaves. It is
+ *  nearly impossible to recover after some MPI fault so ParFORM terminates 
+ *  on any recovery failure.
+ *
  *  DoRecovery and DoSnapshot do the loading and saving of the recovery data,
  *  respectively. Every change in one functions needs to be accompanied by the
  *  appropriate change in the other function. The structure of both functions is
@@ -60,7 +66,19 @@
 /**
  *  basename of recovery files
  */
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+#define BASENAME_FMT "%c%04dFORMrecv"
+/**
+ * The basenames for ParFORM will be created from BASENAME_FMT by means of 
+ * sprintf(basename,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
+ * in InitRecovery(). Here just reserve the space:
+ */
+static char basename[] = BASENAME_FMT;
+#else
 static char *basename = "FORMrecv";
+#endif
+/*:[20oct2009 mt]*/
 /**
  *  filename for the recovery file
  */
@@ -99,14 +117,99 @@ static int done_snapshot = 0;
  *  Checks whether a snapshot/recovery file exists.
  *  Returns 1 if it exists, 0 otherwise.
  */
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+
+/**
+ * The master has all the recovery files. It checks whether these files
+ * exist and sends proper files to slaves. On any error PF_CheckRecoveryFile()
+ * returns -1 which leads to the program termination.
+ */
+static int PF_CheckRecoveryFile()
+{
+	int i,ret=0;
+	FILE *fd;
+	if (PF.me == MASTER){
+		char tmpnam[128];/*ATT! buffer overflow may ahppen!*/
+		/*We have to have recovery files for the master and all the slaves:*/
+		for(i=0; i<PF.numtasks;i++){
+			char *s1=tmpnam+6,*s2=recoveryfile+6;
+			sprintf(tmpnam,BASENAME_FMT,'m',i);
+			while( (*s1++ = *s2++)!='\0' );
+			/*now tmpnam is equal to recoveryfile for PF.me == i*/
+			if ( (fd = fopen(tmpnam, "r")) )
+				fclose(fd);
+			else
+				break;
+		}/*for(i=0; i<PF.numtasks;i++)*/
+		if(i!=PF.numtasks){/*some files are absent*/
+			int j;
+			/*Send all slaves failure*/
+			for(j=1; j<PF.numtasks;j++){
+				ret=PF_SendFile(j, NULL);
+				if(ret<0)
+					return(-1);
+			}
+			if(i==0)
+				return(0);/*Ok, no recovery files at all.*/
+			/*The master recovery file exists but some slave files are absent*/
+			MesPrint("The file %s exists but some of the slave recovery files are absent.",
+							RecoveryFilename());
+			return(-1);
+		}/*if(i!=PF.numtasks)*/
+		/*All the files are here.*/
+		/*Send all slaves success and files:*/
+		for(i=1; i<PF.numtasks;i++){
+			char *s1=tmpnam+6,*s2=recoveryfile+6;
+			sprintf(tmpnam,BASENAME_FMT,'m',i);
+			while( (*s1++ = *s2++)!='\0' );
+			/*now tmpnam is equal to recoveryfile for PF.me == i*/
+			fd = fopen(tmpnam, "r");
+			ret=PF_SendFile(i, fd);/*if fd==NULL, PF_SendFile seds to a slave the failure tag*/
+			if(fd == NULL)
+				return(-1);
+			else
+				fclose(fd);
+			if(ret<0)
+				return(-1);
+		}/*for(i=0; i<PF.numtasks;i++)*/
+		return(1);		
+	}/*if (PF.me == MASTER)*/
+	/*Slave:*/
+	/*Get the answer from the master:*/
+	fd=fopen(recoveryfile,"w");
+	if(fd == NULL)
+		return(-1);
+	ret=PF_RecvFile(MASTER,fd);
+	if(ret<0)
+		return(-1);
+	fclose(fd);
+	if(ret==0){
+		/*Nothing is found by the master*/
+		remove(recoveryfile);
+		return(0);
+	}
+	/*Recovery file is successfully transferred*/
+	return(1);
+}
+#endif
+/*:[20oct2009 mt]*/
 int CheckRecoveryFile()
 {
 	FILE *fd;
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	return(PF_CheckRecoveryFile());
+#else
+/*:[20oct2009 mt]*/
 	if ( (fd = fopen(recoveryfile, "r")) ) {
 		fclose(fd);
 		return(1);
 	}
 	return(0);
+/*[20oct2009 mt]:*/
+#endif
+/*:[20oct2009 mt]*/
 }
 
 /*
@@ -122,9 +225,30 @@ void DeleteRecoveryFile()
 {
 	if ( done_snapshot ) {
 		remove(recoveryfile);
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+		if( PF.me == MASTER){
+			int i;
+			for(i=1; i<PF.numtasks;i++){
+				char tmpnam[128];/*ATT! buffer overflow may ahppen!*/
+				char *s1=tmpnam+6,*s2=recoveryfile+6;
+				sprintf(tmpnam,BASENAME_FMT,'m',i);
+				while( (*s1++ = *s2++)!='\0' );
+				/*now tmpnam is equal to recoveryfile for PF.me == i*/
+				remove(tmpnam);
+			}/*for(i=1; i<PF.numtasks;i++)*/
+			remove(storefile);
+			remove(sortfile);
+			remove(hidefile);
+		}/*if( PF.me == MASTER)*/
+#else
+/*:[20oct2009 mt]*/
 		remove(storefile);
 		remove(sortfile);
 		remove(hidefile);
+/*[20oct2009 mt]:*/
+#endif
+/*:[20oct2009 mt]*/
 	}
 }
 
@@ -174,7 +298,13 @@ static char *InitName(char *str, char *ext)
 void InitRecovery()
 {
 	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
-
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	sprintf(basename,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
+	/*Now basename has a form ?XXXXFORMrecv where ? == 'm' for master and 's' for slave,
+		XXXX is a zero - padded PF.me*/
+#endif	
+/*:[20oct2009 mt]*/
 	recoveryfile = (char*)Malloc1(5*(lenpath+strlen(basename)+4+1),"InitRecovery");
 	intermedfile = InitName(recoveryfile, "tmp");
 	sortfile     = InitName(intermedfile, "XXX");
@@ -1846,6 +1976,11 @@ int DoRecovery(int *moduletype)
 	AR.outfile->ziobuffer = 0;
 #endif
 	/* reopen old outfile */
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	if(PF.me==MASTER)
+#endif
+/*:[20oct2009 mt]*/
 	if ( AR.outfile->handle >= 0 ) {
 		if ( CopyFile(sortfile, AR.outfile->name) ) {
 			MesPrint("ERROR: Could not copy old output sort file %s!",sortfile);
@@ -1953,6 +2088,28 @@ int DoRecovery(int *moduletype)
 #endif
 
 	/* #] AR */
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	/* #[ PF */
+	{/*Block*/
+		int numtasks;
+		R_SET(numtasks, int);
+		if(numtasks!=PF.numtasks){
+			MesPrint("%d number of tasks expected instead of %d; use mpirun -np %d",
+							numtasks,PF.numtasks,numtasks);
+			if(PF.me!=MASTER)
+				remove(RecoveryFilename());
+			Terminate(-1);
+		}
+	}/*Block*/
+	R_SET(PF.synchro, WORD);
+	R_SET(PF.rhsInParallel, int);
+	R_SET(PF.exprbufsize, int);
+	R_SET(PF.module, LONG);
+	R_SET(PF.log, int);
+	/* #] PF */
+#endif
+/*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS
 	/* read timing information of individual threads */
@@ -2426,6 +2583,19 @@ static int DoSnapshot(int moduletype)
 
 	/* #] AR */
 
+/*[20oct2009 mt]:*/
+	/* #[ PF */
+#ifdef PARALLEL
+	S_WRITE_B(&PF.numtasks, sizeof(int));
+	S_WRITE_B(&PF.synchro, sizeof(WORD));
+	S_WRITE_B(&PF.rhsInParallel, sizeof(int));
+	S_WRITE_B(&PF.exprbufsize, sizeof(int));
+	S_WRITE_B(&PF.module, sizeof(LONG));
+	S_WRITE_B(&PF.log, sizeof(int));
+#endif
+	/* #] PF */
+/*:[20oct2009 mt]*/
+
 #ifdef WITHPTHREADS
 	/* write timing information of individual threads */
 	i = GetTimerInfo(&longp);
@@ -2440,7 +2610,11 @@ static int DoSnapshot(int moduletype)
 	fseek(fd, BASEPOSITION(pos), SEEK_SET);
 
 	if ( fclose(fd) ) return(__LINE__);
-
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	if(PF.me == MASTER){
+#endif
+/*:[20oct2009 mt]*/
 	/* copy store file if necessary */
 	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
 		if ( CopyFile(FG.fname, storefile) ) return(__LINE__);
@@ -2455,6 +2629,12 @@ static int DoSnapshot(int moduletype)
 	if ( AR.hidefile->handle >= 0 ) {
 		if ( CopyFile(AR.hidefile->name, hidefile) ) return(__LINE__);
 	}
+
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	}/*if(PF.me == MASTER)*/
+#endif
+/*:[20oct2009 mt]*/
 
 	/* make the intermediate file the recovery file */
 	if ( rename(intermedfile, recoveryfile) ) return(__LINE__);
@@ -2486,7 +2666,11 @@ void DoCheckpoint(int moduletype)
 {
 	int error;
 	LONG timestamp = Timer(0);
-
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	if(PF.me == MASTER){
+#endif
+/*:[20oct2009 mt]*/
 	if ( timestamp - AC.CheckpointStamp >= AC.CheckpointInterval ) {
 		char argbuf[20];
 		int retvalue = 0;
@@ -2501,15 +2685,64 @@ void DoCheckpoint(int moduletype)
 			*(str+l) = ' ';
 			strcpy(str+l+1, argbuf);
 			retvalue = system(str);
+			M_free(str, "callbefore");
 			if ( retvalue ) {
 				MesPrint("Script returned error -> no recovery file will be created.");
 			}
 		}
 		if ( retvalue == 0 ) {
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+			/*confirm slaves to do a snapshot:*/
+			int i;
+			for(i=1;i<PF.numtasks; i++)
+				if( PF_RawSend(i,&i,sizeof(i),PF_DATA_MSGTAG) ){
+					MesPrint("Error sending recovery confirmation to slave No. %d",i);
+					Terminate(-1);
+	      	}
+#endif
+/*:[20oct2009 mt]*/
 			if ( (error = DoSnapshot(moduletype)) ) {
 				MesPrint("Error creating recovery files: %d", error);
 			}
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+			/*get recovery files from slaves:*/
+			for(i=1; i<PF.numtasks;i++){
+				FILE *fd;
+				char tmpnam[128];/*ATT! buffer overflow may ahppen!*/
+				char *s1=tmpnam+6,*s2=recoveryfile+6;
+				sprintf(tmpnam,BASENAME_FMT,'m',i);
+				while( (*s1++ = *s2++)!='\0' );
+				/*now tmpnam is equal to recoveryfile for PF.me == i*/
+				fd = fopen(tmpnam, "w");
+				if(fd == NULL){
+					MesPrint("Error opening recovery file for slave %d",i);
+					Terminate(-1);
+				}/*if(fd == NULL)*/
+				retvalue=PF_RecvFile(i,fd);
+				if(retvalue<=0){
+					MesPrint("Error receiving recovery file from slave %d",i);
+					Terminate(-1);
+				}/*if(retvalue<=0)*/
+				fclose(fd);
+			}/*for(i=0; i<PF.numtasks;i++)*/
+#endif
+/*:[20oct2009 mt]*/
 		}
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+		else{
+			/*discard  slave snapshots:*/
+			int i;
+			for(i=1;i<PF.numtasks; i++)
+				if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) ){
+					MesPrint("Error sending recovery cancellation to slave No. %d",i);
+					Terminate(-1);
+	      	}/*if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) )*/
+		}
+#endif
+/*:[20oct2009 mt]*/
 		if ( AC.CheckpointRunAfter ) {
 			size_t l, l2;
 			char *str;
@@ -2521,12 +2754,54 @@ void DoCheckpoint(int moduletype)
 			*(str+l) = ' ';
 			strcpy(str+l+1, argbuf);
 			retvalue = system(str);
+			M_free(str, "callafter");
 			if ( retvalue ) {
 				MesPrint("Error calling script after recovery.");
 			}
 		}
 		AC.CheckpointStamp = Timer(0);
 	}
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	else{/* timestamp - AC.CheckpointStamp < AC.CheckpointInterval*/
+		/*discard  slave snapshots:*/
+		int i;
+		for(i=1;i<PF.numtasks; i++)
+			if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) ){
+				MesPrint("Error sending recovery cancellation to slave No. %d",i);
+				Terminate(-1);
+      	}/*if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) )*/
+	}
+	}/*if(PF.me == MASTER)*/
+	else{/*Slave*/
+		int i,tag,m=MASTER;
+		/*Wait the master to confirm snapshot:*/
+		PF_RawRecv(&m,&i,sizeof(i),&tag);/*Only tag is relevant*/
+		if(tag==PF_DATA_MSGTAG){/*ok*/
+			error = DoSnapshot(moduletype);
+			if(error == 0){
+				FILE *fd;
+				/*send the recovery file to the master*/
+				fd = fopen(recoveryfile, "r");
+				i=PF_SendFile(MASTER, fd);/*if fd==NULL, PF_SendFile seds to a slave the failure tag*/
+				if(fd == NULL)
+					Terminate(-1);
+				fclose(fd);
+				if(i<=0)
+					Terminate(-1);
+				/*Now the slave need not the recovery file so remove it:*/
+				remove(recoveryfile);
+			}
+			else{
+				/*send the error tag to the master:*/
+				PF_SendFile(MASTER,NULL);/*if fd==NULL, PF_SendFile seds to a slave the failure tag*/
+				Terminate(-1);
+			}
+		}/*if(tag=PF_DATA_MSGTAG)*/
+		/*else -- no confirmation from the master, do nothing*/
+	}/*if(PF.me != MASTER)*/
+#endif
+/*:[20oct2009 mt]*/
 }
 
 /*

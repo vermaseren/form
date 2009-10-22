@@ -1172,12 +1172,26 @@ int main(int argc, char **argv)
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
 	InitRecovery();
-	if ( CheckRecoveryFile() ) {
+/*[20oct2009 mt]:*/
+	{/*Block*/
+	int ret=CheckRecoveryFile();
+	if ( ret < 0 ){/*In ParFORM CheckRecoveryFile() may return a fatal error.*/
+		MesPrint("Fail checking recovery file");
+		Terminate(-1);
+	}
+	else if  ( ret > 0 ) {
+/*:[20oct2009 mt]*/
 		if ( AC.CheckpointFlag != -1 ) {
 			/* recovery file exists but recovery option is not given */
 			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
 			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
 			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+			if(PF.me != MASTER)
+				remove(RecoveryFilename());
+#endif
+/*:[20oct2009 mt]*/
 			Terminate(-1);
 		}
 	}
@@ -1188,6 +1202,9 @@ int main(int argc, char **argv)
 			Terminate(-1);
 		}
 	}
+/*[20oct2009 mt]:*/
+	}/*Block*/
+/*:[20oct2009 mt]*/
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
 	AS.MultiThreaded = 0;
 #ifdef WITHPTHREADS
