@@ -351,7 +351,6 @@ commonread:;
 #ifdef PARALLEL
 				}
 #endif
-}
 				break;
 			case SKIPLEXPRESSION:
 			case SKIPGEXPRESSION:
