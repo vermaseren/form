@@ -20,150 +20,234 @@ foldmarkers to \C{set foldmarker=\#[,\#]}
 
 % INDENTATION HACK to be improved!
 $\quad\;\:$\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{declare.h} & Contains the declaration of all publicly relevant functions and also some macros. \\
-\C{form3.h} & Global settings and macro definitions like word sizes. It includes several different system
+\C{declare.h} & Contains the declarations of all publicly relevant functions as
+well as of commonly used macros like \C{NCOPY} or \C{LOCK}. \\
+\C{form3.h} & Global settings and macro definitions like word size or version
+number. It includes several different system
 header files depending on the computer's architecture.\\
-\C{fsizes.h} & Defines macros that determine the size and lauyout of \FORM's internal data like the
-size of the work bugger etc. \\
+\C{fsizes.h} & Defines macros that determine the size and layout of \FORM's internal data like the
+sizes of the work buffers etc. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{ftypes.h} & Contains preprocessor definitions of codes used in the internal representation of
+\C{ftypes.h} & Contains preprocessor definitions of the codes used in the internal representation of
 parsed input and expressions. \\
-\C{fwin.h} & Special settings for the windows OS. \\
-\C{inivar.h} & Contains the initialization of various global variables. \\
+\C{fwin.h} & Special settings for the Windows operating system. \\
+\C{inivar.h} & Contains the initialization of various global data like the
+\FORM\
+function names or the character table for parsing. It also defines the global
+struct \C{A}, and for \TFORM\ the struct pointer \C{AB}. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{minos.h} &  Header to the minos.c source file. \\
-\C{parallel.h} & Header to the parallel.c source file. \\
+\C{minos.h} &  Dedicated header to the minos.c source file. \\
+\C{parallel.h} & Dedicated header to the parallel.c source file. \\
 \C{portsignals.h} & Preprocessor definition of the OS signals \FORM\ can deal with. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{structs.h} & Contains the global structs that contain almost all of \FORM's internal data. \\
-\C{unix.h} & Special definitions for Unix--like OS. \\
-\C{variable.h} & Some convinience preprocessor definitions to ease the access to global variables. \\
+\C{structs.h} & Defines the structs that contain almost all of
+\FORM's internal data. \\
+\C{unix.h} & Special definitions for Unix--like operating systems. \\
+\C{variable.h} & Some convinience preprocessor definitions to ease the access to
+global variables, like \C{cbuf} or \C{AC}. \\
 \end{tabular}
 
 \subsection{The source files}
 
 % INDENTATION HACK to be improved!
 $\quad\;\:$\begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{argument.c} & TODO \\
-\C{bugtool.c} & \ldots \\
-\C{checkpoint.c} &  \\
+\C{argument.c} & Code for the \C{argument} and \C{term}
+	\FORM\ statements. \\
+\C{bugtool.c} & Low-level debugging code. \\
+\C{checkpoint.c} & Code to test for checkpoint conditions, to create
+snapshots, and to recover from snapshot data. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{comexpr.c} &  \\
-\C{compcomm.c} &  \\
-\C{compiler.c} &  \\
+\C{comexpr.c} & Functions the compiler calls to translate a statement that
+involves an algebraic expression, e.g. \C{Local} or \C{Id}.  \\
+\C{compcomm.c} & Functions the compiler calls to translate a statement that
+neither involves an algebraic expression nor is a variable declaration. \\
+\C{compiler.c} & Main compiler code. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{compress.c} &  \\
-\C{comtool.c} &  \\
-\C{dollar.c} &  \\
+\C{compress.c} & Code for GZIP (de-)compression in sort files. \\
+\C{comtool.c} & Utility functions for the compiler, like \C{AddRHS}. \\
+\C{dollar.c} & Code dealing with dollar variables. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{execute.c} &  \\
-\C{extcmd.c} &  \\
-\C{factor.c} &  \\
+\C{execute.c} & Code for the execution phase of a module. Also, code dealing
+with brackets in \FORM\ expressions. \\
+\C{extcmd.c} & External command code. \\
+\C{factor.c} & Simple factorizing code for dollar variables and expressions. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{findpat.c} &  \\
-\C{function.c} &  \\
-\C{if.c} &  \\
+\C{findpat.c} & Pattern matching for symbols and dot products. \\
+\C{function.c} & Pattern matching for functions. \\
+\C{if.c} & Code for the \C{if} statement. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{index.c} &  \\
-\C{lus.c} &  \\
-\C{message.c} &  \\
+\C{index.c} & Code for bracket indexing. \\
+\C{lus.c} & Code to find loops in index contractions. \\
+\C{message.c} & Text output functions, like \C{MesPrint} or \C{PrintTerm}. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{minos.c} &  \\
-\C{module.c} &  \\
-\C{mpi2.c} &  \\
+\C{minos.c} & The minos database. \\
+\C{module.c} & Code for module execution and the \C{moduleoption}, \C{exec} and
+\C{pipe} statements. \\
+\C{mpi2.c} & MPI2 code for \PARFORM. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{mpi.c} &  \\
-\C{names.c} &  \\
-\C{normal.c} &  \\
+\C{mpi.c} & MPI1 code for \PARFORM. \\
+\C{names.c} & Name administration code to deal with the declaration of
+\FORM\ variables. \\
+\C{normal.c} & Code to normalize terms, i.e. bring them to standard form. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{opera.c} &  \\
-\C{optim.c} &  \\
-\C{parallel.c} &  \\
+\C{opera.c} & Code for doing traces, contractions, and tensor conversions. \\
+\C{optim.c} & Code to optimize FORTRAN or C output. \\
+\C{parallel.c} & \PARFORM\ (MPI-independant code). \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{pattern.c} &  \\
-\C{poly.c} &  \\
-\C{polynito.c} &  \\
+\C{pattern.c} & General pattern matching and substitution. \\
+\C{poly.c} & Code for polynomial arithmetic (experimental). \\
+\C{polynito.c} & Code for polynomial arithmetic and manipulation. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{pre.c} &  \\
-\C{proces.c} &  \\
-\C{ratio.c} &  \\
+\C{pre.c} & The preprocessor. \\
+\C{proces.c} & The central processor. \\
+\C{ratio.c} & Partial fractioning and summing functions. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{reken.c} &  \\
-\C{reshuf.c} &  \\
-\C{sch.c} &  \\
+\C{reken.c} & Code for numerics. \\
+\C{reshuf.c} & Utility functions for the renumbering of dummy indices, and for
+statements like \C{shuffle}, \C{stuffle}, \C{multiply}. \\
+\C{sch.c} & Code for the textual output of terms and expressions. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{setfile.c} &  \\
-\C{smart.c} &  \\
-\C{sort.c} &  \\
+\C{setfile.c} & Code to deal with setup parameters and setup files. \\
+\C{smart.c} & Code doing optimized pattern matching. \\
+\C{sort.c} & Code for the sorting of expressions. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{startup.c} &  \\
-\C{store.c} &  \\
-\C{symmetr.c} &  \\
+\C{startup.c} & Start of program (\C{main()}). Code for the startup and shutdown
+phase of \FORM. \\
+\C{store.c} & Code to read from disk or write to disk terms and expressions.
+Also, store file and save file management. \\
+\C{symmetr.c} & Pattern matching for functions with symmetric properties. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{tables.c} &  \\
-\C{threads.c} &  \\
-\C{token.c} &  \\
+\C{tables.c} & Code for the tablebases. \\
+\C{threads.c} & \TFORM. Almost all of the \TFORM\ specific code. \\
+\C{token.c} & The tokenizer. \\
 \end{tabular}
 
 \begin{tabular}{p{0.2\textwidth}p{0.65\textwidth}}
-\C{tools.c} &  \\
-\C{unixfile.c} &  \\
-\C{wildcard.c} &
+\C{tools.c} & Utility functions to deal with streams, files, strings, memory
+management, and timers. \\
+\C{unixfile.c} &  Wrapper functions for UNIX file I/O functions. \\
+\C{wildcard.c} & Code for wildcards.
 \end{tabular}
-
-% mention groups of files relevant to certain tasks? E.g. all files concerned with preprocessor
-% actions, all files concerned with sorting, etc.
 
 \subsection{The global structs}
 
-\FORM\ keeps its data in several global structs. These structs are defined in \C{structs.h}. The
-various global variables contained in these structs are grouped according to their role in the
-program. There exist the structs \C{P\_const}, \C{M\_const}, \ldots. The global variable \C{A}
-defined in \C{inivar.h} is a struct containing several of these global structs. 
+\FORM\ keeps its data organized in several global structs. These structs are defined in
+\C{structs.h} (in the fold \C{A}) and come by the names \C{M\_const}, \C{P\_const}, \ldots.  The
+various global variables are grouped in these structs according to their r\^ole in the
+program. The fold commentaries give details on this. \C{M\_const} is for global settings at startup
+and \C{.clear}, for example.
 
-% A with and without threads, AB
-% contents of ?\_const structs
-% access macros to these structs
-% initialization in startup.c
-% data type preprocessor definition, e.g. WORD, to be found in form3.h and unix.h or fwin.h.
-% ALLGLOBALS ALLPRIVATES
-% structs like FILE, etc. also in structs.h
+The various structs are collected in the struct \C{AllGlobals}. In the case of sequential \FORM,
+this struct is made into the type \C{ALLGLOBALS}, and in \C{inivar.h}, the global variable \C{A} is
+defined having this type. This global variable \C{A} holds all the data defined in the various
+structs. In \C{variable.h} several macros are defined to simplify (and more importantly unify) the
+access to the struct elements. For example, one can access the variable \C{S0} in \C{T\_const} as
+\C{AT.S0}.
 
-\subsection{Configuration and special files}
+With the multi-threaded version \TFORM\ things are a little bit more complicated, because some data
+needs to be replicated and made private for each thread. This kind of data is situated in the
+structs \C{N\_const}, \C{R\_const}, and \C{T\_const}. For \TFORM, these structs are collected in the
+struct \C{AllPrivates} (which makes up the type \C{ALLPRIVATES}), all other structs go into the
+\C{AllGlobals} struct. The global variable \C{A} now contains only the non-thread specific data. For
+each thread a \C{AllPrivates} struct is dynamically allocated and the global pointer variable (in
+\C{inivar.h}) \C{AB} holds their references. \C{AB} is an array of pointers where the index
+corresponds to the thread number. The macros defined in \C{variable.h} to access the global struct
+data are made such that they transparently work with the \C{AB} array. The user doesn't need to care
+about these details and can still write as in the previous example \C{AT.S0}. This keeps the code
+of sequential \FORM\ and multi-threaded \TFORM\ uniform. 
 
-% config.h
-% tform, parform, windows special files
+The only small price one has to pay to make this uniform access by macros possible is to make sure
+every function in \FORM\ knows in which thread it is executed. The \C{AN}, \C{AR}, and \C{AT} macros
+use a variable \C{B}, which is set to the correct entry in \C{AB} by one of two ways. First, a
+function can use the macro \C{GETIDENTITY} (defined in \C{declare.h}).  In \TFORM\, it calls
+\C{WhoAmI()} to get the thread number, declares the pointer \C{B}, and sets \C{B} to point to the
+correct entry in \C{AB}. In sequential \FORM\ this macro is empty. The second way is to get the
+variable \C{B} as a parameter from the caller. For this method the macros \C{PHEAD}, \C{PHEAD0},
+\C{BHEAD}, and \C{BHEAD0} exist (defined in \C{ftypes.h}), which can be used in the parameter list of
+the function declarations. The variants with a zero differ only by not including a trailing comma,
+which is not allowed if no other parameters are following in the declaration. Usually, \C{PHEAD} is
+used in the declaration (it includes type information), while \C{BHEAD} appears in the calling of
+functions. Which way to set \C{B} is chosen, depends on the use of the function. The \C{PHEAD} method
+is faster than \C{GETIDENTITY} and should be preferred in functions that are called very often. On
+the other hand, \C{GETIDENTITY} is more general as it does not rely on every caller to supply \C{B}. 
+
+The elements of the structs are of various types. Some types are just simple macros mapping directly
+to built-in types (see \C{form3.h}) like \C{WORD}, others are names for structs that are defined
+(mostly) in \C{structs.h}. Often, variables of the same type are grouped together to help the
+compiler with alignment. Also, a lot of structs use macros like \C{PADLONG} (\C{unix.h} or
+\C{fwin.h}) to pad a struct such that its size is a multiple of a built-in type size. This again
+is to help with the data alignment.
+
+Most struct elements have comments that explain their use. These commentaries often include 
+the information where this element was once located in the old version 2 of \FORM\ (it is the pair
+of parentheses with or without a capital letter inside). Pointers come in two flavors: Some
+pointers reference a dynamically allocated piece of memory, basically owning this memory. Others
+just reference another variable or point into allocated memory. The first kind is usually marked
+with \C{[D]} for easy identification. These pointers often need to be treated particularly, e.g. during the
+snapshot creation, when recovering, or when shutting down.
+
+During start up (\C{main()}), all the memory of these global structs, i.e. their element variables, is
+initialized to zero.
+
+\subsection{Configuration}
+
+The source code evaluates several preprocessor definitions that can be defined by the user.
+According to these definitions the executable can be configured in different ways. As a default, the
+sequential version of \FORM\ is generated. But if, for example, the preprocessor variable
+\C{WITHPTHREADS} is defined, the multi-threaded version \TFORM\ will be compiled. These preprocessor
+variables can be set when calling the compiler, like
+
+\C{gcc -c -DWITHPTHREADS -o pre.o pre.c}
+
+The most commonly considered preprocessor variables are: \\ \C{WITHPTHREADS}, \C{PARALLEL},
+\C{WITHZLIB}, \C{WITHGMP}, \C{WITHSORTBOTS}, \C{LINUX}, \\ \C{OPTERON}, \C{DEBUGGING}. The first two
+change the flavor of the executable: \TFORM\ or \PARFORM. The next two configure whether \FORM\ uses
+the zlib library for compression during sorts or the GMP library for arbitrary precision arithmetics.
+The next decides whether \FORM\ uses dedicated sorting  threads in \TFORM. \C{LINUX}
+specifies that the executable is to be compiled for a Linux or UNIX compliant operating system. An
+alternative here would be to set the variable \C{ALPHA} or \C{MYWIN64} instead, but these builds are
+less common. \C{OPTERON} has to be set if one compiles a 64bit executable. \C{DEBUGGING} enables
+some features for a non-release debugging version of the executable (commonly named \C{vorm} or
+\C{tvorm}).
+
+When using the autoconf setup, the settings concerning the operating system, architecture (32/64bit), and
+flavor of the executable are automatically done right. Additional settings like \C{WITHZLIB} can be
+changed by manually editing the file \C{config.h}, which is included in \C{form3.h}.
+
+Version numbers and production date can also be set, but then one either needs to edit the
+appropriate lines in \C{form3.h} when in a manual compiling setup, or by editing \C{configure.ac} in
+an autoconf setup.
