@@ -57,22 +57,85 @@ Documentation can be found in the directory \C{doc}.
 
 \input{@srcdir@/source}
 
-\section{Other parts of the FORM distribution}
-
-% other directories (doc, check, older stuff)
-% autoconf infrastructure
-
 \section{Discussion of a typical \FORM\ run}
 
-%%% What does FORM do during a typical execution.
-%%% 
-%%% Which parts of FORM do exist, when do they come into action, and how to they
-%%% interact with each other.
-%%% 
-%%% Call-graph or structured code block diagrams
+We discuss in the following what is happening inside \FORM\ when it executes a given program. The
+discussion focuses more on the interplay between the various parts of \FORM\ and on key concepts of
+the internal data representation than on in-depth details of the code. For the
+latter, the reader is 
+referred to section \ref{sec:indepth}.
+
+We consider the following exemplary \FORM\ program \C{test.frm} (which we run
+with the command "\C{form test}"):
+
+\begin{verbatim}
+        #define N "3"
+        
+        Symbol x, y, z;
+        
+        L	f = (x+y)^2 - (x+z)^`N';
+        L	g = f - x;
+        
+        Brackets x;
+        Print;
+        .sort
+        
+        #do i=2,3
+        Id	x?^`i' = x;
+        #enddo
+        
+        Print +s;
+        .end
+\end{verbatim}
+
+The entry function \C{main()} is in \C{startup.c}. It does various
+initializations before it calls the preprocessor \C{PreProcessor()}, which
+actually deals with the \FORM\ program. The code shows some typical features:
+Preprocessor macros are frequently used to select code specific to certain
+configurations. The two most common macros can be seen here: \C{WITHPTHREADS}
+for a \TFORM\ executable and \C{PARALLEL} for a \PARFORM\ executable. Macros are
+used to access the global data contained in the variable \C{A}, like 
+\C{AX.timeout} for example. The code uses (usually) own functions instead of
+standard functions provided by the C library for common tasks. Examples in
+\C{main()} are \C{strDup1} or \C{MesPrint} (replacing \C{printf()}). Another
+very often used function is \C{Malloc1()} replacing \C{malloc()}. The reasons
+are better portability and the inclusion of special features.  \C{Malloc1()} for
+example makes a custom memory debugger available while \C{MesPrint()} knows
+among other things how to print encoded expressions from the internal buffers.
+
+% needs to be rewritten ->
+The initializations in \C{main()} are done in several steps. Some like the
+initialization of \C{A} with zeros is done directly, most others are done by
+calls to dedicated functions. The initializations are split up according to the
+type of objects involved and the available information at this point. The
+command line parameters passed to \FORM\ (none in our example run) are treated
+in the function \C{DoTail()}. After that, files are opened and also parsed for
+addtional settings. Then, as all settings are known, the large part of the
+internal data is allocated and initialized. Finally, recovery settings are
+checked, threads are started if necessary, timers are started, and variable
+initializations that might need to be repeated later (e.g. clear modules) are
+done in \C{IniVars()}.
+
+The call to \C{OpenInput()} reads the actual \FORM\ program into memory. The
+input is handled in an abstract fashion as character streams. The stream implementation
+(\C{tools.c}) offers several functions to open, close, and read from a stream.
+Streams can be of different types including files, in-memory data like parts of
+other streams or dollar variables, as well as external channels. The access to
+the characters in all streams though is nicely uniform. In
+\C{OpenInput()} a stream is representing our input file. Most of the logic
+there deals with the jump to the requested module (skipping clear instructions).
+It uses the function \C{GetInput()} to get the next character in the stream.
+Which stream it reads from is determined by the variable \C{AC.CurrentStream}.
+This global variable in the sub-struct \C{C\_const} of the \C{ALLGLOBALS}
+variable \C{A} is an example of how the different parts of \FORM\ typically
+communicate with each other by means of global variables.
+
+Next is the preprocessor. The preprocessor is implemented in the function
+\C{PreProcessor()} in \C{pre.c}.
 
 
 \section{In--depth discussion of the functional parts of FORM}
+\label{sec:indepth}
 
 %%% Parser
 %%% 
@@ -101,7 +164,13 @@ Documentation can be found in the directory \C{doc}.
 %%% ...
 
 
+\section{Other parts of the FORM distribution}
+
+% other directories (doc, check, older stuff)
+% autoconf infrastructure
+
 \section{Autoconf build--system}
+
 
 %%% autoconf vs. pure Makefiles
 %%% configuration
