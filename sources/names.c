@@ -952,7 +952,9 @@ UBYTE *DoDimension(UBYTE *s, int *dim, int *dim4)
 	if ( FG.cTable[*s] == 1 ) {
 retry:
 		ParseNumber(*dim,s)
+#if ( BITSINWORD/8 < 4 )
 		if ( *dim >= (1 << (BITSINWORD-1)) ) goto illeg;
+#endif
 		*dim4 = *dim - 4;
 		return(s);
 	}
