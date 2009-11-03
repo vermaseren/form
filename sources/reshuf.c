@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -90,7 +90,7 @@ WORD ReNumber(PHEAD WORD *term)
 }
 
 /*
- 		#] Renumber : 
+ 		#] Renumber :
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -116,7 +116,7 @@ VOID FunLevel(PHEAD WORD *term)
 			case VECTOR:
 				t += 3;
 				do {
-					if ( *t >= AM.IndDum ) {
+					if ( *t >= AN.IndDum ) {
 						AN.NumFound++;
 						*AN.DumFound++ = *t;
 						*AN.DumPlace++ = t;
@@ -136,7 +136,7 @@ VOID FunLevel(PHEAD WORD *term)
 			case INDEX:
 				t += 2;
 				while ( t < r ) {
-					if ( *t >= AM.IndDum ) {
+					if ( *t >= AN.IndDum ) {
 						AN.NumFound++;
 						*AN.DumFound++ = *t;
 						*AN.DumPlace++ = t;
@@ -162,7 +162,7 @@ VOID FunLevel(PHEAD WORD *term)
 				>= TENSORFUNCTION ) {
 					t += FUNHEAD;
 					while ( t < r ) {
-						if ( *t >= AM.IndDum ) {
+						if ( *t >= AN.IndDum ) {
 							AN.NumFound++;
 							*AN.DumFound++ = *t;
 							*AN.DumPlace++ = t;
@@ -189,7 +189,7 @@ VOID FunLevel(PHEAD WORD *term)
 					else {
 						if ( *t == -INDEX ) {
 							t++;
-							if ( *t >= AM.IndDum ) {
+							if ( *t >= AN.IndDum ) {
 								AN.NumFound++;
 								*AN.DumFound++ = *t;
 								*AN.DumPlace++ = t;
@@ -208,14 +208,17 @@ VOID FunLevel(PHEAD WORD *term)
 }
 
 /*
- 		#] FunLevel : 
+ 		#] FunLevel :
  		#[ DetCurDum :
+
+		We look for indices in the range AM.IndDum to AM.IndDum+MAXDUMMIES.
+		The maximum value is returned.
 */
 
-WORD DetCurDum(WORD *t)
+WORD DetCurDum(PHEAD WORD *t)
 {
-	WORD maxval = AM.IndDum;
-	WORD maxtop = maxval + MAXDUMMIES;
+	WORD maxval = AN.IndDum;
+	WORD maxtop = AM.IndDum + WILDOFFSET;
 	WORD *tstop, *m, *r, i;
 	tstop = t + *t - 1;
 	tstop -= ABS(*tstop);
@@ -258,7 +261,7 @@ Singles:
 					m = r + ARGHEAD;
 					r += *r;
 					while ( m < r ) {   /* Terms in the argument */
-						i = DetCurDum(m);
+						i = DetCurDum(BHEAD m);
 						if ( i > maxval && i < maxtop ) maxval = i;
 						m += *m;
 					}
@@ -273,7 +276,7 @@ Singles:
 }
 
 /*
- 		#] DetCurDum : 
+ 		#] DetCurDum :
  		#[ FullRenumber :
 
 		Does a full renumbering. May be slow if there are many indices.
@@ -384,7 +387,7 @@ Return0:
 }
 
 /*
- 		#] FullRenumber : 
+ 		#] FullRenumber :
  		#[ MoveDummies :
 
 		Routine shifts the dummy indices by an amount 'shift'.
@@ -398,8 +401,8 @@ Return0:
 VOID MoveDummies(PHEAD WORD *term, WORD shift)
 {
 	GETBIDENTITY
-	WORD maxval = AM.IndDum;
-	WORD maxtop = maxval + MAXDUMMIES;
+	WORD maxval = AN.IndDum;
+	WORD maxtop = AM.IndDum + WILDOFFSET;
 	WORD *tstop, *m, *r;
 	tstop = term + *term - 1;
 	tstop -= ABS(*tstop);
@@ -455,8 +458,8 @@ Singles:
 }
 
 /*
- 		#] MoveDummies : 
-  	#] Reshuf : 
+ 		#] MoveDummies :
+  	#] Reshuf :
   	#[ Count :
  		#[ CountDo :
 
@@ -611,7 +614,7 @@ NextFF:
 }
 
 /*
- 		#] CountDo : 
+ 		#] CountDo :
  		#[ CountFun :
 
 		This is the count function.
@@ -776,8 +779,8 @@ VectInd:		i = term[1] - 2;
 }
 
 /*
- 		#] CountFun : 
-  	#] Count : 
+ 		#] CountFun :
+  	#] Count :
   	#[ Multiply Term :
  		#[ MultDo :
 */
@@ -804,8 +807,8 @@ WORD MultDo(WORD *term, WORD *pattern)
 }
 
 /*
- 		#] MultDo : 
-  	#] Multiply Term : 
+ 		#] MultDo :
+  	#] Multiply Term :
   	#[ Try Term(s) :
  		#[ TryDo :
 */
@@ -838,8 +841,8 @@ WORD TryDo(WORD *term, WORD *pattern, WORD level)
 }
 
 /*
- 		#] TryDo : 
-  	#] Try Term(s) : 
+ 		#] TryDo :
+  	#] Try Term(s) :
   	#[ Distribute :
  		#[ DoDistrib :
 
@@ -1100,7 +1103,7 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 }
 
 /*
- 		#] DoDistrib : 
+ 		#] DoDistrib :
  		#[ EqualArg :
 
 		Returns 1 if the arguments in the field are identical.
@@ -1128,7 +1131,7 @@ WORD EqualArg(WORD *parms, WORD num1, WORD num2)
 }
 
 /*
- 		#] EqualArg : 
+ 		#] EqualArg :
  		#[ DoDelta3 :
 */
 
@@ -1310,8 +1313,8 @@ nextk:;
 }
 
 /*
- 		#] DoDelta3 : 
-  	#] Distribute : 
+ 		#] DoDelta3 :
+  	#] Distribute :
   	#[ DoShuffle :
 
 	Merges the arguments of all occurrences of function fun into a
@@ -1431,7 +1434,7 @@ WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
 }
 
 /*
-  	#] DoShuffle : 
+  	#] DoShuffle :
   	#[ Shuffle :
 
 	How to make shuffles:
@@ -1643,7 +1646,7 @@ shuffcall:
 }
 
 /*
-  	#] Shuffle : 
+  	#] Shuffle :
   	#[ FinishShuffle :
 
 	The complications here are:
@@ -1703,7 +1706,7 @@ Finicall:
 }
 
 /*
-  	#] FinishShuffle : 
+  	#] FinishShuffle :
   	#[ DoStuffle :
 
 	Stuffling is a variation of shuffling.
@@ -1921,7 +1924,7 @@ retry2:;
 }
 
 /*
-  	#] DoStuffle : 
+  	#] DoStuffle :
   	#[ Stuffle :
 
 	The way to generate the stuffles
@@ -2054,7 +2057,7 @@ stuffcall:;
 }
 
 /*
-  	#] Stuffle : 
+  	#] Stuffle :
   	#[ FinishStuffle :
 
 	The program only comes here from the Shuffle routine.
@@ -2086,7 +2089,7 @@ stuffcall:;
 }
 
 /*
-  	#] FinishStuffle : 
+  	#] FinishStuffle :
   	#[ StuffRootAdd :
 
 	Makes the stuffle sum of two arguments.
@@ -2358,5 +2361,5 @@ genericcoef:
 #endif
 
 /*
-  	#] StuffRootAdd : 
+  	#] StuffRootAdd :
 */

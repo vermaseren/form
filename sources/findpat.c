@@ -1044,7 +1044,7 @@ WORD FindMulti(PHEAD WORD *term, WORD *pattern)
 WORD FindRest(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
-	WORD *t, *m, *tt;
+	WORD *t, *m, *tt, wild, regular;
 	WORD *tstop, *mstop;
 	WORD *xstop, *ystop;
 	WORD n, *p, nq;
@@ -1107,7 +1107,7 @@ WORD FindRest(PHEAD WORD *term, WORD *pattern)
 			if ( !ScanFunctions(BHEAD ystop,xstop,0) ) return(0);
 		}
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -1130,7 +1130,8 @@ WORD FindRest(PHEAD WORD *term, WORD *pattern)
 					}
 					p = older;
 					nq = n;
-					if ( m[1] < (AM.OffsetIndex+WILDOFFSET) ) {
+					if ( ( m[1] < (AM.OffsetIndex+WILDOFFSET) )
+					|| ( m[1] >= (AM.OffsetIndex+2*WILDOFFSET) ) ) {
 						while ( nq > 0 ) {
 							if ( m[1] == p[1] ) {
 								if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*p,&newval1) ) {
@@ -1160,8 +1161,9 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 					else return(0);
 					m += 2;
 				}
-				else if ( *m <= *t && 
-				m[1] >= (AM.OffsetIndex + WILDOFFSET) ) {
+				else if ( ( *m <= *t )
+				&& ( m[1] >= (AM.OffsetIndex + WILDOFFSET) )
+				&& ( m[1] <  (AM.OffsetIndex + 2*WILDOFFSET) ) ) {
 					if ( *m == *t && t < xstop ) {
 						p = older;
 						p += n;
@@ -1195,7 +1197,7 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 			} while ( m < ystop );
 		}
 /*
-			#] VECTORS : 
+			#] VECTORS :
 			#[ INDICES :
 */
 		else if ( *m == INDEX ) {
@@ -1216,7 +1218,8 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 				if ( *m == *t && t < xstop && m < ystop ) {
 					t++; m++;
 				}
-				else if ( *m >= (AM.OffsetIndex+WILDOFFSET) ) {
+				else if ( ( *m >= (AM.OffsetIndex+WILDOFFSET) )
+				&& ( *m < (AM.OffsetIndex+2*WILDOFFSET) ) ) {
 					while ( t < xstop ) {
 						*p++ = *t++; n++;
 					}
@@ -1226,6 +1229,30 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 					do {
 						if ( !CheckWild(BHEAD *m-WILDOFFSET,INDTOIND,*q,&newval1) ) {
 							AddWild(BHEAD *m-WILDOFFSET,INDTOIND,newval1);
+							break;
+						}
+						q++;
+						nq--;
+					} while ( nq > 0 );
+					if ( nq <= 0 ) return (0);
+					n--;
+					nq--;
+					p = q + 1;
+					while ( nq > 0 ) { *q++ = *p++; nq--; }
+					p--;
+					m++;
+				}
+				else if ( ( *m >= (AM.OffsetVector+WILDOFFSET) )
+				&& ( *m < (AM.OffsetVector+2*WILDOFFSET) ) ) {
+					while ( t < xstop ) {
+						*p++ = *t++; n++;
+					}
+					if ( !n ) return(0);
+					nq = n;
+					q = older;
+					do {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*q,&newval1) ) {
+							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 							break;
 						}
 						q++;
@@ -1266,7 +1293,10 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 					m += 2;
 					t += 2;
 				}
-				else if ( *m >= (AM.OffsetIndex+WILDOFFSET) ) { /* Two dummies */
+				else if ( ( *m >= (AM.OffsetIndex+WILDOFFSET) )
+				&& ( *m < (AM.OffsetIndex+2*WILDOFFSET) )
+				&& ( m[1] >= (AM.OffsetIndex+WILDOFFSET) )
+				&& ( m[1] < (AM.OffsetIndex+2*WILDOFFSET) ) ) { /* Two dummies */
 					while ( t < xstop ) {
 						*p++ = *t++; *p++ = *t++; n += 2;
 					}
@@ -1297,20 +1327,23 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 					p -= 2;
 					m += 2;
 				}
-				else if ( m[1] >= (AM.OffsetIndex+WILDOFFSET) ) {
-					while ( ( *m == *t || *m == t[1] ) && t < xstop ) {
+				else if ( ( m[1] >= (AM.OffsetIndex+WILDOFFSET) )
+				&& ( m[1] < (AM.OffsetIndex+2*WILDOFFSET) ) ) {
+					wild = m[1]; regular = *m;
+OneWild:
+					while ( ( regular == *t || regular == t[1] ) && t < xstop ) {
 						*p++ = *t++; *p++ = *t++; n += 2;
 					}
 					if ( !n ) return(0);
 					nq = n;
 					q = older;
 					do {
-						if ( *m == *q && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,q[1],&newval1) ) {
-							AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval1);
+						if ( regular == *q && !CheckWild(BHEAD wild-WILDOFFSET,INDTOIND,q[1],&newval1) ) {
+							AddWild(BHEAD wild-WILDOFFSET,INDTOIND,newval1);
 							break;
 						}
-						if ( *m == q[1] && !CheckWild(BHEAD m[1]-WILDOFFSET,INDTOIND,*q,&newval1) ) {
-							AddWild(BHEAD m[1]-WILDOFFSET,INDTOIND,newval1);
+						if ( regular == q[1] && !CheckWild(BHEAD wild-WILDOFFSET,INDTOIND,*q,&newval1) ) {
+							AddWild(BHEAD wild-WILDOFFSET,INDTOIND,newval1);
 							break;
 						}
 						q += 2;
@@ -1323,6 +1356,11 @@ RestL11:							AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newval1);
 					while ( nq > 0 ) { *q++ = *p++; nq--; }
 					p -= 2;
 					m += 2;
+				}
+				else if ( ( *m >= (AM.OffsetIndex+WILDOFFSET) )
+				&& ( *m < (AM.OffsetIndex+2*WILDOFFSET) ) ) {
+					wild = *m; regular = m[1];
+					goto OneWild;
 				}
 				else {
 					if ( t >= tstop || *m < *t || ( *m == *t && m[1] < t[1] ) )

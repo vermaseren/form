@@ -332,7 +332,7 @@ extern WORD   CountDo(WORD *,WORD *);
 extern WORD   CountFun(WORD *,WORD *);
 extern WORD   Deferred(PHEAD WORD *,WORD);
 extern WORD   DeleteStore(WORD);
-extern WORD   DetCurDum(WORD *);
+extern WORD   DetCurDum(PHEAD WORD *);
 extern VOID   DetVars(WORD *,WORD);
 extern WORD   Distribute(DISTRIBUTE *,WORD);
 extern WORD   DivLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *,UWORD *,WORD *);

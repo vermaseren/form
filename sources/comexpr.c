@@ -27,21 +27,21 @@ static struct id_options {
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ DoExpr:
 */
 
@@ -238,7 +238,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
@@ -249,7 +249,7 @@ int CoIdOld(UBYTE *inp)
 }
 
 /*
-  	#] CoIdOld : 
+  	#] CoIdOld :
   	#[ CoId :
 */
 
@@ -260,7 +260,7 @@ int CoId(UBYTE *inp)
 }
 
 /*
-  	#] CoId : 
+  	#] CoId :
   	#[ CoIdNew :
 */
 
@@ -271,7 +271,7 @@ int CoIdNew(UBYTE *inp)
 }
 
 /*
-  	#] CoIdNew : 
+  	#] CoIdNew :
   	#[ CoDisorder :
 */
 
@@ -282,7 +282,7 @@ int CoDisorder(UBYTE *inp)
 }
 
 /*
-  	#] CoDisorder : 
+  	#] CoDisorder :
   	#[ CoMany :
 */
 
@@ -293,7 +293,7 @@ int CoMany(UBYTE *inp)
 }
 
 /*
-  	#] CoMany : 
+  	#] CoMany :
   	#[ CoMulti :
 */
 
@@ -304,7 +304,7 @@ int CoMulti(UBYTE *inp)
 }
 
 /*
-  	#] CoMulti : 
+  	#] CoMulti :
   	#[ CoIfMatch :
 */
 
@@ -315,7 +315,7 @@ int CoIfMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfMatch : 
+  	#] CoIfMatch :
   	#[ CoOnce :
 */
 
@@ -326,7 +326,7 @@ int CoOnce(UBYTE *inp)
 }
 
 /*
-  	#] CoOnce : 
+  	#] CoOnce :
   	#[ CoOnly :
 */
 
@@ -337,7 +337,7 @@ int CoOnly(UBYTE *inp)
 }
 
 /*
-  	#] CoOnly : 
+  	#] CoOnly :
   	#[ CoSelect :
 */
 
@@ -348,7 +348,7 @@ int CoSelect(UBYTE *inp)
 }
 
 /*
-  	#] CoSelect : 
+  	#] CoSelect :
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -796,7 +796,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression : 
+  	#] CoIdExpression :
   	#[ CoMultiply :
 */
 
@@ -835,7 +835,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply : 
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1087,7 +1087,7 @@ redef:;
 }
 
 /*
-  	#] CoFill : 
+  	#] CoFill :
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1117,6 +1117,7 @@ int CoFillExpression(UBYTE *inp)
 	CBUF *C;
 	WORD numdummies;
 
+	AN.IndDum = AM.IndDum;
 	if ( ( p = SkipAName(inp) ) == 0 ) return(1);
 	c = *p; *p = 0;
 	if ( ( GetVar(inp,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
@@ -1273,7 +1274,7 @@ int CoFillExpression(UBYTE *inp)
 						m += m[1] - 1;
 						*m = *term - (m-term);
 						AddNtoC(*m,m);
-						numdummies = DetCurDum(term) - AM.IndDum;
+						numdummies = DetCurDum(BHEAD term) - AM.IndDum;
 						if ( numdummies > T->numdummies ) T->numdummies = numdummies;
 					}
 					continue; /* Next term */
@@ -1455,7 +1456,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax
@@ -1624,7 +1625,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable : 
+  	#] CoPrintTable :
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1778,7 +1779,7 @@ int CoDeallocateTable(UBYTE *inp)
 }
 
 /*
-  	#] CoDeallocateTable : 
+  	#] CoDeallocateTable :
 */
 
 

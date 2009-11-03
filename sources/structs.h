@@ -1142,7 +1142,7 @@ typedef struct {
 } SHvariables;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1900,6 +1900,7 @@ struct N_const {
     WORD    ncmod;                 /* () used as some type of flag to disable */
 	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
 	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */
+	WORD	IndDum;                /* Active dummy indices */
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
@@ -1907,7 +1908,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**

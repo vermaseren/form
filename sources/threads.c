@@ -498,6 +498,8 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AR.StoreData.Handle = -1;
 	AR.SortType = AC.SortType;
 
+	AN.IndDum = AM.IndDum;
+
 	if ( identity > 0 ) {
 		s = (UBYTE *)(FG.fname); i = 0;
 		while ( *s ) { s++; i++; }
@@ -1245,7 +1247,14 @@ void *RunThread(void *dummy)
 				  }
 */
 				  AN.RepPoint = AT.RepCount + 1;
-				  AR.CurDum = ReNumber(BHEAD term);
+
+				  if ( AR.DeferFlag ) {
+					AR.CurDum = AN.IndDum = Expressions[AR.CurExpr].numdummies;
+				  }
+				  else {
+					AN.IndDum = AM.IndDum;
+					AR.CurDum = ReNumber(BHEAD term);
+				  }
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				  if ( AN.ncmod ) {
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
@@ -1490,7 +1499,13 @@ bucketstolen:;
 				  }
 				  AT.WorkPointer = term + *term;
 				  AN.RepPoint = AT.RepCount + 1;
-				  AR.CurDum = ReNumber(BHEAD term);
+				  if ( AR.DeferFlag ) {
+					AR.CurDum = AN.IndDum = Expressions[AR.exprtodo].numdummies;
+				  }
+				  else {
+					AN.IndDum = AM.IndDum;
+					AR.CurDum = ReNumber(BHEAD term);
+				  }
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				  if ( AN.ncmod ) {
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);

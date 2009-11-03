@@ -13,7 +13,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -191,6 +191,7 @@ WORD Processor()
 				}
 				AT.WorkPointer = term + *term;
 				AN.RepPoint = AT.RepCount + 1;
+				AN.IndDum = AM.IndDum;
 				AR.CurDum = ReNumber(BHEAD term);
 				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				if ( AN.ncmod ) {
@@ -211,7 +212,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -308,7 +309,13 @@ commonread:;
 					  }
 					  AT.WorkPointer = term + *term;
 					  AN.RepPoint = AT.RepCount + 1;
-					  AR.CurDum = ReNumber(BHEAD term);
+					  if ( AR.DeferFlag ) {
+						AR.CurDum = AN.IndDum = Expressions[AR.CurExpr].numdummies;
+					  }
+					  else {
+						AN.IndDum = AM.IndDum;
+						AR.CurDum = ReNumber(BHEAD term);
+					  }
 					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 					  if ( AN.ncmod ) {
 						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
@@ -515,7 +522,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1577,7 +1584,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2101,7 +2108,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2230,7 +2237,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2346,7 +2353,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2421,7 +2428,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2596,7 +2603,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -2689,9 +2696,13 @@ SkipCount:	level++;
 					if ( !*term ) goto Return0;
 				}
 				if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) {
+					WORD olddummies = AN.IndDum;
+					AN.IndDum = AM.IndDum;
 					ReNumber(BHEAD term); Normalize(BHEAD term);
+					AN.IndDum = olddummies;
 					if ( !*term ) goto Return0;
-					if ( AR.CurDum > AR.MaxDum ) AR.MaxDum = AR.CurDum;
+					olddummies = DetCurDum(BHEAD term);
+					if ( olddummies > AR.MaxDum ) AR.MaxDum = olddummies;
 				}
 				if ( AR.PolyFun > 0 && AR.sLevel <= 0 ) {
 					if ( PrepPoly(term) != 0 ) goto Return0;
@@ -2866,7 +2877,7 @@ SkipCount:	level++;
 /*
 						At this point it is safest to determine CurDum
 */
-						AR.CurDum = DetCurDum(term);
+						AR.CurDum = DetCurDum(BHEAD term);
 						i = C->lhs[level][1]-2;
 						wp = C->lhs[level] + 2;
 						cp[1] = SUBEXPSIZE+4*i;
@@ -3087,7 +3098,7 @@ CommonEnd:
 					return(execterm(term,level));
 				  case TYPEDETCURDUM:
 					AT.WorkPointer = term + *term;
-					AR.CurDum = DetCurDum(term);
+					AR.CurDum = DetCurDum(BHEAD term);
 					break;
 				  case TYPEINEXPRESSION:
 					{WORD *ll = C->lhs[level];
@@ -3178,7 +3189,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3609,7 +3620,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -3808,7 +3819,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -3834,14 +3845,9 @@ WORD Deferred(PHEAD WORD *term, WORD level)
 	WORD *t, *m, *mstop, *tstart, decr, oldb, *termout, i, *oldwork, retval;
 	WORD *oldipointer = AR.CompressPointer, *oldPOfill = AR.infile->POfill;
 	WORD oldGetOneFile = AR.GetOneFile;
-	WORD *copyspace = 0, *tbegin, olddummies = AR.CurDum;
 	AR.GetOneFile = 1;
 	oldwork = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
-	if ( Expressions[AR.CurExpr].numdummies && AR.CurDum > AM.IndDum ) {
-		copyspace = AT.WorkPointer;
-	    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
-	}
 	termout = AT.WorkPointer;
 	AR.DeferFlag = 0;
 	startposition = AR.DefPosition;
@@ -3898,19 +3904,7 @@ WORD Deferred(PHEAD WORD *term, WORD level)
 	for(;;) {
 		*tstart = *(AR.CompressPointer)-decr;
 		AR.CompressPointer = AR.CompressPointer+AR.CompressPointer[0];
-/*
-		Now worry about dummy indices. If those are present and there are
-		already dummy indices we have to make a copy, because otherwise
-		the bracket scan gets messed up. This is what copyspace is for.
-*/
-		if ( copyspace ) {
-			t = tbegin = copyspace; m = tstart; i = *tstart;
-			NCOPY(t,m,i);
-			MoveDummies(BHEAD tbegin,olddummies-AM.IndDum);
-			AR.CurDum = olddummies + Expressions[AR.CurExpr].numdummies;
-		}
-		else tbegin = tstart;
-		if ( InsertTerm(BHEAD term,0,AM.rbufnum,tbegin,termout,0) < 0 ) {
+		if ( InsertTerm(BHEAD term,0,AM.rbufnum,tstart,termout,0) < 0 ) {
 			goto DefCall;
 		}
 		*tstart = oldb;
@@ -3939,7 +3933,6 @@ Thatsit:;
 	if ( AR.infile->handle < 0 ) AR.infile->POfill = oldPOfill;
 	AR.DeferFlag = 1;
 	AR.GetOneFile = oldGetOneFile;
-	AR.CurDum = olddummies;
 	AT.WorkPointer = oldwork;
 	return(0);
 DefCall:;
@@ -3950,7 +3943,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4186,7 +4179,7 @@ WORD PrepPoly(WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4364,7 +4357,7 @@ IllegalContent:
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4384,7 +4377,7 @@ IllegalContent:
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4594,6 +4587,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

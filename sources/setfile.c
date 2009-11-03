@@ -329,7 +329,6 @@ int RecalcSetups()
 	if ( AM.MaxTer > MAXPOSITIVE - 200*sizeof(WORD) ) AM.MaxTer = MAXPOSITIVE - 200*sizeof(WORD);
 	AM.MaxTer /= sizeof(WORD);
 	AM.MaxTer *= sizeof(WORD);
-
 	minimumsize = (AM.totalnumberofthreads-1)*(AM.MaxTer+
 		NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS*AM.MaxTer);
 	if ( totalsize < minimumsize ) {
@@ -348,7 +347,7 @@ int RecalcSetups()
 int AllocSetups()
 {
 	SETUPPARAMETERS *sp;
-	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize, l;
+	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
 	int MaxPatches, MaxFpatches, error = 0;
 	UBYTE *s;
 #ifndef WITHPTHREADS
@@ -401,11 +400,9 @@ int AllocSetups()
 	Fixed indices
 */
 	sp = GetSetupPar((UBYTE *)"constindex");
-	if ( sp->value >= 32767 || ( sp->value+1+5*WILDOFFSET ) > WORDMASK ) {
+	if ( ( sp->value+100+5*WILDOFFSET ) > MAXPOSITIVE ) {
 		MesPrint("Setting of %s in setupfile too large","constindex");
-		l =  WORDMASK - 5*WILDOFFSET;
-		if ( l > 32767 ) l = 32767;
-		AM.OffsetIndex = l;
+		AM.OffsetIndex = MAXPOSITIVE - 5*WILDOFFSET - 100;
 		MesPrint("value corrected to maximum allowed: %d",AM.OffsetIndex);
 	}
 	else AM.OffsetIndex = sp->value + 1;
@@ -414,7 +411,7 @@ int AllocSetups()
 	AM.DumInd = AM.OffsetIndex + 2*WILDOFFSET;
 	AM.IndDum = AM.DumInd + WILDOFFSET;
 #ifndef WITHPTHREADS
-	AR.CurDum = AM.IndDum;
+	AR.CurDum = AN.IndDum = AM.IndDum;
 #endif
 	AM.mTraceDum = AM.IndDum + 2*WILDOFFSET;
 
