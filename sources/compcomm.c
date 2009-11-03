@@ -765,15 +765,19 @@ AllExpr:
 			if ( tolower(*s) == 'f' ) par |= PRINTLFILE;
 			else if ( tolower(*s) == 's' ) {
 				if ( tolower(s[1]) == 's' ) {
-					if ( ( par & 3 ) < 2 ) par |= PRINTONEFUNCTION | PRINTONETERM;
-					s++;
+					if ( tolower(s[2]) == 's' ) {	/* [ 2009-11-02 PI] */
+                                                par |= PRINTONEFUNCTION | PRINTONETERM | PRINTALL;
+                                                s++;
+                                        }
+                                        else if ( ( par & 3 ) < 2 ) par |= PRINTONEFUNCTION | PRINTONETERM;
+                                        s++;
 				}
 				else {
 					if ( ( par & 3 ) < 2 ) par |= PRINTONETERM;
 				}
 			}
 			else {
-illeg:			MesPrint("&Illegal option in (n)print statement");
+illeg:				MesPrint("&Illegal option in (n)print statement");
 				error = 1;
 			}
 			s++;
@@ -784,8 +788,13 @@ illeg:			MesPrint("&Illegal option in (n)print statement");
 			if ( tolower(*s) == 'f' ) par &= ~PRINTLFILE;
 			else if ( tolower(*s) == 's' ) {
 				if ( tolower(s[1]) == 's' ) {
-					if ( ( par & 3 ) < 2 ) par &= ~PRINTONEFUNCTION;
-					s++;
+                                        if ( tolower(s[2]) == 's' ) {	/* [ 2009-10-30 PI] */
+						par &= ~PRINTONEFUNCTION & ~PRINTONETERM;
+						par &= ~PRINTALL;
+                                                s++;
+					}
+                                        else if ( ( par & 3 ) < 2 ) par &= ~PRINTONEFUNCTION;
+                                        s++;
 				}
 				else {
 					if ( ( par & 3 ) < 2 ) {

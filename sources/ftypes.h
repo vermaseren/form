@@ -626,6 +626,7 @@ typedef int (*TFUN1)();
 #define PRINTLFILE 4
 #define PRINTONETERM 8
 #define PRINTONEFUNCTION 16
+#define PRINTALL 32     /* [ 2009-10-31 PI ] */
 
 /**
  *  @name Defines: function specs

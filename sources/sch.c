@@ -1189,6 +1189,12 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 	switch ( *sterm ) {
 		case SYMBOL :
 			while ( t < stopper ) {
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI] */
+					FiniLine();
+					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+						else IniLine(3);
+					if ( first ) TokenToLine((UBYTE *)" ");
+				}
 				if ( !first ) TokenToLine((UBYTE *)"*");
 				if ( AC.OutputMode == CMODE && t[1] != 1 )
 					TokenToLine((UBYTE *)"pow(");
@@ -1201,7 +1207,14 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			break;
 		case VECTOR :
 			while ( t < stopper ) {
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+					FiniLine();
+					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+						else IniLine(3);
+					if ( first ) TokenToLine((UBYTE *)" ");
+				}
 				if ( !first ) TokenToLine((UBYTE *)"*");
+
 				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer);
 				t++;
 				*Out++ = '(';
@@ -1230,7 +1243,13 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
   			break;
 		case INDEX :
 			while ( t < stopper ) {
-			if ( !first ) TokenToLine((UBYTE *)"*");
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+					FiniLine();
+					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+						else IniLine(3);
+					if ( first ) TokenToLine((UBYTE *)" ");
+				}
+				if ( !first ) TokenToLine((UBYTE *)"*");
 			if ( *t >= 0 ) {
 				if ( *t < AM.OffsetIndex ) {
 					TalToLine((UWORD)(*t++));
@@ -1272,6 +1291,12 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			break;
 		case DELTA :
 			while ( t < stopper ) {
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ]*/
+					FiniLine();
+					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+						else IniLine(3);
+					if ( first ) TokenToLine((UBYTE *)" ");
+				}
 				if ( !first ) TokenToLine((UBYTE *)"*");
 				Out = StrCopy((UBYTE *)"d_(",buffer);
 				if ( *t >= AM.OffsetIndex ) {
@@ -1315,6 +1340,12 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			break;
 		case DOTPRODUCT :
 			while ( t < stopper ) {
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+					FiniLine();
+					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+						else IniLine(3);
+					if ( first ) TokenToLine((UBYTE *)" ");
+				}
 				if ( !first ) TokenToLine((UBYTE *)"*");
 				if ( AC.OutputMode == CMODE && t[2] != 1 )
 					TokenToLine((UBYTE *)"pow(");
@@ -1381,8 +1412,14 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			}
 			break;
 		default :
+			if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+				FiniLine();
+				if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+					else IniLine(3);
+				if ( first ) TokenToLine((UBYTE *)" ");
+			}
 			if ( *sterm < FUNCTION ) {
-				return(MesPrint("Illegal subterm while writing"));
+			return(MesPrint("Illegal subterm while writing"));
 			}
 			if ( !first ) TokenToLine((UBYTE *)"*");
 			t += FUNHEAD-2;
@@ -1504,15 +1541,22 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 			first = 0;
 		}
 	}
-	else if ( n != 1 || *t != 1 || t[1] != 1 || t <= s )
-		{ RatToLine((UWORD *)t,n); first = 0; }
+	else if ( n != 1 || *t != 1 || t[1] != 1 || t <= s ) { 
+		if ( lowestlevel && ( ( AO.PrintType & PRINTONEFUNCTION ) != 0 ) ) {    /* [ 2009-10-30 PI ] */
+				FiniLine();
+				if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
+				else IniLine(3);
+		}
+		RatToLine((UWORD *)t,n); first = 0;
+	}
 	else first = 1;
 	while ( s < t ) {
-		if ( ( AO.PrintType & PRINTONEFUNCTION ) != 0 ) {
+		if ( lowestlevel && ( (AO.PrintType & (PRINTONEFUNCTION | PRINTALL)) == PRINTONEFUNCTION ) ) {       /* [ 2009-10-30 PI ] */
 			FiniLine();
 			if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 			else IniLine(3);
 		}
+
 /*
  		#[ NEWGAMMA :
 */
