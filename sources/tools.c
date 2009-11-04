@@ -64,7 +64,7 @@ long numfrees = 0;
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -3112,7 +3112,7 @@ LONG Timer(int par)
 #endif
 
 /*
- 		#] Timer :
+ 		#] Timer : 
  		#[ Crash :
 
 		Routine for debugging purposes

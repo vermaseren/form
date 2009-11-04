@@ -1810,8 +1810,9 @@ struct N_const {
 	TRACES	*tracestack;           /* () used in opera.c */
 	WORD	*selecttermundo;       /* () Used in pattern.c */
 	WORD	*patternbuffer;        /* () Used in pattern.c */
-	WORD	*PoinScratch[300];     /* () used in reshuf.c */
-	WORD	*FunScratch[300];      /* () used in reshuf.c */
+	WORD	**PoinScratch;         /* () used in reshuf.c */
+	WORD	**FunScratch;          /* () used in reshuf.c */
+	WORD	*RenumScratch;         /* () used in reshuf.c */
 	FUN_INFO *FunInfo;             /* () Used in smart.c */
 	WORD	**SplitScratch;        /* () Used in sort.c */
 	SORTING **FunSorts;            /* () Used in sort.c */
@@ -1875,7 +1876,7 @@ struct N_const {
 	int		compressSize;          /* () Used in sort.c */
 	int		polysortflag;
     int     nogroundlevel;         /* () Used to see whether pattern matching at groundlevel */
-	WORD	RenumScratch[300];     /* () used in reshuf.c */
+	WORD	MaxRenumScratch;       /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */
     WORD    NumWild;               /* (N) Used in Wildcard */

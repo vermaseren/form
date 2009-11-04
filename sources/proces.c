@@ -3265,10 +3265,10 @@ AutoGen:	i = *AT.TMout;
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
-					if ( dtype != MODLOCAL ) {
+					if ( dtype != MODLOCAL && dtype != MODSUM ) {
 						if ( StartBuf[0] && StartBuf[StartBuf[0]] ) {
 							LOCK(ErrorMessageLock);
-							MesPrint("A dollar variable with modoption max, min or sum can have only one term");
+							MesPrint("A dollar variable with modoption max or min can have only one term");
 							UNLOCK(ErrorMessageLock);
 							goto GenCall;
 						}
@@ -3306,7 +3306,7 @@ AutoGen:	i = *AT.TMout;
 				}
 */
 #ifdef WITHPTHREADS
-				if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+				if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); }
 				if ( ( AS.Balancing && CC->numrhs == 0 ) && StartBuf[posisub] ) {
 					if ( ( id = ConditionalGetAvailableThread() ) >= 0 ) {
 						if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
@@ -3329,7 +3329,7 @@ AutoGen:	i = *AT.TMout;
 				}
 			}
 #ifdef WITHPTHREADS
-			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); dtype = 0; }
+			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif
 			if ( iscopy ) {
 				M_free(d,"Copy of dollar variable");
@@ -3380,7 +3380,7 @@ AutoGen:	i = *AT.TMout;
 					*AN.RepPoint = 1;
 					AR.expchanged = 1;
 #ifdef WITHPTHREADS
-					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+					if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); }
 					if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 )
 					&& ( id = ConditionalGetAvailableThread() ) >= 0 ) {
 						if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
@@ -3396,7 +3396,7 @@ AutoGen:	i = *AT.TMout;
 				}
 			} while ( i > 0 );
 #ifdef WITHPTHREADS
-			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); dtype = 0; }
+			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif
 			if ( iscopy ) {
 				if ( d ) {
@@ -3438,7 +3438,7 @@ AutoGen:	i = *AT.TMout;
 					*AN.RepPoint = 1;
 					AR.expchanged = 1;
 #ifdef WITHPTHREADS
-					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+					if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); }
 					if ( ( AS.Balancing && CC->numrhs == 0 ) && ( i > 0 ) && ( id = ConditionalGetAvailableThread() ) >= 0 ) {
 						if ( BalanceRunThread(BHEAD id,termout,level) < 0 ) goto GenCall;
 					}
@@ -3453,7 +3453,7 @@ AutoGen:	i = *AT.TMout;
 				}
 			}
 #ifdef WITHPTHREADS
-			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); dtype = 0; }
+			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif
 			if ( iscopy ) {
 				if ( d ) {
@@ -3620,7 +3620,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

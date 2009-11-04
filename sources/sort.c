@@ -41,7 +41,7 @@ extern long numfrees;
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ SortUtilities :
  		#[ WriteStats :				VOID WriteStats(lspace,par)
 */
@@ -478,7 +478,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 }
 
 /*
- 		#] WriteStats : 
+ 		#] WriteStats :
  		#[ NewSort :				WORD NewSort()
 */
 /**
@@ -543,7 +543,7 @@ WORD NewSort()
 }
 
 /*
- 		#] NewSort : 
+ 		#] NewSort :
  		#[ EndSort :				WORD EndSort(buffer,par)
 */
 /**
@@ -1008,7 +1008,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort : 
+ 		#] EndSort :
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -1073,7 +1073,7 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 }
 
 /*
- 		#] PutIn : 
+ 		#] PutIn :
  		#[ Sflush :					WORD Sflush(file)
 */
 /**
@@ -1142,7 +1142,7 @@ WORD Sflush(FILEHANDLE *fi)
 }
 
 /*
- 		#] Sflush : 
+ 		#] Sflush :
  		#[ PutOut :					WORD PutOut(term,position,file,ncomp)
 */
 /**
@@ -1463,7 +1463,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut : 
+ 		#] PutOut :
  		#[ FlushOut :				WORD FlushOut(position,file,compr)
 */
 /**
@@ -1665,7 +1665,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 }
 
 /*
- 		#] FlushOut : 
+ 		#] FlushOut :
  		#[ AddCoef :				WORD AddCoef(pterm1,pterm2)
 */
 /**
@@ -1943,7 +1943,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 }
 
 /*
- 		#] AddPoly : 
+ 		#] AddPoly :
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
  
@@ -2210,7 +2210,7 @@ twogen:
 }
 
 /*
- 		#] AddArgs : 
+ 		#] AddArgs :
  		#[ Compare1 :				WORD Compare1(term1,term2,level)
 */
 /**
@@ -2630,7 +2630,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 : 
+ 		#] Compare1 :
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
@@ -2687,7 +2687,7 @@ LONG ComPress(WORD **ss, LONG *n)
 		ss = sss;
 	}
 
-			#] debug : 
+			#] debug :
 */
 	*n = 0;
 	if ( AT.SS == AT.S0 && !AR.NoCompress ) {
@@ -2780,13 +2780,13 @@ LONG ComPress(WORD **ss, LONG *n)
 		FiniLine();
 	}
 
-			#] debug : 
+			#] debug :
 */
 	return(size);
 }
 
 /*
- 		#] ComPress : 
+ 		#] ComPress :
  		#[ SplitMerge :				VOID SplitMerge(Point,number)
 */
 /**
@@ -3088,7 +3088,7 @@ VOID GarbHand()
 }
 
 /*
- 		#] GarbHand : 
+ 		#] GarbHand :
  		#[ MergePatches :			WORD MergePatches(par)
 */
 /**
@@ -3293,7 +3293,7 @@ ConMer:
 		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
 	The old code had to be replaced because all output needs to go
 	through PutOut. For this we have to go term by term and keep
@@ -3815,7 +3815,7 @@ PatCall2:;
 }
 
 /*
- 		#] MergePatches : 
+ 		#] MergePatches :
  		#[ StoreTerm :				WORD StoreTerm(term)
 */
 /**
@@ -3942,7 +3942,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm : 
+ 		#] StoreTerm :
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**
@@ -4009,7 +4009,7 @@ VOID StageSort(FILEHANDLE *fout)
 }
 
 /*
- 		#] StageSort : 
+ 		#] StageSort :
  		#[ SortWild :				WORD SortWild(w,nw)
 */
 /**
@@ -4110,7 +4110,7 @@ WORD SortWild(WORD *w, WORD nw)
 }
 
 /*
- 		#] SortWild : 
+ 		#] SortWild :
  		#[ CleanUpSort :			VOID CleanUpSort(num)
 */
 /**
@@ -4148,6 +4148,7 @@ void CleanUpSort(int num)
 			}
 			AN.FunSorts[i] = 0;
 		}
+		AN.MaxFunSorts = minnum;
 		if ( num == 0 ) {
 			S = AN.FunSorts[0];
 			if ( S ) {
@@ -4180,7 +4181,7 @@ void CleanUpSort(int num)
 }
 
 /*
- 		#] CleanUpSort : 
+ 		#] CleanUpSort :
  		#[ LowerSortLevel :         VOID LowerSortLevel()
 */
 /**
@@ -4197,6 +4198,6 @@ VOID LowerSortLevel()
 }
 
 /*
- 		#] LowerSortLevel : 
+ 		#] LowerSortLevel :
 	#] SortUtilities :
 */

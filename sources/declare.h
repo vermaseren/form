@@ -387,6 +387,7 @@ extern WORD   FiniTerm(PHEAD WORD *,WORD *,WORD *,WORD,WORD);
 extern VOID   FlushCon(VOID);
 extern WORD   FlushOut(POSITION *,FILEHANDLE *,int);
 extern VOID   FunLevel(PHEAD WORD *);
+extern VOID   AdjustRenumScratch(PHEAD0);
 extern VOID   GarbHand(VOID);
 extern WORD   GcdLong(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern VOID   GCD(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
