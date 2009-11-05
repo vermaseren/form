@@ -841,7 +841,7 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint :
+  	#] DoPrint : 
   	#[ CoPrint :
 */
 
@@ -3720,8 +3720,8 @@ int CoIf(UBYTE *inp)
 	UBYTE *p, *pp, *ppp, c;
 	CBUF *C = cbuf+AC.cbufnum;
 	LONG x;
-
-	if ( *inp == '(' ) inp++;	/* Usually we enter at the bracket */
+	if ( *inp == '(' && inp[1] == ',' ) inp += 2;
+	else if ( *inp == '(' ) inp++;	/* Usually we enter at the bracket */
 
 	if ( CIscratC == 0 )
 		CIscratC = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(UWORD),"CoIf");
@@ -4091,7 +4091,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf : 
+  	#] CoIf :
   	#[ CoElse :
 */
 
