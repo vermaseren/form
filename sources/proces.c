@@ -249,6 +249,7 @@ WORD Processor()
 #ifdef PARALLEL
 				if( ( PF.me == MASTER ) || (PF.mkSlaveInfile) )
 #endif
+                SetScratch(AR.infile,&(e->onfile));
 /*:[20oct2009 mt]*/
 				curfile = AR.infile;
 commonread:;
@@ -522,7 +523,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -3620,7 +3621,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
