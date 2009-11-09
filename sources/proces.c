@@ -311,7 +311,8 @@ commonread:;
 					  AT.WorkPointer = term + *term;
 					  AN.RepPoint = AT.RepCount + 1;
 					  if ( AR.DeferFlag ) {
-						AR.CurDum = AN.IndDum = Expressions[AR.CurExpr].numdummies;
+						AN.IndDum = Expressions[AR.CurExpr].numdummies + AM.IndDum;
+						AR.CurDum = AN.IndDum;
 					  }
 					  else {
 						AN.IndDum = AM.IndDum;
