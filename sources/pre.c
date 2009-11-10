@@ -469,13 +469,22 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 /*
  		#] GetPreVar : 
  		#[ PutPreVar :
-
-		If mode == 1 we see whether we can see this as a redefinition.
-		if value == 0 we have no value. ie, as argument it is no argument.
-		This is different from an empty argument.
-		This should only occur when the name starts with a ?
 */
 
+/**
+ *  Inserts/Updates a preprocessor variable in the name administration.
+ * 
+ *  @param   name    Character string with the variable name.
+ *  @param   value   Character string with a possible value.
+ *                   Special case: if this argument is zero, then we have no
+ *                   value. Note: This is different from having an empty
+ *                   argument! This should only occur when the name starts
+ *                   with a ?
+ *  @param   args    Character string with possible arguments.
+ *  @param   mode    =0: always create a new name entry, =1: try to do a
+ *                   redefinition if possible.
+ *  @return          Index of used entry in name list.
+ */
 int PutPreVar(UBYTE *name, UBYTE *value, UBYTE *args, int mode)
 {
 	int i, ii, num = 2, nnum = 2, numargs = 0;
@@ -1632,22 +1641,23 @@ KEYWORD *FindInKeyWord(UBYTE *theword, KEYWORD *table, int size)
  		#[ TheDefine :
 */
 
+/**
+ *  Preprocessor assignment. Possible arguments and values are treated and the
+ *  new preprocessor variable is put into the name administration.
+ *
+ *  @param   s      Pointer to the character string following the preprocessor
+ *                  command.
+ *  @param   mode   Bitmask. 0-bit clear: always create a new name entry, 0-bit
+ *                  set: try to redefine an existing name, 1-bit set: ignore
+ *                  preprocessor if/switch status.
+ *  @return         zero: no errors, negative number: errors.
+ */
 int TheDefine(UBYTE *s, int mode)
 {
-#ifdef SCANSTRING
-	UBYTE *name, *value, *t, one[] = "1";
-	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
-	if ( ScanString(s,"% %w% %S",&name,&t) <= 0 ) return(-1);
-	if ( *t == 0 ) value = one;
-	else if ( ScanString(t,"\"%s\"",&value) <= 0 ) return(-1);
-	if ( PutPreVar(name,value,0,mode) < 0 ) return(-1);
-	return(0);	
-#else
 	UBYTE *name, *value, *valpoin, *args = 0, c;
 	if ( ( mode & 2 ) == 0 ) {
-	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+		if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+		if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	}
 	else { mode &= ~2; }
 	name = s;
@@ -1705,7 +1715,6 @@ illarg:;
 illargs:;
 	MesPrint("@Illegally formed arguments of preprocessor definition");
 	return(-1);
-#endif
 }
 
 /*
