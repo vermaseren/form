@@ -17,7 +17,7 @@ print;
 .end
 	EOF
 end
-def test
+def test1
 	execute FORM
 	assert no_problem
 	assert result("x") =~ Pattern("x = 0;")

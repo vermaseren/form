@@ -13,7 +13,7 @@ print;
 .end
 	EOF
 end
-def test
+def test1
 	execute FORM
 	assert compile_error
 end

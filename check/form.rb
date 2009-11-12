@@ -3,6 +3,9 @@
 require 'open3'     # for popen3() to run FORM
 require 'rbconfig'  # for Config::CONFIG to determine OS
 require 'test/unit' # for the unit test classes
+if RUBY_VERSION =~ /1\.8\..+/ # only for version 1.8.x
+	require 'test/unit/ui/console/testrunner'
+end
 
 # names of the FORM executables
 FORM = "form"
@@ -125,9 +128,34 @@ class FormTest < Test::Unit::TestCase
 end
 
 if __FILE__ == $0
-	Dir.glob(ENV['srcdir']+"/**/*.rb") do |iname|
+	if ARGV == []
+		if ENV['srcdir']
+			path = ENV['srcdir'] + "/**/*.rb"
+		else
+			path = "**/*.rb"
+		end
+		files = Dir.glob(path)
+	else
+		files = ARGV
+	end
+	files.each do |iname|
 		if iname != $0
 			require iname
 		end
+	end
+	if RUBY_VERSION =~ /1\.8\..+/
+		class DerivedTests
+			def self.suite
+				suite = Test::Unit::TestSuite.new("(T)FORM tests")
+				Class.constants.each do |c|
+					cl = Class.class_eval(c)
+					if cl.class == Class && cl.ancestors[1] == FormTest
+						suite << cl.suite
+					end
+				end
+				return suite
+			end
+		end
+		Test::Unit::UI::Console::TestRunner.run(DerivedTests)
 	end
 end

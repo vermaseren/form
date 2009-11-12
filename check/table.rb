@@ -42,7 +42,7 @@ print;
 	EOF
 	extra_parameter "-D TableSize=10"
 end
-def test
+def test1
 	execute FORM
 	assert no_problem
 	assert result("expr1") =~ Pattern(<<-EOF
