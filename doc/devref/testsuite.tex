@@ -1,0 +1,336 @@
+\section{The test suite}
+
+The subdirectory \C{check} contains a test suite for \FORM. Using the autoconf
+facilities the checks can be started with the command \C{make check}.
+Otherwise, one can issue the command \C{ruby form.rb} in the \C{check}
+directory.
+
+The test suite is written in the language
+Ruby\footnote{\LINK{http://www.ruby-lang.org}}. Ruby itself already offers a
+unit testing framework and this is used with as minimal as possible extensions
+to make the creation of test cases for \FORM\ programs easy. All the extensions
+to the built-in Ruby testing framework (\C{Test::Unit}) are contained in the
+file \C{form.rb}. This file also contains code to load test cases from other
+\C{*.rb} files in the \C{check} directory. Therefore all test cases are
+contained in appropriately named \C{*.rb} files. The makefile's purpose is to
+integrate the call \C{ruby form.rb} into the autoconf system.
+
+{\it Side note:}
+The choice to use Ruby and its built-in test framework was taken for several
+reasons: It makes sense to use or adapt already existing testing frameworks in
+order to keep the extra cost of maintenance as low as possible for the \FORM\
+programmers. There are numerous systems available on the market, some are part
+of a language runtime environment (libraries), and some are dedicated programs
+with a custom configuration language. Since the tests for \FORM\ programs center
+mainly about text processing, i.e. comparing the textual \FORM\ output to a
+correct answer, we need powerful text processing facilities like pattern
+matching. But we also need file operations and information from the operating
+system to check the run of a \FORM\ program, eventually. All this is readily
+available in the testing frameworks of scripting languages, like Ruby, Python,
+or Tcl. Ruby was ultimately chosen, because the mixing of \FORM\ code with the
+steering scripting language code looked nicest, and the small amount of extra
+(Ruby) syntax necessary makes it convenient to add new test cases.
+
+A new test case can be implemented in the following way. First of all, we need a
+\FORM\ program that is to be run. It might be a program that exhibits an actual
+bug in (a previous version of) \FORM\ or that contains generic code that should
+be guaranteed to work, also in coming releases of \FORM. It might also be code
+that deliberately crashes \FORM\ or causes other errors, like syntax errors, if
+this behavior of \FORM\ is to be assumed. Usually, the \FORM\ program is rather
+short or can be made such. In this case, we are going to mix the Ruby and the
+\FORM\ code in one file. Alternatively, the \FORM\ program can also be kept in a
+separate file. This option will be discussed later.
+
+Now, either one choses an existing \C{*.rb} file (not \C{form.rb}) or starts a
+new one. The name of the file should fit the test case scenario. In this file we
+need to define a Ruby class that will contain our \FORM\ code as well as the
+checks (assertions) we want to impose on the run.
+
+The generic frame of this test case definition looks like this:
+
+\begin{verbatim}
+  class [Test name] < FormTest
+  def setup
+    [Setup code, usually this includes the FORM program code]
+  end
+  def test1
+    [Execution code, and the assertion and testing code]
+  end
+  end
+\end{verbatim}
+
+The text in the brackets [ ] needs to be filled with our specific code. The
+details of the Ruby code itself will be explained later. For a start, it is
+usually advisable just to copy an existing test case and modify it.
+
+Every class defined in this way will be used for the testing. First, Ruby will
+run the code in the class method \C{setup}, and then it runs \C{test1}.
+
+A complete test might look like this:
+
+\begin{verbatim}
+  class SymbolIdTest < FormTest
+  def setup
+    input <<-EOF
+  S x, y;
+  L f = (x+y)^100;
+  id x = y;
+  print;
+  .end
+    EOF
+  end
+  def test1
+    execute FORM
+    assert no_problem
+    assert result("f") =~ 
+        Pattern("1267650600228229401496703205376*y^100;")
+  end
+  end
+\end{verbatim}
+
+We have chose the name \C{SymbolIdTest} for our class. We defined the \FORM\
+program in-line with a so called here document (\C{<<-EOF ... EOF}). We do run
+the \FORM\ executable. Alternatives would be \TFORM, for example. The assertions
+we have are that no problem occurred, i.e. no syntax error, no runtime error, or
+similar things. We also check the output of our \FORM\ program. We compare via
+pattern matching the result of the expression \C{f} with the correct answer. The
+function \C{result()} extracts the appropriate line from the output, \C{=\~{}} is
+the pattern matching operator in Ruby, and the function \C{Pattern()} prepares
+special characters like the caret (\^{}) for the pattern matcher.
+
+Next time we run the test suite, our test will be run as well. If no assertions
+are violated, we will only see the number of successful tests and assertions
+increased in the summary output.
+
+Even though the extra Ruby syntax is kept to a minimum and is rather
+straightforward, some remarks about the Ruby language are useful here. Classes
+are defined by the keyword \C{class}, and methods (or functions) are declared
+with the keyword \C{def}. These definitions are always ended with the keyword
+\C{end}. \C{FormTest} is a class defined in \C{form.rb} that contains all the
+special code for \FORM\ test and that is derived from the built-in Ruby test
+case class \C{TestCase}. For every test case we derive again from this class
+(\C{class B < A} says that \C{B} is derived from \C{A}). We don't need
+semicolons to end a line and indentation is arbitrary. Class names should be
+capitalized. In Ruby, parentheses around the arguments of functions can often be
+omitted. We use this possibility when we call the functions \C{input},
+\C{execute}, and \C{assert}. We could have written \C{execute(FORM)} as well,
+for example. The here document (\C{<<-EOF ... EOF}) can also use other markers
+instead of \C{EOF}, of course. The minus sign before \C{EOF} allows the end
+marker to be indented. Comments are started with a \#.
+
+One class can actually contain more than one test. The testing framework will
+call the method \C{setup} and then a method whose name starts with \C{test}
+(Note: in newer versions of Ruby the name could be just \C{test}, but older
+versions ($\ge$1.8.x) require at least one following extra character). If there are
+more methods starting with \C{test}, each will be called and for each \C{setup}
+will be called first.
+
+In \C{setup} we need to prepare everything for the execution of \FORM. We can
+either use \C{input} to in-line the source directly, or we can use
+\C{input\_file} with a string as an argument to reference an external file,
+e.g.
+\begin{verbatim}
+  input_file "parsebug.frm"
+\end{verbatim}
+The function \C{input} will create a temporary
+\FORM\ file for the contents. The name of the file is defined in \C{form.rb}.
+The executable will later be run with the given name or the name of the
+temporary file as an argument. If additional arguments need to be given to the
+executable, the function \C{extra\_parameter} can be used, like e.g.
+\begin{verbatim}
+  extra_parameter "-w4 -l"
+\end{verbatim}
+
+Sometimes one might need to prepare more things for a \FORM\ run, like setting
+up certain files or starting an external program. This needs to be done
+by ordinary Ruby code. For this, some more of the Ruby language needs to be
+known by the user.
+
+In the class methods with a name starting with \C{test} we put the code to run
+the \FORM\ executable and to test the outcome. Usually, the first line will be
+the call to the executable itself, either
+\begin{verbatim}
+  execute FORM
+\end{verbatim}
+or
+\begin{verbatim}
+  execute TFORM
+\end{verbatim}
+(\PARFORM\ is not supported yet). The function \C{execute} will run the
+executable with the necessary or requested arguments, but it will run it under
+the supervision of the \C{strace} system utility. Therefore \C{strace} needs to
+be present on the system (options to enable or disable the use of \C{strace}
+will probably be added in the future). \C{strace} is used to get detailed
+information about the return value or possible failure states of the executable.
+The output of \C{strace} will be saved in a temporary file and made available to
+the test case programmer in a Ruby variable. The regular output and the error
+channel output will be available in Ruby variables as well.
+
+The Ruby variables containing the output are \C{\@@strace\_out}, \C{\@@stdout},
+and \C{\@@stderr} (the leading \@@-sign is Ruby syntax for specifying instance
+variables, i.e. variables belonging to a certain object). These variables are the
+primary source for doing tests. In principle, these variables can be
+investigated directly, for example via pattern matching like
+\begin{verbatim}
+  if @strace_out =~ /Segmentation fault/
+    ...
+  end
+\end{verbatim}
+which checks whether a segmentation fault has occurred (the slashes in Ruby
+define a pattern). But for the most common cases some test functions
+exist that encapsulate necessary pattern matching details. These functions
+return true or false values which can be used as arguments to the \C{assert}
+function. The \C{assert} function raises an error if the argument is false.
+
+Available tests functions are:
+
+\begin{tabular}{lp{20em}}
+\C{crash}          & true if a crash (segmentation fault) occurred \\
+\C{warning}        & true if \FORM\ has issued a warning \\
+\C{compile\_error} & true if \FORM\ has found a syntax error \\
+\C{runtime\_error} & true if \FORM\ has terminated prematurely \\
+\C{error}          & true if \C{compile\_error} or \C{runtime\_error} is true or
+					 the standard error channel contains data \\
+\C{problem}        & true if \C{warning} or \C{error} or \C{crash} is true
+\end{tabular}
+
+Additionally, the logical opposite of each function exists with a name starting
+with \C{no\_}, like \C{no\_problem} or \C{no\_crash}.
+
+There is also the function \C{return\_value} which gives the return value of the
+\FORM\ program as an integer, so one could do a check like
+\begin{verbatim}
+  assert return_value == 66
+\end{verbatim}
+
+If pattern matching is coded directly, like in our example, some details have to
+be considered. The operator \C{=\~{}} will try to match a string with a pattern.
+The variables like \C{\@@stdout} are actually strings (they do contain the
+carriage return and/or line feed for multi-line output). Patterns in Ruby are
+written between slashes and various characters are interpreted in a special way
+(following the widely used regex-syntax). There are three functions to
+facilitate things: \C{result()}, \C{Pattern()}, and \C{ExactPattern()}.
+\C{result()} takes a string being the name of an expression and returns a string
+that only contains the lines belonging to the last output of this expression.
+\C{Pattern()} transforms special characters in the given string, removes
+unnecessary whitespace, and returns the string as a pattern with multi-line
+matching enabled. Since \FORM\
+expressions usually contain a lot of special characters like +, *, ., etc. they
+cannot not be simply used as a pattern. \C{Pattern()} transforms these
+characters automatically into the correct regex equivalent, e.g. + becomes
+\textbackslash +.
+With it, a \FORM\ expression can be directly given as an argument and used in a
+pattern matching (see example). \C{ExactPattern()} does not treat whitespaces
+and line breaks in a special way as \C{Pattern()} does and can therefore be used
+when a exact comparison is required (if for example a bug in the output
+functions of \FORM\ had caused some whitespace or line breaks to be missing and
+a test case were required to check for this behavior).
+
+If one doesn't want or cannot use the \C{assert} function, one can signal a test
+failure to the testing framework by raising an \C{AssertionFailedError}
+directly, like for example
+\begin{verbatim}
+  if return_value != 2
+    raise AssertionFailedError.new("return value is wrong!")
+  end
+\end{verbatim}
+
+Suppose a \FORM\ program should have deleted some file (\C{\#remove}), one could
+implement the following test
+\begin{verbatim}
+  if File.exist?("thenameofthefile")
+    raise AssertionFailedError.new("File still exists!")
+  end
+\end{verbatim}
+
+The testing framework actually not only calls \C{setup} and each \C{test} method
+but also a method called \C{teardown}. This method is responsible for cleaning
+up things at the end of each test run. The class \C{FormTest} provides such a
+\C{teardown} method that will be inherited by the users test case class unless
+it is overwritten. It calls the method \C{remove\_files} to delete all temporary
+files that have been created so far. \C{remove\_files} can be called by the user
+directly. If \C{teardown} is to be replaced by a specific implementation, it is
+advisable to still call \C{FormTest}'s \C{teardown} (using Ruby's command
+\C{super}), like for example
+\begin{verbatim}
+  ...
+  def teardown
+    super
+    File.delete("extra.log")
+  end
+  ...
+\end{verbatim}
+
+At last, a complete example as it is actually contained in the repository.
+{\scriptsize
+\begin{verbatim}
+    #[ SparseTable1 :
+    =begin
+      Bugs reported 2004-04-06 by Misha Tentukov
+      PrintTable and FillExpression did not work with non-sparse tables
+      Fixed 2005-09-27
+    =end
+    class SparseTable1 < FormTest
+    def setup
+      input <<-EOF
+    cf f;
+    s x;
+    ctable Tab(1:`TableSize');
+    ctable TabNew(1:`TableSize');
+    
+    #do i=1,`TableSize',1
+    Fill Tab(`i')=f(`i');
+    .sort
+    #enddo
+    
+    * BUG1 (not all elements are printed):
+    PrintTable Tab;
+    
+    bracket x;
+    .sort
+    L expr1=table_(Tab,x);
+    print;
+    .sort
+    
+    bracket x;
+    .sort
+    
+    * BUG 2 ( seems only TabNew(1) is ok - further everything is broken):
+    Fillexpression TabNew=expr1(x);
+    .sort
+    
+    #do i=1,`TableSize'
+    L e`i'=TabNew(`i');
+    #enddo
+    print;
+    .sort
+    .end
+      EOF
+      extra_parameter "-D TableSize=10"
+    end
+    def test1
+      execute FORM
+      assert no_problem
+      assert result("expr1") =~ Pattern(<<-EOF
+        f(1)*x + f(2)*x^2 + f(3)*x^3 + f(4)*x^4 + f(5)*x^5 + f(6)*x^6 + f(7)*x^7
+        + f(8)*x^8 + f(9)*x^9 + f(10)*x^10;
+        EOF
+      )
+      assert result("e10") =~ /\s+f\(10\);/
+    end
+    end
+    #] SparseTable1 :
+\end{verbatim}}
+
+Some remarks. Folds are used (to structure a long file). \C{=begin} and \C{=end}
+define a commentary block. Here useful information are given about the bug that
+triggered the test case. The input is not modified compared to the original
+\FORM\ program, it is just directly pasted into this Ruby file. We use
+\C{extra\_parameter} to define a preprocessor variable for the run. We check
+\C{expr1} to a multi-line reference. Since we use \C{Pattern()} (instead of
+\C{ExactPattern()}) we can be sloppy about the indentation and the whitespaces.
+The expression \C{e10} is matched to a pattern done "by hand" instead (just to
+show the principle). For such a test case, where we are mostly interested about
+the correctness of the calculation, the first assertion (\C{assert no\_problem})
+is a standard.
+

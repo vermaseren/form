@@ -1,0 +1,276 @@
+\section{Discussion of a typical \FORM\ run}
+
+We discuss in the following what is happening inside \FORM\ when it executes a given program. The
+discussion focuses more on the interplay between the various parts of \FORM\ and on key concepts of
+the internal data representation than on in-depth details of the code. For the
+latter, the reader is 
+referred to section \ref{sec:indepth}.
+
+We consider the following exemplary \FORM\ program \C{test.frm} (which we run
+with the command "\C{form test}"):
+
+\begin{verbatim}
+ 1      #define N "3"
+ 2      
+ 3      Symbol x, y, z;
+ 4      
+ 5      L	f = (x+y)^2 - (x+z)^`N';
+ 6      L	g = f - x;
+ 7      
+ 8      Brackets x;
+ 9      Print;
+10      .sort
+11      
+12      #do i=2,3
+13      Id	x?^`i' = x;
+14      #enddo
+15      
+16      Print +s;
+17      .end
+\end{verbatim}
+
+The entry function \C{main()} is in \C{startup.c}. It does various
+initializations before it calls the preprocessor \C{PreProcessor()}, which
+actually deals with the \FORM\ program. The code shows some typical features:
+Preprocessor macros are frequently used to select code specific to certain
+configurations. The two most common macros can be seen here: \C{WITHPTHREADS}
+for a \TFORM\ executable and \C{PARALLEL} for a \PARFORM\ executable. Macros are
+used to access the global data contained in the variable \C{A}, like 
+\C{AX.timeout} for example. The code uses (usually) own functions instead of
+standard functions provided by the C library for common tasks. Examples in
+\C{main()} are \C{strDup1} or \C{MesPrint} (replacing \C{printf()}). Another
+very often used function is \C{Malloc1()} replacing \C{malloc()}. The reasons
+are better portability and the inclusion of special features.  \C{Malloc1()} for
+example makes a custom memory debugger available while \C{MesPrint()} knows
+among other things how to print encoded expressions from the internal buffers.
+
+% needs to be rewritten ->
+The initializations in \C{main()} are done in several steps. Some like the
+initialization of \C{A} with zeros is done directly, most others are done by
+calls to dedicated functions. The initializations are split up according to the
+type of objects involved and the available information at this point. The
+command line parameters passed to \FORM\ (none in our example run) are treated
+in the function \C{DoTail()}. After that, files are opened and also parsed for
+addtional settings. Then, as all settings are known, the large part of the
+internal data is allocated and initialized. Finally, recovery settings are
+checked, threads are started if necessary, timers are started, and variable
+initializations that might need to be repeated later (e.g. clear modules) are
+done in \C{IniVars()}.
+
+The call to \C{OpenInput()} reads the actual \FORM\ program into memory. The
+input is handled in an abstract fashion as character streams. The stream implementation
+(\C{tools.c}) offers several functions to open, close, and read from a stream.
+Streams can be of different types including files, in-memory data like parts of
+other streams or dollar variables, as well as external channels. The access to
+the characters in all streams though is nicely uniform. In
+\C{OpenInput()} a stream is representing our input file. Most of the logic
+there deals with the jump to the requested module (skipping clear instructions).
+It uses the function \C{GetInput()} to get the next character in the stream.
+Which stream it reads from is determined by the variable \C{AC.CurrentStream}.
+This global variable in the sub-struct \C{C\_const} of the \C{ALLGLOBALS}
+variable \C{A} is an example of how the different parts of \FORM\ typically
+communicate with each other by means of global variables.
+
+Next is the preprocessor. The preprocessor is implemented in the function
+\C{PreProcessor()} in \C{pre.c}. This function consists basically of two nested
+for-loops without conditions (\C{for (;;) \{ \ldots \}}). The outer loop deals
+with one \FORM\ module for each iteration, the inner loop deals with one input
+line. We have certain initializations done before in our example the code runs
+into the inner loop, where \C{GetInput()} reads our input file. The variables
+are all set such that the reading starts from the beginning of out input file.
+
+The input in variable \C{c} is tested for special cases. Whitespaces are
+skipped. Comments starting with a star \C{*} (unless \C{AP.ComChar} is set to a
+different character) are also skipped including whole folds. The crucial check
+on \C{c} is the if-clause that checks it for being a preprocessor command (\C{\#}),
+a module statement (\C{.}), or something else which is usually an ordinary
+statement.
+
+\begin{verbatim}
+ 1      #define N "3"
+\end{verbatim}
+
+In our case, we have a preprocessor command in the input. The function
+\C{PreProInstruction()} is called to read and interpret the rest of the line.
+The first part deals with the loading of the command in a dedicated buffer. For
+the moment, we ignore the details for the special treatment of cases when we are
+already inside a if or switch clause in a \FORM\ program. In our run, the
+function \C{LoadInstruction(0)} is simply called.
+
+\C{LoadInstruction()} copies input into the preprocessor instruction buffer.
+Three variables govern this buffer: \C{AP.preStart} points to the start of the
+buffer, \C{AP.preFill} to the point where new input can be copied to, and
+\C{AP.preStop} to (roughly) the end of the buffer. This setup is quite typical
+for buffers in \FORM. The memory is allocated at the start of \FORM. Later, like
+at the end of \C{LoadInstruction()}, if the buffer gets to small, it can be
+replaced by a larger memory patch with the help of utility functions like
+\C{DoubleLList()}. The contents is copied from the old to the new buffer. Since
+this dynamical resizing of buffers needs to be done with most buffers
+occationally, most buffers in \FORM\ store data such that it easily allows for
+copying, i.e.  usually C pointers are avoided and instead numbers representing
+offsets are used. Since the preprocessor instruction buffer just contains
+characters there is no problem here.
+
+In \C{LoadInstruction()} with our input and the mode set to 5 the input is just
+copied directly without any special actions taking except for a zero that is
+added at the end of the data. \C{PreProInstruction()} examines the data in the
+preprocessor instruction buffer for special cases, and then does a look-up in
+the \C{precommands} variable. This is a vector of type \C{KEYWORD} which enables
+the translation of a string (the command) to a function pointer (the C function
+that performs the operations requested by preprocessor command).
+\C{FindKeyword()} does these translations and the found function pointer is then
+dereferenced with the rest of the input in the instruction buffer as an argument.
+
+The function pointer will point to \C{DoDefine()} in our case. \C{DoDefine()}
+just calls \C{TheDefine()} that does the work. The if-clauses for \\
+\C{AP.PreSwitchModes} and \C{AP.PreIfStack} are present in most of the
+functions dealing with preprocessor commands. They check whether we are in a
+preprocessor if or switch block that is not to be considered, because the
+condition didn't hold. Then, the standard action is to just exit the current
+function leaving it with no effect. Since there are preprocessor commands like
+\C{\#else} or \C{\#endif} this decision can only be taken at this level of the
+execution and requires the repeated use of this idiom.
+
+The function scans through possible arguments and the value. In the value, special
+characters are interpreted. Ultimately, the preprocessor variable is created and
+assigned in the called function \C{PutPreVar()}. The variable \C{chartype}
+deserves an explanation. One will find it used very often in the C code that
+does input parsing. \C{chartype} is actually a macro standing in for
+\C{FG.cTable}. This global, statically initialized (in \C{inivar.h}) vector
+contains a value of every possible ASCII character describing its parsing type.
+The parsing type groups different ASCII characters such that the syntax checking
+is facilitated, see \C{inivar.h} for details.
+
+In \C{PutPreVar()} we get into the details of the name administration. We will
+just comment on some of the more general features. \C{NumPre} and \C{PreVar} are
+macros to access elements in \C{AP.PreVarList}. The type of \C{AP.PreVarList} is
+\C{LIST}. This is a generic type for all kinds of lists and it is used for many
+other variables in \FORM. A \C{LIST} stores list entries in a piece of
+dynamically allocated memory that has no defined type (\C{void *}). The utility
+functions for managing \C{LIST}s like \C{FromList()} are ignorant about the
+actual contents and perform list-specific operations like adding, removing or
+resizing a list. An actual entry can be accessed by some pointer arithmetic and
+type casting. The \C{PreVar} macro contains such a cast to the type \C{PREVAR}
+which represents a preprocessor variable.
+
+\C{PutPreVar()} creates a new list entry for us and basically copies the
+contents of the parameter \C{value} to the memory allocated to \C{PREVAR}'s
+\C{name}. So, by writing \C{PreVar[0]->name} or \C{PreVar[0]->value} we could
+access the strings \C{N} or \C{3}.
+
+In \C{TheDefine()} the function \C{Terminate()} is used several times. This
+function ultimately exits the program, but first tries to clean up things and
+print information about the problems causing this program termination.
+
+\begin{verbatim}
+ 2      
+ 3      Symbol x, y, z;
+\end{verbatim}
+
+In our run, we return to the function \C{PreProcessor()} and start a new inner
+loop iteration that reads a new line. After skipping the empty line we end up
+in the else-branch of the big if-clause testing \C{c} this time. Here the major
+steps are: we check again whether we are in a preprocessor if or switch, call
+\C{LoadStatement()} to read and prepare the input, and call
+\C{CompileStatement()} to perform the actions requested by the statement. Th
+programs enters the compiler stage.
+
+We also see a call to \C{UngetChar()}, which puts back the character that has
+been read into the input stream. This is necessary, because \\
+\C{LoadStatement()} and \C{CompileStatement()} need the complete line for
+parsing. The variable \C{AP.PreContinuation} is used several times. This variable
+deals with statements that span several input lines. \C{LoadStatement()} can
+recognize unfinished statements and sets this variable accordingly.
+
+\C{LoadStatement()} basically copies the input to the compiler's input buffer at
+\C{AC.iBuffer} (which has \C{AC.iPointer} and \C{AC.iStop} associated to it). It
+modifies the copy if necessary. The modification are to replace spaces by commas
+or insert commas at teh right spots to separate tokens. The interpretation steps
+that are following rely on these synactic conventions.
+
+The call to \C{CompileStatement()} is done only if no errors occured and all
+lines of a statement have been gathered into the compiler's input buffer.
+\C{CompileStatement()} is called with the address of this input buffer and tries
+to identify the statement. Like in the preprocessor, the input string is search
+in a vector of \C{KEYWORD}s (in \C{compiler.c} and if found, a function pointer
+is dereferenced to the function that actually deals with the command and its
+options and arguments.  Here, we have actually two vectors of \C{KEYWORD}s,
+because some statements might be stated in abbreviated form. The function
+\C{findcommand()} deals with the search. \C{CompileStatement()} does some small
+extra work, like for example checking the correct order of statements. In our
+case, it calls the function \C{CoSymbol()}. This functions is in file
+\C{name.c}, because as a declaration it basically adds something to the name
+administration. Functions for other statements can be found in \C{compcomm.c}
+and \C{compexpr.c}.
+
+\C{CoSymbol()} loops over the arguments and adds proper variable names together
+with their options to the symbols list \C{AC.Symbols} and the name
+administration (in the call to \C{AddSymbol()}.  In our case, we have \C{x},
+\C{y}, and \C{z} added. We have already encountered the basic mechanism of how a
+specific struct is added to a \C{LIST}. The name administration was not
+explained before, though.
+
+Symbols can appear in expressions that need to be encoded. The coding for
+symbols can simply be its entry index in the list \C{AC.Symbols}, but symbols
+also need to be recognized when an expression is parsed. Therefore a efficient
+look-up mechnism is required. This is achieved by a second data structure that
+holds the name strings in a tree for fast searching. The data in the symbol list
+does not contain the name string itself, but contains a referece (a index) into
+this name string tree. The tree is managed by generalized functions and types
+that are also used for other, similiar objects like vectors, indices, etc. The
+functions for name trees are located in the first part of the file \C{name.c}.
+The types \C{NAMENODE} and \C{NAMETREE} are defined in \C{structs.h}.
+\C{NAMENODE}s are the node of a balanced binary tree. It does not hold the
+name string just an index into \C{NAMETREE}. The actual data is contained in 
+\C{NAMETREE} that constitute one tree. This type has buffers for the nodes and
+for the name strings. This has the benefit of avoiding small malloc calls for
+individual nodes. Also, since all referencing is done via offsets into these
+buffers, a relocation or serialization of such a tree is very easy. In the
+struct \C{C\_const} (aka the global \C{AC}) several name trees are defined, for
+dollar variables, expressions, etc. The symbols added in our example program go
+into the nametree referenced by \C{AC.activenames}, which is at this point equal
+to \C{AC.varnames}.
+
+Our program returns to the \C{PreProcessor()} and starts parsing the next lines:
+
+\begin{verbatim}
+ 5      L	f = (x+y)^2 - (x+z)^`N';
+ 6      L	g = f - x;
+\end{verbatim}
+
+This time the function \C{DoLocal()} will be called to parse each line. The
+function has to add the name of the local expression to the name administration.
+But it also has to parsed the mathematical expression itself and save it in
+encoded form.
+
+% \begin{verbatim}
+%  7      
+%  8      Brackets x;
+%  9      Print;
+% \end{verbatim}
+
+
+
+% \begin{verbatim}
+% 10      .sort
+% \end{verbatim}
+
+
+
+% \begin{verbatim}
+% 11      
+% 12      #do i=2,3
+% 13      Id	x?^`i' = x;
+% 14      #enddo
+% \end{verbatim}
+
+
+
+% \begin{verbatim}
+% 15      
+% 16      Print +s;
+% 17      .end
+% \end{verbatim}
+
+
+

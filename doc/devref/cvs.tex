@@ -1,14 +1,61 @@
 \section{CVS}
 
-The CVS repository resides in {\tt /user/form/formcvs}.
-
-%%% some nice tips&tricks with CVS?
+The CVS repository resides in \C{/user/form/cvs\_repository}. It is advisable to
+set the enviroment variable \C{CVSROOT} accordingly, like (using bash shell syntax)
+{\scriptsize
+\begin{verbatim}
+  export CVSROOT=:ext:myusername@mytrustedmachine.nikhef.nl:/user/form/cvs_repository
+\end{verbatim}}
 
 A mailing list exists for CVS commits. The administration interface for this mailing list can be
 found under the web address
 
 \LINK{https://mailman.nikhef.nl/cgi-bin/admin/form-cvs}
 
-A password is required. Click {\it Membership Management} and then {\it Mass Subscription} to add
-new people.
+A password is required. 
+
+Click {\it Membership Management} and then {\it Mass Subscription} to add
+new people. The personal details of the subscribers like the email address or
+the name can be changed under {\it Membership Management} as well.
+
+The triggering of the CVS commits mails is done in the following way. In the
+file \C{loginfo} in the directory \C{CVSROOT} (inside the repository) the
+default action for logging is set such that the script \C{/user/form/cvs-log.sh}
+will be called with the committer's user name and the CVS mailing list user
+name. The shell script does some simple message transformation and then uses the
+command \C{mail} to send the commit mail to the mailing list.
+
+\subsection{Some useful CVS idioms}
+
+To just show what would be updated/changed without actually
+modifiying anything, use
+\begin{verbatim}
+  cvs -n update
+\end{verbatim}
+
+If \C{cvs -n update} has shown you that something new in the repository will be
+merged into your directory and you want to know in advance what the details are,
+you can do for each of the files involved a
+\begin{verbatim}
+  cvs status <filename>
+\end{verbatim}
+and note the version number of your local file, and then do a
+\begin{verbatim}
+  cvs diff -r <versionnumber> <filename>
+\end{verbatim}
+to see the differences.
+
+In case you want to compile an older version of \FORM\ (maybe to find out
+whether a certain bug is already present or not), do
+\begin{verbatim}
+  cvs update -D "<DATE>"
+\end{verbatim}
+to checkout the sources as they were on a certain date, e.g. \\
+\C{cvs update -D "2006-05-12"}. The files will get the so-called sticky flag,
+which do prevent simple \C{cvs update} commands in the future to update to the
+latest version from the repository. To remove the sticky flag on a file use
+\begin{verbatim}
+  cvs update -A <filename>
+\end{verbatim}
+Without the filename all files will have the sticky flag removed.
 

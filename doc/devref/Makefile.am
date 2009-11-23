@@ -1,5 +1,10 @@
 TEXFILES = \
-	devref.tex
+	cvs.tex \
+	devref.tex \
+	formrun.tex \
+	indepth.tex \
+	source.tex \
+	testsuite.tex
 
 MAIN = devref
 

@@ -1,0 +1,219 @@
+\section{In--depth discussion of the functional parts of FORM}
+\label{sec:indepth}
+
+%%% Parser
+%%% 
+%%% Compiler
+%%% 
+%%% Internal input and term codings
+%%% 
+%%% Generator
+%%% 
+%%% Sorting
+%%% 
+%%% Term canonicalization
+%%% 
+%%% Pattern matching
+%%% 
+%%% Dollar variables
+%%% 
+%%% Streams
+%%% 
+%%% Tables
+%%% 
+%%% Store files
+%%% 
+%%% Recovery mechanism
+%%% 
+%%% ...
+
+\subsection{The problem of dummy indices}
+
+\FORM\ has a indices that can be automatically renumbered. With this we mean 
+that when we have an expression like
+
+\begin{verbatim}
+f(i)*g(i)*h(j)*k(j)-f(j)*g(j)*h(i)*k(i)
+\end{verbatim}
+
+we can say
+
+\begin{verbatim}
+Sum i,j;
+\end{verbatim}
+
+and \FORM\ will change the expression into
+
+\begin{verbatim}
+f(N1_?)*g(N1_?)*h(N2_?)*k(N2_?)-f(N2_?)*g(N2_?)*h(N1_?)*k(N1_?)
+\end{verbatim}
+
+in which \C{Ni\_?} are internal indices.
+
+These internal indices follow a number of rules:
+\begin{enumerate}
+\item
+   their numbers (\C{AC.CurDum}) start at \C{AM.IndDum}, which again starts at 
+   \C{AM.DumInd+WILDOFFSET} and \C{AM.DumInd} starts at \C{AM.OffsetIndex + 2*WILDOFFSET}.
+   Hence \C{AC.CurDum} starts at \C{AM.OffsetIndex +\\ 3*WILDOFFSET}.
+   Because we need this extra space \C{WILDOFFSET} cannot be too large and this 
+   limits the number of indices that is allowed.
+\item The dimension of the dummy indices is equal to the default dimension.
+\item The internal (dummy) indices can be renamed at any time in order to 
+   create uniquely minimal terms. In the above expression that would mean 
+   that the second term would be 'rearranged' into
+\begin{verbatim}
+f(N2_?)*g(N2_?)*h(N1_?)*k(N1_?) -->
+                          f(N1_?)*g(N1_?)*h(N2_?)*k(N2_?)
+\end{verbatim}
+   and the expression becomes zero.
+\end{enumerate}
+
+There are problems with this concept.
+\begin{enumerate}
+\item Multiplying expressions with dummy indices could give a repetition of 
+	the same indices as in \C{(f(N1\_?)*g(N1\_?))\^{}3}. This has been solved 
+   partially as can be seen with the following program:
+\begin{verbatim}
+   CF  f,g;
+   L   F = (f(N1_?)*g(N1_?))^3;
+   L   G = f(N1_?)*g(N1_?);
+   .sort
+   L   G3 = G^3;
+   Print;
+   .end
+\end{verbatim}
+   The routine that takes care of the proper shifts in dummy numbers is
+   \C{MoveDummies()}. As one can see from the example, the \C{SUBEXPRESSION} to a
+   power isn't treated this way. It would have a serious impact on the
+   speed. With the \C{G\^{}3} it is different because that is slower to begin
+   with.
+\item Keep Brackets is extremely dangerous. The problem here is
+\begin{verbatim}
+f(N1_?)*(g(N1_?)*h(N2_?)*k(N2_?)+g(N2_?)*h(N1_?)*k(N2_?))
+\end{verbatim}
+   What is inside the brackets is invisible during the module. Hence a 
+   renumbering that involves \C{f(N1\_?)} only can change \C{N1\_?} into \C{N2?\_}
+   (\FORM\ doesn't know there is already a \C{N2\_?}) and anyway, the 
+   corresponding \C{N1\_?} remains as it is.
+   It means that there are complicatetions with \C{Sum}, \C{Trace4} and things like
+   \C{id  p = f(?);} which can generate dummy indices.
+\end{enumerate}
+
+The second problem requires some action.
+\begin{enumerate}
+\item[A] When Keep Brackets is active, renumbering should not be allowed, until
+   the contents are multiplied with the outside of the brackets.
+\item[B] The multiplying with the contents of the bracket should follow the same
+   procedure as the multiplication with a complete expression \\
+   (\C{MoveDummies()}).
+\item[C] Introduction of new dummy indices should be above \C{AM.IndDum + WILDOFFSET/2}.
+   These should vanish when the term is renumbered after multiplying the
+   outside of the bracket with the inside.
+\end{enumerate}
+
+\C{Trace4} involves the creation of dummy indices, but these vanish again 
+without renumbering. Hence they don't cause problems.
+
+In order to implement \C{A-C} we have to have a good look at all routines that 
+use \C{AR.CurDum} and call \C{ReNumber()} or \C{DetCurDum()}.
+
+\subsection{Values of indices (and vectors)}
+
+The indices and vectors share common use. That means that vectors can occur 
+in the places that are reserved for indices. In addition we have various 
+types of indices. Hence it is important to know what range of values in an 
+index location refers to what.
+
+\begin{enumerate}
+\item Special values:
+
+	\begin{tabular}{p{6em}rp{20em}}
+		\C{GAMMA1} &  0 & Dirac unit matrix \\
+        \C{GAMMA5} & -1 & Dirac gamma 5 (only defined in 4 dimensions) \\
+        \C{GAMMA6} & -2 & Dirac (1+gamma5) (only defined in 4 dimensions) \\
+        \C{GAMMA7} & -3 & Dirac (1-gamma5) (only defined in 4 dimensions)
+	\end{tabular}
+
+	The above 4 indices are to be used only inside the function \C{g\_}.
+
+	\begin{tabular}{p{6em}rp{20em}}
+		\C{FUNNYVEC}    &  -4 & Used in \C{replace\_} to indicate a vector with an
+								unspecified index. Hence \C{VECTOR,4,numvec,FUNNYVEC}
+								instead of \C{INDEX,3,numvec}. \\
+		\C{FUNNYWILD}   &  -5 & Used to indicate an argument field wildcard like
+								\C{?a} inside a tensor. \\
+		\C{SUMMEDIND}   &  -6 & Used in \C{DELTA} to indicate \C{d\_(mu,mu)-4} as generated
+								in traces. \\
+		\C{NOINDEX}     &  -7 & Used by \C{ExecArg()} in splitting a multi-delta or
+								multi-index. Taking out one to make a new argument
+								we leave the old one with two or one empty spots. \\
+		\C{FUNNYDOLLAR} &  -8 & Used to indicate a dollar variable inside a tensor. \\
+		\C{EMPTYINDEX}  &  -9 & Used in the bracket statement to indicate a \C{d\_}.
+								Because \C{d\_} isn't a regular function we cannot use
+								the function notation and it needs two arguments. \\
+		\C{MINSPEC}     & -10 &
+	\end{tabular}
+
+	\C{MINSPEC} must be smaller than all the other special values.
+
+\item Fixed indices. They are in the range of 1 to \C{AM.OffsetIndex-1}.
+
+\item Vectors are in the range from \\
+	\C{AM.OffsetVector = -2*WILDOFFSET+MINSPEC;} \\
+    to \\
+	\C{AM.OffsetVector + WILDOFFSET}
+
+\item Wildcard vectors are in the range \\
+	\C{AM.OffsetVector + WILDOFFSET} \\
+    to \\
+	\C{AM.OffsetVector + 2*WILDOFFSET}
+
+\item Regular indices are in the range from \\
+	\C{AM.OffsetIndex} to \C{AM.OffsetIndex + WILDOFFSET}
+
+\item Wildcard indices are in the range \\
+	\C{AM.OffsetIndex + WILDOFFSET    (=AM.WilInd)} \\
+    to \\
+	\C{AM.OffsetIndex + 2*WILDOFFSET  (=AM.DumInd)}
+
+\item Unused in the range of \\
+	\C{AM.OffsetIndex + 2*WILDOFFSET  (=AM.DumInd)} \\
+    to \\
+	\C{AM.OffsetIndex + 3*WILDOFFSET  (=AM.IndDum)}
+
+\item Summed indices (\C{Ni\_?}) are in the range of \\
+	\C{AM.OffsetIndex + 3*WILDOFFSET  (=AM.IndDum)}
+    to \\
+	\C{AM.OffsetIndex + 4*WILDOFFSET}
+
+\item Unused in the range of \\
+	\C{AM.OffsetIndex + 4*WILDOFFSET} \\
+    to \\
+	\C{AM.OffsetIndex + 5*WILDOFFSET  (=AM.mTraceDum)}
+
+\item Summed indices as generated by the trace routines are above \\
+	\C{AM.OffsetIndex + 5*WILDOFFSET  (=AM.mTraceDum)}
+\end{enumerate}
+
+{\it Note (JV)}: I am not sure why there are unused regions. I must have had a 
+reason for them, but I have forgotten about it (it was more than 20 years 
+ago). And then, maybe it is used somewhere in a totally untransparent way.
+
+{\it Note 2 (JV)}: It was good to make this list. It turned out that in several 
+places the code that checks for wildcard indices was only limited from 
+below, not from above. It would of course be very rare to run into trouble 
+with this, but it is better to have the code formally correct. One never 
+knows. This was particularly the case in \C{FindRest()} (in \C{findpat.c}). There may 
+be more. It is best to repair this, whenever encountered.
+
+From the above it should be clear that on a 32-bits computer \\
+\C{5*WILDOFFSET+AM.OffsetIndex+nTraceDummies < 2\^{}{15}} \\
+in which \C{nTraceDummies} is the number of dummies that can be introduced when 
+taking a 4-dimensional trace.
+
+If we assume that we will not take traces of more than 200 gamma matrices 
+(each with a different index, because otherwise there are contractions) 
+\C{nTraceDummies} will be at most 100. \C{AM.OffsetIndex} is by default 128.
+The value that we selected for \C{WILDOFFSET} is 6100 which allows a maximum 
+value of 2167 for \C{AM.OffsetIndex}.
