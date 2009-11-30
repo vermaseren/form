@@ -1390,6 +1390,7 @@ VOID Terminate(int errorcode)
 VOID PrintRunningTime()
 {
 #ifdef WITHPTHREADS
+#ifdef WITHPOSIXCLOCK
 	LONG mastertime;
 	LONG workertime;
 	LONG wallclocktime;
@@ -1405,6 +1406,13 @@ VOID PrintRunningTime()
 			totaltime/1000,(WORD)((totaltime%1000)/10),
 			wallclocktime/100,(WORD)(wallclocktime%100));
 	}
+#else
+	LONG mastertime = TimeCPU(1);
+	LONG wallclocktime = TimeWallClock(1);
+	MesPrint("  %l.%2i sec out of %l.%2i sec",
+		mastertime/1000,(WORD)((mastertime%1000)/10),
+		wallclocktime/100,(WORD)(wallclocktime%100));
+#endif
 #else
 	LONG mastertime = TimeCPU(1);
 	LONG wallclocktime = TimeWallClock(1);

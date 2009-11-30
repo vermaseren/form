@@ -9,7 +9,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ If statement :
  		#[ Syntax :
 
@@ -499,7 +499,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement :
+ 		#] DoIfStatement : 
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -513,6 +513,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 	GETIDENTITY
 	WORD *m, *t, *r, *w, power, RetVal, i, topje, *newterm;
 	WORD *OldWork, *ww, *mm;
+	int *RepSto, RepVal;
 	int numdollars = 0;
 	m = ifcode + IDHEAD;
 	AN.FullProto = m;
@@ -527,14 +528,20 @@ WORD HowMany(WORD *ifcode, WORD *term)
 		*OldWork += 3;
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
+		RepSto = AN.RepPoint;
+		RepVal = *RepSto;
 		NewSort();
 		if ( Generator(BHEAD OldWork,AR.Cnumlhs) ) {
 			LowerSortLevel();
+			*RepSto = RepVal;
+			AN.RepPoint = RepSto;
 			AT.WorkPointer = OldWork;
 			return(-1);
 		}
 		AT.WorkPointer = ww;
 		if ( EndSort(ww,0) < 0 ) {}
+		*RepSto = RepVal;
+		AN.RepPoint = RepSto;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AP.lhdollarerror == 0 ) {
 				LOCK(ErrorMessageLock);

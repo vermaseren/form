@@ -4022,6 +4022,7 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 				if ( *p ) {
 					level = CompileStatement(p);
 					if ( level ) error = level;
+					while ( *p ) p++;
 					if ( CoEndIf(p) && error == 0 ) error = 1;
 				}
 				return(error);
@@ -4103,6 +4104,8 @@ int CoElse(UBYTE *p)
 		while ( *p == ',' ) p++;
 		if ( tolower(*p) == 'i' && tolower(p[1]) == 'f' && p[2] == '(' )
 													return(CoElseIf(p+2));
+		MesPrint("&No extra text allowed as part of an else statement");
+		error = 1;
 	}
 	if ( AC.IfLevel <= 0 ) { MesPrint("&else statement without if"); return(1); }
 	if ( AC.IfSumCheck[AC.IfLevel-1] != AC.RepLevel + AC.arglevel + AC.insidelevel
@@ -4152,7 +4155,11 @@ int CoEndIf(UBYTE *inp)
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD i = C->numlhs, to, k = -AC.IfLevel;
 	int error = 0;
-	DUMMYUSE(inp);
+	while ( *inp == ',' ) inp++;
+	if ( *inp != 0 ) {
+		error = 1;
+		MesPrint("&No extra text allowed as part of an endif/elseif statement");
+	}
 	if ( AC.IfLevel <= 0 ) {
 		MesPrint("&Endif statement without corresponding if"); return(1);
 	}

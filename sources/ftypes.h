@@ -862,6 +862,7 @@ typedef int (*TFUN1)();
 #define INISORTBOT 7
 #define RUNSORTBOT 8
 #define DOONEEXPRESSION 9
+#define DOBRACKETS 10
 
 #define MASTERBUFFERISFULL 1
 
@@ -884,6 +885,9 @@ typedef int (*TFUN1)();
 #define BUCKETASSIGNED -1
 #define BUCKETTOBERELEASED -2
 #define BUCKETPREPARINGTERM 0
+
+#define BUCKETDOINGTERMS 0
+#define BUCKETDOINGBRACKET 1
 #endif
 
 /*

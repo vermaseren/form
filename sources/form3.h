@@ -23,8 +23,20 @@
 #define PRODUCTIONDATE "23-jan-2009"
 #endif
 
+#ifdef APPLE32
+#define APPLE
+#define LINUX
+#endif
+
+#ifdef APPLE64
+#define APPLE
+#define OPTERON
+#endif
+
 #define WITHZLIB
+#ifndef APPLE
 #define WITHGMP
+#endif
 
 #endif /* def HAVE_CONFIG_H */
 
@@ -63,7 +75,9 @@
 #define WITHSORTBOTS
 
 #ifdef WITHPTHREADS
+#ifndef APPLE
 #define WITHPOSIXCLOCK
+#endif
 #endif
 
 #ifdef WITHZLIB

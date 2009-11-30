@@ -2189,6 +2189,7 @@ NoMnot:
 			}
 			else if ( type != SYMTONUM && type != INDTOIND
 			&& type != SYMTOSYM ) goto NoMatch;
+			else if ( type == SYMTOSYM && Sets[j].type == CNUMBER ) goto NoMatch;
 			else if ( *w == newnumber ) {
 				if ( *s == SETTONUM ) {
 					if ( n2 == oldnumber && type

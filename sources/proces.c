@@ -286,6 +286,7 @@ commonread:;
 					if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 				}
 				AR.DeferFlag = AC.ComDefer;
+				AR.Eside = RHSIDE;
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
 					if ( ThreadsProcessor(e,LastExpression) ) {
@@ -524,7 +525,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -3622,7 +3623,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

@@ -15,7 +15,7 @@
 /* EXTERNLOCK(dummylock) */
 
 /*
-  	#] Includes : 
+  	#] Includes :
 
   	#[ GetNode :
 */
@@ -38,7 +38,7 @@ NAMENODE *GetNode(NAMETREE *nametree, UBYTE *name)
 }
 
 /*
-  	#] GetNode : 
+  	#] GetNode :
   	#[ AddName :
 */
 
@@ -213,7 +213,7 @@ int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenu
 }
 
 /*
-  	#] AddName : 
+  	#] AddName :
   	#[ GetName :
 
 	When AutoDeclare is an active statement.
@@ -274,7 +274,7 @@ NotFound:;
 }
 
 /*
-  	#] GetName : 
+  	#] GetName :
   	#[ GetOName :
 
 	Adds the proper offsets, so we do not have to do that in the calling
@@ -294,7 +294,7 @@ int GetOName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 }
 
 /*
-  	#] GetOName : 
+  	#] GetOName :
   	#[ GetAutoName :
 
 	This routine gets the automatic declarations
@@ -341,7 +341,7 @@ int GetAutoName(UBYTE *name, WORD *number)
 }
 
 /*
-  	#] GetAutoName : 
+  	#] GetAutoName :
   	#[ GetVar :
 */
 
@@ -374,7 +374,7 @@ int GetVar(UBYTE *name, WORD *type, WORD *number, int wantedtype, int par)
 }
 
 /*
-  	#] GetVar : 
+  	#] GetVar :
   	#[ EntVar :
 */
 
@@ -407,7 +407,7 @@ WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z)
 }
 
 /*
-  	#] EntVar : 
+  	#] EntVar :
   	#[ GetDollar :
 */
 
@@ -419,7 +419,7 @@ int GetDollar(UBYTE *name)
 }
 
 /*
-  	#] GetDollar : 
+  	#] GetDollar :
   	#[ DumpTree :
 */
 
@@ -432,7 +432,7 @@ VOID DumpTree(NAMETREE *nametree)
 }
 
 /*
-  	#] DumpTree : 
+  	#] DumpTree :
   	#[ DumpNode :
 */
 
@@ -451,7 +451,7 @@ VOID DumpNode(NAMETREE *nametree, WORD node, WORD depth)
 }
 
 /*
-  	#] DumpNode : 
+  	#] DumpNode :
   	#[ CompactifyTree :
 */
 
@@ -513,7 +513,7 @@ int CompactifyTree(NAMETREE *nametree,WORD par)
 }
 
 /*
-  	#] CompactifyTree : 
+  	#] CompactifyTree :
   	#[ CopyTree :
 */
 
@@ -601,7 +601,7 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 }
 
 /*
-  	#] CopyTree : 
+  	#] CopyTree :
   	#[ LinkTree :
 */
 
@@ -632,7 +632,7 @@ VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
 }
 
 /*
-  	#] LinkTree : 
+  	#] LinkTree :
   	#[ MakeNameTree :
 */
 
@@ -651,7 +651,7 @@ NAMETREE *MakeNameTree()
 }
 
 /*
-  	#] MakeNameTree : 
+  	#] MakeNameTree :
   	#[ FreeNameTree :
 */
 
@@ -665,7 +665,7 @@ VOID FreeNameTree(NAMETREE *n)
 }
 
 /*
-  	#] FreeNameTree : 
+  	#] FreeNameTree :
 
   	#[ WildcardNames :
 */
@@ -734,7 +734,7 @@ int GetWildcardName(UBYTE *name)
 }
 
 /*
-  	#] WildcardNames : 
+  	#] WildcardNames :
 
   	#[ AddSymbol :
 
@@ -757,7 +757,7 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
 }
 
 /*
-  	#] AddSymbol : 
+  	#] AddSymbol :
   	#[ CoSymbol :
 
 	Symbol declarations.   name[#{R|I|C}][([min]:[max])]
@@ -775,12 +775,13 @@ int CoSymbol(UBYTE *s)
 		cplx = 0;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
-			MesPrint("&Illegally formed name in symbol statement");
+IllForm:	MesPrint("&Illegally formed name in symbol statement");
 			error = 1;
 			s = SkipField(name,0);
 			goto eol;
 		}
 		oldc = s; cc = c = *s; *s = 0;
+		if ( TestName(name) ) { *s = c; goto IllForm; }
 		if ( cc == '#' ) {
 			s++;
 			     if ( tolower(*s) == 'r' ) cplx = VARTYPENONE;
@@ -867,7 +868,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol : 
+  	#] CoSymbol :
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -889,7 +890,7 @@ int AddIndex(UBYTE *name, int dim, int dim4)
 }
 
 /*
-  	#] AddIndex : 
+  	#] AddIndex :
   	#[ CoIndex :
 
 	Index declarations. name[={number|symbol[:othersymbol]}]
@@ -905,12 +906,13 @@ int CoIndex(UBYTE *s)
 		dim4 = AC.lDefDim4;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
-			MesPrint("&Illegally formed name in index statement");
+IllForm:	MesPrint("&Illegally formed name in index statement");
 			error = 1;
 			s = SkipField(name,0);
 			goto eol;
 		}
 		oldc = s; c = *s; *s = 0;
+		if ( TestName(name) ) { *s = c; goto IllForm; }
 		if ( c == '=' ) {
 			s++;
 			if ( ( s = DoDimension(s,&dim,&dim4) ) == 0 ) {
@@ -938,7 +940,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoIndex : 
+  	#] CoIndex :
   	#[ DoDimension :
 */
 
@@ -1017,7 +1019,7 @@ int CoDimension(UBYTE *s)
 }
 
 /*
-  	#] CoDimension : 
+  	#] CoDimension :
   	#[ AddVector :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1037,7 +1039,7 @@ int AddVector(UBYTE *name, int cplx)
 }
 
 /*
-  	#] AddVector : 
+  	#] AddVector :
   	#[ CoVector :
 
 	Vector declarations. The descriptor string is "(,%n)"
@@ -1051,12 +1053,13 @@ int CoVector(UBYTE *s)
 	do {
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
-			MesPrint("&Illegally formed name in vector statement");
+IllForm:	MesPrint("&Illegally formed name in vector statement");
 			error = 1;
 			s = SkipField(s,0);
 		}
 		else {
 			c = *s; *s = 0;
+			if ( TestName(name) ) { *s = c; goto IllForm; }
 			if ( ( AC.AutoDeclareFlag == 0 &&
 			 ( ( type = GetName(AC.exprnames,name,&numvector,NOAUTO) )
 			 != NAMENOTFOUND ) )
@@ -1072,7 +1075,7 @@ int CoVector(UBYTE *s)
 }
 
 /*
-  	#] CoVector : 
+  	#] CoVector :
   	#[ AddFunction :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1097,7 +1100,7 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop)
 }
 
 /*
-  	#] AddFunction : 
+  	#] AddFunction :
   	#[ CoFunction + ...:
 
 	Function declarations.
@@ -1114,12 +1117,13 @@ int CoFunction(UBYTE *s, int comm, int istensor)
 		symtype = cplx = 0;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
-			MesPrint("&Illegally formed function/tensor name");
+IllForm:	MesPrint("&Illegally formed function/tensor name");
 			error = 1;
 			s = SkipField(name,0);
 			goto eol;
 		}
 		oldc = s; cc = c = *s; *s = 0;
+		if ( TestName(name) ) { *s = c; goto IllForm; }
 		if ( c == '#' ) {
 			s++;
 			     if ( tolower(*s) == 'r' ) cplx = VARTYPENONE;
@@ -1210,7 +1214,7 @@ int CoNTensor(UBYTE *s) { return(CoFunction(s,1,2)); }
 int CoCTensor(UBYTE *s) { return(CoFunction(s,0,2)); }
 
 /*
-  	#] CoFunction + ...: 
+  	#] CoFunction + ...:
   	#[ DoTable :
 
         Syntax:
@@ -1255,9 +1259,12 @@ int DoTable(UBYTE *s, int par)
 	do {
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
-			MesPrint("&Illegal name or option in table declaration");
+IllForm:	MesPrint("&Illegal name or option in table declaration");
 			return(1);
 		}
+		c = *s; *s = 0;
+		if ( TestName(name) ) { *s = c; goto IllForm; }
+		*s = c;
 		if ( *s == '(' ) break;
 		if ( *s != ',' ) {
 			MesPrint("&Illegal definition of table");
@@ -1532,7 +1539,7 @@ int DoTable(UBYTE *s, int par)
 }
 
 /*
-  	#] DoTable : 
+  	#] DoTable :
   	#[ CoTable :
 */
 
@@ -1542,7 +1549,7 @@ int CoTable(UBYTE *s)
 }
 
 /*
-  	#] CoTable : 
+  	#] CoTable :
   	#[ CoNTable :
 */
 
@@ -1552,7 +1559,7 @@ int CoNTable(UBYTE *s)
 }
 
 /*
-  	#] CoNTable : 
+  	#] CoNTable :
   	#[ CoCTable :
 */
 
@@ -1562,7 +1569,7 @@ int CoCTable(UBYTE *s)
 }
 
 /*
-  	#] CoCTable : 
+  	#] CoCTable :
   	#[ AddSet :
 */
 
@@ -1590,7 +1597,7 @@ int AddSet(UBYTE *name)
 }
 
 /*
-  	#] AddSet : 
+  	#] AddSet :
   	#[ DoElements :
 */
 
@@ -1737,7 +1744,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 }
 
 /*
-  	#] DoElements : 
+  	#] DoElements :
   	#[ CoSet :
 
 	Set declarations.
@@ -1751,10 +1758,11 @@ int CoSet(UBYTE *s)
 	WORD numberofset;
 	name = s;
 	if ( ( s = SkipAName(s) ) == 0 ) {
-		MesPrint("&Illegal name for set");
+IllForm:MesPrint("&Illegal name for set");
 		return(1);
 	}
 	c = *s; *s = 0;
+	if ( TestName(name) ) goto IllForm;
 	if ( ( ( type = GetName(AC.exprnames,name,&numberofset,NOAUTO) ) != NAMENOTFOUND )
 	|| ( ( type = GetName(AC.varnames,name,&numberofset,NOAUTO) ) != NAMENOTFOUND ) ) {
 		if ( type != CSET ) NameConflict(type,name);
@@ -1781,7 +1789,7 @@ int CoSet(UBYTE *s)
 }
 
 /*
-  	#] CoSet : 
+  	#] CoSet :
   	#[ DoTempSet :
 
 		Gets a {} set definition and returns a set number if the set is
@@ -1874,7 +1882,7 @@ int DoTempSet(UBYTE *from, UBYTE *to)
 }
 
 /*
-  	#] DoTempSet : 
+  	#] DoTempSet :
   	#[ CoAuto :
 
 	To prepare first:
@@ -1906,7 +1914,7 @@ int CoAuto(UBYTE *inp)
 }
 
 /*
-  	#] CoAuto : 
+  	#] CoAuto :
   	#[ AddDollar :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1945,7 +1953,7 @@ int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 }
 
 /*
-  	#] AddDollar : 
+  	#] AddDollar :
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.
@@ -1981,7 +1989,7 @@ int ReplaceDollar(WORD number, WORD newtype, WORD *newstart, LONG newsize)
 }
 
 /*
-  	#] ReplaceDollar : 
+  	#] ReplaceDollar :
   	#[ AddDubious :
 
 	This adds a variable of which we do not know the proper type.
@@ -1997,7 +2005,7 @@ int AddDubious(UBYTE *name)
 }
 
 /*
-  	#] AddDubious : 
+  	#] AddDubious :
   	#[ MakeDubious :
 */
 
@@ -2028,7 +2036,7 @@ int MakeDubious(NAMETREE *nametree, UBYTE *name, WORD *number)
 }
 
 /*
-  	#] MakeDubious : 
+  	#] MakeDubious :
   	#[ NameConflict :
 */
 
@@ -2048,7 +2056,7 @@ int NameConflict(int type, UBYTE *name)
 }
 
 /*
-  	#] NameConflict : 
+  	#] NameConflict :
   	#[ AddExpression :
 */
 
@@ -2095,7 +2103,7 @@ int AddExpression(UBYTE *name, int x, int y)
 }
 
 /*
-  	#] AddExpression : 
+  	#] AddExpression :
   	#[ GetLabel :
 */
 
@@ -2135,7 +2143,7 @@ int GetLabel(UBYTE *name)
 }
 
 /*
-  	#] GetLabel : 
+  	#] GetLabel :
   	#[ ResetVariables :
 
 	Resets the variables.
@@ -2436,7 +2444,7 @@ void ResetVariables(int par)
 }
 
 /*
-  	#] ResetVariables : 
+  	#] ResetVariables :
   	#[ RemoveDollars :
 */
 
@@ -2463,7 +2471,7 @@ void RemoveDollars()
 }
 
 /*
-  	#] RemoveDollars : 
+  	#] RemoveDollars :
   	#[ Globalize :
 */
 
@@ -2562,6 +2570,25 @@ void Globalize(int par)
 }
 
 /*
-  	#] Globalize : 
+  	#] Globalize :
+  	#[ TestName :
+*/
+
+int TestName(UBYTE *name)
+{
+	if ( *name == '[' ) {
+		while ( *name ) name++;
+		if ( name[-1] == ']' ) return(0);
+		return(-1);
+	}
+	while ( *name ) {
+		if ( *name == '_' ) return(-1);
+		name++;
+	}
+	return(0);
+}
+
+/*
+  	#] TestName :
 */
 

@@ -949,7 +949,10 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 	WORD i, ni;
 	UWORD *w1, *w2;
 	RLONG t, v;
-	UWORD *e, *f, *ff, *g, norm, estim, *DLscrat9, *DLscratA, *DLscratB, *DLscratC;
+	UWORD *e, *f, *ff, *g, norm, estim;
+#ifdef WITHGMP
+	UWORD *DLscrat9, *DLscratA, *DLscratB, *DLscratC;
+#endif
 	RLONG esthelp;
 	if ( !nb ) {
 		LOCK(ErrorMessageLock);
@@ -1176,7 +1179,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 }
 
 /*
- 		#] DivLong : 
+ 		#] DivLong :
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -2542,7 +2545,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2821,7 +2824,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus :
+ 		#] TakeModulus : 
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2898,7 +2901,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms :
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 

@@ -633,6 +633,7 @@ extern int    AddIndex(UBYTE *,int,int);
 extern UBYTE *DoDimension(UBYTE *,int *,int *);
 extern int    AddFunction(UBYTE *,int,int,int,int);
 extern int    CoFunction(UBYTE *,int,int);
+extern int    TestName(UBYTE *);
 extern int    AddSet(UBYTE *);
 extern int    DoElements(UBYTE *,SETS,UBYTE *);
 extern int    DoTempSet(UBYTE *,UBYTE *);
@@ -1206,7 +1207,6 @@ extern int    MasterMerge(VOID);
 extern int    PutToMaster(PHEAD WORD *);
 extern void   SetWorkerFiles(VOID);
 extern int    MakeThreadBuckets(int,int);
-extern void   Test(VOID);
 extern int    SendOneBucket(VOID);
 extern int    LoadOneThread(int,int,THREADBUCKET *,int);
 extern void  *RunSortBot(void *);
@@ -1235,6 +1235,8 @@ extern int    MasterWaitThread(int);
 extern void   WakeupMasterFromThread(int,int);
 extern int    LoadReadjusted(VOID);
 extern int    IniSortBlocks(int);
+extern int    TreatIndexEntry(PHEAD LONG);
+extern WORD   GetTerm2(PHEAD WORD *);
 
 #endif
 
@@ -1277,6 +1279,7 @@ typedef int (*SETKILLMODEFOREXTERNALCHANNEL)(int,int);
 /*:[08may2006 mt]*/
 typedef LONG (*WRITEFILE)(int,UBYTE *,LONG);
 typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
+typedef WORD (*GETTERM)(PHEAD WORD *);
 typedef WORD (*FINISHUFFLE)(PHEAD WORD *);
 typedef WORD (*DO_UFFLE)(WORD *,WORD,WORD,WORD);
 

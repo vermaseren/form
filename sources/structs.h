@@ -321,6 +321,7 @@ typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
 	POSITION start;				/* Place where bracket starts - start of expr */
 	POSITION next;				/* Place of next indexed bracket in expr */
 	LONG bracket;				/* Offset of position in bracketbuffer */
+	LONG termsinbracket;
 	PADPOINTER(1,0,0,0);
 } BRACKETINDEX;
 
@@ -594,7 +595,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
 
@@ -1079,11 +1080,14 @@ typedef struct ThReAdBuCkEt {
 	LONG threadbuffersize;      /* Number of words in threadbuffer */
 	LONG ddterms;               /* Number of primary+secondary terms represented */
 	LONG firstterm;				/* The number of the first term in the bucket */
+	LONG firstbracket;          /* When doing complete brackets */
+	LONG lastbracket;           /* When doing complete brackets */
 	pthread_mutex_t lock;       /* For the load balancing phase */
 	int  free;                  /* Status of the bucket */
 	int  totnum;                /* Total number of primary terms */
 	int  usenum;                /* Which is the term being used at the moment */
 	int  busy;                  /*  */
+	int  type;                  /* Doing brackets? */
 } THREADBUCKET;
 
 #endif
@@ -1829,6 +1833,7 @@ struct N_const {
 	WORD	*poly2a;
 #ifdef WITHPTHREADS
 	THREADBUCKET *threadbuck;
+	EXPRESSIONS expr;
 #endif
 	UWORD	*SHcombi;
 	POLYMOD polymod1;              /* For use in PolyModGCD and calling routines */
@@ -1845,6 +1850,7 @@ struct N_const {
 	LONG	ninterms;              /* () Used in proces.c and sort.c */
 #ifdef WITHPTHREADS
 	LONG	inputnumber;           /* () For use in redefine */
+	LONG	lastinindex;
 #endif
 #ifdef WHICHSUBEXPRESSION
 	LONG	last2;                 /* () Used in proces.c */
@@ -1909,7 +1915,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 /**

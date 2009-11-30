@@ -285,6 +285,7 @@ VOID PutBracketInIndex(WORD *term, POSITION *newpos)
 		else if ( b->bracketbuffer[bi->bracket] == 4 ) i = 1;
 		else i = Compare(BHEAD term,b->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) {	/* still the same bracket */
+			bi->termsinbracket++;
 			goto bracketdone;
 		}
 		if ( i > 0 ) { /* We have a problem */
@@ -389,11 +390,13 @@ problems:;
 					PUTZERO(b1->start);
 					PUTZERO(b1->next);
 					b1->bracket = 0;
+					b1->termsinbracket = 0;
 				}
 				if ( b3 <= b2 ) {
 					PUTZERO(b2->start);
 					PUTZERO(b2->next);
 					b2->bracket = 0;
+					b2->termsinbracket = 0;
 				}
 			}
 			else {
@@ -401,15 +404,18 @@ problems:;
 				b1->bracket = t2 - b->bracketbuffer;
 				i = *t1; NCOPY(t2,t1,i)
 				b1->next = b2->next;
+				b1->termsinbracket += b2->termsinbracket;
 				*b3++ = *b1;
 				if ( b3 <= b1 ) {
 					PUTZERO(b1->start);
 					PUTZERO(b1->next);
 					b1->bracket = 0;
+					b1->termsinbracket = 0;
 				}
 				PUTZERO(b2->start);
 				PUTZERO(b2->next);
 				b2->bracket = 0;
+				b2->termsinbracket = 0;
 			}
 			b1 += 2; b2 += 2;
 		}
@@ -422,6 +428,7 @@ problems:;
 				PUTZERO(b1->start);
 				PUTZERO(b1->next);
 				b1->bracket = 0;
+				b1->termsinbracket = 0;
 			}
 			b1++;
 		}
@@ -433,6 +440,7 @@ problems:;
 	bi->bracket = b->bracketfill;
 	bi->start = thepos;
 	bi->next = thepos;
+	bi->termsinbracket = 1;
 /*
 	Copy the bracket into the buffer
 */
@@ -487,7 +495,7 @@ VOID OpenBracketIndex(WORD nexpr)
 }
 
 /*
-  	#] OpenBracketIndex : 
+  	#] OpenBracketIndex :
 */
 
 /*

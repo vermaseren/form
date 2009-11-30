@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Normalize :
  		#[ Commute :
 
@@ -42,7 +42,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute :
+ 		#] Commute : 
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -89,7 +89,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations :
+  	#] Declarations : 
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -114,7 +114,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup :
+  	#] Setup : 
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -2012,7 +2012,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators :
+  	#] Easy denominators : 
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -2246,7 +2246,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions :
+  	#] Index Contractions : 
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2397,7 +2397,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions :
+  	#] NonCommuting Functions : 
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2574,7 +2574,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions :
+  	#] Commuting Functions : 
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2662,7 +2662,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors :
+  	#] LeviCivita tensors : 
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2693,7 +2693,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta :
+  	#] Delta : 
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2715,7 +2715,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices :
+  	#] Loose Vectors/Indices : 
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2744,7 +2744,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors :
+  	#] Vectors : 
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2814,7 +2814,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts :
+  	#] Dotproducts : 
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2866,7 +2866,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols :
+  	#] Symbols : 
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -3110,7 +3110,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements :
+ 		#] normalize replacements : 
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -3205,7 +3205,7 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish :
+  	#] Errors and Finish : 
 */
 }
 
@@ -3272,7 +3272,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 }
 
 /*
- 		#] ExtraSymbol :
+ 		#] ExtraSymbol : 
  		#[ DoTheta :
 */
 
@@ -3369,7 +3369,7 @@ WORD DoTheta(WORD *t)
 }
 
 /*
- 		#] DoTheta :
+ 		#] DoTheta : 
  		#[ DoDelta :
 */
 
@@ -3436,7 +3436,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta :
+ 		#] DoDelta : 
  		#[ DoRevert :
 */
 
@@ -3511,7 +3511,7 @@ void DoRevert(WORD *fun, WORD *tmp)
 }
 
 /*
- 		#] DoRevert :
+ 		#] DoRevert : 
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3574,7 +3574,7 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu :
+  	#] DetCommu : 
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3895,7 +3895,7 @@ FromGCD:
 }
 
 /*
-  	#] EvaluateGcd :
+  	#] EvaluateGcd : 
   	#[ DropCoefficient :
 */
 
@@ -3912,5 +3912,5 @@ void DropCoefficient(PHEAD WORD *term)
 }
 
 /*
-  	#] DropCoefficient :
+  	#] DropCoefficient : 
 */
