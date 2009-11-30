@@ -2179,6 +2179,11 @@ NoMnot:
 			if ( notflag ) {
 				switch ( type ) {
 					case SYMTOSYM:
+						if ( Sets[j].type == CNUMBER ) {}
+						else {
+							if ( *w == newnumber ) goto NoMatch;
+						}
+						break;
 					case SYMTONUM:
 					case INDTOIND:
 						if ( *w == newnumber ) goto NoMatch;
