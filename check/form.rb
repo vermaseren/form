@@ -11,11 +11,23 @@ end
 FORM = "form"
 TFORM = "tform"
 
+# maximal running time in seconds of FORM jobs before they get terminated
+TIMEOUT = 10
+
 # names of temporary files
 TMPFILES_BASENAME = "form_rb_exam"
 TESTPRG_NAME = TMPFILES_BASENAME+".frm"
 LOGFILE_NAME = TMPFILES_BASENAME+".log"
-STRACETMP_NAME = TMPFILES_BASENAME+"_strace.tmp"
+STRACETMP_NAME = TMPFILES_BASENAME+"_strace"
+
+def cleanup_pidfiles
+	Dir.glob(STRACETMP_NAME+".*") { |fn| File.delete(fn) }
+end
+def cleanup_tempfiles
+	File.delete(TESTPRG_NAME) if File.exist?(TESTPRG_NAME)
+	File.delete(LOGFILE_NAME) if File.exist?(LOGFILE_NAME)
+	cleanup_pidfiles
+end
 
 # determine OS we are running on
 osname = Config::CONFIG["target_os"]
@@ -31,6 +43,7 @@ class FormTest < Test::Unit::TestCase
 		@input_file = ""
 		@extra_parameter = ""
 		@interactive = false
+		cleanup_pidfiles
 	end
 
 	# Functions to specify test-run input and environment
@@ -53,30 +66,47 @@ class FormTest < Test::Unit::TestCase
 		remove_files
 	end
 	def remove_files
-		if passed?
-			File.delete(STRACETMP_NAME) if File.exist?(STRACETMP_NAME)
-			File.delete(TESTPRG_NAME) if File.exist?(TESTPRG_NAME)
-			File.delete(LOGFILE_NAME) if File.exist?(LOGFILE_NAME)
-		end
+		cleanup_tempfiles if passed?
 	end
 
 	# To run a (T)FORM job
-	def execute(executable)
-		cmdline = "strace -o "+STRACETMP_NAME+" "+executable+" "+@extra_parameter+" "+@input_file
-		@inputstream, @outputstream, @errorstream = Open3.popen3(cmdline)
-		@stdout = @outputstream.readlines.join
-		@stderr = @errorstream.readlines.join
-		if !@interactive
+	def execute(executable, timeout=TIMEOUT)
+		cmdline = "strace -ff -o "+STRACETMP_NAME+" "+executable+" "+@extra_parameter+" "+@input_file
+		@stdout = []; @stderr = []
+		begin
+			runner = Thread.current
+			killer = Thread.new(timeout) { |timeout| sleep timeout; runner.raise }
+			@inputstream, @outputstream, @errorstream = Open3.popen3(cmdline)
+			out = Thread.new { while (( line = @outputstream.gets )) do @stdout << line end }
+			err = Thread.new { while (( line = @errorstream.gets )) do @stderr << line end }
+			out.join
+			err.join
+			killer.kill
+		rescue
+			@unfinished = true
+		else
+			@unfinished = false
+		ensure
 			@inputstream.close
 			@outputstream.close
 			@errorstream.close
-			evaluate
+			@stdout = @stdout.join
+			@stderr = @stderr.join
+			tmpfiles = Dir.glob(STRACETMP_NAME+".*")
+			if tmpfiles.size == 0 then raise "Error: could not run executable #{executable}!"
+			elsif tmpfiles.size > 1 then puts "Warning: Cannot terminate or evaluate FORM job!"
+			else pid = File.extname(tmpfiles[0])[1..-1] end
+			if @unfinished
+				puts "Timeout: Terminating FORM job!"
+				system("kill -SIGKILL "+pid)
+			end
 		end
+		evaluate pid
 	end
 
 	# Prepares data for test-result functions
-	def evaluate
-		File.open(STRACETMP_NAME, "r") { |f| @strace_out = f.readlines.join }
+	def evaluate(pid)
+		File.open(STRACETMP_NAME+"."+pid, "r") { |f| @strace_out = f.readlines.join }
 	end
 
 	# Test-result functions 
@@ -110,8 +140,14 @@ class FormTest < Test::Unit::TestCase
 		compile_error || runtime_error || @stderr != ""
 	end
 	def no_error; !error; end
+	def has_not_finished
+		@unfinished
+	end
+	def has_finished
+		!@unfinished
+	end
 	def problem
-		warning || error || crash
+		has_not_finished || warning || error || crash
 	end
 	def no_problem; !problem; end
 
