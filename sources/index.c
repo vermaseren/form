@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -31,14 +31,15 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use : 
+  	#] syntax and use :
   	#[ FindBracket :
 */
 
-POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
+POSITION *FindBracket(WORD nexp, WORD *bracket)
 {
 	GETIDENTITY
 	BRACKETINDEX *bi;
+	EXPRESSIONS e = &(Expressions[nexp]);
 	LONG hi, low, med;
 	int i;
 	WORD oldsorttype = AR.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
@@ -100,7 +101,7 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 	The bracket is now either bi itself or between bi and the next one
 	or it is not present at all.
 */
-	AN.theposition = e->onfile;
+	AN.theposition = AS.OldOnFile[nexp];
 	ADD2POS(AN.theposition,bi->start);
 /*
 	The seek will have to move closer to the actual read so that we
@@ -128,10 +129,10 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 */
 	if ( fi->handle < 0 ) {
 		p = (WORD *)((UBYTE *)(fi->PObuffer)
-			 + BASEPOSITION(e->onfile)
+			 + BASEPOSITION(AS.OldOnFile[nexp])
 			 + BASEPOSITION(bi->start));
 		pstop = (WORD *)((UBYTE *)(fi->PObuffer)
-			 + BASEPOSITION(e->onfile)
+			 + BASEPOSITION(AS.OldOnFile[nexp])
 			 + BASEPOSITION(bi->next));
 		while ( p < pstop ) {
 /*
@@ -167,23 +168,30 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 				if ( i > 0 ) break;	/* passed what was possible */
 			}
 			else {	/* no compression. We have to check! */
-				pp = p;
+				WORD *oldworkpointer = AT.WorkPointer, *t3, *t4;
 				t2 = p + 1; while ( *t2 != HAAKJE ) t2 += t2[1];
-				a[0] = *p; a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];
-				*t2++ = 1; *t2++ = 1; *t2++ = 3;
-				*p = t2-p;
+/*
+				Here we need to copy the term. Modifying has proven to
+				be NOT threadsafe.
+*/
+				t3 = oldworkpointer; t4 = p;
+				while ( t4 < t2 ) *t3++ = *t4++;
+				*t3++ = 1; *t3++ = 1; *t3++ = 3;
+				*oldworkpointer = t3 - oldworkpointer;
+				AT.WorkPointer = t3;
+				t3 = oldworkpointer;
 				if ( *bracket == 4 ) {
-					if ( p[0] == 4 ) i = 0;
+					if ( t3[0] == 4 ) i = 0;
 					else i = -1;
 				}
-				else if ( p[0] == 4 ) i = 1;
+				else if ( t3[0] == 4 ) i = 1;
 				else {
-					i = Compare(BHEAD bracket,p,0);
+					i = Compare(BHEAD bracket,t3,0);
 				}
-				*p = a[0]; t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
+				AT.WorkPointer = oldworkpointer;
 				if ( i == 0 ) {
-					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
-					fi->POfill = pp;
+					SETBASEPOSITION(AN.theposition,(p-fi->PObuffer)*sizeof(WORD));
+					fi->POfill = p;
 					goto found;
 				}
 				if ( i > 0 ) break;	/* passed what was possible */
@@ -194,7 +202,7 @@ POSITION *FindBracket(EXPRESSIONS e, WORD *bracket)
 		return(0);	/* Bracket does not exist */
 	}
 	else {
-		toppos = e->onfile;
+		toppos = AS.OldOnFile[nexp];
 		ADD2POS(toppos,bi->next);
 		cp = AR.CompressPointer;
 		for(;;) {
@@ -240,7 +248,7 @@ found:
 }
 
 /*
-  	#] FindBracket : 
+  	#] FindBracket :
   	#[ PutBracketInIndex :
 
 	Call via
@@ -469,7 +477,7 @@ void ClearBracketIndex(WORD numexp)
 }
 
 /*
-  	#] ClearBracketIndex : 
+  	#] ClearBracketIndex :
   	#[ OpenBracketIndex :
 
 	Note: This routine is thread-safe
@@ -525,5 +533,5 @@ int PutTermInIndex(WORD *term,POSITION *position)
 	return(0);
 }
 
-  	#] PutTermInIndex : 
+  	#] PutTermInIndex :
 */

@@ -195,7 +195,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -412,14 +412,8 @@ typedef struct ExPrEsSiOn {
 	WORD	namesize;
 	WORD	compression;
 	WORD	numdummies;
-/*[20oct2009]:*/
-#ifdef PARALLEL
-   WORD p_Partodo; /* Whether to be done in parallel mode */
-   WORD isRhs; /*1 if occur in rhs, o is not.*/ /*Should be moved to vflags?*/
-#endif
-/*:[20oct2009 mt]*/
-#ifdef WITHPTHREADS
-	WORD	partodo;		/* Whether to be done in parallel mode */
+#ifdef PARALLELCODE
+    WORD    partodo;        /* Whether to be done in parallel mode */
 	PADPOINTER(2,0,11,0);
 #else
 	PADPOINTER(2,0,10,0);
@@ -686,7 +680,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -744,7 +738,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
 
@@ -851,7 +845,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -1146,7 +1140,7 @@ typedef struct {
 } SHvariables;
 
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1175,7 +1169,7 @@ struct M_const {
     UBYTE   *gFortran90Kind;
     POSITION zeropos;              /* (M) is zero */
 #ifdef WITHPTHREADS
-    pthread_mutex_t handlelock;    /* (M) */
+    pthread_rwlock_t handlelock;   /* (M) */
     pthread_mutex_t storefilelock; /* (M) */
     LONG    ThreadScratSize;       /* (M) Size of Fscr[0/2] buffers of the workers */
     LONG    ThreadScratOutSize;    /* (M) Size of Fscr[1] buffers of the workers */
@@ -1296,7 +1290,7 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1352,7 +1346,7 @@ struct P_const {
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1492,6 +1486,8 @@ struct C_const {
     int     bracketindexflag;      /* (C) Are brackets going to be indexed? */
     int     parallelflag;          /* (C) parallel allowed? */
     int     mparallelflag;         /* (C) parallel allowed in this module? */
+    int     inparallelflag;        /* (C) inparallel allowed? */
+    int     partodoflag;           /* (C) parallel allowed? */
     int     properorderflag;       /* (C) clean normalizing. */
     int     vetofilling;           /* (C) vetoes overwriting in tablebase stubs */
     int     tablefilling;          /* (C) to notify AddRHS we are filling a table */
@@ -1503,7 +1499,6 @@ struct C_const {
 #ifdef WITHPTHREADS
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
-    int     numpartodo;
 #endif
     WORD    RepLevel;              /* (C) Tracks nesting of repeat. */
     WORD    arglevel;              /* (C) level of nested argument statements */
@@ -1544,13 +1539,11 @@ struct C_const {
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
 #ifdef PARALLEL
-/*[20oct2009 mt]:*/
-	int     p_Numpartodo;          /* for ParFORM's InParallel */
-/*:[20oct2009 mt]*/
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
+    UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
                                         -1 : do recovery from snapshot, set by command line option;
                                         0 : do nothing; 1 : create snapshots, set by On checkpoint
@@ -1564,7 +1557,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1595,7 +1588,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1661,7 +1654,7 @@ struct R_const {
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1756,7 +1749,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1915,7 +1908,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -1984,7 +1977,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2010,7 +2003,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X : 
+ 		#] X :
  		#[ Definitions :
 */
 
@@ -2062,7 +2055,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
     #] A :
   	#[ FG :
 */
@@ -2099,7 +2092,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

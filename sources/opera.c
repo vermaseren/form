@@ -1833,7 +1833,7 @@ WORD TraceFind(PHEAD WORD *term, WORD *params)
 	type = params[3];
 	spinline = params[4];
 	if ( spinline < 0 ) {	/* $ variable. Evaluate */
-		sp = DolToIndex(-spinline);
+		sp = DolToIndex(BHEAD -spinline);
 		if ( AN.ErrorInDollar || sp < 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("$%s does not have an index value in trace statement in module %l",
@@ -2156,10 +2156,10 @@ WORD TenVecFind(PHEAD WORD *term, WORD *params)
 	thevector = params[4];
 	mode = params[5];
 	if ( thetensor < 0 ) {	/* $-expression */
-		thetensor = DolToTensor(-thetensor);
+		thetensor = DolToTensor(BHEAD -thetensor);
 		if ( thetensor < FUNCTION ) {
 			if ( thevector > 0 ) {
-				thetensor = DolToTensor(thevector);
+				thetensor = DolToTensor(BHEAD thevector);
 				if ( thetensor < FUNCTION ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("$%s should have been a tensor in module %l"
@@ -2167,7 +2167,7 @@ WORD TenVecFind(PHEAD WORD *term, WORD *params)
 					UNLOCK(ErrorMessageLock);
 					return(-1);
 				}
-				thevector = DolToVector(-params[3]);
+				thevector = DolToVector(BHEAD -params[3]);
 				if ( thevector >= 0 ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("$%s should have been a vector in module %l"
@@ -2186,7 +2186,7 @@ WORD TenVecFind(PHEAD WORD *term, WORD *params)
 		}
 	}
 	if ( thevector > 0 ) {	/* $-expression */
-		thevector = DolToVector(thevector);
+		thevector = DolToVector(BHEAD thevector);
 		if ( thevector >= 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("$%s should have been a vector in module %l"

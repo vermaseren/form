@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] include : 
+  	#] include :
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -25,9 +25,9 @@
 	need to insert a different value (C->lhs[level][2]).
 */
 
-WORD execarg(WORD *term, WORD level)
+WORD execarg(PHEAD WORD *term, WORD level)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *r, *m, *v;
 	WORD *start, *stop, *rstop, *r1, *r2 = 0, *r3 = 0, *r4, *r5, *r6, *r7, *r8, *r9;
 	WORD *mm, *mstop, *mnext, *rnext, *rr, *factor, type, ngcd, nq;
@@ -501,7 +501,7 @@ ScaledVariety:;
 						What to do with dummy indices?
 */
 						if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
-							if ( MultDo(r1,AT.mulpat) ) goto execargerr;
+							if ( MultDo(BHEAD r1,AT.mulpat) ) goto execargerr;
 							AT.WorkPointer = r1 + *r1;
 						}
 						if ( Generator(BHEAD r1,level) ) goto execargerr;
@@ -520,7 +520,7 @@ ScaledVariety:;
 					What to do with dummy indices?
 */
 					if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
-						if ( MultDo(m,AT.mulpat) ) goto execargerr;
+						if ( MultDo(BHEAD m,AT.mulpat) ) goto execargerr;
 						AT.WorkPointer = m + *m;
 					}
 					if ( Generator(BHEAD m,level) ) goto execargerr;
@@ -1396,13 +1396,13 @@ execargerr:
 }
 
 /*
-  	#] execarg : 
+  	#] execarg :
   	#[ execterm :
 */
 
-WORD execterm(WORD *term, WORD level)
+WORD execterm(PHEAD WORD *term, WORD level)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	CBUF *C = cbuf+AM.rbufnum;
 	WORD oldnumlhs = AR.Cnumlhs;
 	WORD maxisat = C->lhs[level][2];
@@ -1455,12 +1455,13 @@ exectermerr:
 }
 
 /*
-  	#] execterm : 
+  	#] execterm :
   	#[ ArgumentImplode :
 */
 
 int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 {
+	GETBIDENTITY
 	WORD *liststart, *liststop, *inlist;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
 	int action = 0;
@@ -1564,6 +1565,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 
 int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 {
+	GETBIDENTITY
 	WORD *liststart, *liststop, *inlist, *old;
 	WORD *w, *t, *tend, *tstop, *tt, *ttstop, *ttt, ncount, i;
 	int action = 0;
@@ -1652,7 +1654,7 @@ NoExplode:
 }
 
 /*
-  	#] ArgumentExplode : 
+  	#] ArgumentExplode :
   	#[ DoRepArg :
 
 	Too be filled in.
@@ -1667,6 +1669,6 @@ int DoRepArg(PHEAD WORD *term,int level)
 }
 
 /*
-  	#] DoRepArg : 
+  	#] DoRepArg :
 */
 

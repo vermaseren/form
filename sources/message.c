@@ -22,7 +22,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
 					 'A','B','C','D','E','F'};
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ exit :
  		#[ Error0 :
 */
@@ -34,7 +34,7 @@ VOID Error0(char *s)
 }
 
 /*
- 		#] Error0 : 
+ 		#] Error0 :
  		#[ Error1 :
 */
 
@@ -45,7 +45,7 @@ VOID Error1(char *s, UBYTE *t)
 }
 
 /*
- 		#] Error1 : 
+ 		#] Error1 :
  		#[ Error2 :
 */
 
@@ -56,7 +56,7 @@ VOID Error2(char *s1, char *s2, UBYTE *t)
 }
 
 /*
- 		#] Error2 : 
+ 		#] Error2 :
  		#[ MesWork :
 */
 
@@ -69,7 +69,7 @@ int MesWork()
 }
 
 /*
- 		#] MesWork : 
+ 		#] MesWork :
  		#[ MesPrint :
 
 	Kind of a printf function for simple messages.
@@ -309,7 +309,8 @@ va_dcl
 				else {
 					DOLLARS d = Dollars + AN.listinprint[1];
 #ifdef WITHPTHREADS
-					int nummodopt, dtype = -1;
+					int nummodopt, dtype;
+					dtype = -1;
 					if ( AS.MultiThreaded ) {
 						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 							if ( AN.listinprint[1] == ModOptdollars[nummodopt].number ) break;
@@ -317,7 +318,7 @@ va_dcl
 						if ( nummodopt < NumModOptdollars ) {
 							dtype = ModOptdollars[nummodopt].type;
 							if ( dtype == MODLOCAL ) {
-								d = ModOptdollars[nummodopt].dstruct+identity;
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
 							}
 							else {
 								LOCK(d->pthreadslockread);
@@ -334,7 +335,7 @@ va_dcl
 					AddToLine((UBYTE *)Out);
 					if ( d->type == DOLTERMS || d->type == DOLNUMBER ) {
 						WORD first = 1;
-						term = cbuf[AM.dbufnum].rhs[AN.listinprint[1]];
+						term = d->where;
 						do {
 							if ( AC.LineLength > 256 ) AC.LineLength = 256;
 							AO.IsBracket = 0;
@@ -393,10 +394,10 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 						AO.OutStop = oldStop;
 					}
 					else if ( d->type == DOLUNDEFINED ) {
-						*t++ = '*'; *t++ = '*'; *t++ = '*';
+						*t++ = '*'; *t++ = '*'; *t++ = '*'; *t = 0;
 					}
 					else if ( d->type == DOLZERO ) {
-						*t++ = '0';
+						*t++ = '0'; *t = 0;
 					}
 					else if ( d->type == DOLINDEX ) {
 						tt = indsubterm; *tt = INDEX;
@@ -486,7 +487,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					AN.listinprint += 2;
 				}
 /*
-			#] dollars : 
+			#] dollars :
 */
 			}
 #ifdef WITHPTHREADS
@@ -610,7 +611,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 }
 
 /*
- 		#] MesPrint : 
+ 		#] MesPrint :
  		#[ Warning :
 */
 
@@ -622,7 +623,7 @@ VOID Warning(char *s)
 }
 
 /*
- 		#] Warning : 
+ 		#] Warning :
  		#[ HighWarning :
 */
 
@@ -634,7 +635,7 @@ VOID HighWarning(char *s)
 }
 
 /*
- 		#] HighWarning : 
+ 		#] HighWarning :
  		#[ MesCall :
 */
 
@@ -644,7 +645,7 @@ int MesCall(char *s)
 }
 
 /*
- 		#] MesCall : 
+ 		#] MesCall :
  		#[ MesCerr :
 */
 
@@ -663,7 +664,7 @@ WORD MesCerr(char *s, UBYTE *t)
 }
 
 /*
- 		#] MesCerr : 
+ 		#] MesCerr :
  		#[ MesComp :
 */
 
@@ -677,7 +678,7 @@ WORD MesComp(char *s, UBYTE *p, UBYTE *q)
 }
 
 /*
- 		#] MesComp : 
+ 		#] MesComp :
  		#[ PrintTerm :
 */
 
@@ -763,7 +764,7 @@ VOID PrintSubTerm(WORD *term, char *where)
 }
 
 /*
- 		#] PrintSubTerm : 
+ 		#] PrintSubTerm :
  		#[ PrintWords :
 */
 
@@ -781,6 +782,6 @@ VOID PrintWords(WORD *buffer, LONG number)
 }
 
 /*
- 		#] PrintWords : 
+ 		#] PrintWords :
 	#] exit :
 */

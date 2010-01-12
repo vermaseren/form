@@ -67,7 +67,6 @@
 #endif
 
 /*
-#define ITHREADS
 #define WITHPCOUNTER
 #define DEBUGGINGLOCKS
 #define WITHSTATS
@@ -153,7 +152,7 @@
 
 # ifdef A16BIT
 /*
-   #[ Alphaversion with 16 bits per WORD 
+   #[ Alphaversion with 16 bits per WORD :
 */
    typedef void VOID;
    typedef char SBYTE;
@@ -170,11 +169,11 @@
 #define BITSINSHORT 16
 #define SHORTMASK 0xFFFF
 /*
-   #] Alphaversion with 16 bits per WORD 
+   #] Alphaversion with 16 bits per WORD : 
 */
 # else
 /*
-   #[ Alphaversion with 32 bits per WORD 
+   #[ Alphaversion with 32 bits per WORD :
 */
 
 /*[13apr2004 mt]:*/
@@ -207,7 +206,7 @@
 #define INT64 long
 #undef INT128
 /*
-   #] Alphaversion with 32 bits per WORD 
+   #] Alphaversion with 32 bits per WORD : 
 */
 # endif
 
@@ -283,6 +282,18 @@
 #ifdef mBSD
 #include "unix.h"
 #endif
+ 
+/*
+	PARALLELCODE indicates code that is common for TFORM and parFORM but
+	should not be there for sequential FORM.
+*/
+#ifdef PARALLEL
+#define PARALLELCODE
+#endif
+#ifdef WITHPTHREADS
+#define PARALLELCODE
+#endif
+
 #define ALIGNMENT sizeof(int *)
 #include "ftypes.h"
 #include "fsizes.h"

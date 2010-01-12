@@ -19,7 +19,7 @@ PFDOLLARS *PFDollars;
 /*:[28sep2005 mt]*/
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -118,14 +118,9 @@ WORD CleanExpr(WORD par)
 					e_out->newbracketinfo = e_in->newbracketinfo;
 					e_out->numdummies = e_in->numdummies;
 				}
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 				e_out->partodo = 0;
 #endif
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-				e_out->p_Partodo = 0;
-#endif
-/*:[20oct2009]*/
 				e_out++;
 				j++;
 				break;
@@ -153,7 +148,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -267,7 +262,7 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables : 
+ 		#] PopVariables :
  		#[ MakeGlobal :
 */
 
@@ -327,7 +322,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ TestDrop :
 */
 
@@ -398,7 +393,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop : 
+ 		#] TestDrop :
  		#[ DoExecute :
 */
 
@@ -407,11 +402,10 @@ WORD DoExecute(WORD par, WORD skip)
 	GETIDENTITY
 	WORD RetCode = 0;
 	int i, oldmultithreaded = AS.MultiThreaded;
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 	int j;
 #endif
 #ifdef PARALLEL
-	int j;
 	/*See comments to PF_PotModDollars in parallel.c*/
 	PF_markPotModDollars();	
 #endif
@@ -430,7 +424,9 @@ WORD DoExecute(WORD par, WORD skip)
 				MesPrint("WARNING!: $ use in table - module %l is forced to run in sequential mode.", AC.CModule);
 #endif
 			}
-			else AC.mparallelflag = PARALLELFLAG;
+			else {
+				AC.mparallelflag = PARALLELFLAG;
+			}
 		}
 	}
 	else {
@@ -521,18 +517,32 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 #endif
 #ifdef WITHPTHREADS
-	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
+/*
+		Now check whether we have either the regular parallel flag or the
+		mparallel flag set.
+		Next check whether any of the expressions has partodo set.
+		If any of the above we need to check what the dollar status is.
+*/
+	AC.partodoflag = -1;
+	if ( NumPotModdollars >= 0 ) {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			if ( Expressions[i].partodo ) { AC.partodoflag = 1; break; }
+		}
+	}
+	if ( AC.partodoflag > 0 || ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) ) {
 	  if ( NumPotModdollars > NumModOptdollars ) {
 		AC.mparallelflag = NOPARALLEL_DOLLAR;
 		AS.MultiThreaded = 0;
+		AC.partodoflag = 0;
 	  }
-	  else 
+	  else {
 		for ( i = 0; i < NumPotModdollars; i++ ) {
 		  for ( j = 0; j < NumModOptdollars; j++ ) 
 			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
 		  if ( j >= NumModOptdollars ) {
-			AC.parallelflag = NOPARALLEL_DOLLAR;
+			AC.mparallelflag = NOPARALLEL_DOLLAR;
 			AS.MultiThreaded = 0;
+			AC.partodoflag = 0;
 			break;
 		  }
 		  switch ( ModOptdollars[j].type ) {
@@ -542,11 +552,25 @@ WORD DoExecute(WORD par, WORD skip)
 			case MODLOCAL:
 				break;
 			default:
-				AC.parallelflag = NOPARALLEL_DOLLAR;
+				AC.mparallelflag = NOPARALLEL_DOLLAR;
 				AS.MultiThreaded = 0;
+				AC.partodoflag = 0;
 				break;
 		  }
 		}
+	  }
+	}
+	else if ( ( AC.mparallelflag & NOPARALLEL_USER ) != 0 ) {
+		AS.MultiThreaded = 0;
+		AC.partodoflag = 0;
+	}
+	if ( AC.partodoflag == 0 ) {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			Expressions[i].partodo = 0;
+		}
+	}
+	else if ( AC.partodoflag == -1 ) {
+		AC.partodoflag = 0;
 	}
 #endif
 #ifdef PARALLEL 
@@ -584,30 +608,17 @@ WORD DoExecute(WORD par, WORD skip)
 	if ( AC.NamesFlag || AC.CodesFlag ) WriteLists();
 	if ( par == GLOBALMODULE ) MakeGlobal();
 	if ( RevertScratch() ) return(-1);
-#ifdef WITHPTHREADS
-	AC.numpartodo = 0;
-	if ( AM.totalnumberofthreads >= 3 ) {
+/*[20oct2009 mt]:*/
+#ifdef PARALLEL
+	AC.partodoflag = 0;
+	if ( PF.numtasks >= 3 ) {
 		for ( i = 0; i < NumExpressions; i++ ) {
-			if ( Expressions[i].partodo > 0 ) AC.numpartodo++;
+			if ( Expressions[i].partodo > 0 ) { AC.partodoflag = 1; break; }
 		}
 	}
 	else {
 		for ( i = 0; i < NumExpressions; i++ ) {
 			Expressions[i].partodo = 0;
-		}
-	}
-#endif
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-	AC.p_Numpartodo = 0;
-	if ( PF.numtasks >= 3 ) {
-		for ( i = 0; i < NumExpressions; i++ ) {
-			if ( Expressions[i].p_Partodo > 0 ) AC.p_Numpartodo++;
-		}
-	}
-	else {
-		for ( i = 0; i < NumExpressions; i++ ) {
-			Expressions[i].p_Partodo = 0;
 		}
 	}
 #endif
@@ -734,7 +745,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute : 
+ 		#] DoExecute :
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1039,7 +1050,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket : 
+ 		#] PutBracket :
  		#[ SpecialCleanup :
 */
 
@@ -1051,7 +1062,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup : 
+ 		#] SpecialCleanup :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1127,7 +1138,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions : 
+ 		#] ExchangeExpressions :
  		#[ GetFirstBracket :
 */
 
@@ -1244,7 +1255,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression : 
+ 		#] TermsInExpression :
  		#[ UpdatePositions :
 */
 
@@ -1271,7 +1282,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions : 
+ 		#] UpdatePositions :
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1382,7 +1393,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 : 
+ 		#] CountTerms1 :
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1573,6 +1584,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level)
 	#] Expressions :
 */

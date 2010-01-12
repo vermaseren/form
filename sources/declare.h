@@ -254,25 +254,34 @@ long WinTimer();
 
 #define EXTERNLOCK(x) extern pthread_mutex_t x;
 #define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER
+#define EXTERNRWLOCK(x) extern pthread_rwlock_t x;
+#define INIRWLOCK(x)    pthread_rwlock_t x = PTHREAD_RWLOCK_INITIALIZER;
 #ifdef DEBUGGINGLOCKS
 #include <asm/errno.h>
 #define LOCK(x)       while ( pthread_mutex_trylock(&(x)) == EBUSY ) {}
+#define RWLOCKR(x)      while ( pthread_rwlock_tryrdlock(&(x)) == EBUSY ) {}
+#define RWLOCKW(x)      while ( pthread_rwlock_trywrlock(&(x)) == EBUSY ) {}
 #else
 #define LOCK(x)       pthread_mutex_lock(&(x))
+#define RWLOCKR(x)      pthread_rwlock_rdlock(&(x))
+#define RWLOCKW(x)      pthread_rwlock_wrlock(&(x))
 #endif
 #define UNLOCK(x)     pthread_mutex_unlock(&(x))
+#define UNRWLOCK(x)     pthread_rwlock_unlock(&(x))
+
 #define GETBIDENTITY
-#ifdef ITHREADS
-#define GETIDENTITY   int identity = WhoAmI();
-#else
 #define GETIDENTITY   int identity = WhoAmI(); ALLPRIVATES *B = AB[identity];
-#endif
 #else
 
 #define EXTERNLOCK(x)
 #define INILOCK(x)
 #define LOCK(x) 
 #define UNLOCK(x)
+#define EXTERNRWLOCK(x)
+#define INIRWLOCK(x)
+#define RWLOCKR(x)
+#define RWLOCKW(x)
+#define UNRWLOCK(x)
 #define GETIDENTITY
 #define GETBIDENTITY
 
@@ -313,7 +322,7 @@ extern WORD   AddRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern VOID   AddToLine(UBYTE *);
 extern WORD   AddWild(PHEAD WORD,WORD,WORD);
 extern WORD   BigLong(UWORD *,WORD,UWORD *,WORD);
-extern WORD   BinomGen(WORD *,WORD,WORD **,WORD,WORD,WORD,WORD,WORD,UWORD *,WORD);
+extern WORD   BinomGen(PHEAD WORD *,WORD,WORD **,WORD,WORD,WORD,WORD,WORD,UWORD *,WORD);
 extern VOID   Cconout(WORD);
 extern WORD   CheckWild(PHEAD WORD,WORD,WORD,WORD *);
 extern WORD   Chisholm(PHEAD WORD *,WORD);
@@ -339,13 +348,13 @@ extern WORD   DivLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *,UWORD *,WORD *);
 extern WORD   DivRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern WORD   Divvy(PHEAD UWORD *,WORD *,UWORD *,WORD);
 extern WORD   DoDelta(WORD *);
-extern WORD   DoDelta3(WORD *,WORD);
+extern WORD   DoDelta3(PHEAD WORD *,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
-extern WORD   DoShuffle(WORD *,WORD,WORD,WORD);
+extern WORD   DoShuffle(PHEAD WORD *,WORD,WORD,WORD);
 extern int    Shuffle(PHEAD WORD *, WORD *, WORD *);
 extern int    FinishShuffle(PHEAD WORD *);
-extern WORD   DoStuffle(WORD *,WORD,WORD,WORD);
+extern WORD   DoStuffle(PHEAD WORD *,WORD,WORD,WORD);
 extern int    Stuffle(PHEAD WORD *, WORD *, WORD *);
 extern int    FinishStuffle(PHEAD WORD *);
 extern WORD  *StuffRootAdd(WORD *, WORD *, WORD *);
@@ -359,11 +368,11 @@ extern WORD   TableReset(VOID);
 extern VOID   ReWorkT(WORD *,WORD *,WORD);
 extern WORD   DoIfStatement(WORD *,WORD *);
 extern WORD   DoModule(VOID);
-extern WORD   DoOnePow(WORD *,WORD,WORD,WORD *,WORD *,WORD,WORD *);
+extern WORD   DoOnePow(PHEAD WORD *,WORD,WORD,WORD *,WORD *,WORD,WORD *);
 extern void   DoRevert(WORD *,WORD *);
 extern WORD   DoSumF1(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoSumF2(PHEAD WORD *,WORD *,WORD,WORD);
-extern WORD   DoTheta(WORD *);
+extern WORD   DoTheta(PHEAD WORD *);
 extern LONG   EndSort(WORD *,int);
 extern WORD   EntVar(WORD,UBYTE *,WORD,WORD,WORD);
 extern WORD   EpfCon(PHEAD WORD *,WORD *,WORD,WORD);
@@ -409,7 +418,7 @@ extern RENUMBER GetTable(WORD,POSITION *);
 extern WORD   GetTerm(PHEAD WORD *);
 extern WORD   GetWithEcho(VOID);
 extern WORD   Glue(PHEAD WORD *,WORD *,WORD *,WORD);
-extern WORD   InFunction(WORD *,WORD *);
+extern WORD   InFunction(PHEAD WORD *,WORD *);
 extern WORD   IncLHS(VOID);
 extern WORD   IncRHS(WORD);
 extern VOID   IniGlob(VOID);
@@ -425,11 +434,11 @@ extern WORD   MakeDirty(WORD *,WORD *,WORD);
 extern VOID   MarkDirty(WORD *,WORD);
 extern VOID   PolyFunDirty(PHEAD WORD *);
 extern WORD   MakeModTable(VOID);
-extern WORD   MatchE(WORD *,WORD *,WORD *,WORD);
-extern int    MatchCy(WORD *,WORD *,WORD *,WORD);
-extern int    FunMatchCy(WORD *,WORD *,WORD *,WORD);
-extern int    FunMatchSy(WORD *,WORD *,WORD *,WORD);
-extern int    MatchArgument(WORD *,WORD *);
+extern WORD   MatchE(PHEAD WORD *,WORD *,WORD *,WORD);
+extern int    MatchCy(PHEAD WORD *,WORD *,WORD *,WORD);
+extern int    FunMatchCy(PHEAD WORD *,WORD *,WORD *,WORD);
+extern int    FunMatchSy(PHEAD WORD *,WORD *,WORD *,WORD);
+extern int    MatchArgument(PHEAD WORD *,WORD *);
 extern WORD   MatchFunction(PHEAD WORD *,WORD *,WORD *);
 extern WORD   MergePatches(WORD);
 extern WORD   MesCerr(char *, UBYTE *);
@@ -442,18 +451,18 @@ extern VOID   MoveDummies(PHEAD WORD *,WORD);
 extern WORD   MulLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern WORD   MulRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern WORD   Mully(PHEAD UWORD *,WORD *,UWORD *,WORD);
-extern WORD   MultDo(WORD *,WORD *);
+extern WORD   MultDo(PHEAD WORD *,WORD *);
 extern WORD   NewSort(VOID);
 extern WORD   ExtraSymbol(WORD,WORD,WORD,WORD *,WORD *);
 extern WORD   Normalize(PHEAD WORD *);
 extern VOID   DropCoefficient(PHEAD WORD *);
 extern WORD   OpenTemp(VOID);
 extern VOID   Pack(UWORD *,WORD *,UWORD *,WORD );
-extern LONG   PasteFile(WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD);
+extern LONG   PasteFile(PHEAD WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD);
 extern WORD   Permute(PERM *,WORD);
 extern WORD   PolyFunMul(PHEAD WORD *);
 extern WORD   PopVariables(VOID);
-extern WORD   PrepPoly(WORD *);
+extern WORD   PrepPoly(PHEAD WORD *);
 extern WORD   Processor(VOID);
 extern WORD   Product(UWORD *,WORD *,WORD);
 extern VOID   PrtLong(UWORD *,WORD,UBYTE *);
@@ -478,7 +487,7 @@ extern WORD   ReadSnum(UBYTE **);
 extern WORD   Remain10(UWORD *,WORD *);
 extern WORD   Remain4(UWORD *,WORD *);
 extern WORD   ResetScratch(VOID);
-extern WORD   ResolveSet(WORD *,WORD *,WORD *);
+extern WORD   ResolveSet(PHEAD WORD *,WORD *,WORD *);
 extern WORD   Reverse5(WORD *term,WORD level);
 extern WORD   RevertScratch(VOID);
 extern WORD   ScanFunctions(PHEAD WORD *,WORD *,WORD);
@@ -506,7 +515,7 @@ extern VOID   Substitute(PHEAD WORD *,WORD *,WORD);
 extern WORD   SymFind(PHEAD WORD *,WORD *);
 extern WORD   SymGen(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   Symmetrize(PHEAD WORD *,WORD *,WORD,WORD,WORD);
-extern int    FullSymmetrize(WORD *,int);
+extern int    FullSymmetrize(PHEAD WORD *,int);
 extern WORD   TakeModulus(UWORD *,WORD *,WORD *,WORD,WORD);
 extern VOID   TalToLine(UWORD);
 extern WORD   TenVec(PHEAD WORD *,WORD *,WORD,WORD);
@@ -533,7 +542,7 @@ extern WORD   TraceNgen(PHEAD TRACES *,WORD);
 extern WORD   TraceNno(WORD,WORD *,TRACES *);
 extern WORD   Traces(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   Trick(WORD *,TRACES *);
-extern WORD   TryDo(WORD *,WORD *,WORD);
+extern WORD   TryDo(PHEAD WORD *,WORD *,WORD);
 extern VOID   UnDefine(WORD);
 extern VOID   UnPack(UWORD *,WORD,WORD *,WORD *);
 extern WORD   Unique(UBYTE *,UBYTE *,WORD);
@@ -551,8 +560,8 @@ extern VOID   WriteSetup(VOID);
 extern VOID   WriteStats(POSITION *,WORD);
 extern WORD   WriteSubTerm(WORD *,WORD);
 extern WORD   WriteTerm(WORD *,WORD *,WORD,WORD,WORD);
-extern WORD   execarg(WORD *,WORD);
-extern WORD   execterm(WORD *,WORD);
+extern WORD   execarg(PHEAD WORD *,WORD);
+extern WORD   execterm(PHEAD WORD *,WORD);
 extern WORD   execnorm(WORD *,WORD);
 extern VOID   SpecialCleanup(PHEAD0);
 
@@ -904,6 +913,7 @@ extern int    CoNoDrop(UBYTE *);
 extern int    CoNoSkip(UBYTE *);
 extern int    CoNormalize(UBYTE *);
 extern int    CoMakeInteger(UBYTE *);
+extern int    CoFlags(UBYTE *,int);
 extern int    CoOff(UBYTE *);
 extern int    CoOn(UBYTE *);
 extern int    CoOnce(UBYTE *);
@@ -1000,13 +1010,13 @@ extern int    InsTree(int);
 extern void   RedoTree(CBUF *,int);
 extern void   ClearTree(int);
 extern int    CatchDollar(int);
-extern int    AssignDollar(WORD *,WORD);
+extern int    AssignDollar(PHEAD WORD *,WORD);
 extern UBYTE *WriteDollarToBuffer(WORD,WORD);
 extern void   AddToDollarBuffer(UBYTE *);
 extern void   TermAssign(WORD *);
-extern void   WildDollars(VOID);
+extern void   WildDollars(PHEAD0);
 extern LONG   numcommute(WORD *,LONG *);
-extern int    FullRenumber(WORD *,WORD);
+extern int    FullRenumber(PHEAD WORD *,WORD);
 extern int    Lus(WORD *,WORD,WORD,WORD,WORD,WORD);
 extern int    FindLus(int,int,int);
 extern int    CoReplaceInArg(UBYTE *);
@@ -1017,12 +1027,12 @@ extern int    CoFunPowers(UBYTE *);
 extern int    SortTheList(int *,int);
 extern int    MatchIsPossible(WORD *,WORD *);
 extern void   StudyPattern(WORD *);
-extern WORD   DolToTensor(WORD);
-extern WORD   DolToFunction(WORD);
-extern WORD   DolToVector(WORD);
-extern WORD   DolToNumber(WORD);
-extern WORD   DolToSymbol(WORD);
-extern WORD   DolToIndex(WORD);
+extern WORD   DolToTensor(PHEAD WORD);
+extern WORD   DolToFunction(PHEAD WORD);
+extern WORD   DolToVector(PHEAD WORD);
+extern WORD   DolToNumber(PHEAD WORD);
+extern WORD   DolToSymbol(PHEAD WORD);
+extern WORD   DolToIndex(PHEAD WORD);
 extern int    CoPrintTable(UBYTE *);
 extern int    CoDeallocateTable(UBYTE *);
  
@@ -1057,8 +1067,8 @@ extern void   CleanUpSort(int);
 extern FILEHANDLE *AllocFileHandle(VOID);
 extern VOID   DeAllocFileHandle(FILEHANDLE *);
 extern VOID   LowerSortLevel(VOID);
-extern int    InsideDollar(WORD *,WORD);
-extern DOLLARS DolToTerms(WORD);
+extern int    InsideDollar(PHEAD WORD *,WORD);
+extern DOLLARS DolToTerms(PHEAD WORD);
 extern int    SetExprCases(int,int,int);
 extern int    TestSelect(WORD *,WORD *);
 extern int    MakeSetupAllocs(VOID);
@@ -1103,7 +1113,7 @@ extern int    DoPolynoNorm(int,WORD,WORD,WORD);
 /*
 int IsProductOf(WORD *,WORD *);
 */
-extern POSITION *FindBracket(EXPRESSIONS,WORD *);
+extern POSITION *FindBracket(WORD,WORD *);
 extern VOID   PutBracketInIndex(WORD *,POSITION *);
 extern void   ClearBracketIndex(WORD);
 extern VOID   OpenBracketIndex(WORD);
@@ -1119,8 +1129,8 @@ extern int    DoinParallel(UBYTE *);
 extern int    DonotinParallel(UBYTE *);
 
 extern int    FlipTable(FUNCTIONS,int);
-extern int    ChainIn(WORD *,WORD);
-extern int    ChainOut(WORD *,WORD);
+extern int    ChainIn(PHEAD WORD *,WORD);
+extern int    ChainOut(PHEAD WORD *,WORD);
 extern int    PolyNorm(PHEAD WORD *,WORD,WORD,WORD);
 extern int    ArgumentImplode(PHEAD WORD *,WORD *);
 extern int    ArgumentExplode(PHEAD WORD *,WORD *);
@@ -1237,6 +1247,7 @@ extern int    LoadReadjusted(VOID);
 extern int    IniSortBlocks(int);
 extern int    TreatIndexEntry(PHEAD LONG);
 extern WORD   GetTerm2(PHEAD WORD *);
+extern void	SetHideFiles(VOID);
 
 #endif
 
@@ -1281,7 +1292,7 @@ typedef LONG (*WRITEFILE)(int,UBYTE *,LONG);
 typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
 typedef WORD (*GETTERM)(PHEAD WORD *);
 typedef WORD (*FINISHUFFLE)(PHEAD WORD *);
-typedef WORD (*DO_UFFLE)(WORD *,WORD,WORD,WORD);
+typedef WORD (*DO_UFFLE)(PHEAD WORD *,WORD,WORD,WORD);
 
 #define Compare ((COMPARE)AR.CompareRoutine)
 #define FiniShuffle ((FINISHUFFLE)AN.SHvar.finishuf)

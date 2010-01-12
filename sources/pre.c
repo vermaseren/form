@@ -630,7 +630,7 @@ VOID IniModule(int type)
 	PF.mkSlaveInfile=0;
 	PF.slavebuf.PObuffer=NULL;
 	for(i=0; i<NumExpressions; i++)
-		Expressions[i].isRhs=0;
+		Expressions[i].vflags &= ~ISINRHS;
 /*:[20oct2009 mt]*/
 #endif
 /*:[06nov2003 mt]*/
@@ -679,20 +679,15 @@ VOID IniModule(int type)
 	AR.PolyFun = AC.lPolyFun;
 	AR.PolyFunType = AC.lPolyFunType;
 	AC.mparallelflag = AC.parallelflag;
+	AC.inparallelflag = 0;
 	NumPotModdollars = 0;
 #ifdef WITHPTHREADS
 	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	else AS.MultiThreaded = 0;
-	AC.numpartodo = 0;
 	for ( i = 1; i < AM.totalnumberofthreads; i++ ) {
 		AB[i]->T.S0->PolyWise = 0;
 	}
 #endif
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-	AC.p_Numpartodo = 0;
-#endif
-/*:[20oct2009 mt]*/
 	OpenTemp();
 }
 
@@ -1233,19 +1228,23 @@ int LoadStatement(int type)
 blank:			if ( newstatement < 0 ) newstatement = 0;
 				if ( AP.eat && ( newstatement == 0 ) ) continue;
 				c = ',';
-				AP.eat = -1;
+				AP.eat = -2;
 				if ( newstatement > 0 ) newstatement = -1;
 			}
 			else if ( chartype[c] <= 3 ) {
 				AP.eat = 0;
 				if ( newstatement < 0 ) newstatement = 0;
 			}
-			else if ( ( c == ',' ) && ( newstatement > 0 ) ) {
-				newstatement = -1;
-				AP.eat = -1;
+			else if ( c == ',' ) {
+				if ( newstatement > 0 ) {
+					newstatement = -1;
+					AP.eat = -2;
+				}
+				else if ( AP.eat == -2 ) { s--; }
+				else { goto doall; }
 			}
 			else {
-				if ( AP.eat < 0 ) {
+doall:;			if ( AP.eat < 0 ) {
 					if ( newstatement == 0 ) s--;
 					else { newstatement = 0; }
 				}
@@ -3474,7 +3473,7 @@ int DoPreNormPoly(UBYTE *s)
 			num1 = AddDollar(s1,0,0,0);
 		}
 		else {
-			num2 = DolToSymbol(num2);
+			num2 = DolToSymbol(BHEAD num2);
 			if ( num2 == 0 ) {
 				MesPrint("@$%s is not a symbol",s1);
 				if ( !error ) error = 1;

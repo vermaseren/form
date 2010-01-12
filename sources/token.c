@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Compiler :
  		#[ tokenize :
 
@@ -103,9 +103,7 @@ dovariable:		c = *in; *in = 0;
 #ifdef PARALLEL
 										else/*RHSide*/
 											AC.NumberOfRhsExprInModule++;
-/*[20oct2009 mt]:*/
-											Expressions[number].isRhs=1;
-/*:[20oct2009 mt]*/
+											Expressions[number].vflags |= ISINRHS;
 #endif
 /*:[06nov2003 mt]*/
 										if ( AC.exprfillwarning == 0 ) {
@@ -565,7 +563,7 @@ writenumber:
 }
 
 /*
- 		#] WriteTokens : 
+ 		#] WriteTokens :
  		#[ simp1token :
 
 		Routine substitutes set elements if possible.
@@ -644,7 +642,7 @@ if ( n < 0 ) {
 }
 
 /*
- 		#] simp1token : 
+ 		#] simp1token :
  		#[ simpwtoken :
 
 		Only to be called in the LHS.
@@ -804,7 +802,7 @@ firsterr:		if ( first ) {
 }
 
 /*
- 		#] simpwtoken : 
+ 		#] simpwtoken :
  		#[ simp2token :
 
 		Deals with function arguments.
@@ -1218,7 +1216,7 @@ doublepower:
 }
 
 /*
- 		#] simp3atoken : 
+ 		#] simp3atoken :
  		#[ simp3btoken :
 */
 
@@ -1591,7 +1589,7 @@ doublepower:;
 }
 
 /*
- 		#] simp3btoken : 
+ 		#] simp3btoken :
  		#[ simp4token :
 
 		Deal with the set[n] objects in the RHS.
@@ -1747,7 +1745,7 @@ int simp4token(SBYTE *s)
 }
 
 /*
- 		#] simp4token : 
+ 		#] simp4token :
  		#[ simp5token :
 
 	Making sure that first argument of sumfunction is not a wildcard already
@@ -1793,7 +1791,7 @@ int simp5token(SBYTE *s, int mode)
 }
 
 /*
- 		#] simp5token : 
+ 		#] simp5token :
  		#[ simp6token :
 
 int simp6token(SBYTE *s, int mode)
@@ -1806,7 +1804,7 @@ int simp6token(SBYTE *s, int mode)
 	return(error);
 }
 
- 		#] simp6token : 
+ 		#] simp6token :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

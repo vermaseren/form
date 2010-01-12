@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ Commute :
 
@@ -42,7 +42,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -89,7 +89,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations : 
+  	#] Declarations :
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -114,7 +114,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup : 
+  	#] Setup :
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -226,7 +226,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -2012,7 +2012,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators : 
+  	#] Easy denominators :
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -2246,7 +2246,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions : 
+  	#] Index Contractions :
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2287,10 +2287,10 @@ HaveCon:
 				&& ( l = functions[*t-FUNCTION].symmetric ) > 0 ) ) {
 					if ( *t >= (FUNCTION+WILDOFFSET) ) {
 						*t -= WILDOFFSET;
-						j = FullSymmetrize(t,l);
+						j = FullSymmetrize(BHEAD t,l);
 						*t += WILDOFFSET;
 					}
-					else j = FullSymmetrize(t,l);
+					else j = FullSymmetrize(BHEAD t,l);
 					if ( (l & ~REVERSEORDER) == ANTISYMMETRIC ) {
 						if ( ( j & 2 ) != 0 ) goto NormZero;
 						if ( ( j & 1 ) != 0 ) ncoef = -ncoef;
@@ -2397,7 +2397,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions : 
+  	#] NonCommuting Functions :
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2435,10 +2435,10 @@ onegammamatrix:
 				&& ( l = functions[*t-FUNCTION].symmetric ) > 0 ) ) {
 					if ( *t >= (FUNCTION+WILDOFFSET) ) {
 						*t -= WILDOFFSET;
-						j = FullSymmetrize(t,l);
+						j = FullSymmetrize(BHEAD t,l);
 						*t += WILDOFFSET;
 					}
-					else j = FullSymmetrize(t,l);
+					else j = FullSymmetrize(BHEAD t,l);
 					if ( (l & ~REVERSEORDER) == ANTISYMMETRIC ) {
 						if ( ( j & 2 ) != 0 ) goto NormZero;
 						if ( ( j & 1 ) != 0 ) ncoef = -ncoef;
@@ -2524,7 +2524,7 @@ NextI:;
 		for ( i = 0; i < ncom; i++ ) {
 			t = pcom[i];
 			if ( *t == THETA || *t == THETA2 ) {
-				if ( ( k = DoTheta(t) ) == 0 ) goto NormZero;
+				if ( ( k = DoTheta(BHEAD t) ) == 0 ) goto NormZero;
 				else if ( k < 0 ) {
 					k = t[1];
 					NCOPY(m,t,k);
@@ -2574,7 +2574,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions : 
+  	#] Commuting Functions :
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2662,7 +2662,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors : 
+  	#] LeviCivita tensors :
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2693,7 +2693,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta : 
+  	#] Delta :
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2715,7 +2715,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices : 
+  	#] Loose Vectors/Indices :
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2744,7 +2744,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors : 
+  	#] Vectors :
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2814,7 +2814,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts : 
+  	#] Dotproducts :
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2866,7 +2866,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols : 
+  	#] Symbols :
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -3110,7 +3110,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements : 
+ 		#] normalize replacements :
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -3205,7 +3205,7 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 
@@ -3272,13 +3272,13 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 }
 
 /*
- 		#] ExtraSymbol : 
+ 		#] ExtraSymbol :
  		#[ DoTheta :
 */
 
-WORD DoTheta(WORD *t)
+WORD DoTheta(PHEAD WORD *t)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD k, *r1, *r2, *tstop, type;
 	WORD ia, *ta, *tb, *stopa, *stopb;
 	if ( AC.BracketNormalize ) return(-1);
@@ -3369,7 +3369,7 @@ WORD DoTheta(WORD *t)
 }
 
 /*
- 		#] DoTheta : 
+ 		#] DoTheta :
  		#[ DoDelta :
 */
 
@@ -3436,7 +3436,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta : 
+ 		#] DoDelta :
  		#[ DoRevert :
 */
 
@@ -3511,7 +3511,7 @@ void DoRevert(WORD *fun, WORD *tmp)
 }
 
 /*
- 		#] DoRevert : 
+ 		#] DoRevert :
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3560,6 +3560,12 @@ WORD DetCommu(WORD *terms)
 				break;
 			}
 			else if ( *t == DOLLAREXPRESSION ) {
+/*
+				Technically this is not correct. We have to test first
+				whether this is MODLOCAL (in TFORM) and if so, use the
+				local version. Anyway, this should be rare to never
+				occurring because dollars should be replaced.
+*/
 				if ( cbuf[AM.dbufnum].CanCommu[t[2]] ) {
 					num++;
 					if ( num >= MAXNUMBEROFNONCOMTERMS ) return(num);
@@ -3574,7 +3580,7 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu : 
+  	#] DetCommu :
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3596,6 +3602,7 @@ WORD DetCommu(WORD *terms)
 
 WORD *EvaluateGcd(PHEAD WORD *subterm)
 {
+	GETBIDENTITY
 	WORD *oldworkpointer = AT.WorkPointer, *work1, *work2, *work3;
 	WORD *t, *tt, *ttt, *t1, *t2, *t3, *t4, *tstop;
 	WORD ct, nnum;
@@ -3895,12 +3902,13 @@ FromGCD:
 }
 
 /*
-  	#] EvaluateGcd : 
+  	#] EvaluateGcd :
   	#[ DropCoefficient :
 */
 
 void DropCoefficient(PHEAD WORD *term)
 {
+	GETBIDENTITY
 	WORD *t = term + *term;
 	WORD n, na;
 	n = t[-1]; na = ABS(n);
@@ -3912,5 +3920,5 @@ void DropCoefficient(PHEAD WORD *term)
 }
 
 /*
-  	#] DropCoefficient : 
+  	#] DropCoefficient :
 */

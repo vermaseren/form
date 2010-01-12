@@ -9,7 +9,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ If statement :
  		#[ Syntax :
 
@@ -73,7 +73,7 @@
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax : 
+ 		#] Syntax :
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -499,7 +499,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement : 
+ 		#] DoIfStatement :
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -593,7 +593,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 				FindOnly(BHEAD newterm,m) ) ) {
 				Substitute(BHEAD newterm,m,1);
 				if ( numdollars ) {
-					WildDollars();
+					WildDollars(BHEAD0);
 					numdollars = 0;
 				}
 				ClearWild(BHEAD0);
@@ -617,7 +617,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
-							WildDollars();
+							WildDollars(BHEAD0);
 							numdollars = 0;
 						}
 						ClearWild(BHEAD0);
@@ -629,7 +629,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
-							WildDollars();
+							WildDollars(BHEAD0);
 							numdollars = 0;
 						}
 						ClearWild(BHEAD0);
@@ -642,7 +642,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
-							WildDollars();
+							WildDollars(BHEAD0);
 							numdollars = 0;
 						}
 						ClearWild(BHEAD0);
@@ -664,7 +664,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 			if ( FindRest(BHEAD newterm,m) && ( AN.UsedOtherFind || FindOnce(BHEAD newterm,m) ) ) {
 				Substitute(BHEAD newterm,m,1);
 				if ( numdollars ) {
-					WildDollars();
+					WildDollars(BHEAD0);
 					numdollars = 0;
 				}
 				ClearWild(BHEAD0);
@@ -732,7 +732,7 @@ VOID DoubleIfBuffers()
 }
 
 /*
- 		#] DoubleIfBuffers : 
+ 		#] DoubleIfBuffers :
   	#] If statement :
 */
 

@@ -190,7 +190,7 @@ PosNeg:
 			AT.WorkPointer = (WORD *)(coef + 1);
 			j = n2;
 			for ( i = 0; i <= n2; i++ ) {
-				if ( BinomGen(term,level,tstops,x1,x3,n2-n1-i,i,sign&i
+				if ( BinomGen(BHEAD term,level,tstops,x1,x3,n2-n1-i,i,sign&i
 				,coef,ncoef) ) goto RatioCall;
 				if ( i < n2 ) {
 					if ( Product(coef,&ncoef,j) ) goto RatioCall;
@@ -212,7 +212,7 @@ PosNeg:
 			AT.WorkPointer = (WORD *)(coef + 1);
 			j = n2 - n1;
 			for ( i = 0; i <= j; i++ ) {
-				if ( BinomGen(term,level,tstops,x2,x3,n2-n1-i,i,sign&i
+				if ( BinomGen(BHEAD term,level,tstops,x2,x3,n2-n1-i,i,sign&i
 				,coef,ncoef) ) goto RatioCall;
 				if ( i < j ) {
 					if ( Product(coef,&ncoef,n1+i) ) goto RatioCall;
@@ -225,7 +225,7 @@ PosNeg:
 			AT.WorkPointer = (WORD *)(coef + 1);
 			j = n1-1;
 			for ( i = 0; i <= j; i++ ) {
-				if ( BinomGen(term,level,tstops,x1,x3,i-n1,n2-i,sign&(n2-i)
+				if ( BinomGen(BHEAD term,level,tstops,x1,x3,i-n1,n2-i,sign&(n2-i)
 				,coef,ncoef) ) goto RatioCall;
 				if ( i < j ) {
 					if ( Product(coef,&ncoef,n2-i) ) goto RatioCall;
@@ -251,7 +251,7 @@ PosNeg:
 		AT.WorkPointer = (WORD *)(coef + 1);
 		j = n1-1;
 		for ( i = 0; i <= j; i++ ) {
-			if ( BinomGen(term,level,tstops,x1,x3,i-n1,-n2-i,i&1
+			if ( BinomGen(BHEAD term,level,tstops,x1,x3,i-n1,-n2-i,i&1
 			,coef,ncoef) ) goto RatioCall;
 			if ( i < j ) {
 				if ( Product(coef,&ncoef,n2+i) ) goto RatioCall;
@@ -264,7 +264,7 @@ PosNeg:
 		AT.WorkPointer = (WORD *)(coef + 1);
 		j = n2-1;
 		for ( i = 0; i <= j; i++ ) {
-			if ( BinomGen(term,level,tstops,x2,x3,i-n2,-n1-i,n1&1
+			if ( BinomGen(BHEAD term,level,tstops,x2,x3,i-n2,-n1-i,n1&1
 			,coef,ncoef) ) goto RatioCall;
 			if ( i < j ) {
 				if ( Product(coef,&ncoef,n1+i) ) goto RatioCall;
@@ -291,10 +291,10 @@ RatioCall:
 
 */
 
-WORD BinomGen(WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
+WORD BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
               WORD pow1, WORD pow2, WORD sign, UWORD *coef, WORD ncoef)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *r;
 	WORD *termout;
 	WORD k;

@@ -93,12 +93,13 @@ static KEYWORD onoffoptions[] = {
 	,{"nospacesinnumbers",(TFUN)&(AO.NoSpacesInNumbers),1,0}
 	,{"indentspace",    (TFUN)&(AO.IndentSpace),INDENTSPACE,0}
 	/*:[30jan2004 mt]*/
+	,{"flag",			(TFUN)&(AC.debugFlags),	1,	0}
 };
 
 static WORD one = 1;
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ CoCollect :
 
 	Collect,functionname
@@ -162,7 +163,7 @@ syntaxerror:
 }
 
 /*
-  	#] CoCollect : 
+  	#] CoCollect :
   	#[ setonoff :
 */
 
@@ -178,7 +179,7 @@ int setonoff(UBYTE *s, int *flag, int onvalue, int offvalue)
 }
 
 /*
-  	#] setonoff : 
+  	#] setonoff :
   	#[ CoCompress :
 */
 
@@ -227,7 +228,42 @@ int CoCompress(UBYTE *s)
 }
 
 /*
-  	#] CoCompress : 
+  	#] CoCompress :
+  	#[ CoFlags :
+*/
+
+int CoFlags(UBYTE *s,int value)
+{
+	int i, error = 0;
+	if ( *s != ',' ) {
+		MesPrint("&Proper syntax is: On/Off Flag,number[s];");
+		error = 1;
+	}
+	while ( *s == ',' ) {
+		do { s++; } while ( *s == ',' );
+		i = 0;
+		if ( FG.cTable[*s] != 1 ) {
+			MesPrint("&Proper syntax is: On/Off Flag,number[s];");
+			error = 1;
+			break;
+		}
+		while ( FG.cTable[*s] == 1 ) { i = 10*i + *s++ - '0'; }
+		if ( i <= 0 || i > MAXFLAGS ) {
+			MesPrint("&The number of a flag in On/Off Flag should be in the range 0-%d",(int)MAXFLAGS);
+			error = 1;
+			break;
+		}
+		AC.debugFlags[i] = value;
+	}
+	if ( *s ) {
+		MesPrint("&Proper syntax is: On/Off Flag,number[s];");
+		error = 1;
+	}
+	return(error);
+}
+
+/*
+  	#] CoFlags :
   	#[ CoOff :
 */
 
@@ -252,17 +288,21 @@ int CoOff(UBYTE *s)
 			MesPrint("&Unrecognized option in OFF statement: %s",t);
 			*s = c; return(-1);
 		}
-		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
+		else if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
 			AR.gzipCompress = 0;
 		}
-		if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
+		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
 			AC.CheckpointInterval = 0;
 			if ( AC.CheckpointRunBefore ) { free(AC.CheckpointRunBefore); AC.CheckpointRunBefore = NULL; }
 			if ( AC.CheckpointRunAfter ) { free(AC.CheckpointRunAfter); AC.CheckpointRunAfter = NULL; }
 			MesPrint("Checkpoints deactivated.");
 		}
-		if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
+		else if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
 			AS.MultiThreaded = 0;
+		}
+		else if ( StrICont(t,(UBYTE *)"flag") == 0 ) {
+			*s = c;
+			return(CoFlags(s,0));
 		}
 		*s = c;
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
@@ -271,7 +311,7 @@ int CoOff(UBYTE *s)
 }
 
 /*
-  	#] CoOff : 
+  	#] CoOff :
   	#[ CoOn :
 */
 
@@ -478,6 +518,10 @@ int CoOn(UBYTE *s)
 		else if ( StrICont(t,(UBYTE *)"threads") == 0 ) {
 			if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 		}
+		else if ( StrICont(t,(UBYTE *)"flag") == 0 ) {
+			*s = c;
+			return(CoFlags(s,1));
+		}
 		else { *s = c; }
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
 		AR.SortType = AC.SortType;
@@ -485,21 +529,21 @@ int CoOn(UBYTE *s)
 }
 
 /*
-  	#] CoOn : 
+  	#] CoOn :
   	#[ CoInsideFirst :
 */
 
 int CoInsideFirst(UBYTE *s) { return(setonoff(s,&AC.insidefirst,1,0)); }
 
 /*
-  	#] CoInsideFirst : 
+  	#] CoInsideFirst :
   	#[ CoProperCount :
 */
 
 int CoProperCount(UBYTE *s) { return(setonoff(s,&AC.BottomLevel,1,0)); }
 
 /*
-  	#] CoProperCount : 
+  	#] CoProperCount :
   	#[ CoDelete :
 */
 
@@ -519,7 +563,7 @@ int CoDelete(UBYTE *s)
 }
 
 /*
-  	#] CoDelete : 
+  	#] CoDelete :
   	#[ CoFormat :
 */
 
@@ -625,7 +669,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat : 
+  	#] CoFormat :
   	#[ CoKeep :
 */
 
@@ -637,7 +681,7 @@ int CoKeep(UBYTE *s)
 }
 
 /*
-  	#] CoKeep : 
+  	#] CoKeep :
   	#[ CoFixIndex :
 */
 
@@ -671,7 +715,7 @@ proper:		MesPrint("&Proper syntax is: FixIndex,number:value[,number,value];");
 }
 
 /*
-  	#] CoFixIndex : 
+  	#] CoFixIndex :
   	#[ CoMetric :
 */
 
@@ -679,7 +723,7 @@ int CoMetric(UBYTE *s)
 { DUMMYUSE(s); MesPrint("&The metric statement does not do anything yet"); return(1); }
 
 /*
-  	#] CoMetric : 
+  	#] CoMetric :
   	#[ DoPrint :
 */
 
@@ -841,28 +885,28 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint : 
+  	#] DoPrint :
   	#[ CoPrint :
 */
 
 int CoPrint(UBYTE *s) { return(DoPrint(s,PRINTON)); }
 
 /*
-  	#] CoPrint : 
+  	#] CoPrint :
   	#[ CoPrintB :
 */
 
 int CoPrintB(UBYTE *s) { return(DoPrint(s,PRINTCONTENT)); }
 
 /*
-  	#] CoPrintB : 
+  	#] CoPrintB :
   	#[ CoNPrint :
 */
 
 int CoNPrint(UBYTE *s) { return(DoPrint(s,PRINTOFF)); }
 
 /*
-  	#] CoNPrint : 
+  	#] CoNPrint :
   	#[ CoPushHide :
 */
 
@@ -906,7 +950,7 @@ int CoPushHide(UBYTE *s)
 }
 
 /*
-  	#] CoPushHide : 
+  	#] CoPushHide :
   	#[ CoPopHide :
 */
 
@@ -941,7 +985,7 @@ int CoPopHide(UBYTE *s)
 }
 
 /*
-  	#] CoPopHide : 
+  	#] CoPopHide :
   	#[ SetExprCases :
 */
 
@@ -1087,7 +1131,7 @@ int SetExprCases(int par, int setunset, int val)
 }
 
 /*
-  	#] SetExprCases : 
+  	#] SetExprCases :
   	#[ SetExpr :
 */
 
@@ -1131,35 +1175,35 @@ int SetExpr(UBYTE *s, int setunset, int par)
 }
 
 /*
-  	#] SetExpr : 
+  	#] SetExpr :
   	#[ CoDrop :
 */
 
 int CoDrop(UBYTE *s) { return(SetExpr(s,1,DROP)); }
 
 /*
-  	#] CoDrop : 
+  	#] CoDrop :
   	#[ CoNoDrop :
 */
 
 int CoNoDrop(UBYTE *s) { return(SetExpr(s,0,DROP)); }
 
 /*
-  	#] CoNoDrop : 
+  	#] CoNoDrop :
   	#[ CoSkip :
 */
 
 int CoSkip(UBYTE *s) { return(SetExpr(s,1,SKIP)); }
 
 /*
-  	#] CoSkip : 
+  	#] CoSkip :
   	#[ CoNoSkip :
 */
 
 int CoNoSkip(UBYTE *s) { return(SetExpr(s,0,SKIP)); }
 
 /*
-  	#] CoNoSkip : 
+  	#] CoNoSkip :
   	#[ CoHide :
 */
 
@@ -1177,7 +1221,7 @@ int CoHide(UBYTE *inp) {
 }
 
 /*
-  	#] CoHide : 
+  	#] CoHide :
   	#[ CoIntoHide :
 */
 
@@ -1195,28 +1239,28 @@ int CoIntoHide(UBYTE *inp) {
 }
 
 /*
-  	#] CoIntoHide : 
+  	#] CoIntoHide :
   	#[ CoNoHide :
 */
 
 int CoNoHide(UBYTE *inp) { return(SetExpr(inp,0,HIDE)); }
 
 /*
-  	#] CoNoHide : 
+  	#] CoNoHide :
   	#[ CoUnHide :
 */
 
 int CoUnHide(UBYTE *inp) { return(SetExpr(inp,1,UNHIDE)); }
 
 /*
-  	#] CoUnHide : 
+  	#] CoUnHide :
   	#[ CoNoUnHide :
 */
 
 int CoNoUnHide(UBYTE *inp) { return(SetExpr(inp,0,UNHIDE)); }
 
 /*
-  	#] CoNoUnHide : 
+  	#] CoNoUnHide :
   	#[ AddToCom :
 */
 
@@ -1231,7 +1275,7 @@ void AddToCom(int n, WORD *array)
 }
 
 /*
-  	#] AddToCom : 
+  	#] AddToCom :
   	#[ AddComString :
 */
 
@@ -1290,7 +1334,7 @@ int AddComString(int n, WORD *array, UBYTE *thestring, int par)
 }
 
 /*
-  	#] AddComString : 
+  	#] AddComString :
   	#[ Add2ComStrings :
 */
 
@@ -1331,7 +1375,7 @@ int Add2ComStrings(int n, WORD *array, UBYTE *string1, UBYTE *string2)
 }
 
 /*
-  	#] Add2ComStrings : 
+  	#] Add2ComStrings :
   	#[ CoDiscard :
 */
 
@@ -1346,7 +1390,7 @@ int CoDiscard(UBYTE *s)
 }
 
 /*
-  	#] CoDiscard : 
+  	#] CoDiscard :
   	#[ CoContract :
 
 	Syntax:
@@ -1383,7 +1427,7 @@ proper:		MesPrint("&Illegal number in contract statement");
 }
 
 /*
-  	#] CoContract : 
+  	#] CoContract :
   	#[ CoGoTo :
 */
 
@@ -1402,7 +1446,7 @@ int CoGoTo(UBYTE *inp)
 }
 
 /*
-  	#] CoGoTo : 
+  	#] CoGoTo :
   	#[ CoLabel :
 */
 
@@ -1421,7 +1465,7 @@ int CoLabel(UBYTE *inp)
 }
 
 /*
-  	#] CoLabel : 
+  	#] CoLabel :
   	#[ DoArgument :
 
 	Layout:
@@ -1660,14 +1704,14 @@ nofun:					MesPrint("&%s is not a function or a set of functions"
 }
 
 /*
-  	#] DoArgument : 
+  	#] DoArgument :
   	#[ CoArgument :
 */
 
 int CoArgument(UBYTE *s) { return(DoArgument(s,TYPEARG)); }
 
 /*
-  	#] CoArgument : 
+  	#] CoArgument :
   	#[ CoEndArgument :
 */
 
@@ -1694,21 +1738,21 @@ int CoEndArgument(UBYTE *s)
 }
 
 /*
-  	#] CoEndArgument : 
+  	#] CoEndArgument :
   	#[ CoReplaceInArg :
 */
 
 int CoReplaceInArg(UBYTE *s) { return(DoArgument(s,TYPEREPARG)); }
 
 /*
-  	#] CoReplaceInArg : 
+  	#] CoReplaceInArg :
   	#[ CoInside :
 */
 
 int CoInside(UBYTE *s) { return(DoInside(s)); }
 
 /*
-  	#] CoInside : 
+  	#] CoInside :
   	#[ CoEndInside :
 */
 
@@ -1735,49 +1779,49 @@ int CoEndInside(UBYTE *s)
 }
 
 /*
-  	#] CoEndInside : 
+  	#] CoEndInside :
   	#[ CoNormalize :
 */
 
 int CoNormalize(UBYTE *s) { return(DoArgument(s,TYPENORM)); }
 
 /*
-  	#] CoNormalize : 
+  	#] CoNormalize :
   	#[ CoMakeInteger :
 */
 
 int CoMakeInteger(UBYTE *s) { return(DoArgument(s,TYPENORM4)); }
 
 /*
-  	#] CoMakeInteger : 
+  	#] CoMakeInteger :
   	#[ CoSplitArg :
 */
 
 int CoSplitArg(UBYTE *s) { return(DoArgument(s,TYPESPLITARG)); }
 
 /*
-  	#] CoSplitArg : 
+  	#] CoSplitArg :
   	#[ CoSplitFirstArg :
 */
 
 int CoSplitFirstArg(UBYTE *s) { return(DoArgument(s,TYPESPLITFIRSTARG)); }
 
 /*
-  	#] CoSplitFirstArg : 
+  	#] CoSplitFirstArg :
   	#[ CoSplitLastArg :
 */
 
 int CoSplitLastArg(UBYTE *s) { return(DoArgument(s,TYPESPLITLASTARG)); }
 
 /*
-  	#] CoSplitLastArg : 
+  	#] CoSplitLastArg :
   	#[ CoFactArg :
 */
 
 int CoFactArg(UBYTE *s) { return(DoArgument(s,TYPEFACTARG)); }
 
 /*
-  	#] CoFactArg : 
+  	#] CoFactArg :
   	#[ DoSymmetrize :
 
         Syntax:
@@ -1903,35 +1947,35 @@ illarg:		MesPrint("&Illegal argument");
 }
 
 /*
-  	#] DoSymmetrize : 
+  	#] DoSymmetrize :
   	#[ CoSymmetrize :
 */
 
 int CoSymmetrize(UBYTE *s) { return(DoSymmetrize(s,SYMMETRIC)); }
 
 /*
-  	#] CoSymmetrize : 
+  	#] CoSymmetrize :
   	#[ CoAntiSymmetrize :
 */
 
 int CoAntiSymmetrize(UBYTE *s) { return(DoSymmetrize(s,ANTISYMMETRIC)); }
 
 /*
-  	#] CoAntiSymmetrize : 
+  	#] CoAntiSymmetrize :
   	#[ CoCycleSymmetrize :
 */
 
 int CoCycleSymmetrize(UBYTE *s) { return(DoSymmetrize(s,CYCLESYMMETRIC)); }
 
 /*
-  	#] CoCycleSymmetrize : 
+  	#] CoCycleSymmetrize :
   	#[ CoRCycleSymmetrize :
 */
 
 int CoRCycleSymmetrize(UBYTE *s) { return(DoSymmetrize(s,RCYCLESYMMETRIC)); }
 
 /*
-  	#] CoRCycleSymmetrize : 
+  	#] CoRCycleSymmetrize :
   	#[ CoWrite :
 */
 
@@ -1956,7 +2000,7 @@ int CoWrite(UBYTE *s)
 }
 
 /*
-  	#] CoWrite : 
+  	#] CoWrite :
   	#[ CoNWrite :
 */
 
@@ -1981,7 +2025,7 @@ int CoNWrite(UBYTE *s)
 }
 
 /*
-  	#] CoNWrite : 
+  	#] CoNWrite :
   	#[ CoRatio :
 */
 
@@ -2020,7 +2064,7 @@ int CoRatio(UBYTE *s)
 }
 
 /*
-  	#] CoRatio : 
+  	#] CoRatio :
   	#[ CoRedefine :
 
 	We have a preprocessor variable and a (new) value for it.
@@ -2125,7 +2169,7 @@ illargs:;
 }
 
 /*
-  	#] CoRedefine : 
+  	#] CoRedefine :
   	#[ CoRenumber :
 
 	renumber    or renumber,0     Only exchanges (n^2 until no improvement)
@@ -2149,7 +2193,7 @@ int CoRenumber(UBYTE *s)
 }
 
 /*
-  	#] CoRenumber : 
+  	#] CoRenumber :
   	#[ CoSum :
 */
 
@@ -2267,7 +2311,7 @@ int CoSum(UBYTE *s)
 }
 
 /*
-  	#] CoSum : 
+  	#] CoSum :
   	#[ CoToTensor :
 */
 
@@ -2408,7 +2452,7 @@ proper:		MesPrint("&Syntax error in ToTensor statement");
 }
 
 /*
-  	#] CoToTensor : 
+  	#] CoToTensor :
   	#[ CoToVector :
 */
 
@@ -2480,7 +2524,7 @@ proper:		MesPrint("&Arguments of ToVector statement should be a vector and a ten
 }
 
 /*
-  	#] CoToVector : 
+  	#] CoToVector :
   	#[ CoTrace4 :
 */
 
@@ -2567,7 +2611,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoTrace4 : 
+  	#] CoTrace4 :
   	#[ CoTraceN :
 */
 
@@ -2627,7 +2671,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoTraceN : 
+  	#] CoTraceN :
   	#[ CoChisholm :
 */
 
@@ -2707,7 +2751,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoChisholm : 
+  	#] CoChisholm :
   	#[ DoChain :
 
 	Syntax: Chainxx functionname;
@@ -2751,7 +2795,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] DoChain : 
+  	#] DoChain :
   	#[ CoChainin :
 
 	Syntax: Chainin functionname;
@@ -2763,7 +2807,7 @@ int CoChainin(UBYTE *s)
 }
 
 /*
-  	#] CoChainin : 
+  	#] CoChainin :
   	#[ CoChainout :
 
 	Syntax: Chainout functionname;
@@ -2775,7 +2819,7 @@ int CoChainout(UBYTE *s)
 }
 
 /*
-  	#] CoChainout : 
+  	#] CoChainout :
   	#[ CoExit :
 */
 
@@ -2802,7 +2846,7 @@ int CoExit(UBYTE *s)
 }
 
 /*
-  	#] CoExit : 
+  	#] CoExit :
   	#[ CoInParallel :
 */
 
@@ -2812,7 +2856,7 @@ int CoInParallel(UBYTE *s)
 }
 
 /*
-  	#] CoInParallel : 
+  	#] CoInParallel :
   	#[ CoNotInParallel :
 */
 
@@ -2822,7 +2866,7 @@ int CoNotInParallel(UBYTE *s)
 }
 
 /*
-  	#] CoNotInParallel : 
+  	#] CoNotInParallel :
   	#[ DoInParallel :
 
 	InParallel;
@@ -2833,16 +2877,10 @@ int CoNotInParallel(UBYTE *s)
 
 int DoInParallel(UBYTE *s, int par)
 {
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 	EXPRESSIONS e;
 	WORD i;
 #endif
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-	EXPRESSIONS e;
-	WORD i;
-#endif
-/*:[20oct2009 mt]*/
 	WORD number;
 	UBYTE *t, c;
 	int error = 0;
@@ -2850,7 +2888,8 @@ int DoInParallel(UBYTE *s, int par)
 	DUMMYUSE(par);
 #endif
 	if ( *s == 0 ) {
-#ifdef WITHPTHREADS
+		AC.inparallelflag = par;
+#ifdef PARALLELCODE
 		for ( i = NumExpressions-1; i >= 0; i-- ) {
 			e = Expressions+i;
 			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
@@ -2860,18 +2899,6 @@ int DoInParallel(UBYTE *s, int par)
 			}
 		}
 #endif
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-		for ( i = NumExpressions-1; i >= 0; i-- ) {
-			e = Expressions+i;
-			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
-			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
-			) {
-				e->p_Partodo = par;
-			}
-		}
-#endif
-/*:[20oct2009 mt]*/
 	}
 	else {
 		for(;;) {	/* Look for a (comma separated) list of variables */
@@ -2885,7 +2912,7 @@ int DoInParallel(UBYTE *s, int par)
 				}
 				c = *s; *s = 0;
 				if ( GetName(AC.exprnames,t,&number,NOAUTO) == CEXPRESSION ) {
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 					e = Expressions+number;
 					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
 					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
@@ -2893,16 +2920,6 @@ int DoInParallel(UBYTE *s, int par)
 						e->partodo = par;
 					}
 #endif
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-					e = Expressions+number;
-					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
-					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
-					) {
-						e->p_Partodo = par;
-					}
-#endif
-/*:[20oct2009 mt]*/
 				}
 				else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
 					MesPrint("&%s is not an expression",t);
@@ -2923,7 +2940,7 @@ int DoInParallel(UBYTE *s, int par)
 }
 
 /*
-  	#] DoInParallel : 
+  	#] DoInParallel :
   	#[ CoInExpression :
 */
 
@@ -2977,7 +2994,7 @@ int CoInExpression(UBYTE *s)
 }
 
 /*
-  	#] CoInExpression : 
+  	#] CoInExpression :
   	#[ CoEndInExpression :
 */
 
@@ -3004,7 +3021,7 @@ int CoEndInExpression(UBYTE *s)
 }
 
 /*
-  	#] CoEndInExpression : 
+  	#] CoEndInExpression :
   	#[ CoSetExitFlag :
 */
 
@@ -3019,7 +3036,7 @@ int CoSetExitFlag(UBYTE *s)
 }
 
 /*
-  	#] CoSetExitFlag : 
+  	#] CoSetExitFlag :
   	#[ CoTryReplace :
 */
 int CoTryReplace(UBYTE *p)
@@ -3111,7 +3128,7 @@ int CoTryReplace(UBYTE *p)
 }
 
 /*
-  	#] CoTryReplace : 
+  	#] CoTryReplace :
   	#[ CoModulus :
 
 	Old syntax:  Modulus [-] number [:number]
@@ -3182,7 +3199,7 @@ regular:
 		AC.modinverses = 0;
 	}
 	return(Retval);
-/*	#] Old Syntax : */ 
+/*	#] Old Syntax : */
 #else
 	GETIDENTITY
 	int Retval = 0, sign = 1;
@@ -3306,7 +3323,7 @@ badsyntax:
 }
 
 /*
-  	#] CoModulus : 
+  	#] CoModulus :
   	#[ CoRepeat :
 */
 
@@ -3330,7 +3347,7 @@ int CoRepeat(UBYTE *inp)
 }
 
 /*
-  	#] CoRepeat : 
+  	#] CoRepeat :
   	#[ CoEndRepeat :
 */
 
@@ -3365,7 +3382,7 @@ int CoEndRepeat(UBYTE *inp)
 }
 
 /*
-  	#] CoEndRepeat : 
+  	#] CoEndRepeat :
   	#[ DoBrackets :
 
 		Reads in the bracket information.
@@ -3480,7 +3497,7 @@ redo:	AR.BracketOn++;
 }
 
 /*
-  	#] DoBrackets : 
+  	#] DoBrackets :
   	#[ CoBracket :
 */
 
@@ -3488,7 +3505,7 @@ int CoBracket(UBYTE *inp)
 { return(DoBrackets(inp,0)); }
 
 /*
-  	#] CoBracket : 
+  	#] CoBracket :
   	#[ CoAntiBracket :
 */
 
@@ -3496,7 +3513,7 @@ int CoAntiBracket(UBYTE *inp)
 { return(DoBrackets(inp,1)); }
 
 /*
-  	#] CoAntiBracket : 
+  	#] CoAntiBracket :
   	#[ CountComp :
 
 		This routine reads the count statement. The syntax is:
@@ -3688,7 +3705,7 @@ skipfield:			while ( *p && *p != ')' && *p != ',' ) p++;
 }
 
 /*
-  	#] CountComp : 
+  	#] CountComp :
   	#[ CoIf :
 
 		Reads the if statement: There must be a pair of parentheses.
@@ -4119,7 +4136,7 @@ int CoElse(UBYTE *p)
 }
 
 /*
-  	#] CoElse : 
+  	#] CoElse :
   	#[ CoElseIf :
 */
 
@@ -4134,7 +4151,7 @@ int CoElseIf(UBYTE *inp)
 }
 
 /*
-  	#] CoElseIf : 
+  	#] CoElseIf :
   	#[ CoEndIf :
 
 		It puts a RHS-level at the position indicated in the AC.IfStack.
@@ -4192,7 +4209,7 @@ int CoEndIf(UBYTE *inp)
 }
 
 /*
-  	#] CoEndIf : 
+  	#] CoEndIf :
   	#[ CoWhile :
 */
 
@@ -4213,7 +4230,7 @@ int CoWhile(UBYTE *inp)
 }
 
 /*
-  	#] CoWhile : 
+  	#] CoWhile :
   	#[ CoEndWhile :
 */
 
@@ -4233,7 +4250,7 @@ int CoEndWhile(UBYTE *inp)
 }
 
 /*
-  	#] CoEndWhile : 
+  	#] CoEndWhile :
   	#[ DoFindLoop :
 
 	Function,arguments=number,loopsize=number,outfun=function,include=index;
@@ -4355,7 +4372,7 @@ syntax:	MesPrint("&Proper syntax is:");
 }
 
 /*
-  	#] DoFindLoop : 
+  	#] DoFindLoop :
   	#[ CoFindLoop :
 */
 
@@ -4363,7 +4380,7 @@ int CoFindLoop(UBYTE *inp)
 { return(DoFindLoop(inp,FINDLOOP)); }
 
 /*
-  	#] CoFindLoop : 
+  	#] CoFindLoop :
   	#[ CoReplaceLoop :
 */
 
@@ -4371,7 +4388,7 @@ int CoReplaceLoop(UBYTE *inp)
 { return(DoFindLoop(inp,REPLACELOOP)); }
 
 /*
-  	#] CoReplaceLoop : 
+  	#] CoReplaceLoop :
   	#[ CoFunPowers :
 */
 
@@ -4404,7 +4421,7 @@ int CoFunPowers(UBYTE *inp)
 }
 
 /*
-  	#] CoFunPowers : 
+  	#] CoFunPowers :
   	#[ CoUnitTrace :
 */
 
@@ -4435,7 +4452,7 @@ nogood:		MesPrint("&Value of UnitTrace should be a (positive) number or a symbol
 }
 
 /*
-  	#] CoUnitTrace : 
+  	#] CoUnitTrace :
   	#[ CoTerm :
 
 	Note: termstack holds the offset of the term statement in the compiler
@@ -4488,7 +4505,7 @@ int CoTerm(UBYTE *s)
 }
 
 /*
-  	#] CoTerm : 
+  	#] CoTerm :
   	#[ CoEndTerm :
 */
 
@@ -4516,7 +4533,7 @@ int CoEndTerm(UBYTE *s)
 }
 
 /*
-  	#] CoEndTerm : 
+  	#] CoEndTerm :
   	#[ CoSort :
 */
 
@@ -4554,7 +4571,7 @@ int CoSort(UBYTE *s)
 }
 
 /*
-  	#] CoSort : 
+  	#] CoSort :
   	#[ CoPolyFun :
 
 	Collect,functionname
@@ -4591,7 +4608,7 @@ int CoPolyFun(UBYTE *s)
 }
 
 /*
-  	#] CoPolyFun : 
+  	#] CoPolyFun :
   	#[ CoPolyRatFun :
 
 	Collect,functionname
@@ -4628,7 +4645,7 @@ int CoPolyRatFun(UBYTE *s)
 }
 
 /*
-  	#] CoPolyRatFun : 
+  	#] CoPolyRatFun :
   	#[ CoMerge :
 */
 
@@ -4680,7 +4697,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoMerge : 
+  	#] CoMerge :
   	#[ CoStuffle :
 
 	Important for future options: The bit, given by 256 (bit 8) is reserved
@@ -4739,7 +4756,7 @@ tests:	*ss = c;
 }
 
 /*
-  	#] CoStuffle : 
+  	#] CoStuffle :
   	#[ CoSlavePatch :
 */
 
@@ -4757,7 +4774,7 @@ int CoSlavePatch(UBYTE *s)
 }
 
 /*
-  	#] CoSlavePatch : 
+  	#] CoSlavePatch :
   	#[ CoThreadBucket :
 */
 
@@ -4782,7 +4799,7 @@ int CoThreadBucket(UBYTE *s)
 }
 
 /*
-  	#] CoThreadBucket : 
+  	#] CoThreadBucket :
   	#[ CoModulusGCD :
 
 	ModulusGCD,m,x,fun1,fun2;
@@ -4881,7 +4898,7 @@ int CoModulusGCD(UBYTE *s)
 }
 
 /*
-  	#] CoModulusGCD : 
+  	#] CoModulusGCD :
   	#[ CoPolyNorm :
 */
 
@@ -4930,7 +4947,7 @@ nofunc:			MesPrint("&%s is not a CFunction",t);
 }
 
 /*
-  	#] CoPolyNorm : 
+  	#] CoPolyNorm :
   	#[ DoArgPlode :
 
 	Syntax: a list of functions.
@@ -4987,21 +5004,21 @@ int DoArgPlode(UBYTE *s, int par)
 }
 
 /*
-  	#] DoArgPlode : 
+  	#] DoArgPlode :
   	#[ CoArgExplode :
 */
 
 int CoArgExplode(UBYTE *s) { return(DoArgPlode(s,TYPEARGEXPLODE)); }
 
 /*
-  	#] CoArgExplode : 
+  	#] CoArgExplode :
   	#[ CoArgImplode :
 */
 
 int CoArgImplode(UBYTE *s) { return(DoArgPlode(s,TYPEARGIMPLODE)); }
 
 /*
-  	#] CoArgImplode : 
+  	#] CoArgImplode :
   	#[ CoClearTable :
 */
 
@@ -5077,7 +5094,7 @@ nofunc:		MesPrint("&%s is not a sparse table",t);
 }
 
 /*
-  	#] CoClearTable : 
+  	#] CoClearTable :
   	#[ CoDenominators :
 */
 
@@ -5106,7 +5123,7 @@ syntaxerror:
 }
 
 /*
-  	#] CoDenominators : 
+  	#] CoDenominators :
   	#[ CoDropCoefficient :
 */
 
@@ -5120,6 +5137,6 @@ int CoDropCoefficient(UBYTE *s)
 	return(1);
 }
 /*
-  	#] CoDropCoefficient : 
+  	#] CoDropCoefficient :
 */
 /* temporary commentary for forcing cvs merge */

@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -224,6 +224,7 @@ VOID FunLevel(PHEAD WORD *term)
 
 WORD DetCurDum(PHEAD WORD *t)
 {
+	GETBIDENTITY
 	WORD maxval = AN.IndDum;
 	WORD maxtop = AM.IndDum + WILDOFFSET;
 	WORD *tstop, *m, *r, i;
@@ -293,9 +294,9 @@ Singles:
 		arguments inside functions inside functions.
 */
 
-int FullRenumber(WORD *term, WORD par)
+int FullRenumber(PHEAD WORD *term, WORD par)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *d, **p, **f, *w, *t, *best, *stac, *perm, a, *termtry;
 	WORD n, i, j, k, ii;
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -477,6 +478,7 @@ Singles:
 
 void AdjustRenumScratch(PHEAD0)
 {
+	GETBIDENTITY
 	WORD newsize;
 	int i;
 	WORD **newpoin, *newnum;
@@ -509,8 +511,8 @@ void AdjustRenumScratch(PHEAD0)
 }
 
 /*
- 		#] AdjustRenumScratch :
-  	#] Reshuf :
+ 		#] AdjustRenumScratch : 
+  	#] Reshuf : 
   	#[ Count :
  		#[ CountDo :
 
@@ -836,9 +838,9 @@ VectInd:		i = term[1] - 2;
  		#[ MultDo :
 */
 
-WORD MultDo(WORD *term, WORD *pattern)
+WORD MultDo(PHEAD WORD *term, WORD *pattern)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *r, i;
 	t = term + *term;
 	if ( pattern[2] > 0 ) {			/* Left multiply */
@@ -864,9 +866,9 @@ WORD MultDo(WORD *term, WORD *pattern)
  		#[ TryDo :
 */
 
-WORD TryDo(WORD *term, WORD *pattern, WORD level)
+WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *r, *m, i, j;
 	ReNumber(BHEAD term);
 	Normalize(BHEAD term);
@@ -1186,9 +1188,9 @@ WORD EqualArg(WORD *parms, WORD num1, WORD num2)
  		#[ DoDelta3 :
 */
 
-WORD DoDelta3(WORD *term, WORD level)
+WORD DoDelta3(PHEAD WORD *term, WORD level)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *m, *m1, *m2, *stopper, *tstop, *termout, *dels, *taken;
 	WORD *ic, *jc, *factors;
 	WORD num, num2, i, j, k, knum, a;
@@ -1385,9 +1387,9 @@ nextk:;
 	groups (0,1) also cause double terms.
 */
 
-WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
+WORD DoShuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	SHvariables SHback, *SH = &(AN.SHvar);
 	WORD *t1, *t2, *tstop, ncoef, n = fun, *to, *from;
 	int i, error;
@@ -1395,7 +1397,7 @@ WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
 	UWORD *newcombi;
 
 	if ( n < 0 ) {
-		if ( ( n = DolToFunction(-n) ) == 0 ) {
+		if ( ( n = DolToFunction(BHEAD -n) ) == 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("$-variable in merge statement did not evaluate to a function.");
 			UNLOCK(ErrorMessageLock);
@@ -1746,7 +1748,7 @@ int FinishShuffle(PHEAD WORD *fini)
 		if ( Generator(BHEAD out,SH->level) ) goto Finicall;
 	}
 	else {
-		if ( DoShtuffle(out,SH->level,SH->thefunction,SH->option) ) goto Finicall;
+		if ( DoShtuffle(BHEAD out,SH->level,SH->thefunction,SH->option) ) goto Finicall;
 	}
 	AT.WorkPointer = oldworkpointer;
 	return(0);
@@ -1757,7 +1759,7 @@ Finicall:
 }
 
 /*
-  	#] FinishShuffle : 
+  	#] FinishShuffle :
   	#[ DoStuffle :
 
 	Stuffling is a variation of shuffling.
@@ -1774,9 +1776,9 @@ Finicall:
 	need to know n1, n2, minval.
 */
 
-WORD DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
+WORD DoStuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	SHvariables SHback, *SH = &(AN.SHvar);
 	WORD *t1, *t2, *tstop, *t1stop, *t2stop, ncoef, n = fun, *to, *from;
 	WORD *r1, *r2;
@@ -1787,7 +1789,7 @@ WORD DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
 	WORD *rr1, *rr2, i1, i2;
 #endif
 	if ( n < 0 ) {
-		if ( ( n = DolToFunction(-n) ) == 0 ) {
+		if ( ( n = DolToFunction(BHEAD -n) ) == 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("$-variable in merge statement did not evaluate to a function.");
 			UNLOCK(ErrorMessageLock);
@@ -1991,6 +1993,7 @@ retry2:;
 
 int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 {
+	GETBIDENTITY
 	WORD *t, *tf, *next1, *next2, *st1, *st2, *save1, *save2;
 	SHvariables *SH = &(AN.SHvar);
 	int i, retval;
@@ -2117,6 +2120,7 @@ stuffcall:;
 
 int FinishStuffle(PHEAD WORD *fini)
 {
+	GETBIDENTITY
 	SHvariables *SH = &(AN.SHvar);
 #ifdef NEWCODE
 	WORD *next1 = SH->stop1, *next2 = SH->stop2;

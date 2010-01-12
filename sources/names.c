@@ -2089,14 +2089,7 @@ int AddExpression(UBYTE *name, int x, int y)
 	}
 	expr->vflags = 0;
 	expr->numdummies = 0;
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-   expr->p_Partodo=0;
-   expr->isRhs=0;
-#endif
-/*:[20oct2009 mt]*/
-
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 	expr->partodo = 0;
 #endif
 	return(numexpr);

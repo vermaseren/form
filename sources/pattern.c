@@ -280,7 +280,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
 						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
-							WildDollars();
+							WildDollars(BHEAD0);
 							numdollars = 0;
 						}
 						if ( ww < term+term[0] ) ww = term+term[0];
@@ -313,7 +313,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
 						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
-							WildDollars();
+							WildDollars(BHEAD0);
 							numdollars = 0;
 						}
 						if ( ww < term+term[0] ) ww = term+term[0];
@@ -346,7 +346,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
 						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
-							WildDollars();
+							WildDollars(BHEAD0);
 							numdollars = 0;
 						}
 						if ( ww < term+term[0] ) ww = term+term[0];
@@ -430,7 +430,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 					}
 				}
 				if ( numdollars ) {
-					WildDollars();
+					WildDollars(BHEAD0);
 					numdollars = 0;
 				}
 				match = 1;
@@ -448,7 +448,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	if ( power ) {
 		Substitute(BHEAD term,m,power);
 		if ( numdollars ) {
-			WildDollars();
+			WildDollars(BHEAD0);
 			numdollars = 0;
 		}
 		match = 1;
@@ -593,7 +593,7 @@ SubsL2:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 			#[ DOTPRODUCTS :
 */
 		else if ( *m == DOTPRODUCT ) {
@@ -713,7 +713,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -849,7 +849,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] VECTORS :
+			#] VECTORS : 
 			#[ INDICES :
 
 			Currently without wildcards
@@ -901,7 +901,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] INDICES :
+			#] INDICES : 
 			#[ DELTAS :
 */
 		else if ( *m == DELTA ) {
@@ -968,7 +968,7 @@ SubsL6:				nq = WORDDIF(fill,subterm);
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DELTAS :
+			#] DELTAS : 
 */
 EndLoop:;
 	} while ( m < mstop ); }
@@ -998,7 +998,7 @@ SubCoef:
 }
 
 /*
- 		#] Substitute :
+ 		#] Substitute : 
  		#[ FindSpecial :		WORD FindSpecial(term)
 
 	Routine to detect symplifications regarding the special functions
@@ -1029,7 +1029,7 @@ WORD FindSpecial(WORD *term)
 	return(0);
 }
 
- 		#] FindSpecial :
+ 		#] FindSpecial : 
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
@@ -1484,7 +1484,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll :
+ 		#] FindAll : 
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp
@@ -1710,7 +1710,7 @@ dotensor:
 }
 
 /*
- 		#] TestSelect :
+ 		#] TestSelect : 
   	#] Patterns :
 */
 

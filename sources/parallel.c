@@ -2392,7 +2392,7 @@ WORD PF_mkDollarsParallel()
 				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
 				namesize = 1;
 				while(*p++) namesize++;
-				newd = DolToTerms(index);
+				newd = DolToTerms(BHEAD index);
 /*
 					type newd == 0  will not be send to master
 */
@@ -2435,7 +2435,7 @@ WORD PF_mkDollarsParallel()
 			namesize = 1;
 			while ( *p++ ) namesize++;
 
-			newd = DolToTerms(index);
+			newd = DolToTerms(BHEAD index);
 /*
 				if newd=0, this type of dollars will not be send to master
 */
@@ -2749,8 +2749,8 @@ int i;
 FILEHANDLE *curfile;
 
 	for ( i = 0; i < NumExpressions; i++ ) {
-		EXPRESSIONS e=Expressions+i;
-		if(e->isRhs == 0)continue;
+		EXPRESSIONS e = Expressions+i;
+		if ( ( e->vflags & ISINRHS ) == 0 ) continue;
 		switch ( e->status ) {
 			case UNHIDELEXPRESSION:
 			case UNHIDEGEXPRESSION:
@@ -2794,9 +2794,9 @@ int PF_InParallelProcessor(void)
 			partodoexr = (WORD*)Malloc1(sizeof(WORD)*(PF.numtasks+1),"PF_InParallelProcessor");
 			for ( i = 0; i < NumExpressions; i++ ) {
 				e = Expressions+i;
-				if ( e->p_Partodo <= 0 ) continue;
+				if ( e->partodo <= 0 ) continue;
 				if ( e->counter == 0 ) { /* Expression with zero terms */
-					e->p_Partodo = 0;
+					e->partodo = 0;
 					continue;
 				}
 				switch(e->status){
@@ -2820,7 +2820,7 @@ int PF_InParallelProcessor(void)
 						partodoexr[next]=i;
 						break;
 					default:
-						e->p_Partodo = 0;
+						e->partodo = 0;
 						continue;
 				}/*switch(e->status)*/
 			}/*for ( i = 0; i < NumExpressions; i++ )*/
@@ -2839,7 +2839,7 @@ int PF_InParallelProcessor(void)
 		}/*if ( PF.numtasks >= 3 ) */
 		else {
 			for ( i = 0; i < NumExpressions; i++ ) {
-				Expressions[i].p_Partodo = 0;
+				Expressions[i].partodo = 0;
 			}
 		}
 		return(0);

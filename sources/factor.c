@@ -298,7 +298,7 @@ int FactorIn(PHEAD WORD *term, WORD level)
 	if ( d->type == DOLTERMS ) {
 		fromwhere = 1;
 	}
-	else if ( ( d = DolToTerms(t[FUNHEAD+1]) ) == 0 ) {
+	else if ( ( d = DolToTerms(BHEAD t[FUNHEAD+1]) ) == 0 ) {
 /*
 		The variable cannot convert to an expression
 		We replace the function by 1.
@@ -615,7 +615,7 @@ onerror:
 }
 
 /*
-  	#] FactorIn : 
+  	#] FactorIn :
   	#[ FactorInExpr :
 
 	This routine tests for a factor in an active or hidden expression.

@@ -556,7 +556,7 @@ UBYTE * DoModDollar(UBYTE *s, int type)
 			number = GetDollar(name);
 			if ( number < 0 ) {
 				number = AddDollar(s,0,0,0);
-				Warning("&Undefined $-variable in module statemen");
+				Warning("&Undefined $-variable in module statement");
 			}
 			md = (MODOPTDOLLAR *)FromList(&AC.ModOptDolList);
 			md->number = number;
@@ -582,9 +582,10 @@ UBYTE * DoModDollar(UBYTE *s, int type)
 					dlocal->size = dglobal->size;
 					dlocal->where = dglobal->where;
 					if ( dlocal->size > 0 ) {
-						dlocal->where = (WORD *)Malloc1(dlocal->size*sizeof(WORD),"Local dollar value");
+						dlocal->where = (WORD *)Malloc1((dlocal->size+1)*sizeof(WORD),"Local dollar value");
 						for ( i = 0; i < dlocal->size; i++ )
 							dlocal->where[i] = dglobal->where[i];
+						dlocal->where[dlocal->size] = 0;
 					}
 					dlocal->pthreadslockread = dummylock;
 					dlocal->pthreadslockwrite = dummylock;

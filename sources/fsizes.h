@@ -58,6 +58,7 @@
 #define MAXLOOPS 30
 #define MAXLABELS 20
 #define COMMERCIALSIZE 24
+#define MAXFLAGS 16
 /*
 	The next quantities should still be eliminated from the program
 	This should be together with changes in setfile!

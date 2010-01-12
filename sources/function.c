@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Utilities :
  		#[ MakeDirty :
 
@@ -59,7 +59,7 @@ WORD MakeDirty(WORD *term, WORD *x, WORD par)
 }
 
 /*
- 		#] MakeDirty : 
+ 		#] MakeDirty :
  		#[ MarkDirty :
 
 		Routine marks all functions dirty with the given flags.
@@ -102,7 +102,7 @@ void MarkDirty(WORD *term, WORD flags)
 }
 
 /*
- 		#] MarkDirty : 
+ 		#] MarkDirty :
  		#[ PolyFunDirty :
 
 		Routine marks the PolyFun or the PolyRatFun dirty.
@@ -112,6 +112,7 @@ void MarkDirty(WORD *term, WORD flags)
 
 void PolyFunDirty(PHEAD WORD *term)
 {
+	GETBIDENTITY
 	WORD *t, *tstop, *endarg;
 	tstop = term + *term;
 	tstop -= ABS(tstop[-1]);
@@ -135,7 +136,7 @@ void PolyFunDirty(PHEAD WORD *term)
 }
 
 /*
- 		#] PolyFunDirty : 
+ 		#] PolyFunDirty :
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -306,7 +307,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize : 
+ 		#] Symmetrize :
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -402,7 +403,7 @@ WORD CompGroup(PHEAD WORD type, WORD **args, WORD *a1, WORD *a2, WORD num)
 }
 
 /*
- 		#] CompGroup : 
+ 		#] CompGroup :
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -418,9 +419,9 @@ WORD CompGroup(PHEAD WORD type, WORD **args, WORD *a1, WORD *a2, WORD num)
 		bit 2: there was a permutation.
 */
 
-int FullSymmetrize(WORD *fun, int type)
+int FullSymmetrize(PHEAD WORD *fun, int type)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *Lijst, count = 0;
 	WORD *t, *funstop, i;
 	int retval;
@@ -450,7 +451,7 @@ int FullSymmetrize(WORD *fun, int type)
 }
 
 /*
- 		#] FullSymmetrize : 
+ 		#] FullSymmetrize :
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -565,7 +566,7 @@ NextFun:
 }
 
 /*
- 		#] SymGen : 
+ 		#] SymGen :
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -628,7 +629,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind : 
+ 		#] SymFind :
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -636,13 +637,13 @@ NextFun:
 		This one always takes less space.
 */
 
-int ChainIn(WORD *term, WORD funnum)
+int ChainIn(PHEAD WORD *term, WORD funnum)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *tend, *m, *tt, *ts;
 	int action;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
-		funnum = DolToFunction(-funnum);
+		funnum = DolToFunction(BHEAD -funnum);
 		if ( AN.ErrorInDollar || funnum <= 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("Dollar variable does not evaluate to function in ChainIn statement");
@@ -678,22 +679,22 @@ int ChainIn(WORD *term, WORD funnum)
 }
 
 /*
- 		#] ChainIn : 
+ 		#] ChainIn :
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
 */
 
-int ChainOut(WORD *term, WORD funnum)
+int ChainOut(PHEAD WORD *term, WORD funnum)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *tend, *tt, *ts, *w, *ws;
 	int flag = 0, i;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
-		funnum = DolToFunction(-funnum);
+		funnum = DolToFunction(BHEAD -funnum);
 		if ( AN.ErrorInDollar || funnum <= 0 ) {
 			LOCK(ErrorMessageLock);
-			MesPrint("Dollar variable does not evaluate to function in ChainIn statement");
+			MesPrint("Dollar variable does not evaluate to function in ChainOut statement");
 			UNLOCK(ErrorMessageLock);
 			return(-1);
 		}
@@ -738,7 +739,7 @@ int ChainOut(WORD *term, WORD funnum)
 }
 
 /*
- 		#] ChainOut : 
+ 		#] ChainOut :
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -950,7 +951,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA : 
+ 		#] GAMMA :
  		#[ Tensors :
 */
 	}
@@ -1079,7 +1080,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors : 
+ 		#] Tensors :
 */
 	}
 /*
@@ -1627,14 +1628,14 @@ trythis:;
 /*
 						Special function call for (anti)symmetric tensors
 */
-						if ( MatchE(inpat,inter,instart,par) ) goto OnSuccess;
+						if ( MatchE(BHEAD inpat,inter,instart,par) ) goto OnSuccess;
 					}
 					else if ( sym == CYCLESYMMETRIC || sym == RCYCLESYMMETRIC
 					|| psym == CYCLESYMMETRIC || psym == RCYCLESYMMETRIC ) {
 /*
 						Special function call for (r)cyclic tensors
 */
-						if ( MatchCy(inpat,inter,instart,par) ) goto OnSuccess;
+						if ( MatchCy(BHEAD inpat,inter,instart,par) ) goto OnSuccess;
 					}
 					else goto rewild;
 				}
@@ -1654,12 +1655,12 @@ trythis:;
 					) {
 						if ( sym == ANTISYMMETRIC && psym == SYMMETRIC ) goto rewild;
 						if ( sym == SYMMETRIC && psym == ANTISYMMETRIC ) goto rewild;
-						if ( FunMatchSy(inpat,inter,instart,par) ) goto OnSuccess;
+						if ( FunMatchSy(BHEAD inpat,inter,instart,par) ) goto OnSuccess;
 					}
 					else
 						if ( sym == CYCLESYMMETRIC || sym == RCYCLESYMMETRIC
 					|| psym == CYCLESYMMETRIC || psym == RCYCLESYMMETRIC ) {
-						if ( FunMatchCy(inpat,inter,instart,par) ) goto OnSuccess;
+						if ( FunMatchCy(BHEAD inpat,inter,instart,par) ) goto OnSuccess;
 					}
 					else goto rewild;
 				}
@@ -1830,7 +1831,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions : 
+ 		#] ScanFunctions :
 	#] Patterns :
 */
 

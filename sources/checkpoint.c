@@ -59,7 +59,7 @@
 */
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ filenames and system commands :
 */
 
@@ -109,7 +109,7 @@ static char *storefile = 0;
 static int done_snapshot = 0;
 
 /*
-  	#] filenames and system commands : 
+  	#] filenames and system commands :
   	#[ CheckRecoveryFile :
 */
 
@@ -213,7 +213,7 @@ int CheckRecoveryFile()
 }
 
 /*
-  	#] CheckRecoveryFile : 
+  	#] CheckRecoveryFile :
   	#[ DeleteRecoveryFile :
 */
 
@@ -253,7 +253,7 @@ void DeleteRecoveryFile()
 }
 
 /*
-  	#] DeleteRecoveryFile : 
+  	#] DeleteRecoveryFile :
   	#[ RecoveryFilename :
 */
 
@@ -266,7 +266,7 @@ char *RecoveryFilename()
 }
 
 /*
-  	#] RecoveryFilename : 
+  	#] RecoveryFilename :
   	#[ InitRecovery :
 */
 
@@ -314,7 +314,7 @@ void InitRecovery()
 }
 
 /*
-  	#] InitRecovery : 
+  	#] InitRecovery :
   	#[ Debugging :
 */
 
@@ -964,7 +964,6 @@ static void print_C()
 #ifdef WITHPTHREADS
 	printf("%d\n", AC.numpfirstnum);
 	printf("%d\n", AC.sizepfirstnum);
-	printf("%d\n", AC.numpartodo);
 #endif
 	printf("%d\n", AC.RepLevel);
 	printf("%d\n", AC.arglevel);
@@ -1074,7 +1073,7 @@ static void print_R()
 #endif /* ifdef PRINTDEBUG */
 
 /*
-  	#] Debugging : 
+  	#] Debugging :
   	#[ Helper Macros :
 */
 
@@ -2654,7 +2653,7 @@ static int DoSnapshot(int moduletype)
 }
 
 /*
-  	#] DoSnapshot : 
+  	#] DoSnapshot :
   	#[ DoCheckpoint :
 */
 
@@ -2805,5 +2804,5 @@ void DoCheckpoint(int moduletype)
 }
 
 /*
-  	#] DoCheckpoint : 
+  	#] DoCheckpoint :
 */

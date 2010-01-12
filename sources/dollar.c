@@ -14,7 +14,7 @@
 static UBYTE underscore[2] = {'_',0};
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CatchDollar :
 
 	Works out a dollar expression during compile type.
@@ -190,7 +190,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar :
+  	#] CatchDollar : 
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -207,9 +207,9 @@ onerror:
 	and MODMIN cases.
 */
 
-int AssignDollar(WORD *term, WORD level)
+int AssignDollar(PHEAD WORD *term, WORD level)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	CBUF *C = cbuf+AM.rbufnum;
 	int numterms = 0, numdollar = C->lhs[level][2];
 	LONG newsize;
@@ -221,7 +221,7 @@ int AssignDollar(WORD *term, WORD level)
 	int nummodopt, dtype = -1, dw;
 	WORD numvalue;
 	if ( AN.ncmod && ( ( AC.modmode & ALSODOLLARS ) == 0 ) ) AN.ncmod = 0;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 /*
 		Here we come only when the module runs with more than one thread.
 		This must be a variable with a special module option.
@@ -238,7 +238,7 @@ int AssignDollar(WORD *term, WORD level)
 		}
 		dtype = ModOptdollars[nummodopt].type;
 		if ( dtype == MODLOCAL ) {
-			d = ModOptdollars[nummodopt].dstruct+identity;
+			d = ModOptdollars[nummodopt].dstruct+AT.identity;
 		}
 	}
 #endif
@@ -267,7 +267,7 @@ NewValIsZero:;
 					if ( dtype == MODMIN && d->where[dw-1] <= 0 ) goto NoChangeZero;
 					break;
 				default:
-					numvalue = DolToNumber(numdollar);
+					numvalue = DolToNumber(BHEAD numdollar);
 					if ( AN.ErrorInDollar != 0 ) break;
 					if ( dtype == MODMAX && numvalue >= 0 ) goto NoChangeZero;
 					if ( dtype == MODMIN && numvalue <= 0 ) goto NoChangeZero;
@@ -331,7 +331,7 @@ HandleDolZero:;
 						Note that we convert the type for the next time around.
 */
 						WORD extraterm[4];
-						numvalue = DolToNumber(numdollar);
+						numvalue = DolToNumber(BHEAD numdollar);
 						if ( AN.ErrorInDollar != 0 ) break;
 						if ( numvalue == 0 ) {
 							d->type = DOLZERO;
@@ -491,7 +491,7 @@ HandleDolZero1:;
 					goto NoChange;
 				default: {
 					WORD extraterm[4];
-					numvalue = DolToNumber(numdollar);
+					numvalue = DolToNumber(BHEAD numdollar);
 					if ( AN.ErrorInDollar != 0 ) break;
 					if ( numvalue == 0 ) {
 						d->type = DOLZERO;
@@ -574,7 +574,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar :
+  	#] AssignDollar : 
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -660,7 +660,7 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 }
 
 /*
-  	#] WriteDollarToBuffer :
+  	#] WriteDollarToBuffer : 
   	#[ AddToDollarBuffer :
 */
 
@@ -693,8 +693,11 @@ void AddToDollarBuffer(UBYTE *s)
 }
 
 /*
-  	#] AddToDollarBuffer :
+  	#] AddToDollarBuffer : 
   	#[ TermAssign :
+
+	This routine is called from a piece of code in Normalize that has been
+	commented out.
 */
 
 void TermAssign(WORD *term)
@@ -749,19 +752,22 @@ void TermAssign(WORD *term)
 }
 
 /*
-  	#] TermAssign :
+  	#] TermAssign : 
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
 */
 
-void WildDollars()
+void WildDollars(PHEAD0)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d;
 	WORD *m, *t, *w, *ww, *orig = 0;
 	int numdollar;
 	long weneed, i;
+#ifdef WITHPTHREADS
+	int dtype = -1;
+#endif
 	m = AN.WildValue;
 	while ( m < AN.WildStop ) {
 		if ( *m != LOADDOLLAR ) { m += m[1]; continue; }
@@ -777,15 +783,16 @@ void WildDollars()
 		d = Dollars + numdollar;
 #ifdef WITHPTHREADS
 		{
-			int nummodopt, dtype = -1;
-			if ( AS.MultiThreaded ) {
+			int nummodopt;
+			dtype = -1;
+			if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 				for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 					if ( numdollar == ModOptdollars[nummodopt].number ) break;
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
 					if ( dtype == MODLOCAL ) {
-						d = ModOptdollars[nummodopt].dstruct+identity;
+						d = ModOptdollars[nummodopt].dstruct+AT.identity;
 					}
 					else {
 						LOCK(ErrorMessageLock);
@@ -800,6 +807,7 @@ void WildDollars()
 #endif
 /*
 		The value of this wildcard goes into our $-variable
+		First compute the space we need.
 */
 		switch ( *t ) {
 			case SYMTONUM:
@@ -846,9 +854,19 @@ void WildDollars()
 			d->where = (WORD *)Malloc1(weneed*sizeof(WORD),"dollarspace");
 			d->size = weneed;
 		}
-		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
-		cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
-		cbuf[AM.dbufnum].rhs[numdollar] = w = d->where;
+/*
+		It is not clear what the following code does for TFORM
+		if ( dtype != MODLOCAL ) {
+*/
+			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+			cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
+/*			cbuf[AM.dbufnum].rhs[numdollar] = d->where; */
+			cbuf[AM.dbufnum].rhs[numdollar] = (WORD *)(1);
+/*
+		}
+		Now load up the value of the wildcard in compiler buffer format
+*/
+		w = d->where;
 		d->type = DOLTERMS;
 		switch ( *t ) {
 			case SYMTONUM:
@@ -911,21 +929,21 @@ void WildDollars()
   	#[ DolToTensor :    with LOCK
 */
 
-WORD DolToTensor(WORD numdollar)
+WORD DolToTensor(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
 				LOCK(d->pthreadslockread);
@@ -968,25 +986,25 @@ WORD DolToTensor(WORD numdollar)
 }
 
 /*
-  	#] DolToTensor :
+  	#] DolToTensor : 
   	#[ DolToFunction :  with LOCK
 */
 
-WORD DolToFunction(WORD numdollar)
+WORD DolToFunction(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
 				LOCK(d->pthreadslockread);
@@ -1025,25 +1043,25 @@ WORD DolToFunction(WORD numdollar)
 }
 
 /*
-  	#] DolToFunction :
+  	#] DolToFunction : 
   	#[ DolToVector :    with LOCK
 */
 
-WORD DolToVector(WORD numdollar)
+WORD DolToVector(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
 				LOCK(d->pthreadslockread);
@@ -1089,24 +1107,24 @@ WORD DolToVector(WORD numdollar)
 }
 
 /*
-  	#] DolToVector :
+  	#] DolToVector : 
   	#[ DolToNumber :
 */
 
-WORD DolToNumber(WORD numdollar)
+WORD DolToNumber(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 		}
 	}
@@ -1148,25 +1166,25 @@ WORD DolToNumber(WORD numdollar)
 }
 
 /*
-  	#] DolToNumber :
+  	#] DolToNumber : 
   	#[ DolToSymbol :    with LOCK
 */
 
-WORD DolToSymbol(WORD numdollar)
+WORD DolToSymbol(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
 				LOCK(d->pthreadslockread);
@@ -1202,25 +1220,25 @@ WORD DolToSymbol(WORD numdollar)
 }
 
 /*
-  	#] DolToSymbol :
+  	#] DolToSymbol : 
   	#[ DolToIndex :     with LOCK
 */
 
-WORD DolToIndex(WORD numdollar)
+WORD DolToIndex(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD retval;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
 				LOCK(d->pthreadslockread);
@@ -1274,7 +1292,7 @@ WORD DolToIndex(WORD numdollar)
 }
 
 /*
-  	#] DolToIndex :
+  	#] DolToIndex : 
   	#[ DolToTerms :
 
 	Returns a struct of type DOLLARS which contains a copy of the
@@ -1282,22 +1300,22 @@ WORD DolToIndex(WORD numdollar)
 	an expression (type = DOLTERMS). Otherwise it returns zero.
 */
 
-DOLLARS DolToTerms(WORD numdollar)
+DOLLARS DolToTerms(PHEAD WORD numdollar)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	LONG size;
 	DOLLARS d = Dollars + numdollar, newd;
 	WORD *t, *w;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
 			if ( dtype == MODLOCAL ) {
-				d = ModOptdollars[nummodopt].dstruct+identity;
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 		}
 	}
@@ -1382,7 +1400,7 @@ DOLLARS DolToTerms(WORD numdollar)
 }
 
 /*
-  	#] DolToTerms :
+  	#] DolToTerms : 
   	#[ DoInside :
 */
 
@@ -1440,7 +1458,7 @@ skipdol:	error = 1;
 }
 
 /*
-  	#] DoInside :
+  	#] DoInside : 
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -1451,9 +1469,9 @@ skipdol:	error = 1;
 	In the end we sort and redefine $a.
 */
 
-int InsideDollar(WORD *ll, WORD level)
+int InsideDollar(PHEAD WORD *ll, WORD level)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	int numvar = (int)(ll[1]-3), j, error = 0;
 	WORD numdol, *oldcterm, *oldwork = AT.WorkPointer, olddefer, *r, *m;
 	WORD oldnumlhs, *dbuffer;
@@ -1469,14 +1487,14 @@ int InsideDollar(WORD *ll, WORD level)
 	  {
 #ifdef WITHPTHREADS
 		int nummodopt, dtype = -1;
-		if ( AS.MultiThreaded ) {
+		if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 				if ( numdol == ModOptdollars[nummodopt].number ) break;
 			}
 			if ( nummodopt < NumModOptdollars ) {
 				dtype = ModOptdollars[nummodopt].type;
 				if ( dtype == MODLOCAL ) {
-					d = ModOptdollars[nummodopt].dstruct+identity;
+					d = ModOptdollars[nummodopt].dstruct+AT.identity;
 				}
 				else {
 /*					LOCK(d->pthreadslockwrite); */
@@ -1485,7 +1503,7 @@ int InsideDollar(WORD *ll, WORD level)
 			}
 		}
 #endif
-		newd = DolToTerms(numdol);
+		newd = DolToTerms(BHEAD numdol);
 		if ( newd == 0 ) continue;
 		r = newd->where;
 		NewSort();
@@ -1516,7 +1534,8 @@ int InsideDollar(WORD *ll, WORD level)
 			r = d->where; while ( *r ) r += *r;
 			d->size = r-d->where;
 		}
-		cbuf[AM.dbufnum].rhs[numdol] = d->where;
+/*		cbuf[AM.dbufnum].rhs[numdol] = d->where; */
+		cbuf[AM.dbufnum].rhs[numdol] = (WORD *)(1);
 /*
 		Now we have a little cleaning up to do
 */
@@ -1538,7 +1557,7 @@ idcall:;
 }
 
 /*
-  	#] InsideDollar :
+  	#] InsideDollar : 
   	#[ ExchangeDollars :
 */
 
@@ -1556,7 +1575,7 @@ void ExchangeDollars(int num1, int num2)
 }
 
 /*
-  	#] ExchangeDollars :
+  	#] ExchangeDollars : 
   	#[ TermsInDollar :
 */
 
@@ -1568,7 +1587,7 @@ LONG TermsInDollar(WORD num)
 	LONG n;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
-	if ( AS.MultiThreaded ) {
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
 		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
 			if ( num == ModOptdollars[nummodopt].number ) break;
 		}
@@ -1605,7 +1624,7 @@ LONG TermsInDollar(WORD num)
 }
 
 /*
-  	#] TermsInDollar :
+  	#] TermsInDollar : 
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.
@@ -1797,7 +1816,7 @@ onerror:
 }
 
 /*
-  	#] PreIfDollarEval :
+  	#] PreIfDollarEval : 
   	#[ TranslateExpression :
 */
 
@@ -1849,7 +1868,7 @@ WORD *TranslateExpression(UBYTE *s)
 }
 
 /*
-  	#] TranslateExpression :
+  	#] TranslateExpression : 
   	#[ IsSetMember :
 
 	Checks whether the expression in the buffer can be seen as an element
@@ -2007,7 +2026,7 @@ int IsSetMember(WORD *buffer, WORD numset)
 }
 
 /*
-  	#] IsSetMember :
+  	#] IsSetMember : 
   	#[ IsProductOf :
 
 	Checks whether the expression in buf1 is a single term multiple of 
@@ -2019,7 +2038,7 @@ int IsProductOf(WORD *buf1, WORD *buf2)
 }
 
 
-  	#] IsProductOf :
+  	#] IsProductOf : 
   	#[ IsMultipleOf :
 
 	Checks whether the expression in buf1 is a numerical multiple of 
@@ -2095,7 +2114,7 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 }
 
 /*
-  	#] IsMultipleOf :
+  	#] IsMultipleOf : 
   	#[ TwoExprCompare :
 
 	Compares the expressions in buf1 and buf2 according to oprtr
@@ -2170,7 +2189,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 }
 
 /*
-  	#] TwoExprCompare :
+  	#] TwoExprCompare : 
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
@@ -2258,7 +2277,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 }
 
 /*
-  	#] DollarRaiseLow :
+  	#] DollarRaiseLow : 
  		#[ MinDollar  :
 
         finds the minimum dollar variable among dollar variables 
@@ -2358,7 +2377,7 @@ int MinDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MinDollar  :
+ 		#] MinDollar  : 
  		#[ MaxDollar  :
 
         finds the maximum dollar variable among dollar variables 
@@ -2446,7 +2465,7 @@ int MaxDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MaxDollar  :
+ 		#] MaxDollar  : 
  		#[ SumDollars :
 
         sums the dollar variable content in PFDollars[number].slavebuf
@@ -2548,6 +2567,6 @@ cleanup:;
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] SumDollars :
+ 		#] SumDollars : 
 */
 

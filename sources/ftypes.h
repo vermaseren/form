@@ -694,6 +694,7 @@ typedef int (*TFUN1)();
 #define ISZERO 1
 #define ISUNMODIFIED 2
 #define ISCOMPRESSED 4
+#define ISINRHS 8
 
 #define SORTWEIGHTS 1
 #define LINSOLVE 2

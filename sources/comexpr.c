@@ -159,6 +159,9 @@ int DoExpr(UBYTE *inp, int type)
 			Expressions[j].counter = 1; 
 			Expressions[j].onfile = pos; 
 			Expressions[j].whichbuffer = 0;
+#ifdef PARALLELCODE
+			Expressions[j].partodo = AC.inparallelflag; 
+#endif
 			OldWork[2] = w - OldWork - 3;
 			AT.WorkPointer = w;
 /*

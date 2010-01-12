@@ -27,9 +27,9 @@
 		non-commuting objects are involved.
 */
 
-WORD MatchE(WORD *pattern, WORD *fun, WORD *inter, WORD par)
+WORD MatchE(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *m, *t, *r, i, retval;
 	WORD *mstop, *tstop, j, newvalue, newfun;
 	WORD fixvec[MAXMATCH],wcvec[MAXMATCH],fixind[MAXMATCH],wcind[MAXMATCH];
@@ -395,7 +395,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE : 
+  	#] MatchE :
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.
@@ -506,9 +506,9 @@ WORD Distribute(DISTRIBUTE *d, WORD first)
 		is more than one choice for i1.
 */
 
-int MatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
+int MatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD *thewildcards, *multiplicity, *renum, wc, newvalue, oldwilval = 0;
 	WORD *params, *lowlevel = 0;
@@ -1002,9 +1002,9 @@ nomatch:;
 		Like MatchCy, but now for general functions.
 */
 
-int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
+int FunMatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, *multiplicity, *renum, wc, wcc, oldwilval = 0;
 	LONG oww = AT.pWorkPointer;
@@ -1136,7 +1136,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 				for ( j = 0; j < tcount; j++ ) { /* The arguments */
 					while ( *p == -ARGWILD ) p += 2;
 					t = AT.pWorkSpace[oww+((i+j)%tcount)];
-					if ( ( wcc =  MatchArgument(t,p) ) == 0 ) break;
+					if ( ( wcc =  MatchArgument(BHEAD t,p) ) == 0 ) break;
 					if ( wcc > 1 ) wc = 1;
 					NEXTARG(p);
 				}
@@ -1229,7 +1229,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 						AddWild(BHEAD p[1],ARLTOARL,funnycount);
 						j += funnycount-1; a += funnycount-1;
 					}
-					else if ( MatchArgument(t,p) == 0 ) break;
+					else if ( MatchArgument(BHEAD t,p) == 0 ) break;
 					NEXTARG(p);
 				}
 				if ( j >= tcount ) { /* Match! */
@@ -1373,7 +1373,7 @@ int FunMatchCy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
 						AddWild(BHEAD p[1],ARLTOARL,wc);
 						j += wc-1; a += wc-1; wc = 1;
 					}
-					else if ( MatchArgument(t,p) == 0 ) break;
+					else if ( MatchArgument(BHEAD t,p) == 0 ) break;
 					NEXTARG(p);
 				}
 				if ( j >= tcount ) { /* Match! */
@@ -1460,9 +1460,9 @@ nomatch:;
 		Like MatchE, but now for general functions.
 */
 
-int FunMatchSy(WORD *pattern, WORD *fun, WORD *inter, WORD par)
+int FunMatchSy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *t, *tstop, *p, *pstop, *m, *r, *oldworkpointer = AT.WorkPointer;
 	WORD **a, *thewildcards, oldwilval = 0;
 	WORD newvalue, *lowlevel = 0, num, assig;
@@ -1679,7 +1679,7 @@ quicky:
 		}
 		else {	/* Category 2: Wildcard that was assigned */
 			for ( j = 0; j < tcount; j++ ) {
-				if ( MatchArgument(AT.pWorkSpace[oww+j],t) ) {
+				if ( MatchArgument(BHEAD AT.pWorkSpace[oww+j],t) ) {
 					k = nwstore;
 					r = AT.WildMask;
 					num = 0;
@@ -1812,7 +1812,7 @@ nextargw:;
 */
 	for ( i = 0; i < iraise; i++ ) {
 		for ( j = 0; j < tcount; j++ ) {
-			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+i]) ) {
+			if ( MatchArgument(BHEAD AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+i]) ) {
 				k = nwstore;
 				r = AT.WildMask;
 				num = 0;
@@ -1864,7 +1864,7 @@ nextiraise:;
 	for (;;) {
 		WORD oRepFunNum = AN.RepFunNum;
 		for ( j = 0; j < argcount; j++ ) {
-			if ( MatchArgument(AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+j]) == 0 ) {
+			if ( MatchArgument(BHEAD AT.pWorkSpace[oww+j],AT.pWorkSpace[lhpars+j]) == 0 ) {
 				break;
 			}
 		}
@@ -1987,9 +1987,9 @@ NoSuccess:
   	#[ MatchArgument :
 */
 
-int MatchArgument(WORD *arg, WORD *pat)
+int MatchArgument(PHEAD WORD *arg, WORD *pat)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *m = pat, *t = arg, i, j, newvalue;
 	WORD *argmstop = pat, *argtstop = arg;
 	WORD *cto, *cfrom, *csav, ci;
@@ -2245,7 +2245,7 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 	}
 /*
-  	#] Both general :
+  	#] Both general : 
 */
 	else return(0);
 /*
@@ -2255,5 +2255,5 @@ IndAll:			i = m[1] - WILDOFFSET;
 }
 
 /*
-  	#] MatchArgument :
+  	#] MatchArgument : 
 */
