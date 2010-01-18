@@ -92,12 +92,12 @@ class FormTest < Test::Unit::TestCase
 			@errorstream.close
 			@stdout = @stdout.join
 			@stderr = @stderr.join
-			tmpfiles = Dir.glob(STRACETMP_NAME+".*")
-			if tmpfiles.size == 0 then raise "Error: could not run executable #{executable}!"
-			elsif tmpfiles.size > 1 then puts "Warning: Cannot terminate or evaluate FORM job!"
-			else pid = File.extname(tmpfiles[0])[1..-1] end
+			pids = []
+			Dir.glob(STRACETMP_NAME+".*") { |fn| pids << File.extname(fn)[1..-1] }
+			if pids.size == 0 then raise "Error: could not run executable #{executable}!" end
+			pid = pids.sort[0]
 			if @unfinished
-				puts "Timeout: Terminating FORM job!"
+				puts "Timeout: Terminating (T)FORM job!"
 				system("kill -SIGKILL "+pid)
 			end
 		end
