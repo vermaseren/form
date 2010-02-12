@@ -101,6 +101,9 @@ WORD Processor()
 		) break;
 	}
 	last = i;
+	for ( i = NumExpressions-1; i >= 0; i-- ) {
+		AS.OldOnFile[i] = Expressions[i].onfile;
+	}
 #ifdef WITHPTHREADS
 /*
 		When we run with threads we have to make sure that all local input
@@ -273,7 +276,7 @@ commonread:;
 					MesPrint("Error condition 1a");
 					ExprStatus(e);
 #endif
-					MesPrint("Expression %d has problems in scratchfile",i);
+					MesPrint("Expression %d has problems in scratchfile(process)",i);
 					retval = -1;
 					break;
 				}
@@ -780,18 +783,23 @@ TooMuch:;
 /*
 					We should check now for subexpressions and if necessary
 					we substitute them. Keep in mind: only one term allowed!
+
+					In retrospect (26-jan-2010): take also functions that
+					have a dirty flag on
 */
 					j = *t; tttstop = t + j;
 					GETSTOP(t,ttstop);
 					*m++ = j; t++;
 					while ( t < ttstop ) {
 						if ( *t == SUBEXPRESSION ) break;
+						if ( *t >= FUNCTION && ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG ) ) break;
 						j = t[1]; NCOPY(m,t,j);
 					}
 					if ( t < ttstop ) {
 /*
-						We ran into a subexpression. It could be a $ or
-						just e[(a^2)*b]. In either case we should evaluate
+						We ran into a subexpression or a function with a
+						'dirty' argument. It could also be a $ or
+						just e[(a^2)*b]. In all cases we should evaluate
 */
 						while ( t < tttstop ) *m++ = *t++;
 						*AT.WorkPointer = m-AT.WorkPointer;
@@ -3225,7 +3233,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );

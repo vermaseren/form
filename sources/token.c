@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Compiler :
  		#[ tokenize :
 
@@ -500,7 +500,6 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 		while ( out >= AC.tokens ) { *tt-- = *out--; }
 		while ( tt >= AC.tokens ) { *tt-- = TEMPTY; }
 		if ( error == 0 && simp3btoken(AC.tokens,leftright) ) error = 1;
-
 		if ( error == 0 && simp2token(AC.tokens) ) error = 1;
 	}
 /*
@@ -513,7 +512,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize :
+ 		#] tokenize : 
  		#[ WriteTokens :
 */
 
@@ -563,7 +562,7 @@ writenumber:
 }
 
 /*
- 		#] WriteTokens :
+ 		#] WriteTokens : 
  		#[ simp1token :
 
 		Routine substitutes set elements if possible.
@@ -642,7 +641,7 @@ if ( n < 0 ) {
 }
 
 /*
- 		#] simp1token :
+ 		#] simp1token : 
  		#[ simpwtoken :
 
 		Only to be called in the LHS.
@@ -802,7 +801,7 @@ firsterr:		if ( first ) {
 }
 
 /*
- 		#] simpwtoken :
+ 		#] simpwtoken : 
  		#[ simp2token :
 
 		Deals with function arguments.
@@ -815,7 +814,7 @@ firsterr:		if ( first ) {
 
 int simp2token(SBYTE *s)
 {
-	SBYTE *to, *fill, *t, *v, *w, *s0 = s;
+	SBYTE *to, *fill, *t, *v, *w, *s0 = s, *vv;
 	int error = 0, n;
 /*
 	Set substitutions
@@ -848,6 +847,8 @@ int simp2token(SBYTE *s)
 	*fill++ = TENDOFIT;
 /*
 	Second round: try to locate 'simple' arguments and strip their brackets
+
+	We add (9-feb-2010) to the simple arguments integers of any size
 */
 	fill = s = to;
 	while ( *s != TENDOFIT ) {
@@ -902,9 +903,26 @@ int simp2token(SBYTE *s)
 							}
 						}
 						else {
-							if ( ( *v == TNUMBER || *v == TNUMBER1 )
-							&& ( ( v+3 == t && v[2] >= 0 ) || v+2 == t ) ) {
-								*t = TEMPTY; s++;
+							if ( *v == TNUMBER || *v == TNUMBER1 ) {
+							  if ( BITSINWORD == 16 ) { LONG x; WORD base;
+								base = ( *v == TNUMBER ) ? 100: 128;
+								vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
+								if ( ( vv != t ) || ( ( vv - v ) > 4 ) || ( x > (MAXPOSITIVE+1) ) )
+									*fill++ = *s++;
+								else { *t = TEMPTY; s++; break; }
+							  }
+							  else if ( BITSINWORD == 32 ) { LONG x; WORD base;
+								base = ( *v == TNUMBER ) ? 100: 128;
+								vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
+								if ( ( vv != t ) || ( ( vv - v ) > 6 ) || ( x > (MAXPOSITIVE+1) ) )
+									*fill++ = *s++;
+								else { *t = TEMPTY; s++; break; }
+							  }
+							  else {
+								if ( ( v+2 == t ) || ( v+3 == t && v[2] >= 0 ) )
+									{ *t = TEMPTY; s++; break; }
+								else *fill++ = *s++;
+							  }
 							}
 							else if ( *v == LPARENTHESIS && t[-1] == RPARENTHESIS ) {
 								w = v; n = 0;
@@ -945,9 +963,25 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						break;
 					case TNUMBER:
 					case TNUMBER1:
-						if ( ( v+2 == t ) || ( v+3 == t && v[2] >= 0 ) )
-							{ *t = TEMPTY; s++; break; }
-						else *fill++ = *s++;
+						if ( BITSINWORD == 16 ) { LONG x; WORD base;
+							base = ( *v == TNUMBER ) ? 100: 128;
+							vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
+							if ( ( vv != t ) || ( ( vv - v ) > 4 ) || ( x > MAXPOSITIVE ) )
+								*fill++ = *s++;
+							else { *t = TEMPTY; s++; break; }
+						}
+						else if ( BITSINWORD == 32 ) { LONG x; WORD base;
+							base = ( *v == TNUMBER ) ? 100: 128;
+							vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
+							if ( ( vv != t ) || ( ( vv - v ) > 6 ) || ( x > MAXPOSITIVE ) )
+								*fill++ = *s++;
+							else { *t = TEMPTY; s++; break; }
+						}
+						else {
+							if ( ( v+2 == t ) || ( v+3 == t && v[2] >= 0 ) )
+								{ *t = TEMPTY; s++; break; }
+							else *fill++ = *s++;
+						}
 						break;
 					case TWILDARG:
 						v++; while ( *v >= 0 ) v++;
@@ -1216,7 +1250,7 @@ doublepower:
 }
 
 /*
- 		#] simp3atoken :
+ 		#] simp3atoken : 
  		#[ simp3btoken :
 */
 
@@ -1589,7 +1623,7 @@ doublepower:;
 }
 
 /*
- 		#] simp3btoken :
+ 		#] simp3btoken : 
  		#[ simp4token :
 
 		Deal with the set[n] objects in the RHS.
@@ -1745,7 +1779,7 @@ int simp4token(SBYTE *s)
 }
 
 /*
- 		#] simp4token :
+ 		#] simp4token : 
  		#[ simp5token :
 
 	Making sure that first argument of sumfunction is not a wildcard already
@@ -1791,7 +1825,7 @@ int simp5token(SBYTE *s, int mode)
 }
 
 /*
- 		#] simp5token :
+ 		#] simp5token : 
  		#[ simp6token :
 
 int simp6token(SBYTE *s, int mode)
@@ -1804,7 +1838,7 @@ int simp6token(SBYTE *s, int mode)
 	return(error);
 }
 
- 		#] simp6token :
+ 		#] simp6token : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

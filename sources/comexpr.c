@@ -17,13 +17,15 @@ static struct id_options {
 	UBYTE *name;
 	int code;
 } IdOptions[] = {
-	 {(UBYTE *)"multi",   SUBMULTI    }
-	,{(UBYTE *)"many",    SUBMANY     }
-	,{(UBYTE *)"only",    SUBONLY     }
-	,{(UBYTE *)"once",    SUBONCE     }
-	,{(UBYTE *)"ifmatch", SUBAFTER    }
-	,{(UBYTE *)"disorder",SUBDISORDER }
-	,{(UBYTE *)"select",  SUBSELECT   }
+	 {(UBYTE *)"multi",      SUBMULTI    }
+	,{(UBYTE *)"many",       SUBMANY     }
+	,{(UBYTE *)"only",       SUBONLY     }
+	,{(UBYTE *)"once",       SUBONCE     }
+	,{(UBYTE *)"ifmatch",    SUBAFTER    }
+	,{(UBYTE *)"ifnomatch",  SUBAFTERNOT }
+	,{(UBYTE *)"ifnotmatch", SUBAFTERNOT }
+	,{(UBYTE *)"disorder",   SUBDISORDER }
+	,{(UBYTE *)"select",     SUBSELECT   }
 };
 
 /*
@@ -34,14 +36,14 @@ static struct id_options {
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal :
+  	#] CoLocal : 
   	#[ CoGlobal :
 */
 
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal :
+  	#] CoGlobal : 
   	#[ DoExpr:
 */
 
@@ -241,7 +243,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -252,7 +254,7 @@ int CoIdOld(UBYTE *inp)
 }
 
 /*
-  	#] CoIdOld :
+  	#] CoIdOld : 
   	#[ CoId :
 */
 
@@ -263,7 +265,7 @@ int CoId(UBYTE *inp)
 }
 
 /*
-  	#] CoId :
+  	#] CoId : 
   	#[ CoIdNew :
 */
 
@@ -274,7 +276,7 @@ int CoIdNew(UBYTE *inp)
 }
 
 /*
-  	#] CoIdNew :
+  	#] CoIdNew : 
   	#[ CoDisorder :
 */
 
@@ -285,7 +287,7 @@ int CoDisorder(UBYTE *inp)
 }
 
 /*
-  	#] CoDisorder :
+  	#] CoDisorder : 
   	#[ CoMany :
 */
 
@@ -296,7 +298,7 @@ int CoMany(UBYTE *inp)
 }
 
 /*
-  	#] CoMany :
+  	#] CoMany : 
   	#[ CoMulti :
 */
 
@@ -307,7 +309,7 @@ int CoMulti(UBYTE *inp)
 }
 
 /*
-  	#] CoMulti :
+  	#] CoMulti : 
   	#[ CoIfMatch :
 */
 
@@ -319,6 +321,17 @@ int CoIfMatch(UBYTE *inp)
 
 /*
   	#] CoIfMatch :
+  	#[ CoIfNoMatch :
+*/
+
+int CoIfNoMatch(UBYTE *inp)
+{
+	AC.idoption = SUBAFTERNOT;
+	return(CoIdExpression(inp,TYPEIDNEW));
+}
+
+/*
+  	#] CoIfNoMatch : 
   	#[ CoOnce :
 */
 
@@ -329,7 +342,7 @@ int CoOnce(UBYTE *inp)
 }
 
 /*
-  	#] CoOnce :
+  	#] CoOnce : 
   	#[ CoOnly :
 */
 
@@ -340,7 +353,7 @@ int CoOnly(UBYTE *inp)
 }
 
 /*
-  	#] CoOnly :
+  	#] CoOnly : 
   	#[ CoSelect :
 */
 
@@ -351,7 +364,7 @@ int CoSelect(UBYTE *inp)
 }
 
 /*
-  	#] CoSelect :
+  	#] CoSelect : 
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -389,7 +402,7 @@ int CoIdExpression(UBYTE *inp, int type)
 		p--;
 		goto findsets;
 	}
-	else if ( AC.idoption == SUBAFTER ) {
+	else if ( ( AC.idoption == SUBAFTER ) || ( AC.idoption == SUBAFTERNOT ) ) {
 		while ( *p && *p != '=' && *p != ',' ) {
 			if ( *p == '(' ) SKIPBRA4(p)
 			else if ( *p == '{' ) SKIPBRA5(p)
@@ -397,7 +410,7 @@ int CoIdExpression(UBYTE *inp, int type)
 			else p++;
 		}
 		if ( *p == '=' || *inp != '-' || inp[1] != '>' ) {
-			MesPrint("&Illegal use if ifmatch in id statement");
+			MesPrint("&Illegal use if if[no]match in id statement");
 			error = 1; goto AllDone;
 		}
 		if ( *p == 0 ) {
@@ -518,19 +531,20 @@ findsets:;
 				AC.idoption = SUBSELECT;
 				break;
 			case SUBAFTER:
+			case SUBAFTERNOT:
 				if ( type == TYPEIF ) {
-					MesPrint("&The ifmatch->label option is not allowed in an if statement");
+					MesPrint("&The if[no]match->label option is not allowed in an if statement");
 					error = 1; goto AllDone;
 				}
 				if ( pp[0] != '-' || pp[1] != '>' ) goto IllField;
 				pp += 2;	/* points now at the label */
 				inp = pp;
+				AC.idoption |= opt;
 readlabel:
-				AC.idoption |= SUBAFTER;
 				while ( FG.cTable[*pp] <= 1 ) pp++;
 				if ( pp != p ) {
 					c = *p; *p = 0;
-					MesPrint("&Illegal label %s in ifmatch option of id-statement",inp);
+					MesPrint("&Illegal label %s in if[no]match option of id-statement",inp);
 					*p = c; error = 1; inp = p+1; continue;
 				}
 				c = *p; *p = 0;
@@ -838,7 +852,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply :
+  	#] CoMultiply : 
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1090,7 +1104,7 @@ redef:;
 }
 
 /*
-  	#] CoFill :
+  	#] CoFill : 
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1248,7 +1262,7 @@ int CoFillExpression(UBYTE *inp)
 		Note: Because everything fits inside memory we never get problems
 		with excessive file sizes.
 */
-		SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
+		SETBASEPOSITION(oldposition,(UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer));
 		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(Expressions[expnum].onfile));
 	}
 	pw = AT.WorkPointer;
@@ -1446,12 +1460,19 @@ nextterm:;
 			C->CanCommu[curelement] = numcommu;
 		}
 	}
+	if ( fi->handle >= 0 ) {
+		SetScratch(fi,&(oldposition));
+	}
+	else {
+		fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + BASEPOSITION(oldposition));
+	}
 	BACKINOUT
 	AC.cbufnum = oldcbuf;
 	AC.tablefilling = 0;
 	AT.WorkPointer = oldwork;
 	return(0);
 noway:
+	BACKINOUT
 	AC.cbufnum = oldcbuf;
 	AC.tablefilling = 0;
 	AT.WorkPointer = oldwork;
@@ -1628,7 +1649,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable :
+  	#] CoPrintTable : 
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1718,7 +1739,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign :
+  	#] CoAssign : 
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1782,7 +1803,7 @@ int CoDeallocateTable(UBYTE *inp)
 }
 
 /*
-  	#] CoDeallocateTable :
+  	#] CoDeallocateTable : 
 */
 
 

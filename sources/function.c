@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Utilities :
  		#[ MakeDirty :
 
@@ -59,7 +59,7 @@ WORD MakeDirty(WORD *term, WORD *x, WORD par)
 }
 
 /*
- 		#] MakeDirty :
+ 		#] MakeDirty : 
  		#[ MarkDirty :
 
 		Routine marks all functions dirty with the given flags.
@@ -102,7 +102,7 @@ void MarkDirty(WORD *term, WORD flags)
 }
 
 /*
- 		#] MarkDirty :
+ 		#] MarkDirty : 
  		#[ PolyFunDirty :
 
 		Routine marks the PolyFun or the PolyRatFun dirty.
@@ -136,7 +136,7 @@ void PolyFunDirty(PHEAD WORD *term)
 }
 
 /*
- 		#] PolyFunDirty :
+ 		#] PolyFunDirty : 
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -307,7 +307,7 @@ recycle:
 }
 
 /*
- 		#] Symmetrize :
+ 		#] Symmetrize : 
  		#[ CompGroup :
 
 			Routine compares two groups of arguments
@@ -403,7 +403,7 @@ WORD CompGroup(PHEAD WORD type, WORD **args, WORD *a1, WORD *a2, WORD num)
 }
 
 /*
- 		#] CompGroup :
+ 		#] CompGroup : 
  		#[ FullSymmetrize :
 
 		Relay function for Normalize to execute a full symmetrization
@@ -451,7 +451,7 @@ int FullSymmetrize(PHEAD WORD *fun, int type)
 }
 
 /*
- 		#] FullSymmetrize :
+ 		#] FullSymmetrize : 
  		#[ SymGen :
 
 		Routine does the outer work in the symmetrization.
@@ -566,7 +566,7 @@ NextFun:
 }
 
 /*
- 		#] SymGen :
+ 		#] SymGen : 
  		#[ SymFind :
 
 		There is a certain amount of double work here, as this routine
@@ -629,7 +629,7 @@ NextFun:
 }
 
 /*
- 		#] SymFind :
+ 		#] SymFind : 
  		#[ ChainIn :
 
 		Equivalent to repeat id f(?a)*f(?b) = f(?a,?b);
@@ -679,7 +679,7 @@ int ChainIn(PHEAD WORD *term, WORD funnum)
 }
 
 /*
- 		#] ChainIn :
+ 		#] ChainIn : 
  		#[ ChainOut :
 
 		Equivalent to repeat id f(x1?,x2?,?a) = f(x1)*f(x2,?a);
@@ -739,7 +739,7 @@ int ChainOut(PHEAD WORD *term, WORD funnum)
 }
 
 /*
- 		#] ChainOut :
+ 		#] ChainOut : 
   	#] Utilities :
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
@@ -904,7 +904,8 @@ WithGamma:		m++; t++;
 							if ( functions[k-FUNCTION].commute ) goto NoGamma;
 						}
 					}
-FullOK:				AN.RepFunList[AN.RepFunNum+1] = WORDDIF(oldt,argtstop);
+FullOK:				if ( AN.SignCheck && AN.ExpectedSign ) goto NoGamma;
+					AN.RepFunList[AN.RepFunNum+1] = WORDDIF(oldt,argtstop);
 					return(1);
 				}
 				if ( t >= tstop ) goto NoCaseB;
@@ -1367,6 +1368,7 @@ nomatch:
 					for ( i = 0; i < wildargs; i++ ) AT.WildArgTaken[i] = wildargtaken[i];
 					goto endofloop;
 				}
+/*				if ( *m == 1 || m[1] < FUNCTION || functions[m[1]-FUNCTION].spec >= TENSORFUNCTION ) { */
 				if ( *m == 1 || m[1] < FUNCTION ) {
 					if ( AN.ExpectedSign ) goto nomatch;
 				}
@@ -1831,7 +1833,7 @@ NextFor:;
 }
 
 /*
- 		#] ScanFunctions :
+ 		#] ScanFunctions : 
 	#] Patterns :
 */
 

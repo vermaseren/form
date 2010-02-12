@@ -18,7 +18,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Patterns :
  		#[ Rules :
 
@@ -36,7 +36,7 @@
 		6:	x^n? can revert to n = 0 if there is no power of x.
 		7:	x?^n? must match some x. There could be an ambiguity otherwise.
 
- 		#] Rules :
+ 		#] Rules : 
  		#[ TestMatch :			WORD TestMatch(term,level)
 */
 
@@ -115,7 +115,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else return(0);
 	}
 /*
- 		#] Preliminaries :
+ 		#] Preliminaries : 
 */
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -240,7 +240,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		*AN.RepPoint = oldRepPoint;
 	}
 /*
- 		#] Expand dollars :
+ 		#] Expand dollars : 
 
 	AT.WorkPointer = ww = term + *term;
 */
@@ -374,7 +374,12 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 				}
 			}
 #if IDHEAD > 3
-			if ( match && ( ll[2] & SUBAFTER ) != 0 ) *level = AC.Labels[ll[3]];
+			if ( match ) {
+				if ( ( ll[2] & SUBAFTER ) != 0 ) *level = AC.Labels[ll[3]];
+			}
+			else {
+				if ( ( ll[2] & SUBAFTERNOT ) != 0 ) *level = AC.Labels[ll[3]];
+			}
 #endif
 /*			AT.WorkPointer = AN.RepFunList;
 			return(match); */
@@ -426,6 +431,11 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						power = 0;
 						t1 = term; t2 = AN.selecttermundo; i = *t2;
 						NCOPY(t1,t2,i);
+#if IDHEAD > 3
+						if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
+							*level = AC.Labels[ll[3]];
+						}
+#endif
 						goto nextlevel;
 					}
 				}
@@ -440,7 +450,14 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 				}
 #endif
 			}
-			else power = 0;
+			else {
+#if IDHEAD > 3
+				if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
+					*level = AC.Labels[ll[3]];
+				}
+#endif
+				power = 0;
+			}
 			goto nextlevel;
 		default :
 			break;
@@ -460,6 +477,11 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	}
 	else {
 		AT.WorkPointer = AN.RepFunList;
+#if IDHEAD > 3
+		if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
+			*level = AC.Labels[ll[3]];
+		}
+#endif
 	}
 nextlevel:;
 	} while ( (*level)++ < AR.Cnumlhs && C->lhs[*level][0] == TYPEIDOLD );
@@ -469,7 +491,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch :
+ 		#] TestMatch : 
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 
 	The current version doesn't scan function arguments yet. 7-Apr-1988
@@ -1039,7 +1061,7 @@ WORD FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
 	WORD *t, *m, *r, *mm;
 	WORD *tstop, *mstop, *TwoProto, *vwhere = 0, oldv, oldvv, vv, level2;
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;
-    WORD fromindex, *intens;
+    WORD fromindex, *intens, notflag1 = 0, notflag2 = 0;
 	CBUF *C;
 	C = cbuf+AM.rbufnum;
 	v = pattern[3];		/* The vector to be found */
@@ -1050,6 +1072,9 @@ WORD FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
 	if ( t < m ) do {
 		tstop = t + t[1];
 		fromindex = 2;
+/*
+			#[ VECTOR :
+*/
 		if ( *t == VECTOR ) {
 			r = t;
 			r += 2;
@@ -1061,10 +1086,13 @@ InVect:
 					if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 						WORD *afirst, *alast, j;
 						j = vwhere[3];
+						if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag1 = 1; }
+						else { notflag1 = 0; }
 						afirst = SetElements + Sets[j].first;
 						alast  = SetElements + Sets[j].last;
 						ii = 1;
-						do {
+						if ( notflag1 == 0 ) {
+						  do {
 							if ( *afirst == *r ) {
 								if ( vwhere[1] == SETTONUM ) {
 									AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
@@ -1077,7 +1105,14 @@ InVect:
 								goto DoVect;
 							}
 							ii++;
-						} while ( ++afirst < alast );
+						  } while ( ++afirst < alast );
+						}
+						else {
+						  do {
+							if ( *afirst == *r ) break;
+						  } while ( ++afirst < alast );
+						  if ( afirst >= alast ) goto DoVect;
+						}
 					}
 					else goto DoVect;
 				}
@@ -1118,6 +1153,10 @@ DoVect:				m = AT.WorkPointer;
 				r += fromindex;
 			}
 		}
+/*
+			#] VECTOR : 
+			#[ DOTPRODUCT :
+*/
 		else if ( *t == DOTPRODUCT ) {
 			r = t;
 			r += 2;
@@ -1161,10 +1200,13 @@ CopRest:				t = tstop;
 						if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 							WORD *afirst, *alast, j;
 							j = vwhere[3];
+							if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag1 = 1; }
+							else { notflag1 = 0; }
 							afirst = SetElements + Sets[j].first;
 							alast  = SetElements + Sets[j].last;
 							ii = 1;
-							do {          	
+							if ( notflag1 == 0 ) {
+							  do {          	
 								if ( *afirst == *r ) {
 									if ( vwhere[1] == SETTONUM ) {
 										AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
@@ -1177,7 +1219,14 @@ CopRest:				t = tstop;
 									goto TwoVec;
 								}
 								ii++;
-							} while ( ++afirst < alast );
+							  } while ( ++afirst < alast );
+							}
+							else {
+							  do {
+								if ( *afirst == *r ) break;
+							  } while ( ++afirst < alast );
+							  if ( afirst >= alast ) goto TwoVec;
+							}
 						}
 						else goto TwoVec;
 					}
@@ -1193,7 +1242,6 @@ CopRest:				t = tstop;
 							m += IDHEAD;
 							if ( m[-IDHEAD+2] == SUBALL ) {
 							if ( ( vv = m[m[1]+3] ) == r[1] ) {
-/*OnePV:							TwoProto = m; */
 OnePV:							TwoProto = AN.FullProto;
 TwoPV:							m = AT.WorkPointer;
 								tstop = t;
@@ -1234,10 +1282,13 @@ TwoPV:							m = AT.WorkPointer;
 								if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 									WORD *afirst, *alast, j;
 									j = vwhere[3];
+									if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag1 = 1; }
+									else { notflag1 = 0; }
 									afirst = SetElements + Sets[j].first;
 									alast  = SetElements + Sets[j].last;
-									ii = 1;
-									do {
+									if ( notflag1 == 0 ) {
+									  ii = 1;
+									  do {
 										if ( *afirst == r[1] ) {
 											if ( vwhere[1] == SETTONUM ) {
 												AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
@@ -1250,7 +1301,14 @@ TwoPV:							m = AT.WorkPointer;
 											goto OnePV;
 										}
 										ii++;
-									} while ( ++afirst < alast );
+									  } while ( ++afirst < alast );
+									}
+									else {
+									  do {
+										if ( *afirst == *r ) break;
+									  } while ( ++afirst < alast );
+									  if ( afirst >= alast ) goto OnePV;
+									}
 								}
 								else goto OnePV;
 							}
@@ -1281,10 +1339,13 @@ OneOnly:				m = AT.WorkPointer;
 						if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 							WORD *afirst, *alast, *bfirst, *blast, j;
 							j = vwhere[3];
+							if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag1 = 1; }
+							else { notflag1 = 0; }
 							afirst = SetElements + Sets[j].first;
 							alast  = SetElements + Sets[j].last;
 							ii = 1;
-							do {
+							if ( notflag1 == 0 ) {
+							  do {
 								if ( *afirst == *r ) {
 									if ( vwhere[1] == SETTONUM ) {
 										AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
@@ -1294,7 +1355,7 @@ OneOnly:				m = AT.WorkPointer;
 										oldv = *(afirst - Sets[j].first
 										+ Sets[vwhere[4]].first);
 									}
-									level2 = level;
+Hitlevel1:							level2 = level;
 									do {
 										if ( !par ) m = C->lhs[level2];
 										else m = par;
@@ -1306,10 +1367,13 @@ OneOnly:				m = AT.WorkPointer;
 											if ( m[8] != FROMSET &&
 											m[8] != SETTONUM ) goto OnePV;
 											j = m[10];
+											if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag2 = 1; }
+											else { notflag2 = 0; }
 											bfirst = SetElements + Sets[j].first;
 											blast  = SetElements + Sets[j].last;
 											jj = 1;
-											do {
+											if ( notflag2 == 0 ) {
+											  do {
 												if ( *bfirst == r[1] ) {
 													if ( m[8] == SETTONUM ) {
 														m[12] = SYMTONUM;
@@ -1322,7 +1386,14 @@ OneOnly:				m = AT.WorkPointer;
 													goto OnePV;
 												}
 												jj++;
-											} while ( ++bfirst < blast );
+											  } while ( ++bfirst < blast );
+											}
+											else {
+											  do {
+												if ( *afirst == *r ) break;
+											  } while ( ++afirst < alast );
+											  if ( afirst >= alast ) goto OnePV;
+											}
 										}
 											}
 									} while ( ++level2 < AR.Cnumlhs &&
@@ -1338,7 +1409,7 @@ OneOnly:				m = AT.WorkPointer;
 										oldv = *(afirst - Sets[j].first
 										+ Sets[vwhere[4]].first);
 									}
-									level2 = level;
+Hitlevel2:							level2 = level;
 									while ( ++level2 < AR.Cnumlhs &&
 									C->lhs[level2][0] == TYPEIDOLD ) {
 										if ( !par ) m = C->lhs[level2];
@@ -1384,7 +1455,18 @@ OneOnly:				m = AT.WorkPointer;
 									goto OneOnly;
 								}
 								ii++;
-							} while ( ++afirst < alast );
+							  } while ( ++afirst < alast );
+							}
+							else {
+							  do {
+								if ( *afirst == *r ) break;
+							  } while ( ++afirst < alast );
+							  if ( afirst >= alast ) goto Hitlevel1;
+							  do {
+								if ( *afirst == r[1] ) break;
+							  } while ( ++afirst < alast );
+							  if ( afirst >= alast ) goto Hitlevel2;
+							}
 						}
 						else { /* Matches twice */
 							vv = v;
@@ -1396,6 +1478,10 @@ OneOnly:				m = AT.WorkPointer;
 NextDot:			r += 3;
 			} while ( r < tstop );
 		}
+/*
+			#] DOTPRODUCT :
+			#[ LEVICIVITA :
+*/
 		else if ( *t == LEVICIVITA ) {
 			intens = 0;
 			r = t;
@@ -1408,10 +1494,13 @@ OneVect:;
 					if ( vwhere[1] == FROMSET || vwhere[1] == SETTONUM ) {
 						WORD *afirst, *alast, j;
 						j = vwhere[3];
+						if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag1 = 1; }
+						else { notflag1 = 0; }
 						afirst = SetElements + Sets[j].first;
 						alast  = SetElements + Sets[j].last;
 						ii = 1;
-						do {
+						if ( notflag1 == 0 ) {
+						  do {
 							if ( *afirst == *r ) {
 								if ( vwhere[1] == SETTONUM ) {
 									AN.FullProto[8+SUBEXPSIZE] = SYMTONUM;
@@ -1424,7 +1513,14 @@ OneVect:;
 								goto DoVect;
 							}
 							ii++;
-						} while ( ++afirst < alast );
+						  } while ( ++afirst < alast );
+						}
+						else {
+						  do {
+							if ( *afirst == *r ) break;
+						  } while ( ++afirst < alast );
+						  if ( afirst >= alast ) goto DoVect;
+						}
 					}
 					else goto LeVect;
 				}
@@ -1453,18 +1549,30 @@ LeVect:				m = AT.WorkPointer;
 				r++;
 			}
 		}
+/*
+			#] LEVICIVITA : 
+			#[ GAMMA :
+*/
 		else if ( *t == GAMMA ) {
 			intens = 0;
 			r = t;
 			r += FUNHEAD+1;
 			if ( r < tstop ) goto OneVect;
 		}
+/*
+			#] GAMMA : 
+			#[ INDEX :
+*/
 		else if ( *t == INDEX ) {	/* The 'forgotten' part */
 			r = t;
 			r += 2;
 			fromindex = 1;
 			goto InVect;
 		}
+/*
+			#] INDEX : 
+			#[ FUNCTION :
+*/
 		else if ( *t >= FUNCTION ) {
 			if ( *t >= FUNCTION
 			 && functions[*t-FUNCTION].spec >= TENSORFUNCTION
@@ -1478,13 +1586,16 @@ LeVect:				m = AT.WorkPointer;
 				goto OneVect;
 			}
 		}
+/*
+			#] FUNCTION : 
+*/
 		t += t[1];
 	} while ( t < m );
 	return(0);
 }
 
 /*
- 		#] FindAll : 
+ 		#] FindAll :
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp

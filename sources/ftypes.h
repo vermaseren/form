@@ -736,6 +736,7 @@ typedef int (*TFUN1)();
 #define SUBMASK 15
 #define SUBDISORDER 16
 #define SUBAFTER 32
+#define SUBAFTERNOT 64
 
 #define IDHEAD 5
 

@@ -22,6 +22,7 @@
  
 #ifdef WITHPTHREADS
 
+#define WHOLEBRACKETS
 /*
   	#[ Variables :
 
@@ -79,7 +80,7 @@ static LONG numberofterms;
 #endif
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Identity :
  		#[ StartIdentity :
 */
@@ -94,7 +95,7 @@ void StartIdentity()
 }
 
 /*
- 		#] StartIdentity :
+ 		#] StartIdentity : 
  		#[ FinishIdentity :
 */
 /**
@@ -107,7 +108,7 @@ void FinishIdentity(void *keyp)
 }
 
 /*
- 		#] FinishIdentity :
+ 		#] FinishIdentity : 
  		#[ SetIdentity :
 */
 /**
@@ -128,7 +129,7 @@ int SetIdentity(int *identityretval)
 }
 
 /*
- 		#] SetIdentity :
+ 		#] SetIdentity : 
  		#[ WhoAmI :
 */
  
@@ -173,7 +174,7 @@ int WhoAmI()
 }
 
 /*
- 		#] WhoAmI :
+ 		#] WhoAmI : 
  		#[ BeginIdentities :
 */
 /**
@@ -188,8 +189,8 @@ VOID BeginIdentities()
 }
 
 /*
- 		#] BeginIdentities :
-  	#] Identity :
+ 		#] BeginIdentities : 
+  	#] Identity : 
   	#[ StartHandleLock :
 */
 /**
@@ -204,7 +205,7 @@ void StartHandleLock()
 }
 
 /*
-  	#] StartHandleLock :
+  	#] StartHandleLock : 
   	#[ StartAllThreads :
 */
 /**
@@ -303,7 +304,7 @@ int StartAllThreads(int number)
 }
 
 /*
-  	#] StartAllThreads :
+  	#] StartAllThreads : 
   	#[ InitializeOneThread :
 */
 /**
@@ -719,7 +720,7 @@ OnError:;
 }
 
 /*
-  	#] InitializeOneThread :
+  	#] InitializeOneThread : 
   	#[ FinalizeOneThread :
 */
 /**
@@ -738,7 +739,7 @@ void FinalizeOneThread(int identity)
 }
 
 /*
-  	#] FinalizeOneThread :
+  	#] FinalizeOneThread : 
   	#[ TerminateAllThreads :
 */
 /**
@@ -770,7 +771,7 @@ VOID TerminateAllThreads()
 }
 
 /*
-  	#] TerminateAllThreads :
+  	#] TerminateAllThreads : 
   	#[ MakeThreadBuckets :
 */
 /**
@@ -845,7 +846,7 @@ int MakeThreadBuckets(int number, int par)
 }
 
 /*
-  	#] MakeThreadBuckets :
+  	#] MakeThreadBuckets : 
   	#[ GetTimerInfo :
 */
 
@@ -865,7 +866,7 @@ int GetTimerInfo(LONG** ti)
 }
 
 /*
-  	#] GetTimerInfo :
+  	#] GetTimerInfo : 
   	#[ WriteTimerInfo :
 */
 
@@ -887,7 +888,7 @@ void WriteTimerInfo(LONG* ti)
 }
 
 /*
-  	#] WriteTimerInfo :
+  	#] WriteTimerInfo : 
   	#[ GetWorkerTimes :
 */
 /**
@@ -908,7 +909,7 @@ LONG GetWorkerTimes()
 }
 
 /*
-  	#] GetWorkerTimes :
+  	#] GetWorkerTimes : 
   	#[ UpdateOneThread :
 */
 /**
@@ -935,7 +936,7 @@ int UpdateOneThread(int identity)
 }
 
 /*
-  	#] UpdateOneThread :
+  	#] UpdateOneThread : 
   	#[ LoadOneThread :
 */
 /**
@@ -1022,7 +1023,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 }
 
 /*
-  	#] LoadOneThread :
+  	#] LoadOneThread : 
   	#[ BalanceRunThread :
 */
 /**
@@ -1071,7 +1072,7 @@ int BalanceRunThread(PHEAD int identity, WORD *term, WORD level)
 }
 
 /*
-  	#] BalanceRunThread :
+  	#] BalanceRunThread : 
   	#[ SetWorkerFiles :
 */
 /**
@@ -1148,7 +1149,7 @@ void SetWorkerFiles()
 }
 
 /*
-  	#] SetWorkerFiles :
+  	#] SetWorkerFiles : 
   	#[ RunThread :
 */
 /**
@@ -1195,7 +1196,7 @@ void *RunThread(void *dummy)
 				NewSort();
 				break;
 /*
-			#] STARTNEWEXPRESSION :
+			#] STARTNEWEXPRESSION : 
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -1310,7 +1311,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION :
+			#] LOWESTLEVELGENERATION : 
 			#[ FINISHEXPRESSION :
 */
 #ifdef WITHSORTBOTS
@@ -1354,7 +1355,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION :
+			#] FINISHEXPRESSION : 
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -1393,7 +1394,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION :
+			#] CLEANUPEXPRESSION : 
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1412,7 +1413,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] HIGHERLEVELGENERATION :
+			#] HIGHERLEVELGENERATION : 
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1422,13 +1423,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE :
+			#] STARTNEWMODULE : 
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD :
+			#] TERMINATETHREAD : 
 			#[ DOONEEXPRESSION :
 
 				When a thread has to do a complete (not too big) expression.
@@ -1481,6 +1482,16 @@ bucketstolen:;
 				if ( fout->handle >= 0 ) {
 					fout->POposition = outposition;
 				}
+/*
+				The next statement is needed because we need the system
+				to believe that the expression is at position zero for
+				the moment. In this worker, with no memory of other expressions,
+				it is. This is needed for when a bracket index is made
+				because there e->onfile is an offset. Afterwards, when the
+				expression is written to its final location in the masters
+				output e->onfile will get its real value.
+*/
+				PUTZERO(e->onfile);
 				if ( PutOut(BHEAD term,&outposition,fout,0) < 0 ) goto ProcErr;
 
 				AR.DeferFlag = AC.ComDefer;
@@ -1587,13 +1598,17 @@ bucketstolen:;
 				BRACKETINFO *binfo = e->bracketinfo;
 				BRACKETINDEX *bi;
 				FILEHANDLE *fi;
-				POSITION stoppos,nextpos;
+				POSITION stoppos,where;
 				thr = AN.threadbuck;
 				bi = &(binfo->indexbuffer[thr->firstbracket]);
 				if ( AR.GetFile == 2 ) fi = AR.hidefile;
 				else                   fi = AR.infile;
-				SetScratch(fi,&(bi->start));
+				where = bi->start;
+				ADD2POS(where,AS.OldOnFile[AR.CurExpr]);
+				SetScratch(fi,&(where));
 				stoppos = binfo->indexbuffer[thr->lastbracket].next;
+				ADD2POS(stoppos,AS.OldOnFile[AR.CurExpr]);
+				AN.ninterms = thr->firstterm;
 /*
 				Now we have to put the 'value' of the bracket in the
 				Compress buffer.
@@ -1616,7 +1631,7 @@ bucketstolen:;
 					if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
 						LOCK(ErrorMessageLock);
 						MesPrint("Thread %w executing term:");
-						PrintTerm(term,"LLG");
+						PrintTerm(term,"DoBrackets");
 						UNLOCK(ErrorMessageLock);
 					}
 					AT.WorkPointer = term + *term;
@@ -1627,13 +1642,16 @@ bucketstolen:;
 						UNLOCK(ErrorMessageLock);
 						Terminate(-1);
 					}
-					SeekScratch(fi,&nextpos);
-					if ( ISGEPOS(nextpos,stoppos) ) break;
+					AN.ninterms++;
+					SeekScratch(fi,&where);
+					if ( ISGEPOS(where,stoppos) ) break;
 				}
 				AT.WorkPointer = term;
-			} break;
+				thr->free = BUCKETCOMINGFREE;
+				break;
+			}
 /*
-			#] DOBRACKETS :
+			#] DOBRACKETS : 
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1700,20 +1718,20 @@ void *RunSortBot(void *dummy)
 				SETBASEPOSITION(AN.theposition,0);
 				break;
 /*
-			#] INISORTBOT :
+			#] INISORTBOT : 
 			#[ RUNSORTBOT :
 */
 			case RUNSORTBOT:
 				SortBotMerge(B);
 				break;
 /*
-			#] RUNSORTBOT :
+			#] RUNSORTBOT : 
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD :
+			#] TERMINATETHREAD : 
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1734,7 +1752,7 @@ EndOfThread:;
 #endif
 
 /*
-  	#] RunSortBot :
+  	#] RunSortBot : 
   	#[ IAmAvailable :
 */
 /**
@@ -1767,7 +1785,7 @@ void IAmAvailable(int identity)
 }
 
 /*
-  	#] IAmAvailable :
+  	#] IAmAvailable : 
   	#[ GetAvailableThread :
 */
 /**
@@ -1796,7 +1814,7 @@ int GetAvailableThread()
 }
 
 /*
-  	#] GetAvailableThread :
+  	#] GetAvailableThread : 
   	#[ ConditionalGetAvailableThread :
 */
 /**
@@ -1828,7 +1846,7 @@ int ConditionalGetAvailableThread()
 }
 
 /*
-  	#] ConditionalGetAvailableThread :
+  	#] ConditionalGetAvailableThread : 
   	#[ GetThread :
 */
 /**
@@ -1859,7 +1877,7 @@ int GetThread(int identity)
 }
 
 /*
-  	#] GetThread :
+  	#] GetThread : 
   	#[ ThreadWait :
 */
 /**
@@ -1901,7 +1919,7 @@ int ThreadWait(int identity)
 }
 
 /*
-  	#] ThreadWait :
+  	#] ThreadWait : 
   	#[ SortBotWait :
 */
  
@@ -1943,7 +1961,7 @@ int SortBotWait(int identity)
 #endif
 
 /*
-  	#] SortBotWait :
+  	#] SortBotWait : 
   	#[ ThreadClaimedBlock :
 */
 /**
@@ -1974,7 +1992,7 @@ int ThreadClaimedBlock(int identity)
 }
 
 /*
-  	#] ThreadClaimedBlock :
+  	#] ThreadClaimedBlock : 
   	#[ MasterWait :
 */
 /**
@@ -1998,7 +2016,7 @@ int MasterWait()
 }
 
 /*
-  	#] MasterWait :
+  	#] MasterWait : 
   	#[ MasterWaitThread :
 */
 /**
@@ -2022,7 +2040,7 @@ int MasterWaitThread(int identity)
 }
 
 /*
-  	#] MasterWaitThread :
+  	#] MasterWaitThread : 
   	#[ MasterWaitAll :
 */
 /**
@@ -2042,7 +2060,7 @@ void MasterWaitAll()
 }
 
 /*
-  	#] MasterWaitAll :
+  	#] MasterWaitAll : 
   	#[ MasterWaitAllSortBots :
 */
  
@@ -2066,7 +2084,7 @@ void MasterWaitAllSortBots()
 #endif
 
 /*
-  	#] MasterWaitAllSortBots :
+  	#] MasterWaitAllSortBots : 
   	#[ MasterWaitAllBlocks :
 */
 /**
@@ -2086,7 +2104,7 @@ void MasterWaitAllBlocks()
 }
 
 /*
-  	#] MasterWaitAllBlocks :
+  	#] MasterWaitAllBlocks : 
   	#[ WakeupThread :
 */
 /**
@@ -2112,7 +2130,7 @@ void WakeupThread(int identity, int signalnumber)
 }
 
 /*
-  	#] WakeupThread :
+  	#] WakeupThread : 
   	#[ WakeupMasterFromThread :
 */
 /**
@@ -2138,7 +2156,7 @@ void WakeupMasterFromThread(int identity, int signalnumber)
 }
 
 /*
-  	#] WakeupMasterFromThread :
+  	#] WakeupMasterFromThread : 
   	#[ SendOneBucket :
 */
 /**
@@ -2146,7 +2164,7 @@ void WakeupMasterFromThread(int identity, int signalnumber)
  *	It prepares the thread and then wakes it up.
  */
 
-int SendOneBucket()
+int SendOneBucket(int type)
 {
 	ALLPRIVATES *B0 = AB[0];
 	THREADBUCKET *thr = 0;
@@ -2176,13 +2194,13 @@ int SendOneBucket()
 	2: when thr->busy == BUCKETDOINGTERM and then only when protected by
 	   thr->lock. This would be for load balancing.
 */
-	WakeupThread(id,LOWESTLEVELGENERATION);
+	WakeupThread(id,type);
 	AN0.ninterms += thr->ddterms;
 	return(0);
 }
 
 /*
-  	#] SendOneBucket :
+  	#] SendOneBucket : 
   	#[ InParallelProcessor :
 */
 /**
@@ -2251,7 +2269,7 @@ int InParallelProcessor()
 }
 
 /*
-  	#] InParallelProcessor :
+  	#] InParallelProcessor : 
   	#[ ThreadsProcessor :
 */
 /**
@@ -2283,11 +2301,12 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 	ALLPRIVATES *B0 = AB[0];
 	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0, bra = 0, first = 1;
 	LONG dd = 0, ddd, thrbufsiz, thrbufsiz0, thrbufsiz2, numbucket = 0, numpasses;
-	LONG numinput = 1, num, i;
+	LONG num, i;
 	WORD *oldworkpointer = AT0.WorkPointer, *tt, *ttco = 0, *t1 = 0, ter, *tstop = 0, *t2;
 	THREADBUCKET *thr = 0;
 	FILEHANDLE *oldoutfile = AR0.outfile;
 	GETTERM GetTermP = &GetTerm;
+	POSITION eonfile = AS.OldOnFile[e-Expressions];
 	numberoffullbuckets = 0;
 /*
 	Start up all threads. The lock needs to be around the whole loop
@@ -2304,7 +2323,7 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 	}
 	UNLOCK(availabilitylock);
 	NewSort();
-	AN0.ninterms = 0;
+	AN0.ninterms = 1;
 /*
 	Now for redefine
 */
@@ -2341,16 +2360,17 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 
 	First we look whether we have to work with entire brackets
 	This is the case when there is a non-NULL address in e->bracketinfo.
-	Of course we shouldn't have interference from a collect statement.
+	Of course we shouldn't have interference from a collect or keep statement.
 */
 #ifdef WHOLEBRACKETS
 	if ( e->bracketinfo && AC.CollectFun == 0 && AR0.DeferFlag == 0 ) {
 		FILEHANDLE *curfile;
 		int didone = 0;
-		LONG num, nterms = 0, n;
+		LONG num, n;
 		AN0.expr = e;
 		for ( n = 0; n < e->bracketinfo->indexfill; n++ ) {
-			if ( ( num = TreatIndexEntry(B0,n) ) > 0 ) {
+			num = TreatIndexEntry(B0,n);
+			if ( num > 0 ) {
 				didone = 1;
 /*
 				This bracket can be sent off.
@@ -2383,32 +2403,28 @@ Found1:;
 					thr->lastbracket = n + num - 1;
 					thr->type = BUCKETDOINGBRACKET;
 					thr->free = BUCKETFILLED;
-					thr->firstterm = nterms;
+					thr->firstterm = AN0.ninterms;
 					for ( j = n; j < n+num; j++ ) {
-						nterms += e->bracketinfo->indexbuffer[j].termsinbracket;
+						AN0.ninterms += e->bracketinfo->indexbuffer[j].termsinbracket;
 					}
 					n += num-1;
 					numberoffullbuckets++;
-					if ( topofavailables > 0 ) SendOneBucket();
+					if ( topofavailables > 0 ) {
+						SendOneBucket(DOBRACKETS);
+					}
 				}
 /*
 					All buckets are in use.
 					Look/wait for an idle worker. Give it a bucket.
 					After that, retry for a bucket
 */
-				else if ( topofavailables > 0 ) {
-					SendOneBucket();
-					goto ReTry;
-				}
 				else {
-					while ( ( id = GetAvailableThread() ) < 0 ) {
+					while ( topofavailables <= 0 ) {
 						MasterWait();
 					}
+					SendOneBucket(DOBRACKETS);
 					goto ReTry;
 				}
-			}
-			else {
-				nterms += e->bracketinfo->indexbuffer[n].termsinbracket;
 			}
 		}
 		if ( didone ) {
@@ -2428,9 +2444,8 @@ Found1:;
 					curfile = AR0.infile;
 					break;
 			}
-			SetScratch(curfile,&(e->onfile));
+			SetScratch(curfile,&eonfile);
 			GetTerm(B0,AT0.WorkPointer);
-			AN0.ninterms = nterms;
 /*
 			Now we point the GetTerm that is used to the one that is selective
 */
@@ -2456,25 +2471,35 @@ Found1:;
 							break;
 					}
 				}
-				while ( ( id = GetAvailableThread() ) < 0 ) {
+				while ( topofavailables <= 0 ) {
 					MasterWait();
 				}
 				while ( topofavailables > 0 && numberoffullbuckets > 0 ) {
-					SendOneBucket();
+					SendOneBucket(DOBRACKETS);
 				}
 			}
 Found2:;
+			while ( numberoffullbuckets > 0 ) {
+				while ( topofavailables <= 0 ) {
+					MasterWait();
+				}
+				while ( topofavailables > 0 && numberoffullbuckets > 0 ) {
+					SendOneBucket(DOBRACKETS);
+				}
+			}
 /*
 			Disable the 'warming up' with smaller buckets.
-*/
+
 			numpasses = 0;
 			thrbufsiz = thrbufsiz0;
+*/
 			AN0.lastinindex = -1;
 		}
+		MasterWaitAll();
 	}
 #endif
 /*
-  	#] Whole brackets :
+  	#] Whole brackets : 
 
 	Now the loop to start a bucket
 */
@@ -2509,7 +2534,7 @@ Found2:;
 /*
 		Check whether we have a priority task:
 */
-		if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket();
+		if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket(LOWESTLEVELGENERATION);
 /*
 		Now put more terms in the bucket. Position tt after the first term
 */
@@ -2538,7 +2563,7 @@ Found2:;
 /*
 			First check:
 */
-			if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket();
+			if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket(LOWESTLEVELGENERATION);
 /*
 			There is room in the bucket. Fill yet another term.
 */
@@ -2580,7 +2605,7 @@ Found2:;
 /*
 				First check:
 */
-				if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket();
+				if ( topofavailables > 0 && numberoffullbuckets > 0 ) SendOneBucket(LOWESTLEVELGENERATION);
 /*
 				There is room in the bucket. Fill yet another term.
 */
@@ -2610,8 +2635,8 @@ Found2:;
 			}
 		}
 		thr->ddterms = dd; /* total number of terms including keep brackets */
-		thr->firstterm = numinput;
-		numinput += dd;
+		thr->firstterm = AN0.ninterms;
+		AN0.ninterms += dd;
 		*tt = 0;           /* mark end of bucket */
 		thr->free = BUCKETFILLED;
 		thr->type = BUCKETDOINGTERMS;
@@ -2891,7 +2916,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor :
+  	#] ThreadsProcessor : 
   	#[ LoadReadjusted :
 */
 /**
@@ -3006,7 +3031,7 @@ restart:;
 		}
 		goto intercepted;
 	}
-	UNLOCK(thr->lock);
+/*	UNLOCK(thr->lock); */
 	if ( numbusy > 0 ) return(1); /* Wait a bit.... */
 	return(0);
 intercepted:;
@@ -3119,7 +3144,7 @@ intercepted:;
 }
 
 /*
-  	#] LoadReadjusted :
+  	#] LoadReadjusted : 
   	#[ SortStrategy :
 */
 /**
@@ -3155,7 +3180,7 @@ intercepted:;
  *	completely.
 */
 /*
-  	#] SortStrategy :
+  	#] SortStrategy : 
   	#[ PutToMaster :
 */
 /**
@@ -3222,7 +3247,7 @@ int PutToMaster(PHEAD WORD *term)
 }
 
 /*
-  	#] PutToMaster :
+  	#] PutToMaster : 
   	#[ SortBotOut :
 */
  
@@ -3264,7 +3289,7 @@ SortBotOut(PHEAD WORD *term)
 #endif
 
 /*
-  	#] SortBotOut :
+  	#] SortBotOut : 
   	#[ MasterMerge :
 */
 /**
@@ -3366,7 +3391,7 @@ int MasterMerge()
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup :
+ 		#] Setup : 
 
 	Now construct the tree:
 */
@@ -3713,7 +3738,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge :
+  	#] MasterMerge : 
   	#[ SortBotMasterMerge :
 */
  
@@ -3837,7 +3862,7 @@ int SortBotMasterMerge()
 #endif
 
 /*
-  	#] SortBotMasterMerge :
+  	#] SortBotMasterMerge : 
   	#[ SortBotMerge :
 */
  
@@ -3925,7 +3950,7 @@ int SortBotMerge(PHEAD0)
 			}
 			term1 += im;
 /*
-			#] One is smallest :
+			#] One is smallest : 
 */
 		}
 		else if ( c < 0 ) {
@@ -3967,7 +3992,7 @@ next2:		im = *term2;
 			}
 			term2 += im;
 /*
-			#] Two is smallest :
+			#] Two is smallest : 
 */
 		}
 		else {
@@ -4120,7 +4145,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 			goto next2;
 /*
-			#] Equal :
+			#] Equal : 
 */
 		}
 	}
@@ -4168,7 +4193,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 		}
 /*
-			#] Tail in one :
+			#] Tail in one : 
 */
 	}
 	else if ( *term2 ) {
@@ -4212,7 +4237,7 @@ cancelled:;		/* Now we need two new terms */
 			term2 += im;
 		}
 /*
-			#] Tail in two :
+			#] Tail in two : 
 */
 	}
 	SortBotOut(BHEAD 0);
@@ -4246,7 +4271,7 @@ ReturnError:;
 #endif
 
 /*
-  	#] SortBotMerge :
+  	#] SortBotMerge : 
   	#[ IniSortBlocks :
 */
  
@@ -4331,7 +4356,7 @@ int IniSortBlocks(int numworkers)
 }
 
 /*
-  	#] IniSortBlocks :
+  	#] IniSortBlocks : 
   	#[ DefineSortBotTree :
 */
  
@@ -4361,7 +4386,7 @@ void DefineSortBotTree()
 #endif
 
 /*
-  	#] DefineSortBotTree :
+  	#] DefineSortBotTree : 
   	#[ GetTerm2 :
 
 	Routine does a GetTerm but only when a bracket index is involved and
@@ -4372,13 +4397,13 @@ void DefineSortBotTree()
 
 WORD GetTerm2(PHEAD WORD *term)
 {
-	WORD *ttco,*tt;
+	WORD *ttco, *tt, retval;
 	LONG n,i;
-	POSITION where;
 	FILEHANDLE *fi;
 	EXPRESSIONS e = AN.expr;
 	BRACKETINFO *b  = e->bracketinfo;
 	BRACKETINDEX *bi = b->indexbuffer;
+	POSITION where, eonfile = AS.OldOnFile[e-Expressions], bstart, bnext;
 /*
 	1: Get the current position.
 */
@@ -4395,14 +4420,19 @@ WORD GetTerm2(PHEAD WORD *term)
 			fi = AR.infile;
 			break;
 	}
+	if ( AR.KeptInHold ) {
+		retval = GetTerm(BHEAD term);
+		return(retval);
+	}
 	SeekScratch(fi,&where);
 	if ( AN.lastinindex < 0 ) {
 /*
 		We have to test whether we have to do the first bracket
 */
-		if ( ( n = TreatIndexEntry(BHEAD 0) ) > 0 ) {
+		if ( ( n = TreatIndexEntry(BHEAD 0) ) <= 0 ) {
 			AN.lastinindex = n;
 			where = bi[n].start;
+			ADD2POS(where,eonfile);
 			SetScratch(fi,&where);
 /*
 			Put the bracket in the Compress buffer.
@@ -4412,20 +4442,27 @@ WORD GetTerm2(PHEAD WORD *term)
 			i = *tt;
 			NCOPY(ttco,tt,i)
 			AR.CompressPointer = ttco;
-			return(GetTerm(BHEAD term));
+			retval = GetTerm(BHEAD term);
+			return(retval);
 		}
-		else AN.lastinindex = 0;
+		else AN.lastinindex = n-1;
 	}
 /*
 	2: Find the corresponding index number
 	   a: test whether it is in the current bracket
 */
 	n = AN.lastinindex;
-	if ( ISLESSPOS(bi[n].start,where) && ISLESSPOS(where,bi[n].next) ) {
-		return(GetTerm(BHEAD term));
+	bstart = bi[n].start;
+	ADD2POS(bstart,eonfile);
+	bnext = bi[n].next;
+	ADD2POS(bnext,eonfile);
+	if ( ISLESSPOS(bstart,where) && ISLESSPOS(where,bnext) ) {
+		retval = GetTerm(BHEAD term);
+		return(retval);
 	}
 	for ( n++ ; n < b->indexfill; n++ ) {
-		if ( ( i = TreatIndexEntry(BHEAD n) ) <= 0 ) {
+		i = TreatIndexEntry(BHEAD n);
+		if ( i <= 0 ) {
 /*
 			Put the bracket in the Compress buffer.
 */
@@ -4435,8 +4472,11 @@ WORD GetTerm2(PHEAD WORD *term)
 			NCOPY(ttco,tt,i)
 			AR.CompressPointer = ttco;
 			AN.lastinindex = n;
-			SetScratch(fi,&(bi[n].start));
-			return(GetTerm(BHEAD term));
+			where = bi[n].start;
+			ADD2POS(where,eonfile);
+			SetScratch(fi,&(where));
+			retval = GetTerm(BHEAD term);
+			return(retval);
 		}
 		else n += i - 1;
 	}
@@ -4444,7 +4484,7 @@ WORD GetTerm2(PHEAD WORD *term)
 }
 
 /*
-  	#] GetTerm2 :
+  	#] GetTerm2 : 
   	#[ TreatIndexEntry :
 */
 /**
@@ -4459,6 +4499,7 @@ int TreatIndexEntry(PHEAD LONG n)
 {
 	BRACKETINFO *b  = AN.expr->bracketinfo;
 	LONG numbra = b->indexfill - 1, i;
+	LONG totterms;
 	BRACKETINDEX *bi;
 	POSITION pos1, average;
 /*
@@ -4472,16 +4513,20 @@ int TreatIndexEntry(PHEAD LONG n)
 */
 	bi = b->indexbuffer;
 	DIFPOS(pos1,bi[numbra].next,bi[n].next);  /* Size of what remains */
-	BASEPOSITION(average) = DIVPOS(pos1,numberofworkers);
+	BASEPOSITION(average) = DIVPOS(pos1,(3*numberofworkers));
 	DIFPOS(pos1,bi[n].next,bi[n].start);      /* Size of the current bracket */
 	if ( ISLESSPOS(average,pos1) ) return(0);
 /*
 	It passes.
 	Now check whether we can do more brackets
 */
+	totterms = bi->termsinbracket;
+	if ( totterms > 2*AC.ThreadBucketSize ) return(1);
 	for ( i = 1; i < numbra-n; i++ ) {
 		DIFPOS(pos1,bi[n+i].next,bi[n].start); /* Size of the combined brackets */
 		if ( ISLESSPOS(average,pos1) ) return(i);
+		totterms += bi->termsinbracket;
+		if ( totterms > 2*AC.ThreadBucketSize ) return(i+1);
 	}
 /*
 	We have a problem at the end of the system. Just do one.
@@ -4490,7 +4535,7 @@ int TreatIndexEntry(PHEAD LONG n)
 }
 
 /*
-  	#] TreatIndexEntry :
+  	#] TreatIndexEntry : 
   	#[ SetHideFiles :
 */
 
@@ -4520,6 +4565,6 @@ void SetHideFiles() {
 }
 
 /*
-  	#] SetHideFiles :
+  	#] SetHideFiles : 
 */
 #endif

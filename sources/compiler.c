@@ -109,6 +109,8 @@ static KEYWORD com2commands[] = {
 	,{"hide",           (TFUN)CoHide,             SPECIFICATION,PARTEST}
 	,{"if",             (TFUN)CoIf,               STATEMENT,    PARTEST}
 	,{"ifmatch",        (TFUN)CoIfMatch,          STATEMENT,    PARTEST}
+	,{"ifnomatch",      (TFUN)CoIfNoMatch,        STATEMENT,    PARTEST}
+	,{"ifnotmatch",      (TFUN)CoIfNoMatch,        STATEMENT,    PARTEST}
 	,{"inexpression",   (TFUN)CoInExpression,     STATEMENT,    PARTEST}
 	,{"inparallel",     (TFUN)CoInParallel,       SPECIFICATION,PARTEST}
 	,{"inside",         (TFUN)CoInside,           STATEMENT,    PARTEST}
@@ -203,7 +205,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -226,7 +228,7 @@ VOID inictable()
 }
 
 /*
- 		#] inictable :
+ 		#] inictable : 
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -278,7 +280,7 @@ KEYWORD *findcommand(UBYTE *in)
 }
 
 /*
- 		#] findcommand :
+ 		#] findcommand : 
  		#[ ParenthesesTest :
 */
 
@@ -322,7 +324,7 @@ int ParenthesesTest(UBYTE *sin)
 }
 
 /*
- 		#] ParenthesesTest :
+ 		#] ParenthesesTest : 
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -356,7 +358,7 @@ UBYTE *SkipAName(UBYTE *s)
 }
 
 /*
- 		#] SkipAName :
+ 		#] SkipAName : 
  		#[ IsRHS :
 */
 
@@ -402,7 +404,7 @@ UBYTE *IsRHS(UBYTE *s, UBYTE c)
 }
 
 /*
- 		#] IsRHS :
+ 		#] IsRHS : 
  		#[ IsIdStatement :
 */
 
@@ -413,7 +415,7 @@ int IsIdStatement(UBYTE *s)
 }
 
 /*
- 		#] IsIdStatement :
+ 		#] IsIdStatement : 
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -453,7 +455,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 }
 
 /*
- 		#] CompileAlgebra :
+ 		#] CompileAlgebra : 
  		#[ CompileStatement :
 
 */
@@ -566,7 +568,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
@@ -605,7 +607,7 @@ int TestTables()
 }
 
 /*
- 		#] TestTables :
+ 		#] TestTables : 
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -648,6 +650,13 @@ int CompileSubExpressions(SBYTE *tokens)
 		}
 		else if ( *s == TFUNCLOSE ) { sumlevel = 0; *fill++ = *s++; }
 		else if ( *s == LPARENTHESIS ) {
+/*
+			We must make an exception here.
+			If the subexpression is just an integer, whatever its length,
+			we should try to keep it.
+			This is important when we have a function with an integer
+			argument. In particular this is relevant for the MZV program.
+*/
 			t = s; level = 0;
 			while ( level >= 0 ) {
 				s++;
@@ -1796,7 +1805,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 }
 
 /*
- 		#] CompleteTerm :
+ 		#] CompleteTerm : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */
