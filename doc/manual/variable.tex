@@ -152,6 +152,8 @@ under complex conjugation it changes sign. Its power restrictions are
 somewhat uncommon. Any power outside the range 6 to 9 is eliminated. 
 There is however one exception: a term that does not contain t to any 
 power ($t^0$) is not affected. 
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     s     x(:10),y;
     L     F=y^7;
@@ -485,6 +487,8 @@ position that they are used and their use defines their contents. The
 elements of the set should be enclosed by a pair of curly 
 brackets\index{brackets!curly} and the set is placed at the position where 
 otherwise the name of the set would be used:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Symbols a1,a2,a3,b1,b2,b3,x,n;
     CFunctions g1,g2,g3,g;
@@ -614,7 +618,10 @@ Sometimes indices\index{indices!dummy} are to be summed over but due to the
 evaluation procedures some terms contain the index mu and other terms 
 contain the index nu. There is a command to sum over indices in such a way 
 that {\FORM} recognizes that the exact name of the index is irrelevant. 
-This is the `sum'-statement (see also \ref{substasum}): \begin{verbatim}
+This is the `sum'-statement (see also \ref{substasum}):%
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
+\begin{verbatim}
    i  mu,nu;
    f  f1,f2;
    L  F=f1(mu)*f2(mu)+f1(nu)*f2(nu);
@@ -653,6 +660,8 @@ become time consuming.
 These dummy indices can be used to solve a well known problem in the 
 automatic summation of indices. This problem occurs, when summed indices 
 are found inside a subexpression that is raised to a power:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Index mu,nu;
     CFunctions f,g;
@@ -669,6 +678,8 @@ are found inside a subexpression that is raised to a power:
 \end{verbatim}
 Clearly the answer is not what we had in mind, when we made the program. 
 There is an easy way out:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Index mu,nu;
     Symbol x;
@@ -692,10 +703,14 @@ mu to a new dummy index.
 
 There are some extra problems connected to dummy indices. Assume that we 
 have the expression F which contains
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
      F = f(N1_?,N2_?)*f(N2_?,N1_?);
 \end{verbatim}
 and next we have the module
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
      Indices mu,nu,rho,si;
      Vectors p1,p2,p3,v;

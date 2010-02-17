@@ -359,6 +359,8 @@ work in future versions of \FORM.
 Nowadays also the use of the argument field wildcard (see chapter 
 \ref{pattern} on pattern matching) is allowed as in the 
 regular functions:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     #define a "1"
     #define bc2 "x"
@@ -536,6 +538,8 @@ delayed\index{delayed substitution}
 substitution\index{substitution!delayed}. With macro's like the above the 
 question is always {\sl when} a preprocessor variable will be substituted. 
 Take for instance
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     #define c "3"
     #define var1(a,b) "(`~a'+`~b'+`c')"
@@ -1158,6 +1162,8 @@ Hence it should be used with great care.
 
 \noindent Turns\index{\#preout} listing of the output of the preprocessor 
 to the compiler on or off. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     #PreOut ON
     S   a1,...,a4;
@@ -1681,6 +1687,8 @@ message and execution will be halted.
 \end{description}
 If no special variables are asked for (by means of \%\$, \%e, \%E or \%s) 
 the list of variables will be ignored (if present). Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Symbols a,b;
     L   F = a+b;
@@ -1689,9 +1697,9 @@ the list of variables will be ignored (if present). Example:
     #$a3 = $a1^3;
     #write " One power: %$\n Two powers: %$\n Three powers: %$\n%s"\
            ,$a1,$a2,$a3," The end"
- One power: a+b
- Two powers: 2*a*b+a^2+b^2
- Three powers: 3*a*b^2+3*a^2*b+a^3+b^3
+ One power: b+a
+ Two powers: b^2+2*a*b+a^2
+ Three powers: b^3+3*a*b^2+3*a^2*b+a^3
  The end
     .end
 
@@ -1702,6 +1710,8 @@ Time =       0.00 sec    Generated terms =          2
 We see that the writing occurs immediately after the \#write\index{\#write} 
 instruction, because it is done by the preprocessor. Hence the output comes 
 before the execution of the expression F.
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     S   x1,...,x10;
     L   MyExpression = (x1+...+x10)^4;
@@ -1720,6 +1730,8 @@ expression has not been worked out at the moment we want to write. The name
 of the expression is too long for fortran\index{fortran}, and hence the 
 output file will use a different name (in this case the name `fun' was 
 selected). The output file looks like
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
       FUNCTION fun(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)
       REAL x1,x2,x3,x4,x5,x6,x7,x8,x9,x10

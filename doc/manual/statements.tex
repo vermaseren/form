@@ -136,11 +136,15 @@ In the first notation the indices can only be 0, 1 and -1. In the second
 notation there can be no zeroes. The `ArgImplode,Z;' 
 statement\index{argimplode} would be 
 equivalent to the statement
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
    repeat id Z(?a,0,x?!{0,0},?b) = Z(?a,x+sig_(x),?b);
 \end{verbatim}
 and takes one from the first notation to the second. The `ArgExplode,Z;' 
 statement\index{argexplode} is equivalent to the statement
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
    repeat id Z(?a,x?!{1,0,-1},?b) = Z(?a,0,x-sig_(x),?b);
 \end{verbatim}
@@ -1176,6 +1180,8 @@ separately.}
 
 \noindent In the case of the above options only the coefficient is treated. 
 When these options are not used the whole term is treated as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Symbols a,b,c;
     CFunctions f,f1,f2,f3;
@@ -2191,6 +2197,8 @@ have to be done only once, rather than for each complete term separately
 (assuming that each bracket contains a large number of terms).
 
 \noindent There can be some nasty side effects. Assume an expression like:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     F = f(i1,x)*(g(i1,y)+g(i1,z));
     B  f;
@@ -2200,7 +2208,7 @@ have to be done only once, rather than for each complete term separately
 \end{verbatim}
 the result will be
 \begin{verbatim}
-    F = f(N1_?,x)*g(i1,y)+f(N1_?,x)*g(i1,z));
+    F = f(N1_?,x)*g(i1,y)+f(N1_?,x)*g(i1,z);
 \end{verbatim}
 because at the moment of summing over i1 \FORM\ is not looking inside the 
 brackets and hence it never sees the second occurrence of i1. There are 
@@ -2301,6 +2309,8 @@ this argument may be negative. If this is not desired one can first
 normalize\index{normalize} the argument and then make its coefficients 
 integer. The overall factor that is needed to make the coefficients like 
 described is taken from the overall factor of the complete term. Example
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     S   a,b,c;
     CF  f;
@@ -2311,7 +2321,6 @@ described is taken from the overall factor of the complete term. Example
 
    F =
       2/105*f(135*c + 147*b + 385*a);
-
 \end{verbatim}
 
 \noindent Note that this feature can be used to make outputs look much more 
@@ -3223,6 +3232,8 @@ argument\index{argument} is considered to be the
 coefficient\index{coefficient} of the term. If two terms are otherwise 
 identical the arguments of their polyfun will be added during the sorting, 
 even if these arguments are little expressions. Hence
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     PolyFun acc;
     Local F = 3*x^2*acc(1+y+y^2)+2*x^2*acc(1-y+y^2);
@@ -3409,6 +3420,8 @@ will be printed at the end of the print command.}
 \rightvitem{15cm}{A linefeed\index{linefeed}.}
 
 \noindent Each call is terminated with a linefeed\index{linefeed}. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Symbols a,b,c;
     Local F = 3*a+2*b;
@@ -3861,6 +3874,8 @@ first index as if it is something incoming and the second index as if it is
 something outgoing) and if the vertex function is 
 antisymmetric\index{antisymmetric}\index{symmetric!anti}, each exchange will 
 result in a minus sign. Examples:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Functions f(antisymmetric),ff(cyclesymmetric);
     Indices i1,...,i8;
@@ -4004,6 +4019,8 @@ merged in all different ways, keeping the relative ordering of the two
 lists preserved. It is the opposite of the 
 distrib\_\index{distrib\_}\index{function!distrib\_} function (see 
 \ref{fundistrib}). Hence
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
    Local F = f(a,b)*f(c,d);
    shuffle,f;
@@ -4254,6 +4271,8 @@ while in the case of the minus the definition is
 It is assumed that we have harmonic sums\index{harmonic sum} (see the 
 summer library in the \FORM\ distribution). For such sums we expect 
 functions with lists of nonzero integer arguments. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     CF  S,R;
     Symbols N,n;

@@ -88,6 +88,8 @@ other. For this case \FORM\ allows the user to define a private metric. All
 the tools exist to make this a success with the exception of a loss in 
 speed of course. Let us have a look at the contraction of two Levi-Civita 
 tensors in an arbitrary metric:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Indices m1,m2,m3,n1,n2,n3,i1,i2,i3;
     Cfunction eta(symmetric),e(antisymmetric);
@@ -168,6 +170,8 @@ n-dimensional index run over? In the above example it is the sum
 (\ref{substasum}) statement that determines this. Hence this is fully under 
 the control of the user. Therefore a proper way to deal with the above 
 example would be
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Indices i1,i2,i3;
     FixIndex 1:1,2:1,3:-1;
@@ -199,6 +203,8 @@ while they are indices of a Kronecker delta, because as long as the indices
 are symbolic, \FORM\ will replace \verb:d_(i1,i1): by the dimension of 
 \verb:i1:, and that is not what we want. Hence we have to declare the 
 indices to be non-summable by giving them dimension zero:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!
 \begin{verbatim}
     Indices i1=0,i2=0,i3=0;
     FixIndex 1:1,2:1,3:-1;
