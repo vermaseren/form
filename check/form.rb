@@ -114,9 +114,13 @@ class FormTest < Test::Unit::TestCase
 		@strace_out =~ /exit_group\((\d+)\)/
 		$1.to_i
 	end
-	def result(exprname)
-		@stdout =~ /.+\n(\s+#{exprname}\s*=.+;\n)/m
-		return $1
+	def exact_result(exprname, index=-1) # verbatim result (keeps line breaks and whitespaces)
+		matches = @stdout.scan(/^[ \t]+#{exprname}\s*=.+?;/m) 
+		return matches[index] if not matches.empty?
+		return ""
+	end
+	def result(exprname, index=-1) # result on one line with multiple whitespaces reduced to one
+		exact_result(exprname, index).gsub(/\s+/, "")
 	end
 
 	# Test-result functions to be used in assertions
@@ -152,19 +156,30 @@ class FormTest < Test::Unit::TestCase
 	def no_problem; !problem; end
 
 	# Utility functions for pattern matching
-	def ExactPattern(str)
+	def exact_pattern(str)
 		san_str = Regexp.quote(str)
 		Regexp.new(san_str)
 	end
-	def Pattern(str)
-		san_str = Regexp.quote(str)
-		san_str = san_str.gsub(/(\\n|^)(\\ |\\t)+/, '\1\s+')
-		Regexp.new(san_str, Regexp::MULTILINE)
+	def pattern(str)
+		san_str = Regexp.quote(str.gsub(/\s+/, ""))
+		Regexp.new(san_str)
 	end
 end
 
 if __FILE__ == $0
-	if ARGV == []
+	argv = ARGV
+	options = argv.index("-c")
+	$onlyoneclass = nil
+	if options
+		if options+1 >= argv.size
+			puts "Error: Missing class name for option -c!"
+			exit
+		end
+		$onlyoneclass = argv[options+1]
+		argv.delete_at(options)
+		argv.delete_at(options)
+	end
+	if argv == []
 		if ENV['srcdir']
 			path = ENV['srcdir'] + "/**/*.rb"
 		else
@@ -172,7 +187,7 @@ if __FILE__ == $0
 		end
 		files = Dir.glob(path)
 	else
-		files = ARGV
+		files = argv
 	end
 	files.each do |iname|
 		if iname != $0
@@ -186,6 +201,7 @@ if __FILE__ == $0
 				Class.constants.each do |c|
 					cl = Class.class_eval(c)
 					if cl.class == Class && cl.ancestors[1] == FormTest
+						next if $onlyoneclass && $onlyoneclass != cl.name
 						suite << cl.suite
 					end
 				end
@@ -193,5 +209,8 @@ if __FILE__ == $0
 			end
 		end
 		Test::Unit::UI::Console::TestRunner.run(DerivedTests)
+	elsif $onlyoneclass
+		MiniTest::Unit::TestCase.reset
+		MiniTest::Unit::TestCase.inherited(Kernel.const_get($onlyoneclass))
 	end
 end

@@ -20,8 +20,8 @@ end
 def test1
 	execute FORM
 	assert no_problem
-	assert result("x") =~ Pattern("x = 0;")
-	assert result("y") =~ Pattern("y = 0;")
+	assert result("x") =~ pattern("x = 0;")
+	assert result("y") =~ pattern("y = 0;")
 end
 end
 #] NonZero :

@@ -45,12 +45,8 @@ end
 def test1
 	execute FORM
 	assert no_problem
-	assert result("expr1") =~ Pattern(<<-EOF
-		f(1)*x + f(2)*x^2 + f(3)*x^3 + f(4)*x^4 + f(5)*x^5 + f(6)*x^6 + f(7)*x^7
-		+ f(8)*x^8 + f(9)*x^9 + f(10)*x^10;
-		EOF
-	)
-	assert result("e10") =~ /\s+f\(10\);/
+	assert result("expr1") =~ pattern("f(1)*x + f(2)*x^2 + f(3)*x^3 + f(4)*x^4 + f(5)*x^5 + f(6)*x^6 + f(7)*x^7 + f(8)*x^8 + f(9)*x^9 + f(10)*x^10")
+	assert result("e10") =~ pattern("f(10)")
 end
 end
 #] SparseTable1 :
