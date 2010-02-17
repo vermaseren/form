@@ -83,7 +83,7 @@ A complete test might look like this:
     execute FORM
     assert no_problem
     assert result("f") =~ 
-        Pattern("1267650600228229401496703205376*y^100;")
+        pattern("1267650600228229401496703205376*y^100;")
   end
   end
 \end{verbatim}
@@ -95,7 +95,7 @@ we have are that no problem occurred, i.e. no syntax error, no runtime error, or
 similar things. We also check the output of our \FORM\ program. We compare via
 pattern matching the result of the expression \C{f} with the correct answer. The
 function \C{result()} extracts the appropriate line from the output, \C{=\~{}} is
-the pattern matching operator in Ruby, and the function \C{Pattern()} prepares
+the pattern matching operator in Ruby, and the function \C{pattern()} prepares
 special characters like the caret (\^{}) for the pattern matcher.
 
 Next time we run the test suite, our test will be run as well. If no assertions
@@ -208,23 +208,26 @@ be considered. The operator \C{=\~{}} will try to match a string with a pattern.
 The variables like \C{\@@stdout} are actually strings (they do contain the
 carriage return and/or line feed for multi-line output). Patterns in Ruby are
 written between slashes and various characters are interpreted in a special way
-(following the widely used regex-syntax). There are three functions to
-facilitate things: \C{result()}, \C{Pattern()}, and \C{ExactPattern()}.
-\C{result()} takes a string being the name of an expression and returns a string
-that only contains the lines belonging to the last output of this expression.
-\C{Pattern()} transforms special characters in the given string, removes
-unnecessary whitespace, and returns the string as a pattern with multi-line
-matching enabled. Since \FORM\
+(following the widely used regex-syntax).
+
+There are four functions to facilitate things: \C{result()}, \C{pattern()},
+\C{exact\_result()}, and \C{exact\_pattern()}. \C{result()} takes a string being
+the name of an expression and returns a string that only contains the lines
+belonging to the last output of this expression. If it is not the last output of
+an expression that is wished for, a second numeric parameter can be given that
+specifies the index of the output (counting starts at 0).  While \C{result()}
+removes all line breaks and whitespaces, \C{exact\_result()} leaves them in
+place.  \C{pattern()} transforms special characters in the given string, removes
+whitespaces and line breaks, and returns the string as a pattern. Since \FORM\
 expressions usually contain a lot of special characters like +, *, ., etc. they
-cannot not be simply used as a pattern. \C{Pattern()} transforms these
+cannot not be simply used in a pattern. \C{pattern()} transforms these
 characters automatically into the correct regex equivalent, e.g. + becomes
-\textbackslash +.
-With it, a \FORM\ expression can be directly given as an argument and used in a
-pattern matching (see example). \C{ExactPattern()} does not treat whitespaces
-and line breaks in a special way as \C{Pattern()} does and can therefore be used
-when a exact comparison is required (if for example a bug in the output
-functions of \FORM\ had caused some whitespace or line breaks to be missing and
-a test case were required to check for this behavior).
+\textbackslash +.  With it, a \FORM\ expression can be directly given as an
+argument and used in a pattern matching (see example). \C{exact\_pattern()} does
+not treat whitespaces and line breaks in a special way as \C{pattern()} does and
+can therefore be used when a exact comparison is required (if for example a bug
+in the output functions of \FORM\ had caused some whitespace or line breaks to
+be missing and a test case were required to check for this behavior).
 
 If one doesn't want or cannot use the \C{assert} function, one can signal a test
 failure to the testing framework by raising an \C{AssertionFailedError}
@@ -311,7 +314,7 @@ At last, a complete example as it is actually contained in the repository.
     def test1
       execute FORM
       assert no_problem
-      assert result("expr1") =~ Pattern(<<-EOF
+      assert result("expr1") =~ pattern(<<-EOF
         f(1)*x + f(2)*x^2 + f(3)*x^3 + f(4)*x^4 + f(5)*x^5 + f(6)*x^6 + f(7)*x^7
         + f(8)*x^8 + f(9)*x^9 + f(10)*x^10;
         EOF
@@ -327,8 +330,8 @@ define a commentary block. Here useful information are given about the bug that
 triggered the test case. The input is not modified compared to the original
 \FORM\ program, it is just directly pasted into this Ruby file. We use
 \C{extra\_parameter} to define a preprocessor variable for the run. We check
-\C{expr1} to a multi-line reference. Since we use \C{Pattern()} (instead of
-\C{ExactPattern()}) we can be sloppy about the indentation and the whitespaces.
+\C{expr1} to a multi-line reference. Since we use \C{pattern()} (instead of
+\C{exact\_pattern()}), we can be sloppy about the indentation and the whitespaces.
 The expression \C{e10} is matched to a pattern done "by hand" instead (just to
 show the principle). For such a test case, where we are mostly interested about
 the correctness of the calculation, the first assertion (\C{assert no\_problem})
