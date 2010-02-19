@@ -1037,6 +1037,7 @@ static void print_R()
 	/* ... */
 	printf("%ld\n", AR.OldTime);
 	printf("%ld\n", AR.InInBuf);
+	printf("%ld\n", AR.InHiBuf);
 	printf("%ld\n", AR.pWorkSize);
 	printf("%ld\n", AR.lWorkSize);
 	printf("%ld\n", AR.posWorkSize);
@@ -2050,6 +2051,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AR.DefPosition, POSITION);
 	R_SET(AR.OldTime, LONG);
 	R_SET(AR.InInBuf, LONG);
+	R_SET(AR.InHiBuf, LONG);
 
 	R_SET(AR.NoCompress, int);
 	R_SET(AR.gzipCompress, int);
@@ -2553,6 +2555,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&l, sizeof(LONG));
 
 	S_WRITE_B(&AR.InInBuf, sizeof(LONG));
+	S_WRITE_B(&AR.InHiBuf, sizeof(LONG));
 	
 	S_WRITE_B(&AR.NoCompress, sizeof(int));
 	S_WRITE_B(&AR.gzipCompress, sizeof(int));

@@ -12,7 +12,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ syntax and use :
 
 	The indexing of brackets is not automatic! It should only be used
@@ -31,7 +31,7 @@
 	bracketinfo      for using.
 	newbracketinfo   for making new index.
 
-  	#] syntax and use :
+  	#] syntax and use : 
   	#[ FindBracket :
 */
 
@@ -248,7 +248,7 @@ found:
 }
 
 /*
-  	#] FindBracket :
+  	#] FindBracket : 
   	#[ PutBracketInIndex :
 
 	Call via
@@ -477,7 +477,7 @@ void ClearBracketIndex(WORD numexp)
 }
 
 /*
-  	#] ClearBracketIndex :
+  	#] ClearBracketIndex : 
   	#[ OpenBracketIndex :
 
 	Note: This routine is thread-safe
@@ -503,7 +503,7 @@ VOID OpenBracketIndex(WORD nexpr)
 }
 
 /*
-  	#] OpenBracketIndex :
+  	#] OpenBracketIndex : 
 */
 
 /*
@@ -533,5 +533,5 @@ int PutTermInIndex(WORD *term,POSITION *position)
 	return(0);
 }
 
-  	#] PutTermInIndex :
+  	#] PutTermInIndex : 
 */

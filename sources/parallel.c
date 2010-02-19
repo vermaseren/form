@@ -2736,7 +2736,8 @@ static int  PF_rhsBCastSlave(FILEHANDLE *curfile,EXPRESSIONS e)
 		curfile->POfill-=l;
 	}
 	curfile->POfull=curfile->POfill;
-   if ( curfile != AR.hidefile ) AR.InInBuf = curfile->POfull-curfile->PObuffer;
+	if ( curfile != AR.hidefile ) AR.InInBuf = curfile->POfull-curfile->PObuffer;
+	else                          AR.InHiBuf = curfile->POfull-curfile->PObuffer;
 	return(0);
 }
 /*
@@ -2973,8 +2974,14 @@ static int PF_DoOneExpr(void)/*the processor*/
 				  }
 				  AN.ninterms += dd;
 				  SetScratch(fi,&position);
-				  AR.InInBuf = (fi->POfull-fi->PObuffer)
+				  if ( fi == AR.hidefile ) {
+					AR.InHiBuf = (fi->POfull-fi->PObuffer)
 						-DIFBASE(position,fi->POposition)/sizeof(WORD);
+				  }
+				  else {
+					AR.InInBuf = (fi->POfull-fi->PObuffer)
+						-DIFBASE(position,fi->POposition)/sizeof(WORD);
+				  }
 				}
 				AN.ninterms += dd;
 				if ( EndSort(AM.S0->sBuffer,0) < 0 ) return(-1);

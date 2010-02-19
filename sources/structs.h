@@ -1620,6 +1620,7 @@ struct R_const {
 #endif
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
+    LONG    InHiBuf;               /* (R) Characters in hide buffer. Scratch file. */
     LONG    pWorkSize;             /* (R) Size of pWorkSpace */
     LONG    lWorkSize;             /* (R) Size of lWorkSpace */
     LONG    posWorkSize;           /* (R) Size of posWorkSpace */

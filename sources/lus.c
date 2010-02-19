@@ -324,34 +324,64 @@ Success:;
 			}
 		}
 		else {
+			WORD *t1, *t2, *t3;
 			for ( i = 0; i < L; i++ ) {
 				alist = wi + i*numargs;
 				tt = loc[i];
 				m = tt + FUNHEAD;
 				for ( k = 0; k < numargs; k++ ) {
-					if ( m[2*k] == -INDEX && m[2*k+1] == alist[0] ) {
+					if ( *m == -INDEX && m[1] == alist[0] ) {
 						if ( k != 0 ) {
-							jj = m[2*k]; m[2*k] = m[0]; m[0] = jj;
-							jj = m[2*k+1]; m[2*k+1] = m[0]; m[0] = jj;
-							sign = -sign;
-							break;
+							if ( ( k & 1 ) != 0 ) sign = -sign;
+/*
+							now move to position 0
+*/
+							t2 = m+2; t1 = m; t3 = tt+FUNHEAD;
+							while ( t1 > t3 ) { *--t2 = *--t1; }
+							t3[0] = -INDEX; t3[1] = alist[0];
 						}
+						break;
 					}
+					NEXTARG(m)
 				}
+				m = tt + FUNHEAD + 2;
 				for ( k = 1; k < numargs; k++ ) {
-					if ( m[2*k] == -INDEX && m[2*k+1] == alist[1] ) {
+					if ( *m == -INDEX && m[1] == alist[1] ) {
 						if ( k != 1 ) {
-							jj = m[2*k]; m[2*k] = m[2]; m[2] = jj;
-							jj = m[2*k+1]; m[2*k+1] = m[3]; m[3] = jj;
-							sign = -sign;
-							break;
+							if ( ( k & 1 ) == 0 ) sign = -sign;
+/*
+							now move to position 1
+*/
+							t2 = m+2; t1 = m; t3 = tt+FUNHEAD+2;
+							while ( t1 > t3 ) { *--t2 = *--t1; }
+							t3[0] = -INDEX; t3[1] = alist[1];
 						}
+						break;
 					}
+					NEXTARG(m)
 				}
-				m += 4; tt += tt[1];
-				while ( m < tt ) {
-					if ( *m == -MINVECTOR ) sign2 = -sign2;
-					m++; *w++ = *m++;
+/*
+				now copy the remaining arguments to w
+				keep in mind that the output function is a tensor!
+*/
+				t1 = tt + FUNHEAD + 4;
+				t2 = tt + tt[1];
+				while ( t1 < t2 ) {
+					if ( *t1 == -INDEX || *t1 == -VECTOR ) {
+						*w++ = t1[1]; t1 += 2;
+					}
+					else if ( *t1 == -MINVECTOR ) {
+						*w++ = t1[1]; t1 += 2; sign2 = -sign2;
+					}
+					else if ( ( *t1 == -SNUMBER ) && ( t1[1] >= 0 ) && ( t1[1] < AM.OffsetIndex ) ) {
+						*w++ = t1[1]; t1 += 2; sign2 = -sign2;
+					}
+					else {
+						LOCK(ErrorMessageLock);
+						MesPrint("Illegal attempt to use a non-index-like argument in a tensor in ReplaceLoop statement");
+						UNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
 				}
 			}
 		}
@@ -389,27 +419,48 @@ Success:;
 			}
 		}
 		else {
+			WORD *t1, *t2, *t3;
 			for ( i = 0; i < L; i++ ) {
 				alist = wi + i*numargs;
 				tt = loc[i];
-				m = tt + FUNHEAD; jj = -1;
-				for ( k = 0, j = 0; k < numargs; k++ ) {
-					if ( *m == -INDEX && m[1] == alist[0] && ( j & 1 ) == 0 ) {
-						if ( k != 0 && jj != 0 ) { sign = -sign; jj = k; }
-						NEXTARG(m)
-						j |= 1;
+				m = tt + FUNHEAD;
+				for ( k = 0; k < numargs; k++ ) {
+					if ( *m == -INDEX && m[1] == alist[0] ) {
+						if ( k != 0 ) {
+							if ( ( k & 1 ) != 0 ) sign = -sign;
+/*
+							now move to position 0
+*/
+							t2 = m+2; t1 = m; t3 = tt+FUNHEAD;
+							while ( t1 > t3 ) { *--t2 = *--t1; }
+							t3[0] = -INDEX; t3[1] = alist[0];
+						}
+						break;
 					}
-					else if ( *m == -INDEX && m[1] == alist[1] && ( j & 2 ) == 0 ) {
-						if ( k != 1 && jj != 1 ) { sign = -sign; jj = k; }
-						NEXTARG(m)
-						j |= 2;
-					}
-					else {
-						tt = m;
-						NEXTARG(m)
-						while ( tt < m ) *w++ = *tt++;
-					}
+					NEXTARG(m)
 				}
+				m = tt + FUNHEAD + 2;
+				for ( k = 1; k < numargs; k++ ) {
+					if ( *m == -INDEX && m[1] == alist[1] ) {
+						if ( k != 1 ) {
+							if ( ( k & 1 ) == 0 ) sign = -sign;
+/*
+							now move to position 1
+*/
+							t2 = m+2; t1 = m; t3 = tt+FUNHEAD+2;
+							while ( t1 > t3 ) { *--t2 = *--t1; }
+							t3[0] = -INDEX; t3[1] = alist[1];
+						}
+						break;
+					}
+					NEXTARG(m)
+				}
+/*
+				now copy the remaining arguments to w
+*/
+				t1 = tt + FUNHEAD + 4;
+				t2 = tt + tt[1];
+				while ( t1 < t2 ) *w++ = *t1++;
 			}
 		}
 	}
@@ -431,7 +482,7 @@ Success:;
 }
 
 /*
-  	#] Lus : 
+  	#] Lus :
   	#[ FindLus :
 */
 

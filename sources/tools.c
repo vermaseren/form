@@ -934,6 +934,7 @@ LONG ReadPosFile(PHEAD FILEHANDLE *fi, UBYTE *buffer, LONG size, POSITION *pos)
 			fi->POfull = fi->PObuffer+retval/sizeof(WORD);
 			fi->POfill = fi->PObuffer;
 			if ( fi != AR.hidefile ) AR.InInBuf = retval/sizeof(WORD);
+			else                     AR.InHiBuf = retval/sizeof(WORD);
 		}
 		else {
 			fi->POfill = (WORD *)((UBYTE *)(fi->PObuffer) + DIFBASE(*pos,fi->POposition));
@@ -957,6 +958,7 @@ LONG ReadPosFile(PHEAD FILEHANDLE *fi, UBYTE *buffer, LONG size, POSITION *pos)
 			fi->POfull = fi->PObuffer+retval/sizeof(WORD);
 			fi->POfill = fi->PObuffer;
 			if ( fi != AR.hidefile ) AR.InInBuf = retval/sizeof(WORD);
+			else                     AR.InHiBuf = retval/sizeof(WORD);
 			if ( retval == 0 ) { t = fi->POfill; break; }
 		  }
 		}

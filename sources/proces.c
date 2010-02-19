@@ -232,14 +232,14 @@ WORD Processor()
 	            if ( PF.me == MASTER ) SetScratch(AR.hidefile,&(e->onfile));
 #else
 				SetScratch(AR.hidefile,&(e->onfile));
-				AR.InInBuf = AR.hidefile->POfull-AR.hidefile->POfill;
+				AR.InHiBuf = AR.hidefile->POfull-AR.hidefile->POfill;
 #ifdef HIDEDEBUG
 				MesPrint("Hidefile: onfile: %15p, POposition: %15p, filesize: %15p",&(e->onfile)
 				,&(AR.hidefile->POposition),&(AR.hidefile->filesize));
-				MesPrint("Set hidefile to buffer position %l/%l; AR.InInBuf = %l"
+				MesPrint("Set hidefile to buffer position %l/%l; AR.InHiBuf = %l"
 					,(AR.hidefile->POfill-AR.hidefile->PObuffer)*sizeof(WORD)
 					,(AR.hidefile->POfull-AR.hidefile->PObuffer)*sizeof(WORD)
-					,AR.InInBuf
+					,AR.InHiBuf
 				);
 #endif
 #endif
@@ -340,8 +340,14 @@ commonread:;
 					  }
 					  AN.ninterms += dd;
 					  SetScratch(curfile,&position);
-					  AR.InInBuf = (curfile->POfull-curfile->PObuffer)
+					  if ( AR.GetFile == 2 ) {
+						AR.InHiBuf = (curfile->POfull-curfile->PObuffer)
 							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
+					  }
+					  else {
+						AR.InInBuf = (curfile->POfull-curfile->PObuffer)
+							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
+					  }
 					}
 					AN.ninterms += dd;
 					if ( LastExpression ) {
