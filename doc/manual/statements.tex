@@ -1759,6 +1759,11 @@ the powers of the symbols and dotproducts present.}
 label\index{label}. If the pattern matches, the replacement will be made 
 after which the execution continues at the label.}
 
+\lefttabitem{ifnomatch$-\!\!>$\index{ifmatch}}
+\tabitem{This option should be followed by the name (or number) of a 
+label\index{label}. If the pattern does not match, 
+execution continues at the label.}
+
 \lefttabitem{disorder\index{disorder}}
 \tabitem{This option is used for products of 
 noncommuting\index{noncommuting} functions\index{functions!noncommuting} or 
@@ -1993,6 +1998,29 @@ is just a shorthand notation for
 \vspace{10mm}
 
 %--#] ifmatch : 
+%--#[ ifnomatch :
+
+\section{ifnomatch}
+\label{substaifnomatch}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & ifnomatch$-\!\!>$ {\tt<}label{\tt>} {\tt<}pattern{\tt>} = {\tt<}expression{\tt>};
+\\ See also & identify (\ref{substaidentify})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{ifnomatch} is identical to the ifnomatch option 
+of the id statement (see \ref{substaidentify}). Hence
+\begin{verbatim}
+   ifnomatch-> ....
+\end{verbatim}
+is just a shorthand notation for
+\begin{verbatim}
+   id ifnomatch-> ....
+\end{verbatim}
+\vspace{10mm}
+
+%--#] ifnomatch : 
 %--#[ index :
  
 \section{index, indices}
@@ -3167,7 +3195,7 @@ is on.}
 is the default.}
 \vspace{10mm}
 
-%--#] on :
+%--#] on : 
 %--#[ once :
  
 \section{once}
@@ -4310,6 +4338,13 @@ When the option once is mentioned, only one pair will be contracted this
 way. Without this option all occurrences of the function inside a term will 
 be treated till there are only terms with a single occurrence of the 
 function.
+
+The stuffle command takes also the effect of roots of 
+unity\ref{rootofunity}\index{root of unity} into account in the same way 
+that the signs of alternating sums are taken into account. This means that 
+the sum indices don't have to be integers, but could be multiples of a 
+single symbol that has been declared to be a root of 
+unity\ref{substasymbols}.
 \vspace{10mm}
 %
 %--#] stuffle : 
@@ -4372,6 +4407,12 @@ complex conjugate).}
 
 \leftvitem{2cm}{x\hash{}i}
 \rightvitem{14cm}{The symbol is imaginary\index{imaginary}.}
+
+\leftvitem{2cm}{x\hash{}=number}
+\rightvitem{14cm}{The symbol is a number-th root of
+unity\index{root of unity}\label{rootofunity} This means that the number-th 
+power of the symbol will be replaced by one and half this power (if even) 
+by -1. Negative powers will be replaced by corresponding positive powers.}
 
 \leftvitem{2cm}{x(:5)}
 \rightvitem{14cm}{The symbol has the maximum power 5. This means that $x^6$ 
@@ -4858,6 +4899,154 @@ algorithm used, see chapter~\ref{gammaalgebra} on gamma matrices.
 \vspace{10mm}
 
 %--#] tracen : 
+%--#[ transform :
+ 
+\section{transform}
+\label{substatransform}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & transform,function(s),{\tt<}one or more transformations{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent Statement\index{Transform} to manipulation function arguments and 
+fields of arguments. Allows speedy transformations without the need of 
+multiple statements or repeat loops.
+
+The function(s) is/are indicated as individual, comma or blank space 
+separated, functions or sets of functions.
+
+If there is more than one transformation, the transformations are separated 
+by comma's (or blanks, unless the blank space would not induce a comma).
+
+Each transformation consists of its keyword, indicating its type, followed 
+by a range of arguments that is enclosed by parentheses. After that 
+specific information may follow. The range\index{last}\index{range} is as 
+in
+\begin{verbatim}
+	(1,4)
+	(3,last)
+	(last-6,last-2)
+\end{verbatim}
+hence two indicators, separated by a comma. If the first number is bigger 
+than the second the arguments will be processed in reverse order whenever 
+this is relevant. In the descriptions below we will indicate the range by 
+(r1,r2).
+
+The transformations that are allowed currently are:
+ 
+\leftvitem{3cm}{replace\index{transform!replace}\index{replace}}
+\rightvitem{13cm}{replace(r1,r2)=(from1,to1,from2,to2,...,fromn,ton) in 
+which the from-to pairs are as in the replace\_ function. Here however 
+there are more options than in the replace\_ function as we can specify 
+(small) numbers as well as in \\
+replace(1,last)=(0,1,1,0) which would replace arguments that are zero by 
+one and arguments that are one by zero. Generic arguments are indicated by 
+the new variables xarg\_, iarg\_, parg\_ and farg\_ as in \\
+replace(1,last)=(xarg\_,2\*xarg\_+1,p) which would replace f(2,a) by f(5,
+2\*a+1,p) if a is a symbol and p a vector. To catch p one would need to use 
+parg\_.}
+
+\leftvitem{3cm}{encode\index{transform!encode}\index{encode}}
+\rightvitem{13cm}{encode(r1,r2):base=number will interprete the arguments as 
+the digits in a base 2 number system, compute the complete number and 
+replace the arguments by a single argument that is that number. The number 
+must fit inside a single FORM word and so must each of the original 
+arguments. They should actually be smaller than the number of the base.}
+
+\leftvitem{3cm}{decode\index{transform!decode}\index{decode}}
+\rightvitem{13cm}{decode(r1,r2):base=number will do the opposite of encode. 
+It will take a single argument (the smallest of the two given) and expand 
+it into digits in a number system given by the base. It will create the 
+specified number of digits and replace the original number by the given 
+number of arguments representing these digits. If r2 is less than r1 the 
+digits will be in reverse order.}
+
+\leftvitem{3cm}{implode\index{transform!implode}\index{implode}}
+\rightvitem{13cm}{implode(r1,r2) realizes an encoding in which zeroes are 
+absorbed as extra values in the first nonzero argument that is following. 
+This is used when dealing with harmonic sums and harmonic polylogarithms. 
+An example is that (0,0,1,0,a,0,0,0,-1) goes into (3,2*a,-4). Currently 
+only a single symbol is allowed and the numbers should be (small) integers 
+because otherwise the reverse operation (explode) would generate too many 
+arguments.}
+
+\leftvitem{3cm}{explode\index{transform!explode}\index{explode}}
+\rightvitem{13cm}{explode(r1,r2) undoes what implode might have done. Hence 
+each integer with an absolute value $n$ generates $n-1$ zeroes and leaves 
+something with absolute value one.}
+
+\leftvitem{3cm}{permute\index{transform!permute}\index{permute}}
+\rightvitem{13cm}{permute(1,last)=(1,3,5)(2,6) will permute the arguments 
+according to the cycles indicated. The cycles are executed in order and may 
+overlap.}
+
+\leftvitem{3cm}{reverse\index{transform!reverse}\index{reverse}}
+\rightvitem{13cm}{reverse(r1,r2) reverses the order of the arguments in 
+specified range.}
+
+\leftvitem{3cm}{cycle\index{transform!cycle}\index{cycle}}
+\rightvitem{13cm}{cycle(r1,r2)=+/-number will perform a cyclic permutation 
+of the indicated range of arguments. If the number is preceeded by a - the 
+cycling is to the left. If there is a plus sign the cycling is to the 
+right. Note that either the plus or the minus sign is mandatory.}
+
+Some Examples. Assume that we have some Multiple Zeta Values\index{Multiple 
+Zeta Value}\index{MZV} (see the papers on harmonic sums\index{harmonic 
+sums}, harmonic polylogarithms\index{harmonic polylogarithm} and the MZV 
+data mine\index{MZV data mine}) in the sum notation, but for calculational 
+reasone we want to use a binary encoding (as used in the MZV programs). We 
+could have
+
+\begin{verbatim}
+    Symbol x,x1,x2;
+    CF  H,H1;
+    Off Statistics;
+    L   F = H(3,4,2,6,1,1,1,2);
+    repeat id H(?a,x?!{0,1},?b) = H(?a,0,x-1,?b);
+    Print;
+    .sort
+
+   F =
+      H(0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,1,1,1,0,1);
+
+    Multiply H1;
+    repeat id H(x?,?a)*H1(?b) = H(?a)*H1(?b,1-x);
+    id  H1(?a)*H = H(?a);
+    Print;
+    .sort
+
+   F =
+      H(1,1,0,1,1,1,0,1,0,1,1,1,1,1,0,0,0,0,1,0);
+
+    repeat id H(x1?,x2?,?a) = H(2*x1+x2,?a);
+    Print;
+    .end
+
+   F =
+      H(907202);
+\end{verbatim}
+The new version of the same program would be
+\begin{verbatim}
+    Symbol x,x1,x2;
+    CF  H,H1;
+    Off Statistics;
+    L   F = H(3,4,2,6,1,1,1,2);
+    Transform,H,explode(1,last),
+                replace(1,last)=(0,1,1,0),
+                encode(1,last):base=2;
+    Print;
+    .end
+
+   F =
+      H(907202);
+\end{verbatim}
+It should be clear that this is simpler and faster. On a 64-bits computer 
+it is faster by more than a factor 100.
+
+\vspace{10mm}
+
+%--#] transform :
 %--#[ tryreplace :
 
 \section{tryreplace}

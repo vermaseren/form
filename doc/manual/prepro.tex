@@ -28,7 +28,7 @@ commands will be discussed below.
 preprocessor. See chapter \ref{dollars} on dollar variables.
 \end{description}
 
-%--#] General :
+%--#] General : 
 %--#[ The preprocessor variables :
 
 \section{The preprocessor variables}
@@ -76,7 +76,7 @@ it will look in the systems environment\index{environment} to see whether
 there is an environment variable by that name. If this is the case its 
 string value will be substituted.
 
-%--#] The preprocessor variables :
+%--#] The preprocessor variables : 
 %--#[ Calculator :
 \section{The preprocessor calculator}
 \label{calculator}
@@ -175,7 +175,7 @@ calculator works only over the integers. Hence, unless i is equal to zero
 or -2, the result would be zero (excluding of course the fatal error when i 
 is equal to -1).
 
-%--#] Calculator :
+%--#] Calculator : 
 %--#[ ... :
 \section{The triple dot operator}
 \label{tripledot}
@@ -248,7 +248,7 @@ the above constructions, creating code that was very hard to read. The
 \verb:...: operator should improve the readability of the programs very 
 much.
 
-%--#] ... :
+%--#] ... : 
 %--#[ append :
  
 \section{\#append}
@@ -266,7 +266,7 @@ much.
 be positioned at the end. The next \#write\index{\#write} instruction will 
 add to it.
 
-%--#] append :
+%--#] append : 
 %--#[ break :
 
 \section{\#break}
@@ -288,7 +288,7 @@ will continue after the matching \#endswitch\index{\#endswitch}
 instruction. The \#break instruction must of course be inside the range of 
 a \#switch\index{\#switch}/\#endswitch construction.
 
-%--#] break :
+%--#] break : 
 %--#[ call :
 
 \section{\#call}
@@ -391,7 +391,7 @@ possible to change this. There are two different ways: One is with the
 \ref{preprocedureextension}. The other is via the setup (see the chapter on 
 the setup file, chapter \ref{setup}).
 
-%--#] call :
+%--#] call : 
 %--#[ case :
 
 \section{\#case}
@@ -415,7 +415,7 @@ fall-through). The control flow will include lines either until the next
 matching \#break instruction, or until the matching 
 \#endswitch\index{\#endswitch} instruction.
 
-%--#] case :
+%--#] case : 
 %--#[ close :
 
 \section{\#close}
@@ -436,7 +436,7 @@ The use of a subsequent \#write instruction with the same file name will
 remove the old contents and hence start basically a new file. There are 
 times that this is useful.
 
-%--#] close :
+%--#] close : 
 %--#[ commentchar :
 
 \section{\#commentchar}
@@ -456,7 +456,7 @@ sign in column 1 in longer expressions.
 
 The default commentary character is $\ast$.
 
-%--#] commentchar :
+%--#] commentchar : 
 %--#[ create :
  
 \section{\#create}
@@ -476,7 +476,7 @@ existed already, its previous contents will be lost. The next
 instruction is not needed, because the \#write instruction would create the 
 file if it had not been opened yet at the moment of writing.
 
-%--#] create :
+%--#] create : 
 %--#[ default :
 
 \section{\#default}
@@ -501,7 +501,7 @@ instruction is reached, or when a matching \#endswitch\index{\#endswitch}
 is encountered. In the last case of course control flow will continue after 
 the \#endswitch instruction.
 
-%--#] default :
+%--#] default : 
 %--#[ define :
 
 \section{\#define}
@@ -564,7 +564,7 @@ that the whole macro\index{macro}, with its arguments should be placed
 between the backquote and the quote. Another example can be found with the 
 \#call\index{\#call} instruction. See section \ref{precall}
 
-%--#] define :
+%--#] define : 
 %--#[ do :
  
 \section{\#do}
@@ -686,7 +686,7 @@ the first time the bracket could be too long for one term. The second time
 that restriction doesn't exist because besides the x and the y there are 
 only integer coefficients.
 
-%--#] do :
+%--#] do : 
 %--#[ else :
 
 \section{\#else}
@@ -710,7 +710,7 @@ instructions) is not true. If any of these conditions is true, this code is
 skipped. The reading is stopped after the matching \#endif is encountered 
 and continued after this matching \#endif instruction.
 
-%--#] else :
+%--#] else : 
 %--#[ elseif :
 
 \section{\#elseif}
@@ -748,7 +748,7 @@ Example
     #endif
 \end{verbatim}
 
-%--#] elseif :
+%--#] elseif : 
 %--#[ enddo :
 
 \section{\#enddo}
@@ -763,7 +763,7 @@ Example
 \noindent Used to\index{\#enddo} terminate\index{terminate} a preprocessor 
 do\index{do loop} loop. See the \#do\index{\#do} instruction.
 
-%--#] enddo :
+%--#] enddo : 
 %--#[ endif :
 
 \section{\#endif}
@@ -783,7 +783,7 @@ do\index{do loop} loop. See the \#do\index{\#do} instruction.
 \#ifdef\index{\#ifdef} or \#ifndef\index{\#ifndef} construction. 
 Reading will continue after it.
 
-%--#] endif :
+%--#] endif : 
 %--#[ endprocedure :
 
 \section{\#endprocedure}
@@ -807,7 +807,7 @@ preprocessor variables\index{variables!preprocessor} that were defined
 inside the procedure and all parameters of the call of the procedure will 
 become undefined.
 
-%--#] endprocedure :
+%--#] endprocedure : 
 %--#[ endswitch :
 
 \section{\#endswitch}
@@ -828,7 +828,7 @@ the \#switch construction has been included in the control flow, reading
 will continue after the matching \#endswitch instruction. Each \#switch 
 needs a \#endswitch, unless a .end instruction is encountered first.
 
-%--#] endswitch :
+%--#] endswitch : 
 %--#[ exchange :
 
 \section{\#exchange}
@@ -854,7 +854,7 @@ to be exchanged (and some extra information about the contents).
 This instruction can be very useful when sorting expressions or dollar 
 variables by their contents.
 
-%--#] exchange :
+%--#] exchange : 
 %--#[ external :
 
 \section{\#external}
@@ -883,7 +883,7 @@ external command.  All further instructions
 \#fromexternal\index{\#fromexternal} and \#toexternal\index{\#toexternal} 
 deal with the current external command.
 
-%--#] external :
+%--#] external : 
 %--#[ fromexternal :
 
 \section{\#fromexternal}
@@ -918,7 +918,7 @@ the name of the variable starts with the dollar sign ``\$''.
 the preprocessor (or dollar) variable varname. Only the first maxlength 
 characters are stored.
 
-%--#] fromexternal :
+%--#] fromexternal : 
 %--#[ if :
 
 \section{\#if}
@@ -1009,7 +1009,7 @@ symbol as it has been declared. If no minimum power has been set in the
 declaration of the symbol, the general minimum power for symbols is 
 returned (see \ref{substasymbols}).}
 
-%--#] if :
+%--#] if : 
 %--#[ ifdef :
 
 \section{\#ifdef}
@@ -1028,7 +1028,7 @@ returned (see \ref{substasymbols}).}
 defined the condition is true, else it is false. For the rest the 
 instruction behaves like the \#if\index{\#if} instruction.
 
-%--#] ifdef :
+%--#] ifdef : 
 %--#[ ifndef :
 
 \section{\#ifndef}
@@ -1047,7 +1047,7 @@ instruction behaves like the \#if\index{\#if} instruction.
 defined the condition is false, else it is true. For the rest the 
 instruction behaves like the \#if\index{\#if} instruction.
 
-%--#] ifndef :
+%--#] ifndef : 
 %--#[ include :
 
 \section{\#include}
@@ -1097,7 +1097,7 @@ and put them in its input stream. More about folds is explained in the
 manual of the STedi editor which is also provided in the \FORM\ 
 distribution.
 
-%--#] include :
+%--#] include : 
 %--#[ message :
 
 \section{\#message}
@@ -1125,7 +1125,7 @@ Note that the semicolon\index{semicolon} is not needed and if present is
 printed as well. If one needs messages without this clear marking, one 
 should use the \#write\index{\#write} instruction.
  
-%--#] message :
+%--#] message : 
 %--#[ pipe :
  
 \section{\#pipe}
@@ -1148,7 +1148,7 @@ pipes\index{pipe}. This is mainly UNIX\index{UNIX} and derived systems.
 Note that this instruction also introduces operating system dependent code. 
 Hence it should be used with great care.
 
-%--#] pipe :
+%--#] pipe : 
 %--#[ preout :
  
 \section{\#preout}
@@ -1180,6 +1180,25 @@ Time =       0.00 sec    Generated terms =         10
 \end{verbatim}
 
 %--#] preout :
+%--#[ printtimes :
+ 
+\section{\#printtimes}
+\label{preprinttimes}
+
+\noindent Syntax:
+
+\#printtimes
+
+\noindent Prints\index{\#printtimes} the current execution time and real 
+time in the same way as done at the end of the program. Helps in monitoring 
+the real time passed in TFORM jobs.
+Example:
+\begin{verbatim}
+    #Printtimes
+  423.59 sec + 5815.88 sec: 6239.47 sec out of 1215.29 sec
+\end{verbatim}
+
+%--#] printtimes :
 %--#[ procedure :
 
 \section{\#procedure}
@@ -1224,7 +1243,7 @@ it guards against the inadvertently picking up of procedures from other
 directories. It also makes for fewer files and hence makes for better 
 housekeeping.
 
-%--#] procedure :
+%--#] procedure : 
 %--#[ procedureextension :
 
 % NEW@@@
@@ -1257,7 +1276,7 @@ For the rest any characters can be used.
 \#procedureextension instruction or to the next .clear\index{.clear} 
 instruction (page \ref{instrclear}), whatever comes first.
 
-%--#] procedureextension :
+%--#] procedureextension : 
 %--#[ prompt :
 
 \section{\#prompt}
@@ -1276,7 +1295,7 @@ used.
 The prompt\index{prompt} is a line consisting of a single prompt string. By 
 default, this is an empty string.
 
-%--#] prompt :
+%--#] prompt : 
 %--#[ redefine :
 
 \section{\#redefine}
@@ -1296,7 +1315,7 @@ string will be its new value. If no variable of the given name exists yet,
 the instruction will be equivalent to the \#define\index{\#define} 
 instruction.
 
-%--#] redefine :
+%--#] redefine : 
 %--#[ remove :
  
 \section{\#remove}
@@ -1324,7 +1343,7 @@ The difference with the \#system\index{\#system} instruction is that the
 syntax of the operating system. Hence the \#remove instruction can always 
 be used.
 
-%--#] remove :
+%--#] remove : 
 %--#[ rmexternal :
 
 \section{\#rmexternal}
@@ -1348,7 +1367,7 @@ closes the commands' IO channels, sends a KILL\index{KILL signal} signal to
 every process in its process group and waits for the external command to be 
 finished.
 
-%--#] rmexternal :
+%--#] rmexternal : 
 %--#[ setexternal :
 
 \section{\#setexternal}
@@ -1364,7 +1383,7 @@ instructions \#toexternal\index{\#toexternal} and
 command.  The integer number n must be the descriptor of a running external 
 command.
 
-%--#] setexternal :
+%--#] setexternal : 
 %--#[ setexternalattr :
 
 \section{\#setexternalattr}
@@ -1430,7 +1449,7 @@ The instruction \#rmexternal\index{\#rmexternal} sends the
 KILL\index{KILL signal} signal to the wholegroup, which means that also 
 \FORM\ itself will be killed.
 
-%--#] setexternalattr :
+%--#] setexternalattr : 
 %--#[ show :
 
 \section{\#show}
@@ -1480,7 +1499,7 @@ Its name is SHOWINPUT\_\index{SHOWINPUT\_}. This variable has the value one
 if the listing of the input is on and the value zero if the listing of the 
 input is off.
 
-%--#] show :
+%--#] show : 
 %--#[ switch :
 
 \section{\#switch}
@@ -1546,7 +1565,7 @@ with \#if\index{\#if} constructions, \#do\index{\#do} instructions, etc.
 but they should obey normal nesting rules (as with nesting of 
 brackets\index{bracket} of different types).
 
-%--#] switch :
+%--#] switch : 
 %--#[ system :
  
 \section{\#system}
@@ -1564,7 +1583,7 @@ tabs) is passed to the operating system. \FORM\ will then wait until control
 is returned. Note that this instruction introduces operating system 
 dependent code. Hence it should be used with great care.
 
-%--#] system :
+%--#] system : 
 %--#[ terminate :
  
 \section{\#terminate}
@@ -1579,7 +1598,7 @@ immediately. If an exit code is given (an integer number), this will be the
 return value that \FORM\ gives to the shell program from which it was run. If 
 no return value is specified, the value -1 will be returned.
 
-%--#] terminate :
+%--#] terminate : 
 %--#[ toexternal :
 
 \section{\#toexternal}
@@ -1596,7 +1615,7 @@ instruction, except for the trailing end-of-line symbol. In contrast to the
 \#write instruction, the \#toexternal instruction does not append any new 
 line symbol to the end of its output.
 
-%--#] toexternal :
+%--#] toexternal : 
 %--#[ undefine :
 
 \section{\#undefine}
@@ -1620,7 +1639,7 @@ of a procedure, and so are all other preprocessor variables that were
 defined inside this procedure. The same holds for the preprocessor variable 
 that is used as a loop parameter in the \#do\index{\#do} instruction.
 
-%--#] undefine :
+%--#] undefine : 
 %--#[ write :
 
 \section{\#write}
@@ -1755,7 +1774,7 @@ selected). The output file looks like
 and each time after 19 continuation lines we have to break the expression 
 and use the \verb:fun = fun +: trick to continue.
 
-%--#] write :
+%--#] write : 
 %--#[ Some remarks :
 
 \section{Some remarks}
@@ -1789,6 +1808,6 @@ construction that might be very useful:
 \end{verbatim}
 Currently the syntax does not allow this. This may change in the future.
 
-%--#] Some remarks :
+%--#] Some remarks : 
 
 
