@@ -104,3 +104,5 @@ the errno checkup*/
 #define PADWORD(by) UBYTE d_u_m_m_y[2-((by)&1)]
 #endif
 #endif
+
+#define MAXPOSITIVE2 (MAXPOSITIVE/2)

@@ -254,7 +254,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -337,7 +337,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -545,7 +545,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -694,6 +694,10 @@ VOID StartVariables()
 	AddSymbol((UBYTE *)"coeff_",-MAXPOWER,MAXPOWER,VARTYPENONE);
 	AddSymbol((UBYTE *)"num_",-MAXPOWER,MAXPOWER,VARTYPENONE);
 	AddSymbol((UBYTE *)"den_",-MAXPOWER,MAXPOWER,VARTYPENONE);
+	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE);
+
+	AddIndex((UBYTE *)"iarg_",4,0);
+	AddVector((UBYTE *)"parg_",VARTYPENONE);
 
 	AM.NumFixedFunctions = sizeof(fixedfunctions)/sizeof(struct fixedfun);
 	for ( i = 0; i < AM.NumFixedFunctions; i++ )
@@ -985,7 +989,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1055,7 +1059,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1234,7 +1238,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1310,7 +1314,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1383,7 +1387,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
  		#[ PrintRunningTime :
 */
 
@@ -1423,6 +1427,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 

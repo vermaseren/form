@@ -167,6 +167,7 @@ static struct fixedfun {
 	,{"tbl_"     ,0 ,0                ,0               ,0} /* TABLESTUB */
 	,{"factorin_",0 ,0                ,0               ,0} /* FACTORIN */
 	,{"termsinbracket_",0 ,0          ,0               ,0} /* TERMSINBRACKET */
+	,{"farg_"    ,0 ,0                ,0               ,0} /* WILDARGFUN */
 /*
      The following names are reserved for the floating point library.
 	 As long as we have no floating point numbers they do not do anything.

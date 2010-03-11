@@ -59,7 +59,7 @@
 */
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ filenames and system commands :
 */
 
@@ -109,7 +109,7 @@ static char *storefile = 0;
 static int done_snapshot = 0;
 
 /*
-  	#] filenames and system commands :
+  	#] filenames and system commands : 
   	#[ CheckRecoveryFile :
 */
 
@@ -213,7 +213,7 @@ int CheckRecoveryFile()
 }
 
 /*
-  	#] CheckRecoveryFile :
+  	#] CheckRecoveryFile : 
   	#[ DeleteRecoveryFile :
 */
 
@@ -253,7 +253,7 @@ void DeleteRecoveryFile()
 }
 
 /*
-  	#] DeleteRecoveryFile :
+  	#] DeleteRecoveryFile : 
   	#[ RecoveryFilename :
 */
 
@@ -266,7 +266,7 @@ char *RecoveryFilename()
 }
 
 /*
-  	#] RecoveryFilename :
+  	#] RecoveryFilename : 
   	#[ InitRecovery :
 */
 
@@ -314,7 +314,7 @@ void InitRecovery()
 }
 
 /*
-  	#] InitRecovery :
+  	#] InitRecovery : 
   	#[ Debugging :
 */
 
@@ -1074,7 +1074,7 @@ static void print_R()
 #endif /* ifdef PRINTDEBUG */
 
 /*
-  	#] Debugging :
+  	#] Debugging : 
   	#[ Helper Macros :
 */
 
@@ -1163,7 +1163,7 @@ static void print_R()
 	}
 
 /*
-  	#] Helper Macros :
+  	#] Helper Macros : 
   	#[ DoRecovery :
 */
 
@@ -1223,7 +1223,7 @@ int DoRecovery(int *moduletype)
 	/* read moduletype */
 	R_SET(*moduletype, int);
 
-	/* #[ AM */
+	/*#[ AM : */
 
 	/* only certain elements will be restored. the rest of AM should have gotten
 	 * the correct values at startup. */
@@ -1271,8 +1271,8 @@ int DoRecovery(int *moduletype)
 	print_M();
 #endif
 
-	/* #] AM */
-	/* #[ AC */
+	/*#] AM : */ 
+	/*#[ AC : */
 
 	/* #[ AC free pointers */
 
@@ -1777,8 +1777,8 @@ int DoRecovery(int *moduletype)
 	print_C();
 #endif
 
-	/* #] AC */
-	/* #[ AP */
+	/*#] AC : */
+	/*#[ AP : */
 
 	/* #[ AP free pointers */
 
@@ -1913,8 +1913,8 @@ int DoRecovery(int *moduletype)
 	print_P();
 #endif
 
-	/* #] AP */
-	/* #[ AR */
+	/*#] AP : */ 
+	/*#[ AR : */
 
 	R_SET(ofs,long);
 	if ( ofs ) {
@@ -2088,10 +2088,10 @@ int DoRecovery(int *moduletype)
 	print_R();
 #endif
 
-	/* #] AR */
+	/*#] AR : */ 
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
-	/* #[ PF */
+	/*#[ PF : */
 	{/*Block*/
 		int numtasks;
 		R_SET(numtasks, int);
@@ -2108,7 +2108,7 @@ int DoRecovery(int *moduletype)
 	R_SET(PF.exprbufsize, int);
 	R_SET(PF.module, LONG);
 	R_SET(PF.log, int);
-	/* #] PF */
+	/*#] PF : */ 
 #endif
 /*:[20oct2009 mt]*/
 
@@ -2130,6 +2130,10 @@ int DoRecovery(int *moduletype)
 	/* cares about data in S_const */
 	UpdatePositions();
 	AT.SS = AT.S0;
+/*
+	Set the checkpoint parameter right for the next checkpoint.
+*/
+	AC.CheckpointStamp = TimeWallClock(1);
 	
 	done_snapshot = 1;
 	MesPrint("done."); fflush(0);
@@ -2656,7 +2660,7 @@ static int DoSnapshot(int moduletype)
 }
 
 /*
-  	#] DoSnapshot :
+  	#] DoSnapshot : 
   	#[ DoCheckpoint :
 */
 
@@ -2667,7 +2671,7 @@ static int DoSnapshot(int moduletype)
 void DoCheckpoint(int moduletype)
 {
 	int error;
-	LONG timestamp = Timer(0);
+	LONG timestamp = TimeWallClock(1);
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	if(PF.me == MASTER){
@@ -2761,7 +2765,7 @@ void DoCheckpoint(int moduletype)
 				MesPrint("Error calling script after recovery.");
 			}
 		}
-		AC.CheckpointStamp = Timer(0);
+		AC.CheckpointStamp = TimeWallClock(1);
 	}
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
@@ -2807,5 +2811,5 @@ void DoCheckpoint(int moduletype)
 }
 
 /*
-  	#] DoCheckpoint :
+  	#] DoCheckpoint : 
 */

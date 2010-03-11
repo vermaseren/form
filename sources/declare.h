@@ -122,6 +122,8 @@
 #endif
 
 #define NEXTARG(x) if(*x>0) x += *x; else if(*x <= -FUNCTION)x++; else x += 2;
+#define COPY1ARG(s1,t1) { int ica; if ( (ica=*t1) > 0 ) { NCOPY(s1,t1,ica) } \
+		else if(*t1<=-FUNCTION){*s1++=*t1++;} else{*s1++=*t1++;*s1++=*t1++;} }
 #define GETSETNUM(y) (((y)[2]==4)?((LONG)(y)[4]):\
 	((((LONG)(y)[4])<<(BITSINWORD-1))+(LONG)(y)[5]))
 
@@ -962,6 +964,7 @@ extern int    CoToVector(UBYTE *);
 extern int    CoTrace4(UBYTE *);
 extern int    CoTraceN(UBYTE *);
 extern int    CoChisholm(UBYTE *);
+extern int    CoTransform(UBYTE *);
 extern int    CoClearTable(UBYTE *);
 extern int    DoChain(UBYTE *,int);
 extern int    CoChainin(UBYTE *);
@@ -1404,6 +1407,19 @@ extern VOID NumberFree2(PHEAD UWORD *NumberMem,char *text);
 extern void ExprStatus(EXPRESSIONS);
 extern VOID iniTools(VOID);
 extern int TestTerm(WORD *);
+
+extern WORD RunTransform(PHEAD WORD *term, WORD *params);
+extern WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunImplode(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunExplode(PHEAD WORD *fun, WORD *args, WORD *info);
+extern int TestArgNum(int n, int totarg, WORD *args);
+extern WORD PutArgInScratch(WORD *arg,UWORD *scrat);
+extern UBYTE *ReadRange(UBYTE *s, WORD *out, int par);
+extern WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunReverse(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info);
 
 /*
   	#] Declarations :

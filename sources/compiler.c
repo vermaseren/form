@@ -170,6 +170,7 @@ static KEYWORD com2commands[] = {
 	,{"tovector",       (TFUN)CoToVector,         STATEMENT,    PARTEST}
 	,{"trace4",         (TFUN)CoTrace4,           STATEMENT,    PARTEST}
 	,{"tracen",         (TFUN)CoTraceN,           STATEMENT,    PARTEST}
+	,{"transform",      (TFUN)CoTransform,        STATEMENT,    PARTEST}
 	,{"tryreplace",     (TFUN)CoTryReplace,       STATEMENT,    PARTEST}
 	,{"unhide",         (TFUN)CoUnHide,           SPECIFICATION,PARTEST}
 	,{"while",          (TFUN)CoWhile,            STATEMENT,    PARTEST}
@@ -205,7 +206,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 

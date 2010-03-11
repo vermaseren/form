@@ -422,26 +422,27 @@ typedef int (*TFUN1)();
 #define TABLESTUB 79
 #define FACTORIN 80
 #define TERMSINBRACKET 81
+#define WILDARGFUN 82
 
-#define SQRTFUNCTION 82
-#define LNFUNCTION 83
-#define SINFUNCTION 84
-#define COSFUNCTION 85
-#define TANFUNCTION 86
-#define ASINFUNCTION 87
-#define ACOSFUNCTION 88
-#define ATANFUNCTION 89
-#define ATAN2FUNCTION 90
-#define SINHFUNCTION 91
-#define COSHFUNCTION 92
-#define TANHFUNCTION 93
-#define ASINHFUNCTION 94
-#define ACOSHFUNCTION 95
-#define ATANHFUNCTION 96
-#define LI2FUNCTION 97
-#define LINFUNCTION 98
+#define SQRTFUNCTION 83
+#define LNFUNCTION 84
+#define SINFUNCTION 85
+#define COSFUNCTION 86
+#define TANFUNCTION 87
+#define ASINFUNCTION 88
+#define ACOSFUNCTION 89
+#define ATANFUNCTION 90
+#define ATAN2FUNCTION 91
+#define SINHFUNCTION 92
+#define COSHFUNCTION 93
+#define TANHFUNCTION 94
+#define ASINHFUNCTION 95
+#define ACOSHFUNCTION 96
+#define ATANHFUNCTION 97
+#define LI2FUNCTION 98
+#define LINFUNCTION 99
 
-#define MAXBUILTINFUNCTION 98
+#define MAXBUILTINFUNCTION 99
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist
@@ -453,6 +454,10 @@ typedef int (*TFUN1)();
 #define COEFFSYMBOL 2
 #define NUMERATORSYMBOL 3
 #define DENOMINATORSYMBOL 4
+#define WILDARGSYMBOL 5
+
+#define WILDARGVECTOR 0
+#define WILDARGINDEX 0
 
 /*
 	The objects that have a name that starts with TYPE are codes of statements
@@ -525,6 +530,7 @@ typedef int (*TFUN1)();
 #define TYPESTUFFLE 70
 #define TYPEDROPCOEFFICIENT 71
 #define TYPEREPARG 72
+#define TYPETRANSFORM 73
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
@@ -898,3 +904,20 @@ typedef int (*TFUN1)();
 	just in case we run into trouble later.
 */
 #define DUMMYBUFFER 1
+
+#define ALLARGS      1
+#define NUMARG       2
+#define ARGRANGE     3
+#define MAKEARGS     4
+#define MAXRANGEINDICATOR 4
+#define REPLACEARG   5
+#define ENCODEARG    6
+#define DECODEARG    7
+#define IMPLODEARG   8
+#define EXPLODEARG   9
+#define PERMUTEARG  10 
+#define REVERSEARG  11 
+#define CYCLEARG    12 
+
+#define BASECODE 1
+

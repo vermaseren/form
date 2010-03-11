@@ -226,7 +226,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER :
+			#] TO SNUMBER : 
 */
 						t += 2;
 						goto NextSymbol;
@@ -1187,7 +1187,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 					WORD tterm[4], iii;
 					while ( ttt < tttstop ) {
 						if ( *ttt > 0 ) {
-							if ( ttt[ARGHEAD]-1 < ABS(ttt[*ttt-1]) ) goto nospec;
+							if ( ttt[ARGHEAD]-1 > ABS(ttt[*ttt-1]) ) goto nospec;
 							ttt += *ttt;
 						}
 						else {
