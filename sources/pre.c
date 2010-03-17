@@ -4523,9 +4523,6 @@ int DoExternal(UBYTE *s)
  		#[ DoPrompt:
 			#prompt string
 */
-#ifdef WITHEXTERNALCHANNEL
-char emptyprompt[] = "";
-#endif
 
 int DoPrompt(UBYTE *s)
 {
@@ -4534,10 +4531,10 @@ int DoPrompt(UBYTE *s)
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
-	if ( AX.currentPrompt && AX.currentPrompt != (UBYTE *)emptyprompt )
+	if ( AX.currentPrompt )
 			M_free(AX.currentPrompt,"external channel prompt");
 	if ( *s == '\0' )
-		AX.currentPrompt = (UBYTE *)emptyprompt;
+		AX.currentPrompt = (UBYTE *)strDup1((UBYTE *)"","external channel prompt");
 	else
 		AX.currentPrompt = strDup1(s,"external channel prompt");
 	if(  setTerminatorForExternalChannel( (char *)AX.currentPrompt) > 0  ){

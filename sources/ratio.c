@@ -1880,7 +1880,7 @@ nextt:;
 }
 
 /*
- 		#] RunReplace :
+ 		#] RunReplace : 
  		#[ RunImplode :
 
 		Note that we restrict ourselves to short integers and/or single symbols
@@ -2009,6 +2009,9 @@ WORD RunImplode(PHEAD WORD *fun, WORD *args, WORD *info)
 					ttt = t + 4;
 					numzero = 0;
 				}
+				else {
+					ttt = t + 4;
+				}
 			}
 			t += 4;
 		}
@@ -2082,7 +2085,7 @@ moveinto:
 }
 
 /*
- 		#] RunImplode : 
+ 		#] RunImplode :
  		#[ RunExplode :
 */
 
