@@ -51,6 +51,7 @@ SRCBASE = \
 	threads.c \
 	token.c \
 	tools.c \
+	transform.c \
 	unixfile.c \
 	unix.h \
 	variable.h \
