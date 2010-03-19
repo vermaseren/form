@@ -1718,7 +1718,8 @@ int FinishShuffle(PHEAD WORD *fini)
 	int i;
 	SHvariables *SH = &(AN.SHvar);
 	SH->outfun[1] = fini - SH->outfun;
-
+	if ( functions[SH->outfun[0]-FUNCTION].symmetric != 0 )
+					SH->outfun[2] |= DIRTYSYMFLAG;
 	out = fini; i = fini - SH->outterm; t = SH->outterm;
 	NCOPY(fini,t,i)
 	t = SH->stop1;

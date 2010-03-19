@@ -918,6 +918,12 @@ typedef int (*TFUN1)();
 #define PERMUTEARG  10 
 #define REVERSEARG  11 
 #define CYCLEARG    12 
+#define ISLYNDON    13
+#define ISLYNDONR   14
+#define TOLYNDON    15
+#define TOLYNDONR   16
 
 #define BASECODE 1
+#define YESLYNDON 1
+#define NOLYNDON 2
 

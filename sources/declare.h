@@ -1420,6 +1420,8 @@ extern UBYTE *ReadRange(UBYTE *s, WORD *out, int par);
 extern WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info);
 extern WORD RunReverse(PHEAD WORD *fun, WORD *args, WORD *info);
 extern WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info);
+extern WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par);
+extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par);
 
 /*
   	#] Declarations :

@@ -3777,7 +3777,7 @@ WORD PolyRatFunMul(PHEAD WORD *term)
 {
 	WORD *t, *tt, *t1, *t2, *t3, *tstop, *t1stop, *t2stop, *t1a, *t2a;
 	WORD narg1, narg2;
-	WORD *num1, *num2, *num3, *den1, *den2, *den3, *rem, *g1, *g2;
+	WORD *num1 = 0, *num2 = 0, *num3, *den1 = 0, *den2 = 0, *den3, *rem, *g1, *g2;
 	WORD *oldworkpointer = AT.WorkPointer;
 	int i;
 

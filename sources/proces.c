@@ -3246,7 +3246,7 @@ CommonEnd:
 					if ( RunTransform(BHEAD term,C->lhs[level]+2) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					if ( *term == 0 ) goto Return0;
-					break;
+					goto ReStart;
 				}
 				goto SkipCount;
 /*
