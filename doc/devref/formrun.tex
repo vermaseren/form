@@ -1,10 +1,11 @@
 \section{Discussion of a typical \FORM\ run}
 
-We discuss in the following what is happening inside \FORM\ when it executes a given program. The
-discussion focuses more on the interplay between the various parts of \FORM\ and on key concepts of
-the internal data representation than on in-depth details of the code. For the
-latter, the reader is 
-referred to section \ref{sec:indepth}.
+We discuss in the following what is happening inside \FORM\ when it executes a
+given program. The discussion focuses more on the interplay between the various
+parts of \FORM\ and on key concepts of the internal data representation than on
+in-depth details of the code. For the latter, the reader is referred to section
+\ref{sec:indepth}. This section should for better comprehension be read with the
+referenced \FORM\ source files opened aside.
 
 We consider the following exemplary \FORM\ program \C{test.frm} (which we run
 with the command "\C{form test}"):
@@ -238,10 +239,134 @@ Our program returns to the \C{PreProcessor()} and starts parsing the next lines:
  6      L	g = f - x;
 \end{verbatim}
 
-This time the function \C{DoLocal()} will be called to parse each line. The
-function has to add the name of the local expression to the name administration.
-But it also has to parsed the mathematical expression itself and save it in
-encoded form.
+This time the function \C{DoExpr()} will get called (via \C{CoLocal()}) for each
+line to do the parsing.  The function \C{DoExpr()} first tries to figure out
+what type of \C{Local} statement we have. In our cases we have an actual
+assignment. With the call to \C{GetVar()} we check whether a variable of the same
+name already exists. The search is done in the nametrees \C{AC.varnames} and
+\C{AC.exprnames}. Since our names are new we don't find a previous variable and
+simply call \C{EntVar()}. \C{EntVar()} creates an entry in \C{AC.ExpressionList}
+and puts the name into the \C{AC.exprnames} nametree. The entry in
+\C{AC.ExpressionList} is of type \C{struct ExPrEsSiOn}. There are more struct
+elements than in the case of symbols, but the principle is the same. Up to now,
+the right-hand-side (RHS) has not been looked at and therefore no information
+about it is saved in the expression's entry yet. The connection between the
+expression's entry in the \C{AC.ExpressionList} and the data containing the RHS
+will be made via the elements \C{prototype} and \C{onfile} as we will describe
+soon.  The access to elements in \C{AC.ExpressionList} is facilitated by the
+macro \C{Expressions}. The following code in \C{DoExpr()} builds up a so-called
+prototype and puts the RHS in encoded form into the buffer system via the call
+to \C{CompileAlgebra()}.
+
+\FORM\ uses the allocated memory in \C{AT.WorkSpace} for operations like the
+generation of terms. This memory stores \C{WORD}s and is used in a stack-like
+fashion with the help of the pointer \C{AT.WorkPointer}. A function can write to
+this memory and set \C{AT.WorkPointer} beyond the written data to insure that
+other functions that are called and might use the workspace as well do not
+overwrite this data. It is the responsibility of the function to reset
+\C{AT.WorkPointer} to its original value again (see variable \C{OldWork} in our
+case). Every thread in \TFORM\ will have its own private work space.
+
+\FORM\ now uses \C{AT.WorkSpace} to build up a data structure that contains
+everything that needs to be known at a later stage about the expression that is
+parsed. The creation and the layout of the data is quite typical. First comes a
+header that signifies what is coming. Here, it is \C{TYPEEXPRESSION}. Then comes
+the length of the whole data, i.e. the total number of occupied \C{WORD}s. The
+actual contents is following, which is a so-called subexpression that we will
+discuss soon. The contents is followed by a coefficient and a zero, which
+signifies the end of the data.
+
+{\bf Coefficients} are coded in \FORM\ always in the following manner: Since
+coefficients can in general be fractional numbers, we encode an integer
+numerator and an integer denominator. The integers can have arbitrary length
+(limited only by the buffer sizes, see the setup variables \C{MaxNumberSize} and
+\C{MaxTermSize}) and are encoded in \C{WORD}-pieces in little-endian convention.
+The number of allocated \C{WORD}s is always the same for the numerator and the
+denominator. The last word of the coefficient contains the size of the whole
+coefficient in words. The formal structure of a coefficients is therefore like
+this:
+\begin{center}
+{\it NUMERATOR WORDS, DENOMINATOR WORDS, LENGTH}.
+\end{center}
+The integers are always
+unsigned, i.e. positive. Negative fractions are encoded by a negative length.
+Examples (with 16bit words): $2^{16}+2 = 65538$ gives words 2,1,1,0,5 and $-5/2$
+gives $5,2,-3$.
+
+The data structure in \C{AT.WorkSpace} is basically an instruction for the
+generator, a central function that does the main work during the execution of
+the \FORM\ program, to generate an expression. The content of the expression is
+a subexpression. This is a pointer to the real content of the expression and
+will be substituted later after the execution. The main reason for this delayed
+expression insertion is that it can often save a lot of intermediate operations
+and data space and thereby speed up \FORM. A case where such a thing can happen
+is, when an expression is used at different places and the different parts are
+brought together by some operations. Then, cancellations may occur or terms can
+be factored out and when the expressions finally is inserted the workload is
+less.
+
+	In our example run, the data that will later instruct the generator to 
+create an expression looks in total like this:
+
+\begin{center}
+{\it TYPEEXPRESSION, SUBEXPSIZE+3, 9, SUBEXPRESSION, \\
+SUBEXPSIZE, 0, 1, AC.cbufnum, 1, 1, 3, 0}
+\end{center}
+
+We used the macro names as in the actual code. \C{AC.cbufnum} is a variable that
+is the index of the compile buffer used for this parsed statement.
+At the end of the data preparation phase the pointer \C{AT.WorkPointer} is set
+beyond the data on the trailing zero, the pointer \C{AT.ProtoType}, which is
+used soon in following functions is set to the word \C{SUBEXPRESSION}.
+
+The expression will be put into the scratch buffer system. This system comprises
+the small and large buffers and the scratch files. Where new data to the scratch
+buffers will be stored is of no concern to a function like \C{DoExpr()}, it
+simply uses several utility functions for that purpose. Still, we need to
+initialize the variable \C{pos} here that will indicate the position of the
+data, i.e. the expression, in the scratch file.
+
+Next, the function \C{CompileAlgebra()} is called to parse the right hand side
+and put the codified expression into the \FORM\ buffers. It basically calls two
+functions: \C{tokenize} and \C{CompileSubExpressions}. \C{tokenize} is the
+tokenizer that translates the input character string in a sanitized and partly
+interpreted string of codes. It will look up the variables named in the input
+string and put the index they have in the name administration into the tokenized
+output. Our input string is transformed into the code string like this
+
+\begin{verbatim}
+   (     -13  LPARENTHESIS
+   x      -1  TSYMBOL
+           5
+   +     -26  TPLUS
+   y      -1  TSYMBOL
+           6
+   )     -14  RPARENTHESIS
+   ^     -25  TPOWER
+   2      -8  TNUMBER
+           2
+   -     -27  TMINUS
+   (     -13  LPARENTHESIS
+   x      -1  TSYMBOL
+           5
+   +     -26  TPLUS
+   z      -1  TSYMBOL
+           7
+   )     -14  RPARENTHESIS
+   ^     -25  TPOWER
+   `N'    -8  TNUMBER
+           3
+         -29  ENDOFIT
+\end{verbatim}
+
+This code string then lies in the \C{AC.tokens} buffer where it is used by
+subsequent functions.
+
+The function \C{CompileSubExpression()} finds terms in an expression that might
+be reused at another place and extracts them. As one can see in the code, the
+function looks for terms in parentheses and works recursively. 
+
+
 
 % \begin{verbatim}
 %  7      
