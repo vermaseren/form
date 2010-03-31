@@ -28,6 +28,7 @@ SRCBASE = \
 	module.c \
 	names.c \
 	normal.c \
+	notation.c \
 	opera.c \
 	optim.c \
 	pattern.c \

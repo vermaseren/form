@@ -1210,6 +1210,7 @@ struct M_const {
     int     NumFixedFunctions;     /* (M) Number of built in functions */
     int     rbufnum;               /* (M) startup compiler buffer */
     int     dbufnum;               /* (M) dollar variables */
+    int     sbufnum;               /* (M) subterm variables */
     int     SkipClears;            /* (M) Number of .clear to skip at start */
     int     gfunpowers;            /* (M) */
     int     gStatsFlag;            /* (M) */

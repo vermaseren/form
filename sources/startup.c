@@ -675,6 +675,7 @@ VOID StartVariables()
 	AS.MasterSort = 0;
 #endif
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
+	AM.sbufnum = inicbufs();		/* Subterm buffer for polynomials and optimization */
 /*
 	Enter the built in objects
 */

@@ -166,6 +166,9 @@ static KEYWORD com2commands[] = {
 	,{"term",           (TFUN)CoTerm,             STATEMENT,    PARTEST}
 	,{"testuse",        (TFUN)CoTestUse,          STATEMENT,    PARTEST}
 	,{"threadbucketsize",(TFUN)CoThreadBucket,    DECLARATION,  PARTEST}
+#ifndef TOPLOYNOMIAL
+	,{"topolynomial",   (TFUN)CoToPolynomial,     STATEMENT,    PARTEST}
+#endif
 	,{"totensor",       (TFUN)CoToTensor,         STATEMENT,    PARTEST}
 	,{"tovector",       (TFUN)CoToVector,         STATEMENT,    PARTEST}
 	,{"trace4",         (TFUN)CoTrace4,           STATEMENT,    PARTEST}

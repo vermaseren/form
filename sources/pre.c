@@ -3118,6 +3118,7 @@ int DoPreClose(UBYTE *s)
 		%e  expression (name to be found among the objects)
 		%E  expression without ; (name to be found among the objects)
 		%s	string (to be found among the objects) (with or without "")
+		%$	subterms (see PrintSubtermList)
 */
 
 int DoPreWrite(UBYTE *s)
@@ -5245,6 +5246,12 @@ nodollar:			MesPrint("@$-variable expected in #write instruction");
 					}
 				}
 			}
+#ifndef TOPLOYNOMIAL
+			else if ( *fstring == 'S' ) {
+				fstring++;
+				PrintSubtermList();
+			}
+#endif
 			else if ( *fstring == 'e' || *fstring == 'E' ) {
 				if ( *fstring == 'E' ) nosemi = 1;
 				else nosemi = 0;

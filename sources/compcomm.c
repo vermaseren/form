@@ -5141,6 +5141,26 @@ int CoDropCoefficient(UBYTE *s)
 	return(1);
 }
 /*
-  	#] CoDropCoefficient : 
+  	#] CoDropCoefficient :
+  	#[ CoToPolynomial :
+*/
+
+#ifndef TOPLOYNOMIAL
+
+int CoToPolynomial(UBYTE *inp)
+{
+	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+	if ( *inp == 0 ) {
+		Add2Com(TYPETOPOLYNOMIAL)
+		return(0);
+	}
+	MesPrint("&Illegal argument in ToPolynomial statement: '%s'",inp);
+	return(1);
+}
+
+#endif
+
+/*
+  	#] CoToPolynomial :
 */
 /* temporary commentary for forcing cvs merge */

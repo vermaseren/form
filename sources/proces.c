@@ -3247,6 +3247,14 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					if ( *term == 0 ) goto Return0;
 					goto ReStart;
+#ifndef TOPLOYNOMIAL
+				  case TYPETOPOLYNOMIAL:
+					AT.WorkPointer = term + *term;
+					if ( ConvertToPoly(BHEAD term) < 0 ) goto GenCall;
+					if ( *term == 0 ) goto Return0;
+					AT.WorkPointer = term + *term;
+					break;
+#endif
 				}
 				goto SkipCount;
 /*

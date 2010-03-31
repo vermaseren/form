@@ -231,7 +231,7 @@ conscan:;
 						t += 2;
 						goto NextSymbol;
 					}
-					if ( ( *t < MAXPOWER && *t > -MAXPOWER )
+					if ( ( *t <= NumSymbols && *t > -MAXPOWER )
 					 && ( symbols[*t].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 						if ( t[1] <= 2*MAXPOWER && t[1] >= -2*MAXPOWER ) {
 						t[1] %= symbols[*t].maxpower;
@@ -259,7 +259,7 @@ conscan:;
 								goto NormMin;
 							}
 							*m += *t;
-							if ( ( t[-1] < MAXPOWER && t[-1] > -MAXPOWER )
+							if ( ( t[-1] <= NumSymbols && t[-1] > -MAXPOWER )
 							 && ( symbols[t[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 								*m %= symbols[t[-1]].maxpower;
 								if ( *m < 0 ) *m += symbols[t[-1]].maxpower;
@@ -742,7 +742,7 @@ multermnum:			if ( x == 0 ) goto NormZero;
 					if ( t[FUNHEAD+1] < 0 ) ncoef = -ncoef;
 				}
 				else if ( ( t[1] == FUNHEAD+2 ) && ( t[FUNHEAD] == -SYMBOL )
-					&& ( ( t[FUNHEAD+1] < MAXPOWER && t[FUNHEAD+1] > -MAXPOWER )
+					&& ( ( t[FUNHEAD+1] <= NumSymbols && t[FUNHEAD+1] > -MAXPOWER )
 					&& ( symbols[t[FUNHEAD+1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) ) {
 					k = t[FUNHEAD+1];
 					from = m;
@@ -792,7 +792,7 @@ sigDoneSymbol:;
 						WORD *ts = t + FUNHEAD+ARGHEAD+3;
 						WORD its = ts[-1]-2;
 						while ( its > 0 ) {
-							if ( ( *ts != 0 ) && ( ( *ts >= MAXPOWER || *ts <= -MAXPOWER )
+							if ( ( *ts != 0 ) && ( ( *ts > NumSymbols || *ts <= -MAXPOWER )
 							 || ( symbols[*ts].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY ) ) {
 								goto signogood;
 							}
@@ -814,7 +814,7 @@ sigDoneSymbol:;
 								if	( *ts == *m ) {
 									ts++; m++;
 									*m += *ts;
-									if ( ( ts[-1] < MAXPOWER && ts[-1] > -MAXPOWER ) &&
+									if ( ( ts[-1] <= NumSymbols && ts[-1] > -MAXPOWER ) &&
 									 ( symbols[ts[-1]].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 										*m %= symbols[ts[-1]].maxpower;
 										if ( *m < 0 ) *m += symbols[ts[-1]].maxpower;
@@ -868,7 +868,7 @@ signogood:				pcom[ncom++] = t;
 				}
 				else if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SYMBOL ) {
 					k = t[FUNHEAD+1];
-					if ( ( k >= MAXPOWER || k <= -MAXPOWER )
+					if ( ( k > NumSymbols || k <= -MAXPOWER )
 					 || ( symbols[k].complex & VARTYPEROOTOFUNITY ) != VARTYPEROOTOFUNITY )
 						goto absnogood;
 				}
@@ -894,7 +894,7 @@ absnosymbols:			ts = t + t[1] -1;
 						ts += 2;
 						while ( its > 0 ) {
 							if ( *ts == 0 ) { }
-							else if ( ( *ts >= MAXPOWER || *ts <= -MAXPOWER )
+							else if ( ( *ts > NumSymbols || *ts <= -MAXPOWER )
 							 || ( symbols[*ts].complex & VARTYPEROOTOFUNITY )
 								!= VARTYPEROOTOFUNITY ) goto absnogood;
 							its -= 2; ts += 2;
@@ -2832,7 +2832,7 @@ NextI:;
 					t++;
 				}
 			}
-			else if ( *t < 2*MAXPOWER && *t > -2*MAXPOWER ) {	/* Put powers in range */
+			else if ( *t <= NumSymbols && *t > -2*MAXPOWER ) {	/* Put powers in range */
 				if ( ( ( ( t[1] > symbols[*t].maxpower ) && ( symbols[*t].maxpower < MAXPOWER ) ) ||
 					   ( ( t[1] < symbols[*t].minpower ) && ( symbols[*t].minpower > -MAXPOWER ) ) ) &&
 					   ( t[1] < 2*MAXPOWER ) && ( t[1] > -2*MAXPOWER ) ) {
@@ -3231,7 +3231,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 			}
 			*m += pow;
 
-			if ( ( sym < MAXPOWER && sym > -MAXPOWER )
+			if ( ( sym <= NumSymbols && sym > -MAXPOWER )
 			 && ( symbols[sym].complex & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
 				*m %= symbols[sym].maxpower;
 				if ( *m < 0 ) *m += symbols[sym].maxpower;

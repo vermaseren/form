@@ -1423,6 +1423,16 @@ extern WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info);
 extern WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par);
 extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par);
 
+extern int NormPolyTerm(PHEAD WORD *term);
+extern WORD ComparePoly(WORD *term1, WORD *term2, WORD level);
+extern int PolyBracket(WORD *term, WORD *bracket, int level);
+extern int ConvertToPoly(PHEAD WORD *term);
+extern WORD FindSubterm(WORD *subterm);
+extern void PrintSubtermList(VOID);
+
+#ifndef TOPLOYNOMIAL
+extern int CoToPolynomial(UBYTE *inp);
+#endif
 /*
   	#] Declarations :
 */
