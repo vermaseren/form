@@ -356,7 +356,7 @@ output. Our input string is transformed into the code string like this
    ^     -25  TPOWER
    `N'    -8  TNUMBER
            3
-         -29  ENDOFIT
+         -29  TENDOFIT
 \end{verbatim}
 
 This code string then lies in the \C{AC.tokens} buffer where it is used by
@@ -364,38 +364,205 @@ subsequent functions.
 
 The function \C{CompileSubExpression()} finds terms in an expression that might
 be reused at another place and extracts them. As one can see in the code, the
-function looks for terms in parentheses and works recursively. 
+function looks for terms in parentheses and works recursively. The end of such a
+term is each time marked with \C{TENDOFIT}. Then, the function
+\C{CodeGenerator()} called at the end of \C{CompileSubExpression()} does the
+real work.
 
+In our example \C{CodeGenerator()} first gets the data
+\begin{center}
+{\it LPARENTHESIS, TSYMBOL, 5, TPLUS, TSYMBOL, 6, TENDOFIT}
+\end{center}
+as a parameter, which is the term $x+y$. It builds up the actual term encoding
+in the workspace and first reserves for that enough space there. One can see the
+pointer arithmetic using constants like \C{AM.MaxTal}, which is the maximum
+number of words a number can occupy. It reserves space for the coefficient, an
+integer, and the actual term. Once a token is recognized, the equivalent term
+data is written to the workspace and the function \C{CompleteTerm} is called.
+This function completes the data to
+\begin{center}
+{\it 8, 1, 4, 5, 1, 1, 1, 3, 0}. 
+\end{center}
+The first word is the total length, i.e. 8 words. This is the length of the
+whole expression. The second word is the type of the term, which is a symbol. It
+is the value \C{SYMBOL} as defined in \C{ftypes.h}. This macro definition
+\C{SYMBOL} has the value 1 (in the \FORM\ version at this time this reference is
+written). Following the type signifying word is the length of the term, which is
+4. Several such terms could follow each other, but we only have one term at the
+moment. Finally, we have the trailing words for the coefficient being 1 and a
+terminating zero. The meaning and interpretation of the words in the data of a
+single term after the type word and the length word are dependent on the type.
+For symbols, we have pairs of word, where the first word is the index of the
+symbol in the name administration and the second word is the exponent. Here we
+have symbol 5 ($ = x$) with an exponent 1.  After \C{CompleteTerm()} has
+constructed the whole expression it copies the data to the compile buffers with
+the help of the function \C{AddNtoC()}.
 
+The compile buffers contain the instruction for the execution engine, the
+\C{Processor()}, that will start when the \C{.sort} command is parsed. Our terms
+are put into the right-hand-side buffers in the compile buffer. When the
+\C{Processor()} will read these buffers one after the other, it will take the
+terms and put them into the scratch buffer system. Then, they become the
+expressions upon which further statements do act. The compile buffers are stored
+in the list \C{AC.cbufList} and we get access to the elements via the cast
+\C{((CBUF *)(AC.cbufList.lijst))}. This cast is defined as a preprocessor macro
+called \C{cbuf}. The element \C{cbuf[0]->numrhs} (0 is the current compile
+buffer we are using) gives the number of entries in \C{cbuf[0]->rhs}, which is
+an array of pointer into \C{cbuf[0]->Buffer}. We have 3 elements:
 
-% \begin{verbatim}
-%  7      
-%  8      Brackets x;
-%  9      Print;
-% \end{verbatim}
+\begin{verbatim}
+  cbuf[0]->rhs[1]   -->
+     8, 1, 4, 5, 1, 1, 1, 3, 8, 1, 4, 6, 1, 1, 1, 3, 0
+  cbuf[0]->rhs[2]   -->
+     8, 1, 4, 5, 1, 1, 1, 3, 8, 1, 4, 7, 1, 1, 1, 3, 0
+  cbuf[0]->rhs[3]   -->
+     9, 6, 5, 1, 2, 0, 1, 1, 3, 9, 6, 5, 2, 3, 0, 1, 1, -3, 0
+\end{verbatim}
 
+\C{cbuf[0]->rhs[0]} is not used and the data lies consecutively in \\
+\C{cbuf[0]->Buffer}. The meaning of the first two entries has already been
+explained. These are expressions containing $x+y$ and $x+z$, respectively.
+The last expression uses subexpressions that have the type \C{SUBEXPRESSION}
+$ = 6$. The length of a subexpression is 5 and the contents $1,2,0$ means
+that expression 1 needs to be inserted with an exponent of 2. The zero is a
+dirty flag that signals to the processor the state of the subexpression. Here in
+the compile buffers it is simply cleared to zero. The contents $2,3,0$ of the
+second subexpression should be obvious. Finally, we have an negative
+coefficient for the second subexpression which accounts for the minus sign
+between the parentheses in our original expression.
 
+We return to the function \C{DoExpr()} where the prototype of the expression is
+put into the scratch system via the call \C{PutOut()} and we are finished with
+this line in the input file. The next line defining a second local expression
+works the same.
 
-% \begin{verbatim}
-% 10      .sort
-% \end{verbatim}
+We come to the parsing of the following statements:
 
+\begin{verbatim}
+ 7      
+ 8      Brackets x;
+ 9      Print;
+\end{verbatim}
 
+The bracket statement is dealt with in function \C{DoBrackets()}. It sets the
+flag \C{AR.BracketOn} to 1 and constructs the term that will stand outside the
+bracket. This term is copied into the \C{AT.BrackBuf} buffer, where it can be
+used by the execution engine when it needs to insert this heading term into an
+expression.
 
-% \begin{verbatim}
-% 11      
-% 12      #do i=2,3
-% 13      Id	x?^`i' = x;
-% 14      #enddo
-% \end{verbatim}
+The print statement is parsed in function \C{DoPrint()}. Since we don't have any
+arguments to \C{Print} all active expressions shall be printed.
+\C{DoPrint()} just loops through the \C{Expressions} list and sets the
+\C{printflag} to 1 for each expression.
 
+With the next statement in our input file
 
+\begin{verbatim}
+10      .sort
+\end{verbatim}
 
-% \begin{verbatim}
-% 15      
-% 16      Print +s;
-% 17      .end
-% \end{verbatim}
+we will get to know the other central parts of \FORM: the processor and the
+sorting routines. The code in the \C{PreProcessor()} will call
+\C{ExecModule()}
+which calls \C{DoExecute()}. We can ignore a lot of code there that is only for
+parallelized versions of \FORM. There are three important functions calls
+happening. First, \C{RevertScratch()} is called. \FORM\ uses three scratch
+buffers: input buffer, output buffer, and the hide buffer. The usual mode of
+operation is to apply statements on expressions in the input buffer, sort and
+normalize the result, and write it into the output buffer. This repeats for
+every executing module and therefore an important optimization is made: the
+input buffer and the output buffer simply change their roles.
+\C{RevertScratch()} does this job.  The second and third important calls are to
+\C{Processor()} and \C{WriteAll()}. 
 
+\C{Processor()} is, as the name suggests, the main processor that executes
+statements and deals with the results. A lot of initialization work is done
+before we go into the large loop over the expressions that spans almost the
+whole function. Our expressions have as regular expressions from the scratch
+buffers the \C{inmem} flag set to zero, so we go into the else branch of the
+checking if-clause. There we go to the case of a \C{LOCALEXPRESSION}. The main
+logic here is to do a single call to \C{GetTerm()} to get the first term from
+the input file and copy that to the output with the call to \C{PutOut()}. This
+first term, which is a subexpression, serves as a header for the expression. It
+follows a (while-)loop that calls \C{GetTerm()}, and if there are still terms,
+the loop executes its body and calls \C{Generator()}. After this loop, some
+clean-up and a final \C{EndSort()} is done, before the outer loop over the
+expressions repeats. \C{Generator()} is the function where the read input, which
+is {\it 9, 6, 5, 3, 1, 0, 1, 1, 3}, will be substituted and expanded.
 
+\C{Generator()} gets the term in the workspace and first tries to do all
+substitutions (\C{SUBEXPRESSION}), then applies the statements in the compile
+buffers to the normalized terms, substitutes again if necessary, do brackets,
+and finally sorts the result.
 
+The call to \C{TestSub()} does the search for subexpressions. \C{TestSub()} will
+find a subexpression in our case and return the number (3) of this subexpression
+and set other global variables ready for the following steps. In \C{Generator()}
+we enter therefore the if-clause checking \C{replac}$> 0$.  Depending on the
+power of the subexpression different operations are taken. We have our
+subexpression to the power one only, which is an easy case. The actual
+substitution is performed by the function \C{InsertTerm()}. Since the new term
+might again contain subexpressions we do a recursive call to \C{Generator()}.
+Our expression contains several layers of subexpressions which are all dealt
+with as described above. Only the powers of the other subexpressions are
+different from one, so we get slightly more work to be done which involves the
+expansion of the terms using binomials. 
+
+Finally, the call to \C{TestSub()} at the beginning of \C{Generator()} will
+return zero. The function \C{Normalize()} is called, which puts the terms in a
+canonical form, i.e. terms are ordered and collected with the correct
+coefficient. In our example, as the first fully subsituted term we have
+{\it 12, 1, 4, 6, 1, 1, 4, 6, 1, 1, 1, 3} before the call to
+\C{Normalize()}, which means we have a term $x*x$. \C{Normalize()}
+makes this into {\it 8, 1, 4, 6, 2, 1, 1, 3}, which is $x^2$.
+
+Then, we loop over the statements in the compile buffer. \C{level} is the
+instruction counter. We have a long switch-clause that interprets the statement
+type identifiers like \C{TYPECOUNT}. Statements with \C{TYPEEXPRESSION} are not
+treated here. So we loop over all the compile buffer statements here and only
+call \C{TestMatch()} at the loop's end. This function has no effect in our
+example, because we have no pattern matching going on.
+
+Then, the function \C{PutBracket()} is called to deal with brackets. Brackets
+are implemented by putting the special code \C{HAAKJE} inside the expression.
+The terms before the \C{HAAKJE} are outside the bracket, everything following it
+will be inside the bracket. 
+
+At the end of the loop over the terms in the expressions, the function
+\C{StoreTerm()} is called. This function puts the result of the processing in
+the output scratch buffers. Finally, we return to \C{Processor()}. There the
+final sorting is started. Also, the printing of the expressions is done here.
+
+The parsing in \C{PreProcessor()} continues with
+
+\begin{verbatim}
+11      
+12      #do i=2,3
+13      Id	x?^`i' = x;
+14      #enddo
+\end{verbatim}
+
+Here we have a somewhat more complicated example of preprocessor instructions.
+The do-loop is treated in \C{DoDo()} which sets up data structures (\C{DOLOOP})
+to guide the preprocessor when it is parsing the loop body. The statement line
+will then be presented to the compiler two times and with the correct values of
+the preprocessor variable \C{i}. The compiler deals with this statement in
+\C{CoId()} which is just calling \C{CoIdExpression()}.  \C{CoIdExpression()}
+puts a \C{TYPEIDNEW} code into the lhs compile buffer. This tells the processor
+later how to do the pattern matching. The rhs is the term \C{x} that will be
+inserted.
+
+The parsing continues and ends with
+
+\begin{verbatim}
+15      
+16      Print +s;
+17      .end
+\end{verbatim}
+
+The way these statements are treated and how the program is executed has already
+been described. The pattern matching is something that has not occurred before,
+though. We will not describe it here, since there is a dedicated section in this
+manual for that. After the final sorting, \FORM\ will clean up tempory files and
+other resources that are not automatically freed by the operating system before
+\FORM\ ends itself.

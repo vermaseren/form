@@ -60,51 +60,13 @@ suite is contained in the directory \C{check}.
 
 \input{@srcdir@/formrun}
 
+\section{Specific topics}
+
 \input{@srcdir@/indepth}
-
-\section{Autoconf build--system}
-
-%%% autoconf vs. pure Makefiles
-%%% configuration
 
 \input{@srcdir@/testsuite}
 
 \input{@srcdir@/cvs}
-
-\section{How to implement new things?}
-
-%%% New options
-%%% 
-%%% New statements
-%%% 
-%%% What to do when new global variables are needed?
-%%% 
-%%% Checklist of things to do, what to update, ...
-%%% 
-%%% Doxygen
-%%% 
-%%% autoconf settings
-
-
-\section{Various notes}
-
-%%% 32/64bit issues
-%%% 
-%%% Windows issues
-
-
-\section{Tipps on how to debug FORM}
-
-%%% Tools: gdb, ..., internal facilities, and useful settings
-%%% 
-%%% Where to look when dealing with certain problems?
-
-
-\section{\TFORM}
-
-
-\section{\PARFORM}
-
 
 \printindex
 
