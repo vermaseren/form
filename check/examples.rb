@@ -721,9 +721,7 @@ def test1
 	execute FORM
 	assert no_problem
     assert result("F",0) =~ pattern("-ff(i4,i5,i6)*f(i4,i7,i8)")
-    assert result("F",1) =~ pattern("f(i1,i2,i4)*f(i2,i3,i5)*f(i1,i3,i6)*ff(i4,i6)")
-	# Bug? Manual says:
-    #assert result("F",1)=~ pattern("-f(i1,i4,i2)*f(i5,i2,i3)*f(i3,i1,i6)*ff(i4,i6)")
+    assert result("F",1)=~ pattern("-f(i1,i2,i4)*f(i2,i3,i5)*f(i1,i3,i6)*ff(i4,i6)")
 end
 end
 #] 7.101 :
