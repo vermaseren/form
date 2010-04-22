@@ -1199,7 +1199,7 @@ int DoRecovery(int *moduletype)
 	void *buf, *p;
 	long size;
 	int i, j;
-	void *org, *org2;
+	UBYTE *org;
 	char *namebufout, *namebufhide;
 	long ofs;
 	void *oldAMdollarzero;
@@ -1438,27 +1438,29 @@ int DoRecovery(int *moduletype)
 						TABLEEXTENSION*sizeof(WORD)*(tabl->totind), WORD*);
 				}
 			}
-			org = tabl->prototype;
+			org = (UBYTE*)tabl->prototype;
 #ifdef WITHPTHREADS
 			R_COPY_B(tabl->prototype, tabl->prototypeSize, WORD**);
-			ofs = tabl->prototype - (WORD**)org;
+			ofs = (UBYTE*)tabl->prototype - org;
 			for ( j=0; j<AM.totalnumberofthreads; ++j ) {
 				if ( tabl->prototype[j] ) {
-					tabl->prototype[j] = (WORD*)((WORD**)(tabl->prototype[j]) + ofs);
+					tabl->prototype[j] = (WORD*)((UBYTE*)tabl->prototype[j] + ofs);
 				}
 			}
 			if ( tabl->pattern ) {
-				tabl->pattern += ofs;
+				tabl->pattern = (WORD**)((UBYTE*)tabl->pattern + ofs);
 				for ( j=0; j<AM.totalnumberofthreads; ++j ) {
 					if ( tabl->pattern[j] ) {
-						tabl->pattern[j] = (WORD*)((WORD**)(tabl->pattern[j]) + ofs);
+						tabl->pattern[j] = (WORD*)((UBYTE*)tabl->pattern[j] + ofs);
 					}
 				}
 			}
 #else
+			ofs = tabl->pattern - tabl->prototype;
 			R_COPY_B(tabl->prototype, tabl->prototypeSize, WORD*);
-			ofs = tabl->prototype - (WORD*)org;
-			if ( tabl->pattern ) tabl->pattern += ofs;
+			if ( tabl->pattern ) {
+				tabl->pattern = tabl->prototype + ofs;
+			}
 #endif
 			R_COPY_B(tabl->mm, tabl->numind*(LONG)sizeof(MINMAX), MINMAX*);
 			R_COPY_B(tabl->flags, tabl->numind*(LONG)sizeof(WORD), WORD*);
@@ -1502,25 +1504,25 @@ int DoRecovery(int *moduletype)
 		EXPRESSIONS ex = Expressions + i;
 		if ( ex->renum ) {
 			R_COPY_B(ex->renum, sizeof(struct ReNuMbEr), RENUMBER);
-			org = ex->renum->symb.lo;
+			org = (UBYTE*)ex->renum->symb.lo;
 			R_SET(size, size_t);
 			R_COPY_B(ex->renum->symb.lo, size, WORD*);
-			ofs = ex->renum->symb.lo - (WORD*)org;
-			ex->renum->symb.start += ofs;
-			ex->renum->symb.hi += ofs;
-			ex->renum->indi.lo += ofs;
-			ex->renum->indi.start += ofs;
-			ex->renum->indi.hi += ofs;
-			ex->renum->vect.lo += ofs;
-			ex->renum->vect.start += ofs;
-			ex->renum->vect.hi += ofs;
-			ex->renum->func.lo += ofs;
-			ex->renum->func.start += ofs;
-			ex->renum->func.hi += ofs;
-			ex->renum->symnum += ofs;
-			ex->renum->indnum += ofs;
-			ex->renum->vecnum += ofs;
-			ex->renum->funnum += ofs;
+			ofs = (UBYTE*)ex->renum->symb.lo - org;
+			ex->renum->symb.start = (WORD*)((UBYTE*)ex->renum->symb.start + ofs);
+			ex->renum->symb.hi = (WORD*)((UBYTE*)ex->renum->symb.hi + ofs);
+			ex->renum->indi.lo = (WORD*)((UBYTE*)ex->renum->indi.lo + ofs);
+			ex->renum->indi.start = (WORD*)((UBYTE*)ex->renum->indi.start + ofs);
+			ex->renum->indi.hi = (WORD*)((UBYTE*)ex->renum->indi.hi + ofs);
+			ex->renum->vect.lo = (WORD*)((UBYTE*)ex->renum->vect.lo + ofs);
+			ex->renum->vect.start = (WORD*)((UBYTE*)ex->renum->vect.start + ofs);
+			ex->renum->vect.hi = (WORD*)((UBYTE*)ex->renum->vect.hi + ofs);
+			ex->renum->func.lo = (WORD*)((UBYTE*)ex->renum->func.lo + ofs);
+			ex->renum->func.start = (WORD*)((UBYTE*)ex->renum->func.start + ofs);
+			ex->renum->func.hi = (WORD*)((UBYTE*)ex->renum->func.hi + ofs);
+			ex->renum->symnum = (WORD*)((UBYTE*)ex->renum->symnum + ofs);
+			ex->renum->indnum = (WORD*)((UBYTE*)ex->renum->indnum + ofs);
+			ex->renum->vecnum = (WORD*)((UBYTE*)ex->renum->vecnum + ofs);
+			ex->renum->funnum = (WORD*)((UBYTE*)ex->renum->funnum + ofs);
 		}
 		if ( ex->bracketinfo ) {
 			R_COPY_B(ex->bracketinfo, sizeof(BRACKETINFO), BRACKETINFO*);
@@ -1589,24 +1591,24 @@ int DoRecovery(int *moduletype)
 
 	R_COPY_LIST(AC.cbufList);
 	for ( i=0; i<AC.cbufList.num; ++i ) {
-		org = cbuf[i].Buffer;
+		org = (UBYTE*)cbuf[i].Buffer;
 		R_COPY_B(cbuf[i].Buffer, cbuf[i].BufferSize*sizeof(WORD), WORD*);
-		ofs = cbuf[i].Buffer - (WORD*)org;
-		cbuf[i].Top += ofs;
-		cbuf[i].Pointer += ofs;
+		ofs = (UBYTE*)cbuf[i].Buffer - org;
+		cbuf[i].Top = (WORD*)((UBYTE*)cbuf[i].Top + ofs);
+		cbuf[i].Pointer = (WORD*)((UBYTE*)cbuf[i].Pointer + ofs);
 		R_COPY_B(cbuf[i].lhs, cbuf[i].maxlhs*(LONG)sizeof(WORD*), WORD**);
 		for ( j=1; j<=cbuf[i].numlhs; ++j ) {
-			if ( cbuf[i].lhs[j] ) cbuf[i].lhs[j] += ofs;
+			if ( cbuf[i].lhs[j] ) cbuf[i].lhs[j] = (WORD*)((UBYTE*)cbuf[i].lhs[j] + ofs);
 		}
-		org = cbuf[i].rhs;
+		org = (UBYTE*)cbuf[i].rhs;
 		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)), WORD**);
 		for ( j=1; j<=cbuf[i].numrhs; ++j ) {
-			if ( cbuf[i].rhs[j] ) cbuf[i].rhs[j] += ofs;
+			if ( cbuf[i].rhs[j] ) cbuf[i].rhs[j] = (WORD*)((UBYTE*)cbuf[i].rhs[j] + ofs);
 		}
-		ofs = (char*)cbuf[i].rhs - (char*)org;
-		cbuf[i].CanCommu = (LONG*)((char*)cbuf[i].CanCommu + ofs);
-		cbuf[i].NumTerms = (LONG*)((char*)cbuf[i].NumTerms + ofs);
-		cbuf[i].numdum = (WORD*)((char*)cbuf[i].numdum + ofs);
+		ofs = (UBYTE*)cbuf[i].rhs - org;
+		cbuf[i].CanCommu = (LONG*)((UBYTE*)cbuf[i].CanCommu + ofs);
+		cbuf[i].NumTerms = (LONG*)((UBYTE*)cbuf[i].NumTerms + ofs);
+		cbuf[i].numdum = (WORD*)((UBYTE*)cbuf[i].numdum + ofs);
 		if ( cbuf[i].boomlijst ) {
 			R_COPY_B(cbuf[i].boomlijst, cbuf[i].MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
 		}
@@ -1630,15 +1632,16 @@ int DoRecovery(int *moduletype)
 	AC.Functions = &(AC.FunctionList);
 	AC.activenames = &(AC.varnames);
 
-	org = AC.Streams;
+	org = (UBYTE*)AC.Streams;
 	R_COPY_B(AC.Streams, AC.MaxNumStreams*(LONG)sizeof(STREAM), STREAM*);
 	for ( i=0; i<AC.NumStreams; ++i ) {
 		if ( AC.Streams[i].type != FILESTREAM ) {
+			UBYTE *org2;
 			org2 = AC.Streams[i].buffer;
 			if ( AC.Streams[i].inbuffer ) {
 				R_COPY_B(AC.Streams[i].buffer, AC.Streams[i].inbuffer, UBYTE*);
 			}
-			ofs = AC.Streams[i].buffer - (UBYTE*)org2;
+			ofs = AC.Streams[i].buffer - org2;
 			AC.Streams[i].pointer += ofs;
 			AC.Streams[i].top += ofs;
 		}
@@ -1651,10 +1654,11 @@ int DoRecovery(int *moduletype)
 		if ( AC.Streams[i].type == PREVARSTREAM || AC.Streams[i].type == DOLLARSTREAM ) {
 			AC.Streams[i].pname = AC.Streams[i].name;
 		}
-		if ( AC.Streams[i].type == FILESTREAM ) {
+		else if ( AC.Streams[i].type == FILESTREAM ) {
+			UBYTE *org2;
 			org2 = AC.Streams[i].buffer;
 			AC.Streams[i].buffer = (UBYTE*)Malloc1(AC.Streams[i].buffersize, "buffer");
-			ofs = AC.Streams[i].buffer - (UBYTE*)org2;
+			ofs = AC.Streams[i].buffer - org2;
 			AC.Streams[i].pointer += ofs;
 			AC.Streams[i].top += ofs;
 
@@ -1676,9 +1680,18 @@ int DoRecovery(int *moduletype)
 			SETBASEPOSITION(pos, AC.Streams[i].fileposition);
 			SeekFile(AC.Streams[i].handle, &pos, SEEK_SET);
 		}
+		/* 
+		 * Ideally, we should check if we have a type PREREADSTREAM, PREREADSTREAM2, and
+		 * PRECALCSTREAM here. If so, we should free element name and point it
+		 * to the name element of the embracing stream's struct. In practice,
+		 * this is undoable without adding new data to STREAM. Since we create
+		 * only a small memory leak here (some few byte for each existing
+		 * stream of these types) and only once when we do a recovery, we
+		 * tolerate this leak and keep it STREAM as it is.
+		 */
 	}
-	ofs = AC.Streams - (STREAM*)org;
-	AC.CurrentStream += ofs;
+	ofs = (UBYTE*)AC.Streams - org;
+	AC.CurrentStream = (STREAM*)((UBYTE*)AC.CurrentStream + ofs);
 
 	if ( AC.termstack ) {
 		R_COPY_B(AC.termstack, AC.maxtermlevel*(LONG)sizeof(LONG), LONG*);
@@ -1700,28 +1713,27 @@ int DoRecovery(int *moduletype)
 	/* we don't care about AC.ProtoType/WildC */
 
 	if ( AC.IfHeap ) {
-		org = AC.IfHeap;
+		ofs = AC.IfStack - AC.IfHeap;
 		R_COPY_B(AC.IfHeap, (LONG)sizeof(LONG)*(AC.MaxIf+1), LONG*);
-		ofs = AC.IfHeap - (LONG*)org;
-		AC.IfStack += ofs;
+		AC.IfStack = AC.IfHeap + ofs;
 		R_COPY_B(AC.IfCount, (LONG)sizeof(LONG)*(AC.MaxIf+1), LONG*);
 	}
 
 	org = AC.iBuffer;
-	ofs = AC.iStop - AC.iBuffer + 2;
-	R_COPY_B(AC.iBuffer, ofs, UBYTE*);
-	ofs = AC.iBuffer - (UBYTE*)org;
+	size = AC.iStop - AC.iBuffer + 2;
+	R_COPY_B(AC.iBuffer, size, UBYTE*);
+	ofs = AC.iBuffer - org;
 	AC.iPointer += ofs;
 	AC.iStop += ofs;
 
 	if ( AC.LabelNames ) {
-		org = AC.LabelNames;
+		org = (UBYTE*)AC.LabelNames;
 		R_COPY_B(AC.LabelNames, AC.MaxLabels*(LONG)(sizeof(UBYTE*)+sizeof(WORD)), UBYTE**);
 		for ( i=0; i<AC.NumLabels; ++i ) {
 			R_COPY_S(AC.LabelNames[i],UBYTE*);
 		}
-		ofs = (int*)AC.LabelNames - (int*)org;
-		AC.Labels += ofs;
+		ofs = (UBYTE*)AC.LabelNames - org;
+		AC.Labels = (int*)((UBYTE*)AC.Labels + ofs);
 	}
 	
 	R_COPY_B(AC.FixIndices, AM.OffsetIndex*(LONG)sizeof(WORD), WORD*);
@@ -1735,9 +1747,9 @@ int DoRecovery(int *moduletype)
 	if ( AC.tokens ) {
 		size = AC.toptokens - AC.tokens;
 		if ( size ) {
-			org = AC.tokens;
+			org = (UBYTE*)AC.tokens;
 			R_COPY_B(AC.tokens, size, SBYTE*);
-			ofs = AC.tokens - (SBYTE*)org;
+			ofs = (UBYTE*)AC.tokens - org;
 			AC.endoftokens += ofs;
 			AC.toptokens += ofs;
 		}
@@ -1756,10 +1768,10 @@ int DoRecovery(int *moduletype)
 
 #ifdef WITHPTHREADS
 	if ( AC.inputnumbers ) {
-		org = AC.inputnumbers;
+		org = (UBYTE*)AC.inputnumbers;
 		R_COPY_B(AC.inputnumbers, AC.sizepfirstnum*(LONG)(sizeof(WORD)+sizeof(LONG)), LONG*);
-		ofs = (WORD*)AC.inputnumbers - (WORD*)org;
-		AC.pfirstnum += ofs;
+		ofs = (UBYTE*)AC.inputnumbers - org;
+		AC.pfirstnum = (WORD*)((UBYTE*)AC.pfirstnum + ofs);
 	}
 	AC.halfmodlock = dummylock;
 #endif /* ifdef WITHPTHREADS */
@@ -1852,7 +1864,7 @@ int DoRecovery(int *moduletype)
 		R_SET(size, size_t);
 		org = PreVar[i].name;
 		R_COPY_B(PreVar[i].name, size, UBYTE*);
-		ofs = PreVar[i].name - (UBYTE*)org;
+		ofs = PreVar[i].name - org;
 		if ( PreVar[i].value ) PreVar[i].value += ofs;
 		if ( PreVar[i].argnames ) PreVar[i].argnames += ofs;
 	}
@@ -1862,7 +1874,7 @@ int DoRecovery(int *moduletype)
 	for ( i=0; i<AP.LoopList.num; ++i ) {
 		org = DoLoops[i].p.buffer;
 		R_COPY_B(DoLoops[i].p.buffer, DoLoops[i].p.size, UBYTE*);
-		ofs = DoLoops[i].p.buffer - (UBYTE*)org;
+		ofs = DoLoops[i].p.buffer - org;
 		if ( DoLoops[i].name ) DoLoops[i].name += ofs;
 		if ( DoLoops[i].vars ) DoLoops[i].vars += ofs;
 		if ( DoLoops[i].contents ) DoLoops[i].contents += ofs;
@@ -1898,7 +1910,7 @@ int DoRecovery(int *moduletype)
 
 	org = AP.preStart;
 	R_COPY_B(AP.preStart, AP.pSize, UBYTE*);
-	ofs = AP.preStart - (UBYTE*)org;
+	ofs = AP.preStart - org;
 	if ( AP.preFill ) AP.preFill += ofs;
 	if ( AP.preStop ) AP.preStop += ofs;
 
@@ -1952,17 +1964,17 @@ int DoRecovery(int *moduletype)
 	
 	/* outfile */
 	R_SET(*AR.outfile, FILEHANDLE);
-	org = AR.outfile->PObuffer;
+	org = (UBYTE*)AR.outfile->PObuffer;
 	size = AR.outfile->POfull - AR.outfile->PObuffer;
 	AR.outfile->PObuffer = (WORD*)Malloc1(AR.outfile->POsize, "PObuffer");
 	if ( size ) {
 		memcpy(AR.outfile->PObuffer, p, size*sizeof(WORD));
 		p = (unsigned char*)p + size*sizeof(WORD);
 	}
-	ofs = AR.outfile->PObuffer - (WORD*)org;
-	AR.outfile->POstop += ofs;
-	AR.outfile->POfill += ofs;
-	AR.outfile->POfull += ofs;
+	ofs = (UBYTE*)AR.outfile->PObuffer - org;
+	AR.outfile->POstop = (WORD*)((UBYTE*)AR.outfile->POstop + ofs);
+	AR.outfile->POfill = (WORD*)((UBYTE*)AR.outfile->POfill + ofs);
+	AR.outfile->POfull = (WORD*)((UBYTE*)AR.outfile->POfull + ofs);
 	AR.outfile->name = namebufout;
 #ifdef WITHPTHREADS
 	AR.outfile->wPObuffer = AR.outfile->PObuffer;
@@ -1998,17 +2010,17 @@ int DoRecovery(int *moduletype)
 	R_SET(*AR.hidefile, FILEHANDLE);
 	AR.hidefile->name = namebufhide;
 	if ( AR.hidefile->PObuffer ) {
-		org = AR.hidefile->PObuffer;
+		org = (UBYTE*)AR.hidefile->PObuffer;
 		size = AR.hidefile->POfull - AR.hidefile->PObuffer;
 		AR.hidefile->PObuffer = (WORD*)Malloc1(AR.hidefile->POsize, "PObuffer");
 		if ( size ) {
 			memcpy(AR.hidefile->PObuffer, p, size*sizeof(WORD));
 			p = (unsigned char*)p + size*sizeof(WORD);
 		}
-		ofs = AR.hidefile->PObuffer - (WORD*)org;
-		AR.hidefile->POstop += ofs;
-		AR.hidefile->POfill += ofs;
-		AR.hidefile->POfull += ofs;
+		ofs = (UBYTE*)AR.hidefile->PObuffer - org;
+		AR.hidefile->POstop = (WORD*)((UBYTE*)AR.hidefile->POstop + ofs);
+		AR.hidefile->POfill = (WORD*)((UBYTE*)AR.hidefile->POfill + ofs);
+		AR.hidefile->POfull = (WORD*)((UBYTE*)AR.hidefile->POfull + ofs);
 #ifdef WITHPTHREADS
 		AR.hidefile->wPObuffer = AR.hidefile->PObuffer;
 		AR.hidefile->wPOstop = AR.hidefile->POstop;
