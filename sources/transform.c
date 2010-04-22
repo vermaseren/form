@@ -301,7 +301,8 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
  		#] encode/decode : 
  		#[ implode :
 */
-		else if ( StrICmp(s,(UBYTE *)"implode") == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"implode") == 0
+			   || StrICmp(s,(UBYTE *)"tosumnotation") == 0 ) {
 /*
 				Subkeys: ?
 */
@@ -323,7 +324,8 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
  		#] implode : 
  		#[ explode :
 */
-		else if ( StrICmp(s,(UBYTE *)"explode") == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"explode") == 0
+			   || StrICmp(s,(UBYTE *)"tointegralnotation") == 0 ) {
 /*
 				Subkeys: ?
 */
@@ -342,7 +344,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			s = in;
 		}
 /*
- 		#] explode : 
+ 		#] explode :
  		#[ permute :
 */
 		else if ( StrICmp(s,(UBYTE *)"permute") == 0 ) {
@@ -516,7 +518,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 }
 
 /*
- 		#] CoTransform : 
+ 		#] CoTransform :
  		#[ RunTransform :
 
 		Executes the transform statement.
@@ -745,6 +747,7 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 	int num, num1, num2, n, i, i1, i2;
 	UWORD *scrat1, *scrat2, *scrat3;
 	WORD *tt, *tstop, totarg, arg1, arg2;
+	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunEncode");
@@ -934,6 +937,7 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD i1, i2, i, sig;
 	UWORD *scrat1, *scrat2, *scrat3;
 	WORD *tt, *tstop, totarg, arg1, arg2;
+	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunDecode");
@@ -1102,7 +1106,7 @@ CalledFrom:
 
 WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 {
-	int n = 0, i, dirty = 0, totarg = 0, nfix, nwild, ngeneral;
+	int n = 0, i, dirty = 0, totarg, nfix, nwild, ngeneral;
 	WORD *t, *tt, *u, *tstop, *info1, *infoend, *oldwork = AT.WorkPointer;
 	WORD *term, *newterm, *nt, *term1, *term2;
 	WORD wild[4], mask, *term3, *term4;
@@ -1111,7 +1115,13 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 	t = fun; tstop = fun + fun[1]; u = tstop;
 	for ( i = 0; i < FUNHEAD; i++ ) *u++ = *t++;
 	tt = t;
-	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+		totarg = 0;
+		while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	}
+	else {
+		totarg = tstop - tt;
+	}
 /*
 	Now get the info through Generator to bring it to standard form.
 	info points at a single term that should be sent to Generator.
@@ -1221,9 +1231,12 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 	while ( t < tstop ) {
 		n++;	/* The number of the argument. Now check whether we need it */
 		if ( TestArgNum(n,totarg,args) == 0 ) {
-			if ( *t <= FUNCTION ) { *u++ = *t++; }
-			else if ( *t < 0 ) { *u++ = *t++; *u++ = *t++; }
-			else { i = *t; NCOPY(u,t,i) }
+			if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+				if ( *t <= -FUNCTION ) { *u++ = *t++; }
+				else if ( *t < 0 ) { *u++ = *t++; *u++ = *t++; }
+				else { i = *t; NCOPY(u,t,i) }
+			}
+			else *u++ = *t++;
 			continue;
 		}
 /*
@@ -1236,6 +1249,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 		First we go for number -> something
 */
 		if ( nfix > 0 ) {
+		  if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
 			if ( *t == -SNUMBER ) {
 			  info1 = info + FUNHEAD;
 			  while ( info1 < infoend ) {
@@ -1263,6 +1277,27 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 				}
 			  }
 			}
+		  }
+		  else {  /* Tensor */
+			if ( *t < AM.OffsetIndex && *t >= 0 ) {
+			  info1 = info + FUNHEAD;
+			  while ( info1 < infoend ) {
+				if ( ( *info1 == -SNUMBER ) && ( info1[1] == *t )
+				 && ( ( ( info1[2] == -SNUMBER ) && ( info1[3] >= 0 )
+				 && ( info1[3] < AM.OffsetIndex ) )
+				 || ( info1[2] == -INDEX || info1[2] == -VECTOR
+				 || info1[2] == -MINVECTOR ) ) ) {
+					*u++ = info1[3];
+					info1 += 4;
+					t++; goto nextt;
+				}
+				else {
+					NEXTARG(info1);
+					NEXTARG(info1);
+				}
+			  }
+			}
+		  }
 		}
 /*
 		First we try to catch those elements that have an exact match
@@ -1271,6 +1306,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 		in the replace_ function that we prepared.
 */
 		if ( ngeneral > 0 ) {
+		  if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
 			if ( *t < 0 ) {
 				term3 = term1 + *term1;
 				term4 = term1 + FUNHEAD;
@@ -1281,6 +1317,19 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 				}
 				if ( term4 < term3 ) goto dothisnow;
 			}
+		  }
+		  else {
+			term3 = term1 + *term1;
+			term4 = term1 + FUNHEAD;
+			while ( term4 < term3 ) {
+				if ( ( term4[1] == *t ) &&
+					( ( *term4 == -INDEX || *term4 == -VECTOR ||
+					 ( *term4 == -SYMBOL && term4[1] < AM.OffsetIndex
+						&& term4[1] >= 0 ) ) ) ) break;
+				NEXTARG(term4)
+			}
+			if ( term4 < term3 ) goto dothisnow;
+		  }
 		}
 /*
 		First we eliminate the fixed arguments and make a 'new info'
@@ -1298,7 +1347,8 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 			wild[1] = 4;
 			info1 = info + FUNHEAD;
 			while ( info1 < infoend ) {
-				if ( *info1 == -SYMBOL && info1[1] == WILDARGSYMBOL ) {
+				if ( *info1 == -SYMBOL && info1[1] == WILDARGSYMBOL
+				&& ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) ) {
 					wild[0] = SYMTOSUB;
 					wild[2] = WILDARGSYMBOL;
 					wild[3] = 0;
@@ -1315,16 +1365,27 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 						info1 += 2;
 getthisone:;
 						term3 = term2+1;
-						*term3++ = DUMFUN; term3++; FILLFUN(term3)
-						COPY1ARG(term3,info1)
+						if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+							*term3++ = DUMFUN; term3++; FILLFUN(term3)
+							COPY1ARG(term3,info1)
+						}
+						else {
+							*term3++ = fun[0]; term3++; FILLFUN(term3)
+							*term3++ = *info1;
+						}
 						term2[2] = term3 - term2 - 1;
 						tt = term3;
 						*term3++ = REPLACEMENT;
 						term3++; FILLFUN(term3)
 						*term3++ = -n1;
 						if ( n1 < FUNCTION ) *term3++ = n2;
-						term4 = t;
-						COPY1ARG(term3,term4)
+						if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+							term4 = t;
+							COPY1ARG(term3,term4)
+						}
+						else {
+							*term3++ = *t;
+						}
 						tt[1] = term3 - tt;
 						*term3++ = 1; *term3++ = 1; *term3++ = 3;
 						*term2 = term3 - term2;
@@ -1350,7 +1411,10 @@ getthisone:;
 						i = term4[2]-FUNHEAD;
 						term3 = term4+FUNHEAD+1;
 						NCOPY(u,term3,i)
-						NEXTARG(t)
+						if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+							NEXTARG(t)
+						}
+						else t++;
 						AT.WorkPointer = term2;
 
 						goto nextt;
@@ -1366,7 +1430,8 @@ getthisone:;
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
-					if ( *t == -INDEX || ( *t > 0 && CheckWild(BHEAD WILDARGINDEX,INDTOSUB,1,t) == 0 ) ) {
+					if ( ( functions[fun[0]-FUNCTION].spec == TENSORFUNCTION )
+					|| ( *t == -INDEX || ( *t > 0 && CheckWild(BHEAD WILDARGINDEX,INDTOSUB,1,t) == 0 ) ) ) {
 /*
 						We put the part in replace in a function and make
 						a replace_(xarg_,(t argument)).
@@ -1386,7 +1451,14 @@ getthisone:;
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
-					if ( *t == -VECTOR || *t == -MINVECTOR ||
+					if ( functions[fun[0]-FUNCTION].spec == TENSORFUNCTION ) {
+						if ( *t < MINSPEC ) {
+							n1 = VECTOR; n2 = WILDARGVECTOR+AM.OffsetVector;
+							info1 += 2;
+							goto getthisone;
+						}
+					}
+					else if ( *t == -VECTOR || *t == -MINVECTOR ||
 					( *t > 0 && CheckWild(BHEAD WILDARGVECTOR,VECTOSUB,1,t) == 0 ) ) {
 /*
 						We put the part in replace in a function and make
@@ -1433,9 +1505,14 @@ dothisnow:;
 			term3 = term2; term4 = term1; i = *term1;
 			NCOPY(term3,term4,i)
 			term4 = term3;
-			*term3++ = DUMFUN; term3++; FILLFUN(term3);
-			tt = t;
-			COPY1ARG(term3,tt)
+			if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+				*term3++ = DUMFUN; term3++; FILLFUN(term3);
+				tt = t;
+				COPY1ARG(term3,tt)
+			}
+			else {
+				*term3++ = fun[0]; term3++; FILLFUN(term3); *term3++ = *t;
+			}
 			term4[1] = term3-term4;
 			*term3++ = 1; *term3++ = 1; *term3++ = 3;
 			*term2 = term3-term2;
@@ -1469,9 +1546,14 @@ dothisnow:;
 /*
 		No catch. Copy the argument and continue.
 */		
-		if ( *t <= -FUNCTION ) { *u++ = *t++; }
-		else if ( *t < 0 ) { *u++ = *t++; *u++ = *t++; }
-		else { i = *t; NCOPY(u,t,i) }
+		if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+			if ( *t <= -FUNCTION ) { *u++ = *t++; }
+			else if ( *t < 0 ) { *u++ = *t++; *u++ = *t++; }
+			else { i = *t; NCOPY(u,t,i) }
+		}
+		else {
+			*u++ = *t++;
+		}
 nextt:;
 	}
 	i = u - tstop; tstop[1] = i; tstop[2] = dirty;
@@ -1481,7 +1563,7 @@ nextt:;
 }
 
 /*
- 		#] RunReplace : 
+ 		#] RunReplace :
  		#[ RunImplode :
 
 		Note that we restrict ourselves to short integers and/or single symbols
@@ -1492,6 +1574,7 @@ WORD RunImplode(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD *tt, *tstop, totarg, arg1, arg2, num, num1, num2, i, i1, n;
 	WORD *f, *t, *ttt, *t4, *ff, *fff;
 	WORD moveup, numzero, outspace;
+	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunImplode");
@@ -1695,6 +1778,7 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD arg1, arg2, num1, num2, num, *tt, *tstop, totarg, *tonew, *newfun;
 	WORD *ff, *f;
 	int reverse = 0, iarg, i, numzero;
+	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunImplode");
@@ -1816,27 +1900,28 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
-	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = 1; arg2 = totarg;
+	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	  arg1 = 1; arg2 = totarg;
 /*
-	We need to:
+	  We need to:
 		1: get pointers to the arguments
 		2: permute the pointers
 		3: copy the arguments to safe territory in the new order
 		4: copy this new order back in situ.
 */
-	num = arg2-arg1+1;
-	WantAddPointers(num);	/* Guarantees the presence of enough pointers */
-	f = fun+FUNHEAD; n = 1; i = 0;
-	while ( n < arg1 ) { n++; NEXTARG(f) }
-	f1 = f;
-	while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
+	  num = arg2-arg1+1;
+	  WantAddPointers(num);	/* Guarantees the presence of enough pointers */
+	  f = fun+FUNHEAD; n = 1; i = 0;
+	  while ( n < arg1 ) { n++; NEXTARG(f) }
+	  f1 = f;
+	  while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
 /*
-	Now the permutations
+	  Now the permutations
 */
-	info++;
-	while ( *info ) {
+	  info++;
+	  while ( *info ) {
 		infostop = info + *info;
 		info++;
 		if ( *info > totarg ) return(0);
@@ -1848,15 +1933,51 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 			info++;
 		}
 		AT.pWorkSpace[AT.pWorkPointer+info[-1]] = tt;
-	}
+	  }
 /*
-	And the final cleanup
+	  And the final cleanup
 */
-	if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
-	f2 = tstop;
-	for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; COPY1ARG(f2,f) }
-	i = f2 - tstop;
-	NCOPY(f1,tstop,i)
+	  if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
+	  f2 = tstop;
+	  for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; COPY1ARG(f2,f) }
+	  i = f2 - tstop;
+	  NCOPY(f1,tstop,i)
+	}
+	else {  /* tensors */
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop-tt;
+	  arg1 = 1; arg2 = totarg;
+	  num = arg2-arg1+1;
+	  WantAddPointers(num);	/* Guarantees the presence of enough pointers */
+	  f = fun+FUNHEAD; n = 1; i = 0;
+	  while ( n < arg1 ) { n++; f++; }
+	  f1 = f;
+	  while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; f++; }
+/*
+	  Now the permutations
+*/
+	  info++;
+	  while ( *info ) {
+		infostop = info + *info;
+		info++;
+		if ( *info > totarg ) return(0);
+		tt = AT.pWorkSpace[AT.pWorkPointer+*info];
+		info++;
+		while ( info < infostop ) {
+			if ( *info > totarg ) return(0);
+			AT.pWorkSpace[AT.pWorkPointer+info[-1]] = AT.pWorkSpace[AT.pWorkPointer+*info];
+			info++;
+		}
+		AT.pWorkSpace[AT.pWorkPointer+info[-1]] = tt;
+	  }
+/*
+	  And the final cleanup
+*/
+	  if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
+	  f2 = tstop;
+	  for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; *f2++= *f++; }
+	  i = f2 - tstop;
+	  NCOPY(f1,tstop,i)
+	}
 	return(0);
 OverWork:;
 	LOCK(ErrorMessageLock);
@@ -1879,40 +2000,77 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args, WORD *info)
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
-	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	  arg1 = args[1];
+	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	  arg2 = args[2];
+	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
 /*
-	We need to:
+	  We need to:
 		1: get pointers to the arguments
 		2: reverse the order of the pointers
 		3: copy the arguments to safe territory in the new order
 		4: copy this new order back in situ.
 */
-	if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
-	if ( arg2 > totarg ) return(0);
+	  if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
 
-	num = arg2-arg1+1;
-	WantAddPointers(num);	/* Guarantees the presence of enough pointers */
-	f = fun+FUNHEAD; n = 1; i = 0;
-	while ( n < arg1 ) { n++; NEXTARG(f) }
-	f1 = f;
-	while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
-	i1 = i-1; i2 = 0;
-	while ( i1 > i2 ) {
+	  num = arg2-arg1+1;
+	  WantAddPointers(num);	/* Guarantees the presence of enough pointers */
+	  f = fun+FUNHEAD; n = 1; i = 0;
+	  while ( n < arg1 ) { n++; NEXTARG(f) }
+	  f1 = f;
+	  while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
+	  i1 = i-1; i2 = 0;
+	  while ( i1 > i2 ) {
 		tt = AT.pWorkSpace[AT.pWorkPointer+i1];
 		AT.pWorkSpace[AT.pWorkPointer+i1] = AT.pWorkSpace[AT.pWorkPointer+i2];
 		AT.pWorkSpace[AT.pWorkPointer+i2] = tt;
 		i1--; i2++;
+	  }
+	  if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
+	  f2 = tstop;
+	  for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; COPY1ARG(f2,f) }
+	  i = f2 - tstop;
+	  NCOPY(f1,tstop,i)
 	}
-	if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
-	f2 = tstop;
-	for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; COPY1ARG(f2,f) }
-	i = f2 - tstop;
-	NCOPY(f1,tstop,i)
+	else {	/* Tensors */
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
+	  arg1 = args[1];
+	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	  arg2 = args[2];
+	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+/*
+	  We need to:
+		1: get pointers to the arguments
+		2: reverse the order of the pointers
+		3: copy the arguments to safe territory in the new order
+		4: copy this new order back in situ.
+*/
+	  if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
+
+	  num = arg2-arg1+1;
+	  WantAddPointers(num);	/* Guarantees the presence of enough pointers */
+	  f = fun+FUNHEAD; n = 1; i = 0;
+	  while ( n < arg1 ) { n++; f++; }
+	  f1 = f;
+	  while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; f++; }
+	  i1 = i-1; i2 = 0;
+	  while ( i1 > i2 ) {
+		tt = AT.pWorkSpace[AT.pWorkPointer+i1];
+		AT.pWorkSpace[AT.pWorkPointer+i1] = AT.pWorkSpace[AT.pWorkPointer+i2];
+		AT.pWorkSpace[AT.pWorkPointer+i2] = tt;
+		i1--; i2++;
+	  }
+	  if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
+	  f2 = tstop;
+	  for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; *f2++ = *f++; }
+	  i = f2 - tstop;
+	  NCOPY(f1,tstop,i)
+	}
 	return(0);
 OverWork:;
 	LOCK(ErrorMessageLock);
@@ -1935,40 +2093,41 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
-	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1]; arg2 = args[2];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
-	if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
-	if ( arg2 > totarg ) return(0);
+	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	  arg1 = args[1]; arg2 = args[2];
+	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	  if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
 /*
-	We need to:
+	  We need to:
 		1: get pointers to the arguments
 		2: cycle the pointers
 		3: copy the arguments to safe territory in the new order
 		4: copy this new order back in situ.
 */
-	num = arg2-arg1+1;
-	WantAddPointers(num);	/* Guarantees the presence of enough pointers */
-	f = fun+FUNHEAD; n = 1; i = 0;
-	while ( n < arg1 ) { n++; NEXTARG(f) }
-	f1 = f;
-	while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
+	  num = arg2-arg1+1;
+	  WantAddPointers(num);	/* Guarantees the presence of enough pointers */
+	  f = fun+FUNHEAD; n = 1; i = 0;
+	  while ( n < arg1 ) { n++; NEXTARG(f) }
+	  f1 = f;
+	  while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
 /*
-	Now the cycle(s). First minimize the number of cycles.
+	  Now the cycle(s). First minimize the number of cycles.
 */
-	info++;
-	x = *info;
-	if ( x >= i ) {
+	  info++;
+	  x = *info;
+	  if ( x >= i ) {
 		x %= i;
 		if ( x > i/2 ) x -= i;
-	}
-	else if ( x <= -i ) {
+	  }
+	  else if ( x <= -i ) {
 		x = -((-x) % i);
 		if ( x <= -i/2 ) x += i;
-	}
-	while ( x ) {
+	  }
+	  while ( x ) {
 		if ( x > 0 ) {
 			tt = AT.pWorkSpace[AT.pWorkPointer+i-1];
 			for ( j = i-1; j > 0; j-- )
@@ -1983,15 +2142,74 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 			AT.pWorkSpace[AT.pWorkPointer+j-1] = tt;
 			x++;
 		}
-	}
+	  }
 /*
-	And the final cleanup
+	  And the final cleanup
 */
-	if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
-	f2 = tstop;
-	for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; COPY1ARG(f2,f) }
-	i = f2 - tstop;
-	NCOPY(f1,tstop,i)
+	  if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
+	  f2 = tstop;
+	  for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; COPY1ARG(f2,f) }
+	  i = f2 - tstop;
+	  NCOPY(f1,tstop,i)
+	}
+	else {	/* Tensors */
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
+	  arg1 = args[1]; arg2 = args[2];
+	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	  if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
+/*
+	  We need to:
+		1: get pointers to the arguments
+		2: cycle the pointers
+		3: copy the arguments to safe territory in the new order
+		4: copy this new order back in situ.
+*/
+	  num = arg2-arg1+1;
+	  WantAddPointers(num);	/* Guarantees the presence of enough pointers */
+	  f = fun+FUNHEAD; n = 1; i = 0;
+	  while ( n < arg1 ) { n++; f++; }
+	  f1 = f;
+	  while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; f++; }
+/*
+	  Now the cycle(s). First minimize the number of cycles.
+*/
+	  info++;
+	  x = *info;
+	  if ( x >= i ) {
+		x %= i;
+		if ( x > i/2 ) x -= i;
+	  }
+	  else if ( x <= -i ) {
+		x = -((-x) % i);
+		if ( x <= -i/2 ) x += i;
+	  }
+	  while ( x ) {
+		if ( x > 0 ) {
+			tt = AT.pWorkSpace[AT.pWorkPointer+i-1];
+			for ( j = i-1; j > 0; j-- )
+				AT.pWorkSpace[AT.pWorkPointer+j] = AT.pWorkSpace[AT.pWorkPointer+j-1];
+			AT.pWorkSpace[AT.pWorkPointer] = tt;
+			x--;
+		}
+		else {
+			tt = AT.pWorkSpace[AT.pWorkPointer];
+			for ( j = 1; j < i; j++ )
+				AT.pWorkSpace[AT.pWorkPointer+j-1] = AT.pWorkSpace[AT.pWorkPointer+j];
+			AT.pWorkSpace[AT.pWorkPointer+j-1] = tt;
+			x++;
+		}
+	  }
+/*
+	  And the final cleanup
+*/
+	  if ( tstop+(f-f1) > AT.WorkTop ) goto OverWork;
+	  f2 = tstop;
+	  for ( i = 0; i < num; i++ ) { f = AT.pWorkSpace[AT.pWorkPointer+i]; *f2++ = *f++; }
+	  i = f2 - tstop;
+	  NCOPY(f1,tstop,i)
+	}
 	return(0);
 OverWork:;
 	LOCK(ErrorMessageLock);
@@ -2013,6 +2231,7 @@ WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, *f1, n, i;
 	WORD sign, i1, i2, retval;
+	if ( fun[0] <= GAMMASEVEN && fun[0] >= GAMMA ) return(0);
 	if ( *args != ARGRANGE ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunIsLyndon");
@@ -2092,6 +2311,7 @@ WORD RunToLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, *f1, *f2, n, i;
 	WORD sign, i1, i2, retval, unique;
+	if ( fun[0] <= GAMMASEVEN && fun[0] >= GAMMA ) return(0);
 	if ( *args != ARGRANGE ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunIsLyndon");
