@@ -1,0 +1,67 @@
+\documentclass{report}
+
+\usepackage{html}
+\usepackage{graphics}
+
+%\makeatletter
+%\renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
+%\makeatother
+
+\newcommand{\pfill}{\hfill}
+\newcommand{\lefttabitem}[1]{\noindent{\begin{minipage}[t]{4cm}{#1}
+\end{minipage}}\vspace{1mm}}
+\newcommand{\leftvitem}[2]{\noindent{\begin{minipage}[t]{#1}{#2}
+\end{minipage}}\vspace{1mm}}
+\newcommand{\tabitem}[1]{{\begin{minipage}[t]{12cm}{#1}\end{minipage}}
+    \vspace{1mm}}
+\newcommand{\rightvitem}[2]{{\begin{minipage}[t]{#1}{#2}\end{minipage}}
+    \vspace{1mm}}
+
+\def\FORM{{\sc FORM}}
+\def\TFORM{{\sc TFORM}}
+\def\ParFORM{{\sc ParFORM}}
+\def\Andre#1{{\sl #1}}
+\def\Remark#1{{\sl #1}}
+\def\Tr{{\rm Tr}}
+\def\hash{\symbol{"23}}
+\def\sign(#1){(\!-\!1)^{#1}}
+\def\binom(#1,#2){ (\!\!
+	 \begin{array}{c} #1 \\ #2 \end{array}\!\! ) }
+\def\plus{\!+\!}
+\def\minus{\!-\!}
+\def\mydot{\!\!\cdot\!}
+\def\nn{\nonumber \\ &&}
+\def\nne{\nonumber \\ & = &}
+
+\makeindex
+
+\begin{document}
+
+\begin{center}
+{\Huge FORM \\ \Large version 3.3 \\ \huge Reference manual} \\
+
+{11-mar-2010} \\
+
+{J.A.M.Vermaseren, M.Tentyukov and J.Vollinga}
+\end{center}
+
+\tableofcontents
+
+\input{startup}
+\input{variable}
+\input{prepro}
+\input{module}
+\input{pattern}
+\input{dollar}
+\input{statements}
+\input{functions}
+\input{bracket}
+\input{tablebas}
+\input{gamma}
+\input{metric}
+\input{sorting}
+\input{setup}
+\input{parallel}
+\input{external}
+
+\end{document}
