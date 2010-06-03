@@ -298,6 +298,15 @@ size for the workers is set with the ThreadScratchOutSize parameter.}
 %\rightvitem{12.6cm}{\indent Only relevant for \TFORM. Possible values are ON 
 %or OFF. For details see the chapter on the parallel version (\ref{parallel}).}
 
+\leftvitem{3.8cm}{TotalSize\index{setup!totalsize}\index{totalsize}}
+\rightvitem{12.6cm}{Puts \FORM\ in a mode in which it tries to determine 
+the maximum space occupied by all expressions at any given moment during 
+the execution of the program. This space is the sum of the 
+input/output/hide scratch files, the sort file(s) and the .str file. This 
+maximum is printed at the end of the program. The same can be obtained with 
+the "On TotalSize" statement (see \ref{ontotalsize}) or the -T option 
+in the command tail when \FORM\ is started (see \ref{running}).}
+
 \leftvitem{3.8cm}{WorkSpace\index{setup!workspace}\index{workspace}}
 \rightvitem{12.6cm}{The size of the heap that is used by the algebra 
 processor when it is evaluating the substitution tree. It will contain 

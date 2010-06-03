@@ -3038,6 +3038,11 @@ In other versions of \FORM\ this option is ignored.}
 \rightvitem{13cm}{Turns off the thread by thread printing of the statistics 
 in \TFORM. Only the master thread will be printing statistics. Other 
 versions of \FORM\ will ignore this option.}
+ 
+\leftvitem{3cm}{totalsize\index{off!totalsize}}
+\rightvitem{13cm}{Switches the totalsize mode off. For a more detailed 
+description of the totalsize mode, see the "On TotalSize;" 
+command\ref{ontotalsize}.}
 
 \leftvitem{3cm}{warnings\index{off!warnings}}
 \rightvitem{13cm}{Turns off the printing of warnings.}
@@ -3190,12 +3195,22 @@ unless other problems prevent this. This is of course only relevant for
 print their run time statistics or only the master thread does so. Default 
 is on.}
  
+\leftvitem{3cm}{totalsize\index{on!totalsize}}
+\rightvitem{13cm}{\label{ontotalsize} Puts \FORM\ in a 
+mode\index{totalsize} in which it tries to determine 
+the maximum space occupied by all expressions at any given moment during 
+the execution of the program. This space is the sum of the 
+input/output/hide scratch files, the sort file(s) and the .str file. This 
+maximum is printed at the end of the program. The same can be obtained with 
+the "TotalSize ON" command in the setup (see \ref{setup}) or the -T option 
+in the command tail when \FORM\ is started (see \ref{running}).}
+ 
 \leftvitem{3cm}{warnings\index{on!warnings}}
 \rightvitem{13cm}{Turns on the printing of warnings in regular mode. This 
 is the default.}
 \vspace{10mm}
 
-%--#] on : 
+%--#] on :
 %--#[ once :
  
 \section{once}
@@ -5078,7 +5093,7 @@ it is faster by more than a factor 100.
 
 \vspace{10mm}
 
-%--#] transform :
+%--#] transform : 
 %--#[ tryreplace :
 
 \section{tryreplace}
