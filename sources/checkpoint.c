@@ -59,7 +59,7 @@
 */
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ filenames and system commands :
 */
 
@@ -109,7 +109,7 @@ static char *storefile = 0;
 static int done_snapshot = 0;
 
 /*
-  	#] filenames and system commands : 
+  	#] filenames and system commands :
   	#[ CheckRecoveryFile :
 */
 
@@ -213,7 +213,7 @@ int CheckRecoveryFile()
 }
 
 /*
-  	#] CheckRecoveryFile : 
+  	#] CheckRecoveryFile :
   	#[ DeleteRecoveryFile :
 */
 
@@ -253,7 +253,7 @@ void DeleteRecoveryFile()
 }
 
 /*
-  	#] DeleteRecoveryFile : 
+  	#] DeleteRecoveryFile :
   	#[ RecoveryFilename :
 */
 
@@ -266,7 +266,7 @@ char *RecoveryFilename()
 }
 
 /*
-  	#] RecoveryFilename : 
+  	#] RecoveryFilename :
   	#[ InitRecovery :
 */
 
@@ -314,7 +314,7 @@ void InitRecovery()
 }
 
 /*
-  	#] InitRecovery : 
+  	#] InitRecovery :
   	#[ Debugging :
 */
 
@@ -637,6 +637,7 @@ static void print_M()
 	printf("%d\n", AM.gStatsFlag);
 	printf("%d\n", AM.gNamesFlag);
 	printf("%d\n", AM.gCodesFlag);
+	printf("%d\n", AM.gTokensWriteFlag);
 	printf("%d\n", AM.gSortType);
 	printf("%d\n", AM.gproperorderflag);
 	printf("--MARK  5\n");
@@ -939,6 +940,7 @@ static void print_C()
 	printf("%d\n", AC.StatsFlag);
 	printf("%d\n", AC.NamesFlag);
 	printf("%d\n", AC.CodesFlag);
+	printf("%d\n", AC.TokensWriteFlag);
 	printf("%d\n", AC.SetupFlag);
 	printf("%d\n", AC.SortType);
 	printf("%d\n", AC.lSortType);
@@ -1074,7 +1076,7 @@ static void print_R()
 #endif /* ifdef PRINTDEBUG */
 
 /*
-  	#] Debugging : 
+  	#] Debugging :
   	#[ Helper Macros :
 */
 
@@ -1163,7 +1165,7 @@ static void print_R()
 	}
 
 /*
-  	#] Helper Macros : 
+  	#] Helper Macros :
   	#[ DoRecovery :
 */
 
@@ -1233,6 +1235,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.gCodesFlag, int);
 	R_SET(AM.gNamesFlag, int);
 	R_SET(AM.gStatsFlag, int);
+	R_SET(AM.gTokensWriteFlag, int);
 	R_SET(AM.gNoSpacesInNumbers, int);
 	R_SET(AM.gIndentSpace, WORD);
 	R_SET(AM.gUnitTrace, WORD);
@@ -1271,7 +1274,7 @@ int DoRecovery(int *moduletype)
 	print_M();
 #endif
 
-	/*#] AM : */ 
+	/*#] AM : */
 	/*#[ AC : */
 
 	/* #[ AC free pointers */
@@ -1925,7 +1928,7 @@ int DoRecovery(int *moduletype)
 	print_P();
 #endif
 
-	/*#] AP : */ 
+	/*#] AP : */
 	/*#[ AR : */
 
 	R_SET(ofs,long);
@@ -2100,7 +2103,7 @@ int DoRecovery(int *moduletype)
 	print_R();
 #endif
 
-	/*#] AR : */ 
+	/*#] AR : */
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	/*#[ PF : */
@@ -2120,7 +2123,7 @@ int DoRecovery(int *moduletype)
 	R_SET(PF.exprbufsize, int);
 	R_SET(PF.module, LONG);
 	R_SET(PF.log, int);
-	/*#] PF : */ 
+	/*#] PF : */
 #endif
 /*:[20oct2009 mt]*/
 
@@ -2208,6 +2211,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.gCodesFlag, sizeof(int));
 	S_WRITE_B(&AM.gNamesFlag, sizeof(int));
 	S_WRITE_B(&AM.gStatsFlag, sizeof(int));
+	S_WRITE_B(&AM.gTokensWriteFlag, sizeof(int));
 	S_WRITE_B(&AM.gNoSpacesInNumbers, sizeof(int));
 	S_WRITE_B(&AM.gIndentSpace, sizeof(WORD));
 	S_WRITE_B(&AM.gUnitTrace, sizeof(WORD));
@@ -2672,7 +2676,7 @@ static int DoSnapshot(int moduletype)
 }
 
 /*
-  	#] DoSnapshot : 
+  	#] DoSnapshot :
   	#[ DoCheckpoint :
 */
 
@@ -2823,5 +2827,5 @@ void DoCheckpoint(int moduletype)
 }
 
 /*
-  	#] DoCheckpoint : 
+  	#] DoCheckpoint :
 */

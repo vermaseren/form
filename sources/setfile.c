@@ -77,12 +77,13 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"threadscratchoutsize",  NUMERICALVALUE, 0, (long)THREADSCRATCHOUTSIZE}
 	,{(UBYTE *)"threadscratchsize",     NUMERICALVALUE, 0, (long)THREADSCRATCHSIZE}
     ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (long)0}
+	,{(UBYTE *)"totalsize",                 ONOFFVALUE, 0, (long)2}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (long)WORKBUFFER}
 	,{(UBYTE *)"zipsize",               NUMERICALVALUE, 0, (long)ZIPBUFFERSIZE}
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -131,7 +132,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -289,7 +290,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -340,7 +341,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -614,6 +615,10 @@ int AllocSetups()
 	}
 	AP.cprocedureExtension = strDup1((UBYTE *)(sp->value),"procedureExtension");
 	AP.procedureExtension = strDup1(AP.cprocedureExtension,"procedureExtension");
+
+	sp = GetSetupPar((UBYTE *)"totalsize");
+	if ( sp->value != 2 ) AM.PrintTotalSize = sp->value;
+
 	sp = GetSetupPar((UBYTE *)"continuationlines");
 	AM.FortranCont = sp->value;
 	if ( AM.FortranCont <= 0 ) AM.FortranCont = 1;
@@ -700,7 +705,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -760,7 +765,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -891,7 +896,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -916,7 +921,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
@@ -964,7 +969,7 @@ FILEHANDLE *AllocFileHandle()
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -983,7 +988,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -994,7 +999,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1098,7 +1103,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */
 

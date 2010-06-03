@@ -133,6 +133,7 @@ WORD CleanExpr(WORD par)
 		}
 		e_in++;
 	} while ( --n > 0 ); }
+	UpdateMaxSize();
 	NumExpressions = j;
 	if ( numhid == 0 && AR.hidefile->PObuffer ) {
 		if ( AR.hidefile->handle >= 0 ) {
@@ -169,6 +170,7 @@ WORD PopVariables()
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
 	AC.StatsFlag = AM.gStatsFlag;
+	AC.TokensWriteFlag = AM.gTokensWriteFlag;
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers;
 	AO.IndentSpace = AM.gIndentSpace;
 	AC.lUnitTrace = AM.gUnitTrace;
@@ -274,6 +276,7 @@ VOID MakeGlobal()
 	AM.gCodesFlag = AC.CodesFlag;
 	AM.gNamesFlag = AC.NamesFlag;
 	AM.gStatsFlag = AC.StatsFlag;
+	AM.gTokensWriteFlag= AC.TokensWriteFlag;
 	AM.gNoSpacesInNumbers = AO.NoSpacesInNumbers;
 	AM.gIndentSpace = AO.IndentSpace;
 	AM.gUnitTrace = AC.lUnitTrace;

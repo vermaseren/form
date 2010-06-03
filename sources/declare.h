@@ -1430,6 +1430,8 @@ extern int ConvertToPoly(PHEAD WORD *term);
 extern WORD FindSubterm(WORD *subterm);
 extern void PrintSubtermList(VOID);
 
+extern void UpdateMaxSize(VOID);
+
 #ifndef TOPLOYNOMIAL
 extern int CoToPolynomial(UBYTE *inp);
 #endif

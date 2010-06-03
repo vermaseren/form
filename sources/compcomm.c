@@ -87,19 +87,17 @@ static KEYWORD onoffoptions[] = {
 	,{"finalstats",	    (TFUN)&(AC.FinalStats),1,	0}
 	,{"fewerstats",		(TFUN)&(AC.ShortStatsMax),	10,		0}
 	,{"fewerstatistics",(TFUN)&(AC.ShortStatsMax),	10,		0}
-	/*[30jan2004 mt]:*/
-	/*,{"parallel",	    (TFUN)&(AC.parallelflag),0,1}*/
 	,{"parallel",	    (TFUN)&(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
 	,{"nospacesinnumbers",(TFUN)&(AO.NoSpacesInNumbers),1,0}
 	,{"indentspace",    (TFUN)&(AO.IndentSpace),INDENTSPACE,0}
-	/*:[30jan2004 mt]*/
+	,{"totalsize",		(TFUN)&(AM.PrintTotalSize),	1,	0}
 	,{"flag",			(TFUN)&(AC.debugFlags),	1,	0}
 };
 
 static WORD one = 1;
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ CoCollect :
 
 	Collect,functionname

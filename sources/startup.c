@@ -172,6 +172,8 @@ int DoTail(int argc, UBYTE **argv)
 							TAKEPATH(AM.SetupFile) break;
 				case 't': /* Next arg is directory for temp files */
 							TAKEPATH(AM.TempDir)   break;
+				case 'T': /* Print the total size used at end of job */
+							AM.PrintTotalSize = 1; break;
 				case 'v':
 printversion:;
 #ifdef WITHPTHREADS
@@ -664,6 +666,7 @@ VOID StartVariables()
 	AC.dollarnames = MakeNameTree();
 	AC.autonames = MakeNameTree();
 	AC.activenames = &(AC.varnames);
+	AP.preError = 0;
 /*
 	Initialize the compiler:
 */
@@ -718,6 +721,7 @@ VOID StartVariables()
 	AN.RepPoint = AT.RepCount;
 	AT.RepTop = AT.RepCount + AM.RepMax;
 	AN.polysortflag = 0;
+	AN.subsubveto = 0;
 #endif
 	AC.NumWildcardNames = 0;
 	AC.WildcardBufferSize = 50;
@@ -774,9 +778,13 @@ VOID StartVariables()
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch = 0;
 	AM.gcNumDollars = AP.DollarList.num;
 
+	AM.PrintTotalSize = 0;
+
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers = 0;
 	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace = INDENTSPACE;
 	AO.BlockSpaces = 0;
+	PUTZERO(AS.MaxExprSize);
+	PUTZERO(AC.StoreFileSize);
 
 #ifdef WITHPTHREADS
 	AC.inputnumbers = 0;
@@ -786,7 +794,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -821,6 +829,7 @@ WORD IniVars()
 	AC.lUnitTrace = AM.gUnitTrace = 4;
 	AC.NamesFlag = AM.gNamesFlag = 0;
 	AC.CodesFlag = AM.gCodesFlag = 0;
+	AC.TokensWriteFlag = AM.gTokensWriteFlag = 0;
 	AC.SetupFlag = 0;
 	AC.LineLength = AM.gLineLength = 79;
 	AC.NwildC = 0;
@@ -1373,7 +1382,12 @@ VOID Terminate(int errorcode)
 #ifdef WITHPTHREADS
 	TerminateAllThreads();
 #endif
-	if ( AC.FinalStats ) PrintRunningTime();
+	if ( AC.FinalStats ) {
+		if ( AM.PrintTotalSize ) {
+			MesPrint("Max. space for expressions: %19p bytes",&(AS.MaxExprSize));
+		}
+		PrintRunningTime();
+	}
 	if ( AM.HoldFlag ) {
 		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
 		getchar();
@@ -1388,7 +1402,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] Terminate :
  		#[ PrintRunningTime :
 */
 

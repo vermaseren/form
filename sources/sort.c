@@ -740,9 +740,13 @@ LONG EndSort(WORD *buffer, int par)
 			ADDPOS(pp,sSpace);
 			MULPOS(pp,sizeof(WORD));
 */
+/*
 			SETBASEPOSITION(pp,sSpace);
 			MULPOS(pp,sizeof(WORD));
 			ADD2POS(pp,S->fPatches[S->fPatchN]);
+*/
+			pp = S->SizeInFile[1];
+			MULPOS(pp,sizeof(WORD));
 #ifndef WITHPTHREADS
 			if ( S == AT.S0 )
 #endif
@@ -751,6 +755,7 @@ LONG EndSort(WORD *buffer, int par)
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
 				WriteStats(&pp,(WORD)1);
 				AC.LogHandle = oldLogHandle;
+				UpdateMaxSize();
 			}
 		}
 		else {
@@ -779,6 +784,7 @@ LONG EndSort(WORD *buffer, int par)
 				pp = S->SizeInFile[2];
 				MULPOS(pp,sizeof(WORD));
 				WriteStats(&pp,2);
+				UpdateMaxSize();
 				goto RetRetval;
 			}
 			if ( MergePatches(1) ) {
@@ -787,14 +793,14 @@ LONG EndSort(WORD *buffer, int par)
 				UNLOCK(ErrorMessageLock);
 				retval = -1; goto RetRetval;
 			}
+/*
 			SETBASEPOSITION(pp,sSpace);
 			MULPOS(pp,sizeof(WORD));
 			ADD2POS(pp,S->fPatches[S->fPatchN]);
-/*
-			pp = S->SizeInFile[1];
-			ADDPOS(pp,sSpace);
-			MULPOS(pp,sizeof(WORD));
 */
+			UpdateMaxSize();
+			pp = S->SizeInFile[1];
+			MULPOS(pp,sizeof(WORD));
 #ifndef WITHPTHREADS
 			if ( S == AT.S0 )
 #endif
@@ -836,6 +842,7 @@ LONG EndSort(WORD *buffer, int par)
 				}
 				++(S->fPatchN);
 				S->fPatches[S->fPatchN] = position;
+				UpdateMaxSize();
 #ifdef GZIPDEBUG
 				LOCK(ErrorMessageLock);
 				MesPrint("%w EndSort+: fPatchN = %d, lPatch = %d, position = %12p"
@@ -852,6 +859,7 @@ LONG EndSort(WORD *buffer, int par)
 			}
 		}
 #endif
+		UpdateMaxSize();
 		if ( MergePatches(0) ) {
 			LOCK(ErrorMessageLock);
 			MesCall("EndSort");
@@ -865,6 +873,7 @@ LONG EndSort(WORD *buffer, int par)
 		pp = S->SizeInFile[0];
 		MULPOS(pp,sizeof(WORD));
 		WriteStats(&pp,2);
+		UpdateMaxSize();
 	}
 RetRetval:
 
@@ -901,7 +910,7 @@ RetRetval:
 /*:[25nov2003 mt]*/
 	if ( S->file.handle >= 0 && ( par != 1 ) && ( par != 2 ) ) {
 				/* sortfile is still open */
-/*		TruncateFile(S->file.handle); */
+		UpdateMaxSize();
 		CloseFile(S->file.handle);
 		S->file.handle = -1;
 		remove(S->file.name);
@@ -916,14 +925,8 @@ RetRetval:
 	if ( AR.sLevel >= 0 ) AT.SS = AN.FunSorts[AR.sLevel];
 	if ( par == 1 ) {
 		if ( retval < 0 ) {
+			UpdateMaxSize();
 			DeAllocFileHandle(newout);
-/*
-			if ( AR.outfile->handle >= 0 ) {
-				CloseFile(newout->handle);
-				remove(newout->name);
-			}
-			M_free(newout,"FileHandle");
-*/
 		}
 		else {
 /*
@@ -942,6 +945,7 @@ RetRetval:
 				to = buffer; t = newout->PObuffer;
 				while ( j-- > 0 ) *to++ = *t++;
 			}
+			UpdateMaxSize();
 			DeAllocFileHandle(newout);
 		}
 	}
@@ -990,15 +994,8 @@ RetRetval:
 				NCOPY(to,t,wsiz);
 			  }
 			}
+			UpdateMaxSize();
 			DeAllocFileHandle(newout);
-/*
-			if ( newout->handle >= 0 ) {
-				CloseFile(newout->handle);
-				newout->handle = -1;
-				remove(newout->name);
-			}
-			M_free(newout,"Temporary FileHandle");
-*/
 		}
 	}
 	return(retval);
@@ -1241,7 +1238,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 			} 
 			*p++ = *term++;
 		} while ( --i > 0 );
-		fi->POfill = p;
+		fi->POfull = fi->POfill = p;
 		return(ret);
 	}
 	if ( ( AP.PreDebug & DUMPOUTTERMS ) == DUMPOUTTERMS ) {
@@ -1451,7 +1448,7 @@ nocompress:
 			}
 */
 		} while ( --i > 0 );
-		fi->POfill = p;
+		fi->POfull = fi->POfill = p;
 	}
 /*
 	if ( AP.DebugFlag ) {
@@ -1569,6 +1566,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		}
 	} 
 	*(fi->POfill)++ = 0;
+	fi->POfull = fi->POfill;
 /*
 	{
 		UBYTE OutBuf[140];
@@ -3756,6 +3754,7 @@ EndOfAll:
 			}
 */
 /*			TruncateFile(fin->handle); */
+			UpdateMaxSize();
 			CloseFile(fin->handle);
 			remove(fin->name);		/* Gives diskspace free again. */
 #ifdef GZIPDEBUG
@@ -3778,6 +3777,7 @@ EndOfAll:
 	}
 	if ( par == 0 ) {
 /*		TruncateFile(fin->handle); */
+		UpdateMaxSize();
 		CloseFile(fin->handle);
 		remove(fin->name);
 		fin->handle = -1;
@@ -4135,6 +4135,7 @@ void CleanUpSort(int num)
 			if ( S ) {
 				if ( S->file.handle >= 0 ) {
 /*					TruncateFile(S->file.handle); */
+					UpdateMaxSize();
 					CloseFile(S->file.handle);
 					S->file.handle = -1;
 					remove(S->file.name);
@@ -4154,6 +4155,7 @@ void CleanUpSort(int num)
 			if ( S ) {
 				if ( S->file.handle >= 0 ) {
 /*					TruncateFile(S->file.handle); */
+					UpdateMaxSize();
 					CloseFile(S->file.handle);
 					S->file.handle = -1;
 					remove(S->file.name);
@@ -4168,6 +4170,7 @@ void CleanUpSort(int num)
 	}
 	for ( i = 0; i < 2; i++ ) {
 		if ( AR.FoStage4[i].handle >= 0 ) {
+			UpdateMaxSize();
 			CloseFile(AR.FoStage4[i].handle);
 			remove(AR.FoStage4[i].name);
 			AR.FoStage4[i].handle = -1;

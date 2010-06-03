@@ -1212,6 +1212,7 @@ struct M_const {
     int     dbufnum;               /* (M) dollar variables */
     int     sbufnum;               /* (M) subterm variables */
     int     SkipClears;            /* (M) Number of .clear to skip at start */
+    int     gTokensWriteFlag;      /* (M) */
     int     gfunpowers;            /* (M) */
     int     gStatsFlag;            /* (M) */
     int     gNamesFlag;            /* (M) */
@@ -1239,6 +1240,7 @@ struct M_const {
     int     ggNoSpacesInNumbers;   /* For very long numbers */
     int     polygcdchoice;
     int     gIsFortran90;
+	int		PrintTotalSize;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1341,7 +1343,7 @@ struct P_const {
 	int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
     int     PreDebug;              /* (C) */
     WORD    DebugFlag;             /* (P) For debugging purposes */
-    WORD    preError;              /* (?) used but not defined */
+    WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
 };
@@ -1434,6 +1436,7 @@ struct C_const {
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
     pthread_mutex_t halfmodlock;   /* () Lock for adding buffer for halfmod */
 #endif
+	POSITION StoreFileSize;        /* () Size of store file */
     LONG    argstack[MAXNEST];     /* (C) {contents} Stack for nesting of Argument */
     LONG    insidestack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
     LONG    inexprstack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
@@ -1573,7 +1576,12 @@ struct S_const {
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
 	pthread_mutex_t	outputslock;
+	pthread_mutex_t	MaxExprSizeLock;
 #endif
+	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
+	POSITION InFileSize;           /* ( ) Current inscratch size */
+	POSITION OutFileSize;          /* ( ) Current outscratch size */
+	POSITION HideFileSize;         /* ( ) Current hidescratch size */
     POSITION *OldOnFile;           /* (S) File positions of expressions */
     int     NumOldOnFile;          /* (S) Number of expressions in OldOnFile */
     int     MultiThreaded;         /* (S) Are we running multi-threaded? */
@@ -1671,6 +1679,7 @@ struct T_const {
 #ifdef WITHPTHREADS
     SORTBLOCK SB;
 #endif
+	POSITION SortSize;             /* ( ) Maximum size during the sorting */
     SORTING *S0;                   /* (-) The thread specific sort buffer */
     SORTING *SS;                   /* (R) Current sort buffer */
     NESTING     Nest;              /* (R) Nesting of function levels etc. */
@@ -1877,6 +1886,7 @@ struct N_const {
 	int		compressSize;          /* () Used in sort.c */
 	int		polysortflag;
     int     nogroundlevel;         /* () Used to see whether pattern matching at groundlevel */
+	int		subsubveto;            /* () Sabotage combining subexpressions in TestSub */
 	WORD	MaxRenumScratch;       /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */

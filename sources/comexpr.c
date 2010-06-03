@@ -29,7 +29,7 @@ static struct id_options {
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CoLocal :
 */
 
@@ -43,7 +43,7 @@ int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ DoExpr:
 */
 
@@ -217,6 +217,10 @@ int DoExpr(UBYTE *inp, int type)
 		}
 	}
 	else {	/* Variety in which expressions change property */
+/*
+			This code got a major revision because it didn't
+			take hidden expressions into account. (1-jun-2010 JV)
+*/
 		do {
 			if ( ( q = SkipAName(inp) ) == 0 ) {
 				MesPrint("&Illegal name(s) for expression(s)");
@@ -229,8 +233,61 @@ int DoExpr(UBYTE *inp, int type)
 			}
 			else {
 				w = &(Expressions[c1].status);
+				if ( type == LOCALEXPRESSION ) {
+					switch ( *w ) {
+						case GLOBALEXPRESSION:
+							*w = LOCALEXPRESSION;
+							break;
+						case SKIPGEXPRESSION:
+							*w = SKIPLEXPRESSION;
+							break;
+						case DROPGEXPRESSION:
+							*w = DROPLEXPRESSION;
+							break;
+						case HIDDENGEXPRESSION:
+							*w = HIDDENLEXPRESSION;
+							break;
+						case HIDEGEXPRESSION:
+							*w = HIDELEXPRESSION;
+							break;
+						case UNHIDEGEXPRESSION:
+							*w = UNHIDELEXPRESSION;
+							break;
+						case INTOHIDEGEXPRESSION:
+							*w = INTOHIDELEXPRESSION;
+							break;
+					}
+				}
+				else if ( type == GLOBALEXPRESSION ) {
+					switch ( *w ) {
+						case LOCALEXPRESSION:
+							*w = GLOBALEXPRESSION;
+							break;
+						case SKIPLEXPRESSION:
+							*w = SKIPGEXPRESSION;
+							break;
+						case DROPLEXPRESSION:
+							*w = DROPGEXPRESSION;
+							break;
+						case HIDDENLEXPRESSION:
+							*w = HIDDENGEXPRESSION;
+							break;
+						case HIDELEXPRESSION:
+							*w = HIDEGEXPRESSION;
+							break;
+						case UNHIDELEXPRESSION:
+							*w = UNHIDEGEXPRESSION;
+							break;
+						case INTOHIDELEXPRESSION:
+							*w = INTOHIDEGEXPRESSION;
+							break;
+					}
+				}
+/*
+				old code
 				if ( type != LOCALEXPRESSION || *w != STOREDEXPRESSION )
 						*w = type;
+*/
 			}
 			*q = c; inp = q+1;
 		} while ( c == ',' );
@@ -243,7 +300,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 

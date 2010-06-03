@@ -80,7 +80,7 @@ static LONG numberofterms;
 #endif
 
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Identity :
  		#[ StartIdentity :
 */
@@ -95,7 +95,7 @@ void StartIdentity()
 }
 
 /*
- 		#] StartIdentity : 
+ 		#] StartIdentity :
  		#[ FinishIdentity :
 */
 /**
@@ -108,7 +108,7 @@ void FinishIdentity(void *keyp)
 }
 
 /*
- 		#] FinishIdentity : 
+ 		#] FinishIdentity :
  		#[ SetIdentity :
 */
 /**
@@ -129,7 +129,7 @@ int SetIdentity(int *identityretval)
 }
 
 /*
- 		#] SetIdentity : 
+ 		#] SetIdentity :
  		#[ WhoAmI :
 */
  
@@ -174,7 +174,7 @@ int WhoAmI()
 }
 
 /*
- 		#] WhoAmI : 
+ 		#] WhoAmI :
  		#[ BeginIdentities :
 */
 /**
@@ -189,8 +189,8 @@ VOID BeginIdentities()
 }
 
 /*
- 		#] BeginIdentities : 
-  	#] Identity : 
+ 		#] BeginIdentities :
+  	#] Identity :
   	#[ StartHandleLock :
 */
 /**
@@ -205,7 +205,7 @@ void StartHandleLock()
 }
 
 /*
-  	#] StartHandleLock : 
+  	#] StartHandleLock :
   	#[ StartAllThreads :
 */
 /**
@@ -273,6 +273,7 @@ int StartAllThreads(int number)
 	AR.hidefile = &(AR.Fscr[2]);
 	AS.inputslock = dummylock;
 	AS.outputslock = dummylock;
+	AS.MaxExprSizeLock = dummylock;
 	AP.PreVarLock = dummylock;
 	AC.halfmodlock = dummylock;
 	MakeThreadBuckets(number,0);
@@ -304,7 +305,7 @@ int StartAllThreads(int number)
 }
 
 /*
-  	#] StartAllThreads : 
+  	#] StartAllThreads :
   	#[ InitializeOneThread :
 */
 /**
@@ -545,6 +546,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AT.RepCount = (int *)Malloc1((LONG)((AM.RepMax+3)*sizeof(int)),"repeat buffers");
 	AN.RepPoint = AT.RepCount;
 	AN.polysortflag = 0;
+	AN.subsubveto = 0;
 	AT.RepTop = AT.RepCount + AM.RepMax;
 
 	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
@@ -721,7 +723,7 @@ OnError:;
 }
 
 /*
-  	#] InitializeOneThread : 
+  	#] InitializeOneThread :
   	#[ FinalizeOneThread :
 */
 /**
@@ -740,7 +742,7 @@ void FinalizeOneThread(int identity)
 }
 
 /*
-  	#] FinalizeOneThread : 
+  	#] FinalizeOneThread :
   	#[ TerminateAllThreads :
 */
 /**
@@ -772,7 +774,7 @@ VOID TerminateAllThreads()
 }
 
 /*
-  	#] TerminateAllThreads : 
+  	#] TerminateAllThreads :
   	#[ MakeThreadBuckets :
 */
 /**
@@ -847,7 +849,7 @@ int MakeThreadBuckets(int number, int par)
 }
 
 /*
-  	#] MakeThreadBuckets : 
+  	#] MakeThreadBuckets :
   	#[ GetTimerInfo :
 */
 
@@ -867,7 +869,7 @@ int GetTimerInfo(LONG** ti)
 }
 
 /*
-  	#] GetTimerInfo : 
+  	#] GetTimerInfo :
   	#[ WriteTimerInfo :
 */
 
@@ -889,7 +891,7 @@ void WriteTimerInfo(LONG* ti)
 }
 
 /*
-  	#] WriteTimerInfo : 
+  	#] WriteTimerInfo :
   	#[ GetWorkerTimes :
 */
 /**
@@ -910,7 +912,7 @@ LONG GetWorkerTimes()
 }
 
 /*
-  	#] GetWorkerTimes : 
+  	#] GetWorkerTimes :
   	#[ UpdateOneThread :
 */
 /**
@@ -937,7 +939,7 @@ int UpdateOneThread(int identity)
 }
 
 /*
-  	#] UpdateOneThread : 
+  	#] UpdateOneThread :
   	#[ LoadOneThread :
 */
 /**
@@ -1005,14 +1007,15 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 	}
 	if ( par == 0 ) {
 		AN.threadbuck = thr;
+		AN.ninterms = thr->firstterm;
 	}
 	else if ( par == 1 ) {
 		WORD *tstop;
 		t1 = thr->threadbuffer; tstop = t1 + *t1;
 		t2 = AT.WorkPointer;
 		while ( t1 < tstop ) *t2++ = *t1++;
+		AN.ninterms = thr->firstterm;
 	}
-	AN.ninterms = thr->firstterm;
 	AN.TeInFun = 0;
 	AN.ncmod = AC.ncmod;
 	AT.BrackBuf = AT0.BrackBuf;
@@ -1024,7 +1027,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 }
 
 /*
-  	#] LoadOneThread : 
+  	#] LoadOneThread :
   	#[ BalanceRunThread :
 */
 /**
@@ -1073,7 +1076,7 @@ int BalanceRunThread(PHEAD int identity, WORD *term, WORD level)
 }
 
 /*
-  	#] BalanceRunThread : 
+  	#] BalanceRunThread :
   	#[ SetWorkerFiles :
 */
 /**
@@ -1152,7 +1155,7 @@ void SetWorkerFiles()
 }
 
 /*
-  	#] SetWorkerFiles : 
+  	#] SetWorkerFiles :
   	#[ RunThread :
 */
 /**
@@ -1199,7 +1202,7 @@ void *RunThread(void *dummy)
 				NewSort();
 				break;
 /*
-			#] STARTNEWEXPRESSION : 
+			#] STARTNEWEXPRESSION :
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -1316,7 +1319,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION : 
+			#] LOWESTLEVELGENERATION :
 			#[ FINISHEXPRESSION :
 */
 #ifdef WITHSORTBOTS
@@ -1352,6 +1355,7 @@ bucketstolen:;
 				AT.SB.MasterFill[1] = AT.SB.MasterStart[1];
 				errorcode = EndSort(AT.S0->sBuffer,0);
 				UNLOCK(AT.SB.MasterBlockLock[AT.SB.FillBlock]);
+				UpdateMaxSize();
 				if ( errorcode ) {
 					LOCK(ErrorMessageLock);
 					MesPrint("Error terminating sort in thread %d in module %d",identity,AC.CModule);
@@ -1360,7 +1364,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION : 
+			#] FINISHEXPRESSION :
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -1399,7 +1403,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION : 
+			#] CLEANUPEXPRESSION :
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1418,7 +1422,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] HIGHERLEVELGENERATION : 
+			#] HIGHERLEVELGENERATION :
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1428,13 +1432,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE : 
+			#] STARTNEWMODULE :
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD : 
+			#] TERMINATETHREAD :
 			#[ DOONEEXPRESSION :
 
 				When a thread has to do a complete (not too big) expression.
@@ -1584,12 +1588,13 @@ bucketstolen:;
 					PUTZERO(fout->filesize);
 					fout->POfill = fout->POfull = fout->PObuffer;
 				}
+				UpdateMaxSize();
 
 				AT.WorkPointer = oldwork;
 
 				} break;
 /*
-			#] DOONEEXPRESSION : 
+			#] DOONEEXPRESSION :
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat
@@ -1662,7 +1667,7 @@ bucketstolen:;
 				break;
 			}
 /*
-			#] DOBRACKETS : 
+			#] DOBRACKETS :
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1687,7 +1692,7 @@ ProcErr:
 }
 
 /*
-  	#] RunThread : 
+  	#] RunThread :
   	#[ RunSortBot :
 */
 /**
@@ -1729,20 +1734,20 @@ void *RunSortBot(void *dummy)
 				SETBASEPOSITION(AN.theposition,0);
 				break;
 /*
-			#] INISORTBOT : 
+			#] INISORTBOT :
 			#[ RUNSORTBOT :
 */
 			case RUNSORTBOT:
 				SortBotMerge(B);
 				break;
 /*
-			#] RUNSORTBOT : 
+			#] RUNSORTBOT :
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD : 
+			#] TERMINATETHREAD :
 */
 			default:
 				LOCK(ErrorMessageLock);
@@ -1763,7 +1768,7 @@ EndOfThread:;
 #endif
 
 /*
-  	#] RunSortBot : 
+  	#] RunSortBot :
   	#[ IAmAvailable :
 */
 /**
@@ -1796,7 +1801,7 @@ void IAmAvailable(int identity)
 }
 
 /*
-  	#] IAmAvailable : 
+  	#] IAmAvailable :
   	#[ GetAvailableThread :
 */
 /**
@@ -1825,7 +1830,7 @@ int GetAvailableThread()
 }
 
 /*
-  	#] GetAvailableThread : 
+  	#] GetAvailableThread :
   	#[ ConditionalGetAvailableThread :
 */
 /**
@@ -1857,7 +1862,7 @@ int ConditionalGetAvailableThread()
 }
 
 /*
-  	#] ConditionalGetAvailableThread : 
+  	#] ConditionalGetAvailableThread :
   	#[ GetThread :
 */
 /**
@@ -1888,7 +1893,7 @@ int GetThread(int identity)
 }
 
 /*
-  	#] GetThread : 
+  	#] GetThread :
   	#[ ThreadWait :
 */
 /**
@@ -1930,7 +1935,7 @@ int ThreadWait(int identity)
 }
 
 /*
-  	#] ThreadWait : 
+  	#] ThreadWait :
   	#[ SortBotWait :
 */
  
@@ -1972,7 +1977,7 @@ int SortBotWait(int identity)
 #endif
 
 /*
-  	#] SortBotWait : 
+  	#] SortBotWait :
   	#[ ThreadClaimedBlock :
 */
 /**
@@ -2003,7 +2008,7 @@ int ThreadClaimedBlock(int identity)
 }
 
 /*
-  	#] ThreadClaimedBlock : 
+  	#] ThreadClaimedBlock :
   	#[ MasterWait :
 */
 /**
@@ -2027,7 +2032,7 @@ int MasterWait()
 }
 
 /*
-  	#] MasterWait : 
+  	#] MasterWait :
   	#[ MasterWaitThread :
 */
 /**
@@ -2051,7 +2056,7 @@ int MasterWaitThread(int identity)
 }
 
 /*
-  	#] MasterWaitThread : 
+  	#] MasterWaitThread :
   	#[ MasterWaitAll :
 */
 /**
@@ -2071,7 +2076,7 @@ void MasterWaitAll()
 }
 
 /*
-  	#] MasterWaitAll : 
+  	#] MasterWaitAll :
   	#[ MasterWaitAllSortBots :
 */
  
@@ -2095,7 +2100,7 @@ void MasterWaitAllSortBots()
 #endif
 
 /*
-  	#] MasterWaitAllSortBots : 
+  	#] MasterWaitAllSortBots :
   	#[ MasterWaitAllBlocks :
 */
 /**
@@ -2115,7 +2120,7 @@ void MasterWaitAllBlocks()
 }
 
 /*
-  	#] MasterWaitAllBlocks : 
+  	#] MasterWaitAllBlocks :
   	#[ WakeupThread :
 */
 /**
@@ -2141,7 +2146,7 @@ void WakeupThread(int identity, int signalnumber)
 }
 
 /*
-  	#] WakeupThread : 
+  	#] WakeupThread :
   	#[ WakeupMasterFromThread :
 */
 /**
@@ -2167,7 +2172,7 @@ void WakeupMasterFromThread(int identity, int signalnumber)
 }
 
 /*
-  	#] WakeupMasterFromThread : 
+  	#] WakeupMasterFromThread :
   	#[ SendOneBucket :
 */
 /**
@@ -2211,7 +2216,7 @@ int SendOneBucket(int type)
 }
 
 /*
-  	#] SendOneBucket : 
+  	#] SendOneBucket :
   	#[ InParallelProcessor :
 */
 /**
@@ -2280,7 +2285,7 @@ int InParallelProcessor()
 }
 
 /*
-  	#] InParallelProcessor : 
+  	#] InParallelProcessor :
   	#[ ThreadsProcessor :
 */
 /**
@@ -2510,7 +2515,7 @@ Found2:;
 	}
 #endif
 /*
-  	#] Whole brackets : 
+  	#] Whole brackets :
 
 	Now the loop to start a bucket
 */
@@ -2873,6 +2878,7 @@ NextBucket:;
 	scratch file. This saves potentially much disk space (up to 1/3)
 */
 	if ( LastExpression ) {
+		UpdateMaxSize();
 		if ( AR0.infile->handle >= 0 ) {
 			CloseFile(AR0.infile->handle);
 			AR0.infile->handle = -1;
@@ -2927,7 +2933,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor : 
+  	#] ThreadsProcessor :
   	#[ LoadReadjusted :
 */
 /**
@@ -3155,7 +3161,7 @@ intercepted:;
 }
 
 /*
-  	#] LoadReadjusted : 
+  	#] LoadReadjusted :
   	#[ SortStrategy :
 */
 /**
@@ -3191,7 +3197,7 @@ intercepted:;
  *	completely.
 */
 /*
-  	#] SortStrategy : 
+  	#] SortStrategy :
   	#[ PutToMaster :
 */
 /**
@@ -3258,7 +3264,7 @@ int PutToMaster(PHEAD WORD *term)
 }
 
 /*
-  	#] PutToMaster : 
+  	#] PutToMaster :
   	#[ SortBotOut :
 */
  
@@ -3300,7 +3306,7 @@ SortBotOut(PHEAD WORD *term)
 #endif
 
 /*
-  	#] SortBotOut : 
+  	#] SortBotOut :
   	#[ MasterMerge :
 */
 /**
@@ -3402,7 +3408,7 @@ int MasterMerge()
 		AT.SB.MasterBlock = 1;
 	}
 /*
- 		#] Setup : 
+ 		#] Setup :
 
 	Now construct the tree:
 */
@@ -3749,7 +3755,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge : 
+  	#] MasterMerge :
   	#[ SortBotMasterMerge :
 */
  
@@ -3873,7 +3879,7 @@ int SortBotMasterMerge()
 #endif
 
 /*
-  	#] SortBotMasterMerge : 
+  	#] SortBotMasterMerge :
   	#[ SortBotMerge :
 */
  
@@ -3961,7 +3967,7 @@ int SortBotMerge(PHEAD0)
 			}
 			term1 += im;
 /*
-			#] One is smallest : 
+			#] One is smallest :
 */
 		}
 		else if ( c < 0 ) {
@@ -4003,7 +4009,7 @@ next2:		im = *term2;
 			}
 			term2 += im;
 /*
-			#] Two is smallest : 
+			#] Two is smallest :
 */
 		}
 		else {
@@ -4156,7 +4162,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 			goto next2;
 /*
-			#] Equal : 
+			#] Equal :
 */
 		}
 	}
@@ -4204,7 +4210,7 @@ cancelled:;		/* Now we need two new terms */
 			term1 += im;
 		}
 /*
-			#] Tail in one : 
+			#] Tail in one :
 */
 	}
 	else if ( *term2 ) {
@@ -4248,7 +4254,7 @@ cancelled:;		/* Now we need two new terms */
 			term2 += im;
 		}
 /*
-			#] Tail in two : 
+			#] Tail in two :
 */
 	}
 	SortBotOut(BHEAD 0);
@@ -4282,7 +4288,7 @@ ReturnError:;
 #endif
 
 /*
-  	#] SortBotMerge : 
+  	#] SortBotMerge :
   	#[ IniSortBlocks :
 */
  
@@ -4367,7 +4373,7 @@ int IniSortBlocks(int numworkers)
 }
 
 /*
-  	#] IniSortBlocks : 
+  	#] IniSortBlocks :
   	#[ DefineSortBotTree :
 */
  
@@ -4397,7 +4403,7 @@ void DefineSortBotTree()
 #endif
 
 /*
-  	#] DefineSortBotTree : 
+  	#] DefineSortBotTree :
   	#[ GetTerm2 :
 
 	Routine does a GetTerm but only when a bracket index is involved and
@@ -4495,7 +4501,7 @@ WORD GetTerm2(PHEAD WORD *term)
 }
 
 /*
-  	#] GetTerm2 : 
+  	#] GetTerm2 :
   	#[ TreatIndexEntry :
 */
 /**
@@ -4546,7 +4552,7 @@ int TreatIndexEntry(PHEAD LONG n)
 }
 
 /*
-  	#] TreatIndexEntry : 
+  	#] TreatIndexEntry :
   	#[ SetHideFiles :
 */
 
@@ -4576,6 +4582,6 @@ void SetHideFiles() {
 }
 
 /*
-  	#] SetHideFiles : 
+  	#] SetHideFiles :
 */
 #endif

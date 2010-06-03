@@ -351,13 +351,14 @@ commonread:;
 					}
 					AN.ninterms += dd;
 					if ( LastExpression ) {
+						UpdateMaxSize();
 						if ( AR.infile->handle >= 0 ) {
 							CloseFile(AR.infile->handle);
 							AR.infile->handle = -1;
 							remove(AR.infile->name);
 							PUTZERO(AR.infile->POposition);
-							AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 						}
+						AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 					}
 					if ( AR.outtohide ) AR.outfile = AR.hidefile;
 					if ( EndSort(AM.S0->sBuffer,0) < 0 ) goto ProcErr;
@@ -366,6 +367,7 @@ commonread:;
 						AR.hidefile->POfull = AR.hidefile->POfill;
 					}
 					e->numdummies = AR.MaxDum - AM.IndDum;
+					UpdateMaxSize();
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
@@ -429,6 +431,7 @@ commonread:;
 					AR.ComprTop = comprtop;
 				} while ( GetTerm(BHEAD term) );
 				if ( FlushOut(&position,AR.outfile,1) ) goto ProcErr;
+				UpdateMaxSize();
 				break;
 			case HIDELEXPRESSION:
 			case HIDEGEXPRESSION:
@@ -536,6 +539,7 @@ commonread:;
 #ifdef WITHPTHREADS
 				SetHideFiles();
 #endif
+				UpdateMaxSize();
 				break;
 			case DROPPEDEXPRESSION:
 			case DROPLEXPRESSION:
@@ -567,7 +571,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -634,7 +638,8 @@ ReStart:
 #endif
 			if ( t[3] ) {
 				r = t + t[1];
-				while ( *r == SUBEXPRESSION && r < m && r[3] ) {
+				while ( AN.subsubveto == 0 &&
+							*r == SUBEXPRESSION && r < m && r[3] ) {
 #ifdef WHICHSUBEXPRESSION
 					mnum1++;
 #endif
@@ -1270,6 +1275,14 @@ DoSpec:
 											/* Sum over terms */
 							AT.RecFlag++;
 /*							i = *t; */
+							AN.subsubveto = 1;
+/*
+							AN.subsubveto repairs a bug that became apparent
+							in an example by York Schroeder:
+								f(k1.k1)*replace_(k1,2*k2)
+							Is it possible to repair the counting of the various
+							length indicators? (JV 1-jun-2010)
+*/
 							if ( ( retvalue = TestSub(BHEAD t,level) ) != 0 ) {
 /*
 								Possible size changes:
@@ -1285,6 +1298,7 @@ DoSpec:
 									*term -= i;
 								}
 */
+								AN.subsubveto = 0;
 								t1[2] = 1;
 								AT.RecFlag--;
 								AT.NestPoin--;
@@ -1293,6 +1307,7 @@ DoSpec:
 								AN.ncmod = oldncmod;
 								return(retvalue);
 							}
+							AN.subsubveto = 0;
 							AT.RecFlag--;
 							t += *t;
 						}
@@ -2717,7 +2732,10 @@ ReStart:
 		if ( applyflag ) { TableReset(); applyflag = 0; }
 Renormalize:
 		if ( ( retnorm = Normalize(BHEAD term) ) != 0 ) {
-			if ( retnorm > 0 ) goto ReStart;
+			if ( retnorm > 0 ) {
+				if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+				goto ReStart;
+			}
 			goto GenCall;
 		}
 		if ( !*term ) goto Return0;
@@ -3258,7 +3276,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3687,7 +3705,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

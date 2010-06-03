@@ -64,7 +64,7 @@ long numfrees = 0;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -96,7 +96,7 @@ UBYTE *LoadInputFile(UBYTE *filename, int type)
 }
 
 /*
- 		#] LoadInputFile :
+ 		#] LoadInputFile : 
  		#[ ReadFromStream :
 */
 
@@ -164,7 +164,7 @@ UBYTE ReadFromStream(STREAM *stream)
 }
 
 /*
- 		#] ReadFromStream :
+ 		#] ReadFromStream : 
  		#[ GetFromStream :
 */
 
@@ -187,7 +187,7 @@ UBYTE GetFromStream(STREAM *stream)
 }
 
 /*
- 		#] GetFromStream :
+ 		#] GetFromStream : 
  		#[ LookInStream :
 */
 
@@ -199,7 +199,7 @@ UBYTE LookInStream(STREAM *stream)
 }
 
 /*
- 		#] LookInStream :
+ 		#] LookInStream : 
  		#[ OpenStream :
 */
 
@@ -351,7 +351,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 }
 
 /*
- 		#] OpenStream :
+ 		#] OpenStream : 
  		#[ LocateFile :
 */
 
@@ -438,7 +438,7 @@ int LocateFile(UBYTE **name, int type)
 }
 
 /*
- 		#] LocateFile :
+ 		#] LocateFile : 
  		#[ CloseStream :
 */
 
@@ -535,7 +535,7 @@ STREAM *CloseStream(STREAM *stream)
 }
 
 /*
- 		#] CloseStream :
+ 		#] CloseStream : 
  		#[ CreateStream :
 */
 
@@ -566,7 +566,7 @@ STREAM *CreateStream(UBYTE *where)
 }
 
 /*
- 		#] CreateStream :
+ 		#] CreateStream : 
  		#[ GetStreamPosition :
 */
 
@@ -576,7 +576,7 @@ LONG GetStreamPosition(STREAM *stream)
 }
 
 /*
- 		#] GetStreamPosition :
+ 		#] GetStreamPosition : 
  		#[ PositionStream :
 */
 
@@ -604,8 +604,8 @@ VOID PositionStream(STREAM *stream, LONG position)
 }
 
 /*
- 		#] PositionStream :
-  	#] Streams :
+ 		#] PositionStream : 
+  	#] Streams : 
   	#[ Files :
  		#[ StartFiles :
 */
@@ -633,7 +633,7 @@ VOID StartFiles()
 }
 
 /*
- 		#] StartFiles :
+ 		#] StartFiles : 
  		#[ OpenFile :
 */
 
@@ -652,7 +652,7 @@ int OpenFile(char *name)
 }
 
 /*
- 		#] OpenFile :
+ 		#] OpenFile : 
  		#[ OpenAddFile :
 */
 
@@ -673,7 +673,7 @@ int OpenAddFile(char *name)
 }
 
 /*
- 		#] OpenAddFile :
+ 		#] OpenAddFile : 
  		#[ ReOpenFile :
 */
 
@@ -693,7 +693,7 @@ int ReOpenFile(char *name)
 }
 
 /*
- 		#] ReOpenFile :
+ 		#] ReOpenFile : 
  		#[ CreateFile :
 */
 
@@ -710,7 +710,7 @@ int CreateFile(char *name)
 }
 
 /*
- 		#] CreateFile :
+ 		#] CreateFile : 
  		#[ CreateLogFile :
 */
 
@@ -728,7 +728,7 @@ int CreateLogFile(char *name)
 }
 
 /*
- 		#] CreateLogFile :
+ 		#] CreateLogFile : 
  		#[ CloseFile :
 */
 
@@ -746,7 +746,7 @@ VOID CloseFile(int handle)
 }
 
 /*
- 		#] CloseFile :
+ 		#] CloseFile : 
  		#[ CopyFile :
 */
 
@@ -795,7 +795,7 @@ int CopyFile(char *source, char *dest)
 }
 
 /*
- 		#] CopyFile :
+ 		#] CopyFile : 
  		#[ CreateHandle :
 
 		We need a lock here.
@@ -854,7 +854,7 @@ int CreateHandle()
 }
 
 /*
- 		#] CreateHandle :
+ 		#] CreateHandle : 
  		#[ ReadFile :
 */
 
@@ -883,7 +883,7 @@ LONG ReadFile(int handle, UBYTE *buffer, LONG size)
 }
 
 /*
- 		#] ReadFile :
+ 		#] ReadFile : 
  		#[ ReadPosFile :
 
 		Gets words from a file(handle).
@@ -970,7 +970,7 @@ LONG ReadPosFile(PHEAD FILEHANDLE *fi, UBYTE *buffer, LONG size, POSITION *pos)
 }
 
 /*
- 		#] ReadPosFile :
+ 		#] ReadPosFile : 
  		#[ WriteFile :
 */
 
@@ -1001,7 +1001,7 @@ LONG (*WriteFile)(int handle, UBYTE *buffer, LONG size) = &WriteFileToFile;
 /*:[17nov2005]*/
 
 /*
- 		#] WriteFile :
+ 		#] WriteFile : 
  		#[ SeekFile :
 */
 
@@ -1026,7 +1026,7 @@ VOID SeekFile(int handle, POSITION *offset, int origin)
 }
 
 /*
- 		#] SeekFile :
+ 		#] SeekFile : 
  		#[ TellFile :
 */
 
@@ -1050,7 +1050,7 @@ VOID TELLFILE(int handle, POSITION *position)
 }
 
 /*
- 		#] TellFile :
+ 		#] TellFile : 
  		#[ FlushFile :
 */
 
@@ -1064,7 +1064,7 @@ void FlushFile(int handle)
 }
 
 /*
- 		#] FlushFile :
+ 		#] FlushFile : 
  		#[ GetPosFile :
 */
 
@@ -1078,7 +1078,7 @@ int GetPosFile(int handle, fpos_t *pospointer)
 }
 
 /*
- 		#] GetPosFile :
+ 		#] GetPosFile : 
  		#[ SetPosFile :
 */
 
@@ -1092,7 +1092,7 @@ int SetPosFile(int handle, fpos_t *pospointer)
 }
 
 /*
- 		#] SetPosFile :
+ 		#] SetPosFile : 
  		#[ SynchFile :
 
 		It may be that when we use many sort files at the same time there
@@ -1118,7 +1118,7 @@ VOID SynchFile(int handle)
 }
 
 /*
- 		#] SynchFile :
+ 		#] SynchFile : 
  		#[ TruncateFile :
 
 		It may be that when we use many sort files at the same time there
@@ -1144,7 +1144,7 @@ VOID TruncateFile(int handle)
 }
 
 /*
- 		#] TruncateFile :
+ 		#] TruncateFile : 
  		#[ GetChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -1175,7 +1175,7 @@ int GetChannel(char *name)
 }
 
 /*
- 		#] GetChannel :
+ 		#] GetChannel : 
  		#[ GetAppendChannel :
 
 		Checks whether we have this file already. If so, we return its
@@ -1206,7 +1206,7 @@ int GetAppendChannel(char *name)
 }
 
 /*
- 		#] GetAppendChannel :
+ 		#] GetAppendChannel : 
  		#[ CloseChannel :
 
 		Checks whether we have this file already. If so, we close it.
@@ -1229,7 +1229,103 @@ int CloseChannel(char *name)
 }
 
 /*
- 		#] CloseChannel :
+ 		#] CloseChannel : 
+ 		#[ UpdateMaxSize :
+
+		Updates the maximum size of the combined input/output/hide scratch
+		files, the sort files and the .str file.
+		The result becomes only visible with either
+			ON totalsize;
+			#: totalsize ON;
+		or the -T in the command tail.
+
+		To be called, whenever a file is closed/removed or truncated to zero.
+
+		We have no provisions yet for expressions that remain inside the
+		small or large buffer during the sort. The space they use there is
+		currently ignored.
+*/
+
+void UpdateMaxSize()
+{
+	POSITION position, sumsize;
+	int i;
+	PUTZERO(sumsize);
+	FILEHANDLE *scr;
+	if ( AM.PrintTotalSize ) {
+/*
+		First the three scratch files
+*/
+#ifdef WITHPTHREADS
+	scr = AB[0]->R.Fscr;
+#else
+	scr = AR.Fscr;
+#endif
+	for ( i = 0; i <=2; i++ ) {
+		if ( scr[i].handle < 0 ) {
+			SETBASEPOSITION(position,(scr[i].POfull-scr[i].PObuffer)*sizeof(WORD));
+		}
+		else {
+			position = scr[i].filesize;
+		}
+		ADD2POS(sumsize,position);
+	}
+/*
+		Now the sort file(s)
+*/
+#ifdef WITHPTHREADS
+	{
+		int j;
+		ALLPRIVATES *B;
+		for ( j = 0; j < AM.totalnumberofthreads; j++ ) {
+			B = AB[j];
+			if ( AT.SS->file.handle >= 0 ) {
+				position = AT.SS->file.filesize;
+/*
+LOCK(ErrorMessageLock);
+MesPrint("%d: %10p",j,&(AT.SS->file.filesize));
+UNLOCK(ErrorMessageLock);
+*/
+				ADD2POS(sumsize,position);
+			}
+			if ( AR.FoStage4[0].handle >= 0 ) {
+				position = AR.FoStage4[0].filesize;
+				ADD2POS(sumsize,position);
+			}
+		}
+	}
+#else
+	if ( AT.SS->file.handle >= 0 ) {
+		position = AT.SS->file.filesize;
+		ADD2POS(sumsize,position);
+	}
+	if ( AR.FoStage4[0].handle >= 0 ) {
+		position = AR.FoStage4[0].filesize;
+		ADD2POS(sumsize,position);
+	}
+#endif
+/*
+		And of course the str file.
+*/
+	ADD2POS(sumsize,AC.StoreFileSize);
+/*
+		Finally the test whether it is bigger
+*/
+	if ( ISLESSPOS(AS.MaxExprSize,sumsize) ) {
+#ifdef WITHPTHREADS
+		LOCK(AS.MaxExprSizeLock);
+		if ( ISLESSPOS(AS.MaxExprSize,sumsize) ) AS.MaxExprSize = sumsize;
+		UNLOCK(AS.MaxExprSizeLock);
+#else
+		AS.MaxExprSize = sumsize;
+#endif
+	}
+	}
+	return;
+}
+
+/*
+ 		#] UpdateMaxSize :
   	#] Files :
   	#[ Strings :
  		#[ StrCmp :
@@ -1242,7 +1338,7 @@ int StrCmp(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrCmp :
+ 		#] StrCmp : 
  		#[ StrICmp :
 */
 
@@ -1253,7 +1349,7 @@ int StrICmp(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrICmp :
+ 		#] StrICmp : 
  		#[ StrHICmp :
 */
 
@@ -1264,7 +1360,7 @@ int StrHICmp(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrHICmp :
+ 		#] StrHICmp : 
  		#[ StrICont :
 */
 
@@ -1276,7 +1372,7 @@ int StrICont(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] StrICont :
+ 		#] StrICont : 
  		#[ ConWord :
 */
 
@@ -1288,7 +1384,7 @@ int ConWord(UBYTE *s1, UBYTE *s2)
 }
 
 /*
- 		#] ConWord :
+ 		#] ConWord : 
  		#[ StrLen :
 */
 
@@ -1300,26 +1396,27 @@ int StrLen(UBYTE *s)
 }
 
 /*
- 		#] StrLen :
+ 		#] StrLen : 
  		#[ NumToStr :
 */
 
 VOID NumToStr(UBYTE *s, LONG x)
 {
 	UBYTE *t, str[24];
+	ULONG xx;
 	t = str;
-	/*[02dec2004 mt]: the following line may lead to integer overflow!:*/
-	if ( x < 0 ) { *s++ = '-'; x = -x; }
+	if ( x < 0 ) { *s++ = '-'; xx = -x; }
+	else xx = x;
 	do {
-		*t++ = x % 10 + '0';
-		x /= 10;
-	} while ( x );
+		*t++ = xx % 10 + '0';
+		xx /= 10;
+	} while ( xx );
 	while ( t > str ) *s++ = *--t;
 	*s = 0;
 }
 
 /*
- 		#] NumToStr :
+ 		#] NumToStr : 
  		#[ WriteString :
 
 		Writes a characterstring to the various outputs.
@@ -1352,7 +1449,7 @@ VOID WriteString(int type, UBYTE *str, int num)
 }
 
 /*
- 		#] WriteString :
+ 		#] WriteString : 
  		#[ WriteUnfinString :
 
 		Writes a characterstring to the various outputs.
@@ -1382,7 +1479,7 @@ VOID WriteUnfinString(int type, UBYTE *str, int num)
 }
 
 /*
- 		#] WriteUnfinString :
+ 		#] WriteUnfinString : 
  		#[ strDup1 :
 
 		string duplication with message passing for Malloc1, allowing
@@ -1401,7 +1498,7 @@ UBYTE *strDup1(UBYTE *instring, char *ifwrong)
 }
 
 /*
- 		#] strDup1 :
+ 		#] strDup1 : 
  		#[ EndOfToken :
 */
 
@@ -1413,7 +1510,7 @@ UBYTE *EndOfToken(UBYTE *s)
 }
 
 /*
- 		#] EndOfToken :
+ 		#] EndOfToken : 
  		#[ ToToken :
 */
 
@@ -1425,7 +1522,7 @@ UBYTE *ToToken(UBYTE *s)
 }
 
 /*
- 		#] ToToken :
+ 		#] ToToken : 
  		#[ SkipField :
 
 	Skips from s to the end of a declaration field.
@@ -1450,7 +1547,7 @@ UBYTE *SkipField(UBYTE *s, int level)
 }
 
 /*
- 		#] SkipField :
+ 		#] SkipField : 
  		#[ ReadSnum :			WORD ReadSnum(p)
 
 		Reads a number that should fit in a word.
@@ -1476,7 +1573,7 @@ WORD ReadSnum(UBYTE **p)
 }
 
 /*
- 		#] ReadSnum :
+ 		#] ReadSnum : 
  		#[ NumCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1499,7 +1596,7 @@ UBYTE *NumCopy(WORD x, UBYTE *to)
 }
 
 /*
- 		#] NumCopy :
+ 		#] NumCopy : 
  		#[ LongCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1522,7 +1619,7 @@ char *LongCopy(LONG x, char *to)
 }
 
 /*
- 		#] LongCopy :
+ 		#] LongCopy : 
  		#[ LongLongCopy :
 
 	Adds the decimal representation of a number to a string.
@@ -1546,7 +1643,7 @@ char *LongLongCopy(off_t *y, char *to)
 }
 
 /*
- 		#] LongLongCopy :
+ 		#] LongLongCopy : 
  		#[ MakeDate :
 
 		Routine produces a string with the date and time of the run
@@ -1578,7 +1675,7 @@ UBYTE *MakeDate()
 }
 
 /*
- 		#] MakeDate :
+ 		#] MakeDate : 
  		#[ set_in :
          Returns 1 if ch is in set ; 0 if ch is not in set:
 */
@@ -1598,7 +1695,7 @@ int set_in(UBYTE ch, set_of_char set)
 	return(-1);
 }/*set_in*/
 /*
- 		#] set_in :
+ 		#] set_in : 
  		#[ set_set :
 			sets ch into set; returns *set:
 */
@@ -1619,7 +1716,7 @@ one_byte set_set(UBYTE ch, set_of_char set)
 	return(tmp);
 }/*set_set*/
 /*
- 		#] set_set :
+ 		#] set_set : 
  		#[ set_del :
 			deletes ch from set; returns *set:
 */
@@ -1640,7 +1737,7 @@ one_byte set_del(UBYTE ch, set_of_char set)
 	return(tmp);
 }/*set_del*/
 /*
- 		#] set_del :
+ 		#] set_del : 
  		#[ set_sub :
 			returns *set = set1\set2. This function may be usd for initialising,
 				set_sub(a,a,a) => now a is empty set :
@@ -1665,7 +1762,7 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 	return(tmp);
 }/*set_sub*/
 /*
- 		#] set_sub :
+ 		#] set_sub : 
   	#] Strings :
   	#[ Mixed :
  		#[ iniTools :
@@ -1680,7 +1777,7 @@ VOID iniTools(VOID)
 }
 
 /*
- 		#] iniTools :
+ 		#] iniTools : 
  		#[ Malloc :
 
 		Malloc routine with built in error checking.
@@ -1766,7 +1863,7 @@ VOID *Malloc(LONG size)
 }
 
 /*
- 		#] Malloc :
+ 		#] Malloc : 
  		#[ Malloc1 :
 
 		Malloc with more detailed error message.
@@ -1835,7 +1932,7 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 }
 
 /*
- 		#] Malloc1 :
+ 		#] Malloc1 : 
  		#[ M_free :
 */
 
@@ -1862,8 +1959,9 @@ void M_free(VOID *x, char *where)
 		}
 	}
 	if ( i < 0 ) {
+		unsigned int xx = ((unsigned long)x);
 		printf("Error returning non-allocated address: 0x%x from %s\n"
-			,(unsigned int)x,where);
+			,xx,where);
 /*		UNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 		exit(-1);
@@ -1906,7 +2004,7 @@ void M_free(VOID *x, char *where)
 }
 
 /*
- 		#] M_free :
+ 		#] M_free : 
  		#[ M_check :
 */
 
@@ -1972,7 +2070,7 @@ void M_print() {}
 #endif
 
 /*
- 		#] M_check :
+ 		#] M_check : 
  		#[ TermMalloc :
 */
 /**
@@ -2041,7 +2139,7 @@ MesPrint("TermFree: %s, %l",text,AT.TermMemTop);
 #endif
 
 /*
- 		#] TermMalloc :
+ 		#] TermMalloc : 
  		#[ NumberMalloc :
 */
 /**
@@ -2109,7 +2207,7 @@ MesPrint("NumberFree: %s, %l",text,AT.NumberMemTop);
 #endif
 
 /*
- 		#] NumberMalloc :
+ 		#] NumberMalloc : 
  		#[ FromList :
 
 	Returns the next object in a list.
@@ -2137,7 +2235,7 @@ VOID *FromList(LIST *L)
 }
 
 /*
- 		#] FromList :
+ 		#] FromList : 
  		#[ From0List :
 
 		Same as FromList, but we zero excess variables.
@@ -2163,7 +2261,7 @@ VOID *From0List(LIST *L)
 }
 
 /*
- 		#] From0List :
+ 		#] From0List : 
  		#[ FromVarList :
 
 	Returns the next object in a list of variables.
@@ -2210,7 +2308,7 @@ VOID *FromVarList(LIST *L)
 }
 
 /*
- 		#] FromVarList :
+ 		#] FromVarList : 
  		#[ DoubleList :
 */
 
@@ -2262,7 +2360,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 }
 
 /*
- 		#] DoubleList :
+ 		#] DoubleList : 
  		#[ DoubleLList :
 */
 
@@ -2303,7 +2401,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 }
 
 /*
- 		#] DoubleLList :
+ 		#] DoubleLList : 
  		#[ DoubleBuffer :
 */
 
@@ -2329,7 +2427,7 @@ void DoubleBuffer(void **start, void **stop, int size, char *text)
 }
 
 /*
- 		#] DoubleBuffer :
+ 		#] DoubleBuffer : 
  		#[ ExpandBuffer :
 */
 
@@ -2356,7 +2454,7 @@ void ExpandBuffer(void **buffer, LONG *oldsize, int type)
 }
 
 /*
- 		#] ExpandBuffer :
+ 		#] ExpandBuffer : 
  		#[ iexp :
 
 		Raises the long integer y to the power p.
@@ -2385,7 +2483,7 @@ LONG iexp(LONG x, int p)
 }
 
 /*
- 		#] iexp :
+ 		#] iexp : 
  		#[ ToGeneral :
 
 		Convert a fast argument to a general argument
@@ -2421,7 +2519,7 @@ MakeSize:
 }
 
 /*
- 		#] ToGeneral :
+ 		#] ToGeneral : 
  		#[ ToFast :
 
 		Checks whether an argument can be converted to fast notation
@@ -2476,7 +2574,7 @@ int ToFast(WORD *r, WORD *m)
 }
 
 /*
- 		#] ToFast :
+ 		#] ToFast : 
  		#[ IsLikeVector :
 
 		Routine determines whether a function argument is like a vector.
@@ -2509,7 +2607,7 @@ int IsLikeVector(WORD *arg)
 }
 
 /*
- 		#] IsLikeVector :
+ 		#] IsLikeVector : 
  		#[ AreArgsEqual :
 */
 
@@ -2528,7 +2626,7 @@ int AreArgsEqual(WORD *arg1, WORD *arg2)
 }
 
 /*
- 		#] AreArgsEqual :
+ 		#] AreArgsEqual : 
  		#[ CompareArgs :
 */
 
@@ -2557,7 +2655,7 @@ int CompareArgs(WORD *arg1, WORD *arg2)
 }
 
 /*
- 		#] CompareArgs :
+ 		#] CompareArgs : 
  		#[ CompArg :
 
 	returns 1 if arg1 comes first, -1 if arg2 comes first, 0 if equal
@@ -2713,7 +2811,7 @@ argerror:
 }
 
 /*
- 		#] CompArg :
+ 		#] CompArg : 
  		#[ TimeWallClock :
 */
 
@@ -2735,7 +2833,7 @@ LONG TimeWallClock(WORD par)
 }
 
 /*
- 		#] TimeWallClock :
+ 		#] TimeWallClock : 
  		#[ TimeChildren :
 */
 
@@ -2747,7 +2845,7 @@ LONG TimeChildren(WORD par)
 }
 
 /*
- 		#] TimeChildren :
+ 		#] TimeChildren : 
  		#[ TimeCPU :
 */
 
@@ -2760,7 +2858,7 @@ LONG TimeCPU(WORD par)
 }
 
 /*
- 		#] TimeCPU :
+ 		#] TimeCPU : 
  		#[ Timer :
 */
 /*
@@ -3116,7 +3214,7 @@ LONG Timer(int par)
 #endif
 
 /*
- 		#] Timer :
+ 		#] Timer : 
  		#[ Crash :
 
 		Routine for debugging purposes
@@ -3135,7 +3233,7 @@ int Crash()
 }
 
 /*
- 		#] Crash :
+ 		#] Crash : 
  		#[ TestTerm :
 */
 
@@ -3332,6 +3430,6 @@ finish:
 }
 
 /*
- 		#] TestTerm :
-  	#] Mixed :
+ 		#] TestTerm : 
+  	#] Mixed : 
 */

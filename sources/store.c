@@ -627,6 +627,7 @@ EndLoad:
 #endif
 	CloseFile(AO.SaveData.Handle);
 	AO.SaveData.Handle = -1;
+	SeekFile(AR.StoreData.Handle,&(AC.StoreFileSize),SEEK_END);
 	return(error);
 LoadWrt:
 	MesPrint("WriteError");
@@ -711,6 +712,7 @@ WORD DeleteStore(WORD par)
 			}
 #endif
 		}
+		PUTZERO(AC.StoreFileSize);
 		s = FG.fname; while ( *s ) s++;
 #ifdef VMS
 		*s = ';'; s[1] = '*'; s[2] = 0;
@@ -723,7 +725,7 @@ WORD DeleteStore(WORD par)
 }
 
 /*
- 		#] DeleteStore : 
+ 		#] DeleteStore :
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -2077,6 +2079,7 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)indexent,(LONG)(sizeof(INDEXENTRY))) !=
 		sizeof(INDEXENTRY) ) goto ErrInSto;
 	FlushFile(AR.StoreData.Handle);
+	SeekFile(AR.StoreData.Handle,&(AC.StoreFileSize),SEEK_END);
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 	return(0);
 ErrToSto:
@@ -2090,7 +2093,7 @@ ErrReturn:
 }
 
 /*
- 		#] ToStorage :
+ 		#] ToStorage : 
  		#[ NextFileIndex :
 */
 
