@@ -59,6 +59,10 @@
 */
 
 /*
+#define PRINTTIMEMARKS
+*/
+
+/*
   	#] Includes :
   	#[ filenames and system commands :
 */
@@ -1077,6 +1081,66 @@ static void print_R()
 
 /*
   	#] Debugging :
+  	#[ Cached file operation functions :
+*/
+
+#define CACHED_SNAPSHOT
+
+#define CACHE_SIZE 4096
+
+#ifdef CACHED_SNAPSHOT
+unsigned char cache_buffer[CACHE_SIZE];
+size_t cache_fill = 0;
+
+size_t fwrite_cached(const void *ptr, size_t size, size_t nmemb, FILE *fd)
+{
+	size_t fullsize = size*nmemb;
+	if ( fullsize+cache_fill >= CACHE_SIZE ) {
+		size_t overlap = CACHE_SIZE-cache_fill;
+		memcpy(cache_buffer+cache_fill, (unsigned char*)ptr, overlap);
+		if ( fwrite(cache_buffer, CACHE_SIZE, 1, fd) != 1 ) return 0;
+		fullsize -= overlap;
+		if ( fullsize >= CACHE_SIZE ) {
+			cache_fill = fullsize % CACHE_SIZE;
+			if ( cache_fill ) memcpy(cache_buffer, (unsigned char*)ptr+overlap+fullsize-cache_fill, cache_fill);
+			if ( fwrite((unsigned char*)ptr+overlap, fullsize-cache_fill, 1, fd) != 1 ) return 0;
+		}
+		else {
+			memcpy(cache_buffer, (unsigned char*)ptr+overlap, fullsize);
+			cache_fill = fullsize;
+		}
+	}
+	else {
+		memcpy(cache_buffer+cache_fill, (unsigned char*)ptr, fullsize);
+		cache_fill += fullsize;
+	}
+	return nmemb;
+}
+
+size_t flush_cache(FILE *fd)
+{
+	if ( cache_fill ) {
+		size_t retval = fwrite(cache_buffer, cache_fill, 1, fd);
+	 	cache_fill = 0;
+		return retval;
+	}
+	return 1;
+}
+#else
+size_t fwrite_cached(const void *ptr, size_t size, size_t nmemb, FILE *fd)
+{
+	return fwrite(ptr, size, nmemb, fd);
+}
+
+size_t flush_cache(FILE *fd)
+{
+	DUMMYUSE(fd)
+	return 1;
+}
+#endif
+
+/*
+  	#] Cached file operation functions :
   	#[ Helper Macros :
 */
 
@@ -1109,7 +1173,10 @@ static void print_R()
 	memcpy(VAR, p, SIZE); p = (unsigned char*)p + SIZE;
 
 #define S_WRITE_B(BUF,LEN) \
-	if ( fwrite(BUF, LEN, 1, fd) != 1 ) return(__LINE__);
+	if ( fwrite_cached(BUF, LEN, 1, fd) != 1 ) return(__LINE__);
+
+#define S_FLUSH_B \
+	if ( flush_cache(fd) != 1 ) return(__LINE__);
 
 /* character strings */
 
@@ -1122,7 +1189,7 @@ static void print_R()
 #define S_WRITE_S(STR) \
 	if ( STR ) { \
 		l = strlen((char*)STR) + 1; \
-		if ( fwrite(STR, l, 1, fd) != 1 ) return(__LINE__); \
+		if ( fwrite_cached(STR, l, 1, fd) != 1 ) return(__LINE__); \
 	}
 
 /* LIST */
@@ -1163,6 +1230,15 @@ static void print_R()
 	if ( ARG.size && ARG.where && ARG.where != &(AM.dollarzero) ) { \
 		S_WRITE_B(ARG.where, ARG.size*sizeof(WORD)) \
 	}
+
+/* Printing time marks with ANNOUNCE macro */
+
+#ifdef PRINTTIMEMARKS
+time_t announce_time;
+#define ANNOUNCE(str) time(&announce_time); printf("TIMEMARK %s\t%s\n", ctime(&announce_time), #str);
+#else
+#define ANNOUNCE(str)
+#endif
 
 /*
   	#] Helper Macros :
@@ -2190,6 +2266,9 @@ static int DoSnapshot(int moduletype)
 #endif /* ifdef WITHPTHREADS */
 
 	MesPrint("Saving recovery point ... %"); fflush(0);
+#ifdef PRINTTIMEMARKS
+	MesPrint("\n");
+#endif
 
 	if ( !(fd = fopen(intermedfile, "wb")) ) return(__LINE__);
 
@@ -2206,6 +2285,7 @@ static int DoSnapshot(int moduletype)
 	 * anyway. only the exceptions need to be taken care of. see MakeGlobal()
 	 * and PopVariables() in execute.c. */
 
+	ANNOUNCE(AM)
 	S_WRITE_B(&AM.hparallelflag, sizeof(int));
 	S_WRITE_B(&AM.gparallelflag, sizeof(int));
 	S_WRITE_B(&AM.gCodesFlag, sizeof(int));
@@ -2252,6 +2332,7 @@ static int DoSnapshot(int moduletype)
 	/* we write AC as a whole and then write all additional data step by step.
 	 * AC.DubiousList doesn't need to be treated, because it should be empty. */
 
+	ANNOUNCE(AC)
 	S_WRITE_B(&AC, sizeof(struct C_const));
 
 	S_WRITE_NAMETREE(AC.dollarnames);
@@ -2263,6 +2344,7 @@ static int DoSnapshot(int moduletype)
 		S_WRITE_S(channels[i].name);
 	}
 
+	ANNOUNCE(AC.FunctionList)
 	S_WRITE_LIST(AC.FunctionList);
 	for ( i=0; i<AC.FunctionList.num; ++i ) {
 		/* if the function is a table */
@@ -2316,6 +2398,7 @@ static int DoSnapshot(int moduletype)
 		}
 	}
 
+	ANNOUNCE(AC.ExpressionList)
 	S_WRITE_LIST(AC.ExpressionList);
 	for ( i=0; i<AC.ExpressionList.num; ++i ) {
 		EXPRESSIONS ex = Expressions + i;
@@ -2356,12 +2439,14 @@ static int DoSnapshot(int moduletype)
 		}
 	}
 	
+	ANNOUNCE(AC.IndexList)
 	S_WRITE_LIST(AC.IndexList);
 	S_WRITE_LIST(AC.SetElementList);
 	S_WRITE_LIST(AC.SetList);
 	S_WRITE_LIST(AC.SymbolList);
 	S_WRITE_LIST(AC.VectorList);
 
+	ANNOUNCE(AC.TableBaseList)
 	S_WRITE_LIST(AC.TableBaseList);
 	for ( i=0; i<AC.TableBaseList.num; ++i ) {
 		/* see struct dbase in minos.h */
@@ -2386,6 +2471,7 @@ static int DoSnapshot(int moduletype)
 		S_WRITE_S(tablebases[i].tablenames);
 	}
 
+	ANNOUNCE(AC.cbufList)
 	S_WRITE_LIST(AC.cbufList);
 	for ( i=0; i<AC.cbufList.num; ++i ) {
 		S_WRITE_B(cbuf[i].Buffer, cbuf[i].BufferSize*sizeof(WORD));
@@ -2404,6 +2490,7 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_NAMETREE(AC.autonames);
 
+	ANNOUNCE(AC.Streams)
 	S_WRITE_B(AC.Streams, AC.MaxNumStreams*(LONG)sizeof(STREAM));
 	for ( i=0; i<AC.NumStreams; ++i ) {
 		if ( AC.Streams[i].inbuffer ) {
@@ -2475,6 +2562,7 @@ static int DoSnapshot(int moduletype)
 
 	/* we write AP as a whole and then write all additional data step by step. */
 
+	ANNOUNCE(AP)
 	S_WRITE_B(&AP, sizeof(struct P_const));
 
 	S_WRITE_LIST(AP.DollarList);
@@ -2494,10 +2582,11 @@ static int DoSnapshot(int moduletype)
 		for ( j=0; j<PreVar[i].nargs; ++j ) {
 			l += strlen((char*)(PreVar[i].name+l)) + 1;
 		}
-		if ( fwrite(&l, sizeof(size_t), 1, fd) != 1 ) return(__LINE__);
+		S_WRITE_B(&l, sizeof(size_t));
 		S_WRITE_B(PreVar[i].name, l);
 	}
 
+	ANNOUNCE(AP.LoopList)
 	S_WRITE_LIST(AP.LoopList);
 	for ( i=0; i<AP.LoopList.num; ++i ) {
 		S_WRITE_B(DoLoops[i].p.buffer, DoLoops[i].p.size);
@@ -2548,6 +2637,7 @@ static int DoSnapshot(int moduletype)
 	/* #] AP */
 	/* #[ AR */
 
+	ANNOUNCE(AR)
 	/* to remember which entry in AR.Fscr corresponds to the infile */
 	l = AR.infile - AR.Fscr;
 	S_WRITE_B(&l, sizeof(long));
@@ -2574,6 +2664,7 @@ static int DoSnapshot(int moduletype)
 	l = TimeCPU(1); l = -l;
 	S_WRITE_B(&l, sizeof(LONG));
 
+	ANNOUNCE(AR.InInBuf)
 	S_WRITE_B(&AR.InInBuf, sizeof(LONG));
 	S_WRITE_B(&AR.InHiBuf, sizeof(LONG));
 	
@@ -2619,18 +2710,23 @@ static int DoSnapshot(int moduletype)
 /*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS
+	ANNOUNCE(GetTimerInfo)
 	/* write timing information of individual threads */
 	i = GetTimerInfo(&longp);
 	S_WRITE_B(&i, sizeof(int));
 	S_WRITE_B(longp, i*(LONG)sizeof(LONG));
 #endif /* ifdef WITHPTHREADS */
 
+	S_FLUSH_B /* because we will call fwrite() directly in the following code */
+
 	/* save length of data at the beginning of the file */
+	ANNOUNCE(file length)
 	SETBASEPOSITION(pos, (ftell(fd)));
 	fseek(fd, 0, SEEK_SET);
 	if ( fwrite(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
 	fseek(fd, BASEPOSITION(pos), SEEK_SET);
 
+	ANNOUNCE(file close)
 	if ( fclose(fd) ) return(__LINE__);
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
@@ -2638,16 +2734,19 @@ static int DoSnapshot(int moduletype)
 #endif
 /*:[20oct2009 mt]*/
 	/* copy store file if necessary */
+	ANNOUNCE(copy store file)
 	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
 		if ( CopyFile(FG.fname, storefile) ) return(__LINE__);
 	}
 
 	/* copy sort file if necessary */
+	ANNOUNCE(copy sort file)
 	if ( AR.outfile->handle >= 0 ) {
 		if ( CopyFile(AR.outfile->name, sortfile) ) return(__LINE__);
 	}
 
 	/* copy hide file if necessary */
+	ANNOUNCE(copy hide file)
 	if ( AR.hidefile->handle >= 0 ) {
 		if ( CopyFile(AR.hidefile->name, hidefile) ) return(__LINE__);
 	}
@@ -2659,6 +2758,7 @@ static int DoSnapshot(int moduletype)
 /*:[20oct2009 mt]*/
 
 	/* make the intermediate file the recovery file */
+	ANNOUNCE(rename intermediate file)
 	if ( rename(intermedfile, recoveryfile) ) return(__LINE__);
 
 	done_snapshot = 1;
