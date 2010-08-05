@@ -868,7 +868,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol :
+  	#] CoSymbol : 
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1673,8 +1673,8 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 				s++;
 				switch ( set->type ) {
 					case CSYMBOL: numset = -numset; break;
+					case CVECTOR: numset += WILDOFFSET; break;
 					case CINDEX:
-					case CVECTOR:
 					case CFUNCTION: numset |= WILDMASK; break;
 				}
 				AC.wildflag = 1;
@@ -1744,7 +1744,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 }
 
 /*
-  	#] DoElements : 
+  	#] DoElements :
   	#[ CoSet :
 
 	Set declarations.

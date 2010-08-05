@@ -612,7 +612,7 @@ VOID TokenToLine(UBYTE *s)
 }
 
 /*
- 		#] TokenToLine :
+ 		#] TokenToLine : 
  		#[ CodeToLine :			VOID CodeToLine(name,number,mode)
 
 	Writes a name and possibly its number to output as a single token.
@@ -930,9 +930,9 @@ VOID WriteLists()
 								StrCopy((UBYTE *)"_?",Out);
 								TokenToLine(OutScr);
 							}
-							else if ( number >= AM.OffsetIndex + WILDOFFSET ) {
+							else if ( number >= AM.OffsetIndex + WILDMASK ) {
 								Out = StrCopy(VARNAME(indices,number
-								-AM.OffsetIndex-WILDOFFSET),OutScr);
+								-AM.OffsetIndex-WILDMASK),OutScr);
 								StrCopy((UBYTE *)"?",Out);
 								TokenToLine(OutScr);
 							}
@@ -955,7 +955,7 @@ VOID WriteLists()
 							TokenToLine(VARNAME(vectors,number-AM.OffsetVector));
 							break;
 						case CFUNCTION:
-							if ( number >= FUNCTION + WILDOFFSET ) {
+							if ( number >= FUNCTION + WILDMASK ) {
 								Out = StrCopy(VARNAME(functions,number
 								-FUNCTION-WILDOFFSET),OutScr);
 								StrCopy((UBYTE *)"?",Out);
@@ -1085,7 +1085,7 @@ VOID WriteLists()
 }
 
 /*
- 		#] WriteLists : 
+ 		#] WriteLists :
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
@@ -2272,7 +2272,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteOne :
+ 		#] WriteOne : 
   	#] schryf-Writes :
 */
 

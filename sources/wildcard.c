@@ -20,7 +20,7 @@
 /*
 #define DEBUG(x) x
 
-  	#] Includes :
+  	#] Includes : 
  	#[ Wildcards :
  		#[ WildFill :			WORD WildFill(to,from,sub)
 
@@ -267,7 +267,7 @@ Seven:;
 				while ( s < z ) *m++ = *s++;
 				break;
 /*
-			#] SYMBOLS :
+			#] SYMBOLS : 
 */
 			case DOTPRODUCT:
 /*
@@ -575,7 +575,7 @@ NextDot:;
 				}
 				break;
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 */
 			case SETSET:
 /*
@@ -590,7 +590,7 @@ NextDot:;
 				t = temp; u = t + t[1];
 				goto ReSwitch;
 /*
-			#] SETS :
+			#] SETS : 
 */
 			case VECTOR:
 /*
@@ -683,7 +683,7 @@ ss4:				m++; t++;
 				}
 				break;
 /*
-			#] VECTORS :
+			#] VECTORS : 
 */
 			case INDEX:
 /*
@@ -729,7 +729,7 @@ ss5:				m++; t++;
 				}
 				break;
 /*
-			#] INDEX :
+			#] INDEX : 
 */
 			case DELTA:
 			case LEVICIVITA:
@@ -828,7 +828,7 @@ ss6:					m++; t++;
 				}
 				break;
 /*
-			#] SPECIALS :
+			#] SPECIALS : 
 */
 			case SUBEXPRESSION:
 /*
@@ -885,7 +885,7 @@ sr7:;
 				}
 				break;
 /*
-			#] SUBEXPRESSION :
+			#] SUBEXPRESSION : 
 */
 			case EXPRESSION:
 /*
@@ -950,7 +950,7 @@ sr7:;
 				v[1] = m-v;
 				break;
 /*
-			#] EXPRESSION :
+			#] EXPRESSION : 
 */
 			default:
 /*
@@ -1185,7 +1185,7 @@ ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments :
+			#] Simple arguments : 
 */
 						}
 						else {
@@ -1269,7 +1269,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 */
 		}
 		t = uu;
@@ -1284,7 +1284,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill :
+ 		#] WildFill : 
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -1449,7 +1449,7 @@ GotOne:;
 }
 
 /*
- 		#] ResolveSet :
+ 		#] ResolveSet : 
  		#[ ClearWild :			VOID ClearWild()
 
 	Clears the current wildcard settings and makes them ready for
@@ -1475,7 +1475,7 @@ VOID ClearWild(PHEAD0)
 }
 
 /*
- 		#] ClearWild :
+ 		#] ClearWild : 
  		#[ AddWild :			WORD AddWild(oldnumber,type,newnumber)
 
  		Adds a wildcard assignment.
@@ -1704,7 +1704,7 @@ FlipOn:
 }
 
 /*
- 		#] AddWild :
+ 		#] AddWild : 
  		#[ CheckWild :			WORD CheckWild(oldnumber,type,newnumber,newval)
 
  		Tests whether a wildcard assignment is allowed.
@@ -2275,11 +2275,11 @@ NoMnot:
 				case VECTOVEC:
 					if ( *w == newnumber ) goto NoMatch;
 				case VECTOSUB:
-					if ( *w - WILDMASK >= AM.OffsetIndex ) {
+					if ( *w - WILDOFFSET >= AM.OffsetVector ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
-						k = *w - WILDMASK;
+						k = *w - WILDOFFSET;
 						while ( --nn >= 0 ) {
 							if ( *mm && ww[2] == k && ww[0] == type ) {
 								if ( type == VECTOVEC ) {
@@ -2447,6 +2447,6 @@ int DenToFunction(WORD *term, WORD numfun)
 }
 
 /*
-  	#] DenToFunction :
+  	#] DenToFunction : 
 */
 
