@@ -37,12 +37,6 @@ AC_SYS_LARGEFILE
 
 # Check for architecture and OS
 AC_CANONICAL_HOST
-# DEBUG
-# echo HOST $host
-# echo CPU $host_cpu
-# echo OS $host_os
-# echo VENDOR $host_vendor
-# END DEBUG
 case $host_cpu in
 	i?86 )
 		print_cpu="Pentium"
@@ -112,10 +106,10 @@ AC_ARG_ENABLE([scalar], [AS_HELP_STRING([--disable-scalar],
 build_form=$enableval
 AM_CONDITIONAL([BUILD_FORM], [test "x$build_form" = xyes])
 
-# Check for disabling debugging version
-AC_ARG_ENABLE([debug], [AS_HELP_STRING([--disable-debug],
-	[do not build debugging version (vorm)])],
-	[], [enableval=yes])
+# Check for enabling debugging version
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug],
+	[do build debugging versions (vorm/tvorm)])],
+	[enableval=yes], [enableval=no])
 build_vorm=$enableval
 AM_CONDITIONAL([BUILD_VORM], [test "x$build_vorm" = xyes])
 
@@ -124,11 +118,8 @@ AC_ARG_ENABLE([threaded], [AS_HELP_STRING([--disable-threaded],
 	[do not build multi-threaded version (tform)])],
 	[], [enableval=yes])
 build_tform=$enableval
-AC_ARG_ENABLE([debug-threaded], [AS_HELP_STRING([--disable-debug-threaded],
-	[do not build multi-threaded debugging version (tvorm)])],
-	[], [enableval=yes])
-build_tvorm=$enableval
-AS_IF([test "x$build_tform" = xyes -o "x$build_tvorm" = xyes],
+AS_IF([test "$enableval" = yes], [build_tvorm=$build_vorm])
+AS_IF([test "x$build_tform" = xyes],
 	[AC_CHECK_HEADER([pthread.h], [], [build_tform=no build_tvorm=no])
 	 AC_CHECK_LIB([rt], [pthread_self], [], [build_tform=no build_tvorm=no])
 	 AS_IF([test "x$build_tform" != xyes],

@@ -71,15 +71,18 @@ installation path use the "--prefix" option:
 The FORM executables will then be installed into the directory "<path>/bin".
 
 As a default, all possible flavors of FORM, i.e. the sequential version (form),
-the threaded version (tform), the parallel version (parform), the debugging
-versions (vorm, tvorm, ...), will be selected for compilation. To prevent a
-flavor from being build, use one of the following options:
+the threaded version (tform), and the parallel version (parform) will be
+selected for compilation. To prevent a flavor from being build, use one of the
+following options:
 
     ./configure --disable-scalar
-    ./configure --disable-debug
     ./configure --disable-threaded
-    ./configure --disable-debug-threaded
     ./configure --disable-parform
+
+If you want to build the debugging versions of these flavors, then add the
+option:
+
+    ./configure --enable-debug
 
 Use one of the following options
 
