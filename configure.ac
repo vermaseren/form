@@ -143,9 +143,9 @@ AM_CONDITIONAL([BUILD_TFORM], [test "x$build_tform" = xyes])
 AM_CONDITIONAL([BUILD_TVORM], [test "x$build_tvorm" = xyes])
 
 # Check for MPI
-AC_ARG_ENABLE([parform], [AS_HELP_STRING([--disable-parform],
+AC_ARG_ENABLE([parform], [AS_HELP_STRING([--enable-parform],
 	[do not build parallel version using MPI (parform)])],
-	[], [enableval=yes])
+	[enableval=yes], [enableval=no])
 build_parform=$enableval
 AS_IF([test "x$build_parform" = xyes],
 	[AC_CHECK_PROG([MPICOMPILER], [mpicc], [mpicc], [])
