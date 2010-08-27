@@ -68,7 +68,7 @@ DATEFLAG=$(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)
 
 # for release versions
 COMPILEFLAGS=$(DATEFLAG)
-LINKFLAGS=-static -s
+LINKFLAGS=
 # for debugging versions
 DEBUGCOMPILEFLAGS=-g -Wall $(DATEFLAG)
 DEBUGLINKFLAGS=-g
@@ -77,11 +77,23 @@ DEBUGLINKFLAGS=-g
 if USINGGCC
 COMPILEFLAGS+=-O3 -fomit-frame-pointer
 DEBUGCOMPILEFLAGS+=-Wextra -pedantic
+if ONAPPLE
+LINKFLAGS+=-static-libgcc
+if OPTOPTERON
+COMPILEFLAGS+=-m64
+LINKFLAGS+=-m64
+else
+COMPILEFLAGS+=-m32
+LINKFLAGS+=-m32
+endif
+else
+LINKFLAGS+=-static -s
 if OPTPENTIUM
 COMPILEFLAGS+=-march=i686
 endif
 if OPTOPTERON
 COMPILEFLAGS+=-march=opteron
+endif
 endif
 endif
 if USINGICC
@@ -98,7 +110,7 @@ bin_PROGRAMS =
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CFLAGS = $(COMPILEFLAGS)
+form_CPPFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS)
 form_LDADD = $(EXTRALIBS)
 endif
@@ -118,7 +130,11 @@ tform_SOURCES = $(SRCBASE)
 tform_CPPFLAGS = -DWITHPTHREADS
 tform_CFLAGS = $(COMPILEFLAGS)
 tform_LDFLAGS = $(LINKFLAGS) -pthread
+if ONAPPLE
+tform_LDADD = $(EXTRALIBS)
+else
 tform_LDADD = $(EXTRALIBS) -lrt
+endif
 endif
 
 if BUILD_TVORM
@@ -127,7 +143,11 @@ tvorm_SOURCES = $(SRCBASE)
 tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS) -pthread
+if ONAPPLE
+tvorm_LDADD = $(EXTRALIBS)
+else
 tvorm_LDADD = $(EXTRALIBS) -lrt
+endif
 endif
 
 if BUILD_PARFORM

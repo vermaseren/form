@@ -38,6 +38,10 @@ AC_SYS_LARGEFILE
 # Check for architecture and OS
 AC_CANONICAL_HOST
 case $host_cpu in
+	i386 )
+		print_cpu="Opteron"
+		AC_DEFINE(OPTERON, , [Compiling for a 64bit Opteron system.])
+		;;
 	i?86 )
 		print_cpu="Pentium"
 		;;
@@ -57,6 +61,10 @@ esac
 AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = "xPentium"])
 AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = "xOpteron"])
 case $host_os in
+	darwin* )
+		print_os="OSX"
+		AC_DEFINE(APPLE, , [Compiling for an Apple 64 bits system.])
+		;;
 	linux* )
 		print_os="Linux"
 		AC_DEFINE(LINUX, , [Compiling for a Linux system.])
@@ -70,6 +78,7 @@ case $host_os in
 		AC_MSG_WARN([Compiling for a unrecognized OS.])
 		;;
 esac
+AM_CONDITIONAL([ONAPPLE], [test "x$print_os" = xOSX])
 
 # Check for C compiler vendor
 AM_CONDITIONAL([USINGGCC], [test "x$CC" = xgcc])
@@ -80,6 +89,7 @@ GMPLIBS=
 AC_ARG_WITH([gmp], [AS_HELP_STRING([--without-gmp],
 			[do not use GMP for long integer arithmetic @<:@default=use GMP if available@:>@])],
 			[], [USE_GMP=yes])
+AS_IF([test "x$print_os" = xOSX], [USE_GMP=no]) 
 AS_IF([test "x$USE_GMP" = xyes],
 	[AC_CHECK_LIB([gmp], [__gmpz_init],
 		[AC_DEFINE(WITHGMP, , [Define to use GMP for long integer arithmetic.])
@@ -121,7 +131,9 @@ build_tform=$enableval
 AS_IF([test "$enableval" = yes], [build_tvorm=$build_vorm])
 AS_IF([test "x$build_tform" = xyes],
 	[AC_CHECK_HEADER([pthread.h], [], [build_tform=no build_tvorm=no])
-	 AC_CHECK_LIB([rt], [pthread_self], [], [build_tform=no build_tvorm=no])
+	 AS_IF([test "x$print_os" != xOSX],
+	 	[AC_CHECK_LIB([rt], [pthread_self], [], [build_tform=no build_tvorm=no])],
+	 	[AC_CHECK_LIB([pthread], [pthread_self], [], [build_tform=no build_tvorm=no])])
 	 AS_IF([test "x$build_tform" != xyes],
 		   [AC_MSG_WARN([building tform has been disabled.])])
 	 AS_IF([test "x$build_tvorm" != xyes],
