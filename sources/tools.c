@@ -753,14 +753,23 @@ VOID CloseFile(int handle)
 /** Copies a file with name *source to a file named *dest.
  *  The involved files must not be open.
  *  Returns non-zero if an error occurred.
+ *	Uses if possible the combined large and small sorting buffers as cache.
  */
 int CopyFile(char *source, char *dest)
 {
-	#define COPYFILEBUFSIZE 4096
+	#define COPYFILEBUFSIZE 40960L
 	FILE *in, *out;
-	size_t countin, countout;
+	size_t countin, countout, sumcount;
 	char *buffer = NULL;
-	buffer = (char*)Malloc1(COPYFILEBUFSIZE, "file copy buffer");
+
+	sumcount = (AM.S0->LargeSize+AM.S0->SmallEsize)*sizeof(WORD);
+	if ( sumcount <= COPYFILEBUFSIZE ) {
+		sumcount = COPYFILEBUFSIZE;
+		buffer = (char*)Malloc1(sumcount, "file copy buffer");
+	}
+	else {
+		buffer = (char *)(AM.S0->lBuffer);
+	}
 	
 	in = fopen(source, "rb");
 	if ( in == NULL ) {
@@ -774,8 +783,8 @@ int CopyFile(char *source, char *dest)
 	}
 
 	while ( !feof(in) ) {
-		countin = fread(buffer, 1, COPYFILEBUFSIZE, in);
-		if ( countin != COPYFILEBUFSIZE ) {
+		countin = fread(buffer, 1, sumcount, in);
+		if ( countin != sumcount ) {
 			if ( ferror(in) ) {
 				perror("CopyFile: ");
 				return(3);
@@ -790,12 +799,14 @@ int CopyFile(char *source, char *dest)
 
 	fclose(in);
 	fclose(out);
-	
+	if ( sumcount <= COPYFILEBUFSIZE ) {
+		M_free(buffer, "file copy buffer");
+	}
 	return(0);
 }
 
 /*
- 		#] CopyFile : 
+ 		#] CopyFile :
  		#[ CreateHandle :
 
 		We need a lock here.
@@ -1250,8 +1261,8 @@ void UpdateMaxSize()
 {
 	POSITION position, sumsize;
 	int i;
-	PUTZERO(sumsize);
 	FILEHANDLE *scr;
+	PUTZERO(sumsize);
 	if ( AM.PrintTotalSize ) {
 /*
 		First the three scratch files
@@ -1763,7 +1774,7 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 }/*set_sub*/
 /*
  		#] set_sub : 
-  	#] Strings :
+  	#] Strings : 
   	#[ Mixed :
  		#[ iniTools :
 */
@@ -2811,7 +2822,7 @@ argerror:
 }
 
 /*
- 		#] CompArg : 
+ 		#] CompArg :
  		#[ TimeWallClock :
 */
 
@@ -3431,5 +3442,5 @@ finish:
 
 /*
  		#] TestTerm : 
-  	#] Mixed : 
+  	#] Mixed :
 */

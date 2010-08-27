@@ -13,7 +13,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -219,7 +219,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -1649,7 +1649,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2173,7 +2173,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2302,7 +2302,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2418,7 +2418,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2493,7 +2493,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2668,7 +2668,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3039,9 +3039,11 @@ CommonEnd:
 					level = C->lhs[level][2];
 					break; }
 				  case TYPEEXIT:
-					LOCK(ErrorMessageLock);
-					MesPrint("%s",C->lhs[level]+3);
-					UNLOCK(ErrorMessageLock);
+					if ( C->lhs[level][2] > 0 ) {
+						LOCK(ErrorMessageLock);
+						MesPrint("%s",C->lhs[level]+3);
+						UNLOCK(ErrorMessageLock);
+					}
 					goto GenCall;
 				  case TYPESETEXIT:
 					AM.exitflag = 1; /* no danger of race conditions */
@@ -3276,7 +3278,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3705,7 +3707,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -3936,7 +3938,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4060,7 +4062,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4296,7 +4298,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument : 
+ 		#] One argument :
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4474,7 +4476,7 @@ IllegalContent:
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] Two arguments : 
+ 		#] Two arguments :
 */
 	}
 	else {
@@ -4494,7 +4496,7 @@ IllegalContent:
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4704,6 +4706,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul : 
+ 		#] PolyFunMul :
 	#] Processor :
 */

@@ -957,7 +957,7 @@ VOID WriteLists()
 						case CFUNCTION:
 							if ( number >= FUNCTION + WILDMASK ) {
 								Out = StrCopy(VARNAME(functions,number
-								-FUNCTION-WILDOFFSET),OutScr);
+								-FUNCTION-WILDMASK),OutScr);
 								StrCopy((UBYTE *)"?",Out);
 								TokenToLine(OutScr);
 							}

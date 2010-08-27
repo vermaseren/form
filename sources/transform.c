@@ -875,7 +875,7 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 		else if ( size1 == -1 && scrat1[0] <= MAXPOSITIVE+1 ) { /* Fits! */
 			*fun1++ = -SNUMBER;
 			if ( scrat1[0] < MAXPOSITIVE ) *fun1++ = scrat1[0];
-			else *fun1++ = MAXPOSITIVE+1;
+			else *fun1++ = (WORD)(MAXPOSITIVE+1);
 			while ( f < funstop ) *fun1++ = *f++;
 			fun[1] = fun1-fun;
 		}
@@ -927,7 +927,7 @@ CalledFrom:
 }
 
 /*
- 		#] RunEncode : 
+ 		#] RunEncode :
  		#[ RunDecode :
 */
 

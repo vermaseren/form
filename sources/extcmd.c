@@ -1532,7 +1532,7 @@ pid_t getExternalChannelPid()
 int getCurrentExternalChannel()
 {
 
-	if(externalChannelsListTop>0)
+	if ( externalChannelsListTop != 0 )
 		return(externalChannelsListTop-externalChannelsList+1);
 	return(0);
 }/*getCurrentExternalChannel*/

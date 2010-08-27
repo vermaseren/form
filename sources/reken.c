@@ -23,7 +23,7 @@
 
 #define NEWTRICK 1
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ RekenRational :
  		#[ Pack :			VOID Pack(a,na,b,nb)
 
@@ -62,7 +62,7 @@ VOID Pack(UWORD *a, WORD *na, UWORD *b, WORD nb)
 }
 
 /*
- 		#] Pack : 
+ 		#] Pack :
  		#[ UnPack :			VOID UnPack(a,na,denom,numer)
 
 	Determines the sizes of the numerator and the denominator in the
@@ -89,7 +89,7 @@ VOID UnPack(UWORD *a, WORD na, WORD *denom, WORD *numer)
 }
 
 /*
- 		#] UnPack : 
+ 		#] UnPack :
  		#[ Mully :			WORD Mully(a,na,b,nb)
 
 	Multiplies the rational a by the Long b.
@@ -135,7 +135,7 @@ MullyEr:
 }
 
 /*
- 		#] Mully : 
+ 		#] Mully :
  		#[ Divvy :			WORD Divvy(a,na,b,nb)
 
 	Divides the rational a by the Long b.
@@ -176,7 +176,7 @@ DivvyEr:
 }
 
 /*
- 		#] Divvy : 
+ 		#] Divvy :
  		#[ AddRat :			WORD AddRat(a,na,b,nb,c,nc)
 */
 
@@ -339,7 +339,7 @@ AddRer1:
 }
 
 /*
- 		#] AddRat : 
+ 		#] AddRat :
  		#[ MulRat :			WORD MulRat(a,na,b,nb,c,nc)
 
 	Multiplies the rationals a and b. The Gcd of the individual
@@ -463,7 +463,7 @@ WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 }
 
 /*
- 		#] MulRat : 
+ 		#] MulRat :
  		#[ DivRat :			WORD DivRat(a,na,b,nb,c,nc)
 
 	Divides the rational a by the rational b.
@@ -491,7 +491,7 @@ WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 }
 
 /*
- 		#] DivRat : 
+ 		#] DivRat :
  		#[ Simplify :		WORD Simplify(a,na,b,nb)
 
 	Determines the greatest common denominator of a and b and
@@ -608,7 +608,7 @@ SimpErr:
 }
 
 /*
- 		#] Simplify : 
+ 		#] Simplify :
  		#[ AccumGCD :		WORD AccumGCD(a,na,b,nb)
 
 		Routine takes the rational GCD of the fractions in a and b and
@@ -646,7 +646,7 @@ AccErr:
 }
 
 /*
- 		#] AccumGCD : 
+ 		#] AccumGCD :
  		#[ TakeRatRoot:
 */
 
@@ -666,8 +666,8 @@ int TakeRatRoot(UWORD *a, WORD *n, WORD power)
 }
 
 /*
- 		#] TakeRatRoot: 
-  	#] RekenRational : 
+ 		#] TakeRatRoot:
+  	#] RekenRational :
   	#[ RekenLong :
  		#[ AddLong :		WORD AddLong(a,na,b,nb,c,nc)
 
@@ -680,7 +680,7 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	WORD sgn, res;
 	if ( na < 0 ) {
 		if ( nb < 0 ) {
-			if ( AddPLon(a,-na,b,-nb,c,(UWORD *)nc) ) return(-1);
+			if ( AddPLon(a,-na,b,-nb,c,nc) ) return(-1);
 			*nc = -*nc;
 			return(0);
 		}
@@ -694,7 +694,7 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			nb = -nb;
 			sgn = 1;
 		}
-		else { return( AddPLon(a,na,b,nb,c,(UWORD *)nc) ); }
+		else { return( AddPLon(a,na,b,nb,c,nc) ); }
 	}
 	if ( ( res = BigLong(a,na,b,nb) ) > 0 ) {
 		SubPLon(a,na,b,nb,c,nc);
@@ -712,7 +712,7 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 }
 
 /*
- 		#] AddLong : 
+ 		#] AddLong :
  		#[ AddPLon :		WORD AddPLon(a,na,b,nb,c,nc)
 
 	Adds two long integers a and b and puts the result in c.
@@ -720,7 +720,7 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	c can be a or b.
 */
 
-WORD AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, UWORD *nc)
+WORD AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	UWORD carry = 0, e, nd = 0;
 	while ( na && nb ) {
@@ -765,7 +765,7 @@ WORD AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, UWORD *nc)
 }
 
 /*
- 		#] AddPLon : 
+ 		#] AddPLon :
  		#[ SubPLon :		VOID SubPLon(a,na,b,nb,c,nc)
 
 	Subtracts b from a. Assumes that a > b. Result in c.
@@ -801,7 +801,7 @@ VOID SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 }
 
 /*
- 		#] SubPLon : 
+ 		#] SubPLon :
  		#[ MulLong :		WORD MulLong(a,na,b,nb,c,nc)
 
 	Does a Long multiplication. Assumes that WORD is half the size
@@ -879,7 +879,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 #endif
 /*
-  	#] GMP stuff : 
+  	#] GMP stuff :
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -907,7 +907,7 @@ MulLov:
 }
 
 /*
- 		#] MulLong : 
+ 		#] MulLong :
  		#[ BigLong :		WORD BigLong(a,na,b,nb)
 
 	Returns > 0 if a > b, < 0 if b > a and 0 if a == b
@@ -931,7 +931,7 @@ WORD BigLong(UWORD *a, WORD na, UWORD *b, WORD nb)
 }
 
 /*
- 		#] BigLong : 
+ 		#] BigLong :
  		#[ DivLong :		WORD DivLong(a,na,b,nb,c,nc,d,nd)
 
 	This is the long division which knows a couple of exceptions.
@@ -1064,7 +1064,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		}
 #endif
 /*
- 		#] GMP stuff : 
+ 		#] GMP stuff :
 */
 		/* Start with normalization operation */
  
@@ -1236,7 +1236,7 @@ RaisOvl:
 }
 
 /*
- 		#] RaisPow : 
+ 		#] RaisPow :
  		#[ NormalModulus :  int NormalModulus(UWORD *a,WORD *na)
 */
 /**
@@ -1271,7 +1271,7 @@ int NormalModulus(UWORD *a,WORD *na)
 }
 
 /*
- 		#] NormalModulus : 
+ 		#] NormalModulus :
  		#[ MakeInverses :
 */
 /**
@@ -1305,7 +1305,7 @@ int MakeInverses()
 }
 
 /*
- 		#] MakeInverses : 
+ 		#] MakeInverses :
  		#[ GetModInverses :
 */
 /**
@@ -1346,7 +1346,7 @@ somethingwrong:
 	return(-1);
 }
 /*
- 		#] GetModInverses : 
+ 		#] GetModInverses :
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -1380,7 +1380,7 @@ WORD Product(UWORD *a, WORD *na, WORD b)
 }
 
 /*
- 		#] Product : 
+ 		#] Product :
  		#[ Quotient :		UWORD Quotient(a,na,b)
 
 		Routine divides the long number a by b with the assumption that
@@ -1419,7 +1419,7 @@ UWORD Quotient(UWORD *a, WORD *na, WORD b)
 }
 
 /*
- 		#] Quotient : 
+ 		#] Quotient :
  		#[ Remain10 :		WORD Remain10(a,na)
 
 	Routine devides a by 10 and gives the remainder as return value.
@@ -1446,7 +1446,7 @@ WORD Remain10(UWORD *a, WORD *na)
 }
 
 /*
- 		#] Remain10 : 
+ 		#] Remain10 :
  		#[ Remain4 :		WORD Remain4(a,na)
 
 	Routine devides a by 10000 and gives the remainder as return value.
@@ -1473,7 +1473,7 @@ WORD Remain4(UWORD *a, WORD *na)
 }
 
 /*
- 		#] Remain4 : 
+ 		#] Remain4 :
  		#[ PrtLong :		VOID PrtLong(a,na,s)
 
 	Puts the long positive number a in string s.
@@ -1526,7 +1526,7 @@ VOID PrtLong(UWORD *a, WORD na, UBYTE *s)
 }
 
 /*
- 		#] PrtLong : 
+ 		#] PrtLong :
  		#[ GetLong :		WORD GetLong(s,a,na)
 
 	Reads a long number from a string.
@@ -1574,7 +1574,7 @@ WORD GetLong(UBYTE *s, UWORD *a, WORD *na)
 }
 
 /*
- 		#] GetLong : 
+ 		#] GetLong :
  		#[ GCD :			WORD GCD(a,na,b,nb,c,nc)
 
 	Algorithm to compute the GCD of two long numbers.
@@ -1737,7 +1737,7 @@ toobad:
 #endif
 
 /*
- 		#] GCD : 
+ 		#] GCD :
  		#[ GcdLong :		WORD GcdLong(a,na,b,nb,c,nc)
 
 	Returns the Greatest Common Divider of a and b in c.
@@ -1955,7 +1955,7 @@ GcdErr:
 	SETERROR(-1)
 }
 /*
-  	#] Old Routine : 
+  	#] Old Routine :
 */
 #else
 
@@ -2111,7 +2111,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 #endif
 /*
-  	#] GMP stuff : 
+  	#] GMP stuff :
 */
 /*
   	#[ Easy cases :
@@ -2154,7 +2154,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		return(0);
 	}
 /*
-  	#] Easy cases : 
+  	#] Easy cases :
 */
 	GLscrat6 = NumberMalloc("GcdLong"); GLscrat7 = NumberMalloc("GcdLong");
 	GLscrat8 = NumberMalloc("GcdLong");
@@ -2199,7 +2199,7 @@ restart:;
 		}
 	}
 /*
-  	#] Easy cases : 
+  	#] Easy cases :
   	#[ Original code :
 */
 	else if ( na < GCDMAX || nb < GCDMAX || na != nb ) {
@@ -2249,7 +2249,7 @@ restart:;
 		NCOPY(c,x1,i);
 	}
 /*
-  	#] Original code : 
+  	#] Original code :
   	#[ New code :
 */
 	else {
@@ -2376,7 +2376,7 @@ newtrick:;
 		}
 		goto restart;
 /*
-  	#] New code : 
+  	#] New code :
 */
 	}
 normalend:
@@ -2395,7 +2395,7 @@ GcdErr:
 #endif
 
 /*
- 		#] GcdLong : 
+ 		#] GcdLong :
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
@@ -2426,7 +2426,7 @@ CalledFrom:
 }
 
 /*
- 		#] GetBinom : 
+ 		#] GetBinom :
  		#[ TakeLongRoot:
 
 	Takes the 'power'-root of the long number in a.
@@ -2544,7 +2544,7 @@ TLcall:
 }
 
 /*
- 		#] TakeLongRoot: 
+ 		#] TakeLongRoot:
   	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
@@ -2603,7 +2603,7 @@ WORD CompCoef(WORD *term1, WORD *term2)
 }
 
 /*
- 		#] CompCoef : 
+ 		#] CompCoef :
  		#[ Modulus :		WORD Modulus(term)
 
 	Routine takes the coefficient of term modulus b. The answer
@@ -2643,7 +2643,7 @@ WORD Modulus(WORD *term)
 }
 
 /*
- 		#] Modulus : 
+ 		#] Modulus :
  		#[ TakeModulus :	WORD TakeModulus(a,na,par)
 
 		Routine gets the rational number in a with reduced length na.
@@ -2824,7 +2824,7 @@ ModErr:
 }
 
 /*
- 		#] TakeModulus : 
+ 		#] TakeModulus :
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2900,8 +2900,8 @@ WORD MakeModTable()
 }
 
 /*
- 		#] MakeModTable : 
-  	#] RekenTerms : 
+ 		#] MakeModTable :
+  	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
@@ -2977,7 +2977,7 @@ int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 }
 
 /*
- 		#] Factorial : 
+ 		#] Factorial :
  		#[ Bernoulli :		WORD Bernoulli(n,a,na)
 
 	Starts with only the value of bernoulli_(0).
@@ -3098,7 +3098,7 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 }
 
 /*
- 		#] Bernoulli : 
+ 		#] Bernoulli :
  		#[ wranf :
 
 		A random number generator that generates random WORDs with a very
@@ -3165,6 +3165,6 @@ WORD wranf(PHEAD0)
 }
 
 /*
- 		#] wranf : 
-  	#] Functions : 
+ 		#] wranf :
+  	#] Functions :
 */

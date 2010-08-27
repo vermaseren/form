@@ -226,7 +226,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -2763,12 +2763,17 @@ NextI:;
 			do {
 				if ( *r == *t ) {
 					if ( *++r == *++t ) {
-/*
-!!!!!!!! This code is wrong! negative powers? power overflow?
-*/
-						if ( *++r < MAXPOWER && t[1] < MAXPOWER ) {
+						r++;
+						if ( ( *r < MAXPOWER && t[1] < MAXPOWER )
+						|| ( *r > -MAXPOWER && t[1] > -MAXPOWER ) ) {
 							t++;
 							*t += *r;
+							if ( *t > MAXPOWER || *t < -MAXPOWER ) {
+								LOCK(ErrorMessageLock);
+								MesPrint("Exponent of dotproduct out of range: %d",*t);
+								UNLOCK(ErrorMessageLock);
+								goto NormMin;
+							}
 							ndot -= 3;
 							*r-- = *--m;
 							*r-- = *--m;
@@ -3272,7 +3277,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 }
 
 /*
- 		#] ExtraSymbol :
+ 		#] ExtraSymbol : 
  		#[ DoTheta :
 */
 
@@ -3369,7 +3374,7 @@ WORD DoTheta(PHEAD WORD *t)
 }
 
 /*
- 		#] DoTheta :
+ 		#] DoTheta : 
  		#[ DoDelta :
 */
 
@@ -3436,7 +3441,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta :
+ 		#] DoDelta : 
  		#[ DoRevert :
 */
 
@@ -3511,7 +3516,7 @@ void DoRevert(WORD *fun, WORD *tmp)
 }
 
 /*
- 		#] DoRevert :
+ 		#] DoRevert : 
  	#] Normalize :
   	#[ DetCommu :
 
@@ -3580,7 +3585,7 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu :
+  	#] DetCommu : 
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3902,7 +3907,7 @@ FromGCD:
 }
 
 /*
-  	#] EvaluateGcd :
+  	#] EvaluateGcd : 
   	#[ DropCoefficient :
 */
 
@@ -3920,5 +3925,5 @@ void DropCoefficient(PHEAD WORD *term)
 }
 
 /*
-  	#] DropCoefficient :
+  	#] DropCoefficient : 
 */

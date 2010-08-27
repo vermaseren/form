@@ -1098,12 +1098,12 @@ size_t fwrite_cached(const void *ptr, size_t size, size_t nmemb, FILE *fd)
 	if ( fullsize+cache_fill >= CACHE_SIZE ) {
 		size_t overlap = CACHE_SIZE-cache_fill;
 		memcpy(cache_buffer+cache_fill, (unsigned char*)ptr, overlap);
-		if ( fwrite(cache_buffer, CACHE_SIZE, 1, fd) != 1 ) return 0;
+		if ( fwrite(cache_buffer, 1, CACHE_SIZE, fd) != CACHE_SIZE ) return 0;
 		fullsize -= overlap;
 		if ( fullsize >= CACHE_SIZE ) {
 			cache_fill = fullsize % CACHE_SIZE;
 			if ( cache_fill ) memcpy(cache_buffer, (unsigned char*)ptr+overlap+fullsize-cache_fill, cache_fill);
-			if ( fwrite((unsigned char*)ptr+overlap, fullsize-cache_fill, 1, fd) != 1 ) return 0;
+			if ( fwrite((unsigned char*)ptr+overlap, 1, fullsize-cache_fill, fd) != fullsize-cache_fill ) return 0;
 		}
 		else {
 			memcpy(cache_buffer, (unsigned char*)ptr+overlap, fullsize);
@@ -1120,9 +1120,12 @@ size_t fwrite_cached(const void *ptr, size_t size, size_t nmemb, FILE *fd)
 size_t flush_cache(FILE *fd)
 {
 	if ( cache_fill ) {
-		size_t retval = fwrite(cache_buffer, cache_fill, 1, fd);
+		size_t retval = fwrite(cache_buffer, 1, cache_fill, fd);
+		if ( retval != cache_fill ) {
+		 	cache_fill = 0;
+			return 0;
+		}
 	 	cache_fill = 0;
-		return retval;
 	}
 	return 1;
 }
@@ -1173,7 +1176,7 @@ size_t flush_cache(FILE *fd)
 	memcpy(VAR, p, SIZE); p = (unsigned char*)p + SIZE;
 
 #define S_WRITE_B(BUF,LEN) \
-	if ( fwrite_cached(BUF, LEN, 1, fd) != 1 ) return(__LINE__);
+	if ( fwrite_cached(BUF, 1, LEN, fd) != LEN ) return(__LINE__);
 
 #define S_FLUSH_B \
 	if ( flush_cache(fd) != 1 ) return(__LINE__);
@@ -1189,7 +1192,7 @@ size_t flush_cache(FILE *fd)
 #define S_WRITE_S(STR) \
 	if ( STR ) { \
 		l = strlen((char*)STR) + 1; \
-		if ( fwrite_cached(STR, l, 1, fd) != 1 ) return(__LINE__); \
+		if ( fwrite_cached(STR, 1, l, fd) != l ) return(__LINE__); \
 	}
 
 /* LIST */
@@ -2273,10 +2276,10 @@ static int DoSnapshot(int moduletype)
 	if ( !(fd = fopen(intermedfile, "wb")) ) return(__LINE__);
 
 	/* reserve space in the file for a length field */
-	if ( fwrite(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
+	if ( fwrite(&pos, 1, sizeof(POSITION), fd) != sizeof(POSITION) ) return(__LINE__);
 
 	/* write moduletype */
-	if ( fwrite(&moduletype, sizeof(int), 1, fd) != 1 ) return(__LINE__);
+	if ( fwrite(&moduletype, 1, sizeof(int), fd) != sizeof(int) ) return(__LINE__);
 
 	/* #[ AM */
 
@@ -2723,7 +2726,7 @@ static int DoSnapshot(int moduletype)
 	ANNOUNCE(file length)
 	SETBASEPOSITION(pos, (ftell(fd)));
 	fseek(fd, 0, SEEK_SET);
-	if ( fwrite(&pos, sizeof(POSITION), 1, fd) != 1 ) return(__LINE__);
+	if ( fwrite(&pos, 1, sizeof(POSITION), fd) != sizeof(POSITION) ) return(__LINE__);
 	fseek(fd, BASEPOSITION(pos), SEEK_SET);
 
 	ANNOUNCE(file close)

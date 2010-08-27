@@ -124,6 +124,7 @@ static KEYWORD com2commands[] = {
 	,{"moduleoption",   (TFUN)CoModuleOption,     ATENDOFMODULE,PARTEST}
 	,{"modulusgcd",     (TFUN)CoModulusGCD,       STATEMENT,    PARTEST}
 	,{"multi",          (TFUN)CoMulti,            STATEMENT,    PARTEST}
+	,{"multibracket",   (TFUN)CoMultiBracket,     STATEMENT,    PARTEST}
 	,{"ndrop",          (TFUN)CoNoDrop,           SPECIFICATION,PARTEST}
 	,{"nhide",          (TFUN)CoNoHide,           SPECIFICATION,PARTEST}
 	,{"normalize",      (TFUN)CoNormalize,        STATEMENT,    PARTEST}
@@ -694,8 +695,8 @@ int CompileSubExpressions(SBYTE *tokens)
 			hard to find errors, years from now.
 */
 #ifdef MULBUF
-			if ( insubexpbuffers >= 0x1FFFFFL ) {
-				MesPrint("&More than 2^21 subexpressions inside one expression");
+			if ( insubexpbuffers >= 0x3FFFFFL ) {
+				MesPrint("&More than 2^22 subexpressions inside one expression");
 				Terminate(-1);
 			}
 			if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
@@ -1783,7 +1784,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term

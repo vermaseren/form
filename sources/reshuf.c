@@ -14,7 +14,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Reshuf :
 
 	Routines to rearrange dummy indices, so that
@@ -67,7 +67,7 @@ WORD ReNumber(PHEAD WORD *term)
 /*
 	Now the first level sorting.
 */
-	i = AM.IndDum;
+	i = AN.IndDum;
 	n = AN.NumFound;
 	while ( --n >= 0 ) {
 		if ( *d > 0 ) {
@@ -93,7 +93,7 @@ WORD ReNumber(PHEAD WORD *term)
 }
 
 /*
- 		#] ReNumber : 
+ 		#] ReNumber :
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -119,7 +119,7 @@ VOID FunLevel(PHEAD WORD *term)
 			case VECTOR:
 				t += 3;
 				do {
-					if ( *t >= AN.IndDum ) {
+					if ( *t > AN.IndDum ) {
 						if ( AN.NumFound >= AN.MaxRenumScratch ) AdjustRenumScratch(BHEAD0);
 						AN.NumFound++;
 						*AN.DumFound++ = *t;
@@ -140,7 +140,7 @@ VOID FunLevel(PHEAD WORD *term)
 			case INDEX:
 				t += 2;
 				while ( t < r ) {
-					if ( *t >= AN.IndDum ) {
+					if ( *t > AN.IndDum ) {
 						if ( AN.NumFound >= AN.MaxRenumScratch ) AdjustRenumScratch(BHEAD0);
 						AN.NumFound++;
 						*AN.DumFound++ = *t;
@@ -167,7 +167,7 @@ VOID FunLevel(PHEAD WORD *term)
 				>= TENSORFUNCTION ) {
 					t += FUNHEAD;
 					while ( t < r ) {
-						if ( *t >= AN.IndDum ) {
+						if ( *t > AN.IndDum ) {
 							if ( AN.NumFound >= AN.MaxRenumScratch ) AdjustRenumScratch(BHEAD0);
 							AN.NumFound++;
 							*AN.DumFound++ = *t;
@@ -215,7 +215,7 @@ VOID FunLevel(PHEAD WORD *term)
 }
 
 /*
- 		#] FunLevel : 
+ 		#] FunLevel :
  		#[ DetCurDum :
 
 		We look for indices in the range AM.IndDum to AM.IndDum+MAXDUMMIES.
@@ -512,7 +512,7 @@ void AdjustRenumScratch(PHEAD0)
 
 /*
  		#] AdjustRenumScratch : 
-  	#] Reshuf : 
+  	#] Reshuf :
   	#[ Count :
  		#[ CountDo :
 
@@ -1760,7 +1760,7 @@ Finicall:
 }
 
 /*
-  	#] FinishShuffle :
+  	#] FinishShuffle : 
   	#[ DoStuffle :
 
 	Stuffling is a variation of shuffling.

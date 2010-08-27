@@ -97,7 +97,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ CoCollect :
 
 	Collect,functionname
@@ -531,7 +531,7 @@ int CoOn(UBYTE *s)
 }
 
 /*
-  	#] CoOn :
+  	#] CoOn : 
   	#[ CoInsideFirst :
 */
 
@@ -3516,6 +3516,119 @@ int CoAntiBracket(UBYTE *inp)
 
 /*
   	#] CoAntiBracket : 
+  	#[ CoMultiBracket :
+
+	Syntax:
+		MultiBracket:{A|B} bracketinfo:...:{A|B} bracketinfo;
+*/
+
+int CoMultiBracket(UBYTE *inp)
+{
+	GETIDENTITY
+	int i, error = 0, error1, type, num;
+	UBYTE *s, c;
+	WORD *to, *from;
+
+	if ( *inp != ':' ) {
+		MesPrint("&Illegal Multiple Bracket separator: %s",inp);
+		return(1);
+	}
+	inp++;
+	if ( AC.MultiBracketBuf == 0 ) {
+		AC.MultiBracketBuf = (WORD **)Malloc1(sizeof(WORD *)*MAXMULTIBRACKETLEVELS,"multi bracket buffer");
+		for ( i = 0; i < MAXMULTIBRACKETLEVELS; i++ ) {
+			AC.MultiBracketBuf[i] = 0;
+		}
+	}
+	else {
+	  for ( i = 0; i < MAXMULTIBRACKETLEVELS; i++ ) {
+		if ( AC.MultiBracketBuf[i] ) {
+			M_free(AC.MultiBracketBuf[i],"bracket buffer i");
+			AC.MultiBracketBuf[i] = 0;
+		}
+	  }
+	  AC.MultiBracketLevels = 0;
+	}
+	AC.MultiBracketLevels = 0;
+/*
+		Start with disabling the regular brackets.
+*/
+	if ( AT.BrackBuf == 0 ) {
+		AR.MaxBracket = 100;
+		AT.BrackBuf = (WORD *)Malloc1(sizeof(WORD)*(AR.MaxBracket+1),"bracket buffer");
+	}
+	*AT.BrackBuf = 0;
+	AR.BracketOn = 0;
+	AC.bracketindexflag = 0;
+/*
+	Now loop through the various levels, separated by the colons.
+*/
+	for ( i = 0; i < MAXMULTIBRACKETLEVELS; i++ ) {
+		if ( *inp == 0 ) goto RegEnd;
+/*
+		1: skip to ':', determine bracket or antibracket
+*/
+		s = inp;
+		while ( *s && *s != ':' ) {
+			if ( *s == '[' ) { SKIPBRA1(s) s++; }
+			else if ( *s == '{' ) { SKIPBRA2(s) s++; }
+			else s++;
+		}
+		c = *s; *s = 0;
+		if ( StrICont(inp,(UBYTE *)"antibrackets") == 0 ) { type = 1; }
+		else if ( StrICont(inp,(UBYTE *)"brackets") == 0 ) { type = 0; }
+		else {
+			MesPrint("&Illegal (anti)bracket specification in MultiBracket statement");
+			if ( error == 0 ) error = 1;
+			goto NextLevel;
+		}
+		while ( FG.cTable[*inp] == 0 ) inp++;
+		if ( *inp != ',' ) {
+			MesPrint("&Illegal separator after (anti)bracket specification in MultiBracket statement");
+			if ( error == 0 ) error = 1;
+			goto NextLevel;
+		}
+		inp++;
+/*
+		2: call DoBrackets.
+*/
+		error1 = DoBrackets(inp, type);
+		if ( error < 0 ) return(error1);
+		if ( error1 > error ) error = error1;
+/*
+		3: copy bracket information to the multi bracket arrays
+*/
+		if ( AR.BracketOn ) {
+			num = AT.BrackBuf[0];
+			to = AC.MultiBracketBuf[i] = (WORD *)Malloc1((num+2)*sizeof(WORD),"bracket buffer i");
+			from = AT.BrackBuf;
+			*to++ = AR.BracketOn;
+			NCOPY(to,from,num);
+			*to = 0;
+		}
+/*
+		4: set ready for the next level
+*/
+NextLevel:
+		*s = c; if ( c == ':' ) s++;
+		inp = s;
+		*AT.BrackBuf = 0;
+		AR.BracketOn = 0;
+	}
+	if ( *inp != 0 ) {
+		MesPrint("&More than %d levels in MultiBracket statement",(WORD)MAXMULTIBRACKETLEVELS);
+		if ( error == 0 ) error = 1;
+	}
+RegEnd:
+	AC.MultiBracketLevels = i;
+	*AT.BrackBuf = 0;
+	AR.BracketOn = 0;
+	AC.bracketindexflag = 0;
+	return(error);
+}
+
+/*
+  	#] CoMultiBracket :
   	#[ CountComp :
 
 		This routine reads the count statement. The syntax is:
@@ -5139,7 +5252,7 @@ int CoDropCoefficient(UBYTE *s)
 	return(1);
 }
 /*
-  	#] CoDropCoefficient :
+  	#] CoDropCoefficient : 
   	#[ CoToPolynomial :
 */
 
@@ -5159,6 +5272,6 @@ int CoToPolynomial(UBYTE *inp)
 #endif
 
 /*
-  	#] CoToPolynomial :
+  	#] CoToPolynomial : 
 */
 /* temporary commentary for forcing cvs merge */

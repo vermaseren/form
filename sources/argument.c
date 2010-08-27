@@ -10,7 +10,7 @@
 #include "form3.h"
 
 /*
-  	#] include :
+  	#] include : 
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -147,6 +147,7 @@ HaveTodo:
 				If we come here we have to do the argument i (first is 1).
 */
 				sign = 1;
+				action = 1;
 				v[2] |= DIRTYFLAG;
 				r = t + FUNHEAD;
 				j = i;
@@ -244,6 +245,7 @@ HaveTodo:
 						Now we must multiply the general coefficient by r[1]
 */
 						if ( scale && ( factor == 0 || *factor ) ) {
+							action = 1;
 							v[2] |= DIRTYFLAG;
 							if ( r[1] < 0 ) {
 								if ( type == TYPENORM3 ) k = 1;
@@ -437,6 +439,7 @@ HaveTodo:
 							if ( r2[-1] == 3 ) continue;
 							if ( r2[-1] == -3 && type == TYPENORM3 ) continue;
 						}
+						action = 1;
 						v[2] |= DIRTYFLAG;
 						j = r2[-1];
 						k = REDLENG(j);
@@ -546,6 +549,7 @@ ScaledVariety:;
 				else j = k - 2;
 
 				t[1] += j;
+				action = 1;
 				v[2] |= DIRTYFLAG;
 				if ( j > 0 ) {
 					r = m + j;
@@ -1267,6 +1271,7 @@ nextterm:						mm = mnext;
 									*t = DUMMYTEN;
 							else
 									*t = DUMMYFUN;
+							action = 1;
 							v[2] = DIRTYFLAG;
 							t += t[1];
 						}
@@ -1365,6 +1370,7 @@ oneterm:;
 					TermFree(EAscrat,"execarg");
 				}
 				r2[1] = r1 - r2;
+				action = 1;
 				v[2] = DIRTYFLAG;
 			}
 			else {
@@ -1455,7 +1461,7 @@ exectermerr:
 }
 
 /*
-  	#] execterm :
+  	#] execterm : 
   	#[ ArgumentImplode :
 */
 
@@ -1559,7 +1565,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentImplode :
+  	#] ArgumentImplode : 
   	#[ ArgumentExplode :
 */
 
@@ -1654,7 +1660,7 @@ NoExplode:
 }
 
 /*
-  	#] ArgumentExplode :
+  	#] ArgumentExplode : 
   	#[ DoRepArg :
 
 	Too be filled in.
@@ -1669,6 +1675,6 @@ int DoRepArg(PHEAD WORD *term,int level)
 }
 
 /*
-  	#] DoRepArg :
+  	#] DoRepArg : 
 */
 

@@ -195,7 +195,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -589,7 +589,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
@@ -680,7 +680,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -738,7 +738,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
 
@@ -845,7 +845,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -1140,7 +1140,7 @@ typedef struct {
 } SHvariables;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1293,7 +1293,7 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1349,7 +1349,7 @@ struct P_const {
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1431,6 +1431,7 @@ struct C_const {
     WORD    *tokenarglevel;        /**< [D] Keeps track of function arguments */
 	UWORD   *modinverses;          /* Table for inverses of primes */
     UBYTE   *Fortran90Kind;        /* The kind of number in Fortran 90 as in _ki */
+	WORD	**MultiBracketBuf;     /* Array of buffers for multi-level brackets */
 #ifdef WITHPTHREADS
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1500,6 +1501,8 @@ struct C_const {
     int     lhdollarflag;          /* (R) left hand dollar present */
     int     NoCompress;            /* (R) Controls native compression */
     int     IsFortran90;           /* Tells whether the Fortran is Fortran90 */
+	int     MultiBracketLevels;    /* Number of elements in MultiBracketBuf */
+	int     MultiBracketOn;        /* MultiBracket active? */
 #ifdef WITHPTHREADS
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
@@ -1597,7 +1600,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1664,7 +1667,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1760,7 +1763,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1920,7 +1923,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -1989,7 +1992,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2015,7 +2018,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X :
+ 		#] X : 
  		#[ Definitions :
 */
 
@@ -2067,7 +2070,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
     #] A :
   	#[ FG :
 */
@@ -2104,7 +2107,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif
