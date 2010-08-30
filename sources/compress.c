@@ -1,5 +1,5 @@
 /** @file compress.c
- *
+ * 
  *  The routines for the use of gzip (de)compression of the information
  *  in the sort file.
  */

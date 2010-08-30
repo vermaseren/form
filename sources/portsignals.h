@@ -1,4 +1,3 @@
-
 #ifndef PORTSIGNAL_H
 #define PORTSIGNAL_H
 

@@ -1,5 +1,5 @@
 /** @file pattern.c
- *
+ * 
  *  Top level pattern matching routines.
  *	More pattern matching is found in findpat.c, function.c, symmetr.c
  *	and smart.c. The last three files contain the matching inside functions.

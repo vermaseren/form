@@ -1,5 +1,5 @@
 /** @file structs.h
- *
+ * 
  *  Contains definitions for global structs.
  *
  *  !!!CAUTION!!!

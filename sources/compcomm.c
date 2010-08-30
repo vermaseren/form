@@ -1,5 +1,5 @@
 /** @file compcomm.c
- *
+ * 
  *  Compiler routines for most statements that don't involve algebraic
  *	expressions. Exceptions: all routines involving declarations are in
  *	the file names.c

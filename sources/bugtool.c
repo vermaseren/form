@@ -1,5 +1,5 @@
 /** @file bugtool.c
- *
+ * 
  *  Low level routines for debugging
  */
 

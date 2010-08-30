@@ -1,5 +1,5 @@
 /** @file findpat.c
- *
+ * 
  *  Pattern matching of symbols and dotproducts.
  *  There are various routines because of the options in the id-statements
  *	like once, only, multi and many.

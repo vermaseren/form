@@ -1,4 +1,3 @@
-
 /** @file form3.h
  *
  *  Contains critical defines for the compilation process

@@ -1,4 +1,3 @@
-
 /** @file ftypes.h
  *
  *  Contains the definitions of many internal codes

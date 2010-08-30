@@ -1,5 +1,5 @@
 /** @file reshuf.c
- *
+ * 
  *	Mixed routines:
  *	Routines for relabelling dummy indices.
  *	The multiply command

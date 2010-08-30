@@ -1,4 +1,3 @@
-
 /** @file inivar.h
  *
  *  Contains the initialization of a number of structs at compile time

@@ -1,5 +1,5 @@
 /** @file compiler.c
- *
+ * 
  *  The heart of the compiler.
  *  It contains the tables of statements.
  *	It finds the statements in the tables and calls the proper routines.

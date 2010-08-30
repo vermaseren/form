@@ -1,5 +1,5 @@
 /** @file lus.c
- *
+ * 
  *	Routines to find loops in index contractions.
  *	These routines allow for a category of topological statements.
  *	They were originally developed for the color library.

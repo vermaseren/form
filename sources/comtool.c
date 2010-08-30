@@ -1,5 +1,5 @@
 /** @file comtool.c
- *
+ * 
  *  Utility routines for the compiler.
  */
 /* #[ License : */

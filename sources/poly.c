@@ -1,5 +1,5 @@
 /** @file poly.c
- *
+ * 
  *  The routines that deal with the experimental polynomial routines
  *	of the family poly_, polyadd_ etc.
  *	These were never very efficient and never very general.

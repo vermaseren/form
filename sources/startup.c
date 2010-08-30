@@ -1,5 +1,5 @@
 /** @file startup.c
- *
+ * 
  *  This file contains the main program.
  *  It also deals with the very early stages of the startup of FORM
  *	and the final stages when the program attemps some cleanup.

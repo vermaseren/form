@@ -1,5 +1,5 @@
 /** @file notation.c
- *
+ * 
  *  Contains the functions that deal with the rewriting and manipulation
  *	of expressions/terms in polynomial representation.
  */

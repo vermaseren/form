@@ -1,5 +1,5 @@
 /** @file tables.c
- *
+ * 
  *  Contains all functions that deal with the table bases on the 'FORM level'
  *  The low level databse routines are in minos.c
  */

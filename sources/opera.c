@@ -1,5 +1,5 @@
 /** @file opera.c
- *
+ * 
  *  Contains the 'operations'
  *	These are the trace routines, the contractions of the Levi-Civita tensors
  *	and the tensor to vector/vector to tensor routines.

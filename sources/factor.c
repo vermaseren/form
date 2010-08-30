@@ -1,5 +1,5 @@
 /** @file factor.c
- *
+ * 
  *	The routines for finding (one term) factors in dollars and expressions.
  *	In addition there are some (unused?) experimental routines.
  */

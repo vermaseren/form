@@ -1,5 +1,5 @@
 /** @file checkpoint.c
- *
+ * 
  *  Contains all functions that deal with the recovery mechanism controlled and
  *  activated by the On Checkpoint switch.
  *

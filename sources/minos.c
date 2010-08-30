@@ -1,5 +1,5 @@
 /** @file minos.c
- *
+ * 
  *  These are the low level functions for the database part of the
  *  tablebases. These routines have been copied (and then adapted) from
  *	the minos database program. This file goes together with minos.h

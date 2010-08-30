@@ -1,5 +1,5 @@
 /** @file reken.c
- *
+ * 
  *  This file contains the numerical routines.
  *  The arithmetic in FORM is normally over the rational numbers.
  *	Hence there are routines for dealing with integers and with rational

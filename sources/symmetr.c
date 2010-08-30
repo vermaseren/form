@@ -1,5 +1,5 @@
 /** @file symmetr.c
- *
+ * 
  *  The routines that deal with the pattern matching of functions with
  *	symmetric properties.
  */

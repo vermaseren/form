@@ -1,5 +1,5 @@
 /** @file polynito.c
- *
+ * 
  *  Contains functions for the manipulation of (univariate) polynomials.
  */
 /* #[ License : */

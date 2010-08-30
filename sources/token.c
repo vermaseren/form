@@ -1,5 +1,5 @@
 /** @file token.c
- *
+ * 
  *  The tokenizer. This is a part of the compiler that does an intermediate
  *  type of translation. It does look up the names etc and can do a number
  *	of optimizations. The resulting output is a stream of bytes which can

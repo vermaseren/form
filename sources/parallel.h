@@ -1,5 +1,5 @@
 #ifndef __PARALLEL__
-
+ 
 #define __PARALLEL__
 
 /** @file parallel.h

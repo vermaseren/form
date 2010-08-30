@@ -1,5 +1,5 @@
 /** @file sort.c
- *
+ * 
  *  Contains the sort routines.
  *	We distinguish levels of sorting.
  *	The ground level is the sorting of terms in an expression.

@@ -1,5 +1,5 @@
 /** @file wildcard.c
- *
+ * 
  *  Contains the functions that deal with the wildcards.
  *	During the pattern matching there are two steps:
  *	1: check that a wildcard substitution is correct (if there was already

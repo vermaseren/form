@@ -1,5 +1,5 @@
 /** @file smart.c
- *
+ * 
  *  The functions for smart pattern searches in combinations of functions.
  *  When many wildcards are involved and the functions are (anti)symmetric
  *	an exhaustive search for all possibilities may take very much time

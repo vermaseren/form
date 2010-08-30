@@ -1,5 +1,5 @@
 /** @file extcmd.c
- *
+ * 
  *  The system that takes care of communication with external programs.
  */
 /* #[ License : */

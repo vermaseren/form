@@ -1,5 +1,5 @@
 /** @file dollar.c
- *
+ * 
  *  The routines that deal with the dollar variables.
  *  The name administration is to be found in the file names.c
  */

@@ -1,5 +1,5 @@
 /** @file sch.c
- *
+ * 
  *  Contains the functions that deal with the writing of expressions/terms
  *	in a textual representation. (Dutch schrijven = to write)
  */

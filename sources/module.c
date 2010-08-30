@@ -1,5 +1,5 @@
 /** @file module.c
- *
+ * 
  *  A number of routines that deal with the moduleoption statement and the
  *  execution of modules.
  *	Additionally there are the execution of the exec and pipe instructions.

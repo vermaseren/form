@@ -1,5 +1,5 @@
 /** @file tools.c
- *
+ * 
  *  Low level routines for many types of task.
  *	There are routines for manipulating the input system (streams and files)
  *	routines for string manipulation, the memory allocation interface,

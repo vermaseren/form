@@ -1,6 +1,6 @@
 #ifndef MALLOCPROTECT_H
 #define MALLOCPROTECT_H
-
+ 
 /** @file mall.h
  *
  *  Malloc debugger extension, inline funclions

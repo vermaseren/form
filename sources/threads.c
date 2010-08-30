@@ -1,5 +1,5 @@
 /** @file threads.c
- *
+ * 
  *  Routines for the interface of FORM with the pthreads library
  *
  *	This is the main part of the parallelization of TFORM.

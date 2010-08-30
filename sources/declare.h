@@ -1,5 +1,5 @@
 #ifndef __FDECLARE__
-
+ 
 #define __FDECLARE__
 
 /** @file declare.h

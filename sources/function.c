@@ -1,5 +1,5 @@
 /** @file function.c
- *
+ * 
  *  The file with the central routines for the pattern matching of
  *	functions and their arguments.
  *	The file also contains the routines for the execution of the

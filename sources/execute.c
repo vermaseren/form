@@ -1,5 +1,5 @@
 /** @file execute.c
- *
+ * 
  *	The routines that start the execution phase of a module.
  *	It also contains the routines for placing the bracket subterm.
  */

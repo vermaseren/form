@@ -1,5 +1,5 @@
 /** @file proces.c
- *
+ * 
  *  Contains the central terms processor routines. This is the core of
  *	the virtual machine. All other files are to help these routines.
  */

@@ -1,5 +1,5 @@
 /** @file store.c
- *
+ * 
  *  Contains all functions that deal with store-files and the system
  *  independent save-files.
  */

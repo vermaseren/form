@@ -1,5 +1,5 @@
 /** @file names.c
- *
+ * 
  *  The complete names administration.
  *  All variables with a name have to pass here to be properly registered,
  *	have structs of the proper type assigned to them etc.

@@ -1,5 +1,5 @@
 /** @file optim.c
- *
+ * 
  *  experimental routines for the optimization of FORTRAN or C output.
  */
 /* #[ License : */

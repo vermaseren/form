@@ -1,4 +1,3 @@
-
 /** @file unix.h
  *
  *  Contains the definition of constants connected to the byte structure

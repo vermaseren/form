@@ -1,5 +1,5 @@
 /** @file normal.c
- *
+ * 
  *  Mainly the routine Normalize. This routine brings terms to standard
  *	FORM. Currently it has one serious drawback. Its buffers are all
  *	in the stack. This means these buffers have a fixed size (NORMSIZE).

@@ -1,5 +1,5 @@
 /** @file message.c
- *
+ * 
  *  Contains the routines that write messages.
  *	This includes the very important routine MesPrint which is the
  *	FORM equivalent of printf but then with escape sequences that are

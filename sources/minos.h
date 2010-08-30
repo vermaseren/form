@@ -1,4 +1,3 @@
-
 #ifndef __MANAGE_H__
 
 #define __MANAGE_H__

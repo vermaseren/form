@@ -1,5 +1,5 @@
 /** @file ratio.c
- *
+ * 
  *	A variety of routines:
  *	The ratio command for partial fractioning
  *	(rather old. Schoonschip inheritance)

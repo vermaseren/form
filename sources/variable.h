@@ -1,5 +1,5 @@
 #ifndef __VARIABLE__
-
+ 
 #define __VARIABLE__
 
 /** @file variable.h
