@@ -37,33 +37,10 @@ AC_SYS_LARGEFILE
 
 # Check for architecture and OS
 AC_CANONICAL_HOST
-case $host_cpu in
-	i386 )
-		print_cpu="Opteron"
-		AC_DEFINE(OPTERON, , [Compiling for a 64bit Opteron system.])
-		;;
-	i?86 )
-		print_cpu="Pentium"
-		;;
-	x86_64 )
-		print_cpu="Opteron"
-		AC_DEFINE(OPTERON, , [Compiling for a 64bit Opteron system.])
-		;;
-	alpha* )
-		print_cpu="Alpha"
-		AC_DEFINE(ALPHA, , [Compiling for a Alpha system.])
-		;;
-	* )
-		print_cpu="!!UNKNOWN CPU!!"
-		AC_MSG_WARN([Compiling for a unrecognized CPU.])
-		;;
-esac
-AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = "xPentium"])
-AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = "xOpteron"])
 case $host_os in
 	darwin* )
 		print_os="OSX"
-		AC_DEFINE(APPLE, , [Compiling for an Apple 64 bits system.])
+		AC_DEFINE(APPLE, , [Compiling for an Apple system.])
 		;;
 	linux* )
 		print_os="Linux"
@@ -79,6 +56,32 @@ case $host_os in
 		;;
 esac
 AM_CONDITIONAL([ONAPPLE], [test "x$print_os" = xOSX])
+case $host_cpu in
+	i486 )
+		print_cpu="Pentium"
+		AC_DEFINE(LINUX, , [Compiling for a 32bit CPU.])
+		;;
+	i?86 )
+		AS_IF([test "x$print_os" = xOSX],
+			  [print_cpu="Opteron"
+			   AC_DEFINE(OPTERON, , [Compiling for a 64bit CPU.])],
+			  [print_cpu="Pentium"])
+		;;
+	x86_64 )
+		print_cpu="Opteron"
+		AC_DEFINE(OPTERON, , [Compiling for a 64bit CPU.])
+		;;
+	alpha* )
+		print_cpu="Alpha"
+		AC_DEFINE(ALPHA, , [Compiling for an Alpha CPU.])
+		;;
+	* )
+		print_cpu="!!UNKNOWN CPU!!"
+		AC_MSG_WARN([Compiling for an unrecognized CPU.])
+		;;
+esac
+AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = "xPentium"])
+AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = "xOpteron"])
 
 # Check for C compiler vendor
 AM_CONDITIONAL([USINGGCC], [test "x$CC" = xgcc])
@@ -112,7 +115,7 @@ AS_IF([test "x$USE_ZLIB" = xyes],
 # Check for disabling scalar version
 AC_ARG_ENABLE([scalar], [AS_HELP_STRING([--disable-scalar],
 	[do not build scalar version (form)])],
-	[], [enableval=yes])
+	[enableval=no], [enableval=yes])
 build_form=$enableval
 AM_CONDITIONAL([BUILD_FORM], [test "x$build_form" = xyes])
 
@@ -126,7 +129,7 @@ AM_CONDITIONAL([BUILD_VORM], [test "x$build_vorm" = xyes])
 # Check for pthread
 AC_ARG_ENABLE([threaded], [AS_HELP_STRING([--disable-threaded],
 	[do not build multi-threaded version (tform)])],
-	[], [enableval=yes])
+	[enableval=no], [enableval=yes])
 build_tform=$enableval
 AS_IF([test "$enableval" = yes], [build_tvorm=$build_vorm])
 AS_IF([test "x$build_tform" = xyes],
@@ -135,9 +138,9 @@ AS_IF([test "x$build_tform" = xyes],
 	 	[AC_CHECK_LIB([rt], [pthread_self], [], [build_tform=no build_tvorm=no])],
 	 	[AC_CHECK_LIB([pthread], [pthread_self], [], [build_tform=no build_tvorm=no])])
 	 AS_IF([test "x$build_tform" != xyes],
-		   [AC_MSG_WARN([building tform has been disabled.])])
-	 AS_IF([test "x$build_tvorm" != xyes],
-		   [AC_MSG_WARN([building tvorm has been disabled.])])
+		   [AC_MSG_WARN([building tform has been disabled.])
+		    AS_IF([test "x$build_vorm" = xyes],
+		    	AC_MSG_WARN([building tvorm has been disabled.]))])
 	])
 AM_CONDITIONAL([BUILD_TFORM], [test "x$build_tform" = xyes])
 AM_CONDITIONAL([BUILD_TVORM], [test "x$build_tvorm" = xyes])

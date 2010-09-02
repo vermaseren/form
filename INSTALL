@@ -13,6 +13,10 @@ into the default path "/usr/bin". Nevertheless, you are strongly advised to
 carefully read the following sections in order to prevent common mistakes and to
 be able to choose the best configuration settings for your system.
 
+NOTE for Apple users: If you compile on an Apple system, please read the
+special advice below in the Configuration section about the 32bit/64bit
+problem!
+
 
 Prerequisites
 =============
@@ -94,6 +98,13 @@ Use one of the following options
 to prevent FORM from using one of these libraries. The executable will not be
 linked against this library then and the functionality will be provided by
 internal code. Usually, you don't need to care about these options.
+
+The configure script automatically recognizes your CPU architecture and sets it
+to 32bit or 64bit, accordingly.  On Apple systems this doesn't work properly.
+There, the CPU is always set to 64bit! If you need to build a 32bit executable,
+use the option
+
+    ./configure --build=i486-apple-darwin
 
 The option
 
