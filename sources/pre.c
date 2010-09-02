@@ -352,7 +352,8 @@ higherlevel:
 */
 				}
 				else if ( stream->inbuffer == 0 ) {
-					return(GetInput());
+					c = GetInput();
+					continue;
 				}
 			}
 			c = GetInput();
@@ -368,7 +369,7 @@ higherlevel:
 }
 
 /*
- 		#] GetChar : 
+ 		#] GetChar :
  		#[ CharOut :
 */
 
@@ -940,7 +941,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor :
+ 		#] PreProcessor : 
  		#[ PreProInstruction :
 */
 

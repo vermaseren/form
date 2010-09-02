@@ -42,7 +42,7 @@
 */
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Operations :
  		#[ EpfFind :			WORD EpfFind(term,params)
 
@@ -191,7 +191,7 @@ AllLev:
 }
 
 /*
- 		#] EpfFind :
+ 		#] EpfFind : 
  		#[ EpfCon :				WORD EpfCon(term,params,num,level)
 
 		Contraction of two strings of indices/vectors. They come
@@ -274,7 +274,7 @@ EpfCall:
 }
 
 /*
- 		#] EpfCon :
+ 		#] EpfCon : 
  		#[ EpfGen :				WORD EpfGen(number,inlist,kron,perm,sgn)
 */
 
@@ -315,7 +315,7 @@ WORD EpfGen(WORD number, WORD *inlist, WORD *kron, WORD *perm, WORD sgn)
 }
 
 /*
- 		#] EpfGen :
+ 		#] EpfGen : 
  		#[ Trick :				WORD Trick(in,t)
 
 		This routine implements the identity:
@@ -383,7 +383,7 @@ WORD Trick(WORD *in, TRACES *t)
 }
 
 /*
- 		#] Trick :
+ 		#] Trick : 
  		#[ Trace4no :			WORD Trace4no(number,kron,t)
 
 		Takes the trace of a string of gamma matrices in 4 dimensions.
@@ -662,7 +662,7 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 }
 
 /*
- 		#] Trace4no :
+ 		#] Trace4no : 
  		#[ Trace4 :				WORD Trace4(term,params,num,level)
 
 		Generates traces of the string of gamma matrices in 'instring'.
@@ -924,7 +924,7 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 		return(0);
 	}
 /*
-			#] Special cases :
+			#] Special cases : 
 			#[ Adjacent objects :
 */
 	p = t->inlist;
@@ -971,7 +971,7 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Adjacent objects :
+			#] Adjacent objects : 
 			#[ Odd Contraction :
 */
 	p = t->inlist;
@@ -1014,7 +1014,7 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Odd Contraction :
+			#] Odd Contraction : 
 			#[ Even Contraction :
 		First the case with two matrices inbetween.
 */
@@ -1159,7 +1159,7 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Even Contraction :
+			#] Even Contraction : 
 			#[ Same Objects :
 */
 	p = t->inlist;
@@ -1228,7 +1228,7 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 		}
 	} while ( ++diff <= (number>>1) );
 /*
-			#] Same Objects :
+			#] Same Objects : 
 			#[ All Different :
 
 		Here we have a string with all different objects.
@@ -1309,7 +1309,7 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 	return(0);
 
 /*
-			#] All Different :
+			#] All Different : 
 */
 Trac4Call:
 	AT.WorkPointer = oldstring;
@@ -1374,7 +1374,7 @@ WORD TraceNno(WORD number, WORD *kron, TRACES *t)
 }
 
 /*
- 		#] TraceNno :
+ 		#] TraceNno : 
  		#[ TraceN :				WORD TraceN(term,params,num,level)
 */
 
@@ -1432,7 +1432,7 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 }
 
 /*
- 		#] TraceN :
+ 		#] TraceN : 
  		#[ TraceNgen :			WORD TraceNgen(t,number)
 
 		This routine is a simplified version of Trace4Gen. We know here
@@ -1511,7 +1511,7 @@ WORD TraceNgen(PHEAD TRACES *t, WORD number)
 		return(0);
 	}
 /*
-			#] Special cases :
+			#] Special cases : 
 			#[ Adjacent objects :
 */
 	p = t->inlist;
@@ -1548,7 +1548,7 @@ WORD TraceNgen(PHEAD TRACES *t, WORD number)
 		p++;
 	} while ( p < stop );
 /*
-			#] Adjacent objects :
+			#] Adjacent objects : 
 			#[ Same Objects :
 */
 	p = t->inlist;
@@ -1738,7 +1738,7 @@ WORD TraceNgen(PHEAD TRACES *t, WORD number)
 		diff++;
 	} while ( diff <= (number>>1) );
 /*
-			#] Same Objects :
+			#] Same Objects : 
 			#[ All Different :
 
 		Here we have a string with all different objects.
@@ -1805,7 +1805,7 @@ WORD TraceNgen(PHEAD TRACES *t, WORD number)
 	return(0);
 
 /*
-			#] All Different :
+			#] All Different : 
 */
 TracnCall:
 	AT.WorkPointer = oldstring;
@@ -1819,7 +1819,7 @@ TracCall:
 }
 
 /*
- 		#] TraceNgen :
+ 		#] TraceNgen : 
  		#[ Traces :				WORD Traces(term,params,num,level)
 
 		The contents of the AT.TMout array are:
@@ -1845,7 +1845,7 @@ WORD Traces(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 }
 
 /*
- 		#] Traces :
+ 		#] Traces : 
  		#[ TraceFind :			WORD TraceFind(term,params)
 */
 
@@ -1946,7 +1946,7 @@ F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
 }
 
 /*
- 		#] TraceFind :
+ 		#] TraceFind : 
  		#[ Chisholm :			WORD Chisholm(term,level,num)
 
 		Routines for reorganizing traces.
@@ -1996,7 +1996,7 @@ WORD Chisholm(PHEAD WORD *term, WORD level)
 	}
 	if ( ( i & 1 ) != 0 ) return(0);	/* odd trace */
 /*
-  	#] Find :
+  	#] Find : 
   	#[ Test : Test for contracted index
 
 	This code should be modified.
@@ -2016,7 +2016,8 @@ WORD Chisholm(PHEAD WORD *term, WORD level)
 		indices[*s-AM.OffsetIndex].dimension == 0 ) ) {
 */
 		if ( *s < AM.OffsetIndex || ( *s < ( AM.OffsetIndex + WILDOFFSET ) &&
-		indices[*s-AM.OffsetIndex].dimension != 4 ) ) {
+		indices[*s-AM.OffsetIndex].dimension != 4 )
+		|| ( ( AC.lDefDim != 4 ) && ( *s >= ( AM.OffsetIndex + WILDOFFSET ) ) ) ) {
 			s++; continue;
 		}
 		t = term+1;
@@ -2037,7 +2038,7 @@ WORD Chisholm(PHEAD WORD *term, WORD level)
 	}
 	if ( norm == 0 ) return(Generator(BHEAD term,level));	/* No Action */
 /*
-  	#] Test :
+  	#] Test : 
   	#[ Do : Process the string
 
 	tt:	The subterm
@@ -2157,7 +2158,7 @@ NextK:;
 	}
 	return(0);
 /*
-  	#] Do :
+  	#] Do : 
 */
 ChisCall:
 	if ( AM.tracebackflag ) {
@@ -2169,7 +2170,7 @@ ChisCall:
 }
 
 /*
- 		#] Chisholm :
+ 		#] Chisholm : 
  		#[ TenVecFind :			WORD TenVecFind(term,params)
 */
 
@@ -2303,7 +2304,7 @@ match:
 }
 
 /*
- 		#] TenVecFind :
+ 		#] TenVecFind : 
  		#[ TenVec :				WORD TenVec(term,params,num,level)
 */
 
@@ -2499,7 +2500,7 @@ fromTenVec:
 }
 
 /*
- 		#] TenVec :
+ 		#] TenVec : 
   	#] Operations :
 */
 
