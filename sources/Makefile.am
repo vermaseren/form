@@ -78,6 +78,7 @@ if USINGGCC
 COMPILEFLAGS+=-O3 -fomit-frame-pointer
 DEBUGCOMPILEFLAGS+=-Wextra -pedantic
 if ONAPPLE
+COMPILEFLAGS+=-mmacosx-version-min=10.4
 LINKFLAGS+=-static-libgcc
 if OPTOPTERON
 COMPILEFLAGS+=-m64
