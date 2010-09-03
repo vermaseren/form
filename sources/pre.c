@@ -1,5 +1,5 @@
 /** @file pre.c
- * 
+ *
  *  This is the preprocessor and all its routines.
  */
 /* #[ License : */
@@ -353,7 +353,8 @@ higherlevel:
 				}
 				else if ( stream->inbuffer == 0 ) {
 					c = GetInput();
-					continue;
+					if ( level > 0 && c == '\'' ) return(c);
+					goto endofloop;
 				}
 			}
 			c = GetInput();
@@ -364,6 +365,7 @@ higherlevel:
 			break;
 		}
 		else break;
+endofloop:;
 	}
 	return(c);	
 }
