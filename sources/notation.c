@@ -221,7 +221,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm : 
+ 		#] NormPolyTerm :
  		#[ ComparePoly :
 */
 /**
@@ -316,9 +316,28 @@ int ConvertToPoly(PHEAD WORD *term)
 	t = term + 1;
 	while ( t < tstop ) {
 		if ( *t == SYMBOL ) {
-			i = t[1];
-			NCOPY(tout,t,i)
-			continue;
+			r = t+2;
+			t += t[1];
+			while ( r < t ) {
+				if ( r[1] > 0 ) {
+					*tout++ = SYMBOL;
+					*tout++ = 4;
+					*tout++ = r[0];
+					*tout++ = r[1];
+				}
+				else {
+					tout[1] = SYMBOL;
+					tout[2] = 4;
+					tout[3] = r[0];
+					tout[4] = -1;
+					i = FindSubterm(tout+1);
+					*tout++ = SYMBOL;
+					*tout++ = 4;
+					*tout++ = MAXVARIABLES-i;
+					*tout++ = -r[1];
+				}
+				r += 2;
+			}
 		}
 		else if ( *t == DOTPRODUCT ) {
 			r = t + 2;
@@ -328,12 +347,17 @@ int ConvertToPoly(PHEAD WORD *term)
 				tout[2] = 5;
 				tout[3] = r[0];
 				tout[4] = r[1];
-				tout[5] = 1;
+				if ( r[2] < 0 ) {
+					tout[5] = -1;
+				}
+				else {
+					tout[5] = 1;
+				}
 				i = FindSubterm(tout+1);
 				*tout++ = SYMBOL;
 				*tout++ = 4;
 				*tout++ = MAXVARIABLES-i;
-				*tout++ = r[2];
+				*tout++ = ABS(r[2]);
 				r += 3;
 			}
 		}
