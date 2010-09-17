@@ -221,7 +221,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm :
+ 		#] NormPolyTerm : 
  		#[ ComparePoly :
 */
 /**
@@ -400,25 +400,29 @@ int ConvertToPoly(PHEAD WORD *term)
 	i = *outterm = tout-outterm;
 	t = term;
 	NCOPY(t,outterm,i)
-	AT.WorkPointer = oldwork;
-	return(NormPolyTerm(BHEAD term));
+	AT.WorkPointer = term + *term;
+	i = NormPolyTerm(BHEAD term);
+	AT.WorkPointer = term + *term;
+	return(i);
 }
 
 /*
- 		#] ConvertToPoly :
+ 		#] ConvertToPoly : 
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
 		If we don't find it we will enter it in the subterm compiler buffer
 		Searching is by tree structure.
 		Adding changes the tree.
+
+		Notice that in TFORM we should be in sequential mode.
 */
 
 WORD FindSubterm(WORD *subterm)
 {
 	WORD old[4], *ss, *term, number;
 	CBUF *C = cbuf + AM.sbufnum;
-	int oldcbufnum = AC.cbufnum;
+	LONG oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
 	AddRHS(AM.sbufnum,1);
 	term = subterm-1;
 	ss = subterm+subterm[1];
@@ -428,26 +432,29 @@ WORD FindSubterm(WORD *subterm)
 	old[0] = *term; old[1] = ss[0]; old[2] = ss[1]; old[3] = ss[2];
 	ss[0] = 1; ss[1] = 1; ss[2] = 3; *term = subterm[1]+4;
 /*
-		Add to compiler buffer and restore old values. Paste on a zero.
+		Add the term to the compiler buffer. Paste on a zero.
 */
-	AC.cbufnum = AM.sbufnum;
-	AddNtoC(*term,term);
-	*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3];
+	AddNtoC(AM.sbufnum,*term,term);
 	AddToCB(C,0)
 /*
 		See whether we have this one already. If not, insert it in the tree.
 */
-	number = InsTree(C->numrhs);
-	AC.cbufnum = oldcbufnum;
+	number = InsTree(AM.sbufnum,C->numrhs);
+/*
+		Restore old values and return what is needed.
+*/
 	if ( number < (C->numrhs) ) {	/* It existed already */
-		C->Pointer = C->rhs[C->numrhs--];
+		C->Pointer = oldCpointer + C->Buffer;
+		C->numrhs--;
+		*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3];
 		return(number);
 	}
+	*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3];
 	return(C->numrhs);
 }
 
 /*
- 		#] FindSubterm :
+ 		#] FindSubterm : 
  		#[ PrintSubtermList :
 
 		Prints all the expressions in the subterm compiler buffer.
@@ -501,5 +508,46 @@ void PrintSubtermList()
 }
 
 /*
- 		#] PrintSubtermList :
+ 		#] PrintSubtermList : 
+ 		#[ FindSubexpression :
+
+		In this routine we look up a subexpression.
+		If we don't find it we will enter it in the subterm compiler buffer
+		Searching is by tree structure.
+		Adding changes the tree.
+
+		Notice that in TFORM we should be in sequential mode.
+*/
+
+WORD FindSubexpression(WORD *subexpr)
+{
+	WORD *term, number;
+	CBUF *C = cbuf + AM.sbufnum;
+	LONG oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
+	AddRHS(AM.sbufnum,1);
+	term = subexpr;
+	while ( *term ) term += *term;
+	number = term - subexpr;
+/*
+		Add the terms to the compiler buffer. Paste on a zero.
+*/
+	AddNtoC(AM.sbufnum,number,subexpr);
+	AddToCB(C,0)
+/*
+		See whether we have this one already. If not, insert it in the tree.
+*/
+	number = InsTree(AM.sbufnum,C->numrhs);
+/*
+		Restore old values and return what is needed.
+*/
+	if ( number < (C->numrhs) ) {	/* It existed already */
+		C->Pointer = oldCpointer + C->Buffer;
+		C->numrhs--;
+		return(number);
+	}
+	return(C->numrhs);
+}
+
+/*
+ 		#] FindSubexpression :
 */

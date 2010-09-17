@@ -36,6 +36,7 @@
 /* #] License : */ 
 /*
   	#[ Includes :
+#define WITHMALLOCPRINT 1
 #define MALLOCDEBUG 1
 */
 
@@ -90,7 +91,7 @@ long numfrees = 0;
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -832,7 +833,7 @@ int CopyFile(char *source, char *dest)
 }
 
 /*
- 		#] CopyFile :
+ 		#] CopyFile : 
  		#[ CreateHandle :
 
 		We need a lock here.
@@ -1362,8 +1363,8 @@ UNLOCK(ErrorMessageLock);
 }
 
 /*
- 		#] UpdateMaxSize :
-  	#] Files :
+ 		#] UpdateMaxSize : 
+  	#] Files : 
   	#[ Strings :
  		#[ StrCmp :
 */
@@ -1946,7 +1947,9 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 	mallocsizes[nummalloclist] = size;
 	mallocstrings[nummalloclist] = (char *)messageifwrong;
 	malloclist[nummalloclist++] = mem;
+#ifdef WITHMALLOCPRINT
 	if ( filelist ) MesPrint("%wMem1 at 0x%x: %l bytes. %s",mem,size,messageifwrong);
+#endif
 	{
 		int i = nummalloclist-1;
 		while ( --i >= 0 ) {
@@ -1981,7 +1984,9 @@ void M_free(VOID *x, char *where)
 	LONG size = 0;
 	x = (void *)(((char *)x)-BANNER);
 /*	LOCK(ErrorMessageLock); */
+#ifdef WITHMALLOCPRINT
 	MesPrint("%wFreeing 0x%x: %s",x,where);
+#endif
 	LOCK(MallocLock);
 	for ( i = nummalloclist-1; i >= 0; i-- ) {
 		if ( x == malloclist[i] ) {
@@ -2848,7 +2853,7 @@ argerror:
 }
 
 /*
- 		#] CompArg :
+ 		#] CompArg : 
  		#[ TimeWallClock :
 */
 
@@ -3468,5 +3473,5 @@ finish:
 
 /*
  		#] TestTerm : 
-  	#] Mixed :
+  	#] Mixed : 
 */

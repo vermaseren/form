@@ -5280,6 +5280,12 @@ int CoDropCoefficient(UBYTE *s)
 /*
   	#] CoDropCoefficient : 
   	#[ CoToPolynomial :
+
+	Converts the current term as much as possible to symbols.
+	Keeps a list of all objects converted to symbols in AM.sbufnum.
+	Note that this cannot be executed in parallel because we have only
+	a single compiler buffer for this. Hence we switch on the noparallel
+	module option.
 */
 
 #ifndef TOPLOYNOMIAL
@@ -5289,6 +5295,7 @@ int CoToPolynomial(UBYTE *inp)
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
 	if ( *inp == 0 ) {
 		Add2Com(TYPETOPOLYNOMIAL)
+		AC.mparallelflag = NOPARALLEL_MOPT;
 		return(0);
 	}
 	MesPrint("&Illegal argument in ToPolynomial statement: '%s'",inp);
@@ -5298,6 +5305,6 @@ int CoToPolynomial(UBYTE *inp)
 #endif
 
 /*
-  	#] CoToPolynomial : 
+  	#] CoToPolynomial :
 */
 /* temporary commentary for forcing cvs merge */

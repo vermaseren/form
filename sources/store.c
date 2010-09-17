@@ -751,7 +751,7 @@ WORD DeleteStore(WORD par)
 }
 
 /*
- 		#] DeleteStore :
+ 		#] DeleteStore : 
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -1051,7 +1051,11 @@ NewIn:
 		Terminate(-1);
 	}
 	AR.CompressPointer = r; *r = 0;
-	if ( testing ) {
+/*
+		The next *from is a bug fix that made the program read in forbidden
+		territory.
+*/
+	if ( testing && *from != 0 ) {
 		WORD jj;
 		r = from;
 		jj = *r - 1 - ABS(*(r+*r-1));
@@ -1125,7 +1129,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm : 
+ 		#] GetTerm :
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.

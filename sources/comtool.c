@@ -81,7 +81,7 @@ void finishcbuf(WORD num)
 	if ( C->Buffer ) M_free(C->Buffer,"compiler buffer");
 	if ( C->rhs ) M_free(C->rhs,"compiler buffer");
 	if ( C->lhs ) M_free(C->lhs,"compiler buffer");
-	if ( C->boomlijst ) M_free(C->boomlijst,"compiler buffer");
+	if ( C->boomlijst ) M_free(C->boomlijst,"boomlijst");
 	C->Top = C->Pointer = C->Buffer = 0;
 	C->rhs = C->lhs = 0;
 	C->CanCommu = 0;
@@ -100,7 +100,7 @@ void finishcbuf(WORD num)
 void clearcbuf(WORD num)
 {
 	CBUF *C = cbuf+num;
-	if ( C->boomlijst ) M_free(C->boomlijst,"compiler buffer");
+	if ( C->boomlijst ) M_free(C->boomlijst,"boomlijst");
 	C->Pointer = C->Buffer;
 	C->numrhs = C->numlhs = 0;
 	C->mnumlhs = 0;
@@ -222,6 +222,7 @@ restart:;
 	C->numrhs++;
 	C->CanCommu[C->numrhs] = 0;
 	C->NumTerms[C->numrhs] = 0;
+	C->numdum[C->numrhs] = 0;
 	C->rhs[C->numrhs] = C->Pointer;
 	return(C->Pointer);
 }
@@ -247,17 +248,20 @@ int AddNtoL(int n, WORD *array)
 /*
   	#] AddNtoL : 
   	#[ AddNtoC :
+
+	Commentary: added the bufnum on 14-sep-2010 to make the whole a bit
+	more flexible (JV). Still to do with AddNtoL.
 */
 
-int AddNtoC(int n, WORD *array)
+int AddNtoC(int bufnum, int n, WORD *array)
 {
 	int i;
 	WORD *w;
-	CBUF *C = cbuf+AC.cbufnum;
+	CBUF *C = cbuf+bufnum;
 #ifdef COMPBUFDEBUG
 	MesPrint("RH: %a",n,array);
 #endif
-	while ( C->Pointer+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+n+1 >= C->Top ) DoubleCbuffer(bufnum,C->Pointer);
 	w = C->Pointer;
 	for ( i = 0; i < n; i++ ) *w++ = *array++;
 	C->Pointer = w;
@@ -275,29 +279,30 @@ int AddNtoC(int n, WORD *array)
 	There are no provisions for removing elements from the tree.
 	The routines are:
 	void RedoTree(size) Re-allocates the tree space. There will
-                        be MaxTreeSize elements.
+                        be MaxTreeSize = size elements.
 	void ClearTree()    Prunes the tree down to the root element.
-	int InsTree(int)    Searches for the requested element. If not found it
+	int InsTree(int,int)Searches for the requested element. If not found it
 	                    will allocate a new element, balance the tree if
 	                    necessary and return the called number.
                         If it was in the tree, it returns the tree 'value'.
-*/
 
-int InsTree(int h)
+	Commentary: added the bufnum on 14-sep-2010 to make the whole a bit
+	more flexible (JV).
+*/
+static COMPTREE comptreezero = {0,0,0,0,0};
+
+int InsTree(int bufnum, int h)
 {
-	CBUF *C = cbuf + AC.cbufnum;
+	CBUF *C = cbuf + bufnum;
 	COMPTREE *boomlijst = C->boomlijst, *q = boomlijst + C->rootnum, *p, *s;
 	WORD *v1, *v2, *v3;
 	int ip, iq, is;
-/*
-	If the tree overflows, we do as if the number is in the tree already.
-*/
-/*
+
 	if ( C->numtree + 1 >= C->MaxTreeSize ) {
 		if ( C->MaxTreeSize == 0 ) {
 			COMPTREE *root;
 			C->MaxTreeSize = 125;
-			C->boomlijst = (COMPTREE *)Malloc1(C->MaxTreeSize*sizeof(COMPTREE),
+			C->boomlijst = (COMPTREE *)Malloc1((C->MaxTreeSize+1)*sizeof(COMPTREE),
 				"ClearInsTree");
 			root = C->boomlijst;
 			C->numtree = 0;
@@ -307,11 +312,13 @@ int InsTree(int h)
 			root->parent = -1;
 			root->blnce = 0;
 			root->value = -1;
+			for ( ip = 1; ip < C->MaxTreeSize; ip++ ) { C->boomlijst[ip] = comptreezero; }
 		}
 		else {
 			is = C->MaxTreeSize * 2;
-			s  = (COMPTREE *)Malloc1(is*sizeof(COMPTREE),"InsTree");
+			s  = (COMPTREE *)Malloc1((is+1)*sizeof(COMPTREE),"InsTree");
 			for ( ip = 0; ip < C->MaxTreeSize; ip++ ) { s[ip] = C->boomlijst[ip]; }
+			for ( ip = C->MaxTreeSize; ip <= is; ip++ ) { s[ip] = comptreezero; }
 			if ( C->boomlijst ) M_free(C->boomlijst,"InsTree");
 			C->boomlijst = s;
 			C->MaxTreeSize = is;
@@ -319,12 +326,12 @@ int InsTree(int h)
 		boomlijst = C->boomlijst;
 		q = boomlijst + C->rootnum;
 	}
-*/
+
 	if ( q->right == -1 ) { /* First element */
 		C->numtree++;
 
 if ( C->numtree > C->numrhs ) {
-	MesPrint("Problems in InsTree: 1");
+	MesPrint("Problems in InsTree: 1 (%d,%d)(%d)",C->numtree,C->numrhs,(C-cbuf));
 }
 
 		s = boomlijst+C->numtree;
@@ -460,7 +467,7 @@ balance:;
 }
 
 /*
-  	#] InsTree : 
+  	#] InsTree :
   	#[ RedoTree :
 */
 
@@ -468,8 +475,9 @@ void RedoTree(CBUF *C, int size)
 {
 	COMPTREE *newboomlijst;
 	int i;
-	newboomlijst = (COMPTREE *)Malloc1(size*sizeof(COMPTREE),"newboomlijst");
+	newboomlijst = (COMPTREE *)Malloc1((size+1)*sizeof(COMPTREE),"newboomlijst");
 	if ( C->boomlijst ) {
+		if ( C->MaxTreeSize > size ) C->MaxTreeSize = size;
 		for ( i = 0; i < C->MaxTreeSize; i++ ) newboomlijst[i] = C->boomlijst[i];
 		M_free(C->boomlijst,"boomlijst");
 	}
@@ -493,6 +501,7 @@ void ClearTree(int i)
 		root->right = -1;
 		root->parent = -1;
 		root->blnce = 0;
+		root->value = -1;
 	}		
 }
 

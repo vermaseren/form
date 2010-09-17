@@ -37,7 +37,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ includes :
 */
@@ -259,7 +259,7 @@ VOID inictable()
 }
 
 /*
- 		#] inictable : 
+ 		#] inictable :
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -311,7 +311,7 @@ KEYWORD *findcommand(UBYTE *in)
 }
 
 /*
- 		#] findcommand : 
+ 		#] findcommand :
  		#[ ParenthesesTest :
 */
 
@@ -355,7 +355,7 @@ int ParenthesesTest(UBYTE *sin)
 }
 
 /*
- 		#] ParenthesesTest : 
+ 		#] ParenthesesTest :
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -389,7 +389,7 @@ UBYTE *SkipAName(UBYTE *s)
 }
 
 /*
- 		#] SkipAName : 
+ 		#] SkipAName :
  		#[ IsRHS :
 */
 
@@ -435,7 +435,7 @@ UBYTE *IsRHS(UBYTE *s, UBYTE c)
 }
 
 /*
- 		#] IsRHS : 
+ 		#] IsRHS :
  		#[ IsIdStatement :
 */
 
@@ -446,7 +446,7 @@ int IsIdStatement(UBYTE *s)
 }
 
 /*
- 		#] IsIdStatement : 
+ 		#] IsIdStatement :
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -486,7 +486,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 }
 
 /*
- 		#] CompileAlgebra : 
+ 		#] CompileAlgebra :
  		#[ CompileStatement :
 
 */
@@ -599,7 +599,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement : 
+ 		#] CompileStatement :
  		#[ TestTables :
 */
 
@@ -638,7 +638,7 @@ int TestTables()
 }
 
 /*
- 		#] TestTables : 
+ 		#] TestTables :
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -1795,7 +1795,7 @@ docoef:
 	AddToCB(C,0)
 	if ( AC.CompileLevel > 0 && AR.Eside != LHSIDE ) {
 		/* See whether we have this one already */
-		error = InsTree(C->numrhs);
+		error = InsTree(AC.cbufnum,C->numrhs);
 		if ( error < (C->numrhs) ) {
 			C->Pointer = C->rhs[C->numrhs--];
 			return(error);
@@ -1810,7 +1810,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator : 
+ 		#] CodeGenerator :
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1831,12 +1831,12 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 	for ( ; i < nsize; i++ ) *t++ = 0;
 	*t++ = (2*nsize+1)*sign;
 	*term = t - term;
-	AddNtoC(*term,term);
+	AddNtoC(AC.cbufnum,*term,term);
 	return(0);
 }
 
 /*
- 		#] CompleteTerm : 
+ 		#] CompleteTerm :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

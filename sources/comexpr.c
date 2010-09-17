@@ -71,7 +71,7 @@ int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal :
+  	#] CoGlobal : 
   	#[ DoExpr:
 */
 
@@ -328,7 +328,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -405,7 +405,7 @@ int CoIfMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfMatch :
+  	#] CoIfMatch : 
   	#[ CoIfNoMatch :
 */
 
@@ -898,7 +898,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression :
+  	#] CoIdExpression : 
   	#[ CoMultiply :
 */
 
@@ -1375,7 +1375,7 @@ int CoFillExpression(UBYTE *inp)
 					if ( weneedit ) {
 						m += m[1] - 1;
 						*m = *term - (m-term);
-						AddNtoC(*m,m);
+						AddNtoC(AC.cbufnum,*m,m);
 						numdummies = DetCurDum(BHEAD term) - AM.IndDum;
 						if ( numdummies > T->numdummies ) T->numdummies = numdummies;
 					}
@@ -1383,7 +1383,7 @@ int CoFillExpression(UBYTE *inp)
 				}
 			}
 			if ( weneedit ) {
-				AddNtoC(1,&zero);	/* Terminate old bracket */
+				AddNtoC(AC.cbufnum,1,&zero);	/* Terminate old bracket */
 				numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 				C->CanCommu[curelement] = numcommu;
 			}
@@ -1535,12 +1535,12 @@ Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 newentry:	if ( *m == HAAKJE ) { m += m[1] - 1; }
 			else m--;
 			*m = *term - (m-term);
-			AddNtoC(*m,m);
+			AddNtoC(AC.cbufnum,*m,m);
 			curelement = T->tablepointers[sum];
 nextterm:;
 		}
 		if ( weneedit ) {
-			AddNtoC(1,&zero);	/* Terminate old bracket */
+			AddNtoC(AC.cbufnum,1,&zero);	/* Terminate old bracket */
 			numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 			C->CanCommu[curelement] = numcommu;
 		}

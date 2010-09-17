@@ -855,7 +855,7 @@ extern WORD  *DoubleCbuffer(int,WORD *);
 extern WORD  *AddLHS(int);
 extern WORD  *AddRHS(int,int);
 extern int    AddNtoL(int,WORD *);
-extern int    AddNtoC(int,WORD *);
+extern int    AddNtoC(int,int,WORD *);
 extern VOID   DoubleIfBuffers(VOID);
 extern STREAM *CreateStream(UBYTE *);
 
@@ -1039,7 +1039,7 @@ extern int    DoExpr(UBYTE *,int);
 extern int    CompileSubExpressions(SBYTE *);
 extern int    CodeGenerator(SBYTE *);
 extern int    CompleteTerm(WORD *,UWORD *,UWORD *,WORD,WORD,int);
-extern int    InsTree(int);
+extern int    InsTree(int,int);
 extern void   RedoTree(CBUF *,int);
 extern void   ClearTree(int);
 extern int    CatchDollar(int);
@@ -1457,6 +1457,7 @@ extern int PolyBracket(WORD *term, WORD *bracket, int level);
 extern int ConvertToPoly(PHEAD WORD *term);
 extern WORD FindSubterm(WORD *subterm);
 extern void PrintSubtermList(VOID);
+extern WORD FindSubexpression(WORD *subexpr);
 
 extern void UpdateMaxSize(VOID);
 
