@@ -100,7 +100,7 @@
 #define WITHSORTBOTS
 
 #ifdef WITHPTHREADS
-#ifndef APPLE
+#ifdef _POSIX_THREAD_CPUTIME
 #define WITHPOSIXCLOCK
 #endif
 #endif

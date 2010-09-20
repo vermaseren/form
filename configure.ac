@@ -46,9 +46,9 @@ case $host_os in
 		print_os="Linux"
 		AC_DEFINE(LINUX, , [Compiling for a Linux system.])
 		;;
-	mingw* )
-		print_os="MingW/Windows"
-		AC_DEFINE(WINDOWS, , [Compiling for a Windows system.])
+	cygwin* )
+		print_os="Cygwin"
+		AC_DEFINE(LINUX, , [Compiling for a Cygwin/Windows system.])
 		;;
 	* )
 		print_cpu="!!UNKNOWN OS!!"
@@ -56,6 +56,7 @@ case $host_os in
 		;;
 esac
 AM_CONDITIONAL([ONAPPLE], [test "x$print_os" = xOSX])
+AM_CONDITIONAL([ONCYGWIN], [test "x$print_os" = xCygwin])
 case $host_cpu in
 	i486 )
 		print_cpu="Pentium"

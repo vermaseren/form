@@ -88,7 +88,11 @@ COMPILEFLAGS+=-m32
 LINKFLAGS+=-m32
 endif
 else
+if ONCYGWIN
+LINKFLAGS+=-static-libgcc
+else
 LINKFLAGS+=-static -s
+endif
 if OPTPENTIUM
 COMPILEFLAGS+=-march=i686
 endif
