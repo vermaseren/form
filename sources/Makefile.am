@@ -76,7 +76,7 @@ DEBUGLINKFLAGS=-g
 # compiler specific parameters
 if USINGGCC
 COMPILEFLAGS+=-O3 -fomit-frame-pointer
-DEBUGCOMPILEFLAGS+=-Wextra -pedantic
+DEBUGCOMPILEFLAGS+=-Wextra -pedantic -Wpadded
 if ONAPPLE
 COMPILEFLAGS+=-mmacosx-version-min=10.4
 LINKFLAGS+=-static-libgcc
@@ -89,6 +89,8 @@ LINKFLAGS+=-m32
 endif
 else
 if ONCYGWIN
+COMPILEFLAGS+=-fpack-struct=4
+DEBUGCOMPILEFLAGS+=-fpack-struct=4
 LINKFLAGS+=-static-libgcc
 else
 LINKFLAGS+=-static -s

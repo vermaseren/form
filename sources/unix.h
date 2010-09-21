@@ -124,7 +124,11 @@ the errno checkup*/
 #define FULLMAX  0x10000L
 #define AWORDMASK 0xFFFF0000L
 #define MAXLONG 0x7FFFFFFFL
+#ifdef CYGWIN
+#define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[8-((4*(lo)+4*(in)+2*(wo)+(by))&7)]
+#else
 #define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
+#endif
 #define PADLONG(in,wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
 #define PADINT(wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
 #define PADWORD(by) UBYTE d_u_m_m_y[2-((by)&1)]

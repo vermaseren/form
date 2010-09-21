@@ -49,6 +49,7 @@ case $host_os in
 	cygwin* )
 		print_os="Cygwin"
 		AC_DEFINE(LINUX, , [Compiling for a Cygwin/Windows system.])
+		AC_DEFINE(CYGWIN, , [Compiling for a Cygwin/Windows system.])
 		;;
 	* )
 		print_cpu="!!UNKNOWN OS!!"
