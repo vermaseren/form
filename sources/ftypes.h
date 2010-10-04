@@ -449,7 +449,13 @@ typedef int (*TFUN1)();
 #define FACTORIN 80
 #define TERMSINBRACKET 81
 #define WILDARGFUN 82
-
+/*
+	In the past we would add new functions here and raise the numbers
+	on the special reserved names. This is impractical in the light of
+	the .sav files. The .sav files need a mechanism that contains the
+	value of MAXBUILTINFUNCTION at the moment of writing. This allows
+	form corrections if this value has changed in the mean time.
+*/
 #define SQRTFUNCTION 83
 #define LNFUNCTION 84
 #define SINFUNCTION 85
@@ -468,7 +474,9 @@ typedef int (*TFUN1)();
 #define LI2FUNCTION 98
 #define LINFUNCTION 99
 
-#define MAXBUILTINFUNCTION 99
+#define EXTRASYMFUN 100
+
+#define MAXBUILTINFUNCTION 100
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist
@@ -557,10 +565,7 @@ typedef int (*TFUN1)();
 #define TYPEDROPCOEFFICIENT 71
 #define TYPEREPARG 72
 #define TYPETRANSFORM 73
-
-#ifndef TOPLOYNOMIAL
 #define TYPETOPOLYNOMIAL 74
-#endif
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.

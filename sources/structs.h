@@ -1194,6 +1194,8 @@ struct M_const {
     UBYTE   *Zip1Buffer;           /* (M) First Zip compression buffer */
     UBYTE   *Zip2Buffer;           /* (M) Second Zip compression buffer */
     UBYTE   *gFortran90Kind;
+	UBYTE   *gextrasym;
+	UBYTE   *ggextrasym;
     POSITION zeropos;              /* (M) is zero */
 #ifdef WITHPTHREADS
     pthread_rwlock_t handlelock;   /* (M) */
@@ -1318,9 +1320,11 @@ struct M_const {
     WORD    ggIndentSpace;
     WORD    gShortStatsMax;        /**< For  On FewerStatistics 10; */
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
+	WORD	gextrasymbols;
+	WORD	ggextrasymbols;
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1459,6 +1463,7 @@ struct C_const {
 	UWORD   *modinverses;          /* Table for inverses of primes */
     UBYTE   *Fortran90Kind;        /* The kind of number in Fortran 90 as in _ki */
 	WORD	**MultiBracketBuf;     /* Array of buffers for multi-level brackets */
+	UBYTE   *extrasym;             /* Array with the name for extra symbols in ToPolynomial */
 #ifdef WITHPTHREADS
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1572,6 +1577,7 @@ struct C_const {
     WORD    SymChangeFlag;         /* (C) */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
+	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
 #ifdef PARALLEL
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/

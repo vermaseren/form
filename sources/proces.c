@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -245,7 +245,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -597,7 +597,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1099,7 +1099,7 @@ Important: we may not have enough spots here
 			if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & DIRTYFLAG ) != 0 ) funflag = 1;
 			if ( *t <= MAXBUILTINFUNCTION ) {
-			if ( *t == THETA || *t == THETA2 ) {
+			  if ( *t == THETA || *t == THETA2 ) {
 				WORD *tstop, *tt2, kk;
 				tstop = t + t[1];
 				tt2 = t + FUNHEAD;
@@ -1123,8 +1123,8 @@ Important: we may not have enough spots here
 						goto ReStart;
 					}
 				}
-			}
-			else if ( *t == DELTA2 || *t == DELTAP ) {
+			  }
+			  else if ( *t == DELTA2 || *t == DELTAP ) {
 				WORD *tstop, *tt2, kk;
 				tstop = t + t[1];
 				tt2 = t + FUNHEAD;
@@ -1148,27 +1148,27 @@ Important: we may not have enough spots here
 						goto ReStart;
 					}
 				}
-			}
-			else if ( *t == DISTRIBUTION && t[FUNHEAD] == -SNUMBER
-			&& t[FUNHEAD+1] >= -2 && t[FUNHEAD+1] <= 2
-			&& t[FUNHEAD+2] == -SNUMBER
-			&& t[FUNHEAD+4] <= -FUNCTION
-			&& t[FUNHEAD+5] <= -FUNCTION ) {
+			  }
+			  else if ( *t == DISTRIBUTION && t[FUNHEAD] == -SNUMBER
+			  && t[FUNHEAD+1] >= -2 && t[FUNHEAD+1] <= 2
+			  && t[FUNHEAD+2] == -SNUMBER
+			  && t[FUNHEAD+4] <= -FUNCTION
+			  && t[FUNHEAD+5] <= -FUNCTION ) {
 				AN.TeInFun = -1;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
-			}
-			else if ( *t == DELTA3 && ((t[1]-FUNHEAD) & 1 ) == 0 ) {
+			  }
+			  else if ( *t == DELTA3 && ((t[1]-FUNHEAD) & 1 ) == 0 ) {
 				AN.TeInFun = -2;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
-			}
-			else if ( ( *t == TABLEFUNCTION ) && ( t[FUNHEAD] <= -FUNCTION )
-			&& ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
-			&& ( t[1] >= FUNHEAD+1+2*T->numind )
-			&& ( t[FUNHEAD+1] == -SYMBOL ) ) {
+			  }
+			  else if ( ( *t == TABLEFUNCTION ) && ( t[FUNHEAD] <= -FUNCTION )
+			  && ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
+			  && ( t[1] >= FUNHEAD+1+2*T->numind )
+			  && ( t[FUNHEAD+1] == -SYMBOL ) ) {
 /*
 				The case of table_(tab,sym1,...,symn)
 */
@@ -1181,11 +1181,11 @@ Important: we may not have enough spots here
 					AR.TePos = -1;
 					return(1);
 				}
-			}
-			else if ( *t == TABLEFUNCTION && t[FUNHEAD] <= -FUNCTION
-			&& ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
-			&& ( t[1] == FUNHEAD+2 )
-			&& ( t[FUNHEAD+1] <= -FUNCTION ) ) {
+			  }
+			  else if ( *t == TABLEFUNCTION && t[FUNHEAD] <= -FUNCTION
+			  && ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
+			  && ( t[1] == FUNHEAD+2 )
+			  && ( t[FUNHEAD+1] <= -FUNCTION ) ) {
 /*
 				The case of table_(tab,fun)
 */
@@ -1193,20 +1193,20 @@ Important: we may not have enough spots here
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
-			}
-			else if ( *t == AM.polyfunnum ) {
+			  }
+			  else if ( *t == AM.polyfunnum ) {
 				AN.TeInFun = -4;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
-			}
-			else if ( *t == AM.polygetremnum ) {
+			  }
+			  else if ( *t == AM.polygetremnum ) {
 				AN.TeInFun = -5;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
-			}
-			else if ( *t == FACTORIN ) {
+			  }
+			  else if ( *t == FACTORIN ) {
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -DOLLAREXPRESSION ) {
 					AN.TeInFun = -6;
 					AN.TeSuOut = 0;
@@ -1219,8 +1219,8 @@ Important: we may not have enough spots here
 					AR.TePos = -1;
 					return(1);
 				}
-			}
-			else if ( *t == TERMSINBRACKET ) {
+			  }
+			  else if ( *t == TERMSINBRACKET ) {
 				if ( t[1] == FUNHEAD || (
 					 t[1] == FUNHEAD+2
 					&& t[FUNHEAD] == -SNUMBER
@@ -1263,7 +1263,25 @@ Important: we may not have enough spots here
 					return(1);
 				}
 */
-			}
+			  }
+			  else if ( *t == EXTRASYMFUN ) {
+				if ( t[1] == FUNHEAD+2 && (
+					( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] <= cbuf[AM.sbufnum].numrhs
+							&& t[FUNHEAD+1] > 0 ) ||
+					( t[FUNHEAD] == -SYMBOL && t[FUNHEAD+1] < MAXVARIABLES 
+							&& t[FUNHEAD+1] >= MAXVARIABLES-cbuf[AM.sbufnum].numrhs ) ) ) {
+					AN.TeInFun = -9;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+				else if ( t[1] == FUNHEAD ) {
+					AN.TeInFun = -9;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+			  }
 			}
 		}
 		t += t[1];
@@ -2199,7 +2217,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2328,7 +2346,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2444,7 +2462,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2519,7 +2537,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2694,7 +2712,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3293,18 +3311,16 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					if ( *term == 0 ) goto Return0;
 					goto ReStart;
-#ifndef TOPLOYNOMIAL
 				  case TYPETOPOLYNOMIAL:
 					AT.WorkPointer = term + *term;
 					if ( ConvertToPoly(BHEAD term) < 0 ) goto GenCall;
 					if ( *term == 0 ) goto Return0;
 					AT.WorkPointer = term + *term;
 					break;
-#endif
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3341,6 +3357,7 @@ AutoGen:	i = *AT.TMout;
 			else if ( AN.TeInFun == -6 && FactorIn(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -7 && FactorInExpr(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -8 && TermsInBracket(BHEAD term,level) < 0 ) goto GenCall;
+			else if ( AN.TeInFun == -9 && ExtraSymFun(BHEAD term,level) < 0 ) goto GenCall;
 		}
 		else {
 			termout = AT.WorkPointer;
@@ -3733,7 +3750,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -3964,7 +3981,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4088,7 +4105,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4324,7 +4341,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4502,7 +4519,7 @@ IllegalContent:
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4522,7 +4539,7 @@ IllegalContent:
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4732,6 +4749,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

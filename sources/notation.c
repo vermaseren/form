@@ -481,8 +481,21 @@ void PrintSubtermList()
 	FiniLine();
 
 	for ( i = 1; i <= C->numrhs; i++ ) {
-		out = StrCopy((UBYTE *)"Z_",buffer);
-		out = NumCopy(i,out);
+		out = StrCopy((UBYTE *)AC.extrasym,buffer);
+		if ( AC.extrasymbols == 0 ) {
+			out = NumCopy((MAXVARIABLES-i),out);
+			out = StrCopy((UBYTE *)"_",out);
+		}
+		else if ( AC.extrasymbols == 1 ) {
+			out = StrCopy((UBYTE *)"(",out);
+			out = NumCopy(i,out);
+			out = StrCopy((UBYTE *)")",out);
+		}
+/*
+		else if ( AC.extrasymbols == 2 ) {
+			out = NumCopy((MAXVARIABLES-i),out);
+		}
+*/
 		out = StrCopy((UBYTE *)"=",out);
 		TokenToLine(buffer);
 		term = C->rhs[i];
@@ -497,7 +510,6 @@ void PrintSubtermList()
 				term += *term;
 				first = 0;
 			}
-
 			if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE ) {
 				out = StrCopy((UBYTE *)";",buffer);
 				TokenToLine(buffer);
@@ -508,7 +520,7 @@ void PrintSubtermList()
 }
 
 /*
- 		#] PrintSubtermList : 
+ 		#] PrintSubtermList :
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
@@ -549,5 +561,73 @@ WORD FindSubexpression(WORD *subexpr)
 }
 
 /*
- 		#] FindSubexpression :
+ 		#] FindSubexpression : 
+ 		#[ ExtraSymFun :
+*/
+
+int ExtraSymFun(PHEAD WORD *term,WORD level)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	WORD *termout, *t1, *t2, *t3, *tstop, *tend, i;
+	int retval = 0;
+	tend = termout = term + *term;
+	tstop = tend - ABS(tend[-1]);
+	t3 = t1 = term+1; t2 = termout+1;
+/*
+	First refind the function(s). There is at least one.
+*/
+	while ( t1 < tstop ) {
+		if ( *t1 == EXTRASYMFUN && t1[1] == FUNHEAD+2 ) {
+			if ( t1[FUNHEAD] == -SNUMBER && t1[FUNHEAD+1] <= cbuf[AM.sbufnum].numrhs
+							&& t1[FUNHEAD+1] > 0 ) {
+				i = t1[FUNHEAD+1];
+			}
+			else if ( t1[FUNHEAD] == -SYMBOL && t1[FUNHEAD+1] < MAXVARIABLES 
+							&& t1[FUNHEAD+1] >= MAXVARIABLES-cbuf[AM.sbufnum].numrhs ) {
+				i = MAXVARIABLES - t1[FUNHEAD+1];
+			}
+			else goto nocase;
+			while ( t3 < t1 ) *t2++ = *t3++;
+/*
+				Now inset the rhs pointer
+*/
+			*t2++ = SUBEXPRESSION;
+			*t2++ = SUBEXPSIZE;
+			*t2++ = i;
+			*t2++ = 1;
+			*t2++ = AM.sbufnum;
+			FILLSUB(t2)
+			t3 = t1 = t1 + t1[1];
+		}
+		else if ( *t1 == EXTRASYMFUN && t1[1] == FUNHEAD ) {
+			while ( t3 < t1 ) *t2++ = *t3++;
+			t3 = t1 = t1 + t1[1];
+		}
+		else {
+nocase:;
+			t1 = t1 + t1[1];
+		}
+	}
+	while ( t3 < tend ) *t2++ = *t3++;
+	*termout = t2 - termout;
+	AT.WorkPointer = termout;
+	if ( AT.WorkPointer >= AT.WorkTop ) {
+		LOCK(ErrorMessageLock);
+		MesWork();
+		UNLOCK(ErrorMessageLock);
+		AT.WorkPointer = oldworkpointer;
+		return(-1);
+	}
+	retval = Generator(BHEAD termout,level);
+	AT.WorkPointer = oldworkpointer;
+	if ( retval < 0 ) {
+		LOCK(ErrorMessageLock);
+		MesCall("ExtraSymFun");
+		UNLOCK(ErrorMessageLock);
+	}
+	return(retval);
+}
+
+/*
+ 		#] ExtraSymFun :
 */

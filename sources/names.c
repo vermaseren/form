@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -41,7 +41,7 @@
 /* EXTERNLOCK(dummylock) */
 
 /*
-  	#] Includes : 
+  	#] Includes :
 
   	#[ GetNode :
 */
@@ -64,7 +64,7 @@ NAMENODE *GetNode(NAMETREE *nametree, UBYTE *name)
 }
 
 /*
-  	#] GetNode : 
+  	#] GetNode :
   	#[ AddName :
 */
 
@@ -239,7 +239,7 @@ int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenu
 }
 
 /*
-  	#] AddName : 
+  	#] AddName :
   	#[ GetName :
 
 	When AutoDeclare is an active statement.
@@ -253,7 +253,7 @@ int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 {
 	NAMENODE *n;
 	int node, newnode, i;
-	UBYTE *s, *t;
+	UBYTE *s, *t, *u;
 	if ( nametree->namenode == 0 || nametree->namefill == 0 ) goto NotFound;
 	newnode = nametree->headnode;
 	do {
@@ -270,10 +270,16 @@ int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 	s = name;
 	while ( *s ) s++;
 	if ( s > name && s[-1] == '_' && nametree == AC.varnames ) {
+/*
+			The Kronecker delta d_ is very special. It is not really a function.
+*/
 		if ( s == name+2 && ( *name == 'd' || *name == 'D' ) ) {
 			*number = DELTA-FUNCTION;
 			return(CDELTA);
 		}
+/*
+			Test for N#_? type variables (summed indices)
+*/
 		if ( s > name+2 && *name == 'N' ) {
 			t = name+1; i = 0;
 			while ( FG.cTable[*t] == 1 ) i = 10*i + *t++ -'0';
@@ -282,6 +288,9 @@ int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 				return(CINDEX);
 			}
 		}
+/*
+			Now test for any built in object
+*/
 		newnode = nametree->headnode;
 		do {
 			node = newnode;
@@ -293,6 +302,24 @@ int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 				*number = n->number; return(n->type);
 			}
 		} while ( newnode >= 0 );
+/*
+			Now we test for the extra symbols of the type STR###_
+			The string sits in AC.extrasym and is followed by digits.
+			The name is only legal if the number is in the
+			range 1,...,cbuf[AM.sbufnum].numrhs
+*/
+		t = name; u = AC.extrasym;
+		while ( *t == *u ) { t++; u++; }
+		if ( *u == 0 && *t != 0 ) {	/* potential hit */
+			WORD x = 0;
+			while ( FG.cTable[*t] == 1 ) {
+				x = 10*x + (*t++ - '0');
+			}
+			if ( *t == '_' && x > 0 && x <= cbuf[AM.sbufnum].numrhs ) { /* Hit */
+				*number = MAXVARIABLES-x;
+				return(CSYMBOL);
+			}
+		}
 	}
 NotFound:;
 	if ( par != WITHAUTO || nametree == AC.autonames ) return(NAMENOTFOUND);
@@ -300,7 +327,7 @@ NotFound:;
 }
 
 /*
-  	#] GetName : 
+  	#] GetName :
   	#[ GetOName :
 
 	Adds the proper offsets, so we do not have to do that in the calling
@@ -320,7 +347,7 @@ int GetOName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 }
 
 /*
-  	#] GetOName : 
+  	#] GetOName :
   	#[ GetAutoName :
 
 	This routine gets the automatic declarations
@@ -367,7 +394,7 @@ int GetAutoName(UBYTE *name, WORD *number)
 }
 
 /*
-  	#] GetAutoName : 
+  	#] GetAutoName :
   	#[ GetVar :
 */
 
@@ -400,7 +427,7 @@ int GetVar(UBYTE *name, WORD *type, WORD *number, int wantedtype, int par)
 }
 
 /*
-  	#] GetVar : 
+  	#] GetVar :
   	#[ EntVar :
 */
 
@@ -433,7 +460,7 @@ WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z)
 }
 
 /*
-  	#] EntVar : 
+  	#] EntVar :
   	#[ GetDollar :
 */
 
@@ -445,7 +472,7 @@ int GetDollar(UBYTE *name)
 }
 
 /*
-  	#] GetDollar : 
+  	#] GetDollar :
   	#[ DumpTree :
 */
 
@@ -458,7 +485,7 @@ VOID DumpTree(NAMETREE *nametree)
 }
 
 /*
-  	#] DumpTree : 
+  	#] DumpTree :
   	#[ DumpNode :
 */
 
@@ -477,7 +504,7 @@ VOID DumpNode(NAMETREE *nametree, WORD node, WORD depth)
 }
 
 /*
-  	#] DumpNode : 
+  	#] DumpNode :
   	#[ CompactifyTree :
 */
 
@@ -539,7 +566,7 @@ int CompactifyTree(NAMETREE *nametree,WORD par)
 }
 
 /*
-  	#] CompactifyTree : 
+  	#] CompactifyTree :
   	#[ CopyTree :
 */
 
@@ -627,7 +654,7 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 }
 
 /*
-  	#] CopyTree : 
+  	#] CopyTree :
   	#[ LinkTree :
 */
 
@@ -658,7 +685,7 @@ VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
 }
 
 /*
-  	#] LinkTree : 
+  	#] LinkTree :
   	#[ MakeNameTree :
 */
 
@@ -677,7 +704,7 @@ NAMETREE *MakeNameTree()
 }
 
 /*
-  	#] MakeNameTree : 
+  	#] MakeNameTree :
   	#[ FreeNameTree :
 */
 
@@ -691,7 +718,7 @@ VOID FreeNameTree(NAMETREE *n)
 }
 
 /*
-  	#] FreeNameTree : 
+  	#] FreeNameTree :
 
   	#[ WildcardNames :
 */
@@ -760,7 +787,7 @@ int GetWildcardName(UBYTE *name)
 }
 
 /*
-  	#] WildcardNames : 
+  	#] WildcardNames :
 
   	#[ AddSymbol :
 
@@ -783,7 +810,7 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
 }
 
 /*
-  	#] AddSymbol : 
+  	#] AddSymbol :
   	#[ CoSymbol :
 
 	Symbol declarations.   name[#{R|I|C}][([min]:[max])]
@@ -886,7 +913,9 @@ skippar:		error = 1;
 				sym->maxpower = maxpow;
 			}
 		}
-		else AddSymbol(name,minpow,maxpow,cplx);
+		else {
+			AddSymbol(name,minpow,maxpow,cplx);
+		}
 		*oldc = c;
 eol:	while ( *s == ',' ) s++;
 	} while ( *s );
@@ -894,7 +923,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol : 
+  	#] CoSymbol :
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -916,7 +945,7 @@ int AddIndex(UBYTE *name, int dim, int dim4)
 }
 
 /*
-  	#] AddIndex : 
+  	#] AddIndex :
   	#[ CoIndex :
 
 	Index declarations. name[={number|symbol[:othersymbol]}]
@@ -966,7 +995,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoIndex : 
+  	#] CoIndex :
   	#[ DoDimension :
 */
 
@@ -1029,7 +1058,7 @@ illeg:	MesPrint("&Illegal dimension specification. Should be number >= 0, symbol
 }
 
 /*
-  	#] DoDimension : 
+  	#] DoDimension :
   	#[ CoDimension :
 */
 
@@ -1045,7 +1074,7 @@ int CoDimension(UBYTE *s)
 }
 
 /*
-  	#] CoDimension : 
+  	#] CoDimension :
   	#[ AddVector :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1065,7 +1094,7 @@ int AddVector(UBYTE *name, int cplx)
 }
 
 /*
-  	#] AddVector : 
+  	#] AddVector :
   	#[ CoVector :
 
 	Vector declarations. The descriptor string is "(,%n)"
@@ -1101,7 +1130,7 @@ IllForm:	MesPrint("&Illegally formed name in vector statement");
 }
 
 /*
-  	#] CoVector : 
+  	#] CoVector :
   	#[ AddFunction :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1126,7 +1155,7 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop)
 }
 
 /*
-  	#] AddFunction : 
+  	#] AddFunction :
   	#[ CoFunction + ...:
 
 	Function declarations.
@@ -1240,7 +1269,7 @@ int CoNTensor(UBYTE *s) { return(CoFunction(s,1,2)); }
 int CoCTensor(UBYTE *s) { return(CoFunction(s,0,2)); }
 
 /*
-  	#] CoFunction + ...: 
+  	#] CoFunction + ...:
   	#[ DoTable :
 
         Syntax:
@@ -1565,7 +1594,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 }
 
 /*
-  	#] DoTable : 
+  	#] DoTable :
   	#[ CoTable :
 */
 
@@ -1575,7 +1604,7 @@ int CoTable(UBYTE *s)
 }
 
 /*
-  	#] CoTable : 
+  	#] CoTable :
   	#[ CoNTable :
 */
 
@@ -1585,7 +1614,7 @@ int CoNTable(UBYTE *s)
 }
 
 /*
-  	#] CoNTable : 
+  	#] CoNTable :
   	#[ CoCTable :
 */
 
@@ -1595,7 +1624,7 @@ int CoCTable(UBYTE *s)
 }
 
 /*
-  	#] CoCTable : 
+  	#] CoCTable :
   	#[ AddSet :
 */
 
@@ -1623,7 +1652,7 @@ int AddSet(UBYTE *name)
 }
 
 /*
-  	#] AddSet : 
+  	#] AddSet :
   	#[ DoElements :
 */
 
@@ -1815,7 +1844,7 @@ IllForm:MesPrint("&Illegal name for set");
 }
 
 /*
-  	#] CoSet : 
+  	#] CoSet :
   	#[ DoTempSet :
 
 		Gets a {} set definition and returns a set number if the set is
@@ -1908,7 +1937,7 @@ int DoTempSet(UBYTE *from, UBYTE *to)
 }
 
 /*
-  	#] DoTempSet : 
+  	#] DoTempSet :
   	#[ CoAuto :
 
 	To prepare first:
@@ -1940,7 +1969,7 @@ int CoAuto(UBYTE *inp)
 }
 
 /*
-  	#] CoAuto : 
+  	#] CoAuto :
   	#[ AddDollar :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1979,7 +2008,7 @@ int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 }
 
 /*
-  	#] AddDollar : 
+  	#] AddDollar :
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.
@@ -2015,7 +2044,7 @@ int ReplaceDollar(WORD number, WORD newtype, WORD *newstart, LONG newsize)
 }
 
 /*
-  	#] ReplaceDollar : 
+  	#] ReplaceDollar :
   	#[ AddDubious :
 
 	This adds a variable of which we do not know the proper type.
@@ -2031,7 +2060,7 @@ int AddDubious(UBYTE *name)
 }
 
 /*
-  	#] AddDubious : 
+  	#] AddDubious :
   	#[ MakeDubious :
 */
 
@@ -2062,7 +2091,7 @@ int MakeDubious(NAMETREE *nametree, UBYTE *name, WORD *number)
 }
 
 /*
-  	#] MakeDubious : 
+  	#] MakeDubious :
   	#[ NameConflict :
 */
 
@@ -2082,7 +2111,7 @@ int NameConflict(int type, UBYTE *name)
 }
 
 /*
-  	#] NameConflict : 
+  	#] NameConflict :
   	#[ AddExpression :
 */
 
@@ -2122,7 +2151,7 @@ int AddExpression(UBYTE *name, int x, int y)
 }
 
 /*
-  	#] AddExpression : 
+  	#] AddExpression :
   	#[ GetLabel :
 */
 
@@ -2162,7 +2191,7 @@ int GetLabel(UBYTE *name)
 }
 
 /*
-  	#] GetLabel : 
+  	#] GetLabel :
   	#[ ResetVariables :
 
 	Resets the variables.
@@ -2463,7 +2492,7 @@ void ResetVariables(int par)
 }
 
 /*
-  	#] ResetVariables : 
+  	#] ResetVariables :
   	#[ RemoveDollars :
 */
 
@@ -2490,7 +2519,7 @@ void RemoveDollars()
 }
 
 /*
-  	#] RemoveDollars : 
+  	#] RemoveDollars :
   	#[ Globalize :
 */
 
@@ -2589,7 +2618,7 @@ void Globalize(int par)
 }
 
 /*
-  	#] Globalize : 
+  	#] Globalize :
   	#[ TestName :
 */
 
@@ -2608,6 +2637,6 @@ int TestName(UBYTE *name)
 }
 
 /*
-  	#] TestName : 
+  	#] TestName :
 */
 

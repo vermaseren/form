@@ -215,6 +215,10 @@ static struct fixedfun {
 	,{"atanh_"   ,0 ,0                ,0               ,0} /* ATANHFUNCTION */
 	,{"li2_"     ,0 ,0                ,0               ,0} /* LI2FUNCTION */
 	,{"lin_"     ,0 ,0                ,0               ,0} /* LINFUNCTION */
+/*
+     From here on we continue with new functions (26-sep-2010)
+*/
+	,{"extrasymbol_",0 ,0             ,0               ,0} /* EXTRASYMFUN */
 };
 
 FIXEDSET fixedsets[] = {

@@ -37,7 +37,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ includes :
 */
@@ -128,6 +128,7 @@ static KEYWORD com2commands[] = {
 	,{"endterm",        (TFUN)CoEndTerm,          STATEMENT,    PARTEST}
 	,{"endwhile",       (TFUN)CoEndWhile,         STATEMENT,    PARTEST}
 	,{"exit",           (TFUN)CoExit,             STATEMENT,    PARTEST}
+	,{"extrasymbols",   (TFUN)CoExtraSymbols,     DECLARATION,  PARTEST}
 	,{"factarg",        (TFUN)CoFactArg,          STATEMENT,    PARTEST}
 	,{"fill",           (TFUN)CoFill,             DECLARATION,  PARTEST}
 	,{"fillexpression", (TFUN)CoFillExpression,   DECLARATION,  PARTEST}
@@ -193,9 +194,7 @@ static KEYWORD com2commands[] = {
 	,{"term",           (TFUN)CoTerm,             STATEMENT,    PARTEST}
 	,{"testuse",        (TFUN)CoTestUse,          STATEMENT,    PARTEST}
 	,{"threadbucketsize",(TFUN)CoThreadBucket,    DECLARATION,  PARTEST}
-#ifndef TOPLOYNOMIAL
 	,{"topolynomial",   (TFUN)CoToPolynomial,     STATEMENT,    PARTEST}
-#endif
 	,{"totensor",       (TFUN)CoToTensor,         STATEMENT,    PARTEST}
 	,{"tovector",       (TFUN)CoToVector,         STATEMENT,    PARTEST}
 	,{"trace4",         (TFUN)CoTrace4,           STATEMENT,    PARTEST}
@@ -259,7 +258,7 @@ VOID inictable()
 }
 
 /*
- 		#] inictable :
+ 		#] inictable : 
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -311,7 +310,7 @@ KEYWORD *findcommand(UBYTE *in)
 }
 
 /*
- 		#] findcommand :
+ 		#] findcommand : 
  		#[ ParenthesesTest :
 */
 
@@ -355,7 +354,7 @@ int ParenthesesTest(UBYTE *sin)
 }
 
 /*
- 		#] ParenthesesTest :
+ 		#] ParenthesesTest : 
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -389,7 +388,7 @@ UBYTE *SkipAName(UBYTE *s)
 }
 
 /*
- 		#] SkipAName :
+ 		#] SkipAName : 
  		#[ IsRHS :
 */
 
@@ -435,7 +434,7 @@ UBYTE *IsRHS(UBYTE *s, UBYTE c)
 }
 
 /*
- 		#] IsRHS :
+ 		#] IsRHS : 
  		#[ IsIdStatement :
 */
 
@@ -446,7 +445,7 @@ int IsIdStatement(UBYTE *s)
 }
 
 /*
- 		#] IsIdStatement :
+ 		#] IsIdStatement : 
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -486,7 +485,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 }
 
 /*
- 		#] CompileAlgebra :
+ 		#] CompileAlgebra : 
  		#[ CompileStatement :
 
 */
@@ -599,7 +598,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
@@ -638,7 +637,7 @@ int TestTables()
 }
 
 /*
- 		#] TestTables :
+ 		#] TestTables : 
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -752,7 +751,7 @@ int CompileSubExpressions(SBYTE *tokens)
 }
 
 /*
- 		#] CompileSubExpressions :
+ 		#] CompileSubExpressions : 
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -1810,7 +1809,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1836,7 +1835,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 }
 
 /*
- 		#] CompleteTerm :
+ 		#] CompleteTerm : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

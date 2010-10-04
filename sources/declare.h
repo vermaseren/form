@@ -1461,9 +1461,10 @@ extern WORD FindSubexpression(WORD *subexpr);
 
 extern void UpdateMaxSize(VOID);
 
-#ifndef TOPLOYNOMIAL
 extern int CoToPolynomial(UBYTE *inp);
-#endif
+extern int CoExtraSymbols(UBYTE *inp);
+extern int ExtraSymFun(PHEAD WORD *,WORD);
+
 /*
   	#] Declarations :
 */

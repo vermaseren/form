@@ -306,6 +306,9 @@ VOID FullCleanUp()
 	AP.procedureExtension = strDup1(AP.cprocedureExtension,"procedureextension");
 
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag;
+	AC.extrasymbols = AM.gextrasymbols = AM.ggextrasymbols;
+	AC.extrasym[0] = AM.gextrasym[0] = AM.ggextrasym[0] = 'Z';
+	AC.extrasym[1] = AM.gextrasym[1] = AM.ggextrasym[1] = 0;
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers;
 	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace;
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats;

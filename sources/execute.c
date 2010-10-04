@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : execute.c
 */
@@ -45,7 +45,7 @@ PFDOLLARS *PFDollars;
 /*:[28sep2005 mt]*/
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -175,7 +175,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -186,7 +186,8 @@ WORD CleanExpr(WORD par)
 WORD PopVariables()
 {
 	GETIDENTITY
-	WORD j, retval;
+	WORD i, j, retval;
+	UBYTE *s;
 
 	retval = CleanExpr(1);
 	ResetVariables(1);
@@ -197,6 +198,11 @@ WORD PopVariables()
 	AC.NamesFlag = AM.gNamesFlag;
 	AC.StatsFlag = AM.gStatsFlag;
 	AC.TokensWriteFlag = AM.gTokensWriteFlag;
+	AC.extrasymbols = AM.gextrasymbols;
+	if ( AC.extrasym ) { M_free(AC.extrasym,"extrasym"); AC.extrasym = 0; }
+	i = 1; s = AM.gextrasym; while ( *s ) { s++; i++; }
+	AC.extrasym = (UBYTE *)Malloc1(i*sizeof(UBYTE),"extrasym");
+	for ( j = 0; j < i; j++ ) AC.extrasym[j] = AM.gextrasym[j];
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers;
 	AO.IndentSpace = AM.gIndentSpace;
 	AC.lUnitTrace = AM.gUnitTrace;
@@ -290,18 +296,24 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables : 
+ 		#] PopVariables :
  		#[ MakeGlobal :
 */
 
 VOID MakeGlobal()
 {
-	WORD i, *p, *m;
+	WORD i, j, *p, *m;
+	UBYTE *s;
 	Globalize(0);
 
 	AM.gCodesFlag = AC.CodesFlag;
 	AM.gNamesFlag = AC.NamesFlag;
 	AM.gStatsFlag = AC.StatsFlag;
+	AM.gextrasymbols = AC.extrasymbols;
+	if ( AM.gextrasym ) { M_free(AM.gextrasym,"extrasym"); AM.gextrasym = 0; }
+	i = 1; s = AC.extrasym; while ( *s ) { s++; i++; }
+	AM.gextrasym = (UBYTE *)Malloc1(i*sizeof(UBYTE),"extrasym");
+	for ( j = 0; j < i; j++ ) AM.gextrasym[j] = AC.extrasym[j];
 	AM.gTokensWriteFlag= AC.TokensWriteFlag;
 	AM.gNoSpacesInNumbers = AO.NoSpacesInNumbers;
 	AM.gIndentSpace = AO.IndentSpace;
@@ -351,7 +363,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ TestDrop :
 */
 
@@ -422,7 +434,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop : 
+ 		#] TestDrop :
  		#[ DoExecute :
 */
 
@@ -1091,7 +1103,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket : 
+ 		#] PutBracket :
  		#[ SpecialCleanup :
 */
 
@@ -1103,7 +1115,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup : 
+ 		#] SpecialCleanup :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1179,7 +1191,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions : 
+ 		#] ExchangeExpressions :
  		#[ GetFirstBracket :
 */
 
@@ -1284,7 +1296,7 @@ int GetFirstBracket(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstBracket : 
+ 		#] GetFirstBracket :
  		#[ TermsInExpression :
 */
 
@@ -1296,7 +1308,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression : 
+ 		#] TermsInExpression :
  		#[ UpdatePositions :
 */
 
@@ -1323,7 +1335,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions : 
+ 		#] UpdatePositions :
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1434,7 +1446,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 : 
+ 		#] CountTerms1 :
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1625,6 +1637,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level)
 	#] Expressions :
 */

@@ -855,6 +855,12 @@ WORD IniVars()
 	AC.lUnitTrace = AM.gUnitTrace = 4;
 	AC.NamesFlag = AM.gNamesFlag = 0;
 	AC.CodesFlag = AM.gCodesFlag = 0;
+	AC.extrasymbols = AM.gextrasymbols = AM.ggextrasymbols = 0;
+	AC.extrasym = (UBYTE *)Malloc1(2*sizeof(UBYTE),"extrasym");
+	AM.gextrasym = (UBYTE *)Malloc1(2*sizeof(UBYTE),"extrasym");
+	AM.ggextrasym = (UBYTE *)Malloc1(2*sizeof(UBYTE),"extrasym");
+	AC.extrasym[0] = AM.gextrasym[0] = AM.ggextrasym[0] = 'Z';
+	AC.extrasym[1] = AM.gextrasym[1] = AM.ggextrasym[1] = 0;
 	AC.TokensWriteFlag = AM.gTokensWriteFlag = 0;
 	AC.SetupFlag = 0;
 	AC.LineLength = AM.gLineLength = 79;
@@ -1025,7 +1031,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars : 
+ 		#] IniVars :
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/

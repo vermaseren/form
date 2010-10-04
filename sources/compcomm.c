@@ -3525,7 +3525,7 @@ redo:	AR.BracketOn++;
 }
 
 /*
-  	#] DoBrackets : 
+  	#] DoBrackets :
   	#[ CoBracket :
 */
 
@@ -3654,7 +3654,7 @@ RegEnd:
 }
 
 /*
-  	#] CoMultiBracket :
+  	#] CoMultiBracket : 
   	#[ CountComp :
 
 		This routine reads the count statement. The syntax is:
@@ -5288,8 +5288,6 @@ int CoDropCoefficient(UBYTE *s)
 	module option.
 */
 
-#ifndef TOPLOYNOMIAL
-
 int CoToPolynomial(UBYTE *inp)
 {
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
@@ -5302,9 +5300,80 @@ int CoToPolynomial(UBYTE *inp)
 	return(1);
 }
 
-#endif
+/*
+  	#] CoToPolynomial : 
+  	#[ CoExtraSymbols :
+*/
+
+int CoExtraSymbols(UBYTE *inp)
+{
+	UBYTE *arg1, *arg2, c, *s;
+	WORD i, j, type, number;
+	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+	if ( FG.cTable[*inp] != 0 ) {
+		MesPrint("&Illegal argument in ExtraSymbols statement: '%s'",inp);
+		return(1);
+	}
+	arg1 = inp;
+	while ( FG.cTable[*inp] == 0 ) inp++;
+	c = *inp; *inp = 0;
+	if ( ( StrICmp(arg1,(UBYTE *)"array") == 0 )
+			|| ( StrICmp(arg1,(UBYTE *)"vector") == 0 ) ) {
+		AC.extrasymbols = 1;
+	}
+	else if ( StrICmp(arg1,(UBYTE *)"underscore") == 0 ) {
+		AC.extrasymbols = 0;
+	}
+/*
+	else if ( StrICmp(arg1,(UBYTE *)"nothing") == 0 ) {
+		AC.extrasymbols = 2;
+	}
+*/
+	else {
+		MesPrint("&Illegal keyword in ExtraSymbols statement: '%s'",arg1);
+		return(1);
+	}
+	*inp = c;
+	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+	if ( FG.cTable[*inp] != 0 ) {
+		MesPrint("&Illegal argument in ExtraSymbols statement: '%s'",inp);
+		return(1);
+	}
+	arg2 = inp;
+	while ( FG.cTable[*inp] <= 1 ) inp++;
+	if ( *inp != 0 ) {
+		MesPrint("&Illegal end of ExtraSymbols statement: '%s'",inp);
+		return(1);
+	}
+/*
+		Now check whether this object has been declared already.
+		That would not be allowed.
+*/
+	if ( AC.extrasymbols == 1 ) {
+		type = GetName(AC.varnames,arg2,&number,NOAUTO);
+		if ( type != NAMENOTFOUND ) {
+			MesPrint("&ExtraSymbols statement: '%s' has already been declared before",arg2);
+			return(1);
+		}
+	}
+	else if ( AC.extrasymbols == 0 ) {
+		if ( *arg2 == 'N' ) {
+			s = arg2+1;
+			while ( FG.cTable[*s] == 1 ) s++;
+			if ( *s == 0 ) {
+				MesPrint("&ExtraSymbols statement: '%s' creates conflicts with summed indices",arg2);
+				return(1);
+			}
+		}
+	}
+	if ( AC.extrasym ) { M_free(AC.extrasym,"extrasym"); AC.extrasym = 0; }
+	i = inp - arg2 + 1;
+	AC.extrasym = (UBYTE *)Malloc1(i*sizeof(UBYTE),"extrasym");
+	for ( j = 0; j < i; j++ ) AC.extrasym[j] = arg2[j];
+	return(0);
+}
 
 /*
-  	#] CoToPolynomial :
+  	#] CoExtraSymbols :
 */
 /* temporary commentary for forcing cvs merge */

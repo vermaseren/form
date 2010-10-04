@@ -3,7 +3,7 @@
  
 /** @file mall.h
  *
- *  Malloc debugger extension, inline funclions
+ *  Malloc debugger extension, inline functions
  *  this file is the include file for the file tools.c
  */
 
@@ -99,7 +99,7 @@ reading over the allocated ares.
 The leftmost extra page is always allocated and mprotected. The size
 of the allocated chunk is stored in the beginning of this page.
 
-  	#] Documentation : 
+  	#] Documentation :
   	#[ Includes :
 */
 
@@ -239,12 +239,14 @@ static void segv_handler(int sig, siginfo_t *sip, void *xxx) {
 		size_t alignedAdr=((size_t)vadr) & (~(pageSize-1));
 		fprintf(stderr, "   Attach gdb -p %ld and set var loopForever=0 in a corresponding frame",
 			(long)getpid());
+#ifdef CORRECTCODE
 #ifdef WITHPTHREADS
 #ifdef LINUX
 		fprintf(stderr, "\n   of a thread with LPW id %ld",(long)syscall(SYS_gettid));
 #else
 		/*If the compiler fails here, just remove the next line:*/
 		fprintf(stderr, "\n   of thread with LPW id %ld",(long)gettid());
+#endif
 #endif
 #endif
 		fprintf(stderr, " to continue\n");
@@ -356,7 +358,7 @@ static void *mprotectMalloc(size_t theSize)
 #endif
 }/*mprotectMalloc*/
 /*
-  	#] mprotectMalloc :
+  	#] mprotectMalloc : 
 */
 
 /*
@@ -382,7 +384,7 @@ static void mprotectFree(char *ptr)
 }/*mprotectFree*/
 
 /*
-  	#] mprotectFree :
+  	#] mprotectFree : 
 */
 
 #endif

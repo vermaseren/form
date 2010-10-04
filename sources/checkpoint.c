@@ -91,7 +91,7 @@
 */
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ filenames and system commands :
 */
 
@@ -141,7 +141,7 @@ static char *storefile = 0;
 static int done_snapshot = 0;
 
 /*
-  	#] filenames and system commands :
+  	#] filenames and system commands : 
   	#[ CheckRecoveryFile :
 */
 
@@ -245,7 +245,7 @@ int CheckRecoveryFile()
 }
 
 /*
-  	#] CheckRecoveryFile :
+  	#] CheckRecoveryFile : 
   	#[ DeleteRecoveryFile :
 */
 
@@ -285,7 +285,7 @@ void DeleteRecoveryFile()
 }
 
 /*
-  	#] DeleteRecoveryFile :
+  	#] DeleteRecoveryFile : 
   	#[ RecoveryFilename :
 */
 
@@ -298,7 +298,7 @@ char *RecoveryFilename()
 }
 
 /*
-  	#] RecoveryFilename :
+  	#] RecoveryFilename : 
   	#[ InitRecovery :
 */
 
@@ -346,7 +346,7 @@ void InitRecovery()
 }
 
 /*
-  	#] InitRecovery :
+  	#] InitRecovery : 
   	#[ Debugging :
 */
 
@@ -1108,7 +1108,7 @@ static void print_R()
 #endif /* ifdef PRINTDEBUG */
 
 /*
-  	#] Debugging :
+  	#] Debugging : 
   	#[ Cached file operation functions :
 */
 
@@ -1171,7 +1171,7 @@ size_t flush_cache(FILE *fd)
 #endif
 
 /*
-  	#] Cached file operation functions :
+  	#] Cached file operation functions : 
   	#[ Helper Macros :
 */
 
@@ -1272,7 +1272,7 @@ time_t announce_time;
 #endif
 
 /*
-  	#] Helper Macros :
+  	#] Helper Macros : 
   	#[ DoRecovery :
 */
 
@@ -1377,11 +1377,14 @@ int DoRecovery(int *moduletype)
 	R_COPY_S(AM.gFortran90Kind,UBYTE *);
 	R_SET(AM.safetyfirst, WORD);
 
+	R_COPY_S(AM.gextrasym,UBYTE *);
+	R_COPY_S(AM.ggextrasym,UBYTE *);
+
 #ifdef PRINTDEBUG
 	print_M();
 #endif
 
-	/*#] AM : */
+	/*#] AM : */ 
 	/*#[ AC : */
 
 	/* #[ AC free pointers */
@@ -1895,11 +1898,13 @@ int DoRecovery(int *moduletype)
 	R_COPY_S(AC.CheckpointRunAfter,char*);
 	R_COPY_S(AC.CheckpointRunBefore,char*);
 
+	R_COPY_S(AC.extrasym,UBYTE *);
+
 #ifdef PRINTDEBUG
 	print_C();
 #endif
 
-	/*#] AC : */
+	/*#] AC : */ 
 	/*#[ AP : */
 
 	/* #[ AP free pointers */
@@ -2035,7 +2040,7 @@ int DoRecovery(int *moduletype)
 	print_P();
 #endif
 
-	/*#] AP : */
+	/*#] AP : */ 
 	/*#[ AR : */
 
 	R_SET(ofs,long);
@@ -2210,7 +2215,7 @@ int DoRecovery(int *moduletype)
 	print_R();
 #endif
 
-	/*#] AR : */
+	/*#] AR : */ 
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	/*#[ PF : */
@@ -2230,7 +2235,7 @@ int DoRecovery(int *moduletype)
 	R_SET(PF.exprbufsize, int);
 	R_SET(PF.module, LONG);
 	R_SET(PF.log, int);
-	/*#] PF : */
+	/*#] PF : */ 
 #endif
 /*:[20oct2009 mt]*/
 
@@ -2264,7 +2269,7 @@ int DoRecovery(int *moduletype)
 }
 
 /*
-  	#] DoRecovery :
+  	#] DoRecovery : 
   	#[ DoSnapshot :
 */
 
@@ -2309,7 +2314,7 @@ static int DoSnapshot(int moduletype)
 	/* write moduletype */
 	if ( fwrite(&moduletype, 1, sizeof(int), fd) != sizeof(int) ) return(__LINE__);
 
-	/* #[ AM */
+	/*#[ AM :*/
 
 	/* since most values don't change during execution, AM doesn't need to be
 	 * written as a whole. all values will be correctly set when starting up
@@ -2357,8 +2362,11 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_S(AM.gFortran90Kind);
 	S_WRITE_B(&AM.safetyfirst, sizeof(WORD));
 
-	/* #] AM */
-	/* #[ AC */
+	S_WRITE_S(AM.gextrasym);
+	S_WRITE_S(AM.ggextrasym);
+
+	/*#] AM :*/ 
+	/*#[ AC :*/
 
 	/* we write AC as a whole and then write all additional data step by step.
 	 * AC.DubiousList doesn't need to be treated, because it should be empty. */
@@ -2588,8 +2596,10 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_S(AC.CheckpointRunAfter);
 	S_WRITE_S(AC.CheckpointRunBefore);
 
-	/* #] AC */
-	/* #[ AP */
+	S_WRITE_S(AC.extrasym);
+
+	/*#] AC :*/ 
+	/*#[ AP :*/
 
 	/* we write AP as a whole and then write all additional data step by step. */
 
@@ -2665,8 +2675,8 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int));
 
-	/* #] AP */
-	/* #[ AR */
+	/*#] AP :*/ 
+	/*#[ AR :*/
 
 	ANNOUNCE(AR)
 	/* to remember which entry in AR.Fscr corresponds to the infile */
@@ -2725,10 +2735,10 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AR.SortType, sizeof(WORD));
 	S_WRITE_B(&AR.ShortSortCount, sizeof(WORD));
 
-	/* #] AR */
+	/*#] AR :*/ 
 
 /*[20oct2009 mt]:*/
-	/* #[ PF */
+	/*#[ PF :*/
 #ifdef PARALLEL
 	S_WRITE_B(&PF.numtasks, sizeof(int));
 	S_WRITE_B(&PF.synchro, sizeof(WORD));
@@ -2737,7 +2747,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&PF.module, sizeof(LONG));
 	S_WRITE_B(&PF.log, sizeof(int));
 #endif
-	/* #] PF */
+	/*#] PF :*/ 
 /*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS
@@ -2807,7 +2817,7 @@ static int DoSnapshot(int moduletype)
 }
 
 /*
-  	#] DoSnapshot :
+  	#] DoSnapshot : 
   	#[ DoCheckpoint :
 */
 
@@ -2958,5 +2968,5 @@ void DoCheckpoint(int moduletype)
 }
 
 /*
-  	#] DoCheckpoint :
+  	#] DoCheckpoint : 
 */
