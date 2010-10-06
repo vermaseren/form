@@ -566,6 +566,7 @@ typedef int (*TFUN1)();
 #define TYPEREPARG 72
 #define TYPETRANSFORM 73
 #define TYPETOPOLYNOMIAL 74
+#define TYPEFROMPOLYNOMIAL 75
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.

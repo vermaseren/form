@@ -75,6 +75,9 @@ WORD execarg(PHEAD WORD *term, WORD level)
 	scale = start[4];
 	renorm = start[5];
 	start += TYPEARGHEADSIZE;
+/*
+  	#[ Dollars :
+*/
 	if ( renorm && start[1] != 0 ) {/* We have to evaluate $ symbols inside () */
 		t = start+1; factor = oldwork2 = v = AT.WorkPointer;
 		i = *t; t++;
@@ -111,10 +114,16 @@ WORD execarg(PHEAD WORD *term, WORD level)
 		}
 		else factor = 0;
 	}
+/*
+  	#] Dollars : 
+*/
 	t = term;
 	r = t + *t;
 	rstop = r - ABS(r[-1]);
 	t++;
+/*
+  	#[ Argument detection : + argument statement
+*/
 	while ( t < rstop ) {
 		if ( *t >= FUNCTION && functions[*t-FUNCTION].spec == 0 ) {
 /*
@@ -603,6 +612,10 @@ ScaledVariety:;
 		}
 		t += t[1];
 	}
+/*
+  	#] Argument detection : 
+  	#[ SplitArg : + varieties
+*/
 	if ( ( type == TYPESPLITARG || type == TYPESPLITARG2
 	 || type == TYPESPLITFIRSTARG || type == TYPESPLITLASTARG ) && 
 	AT.pWorkPointer > oldppointer ) {
@@ -848,6 +861,10 @@ ScaledVariety:;
 		while ( --i >= 0 ) *t++ = *m++;
 		if ( AT.WorkPointer < m ) AT.WorkPointer = m;
 	}
+/*
+  	#] SplitArg : 
+  	#[ FACTARG :
+*/
 	if ( ( type == TYPEFACTARG || type == TYPEFACTARG2 ) && 
 	AT.pWorkPointer > oldppointer ) {
 		t = term+1;
@@ -1414,6 +1431,9 @@ oneterm:;
 		while ( --i >= 0 ) *t++ = *m++;
 		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
+/*
+  	#] FACTARG : 
+*/
 	AR.Cnumlhs = oldnumlhs;
 	if ( action && Normalize(BHEAD term) ) goto execargerr;
 	AT.WorkPointer = oldwork;

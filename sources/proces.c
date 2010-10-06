@@ -1693,7 +1693,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -3317,10 +3317,16 @@ CommonEnd:
 					if ( *term == 0 ) goto Return0;
 					AT.WorkPointer = term + *term;
 					break;
+				  case TYPEFROMPOLYNOMIAL:
+					AT.WorkPointer = term + *term;
+					if ( ConvertFromPoly(BHEAD term) < 0 ) goto GenCall;
+					if ( *term == 0 ) goto Return0;
+					AT.WorkPointer = term + *term;
+					goto ReStart;
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3750,7 +3756,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

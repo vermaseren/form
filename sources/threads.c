@@ -231,7 +231,7 @@ void StartHandleLock()
 }
 
 /*
-  	#] StartHandleLock : 
+  	#] StartHandleLock :
   	#[ StartAllThreads :
 */
 /**
@@ -297,6 +297,7 @@ int StartAllThreads(int number)
 	AR.infile = &(AR.Fscr[0]);
 	AR.outfile = &(AR.Fscr[1]);
 	AR.hidefile = &(AR.Fscr[2]);
+	AM.sbuflock = dummylock;
 	AS.inputslock = dummylock;
 	AS.outputslock = dummylock;
 	AS.MaxExprSizeLock = dummylock;
@@ -331,7 +332,7 @@ int StartAllThreads(int number)
 }
 
 /*
-  	#] StartAllThreads : 
+  	#] StartAllThreads :
   	#[ InitializeOneThread :
 */
 /**

@@ -408,6 +408,67 @@ int ConvertToPoly(PHEAD WORD *term)
 
 /*
  		#] ConvertToPoly : 
+ 		#[ ConvertFromPoly :
+
+		Converts a generic term from polynomial notation to the original
+		in which the extra symbols have been replaced by their values.
+		The output overwrites the input.
+		The output has to be sent to TestSub because it may contain
+		subexpressions when extra symbols have been replaced.
+*/
+
+int ConvertFromPoly(PHEAD WORD *term)
+{
+	WORD *oldwork = AT.WorkPointer, *outterm, *tout, *tstop, *tstop1, ncoef, *t, *r;
+	int i, first = 1;
+	outterm = AT.WorkPointer = term + *term;
+	tout = outterm+1;
+	ncoef = ABS(outterm[-1]);
+	tstop = outterm - ncoef;
+	r = t = term + 1;
+	while ( t < tstop ) {
+		if ( *t == SYMBOL ) {
+			while ( r < t ) *tout++ = *r++;
+			first = 0;
+			tstop1 = t + t[1]; t += 2;
+			while ( t < tstop1 ) {
+				if ( *t < MAXVARIABLES - cbuf[AM.sbufnum].numrhs ) {
+					*tout++ = SYMBOL;
+					*tout++ = 4;
+					*tout++ = *t++;
+					*tout++ = *t++;
+				}
+				else {	/* Caught one! */
+					*tout++ = SUBEXPRESSION;
+					*tout++ = SUBEXPSIZE;
+					*tout++ = MAXVARIABLES - *t++;
+					*tout++ = *t++;
+					*tout++ = AM.sbufnum;
+					FILLSUB(tout)
+				}
+			}
+			r = t;
+		}
+		else {
+			t += t[1];
+		}
+	}
+	if ( first ) {
+		AT.WorkPointer = oldwork;
+		return(*term);
+	}
+	while ( r < t ) *tout++ = *r++;
+	NCOPY(tout,tstop,ncoef)
+	i = *outterm = tout-outterm;
+	t = term; r = outterm;
+	NCOPY(t,r,i)
+	if ( outterm == oldwork ) AT.WorkPointer = term + *term;
+	else                      AT.WorkPointer = oldwork;
+	return(*term);
+}
+
+/*
+ 		#] ConvertFromPoly :
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -420,20 +481,25 @@ int ConvertToPoly(PHEAD WORD *term)
 
 WORD FindSubterm(WORD *subterm)
 {
-	WORD old[4], *ss, *term, number;
+	WORD old[5], *ss, *term, number;
 	CBUF *C = cbuf + AM.sbufnum;
-	LONG oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
-	AddRHS(AM.sbufnum,1);
+	LONG oldCpointer;
 	term = subterm-1;
 	ss = subterm+subterm[1];
 /*
 		Convert to proper term
 */
-	old[0] = *term; old[1] = ss[0]; old[2] = ss[1]; old[3] = ss[2];
-	ss[0] = 1; ss[1] = 1; ss[2] = 3; *term = subterm[1]+4;
+	old[0] = *term; old[1] = ss[0]; old[2] = ss[1]; old[3] = ss[2]; old[4] = ss[3];
+	ss[0] = 1; ss[1] = 1; ss[2] = 3; ss[3] = 0; *term = subterm[1]+4;
 /*
-		Add the term to the compiler buffer. Paste on a zero.
+		We may have to add the term to the compiler
+		buffer and then to the tree. This cannot be done in parallel and
+		hence we have to set a lock.
 */
+	LOCK(AM.sbuflock);
+
+	oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
+	AddRHS(AM.sbufnum,1);
 	AddNtoC(AM.sbufnum,*term,term);
 	AddToCB(C,0)
 /*
@@ -446,11 +512,12 @@ WORD FindSubterm(WORD *subterm)
 	if ( number < (C->numrhs) ) {	/* It existed already */
 		C->Pointer = oldCpointer + C->Buffer;
 		C->numrhs--;
-		*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3];
-		return(number);
 	}
-	*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3];
-	return(C->numrhs);
+
+	UNLOCK(AM.sbuflock);
+
+	*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3]; ss[3] = old[4];
+	return(number);
 }
 
 /*
@@ -463,39 +530,55 @@ WORD FindSubterm(WORD *subterm)
 		These variables have the names Z_123 etc.
 */
 
-void PrintSubtermList()
+void PrintSubtermList(int from,int to)
 {
 	UBYTE buffer[80], *out, outbuffer[300];
-	int first, i;
+	int first, i, inc = 1;
 	WORD *term;
 	CBUF *C = cbuf + AM.sbufnum;
+
+	if ( to < from ) inc = -1;
+	if ( to == from ) inc = 0;
 
 	AO.OutFill = AO.OutputLine = outbuffer;
 	AO.OutStop = AO.OutputLine+AC.LineLength;
 	AO.IsBracket = 0;
 	AO.OutSkip = 3;
 
-	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
-			 AO.OutSkip = 6;
-
+	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
+		TokenToLine((UBYTE *)"      ");
+		AO.OutSkip = 6;
+	}
+	else if ( AO.OutSkip > 0 ) {
+		for ( i = 0; i <= AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
+	}
+/*
 	FiniLine();
-
-	for ( i = 1; i <= C->numrhs; i++ ) {
+*/
+	i = from;
+	do {
+/*
+		if ( AC.OutputMode == NORMALFORMAT ) {
+			TokenToLine((UBYTE *)"id ");
+		}
+*/
 		out = StrCopy((UBYTE *)AC.extrasym,buffer);
 		if ( AC.extrasymbols == 0 ) {
-			out = NumCopy((MAXVARIABLES-i),out);
+			out = NumCopy(i,out);
 			out = StrCopy((UBYTE *)"_",out);
 		}
 		else if ( AC.extrasymbols == 1 ) {
-			out = StrCopy((UBYTE *)"(",out);
-			out = NumCopy(i,out);
-			out = StrCopy((UBYTE *)")",out);
+			if ( AC.OutputMode == CMODE ) {
+				out = StrCopy((UBYTE *)"[",out);
+				out = NumCopy(i,out);
+				out = StrCopy((UBYTE *)"]",out);
+			}
+			else {
+				out = StrCopy((UBYTE *)"(",out);
+				out = NumCopy(i,out);
+				out = StrCopy((UBYTE *)")",out);
+			}
 		}
-/*
-		else if ( AC.extrasymbols == 2 ) {
-			out = NumCopy((MAXVARIABLES-i),out);
-		}
-*/
 		out = StrCopy((UBYTE *)"=",out);
 		TokenToLine(buffer);
 		term = C->rhs[i];
@@ -516,11 +599,12 @@ void PrintSubtermList()
 			}
 		}
 		FiniLine();
-	}
+		i += inc;
+	} while ( i != to );
 }
 
 /*
- 		#] PrintSubtermList :
+ 		#] PrintSubtermList : 
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
@@ -536,6 +620,12 @@ WORD FindSubexpression(WORD *subexpr)
 	WORD *term, number;
 	CBUF *C = cbuf + AM.sbufnum;
 	LONG oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
+/*
+		We may have to add the subexpression to the tree.
+		This requires a lock.
+*/
+	LOCK(AM.sbuflock);
+
 	AddRHS(AM.sbufnum,1);
 	term = subexpr;
 	while ( *term ) term += *term;
@@ -555,9 +645,11 @@ WORD FindSubexpression(WORD *subexpr)
 	if ( number < (C->numrhs) ) {	/* It existed already */
 		C->Pointer = oldCpointer + C->Buffer;
 		C->numrhs--;
-		return(number);
 	}
-	return(C->numrhs);
+
+	UNLOCK(AM.sbuflock);
+
+	return(number);
 }
 
 /*
@@ -629,5 +721,5 @@ nocase:;
 }
 
 /*
- 		#] ExtraSymFun :
+ 		#] ExtraSymFun : 
 */

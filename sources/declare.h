@@ -1040,6 +1040,7 @@ extern int    CompileSubExpressions(SBYTE *);
 extern int    CodeGenerator(SBYTE *);
 extern int    CompleteTerm(WORD *,UWORD *,UWORD *,WORD,WORD,int);
 extern int    InsTree(int,int);
+extern int    FindTree(int,WORD *);
 extern void   RedoTree(CBUF *,int);
 extern void   ClearTree(int);
 extern int    CatchDollar(int);
@@ -1455,13 +1456,15 @@ extern int NormPolyTerm(PHEAD WORD *term);
 extern WORD ComparePoly(WORD *term1, WORD *term2, WORD level);
 extern int PolyBracket(WORD *term, WORD *bracket, int level);
 extern int ConvertToPoly(PHEAD WORD *term);
+extern int ConvertFromPoly(PHEAD WORD *term);
 extern WORD FindSubterm(WORD *subterm);
-extern void PrintSubtermList(VOID);
+extern void PrintSubtermList(int from,int to);
 extern WORD FindSubexpression(WORD *subexpr);
 
 extern void UpdateMaxSize(VOID);
 
 extern int CoToPolynomial(UBYTE *inp);
+extern int CoFromPolynomial(UBYTE *inp);
 extern int CoExtraSymbols(UBYTE *inp);
 extern int ExtraSymFun(PHEAD WORD *,WORD);
 

@@ -5293,7 +5293,7 @@ int CoToPolynomial(UBYTE *inp)
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
 	if ( *inp == 0 ) {
 		Add2Com(TYPETOPOLYNOMIAL)
-		AC.mparallelflag = NOPARALLEL_MOPT;
+/*		AC.mparallelflag = NOPARALLEL_MOPT; */
 		return(0);
 	}
 	MesPrint("&Illegal argument in ToPolynomial statement: '%s'",inp);
@@ -5301,7 +5301,26 @@ int CoToPolynomial(UBYTE *inp)
 }
 
 /*
-  	#] CoToPolynomial : 
+  	#] CoToPolynomial :
+  	#[ CoFromPolynomial :
+
+	Converts the current term as much as possible back from extra symbols
+	to their original values. Does not look inside functions.
+*/
+
+int CoFromPolynomial(UBYTE *inp)
+{
+	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+	if ( *inp == 0 ) {
+		Add2Com(TYPEFROMPOLYNOMIAL)
+		return(0);
+	}
+	MesPrint("&Illegal argument in FromPolynomial statement: '%s'",inp);
+	return(1);
+}
+
+/*
+  	#] CoFromPolynomial : 
   	#[ CoExtraSymbols :
 */
 
@@ -5374,6 +5393,5 @@ int CoExtraSymbols(UBYTE *inp)
 }
 
 /*
-  	#] CoExtraSymbols :
+  	#] CoExtraSymbols : 
 */
-/* temporary commentary for forcing cvs merge */

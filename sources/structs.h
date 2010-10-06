@@ -1200,6 +1200,7 @@ struct M_const {
 #ifdef WITHPTHREADS
     pthread_rwlock_t handlelock;   /* (M) */
     pthread_mutex_t storefilelock; /* (M) */
+	pthread_mutex_t	sbuflock;      /* (M) Lock for writing in the AM.sbuffer */
     LONG    ThreadScratSize;       /* (M) Size of Fscr[0/2] buffers of the workers */
     LONG    ThreadScratOutSize;    /* (M) Size of Fscr[1] buffers of the workers */
 #endif
@@ -1597,7 +1598,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1633,7 +1634,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.

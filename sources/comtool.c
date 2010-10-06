@@ -467,7 +467,46 @@ balance:;
 }
 
 /*
-  	#] InsTree :
+  	#] InsTree : 
+  	#[ FindTree :
+
+	Routines for balanced tree searching.
+	Is like InsTree but without the insertions.
+	Returns -1 if the element is not in the tree.
+	The advantage of this routine over InsTree is that this routine
+	can be run in parallel.
+*/
+
+int FindTree(int bufnum, WORD *subexpr)
+{
+	CBUF *C = cbuf + bufnum;
+	COMPTREE *boomlijst = C->boomlijst, *q = boomlijst + C->rootnum, *p;
+	WORD *v1, *v2, *v3;
+	int ip, iq;
+
+	ip = q->right;
+	while ( ip >= 0 ) {
+		p = boomlijst + ip;
+		v1 = C->rhs[p->value]; v2 = v3 = subexpr;
+		while ( *v3 ) v3 += *v3;  /* find the 0 that indicates end-of-expr */
+		while ( *v1 == *v2 && v2 < v3 ) { v1++; v2++; }
+		if ( *v1 > *v2 ) {
+			iq = p->right;
+			if ( iq >= 0 ) { ip = iq; }
+			else { return(-1); }
+		}
+		else if ( *v1 < *v2 ) {
+			iq = p->left;
+			if ( iq >= 0 ) { ip = iq; }
+			else { return(-1); }
+		}
+		else return(p->value);
+	}
+	return(-1);
+}
+
+/*
+  	#] FindTree :
   	#[ RedoTree :
 */
 

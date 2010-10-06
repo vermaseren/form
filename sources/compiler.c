@@ -132,12 +132,13 @@ static KEYWORD com2commands[] = {
 	,{"factarg",        (TFUN)CoFactArg,          STATEMENT,    PARTEST}
 	,{"fill",           (TFUN)CoFill,             DECLARATION,  PARTEST}
 	,{"fillexpression", (TFUN)CoFillExpression,   DECLARATION,  PARTEST}
+	,{"frompolynomial", (TFUN)CoFromPolynomial,   STATEMENT,    PARTEST}
 	,{"funpowers",      (TFUN)CoFunPowers,        DECLARATION,  PARTEST}
 	,{"hide",           (TFUN)CoHide,             SPECIFICATION,PARTEST}
 	,{"if",             (TFUN)CoIf,               STATEMENT,    PARTEST}
 	,{"ifmatch",        (TFUN)CoIfMatch,          STATEMENT,    PARTEST}
 	,{"ifnomatch",      (TFUN)CoIfNoMatch,        STATEMENT,    PARTEST}
-	,{"ifnotmatch",      (TFUN)CoIfNoMatch,        STATEMENT,    PARTEST}
+	,{"ifnotmatch",     (TFUN)CoIfNoMatch,        STATEMENT,    PARTEST}
 	,{"inexpression",   (TFUN)CoInExpression,     STATEMENT,    PARTEST}
 	,{"inparallel",     (TFUN)CoInParallel,       SPECIFICATION,PARTEST}
 	,{"inside",         (TFUN)CoInside,           STATEMENT,    PARTEST}
