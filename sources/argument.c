@@ -919,6 +919,9 @@ ScaledVariety:;
 							continue;
 						}
 					}
+/*
+					Now we have a nontrivial argument
+*/
 					r3 = t + *t;
 					t += ARGHEAD;  r5 = t; /* Store starting point */
 					/* We have terms from r5 to r3 */
@@ -981,11 +984,27 @@ ScaledVariety:;
 							t = r3; continue;
 						}
 					}
+/*
+					Now we take the first term and look for its pieces
+					inside the other terms.
+
+					It is at this point that a more general factorization
+					routine could take over (allowing for writing the output
+					properly of course).
+*/
+#ifdef WITHFACTORIZE
+					if ( ArgFactorize(BHEAD t,r1) < 0 ) {
+						MesCall("ExecArg");
+						return(-1);
+					}
+					t = t + *t;
+					while ( *r1 ) { NEXTARG(r1) }
+#else
 					rnext = t + *t;
 					GETSTOP(t,r6);
 					t++;
 					if ( factor == 0 ) {
-					while ( t < r6 ) {
+					  while ( t < r6 ) {
 						if ( *t == SYMBOL ) {
 							r7 = t; r8 = t + t[1]; t += 2;
 							while ( t < r8 ) {
@@ -1323,7 +1342,7 @@ nextterm:						mm = mnext;
 						else {
 							t += t[1];
 						}
-					}
+					  }
 					}
 					t = r5; pow = 1;
 					while ( t < r3 ) {
@@ -1413,6 +1432,7 @@ oneterm:;
 						}
 					}
 					TermFree(EAscrat,"execarg");
+#endif
 				}
 				r2[1] = r1 - r2;
 				action = 1;
@@ -1450,7 +1470,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -1724,5 +1744,33 @@ int DoRepArg(PHEAD WORD *term,int level)
 
 /*
   	#] DoRepArg : 
+  	#[ ArgFactorize :
+
+	Factorizes an argument in general notation (meaning that the first
+	word of the argument is a positive size indicator)
+	Input (argin):   pointer to the complete argument
+	Output (argout): Pointer to where the output should be written.
+	                 This is in the WorkSpace
+	Return value should be negative if anything goes wrong.
+
+	The notation of the output should be a string of arguments terminated
+	by the number zero.
+*/
+#ifdef WITHFACTORIZE
+
+int ArgFactorize(PHEAD WORD *argin, WORD *argout)
+{
+/*
+		First look whether we have done this one already
+*/
+/*
+		If not in the tables, we have to do this from first principles
+*/
+	return(-1);
+}
+
+#endif
+/*
+  	#] ArgFactorize :
 */
 

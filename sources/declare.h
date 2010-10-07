@@ -867,6 +867,7 @@ extern int    Add2ComStrings(int,WORD *,UBYTE *,UBYTE *);
 extern int    DoSymmetrize(UBYTE *,int);
 extern int    DoArgument(UBYTE *,int);
 extern int    DoRepArg(PHEAD WORD *,int);
+extern int    ArgFactorize(PHEAD WORD *,WORD *);
 extern int    DoBrackets(UBYTE *,int);
 extern WORD  *CountComp(UBYTE *,WORD *);
 extern int    CoAntiBracket(UBYTE *);

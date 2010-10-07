@@ -5375,36 +5375,38 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				while ( FG.cTable[*fstring] == 1 ) {
 					number = 10*number + *fstring++ - '0';
 				}
-				if ( *fstring == 'X' ) {
+				if ( *fstring == 'X' || *fstring == 'x' ) {
 					if ( number > 0 && number <= cbuf[AM.sbufnum].numrhs ) {
 						UBYTE buffer[80], *out, *old1, *old2, *old3;
 						WORD *term, first;
-						out = StrCopy((UBYTE *)AC.extrasym,buffer);
-						if ( AC.extrasymbols == 0 ) {
-							out = NumCopy(number,out);
-							out = StrCopy((UBYTE *)"_",out);
-						}
-						else if ( AC.extrasymbols == 1 ) {
-							if ( AC.OutputMode == CMODE ) {
-								out = StrCopy((UBYTE *)"[",out);
+						if ( *fstring == 'X' ) {
+							out = StrCopy((UBYTE *)AC.extrasym,buffer);
+							if ( AC.extrasymbols == 0 ) {
 								out = NumCopy(number,out);
-								out = StrCopy((UBYTE *)"]",out);
+								out = StrCopy((UBYTE *)"_",out);
 							}
-							else {
-								out = StrCopy((UBYTE *)"(",out);
-								out = NumCopy(number,out);
-								out = StrCopy((UBYTE *)")",out);
+							else if ( AC.extrasymbols == 1 ) {
+								if ( AC.OutputMode == CMODE ) {
+									out = StrCopy((UBYTE *)"[",out);
+									out = NumCopy(number,out);
+									out = StrCopy((UBYTE *)"]",out);
+								}
+								else {
+									out = StrCopy((UBYTE *)"(",out);
+									out = NumCopy(number,out);
+									out = StrCopy((UBYTE *)")",out);
+								}
 							}
-						}
-						out = StrCopy((UBYTE *)"=",out);
-						ss = buffer;
-						while ( ss < out ) {
-							if ( to >= stopper ) {
-								num = to - Out;
-								WriteString(wtype,Out,num);
-								to = Out;
+							out = StrCopy((UBYTE *)"=",out);
+							ss = buffer;
+							while ( ss < out ) {
+								if ( to >= stopper ) {
+									num = to - Out;
+									WriteString(wtype,Out,num);
+									to = Out;
+								}
+								*to++ = *ss++;
 							}
-							*to++ = *ss++;
 						}
 						term = cbuf[AM.sbufnum].rhs[number];
 						first = 1;
