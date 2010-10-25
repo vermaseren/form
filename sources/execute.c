@@ -197,6 +197,7 @@ WORD PopVariables()
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
 	AC.StatsFlag = AM.gStatsFlag;
+	AC.OldFactArgFlag = AM.gOldFactArgFlag;
 	AC.TokensWriteFlag = AM.gTokensWriteFlag;
 	AC.extrasymbols = AM.gextrasymbols;
 	if ( AC.extrasym ) { M_free(AC.extrasym,"extrasym"); AC.extrasym = 0; }
@@ -309,6 +310,7 @@ VOID MakeGlobal()
 	AM.gCodesFlag = AC.CodesFlag;
 	AM.gNamesFlag = AC.NamesFlag;
 	AM.gStatsFlag = AC.StatsFlag;
+    AM.gOldFactArgFlag = AC.OldFactArgFlag;
 	AM.gextrasymbols = AC.extrasymbols;
 	if ( AM.gextrasym ) { M_free(AM.gextrasym,"extrasym"); AM.gextrasym = 0; }
 	i = 1; s = AC.extrasym; while ( *s ) { s++; i++; }

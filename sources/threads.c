@@ -231,7 +231,7 @@ void StartHandleLock()
 }
 
 /*
-  	#] StartHandleLock :
+  	#] StartHandleLock : 
   	#[ StartAllThreads :
 */
 /**
@@ -568,6 +568,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 
 	LOCK(availabilitylock);
 	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
+	AT.fbufnum = inicbufs();		/* Buffer for caching in factorization */
 	UNLOCK(availabilitylock);
 
 	AT.RepCount = (int *)Malloc1((LONG)((AM.RepMax+3)*sizeof(int)),"repeat buffers");
@@ -1346,7 +1347,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] LOWESTLEVELGENERATION :
+			#] LOWESTLEVELGENERATION : 
 			#[ FINISHEXPRESSION :
 */
 #ifdef WITHSORTBOTS
@@ -1719,7 +1720,7 @@ ProcErr:
 }
 
 /*
-  	#] RunThread :
+  	#] RunThread : 
   	#[ RunSortBot :
 */
 /**
@@ -4610,5 +4611,18 @@ void SetHideFiles() {
 
 /*
   	#] SetHideFiles : 
+  	#[ IniFbufs :
+*/
+
+void IniFbufs(VOID)
+{
+	int i;
+	for ( i = 0; i < AM.totalnumberofthreads; i++ ) {
+		IniFbuffer(AB[i]->T.fbufnum);
+	}
+}
+
+/*
+  	#] IniFbufs :
 */
 #endif

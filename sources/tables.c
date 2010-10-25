@@ -84,6 +84,7 @@ void ClearTableTree(TABLES T)
 	root->parent = -1;
 	root->blnce = 0;
 	root->value = -1;
+	root->usage = 0;
 }
 
 /*
@@ -124,6 +125,7 @@ int InsTableTree(TABLES T, WORD *tp)
 		s->left = s->right = -1;
 		s->blnce = 0;
 		s->value = tp - T->tablepointers;
+		s->usage = 0;
 		return(T->numtree);
 	}
 	ip = q->right;
@@ -143,6 +145,7 @@ int InsTableTree(TABLES T, WORD *tp)
 				s = boomlijst + is;
 				s->parent = ip; s->left = s->right = -1;
 				s->blnce = 0;   s->value = tp - T->tablepointers;
+				s->usage = 0;
 				p->blnce++;
 				if ( p->blnce == 0 ) return(T->numtree);
 				goto balance;
@@ -158,6 +161,7 @@ int InsTableTree(TABLES T, WORD *tp)
 				p->left = is;
 				s->parent = ip; s->left = s->right = -1;
 				s->blnce = 0;   s->value = tp - T->tablepointers;
+				s->usage = 0;
 				p->blnce--;
 				if ( p->blnce == 0 ) return(T->numtree);
 				goto balance;
@@ -294,7 +298,10 @@ int FindTableTree(TABLES T, WORD *tp, int inc)
 		v1 = T->tablepointers + p->value;
 		v2 = tp; v3 = v1 + T->numind;
 		while ( *v1 == *v2 && v1 < v3 ) { v1++; v2 += inc; }
-		if ( v1 == v3 ) return(p->value);
+		if ( v1 == v3 ) {
+			p->usage++;
+			return(p->value);
+		}
 		if ( *v1 > *v2 ) {
 			iq = p->right;
 			if ( iq >= 0 ) { ip = iq; }

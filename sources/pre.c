@@ -719,6 +719,7 @@ VOID IniModule(int type)
 	AC.mparallelflag = AC.parallelflag;
 	AC.inparallelflag = 0;
 	NumPotModdollars = 0;
+	AC.topolynomialflag = 0;
 #ifdef WITHPTHREADS
 	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	else AS.MultiThreaded = 0;
@@ -730,7 +731,7 @@ VOID IniModule(int type)
 }
 
 /*
- 		#] IniModule : 
+ 		#] IniModule :
  		#[ IniSpecialModule :
 */
 

@@ -58,10 +58,10 @@ WORD execarg(PHEAD WORD *term, WORD level)
 	GETBIDENTITY
 	WORD *t, *r, *m, *v;
 	WORD *start, *stop, *rstop, *r1, *r2 = 0, *r3 = 0, *r4, *r5, *r6, *r7, *r8, *r9;
-	WORD *mm, *mstop, *mnext, *rnext, *rr, *factor, type, ngcd, nq;
+	WORD *mm, *mstop, *rnext, *rr, *factor, type, ngcd, nq;
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf+AT.ebufnum;
 	WORD i, j, k, oldnumlhs = AR.Cnumlhs, count, action = 0, olddefer = AR.DeferFlag;
-	WORD oldnumrhs = CC->numrhs, size, pow, ncom, jj;
+	WORD oldnumrhs = CC->numrhs, size, pow, jj;
 	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AT.pWorkPointer, lp;
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
 	WORD kLCM = 0, kGCD = 0, kGCD2, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
@@ -435,6 +435,11 @@ HaveTodo:
 						j = 2*k+1;
 /*
 						Now we have to correct the overal factor
+
+						We have a little problem here.
+						r3 is in GCDbuffer and we returned that.
+						At the same time we still use it.
+						This works as long as each worker has its own TermMalloc
 */
 						if ( scale && ( factor == 0 || *factor > 0 ) )
 							goto ScaledVariety;
@@ -992,19 +997,128 @@ ScaledVariety:;
 					routine could take over (allowing for writing the output
 					properly of course).
 */
-#ifdef WITHFACTORIZE
-					if ( ArgFactorize(BHEAD t,r1) < 0 ) {
-						MesCall("ExecArg");
-						return(-1);
+					if ( AC.OldFactArgFlag == 0 ) {
+					if ( factor == 0 ) {
+						WORD *oldworkpointer2 = AT.WorkPointer;
+						AT.WorkPointer = r1 + AM.MaxTer;
+						if ( ArgFactorize(BHEAD t-ARGHEAD,r1) < 0 ) {
+							MesCall("ExecArg");
+							return(-1);
+						}
+						AT.WorkPointer = oldworkpointer2;
+						t = r3;
+						while ( *r1 ) { NEXTARG(r1) }
 					}
-					t = t + *t;
-					while ( *r1 ) { NEXTARG(r1) }
-#else
+					else {
+						rnext = t + *t;
+						GETSTOP(t,r6);
+						t++;
+						t = r5; pow = 1;
+						while ( t < r3 ) {
+							t += *t; if ( t[-1] > 0 ) { pow = 0; break; }
+						}
+/*
+						We have to add here the code for computing the GCD
+						and to divide it out.
+
+			#[ Numerical factor :
+*/
+						t = r5;
+						EAscrat = (UWORD *)(TermMalloc("execarg"));
+						if ( t + *t == r3 ) goto onetermnew;
+						GETSTOP(t,r6);
+						ngcd = t[t[0]-1];
+						i = abs(ngcd)-1;
+						while ( --i >= 0 ) EAscrat[i] = r6[i];
+						t += *t;
+						while ( t < r3 ) {
+							GETSTOP(t,r6);
+							i = t[t[0]-1];
+							if ( AccumGCD(EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
+							if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
+							t += *t;
+						}
+	 					if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+							if ( pow ) ngcd = -ngcd;
+							t = r5; r9 = r1; *r1++ = t[-ARGHEAD]; *r1++ = 1;
+							FILLARG(r1); ngcd = REDLENG(ngcd);
+							while ( t < r3 ) {
+								GETSTOP(t,r6);
+								r7 = t; r8 = r1;
+								while ( r7 < r6) *r1++ = *r7++;
+								t += *t;
+								i = REDLENG(t[-1]);
+								if ( DivRat(BHEAD (UWORD *)r6,i,EAscrat,ngcd,(UWORD *)r1,&nq) ) goto execargerr;
+								nq = INCLENG(nq);
+								i = ABS(nq)-1;
+								r1 += i; *r1++ = nq; *r8 = r1-r8;
+							}
+							*r9 = r1-r9;
+							ngcd = INCLENG(ngcd);
+							i = ABS(ngcd)-1;
+							if ( factor && *factor == 0 ) {}
+							else if ( ( factor && factor[0] == 4 && factor[2] == 1
+							&& factor[3] == -3 ) || pow == 0 ) {
+								r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
+								FILLARG(r1); *r1++ = i+2;
+								for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
+								*r1++ = ngcd;
+								if ( ToFast(r9,r9) ) r1 = r9+2;
+							}
+							else if ( factor && factor[0] == 4 && factor[2] == 1
+							&& factor[3] > 0 && pow ) {
+								if ( ngcd < 0 ) ngcd = -ngcd;
+								*r1++ = -SNUMBER; *r1++ = -1;
+								r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
+								FILLARG(r1); *r1++ = i+2;
+								for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
+								*r1++ = ngcd;
+								if ( ToFast(r9,r9) ) r1 = r9+2;
+							}
+							else {
+								if ( ngcd < 0 ) ngcd = -ngcd;
+								if ( pow ) { *r1++ = -SNUMBER; *r1++ = -1; }
+								if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+									r9 = r1; *r1++ = ARGHEAD+2+i; *r1++ = 0;
+									FILLARG(r1); *r1++ = i+2;
+									for ( j = 0; j < i; j++ ) *r1++ = EAscrat[j];
+									*r1++ = ngcd;
+									if ( ToFast(r9,r9) ) r1 = r9+2;
+								}
+							}
+	 					}
+/*
+			#] Numerical factor : 
+*/
+						else {
+onetermnew:;
+							if ( factor == 0 || *factor > 2 ) {
+							if ( pow > 0 ) {
+								*r1++ = -SNUMBER; *r1++ = -1;
+								t = r5;
+								while ( t < r3 ) {
+									t += *t; t[-1] = -t[-1];
+								}
+							}
+							t = rr; *r1++ = *t++; *r1++ = 1; t++;
+							COPYARG(r1,t);
+							while ( t < m ) *r1++ = *t++;
+							}
+						}
+						TermFree(EAscrat,"execarg");
+					}
+					}
+					else {	/* AC.OldFactArgFlag is ON */
+					{
+					WORD *mnext, ncom;
 					rnext = t + *t;
 					GETSTOP(t,r6);
 					t++;
 					if ( factor == 0 ) {
 					  while ( t < r6 ) {
+/*
+			#[ SYMBOL :
+*/
 						if ( *t == SYMBOL ) {
 							r7 = t; r8 = t + t[1]; t += 2;
 							while ( t < r8 ) {
@@ -1073,6 +1187,10 @@ ScaledVariety:;
 								t += 2;
 							}
 						}
+/*
+			#] SYMBOL : 
+			#[ DOTPRODUCT :
+*/
 						else if ( *t == DOTPRODUCT ) {
 							r7 = t; r8 = t + t[1]; t += 2;
 							while ( t < r8 ) {
@@ -1146,6 +1264,10 @@ ScaledVariety:;
 								t += 3;
 							}
 						}
+/*
+			#] DOTPRODUCT : 
+			#[ DELTA/VECTOR :
+*/
 						else if ( *t == DELTA || *t == VECTOR ) {
 							r7 = t; r8 = t + t[1]; t += 2;
 							while ( t < r8 ) {
@@ -1199,6 +1321,10 @@ ScaledVariety:;
 								t += 2;
 							}
 						}
+/*
+			#] DELTA/VECTOR : 
+			#[ INDEX :
+*/
 						else if ( *t == INDEX ) {
 							r7 = t; r8 = t + t[1]; t += 2;
 							while ( t < r8 ) {
@@ -1262,6 +1388,10 @@ ScaledVariety:;
 								t += 1;
 							}
 						}
+/*
+			#] INDEX : 
+			#[ FUNCTION :
+*/
 						else if ( *t >= FUNCTION ) {
 /*
 							In the next code we should actually look inside
@@ -1288,7 +1418,7 @@ ScaledVariety:;
 										if ( i >= t[1] )
 											{ mm += mm[1]; goto nextmterm; }
 									}
-									if ( ncom && *mm != DUMMYFUN && *m != DUMMYTEN )
+									if ( ncom && *mm != DUMMYFUN && *mm != DUMMYTEN )
 										{ pow = 0; break; }
 									mm += mm[1];
 								}
@@ -1339,6 +1469,9 @@ nextterm:						mm = mnext;
 							v[2] = DIRTYFLAG;
 							t += t[1];
 						}
+/*
+			#] FUNCTION : 
+*/
 						else {
 							t += t[1];
 						}
@@ -1351,6 +1484,9 @@ nextterm:						mm = mnext;
 /*
 					We have to add here the code for computing the GCD
 					and to divide it out.
+*/
+/*
+			#[ Numerical factor :
 */
 					t = r5;
 					EAscrat = (UWORD *)(TermMalloc("execarg"));
@@ -1416,6 +1552,9 @@ nextterm:						mm = mnext;
 							}
 						}
  					}
+/*
+			#] Numerical factor : 
+*/
 					else {
 oneterm:;
 						if ( factor == 0 || *factor > 2 ) {
@@ -1432,7 +1571,8 @@ oneterm:;
 						}
 					}
 					TermFree(EAscrat,"execarg");
-#endif
+					}
+                	} /* AC.OldFactArgFlag */
 				}
 				r2[1] = r1 - r2;
 				action = 1;
@@ -1745,32 +1885,1233 @@ int DoRepArg(PHEAD WORD *term,int level)
 /*
   	#] DoRepArg : 
   	#[ ArgFactorize :
-
-	Factorizes an argument in general notation (meaning that the first
-	word of the argument is a positive size indicator)
-	Input (argin):   pointer to the complete argument
-	Output (argout): Pointer to where the output should be written.
-	                 This is in the WorkSpace
-	Return value should be negative if anything goes wrong.
-
-	The notation of the output should be a string of arguments terminated
-	by the number zero.
 */
-#ifdef WITHFACTORIZE
+/**
+ *	Factorizes an argument in general notation (meaning that the first
+ *	word of the argument is a positive size indicator)
+ *	Input (argin):   pointer to the complete argument
+ *	Output (argout): Pointer to where the output should be written.
+ *	                 This is in the WorkSpace
+ *	Return value should be negative if anything goes wrong.
+ *
+ *	The notation of the output should be a string of arguments terminated
+ *	by the number zero.
+ */
 
 int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 {
+	WORD *argfree, *argextra, *argcopy, *t, *tstop, *a, *a1, *a2;
+	WORD startebuf = cbuf[AT.ebufnum].numrhs;
+	int error = 0, action = 0, i, ii, number;
+	*argout = 0;
 /*
-		First look whether we have done this one already
+		Step 1: take out the 'content'.
 */
+	if ( ( argfree = TakeArgContent(BHEAD argin,argout) ) == 0 ) {
+		argfree = argin;
+	}
+	else {
 /*
-		If not in the tables, we have to do this from first principles
+		The way we took out objects is rather brutish. We have to
+		normalize
 */
-	return(-1);
+		NewSort();
+		t = argfree+ARGHEAD;
+		while ( *t ) {
+			tstop = t + *t;
+			Normalize(BHEAD t);
+			StoreTerm(BHEAD t);
+			t = tstop;
+		}
+		EndSort(argfree+ARGHEAD,0);
+		t = argfree+ARGHEAD;
+		while ( *t ) t += *t;
+		*argfree = t - argfree;
+	}
+/*
+		Step 2: look whether we have done this one already.
+*/
+	if ( ( number = FindArg(BHEAD argfree) ) != 0 ) {
+		if ( number > 0 ) t = cbuf[AT.fbufnum].rhs[number-1];
+		else              t = cbuf[AC.ffbufnum].rhs[-number-1];
+/*
+		Now position on the result. Remember we have in the cache:
+					inputarg,0,outputargs,0
+		t is currently at inputarg. *inputarg is always positive.
+		in principle this holds also for the arguments in the output
+		but we take no risks here (in case of future developments).
+*/
+		t += *t; t++;
+		tstop = t; while ( *tstop ) NEXTARG(tstop);
+		i = tstop - t;
+		a = argout; while ( *a ) NEXTARG(a);
+		ii = a - argout;
+		a2 = a; a1 = a + i;
+		*a1 = 0;
+		while ( ii > 0 ) { *--a1 = *--a2; ii--; }
+		a = argout;
+		NCOPY(a,t,i)
+		goto return0;
+	}
+/*
+		Step 3: if there are objects that are not SYMBOLs,
+		        invoke ConvertToPoly
+				We make a copy first in case there are no factors
+*/
+	argcopy = TermMalloc("argcopy");
+	for ( i = 0; i <= *argfree; i++ ) argcopy[i] = argfree[i];
+
+	t = argfree + ARGHEAD; tstop = argfree + *argfree;
+	while ( t < tstop ) {
+		if ( ( t[1] != SYMBOL ) && ( *t != (ABS(t[*t-1])+1) ) ) {
+			action = 1; break;
+		}
+		t += *t;
+	}
+	if ( action ) {
+		t = argfree + ARGHEAD;
+		argextra = AT.WorkPointer;
+		NewSort();
+		while ( t < tstop ) {
+			if ( LocalConvertToPoly(BHEAD t,argextra,startebuf) < 0 ) {
+				error = -1;
+getout:
+				TermFree(argcopy,"argcopy");
+				if ( argfree != argin ) TermFree(argfree,"argfree");
+				MesCall("ArgFactorize");
+				Terminate(-1);
+				return(-1);
+			}
+			StoreTerm(BHEAD argextra);
+			t += *t; argextra += *argextra;
+		}
+		if ( EndSort(argfree+ARGHEAD,0) ) { error = -2; goto getout; }
+		t = argfree + ARGHEAD;
+		while ( *t > 0 ) t += *t;
+		*argfree = t - argfree;
+	}
+/*
+		Step 4: If not in the tables, we have to do this by hard work.
+*/
+	a = argout;
+	while ( *a ) NEXTARG(a);
+	if ( DoFactorize(BHEAD argfree,a) < 0 ) {
+		MesCall("ArgFactorize");
+		error = -1;
+	}
+/*
+		Step 5: If ConvertToPoly was used, use now ConvertFromPoly
+		        Be careful: there should be more than one argument now.
+*/
+	if ( error == 0 && action ) {
+	  if ( a[*a] != 0 ) {
+		CBUF *C = cbuf+AC.cbufnum;
+		CBUF *CC = cbuf+AT.ebufnum;
+		WORD *oldworkpointer = AT.WorkPointer;
+		WORD *argcopy2 = TermMalloc("argcopy2"), *a1, *a2;
+		a1 = argfree; a2 = argcopy2;
+		while ( *a1 ) {
+			t = a1 + ARGHEAD;
+			tstop = a1 + *a1;
+			argextra = AT.WorkPointer;
+			NewSort();
+			while ( t < tstop ) {
+				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol) ) {
+					TermFree(argcopy2,"argcopy2");
+					LowerSortLevel();
+					error = -3;
+					goto getout;
+				}
+				t += *t;
+				AT.WorkPointer = argextra + *argextra;
+/*
+				ConvertFromPoly leaves terms with subexpressions. Hence:
+*/
+				if ( Generator(BHEAD argextra,C->numlhs) ) {
+					TermFree(argcopy2,"argcopy2");
+					LowerSortLevel();
+					error = -4;
+					goto getout;
+				}
+			}
+			AT.WorkPointer = oldworkpointer;
+			if ( EndSort(a2+ARGHEAD,0) ) { error = -5; goto getout; }
+			*a2 = t - a2; a2[1] = 0; ZEROARG(a2); a2 = t;
+			a1 = tstop;
+		}
+		i = a2 - argcopy2;
+		a2 = argcopy2; a1 = argfree;
+		NCOPY(a1,a2,i);
+		*a1 = 0;
+		TermFree(argcopy2,"argcopy2");
+/*
+		Erase the entries we made temporarily in cbuf[AT.ebufnum]
+*/
+		CC->numrhs = startebuf;
+	  }
+	  else {	/* no factorization. recover the argument from before step 3. */
+		for ( i = 0; i <= *argcopy; i++ ) argfree[i] = argcopy[i];
+	  }
+	}
+/*
+		Step 6: Add this one to the tables and possibly drop some elements
+		          in the tables when they become too full.
+*/
+	if ( error == 0 ) {
+		if ( InsertArg(BHEAD argcopy,a,0) < 0 ) { error = -1; }
+	}
+/*
+		Step 7: Clean up and return.
+
+		Change the order of the arguments in argout and a.
+		Use argcopy as spare space.
+*/
+	ii = a - argout;
+	for ( i = 0; i < ii; i++ ) argcopy[i] = argout[i];
+	a1 = a; while ( *a1 ) NEXTARG(a1);
+	i = a1 - a;
+	a2 = argout;
+	NCOPY(a2,a,i);
+	for ( i = 0; i < ii; i++ ) *a2++ = argcopy[i];
+	*a2 = 0;
+	TermFree(argcopy,"argcopy");
+return0:
+	if ( argfree != argin ) TermFree(argfree,"argfree");
+	return(error);
 }
 
-#endif
 /*
   	#] ArgFactorize :
+  	#[ FindArg :
+*/
+/**
+ *	Looks the argument up in the (workers) table.
+ *	If it is found the number in the table is returned (plus one to make it positive).
+ *	If it is not found we look in the compiler provided table.
+ *	If it is found - the number in the table is returned (minus one to make it negative).
+ *	If in neither table we return zero.
+ */
+
+WORD FindArg(PHEAD WORD *a)
+{
+	int number = FindTree(AT.fbufnum,a);
+	if ( number >= 0 ) return(number+1);
+	number = FindTree(AC.ffbufnum,a);
+	if ( number >= 0 ) return(-number-1);
+	return(0);
+}
+
+/*
+  	#] FindArg : 
+  	#[ InsertArg :
+*/
+/**
+ *	Inserts the argument into the (workers) table.
+ *	If the table is too full we eliminate half of it.
+ *	The eliminated elements are the ones that have not been used
+ *	most recently, weighted by their total use and age(?).
+ *	If par == 0 it inserts in the regular factorization cache
+ *	If par == 1 it inserts in the cache defined with the FactorCache statement
+ */
+
+WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
+{
+	CBUF *C;
+	WORD *a, i, bufnum;
+	if ( par == 0 ) {
+		bufnum = AT.fbufnum;
+		C = cbuf+bufnum;
+		if ( C->numrhs >= C->maxrhs ) CleanupArgCache(BHEAD AT.fbufnum);
+	}
+	else if ( par == 1 ) {
+		bufnum = AC.ffbufnum;
+		C = cbuf+bufnum;
+	}
+	else { return(-1); }
+	AddRHS(bufnum,1);
+	AddNtoC(bufnum,*argin,argin);
+	AddToCB(C,0)
+	a = argout; while ( *a ) NEXTARG(a);
+	i = a - argout;
+	AddNtoC(bufnum,i,argout);
+	AddToCB(C,0)
+	return(InsTree(bufnum,C->numrhs));
+}
+
+/*
+  	#] InsertArg : 
+  	#[ CleanupArgCache :
+*/
+/**
+ *	Cleans up the argument factorization cache.
+ *	We throw half the elements.
+ *	For a weight of what we want to keep we use the product of
+ *	usage and the number in the buffer.
+ */
+
+int CleanupArgCache(PHEAD WORD bufnum)
+{
+	CBUF *C = cbuf + bufnum;
+	COMPTREE *boomlijst = C->boomlijst;
+	LONG *weights = (LONG *)Malloc1(2*(C->numrhs+1)*sizeof(LONG),"CleanupArgCache");
+	LONG w, whalf, *extraweights;
+	WORD *a, *to, *from;
+	int i,j,k;
+	for ( i = 1; i <= C->numrhs; i++ ) {
+		weights[i] = ((LONG)i) * (boomlijst[i].usage);
+	}
+/*
+		Now sort the weights and determine the halfway weight
+*/
+	extraweights = weights+C->numrhs+1;
+	SortWeights(weights+1,extraweights,C->numrhs);
+	whalf = weights[C->numrhs/2+1];
+/*
+		We should drop everybody with a weight < whalf.
+*/
+	to = C->Buffer;
+	k = 1;
+	for ( i = 1; i <= C->numrhs; i++ ) {
+		from = C->rhs[i]; w = ((LONG)i) * (boomlijst[i].usage);
+		if ( w >= whalf ) {
+			if ( i < C->numrhs-1 ) {
+				if ( to == from ) {
+					to = C->rhs[i+1];
+				}
+				else {
+					j = C->rhs[i+1] - from;
+					C->rhs[k] = to;
+					NCOPY(to,from,j)
+				}
+			}
+			else if ( to == from ) {
+				to += *to + 1; while ( *to ) NEXTARG(to); to++;
+			}
+			else {
+				a = from; a += *a+1; while ( *a ) NEXTARG(a); a++;
+				j = a - from;
+				C->rhs[k] = to;
+				NCOPY(to,from,j)
+			}
+			weights[k++] = boomlijst[i].usage;
+		}
+	}
+	C->numrhs = k;
+	C->Pointer = to;
+/*
+		Next we need to rebuild the tree.
+		Note that this can probably be done much faster by using the
+		remains of the old tree !!!!!!!!!!!!!!!!
+*/
+	ClearTree(AT.fbufnum);
+	for ( i = 1; i <= k; i++ ) {
+		InsTree(AT.fbufnum,i);
+		boomlijst[i].usage = weights[i];
+	}
+/*
+		And cleanup
+*/
+	M_free(weights,"CleanupArgCache");
+	return(0);
+}
+
+/*
+  	#] CleanupArgCache : 
+  	#[ DoFactorize :
+*/
+/**
+ *	Does the factorization the hard way.
+ *	This is the domain of Jan Kuipers.
+ */
+
+int DoFactorize(PHEAD WORD *argin, WORD *argout)
+{
+/*
+	Just for now, copy the input to the output
+*/
+	int i = *argin;
+	NCOPY(argout,argin,i);
+	*argout = 0;
+	return(0);
+}
+
+/*
+  	#] DoFactorize : 
+  	#[ ArgSymbolMerge :
+*/
+
+int ArgSymbolMerge(WORD *t1, WORD *t2)
+{
+	WORD *t1e = t1+t1[1];
+	WORD *t2e = t2+t2[1];
+	WORD *t1a = t1+2;
+	WORD *t2a = t2+2;
+	WORD *t3;
+	while ( t1a < t1e && t2a < t2e ) {
+		if ( *t1a < *t2a ) {
+			if ( t1a[1] >= 0 ) {
+				t3 = t1a+2;
+				while ( t3 < t1e ) { t3[-2] = *t3; t3[-1] = t3[1]; t3 += 2; }
+				t1e -= 2;
+			}
+			else t1a += 2;
+		}
+		else if ( *t1a > *t2a ) {
+			if ( t2a[1] >= 0 ) t2a += 2;
+			else {
+				t3 = t2e;
+				while ( t3 > t1a ) { *t3 = t3[-2]; t3[1] = t3[-1]; t3 -= 2; }
+				*t1a++ = *t2a++;
+				*t1a++ = *t2a++;
+				t1e += 2;
+			}
+		}
+		else {
+			if ( t2a[1] < t1a[1] ) t1a[1] = t2a[1];
+			t1a += 2; t2a += 2;
+		}
+	}
+	while ( t2a < t2e ) {
+		if ( t2a[1] < 0 ) {
+			*t1a++ = *t2a++;
+			*t1a++ = *t2a++;
+		}
+		else t2a += 2;
+	}
+	t1[1] = t1a - t1;
+	return(0);
+}
+
+/*
+  	#] ArgSymbolMerge : 
+  	#[ ArgDotproductMerge :
+*/
+
+int ArgDotproductMerge(WORD *t1, WORD *t2)
+{
+	WORD *t1e = t1+t1[1];
+	WORD *t2e = t2+t2[1];
+	WORD *t1a = t1+2;
+	WORD *t2a = t2+2;
+	WORD *t3;
+	while ( t1a < t1e && t2a < t2e ) {
+		if ( *t1a < *t2a || ( *t1a == *t2a && t1a[1] < t2a[1] ) ) {
+			if ( t1a[2] >= 0 ) {
+				t3 = t1a+3;
+				while ( t3 < t1e ) { t3[-3] = *t3; t3[-2] = t3[1]; t3[-1] = t3[2]; t3 += 3; }
+				t1e -= 3;
+			}
+			else t1a += 3;
+		}
+		else if ( *t1a > *t2a || ( *t1a == *t2a && t1a[1] > t2a[1] ) ) {
+			if ( t2a[2] >= 0 ) t2a += 3;
+			else {
+				t3 = t2e;
+				while ( t3 > t1a ) { *t3 = t3[-3]; t3[1] = t3[-2]; t3[2] = t3[-1]; t3 -= 3; }
+				*t1a++ = *t2a++;
+				*t1a++ = *t2a++;
+				*t1a++ = *t2a++;
+				t1e += 3;
+			}
+		}
+		else {
+			if ( t2a[2] < t1a[2] ) t1a[2] = t2a[2];
+			t1a += 3; t2a += 3;
+		}
+	}
+	while ( t2a < t2e ) {
+		if ( t2a[2] < 0 ) {
+			*t1a++ = *t2a++;
+			*t1a++ = *t2a++;
+			*t1a++ = *t2a++;
+		}
+		else t2a += 3;
+	}
+	t1[1] = t1a - t1;
+	return(0);
+}
+
+/*
+  	#] ArgDotproductMerge : 
+  	#[ TakeArgContent :
+*/
+/**
+ *	Implements part of the old ExecArg in which we take common factors
+ *	from arguments with more than one term.
+ *	The common pieces are put in argout as a sequence of arguments.
+ *	The part with the multiple terms that are now relative prime is
+ *	put in argfree which is allocated via TermMalloc and is given as the
+ *	return value.
+ *	The difference with the old code is that negative powers are always
+ *	removed. Hence it is as in MakeInteger in which only numerators will
+ *	be left: now only zero or positive powers will be remaining.
+ */
+
+WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
+{
+	WORD *t, *rnext, *r1, *r2, *r3, *r5, *r6, *r7, *r8, *r9;
+	WORD pow, *mm, *mnext, *mstop, *argin2 = argin, *argin3 = argin, *argfree;
+	WORD ncom;
+	int action = 0, j, i, act;
+	r5 = t = argin + ARGHEAD;
+	r3 = argin + *argin;
+	rnext = t + *t;
+	GETSTOP(t,r6);
+	r1 = argout;
+	t++;
+/*
+		First pass: arrange everything but the symbols and dotproducts.
+		They need separate treatment because we have to take out negative
+		powers.
+*/
+	while ( t < r6 ) {
+/*
+			#[ DELTA/VECTOR :
+*/
+		if ( *t == DELTA || *t == VECTOR ) {
+			r7 = t; r8 = t + t[1]; t += 2;
+			while ( t < r8 ) {
+				mm = rnext;
+				pow = 1;
+				while ( mm < r3 ) {
+					mnext = mm + *mm;
+					GETSTOP(mm,mstop); mm++;
+					while ( mm < mstop ) {
+						if ( *mm != *r7 ) mm += mm[1];
+						else break;
+					}
+					if ( *mm == *r7 ) {
+						mstop = mm + mm[1]; mm += 2;
+						while ( ( *mm != *t || mm[1] != t[1] )
+							&& mm < mstop ) mm += 2;
+						if ( mm >= mstop ) pow = 0;
+					}
+					else pow = 0;
+					if ( pow == 0 ) break;
+					mm = mnext;
+				}
+				if ( pow == 0 ) { t += 2; continue; }
+/*
+				We have a factor
+*/
+				action = 1;
+				*r1++ = 8 + ARGHEAD;
+				for ( j = 1; j < ARGHEAD; j++ ) *r1++ = 0;
+				*r1++ = 8; *r1++ = *r7;
+				*r1++ = 4; *r1++ = *t; *r1++ = t[1];
+				*r1++ = 1; *r1++ = 1; *r1++ = 3;
+				argout = r1;
+/*
+				Now we have to remove the delta's/vectors
+*/
+				mm = rnext;
+				while ( mm < r3 ) {
+					mnext = mm + *mm;
+					GETSTOP(mm,mstop); mm++;
+					while ( mm < mstop ) {
+						if ( *mm != *r7 ) mm += mm[1];
+						else break;
+					}
+					mstop = mm + mm[1]; mm += 2;
+					while ( mm < mstop && (
+					 *mm != *t || mm[1] != t[1] ) ) mm += 2;
+					*mm = mm[1] = NOINDEX;
+					mm = mnext;
+				}
+				*t = t[1] = NOINDEX;
+				t += 2;
+			}
+		}
+/*
+			#] DELTA/VECTOR : 
+			#[ INDEX :
+*/
+		else if ( *t == INDEX ) {
+			r7 = t; r8 = t + t[1]; t += 2;
+			while ( t < r8 ) {
+				mm = rnext;
+				pow = 1;
+				while ( mm < r3 ) {
+					mnext = mm + *mm;
+					GETSTOP(mm,mstop); mm++;
+					while ( mm < mstop ) {
+						if ( *mm != *r7 ) mm += mm[1];
+						else break;
+					}
+					if ( *mm == *r7 ) {
+						mstop = mm + mm[1]; mm += 2;
+						while ( *mm != *t 
+							&& mm < mstop ) mm++;
+						if ( mm >= mstop ) pow = 0;
+					}
+					else pow = 0;
+					if ( pow == 0 ) break;
+					mm = mnext;
+				}
+				if ( pow == 0 ) { t++; continue; }
+/*
+				We have a factor
+*/
+				action = 1;
+				if ( *t < 0 ) { *r1++ = -VECTOR; }
+				else          { *r1++ = -INDEX; }
+				*r1++ = *t;
+				argout = r1;
+/*
+				Now we have to remove the index
+*/
+				*t = NOINDEX;
+				mm = rnext;
+				while ( mm < r3 ) {
+					mnext = mm + *mm;
+					GETSTOP(mm,mstop); mm++;
+					while ( mm < mstop ) {
+						if ( *mm != *r7 ) mm += mm[1];
+						else break;
+					}
+					mstop = mm + mm[1]; mm += 2;
+					while ( mm < mstop && 
+					 *mm != *t ) mm += 1;
+					*mm = NOINDEX;
+					mm = mnext;
+				}
+				t += 1;
+			}
+		}
+/*
+			#] INDEX : 
+			#[ FUNCTION :
+*/
+		else if ( *t >= FUNCTION ) {
+/*
+			In the next code we should actually look inside
+			the DENOMINATOR or EXPONENT for noncommuting objects
+*/
+			if ( *t >= FUNCTION &&
+				functions[*t-FUNCTION].commute == 0 ) ncom = 0;
+			else ncom = 1;
+			if ( ncom ) {
+				mm = r5 + 1;
+				while ( mm < t && ( *mm == DUMMYFUN
+				|| *mm == DUMMYTEN ) ) mm += mm[1];
+				if ( mm < t ) { t += t[1]; continue; }
+			}
+			mm = rnext; pow = 1;
+			while ( mm < r3 ) {
+				mnext = mm + *mm;
+				GETSTOP(mm,mstop); mm++;
+				while ( mm < mstop ) {
+					if ( *mm == *t && mm[1] == t[1] ) {
+						for ( i = 2; i < t[1]; i++ ) {
+							if ( mm[i] != t[i] ) break;
+						}
+						if ( i >= t[1] )
+							{ mm += mm[1]; goto nextmterm; }
+					}
+					if ( ncom && *mm != DUMMYFUN && *mm != DUMMYTEN )
+						{ pow = 0; break; }
+					mm += mm[1];
+				}
+				if ( mm >= mstop ) pow = 0;
+				if ( pow == 0 ) break;
+nextmterm:		mm = mnext;
+			}
+			if ( pow == 0 ) { t += t[1]; continue; }
+/*
+			Copy the function
+*/
+			action = 1;
+			*r1++ = t[1] + 4 + ARGHEAD;
+			for ( i = 1; i < ARGHEAD; i++ ) *r1++ = 0;
+			*r1++ = t[1] + 4;
+			for ( i = 0; i < t[1]; i++ ) *r1++ = t[i];
+			*r1++ = 1; *r1++ = 1; *r1++ = 3;
+			argout = r1;
+/*
+			Now we have to take out the functions
+*/
+			mm = rnext;
+			while ( mm < r3 ) {
+				mnext = mm + *mm;
+				GETSTOP(mm,mstop); mm++;
+				while ( mm < mstop ) {
+					if ( *mm == *t && mm[1] == t[1] ) {
+						for ( i = 2; i < t[1]; i++ ) {
+							if ( mm[i] != t[i] ) break;
+						}
+						if ( i >= t[1] ) {
+							if ( functions[*t-FUNCTION].spec > 0 )
+								*mm = DUMMYTEN;
+							else
+								*mm = DUMMYFUN;
+							mm += mm[1];
+							goto nextterm;
+						}
+					}
+					mm += mm[1];
+				}
+nextterm:						mm = mnext;
+			}
+			if ( functions[*t-FUNCTION].spec > 0 )
+					*t = DUMMYTEN;
+			else
+					*t = DUMMYFUN;
+			action = 1;
+			t += t[1];
+		}
+/*
+			#] FUNCTION : 
+*/
+		else {
+			t += t[1];
+		}
+	}
+/*
+			#[ SYMBOL :
+
+		Now collect all symbols. We can use the space after r1 as storage
+*/
+	  t = argin+ARGHEAD;
+	  rnext = t + *t;
+	  r2 = r1;
+	  while ( t < r3 ) {
+		GETSTOP(t,r6);
+		t++;
+		act = 0;
+		while ( t < r6 ) {
+			if ( *t == SYMBOL ) {
+				act = 1;
+				i = t[1];
+				NCOPY(r2,t,i)
+			}
+			else { t += t[1]; }
+		}
+		if ( act == 0 ) {
+			*r2++ = SYMBOL; *r2++ = 2;
+		}
+		t = rnext; rnext = rnext + *rnext;
+	  }
+	  *r2 = 0;
+	  argin2 = argin;
+/*
+		Now we have a list of all symbols as a sequence of SYMBOL subterms.
+		Any symbol that is absent in a subterm has power zero.
+		We now need a list of all minimum powers.
+		This can be done by subsequent merges.
+*/
+	  r7 = r1;          /* The first object into which we merge. */	
+	  r8 = r7 + r7[1];  /* The object that gets merged into r7.  */
+	  while ( *r8 ) {
+		r2 = r8 + r8[1]; /* Next object */
+		ArgSymbolMerge(r7,r8);
+		r8 = r2;
+	  }
+/*
+		Now we have to divide by the object in r7 and take it apart as factors.
+		The division can be simple if there are no negative powers.
+*/
+	  if ( r7[1] > 2 ) {
+		r8 = r7+2;
+		r2 = r7 + r7[1];
+		act = 0;
+		pow = 0;
+		while ( r8 < r2 ) {
+			if ( r8[1] < 0 ) { act = 1; pow += -r8[1]*(ARGHEAD+8); }
+			else { pow += 2*r8[1]; }
+			r8 += 2;
+		}
+/*
+		The amount of space we need to move r7 is given in pow
+*/
+		if ( act == 0 ) {	/* this can be done 'in situ' */
+			t = argin + ARGHEAD;
+			while ( t < r3 ) {
+				rnext = t + *t;
+				GETSTOP(t,r6);
+				t++;
+				while ( t < r6 ) {
+					if ( *t != SYMBOL ) { t += t[1]; continue; }
+					r8 = r7+2;
+					while ( t < rnext && r8 < r2 ) {
+						if ( *t == *r8 ) {
+							t[1] -= r8[1]; t += 2; r8 += 2;
+						}
+						else { /* *t must be < than *r8 !!! */
+							t += 2;
+						}
+					}
+				}
+				t = rnext;
+			}
+/*
+			And now the factors that go to argout.
+			First we have to move r7 out of the way.
+*/
+			r8 = r7+pow; i = r7[1];
+			while ( --i >= 0 ) r8[i] = r7[i];
+			r2 += pow;
+			r8 += 2;
+			while ( r8 < r2 ) {
+				for ( i = 0; i < r8[1]; i++ ) { *r1++ = -SYMBOL; *r1++ = *r8; }
+				r8 += 2;
+			}
+		}
+		else {	/* this needs a new location */
+			argin2 = TermMalloc("TakeArgContent2");
+/*
+			We have to multiply the inverse of r7 into argin
+			The answer should go to argin2.
+*/
+			r5 = argin2; *r5++ = 0; *r5++ = 0; FILLARG(r5);
+			t = argin+ARGHEAD;
+			while ( t < r3 ) {
+				rnext = t + *t;
+				GETSTOP(t,r6);
+				r9 = r5;
+				*r5++ = *t++ + r7[1];
+				while ( t < r6 ) *r5++ = *t++;
+				i = r7[1] - 2; r8 = r7+2;
+				*r5++ = r7[0]; *r5++ = r7[1];
+				while ( i > 0 ) { *r5++ = *r8++; *r5++ = -*r8++; i -= 2; }
+				while ( t < rnext ) *r5++ = *t++;
+				Normalize(BHEAD r9);
+				r5 = r9 + *r9;
+			}
+			*r5 = 0;
+			*argin2 = r5-argin2;
+/*
+			We may have to sort the terms in argin2.
+*/
+			NewSort();
+			t = argin2+ARGHEAD;
+			while ( *t ) {
+				StoreTerm(BHEAD t);
+				t += *t;
+			}
+			t = argin2+ARGHEAD;
+			if ( EndSort(t,0) < 0 ) goto Irreg;
+			while ( *t ) t += *t;
+			*argin2 = t - argin2;
+			r3 = t;
+/*
+			And now the factors that go to argout.
+			First we have to move r7 out of the way.
+*/
+			r8 = r7+pow; i = r7[1];
+			while ( --i >= 0 ) r8[i] = r7[i];
+			r2 += pow;
+			r8 += 2;
+			while ( r8 < r2 ) {
+				if ( r8[1] >= 0 ) {
+					for ( i = 0; i < r8[1]; i++ ) { *r1++ = -SYMBOL; *r1++ = *r8; }
+				}
+				else {
+					for ( i = 0; i < -r8[1]; i++ ) {
+						*r1++ = ARGHEAD+8; *r1++ = 0;
+						FILLARG(r1);
+						*r1++ = 8; *r1++ = SYMBOL; *r1++ = 4; *r1++ = *r8;
+						*r1++ = -1; *r1++ = 1; *r1++ = 1; *r1++ = 3;
+					}
+				}
+				r8 += 2;
+			}
+			argout = r1;
+		}
+	  }
+/*
+			#] SYMBOL : 
+			#[ DOTPRODUCT :
+
+		Now collect all dotproducts. We can use the space after r1 as storage
+*/
+	  t = argin2+ARGHEAD;
+	  rnext = t + *t;
+	  r2 = r1;
+	  while ( t < r3 ) {
+		GETSTOP(t,r6);
+		t++;
+		act = 0;
+		while ( t < r6 ) {
+			if ( *t == DOTPRODUCT ) {
+				act = 1;
+				i = t[1];
+				NCOPY(r2,t,i)
+			}
+			else { t += t[1]; }
+		}
+		if ( act == 0 ) {
+			*r2++ = DOTPRODUCT; *r2++ = 2;
+		}
+		t = rnext; rnext = rnext + *rnext;
+	  }
+	  *r2 = 0;
+	  argin3 = argin2;
+/*
+		Now we have a list of all dotproducts as a sequence of DOTPRODUCT
+		subterms. Any dotproduct that is absent in a subterm has power zero.
+		We now need a list of all minimum powers.
+		This can be done by subsequent merges.
+*/
+	  r7 = r1;          /* The first object into which we merge. */	
+	  r8 = r7 + r7[1];  /* The object that gets merged into r7.  */
+	  while ( *r8 ) {
+		r2 = r8 + r8[1]; /* Next object */
+		ArgDotproductMerge(r7,r8);
+		r8 = r2;
+	  }
+/*
+		Now we have to divide by the object in r7 and take it apart as factors.
+		The division can be simple if there are no negative powers.
+*/
+	  if ( r7[1] > 2 ) {
+		r8 = r7+2;
+		r2 = r7 + r7[1];
+		act = 0;
+		pow = 0;
+		while ( r8 < r2 ) {
+			if ( r8[2] < 0 ) { pow += -r8[2]*(ARGHEAD+9); }
+			else             { pow +=  r8[2]*(ARGHEAD+9); }
+			r8 += 3;
+		}
+/*
+		The amount of space we need to move r7 is given in pow
+		For dotproducts we always need a new location
+*/
+		{
+			argin3 = TermMalloc("TakeArgContent3");
+/*
+			We have to multiply the inverse of r7 into argin
+			The answer should go to argin2.
+*/
+			r5 = argin3; *r5++ = 0; *r5++ = 0; FILLARG(r5);
+			t = argin2+ARGHEAD;
+			while ( t < r3 ) {
+				rnext = t + *t;
+				GETSTOP(t,r6);
+				r9 = r5;
+				*r5++ = *t++ + r7[1];
+				while ( t < r6 ) *r5++ = *t++;
+				i = r7[1] - 2; r8 = r7+2;
+				*r5++ = r7[0]; *r5++ = r7[1];
+				while ( i > 0 ) { *r5++ = *r8++; *r5++ = -*r8++; *r5++ = -*r8++; i -= 3; }
+				while ( t < rnext ) *r5++ = *t++;
+				Normalize(BHEAD r9);
+				r5 = r9 + *r9;
+			}
+			*r5 = 0;
+			*argin3 = r5-argin3;
+/*
+			We may have to sort the terms in argin3.
+*/
+			NewSort();
+			t = argin3+ARGHEAD;
+			while ( *t ) {
+				StoreTerm(BHEAD t);
+				t += *t;
+			}
+			t = argin3+ARGHEAD;
+			if ( EndSort(t,0) < 0 ) goto Irreg;
+			while ( *t ) t += *t;
+			*argin3 = t - argin3;
+			r3 = t;
+/*
+			And now the factors that go to argout.
+			First we have to move r7 out of the way.
+*/
+			r8 = r7+pow; i = r7[1];
+			while ( --i >= 0 ) r8[i] = r7[i];
+			r2 += pow;
+			r8 += 2;
+			while ( r8 < r2 ) {
+				for ( i = 0; i < -r8[1]; i++ ) {
+					*r1++ = ARGHEAD+9; *r1++ = 0; FILLARG(r1);
+					*r1++ = 9; *r1++ = DOTPRODUCT; *r1++ = 5; *r1++ = *r8;
+					*r1++ = r8[1]; *r1++ = r8[2] < 0 ? -1: 1;
+					*r1++ = 1; *r1++ = 1; *r1++ = 3;
+				}
+				r8 += 3;
+			}
+			argout = r1;
+		}
+	  }
+/*
+			#] DOTPRODUCT : 
+
+	We have now in argin3 the argument stripped of negative powers and
+	common factors. The only thing left to deal with is to make the
+	coefficients integer. For that we have to find the LCM of the denominators
+	and the GCD of the numerators. And to start with, the sign.
+	We force the sign of the first term to be positive.
+*/
+	t = argin3 + ARGHEAD; pow = 1;
+	t += *t;
+	if ( t[-1] < 0 ) {
+		pow = 0;
+		t[-1] = -t[-1];
+		while ( t < r3 ) {
+			t += *t; t[-1] = -t[-1];
+		}
+	}
+/*
+	Now the GCD of the numerators and the LCM of the denominators:
+*/
+	argfree = TermMalloc("TakeArgContent1");
+	r1 = MakeInteger(BHEAD argin3,r1,argfree);
+	if ( pow == 0 ) {
+		*r1++ = -SNUMBER;
+		*r1++ = -1;
+	}
+	*r1 = 0;
+/*
+	Cleanup
+*/
+	if ( argin3 != argin2 ) TermFree(argin3,"TakeArgContent3");
+	if ( argin2 != argin  ) TermFree(argin2,"TakeArgContent2");
+	return(argfree);
+Irreg:
+	MesPrint("Irregularity while sorting argument in TakeArgContent");
+	if ( argin3 != argin2 ) TermFree(argin3,"TakeArgContent3");
+	if ( argin2 != argin  ) TermFree(argin2,"TakeArgContent2");
+	Terminate(-1);
+	return(0);
+}
+
+/*
+  	#] TakeArgContent : 
+  	#[ MakeInteger :
+*/
+/**
+ *	For normalizing everything to integers we have to
+ *	determine for all elements of this argument the LCM of
+ *	the denominators and the GCD of the numerators.
+ *	The input argument is in argin.
+ *	The number that comes out should go to argout.
+ *	The new pointer in the argout buffer is the return value.
+ *	The normalized argument is in argfree.
+ */
+
+WORD *MakeInteger(PHEAD WORD *argin,WORD *argout,WORD *argfree)
+{
+	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
+	WORD *r, *r1, *r2, *r3, *r4, *r5, *rnext, i, k, j;
+	WORD kGCD, kLCM, kGCD2, kkLCM, jLCM, jGCD;
+	GCDbuffer = NumberMalloc("MakeInteger");
+	GCDbuffer2 = NumberMalloc("MakeInteger");
+	LCMbuffer = NumberMalloc("MakeInteger");
+	LCMb = NumberMalloc("MakeInteger");
+	LCMc = NumberMalloc("MakeInteger");
+	r4 = argin + *argin;
+	r = argin + ARGHEAD;
+/*
+	First take the first term to load up the LCM and the GCD
+*/
+	r2 = r + *r;
+	j = r2[-1];
+	r3 = r2 - ABS(j);
+	k = REDLENG(j);
+	if ( k < 0 ) k = -k;
+	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+	for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
+	k = REDLENG(j);
+	if ( k < 0 ) k = -k;
+	r3 += k;
+	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+	for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
+	r1 = r2;
+/*
+	Now go through the rest of the terms in this argument.
+*/
+	while ( r1 < r4 ) {
+		r2 = r1 + *r1;
+		j = r2[-1];
+		r3 = r2 - ABS(j);
+		k = REDLENG(j);
+		if ( k < 0 ) k = -k;
+		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+		if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+/*
+			GCD is already 1
+*/
+		}
+		else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
+			if ( GcdLong(BHEAD GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer2,&kGCD2) ) {
+				NumberFree(GCDbuffer,"MakeInteger");
+				NumberFree(GCDbuffer2,"MakeInteger");
+				NumberFree(LCMbuffer,"MakeInteger");
+				NumberFree(LCMb,"MakeInteger"); NumberFree(LCMc,"MakeInteger");
+				goto MakeIntegerErr;
+			}
+			kGCD = kGCD2;
+			for ( i = 0; i < kGCD; i++ ) GCDbuffer[i] = GCDbuffer2[i];
+		}
+		else {
+			kGCD = 1; GCDbuffer[0] = 1;
+		}
+		k = REDLENG(j);
+		if ( k < 0 ) k = -k;
+		r3 += k;
+		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+		if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+			for ( kLCM = 0; kLCM < k; kLCM++ )
+				LCMbuffer[kLCM] = r3[kLCM];
+		}
+		else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
+			if ( GcdLong(BHEAD LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
+				NumberFree(GCDbuffer,"MakeInteger"); NumberFree(GCDbuffer2,"MakeInteger");
+				NumberFree(LCMbuffer,"MakeInteger"); NumberFree(LCMb,"MakeInteger"); NumberFree(LCMc,"MakeInteger");
+				goto MakeIntegerErr;
+			}
+			DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
+			MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
+			for ( kLCM = 0; kLCM < jLCM; kLCM++ )
+				LCMbuffer[kLCM] = LCMc[kLCM];
+		}
+		else {} /* LCM doesn't change */
+		r1 = r2;
+	}
+/*
+	Now put the factor together: GCD/LCM
+*/
+	r3 = (WORD *)(GCDbuffer);
+	if ( kGCD == kLCM ) {
+		for ( jGCD = 0; jGCD < kGCD; jGCD++ )
+			r3[jGCD+kGCD] = LCMbuffer[jGCD];
+		k = kGCD;
+	}
+	else if ( kGCD > kLCM ) {
+		for ( jGCD = 0; jGCD < kLCM; jGCD++ )
+			r3[jGCD+kGCD] = LCMbuffer[jGCD];
+		for ( jGCD = kLCM; jGCD < kGCD; jGCD++ )
+			r3[jGCD+kGCD] = 0;
+		k = kGCD;
+	}
+	else {
+		for ( jGCD = kGCD; jGCD < kLCM; jGCD++ )
+			r3[jGCD] = 0;
+		for ( jGCD = 0; jGCD < kLCM; jGCD++ )
+			r3[jGCD+kLCM] = LCMbuffer[jGCD];
+		k = kLCM;
+	}
+	j = 2*k+1;
+/*
+	Now we have to write this to argout
+*/
+	if ( ( j == 3 ) && ( r3[1] == 1 ) && ( (WORD)(r3[0]) > 0 ) ) {
+		*argout = -SNUMBER;
+		argout[1] = r3[0];
+		r1 = argout+2;
+	}
+	else {
+		r1 = argout;
+		*r1++ = j+1+ARGHEAD; *r1++ = 0; FILLARG(r1);
+		*r1++ = j+1; r2 = r3;
+		for ( i = 0; i < k; i++ ) { *r1++ = *r2++; *r1++ = *r2++; }
+		*r1++ = j;
+	}
+/*
+	Next we have to take the factor out from the argument.
+	This cannot be done in location, because the denominator stuff can make
+	coefficients longer.
+*/
+	r2 = argfree + 2; FILLARG(r2)
+	while ( r < r4 ) {
+		rnext = r + *r;
+		j = ABS(rnext[-1]);
+		r5 = rnext - j;
+		r3 = r2;
+		while ( r < r5 ) *r2++ = *r++;
+		j = (j-1)/2;	/* reduced length. Remember, k is the other red length */
+		if ( DivRat(BHEAD (UWORD *)r5,j,GCDbuffer,k,(UWORD *)r2,&i) ) {
+			goto MakeIntegerErr;
+		}
+		i = 2*i+1;
+		r2 = r2 + i;
+		if ( rnext[-1] < 0 ) r2[-1] = -i;
+		else                 r2[-1] =  i;
+		*r3 = r2-r3;
+		r = rnext;
+	}
+	*r2 = 0;
+	argfree[0] = r2-argfree;
+	argfree[1] = 0;
+/*
+	Cleanup
+*/
+	NumberFree(LCMc,"MakeInteger");
+	NumberFree(LCMb,"MakeInteger");
+	NumberFree(LCMbuffer,"MakeInteger");
+	NumberFree(GCDbuffer2,"MakeInteger");
+	NumberFree(GCDbuffer,"MakeInteger");
+	return(r1);
+
+MakeIntegerErr:
+	MesCall("MakeInteger");
+	Terminate(-1);
+	return(0);
+}
+
+/*
+  	#] MakeInteger : 
+  	#[ SortWeights :
+*/
+/**
+ *	Sorts an array of LONGS in the same way SplitMerge (in sort.c) works
+ *	We use gradual division in two.
+ */
+
+void SortWeights(LONG *weights,LONG *extraspace,WORD number)
+{
+	LONG w, *fill, *from1, *from2;
+	int n1,n2,i;
+	if ( number >= 4 ) {
+		n1 = number/2; n2 = number - n1;
+		SortWeights(weights,extraspace,n1);
+		SortWeights(weights+n1,extraspace,n2);
+/*
+		We copy the first patch to the extra space. Then we merge
+		Note that a potential remaining n2 objects are already in place.
+*/
+		for ( i = 0; i < n1; i++ ) extraspace[i] = weights[i];
+		fill = weights; from1 = extraspace; from2 = weights+n1;
+		while ( n1 > 0 && n2 > 0 ) {
+			if ( *from1 <= *from2 ) { *fill++ = *from1++; n1--; }
+			else                    { *fill++ = *from2++; n2--; }
+		}
+		while ( n1 > 0 ) { *fill++ = *from1++; n1--; }
+	}
+/*
+	Special cases
+*/
+	else if ( number == 3 ) { /* 6 permutations of which one is trivial */
+		if ( weights[0] > weights[1] ) {
+			if ( weights[1] > weights[2] ) {
+				w = weights[0]; weights[0] = weights[2]; weights[2] = w;
+			}
+			else if ( weights[0] > weights[2] ) {
+				w = weights[0]; weights[0] = weights[1];
+				weights[1] = weights[2]; weights[2] = w;
+			}
+			else {
+				w = weights[0]; weights[0] = weights[1]; weights[1] = w;
+			}
+		}
+		else if ( weights[0] > weights[2] ) {
+			w = weights[0]; weights[0] = weights[2];
+			weights[2] = weights[1]; weights[1] = w;
+		}
+		else if ( weights[1] > weights[2] ) {
+			w = weights[1]; weights[1] = weights[2]; weights[2] = w;
+		}
+	}
+	else if ( number == 2 ) {
+		if ( weights[0] > weights[1] ) {
+			w = weights[0]; weights[0] = weights[1]; weights[1] = w;
+		}
+	}
+	return;
+}
+
+/*
+  	#] SortWeights : 
 */
 

@@ -312,6 +312,7 @@ VOID FullCleanUp()
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers;
 	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace;
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats;
+	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag;
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats;
 	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag;
 	if ( AC.ThreadsFlag && AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;

@@ -312,6 +312,7 @@ int InsTree(int bufnum, int h)
 			root->parent = -1;
 			root->blnce = 0;
 			root->value = -1;
+			root->usage = 0;
 			for ( ip = 1; ip < C->MaxTreeSize; ip++ ) { C->boomlijst[ip] = comptreezero; }
 		}
 		else {
@@ -329,17 +330,13 @@ int InsTree(int bufnum, int h)
 
 	if ( q->right == -1 ) { /* First element */
 		C->numtree++;
-
-if ( C->numtree > C->numrhs ) {
-	MesPrint("Problems in InsTree: 1 (%d,%d)(%d)",C->numtree,C->numrhs,(C-cbuf));
-}
-
 		s = boomlijst+C->numtree;
 		q->right = C->numtree;
 		s->parent = C->rootnum;
 		s->left = s->right = -1;
 		s->blnce = 0;
 		s->value = h;
+		s->usage = 1;
 		return(h);
 	}
 	ip = q->right;
@@ -353,15 +350,11 @@ if ( C->numtree > C->numrhs ) {
 			if ( iq >= 0 ) { ip = iq; }
 			else {
 				C->numtree++;
-
-if ( C->numtree > C->numrhs ) {
-	MesPrint("Problems in InsTree: 2");
-}
 				is = C->numtree; 
 				p->right = is;
 				s = boomlijst + is;
 				s->parent = ip; s->left = s->right = -1;
-				s->blnce = 0;   s->value = h;
+				s->blnce = 0;   s->value = h; s->usage = 1;
 				p->blnce++;
 				if ( p->blnce == 0 ) return(h);
 				goto balance;
@@ -372,21 +365,20 @@ if ( C->numtree > C->numrhs ) {
 			if ( iq >= 0 ) { ip = iq; }
 			else {
 				C->numtree++;
-
-if ( C->numtree > C->numrhs ) {
-	MesPrint("Problems in InsTree: 3");
-}
 				is = C->numtree;
 				s = boomlijst+is;
 				p->left = is;
 				s->parent = ip; s->left = s->right = -1;
-				s->blnce = 0;   s->value = h;
+				s->blnce = 0;   s->value = h; s->usage = 1;
 				p->blnce--;
 				if ( p->blnce == 0 ) return(h);
 				goto balance;
 			}
 		}
-		else return(p->value);
+		else {
+			p->usage++;
+			return(p->value);
+		}
 	}
 	printf("We vallen uit de boom!\n");
 	Terminate(-1);
@@ -500,13 +492,16 @@ int FindTree(int bufnum, WORD *subexpr)
 			if ( iq >= 0 ) { ip = iq; }
 			else { return(-1); }
 		}
-		else return(p->value);
+		else {
+			p->usage++;
+			return(p->value);
+		}
 	}
 	return(-1);
 }
 
 /*
-  	#] FindTree :
+  	#] FindTree : 
   	#[ RedoTree :
 */
 
@@ -541,11 +536,52 @@ void ClearTree(int i)
 		root->parent = -1;
 		root->blnce = 0;
 		root->value = -1;
+		root->usage = 0;
 	}		
 }
 
 /*
   	#] ClearTree : 
+  	#[ IniFbuffer :
+*/
+/**
+ *	Initialize a factorization cache buffer.
+ *	We set the size of the rhs and boomlijst buffers immediately
+ *	to their final values.
+ */
+
+int IniFbuffer(WORD bufnum)
+{
+	CBUF *C = cbuf + bufnum;
+	COMPTREE *root;
+	int i;
+	LONG fullsize;
+	C->maxrhs = AM.fbuffersize;
+	C->MaxTreeSize = AM.fbuffersize;
+
+	C->boomlijst = (COMPTREE *)Malloc1((C->MaxTreeSize+1)*sizeof(COMPTREE),"IniFbuffer-tree");
+	root = C->boomlijst;
+	C->numtree = 0;
+	C->rootnum = 0;
+	root->left = -1;		
+	root->right = -1;
+	root->parent = -1;
+	root->blnce = 0;
+	root->value = -1;
+	root->usage = 0;
+	for ( i = 1; i < C->MaxTreeSize; i++ ) { C->boomlijst[i] = comptreezero; }
+
+	fullsize = (C->maxrhs+1) * (sizeof(WORD *) + 2*sizeof(LONG) + sizeof(WORD));
+	C->rhs = (WORD **)Malloc1(fullsize,"IniFbuffer-rhs");
+	C->CanCommu = (LONG *)(C->rhs+C->maxrhs);
+	C->NumTerms = (LONG *)(C->rhs+2*C->maxrhs);
+	C->numdum = (WORD *)(C->NumTerms+C->maxrhs);
+
+	return(0);
+}
+
+/*
+  	#] IniFbuffer :
   	#[ numcommute :
 
 	Returns the number of non-commuting terms in the expression

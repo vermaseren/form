@@ -118,6 +118,8 @@ extern FILE **FileStructs;
 #define autoindices ((INDICES)(AC.AutoIndexList.lijst))
 #define autosymbols ((SYMBOLS)(AC.AutoSymbolList.lijst))
 #define autovectors ((VECTORS)(AC.AutoVectorList.lijst))
+#define xsymbol (cbuf[AM.sbufnum].rhs)
+#define numxsymbol (cbuf[AM.sbufnum].numrhs)
 
 /*[28sep2005 mt]:*/
 /*This code is never used*/

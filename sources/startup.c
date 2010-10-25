@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 #include "form3.h"
 #include "inivar.h"
@@ -282,7 +282,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -365,7 +365,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput : 
+ 		#] OpenInput :
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -573,7 +573,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles : 
+ 		#] ReserveTempFiles :
  		#[ StartVariables :
 */
 
@@ -700,11 +700,13 @@ VOID StartVariables()
 	AM.rbufnum = inicbufs();		/* Regular compiler buffer */
 #ifndef WITHPTHREADS
 	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
+	AT.fbufnum = inicbufs();		/* Buffer for caching in factorization */
 #else
 	AS.MasterSort = 0;
 #endif
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
 	AM.sbufnum = inicbufs();		/* Subterm buffer for polynomials and optimization */
+	AC.ffbufnum = inicbufs();		/* Buffer number for user defined factorizations */
 /*
 	Enter the built in objects
 */
@@ -802,6 +804,7 @@ VOID StartVariables()
 	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag = 1;
 	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing = 1;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch = 0;
+	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = OLDFACTARG;
 	AM.gcNumDollars = AP.DollarList.num;
 
 	AM.PrintTotalSize = 0;
@@ -820,7 +823,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1101,7 +1104,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers : 
+ 		#] Signal handlers :
  		#[ main :
 */
 
@@ -1217,6 +1220,15 @@ int main(int argc, char **argv)
 #endif
 #endif
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
+#ifdef WITHPTHREADS
+	IniFbufs();
+#else
+	#ifdef PARALLEL
+		printf("!!!!Do not use factarg with this version!!!!!\n");
+	#else
+		IniFbuffer(AT.fbufnum);
+	#endif
+#endif
 	InitRecovery();
 /*[20oct2009 mt]:*/
 	{/*Block*/
@@ -1280,7 +1292,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main : 
+ 		#] main :
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1356,7 +1368,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -1474,6 +1486,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 

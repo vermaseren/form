@@ -115,9 +115,11 @@
 #if ARGHEAD > 2
 #define FILLARG(w) { int i = ARGHEAD-2; while ( --i >= 0 ) *w++ = 0; }
 #define COPYARG(w,t) { int i = ARGHEAD-2; while ( --i >= 0 ) *w++ = *t++; }
+#define ZEROARG(w) { int i; for ( i = 2; i < ARGHEAD; i++ ) w[i] = 0; }
 #else
 #define FILLARG(w)
 #define COPYARG(w,t)
+#define ZEROARG(w)
 #endif
 
 #if FUNHEAD > 2
@@ -868,6 +870,15 @@ extern int    DoSymmetrize(UBYTE *,int);
 extern int    DoArgument(UBYTE *,int);
 extern int    DoRepArg(PHEAD WORD *,int);
 extern int    ArgFactorize(PHEAD WORD *,WORD *);
+extern WORD  *TakeArgContent(PHEAD WORD *, WORD *);
+extern WORD  *MakeInteger(PHEAD WORD *,WORD *,WORD *);
+extern WORD   FindArg(PHEAD WORD *);
+extern WORD   InsertArg(PHEAD WORD *,WORD *,int);
+extern int    CleanupArgCache(PHEAD WORD);
+extern int    DoFactorize(PHEAD WORD *, WORD *);
+extern int    ArgSymbolMerge(WORD *, WORD *);
+extern int    ArgDotproductMerge(WORD *, WORD *);
+extern void   SortWeights(LONG *,LONG *,WORD);
 extern int    DoBrackets(UBYTE *,int);
 extern WORD  *CountComp(UBYTE *,WORD *);
 extern int    CoAntiBracket(UBYTE *);
@@ -1453,21 +1464,25 @@ extern WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info);
 extern WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par);
 extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par);
 
-extern int NormPolyTerm(PHEAD WORD *term);
-extern WORD ComparePoly(WORD *term1, WORD *term2, WORD level);
-extern int PolyBracket(WORD *term, WORD *bracket, int level);
-extern int ConvertToPoly(PHEAD WORD *term);
-extern int ConvertFromPoly(PHEAD WORD *term);
-extern WORD FindSubterm(WORD *subterm);
-extern void PrintSubtermList(int from,int to);
-extern WORD FindSubexpression(WORD *subexpr);
+extern int NormPolyTerm(PHEAD WORD *);
+extern WORD ComparePoly(WORD *, WORD *, WORD);
+extern int PolyBracket(WORD *term, WORD *, int);
+extern int ConvertToPoly(PHEAD WORD *, WORD *);
+extern int LocalConvertToPoly(PHEAD WORD *, WORD *, WORD);
+extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD);
+extern WORD FindSubterm(WORD *);
+extern WORD FindLocalSubterm(PHEAD WORD *, WORD);
+extern void PrintSubtermList(int,int);
+extern WORD FindSubexpression(WORD *);
 
 extern void UpdateMaxSize(VOID);
 
-extern int CoToPolynomial(UBYTE *inp);
-extern int CoFromPolynomial(UBYTE *inp);
-extern int CoExtraSymbols(UBYTE *inp);
+extern int CoToPolynomial(UBYTE *);
+extern int CoFromPolynomial(UBYTE *);
+extern int CoExtraSymbols(UBYTE *);
 extern int ExtraSymFun(PHEAD WORD *,WORD);
+extern int IniFbuffer(WORD);
+extern void IniFbufs(VOID);
 
 /*
   	#] Declarations :

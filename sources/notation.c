@@ -292,27 +292,28 @@ int PolyBracket(WORD *term, WORD *bracket, int level)
 /*
  		#] PolyBracket : 
  		#[ ConvertToPoly :
-
-		Converts a generic term to polynomial notation in which there are
-		only symbols and brackets.
-		During conversion there will be only symbols. Brackets are stripped.
-		Objects that need 'translation' are put inside a special compiler
-		buffer and represented by a symbol. The numbering of the extra
-		symbols is down from the maximum. In principle there can be a
-		problem when running into the already assigned ones.
-		The output overwrites the input.
 */
+/**
+ *		Converts a generic term to polynomial notation in which there are
+ *		only symbols and brackets.
+ *		During conversion there will be only symbols. Brackets are stripped.
+ *		Objects that need 'translation' are put inside a special compiler
+ *		buffer and represented by a symbol. The numbering of the extra
+ *		symbols is down from the maximum. In principle there can be a
+ *		problem when running into the already assigned ones.
+ *		The output overwrites the input.
+ */
 
 static int FirstWarnConvertToPoly = 1;
 
-int ConvertToPoly(PHEAD WORD *term)
+int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 {
-	WORD *oldwork = AT.WorkPointer, *outterm, *tout, *tstop, ncoef, *t, *r;
+	WORD *tout, *tstop, ncoef, *t, *r, *tt;
 	int i;
-	outterm = AT.WorkPointer = term + *term;
+	tt = term + *term;
+	ncoef = ABS(tt[-1]);
+	tstop = tt - ncoef;
 	tout = outterm+1;
-	ncoef = ABS(outterm[-1]);
-	tstop = outterm - ncoef;
 	t = term + 1;
 	while ( t < tstop ) {
 		if ( *t == SYMBOL ) {
@@ -377,6 +378,21 @@ int ConvertToPoly(PHEAD WORD *term)
 				r += 2;
 			}
 		}
+		else if ( *t == INDEX ) {
+			r = t + 2;
+			t += t[1];
+			while ( r < t ) {
+				tout[1] = INDEX;
+				tout[2] = 3;
+				tout[3] = r[0];
+				i = FindSubterm(tout+1);
+				*tout++ = SYMBOL;
+				*tout++ = 4;
+				*tout++ = MAXVARIABLES-i;
+				*tout++ = 1;
+				r++;
+			}
+		}
 		else if ( *t >= FUNCTION ) {
 			i = FindSubterm(t);
 			t += t[1];
@@ -392,39 +408,164 @@ int ConvertToPoly(PHEAD WORD *term)
 				UNLOCK(ErrorMessageLock);
 				FirstWarnConvertToPoly = 0;
 			}
-			AT.WorkPointer = oldwork;
 			return(-1);
 		}
 	}
 	NCOPY(tout,tstop,ncoef)
-	i = *outterm = tout-outterm;
-	t = term;
-	NCOPY(t,outterm,i)
-	AT.WorkPointer = term + *term;
-	i = NormPolyTerm(BHEAD term);
-	AT.WorkPointer = term + *term;
+	*outterm = tout-outterm;
+	i = NormPolyTerm(BHEAD outterm);
 	return(i);
 }
 
 /*
  		#] ConvertToPoly : 
+ 		#[ LocalConvertToPoly :
+*/
+/**
+ *		Converts a generic term to polynomial notation in which there are
+ *		only symbols and brackets.
+ *		During conversion there will be only symbols. Brackets are stripped.
+ *		Objects that need 'translation' are put inside a special compiler
+ *		buffer and represented by a symbol. The numbering of the extra
+ *		symbols is down from the maximum. In principle there can be a
+ *		problem when running into the already assigned ones.
+ *		This uses the FindTree for searching in the global tree and
+ *		then looks further in the AT.ebufnum. This allows fully parallel
+ *		processing. Hence we need no locks. Cannot be used in the same
+ *		module as ConvertToPoly.
+ */
+
+int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
+{
+	WORD *tout, *tstop, ncoef, *t, *r, *tt;
+	int i;
+	tt = term + *term;
+	ncoef = ABS(tt[-1]);
+	tstop = tt - ncoef;
+	tout = outterm+1;
+	t = term + 1;
+	while ( t < tstop ) {
+		if ( *t == SYMBOL ) {
+			r = t+2;
+			t += t[1];
+			while ( r < t ) {
+				if ( r[1] > 0 ) {
+					*tout++ = SYMBOL;
+					*tout++ = 4;
+					*tout++ = r[0];
+					*tout++ = r[1];
+				}
+				else {
+					tout[1] = SYMBOL;
+					tout[2] = 4;
+					tout[3] = r[0];
+					tout[4] = -1;
+					i = FindLocalSubterm(BHEAD tout+1,startebuf);
+					*tout++ = SYMBOL;
+					*tout++ = 4;
+					*tout++ = MAXVARIABLES-i;
+					*tout++ = -r[1];
+				}
+				r += 2;
+			}
+		}
+		else if ( *t == DOTPRODUCT ) {
+			r = t + 2;
+			t += t[1];
+			while ( r < t ) {
+				tout[1] = DOTPRODUCT;
+				tout[2] = 5;
+				tout[3] = r[0];
+				tout[4] = r[1];
+				if ( r[2] < 0 ) {
+					tout[5] = -1;
+				}
+				else {
+					tout[5] = 1;
+				}
+				i = FindLocalSubterm(BHEAD tout+1,startebuf);
+				*tout++ = SYMBOL;
+				*tout++ = 4;
+				*tout++ = MAXVARIABLES-i;
+				*tout++ = ABS(r[2]);
+				r += 3;
+			}
+		}
+		else if ( *t == VECTOR ) {
+			r = t + 2;
+			t += t[1];
+			while ( r < t ) {
+				tout[1] = VECTOR;
+				tout[2] = 4;
+				tout[3] = r[0];
+				tout[4] = r[1];
+				i = FindLocalSubterm(BHEAD tout+1,startebuf);
+				*tout++ = SYMBOL;
+				*tout++ = 4;
+				*tout++ = MAXVARIABLES-i;
+				*tout++ = 1;
+				r += 2;
+			}
+		}
+		else if ( *t == INDEX ) {
+			r = t + 2;
+			t += t[1];
+			while ( r < t ) {
+				tout[1] = INDEX;
+				tout[2] = 3;
+				tout[3] = r[0];
+				i = FindLocalSubterm(BHEAD tout+1,startebuf);
+				*tout++ = SYMBOL;
+				*tout++ = 4;
+				*tout++ = MAXVARIABLES-i;
+				*tout++ = 1;
+				r++;
+			}
+		}
+		else if ( *t >= FUNCTION ) {
+			i = FindLocalSubterm(BHEAD t,startebuf);
+			t += t[1];
+			*tout++ = SYMBOL;
+			*tout++ = 4;
+			*tout++ = MAXVARIABLES-i;
+			*tout++ = 1;
+		}
+		else {
+			if ( FirstWarnConvertToPoly ) {
+				LOCK(ErrorMessageLock);
+				MesPrint("Illegal object in conversion to polynomial notation");
+				UNLOCK(ErrorMessageLock);
+				FirstWarnConvertToPoly = 0;
+			}
+			return(-1);
+		}
+	}
+	NCOPY(tout,tstop,ncoef)
+	*outterm = tout-outterm;
+	i = NormPolyTerm(BHEAD outterm);
+	return(i);
+}
+
+/*
+ 		#] LocalConvertToPoly : 
  		#[ ConvertFromPoly :
 
 		Converts a generic term from polynomial notation to the original
 		in which the extra symbols have been replaced by their values.
-		The output overwrites the input.
+		The output is in outterm.
+		We only deal with the extra symbols in the range from < i <= to
 		The output has to be sent to TestSub because it may contain
 		subexpressions when extra symbols have been replaced.
 */
 
-int ConvertFromPoly(PHEAD WORD *term)
+int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to)
 {
-	WORD *oldwork = AT.WorkPointer, *outterm, *tout, *tstop, *tstop1, ncoef, *t, *r;
+	WORD *tout, *tstop, *tstop1, ncoef, *t, *r, *tt;
 	int i, first = 1;
-	outterm = AT.WorkPointer = term + *term;
+	tt = term + *term;
 	tout = outterm+1;
-	ncoef = ABS(outterm[-1]);
-	tstop = outterm - ncoef;
+	ncoef = ABS(tt[-1]);
+	tstop = tt - ncoef;
 	r = t = term + 1;
 	while ( t < tstop ) {
 		if ( *t == SYMBOL ) {
@@ -432,7 +573,8 @@ int ConvertFromPoly(PHEAD WORD *term)
 			first = 0;
 			tstop1 = t + t[1]; t += 2;
 			while ( t < tstop1 ) {
-				if ( *t < MAXVARIABLES - cbuf[AM.sbufnum].numrhs ) {
+				if ( ( *t < MAXVARIABLES - to )
+				  || ( *t >= MAXVARIABLES - from ) ) {
 					*tout++ = SYMBOL;
 					*tout++ = 4;
 					*tout++ = *t++;
@@ -454,21 +596,18 @@ int ConvertFromPoly(PHEAD WORD *term)
 		}
 	}
 	if ( first ) {
-		AT.WorkPointer = oldwork;
+		i = *term; t = term;
+		NCOPY(outterm,t,i);
 		return(*term);
 	}
 	while ( r < t ) *tout++ = *r++;
 	NCOPY(tout,tstop,ncoef)
-	i = *outterm = tout-outterm;
-	t = term; r = outterm;
-	NCOPY(t,r,i)
-	if ( outterm == oldwork ) AT.WorkPointer = term + *term;
-	else                      AT.WorkPointer = oldwork;
-	return(*term);
+	*outterm = tout-outterm;
+	return(*outterm);
 }
 
 /*
- 		#] ConvertFromPoly :
+ 		#] ConvertFromPoly : 
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -522,6 +661,58 @@ WORD FindSubterm(WORD *subterm)
 
 /*
  		#] FindSubterm : 
+ 		#[ FindLocalSubterm :
+
+		In this routine we look up a variable.
+		If we don't find it we will enter it in the subterm compiler buffer
+		Searching is by tree structure.
+		Adding changes the tree.
+
+		Notice that in TFORM we should be in sequential mode.
+*/
+
+WORD FindLocalSubterm(PHEAD WORD *subterm, WORD startebuf)
+{
+	WORD old[5], *ss, *term, number, i, *t1, *t2;
+	CBUF *C = cbuf + AT.ebufnum;
+	term = subterm-1;
+	ss = subterm+subterm[1];
+/*
+		Convert to proper term
+*/
+	old[0] = *term; old[1] = ss[0]; old[2] = ss[1]; old[3] = ss[2]; old[4] = ss[3];
+	ss[0] = 1; ss[1] = 1; ss[2] = 3; ss[3] = 0; *term = subterm[1]+4;
+/*
+		First see whether we have this one already in the global buffer.
+*/
+	number = FindTree(AM.sbufnum,term);
+	if ( number > 0 ) goto wearehappy;
+/*
+	Now look whether it is in the ebufnum between startebuf and numrhs
+	Note however that we need an offset of (numxsymbol-startebuf)
+*/
+	for ( i = startebuf+1; i <= C->numrhs; i++ ) {
+		t1 = C->rhs[i]; t2 = term;
+		while ( *t1 == *t2 && *t1 ) { t1++; t2++; }
+		if ( *t1 == 0 && *t2 == 0 ) {
+			number = i-startebuf+numxsymbol;
+			goto wearehappy;
+		}
+	}
+/*
+	Now we have to add it to cbuf[AT.ebufnum]
+*/
+	AddRHS(AT.ebufnum,1);
+	AddNtoC(AT.ebufnum,*term,term);
+	AddToCB(C,0)
+	number = C->numrhs-startebuf+numxsymbol;
+wearehappy:
+	*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3]; ss[3] = old[4];
+	return(number);
+}
+
+/*
+ 		#] FindLocalSubterm :
  		#[ PrintSubtermList :
 
 		Prints all the expressions in the subterm compiler buffer.
@@ -670,12 +861,12 @@ int ExtraSymFun(PHEAD WORD *term,WORD level)
 */
 	while ( t1 < tstop ) {
 		if ( *t1 == EXTRASYMFUN && t1[1] == FUNHEAD+2 ) {
-			if ( t1[FUNHEAD] == -SNUMBER && t1[FUNHEAD+1] <= cbuf[AM.sbufnum].numrhs
+			if ( t1[FUNHEAD] == -SNUMBER && t1[FUNHEAD+1] <= numxsymbol
 							&& t1[FUNHEAD+1] > 0 ) {
 				i = t1[FUNHEAD+1];
 			}
 			else if ( t1[FUNHEAD] == -SYMBOL && t1[FUNHEAD+1] < MAXVARIABLES 
-							&& t1[FUNHEAD+1] >= MAXVARIABLES-cbuf[AM.sbufnum].numrhs ) {
+							&& t1[FUNHEAD+1] >= MAXVARIABLES-numxsymbol ) {
 				i = MAXVARIABLES - t1[FUNHEAD+1];
 			}
 			else goto nocase;

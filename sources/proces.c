@@ -676,12 +676,22 @@ ReStart:
 						while ( j > 0 && *t1++ == *t2++ ) j--;
 						if ( j <= 0 ) {
 							t[3] += r[3];
-							t1 = r + r[1];
-							t2 = term + *term;
-							*term -= r[1];
-							m -= r[1];
-							while ( t1 < t2 ) *r++ = *t1++;
-							r = t;
+							if ( t[3] == 0 ) {
+								t1 = r + r[1];
+								t2 = term + *term;
+								*term -= r[1]+t[1];
+								r = t;
+								while ( t1 < t2 ) *r++ = *t1++;
+								goto ReStart;
+							}
+							else {
+								t1 = r + r[1];
+								t2 = term + *term;
+								*term -= r[1];
+								m -= r[1];
+								while ( t1 < t2 ) *r++ = *t1++;
+								r = t;
+							}
 						}
 					}
 #ifdef WHICHSUBEXPRESSION
@@ -1693,7 +1703,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -3313,14 +3323,18 @@ CommonEnd:
 					goto ReStart;
 				  case TYPETOPOLYNOMIAL:
 					AT.WorkPointer = term + *term;
-					if ( ConvertToPoly(BHEAD term) < 0 ) goto GenCall;
-					if ( *term == 0 ) goto Return0;
+					termout = AT.WorkPointer;
+					if ( ConvertToPoly(BHEAD term,termout) < 0 ) goto GenCall;
+					if ( *termout == 0 ) goto Return0;
+					i = termout[0]; t = term; NCOPY(t,termout,i);
 					AT.WorkPointer = term + *term;
 					break;
 				  case TYPEFROMPOLYNOMIAL:
 					AT.WorkPointer = term + *term;
-					if ( ConvertFromPoly(BHEAD term) < 0 ) goto GenCall;
+					termout = AT.WorkPointer;
+					if ( ConvertFromPoly(BHEAD term,termout,0,numxsymbol) < 0 ) goto GenCall;
 					if ( *term == 0 ) goto Return0;
+					i = termout[0]; t = term; NCOPY(t,termout,i);
 					AT.WorkPointer = term + *term;
 					goto ReStart;
 				}

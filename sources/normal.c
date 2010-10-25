@@ -3161,25 +3161,6 @@ NextI:;
 		return(1);
 	}
 	else {
-/*
-		The modulus part is an attempt to get the MZVs to run faster
-		26-jun-2009
-		We also insert code for this after table substitutions.
-
-		Turns out to be not very effective
-
-		if ( AN.ncmod != 0 ) {
-			ncoef = REDLENG(ncoef);
-			if ( TakeModulus((UWORD *)AT.n_coef,&ncoef,AC.cmod,AC.ncmod,UNPACK) ) {
-				LOCK(ErrorMessageLock);
-				MesCall("Modulus");
-				UNLOCK(ErrorMessageLock);
-				SETERROR(-1)
-			}
-			if ( ncoef == 0 ) goto NormZero;
-			ncoef = INCLENG(ncoef);
-		}
-*/
 		t = termout;
 		k = WORDDIF(m,t);
 		*t = k + i;

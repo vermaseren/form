@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 
@@ -58,6 +58,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"continuationlines",     NUMERICALVALUE, 0, (long)FORTRANCONTINUATIONLINES}
 	,{(UBYTE *)"define",                   DEFINEVALUE, 0, (long)0}
 	,{(UBYTE *)"dotchar",                  STRINGVALUE, 0, (long)dotchar}
+	,{(UBYTE *)"factorizationcache",    NUMERICALVALUE, 0, (long)FBUFFERSIZE}
 	,{(UBYTE *)"filepatches",           NUMERICALVALUE, 0, (long)MAXFPATCHES}
 	,{(UBYTE *)"functionlevels",        NUMERICALVALUE, 0, (long)MAXFLEVELS}
 	,{(UBYTE *)"hidesize",              NUMERICALVALUE, 0, (long)0}
@@ -74,6 +75,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (long)0}
+	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, OLDFACTARG, (long)0}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
@@ -109,7 +111,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -158,7 +160,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -316,7 +318,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -367,7 +369,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -498,6 +500,8 @@ int AllocSetups()
 		AM.HideSize = sp->value/sizeof(WORD);
 		if ( AM.HideSize < 4*AM.MaxTer ) AM.HideSize = 4*AM.MaxTer;
 	}
+	sp = GetSetupPar((UBYTE *)"factorizationcache");
+	AM.fbuffersize = sp->value;
 #ifdef WITHPTHREADS
 	sp = GetSetupPar((UBYTE *)"threadscratchsize");
 	AM.ThreadScratSize = sp->value/sizeof(WORD);
@@ -662,6 +666,8 @@ int AllocSetups()
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritethreadstatistics");
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1-sp->value;
+	sp = GetSetupPar((UBYTE *)"oldfactarg");
+	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;
@@ -731,7 +737,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups : 
+ 		#] AllocSetups :
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -791,7 +797,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -922,7 +928,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -947,7 +953,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName : 
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -995,7 +1001,7 @@ FILEHANDLE *AllocFileHandle()
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -1014,7 +1020,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -1025,7 +1031,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1129,7 +1135,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
 	#] Setups :
 */
 

@@ -1565,7 +1565,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression :
+  	#] CoFillExpression : 
   	#[ CoPrintTable :
 
 	Syntax
@@ -1889,6 +1889,33 @@ int CoDeallocateTable(UBYTE *inp)
 
 /*
   	#] CoDeallocateTable : 
+  	#[ CoFactorCache :
+*/
+/**
+ *	Reads the FactorCache statement which is like a fill statement for
+ *	the factorization cache. Syntax:
+ *		FactorCache,expression:factor1,...,factorn;
+ *	This statement is mainly for testing purposes, because there are severe
+ *	restrictions on the use of the expression (no common GCD, no denominators)
+ *	The expression is worked out by FORM and properly normalized and sorted.
+ */
+
+int CoFactorCache(UBYTE *inp)
+{
+/*
+	Code to be added in due time
+	We need to read 'expression', get its terms through Generator and sort them.
+	We store the result in the WorkSpace in argument notation.
+	This will be argin.
+	Then we do the same with the sequence of factors. They form argout.
+	The whole is put in the buffer with the call
+		InsertArg(BHEAD argin,argout,1)
+*/
+	return(0);
+}
+
+/*
+  	#] CoFactorCache :
 */
 
 

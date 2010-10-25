@@ -328,6 +328,7 @@ typedef struct tree {
 	int right;   /**< Right child (if not -1) */
 	int value;   /**< The object to be sorted and searched */
 	int blnce;   /**< Balance factor */
+	int usage;   /**< Number of uses in some types of trees */
 } COMPTREE;
 
 /**
@@ -1271,6 +1272,9 @@ struct M_const {
     int     polygcdchoice;
     int     gIsFortran90;
 	int		PrintTotalSize;
+    int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
+    int     gOldFactArgFlag;
+    int     ggOldFactArgFlag;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1534,8 +1538,11 @@ struct C_const {
     int     lhdollarflag;          /* (R) left hand dollar present */
     int     NoCompress;            /* (R) Controls native compression */
     int     IsFortran90;           /* Tells whether the Fortran is Fortran90 */
-	int     MultiBracketLevels;    /* Number of elements in MultiBracketBuf */
-	int     MultiBracketOn;        /* MultiBracket active? */
+    int     MultiBracketLevels;    /* Number of elements in MultiBracketBuf */
+    int     MultiBracketOn;        /* MultiBracket active? */
+    int     topolynomialflag;      /* To avoid ToPolynomial and FactArg together */
+    int     ffbufnum;              /* Buffer number for user defined factorizations */
+    int     OldFactArgFlag;
 #ifdef WITHPTHREADS
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
@@ -1598,7 +1605,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1634,7 +1641,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1755,6 +1762,7 @@ struct T_const {
     int     sfact;                 /* (T) size of the factorials buffer */
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
+    int     fbufnum;               /* extra compiler buffer for factorization cache */
     int     WildcardBufferSize;    /* () local copy for updates */
 #ifdef WITHPTHREADS
     int     identity;              /* () When we work with B->T */

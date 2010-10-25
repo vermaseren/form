@@ -47,6 +47,7 @@ static KEYWORD formatoptions[] = {
 	,{"fortran90",		(TFUN)0,	FORTRANMODE,		4}
 	,{"maple",			(TFUN)0,	MAPLEMODE,			0}
 	,{"mathematica",	(TFUN)0,	MATHEMATICAMODE,	0}
+	,{"normal",			(TFUN)0,	NORMALFORMAT,		1}
 	,{"nospaces",		(TFUN)0,	NOSPACEFORMAT,		3}
 	,{"pfortran",		(TFUN)0,	PFORTRANMODE,		0}
 	,{"rational",		(TFUN)0,	RATIONALMODE,		1}
@@ -118,12 +119,13 @@ static KEYWORD onoffoptions[] = {
 	,{"indentspace",    (TFUN)&(AO.IndentSpace),INDENTSPACE,0}
 	,{"totalsize",		(TFUN)&(AM.PrintTotalSize),	1,	0}
 	,{"flag",			(TFUN)&(AC.debugFlags),	1,	0}
+	,{"oldfactarg",		(TFUN)&(AC.OldFactArgFlag),	1,	0}
 };
 
 static WORD one = 1;
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ CoCollect :
 
 	Collect,functionname
@@ -335,7 +337,7 @@ int CoOff(UBYTE *s)
 }
 
 /*
-  	#] CoOff : 
+  	#] CoOff :
   	#[ CoOn :
 */
 
@@ -557,7 +559,7 @@ int CoOn(UBYTE *s)
 }
 
 /*
-  	#] CoOn : 
+  	#] CoOn :
   	#[ CoInsideFirst :
 */
 
@@ -1846,7 +1848,14 @@ int CoSplitLastArg(UBYTE *s) { return(DoArgument(s,TYPESPLITLASTARG)); }
   	#[ CoFactArg :
 */
 
-int CoFactArg(UBYTE *s) { return(DoArgument(s,TYPEFACTARG)); }
+int CoFactArg(UBYTE *s) {
+	if ( ( AC.topolynomialflag & TOPOLYNOMIALFLAG ) != 0 ) {
+		MesPrint("&ToPolynomial statement and FactArg statement are not allowed in the same module");
+		return(1);
+	}
+	AC.topolynomialflag |= FACTARGFLAG;
+	return(DoArgument(s,TYPEFACTARG));
+}
 
 /*
   	#] CoFactArg : 
@@ -3525,7 +3534,7 @@ redo:	AR.BracketOn++;
 }
 
 /*
-  	#] DoBrackets :
+  	#] DoBrackets : 
   	#[ CoBracket :
 */
 
@@ -5291,8 +5300,13 @@ int CoDropCoefficient(UBYTE *s)
 int CoToPolynomial(UBYTE *inp)
 {
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+	if ( ( AC.topolynomialflag & ~TOPOLYNOMIALFLAG ) != 0 ) {
+		MesPrint("&ToPolynomial statement and FactArg statement are not allowed in the same module");
+		return(1);
+	}
 	if ( *inp == 0 ) {
 		Add2Com(TYPETOPOLYNOMIAL)
+		AC.topolynomialflag |= TOPOLYNOMIALFLAG;
 /*		AC.mparallelflag = NOPARALLEL_MOPT; */
 		return(0);
 	}
@@ -5301,7 +5315,7 @@ int CoToPolynomial(UBYTE *inp)
 }
 
 /*
-  	#] CoToPolynomial :
+  	#] CoToPolynomial : 
   	#[ CoFromPolynomial :
 
 	Converts the current term as much as possible back from extra symbols
