@@ -1469,7 +1469,7 @@ extern WORD ComparePoly(WORD *, WORD *, WORD);
 extern int PolyBracket(WORD *term, WORD *, int);
 extern int ConvertToPoly(PHEAD WORD *, WORD *);
 extern int LocalConvertToPoly(PHEAD WORD *, WORD *, WORD);
-extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD);
+extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD, WORD);
 extern WORD FindSubterm(WORD *);
 extern WORD FindLocalSubterm(PHEAD WORD *, WORD);
 extern void PrintSubtermList(int,int);

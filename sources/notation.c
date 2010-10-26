@@ -558,7 +558,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 		subexpressions when extra symbols have been replaced.
 */
 
-int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to)
+int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD par)
 {
 	WORD *tout, *tstop, *tstop1, ncoef, *t, *r, *tt;
 	int i, first = 1;
@@ -585,7 +585,8 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to)
 					*tout++ = SUBEXPSIZE;
 					*tout++ = MAXVARIABLES - *t++;
 					*tout++ = *t++;
-					*tout++ = AM.sbufnum;
+					if ( par ) *tout++ = AT.ebufnum;
+					else       *tout++ = AM.sbufnum;
 					FILLSUB(tout)
 				}
 			}
@@ -607,7 +608,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to)
 }
 
 /*
- 		#] ConvertFromPoly : 
+ 		#] ConvertFromPoly :
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -712,7 +713,7 @@ wearehappy:
 }
 
 /*
- 		#] FindLocalSubterm :
+ 		#] FindLocalSubterm : 
  		#[ PrintSubtermList :
 
 		Prints all the expressions in the subterm compiler buffer.

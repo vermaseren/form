@@ -2016,7 +2016,7 @@ getout:
 			argextra = AT.WorkPointer;
 			NewSort();
 			while ( t < tstop ) {
-				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol) ) {
+				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) ) {
 					TermFree(argcopy2,"argcopy2");
 					LowerSortLevel();
 					error = -3;
@@ -2050,7 +2050,7 @@ getout:
 		CC->numrhs = startebuf;
 	  }
 	  else {	/* no factorization. recover the argument from before step 3. */
-		for ( i = 0; i <= *argcopy; i++ ) argfree[i] = argcopy[i];
+		for ( i = 0; i <= *argcopy; i++ ) a[i] = argcopy[i];
 	  }
 	}
 /*
@@ -2081,7 +2081,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize :
+  	#] ArgFactorize : 
   	#[ FindArg :
 */
 /**
@@ -2121,7 +2121,7 @@ WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 	if ( par == 0 ) {
 		bufnum = AT.fbufnum;
 		C = cbuf+bufnum;
-		if ( C->numrhs >= C->maxrhs ) CleanupArgCache(BHEAD AT.fbufnum);
+		if ( C->numrhs >= (C->maxrhs-2) ) CleanupArgCache(BHEAD AT.fbufnum);
 	}
 	else if ( par == 1 ) {
 		bufnum = AC.ffbufnum;
@@ -2139,7 +2139,7 @@ WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 }
 
 /*
-  	#] InsertArg : 
+  	#] InsertArg :
   	#[ CleanupArgCache :
 */
 /**
@@ -2196,7 +2196,7 @@ int CleanupArgCache(PHEAD WORD bufnum)
 			weights[k++] = boomlijst[i].usage;
 		}
 	}
-	C->numrhs = k;
+	C->numrhs = --k;
 	C->Pointer = to;
 /*
 		Next we need to rebuild the tree.
@@ -2216,7 +2216,7 @@ int CleanupArgCache(PHEAD WORD bufnum)
 }
 
 /*
-  	#] CleanupArgCache : 
+  	#] CleanupArgCache :
   	#[ DoFactorize :
 */
 /**
@@ -2278,6 +2278,14 @@ int ArgSymbolMerge(WORD *t1, WORD *t2)
 		}
 		else t2a += 2;
 	}
+	while ( t1a < t1e ) {
+		if ( t1a[1] >= 0 ) {
+			t3 = t1a+2;
+			while ( t3 < t1e ) { t3[-2] = *t3; t3[-1] = t3[1]; t3 += 2; }
+			t1e -= 2;
+		}
+		else t1a += 2;
+	}
 	t1[1] = t1a - t1;
 	return(0);
 }
@@ -2326,6 +2334,14 @@ int ArgDotproductMerge(WORD *t1, WORD *t2)
 			*t1a++ = *t2a++;
 		}
 		else t2a += 3;
+	}
+	while ( t1a < t1e ) {
+		if ( t1a[2] >= 0 ) {
+			t3 = t1a+3;
+			while ( t3 < t1e ) { t3[-3] = *t3; t3[-2] = t3[1]; t3[-1] = t3[2]; t3 += 3; }
+			t1e -= 3;
+		}
+		else t1a += 2;
 	}
 	t1[1] = t1a - t1;
 	return(0);
@@ -2571,10 +2587,10 @@ nextterm:						mm = mnext;
 
 		Now collect all symbols. We can use the space after r1 as storage
 */
-	  t = argin+ARGHEAD;
-	  rnext = t + *t;
-	  r2 = r1;
-	  while ( t < r3 ) {
+	t = argin+ARGHEAD;
+	rnext = t + *t;
+	r2 = r1;
+	while ( t < r3 ) {
 		GETSTOP(t,r6);
 		t++;
 		act = 0;
@@ -2590,27 +2606,27 @@ nextterm:						mm = mnext;
 			*r2++ = SYMBOL; *r2++ = 2;
 		}
 		t = rnext; rnext = rnext + *rnext;
-	  }
-	  *r2 = 0;
-	  argin2 = argin;
+	}
+	*r2 = 0;
+	argin2 = argin;
 /*
 		Now we have a list of all symbols as a sequence of SYMBOL subterms.
 		Any symbol that is absent in a subterm has power zero.
 		We now need a list of all minimum powers.
 		This can be done by subsequent merges.
 */
-	  r7 = r1;          /* The first object into which we merge. */	
-	  r8 = r7 + r7[1];  /* The object that gets merged into r7.  */
-	  while ( *r8 ) {
+	r7 = r1;          /* The first object into which we merge. */	
+	r8 = r7 + r7[1];  /* The object that gets merged into r7.  */
+	while ( *r8 ) {
 		r2 = r8 + r8[1]; /* Next object */
 		ArgSymbolMerge(r7,r8);
 		r8 = r2;
-	  }
+	}
 /*
 		Now we have to divide by the object in r7 and take it apart as factors.
 		The division can be simple if there are no negative powers.
 */
-	  if ( r7[1] > 2 ) {
+	if ( r7[1] > 2 ) {
 		r8 = r7+2;
 		r2 = r7 + r7[1];
 		act = 0;
@@ -2717,7 +2733,7 @@ nextterm:						mm = mnext;
 			}
 			argout = r1;
 		}
-	  }
+	}
 /*
 			#] SYMBOL : 
 			#[ DOTPRODUCT :
