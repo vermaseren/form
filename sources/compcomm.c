@@ -125,7 +125,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ CoCollect :
 
 	Collect,functionname
@@ -337,7 +337,7 @@ int CoOff(UBYTE *s)
 }
 
 /*
-  	#] CoOff :
+  	#] CoOff : 
   	#[ CoOn :
 */
 
@@ -559,7 +559,7 @@ int CoOn(UBYTE *s)
 }
 
 /*
-  	#] CoOn :
+  	#] CoOn : 
   	#[ CoInsideFirst :
 */
 
@@ -1623,7 +1623,7 @@ int DoArgument(UBYTE *s, int par)
 					if ( Generator(BHEAD mm,C->numlhs) ) {
 						LowerSortLevel(); error = 1;
 					}
-					else if ( EndSort(mm,0) < 0 ) {
+					else if ( EndSort(mm,0,0) < 0 ) {
 						error = 1;
 						AT.WorkPointer = mm;
 					}

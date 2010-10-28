@@ -68,7 +68,7 @@ WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
 		t += *t;
 	}
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 }
@@ -102,7 +102,7 @@ WORD *PolynoSub(WORD *poly1, WORD *poly2)
 		}
 		tt[-1] = -tt[-1]; t = tt;
 	}
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 }
@@ -173,7 +173,7 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 		t += *t;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 abortion:
@@ -460,7 +460,7 @@ dosub:
 			}
 		}
 		AT.WorkPointer = ow;
-		if ( EndSort((WORD *)((VOID *)(&n3)),2) < 0 ) { LowerSortLevel(); goto aborteer; }
+		if ( EndSort((WORD *)((VOID *)(&n3)),2,0) < 0 ) { LowerSortLevel(); goto aborteer; }
 		LowerSortLevel();
 		if ( n1 != poly1 && n1 != poly2 ) M_free(n1,"$-sort space");
 		n1 = n3;
@@ -1053,7 +1053,7 @@ WORD *PolynoNormalize(WORD *poly)
 		else if ( StoreTerm(BHEAD oldwork) ) goto aborteer;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 aborteer:
@@ -1451,7 +1451,7 @@ WORD *MakePolynomial(WORD numexp, int par, int *onevar)
 	if ( Generator(BHEAD AT.proexp,localnumlhs) ) {
 		LowerSortLevel(); LowerSortLevel(); goto aborteer;
 	}
-	if ( EndSort((WORD *)((VOID *)(&n1)),2) < 0 ) { LowerSortLevel(); goto aborteer; }
+	if ( EndSort((WORD *)((VOID *)(&n1)),2,0) < 0 ) { LowerSortLevel(); goto aborteer; }
 	LowerSortLevel();
 /*
 	Now check the 'quality'. Only positive powers of symbols allowed.
@@ -1635,7 +1635,7 @@ WORD *PolynoIntFac(WORD *poly)
 		if ( StoreTerm(BHEAD oldwork) ) goto PIFerror;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2) < 0 ) goto PIFerror1;
+	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) goto PIFerror1;
 	LowerSortLevel();
 	NumberFree(PIFscrat,"PolynoIntFac"); NumberFree(PIFscrat1,"PolynoIntFac"); NumberFree(PIFscrat2,"PolynoIntFac");
 	return(pbuffer);

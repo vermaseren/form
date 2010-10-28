@@ -220,7 +220,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			return(-1);
 		}
 		AT.WorkPointer = ww;
-		if ( EndSort(ww,0) < 0 ) {}
+		if ( EndSort(ww,0,0) < 0 ) {}
 		AR.DeferFlag = olddefer;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AP.lhdollarerror == 0 ) {
@@ -821,7 +821,7 @@ SubsL5:								fill += nq;
 			m += m[1];
 		}
 /*
-			#] FUNCTIONS :
+			#] FUNCTIONS : 
 			#[ VECTORS :
 */
 		else if ( *m == VECTOR ) {
@@ -1505,7 +1505,7 @@ NextDot:			r += 3;
 			} while ( r < tstop );
 		}
 /*
-			#] DOTPRODUCT :
+			#] DOTPRODUCT : 
 			#[ LEVICIVITA :
 */
 		else if ( *t == LEVICIVITA ) {
@@ -1621,7 +1621,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll :
+ 		#] FindAll : 
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp

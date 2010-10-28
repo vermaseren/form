@@ -35,7 +35,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ If statement :
  		#[ Syntax :
 
@@ -99,7 +99,7 @@
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax :
+ 		#] Syntax : 
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -525,7 +525,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement :
+ 		#] DoIfStatement : 
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -565,7 +565,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 			return(-1);
 		}
 		AT.WorkPointer = ww;
-		if ( EndSort(ww,0) < 0 ) {}
+		if ( EndSort(ww,0,0) < 0 ) {}
 		*RepSto = RepVal;
 		AN.RepPoint = RepSto;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
@@ -723,7 +723,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 }
 
 /*
- 		#] HowMany :
+ 		#] HowMany : 
  		#[ DoubleIfBuffers :
 */
 
@@ -758,7 +758,7 @@ VOID DoubleIfBuffers()
 }
 
 /*
- 		#] DoubleIfBuffers :
-  	#] If statement :
+ 		#] DoubleIfBuffers : 
+  	#] If statement : 
 */
 

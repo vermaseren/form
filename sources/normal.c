@@ -40,7 +40,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Normalize :
  		#[ Commute :
 
@@ -68,7 +68,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute :
+ 		#] Commute : 
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -115,7 +115,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations :
+  	#] Declarations : 
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -140,7 +140,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup :
+  	#] Setup : 
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -252,7 +252,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER :
+			#] TO SNUMBER : 
 */
 						t += 2;
 						goto NextSymbol;
@@ -1889,7 +1889,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2038,7 +2038,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators :
+  	#] Easy denominators : 
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -2272,7 +2272,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions :
+  	#] Index Contractions : 
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2423,7 +2423,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions :
+  	#] NonCommuting Functions : 
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2600,7 +2600,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions :
+  	#] Commuting Functions : 
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2688,7 +2688,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors :
+  	#] LeviCivita tensors : 
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2719,7 +2719,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta :
+  	#] Delta : 
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2741,7 +2741,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices :
+  	#] Loose Vectors/Indices : 
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2770,7 +2770,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors :
+  	#] Vectors : 
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2845,7 +2845,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts :
+  	#] Dotproducts : 
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2897,7 +2897,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols :
+  	#] Symbols : 
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -2998,7 +2998,7 @@ NextI:;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(oldwork)) + AM.MaxTer);
 							if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 							m = AT.WorkPointer;
-							if ( EndSort(m,1) < 0 ) goto FromNorm;
+							if ( EndSort(m,1,0) < 0 ) goto FromNorm;
 /*
 							Now we have to analyse the output
 							Count terms and space
@@ -3135,13 +3135,13 @@ NextI:;
 				LowerSortLevel(); goto FromNorm;
 			}
 		    AT.WorkPointer = oldwork;
-			if ( EndSort(term,1) < 0 ) goto FromNorm;
+			if ( EndSort(term,1,0) < 0 ) goto FromNorm;
 			if ( *term == 0 ) goto NormZero;
 			AR.DeferFlag = olddefer;
 		}
 #endif
 /*
- 		#] normalize replacements :
+ 		#] normalize replacements : 
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -3217,12 +3217,12 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish :
+  	#] Errors and Finish : 
 */
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 

@@ -885,7 +885,7 @@ int simp2token(SBYTE *s)
 				if ( *t == LPARENTHESIS ) n++;
 				else if ( *t == RPARENTHESIS ) n--;
 			}
-			if ( t[1] == TFUNCLOSE ) { /* Check for last argument in sum */
+			if ( t[1] == TFUNCLOSE && s[1] != TWILDARG ) { /* Check for last argument in sum */
 				v = fill - 1; n = 0;
 				while ( n >= 0 && v >= to ) {
 					if ( *v == TFUNOPEN ) n--;

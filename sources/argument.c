@@ -92,7 +92,7 @@ WORD execarg(PHEAD WORD *term, WORD level)
 			return(-1);
 		}
 		AT.WorkPointer = v;
-		if ( EndSort(factor,0) < 0 ) {}
+		if ( EndSort(factor,0,0) < 0 ) {}
 		if ( *factor && *(factor+*factor) != 0 ) {
 			LOCK(ErrorMessageLock);
 			MesPrint("&$ in () does not evaluate into a single term");
@@ -571,7 +571,7 @@ ScaledVariety:;
 					if ( Generator(BHEAD m,level) ) goto execargerr;
 					AT.WorkPointer = r1;
 				}
-				if ( EndSort(AT.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
+				if ( EndSort(AT.WorkPointer+ARGHEAD,1,0) < 0 ) goto execargerr;
 				AR.DeferFlag = olddefer;
 /*
 				Now shift the sorted entity over the old argument.
@@ -1644,7 +1644,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 			M_free((void *)buffer1,"buffer in sort statement");
 			buffer1 = 0;
 		}
-		if ( EndSort((WORD *)((VOID *)(&buffer1)),2) < 0 ) goto exectermerr;
+		if ( EndSort((WORD *)((VOID *)(&buffer1)),2,0) < 0 ) goto exectermerr;
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );
 	AR.Cnumlhs = oldnumlhs;
@@ -1923,7 +1923,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(argfree+ARGHEAD,0);
+		EndSort(argfree+ARGHEAD,0,0);
 		t = argfree+ARGHEAD;
 		while ( *t ) t += *t;
 		*argfree = t - argfree;
@@ -1985,7 +1985,7 @@ getout:
 			StoreTerm(BHEAD argextra);
 			t += *t; argextra += *argextra;
 		}
-		if ( EndSort(argfree+ARGHEAD,0) ) { error = -2; goto getout; }
+		if ( EndSort(argfree+ARGHEAD,0,0) ) { error = -2; goto getout; }
 		t = argfree + ARGHEAD;
 		while ( *t > 0 ) t += *t;
 		*argfree = t - argfree;
@@ -2035,7 +2035,7 @@ getout:
 				}
 			}
 			AT.WorkPointer = oldworkpointer;
-			if ( EndSort(a2+ARGHEAD,0) ) { error = -5; goto getout; }
+			if ( EndSort(a2+ARGHEAD,0,0) ) { error = -5; goto getout; }
 			*a2 = t - a2; a2[1] = 0; ZEROARG(a2); a2 = t;
 			a1 = tstop;
 		}
@@ -2139,7 +2139,7 @@ WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 }
 
 /*
-  	#] InsertArg :
+  	#] InsertArg : 
   	#[ CleanupArgCache :
 */
 /**
@@ -2216,7 +2216,7 @@ int CleanupArgCache(PHEAD WORD bufnum)
 }
 
 /*
-  	#] CleanupArgCache :
+  	#] CleanupArgCache : 
   	#[ DoFactorize :
 */
 /**
@@ -2705,7 +2705,7 @@ nextterm:						mm = mnext;
 				t += *t;
 			}
 			t = argin2+ARGHEAD;
-			if ( EndSort(t,0) < 0 ) goto Irreg;
+			if ( EndSort(t,0,0) < 0 ) goto Irreg;
 			while ( *t ) t += *t;
 			*argin2 = t - argin2;
 			r3 = t;
@@ -2826,7 +2826,7 @@ nextterm:						mm = mnext;
 				t += *t;
 			}
 			t = argin3+ARGHEAD;
-			if ( EndSort(t,0) < 0 ) goto Irreg;
+			if ( EndSort(t,0,0) < 0 ) goto Irreg;
 			while ( *t ) t += *t;
 			*argin3 = t - argin3;
 			r3 = t;

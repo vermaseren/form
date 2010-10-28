@@ -138,7 +138,7 @@ int CatchDollar(int par)
 		if ( Generator(BHEAD oldwork,C->numlhs) ) { error = 1; break; }
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; }
+	if ( EndSort((WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; }
 	LowerSortLevel();
 /*[19sep2005 mt]:*/
 #ifdef REMOVEDBY_MT
@@ -311,7 +311,7 @@ NoChangeZero:;
 		}
 #endif
 /*
- 		#] Thread version :
+ 		#] Thread version : 
 */
 		d->type = DOLZERO;
 		d->where[0] = 0;
@@ -393,7 +393,7 @@ NoChangeOne:;
 		}
 #endif
 /*
- 		#] Thread version :
+ 		#] Thread version : 
 */
 		if ( d->size < 5 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
@@ -457,7 +457,7 @@ NoChangeOne:;
 			}
 			AT.WorkPointer = ww;
 		}
-		if ( ( newsize = EndSort((WORD *)((VOID *)(&ss)),2) ) < 0 ) {
+		if ( ( newsize = EndSort((WORD *)((VOID *)(&ss)),2,0) ) < 0 ) {
 			AN.ncmod = oldncmod;
 			return(1);
 		}
@@ -548,7 +548,7 @@ HandleDolZero1:;
 		}
 #endif
 /*
- 		#] Thread version :
+ 		#] Thread version : 
 */
 		d->type = DOLTERMS;
 		if ( d->where && d->where != &(AM.dollarzero) ) { M_free(d->where,"dollar contents"); d->where = 0; }
@@ -951,7 +951,7 @@ void WildDollars(PHEAD0)
 }
 
 /*
-  	#] WildDollars :
+  	#] WildDollars : 
   	#[ DolToTensor :    with LOCK
 */
 
@@ -1547,7 +1547,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			}
 			AT.WorkPointer = oldwork;
 		}
-		if ( EndSort((WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; break; }
+		if ( EndSort((WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; break; }
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"old buffer of dollar");
 		d->where = dbuffer;
 		if ( dbuffer == 0 || *dbuffer == 0 ) {
@@ -1885,7 +1885,7 @@ WORD *TranslateExpression(UBYTE *s)
 	}
 	AR.Eside = oldEside;
 	AT.WorkPointer = w;
-	if ( EndSort((WORD *)((VOID *)(&outbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort((WORD *)((VOID *)(&outbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	C->Pointer = C->Buffer + oldcpointer;
 	C->numrhs = oldnumrhs;
@@ -2550,7 +2550,7 @@ int SumDollars(WORD index)
 	}
     }
 
-  if (EndSort((WORD*)(&dbuffer),2) < 0) 
+  if (EndSort((WORD*)(&dbuffer),2,0) < 0) 
     {
       LowerSortLevel(); LowerSortLevel(); error = 1;
     }

@@ -35,7 +35,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  	#[ Transform :
  		#[ Intro :
 
@@ -370,7 +370,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			s = in;
 		}
 /*
- 		#] explode :
+ 		#] explode : 
  		#[ permute :
 */
 		else if ( StrICmp(s,(UBYTE *)"permute") == 0 ) {
@@ -544,7 +544,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 }
 
 /*
- 		#] CoTransform :
+ 		#] CoTransform : 
  		#[ RunTransform :
 
 		Executes the transform statement.
@@ -653,7 +653,7 @@ returnvalues:;
 							return(-1);
 						}
 						newterm = AT.WorkPointer;
-						if ( EndSort(newterm,0) < 0 ) {}
+						if ( EndSort(newterm,0,0) < 0 ) {}
 						if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
 							LOCK(ErrorMessageLock);
 							MesPrint("&yes/no information in islyndon/tolyndon does not evaluate into a single term");
@@ -953,7 +953,7 @@ CalledFrom:
 }
 
 /*
- 		#] RunEncode :
+ 		#] RunEncode : 
  		#[ RunDecode :
 */
 
@@ -1173,7 +1173,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 		return(-1);
 	}
 	newterm = AT.WorkPointer;
-	if ( EndSort(newterm,0) < 0 ) {}
+	if ( EndSort(newterm,0,0) < 0 ) {}
 	if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
 		LOCK(ErrorMessageLock);
 		MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1424,7 +1424,7 @@ getthisone:;
 							return(-1);
 						}
 						term4 = AT.WorkPointer;
-						if ( EndSort(term4,0) < 0 ) {}
+						if ( EndSort(term4,0,0) < 0 ) {}
 						if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
 							LOCK(ErrorMessageLock);
 							MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1550,7 +1550,7 @@ dothisnow:;
 				return(-1);
 			}
 			term4 = AT.WorkPointer;
-			if ( EndSort(term4,0) < 0 ) {}
+			if ( EndSort(term4,0,0) < 0 ) {}
 			if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
 				LOCK(ErrorMessageLock);
 				MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1589,7 +1589,7 @@ nextt:;
 }
 
 /*
- 		#] RunReplace :
+ 		#] RunReplace : 
  		#[ RunImplode :
 
 		Note that we restrict ourselves to short integers and/or single symbols

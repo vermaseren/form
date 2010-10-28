@@ -332,7 +332,7 @@ int StartAllThreads(int number)
 }
 
 /*
-  	#] StartAllThreads :
+  	#] StartAllThreads : 
   	#[ InitializeOneThread :
 */
 /**
@@ -1381,7 +1381,7 @@ bucketstolen:;
 				}
 				AT.SB.FillBlock = 1;
 				AT.SB.MasterFill[1] = AT.SB.MasterStart[1];
-				errorcode = EndSort(AT.S0->sBuffer,0);
+				errorcode = EndSort(AT.S0->sBuffer,0,0);
 				UNLOCK(AT.SB.MasterBlockLock[AT.SB.FillBlock]);
 				UpdateMaxSize();
 				if ( errorcode ) {
@@ -1576,7 +1576,7 @@ bucketstolen:;
 				  }
 				}
 				AN.ninterms += dd;
-				if ( EndSort(AT.S0->sBuffer,0) < 0 ) goto ProcErr;
+				if ( EndSort(AT.S0->sBuffer,0,0) < 0 ) goto ProcErr;
 				e->numdummies = AR.MaxDum - AM.IndDum;
 				if ( AT.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
@@ -4623,6 +4623,6 @@ void IniFbufs(VOID)
 }
 
 /*
-  	#] IniFbufs :
+  	#] IniFbufs : 
 */
 #endif

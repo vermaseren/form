@@ -404,7 +404,7 @@ extern void   DoRevert(WORD *,WORD *);
 extern WORD   DoSumF1(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoSumF2(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoTheta(PHEAD WORD *);
-extern LONG   EndSort(WORD *,int);
+extern LONG   EndSort(WORD *,int,int);
 extern WORD   EntVar(WORD,UBYTE *,WORD,WORD,WORD);
 extern WORD   EpfCon(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   EpfFind(PHEAD WORD *,WORD *);
