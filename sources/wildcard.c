@@ -34,7 +34,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : wildcard.c
 */
@@ -46,7 +46,7 @@
 /*
 #define DEBUG(x) x
 
-  	#] Includes : 
+  	#] Includes :
  	#[ Wildcards :
  		#[ WildFill :			WORD WildFill(to,from,sub)
 
@@ -293,7 +293,7 @@ Seven:;
 				while ( s < z ) *m++ = *s++;
 				break;
 /*
-			#] SYMBOLS : 
+			#] SYMBOLS :
 */
 			case DOTPRODUCT:
 /*
@@ -601,7 +601,7 @@ NextDot:;
 				}
 				break;
 /*
-			#] DOTPRODUCTS : 
+			#] DOTPRODUCTS :
 */
 			case SETSET:
 /*
@@ -616,7 +616,7 @@ NextDot:;
 				t = temp; u = t + t[1];
 				goto ReSwitch;
 /*
-			#] SETS : 
+			#] SETS :
 */
 			case VECTOR:
 /*
@@ -709,7 +709,7 @@ ss4:				m++; t++;
 				}
 				break;
 /*
-			#] VECTORS : 
+			#] VECTORS :
 */
 			case INDEX:
 /*
@@ -755,7 +755,7 @@ ss5:				m++; t++;
 				}
 				break;
 /*
-			#] INDEX : 
+			#] INDEX :
 */
 			case DELTA:
 			case LEVICIVITA:
@@ -854,7 +854,7 @@ ss6:					m++; t++;
 				}
 				break;
 /*
-			#] SPECIALS : 
+			#] SPECIALS :
 */
 			case SUBEXPRESSION:
 /*
@@ -911,7 +911,7 @@ sr7:;
 				}
 				break;
 /*
-			#] SUBEXPRESSION : 
+			#] SUBEXPRESSION :
 */
 			case EXPRESSION:
 /*
@@ -976,7 +976,7 @@ sr7:;
 				v[1] = m-v;
 				break;
 /*
-			#] EXPRESSION : 
+			#] EXPRESSION :
 */
 			default:
 /*
@@ -1211,7 +1211,7 @@ ss10:							*m++ = *t++;
 							}
 							na = WORDDIF(z,accu);
 /*
-			#] Simple arguments : 
+			#] Simple arguments :
 */
 						}
 						else {
@@ -1295,7 +1295,7 @@ ss10:							*m++ = *t++;
 				}
 				else { while ( t < u ) *m++ = *t++; }
 /*
-			#] FUNCTIONS : 
+			#] FUNCTIONS :
 */
 		}
 		t = uu;
@@ -1310,7 +1310,7 @@ ss10:							*m++ = *t++;
 }
 
 /*
- 		#] WildFill : 
+ 		#] WildFill :
  		#[ ResolveSet :			WORD ResolveSet(from,to,subs)
 
 		The set syntax is:
@@ -1365,7 +1365,7 @@ WORD ResolveSet(PHEAD WORD *from, WORD *to, WORD *subs)
 #ifdef WITHPTHREADS
 			if ( AS.MultiThreaded ) {
 				for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
-					if ( w[1] == ModOptdollars[nummodopt].number ) break;
+					if ( -w[1] == ModOptdollars[nummodopt].number ) break;
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
@@ -1475,7 +1475,7 @@ GotOne:;
 }
 
 /*
- 		#] ResolveSet : 
+ 		#] ResolveSet :
  		#[ ClearWild :			VOID ClearWild()
 
 	Clears the current wildcard settings and makes them ready for
@@ -1501,7 +1501,7 @@ VOID ClearWild(PHEAD0)
 }
 
 /*
- 		#] ClearWild : 
+ 		#] ClearWild :
  		#[ AddWild :			WORD AddWild(oldnumber,type,newnumber)
 
  		Adds a wildcard assignment.
@@ -1730,7 +1730,7 @@ FlipOn:
 }
 
 /*
- 		#] AddWild : 
+ 		#] AddWild :
  		#[ CheckWild :			WORD CheckWild(oldnumber,type,newnumber,newval)
 
  		Tests whether a wildcard assignment is allowed.
@@ -2473,6 +2473,6 @@ int DenToFunction(WORD *term, WORD numfun)
 }
 
 /*
-  	#] DenToFunction : 
+  	#] DenToFunction :
 */
 
