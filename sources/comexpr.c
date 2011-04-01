@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 /*
   	#[ Includes : compi2.c
@@ -57,21 +57,21 @@ static struct id_options {
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ DoExpr:
 */
 
@@ -114,20 +114,20 @@ int DoExpr(UBYTE *inp, int type)
 /*
 		Original code:
 					Expressions[c2].replace = j =
-						EntVar(CEXPRESSION,0,type,0,0);
+						EntVar(CEXPRESSION,0,type,0,0,0);
 		At some moment it does get the value in j but not in Expressions[c2].replace
 */
-					j = EntVar(CEXPRESSION,0,type,0,0);
+					j = EntVar(CEXPRESSION,0,type,0,0,0);
 					Expressions[j].node = Expressions[c2].node;
 					Expressions[c2].replace = j;
 				}
 				else {
 					MesPrint("&name of expression is also name of a variable");
 					error = 1;
-					j = EntVar(CEXPRESSION,inp,type,0,0);
+					j = EntVar(CEXPRESSION,inp,type,0,0,0);
 				}
 			}
-			else j = EntVar(CEXPRESSION,inp,type,0,0);
+			else j = EntVar(CEXPRESSION,inp,type,0,0,0);
 			*q = c;
 			OldWork = w = AT.WorkPointer;
 			*w++ = TYPEEXPRESSION;
@@ -328,7 +328,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
@@ -339,7 +339,7 @@ int CoIdOld(UBYTE *inp)
 }
 
 /*
-  	#] CoIdOld : 
+  	#] CoIdOld :
   	#[ CoId :
 */
 
@@ -350,7 +350,7 @@ int CoId(UBYTE *inp)
 }
 
 /*
-  	#] CoId : 
+  	#] CoId :
   	#[ CoIdNew :
 */
 
@@ -361,7 +361,7 @@ int CoIdNew(UBYTE *inp)
 }
 
 /*
-  	#] CoIdNew : 
+  	#] CoIdNew :
   	#[ CoDisorder :
 */
 
@@ -372,7 +372,7 @@ int CoDisorder(UBYTE *inp)
 }
 
 /*
-  	#] CoDisorder : 
+  	#] CoDisorder :
   	#[ CoMany :
 */
 
@@ -383,7 +383,7 @@ int CoMany(UBYTE *inp)
 }
 
 /*
-  	#] CoMany : 
+  	#] CoMany :
   	#[ CoMulti :
 */
 
@@ -394,7 +394,7 @@ int CoMulti(UBYTE *inp)
 }
 
 /*
-  	#] CoMulti : 
+  	#] CoMulti :
   	#[ CoIfMatch :
 */
 
@@ -405,7 +405,7 @@ int CoIfMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfMatch : 
+  	#] CoIfMatch :
   	#[ CoIfNoMatch :
 */
 
@@ -416,7 +416,7 @@ int CoIfNoMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfNoMatch : 
+  	#] CoIfNoMatch :
   	#[ CoOnce :
 */
 
@@ -427,7 +427,7 @@ int CoOnce(UBYTE *inp)
 }
 
 /*
-  	#] CoOnce : 
+  	#] CoOnce :
   	#[ CoOnly :
 */
 
@@ -438,7 +438,7 @@ int CoOnly(UBYTE *inp)
 }
 
 /*
-  	#] CoOnly : 
+  	#] CoOnly :
   	#[ CoSelect :
 */
 
@@ -449,7 +449,7 @@ int CoSelect(UBYTE *inp)
 }
 
 /*
-  	#] CoSelect : 
+  	#] CoSelect :
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -749,7 +749,7 @@ IllLeft:MesPrint("&Illegal LHS");
 			return(1);
 		}
 		LowerSortLevel();
-		if ( AC.lhdollarflag ) MarkDirty(w,1);
+		if ( AC.lhdollarflag ) MarkDirty(w,DIRTYFLAG);
 	}
 	AT.WorkPointer = w + *w;
 	AC.DumNum = 0;
@@ -898,7 +898,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression : 
+  	#] CoIdExpression :
   	#[ CoMultiply :
 */
 
@@ -937,7 +937,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply : 
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1189,7 +1189,7 @@ redef:;
 }
 
 /*
-  	#] CoFill : 
+  	#] CoFill :
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1565,7 +1565,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax
@@ -1711,8 +1711,13 @@ int CoPrintTable(UBYTE *inp)
 		else if ( lbrac ) { TOKENTOLINE(" )",")") }
 */
 		while ( *m ) m += *m;
-		if ( WriteExpression(expr,(LONG)(m-expr)) ) { error = 1; goto finally; }
-		AO.OutSkip = 0;
+		if ( m > expr ) {
+			if ( WriteExpression(expr,(LONG)(m-expr)) ) { error = 1; goto finally; }
+			AO.OutSkip = 0;
+		}
+		else {
+			TokenToLine((UBYTE *)"0");
+		}
 		TokenToLine((UBYTE *)";");
 		FiniLine();
 	}
@@ -1734,7 +1739,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable : 
+  	#] CoPrintTable :
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1824,7 +1829,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign : 
+  	#] CoAssign :
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1888,7 +1893,7 @@ int CoDeallocateTable(UBYTE *inp)
 }
 
 /*
-  	#] CoDeallocateTable : 
+  	#] CoDeallocateTable :
   	#[ CoFactorCache :
 */
 /**
@@ -1915,7 +1920,7 @@ int CoFactorCache(UBYTE *inp)
 }
 
 /*
-  	#] CoFactorCache : 
+  	#] CoFactorCache :
 */
 
 

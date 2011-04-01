@@ -32,7 +32,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : normal.c
 */
@@ -40,7 +40,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ Commute :
 
@@ -68,7 +68,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -115,7 +115,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations : 
+  	#] Declarations :
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -140,7 +140,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup : 
+  	#] Setup :
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -220,6 +220,31 @@ conscan:;
 						t += 2;
 						goto NextSymbol;
 					}
+					else if ( *t == DIMENSIONSYMBOL ) {
+						if ( AN.cTerm ) m = AN.cTerm;
+						else m = term;
+						k = DimensionTerm(BHEAD m);
+						if ( k == 0 ) goto NormZero;
+						if ( k == MAXPOSITIVE ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("Dimension_ is undefined in term %t");
+							UNLOCK(ErrorMessageLock);
+							goto NormMin;
+						}
+						if ( k == -MAXPOSITIVE ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("Dimension_ out of range in term %t");
+							UNLOCK(ErrorMessageLock);
+							goto NormMin;
+						}
+						if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
+						else { *((UWORD *)lnum) = -k; nnum = -1; }
+						ncoef = REDLENG(ncoef);	
+						if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)lnum,nnum) ) goto FromNorm;
+						ncoef = INCLENG(ncoef);
+						t += 2;
+						goto NextSymbol;
+					}
 					if ( ( *t >= MAXPOWER && *t < 2*MAXPOWER )
 						|| ( *t < -MAXPOWER && *t > -2*MAXPOWER ) ) {
 /*
@@ -252,7 +277,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -1875,6 +1900,17 @@ doflags:
 								pcon[ncon++] = t+1;
 							t += 2;
 						}
+						else if ( *t == -SYMBOL ) {
+							if ( t[1] >= MAXPOWER && t[1] < 2*MAXPOWER ) {
+								*t = -SNUMBER;
+								t[1] -= MAXPOWER;
+							}
+							else if ( t[1] < -MAXPOWER && t[1] > -2*MAXPOWER  ) {
+								*t = -SNUMBER;
+								t[1] += MAXPOWER;
+							}
+							else t += 2;
+						}
 						else t += 2;
 					}
 				}
@@ -1889,7 +1925,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2038,7 +2074,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators : 
+  	#] Easy denominators :
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -2272,7 +2308,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions : 
+  	#] Index Contractions :
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -2423,7 +2459,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions : 
+  	#] NonCommuting Functions :
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -2580,6 +2616,8 @@ NextI:;
 					u = t + FUNHEAD + 2;
 					if ( *u < 0 ) {
 						if ( *u <= -FUNCTION ) {}
+						else if ( t[1] == FUNHEAD+4 && t[FUNHEAD+2] == -SNUMBER
+							&& t[FUNHEAD+3] == 0 ) goto NormPRF;
 						else if ( t[1] == FUNHEAD+4 ) goto NormZero;
 					}
 					else if ( t[1] == *u+FUNHEAD+2 ) goto NormZero;
@@ -2600,7 +2638,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Commuting Functions : 
+  	#] Commuting Functions :
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -2688,7 +2726,7 @@ NextI:;
 		}
 	}
 /*
-  	#] LeviCivita tensors : 
+  	#] LeviCivita tensors :
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -2719,7 +2757,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta : 
+  	#] Delta :
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -2741,7 +2779,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices : 
+  	#] Loose Vectors/Indices :
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -2770,7 +2808,7 @@ NextI:;
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors : 
+  	#] Vectors :
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -2845,7 +2883,7 @@ NextI:;
 		}
 	}
 /*
-  	#] Dotproducts : 
+  	#] Dotproducts :
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -2897,7 +2935,7 @@ NextI:;
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols : 
+  	#] Symbols :
   	#[ Errors and Finish :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -2977,6 +3015,7 @@ NextI:;
 			while ( t < tstop ) {
 				if ( *t >= FUNCTION && ( ( t[2] & DIRTYFLAG ) != 0 )
 				&& ( functions[*t-FUNCTION].spec == 0 ) ) {
+					VOID *oldcompareroutine = AR.CompareRoutine;
 					r = t + FUNHEAD; argstop = t + t[1];
 					while ( r < argstop ) {
 						if ( *r > 0 && ( r[1] != 0 ) ) {
@@ -2984,6 +3023,9 @@ NextI:;
 							oldwork = AT.WorkPointer;
 							olddefer = AR.DeferFlag;
 							AR.DeferFlag = 0;
+							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
+								AR.CompareRoutine = &CompareSymbols;
+							}
 							NewSort();
 							m  = r + ARGHEAD; rnext = r + *r;
 							while ( m < rnext ) {
@@ -2999,6 +3041,9 @@ NextI:;
 							if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 							m = AT.WorkPointer;
 							if ( EndSort(m,1,0) < 0 ) goto FromNorm;
+							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
+								AR.CompareRoutine = oldcompareroutine;
+							}
 /*
 							Now we have to analyse the output
 							Count terms and space
@@ -3141,7 +3186,7 @@ NextI:;
 		}
 #endif
 /*
- 		#] normalize replacements : 
+ 		#] normalize replacements :
 */
 #ifdef OLDNORMREPLACE
 		AT.WorkPointer = termout;
@@ -3193,6 +3238,12 @@ NormZZ:
 	UNLOCK(ErrorMessageLock);
 	goto NormMin;
 
+NormPRF:
+	LOCK(ErrorMessageLock);
+	MesPrint("0/0 in polyratfun during normalization of term");
+	UNLOCK(ErrorMessageLock);
+	goto NormMin;
+
 NormZero:
 	*term = 0;
 	AT.WorkPointer = termout;
@@ -3217,12 +3268,12 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
@@ -3885,7 +3936,7 @@ gcdillegal:;
 	work1 = work3;
 	while ( *work2 ) {
 		if ( work2 != work3 ) {
-			work1 = PolyGCD(BHEAD work1,work2);
+			work1 = PolyGCD2(BHEAD work1,work2);
 		}
 		while ( *work2 ) work2 += *work2;
 		work2++;

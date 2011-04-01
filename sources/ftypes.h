@@ -175,20 +175,20 @@
 	The typedefs are to allow the compilers to do better error checking.
 */
 
-#ifdef __INTEL_COMPILER
 /*
-	icc doesn't like the typedef void VOID;
+	icc doesn't like the typedef void VOID; Neither does g++ on the apple
 	Hence we work the old fashioned way:
 */
 #define VOID void
-#endif
 
 #ifndef ALPHA
 #ifndef OPTERON
 #ifndef MYWIN64
+/*
 #ifndef VOID
 typedef void VOID;
 #endif
+*/
 #ifdef HP
 typedef char SBYTE;
 #else
@@ -489,6 +489,7 @@ typedef int (*TFUN1)();
 #define NUMERATORSYMBOL 3
 #define DENOMINATORSYMBOL 4
 #define WILDARGSYMBOL 5
+#define DIMENSIONSYMBOL 6
 
 #define WILDARGVECTOR 0
 #define WILDARGINDEX 0
@@ -619,6 +620,7 @@ typedef int (*TFUN1)();
 #define DIRTYFLAG 1
 #define DIRTYSYMFLAG 2
 #define ALLDIRTY (DIRTYFLAG|DIRTYSYMFLAG)
+#define CLEANPRF 4
 
 #define ARGHEAD 2
 #define FUNHEAD 3

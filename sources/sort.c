@@ -797,13 +797,39 @@ LONG EndSort(WORD *buffer, int par, int par2)
 					UNLOCK(ErrorMessageLock);
 					retval = -1; goto RetRetval;
 				}
+				if ( S == AT.S0 ) {
 #ifdef WITHPTHREADS
-				if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
+					if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
 #endif
-				pp = S->SizeInFile[2];
-				MULPOS(pp,sizeof(WORD));
-				WriteStats(&pp,2);
-				UpdateMaxSize();
+					pp = S->SizeInFile[2];
+					MULPOS(pp,sizeof(WORD));
+					WriteStats(&pp,2);
+					UpdateMaxSize();
+				}
+				else {
+					if ( newout->handle >= 0 ) {	/* output too large */
+TooLarge:
+						LOCK(ErrorMessageLock);
+						MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
+						MesCall("EndSort");
+						UNLOCK(ErrorMessageLock);
+						retval = -1; goto RetRetval;
+					}
+
+					t = newout->PObuffer;
+					j = newout->POfill - t;
+					to = buffer;
+					if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
+						LOCK(ErrorMessageLock);
+						MesWork();
+						MesCall("EndSort");
+						UNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
+					if ( j > AM.MaxTer ) goto TooLarge;
+					NCOPY(to,t,j);
+
+				}
 				goto RetRetval;
 			}
 			if ( MergePatches(1) ) {
@@ -825,6 +851,22 @@ LONG EndSort(WORD *buffer, int par, int par2)
 				WriteStats(&pp,(WORD)1);
 				AC.LogHandle = oldLogHandle;
 			  }
+			}
+			if ( S != AT.S0 ) {
+				if ( newout->handle >= 0 ) goto TooLarge;
+				t = newout->PObuffer;
+				j = newout->POfill - t;
+				to = buffer;
+				if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
+					LOCK(ErrorMessageLock);
+					MesWork();
+					MesCall("EndSort");
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				if ( j > AM.MaxTer ) goto TooLarge;
+				NCOPY(to,t,j);
+				goto RetRetval;
 			}
 		}
 	}
@@ -944,7 +986,7 @@ RetRetval:
 			UpdateMaxSize();
 			DeAllocFileHandle(newout);
 		}
-		else {
+		else if ( newout && newout->handle >= 0 ) { /*????????????????*/
 /*
 			Here we have to copy the contents of the 'file' into
 			the buffer. We assume that this buffer lies in the WorkSpace.
@@ -963,6 +1005,11 @@ RetRetval:
 			}
 			UpdateMaxSize();
 			DeAllocFileHandle(newout);
+			newout = 0;
+		}
+		else if ( newout ) {
+			DeAllocFileHandle(newout);
+			newout = 0;
 		}
 	}
 	else if ( par == 2 ) {
@@ -1021,7 +1068,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -1300,6 +1347,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 				while ( polystop < sa && *polystop != AR.PolyFun ) {
 					polystop += polystop[1];
 				}
+				if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
 				while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
 					i--; j--; k--; p++; r++;
 				}
@@ -1353,6 +1401,7 @@ nocompress:
 				while ( polystop < sa && *polystop != AR.PolyFun ) {
 					polystop += polystop[1];
 				}
+				if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
 				while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
 					i--; j--; k--; p++; r++;
 				}
@@ -1362,8 +1411,22 @@ nocompress:
 			}
 			goto nocompress;
 		}
-		else if ( dobracketindex ) {
-			PutBracketInIndex(term,position);
+		else {
+			if ( AR.PolyFunType == 2 ) {
+				WORD *t, *tstop;
+				tstop = term + *term;
+				tstop -= ABS(tstop[-1]);
+				t = term+1;
+				while ( t < tstop ) {
+					if ( *t == AR.PolyFun ) {
+						t[2] &= ~CLEANPRF;
+					}
+					t += t[1];
+				}
+			}
+			if ( dobracketindex ) {
+				PutBracketInIndex(term,position);
+			}
 		}
 		ret = i;
 		ADDPOS(*position,i*sizeof(WORD));
@@ -1476,7 +1539,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut : 
+ 		#] PutOut :
  		#[ FlushOut :				WORD FlushOut(position,file,compr)
 */
 /**
@@ -1836,20 +1899,36 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 	Add here the two arguments. Is a straight merge.
 */
 	if ( S->PolyFlag == 2 ) {
+		WORD **oldSplitScratch = AN.SplitScratch;
+		LONG oldSplitScratchSize = AN.SplitScratchSize;
+		LONG oldInScratch = AN.InScratch;
 		if ( (WORD *)((UBYTE *)w + AM.MaxTer) >= AT.WorkTop ) {
 			LOCK(ErrorMessageLock);
-			MesPrint("Program was adding polyfun arguments");
+			MesPrint("Program was adding polyratfun arguments");
 			MesWork();
 			UNLOCK(ErrorMessageLock);
 		}
 		S->PolyWise = 0;
-		PolyFunAddRat(BHEAD s1,s2);
+		AN.SplitScratch = AN.SplitScratch1;
+		AN.SplitScratchSize = AN.SplitScratchSize1;
+		AN.InScratch = AN.InScratch1;
+		PolyRatFunAdd1(BHEAD s1,s2);
+/*
+		if ( AM.oldpolyratfun ) PolyRatFunAdd_OLD(BHEAD s1,s2);
+		else                    PolyRatFunAdd(BHEAD s1,s2);
+*/
 		S->PolyWise = oldpw;
+		AN.SplitScratch1 = AN.SplitScratch;
+		AN.SplitScratchSize1 = AN.SplitScratchSize;
+		AN.InScratch1 = AN.InScratch;
+		AN.SplitScratch = oldSplitScratch;
+		AN.SplitScratchSize = oldSplitScratchSize;
+		AN.InScratch = oldInScratch;
 		AT.WorkPointer = w;
-		if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 && w[1] > FUNHEAD ) {
+		if ( w[1] <= FUNHEAD ||
+			( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) ) {
 			*ps1 = *ps2 = 0; return(0);
 		}
-		else if ( w[1] <= FUNHEAD ) { *ps1 = *ps2 = 0; return(0); }
 	}
 	else {
 		if ( w + s1[1] + s2[1] + 12 + ARGHEAD >= AT.WorkTop ) {
@@ -3506,16 +3585,34 @@ OneTerm:
 						tt1 = m1;
 						m1 += S->PolyWise;
 						m2 += S->PolyWise;
-						w = AT.WorkPointer;
-						if ( w + m1[1] + m2[1] > AT.WorkTop ) {
-							LOCK(ErrorMessageLock);
-							MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
-							UNLOCK(ErrorMessageLock);
-							Terminate(-1);
+						if ( S->PolyFlag == 2 ) {
+							w = PolyRatFunAdd1(BHEAD m1,m2);
+/*
+							if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(BHEAD m1,m2);
+							else                    w = PolyRatFunAdd(BHEAD m1,m2);
+*/
+							if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
+								LOCK(ErrorMessageLock);
+								MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+								UNLOCK(ErrorMessageLock);
+								Terminate(-1);
+							}
+							AT.WorkPointer = w;
 						}
-						AddArgs(BHEAD m1,m2,w);
+						else {
+							w = AT.WorkPointer;
+							if ( w + m1[1] + m2[1] > AT.WorkTop ) {
+								LOCK(ErrorMessageLock);
+								MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
+								UNLOCK(ErrorMessageLock);
+								Terminate(-1);
+							}
+							AddArgs(BHEAD m1,m2,w);
+						}
 						r1 = w[1];
-						if ( r1 <= FUNHEAD ) { goto cancelled; }
+						if ( r1 <= FUNHEAD
+							|| ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) )
+								 { goto cancelled; }
 						if ( r1 == m1[1] ) {
 							NCOPY(m1,w,r1);
 						}
@@ -3851,7 +3948,7 @@ WORD StoreTerm(PHEAD WORD *term)
 	POSITION pp;
 	LONG lSpace, sSpace, RetCode, over, tover;
 
-	if ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) {
+	if ( ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) && AR.sLevel == 0 ) {
 #ifdef WITHPTHREADS
 		sprintf((char *)(THRbuf),"StoreTerm(%d)",AT.identity);
 		PrintTerm(term,(char *)(THRbuf));
@@ -3894,12 +3991,7 @@ WORD StoreTerm(PHEAD WORD *term)
 			WriteStats(&pp,(WORD)0);
 			AC.LogHandle = oldLogHandle;
 		}
-/*
-		if ( !S->lPatch && ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop )
-			goto SkipLarge;
-*/
 		if ( ( S->lPatch >= S->MaxPatches ) ||
-/*            Albert had here       2*AM.MaxTal     */
 			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop ) ) {
 /*
 			The large buffer is too full. Merge and write it

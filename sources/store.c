@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
 #define HIDEDEBUG
   	#[ Includes : store.c
@@ -37,7 +37,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -57,7 +57,7 @@ WORD OpenTemp()
 }
 
 /*
- 		#] OpenTemp : 
+ 		#] OpenTemp :
  		#[ SeekScratch :
 */
 
@@ -68,7 +68,7 @@ VOID SeekScratch(FILEHANDLE *fi, POSITION *pos)
 }
 
 /*
- 		#] SeekScratch : 
+ 		#] SeekScratch :
  		#[ SetEndScratch :
 */
 
@@ -82,7 +82,7 @@ VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndScratch : 
+ 		#] SetEndScratch :
  		#[ SetEndHScratch :
 */
 
@@ -108,7 +108,7 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndHScratch : 
+ 		#] SetEndHScratch :
  		#[ SetScratch :
 */
 
@@ -177,7 +177,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch : 
+ 		#] SetScratch :
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -221,7 +221,7 @@ WORD RevertScratch()
 }
 
 /*
- 		#] RevertScratch : 
+ 		#] RevertScratch :
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -263,7 +263,7 @@ WORD ResetScratch()
 }
 
 /*
- 		#] ResetScratch : 
+ 		#] ResetScratch :
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -469,7 +469,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave : 
+ 		#] CoSave :
  		#[ CoLoad :
 */
 
@@ -539,7 +539,7 @@ int CoLoad(UBYTE *inp)
 				error = -1;
 			}
 			else {
-				if ( ( num = EntVar(CEXPRESSION,inp,STOREDEXPRESSION,0,0) ) >= 0 ) {
+				if ( ( num = EntVar(CEXPRESSION,inp,STOREDEXPRESSION,0,0,0) ) >= 0 ) {
 					TMproto[0] = EXPRESSION;
 					TMproto[1] = SUBEXPSIZE;
 					TMproto[2] = num;
@@ -593,7 +593,7 @@ int CoLoad(UBYTE *inp)
 				error = -1;
 			}
 			else {
-				if ( ( num = EntVar(CEXPRESSION,(UBYTE *)(ind->name),STOREDEXPRESSION,0,0) ) >= 0 ) {
+				if ( ( num = EntVar(CEXPRESSION,(UBYTE *)(ind->name),STOREDEXPRESSION,0,0,0) ) >= 0 ) {
 					if ( !error ) {
 						if ( PutInStore(ind,num) ) error = -1;
 						else if ( !AM.silent && silentload == 0 )
@@ -620,7 +620,7 @@ int CoLoad(UBYTE *inp)
 					error = -1;
 				}
 				else {
-					if ( ( num = EntVar(CEXPRESSION,(UBYTE *)(ind->name),STOREDEXPRESSION,0,0) ) >= 0 ) {
+					if ( ( num = EntVar(CEXPRESSION,(UBYTE *)(ind->name),STOREDEXPRESSION,0,0,0) ) >= 0 ) {
 						if ( !error ) {
 							if ( PutInStore(ind,num) ) error = -1;
 							else if ( !AM.silent && silentload == 0 )
@@ -666,7 +666,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad : 
+ 		#] CoLoad :
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -751,7 +751,7 @@ WORD DeleteStore(WORD par)
 }
 
 /*
- 		#] DeleteStore : 
+ 		#] DeleteStore :
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -857,7 +857,7 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore : 
+ 		#] PutInStore :
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -1119,7 +1119,7 @@ RegRet:;
 		}
 	}
 /*
-			#] debug : 
+			#] debug :
 */
 	return(*from);
 GTerr:
@@ -1300,7 +1300,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm : 
+ 		#] GetOneTerm :
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1402,7 +1402,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms : 
+ 		#] GetMoreTerms :
  		#[ GetMoreFromMem :
 
 */
@@ -1494,7 +1494,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem : 
+ 		#] GetMoreFromMem :
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1701,7 +1701,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore : 
+ 		#] GetFromStore :
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1885,7 +1885,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars : 
+ 		#] DetVars :
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -2123,7 +2123,7 @@ ErrReturn:
 }
 
 /*
- 		#] ToStorage : 
+ 		#] ToStorage :
  		#[ NextFileIndex :
 */
 
@@ -2176,7 +2176,7 @@ ErrNextS:
 }
 
 /*
- 		#] NextFileIndex : 
+ 		#] NextFileIndex :
  		#[ SetFileIndex :
 */
 
@@ -2224,7 +2224,7 @@ WORD SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex : 
+ 		#] SetFileIndex :
  		#[ VarStore :
 */
 
@@ -2267,7 +2267,7 @@ WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 }
 
 /*
- 		#] VarStore : 
+ 		#] VarStore :
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2433,7 +2433,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber : 
+ 		#] TermRenumber :
  		#[ FindrNumber :
 */
 
@@ -2498,7 +2498,7 @@ ErrFindr2:
 }
 
 /*
- 		#] FindrNumber : 
+ 		#] FindrNumber :
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2640,7 +2640,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex : 
+ 		#] FindInIndex :
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2811,14 +2811,14 @@ RENUMBER GetTable(WORD expr, POSITION *position)
 		}
 		else {
 			if ( ( k = EntVar(CSYMBOL,(UBYTE *)(AT.WorkPointer),s->complex,s->minpower,
-			s->maxpower) ) < 0 ) goto GetTcall;
+			s->maxpower,s->dimension) ) < 0 ) goto GetTcall;
 		}
 		*(w+j) = k;
 		w++;
 	}
 	}
 /*
-			#] Symbols : 
+			#] Symbols :
 			#[ Indices :
 */
 	{
@@ -2873,7 +2873,7 @@ RENUMBER GetTable(WORD expr, POSITION *position)
 		else {
 GetTb3:
 			if ( ( k = EntVar(CINDEX,(UBYTE *)(AT.WorkPointer),
-			s->dimension,0,0) ) < 0 ) goto GetTcall;
+			s->dimension,0,0,0) ) < 0 ) goto GetTcall;
 
 		}
 		*(w+j) = k + AM.OffsetIndex;
@@ -2881,7 +2881,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices : 
+			#] Indices :
 			#[ Vectors :
 */
 	{
@@ -2918,14 +2918,14 @@ GetTb3:
 		}
 		else {
 			if ( ( k = EntVar(CVECTOR,(UBYTE *)(AT.WorkPointer),
-			s->complex,0,0) ) < 0 ) goto GetTcall;
+			s->complex,0,0,s->dimension) ) < 0 ) goto GetTcall;
 		}
 		*(w+j) = k + AM.OffsetVector;
 		w++;
 	}
 	}
 /*
-			#] Vectors : 
+			#] Vectors :
 			#[ Functions :
 */
 	{
@@ -2965,7 +2965,7 @@ GetTb3:
 		}
 		else {
 			if ( ( k = EntVar(CFUNCTION,(UBYTE *)(AT.WorkPointer),
-			s->complex,s->commute,s->spec) ) < 0 ) goto GetTcall;
+			s->complex,s->commute,s->spec,s->dimension) ) < 0 ) goto GetTcall;
 			functions[k].symmetric = s->symmetric;
 		}
 		*(w+j) = k + FUNCTION;
@@ -2973,7 +2973,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions : 
+			#] Functions :
 
 	Now we skip the prototype. This sets the start position at the first term
 */
@@ -3051,7 +3051,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable : 
+ 		#] GetTable :
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
@@ -3225,7 +3225,7 @@ WriteTrailer:
 }
 
 /*
- 		#] CopyExpression : 
+ 		#] CopyExpression :
 	#] StoreExpressions :
 	#[ System Independent Saved Expressions :
 
@@ -3312,7 +3312,7 @@ static void Flip64(UBYTE *p) { FlipN(p, 8); }
 static void Flip128(UBYTE *p) { FlipN(p, 16); }
 
 /*
- 		#] Flip : 
+ 		#] Flip :
  		#[ Resize :
 */
 
@@ -3519,7 +3519,7 @@ static void Resize128t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8
 static void Resize128t64NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /*
- 		#] Resize : 
+ 		#] Resize :
  		#[ CheckPower and RenumberVec :
 */
 
@@ -3559,7 +3559,7 @@ static void RenumberVec32(UBYTE *p)
 }
 
 /*
- 		#] CheckPower and RenumberVec : 
+ 		#] CheckPower and RenumberVec :
  		#[ ResizeCoeff :
 */
 
@@ -3671,7 +3671,7 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 }
 
 /*
- 		#] ResizeCoeff : 
+ 		#] ResizeCoeff :
  		#[ WriteStoreHeader :
 */
 
@@ -3726,7 +3726,7 @@ WORD WriteStoreHeader(WORD handle)
 }
 
 /*
- 		#] WriteStoreHeader : 
+ 		#] WriteStoreHeader :
  		#[ CompactifySizeof :
 */
 
@@ -3750,7 +3750,7 @@ static unsigned int CompactifySizeof(unsigned int size)
 }
 
 /*
- 		#] CompactifySizeof : 
+ 		#] CompactifySizeof :
  		#[ ReadSaveHeader :
 */
 
@@ -3855,7 +3855,7 @@ WORD ReadSaveHeader()
 }
 
 /*
- 		#] ReadSaveHeader : 
+ 		#] ReadSaveHeader :
  		#[ ReadSaveIndex :
 */
 
@@ -4024,7 +4024,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 }
 
 /*
- 		#] ReadSaveIndex : 
+ 		#] ReadSaveIndex :
  		#[ ReadSaveVariables :
 */
 
@@ -4152,7 +4152,8 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node     */
-				AO.ResizeWORD(in, out); in += lenW;                      /* namesize */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* namesize */
+				AO.ResizeWORD(in, out); in += lenW;                      /* dimension */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -4252,7 +4253,8 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node     */
-				AO.ResizeWORD(in, out); in += lenW;                      /* namesize */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* namesize */
+				AO.ResizeWORD(in, out); in += lenW;                      /* dimension */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -4309,7 +4311,8 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* spec      */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* symmetric */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node      */
-				AO.ResizeWORD(in, out); in += lenW;                      /* namesize  */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* namesize  */
+				AO.ResizeWORD(in, out); in += lenW;                      /* dimension */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
@@ -4362,7 +4365,7 @@ RSVEnd:
 }
 
 /*
- 		#] ReadSaveVariables : 
+ 		#] ReadSaveVariables :
  		#[ ReadSaveTerm :
 */
 
@@ -4706,8 +4709,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 					while ( out < argEnd ) {
 						INT32 *keepsizep = out + *out;
 						INT32 lenbuf = *out;
+						INT32 **ppp = &out; /* to avoid a compiler warning */
 						/* recursion */
-						newbin = ReadSaveTerm32((UBYTE *)r, binend, (UBYTE **)&out, (UBYTE *)rend, top, 1);
+						newbin = ReadSaveTerm32((UBYTE *)r, binend, (UBYTE **)ppp, (UBYTE *)rend, top, 1);
 						r += lenbuf;
 						if ( newbin == (UBYTE *)r ) {
 							return ( (UBYTE *)in );
@@ -4774,7 +4778,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 }
 
 /*
- 		#] ReadSaveTerm : 
+ 		#] ReadSaveTerm :
  		#[ ReadSaveExpression :
 */
 
@@ -4900,6 +4904,6 @@ WORD ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 }
 
 /*
- 		#] ReadSaveExpression : 
+ 		#] ReadSaveExpression :
 	#] System Independent Saved Expressions :
 */

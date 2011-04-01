@@ -761,7 +761,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS : 
+			#] DOTPRODUCTS :
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -1084,7 +1084,7 @@ WORD FindSpecial(WORD *term)
 WORD FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
 {
 	GETBIDENTITY
-	WORD *t, *m, *r, *mm;
+	WORD *t, *m, *r, *mm, rnum;
 	WORD *tstop, *mstop, *TwoProto, *vwhere = 0, oldv, oldvv, vv, level2;
 	WORD v, nq, OffNum = AM.OffsetVector + WILDOFFSET, i, ii = 0, jj;
     WORD fromindex, *intens, notflag1 = 0, notflag2 = 0;
@@ -1345,6 +1345,7 @@ TwoPV:							m = AT.WorkPointer;
 			not in following idold statements.
 			Notice that a following q.p? cannot match.
 */
+						rnum = r[1];
 OneOnly:				m = AT.WorkPointer;
 						tstop = t;
 						t = term;
@@ -1356,7 +1357,7 @@ OneOnly:				m = AT.WorkPointer;
 						t[3] = i;
 						NCOPY(m,t,nq);
 						m[-4] = INDTOIND;
-						m[-1] = r[1];
+						m[-1] = rnum;
 						if ( v >= OffNum ) vwhere[3+SUBEXPSIZE] = oldv;
 						goto CopRest;
 					}
@@ -1390,9 +1391,9 @@ Hitlevel1:							level2 = level;
 										if ( ( vv = m[m[1]+3] ) == r[1] )
 											goto OnePV;
 										else if ( vv >= OffNum ) {
-											if ( m[8] != FROMSET &&
-											m[8] != SETTONUM ) goto OnePV;
-											j = m[10];
+											if ( m[SUBEXPSIZE+4] != FROMSET &&
+											m[SUBEXPSIZE+4] != SETTONUM ) goto OnePV;
+											j = m[SUBEXPSIZE+6];
 											if ( j > WILDOFFSET ) { j -= 2*WILDOFFSET; notflag2 = 1; }
 											else { notflag2 = 0; }
 											bfirst = SetElements + Sets[j].first;
@@ -1401,13 +1402,13 @@ Hitlevel1:							level2 = level;
 											if ( notflag2 == 0 ) {
 											  do {
 												if ( *bfirst == r[1] ) {
-													if ( m[8] == SETTONUM ) {
-														m[12] = SYMTONUM;
-														m[15] = jj;
+													if ( m[SUBEXPSIZE+4] == SETTONUM ) {
+														m[SUBEXPSIZE+8] = SYMTONUM;
+														m[SUBEXPSIZE+11] = jj;
 													}
-													if ( m[11] >= 0 ) {
+													if ( m[SUBEXPSIZE+7] >= 0 ) {
 														oldvv = *(bfirst - Sets[j].first
-														+ Sets[m[11]].first);
+														+ Sets[m[SUBEXPSIZE+7]].first);
 													}
 													goto OnePV;
 												}
@@ -1416,14 +1417,15 @@ Hitlevel1:							level2 = level;
 											}
 											else {
 											  do {
-												if ( *afirst == *r ) break;
-											  } while ( ++afirst < alast );
-											  if ( afirst >= alast ) goto OnePV;
+												if ( *bfirst == r[1] ) break;
+											  } while ( ++bfirst < blast );
+											  if ( bfirst >= blast ) goto OnePV;
 											}
 										}
 											}
 									} while ( ++level2 < AR.Cnumlhs &&
 									C->lhs[level2][0] == TYPEIDOLD );
+									rnum = r[1];
 									goto OneOnly;
 								}
 								else if ( *afirst == r[1] ) {
@@ -1445,26 +1447,26 @@ Hitlevel2:							level2 = level;
 										if ( ( vv = m[6] ) == *r )
 											goto OnePV;
 										else if ( vv >= OffNum ) {
-											if ( m[8] != FROMSET && m[8]
+											if ( m[SUBEXPSIZE+4] != FROMSET && m[SUBEXPSIZE+4]
 											!= SETTONUM ) {
 												j = *r;
 												*r = r[1];
 												r[1] = j;
 												goto OnePV;
 											}
-											j = m[10];
+											j = m[SUBEXPSIZE+6];
 											bfirst = SetElements + Sets[j].first;
 											blast  = SetElements + Sets[j].last;
 											jj = 1;
 											do {
 												if ( *bfirst == *r ) {
-													if ( m[8] == SETTONUM ) {
-														m[12] = SYMTONUM;
-														m[15] = jj;
+													if ( m[SUBEXPSIZE+4] == SETTONUM ) {
+														m[SUBEXPSIZE+8] = SYMTONUM;
+														m[SUBEXPSIZE+11] = jj;
 													}
-													if ( m[11] >= 0 ) {
+													if ( m[SUBEXPSIZE+7] >= 0 ) {
 														oldvv = *(bfirst - Sets[j].first
-														+ Sets[m[11]].first);
+														+ Sets[m[SUBEXPSIZE+7]].first);
 													}
 													j = *r;
 													*r = r[1];
@@ -1478,6 +1480,8 @@ Hitlevel2:							level2 = level;
 											}
 									}
 									jj = *r; *r = r[1]; r[1] = jj;
+									jj = oldv; oldv = oldvv; oldvv = j;
+									rnum = r[1];
 									goto OneOnly;
 								}
 								ii++;
@@ -1505,7 +1509,7 @@ NextDot:			r += 3;
 			} while ( r < tstop );
 		}
 /*
-			#] DOTPRODUCT : 
+			#] DOTPRODUCT :
 			#[ LEVICIVITA :
 */
 		else if ( *t == LEVICIVITA ) {
@@ -1621,7 +1625,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll : 
+ 		#] FindAll :
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp

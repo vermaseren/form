@@ -163,6 +163,30 @@ void PolyFunDirty(PHEAD WORD *term)
 
 /*
  		#] PolyFunDirty : 
+ 		#[ PolyFunClean :
+
+		Routine marks the PolyFun or the PolyRatFun dirty.
+		This is used when there is modular calculus and the modulus
+		has cahnged for the current module.
+*/
+
+void PolyFunClean(PHEAD WORD *term)
+{
+	GETBIDENTITY
+	WORD *t, *tstop;
+	tstop = term + *term;
+	tstop -= ABS(tstop[-1]);
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *t == AR.PolyFun ) {
+			t[2] |= CLEANPRF;
+		}
+		t += t[1];
+	}
+}
+
+/*
+ 		#] PolyFunClean :
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 

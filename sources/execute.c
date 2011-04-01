@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes : execute.c
 */
@@ -45,7 +45,7 @@ PFDOLLARS *PFDollars;
 /*:[28sep2005 mt]*/
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -175,7 +175,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -297,7 +297,7 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables :
+ 		#] PopVariables : 
  		#[ MakeGlobal :
 */
 
@@ -365,7 +365,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ TestDrop :
 */
 
@@ -436,7 +436,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop :
+ 		#] TestDrop : 
  		#[ DoExecute :
 */
 
@@ -736,6 +736,7 @@ skipexec:
 	AC.numpfirstnum = 0;
 #endif
 	AC.DidClean = 0;
+	AC.PolyRatFunChanged = 0;
 	TestDrop();
 	if ( par == STOREMODULE || par == CLEARMODULE ) {
 		if ( par == STOREMODULE && PopVariables() ) RetCode = -1;
@@ -1105,7 +1106,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket :
+ 		#] PutBracket : 
  		#[ SpecialCleanup :
 */
 
@@ -1117,7 +1118,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup :
+ 		#] SpecialCleanup : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1193,7 +1194,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions :
+ 		#] ExchangeExpressions : 
  		#[ GetFirstBracket :
 */
 
@@ -1298,7 +1299,7 @@ int GetFirstBracket(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstBracket :
+ 		#] GetFirstBracket : 
  		#[ TermsInExpression :
 */
 
@@ -1310,7 +1311,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression :
+ 		#] TermsInExpression : 
  		#[ UpdatePositions :
 */
 
@@ -1337,7 +1338,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions :
+ 		#] UpdatePositions : 
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1448,7 +1449,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 :
+ 		#] CountTerms1 : 
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1639,6 +1640,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level)
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */

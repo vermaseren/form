@@ -56,7 +56,16 @@ SRCBASE = \
 	unixfile.c \
 	unix.h \
 	variable.h \
-	wildcard.c
+	wildcard.c \
+	newpoly.cc \
+	newpoly.h \
+	polyfact.cc \
+	polyfact.h \
+	polygcd.cc \
+	polygcd.h \
+	polyvar.h \
+	mytime.h \
+	mytime.cc
 
 SRCPARALLEL = \
 	mpi.c \

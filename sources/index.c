@@ -325,18 +325,22 @@ VOID PutBracketInIndex(WORD *term, POSITION *newpos)
 		}
 		if ( i > 0 ) { /* We have a problem */
 /*
-			There is a special case in which we have only functions and
+			There is a special case in which // we have only functions and
 			term is contained completely in the bracket
 */
+/*
 			t = term + 1;
 			tstop = term + *term - 3;
 			while ( t < tstop && *t > HAAKJE ) t += t[1];
 			if ( t < tstop ) goto problems;
+*/
 			for ( i = 1; i < *term - 3; i++ ) {
 				if ( term[i] != b->bracketbuffer[bi->bracket+i] ) break;
 			}
 			if ( i < *term - 3 ) {
+/*
 problems:;
+*/
 				*term = oldsize; oldt[0] = HAAKJE; oldt[1] = oldhs; oldt[2] = oldh;
 				LOCK(ErrorMessageLock);
 				MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");

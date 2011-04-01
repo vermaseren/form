@@ -75,7 +75,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, OLDFACTARG, (long)0}
+	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, NEWFACTARG, (long)0}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
@@ -716,6 +716,7 @@ int AllocSetups()
 		}		
 	}
 #endif
+
 /*
 	And now some order sensitive things
 */

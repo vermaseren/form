@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 #include "form3.h"
 #include "inivar.h"
@@ -282,7 +282,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -365,7 +365,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput : 
+ 		#] OpenInput :
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -573,7 +573,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles : 
+ 		#] ReserveTempFiles :
  		#[ StartVariables :
 */
 
@@ -721,15 +721,16 @@ VOID StartVariables()
 	cbuf[AM.dbufnum].mnumlhs = cbuf[AM.dbufnum].numlhs;
 	cbuf[AM.dbufnum].mnumrhs = cbuf[AM.dbufnum].numrhs;
 
-	AddSymbol((UBYTE *)"i_",-MAXPOWER,MAXPOWER,VARTYPEIMAGINARY);
-	AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE);
-	AddSymbol((UBYTE *)"coeff_",-MAXPOWER,MAXPOWER,VARTYPENONE);
-	AddSymbol((UBYTE *)"num_",-MAXPOWER,MAXPOWER,VARTYPENONE);
-	AddSymbol((UBYTE *)"den_",-MAXPOWER,MAXPOWER,VARTYPENONE);
-	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE);
+	AddSymbol((UBYTE *)"i_",-MAXPOWER,MAXPOWER,VARTYPEIMAGINARY,0);
+	AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"coeff_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"num_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"den_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE,MAXPOSITIVE);
+	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 
 	AddIndex((UBYTE *)"iarg_",4,0);
-	AddVector((UBYTE *)"parg_",VARTYPENONE);
+	AddVector((UBYTE *)"parg_",VARTYPENONE,MAXPOSITIVE);
 
 	AM.NumFixedFunctions = sizeof(fixedfunctions)/sizeof(struct fixedfun);
 	for ( i = 0; i < AM.NumFixedFunctions; i++ )
@@ -737,10 +738,11 @@ VOID StartVariables()
 		                    ,fixedfunctions[i].commu
 		                    ,fixedfunctions[i].tensor
 		                    ,fixedfunctions[i].complx
-		                    ,fixedfunctions[i].symmetric);
+		                    ,fixedfunctions[i].symmetric
+							,0);
 	AM.NumFixedSets = sizeof(fixedsets)/sizeof(struct fixedset);
 	for ( i = 0; i < AM.NumFixedSets; i++ ) {
-		ii = AddSet((UBYTE *)fixedsets[i].name);
+		ii = AddSet((UBYTE *)fixedsets[i].name,0);
 		Sets[ii].type = fixedsets[i].type;
 	}
 	AM.RepMax = MAXREPEAT;
@@ -759,6 +761,9 @@ VOID StartVariables()
 				,"argument list names");
 	AT.WildcardBufferSize = AC.WildcardBufferSize;
 	AR.CompareRoutine = &Compare1;
+	AT.nfac = AT.nBer = 0;
+	AT.factorials = 0;
+	AT.bernoullis = 0;
 #endif
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
@@ -820,10 +825,11 @@ VOID StartVariables()
 	AC.pfirstnum = 0;
 	AC.numpfirstnum = AC.sizepfirstnum = 0;
 #endif
+	AC.MemDebugFlag = 0;
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1017,9 +1023,13 @@ WORD IniVars()
 	AT.inprimelist = -1;
 	AT.sizeprimelist = 0;
 	AT.primelist = 0;
+	AN.SplitScratch = 0;
+	AN.SplitScratchSize = AN.InScratch = 0;
+	AN.SplitScratch1 = 0;
+	AN.SplitScratchSize1 = AN.InScratch1 = 0;
 
-	AllocPolyModCoefs(&(AN.polymod1),100);
-	AllocPolyModCoefs(&(AN.polymod2),100);
+	AllocPolyModCoefs(&(AN.polymod1),200);
+	AllocPolyModCoefs(&(AN.polymod2),200);
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	C->Pointer = C->Buffer;
@@ -1029,12 +1039,13 @@ WORD IniVars()
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AP.PreAssignFlag = 0;
+	AM.oldpolyratfun = 0;
 
 	return(0);
 }
 
 /*
- 		#] IniVars : 
+ 		#] IniVars :
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1104,7 +1115,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers : 
+ 		#] Signal handlers :
  		#[ main :
 */
 
@@ -1368,7 +1379,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -1446,7 +1457,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] Terminate :
  		#[ PrintRunningTime :
 */
 
@@ -1486,6 +1497,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 

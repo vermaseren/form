@@ -32,21 +32,25 @@
  */
 /* #] License : */ 
 
+#ifndef __FORM3H__
+
+#define __FORM3H__
+
 #ifdef HAVE_CONFIG_H
 
 #include "config.h"
 
 #else /* def HAVE_CONFIG_H */
 
-#define VERSION "3.3"
-#define MAJORVERSION 3
-#define MINORVERSION 3
-/* #define BETAVERSION */
+#define VERSION "4.0"
+#define MAJORVERSION 4
+#define MINORVERSION 0
+#define BETAVERSION
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "23-jan-2009"
+#define PRODUCTIONDATE "1-apr-2011"
 #endif
 
 #ifdef APPLE32
@@ -396,3 +400,4 @@ extern FILES *Ustdout;
 #include "parallel.h"
 #endif
 
+#endif

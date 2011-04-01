@@ -36,7 +36,6 @@
 /* #] License : */ 
 /*
   	#[ Includes :
-#define WITHMALLOCPRINT 1
 #define MALLOCDEBUG 1
 */
 
@@ -58,9 +57,9 @@ int numinfilelist = 0;
 int filelistsize = 0;
 #ifdef MALLOCDEBUG
 #define BANNER (4*sizeof(LONG))
-void *malloclist[6000];
-long mallocsizes[6000];
-char *mallocstrings[6000];
+void *malloclist[60000];
+long mallocsizes[60000];
+char *mallocstrings[60000];
 int nummalloclist = 0;
 #endif
 
@@ -282,6 +281,9 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			stream->eqnum = AC.CurrentStream->eqnum;
 			stream->pname = strDup1(name,"stream->pname");
 			stream->olddelay = AP.AllowDelay;
+			s = stream->pname; while ( *s ) s++;
+			while ( s[-1] == '+' || s[-1] == '-' ) s--;
+			*s = 0;
 			UnsetAllowDelay();
 			break;
 		case DOLLARSTREAM:
@@ -296,6 +298,9 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			stream->prevline= AC.CurrentStream->prevline;
 			stream->eqnum = AC.CurrentStream->eqnum;
 			stream->pname = strDup1(name,"stream->pname");
+			s = stream->pname; while ( *s ) s++;
+			while ( s[-1] == '+' || s[-1] == '-' ) s--;
+			*s = 0;
 			/* We 'stole' the buffer. Later we can free it. */
 			AO.DollarOutSizeBuffer = 0;
 			AO.DollarOutBuffer = 0;
@@ -378,7 +383,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 }
 
 /*
- 		#] OpenStream : 
+ 		#] OpenStream :
  		#[ LocateFile :
 */
 
@@ -632,7 +637,7 @@ VOID PositionStream(STREAM *stream, LONG position)
 
 /*
  		#] PositionStream : 
-  	#] Streams : 
+  	#] Streams :
   	#[ Files :
  		#[ StartFiles :
 */
@@ -1947,9 +1952,7 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 	mallocsizes[nummalloclist] = size;
 	mallocstrings[nummalloclist] = (char *)messageifwrong;
 	malloclist[nummalloclist++] = mem;
-#ifdef WITHMALLOCPRINT
-	if ( filelist ) MesPrint("%wMem1 at 0x%x: %l bytes. %s",mem,size,messageifwrong);
-#endif
+	if ( AC.MemDebugFlag && filelist ) MesPrint("%wMem1 at 0x%x: %l bytes. %s",mem,size,messageifwrong);
 	{
 		int i = nummalloclist-1;
 		while ( --i >= 0 ) {
@@ -1984,9 +1987,7 @@ void M_free(VOID *x, char *where)
 	LONG size = 0;
 	x = (void *)(((char *)x)-BANNER);
 /*	LOCK(ErrorMessageLock); */
-#ifdef WITHMALLOCPRINT
-	MesPrint("%wFreeing 0x%x: %s",x,where);
-#endif
+	if ( AC.MemDebugFlag ) MesPrint("%wFreeing 0x%x: %s",x,where);
 	LOCK(MallocLock);
 	for ( i = nummalloclist-1; i >= 0; i-- ) {
 		if ( x == malloclist[i] ) {
@@ -2147,10 +2148,10 @@ VOID TermMallocAddMemory(PHEAD0)
 	if ( AT.TermMemMax == 0 ) extra = TERMMEMSTARTNUM;
 	else                      extra = AT.TermMemMax;
 	if ( AT.TermMemHeap ) M_free(AT.TermMemHeap,"TermMalloc");
-	newbufs = (WORD *)Malloc1(extra*(AM.MaxTer+TERMEXTRAWORDS)*sizeof(WORD),"TermMalloc");
+	newbufs = (WORD *)Malloc1(extra*(AM.MaxTer+TERMEXTRAWORDS*sizeof(WORD)),"TermMalloc");
 	AT.TermMemHeap = (WORD **)Malloc1((extra+AT.TermMemMax)*sizeof(WORD *),"TermMalloc");
 	for ( i = 0; i < extra; i++ ) {
-		AT.TermMemHeap[i] = newbufs + i*(AM.MaxTer+TERMEXTRAWORDS);
+		AT.TermMemHeap[i] = newbufs + i*(AM.MaxTer/sizeof(WORD)+TERMEXTRAWORDS);
 	}
 	AT.TermMemTop = extra;
 	AT.TermMemMax += extra;

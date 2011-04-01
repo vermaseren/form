@@ -63,8 +63,11 @@ int tokenize(UBYTE *in, WORD leftright)
 	UBYTE *s, c;
 	SBYTE *out, *outtop, num[MAXNUMSIZE], *t;
 	LONG i;
-	if ( AC.tokens == 0 )
-		DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"start tokens");
+	if ( AC.tokens == 0 ) {
+		SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
+		SBYTE **pppp = &(AC.toptokens);
+		DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"start tokens");
+	}
 	out = AC.tokens;
 	outtop = AC.toptokens - MAXNUMSIZE;
 	AC.dumnumflag = 0;
@@ -72,7 +75,9 @@ int tokenize(UBYTE *in, WORD leftright)
 	while ( *in ) {
 		if ( out > outtop ) {
 			long oldsize = out - AC.tokens;
-			DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"expand tokens");
+			SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
+			SBYTE **pppp = &(AC.toptokens);
+			DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"expand tokens");
 			out = AC.tokens + oldsize;
 			outtop = AC.toptokens - MAXNUMSIZE;
 		}
@@ -173,7 +178,9 @@ donumber:		i = 0;
 				if ( ( i & 1 ) != 0 ) *out++ = (SBYTE)(*s++ - '0');
 				while ( out + (in-s)/2 >= AC.toptokens ) {
 					long oldsize = out - AC.tokens;
-					DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"more tokens");
+					SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
+					SBYTE **pppp = &(AC.toptokens);
+					DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"more tokens");
 					out = AC.tokens + oldsize;
 					outtop = AC.toptokens - MAXNUMSIZE;
 				}
@@ -518,7 +525,9 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 		while ( *out != TENDOFIT ) out++;
 		while ( out+numexp*9+20 > outtop ) {
 			long oldsize = out - AC.tokens;
-			DoubleBuffer((void **)&AC.tokens,(void **)&AC.toptokens,sizeof(SBYTE),"out tokens");
+			SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
+			SBYTE **pppp = &(AC.toptokens);
+			DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"out tokens");
 			out = AC.tokens + oldsize;
 			outtop = AC.toptokens - MAXNUMSIZE;
 		}
@@ -538,7 +547,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize : 
+ 		#] tokenize :
  		#[ WriteTokens :
 */
 

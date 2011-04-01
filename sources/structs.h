@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
  
 #ifndef __STRUCTS__
 
@@ -222,7 +222,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -461,7 +461,8 @@ typedef struct SyMbOl {			/* Don't change unless altering .sav too */
 	WORD	flags;				/* Used to indicate usage when storing */
 	WORD	node;
 	WORD	namesize;
-	PADLONG(0,7,0);
+	WORD	dimension;			/* For dimensionality checks */
+	PADLONG(0,8,0);
 } *SYMBOLS;
 
 /**
@@ -491,7 +492,8 @@ typedef struct VeCtOr {			/* Don't change unless altering .sav too */
 	WORD	flags;				/* Used to indicate usage when storing */
 	WORD	node;
 	WORD	namesize;
-	PADLONG(0,5,0);
+	WORD	dimension;			/* For dimensionality checks */
+	PADLONG(0,6,0);
 } *VECTORS;
 
 /**
@@ -511,7 +513,8 @@ typedef struct FuNcTiOn {  /* Don't change unless altering .sav too */
 	WORD    symmetric;     /**< > 0 if symmetric properties */
 	WORD    node;          /**< Location in namenode of #NAMETREE */
 	WORD    namesize;      /**< Length of the name */
-	PADPOINTER(2,0,8,0);
+	WORD	dimension;			/* For dimensionality checks */
+	PADPOINTER(2,0,9,0);
 } *FUNCTIONS;
 
 /**
@@ -525,7 +528,8 @@ typedef struct SeTs {
 	WORD	last;				/* Last element in setstore */
 	WORD	node;
 	WORD	namesize;
-	PADLONG(1,5,0);
+	WORD	dimension;			/* For dimensionality checks */
+	PADLONG(1,6,0);
 } *SETS;
 
 /**
@@ -617,7 +621,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
 
@@ -708,7 +712,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -766,7 +770,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
 
@@ -873,7 +877,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -891,6 +895,7 @@ typedef struct CbUf {
 	LONG *CanCommu;       /**< points into rhs memory behind WORD* area. */
 	LONG *NumTerms;       /**< points into rhs memory behind CanCommu area */
 	WORD *numdum;         /**< points into rhs memory behind NumTerms */
+	WORD *dimension;      /**< points into rhs memory behind numdum */
 	COMPTREE *boomlijst;  /**< [D] Number elements in MaxTreeSize */
 	LONG BufferSize;      /**< Number of allocated WORD's in Buffer */
 	int numlhs;
@@ -1167,8 +1172,15 @@ typedef struct {
 	WORD	option;
 } SHvariables;
 
+typedef struct {				/* Used for computing calculational cost in optim.c */
+	LONG	add;
+	LONG	mul;
+	LONG	div;
+	LONG	pow;
+} COST;
+
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1275,6 +1287,7 @@ struct M_const {
     int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
     int     gOldFactArgFlag;
     int     ggOldFactArgFlag;
+	int		oldpolyratfun;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1385,7 +1398,7 @@ struct P_const {
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1543,6 +1556,7 @@ struct C_const {
     int     topolynomialflag;      /* To avoid ToPolynomial and FactArg together */
     int     ffbufnum;              /* Buffer number for user defined factorizations */
     int     OldFactArgFlag;
+    int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
 #ifdef WITHPTHREADS
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
@@ -1586,6 +1600,7 @@ struct C_const {
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
 	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
+    WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
 #ifdef PARALLEL
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
@@ -1641,7 +1656,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1708,7 +1723,7 @@ struct R_const {
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1744,6 +1759,10 @@ struct T_const {
     WORD    *n_coef;               /* (M) Used by normal. local. */
     WORD    *n_llnum;              /* (M) Used by normal. local. */
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
+  	WORD     small_power_maxx;     /*     size of the cache for small powers  */
+	  WORD     small_power_maxn;     /*     size of the cache for small powers */
+  	WORD    *small_power_n;        /*     length of the number */
+	  UWORD  **small_power;          /*     the number*/	
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
 	WORD    *primelist;
     WORD    *lastpolyrem;          /* () Remainder after PolyDiv_ */
@@ -1805,7 +1824,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1868,6 +1887,7 @@ struct N_const {
 	WORD	*RenumScratch;         /* () used in reshuf.c */
 	FUN_INFO *FunInfo;             /* () Used in smart.c */
 	WORD	**SplitScratch;        /* () Used in sort.c */
+	WORD	**SplitScratch1;       /* () Used in sort.c and PolyRatFunAdd */
 	SORTING **FunSorts;            /* () Used in sort.c */
 	UWORD	*SoScratC;             /* () Used in sort.c */
 	WORD	*listinprint;          /* () Used in proces.c and message.c */
@@ -1885,6 +1905,7 @@ struct N_const {
 	EXPRESSIONS expr;
 #endif
 	UWORD	*SHcombi;
+	WORD    *poly_vars;
 	POLYMOD polymod1;              /* For use in PolyModGCD and calling routines */
 	POLYMOD polymod2;              /* For use in PolyModGCD and calling routines */
     POSITION OldPosIn;             /* (R) Used in sort. */
@@ -1896,6 +1917,8 @@ struct N_const {
 	LONG	deferskipped;          /* () Used in proces.c store.c and parallel.c */
 	LONG	InScratch;             /* () Used in sort.c */
 	LONG	SplitScratchSize;      /* () Used in sort.c */
+	LONG	InScratch1;            /* () Used in sort.c and PolyRatFunAdd */
+	LONG	SplitScratchSize1;     /* () Used in sort.c and PolyRatFunAdd */
 	LONG	ninterms;              /* () Used in proces.c and sort.c */
 #ifdef WITHPTHREADS
 	LONG	inputnumber;           /* () For use in redefine */
@@ -1958,6 +1981,7 @@ struct N_const {
 	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
 	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */
 	WORD	IndDum;                /* Active dummy indices */
+	WORD    poly_num_vars;
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
@@ -1965,7 +1989,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2034,7 +2058,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2060,7 +2084,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X : 
+ 		#] X :
  		#[ Definitions :
 */
 
@@ -2112,7 +2136,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
     #] A :
   	#[ FG :
 */
@@ -2149,7 +2173,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

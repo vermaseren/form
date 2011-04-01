@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -41,7 +41,7 @@
 /* EXTERNLOCK(dummylock) */
 
 /*
-  	#] Includes :
+  	#] Includes : 
 
   	#[ GetNode :
 */
@@ -64,7 +64,7 @@ NAMENODE *GetNode(NAMETREE *nametree, UBYTE *name)
 }
 
 /*
-  	#] GetNode :
+  	#] GetNode : 
   	#[ AddName :
 */
 
@@ -239,7 +239,7 @@ int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenu
 }
 
 /*
-  	#] AddName :
+  	#] AddName : 
   	#[ GetName :
 
 	When AutoDeclare is an active statement.
@@ -327,7 +327,7 @@ NotFound:;
 }
 
 /*
-  	#] GetName :
+  	#] GetName : 
   	#[ GetOName :
 
 	Adds the proper offsets, so we do not have to do that in the calling
@@ -347,7 +347,7 @@ int GetOName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
 }
 
 /*
-  	#] GetOName :
+  	#] GetOName : 
   	#[ GetAutoName :
 
 	This routine gets the automatic declarations
@@ -371,11 +371,11 @@ int GetAutoName(UBYTE *name, WORD *number)
 		switch(type) {
 			case CSYMBOL: {
 				SYMBOLS sym = ((SYMBOLS)(AC.AutoSymbolList.lijst)) + *number;
-				*number = AddSymbol(name,sym->minpower,sym->maxpower,sym->complex);
+				*number = AddSymbol(name,sym->minpower,sym->maxpower,sym->complex,sym->dimension);
 				return(type); }
 			case CVECTOR: {
 				VECTORS vec = ((VECTORS)(AC.AutoVectorList.lijst)) + *number;
-				*number = AddVector(name,vec->complex);
+				*number = AddVector(name,vec->complex,vec->dimension);
 				return(type); }
 			case CINDEX: {
 				INDICES ind = ((INDICES)(AC.AutoIndexList.lijst)) + *number;
@@ -383,7 +383,7 @@ int GetAutoName(UBYTE *name, WORD *number)
 				return(type); }
 			case CFUNCTION: {
 				FUNCTIONS fun = ((FUNCTIONS)(AC.AutoFunctionList.lijst)) + *number;
-				*number = AddFunction(name,fun->commute,fun->spec,fun->complex,fun->symmetric);
+				*number = AddFunction(name,fun->commute,fun->spec,fun->complex,fun->symmetric,fun->dimension);
 				return(type); }
 			default:
 				break;
@@ -394,7 +394,7 @@ int GetAutoName(UBYTE *name, WORD *number)
 }
 
 /*
-  	#] GetAutoName :
+  	#] GetAutoName : 
   	#[ GetVar :
 */
 
@@ -427,28 +427,28 @@ int GetVar(UBYTE *name, WORD *type, WORD *number, int wantedtype, int par)
 }
 
 /*
-  	#] GetVar :
+  	#] GetVar : 
   	#[ EntVar :
 */
 
-WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z)
+WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z, WORD d)
 {
 	switch ( type ) {
 		case CSYMBOL:
-			return(AddSymbol(name,y,z,x));
+			return(AddSymbol(name,y,z,x,d));
 			break;
 		case CINDEX:
 			return(AddIndex(name,x,z));
 			break;
 		case CVECTOR:
-			return(AddVector(name,x));
+			return(AddVector(name,x,d));
 			break;
 		case CFUNCTION:
-			return(AddFunction(name,y,z,x,0));
+			return(AddFunction(name,y,z,x,0,d));
 			break;
 		case CSET:
 			AC.SetList.numtemp++;
-			return(AddSet(name));
+			return(AddSet(name,d));
 			break;
 		case CEXPRESSION:
 			return(AddExpression(name,x,y));
@@ -460,7 +460,7 @@ WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z)
 }
 
 /*
-  	#] EntVar :
+  	#] EntVar : 
   	#[ GetDollar :
 */
 
@@ -472,7 +472,7 @@ int GetDollar(UBYTE *name)
 }
 
 /*
-  	#] GetDollar :
+  	#] GetDollar : 
   	#[ DumpTree :
 */
 
@@ -485,7 +485,7 @@ VOID DumpTree(NAMETREE *nametree)
 }
 
 /*
-  	#] DumpTree :
+  	#] DumpTree : 
   	#[ DumpNode :
 */
 
@@ -504,7 +504,7 @@ VOID DumpNode(NAMETREE *nametree, WORD node, WORD depth)
 }
 
 /*
-  	#] DumpNode :
+  	#] DumpNode : 
   	#[ CompactifyTree :
 */
 
@@ -566,7 +566,7 @@ int CompactifyTree(NAMETREE *nametree,WORD par)
 }
 
 /*
-  	#] CompactifyTree :
+  	#] CompactifyTree : 
   	#[ CopyTree :
 */
 
@@ -654,7 +654,7 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 }
 
 /*
-  	#] CopyTree :
+  	#] CopyTree : 
   	#[ LinkTree :
 */
 
@@ -685,7 +685,7 @@ VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
 }
 
 /*
-  	#] LinkTree :
+  	#] LinkTree : 
   	#[ MakeNameTree :
 */
 
@@ -704,7 +704,7 @@ NAMETREE *MakeNameTree()
 }
 
 /*
-  	#] MakeNameTree :
+  	#] MakeNameTree : 
   	#[ FreeNameTree :
 */
 
@@ -718,7 +718,7 @@ VOID FreeNameTree(NAMETREE *n)
 }
 
 /*
-  	#] FreeNameTree :
+  	#] FreeNameTree : 
 
   	#[ WildcardNames :
 */
@@ -787,14 +787,14 @@ int GetWildcardName(UBYTE *name)
 }
 
 /*
-  	#] WildcardNames :
+  	#] WildcardNames : 
 
   	#[ AddSymbol :
 
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
+int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx, int dim)
 {
 	int nodenum, numsymbol = AC.Symbols->num;
 	UBYTE *s = name;
@@ -804,13 +804,14 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
 	sym->maxpower = maxpow;
 	sym->complex  = cplx;
 	sym->node     = nodenum;
+	sym->dimension= dim;
 	while ( *s ) s++;
 	sym->namesize = (s-name)+1;
 	return(numsymbol);
 }
 
 /*
-  	#] AddSymbol :
+  	#] AddSymbol : 
   	#[ CoSymbol :
 
 	Symbol declarations.   name[#{R|I|C}][([min]:[max])]
@@ -819,13 +820,14 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx)
 
 int CoSymbol(UBYTE *s)
 {
-	int type, error = 0, minpow, maxpow, cplx, sgn;
+	int type, error = 0, minpow, maxpow, cplx, sgn, dim;
 	WORD numsymbol;
 	UBYTE *name, *oldc, c, cc;
 	do {
 		minpow = -MAXPOWER;
 		maxpow =  MAXPOWER;
 		cplx = 0;
+		dim = MAXPOSITIVE;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:	MesPrint("&Illegally formed name in symbol statement");
@@ -867,6 +869,28 @@ IllForm:	MesPrint("&Illegally formed name in symbol statement");
 				goto eol;
 			}
 			s++; cc = *s;
+		}
+		if ( cc == '{' ) {
+			s++;
+			if ( ( *s == 'd' || *s == 'D' ) && s[1] == '=' ) {
+				s += 2;
+				if ( *s == '-' || *s == '+' || FG.cTable[*s] == 1 ) {
+					ParseSignedNumber(dim,s)
+					if ( dim < -HALFMAX || dim > HALFMAX ) {
+						MesPrint("&Warning: dimension of %s (%d) out of range"
+						,name,dim);
+					}
+				}
+				if ( *s != '}' ) goto IllDim;
+				else s++;
+			}
+			else {
+IllDim:			MesPrint("&Error: Illegal dimension field for variable %s",name);
+				error = 1;
+				s = SkipField(s,0);
+				goto eol;
+			}
+			cc = *s;
 		}
 		if ( cc == '(' ) {
 			if ( ( cplx & VARTYPEROOTOFUNITY ) == VARTYPEROOTOFUNITY ) {
@@ -911,10 +935,11 @@ skippar:		error = 1;
 				sym->complex  = cplx;
 				sym->minpower = minpow;
 				sym->maxpower = maxpow;
+				sym->dimension= dim;
 			}
 		}
 		else {
-			AddSymbol(name,minpow,maxpow,cplx);
+			AddSymbol(name,minpow,maxpow,cplx,dim);
 		}
 		*oldc = c;
 eol:	while ( *s == ',' ) s++;
@@ -945,7 +970,7 @@ int AddIndex(UBYTE *name, int dim, int dim4)
 }
 
 /*
-  	#] AddIndex :
+  	#] AddIndex : 
   	#[ CoIndex :
 
 	Index declarations. name[={number|symbol[:othersymbol]}]
@@ -995,7 +1020,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoIndex :
+  	#] CoIndex : 
   	#[ DoDimension :
 */
 
@@ -1024,7 +1049,7 @@ retry:
 			if ( type != CSYMBOL ) error = NameConflict(type,t);
 		}
 		else {
-			numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0);
+			numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0,0);
 			if ( *oldtree != AC.autonames && AC.WarnFlag )
 			MesPrint("&Warning: Implicit declaration of %s as a symbol",t);
 		}
@@ -1038,7 +1063,7 @@ retry:
 				if ( type != CSYMBOL ) error = NameConflict(type,t);
 			}
 			else {
-				numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0);
+				numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0,0);
 				if ( *oldtree != AC.autonames && AC.WarnFlag )
 				MesPrint("&Warning: Implicit declaration of %s as a symbol",t);
 			}
@@ -1058,7 +1083,7 @@ illeg:	MesPrint("&Illegal dimension specification. Should be number >= 0, symbol
 }
 
 /*
-  	#] DoDimension :
+  	#] DoDimension : 
   	#[ CoDimension :
 */
 
@@ -1074,13 +1099,13 @@ int CoDimension(UBYTE *s)
 }
 
 /*
-  	#] CoDimension :
+  	#] CoDimension : 
   	#[ AddVector :
 
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int AddVector(UBYTE *name, int cplx)
+int AddVector(UBYTE *name, int cplx, int dim)
 {
 	int nodenum, numvector = AC.Vectors->num;
 	VECTORS v = (VECTORS)FromVarList(AC.Vectors);
@@ -1088,13 +1113,14 @@ int AddVector(UBYTE *name, int cplx)
 	v->name = AddName(*AC.activenames,name,CVECTOR,numvector,&nodenum);
 	v->complex = cplx;
 	v->node    = nodenum;
+	v->dimension = dim;
 	while ( *s ) s++;
 	v->namesize = (s-name)+1;
 	return(numvector);
 }
 
 /*
-  	#] AddVector :
+  	#] AddVector : 
   	#[ CoVector :
 
 	Vector declarations. The descriptor string is "(,%n)"
@@ -1102,27 +1128,50 @@ int AddVector(UBYTE *name, int cplx)
 
 int CoVector(UBYTE *s)
 {
-	int type, error = 0;
+	int type, error = 0, dim;
 	WORD numvector;
-	UBYTE *name, c;
+	UBYTE *name, c, *endname;
 	do {
 		name = s;
+		dim = MAXPOSITIVE;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:	MesPrint("&Illegally formed name in vector statement");
 			error = 1;
 			s = SkipField(s,0);
 		}
 		else {
-			c = *s; *s = 0;
+			c = *s; *s = 0, endname = s;
 			if ( TestName(name) ) { *s = c; goto IllForm; }
+			if ( c == '{' ) {
+				s++;
+				if ( ( *s == 'd' || *s == 'D' ) && s[1] == '=' ) {
+					s += 2;
+					if ( *s == '-' || *s == '+' || FG.cTable[*s] == 1 ) {
+						ParseSignedNumber(dim,s)
+						if ( dim < -HALFMAX || dim > HALFMAX ) {
+							MesPrint("&Warning: dimension of %s (%d) out of range"
+							,name,dim);
+						}
+					}
+					if ( *s != '}' ) goto IllDim;
+					else s++;
+				}
+				else {
+IllDim:				MesPrint("&Error: Illegal dimension field for variable %s",name);
+					error = 1;
+					s = SkipField(s,0);
+					while ( *s == ',' ) s++;
+					continue;
+				}
+			}
 			if ( ( AC.AutoDeclareFlag == 0 &&
 			 ( ( type = GetName(AC.exprnames,name,&numvector,NOAUTO) )
 			 != NAMENOTFOUND ) )
 			|| ( ( type = GetName(*(AC.activenames),name,&numvector,NOAUTO) ) != NAMENOTFOUND ) ) {
 				if ( type != CVECTOR ) error = NameConflict(type,name);
 			}
-			else AddVector(name,0);
-			*s = c;
+			else AddVector(name,0,dim);
+			*endname = c;
 		}
 		while ( *s == ',' ) s++;
 	} while ( *s );
@@ -1130,13 +1179,13 @@ IllForm:	MesPrint("&Illegally formed name in vector statement");
 }
 
 /*
-  	#] CoVector :
+  	#] CoVector : 
   	#[ AddFunction :
 
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop)
+int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int dim)
 {
 	int nodenum, numfunction = AC.Functions->num;
 	FUNCTIONS fun = (FUNCTIONS)FromVarList(AC.Functions);
@@ -1149,13 +1198,14 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop)
 	fun->node = nodenum;
 	fun->symminfo = 0;
 	fun->symmetric = symprop;
+	fun->dimension = dim;
 	while ( *s ) s++;
 	fun->namesize = (s-name)+1;
 	return(numfunction);
 }
 
 /*
-  	#] AddFunction :
+  	#] AddFunction : 
   	#[ CoFunction + ...:
 
 	Function declarations.
@@ -1165,11 +1215,12 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop)
 
 int CoFunction(UBYTE *s, int comm, int istensor)
 {
-	int type, error = 0, cplx, symtype;
+	int type, error = 0, cplx, symtype, dim;
 	WORD numfunction, reverseorder = 0;
 	UBYTE *name, *oldc, *par, c, cc;
 	do {
 		symtype = cplx = 0;
+		dim = MAXPOSITIVE;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:	MesPrint("&Illegally formed function/tensor name");
@@ -1192,6 +1243,28 @@ IllForm:	MesPrint("&Illegally formed function/tensor name");
 				goto eol;
 			}
 			s++; cc = *s;
+		}
+		if ( cc == '{' ) {
+			s++;
+			if ( ( *s == 'd' || *s == 'D' ) && s[1] == '=' ) {
+				s += 2;
+				if ( *s == '-' || *s == '+' || FG.cTable[*s] == 1 ) {
+					ParseSignedNumber(dim,s)
+					if ( dim < -HALFMAX || dim > HALFMAX ) {
+						MesPrint("&Warning: dimension of %s (%d) out of range"
+						,name,dim);
+					}
+				}
+				if ( *s != '}' ) goto IllDim;
+				else s++;
+			}
+			else {
+IllDim:			MesPrint("&Error: Illegal dimension field for variable %s",name);
+				error = 1;
+				s = SkipField(s,0);
+				goto eol;
+			}
+			cc = *s;
 		}
 		if ( cc == '(' ) {
 			s++;
@@ -1255,7 +1328,7 @@ illegsym:		*s = cc;
 			}
 		}
 		else {
-			AddFunction(name,comm,istensor,cplx,symtype);
+			AddFunction(name,comm,istensor,cplx,symtype,dim);
 		}
 		*oldc = c;
 eol:	while ( *s == ',' ) s++;
@@ -1269,7 +1342,7 @@ int CoNTensor(UBYTE *s) { return(CoFunction(s,1,2)); }
 int CoCTensor(UBYTE *s) { return(CoFunction(s,0,2)); }
 
 /*
-  	#] CoFunction + ...:
+  	#] CoFunction + ...: 
   	#[ DoTable :
 
         Syntax:
@@ -1357,14 +1430,14 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	if ( ( ret = GetVar(name,&type,&funnum,CFUNCTION,NOAUTO) ) ==
 					NAMENOTFOUND ) {
 		if ( par == 0 ) {
-			funnum = EntVar(CFUNCTION,name,0,1,0);
+			funnum = EntVar(CFUNCTION,name,0,1,0,MAXPOSITIVE);
 		}
 		else if ( par == 1 || par == 2 ) {
-			funnum = EntVar(CFUNCTION,name,0,0,0);
+			funnum = EntVar(CFUNCTION,name,0,0,0,MAXPOSITIVE);
 		}
 	}
 	else if ( ret <= 0 ) {
-		funnum = EntVar(CFUNCTION,name,0,0,0);
+		funnum = EntVar(CFUNCTION,name,0,0,0,MAXPOSITIVE);
 		error = 1;
 	}
 	else {
@@ -1594,7 +1667,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 }
 
 /*
-  	#] DoTable :
+  	#] DoTable : 
   	#[ CoTable :
 */
 
@@ -1604,7 +1677,7 @@ int CoTable(UBYTE *s)
 }
 
 /*
-  	#] CoTable :
+  	#] CoTable : 
   	#[ CoNTable :
 */
 
@@ -1614,7 +1687,7 @@ int CoNTable(UBYTE *s)
 }
 
 /*
-  	#] CoNTable :
+  	#] CoNTable : 
   	#[ CoCTable :
 */
 
@@ -1624,11 +1697,11 @@ int CoCTable(UBYTE *s)
 }
 
 /*
-  	#] CoCTable :
+  	#] CoCTable : 
   	#[ AddSet :
 */
 
-int AddSet(UBYTE *name)
+int AddSet(UBYTE *name, WORD dim)
 {
 	int nodenum, numset = AC.SetList.num;
 	SETS set = (SETS)FromVarList(&AC.SetList);
@@ -1648,12 +1721,16 @@ int AddSet(UBYTE *name)
 	set->first =
 	set->last  = AC.SetElementList.num;	/* set has no elements yet */
 	set->type  = -1;					/* undefined as of yet */
+	set->dimension = dim;
 	return(numset);
 }
 
 /*
-  	#] AddSet :
+  	#] AddSet : 
   	#[ DoElements :
+
+	Remark (25-mar-2011): If the dimension has been set (dim != MAXPOSITIVE)
+	we want to test dimensions. Numbers count as dimension zero?
 */
 
 int DoElements(UBYTE *s, SETS set, UBYTE *name)
@@ -1685,6 +1762,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 				dv->name = AddName(AC.varnames,cname,CDUBIOUS,numset,&nodenum);
 				dv->node = nodenum;
 				set->type = type = CDUBIOUS;
+				set->dimension = 0;
 				error = 1;
 			}
 			if ( set->type == -1 ) {
@@ -1714,6 +1792,34 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 					set->type = type;
 				}
 			}
+			if ( set->dimension != MAXPOSITIVE ) { /* Dimension check */
+				switch ( set->type ) {
+					case CSYMBOL:
+						if ( symbols[numset].dimension != set->dimension ) {
+							MesPrint("&Dimension check failed in set %s, symbol %s",
+								VARNAME(Sets,(set-Sets)),
+								VARNAME(symbols,numset));
+							error = 1;
+						}
+						break;
+					case CVECTOR:
+						if ( vectors[numset-AM.OffsetVector].dimension != set->dimension ) {
+							MesPrint("&Dimension check failed in set %s, vector %s",
+								VARNAME(Sets,(set-Sets)),
+								VARNAME(vectors,(numset-AM.OffsetVector)));
+							error = 1;
+						}
+						break;
+					case CFUNCTION:
+						if ( functions[numset-FUNCTION].dimension != set->dimension ) {
+							MesPrint("&Dimension check failed in set %s, function %s",
+								VARNAME(Sets,(set-Sets)),
+								VARNAME(functions,(numset-FUNCTION)));
+							error = 1;
+						}
+						break;
+				}
+			}
 			if ( sgn ) {
 				if ( type != CVECTOR ) {
 					MesPrint("&Illegal use of - sign in set. Can use only with vector or number");
@@ -1727,10 +1833,14 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 			if ( name == 0 && *s == '?' ) {
 				s++;
 				switch ( set->type ) {
-					case CSYMBOL: numset = -numset; break;
-					case CVECTOR: numset += WILDOFFSET; break;
+					case CSYMBOL:
+						numset = -numset; break;
+					case CVECTOR:
+						numset += WILDOFFSET; break;
 					case CINDEX:
-					case CFUNCTION: numset |= WILDMASK; break;
+						numset |= WILDMASK; break;
+					case CFUNCTION:
+						numset |= WILDMASK; break;
 				}
 				AC.wildflag = 1;
 			}
@@ -1799,7 +1909,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 }
 
 /*
-  	#] DoElements :
+  	#] DoElements : 
   	#[ CoSet :
 
 	Set declarations.
@@ -1808,9 +1918,9 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 int CoSet(UBYTE *s)
 {
 	int type, error = 0;
-	UBYTE *name, c;
+	UBYTE *name, c, *ss;
 	SETS set;
-	WORD numberofset;
+	WORD numberofset, dim = MAXPOSITIVE;
 	name = s;
 	if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:MesPrint("&Illegal name for set");
@@ -1826,13 +1936,38 @@ IllForm:MesPrint("&Illegal name for set");
 		}
 		return(1);
 	}
-	else {
-		numberofset = AddSet(name);
+	if ( c == 0 ) {
+		numberofset = AddSet(name,0);
 		set = Sets + numberofset;
+		return(0);		/* empty set */
 	}
-	if ( c == 0 ) return(0);		/* empty set */
-	*s = c;
-	if ( c != ':' ) {
+	*s = c; ss = s;
+	if ( *s == '{' ) {
+		s++;
+		if ( ( *s == 'd' || *s == 'D' ) && s[1] == '=' ) {
+			s += 2;
+			if ( *s == '-' || *s == '+' || FG.cTable[*s] == 1 ) {
+				ParseSignedNumber(dim,s)
+				if ( dim < -HALFMAX || dim > HALFMAX ) {
+					MesPrint("&Warning: dimension of %s (%d) out of range"
+					,name,dim);
+				}
+			}
+			if ( *s != '}' ) goto IllDim;
+			else s++;
+		}
+		else {
+IllDim:		MesPrint("&Error: Illegal dimension field for set %s",name);
+			error = 1;
+			s = SkipField(s,0);
+		}
+		while ( *s == ',' ) s++;
+	}
+	c = *ss; *ss = 0;
+	numberofset = AddSet(name,dim);
+	*ss = c;
+	set = Sets + numberofset;
+	if ( *s != ':' ) {
 		MesPrint("&Proper syntax is `Set name:elements'");
 		return(1);
 	}
@@ -1844,7 +1979,7 @@ IllForm:MesPrint("&Illegal name for set");
 }
 
 /*
-  	#] CoSet :
+  	#] CoSet : 
   	#[ DoTempSet :
 
 		Gets a {} set definition and returns a set number if the set is
@@ -1858,7 +1993,7 @@ int DoTempSet(UBYTE *from, UBYTE *to)
 	int i, num, j, sgn;
 	WORD *e, *ep;
 	UBYTE c;
-	int setnum = AddSet(0);
+	int setnum = AddSet(0,MAXPOSITIVE);
 	SETS set = Sets + setnum, setp;
 	set->name = -1;
 	set->type = -1;
@@ -1937,7 +2072,7 @@ int DoTempSet(UBYTE *from, UBYTE *to)
 }
 
 /*
-  	#] DoTempSet :
+  	#] DoTempSet : 
   	#[ CoAuto :
 
 	To prepare first:
@@ -1969,7 +2104,7 @@ int CoAuto(UBYTE *inp)
 }
 
 /*
-  	#] CoAuto :
+  	#] CoAuto : 
   	#[ AddDollar :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -2008,7 +2143,7 @@ int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 }
 
 /*
-  	#] AddDollar :
+  	#] AddDollar : 
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.
@@ -2044,7 +2179,7 @@ int ReplaceDollar(WORD number, WORD newtype, WORD *newstart, LONG newsize)
 }
 
 /*
-  	#] ReplaceDollar :
+  	#] ReplaceDollar : 
   	#[ AddDubious :
 
 	This adds a variable of which we do not know the proper type.
@@ -2060,7 +2195,7 @@ int AddDubious(UBYTE *name)
 }
 
 /*
-  	#] AddDubious :
+  	#] AddDubious : 
   	#[ MakeDubious :
 */
 
@@ -2091,7 +2226,7 @@ int MakeDubious(NAMETREE *nametree, UBYTE *name, WORD *number)
 }
 
 /*
-  	#] MakeDubious :
+  	#] MakeDubious : 
   	#[ NameConflict :
 */
 
@@ -2111,7 +2246,7 @@ int NameConflict(int type, UBYTE *name)
 }
 
 /*
-  	#] NameConflict :
+  	#] NameConflict : 
   	#[ AddExpression :
 */
 
@@ -2151,7 +2286,7 @@ int AddExpression(UBYTE *name, int x, int y)
 }
 
 /*
-  	#] AddExpression :
+  	#] AddExpression : 
   	#[ GetLabel :
 */
 
@@ -2191,7 +2326,7 @@ int GetLabel(UBYTE *name)
 }
 
 /*
-  	#] GetLabel :
+  	#] GetLabel : 
   	#[ ResetVariables :
 
 	Resets the variables.
@@ -2492,7 +2627,7 @@ void ResetVariables(int par)
 }
 
 /*
-  	#] ResetVariables :
+  	#] ResetVariables : 
   	#[ RemoveDollars :
 */
 
@@ -2519,7 +2654,7 @@ void RemoveDollars()
 }
 
 /*
-  	#] RemoveDollars :
+  	#] RemoveDollars : 
   	#[ Globalize :
 */
 
@@ -2618,7 +2753,7 @@ void Globalize(int par)
 }
 
 /*
-  	#] Globalize :
+  	#] Globalize : 
   	#[ TestName :
 */
 
@@ -2637,6 +2772,6 @@ int TestName(UBYTE *name)
 }
 
 /*
-  	#] TestName :
+  	#] TestName : 
 */
 

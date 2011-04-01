@@ -106,7 +106,7 @@ static LONG numberofterms;
 #endif
 
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Identity :
  		#[ StartIdentity :
 */
@@ -200,7 +200,7 @@ int WhoAmI()
 }
 
 /*
- 		#] WhoAmI : 
+ 		#] WhoAmI :
  		#[ BeginIdentities :
 */
 /**
@@ -216,7 +216,7 @@ VOID BeginIdentities()
 
 /*
  		#] BeginIdentities : 
-  	#] Identity : 
+  	#] Identity :
   	#[ StartHandleLock :
 */
 /**
@@ -327,12 +327,14 @@ int StartAllThreads(int number)
 	IniSortBlocks(number-1);
 	AS.MasterSort = 0;
 	AM.storefilelock = dummylock;
-
+/*
+MesPrint("AB = %x %x %x  %d",AB[0],AB[1],AB[2], identityofthreads);
+*/
 	return(0);
 }
 
 /*
-  	#] StartAllThreads : 
+  	#] StartAllThreads :
   	#[ InitializeOneThread :
 */
 /**
@@ -410,13 +412,15 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	if ( identity > 0 ) TimeCPU(0);
 
 #ifdef WITHSORTBOTS
+
 	if ( identity > numberofworkers ) {
 /*
 		Some workspace is needed when we have a PolyFun and we have to add
 		two terms and the new result is going to be longer than the old result.
 */
-		AT.WorkSpace = (WORD *)Malloc1(AM.MaxTer*2,"WorkSpace");
-		AT.WorkTop = AT.WorkSpace + AM.MaxTer/sizeof(WORD)*2;
+		LONG length = AM.WorkSize*sizeof(WORD)/8+AM.MaxTer*2;
+		AT.WorkSpace = (WORD *)Malloc1(length,"WorkSpace");
+		AT.WorkTop = AT.WorkSpace + length/sizeof(WORD);
 		AT.WorkPointer = AT.WorkSpace;
 		AT.identity = identity;
 /*
@@ -445,8 +449,9 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.comfun[1] = FUNCTION;
 		AT.comfun[2] = FUNHEAD;
 		AT.comfun[3] = 0;
-#if FUNHEAD == 4
-		AT.comfun[4] = 0;
+#if FUNHEAD > 3
+		for ( i = 4; i <= FUNHEAD; i++ )
+			AT.comfun[i] = 0;
 #endif
 		AT.comfun[FUNHEAD+1] = 1;
 		AT.comfun[FUNHEAD+2] = 1;
@@ -464,10 +469,23 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.primelist = 0;
 		AN.getdivgcd = 0;
 
-		AllocPolyModCoefs(&(AN.polymod1),100);
-		AllocPolyModCoefs(&(AN.polymod2),100);
+		AllocPolyModCoefs(&(AN.polymod1),200);
+		AllocPolyModCoefs(&(AN.polymod2),200);
 
 		AR.CompareRoutine = &Compare1;
+
+		AR.sLevel = 0;
+		AN.NumFunSorts = 5;
+		AN.MaxFunSorts = 5;
+		AN.SplitScratch = 0;
+		AN.SplitScratchSize = AN.InScratch = 0;
+		AN.SplitScratch1 = 0;
+		AN.SplitScratchSize1 = AN.InScratch1 = 0;
+
+		AN.FunSorts = (SORTING **)Malloc1((AN.NumFunSorts+1)*sizeof(SORTING *),"FunSort pointers");
+		for ( i = 0; i <= AN.NumFunSorts; i++ ) AN.FunSorts[i] = 0;
+		AN.FunSorts[0] = AT.S0 = AT.SS;
+
 		return(B);
 	}
 	if ( identity == 0 && AN.SoScratC == 0 ) {
@@ -629,8 +647,9 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AT.comfun[1] = FUNCTION;
 	AT.comfun[2] = FUNHEAD;
 	AT.comfun[3] = 0;
-#if FUNHEAD == 4
-	AT.comfun[4] = 0;
+#if FUNHEAD > 3
+	for ( i = 4; i <= FUNHEAD; i++ )
+		AT.comfun[i] = 0;
 #endif
 	AT.comfun[FUNHEAD+1] = 1;
 	AT.comfun[FUNHEAD+2] = 1;
@@ -692,8 +711,16 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AT.sizeprimelist = 0;
 	AT.primelist = 0;
 	AN.getdivgcd = 0;
-	AllocPolyModCoefs(&(AN.polymod1),100);
-	AllocPolyModCoefs(&(AN.polymod2),100);
+	AT.nfac = AT.nBer = 0;
+	AT.factorials = 0;
+	AT.bernoullis = 0;
+	AllocPolyModCoefs(&(AN.polymod1),200);
+	AllocPolyModCoefs(&(AN.polymod2),200);
+
+	AN.SplitScratch = 0;
+	AN.SplitScratchSize = AN.InScratch = 0;
+	AN.SplitScratch1 = 0;
+	AN.SplitScratchSize1 = AN.InScratch1 = 0;
 /*
 	Now the sort buffers. They depend on which thread. The master
 	inherits the sortbuffer from AM.S0
@@ -740,6 +767,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 			sa = sb;
 		}		
 	}
+
 	ReserveTempFiles(2);
 	return(B);
 OnError:;
@@ -1200,6 +1228,7 @@ void *RunThread(void *dummy)
 	ALLPRIVATES *B;
 	THREADBUCKET *thr;
 	POSITION *ppdef;
+	EXPRESSIONS e;
 	identity = SetIdentity(&identityretv);
 	threadpointers[identity] = pthread_self();
 	B = InitializeOneThread(identity);
@@ -1234,6 +1263,7 @@ void *RunThread(void *dummy)
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
+				e = Expressions + AR.CurExpr;
 				thr = AN.threadbuck;
 				ppdef = thr->deferbuffer;
 				ttin = thr->threadbuffer;
@@ -1303,6 +1333,10 @@ void *RunThread(void *dummy)
 					MesPrint("Thread %w executing term:");
 					PrintTerm(term,"LLG");
 					UNLOCK(ErrorMessageLock);
+				  }
+				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
+						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
+						PolyFunClean(BHEAD term);
 				  }
 				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel();
@@ -1483,10 +1517,10 @@ bucketstolen:;
 */
 			case DOONEEXPRESSION: {
 
-				EXPRESSIONS e = Expressions + AR.exprtodo;
 				POSITION position, outposition;
 				FILEHANDLE *fi, *fout, *oldoutfile;
 				LONG dd = 0;
+				e = Expressions + AR.exprtodo;
 				i = AR.exprtodo;
 				AR.CurExpr = i;
 				AR.SortType = AC.SortType;
@@ -1560,6 +1594,10 @@ bucketstolen:;
 				  if ( AN.ncmod ) {
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  }
+				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
+						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
+						PolyFunClean(BHEAD term);
 				  }
 				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
@@ -1638,11 +1676,12 @@ bucketstolen:;
 				2: The number of the last bracket to be done
 */
 			case DOBRACKETS: {
-				EXPRESSIONS e = Expressions + AR.CurExpr;
-				BRACKETINFO *binfo = e->bracketinfo;
+				BRACKETINFO *binfo;
 				BRACKETINDEX *bi;
 				FILEHANDLE *fi;
 				POSITION stoppos,where;
+				e = Expressions + AR.CurExpr;
+				binfo = e->bracketinfo;
 				thr = AN.threadbuck;
 				bi = &(binfo->indexbuffer[thr->firstbracket]);
 				if ( AR.GetFile == 2 ) fi = AR.hidefile;
@@ -1671,6 +1710,10 @@ bucketstolen:;
 					if ( AN.ncmod ) {
 						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 						else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+					}
+					if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
+						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
+						PolyFunClean(BHEAD term);
 					}
 					if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
 						LOCK(ErrorMessageLock);
@@ -3520,16 +3563,37 @@ OneTerm:
 					tt1 = m1;
 					m1 += S->PolyWise;
 					m2 += S->PolyWise;
-					w = AT0.WorkPointer;
-					if ( w + m1[1] + m2[1] > AT0.WorkTop ) {
-						LOCK(ErrorMessageLock);
-						MesPrint("MasterMerge: A WorkSpace of %10l is too small",AM.WorkSize);
-						UNLOCK(ErrorMessageLock);
-						Terminate(-1);
+					if ( S->PolyFlag == 2 ) {
+						w = PolyRatFunAdd1(B0,m1,m2);
+/*
+						if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(B0,m1,m2);
+						else                    w = PolyRatFunAdd(B0,m1,m2);
+*/
+						if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+							UNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						}
+						AT0.WorkPointer = w;
+						if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 && w[1] > FUNHEAD ) {
+							goto cancelled;
+						}
 					}
-					AddArgs(B0,m1,m2,w);
+					else {
+						w = AT0.WorkPointer;
+						if ( w + m1[1] + m2[1] > AT0.WorkTop ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("MasterMerge: A WorkSpace of %10l is too small",AM.WorkSize);
+							UNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						}
+						AddArgs(B0,m1,m2,w);
+					}
 					r1 = w[1];
-					if ( r1 <= FUNHEAD ) { goto cancelled; }
+					if ( r1 <= FUNHEAD
+						|| ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) )
+							 { goto cancelled; }
 					if ( r1 == m1[1] ) {
 						NCOPY(m1,w,r1);
 					}
@@ -3783,7 +3847,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge : 
+  	#] MasterMerge :
   	#[ SortBotMasterMerge :
 */
  
@@ -3939,7 +4003,7 @@ int SortBotMerge(PHEAD0)
 		wp = AT.WorkPointer;
 	}
 	else {
-		wp = AT.WorkSpace;
+		wp = AT.WorkPointer = AT.WorkSpace;
 	}
 /*
 	Get the locks for reading the input
@@ -4050,21 +4114,43 @@ next2:		im = *term2;
 				tt1 = m1;
 				m1 += S->PolyWise;
 				m2 += S->PolyWise;
-				w = wp;
-				if ( w + m1[1] + m2[1] > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
-					MesPrint("SortBotMerge(%d): A Maxtermsize of %10l is too small",
-							AT.identity,AM.MaxTer/sizeof(WORD));
-					MesPrint("m1[1] = %d, m2[1] = %d, Space = %l",m1[1],m2[1],(LONG)(AT.WorkTop-wp));
-					PrintTerm(term1,"term1");
-					PrintTerm(term2,"term2");
-					MesPrint("PolyWise = %d",S->PolyWise);
-					UNLOCK(ErrorMessageLock);
-					Terminate(-1);
+				if ( S->PolyFlag == 2 ) {
+					AT.WorkPointer = wp;
+					w = PolyRatFunAdd1(BHEAD m1,m2);
+/*
+					if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(BHEAD m1,m2);
+					else                    w = PolyRatFunAdd(BHEAD m1,m2);
+*/
+					if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
+						LOCK(ErrorMessageLock);
+						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+						UNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
+					AT.WorkPointer = wp;
+					if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 && w[1] > FUNHEAD ) {
+						goto cancelled;
+					}
 				}
-				AddArgs(BHEAD m1,m2,w);
+				else {
+					w = wp;
+					if ( w + m1[1] + m2[1] > AT.WorkTop ) {
+						LOCK(ErrorMessageLock);
+						MesPrint("SortBotMerge(%d): A Maxtermsize of %10l is too small",
+								AT.identity,AM.MaxTer/sizeof(WORD));
+						MesPrint("m1[1] = %d, m2[1] = %d, Space = %l",m1[1],m2[1],(LONG)(AT.WorkTop-wp));
+						PrintTerm(term1,"term1");
+						PrintTerm(term2,"term2");
+						MesPrint("PolyWise = %d",S->PolyWise);
+						UNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
+					AddArgs(BHEAD m1,m2,w);
+				}
 				r1 = w[1];
-				if ( r1 <= FUNHEAD ) { goto cancelled; }
+				if ( r1 <= FUNHEAD
+					|| ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) )
+						 { goto cancelled; }
 				if ( r1 == m1[1] ) {
 					NCOPY(m1,w,r1);
 				}

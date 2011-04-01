@@ -232,12 +232,15 @@ extern VOID TELLFILE(int,POSITION *);
 #define Add5Com(x1,x2,x3,x4) { WORD cod[5]; cod[0] = x1; cod[1] = 5; \
    cod[2] = x2; cod[3] = x3; cod[4] = x4; AddNtoL(5,cod); }
 
-#define WantAddPointers(x) while((AT.pWorkPointer+(x))>AR.pWorkSize)\
-	ExpandBuffer((void **)(&AT.pWorkSpace),&AR.pWorkSize,sizeof(WORD *))
-#define WantAddLongs(x) while((AT.lWorkPointer+(x))>AR.lWorkSize)\
-	ExpandBuffer((void **)(&AT.lWorkSpace),&AR.lWorkSize,sizeof(LONG))
-#define WantAddPositions(x) while((AT.posWorkPointer+(x))>AR.posWorkSize)\
-	ExpandBuffer((void **)(&AT.posWorkSpace),&AR.posWorkSize,sizeof(POSITION))
+/*
+	The temporary variable ppp is to avoid a compiler warning about strict aliassing
+*/
+#define WantAddPointers(x) while((AT.pWorkPointer+(x))>AR.pWorkSize){WORD ***ppp=&AT.pWorkSpace;\
+	ExpandBuffer((void **)ppp,&AR.pWorkSize,(int)(sizeof(WORD *)));}
+#define WantAddLongs(x) while((AT.lWorkPointer+(x))>AR.lWorkSize){LONG **ppp=&AT.lWorkSpace;\
+	ExpandBuffer((void **)ppp,&AR.lWorkSize,sizeof(LONG));}
+#define WantAddPositions(x) while((AT.posWorkPointer+(x))>AR.posWorkSize){POSITION **ppp=&AT.posWorkSpace;\
+	ExpandBuffer((void **)ppp,&AR.posWorkSize,sizeof(POSITION));}
 
 #ifdef _MSC_VER
 long WinTimer();
@@ -275,6 +278,8 @@ long WinTimer();
 #define NumberFree(x,y) NumberFree2(BHEAD (UWORD *)(x),(char *)(y))
 
 #endif
+
+#define ZEROCOST(c) { (c).add = (c).mul = (c).div = (c).pow = 0; }
 
 /*
   	#] Macro's :
@@ -327,7 +332,7 @@ long WinTimer();
  *	All functions (well, nearly all) are declared here.
  */
 
-extern VOID   StartVariables(VOID);
+extern VOID   StartVariables();
 extern VOID   setSignalHandlers(VOID);
 extern UBYTE *CodeToLine(WORD,UBYTE *);
 extern INDEXENTRY *FindInIndex(WORD,FILEDATA *,WORD);
@@ -370,6 +375,9 @@ extern WORD   Compare1(PHEAD WORD *,WORD *,WORD);
 extern WORD   CopyToComp(VOID);
 extern WORD   CountDo(WORD *,WORD *);
 extern WORD   CountFun(WORD *,WORD *);
+extern WORD   DimensionSubterm(PHEAD WORD *);
+extern WORD   DimensionTerm(PHEAD WORD *);
+extern WORD   DimensionExpression(PHEAD WORD *);
 extern WORD   Deferred(PHEAD WORD *,WORD);
 extern WORD   DeleteStore(WORD);
 extern WORD   DetCurDum(PHEAD WORD *);
@@ -405,7 +413,7 @@ extern WORD   DoSumF1(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoSumF2(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoTheta(PHEAD WORD *);
 extern LONG   EndSort(WORD *,int,int);
-extern WORD   EntVar(WORD,UBYTE *,WORD,WORD,WORD);
+extern WORD   EntVar(WORD,UBYTE *,WORD,WORD,WORD,WORD);
 extern WORD   EpfCon(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   EpfFind(PHEAD WORD *,WORD *);
 extern WORD   EpfGen(WORD,WORD *,WORD *,WORD *,WORD);
@@ -464,6 +472,7 @@ extern WORD   LookAhead(VOID);
 extern WORD   MakeDirty(WORD *,WORD *,WORD);
 extern VOID   MarkDirty(WORD *,WORD);
 extern VOID   PolyFunDirty(PHEAD WORD *);
+extern VOID   PolyFunClean(PHEAD WORD *);
 extern WORD   MakeModTable(VOID);
 extern WORD   MatchE(PHEAD WORD *,WORD *,WORD *,WORD);
 extern int    MatchCy(PHEAD WORD *,WORD *,WORD *,WORD);
@@ -548,6 +557,7 @@ extern WORD   SymGen(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   Symmetrize(PHEAD WORD *,WORD *,WORD,WORD,WORD);
 extern int    FullSymmetrize(PHEAD WORD *,int);
 extern WORD   TakeModulus(UWORD *,WORD *,WORD *,WORD,WORD);
+extern WORD   TakeNormalModulus(UWORD *,WORD *,WORD *,WORD,WORD);
 extern VOID   TalToLine(UWORD);
 extern WORD   TenVec(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   TenVecFind(PHEAD WORD *,WORD *);
@@ -663,18 +673,18 @@ extern int    CompactifyTree(NAMETREE *,WORD);
 extern NAMETREE *MakeNameTree(VOID);
 extern VOID   FreeNameTree(NAMETREE *);
 extern int    AddExpression(UBYTE *,int,int);
-extern int    AddSymbol(UBYTE *,int,int,int);
+extern int    AddSymbol(UBYTE *,int,int,int,int);
 extern int    AddDollar(UBYTE *,WORD,WORD *,LONG);
 extern int    ReplaceDollar(WORD,WORD,WORD *,LONG);
 extern int    DollarRaiseLow(UBYTE *,LONG);
-extern int    AddVector(UBYTE *,int);
+extern int    AddVector(UBYTE *,int,int);
 extern int    AddDubious(UBYTE *);
 extern int    AddIndex(UBYTE *,int,int);
 extern UBYTE *DoDimension(UBYTE *,int *,int *);
-extern int    AddFunction(UBYTE *,int,int,int,int);
+extern int    AddFunction(UBYTE *,int,int,int,int,int);
 extern int    CoFunction(UBYTE *,int,int);
 extern int    TestName(UBYTE *);
-extern int    AddSet(UBYTE *);
+extern int    AddSet(UBYTE *,WORD);
 extern int    DoElements(UBYTE *,SETS,UBYTE *);
 extern int    DoTempSet(UBYTE *,UBYTE *);
 extern int    NameConflict(int,UBYTE *);
@@ -876,6 +886,7 @@ extern WORD   FindArg(PHEAD WORD *);
 extern WORD   InsertArg(PHEAD WORD *,WORD *,int);
 extern int    CleanupArgCache(PHEAD WORD);
 extern int    DoFactorize(PHEAD WORD *, WORD *);
+extern int    DoFactorize1(PHEAD WORD *, WORD *);
 extern int    ArgSymbolMerge(WORD *, WORD *);
 extern int    ArgDotproductMerge(WORD *, WORD *);
 extern void   SortWeights(LONG *,LONG *,WORD);
@@ -1370,6 +1381,7 @@ extern int    SymbolNormalize(WORD *,WORD *,WORD);
 extern int    CheckMinTerm(WORD *,WORD *);
 extern int    ReOrderSymbols(WORD *,WORD *,WORD);
 extern int    CompareSymbols(PHEAD WORD *,WORD *,WORD);
+extern int    PolyOrder(PHEAD WORD *);
 extern WORD  *PolyAdd(PHEAD WORD *,WORD *);
 extern WORD  *PolyMul(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv(PHEAD WORD *,WORD *);
@@ -1377,8 +1389,10 @@ extern WORD  *PolyDivI(PHEAD WORD *,WORD *);
 extern WORD  *PolyMul0(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv0(PHEAD WORD *,WORD *);
 extern WORD  *PolyRatNorm(PHEAD WORD *,WORD *);
-extern WORD  *PolyFunNorm(PHEAD WORD *,WORD);
-extern WORD  *PolyFunAddRat(PHEAD WORD *,WORD *);
+extern WORD  *PolyRatFunNorm(PHEAD WORD *,WORD);
+extern WORD  *PolyRatFunAdd(PHEAD WORD *,WORD *);
+extern WORD  *PolyRatFunAdd_OLD(PHEAD WORD *,WORD *);
+extern WORD  *PolyRatFunAdd1(PHEAD WORD *,WORD *);
 extern WORD  *PolyRemoveContent(PHEAD WORD *,WORD);
 extern WORD  *PolyGCD(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1(PHEAD WORD *,WORD *);
@@ -1386,12 +1400,15 @@ extern WORD  *PolyGCD1a(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1b(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1c(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1d(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD_OLD(PHEAD WORD *,WORD *);
+extern WORD  *PolyGCD2(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv1(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv1d(PHEAD WORD *,WORD *);
 extern WORD  *PolyPseudoRem1(PHEAD WORD *,WORD *);
 extern WORD  *GetNegPow(PHEAD WORD *);
 extern WORD  *PolyNormPoly(PHEAD WORD *);
 extern WORD   PolyRatFunMul(PHEAD WORD *);
+extern WORD   PolyRatFunMul_OLD(PHEAD WORD *);
 extern WORD  *PolyTake(PHEAD WORD *,WORD);
 extern WORD   PolyGetRenumbering(PHEAD WORD *,WORD *);
 extern WORD   InvertModular(WORD,WORD);
@@ -1418,6 +1435,9 @@ extern WORD   PolyModSubsVector(PHEAD WORD *,WORD *,WORD,WORD,WORD,WORD,POLYMOD 
 extern WORD  *PolyGetSymbols(PHEAD WORD *,int *);
 extern WORD  *PolyGetGCDPowers(PHEAD WORD *,WORD *,WORD *,WORD *);
 extern WORD  *PolyGetConfig(PHEAD WORD);
+extern WORD  *RedoPolyRatFun(PHEAD WORD *,int);
+extern int    TestSymbols(WORD *);
+extern WORD  *PolyRatFunTake(PHEAD WORD *);
 extern WORD   wranf(PHEAD0);
 
 extern WORD  *EvaluateGcd(PHEAD WORD *);
@@ -1483,7 +1503,14 @@ extern int CoExtraSymbols(UBYTE *);
 extern int ExtraSymFun(PHEAD WORD *,WORD);
 extern int IniFbuffer(WORD);
 extern void IniFbufs(VOID);
+extern int GCDfunction(PHEAD WORD *,WORD);
+extern int GCDfunction1(WORD *,WORD *,WORD *);
+extern int GCDfunction2(PHEAD WORD *,WORD *);
+extern int GCDterms(WORD *,WORD *,WORD *);
+extern int DoGCDfunction(PHEAD WORD *, WORD *);
+extern int DoGCDfunction1(PHEAD WORD *, WORD *);
 
+extern void initialize_geobuckets();
 /*
   	#] Declarations :
 */

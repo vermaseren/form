@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : polynito.c
 */
@@ -44,8 +44,10 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
 						siz = c2-y+1; c1 = x = AT.WorkPointer; c2 = y; NCOPY(c1,c2,siz); AT.WorkPointer = c1; }
 #define PRINTPOLY(s,x) { WORD i, *pp = x; while ( *pp ) pp += *pp; i = pp - x + 1; MesPrint("%s %a",s,i,x); }
 
+int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3);
+
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Notation :
 
 	We use several notations internally to deal with polynomials.
@@ -94,7 +96,7 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
 	To not exhaust the WorkSpace too quickly we have to copy polynomials
 	down in the WorkSpace frequently. This is a slight inefficiency.
 
-  	#] Notation : 
+  	#] Notation :
   	#[ SymbolNormalize :
 */
 /**
@@ -235,7 +237,7 @@ Nexti:;
 }
 
 /*
-  	#] SymbolNormalize : 
+  	#] SymbolNormalize :
   	#[ CheckMinTerm :
 */
 /**
@@ -268,7 +270,7 @@ nextm:	m += 2;
 }
 
 /*
-  	#] CheckMinTerm : 
+  	#] CheckMinTerm :
   	#[ ReOrderSymbols :
 */
 /**
@@ -324,7 +326,7 @@ int ReOrderSymbols(WORD *term, WORD *slist, WORD par)
 }
 
 /*
-  	#] ReOrderSymbols : 
+  	#] ReOrderSymbols :
   	#[ CompareSymbols :
 */
 /**
@@ -368,7 +370,34 @@ int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 }
 
 /*
-  	#] CompareSymbols : 
+  	#] CompareSymbols :
+  	#[ PolyOrder :
+*/
+
+int PolyOrder(PHEAD WORD *poly)
+{
+	WORD *p;
+	if ( NewSort() ) { Terminate(-1); }
+	AR.CompareRoutine = &CompareSymbols;
+	p = poly;
+	while ( *p ) {
+		if ( StoreTerm(BHEAD p) ) {
+			AR.CompareRoutine = &Compare1;
+			LowerSortLevel();
+			Terminate(-1);
+		}
+		p += *p;
+	}
+	if ( EndSort(poly,1,0) < 0 ) {
+		AR.CompareRoutine = &Compare1;
+		Terminate(-1);
+	}
+	AR.CompareRoutine = &Compare1;
+	return(0);
+}
+
+/*
+  	#] PolyOrder :
   	#[ PolyAdd :
 */
 /**
@@ -446,7 +475,7 @@ WORD *PolyAdd(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyAdd : 
+  	#] PolyAdd :
   	#[ PolyMul :
 */
 /**
@@ -512,7 +541,7 @@ WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyMul : 
+  	#] PolyMul :
   	#[ PolyDiv :
 */
 /**
@@ -647,7 +676,7 @@ NegPow:
 		*b++ = 0;
 		AT.WorkPointer = b;
 /*
- 		#] Get q : 
+ 		#] Get q :
 
 		Compute poly1 - q*Poly2
 */
@@ -688,14 +717,13 @@ NegPow:
 }
 
 /*
-  	#] PolyDiv : 
+  	#] PolyDiv :
   	#[ PolyDivI :
 */
 /**
- *	Divides polynomial Poly1 by Poly2.
- *	We assume that both polynomials have at minimum power of at least
+ *	Tests whether Poly2 divides Poly1 over the integers.
+ *	We assume that both polynomials have a minimum power of at least
  *	one and that all coefficients are integer.
- *	In addition we test whether there is a remainder.
  *	If there is a remainder this is considered an error and the return
  *	value is a zero polynomial.
  *	Also the answer has to be a polynomial over the integers.
@@ -705,178 +733,145 @@ NegPow:
 WORD *PolyDivI(PHEAD WORD *Poly1, WORD *Poly2)
 {
 	WORD *oldworkpointer = AT.WorkPointer;
-	WORD *poly1, *p, *p1, *p2, *p1a = 0, *p2a = 0, *t, *t1, *out;
-	WORD *coef, *coef1 = 0, *coef2 = 0, *factor,
-	      ncoef, ncoef1 = 0, ncoef2, nfactor;
-	WORD m1, m2, delta, pow1 = 0, pow2 = 0, numsym = Poly1[3];
-	WORD size1, size2;
-	int dop1, dop2, i;
-	LONG size;
-	UWORD *ARscrat1 = NumberMalloc("PolyDivI"), *ARscrat2 = NumberMalloc("PolyDivI");
-	p = Poly1; while ( *p ) p += *p; size = p - Poly1 + 1;
-	p = Poly1; poly1 = p1 = AT.WorkPointer; NCOPY(p1,p,size);
-	AT.WorkPointer = p1;
-	out = oldworkpointer;
-	m2 = Poly2[4]; coef = Poly2+5; ncoef = Poly2[*Poly2-1];
-	if ( ncoef < 0 ) ncoef = (ncoef+1)/2; else ncoef = (ncoef-1)/2;
+	WORD *output = TermMalloc("PolyDivI"), *out;
+	WORD *poly3 = TermMalloc("PolyDivI"), *p3;
+	WORD *poly1 = oldworkpointer, *p1, *p2;
+	WORD pow1, pow2, pow2m, powdif, *coef1, ncoef1, *coef2, ncoef2, nrem;
+	UWORD *factor = NumberMalloc("PolyDivI"), *scratnum2 = NumberMalloc("PolyDivI");
+	WORD nfactor, *coe, ncoe, nsc2;
+	int i, j;
+
+	p1 = Poly1; while ( *p1 ) p1 += *p1; i = p1 - Poly1;
+	p2 = poly1; p1 = Poly1; NCOPY(p2,p1,i); *p2++ = 0;
+	AT.WorkPointer = p2;
+
+	pow2m = Poly2[4]; coef2 = Poly2+5; ncoef2 = Poly2[*Poly2-1];
+	ncoef2 = ( ncoef2 < 0 ) ? (ncoef2+1)/2: (ncoef2-1)/2;
+
+	out = output; /* for storing the quotient if everything goes right */
+
 	while ( ABS(poly1[*poly1-1]) < *poly1-1 ) {
-		m1 = poly1[4];
-		if ( m1 < m2 ) goto nogo;
-		delta = m1-m2;
-		if ( ncoef == 1 && coef[0] == 1 ) {
-			factor = poly1+5; nfactor = poly1[*poly1-1];
-			if ( nfactor < 0 ) nfactor = (nfactor+1)/2;
-			else               nfactor = (nfactor-1)/2;
+		pow1 = poly1[4]; coef1 = poly1+5; ncoef1 = poly1[*poly1-1];
+		ncoef1 = ( ncoef1 < 0 ) ? (ncoef1+1)/2: (ncoef1-1)/2;
+		if ( pow1 < pow2m ) goto nodivision;
+		powdif = pow1 - pow2m;
+		p3 = poly3;
+		
+		DivLong((UWORD *)coef1,ncoef1,
+		        (UWORD *)coef2,ncoef2,
+		        (UWORD *)factor,&nfactor,
+				(UWORD *)(AT.WorkPointer),&nrem);
+		if ( nrem != 0 ) goto nodivision;
+/*
+		Now we have to compute poly3 = poly1 - factor*Poly2
+		The first term is zero by construction
+*/
+		p2 = Poly2; p2 += *p2;
+		p1 = poly1; p1 += *p1;
+		while ( *p2 ) {           /* New term in Poly2 */
+			if ( ABS(p2[*p2-1]) == (*p2-1) ) { coe = p2+1; pow2 = 0; }
+			else                             { coe = p2+5; pow2 = p2[4]; }
+			ncoe = p2[*p2-1]; ncoe = ( ncoe < 0 ) ? (ncoe+1)/2: (ncoe-1)/2;
+			MulLong((UWORD *)factor,nfactor,(UWORD *)coe,ncoe,scratnum2,&nsc2);
+			nsc2 = -nsc2;
+redo1:;
+			if ( *p1 == 0 ) {
+justcopy:		i = ABS(nsc2);
+				if ( (powdif+pow2) > 0 ) {
+					*p3++ = 2*i+6;
+					*p3++ = SYMBOL; *p3++ = 4; *p3++ = Poly2[3]; *p3++ = powdif+pow2;
+				}
+				else {
+					*p3++ = 2*i+2;
+				}
+				for ( j = 0; j < i; j++ ) *p3++ = (WORD)(scratnum2[j]);
+				*p3++ = 1; for ( j = 1; j < i; j++ ) *p3++ = 0;
+				*p3++ = ( nsc2 < 0 ) ? -(2*i+1): (2*i+1);
+				p2 += *p2;
+			}
+			else if ( ABS(p1[*p1-1]) == (*p1-1) ) {
+				if ( powdif+pow2 > 0 ) goto justcopy;
+				coef1 = p1+1; ncoef1 = p1[*p1-1];
+				ncoef1 = ( ncoef1 < 0 ) ? (ncoef1+1)/2: (ncoef1-1)/2;
+				AddLong((UWORD *)coef1,ncoef1,scratnum2,nsc2,scratnum2,&nsc2);
+				i = ABS(nsc2);
+				if ( i ) {
+					*p3++ = 2*i+2;
+					for ( j = 0; j < i; j++ ) *p3++ = (WORD)(scratnum2[j]);
+					*p3++ = 1; for ( j = 1; j < i; j++ ) *p3++ = 0;
+					*p3++ = ( nsc2 < 0 ) ? -(2*i+1): (2*i+1);
+				}
+				p2 += *p2;
+				p1 += *p1;
+			}
+			else {
+				while ( p1[4] > pow2+powdif ) {
+					i = *p1; NCOPY(p3,p1,i);
+					goto redo1;
+				}
+				if ( p1[4] < pow2+powdif ) goto justcopy;
+
+				coef1 = p1+5; ncoef1 = p1[*p1-1];
+				ncoef1 = ( ncoef1 < 0 ) ? (ncoef1+1)/2: (ncoef1-1)/2;
+				AddLong((UWORD *)coef1,ncoef1,scratnum2,nsc2,scratnum2,&nsc2);
+				i = ABS(nsc2);
+				if ( i ) {
+					*p3++ = 2*i+6;
+					*p3++ = p1[1]; *p3++ = p1[2]; *p3++ = p1[3]; *p3++ = p1[4];
+					for ( j = 0; j < i; j++ ) *p3++ = (WORD)(scratnum2[j]);
+					*p3++ = 1; for ( j = 1; j < i; j++ ) *p3++ = 0;
+					*p3++ = ( nsc2 < 0 ) ? -(2*i+1): (2*i+1);
+				}
+				p2 += *p2;
+				p1 += *p1;
+			}
+		}
+ 
+		if ( *p1 ) {
+			p2 = p1; while ( *p2 ) p2 += *p2;
+			i = p2 - p1;
+			NCOPY(p3,p1,i);
+		}
+
+		i = ABS(nfactor);
+		if ( powdif == 0 ) {
+			*out++ = 2*i + 2;
 		}
 		else {
-			coef1 = poly1+5; ncoef1 = poly1[*poly1-1];
-			if ( ncoef1 < 0 ) ncoef1 = (ncoef1+1)/2;
-			else              ncoef1 = (ncoef1-1)/2;
-			factor = (WORD *)(ARscrat1);
-			DivLong((UWORD *)coef1,ncoef1,
-			        (UWORD *)coef,ncoef,
-			        (UWORD *)factor,&nfactor,
-					(UWORD *)(AT.WorkPointer),&ncoef2);
-			if ( ncoef2 != 0 ) goto nogo;
+			*out++ = 2*i + 6;
+			*out++ = SYMBOL; *out++ = 4; *out++ = Poly2[3]; *out++ = powdif;
 		}
-/*
-		We compute poly1 - (factor*x^delta)*Poly2.
-		We know that the first terms are going to cancel.
-		Hence we can start with the second terms.
-*/
-		p2 = Poly2+*Poly2; p1 = poly1+*poly1;
-		dop1 = dop2 = 1;
-		t = AT.WorkPointer;
-		while ( *p1 && *p2 ) {
-			if ( dop1 ) {
-				p1a = p1; p1 += *p1;
-				if ( ABS(p1[-1]) == *p1a-1 ) { pow1 = 0; coef1 = p1a+1; }
-				else { pow1 = p1a[4]; coef1 = p1a+5; }
-				ncoef1 = p1[-1];
-				if ( ncoef1 < 0 ) ncoef1 = (ncoef1+1)/2;
-				else              ncoef1 = (ncoef1-1)/2;
-			}
-			if ( dop2 ) {
-				p2a = p2; p2 += *p2;
-				if ( ABS(p2[-1]) == *p2a-1 ) { pow2 = 0; coef2 = p2a+1; }
-				else { pow2 = p2a[4]; coef2 = p2a+5; }
-				ncoef2 = p2[-1];
-				if ( ncoef2 < 0 ) ncoef2 = (ncoef2+1)/2;
-				else              ncoef2 = (ncoef2-1)/2;
-			}
-			t1 = t; t++;
-			if ( pow1 == pow2+delta ) {
-				if ( pow1 > 0 ) { *t++ = SYMBOL; *t++ = 4; *t++ = numsym; *t++ = pow1; }
-				dop1 = dop2 = 1;
-				if ( MulLong((UWORD *)coef2,ncoef2,
-				             (UWORD *)factor,nfactor,
-				             (UWORD *)(ARscrat2),&size1) ) goto calledfrom;
-				size1 = -size1;
-				AddLong((UWORD *)coef1,ncoef1,
-				        (UWORD *)(ARscrat2),size1,
-				        (UWORD *)t,&size2);
-			}
-			else if ( pow1 > pow2+delta ) {
-				if ( pow1 > 0 ) { *t++ = SYMBOL; *t++ = 4; *t++ = numsym; *t++ = pow1; }
-				dop1 = 1; dop2 = 0;
-				size2 = ncoef1; size1 = ABS(size2);
-				for ( i = 0; i < size1; i++ ) t[i] = coef1[i];
-			}
-			else {
-				if ( pow2+delta > 0 ) { *t++ = SYMBOL; *t++ = 4; *t++ = numsym; *t++ = pow2+delta; }
-				dop1 = 0; dop2 = 1;
-				if ( MulLong((UWORD *)coef2,ncoef2,
-				             (UWORD *)factor,nfactor,
-				             (UWORD *)t,&size2) ) goto calledfrom;
-				size2 = -size2;
-			}
-			if ( size2 == 0 ) { t = t1; }
-			else {
-				size1 = ABS(size2);
-				t += size1; *t++ = 1;
-				for ( i = 1; i < size1; i++ ) *t++ = 0;
-				size1 = 2*size1+1; if ( size2 < 0 ) size1 = -size1;
-				*t++ = size1;
-				*t1 = t - t1;
-			}
-		}
-		if ( dop1 == 0 ) {
-			p1 = p1a;
-			p1a = p1; while ( *p1 ) p1 += *p1; size = p1-p1a+1;
-			p1 = p1a; NCOPY(t,p1,size);
-		}
-		if ( dop2 == 0 ) {
-			p2 = p2a;
-			while ( *p2 ) {
-				p2a = p2; p2 += *p2;
-				if ( ABS(p2[-1]) == *p2a-1 ) { pow2 = 0; coef2 = p2a+1; }
-				else { pow2 = p2a[4]; coef2 = p2a+5; }
-				ncoef2 = p2[-1];
-				if ( ncoef2 < 0 ) ncoef2 = (ncoef2+1)/2;
-				else              ncoef2 = (ncoef2-1)/2;
-				t1 = t; t++;
-				if ( pow2+delta > 0 ) { *t++ = SYMBOL; *t++ = 4; *t++ = numsym; *t++ = pow2+delta; }
-				dop1 = 0; dop2 = 1;
-				if ( MulLong((UWORD *)coef2,ncoef2,
-				             (UWORD *)factor,nfactor,
-				             (UWORD *)t,&size2) ) goto calledfrom;
-				size2 = -size2;
-				size1 = ABS(size2);
-				t += size1; *t++ = 1;
-				for ( i = 1; i < size1; i++ ) *t++ = 0;
-				size1 = 2*size1+1; if ( size2 < 0 ) size1 = -size1;
-				*t++ = size1;
-				*t1 = t - t1;
-			}
-		}
-		*t++ = 0;
-/*
-		Now put the factor*x^delta in the output
-		There is room!
-*/
-		t1 = out; out++;
-		if ( delta > 0 ) { *out++ = SYMBOL; *out++ = 4;
-			*out++ = numsym; *out++ = delta;
-		}
-		size1 = ABS(nfactor);
-		for ( i = 0; i < size1; i++ ) *out++ = factor[i];
-		*out++ = 1;
-		for ( i = 1; i < size1; i++ ) *out++ = 0;
-		size1 = 2*size1+1; if ( nfactor < 0 ) size1 = -size1;
-		*out++ = size1;
-		*t1 = out-t1;
-		*out = 0;
-/*
-		Next copy the remainder to poly1
-*/
-		p1 = poly1 = out+1;
-		size = t - AT.WorkPointer;
-		t = AT.WorkPointer;
-		NCOPY(p1,t,size);
-		if ( *poly1 == 0 ) {	/* solution */
-			AT.WorkPointer = out+1;
-			break;
-		}
+		for ( j = 0; j < i; j++ ) *out++ = (WORD)(factor[j]);
+		*out++ = 1; for ( j = 1; j < i; j++ ) *out++ = 0;
+		*out++ = ( nfactor < 0 ) ? -(2*i+1): 2*i+1;
+
+		i = p3 - poly3; p3 = poly3; p1 = poly1;
+		NCOPY(p1,p3,i); *p1++ = 0;
+		if ( *poly1 == 0 ) break;
 		AT.WorkPointer = p1;
 	}
-	NumberFree(ARscrat1,"PolyDivI"); NumberFree(ARscrat2,"PolyDivI");
+
+	if ( *poly1 ) {
+nodivision:
+		*oldworkpointer = 0;
+		AT.WorkPointer = oldworkpointer;
+	}
+	else {
+		i = out - output;
+		p1 = output; p2 = oldworkpointer;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+		AT.WorkPointer = p2;
+	}
+	NumberFree(scratnum2,"PolyDivI");
+	NumberFree(factor,"PolyDivI");
+	TermFree(poly3,"PolyDivI");
+	TermFree(output,"PolyDivI");
 	return(oldworkpointer);
-nogo:
-	oldworkpointer[0] = 0;
-	AT.WorkPointer = oldworkpointer;
-	NumberFree(ARscrat1,"PolyDivI"); NumberFree(ARscrat2,"PolyDivI");
-	return(oldworkpointer);
-calledfrom:;
-	LOCK(ErrorMessageLock);
-	MesCall("PolyDivI");
-	UNLOCK(ErrorMessageLock);
-	NumberFree(ARscrat1,"PolyDivI"); NumberFree(ARscrat2,"PolyDivI");
-	Terminate(-1);
-	return(0);
 }
 
 /*
-  	#] PolyDivI : 
+  	#] PolyDivI :
   	#[ PolyMul0 :
 */
 /**
@@ -943,7 +938,7 @@ WORD *PolyMul0(PHEAD WORD *Poly, WORD *term)
 }
 
 /*
-  	#] PolyMul0 : 
+  	#] PolyMul0 :
   	#[ PolyDiv0 :
 */
 /**
@@ -971,7 +966,7 @@ WORD *PolyDiv0(PHEAD WORD *Poly1, WORD *Poly2)
 /*
 	Special case: Poly2 is a constant
 */
-	if ( Poly2[*Poly2] == 0 && ABS(Poly2[*Poly2-1]) == *Poly2-1 ) {
+	if ( ( Poly2[*Poly2] == 0 ) && ( ABS(Poly2[*Poly2-1]) == (*Poly2-1) ) ) {
 		size = *Poly2 - 2; i = size/2;
 		q = out;
 		*q = *Poly2;
@@ -1061,7 +1056,7 @@ NegPow:
 		bb[0] = b - bb;
 		AT.WorkPointer = b;
 /*
- 		#] Get q : 
+ 		#] Get q :
 
 		Compute poly1 - q*Poly2
 */
@@ -1091,7 +1086,7 @@ NegPow:
 }
 
 /*
-  	#] PolyDiv0 : 
+  	#] PolyDiv0 :
   	#[ PolyPow :
 */
 /**
@@ -1160,7 +1155,7 @@ WORD *PolyPow(PHEAD WORD *Poly, WORD pow)
 }
 
 /*
-  	#] PolyPow : 
+  	#] PolyPow :
   	#[ PolyRatNorm :
 */
 /**
@@ -1177,19 +1172,56 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD *b1, *b2, *b3, *output, *out = AT.WorkPointer;
 	WORD *gcd;
 	LONG size;
-	gcd = PolyGCD(BHEAD Poly1,Poly2);
+	WORD *Poly3, *num, *den, *p1, *p2, i, j, *tt, *t;
+	gcd = PolyGCD2(BHEAD Poly1,Poly2);
 	if ( gcd[*gcd] == 0 && *gcd-1 == ABS(gcd[*gcd-1]) ) {
 		b2 = b1 = Poly1; while ( *b2 ) b2 += *b2;
 		size = b2-b1+1;
 		b3 = b2 = Poly2; while ( *b3 ) b3 += *b3;
 		b3++;
+		AT.WorkPointer = b3;
 	}
 	else {
 		b1 = PolyDiv0(BHEAD Poly1,gcd);
 		b2 = PolyDiv0(BHEAD Poly2,gcd);
 		b3 = AT.WorkPointer;
-		size = b2 - b1;
 	}
+/*
+	Now we need to divide by the content of b1,b2
+	We put the two Poly's together so that we need only one call to
+	PolyRemoveContent.
+*/
+	p2 = b2;
+	if ( p2[*p2-1] < 0 ) {
+		p1 = Poly1;
+		while ( *p1 ) { p1 += *p1; p1[-1] = -p1[-1]; }
+		p2 = Poly2;
+		while ( *p2 ) { p2 += *p2; p2[-1] = -p2[-1]; }
+	}
+	p2 = Poly3 = AT.WorkPointer;
+	p1 = b1; while ( *p1 ) p1 += *p1;
+	i = p1 - b1; p1 = b1; NCOPY(p2,p1,i);
+	p1 = b2; while ( *p1 ) p1 += *p1;
+	i = p1 - b2; p1 = b2; NCOPY(p2,p1,i);
+	*p2++ = 0;
+	tt = AT.WorkPointer = p2;
+	PolyRemoveContent(BHEAD Poly3,2);
+/*
+		Next exchange numerator and denominator in the content
+*/
+	t = tt+tt[0]; i = ABS(t[-1]);
+	num = t - i; i = (i-1)/2; den = num+i;
+	if ( num > tt+1 ) tt[4] = -tt[4];
+	while ( --i >= 0 ) { j = num[i]; num[i] = den[i]; den[i] = j; }
+	
+	AT.WorkPointer = tt+tt[0];
+	*AT.WorkPointer++ = 0;
+	b1 = PolyMul0(BHEAD b1,tt);
+	b2 = PolyMul0(BHEAD b2,tt);
+	b3 = b2; while ( *b3 ) b3 += *b3;
+	b3++;
+
+	size = b2 - b1;
 	NCOPY(out,b1,size);
 	output = out;
 	size = b3-b2;
@@ -1199,8 +1231,8 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyRatNorm : 
-  	#[ PolyFunNorm :
+  	#] PolyRatNorm :
+  	#[ PolyRatFunNorm :
 */
 /**
  *	Gets the PolyFun with two arguments.
@@ -1210,11 +1242,13 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
  *	If par == 2 we put the two polynomials in the WorkSpace.
  */
 
-WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
+WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 {
-	WORD *oldworkpointer, *ow = AT.WorkPointer;
-	WORD buf1[9], buf2[9], *Poly1, *Poly2, *p1, *p2, *pp;
-	WORD oldvalue, *t, *tt, *tstop, i, j, *np;
+	WORD *oldworkpointer, *ow = AT.WorkPointer, *retval = 0;
+	WORD buf1[9], buf2[9], *Poly1, *Poly2, *p1, *p2, *p3, *p4, *pp;
+	WORD *T1 = TermMalloc("PolyRatFunNorm");
+	WORD *T2 = TermMalloc("PolyRatFunNorm");
+	WORD oldvalue, *t, *tstop, i, *np;
 	LONG size;
 	VOID *oldcompareroutine = AR.CompareRoutine;
 	if ( par == 1 ) {
@@ -1222,7 +1256,6 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		NCOPY(pp,t,size);
 		AT.WorkPointer = pp;
 	}
-	oldworkpointer = AT.WorkPointer;
 /*
   	#[ Step 1 : Get the Polynomials in proper notation.
 */
@@ -1247,7 +1280,7 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 					term = ow; AT.WorkPointer = ow + 2;
 				}
 				*term = 0; term[1] = 0;
-				return(term);
+				retval = term; goto rett;
 			}
 			buf1[0] = 4;
 			buf1[1] = ABS(Poly1[1]);
@@ -1266,7 +1299,10 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		Poly1 = buf1;
 	}
 	else {
+		
+		i = *Poly1; p4 = Poly1; p3 = T1;
 		Poly2 = Poly1 + *Poly1;
+		Poly1 = T1; NCOPY(p3,p4,i); *p3++ = 0;
 		Poly1 += ARGHEAD;
 	}
 	if ( Poly2 >= tstop ) {
@@ -1315,6 +1351,8 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 	}
 	else {
 		p1 = Poly2 + *Poly2;
+		i = *Poly2; p4 = Poly2; p3 = T2;
+		Poly2 = T2; NCOPY(p3,p4,i); *p3++ = 0;
 		*Poly2 = 0;
 		Poly2 += ARGHEAD;
 	}
@@ -1325,8 +1363,9 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		Terminate(-1);
 	}
 	oldvalue = *tstop; *tstop = 0; /* For the general case */
+	oldworkpointer = AT.WorkPointer;
 /*
-  	#] Step 1 : 
+  	#] Step 1 :
   	#[ Step 2 : get rid of negative powers
 */
 	np = GetNegPow(BHEAD Poly1);
@@ -1344,7 +1383,7 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		Poly2 = PolyMul0(BHEAD Poly2,np);
 	}
 /*
-  	#] Step 2 : 
+  	#] Step 2 :
   	#[ Step 3 : sort the denominator, sort the numerator
 */
 	if ( Poly1[*Poly1] != 0 ) {
@@ -1368,7 +1407,6 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		p1 = Poly1; while ( *p1 ) p1 += *p1;
 		AT.WorkPointer = p1+1;
 	}
-
 	if ( Poly2[*Poly2] != 0 ) {
 		if ( NewSort() ) { Terminate(-1); }
 		AR.CompareRoutine = &CompareSymbols;
@@ -1391,52 +1429,62 @@ WORD *PolyFunNorm(PHEAD WORD *term, WORD par)
 		AT.WorkPointer = p2+1;
 	}
 /*
-  	#] Step 3 : 
+  	#] Step 3 :
   	#[ Step 4 : normalize the denominator and put the factor in the numerator.
-	Potentially there are two normalizations: a: first term has coefficient 1.
-	b: all coefficients are integers and their GCD is one.
+	Potentially there are two normalizations:
+			a: first term has coefficient 1.
+			b: all coefficients are integers and the GCD
+			   of all coeffs (num+den) is one.
 */
-	p2 = Poly2;
-	if ( p2[*p2-2] == 1 && p2[*p2-3] == 1 ) {
-		if ( p2[*p2-1] == 3 ) goto endnormalize;
-		else if ( p2[*p2-1] == -3 ) {
-			p1 = Poly2;
-			while ( *p1 ) {
-				pp = p1 + *p1;
-				pp[-1] = -pp[-1];
-				p1 = pp;
-			}
-			p1 = Poly1;
-			while ( *p1 ) {
-				pp = p1 + *p1;
-				pp[-1] = -pp[-1];
-				p1 = pp;
-			}
-			goto endnormalize;
-		}
-	}
-	t = tt = AT.WorkPointer;
-	pp = p2 + *p2;
-	i = ABS(pp[-1]) - 1;
-	*t++ = i+2; i = i/2;
-	p2 = pp-i-1;
-	for ( j = 0; j < i; j++ ) *t++ = p2[j];
-	p2 -= i;
-	for ( j = 0; j < i; j++ ) *t++ = p2[j];
-	*t++ = pp[-1];
-	*t++ = 0;
-	AT.WorkPointer = t;
-	Poly1 = PolyMul0(BHEAD Poly1,tt);
-	Poly2 = PolyMul0(BHEAD Poly2,tt);
-endnormalize:;
+#ifndef OLDNORM
+	{
 /*
-  	#] Step 4 : 
+	Here we need to multiply by LCM(denPoly1,denPoly2)/GCD(numPoly1,numPoly2)
+	We put the two Poly's together so that we need only one call to
+	PolyRemoveContent.
+*/
+		WORD *Poly3, *num, *den;
+		WORD *tt, j;
+		p2 = Poly2;
+		if ( p2[*p2-1] < 0 ) {
+			p1 = Poly1;
+			while ( *p1 ) { p1 += *p1; p1[-1] = -p1[-1]; }
+			p2 = Poly2;
+			while ( *p2 ) { p2 += *p2; p2[-1] = -p2[-1]; }
+		}
+		p2 = Poly3 = AT.WorkPointer;
+		p1 = Poly1; while ( *p1 ) p1 += *p1;
+		i = p1 - Poly1; p1 = Poly1; NCOPY(p2,p1,i);
+		p1 = Poly2; while ( *p1 ) p1 += *p1;
+		i = p1 - Poly2; p1 = Poly2; NCOPY(p2,p1,i);
+		*p2++ = 0;
+		AT.WorkPointer = p2;
+		tt = PolyRemoveContent(BHEAD Poly3,1);
+		tt = p2;
+/*
+		Next exchange numerator and denominator in the content
+*/
+		i = tt[tt[0]-1]; i = ABS(i); num = tt + tt[0] - i; i = (i-1)/2;
+		num = tt+1; den = num+i;
+		while ( --i >= 0 ) { j = num[i]; num[i] = den[i]; den[i] = j; }
+		AT.WorkPointer = tt+tt[0];
+		*AT.WorkPointer++ = 0;
+		Poly1 = PolyMul0(BHEAD Poly1,tt);
+		Poly2 = PolyMul0(BHEAD Poly2,tt);
+	}
+#endif
+/*
+  	#] Step 4 :
   	#[ Step 5 : determine the GCD and divide it out (PolyRatNorm)
 */
 	p1 = AT.WorkPointer;
 	p2 = PolyRatNorm(BHEAD Poly1,Poly2);
 /*
-  	#] Step 5 : 
+	if ( AM.oldpolyratfun ) p2 = PolyRatNorm_OLD(BHEAD Poly1,Poly2);
+	else                    p2 = PolyRatNorm(BHEAD Poly1,Poly2);
+*/
+/*
+  	#] Step 5 :
   	#[ Step 6 : insert the result in term
 
 	Note that if the denominator is trivial we switch to the other notation
@@ -1446,12 +1494,17 @@ endnormalize:;
 */
 	if ( par ==  2 ) {
 		size = AT.WorkPointer - p1;
-		if ( p1 == oldworkpointer ) { *tstop = oldvalue; return(oldworkpointer); }
+		if ( p1 == oldworkpointer ) {
+			*tstop = oldvalue;
+			retval = oldworkpointer;
+			goto rett;
+		}
 		p2 = oldworkpointer;
 		NCOPY(p2,p1,size)
 		AT.WorkPointer = p2;
 		*tstop = oldvalue;
-		return(oldworkpointer);
+		retval = oldworkpointer;
+		goto rett;
 	}
 
 	*tstop = oldvalue;
@@ -1461,21 +1514,26 @@ endnormalize:;
 	if ( *p2 == 4 && p2[4] == 0 ) {
 		if ( par ) term = ow;
 		t = ow;
-		size = FUNHEAD + ARGHEAD + (AT.WorkPointer-p1)-1;
+		size = FUNHEAD + 2*ARGHEAD + (AT.WorkPointer-p1)-2;
 		if ( size*sizeof(WORD) >= AM.MaxTer ) {
 			LOCK(ErrorMessageLock);
-			MesPrint("PolyFun becomes too complex in PolyFunNorm. If possible, increase MaxTermSize.");
+			MesPrint("PolyFun becomes too complex in PolyRatFunNorm. If possible, increase MaxTermSize.");
 			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		t[1] = size;
-		t[2] = 0;	/* The dirtyflag is set to clean */
+		t[2] = 0;
 		t += FUNHEAD;
 		t[0] = (p2-p1)+ARGHEAD-1;
-		t[1] = 0;	/* The dirtyflag is set to clean */
+		t[1] = 0;
 		t += ARGHEAD;
 		size = p2-p1-1;
 		NCOPY(t,p1,size);
+		t[0] = (AT.WorkPointer-p2)+ARGHEAD-1;
+		t[1] = 0;	/* The dirtyflag is set to clean */
+		t += ARGHEAD;
+		size = AT.WorkPointer-p2-1;
+		NCOPY(t,p2,size)
 	}
 	else {
 		if ( par ) term = ow;
@@ -1483,7 +1541,7 @@ endnormalize:;
 		size = FUNHEAD + 2*ARGHEAD + (AT.WorkPointer-p1)-2;
 		if ( size*sizeof(WORD) >= AM.MaxTer ) {
 			LOCK(ErrorMessageLock);
-			MesPrint("PolyFun becomes too complex in PolyFunNorm. If possible, increase MaxTermSize.");
+			MesPrint("PolyFun becomes too complex in PolyRatFunNorm. If possible, increase MaxTermSize.");
 			UNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
@@ -1502,36 +1560,45 @@ endnormalize:;
 		NCOPY(t,p2,size)
 	}
 /*
-  	#] Step 6 : 
+  	#] Step 6 :
 */
 	t++;
 	if ( par == 0 ) AT.WorkPointer = oldworkpointer;
 	else AT.WorkPointer = t;
 	if ( ( AT.WorkPointer > term ) && ( AT.WorkPointer < t ) )
 		AT.WorkPointer = t;
+	TermFree(T2,"PolyRatFunNorm");
+	TermFree(T1,"PolyRatFunNorm");
 	return(term);
+rett:
+	TermFree(T2,"PolyRatFunNorm");
+	TermFree(T1,"PolyRatFunNorm");
+	return(retval);
 }
 
 /*
-  	#] PolyFunNorm : 
-  	#[ PolyFunAddRat :
+  	#] PolyRatFunNorm :
+  	#[ PolyRatFunAdd :
 */
 /**
- *	Gets two with PolyFuns with up to two arguments.
+ *	Gets two PolyFuns with up to two arguments.
  *	Adds the contents of the rational PolyFuns.
- *	Returns the new polyfun
+ *	Returns the new polyfun in the original value of AT.WorkPointer
+ *	which is also the return value of the routine.
  */
 
-WORD *PolyFunAddRat(PHEAD WORD *t1, WORD *t2)
+WORD *PolyRatFunAdd_OLD(PHEAD WORD *t1, WORD *t2)
 {
-	WORD *oldworkpointer = AT.WorkPointer, buf[9];
+	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *g1, *g2, *num1, *num2, *den1, *den2;
-	WORD *numn, *num3, *den3, *t, *p1, *r1, *r2, *m1, *m2, *tt;
+	WORD *numn, *num3, *den3, *t, *p1, *r1, *r2, *m1, *m2;
 	LONG size, newsize;
-	int narg1, narg2, i;
 /*
   	#[ Step 1: Get the (properly normalized) polynomials
 */
+#ifdef OLDPOLYRATFUNNORM
+	int narg1, narg2, i;
+	WORD *tt, buf[9];
 	AT.WorkPointer += FUNHEAD+2*ARGHEAD;
 	narg1 = 0; t = t1+FUNHEAD; tt = t1+t1[1];
 	while ( t < tt ) { narg1++; NEXTARG(t); }
@@ -1652,13 +1719,13 @@ skip2:;
 		AT.WorkPointer = p1;
 		return(oldworkpointer);
 /*
- 		#] 1,1 : 
+ 		#] 1,1 :
 */
 	}
 	else if ( narg1 == 2 && narg2 == 2 ) {	/* what we are here for */
-		num1 = PolyFunNorm(BHEAD t1,2);
+		num1 = PolyRatFunNorm(BHEAD t1,2);
 		den1 = num1; while ( *den1 ) den1 += *den1; den1++;
-		num2 = PolyFunNorm(BHEAD t2,2);
+		num2 = PolyRatFunNorm(BHEAD t2,2);
 		den2 = num2; while ( *den2 ) den2 += *den2; den2++;
 	}
 	else if ( narg1*narg2 == 2 ) {
@@ -1666,9 +1733,9 @@ skip2:;
 			i = narg1; narg1 = narg2; narg2 = i;
 			t = t1; t1 = t2; t2 = t;
 		}	/* Now we deal with narg1 = 2 and narg2 = 1 */
-		num1 = PolyFunNorm(BHEAD t1,2);
+		num1 = PolyRatFunNorm(BHEAD t1,2);
 		den1 = num1; while ( *den1 ) den1 += *den1; den1++;
-		num2 = PolyFunNorm(BHEAD t2,2);
+		num2 = PolyRatFunNorm(BHEAD t2,2);
 		den2 = num2; while ( *den2 ) den2 += *den2; den2++;
 	}
 	else {	/* This case we cannot handle */
@@ -1678,35 +1745,75 @@ skip2:;
 		Terminate(-1);
 		return(0);
 	}
+#else
 /*
-  	#] Step 1: 
+		When we use RedoPolyRatFun the function is in principle already
+		in good shape. There are even no short arguments.
+		Hence we can be very cursory. We should copy the arguments though
+		and for security sake (if we change plans in the future) we deal
+		with potentially short arguments. This is done in the routine
+		PolyRatFunTake
+*/
+	AT.WorkPointer += FUNHEAD+2*ARGHEAD;
+	num1 = PolyRatFunTake(BHEAD t1);
+	den1 = num1; while ( *den1 ) den1 += *den1; den1++;
+	num2 = PolyRatFunTake(BHEAD t2);
+	den2 = num2; while ( *den2 ) den2 += *den2; den2++;
+#endif
+/*
+  	#] Step 1:
   	#[ Step 2: Get g1 = GCD of the two denominators. r1 = den1/g1, r2 = den2/g1
 */
-	g1   = PolyGCD(BHEAD den1,den2);
+#ifndef OLDRATADD
+	g1   = PolyGCD2(BHEAD den1,den2);
 	r1   = PolyDiv0(BHEAD den1,g1);
 	r2   = PolyDiv0(BHEAD den2,g1);
 /*
-  	#] Step 2: 
+  	#] Step 2:
   	#[ Step 3: compute numn = r2*num1+r1*num2
 */
 	m1   = PolyMul(BHEAD num1,r2);
 	m2   = PolyMul(BHEAD num2,r1);
 	numn = PolyAdd(BHEAD m1,m2);
+	if ( numn[0] == 0 ) goto AnswerIsZero;
 /*
-  	#] Step 3: 
+  	#] Step 3:
   	#[ Step 4: compute g2 = gcd of numn and g1.
 */
-	g2   = PolyGCD(BHEAD numn,g1);
+	g2   = PolyGCD2(BHEAD numn,g1);
 /*
-  	#] Step 4: 
+  	#] Step 4:
   	#[ Step 5: output is num3 = numn/g2, den3 = r1*r2*(g1/g2)
 */
 	num3 = PolyDiv0(BHEAD numn,g2);
 	g1   = PolyDiv0(BHEAD g1,g2);
 	r1   = PolyMul(BHEAD r1,r2);
 	den3 = PolyMul(BHEAD r1,g1);
+
+	g1   = AT.WorkPointer;
+	den3 = PolyRatNorm(BHEAD num3,den3);
+	num3 = g1; g1 = den3;
+#else
+	m1 = PolyMul(BHEAD num1,den2);
+	m2 = PolyMul(BHEAD den1,num2);
+	numn = PolyAdd(BHEAD m1,m2);
+	if ( numn[0] == 0 ) goto AnswerIsZero;
+	g1 = PolyMul(BHEAD den1,den2);
+	num3 = AT.WorkPointer;
+	g1 = den3 = PolyRatNorm(BHEAD numn,g1);
+#endif
 /*
-  	#] Step 5: 
+		Normalize the sign. If the leading term in the denominator is
+		negative we flip everybodies sign
+*/
+		if ( den3[*den3-1] < 0 ) {
+			t = den3;
+			while ( *t ) { t += *t; t[-1] = -t[-1]; }
+			t = num3;
+			while ( *t ) { t += *t; t[-1] = -t[-1]; }
+		}
+/*
+  	#] Step 5:
   	#[ Step 6: put the new polyfun in the buffer.
 */
 	newsize = (g1-num3) + (AT.WorkPointer-den3) + FUNHEAD + 2*ARGHEAD - 2;
@@ -1738,13 +1845,268 @@ skip2:;
 	oldworkpointer[1] = p1 - oldworkpointer;
 	AT.WorkPointer = p1;
 /*
-  	#] Step 6: 
+  	#] Step 6:
 */
+/*
+	if ( PolyTestAdd(BHEAD t1,t2,oldworkpointer) ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Error in PolyRatFunAdd.");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(0);
+	}
+*/
+	return(oldworkpointer);
+AnswerIsZero:
+	p1 = oldworkpointer;
+	*p1++ = *t1;
+	*p1++ = FUNHEAD+4;
+	FILLFUN(p1)
+	*p1++ = -SNUMBER;
+	*p1++ = 0;
+	*p1++ = -SNUMBER;
+	*p1++ = 1;
 	return(oldworkpointer);
 }
 
 /*
-  	#] PolyFunAddRat : 
+  	#] PolyRatFunAdd :
+  	#[ PolyRatFunMul :
+*/
+/**
+ *	Looks for multiple occurrences of the PolyRatFun in the given term.
+ *	If it finds them it multiplies their contents. In the end there should
+ *	be at most a single PolyRatFun left.
+ *	Routine is called only when AR.PolyFunType == 2, hence when we have the
+ *	PolyRatFun.
+ */
+
+WORD PolyRatFunMul_OLD(PHEAD WORD *term)
+{
+	WORD *t, *tt, *t1, *t2, *t3, *tstop, *t1stop, *t2stop, *t1a, *t2a;
+	WORD narg1, narg2;
+	WORD *num1 = 0, *num2 = 0, *num3, *den1 = 0, *den2 = 0, *den3, *rem, *g1;
+	WORD *oldworkpointer = AT.WorkPointer;
+	int i;
+
+	for(;;) {
+		t1 = term + 1; tstop = term + *term; tstop -= ABS(tstop[-1]);
+tryothert1:;
+		while ( t1 < tstop ) {
+			if ( *t1 == AR.PolyFun ) break;
+			t1 += t1[1];
+		}
+		if ( t1 >= tstop ) break; /* No PolyRatFun at all */
+		narg1 = 0;
+		t1a = t1 + FUNHEAD; t1stop = t1 + t1[1];
+		while ( t1a < t1stop ) {
+			narg1++;
+			if ( narg1 == 1 ) num1 = t1a;
+			else              den1 = t1a;
+			if ( *t1a < 0 ) {
+				if ( *t1a != -SNUMBER && *t1a != -SYMBOL ) {
+					t1 = t1stop; goto tryothert1;
+				}
+				t1a += 2;
+			}
+			else t1a += *t1a;
+			if ( narg1 > 2 ) goto tryothert1;
+		}
+		if ( narg1 != 2 ) goto tryothert1;
+		t2 = t1 + t1[1];
+tryothert2:;
+		while ( t2 < tstop ) {
+			if ( *t2 == AR.PolyFun ) break;
+			t2 += t2[1];
+		}
+		if ( t2 >= tstop ) break; /* Only one PolyRatFun */
+		narg2 = 0;
+		t2a = t2 + FUNHEAD; t2stop = t2 + t2[1];
+		while ( t2a < t2stop ) {
+			narg2++;
+			if ( narg2 == 1 ) num2 = t2a;
+			else              den2 = t2a;
+			if ( *t2a < 0 ) {
+				if ( *t2a != -SNUMBER && *t2a != -SYMBOL ) {
+					t2 = t2stop; goto tryothert2;
+				}
+				t2a += 2;
+			}
+			else t2a += *t2a;
+			if ( narg2 > 2 ) { t2 = t2stop; goto tryothert2; }
+		}
+		if ( narg2 != 2 ) { t2 = t2stop; goto tryothert2; }
+		if ( AT.WorkPointer >= term && AT.WorkPointer < term+*term )
+			AT.WorkPointer = term + *term;
+/*
+		Now we seem to have two almost proper functions (the terms in the
+		general arguments could still be non-symbol like).
+		The algorithm is a bit like in MulRat.
+
+		First step: `Civilize the polynomials'
+*/
+		if ( *num1 < 0 ) {
+			if ( *num1 == -SNUMBER ) {
+				t1a = AT.WorkPointer;
+				*t1a++ = 4; *t1a++ = ABS(num1[1]); *t1a++ = 1;
+				*t1a++ = num1[1] < 0 ? -3: 3;
+			}
+			else {
+				t1a = AT.WorkPointer;
+				*t1a++ = 8; *t1a++ = SYMBOL; *t1a++ = 4; *t1a++ = num1[1];
+				*t1a++ = 1; *t1a++ = 1; *t1a++ = 1; *t1a++ = 3;
+			}
+		}
+		else {
+			i = *num1 - ARGHEAD; num1 += ARGHEAD;
+			t1a = AT.WorkPointer;
+			NCOPY(t1a,num1,i)
+		}
+		*t1a++ = 0;
+		num1 = AT.WorkPointer;
+		AT.WorkPointer = t1a;
+		if ( *den1 < 0 ) {
+			if ( *den1 == -SNUMBER ) {
+				t1a = AT.WorkPointer;
+				*t1a++ = 4; *t1a++ = ABS(den1[1]); *t1a++ = 1;
+				*t1a++ = den1[1] < 0 ? -3: 3;
+			}
+			else {
+				t1a = AT.WorkPointer;
+				*t1a++ = 8; *t1a++ = SYMBOL; *t1a++ = 4; *t1a++ = den1[1];
+				*t1a++ = 1; *t1a++ = 1; *t1a++ = 1; *t1a++ = 3;
+			}
+		}
+		else {
+			i = *den1 - ARGHEAD; den1 += ARGHEAD;
+			t1a = AT.WorkPointer;
+			NCOPY(t1a,den1,i)
+		}
+		*t1a++ = 0;
+		den1 = AT.WorkPointer;
+		AT.WorkPointer = t1a;
+		if ( *num2 < 0 ) {
+			if ( *num2 == -SNUMBER ) {
+				t2a = AT.WorkPointer;
+				*t2a++ = 4; *t2a++ = ABS(num2[1]); *t2a++ = 1;
+				*t2a++ = num2[1] < 0 ? -3: 3;
+			}
+			else {
+				t2a = AT.WorkPointer;
+				*t2a++ = 8; *t2a++ = SYMBOL; *t2a++ = 4; *t2a++ = num2[1];
+				*t2a++ = 1; *t2a++ = 1; *t2a++ = 1; *t2a++ = 3;
+			}
+		}
+		else {
+			i = *num2 - ARGHEAD; num2 += ARGHEAD;
+			t2a = AT.WorkPointer;
+			NCOPY(t2a,num2,i)
+		}
+		*t2a++ = 0;
+		num2 = AT.WorkPointer;
+		AT.WorkPointer = t2a;
+		if ( *den2 < 0 ) {
+			if ( *den2 == -SNUMBER ) {
+				t2a = AT.WorkPointer;
+				*t2a++ = 4; *t2a++ = ABS(den2[1]); *t2a++ = 1;
+				*t2a++ = den2[1] < 0 ? -3: 3;
+			}
+			else {
+				t2a = AT.WorkPointer;
+				*t2a++ = 8; *t2a++ = SYMBOL; *t2a++ = 4; *t2a++ = den2[1];
+				*t2a++ = 1; *t2a++ = 1; *t2a++ = 1; *t2a++ = 3;
+			}
+		}
+		else {
+			i = *den2 - ARGHEAD; den2 += ARGHEAD;
+			t2a = AT.WorkPointer;
+			NCOPY(t2a,den2,i)
+		}
+		*t2a++ = 0;
+		den2 = AT.WorkPointer;
+		AT.WorkPointer = t2a;
+		PolyOrder(BHEAD num1);
+		PolyOrder(BHEAD num2);
+		PolyOrder(BHEAD den1);
+		PolyOrder(BHEAD den2);
+/*
+		Now we can call the relevant routines
+*/
+		g1   = PolyGCD2(BHEAD num1,den2);
+		num1 = PolyDiv0(BHEAD num1,g1);
+		den2 = PolyDiv0(BHEAD den2,g1);
+
+		g1   = PolyGCD2(BHEAD num2,den1);
+		num2 = PolyDiv0(BHEAD num2,g1);
+		den1 = PolyDiv0(BHEAD den1,g1);
+
+		num3 = PolyMul(BHEAD num1,num2);
+		den3 = PolyMul(BHEAD den1,den2);
+/*
+		g1   = AT.WorkPointer;
+		den3 = PolyRatNorm(BHEAD num3,den3);
+		num3 = g1;
+*/
+/*
+		Normalize the sign. If the leading term in the denominator is
+		negative we flip everybodies sign
+*/
+		if ( den3[*den3-1] < 0 ) {
+			t = den3;
+			while ( *t ) { t += *t; t[-1] = -t[-1]; }
+			t = num3;
+			while ( *t ) { t += *t; t[-1] = -t[-1]; }
+		}
+/*
+		Now the packing operation
+		First move the remaining pieces of the term out of the way
+*/
+		t = rem = AT.WorkPointer;
+		tt = t1stop;
+		while ( tt < t2 ) *t++ = *tt++;
+		tt = t2stop; t3 = term + *term;
+		while ( tt < t3 ) *t++ = *tt++;
+		AT.WorkPointer = t;
+/*
+		Move the first argument in its place
+*/
+		t = t1+FUNHEAD;
+		t3 = t;
+		*t++ = 0; *t++ = 0; FILLARG(t)
+		tt = num3; i = den3 - num3 -1; NCOPY(t,tt,i)
+		*t3 = t - t3;
+		if ( ToFast(t3,t3) ) {
+			if ( *t3 <= -FUNCTION ) t = t3+1;
+			else t = t3+2;
+		}
+/*
+		Move the second argument in its place
+*/
+		t3 = t;
+		*t++ = 0; *t++ = 0; FILLARG(t)
+		tt = den3; i = rem - den3 -1; NCOPY(t,tt,i)
+		*t3 = t - t3;
+		if ( ToFast(t3,t3) ) {
+			if ( *t3 <= -FUNCTION ) t = t3+1;
+			else t = t3+2;
+		}
+		t1[1] = t - t1;
+		t1[2] |= CLEANPRF;
+/*
+		Move the tail in its place
+*/
+		tt = rem; t3 = AT.WorkPointer;
+		while ( tt < t3 ) *t++ = *tt++;
+		*term = t - term;
+		AT.WorkPointer = oldworkpointer;
+		if ( AT.WorkPointer > term && AT.WorkPointer < t ) AT.WorkPointer = t;
+	}
+
+	return(0);
+}
+
+/*
+  	#] PolyRatFunMul :
   	#[ PolyRemoveContent :
 */
 /**
@@ -1802,6 +2164,17 @@ WORD *PolyRemoveContent(PHEAD WORD *Poly, WORD par)
 	}
 	else if ( par == 1 || par == 2 ) {
 /*
+		First the special case that there is only a single term
+*/
+		if ( Poly[Poly[0]] == 0 ) {
+			output = AT.WorkPointer; p = Poly; i = Poly[0];
+			NCOPY(output,p,i);
+			*output++ = 0; t = output;
+			*t++ = 4; *t++ = 1; *t++ = 1; *t++ = 3; *t++ = 0;
+			AT.WorkPointer = t;
+			return(output);
+		}
+/*
 		We need the gcd of the numerators and the lcm of the denominators.
 		Then we have to multiply by lcm/gcd
 		This code is similar to the code of the MakeInteger command and we
@@ -1847,8 +2220,8 @@ WORD *PolyRemoveContent(PHEAD WORD *Poly, WORD par)
 							if ( p1[j] == buffer[i] ) {
 								if ( buffer[j+1] > p1[i+1] ) {
 									buffer[j+1] = p1[i+1];
-									goto nexti;
 								}
+								goto nexti;
 							}
 						}
 						b = buffer+i;
@@ -1877,7 +2250,7 @@ nexti:;
 			}
 			if ( densize > 1 || den[0] != 1 ) {
 				if ( LCMsize == 1 && LCMbuffer[0] == 1 ) {
-					LCMsize = densize;
+					LCMsize = ABS(densize);
 					for ( i = 0; i < LCMsize; i++ ) LCMbuffer[i] = den[i];
 				}
 				else {
@@ -1907,7 +2280,7 @@ nexti:;
 
 		First the content
 */
-		out = output;
+		out = output + 1;
 		if ( LCMsize > GCDsize ) {
 			for ( i = GCDsize; i < LCMsize; i++ ) GCDbuffer[i] = 0;
 			j = LCMsize;
@@ -1917,12 +2290,14 @@ nexti:;
 			j = GCDsize;
 		}
 		else j = GCDsize;
-		*out++ = 2*j+2;
+		if ( par == 2 && buffer[1] > 2 ) {
+			for ( i = 0; i < buffer[1]; i++ ) *out++ = buffer[i];
+		}
 		for ( i = 0; i < j; i++ ) *out++ = GCDbuffer[i];
 		for ( i = 0; i < j; i++ ) *out++ = LCMbuffer[i];
 		*out = 2*j+1;
 		if ( sign < 0 ) *out = -*out;
-		out++; *out++ = 0; output = out;
+		out++; *output = out - output; *out++ = 0; output = out;
 /*
 		Next the polynomial
 */
@@ -1937,11 +2312,11 @@ nexti:;
 			if ( par == 2 && buffer[1] > 2 ) {
 				*out++ = *t++;
 				p1 = t; *out++ = SYMBOL; out++;
-				for ( i = 2; i < t[1]; i++ ) {
-					for ( j = 2; j < buffer[1]; j++ ) {
+				for ( i = 2; i < t[1]; i += 2 ) {
+					for ( j = 2; j < buffer[1]; j += 2 ) {
 						if ( buffer[j] == t[i] ) {
 							if ( t[i+1] > buffer[j+1] ) {
-								*out++ = t[i]; *out++ = t[i+1]-buffer[i+1];
+								*out++ = t[i]; *out++ = t[i+1]-buffer[j+1];
 							}
 							goto nextsymbol;
 						}
@@ -1991,15 +2366,17 @@ calledfrom:
 }
 
 /*
-  	#] PolyRemoveContent : 
-  	#[ PolyGCD :
+  	#] PolyRemoveContent :
+  	#[ PolyGCD_OLD :
 */
 /**
  *	Calculates the GCD of two polynomials.
  *	There can be various strategies for such calculations.
+ *
+ *  [JK, 03-03-2011] replaced by PolyGCD from "polygcd.cc"
  */
 
-WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
+WORD *PolyGCD_OLD(PHEAD WORD *Poly1, WORD *Poly2)
 {
 #ifdef GCDALGORITHM1
 /*
@@ -2018,7 +2395,7 @@ WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 		7: free(n1), n1'=n2', n2'=n3' go to 5
 		Note the abundant recursions here.
 
- 		#] Algorithm: 
+ 		#] Algorithm:
  		#[ Declarations:
 */
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -2029,7 +2406,7 @@ WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD pow, numsym1, numsym2, x;
 	VOID *oldcompare = AR.CompareRoutine;
 /*
- 		#] Declarations: 
+ 		#] Declarations:
  		#[ Special cases:
 */
 	if ( *Poly1 == 0 || ( Poly1[*Poly1] == 0 && ABS(Poly1[*Poly1-1]) == *Poly1-1 ) )
@@ -2037,7 +2414,7 @@ WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 	if ( *Poly2 == 0 || ( Poly2[*Poly2] == 0 && ABS(Poly2[*Poly2-1]) == *Poly2-1 ) )
 		goto gcdisone;
 /*
- 		#] Special cases: 
+ 		#] Special cases:
  		#[ Determine the order of the variables:
 */
 
@@ -2057,7 +2434,7 @@ gcdisone:
 		return(oldworkpointer);
 	}
 /*
- 		#] Determine the order of the variables: 
+ 		#] Determine the order of the variables:
  		#[ Copy the polynomials and renumber them:
 
 	Note that we have to copy the terms before renumbering or we might
@@ -2109,7 +2486,7 @@ gcdisone:
 		x = numsym1; numsym1 = numsym2; numsym2 = x;
 	}
 /*
- 		#] Copy the polynomials and renumber them: 
+ 		#] Copy the polynomials and renumber them:
  		#[ Determine gcd's of the coefficients of the first variable:
 
 	First copy the part of poly1 with the highest power to g1.
@@ -2122,7 +2499,7 @@ gcdisone:
 	n1p = PolyTake(poly1,numsym1);
 	g2 = AT.WorkPointer;
 	n2p = PolyTake(poly2,numsym1);
-	ga = PolyGCD(g1,g2);
+	ga = PolyGCD2(g1,g2);
 
 	size = AT.WorkPointer - ga;
 	size1 = n1p - g1;
@@ -2152,7 +2529,7 @@ gcdisone:
 		AT.WorkPointer = p1;
 	}
 /*
- 		#] Determine gcd's of the coefficients of the first variable: 
+ 		#] Determine gcd's of the coefficients of the first variable:
  		#[ The loop:
 */
 	for(;;) {
@@ -2176,7 +2553,7 @@ gcdisone:
 		POLYCOPY(n2p,n3p);
 	}
 /*
- 		#] The loop: 
+ 		#] The loop:
  		#[ Renumber the gcd back and copy it into place:
 */
 finishup:
@@ -2205,12 +2582,12 @@ finishup:
 	p1 = oldworkpointer; while ( *p1 ) p1 += *p1; p1++; AT.WorkPointer = p1;
 	return(oldworkpointer);
 /*
- 		#] Renumber the gcd back and copy it into place: 
+ 		#] Renumber the gcd back and copy it into place:
 */
 calledfrom:
 	AT.WorkPointer = oldworkpointer;
 	LOCK(ErrorMessageLock);
-	MesCall("PolyGCD");
+	MesCall("PolyGCD_OLD");
 	UNLOCK(ErrorMessageLock);
 	return(0);
 #else
@@ -2218,15 +2595,17 @@ calledfrom:
 	This algorithm works only for univariate polynomials.
 	It should be replaced by a faster one sooner or later.
 */
-	if ( AM.polygcdchoice <= 1 ) return(PolyGCD1a(BHEAD Poly1,Poly2));
-	else if ( AM.polygcdchoice == 2 ) return(PolyGCD1b(BHEAD Poly1,Poly2));
-/*	else if ( AM.polygcdchoice >= 4 ) return(PolyGCD1d(BHEAD Poly1,Poly2)); */
-	else return(PolyGCD1c(BHEAD Poly1,Poly2));
+	WORD *neww;
+	if ( AM.polygcdchoice <= 1 ) neww = PolyGCD1a(BHEAD Poly1,Poly2);
+	else if ( AM.polygcdchoice == 2 ) neww = PolyGCD1b(BHEAD Poly1,Poly2);
+/*	else if ( AM.polygcdchoice >= 4 ) neww = PolyGCD1d(BHEAD Poly1,Poly2); */
+	else neww = PolyGCD1c(BHEAD Poly1,Poly2);
+	return(neww);
 #endif
 }
 
 /*
-  	#] PolyGCD : 
+  	#] PolyGCD_OLD :
   	#[ PolyGetRenumbering :
 */
 /**
@@ -2361,7 +2740,7 @@ nexti2:;
 }
 
 /*
-  	#] PolyGetRenumbering : 
+  	#] PolyGetRenumbering :
   	#[ PolyTake :
 */
 /**
@@ -2457,7 +2836,7 @@ simplecase:
 		}
 		*p2++ = 0;
 		AT.WorkPointer = p2;
-		g1p = PolyGCD(BHEAD n1,g1);
+		g1p = PolyGCD2(BHEAD n1,g1);
 		p3 = g1p; while ( *p3 ) p3 += *p3; p3++; size = p3 - g1p;
 		p2 = g1; p3 = g1p; NCOPY(p2,p3,size);
 		n1 = p2;
@@ -2470,7 +2849,7 @@ simplecase:
 			g1[0] = 4; g1[1] = 1; g1[2] = 1; g1[3] = 3; g1[4] = 0; p2 = g1+5;
 		}
 		else {
-			g1p = PolyGCD(BHEAD p1,g1);
+			g1p = PolyGCD2(BHEAD p1,g1);
 			p3 = g1p; while ( *p3 ) p3 += *p3; p3++; size = p3 - g1p;
 			p2 = g1; p3 = g1p; NCOPY(p2,p3,size);
 		}
@@ -2486,7 +2865,7 @@ simplecase:
 }
 
 /*
-  	#] PolyTake : 
+  	#] PolyTake :
   	#[ GetNegPow :
 */
 /**
@@ -2558,7 +2937,7 @@ WORD *GetNegPow(PHEAD WORD *Poly)
 }
 
 /*
-  	#] GetNegPow : 
+  	#] GetNegPow :
   	#[ PolyNormPoly :
 */
 /**
@@ -2593,7 +2972,7 @@ WORD *PolyNormPoly(PHEAD WORD *Poly)
 }
 
 /*
-  	#] PolyNormPoly : 
+  	#] PolyNormPoly :
   	#[ PolyGCD1 :
  		#[ Generic routine :
 */
@@ -2650,7 +3029,7 @@ WORD *PolyGCD1(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
- 		#] Generic routine : 
+ 		#] Generic routine :
 
  		#[ Algorithm 1 : The modular method
 */
@@ -2689,7 +3068,7 @@ WORD *PolyGCD1a(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD *oldworkpointer = AT.WorkPointer, *t, *p;
 	WORD m1, m2, numprime, usedprime, prime, aprime[1];
 	WORD *coef,ncoef,*gcdcoef,ngcdcoef,lgcd,*term;
-	WORD *poly1, *poly2, *poly3, *poly4, size1, size2;
+	WORD *poly1, *poly2, *poly3, *poly4, *poly5, size1, size2;
 	WORD *poly1a, *poly2a, *poly1arem /*, *poly2arem */;
 	WORD *content1, *content2, numsize, gcdpow;
 	LONG size;
@@ -2698,6 +3077,7 @@ WORD *PolyGCD1a(PHEAD WORD *Poly1, WORD *Poly2)
   	#[ Step C1 :
 */
 	UWORD *POscratg = (UWORD *)(TermMalloc("PolyGCD1a"));
+	WORD *POscrath = (WORD *)(TermMalloc("PolyGCD1a"));
 	WORD nPOscrata;
 restart:;
 /*
@@ -2722,8 +3102,9 @@ restart:;
 
 */
 	AccumTermGCD(content1,content2);
+	for ( i = 0; i <= content1[0]; i++ ) POscrath[i] = content1[i];
 
-	if ( ABS(Poly1[*Poly1-1]) == *Poly1-1 || ABS(Poly1[*Poly2-1]) == *Poly2-1 ) {
+	if ( ABS(poly1[*poly1-1]) == *poly1-1 || ABS(poly2[*poly2-1]) == *poly2-1 ) {
 /*
 		The answer is the GCD of the lead terms
 */
@@ -2734,7 +3115,7 @@ restart:;
 */
 	if ( poly1[4] < poly2[4] ) { p = poly1; poly1 = poly2; poly2 = p; }
 /*
-  	#] Step C1 : 
+  	#] Step C1 :
 
 	Put the GCD of the leading coefficients in gcdcoef
 */
@@ -2777,7 +3158,7 @@ restart:;
 			Relative prime. Now we either return 1 when content1 doesn't
 			contains symbols or we have to return content1
 */
-relativeprime:
+relativeprime:;
 			if ( content1[*content1-1] == *content1-1 ) {
 				oldworkpointer[0] = 4;
 				oldworkpointer[1] = 1;
@@ -2788,10 +3169,10 @@ relativeprime:
 			}
 			else {
 				if ( oldworkpointer != content1 ) {
-					i = *content1; t = oldworkpointer; p = content1;
+					i = *content1 + 1; t = oldworkpointer; p = content1;
 					NCOPY(t,p,i);
 				}
-				AT.WorkPointer = oldworkpointer + *oldworkpointer;
+				AT.WorkPointer = oldworkpointer + *oldworkpointer + 1;
 			}
 			if ( AN.getdivgcd ) {
 				AN.poly1a = 0;
@@ -2821,18 +3202,29 @@ relativeprime:
 /*
 		Now we test whether poly3 divides poly1 and poly2. If so, it is
 		the GCD. If not we have to continue with the next prime.
+		First however we have to get the content away from poly3 (!)
 */
-		poly1a = PolyDivI(BHEAD poly1,poly3);
+		poly5 = PolyRemoveContent(BHEAD poly3,1);
+#ifdef OLDRELIABLEBUTSLOW
+		poly1a = AT.WorkPointer;
+		poly1arem = PolyDiv(BHEAD poly1,poly5);
+		if ( *poly1arem == 0 ) {
+			poly2a = AT.WorkPointer;
+			poly1arem = PolyDiv(BHEAD poly2,poly5);
+			if ( *poly1arem == 0 ) {
+#else
+		poly1a = PolyDivI(BHEAD poly1,poly5);
 		if ( *poly1a != 0 ) {
-			poly2a = PolyDivI(BHEAD poly2,poly3);
-			if ( *poly2a != 0 ) {	/* We got it!!!! */
+			poly2a = PolyDivI(BHEAD poly2,poly5);
+			if ( *poly2a != 0 ) { /* We got it!!!! */
+#endif
 /*
-				To be really precise we should multiply poly3 by content1
+				To be really precise we should multiply poly3a by content1
 				In that case poly1a,poly2a should be divided by content1
 */
 				if ( content1[0] != 4 || content1[1] != 1 ||
 				     content1[2] != 1 || content1[3] != 3 ) {
-					poly3 = PolyMul0(BHEAD poly3,content1);
+					poly3 = PolyMul0(BHEAD poly5,content1);
 					if ( AN.getdivgcd ) {
 						size1 = ABS(content1[*content1-1]); size1 = (size1-1)/2;
 						for ( i = 1; i <= size1; i++ ) {
@@ -2844,8 +3236,8 @@ relativeprime:
 					}
 				}
 				t = oldworkpointer;
-				p = poly3; while ( *p ) p += *p; size = p - poly3 + 1;
-				p = poly3; NCOPY(t,p,size);
+				p = poly5; while ( *p ) p += *p; size = p - poly5 + 1;
+				p = poly5; NCOPY(t,p,size);
 				if ( AN.getdivgcd ) {
 /*
 					When normalizing a fraction we don't want to do the
@@ -2948,19 +3340,34 @@ multipleofpoly2:
 	}
 	AT.WorkPointer = t;
 normalreturn:
+	if ( oldworkpointer[0] == 4 && oldworkpointer[1] == 1
+	 && oldworkpointer[2] == 1 && oldworkpointer[3] == 3
+	 && oldworkpointer[4] == 0 ) {
+		if ( POscrath[0] != 4 || POscrath[1] != 1
+		 || POscrath[2] != 1 || POscrath[3] != 3 ) {
+			for ( i = 0; i <= POscrath[0]; i++ ) oldworkpointer[i] = POscrath[i]; 
+			AT.WorkPointer = oldworkpointer + *oldworkpointer + 1;
+			if ( AN.getdivgcd ) {
+				PolyDiv(BHEAD Poly2,POscrath);
+				PolyDiv(BHEAD Poly1,POscrath);
+			}
+		}
+	}
+	TermFree(POscrath,"PolyGCD1a");
 	TermFree(POscratg,"PolyGCD1a");
 	return(oldworkpointer);
 calledfrom:;
 	LOCK(ErrorMessageLock);
 	MesCall("PolyGCD1a");
 	UNLOCK(ErrorMessageLock);
+	TermFree(POscrath,"PolyGCD1a");
 	TermFree(POscratg,"PolyGCD1a");
 	Terminate(-1);
 	return(0);
 }
 
 /*
- 		#] Algorithm 1 : 
+ 		#] Algorithm 1 :
  		#[ Algorithm 2 : The classical method
 */
 /**
@@ -3056,7 +3463,7 @@ valueisone:
 }
 
 /* 
- 		#] Algorithm 2 : 
+ 		#] Algorithm 2 :
 
  		#[ Algorithm 3 : The subresultant method
 */
@@ -3126,7 +3533,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 	POscratg[0] = 1; sizeg = 1;
 	POscrath[0] = 1; sizeh = 1;
 /*
-  	#] Step C1 : 
+  	#] Step C1 :
 
 	And now the loop
 */
@@ -3162,7 +3569,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			goto finished;
 		}
 /*
- 		#] Step C2 : 
+ 		#] Step C2 :
  		#[ Step C3 :
 
 		Put poly2 where once was poly1
@@ -3296,7 +3703,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
             counter = 0;
         }
 /*
- 		#] Step C3 : 
+ 		#] Step C3 :
 */
 	}
 finished:
@@ -3319,8 +3726,8 @@ calledfrom:
 }
 
 /*
- 		#] Algorithm 3 : 
-  	#] PolyGCD1 : 
+ 		#] Algorithm 3 :
+  	#] PolyGCD1 :
   	#[ PolyDiv1 :
 */
 /**
@@ -3575,7 +3982,7 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyDiv1 : 
+  	#] PolyDiv1 :
 
   	#[ PolyPseudoRem1 :
 */
@@ -3660,13 +4067,13 @@ WORD *PolyPseudoRem1(PHEAD WORD *Poly1, WORD *Poly2)
 	}
 	AT.WorkPointer += m2+1;
 /*
-  	#] Step 0: Make an index of coefficients of Poly2 
+  	#] Step 0: Make an index of coefficients of Poly2
   	#[ Copy Poly1 :
 */
 	POLYCOPY(polyin,Poly1)
 	Poly1 = polyin;
 /*
-  	#] Copy Poly1 : 
+  	#] Copy Poly1 :
 
 		for ( k = m1-m2; k >= 0; k-- ) {
 			q(k) = polyin(m2+k)*Poly2(m2)^k
@@ -3788,223 +4195,7 @@ calledfrom:
 }
 
 /*
-  	#] PolyPseudoRem1 : 
-  	#[ PolyRatFunMul :
-*/
-/**
- *	Looks for multiple occurrences of the PolyRatFun in the given term.
- *	If it finds them it multiplies their contents. In the end there should
- *	be at most a single PolyRatFun left.
- *	Routine is called only when AR.PolyFunType == 2, hence when we have the
- *	PolyRatFun.
- */
-
-WORD PolyRatFunMul(PHEAD WORD *term)
-{
-	WORD *t, *tt, *t1, *t2, *t3, *tstop, *t1stop, *t2stop, *t1a, *t2a;
-	WORD narg1, narg2;
-	WORD *num1 = 0, *num2 = 0, *num3, *den1 = 0, *den2 = 0, *den3, *rem, *g1, *g2;
-	WORD *oldworkpointer = AT.WorkPointer;
-	int i;
-
-	for(;;) {
-		t1 = term + 1; tstop = term + *term; tstop -= ABS(tstop[-1]);
-tryothert1:;
-		while ( t1 < tstop ) {
-			if ( *t1 == AR.PolyFun ) break;
-			t1 += t1[1];
-		}
-		if ( t1 >= tstop ) break; /* No PolyRatFun at all */
-		narg1 = 0;
-		t1a = t1 + FUNHEAD; t1stop = t1 + t1[1];
-		while ( t1a < t1stop ) {
-			narg1++;
-			if ( narg1 == 1 ) num1 = t1a;
-			else              den1 = t1a;
-			if ( *t1a < 0 ) {
-				if ( *t1a <= -FUNCTION || ( *t1a != -SNUMBER && *t1a != -SYMBOL ) ) {
-					t1 = t1stop; goto tryothert1;
-				}
-				t1a += 2;
-			}
-			else t1a += *t1a;
-			if ( narg1 > 2 ) goto tryothert1;
-		}
-		if ( narg1 != 2 ) goto tryothert1;
-tryothert2:;
-		t2 = t1 + t1[1];
-		while ( t2 < tstop ) {
-			if ( *t2 == AR.PolyFun ) break;
-			t2 += t2[1];
-		}
-		if ( t2 >= tstop ) break; /* Only one PolyRatFun */
-		narg2 = 0;
-		t2a = t2 + FUNHEAD; t2stop = t2 + t2[1];
-		while ( t2a < t2stop ) {
-			narg2++;
-			if ( narg2 == 1 ) num2 = t2a;
-			else              den2 = t2a;
-			if ( *t2a < 0 ) {
-				if ( *t2a <= -FUNCTION || ( *t2a != -SNUMBER && *t2a != -SYMBOL ) ) {
-					t2 = t2stop; goto tryothert2;
-				}
-				t2a += 2;
-			}
-			else t2a += *t2a;
-			if ( narg2 > 2 ) goto tryothert2;
-		}
-		if ( narg2 != 2 ) goto tryothert2;
-		if ( AT.WorkPointer >= term && AT.WorkPointer < term+*term )
-			AT.WorkPointer = term + *term;
-/*
-		Now we seem to have two almost proper functions (the terms in the
-		general arguments could still be non-symbol like).
-		The algorithm is a bit like in MulRat.
-
-		First step: `Civilize the polynomials'
-*/
-		if ( *num1 < 0 ) {
-			if ( *num1 == -SNUMBER ) {
-				t1a = AT.WorkPointer;
-				*t1a++ = 4; *t1a++ = ABS(num1[1]); *t1a++ = 1;
-				*t1a++ = num1[1] < 0 ? -3: 3;
-			}
-			else {
-				t1a = AT.WorkPointer;
-				*t1a++ = 8; *t1a++ = SYMBOL; *t1a++ = 4; *t1a++ = num1[1];
-				*t1a++ = 1; *t1a++ = 1; *t1a++ = 1; *t1a++ = 3;
-			}
-		}
-		else {
-			i = *num1 - ARGHEAD; num1 += 2;
-			t1a = AT.WorkPointer;
-			NCOPY(t1a,num1,i)
-		}
-		*t1a++ = 0;
-		num1 = AT.WorkPointer;
-		AT.WorkPointer = t1a;
-		if ( *den1 < 0 ) {
-			if ( *den1 == -SNUMBER ) {
-				t1a = AT.WorkPointer;
-				*t1a++ = 4; *t1a++ = ABS(den1[1]); *t1a++ = 1;
-				*t1a++ = den1[1] < 0 ? -3: 3;
-			}
-			else {
-				t1a = AT.WorkPointer;
-				*t1a++ = 8; *t1a++ = SYMBOL; *t1a++ = 4; *t1a++ = den1[1];
-				*t1a++ = 1; *t1a++ = 1; *t1a++ = 1; *t1a++ = 3;
-			}
-		}
-		else {
-			i = *den1 - ARGHEAD; den1 += 2;
-			t1a = AT.WorkPointer;
-			NCOPY(t1a,den1,i)
-		}
-		*t1a++ = 0;
-		den1 = AT.WorkPointer;
-		AT.WorkPointer = t1a;
-		if ( *num2 < 0 ) {
-			if ( *num2 == -SNUMBER ) {
-				t2a = AT.WorkPointer;
-				*t2a++ = 4; *t2a++ = ABS(num2[1]); *t2a++ = 1;
-				*t2a++ = num2[1] < 0 ? -3: 3;
-			}
-			else {
-				t2a = AT.WorkPointer;
-				*t2a++ = 8; *t2a++ = SYMBOL; *t2a++ = 4; *t2a++ = num2[1];
-				*t2a++ = 1; *t2a++ = 1; *t2a++ = 1; *t2a++ = 3;
-			}
-		}
-		else {
-			i = *num2 - ARGHEAD; num2 += 2;
-			t2a = AT.WorkPointer;
-			NCOPY(t2a,num2,i)
-		}
-		*t2a++ = 0;
-		num2 = AT.WorkPointer;
-		AT.WorkPointer = t2a;
-		if ( *den2 < 0 ) {
-			if ( *den2 == -SNUMBER ) {
-				t2a = AT.WorkPointer;
-				*t2a++ = 4; *t2a++ = ABS(den2[1]); *t2a++ = 1;
-				*t2a++ = den2[1] < 0 ? -3: 3;
-			}
-			else {
-				t2a = AT.WorkPointer;
-				*t2a++ = 8; *t2a++ = SYMBOL; *t2a++ = 4; *t2a++ = den2[1];
-				*t2a++ = 1; *t2a++ = 1; *t2a++ = 1; *t2a++ = 3;
-			}
-		}
-		else {
-			i = *den2 - ARGHEAD; den2 += 2;
-			t2a = AT.WorkPointer;
-			NCOPY(t2a,den2,i)
-		}
-		*t2a++ = 0;
-		den2 = AT.WorkPointer;
-		AT.WorkPointer = t2a;
-/*
-		Now we can call the relevant routines
-*/
-		g1 = PolyGCD(BHEAD num1,den2);
-		num1 = PolyDiv0(BHEAD num1,g1);
-		den2 = PolyDiv0(BHEAD den2,g1);
-		g2 = PolyGCD(BHEAD num2,den1);
-		num2 = PolyDiv0(BHEAD num2,g2);
-		den1 = PolyDiv0(BHEAD den1,g2);
-		num3 = PolyMul(BHEAD num1,num2);
-		den3 = PolyMul(BHEAD den1,den2);
-/*
-		Now the packing operation
-		First move the remaining pieces of the term out of the way
-*/
-		t = rem = AT.WorkPointer;
-		tt = t1stop;
-		while ( tt < t2 ) *t++ = *tt++;
-		tt = t2stop; t3 = term + *term;
-		while ( tt < t3 ) *t++ = *tt++;
-		AT.WorkPointer = t;
-/*
-		Move the first argument in its place
-*/
-		t = t1+FUNHEAD;
-		t3 = t;
-		*t++ = 0; *t++ = 0; FILLARG(t)
-		tt = num3; i = den3 - num3 -1; NCOPY(t,tt,i)
-		if ( ToFast(t3,t3) ) {
-			if ( *t3 <= -FUNCTION ) t = t3+1;
-			else t = t3+2;
-		}
-		else {
-			*t3 = t - t3;
-		}
-/*
-		Move the second argument in its place
-*/
-		t3 = t;
-		*t++ = 0; *t++ = 0; FILLARG(t)
-		tt = den3; i = rem - den3 -1; NCOPY(t,tt,i)
-		if ( ToFast(t3,t3) ) {
-			if ( *t3 <= -FUNCTION ) t = t3+1;
-			else t = t3+2;
-		}
-		else {
-			*t3 = t - t3;
-		}
-		t1[1] = t - t1;
-/*
-		Move the tail in its place
-*/
-		tt = rem; t3 = AT.WorkPointer;
-		while ( tt < t3 ) *t++ = *tt++;
-		*term = t - term;
-		AT.WorkPointer = oldworkpointer;
-	}
-	return(0);
-}
-
-/*
-  	#] PolyRatFunMul : 
+  	#] PolyPseudoRem1 :
   	#[ InvertModular :
 */
 /**
@@ -4036,7 +4227,7 @@ WORD InvertModular(WORD xx, WORD m)
 	return((WORD)a2);
 }
 /*
-  	#] InvertModular : 
+  	#] InvertModular :
 
   	#[ InvertLongModular :
 */
@@ -4120,7 +4311,7 @@ WORD InvertLongModular(PHEAD UWORD *a, WORD na, WORD m, UWORD *b, WORD *nb)
 }
 
 /*
-  	#] InvertLongModular : 
+  	#] InvertLongModular :
   	#[ PolyModGCD :
 */
 /**
@@ -4165,7 +4356,9 @@ relativeprime:
 			  }
 			  if ( r2 != 1 ) {
 				for ( pow = 0; pow < delta; pow++ ) {
-					Poly1->coefs[pow] = (WORD)((Poly1->coefs[pow]*r2)%prime);
+					x = (WORD)((Poly1->coefs[pow]*r2)%prime);
+					if ( x < 0 ) x += prime;
+					Poly1->coefs[pow] = x;
 				}
 			  }
 			}
@@ -4190,7 +4383,7 @@ relativeprime:
 }
 
 /*
-  	#] PolyModGCD : 
+  	#] PolyModGCD :
   	#[ PolyConvertToModulus :
 */
 /**
@@ -4225,7 +4418,7 @@ int PolyConvertToModulus(WORD *PolyIn, POLYMOD *PolyOut, WORD prime)
 }
 
 /*
-  	#] PolyConvertToModulus : 
+  	#] PolyConvertToModulus :
   	#[ PolyConvertFromModulus :
 */
 /**
@@ -4277,7 +4470,7 @@ WORD *PolyConvertFromModulus(PHEAD POLYMOD *PolyIn, WORD lgcd)
 }
 
 /*
-  	#] PolyConvertFromModulus : 
+  	#] PolyConvertFromModulus :
 
   	#[ PolyChineseRemainder :
 */
@@ -4447,7 +4640,7 @@ calledfrom:;
 }
 
 /*
-  	#] PolyChineseRemainder : 
+  	#] PolyChineseRemainder :
   	#[ PolyHenselUni :
 */
 /**
@@ -4593,7 +4786,7 @@ WORD *PolyHenselUni(PHEAD WORD *Prod, POLYMOD *Poly11, POLYMOD *Poly21)
 #endif
 
 /*
-  	#] PolyHenselUni : 
+  	#] PolyHenselUni :
   	#[ NextPrime :
 */
 /**
@@ -4654,7 +4847,7 @@ nexti:;
 }
  
 /*
-  	#] NextPrime : 
+  	#] NextPrime :
   	#[ ModShortPrime :
 */
 /**
@@ -4672,7 +4865,7 @@ WORD ModShortPrime(UWORD *a, WORD na, WORD x)
 }
 
 /*
-  	#] ModShortPrime : 
+  	#] ModShortPrime :
   	#[ AllocPolyModCoefs :
 */
 /**
@@ -4709,7 +4902,7 @@ int AllocPolyModCoefs(POLYMOD *polymod, WORD size)
 }
 
 /*
-  	#] AllocPolyModCoefs : 
+  	#] AllocPolyModCoefs :
   	#[ AccumTermGCD :
 */
 /**
@@ -4774,11 +4967,12 @@ nexti:;
 	if ( size1 < 0 && size2 < 0 ) {
 		term1[*term1-1] = -term1[*term1-1];
 	}
+	term1[*term1] = 0;
 	return(0);
 }
 
 /*
-  	#] AccumTermGCD : 
+  	#] AccumTermGCD :
   	#[ PolyTakeSqrt :
 */
 /**
@@ -4924,7 +5118,7 @@ noroot:;
 }
 
 /*
-  	#] PolyTakeSqrt : 
+  	#] PolyTakeSqrt :
   	#[ PolyTakeRoot :
 */
 /**
@@ -5088,7 +5282,7 @@ noroot:;
 }
 
 /*
-  	#] PolyTakeRoot : 
+  	#] PolyTakeRoot :
   	#[ PolyMulti :
  		#[ PolyInterpolation :
 */
@@ -5152,7 +5346,7 @@ WORD *PolyInterpolation(PHEAD WORD *Poly1, WORD *Poly2, WORD numsym)
 }
 #endif
 /*
- 		#] PolyInterpolation : 
+ 		#] PolyInterpolation :
  		#[ PolySubs :
 */
 /**
@@ -5425,7 +5619,7 @@ calledfrom:;
 }
 
 /*
- 		#] PolySubs : 
+ 		#] PolySubs :
  		#[ PolyNewton :
 */
 /**
@@ -5567,7 +5761,7 @@ WORD *PolyNewton(PHEAD WORD **Polynomials, WORD num, WORD numsym)
 }
 
 /*
- 		#] PolyNewton : 
+ 		#] PolyNewton :
  		#[ PolyGetNewtonCoef :
 */
 /**
@@ -5662,7 +5856,7 @@ calledfrom:;
 }
 
 /*
- 		#] PolyGetNewtonCoef : 
+ 		#] PolyGetNewtonCoef :
  		#[ PolyGetGCDPowers :
 */
 /**
@@ -5788,7 +5982,7 @@ WORD *PolyGetGCDPowers(PHEAD WORD *Poly1, WORD *Poly2, WORD *plist1, WORD *plist
 }
 
 /*
- 		#] PolyGetGCDPowers : 
+ 		#] PolyGetGCDPowers :
  		#[ PolyModSubsVector :
 */
 /**
@@ -5900,7 +6094,7 @@ zerovalue:;
 }
 
 /*
- 		#] PolyModSubsVector : 
+ 		#] PolyModSubsVector :
  		#[ ModPow :
 */
 /**
@@ -5940,7 +6134,7 @@ WORD ModPow(WORD num, WORD pow, WORD prime)
 }
 
 /*
- 		#] ModPow : 
+ 		#] ModPow :
  		#[ PolyGetSymbols :
 */
 /**
@@ -6031,7 +6225,7 @@ WORD *PolyGetSymbols(PHEAD WORD *Poly, int *maxi)
 }
 
 /*
- 		#] PolyGetSymbols : 
+ 		#] PolyGetSymbols :
  		#[ PolyGetConfig :
 */
 /**
@@ -6055,6 +6249,449 @@ WORD *PolyGetConfig(PHEAD WORD numvars)
 }
 
 /*
- 		#] PolyGetConfig : 
-  	#] PolyMulti : 
+ 		#] PolyGetConfig :
+  	#] PolyMulti :
+  	#[ PolyTestAdd :
+
+	Tests whether PolyRatFun1+PolyRatFun2 = PolyRatFun3
+*/
+
+int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3)
+{
+	WORD *oldworkpointer = AT.WorkPointer, *p1, *p2;
+	WORD *num1, *num2, *num3, *den1, *den2, *den3, i;
+	WORD *a1,*a2,*b1,*b2,*c1,*c2,*d1,*d2;
+/*
+ 		#[ Get polynomials :
+*/
+	p1 = PolyRatFun1 + FUNHEAD;
+	p2 = num1 = AT.WorkPointer;
+	if ( *p1 > 0 ) {
+		i = *p1 - ARGHEAD; p1 += ARGHEAD;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+	}
+	else if ( *p1 == -SNUMBER ) {
+		*p2++ = 4;
+		*p2++ = ABS(p1[1]);
+		*p2++ = 1;
+		if ( p1[1] < 0 ) *p2++ = -3;
+		else             *p2++ =  3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	else {
+		*p2++ = 8;
+		*p2++ = SYMBOL;
+		*p2++ = 4;
+		*p2++ = p1[1];
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	AT.WorkPointer = p2;
+	den1 = AT.WorkPointer;
+	if ( *p1 > 0 ) {
+		i = *p1 - ARGHEAD; p1 += ARGHEAD;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+	}
+	else if ( *p1 == -SNUMBER ) {
+		*p2++ = 4;
+		*p2++ = ABS(p1[1]);
+		*p2++ = 1;
+		if ( p1[1] < 0 ) *p2++ = -3;
+		else             *p2++ =  3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	else {
+		*p2++ = 8;
+		*p2++ = SYMBOL;
+		*p2++ = 4;
+		*p2++ = p1[1];
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	AT.WorkPointer = p2;
+
+	p1 = PolyRatFun2 + FUNHEAD;
+	p2 = num2 = AT.WorkPointer;
+	if ( *p1 > 0 ) {
+		i = *p1 - ARGHEAD; p1 += ARGHEAD;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+	}
+	else if ( *p1 == -SNUMBER ) {
+		*p2++ = 4;
+		*p2++ = ABS(p1[1]);
+		*p2++ = 1;
+		if ( p1[1] < 0 ) *p2++ = -3;
+		else             *p2++ =  3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	else {
+		*p2++ = 8;
+		*p2++ = SYMBOL;
+		*p2++ = 4;
+		*p2++ = p1[1];
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	AT.WorkPointer = p2;
+	den2 = AT.WorkPointer;
+	if ( *p1 > 0 ) {
+		i = *p1 - ARGHEAD; p1 += ARGHEAD;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+	}
+	else if ( *p1 == -SNUMBER ) {
+		*p2++ = 4;
+		*p2++ = ABS(p1[1]);
+		*p2++ = 1;
+		if ( p1[1] < 0 ) *p2++ = -3;
+		else             *p2++ =  3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	else {
+		*p2++ = 8;
+		*p2++ = SYMBOL;
+		*p2++ = 4;
+		*p2++ = p1[1];
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	AT.WorkPointer = p2;
+
+	p1 = PolyRatFun3 + FUNHEAD;
+	p2 = num3 = AT.WorkPointer;
+	if ( *p1 > 0 ) {
+		i = *p1 - ARGHEAD; p1 += ARGHEAD;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+	}
+	else if ( *p1 == -SNUMBER ) {
+		*p2++ = 4;
+		*p2++ = ABS(p1[1]);
+		*p2++ = 1;
+		if ( p1[1] < 0 ) *p2++ = -3;
+		else             *p2++ =  3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	else {
+		*p2++ = 8;
+		*p2++ = SYMBOL;
+		*p2++ = 4;
+		*p2++ = p1[1];
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	AT.WorkPointer = p2;
+	den3 = AT.WorkPointer;
+	if ( *p1 > 0 ) {
+		i = *p1 - ARGHEAD; p1 += ARGHEAD;
+		NCOPY(p2,p1,i);
+		*p2++ = 0;
+	}
+	else if ( *p1 == -SNUMBER ) {
+		*p2++ = 4;
+		*p2++ = ABS(p1[1]);
+		*p2++ = 1;
+		if ( p1[1] < 0 ) *p2++ = -3;
+		else             *p2++ =  3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	else {
+		*p2++ = 8;
+		*p2++ = SYMBOL;
+		*p2++ = 4;
+		*p2++ = p1[1];
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 1;
+		*p2++ = 3;
+		*p2++ = 0;
+		p1 += 2;
+	}
+	AT.WorkPointer = p2;
+/*
+ 		#] Get polynomials :
+*/
+	a1 = PolyMul(BHEAD num1,den2);
+	a2 = PolyMul(BHEAD a1,den3);
+	b1 = PolyMul(BHEAD num2,den1);
+	b2 = PolyMul(BHEAD b1,den3);
+	c1 = PolyMul(BHEAD num3,den1);
+	c2 = PolyMul(BHEAD c1,den2);
+	p1 = c2;
+	while ( *p1 ) {
+		p1 += *p1; p1[-1] = -p1[-1];
+	}
+	d1 = PolyAdd(BHEAD a2,b2);
+	d2 = PolyAdd(BHEAD d1,c2);
+	AT.WorkPointer = oldworkpointer;
+	if ( *d2 == 0 ) return(0);
+	else {
+		LOCK(ErrorMessageLock);
+		MesPrint("Error in PolyTestAdd.");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(-1);
+	}
+}
+
+/*
+  	#] PolyTestAdd :
+  	#[ RedoPolyRatFun :
+*/
+/**
+ *	Tests whether the PolyRatFun occurrences are proper.
+ *	This means: only symbols with positive powers and only integer
+ *	coefficients. If there are negative powers or denominators the
+ *	function is 'repaired'. If there are non-symbol objects there
+ *	will be an error message and the return value is 0.
+ *		term is the term containing the PolyRatFun(s)
+ *		par == 0: write the new result over the old one
+ *		par == 1: write the new result in AT.WorkPointer.
+ *		par == 2: write the result in a TermMalloc
+ */
+
+WORD *RedoPolyRatFun(PHEAD WORD *termin,int par)
+{
+	int i;
+	WORD *t, *w, *tm, *tstop, *term = termin, *t1, *t2, *nt;
+	WORD *oldworkpointer = AT.WorkPointer;
+	t2 = term + *term;
+	tstop = t2 - ABS(t2[-1]);
+	t = term + 1;
+	while ( t < tstop ) {
+		if ( *t == AR.PolyFun && ( ( t[2] & CLEANPRF ) == 0 ) ) {
+			TestSymbols(t);
+			nt = PolyRatFunNorm(BHEAD t,1);
+			nt[2] |= CLEANPRF;
+			w = tm = AT.WorkPointer;
+			t1 = term;
+			while ( t1 < t ) *w++ = *t1++;
+			i = nt[1]; NCOPY(w,nt,i)
+			t1 = t+t[1];
+			while ( t1 < t2 ) *w++ = *t1++;
+			*tm = w - tm;
+			AT.WorkPointer = w;
+			tstop = w - ABS(w[-1]);
+			t2 = w;
+			t = (t-term)+tm;
+			term = tm;
+		}
+		t += t[1];
+	}
+	if ( par == 1 ) {
+		if ( term == oldworkpointer ) { return(term); }
+		i = *term; t = term; tm = w = oldworkpointer;
+		NCOPY(w,t,i)
+		AT.WorkPointer = w;
+		return(tm);
+	}
+	else if ( par == 2 ) {
+		w = tm = TermMalloc("RedoPolyRatFun");
+		i = *term; t = term;
+		NCOPY(w,t,i)
+		return(tm);
+	}
+	else if ( par == 0 ) {
+		if ( termin == term ) return(termin);
+		i = *term; t1 = termin; t2 = term;
+		NCOPY(t1,t2,i)
+		return(termin);
+	}
+	return(0);
+}
+
+/*
+  	#] RedoPolyRatFun :
+  	#[ TestSymbols :
+*/
+/**
+ *	Tests whether the function in the argument has arguments that contain
+ *	only symbols and numbers. There must be two arguments.
+ */
+
+int TestSymbols(WORD *fun)
+{
+	WORD *endfun, *f, *fs, *fnext, *fstop;
+	int num = 0;
+
+	endfun = fun+fun[1];
+	f = fun + FUNHEAD;
+	while ( f < endfun ) {
+		if ( *f < 0 ) {
+			if ( *f != -SYMBOL && *f != -SNUMBER ) goto IllObject;
+			f += 2;
+		}
+		else {
+			fs = f + *f;
+			f += ARGHEAD;
+			while ( f < fs ) {
+				fnext = f + *f;
+				fstop = fnext - ABS(fnext[-1]);
+				f++;
+				while ( f < fstop ) {
+					if ( *f != SYMBOL ) goto IllObject;
+					f += f[1];
+				}
+				f = fnext;
+			}
+			f = fs;
+		}
+		num++;
+	}
+	if ( num != 2 ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Number of arguments in polyratfun is %d which is not equal to two",num);
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	return(0);
+IllObject:
+	LOCK(ErrorMessageLock);
+	MesPrint("Illegal object (not a symbol or a number) in polyratfun");
+	UNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(-1);
+}
+
+/*
+  	#] TestSymbols :
+  	#[ PolyRatFunAdd1 :
+*/
+/**
+ *	Routine to make the addition of two polyratfun's
+ *	Includes testing of legality.
+ */
+
+WORD *PolyRatFunAdd1(PHEAD WORD *t1, WORD *t2)
+{
+	WORD *s1, *s2, iold;
+	WORD *oldworkpointer = AT.WorkPointer;
+	iold = t1[-1];
+	t1[-1] = t1[1]+4;
+	s1 = RedoPolyRatFun(BHEAD t1-1,2);
+	t1[-1] = iold;
+	AT.WorkPointer = oldworkpointer;
+	iold = t2[-1];
+	t2[-1] = t2[1]+4;
+	s2 = RedoPolyRatFun(BHEAD t2-1,2);
+	t2[-1] = iold;
+	AT.WorkPointer = oldworkpointer;
+
+	if ( AM.oldpolyratfun ) PolyRatFunAdd_OLD(BHEAD s1+1,s2+1);
+	else                    PolyRatFunAdd(BHEAD s1+1,s2+1);
+
+	TermFree(s2,"RedoPolyRatFun");
+	TermFree(s1,"RedoPolyRatFun");
+
+	oldworkpointer[2] |= CLEANPRF;
+	return(oldworkpointer);
+}
+
+/*
+  	#] PolyRatFunAdd1 :
+  	#[ PolyRatFunTake :
+*/
+/**
+ *	Gets the PolyFun with two arguments.
+ *	Puts the numerator and the denominator in the workspace.
+ *	Makes sure that we have no short arguments.
+ *	We should already be protected against illegal configurations.
+ */
+
+WORD *PolyRatFunTake(PHEAD WORD *term)
+{
+	WORD *oldworkpointer, *w, *Poly1, *Poly2, i;
+	oldworkpointer = w = AT.WorkPointer;
+	Poly1 = term + FUNHEAD;
+
+	if ( *Poly1 < 0 ) {
+		if ( *Poly1 == -SYMBOL ) {
+			*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = Poly1[1];
+			*w++ = 1; *w++ = 1; *w++ = 1; *w++ = 3; *w++ = 0;
+		}
+		else if ( *Poly1 == -SNUMBER ) {
+			if ( Poly1[1] != 0 ) {
+				*w++ = 4; *w++ = ABS(Poly1[1]); *w++ = 1;
+				if ( Poly1[1] < 0 ) *w++ = -3;
+				else                *w++ =  3;
+			}
+			*w++ = 0;
+		}
+		Poly2 = Poly1 + 2;
+	}
+	else {
+		i = *Poly1 - ARGHEAD;
+		Poly1 += ARGHEAD;
+		NCOPY(w,Poly1,i)
+		*w++ = 0;
+		Poly2 = Poly1;
+	}
+
+	if ( *Poly2 < 0 ) {
+		if ( *Poly2 == -SYMBOL ) {
+			*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = Poly2[1];
+			*w++ = 1; *w++ = 1; *w++ = 1; *w++ = 3; *w++ = 0;
+		}
+		else if ( *Poly2 == -SNUMBER ) {
+			if ( Poly2[1] != 0 ) {
+				*w++ = 4; *w++ = ABS(Poly2[1]); *w++ = 1;
+				if ( Poly2[1] < 0 ) *w++ = -3;
+				else                *w++ =  3;
+			}
+			*w++ = 0;
+		}
+	}
+	else {
+		i = *Poly2 - ARGHEAD;
+		Poly2 += ARGHEAD;
+		NCOPY(w,Poly2,i)
+		*w++ = 0;
+	}
+
+	AT.WorkPointer = w;
+	return(oldworkpointer);
+}
+
+/*
+  	#] PolyRatFunTake :
+  	#[ PolyGCD2 :
+*/
+
+WORD *PolyGCD2(PHEAD WORD *Poly1, WORD *Poly2)
+{
+	if ( AM.oldpolyratfun ) return(PolyGCD_OLD(BHEAD Poly1,Poly2));
+	else                    return(PolyGCD(BHEAD Poly1,Poly2));
+}
+
+/*
+  	#] PolyGCD2 :
 */

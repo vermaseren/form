@@ -119,7 +119,7 @@ WORD ReNumber(PHEAD WORD *term)
 }
 
 /*
- 		#] ReNumber :
+ 		#] ReNumber : 
  		#[ FunLevel :
 
 		Does one term in determining where the dummies are.
@@ -241,7 +241,7 @@ VOID FunLevel(PHEAD WORD *term)
 }
 
 /*
- 		#] FunLevel :
+ 		#] FunLevel : 
  		#[ DetCurDum :
 
 		We look for indices in the range AM.IndDum to AM.IndDum+MAXDUMMIES.
@@ -538,7 +538,7 @@ void AdjustRenumScratch(PHEAD0)
 
 /*
  		#] AdjustRenumScratch : 
-  	#] Reshuf :
+  	#] Reshuf : 
   	#[ Count :
  		#[ CountDo :
 
@@ -698,7 +698,7 @@ NextFF:
 
 		This is the count function.
 		The return value is the count of the term.
-		Input is the term and a pointer to the count function..
+		Input is the term and a pointer to the count function.
 
 */
 
@@ -859,7 +859,183 @@ VectInd:		i = term[1] - 2;
 
 /*
  		#] CountFun : 
-  	#] Count : 
+  	#] Count :
+  	#[ DimensionSubterm :
+*/
+
+WORD DimensionSubterm(PHEAD WORD *subterm)
+{
+	WORD *r, *rstop, dim, i;
+	LONG x = 0;
+	rstop = subterm + subterm[1];
+	if ( *subterm == SYMBOL ) {
+		r = subterm + 2;
+		while ( r < rstop ) {
+			if ( *r <= NumSymbols && *r > -MAXPOWER ) {
+				dim = symbols[*r].dimension;
+				if ( dim == MAXPOSITIVE ) goto undefined;
+				x += dim * r[1];
+				if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+				r += 2;
+			}
+			else if ( *r <= MAXVARIABLES ) {
+/*
+				Here we have an extra symbol. Store dimension in the compiler buffer
+*/
+				i = MAXVARIABLES - *r;
+				dim = cbuf[AM.sbufnum].dimension[i];
+				if ( dim ==  MAXPOSITIVE ) goto undefined;
+				if ( dim == -MAXPOSITIVE ) goto outofrange;
+				x += dim * r[1];
+				if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+				r += 2;
+			}
+			else { r += 2; }
+		}
+	}
+	else if ( *subterm == DOTPRODUCT ) {
+		r = subterm + 2;
+		while ( r < rstop ) {
+			dim = vectors[*r-AM.OffsetVector].dimension;
+			if ( dim == MAXPOSITIVE ) goto undefined;
+			x += dim * r[2];
+			if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+			dim = vectors[r[1]-AM.OffsetVector].dimension;
+			if ( dim == MAXPOSITIVE ) goto undefined;
+			x += dim * r[2];
+			if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+			r += 3;
+		}
+	}
+	else if ( *subterm == VECTOR ) {
+		r = subterm + 2;
+		while ( r < rstop ) {
+			dim = vectors[*r-AM.OffsetVector].dimension;
+			if ( dim == MAXPOSITIVE ) goto undefined;
+			x += dim;
+			if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+			r += 2;
+		}
+	}
+	else if ( *subterm == INDEX ) {
+		r = subterm + 2;
+		while ( r < rstop ) {
+			if ( *r < 0 ) {
+				dim = vectors[*r-AM.OffsetVector].dimension;
+				if ( dim == MAXPOSITIVE ) goto undefined;
+				x += dim;
+				if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+			}
+			r++;
+		}
+	}
+	else if ( *subterm >= FUNCTION ) {
+		dim = functions[*subterm-FUNCTION].dimension;
+		if ( dim == MAXPOSITIVE ) goto undefined;
+		x += dim;
+		if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+		if ( functions[*subterm-FUNCTION].spec > 0 ) {	/* tensor */
+			r = subterm + FUNHEAD;
+			while ( r < rstop ) {
+				if ( *r < 0 ) {
+					dim = vectors[*r-AM.OffsetVector].dimension;
+					if ( dim == MAXPOSITIVE ) goto undefined;
+					x += dim;
+					if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+				}
+				r++;
+			}
+		}
+	}
+	return((WORD)x);
+undefined:
+	return((WORD)MAXPOSITIVE);
+outofrange:
+	return(-(WORD)MAXPOSITIVE);
+}
+
+/*
+  	#] DimensionSubterm :
+  	#[ DimensionTerm :
+
+	Returns the dimension of the given term.
+	If there is any variable of which the dimension is not defined
+	we return the code for undefined which is MAXPOSITIVE
+	When the value is out of range we return -MAXPOSITIVE
+*/
+
+WORD DimensionTerm(PHEAD WORD *term)
+{
+	WORD *t, *tstop, dim;
+	LONG x = 0;
+	tstop = term + *term; tstop -= ABS(tstop[-1]);
+	t = term+1;
+	while ( t < tstop ) {
+		dim = DimensionSubterm(BHEAD t);
+		if ( dim ==  MAXPOSITIVE ) goto undefined;
+		if ( dim == -MAXPOSITIVE ) goto outofrange;
+		x += dim;
+		if ( x >= MAXPOSITIVE || x <= -MAXPOSITIVE ) goto outofrange;
+		t += t[1];
+	}
+	return((WORD)x);
+undefined:
+	return((WORD)MAXPOSITIVE);
+outofrange:
+	return(-(WORD)MAXPOSITIVE);
+}
+
+/*
+  	#] DimensionTerm : 
+  	#[ DimensionExpression :
+
+	Returns the dimension of the given expression.
+	If there is any variable of which the dimension is not defined
+	we return the code for undefined which is MAXPOSITIVE
+	When the value is out of range we return -MAXPOSITIVE
+	When the value is not consistent we return -MAXPOSITIVE.
+*/
+
+WORD DimensionExpression(PHEAD WORD *expr)
+{
+	WORD dim, *term, *old, x = 0;
+	int first = 1;
+	term = expr;
+	while ( *term ) {
+		dim = DimensionTerm(BHEAD term);
+		if ( dim ==  MAXPOSITIVE ) goto undefined;
+		if ( dim == -MAXPOSITIVE ) goto outofrange;
+		if ( first ) { x = dim; }
+		else if ( x != dim ) {
+			old  = AN.currentTerm;
+			LOCK(ErrorMessageLock);
+			MesPrint("Dimension is not the same in the terms of the expression");
+			term = expr;
+			while ( *term ) {
+				AN.currentTerm = term;
+				MesPrint("   %T");
+			}
+			UNLOCK(ErrorMessageLock);
+			AN.currentTerm = old;
+			return(-(WORD)MAXPOSITIVE);
+		}
+		term += *term;
+	}
+	return((WORD)x);
+undefined:
+	return((WORD)MAXPOSITIVE);
+outofrange:
+	old  = AN.currentTerm;
+	AN.currentTerm = term;
+	LOCK(ErrorMessageLock);
+	MesPrint("Dimension out of range in %t in subexpression");
+	UNLOCK(ErrorMessageLock);
+	AN.currentTerm = old;
+	return(-(WORD)MAXPOSITIVE);
+}
+
+/*
+  	#] DimensionExpression : 
   	#[ Multiply Term :
  		#[ MultDo :
 */

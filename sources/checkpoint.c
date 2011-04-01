@@ -72,7 +72,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 /*
   	#[ Includes :
@@ -91,7 +91,7 @@
 */
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ filenames and system commands :
 */
 
@@ -141,7 +141,7 @@ static char *storefile = 0;
 static int done_snapshot = 0;
 
 /*
-  	#] filenames and system commands :
+  	#] filenames and system commands : 
   	#[ CheckRecoveryFile :
 */
 
@@ -245,7 +245,7 @@ int CheckRecoveryFile()
 }
 
 /*
-  	#] CheckRecoveryFile :
+  	#] CheckRecoveryFile : 
   	#[ DeleteRecoveryFile :
 */
 
@@ -285,7 +285,7 @@ void DeleteRecoveryFile()
 }
 
 /*
-  	#] DeleteRecoveryFile :
+  	#] DeleteRecoveryFile : 
   	#[ RecoveryFilename :
 */
 
@@ -298,7 +298,7 @@ char *RecoveryFilename()
 }
 
 /*
-  	#] RecoveryFilename :
+  	#] RecoveryFilename : 
   	#[ InitRecovery :
 */
 
@@ -346,7 +346,7 @@ void InitRecovery()
 }
 
 /*
-  	#] InitRecovery :
+  	#] InitRecovery : 
   	#[ Debugging :
 */
 
@@ -1108,7 +1108,7 @@ static void print_R()
 #endif /* ifdef PRINTDEBUG */
 
 /*
-  	#] Debugging :
+  	#] Debugging : 
   	#[ Cached file operation functions :
 */
 
@@ -1171,7 +1171,7 @@ size_t flush_cache(FILE *fd)
 #endif
 
 /*
-  	#] Cached file operation functions :
+  	#] Cached file operation functions : 
   	#[ Helper Macros :
 */
 
@@ -1272,7 +1272,7 @@ time_t announce_time;
 #endif
 
 /*
-  	#] Helper Macros :
+  	#] Helper Macros : 
   	#[ DoRecovery :
 */
 
@@ -1389,7 +1389,7 @@ int DoRecovery(int *moduletype)
 	print_M();
 #endif
 
-	/*#] AM : */
+	/*#] AM : */ 
 	/*#[ AC : */
 
 	/* #[ AC free pointers */
@@ -1719,7 +1719,7 @@ int DoRecovery(int *moduletype)
 			if ( cbuf[i].lhs[j] ) cbuf[i].lhs[j] = (WORD*)((UBYTE*)cbuf[i].lhs[j] + ofs);
 		}
 		org = (UBYTE*)cbuf[i].rhs;
-		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)), WORD**);
+		R_COPY_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+2*sizeof(WORD)), WORD**);
 		for ( j=1; j<=cbuf[i].numrhs; ++j ) {
 			if ( cbuf[i].rhs[j] ) cbuf[i].rhs[j] = (WORD*)((UBYTE*)cbuf[i].rhs[j] + ofs);
 		}
@@ -1727,6 +1727,7 @@ int DoRecovery(int *moduletype)
 		cbuf[i].CanCommu = (LONG*)((UBYTE*)cbuf[i].CanCommu + ofs);
 		cbuf[i].NumTerms = (LONG*)((UBYTE*)cbuf[i].NumTerms + ofs);
 		cbuf[i].numdum = (WORD*)((UBYTE*)cbuf[i].numdum + ofs);
+		cbuf[i].dimension = (WORD*)((UBYTE*)cbuf[i].dimension + ofs);
 		if ( cbuf[i].boomlijst ) {
 			R_COPY_B(cbuf[i].boomlijst, cbuf[i].MaxTreeSize*sizeof(COMPTREE), COMPTREE*);
 		}
@@ -2274,7 +2275,7 @@ int DoRecovery(int *moduletype)
 }
 
 /*
-  	#] DoRecovery :
+  	#] DoRecovery : 
   	#[ DoSnapshot :
 */
 
@@ -2526,7 +2527,7 @@ static int DoSnapshot(int moduletype)
 		S_WRITE_B(cbuf[i].Buffer, cbuf[i].BufferSize*sizeof(WORD));
 		/* see inicbufs in comtool.c */
 		S_WRITE_B(cbuf[i].lhs, cbuf[i].maxlhs*(LONG)sizeof(WORD*));
-		S_WRITE_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+sizeof(WORD)));
+		S_WRITE_B(cbuf[i].rhs, cbuf[i].maxrhs*(LONG)(sizeof(WORD*)+2*sizeof(LONG)+2*sizeof(WORD)));
 		if ( cbuf[i].boomlijst ) {
 			S_WRITE_B(cbuf[i].boomlijst, cbuf[i].MaxTreeSize*(LONG)sizeof(COMPTREE));
 		}
@@ -2608,7 +2609,7 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_S(AC.extrasym);
 
-	/*#] AC :*/
+	/*#] AC :*/ 
 	/*#[ AP :*/
 
 	/* we write AP as a whole and then write all additional data step by step. */
@@ -2685,7 +2686,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int));
 
-	/*#] AP :*/
+	/*#] AP :*/ 
 	/*#[ AR :*/
 
 	ANNOUNCE(AR)
@@ -2745,7 +2746,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AR.SortType, sizeof(WORD));
 	S_WRITE_B(&AR.ShortSortCount, sizeof(WORD));
 
-	/*#] AR :*/
+	/*#] AR :*/ 
 
 /*[20oct2009 mt]:*/
 	/*#[ PF :*/
@@ -2757,7 +2758,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&PF.module, sizeof(LONG));
 	S_WRITE_B(&PF.log, sizeof(int));
 #endif
-	/*#] PF :*/
+	/*#] PF :*/ 
 /*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS

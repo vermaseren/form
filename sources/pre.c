@@ -1201,9 +1201,11 @@ dodollar:		s = sstart;
 			}
 		}
 		if ( s >= (AP.preStop-1) ) {
+			UBYTE **ppp;
 			position = s - AP.preStart;
 			if ( AP.preFill ) fillpos = AP.preFill - AP.preStart;
-			if ( DoubleLList((VOID ***)&(AP.preStart),&AP.pSize,sizeof(UBYTE),
+			ppp = &(AP.preStart); /* to avoid a compiler warning */
+			if ( DoubleLList((VOID ***)ppp,&AP.pSize,sizeof(UBYTE),
 			"instruction buffer") ) { *s = 0; oldmode = mode; return(-1); }
 			AP.preStop = AP.preStart + AP.pSize-3;
 			s = AP.preStart + position;
@@ -1217,7 +1219,7 @@ dodollar:		s = sstart;
 }
 
 /*
- 		#] LoadInstruction : 
+ 		#] LoadInstruction :
  		#[ LoadStatement :
 
 		Puts the current string together in the input buffer.
@@ -1299,7 +1301,8 @@ doall:;			if ( AP.eat < 0 ) {
 		if ( s >= AC.iStop ) {
 			if ( !AP.iBufError ) {
 				LONG position = s - AC.iBuffer;
-				if ( DoubleLList((VOID ***)&(AC.iBuffer),&AC.iBufferSize
+				UBYTE **ppp = &(AC.iBuffer); /* to avoid a compiler warning */
+				if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 				,sizeof(UBYTE),"statement buffer") ) {
 					*s = 0; retval = -1; AP.iBufError = 1;
 				}
@@ -1341,7 +1344,7 @@ doall:;			if ( AP.eat < 0 ) {
 }
 
 /*
- 		#] LoadStatement : 
+ 		#] LoadStatement :
  		#[ ExpandTripleDots :
 */
 
@@ -1443,7 +1446,8 @@ int ExpandTripleDots()
 				LONG endstr = n1-AC.iBuffer;
 				LONG startq = startp - AC.iBuffer;
 				LONG position = s - AC.iBuffer;
-				if ( DoubleLList((VOID ***)&(AC.iBuffer),&AC.iBufferSize
+				UBYTE **ppp = &(AC.iBuffer); /* to avoid a compiler warning */
+				if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 					,sizeof(UBYTE),"statement buffer") ) {
 						Terminate(-1);
 				}
@@ -1635,7 +1639,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots : 
+ 		#] ExpandTripleDots :
  		#[ FindKeyWord :
 */
 
@@ -2840,7 +2844,8 @@ int DoIf(UBYTE *s)
 	}
 	else condition = LOOKINGFORENDIF;
 	if ( AP.PreIfLevel+1 >= AP.MaxPreIfLevel ) {
-		if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
+		int **ppp = &AP.PreIfStack; /* To avoid a compiler warning */
+		if ( DoubleList((VOID ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) return(-1);
 	}
 	AP.PreIfStack[++AP.PreIfLevel] = condition;
@@ -2848,7 +2853,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf : 
+ 		#] DoIf :
  		#[ DoIfdef :
 */
 
@@ -2864,7 +2869,8 @@ int DoIfdef(UBYTE *s, int par)
 	}
 	else condition = LOOKINGFORENDIF;
 	if ( AP.PreIfLevel+1 >= AP.MaxPreIfLevel ) {
-		if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
+		int **ppp = &AP.PreIfStack; /* to avoid a compiler warning */
+		if ( DoubleList((VOID ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) return(-1);
 	}
 	AP.PreIfStack[++AP.PreIfLevel] = condition;
@@ -2872,7 +2878,7 @@ int DoIfdef(UBYTE *s, int par)
 }
 
 /*
- 		#] DoIfdef : 
+ 		#] DoIfdef :
  		#[ DoMessage :
 */
 
@@ -3736,8 +3742,10 @@ int PreSkip(UBYTE *start, UBYTE *stop, int mode)
 
 VOID StartPrepro()
 {
+	int **ppp;
 	AP.MaxPreIfLevel = 2;
-	if ( DoubleList((VOID ***)&AP.PreIfStack,&AP.MaxPreIfLevel,sizeof(int),
+	ppp = &AP.PreIfStack;
+	if ( DoubleList((VOID ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) Terminate(-1);
 	AP.PreIfLevel = 0; AP.PreIfStack[0] = EXECUTINGIF;
 
@@ -3751,7 +3759,7 @@ VOID StartPrepro()
 }
 
 /*
- 		#] StartPrepro : 
+ 		#] StartPrepro :
  		#[ EvalPreIf :
 
 		Evaluates the condition in an if instruction.

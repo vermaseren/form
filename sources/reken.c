@@ -971,7 +971,7 @@ WORD BigLong(UWORD *a, WORD na, UWORD *b, WORD nb)
 WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
              WORD *nc, UWORD *d, WORD *nd)
 {
-	WORD sgn = 1, ne, nf, ng, nh;
+	WORD sgna = 1, sgnb = 1, ne, nf, ng, nh;
 	WORD i, ni;
 	UWORD *w1, *w2;
 	RLONG t, v;
@@ -987,8 +987,8 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		return(-1);
 	}
 	if ( !na ) { *nc = *nd = 0; return(0); }
-	if ( na < 0 ) { sgn = -sgn; na = -na; }
-	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
+	if ( na < 0 ) { sgna = -sgna; na = -na; }
+	if ( nb < 0 ) { sgnb = -sgnb; nb = -nb; }
 	if ( na < nb ) {
 		for ( i = 0; i < na; i++ ) *d++ = *a++;
 		*nd = na;
@@ -1083,14 +1083,15 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		  while ( j >= 0 && id[j] == 0 ) j--;
 		  j++; *nd = j;
 		  if ( d != id ) { NCOPY(d,id,j); }
-		  if ( sgn < 0 ) { *nc = -(*nc); *nd = -(*nd); }
+		  if ( sgna < 0 ) { *nc = -(*nc); *nd = -(*nd); }
+		  if ( sgnb < 0 ) { *nc = -(*nc); }
 		  NumberFree(DLscrat9,"DivLong"); NumberFree(DLscratA,"DivLong");
 		  NumberFree(DLscratB,"DivLong"); NumberFree(DLscratC,"DivLong");
 		  return(0);
 		}
 #endif
 /*
- 		#] GMP stuff : 
+ 		#] GMP stuff :
 */
 		/* Start with normalization operation */
  
@@ -1200,12 +1201,13 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		else { *nd = 0; }
 		NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
 	}
-	if ( sgn < 0 ) { *nc = -(*nc); *nd = -(*nd); }
+	if ( sgna < 0 ) { *nc = -(*nc); *nd = -(*nd); }
+	if ( sgnb < 0 ) { *nc = -(*nc); }
 	return(0);
 }
 
 /*
- 		#] DivLong : 
+ 		#] DivLong :
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -1502,7 +1504,7 @@ WORD Remain4(UWORD *a, WORD *na)
  		#] Remain4 : 
  		#[ PrtLong :		VOID PrtLong(a,na,s)
 
-	Puts the long positive number a in string s.
+	Puts the long number a in string s.
 
 */
 
@@ -1513,6 +1515,12 @@ VOID PrtLong(UWORD *a, WORD na, UBYTE *s)
 	UBYTE *sa, *sb;
 	UBYTE c;
 	UWORD *bb, *b;
+
+	if ( na < 0 ) {
+		*s++ = '-';
+		na = -na;
+	}
+
 	b = NumberMalloc("PrtLong");
 	bb = b;
 	i = na; while ( --i >= 0 ) *bb++ = *a++;
@@ -1781,10 +1789,24 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	if ( !na || !nb ) {
-		LOCK(ErrorMessageLock);
-		MesPrint("Cannot take gcd");
-		UNLOCK(ErrorMessageLock);
-		return(-1);
+		if ( !na && !nb ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Cannot take gcd");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		
+		if ( !na ) {
+			*nc = abs(nb);
+			NCOPY(c,b,*nc);
+			*nc = abs(nb);
+			return(0);
+		}
+		
+		*nc = abs(na);
+		NCOPY(c,a,*nc);
+		*nc = abs(na);
+		return(0);
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
@@ -2058,10 +2080,24 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	RLONG lx,ly,lz;
 	LONG ma1, ma2, mb1, mb2, mc1, mc2, m;
 	if ( !na || !nb ) {
-		LOCK(ErrorMessageLock);
-		MesPrint("Cannot take gcd");
-		UNLOCK(ErrorMessageLock);
-		return(-1);
+		if ( !na && !nb ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Cannot take gcd");
+			UNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		
+		if ( !na ) {
+			*nc = abs(nb);
+			NCOPY(c,b,*nc);
+			*nc = abs(nb);
+			return(0);
+		}
+		
+		*nc = abs(na);
+		NCOPY(c,a,*nc);
+		*nc = abs(na);
+		return(0);
 	}
 	if ( na < 0 ) na = -na;
 	if ( nb < 0 ) nb = -nb;
@@ -2571,7 +2607,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2851,6 +2887,42 @@ ModErr:
 
 /*
  		#] TakeModulus : 
+ 		#[ TakeNormalModulus :  WORD TakeModulus(a,na,par)
+
+		added by Jan [01-09-2010]
+*/
+
+WORD TakeNormalModulus (UWORD *a, WORD *na, WORD *c, WORD nc, WORD par)
+{
+	WORD n;
+	
+	WORD nhalfmod;
+	UWORD halfmod[nc];
+	
+	UWORD two[1],remain[1];
+	WORD dummy;
+	
+	two[0] = 2;
+	DivLong((UWORD *)c,ABS(nc),two,1,(UWORD *)halfmod,&nhalfmod,remain,&dummy);
+	
+	// takes care of the number never expanding, e.g., -1(mod 100) -> 99 -> -1
+	if (BigLong(a,ABS(*na),halfmod,nhalfmod) <= 0) return(0);
+	
+	TakeModulus(a,na,c,nc,par);
+	
+	n = ABS(*na);
+	if (BigLong(a,n,halfmod,nhalfmod) > 0) {
+		SubPLon((UWORD *)c,nc,a,n,a,&n);
+		if ( *na > 0 ) { *na = -n; }
+		else { *na = n; }
+		return(1);
+	}
+	
+	return(0);
+}
+
+/*
+ 		#] TakeNormalModulus : 
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
@@ -2927,7 +2999,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms :
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 

@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -35,7 +35,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ inicbufs :
 */
 
@@ -57,10 +57,11 @@ int inicbufs()
 	C->numlhs = 0;
 	C->mnumlhs = 0;
 	C->maxrhs = 25;
-	C->rhs = (WORD **)Malloc1(C->maxrhs*(sizeof(WORD *)+2*sizeof(LONG)+sizeof(WORD)),"compiler buffer");
+	C->rhs = (WORD **)Malloc1(C->maxrhs*(sizeof(WORD *)+2*sizeof(LONG)+2*sizeof(WORD)),"compiler buffer");
 	C->CanCommu = (LONG *)(C->rhs+C->maxrhs);
 	C->NumTerms = C->CanCommu+C->maxrhs;
 	C->numdum = (WORD *)(C->NumTerms+C->maxrhs);
+	C->dimension = C->numdum + C->maxrhs;
 	C->numrhs = 0;
 	C->mnumrhs = 0;
 	C->rhs[0] = C->rhs[1] = C->Pointer;
@@ -71,7 +72,7 @@ int inicbufs()
 }
 
 /*
-  	#] inicbufs : 
+  	#] inicbufs :
   	#[ finishcbuf :
 */
 
@@ -93,7 +94,7 @@ void finishcbuf(WORD num)
 }
 
 /*
-  	#] finishcbuf : 
+  	#] finishcbuf :
   	#[ clearcbuf :
 */
 
@@ -113,7 +114,7 @@ void clearcbuf(WORD num)
 }
 
 /*
-  	#] clearcbuf : 
+  	#] clearcbuf :
   	#[ DoubleCbuffer :
 */
 
@@ -146,7 +147,7 @@ WORD *DoubleCbuffer(int num, WORD *w)
 }
 
 /*
-  	#] DoubleCbuffer : 
+  	#] DoubleCbuffer :
   	#[ AddLHS :
 */
 
@@ -155,7 +156,8 @@ WORD *AddLHS(int num)
 	CBUF *C = cbuf + num;
 	C->numlhs++;
 	if ( C->numlhs >= (C->maxlhs-2) ) {
-		if ( DoubleList((VOID ***)(&(C->lhs)),&(C->maxlhs),sizeof(WORD *),
+		WORD ***ppp = &(C->lhs);	/* to avoid compiler warning */
+		if ( DoubleList((VOID ***)ppp,&(C->maxlhs),sizeof(WORD *),
 		"statement lists") ) Terminate(-1);
 	}
 	C->lhs[C->numlhs] = C->Pointer;
@@ -164,7 +166,7 @@ WORD *AddLHS(int num)
 }
 
 /*
-  	#] AddLHS : 
+  	#] AddLHS :
   	#[ AddRHS :
 */
 
@@ -206,7 +208,7 @@ restart:;
 			}
 		}
 		old	= C->rhs;
-		fullsize = newsize * (sizeof(WORD *) + 2*sizeof(LONG) + sizeof(WORD));
+		fullsize = newsize * (sizeof(WORD *) + 2*sizeof(LONG) + 2*sizeof(WORD));
 		C->rhs = (WORD **)Malloc1(fullsize,"subexpression lists");
 		for ( i = 0; i < C->maxrhs; i++ ) C->rhs[i] = old[i];
 		lold = C->CanCommu; C->CanCommu = (LONG *)(C->rhs+newsize);
@@ -215,6 +217,8 @@ restart:;
 		for ( i = 0; i < C->maxrhs; i++ ) C->NumTerms[i] = lold[i];
 		wold = C->numdum; C->numdum = (WORD *)(C->NumTerms+newsize);
 		for ( i = 0; i < C->maxrhs; i++ ) C->numdum[i] = wold[i];
+		wold = C->dimension; C->dimension = (WORD *)(C->numdum+newsize);
+		for ( i = 0; i < C->maxrhs; i++ ) C->dimension[i] = wold[i];
 		if ( old ) M_free(old,"subexpression lists");
 		C->maxrhs = newsize;
 		if ( type == 0 ) RedoTree(C,C->maxrhs);
@@ -223,12 +227,13 @@ restart:;
 	C->CanCommu[C->numrhs] = 0;
 	C->NumTerms[C->numrhs] = 0;
 	C->numdum[C->numrhs] = 0;
+	C->dimension[C->numrhs] = MAXPOSITIVE;
 	C->rhs[C->numrhs] = C->Pointer;
 	return(C->Pointer);
 }
 
 /*
-  	#] AddRHS : 
+  	#] AddRHS :
   	#[ AddNtoL :
 */
 
@@ -246,7 +251,7 @@ int AddNtoL(int n, WORD *array)
 }
 
 /*
-  	#] AddNtoL : 
+  	#] AddNtoL :
   	#[ AddNtoC :
 
 	Commentary: added the bufnum on 14-sep-2010 to make the whole a bit
@@ -269,7 +274,7 @@ int AddNtoC(int bufnum, int n, WORD *array)
 }
 
 /*
-  	#] AddNtoC : 
+  	#] AddNtoC :
   	#[ InsTree :
 
 	Routines for balanced tree searching and insertion.
@@ -459,7 +464,7 @@ balance:;
 }
 
 /*
-  	#] InsTree : 
+  	#] InsTree :
   	#[ FindTree :
 
 	Routines for balanced tree searching.
@@ -501,7 +506,7 @@ int FindTree(int bufnum, WORD *subexpr)
 }
 
 /*
-  	#] FindTree : 
+  	#] FindTree :
   	#[ RedoTree :
 */
 
@@ -520,7 +525,7 @@ void RedoTree(CBUF *C, int size)
 }
 
 /*
-  	#] RedoTree : 
+  	#] RedoTree :
   	#[ ClearTree :
 */
 
@@ -541,7 +546,7 @@ void ClearTree(int i)
 }
 
 /*
-  	#] ClearTree : 
+  	#] ClearTree :
   	#[ IniFbuffer :
 */
 /**
@@ -571,11 +576,12 @@ int IniFbuffer(WORD bufnum)
 	root->usage = 0;
 	for ( i = 1; i < C->MaxTreeSize; i++ ) { C->boomlijst[i] = comptreezero; }
 
-	fullsize = (C->maxrhs+1) * (sizeof(WORD *) + 2*sizeof(LONG) + sizeof(WORD));
+	fullsize = (C->maxrhs+1) * (sizeof(WORD *) + 2*sizeof(LONG) + 2*sizeof(WORD));
 	C->rhs = (WORD **)Malloc1(fullsize,"IniFbuffer-rhs");
 	C->CanCommu = (LONG *)(C->rhs+C->maxrhs);
 	C->NumTerms = (LONG *)(C->rhs+2*C->maxrhs);
 	C->numdum = (WORD *)(C->NumTerms+C->maxrhs);
+	C->dimension = (WORD *)(C->numdum+C->maxrhs);
 
 	return(0);
 }
@@ -608,6 +614,6 @@ LONG numcommute(WORD *terms, LONG *numterms)
 }
 
 /*
-  	#] numcommute : 
+  	#] numcommute :
 */
 

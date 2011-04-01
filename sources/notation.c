@@ -64,6 +64,7 @@ int NormPolyTerm(PHEAD WORD *term)
 	tstop = tcoef - ABS(tcoef[-1]);
 	tfill = t = term + 1;
 	rfirst = 0;
+	if ( t >= tstop ) return(*term);
 	while ( t < tstop ) {
 		switch ( *t ) {
 			case SYMBOL:
@@ -608,7 +609,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD pa
 }
 
 /*
- 		#] ConvertFromPoly :
+ 		#] ConvertFromPoly : 
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -653,7 +654,23 @@ WORD FindSubterm(WORD *subterm)
 		C->Pointer = oldCpointer + C->Buffer;
 		C->numrhs--;
 	}
+    else {
+		GETIDENTITY
+		WORD dim = DimensionSubterm(BHEAD subterm);
 
+		if ( dim == -MAXPOSITIVE ) {	/* Give error message but continue */
+			WORD *old = AN.currentTerm;
+			AN.currentTerm = term;
+			LOCK(ErrorMessageLock);
+			MesPrint("Dimension out of range in %t");
+			UNLOCK(ErrorMessageLock);
+			AN.currentTerm = old;
+		}
+/*
+		Store the dimension
+*/
+		C->dimension[number] = dim;
+	}
 	UNLOCK(AM.sbuflock);
 
 	*term = old[0]; ss[0] = old[1]; ss[1] = old[2]; ss[2] = old[3]; ss[3] = old[4];
@@ -838,6 +855,14 @@ WORD FindSubexpression(WORD *subexpr)
 		C->Pointer = oldCpointer + C->Buffer;
 		C->numrhs--;
 	}
+    else {
+		GETIDENTITY
+		WORD dim = DimensionExpression(BHEAD subexpr);
+/*
+		Store the dimension
+*/
+		C->dimension[number] = dim;
+	}
 
 	UNLOCK(AM.sbuflock);
 
@@ -845,7 +870,7 @@ WORD FindSubexpression(WORD *subexpr)
 }
 
 /*
- 		#] FindSubexpression : 
+ 		#] FindSubexpression :
  		#[ ExtraSymFun :
 */
 
