@@ -26,6 +26,7 @@ AH_VERBATIM([PRODUCTIONDATE],
 cflagsbackup=$CFLAGS
 AC_PROG_CC([gcc cc icc])
 AM_PROG_CC_C_O
+AC_PROG_CXX
 
 # Checks for header files
 AC_HEADER_STDC

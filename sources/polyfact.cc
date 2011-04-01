@@ -32,9 +32,11 @@
   	#[ include :
 */
 
+#include <algorithm>
 #include <vector>
 #include <iostream>
 #include <cassert>
+#include <climits>
 #include <cmath>
 #include <map>
 
