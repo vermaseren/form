@@ -997,7 +997,7 @@ ScaledVariety:;
 					routine could take over (allowing for writing the output
 					properly of course).
 */
-					if ( AC.OldFactArgFlag == 0 ) {
+					if ( AC.OldFactArgFlag == NEWFACTARG ) {
 					if ( factor == 0 ) {
 						WORD *oldworkpointer2 = AT.WorkPointer;
 						AT.WorkPointer = r1 + AM.MaxTer;
@@ -2081,7 +2081,7 @@ getout:
 		Step 6: Add this one to the tables and possibly drop some elements
 		          in the tables when they become too full.
 */
-	if ( error == 0 ) {
+	if ( error == 0 && AN.ncmod == 0 ) {
 		if ( InsertArg(BHEAD argcopy,a,0) < 0 ) { error = -1; }
 	}
 /*
@@ -2119,7 +2119,9 @@ return0:
 
 WORD FindArg(PHEAD WORD *a)
 {
-	int number = FindTree(AT.fbufnum,a);
+	int number;
+	if ( AN.ncmod != 0 ) return(0);	/* no room for mod stuff */
+	number = FindTree(AT.fbufnum,a);
 	if ( number >= 0 ) return(number+1);
 	number = FindTree(AC.ffbufnum,a);
 	if ( number >= 0 ) return(-number-1);

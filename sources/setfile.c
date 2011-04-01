@@ -75,7 +75,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, NEWFACTARG, (long)0}
+	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, 0, (long)NEWFACTARG}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
@@ -667,7 +667,7 @@ int AllocSetups()
 	sp = GetSetupPar((UBYTE *)"nwritethreadstatistics");
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"oldfactarg");
-	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = 1-sp->value;
+	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;
