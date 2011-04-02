@@ -809,11 +809,11 @@ void PrintSubtermList(int from,int to)
 		}
 		FiniLine();
 		i += inc;
-	} while ( i != to );
+	} while ( i <= to );
 }
 
 /*
- 		#] PrintSubtermList : 
+ 		#] PrintSubtermList :
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
