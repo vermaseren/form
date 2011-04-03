@@ -1150,6 +1150,48 @@ immediately. The string will be printed in the output. This can be used to
 indicate where \FORM\ ran into the exit statement. \vspace{10mm}
 
 %--#] exit : 
+%--#[ extrasymbols :
+
+\section{extrasymbols}
+\label{substaextrasymbols}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & extrasymbols,array/vector/underscore,name;
+\\ See also & ToPolynomial (\ref{substatopolynomial}) ,FromPolynomial 
+(\ref{substafrompolynomial}) and the section on extra symbols 
+(\ref{sect-extrasymbols}).
+\end{tabular} \vspace{4mm}
+
+\noindent Starting with version 4.0 of \FORM some built in operations or 
+statements can only deal with symbols and numbers. Examples of this are 
+factorization(\ref{substafactarg}) (which uses the topolynomial facilities 
+automatically) and output simplification (still to be 
+implemented). The ToPolynomial statement takes each term, looks for objects 
+that are not symbols to positive powers and replaces them by symbols. If 
+the object has been encountered before the same symbol will be used, 
+otherwise a new symbol will be defined. The object represented by the 
+`extra symbol' is stored internally and can be printed if needed with the 
+\%X option in the \#write instruction (\ref{prewrite}). The representation 
+of the extra symbols is by default the name Z followed by a number and an 
+underscore character. If another name is desired this should be specified 
+in an `ExtraSymbols' statement. The name given may contain only alphabetic 
+characters! Because some compilers do not like the underscore character, 
+there is an alternative notation for the extra symbols. This is just for 
+cosmetic reasons and one cannot feed these symbols into the compiler this 
+way. This is with an array notation. The statement
+\begin{verbatim}
+   ExtraSymbols,array,Ab;
+\end{verbatim}
+would cause the second extra symbol to be printed as {\tt Ab(2)}. The total 
+number of defined extra symbols is given by the built in symbol 
+extrasymbols\_.
+The option vector in the ExtraSymbols statement is identical to the option 
+array and the option underscore reverts the notation back to the default 
+notation with the trailing underscore.
+\vspace{10mm}
+
+%--#] extrasymbols : 
 %--#[ factarg :
 
 \section{factarg}
@@ -1200,6 +1242,19 @@ When these options are not used the whole term is treated as in:
       f(a,b,-1,3) + f(a,b,3) + 2*f1(a*b) + f2(a*b,-1,3) + f2(a*b,3)
       + f3(a*b,-3) + f3(a*b,3);
 \end{verbatim}
+When no extra options are used, starting with version 4.0, the whole 
+argument is factorized over the rationals. This means that
+\begin{verbatim}
+    f(x^2+2*x*y+y^2) --> f(y + x,y + x,1)
+\end{verbatim}
+It should be noticed that \FORM can although the internal algoriths can 
+only factorize expressions with numbers and symbols, \FORM redefines all 
+non-symbol objects temporarily into symbols and at the end substitutes them 
+back. This is done with a mechanism that is similar to that of the 
+ToPolynomial statement.
+
+See also the On OldfactArg; and Off OldFactArg statements for a 
+compatibility mode with versions before version 4.0.
 \vspace{10mm}
 
 %--#] factarg : 
@@ -1492,6 +1547,29 @@ Reduce format. It is not guaranteed that this is perfect.}
 author is open for suggestions. \vspace{10mm}
 
 %--#] format : 
+%--#[ frompolynomial :
+
+\section{frompolynomial}
+\label{substafrompolynomial}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & frompolynomial
+\\ See also & factarg (\ref{substafactarg}), ToPolynomial 
+(\ref{substatopolynomial}) and ExtraSymbols (\ref{stubstaextrasymbols},
+\ref{sect-extrasymbols}).
+\end{tabular} \vspace{4mm}
+
+\noindent Starting with version 4.0 of \FORM some built in operations or 
+statements can only deal with symbols and numbers. Examples of this are 
+factorization(\ref{substafactarg}) and output simplification (still to be 
+implemented). Whereas the ToPolynomial statement takes each term, looks for objects 
+that are not symbols to positive powers and replaces them by symbols the 
+FromPolynomial does the opposite: it replaces the newly defined extra 
+symbols and replaces them back by their original meaning.
+\vspace{10mm}
+
+%--#] frompolynomial : 
 %--#[ functions :
  
 \section{functions}
@@ -2524,14 +2602,16 @@ the parallel version and section \ref{pardollars} on the dollar variables.\vspac
 
 \noindent \begin{tabular}{ll}
 Type & Declaration statement\\
-Syntax & m[odulus] {\tt<}value{\tt>};
+Syntax & m[odulus] [option(s)] {\tt<}value{\tt>};
 \end{tabular} \vspace{4mm}
 
 \noindent Defines all calculus to be modulus\index{modulus} the given 
-number, provided this number is positive. If this number is less than the 
-(installation dependent but at least 10000) maximum power for symbols and 
-dotproducts the powers of symbols and dotproducts are reduced with the 
-relation $x^{value} = x$.
+integer value, provided this number is positive.
+
+% If this number is less than the 
+%(installation dependent but at least 10000) maximum power for symbols and 
+%dotproducts the powers of symbols and dotproducts are reduced with the 
+%relation $x^{value} = x$.
 
 \noindent The modulus calculus extends itself to 
 fractions\index{fractions}. This means that if the value is not a prime 
@@ -2542,29 +2622,47 @@ to avoid such problems.
 statement would be meaningless. It is used as a signal to \FORM\ that modulus 
 calculus should be switched off again.
 
-\noindent The reduction of powers with the relation $x^{value}=x$ can be 
-switched off by specifying a negative number for `value'. In that case only 
-coefficients are treated. Of course the value used for the modulus will be 
-the absolute value of the number that was specified. Hence
-\begin{verbatim}
-    Modulus,-17;
-\end{verbatim}
-will set all arithmetic to modulus 17 and powers will not be affected.
+The options are
+\begin{description}
+\item[NoFunctions] Modulus calculus is not performed inside function 
+arguments.
+\item[AlsoFunctions] Modulus calculus is also performed inside function 
+arguments.
+\item[CoefficientsOnly] Modulus calculus is neither performed inside function 
+arguments nor on powers of symbols.
+\item[PlusMin] The values of numbers are reduced to the range 
+$(-value+1)/2$ to $(value-1)/2$.
+\item[Positive] The values of numbers are reduced to the range $0$ to 
+$value-1$.
+\item[NoDollars] The modulus calculus is not performed inside dollar 
+variables.
+\item[AlsoDollars] The modulus calculus is performed also inside dollar 
+expressions.
+\item[InverseTable] To speed up calculations all inverses are computed by 
+means of a table. If the modulus value is very big, this table may be too 
+big for the memory. That would result in an error message.
+\item[NoInverseTable] No Table of Inverses is constructed. They are 
+calculated whenever needed.
+\item[AlsoPowers] Reduction is also used on powers of symbols with the 
+relation $x^mod = x$ if mod is the given value
+\item[NoPowers] No reduction on powers is done.
+\item[PrintPowersOf] The proper syntax is here printpowersof(generator) in 
+which generator is supposed to be a generator for calculus modulus the 
+given value, which means that all numbers will be written as a power of the 
+generator. If the number turns out not to be a proper generator an error 
+will be given. Note that finding the powers is done by means of the 
+construction of a table. Hence, if the modulus value is very big the table 
+might not fit inside memory. This will result in an error message.
+\end{description}
+The default mode is NoFunctions, Positive, NoInverseTable, NoDollars, 
+NoPowers.
 
-\noindent When the value for the modulus arithmetic is a prime\index{prime} 
-number there exists another option. In the statement
-\begin{verbatim}
-    Modulus p:x;
-\end{verbatim}
-in which p is a prime number and x a generator (a number such that all 
-numbers mod p that are not zero can be written as powers of x) \FORM\ will 
-construct a table to express all nonzero numbers less than p as powers of 
-x. This will fail if either x is not a generator or when the numbers are 
-too large for the construction of such a table. If the table can be 
-constructed \FORM\ uses it when printing results and expresses all numbers as 
-powers of the generator.\vspace{10mm}
+The current syntax (version 4.0 and later) differs slightly from the 
+previous syntax. As however there were many bugs in the old implementation 
+we suspect that a slight change of the options does not inconvenience any 
+many users.
 
-%--#] modulus : 
+%--#] modulus :
 %--#[ modulusgcd : To do <------
 %
 %	ModulusGCD,m,x,f1,f2;   Look inside factor.c
@@ -2574,7 +2672,7 @@ powers of the generator.\vspace{10mm}
 %	Puts the result in f2. Leaves the f1.
 %	Because it doesn't work too well yet is isn't officially supported.
 %
-%--#] modulusgcd : 
+%--#] modulusgcd :
 %--#[ multi :
  
 \section{multi}
@@ -2993,6 +3091,12 @@ off by the `on nospacesinnumbers;' statement. The printing of the blank
 characters can be restored by turning this variable off. See also page 
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
+\leftvitem{3cm}{oldfactarg\index{off!oldfactarg}}
+\rightvitem{13cm}{\label{staoffoldfactarg}Switches the use of the FactArg 
+statement\ref{substafactarg}\index{factarg} to the new mode of version 4 or 
+later in which expressions in the argument of the mentioned function are 
+completely factored over the rationals. The default is off.}
+ 
 \leftvitem{3cm}{parallel\index{off!parallel}}
 \rightvitem{13cm}{Disallows the running of the program in parallel mode 
 (only relevant for parallel versions of \FORM).}
@@ -3137,6 +3241,13 @@ purposes \FORM\ puts usually a few blank spaces at the beginning of the line.
 blank characters can be omitted by turning this variable on. See also page
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
+\leftvitem{3cm}{oldfactarg\index{on!oldfactarg}}
+\rightvitem{13cm}{\label{staonoldfactarg}Switches the use of the FactArg 
+statement\ref{substafactarg}\index{factarg} to the old mode from before 
+version 4. This is a compatibility mode to allow oldprograms that rely on a 
+specific working of the FactArg statement to still run. The default is 
+off.}
+ 
 \leftvitem{3cm}{parallel\index{on!parallel}}
 \rightvitem{13cm}{Allows the running of the program in parallel mode unless 
 other problems prevent this. This is of course only relevant for parallel 
@@ -3210,7 +3321,7 @@ in the command tail when \FORM\ is started (see \ref{running}).}
 is the default.}
 \vspace{10mm}
 
-%--#] on :
+%--#] on : 
 %--#[ once :
  
 \section{once}
@@ -3348,10 +3459,10 @@ with the highest power first. In the polyfun the ordering is as with the
 regular terms. By default the lowest powers come first as one usually likes 
 for power series expansions.
 
-\noindent REMARK: The treatment of polynomials is currently under 
-development and hence not all facilities are fully operational. At the 
-moment of writing (15-nov-2007), the polyratfun only supports rational 
-polynomials in a single variable.
+\noindent REMARK: In versions after 15-nov-2007 but before 1-apr-2011 
+(version 4.0 beta) not all facilities were operational. Among others only 
+rational polynomials in a single variable were supported. Starting with 
+version 4.0 the polyratfun is supposed to be fully operational.
 \vspace{10mm}
 
 %--#] polyratfun : 
@@ -4759,6 +4870,32 @@ section on \TFORM\ (\ref{tform}). To find out what its value is, use the
 `ON,setup;' statement (\ref{substaon} and \ref{setup}). \vspace{10mm}
 
 %--#] threadbucketsize : 
+%--#[ topolynomial :
+
+\section{topolynomial}
+\label{substatopolynomial}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & topolynomial
+\\ See also & factarg (\ref{substafactarg}), FromPolynomial 
+(\ref{substafrompolynomial}) and ExtraSymbols (\ref{stubstaextrasymbols},
+\ref{sect-extrasymbols}).
+\end{tabular} \vspace{4mm}
+
+\noindent Starting with version 4.0 of \FORM some built in operations or 
+statements can only deal with symbols and numbers. Examples of this are 
+factorization(\ref{substafactarg}) and output simplification (still to be 
+implemented). The ToPolynomial statement takes each term, looks for objects 
+that are not symbols to positive powers and replaces them by symbols. If 
+the object has been encountered before the same symbol will be used, 
+otherwise a new symbol will be defined. The object represented by the 
+`extra symbol' is stored internally and can be printed if needed with the 
+\%X option in the \#write instruction (\ref{prewrite}). Note that negative 
+powers of symbols will also be replaced.
+\vspace{10mm}
+
+%--#] topolynomial : 
 %--#[ totensor :
 
 \section{totensor}

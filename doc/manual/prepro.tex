@@ -1179,7 +1179,7 @@ Time =       0.00 sec    Generated terms =         10
                          Bytes used      =         52
 \end{verbatim}
 
-%--#] preout :
+%--#] preout : 
 %--#[ printtimes :
  
 \section{\#printtimes}
@@ -1198,7 +1198,7 @@ Example:
   423.59 sec + 5815.88 sec: 6239.47 sec out of 1215.29 sec
 \end{verbatim}
 
-%--#] printtimes :
+%--#] printtimes : 
 %--#[ procedure :
 
 \section{\#procedure}
@@ -1703,6 +1703,8 @@ environment variable FORMPATH\index{FORMPATH}. If this variable exists it
 will be interpreted as a path and \FORM\ will search the indicated 
 directories for the given file. If none is found there will be an error 
 message and execution will be halted.
+\item[\%X] Forces the printing of the list of extra symbols 
+(\ref{sect-extrasymbols}) and their definitions\index{extrasymbols}.
 \end{description}
 If no special variables are asked for (by means of \%\$, \%e, \%E or \%s) 
 the list of variables will be ignored (if present). Example:
@@ -1774,7 +1776,7 @@ selected). The output file looks like
 and each time after 19 continuation lines we have to break the expression 
 and use the \verb:fun = fun +: trick to continue.
 
-%--#] write : 
+%--#] write :
 %--#[ Some remarks :
 
 \section{Some remarks}

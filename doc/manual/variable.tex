@@ -191,6 +191,8 @@ the numerator of the coefficient of the current term.
 \noindent den\_\index{den\_}: this variable is automatically replaced by 
 the denominator of the coefficient of the current term.
 
+\noindent extrasymbols\_\index{extrasymbols\_}: this symbol represents the 
+number of extra symbols (see \ref{sect-extrasymbols}).
 
 \section{Vectors}
 
@@ -792,6 +794,124 @@ the d\_ is replaced by the dimension of the index. If they are fixed
 indices, the d\_ is replaced by one, unless this value has been altered 
 with the fixindex-statement. Some examples of Kronecker delta's are given 
 in section~\ref{fund}.
+
+\section{Extra Symbols}
+
+\label{sect-extrasymbols}
+Starting with version 4.0 \FORM is equipped with a mechanism to replace 
+non-symbol objects by internally generated symbols. These are called the 
+extra symbols. Their numbering starts at maximum number allowed for 
+internal objects and then counts down. Hence their ordering will be 
+opposite to what might otherwise be expected. It is possible to control 
+their representation when they are to be printed in the output. For this 
+there is the ExtraSymbols(\ref{substaextrasymbols}) statement. The 
+definitions of the extra symbols can be made visible with the \%X option in 
+the \#write preprocessor instruction.
+
+Extra symbols can be introduced by the user with the ToPolynomial statement 
+(\ref{substatopolynomial}). This statement replaces all objects that are 
+not numbers or symbols to positive powers by extra symbols. This may be 
+needed for some new manipulations and can also be very handy for output 
+that is to be treated by for instance a FORTRAN or C compiler. The 
+FromPolynomial statement replaces the extra symbols again by their original 
+meaning.
+
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL!   Not yet
+\begin{verbatim}
+    Vector p,q,p1,p2;
+    CFunction f;
+    CFunction Dot,InvDot;
+    Symbol x,x1,x2;
+    Set pdot:p,q;
+    Off Statistics;
+    Local F = x+x^2+1/x+1/x^2+f(x1)+f(x2)*p.q*x+f(x2)/p.q^2;
+    id  p1?pdot.p2?pdot = Dot(p1,p2);
+    id  1/p1?pdot.p2?pdot = InvDot(p1,p2);
+    Print;
+    .sort
+
+   F =
+      x^-2 + x^-1 + x + x^2 + f(x1) + f(x2)*Dot(p,q)*x + f(x2)*InvDot(p,q)^2;
+
+    ExtraSymbols,array,Y;
+    Format DOUBLEFORTRAN;
+    ToPolynomial;
+    Print;
+    .sort
+
+      F =
+     & Y(1) + Y(1)**2 + Y(2) + Y(5)**2*Y(3) + x + x*Y(4)*Y(3) + x**2
+
+    #write <sub.f> "      SUBROUTINE sub(Y)"
+    #write <sub.f> "*"
+    #write <sub.f> "*      Compute the extra symbols. Generated on `DATE_'"
+    #write <sub.f> "*"
+    #write <sub.f> "      REAL*8 Y(`EXTRASYMBOLS_')"
+    #write <sub.f> "      REAL*8 Dot,InvDot"
+    #write <sub.f> "      Dot(p1,p2)=p1(1)*p2(1)-p1(2)*p2(2)-p1(3)*p2(3)-p1(4)*p2(4)"
+    #write <sub.f> "      InvDot(p1,p2)=1.D0/(Dot(p1,p2))"
+    #write <sub.f> "*"
+    #write <sub.f> "*        We still have to add definitions here."
+    #write <sub.f> "*        And we have to import all the variables."
+    #write <sub.f> "*"
+    #write <sub.f> "%X"
+    #write <sub.f> "*"
+    #write <sub.f> "      RETURN"
+    #write <sub.f> "      END"
+    ExtraSymbols,underscore,Z;
+    Format Normal;
+    Format 80;
+    Print;
+    .end
+
+   F =
+      Z1_ + Z1_^2 + Z2_ + Z5_^2*Z3_ + x + x*Z4_*Z3_ + x^2;
+
+    FromPolynomial;
+    Print;
+    .end
+
+   F =
+      x^-2 + x^-1 + x + x^2 + f(x1) + f(x2)*Dot(p,q)*x + f(x2)*InvDot(p,q)^2;
+
+\end{verbatim}
+In the ExtraSymbols statement we say that we want the extra symbols to be 
+presented as an array with the name Y. The alternative is a set of symbols 
+with names ending in an underscore, but that would not make the FORTRAN 
+compiler very happy. Then we convert the expression to symbols. As one can 
+see, everything got converted to elements of an array Y which are treated 
+as symbols. After we have written the file sub.f (notice that 
+EXTRASYMBOLS\_ is a built in symbol indicating the number of extra symbols) 
+we change the representation to the (default) notation with an underscore 
+and the character Z. The contents of the file sub.f are:
+\begin{verbatim}
+      SUBROUTINE sub(Y)
+*
+*      Compute the extra symbols. Generated on Sat Apr  2 20:40:33 2011
+*
+      REAL*8 Y(5)
+      REAL*8 Dot,InvDot
+      Dot(p1,p2)=p1(1)*p2(1)-p1(2)*p2(2)-p1(3)*p2(3)-p1(4)*p2(4)
+      InvDot(p1,p2)=1.D0/(Dot(p1,p2))
+*
+*        We still have to add definitions here.
+*        And we have to import all the variables.
+*
+      Y(1)=x**(-1)
+      Y(2)=f(x1)
+      Y(3)=f(x2)
+      Y(4)=Dot(p,q)
+      Y(5)=InvDot(p,q)
+
+*
+      RETURN
+      END
+\end{verbatim}
+As one can see, with very little effort this routine can be made into a 
+proper subroutine that computes all elements of the array Y which can then 
+be used for computing the expression F.
+
 
 \section{Restrictions}
 
