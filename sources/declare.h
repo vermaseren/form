@@ -605,6 +605,8 @@ extern WORD   execarg(PHEAD WORD *,WORD);
 extern WORD   execterm(PHEAD WORD *,WORD);
 extern WORD   execnorm(WORD *,WORD);
 extern VOID   SpecialCleanup(PHEAD0);
+extern void   SetMods();
+extern void   UnSetMods();
 
 typedef WORD (*WCW)(EXPRESSIONS,WORD);
 
@@ -882,6 +884,7 @@ extern int    DoRepArg(PHEAD WORD *,int);
 extern int    ArgFactorize(PHEAD WORD *,WORD *);
 extern WORD  *TakeArgContent(PHEAD WORD *, WORD *);
 extern WORD  *MakeInteger(PHEAD WORD *,WORD *,WORD *);
+extern WORD  *MakeMod(PHEAD WORD *,WORD *,WORD *);
 extern WORD   FindArg(PHEAD WORD *);
 extern WORD   InsertArg(PHEAD WORD *,WORD *,int);
 extern int    CleanupArgCache(PHEAD WORD);

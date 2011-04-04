@@ -665,7 +665,7 @@ WORD DoExecute(WORD par, WORD skip)
 		}
 	}
 #endif
-/*:[20oct2009 mt]*/
+	if ( AC.ncmod ) SetMods();
 /*
 	Now the actual execution
 */
@@ -673,6 +673,7 @@ WORD DoExecute(WORD par, WORD skip)
 /*
 	That was it. Next is cleanup.
 */
+	if ( AC.ncmod ) UnSetMods();
 	AS.MultiThreaded = oldmultithreaded;
 	TableReset();
 
@@ -801,7 +802,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute :
+ 		#] DoExecute : 
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1119,6 +1120,39 @@ VOID SpecialCleanup(PHEAD0)
 
 /*
  		#] SpecialCleanup : 
+ 		#[ SetMods :
+*/
+
+#ifndef WITHPTHREADS
+
+void SetMods()
+{
+	int i, n;
+	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
+	n = ABS(AN.ncmod);
+	AN.cmod = (WORD *)Malloc1(sizeof(WORD)*n,"AN.cmod");
+	for ( i = 0; i < n; i++ ) AN.cmod[i] = AC.cmod[i];
+}
+
+#endif
+
+/*
+ 		#] SetMods :
+ 		#[ UnSetMods :
+*/
+
+#ifndef WITHPTHREADS
+
+void UnSetMods()
+{
+	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
+	AN.cmod = 0;
+}
+
+#endif
+
+/*
+ 		#] UnSetMods :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :

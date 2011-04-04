@@ -106,7 +106,7 @@ static LONG numberofterms;
 #endif
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Identity :
  		#[ StartIdentity :
 */
@@ -200,7 +200,7 @@ int WhoAmI()
 }
 
 /*
- 		#] WhoAmI :
+ 		#] WhoAmI : 
  		#[ BeginIdentities :
 */
 /**
@@ -216,7 +216,7 @@ VOID BeginIdentities()
 
 /*
  		#] BeginIdentities : 
-  	#] Identity :
+  	#] Identity : 
   	#[ StartHandleLock :
 */
 /**
@@ -334,7 +334,7 @@ MesPrint("AB = %x %x %x  %d",AB[0],AB[1],AB[2], identityofthreads);
 }
 
 /*
-  	#] StartAllThreads :
+  	#] StartAllThreads : 
   	#[ InitializeOneThread :
 */
 /**
@@ -3847,7 +3847,7 @@ ReturnError:
 }
 
 /*
-  	#] MasterMerge :
+  	#] MasterMerge : 
   	#[ SortBotMasterMerge :
 */
  
@@ -4709,6 +4709,41 @@ void IniFbufs(VOID)
 }
 
 /*
-  	#] IniFbufs : 
+  	#] IniFbufs :
+  	#[ SetMods :
+*/
+
+void SetMods()
+{
+	ALLPRIVATES *B;
+	int i, n, j;
+	for ( j = 0; j < AM.totalnumberofthreads; j++ ) {
+		B = AB[j];
+		AN.ncmod = AC.ncmod;
+		if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
+		n = ABS(AN.ncmod);
+		AN.cmod = (WORD *)Malloc1(sizeof(WORD)*n,"AN.cmod");
+		for ( i = 0; i < n; i++ ) AN.cmod[i] = AC.cmod[i];
+	}
+}
+
+/*
+  	#] SetMods :
+  	#[ UnSetMods :
+*/
+
+void UnSetMods()
+{
+	ALLPRIVATES *B;
+	int j;
+	for ( j = 0; j < AM.totalnumberofthreads; j++ ) {
+		B = AB[j];
+		if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
+		AN.cmod = 0;
+	}
+}
+
+/*
+  	#] UnSetMods :
 */
 #endif

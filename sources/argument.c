@@ -29,7 +29,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 /*
   	#[ include : argument.c
@@ -38,7 +38,7 @@
 #include "form3.h"
 
 /*
-  	#] include :
+  	#] include : 
   	#[ execarg :
 
 	Executes the subset of statements in an argument environment.
@@ -115,7 +115,7 @@ WORD execarg(PHEAD WORD *term, WORD level)
 		else factor = 0;
 	}
 /*
-  	#] Dollars :
+  	#] Dollars : 
 */
 	t = term;
 	r = t + *t;
@@ -618,7 +618,7 @@ ScaledVariety:;
 		t += t[1];
 	}
 /*
-  	#] Argument detection :
+  	#] Argument detection : 
   	#[ SplitArg : + varieties
 */
 	if ( ( type == TYPESPLITARG || type == TYPESPLITARG2
@@ -867,7 +867,7 @@ ScaledVariety:;
 		if ( AT.WorkPointer < m ) AT.WorkPointer = m;
 	}
 /*
-  	#] SplitArg :
+  	#] SplitArg : 
   	#[ FACTARG :
 */
 	if ( ( type == TYPEFACTARG || type == TYPEFACTARG2 ) && 
@@ -1088,7 +1088,7 @@ ScaledVariety:;
 							}
 	 					}
 /*
-			#] Numerical factor :
+			#] Numerical factor : 
 */
 						else {
 onetermnew:;
@@ -1188,7 +1188,7 @@ onetermnew:;
 							}
 						}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 */
 						else if ( *t == DOTPRODUCT ) {
@@ -1265,7 +1265,7 @@ onetermnew:;
 							}
 						}
 /*
-			#] DOTPRODUCT :
+			#] DOTPRODUCT : 
 			#[ DELTA/VECTOR :
 */
 						else if ( *t == DELTA || *t == VECTOR ) {
@@ -1322,7 +1322,7 @@ onetermnew:;
 							}
 						}
 /*
-			#] DELTA/VECTOR :
+			#] DELTA/VECTOR : 
 			#[ INDEX :
 */
 						else if ( *t == INDEX ) {
@@ -1389,7 +1389,7 @@ onetermnew:;
 							}
 						}
 /*
-			#] INDEX :
+			#] INDEX : 
 			#[ FUNCTION :
 */
 						else if ( *t >= FUNCTION ) {
@@ -1470,7 +1470,7 @@ nextterm:						mm = mnext;
 							t += t[1];
 						}
 /*
-			#] FUNCTION :
+			#] FUNCTION : 
 */
 						else {
 							t += t[1];
@@ -1553,7 +1553,7 @@ nextterm:						mm = mnext;
 						}
  					}
 /*
-			#] Numerical factor :
+			#] Numerical factor : 
 */
 					else {
 oneterm:;
@@ -1592,7 +1592,7 @@ oneterm:;
 		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
 /*
-  	#] FACTARG :
+  	#] FACTARG : 
 */
 	AR.Cnumlhs = oldnumlhs;
 	if ( action && Normalize(BHEAD term) ) goto execargerr;
@@ -1610,7 +1610,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -1669,7 +1669,7 @@ exectermerr:
 }
 
 /*
-  	#] execterm :
+  	#] execterm : 
   	#[ ArgumentImplode :
 */
 
@@ -1773,7 +1773,7 @@ int ArgumentImplode(PHEAD WORD *term, WORD *thelist)
 }
 
 /*
-  	#] ArgumentImplode :
+  	#] ArgumentImplode : 
   	#[ ArgumentExplode :
 */
 
@@ -1868,7 +1868,7 @@ NoExplode:
 }
 
 /*
-  	#] ArgumentExplode :
+  	#] ArgumentExplode : 
   	#[ DoRepArg :
 
 	Too be filled in.
@@ -1883,7 +1883,7 @@ int DoRepArg(PHEAD WORD *term,int level)
 }
 
 /*
-  	#] DoRepArg :
+  	#] DoRepArg : 
   	#[ ArgFactorize :
 */
 /**
@@ -1913,6 +1913,21 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		t = argin+ARGHEAD;
 		while ( *t ) {
 			tstop = t + *t;
+			if ( AN.ncmod != 0 ) {
+				if ( AN.ncmod != 1 || ( (WORD)AN.cmod[0] < 0 ) ) {
+					LOCK(ErrorMessageLock);
+					MesPrint("Factorization modulus a number, greater than a WORD not implemented.");
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				if ( Modulus(t) ) {
+					LOCK(ErrorMessageLock);
+					MesCall("ArgFactorize");
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				if ( !*t) { t = tstop; continue; }
+			}
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
@@ -2101,12 +2116,31 @@ getout:
 	TermFree(argcopy,"argcopy");
 return0:
 	if ( argfree != argin ) TermFree(argfree,"argfree");
-	AR.SortType = oldsorttype;
+/*	AR.SortType = oldsorttype; */
+	if ( oldsorttype != AR.SortType ) {
+		AR.SortType = oldsorttype;
+		while ( *argout ) {
+			if ( *argout > 0 ) {
+				NewSort();
+				oldword = argout[*argout]; argout[*argout] = 0;
+				t = argout+ARGHEAD;
+				while ( *t ) {
+					tstop = t + *t;
+					StoreTerm(BHEAD t);
+					t = tstop;
+				}
+				EndSort(argout+ARGHEAD,0,0);
+				argout[*argout] = oldword;
+				argout += *argout;
+			}
+			else { NEXTARG(argout); }
+		}
+	}
 	return(error);
 }
 
 /*
-  	#] ArgFactorize :
+  	#] ArgFactorize : 
   	#[ FindArg :
 */
 /**
@@ -2129,7 +2163,7 @@ WORD FindArg(PHEAD WORD *a)
 }
 
 /*
-  	#] FindArg :
+  	#] FindArg : 
   	#[ InsertArg :
 */
 /**
@@ -2166,7 +2200,7 @@ WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 }
 
 /*
-  	#] InsertArg :
+  	#] InsertArg : 
   	#[ CleanupArgCache :
 */
 /**
@@ -2243,7 +2277,7 @@ int CleanupArgCache(PHEAD WORD bufnum)
 }
 
 /*
-  	#] CleanupArgCache :
+  	#] CleanupArgCache : 
   	#[ DoFactorize1 :
 */
 /**
@@ -2264,7 +2298,7 @@ int DoFactorize1(PHEAD WORD *argin, WORD *argout)
 }
 
 /*
-  	#] DoFactorize1 :
+  	#] DoFactorize1 : 
   	#[ ArgSymbolMerge :
 */
 
@@ -2319,7 +2353,7 @@ int ArgSymbolMerge(WORD *t1, WORD *t2)
 }
 
 /*
-  	#] ArgSymbolMerge :
+  	#] ArgSymbolMerge : 
   	#[ ArgDotproductMerge :
 */
 
@@ -2376,7 +2410,7 @@ int ArgDotproductMerge(WORD *t1, WORD *t2)
 }
 
 /*
-  	#] ArgDotproductMerge :
+  	#] ArgDotproductMerge : 
   	#[ TakeArgContent :
 */
 /**
@@ -2467,7 +2501,7 @@ WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
 			}
 		}
 /*
-			#] DELTA/VECTOR :
+			#] DELTA/VECTOR : 
 			#[ INDEX :
 */
 		else if ( *t == INDEX ) {
@@ -2523,7 +2557,7 @@ WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
 			}
 		}
 /*
-			#] INDEX :
+			#] INDEX : 
 			#[ FUNCTION :
 */
 		else if ( *t >= FUNCTION ) {
@@ -2604,7 +2638,7 @@ nextterm:						mm = mnext;
 			t += t[1];
 		}
 /*
-			#] FUNCTION :
+			#] FUNCTION : 
 */
 		else {
 			t += t[1];
@@ -2763,7 +2797,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -2879,7 +2913,7 @@ nextterm:						mm = mnext;
 		}
 	  }
 /*
-			#] DOTPRODUCT :
+			#] DOTPRODUCT : 
 
 	We have now in argin3 the argument stripped of negative powers and
 	common factors. The only thing left to deal with is to make the
@@ -2900,7 +2934,12 @@ nextterm:						mm = mnext;
 	Now the GCD of the numerators and the LCM of the denominators:
 */
 	argfree = TermMalloc("TakeArgContent1");
-	r1 = MakeInteger(BHEAD argin3,r1,argfree);
+	if ( AN.cmod != 0 ) {
+		r1 = MakeMod(BHEAD argin3,r1,argfree);
+	}
+	else {
+		r1 = MakeInteger(BHEAD argin3,r1,argfree);
+	}
 	if ( pow == 0 ) {
 		*r1++ = -SNUMBER;
 		*r1++ = -1;
@@ -2921,7 +2960,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent :
+  	#] TakeArgContent : 
   	#[ MakeInteger :
 */
 /**
@@ -3095,7 +3134,54 @@ MakeIntegerErr:
 }
 
 /*
-  	#] MakeInteger :
+  	#] MakeInteger : 
+  	#[ MakeMod :
+*/
+/**
+ *	Similar to MakeInteger but now with modulus arithmetic using only
+ *	a one WORD 'prime'. We make the coefficient of the first term in the
+ *	argument equal to one.
+ *	Already the coefficients are taken modulus AN.cmod and AN.ncmod == 1
+ */
+
+WORD *MakeMod(PHEAD WORD *argin,WORD *argout,WORD *argfree)
+{
+	WORD *r, *instop, *r1, *m, x, xx, ix, ip;
+	int i;
+	r = argin; instop = r + *r; r += ARGHEAD;
+	x = r[*r-3];
+	if ( r[*r-1] < 0 ) x += AN.cmod[0];
+	if ( GetModInverses(x,(WORD)(AN.cmod[0]),&ix,&ip) ) {
+		Terminate(-1);
+	}
+	argout[0] = -SNUMBER;
+	argout[1] = x;
+	argout[2] = 0;
+	r1 = argout+2;
+/*
+	Now we have to multiply all coefficients by ix.
+	This does not make things longer, but we should keep to the conventions
+	of MakeInteger.
+*/
+	m = argfree + ARGHEAD;
+	while ( r < instop ) {
+		xx = r[*r-3]; if ( r[*r-1] < 0 ) xx += AN.cmod[0];
+		xx = (WORD)((((LONG)xx)*ix) % AN.cmod[0]);
+		if ( xx != 0 ) {
+			i = *r; NCOPY(m,r,i);
+			m[-3] = xx; m[-1] = 3;
+		}
+		else { r += *r; }
+	}
+	*m = 0;
+	*argfree = m - argfree;
+	argfree[1] = 0;
+	argfree += 2; FILLARG(argfree);
+	return(r1);
+}
+
+/*
+  	#] MakeMod :
   	#[ SortWeights :
 */
 /**
@@ -3156,6 +3242,6 @@ void SortWeights(LONG *weights,LONG *extraspace,WORD number)
 }
 
 /*
-  	#] SortWeights :
+  	#] SortWeights : 
 */
 
