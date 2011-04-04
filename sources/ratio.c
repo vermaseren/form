@@ -772,7 +772,14 @@ signdone:;
 		if ( firstshort == -VECTOR || firstshort == -INDEX || firstshort == -MINVECTOR ) {
 			tf = t + FUNHEAD;
 			while ( tf < t + t[1] ) {
-				if ( *tf < 0 ) { NEXTARG(tf); continue; }
+				if ( *tf < 0 ) {
+					if ( tf[1] != firstvalue ) goto gcdone;
+					if ( ( *tf == -VECTOR || *tf == -MINVECTOR ) &&
+					( firstshort == -VECTOR || firstshort == -MINVECTOR ) ) {
+						NEXTARG(tf); continue;
+					}
+					else goto gcdone;
+				}
 				tfnext = tf + *tf; m = tf + ARGHEAD;
 				while ( m < tfnext ) {
 					mnext = m + *m;
@@ -808,6 +815,51 @@ signdone:;
 			AT.WorkPointer = tout;
 			return(0);
 
+		}
+		else if ( firstshort == -SYMBOL ) {
+			tf = t + FUNHEAD;
+			while ( tf < t + t[1] ) {
+				if ( *tf < 0 ) {
+					if ( *tf == firstshort && tf[1] == firstvalue ) {
+						NEXTARG(tf); continue;
+					}
+					else goto gcdone;
+				}
+				tfnext = tf + *tf; m = tf + ARGHEAD;
+				while ( m < tfnext ) {
+					mnext = m + *m;
+					mlength = ABS(mnext[-1]); mstop = mnext - mlength;
+					m = m+1;
+					while ( m < mstop ) {
+						if ( *m == SYMBOL ) {
+							for ( i = 2; i < m[1]; i += 2 ) {
+								if ( m[i] == firstvalue && m[i+1] > 0 ) break;
+							}
+							if ( i >= m[1] ) goto gcdone;
+							break;
+						}
+						m += m[1];
+					}
+					if ( m >= mstop ) goto gcdone;
+					m = mnext;
+				}
+				tf = tfnext;
+			}
+/*
+			The GCD is SYMBOL,4,firstvalue,1
+*/			
+			tin += t[1]; tstop = term + *term;
+			*tout++ = SYMBOL;
+			*tout++ = 4;
+			*tout++ = firstvalue;
+			*tout++ = 1;
+			while ( tin < tstop ) *tout++ = *tin++;
+			*termout = tout - termout;
+			if ( sign < 0 ) tout[-1] = -tout[-1];
+			AT.WorkPointer = tout;
+			if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+			AT.WorkPointer = tout;
+			return(0);
 		}
 		else if ( firstshort <= -FUNCTION ) {
 			tf = t + FUNHEAD;
@@ -903,7 +955,7 @@ signdone:;
 }
 
 /*
- 		#] GCDfunction : 
+ 		#] GCDfunction :
  		#[ GCDfunction1 :  At least one argument with only one term
 
 	Finds the GCD of the all long arguments in argin of which the one at one
@@ -1175,7 +1227,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction2 :
+ 		#] GCDfunction2 : 
  		#[ GCDterms :      GCD of two terms
 
 	Computes the GCD of two terms.
@@ -1379,7 +1431,7 @@ int DoGCDfunction1(PHEAD WORD *argin, WORD *argout)
 }
 
 /*
- 		#] DoGCDfunction1 :
+ 		#] DoGCDfunction1 : 
   	#] GCDfunction :
 */
 
