@@ -864,7 +864,12 @@ signdone:;
 		else if ( firstshort <= -FUNCTION ) {
 			tf = t + FUNHEAD;
 			while ( tf < t + t[1] ) {
-				if ( *tf < 0 ) { NEXTARG(tf); continue; }
+				if ( *tf < 0 ) {
+					if ( *tf == firstshort ) {
+						NEXTARG(tf); continue;
+					}
+					else goto gcdone;
+				}
 				tfnext = tf + *tf; m = tf + ARGHEAD;
 				while ( m < tfnext ) {
 					mnext = m + *m;
