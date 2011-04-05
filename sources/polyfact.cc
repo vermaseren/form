@@ -32,13 +32,13 @@
   	#[ include :
 */
 
-#include <algorithm>
 #include <vector>
 #include <iostream>
 #include <cassert>
-#include <climits>
 #include <cmath>
 #include <map>
+#include <algorithm>
+#include <climits>
 
 #include "newpoly.h"
 #include "polygcd.h"
@@ -293,21 +293,16 @@ const poly poly_fact::derivative (const poly &a, int x) {
  *
  *   Notes
  *   ===== 
- *   - The method used is Yun's method.
+ *   - For modp==0, Yun's efficient method is used
+ *   - For modp!=0, a simple method is used
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 337-343]
  */
-const factorized_poly poly_fact::squarefree_factors (const poly &_a) {
-
-#ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: squarefree_factors("<<_a<<")\n";
-#endif
-
-	poly a(_a);
-	if (a == 1) return factorized_poly();
+const factorized_poly poly_fact::squarefree_factors_Yun (const poly &_a) {
 
 	factorized_poly res;
-
+	poly a(_a);
+	
 	int pow = 1;
 	int x = a.first_variable();
 	
@@ -317,20 +312,75 @@ const factorized_poly poly_fact::squarefree_factors (const poly &_a) {
 	while (true) {
 		a /= c;
 		b /= c;
-		assert (derivative(a,x) != 0);
 		b -= derivative(a,x);
-		
 		if (b == 0) break;
-		
 		c = poly_gcd::gcd(a,b);
-		if (c != 1)	res.add_factor(c,pow);
+		if (c != 1) res.add_factor(c,pow);
 		pow++;
 	}
+	
+	if (a != 1) res.add_factor(a,pow);
+	return res;
+}	
 
-	if (a != 1)	res.add_factor(a,pow);
+const factorized_poly poly_fact::squarefree_factors_modp (const poly &_a) {
+
+	factorized_poly res;
+	poly a(_a);
+	
+	int pow = 1;
+	int x = a.first_variable();
+	poly b = derivative(a,x);
+
+	// poly contains terms of the form c(x)^n (n!=c*p)
+	if (b != 0) {
+		poly c = poly_gcd::gcd(a,b);
+		a /= c;
+		
+		while (a != 1) {
+			b = poly_gcd::gcd(a,c);
+			a /= b;
+			if (a != 1) res.add_factor(a,pow);
+			pow++;
+			a = b;
+			c /= a;			
+		}
+
+		a = c;
+	}
+
+	// polynomial contains terms of the form c(x)^p
+	if (a != 1) {
+		for (int i=1; i<a.terms[1]; i+=a.terms[i])
+			a.terms[i+1+x] /= a.modp;
+		factorized_poly res2 = squarefree_factors(a);
+		for (int i=0; i<res2.factor.size(); i++) {
+			res.factor.push_back(res2.factor[i]);
+			res.power.push_back(a.modp*res2.power[i]);
+		}
+	}
+
+	return res;
+}
+
+
+const factorized_poly poly_fact::squarefree_factors (const poly &a) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : squarefree_factors("<<_a<<") = "<<res<<"\n";
+	cout << "*** [" << thetime() << "]  CALL: squarefree_factors("<<a<<")\n";
+#endif
+
+	if (a == 1) return factorized_poly();
+
+	factorized_poly res;
+	
+	if (a.modp==0)
+		res = squarefree_factors_Yun(a);
+	else
+		res = squarefree_factors_modp(a);
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  RES : squarefree_factors("<<a<<") = "<<res<<"\n";
 #endif
 
 	return res;
@@ -1065,25 +1115,32 @@ const factorized_poly poly_fact::factorize (const poly &a) {
  *   - This method is called from "argument.c"
  */
 int DoFactorize(PHEAD WORD *argin, WORD *argout) {
-
-	//	extern void test_a_lot();
-	//	test_a_lot();
 	
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables(argin, true, false);
 			 
  	poly a = poly::argument_to_poly(argin, true, var_to_idx);
 
-	// Check for modulus calculus
-	if (AC.modmode & ALSOFUNARGS) {
-		if (abs(AC.ncmod)>1) {
-			MesPrint ((char*)"ERROR: modulus > WORDSIZE not yet supported for polygcd ");
-			Terminate(1);
-		}
-		else 
+	// check for modulus calculus
+	if (AC.ncmod!=0) {
+		if (AC.modmode & ALSOFUNARGS) {
+			if (abs(AC.ncmod)>1) {
+				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
+				Terminate(1);
+			}
+			if (AN.poly_num_vars > 1) {
+				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
+				Terminate(1);
+			}
 			a.setmod(*AC.cmod, 1);
+		}
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
+		}
 	}
-	
+
+	// factorize
 	factorized_poly f = poly_fact::factorize(a);
 
 	for (int i=0; i<(int)f.factor.size(); i++) 
@@ -1097,6 +1154,9 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	
 	*argout = 0;
 
+	// reset modulo calculation
+	AC.ncmod = AN.ncmod;
+	
 	return 0;
 }
 

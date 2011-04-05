@@ -36,8 +36,8 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
-#include <climits>
 #include <cmath>
+#include <climits>
 
 #include "newpoly.h"
 #include "polygcd.h"
@@ -967,7 +967,7 @@ const poly poly_gcd::gcd_EZ (const poly &a, const poly &b, const vector<int> &x)
  *   =====
  *   If a prime p is provided, it returns the next prime that is good.
  */
-const WORD poly_gcd::choose_prime (const poly &a, const vector<int> &x, WORD p) {
+WORD poly_gcd::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: choose_prime("<<a<<","<<x<<","<<p<<")"<<endl;
@@ -1015,29 +1015,34 @@ const WORD poly_gcd::choose_prime (const poly &a, const vector<int> &x, WORD p) 
  *   Choose a power n such that p^n is larger than the coefficients of
  *   any factorization of a. These coefficients are bounded by:
  *
- *      goldenratio^degree * maxcoeff
+ *      goldenratio^degree * |f|
+ *
+ *   with the norm |f| = (SUM coeff^2)^1/2
  *
  *   [for details, see "Bounding the Coefficients of a Divisor of a
  *   Given Polynomial" by Andrew Granville]
- *
- *   TODO: add other estimates, that are suitable for high powers
- *   TODO: check this function thoroughly
  */
-const WORD poly_gcd::choose_prime_power (const poly &a, const vector<int> &x, WORD p) {
+WORD poly_gcd::choose_prime_power (const poly &a, const vector<int> &x, WORD p) {
 
 	GETIDENTITY;
-	
-	WORD maxdegree=0, maxdigits=0;
+
+	// analyse the polynomial for calculating the bound
+	WORD maxdegree=0, maxdigits=0, numterms=0;
 			
 	for (int i=1; i<a.terms[0]; i+=a.terms[i]) {
 		for (int j=0; j<AN.poly_num_vars; j++)
 			maxdegree = max(maxdegree, a.terms[i+1+j]);
-		
+
+		// maxdigits is a number of digits in the largest coefficient in base e
 		maxdigits = max(maxdigits, (WORD) ceil(log(a.terms[i+a.terms[i]-2])
-																					+ 32*(abs(a.terms[i+a.terms[i]-1])-1)*log(2)));
+																					 + BITSINWORD*(abs(a.terms[i+a.terms[i]-1])-1)*log(2)));
+		numterms++;
 	}
-	
-	return 4 + (WORD)ceil((log((sqrt(5.0)+1)/2) * maxdegree + maxdigits) / log(p));
+
+	// +5 is a fudge factor to compensate for multiplying with stuff
+	// along the way. Not very well investigated, but +4 is not enough.
+	// Maybe increasing is necessary.
+	return 5 + (WORD)ceil((log((sqrt(5.0)+1)/2) * maxdegree + maxdigits + 0.5*log(numterms)) / log(p));
 }
 
 /*
@@ -1421,20 +1426,23 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables(argin, true, true);
 
-	poly gcd(0);
-
 	// Check for modulus calculus
-	if (abs(AC.ncmod)>1) {
-		MesPrint ((char*)"ERROR: modulus > WORDSIZE not yet supported for polygcd ");
-		Terminate(1);
+	WORD modp=0;
+
+	if (AC.ncmod != 0) {
+		if (abs(AC.ncmod)>1) {
+			MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
+			Terminate(1);
+		}
+		if (AN.poly_num_vars > 1) {
+			MesPrint ((char*)"ERROR: multivariate polynomial GCD with modulus not implemented");
+			Terminate(1);
+		}
+		modp = *AC.cmod;
 	}
 
-	WORD modp=0;
-	if (abs(AC.ncmod)==1) {
-		modp = *AC.cmod;
-		gcd.setmod(modp,1);
-	}
-			
+	poly gcd(0, modp, 1);
+	
 	// Calculate gcd
 	while (*argin != 0) {
 		poly a = poly::argument_to_poly(argin, true, var_to_idx);
@@ -1485,9 +1493,28 @@ WORD *PolyGCD(PHEAD WORD *a, WORD *b) {
 	map<int,int> var_to_idx = poly::extract_variables(a,false,false);
 	var_to_idx = poly::extract_variables(b,false,false);
 
+	poly pa = poly::argument_to_poly(a,false,var_to_idx); 
+	poly pb = poly::argument_to_poly(b,false,var_to_idx);
+		
+	// Check for modulus calculus
+	WORD modp=0;
+
+	if (AC.ncmod != 0) {
+		if (abs(AC.ncmod)>1) {
+			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+			Terminate(1);
+		}
+		if (AN.poly_num_vars > 1) {
+			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+			Terminate(1);
+		}
+		modp = *AC.cmod;
+		pa.setmod(modp);
+		pb.setmod(modp);
+	}
+
 	// Calculate gcd
-	poly gcd = poly_gcd::gcd(poly::argument_to_poly(a,false,var_to_idx),
-													 poly::argument_to_poly(b,false,var_to_idx));
+	poly gcd = poly_gcd::gcd(pa,pb);
 
 	// Convert to Form notation
 	poly::poly_to_argument(gcd, AT.WorkPointer, false);
@@ -1520,7 +1547,6 @@ WORD *PolyGCD(PHEAD WORD *a, WORD *b) {
 WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 
 	WORD *oldworkpointer = AT.WorkPointer;
-	poly num1, den1(1), num2, den2(1);
 	map<int,int> var_to_idx;
 	
 	AN.poly_num_vars = 0;
@@ -1536,7 +1562,24 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 		NEXTARG(t);
 	}
 
+	// Check for modulus calculus
+	WORD modp=0;
+
+	if (AC.ncmod != 0) {
+		if (abs(AC.ncmod)>1) {
+			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+			Terminate(1);
+		}
+		if (AN.poly_num_vars > 1) {
+			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+			Terminate(1);
+		}
+		modp = *AC.cmod;
+	}
+	
 	// Find numerators / denominators
+	poly num1, den1(1), num2, den2(1);
+	
 	t = t1+FUNHEAD;
 	num1 = poly::argument_to_poly(t, true, var_to_idx);
 	NEXTARG(t);
@@ -1549,6 +1592,13 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 	if (t < t2+t2[1]) 
 		den2 = poly::argument_to_poly(t, true, var_to_idx);
 
+	if (modp>0) {
+		num1.setmod(modp,1);
+		den1.setmod(modp,1);
+		num2.setmod(modp,1);
+		den2.setmod(modp,1);
+	}
+	
 	poly num,den,gcd;
 
 	// Calculate result
@@ -1634,8 +1684,23 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 		}
 	}
 
+	// Check for modulus calculus
+	WORD modp=0;
+
+	if (AC.ncmod != 0) {
+		if (abs(AC.ncmod)>1) {
+			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+			Terminate(1);
+		}
+		if (AN.poly_num_vars > 1) {
+			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+			Terminate(1);
+		}
+		modp = *AC.cmod;
+	}	
+	
 	// Accumulate total denominator/numerator and copy the remaining terms
-	poly num1(1), den1(1);
+	poly num1(1,modp,1), den1(1,modp,1);
 
 	WORD *s = term+1;
 	
@@ -1649,9 +1714,9 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 		}
 		if (*t == AR.PolyFun && nargs <= 2) {
 			WORD *t2 = t+FUNHEAD;
-			poly num2(poly::argument_to_poly(t2, true, var_to_idx));
+			poly num2(poly::argument_to_poly(t2, true, var_to_idx),modp,1);
 			NEXTARG(t2);
-			poly den2(1);
+			poly den2(1,modp,1);
 			if (t2<t+t[1]) den2=poly::argument_to_poly(t2, true, var_to_idx);
 
 			poly gcd1 = poly_gcd::gcd(num1,den2);

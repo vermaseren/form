@@ -53,12 +53,18 @@ namespace poly_fact {
 
 	const std::vector<int> choose_ideal (const poly &a, int p, const factorized_poly &lc, const std::vector<int> &x);
 	const poly derivative (const poly &a, int var);
+	
 	const factorized_poly squarefree_factors (const poly &_a);
+	const factorized_poly squarefree_factors_Yun (const poly &a);
+	const factorized_poly squarefree_factors_modp (const poly &a);
+	
 	const std::vector<WORD> dense_polynomial_quotient (std::vector<WORD> a, std::vector<WORD> b, const std::vector<WORD> &inv, WORD modp);
 	const std::vector<WORD> dense_polynomial_gcd (std::vector<WORD> a, std::vector<WORD> b, const std::vector<WORD> &inv, WORD modp);
+	
 	const std::vector<std::vector<WORD> > Berlekamp_Qmatrix (const poly &_a);
 	const std::vector<poly> Berlekamp_find_factors (const poly &, const std::vector<std::vector<WORD> > &);
 	const std::vector<poly> combine_factors (const poly &A, const std::vector<poly> &a);
+	
 	const std::vector<poly> factorize_squarefree (const poly &a, const std::vector<int> &x);
 	const factorized_poly factorize (const poly &a);
 };

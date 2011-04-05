@@ -244,14 +244,19 @@ poly::~poly () {
 
 // Sets the coefficient space to ZZ/p^n
 void poly::setmod(WORD _modp, WORD _modn) {
-	modp = _modp;
-	modn = _modn;
 	
-	if (modp>0) {
+	if (_modp>0 && (_modp!=modp || _modn<modn)) {
+		modp = _modp;
+		modn = _modn;
+	
 		WORD nmodq=0;
 		UWORD *modq=NULL;
 		small_power(modp,modn,modq,nmodq);
 		coefficients_modulo(modq,nmodq);
+	}
+	else {
+		modp = _modp;
+		modn = _modn;
 	}
 }
 
@@ -1762,13 +1767,13 @@ poly& poly::operator/= (const poly &a) { return *this = *this / a; }
 poly& poly::operator%= (const poly &a) { return *this = *this % a; }
 
 // Comparison operators
-const bool poly::operator== (const poly &a) const {
+bool poly::operator== (const poly &a) const {
 	for (int i=0; i<terms[0]; i++)
 		if (terms[i] != a.terms[i]) return 0;
 	return 1;
 }
 
-const bool poly::operator!= (const poly &a) const {	return !(*this == a); }
+bool poly::operator!= (const poly &a) const {	return !(*this == a); }
 
 /*
   	#] operator overloads : 

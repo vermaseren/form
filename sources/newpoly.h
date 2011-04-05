@@ -100,8 +100,8 @@ class poly {
 	const poly operator/ (const poly&) const;
 	const poly operator% (const poly&) const;
 
-	const bool operator== (const poly&) const;
-	const bool operator!= (const poly&) const;
+	bool operator== (const poly&) const;
+	bool operator!= (const poly&) const;
 	
 	int first_variable () const;
 	std::vector<int> all_variables () const;
