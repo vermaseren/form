@@ -51,6 +51,7 @@ namespace poly_gcd {
 	const std::vector<poly> solve_Diophantine_univariate (const std::vector<poly> &a, const poly &b);
 	const std::vector<poly> solve_Diophantine_multivariate (const std::vector<poly> &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c, int d);
 	const std::vector<poly> lift_coefficients (const poly &A, const std::vector<poly> &a);
+	void predetermine (int dep, const std::vector<std::vector<int> > &state, std::vector<std::vector<std::vector<int> > > &terms, std::vector<int> &term, int sumdeg=0);
 	const std::vector<poly> lift_variables (const poly &A, const std::vector<poly> &a, const std::vector<int> &x, const std::vector<int> &c, const std::vector<poly> &lc);
 	WORD choose_prime (const poly &a, const std::vector<int> &x, WORD p=0);
 	WORD choose_prime_power (const poly &a, const std::vector<int> &x, WORD p);

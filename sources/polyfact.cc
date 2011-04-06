@@ -261,7 +261,7 @@ const poly poly_fact::derivative (const poly &a, int x) {
 			WORD nb = b.terms[bi+b.terms[bi]-1];
 			Product((UWORD *)&b.terms[bi+1+AN.poly_num_vars], &nb, power);
 
-			b.terms[bi] = 2 + AN.poly_num_vars + abs(nb);
+			b.terms[bi] = 2 + AN.poly_num_vars + ABS(nb);
 			b.terms[bi+b.terms[bi]-1] = nb;
 			
 			bi += b.terms[bi];
@@ -354,7 +354,7 @@ const factorized_poly poly_fact::squarefree_factors_modp (const poly &_a) {
 		for (int i=1; i<a.terms[1]; i+=a.terms[i])
 			a.terms[i+1+x] /= a.modp;
 		factorized_poly res2 = squarefree_factors(a);
-		for (int i=0; i<res2.factor.size(); i++) {
+		for (int i=0; i<(int)res2.factor.size(); i++) {
 			res.factor.push_back(res2.factor[i]);
 			res.power.push_back(a.modp*res2.power[i]);
 		}
@@ -927,7 +927,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 						
 						if (nrem == 0) {
 							correct_lc[j] *= lc.factor[i];
-							memcpy(&lc_f.terms[2+AN.poly_num_vars], &quo.terms[0], abs(nquo)*sizeof(WORD));
+							memcpy(&lc_f.terms[2+AN.poly_num_vars], &quo.terms[0], ABS(nquo)*sizeof(WORD));
 							nlc_f = nquo;
 						}
 					}
@@ -1124,7 +1124,7 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	// check for modulus calculus
 	if (AC.ncmod!=0) {
 		if (AC.modmode & ALSOFUNARGS) {
-			if (abs(AC.ncmod)>1) {
+			if (ABS(AC.ncmod)>1) {
 				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
 				Terminate(1);
 			}

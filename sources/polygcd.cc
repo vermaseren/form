@@ -109,7 +109,7 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
 					(UWORD *)&b.terms[AN.poly_num_vars+2],b.terms[b.terms[0]-1],
 					(UWORD *)&c.terms[AN.poly_num_vars+2],&nc);
 
-	c.terms[1] = 2 + AN.poly_num_vars + abs(nc);
+	c.terms[1] = 2 + AN.poly_num_vars + ABS(nc);
 	c.terms[0] = 1 + c.terms[1];
 	c.terms[c.terms[0]-1] = nc;
 
@@ -169,7 +169,7 @@ const poly poly_gcd::integer_content (const poly &a) {
 						(UWORD *)&a.terms[i+1+AN.poly_num_vars], a.terms[i+a.terms[i]-1],
 						(UWORD *)&c.terms[2+AN.poly_num_vars], &nc);
 		
-		c.terms[1] = 2 + AN.poly_num_vars + abs(nc);
+		c.terms[1] = 2 + AN.poly_num_vars + ABS(nc);
 		c.terms[0] = 1 + c.terms[1];
 		c.terms[c.terms[0]-1] = nc;
 	}	
@@ -610,7 +610,46 @@ const vector<poly> poly_gcd::lift_coefficients (const poly &_A, const vector<pol
 }
 
 /*
-  	#] lift_coefficients : 
+  	#] lift_coefficients :
+		#[ predetermine :
+*/
+
+/**  Predetermine coefficients
+ *
+ *   Description
+ *   ===========
+ *   Helper function for multivariate Hensel lifting to predetermine
+ *   coefficients. The function creates all products of terms of the
+ *   polynomials a1,...,an and stores them according to degree in x1.
+ *
+ *   All terms with equal power in x1 result in an equation that might
+ *   be solved to predetermine a coefficient.
+ *
+ *   For details, see Wang, "An Improved Polynomial Factoring
+ *   Algorithm", Math. Comput. 32 (1978) pp. 1215-1231]
+ */
+void poly_gcd::predetermine (int dep, const vector<vector<int> > &state, vector<vector<vector<int> > > &terms, vector<int> &term, int sumdeg) {
+	// store the term
+	if (dep == (int)state.size()) {
+		terms[sumdeg].push_back(term);
+		return;
+	}
+
+	// recursively create new terms
+	term.push_back(0);
+	
+	for (int deg=0; sumdeg+deg<(int)state[dep].size(); deg++)
+		if (state[dep][deg] > 0) {
+			term.back() = deg;
+			predetermine(dep+1, state, terms, term, sumdeg+deg);
+		}
+
+	term.pop_back();
+}
+
+
+/*
+		#] predetermine :
   	#[ lift_variables :
 */
 
@@ -636,13 +675,19 @@ const vector<poly> poly_gcd::lift_coefficients (const poly &_A, const vector<pol
  *
  *   The correct multivariate leading coefficients should be given in
  *   the parameter lc.
+ *
+ *   [for details, see "Algorithms for Computer Algebra", pp. 250-273]
+ *
+ *   Before Hensel lifting, predetermination of coefficients is used
+ *   for efficiency.
+ 
+ *   [for details, see Wang, "An Improved Polynomial Factoring
+ *   Algorithm", Math. Comput. 32 (1978) pp. 1215-1231]
  *  
  *   Notes
  *   =====
  *   - The polynomial A must be primitive.
  *   - Returns empty vector<poly>() if lifting is impossible.
- *
- *   [for details, see "Algorithms for Computer Algebra", pp. 250-273]
  */
 const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &_a, const vector<int> &x, const vector<int> &c, const vector<poly> &lc) {
 	
@@ -655,21 +700,93 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 	
 	vector<poly> a(_a);
 
+	// First method: predetermine coefficients
+	
+	// state[n][d]: coefficient of x^d in a[n] is
+	// 0: non-existent, 1: undetermined, 2: determined
+	int D = A.degree(x[0]);
+	vector<vector<int> > state(a.size(), vector<int>(D+1, 0));
+
+	for (int i=0; i<(int)a.size(); i++)
+		for (int j=1; j<a[i].terms[0]; j+=a[i].terms[j]) 
+			state[i][a[i].terms[j+1+x[0]]] = j==1 ? 2 : 1;
+
+	// collect all products of terms
+	vector<vector<vector<int> > > terms(D+1);
+	vector<int> term;
+	predetermine(0,state,terms,term);
+
+	// count the number of undetermined coefficients
+	vector<int> num_undet(terms.size(),0);
+	for (int i=0; i<(int)terms.size(); i++) 
+		for (int j=0; j<(int)terms[i].size(); j++)
+			for (int k=0; k<(int)terms[i][j].size(); k++)
+				if (state[k][terms[i][j][k]] == 1) num_undet[i]++;
+
+	// replace the current leading coefficients by the correct ones
+	for (int i=0; i<(int)a.size(); i++) {
+		int thisdeg = a[i].degree(x[0]);
+		a[i] += (lc[i] - a[i].coefficient(x[0],thisdeg)) * poly::simple_poly(x[0],0,thisdeg);
+	}
+
+	bool changed;
+	do {
+		changed = false;
+
+		for (int i=0; i<(int)terms.size(); i++) {
+			// is only one coefficient in a equation is undetermined, solve
+			// the equation to determine this coefficient
+			if (num_undet[i] == 1) {
+				// generate equation
+				poly lhs, rhs(A.coefficient(x[0],i), A.modp, A.modn);
+				int which_idx=-1, which_deg=-1;
+				for (int j=0; j<(int)terms[i].size(); j++) {
+					poly coeff(1, A.modp, A.modn);
+					bool undet=false;
+					for (int k=0; k<(int)terms[i][j].size(); k++) {
+						if (state[k][terms[i][j][k]] == 1) {
+							undet = true;
+							which_idx=k;
+							which_deg=terms[i][j][k];
+						}
+						else 
+							coeff *= a[k].coefficient(x[0], terms[i][j][k]);
+					}
+					if (undet) 
+						lhs = coeff;
+					else
+						rhs -= coeff;
+				}
+
+				// solve equation
+				if (A.modn > 1) rhs.setmod(0,1);
+				a[which_idx] += (rhs / lhs - a[which_idx].coefficient(x[0],which_deg)) * poly::simple_poly(x[0],0,which_deg);
+				state[which_idx][which_deg] = 2;
+
+				// update number of undetermined coefficients
+				for (int j=0; j<(int)terms.size(); j++)
+					for (int k=0; k<(int)terms[j].size(); k++)
+						if (terms[j][k][which_idx] == which_deg)
+							num_undet[j]--;
+
+				changed = true;
+			}
+		}
+	}
+	while (changed);
+
+	// if this is the complete result, skip lifting
+	poly check(1, A.modn>1?0:A.modp, 1);
+	for (int i=0; i<(int)a.size(); i++)
+		check *= a[i];
+	if (check == A) return a;
+
+	// Second method: Hensel lifting
+	
 	// Calculate A and lc's modulo Ii = <xi-c{i-1],...,xm-c{m-1}> (for i=2,...,m)
 	vector<poly> simple(x.size());
-	vector<poly> AmodI(x.size());
-	vector<vector<poly> > lcmodI(a.size(), vector<poly>(x.size()));
-	
-	AmodI[x.size()-1] = A;
-	for (int i=0; i<(int)a.size(); i++)
-		lcmodI[i][x.size()-1] = lc[i];
-	
-	for (int i=(int)x.size()-2; i>=0; i--) {
+	for (int i=(int)x.size()-2; i>=0; i--) 
 		simple[i] = poly::simple_poly(x[i+1],c[i],1);
-		AmodI[i] = AmodI[i+1] % simple[i];
-		for (int j=0; j<(int)a.size(); j++)
-			lcmodI[j][i] = lcmodI[j][i+1] % simple[i];
-	}
 
 	// Calculate the maximum degree of A in x2,...,xm
 	int maxdegA=0;
@@ -680,15 +797,13 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 	for (int xi=1; xi<(int)x.size(); xi++) {
 
 		vector<poly> anew = a;
+		for (int i=0; i<(int)anew.size(); i++)
+			for (int j=xi-1; j<(int)c.size(); j++)
+				anew[i] %= simple[j];
+
 		vector<int> xnew(x.begin(), x.begin()+xi);
 		vector<int> cnew(c.begin(), c.begin()+xi-1);
 		poly term(1,A.modp,A.modn);
-
-		// Replace the current leading coefficient by the correct one modulo I_xi
-		for (int i=0; i<(int)a.size(); i++) {
-			int thisdeg = a[i].degree(x[0]);
-			a[i] += (lcmodI[i][xi] - a[i].coefficient(x[0],thisdeg)) * poly::simple_poly(x[0],0,thisdeg);
-		}
 
 		// Iteratively add the powers xi^k
 		for (int deg=1, maxdeg=A.degree(x[xi]); deg<=maxdeg; deg++) {
@@ -698,13 +813,14 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 			// Calculate the error, express it in terms of ai and add corrections.
 			poly error(-1,A.modp,A.modn);
 			for (int i=0; i<(int)a.size(); i++) error *= a[i];
-			error += AmodI[xi];
+			error += A;
+			for (int i=xi; i<(int)c.size(); i++) error %= simple[i];
 
 			if (error.is_zero()) break;
-			
+				
 			error /= term;
 			error %= simple[xi-1];
-
+			
 			vector<poly> s = solve_Diophantine_multivariate(anew,error,xnew,cnew,maxdegA);
 			if (s == vector<poly>()) return vector<poly>();
 
@@ -712,19 +828,19 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 				a[i] += s[i] * term;
 		}
 		
-		// check whether PRODUCT(a[i]) = A mod <xi-c{i-1},...,xm-c{m-1]> over the integers
-		poly check(1, A.modn>1?0:A.modp, 1);
-		for (int i=0; i<(int)a.size(); i++)
-			check *= a[i];
-
-		if (check != AmodI[xi]) {
-			return vector<poly>();
-		}
+		// check whether PRODUCT(a[i]) = A mod <xi-c{i-1},...,xm-c{m-1]> over the integers or ZZ/p
+		poly check(-1, A.modn>1?0:A.modp, 1);
+		for (int i=0; i<(int)a.size(); i++)	check *= a[i];
+		check += A;
+		for (int i=xi; i<(int)c.size(); i++) check %= simple[i];
+		if (check != 0) return vector<poly>();
 	}
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : lift_variables("<<A<<","<<_a<<","<<x<<","<<c<<","<<lc<<") = " << a << endl;
 #endif
+
+	cout << "*** RES : lift_variables("<<A<<","<<_a<<","<<x<<","<<c<<","<<lc<<") = " << a << endl;
 	
 	return a;
 }
@@ -1035,7 +1151,7 @@ WORD poly_gcd::choose_prime_power (const poly &a, const vector<int> &x, WORD p) 
 
 		// maxdigits is a number of digits in the largest coefficient in base e
 		maxdigits = max(maxdigits, (WORD) ceil(log(a.terms[i+a.terms[i]-2])
-																					 + BITSINWORD*(abs(a.terms[i+a.terms[i]-1])-1)*log(2)));
+																					 + BITSINWORD*(ABS(a.terms[i+a.terms[i]-1])-1)*log(2)));
 		numterms++;
 	}
 
@@ -1144,7 +1260,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 	WORD nxi=0;
 
 	for (int i=1; i<a.terms[0]; i+=a.terms[i]) {
-		WORD na = abs(a.terms[i+a.terms[i]-1]);
+		WORD na = ABS(a.terms[i+a.terms[i]-1]);
 		if (BigLong((UWORD *)&a.terms[i+a.terms[i]-1-na], na, pxi, nxi) > 0) {
 			pxi = (UWORD *)&a.terms[i+a.terms[i]-1-na];
 			nxi = na;
@@ -1152,7 +1268,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 	}
 	
 	for (int i=1; i<b.terms[0]; i+=b.terms[i]) {
-		WORD nb = abs(b.terms[i+b.terms[i]-1]);
+		WORD nb = ABS(b.terms[i+b.terms[i]-1]);
 		if (BigLong((UWORD *)&b.terms[i+b.terms[i]-1-nb], nb, pxi, nxi) > 0) {
 			pxi = (UWORD *)&b.terms[i+b.terms[i]-1-nb];
 			nxi = nb;
@@ -1342,7 +1458,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 				prod_deg *= ppa.terms[i+1+j] + 1;
 			max_prod_deg = max(max_prod_deg, prod_deg);
 
-			WORD digits = abs(ppa.terms[i+ppa.terms[i]-1]);
+			WORD digits = ABS(ppa.terms[i+ppa.terms[i]-1]);
 			UWORD lead = ppa.terms[i+1+AN.poly_num_vars];
 
 			if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
@@ -1357,7 +1473,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 				prod_deg *= ppb.terms[i+1+j] + 1;
 			max_prod_deg = max(max_prod_deg, prod_deg);
 			
-			WORD digits = abs(ppb.terms[i+ppb.terms[i]-1]);
+			WORD digits = ABS(ppb.terms[i+ppb.terms[i]-1]);
 			UWORD lead = ppb.terms[i+1+AN.poly_num_vars];
 
 			if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
@@ -1366,7 +1482,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 			}
 		}
 		
-		if (max_prod_deg*(max_digits-1+log(2*abs(max_lead))/log(2)/(BITSINWORD/2)) < GCD_HEURISTIC_MAX_DIGITS) {
+		if (max_prod_deg*(max_digits-1+log(2*ABS(max_lead))/log(2)/(BITSINWORD/2)) < GCD_HEURISTIC_MAX_DIGITS) {
 		*/
 		
 		try {
@@ -1430,7 +1546,7 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 	WORD modp=0;
 
 	if (AC.ncmod != 0) {
-		if (abs(AC.ncmod)>1) {
+		if (ABS(AC.ncmod)>1) {
 			MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
 			Terminate(1);
 		}
@@ -1500,7 +1616,7 @@ WORD *PolyGCD(PHEAD WORD *a, WORD *b) {
 	WORD modp=0;
 
 	if (AC.ncmod != 0) {
-		if (abs(AC.ncmod)>1) {
+		if (ABS(AC.ncmod)>1) {
 			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
 			Terminate(1);
 		}
@@ -1566,7 +1682,7 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 	WORD modp=0;
 
 	if (AC.ncmod != 0) {
-		if (abs(AC.ncmod)>1) {
+		if (ABS(AC.ncmod)>1) {
 			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
 			Terminate(1);
 		}
@@ -1688,7 +1804,7 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 	WORD modp=0;
 
 	if (AC.ncmod != 0) {
-		if (abs(AC.ncmod)>1) {
+		if (ABS(AC.ncmod)>1) {
 			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
 			Terminate(1);
 		}
