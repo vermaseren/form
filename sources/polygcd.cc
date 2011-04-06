@@ -833,15 +833,13 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 		for (int i=0; i<(int)a.size(); i++)	check *= a[i];
 		check += A;
 		for (int i=xi; i<(int)c.size(); i++) check %= simple[i];
-		if (check != 0) return vector<poly>();
+		if (!check.is_zero()) return vector<poly>();
 	}
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : lift_variables("<<A<<","<<_a<<","<<x<<","<<c<<","<<lc<<") = " << a << endl;
 #endif
 
-	cout << "*** RES : lift_variables("<<A<<","<<_a<<","<<x<<","<<c<<","<<lc<<") = " << a << endl;
-	
 	return a;
 }
 
