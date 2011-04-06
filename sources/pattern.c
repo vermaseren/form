@@ -1464,7 +1464,7 @@ Hitlevel2:							level2 = level;
 														m[SUBEXPSIZE+8] = SYMTONUM;
 														m[SUBEXPSIZE+11] = jj;
 													}
-													if ( m[SUBEXPSIZE+7] >= 0 ) {
+													else if ( m[SUBEXPSIZE+7] >= 0 ) {
 														oldvv = *(bfirst - Sets[j].first
 														+ Sets[m[SUBEXPSIZE+7]].first);
 													}
