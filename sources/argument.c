@@ -2709,8 +2709,8 @@ nextterm:						mm = mnext;
 				t++;
 				while ( t < r6 ) {
 					if ( *t != SYMBOL ) { t += t[1]; continue; }
-					r8 = r7+2;
-					while ( t < rnext && r8 < r2 ) {
+					r8 = r7+2; r9 = t + t[1]; t += 2;
+					while ( ( t < r9 ) && ( r8 < r2 ) ) {
 						if ( *t == *r8 ) {
 							t[1] -= r8[1]; t += 2; r8 += 2;
 						}
@@ -2718,6 +2718,7 @@ nextterm:						mm = mnext;
 							t += 2;
 						}
 					}
+					t = r9;
 				}
 				t = rnext;
 			}
@@ -2797,7 +2798,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL : 
+			#] SYMBOL :
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -2960,7 +2961,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent : 
+  	#] TakeArgContent :
   	#[ MakeInteger :
 */
 /**
