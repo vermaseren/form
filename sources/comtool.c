@@ -227,7 +227,7 @@ restart:;
 	C->CanCommu[C->numrhs] = 0;
 	C->NumTerms[C->numrhs] = 0;
 	C->numdum[C->numrhs] = 0;
-	C->dimension[C->numrhs] = MAXPOSITIVE;
+	C->dimension[C->numrhs] = 0;
 	C->rhs[C->numrhs] = C->Pointer;
 	return(C->Pointer);
 }

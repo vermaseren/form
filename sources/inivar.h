@@ -222,17 +222,17 @@ static struct fixedfun {
 };
 
 FIXEDSET fixedsets[] = {
-	 {"pos_",   "integers > 0",  CSYMBOL}  /* POS_    0  */
-	,{"pos0_",  "integers >= 0", CSYMBOL}  /* POS0_   1  */
-	,{"neg_",   "integers < 0",  CSYMBOL}  /* NEG_    2  */
-	,{"neg0_",  "integers <= 0", CSYMBOL}  /* NEG0_   3  */
-	,{"even_",  "even integers", CSYMBOL}  /* EVEN_   4  */
-	,{"odd_",   "odd integers",  CSYMBOL}  /* ODD_    5  */
-	,{"int_",   "all integers",  CSYMBOL}  /* Z_      6  */
-	,{"symbol_","only symbols",  CSYMBOL}  /* SYMBOL_ 7  */
-	,{"fixed_", "fixed indices", CINDEX}   /* FIXED_  8  */
-	,{"index_", "all indices",   CINDEX}   /* INDEX_  9  */
-	,{"number_","all rationals", CSYMBOL}  /* Q_     10  */
+	 {"pos_",   "integers > 0",  CSYMBOL, 0}  /* POS_    0  */
+	,{"pos0_",  "integers >= 0", CSYMBOL, 0}  /* POS0_   1  */
+	,{"neg_",   "integers < 0",  CSYMBOL, 0}  /* NEG_    2  */
+	,{"neg0_",  "integers <= 0", CSYMBOL, 0}  /* NEG0_   3  */
+	,{"even_",  "even integers", CSYMBOL, 0}  /* EVEN_   4  */
+	,{"odd_",   "odd integers",  CSYMBOL, 0}  /* ODD_    5  */
+	,{"int_",   "all integers",  CSYMBOL, 0}  /* Z_      6  */
+	,{"symbol_","only symbols",  CSYMBOL, MAXPOSITIVE}  /* SYMBOL_ 7  */
+	,{"fixed_", "fixed indices", CINDEX, 0}   /* FIXED_  8  */
+	,{"index_", "all indices",   CINDEX, 0}   /* INDEX_  9  */
+	,{"number_","all rationals", CSYMBOL, 0}  /* Q_     10  */
 };
 
 UBYTE BufferForOutput[260];

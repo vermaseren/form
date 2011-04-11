@@ -827,7 +827,7 @@ int CoSymbol(UBYTE *s)
 		minpow = -MAXPOWER;
 		maxpow =  MAXPOWER;
 		cplx = 0;
-		dim = MAXPOSITIVE;
+		dim = 0;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:	MesPrint("&Illegally formed name in symbol statement");
@@ -948,7 +948,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol :
+  	#] CoSymbol : 
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1133,7 +1133,7 @@ int CoVector(UBYTE *s)
 	UBYTE *name, c, *endname;
 	do {
 		name = s;
-		dim = MAXPOSITIVE;
+		dim = 0;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:	MesPrint("&Illegally formed name in vector statement");
 			error = 1;
@@ -1220,7 +1220,7 @@ int CoFunction(UBYTE *s, int comm, int istensor)
 	UBYTE *name, *oldc, *par, c, cc;
 	do {
 		symtype = cplx = 0;
-		dim = MAXPOSITIVE;
+		dim = 0;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:	MesPrint("&Illegally formed function/tensor name");
@@ -1430,14 +1430,14 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	if ( ( ret = GetVar(name,&type,&funnum,CFUNCTION,NOAUTO) ) ==
 					NAMENOTFOUND ) {
 		if ( par == 0 ) {
-			funnum = EntVar(CFUNCTION,name,0,1,0,MAXPOSITIVE);
+			funnum = EntVar(CFUNCTION,name,0,1,0,0);
 		}
 		else if ( par == 1 || par == 2 ) {
-			funnum = EntVar(CFUNCTION,name,0,0,0,MAXPOSITIVE);
+			funnum = EntVar(CFUNCTION,name,0,0,0,0);
 		}
 	}
 	else if ( ret <= 0 ) {
-		funnum = EntVar(CFUNCTION,name,0,0,0,MAXPOSITIVE);
+		funnum = EntVar(CFUNCTION,name,0,0,0,0);
 		error = 1;
 	}
 	else {
@@ -1800,6 +1800,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 								VARNAME(Sets,(set-Sets)),
 								VARNAME(symbols,numset));
 							error = 1;
+							set->dimension = MAXPOSITIVE;
 						}
 						break;
 					case CVECTOR:
@@ -1808,6 +1809,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 								VARNAME(Sets,(set-Sets)),
 								VARNAME(vectors,(numset-AM.OffsetVector)));
 							error = 1;
+							set->dimension = MAXPOSITIVE;
 						}
 						break;
 					case CFUNCTION:
@@ -1818,6 +1820,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 							error = 1;
 						}
 						break;
+							set->dimension = MAXPOSITIVE;
 				}
 			}
 			if ( sgn ) {
@@ -1909,7 +1912,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 }
 
 /*
-  	#] DoElements : 
+  	#] DoElements :
   	#[ CoSet :
 
 	Set declarations.

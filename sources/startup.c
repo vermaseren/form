@@ -726,11 +726,11 @@ VOID StartVariables()
 	AddSymbol((UBYTE *)"coeff_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"num_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"den_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
-	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE,MAXPOSITIVE);
+	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 
 	AddIndex((UBYTE *)"iarg_",4,0);
-	AddVector((UBYTE *)"parg_",VARTYPENONE,MAXPOSITIVE);
+	AddVector((UBYTE *)"parg_",VARTYPENONE,0);
 
 	AM.NumFixedFunctions = sizeof(fixedfunctions)/sizeof(struct fixedfun);
 	for ( i = 0; i < AM.NumFixedFunctions; i++ )
@@ -742,7 +742,7 @@ VOID StartVariables()
 							,0);
 	AM.NumFixedSets = sizeof(fixedsets)/sizeof(struct fixedset);
 	for ( i = 0; i < AM.NumFixedSets; i++ ) {
-		ii = AddSet((UBYTE *)fixedsets[i].name,0);
+		ii = AddSet((UBYTE *)fixedsets[i].name,fixedsets[i].dimension);
 		Sets[ii].type = fixedsets[i].type;
 	}
 	AM.RepMax = MAXREPEAT;
