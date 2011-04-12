@@ -190,8 +190,8 @@ int NormPolyTerm(PHEAD WORD *term)
 			}
 			else { r2 += 2; }
 		}
+		if ( rfirst[1] < 4 ) rfirst = 0;
 	}
-	if ( rfirst[1] < 4 ) rfirst = 0;
 /*
 	Finally we put the term together
 */
@@ -222,7 +222,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm : 
+ 		#] NormPolyTerm :
  		#[ ComparePoly :
 */
 /**
