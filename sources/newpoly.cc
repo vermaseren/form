@@ -43,12 +43,6 @@
 #include "newpoly.h"
 #include "polygcd.h"
 
-#define TIMECHECK
-
-#ifdef TIMECHECK
-#include "mytime.h"
-#endif
-
 // error message if the polynomial becomes too large
 #define	CHECK_TOO_LARGE(x) \
 	if ((UWORD)x.terms[0] > AM.MaxTer/sizeof(WORD)) {	\

@@ -176,7 +176,7 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 
 	// choose random c
 	for (int i=0; i<(int)c.size(); i++) {
-		c[i] = 1 + random() % (p-1);
+		c[i] = 1 + random() % ((p-1)/5); // <---------- this fudge factor of 5 causes improvement! (TODO!)
 		amodI %= poly::simple_poly(x[i+1],c[i],1);
 	}
 	
@@ -222,7 +222,7 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 		if (q == 1) return vector<int>();
 		d.push_back(q);
 	}
-
+	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : poly_fact::choose_ideal("
 			 <<a<<","<<p<<","<<lc<<","<<x<<") = "<<c<<endl;
@@ -819,7 +819,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 				c = choose_ideal(a,p,lc,x);
 				if (c.size()>0) break;
 			}
-
+		
 		if (x.size()==1 || c.size()>0) {
 			amodI = a;
 			for (int i=0; i<(int)c.size(); i++) 
@@ -885,113 +885,89 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 	}
 
 	// Lift variables
-	if (f.size() > 1) {
+	if (x.size() > 1 && f.size() > 1) {
 
+		// The correct leading coefficients of the factors can be
+		// reconstructed from prime number factors of the leading
+		// coefficients modulo I. This is possible since all factors of
+		// the leading coefficient have unique prime factors for the ideal
+		// I is chosen as such.
+		
+		poly amodI(a);
+		for (int i=0; i<(int)c.size(); i++)
+			amodI %= poly::simple_poly(x[i+1],c[i]);
+		poly delta = poly_gcd::integer_content(amodI);
+		
+		vector<poly> lcmodI(lc.factor.size());
+		for (int i=0; i<(int)lc.factor.size(); i++) {
+			lcmodI[i] = lc.factor[i];
+			for (int j=0; j<(int)c.size(); j++)
+				lcmodI[i] %= poly::simple_poly(x[j+1],c[j]);
+		}
+		
 		vector<poly> correct_lc(f.size(), poly(1,p,n));
-		poly aa;
 		
-		if (a.modp==0) {
-			// In the case of factorizing over the integers, the correct
-			// leading coefficients of the factors can be reconstructed from
-			// prime number factors of the leading coefficients modulo
-			// I. This is possible since all factors of the leading
-			// coefficient have unique prime factors for the ideal I is
-			// chosen as such.
-			poly amodI(a);
-			for (int i=0; i<(int)c.size(); i++)
-				amodI %= poly::simple_poly(x[i+1],c[i]);
-			poly delta = poly_gcd::integer_content(amodI);
+		for (int j=0; j<(int)f.size(); j++) {
+			poly lc_f = f[j].lcoeff() * delta;
+			WORD nlc_f = lc_f.terms[lc_f.terms[1]];
+			poly quo,rem;
+			WORD nquo,nrem;
 			
-			vector<poly> lcmodI(lc.factor.size());
-			for (int i=0; i<(int)lc.factor.size(); i++) {
-				lcmodI[i] = lc.factor[i];
-				for (int j=0; j<(int)c.size(); j++)
-					lcmodI[i] %= poly::simple_poly(x[j+1],c[j]);
-			}
-			
-			for (int j=0; j<(int)f.size(); j++) {
-				poly lc_f = f[j].lcoeff() * delta;
-				WORD nlc_f = lc_f.terms[lc_f.terms[1]];
-				poly quo,rem;
-				WORD nquo,nrem;
+			for (int i=(int)lcmodI.size()-1; i>=0; i--) {
 				
-				for (int i=(int)lcmodI.size()-1; i>=0; i--) {
+				if (i==0 && lc.factor[i].is_integer()) continue;
+				
+				do {
+					DivLong((UWORD *)&lc_f.terms[2+AN.poly_num_vars], nlc_f,
+									(UWORD *)&lcmodI[i].terms[2+AN.poly_num_vars], lcmodI[i].terms[lcmodI[i].terms[1]],
+									(UWORD *)&quo.terms[0], &nquo,
+									(UWORD *)&rem.terms[0], &nrem);
 					
-					if (i==0 && lc.factor[i].is_integer()) continue;
-					
-					do {
-						DivLong((UWORD *)&lc_f.terms[2+AN.poly_num_vars], nlc_f,
-										(UWORD *)&lcmodI[i].terms[2+AN.poly_num_vars], lcmodI[i].terms[lcmodI[i].terms[1]],
-										(UWORD *)&quo.terms[0], &nquo,
-										(UWORD *)&rem.terms[0], &nrem);
-						
-						if (nrem == 0) {
-							correct_lc[j] *= lc.factor[i];
-							memcpy(&lc_f.terms[2+AN.poly_num_vars], &quo.terms[0], ABS(nquo)*sizeof(WORD));
-							nlc_f = nquo;
-						}
+					if (nrem == 0) {
+						correct_lc[j] *= lc.factor[i];
+						memcpy(&lc_f.terms[2+AN.poly_num_vars], &quo.terms[0], ABS(nquo)*sizeof(WORD));
+						nlc_f = nquo;
 					}
-					while (nrem == 0);
 				}
+				while (nrem == 0);
 			}
+		}
+		
+		for (int i=0; i<(int)correct_lc.size(); i++) {
+			poly correct_modI = correct_lc[i];
+			for (int j=0; j<(int)c.size(); j++)
+				correct_modI %= poly::simple_poly(x[j+1],c[j]);
 			
-			for (int i=0; i<(int)correct_lc.size(); i++) {
-				poly correct_modI = correct_lc[i];
-				for (int j=0; j<(int)c.size(); j++)
-					correct_modI %= poly::simple_poly(x[j+1],c[j]);
-				
-				poly d = poly_gcd::integer_gcd(correct_modI, f[i].lcoeff());
-				correct_lc[i] *= f[i].lcoeff() / d;
-				delta /= correct_modI / d;
-				f[i] *= correct_modI / d;
-			}
-			
-			// increase n, because of multiplying with delta
-			if (delta!=1) {
-				poly deltapow(1);
-				for (int i=1; i<(int)correct_lc.size(); i++)
+			poly d = poly_gcd::integer_gcd(correct_modI, f[i].lcoeff());
+			correct_lc[i] *= f[i].lcoeff() / d;
+			delta /= correct_modI / d;
+			f[i] *= correct_modI / d;
+		}
+		
+		// increase n, because of multiplying with delta
+		if (delta!=1) {
+			poly deltapow(1);
+			for (int i=1; i<(int)correct_lc.size(); i++)
 					deltapow *= delta;
-				while (!deltapow.is_zero()) {
-					deltapow /= p;
-					n++;
-				}
-				
-				for (int i=0; i<(int)f.size(); i++) {
-					f[i].modn = n;
-					correct_lc[i].modn = n;
-				}
+			while (!deltapow.is_zero()) {
+				deltapow /= p;
+				n++;
 			}
-				
-			aa = poly(a,p,n);
-		
-			for (int i=0; i<(int)correct_lc.size(); i++) {
-				correct_lc[i] *= delta;
-				f[i] *= delta;
-				if (i>0) aa *= delta;
-			}		
-		}
-		else {
-			// In the case of factorizing over Z/p, the above trick doesnot
-			// work. To reconstruct the correct leading coefficients, each
-			// factor is multiplied by the total leading coefficient and
-			// contents are divided out afterwards.
-
-			aa = a;
-			poly the_lc = a.coefficient(x[0], a.degree(x[0]));
 			
-			poly the_lc_modI(the_lc);
-			for (int i=0; i<(int)c.size(); i++)
-				the_lc_modI %= poly::simple_poly(x[i+1],c[i]);
-
 			for (int i=0; i<(int)f.size(); i++) {
-				f[i] /= poly_gcd::integer_content(f[i]);
-				f[i] *= the_lc_modI;
-				if (i>0) aa *= the_lc;
+				f[i].modn = n;
+				correct_lc[i].modn = n;
 			}
-
-			correct_lc = vector<poly>(f.size(), the_lc);
 		}
 		
+		poly aa = poly(a,p,n);
+			
+		for (int i=0; i<(int)correct_lc.size(); i++) {
+			correct_lc[i] *= delta;
+			f[i] *= delta;
+			if (i>0) aa *= delta;
+		}		
+
 		f = poly_gcd::lift_variables(aa,f,x,c,correct_lc);
 		
 		for (int i=0; i<(int)f.size(); i++)
@@ -1115,6 +1091,10 @@ const factorized_poly poly_fact::factorize (const poly &a) {
  *   - This method is called from "argument.c"
  */
 int DoFactorize(PHEAD WORD *argin, WORD *argout) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: DoFactorize(...)" << endl;
+#endif
 	
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables(argin, true, false);

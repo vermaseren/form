@@ -689,6 +689,7 @@ void poly_gcd::predetermine (int dep, const vector<vector<int> > &state, vector<
  *   - The polynomial A must be primitive.
  *   - Returns empty vector<poly>() if lifting is impossible.
  */
+
 const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &_a, const vector<int> &x, const vector<int> &c, const vector<poly> &lc) {
 	
 #ifdef DEBUG
@@ -710,7 +711,7 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 	for (int i=0; i<(int)a.size(); i++)
 		for (int j=1; j<a[i].terms[0]; j+=a[i].terms[j]) 
 			state[i][a[i].terms[j+1+x[0]]] = j==1 ? 2 : 1;
-
+	
 	// collect all products of terms
 	vector<vector<vector<int> > > terms(D+1);
 	vector<int> term;
@@ -728,7 +729,7 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 		int thisdeg = a[i].degree(x[0]);
 		a[i] += (lc[i] - a[i].coefficient(x[0],thisdeg)) * poly::simple_poly(x[0],0,thisdeg);
 	}
-
+	
 	bool changed;
 	do {
 		changed = false;
@@ -779,8 +780,9 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 	poly check(1, A.modn>1?0:A.modp, 1);
 	for (int i=0; i<(int)a.size(); i++)
 		check *= a[i];
-	if (check == A) return a;
 
+	if (check == A) return a;
+	
 	// Second method: Hensel lifting
 	
 	// Calculate A and lc's modulo Ii = <xi-c{i-1],...,xm-c{m-1}> (for i=2,...,m)
