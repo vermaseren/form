@@ -44,7 +44,8 @@ class poly {
 	
 	WORD modp,modn;
 	WORD *terms;
-
+	WORD size_of_terms;
+	
 	poly ();
 	poly (WORD a);
 	poly (const UWORD *a, WORD na);
@@ -52,6 +53,8 @@ class poly {
 	poly (const poly &a, WORD modp, WORD modn);
 	~poly ();
 
+	void expand_memory();
+	
 	void setmod(WORD, WORD=1);
 	void coefficients_modulo (UWORD *a, WORD na);
 
@@ -85,7 +88,7 @@ class poly {
 	static void divmod_heap (const poly &a, const poly &b, poly &q, poly &r);
 	
 	static void inverse (UWORD*, WORD, UWORD*, WORD, UWORD*, WORD&);
-	
+
 	poly& operator= (const poly &);
 
 	poly& operator+= (const poly&);
@@ -102,6 +105,10 @@ class poly {
 
 	bool operator== (const poly&) const;
 	bool operator!= (const poly&) const;
+
+	WORD& operator[] (int);
+	const WORD& operator[] (int) const;
+	void termscopy (const WORD *, int, int);
 	
 	int first_variable () const;
 	std::vector<int> all_variables () const;
@@ -121,6 +128,22 @@ class poly {
 	static const std::map<int,int> extract_variables (WORD *, bool, bool);
 	static const poly argument_to_poly (WORD *, bool, const std::map<int,int> &);
 	static void poly_to_argument (const poly &, WORD *, bool);
+	
+	int size_of_form_notation ();
 };
 
 std::ostream& operator<< (std::ostream &, const poly &);
+
+inline WORD& poly::operator[] (int i) {
+	if (i + AM.MaxTal >= size_of_terms) expand_memory();
+	return terms[i];
+}
+
+inline const WORD& poly::operator[] (int i) const {
+	return terms[i];
+}
+
+inline void poly::termscopy (const WORD *from, int dest, int num) {
+	while (dest+num >= size_of_terms) expand_memory();
+	memcpy (terms+dest, from, num*sizeof(WORD));
+}

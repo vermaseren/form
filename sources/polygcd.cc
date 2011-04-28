@@ -105,16 +105,16 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
 	poly c;
 	WORD nc;
 	
-	GcdLong(BHEAD (UWORD *)&a.terms[AN.poly_num_vars+2],a.terms[a.terms[0]-1],
-					(UWORD *)&b.terms[AN.poly_num_vars+2],b.terms[b.terms[0]-1],
-					(UWORD *)&c.terms[AN.poly_num_vars+2],&nc);
+	GcdLong(BHEAD (UWORD *)&a[AN.poly_num_vars+2],a[a[0]-1],
+					(UWORD *)&b[AN.poly_num_vars+2],b[b[0]-1],
+					(UWORD *)&c[AN.poly_num_vars+2],&nc);
 
-	c.terms[1] = 2 + AN.poly_num_vars + ABS(nc);
-	c.terms[0] = 1 + c.terms[1];
-	c.terms[c.terms[0]-1] = nc;
+	c[1] = 2 + AN.poly_num_vars + ABS(nc);
+	c[0] = 1 + c[1];
+	c[c[0]-1] = nc;
 
 	for (int i=0; i<AN.poly_num_vars; i++)
-		c.terms[2+i] = 0;
+		c[2+i] = 0;
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : integer_gcd(" << a << "," << b << ") = " << c << endl;
@@ -155,27 +155,30 @@ const poly poly_gcd::integer_content (const poly &a) {
 
 	if (a.modp>0 && a.modn==1) return a.lcoeff();
 
-	poly c(0, 0, 1), d;
+	poly c(0, 0, 1);
+	WORD *d = (WORD *)NumberMalloc("integer content");
 	WORD nc=0;
 
 	for (int i=0; i<AN.poly_num_vars; i++)
-		c.terms[2+i] = 0;
+		c[2+i] = 0;
 
-	for (int i=1; i<a.terms[0]; i+=a.terms[i]) {
+	for (int i=1; i<a[0]; i+=a[i]) {
 
-		memcpy(d.terms, &c.terms[2+AN.poly_num_vars], nc*sizeof(UWORD));
+		memcpy(d,&c[2+AN.poly_num_vars],nc*sizeof(WORD));
 		
-		GcdLong(BHEAD (UWORD *)d.terms, nc,
-						(UWORD *)&a.terms[i+1+AN.poly_num_vars], a.terms[i+a.terms[i]-1],
-						(UWORD *)&c.terms[2+AN.poly_num_vars], &nc);
+		GcdLong(BHEAD (UWORD *)d, nc,
+						(UWORD *)&a[i+1+AN.poly_num_vars], a[i+a[i]-1],
+						(UWORD *)&c[2+AN.poly_num_vars], &nc);
 		
-		c.terms[1] = 2 + AN.poly_num_vars + ABS(nc);
-		c.terms[0] = 1 + c.terms[1];
-		c.terms[c.terms[0]-1] = nc;
+		c[1] = 2 + AN.poly_num_vars + ABS(nc);
+		c[0] = 1 + c[1];
+		c[c[0]-1] = nc;
 	}	
 
 	if (a.sign() != c.sign()) c *= -1;
-
+	
+	NumberFree(d,"integer content");
+	
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : integer_content(" << a << ") = " << c << endl;
 #endif
@@ -216,14 +219,14 @@ const poly poly_gcd::content (const poly &a, int x) {
 
 	poly res(0,modp,modn);
 
-	for (int i=1; i<a.terms[0];) {
+	for (int i=1; i<a[0];) {
 		poly b(0,modp,modn);
-		WORD deg = a.terms[i+1+x];
+		WORD deg = a[i+1+x];
 		
-		for (; i<a.terms[0] && a.terms[i+1+x]==deg; i+=a.terms[i]) {
-			memcpy(&b.terms[b.terms[0]], &a.terms[i], a.terms[i]*sizeof(UWORD));
-			b.terms[b.terms[0]+1+x] = 0;
-			b.terms[0] += a.terms[i];
+		for (; i<a[0] && a[i+1+x]==deg; i+=a[i]) {
+			b.termscopy(&a[i],b[0],a[i]);
+			b[b[0]+1+x] = 0;
+			b[0] += a[i];
 		}			
 		
 		res = gcd(res, b);
@@ -709,8 +712,8 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 	vector<vector<int> > state(a.size(), vector<int>(D+1, 0));
 
 	for (int i=0; i<(int)a.size(); i++)
-		for (int j=1; j<a[i].terms[0]; j+=a[i].terms[j]) 
-			state[i][a[i].terms[j+1+x[0]]] = j==1 ? 2 : 1;
+		for (int j=1; j<a[i][0]; j+=a[i][j]) 
+			state[i][a[i][j+1+x[0]]] = j==1 ? 2 : 1;
 	
 	// collect all products of terms
 	vector<vector<vector<int> > > terms(D+1);
@@ -1145,13 +1148,13 @@ WORD poly_gcd::choose_prime_power (const poly &a, const vector<int> &x, WORD p) 
 	// analyse the polynomial for calculating the bound
 	WORD maxdegree=0, maxdigits=0, numterms=0;
 			
-	for (int i=1; i<a.terms[0]; i+=a.terms[i]) {
+	for (int i=1; i<a[0]; i+=a[i]) {
 		for (int j=0; j<AN.poly_num_vars; j++)
-			maxdegree = max(maxdegree, a.terms[i+1+j]);
+			maxdegree = max(maxdegree, a[i+1+j]);
 
 		// maxdigits is a number of digits in the largest coefficient in base e
-		maxdigits = max(maxdigits, (WORD) ceil(log(a.terms[i+a.terms[i]-2])
-																					 + BITSINWORD*(ABS(a.terms[i+a.terms[i]-1])-1)*log(2)));
+		maxdigits = max(maxdigits, (WORD) ceil(log(a[i+a[i]-2])
+																					 + BITSINWORD*(ABS(a[i+a[i]-1])-1)*log(2)));
 		numterms++;
 	}
 
@@ -1259,18 +1262,18 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 	UWORD *pxi=NULL;
 	WORD nxi=0;
 
-	for (int i=1; i<a.terms[0]; i+=a.terms[i]) {
-		WORD na = ABS(a.terms[i+a.terms[i]-1]);
-		if (BigLong((UWORD *)&a.terms[i+a.terms[i]-1-na], na, pxi, nxi) > 0) {
-			pxi = (UWORD *)&a.terms[i+a.terms[i]-1-na];
+	for (int i=1; i<a[0]; i+=a[i]) {
+		WORD na = ABS(a[i+a[i]-1]);
+		if (BigLong((UWORD *)&a[i+a[i]-1-na], na, pxi, nxi) > 0) {
+			pxi = (UWORD *)&a[i+a[i]-1-na];
 			nxi = na;
 		}
 	}
 	
-	for (int i=1; i<b.terms[0]; i+=b.terms[i]) {
-		WORD nb = ABS(b.terms[i+b.terms[i]-1]);
-		if (BigLong((UWORD *)&b.terms[i+b.terms[i]-1-nb], nb, pxi, nxi) > 0) {
-			pxi = (UWORD *)&b.terms[i+b.terms[i]-1-nb];
+	for (int i=1; i<b[0]; i+=b[i]) {
+		WORD nb = ABS(b[i+b[i]-1]);
+		if (BigLong((UWORD *)&b[i+b[i]-1-nb], nb, pxi, nxi) > 0) {
+			pxi = (UWORD *)&b[i+b[i]-1-nb];
 			nxi = nb;
 		}
 	}
@@ -1280,13 +1283,13 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 	xi = xi*2 + 2 + random()%GCD_HEURISTIC_MAX_ADD_RANDOM;
 															 
 	// If degree*digits(xi) is too large, throw exception
-	if (max(a.degree(x[0]),b.degree(x[0])) * xi.terms[xi.terms[1]] >= GCD_HEURISTIC_MAX_DIGITS) {
+	if (max(a.degree(x[0]),b.degree(x[0])) * xi[xi[1]] >= min(AM.MaxTal, GCD_HEURISTIC_MAX_DIGITS)) {
 #ifdef DEBUG
 		cout << "*** [" << thetime() << "]  RES : gcd_heuristic("<<a<<","<<b<<","<<x<<") = overflow\n";
 #endif
 		throw(gcd_heuristic_failed());
 	}
-		
+
 	for (int times=0; times<max_tries; times++) {
 
 		// Recursively calculate the gcd
@@ -1305,20 +1308,20 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 
 				// calculate c = gamma % xi (c and gamma are polynomials, xi is integer)
 				c = gamma;
-				c.coefficients_modulo((UWORD *)&xi.terms[2+AN.poly_num_vars], xi.terms[xi.terms[0]-1]);
+				c.coefficients_modulo((UWORD *)&xi[2+AN.poly_num_vars], xi[xi[0]-1]);
 				
 				// Add the terms c * x^power to res
-				memcpy (&res.terms[res.terms[0]], &c.terms[1], (c.terms[0]-1)*sizeof(UWORD));
-				for (int i=1; i<c.terms[0]; i+=c.terms[i])
-					res.terms[res.terms[0]-1+i+1+x[0]] = power;
+				res.termscopy(&c[1],res[0],c[0]-1);
+				for (int i=1; i<c[0]; i+=c[i])
+					res[res[0]-1+i+1+x[0]] = power;
 
 				// Store idx/len for reversing
 				if (!c.is_zero()) {
-					idx.push_back(res.terms[0]);
-					len.push_back(c.terms[0]-1);
+					idx.push_back(res[0]);
+					len.push_back(c[0]-1);
 				}
 				
-				res.terms[0] += c.terms[0]-1;
+				res[0] += c[0]-1;
 
 				// Divide gamma by xi
 				gamma = (gamma - c) / xi;
@@ -1326,10 +1329,10 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 			
 			// Reverse the resulting polynomial
 			poly rev;
-			rev.terms[0] = 1;
+			rev[0] = 1;
 			for (int i=idx.size()-1; i>=0; i--) {
-				memcpy(&rev.terms[rev.terms[0]], &res.terms[idx[i]], len[i]*sizeof(UWORD));
-				rev.terms[0] += len[i];
+				rev.termscopy(&res[idx[i]], rev[0], len[i]);
+				rev[0] += len[i];
 			}
 			res = rev;
 
@@ -1452,14 +1455,14 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 		double max_digits = 0;
 		double max_lead = 0;
 		
-		for (int i=1; i<ppa.terms[0]; i+=ppa.terms[i]) {
+		for (int i=1; i<ppa[0]; i+=ppa[i]) {
 			double prod_deg = 1;
 			for (int j=0; j<AN.poly_num_vars; j++)
-				prod_deg *= ppa.terms[i+1+j] + 1;
+				prod_deg *= ppa[i+1+j] + 1;
 			max_prod_deg = max(max_prod_deg, prod_deg);
 
-			WORD digits = ABS(ppa.terms[i+ppa.terms[i]-1]);
-			UWORD lead = ppa.terms[i+1+AN.poly_num_vars];
+			WORD digits = ABS(ppa[i+ppa[i]-1]);
+			UWORD lead = ppa[i+1+AN.poly_num_vars];
 
 			if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
 				max_digits = digits;
@@ -1467,14 +1470,14 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 			}
 		}
 		
-		for (int i=1; i<ppb.terms[0]; i+=ppb.terms[i]) {
+		for (int i=1; i<ppb[0]; i+=ppb[i]) {
 			double prod_deg = 1;
 			for (int j=0; j<AN.poly_num_vars; j++)
-				prod_deg *= ppb.terms[i+1+j] + 1;
+				prod_deg *= ppb[i+1+j] + 1;
 			max_prod_deg = max(max_prod_deg, prod_deg);
 			
-			WORD digits = ABS(ppb.terms[i+ppb.terms[i]-1]);
-			UWORD lead = ppb.terms[i+1+AN.poly_num_vars];
+			WORD digits = ABS(ppb[i+ppb[i]-1]);
+			UWORD lead = ppb[i+1+AN.poly_num_vars];
 
 			if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
 				max_digits = digits;
@@ -1617,11 +1620,11 @@ WORD *PolyGCD(PHEAD WORD *a, WORD *b) {
 
 	if (AC.ncmod != 0) {
 		if (ABS(AC.ncmod)>1) {
-			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+			MesPrint ((char*)"ERROR: gcd with modulus > WORDSIZE not implemented");
 			Terminate(1);
 		}
 		if (AN.poly_num_vars > 1) {
-			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+			MesPrint ((char*)"ERROR: multivariate gcd with modulus not implemented");
 			Terminate(1);
 		}
 		modp = *AC.cmod;
@@ -1736,6 +1739,12 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 	// Fix sign
 	if (den.sign() == -1) { num*=-1; den*=-1; }
 
+	// Check size
+	if (num.size_of_form_notation() + den.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
+		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
+		Terminate(1);
+	}
+	
 	// Format result in Form notation
 	t = oldworkpointer;
 
@@ -1780,8 +1789,8 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 	WORD *tstop = term + *term;
 	int ncoeff = ABS(tstop[-1]);
 	tstop -= ncoeff;		
-	poly coeff;
-	memcpy(coeff.terms, tstop, ncoeff*sizeof(WORD));	
+	WORD *coeff = (WORD *)NumberMalloc("PolyRatFunMul");
+	memcpy(coeff, tstop, ncoeff*sizeof(WORD));	
 
 	// Extract all variables in the polyfuns
 	for (WORD *t=term+1; t<tstop; t+=t[1]) {
@@ -1844,14 +1853,19 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 			t+=t[1];
 		}
 		else {
-			int n = t[1];
-			NCOPY (s,t,n);
+			memcpy(s,t,t[1]*sizeof(WORD));
 		}			
 	}
 
 	// Fix sign
 	if (den1.sign() == -1) { num1*=-1; den1*=-1; }
 
+	// Check size
+	if (num1.size_of_form_notation() + den1.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
+		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
+		Terminate(1);
+	}
+	
 	// Format result in Form notation
 	WORD *t=s;
 	*t++ = AR.PolyFun;                   // function
@@ -1864,7 +1878,7 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 	t += (*t>0 ? *t : 2);
 	s[1] = t - s;                        // function length
 
-	memcpy(t, coeff.terms, ncoeff*sizeof(WORD));	
+	memcpy(t, coeff, ncoeff*sizeof(WORD));	
 	t += ncoeff;
 	
 	term[0] = t-term;                    // term length
@@ -1872,6 +1886,7 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 	if (AN.poly_num_vars > 0) 
 		delete AN.poly_vars;
 
+	NumberFree(coeff,"PolyRatFunMul");
 	return 0;
 }
 

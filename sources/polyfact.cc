@@ -250,25 +250,25 @@ const poly poly_fact::derivative (const poly &a, int x) {
 	poly b;
 	WORD bi=1;
 
-	for (int ai=1; ai<a.terms[0]; ai+=a.terms[ai]) {
+	for (int ai=1; ai<a[0]; ai+=a[ai]) {
 		
-		WORD power = a.terms[ai+1+x];
+		WORD power = a[ai+1+x];
 
 		if (power > 0) {
-			memcpy(&b.terms[bi], &a.terms[ai], a.terms[ai]*sizeof(UWORD));
-			b.terms[bi+1+x]--;
+			b.termscopy(&a[ai], bi, a[ai]);
+			b[bi+1+x]--;
 			
-			WORD nb = b.terms[bi+b.terms[bi]-1];
-			Product((UWORD *)&b.terms[bi+1+AN.poly_num_vars], &nb, power);
+			WORD nb = b[bi+b[bi]-1];
+			Product((UWORD *)&b[bi+1+AN.poly_num_vars], &nb, power);
 
-			b.terms[bi] = 2 + AN.poly_num_vars + ABS(nb);
-			b.terms[bi+b.terms[bi]-1] = nb;
+			b[bi] = 2 + AN.poly_num_vars + ABS(nb);
+			b[bi+b[bi]-1] = nb;
 			
-			bi += b.terms[bi];
+			bi += b[bi];
 		}
 	}
 
-	b.terms[0] = bi;
+	b[0] = bi;
 	b.setmod(a.modp,a.modn);
 	return b;	
 }
@@ -351,8 +351,8 @@ const factorized_poly poly_fact::squarefree_factors_modp (const poly &_a) {
 
 	// polynomial contains terms of the form c(x)^p
 	if (a != 1) {
-		for (int i=1; i<a.terms[1]; i+=a.terms[i])
-			a.terms[i+1+x] /= a.modp;
+		for (int i=1; i<a[1]; i+=a[i])
+			a[i+1+x] /= a.modp;
 		factorized_poly res2 = squarefree_factors(a);
 		for (int i=0; i<(int)res2.factor.size(); i++) {
 			res.factor.push_back(res2.factor[i]);
@@ -441,8 +441,8 @@ const vector<vector<WORD> > poly_fact::Berlekamp_Qmatrix (const poly &_a) {
 
 	// c is the vector of coefficients of the polynomial a
 	vector<WORD> c(n+1,0);
-	for (int j=1; j<a.terms[0]; j+=a.terms[j])
-		c[a.terms[j+1+x]] = a.terms[j+1+AN.poly_num_vars] * a.terms[j+2+AN.poly_num_vars];
+	for (int j=1; j<a[0]; j+=a[j])
+		c[a[j+1+x]] = a[j+1+AN.poly_num_vars] * a[j+2+AN.poly_num_vars];
 
 	// d is the vector of coefficients of x^i mod a, starting with i=0
 	vector<WORD> d(n,0);
@@ -633,8 +633,8 @@ const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vect
 	vector<vector<WORD> > fac(1, vector<WORD>(n+1,0));
 
 	// fac[0] is the full polynomial a
-	for (int i=1; i<a.terms[0]; i+=a.terms[i]) 
-		fac[0][a.terms[i+1+x]] = (p + a.terms[i+1+AN.poly_num_vars] * a.terms[i+2+AN.poly_num_vars]) % p;
+	for (int i=1; i<a[0]; i+=a[i]) 
+		fac[0][a[i+1+x]] = (p + a[i+1+AN.poly_num_vars] * a[i+2+AN.poly_num_vars]) % p;
 
 	// Loop over the columns of q + constant, i.e., an exhaustive list of possible factors	
 	for (int i=1; i<n; i++) {
@@ -909,7 +909,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 		
 		for (int j=0; j<(int)f.size(); j++) {
 			poly lc_f = f[j].lcoeff() * delta;
-			WORD nlc_f = lc_f.terms[lc_f.terms[1]];
+			WORD nlc_f = lc_f[lc_f[1]];
 			poly quo,rem;
 			WORD nquo,nrem;
 			
@@ -918,14 +918,14 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 				if (i==0 && lc.factor[i].is_integer()) continue;
 				
 				do {
-					DivLong((UWORD *)&lc_f.terms[2+AN.poly_num_vars], nlc_f,
-									(UWORD *)&lcmodI[i].terms[2+AN.poly_num_vars], lcmodI[i].terms[lcmodI[i].terms[1]],
-									(UWORD *)&quo.terms[0], &nquo,
-									(UWORD *)&rem.terms[0], &nrem);
+					DivLong((UWORD *)&lc_f[2+AN.poly_num_vars], nlc_f,
+									(UWORD *)&lcmodI[i][2+AN.poly_num_vars], lcmodI[i][lcmodI[i][1]],
+									(UWORD *)&quo[0], &nquo,
+									(UWORD *)&rem[0], &nrem);
 					
 					if (nrem == 0) {
 						correct_lc[j] *= lc.factor[i];
-						memcpy(&lc_f.terms[2+AN.poly_num_vars], &quo.terms[0], ABS(nquo)*sizeof(WORD));
+						lc_f.termscopy(&quo[0], 2+AN.poly_num_vars, ABS(nquo));
 						nlc_f = nquo;
 					}
 				}
@@ -1079,7 +1079,7 @@ const factorized_poly poly_fact::factorize (const poly &a) {
   	#[ DoFactorize :
 */
 
-/**  Wrapper function to call factorization from Form
+/**  Wrapper function to call factorization of arguments from Form
  *
  *   Description
  *   ===========
@@ -1089,6 +1089,7 @@ const factorized_poly poly_fact::factorize (const poly &a) {
  *   Notes
  *   =====
  *   - This method is called from "argument.c"
+ *   - Called from Form with "FactArg"
  */
 int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 
@@ -1123,6 +1124,15 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	// factorize
 	factorized_poly f = poly_fact::factorize(a);
 
+	// check size
+	int len = 0;
+	for (int i=0; i<(int)f.factor.size(); i++)
+		len += f.power[i] * f.factor[i].size_of_form_notation();
+	if (len >= AM.MaxTer) {
+		MesPrint ("ERROR: factorization doesn't fit in a term");
+		Terminate(1);
+	}
+	
 	for (int i=0; i<(int)f.factor.size(); i++) 
 		for (int j=0; j<f.power[i]; j++) {
 			poly::poly_to_argument(f.factor[i],argout,true);
@@ -1142,4 +1152,80 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 
 /*
   	#] DoFactorize :
+  	#[ DoFactorizeDollar :
+*/
+
+/**  Wrapper function to call factorization of arguments from Form
+ *
+ *   Description
+ *   ===========
+ *   The input consist of a Form style argument. The output is written
+ *   at argout as a list of Form style arguments terminated by a zero.
+ *
+ *   Notes
+ *   =====
+ *   - This method is called from "xxx.c"
+ *   - Called from Form with "Factor $" and "#Factor $"
+ */
+WORD *DoFactorizeDollar(PHEAD WORD *argin) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: DoFactorizeDollar(...)" << endl;
+#endif
+	
+	AN.poly_num_vars = 0;
+	map<int,int> var_to_idx = poly::extract_variables(argin, false, false);
+			 
+ 	poly a = poly::argument_to_poly(argin, false, var_to_idx);
+
+	// check for modulus calculus
+	if (AC.ncmod!=0) {
+		if (AC.modmode & ALSOFUNARGS) {
+			if (ABS(AC.ncmod)>1) {
+				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
+				Terminate(1);
+			}
+			if (AN.poly_num_vars > 1) {
+				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
+				Terminate(1);
+			}
+			a.setmod(*AC.cmod, 1);
+		}
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
+		}
+	}
+
+	// factorize
+	factorized_poly f = poly_fact::factorize(a);
+
+	// calculate size, allocate memory, write answer
+	int len = 0;
+	for (int i=0; i<(int)f.factor.size(); i++)
+		len += f.power[i] * (f.factor[i].size_of_form_notation()+1);
+	len++;
+	
+	WORD *res = (WORD*) Malloc1(len*sizeof(WORD), "DoFactorizeDollar");
+	WORD *oldres = res;
+	
+	for (int i=0; i<(int)f.factor.size(); i++) 
+		for (int j=0; j<f.power[i]; j++) {
+			poly::poly_to_argument(f.factor[i],res,false);
+			while (*res!=0) res+=*res;
+			res++;
+		}
+	*res=0;
+	
+	if (AN.poly_num_vars > 0)
+		delete AN.poly_vars;
+
+	// reset modulo calculation
+	AC.ncmod = AN.ncmod;
+	
+	return oldres;
+}
+
+/*
+  	#] DoFactorizeDollar :
 */
