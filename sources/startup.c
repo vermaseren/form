@@ -47,6 +47,32 @@ extern int pcounter;
 #endif
 #endif
 
+/*
+ * FORMNAME = "FORM" or "TFORM" or "ParFORM".
+ */
+#if defined(WITHPTHREADS)
+	#define FORMNAME "TFORM"
+#elif defined(PARALLEL)
+	#define FORMNAME "ParFORM"
+#else
+	#define FORMNAME "FORM"
+#endif
+
+/*
+ * VERSIONSTR = VERSION or VERSION"Beta".
+ */
+#ifdef BETAVERSION
+	#define VERSIONSTR VERSION"Beta"
+#else
+	#define VERSIONSTR VERSION
+#endif
+
+/*
+ * A macro for translating the contents of `x' into a string after expanding.
+ */
+#define STRINGIFY(x)  STRINGIFY__(x)
+#define STRINGIFY__(x) #x
+
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
 /*
@@ -202,19 +228,10 @@ int DoTail(int argc, UBYTE **argv)
 							AM.PrintTotalSize = 1; break;
 				case 'v':
 printversion:;
-#ifdef WITHPTHREADS
-#ifdef BETAVERSION
-							printf("TFORM version %sBeta(%s)\n",VERSION,PRODUCTIONDATE);
-#else
-							printf("TFORM version %s(%s)\n",VERSION,PRODUCTIONDATE);
+#ifdef PARALLEL
+							if ( PF.me == MASTER )
 #endif
-#else
-#ifdef BETAVERSION
-							printf("FORM version %sBeta(%s)\n",VERSION,PRODUCTIONDATE);
-#else
-							printf("FORM version %s(%s)\n",VERSION,PRODUCTIONDATE);
-#endif
-#endif
+							printf(FORMNAME" version %s(%s)\n",VERSIONSTR,PRODUCTIONDATE);
 							if ( onlyversion ) return(-1);
 							AM.InputFileName = 0;
 							break;
@@ -766,8 +783,8 @@ VOID StartVariables()
 	AT.bernoullis = 0;
 #endif
 	AM.atstartup = 1;
-	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)"3",0,0);
-	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)"3",0,0);
+	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)STRINGIFY(MAJORVERSION),0,0);
+	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)STRINGIFY(MINORVERSION),0,0);
 	PutPreVar((UBYTE *)"NAMEVERSION_",(UBYTE *)nameversion,0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
 	AM.atstartup = 0;
@@ -1213,23 +1230,8 @@ int main(int argc, char **argv)
 /*:[20sep2005 mt]*/
 	if ( !AM.silent ) 
 #endif
-#ifdef WITHPTHREADS
-#ifdef BETAVERSION
-			MesPrint("TFORM by J.Vermaseren,version %sBeta(%s) Run %s"
-                         ,VERSION,PRODUCTIONDATE,MakeDate());
-#else
-			MesPrint("TFORM by J.Vermaseren,version %s(%s) Run at: %s"
-                         ,VERSION,PRODUCTIONDATE,MakeDate());
-#endif
-#else
-#ifdef BETAVERSION
-			MesPrint("FORM by J.Vermaseren,version %sBeta(%s) Run %s"
-                         ,VERSION,PRODUCTIONDATE,MakeDate());
-#else
-			MesPrint("FORM by J.Vermaseren,version %s(%s) Run at: %s"
-                         ,VERSION,PRODUCTIONDATE,MakeDate());
-#endif
-#endif
+		MesPrint(FORMNAME" by J.Vermaseren %s(%s) Run at: %s",
+		         VERSIONSTR,PRODUCTIONDATE,MakeDate());
 	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
 	InitRecovery();
 /*[20oct2009 mt]:*/

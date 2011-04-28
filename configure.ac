@@ -1,8 +1,8 @@
-m4_define([FORM_MAJORVERSION], [3])
-m4_define([FORM_MINORVERSION], [3])
+m4_define([FORM_MAJORVERSION], [4])
+m4_define([FORM_MINORVERSION], [0])
 m4_define([FORM_VERSION], [FORM_MAJORVERSION.FORM_MINORVERSION])
 # set to 'yes' for beta verstions
-m4_define([VERSION_IS_BETA], [no])
+m4_define([VERSION_IS_BETA], [yes])
 
 ########################################
 
@@ -15,6 +15,8 @@ AM_INIT_AUTOMAKE([gnu 1.7 dist-bzip2])
 
 AC_DEFINE(MAJORVERSION, FORM_MAJORVERSION, [Major version of FORM.])
 AC_DEFINE(MINORVERSION, FORM_MINORVERSION, [Minor version of FORM.])
+AS_IF([test "x[]VERSION_IS_BETA" = "xyes"],
+	[AC_DEFINE(BETAVERSION, 1, [Define to 1 in the beta version.])])
 
 AH_VERBATIM([PRODUCTIONDATE],
 [/* Set production date. */
