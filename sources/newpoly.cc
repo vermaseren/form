@@ -244,6 +244,8 @@ poly::~poly () {
 // doubles the amount of memory allocated for a polynomial
 void poly::expand_memory() {
 
+	GETIDENTITY;
+	
 	WORD *newterms = new WORD[2 * size_of_terms];
 	memcpy(newterms, terms, size_of_terms*sizeof(WORD));
 
