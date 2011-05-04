@@ -764,7 +764,7 @@ int DoPrint(UBYTE *s, int par)
 	int i, error = 0, numdol = 0, type;
 	UBYTE *name, c, *t;
 	EXPRESSIONS e;
-	WORD numexpr, tofile = 0;
+	WORD numexpr, tofile = 0, *w;
 	CBUF *C = cbuf + AC.cbufnum;
 	while ( *s == ',' ) s++;
 /*	if ( s[-1] == '+' || s[-1] == '-' ) s--; */
@@ -815,6 +815,18 @@ int DoPrint(UBYTE *s, int par)
 				return(error);
 			}
 			*s = c;
+			if ( c == '[' ) {
+				w = C->Pointer;
+				s++;
+				s = GetDoParam(s,&(C->Pointer),-1);
+				if ( s == 0 ) return(1);
+				if ( *s != ']' ) {
+					MesPrint("&unmatched [] in $ factor");
+					return(1);
+				}
+				C->lhs[C->numlhs][1] += C->Pointer - w;
+				s++;
+			}
 		}
 		if ( *s != 0 ) {
 			MesPrint("&Illegal object in print statement");
@@ -824,6 +836,7 @@ int DoPrint(UBYTE *s, int par)
 			MesPrint("&More $ variables asked for than provided");
 			error = 1;
 		}
+		*(C->Pointer)++ = 0;
 		return(error);
 	}
 	if ( *s == 0 ) {	/* All active expressions */
@@ -917,7 +930,7 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint : 
+  	#] DoPrint :
   	#[ CoPrint :
 */
 
@@ -5378,7 +5391,12 @@ UBYTE *GetDoParam(UBYTE *inp, WORD **wp, int par)
 		while ( *inp >= '0' && *inp <= '9' ) {
 			x = 10*x + *inp++ - '0';
 			if ( x > MAXPOSITIVE ) {
-				MesPrint("&Value in do loop boundaries too large");
+				if ( par == -1 ) {
+					MesPrint("&Value in dollar factor too large");
+				}
+				else {
+					MesPrint("&Value in do loop boundaries too large");
+				}
 				while ( FG.cTable[*inp] == 1 ) inp++;
 				return(0);
 			}
@@ -5400,7 +5418,12 @@ UBYTE *GetDoParam(UBYTE *inp, WORD **wp, int par)
 	while ( FG.cTable[*inp] < 2 ) inp++;
 	c = *inp; *inp = 0;
 	if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) {
-		MesPrint("&dollar in do loop boundaries should have been defined previously");
+		if ( par == -1 ) {
+			MesPrint("&dollar in print statement should have been defined previously");
+		}
+		else {
+			MesPrint("&dollar in do loop boundaries should have been defined previously");
+		}
 		return(0);
 	}
 	*inp = c;
@@ -5417,7 +5440,12 @@ UBYTE *GetDoParam(UBYTE *inp, WORD **wp, int par)
 		inp = GetDoParam(inp,wp,0);
 		if ( inp == 0 ) return(0);
 		if ( *inp != ']' ) {
-			MesPrint("&unmatched [] in do loop boundaries");
+			if ( par == -1 ) {
+				MesPrint("&unmatched [] in $ in print statement");
+			}
+			else {
+				MesPrint("&unmatched [] in do loop boundaries");
+			}
 			return(0);
 		}
 		inp++;
@@ -5605,5 +5633,5 @@ int CoFactor(UBYTE *inp)
 }
 
 /*
-  	#] CoFactor :
+  	#] CoFactor : 
 */

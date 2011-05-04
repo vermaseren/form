@@ -1759,7 +1759,7 @@ docoef:
 						}
 						else if ( *s == TNUMBER ) {
 							s++;
-							x2 = 0; while ( *s >= 0 ) { x2 = 128*x2 + *s++; }
+							x2 = 0; while ( *s >= 0 ) { x2 = 100*x2 + *s++; }
 							*t++ = DOLLAREXPR2; *t++ = 3; *t++ = -x2-1;
 CloseBraces:
 							while ( bracelevel > 0 ) {

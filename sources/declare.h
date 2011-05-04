@@ -1137,7 +1137,7 @@ extern VOID   DeAllocFileHandle(FILEHANDLE *);
 extern VOID   LowerSortLevel(VOID);
 extern int    InsideDollar(PHEAD WORD *,WORD);
 extern DOLLARS DolToTerms(PHEAD WORD);
-extern WORD   EvalDoLoopArg(PHEAD WORD *);
+extern WORD   EvalDoLoopArg(PHEAD WORD *,WORD);
 extern int    SetExprCases(int,int,int);
 extern int    TestSelect(WORD *,WORD *);
 extern int    MakeSetupAllocs(VOID);

@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -40,7 +40,7 @@
 static UBYTE underscore[2] = {'_',0};
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CatchDollar :
 
 	Works out a dollar expression during compile type.
@@ -216,7 +216,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar : 
+  	#] CatchDollar :
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -311,7 +311,7 @@ NoChangeZero:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		d->type = DOLZERO;
 		d->where[0] = 0;
@@ -393,7 +393,7 @@ NoChangeOne:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		if ( d->size < 5 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
@@ -548,7 +548,7 @@ HandleDolZero1:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		d->type = DOLTERMS;
 		if ( d->where && d->where != &(AM.dollarzero) ) { M_free(d->where,"dollar contents"); d->where = 0; }
@@ -600,7 +600,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar : 
+  	#] AssignDollar :
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -686,7 +686,7 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 }
 
 /*
-  	#] WriteDollarToBuffer : 
+  	#] WriteDollarToBuffer :
   	#[ AddToDollarBuffer :
 */
 
@@ -719,7 +719,7 @@ void AddToDollarBuffer(UBYTE *s)
 }
 
 /*
-  	#] AddToDollarBuffer : 
+  	#] AddToDollarBuffer :
   	#[ TermAssign :
 
 	This routine is called from a piece of code in Normalize that has been
@@ -778,7 +778,7 @@ void TermAssign(WORD *term)
 }
 
 /*
-  	#] TermAssign : 
+  	#] TermAssign :
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
@@ -951,7 +951,7 @@ void WildDollars(PHEAD0)
 }
 
 /*
-  	#] WildDollars : 
+  	#] WildDollars :
   	#[ DolToTensor :    with LOCK
 */
 
@@ -1012,7 +1012,7 @@ WORD DolToTensor(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToTensor : 
+  	#] DolToTensor :
   	#[ DolToFunction :  with LOCK
 */
 
@@ -1069,7 +1069,7 @@ WORD DolToFunction(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToFunction : 
+  	#] DolToFunction :
   	#[ DolToVector :    with LOCK
 */
 
@@ -1133,7 +1133,7 @@ WORD DolToVector(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToVector : 
+  	#] DolToVector :
   	#[ DolToNumber :
 */
 
@@ -1192,7 +1192,7 @@ WORD DolToNumber(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToNumber : 
+  	#] DolToNumber :
   	#[ DolToSymbol :    with LOCK
 */
 
@@ -1246,7 +1246,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToSymbol : 
+  	#] DolToSymbol :
   	#[ DolToIndex :     with LOCK
 */
 
@@ -1318,7 +1318,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToIndex : 
+  	#] DolToIndex :
   	#[ DolToTerms :
 
 	Returns a struct of type DOLLARS which contains a copy of the
@@ -1437,7 +1437,7 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DoInside :
 */
 
@@ -1495,7 +1495,7 @@ skipdol:	error = 1;
 }
 
 /*
-  	#] DoInside : 
+  	#] DoInside :
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -1595,7 +1595,7 @@ idcall:;
 }
 
 /*
-  	#] InsideDollar : 
+  	#] InsideDollar :
   	#[ ExchangeDollars :
 */
 
@@ -1613,7 +1613,7 @@ void ExchangeDollars(int num1, int num2)
 }
 
 /*
-  	#] ExchangeDollars : 
+  	#] ExchangeDollars :
   	#[ TermsInDollar :
 */
 
@@ -1662,7 +1662,7 @@ LONG TermsInDollar(WORD num)
 }
 
 /*
-  	#] TermsInDollar : 
+  	#] TermsInDollar :
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.
@@ -1854,7 +1854,7 @@ onerror:
 }
 
 /*
-  	#] PreIfDollarEval : 
+  	#] PreIfDollarEval :
   	#[ TranslateExpression :
 */
 
@@ -1906,7 +1906,7 @@ WORD *TranslateExpression(UBYTE *s)
 }
 
 /*
-  	#] TranslateExpression : 
+  	#] TranslateExpression :
   	#[ IsSetMember :
 
 	Checks whether the expression in the buffer can be seen as an element
@@ -2064,7 +2064,7 @@ int IsSetMember(WORD *buffer, WORD numset)
 }
 
 /*
-  	#] IsSetMember : 
+  	#] IsSetMember :
   	#[ IsProductOf :
 
 	Checks whether the expression in buf1 is a single term multiple of 
@@ -2076,7 +2076,7 @@ int IsProductOf(WORD *buf1, WORD *buf2)
 }
 
 
-  	#] IsProductOf : 
+  	#] IsProductOf :
   	#[ IsMultipleOf :
 
 	Checks whether the expression in buf1 is a numerical multiple of 
@@ -2152,7 +2152,7 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 }
 
 /*
-  	#] IsMultipleOf : 
+  	#] IsMultipleOf :
   	#[ TwoExprCompare :
 
 	Compares the expressions in buf1 and buf2 according to oprtr
@@ -2227,7 +2227,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 }
 
 /*
-  	#] TwoExprCompare : 
+  	#] TwoExprCompare :
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
@@ -2315,7 +2315,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 }
 
 /*
-  	#] DollarRaiseLow : 
+  	#] DollarRaiseLow :
  		#[ MinDollar  :
 
         finds the minimum dollar variable among dollar variables 
@@ -2415,7 +2415,7 @@ int MinDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MinDollar  : 
+ 		#] MinDollar  :
  		#[ MaxDollar  :
 
         finds the maximum dollar variable among dollar variables 
@@ -2503,7 +2503,7 @@ int MaxDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MaxDollar  : 
+ 		#] MaxDollar  :
  		#[ SumDollars :
 
         sums the dollar variable content in PFDollars[number].slavebuf
@@ -2605,7 +2605,7 @@ cleanup:;
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] SumDollars : 
+ 		#] SumDollars :
   	#[ EvalDoLoopArg :
 */
 /**
@@ -2624,7 +2624,7 @@ cleanup:;
  *	The routine works its way through the list in a recursive manner.
  */
 
-WORD EvalDoLoopArg(PHEAD WORD *arg)
+WORD EvalDoLoopArg(PHEAD WORD *arg, WORD par)
 {
 	WORD num, type, *td;
 	DOLLARS d;
@@ -2649,13 +2649,19 @@ WORD EvalDoLoopArg(PHEAD WORD *arg)
 #endif
 	if ( *arg == DOLLAREXPRESSION ) {
 		if ( arg[2] != DOLLAREXPR2 ) {	/* end of chain */
+endofchain:
 			type = d->type;
 			if ( type == DOLZERO ) {}
 			else if ( type == DOLNUMBER ) {
 				td = d->where;
 				if ( ( td[0] != 4 ) || ( (td[1]&SPECMASK) != 0 ) || ( td[2] != 1 ) ) {
 					LOCK(ErrorMessageLock);
-					MesPrint("$-variable is not a short number in do loop");
+					if ( par == -1 ) {
+						MesPrint("$-variable is not a short number in print statement");
+					}
+					else {
+						MesPrint("$-variable is not a short number in do loop");
+					}
 					UNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
@@ -2663,21 +2669,34 @@ WORD EvalDoLoopArg(PHEAD WORD *arg)
 			}
 		    else {
 				LOCK(ErrorMessageLock);
-				MesPrint("$-variable is not a number in do loop");
+				if ( par == -1 ) {
+					MesPrint("$-variable is not a number in print statement");
+				}
+				else {
+					MesPrint("$-variable is not a number in do loop");
+				}
 				UNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			return(0);
 		}
-		num = EvalDoLoopArg(BHEAD arg+2);
+		num = EvalDoLoopArg(BHEAD arg+2,par);
 	}
 	else if ( *arg == DOLLAREXPR2 ) {
 		if ( arg[1] < 0 ) { num = -arg[1]-1; }
-		else              { num = EvalDoLoopArg(BHEAD arg+2); }
+		else if ( arg[2] == 0 && par == -1 ) {
+			goto endofchain;
+		}
+		else              { num = EvalDoLoopArg(BHEAD arg+2,par); }
 	}
 	else {
 		LOCK(ErrorMessageLock);
-		MesPrint("Invalid $-variable in do loop");
+		if ( par == -1 ) {
+			MesPrint("Invalid $-variable in print statement");
+		}
+		else {
+			MesPrint("Invalid $-variable in do loop");
+		}
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
@@ -2685,7 +2704,12 @@ WORD EvalDoLoopArg(PHEAD WORD *arg)
 	if ( num == 0 ) return(d->nfactors);
 	if ( num > d->nfactors || num < 1 ) {
 		LOCK(ErrorMessageLock);
-		MesPrint("Not a valid factor number for $-variable in do loop");
+		if ( par == -1 ) {
+			MesPrint("Not a valid factor number for $-variable in print statement");
+		}
+		else {
+			MesPrint("Not a valid factor number for $-variable in do loop");
+		}
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
@@ -2694,7 +2718,12 @@ WORD EvalDoLoopArg(PHEAD WORD *arg)
 		return(d->factors[num].value);
 	else {	/* If correct, type can only be DOLNUMBER or DOLTERMS */
 		LOCK(ErrorMessageLock);
-		MesPrint("$-variable in do loop is not a number");
+		if ( par == -1 ) {
+			MesPrint("$-variable in print statement is not a number");
+		}
+		else {
+			MesPrint("$-variable in do loop is not a number");
+		}
 		UNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
@@ -2702,7 +2731,7 @@ WORD EvalDoLoopArg(PHEAD WORD *arg)
 }
 
 /*
-  	#] EvalDoLoopArg : 
+  	#] EvalDoLoopArg :
   	#[ TestDoLoop :
 */
 
@@ -2713,15 +2742,15 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 	WORD *h;
 	DOLLARS d;
 	h = lhsbuf + 4;	/* address of the start value */
-	start = EvalDoLoopArg(BHEAD h);
+	start = EvalDoLoopArg(BHEAD h,0);
 	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
 		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
 	h += 2;
-	finish = EvalDoLoopArg(BHEAD h);
+	finish = EvalDoLoopArg(BHEAD h,0);
 	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
 		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
 	h += 2;
-	incr = EvalDoLoopArg(BHEAD h);
+	incr = EvalDoLoopArg(BHEAD h,0);
 
 	if ( ( finish == start ) || ( finish > start && incr > 0 )
 	|| ( finish < start && incr < 0 ) ) {}
@@ -2780,7 +2809,7 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 }
 
 /*
-  	#] TestDoLoop : 
+  	#] TestDoLoop :
   	#[ TestEndDoLoop :
 */
 
@@ -2791,15 +2820,15 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 	WORD *h;
 	DOLLARS d;
 	h = lhsbuf + 4;	/* address of the start value */
-	start = EvalDoLoopArg(BHEAD h);
+	start = EvalDoLoopArg(BHEAD h,0);
 	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
 		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
 	h += 2;
-	finish = EvalDoLoopArg(BHEAD h);
+	finish = EvalDoLoopArg(BHEAD h,0);
 	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
 		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
 	h += 2;
-	incr = EvalDoLoopArg(BHEAD h);
+	incr = EvalDoLoopArg(BHEAD h,0);
 
 	if ( ( finish == start ) || ( finish > start && incr > 0 )
 	|| ( finish < start && incr < 0 ) ) {}
@@ -2881,7 +2910,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 }
 
 /*
-  	#] TestEndDoLoop : 
+  	#] TestEndDoLoop :
   	#[ DollarFactorize :
 */
 /**
@@ -2964,7 +2993,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		*t++ = 0;
 	}
 /*
- 		#] Step 0: 
+ 		#] Step 0:
  		#[ Step 1: take out the 'content'.
 */
 	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
@@ -3034,7 +3063,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		}
 	}
 /*
- 		#] Step 1: take out the 'content'. 
+ 		#] Step 1: take out the 'content'.
  		#[ Step 3: ConvertToPoly
 				if there are objects that are not SYMBOLs,
 		        invoke ConvertToPoly
@@ -3073,7 +3102,7 @@ getout:
 		insize2 = insize;
 	}
 /*
- 		#] Step 3: ConvertToPoly 
+ 		#] Step 3: ConvertToPoly
  		#[ Step 4: Now the hard work.
 */
 	if ( ( buf3 = DoFactorizeDollar(BHEAD buf2) ) == 0 ) {
@@ -3314,7 +3343,7 @@ getout2:			AR.SortType = oldsorttype;
 }
 
 /*
-  	#] DollarFactorize : 
+  	#] DollarFactorize :
   	#[ CleanDollarFactors :
 */
 
@@ -3335,7 +3364,7 @@ void CleanDollarFactors(DOLLARS d)
 }
 
 /*
-  	#] CleanDollarFactors : 
+  	#] CleanDollarFactors :
   	#[ TakeDollarContent :
 */
 
@@ -3379,7 +3408,7 @@ WORD *TakeDollarContent(PHEAD WORD *dollarbuffer, WORD **factor)
 }
 
 /*
-  	#] TakeDollarContent : 
+  	#] TakeDollarContent :
   	#[ MakeDollarInteger :
 */
 /**
@@ -3553,7 +3582,7 @@ MakeDollarIntegerErr:
 }
 
 /*
-  	#] MakeDollarInteger : 
+  	#] MakeDollarInteger :
   	#[ MakeDollarMod :
 */
 /**
@@ -3600,7 +3629,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 	return(factor);
 }
 /*
-  	#] MakeDollarMod : 
+  	#] MakeDollarMod :
   	#[ GetDolNum :
 
 	Evaluates a chain of DOLLAREXPR2 into a number

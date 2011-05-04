@@ -506,6 +506,10 @@ WORD DoExecute(WORD par, WORD skip)
 			}
 		}
 	}
+	if ( AC.dolooplevel > 0 ) {
+		MesPrint(" %d enddo statement(s) missing",AC.dolooplevel);
+		RetCode = 1;
+	}
 	if ( RetCode ) return(RetCode);
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 
@@ -802,7 +806,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute : 
+ 		#] DoExecute :
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:

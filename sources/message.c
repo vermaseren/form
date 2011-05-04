@@ -48,7 +48,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
 					 'A','B','C','D','E','F'};
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ exit :
  		#[ Error0 :
 */
@@ -60,7 +60,7 @@ VOID Error0(char *s)
 }
 
 /*
- 		#] Error0 :
+ 		#] Error0 : 
  		#[ Error1 :
 */
 
@@ -71,7 +71,7 @@ VOID Error1(char *s, UBYTE *t)
 }
 
 /*
- 		#] Error1 :
+ 		#] Error1 : 
  		#[ Error2 :
 */
 
@@ -82,7 +82,7 @@ VOID Error2(char *s1, char *s2, UBYTE *t)
 }
 
 /*
- 		#] Error2 :
+ 		#] Error2 : 
  		#[ MesWork :
 */
 
@@ -95,7 +95,7 @@ int MesWork()
 }
 
 /*
- 		#] MesWork :
+ 		#] MesWork : 
  		#[ MesPrint :
 
 	Kind of a printf function for simple messages.
@@ -329,6 +329,7 @@ va_dcl
 				WORD oldlength = AC.LineLength;
 				UBYTE *oldStop = AO.OutStop;
 				WORD *term, indsubterm[3], *tt;
+				WORD value[5], first, num;
 				if ( *AN.listinprint != DOLLAREXPRESSION ) {
 					specialerror = 1;
 				}
@@ -359,9 +360,29 @@ va_dcl
 					AO.OutStop = AO.OutputLine + AC.LineLength;
 					*t = 0;
 					AddToLine((UBYTE *)Out);
+					if ( d->nfactors >= 1 && AN.listinprint[2] == DOLLAREXPR2 ) {
+						num = EvalDoLoopArg(BHEAD AN.listinprint+2,-1);
+						if ( num == 0 ) {
+							value[0] = 4; value[1] = d->nfactors; value[2] = 1; value[3] = 3; value[4] = 0;
+							term = value; goto printterms;
+						}
+						if ( num == 1 && d->nfactors == 1 ) {
+							term = d->where; goto printterms;
+						}
+						if ( num > d->nfactors ) {
+							MesPrint("\nFactor number for dollar is too large.");
+							Terminate(-1);
+						}
+						term = d->factors[num-1].where;
+						if ( term == 0 ) {
+							value[0] = 4; value[1] = d->factors[num-1].value; value[2] = 1; value[3] = 3; value[4] = 0;
+							term = value;
+						}
+						goto printterms;
+					}
 					if ( d->type == DOLTERMS || d->type == DOLNUMBER ) {
-						WORD first = 1;
 						term = d->where;
+printterms:				first = 1;
 						do {
 							if ( AC.LineLength > 256 ) AC.LineLength = 256;
 							AO.IsBracket = 0;
@@ -649,7 +670,7 @@ VOID Warning(char *s)
 }
 
 /*
- 		#] Warning :
+ 		#] Warning : 
  		#[ HighWarning :
 */
 
@@ -661,7 +682,7 @@ VOID HighWarning(char *s)
 }
 
 /*
- 		#] HighWarning :
+ 		#] HighWarning : 
  		#[ MesCall :
 */
 
@@ -671,7 +692,7 @@ int MesCall(char *s)
 }
 
 /*
- 		#] MesCall :
+ 		#] MesCall : 
  		#[ MesCerr :
 */
 
@@ -690,7 +711,7 @@ WORD MesCerr(char *s, UBYTE *t)
 }
 
 /*
- 		#] MesCerr :
+ 		#] MesCerr : 
  		#[ MesComp :
 */
 
@@ -704,7 +725,7 @@ WORD MesComp(char *s, UBYTE *p, UBYTE *q)
 }
 
 /*
- 		#] MesComp :
+ 		#] MesComp : 
  		#[ PrintTerm :
 */
 
@@ -734,7 +755,7 @@ VOID PrintTerm(WORD *term, char *where)
 }
 
 /*
- 		#] PrintTerm :
+ 		#] PrintTerm : 
  		#[ PrintTermC :
 */
 
@@ -768,7 +789,7 @@ VOID PrintTermC(WORD *term, char *where)
 }
 
 /*
- 		#] PrintTermC :
+ 		#] PrintTermC : 
  		#[ PrintSubTerm :
 */
 
@@ -790,7 +811,7 @@ VOID PrintSubTerm(WORD *term, char *where)
 }
 
 /*
- 		#] PrintSubTerm :
+ 		#] PrintSubTerm : 
  		#[ PrintWords :
 */
 
@@ -808,6 +829,6 @@ VOID PrintWords(WORD *buffer, LONG number)
 }
 
 /*
- 		#] PrintWords :
+ 		#] PrintWords : 
 	#] exit :
 */
