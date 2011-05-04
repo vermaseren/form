@@ -65,6 +65,8 @@ static KEYWORD precommands[] = {
 	,{"endswitch"   , DoPreEndSwitch , 0, 0}
 	,{"exchange"    , DoPreExchange  , 0, 0}
 	,{"external"    , DoExternal     , 0, 0}
+	,{"factor"      , DoFactor       , 0, 0}
+	,{"factorize"   , DoFactor       , 0, 0}
 	,{"fromexternal", DoFromExternal , 0, 0}
 	,{"if"          , DoIf           , 0, 0}
 	,{"ifdef"       , (TFUN)DoIfdef  , 1, 0}
@@ -707,6 +709,7 @@ VOID IniModule(int type)
 	AC.WhileLevel = 0;
 	AC.RepLevel = 0;
 	AC.insidelevel = 0;
+	AC.dolooplevel = 0;
 	AC.MustTestTable = 0;
 	AO.PrintType = 0;				/* Otherwise statistics can get spoiled */
 	AC.ComDefer = 0;
@@ -731,7 +734,7 @@ VOID IniModule(int type)
 }
 
 /*
- 		#] IniModule :
+ 		#] IniModule : 
  		#[ IniSpecialModule :
 */
 
@@ -1219,7 +1222,7 @@ dodollar:		s = sstart;
 }
 
 /*
- 		#] LoadInstruction :
+ 		#] LoadInstruction : 
  		#[ LoadStatement :
 
 		Puts the current string together in the input buffer.
@@ -1344,7 +1347,7 @@ doall:;			if ( AP.eat < 0 ) {
 }
 
 /*
- 		#] LoadStatement :
+ 		#] LoadStatement : 
  		#[ ExpandTripleDots :
 */
 
@@ -1639,7 +1642,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots :
+ 		#] ExpandTripleDots : 
  		#[ FindKeyWord :
 */
 
@@ -2853,7 +2856,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf :
+ 		#] DoIf : 
  		#[ DoIfdef :
 */
 
@@ -2878,7 +2881,7 @@ int DoIfdef(UBYTE *s, int par)
 }
 
 /*
- 		#] DoIfdef :
+ 		#] DoIfdef : 
  		#[ DoMessage :
 */
 
@@ -3759,7 +3762,7 @@ VOID StartPrepro()
 }
 
 /*
- 		#] StartPrepro :
+ 		#] StartPrepro : 
  		#[ EvalPreIf :
 
 		Evaluates the condition in an if instruction.
@@ -5486,6 +5489,101 @@ ReturnWithError:
 }
 
 /*
- 		#] writeToChannel :
+ 		#] writeToChannel : 
+ 		#[ DoFactor :
+
+		Executes the #factor(ize) $var
+		      or the #factor(ize) inexpr,outexpr,symbol
+		      instruction
+*/
+
+int DoFactor(UBYTE *s)
+{
+	GETIDENTITY
+	WORD numdollar, *oldworkpointer, type;
+	WORD inexpression, outexpression, numsymbol;
+	UBYTE *name, c;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == '\t' ) s++;
+	if ( *s == '$' ) {
+		if ( GetName(AC.dollarnames,s+1,&numdollar,NOAUTO) != CDOLLAR ) {
+			MesPrint("@%s is undefined",s);
+			return(-1);
+		}
+		s = SkipAName(s+1);
+		if ( *s != 0 ) {
+			MesPrint("@#Factor(ize) should have a single $variable for its argument");
+			return(-1);
+		}
+		NewSort();
+		oldworkpointer = AT.WorkPointer;
+		if ( DollarFactorize(BHEAD numdollar) ) return(-1);
+		AT.WorkPointer = oldworkpointer;
+		LowerSortLevel();
+		return(0);
+	}
+	else if ( ParenthesesTest(s) ) return(-1);
+	else if ( *s ) {
+		name = s;
+		if ( ( s = SkipAName(s) ) == 0 ) return(-1);
+		c = *s; *s = 0;
+		if ( GetVar(name,&type,&inexpression,ALLVARIABLES,NOAUTO) == NAMENOTFOUND ) {
+			MesPrint("@%s is not an existing expression",name);
+			return(-1);
+		}
+		if ( type != CEXPRESSION ) {
+			MesPrint("@%s is not an expression",name);
+			return(-1);
+		}
+		if ( Expressions[inexpression].status == STOREDEXPRESSION ) {
+/*
+			This seems to be the only type we cannot pick up
+*/
+			MesPrint("@%s is not an active expression",name);
+			return(-1);
+		}
+		*s = c;
+		while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+		if ( *s == 0 ) goto nosyntax;
+		name = s;
+		if ( ( s = SkipAName(s) ) == 0 ) return(-1);
+		c = *s; *s = 0;
+		if ( GetVar(name,&type,&outexpression,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
+			MesPrint("@%s is an existing variable",name);
+			return(-1);
+		}
+		outexpression = EntVar(CEXPRESSION,name,LOCALEXPRESSION,0,0,0);
+		*s = c;
+		while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+		if ( *s == 0 ) goto nosyntax;
+		name = s;
+		if ( ( s = SkipAName(s) ) == 0 ) return(-1);
+		c = *s; *s = 0;
+		if ( GetVar(name,&type,&numsymbol,ALLVARIABLES,NOAUTO) == NAMENOTFOUND ) {
+			MesPrint("@%s should be the name of a symbol",name);
+			return(-1);
+		}
+		*s = c;
+		while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+		if ( *s ) goto nosyntax;
+/*
+		Now we have the three names and we can call the proper routine
+
+		if ( ExpressionFactorize(inexpression,outexpression,numsymbol) )
+			return(-1);
+*/
+		return(0);
+	}
+	else {
+nosyntax:
+		MesPrint("@proper syntax is #factor(ize),inexpression,outexpression,symbol");
+		MesPrint("@              or #factor(ize),$variable");
+		return(-1);
+	}
+}
+
+/*
+ 		#] DoFactor :
  	# ] PreProcessor :
 */

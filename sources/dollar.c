@@ -1331,7 +1331,7 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 	GETBIDENTITY
 	LONG size;
 	DOLLARS d = Dollars + numdollar, newd;
-	WORD *t, *w;
+	WORD *t, *w, i;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1;
 	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
@@ -1422,6 +1422,17 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 #endif
 	size++;
 	NCOPY(t,w,size);
+	newd->nfactors = d->nfactors;
+	if ( d->nfactors > 1 ) {
+		newd->factors = (FACDOLLAR *)Malloc1(d->nfactors*sizeof(FACDOLLAR),"Dollar factors");
+		for ( i = 0; i < d->nfactors; i++ ) {
+			newd->factors[i].where = 0;
+			newd->factors[i].size = 0;
+			newd->factors[i].type = DOLUNDEFINED;
+			newd->factors[i].value = 0;
+		}
+	}
+	else { newd->factors = 0; }
 	return(newd);
 }
 
@@ -1571,6 +1582,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			UNLOCK(d->pthreadslockread);
 		}
 #endif
+		if ( newd->factors ) M_free(newd->factors,"Dollar factors");
 		M_free(newd,"Copy of dollar variable");
 	  }
 	}
@@ -2594,5 +2606,1061 @@ cleanup:;
 
 /*
  		#] SumDollars : 
+  	#[ EvalDoLoopArg :
+*/
+/**
+ *	Evaluates one argument of a do loop. Such an argument is constructed
+ *	from SNUMBERs DOLLAREXPRESSIONs and possibly DOLLAREXPR2s which indicate
+ *	factors of the preceeding dollar. Hence we have
+ *	SNUMBER,num
+ *	DOLLAREXPRESSION,numdollar
+ *	DOLLAREXPRESSION,numdollar,DOLLAREXPR2,numfactor
+ *	DOLLAREXPRESSION,numdollar,DOLLAREXPR2,numfactor,DOLLAREXPR2,numfactor
+ *	etc.
+ *	Because we have a do-loop at every stage we should have a number.
+ *	The notation in DOLLAREXPR2 is that >= 0 is number of yet another dollar
+ *	and < 0 is -n-1 with n the array element or zero.
+ *	The return value is the (short) number.
+ *	The routine works its way through the list in a recursive manner.
+ */
+
+WORD EvalDoLoopArg(PHEAD WORD *arg)
+{
+	WORD num, type, *td;
+	DOLLARS d;
+	if ( *arg == SNUMBER ) return(arg[1]);
+	if ( *arg == DOLLAREXPR2 && arg[1] < 0 ) return(-arg[1]-1);
+	d = Dollars + arg[1];
+#ifdef WITHPTHREADS
+	{
+		int nummodopt, dtype = -1;
+		if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+				if ( arg[1] == ModOptdollars[nummodopt].number ) break;
+			}
+			if ( nummodopt < NumModOptdollars ) {
+				dtype = ModOptdollars[nummodopt].type;
+				if ( dtype == MODLOCAL ) {
+					d = ModOptdollars[nummodopt].dstruct+AT.identity;
+				}
+			}
+		}
+	}
+#endif
+	if ( *arg == DOLLAREXPRESSION ) {
+		if ( arg[2] != DOLLAREXPR2 ) {	/* end of chain */
+			type = d->type;
+			if ( type == DOLZERO ) {}
+			else if ( type == DOLNUMBER ) {
+				td = d->where;
+				if ( ( td[0] != 4 ) || ( (td[1]&SPECMASK) != 0 ) || ( td[2] != 1 ) ) {
+					LOCK(ErrorMessageLock);
+					MesPrint("$-variable is not a short number in do loop");
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				return( td[3] > 0 ? td[1]: -td[1] );
+			}
+		    else {
+				LOCK(ErrorMessageLock);
+				MesPrint("$-variable is not a number in do loop");
+				UNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			return(0);
+		}
+		num = EvalDoLoopArg(BHEAD arg+2);
+	}
+	else if ( *arg == DOLLAREXPR2 ) {
+		if ( arg[1] < 0 ) { num = -arg[1]-1; }
+		else              { num = EvalDoLoopArg(BHEAD arg+2); }
+	}
+	else {
+		LOCK(ErrorMessageLock);
+		MesPrint("Invalid $-variable in do loop");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(0);
+	}
+	if ( num == 0 ) return(d->nfactors);
+	if ( num > d->nfactors || num < 1 ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("Not a valid factor number for $-variable in do loop");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(0);
+	}
+	if ( d->factors[num].type == DOLNUMBER )
+		return(d->factors[num].value);
+	else {	/* If correct, type can only be DOLNUMBER or DOLTERMS */
+		LOCK(ErrorMessageLock);
+		MesPrint("$-variable in do loop is not a number");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(0);
+	}
+}
+
+/*
+  	#] EvalDoLoopArg : 
+  	#[ TestDoLoop :
+*/
+
+WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
+{
+	GETBIDENTITY
+	WORD start,finish,incr;
+	WORD *h;
+	DOLLARS d;
+	h = lhsbuf + 4;	/* address of the start value */
+	start = EvalDoLoopArg(BHEAD h);
+	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
+		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
+	h += 2;
+	finish = EvalDoLoopArg(BHEAD h);
+	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
+		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
+	h += 2;
+	incr = EvalDoLoopArg(BHEAD h);
+
+	if ( ( finish == start ) || ( finish > start && incr > 0 )
+	|| ( finish < start && incr < 0 ) ) {}
+	else { level = lhsbuf[3]; } /* skips the loop */
+/*
+	Put start in the dollar variable indicated by lhsbuf[2]
+*/
+	d = Dollars + lhsbuf[2];
+#ifdef WITHPTHREADS
+	{
+		int nummodopt, dtype = -1;
+		if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+				if ( lhsbuf[2] == ModOptdollars[nummodopt].number ) break;
+			}
+			if ( nummodopt < NumModOptdollars ) {
+				dtype = ModOptdollars[nummodopt].type;
+				if ( dtype == MODLOCAL ) {
+					d = ModOptdollars[nummodopt].dstruct+AT.identity;
+				}
+			}
+		}
+	}
+#endif
+
+	if ( d->size < 5 ) {
+		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
+		d->size = 20;
+		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
+	}
+	if ( start > 0 ) {
+		d->where[0] = 4;
+		d->where[1] = start;
+		d->where[2] = 1;
+		d->where[3] = 3;
+		d->where[4] = 0;
+		d->type = DOLNUMBER;
+	}
+	else if ( start < 0 ) {
+		d->where[0] = 4;
+		d->where[1] = -start;
+		d->where[2] = 1;
+		d->where[3] = -3;
+		d->where[4] = 0;
+		d->type = DOLNUMBER;
+	}
+	else
+		d->type = DOLZERO;
+
+	if ( d == Dollars + lhsbuf[2] ) {
+		cbuf[AM.dbufnum].CanCommu[lhsbuf[2]] = 0;
+		cbuf[AM.dbufnum].NumTerms[lhsbuf[2]] = 1;
+		cbuf[AM.dbufnum].rhs[lhsbuf[2]] = d->where;
+	}
+	return(level);
+}
+
+/*
+  	#] TestDoLoop : 
+  	#[ TestEndDoLoop :
+*/
+
+WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
+{
+	GETBIDENTITY
+	WORD start,finish,incr,value;
+	WORD *h;
+	DOLLARS d;
+	h = lhsbuf + 4;	/* address of the start value */
+	start = EvalDoLoopArg(BHEAD h);
+	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
+		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
+	h += 2;
+	finish = EvalDoLoopArg(BHEAD h);
+	while ( ( *h == DOLLAREXPRESSION || *h == DOLLAREXPR2 )
+		&& ( h[2] == DOLLAREXPR2 ) ) h += 2;
+	h += 2;
+	incr = EvalDoLoopArg(BHEAD h);
+
+	if ( ( finish == start ) || ( finish > start && incr > 0 )
+	|| ( finish < start && incr < 0 ) ) {}
+	else { level = lhsbuf[3]; } /* skips the loop */
+/*
+	Put start in the dollar variable indicated by lhsbuf[2]
+*/
+	d = Dollars + lhsbuf[2];
+#ifdef WITHPTHREADS
+	{
+		int nummodopt, dtype = -1;
+		if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+			for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+				if ( lhsbuf[2] == ModOptdollars[nummodopt].number ) break;
+			}
+			if ( nummodopt < NumModOptdollars ) {
+				dtype = ModOptdollars[nummodopt].type;
+				if ( dtype == MODLOCAL ) {
+					d = ModOptdollars[nummodopt].dstruct+AT.identity;
+				}
+			}
+		}
+	}
+#endif
+/*
+	Get the value
+*/
+	if ( d->type == DOLZERO ) {
+		value = 0;
+	}
+	else if ( ( d->type == DOLNUMBER || d->type == DOLTERMS )
+	&& ( d->where[4] == 0 ) && ( d->where[0] == 4 )
+	&& ( d->where[1] > 0 ) && ( d->where[2] == 1 ) ) {
+		value = ( d->where[3] < 0 ) ? -d->where[1]: d->where[1];
+	}
+	else {
+		LOCK(ErrorMessageLock);
+		MesPrint("Wrong type of object in do loop parameter");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(level);
+	}
+	value += incr;
+	if ( ( finish > start && value <= finish ) ||
+		 ( finish < start && value >= finish ) ||
+		 ( finish == start && value == finish ) ) {}
+	else level = lhsbuf[3];
+
+	if ( d->size < 5 ) {
+		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
+		d->size = 20;
+		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
+	}
+	if ( value > 0 ) {
+		d->where[0] = 4;
+		d->where[1] = value;
+		d->where[2] = 1;
+		d->where[3] = 3;
+		d->where[4] = 0;
+		d->type = DOLNUMBER;
+	}
+	else if ( start < 0 ) {
+		d->where[0] = 4;
+		d->where[1] = -value;
+		d->where[2] = 1;
+		d->where[3] = -3;
+		d->where[4] = 0;
+		d->type = DOLNUMBER;
+	}
+	else
+		d->type = DOLZERO;
+
+	if ( d == Dollars + lhsbuf[2] ) {
+		cbuf[AM.dbufnum].CanCommu[lhsbuf[2]] = 0;
+		cbuf[AM.dbufnum].NumTerms[lhsbuf[2]] = 1;
+		cbuf[AM.dbufnum].rhs[lhsbuf[2]] = d->where;
+	}
+	return(level);
+}
+
+/*
+  	#] TestEndDoLoop : 
+  	#[ DollarFactorize :
+*/
+/**
+ *	Factors a dollar expression.
+ *	Notation: d->nfactors becomes nonzero.
+ *	          if the number of factors is one, we leave d->factors zero.
+ *	          Otherwise factors is an array of pointers to the factors.
+ *	          These are pointers of the type FACDOLLAR.
+ *	            fd->where   pointer to contents in term notation
+ *	            fd->size    size of the buffer fd->where points to
+ *	            fd->type    DOLNUMBER or DOLTERMS
+ *	            fd->value   value if type is DOLNUMBER and it fits in a WORD.
+ */
+
+int DollarFactorize(PHEAD WORD numdollar)
+{
+	GETBIDENTITY
+	DOLLARS d = Dollars + numdollar;
+	WORD *buf1, *t, *term, *buf1content, *buf2, *termextra;
+	WORD *buf3, *tstop, *argextra, pow, *r;
+	int i, j, jj, action = 0, sign;
+	LONG insize, ii, insize2;
+	WORD startebuf = cbuf[AT.ebufnum].numrhs;
+	WORD nfactors, factorsincontent;
+	WORD oldsorttype = AR.SortType;
+
+	CleanDollarFactors(d);
+	if ( d->type != DOLTERMS ) {	/* only one term */
+		if ( d->type != DOLZERO ) d->nfactors = 1;
+		return(0);
+	}
+	if ( d->where[d->where[0]] == 0 ) {	/* only one term. easy */
+	}
+/*
+	Here should come the code for the factorization
+	We copied the routine ArgFactorize in argument.c and changed the
+	memory management completely. For the actual factorization it
+	calls WORD *DoFactorizeDollar(PHEAD WORD *expr) which allocates
+	space for the answer. Notation:
+	 term,...,term,0,term,...,term,0,term,...,term,0,0
+
+ 		#[ Step 0: sort the terms properly and/or make copy  --> buf1,insize
+*/
+	term = d->where;
+	AR.SortType = SORTHIGHFIRST;
+	if ( oldsorttype != AR.SortType ) {
+		NewSort();
+		while ( *term ) {
+			t = term + *term;
+			if ( AN.ncmod != 0 ) {
+				if ( AN.ncmod != 1 || ( (WORD)AN.cmod[0] < 0 ) ) {
+					AR.SortType = oldsorttype;
+					LOCK(ErrorMessageLock);
+					MesPrint("Factorization modulus a number, greater than a WORD not implemented.");
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				if ( Modulus(term) ) {
+					AR.SortType = oldsorttype;
+					LOCK(ErrorMessageLock);
+					MesCall("DollarFactorize");
+					UNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				if ( !*term) { term = t; continue; }
+			}
+			StoreTerm(BHEAD term);
+			term = t;
+		}
+		EndSort((WORD *)((void *)(&buf1)),2,0);
+		t = buf1; while ( *t ) t += *t;
+		insize = t - buf1;
+	}
+	else {
+		t = term; while ( *t ) t += *t;
+		ii = insize = t - term;
+		buf1 = (WORD *)Malloc1((insize+1)*sizeof(WORD),"DollarFactorize-1");
+		t = buf1;
+		NCOPY(t,term,ii);
+		*t++ = 0;
+	}
+/*
+ 		#] Step 0: 
+ 		#[ Step 1: take out the 'content'.
+*/
+	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
+		M_free(buf1,"DollarFactorize-1");
+		AR.SortType = oldsorttype;
+		LOCK(ErrorMessageLock);
+		MesCall("DollarFactorize");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(1);
+	}
+	else if ( ( buf1content[0] == 4 ) && ( buf1content[1] == 1 ) &&
+		      ( buf1content[2] == 1 ) && ( buf1content[3] == 3 ) &&
+			  ( buf1content[4] == 0 ) ) { /* Nothing happened */
+		M_free(buf2,"DollarFactorize-2");
+		factorsincontent = 0;
+	}
+	else {
+/*
+		The way we took out objects is rather brutish. We have to normalize
+*/
+		M_free(buf1,"DollarFactorize-1");
+		buf1 = buf2;
+		t = buf1; while ( *t ) t += *t;
+		insize = t - buf1;
+/*
+		Now analyse how many factors there are in the content
+*/
+		factorsincontent = 0;
+		term = buf1content;
+		tstop = term + *term;
+		if ( tstop[-1] < 0 ) factorsincontent++;
+		if ( ABS(tstop[-1]) == 3 && tstop[-2] == 1 && tstop[-3] == 1 ) {}
+		else {
+			factorsincontent++;
+			tstop -= ABS(tstop[-1]);
+		}
+		term++;
+		while ( term < tstop ) {
+			switch ( *term ) {
+				case SYMBOL:
+					t = term+2; i = (term[1]-2)/2;
+					while ( i > 0 ) {
+						factorsincontent += ABS(t[1]);
+						i--; t += 2;
+					}
+					break;
+				case DOTPRODUCT:
+					t = term+2; i = (term[1]-2)/3;
+					while ( i > 0 ) {
+						factorsincontent += ABS(t[2]);
+						i--; t += 3;
+					}
+					break;
+				case VECTOR:
+				case DELTA:
+					factorsincontent += (term[1]-2)/2;
+					break;
+				case INDEX:
+					factorsincontent += term[1]-2;
+					break;
+				default:
+					if ( *term >= FUNCTION ) factorsincontent++;
+					break;
+			}
+			term += term[1];
+		}
+	}
+/*
+ 		#] Step 1: take out the 'content'. 
+ 		#[ Step 3: ConvertToPoly
+				if there are objects that are not SYMBOLs,
+		        invoke ConvertToPoly
+				We keep the original in buf1 in case there are no factors
+*/
+	t = buf1;
+	while ( *t ) {
+		if ( ( t[1] != SYMBOL ) && ( *t != (ABS(t[*t-1])+1) ) ) {
+			action = 1; break;
+		}
+		t += *t;
+	}
+	if ( action ) {
+		t = buf1;
+		termextra = AT.WorkPointer;
+		NewSort();
+		while ( *t ) {
+			if ( LocalConvertToPoly(BHEAD t,termextra,startebuf) < 0 ) {
+getout:
+				AR.SortType = oldsorttype;
+				M_free(buf1,"DollarFactorize-2");
+				M_free(buf1content,"DollarFactorize-4");
+				MesCall("DollarFactorize");
+				Terminate(-1);
+				return(-1);
+			}
+			StoreTerm(BHEAD termextra);
+			t += *t;
+		}
+		if ( EndSort((WORD *)((void *)(&buf2)),0,0) ) { goto getout; }
+		t = buf2; while ( *t > 0 ) t += *t;
+		insize2 = t - buf2;
+	}
+	else {
+		buf2 = buf1;
+		insize2 = insize;
+	}
+/*
+ 		#] Step 3: ConvertToPoly 
+ 		#[ Step 4: Now the hard work.
+*/
+	if ( ( buf3 = DoFactorizeDollar(BHEAD buf2) ) == 0 ) {
+		MesCall("DollarFactorize");
+		AR.SortType = oldsorttype;
+		if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-3");
+		M_free(buf1,"DollarFactorize-3");
+		M_free(buf1content,"DollarFactorize-4");
+		Terminate(-1);
+		return(-1);
+	}
+	if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-3");
+	term = buf3;
+/*
+	Count the factors:
+*/
+	nfactors = 0;
+	while ( *term ) {
+		term += *term;
+		if ( *term == 0 ) { nfactors++; term++; }
+	}
+/*
+	We have now:
+		buf1: the original before ConvertToPoly for if only one factor
+		buf3: the factored expression with nfactors factors
+
+ 		#] Step 4:
+ 		#[ Step 5: ConvertFromPoly
+				If ConvertToPoly was used, use now ConvertFromPoly
+		        Be careful: there should be more than one factor now.
+*/
+	if ( nfactors ==  1 ) {	/* we can use the buf1 contents */
+		if ( factorsincontent == 0 ) {
+			d->nfactors = 1;
+			AR.SortType = oldsorttype;
+			M_free(buf3,"DollarFactorize-4");
+			if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-4");
+			M_free(buf1,"DollarFactorize-4");
+			M_free(buf1content,"DollarFactorize-4");
+			return(0);
+		}
+		else {
+			d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*(nfactors+factorsincontent),"factors in dollar");
+			d->factors[0].where = buf1;
+			M_free(buf3,"DollarFactorize-4");
+			if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-4");
+		}
+	}
+	else if ( action ) {
+		CBUF *C = cbuf+AC.cbufnum;
+		CBUF *CC = cbuf+AT.ebufnum;
+		WORD *oldworkpointer = AT.WorkPointer;
+		d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*(nfactors+factorsincontent),"factors in dollar");
+		term = buf3;
+		for ( i = 0; i < nfactors; i++ ) {
+			argextra = AT.WorkPointer;
+			NewSort();
+			while ( *term ) {
+				if ( ConvertFromPoly(BHEAD term,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
+					LowerSortLevel();
+getout2:			AR.SortType = oldsorttype;
+					M_free(d->factors,"factors in dollar");
+					d->factors = 0;
+					M_free(buf3,"DollarFactorize-4");
+					if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-4");
+					M_free(buf1,"DollarFactorize-4");
+					M_free(buf1content,"DollarFactorize-4");
+					return(-3);
+				}
+				AT.WorkPointer = argextra + *argextra;
+/*
+				ConvertFromPoly leaves terms with subexpressions. Hence:
+*/
+				if ( Generator(BHEAD argextra,C->numlhs) ) {
+					goto getout2;
+				}
+				term += *term;
+			}
+			term++;
+			AT.WorkPointer = oldworkpointer;
+			EndSort((WORD *)((void *)(&(d->factors[i].where))),2,0);
+			d->factors[i].type = DOLTERMS;
+			t = d->factors[i].where;
+			while ( *t ) t += *t;
+			d->factors[i].size = t - d->factors[i].where;
+		}
+		CC->numrhs = startebuf;
+	}
+	else {
+		CBUF *C = cbuf+AC.cbufnum;
+		WORD *oldworkpointer = AT.WorkPointer;
+		d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*(nfactors+factorsincontent),"factors in dollar");
+		term = buf3;
+		for ( i = 0; i < nfactors; i++ ) {
+			NewSort();
+			while ( *term ) {
+				argextra = oldworkpointer;
+				j = *term;
+				NCOPY(argextra,term,j)
+				AT.WorkPointer = argextra;
+				if ( Generator(BHEAD oldworkpointer,C->numlhs) ) {
+					goto getout2;
+				}
+			}
+			term++;
+			AT.WorkPointer = oldworkpointer;
+			EndSort((WORD *)((void *)(&(d->factors[i].where))),2,0);
+			d->factors[i].type = DOLTERMS;
+			t = d->factors[i].where;
+			while ( *t ) t += *t;
+			d->factors[i].size = t - d->factors[i].where;
+		}
+	}
+	d->nfactors = nfactors + factorsincontent;
+/*
+ 		#] Step 5: ConvertFromPoly
+ 		#[ Step 7: The factors of the content
+*/
+	AR.SortType = oldsorttype;
+	M_free(buf3,"DollarFactorize-5");
+	if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-5");
+	M_free(buf1,"DollarFactorize-5");
+	j = nfactors;
+	term = buf1content;
+	tstop = term + *term;
+	if ( tstop[-1] < 0 ) { tstop[-1] = -tstop[-1]; sign = -1; }
+	else { sign = 1; }
+	tstop -= tstop[-1];	
+	term++;
+	while ( term < tstop ) {
+		switch ( *term ) {
+			case SYMBOL:
+				t = term+2; i = (term[1]-2)/2;
+				while ( i > 0 ) {
+					if ( t[1] < 0 ) { t[1] = -t[1]; pow = -1; }
+					else { pow = 1; }
+					for ( jj = 0; jj < t[1]; jj++ ) {
+						r = d->factors[j].where = (WORD *)Malloc1(9*sizeof(WORD),"factor");
+						r[0] = 8; r[1] = SYMBOL; r[2] = 4; r[3] = *t; r[4] = pow;
+						r[5] = 1; r[6] = 1; r[7] = 3; r[8] = 0;
+						d->factors[j].type = DOLTERMS;
+						d->factors[j].size = 8;
+						j++;
+					}
+					i--; t += 2;
+				}
+				break;
+			case DOTPRODUCT:
+				t = term+2; i = (term[1]-2)/3;
+				while ( i > 0 ) {
+					if ( t[2] < 0 ) { t[2] = -t[2]; pow = -1; }
+					else { pow = 1; }
+					for ( jj = 0; jj < t[2]; jj++ ) {
+						r = d->factors[j].where = (WORD *)Malloc1(10*sizeof(WORD),"factor");
+						r[0] = 9; r[1] = DOTPRODUCT; r[2] = 5; r[3] = t[0]; r[4] = t[1];
+						r[5] = pow; r[6] = 1; r[7] = 1; r[8] = 3; r[9] = 0;
+						d->factors[j].type = DOLTERMS;
+						d->factors[j].size = 9;
+						j++;
+					}
+					i--; t += 3;
+				}
+				break;
+			case VECTOR:
+			case DELTA:
+				t = term+2; i = (term[1]-2)/2;
+				while ( i > 0 ) {
+					for ( jj = 0; jj < t[1]; jj++ ) {
+						r = d->factors[j].where = (WORD *)Malloc1(9*sizeof(WORD),"factor");
+						r[0] = 8; r[1] = *term; r[2] = 4; r[3] = *t; r[4] = t[1];
+						r[5] = 1; r[6] = 1; r[7] = 3; r[8] = 0;
+						d->factors[j].type = DOLTERMS;
+						d->factors[j].size = 8;
+						j++;
+					}
+					i--; t += 2;
+				}
+				break;
+			case INDEX:
+				t = term+2; i = term[1]-2;
+				while ( i > 0 ) {
+					for ( jj = 0; jj < t[1]; jj++ ) {
+						r = d->factors[j].where = (WORD *)Malloc1(8*sizeof(WORD),"factor");
+						r[0] = 7; r[1] = *term; r[2] = 3; r[3] = *t;
+						r[4] = 1; r[5] = 1; r[6] = 3; r[7] = 0;
+						d->factors[j].type = DOLTERMS;
+						d->factors[j].size = 7;
+						j++;
+					}
+					i--; t++;
+				}
+				break;
+			default:
+				if ( *term >= FUNCTION ) {
+					r = d->factors[j].where = (WORD *)Malloc1((term[1]+5)*sizeof(WORD),"factor");
+					*r++ = d->factors[j].size = term[1]+4;
+					for ( jj = 0; jj < t[1]; jj++ ) *r++ = term[jj];
+					*r++ = 1; *r++ = 1; *r++ = 3; *r = 0;
+					j++;
+				}
+				break;
+		}
+		term += term[1];
+	}
+/*
+	Now the numerical factors
+*/
+	term = buf1content;
+	tstop = term + *term;
+	if ( tstop[-1] == 3 && tstop[-2] == 1 && tstop[-3] == 1 ) {}
+	else if ( tstop[-1] == 3 && tstop[-2] == 1 && (UWORD)(tstop[-3]) <= MAXPOSITIVE ) {
+		d->factors[j].where = 0;
+		d->factors[j].size  = 0;
+		d->factors[j].type  = DOLNUMBER;
+		d->factors[j].value = tstop[-3];
+		j++;
+	}
+	else {
+		d->factors[j].where = r = (WORD *)Malloc1((tstop[-1]+2)*sizeof(WORD),"numfactor");
+		d->factors[j].size  = tstop[-1]+1;
+		d->factors[j].type  = DOLTERMS;
+		d->factors[j].value = 0;
+		i = tstop[-1];
+		t = tstop - i;
+		*r++ = tstop[-1]+1;
+		NCOPY(r,t,i);
+		*r = 0;
+		j++;
+	}
+	if ( sign < 0 ) {
+		d->factors[j].where = 0;
+		d->factors[j].size  = 0;
+		d->factors[j].type  = DOLNUMBER;
+		d->factors[j].value = -1;
+	}
+	M_free(buf1content,"DollarFactorize-5");
+	return(0);
+}
+
+/*
+  	#] DollarFactorize : 
+  	#[ CleanDollarFactors :
+*/
+
+void CleanDollarFactors(DOLLARS d)
+{
+	int i;
+	if ( d->nfactors > 1 ) {
+		for ( i = 0; i < d->nfactors; i++ ) {
+			if ( d->factors[i].where )
+				M_free(d->factors[i].where,"dollar factors");
+		}
+	}
+	if ( d->factors ) {
+		M_free(d->factors,"dollar factors");
+		d->factors = 0;
+	}
+	d->nfactors = 0;
+}
+
+/*
+  	#] CleanDollarFactors : 
+  	#[ TakeDollarContent :
+*/
+
+WORD *TakeDollarContent(PHEAD WORD *dollarbuffer, WORD **factor)
+{
+	WORD *remain, *t;
+	int pow;
+/*
+	We force the sign of the first term to be positive.
+*/
+	t = dollarbuffer; pow = 1;
+	t += *t;
+	if ( t[-1] < 0 ) {
+		pow = 0;
+		t[-1] = -t[-1];
+		while ( *t ) {
+			t += *t; t[-1] = -t[-1];
+		}
+	}
+/*
+	Now the GCD of the numerators and the LCM of the denominators:
+*/
+	if ( AN.cmod != 0 ) {
+		if ( ( *factor = MakeDollarMod(BHEAD dollarbuffer,&remain) ) == 0 ) {
+			Terminate(-1);
+		}
+		if ( pow == 0 ) {
+			*factor[**factor-1] = -*factor[**factor-1];
+			*factor[**factor-1] += AN.cmod[0];
+		}
+	}
+	else {
+		if ( ( *factor = MakeDollarInteger(BHEAD dollarbuffer,&remain) ) == 0 ) {
+			Terminate(-1);
+		}
+		if ( pow == 0 ) {
+			*factor[**factor-1] = -*factor[**factor-1];
+		}
+	}
+	return(remain);
+}
+
+/*
+  	#] TakeDollarContent : 
+  	#[ MakeDollarInteger :
+*/
+/**
+ *	For normalizing everything to integers we have to
+ *	determine for all elements of this argument the LCM of
+ *	the denominators and the GCD of the numerators.
+ *	The input argument is in bufin.
+ *	The number that comes out is the return value.
+ *	The normalized argument is in bufout.
+ */
+
+WORD *MakeDollarInteger(PHEAD WORD *bufin,WORD **bufout)
+{
+	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
+	WORD *r, *r1, *r2, *r3, *rnext, i, k, j, *oldworkpointer, *factor;
+	WORD kGCD, kLCM, kGCD2, kkLCM, jLCM, jGCD;
+	CBUF *C = cbuf+AC.cbufnum;
+
+	GCDbuffer = NumberMalloc("MakeDollarInteger");
+	GCDbuffer2 = NumberMalloc("MakeDollarInteger");
+	LCMbuffer = NumberMalloc("MakeDollarInteger");
+	LCMb = NumberMalloc("MakeDollarInteger");
+	LCMc = NumberMalloc("MakeDollarInteger");
+	r = bufin;
+/*
+	First take the first term to load up the LCM and the GCD
+*/
+	r2 = r + *r;
+	j = r2[-1];
+	r3 = r2 - ABS(j);
+	k = REDLENG(j);
+	if ( k < 0 ) k = -k;
+	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+	for ( kGCD = 0; kGCD < k; kGCD++ ) GCDbuffer[kGCD] = r3[kGCD];
+	k = REDLENG(j);
+	if ( k < 0 ) k = -k;
+	r3 += k;
+	while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+	for ( kLCM = 0; kLCM < k; kLCM++ ) LCMbuffer[kLCM] = r3[kLCM];
+	r1 = r2;
+/*
+	Now go through the rest of the terms in this argument.
+*/
+	while ( *r1 ) {
+		r2 = r1 + *r1;
+		j = r2[-1];
+		r3 = r2 - ABS(j);
+		k = REDLENG(j);
+		if ( k < 0 ) k = -k;
+		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+		if ( ( ( GCDbuffer[0] == 1 ) && ( kGCD == 1 ) ) ) {
+/*
+			GCD is already 1
+*/
+		}
+		else if ( ( ( k != 1 ) || ( r3[0] != 1 ) ) ) {
+			if ( GcdLong(BHEAD GCDbuffer,kGCD,(UWORD *)r3,k,GCDbuffer2,&kGCD2) ) {
+				goto MakeDollarIntegerErr;
+			}
+			kGCD = kGCD2;
+			for ( i = 0; i < kGCD; i++ ) GCDbuffer[i] = GCDbuffer2[i];
+		}
+		else {
+			kGCD = 1; GCDbuffer[0] = 1;
+		}
+		k = REDLENG(j);
+		if ( k < 0 ) k = -k;
+		r3 += k;
+		while ( ( k > 1 ) && ( r3[k-1] == 0 ) ) k--;
+		if ( ( ( LCMbuffer[0] == 1 ) && ( kLCM == 1 ) ) ) {
+			for ( kLCM = 0; kLCM < k; kLCM++ )
+				LCMbuffer[kLCM] = r3[kLCM];
+		}
+		else if ( ( k != 1 ) || ( r3[0] != 1 ) ) {
+			if ( GcdLong(BHEAD LCMbuffer,kLCM,(UWORD *)r3,k,LCMb,&kkLCM) ) {
+				goto MakeDollarIntegerErr;
+			}
+			DivLong((UWORD *)r3,k,LCMb,kkLCM,LCMb,&kkLCM,LCMc,&jLCM);
+			MulLong(LCMbuffer,kLCM,LCMb,kkLCM,LCMc,&jLCM);
+			for ( kLCM = 0; kLCM < jLCM; kLCM++ )
+				LCMbuffer[kLCM] = LCMc[kLCM];
+		}
+		else {} /* LCM doesn't change */
+		r1 = r2;
+	}
+/*
+	Now put the factor together: GCD/LCM
+*/
+	r3 = (WORD *)(GCDbuffer);
+	if ( kGCD == kLCM ) {
+		for ( jGCD = 0; jGCD < kGCD; jGCD++ )
+			r3[jGCD+kGCD] = LCMbuffer[jGCD];
+		k = kGCD;
+	}
+	else if ( kGCD > kLCM ) {
+		for ( jGCD = 0; jGCD < kLCM; jGCD++ )
+			r3[jGCD+kGCD] = LCMbuffer[jGCD];
+		for ( jGCD = kLCM; jGCD < kGCD; jGCD++ )
+			r3[jGCD+kGCD] = 0;
+		k = kGCD;
+	}
+	else {
+		for ( jGCD = kGCD; jGCD < kLCM; jGCD++ )
+			r3[jGCD] = 0;
+		for ( jGCD = 0; jGCD < kLCM; jGCD++ )
+			r3[jGCD+kLCM] = LCMbuffer[jGCD];
+		k = kLCM;
+	}
+	j = 2*k+1;
+/*
+	Now we have to write this to factor
+*/
+	factor = r1 = (WORD *)Malloc1((j+2)*sizeof(WORD),"MakeDollarInteger");
+	*r1++ = j+1; r2 = r3;
+	for ( i = 0; i < k; i++ ) { *r1++ = *r2++; *r1++ = *r2++; }
+	*r1++ = j;
+	*r1 = 0;
+/*
+	Next we have to take the factor out from the argument.
+	This cannot be done in location, because the denominator stuff can make
+	coefficients longer.
+
+	We do this via a sort because the things may be jumbled any way and we
+	do not know in advance how much space we need.
+*/
+	NewSort();
+	r = bufin;
+	oldworkpointer = AT.WorkPointer;
+	while ( *r ) {
+		rnext = r + *r;
+		j = ABS(rnext[-1]);
+		r3 = rnext - j;
+		r2 = oldworkpointer;
+		while ( r < r3 ) *r2++ = *r++;
+		j = (j-1)/2;	/* reduced length. Remember, k is the other red length */
+		if ( DivRat(BHEAD (UWORD *)r3,j,GCDbuffer,k,(UWORD *)r2,&i) ) {
+			goto MakeDollarIntegerErr;
+		}
+		i = 2*i+1;
+		r2 = r2 + i;
+		if ( rnext[-1] < 0 ) r2[-1] = -i;
+		else                 r2[-1] =  i;
+		*oldworkpointer = r2-oldworkpointer;
+		AT.WorkPointer = r2;
+		if ( Generator(BHEAD oldworkpointer,C->numlhs) ) {
+			goto MakeDollarIntegerErr;
+		}
+		r = rnext;
+	}
+	AT.WorkPointer = oldworkpointer;
+	EndSort((WORD *)bufout,2,0);
+/*
+	Cleanup
+*/
+	NumberFree(LCMc,"MakeDollarInteger");
+	NumberFree(LCMb,"MakeDollarInteger");
+	NumberFree(LCMbuffer,"MakeDollarInteger");
+	NumberFree(GCDbuffer2,"MakeDollarInteger");
+	NumberFree(GCDbuffer,"MakeDollarInteger");
+	return(factor);
+
+MakeDollarIntegerErr:
+	NumberFree(LCMc,"MakeDollarInteger");
+	NumberFree(LCMb,"MakeDollarInteger");
+	NumberFree(LCMbuffer,"MakeDollarInteger");
+	NumberFree(GCDbuffer2,"MakeDollarInteger");
+	NumberFree(GCDbuffer,"MakeDollarInteger");
+	MesCall("MakeDollarInteger");
+	Terminate(-1);
+	return(0);
+}
+
+/*
+  	#] MakeDollarInteger : 
+  	#[ MakeDollarMod :
+*/
+/**
+ *	Similar to MakeDollarInteger but now with modulus arithmetic using only
+ *	a one WORD 'prime'. We make the coefficient of the first term in the
+ *	argument equal to one.
+ *	Already the coefficients are taken modulus AN.cmod and AN.ncmod == 1
+ */
+
+WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
+{
+	WORD *r, *r1, x, xx, ix, ip;
+	WORD *factor, *oldworkpointer;
+	int i;
+	CBUF *C = cbuf+AC.cbufnum;
+	r = buffer;
+	x = r[*r-3];
+	if ( r[*r-1] < 0 ) x += AN.cmod[0];
+	if ( GetModInverses(x,(WORD)(AN.cmod[0]),&ix,&ip) ) {
+		Terminate(-1);
+	}
+	factor = (WORD *)Malloc1(5*sizeof(WORD),"MakeDollarMod");
+	factor[0] = 4; factor[1] = x; factor[2] = 1; factor[3] = 3; factor[4] = 0;
+/*
+	Now we have to multiply all coefficients by ix.
+	This does not make things longer, but we should keep to the conventions
+	of MakeDollarInteger.
+*/
+	NewSort();
+	r = buffer;
+	oldworkpointer = AT.WorkPointer;
+	while ( *r ) {
+		r1 = oldworkpointer; i = *r;
+		NCOPY(r1,r,i);
+		xx = r1[-3]; if ( r1[-1] < 0 ) xx += AN.cmod[0];
+		r1[-1] = (WORD)((((LONG)xx)*ix) % AN.cmod[0]);
+		*r1 = 0; AT.WorkPointer = r1;
+		if ( Generator(BHEAD oldworkpointer,C->numlhs) ) {
+			Terminate(-1);
+		}
+	}
+	AT.WorkPointer = oldworkpointer;
+	EndSort((WORD *)bufout,2,0);
+	return(factor);
+}
+/*
+  	#] MakeDollarMod : 
+  	#[ GetDolNum :
+
+	Evaluates a chain of DOLLAREXPR2 into a number
+*/
+
+int GetDolNum(PHEAD WORD *t, WORD *tstop)
+{
+	DOLLARS d;
+	WORD num, *w;
+	if ( t+3 < tstop && t[3] == DOLLAREXPR2 ) {
+		d = Dollars + t[2];
+		if ( d->factors == 0 ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Attempt to use a factor of an unfactored $-variable");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		num = GetDolNum(BHEAD t+t[1],tstop);
+		if ( num == 0 ) return(d->nfactors);
+		if ( num > d->nfactors ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Attempt to use an unexisting factor %d of a $-variable",num);
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		w = d->factors[num-1].where;
+		if ( w == 0 ) return(d->factors[num-1].value);
+		if ( w[0] == 4 && w[4] == 0 && w[3] == 3 && w[2] == 1 && w[1] > 0
+		&& w[1] < MAXPOSITIVE ) return(w[1]);
+		else {
+			LOCK(ErrorMessageLock);
+			MesPrint("Illegal type of factor number of a $-variable");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+	}
+	else if ( t[2] < 0 ) {
+		return(-t[2]-1);
+	}
+	else {
+		d = Dollars + t[2];
+		if ( d->type == DOLZERO ) return(0);
+		if ( d->type == DOLTERMS || d->type == DOLNUMBER ) {
+			if ( d->where[0] == 4 && d->where[4] == 0 && d->where[3] == 3
+				&& d->where[2] == 1 && d->where[1] > 0
+				&& d->where[1] < MAXPOSITIVE ) return(d->where[1]);
+			LOCK(ErrorMessageLock);
+			MesPrint("Attempt to use an unexisting factor of a $-variable");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		LOCK(ErrorMessageLock);
+		MesPrint("Illegal type of factor number of a $-variable");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	return(0);
+}
+
+/*
+  	#] GetDolNum :
 */
 

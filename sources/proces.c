@@ -601,7 +601,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -787,6 +787,13 @@ TooMuch:;
 /*				AR.TePos = 0;  */
 				AR.TePos = WORDDIF(t,term);
 				AT.TMbuff = t[4];
+				if ( t[4] == AM.dbufnum && (t+t[1]) < m && t[t[1]] == DOLLAREXPR2 ) {
+					if ( t[t[1]+2] < 0 ) AT.TMdolfac = -t[t[1]+2];
+					else {	/* resolve the element number */
+						AT.TMdolfac = GetDolNum(BHEAD t+t[1],m)+1;
+					}
+				}
+				else AT.TMdolfac = 0;
 				if ( t[3] < 0 ) {
 					AN.TeInFun = 1;
 					AR.TePos = WORDDIF(t,term);
@@ -2301,6 +2308,9 @@ foundit:;
 			m = termout;
 			do { *m++ = *r++; } while ( r < t );
 			if ( t[1] > SUBEXPSIZE ) {
+/*
+				if this is a dollar expression there are no wildcards
+*/
 				i = *--m;
 				if ( ( l2 = WildFill(BHEAD m,position,t) ) < 0 ) goto InsCall;
 				*m = i;
@@ -2321,6 +2331,7 @@ foundit:;
 				t = v;
 			}
 			t += t[1];
+			while ( t < u && *t == DOLLAREXPR2 ) t += t[1];
 ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 			if ( *r == 1 && r[1] == 1 && j == 3 ) {
 				if ( l2 < 0 ) l1 = -l1;
@@ -2671,6 +2682,9 @@ NoWild:				r = accum;
 				}
 				accum += *accum;
 			} while ( --numacc >= 0 );
+			if ( *t == SUBEXPRESSION ) {
+				 while ( t+t[1] < u && t[t[1]] == DOLLAREXPR2 ) t += t[1];
+			}
 			t += t[1];
 			if ( t < u ) do { *m++ = *t++; } while ( t < u );
 			l2 = l1;
@@ -2699,6 +2713,7 @@ NoWild:				r = accum;
 									goto Nextr;
 								}
 								if ( l1 && cbuf[t[4]].CanCommu[t[2]] ) break;
+								while ( t+t[1] < m && t[t[1]] == DOLLAREXPR2 ) t += t[1];
 						}
 						else if ( l1 ) {
 							if ( *t == SUBEXPRESSION && cbuf[t[4]].CanCommu[t[2]] )
@@ -2783,6 +2798,7 @@ WORD Generator(PHEAD WORD *term, WORD level)
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum;
 	LONG posisub, oldcpointer;
 	DOLLARS d = 0;
+	WORD numfac[5];
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1, id;
 #endif
@@ -3313,9 +3329,9 @@ CommonEnd:
 					if ( ChainOut(BHEAD term,C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
-				  case TYPEPOLYNORM:
+				  case TYPEFACTOR:
 					AT.WorkPointer = term + *term;
-					if ( PolyNorm(BHEAD term,level,C->lhs[level][2],C->lhs[level][3]) ) goto GenCall;
+					if ( DollarFactorize(BHEAD C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
 				  case TYPEARGIMPLODE:
@@ -3362,6 +3378,14 @@ CommonEnd:
 					i = termout[0]; t = term; NCOPY(t,termout,i);
 					AT.WorkPointer = term + *term;
 					goto ReStart;
+				  case TYPEDOLOOP:
+					level = TestDoLoop(BHEAD C->lhs[level],level);
+					if ( level < 0 ) goto GenCall;
+					break;
+				  case TYPEENDDOLOOP:
+					level = TestEndDoLoop(BHEAD C->lhs[C->lhs[level][2]],C->lhs[level][2]);
+					if ( level < 0 ) goto GenCall;
+					break;
 				}
 				goto SkipCount;
 /*
@@ -3428,7 +3452,58 @@ AutoGen:	i = *AT.TMout;
 			d = DolToTerms(BHEAD replac);
 			if ( d ) {
 				iscopy = 1;
-				StartBuf = d->where;
+				if ( AT.TMdolfac > 0 ) {	/* We need a factor */
+				  if ( AT.TMdolfac == 1 ) {
+					numfac[0] = 4;
+					numfac[1] = d->nfactors;
+					numfac[2] = 1;
+					numfac[3] = 3;
+					numfac[4] = 0;
+					StartBuf = numfac;
+				  }
+				  else {
+					if ( (AT.TMdolfac-1) > d->nfactors && d->nfactors > 0 ) {
+						LOCK(ErrorMessageLock);
+						MesPrint("Attempt to use an unexisting factor %d of a $-variable",(WORD)(AT.TMdolfac-1));
+						if ( d->nfactors == 1 )
+							MesPrint("There is only one factor");
+						else
+							MesPrint("There are only %d factors",(WORD)(d->nfactors));
+						UNLOCK(ErrorMessageLock);
+						goto GenCall;
+					}
+					if ( d->nfactors > 1 ) {
+						DOLLARS dd = Dollars + replac;
+						LONG dsize = dd->factors[AT.TMdolfac-2].size;
+						WORD *td1, *td2;
+/*
+						We copy only the factor we need
+*/
+						d->factors[AT.TMdolfac-2].where = td2 = (WORD *)Malloc1(
+							(dsize+1)*sizeof(WORD),"Copy of factor");
+						td1 = dd->factors[AT.TMdolfac-2].where;
+						StartBuf = td2;
+						d->size = dsize; d->type = DOLTERMS;
+						NCOPY(td2,td1,dsize);
+						*td2 = 0;
+					}
+					else if ( d->nfactors == 1 ) {
+						StartBuf = d->where;
+					}
+					else {
+						LOCK(ErrorMessageLock);
+						if ( d->nfactors == 0 ) {
+							MesPrint("Attempt to use factor %d of an unfactored $-variable",(WORD)(AT.TMdolfac-1));
+						}
+						else {
+							MesPrint("Internal error. Illegal number of factors for $-variable");
+						}
+						UNLOCK(ErrorMessageLock);
+						goto GenCall;
+					}
+				  }
+				}
+				else StartBuf = d->where;
 			}
 			else {
 				d = Dollars + replac;
@@ -3510,6 +3585,13 @@ AutoGen:	i = *AT.TMout;
 			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif
 			if ( iscopy ) {
+				if ( d->nfactors > 1 ) {
+					int j;
+					for ( j = 0; j < d->nfactors; j++ ) {
+						if ( d->factors[j].where ) M_free(d->factors[j].where,"Copy of factor");
+					}
+					M_free(d->factors,"Dollar factors");
+				}
 				M_free(d,"Copy of dollar variable");
 				d = 0; iscopy = 0;
 			}
@@ -3578,6 +3660,13 @@ AutoGen:	i = *AT.TMout;
 			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif
 			if ( iscopy ) {
+				if ( d->nfactors > 1 ) {
+					int j;
+					for ( j = 0; j < d->nfactors; j++ ) {
+						if ( d->factors[j].where ) M_free(d->factors[j].where,"Copy of factor");
+					}
+					M_free(d->factors,"Dollar factors");
+				}
 				M_free(d,"Copy of dollar variable");
 				d = 0; iscopy = 0;
 			}
@@ -3634,6 +3723,13 @@ AutoGen:	i = *AT.TMout;
 			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif
 			if ( iscopy ) {
+				if ( d->nfactors > 1 ) {
+					int j;
+					for ( j = 0; j < d->nfactors; j++ ) {
+						if ( d->factors[j].where ) M_free(d->factors[j].where,"Copy of factor");
+					}
+					M_free(d->factors,"Dollar factors");
+				}
 				M_free(d,"Copy of dollar variable");
 				d = 0; iscopy = 0;
 			}

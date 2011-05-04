@@ -1942,6 +1942,9 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		argfree = argin;
 	}
 	else if ( argfree[0] == ( argfree[ARGHEAD]+ARGHEAD ) ) {
+		Normalize(BHEAD argfree+ARGHEAD);
+		argfree[0] = argfree[ARGHEAD]+ARGHEAD;
+		argfree[1] = 0;
 		if ( ( argfree[0] == ARGHEAD+4 ) && ( argfree[ARGHEAD+3] == 3 )
 			&& ( argfree[ARGHEAD+1] == 1 ) && ( argfree[ARGHEAD+2] == 1 ) ) {
 			goto return0;
@@ -2140,7 +2143,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize : 
+  	#] ArgFactorize :
   	#[ FindArg :
 */
 /**

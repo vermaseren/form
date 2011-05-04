@@ -701,6 +701,9 @@ VOID StartVariables()
 	AO.FortDotChar = '_';
 	AC.firstconstindex = 1;
 	AM.dollarzero = 0;
+ 	AC.doloopstack = 0;
+ 	AC.doloopstacksize = 0;
+ 	AC.dolooplevel = 0;
 /*
 	Set up the main name trees:
 */
