@@ -2436,6 +2436,11 @@ WORD PF_mkDollarsParallel()
 					PF_longSinglePack((UBYTE*)&(newd->type), 1, PF_WORD);
 					PF_longSinglePack((UBYTE*)&(newd->size), 1, PF_LONG);
 					PF_longSinglePack((UBYTE*)newd->where, newd->size+1, PF_WORD);
+/*
+					if ( newd->nfactors > 1 ) {
+	We have to send the factored stuff !!!!!!!!!!!!!!!!!
+					}
+*/
 				} 
 				else {
 					type = DOLZERO;
@@ -2480,6 +2485,11 @@ WORD PF_mkDollarsParallel()
 				PF_longMultiPack((UBYTE*)&(newd->type), 1, sizeof(WORD),PF_WORD);
 				PF_longMultiPack((UBYTE*)&(newd->size), 1, sizeof(LONG),PF_LONG);
 				PF_longMultiPack((UBYTE*)newd->where, newd->size+1, sizeof(WORD),PF_WORD);
+/*
+				if ( newd->nfactors > 1 ) {
+	We have to send the factored stuff !!!!!!!!!!!!!!!
+				}
+*/
 			}
 			else {
 				type = DOLZERO;
@@ -2727,7 +2737,7 @@ LONG l=0;
 }
 /*
   	#] PF_WalkThroughExprMaster:
-  	#[ int  PF_rhsBCastMaster:
+  	#[ int PF_rhsBCastMaster:
 */
 static int  PF_rhsBCastMaster(FILEHANDLE *curfile,EXPRESSIONS e)
 {

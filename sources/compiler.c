@@ -116,11 +116,13 @@ static KEYWORD com2commands[] = {
 	,{"delete",         (TFUN)CoDelete,           SPECIFICATION,PARTEST}
 	,{"denominators",   (TFUN)CoDenominators,     STATEMENT,    PARTEST}
 	,{"disorder",       (TFUN)CoDisorder,         STATEMENT,    PARTEST}
+	,{"do",             (TFUN)CoDo,               STATEMENT,    PARTEST}
 	,{"drop",           (TFUN)CoDrop,             SPECIFICATION,PARTEST}
 	,{"dropcoefficient",(TFUN)CoDropCoefficient,  STATEMENT,    PARTEST}
 	,{"else",           (TFUN)CoElse,             STATEMENT,    PARTEST}
 	,{"elseif",         (TFUN)CoElseIf,           STATEMENT,    PARTEST}
 	,{"endargument",    (TFUN)CoEndArgument,      STATEMENT,    PARTEST}
+	,{"enddo",          (TFUN)CoEndDo,            STATEMENT,    PARTEST}
 	,{"endif",          (TFUN)CoEndIf,            STATEMENT,    PARTEST}
 	,{"endinexpression",(TFUN)CoEndInExpression,  STATEMENT,    PARTEST}
 	,{"endinside",      (TFUN)CoEndInside,        STATEMENT,    PARTEST}
@@ -130,6 +132,8 @@ static KEYWORD com2commands[] = {
 	,{"exit",           (TFUN)CoExit,             STATEMENT,    PARTEST}
 	,{"extrasymbols",   (TFUN)CoExtraSymbols,     DECLARATION,  PARTEST}
 	,{"factarg",        (TFUN)CoFactArg,          STATEMENT,    PARTEST}
+	,{"factor",         (TFUN)CoFactor,           STATEMENT,    PARTEST}
+	,{"factorize",      (TFUN)CoFactor,           STATEMENT,    PARTEST}
 	,{"fill",           (TFUN)CoFill,             DECLARATION,  PARTEST}
 	,{"fillexpression", (TFUN)CoFillExpression,   DECLARATION,  PARTEST}
 	,{"frompolynomial", (TFUN)CoFromPolynomial,   STATEMENT,    PARTEST}
@@ -165,7 +169,6 @@ static KEYWORD com2commands[] = {
 	,{"once",           (TFUN)CoOnce,             STATEMENT,    PARTEST}
 	,{"only",           (TFUN)CoOnly,             STATEMENT,    PARTEST}
 	,{"polyfun",        (TFUN)CoPolyFun,          DECLARATION,  PARTEST}
-	,{"polynorm",       (TFUN)CoPolyNorm,         STATEMENT,    PARTEST}
 	,{"polyratfun",     (TFUN)CoPolyRatFun,       DECLARATION,  PARTEST}
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}
 	,{"print[]",        (TFUN)CoPrintB,           TOOUTPUT,     PARTEST}
@@ -783,7 +786,7 @@ int CodeGenerator(SBYTE *tokens)
 	GETIDENTITY
 	SBYTE *s = tokens, c;
 	int i, sign = 1, first = 1, deno = 1, error = 0, minus, n, needarg, numexp, cc;
-	int base, sumlevel = 0, sumtype = SYMTOSYM, firstsumarg, inset = 0, dflag;
+	int base, sumlevel = 0, sumtype = SYMTOSYM, firstsumarg, inset = 0;
 	int funflag = 0, settype, x1, x2;
 	WORD *t, *v, *r, *term, nnumerator, ndenominator, *oldwork, x3, y, nin;
 	WORD *w1, *w2, *tsize = 0, *relo = 0;
@@ -831,7 +834,6 @@ int CodeGenerator(SBYTE *tokens)
 		}
 		else {
 			first = 0; c = *s++;
-			dflag = 0;
 			switch ( c ) {
 			case TSYMBOL:
 				x1 = 0; while ( *s >= 0 ) { x1 = x1*128 + *s++; }
@@ -851,7 +853,6 @@ TryPower:		if ( *s == TPOWER ) {
 					*t++ = deno*x2;
 				}
 				else *t++ = deno;
-				if ( dflag ) { *t++ = AM.dbufnum; FILLSUB(t) }
 fin:			deno = 1;
 				if ( inset ) {
 					while ( relo < AT.WorkTop ) *t++ = *relo++;
@@ -1735,16 +1736,81 @@ docoef:
 				*relo = 2; *t++ = SNUMBER; *t++ = 4; *t++ = y;
 				goto TryPower;
 			case TDOLLAR:
+			{
+				WORD *powplace;
 				x1 = 0; while ( *s >= 0 ) { x1 = x1*128 + *s++; }
 				if ( AR.Eside != LHSIDE ) {
 					*t++ = SUBEXPRESSION; *t++ = SUBEXPSIZE; *t++ = x1;
-					dflag = 1;
 				}
 				else {
 					*t++ = DOLLAREXPRESSION; *t++ = SUBEXPSIZE; *t++ = x1;
-					dflag = 1;
 				}
-				goto TryPower;
+				powplace = t; t++;
+				*t++ = AM.dbufnum; FILLSUB(t)
+/*
+				Now we have to test for factors of dollars with [ ] and [ [ ]]
+*/
+				if ( *s == LBRACE ) {
+					int bracelevel = 1;
+					s++;
+					while ( bracelevel > 0 ) {
+						if ( *s == RBRACE ) {
+							bracelevel--; s++;
+						}
+						else if ( *s == TNUMBER ) {
+							s++;
+							x2 = 0; while ( *s >= 0 ) { x2 = 128*x2 + *s++; }
+							*t++ = DOLLAREXPR2; *t++ = 3; *t++ = -x2-1;
+CloseBraces:
+							while ( bracelevel > 0 ) {
+								if ( *s != RBRACE ) {
+ErrorBraces:
+									error = -1;
+									MesPrint("&Improper use of [] in $-variable.");
+									return(error);
+								}
+								else {
+									s++; bracelevel--;
+								}
+							}
+						}
+						else if ( *s == TDOLLAR ) {
+							s++;
+							x1 = 0; while ( *s >= 0 ) { x1 = x1*128 + *s++; }
+							*t++ = DOLLAREXPR2; *t++ = 3; *t++ = x1;
+							if ( *s == RBRACE ) goto CloseBraces;
+							else if ( *s == LBRACE ) {
+								s++; bracelevel++;
+							}
+						}
+						else goto ErrorBraces;
+					}
+				}
+/*
+				Finally we can continue with the power
+*/
+				if ( *s == TPOWER ) {
+					s++;
+					if ( *s == TMINUS ) { s++; deno = -deno; }
+					c = *s++;
+					base = ( c == TNUMBER ) ? 100: 128;
+					x2 = 0; while ( *s >= 0 ) { x2 = base*x2 + *s++; }
+					if ( c == TSYMBOL ) {
+						if ( *s == TWILDCARD ) s++;
+						x2 += 2*MAXPOWER;
+					}
+					*powplace = deno*x2;
+				}
+				else *powplace = deno;
+				deno = 1;
+/*
+				if ( inset ) {
+					while ( relo < AT.WorkTop ) *t++ = *relo++;
+					inset = 0; tsize[1] = t - tsize;
+				}
+*/
+			}
+				break;
 			case TSETNUM:
 				inset = 1; tsize = t; relo = AT.WorkTop;
 				*t++ = SETSET; *t++ = 0;
@@ -1810,7 +1876,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator : 
+ 		#] CodeGenerator :
  		#[ CompleteTerm :
 
 		Completes the term

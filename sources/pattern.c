@@ -141,7 +141,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else return(0);
 	}
 /*
- 		#] Preliminaries : 
+ 		#] Preliminaries :
 */
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -519,9 +519,6 @@ nextlevel:;
 /*
  		#] TestMatch : 
  		#[ Substitute :			VOID Substitute(term,pattern,power)
-
-	The current version doesn't scan function arguments yet. 7-Apr-1988
-
 */
 
 VOID Substitute(PHEAD WORD *term, WORD *pattern, WORD power)
@@ -761,7 +758,7 @@ SubsL5:								fill += nq;
 			else { fill = subterm; fill -= 2; }
 		}
 /*
-			#] DOTPRODUCTS :
+			#] DOTPRODUCTS : 
 			#[ FUNCTIONS :
 */
 		else if ( *m >= FUNCTION ) {
@@ -1509,7 +1506,7 @@ NextDot:			r += 3;
 			} while ( r < tstop );
 		}
 /*
-			#] DOTPRODUCT :
+			#] DOTPRODUCT : 
 			#[ LEVICIVITA :
 */
 		else if ( *t == LEVICIVITA ) {
@@ -1625,7 +1622,7 @@ LeVect:				m = AT.WorkPointer;
 }
 
 /*
- 		#] FindAll :
+ 		#] FindAll : 
  		#[ TestSelect :
 
 		Returns 1 if any of the objects in any of the sets in setp

@@ -379,6 +379,7 @@ typedef int (*TFUN1)();
 #define ARGWILD 9
 #define MINVECTOR 10
 #define SETEXP 11
+#define DOLLAREXPR2 12
 #define FUNCTION 20
 
 #define ARGFIELD 15
@@ -558,7 +559,7 @@ typedef int (*TFUN1)();
 #define TYPECHAININ 63
 #define TYPECHAINOUT 64
 #define TYPENORM4 65
-#define TYPEPOLYNORM 66
+#define TYPEFACTOR 66
 #define TYPEARGIMPLODE 67
 #define TYPEARGEXPLODE 68
 #define TYPEDENOMINATORS 69
@@ -568,6 +569,8 @@ typedef int (*TFUN1)();
 #define TYPETRANSFORM 73
 #define TYPETOPOLYNOMIAL 74
 #define TYPEFROMPOLYNOMIAL 75
+#define TYPEDOLOOP 76
+#define TYPEENDDOLOOP 77
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.

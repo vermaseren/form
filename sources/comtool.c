@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -35,7 +35,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ inicbufs :
 */
 
@@ -94,7 +94,7 @@ void finishcbuf(WORD num)
 }
 
 /*
-  	#] finishcbuf :
+  	#] finishcbuf : 
   	#[ clearcbuf :
 */
 
@@ -114,7 +114,7 @@ void clearcbuf(WORD num)
 }
 
 /*
-  	#] clearcbuf :
+  	#] clearcbuf : 
   	#[ DoubleCbuffer :
 */
 
@@ -147,7 +147,7 @@ WORD *DoubleCbuffer(int num, WORD *w)
 }
 
 /*
-  	#] DoubleCbuffer :
+  	#] DoubleCbuffer : 
   	#[ AddLHS :
 */
 
@@ -233,7 +233,7 @@ restart:;
 }
 
 /*
-  	#] AddRHS :
+  	#] AddRHS : 
   	#[ AddNtoL :
 */
 
@@ -251,7 +251,7 @@ int AddNtoL(int n, WORD *array)
 }
 
 /*
-  	#] AddNtoL :
+  	#] AddNtoL : 
   	#[ AddNtoC :
 
 	Commentary: added the bufnum on 14-sep-2010 to make the whole a bit
@@ -274,7 +274,7 @@ int AddNtoC(int bufnum, int n, WORD *array)
 }
 
 /*
-  	#] AddNtoC :
+  	#] AddNtoC : 
   	#[ InsTree :
 
 	Routines for balanced tree searching and insertion.
@@ -464,7 +464,7 @@ balance:;
 }
 
 /*
-  	#] InsTree :
+  	#] InsTree : 
   	#[ FindTree :
 
 	Routines for balanced tree searching.
@@ -506,7 +506,7 @@ int FindTree(int bufnum, WORD *subexpr)
 }
 
 /*
-  	#] FindTree :
+  	#] FindTree : 
   	#[ RedoTree :
 */
 
@@ -525,7 +525,7 @@ void RedoTree(CBUF *C, int size)
 }
 
 /*
-  	#] RedoTree :
+  	#] RedoTree : 
   	#[ ClearTree :
 */
 
@@ -546,7 +546,7 @@ void ClearTree(int i)
 }
 
 /*
-  	#] ClearTree :
+  	#] ClearTree : 
   	#[ IniFbuffer :
 */
 /**
@@ -587,7 +587,7 @@ int IniFbuffer(WORD bufnum)
 }
 
 /*
-  	#] IniFbuffer :
+  	#] IniFbuffer : 
   	#[ numcommute :
 
 	Returns the number of non-commuting terms in the expression
@@ -614,6 +614,6 @@ LONG numcommute(WORD *terms, LONG *numterms)
 }
 
 /*
-  	#] numcommute :
+  	#] numcommute : 
 */
 

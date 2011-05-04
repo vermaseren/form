@@ -1912,7 +1912,7 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 }
 
 /*
-  	#] DoElements :
+  	#] DoElements : 
   	#[ CoSet :
 
 	Set declarations.
@@ -2127,6 +2127,8 @@ int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 	dol->pthreadslockread = dummylock;
 	dol->pthreadslockwrite = dummylock;
 #endif
+	dol->nfactors = 0;
+	dol->factors = 0;
 	AddRHS(AM.dbufnum,1);
 	AddLHS(AM.dbufnum);
 	if ( start && size > 0 ) {
@@ -2146,7 +2148,7 @@ int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 }
 
 /*
-  	#] AddDollar : 
+  	#] AddDollar :
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.

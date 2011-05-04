@@ -32,7 +32,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ includes :
 */
@@ -127,7 +127,7 @@ static KEYWORD onoffoptions[] = {
 static WORD one = 1;
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ CoCollect :
 
 	Collect,functionname
@@ -191,7 +191,7 @@ syntaxerror:
 }
 
 /*
-  	#] CoCollect :
+  	#] CoCollect : 
   	#[ setonoff :
 */
 
@@ -207,7 +207,7 @@ int setonoff(UBYTE *s, int *flag, int onvalue, int offvalue)
 }
 
 /*
-  	#] setonoff :
+  	#] setonoff : 
   	#[ CoCompress :
 */
 
@@ -256,7 +256,7 @@ int CoCompress(UBYTE *s)
 }
 
 /*
-  	#] CoCompress :
+  	#] CoCompress : 
   	#[ CoFlags :
 */
 
@@ -291,7 +291,7 @@ int CoFlags(UBYTE *s,int value)
 }
 
 /*
-  	#] CoFlags :
+  	#] CoFlags : 
   	#[ CoOff :
 */
 
@@ -339,7 +339,7 @@ int CoOff(UBYTE *s)
 }
 
 /*
-  	#] CoOff :
+  	#] CoOff : 
   	#[ CoOn :
 */
 
@@ -561,21 +561,21 @@ int CoOn(UBYTE *s)
 }
 
 /*
-  	#] CoOn :
+  	#] CoOn : 
   	#[ CoInsideFirst :
 */
 
 int CoInsideFirst(UBYTE *s) { return(setonoff(s,&AC.insidefirst,1,0)); }
 
 /*
-  	#] CoInsideFirst :
+  	#] CoInsideFirst : 
   	#[ CoProperCount :
 */
 
 int CoProperCount(UBYTE *s) { return(setonoff(s,&AC.BottomLevel,1,0)); }
 
 /*
-  	#] CoProperCount :
+  	#] CoProperCount : 
   	#[ CoDelete :
 */
 
@@ -595,7 +595,7 @@ int CoDelete(UBYTE *s)
 }
 
 /*
-  	#] CoDelete :
+  	#] CoDelete : 
   	#[ CoFormat :
 */
 
@@ -701,7 +701,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat :
+  	#] CoFormat : 
   	#[ CoKeep :
 */
 
@@ -713,7 +713,7 @@ int CoKeep(UBYTE *s)
 }
 
 /*
-  	#] CoKeep :
+  	#] CoKeep : 
   	#[ CoFixIndex :
 */
 
@@ -747,7 +747,7 @@ proper:		MesPrint("&Proper syntax is: FixIndex,number:value[,number,value];");
 }
 
 /*
-  	#] CoFixIndex :
+  	#] CoFixIndex : 
   	#[ CoMetric :
 */
 
@@ -755,7 +755,7 @@ int CoMetric(UBYTE *s)
 { DUMMYUSE(s); MesPrint("&The metric statement does not do anything yet"); return(1); }
 
 /*
-  	#] CoMetric :
+  	#] CoMetric : 
   	#[ DoPrint :
 */
 
@@ -917,28 +917,28 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint :
+  	#] DoPrint : 
   	#[ CoPrint :
 */
 
 int CoPrint(UBYTE *s) { return(DoPrint(s,PRINTON)); }
 
 /*
-  	#] CoPrint :
+  	#] CoPrint : 
   	#[ CoPrintB :
 */
 
 int CoPrintB(UBYTE *s) { return(DoPrint(s,PRINTCONTENT)); }
 
 /*
-  	#] CoPrintB :
+  	#] CoPrintB : 
   	#[ CoNPrint :
 */
 
 int CoNPrint(UBYTE *s) { return(DoPrint(s,PRINTOFF)); }
 
 /*
-  	#] CoNPrint :
+  	#] CoNPrint : 
   	#[ CoPushHide :
 */
 
@@ -982,7 +982,7 @@ int CoPushHide(UBYTE *s)
 }
 
 /*
-  	#] CoPushHide :
+  	#] CoPushHide : 
   	#[ CoPopHide :
 */
 
@@ -1017,7 +1017,7 @@ int CoPopHide(UBYTE *s)
 }
 
 /*
-  	#] CoPopHide :
+  	#] CoPopHide : 
   	#[ SetExprCases :
 */
 
@@ -1163,7 +1163,7 @@ int SetExprCases(int par, int setunset, int val)
 }
 
 /*
-  	#] SetExprCases :
+  	#] SetExprCases : 
   	#[ SetExpr :
 */
 
@@ -1207,35 +1207,35 @@ int SetExpr(UBYTE *s, int setunset, int par)
 }
 
 /*
-  	#] SetExpr :
+  	#] SetExpr : 
   	#[ CoDrop :
 */
 
 int CoDrop(UBYTE *s) { return(SetExpr(s,1,DROP)); }
 
 /*
-  	#] CoDrop :
+  	#] CoDrop : 
   	#[ CoNoDrop :
 */
 
 int CoNoDrop(UBYTE *s) { return(SetExpr(s,0,DROP)); }
 
 /*
-  	#] CoNoDrop :
+  	#] CoNoDrop : 
   	#[ CoSkip :
 */
 
 int CoSkip(UBYTE *s) { return(SetExpr(s,1,SKIP)); }
 
 /*
-  	#] CoSkip :
+  	#] CoSkip : 
   	#[ CoNoSkip :
 */
 
 int CoNoSkip(UBYTE *s) { return(SetExpr(s,0,SKIP)); }
 
 /*
-  	#] CoNoSkip :
+  	#] CoNoSkip : 
   	#[ CoHide :
 */
 
@@ -1253,7 +1253,7 @@ int CoHide(UBYTE *inp) {
 }
 
 /*
-  	#] CoHide :
+  	#] CoHide : 
   	#[ CoIntoHide :
 */
 
@@ -1271,28 +1271,28 @@ int CoIntoHide(UBYTE *inp) {
 }
 
 /*
-  	#] CoIntoHide :
+  	#] CoIntoHide : 
   	#[ CoNoHide :
 */
 
 int CoNoHide(UBYTE *inp) { return(SetExpr(inp,0,HIDE)); }
 
 /*
-  	#] CoNoHide :
+  	#] CoNoHide : 
   	#[ CoUnHide :
 */
 
 int CoUnHide(UBYTE *inp) { return(SetExpr(inp,1,UNHIDE)); }
 
 /*
-  	#] CoUnHide :
+  	#] CoUnHide : 
   	#[ CoNoUnHide :
 */
 
 int CoNoUnHide(UBYTE *inp) { return(SetExpr(inp,0,UNHIDE)); }
 
 /*
-  	#] CoNoUnHide :
+  	#] CoNoUnHide : 
   	#[ AddToCom :
 */
 
@@ -1307,7 +1307,7 @@ void AddToCom(int n, WORD *array)
 }
 
 /*
-  	#] AddToCom :
+  	#] AddToCom : 
   	#[ AddComString :
 */
 
@@ -1366,7 +1366,7 @@ int AddComString(int n, WORD *array, UBYTE *thestring, int par)
 }
 
 /*
-  	#] AddComString :
+  	#] AddComString : 
   	#[ Add2ComStrings :
 */
 
@@ -1407,7 +1407,7 @@ int Add2ComStrings(int n, WORD *array, UBYTE *string1, UBYTE *string2)
 }
 
 /*
-  	#] Add2ComStrings :
+  	#] Add2ComStrings : 
   	#[ CoDiscard :
 */
 
@@ -1422,7 +1422,7 @@ int CoDiscard(UBYTE *s)
 }
 
 /*
-  	#] CoDiscard :
+  	#] CoDiscard : 
   	#[ CoContract :
 
 	Syntax:
@@ -1459,7 +1459,7 @@ proper:		MesPrint("&Illegal number in contract statement");
 }
 
 /*
-  	#] CoContract :
+  	#] CoContract : 
   	#[ CoGoTo :
 */
 
@@ -1478,7 +1478,7 @@ int CoGoTo(UBYTE *inp)
 }
 
 /*
-  	#] CoGoTo :
+  	#] CoGoTo : 
   	#[ CoLabel :
 */
 
@@ -1497,7 +1497,7 @@ int CoLabel(UBYTE *inp)
 }
 
 /*
-  	#] CoLabel :
+  	#] CoLabel : 
   	#[ DoArgument :
 
 	Layout:
@@ -1524,7 +1524,7 @@ int DoArgument(UBYTE *s, int par)
             	return(-1);
 	        }
     	    AC.argsumcheck[AC.arglevel] = AC.IfLevel + AC.RepLevel + AC.insidelevel
-				+ AC.termlevel;
+				+ AC.termlevel + AC.dolooplevel;
         	AC.argstack[AC.arglevel] = cbuf[AC.cbufnum].Pointer
 			                       - cbuf[AC.cbufnum].Buffer + 2;
 			AC.arglevel++;
@@ -1736,14 +1736,14 @@ nofun:					MesPrint("&%s is not a function or a set of functions"
 }
 
 /*
-  	#] DoArgument :
+  	#] DoArgument : 
   	#[ CoArgument :
 */
 
 int CoArgument(UBYTE *s) { return(DoArgument(s,TYPEARG)); }
 
 /*
-  	#] CoArgument :
+  	#] CoArgument : 
   	#[ CoEndArgument :
 */
 
@@ -1762,7 +1762,7 @@ int CoEndArgument(UBYTE *s)
 	AC.arglevel--;
 	cbuf[AC.cbufnum].Buffer[AC.argstack[AC.arglevel]] = C->numlhs;
 	if ( AC.argsumcheck[AC.arglevel] != ( AC.IfLevel + AC.RepLevel + AC.insidelevel
-		+ AC.termlevel ) ) {
+		+ AC.termlevel + AC.dolooplevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument");
 		return(1);
 	}
@@ -1770,21 +1770,21 @@ int CoEndArgument(UBYTE *s)
 }
 
 /*
-  	#] CoEndArgument :
+  	#] CoEndArgument : 
   	#[ CoReplaceInArg :
 */
 
 int CoReplaceInArg(UBYTE *s) { return(DoArgument(s,TYPEREPARG)); }
 
 /*
-  	#] CoReplaceInArg :
+  	#] CoReplaceInArg : 
   	#[ CoInside :
 */
 
 int CoInside(UBYTE *s) { return(DoInside(s)); }
 
 /*
-  	#] CoInside :
+  	#] CoInside : 
   	#[ CoEndInside :
 */
 
@@ -1803,7 +1803,7 @@ int CoEndInside(UBYTE *s)
 	AC.insidelevel--;
 	cbuf[AC.cbufnum].Buffer[AC.insidestack[AC.insidelevel]] = C->numlhs;
 	if ( AC.insidesumcheck[AC.insidelevel] != ( AC.IfLevel + AC.RepLevel
-		+ AC.arglevel + AC.termlevel ) ) {
+		+ AC.arglevel + AC.termlevel + AC.dolooplevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, inside");
 		return(1);
 	}
@@ -1811,42 +1811,42 @@ int CoEndInside(UBYTE *s)
 }
 
 /*
-  	#] CoEndInside :
+  	#] CoEndInside : 
   	#[ CoNormalize :
 */
 
 int CoNormalize(UBYTE *s) { return(DoArgument(s,TYPENORM)); }
 
 /*
-  	#] CoNormalize :
+  	#] CoNormalize : 
   	#[ CoMakeInteger :
 */
 
 int CoMakeInteger(UBYTE *s) { return(DoArgument(s,TYPENORM4)); }
 
 /*
-  	#] CoMakeInteger :
+  	#] CoMakeInteger : 
   	#[ CoSplitArg :
 */
 
 int CoSplitArg(UBYTE *s) { return(DoArgument(s,TYPESPLITARG)); }
 
 /*
-  	#] CoSplitArg :
+  	#] CoSplitArg : 
   	#[ CoSplitFirstArg :
 */
 
 int CoSplitFirstArg(UBYTE *s) { return(DoArgument(s,TYPESPLITFIRSTARG)); }
 
 /*
-  	#] CoSplitFirstArg :
+  	#] CoSplitFirstArg : 
   	#[ CoSplitLastArg :
 */
 
 int CoSplitLastArg(UBYTE *s) { return(DoArgument(s,TYPESPLITLASTARG)); }
 
 /*
-  	#] CoSplitLastArg :
+  	#] CoSplitLastArg : 
   	#[ CoFactArg :
 */
 
@@ -1860,7 +1860,7 @@ int CoFactArg(UBYTE *s) {
 }
 
 /*
-  	#] CoFactArg :
+  	#] CoFactArg : 
   	#[ DoSymmetrize :
 
         Syntax:
@@ -1986,35 +1986,35 @@ illarg:		MesPrint("&Illegal argument");
 }
 
 /*
-  	#] DoSymmetrize :
+  	#] DoSymmetrize : 
   	#[ CoSymmetrize :
 */
 
 int CoSymmetrize(UBYTE *s) { return(DoSymmetrize(s,SYMMETRIC)); }
 
 /*
-  	#] CoSymmetrize :
+  	#] CoSymmetrize : 
   	#[ CoAntiSymmetrize :
 */
 
 int CoAntiSymmetrize(UBYTE *s) { return(DoSymmetrize(s,ANTISYMMETRIC)); }
 
 /*
-  	#] CoAntiSymmetrize :
+  	#] CoAntiSymmetrize : 
   	#[ CoCycleSymmetrize :
 */
 
 int CoCycleSymmetrize(UBYTE *s) { return(DoSymmetrize(s,CYCLESYMMETRIC)); }
 
 /*
-  	#] CoCycleSymmetrize :
+  	#] CoCycleSymmetrize : 
   	#[ CoRCycleSymmetrize :
 */
 
 int CoRCycleSymmetrize(UBYTE *s) { return(DoSymmetrize(s,RCYCLESYMMETRIC)); }
 
 /*
-  	#] CoRCycleSymmetrize :
+  	#] CoRCycleSymmetrize : 
   	#[ CoWrite :
 */
 
@@ -2039,7 +2039,7 @@ int CoWrite(UBYTE *s)
 }
 
 /*
-  	#] CoWrite :
+  	#] CoWrite : 
   	#[ CoNWrite :
 */
 
@@ -2064,7 +2064,7 @@ int CoNWrite(UBYTE *s)
 }
 
 /*
-  	#] CoNWrite :
+  	#] CoNWrite : 
   	#[ CoRatio :
 */
 
@@ -2103,7 +2103,7 @@ int CoRatio(UBYTE *s)
 }
 
 /*
-  	#] CoRatio :
+  	#] CoRatio : 
   	#[ CoRedefine :
 
 	We have a preprocessor variable and a (new) value for it.
@@ -2208,7 +2208,7 @@ illargs:;
 }
 
 /*
-  	#] CoRedefine :
+  	#] CoRedefine : 
   	#[ CoRenumber :
 
 	renumber    or renumber,0     Only exchanges (n^2 until no improvement)
@@ -2232,7 +2232,7 @@ int CoRenumber(UBYTE *s)
 }
 
 /*
-  	#] CoRenumber :
+  	#] CoRenumber : 
   	#[ CoSum :
 */
 
@@ -2350,7 +2350,7 @@ int CoSum(UBYTE *s)
 }
 
 /*
-  	#] CoSum :
+  	#] CoSum : 
   	#[ CoToTensor :
 */
 
@@ -2491,7 +2491,7 @@ proper:		MesPrint("&Syntax error in ToTensor statement");
 }
 
 /*
-  	#] CoToTensor :
+  	#] CoToTensor : 
   	#[ CoToVector :
 */
 
@@ -2563,7 +2563,7 @@ proper:		MesPrint("&Arguments of ToVector statement should be a vector and a ten
 }
 
 /*
-  	#] CoToVector :
+  	#] CoToVector : 
   	#[ CoTrace4 :
 */
 
@@ -2650,7 +2650,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoTrace4 :
+  	#] CoTrace4 : 
   	#[ CoTraceN :
 */
 
@@ -2710,7 +2710,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoTraceN :
+  	#] CoTraceN : 
   	#[ CoChisholm :
 */
 
@@ -2790,7 +2790,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoChisholm :
+  	#] CoChisholm : 
   	#[ DoChain :
 
 	Syntax: Chainxx functionname;
@@ -2834,7 +2834,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] DoChain :
+  	#] DoChain : 
   	#[ CoChainin :
 
 	Syntax: Chainin functionname;
@@ -2846,7 +2846,7 @@ int CoChainin(UBYTE *s)
 }
 
 /*
-  	#] CoChainin :
+  	#] CoChainin : 
   	#[ CoChainout :
 
 	Syntax: Chainout functionname;
@@ -2858,7 +2858,7 @@ int CoChainout(UBYTE *s)
 }
 
 /*
-  	#] CoChainout :
+  	#] CoChainout : 
   	#[ CoExit :
 */
 
@@ -2885,7 +2885,7 @@ int CoExit(UBYTE *s)
 }
 
 /*
-  	#] CoExit :
+  	#] CoExit : 
   	#[ CoInParallel :
 */
 
@@ -2895,7 +2895,7 @@ int CoInParallel(UBYTE *s)
 }
 
 /*
-  	#] CoInParallel :
+  	#] CoInParallel : 
   	#[ CoNotInParallel :
 */
 
@@ -2905,7 +2905,7 @@ int CoNotInParallel(UBYTE *s)
 }
 
 /*
-  	#] CoNotInParallel :
+  	#] CoNotInParallel : 
   	#[ DoInParallel :
 
 	InParallel;
@@ -2979,7 +2979,7 @@ int DoInParallel(UBYTE *s, int par)
 }
 
 /*
-  	#] DoInParallel :
+  	#] DoInParallel : 
   	#[ CoInExpression :
 */
 
@@ -2995,7 +2995,7 @@ int CoInExpression(UBYTE *s)
 		return(-1);
 	}
 	AC.inexprsumcheck[AC.inexprlevel] = AC.IfLevel + AC.RepLevel
-				+ AC.arglevel + AC.termlevel + AC.insidelevel;
+				+ AC.arglevel + AC.termlevel + AC.insidelevel + AC.dolooplevel;
 	AC.inexprstack[AC.inexprlevel] = cbuf[AC.cbufnum].Pointer
 								 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.inexprlevel++;
@@ -3033,7 +3033,7 @@ int CoInExpression(UBYTE *s)
 }
 
 /*
-  	#] CoInExpression :
+  	#] CoInExpression : 
   	#[ CoEndInExpression :
 */
 
@@ -3052,7 +3052,7 @@ int CoEndInExpression(UBYTE *s)
 	AC.inexprlevel--;
 	cbuf[AC.cbufnum].Buffer[AC.inexprstack[AC.inexprlevel]] = C->numlhs;
 	if ( AC.inexprsumcheck[AC.inexprlevel] != ( AC.IfLevel + AC.RepLevel
-		+ AC.arglevel + AC.termlevel + AC.insidelevel ) ) {
+		+ AC.arglevel + AC.termlevel + AC.insidelevel + AC.dolooplevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, inside, inexpression");
 		return(1);
 	}
@@ -3060,7 +3060,7 @@ int CoEndInExpression(UBYTE *s)
 }
 
 /*
-  	#] CoEndInExpression :
+  	#] CoEndInExpression : 
   	#[ CoSetExitFlag :
 */
 
@@ -3075,7 +3075,7 @@ int CoSetExitFlag(UBYTE *s)
 }
 
 /*
-  	#] CoSetExitFlag :
+  	#] CoSetExitFlag : 
   	#[ CoTryReplace :
 */
 int CoTryReplace(UBYTE *p)
@@ -3167,7 +3167,7 @@ int CoTryReplace(UBYTE *p)
 }
 
 /*
-  	#] CoTryReplace :
+  	#] CoTryReplace : 
   	#[ CoModulus :
 
 	Old syntax:  Modulus [-] number [:number]
@@ -3238,7 +3238,7 @@ regular:
 		AC.modinverses = 0;
 	}
 	return(Retval);
-/*	#] Old Syntax : */
+/*	#] Old Syntax : */ 
 #else
 	GETIDENTITY
 	int Retval = 0, sign = 1;
@@ -3365,7 +3365,7 @@ badsyntax:
 }
 
 /*
-  	#] CoModulus :
+  	#] CoModulus : 
   	#[ CoRepeat :
 */
 
@@ -3373,7 +3373,7 @@ int CoRepeat(UBYTE *inp)
 {
 	int error = 0;
 	AC.RepSumCheck[AC.RepLevel] = AC.IfLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel;
+		+ AC.termlevel + AC.dolooplevel;
 	AC.RepLevel++;
 	if ( AC.RepLevel > AM.RepMax ) {
 		MesPrint("&Too many repeat levels. Maximum is %d",AM.RepMax);
@@ -3389,7 +3389,7 @@ int CoRepeat(UBYTE *inp)
 }
 
 /*
-  	#] CoRepeat :
+  	#] CoRepeat : 
   	#[ CoEndRepeat :
 */
 
@@ -3424,7 +3424,7 @@ int CoEndRepeat(UBYTE *inp)
 }
 
 /*
-  	#] CoEndRepeat :
+  	#] CoEndRepeat : 
   	#[ DoBrackets :
 
 		Reads in the bracket information.
@@ -3539,7 +3539,7 @@ redo:	AR.BracketOn++;
 }
 
 /*
-  	#] DoBrackets :
+  	#] DoBrackets : 
   	#[ CoBracket :
 */
 
@@ -3547,7 +3547,7 @@ int CoBracket(UBYTE *inp)
 { return(DoBrackets(inp,0)); }
 
 /*
-  	#] CoBracket :
+  	#] CoBracket : 
   	#[ CoAntiBracket :
 */
 
@@ -3555,7 +3555,7 @@ int CoAntiBracket(UBYTE *inp)
 { return(DoBrackets(inp,1)); }
 
 /*
-  	#] CoAntiBracket :
+  	#] CoAntiBracket : 
   	#[ CoMultiBracket :
 
 	Syntax:
@@ -3668,7 +3668,7 @@ RegEnd:
 }
 
 /*
-  	#] CoMultiBracket :
+  	#] CoMultiBracket : 
   	#[ CountComp :
 
 		This routine reads the count statement. The syntax is:
@@ -3860,7 +3860,7 @@ skipfield:			while ( *p && *p != ')' && *p != ',' ) p++;
 }
 
 /*
-  	#] CountComp :
+  	#] CountComp : 
   	#[ CoIf :
 
 		Reads the if statement: There must be a pair of parentheses.
@@ -3909,7 +3909,7 @@ int CoIf(UBYTE *inp)
 	IfSumCheck is used to test for illegal nesting of if, argument or repeat.
 */
 	AC.IfSumCheck[AC.IfLevel++] = AC.RepLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel;
+		+ AC.termlevel + AC.dolooplevel;
 	w = OldWork = AT.WorkPointer;
 	*w++ = TYPEIF;
 	w += 2;
@@ -4264,7 +4264,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf :
+  	#] CoIf : 
   	#[ CoElse :
 */
 
@@ -4281,7 +4281,7 @@ int CoElse(UBYTE *p)
 	}
 	if ( AC.IfLevel <= 0 ) { MesPrint("&else statement without if"); return(1); }
 	if ( AC.IfSumCheck[AC.IfLevel-1] != AC.RepLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel ) {
+		+ AC.termlevel + AC.dolooplevel ) {
 		MesPrint("&Illegal nesting of if, repeat, argument"); error = 1;
 	}
 	Add3Com(TYPEELSE,AC.IfLevel)
@@ -4291,7 +4291,7 @@ int CoElse(UBYTE *p)
 }
 
 /*
-  	#] CoElse :
+  	#] CoElse : 
   	#[ CoElseIf :
 */
 
@@ -4306,7 +4306,7 @@ int CoElseIf(UBYTE *inp)
 }
 
 /*
-  	#] CoElseIf :
+  	#] CoElseIf : 
   	#[ CoEndIf :
 
 		It puts a RHS-level at the position indicated in the AC.IfStack.
@@ -4338,7 +4338,7 @@ int CoEndIf(UBYTE *inp)
 	AC.IfLevel--;
 	C->Buffer[*--AC.IfStack] = i+1;
 	if ( AC.IfSumCheck[AC.IfLevel] != AC.RepLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel ) {
+		+ AC.termlevel + AC.dolooplevel ) {
 		MesPrint("&Illegal nesting of if, repeat, argument");
 		error = 1;
 	}
@@ -4364,7 +4364,7 @@ int CoEndIf(UBYTE *inp)
 }
 
 /*
-  	#] CoEndIf :
+  	#] CoEndIf : 
   	#[ CoWhile :
 */
 
@@ -4385,7 +4385,7 @@ int CoWhile(UBYTE *inp)
 }
 
 /*
-  	#] CoWhile :
+  	#] CoWhile : 
   	#[ CoEndWhile :
 */
 
@@ -4405,7 +4405,7 @@ int CoEndWhile(UBYTE *inp)
 }
 
 /*
-  	#] CoEndWhile :
+  	#] CoEndWhile : 
   	#[ DoFindLoop :
 
 	Function,arguments=number,loopsize=number,outfun=function,include=index;
@@ -4527,7 +4527,7 @@ syntax:	MesPrint("&Proper syntax is:");
 }
 
 /*
-  	#] DoFindLoop :
+  	#] DoFindLoop : 
   	#[ CoFindLoop :
 */
 
@@ -4535,7 +4535,7 @@ int CoFindLoop(UBYTE *inp)
 { return(DoFindLoop(inp,FINDLOOP)); }
 
 /*
-  	#] CoFindLoop :
+  	#] CoFindLoop : 
   	#[ CoReplaceLoop :
 */
 
@@ -4543,7 +4543,7 @@ int CoReplaceLoop(UBYTE *inp)
 { return(DoFindLoop(inp,REPLACELOOP)); }
 
 /*
-  	#] CoReplaceLoop :
+  	#] CoReplaceLoop : 
   	#[ CoFunPowers :
 */
 
@@ -4576,7 +4576,7 @@ int CoFunPowers(UBYTE *inp)
 }
 
 /*
-  	#] CoFunPowers :
+  	#] CoFunPowers : 
   	#[ CoUnitTrace :
 */
 
@@ -4607,7 +4607,7 @@ nogood:		MesPrint("&Value of UnitTrace should be a (positive) number or a symbol
 }
 
 /*
-  	#] CoUnitTrace :
+  	#] CoUnitTrace : 
   	#[ CoTerm :
 
 	Note: termstack holds the offset of the term statement in the compiler
@@ -4645,7 +4645,7 @@ int CoTerm(UBYTE *s)
 		}
 	}
 	AC.termsumcheck[AC.termlevel] = AC.IfLevel + AC.RepLevel + AC.insidelevel
-								+ AC.arglevel;
+								+ AC.arglevel + AC.dolooplevel;
 	AC.termstack[AC.termlevel] = cbuf[AC.cbufnum].Pointer
 			                 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.termsortstack[AC.termlevel] = AC.termstack[AC.termlevel] + 1;
@@ -4660,7 +4660,7 @@ int CoTerm(UBYTE *s)
 }
 
 /*
-  	#] CoTerm :
+  	#] CoTerm : 
   	#[ CoEndTerm :
 */
 
@@ -4680,7 +4680,7 @@ int CoEndTerm(UBYTE *s)
 	cbuf[AC.cbufnum].Buffer[AC.termstack[AC.termlevel]] = C->numlhs;
 	cbuf[AC.cbufnum].Buffer[AC.termsortstack[AC.termlevel]] = C->numlhs;
 	if ( AC.termsumcheck[AC.termlevel] != ( AC.IfLevel + AC.RepLevel
-		 + AC.insidelevel + AC.arglevel ) ) {
+		 + AC.insidelevel + AC.arglevel + AC.dolooplevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, term");
 		return(1);
 	}
@@ -4688,7 +4688,7 @@ int CoEndTerm(UBYTE *s)
 }
 
 /*
-  	#] CoEndTerm :
+  	#] CoEndTerm : 
   	#[ CoSort :
 */
 
@@ -4716,7 +4716,7 @@ int CoSort(UBYTE *s)
 	AC.termsortstack[AC.termlevel-1] = cbuf[AC.cbufnum].Pointer
 			                 - cbuf[AC.cbufnum].Buffer + 3;
 	if ( AC.termsumcheck[AC.termlevel-1] != ( AC.IfLevel + AC.RepLevel
-		 + AC.insidelevel + AC.arglevel ) ) {
+		 + AC.insidelevel + AC.arglevel + AC.dolooplevel ) ) {
 		MesPrint("&Illegal nesting of if, repeat, argument, term");
 		return(1);
 	}
@@ -4726,7 +4726,7 @@ int CoSort(UBYTE *s)
 }
 
 /*
-  	#] CoSort :
+  	#] CoSort : 
   	#[ CoPolyFun :
 
 	Collect,functionname
@@ -4763,7 +4763,7 @@ int CoPolyFun(UBYTE *s)
 }
 
 /*
-  	#] CoPolyFun :
+  	#] CoPolyFun : 
   	#[ CoPolyRatFun :
 
 	Collect,functionname
@@ -4801,7 +4801,7 @@ int CoPolyRatFun(UBYTE *s)
 }
 
 /*
-  	#] CoPolyRatFun :
+  	#] CoPolyRatFun : 
   	#[ CoMerge :
 */
 
@@ -4853,7 +4853,7 @@ tests:	s = SkipAName(s);
 }
 
 /*
-  	#] CoMerge :
+  	#] CoMerge : 
   	#[ CoStuffle :
 
 	Important for future options: The bit, given by 256 (bit 8) is reserved
@@ -4912,7 +4912,7 @@ tests:	*ss = c;
 }
 
 /*
-  	#] CoStuffle :
+  	#] CoStuffle : 
   	#[ CoSlavePatch :
 */
 
@@ -4930,7 +4930,7 @@ int CoSlavePatch(UBYTE *s)
 }
 
 /*
-  	#] CoSlavePatch :
+  	#] CoSlavePatch : 
   	#[ CoThreadBucket :
 */
 
@@ -4955,7 +4955,7 @@ int CoThreadBucket(UBYTE *s)
 }
 
 /*
-  	#] CoThreadBucket :
+  	#] CoThreadBucket : 
   	#[ CoModulusGCD :
 
 	ModulusGCD,m,x,fun1,fun2;
@@ -5054,56 +5054,7 @@ int CoModulusGCD(UBYTE *s)
 }
 
 /*
-  	#] CoModulusGCD :
-  	#[ CoPolyNorm :
-*/
-
-int CoPolyNorm(UBYTE *s)
-{
-	UBYTE c, *t;
-	int i, type, error = 0;
-	WORD numfun, *pn;
-	WORD polynormstring[4];
-	polynormstring[0] = TYPEPOLYNORM; polynormstring[1] = 4;
-	pn = polynormstring+2;
-	for ( i = 0; i < 2; i++ ) {
-		if ( *s ) {
-			t = s;
-			s = SkipAName(s);
-			c = *s; *s = 0;
-			if ( ( ( type = GetName(AC.varnames,t,&numfun,WITHAUTO) ) != CFUNCTION )
-			&& type != CDUBIOUS ) {
-nofunc:			MesPrint("&%s is not a CFunction",t);
-				error = 4;
-				if ( type < 0 ) numfun = AddFunction(t,0,0,0,0,0);
-			}
-			else if ( ( functions[numfun].commute != 0 ) &&
-					  ( functions[numfun].spec != 0 ) ) goto nofunc;
-			numfun += FUNCTION;
-			*s = c;
-			if ( *s == ',' ) s++;
-		}
-		else {
-			if ( error == 0 )
-				MesPrint("&The PolyNorm statement needs two CFunctions for its arguments");
-			error++;
-			numfun = 0;
-		}
-		*pn++ = numfun;
-	}
-	if ( *s ) {
-		if ( error == 0 )
-			MesPrint("&The PolyNorm statement needs two CFunctions for its arguments");
-		error++;
-	}
-	else {
-		AddNtoL(4,polynormstring);
-	}
-	return(error);
-}
-
-/*
-  	#] CoPolyNorm :
+  	#] CoModulusGCD : 
   	#[ DoArgPlode :
 
 	Syntax: a list of functions.
@@ -5160,21 +5111,21 @@ int DoArgPlode(UBYTE *s, int par)
 }
 
 /*
-  	#] DoArgPlode :
+  	#] DoArgPlode : 
   	#[ CoArgExplode :
 */
 
 int CoArgExplode(UBYTE *s) { return(DoArgPlode(s,TYPEARGEXPLODE)); }
 
 /*
-  	#] CoArgExplode :
+  	#] CoArgExplode : 
   	#[ CoArgImplode :
 */
 
 int CoArgImplode(UBYTE *s) { return(DoArgPlode(s,TYPEARGIMPLODE)); }
 
 /*
-  	#] CoArgImplode :
+  	#] CoArgImplode : 
   	#[ CoClearTable :
 */
 
@@ -5250,7 +5201,7 @@ nofunc:		MesPrint("&%s is not a sparse table",t);
 }
 
 /*
-  	#] CoClearTable :
+  	#] CoClearTable : 
   	#[ CoDenominators :
 */
 
@@ -5279,7 +5230,7 @@ syntaxerror:
 }
 
 /*
-  	#] CoDenominators :
+  	#] CoDenominators : 
   	#[ CoDropCoefficient :
 */
 
@@ -5293,7 +5244,7 @@ int CoDropCoefficient(UBYTE *s)
 	return(1);
 }
 /*
-  	#] CoDropCoefficient :
+  	#] CoDropCoefficient : 
   	#[ CoToPolynomial :
 
 	Converts the current term as much as possible to symbols.
@@ -5321,7 +5272,7 @@ int CoToPolynomial(UBYTE *inp)
 }
 
 /*
-  	#] CoToPolynomial :
+  	#] CoToPolynomial : 
   	#[ CoFromPolynomial :
 
 	Converts the current term as much as possible back from extra symbols
@@ -5340,7 +5291,7 @@ int CoFromPolynomial(UBYTE *inp)
 }
 
 /*
-  	#] CoFromPolynomial :
+  	#] CoFromPolynomial : 
   	#[ CoExtraSymbols :
 */
 
@@ -5413,5 +5364,246 @@ int CoExtraSymbols(UBYTE *inp)
 }
 
 /*
-  	#] CoExtraSymbols :
+  	#] CoExtraSymbols : 
+  	#[ GetDoParam :
+*/
+
+UBYTE *GetDoParam(UBYTE *inp, WORD **wp, int par)
+{
+	LONG x;
+	WORD number;
+	UBYTE *name, c;
+	if ( FG.cTable[*inp] == 1 ) {
+		x = 0;
+		while ( *inp >= '0' && *inp <= '9' ) {
+			x = 10*x + *inp++ - '0';
+			if ( x > MAXPOSITIVE ) {
+				MesPrint("&Value in do loop boundaries too large");
+				while ( FG.cTable[*inp] == 1 ) inp++;
+				return(0);
+			}
+		}
+		if ( par > 0 ) {
+			*(*wp)++ = SNUMBER;
+			*(*wp)++ = (WORD)x;
+		}
+		else {
+			*(*wp)++ = DOLLAREXPR2;
+			*(*wp)++ = -((WORD)x)-1;
+		}
+		return(inp);
+	}
+	if ( *inp != '$' ) {
+		return(0);
+	}
+	inp++; name = inp;
+	while ( FG.cTable[*inp] < 2 ) inp++;
+	c = *inp; *inp = 0;
+	if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) {
+		MesPrint("&dollar in do loop boundaries should have been defined previously");
+		return(0);
+	}
+	*inp = c;
+	if ( par > 0 ) {
+		*(*wp)++ = DOLLAREXPRESSION;
+		*(*wp)++ = number;
+	}
+	else {
+		*(*wp)++ = DOLLAREXPR2;
+		*(*wp)++ = number;
+	}
+	if ( c == '[' ) {
+		inp++;
+		inp = GetDoParam(inp,wp,0);
+		if ( inp == 0 ) return(0);
+		if ( *inp != ']' ) {
+			MesPrint("&unmatched [] in do loop boundaries");
+			return(0);
+		}
+		inp++;
+	}
+	return(inp);
+}
+
+/*
+  	#] GetDoParam : 
+  	#[ CoDo :
+*/
+
+int CoDo(UBYTE *inp)
+{
+	GETIDENTITY
+	CBUF *C = cbuf+AC.cbufnum;
+	WORD *w, numparam;
+	int error = 0, i;
+	UBYTE *name, c;
+	if ( AC.doloopstack == 0 ) {
+		AC.doloopstacksize = 20;
+		AC.doloopstack = (WORD *)Malloc1(AC.doloopstacksize*2*sizeof(WORD),"doloop stack");
+		AC.doloopnest = AC.doloopstack + AC.doloopstacksize;
+	}
+	if ( AC.dolooplevel >= AC.doloopstacksize ) {
+		WORD *newstack, *newnest, newsize;
+		newsize = AC.doloopstacksize * 2;
+		newstack = (WORD *)Malloc1(newsize*2*sizeof(WORD),"doloop stack");
+		newnest = newstack + newsize;
+		for ( i = 0; i < newsize; i++ ) {
+			newstack[i] = AC.doloopstack[i];
+			newnest[i] = AC.doloopnest[i];
+		}
+		M_free(AC.doloopstack,"doloop stack");
+		AC.doloopstack = newstack;
+		AC.doloopnest = newnest;
+		AC.doloopstacksize = newsize;
+	}
+	AC.doloopnest[AC.dolooplevel] = AC.IfLevel + AC.RepLevel
+		 + AC.insidelevel + AC.arglevel + AC.termlevel;
+
+	w = AT.WorkPointer;
+	*w++ = TYPEDOLOOP;
+	w++; /* Space for the length of the statement */
+/*
+	Now the $loopvariable
+*/
+	while ( *inp == ',' ) inp++;
+	if ( *inp != '$' ) {
+		error = 1;
+		MesPrint("&do loop parameter should be a dollar variable");
+	}
+	else {
+		inp++;
+		name = inp;
+		if ( FG.cTable[*inp] != 0 ) {
+			error = 1;
+			MesPrint("&illegal name for do loop parameter");
+		}
+		while ( FG.cTable[*inp] < 2 ) inp++;
+		c = *inp; *inp = 0;
+		if ( GetName(AC.dollarnames,name,&numparam,NOAUTO) == NAMENOTFOUND ) {
+			numparam = AddDollar(name,DOLUNDEFINED,0,0);
+		}
+		*w++ = numparam;
+		*inp = c;
+#ifdef WITHPTHREADS
+		{
+		  int i;
+		  WORD *pmd;
+		  for ( i = 0; i < NumPotModdollars; i++ ) {
+			if ( numparam == PotModdollars[i] ) break;
+		  }
+		  if ( i >= NumPotModdollars ) {
+			pmd = (WORD *)FromList(&AC.PotModDolList);
+			*pmd = numparam;
+		  }
+		}
+#endif
+#ifdef PARALLEL
+		PF_statPotModDollar(numparam,1);
+#endif
+	}
+	w++;  /* space for the level of the enddo statement */
+	while ( *inp == ',' ) inp++;
+	if ( *inp != '=' ) goto IllSyntax;
+	inp++;
+	while ( *inp == ',' ) inp++;
+/*
+	The start value
+*/
+	inp = GetDoParam(inp,&w,1);
+	if ( inp == 0 || *inp != ',' ) goto IllSyntax;
+	while ( *inp == ',' ) inp++;
+/*
+	The end value
+*/
+	inp = GetDoParam(inp,&w,1);
+	if ( inp == 0 || ( *inp != 0 && *inp != ',' ) ) goto IllSyntax;
+/*
+	The increment value
+*/
+	if ( *inp != ',' ) {
+		if ( *inp == 0 ) { *w++ = SNUMBER; *w++ = 1; }
+		else goto IllSyntax;
+	}
+	else {
+		while ( *inp == ',' ) inp++;
+		inp = GetDoParam(inp,&w,1);
+	}
+	if ( inp == 0 || *inp != 0 ) goto IllSyntax;
+	*w = 0;
+	AT.WorkPointer[1] = w - AT.WorkPointer;
+/*
+	Put away and set information for placing enddo information.
+*/
+	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
+	AC.doloopstack[AC.dolooplevel++] = C->numlhs;
+
+	return(0);
+
+IllSyntax:
+	MesPrint("&Illegal syntax for do statement");
+	return(1);
+}
+
+/*
+  	#] CoDo : 
+  	#[ CoEndDo :
+*/
+
+int CoEndDo(UBYTE *inp)
+{
+	CBUF *C = cbuf+AC.cbufnum;
+	WORD scratch[3];
+	while ( *inp == ',' ) inp++;
+	if ( *inp ) {
+		MesPrint("&Illegal syntax for EndDo statement");
+		return(1);
+	}
+	if ( AC.dolooplevel <= 0 ) {
+		MesPrint("&EndDo without corresponding Do statement");
+		return(1);
+	}
+	AC.dolooplevel--;
+	scratch[0] = TYPEENDDOLOOP;
+	scratch[1] = 3;
+	scratch[2] = AC.doloopstack[AC.dolooplevel];
+	AddNtoL(3,scratch);
+	cbuf[AC.cbufnum].lhs[AC.doloopstack[AC.dolooplevel]][3] = C->numlhs;
+	if ( AC.doloopnest[AC.dolooplevel] != ( AC.IfLevel + AC.RepLevel
+		 + AC.insidelevel + AC.arglevel + AC.termlevel ) ) {
+		MesPrint("&Illegal nesting of if, repeat, argument, term, do");
+		return(1);
+	}
+	return(0);
+}
+
+/*
+  	#] CoEndDo : 
+  	#[ CoFactor :
+*/
+
+int CoFactor(UBYTE *inp)
+{
+	WORD numdollar;
+	if ( *inp == '$' ) {
+		if ( GetName(AC.dollarnames,inp+1,&numdollar,NOAUTO) != CDOLLAR ) {
+			MesPrint("&%s is undefined",inp);
+			numdollar = AddDollar(inp+1,DOLINDEX,&one,1);
+			return(1);
+		}
+		inp = SkipAName(inp+1);
+		if ( *inp != 0 ) {
+			MesPrint("&Factor(ize) should have a single $variable for its argument");
+			return(1);
+		}
+	}
+	else {
+		MesPrint("&%s is not a $variable",inp);
+		return(1);
+	}
+	Add3Com(TYPEFACTOR,numdollar);
+	return(0);
+}
+
+/*
+  	#] CoFactor :
 */

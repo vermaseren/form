@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
  
 #ifndef __STRUCTS__
 
@@ -222,7 +222,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -542,9 +542,17 @@ typedef struct DuBiOuS {		/* Undeclared objects. Just for compiler. */
 	WORD	dummy;
 	PADLONG(0,2,0);
 } *DUBIOUSV;
+ 
+typedef struct FaCdOlLaR {
+	WORD	*where;				/* A pointer(!) to the content */
+	LONG	size;
+	WORD	type;				/* Type can be DOLNUMBER or DOLTERMS */
+	WORD	value;				/* in case it is a (short) number */
+} FACDOLLAR;
 
 typedef struct DoLlArS {
 	WORD	*where;				/* A pointer(!) to the object */
+	FACDOLLAR *factors;			/* an array of factors. nfactors elements */
 	LONG	size;				/* The number of words */
 	LONG	name;
 #ifdef WITHPTHREADS
@@ -556,7 +564,7 @@ typedef struct DoLlArS {
 	WORD	index;
 	WORD	zero;
 	WORD	numdummies;
-	WORD	reserved;
+	WORD	nfactors;
 	PADPOINTER(2,0,6,0);
 } *DOLLARS;
 
@@ -622,7 +630,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
@@ -713,7 +721,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -771,7 +779,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
 
@@ -878,7 +886,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -1181,7 +1189,7 @@ typedef struct {				/* Used for computing calculational cost in optim.c */
 } COST;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1343,7 +1351,7 @@ struct M_const {
 	WORD	ggextrasymbols;
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1399,7 +1407,7 @@ struct P_const {
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1483,6 +1491,8 @@ struct C_const {
     UBYTE   *Fortran90Kind;        /* The kind of number in Fortran 90 as in _ki */
 	WORD	**MultiBracketBuf;     /* Array of buffers for multi-level brackets */
 	UBYTE   *extrasym;             /* Array with the name for extra symbols in ToPolynomial */
+	WORD    *doloopstack;          /* To keep track of begin and end of doloops */
+	WORD    *doloopnest;           /* To keep track of nesting of doloops etc */
 #ifdef WITHPTHREADS
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1558,6 +1568,8 @@ struct C_const {
     int     ffbufnum;              /* Buffer number for user defined factorizations */
     int     OldFactArgFlag;
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
+	int     doloopstacksize;
+	int     dolooplevel;
 #ifdef WITHPTHREADS
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
@@ -1657,7 +1669,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1724,7 +1736,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1815,6 +1827,7 @@ struct T_const {
     WORD    proexp[SUBEXPSIZE+5];  /* () Used in poly.c */
     WORD    TMout[40];             /* (R) Passing info */
     WORD    TMbuff;                /* (R) Communication between TestSub and Genera */
+	WORD	TMdolfac;              /* factor number for dollar */
     WORD    nfac;                  /* (T) Number of highest stored factorial */
     WORD    nBer;                  /* (T) Number of highest bernoulli number. */
     WORD    mBer;                  /* (T) Size of buffer pBer. */
@@ -1825,7 +1838,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1991,7 +2004,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2060,7 +2073,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2086,7 +2099,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X :
+ 		#] X : 
  		#[ Definitions :
 */
 
@@ -2138,7 +2151,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
     #] A :
   	#[ FG :
 */
@@ -2175,7 +2188,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

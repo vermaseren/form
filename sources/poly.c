@@ -1652,27 +1652,4 @@ PIFerror:
 /*
  		#] PolynoIntFac : 
 	#] Polyno :
-  	#[ PolyNorm :
-
-	Should see the arguments of numerator and denominator as two
-	polynomials and
-	1: Make the coefficients integer.
-	2: Determine the GCD of the two polynomials.
-	3: Divide out the GCD.
-	4: Make sure again that the coefficients are integer again.
-	When there are more occurrences of numerator or denominator each
-	numerator has to be treated in combination with each denominator.
-
-	Syntax was: PolyNorm,numerator,denominator;
-	in which numerator and denominator are the names of two CFunctions.
-*/
-
-int PolyNorm(PHEAD WORD *term, WORD level, WORD numerator, WORD denominator)
-{
-	DUMMYUSE(term); DUMMYUSE(level); DUMMYUSE(numerator); DUMMYUSE(denominator);
-	return(0);
-}
-
-/*
-  	#] PolyNorm : 
 */
