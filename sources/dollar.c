@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -40,7 +40,7 @@
 static UBYTE underscore[2] = {'_',0};
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CatchDollar :
 
 	Works out a dollar expression during compile type.
@@ -216,7 +216,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar :
+  	#] CatchDollar : 
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -304,6 +304,7 @@ NewValIsZero:;
 			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 			cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
 NoChangeZero:;
+			CleanDollarFactors(d);
 /*			UNLOCK(d->pthreadslockwrite); */
 			UNLOCK(d->pthreadslockread);
 			AN.ncmod = oldncmod;
@@ -311,12 +312,13 @@ NoChangeZero:;
 		}
 #endif
 /*
- 		#] Thread version :
+ 		#] Thread version : 
 */
 		d->type = DOLZERO;
 		d->where[0] = 0;
 		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 		cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+		CleanDollarFactors(d);
 		AN.ncmod = oldncmod;
 		return(0);
 	}
@@ -386,6 +388,7 @@ HandleDolZero:;
 			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 			cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
 NoChangeOne:;
+			CleanDollarFactors(d);
 /*			UNLOCK(d->pthreadslockwrite); */
 			UNLOCK(d->pthreadslockread);
 			AN.ncmod = oldncmod;
@@ -393,7 +396,7 @@ NoChangeOne:;
 		}
 #endif
 /*
- 		#] Thread version :
+ 		#] Thread version : 
 */
 		if ( d->size < 5 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
@@ -409,6 +412,7 @@ NoChangeOne:;
 		d->type = DOLNUMBER;
 		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
 		cbuf[AM.dbufnum].NumTerms[numdollar] = 1;
+		CleanDollarFactors(d);
 		AN.ncmod = oldncmod;
 		return(0);
 	}
@@ -423,6 +427,7 @@ NoChangeOne:;
 		LOCK(d->pthreadslockread);
 	}
 #endif
+	CleanDollarFactors(d);
 /*
 	The following case cannot occur. We treated it already
 
@@ -548,7 +553,7 @@ HandleDolZero1:;
 		}
 #endif
 /*
- 		#] Thread version :
+ 		#] Thread version : 
 */
 		d->type = DOLTERMS;
 		if ( d->where && d->where != &(AM.dollarzero) ) { M_free(d->where,"dollar contents"); d->where = 0; }
@@ -600,7 +605,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar :
+  	#] AssignDollar : 
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -686,7 +691,68 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 }
 
 /*
-  	#] WriteDollarToBuffer :
+  	#] WriteDollarToBuffer : 
+  	#[ WriteDollarFactorToBuffer :
+
+	Takes the numbered dollar expression and writes it to output.
+	We catch however the output in a buffer and return its address.
+	This routine is needed when we need a text representation of
+	a dollar expression like for the construction `$name' in the preprocessor.
+	If par==0 we leave the current printing mode.
+	If par==1 we insist on normal mode
+*/
+
+UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
+{
+	DOLLARS d = Dollars+numdollar;
+	UBYTE *s, *oldcurbufwrt = AO.CurBufWrt;
+	WORD *t, lbrac = 0, first = 0, n[5], oldOutputMode = AC.OutputMode;
+	WORD oldinfbrack = AO.InFbrack;
+	int error = 0;
+ 
+	AO.DollarOutSizeBuffer = 32;
+	AO.DollarOutBuffer = (UBYTE *)Malloc1(AO.DollarOutSizeBuffer,"DollarOutBuffer");
+	AO.DollarInOutBuffer = 1;
+	AO.PrintType = 1;
+	AO.InFbrack = 0;
+	s = AO.DollarOutBuffer;
+	*s = 0;
+	if ( par > 0 ) { AC.OutputMode = NORMALFORMAT; }
+	else {
+		AO.CurBufWrt = (UBYTE *)underscore;
+	}
+	AO.OutInBuffer = 1;
+	if ( numfac == 0 ) {	/* write the number d->nfactors */
+		n[0] = 4; n[1] = d->nfactors; n[2] = 1; n[3] = 3; n[4] = 0; t = n;
+	}
+	else if ( d->factors[numfac-1].where == 0 ) {	/* write the value */
+		n[0] = 4; n[1] = d->factors[numfac-1].value; n[2] = 1; n[3] = 3; n[4] = 0; t = n;
+	}
+	else { t = d->factors[numfac-1].where; }
+	while ( *t ) {
+		if ( WriteTerm(t,&lbrac,first,PRINTON,0) ) {
+			error = 1; break;
+		}
+		t += *t;
+	}
+	AC.OutputMode = oldOutputMode;
+	AO.OutInBuffer = 0;
+	AO.InFbrack = oldinfbrack;
+	AO.CurBufWrt = oldcurbufwrt;
+	if ( error ) {
+		LOCK(ErrorMessageLock);
+		MesPrint("&Illegal dollar object for writing");
+		UNLOCK(ErrorMessageLock);
+		M_free(AO.DollarOutBuffer,"DollarOutBuffer");
+		AO.DollarOutBuffer = 0;
+		AO.DollarOutSizeBuffer = 0;
+		return(0);
+	}
+	return(AO.DollarOutBuffer);
+}
+
+/*
+  	#] WriteDollarFactorToBuffer :
   	#[ AddToDollarBuffer :
 */
 
@@ -719,7 +785,7 @@ void AddToDollarBuffer(UBYTE *s)
 }
 
 /*
-  	#] AddToDollarBuffer :
+  	#] AddToDollarBuffer : 
   	#[ TermAssign :
 
 	This routine is called from a piece of code in Normalize that has been
@@ -778,7 +844,7 @@ void TermAssign(WORD *term)
 }
 
 /*
-  	#] TermAssign :
+  	#] TermAssign : 
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
@@ -951,7 +1017,7 @@ void WildDollars(PHEAD0)
 }
 
 /*
-  	#] WildDollars :
+  	#] WildDollars : 
   	#[ DolToTensor :    with LOCK
 */
 
@@ -1012,7 +1078,7 @@ WORD DolToTensor(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToTensor :
+  	#] DolToTensor : 
   	#[ DolToFunction :  with LOCK
 */
 
@@ -1069,7 +1135,7 @@ WORD DolToFunction(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToFunction :
+  	#] DolToFunction : 
   	#[ DolToVector :    with LOCK
 */
 
@@ -1133,7 +1199,7 @@ WORD DolToVector(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToVector :
+  	#] DolToVector : 
   	#[ DolToNumber :
 */
 
@@ -1192,7 +1258,7 @@ WORD DolToNumber(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToNumber :
+  	#] DolToNumber : 
   	#[ DolToSymbol :    with LOCK
 */
 
@@ -1246,7 +1312,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToSymbol :
+  	#] DolToSymbol : 
   	#[ DolToIndex :     with LOCK
 */
 
@@ -1318,7 +1384,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToIndex :
+  	#] DolToIndex : 
   	#[ DolToTerms :
 
 	Returns a struct of type DOLLARS which contains a copy of the
@@ -1437,7 +1503,7 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToTerms :
+  	#] DolToTerms : 
   	#[ DoInside :
 */
 
@@ -1495,7 +1561,7 @@ skipdol:	error = 1;
 }
 
 /*
-  	#] DoInside :
+  	#] DoInside : 
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -1595,7 +1661,7 @@ idcall:;
 }
 
 /*
-  	#] InsideDollar :
+  	#] InsideDollar : 
   	#[ ExchangeDollars :
 */
 
@@ -1613,7 +1679,7 @@ void ExchangeDollars(int num1, int num2)
 }
 
 /*
-  	#] ExchangeDollars :
+  	#] ExchangeDollars : 
   	#[ TermsInDollar :
 */
 
@@ -1662,7 +1728,7 @@ LONG TermsInDollar(WORD num)
 }
 
 /*
-  	#] TermsInDollar :
+  	#] TermsInDollar : 
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.
@@ -1854,7 +1920,7 @@ onerror:
 }
 
 /*
-  	#] PreIfDollarEval :
+  	#] PreIfDollarEval : 
   	#[ TranslateExpression :
 */
 
@@ -1906,7 +1972,7 @@ WORD *TranslateExpression(UBYTE *s)
 }
 
 /*
-  	#] TranslateExpression :
+  	#] TranslateExpression : 
   	#[ IsSetMember :
 
 	Checks whether the expression in the buffer can be seen as an element
@@ -2064,7 +2130,7 @@ int IsSetMember(WORD *buffer, WORD numset)
 }
 
 /*
-  	#] IsSetMember :
+  	#] IsSetMember : 
   	#[ IsProductOf :
 
 	Checks whether the expression in buf1 is a single term multiple of 
@@ -2076,7 +2142,7 @@ int IsProductOf(WORD *buf1, WORD *buf2)
 }
 
 
-  	#] IsProductOf :
+  	#] IsProductOf : 
   	#[ IsMultipleOf :
 
 	Checks whether the expression in buf1 is a numerical multiple of 
@@ -2152,7 +2218,7 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 }
 
 /*
-  	#] IsMultipleOf :
+  	#] IsMultipleOf : 
   	#[ TwoExprCompare :
 
 	Compares the expressions in buf1 and buf2 according to oprtr
@@ -2227,7 +2293,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 }
 
 /*
-  	#] TwoExprCompare :
+  	#] TwoExprCompare : 
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
@@ -2315,7 +2381,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 }
 
 /*
-  	#] DollarRaiseLow :
+  	#] DollarRaiseLow : 
  		#[ MinDollar  :
 
         finds the minimum dollar variable among dollar variables 
@@ -2415,7 +2481,7 @@ int MinDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MinDollar  :
+ 		#] MinDollar  : 
  		#[ MaxDollar  :
 
         finds the maximum dollar variable among dollar variables 
@@ -2503,7 +2569,7 @@ int MaxDollar(WORD index)
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] MaxDollar  :
+ 		#] MaxDollar  : 
  		#[ SumDollars :
 
         sums the dollar variable content in PFDollars[number].slavebuf
@@ -2605,7 +2671,7 @@ cleanup:;
 #endif /* PARALLEL [04dec2002 df] */
 
 /*
- 		#] SumDollars :
+ 		#] SumDollars : 
   	#[ EvalDoLoopArg :
 */
 /**
@@ -2684,7 +2750,7 @@ endofchain:
 	}
 	else if ( *arg == DOLLAREXPR2 ) {
 		if ( arg[1] < 0 ) { num = -arg[1]-1; }
-		else if ( arg[2] == 0 && par == -1 ) {
+		else if ( arg[2] != DOLLAREXPR2 && par == -1 ) {
 			goto endofchain;
 		}
 		else              { num = EvalDoLoopArg(BHEAD arg+2,par); }
@@ -2731,7 +2797,7 @@ endofchain:
 }
 
 /*
-  	#] EvalDoLoopArg :
+  	#] EvalDoLoopArg : 
   	#[ TestDoLoop :
 */
 
@@ -2809,7 +2875,7 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 }
 
 /*
-  	#] TestDoLoop :
+  	#] TestDoLoop : 
   	#[ TestEndDoLoop :
 */
 
@@ -2910,7 +2976,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 }
 
 /*
-  	#] TestEndDoLoop :
+  	#] TestEndDoLoop : 
   	#[ DollarFactorize :
 */
 /**
@@ -2993,7 +3059,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		*t++ = 0;
 	}
 /*
- 		#] Step 0:
+ 		#] Step 0: 
  		#[ Step 1: take out the 'content'.
 */
 	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
@@ -3063,7 +3129,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		}
 	}
 /*
- 		#] Step 1: take out the 'content'.
+ 		#] Step 1: take out the 'content'. 
  		#[ Step 3: ConvertToPoly
 				if there are objects that are not SYMBOLs,
 		        invoke ConvertToPoly
@@ -3102,7 +3168,7 @@ getout:
 		insize2 = insize;
 	}
 /*
- 		#] Step 3: ConvertToPoly
+ 		#] Step 3: ConvertToPoly 
  		#[ Step 4: Now the hard work.
 */
 	if ( ( buf3 = DoFactorizeDollar(BHEAD buf2) ) == 0 ) {
@@ -3129,7 +3195,7 @@ getout:
 		buf1: the original before ConvertToPoly for if only one factor
 		buf3: the factored expression with nfactors factors
 
- 		#] Step 4:
+ 		#] Step 4: 
  		#[ Step 5: ConvertFromPoly
 				If ConvertToPoly was used, use now ConvertFromPoly
 		        Be careful: there should be more than one factor now.
@@ -3176,7 +3242,7 @@ getout2:			AR.SortType = oldsorttype;
 /*
 				ConvertFromPoly leaves terms with subexpressions. Hence:
 */
-				if ( Generator(BHEAD argextra,C->numlhs) ) {
+				if ( Generator(BHEAD argextra,C->numlhs+1) ) {
 					goto getout2;
 				}
 				term += *term;
@@ -3203,7 +3269,7 @@ getout2:			AR.SortType = oldsorttype;
 				j = *term;
 				NCOPY(argextra,term,j)
 				AT.WorkPointer = argextra;
-				if ( Generator(BHEAD oldworkpointer,C->numlhs) ) {
+				if ( Generator(BHEAD oldworkpointer,C->numlhs+1) ) {
 					goto getout2;
 				}
 			}
@@ -3218,7 +3284,7 @@ getout2:			AR.SortType = oldsorttype;
 	}
 	d->nfactors = nfactors + factorsincontent;
 /*
- 		#] Step 5: ConvertFromPoly
+ 		#] Step 5: ConvertFromPoly 
  		#[ Step 7: The factors of the content
 */
 	AR.SortType = oldsorttype;
@@ -3343,7 +3409,7 @@ getout2:			AR.SortType = oldsorttype;
 }
 
 /*
-  	#] DollarFactorize :
+  	#] DollarFactorize : 
   	#[ CleanDollarFactors :
 */
 
@@ -3364,7 +3430,7 @@ void CleanDollarFactors(DOLLARS d)
 }
 
 /*
-  	#] CleanDollarFactors :
+  	#] CleanDollarFactors : 
   	#[ TakeDollarContent :
 */
 
@@ -3408,7 +3474,7 @@ WORD *TakeDollarContent(PHEAD WORD *dollarbuffer, WORD **factor)
 }
 
 /*
-  	#] TakeDollarContent :
+  	#] TakeDollarContent : 
   	#[ MakeDollarInteger :
 */
 /**
@@ -3582,7 +3648,7 @@ MakeDollarIntegerErr:
 }
 
 /*
-  	#] MakeDollarInteger :
+  	#] MakeDollarInteger : 
   	#[ MakeDollarMod :
 */
 /**
@@ -3629,7 +3695,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 	return(factor);
 }
 /*
-  	#] MakeDollarMod :
+  	#] MakeDollarMod : 
   	#[ GetDolNum :
 
 	Evaluates a chain of DOLLAREXPR2 into a number
@@ -3690,6 +3756,6 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 }
 
 /*
-  	#] GetDolNum :
+  	#] GetDolNum : 
 */
 

@@ -532,6 +532,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 					AN.listinprint += 2;
+					while ( AN.listinprint[0] == DOLLAREXPR2 ) AN.listinprint += 2;
 				}
 /*
 			#] dollars :

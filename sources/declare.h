@@ -777,6 +777,7 @@ extern int    DoSetExternalAttr(UBYTE *);
 extern int    DoRmExternal(UBYTE *);
 /*:[14apr2004 mt]*/
 extern int    DoFactor(UBYTE *);
+extern WORD   GetDollarNumber(UBYTE **,DOLLARS);
 extern int    DoMessage(UBYTE *);
 extern int    DoPreNormPoly(UBYTE *);
 extern int    DoPreOut(UBYTE *);
@@ -1074,6 +1075,7 @@ extern void   ClearTree(int);
 extern int    CatchDollar(int);
 extern int    AssignDollar(PHEAD WORD *,WORD);
 extern UBYTE *WriteDollarToBuffer(WORD,WORD);
+extern UBYTE *WriteDollarFactorToBuffer(WORD,WORD,WORD);
 extern void   AddToDollarBuffer(UBYTE *);
 extern void   TermAssign(WORD *);
 extern void   WildDollars(PHEAD0);

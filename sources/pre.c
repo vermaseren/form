@@ -3190,7 +3190,7 @@ int DoPreWrite(UBYTE *s)
 }
 
 /*
- 		#] DoPreWrite : 
+ 		#] DoPreWrite :
  		#[ DoProcedure :
 
 		We have to read this procedure into a buffer.
@@ -5105,7 +5105,7 @@ UBYTE *defineChannel(UBYTE *s, HANDLERS *h)
 int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 {
 	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
-	WORD  num, number;
+	WORD  num, number, nfac;
 	UBYTE Out[270], *stopper;
 	int nosemi;
 
@@ -5194,7 +5194,33 @@ nodollar:			MesPrint("@$-variable expected in #write instruction");
 					return(-1);
 				}
 				*s = c;
-				if ( *s && *s != ' ' && *s != ',' && *s != '\t' ) {
+				if ( *s == '[' ) {
+					if ( Dollars[num].nfactors <= 0 ) {
+						*s = 0;
+						MesPrint("@#write instruction: $%s has not been factorized",ss);
+						AM.FileOnlyFlag = h->oldlogonly;
+						AC.LogHandle = h->oldhandle;
+						AO.PrintType = h->oldprinttype;
+						AM.silent = h->oldsilent;
+						return(-1);
+					}
+/*
+					Now get the number between the []
+*/
+					nfac = GetDollarNumber(&s,Dollars+num);
+
+					if ( Dollars[num].nfactors == 1 && nfac == 1 ) goto writewhole;
+
+					if ( ( dolalloc = WriteDollarFactorToBuffer(num,nfac,0) ) == 0 ) {
+						AM.FileOnlyFlag = h->oldlogonly;
+						AC.LogHandle = h->oldhandle;
+						AO.PrintType = h->oldprinttype;
+						AM.silent = h->oldsilent;
+						return(-1);
+					}
+					goto writealloc;
+				}
+				else if ( *s && *s != ' ' && *s != ',' && *s != '\t' ) {
 					MesPrint("@#write instruction: illegal characters after $-variable");
 					AM.FileOnlyFlag = h->oldlogonly;
 					AC.LogHandle = h->oldhandle;
@@ -5202,51 +5228,57 @@ nodollar:			MesPrint("@$-variable expected in #write instruction");
 					AM.silent = h->oldsilent;
 					return(-1);
 				}
-				if ( ( dolalloc = WriteDollarToBuffer(num,0) ) == 0 ) {
+				else {
+writewhole:
+				  if ( ( dolalloc = WriteDollarToBuffer(num,0) ) == 0 ) {
 					AM.FileOnlyFlag = h->oldlogonly;
 					AC.LogHandle = h->oldhandle;
 					AO.PrintType = h->oldprinttype;
 					AM.silent = h->oldsilent;
 					return(-1);
-				}
-				ss = dolalloc;
-				while ( *ss ) {
-					if ( to >= stopper ) {
-						num = to - Out;
-						WriteString(wtype,Out,num);
-						to = Out;
-					}
-					if ( chartype[*ss] > 3 ) { *to++ = *ss++; }
-					else {
-						sss = ss; while ( chartype[*ss] <= 3 ) ss++;
-						if ( ( to + (ss-sss) ) >= stopper ) {
-							if ( (ss-sss) >= (stopper-Out) ) {
-								if ( ( to - stopper ) < 10 ) {
-									num = to - Out;
-									WriteString(wtype,Out,num);
-									to = Out;
-								}
-								while ( (ss-sss) >= (stopper-Out) ) {
-									while ( to < stopper-1 ) {
-										*to++ = *sss++;
-									}
-									*to++ = '\\';
-									num = to - Out;
-									WriteString(wtype,Out,num);
-									to = Out;
-								}
-							}
-							else {
-								num = to - Out;
-								WriteString(wtype,Out,num);
-								to = Out;
-							}
+				  }
+				  else {
+writealloc:
+					ss = dolalloc;
+					while ( *ss ) {
+						if ( to >= stopper ) {
+							num = to - Out;
+							WriteString(wtype,Out,num);
+							to = Out;
 						}
-						while ( sss < ss ) *to++ = *sss++;
+						if ( chartype[*ss] > 3 ) { *to++ = *ss++; }
+						else {
+							sss = ss; while ( chartype[*ss] <= 3 ) ss++;
+							if ( ( to + (ss-sss) ) >= stopper ) {
+								if ( (ss-sss) >= (stopper-Out) ) {
+									if ( ( to - stopper ) < 10 ) {
+										num = to - Out;
+										WriteString(wtype,Out,num);
+										to = Out;
+									}
+									while ( (ss-sss) >= (stopper-Out) ) {
+										while ( to < stopper-1 ) {
+											*to++ = *sss++;
+										}
+										*to++ = '\\';
+										num = to - Out;
+										WriteString(wtype,Out,num);
+										to = Out;
+									}
+								}
+								else {
+									num = to - Out;
+									WriteString(wtype,Out,num);
+									to = Out;
+								}
+							}
+							while ( sss < ss ) *to++ = *sss++;
+						}
 					}
+				  }
+				  M_free(dolalloc,"written dollar");
+				  fstring++;
 				}
-				M_free(dolalloc,"written dollar");
-				fstring++;
 			}
 			else if ( *fstring == 's' ) {
 				fstring++;
@@ -5489,7 +5521,7 @@ ReturnWithError:
 }
 
 /*
- 		#] writeToChannel : 
+ 		#] writeToChannel :
  		#[ DoFactor :
 
 		Executes the #factor(ize) $var
@@ -5584,6 +5616,94 @@ nosyntax:
 }
 
 /*
- 		#] DoFactor :
+ 		#] DoFactor : 
+ 		#[ GetDollarNumber :
+*/
+
+WORD GetDollarNumber(UBYTE **inp, DOLLARS d)
+{
+	UBYTE *s = *inp, c, *name;
+	WORD number, nfac, *w;
+	DOLLARS dd;
+	s++;
+	if ( *s == '$' ) {
+		s++; name = s;
+		while ( FG.cTable[*s] < 2 ) s++;
+		c = *s; *s = 0;
+		if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) {
+			MesPrint("@dollar in #write should have been defined previously");
+			Terminate(-1);
+		}
+		*s = c;
+		dd = Dollars + number;
+		if ( c == '[' ) {
+			*inp = s;
+			nfac = GetDollarNumber(inp,dd);
+			s = *inp;
+			if ( *s != ']' ) {
+				MesPrint("@Illegal factor for dollar variable");
+				Terminate(-1);
+			}
+			*inp = s+1;
+			if ( nfac == 0 ) {
+				if ( dd->nfactors > d->nfactors ) {
+TooBig:
+					MesPrint("@Factor number for dollar variable too large");
+					Terminate(-1);
+				}
+				return(dd->nfactors);
+			}
+			w = dd->factors[nfac-1].where;
+			if ( w == 0 ) {
+				if ( dd->factors[nfac-1].value > d->nfactors ||
+				     dd->factors[nfac-1].value < 0 ) goto TooBig;
+				return(dd->factors[nfac-1].value);
+			}
+			if ( *w == 4 && w[4] == 0 && w[3] == 3 && w[2] == 1
+			  && w[1] <= d->nfactors ) return(w[1]);
+			if ( w[*w] == 0 && w[*w-1] == *w-1 ) goto TooBig;
+IllNum:
+			MesPrint("@Illegal factor number for dollar variable");
+			Terminate(-1);
+		}
+		else {	/* The dollar should be a number */
+			if ( dd->type == DOLZERO ) {
+				return(0);
+			}
+			else if ( dd->type == DOLTERMS || dd->type == DOLNUMBER ) {
+				w = dd->where;
+				if ( *w == 4 && w[4] == 0 && w[3] == 3 && w[2] == 1
+				  && w[1] <= d->nfactors ) return(w[1]);
+				if ( w[*w] == 0 && w[*w-1] == *w-1 ) goto TooBig;
+				goto IllNum;
+			}
+			else goto IllNum;
+		}
+	}
+	else if ( FG.cTable[*s] == 1 ) {
+		WORD x = *s++ - '0';
+		while ( FG.cTable[*s] == 1 ) {
+			x = 10*x + *s++ - '0';
+			if ( x > d->nfactors ) {
+				MesPrint("@Factor number %d for dollar variable too large",x);
+				Terminate(-1);
+			}
+		}
+		if ( *s != ']' ) {
+			MesPrint("@Illegal factor number for dollar variable");
+			Terminate(-1);
+		}
+		s++; *inp = s;
+		return(x);
+	}
+	else {
+		MesPrint("@Illegal factor indicator for dollar variable");
+		Terminate(-1);
+	}
+	return(-1);
+}
+
+/*
+ 		#] GetDollarNumber :
  	# ] PreProcessor :
 */
