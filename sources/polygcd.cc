@@ -812,7 +812,7 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 
 		// Iteratively add the powers xi^k
 		for (int deg=1, maxdeg=A.degree(x[xi]); deg<=maxdeg; deg++) {
-		
+
 			term *= simple[xi-1];
 
 			// Calculate the error, express it in terms of ai and add corrections.

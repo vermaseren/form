@@ -1136,7 +1136,7 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	for (int i=0; i<(int)f.factor.size(); i++) 
 		for (int j=0; j<f.power[i]; j++) {
 			poly::poly_to_argument(f.factor[i],argout,true);
-			argout += *argout;
+			argout += *argout > 0 ? *argout : 2;
 		}
 
 	if (AN.poly_num_vars > 0)
