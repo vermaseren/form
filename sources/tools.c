@@ -90,7 +90,7 @@ long numfrees = 0;
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Streams :
  		#[ LoadInputFile :
 */
@@ -232,7 +232,7 @@ UBYTE LookInStream(STREAM *stream)
 STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 {
 	STREAM *stream;
-	UBYTE *rhsofvariable, *s, *newname;
+	UBYTE *rhsofvariable, *s, *newname, c;
 	POSITION scrpos;
 	int handle, num;
 	long filesize;
@@ -287,9 +287,36 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			UnsetAllowDelay();
 			break;
 		case DOLLARSTREAM:
-			if ( ( num = GetDollar(name) ) < 0 ) return(0);
-			stream = CreateStream((UBYTE *)"dollar-stream");
-			stream->buffer = stream->pointer = s = WriteDollarToBuffer(num,1);
+			if ( ( num = GetDollar(name) ) < 0 ) {
+				WORD numfac = 0;
+/*
+				Here we have to test first whether we have $x[1], $x[0]
+				or just an undefined $x.
+*/
+				s = name; while ( *s && *s != '[' ) s++;
+				if ( *s == 0 ) return(0);
+				c = *s; *s = 0;
+				if ( ( num = GetDollar(name) ) < 0 ) return(0);
+				*s = c;
+				s++;
+				if ( *s == 0 || FG.cTable[*s] != 1 || *s == ']' ) {
+					MesPrint("@Illegal factor number for dollar variable");
+					return(0);
+				}
+				while ( *s && FG.cTable[*s] == 1 ) {
+					numfac = 10*numfac+*s++-'0';
+				}
+				if ( *s != ']' || s[1] != 0 ) {
+					MesPrint("@Illegal factor number for $ variable");
+					return(0);
+				}
+				stream = CreateStream((UBYTE *)"dollar-stream");
+				stream->buffer = stream->pointer = s = WriteDollarFactorToBuffer(num,numfac,1);
+			}
+			else {
+				stream = CreateStream((UBYTE *)"dollar-stream");
+				stream->buffer = stream->pointer = s = WriteDollarToBuffer(num,1);
+			}
 			while ( *s ) s++;
 			stream->top = s;
 			stream->inbuffer = s - stream->buffer;
