@@ -1000,7 +1000,7 @@ ScaledVariety:;
 					if ( AC.OldFactArgFlag == NEWFACTARG ) {
 					if ( factor == 0 ) {
 						WORD *oldworkpointer2 = AT.WorkPointer;
-						AT.WorkPointer = r1 + AM.MaxTer;
+						AT.WorkPointer = r1 + AM.MaxTer+FUNHEAD;
 						if ( ArgFactorize(BHEAD t-ARGHEAD,r1) < 0 ) {
 							MesCall("ExecArg");
 							return(-1);
@@ -1902,7 +1902,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 {
 	WORD *argfree, *argextra, *argcopy, *t, *tstop, *a, *a1, *a2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs,oldword;
-	WORD oldsorttype = AR.SortType;
+	WORD oldsorttype = AR.SortType, numargs;
 	int error = 0, action = 0, i, ii, number;
 
 	*argout = 0;
@@ -2138,6 +2138,32 @@ return0:
 			}
 			else { NEXTARG(argout); }
 		}
+	}
+/*
+	Now we have to sort the arguments
+	First have the number of 'nontrivial/nonnumerical' arguments
+	Then make a piece of code like in FullSymmetrize with that number
+	of arguments to be symmetrized.
+	Put a function in front
+	Call the Symmetrize routine
+*/
+	t = argout; numargs = 0;
+	while ( *t && *t != -SNUMBER && ( *t < 0 || ( ABS(t[*t-1]) != *t-1 ) ) ) {
+		NEXTARG(t);
+		numargs++;
+	}
+	if ( numargs > 1 ) {
+		WORD *Lijst;
+		while ( *t ) { NEXTARG(t); }
+		argout[-FUNHEAD] = DUMFUN;
+		argout[-FUNHEAD+1] = t-argout+FUNHEAD;
+		argout[-FUNHEAD+2] = 0;
+		AT.WorkPointer = t+1;
+		Lijst = AT.WorkPointer;
+		for ( i = 0; i < numargs; i++ ) Lijst[i] = i;
+		AT.WorkPointer += numargs;
+		error = Symmetrize(BHEAD argout,Lijst,numargs,1,0);
+		AT.WorkPointer = Lijst;
 	}
 	return(error);
 }
@@ -2801,7 +2827,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -2964,7 +2990,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent :
+  	#] TakeArgContent : 
   	#[ MakeInteger :
 */
 /**
@@ -3185,7 +3211,7 @@ WORD *MakeMod(PHEAD WORD *argin,WORD *argout,WORD *argfree)
 }
 
 /*
-  	#] MakeMod :
+  	#] MakeMod : 
   	#[ SortWeights :
 */
 /**

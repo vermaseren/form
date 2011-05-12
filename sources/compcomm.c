@@ -930,7 +930,7 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint :
+  	#] DoPrint : 
   	#[ CoPrint :
 */
 
@@ -4172,6 +4172,21 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			}
 			*p = c;
 			*w++ = IFDOLLAR; *w++ = 3; *w++ = i;
+/*
+			And then the IFDOLLAREXTRA pieces for [1] [$y] etc
+*/
+			if ( *p == '[' ) {
+				p++;
+				if ( ( w = GetIfDollarFactor(&p,w) ) == 0 ) {
+					error = 1;
+					goto endofif;
+				}
+				else if ( *p != ']' ) {
+					error = 1;
+					goto endofif;
+				}
+				p++;
+			}
 			inp = p;
 			gotexp = 1;
 		}
@@ -4277,7 +4292,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf : 
+  	#] CoIf :
   	#[ CoElse :
 */
 
@@ -5378,6 +5393,64 @@ int CoExtraSymbols(UBYTE *inp)
 
 /*
   	#] CoExtraSymbols : 
+  	#[ GetIfDollarFactor :
+*/
+
+WORD *GetIfDollarFactor(UBYTE **inp, WORD *w)
+{
+	LONG x;
+	WORD number;
+	UBYTE *name, c, *s;
+	s = *inp;
+	if ( FG.cTable[*s] == 1 ) {
+		x = 0;
+		while ( FG.cTable[*s] == 1 ) {
+			x = 10*x + *s++ - '0';
+			if ( x >= MAXPOSITIVE ) {
+				MesPrint("&Value in dollar factor too large");
+				while ( FG.cTable[*s] == 1 ) s++;
+				*inp = s;
+				return(0);
+			}
+		}
+		*w++ = IFDOLLAREXTRA;
+		*w++ = 3;
+		*w++ = -x-1;
+		*inp = s;
+		return(w);
+	}
+	if ( *s != '$' ) {
+		MesPrint("&Factor indicator for $-variable should be a number or a $-variable.");
+		return(0);
+	}
+	s++; name = s;
+	while ( FG.cTable[*s] < 2 ) s++;
+	c = *s; *s = 0;
+	if ( GetName(AC.dollarnames,name,&number,NOAUTO) == NAMENOTFOUND ) {
+		MesPrint("&dollar in if statement should have been defined previously");
+		return(0);
+	}
+	*s = c;
+	*w++ = IFDOLLAREXTRA;
+	*w++ = 3;
+	*w++ = number;
+	if ( c == '[' ) {
+		s++;
+		*inp = s;
+		if ( ( w = GetIfDollarFactor(inp,w) ) == 0 ) return(0);
+		s = *inp;
+		if ( *s != ']' ) {
+			MesPrint("&unmatched [] in $ in if statement");
+			return(0);
+		}
+		s++;
+		*inp = s;
+	}
+	return(w);
+}
+
+/*
+  	#] GetIfDollarFactor :
   	#[ GetDoParam :
 */
 

@@ -375,7 +375,12 @@ va_dcl
 						}
 						term = d->factors[num-1].where;
 						if ( term == 0 ) {
-							value[0] = 4; value[1] = d->factors[num-1].value; value[2] = 1; value[3] = 3; value[4] = 0;
+							if ( d->factors[num-1].value < 0 ) {
+								value[0] = 4; value[1] = -d->factors[num-1].value; value[2] = 1; value[3] = -3; value[4] = 0;
+							}
+							else {
+								value[0] = 4; value[1] = d->factors[num-1].value; value[2] = 1; value[3] = 3; value[4] = 0;
+							}
 							term = value;
 						}
 						goto printterms;

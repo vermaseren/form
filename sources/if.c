@@ -100,6 +100,73 @@
 		MATCH vs TYPEIDNEW.
 
  		#] Syntax : 
+ 		#[ GetIfDollarNum :
+*/
+
+WORD GetIfDollarNum(WORD *ifp, WORD *ifstop)
+{
+	DOLLARS d;
+	WORD num, *w;
+	if ( ifp[2] < 0 ) { return(-ifp[2]-1); }
+	d = Dollars+ifp[2];
+	if ( ifp+3 < ifstop && ifp[3] == IFDOLLAREXTRA ) {
+		if ( d->nfactors == 0 ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Attempt to use a factor of an unfactored $-variable");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		num = GetIfDollarNum(ifp+3,ifstop);
+		if ( num > d->nfactors ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Dollar factor number %s out of range",num);
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		if ( num == 0 ) {
+			return(d->nfactors);
+		}
+		w = d->factors[num-1].where;
+		if ( w == 0 ) return(d->factors[num].value);
+getnumber:;
+		if ( *w == 0 ) return(0);
+		if ( *w == 4 && w[3] == 3 && w[2] == 1 && w[1] < MAXPOSITIVE && w[4] == 0 ) {
+			return(w[1]);
+		}
+		if ( ( w[w[0]] != 0 ) || ( ABS(w[w[0]-1]) != w[0]-1 ) ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Dollar factor number expected but found expression");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		else {
+			LOCK(ErrorMessageLock);
+			MesPrint("Dollar factor number out of range");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		return(0);
+	}
+/*
+	Now we have just a dollar and should evaluate that into a short number
+*/
+	if ( d->type == DOLZERO ) {
+		return(0);
+	}
+	else if ( d->type == DOLNUMBER || d->type == DOLTERMS ) {
+		w = d->where; goto getnumber;
+	}
+	else {
+		LOCK(ErrorMessageLock);
+		MesPrint("Dollar factor number is wrong type");
+		UNLOCK(ErrorMessageLock);
+		Terminate(-1);
+		return(0);
+	}
+}
+
+/*
+ 		#] GetIfDollarNum :
  		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
 
 		The execution time part of the if-statement.
@@ -250,6 +317,8 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 				coef2[1] = 1;
 				ismul2 = 1;
 				break;
+			case IFDOLLAREXTRA:
+				break;
 			case IFDOLLAR:
 				{
 /*
@@ -274,7 +343,55 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 						}
 					}
 #endif
-					switch ( d->type ) {
+/*
+					We have to pick up the IFDOLLAREXTRA pieces for [1], [$y] etc.
+*/
+					if ( ifp+3 < ifstop && ifp[3] == IFDOLLAREXTRA ) {
+						if ( d->nfactors == 0 ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("Attempt to use a factor of an unfactored $-variable");
+							UNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						} {
+						WORD num = GetIfDollarNum(ifp+3,ifstop);
+						WORD *w;
+						while ( ifp+3 < ifstop && ifp[3] == IFDOLLAREXTRA ) ifp += 3;
+						if ( num > d->nfactors ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("Dollar factor number %s out of range",num);
+							UNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						}
+						if ( num == 0 ) {
+							ncoef2 = 1; coef2[0] = d->nfactors; coef2[1] = 1;
+							break;
+						}
+						w = d->factors[num-1].where;
+						if ( w == 0 ) {
+							if ( d->factors[num-1].value < 0 ) {
+								ncoef2 = -1; coef2[0] = -d->factors[num-1].value; coef2[1] = 1;
+							}
+							else {
+								ncoef2 = 1; coef2[0] = d->factors[num-1].value; coef2[1] = 1;
+							}
+							break;
+						}
+						if ( w[*w] == 0 ) {
+							r = w + *w - 1;
+							i = ABS(*r);
+							if ( i == ( *w-1 ) ) {
+								ncoef2 = (i-1)/2;
+								if ( *r < 0 ) ncoef2 = -ncoef2;
+								i--; cc = coef2; r = w + 1;
+								while ( --i >= 0 ) *cc++ = (UWORD)(*r++);
+								break;
+							}
+						}
+						goto generic;
+						}
+					}
+					else {
+					  switch ( d->type ) {
 						case DOLUNDEFINED:
 							if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
@@ -402,6 +519,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 									break;
 								}
 							}
+generic:;
 							if ( AC.UnsureDollarMode == 0 ) {
 #ifdef WITHPTHREADS
 								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
@@ -413,6 +531,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 							}
 							ncoef2 = 0; coef2[0] = 0; coef2[1] = 1;
 							break;
+					  }
 					}
 #ifdef WITHPTHREADS
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
@@ -525,7 +644,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement : 
+ 		#] DoIfStatement :
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -759,6 +878,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement : 
+  	#] If statement :
 */
 
