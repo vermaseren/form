@@ -803,6 +803,7 @@ typedef int (*TFUN1)();
 #define MULTIPLEOF 5
 #define IFDOLLAR 6
 #define IFEXPRESSION 7
+#define IFDOLLAREXTRA 8
 #define GREATER	0
 #define GREATEREQUAL 1
 #define LESS 2
