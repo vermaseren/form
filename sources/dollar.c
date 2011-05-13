@@ -757,7 +757,7 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 }
 
 /*
-  	#] WriteDollarFactorToBuffer :
+  	#] WriteDollarFactorToBuffer : 
   	#[ AddToDollarBuffer :
 */
 
@@ -1500,7 +1500,7 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 			newd->factors[i].where = 0;
 			newd->factors[i].size = 0;
 			newd->factors[i].type = DOLUNDEFINED;
-			newd->factors[i].value = 0;
+			newd->factors[i].value = d->factors[i].value;
 		}
 	}
 	else { newd->factors = 0; }
@@ -3173,7 +3173,7 @@ getout:
 		insize2 = insize;
 	}
 /*
- 		#] Step 3: ConvertToPoly 
+ 		#] Step 3: ConvertToPoly
  		#[ Step 4: Now the hard work.
 */
 	if ( ( buf3 = DoFactorizeDollar(BHEAD buf2) ) == 0 ) {
@@ -3187,6 +3187,7 @@ getout:
 	}
 	if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-3");
 	term = buf3;
+	AR.SortType = oldsorttype;
 /*
 	Count the factors:
 */
@@ -3200,7 +3201,7 @@ getout:
 		buf1: the original before ConvertToPoly for if only one factor
 		buf3: the factored expression with nfactors factors
 
- 		#] Step 4: 
+ 		#] Step 4:
  		#[ Step 5: ConvertFromPoly
 				If ConvertToPoly was used, use now ConvertFromPoly
 		        Be careful: there should be more than one factor now.
@@ -3289,10 +3290,9 @@ getout2:			AR.SortType = oldsorttype;
 	}
 	d->nfactors = nfactors + factorsincontent;
 /*
- 		#] Step 5: ConvertFromPoly 
+ 		#] Step 5: ConvertFromPoly
  		#[ Step 6: The factors of the content
 */
-	AR.SortType = oldsorttype;
 	M_free(buf3,"DollarFactorize-5");
 	if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-5");
 	M_free(buf1,"DollarFactorize-5");
@@ -3379,7 +3379,7 @@ getout2:			AR.SortType = oldsorttype;
 		term += term[1];
 	}
 /*
- 		#] Step 6: 
+ 		#] Step 6:
  		#[ Step 7: Numerical factors
 */
 	term = buf1content;
@@ -3412,7 +3412,7 @@ getout2:			AR.SortType = oldsorttype;
 	}
 	M_free(buf1content,"DollarFactorize-5");
 /*
- 		#] Step 7: 
+ 		#] Step 7:
  		#[ Step 8: Sorting the factors
 
 	There are d->nfactors factors. Look which ones have a 'where'
@@ -3437,11 +3437,12 @@ getout2:			AR.SortType = oldsorttype;
 nextj1:;
 				s1 = *(fac[j1]); s2 = *(fac[j2]);
 				while ( *s1 && *s2 ) {
-					if ( ( ret = Compare(BHEAD s1, s2, 1) ) == 0 ) {
+					if ( ( ret = Compare(BHEAD s1, s2, (WORD)3) ) == 0 ) {
 						s1 += *s1; s2 += *s2;
 					}
 					else if ( ret > 0 ) goto nextj;
 					else {
+exch:
 						s3 = *(fac[j1]); *(fac[j1]) = *(fac[j2]); *(fac[j2]) = s3;
 						x = *(facsize[j1]); *(facsize[j1]) = *(facsize[j2]); *(facsize[j2]) = x;
 						j1--; j2--;
@@ -3449,19 +3450,21 @@ nextj1:;
 						goto nextj;
 					}
 				}
+				if ( *s1 ) goto nextj;
+				if ( *s2 ) goto exch;
 nextj:;
 			}
 		}
 		M_free(facsize,"SortDollarFactors");
 	}
 /*
- 		#] Step 8: 
+ 		#] Step 8:
 */
 	return(0);
 }
 
 /*
-  	#] DollarFactorize : 
+  	#] DollarFactorize :
   	#[ CleanDollarFactors :
 */
 

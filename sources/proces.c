@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -245,7 +245,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -601,7 +601,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1730,7 +1730,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2254,7 +2254,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2387,7 +2387,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2503,7 +2503,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2578,7 +2578,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2757,7 +2757,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3389,7 +3389,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3479,6 +3479,19 @@ AutoGen:	i = *AT.TMout;
 /*
 						We copy only the factor we need
 */
+						if ( dsize == 0 ) {
+							numfac[0] = 4;
+							numfac[1] = d->factors[AT.TMdolfac-2].value;
+							numfac[2] = 1;
+							numfac[3] = 3;
+							numfac[4] = 0;
+							StartBuf = numfac;
+							if ( numfac[1] < 0 ) {
+								numfac[1] = -numfac[1];
+								numfac[3] = -numfac[3];
+							}
+						}
+						else {
 						d->factors[AT.TMdolfac-2].where = td2 = (WORD *)Malloc1(
 							(dsize+1)*sizeof(WORD),"Copy of factor");
 						td1 = dd->factors[AT.TMdolfac-2].where;
@@ -3486,6 +3499,7 @@ AutoGen:	i = *AT.TMout;
 						d->size = dsize; d->type = DOLTERMS;
 						NCOPY(td2,td1,dsize);
 						*td2 = 0;
+						}
 					}
 					else if ( d->nfactors == 1 ) {
 						StartBuf = d->where;
@@ -3892,7 +3906,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4123,7 +4137,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4247,7 +4261,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4365,7 +4379,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun : 
+ 		#] Create a PolyFun :
 */
 	}
 	else if ( AR.PolyFunType == 1 ) {
@@ -4515,7 +4529,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument : 
+ 		#] One argument :
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4578,7 +4592,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		return(0);
 /*
- 		#] Two arguments : 
+ 		#] Two arguments :
 */
 	}
 	else {
@@ -4598,7 +4612,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4849,6 +4863,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul : 
+ 		#] PolyFunMul :
 	#] Processor :
 */

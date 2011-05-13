@@ -2122,21 +2122,22 @@ return0:
 /*	AR.SortType = oldsorttype; */
 	if ( oldsorttype != AR.SortType ) {
 		AR.SortType = oldsorttype;
-		while ( *argout ) {
-			if ( *argout > 0 ) {
+		a = argout;
+		while ( *a ) {
+			if ( *a > 0 ) {
 				NewSort();
-				oldword = argout[*argout]; argout[*argout] = 0;
-				t = argout+ARGHEAD;
+				oldword = a[*a]; a[*a] = 0;
+				t = a+ARGHEAD;
 				while ( *t ) {
 					tstop = t + *t;
 					StoreTerm(BHEAD t);
 					t = tstop;
 				}
-				EndSort(argout+ARGHEAD,0,0);
-				argout[*argout] = oldword;
-				argout += *argout;
+				EndSort(a+ARGHEAD,0,0);
+				a[*a] = oldword;
+				a += *a;
 			}
-			else { NEXTARG(argout); }
+			else { NEXTARG(a); }
 		}
 	}
 /*
@@ -2154,16 +2155,23 @@ return0:
 	}
 	if ( numargs > 1 ) {
 		WORD *Lijst;
+		WORD x[3];
+		x[0] = argout[-FUNHEAD];
+		x[1] = argout[-FUNHEAD+1];
+		x[2] = argout[-FUNHEAD+2];
 		while ( *t ) { NEXTARG(t); }
-		argout[-FUNHEAD] = DUMFUN;
+		argout[-FUNHEAD] = SQRTFUNCTION;
 		argout[-FUNHEAD+1] = t-argout+FUNHEAD;
 		argout[-FUNHEAD+2] = 0;
 		AT.WorkPointer = t+1;
 		Lijst = AT.WorkPointer;
 		for ( i = 0; i < numargs; i++ ) Lijst[i] = i;
 		AT.WorkPointer += numargs;
-		error = Symmetrize(BHEAD argout,Lijst,numargs,1,0);
+		error = Symmetrize(BHEAD argout-FUNHEAD,Lijst,numargs,1,SYMMETRIC);
 		AT.WorkPointer = Lijst;
+		argout[-FUNHEAD] = x[0];
+		argout[-FUNHEAD+1] = x[1];
+		argout[-FUNHEAD+2] = x[2];
 	}
 	return(error);
 }

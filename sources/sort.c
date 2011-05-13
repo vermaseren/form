@@ -1539,7 +1539,7 @@ nocompress:
 }
 
 /*
- 		#] PutOut :
+ 		#] PutOut : 
  		#[ FlushOut :				WORD FlushOut(position,file,compr)
 */
 /**
@@ -2716,14 +2716,14 @@ NoPoly:
 			if ( t2 < stopper2 ) return(PREV(1));
 		}
 	}
+	if ( level == 3 ) return(CompCoef(term1,term2));
 	if ( level >= 1 )
 		return(CompCoef(term2,term1));
-/*	if ( level == 2 ) return(CompCoef(term1,term2)); */
 	return(0);
 }
 
 /*
- 		#] Compare1 : 
+ 		#] Compare1 :
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
