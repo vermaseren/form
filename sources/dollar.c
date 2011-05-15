@@ -3437,7 +3437,7 @@ getout2:			AR.SortType = oldsorttype;
 nextj1:;
 				s1 = *(fac[j1]); s2 = *(fac[j2]);
 				while ( *s1 && *s2 ) {
-					if ( ( ret = Compare(BHEAD s1, s2, (WORD)3) ) == 0 ) {
+					if ( ( ret = Compare(BHEAD s2, s1, (WORD)2) ) == 0 ) {
 						s1 += *s1; s2 += *s2;
 					}
 					else if ( ret > 0 ) goto nextj;
