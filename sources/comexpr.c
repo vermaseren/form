@@ -260,7 +260,7 @@ int DoExpr(UBYTE *inp, int type)
 				error = 1;
 			}
 			else {
-				w = &(Expressions[c1].status);
+				w = &(Expressions[c2].status);
 				if ( type == LOCALEXPRESSION ) {
 					switch ( *w ) {
 						case GLOBALEXPRESSION:
