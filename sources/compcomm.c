@@ -4292,7 +4292,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf :
+  	#] CoIf : 
   	#[ CoElse :
 */
 
@@ -5450,7 +5450,7 @@ WORD *GetIfDollarFactor(UBYTE **inp, WORD *w)
 }
 
 /*
-  	#] GetIfDollarFactor :
+  	#] GetIfDollarFactor : 
   	#[ GetDoParam :
 */
 
@@ -5696,9 +5696,25 @@ int CoFactor(UBYTE *inp)
 			MesPrint("&Factor(ize) should have a single $variable for its argument");
 			return(1);
 		}
+#ifdef WITHPTHREADS
+		{
+		  int i;
+		  WORD *pmd;
+		  for ( i = 0; i < NumPotModdollars; i++ ) {
+			if ( numdollar == PotModdollars[i] ) break;
+		  }
+		  if ( i >= NumPotModdollars ) {
+			pmd = (WORD *)FromList(&AC.PotModDolList);
+			*pmd = numdollar;
+		  }
+		}
+#endif
+#ifdef PARALLEL
+		PF_statPotModDollar(numdollar,1);
+#endif
 	}
 	else {
-		MesPrint("&%s is not a $variable",inp);
+		MesPrint("&%s is not a $-variable",inp);
 		return(1);
 	}
 	Add3Com(TYPEFACTOR,numdollar);
@@ -5706,5 +5722,5 @@ int CoFactor(UBYTE *inp)
 }
 
 /*
-  	#] CoFactor : 
+  	#] CoFactor :
 */

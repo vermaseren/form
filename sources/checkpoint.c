@@ -1,3 +1,6 @@
+/*
+  	#[ Explanations :
+*/
 /** @file checkpoint.c
  * 
  *  Contains all functions that deal with the recovery mechanism controlled and
@@ -46,9 +49,10 @@
  *  DoSnapshot.
  *
  */
-
-/* #[ License : */
 /*
+  	#] Explanations : 
+  	#[ License :
+ *
  *   Copyright (C) 1984-2010 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
@@ -72,9 +76,8 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
-
 /*
+  	#] License : 
   	#[ Includes :
 */
 
@@ -1922,6 +1925,7 @@ int DoRecovery(int *moduletype)
 		if ( Dollars[i].size ) {
 			R_FREE(Dollars[i].where);
 		}
+		CleanDollarFactors(Dollars+i);
 	}
 	R_FREE(AP.DollarList.lijst);
 
@@ -1969,14 +1973,23 @@ int DoRecovery(int *moduletype)
 
 	R_COPY_LIST(AP.DollarList);
 	for ( i=0; i<AP.DollarList.num; ++i ) {
-		size = Dollars[i].size * sizeof(WORD);
-		if ( size && Dollars[i].where && Dollars[i].where != oldAMdollarzero ) {
-			R_COPY_B(Dollars[i].where, size, void*);
+		DOLLARS d = Dollars + i;
+		size = d->size * sizeof(WORD);
+		if ( size && d->where && d->where != oldAMdollarzero ) {
+			R_COPY_B(d->where, size, void*);
 		}
 #ifdef WITHPTHREADS
-		Dollars[i].pthreadslockread = dummylock;
-		Dollars[i].pthreadslockwrite = dummylock;
+		d->pthreadslockread = dummylock;
+		d->pthreadslockwrite = dummylock;
 #endif
+		if ( d->nfactors > 1 ) {
+			R_COPY_B(d->factors,sizeof(FACDOLLAR)*d->nfactors,FACDOLLAR*);
+			for ( j = 0; j < d->nfactors; j++ ) {
+				if ( d->factors[j].size > 0 ) {
+					R_COPY_B(d->factors[i].where,sizeof(WORD)*(d->factors[j].size+1),WORD*);
+				}
+			}
+		}
 	}
 	AP.DollarList.message = "$-variable";
 
@@ -2619,7 +2632,16 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_LIST(AP.DollarList);
 	for ( i=0; i<AP.DollarList.num; ++i ) {
+		DOLLARS d = Dollars + i;
 		S_WRITE_DOLLAR(Dollars[i]);
+		if ( d->nfactors > 1 ) {
+			S_WRITE_B(&(d->factors),sizeof(FACDOLLAR)*d->nfactors);
+			for ( j = 0; j < d->nfactors; j++ ) {
+				if ( d->factors[j].size > 0 ) {
+					S_WRITE_B(&(d->factors[i].where),sizeof(WORD)*(d->factors[j].size+1));
+				}
+			}
+		}
 	}
 
 	S_WRITE_LIST(AP.PreVarList);
