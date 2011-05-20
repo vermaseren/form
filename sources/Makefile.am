@@ -178,11 +178,28 @@ endif
 endif
 
 if BUILD_PARFORM
-parform% : override CC = @MPICOMPILER@
-parfor% : override LINK = @MPICOMPILER@ -o parform
 bin_PROGRAMS += parform
+parform% : override CC = @MPICC@
+parform% : override CXX = @MPICXX@
+parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
 parform_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG
 #parform_CFLAGS = -O3 -mcpu=i586
+parform_CFLAGS = $(COMPILEFLAGS)
+parform_CXXFLAGS = $(COMPILEFLAGS)
+parform_LDFLAGS = $(LINKFLAGS)
 parform_LDADD = $(EXTRALIBS)
+endif
+
+if BUILD_PARVORM
+bin_PROGRAMS += parvorm
+parvorm% : override CC = @MPICC@
+parvorm% : override CXX = @MPICXX@
+parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
+parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
+parvorm_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
+parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
+parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
+parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
+parvorm_LDADD = $(EXTRALIBS)
 endif

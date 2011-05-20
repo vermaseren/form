@@ -152,16 +152,27 @@ AM_CONDITIONAL([BUILD_TFORM], [test "x$build_tform" = xyes])
 AM_CONDITIONAL([BUILD_TVORM], [test "x$build_tvorm" = xyes])
 
 # Check for MPI
+AC_ARG_VAR([MPICC], [C compiler with MPI support])
+AC_ARG_VAR([MPICXX], [C++ compiler with MPI support])
 AC_ARG_ENABLE([parform], [AS_HELP_STRING([--enable-parform],
-	[do not build parallel version using MPI (parform)])],
-	[enableval=yes], [enableval=no])
-build_parform=$enableval
-AS_IF([test "x$build_parform" = xyes],
-	[AC_CHECK_PROG([MPICOMPILER], [mpicc], [mpicc], [])
-	 AS_IF([test -z "$MPICOMPILER"], [build_parform=no])
-	 AC_SUBST([MPICOMPILER])
+	[build parallel version using MPI (parform)])], [], [enable_parform=no])
+build_parform=$enable_parform
+AS_IF([test "x$build_parform" = xyes], [
+	build_parvorm=$build_vorm
+	AS_IF([test -z "$MPICC"], [AC_CHECK_PROGS([MPICC], [mpicc])])
+	AS_IF([test -z "$MPICXX"], [AC_CHECK_PROGS([MPICXX], [mpicxx mpiCC mpic++])])
+	AS_IF([test -z "$MPICC"], [build_parform=no])
+	AS_IF([test -z "$MPICXX"], [build_parform=no])
+	AS_IF([test "x$build_parform" != xyes], [
+		AC_MSG_WARN([building parform has been disabled.])
+		AS_IF([test "x$build_vorm" = xyes], [
+			AC_MSG_WARN([building parvorm has been disabled.])
+			build_parvorm=no
+		])
 	])
+])
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
+AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
 
 # Check for static linking
 AC_MSG_CHECKING([static linking])
@@ -258,6 +269,10 @@ if test "x$build_tvorm" = xyes; then
 fi
 if test "x$build_parform" = xyes; then
 	echo "    parform    parallel version using MPI"
+	atleastone=yes
+fi
+if test "x$build_parvorm" = xyes; then
+	echo "    parvorm    parallel debugging version using MPI"
 	atleastone=yes
 fi
 if test $atleastone = no; then
