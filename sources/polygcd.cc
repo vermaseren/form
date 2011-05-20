@@ -1853,7 +1853,9 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 			t+=t[1];
 		}
 		else {
-			memcpy(s,t,t[1]*sizeof(WORD));
+			int i = t[1];
+			memcpy(s,t,i*sizeof(WORD));
+			t += i; s += i;
 		}			
 	}
 
