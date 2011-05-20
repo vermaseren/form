@@ -697,6 +697,7 @@ WORD DoExecute(WORD par, WORD skip)
 */
 			for ( i = 0; i < AM.totalnumberofthreads; i++ ) {
 				if ( ModOptdollars[j].dstruct[i].size > 0 ) {
+					CleanDollarFactors(&(ModOptdollars[j].dstruct[i]));
 					M_free(ModOptdollars[j].dstruct[i].where,"Local dollar value");
 				}
 			}
@@ -1141,7 +1142,7 @@ void SetMods()
 #endif
 
 /*
- 		#] SetMods :
+ 		#] SetMods : 
  		#[ UnSetMods :
 */
 
@@ -1156,7 +1157,7 @@ void UnSetMods()
 #endif
 
 /*
- 		#] UnSetMods :
+ 		#] UnSetMods : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
