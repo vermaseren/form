@@ -1287,11 +1287,7 @@ int main(int argc, char **argv)
 #ifdef WITHPTHREADS
 	IniFbufs();
 #else
-	#ifdef PARALLEL
-		printf("!!!!Do not use factarg with this version!!!!!\n");
-	#else
-		IniFbuffer(AT.fbufnum);
-	#endif
+	IniFbuffer(AT.fbufnum);
 #endif
 	IniVars();
 	Globalize(1);
