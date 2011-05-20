@@ -249,32 +249,4 @@ extern LONG PF_maxDollarChunkSize;
   	#] global variables used by the PF_functions :
 */
 
-/*
-[17nov2005 mt]:
-   #[ function prototypes:
-*/
-
-int  PF_InitRedefinedPreVars();
-int  PF_Processor(EXPRESSIONS,WORD,WORD);
-WORD PF_Deferred(WORD *,WORD);
-int  PF_EndSort();
-int  PF_Init(int*,char ***);
-int  PF_Terminate(int);
-int  PF_ISendSbuf(int,int);
-int  PF_PackString(UBYTE *);
-int  PF_UnPackString(UBYTE *);
-int  PF_BroadcastPreDollar(WORD **, LONG *,int *);
-int  PF_BroadcastString(UBYTE *);
-LONG PF_BroadcastNumberOfTerms(LONG);
-WORD PF_mkDollarsParallel();
-void PF_markPotModDollars();
-void PF_statPotModDollar(int,int);
-int PF_broadcastRHS(void);
-int PF_SendFile(int to, FILE *fd);
-int PF_RecvFile(int from, FILE *fd);
-
-/*
-   #] function prototypes:
-[:17nov2005 mt]
-*/
 #endif

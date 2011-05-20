@@ -900,12 +900,19 @@ static  WORD *PF_CurrentBracket;
 		PF_CurrentBracket
 */
 
-static WORD PF_GetTerm(FILEHANDLE *fi,WORD *term)
+static WORD PF_GetTerm(WORD *term)
 {
 	GETIDENTITY
-	FILEHANDLE *fi = AR.infile;
+	FILEHANDLE *fi;
 	WORD i;
 	WORD *next, *np, *last, *lp = 0, *nextstop, *tp=term;
+
+	if ( AR.GetFile == 2 ) {
+		fi = AR.hidefile;
+	}
+	else {
+		fi = AR.infile;
+	}
 
 	AN.deferskipped = 0;
 	if ( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ) {
@@ -1817,7 +1824,7 @@ int PF_Init(int *argc, char ***argv)
 /*
 			get these from the environment at the moment sould be in setfile/tail
 */
-		if ( ( c = getenv("PF_LOG") ) == 0 ) {
+		if ( ( c = getenv("PF_LOG") ) != 0 ) {
 			if ( *c ) PF.log = (int)atoi(c);
 			else PF.log = 1;
 			fprintf(stderr,"[%d] changing PF.log to %d\n",PF.me,PF.log);

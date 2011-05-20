@@ -395,9 +395,11 @@ extern FILES *Ustdout;
 
 #endif
 #endif
- 
+
+#ifndef __cplusplus
 #ifdef PARALLEL
 #include "parallel.h"
+#endif
 #endif
 
 #endif
