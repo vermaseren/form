@@ -21,6 +21,8 @@ TEXFILES = \
 
 MAIN = manual
 
+EXTRA_DIST = $(TEXFILES)
+
 .PHONY: FORCE dvi html ps pdf clean-html clean-local
 
 DATEFILE = manualdate.tex

@@ -8,6 +8,8 @@ TEXFILES = \
 
 MAIN = devref
 
+EXTRA_DIST = $(TEXFILES)
+
 .PHONY: FORCE dvi html ps pdf clean-local
 
 DATEFILE = devrefdate.tex

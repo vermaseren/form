@@ -26,9 +26,10 @@ AH_VERBATIM([PRODUCTIONDATE],
 
 # Check for programs
 cflagsbackup=$CFLAGS
+cxxflagsbackup=$CXXFLAGS
 AC_PROG_CC([gcc cc icc])
 AM_PROG_CC_C_O
-AC_PROG_CXX
+AC_PROG_CXX([g++ c++ icpc])
 
 # Checks for header files
 AC_HEADER_STDC
@@ -140,8 +141,8 @@ AS_IF([test "$enableval" = yes], [build_tvorm=$build_vorm])
 AS_IF([test "x$build_tform" = xyes],
 	[AC_CHECK_HEADER([pthread.h], [], [build_tform=no build_tvorm=no])
 	 AS_IF([test "x$print_os" != xOSX],
-	 	[AC_CHECK_LIB([rt], [pthread_self], [], [build_tform=no build_tvorm=no])],
-	 	[AC_CHECK_LIB([pthread], [pthread_self], [], [build_tform=no build_tvorm=no])])
+	 	[AC_CHECK_LIB([rt], [pthread_self], [:], [build_tform=no build_tvorm=no])],
+	 	[AC_CHECK_LIB([pthread], [pthread_self], [:], [build_tform=no build_tvorm=no])])
 	 AS_IF([test "x$build_tform" != xyes],
 		   [AC_MSG_WARN([building tform has been disabled.])
 		    AS_IF([test "x$build_vorm" = xyes],
@@ -162,9 +163,33 @@ AS_IF([test "x$build_parform" = xyes],
 	])
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 
+# Check for static linking
+AC_MSG_CHECKING([static linking])
+save_LDFLAGS=$LDFLAGS
+save_LIBS=$LIBS
+LDFLAGS="$LDFLAGS -static"
+LIBS="$ZLIBS $GMPLIBS"
+if test "x$build_tform" = xyes || test "x$build_tvorm" = xyes; then
+	LDFLAGS="$LDFLAGS -pthread"
+	if test "x$print_os" != xOSX; then
+		LIBS="$LIBS -lrt"
+	else
+		LIBS="$LIBS -lpthread"
+	fi
+fi
+AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
+	[AC_MSG_RESULT([yes])
+        static_link=yes],
+	[AC_MSG_RESULT([no])
+        static_link=no])
+LDFLAGS=$save_LDFLAGS
+LIBS=$save_LIBS
+AM_CONDITIONAL([STATIC_LINK], [test "x$static_link" = xyes])
+
 # Provide a clean environment
 CPPFLAGS=
 CFLAGS=$cflagsbackup
+CXXFLAGS=$cxxflagsbackup
 LDFLAGS=
 
 # Check for doxygen

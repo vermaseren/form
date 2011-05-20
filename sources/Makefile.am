@@ -63,7 +63,6 @@ SRCBASE = \
 	polyfact.h \
 	polygcd.cc \
 	polygcd.h \
-	polyvar.h \
 	mytime.h \
 	mytime.cc
 
@@ -80,12 +79,15 @@ COMPILEFLAGS=$(DATEFLAG)
 LINKFLAGS=
 # for debugging versions
 DEBUGCOMPILEFLAGS=-g -Wall $(DATEFLAG)
-DEBUGLINKFLAGS=-g
+DEBUGLINKFLAGS=
 
 # compiler specific parameters
 if USINGGCC
 COMPILEFLAGS+=-O3 -fomit-frame-pointer
-DEBUGCOMPILEFLAGS+=-Wextra -pedantic -Wpadded
+# For now -pedantic option is removed because g++ 4.1.2 complains
+# as "ISO C++ forbids variable-size array".
+#DEBUGCOMPILEFLAGS+=-O0 -Wextra -pedantic -Wpadded
+DEBUGCOMPILEFLAGS+=-O0 -Wextra -Wpadded
 if ONAPPLE
 COMPILEFLAGS+=-mmacosx-version-min=10.4
 LINKFLAGS+=-static-libgcc
@@ -102,7 +104,11 @@ COMPILEFLAGS+=-fpack-struct=4
 DEBUGCOMPILEFLAGS+=-fpack-struct=4
 LINKFLAGS+=-static-libgcc
 else
+if STATIC_LINK
 LINKFLAGS+=-static -s
+else
+LINKFLAGS+=-s
+endif
 endif
 if OPTPENTIUM
 COMPILEFLAGS+=-march=i686
@@ -126,7 +132,9 @@ bin_PROGRAMS =
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CPPFLAGS = $(COMPILEFLAGS)
+form_CPPFLAGS =
+form_CFLAGS = $(COMPILEFLAGS)
+form_CXXFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS)
 form_LDADD = $(EXTRALIBS)
 endif
@@ -136,6 +144,7 @@ bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
 vorm_CPPFLAGS = -DDEBUGGING
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
+vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
 vorm_LDADD = $(EXTRALIBS)
 endif
@@ -145,9 +154,10 @@ bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE)
 tform_CPPFLAGS = -DWITHPTHREADS
 tform_CFLAGS = $(COMPILEFLAGS)
+tform_CXXFLAGS = $(COMPILEFLAGS)
 tform_LDFLAGS = $(LINKFLAGS) -pthread
 if ONAPPLE
-tform_LDADD = $(EXTRALIBS)
+tform_LDADD = $(EXTRALIBS) -lpthread
 else
 tform_LDADD = $(EXTRALIBS) -lrt
 endif
@@ -158,9 +168,10 @@ bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE)
 tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
+tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS) -pthread
 if ONAPPLE
-tvorm_LDADD = $(EXTRALIBS)
+tvorm_LDADD = $(EXTRALIBS) -lpthread
 else
 tvorm_LDADD = $(EXTRALIBS) -lrt
 endif
