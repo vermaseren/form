@@ -1633,7 +1633,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1661,6 +1661,9 @@ struct S_const {
     int     MasterSort;            /* Final stage of sorting to the master */
 #endif
     int     Balancing;             /* For second stage loadbalancing */
+#ifdef PARALLEL
+	int     printflag;
+#endif
     WORD    ExecMode;              /* (S) */
 
     WORD    CollectOverFlag;       /* (R) Indicates overflow at Collect */
@@ -1669,7 +1672,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.

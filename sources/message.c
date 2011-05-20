@@ -154,7 +154,7 @@ va_dcl
 	s = va_arg(ap,char *);
 #endif
 #ifdef PARALLEL
-	if ( PF.me != MASTER ) return(0);
+	if ( PF.me != MASTER && AS.printflag == 0 ) return(0);
 #endif
 	FLUSHCONSOLE;
 	/*[19apr2004 mt]:*/
@@ -565,6 +565,29 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 			}
 			else if ( *s == 'w' ) {	/* number of the thread */
 				t = (char *)NumCopy(identity,(UBYTE *)t);
+			}
+#elif defined(PARALLEL)
+			else if ( *s == 'W' ) {	/* number of the thread with time */
+				LONG millitime;
+				WORD timepart;
+				t = (char *)NumCopy(PF.me,(UBYTE *)t);
+				millitime = TimeCPU(1);
+				timepart = (WORD)(millitime%1000);
+				millitime /= 1000;
+				timepart /= 10;
+				*t++ = '('; *t = 0;
+				t = (char *)LongCopy(millitime,(char *)t);
+				*t++ = '.'; *t = 0;
+				t = (char *)NumCopy(timepart,(UBYTE *)t);
+				*t++ = ')'; *t = 0;
+				if ( t >= stopper ) {
+					num = t - Out;
+					WriteString(ERROROUT,(UBYTE *)Out,num);
+					num = 0; t = Out;
+				}
+			}
+			else if ( *s == 'w' ) {	/* number of the thread */
+				t = (char *)NumCopy(PF,me,(UBYTE *)t);
 			}
 #else
 			else if ( *s == 'w' ) {	}
