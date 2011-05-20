@@ -587,7 +587,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 				}
 			}
 			else if ( *s == 'w' ) {	/* number of the thread */
-				t = (char *)NumCopy(PF,me,(UBYTE *)t);
+				t = (char *)NumCopy(PF.me,(UBYTE *)t);
 			}
 #else
 			else if ( *s == 'w' ) {	}
