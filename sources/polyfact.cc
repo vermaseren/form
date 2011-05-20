@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ include :
 */
@@ -53,7 +53,7 @@
 using namespace std;
 
 /*
-  	#] include :
+  	#] include : 
   	#[ tostring :
 */
 
@@ -97,7 +97,7 @@ const string factorized_poly::tostring () const {
 }
 
 /*
-  	#] tostring :
+  	#] tostring : 
   	#[ ostream operator :
 */
 
@@ -118,7 +118,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &v) {
 }
 
 /*
-  	#] ostream operator :
+  	#] ostream operator : 
   	#[ add_factor :
 */
 
@@ -129,7 +129,7 @@ void factorized_poly::add_factor(const poly &f, int p) {
 }
 
 /*
-  	#] add_factor :
+  	#] add_factor : 
   	#[ choose_ideal :
 */
 
@@ -232,7 +232,7 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 }
 
 /*
-  	#] choose_ideal :
+  	#] choose_ideal : 
   	#[ derivative :
 */
 
@@ -274,7 +274,7 @@ const poly poly_fact::derivative (const poly &a, int x) {
 }
 
 /*
-  	#] derivative :
+  	#] derivative : 
   	#[ squarefree_factors :
 */
 
@@ -387,7 +387,7 @@ const factorized_poly poly_fact::squarefree_factors (const poly &a) {
 }
 
 /*
-  	#] squarefree_factors :
+  	#] squarefree_factors : 
   	#[ Berlekamp_Qmatrix :
 */
 
@@ -513,8 +513,8 @@ const vector<vector<WORD> > poly_fact::Berlekamp_Qmatrix (const poly &_a) {
 }
 
 /*
-  	#] Berlekamp_Qmatrix :
-  	[# dense_polynomial_quotient :
+  	#] Berlekamp_Qmatrix : 
+  	#[ dense_polynomial_quotient :
 */
 
 const vector<WORD> poly_fact::dense_polynomial_quotient (vector<WORD> a, vector<WORD> b, const vector<WORD> &inv, WORD modp) {
@@ -539,7 +539,7 @@ const vector<WORD> poly_fact::dense_polynomial_quotient (vector<WORD> a, vector<
 }
 
 /*
-  	#] dense_polynomial_quotient :
+  	#] dense_polynomial_quotient : 
   	#[ dense_polynomial_gcd :
 */
 
@@ -576,7 +576,7 @@ const vector<WORD> poly_fact::dense_polynomial_gcd (vector<WORD> a, vector<WORD>
 }
 
 /*
-  	#] dense_polynomial_gcd :
+  	#] dense_polynomial_gcd : 
   	#[ Berlekamp_find_factors :
 */
 
@@ -670,7 +670,7 @@ const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vect
 }
 
 /*
-  	#] Berlekamp_find_factors :
+  	#] Berlekamp_find_factors : 
   	#[ combine_factors :
 */
 
@@ -752,7 +752,7 @@ const vector<poly> poly_fact::combine_factors (const poly &A, const vector<poly>
 }
 
 /*
-  	#] combine_factors :
+  	#] combine_factors : 
   	#[ factorize_squarefree :
 */
 
@@ -989,7 +989,9 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 				f[i].setmod(0,1);
 	}
 	else {
-		f = vector<poly>(1, a);
+		if ( f.size() == 1 ) {
+			f = vector<poly>(1, a);
+		}
 	}
 
 	// Final check (not sure if this is necessary, but it doesn't hurt)
@@ -1075,7 +1077,7 @@ const factorized_poly poly_fact::factorize (const poly &a) {
 }
 
 /*
-  	#] factorize :
+  	#] factorize : 
   	#[ DoFactorize :
 */
 
@@ -1151,7 +1153,7 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 }
 
 /*
-  	#] DoFactorize :
+  	#] DoFactorize : 
   	#[ DoFactorizeDollar :
 */
 
@@ -1227,5 +1229,5 @@ WORD *DoFactorizeDollar(PHEAD WORD *argin) {
 }
 
 /*
-  	#] DoFactorizeDollar :
+  	#] DoFactorizeDollar : 
 */
