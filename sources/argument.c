@@ -2413,7 +2413,7 @@ int ArgDotproductMerge(WORD *t1, WORD *t2)
 		else if ( *t1a > *t2a || ( *t1a == *t2a && t1a[1] > t2a[1] ) ) {
 			if ( t2a[2] >= 0 ) t2a += 3;
 			else {
-				t3 = t2e;
+				t3 = t1e;
 				while ( t3 > t1a ) { *t3 = t3[-3]; t3[1] = t3[-2]; t3[2] = t3[-1]; t3 -= 3; }
 				*t1a++ = *t2a++;
 				*t1a++ = *t2a++;
@@ -2447,7 +2447,7 @@ int ArgDotproductMerge(WORD *t1, WORD *t2)
 }
 
 /*
-  	#] ArgDotproductMerge : 
+  	#] ArgDotproductMerge :
   	#[ TakeArgContent :
 */
 /**
@@ -2835,7 +2835,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -2998,7 +2998,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent :
+  	#] TakeArgContent : 
   	#[ MakeInteger :
 */
 /**
