@@ -99,6 +99,15 @@ VOID WriteStats(POSITION *plspace, WORD par)
 #ifdef WITHPTHREADS
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
 #endif
+#ifdef PARALLEL
+		/**
+		 * TODO: For now, we block all statistics report from slaves because
+		 * they are very annoying. It should be changed as workers do in TFORM,
+		 * with implementing the synchronised output mechanism.
+		 * (TU 26 May 2011)
+		 */
+		if ( PF.me != MASTER ) return;
+#endif
 		if ( Expressions == 0 ) return;
 
 		if ( par == 0 ) {
