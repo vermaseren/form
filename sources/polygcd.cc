@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ include :
 */
@@ -53,7 +53,7 @@
 using namespace std;
 
 /*
-  	#] include : 
+  	#] include :
   	#[ ostream operator :
 */
 
@@ -69,7 +69,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 }
 
 /*
-  	#] ostream operator : 
+  	#] ostream operator :
   	#[ integer_gcd :
 */
 
@@ -124,7 +124,7 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
 }
 
 /*
-  	#] integer_gcd : 
+  	#] integer_gcd :
   	#[ integer_content :
 */
 
@@ -187,7 +187,7 @@ const poly poly_gcd::integer_content (const poly &a) {
 }
 
 /*
-  	#] integer_content : 
+  	#] integer_content :
   	#[ content :
 */
 
@@ -251,7 +251,7 @@ const poly poly_gcd::content (const poly &a, int x) {
 }
 
 /*
-  	#] content : 
+  	#] content :
   	#[ gcd_Euclidean :
 */
 
@@ -287,7 +287,7 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 }
 
 /*
-  	#] gcd_Euclidean : 
+  	#] gcd_Euclidean :
   	#[ extended_gcd_Euclidean_lifted :
 */
 
@@ -360,7 +360,7 @@ const vector<poly> poly_gcd::extended_gcd_Euclidean_lifted (const poly &a, const
 }
 
 /*
-  	#] extended_gcd_Euclidean_lifted : 
+  	#] extended_gcd_Euclidean_lifted :
   	#[ solve_Diophantine_univariate :
 */
 
@@ -421,7 +421,7 @@ const vector<poly> poly_gcd::solve_Diophantine_univariate (const vector<poly> &a
 }
 
 /*
-  	#] solve_Diophantine_univariate : 
+  	#] solve_Diophantine_univariate :
   	#[ solve_Diophantine_multivariate :
 */
 
@@ -521,7 +521,7 @@ const vector<poly> poly_gcd::solve_Diophantine_multivariate (const vector<poly> 
 }
 
 /*
-  	#] solve_Diophantine_multivariate : 
+  	#] solve_Diophantine_multivariate :
   	#[ lift_coefficients :
 */
 																																																 
@@ -849,7 +849,7 @@ const vector<poly> poly_gcd::lift_variables (const poly &A, const vector<poly> &
 }
 
 /*
-  	#] lift_variables : 
+  	#] lift_variables :
   	#[ gcd_EZ :
 */
 
@@ -1071,7 +1071,7 @@ const poly poly_gcd::gcd_EZ (const poly &a, const poly &b, const vector<int> &x)
 }
 
 /*
-  	#] gcd_EZ : 
+  	#] gcd_EZ :
   	#[ choose_prime :
 */
 
@@ -1123,7 +1123,7 @@ WORD poly_gcd::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 }
 
 /*
-  	#] choose_prime : 
+  	#] choose_prime :
   	#[ choose_prime_power :
 */
 
@@ -1165,7 +1165,7 @@ WORD poly_gcd::choose_prime_power (const poly &a, const vector<int> &x, WORD p) 
 }
 
 /*
-  	#] choose_prime_power : 
+  	#] choose_prime_power :
   	#[ choose_ideal :
 */
 
@@ -1216,7 +1216,7 @@ const vector<int> poly_gcd::choose_ideal (const vector<poly> &a, const vector<in
 }
 
 /*
-  	#] choose_ideal : 
+  	#] choose_ideal :
   	#[ gcd_heuristic :
 */
 
@@ -1283,7 +1283,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 	xi = xi*2 + 2 + random()%GCD_HEURISTIC_MAX_ADD_RANDOM;
 															 
 	// If degree*digits(xi) is too large, throw exception
-	if (max(a.degree(x[0]),b.degree(x[0])) * xi[xi[1]] >= min(AM.MaxTal, GCD_HEURISTIC_MAX_DIGITS)) {
+	if (max(a.degree(x[0]),b.degree(x[0])) * xi[xi[1]] >= MiN(AM.MaxTal, GCD_HEURISTIC_MAX_DIGITS)) {
 #ifdef DEBUG
 		cout << "*** [" << thetime() << "]  RES : gcd_heuristic("<<a<<","<<b<<","<<x<<") = overflow\n";
 #endif
@@ -1358,7 +1358,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 }
 
 /*
-  	#] gcd_heuristic : 
+  	#] gcd_heuristic :
   	#[ gcd :
 */
 
@@ -1512,7 +1512,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 }
 
 /*
-  	#] gcd : 
+  	#] gcd :
   	#[ DoGCDfunction :
 */
 
