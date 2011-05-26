@@ -2358,7 +2358,7 @@ int ArgSymbolMerge(WORD *t1, WORD *t2)
 		else if ( *t1a > *t2a ) {
 			if ( t2a[1] >= 0 ) t2a += 2;
 			else {
-				t3 = t2e;
+				t3 = t1e;
 				while ( t3 > t1a ) { *t3 = t3[-2]; t3[1] = t3[-1]; t3 -= 2; }
 				*t1a++ = *t2a++;
 				*t1a++ = *t2a++;
@@ -2835,7 +2835,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL : 
+			#] SYMBOL :
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -2998,7 +2998,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent : 
+  	#] TakeArgContent :
   	#[ MakeInteger :
 */
 /**
