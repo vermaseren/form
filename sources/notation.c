@@ -222,7 +222,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm :
+ 		#] NormPolyTerm : 
  		#[ ComparePoly :
 */
 /**
@@ -548,7 +548,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 }
 
 /*
- 		#] LocalConvertToPoly : 
+ 		#] LocalConvertToPoly :
  		#[ ConvertFromPoly :
 
 		Converts a generic term from polynomial notation to the original
@@ -691,7 +691,7 @@ WORD FindSubterm(WORD *subterm)
 
 WORD FindLocalSubterm(PHEAD WORD *subterm, WORD startebuf)
 {
-	WORD old[5], *ss, *term, number, i, *t1, *t2;
+	WORD old[5], *ss, *term, number, i, j, *t1, *t2;
 	CBUF *C = cbuf + AT.ebufnum;
 	term = subterm-1;
 	ss = subterm+subterm[1];
@@ -711,10 +711,13 @@ WORD FindLocalSubterm(PHEAD WORD *subterm, WORD startebuf)
 */
 	for ( i = startebuf+1; i <= C->numrhs; i++ ) {
 		t1 = C->rhs[i]; t2 = term;
-		while ( *t1 == *t2 && *t1 ) { t1++; t2++; }
-		if ( *t1 == 0 && *t2 == 0 ) {
-			number = i-startebuf+numxsymbol;
-			goto wearehappy;
+		if ( *t1 == *t2 ) {
+			j = *t1;
+			while ( *t1 == *t2 && j > 0 ) { t1++; t2++; j--; }
+			if ( j <= 0 ) {
+				number = i-startebuf+numxsymbol;
+				goto wearehappy;
+			}
 		}
 	}
 /*
@@ -730,7 +733,7 @@ wearehappy:
 }
 
 /*
- 		#] FindLocalSubterm : 
+ 		#] FindLocalSubterm :
  		#[ PrintSubtermList :
 
 		Prints all the expressions in the subterm compiler buffer.
@@ -813,7 +816,7 @@ void PrintSubtermList(int from,int to)
 }
 
 /*
- 		#] PrintSubtermList :
+ 		#] PrintSubtermList : 
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
@@ -870,7 +873,7 @@ WORD FindSubexpression(WORD *subexpr)
 }
 
 /*
- 		#] FindSubexpression :
+ 		#] FindSubexpression : 
  		#[ ExtraSymFun :
 */
 

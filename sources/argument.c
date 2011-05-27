@@ -1955,6 +1955,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		The way we took out objects is rather brutish. We have to
 		normalize
 */
+		if ( argout[0] == -SNUMBER && argout[1] == 1 ) { argout[0] = 0; }
 		NewSort();
 		t = argfree+ARGHEAD;
 		while ( *t ) {
@@ -2045,13 +2046,20 @@ getout:
 		        Be careful: there should be more than one argument now.
 */
 	if ( error == 0 && action ) {
-	  if ( a[*a] != 0 ) {
+/*!!!!!!WHAT IF IN FAST NOTATION?????*/
+	  a1 = a; NEXTARG(a1);
+	  if ( *a1 != 0 ) {
 		CBUF *C = cbuf+AC.cbufnum;
 		CBUF *CC = cbuf+AT.ebufnum;
 		WORD *oldworkpointer = AT.WorkPointer;
 		WORD *argcopy2 = TermMalloc("argcopy2"), *a1, *a2;
 		a1 = a; a2 = argcopy2;
 		while ( *a1 ) {
+			if ( *a1 < 0 ) {
+				if ( *a1 > -FUNCTION ) *a2++ = *a1++;
+				*a2++ = *a1++; *a2 = 0;
+				continue;
+			}
 			t = a1 + ARGHEAD;
 			tstop = a1 + *a1;
 			argextra = AT.WorkPointer;
@@ -2447,7 +2455,7 @@ int ArgDotproductMerge(WORD *t1, WORD *t2)
 }
 
 /*
-  	#] ArgDotproductMerge :
+  	#] ArgDotproductMerge : 
   	#[ TakeArgContent :
 */
 /**
