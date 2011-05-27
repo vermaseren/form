@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -245,7 +245,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -601,7 +601,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1730,7 +1730,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -1829,7 +1829,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					/* to is new argument */
 
 					to -= ARGHEAD;
-					if ( EndSort(m,0,0) < 0 ) {
+					if ( EndSort(m,1,0) < 0 ) {
 						AN.ncmod = oldncmod;
 						goto InFunc;
 					}
@@ -1940,7 +1940,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 										Terminate(-1);
 									}
 								}
-								if ( EndSort(to+ARGHEAD,0,0) < 0 ) goto InFunc;
+								if ( EndSort(to+ARGHEAD,1,0) < 0 ) goto InFunc;
 								AR.PolyFun = oldPolyFun;
 								AR.CompareRoutine = &Compare1;
 								m = to+ARGHEAD;
@@ -2387,7 +2387,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2503,7 +2503,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2578,7 +2578,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2757,7 +2757,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3389,7 +3389,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3906,7 +3906,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4137,7 +4137,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4261,7 +4261,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4379,7 +4379,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun :
+ 		#] Create a PolyFun : 
 */
 	}
 	else if ( AR.PolyFunType == 1 ) {
@@ -4529,7 +4529,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4592,7 +4592,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		return(0);
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4612,7 +4612,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4863,6 +4863,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

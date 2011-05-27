@@ -816,7 +816,32 @@ LONG EndSort(WORD *buffer, int par, int par2)
 					UpdateMaxSize();
 				}
 				else {
-					if ( newout->handle >= 0 ) {	/* output too large */
+					if ( par == 2 && newout->handle >= 0 ) {
+						POSITION zeropos;
+						PUTZERO(zeropos);
+#ifdef ALLLOCK
+						LOCK(newout->pthreadslock);
+#endif
+						SeekFile(newout->handle,&zeropos,SEEK_SET);
+						to = (WORD *)Malloc1(BASEPOSITION(newout->filesize)
+								,"$-buffer reading");
+						if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(newout->filesize)) ) !=
+								BASEPOSITION(newout->filesize) ) {
+							LOCK(ErrorMessageLock);
+							MesPrint("Error reading information for $ variable");
+							UNLOCK(ErrorMessageLock);
+							M_free(to,"$-buffer reading");
+							retval = -1;
+						}
+						else {
+							*((WORD **)buffer) = to;
+							retval /= sizeof(WORD);
+						}
+#ifdef ALLLOCK
+						UNLOCK(newout->pthreadslock);
+#endif
+					}
+					else if ( newout->handle >= 0 ) {	/* output too large */
 TooLarge:
 						LOCK(ErrorMessageLock);
 						MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
@@ -824,24 +849,24 @@ TooLarge:
 						UNLOCK(ErrorMessageLock);
 						retval = -1; goto RetRetval;
 					}
-
-					t = newout->PObuffer;
-					j = newout->POfill - t;
-					to = buffer;
-					if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
-						LOCK(ErrorMessageLock);
-						MesWork();
-						MesCall("EndSort");
-						UNLOCK(ErrorMessageLock);
-						Terminate(-1);
+					else {
+						t = newout->PObuffer;
+						j = newout->POfill - t;
+						to = buffer;
+						if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
+							LOCK(ErrorMessageLock);
+							MesWork();
+							MesCall("EndSort");
+							UNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						}
+						if ( j > AM.MaxTer ) goto TooLarge;
+						NCOPY(to,t,j);
 					}
-					if ( j > AM.MaxTer ) goto TooLarge;
-					NCOPY(to,t,j);
-
 				}
 				goto RetRetval;
 			}
-			if ( MergePatches(1) ) {
+			if ( MergePatches(1) ) { /* --> SortFile */
 				LOCK(ErrorMessageLock);
 				MesCall("EndSort");
 				UNLOCK(ErrorMessageLock);
@@ -861,7 +886,12 @@ TooLarge:
 				AC.LogHandle = oldLogHandle;
 			  }
 			}
+#ifdef WITHERRORXXX
 			if ( S != AT.S0 ) {
+/*
+				This is wrong! We have sorted to the sort file.
+				Things are not sitting in the output yet.
+*/
 				if ( newout->handle >= 0 ) goto TooLarge;
 				t = newout->PObuffer;
 				j = newout->POfill - t;
@@ -877,6 +907,7 @@ TooLarge:
 				NCOPY(to,t,j);
 				goto RetRetval;
 			}
+#endif
 		}
 	}
 	if ( S->file.handle >= 0 ) {
@@ -995,7 +1026,15 @@ RetRetval:
 			UpdateMaxSize();
 			DeAllocFileHandle(newout);
 		}
-		else if ( newout && newout->handle >= 0 ) { /*????????????????*/
+		else if ( newout ) {
+		  if ( newout->handle >= 0 ) {
+			LOCK(ErrorMessageLock);
+			MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
+			MesCall("EndSort");
+			UNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		  }
+		  else if ( newout->POfill > newout->PObuffer ) {
 /*
 			Here we have to copy the contents of the 'file' into
 			the buffer. We assume that this buffer lies in the WorkSpace.
@@ -1015,6 +1054,7 @@ RetRetval:
 			UpdateMaxSize();
 			DeAllocFileHandle(newout);
 			newout = 0;
+		  }
 		}
 		else if ( newout ) {
 			DeAllocFileHandle(newout);
@@ -1077,7 +1117,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort : 
+ 		#] EndSort :
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -2732,7 +2772,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 :
+ 		#] Compare1 : 
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
