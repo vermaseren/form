@@ -1353,7 +1353,7 @@ doall:;			if ( AP.eat < 0 ) {
 
 int ExpandTripleDots()
 {
-	UBYTE *s, *s1, *s2, *n1, *n2, *t1, *t2, *startp, operator1, operator2, c, cc;
+	UBYTE *s, *s1, *s2, *n1, *n2, *m1, *t1, *t2, *startp, operator1, operator2, c, cc;
 	UBYTE *nBuffer, *strngs;
 	LONG withquestion, x1, x2, y1, y2, number, inc, newsize, pow, fullsize;
 	int i, error = 0, i1 ,i2, ii, *nums = 0;
@@ -1515,6 +1515,7 @@ int ExpandTripleDots()
 			n1 = s1; n2 = s2; ii = -1; i = 0;
 			s = strngs;			
 			while ( n1 < t1 || n2 < t2 ) {
+				m1 = n1;
 				if ( *n1 == *n2 && FG.cTable[*n1] != 1 ) { *s++ = *n1++; n2++; continue; }
 /*				*s++ = 0; */
 				if ( FG.cTable[*n1] == 1 && FG.cTable[*n2] == 1 ) {}
@@ -1542,8 +1543,13 @@ int ExpandTripleDots()
 				if ( FG.cTable[n1[-1]] != 1 || FG.cTable[n2[-1]] != 1 ) {
 					n1--; n2--; s[-1] = 0; break;
 				}
-				nums[2*i] = x1; nums[2*i+1] = x2;
-				i++; *s++ = 0;
+				if ( x1 == x2 ) {
+					while ( m1 < n1 ) *s++ = *m1++;
+				}
+				else {
+					nums[2*i] = x1; nums[2*i+1] = x2;
+					i++; *s++ = 0;
+				}
 			}
 			if ( n1 < t1 || n2 < t2 ) {
 				MesPrint("&Improper use of ... operator.");
