@@ -226,15 +226,15 @@ conscan:;
 						k = DimensionTerm(BHEAD m);
 						if ( k == 0 ) goto NormZero;
 						if ( k == MAXPOSITIVE ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Dimension_ is undefined in term %t");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							goto NormMin;
 						}
 						if ( k == -MAXPOSITIVE ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Dimension_ out of range in term %t");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							goto NormMin;
 						}
 						if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
@@ -304,9 +304,9 @@ conscan:;
 							t++; m++;
 							if	( *t > 2*MAXPOWER || *t < -2*MAXPOWER
 							||	*m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("Illegal wildcard power combination.");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								goto NormMin;
 							}
 							*m += *t;
@@ -322,9 +322,9 @@ conscan:;
 								}
 							}
 							if	( *m >= 2*MAXPOWER || *m <= -2*MAXPOWER ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("Power overflow during normalization");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								goto NormMin;
 							}
 							if ( !*m ) {
@@ -517,9 +517,9 @@ NextSymbol:;
 #ifdef WITHPTHREADS
 					if ( ptype > 0 && ptype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("!!!This $ variation has not been implemented yet!!!");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
 #ifdef WITHPTHREADS
@@ -1598,7 +1598,7 @@ NoInteg:;
 			default :
 defaultcase:;
 				if ( *t < FUNCTION ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Illegal code in Norm");
 #ifdef DEBUGON
 					{
@@ -1616,7 +1616,7 @@ defaultcase:;
 						FiniLine();
 					}
 #endif
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
 				if ( *t == REPLACEMENT && ReplaceType == -1 ) {
@@ -1797,9 +1797,9 @@ defaultcase:;
 								C->rhs[C->numrhs+1] = mm;
 								C->Pointer = mm;
 								if ( mm > C->Top ) {
-									LOCK(ErrorMessageLock);
+									MLOCK(ErrorMessageLock);
 									MesPrint("Internal error in Normalize with extra compiler buffer");
-									UNLOCK(ErrorMessageLock);
+									MUNLOCK(ErrorMessageLock);
 									Terminate(-1);
 								}
 								t += 2 + t[2];
@@ -2841,9 +2841,9 @@ NextI:;
 							t++;
 							*t += *r;
 							if ( *t > MAXPOWER || *t < -MAXPOWER ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("Exponent of dotproduct out of range: %d",*t);
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								goto NormMin;
 							}
 							ndot -= 3;
@@ -2925,9 +2925,9 @@ NextI:;
 				}
 				if ( ( t[1] < (2*MAXPOWER) && t[1] >= MAXPOWER )
 				|| ( t[1] > -(2*MAXPOWER) && t[1] <= -MAXPOWER ) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Exponent out of range: %d",t[1]);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
 				if ( t[1] ) {
@@ -2949,9 +2949,9 @@ NextI:;
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
 	i = ABS(ncoef);
 	if ( ( m + i ) > stop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Term too complex during normalization");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto NormMin;
 	}
 	if ( ReplaceType >= 0 ) {
@@ -3145,10 +3145,10 @@ NextI:;
 								r[1] = 0;
 							}
 							else if ( (*term+newspace-oldspace)*sizeof(WORD) > AM.MaxTer ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
 								MesCall("Norm");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								return(-1);
 							}
 							else {
@@ -3235,21 +3235,21 @@ RegEnd:
 	return(regval);
 
 NormInf:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Division by zero during normalization");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	goto NormMin;
 
 NormZZ:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("0^0 during normalization of term");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	goto NormMin;
 
 NormPRF:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("0/0 in polyratfun during normalization of term");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	goto NormMin;
 
 NormZero:
@@ -3261,17 +3261,17 @@ NormMin:
 	return(-1);
 
 FromNorm:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("Norm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 
 #ifdef OLDNORMREPLACE
 OverWork:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
 	MesCall("Norm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 #endif
 
@@ -3295,9 +3295,9 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 			m++;
 			if	( pow > 2*MAXPOWER || pow < -2*MAXPOWER
 			||	*m > 2*MAXPOWER || *m < -2*MAXPOWER ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wildcard power combination.");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			*m += pow;
@@ -3315,9 +3315,9 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 			}
 
 			if	( *m >= 2*MAXPOWER || *m <= -2*MAXPOWER ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Power overflow during normalization");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			if ( !*m ) {
@@ -3694,9 +3694,9 @@ WORD *EvaluateGcd(PHEAD WORD *subterm)
 		if ( *t == -SNUMBER ) {
 			if ( t[1] == 0 ) {
 gcdzero:;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Trying to take the GCD involving a zero term.");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(0);
 			}
 			gcdnum = ABS(t[1]);
@@ -3808,9 +3808,9 @@ nextterminarg:;
 		}
 		else if ( *t < 0 ) {
 gcdillegal:;
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal object in gcd_ function. Object not a number or a symbol.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto FromGCD;
 		}
 		else if ( ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
@@ -3966,9 +3966,9 @@ gcdisone:;
 	AT.WorkPointer = oldworkpointer+5;
 	return(oldworkpointer);
 FromGCD:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("EvaluateGcd");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(0);
 }
 

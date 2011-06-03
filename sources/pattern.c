@@ -125,9 +125,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else {
 			AN.RepPoint--;
 			if ( AN.RepPoint < AT.RepCount ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Internal problems with REPEAT count");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -227,9 +227,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 /*
 				If race condition we just get more error messages
 */
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("&LHS must be one term");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				AP.lhdollarerror = 1;
 			}
 			AT.WorkPointer = OldWork;
@@ -238,9 +238,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		m = ww; ww = m + *m;
 		if ( m[*m-1] < 0 ) { msign = 1; m[*m-1] = -m[*m-1]; }
 		if ( *ww || m[*m-1] != 3 || m[*m-2] != 1 || m[*m-3] != 1 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Dollar variable develops into an illegal pattern in id-statement");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		*m -= m[*m-1];
@@ -279,9 +279,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	/* rep = */ AN.RepFunList = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 	if ( AT.WorkPointer >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AN.DisOrderFlag = ll[2] & SUBDISORDER;
@@ -317,9 +317,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 							/* rep = */ AN.RepFunList = ww;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesWork();
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								return(-1);
 							}
 /*
@@ -350,9 +350,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 							/* rep = */ AN.RepFunList = ww;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesWork();
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								return(-1);
 							}
 /*
@@ -383,9 +383,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 							/* rep = */ AN.RepFunList = ww;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer/2);
 							if ( AT.WorkPointer >= AT.WorkTop ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesWork();
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								return(-1);
 							}
 /*
@@ -533,9 +533,9 @@ VOID Substitute(PHEAD WORD *term, WORD *pattern, WORD power)
 	WORD PutExpr = 0, sign = 0;
 	TemTerm = AT.WorkPointer;
 	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer*2) ) > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	m = pattern;

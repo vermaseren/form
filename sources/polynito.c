@@ -151,9 +151,9 @@ int SymbolNormalize(WORD *term, WORD *minterm, WORD par)
 				if ( bb[0] == t[i] ) {	/* add powers */
 					bb[1] += t[i+1];
 					if ( bb[1] > MAXPOWER || bb[1] < -MAXPOWER ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Power in SymbolNormalize out of range");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						return(-1);
 					}
 					if ( bb[1] == 0 ) {
@@ -181,9 +181,9 @@ Nexti:;
 		}
 	  }
 	  else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal term in SymbolNormalize");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	  }
 	  t += t[1];
@@ -211,9 +211,9 @@ Nexti:;
 		b = buffer; bb = b + b[1]; b += 3;
 		while ( b < bb ) {
 			if ( *b < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Negative power in SymbolNormalize");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			b += 2;
@@ -431,9 +431,9 @@ WORD *PolyAdd(PHEAD WORD *Poly1, WORD *Poly2)
 			if ( AddRat(BHEAD (UWORD *)p1,n1,
 			                  (UWORD *)p2,n2,
 			                  (UWORD *)b,&n3) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesCall("PolyAdd");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			if ( n3 == 0 ) { /* terms cancelled */
@@ -657,9 +657,9 @@ WORD *PolyDiv(PHEAD WORD *Poly1, WORD *Poly2)
 		}
 		if ( t < tt ) {
 NegPow:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Incorrect power in PolyDiv");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		bb[2] = b - bb - 1;
@@ -896,9 +896,9 @@ WORD *PolyMul0(PHEAD WORD *Poly, WORD *term)
 			if ( *p == *t ) {
 				sum = p[1] + t[1];
 				if ( sum > MAXPOWER ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Power in PolyMul0 out of range");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( sum != 0 ) {
@@ -1038,9 +1038,9 @@ WORD *PolyDiv0(PHEAD WORD *Poly1, WORD *Poly2)
 		}
 		if ( t < tt ) {
 NegPow:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Incorrect power in PolyDiv0");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		bb[2] = b - bb - 1;
@@ -1115,9 +1115,9 @@ WORD *PolyPow(PHEAD WORD *Poly, WORD pow)
 	LONG size;
 	int x;
 	if ( pow < 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Negative power in PolyPow. This is not allowed.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	oldworkpointer[0] = 4;
@@ -1290,9 +1290,9 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 			buf1[4] = 0;
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal object (not a symbol or a number) in rational polyfun");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		Poly2 = Poly1 + 2;
@@ -1328,9 +1328,9 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		}
 		else if ( *Poly2 == -SNUMBER ) {
 			if ( Poly2[1] == 0 ) {	/* Division by zero! */
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Division by zero in rational polyfun");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			buf2[0] = 4;
@@ -1341,9 +1341,9 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 			buf2[4] = 0;
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal object (not a symbol or a number) in rational polyfun");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		p1 = Poly2 + 2;
@@ -1357,9 +1357,9 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		Poly2 += ARGHEAD;
 	}
 	if ( p1 != tstop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Wrong number of arguments in rational polyfun");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	oldvalue = *tstop; *tstop = 0; /* For the general case */
@@ -1516,9 +1516,9 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		t = ow;
 		size = FUNHEAD + 2*ARGHEAD + (AT.WorkPointer-p1)-2;
 		if ( size*sizeof(WORD) >= AM.MaxTer ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("PolyFun becomes too complex in PolyRatFunNorm. If possible, increase MaxTermSize.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		t[1] = size;
@@ -1540,9 +1540,9 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		t = ow;
 		size = FUNHEAD + 2*ARGHEAD + (AT.WorkPointer-p1)-2;
 		if ( size*sizeof(WORD) >= AM.MaxTer ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("PolyFun becomes too complex in PolyRatFunNorm. If possible, increase MaxTermSize.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		t[1] = size;
@@ -1645,9 +1645,9 @@ WORD *PolyRatFunAdd_OLD(PHEAD WORD *t1, WORD *t2)
 				buf[4] = 0;
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal object (not a symbol or a number) in rational polyfun");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -1691,9 +1691,9 @@ skip1:;
 				buf[4] = 0;
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal object (not a symbol or a number) in rational polyfun");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -1739,9 +1739,9 @@ skip2:;
 		den2 = num2; while ( *den2 ) den2 += *den2; den2++;
 	}
 	else {	/* This case we cannot handle */
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Currently we cannot handle a PolyFun with more than two arguments.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
 	}
@@ -1849,9 +1849,9 @@ skip2:;
 */
 /*
 	if ( PolyTestAdd(BHEAD t1,t2,oldworkpointer) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Error in PolyRatFunAdd.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
 	}
@@ -2356,9 +2356,9 @@ nextsymbol:;
 	}
 	return(output);
 calledfrom:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyRemoveContent");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(GCDbuffer,"PolyRemoveContent"); NumberFree(GCDbuffer2,"PolyRemoveContent");
 	NumberFree(LCMbuffer,"PolyRemoveContent"); NumberFree(LCMb,"PolyRemoveContent"); NumberFree(LCMc,"PolyRemoveContent");
 	Terminate(-1);
@@ -2586,9 +2586,9 @@ finishup:
 */
 calledfrom:
 	AT.WorkPointer = oldworkpointer;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyGCD_OLD");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(0);
 #else
 /*
@@ -2918,9 +2918,9 @@ WORD *GetNegPow(PHEAD WORD *Poly)
 				}
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal object in polynomial in GetNegPow");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -3020,9 +3020,9 @@ WORD *PolyGCD1(PHEAD WORD *Poly1, WORD *Poly2)
 			This is serious trouble. AllocSetups doesn't let illegal values
 			pass. Hence the program must have overwritten itself.
 */
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal value for PolyGCDchoice. Legal values are 0,1,2,3");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 			return(0);
 	}
@@ -3357,9 +3357,9 @@ normalreturn:
 	TermFree(POscratg,"PolyGCD1a");
 	return(oldworkpointer);
 calledfrom:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyGCD1a");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	TermFree(POscrath,"PolyGCD1a");
 	TermFree(POscratg,"PolyGCD1a");
 	Terminate(-1);
@@ -3620,9 +3620,9 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			        (UWORD *)p1,&size1,
 			        (UWORD *)AT.WorkPointer,&size2);
 			if ( size2 != 0 ) { /* The remainder should have been zero! */
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Major irregularity in PolyGCD1c");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto calledfrom;
 			}
 			size2 = ABS(size1);
@@ -3684,9 +3684,9 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			        (UWORD *)POscrath,&sizeh,
 			        (UWORD *)POscrat2,&sizegg);
 			if ( sizegg != 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Irregularity in PolyGCD1c");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto calledfrom;
 			}
 		}
@@ -3716,9 +3716,9 @@ AN.currentTerm = old;
 	NumberFree(POscratg,"PolyGCD1c"); NumberFree(POscrath,"PolyGCD1c");
 	return(oldworkpointer);
 calledfrom:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyGCD1c");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(POscrat1,"PolyGCD1c"); NumberFree(POscrat2,"PolyGCD1c");
 	NumberFree(POscratg,"PolyGCD1c"); NumberFree(POscrath,"PolyGCD1c");
 	Terminate(-1);
@@ -3748,9 +3748,9 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 	LONG size;
 
 	if ( *Poly2 == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Division by zero in univariate polynomial division PolyDiv1");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( *Poly1 == 0 ) {
@@ -3760,16 +3760,16 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 	}
 	if ( ABS(Poly1[*Poly1-1]) == *Poly1-1 ) {	/* Only a number */
 		if ( Poly1[*Poly1] != 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal normalization for polynomial in PolyDiv1");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		if ( ABS(Poly2[*Poly2-1]) == *Poly2-1 ) {	/* Only a number */
 			if ( Poly2[*Poly2] != 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal normalization for polynomial in PolyDiv1");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			if ( *Poly2 == 4 && Poly2[1] == 1 && Poly2[2] == 1 ) {
@@ -3847,9 +3847,9 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 	}
 	if ( ABS(Poly2[*Poly2-1]) == *Poly2-1 ) {
 		if ( Poly2[*Poly2] != 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal normalization for polynomial in PolyDiv1");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		if ( *Poly2 == 4 && Poly2[1] == 1 && Poly2[2] == 1 ) {
@@ -3904,9 +3904,9 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 		return(p2);
 	}
 	if ( Poly1[3] != Poly2[3] ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("PolyDiv1: division of univariate polynomials with different variables!");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( Poly2[4] > Poly1[4] ) {  /* quotient = 0, remainder = Poly1 */
@@ -4186,9 +4186,9 @@ normalreturn:;
 	NumberFree(POscrat1,"PolyPseudoRem1"); NumberFree(POscrat2,"PolyPseudoRem1");
 	return(oldworkpointer);
 calledfrom:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyPseudoRem1");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(POscrat1,"PolyPseudoRem1"); NumberFree(POscrat2,"PolyPseudoRem1");
 	Terminate(-1);
 	return(0);
@@ -4630,9 +4630,9 @@ WORD *PolyChineseRemainder(PHEAD WORD *Poly1, WORD *Poly2, WORD *mod1, WORD nmod
 	NumberFree(POscrat4,"PolyChineseRemainder"); NumberFree(POscrath,"PolyChineseRemainder");
 	return(oldworkpointer);
 calledfrom:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyChineseRemainder");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(POscrat1,"PolyChineseRemainder"); NumberFree(POscrat2,"PolyChineseRemainder"); NumberFree(POscrat3,"PolyChineseRemainder");
 	NumberFree(POscrat4,"PolyChineseRemainder"); NumberFree(POscrath,"PolyChineseRemainder");
 	Terminate(-1);
@@ -4834,11 +4834,11 @@ WORD NextPrime(PHEAD WORD num)
 nexti:;
 			}
 			if ( i < MAXPOWER ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("There are not enough short prime numbers for this calculation");
 				MesPrint("Try to use a computer with a %d-bits architecture",
 					(int)(BITSINWORD*4));
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -5610,9 +5610,9 @@ terminates:;
 	NumberFree(DLscrat9,"PolySubs"); NumberFree(DLscratA,"PolySubs"); NumberFree(DLscratB,"PolySubs");
 	return(oldworkpointer);
 calledfrom:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolySubs");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(DLscrat9,"PolySubs"); NumberFree(DLscratA,"PolySubs"); NumberFree(DLscratB,"PolySubs");
 	Terminate(-1);
 	return(0);
@@ -5831,9 +5831,9 @@ WORD *PolyGetNewtonCoef(PHEAD WORD **Polynomials, WORD num)
 		        (UWORD *)t,&size1,
 		        (UWORD *)(t+ncoef),&size2);
 		if ( size2 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Problems with division by %d! in PolyGetNewtonCoef",num);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		if ( size1 < 0 ) { ncoef = -size1; size1 = 2*size1-1; }
@@ -5848,9 +5848,9 @@ WORD *PolyGetNewtonCoef(PHEAD WORD **Polynomials, WORD num)
 	AT.WorkPointer = t;
 	return(oldworkpointer);
 calledfrom:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolyGetNewtonCoef");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(0);
 }
@@ -6455,9 +6455,9 @@ int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3)
 	AT.WorkPointer = oldworkpointer;
 	if ( *d2 == 0 ) return(0);
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Error in PolyTestAdd.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(-1);
 	}
@@ -6568,16 +6568,16 @@ int TestSymbols(WORD *fun)
 		num++;
 	}
 	if ( num != 2 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Number of arguments in polyratfun is %d which is not equal to two",num);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	return(0);
 IllObject:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Illegal object (not a symbol or a number) in polyratfun");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
 }

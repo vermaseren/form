@@ -386,9 +386,9 @@ NextInDot:
 			#] DOTPRODUCTS : 
 */
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error in pattern");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 EndLoop:;
@@ -929,9 +929,9 @@ OnceL8a:						mt -= 2*MAXPOWER;
 			#] DOTPRODUCTS : 
 */
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error in pattern");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 EndLoop:;
@@ -1049,9 +1049,9 @@ WORD FindMulti(PHEAD WORD *term, WORD *pattern)
 			#] DOTPRODUCTS : 
 */
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error in pattern");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	} while ( m < mstop ); }
@@ -1399,9 +1399,9 @@ OneWild:
 			#] DELTAS : 
 */
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Pattern not yet implemented");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	} while ( m < mstop );

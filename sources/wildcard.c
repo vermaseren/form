@@ -804,10 +804,10 @@ DEBUG(MesPrint("Thread %w(a): s[3] = %d, w=(%d,%d,%d,%d)",s[3],w[0],w[1],w[2],w[
 											*m++ = *w++;
 										}
 										else {
-											LOCK(ErrorMessageLock);
+											MLOCK(ErrorMessageLock);
 DEBUG(MesPrint("Thread %w(aa): *w = %d",*w);)
 											MesPrint("Illegal substitution of argument field in tensor");
-											UNLOCK(ErrorMessageLock);
+											MUNLOCK(ErrorMessageLock);
 											SETERROR(-1)
 										}
 									}
@@ -933,9 +933,9 @@ sr7:;
 							break;
 						}
 						else if ( *s <= SYMTOSUB ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Wildcard power of expression should be a number");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 					}
@@ -960,9 +960,9 @@ sr7:;
 					*m++ = *t;
 					*m++ = t[1];
 					if ( WildFill(BHEAD m,t+2,sub) < 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesCall("WildFill");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						SETERROR(-1)
 					}
 					m += *m;
@@ -1002,9 +1002,9 @@ ss8:				v = m;
 					>= TENSORFUNCTION ) {
 						if ( *m < FUNCTION || functions[*m-FUNCTION].spec
 						< TENSORFUNCTION ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Illegal wildcarding of regular function to tensorfunction");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 						m++; t++;
@@ -1225,9 +1225,9 @@ ss10:							*m++ = *t++;
 							adirt = 0;
 							while ( t < zz ) {	/* do a term */
 								if ( ( len = WildFill(BHEAD m,t,sub) ) < 0 ) {
-									LOCK(ErrorMessageLock);
+									MLOCK(ErrorMessageLock);
 									MesCall("WildFill");
-									UNLOCK(ErrorMessageLock);
+									MUNLOCK(ErrorMessageLock);
 									SETERROR(-1)
 								}
 								if ( AN.WildDirt ) {
@@ -1355,9 +1355,9 @@ WORD ResolveSet(PHEAD WORD *from, WORD *to, WORD *subs)
 				if ( *s == SYMTONUM && s[2] == w[1] ) { num = s[3]; goto GotOne; }
 				s += s[1];
 			}
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint(" Unresolved setelement during substitution");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		else {	/* Dollar ! */
@@ -1410,10 +1410,10 @@ WORD ResolveSet(PHEAD WORD *from, WORD *to, WORD *subs)
 #ifdef WITHPTHREADS
 			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Unusable type of variable $%s in set substitution",
 				AC.dollarnames->namebuffer+d->name);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 GotOne:;
@@ -1426,10 +1426,10 @@ GotOne:;
 		else i3 = ( ii >= 0 ) ? ii: -ii - 1;
 
 		if ( num > ( Sets[i3].last - Sets[i3].first ) || num <= 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Array bound check during set substitution");
 			MesPrint("    value is %d",num);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		m[*w] = (SetElements+Sets[i3].first)[num-1];
@@ -1460,9 +1460,9 @@ GotOne:;
 				if ( *m == -INDEX || *m == -VECTOR ) {}
 				else if ( *m == -ARGWILD ) { *s++ = FUNNYWILD; }
 				else {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Illegal argument in tensor after set substitution");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					SETERROR(-1)
 				}
 				*s++ = m[1];
@@ -1673,9 +1673,9 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 				C->rhs[C->numrhs+1] = m;
 				C->Pointer = m;
 				if ( m > C->Top ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Internal problems with extra compiler buffer");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				goto FlipOn;
@@ -1697,9 +1697,9 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 			m++; w += w[1];
 		} while ( --n > 0 );
 	}
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Bug in AddWild.");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 FlipOn:
 	if ( i >= 0 ) {
@@ -1713,9 +1713,9 @@ FlipOn:
 			}
 			m++; w += w[1];
 		}
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint(" Bug in AddWild with passing set[i]");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 /*
 		For the moment we want to crash here. That is easier with debugging.
 */
@@ -2087,9 +2087,9 @@ WORD CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 	AN.oldtype = -1;
 	AN.oldvalue = -1;
 	AN.WildReserve = 0;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Inconsistency in Wildcard prototype.");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 NoMatch:
 	AN.WildReserve = 0;

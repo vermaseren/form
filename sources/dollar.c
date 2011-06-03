@@ -257,9 +257,9 @@ int AssignDollar(PHEAD WORD *term, WORD level)
 			if ( numdollar == ModOptdollars[nummodopt].number ) break;
 		}
 		if ( nummodopt >= NumModOptdollars ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal attempt to change $-variable in multi-threaded module %l",AC.CModule);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		dtype = ModOptdollars[nummodopt].type;
@@ -679,9 +679,9 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 	AO.InFbrack = oldinfbrack;
 	AO.CurBufWrt = oldcurbufwrt;
 	if ( error ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		M_free(AO.DollarOutBuffer,"DollarOutBuffer");
 		AO.DollarOutBuffer = 0;
 		AO.DollarOutSizeBuffer = 0;
@@ -745,9 +745,9 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 	AO.InFbrack = oldinfbrack;
 	AO.CurBufWrt = oldcurbufwrt;
 	if ( error ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		M_free(AO.DollarOutBuffer,"DollarOutBuffer");
 		AO.DollarOutBuffer = 0;
 		AO.DollarOutSizeBuffer = 0;
@@ -871,9 +871,9 @@ void WildDollars(PHEAD0)
 		t = m - 4;
 		while ( *t == LOADDOLLAR || *t == FROMSET || *t == SETTONUM ) t -= 4;
 		if ( t < AN.WildValue ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("&Serious bug in wildcard prototype. Found in WildDollars");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		numdollar = m[2];
@@ -892,10 +892,10 @@ void WildDollars(PHEAD0)
 						d = ModOptdollars[nummodopt].dstruct+AT.identity;
 					}
 					else {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("&Illegal attempt to use $-variable %s in module %l",
 							DOLLARNAME(Dollars,numdollar),AC.CModule);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
 					}
 				}
@@ -1520,9 +1520,9 @@ int DoInside(UBYTE *s)
 	int error = 0;
 	w = AT.WorkPointer;
 	if ( AC.insidelevel >= MAXNEST ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Nesting of inside statements more than %d levels",(WORD)MAXNEST);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AC.insidesumcheck[AC.insidelevel] = AC.IfLevel + AC.RepLevel
@@ -1538,9 +1538,9 @@ int DoInside(UBYTE *s)
 		if ( *s == '$' ) {
 			s++; t = s;
 			if ( FG.cTable[*s] != 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal name for $ variable: %s",s-1);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto skipdol;
 			}
 			while ( FG.cTable[*s] == 0 || FG.cTable[*s] == 1 ) s++;
@@ -1552,9 +1552,9 @@ int DoInside(UBYTE *s)
 			*w++ = number;
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("&Illegal object in Inside statement");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 skipdol:	error = 1;
 			while ( *s && *s != ',' && s[1] != '$' ) s++;
 			if ( *s == 0 ) break;
@@ -1764,9 +1764,9 @@ UBYTE *PreIfDollarEval(UBYTE *s, int *value)
 		else if ( *t == '{' ) { SKIPBRA2(t) }
 		else if ( *t == '(' ) { SKIPBRA3(t) }
 		else if ( *t == ']' || *t == '}' || *t == ')' ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("@Improper bracketting in #if");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto onerror;
 		}
 		t++;
@@ -1779,25 +1779,25 @@ UBYTE *PreIfDollarEval(UBYTE *s, int *value)
 		else if ( *t == '{' ) { SKIPBRA2(t) }
 		else if ( *t == '(' ) { SKIPBRA3(t) }
 		else if ( *t == ']' || *t == '}' ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("@Improper brackets in #if");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto onerror;
 		}
 		t++;
 	}
 	if ( *t == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Missing ) to match $( in #if");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto onerror;
 	}
 	s4 = t; c2 = *s4; *s4 = 0;
 	if ( s2+2 < s3 || s2 == s3 ) {
 IllOp:;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Illegal operator in $( option of #if");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto onerror;
 	}
 	if ( s2+1 == s3 ) {
@@ -1824,9 +1824,9 @@ IllOp:;
 		if ( StrICmp(s3,(UBYTE *)"set_") == 0 ) {
 			if ( oprtr != EQUAL && oprtr != NOTEQUAL ) {
 ImpOp:;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("@Improper operator for special keyword in $( ) option");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto onerror;
 			}
 			type = 1;
@@ -1849,9 +1849,9 @@ ImpOp:;
 		while ( *s5 != ')' ) {
 			if ( *s5 == ' ' || *s5 == '\t' || *s5 == '\n' || *s5 == '\r' ) s5--;
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("@Improper use of special keyword in $( ) option");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto onerror;
 			}
 		}
@@ -1873,9 +1873,9 @@ ImpOp:;
 			s3++;
 			if ( numset < 0 ) {
 noset:;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("@Argument of set_ is not a valid set");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto onerror;
 			}
 		}
@@ -1949,9 +1949,9 @@ WORD *TranslateExpression(UBYTE *s)
 	*w++ = 1; *w++ = 1; *w++ = 3; *w++ = 0;
 	AT.WorkPointer = w;
 	if ( ( retcode = CompileAlgebra(s,RHSIDE,AC.ProtoType) ) < 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Error translating first expression in $( ) option");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(0);
 	}
 	else { AC.ProtoType[2] = retcode; }
@@ -2192,9 +2192,9 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 	r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 	nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
 	if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat1,&ni1) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Called from MultipleOf in $( )");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		TermFree(IfScrat1,"IsMultipleOf"); TermFree(IfScrat2,"IsMultipleOf");
 		Terminate(-1);
 	}
@@ -2203,9 +2203,9 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 		r1 = t1 - ABS(t1[-1]); r2 = t2 - ABS(t2[-1]);
 		nc1 = REDLENG(t1[-1]); nc2 = REDLENG(t2[-1]);
 		if ( DivRat(BHEAD (UWORD *)r1,nc1,(UWORD *)r2,nc2,IfScrat2,&ni2) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("@Called from MultipleOf in $( )");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			TermFree(IfScrat1,"IsMultipleOf"); TermFree(IfScrat2,"IsMultipleOf");
 			Terminate(-1);
 		}
@@ -2290,9 +2290,9 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 			case LESSEQUAL: return(1);
 		}
 	}
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("@Internal problems with operator in $( )");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(0);
 }
@@ -2358,9 +2358,9 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 		}
 		if ( AddRat(BHEAD (UWORD *)(d->where+1),i,
 			(UWORD *)lnum,nnum,dscrat,&ndscrat) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesCall("DollarRaiseLow");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 		}
 		ndscrat = INCLENG(ndscrat);
@@ -2726,27 +2726,27 @@ endofchain:
 			else if ( type == DOLNUMBER ) {
 				td = d->where;
 				if ( ( td[0] != 4 ) || ( (td[1]&SPECMASK) != 0 ) || ( td[2] != 1 ) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					if ( par == -1 ) {
 						MesPrint("$-variable is not a short number in print statement");
 					}
 					else {
 						MesPrint("$-variable is not a short number in do loop");
 					}
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				return( td[3] > 0 ? td[1]: -td[1] );
 			}
 		    else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				if ( par == -1 ) {
 					MesPrint("$-variable is not a number in print statement");
 				}
 				else {
 					MesPrint("$-variable is not a number in do loop");
 				}
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			return(0);
@@ -2761,41 +2761,41 @@ endofchain:
 		else              { num = EvalDoLoopArg(BHEAD arg+2,par); }
 	}
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		if ( par == -1 ) {
 			MesPrint("Invalid $-variable in print statement");
 		}
 		else {
 			MesPrint("Invalid $-variable in do loop");
 		}
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
 	}
 	if ( num == 0 ) return(d->nfactors);
 	if ( num > d->nfactors || num < 1 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		if ( par == -1 ) {
 			MesPrint("Not a valid factor number for $-variable in print statement");
 		}
 		else {
 			MesPrint("Not a valid factor number for $-variable in do loop");
 		}
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
 	}
 	if ( d->factors[num].type == DOLNUMBER )
 		return(d->factors[num].value);
 	else {	/* If correct, type can only be DOLNUMBER or DOLTERMS */
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		if ( par == -1 ) {
 			MesPrint("$-variable in print statement is not a number");
 		}
 		else {
 			MesPrint("$-variable in do loop is not a number");
 		}
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(0);
 	}
@@ -2936,9 +2936,9 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 		value = ( d->where[3] < 0 ) ? -d->where[1]: d->where[1];
 	}
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Wrong type of object in do loop parameter");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(level);
 	}
@@ -3055,16 +3055,16 @@ int DollarFactorize(PHEAD WORD numdollar)
 			if ( AN.ncmod != 0 ) {
 				if ( AN.ncmod != 1 || ( (WORD)AN.cmod[0] < 0 ) ) {
 					AR.SortType = oldsorttype;
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Factorization modulus a number, greater than a WORD not implemented.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( Modulus(term) ) {
 					AR.SortType = oldsorttype;
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesCall("DollarFactorize");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( !*term) { term = t; continue; }
@@ -3091,9 +3091,9 @@ int DollarFactorize(PHEAD WORD numdollar)
 	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
 		M_free(buf1,"DollarFactorize-1");
 		AR.SortType = oldsorttype;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("DollarFactorize");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 		return(1);
 	}
@@ -3808,17 +3808,17 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 	if ( t+3 < tstop && t[3] == DOLLAREXPR2 ) {
 		d = Dollars + t[2];
 		if ( d->factors == 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Attempt to use a factor of an unfactored $-variable");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		num = GetDolNum(BHEAD t+t[1],tstop);
 		if ( num == 0 ) return(d->nfactors);
 		if ( num > d->nfactors ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Attempt to use an unexisting factor %d of a $-variable",num);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		w = d->factors[num-1].where;
@@ -3826,9 +3826,9 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 		if ( w[0] == 4 && w[4] == 0 && w[3] == 3 && w[2] == 1 && w[1] > 0
 		&& w[1] < MAXPOSITIVE ) return(w[1]);
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Illegal type of factor number of a $-variable");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -3842,14 +3842,14 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 			if ( d->where[0] == 4 && d->where[4] == 0 && d->where[3] == 3
 				&& d->where[2] == 1 && d->where[1] > 0
 				&& d->where[1] < MAXPOSITIVE ) return(d->where[1]);
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Attempt to use an unexisting factor of a $-variable");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal type of factor number of a $-variable");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	return(0);

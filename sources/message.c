@@ -155,11 +155,16 @@ va_dcl
 #endif
 #ifdef PARALLEL
 	if ( PF.me != MASTER && AS.printflag == 0 ) return(0);
+	if ( PF.me != MASTER )
 #endif
 	FLUSHCONSOLE;
 	/*[19apr2004 mt]:*/
 	/*MesPrint never prints a message to an external channel!*/
+#ifdef PARALLEL
+	WriteFile = &PF_WriteFileToFile;
+#else
 	WriteFile = &WriteFileToFile;
+#endif
 	/*:[19apr2004 mt]*/
 	AO.OutputLine = extrabuffer;
 	t = Out;

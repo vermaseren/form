@@ -97,9 +97,9 @@ WORD MatchE(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 				} while ( --i > 0 );
 			}
 			if ( t >= AT.WorkTop ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesWork();
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			AT.WorkPointer = t;
@@ -354,9 +354,9 @@ NextWV:
 		} while ( --i > 0 );
 	}
 	if ( t >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AT.WorkPointer = t;
@@ -563,9 +563,9 @@ int MatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		}
 		*t++ = C->numrhs;
 		if ( t >= AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		AT.WorkPointer = t;
@@ -624,9 +624,9 @@ int MatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		*t++ = C->numrhs;
 	}
 	if ( t >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AT.WorkPointer = t;
@@ -1060,9 +1060,9 @@ int FunMatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		}
 		*t++ = C->numrhs;
 		if ( t >= AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		AT.WorkPointer = t;
@@ -1125,9 +1125,9 @@ int FunMatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		*t++ = C->numrhs;
 	}
 	if ( t >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AT.WorkPointer = t;
@@ -1519,9 +1519,9 @@ int FunMatchSy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 		}
 		*t++ = C->numrhs;
 		if ( t >= AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		AT.WorkPointer = t;
@@ -1598,9 +1598,9 @@ quicky:
 		*t++ = C->numrhs;
 	}
 	if ( t >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AT.WorkPointer = t;
@@ -1638,9 +1638,9 @@ quicky:
 			|| ( (functions[pnum-FUNCTION].symmetric & ~REVERSEORDER) == ANTISYMMETRIC ) ) {
 				AT.WorkPointer = oldworkpointer;
 				AT.pWorkPointer = oww;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Sorry: no argument field wildcards yet in (anti)symmetric functions");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 		}
 	}
@@ -1901,9 +1901,9 @@ nextiraise:;
 			if ( funnycount ) {
 				AT.WorkPointer = oldworkpointer;
 				AT.pWorkPointer = oww;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Sorry: no argument field wildcards yet in (anti)symmetric functions");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 /*
 				Bugfix 31-oct-2001, reported by Kasper Peeters
 				We returned here with value -1 but that is not caught.
@@ -1981,9 +1981,9 @@ nextiraise:;
 			i--;
 			if ( i < 0 ) goto NoSuccess;
 /*
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Cycle i = %d",i);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 */
 			for ( j = i+1, t = a[i]; j < tcount; j++ ) a[j-1] = a[j];
 			a[tcount-1] = t; cycles[i]--;

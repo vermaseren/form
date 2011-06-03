@@ -762,9 +762,9 @@ ReStart:
 							We will generate more terms than we can count
 */
 TooMuch:;
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Attempt to generate more terms than FORM can count");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						GetBinom(AN.BinoScrat,&AN.nbino,(WORD)mm,t[3]);
@@ -873,9 +873,9 @@ TooMuch:;
 							*m++ = 4; *m++ = 1; *m++ = 1; *m++ = 3;
 						}
 						else if ( m[*m] != 0 ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Bracket specification in expression should be one single term");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						else {
@@ -891,9 +891,9 @@ TooMuch:;
 						m = AT.WorkPointer;
 						AT.WorkPointer = m + *m;
 						if ( Normalize(BHEAD m) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Error while picking up contents of bracket");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						if ( !*m ) {
@@ -959,9 +959,9 @@ TooMuch:;
 				|| t[FUNHEAD+1] != 0 ) && t[FUNHEAD] != ARGHEAD ) {
 				  if ( r[1] == 0 ) {
 					if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] == 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Encountered 0^0. Fatal error.");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						SETERROR(-1);
 					}
 					*t = DUMMYFUN;
@@ -1447,7 +1447,7 @@ DoSpec:
 						if ( j > 0 ) {
 							r = m + j;
 							if ( r > AT.WorkTop ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesWork();
 								goto EndTest2;
 							}
@@ -1592,7 +1592,7 @@ DoSpec:
 							t++;
 							if ( *t < mm->mini || *t > mm->maxi ) {
 								if ( T->bounds ) {
-									LOCK(ErrorMessageLock);
+									MLOCK(ErrorMessageLock);
 									MesPrint("Table boundary check. Argument %d",
 									T->numind-j);
 showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
@@ -1600,7 +1600,7 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 									IniLine(0);
 									WriteSubTerm(t1,1);
 									FiniLine();
-									UNLOCK(ErrorMessageLock);
+									MUNLOCK(ErrorMessageLock);
 									SETERROR(-1)
 								}
 								goto NextFun;
@@ -1620,7 +1620,7 @@ teststrict:					if ( T->strict == -2 ) {
 								term[0] = 0; return(0);
 							}
 							if ( T->strict < 0 ) goto NextFun;
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Element in table is undefined");
 							goto showtable;
 						}
@@ -1651,9 +1651,9 @@ caughttable:
 					AN.RepFunList = AN.EndNest;
 				    AT.WorkPointer = (WORD *)(((UBYTE *)(AN.EndNest)) + AM.MaxTer/2);
 					if ( AT.WorkPointer >= AT.WorkTop ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesWork();
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 					}
 					wilds = 0;
 /*					if ( MatchFunction(BHEAD T->pattern,t1,&wilds) > 0 ) {  } */
@@ -1722,10 +1722,10 @@ NextFun:;
 	}
 	return(0);
 EndTest:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 EndTest2:;
 	MesCall("TestSub");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -2015,10 +2015,10 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 							break;
 						case DOLUNDEFINED:
 						default:
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("!!!Undefined $-variable: $%s!!!",
 							AC.dollarnames->namebuffer+d->name);
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 							if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
@@ -2130,10 +2130,10 @@ wrongtype:;
 #ifdef WITHPTHREADS
 								if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("$%s has wrong type for tensor substitution",
 								AC.dollarnames->namebuffer+d->name);
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								AN.ncmod = oldncmod;
 								return(-1);
 							}
@@ -2196,10 +2196,10 @@ wrongtype:;
 #ifdef WITHPTHREADS
 							if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("$%s is undefined in tensor substitution",
 							AC.dollarnames->namebuffer+d->name);
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							AN.ncmod = oldncmod;
 							return(-1);
 					}
@@ -2225,7 +2225,7 @@ wrongtype:;
 		}
 		t += t[1];
 	}
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Internal error in InFunction: Function not encountered.");
 	if ( AM.tracebackflag ) {
 		MesPrint("%w: AR.TePos = %d",AR.TePos);
@@ -2243,13 +2243,13 @@ wrongtype:;
 		FiniLine();
 		MesCall("InFunction");
 	}
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(1);
 
 InFunc:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("InFunction");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
  		
@@ -2282,9 +2282,9 @@ WORD InsertTerm(PHEAD WORD *term, WORD replac, WORD extractbuff, WORD *position,
 	WORD *u, *v, l1, *coef;
 	coef = AT.WorkPointer;
 	if ( ( AT.WorkPointer = coef + 2*AM.MaxTal ) > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	t = term;
@@ -2380,9 +2380,9 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 	goto ComAct;
 
 InsCall:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("InsertTerm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -2477,9 +2477,9 @@ LONG PasteFile(PHEAD WORD number, WORD *accum, POSITION *position, WORD **accfil
 	}
 	else {
 		if ( ( l = GetFromStore(accum,position,renumber,&InCompState,nexpr) ) < 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("PasteFile");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 		if ( l == 0 ) { *accum = 0; return(0); }
@@ -2487,18 +2487,18 @@ LONG PasteFile(PHEAD WORD number, WORD *accum, POSITION *position, WORD **accfil
 	}
 	accum += l;
 	if ( accum > stop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Buffer too small in PasteFile");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	*accum = 0;
 	*accfill = accum;
 	return(retlength);
 PasErr:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PasteFile");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
  		
@@ -2556,9 +2556,9 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 		a[1] = divby;
 		a[0] = times;
 		if ( MulRat(BHEAD (UWORD *)t,REDLENG(l1),(UWORD *)a,1,(UWORD *)accum,&l1) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("PasteTerm");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(0);
 		}
 		x = l1;
@@ -2568,9 +2568,9 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 		*u = WORDDIF(accum,u);
 	}
 	if ( accum >= m ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Buffer too small in PasteTerm");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(0);
 	}
 	*accum = 0;
@@ -2598,9 +2598,9 @@ WORD FiniTerm(PHEAD WORD *term, WORD *accum, WORD *termout, WORD number, WORD te
 	WORD *m, *t, *r, i, numacc, l2, ipp;
 	WORD *u, *v, l1, *coef = AT.WorkPointer, *oldaccum;
 	if ( ( AT.WorkPointer = coef + 2*AM.MaxTal ) > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	oldaccum = accum;
@@ -2750,9 +2750,9 @@ Nextr:;
 	return(1);
 
 FiniCall:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("FiniTerm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -2807,9 +2807,9 @@ WORD Generator(PHEAD WORD *term, WORD level)
 if ( Expressions[0].bracketinfo != 0 &&
 		 Expressions[0].bracketinfo->indexbuffer == 0 &&
 		 Expressions[0].bracketinfo->bracketbuffer != 0 ) {
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Problems with bracket index in thread %d",AT.identity);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 }
 */
 #endif
@@ -2975,7 +2975,7 @@ SkipCount:	level++;
 							if ( d->type != DOLINDEX
 							|| d->index < AM.OffsetIndex
 							|| d->index >= AM.OffsetIndex + WILDOFFSET ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("$%s should have been an index"
 								,AC.dollarnames->namebuffer+d->name);
 								AN.currentTerm = term;
@@ -2985,7 +2985,7 @@ SkipCount:	level++;
 								printscratch[1] = theindex;
 								MesPrint("$%s = %$"
 								,AC.dollarnames->namebuffer+d->name);
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 							if ( ddtype > 0 && ddtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
@@ -3069,7 +3069,7 @@ SkipCount:	level++;
 								if ( d->type != DOLINDEX
 								|| d->index < AM.OffsetIndex
 								|| d->index >= AM.OffsetIndex + WILDOFFSET ) {
-									LOCK(ErrorMessageLock);
+									MLOCK(ErrorMessageLock);
 									MesPrint("$%s should have been an index"
 									,AC.dollarnames->namebuffer+d->name);
 									AN.currentTerm = term;
@@ -3079,7 +3079,7 @@ SkipCount:	level++;
 									printscratch[1] = theindex;
 									MesPrint("$%s = %$"
 									,AC.dollarnames->namebuffer+d->name);
-									UNLOCK(ErrorMessageLock);
+									MUNLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 									if ( ddtype > 0 && ddtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
@@ -3135,9 +3135,9 @@ CommonEnd:
 					break; }
 				  case TYPEEXIT:
 					if ( C->lhs[level][2] > 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("%s",C->lhs[level]+3);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 					}
 					goto GenCall;
 				  case TYPESETEXIT:
@@ -3147,15 +3147,15 @@ CommonEnd:
 					AN.currentTerm = term;
 					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
 					AN.listinprint = C->lhs[level]+3+C->lhs[level][2];
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint((char *)(C->lhs[level]+3));
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					break;
 				  case TYPEFPRINT:
 					{
 					int oldFOflag;
 					WORD oldPrintType;
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					oldFOflag = AM.FileOnlyFlag;
 					oldPrintType = AO.PrintType;
 					if ( AC.LogHandle >= 0 ) {
@@ -3168,7 +3168,7 @@ CommonEnd:
 					MesPrint((char *)(C->lhs[level]+3));
 					AO.PrintType = oldPrintType;
 					AM.FileOnlyFlag = oldFOflag;
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					}
 					break;
 				  case TYPEREDEFPRE:
@@ -3463,13 +3463,13 @@ AutoGen:	i = *AT.TMout;
 				  }
 				  else {
 					if ( (AT.TMdolfac-1) > d->nfactors && d->nfactors > 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Attempt to use an unexisting factor %d of a $-variable",(WORD)(AT.TMdolfac-1));
 						if ( d->nfactors == 1 )
 							MesPrint("There is only one factor");
 						else
 							MesPrint("There are only %d factors",(WORD)(d->nfactors));
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						goto GenCall;
 					}
 					if ( d->nfactors > 1 ) {
@@ -3505,14 +3505,14 @@ AutoGen:	i = *AT.TMout;
 						StartBuf = d->where;
 					}
 					else {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						if ( d->nfactors == 0 ) {
 							MesPrint("Attempt to use factor %d of an unfactored $-variable",(WORD)(AT.TMdolfac-1));
 						}
 						else {
 							MesPrint("Internal error. Illegal number of factors for $-variable");
 						}
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						goto GenCall;
 					}
 				  }
@@ -3534,9 +3534,9 @@ AutoGen:	i = *AT.TMout;
 					dtype = ModOptdollars[nummodopt].type;
 					if ( dtype != MODLOCAL && dtype != MODSUM ) {
 						if ( StartBuf[0] && StartBuf[StartBuf[0]] ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("A dollar variable with modoption max or min can have only one term");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							goto GenCall;
 						}
 						LOCK(d->pthreadslockread);
@@ -3879,7 +3879,7 @@ Return0:
 GenCall:
 	if ( AM.tracebackflag ) {
 		termout = term;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		AO.OutFill = AO.OutputLine = (UBYTE *)AT.WorkPointer;
 		AO.OutSkip = 3;
 		FiniLine();
@@ -3891,7 +3891,7 @@ GenCall:
 		AO.OutSkip = 0;
 		FiniLine();
 		MesCall("Generator");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
@@ -3899,9 +3899,9 @@ GenCall:
 OverWork:
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -3956,7 +3956,7 @@ WORD DoOnePow(PHEAD WORD *term, WORD power, WORD nexp, WORD * accum,
 /*
 #ifdef WITHPTHREADS
 	if ( freeze ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		if ( AT.identity < 10 ) {
 			freezestring[8] = '0'+AT.identity;
 			freezestring[9] = '>';
@@ -3972,7 +3972,7 @@ WORD DoOnePow(PHEAD WORD *term, WORD power, WORD nexp, WORD * accum,
 			freezestring[8] = 0;
 		}
 		PrintTerm(freeze,freezestring);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 #else
 	if ( freeze ) PrintTerm(freeze,"freeze");
@@ -4079,9 +4079,9 @@ doterms:
 				termout = acc;
 			    AT.WorkPointer = (WORD *)(((UBYTE *)(acc)) + 2*AM.MaxTer);
 				if ( AT.WorkPointer > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				if ( FiniTerm(BHEAD term,aa,termout,nexp,0) ) goto PowCall;
@@ -4094,9 +4094,9 @@ doterms:
 			}
 			else {
 				if ( acc > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				if ( DoOnePow(BHEAD term,power,nexp,acc,aa,level,freeze) ) goto PowCall;
@@ -4114,7 +4114,7 @@ EndExpr:
 		SeekFile(fi->handle,&oldposition,SEEK_SET);
 		UNLOCK(AS.inputslock);
 		if ( ISNEGPOS(oldposition) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("File error");
 			goto PowCall2;
 		}
@@ -4127,12 +4127,12 @@ EndExpr:
 	AR.CurDum = olddummies;
 	return(0);
 PowCall:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 #ifdef WITHSEEK
 PowCall2:;
 #endif
 	MesCall("DoOnePow");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -4254,9 +4254,9 @@ Thatsit:;
 	AT.WorkPointer = oldwork;
 	return(0);
 DefCall:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("Deferred");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -4596,9 +4596,9 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal value for PolyFunType in PrepPoly");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	r = term + *term;
@@ -4839,7 +4839,7 @@ retry:
 	while ( t1 < t2 ) *t++ = *t1++;
 	*AT.WorkPointer = n1 = WORDDIF(t,AT.WorkPointer);
 	if ( n1*sizeof(WORD) > AM.MaxTer ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
 		goto PolyCall2;
 	}
@@ -4855,10 +4855,10 @@ done:
 	}
 	return(0);
 PolyCall:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 PolyCall2:;
 	MesCall("PolyFunMul");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 

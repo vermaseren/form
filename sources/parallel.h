@@ -54,6 +54,8 @@
 #define PF_ATTACH_MSGTAG     40
 #define PF_DATA_MSGTAG       50
 #define PF_EMPTY_MSGTAG      52
+#define PF_STDOUT_MSGTAG     60
+#define PF_LOG_MSGTAG        61
 
 /*[12oct2005 mt]:*/
 /*Better to localize this istuff in mpi.c:*/

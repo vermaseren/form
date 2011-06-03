@@ -1063,12 +1063,16 @@ LONG WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 	}
 	return(totalwritten);
 }
+#ifndef PARALLEL
 /*[17nov2005]:*/
 WRITEFILE WriteFile = &WriteFileToFile;
 /*
 LONG (*WriteFile)(int handle, UBYTE *buffer, LONG size) = &WriteFileToFile;
 */
 /*:[17nov2005]*/
+#else
+WRITEFILE WriteFile = &PF_WriteFileToFile;
+#endif
 
 /*
  		#] WriteFile : 
@@ -1352,9 +1356,9 @@ void UpdateMaxSize()
 			if ( AT.SS->file.handle >= 0 ) {
 				position = AT.SS->file.filesize;
 /*
-LOCK(ErrorMessageLock);
+MLOCK(ErrorMessageLock);
 MesPrint("%d: %10p",j,&(AT.SS->file.filesize));
-UNLOCK(ErrorMessageLock);
+MUNLOCK(ErrorMessageLock);
 */
 				ADD2POS(sumsize,position);
 			}
@@ -1865,7 +1869,7 @@ VOID *Malloc(LONG size)
 	char *t, *u;
 	int i;
 	LOCK(MallocLock);
-/*	LOCK(ErrorMessageLock); */
+/*	MLOCK(ErrorMessageLock); */
 	if ( size == 0 ) {
 		MesPrint("Asking for 0 bytes in Malloc");
 	}
@@ -1877,13 +1881,13 @@ VOID *Malloc(LONG size)
 	mem = (VOID *)M_alloc(size);
 	if ( mem == 0 ) {
 #ifndef MALLOCDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 #endif
 		Error0("No memory!");
 #ifndef MALLOCDEBUG
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #else
-/*		UNLOCK(ErrorMessageLock); */
+/*		MUNLOCK(ErrorMessageLock); */
 #endif
 #ifdef MALLOCDEBUG
 		UNLOCK(MallocLock);
@@ -1918,7 +1922,7 @@ VOID *Malloc(LONG size)
 				u--;
 				if ( *t != 0 || *u != 0 ) {
 					MesPrint("Writing outside memory for %s",malloclist[i]);
-/*					UNLOCK(ErrorMessageLock); */
+/*					MUNLOCK(ErrorMessageLock); */
 					UNLOCK(MallocLock);
 					Terminate(-1);
 				}
@@ -1926,7 +1930,7 @@ VOID *Malloc(LONG size)
 			}
 		}
 	}
-/*	UNLOCK(ErrorMessageLock); */
+/*	MUNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
 	return(mem);
@@ -1947,7 +1951,7 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 	char *t, *u;
 	int i;
 	LOCK(MallocLock);
-/*	LOCK(ErrorMessageLock); */
+/*	MLOCK(ErrorMessageLock); */
 	if ( size == 0 ) {
 		MesPrint("%wAsking for 0 bytes in Malloc1");
 	}
@@ -1962,13 +1966,13 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 	mem = (VOID *)M_alloc(size);
 	if ( mem == 0 ) {
 #ifndef MALLOCDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 #endif
 		Error1("No memory while allocating ",(UBYTE *)messageifwrong);
 #ifndef MALLOCDEBUG
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #else
-/*		UNLOCK(ErrorMessageLock); */
+/*		MUNLOCK(ErrorMessageLock); */
 #endif
 #ifdef MALLOCDEBUG
 		UNLOCK(MallocLock);
@@ -1995,7 +1999,7 @@ VOID *Malloc1(LONG size, char *messageifwrong)
 	for ( i = 0; i < BANNER; i++ ) { *t++ = 0; *--u = 0; }
 	mem = (void *)t;
 	M_check();
-/*	UNLOCK(ErrorMessageLock); */
+/*	MUNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
 	return(mem);
@@ -2013,7 +2017,7 @@ void M_free(VOID *x, char *where)
 	int i, j, k;
 	LONG size = 0;
 	x = (void *)(((char *)x)-BANNER);
-/*	LOCK(ErrorMessageLock); */
+/*	MLOCK(ErrorMessageLock); */
 	if ( AC.MemDebugFlag ) MesPrint("%wFreeing 0x%x: %s",x,where);
 	LOCK(MallocLock);
 	for ( i = nummalloclist-1; i >= 0; i-- ) {
@@ -2032,7 +2036,7 @@ void M_free(VOID *x, char *where)
 		unsigned int xx = ((unsigned long)x);
 		printf("Error returning non-allocated address: 0x%x from %s\n"
 			,xx,where);
-/*		UNLOCK(ErrorMessageLock); */
+/*		MUNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 		exit(-1);
 	}
@@ -2055,7 +2059,7 @@ void M_free(VOID *x, char *where)
 			tt[0],tt[1],tt[2],tt[3]);
 		}
 		M_check();
-/*		UNLOCK(ErrorMessageLock); */
+/*		MUNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 	}
 #else
@@ -2117,7 +2121,7 @@ void M_check()
 	}
 	if ( error ) {
 		M_print();
-/*		UNLOCK(ErrorMessageLock); */
+/*		MUNLOCK(ErrorMessageLock); */
 		UNLOCK(MallocLock);
 		Terminate(-1);
 	}
@@ -3325,16 +3329,16 @@ int TestTerm(WORD *term)
 	endterm = term + *term;
 	coeffsize = ABS(endterm[-1]);
 	if ( coeffsize >= *term ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("TestTerm: Internal inconsistency in term. Coefficient too big.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		errorcode = 1;
 		goto finish;
 	}
 	if ( ( coeffsize < 3 ) || ( ( coeffsize & 1 ) != 1 ) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("TestTerm: Internal inconsistency in term. Wrong size coefficient.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		errorcode = 2;
 		goto finish;
 	}
@@ -3351,9 +3355,9 @@ int TestTerm(WORD *term)
 				break;
 			case SNUMBER:
 			case LNUMBER:
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("TestTerm: Internal inconsistency in term. L or S number");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				errorcode = 3;
 				goto finish;
 				break;
@@ -3361,9 +3365,9 @@ int TestTerm(WORD *term)
 			case SUBEXPRESSION:
 			case DOLLAREXPRESSION:
 /*
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("TestTerm: Internal inconsistency in term. Expression survives.");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				errorcode = 4;
 				goto finish;
 */
@@ -3372,9 +3376,9 @@ int TestTerm(WORD *term)
 			case MINVECTOR:
 			case SETEXP:
 			case ARGFIELD:
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("TestTerm: Internal inconsistency in term. Illegal subterm.");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				errorcode = 5;
 				goto finish;
 				break;
@@ -3382,9 +3386,9 @@ int TestTerm(WORD *term)
 				break;
 			default:
 				if ( *t <= 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("TestTerm: Internal inconsistency in term. Illegal subterm number.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					errorcode = 6;
 					goto finish;
 				}
@@ -3392,26 +3396,26 @@ int TestTerm(WORD *term)
 				This is a regular function.
 */
 				if ( *t-FUNCTION >= NumFunctions ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("TestTerm: Internal inconsistency in term. Illegal function number");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					errorcode = 7;
 					goto finish;
 				}
 				funstop = t + t[1];
 				if ( funstop > tstop ) goto subtermsize;
 				if ( t[2] != 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("TestTerm: Internal inconsistency in term. Dirty flag nonzero.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					errorcode = 8;
 					goto finish;
 				}
 				targ = t + FUNHEAD;
 				if ( targ > funstop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("TestTerm: Internal inconsistency in term. Illegal function size.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					errorcode = 9;
 					goto finish;
 				}
@@ -3421,9 +3425,9 @@ int TestTerm(WORD *term)
 				  while ( targ < funstop ) {
 					if ( *targ < 0 ) {
 						if ( *targ <= -(FUNCTION+NumFunctions) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("TestTerm: Internal inconsistency in term. Illegal function number in argument.");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							errorcode = 10;
 							goto finish;
 						}
@@ -3434,9 +3438,9 @@ int TestTerm(WORD *term)
 							&& ( *targ != -SNUMBER )
 							&& ( *targ != -ARGWILD )
 							&& ( *targ != -INDEX ) ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("TestTerm: Internal inconsistency in term. Illegal object in argument.");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								errorcode = 11;
 								goto finish;
 							}
@@ -3444,16 +3448,16 @@ int TestTerm(WORD *term)
 						}
 					}
 					else if ( ( *targ < ARGHEAD ) || ( targ+*targ > funstop ) ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("TestTerm: Internal inconsistency in term. Illegal size of argument.");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						errorcode = 12;
 						goto finish;
 					}
 					else if ( targ[1] != 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("TestTerm: Internal inconsistency in term. Dirty flag in argument.");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						errorcode = 13;
 						goto finish;
 					}
@@ -3462,16 +3466,16 @@ int TestTerm(WORD *term)
 						argterm = targ + ARGHEAD;
 						while ( argterm < targstop ) {
 							if ( ( *argterm < 4 ) || ( argterm + *argterm > targstop ) ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("TestTerm: Internal inconsistency in term. Illegal termsize in argument.");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								errorcode = 14;
 								goto finish;
 							}
 							if ( TestTerm(argterm) != 0 ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("TestTerm: Internal inconsistency in term. Called from TestTerm.");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								errorcode = 15;
 								goto finish;
 							}
@@ -3486,9 +3490,9 @@ int TestTerm(WORD *term)
 		tt = t + t[1];
 		if ( tt > tstop ) {
 subtermsize:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("TestTerm: Internal inconsistency in term. Illegal subterm size.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			errorcode = 100;
 			goto finish;
 		}

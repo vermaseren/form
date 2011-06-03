@@ -65,9 +65,9 @@ WORD EpfFind(PHEAD WORD *term, WORD *params)
 	WORD ncoef,nfac;
 	WORD number, type;
 	if ( ( AT.WorkPointer = (WORD *)(facto + AM.MaxTal) ) > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	number = params[3];
@@ -177,9 +177,9 @@ AllLev:
 	tstop = t;
 	while ( m < mstop ) *t++ = *m++;
 	if ( Factorial(BHEAD fac,facto,&nfac) || Mully(BHEAD (UWORD *)tstop,&ncoef,facto,nfac) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("EpfFind");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	tstop += (ABS(ncoef))<<1;
@@ -219,9 +219,9 @@ WORD EpfCon(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	termout = (AT.WorkPointer += sizes);
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	if ( AT.WorkPointer > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	params += 2;
@@ -236,9 +236,9 @@ DoOnce:
 		tstop -= SUBEXPSIZE;
 		while ( t < tstop ) *m++ = *t++;
 		if ( t[2] != num || *t != SUBEXPRESSION ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Serious error in EpfCon");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		tstop += SUBEXPSIZE;
@@ -266,9 +266,9 @@ DoOnce:
 	return(0);
 EpfCall:
 	if ( AM.tracebackflag ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("EpfCon");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(-1);
 }
@@ -718,9 +718,9 @@ WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	t->finalstep = ( params[2] & 16 ) ? 1 : 0;
 	t->gamma5 = params[3];
 	if ( t->finalstep && t->gamma5 != GAMMA1 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Gamma5 not allowed in this option of the trace command");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		AN.numtracesctack--;
 		SETERROR(-1)
 	}
@@ -729,9 +729,9 @@ WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	t->perm = t->accu + (number<<1);
 	t->eers = t->perm + number;
 	if ( ( AT.WorkPointer += 19 * number ) >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	t->num = num;
@@ -904,9 +904,9 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 				*termout = WORDDIF(m,termout);
 				if ( t->allsign < 0 ) m[-1] = -m[-1];
 				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				*AN.RepPoint = 1;
@@ -1286,9 +1286,9 @@ WORD Trace4Gen(PHEAD TRACES *t, WORD number)
 				*termout = WORDDIF(m,termout);
 				if ( ( diff ^ t->allsign ) < 0 ) m[-1] = - m[-1];
 				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				if ( *termout ) {
@@ -1315,9 +1315,9 @@ Trac4Call:
 	AT.WorkPointer = oldstring;
 TracCall:
 	if ( AM.tracebackflag ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("Trace4Gen");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(-1);
 }
@@ -1385,9 +1385,9 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	WORD *p, *m, number, i;
 	WORD *OldW;
 	if ( params[3] != GAMMA1 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Gamma5 not allowed in n-trace");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	OldW = AT.WorkPointer;
@@ -1412,9 +1412,9 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	t->perm = t->accu + number;
 	if ( ( AT.WorkPointer += 3 * number ) >= AT.WorkTop ) {
 		AN.numtracesctack--;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	t->num = num;
@@ -1493,9 +1493,9 @@ WORD TraceNgen(PHEAD TRACES *t, WORD number)
 				*termout = WORDDIF(m,termout);
 				if ( t->allsign < 0 ) m[-1] = -m[-1];
 				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				if ( *termout ) {
@@ -1782,9 +1782,9 @@ WORD TraceNgen(PHEAD TRACES *t, WORD number)
 				*termout = WORDDIF(m,termout);
 				if ( ( diff ^ t->allsign ) < 0 ) m[-1] = - m[-1];
 				if ( ( AT.WorkPointer = m ) > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				if ( *termout ) {
@@ -1811,9 +1811,9 @@ TracnCall:
 	AT.WorkPointer = oldstring;
 TracCall:
 	if ( AM.tracebackflag ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("TraceNGen");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(-1);
 }
@@ -1861,10 +1861,10 @@ WORD TraceFind(PHEAD WORD *term, WORD *params)
 	if ( spinline < 0 ) {	/* $ variable. Evaluate */
 		sp = DolToIndex(BHEAD -spinline);
 		if ( AN.ErrorInDollar || sp < 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("$%s does not have an index value in trace statement in module %l",
 				DOLLARNAME(Dollars,-spinline),AC.CModule);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(0);
 		}
 		spinline = sp;
@@ -2162,9 +2162,9 @@ NextK:;
 */
 ChisCall:
 	if ( AM.tracebackflag ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("Chisholm");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(-1);
 }
@@ -2188,26 +2188,26 @@ WORD TenVecFind(PHEAD WORD *term, WORD *params)
 			if ( thevector > 0 ) {
 				thetensor = DolToTensor(BHEAD thevector);
 				if ( thetensor < FUNCTION ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("$%s should have been a tensor in module %l"
 						,DOLLARNAME(Dollars,params[4]),AC.CModule);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				thevector = DolToVector(BHEAD -params[3]);
 				if ( thevector >= 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("$%s should have been a vector in module %l"
 						,DOLLARNAME(Dollars,-params[3]),AC.CModule);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("$%s should have been a tensor in module %l"
 					,DOLLARNAME(Dollars,-params[3]),AC.CModule);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 		}
@@ -2215,10 +2215,10 @@ WORD TenVecFind(PHEAD WORD *term, WORD *params)
 	if ( thevector > 0 ) {	/* $-expression */
 		thevector = DolToVector(BHEAD thevector);
 		if ( thevector >= 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("$%s should have been a vector in module %l"
 				,DOLLARNAME(Dollars,params[4]),AC.CModule);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -2492,9 +2492,9 @@ docopy:
 	return(0);
 fromTenVec:
 	if ( AM.tracebackflag ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("TenVec");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(-1);
 }

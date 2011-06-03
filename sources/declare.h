@@ -286,6 +286,12 @@ long WinTimer();
   	#[ Thread objects :
 */
 
+/**
+ * NOTE: We have replaced LOCK(ErrorMessageLock) and UNLOCK(ErrorMessageLock)
+ * by MLOCK(ErrorMessageLock) and MUNLOCK(ErrorMessageLock). They are used
+ * for the synchronised output in ParFORM.
+ * (TU 28 May 2011)
+ */
 #ifdef WITHPTHREADS
 
 #define EXTERNLOCK(x) extern pthread_mutex_t x;
@@ -304,6 +310,8 @@ long WinTimer();
 #endif
 #define UNLOCK(x)     pthread_mutex_unlock(&(x))
 #define UNRWLOCK(x)     pthread_rwlock_unlock(&(x))
+#define MLOCK(x)      LOCK(x)
+#define MUNLOCK(x)    UNLOCK(x)
 
 #define GETBIDENTITY
 #define GETIDENTITY   int identity = WhoAmI(); ALLPRIVATES *B = AB[identity];
@@ -318,6 +326,13 @@ long WinTimer();
 #define RWLOCKR(x)
 #define RWLOCKW(x)
 #define UNRWLOCK(x)
+#ifdef PARALLEL
+#define MLOCK(x)      do { if ( PF.me != MASTER ) PF_MLock(); } while (0)
+#define MUNLOCK(x)    do { if ( PF.me != MASTER ) PF_MUnlock(); } while (0)
+#else
+#define MLOCK(x)
+#define MUNLOCK(x)
+#endif
 #define GETIDENTITY
 #define GETBIDENTITY
 
@@ -1392,6 +1407,9 @@ extern int PF_broadcastRHS(void);
 extern int PF_SendFile(int to, FILE *fd);
 extern int PF_RecvFile(int from, FILE *fd);
 
+extern void PF_MLock(void);
+extern void PF_MUnlock(void);
+extern LONG PF_WriteFileToFile(int,UBYTE *,LONG);
 #endif
 
 extern UBYTE *defineChannel(UBYTE*, HANDLERS*);

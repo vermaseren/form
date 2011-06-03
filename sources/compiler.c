@@ -1869,9 +1869,9 @@ ErrorBraces:
 	}
 	return(C->numrhs);
 OverWork:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 

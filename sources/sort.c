@@ -117,7 +117,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		AR.ShortSortCount = 0;
 
 		S = AT.SS;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		if ( AC.ShortStats ) {}
 		else {
 #ifdef WITHPTHREADS
@@ -508,7 +508,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		MesPrint("Total number of mallocs: %l, frees: %l"
 			,nummallocs,numfrees);
 #endif
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 }
 
@@ -674,9 +674,9 @@ LONG EndSort(WORD *buffer, int par, int par2)
 				while ( ( t = *ss++ ) != 0 ) {
 					j = *t;
 					if ( ( par2 != 1 ) && ( ( sSpace += j ) > AM.MaxTer/sizeof(WORD) ) ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Sorted function argument too long.");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						retval = -1; goto RetRetval;
 					}
 					while ( --j >= 0 ) *to++ = *t++;
@@ -761,15 +761,15 @@ LONG EndSort(WORD *buffer, int par, int par2)
 			The large buffer is too full. Merge and write it
 */
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w EndSort: lPatch = %d, MaxPatches = %d,lFill = %12x, sSpace = %ld, MaxTer = %d, lTop = %12x"
 					,S->lPatch,S->MaxPatches,S->lFill,sSpace,AM.MaxTer/sizeof(WORD),S->lTop);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 			if ( MergePatches(1) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesCall("EndSort");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				retval = -1; goto RetRetval;
 			}
 			S->lPatch = 0;
@@ -801,9 +801,9 @@ LONG EndSort(WORD *buffer, int par, int par2)
 			S->lFill = to;
 			if ( S->file.handle < 0 ) {
 				if ( MergePatches(2) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesCall("EndSort");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					retval = -1; goto RetRetval;
 				}
 				if ( S == AT.S0 ) {
@@ -827,9 +827,9 @@ LONG EndSort(WORD *buffer, int par, int par2)
 								,"$-buffer reading");
 						if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(newout->filesize)) ) !=
 								BASEPOSITION(newout->filesize) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Error reading information for $ variable");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							M_free(to,"$-buffer reading");
 							retval = -1;
 						}
@@ -843,10 +843,10 @@ LONG EndSort(WORD *buffer, int par, int par2)
 					}
 					else if ( newout->handle >= 0 ) {	/* output too large */
 TooLarge:
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
 						MesCall("EndSort");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						retval = -1; goto RetRetval;
 					}
 					else {
@@ -854,10 +854,10 @@ TooLarge:
 						j = newout->POfill - t;
 						to = buffer;
 						if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesWork();
 							MesCall("EndSort");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						if ( j > AM.MaxTer ) goto TooLarge;
@@ -867,9 +867,9 @@ TooLarge:
 				goto RetRetval;
 			}
 			if ( MergePatches(1) ) { /* --> SortFile */
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesCall("EndSort");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				retval = -1; goto RetRetval;
 			}
 			UpdateMaxSize();
@@ -897,10 +897,10 @@ TooLarge:
 				j = newout->POfill - t;
 				to = buffer;
 				if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
 					MesCall("EndSort");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( j > AM.MaxTer ) goto TooLarge;
@@ -912,10 +912,10 @@ TooLarge:
 	}
 	if ( S->file.handle >= 0 ) {
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%w EndSort: fPatchN = %d, lPatch = %d, position = %12p"
 			,S->fPatchN,S->lPatch,&(S->fPatches[S->fPatchN]));
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 		if ( S->lPatch <= 0 ) {
 			StageSort(&(S->file));
@@ -942,10 +942,10 @@ TooLarge:
 				S->fPatches[S->fPatchN] = position;
 				UpdateMaxSize();
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%w EndSort+: fPatchN = %d, lPatch = %d, position = %12p"
 					,S->fPatchN,S->lPatch,&(S->fPatches[S->fPatchN]));
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 			}
 		}
@@ -959,9 +959,9 @@ TooLarge:
 #endif
 		UpdateMaxSize();
 		if ( MergePatches(0) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("EndSort");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			retval = -1; goto RetRetval;
 		}
 		S->stage4 = 0;
@@ -1013,9 +1013,9 @@ RetRetval:
 		S->file.handle = -1;
 		remove(S->file.name);
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%wEndSort: sortfile %s removed",S->file.name);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 	}
 	AR.outfile = oldoutfile;
@@ -1028,10 +1028,10 @@ RetRetval:
 		}
 		else if ( newout ) {
 		  if ( newout->handle >= 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
 			MesCall("EndSort");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		  }
 		  else if ( newout->POfill > newout->PObuffer ) {
@@ -1042,9 +1042,9 @@ RetRetval:
 */
 			j = newout->POfill-newout->PObuffer;
 			if ( par2 != 1 && ( j+buffer >= AT.WorkTop ) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesWork();
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				retval = -1;
 			}
 			else {
@@ -1081,9 +1081,9 @@ RetRetval:
 						,"$-buffer reading");
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
 				BASEPOSITION(position) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error reading information for $ variable");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					M_free(to,"$-buffer reading");
 					retval = -1;
 				}
@@ -1142,9 +1142,9 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
 	if ( i*sizeof(WORD) > AM.MaxTer ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Problems in PutIn");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	to = buffer;
@@ -1153,10 +1153,10 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 #ifdef WITHZLIB
 	if ( ( RetCode = FillInputGZIP(file,position,(UBYTE *)buffer
 									,file->POsize,npat) ) < 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
 			RetCode,file->POsize);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 #else
@@ -1168,10 +1168,10 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 #ifdef ALLLOCK
 		UNLOCK(file->pthreadslock);
 #endif
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
 			RetCode,file->POsize);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 #ifdef ALLLOCK
@@ -1202,18 +1202,18 @@ WORD Sflush(FILEHANDLE *fi)
 	if ( fi->handle < 0 ) {
 		if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w Sflush created scratch file %s",fi->name);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 			fi->handle = (WORD)RetCode;
 			PUTZERO(fi->filesize);
 			PUTZERO(fi->POposition);
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Cannot create scratch file %s",fi->name);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -1235,9 +1235,9 @@ WORD Sflush(FILEHANDLE *fi)
 #ifdef ALLLOCK
 		UNLOCK(fi->pthreadslock);
 #endif
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Write error while finishing sort. Disk full?");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	  }
 	  ADDPOS(fi->filesize,size);
@@ -1296,18 +1296,18 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 				if ( fi->handle < 0 ) {
 					if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 #ifdef GZIPDEBUG
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("%w PutOut created sortfile %s",fi->name);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 #endif
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
 					}
 					else {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Cannot create scratch file %s",fi->name);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						return(-1);
 					}
 				}
@@ -1325,12 +1325,12 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 #ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
 #endif
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Write error during sort. Disk full?");
 					MesPrint("Attempt to write %l bytes on file %d at position %15p",
 								fi->POsize,fi->handle,&(fi->POposition));
 					MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				ADDPOS(fi->filesize,fi->POsize);
@@ -1354,7 +1354,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 		return(ret);
 	}
 	if ( ( AP.PreDebug & DUMPOUTTERMS ) == DUMPOUTTERMS ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 			sprintf((char *)(THRbuf),"PutOut(%d)",AT.identity);
 			PrintTerm(term,(char *)(THRbuf));
@@ -1363,7 +1363,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 #endif
 			MesPrint("ncomp = %d, AR.NoCompress = %d, AR.sLevel = %d",ncomp,AR.NoCompress,AR.sLevel);
 			MesPrint("File %s, position %p",fi->name,position);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 	}
 
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
@@ -1374,9 +1374,9 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 		if ( i < 0 ) {			/* Compressed term */
 			i = term[1] + 2;
 			if ( fi == AR.outfile || fi == AR.hidefile ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Ran into precompressed term");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Crash();
 				return(-1);
 			}
@@ -1427,9 +1427,9 @@ nocompress:
 /*					Sabotage getting into the coefficient next time */
 			r[-(ABS(r[-1]))] = 0;
 			if ( r >= AR.ComprTop ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Crash();
 				return(-1);
 			}
@@ -1500,18 +1500,18 @@ nocompress:
 				if ( fi->handle < 0 ) {
 					if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 #ifdef GZIPDEBUG
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("%w PutOut created sortfile %s",fi->name);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 #endif
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
 					}
 					else {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Cannot create scratch file %s",fi->name);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						return(-1);
 					}
 				}
@@ -1539,12 +1539,12 @@ nocompress:
 #ifdef ALLLOCK
 					UNLOCK(fi->pthreadslock);
 #endif
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Write error during sort. Disk full?");
 					MesPrint("Attempt to write %l bytes on file %d at position %15p",
 								fi->POsize,fi->handle,&(fi->POposition));
 					MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				  }
 				  ADDPOS(fi->filesize,fi->POsize);
@@ -1631,18 +1631,18 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		if ( fi->handle < 0 ) {
 			if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%w FlushOut created scratch file %s",fi->name);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 				PUTZERO(fi->filesize);
 				PUTZERO(fi->POposition);
 				fi->handle = (WORD)RetCode;
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Cannot create scratch file %s",fi->name);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 		}
@@ -1669,12 +1669,12 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 			if ( fi == AR.hidefile ) {
 				UNLOCK(AS.inputslock);
 			}
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Write error while sorting. Disk full?");
 			MesPrint("Attempt to write %l bytes on file %d at position %15p",
 						fi->POsize,fi->handle,&(fi->POposition));
 			MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		  }
 		  ADDPOS(fi->filesize,fi->POsize);
@@ -1735,12 +1735,12 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 			if ( fi == AR.hidefile ) {
 				UNLOCK(AS.inputslock);
 			}
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Write error while finishing sorting. Disk full?");
 			MesPrint("Attempt to write %l bytes on file %d at position %15p",
 						size,fi->handle,&(fi->POposition));
 			MesPrint("RetCode = %l, Buffer address = %l",RetCode,(LONG)(fi->PObuffer));
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		  }
 		  ADDPOS(fi->filesize,size);
@@ -1821,9 +1821,9 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 	GETCOEF(s1,l1);
 	GETCOEF(s2,l2);
 	if ( AddRat(BHEAD (UWORD *)s1,l1,(UWORD *)s2,l2,OutCoef,&OutLen) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("AddCoef");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( AN.ncmod != 0 ) {
@@ -1897,10 +1897,10 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 RegEnd:
 	*ps2 = 0;
 	if ( **ps1 > AM.MaxTer/sizeof(WORD) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
 		AM.MaxTer/sizeof(WORD));
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	return(1);
@@ -1952,10 +1952,10 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		LONG oldSplitScratchSize = AN.SplitScratchSize;
 		LONG oldInScratch = AN.InScratch;
 		if ( (WORD *)((UBYTE *)w + AM.MaxTer) >= AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Program was adding polyratfun arguments");
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 		}
 		S->PolyWise = 0;
 		AN.SplitScratch = AN.SplitScratch1;
@@ -1981,10 +1981,10 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 	}
 	else {
 		if ( w + s1[1] + s2[1] + 12 + ARGHEAD >= AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Program was adding polyfun arguments");
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 		}
 		AddArgs(BHEAD s1,s2,w);
 	}
@@ -2023,7 +2023,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 			if ( (S->sFill + (**ps1 + w[1] - s1[1])) >= S->sTop2 ) {
 #ifdef TESTGARB
 				UBYTE OutBuf[140];
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				AO.OutFill = AO.OutputLine = OutBuf;
 				AO.OutSkip = 3;
 				FiniLine();
@@ -2051,11 +2051,11 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 				}
 				FiniLine();
 				MesPrint("Please increase SmallExtension in %s",setupfilename);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #else
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Please increase SmallExtension in %s",setupfilename);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 				Terminate(-1);
 			}
@@ -2074,10 +2074,10 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		*ps1 = m;
 		S->sFill = s2;
 		if ( *m > AM.MaxTer/sizeof(WORD) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
 			AM.MaxTer/sizeof(WORD));
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -2317,9 +2317,9 @@ twogen:
 				i1 = REDLENG(i1);
 				i2 = REDLENG(i2);
 				if ( AddRat(BHEAD (UWORD *)t1,i1,(UWORD *)t2,i2,(UWORD *)m,&i) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Addition of coefficients of PolyFun");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( i == 0 ) {
@@ -2394,9 +2394,9 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 	if ( S->PolyFlag ) {
 /*
 		if ( S->PolyWise != 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("S->PolyWise is not zero!!!!!");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 		}
 */
 		count = 0; localPoly = 1; S->PolyWise = polyhit = 0;
@@ -2806,7 +2806,7 @@ LONG ComPress(WORD **ss, LONG *n)
 
 	if ( AP.DebugFlag ) {
 		UBYTE OutBuf[140];
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("ComPress:");
 		AO.OutFill = AO.OutputLine = OutBuf;
 		AO.OutSkip = 3;
@@ -2825,7 +2825,7 @@ LONG ComPress(WORD **ss, LONG *n)
 		}
 		AO.OutSkip = 0;
 		FiniLine();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		ss = sss;
 	}
 
@@ -3145,7 +3145,7 @@ VOID GarbHand()
 	Compute the size needed. Put it in total.
 */
 #ifdef TESTGARB
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("in:  S->sFill = %x, S->sTop2 = %x",S->sFill,S->sTop2);
 #endif
 	Point = S->sPointer;
@@ -3160,7 +3160,7 @@ VOID GarbHand()
 	}
 #ifdef TESTGARB
 	MesPrint("total = %l, nterms = %l",2*total,AN.InScratch);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 /*
 	Test now whether it fits. If so deal with the problem inside
@@ -3218,12 +3218,12 @@ VOID GarbHand()
 	}
 	S->sFill = s2;
 #ifdef TESTGARB
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("out: S->sFill = %x, S->sTop2 = %x",S->sFill,S->sTop2);
 	if ( S->sFill >= S->sTop2 ) {
 		MesPrint("We are in deep trouble");
 	}
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 	if ( tobereturned ) M_free(garbuf,"Garbage buffer");
 	return;
@@ -3288,15 +3288,15 @@ NewMerge:
 FileMake:
 			PUTZERO(AN.OldPosOut);
 			if ( ( fhandle = CreateFile(fout->name) ) < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Cannot create file %s",fout->name);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto ReturnError;
 			}
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w MergePatches created output file %s",fout->name);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
@@ -3347,9 +3347,9 @@ ConMer:
 		for ( i = 0; i < S->inNum; i++ ) {
 			S->fPatchesStop[i] = S->iPatches[i+1];
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 		}
 #endif
@@ -3373,9 +3373,9 @@ ConMer:
 			for ( i = 0; i < S->inNum; i++ ) {
 				S->fPatchesStop[i] = S->fPatches[i+1];
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 			}
 #endif
@@ -3518,7 +3518,7 @@ ConMer:
 				m1 = m2 + *m2;
 			}
 			if ( length < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Readerror");
 				goto PatCall2;
 			}
@@ -3541,7 +3541,7 @@ ConMer:
 				ADDPOS(S->SizeInFile[par],length/sizeof(WORD));
 			}
 			if ( length < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Readerror");
 				goto PatCall2;
 			}
@@ -3641,9 +3641,9 @@ OneTerm:
 							else                    w = PolyRatFunAdd(BHEAD m1,m2);
 */
 							if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
 							AT.WorkPointer = w;
@@ -3651,9 +3651,9 @@ OneTerm:
 						else {
 							w = AT.WorkPointer;
 							if ( w + m1[1] + m2[1] > AT.WorkTop ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
 							AddArgs(BHEAD m1,m2,w);
@@ -3697,9 +3697,9 @@ OneTerm:
 					  r2 = ( ( r2 > 0 ) ? (r2-1) : (r2+1) ) >> 1;
 
 					  if ( AddRat(BHEAD (UWORD *)m1,r1,(UWORD *)m2,r2,coef,&r3) ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesCall("MergePatches");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						SETERROR(-1)
 					  }
 
@@ -3774,9 +3774,9 @@ cancelled:
 								of each patch.
 */
 							if ( (l1 + r31) > AM.MaxTer/sizeof(WORD) ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("Coefficient overflow during sort");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								goto ReturnError;
 							}
 							m2 = poin[S->tree[i]];
@@ -3839,9 +3839,9 @@ NextTerm:
 		else
 #endif
 		if ( ( im = PutOut(BHEAD poin[k],&position,fout,1) ) < 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Called from MergePatches with k = %d (stream %d)",k,S->ktoi[k]);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto ReturnError;
 		}
 		ADDPOS(S->SizeInFile[par],im);
@@ -3889,9 +3889,9 @@ EndOfAll:
 				sizeof(POSITION)
 			  || (ULONG)ReadFile(fin->handle,(UBYTE *)S->iPatches,(LONG)((S->inNum)+1)
 					*sizeof(POSITION)) != ((S->inNum)+1)*sizeof(POSITION) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Read error fourth stage sorting");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto ReturnError;
 			}
 			*rr = 0;
@@ -3899,9 +3899,9 @@ EndOfAll:
 			for ( i = 0; i < S->inNum; i++ ) {
 				S->fPatchesStop[i] = S->iPatches[i+1];
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 			}
 #endif
@@ -3920,9 +3920,9 @@ EndOfAll:
 			CloseFile(fin->handle);
 			remove(fin->name);		/* Gives diskspace free again. */
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w MergePatches removed in file %s",fin->name);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 /*
 			if ( fin == &(AR.FoStage4[0]) ) {
@@ -3944,9 +3944,9 @@ EndOfAll:
 		remove(fin->name);
 		fin->handle = -1;
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%w MergePatches removed in file %s",fin->name);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 	}
 NormalReturn:
@@ -3961,15 +3961,15 @@ ReturnError:
 	return(-1);
 #ifndef WITHZLIB
 PatwCall:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Error while writing to file.");
 	goto PatCall2;
 #endif
 PatCall:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 PatCall2:;
 	MesCall("MergePatches");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #ifdef WITHZLIB
 	AR.gzipCompress = oldgzipCompress;
 #endif
@@ -4092,9 +4092,9 @@ WORD StoreTerm(PHEAD WORD *term)
 	return(0);
 
 StoreCall:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("StoreTerm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -4115,9 +4115,9 @@ VOID StageSort(FILEHANDLE *fout)
 	if ( S->fPatchN >= S->MaxFpatches ) {
 		POSITION position;
 		PUTZERO(position);
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("StageSort");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		SeekFile(fout->handle,&position,SEEK_END);
 /*
 		No extra compression data has to be written.
@@ -4129,9 +4129,9 @@ VOID StageSort(FILEHANDLE *fout)
 			sizeof(POSITION)
 		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(S->fPatches),(LONG)(S->fPatchN+1)
 					*sizeof(POSITION)) != (S->fPatchN+1)*sizeof(POSITION) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Write error while staging sort. Disk full?");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		AN.OldPosOut = position;
@@ -4189,9 +4189,9 @@ WORD SortWild(WORD *w, WORD nw)
 	WORD *pScrat, *stop, *sv, error = 0;
 	pScrat = AT.WorkPointer;
 	if ( ( AT.WorkPointer + 8 * AM.MaxWildcards ) >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	stop = w + nw;
@@ -4219,9 +4219,9 @@ WORD SortWild(WORD *w, WORD nw)
 							|| *sv == SETTONUM || *sv == LOADDOLLAR ) ) {
 								if ( s[2] != sv[2] ) {
 									error = -1;
-									LOCK(ErrorMessageLock);
+									MLOCK(ErrorMessageLock);
 									MesPrint("&Wildcard set conflict");
-									UNLOCK(ErrorMessageLock);
+									MUNLOCK(ErrorMessageLock);
 								}
 							}
 							*v = -1;
@@ -4297,9 +4297,9 @@ void CleanUpSort(int num)
 					S->file.handle = -1;
 					remove(S->file.name);
 #ifdef GZIPDEBUG
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("%w CleanUpSort removed file %s",S->file.name);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 #endif
 				}
 				M_free(S,"sorting struct");
@@ -4317,9 +4317,9 @@ void CleanUpSort(int num)
 					S->file.handle = -1;
 					remove(S->file.name);
 #ifdef GZIPDEBUG
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("%w CleanUpSort removed file %s",S->file.name);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 #endif
 				}
 			}
@@ -4332,9 +4332,9 @@ void CleanUpSort(int num)
 			remove(AR.FoStage4[i].name);
 			AR.FoStage4[i].handle = -1;
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w CleanUpSort removed stage4 file %s",AR.FoStage4[i].name);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 		}
 	}

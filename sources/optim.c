@@ -204,10 +204,10 @@ int LoadOpti(WORD numexpr)
 				*w++ = pow;
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Problems with expression %s:",EXPRNAME(numexpr));
 				MesPrint(useprop);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				AT.WorkPointer = oldwork;
 				return(-1);
 			}
@@ -535,9 +535,9 @@ int FindScratchName()
 	  }
 	  }
 	}
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Could not find a decent name for the scratch variable in Optimize");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -796,9 +796,9 @@ WORD HuntNumFactor(LONG number, WORD *coef, int par)
 
 	return(ncoef);
 ExitHunt:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("HuntNumFactor");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(0);
 }
@@ -828,10 +828,10 @@ WORD HuntFactor(LONG number, WORD *factor, int par)
 	int i, size;
 	LONG newnum, a;
 	if ( factor == 0 && par != 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error: wrong value (%d) of par in HuntFactor",
 				(WORD)par);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( par >= 0 ) {	/* We need the coefficient also */
@@ -1066,9 +1066,9 @@ nexttt:;
 						nc2 = REDLENG(AT.WorkPointer[3]);
 						if ( MulRat(BHEAD (UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4)
 						,nc2,(UWORD *)(newter+4),&nc) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesCall("HuntPairs");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						nc = INCLENG(nc);
@@ -1300,9 +1300,9 @@ nextt:;
 			nc2 = REDLENG(AT.WorkPointer[3]);
 			if ( MulRat(BHEAD (UWORD *)coef,ncoef,(UWORD *)(AT.WorkPointer+4),nc2
 			,(UWORD *)(newter+4),&nc) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesCall("HuntPairs");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			nc = INCLENG(nc);
@@ -1516,9 +1516,9 @@ nextt2:;
 	}
 	return;
 callHP:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("HuntPowers");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return;
 }
@@ -1744,10 +1744,10 @@ void SortOpti(LONG number)
 	t = sca->buffer;
 	while ( t < sca->pointer ) { *p++ = t; t += *t; num++; }
 	if ( num != sca->numterms ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Help! sca->numterms = %l, actual number = %l",
 			sca->numterms, num);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	helppointers = p;
 	SplitOpti(sortpointers,num);

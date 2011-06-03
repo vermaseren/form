@@ -94,9 +94,9 @@ WORD execarg(PHEAD WORD *term, WORD level)
 		AT.WorkPointer = v;
 		if ( EndSort(factor,0,0) < 0 ) {}
 		if ( *factor && *(factor+*factor) != 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("&$ in () does not evaluate into a single term");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		AR.Eside = RHSIDE;
@@ -1603,9 +1603,9 @@ oneterm:;
 execargerr:
 	AT.WorkPointer = oldwork;
 	AT.pWorkPointer = oldppointer;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("execarg");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -1662,9 +1662,9 @@ WORD execterm(PHEAD WORD *term, WORD level)
 exectermerr:
 	AT.WorkPointer = oldworkpointer;
 	AR.DeferFlag = olddeferflag;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("execterm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -1915,15 +1915,15 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			tstop = t + *t;
 			if ( AN.ncmod != 0 ) {
 				if ( AN.ncmod != 1 || ( (WORD)AN.cmod[0] < 0 ) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Factorization modulus a number, greater than a WORD not implemented.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( Modulus(t) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesCall("ArgFactorize");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				if ( !*t) { t = tstop; continue; }

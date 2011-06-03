@@ -297,9 +297,9 @@ int FactorIn(PHEAD WORD *term, WORD level)
 	while ( ( t < tstop ) && ( *t != FACTORIN || ( ( *t == FACTORIN )
 	 && ( t[FUNHEAD] != -DOLLAREXPRESSION || t[1] != FUNHEAD+2 ) ) ) ) t += t[1];
 	if ( t >= tstop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Could not find proper factorin_ function.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	oldwork = AT.WorkPointer;
@@ -638,9 +638,9 @@ nofactor:;
 	return(0);
 onerror:
 	AT.WorkPointer = oldwork;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("FactorIn");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(GCDbuffer,"FactorIn"); NumberFree(GCDbuffer2,"FactorIn");
 	NumberFree(LCMbuffer,"FactorIn"); NumberFree(LCMb,"FactorIn"); NumberFree(LCMc,"FactorIn");
 	return(-1);
@@ -685,9 +685,9 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 		t += t[1];
 	}
 	if ( t >= tstop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Could not find proper factorin_ function.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
@@ -743,9 +743,9 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 /*
 			This is an 'illegal' case
 */
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error: factorin_ cannot determine factors in stored expressions.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 			NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 			return(-1);
@@ -769,9 +769,9 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 			NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 			return(0);
 		default:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error: Illegal expression in factorinexpr.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 			NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 			return(-1);
@@ -786,9 +786,9 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	SeekScratch(file,&oldposition);
 	SetScratch(file,&position);
 	if ( GetTerm(BHEAD oldwork) <= 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Expression %d has problems in scratchfile",expr);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
@@ -1066,10 +1066,10 @@ Complete:;
 */
 PutTheFactor:;
 	if ( AT.WorkPointer + AT.previousEfactor[2] >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
 		MesPrint("Called from factorin_");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
@@ -1101,9 +1101,9 @@ PutTheFactor:;
 onerror:
 	AT.WorkPointer = oldwork;
 	AR.CompressPointer = oldcpointer;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("FactorInExpr");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 	NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 	return(-1);

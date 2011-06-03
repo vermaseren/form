@@ -342,14 +342,14 @@ VOID PutBracketInIndex(WORD *term, POSITION *newpos)
 problems:;
 */
 				*term = oldsize; oldt[0] = HAAKJE; oldt[1] = oldhs; oldt[2] = oldh;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
 #ifdef WITHPTHREADS
 				MesPrint("Worker = %w");
 #endif
 				PrintTerm(term,"term into index");
 				PrintTerm(b->bracketbuffer+bi->bracket,"Last in index");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			i = -1;
@@ -404,10 +404,10 @@ problems:;
 */
 		average = DIVPOS(thepos,b->indexfill+1);
 		if ( ( average <= 0 ) || ( (average*4) <= 0 ) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Problems with bracket buffer. Increase MaxBracketBufferSize in form.set");
 			MesPrint("Current size is %l",AM.MaxBracketBufferSize*sizeof(WORD));
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		average *= 4;  /* 2*2: one 2 for much longer, one 2 because we have pairs */

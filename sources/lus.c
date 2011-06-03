@@ -403,9 +403,9 @@ Success:;
 						*w++ = t1[1]; t1 += 2; sign2 = -sign2;
 					}
 					else {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Illegal attempt to use a non-index-like argument in a tensor in ReplaceLoop statement");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
 					}
 				}

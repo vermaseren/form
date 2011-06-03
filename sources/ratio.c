@@ -303,9 +303,9 @@ PosNeg:
 	}
 
 RatioCall:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("RatioGen");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -351,17 +351,17 @@ WORD BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
 	*termout = WORDDIF(t,termout);
 	AT.WorkPointer = t;
 	if ( AT.WorkPointer > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	*AN.RepPoint = 1;
 	AR.expchanged = 1;
 	if ( Generator(BHEAD termout,level) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("BinomGen");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	AT.WorkPointer = termout;
@@ -409,9 +409,9 @@ WORD DoSumF1(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 	termout = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	if ( AT.WorkPointer > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	t = term + 1;
@@ -441,9 +441,9 @@ WORD DoSumF1(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 	AT.WorkPointer = termout;
 	return(0);
 SumF1Call:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("DoSumF1");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -483,9 +483,9 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 	t -= ABS(nc2);
 	newer = WORDDIF(t,term1);
 	if ( MulRat(BHEAD (UWORD *)t,REDLENG(nc2),coef,ncoef,(UWORD *)t,&nc3) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("Glue");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		TermFree(coef,"Glue");
 		SETERROR(-1)
 	}
@@ -533,9 +533,9 @@ WORD DoSumF2(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 	termout = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	if ( AT.WorkPointer > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	t = term + 1;
@@ -566,9 +566,9 @@ WORD DoSumF2(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 		AT.WorkPointer = termout + *termout;
 		to = AT.WorkPointer;
 		if ( ( to + *termout ) > AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		from = termout;
@@ -585,9 +585,9 @@ WORD DoSumF2(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 	AT.WorkPointer = termout;
 	return(0);
 SumF2Call:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("DoSumF2");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -644,17 +644,17 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 		t += t[1];
 	}
 	if ( t >= tstop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error wrt GCD function.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	termout = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	if ( AT.WorkPointer > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 /*
@@ -672,9 +672,9 @@ gcdone:
 		AT.WorkPointer = tout;
 		if ( Generator(BHEAD termout,level) < 0 ) {
 CalledFrom:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("GCDfunction");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 		AT.WorkPointer = tout;
@@ -900,9 +900,9 @@ signdone:;
 			return(0);
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Internal short argument error wrt GCD function.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -1064,9 +1064,9 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 				TermFree(newarg,"GCDfunction2-c");
 				TermFree(term,"GCDfunction2-b");
 				TermFree(argfac,"GCDfunction2-a");
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Irregular object in GCDfunction2");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				SETERROR(-1)
 			}
 		}
@@ -1225,9 +1225,9 @@ CalledFrom:
 	TermFree(newarg,"GCDfunction2-c");
 	TermFree(term,"GCDfunction2-b");
 	TermFree(argfac,"GCDfunction2-a");
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("GCDfunction2");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -1411,9 +1411,9 @@ int GCDterms(WORD *term1, WORD *term2, WORD *termout)
 	length2 = term2[*term2-1];
 	if ( length1 < 0 && length2 < 0 ) sign = -1;
 	if ( AccumGCD((UWORD *)tout,&length1,(UWORD *)t2stop,length2) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("GCDterms");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
 	if ( sign < 0 && length1 > 0 ) length1 = -length1;

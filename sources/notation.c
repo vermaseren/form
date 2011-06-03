@@ -168,9 +168,9 @@ int NormPolyTerm(PHEAD WORD *term)
 				t += t[1];
 				break;
 			default:
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal code in NormPolyTerm");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				break;
 		}
@@ -208,15 +208,15 @@ NormZero:
 	*term = 0;
 	return(0);
 NormInf:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("0^0 in NormPolyTerm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
 FromNorm:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("NormPolyTerm");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
 }
@@ -404,9 +404,9 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 		}
 		else {
 			if ( FirstWarnConvertToPoly ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal object in conversion to polynomial notation");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				FirstWarnConvertToPoly = 0;
 			}
 			return(-1);
@@ -533,9 +533,9 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 		}
 		else {
 			if ( FirstWarnConvertToPoly ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal object in conversion to polynomial notation");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				FirstWarnConvertToPoly = 0;
 			}
 			return(-1);
@@ -661,9 +661,9 @@ WORD FindSubterm(WORD *subterm)
 		if ( dim == -MAXPOSITIVE ) {	/* Give error message but continue */
 			WORD *old = AN.currentTerm;
 			AN.currentTerm = term;
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Dimension out of range in %t");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			AN.currentTerm = old;
 		}
 /*
@@ -924,18 +924,18 @@ nocase:;
 	*termout = t2 - termout;
 	AT.WorkPointer = termout;
 	if ( AT.WorkPointer >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		AT.WorkPointer = oldworkpointer;
 		return(-1);
 	}
 	retval = Generator(BHEAD termout,level);
 	AT.WorkPointer = oldworkpointer;
 	if ( retval < 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesCall("ExtraSymFun");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(retval);
 }

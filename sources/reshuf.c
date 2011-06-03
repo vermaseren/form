@@ -183,9 +183,9 @@ VOID FunLevel(PHEAD WORD *term)
 				break;
 			default:
 				if ( *t < FUNCTION ) {
-				  LOCK(ErrorMessageLock);
+				  MLOCK(ErrorMessageLock);
 				  MesPrint("Unexpected code in ReNumber");
-				  UNLOCK(ErrorMessageLock);
+				  MUNLOCK(ErrorMessageLock);
 				  Terminate(-1);
 				}
 				fun = t+2;
@@ -1008,14 +1008,14 @@ WORD DimensionExpression(PHEAD WORD *expr)
 		if ( first ) { x = dim; }
 		else if ( x != dim ) {
 			old  = AN.currentTerm;
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Dimension is not the same in the terms of the expression");
 			term = expr;
 			while ( *term ) {
 				AN.currentTerm = term;
 				MesPrint("   %T");
 			}
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			AN.currentTerm = old;
 			return(-(WORD)MAXPOSITIVE);
 		}
@@ -1027,9 +1027,9 @@ undefined:
 outofrange:
 	old  = AN.currentTerm;
 	AN.currentTerm = term;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Dimension out of range in %t in subexpression");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	AN.currentTerm = old;
 	return(-(WORD)MAXPOSITIVE);
 }
@@ -1143,9 +1143,9 @@ WORD DoDistrib(PHEAD WORD *term, WORD level)
 					m += 2;
 				}
 				if ( m < r ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Incompatible function types and arguments in distrib_");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					SETERROR(-1)
 				}
 			}
@@ -1284,9 +1284,9 @@ WORD DoDistrib(PHEAD WORD *term, WORD level)
 */
 					if ( k2 != k1 && k2 != 0 ) {
 						if ( GetBinom((UWORD *)m+3,m+2,k1,k2) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesCall("DoDistrib");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 						m[1] = ( m[2] < 0 ? -m[2]: m[2] ) + 3;
@@ -1313,9 +1313,9 @@ WORD DoDistrib(PHEAD WORD *term, WORD level)
 			*termout = WORDDIF(m,termout);
 			AT.WorkPointer = m;
 			if ( AT.WorkPointer > AT.WorkTop ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesWork();
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			*AN.RepPoint = 1;
@@ -1403,9 +1403,9 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 	while ( ( *t != DELTA3 || ((t[1]-FUNHEAD) & 1 ) != 0 ) && t < stopper )
 		t += t[1];
 	if ( t >= stopper ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error with dd_ function");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	m1 = t; m2 = t + t[1];
@@ -1418,9 +1418,9 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 		*termout = WORDDIF(t,termout);
 		AT.WorkPointer = t;
 		if ( Generator(BHEAD termout,level) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("Do dd_");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 		AT.WorkPointer = termout;
@@ -1486,9 +1486,9 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 					}
 					if ( a > 0 ) {
 						if ( GetBinom((UWORD *)(t+3),t+2,2*j+a,a) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesCall("Do dd_");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							SETERROR(-1)
 						}
 						t[1] = ( t[2] < 0 ? -t[2]: t[2] ) + 3;
@@ -1511,9 +1511,9 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 				}
 				if ( a > 0 ) {
 					if ( GetBinom((UWORD *)(t+3),t+2,j+a,a) ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesCall("Do dd_");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						SETERROR(-1)
 					}
 					t[1] = ( t[2] < 0 ? -t[2]: t[2] ) + 3;
@@ -1526,9 +1526,9 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 			*termout = WORDDIF(t,termout);
 			AT.WorkPointer = t;
 			if ( Generator(BHEAD termout,level) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesCall("Do dd_");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				SETERROR(-1)
 			}
 			k--;
@@ -1600,16 +1600,16 @@ WORD DoShuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
 
 	if ( n < 0 ) {
 		if ( ( n = DolToFunction(BHEAD -n) ) == 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("$-variable in merge statement did not evaluate to a function.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(1);
 		}
 	}
 	if ( AT.WorkPointer + 3*(*term) + AM.MaxTal > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 
@@ -1993,16 +1993,16 @@ WORD DoStuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
 #endif
 	if ( n < 0 ) {
 		if ( ( n = DolToFunction(BHEAD -n) ) == 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("$-variable in merge statement did not evaluate to a function.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(1);
 		}
 	}
 	if ( AT.WorkPointer + 3*(*term) + AM.MaxTal > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 
@@ -2584,9 +2584,9 @@ WORD *StuffRootAdd(WORD *t1, WORD *t2, WORD *to)
 */
 DoCoeffi:
 			if ( AddLong((UWORD *)tt1,size1,(UWORD *)tt2,size2,(UWORD *)to,&size3) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Called from StuffRootAdd");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			sgn = sgn1*sgn2*sgn3;

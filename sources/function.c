@@ -602,9 +602,9 @@ NextFun:
 	}
 	if ( sumch ) {
 		if ( Normalize(BHEAD term) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("SymGen");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		if ( !*term ) return(0);
@@ -695,9 +695,9 @@ int ChainIn(PHEAD WORD *term, WORD funnum)
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(BHEAD -funnum);
 		if ( AN.ErrorInDollar || funnum <= 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Dollar variable does not evaluate to function in ChainIn statement");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -743,9 +743,9 @@ int ChainOut(PHEAD WORD *term, WORD funnum)
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(BHEAD -funnum);
 		if ( AN.ErrorInDollar || funnum <= 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Dollar variable does not evaluate to function in ChainOut statement");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -877,9 +877,9 @@ WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 		*t++ = C->numrhs;
 	}
 	if ( t >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	AT.WorkPointer = t;
@@ -1594,9 +1594,9 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 		*t++ = C->numrhs;
 	}
 	if ( t >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	AT.WorkPointer = t;

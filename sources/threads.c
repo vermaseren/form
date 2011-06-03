@@ -771,9 +771,9 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	ReserveTempFiles(2);
 	return(B);
 OnError:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Error initializing thread %d",identity);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(B);
 }
@@ -1243,9 +1243,9 @@ void *RunThread(void *dummy)
 				Start with getting some buffers synchronized with the compiler
 */
 				if ( UpdateOneThread(identity) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Update error in starting expression in thread %d in module %d",identity,AC.CModule);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				AR.DeferFlag = AC.ComDefer;
@@ -1329,10 +1329,10 @@ void *RunThread(void *dummy)
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  }
 				  if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Thread %w executing term:");
 					PrintTerm(term,"LLG");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 				  }
 				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
@@ -1340,9 +1340,9 @@ void *RunThread(void *dummy)
 				  }
 				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel();
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error in processing one term in thread %d in module %d",identity,AC.CModule);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				  }
 				  AN.ninterms++;
@@ -1419,9 +1419,9 @@ bucketstolen:;
 				UNLOCK(AT.SB.MasterBlockLock[AT.SB.FillBlock]);
 				UpdateMaxSize();
 				if ( errorcode ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error terminating sort in thread %d in module %d",identity,AC.CModule);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				break;
@@ -1476,9 +1476,9 @@ bucketstolen:;
 				term = AT.WorkSpace; AT.WorkPointer = term + *term;
 				if ( Generator(BHEAD term,AR.level) ) {
 					LowerSortLevel();
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error in load balancing one term at level %d in thread %d in module %d",AR.level,AT.identity,AC.CModule);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 				}
 				AT.WorkPointer = term;
@@ -1637,9 +1637,9 @@ bucketstolen:;
 				if ( CopyExpression(fout,AB[0]->R.outfile) < 0 ) {
 					AB[0]->R.outfile = oldoutfile;
 					UNLOCK(AS.outputslock);
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error copying output of 'InParallel' expression to master. Thread: %d",identity);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					goto ProcErr;
 				}
 				AB[0]->R.outfile = oldoutfile;
@@ -1716,17 +1716,17 @@ bucketstolen:;
 						PolyFunClean(BHEAD term);
 					}
 					if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Thread %w executing term:");
 						PrintTerm(term,"DoBrackets");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 					}
 					AT.WorkPointer = term + *term;
 					if ( Generator(BHEAD term,0) ) {
 						LowerSortLevel();
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Error in processing one term in thread %d in module %d",identity,AC.CModule);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
 					}
 					AN.ninterms++;
@@ -1741,9 +1741,9 @@ bucketstolen:;
 			#] DOBRACKETS : 
 */
 			default:
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				break;
 		}
@@ -1821,9 +1821,9 @@ void *RunSortBot(void *dummy)
 			#] TERMINATETHREAD : 
 */
 			default:
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				break;
 		}
@@ -2205,9 +2205,9 @@ void MasterWaitAllBlocks()
 void WakeupThread(int identity, int signalnumber)
 {
 	if ( signalnumber == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal wakeup signal for thread %d",identity);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	LOCK(wakeuplocks[identity]);
@@ -2231,9 +2231,9 @@ void WakeupThread(int identity, int signalnumber)
 void WakeupMasterFromThread(int identity, int signalnumber)
 {
 	if ( signalnumber == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal wakeup signal for master %d",identity);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	LOCK(wakeupmasterthreadlocks[identity]);
@@ -3364,9 +3364,9 @@ SortBotOut(PHEAD WORD *term)
 	else {
 		numberofterms++;
 		if ( ( im = PutOut(BHEAD term,&SortBotPosition,AR.outfile,1) ) < 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Called from MasterMerge/SortBotOut");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		ADDPOS(AT.SS->SizeInFile[0],im);
@@ -3570,9 +3570,9 @@ OneTerm:
 						else                    w = PolyRatFunAdd(B0,m1,m2);
 */
 						if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						AT0.WorkPointer = w;
@@ -3583,9 +3583,9 @@ OneTerm:
 					else {
 						w = AT0.WorkPointer;
 						if ( w + m1[1] + m2[1] > AT0.WorkTop ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("MasterMerge: A WorkSpace of %10l is too small",AM.WorkSize);
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
 						AddArgs(B0,m1,m2,w);
@@ -3629,9 +3629,9 @@ OneTerm:
 					r2 = ( ( r2 > 0 ) ? (r2-1) : (r2+1) ) >> 1;
 
 					if ( AddRat(B0,(UWORD *)m1,r1,(UWORD *)m2,r2,coef,&r3) ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesCall("MasterMerge");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						SETERROR(-1)
 					}
 
@@ -3718,9 +3718,9 @@ cancelled:
 								of each patch.
 */
 							if ( (l1 + r31)*sizeof(WORD) >= AM.MaxTer ) {
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("MasterMerge: Coefficient overflow during sort");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								goto ReturnError;
 							}
 							m2 = poin[S->tree[i]];
@@ -3792,9 +3792,9 @@ NextTerm:
 */
 	S->TermsLeft++;
 	if ( ( im = PutOut(B0,poin[k],&position,fout,1) ) < 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Called from MasterMerge with k = %d (stream %d)",k,S->ktoi[k]);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto ReturnError;
 	}
 	ADDPOS(S->SizeInFile[0],im);
@@ -3930,9 +3930,9 @@ int SortBotMasterMerge()
 		WakeupThread(i,RUNSORTBOT);
 	}
 	if ( SortBotMerge(BHEAD0) ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Called from SortBotMasterMerge");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		AS.MasterSort = 0;
 		return(-1);
 	}
@@ -4025,9 +4025,9 @@ int SortBotMerge(PHEAD0)
 			#[ One is smallest :
 */
 			if ( SortBotOut(BHEAD term1) < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
 			}
@@ -4067,9 +4067,9 @@ int SortBotMerge(PHEAD0)
 			#[ Two is smallest :
 */
 			if ( SortBotOut(BHEAD term2) < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
 			}
@@ -4122,9 +4122,9 @@ next2:		im = *term2;
 					else                    w = PolyRatFunAdd(BHEAD m1,m2);
 */
 					if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
 					}
 					AT.WorkPointer = wp;
@@ -4135,14 +4135,14 @@ next2:		im = *term2;
 				else {
 					w = wp;
 					if ( w + m1[1] + m2[1] > AT.WorkTop ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("SortBotMerge(%d): A Maxtermsize of %10l is too small",
 								AT.identity,AM.MaxTer/sizeof(WORD));
 						MesPrint("m1[1] = %d, m2[1] = %d, Space = %l",m1[1],m2[1],(LONG)(AT.WorkTop-wp));
 						PrintTerm(term1,"term1");
 						PrintTerm(term2,"term2");
 						MesPrint("PolyWise = %d",S->PolyWise);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
 					}
 					AddArgs(BHEAD m1,m2,w);
@@ -4186,9 +4186,9 @@ next2:		im = *term2;
 				r2 = ( ( r2 > 0 ) ? (r2-1) : (r2+1) ) >> 1;
 
 				if ( AddRat(BHEAD (UWORD *)m1,r1,(UWORD *)m2,r2,coef,&r3) ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesCall("SortBotMerge");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					SETERROR(-1)
 				}
 
@@ -4230,9 +4230,9 @@ next2:		im = *term2;
 					*to++ = r33;
 					wp[0] = to - wp;
 					if ( SortBotOut(BHEAD wp) < 0 ) {
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						error = -1;
 						goto ReturnError;
 					}
@@ -4240,9 +4240,9 @@ next2:		im = *term2;
 				}
 			}
 			if ( SortBotOut(BHEAD term1) < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
 			}
@@ -4289,9 +4289,9 @@ cancelled:;		/* Now we need two new terms */
 */
 		while ( *term1 ) {
 			if ( SortBotOut(BHEAD term1) < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
 			}
@@ -4333,9 +4333,9 @@ cancelled:;		/* Now we need two new terms */
 */
 		while ( *term2 ) {
 			if ( SortBotOut(BHEAD term2) < 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
 			}

@@ -91,6 +91,8 @@ int PF_RawSend(int dest, void *buf, LONG l, int tag);
 	returns the actual number of received bytes, or -1 on failure:
 */
 LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag);
+int PF_RawProbe(int *src, int *tag, int *bytesize);
+
 static int PF_Wait4MasterIP(int tag);
 static int PF_DoOneExpr(void);
 static int PF_ReadMaster(void);/*reads directly to its scratch!*/
@@ -99,6 +101,11 @@ static int PF_Master2SlaveIP(int dest, EXPRESSIONS e);
 static int PF_WalkThrough(WORD *t, LONG l, LONG chunk, LONG *count);
 static int PF_SendChunkIP(FILEHANDLE *curfile,  POSITION *position, int to, LONG thesize);
 static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize);
+
+static void PF_ReceiveErrorMessage(int src, int tag);
+static void PF_CatchErrorMessages(int src);
+static void PF_CatchErrorMessagesForAll(void);
+static void PF_FreeErrorMessageBuffers(void);
 
 PARALLELVARS PF;
 #ifdef MPI2
@@ -907,6 +914,9 @@ static WORD PF_GetTerm(WORD *term)
 	WORD i;
 	WORD *next, *np, *last, *lp = 0, *nextstop, *tp=term;
 
+/* It must be on slaves? (TU 3 Jun 2011) */
+/* assert(PF.me != MASTER); */
+
 	if ( AR.GetFile == 2 ) {
 		fi = AR.hidefile;
 	}
@@ -1203,6 +1213,7 @@ static int PF_Wait4Slave(int src)
 {
 	int j, tag, next;
 
+	PF_CatchErrorMessages(src);
 	PF_Receive(src,PF_ANY_MSGTAG,&next,&tag);
 
 	if ( tag != PF_READY_MSGTAG ) {
@@ -1243,6 +1254,7 @@ static int PF_Wait4SlaveIP(int *src)
 {
 	int j,tag,next;
 
+	PF_CatchErrorMessages(src);
 	PF_Receive(*src,PF_ANY_MSGTAG,&next,&tag);
 	*src=tag;
 	if ( PF_W4Sstats == 0 ) {
@@ -1289,7 +1301,18 @@ int PF_WaitAllSlaves()
 /*
 			Here PF_Probe is BLOCKING function if next=PF_ANY_SOURCE:
 */
-		tag = PF_Probe(&next);
+		{
+			int oldnext = next;
+			for (;;) {
+				tag = PF_Probe(&next);
+				if ( tag == PF_STDOUT_MSGTAG || tag == PF_LOG_MSGTAG ) {
+					PF_ReceiveErrorMessage(next, tag);
+					next = oldnext;
+					continue;
+				}
+				break;
+			}
+		}
 /*
 			Here next != PF_ANY_SOURCE
 */
@@ -1391,6 +1414,7 @@ int PF_WaitAllSlaves()
 					Error?
 					Indicates the error. This will force exit from the main loop:
 */
+				MesPrint("!!!Unexpected MPI message src=%d tag=%d.", next, tag);
 				readySlaves = PF.numtasks+1;
 				break;
 		}
@@ -1523,6 +1547,8 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 					LowerSortLevel(); return(-1);
 				}
 			}
+/* Always this condition holds? (TU 3 Jun 2011) */
+/* assert(AC.mparallelflag == PARALLELFLAG); */
 			if ( AC.mparallelflag == PARALLELFLAG) {
 				if(maxinterms == 0){/*First pass:*/
 					maxinterms=PF_maxinterms/100;
@@ -1611,6 +1637,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			#[ Collect (stats,prepro,...):
 */
 		if ( AC.mparallelflag == PARALLELFLAG ) {
+			PF_CatchErrorMessagesForAll();
 			for ( k = 1; k < PF.numtasks; k++ ) {
 				PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
 				PF_UnPack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
@@ -3370,4 +3397,250 @@ int PF_RecvFile(int from, FILE *fd)
 }
 /*
   	#] int PF_RecvFile:
+  	#[ Synchronised output :
+*/
+
+/*
+ * The idea of the syncrhonised output (by, e.g., MesPrint) implemented here is
+ *   Slaves:
+ *     1. Save the output by WriteFile (set to PF_WriteFileToFile)
+ *        into some buffers between MLOCK(ErrorMessageLock) and
+ *        MUNLOCK(ErrorMessageLock), which call PF_MLock and PF_MUnlock,
+ *        respectively. Currently, AM.StdOut and AC.LogHandle are saved to
+ *        the buffers.
+ *     2. At MUNLOCK(ErrorMessageLock), send the buffered outputs to the master,
+ *        with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG.
+ *   Master:
+ *     1. Recieve the buffered output from slaves, and write them by
+ *        WriteFileToFile.
+ *   The main problem is how and where the master receives messages from
+ *   the slaves (PF_ReceiveErrorMessage). For this purpose, there are two
+ *   helper functions, PF_CatchErrorMessages and PF_CatchErrorMessagesForAll,
+ *   which removes messages with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG from the top
+ *   of the message queue.
+ */
+
+/*
+ * A implementation of dynamic arrays.
+ */
+#define Vector(type,x) \
+	struct { \
+		type *ptr; \
+		size_t size; \
+		size_t capacity; \
+	} x = { NULL, 0, 0 }
+#define VectorFree(type,x) \
+	do { \
+		M_free(x.ptr, "VectorFree:" #x); \
+		x.ptr = NULL; \
+		x.size = 0; \
+		x.capacity = 0; \
+	} while (0)
+#define VectorSize(type,x) \
+	(x.size)
+#define VectorCPtr(type,x) \
+	(x.ptr)
+#define VectorEnsureCapacity(type,x,newcapacity__) \
+	do { \
+		size_t newcapacity_ = newcapacity__; \
+		if ( x.capacity < newcapacity_ ) { \
+			type *newptr_ = (type *)Malloc1(sizeof(type) * newcapacity_, "VectorEnsureCapacity:" #x); \
+			if ( x.ptr != NULL ) { \
+				if ( x.size > 0 ) { \
+					const type *src_ = x.ptr; \
+					type *dst_ = newptr_; \
+					int n_ = x.size; \
+					NCOPY(dst_, src_, n_); \
+				} \
+				M_free(x.ptr, "VectorEnsureCapacity:" #x); \
+			} \
+			x.ptr = newptr_; \
+			x.capacity = newcapacity_; \
+		} \
+	} while (0)
+#define VectorClear(type,x) \
+	do { x.size = 0; } while (0)
+#define VectorPushBacks(type,x,src__,size__) \
+	do { \
+		size_t size_ = size__; \
+		if ( size_ > 0 ) { \
+			const type *src_ = src__; \
+			type *dst_; \
+			int n_ = size; \
+			VectorEnsureCapacity(type, x, x.size + size_); \
+			dst_ = x.ptr + x.size; \
+			NCOPY(dst_, src_, n_); \
+			x.size += size_; \
+		} \
+	} while (0)
+
+static int errorMessageLock = 0;     /* The lock count. See PF_MLock and PF_MUnlock. */
+static Vector(UBYTE, stdoutBuffer);  /* The buffer for AM.StdOut. */
+static Vector(UBYTE, logBuffer);     /* The buffer for AC.LogHandle. */
+
+/*
+  		#[ PF_MLock :
+*/
+
+/**
+ * A function called by MLOCK(ErrorMessageLock) for slaves.
+ */
+void PF_MLock(void)
+{
+	/* Only on slaves. */
+	if ( errorMessageLock ++ > 0 ) return;
+	VectorClear(UBYTE, stdoutBuffer);
+	VectorClear(UBYTE, logBuffer);
+}
+
+/*
+  		#] PF_MLock :
+  		#[ PF_MUnlock :
+*/
+
+/**
+ * A function called by MUNLOCK(ErrorMessageLock) for slaves.
+ */
+void PF_MUnlock(void)
+{
+	/* Only on slaves. */
+	if ( -- errorMessageLock > 0 ) return;
+	if ( VectorSize(UBYTE, stdoutBuffer) > 0 ) {
+		PF_RawSend(MASTER, VectorCPtr(UBYTE, stdoutBuffer), VectorSize(UBYTE, stdoutBuffer), PF_STDOUT_MSGTAG);
+	}
+	if ( VectorSize(UBYTE, logBuffer) > 0 ) {
+		PF_RawSend(MASTER, VectorCPtr(UBYTE, logBuffer), VectorSize(UBYTE, logBuffer), PF_LOG_MSGTAG);
+	}
+}
+
+/*
+  		#] PF_MUnlock :
+  		#[ PF_WriteFileToFile :
+*/
+
+/**
+ * Replaces WriteFileToFile on the master and slaves.
+ *
+ * It copies the given buffer into internal buffers, if called between
+ * MLOCK(ErrorMessageLock) and MUNLOCK(ErrorMessageLock) for slaves and
+ * handle is StdOut or LogHandle, otherwise same as WriteFileToFile.
+ *
+ * @param[in] handle A file handle that specifies the output.
+ * @param[in] buffer A pointer to the source buffer containing the data to be written.
+ * @param[in] size   The size of data to be written in bytes.
+ * @return           The actual size of data written to the output in bytes.
+ */
+LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
+{
+	if ( PF.me != MASTER && errorMessageLock > 0 ) {
+		if ( handle == AM.StdOut ) {
+			VectorPushBacks(UBYTE, stdoutBuffer, buffer, size);
+			return size;
+		}
+		else if ( handle == AC.LogHandle ) {
+			VectorPushBacks(UBYTE, logBuffer, buffer, size);
+			return size;
+		}
+	}
+	return WriteFileToFile(handle, buffer, size);
+}
+
+/*
+  		#] PF_WriteFileToFile :
+  		#[ PF_ReceiveErrorMessage :
+*/
+
+/**
+ * Receives an error message from a slave's PF_MUnlock call, and writes
+ * the message to the corresponding output.
+ * instead of LOCK(ErrorMessageLock) and UNLOCK(ErrorMessageLock).
+ *
+ * @param[in] src The source rank. 
+ * @param[in] tag The tag value (must be PF_STDOUT_MSGTAG or PF_LOG_MSGTAG or PF_ANY_MSGTAG).
+ */
+static void PF_ReceiveErrorMessage(int src, int tag)
+{
+	/* Only on the master. */
+	int size;
+	int ret = PF_RawProbe(&src, &tag, &size);
+	if ( ret == 0 ) {
+		switch ( tag ) {
+			case PF_STDOUT_MSGTAG:
+				VectorEnsureCapacity(UBYTE, stdoutBuffer, size);
+				ret = PF_RawRecv(&src, VectorCPtr(UBYTE, stdoutBuffer), size, &tag);
+				if ( ret > 0 ) WriteFileToFile(AM.StdOut, VectorCPtr(UBYTE, stdoutBuffer), size);
+				break;
+			case PF_LOG_MSGTAG:
+				VectorEnsureCapacity(UBYTE, logBuffer, size);
+				ret = PF_RawRecv(&src, VectorCPtr(UBYTE, logBuffer), size, &tag);
+				if ( ret > 0 ) WriteFileToFile(AC.LogHandle, VectorCPtr(UBYTE, logBuffer), size);
+				break;
+		}
+	}
+}
+
+/*
+  		#] PF_ReceiveErrorMessage :
+  		#[ PF_CatchErrorMessages :
+*/
+
+/**
+ * Processes all incoming messages whose tag is PF_STDOUT_MSGTAG
+ * or PF_LOG_MSGTAG. It ensures that the next PF_Recieve(src, PF_ANY_MSGTAG, ...)
+ * will not receive the message with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG.
+ *
+ * @param[in] src The source rank.
+ */
+static void PF_CatchErrorMessages(int src)
+{
+	/* Only on the master. */
+	for (;;) {
+		int next = src;
+		int tag = PF_ANY_MSGTAG;
+		int ret = PF_RawProbe(&next, &tag, NULL);
+		if ( ret == 0 ) {
+			if ( tag == PF_STDOUT_MSGTAG || tag == PF_LOG_MSGTAG ) {
+				PF_ReceiveErrorMessage(next, tag);
+				continue;
+			}
+		}
+		break;
+	}
+}
+
+/*
+  		#] PF_CatchErrorMessages :
+  		#[ PF_CatchErrorMessagesForAll :
+*/
+
+/**
+ * Calls PF_CatchErrorMessages for all slaves.
+ * Note that it is NOT equivalent to PF_CatchErrorMessages(PF_ANY_SOURCE).
+ */
+static void PF_CatchErrorMessagesForAll(void)
+{
+	/* Only on the master. */
+	int i;
+	for ( i = 1; i < PF.numtasks; i++ ) PF_CatchErrorMessages(i);
+}
+
+/*
+  		#] PF_CatchErrorMessagesForAll :
+  		#[ PF_FreeErrorMessageBuffers :
+*/
+
+/**
+ * Frees the buffers allocated for the synchronized output.
+ *
+ * Currently, not used anywhere, but could be used in PF_Terminate.
+ */
+static void PF_FreeErrorMessageBuffers(void)
+{
+	VectorFree(UBYTE, stdoutBuffer);
+	VectorFree(UBYTE, logBuffer);
+}
+
+/*
+  		#] PF_FreeErrorMessageBuffers :
+  	#] Synchronised output :
 */

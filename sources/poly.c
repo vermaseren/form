@@ -126,9 +126,9 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 		tt = poly2;
 		while ( *tt ) {
 			if ( AT.WorkTop < oldwork + *t + *tt + 2 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesWork();
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto abortion;
 			}
 			w = oldwork;
@@ -160,9 +160,9 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 			AT.WorkPointer = w = oldwork + *oldwork;
 			if ( AR.BracketOn ) {
 				if ( w + *oldwork + 3 > AT.WorkTop ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesWork();
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					goto abortion;
 				}
 				if ( PutBracket(BHEAD oldwork) ) goto abortion;
@@ -177,9 +177,9 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 	LowerSortLevel();
 	return(pbuffer);
 abortion:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Called from PolynoMul");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	LowerSortLevel(); LowerSortLevel();
 	return(0);
 }
@@ -199,9 +199,9 @@ WORD *PolynoDiv(WORD *poly1, WORD *poly2, WORD **polyrem)
 	t1 = n1 = poly1;
 	t2 = n2 = poly2;
 	if ( *t2 == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Polynomial division by zero");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	if ( *t1 == 0 ) {
@@ -333,15 +333,15 @@ WORD *Polyno1Div(WORD *poly1, WORD *poly2, WORD **polyrem)
 	t1 = n1 = poly1;
 	t2 = n2 = poly2;
 	if ( (WORD *)(((UBYTE *)(oldwork)) + 2*AM.MaxTer) >= AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	if ( *t2 == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Polynomial division by zero");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	if ( *t1 == 0 ) {
@@ -502,7 +502,7 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 	WORD *b, *b1 = 0, *b2 = 0, *t, *t1, *t2, *tstop, powdif;
 	LONG outsize;
 #ifdef POLYDEBUG
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Computing GCD of the polynomials");
 	PolynoWrite(poly1);
 	MesPrint("and");
@@ -514,7 +514,7 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 #ifdef POLYDEBUG
 		MesPrint("The GCD is");
 		PolynoWrite(AT.onepol);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 		return(CopyOfPolynomial(AT.onepol));
 	}
@@ -524,12 +524,12 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 #ifdef POLYDEBUG
 		MesPrint("The GCD is");
 		PolynoWrite(AT.onepol);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 		return(CopyOfPolynomial(AT.onepol));
 	}
 #ifdef POLYDEBUG
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 	while ( *t1 ) {
 		t = t1; GETSTOP(t,tstop); t++;
@@ -704,10 +704,10 @@ WORD *PolynoGCD(WORD *poly1, WORD *poly2)
 			M_free(n3,"PolynoGCD");
 			M_free(GA,"PolynoGCD");
 #ifdef POLYDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("The GCD is");
 			PolynoWrite(G1);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 			return(G1);
 		}
@@ -718,10 +718,10 @@ constnorm:;
 				M_free(n2,"PolynoGCD");
 				M_free(n3,"PolynoGCD");
 #ifdef POLYDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("The GCD is");
 				PolynoWrite(GA);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 				return(GA);
 			}
@@ -754,7 +754,7 @@ WORD *Polyno1GCD(WORD *poly1, WORD *poly2)
 {
 	WORD *n1, *n2, *n3 = 0, *n4 = 0, *t1, *t2, *t1stop, *t2stop;
 #ifdef POLYDEBUG
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Computing 1GCD of the polynomials");
 	PolynoWrite(poly1);
 	MesPrint("and");
@@ -774,12 +774,12 @@ isone:
 #ifdef POLYDEBUG
 		MesPrint("The 1GCD is");
 		PolynoWrite(n3);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 		return(n3);
 	}
 #ifdef POLYDEBUG
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 	t1 = n1; GETSTOP(t1,t1stop);
 	t2 = n2; GETSTOP(t2,t2stop);
@@ -798,10 +798,10 @@ isone:
 	} while ( *n2 );
 	if ( n2 ) M_free(n2,"Polyno1GCD3");
 #ifdef POLYDEBUG
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("The 1GCD is");
 	PolynoWrite(n1);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 	if ( n1 == poly1 || n1 == poly2 ) return(CopyOfPolynomial(n1));
 	else return(n1);
@@ -837,9 +837,9 @@ UBYTE *PolynoPrint(WORD *poly)
 		AO.DollarOutBuffer = 0;
 		AO.DollarOutSizeBuffer = 0;
 		AO.DollarInOutBuffer = 0;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(0);
 	}
 	else {
@@ -946,9 +946,9 @@ void PolynoPopBracket()
 {
 	GETIDENTITY
 	if ( AN.polyblevel == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error: PolynoBracket popped too often");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	AN.polybpointer = AN.polybpstack[--AN.polyblevel];
@@ -1018,9 +1018,9 @@ WORD *PolynoNormalize(WORD *poly)
 		w = oldwork;
 		i = *t;
 		if ( w + i > AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto aborteer;
 		}
 		NCOPY(w,t,i);
@@ -1030,9 +1030,9 @@ WORD *PolynoNormalize(WORD *poly)
 		AT.WorkPointer = oldwork + *oldwork;
 		GETSTOP(oldwork,w);
 		if ( oldwork+1 < w && oldwork[1] != SYMBOL ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Polynomial Normalization: There are non-symbols in the polynomial");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto aborteer;
 		}
 		if ( AN.ncmod != 0 ) {
@@ -1042,9 +1042,9 @@ WORD *PolynoNormalize(WORD *poly)
 		AT.WorkPointer = w = oldwork + *oldwork;
 		if ( AR.BracketOn ) {
 			if ( w + *oldwork + 3 > AT.WorkTop ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesWork();
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				goto aborteer;
 			}
 			if ( PutBracket(BHEAD oldwork) ) goto aborteer;
@@ -1057,9 +1057,9 @@ WORD *PolynoNormalize(WORD *poly)
 	LowerSortLevel();
 	return(pbuffer);
 aborteer:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolynoNormalize");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	LowerSortLevel(); LowerSortLevel();
 	return(0);
 }
@@ -1083,9 +1083,9 @@ WORD DoPolynomial(WORD *term, WORD level)
 		if ( *t != AM.polyfunnum || t[1] != FUNHEAD+4 || t[FUNHEAD] != -SNUMBER ||
 			( t[FUNHEAD+2] != -DOLLAREXPRESSION && t[FUNHEAD+2] != -EXPRESSION )
 			|| ( t[FUNHEAD+1] != POLYNORM && t[FUNHEAD+1] != POLYINTFAC ) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Internal error. Irregular Poly_ function");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 	}
@@ -1133,10 +1133,10 @@ WORD DoPolynomial(WORD *term, WORD level)
 			n3 = PolynoIntFac(n1);
 			break;
 		default:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Internal error: illegal code in poly_ function");
 			PolynoFinish();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 	}
 	if ( n3 == 0 ) goto aborteer;
@@ -1194,16 +1194,16 @@ WORD DoPolyGetRem(WORD *term, WORD level)
 	t = term; GETSTOP(t,tstop); t++;
 	while ( t < tstop && *t != AM.polygetremnum ) t += t[1];
 	if ( t >= tstop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Irregular Polygetrem_ function");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	n1 = AT.lastpolyrem;
 	if ( n1 == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Error call to polygetrem_ function not after polydiv_.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	while ( *n1 ) {
@@ -1357,10 +1357,10 @@ WORD *PolynoCoefNorm(WORD *poly, WORD x, WORD **factor, int par)
 	PolynoPopBracket();
 	if ( n1 == 0 ) goto aborteer;
 #ifdef POLYDEBUG
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("PolynoCoefNorm in:");
 	PolynoWrite(n1);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 	t1 = n1;
 	while ( *t1 ) {
@@ -1392,20 +1392,20 @@ WORD *PolynoCoefNorm(WORD *poly, WORD x, WORD **factor, int par)
 	M_free(n1,"PolynoCoefNorm4"); n1 = 0;
 	if ( ( b1 = PolynoDiv(poly,G1,&b3) ) == 0 ) goto aborteer;
 	if ( *b3 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Serious error in PolynoCoefNorm");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		goto aborteer;
 	}
 	M_free(b3,"PolynoCoefNorm5");
 	b1 = PolynoUnify(b1,0);
 #ifdef POLYDEBUG
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("PolynoCoefNorm out:");
 	PolynoWrite(b1);
 	MesPrint("   with factor");
 	PolynoWrite(G1);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 #endif
 	if ( par <= 0 ) M_free(poly,"PolynoCoefNorm6");
 	if ( par == 0 || par == 1 ) { *factor = 0; M_free(G1,"PolynoCoefNorm7"); }
@@ -1471,9 +1471,9 @@ WORD *MakePolynomial(WORD numexp, int par, int *onevar)
 	}
 	return(n1);
 onlysymbols:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Only symbols are allowed in polynomials. Make substitutions first");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 aborteer:
 	if ( n1 ) { M_free(n1,"DoPolynomial5"); n1 = 0; }
 	return(0);
@@ -1617,9 +1617,9 @@ WORD *PolynoIntFac(WORD *poly)
 		w = oldwork;
 		i = *t;
 		if ( w + i + 2*PIFnscrat > AT.WorkTop ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesWork();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			goto PIFerror1;
 		}
 		NCOPY(w,t,i);
@@ -1642,9 +1642,9 @@ WORD *PolynoIntFac(WORD *poly)
 PIFerror1:
 	LowerSortLevel();
 PIFerror:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("PolynoIntFac");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	NumberFree(PIFscrat,"PolynoIntFac"); NumberFree(PIFscrat1,"PolynoIntFac"); NumberFree(PIFscrat2,"PolynoIntFac");
 	return(0);
 }

@@ -636,9 +636,9 @@ returnvalues:;
 */
 						AT.WorkPointer += 2*AM.MaxTer;
 						if ( AT.WorkPointer > AT.WorkTop ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesWork();
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							return(-1);
 						}
 						iterm = AT.WorkPointer;
@@ -655,9 +655,9 @@ returnvalues:;
 						newterm = AT.WorkPointer;
 						if ( EndSort(newterm,0,0) < 0 ) {}
 						if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("&yes/no information in islyndon/tolyndon does not evaluate into a single term");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							return(-1);
 						}
 						AR.Eside = RHSIDE;
@@ -674,9 +674,9 @@ returnvalues:;
 */
 							if ( info >= infoend ) {
 abortlyndon:;
-								LOCK(ErrorMessageLock);
+								MLOCK(ErrorMessageLock);
 								MesPrint("There should be a yes and a no argument in islyndon/tolyndon");
-								UNLOCK(ErrorMessageLock);
+								MUNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
 							NEXTARG(info)
@@ -715,9 +715,9 @@ abortlyndon:;
 						}
 						break;
 					default:
-						LOCK(ErrorMessageLock);
+						MLOCK(ErrorMessageLock);
 						MesPrint("Irregular code in execution of transform statement");
-						UNLOCK(ErrorMessageLock);
+						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
 				}
 				onetransform += *onetransform;
@@ -749,9 +749,9 @@ abortlyndon:;
 	NCOPY(term,tt,i)
 	return(0);
 abo:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("RunTransform");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -775,9 +775,9 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD *tt, *tstop, totarg, arg1, arg2;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunEncode");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
@@ -794,10 +794,10 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 			i1 = -base;
 			base = DolToNumber(BHEAD i1);
 			if ( AN.ErrorInDollar || base < 2 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("$%s does not have a number value > 1 in base/encode/transform statement in module %l",
 					DOLLARNAME(Dollars,i1),AC.CModule);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -939,16 +939,16 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 		NumberFree(scrat1,"RunEncode");
 	}
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Unimplemented type of encoding encountered in RunEncode");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	return(0);
 CalledFrom:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("RunEncode");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -965,9 +965,9 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD *tt, *tstop, totarg, arg1, arg2;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunDecode");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
@@ -983,10 +983,10 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 			i1 = -base;
 			base = DolToNumber(BHEAD i1);
 			if ( AN.ErrorInDollar || base < 2 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("$%s does not have a number value > 1 in base/decode/transform statement in module %l",
 					DOLLARNAME(Dollars,i1),AC.CModule);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -1082,9 +1082,9 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 			size1 = size2;
 		}
 		if ( size2 != 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("RunDecode: number to be decoded is too big");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			NumberFree(scrat3,"RunEncode");
 			NumberFree(scrat2,"RunEncode");
 			NumberFree(scrat1,"RunEncode");
@@ -1105,16 +1105,16 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 		NumberFree(scrat1,"RunEncode");
 	}
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Unimplemented type of encoding encountered in RunDecode");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	return(0);
 CalledFrom:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("RunDecode");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -1157,9 +1157,9 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 */
 	AT.WorkPointer += 2*AM.MaxTer;
 	if ( AT.WorkPointer > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	term = AT.WorkPointer;
@@ -1175,9 +1175,9 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 	newterm = AT.WorkPointer;
 	if ( EndSort(newterm,0,0) < 0 ) {}
 	if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("&information in replace transformation does not evaluate into a single term");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	AR.Eside = RHSIDE;
@@ -1242,9 +1242,9 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 			}
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("&irregular code found in replace transformation (RunReplace)");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -1426,9 +1426,9 @@ getthisone:;
 						term4 = AT.WorkPointer;
 						if ( EndSort(term4,0,0) < 0 ) {}
 						if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
-							LOCK(ErrorMessageLock);
+							MLOCK(ErrorMessageLock);
 							MesPrint("&information in replace transformation does not evaluate into a single term");
-							UNLOCK(ErrorMessageLock);
+							MUNLOCK(ErrorMessageLock);
 							return(-1);
 						}
 /*
@@ -1552,9 +1552,9 @@ dothisnow:;
 			term4 = AT.WorkPointer;
 			if ( EndSort(term4,0,0) < 0 ) {}
 			if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("&information in replace transformation does not evaluate into a single term");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 /*
@@ -1602,9 +1602,9 @@ WORD RunImplode(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD moveup, numzero, outspace;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunImplode");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
@@ -1806,9 +1806,9 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args, WORD *info)
 	int reverse = 0, iarg, i, numzero;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunImplode");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
@@ -1906,9 +1906,9 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args, WORD *info)
 	NCOPY(fun,newfun,i)
 	return(0);
 OverWork:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -1921,9 +1921,9 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, *infostop;
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunPermute");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
@@ -2006,9 +2006,9 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 	}
 	return(0);
 OverWork:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -2021,9 +2021,9 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, i1, i2;
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunReverse");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
@@ -2099,9 +2099,9 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args, WORD *info)
 	}
 	return(0);
 OverWork:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -2114,9 +2114,9 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, j, *f, *f1, *f2, x;
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunCycle");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
@@ -2238,9 +2238,9 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 	}
 	return(0);
 OverWork:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -2259,9 +2259,9 @@ WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par)
 	WORD sign, i1, i2, retval;
 	if ( fun[0] <= GAMMASEVEN && fun[0] >= GAMMA ) return(0);
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunIsLyndon");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
@@ -2339,9 +2339,9 @@ WORD RunToLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par)
 	WORD sign, i1, i2, retval, unique;
 	if ( fun[0] <= GAMMASEVEN && fun[0] >= GAMMA ) return(0);
 	if ( *args != ARGRANGE ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunIsLyndon");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
@@ -2437,9 +2437,9 @@ nexti1:;
 */
 	return(unique);
 OverWork:;
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesWork();
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-2);
 }
 

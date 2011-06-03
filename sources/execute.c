@@ -1301,18 +1301,18 @@ int GetFirstBracket(WORD *term, int num)
 		position = AS.OldOnFile[num];
 		if ( GetOneTerm(BHEAD term,fi,&position,1) < 0
 		|| ( GetOneTerm(BHEAD term,fi,&position,1) < 0 ) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("GetFirstBracket");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			SETERROR(-1)
 		}
 		if ( fi->handle >= 0 ) {
 /*
 			SeekFile(fi->handle,&oldposition,SEEK_SET);
 			if ( ISNEGPOS(oldposition) ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("File error");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				SETERROR(-1)
 			}
 */
@@ -1609,9 +1609,9 @@ LONG TermsInBracket(PHEAD WORD *term, WORD level)
 			}
 			else {
 IllBraReq:;
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal bracket request in termsinbracket_ function.");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 		}
@@ -1619,10 +1619,10 @@ IllBraReq:;
 	}
 	AT.WorkPointer = b;
 	if ( AT.WorkPointer + *term +4 > AT.WorkTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesWork();
 		MesPrint("Called from termsinbracket_ function.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 /*
@@ -1641,14 +1641,14 @@ IllBraReq:;
 /*
 			Not implemented yet.
 */
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("termsinbracket_ function currently only handles Keep Brackets.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		case BRACKETOTHEREXPR:
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("termsinbracket_ function currently only handles Keep Brackets.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		case NOBRACKETACTIVE:
 			numterms = 1;
@@ -1673,9 +1673,9 @@ IllBraReq:;
 	AT.WorkPointer = n2;
 	if ( Generator(BHEAD n1,level) < 0 ) {
 		AT.WorkPointer = bracketbuffer;
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Called from termsinbracket_ function.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 /*

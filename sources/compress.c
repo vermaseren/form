@@ -89,9 +89,9 @@ int SetupOutputGZIP(FILEHANDLE *f)
 		f->ziobuffer =
 			(Bytef *)Malloc1(f->ziosize*sizeof(char),"output zbuffer");
 		if ( f->zsp == 0 || f->ziobuffer == 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("SetupOutputGZIP");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -117,10 +117,10 @@ int SetupOutputGZIP(FILEHANDLE *f)
 	6: Initiate the deflation
 */
 	if ( deflateInit(f->zsp,AR.gzipCompress) != Z_OK ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("Error from zlib: %s",f->zsp->msg);
 		MesCall("SetupOutputGZIP");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
@@ -157,10 +157,10 @@ int PutOutputGZIP(FILEHANDLE *f)
 #ifdef GZIPDEBUG
 			{
 				char *s = (char *)((UBYTE *)(f->ziobuffer)+f->ziosize);
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%wWriting %l bytes at %10p: %d %d %d %d %d"
 				,f->ziosize,&(f->POposition),s[-5],s[-4],s[-3],s[-2],s[-1]);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 			}
 #endif
 #ifdef ALLLOCK
@@ -178,9 +178,9 @@ int PutOutputGZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
 #endif
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%wWrite error during compressed sort. Disk full?");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			if ( f == AR.hidefile ) {
@@ -210,15 +210,15 @@ int PutOutputGZIP(FILEHANDLE *f)
 			return(0);
 		}
 		else {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w avail_in = %d, avail_out = %d.",f->zsp->avail_in,f->zsp->avail_out);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			break;
 		}
 	}
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("%wError in gzip handling of output. zerror = %d",zerror);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	return(-1);
 }
 
@@ -248,9 +248,9 @@ int FlushOutputGZIP(FILEHANDLE *f)
 			Write the output
 */
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%wWriting %l bytes at %10p",f->ziosize,&(f->POposition));
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
 			LOCK(f->pthreadslock);
@@ -267,9 +267,9 @@ int FlushOutputGZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 				UNLOCK(f->pthreadslock);
 #endif
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%wWrite error during compressed sort. Disk full?");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 			if ( f == AR.hidefile ) {
@@ -298,9 +298,9 @@ int FlushOutputGZIP(FILEHANDLE *f)
 		Write the output
 */
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%wWriting %l bytes at %10p",(LONG)(f->zsp->avail_out),&(f->POposition));
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
 		LOCK(f->pthreadslock);
@@ -317,9 +317,9 @@ int FlushOutputGZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 			UNLOCK(f->pthreadslock);
 #endif
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%wWrite error during compressed sort. Disk full?");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		if ( f == AR.hidefile ) {
@@ -336,12 +336,12 @@ int FlushOutputGZIP(FILEHANDLE *f)
 		}
 #endif
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		{  char *s = f->ziobuffer+f->zsp->total_out;
 			MesPrint("%w   Last bytes written: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 		}
 		MesPrint("%w     Perceived position in FlushOutputGZIP is %10p",&(f->POposition));
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 /*
 			Reset the output
@@ -350,19 +350,19 @@ int FlushOutputGZIP(FILEHANDLE *f)
 		f->zsp->avail_out = f->ziosize;
 		f->zsp->total_out = 0;
         if ( ( zerror = deflateEnd(f->zsp) ) == Z_OK ) return(0);
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		if ( f->zsp->msg ) {
 			MesPrint("%wError in finishing gzip handling of output: %s",f->zsp->msg);
 		}
 		else {
 			MesPrint("%wError in finishing gzip handling of output.");
 		}
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	else {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%wError in gzip handling of output.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 	}
 	return(-1);
 }
@@ -395,9 +395,9 @@ int SetupAllInputGZIP(SORTING *S)
 	if ( S->zsparray == 0 ) {
 		S->zsparray = (z_streamp)Malloc1(sizeof(z_stream)*S->MaxFpatches,"input zstreams");
 		if ( S->zsparray == 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("SetupAllInputGZIP");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef),"input raw buffers");
@@ -408,9 +408,9 @@ int SetupAllInputGZIP(SORTING *S)
 */
 		AN.ziobufnum  = (Bytef **)Malloc1(S->MaxFpatches*sizeof(Bytef *),"input raw pointers");
 		if ( AN.ziobuffers == 0 || AN.ziobufnum == 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesCall("SetupAllInputGZIP");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 		for ( i  = 0 ; i < S->MaxFpatches; i++ ) {
@@ -419,9 +419,9 @@ int SetupAllInputGZIP(SORTING *S)
 	}
 	for ( i = 0; i < S->inNum; i++ ) {
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%wPreparing z-stream %d with compression %d",i,S->fpincompressed[i]);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 		if ( S->fpincompressed[i] ) {
 			zsp = &(S->zsparray[i]);
@@ -447,11 +447,11 @@ int SetupAllInputGZIP(SORTING *S)
 			4: Initiate the inflation
 */
 			if ( inflateInit(zsp) != Z_OK ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				if ( zsp->msg ) MesPrint("%wError from inflateInit: %s",zsp->msg);
 				else            MesPrint("%wError from inflateInit");
 				MesCall("SetupAllInputGZIP");
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			NumberOpened++;
@@ -496,9 +496,9 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			}
 			if ( toread > 0 ) {
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%w-+Reading %l bytes in stream %d at position %10p; stop at %10p",toread,numstream,position,&(S->fPatchesStop[numstream]));
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
 				LOCK(f->pthreadslock);
@@ -510,11 +510,11 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 				UNLOCK(f->pthreadslock);
 #endif
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				{  char *s = AN.ziobufnum[numstream]+readsize;
 					MesPrint("%w read: %l +Last bytes read: %d %d %d %d %d in %s, newpos = %10p",readsize,s[-5],s[-4],s[-3],s[-2],s[-1],f->name,position);
 				}
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 				if ( readsize == 0 ) {
 					zsp->next_in  = AN.ziobufnum[numstream];
@@ -523,9 +523,9 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					return(zsp->total_out);
 				}
 				if ( readsize < 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("%wFillInputGZIP: Read error during compressed sort.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				ADDPOS(f->filesize,readsize);
@@ -558,7 +558,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 						break;
 /*
 #ifdef GZIPDEBUG
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("%wClosing stream %d",numstream);
 #endif
 					readsize = zsp->total_out;
@@ -570,7 +570,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					else {
 						MesPrint("%w No words");
 					}
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 #endif
 					if ( inflateEnd(zsp) == Z_OK ) return(readsize);
 					break;
@@ -581,9 +581,9 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 */
 #ifdef GZIPDEBUG
 				if ( numstream == 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("%wWant to read in stream 0 at position %10p",position);
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 				}
 #endif
 				if ( ISGEPOSINC(S->fPatchesStop[numstream],*position,f->ziosize) ) {
@@ -594,9 +594,9 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					toread = (LONG)(BASEPOSITION(pos));
 				}
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("%w--Reading %l bytes in stream %d at position %10p",toread,numstream,position);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
 				LOCK(f->pthreadslock);
@@ -608,11 +608,11 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 				UNLOCK(f->pthreadslock);
 #endif
 #ifdef GZIPDEBUG
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				{  char *s = AN.ziobufnum[numstream]+readsize;
 					MesPrint("%w   Last bytes read: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 				}
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 #endif
 				if ( readsize == 0 ) {
 					zsp->next_in  = AN.ziobufnum[numstream];
@@ -621,9 +621,9 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					return(zsp->total_out);
 				}
 				if ( readsize < 0 ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("%wFillInputGZIP: Read error during compressed sort.");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				ADDPOS(f->filesize,readsize);
@@ -640,9 +640,9 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			}
 		}
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%w zerror = %d in stream %d. At position %10p",zerror,numstream,position);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 		if ( zerror == Z_STREAM_END ) {
 /*
@@ -655,7 +655,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			Make the final call and finish
 */
 #ifdef GZIPDEBUG
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%wClosing stream %d",numstream);
 #endif
 			readsize = zsp->total_out;
@@ -667,21 +667,21 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			else {
 				MesPrint("%w No words");
 			}
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 #endif
 			if ( inflateEnd(zsp) == Z_OK ) return(readsize);
 		}
 
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%wFillInputGZIP: Error in gzip handling of input.");
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	else {
 #ifdef GZIPDEBUG
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("%w++Reading %l bytes at position %10p",buffersize,position);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
 		LOCK(f->pthreadslock);
@@ -693,10 +693,10 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 		UNLOCK(f->pthreadslock);
 #endif
 		if ( readsize < 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("%wFillInputGZIP: Read error during uncompressed sort.");
 			MesPrint("%w++Reading %l bytes at position %10p",buffersize,position);
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 		}
 		return(readsize);
 	}

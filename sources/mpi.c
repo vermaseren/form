@@ -43,6 +43,10 @@
 # include "mpe.h"
 #endif
 
+#ifdef MPIDEBUGGING
+#include "mpidbg.h"
+#endif
+
 /*[12oct2005 mt]:*/
 /*
 	Today there was some cleanup, some stuff is moved into another place
@@ -1498,4 +1502,33 @@ LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag)
 }
 /*
    #] LONG PF_RawRecv:
+   #[ PF_RawProbe:
+*/
+
+/**
+ * Probes an incoming message.
+ *
+ * @param[in,out] src      The source rank.
+ * @param[in,out] tag      The tag value.
+ * @param[out]    bytesize The size of received data in bytes.
+ * @return                 The standard return convention (OK = 0).
+ */
+int PF_RawProbe(int *src, int *tag, int *bytesize)
+{
+	MPI_Status stat;
+	int srcval = src != NULL ? *src : PF_ANY_SOURCE;
+	int tagval = tag != NULL ? *tag : PF_ANY_MSGTAG;
+	int ret = MPI_Probe(srcval, tagval, PF_COMM, &stat);
+	if ( ret != MPI_SUCCESS ) return -1;
+	if ( src != NULL ) *src = stat.MPI_SOURCE;
+	if ( tag != NULL ) *tag = stat.MPI_TAG;
+	if ( bytesize != NULL ) {
+		ret = MPI_Get_count(&stat, MPI_BYTE, bytesize);
+		if ( ret != MPI_SUCCESS ) return -1;
+	}
+	return 0;
+}
+
+/*
+   #] PF_RawProbe:
 */

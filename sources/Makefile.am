@@ -69,7 +69,8 @@ SRCBASE = \
 SRCPARALLEL = \
 	mpi.c \
 	parallel.c \
-	parallel.h
+	parallel.h \
+	mpidbg.h
 
 # consider argument DATE
 DATEFLAG=$(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)\"'"; fi))

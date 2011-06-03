@@ -1098,7 +1098,7 @@ RegRet:;
 		UBYTE OutBuf[140];
 /*		if ( AP.DebugFlag ) { */
 		if ( ( AP.PreDebug & DUMPINTERMS ) == DUMPINTERMS ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			AO.OutFill = AO.OutputLine = OutBuf;
 			AO.OutSkip = 3;
 			FiniLine();
@@ -1117,7 +1117,7 @@ RegRet:;
 				}
 			}
 			FiniLine();
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 		}
 	}
 /*
@@ -1253,9 +1253,9 @@ WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 			}
 			while ( --i >= 0 ) *r++ = *term++;
 			if ( r >= AR.ComprTop ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			AR.CompressPointer = r; *r = 0;
@@ -1283,9 +1283,9 @@ WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 		SETBASEPOSITION(*pos,(UBYTE *)(fi->POfill)-(UBYTE *)(fi->PObuffer));
 		if ( p <= fi->POfull ) {
 			if ( r >= AR.ComprTop ) {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
 			AR.CompressPointer = r; *r = 0;
@@ -1294,9 +1294,9 @@ WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 		error = 6;
 	}
 ErrGet:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesPrint("Error while reading scratch file in GetOneTerm (%d)",error);
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
 }
@@ -1647,9 +1647,9 @@ InNew:
 		SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
 		UNLOCK(AM.storefilelock);
 		if ( RetCode != sizeof(WORD) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("@Error in compression of store file");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		num = *m;
@@ -1663,9 +1663,9 @@ InNew:
 	first = num;
 	num *= wsizeof(WORD);
 	if ( num < 0 ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Error in stored expressions file at position %9p",position);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	LOCK(AM.storefilelock);
@@ -1674,18 +1674,18 @@ InNew:
 	SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
 	UNLOCK(AM.storefilelock);
 	if ( RetCode != num ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("@Error in stored expressions file at position %9p",position);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
 	NCOPY(r,m,first);
 PastEnd:
 	*rr = *to;
 	if ( r >= AR.ComprTop ) {
-		LOCK(ErrorMessageLock);
+		MLOCK(ErrorMessageLock);
 		MesPrint("CompressSize of %10l is insufficient",AM.CompressSize);
-		UNLOCK(ErrorMessageLock);
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	AR.CompressPointer = r; *r = 0;
@@ -1696,9 +1696,9 @@ PastEnd:
 		return((WORD)*to);
 	}
 PastErr:
-	LOCK(ErrorMessageLock);
+	MLOCK(ErrorMessageLock);
 	MesCall("GetFromStore");
-	UNLOCK(ErrorMessageLock);
+	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
 }
 
@@ -3091,9 +3091,9 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 				PUTZERO(to->POposition);
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Cannot create scratch file %s",to->name);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 		}
@@ -3107,9 +3107,9 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 			if ( fullsize > 0 ) {
 				SeekFile(to->handle,&(to->POposition),SEEK_SET);
 				if ( WriteFile(to->handle,((UBYTE *)(to->PObuffer)),to->POsize) != to->POsize ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error while writing to disk. Disk full?");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				ADDPOS(to->POposition,to->POsize);
@@ -3130,9 +3130,9 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 	if ( ((UBYTE *)(from->POfill)-(UBYTE *)(from->PObuffer)) > 0 ) {
 		if ( WriteFile(from->handle,((UBYTE *)(from->PObuffer)),((UBYTE *)(from->POfill)-(UBYTE *)(from->PObuffer)))
 		!= ((UBYTE *)(from->POfill)-(UBYTE *)(from->PObuffer)) ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error while writing to disk. Disk full?");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		SeekFile(from->handle,&(from->POposition),SEEK_CUR);
@@ -3147,9 +3147,9 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 	while ( ISLESSPOS(poscopy,posfrom) ) {
 		fullsize = ReadFile(from->handle,((UBYTE *)(from->PObuffer)),from->POsize);
 		if ( fullsize < 0 || ( fullsize % sizeof(WORD) ) != 0 ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error while reading from disk while copying expression.");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		fullsize /= sizeof(WORD);
@@ -3172,9 +3172,9 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 				PUTZERO(to->filesize);
 			}
 			else {
-				LOCK(ErrorMessageLock);
+				MLOCK(ErrorMessageLock);
 				MesPrint("Cannot create scratch file %s",to->name);
-				UNLOCK(ErrorMessageLock);
+				MUNLOCK(ErrorMessageLock);
 				return(-1);
 			}
 		  }
@@ -3187,9 +3187,9 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 			if ( fullsize > 0 ) {
 				SeekFile(to->handle,&(to->POposition),SEEK_SET);
 				if ( WriteFile(to->handle,((UBYTE *)(to->PObuffer)),to->POsize) != to->POsize ) {
-					LOCK(ErrorMessageLock);
+					MLOCK(ErrorMessageLock);
 					MesPrint("Error while writing to disk. Disk full?");
-					UNLOCK(ErrorMessageLock);
+					MUNLOCK(ErrorMessageLock);
 					return(-1);
 				}
 				ADDPOS(to->POposition,to->POsize);
@@ -3213,9 +3213,9 @@ WriteTrailer:
 */
 		SeekFile(to->handle,&(to->filesize),SEEK_SET);
 		if ( WriteFile(to->handle,((UBYTE *)(to->PObuffer)),fullsize) != fullsize ) {
-			LOCK(ErrorMessageLock);
+			MLOCK(ErrorMessageLock);
 			MesPrint("Error while writing to disk. Disk full?");
-			UNLOCK(ErrorMessageLock);
+			MUNLOCK(ErrorMessageLock);
 			return(-1);
 		}
 		ADDPOS(to->filesize,fullsize);
