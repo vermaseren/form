@@ -1254,7 +1254,7 @@ static int PF_Wait4SlaveIP(int *src)
 {
 	int j,tag,next;
 
-	PF_CatchErrorMessages(src);
+	PF_CatchErrorMessages(*src);
 	PF_Receive(*src,PF_ANY_MSGTAG,&next,&tag);
 	*src=tag;
 	if ( PF_W4Sstats == 0 ) {
