@@ -955,7 +955,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor :
+ 		#] PreProcessor : 
  		#[ PreProInstruction :
 */
 
@@ -1034,7 +1034,7 @@ retry:;
 }
 
 /*
- 		#] PreProInstruction :
+ 		#] PreProInstruction : 
  		#[ LoadInstruction :
 
 		0:  preprocessor instruction that may involve matching of brackets
@@ -2870,7 +2870,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf : 
+ 		#] DoIf :
  		#[ DoIfdef :
 */
 
@@ -2909,7 +2909,7 @@ int DoMessage(UBYTE *s)
 }
 
 /*
- 		#] DoMessage :
+ 		#] DoMessage : 
  		#[ DoPipe :
 */
 
@@ -3944,7 +3944,7 @@ illoper:
 }
 
 /*
- 		#] PreIfEval : 
+ 		#] PreIfEval :
  		#[ PreCmp :
 */
 
@@ -4098,6 +4098,36 @@ illend:
 				*val2 = x;
 				return(s);
 			}
+			else if ( StrICmp(s,(UBYTE *)"exists") == 0 ) {
+				UBYTE *tt;
+				WORD numdol, numexp;
+				*t++ = c;
+				while ( *t == ' ' || *t == '\t' || *t == '\n' || *t == '\r' ) t++;
+				if ( *t == '$' ) {
+					t++; tt = t; while (chartype[*tt] <= 1 ) tt++;
+					c = *tt; *tt = 0;
+					if ( ( numdol = GetDollar(t) ) > 0 ) { x = 1; }
+					else                                 { x = 0; }
+					*tt = c;
+				}
+				else {
+					tt = SkipAName(t);
+					c = *tt; *tt = 0;
+					if ( GetName(AC.exprnames,t,&numexp,NOAUTO) == NAMENOTFOUND ) { x = 0; }
+					else { x = 1; }
+					*tt = c;
+				} 
+				while ( *tt == ' ' || *tt == '\t'
+						 || *tt == '\n' || *tt == '\r' ) tt++;
+				if ( *tt != ')' ) {
+					MesPrint("@Improper use of exists($var) or exists(expr)");
+					Terminate(-1);
+				}
+				*type = 3;
+				s = tt+1;
+				*val2 = x;
+				return(s);
+			}
 			else if ( StrICmp(s,(UBYTE *)("maxpowerof")) == 0 ) {
 				UBYTE *tt;
 				WORD numsym;
@@ -4196,7 +4226,7 @@ illend:
 }
 
 /*
- 		#] pParseObject : 
+ 		#] pParseObject :
  		#[ PreCalc :
  
 		To be called when a { is encountered.
