@@ -633,7 +633,6 @@ LONG EndSort(WORD *buffer, int par, int par2)
   else{ /* retval = 0: for S != AM.S0 and slaves still do the regular sort */
 #endif /* PARALLEL */
 	oldoutfile = AR.outfile;
-	if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(); }
 	if ( S == AT.S0 ) {
 		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
 		S->PolyWise = 0;
@@ -653,6 +652,7 @@ LONG EndSort(WORD *buffer, int par, int par2)
 			ss[over] = 0;
 			sSpace = ComPress(ss,&spare);
 			S->TermsLeft -= over - spare;
+			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(); }
 		}
 		else if ( S != AT.S0 ) {
 			ss[over] = 0;
@@ -739,6 +739,7 @@ LONG EndSort(WORD *buffer, int par, int par2)
 			goto RetRetval;
 		}
 	}
+	else if ( par == 1 && newout == 0 ) { AR.outfile = newout = AllocFileHandle(); }
 	sSpace++;
 	lSpace = sSpace + (S->lFill - S->lBuffer) - (LONG)S->lPatch*(AM.MaxTer/sizeof(WORD));
 	SETBASEPOSITION(pp,lSpace);
