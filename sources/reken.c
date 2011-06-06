@@ -880,7 +880,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			from = b; b = to = DLscratA; j = nb; NCOPY(to, from, j);
 		}
 
-		if ( ( *nc > i ) || ( (long)c & (sizeof(mp_limb_t)-1) ) ) {
+		if ( ( *nc > (WORD)i ) || ( (long)c & (long)(sizeof(mp_limb_t)-1) ) ) {
 			ic = DLscratB;
 		}
 		if ( na < nb ) {
@@ -1091,7 +1091,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		}
 #endif
 /*
- 		#] GMP stuff :
+ 		#] GMP stuff : 
 */
 		/* Start with normalization operation */
  
@@ -1207,7 +1207,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 }
 
 /*
- 		#] DivLong :
+ 		#] DivLong : 
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -2165,7 +2165,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 		uw = (UWORD *)upc; anc *= 2;
 		while ( uw[anc-1] == 0 ) anc--;
-		for ( ii = 0; ii < tcounta; ii++ ) *c++ = 0;
+		for ( ii = 0; ii < (int)tcounta; ii++ ) *c++ = 0;
 		for ( ii = 0; ii < anc; ii++ ) *c++ = *uw++;
 		*nc = anc + tcounta;
 		NumberFree(u1,"GcdLong"); NumberFree(u2,"GcdLong"); NumberFree((UWORD *)(upc),"GcdLong");
@@ -2513,10 +2513,10 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 	if ( na == 1 ) {
 /*			Special cases that are the most frequent */
 		if ( a[0] == 1 ) return(0);
-		if ( power < BITSINWORD && na == 1 && a[0] == (1<<power) ) {
+		if ( power < BITSINWORD && na == 1 && a[0] == (UWORD)(1<<power) ) {
 			a[0] = 2; return(0);
 		}
-		if ( 2*power < BITSINWORD && na == 1 && a[0] == (1<<(2*power)) ) {
+		if ( 2*power < BITSINWORD && na == 1 && a[0] == (UWORD)(1<<(2*power)) ) {
 			a[0] = 4; return(0);
 		}
 	}
@@ -2607,7 +2607,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2766,7 +2766,7 @@ simplecase:
 		}
 		if ( a[0] == 0 ) { *na = 0; return(0); }
 		if ( ( AC.modmode & POSNEG ) != 0 ) {
-			if ( a[0] > cmodvec[0]/2 ) {
+			if ( a[0] > (UWORD)(cmodvec[0]/2) ) {
 				a[0] =  cmodvec[0] - a[0];
 				*na = -*na;
 			}
@@ -3245,7 +3245,7 @@ WORD wranf(PHEAD0)
 		AT.wranfia[imax] = j = ( 31459L << (BITSINWORD-2))+12345;
 #endif
 		k = 1;
-		for ( i = 0; i < imax; i++ ) {
+		for ( i = 0; i < (ULONG)(imax); i++ ) {
 			ii = (NPAIR1*i)%NPAIR2;
 			AT.wranfia[ii] = k;
 			k = j - k;

@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : ratio.c
 */
@@ -38,7 +38,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Ratio :
 
 	These are the special operations regarding simple polynomials.
@@ -136,7 +136,7 @@ We have to revise the code for the second case.
 }
 
 /*
- 		#] RatioFind : 
+ 		#] RatioFind :
  		#[ RatioGen :
 
 		The algoritm:
@@ -310,7 +310,7 @@ RatioCall:
 }
 
 /*
- 		#] RatioGen : 
+ 		#] RatioGen :
  		#[ BinomGen :
 
 		Routine for the generation of terms in a binomialtype expansion.
@@ -369,8 +369,8 @@ WORD BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
 }
 
 /*
- 		#] BinomGen : 
-  	#] Ratio : 
+ 		#] BinomGen :
+  	#] Ratio :
   	#[ Sum :
  		#[ DoSumF1 :
 
@@ -448,7 +448,7 @@ SumF1Call:
 }
 
 /*
- 		#] DoSumF1 : 
+ 		#] DoSumF1 :
  		#[ Glue :
 
 		Routine multiplies two terms. The second term is subject
@@ -513,7 +513,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 }
 
 /*
- 		#] Glue : 
+ 		#] Glue :
  		#[ DoSumF2 :
 */
 
@@ -592,8 +592,8 @@ SumF2Call:
 }
 
 /*
- 		#] DoSumF2 : 
-  	#] Sum : 
+ 		#] DoSumF2 :
+  	#] Sum :
   	#[ GCDfunction :
  		#[ GCDfunction :
 */
@@ -991,7 +991,7 @@ int GCDfunction1(WORD *argin, WORD *one, WORD *argout)
 }
 
 /*
- 		#] GCDfunction1 : 
+ 		#] GCDfunction1 :
  		#[ GCDfunction2 :  All arguments with at least two terms
 
 	Finds the GCD of the all long arguments in argin each
@@ -1232,7 +1232,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction2 : 
+ 		#] GCDfunction2 :
  		#[ GCDterms :      GCD of two terms
 
 	Computes the GCD of two terms.
@@ -1423,9 +1423,9 @@ int GCDterms(WORD *term1, WORD *term2, WORD *termout)
 }
 
 /*
- 		#] GCDterms : 
+ 		#] GCDterms :
  		#[ DoGCDfunction1 :
-*/
+
 
 int DoGCDfunction1(PHEAD WORD *argin, WORD *argout)
 {
@@ -1434,9 +1434,10 @@ int DoGCDfunction1(PHEAD WORD *argin, WORD *argout)
 	argout[i] = 0;
 	return(1);
 }
+*/
 
 /*
- 		#] DoGCDfunction1 : 
+ 		#] DoGCDfunction1 :
   	#] GCDfunction :
 */
 

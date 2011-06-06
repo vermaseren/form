@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -36,7 +36,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  		#[ NormPolyTerm :
 
 		Brings a term to normal form.
@@ -222,7 +222,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm : 
+ 		#] NormPolyTerm :
  		#[ ComparePoly :
 */
 /**
@@ -245,6 +245,8 @@ FromNorm:
  *	        >0	term1 comes first.
  *	        <0	term2 comes first.
  */
+
+#ifdef WITHCOMPAREPOLY
 
 WORD ComparePoly(WORD *term1, WORD *term2, WORD level)
 {
@@ -280,18 +282,21 @@ WORD ComparePoly(WORD *term1, WORD *term2, WORD level)
 	return(0);
 }
 
+#endif
+
 /*
- 		#] ComparePoly : 
+ 		#] ComparePoly :
  		#[ PolyBracket :
 */
+/*
 
 int PolyBracket(WORD *term, WORD *bracket, int level)
 {
 	return(0);
 }
-
+*/
 /*
- 		#] PolyBracket : 
+ 		#] PolyBracket :
  		#[ ConvertToPoly :
 */
 /**
@@ -419,7 +424,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 }
 
 /*
- 		#] ConvertToPoly : 
+ 		#] ConvertToPoly :
  		#[ LocalConvertToPoly :
 */
 /**
@@ -609,7 +614,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD pa
 }
 
 /*
- 		#] ConvertFromPoly : 
+ 		#] ConvertFromPoly :
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -656,7 +661,7 @@ WORD FindSubterm(WORD *subterm)
 	}
     else {
 		GETIDENTITY
-		WORD dim = DimensionSubterm(BHEAD subterm);
+		WORD dim = DimensionSubterm(subterm);
 
 		if ( dim == -MAXPOSITIVE ) {	/* Give error message but continue */
 			WORD *old = AN.currentTerm;
@@ -678,7 +683,7 @@ WORD FindSubterm(WORD *subterm)
 }
 
 /*
- 		#] FindSubterm : 
+ 		#] FindSubterm :
  		#[ FindLocalSubterm :
 
 		In this routine we look up a variable.
@@ -816,7 +821,7 @@ void PrintSubtermList(int from,int to)
 }
 
 /*
- 		#] PrintSubtermList : 
+ 		#] PrintSubtermList :
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
@@ -873,7 +878,7 @@ WORD FindSubexpression(WORD *subexpr)
 }
 
 /*
- 		#] FindSubexpression : 
+ 		#] FindSubexpression :
  		#[ ExtraSymFun :
 */
 
@@ -941,5 +946,5 @@ nocase:;
 }
 
 /*
- 		#] ExtraSymFun : 
+ 		#] ExtraSymFun :
 */

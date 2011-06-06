@@ -274,7 +274,6 @@ typedef struct ExternalChannel {
 	pid_t gpid;       /*process  group ID of the external process.
 							  If <=0, not used, if >0, the kill signals
 							  is sent to the whole group */
-	int fsend;       /*stdin of the external process*/
 	FILE *frec;      /*stdout of the external process*/
 	char *INbuf;     /*External channel buffer*/
 	char *IBfill;    /*Position in INbuf from which the next input character will be read*/
@@ -283,13 +282,14 @@ typedef struct ExternalChannel {
 	char *terminator;/* Terminator - when extern. program outputs ONLY this string, 
 							  it is assumed that the answer is ready, and getcFromExtChannel
 							  returns EOF. Should not be longer then the minimal buffer!*/
-	int killSignal; /*signal to kill*/
-
 	/*Info fields, not changable after creating a channel:*/
 	char *cmd;       /*the command*/
-	int daemonize;/*0 --neither setsid nor daemonize, !=0 -- full daemonization*/
 	char *shellname;
 	char *stderrname;/*filename to redirect stderr, or NULL*/
+	int fsend;       /*stdin of the external process*/
+	int killSignal; /*signal to kill*/
+	int daemonize;/*0 --neither setsid nor daemonize, !=0 -- full daemonization*/
+	PADPOINTER(0,3,0,0);
 } EXTHANDLE;
 
 
@@ -488,9 +488,9 @@ ssize_t i;
 int j=0,n=0;
 
 	for(;;){
-		if(  (i=writeFromb(fd, buf+j, count-j)) < 0 ) return -1;
+		if(  (i=writeFromb(fd, buf+j, count-j)) < 0 ) return(-1);
 		j+=i;
-		if(j==count) break;
+		if ( ((size_t)j) == count ) break;
 		if(i==0)n++;
 		else n=0;
 		if(n>MAX_FAILS_IO)return (-1);

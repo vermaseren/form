@@ -217,7 +217,7 @@ WORD Processor()
 				for ( j = 0; j < *t; j++ ) term[j] = t[j];
 				t += *t;
 				AN.ninterms++; dd = AN.deferskipped;
-				if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
+				if ( AC.CollectFun && *term <= (AM.MaxTer/(2*(LONG)(sizeof(WORD)))) ) {
 					if ( GetMoreFromMem(term,&t) ) {
 						LowerSortLevel(); goto ProcErr;
 					}
@@ -340,7 +340,7 @@ commonread:;
 					while ( GetTerm(BHEAD term) ) {
 					  SeekScratch(curfile,&position);
 					  AN.ninterms++; dd = AN.deferskipped;
-					  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
+					  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*(LONG)(sizeof(WORD)))) ) {
 						if ( GetMoreTerms(term) < 0 ) {
 						  LowerSortLevel(); goto ProcErr;
 						}
@@ -2254,7 +2254,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2354,7 +2354,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				}
 			}
 			*termout = WORDDIF(m,termout);
-			if ( (*termout)*sizeof(WORD) > AM.MaxTer ) goto InsCall;
+			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) goto InsCall;
 			AT.WorkPointer = coef;
 			return(0);
 		}
@@ -4838,7 +4838,7 @@ retry:
 	t2 = term + *term;
 	while ( t1 < t2 ) *t++ = *t1++;
 	*AT.WorkPointer = n1 = WORDDIF(t,AT.WorkPointer);
-	if ( n1*sizeof(WORD) > AM.MaxTer ) {
+	if ( n1*((LONG)sizeof(WORD)) > AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
 		goto PolyCall2;

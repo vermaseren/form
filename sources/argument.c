@@ -2332,7 +2332,7 @@ int CleanupArgCache(PHEAD WORD bufnum)
  *	This routine is just for testing and timing purposes and 
  *	copies the input to the output which is equivalent to that
  *	it does as if the polynomial does not factorize.
- */
+
 
 int DoFactorize1(PHEAD WORD *argin, WORD *argout)
 {
@@ -2342,8 +2342,10 @@ int DoFactorize1(PHEAD WORD *argin, WORD *argout)
 	return(0);
 }
 
+ */
+
 /*
-  	#] DoFactorize1 : 
+  	#] DoFactorize1 :
   	#[ ArgSymbolMerge :
 */
 

@@ -223,7 +223,7 @@ conscan:;
 					else if ( *t == DIMENSIONSYMBOL ) {
 						if ( AN.cTerm ) m = AN.cTerm;
 						else m = term;
-						k = DimensionTerm(BHEAD m);
+						k = DimensionTerm(m);
 						if ( k == 0 ) goto NormZero;
 						if ( k == MAXPOSITIVE ) {
 							MLOCK(ErrorMessageLock);

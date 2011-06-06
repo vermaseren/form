@@ -595,11 +595,11 @@ hit:;
 						out = fun + fun[1];
 						break;
 					case IMPLODEARG:
-						if ( RunImplode(BHEAD fun,args,info) ) goto abo;
+						if ( RunImplode(fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
 					case EXPLODEARG:
-						if ( RunExplode(BHEAD fun,args,info) ) goto abo;
+						if ( RunExplode(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
 					case PERMUTEARG:
@@ -607,7 +607,7 @@ hit:;
 						out = fun + fun[1];
 						break;
 					case REVERSEARG:
-						if ( RunReverse(BHEAD fun,args,info) ) goto abo;
+						if ( RunReverse(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
 					case CYCLEARG:
@@ -615,19 +615,19 @@ hit:;
 						out = fun + fun[1];
 						break;
 					case ISLYNDON:
-						if ( ( retval = RunIsLyndon(BHEAD fun,args,info,1) ) < -1 ) goto abo;
+						if ( ( retval = RunIsLyndon(BHEAD fun,args,1) ) < -1 ) goto abo;
 						goto returnvalues;
 						break;
 					case ISLYNDONR:
-						if ( ( retval = RunIsLyndon(BHEAD fun,args,info,-1) ) < -1 ) goto abo;
+						if ( ( retval = RunIsLyndon(BHEAD fun,args,-1) ) < -1 ) goto abo;
 						goto returnvalues;
 						break;
 					case TOLYNDON:
-						if ( ( retval = RunToLyndon(BHEAD fun,args,info,1) ) < -1 ) goto abo;
+						if ( ( retval = RunToLyndon(BHEAD fun,args,1) ) < -1 ) goto abo;
 						goto returnvalues;
 						break;
 					case TOLYNDONR:
-						if ( ( retval = RunToLyndon(BHEAD fun,args,info,-1) ) < -1 ) goto abo;
+						if ( ( retval = RunToLyndon(BHEAD fun,args,-1) ) < -1 ) goto abo;
 returnvalues:;
 						out = fun + fun[1];
 						if ( retval == -1 ) break;
@@ -1595,7 +1595,7 @@ nextt:;
 		Note that we restrict ourselves to short integers and/or single symbols
 */
 
-WORD RunImplode(PHEAD WORD *fun, WORD *args, WORD *info)
+WORD RunImplode(WORD *fun, WORD *args)
 {
 	WORD *tt, *tstop, totarg, arg1, arg2, num, num1, num2, i, i1, n;
 	WORD *f, *t, *ttt, *t4, *ff, *fff;
@@ -1799,7 +1799,7 @@ moveinto:
  		#[ RunExplode :
 */
 
-WORD RunExplode(PHEAD WORD *fun, WORD *args, WORD *info)
+WORD RunExplode(PHEAD WORD *fun, WORD *args)
 {
 	WORD arg1, arg2, num1, num2, num, *tt, *tstop, totarg, *tonew, *newfun;
 	WORD *ff, *f;
@@ -1807,7 +1807,7 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args, WORD *info)
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint("Illegal range encountered in RunImplode");
+		MesPrint("Illegal range encountered in RunExplode");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -2017,7 +2017,7 @@ OverWork:;
  		#[ RunReverse :
 */
 
-WORD RunReverse(PHEAD WORD *fun, WORD *args, WORD *info)
+WORD RunReverse(PHEAD WORD *fun, WORD *args)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, i1, i2;
 	if ( *args != ARGRANGE ) {
@@ -2253,7 +2253,7 @@ OverWork:;
 		the numbers of the arguments in the range.
 */
 
-WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par)
+WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, *f1, n, i;
 	WORD sign, i1, i2, retval;
@@ -2333,14 +2333,14 @@ nexti1:;
 		the numbers of the arguments in the range.
 */
 
-WORD RunToLyndon(PHEAD WORD *fun, WORD *args, WORD *info, int par)
+WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, *f1, *f2, n, i;
 	WORD sign, i1, i2, retval, unique;
 	if ( fun[0] <= GAMMASEVEN && fun[0] >= GAMMA ) return(0);
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint("Illegal range encountered in RunIsLyndon");
+		MesPrint("Illegal range encountered in RunToLyndon");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}

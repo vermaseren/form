@@ -294,7 +294,7 @@ int AddNtoC(int bufnum, int n, WORD *array)
 	Commentary: added the bufnum on 14-sep-2010 to make the whole a bit
 	more flexible (JV).
 */
-static COMPTREE comptreezero = {0,0,0,0,0};
+static COMPTREE comptreezero = {0,0,0,0,0,0};
 
 int InsTree(int bufnum, int h)
 {
@@ -464,7 +464,7 @@ balance:;
 }
 
 /*
-  	#] InsTree : 
+  	#] InsTree :
   	#[ FindTree :
 
 	Routines for balanced tree searching.

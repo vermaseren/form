@@ -859,11 +859,11 @@ VectInd:		i = term[1] - 2;
 
 /*
  		#] CountFun : 
-  	#] Count :
+  	#] Count : 
   	#[ DimensionSubterm :
 */
 
-WORD DimensionSubterm(PHEAD WORD *subterm)
+WORD DimensionSubterm(WORD *subterm)
 {
 	WORD *r, *rstop, dim, i;
 	LONG x = 0;
@@ -955,7 +955,7 @@ outofrange:
 }
 
 /*
-  	#] DimensionSubterm :
+  	#] DimensionSubterm : 
   	#[ DimensionTerm :
 
 	Returns the dimension of the given term.
@@ -964,14 +964,14 @@ outofrange:
 	When the value is out of range we return -MAXPOSITIVE
 */
 
-WORD DimensionTerm(PHEAD WORD *term)
+WORD DimensionTerm(WORD *term)
 {
 	WORD *t, *tstop, dim;
 	LONG x = 0;
 	tstop = term + *term; tstop -= ABS(tstop[-1]);
 	t = term+1;
 	while ( t < tstop ) {
-		dim = DimensionSubterm(BHEAD t);
+		dim = DimensionSubterm(t);
 		if ( dim ==  MAXPOSITIVE ) goto undefined;
 		if ( dim == -MAXPOSITIVE ) goto outofrange;
 		x += dim;
@@ -1002,7 +1002,7 @@ WORD DimensionExpression(PHEAD WORD *expr)
 	int first = 1;
 	term = expr;
 	while ( *term ) {
-		dim = DimensionTerm(BHEAD term);
+		dim = DimensionTerm(term);
 		if ( dim ==  MAXPOSITIVE ) goto undefined;
 		if ( dim == -MAXPOSITIVE ) goto outofrange;
 		if ( first ) { x = dim; }

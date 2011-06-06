@@ -1575,7 +1575,7 @@ bucketstolen:;
 				while ( GetTerm(BHEAD term) ) {
 				  SeekScratch(fi,&position);
 				  AN.ninterms++; dd = AN.deferskipped;
-				  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
+				  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*(LONG)sizeof(WORD))) ) {
 					if ( GetMoreTerms(term) < 0 ) {
 					  LowerSortLevel(); goto ProcErr;
 					}
@@ -2613,7 +2613,7 @@ Found2:;
 /*
 		Check whether we have a collect,function going. If so execute it.
 */
-		if ( AC.CollectFun && *(thr->threadbuffer) < (AM.MaxTer/sizeof(WORD)-10) ) {
+		if ( AC.CollectFun && *(thr->threadbuffer) < (AM.MaxTer/((LONG)sizeof(WORD))-10) ) {
 			if ( ( dd = GetMoreTerms(thr->threadbuffer) ) < 0 ) {
 				LowerSortLevel(); goto ProcErr;
 			}
@@ -2663,7 +2663,7 @@ Found2:;
 				t1 = AR0.CompressBuffer; j = *t1;
 				NCOPY(ttco,t1,j);
 			}
-			if ( AC.CollectFun && *tt < (AM.MaxTer/sizeof(WORD)-10) ) {
+			if ( AC.CollectFun && *tt < (AM.MaxTer/((LONG)sizeof(WORD))-10) ) {
 				if ( ( ddd = GetMoreTerms(tt) ) < 0 ) {
 					LowerSortLevel(); goto ProcErr;
 				}
@@ -3569,7 +3569,7 @@ OneTerm:
 						if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(B0,m1,m2);
 						else                    w = PolyRatFunAdd(B0,m1,m2);
 */
-						if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
+						if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 							MLOCK(ErrorMessageLock);
 							MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
 							MUNLOCK(ErrorMessageLock);
@@ -3717,7 +3717,7 @@ cancelled:
 								we left 2*maxlng spaces open at the beginning
 								of each patch.
 */
-							if ( (l1 + r31)*sizeof(WORD) >= AM.MaxTer ) {
+							if ( (l1 + r31)*((LONG)sizeof(WORD)) >= AM.MaxTer ) {
 								MLOCK(ErrorMessageLock);
 								MesPrint("MasterMerge: Coefficient overflow during sort");
 								MUNLOCK(ErrorMessageLock);
@@ -4121,7 +4121,7 @@ next2:		im = *term2;
 					if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(BHEAD m1,m2);
 					else                    w = PolyRatFunAdd(BHEAD m1,m2);
 */
-					if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
+					if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 						MLOCK(ErrorMessageLock);
 						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
 						MUNLOCK(ErrorMessageLock);
@@ -4709,7 +4709,7 @@ void IniFbufs(VOID)
 }
 
 /*
-  	#] IniFbufs :
+  	#] IniFbufs : 
   	#[ SetMods :
 */
 
@@ -4728,7 +4728,7 @@ void SetMods()
 }
 
 /*
-  	#] SetMods :
+  	#] SetMods : 
   	#[ UnSetMods :
 */
 
@@ -4744,6 +4744,6 @@ void UnSetMods()
 }
 
 /*
-  	#] UnSetMods :
+  	#] UnSetMods : 
 */
 #endif

@@ -255,7 +255,6 @@ typedef struct {
 	TFUN func;
 	int type;
 	int flags;
-	PADPOINTER(0,2,0,0);
 } KEYWORD;
 
 /**
@@ -331,7 +330,6 @@ typedef struct tree {
 	int value;   /**< The object to be sorted and searched */
 	int blnce;   /**< Balance factor */
 	int usage;   /**< Number of uses in some types of trees */
-	PADLONG(6,0,0);
 } COMPTREE;
 
 /**
@@ -597,7 +595,6 @@ typedef struct fixedset {
 	char *description;
 	int type;
 	WORD dimension;
-	PADPOINTER(0,1,1,0);
 } FIXEDSET;
 
 /**
@@ -861,6 +858,15 @@ typedef struct DoLoOp {
  */
 
 struct  bit_field {	/* Assume 8 bits per byte */
+    UBYTE bit_0        : 1;
+    UBYTE bit_1        : 1;
+    UBYTE bit_2        : 1;
+    UBYTE bit_3        : 1;
+    UBYTE bit_4        : 1;
+    UBYTE bit_5        : 1;
+    UBYTE bit_6        : 1;
+    UBYTE bit_7        : 1;
+/*
     UINT bit_0        : 1;
     UINT bit_1        : 1;
     UINT bit_2        : 1;
@@ -869,6 +875,7 @@ struct  bit_field {	/* Assume 8 bits per byte */
     UINT bit_5        : 1;
     UINT bit_6        : 1;
     UINT bit_7        : 1;
+*/
 };
 
 /**
@@ -1399,10 +1406,10 @@ struct P_const {
 #ifdef WITHPTHREADS
 	pthread_mutex_t PreVarLock;    /* (P) */
 #endif
-    int     PreAssignFlag;         /* (C) Indicates #assign -> catch dollar */
-    int     PreContinuation;       /* (C) Indicates whether the statement is new */
     LONG    InOutBuf;              /* (P) Characters in the output buf in pre.c */
     LONG    pSize;                 /* (P) size of preStart */
+    int     PreAssignFlag;         /* (C) Indicates #assign -> catch dollar */
+    int     PreContinuation;       /* (C) Indicates whether the statement is new */
     int     PreproFlag;            /* (P) Internal use to mark work on prepro instr. */
     int     iBufError;             /* (P) Flag for errors with input buffer */
     int     PreOut;                /* (P) Flag for #+ #- */
@@ -1422,6 +1429,7 @@ struct P_const {
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
+	PADPOINTER(2,17,2,2);
 };
 
 /*
@@ -1460,7 +1468,6 @@ struct C_const {
     Compile buffer variables
 */
     LIST    cbufList;              /**< List of compiler buffers */
-    int     cbufnum;               /**< Current compiler buffer */
 /*
     Objects for auto declarations
 */
@@ -1477,8 +1484,6 @@ struct C_const {
     LIST    *Functions;            /* (C) id. */
     NAMETREE **activenames;        /** (C) Pointer for AutoDeclare statement. Points either to
                                            varnames or autonames. */
-    int     AutoDeclareFlag;       /** (C) Mode of looking for names. Set to NOAUTO (=0) or
-                                           WITHAUTO (=2), cf. AutoDeclare statement */
     STREAM  *Streams;              /**< [D] The input streams. */
     STREAM  *CurrentStream;        /**< (C) The current input stream.
                                        Streams are: do loop, file, prevariable. points into Streams memory. */
@@ -1511,6 +1516,11 @@ struct C_const {
 	UBYTE   *extrasym;             /* Array with the name for extra symbols in ToPolynomial */
 	WORD    *doloopstack;          /* To keep track of begin and end of doloops */
 	WORD    *doloopnest;           /* To keep track of nesting of doloops etc */
+    char    *CheckpointRunAfter;   /**< [D] Filename of script to be executed _before_ creating the
+                                        snapshot. =0 if no script shall be executed. */
+    char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
+                                        created the snapshot. =0 if no script shall be executed.*/
+    WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
 #ifdef WITHPTHREADS
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1527,6 +1537,12 @@ struct C_const {
     LONG    mSlavePatchSize;       /* (C) */
     LONG    CModule;               /* (C) Counter of current module */
     LONG    ThreadBucketSize;      /* (C) Roughly the maximum number of input terms */
+    LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)).*/
+    LONG    CheckpointInterval;    /**< Time interval in milliseconds for snapshots. =0 if
+                                        snapshots shall be created at the end of _every_ module.*/
+    int     cbufnum;               /**< Current compiler buffer */
+    int     AutoDeclareFlag;       /** (C) Mode of looking for names. Set to NOAUTO (=0) or
+                                           WITHAUTO (=2), cf. AutoDeclare statement */
     int     NoShowInput;           /* (C) No listing of input as in .prc, #do */
     int     ShortStats;            /* (C) */
     int     compiletype;           /* (C) type of statement {DECLARATION etc} */
@@ -1588,18 +1604,27 @@ struct C_const {
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
 	int     doloopstacksize;
 	int     dolooplevel;
+    int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
+                                        -1 : do recovery from snapshot, set by command line option;
+                                        0 : do nothing; 1 : create snapshots, set by On checkpoint
+                                        statement */
 #ifdef WITHPTHREADS
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
+#else
+	int     dummyint1;
+	int     dummyint2;
 #endif
+    WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
+    WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
+    WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
+    WORD    RepSumCheck[MAXREPEAT];/* (C) Checks nesting of repeat, if, argument */
+    WORD    lUniTrace[4];          /* (C) */
     WORD    RepLevel;              /* (C) Tracks nesting of repeat. */
     WORD    arglevel;              /* (C) level of nested argument statements */
     WORD    insidelevel;           /* (C) level of nested inside statements */
     WORD    inexprlevel;           /* (C) level of nested inexpr statements */
     WORD    termlevel;             /* (C) level of nested term statements */
-    WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
-    WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
-    WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    MustTestTable;         /* (C) Indicates whether tables have been changed */
     WORD    DumNum;                /* (C) */
     WORD    ncmod;                 /* (C) Local setting of modulus. size of cmod */
@@ -1615,12 +1640,9 @@ struct C_const {
     WORD    OutputMode;            /* (C) */
     WORD    OutputSpaces;          /* (C) */
     WORD    OutNumberType;         /* (C) Controls RATIONAL/FLOAT output */
-    WORD    lUniTrace[4];          /* (C) */
-    WORD    RepSumCheck[MAXREPEAT];/* (C) Checks nesting of repeat, if, argument */
     WORD    DidClean;              /* (C) Test whether nametree needs cleaning */
     WORD    IfLevel;               /* (C) */
     WORD    WhileLevel;            /* (C) */
-    WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
     WORD    LogHandle;             /* (C) The Log File */
     WORD    LineLength;            /* (C) */
     WORD    StoreHandle;           /* (C) Handle of .str file */
@@ -1635,20 +1657,13 @@ struct C_const {
 #ifdef PARALLEL
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
+#else
+	WORD dummyword1;
+	WORD dummyword2;
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
-    int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
-                                        -1 : do recovery from snapshot, set by command line option;
-                                        0 : do nothing; 1 : create snapshots, set by On checkpoint
-                                        statement */
-    LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)).*/
-    char    *CheckpointRunAfter;   /**< [D] Filename of script to be executed _before_ creating the
-                                        snapshot. =0 if no script shall be executed. */
-    char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
-                                        created the snapshot. =0 if no script shall be executed.*/
-    LONG    CheckpointInterval;    /**< Time interval in milliseconds for snapshots. =0 if
-                                        snapshots shall be created at the end of _every_ module.*/
+	PADPOINTER((8+3*MAXNEST),66,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
 };
 /*
  		#] C :
@@ -1677,17 +1692,23 @@ struct S_const {
     int     MultiThreaded;         /* (S) Are we running multi-threaded? */
 #ifdef WITHPTHREADS
     int     MasterSort;            /* Final stage of sorting to the master */
-#endif
-    int     Balancing;             /* For second stage loadbalancing */
+#else
 #ifdef PARALLEL
 	int     printflag;
+#else
+	int     dummyint;
 #endif
+#endif
+    int     Balancing;             /* For second stage loadbalancing */
     WORD    ExecMode;              /* (S) */
 
     WORD    CollectOverFlag;       /* (R) Indicates overflow at Collect */
 #ifdef WITHPTHREADS
 	WORD	sLevel;                /* Copy of AR0.sLevel because it can get messy */
+#else
+	WORD    dummyword;
 #endif
+	PADLONG(4,3,0);
 };
 /*
  		#] S :
@@ -2048,10 +2069,6 @@ struct O_const {
     UBYTE   *CurBufWrt;            /* (O) Name of currently written expr. */
     FILEDATA    SaveData;          /* (O) */
     STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
-    WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
-    WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
-    WORD    resizeFlag;            /* ()  >0 indicades that something went wrong when resizing words */
-    WORD    bufferedInd;           /* ()  Contains extra INDEXENTRIES, see ReadSaveIndex() for an explanation */
     VOID    (*FlipWORD)(UBYTE *);  /* ()  Function pointers for translations. Initialized by ReadSaveHeader() */
     VOID    (*FlipLONG)(UBYTE *);
     VOID    (*FlipPOS)(UBYTE *);
@@ -2084,6 +2101,10 @@ struct O_const {
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
+    WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
+    WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
+    WORD    resizeFlag;            /* ()  >0 indicades that something went wrong when resizing words */
+    WORD    bufferedInd;           /* ()  Contains extra INDEXENTRIES, see ReadSaveIndex() for an explanation */
     WORD    OutSkip;               /* (O) How many chars to skip in output line */
     WORD    IsBracket;             /* (O) Controls brackets */
     WORD    InFbrack;              /* (O) For writing only */
@@ -2092,6 +2113,7 @@ struct O_const {
     WORD    DoubleFlag;            /* (O) Output in double precision */
     WORD    IndentSpace;           /* For indentation in output */
     UBYTE   FortDotChar;           /* (O) */
+	PADPOINTER(4,3,11,1);
 };
 /*
  		#] O :
@@ -2118,6 +2140,7 @@ struct X_const {
 	UBYTE *stderrname;         /* If !=NULL (default if "/dev/null"), stderr is 
 	                              redirected to the specified file*/
 	int	currentExternalChannel;
+	int alignmentdummy;
 };
 /*
  		#] X :

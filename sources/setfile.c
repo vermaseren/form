@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 
@@ -111,7 +111,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -160,7 +160,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -298,7 +298,7 @@ restart:;
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -318,7 +318,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -354,8 +354,8 @@ int RecalcSetups()
 */
 	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
 	AM.MaxTer = sp2->value*sizeof(WORD);
-	if ( AM.MaxTer < 200*sizeof(WORD) ) AM.MaxTer = 200*sizeof(WORD);
-	if ( AM.MaxTer > MAXPOSITIVE - 200*sizeof(WORD) ) AM.MaxTer = MAXPOSITIVE - 200*sizeof(WORD);
+	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = 200*(LONG)(sizeof(WORD));
+	if ( AM.MaxTer > MAXPOSITIVE - 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = MAXPOSITIVE - 200*(LONG)(sizeof(WORD));
 	AM.MaxTer /= sizeof(WORD);
 	AM.MaxTer *= sizeof(WORD);
 	minimumsize = (AM.totalnumberofthreads-1)*(AM.MaxTer+
@@ -369,7 +369,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -403,10 +403,10 @@ int AllocSetups()
 */
 	sp = GetSetupPar((UBYTE *)"maxtermsize");
 	AM.MaxTer = sp->value*sizeof(WORD);
-	if ( AM.MaxTer < 200*sizeof(WORD) ) AM.MaxTer = 200*sizeof(WORD);
-	if ( AM.MaxTer > MAXPOSITIVE - 200*sizeof(WORD) ) AM.MaxTer = MAXPOSITIVE - 200*sizeof(WORD);
-	AM.MaxTer /= sizeof(WORD);
-	AM.MaxTer *= sizeof(WORD);
+	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = 200*(LONG)(sizeof(WORD));
+	if ( AM.MaxTer > MAXPOSITIVE - 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = MAXPOSITIVE - 200*(LONG)(sizeof(WORD));
+	AM.MaxTer /= (LONG)sizeof(WORD);
+	AM.MaxTer *= (LONG)sizeof(WORD);
 /*
 	Allocate workspace.
 */
@@ -738,7 +738,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -798,7 +798,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -929,7 +929,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -954,7 +954,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
@@ -1002,7 +1002,7 @@ FILEHANDLE *AllocFileHandle()
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -1021,7 +1021,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -1032,7 +1032,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1111,7 +1111,7 @@ nextline:;
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -1136,7 +1136,7 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */
 

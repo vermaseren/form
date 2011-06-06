@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 /*
   	#[ Includes : compi2.c
@@ -44,34 +44,35 @@
 static struct id_options {
 	UBYTE *name;
 	int code;
+	int dummy;
 } IdOptions[] = {
-	 {(UBYTE *)"multi",      SUBMULTI    }
-	,{(UBYTE *)"many",       SUBMANY     }
-	,{(UBYTE *)"only",       SUBONLY     }
-	,{(UBYTE *)"once",       SUBONCE     }
-	,{(UBYTE *)"ifmatch",    SUBAFTER    }
-	,{(UBYTE *)"ifnomatch",  SUBAFTERNOT }
-	,{(UBYTE *)"ifnotmatch", SUBAFTERNOT }
-	,{(UBYTE *)"disorder",   SUBDISORDER }
-	,{(UBYTE *)"select",     SUBSELECT   }
+	 {(UBYTE *)"multi",      SUBMULTI    ,0}
+	,{(UBYTE *)"many",       SUBMANY     ,0}
+	,{(UBYTE *)"only",       SUBONLY     ,0}
+	,{(UBYTE *)"once",       SUBONCE     ,0}
+	,{(UBYTE *)"ifmatch",    SUBAFTER    ,0}
+	,{(UBYTE *)"ifnomatch",  SUBAFTERNOT ,0}
+	,{(UBYTE *)"ifnotmatch", SUBAFTERNOT ,0}
+	,{(UBYTE *)"disorder",   SUBDISORDER ,0}
+	,{(UBYTE *)"select",     SUBSELECT   ,0}
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CoLocal :
 */
 
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
 
 /*
-  	#] CoLocal :
+  	#] CoLocal : 
   	#[ CoGlobal :
 */
 
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
 
 /*
-  	#] CoGlobal :
+  	#] CoGlobal : 
   	#[ DoExpr:
 */
 
@@ -328,7 +329,7 @@ int DoExpr(UBYTE *inp, int type)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -339,7 +340,7 @@ int CoIdOld(UBYTE *inp)
 }
 
 /*
-  	#] CoIdOld :
+  	#] CoIdOld : 
   	#[ CoId :
 */
 
@@ -350,7 +351,7 @@ int CoId(UBYTE *inp)
 }
 
 /*
-  	#] CoId :
+  	#] CoId : 
   	#[ CoIdNew :
 */
 
@@ -361,7 +362,7 @@ int CoIdNew(UBYTE *inp)
 }
 
 /*
-  	#] CoIdNew :
+  	#] CoIdNew : 
   	#[ CoDisorder :
 */
 
@@ -372,7 +373,7 @@ int CoDisorder(UBYTE *inp)
 }
 
 /*
-  	#] CoDisorder :
+  	#] CoDisorder : 
   	#[ CoMany :
 */
 
@@ -383,7 +384,7 @@ int CoMany(UBYTE *inp)
 }
 
 /*
-  	#] CoMany :
+  	#] CoMany : 
   	#[ CoMulti :
 */
 
@@ -394,7 +395,7 @@ int CoMulti(UBYTE *inp)
 }
 
 /*
-  	#] CoMulti :
+  	#] CoMulti : 
   	#[ CoIfMatch :
 */
 
@@ -405,7 +406,7 @@ int CoIfMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfMatch :
+  	#] CoIfMatch : 
   	#[ CoIfNoMatch :
 */
 
@@ -416,7 +417,7 @@ int CoIfNoMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfNoMatch :
+  	#] CoIfNoMatch : 
   	#[ CoOnce :
 */
 
@@ -427,7 +428,7 @@ int CoOnce(UBYTE *inp)
 }
 
 /*
-  	#] CoOnce :
+  	#] CoOnce : 
   	#[ CoOnly :
 */
 
@@ -438,7 +439,7 @@ int CoOnly(UBYTE *inp)
 }
 
 /*
-  	#] CoOnly :
+  	#] CoOnly : 
   	#[ CoSelect :
 */
 
@@ -449,7 +450,7 @@ int CoSelect(UBYTE *inp)
 }
 
 /*
-  	#] CoSelect :
+  	#] CoSelect : 
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -898,7 +899,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression :
+  	#] CoIdExpression : 
   	#[ CoMultiply :
 */
 
@@ -937,7 +938,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply :
+  	#] CoMultiply : 
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1189,7 +1190,7 @@ redef:;
 }
 
 /*
-  	#] CoFill :
+  	#] CoFill : 
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1565,7 +1566,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression :
+  	#] CoFillExpression : 
   	#[ CoPrintTable :
 
 	Syntax
@@ -1739,7 +1740,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable :
+  	#] CoPrintTable : 
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1829,7 +1830,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign :
+  	#] CoAssign : 
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1893,7 +1894,7 @@ int CoDeallocateTable(UBYTE *inp)
 }
 
 /*
-  	#] CoDeallocateTable :
+  	#] CoDeallocateTable : 
   	#[ CoFactorCache :
 */
 /**
@@ -1905,9 +1906,9 @@ int CoDeallocateTable(UBYTE *inp)
  *	The expression is worked out by FORM and properly normalized and sorted.
  */
 
+/*
 int CoFactorCache(UBYTE *inp)
 {
-/*
 	Code to be added in due time
 	We need to read 'expression', get its terms through Generator and sort them.
 	We store the result in the WorkSpace in argument notation.
@@ -1915,12 +1916,12 @@ int CoFactorCache(UBYTE *inp)
 	Then we do the same with the sequence of factors. They form argout.
 	The whole is put in the buffer with the call
 		InsertArg(BHEAD argin,argout,1)
-*/
 	return(0);
 }
+*/
 
 /*
-  	#] CoFactorCache :
+  	#] CoFactorCache : 
 */
 
 

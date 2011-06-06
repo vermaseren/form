@@ -673,7 +673,7 @@ LONG EndSort(WORD *buffer, int par, int par2)
 				sSpace = 0;
 				while ( ( t = *ss++ ) != 0 ) {
 					j = *t;
-					if ( ( par2 != 1 ) && ( ( sSpace += j ) > AM.MaxTer/sizeof(WORD) ) ) {
+					if ( ( par2 != 1 ) && ( ( sSpace += j ) > AM.MaxTer/((LONG)sizeof(WORD)) ) ) {
 						MLOCK(ErrorMessageLock);
 						MesPrint("Sorted function argument too long.");
 						MUNLOCK(ErrorMessageLock);
@@ -1122,7 +1122,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -1146,7 +1146,7 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	WORD *from, *to;
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
-	if ( i*sizeof(WORD) > AM.MaxTer ) {
+	if ( i*((LONG)(sizeof(WORD))) > AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Problems in PutIn");
 		MUNLOCK(ErrorMessageLock);
@@ -1901,7 +1901,7 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 	S->sFill = s2;
 RegEnd:
 	*ps2 = 0;
-	if ( **ps1 > AM.MaxTer/sizeof(WORD) ) {
+	if ( **ps1 > AM.MaxTer/((LONG)(sizeof(WORD))) ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
 		AM.MaxTer/sizeof(WORD));
@@ -2078,7 +2078,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		*m = WORDDIF(s2,m);
 		*ps1 = m;
 		S->sFill = s2;
-		if ( *m > AM.MaxTer/sizeof(WORD) ) {
+		if ( *m > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
 			AM.MaxTer/sizeof(WORD));
@@ -3645,7 +3645,7 @@ OneTerm:
 							if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(BHEAD m1,m2);
 							else                    w = PolyRatFunAdd(BHEAD m1,m2);
 */
-							if ( *tt1 + w[1] - m1[1] > AM.MaxTer/sizeof(WORD) ) {
+							if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 								MLOCK(ErrorMessageLock);
 								MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
 								MUNLOCK(ErrorMessageLock);
@@ -3778,7 +3778,7 @@ cancelled:
 								we left 2*maxlng spaces open at the beginning
 								of each patch.
 */
-							if ( (l1 + r31) > AM.MaxTer/sizeof(WORD) ) {
+							if ( (l1 + r31) > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 								MLOCK(ErrorMessageLock);
 								MesPrint("Coefficient overflow during sort");
 								MUNLOCK(ErrorMessageLock);
