@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
  
 #ifndef __STRUCTS__
 
@@ -134,7 +134,7 @@ typedef struct InDeXeNtRy {
 	WORD	nfunctions;			/**< Number of functions in the list */
 	WORD    size;				/**< Size of variables field */
 	SBYTE	name[MAXENAME+1];	/**< Name of expression */
-	PADLONG(1,5,MAXENAME+1);
+	PADLONG(0,5,MAXENAME+1);
 } INDEXENTRY;
 
 /**
@@ -207,7 +207,6 @@ typedef struct ReNuMbEr {
 	WORD       *vecnum;       /**< Renumbered vectors */
 	WORD       *funnum;       /**< Renumbered functions */
 	POSITION   startposition;
-	PADPOINTER(0,0,0,0);
 } *RENUMBER;
 
 /**
@@ -219,10 +218,11 @@ typedef struct {
 	WORD	nindices;			/* Number of indices in the list */
 	WORD	nvectors;			/* Number of vectors in the list */
 	WORD	nfunctions;			/* Number of functions in the list */
+	PADLONG(0,4,0);
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -255,6 +255,7 @@ typedef struct {
 	TFUN func;
 	int type;
 	int flags;
+	PADPOINTER(0,2,0,0);
 } KEYWORD;
 
 /**
@@ -267,6 +268,7 @@ typedef struct NameLi {         /* For fast namesearching */
     WORD where;
     WORD type;
     WORD number;
+	PADLONG(0,3,0);
 } NAMELIST;
 
 /**
@@ -329,6 +331,7 @@ typedef struct tree {
 	int value;   /**< The object to be sorted and searched */
 	int blnce;   /**< Balance factor */
 	int usage;   /**< Number of uses in some types of trees */
+	PADLONG(6,0,0);
 } COMPTREE;
 
 /**
@@ -339,6 +342,7 @@ typedef struct MiNmAx {
 	WORD mini;          /**< Minimum value */
 	WORD maxi;          /**< Maximum value */
 	WORD size;          /**< Value of one unit in this position. */
+	PADLONG(0,3,0);
 } MINMAX;
 
 /**
@@ -350,7 +354,7 @@ typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
 	POSITION next;				/* Place of next indexed bracket in expr */
 	LONG bracket;				/* Offset of position in bracketbuffer */
 	LONG termsinbracket;
-	PADPOINTER(1,0,0,0);
+	PADPOINTER(2,0,0,0);
 } BRACKETINDEX;
 
 /**
@@ -387,7 +391,6 @@ typedef struct TaBlEs {
 	WORD    *prototype;     /**< [D] The wildcard prototyping for arguments */
 	WORD    *pattern;       /**< The pattern with which to match the arguments */
 #endif
-	int     prototypeSize;  /**< Size of allocated memory for prototype in bytes. */
 	MINMAX  *mm;            /**< [D] Array bounds, dimension by dimension. # elements = numind. */
 	WORD    *flags;         /**< [D] Is element in use ? etc. # elements = numind. */
 	COMPTREE *boomlijst;    /**< [D] Tree for searching in sparse tables */
@@ -399,6 +402,7 @@ typedef struct TaBlEs {
 	LONG    reserved;       /**< Total reservation in tablepointers for sparse */
 	LONG    defined;        /**< Number of table elements that are defined */
 	LONG    mdefined;       /**< Same as defined but after .global */
+	int     prototypeSize;  /**< Size of allocated memory for prototype in bytes. */
 	int     numind;         /**< Number of array indices */
 	int     bounds;         /**< Array bounds check on/off. */
 	int     strict;         /**< >0: all must be defined. <0: undefined not substitute */
@@ -412,7 +416,7 @@ typedef struct TaBlEs {
 	WORD    tablenum;       /**< For testing of tableuse */
 	WORD    mode;           /**< 0: normal, 1: stub */
 	WORD    numdummies;     /**<  */
-	PADPOINTER(4,7,6,0);
+	PADPOINTER(4,8,6,0);
 } *TABLES;
 
 /**
@@ -548,17 +552,18 @@ typedef struct FaCdOlLaR {
 	LONG	size;
 	WORD	type;				/* Type can be DOLNUMBER or DOLTERMS */
 	WORD	value;				/* in case it is a (short) number */
+	PADPOINTER(1,0,2,0);
 } FACDOLLAR;
 
 typedef struct DoLlArS {
 	WORD	*where;				/* A pointer(!) to the object */
 	FACDOLLAR *factors;			/* an array of factors. nfactors elements */
-	LONG	size;				/* The number of words */
-	LONG	name;
 #ifdef WITHPTHREADS
 	pthread_mutex_t	pthreadslockread;
 	pthread_mutex_t	pthreadslockwrite;
 #endif
+	LONG	size;				/* The number of words */
+	LONG	name;
 	WORD	type;
 	WORD	node;
 	WORD	index;
@@ -573,10 +578,13 @@ typedef struct DoLlArS {
  */
 
 typedef struct MoDoPtDoLlArS {
+#ifdef WITHPTHREADS
+	DOLLARS	dstruct;	/* If local dollar: list of DOLLARS for each thread */
+#endif
 	WORD	number;
 	WORD	type;
 #ifdef WITHPTHREADS
-	DOLLARS	dstruct;	/* If local dollar: list of DOLLARS for each thread */
+	PADPOINTER(0,0,2,0);
 #endif
 } MODOPTDOLLAR;
 
@@ -589,6 +597,7 @@ typedef struct fixedset {
 	char *description;
 	int type;
 	WORD dimension;
+	PADPOINTER(0,1,1,0);
 } FIXEDSET;
 
 /**
@@ -611,6 +620,7 @@ typedef struct TaBlEbAsE {
 	POSITION fillpoint;
 	POSITION current;
 	int numtables;
+	PADPOINTER(0,1,0,0);
 } TABLEBASE;
 
 /**
@@ -627,10 +637,11 @@ typedef struct {
 	int symmet;
 	int tensor;
 	int commute;
+	PADPOINTER(0,6,0,0);
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
 
@@ -676,9 +687,9 @@ typedef struct FiLe {
     int handle;					/**< Our own handle. Equal -1 if no file exists. */
 	int active;					/* File is open or closed. Not used. */
 #ifdef WITHZLIB
-	PADPOINTER(4,2,1,0);
+	PADPOINTER(4,2,0,0);
 #else
-	PADPOINTER(3,2,1,0);
+	PADPOINTER(3,2,0,0);
 #endif
 } FILEHANDLE;
 
@@ -702,9 +713,9 @@ typedef struct StreaM {
 	off_t fileposition;
 	off_t linenumber;
 	off_t prevline;
-	long buffersize;
-	long bufferposition;
-	long inbuffer;
+	LONG buffersize;
+	LONG bufferposition;
+	LONG inbuffer;
 	int previous;
 	int handle;
 	int type;
@@ -717,11 +728,11 @@ typedef struct StreaM {
 	UBYTE isnextchar;
 	UBYTE nextchar[2];
 	UBYTE reserved;
-	PADPOINTER(3,8,0,4);
+	PADPOINTER(3,9,0,4);
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -779,7 +790,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
 
@@ -886,7 +897,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -936,6 +947,9 @@ typedef struct ChAnNeL {
  *	Each setup parameter has one element of the struct SETUPPARAMETERS
  *	assigned to it. By binary search in the array of them we can then
  *	locate the proper element by name.
+ *	We have to assume that two ints make a long and either one or two longs
+ *	make a pointer. The long before the ints and padding gives a problem
+ *	in the initialization.
  */
  
 typedef struct {
@@ -970,7 +984,7 @@ typedef struct StOrEcAcHe {
 	POSITION position;
 	POSITION toppos;
 	WORD buffer[2];
-	PADPOINTER(2,0,2,0);
+	PADPOINTER(0,0,2,0);
 } *STORECACHE;
 
 /**
@@ -1000,6 +1014,7 @@ typedef struct DiStRiBuTe {
 	WORD n2;
 	WORD n;
 	WORD cycle[MAXMATCH];
+	PADPOINTER(0,0,(MAXMATCH+4),0);
 } DISTRIBUTE;
 
 /**
@@ -1043,6 +1058,7 @@ typedef struct sOrT {
 	FILEHANDLE *f;				/* The actual output file */
 	FILEHANDLE file;			/* The own sort file */
 	FILEHANDLE **ff;			/* Handles for a staged sort */
+	POSITION SizeInFile[3];		/* Sizes in the various files */
 	LONG sTerms;				/* Terms in small buffer */
 	LONG LargeSize;				/* Size of large buffer (in words) */
 	LONG SmallSize;				/* Size of small buffer (in words) */
@@ -1055,7 +1071,6 @@ typedef struct sOrT {
 	LONG SpaceLeft;				/* Space needed for still existing terms */
 	LONG putinsize;				/* Size of buffer in putin */
 	LONG ninterms;				/* Which input term ? */
-	POSITION SizeInFile[3];		/* Sizes in the various files */
 	int MaxPatches;				/* Maximum number of patches in large buffer */
 	int MaxFpatches;			/* Maximum number of patches in one filesort */
 	int type;					/* Main, function or sub(routine) */
@@ -1071,7 +1086,7 @@ typedef struct sOrT {
 	WORD fPatchN;				/* Number of patches on file (output) */
 	WORD inNum;					/* Number of patches on file (input) */
 	WORD stage4;				/* Are we using stage4? */
-	PADPOINTER(15,12,3,0);
+	PADPOINTER(12,12,3,0);
 } SORTING;
 
 #ifdef WITHPTHREADS
@@ -1089,6 +1104,7 @@ typedef struct SoRtBlOcK {
     int     MasterNumBlocks;
     int     MasterBlock;
     int     FillBlock;
+	PADPOINTER(0,3,0,0);
 } SORTBLOCK;
 #endif
 
@@ -1124,6 +1140,7 @@ typedef struct ThReAdBuCkEt {
 	int  usenum;                /* Which is the term being used at the moment */
 	int  busy;                  /*  */
 	int  type;                  /* Doing brackets? */
+	PADPOINTER(5,5,0,0);
 } THREADBUCKET;
 
 #endif
@@ -1179,6 +1196,7 @@ typedef struct {
 	WORD	level;
 	WORD	thefunction;
 	WORD	option;
+	PADPOINTER(1,0,4,0);
 } SHvariables;
 
 typedef struct {				/* Used for computing calculational cost in optim.c */
@@ -1189,7 +1207,7 @@ typedef struct {				/* Used for computing calculational cost in optim.c */
 } COST;
 
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1351,7 +1369,7 @@ struct M_const {
 	WORD	ggextrasymbols;
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1407,7 +1425,7 @@ struct P_const {
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1633,7 +1651,7 @@ struct C_const {
                                         snapshots shall be created at the end of _every_ module.*/
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1739,7 +1757,7 @@ struct R_const {
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1841,7 +1859,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -2007,7 +2025,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2076,7 +2094,7 @@ struct O_const {
     UBYTE   FortDotChar;           /* (O) */
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2102,7 +2120,7 @@ struct X_const {
 	int	currentExternalChannel;
 };
 /*
- 		#] X : 
+ 		#] X :
  		#[ Definitions :
 */
 
@@ -2154,7 +2172,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
     #] A :
   	#[ FG :
 */
@@ -2191,7 +2209,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif
