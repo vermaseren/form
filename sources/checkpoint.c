@@ -231,11 +231,11 @@ static int PF_CheckRecoveryFile()
 /*:[20oct2009 mt]*/
 int CheckRecoveryFile()
 {
-	FILE *fd;
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	return(PF_CheckRecoveryFile());
 #else
+	FILE *fd;
 /*:[20oct2009 mt]*/
 	if ( (fd = fopen(recoveryfile, "r")) ) {
 		fclose(fd);

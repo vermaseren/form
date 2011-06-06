@@ -71,9 +71,7 @@ static int   PF_packpos=0;
 static LONG PF_packsize = 0;
 static int PF_longPackInit();      /*:[12oct2005 mt]*/
 static MPI_Status PF_status;
-double PF_starttime;
 LONG PF_maxDollarChunkSize = 0;      /*:[04oct2005 mt]*/
-static int PF_finished;
 
 /*
   	#] includes & variables :
@@ -84,11 +82,12 @@ static int PF_finished;
 
 LONG PF_RealTime(int i)
 {
+	static double starttime;
 	if( i == PF_RESET ){
-		PF_starttime = MPI_Wtime();
+		starttime = MPI_Wtime();
 		return((LONG)0);
 	}
-	return((LONG)( 100. * (MPI_Wtime() - PF_starttime) ) );
+	return((LONG)( 100. * (MPI_Wtime() - starttime) ) );
 }
 
 /*
@@ -185,6 +184,7 @@ int PF_LibInit(int *argcp, char ***argvp)
 
 int PF_Terminate(int error)
 {
+	DUMMYUSE(error);
 	return(MPI_Finalize());
 }
 
@@ -396,6 +396,8 @@ int PF_ISendSbuf(int to, int tag)
 	int size = s->fill[a] - s->buff[a];
 	int r = 0;
 
+	static int finished;
+
 	s->fill[a] = s->buff[a];
 	if ( s->numbufs == 1 ) {
 		r = MPI_Ssend(s->buff[a],size,PF_WORD,MASTER,tag,PF_COMM);
@@ -424,10 +426,10 @@ int PF_ISendSbuf(int to, int tag)
 
 	switch ( tag ) { /* things to do after initialising sending */
 		case PF_TERM_MSGTAG:
-			PF_finished = 0;
+			finished = 0;
 			break;
 		case PF_ENDSORT_MSGTAG:
-			if ( ++PF_finished == PF.numtasks - 1 )
+			if ( ++finished == PF.numtasks - 1 )
 				r = MPI_Waitall(s->numbufs,s->request,s->status);
 			if ( r != MPI_SUCCESS ) return(r);
 			break;
@@ -720,8 +722,8 @@ int PF_UnPackString(UBYTE *str)
 */
 
 typedef struct longMultiStruct {	
-	int bufpos;    /* if >=0, PF_longPackBuf+bufpos is the chunk start */
 	UBYTE *buffer; /* NULL if */
+	int bufpos;    /* if >=0, PF_longPackBuf+bufpos is the chunk start */
 	int packpos;   /* the current position */
 	int nPacks;    /* How many times PF_longPack operates on this cell */
 	int lastLen;   /* if > 0, the last packing didn't fit completely to this

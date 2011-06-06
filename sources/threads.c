@@ -130,6 +130,7 @@ void StartIdentity()
 
 void FinishIdentity(void *keyp)
 {
+	DUMMYUSE(keyp);
 /*	free(keyp); */
 }
 
@@ -1229,6 +1230,7 @@ void *RunThread(void *dummy)
 	THREADBUCKET *thr;
 	POSITION *ppdef;
 	EXPRESSIONS e;
+	DUMMYUSE(dummy);
 	identity = SetIdentity(&identityretv);
 	threadpointers[identity] = pthread_self();
 	B = InitializeOneThread(identity);
@@ -1779,6 +1781,7 @@ void *RunSortBot(void *dummy)
 {
 	int identity, wakeupsignal, identityretv;
 	ALLPRIVATES *B, *BB;
+	DUMMYUSE(dummy);
 	identity = SetIdentity(&identityretv);
 	threadpointers[identity] = pthread_self();
 	B = InitializeOneThread(identity);

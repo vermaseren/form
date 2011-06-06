@@ -105,7 +105,6 @@ static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize);
 static void PF_ReceiveErrorMessage(int src, int tag);
 static void PF_CatchErrorMessages(int src);
 static void PF_CatchErrorMessagesForAll(void);
-static void PF_FreeErrorMessageBuffers(void);
 
 PARALLELVARS PF;
 #ifdef MPI2
@@ -804,7 +803,7 @@ int PF_EndSort()
 */
 		size = (AT.SS->sTop2 - AT.SS->lBuffer - 1)/(PF.numtasks - 1);
 		size -= (AM.MaxTer/sizeof(WORD) + 2); 
-		if ( fout->POsize < size*sizeof(WORD) ) size = fout->POsize/sizeof(WORD);
+		if ( fout->POsize < (LONG)(size*sizeof(WORD)) ) size = fout->POsize/sizeof(WORD);
 		if ( sbuf == 0 ) {
 			if ( (sbuf = PF_AllocBuf(PF.numsbufs,size*sizeof(WORD),1)) == 0 ) return(-1);
 			sbuf->buff[0] = fout->PObuffer;
@@ -1505,7 +1504,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		NewSort();   /* we need AT.SS to be set for this!!! */
 		if ( sb == 0 || sb->buff[0] != AT.SS->lBuffer ) {
 			size = (LONG)((AT.SS->sTop2 - AT.SS->lBuffer)/(PF.numtasks));
-			if ( size > (AR.infile->POsize/sizeof(WORD) - 1) )
+			if ( size > (LONG)(AR.infile->POsize/sizeof(WORD) - 1) )
 					size = AR.infile->POsize/sizeof(WORD) - 1;
 			if ( sb == 0 ) {
 				if( ( sb = PF_AllocBuf(PF.numtasks,size*sizeof(WORD),PF.numtasks) ) == 0 ) 
@@ -1542,7 +1541,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		*(sb->fill[0])++ = (UWORD)(1);
 		while ( GetTerm(BHEAD term) ) {
 			PF.ginterms++; dd = AN.deferskipped;
-			if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
+			if ( AC.CollectFun && *term <= (LONG)(AM.MaxTer/(2*sizeof(WORD))) ) {
 				if ( GetMoreTerms(term) < 0 ) {
 					LowerSortLevel(); return(-1);
 				}
@@ -2694,7 +2693,6 @@ static int PF_pushScratch(FILEHANDLE *f)
 */
 static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
 {
-WORD *t;
 LONG l=0;
 	for(;;){
 		if(curfile->POstop-curfile->POfill < dl){
@@ -2735,7 +2733,6 @@ LONG l=0;
 */
 static int PF_WalkThroughExprMaster(FILEHANDLE *curfile, int dl)
 {
-WORD *t;
 LONG l=0;
 	for(;;){
 		if(curfile->POfull-curfile->POfill < dl){
@@ -2953,7 +2950,7 @@ int PF_InParallelProcessor(void)
 static int PF_Wait4MasterIP(int tag)
 {
 	  int follow = 0;
-	  LONG size,cpu,space = 0;
+	  LONG cpu,space = 0;
 	  
 	  if(PF.log){
 		fprintf(stderr,"[%d] Starting to send to Master\n",PF.me);
@@ -3033,7 +3030,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 				while ( GetTerm(BHEAD term) ) {
 				  SeekScratch(fi,&position);
 				  AN.ninterms++; dd = AN.deferskipped;
-				  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*sizeof(WORD))) ) {
+				  if ( AC.CollectFun && *term <= (LONG)(AM.MaxTer/(2*sizeof(WORD))) ) {
 					if ( GetMoreTerms(term) < 0 ) {
 					  LowerSortLevel(); return(-1);
 					}
@@ -3091,7 +3088,7 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 {
 EXPRESSIONS e;
 bufIPstruct_t exprData;
-int i,tag,l;
+int i,l;
 FILEHANDLE *fout=AR.outfile;
 POSITION pos;
 	/*Here we know the length of data to send in advance:
@@ -3161,7 +3158,7 @@ static int PF_Master2SlaveIP(int dest, EXPRESSIONS e)
 bufIPstruct_t exprData;
 FILEHANDLE *fi;
 POSITION pos;
-int i,l;
+int l;
 LONG ll=0,count=0;
 WORD *t;
 	if(e==NULL){/*Say to the slave that no more job:*/
@@ -3278,7 +3275,7 @@ static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize)
 {
 	LONG receivedBytes;
 
-	if( (curfile->POstop - curfile->POfull)*sizeof(WORD) < thesize )
+	if( (LONG)((curfile->POstop - curfile->POfull)*sizeof(WORD)) < thesize )
 		if(PF_pushScratch(curfile))
 			return(-1);
 	/*Now there is enough space from curfile->POfill to curfile->POstop*/
@@ -3421,7 +3418,7 @@ int PF_RecvFile(int from, FILE *fd)
  */
 
 /*
- * A implementation of dynamic arrays.
+ * An implementation of dynamic arrays.
  */
 #define Vector(type,x) \
 	struct { \
@@ -3488,7 +3485,7 @@ static Vector(UBYTE, logBuffer);     /* The buffer for AC.LogHandle. */
 void PF_MLock(void)
 {
 	/* Only on slaves. */
-	if ( errorMessageLock ++ > 0 ) return;
+	if ( errorMessageLock++ > 0 ) return;
 	VectorClear(UBYTE, stdoutBuffer);
 	VectorClear(UBYTE, logBuffer);
 }
@@ -3504,7 +3501,7 @@ void PF_MLock(void)
 void PF_MUnlock(void)
 {
 	/* Only on slaves. */
-	if ( -- errorMessageLock > 0 ) return;
+	if ( --errorMessageLock > 0 ) return;
 	if ( VectorSize(UBYTE, stdoutBuffer) > 0 ) {
 		PF_RawSend(MASTER, VectorCPtr(UBYTE, stdoutBuffer), VectorSize(UBYTE, stdoutBuffer), PF_STDOUT_MSGTAG);
 	}
@@ -3634,7 +3631,7 @@ static void PF_CatchErrorMessagesForAll(void)
  *
  * Currently, not used anywhere, but could be used in PF_Terminate.
  */
-static void PF_FreeErrorMessageBuffers(void)
+void PF_FreeErrorMessageBuffers(void)
 {
 	VectorFree(UBYTE, stdoutBuffer);
 	VectorFree(UBYTE, logBuffer);

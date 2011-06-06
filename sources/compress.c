@@ -310,7 +310,7 @@ int FlushOutputGZIP(FILEHANDLE *f)
 		}
 		SeekFile(f->handle,&(f->POposition),SEEK_SET);
 		if ( WriteFile(f->handle,(UBYTE *)(f->ziobuffer),f->zsp->total_out)
-						!= f->zsp->total_out ) {
+						!= (LONG)(f->zsp->total_out) ) {
 			if ( f == AR.hidefile ) {
 				UNLOCK(AS.inputslock);
 			}

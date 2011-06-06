@@ -1387,9 +1387,7 @@ typedef WORD (*DO_UFFLE)(PHEAD WORD *,WORD,WORD,WORD);
 #ifdef PARALLEL
 extern LONG   PF_BroadcastNumberOfTerms(LONG);
 extern int    PF_Processor(EXPRESSIONS,WORD,WORD);
-
 extern int  PF_InitRedefinedPreVars();
-extern int  PF_Processor(EXPRESSIONS,WORD,WORD);
 extern WORD PF_Deferred(WORD *,WORD);
 extern int  PF_EndSort();
 extern int  PF_Init(int*,char ***);
@@ -1397,6 +1395,8 @@ extern int  PF_Terminate(int);
 extern int  PF_ISendSbuf(int,int);
 extern int  PF_PackString(UBYTE *);
 extern int  PF_UnPackString(UBYTE *);
+extern int    PF_RawSend(int,void *,LONG,int);
+extern LONG   PF_RawRecv(int *,void *,LONG,int *);
 extern int  PF_BroadcastPreDollar(WORD **, LONG *,int *);
 extern int  PF_BroadcastString(UBYTE *);
 extern LONG PF_BroadcastNumberOfTerms(LONG);
@@ -1404,6 +1404,7 @@ extern WORD PF_mkDollarsParallel();
 extern void PF_markPotModDollars();
 extern void PF_statPotModDollar(int,int);
 extern int PF_broadcastRHS(void);
+extern int    PF_InParallelProcessor(void);
 extern int PF_SendFile(int to, FILE *fd);
 extern int PF_RecvFile(int from, FILE *fd);
 
