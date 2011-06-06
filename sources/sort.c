@@ -1025,6 +1025,7 @@ RetRetval:
 		if ( retval < 0 ) {
 			UpdateMaxSize();
 			DeAllocFileHandle(newout);
+			newout = 0;
 		}
 		else if ( newout ) {
 		  if ( newout->handle >= 0 ) {
@@ -1052,13 +1053,9 @@ RetRetval:
 				while ( j-- > 0 ) *to++ = *t++;
 			}
 			UpdateMaxSize();
-			DeAllocFileHandle(newout);
-			newout = 0;
 		  }
-		}
-		else if ( newout ) {
-			DeAllocFileHandle(newout);
-			newout = 0;
+		  DeAllocFileHandle(newout);
+		  newout = 0;
 		}
 	}
 	else if ( par == 2 ) {
@@ -1108,6 +1105,13 @@ RetRetval:
 			}
 			UpdateMaxSize();
 			DeAllocFileHandle(newout);
+			newout = 0;
+		}
+	}
+	else {
+		if ( newout ) {
+			DeAllocFileHandle(newout);
+			newout = 0;
 		}
 	}
 	return(retval);
