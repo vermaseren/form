@@ -31,6 +31,7 @@ extern "C" {
 };
 
 const int MAX_HASH_SIZE = 1048576;
+const int SMALL_POWER_MAXX = 1000;
 
 #include <string>
 #include <set>
@@ -50,7 +51,7 @@ class poly {
 	poly (WORD a);
 	poly (const UWORD *a, WORD na);
 	poly (const poly &a);
-	poly (const poly &a, WORD modp, WORD modn);
+	poly (const poly &a, WORD modp, WORD modn=1);
 	~poly ();
 
 	void expand_memory();

@@ -35,9 +35,9 @@
 
 #include <vector>
 #include <iostream>
-#include <cassert>
 #include <cmath>
 #include <climits>
+#include <cassert>
 
 #include "newpoly.h"
 #include "polygcd.h"
@@ -45,6 +45,10 @@
 
 //#define DEBUG
 //#define DEBUGALL
+#include "mytime.h"
+
+// otherwise use GCD_EZ
+// #define USE_GCD_MODULAR
 
 #ifdef DEBUG
 #include "mytime.h"
@@ -237,7 +241,6 @@ const poly poly_gcd::content (const poly &a, int x) {
 	}	
 
 	if (modp > 0) {
-		assert (res.lcoeff() == 1);
 		res *= a.lcoeff();
 	}
 	
@@ -360,7 +363,322 @@ const vector<poly> poly_gcd::extended_gcd_Euclidean_lifted (const poly &a, const
 }
 
 /*
+<<<<<<< polygcd.cc
   	#] extended_gcd_Euclidean_lifted :
+	 	#[ modular gcd :
+*/
+
+/**  Chinese remainder algorithm
+ */
+const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2) {
+
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  CALL: chinese_remainder(" << a1 << "," << m1 << "," << a2 << "," << m2 << ")" << endl;
+#endif
+
+	WORD nx,ny,nz;
+	UWORD *x = (UWORD *)NumberMalloc("chinese remainder");
+	UWORD *y = (UWORD *)NumberMalloc("chinese remainder");
+	UWORD *z = (UWORD *)NumberMalloc("chinese remainder");
+
+	// is currently called for evert polynomial coefficient (TODO)
+	poly::inverse((UWORD *)&m1[2+AN.poly_num_vars], m1[m1[1]],
+								(UWORD *)&m2[2+AN.poly_num_vars], m2[m2[1]],
+								(UWORD *)x, nx);
+	
+	AddLong((UWORD *)&a2[2+AN.poly_num_vars], a2.is_zero() ? 0 :  a2[a2[1]],
+					(UWORD *)&a1[2+AN.poly_num_vars], a1.is_zero() ? 0 : -a1[a1[1]],
+					y, &ny);
+
+	MulLong (x,nx,y,ny,z,&nz);
+	MulLong (z,nz,(UWORD *)&m1[2+AN.poly_num_vars],m1[m1[1]],x,&nx);
+
+	AddLong (x,nx,(UWORD *)&a1[2+AN.poly_num_vars], a1.is_zero() ? 0 : a1[a1[1]],y,&ny);
+	
+	MulLong ((UWORD *)&m1[2+AN.poly_num_vars], m1[m1[1]],
+					 (UWORD *)&m2[2+AN.poly_num_vars], m2[m2[1]],
+					 (UWORD *)z,&nz);
+
+	TakeNormalModulus (y,&ny,(WORD *)z,nz,NOUNPACK);
+	
+	poly res(y,ny);
+
+	NumberFree(x,"chinese remainder");
+	NumberFree(y,"chinese remainder");
+	NumberFree(z,"chinese remainder");
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  RES : chinese_remainder(" << a1 << "," << m1 << "," << a2 << "," << m2 << ") = " << res << endl;
+#endif
+
+	return res;
+}
+
+// content, viewed as polynomial with coefficients in Z[x] or Z/p[x]
+const poly poly_gcd::content_all_but (const poly &a, int x) {
+	
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  CALL: content_all_but(" << a << "," << x << ")" << endl;
+#endif
+
+	// If modulo p^n with n>1, then calculate over the integers
+	// (admittedly, this is a bit ugly hack)
+	WORD modp = a.modn>1 ? 0 : a.modp;
+	WORD modn = a.modn>1 ? 1 : a.modn;
+
+	poly res(0,modp,modn);
+
+	for (int i=1,j; i<a[0]; i=j) {
+		poly b(0,modp,modn);
+
+		for (j=i; j<a[0]; j+=a[j]) {
+			bool same_powers = true;
+			for (int k=0; k<AN.poly_num_vars; k++)
+				if (k!=x && a[i+1+k]!=a[j+1+k]) {
+					same_powers = false;
+					break;
+				}
+			if (!same_powers) break;
+			
+			b.termscopy(&a[j],b[0],a[j]);
+			for (int k=0; k<AN.poly_num_vars; k++)
+				if (k!=x) b[b[0]+1+k]=0;
+			
+			b[0] += a[j];
+		}			
+		
+		res = gcd_Euclidean(res, b);
+
+		// Optimization: if there are no variables left, return integer content
+		if (res.is_integer()) 
+			return integer_content(a);
+	}	
+
+	if (modp > 0) {
+		res *= a.lcoeff();
+	}
+	
+	if (a.sign() != res.sign()) res *= -1;
+	
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  RES : content_all_but(" << a << "," << x << ") = " << res << endl;
+#endif
+
+	return res;
+}
+
+const poly lcoeff_all_but (const poly &a, int x) {
+
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  CALL: lcoeff_all_but(" << a << "," << x << ")" << endl;
+#endif
+	
+	WORD modp = a.modn>1 ? 0 : a.modp;
+	WORD modn = a.modn>1 ? 1 : a.modn;
+
+	poly res(0,modp,modn);
+
+	for (int i=1; i<a[0]; i+=a[i]) {
+		bool same_powers = true;
+		for (int j=0; j<AN.poly_num_vars; j++)
+			if (j!=x && a[i+1+j]!=a[2+j]) {
+				same_powers = false;
+				break;
+			}
+		if (!same_powers) break;
+		
+		res.termscopy(&a[i],res[0],a[i]);
+		for (int k=0; k<AN.poly_num_vars; k++)
+			if (k!=x) res[res[0]+1+k]=0;
+		
+		res[0] += a[i];
+	}
+
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  RES : lcoeff_all_but(" << a << "," << x << ") = " << res << endl;
+#endif
+	
+	return res;	
+}
+
+const poly interpolate (const poly &a1, const poly &m1, const poly &a2, const poly &m2) {
+	// res = ai (mod mi)
+	// m2 of the form (xi-c)
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: interpolate(" << a1 << "," << m1 << "," << a2 << "," << m2 <<  ")" << endl;
+#endif
+	
+	poly coeff = m1 % m2;
+	poly invcoeff(1);
+
+	WORD n;
+	poly::inverse((UWORD *)&coeff[2+AN.poly_num_vars], coeff[coeff[1]],
+								(UWORD *)&a1.modp, 1,
+								(UWORD *)&invcoeff[2+AN.poly_num_vars], n);
+	invcoeff[1] = 2+AN.poly_num_vars+ABS(n);
+	invcoeff[0] = 1+invcoeff[1];
+	invcoeff[invcoeff[1]] = n;
+	invcoeff.modp = a1.modp;
+	invcoeff.modn = 1;
+	
+	poly res = a1 + invcoeff * m1 * (a2 - a1%m2);
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  RES : interpolate(" << a1 << "," << m1 << "," << a2 << "," << m2 <<  ") = " << res << endl;
+#endif
+
+	return res;
+}
+
+const poly poly_gcd::gcd_modular_reduce (const poly &a, const poly &b, const vector<int> &x) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_reduce(" << a << "," << b << "," << x << ")" << endl;
+#endif
+	
+	if (x.size() == 1) return gcd_Euclidean(a,b);
+
+	int X = x[x.size()-1];
+	poly conta = content_all_but(a,X);
+	poly contb = content_all_but(b,X);
+	poly gcdconts = gcd_Euclidean(conta,contb);
+	poly ppa = a/conta;
+	poly ppb = b/contb;
+
+	poly lcoeffa = lcoeff_all_but(ppa,X);
+	poly lcoeffb = lcoeff_all_but(ppb,X);
+	poly gcdlcoeffs = gcd_Euclidean(lcoeffa,lcoeffb);
+
+	poly res, modpoly(1,a.modp);
+	
+	for (WORD c=0; c<a.modp; c++) {
+		poly simple = poly::simple_poly(X,c,1,a.modp);
+#ifdef DEBUG
+		cout << "*** [" << thetime() << "]  ... : gcd_modular_reduce(" << a << "," << b << "," << x <<
+			") substitute " << char('a'+X) << "->" << c << endl;
+#endif
+		if (gcdlcoeffs % simple == 0) continue;
+		poly amodc = ppa % simple;
+		poly bmodc = ppb % simple;
+
+		poly gcdmodc = gcd_modular_reduce(amodc,bmodc,vector<int>(x.begin(),x.end()-1));
+		gcdmodc *= (gcdlcoeffs % simple) / gcdmodc.lcoeff();
+
+		int comp=0;
+		if (res.is_zero())
+			comp=-1;
+		else
+			for (int i=0; i<(int)x.size()-1; i++)
+				if (gcdmodc[2+x[i]] != res[2+x[i]])
+					comp = gcdmodc[2+x[i]] - res[2+x[i]];
+		
+		if (comp < 0) {
+			res = gcdmodc;
+			modpoly = simple;
+		}
+		else if (comp == 0) { 
+			res = interpolate(res,modpoly,gcdmodc,simple);
+			modpoly *= simple;
+		}
+
+		if (lcoeff_all_but(res,X) == gcdlcoeffs) {
+			poly ppres = res / content_all_but(res,X);
+			if (a%ppres==0 && b%ppres==0) {
+#ifdef DEBUG
+				cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << "," << x << ") = "
+						 << gcdconts*ppres << endl;
+#endif
+				return gcdconts*ppres;
+			}
+		}
+	}
+	
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << "," << x << ") failed" << endl;
+#endif
+
+	return 0;
+}
+
+// necessary: icont(a)=icont(b)=0
+const poly poly_gcd::gcd_modular (const poly &a, const poly &b, const vector<int> &x) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular(" << a << "," << b << "," << x << ")" << endl;
+#endif
+
+	int pnum=0;
+
+	poly lcoeff = integer_gcd(a.lcoeff(), b.lcoeff());
+	
+	poly d;
+	poly m1=1;
+	WORD mindeg=MAXPOSITIVE;
+	
+	while (true) {
+		WORD p = NextPrime(pnum++);
+
+		poly lcoeffmodp(lcoeff,p);
+		if (lcoeffmodp.is_zero()) continue;
+
+		poly c = gcd_modular_reduce (poly(a,p),poly(b,p),x);
+		if (c.is_zero()) continue;
+		c *= lcoeff;
+
+		WORD deg = c.degree(x[0]);
+
+		if (deg < mindeg) {
+			d=c;
+			d.modp=a.modp;
+			d.modn=a.modn;
+			m1=p;
+			mindeg=deg;
+		}
+		else if (deg == mindeg) {
+			poly newd(0);
+			
+			for (int ci=1,di=1; ci<c[0]||di<d[0]; ) {
+				int comp = ci==c[0] ? -1 : di==d[0] ? +1 : poly::monomial_compare(&c[ci],&d[di]);
+				poly a1(0),a2(0);
+				
+				if (comp <= 0) {
+					newd.termscopy(&d[di],newd[0],1+AN.poly_num_vars);
+					a1 = poly((UWORD *)&d[di+1+AN.poly_num_vars],d[di+d[di]-1]);
+					di+=d[di];
+				}
+				if (comp >= 0) {
+					newd.termscopy(&c[ci],newd[0],1+AN.poly_num_vars);
+					a2 = poly((UWORD *)&c[ci+1+AN.poly_num_vars],c[ci+c[ci]-1]);
+					ci+=c[ci];
+				}
+
+				poly e = chinese_remainder(a1,m1,a2,p); 
+				newd.termscopy(&e[2+AN.poly_num_vars], newd[0]+1+AN.poly_num_vars, ABS(e[e[1]])+1);
+				newd[newd[0]] = 2 + AN.poly_num_vars + ABS(e[e[1]]);
+				newd[0] += newd[newd[0]];
+			}
+
+			m1*=p;
+			d=newd;
+		}
+		poly ppd = d / integer_content(d);
+
+		if (a%ppd==0 && b%ppd==0) {
+#ifdef DEBUG
+			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << a << "," << b << "," << x << ") = "
+					 << ppd << endl;
+#endif
+			return ppd;
+		}
+	}
+}
+
+/*
+  	#] modular gcd :
+=======
+  	#] extended_gcd_Euclidean_lifted :
+>>>>>>> 1.10
   	#[ solve_Diophantine_univariate :
 */
 
@@ -1422,24 +1740,31 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 	for (int i=0; i<AN.poly_num_vars; i++)
 		if (used[i]) x.push_back(i);
 
+#ifdef USE_GCD_MODULAR
+	poly iconta = integer_content(a);
+	poly icontb = integer_content(b);
+	poly gcdconts = integer_gcd(iconta,icontb);
+	poly ppa = a / iconta;
+	poly ppb = b / icontb;
+#else
 	// Calculate the contents, their gcd and the primitive parts
 	poly conta = x.size()==1 ? integer_content(a) : content(a,x[0]);
 	poly contb = x.size()==1 ? integer_content(b) : content(b,x[0]);
-
 	poly gcdconts = x.size()==1 ? integer_gcd(conta,contb) : gcd(conta,contb);
 	poly ppa = a / conta;
 	poly ppb = b / contb;
-
+#endif
+	
 	// Since p^n with n>1 is regarded as over integers (ugly hack)
 	if (modp==0) {
 		ppa.setmod(0,1);
 		ppb.setmod(0,1);
 	}
-	
+
 	if (ppa == ppb) 
 		return ppa * gcdconts;
 	
-	poly gcdpps, gcd;
+	poly gcd;
 	
 	// Try the heuristic gcd algorithm
 	if (modp==0) {
@@ -1489,20 +1814,24 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 		*/
 		
 		try {
-			gcdpps = gcd_heuristic(ppa,ppb,x);
-			if (gcdpps != 0)
-				gcdpps /= integer_content(gcdpps);
-			gcd = gcdconts * gcdpps;
+			gcd = gcd_heuristic(ppa,ppb,x);
+			if (gcd != 0)	gcd /= integer_content(gcd);
 		}
 		catch (gcd_heuristic_failed) {}
 		
 		//		}
 	}
-	
+
 	// If gcd==0, the heuristic algorithm failed, so try EZ-GCD
 	if (gcd == 0) {
-		gcd = gcd_EZ(ppa,ppb,x) * gcdconts;
+#ifdef USE_GCD_MODULAR
+		gcd = gcd_modular(ppa,ppb,x);
+#else
+		gcd = gcd_EZ(ppa,ppb,x);
+#endif
 	}
+
+	gcd *= gcdconts * gcd.sign();
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : gcd("<<a<<","<<b<<") = "<<gcd<<endl;
@@ -1510,6 +1839,47 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 
 	return gcd;
 }
+
+/////////////////////////////////////////
+poly random_poly (int vars=3, int terms=10, int power=10, int coeff=100) {
+	
+	poly res;
+	res.terms[0]=1;
+	
+	for (int t=0; t<terms; t++) {
+		res[res[0]] = AN.poly_num_vars + 3;
+		for (int v=0; v<vars; v++)
+			res[res[0]+1+v] = random() % power;
+		res[res[0]+1+AN.poly_num_vars] = random()%coeff+1;
+		res[res[0]+2+AN.poly_num_vars] = random()%2*2-1;
+		res[0] += res[res[0]];
+	}
+	
+	res.normalize();
+	return res;
+}
+
+void testje () {
+
+	AN.poly_num_vars = 3;
+	AN.poly_vars = new WORD[3];
+	AN.poly_vars[0] = 'x';
+	AN.poly_vars[1] = 'y';
+	AN.poly_vars[2] = 'z';
+
+	for (int i=0; i<10; i++) {
+		poly a = random_poly();
+		poly b = random_poly();
+		poly c = random_poly();
+		a*=c;
+		b*=c;
+		
+		cout << "gcd("<<a<<","<<b<<") = " << poly_gcd::gcd(a,b) << endl;
+	}
+	
+	exit(1);
+}
+///////////////////////////////////
 
 /*
   	#] gcd :
@@ -1527,6 +1897,8 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
  */
 int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 
+	testje();
+	
 	// Check whether one of the arguments is 1
 	// i.e., [ARGHEAD 4 1 1 3] or [-SNUMBER 1]
 	WORD *p = argin;
@@ -1550,11 +1922,15 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 
 	if (AC.ncmod != 0) {
 		if (ABS(AC.ncmod)>1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		if (AN.poly_num_vars > 1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: multivariate polynomial GCD with modulus not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		modp = *AC.cmod;
@@ -1566,6 +1942,10 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 	while (*argin != 0) {
 		poly a = poly::argument_to_poly(argin, true, var_to_idx);
 		if (modp > 0) a.setmod(modp,1);
+
+		// remove this time (TODO)
+		//		for (int times=0; times<100; times++) poly_gcd::gcd(gcd, a);
+		
 		gcd = poly_gcd::gcd(gcd, a);
 		argin += *argin;
 	}
@@ -1620,11 +2000,15 @@ WORD *PolyGCD(PHEAD WORD *a, WORD *b) {
 
 	if (AC.ncmod != 0) {
 		if (ABS(AC.ncmod)>1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: gcd with modulus > WORDSIZE not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		if (AN.poly_num_vars > 1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: multivariate gcd with modulus not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		modp = *AC.cmod;
@@ -1686,11 +2070,15 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 
 	if (AC.ncmod != 0) {
 		if (ABS(AC.ncmod)>1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		if (AN.poly_num_vars > 1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		modp = *AC.cmod;
@@ -1741,7 +2129,9 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 
 	// Check size
 	if (num.size_of_form_notation() + den.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
+		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(1);
 	}
 	
@@ -1814,11 +2204,15 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 
 	if (AC.ncmod != 0) {
 		if (ABS(AC.ncmod)>1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		if (AN.poly_num_vars > 1) {
+			MLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
 		modp = *AC.cmod;
@@ -1864,7 +2258,9 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 
 	// Check size
 	if (num1.size_of_form_notation() + den1.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
+		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(1);
 	}
 	

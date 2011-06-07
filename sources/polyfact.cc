@@ -885,6 +885,9 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 	}
 
 	// Lift variables
+	if (f.size() == 1)
+		f = vector<poly>(1, a);
+	
 	if (x.size() > 1 && f.size() > 1) {
 
 		// The correct leading coefficients of the factors can be
@@ -982,18 +985,13 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 #endif
 			goto try_again;
 		}
-
-		// if n>1, factorize over the integers, otherwise over ZZ/p
-		if (n>1) 
-			for (int i=0; i<(int)f.size(); i++)
-				f[i].setmod(0,1);
 	}
-	else {
-		if ( f.size() == 1 ) {
-			f = vector<poly>(1, a);
-		}
-	}
-
+	
+	// if n>1, factorize over the integers, otherwise over ZZ/p
+	if (n>1) 
+		for (int i=0; i<(int)f.size(); i++)
+			f[i].setmod(0,1);
+	
 	// Final check (not sure if this is necessary, but it doesn't hurt)
 	poly check(1,a.modp,a.modn);
 	for (int i=0; i<(int)f.size(); i++)
@@ -1108,11 +1106,15 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	if (AC.ncmod!=0) {
 		if (AC.modmode & ALSOFUNARGS) {
 			if (ABS(AC.ncmod)>1) {
+				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
+				MUNLOCK(ErrorMessageLock);
 				Terminate(1);
 			}
 			if (AN.poly_num_vars > 1) {
+				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
+				MUNLOCK(ErrorMessageLock);
 				Terminate(1);
 			}
 			a.setmod(*AC.cmod, 1);
@@ -1131,7 +1133,9 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	for (int i=0; i<(int)f.factor.size(); i++)
 		len += f.power[i] * f.factor[i].size_of_form_notation();
 	if (len >= AM.MaxTer) {
+		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: factorization doesn't fit in a term");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(1);
 	}
 	
@@ -1184,11 +1188,15 @@ WORD *DoFactorizeDollar(PHEAD WORD *argin) {
 	if (AC.ncmod!=0) {
 		if (AC.modmode & ALSOFUNARGS) {
 			if (ABS(AC.ncmod)>1) {
+				MUNLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
+				MLOCK(ErrorMessageLock);
 				Terminate(1);
 			}
 			if (AN.poly_num_vars > 1) {
+				MUNLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
+				MLOCK(ErrorMessageLock);
 				Terminate(1);
 			}
 			a.setmod(*AC.cmod, 1);

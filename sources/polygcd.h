@@ -48,6 +48,11 @@ namespace poly_gcd {
 	const poly integer_content (const poly &a);
 	const poly gcd_Euclidean (const poly &a, const poly &b);
 	const std::vector<poly> extended_gcd_Euclidean_lifted (const poly &a, const poly &b);
+	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);
+	const poly content_all_but (const poly &a, int x);
+	const poly gcd_modular (const poly &a, const poly &b, const std::vector<int> &x);
+	const poly gcd_modular_reduce (const poly &a, const poly &b, const std::vector<int> &x);
+
 	const std::vector<poly> solve_Diophantine_univariate (const std::vector<poly> &a, const poly &b);
 	const std::vector<poly> solve_Diophantine_multivariate (const std::vector<poly> &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c, int d);
 	const std::vector<poly> lift_coefficients (const poly &A, const std::vector<poly> &a);

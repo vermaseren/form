@@ -75,7 +75,7 @@ inline int sgn (int x) { return x>=0 ? 1 : -1; }
 void small_power (WORD x, WORD n, UWORD *&c, WORD &nc) {
 
 	GETIDENTITY;
-
+	
 	// check whether to extend the array
 	if (x>=AT.small_power_maxx || n>=AT.small_power_maxn) {
 
@@ -111,7 +111,7 @@ void small_power (WORD x, WORD n, UWORD *&c, WORD &nc) {
 	}
 
 	// check whether the results is already calculated
-	int ID = x * AT.small_power_maxn + n;
+	WORD ID = x * AT.small_power_maxn + n;
 
 	if (AT.small_power[ID] == NULL) {
 		AT.small_power[ID] = NumberMalloc("small power");
@@ -272,7 +272,12 @@ void poly::setmod(WORD _modp, WORD _modn) {
 	
 		WORD nmodq=0;
 		UWORD *modq=NULL;
-		small_power(modp,modn,modq,nmodq);
+		if (modp<SMALL_POWER_MAXX)
+			small_power(modp,modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&modp;
+			nmodq = 1;
+		}
 		coefficients_modulo(modq,nmodq);
 	}
 	else {
@@ -535,7 +540,13 @@ const poly & poly::normalize() {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (modp!=0) small_power(modp,modn,modq,nmodq);
+	if (modp!=0)
+		if (modp<SMALL_POWER_MAXX)
+			small_power(modp,modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&modp;
+			nmodq = 1;
+		}
 
 	// find and sort all monomials
 	// terms[0]/num_vars+3 is an upper bound for number of terms in a
@@ -642,7 +653,13 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0) small_power(c.modp,c.modn,modq,nmodq);
+	if (c.modp!=0)
+		if (c.modp<SMALL_POWER_MAXX)
+			small_power(c.modp,c.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&c.modp;
+			nmodq = 1;
+		}
 	
 	int ai=1,bi=1,ci=1;
 	
@@ -701,7 +718,13 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0) small_power(c.modp,c.modn,modq,nmodq);
+	if (c.modp!=0)
+		if (c.modp<SMALL_POWER_MAXX)
+			small_power(c.modp,c.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&c.modp;
+			nmodq = 1;
+		}
 	
 	int ai=1,bi=1,ci=1;
 	
@@ -807,7 +830,13 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0) small_power(c.modp,c.modn,modq,nmodq);
+	if (c.modp!=0)
+		if (c.modp<SMALL_POWER_MAXX)
+			small_power(c.modp,c.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&c.modp;
+			nmodq = 1;
+		}
 	
   for (int ai=1; ai<a[0]; ai+=a[ai])
     for (int bi=1; bi<b[0]; bi+=b[bi]) {
@@ -844,7 +873,13 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0) small_power(c.modp,c.modn,modq,nmodq);
+	if (c.modp!=0)
+		if (c.modp<SMALL_POWER_MAXX)
+			small_power(c.modp,c.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&c.modp;
+			nmodq = 1;
+		}
 	
 	poly t;
 	WORD nt;
@@ -938,7 +973,13 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0) small_power(c.modp,c.modn,modq,nmodq);
+	if (c.modp!=0)
+		if (c.modp<SMALL_POWER_MAXX)
+			small_power(c.modp,c.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&c.modp;
+			nmodq = 1;
+		}
 
 	// allocate heap
 	int nheap=0;
@@ -1106,10 +1147,15 @@ void poly::mul (const poly &a, const poly &b, poly &c) {
 	if (a==0 || b==0) {	c[0]=1; return; }
 	if (a==1) {
 		c.termscopy(b.terms,0,b[0]);
+		// normalize if necessary
+		if (a.modp!=b.modp || a.modn!=b.modn) {
+			c.modp=0;
+			c.setmod(a.modp,a.modn);
+		}
 		return;
 	}
 	if (b==1) {
-		c.termscopy(a.terms,0,a[0]);
+		c.termscopy(a.terms,0,a[0]);		
 		return;
 	}
 
@@ -1155,7 +1201,12 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r) {
 	UWORD *ltbinv=NULL;
 
 	if (q.modp!=0) {
-		small_power(q.modp,q.modn,modq,nmodq);
+		if (q.modp<SMALL_POWER_MAXX)
+			small_power(q.modp,q.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&q.modp;
+			nmodq = 1;
+		}
 		ltbinv = NumberMalloc("polynomial division (oneterm)");
 		inverse((UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, nltbinv);
 	}
@@ -1241,7 +1292,12 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	UWORD *ltbinv=NULL;
 	
 	if (q.modp!=0) {
-		small_power(q.modp,q.modn,modq,nmodq);
+		if (q.modp<SMALL_POWER_MAXX)
+			small_power(q.modp,q.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&q.modp;
+			nmodq = 1;
+		}
 		ltbinv = NumberMalloc("polynomial division (univar)");
 		inverse((UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, nltbinv);
 	}
@@ -1384,7 +1440,12 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r) {
 	UWORD *ltbinv=NULL;
 	
 	if (q.modp!=0) {
-		small_power(q.modp,q.modn,modq,nmodq);
+		if (q.modp<SMALL_POWER_MAXX)
+			small_power(q.modp,q.modn,modq,nmodq);
+		else {
+			modq = (UWORD *)&q.modp;
+			nmodq = 1;
+		}
 		ltbinv = NumberMalloc("polynomial division (heap)");
 		inverse((UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, nltbinv);
 	}
