@@ -76,19 +76,19 @@ SRCPARALLEL = \
 DATEFLAG=$(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)\"'"; fi))
 
 # for release versions
-COMPILEFLAGS=$(DATEFLAG)
+COMPILEFLAGS=$(DATEFLAG) -Wall
 LINKFLAGS=
 # for debugging versions
-DEBUGCOMPILEFLAGS=-g -Wall $(DATEFLAG)
+DEBUGCOMPILEFLAGS=$(DATEFLAG) -g -Wall
 DEBUGLINKFLAGS=
 
 # compiler specific parameters
 if USINGGCC
-COMPILEFLAGS+=-O3 -fomit-frame-pointer
+COMPILEFLAGS+=-Wextra -Wpadded -O3 -fomit-frame-pointer
 # For now -pedantic option is removed because g++ 4.1.2 complains
 # as "ISO C++ forbids variable-size array".
-#DEBUGCOMPILEFLAGS+=-O0 -Wextra -pedantic -Wpadded
-DEBUGCOMPILEFLAGS+=-O0 -Wextra -Wpadded
+#DEBUGCOMPILEFLAGS+=-Wextra -Wpadded -pedantic -O0
+DEBUGCOMPILEFLAGS+=-Wextra -Wpadded -O0
 if ONAPPLE
 COMPILEFLAGS+=-mmacosx-version-min=10.4
 LINKFLAGS+=-static-libgcc
@@ -184,7 +184,7 @@ parform% : override CC = @MPICC@
 parform% : override CXX = @MPICXX@
 parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parform_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG
+parform_CPPFLAGS = -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG
 #parform_CFLAGS = -O3 -mcpu=i586
 parform_CFLAGS = $(COMPILEFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS)
@@ -198,7 +198,7 @@ parvorm% : override CC = @MPICC@
 parvorm% : override CXX = @MPICXX@
 parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parvorm_CPPFLAGS = -DPARALLEL -DMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
+parvorm_CPPFLAGS = -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)

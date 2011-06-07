@@ -49,7 +49,7 @@ int PF_PrintPackBuf(char*,int);
  int PF_Pack(VOID *,LONG,int);
  int PF_UnPack(VOID*,LONG,int);
 #else
- #ifdef MPI
+ #ifdef WITHMPI
   int PF_Pack(VOID *,LONG,MPI_Datatype);
   int PF_UnPack(VOID*,LONG,MPI_Datatype);
  #endif
@@ -270,7 +270,7 @@ PF_BUFFER* PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 	allocsize = 
 		(LONG)(sizeof(PF_BUFFER) + 4*nbufs*sizeof(WORD*) + (nbufs-free)*bsize); 
 
-#ifdef MPI
+#ifdef WITHMPI
 	allocsize += 
 		(LONG)( nbufs * (  2 * sizeof(MPI_Status)
 			 		   +     sizeof(MPI_Request)
@@ -291,7 +291,7 @@ PF_BUFFER* PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 	buf->fill    = (WORD**)p;		  p += buf->numbufs*sizeof(WORD*);
 	buf->full    = (WORD**)p;		  p += buf->numbufs*sizeof(WORD*);
 	buf->stop    = (WORD**)p;		  p += buf->numbufs*sizeof(WORD*);
-#ifdef MPI
+#ifdef WITHMPI
 	buf->status  = (MPI_Status *)p;	  p += buf->numbufs*sizeof(MPI_Status);
 	buf->retstat = (MPI_Status *)p;	  p += buf->numbufs*sizeof(MPI_Status);
 	buf->request = (MPI_Request *)p;  p += buf->numbufs*sizeof(MPI_Request);

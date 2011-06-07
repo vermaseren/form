@@ -126,8 +126,24 @@
 #  endif
 #endif
 
-#ifdef MPI
-#  include <mpi.h>
+#ifdef WITHMPI
+#  ifdef __cplusplus
+     /*
+      * form3.h (which includes parallel.h) is included from newpoly.h as
+      *   extern "C" {
+      *   #include "form3.h"
+      *   }
+      * On the other hand, C++ interfaces to MPI are defined in mpi.h if it is
+      * included from C++ sources. We first leave from the C-linkage, include
+      * mpi.h, and then go back to the C-linkage.
+      * (TU 7 Jun 2011)
+      */
+}
+#    include <mpi.h>
+extern "C" {
+#  else
+#    include <mpi.h>
+#  endif
 #  define PF_ANY_SOURCE MPI_ANY_SOURCE
 #  define PF_ANY_MSGTAG MPI_ANY_TAG
 #  define PF_COMM MPI_COMM_WORLD
@@ -173,7 +189,7 @@ typedef struct{
   WORD **fill;
   WORD **full;
   WORD **stop;
-#ifdef MPI
+#ifdef WITHMPI
   MPI_Status *status;
   MPI_Status *retstat;  
   MPI_Request *request;
