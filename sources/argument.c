@@ -1937,8 +1937,26 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 /*
 		Step 1: take out the 'content'.
 */
-	if ( ( argfree = TakeArgContent(BHEAD argin,argout) ) == 0 ) {
-
+	argfree = TakeArgContent(BHEAD argin,argout);
+	{
+		a1 = argout;
+		while ( *a1 ) {
+			if ( a1[0] == -SNUMBER && a1[1] == 1 ) {
+				if ( a1[2] ) {
+					a = t = a1+2; while ( *t ) NEXTARG(t);
+					i = t - a1-2;
+					t = a1; NCOPY(t,a,i);
+					*t = 0;
+				}
+				else {
+					a1[0] = 0;
+				}
+				break;
+			}
+			NEXTARG(a1);
+		}
+	}
+	if ( argfree == 0 ) {
 		argfree = argin;
 	}
 	else if ( argfree[0] == ( argfree[ARGHEAD]+ARGHEAD ) ) {
@@ -1955,7 +1973,6 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		The way we took out objects is rather brutish. We have to
 		normalize
 */
-		if ( argout[0] == -SNUMBER && argout[1] == 1 ) { argout[0] = 0; }
 		NewSort();
 		t = argfree+ARGHEAD;
 		while ( *t ) {
@@ -2345,7 +2362,7 @@ int DoFactorize1(PHEAD WORD *argin, WORD *argout)
  */
 
 /*
-  	#] DoFactorize1 :
+  	#] DoFactorize1 : 
   	#[ ArgSymbolMerge :
 */
 
@@ -2845,7 +2862,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL : 
+			#] SYMBOL :
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -3008,7 +3025,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent : 
+  	#] TakeArgContent :
   	#[ MakeInteger :
 */
 /**
