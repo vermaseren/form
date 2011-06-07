@@ -854,8 +854,8 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 
 	// Determine to which power of p to lift
 	if (n==0) {
-		n = poly_gcd::choose_prime_power(amodI,x,p);
-		n = max(n, poly_gcd::choose_prime_power(a,x,p));
+		n = poly_gcd::choose_prime_power(amodI,p);
+		n = max(n, poly_gcd::choose_prime_power(a,p));
 	}
 
 	amodI.setmod(p,n);

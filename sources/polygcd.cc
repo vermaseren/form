@@ -376,6 +376,8 @@ const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const po
 	cout << "*** [" << thetime() << "]  CALL: chinese_remainder(" << a1 << "," << m1 << "," << a2 << "," << m2 << ")" << endl;
 #endif
 
+	GETIDENTITY;
+	
 	WORD nx,ny,nz;
 	UWORD *x = (UWORD *)NumberMalloc("chinese remainder");
 	UWORD *y = (UWORD *)NumberMalloc("chinese remainder");
@@ -421,6 +423,8 @@ const poly poly_gcd::content_all_but (const poly &a, int x) {
 	cout << "*** [" << thetime() << "]  CALL: content_all_but(" << a << "," << x << ")" << endl;
 #endif
 
+	GETIDENTITY;
+	
 	// If modulo p^n with n>1, then calculate over the integers
 	// (admittedly, this is a bit ugly hack)
 	WORD modp = a.modn>1 ? 0 : a.modp;
@@ -473,6 +477,8 @@ const poly lcoeff_all_but (const poly &a, int x) {
 	cout << "*** [" << thetime() << "]  CALL: lcoeff_all_but(" << a << "," << x << ")" << endl;
 #endif
 	
+	GETIDENTITY;
+
 	WORD modp = a.modn>1 ? 0 : a.modp;
 	WORD modn = a.modn>1 ? 1 : a.modn;
 
@@ -509,6 +515,8 @@ const poly interpolate (const poly &a1, const poly &m1, const poly &a2, const po
 	cout << "*** [" << thetime() << "]  CALL: interpolate(" << a1 << "," << m1 << "," << a2 << "," << m2 <<  ")" << endl;
 #endif
 	
+	GETIDENTITY;
+
 	poly coeff = m1 % m2;
 	poly invcoeff(1);
 
@@ -608,6 +616,8 @@ const poly poly_gcd::gcd_modular (const poly &a, const poly &b, const vector<int
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular(" << a << "," << b << "," << x << ")" << endl;
 #endif
 
+	GETIDENTITY;
+
 	int pnum=0;
 
 	poly lcoeff = integer_gcd(a.lcoeff(), b.lcoeff());
@@ -617,7 +627,7 @@ const poly poly_gcd::gcd_modular (const poly &a, const poly &b, const vector<int
 	WORD mindeg=MAXPOSITIVE;
 	
 	while (true) {
-		WORD p = NextPrime(pnum++);
+		WORD p = NextPrime(BHEAD pnum++);
 
 		poly lcoeffmodp(lcoeff,p);
 		if (lcoeffmodp.is_zero()) continue;
@@ -1253,10 +1263,10 @@ const poly poly_gcd::gcd_EZ (const poly &a, const poly &b, const vector<int> &x)
 
 		// Choose prime power
 		if (n==0) {
-			n = choose_prime_power(amodI, x, p);
-			n = max(n,choose_prime_power(bmodI, x, p));
-			n = max(n,choose_prime_power(a, x, p));
-			n = max(n,choose_prime_power(b, x, p));
+			n = choose_prime_power(amodI, p);
+			n = max(n,choose_prime_power(bmodI, p));
+			n = max(n,choose_prime_power(a, p));
+			n = max(n,choose_prime_power(b, p));
 		}
 
 		amodI.setmod(p,n);
@@ -1459,7 +1469,7 @@ WORD poly_gcd::choose_prime (const poly &a, const vector<int> &x, WORD p) {
  *   [for details, see "Bounding the Coefficients of a Divisor of a
  *   Given Polynomial" by Andrew Granville]
  */
-WORD poly_gcd::choose_prime_power (const poly &a, const vector<int> &x, WORD p) {
+WORD poly_gcd::choose_prime_power (const poly &a, WORD p) {
 
 	GETIDENTITY;
 
@@ -1840,8 +1850,10 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 	return gcd;
 }
 
-/////////////////////////////////////////
+///////////////////////////////////////// REMOVE LATER ///////////////////////////////
 poly random_poly (int vars=3, int terms=10, int power=10, int coeff=100) {
+	
+	GETIDENTITY;
 	
 	poly res;
 	res.terms[0]=1;
@@ -1861,6 +1873,8 @@ poly random_poly (int vars=3, int terms=10, int power=10, int coeff=100) {
 
 void testje () {
 
+	GETIDENTITY;
+	
 	AN.poly_num_vars = 3;
 	AN.poly_vars = new WORD[3];
 	AN.poly_vars[0] = 'x';
@@ -1879,7 +1893,7 @@ void testje () {
 	
 	exit(1);
 }
-///////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 
 /*
   	#] gcd :
@@ -1897,7 +1911,7 @@ void testje () {
  */
 int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 
-	testje();
+	//	testje();
 	
 	// Check whether one of the arguments is 1
 	// i.e., [ARGHEAD 4 1 1 3] or [-SNUMBER 1]

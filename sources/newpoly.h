@@ -41,11 +41,13 @@ const int SMALL_POWER_MAXX = 1000;
 
 class poly {
 
- public:
+public:
 	
-	WORD modp,modn;
 	WORD *terms;
+	WORD modp,modn;
 	WORD size_of_terms;
+
+	PADPOINTER(1,0,3,0);
 	
 	poly ();
 	poly (WORD a);
