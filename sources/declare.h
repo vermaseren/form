@@ -659,7 +659,7 @@ extern int    SpareTable(TABLES);
 
 extern UBYTE *strDup1(UBYTE *,char *);
 extern VOID  *Malloc(LONG);
-extern VOID  *Malloc1(LONG,char *);
+extern VOID  *Malloc1(LONG,const char *);
 extern int    DoTail(int,UBYTE **);
 extern int    OpenInput(VOID);
 extern int    PutPreVar(UBYTE *,UBYTE *,UBYTE *,int);
@@ -856,7 +856,7 @@ extern UBYTE *ToToken(UBYTE *);
 extern int    GetDollar(UBYTE *);
 extern int    PutDollar(UBYTE *);
 extern int    MesWork(VOID);
-extern int    MesPrint(char *,...);
+extern int    MesPrint(const char *,...);
 extern int    MesCall(char *);
 extern int    Mes1arr(char *);
 extern int    Mes2arr(char *);
@@ -874,7 +874,7 @@ extern VOID   StageSort(FILEHANDLE *);
 
 #define M_alloc(x)      malloc((size_t)(x))
 
-extern void   M_free(VOID *,char *);
+extern void   M_free(VOID *,const char *);
 extern void   ClearWildcardNames(VOID);
 extern int    AddWildcardName(UBYTE *);
 extern int    GetWildcardName(UBYTE *);

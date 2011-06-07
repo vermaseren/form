@@ -129,7 +129,7 @@ int MesWork()
 
 int
 #ifdef ANSI
-MesPrint(char *fmt, ... )
+MesPrint(const char *fmt, ... )
 #else
 MesPrint(va_alist)
 va_dcl

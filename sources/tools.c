@@ -1944,7 +1944,7 @@ VOID *Malloc(LONG size)
 		Gives the user some idea of what is happening.
 */
 
-VOID *Malloc1(LONG size, char *messageifwrong)
+VOID *Malloc1(LONG size, const char *messageifwrong)
 {
 	VOID *mem;
 #ifdef MALLOCDEBUG
@@ -2010,7 +2010,7 @@ VOID *Malloc1(LONG size, char *messageifwrong)
  		#[ M_free :
 */
 
-void M_free(VOID *x, char *where)
+void M_free(VOID *x, const char *where)
 {
 #ifdef MALLOCDEBUG
 	char *t = (char *)x;

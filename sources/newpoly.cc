@@ -540,13 +540,14 @@ const poly & poly::normalize() {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (modp!=0)
+	if (modp!=0) {
 		if (modp<SMALL_POWER_MAXX)
 			small_power(modp,modn,modq,nmodq);
 		else {
 			modq = (UWORD *)&modp;
 			nmodq = 1;
 		}
+	}
 
 	// find and sort all monomials
 	// terms[0]/num_vars+3 is an upper bound for number of terms in a
@@ -653,13 +654,14 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0)
+	if (c.modp!=0) {
 		if (c.modp<SMALL_POWER_MAXX)
 			small_power(c.modp,c.modn,modq,nmodq);
 		else {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
+	}
 	
 	int ai=1,bi=1,ci=1;
 	
@@ -718,13 +720,14 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0)
+	if (c.modp!=0) {
 		if (c.modp<SMALL_POWER_MAXX)
 			small_power(c.modp,c.modn,modq,nmodq);
 		else {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
+	}
 	
 	int ai=1,bi=1,ci=1;
 	
@@ -830,13 +833,14 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0)
+	if (c.modp!=0) {
 		if (c.modp<SMALL_POWER_MAXX)
 			small_power(c.modp,c.modn,modq,nmodq);
 		else {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
+	}
 	
   for (int ai=1; ai<a[0]; ai+=a[ai])
     for (int bi=1; bi<b[0]; bi+=b[bi]) {
@@ -873,13 +877,14 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0)
+	if (c.modp!=0) {
 		if (c.modp<SMALL_POWER_MAXX)
 			small_power(c.modp,c.modn,modq,nmodq);
 		else {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
+	}
 	
 	poly t;
 	WORD nt;
@@ -973,13 +978,14 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
-	if (c.modp!=0)
+	if (c.modp!=0) {
 		if (c.modp<SMALL_POWER_MAXX)
 			small_power(c.modp,c.modn,modq,nmodq);
 		else {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
+	}
 
 	// allocate heap
 	int nheap=0;
