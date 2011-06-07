@@ -360,7 +360,7 @@ int FullRenumber(PHEAD WORD *term, WORD par)
 				AT.WorkPointer = w;
 				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = Compare(BHEAD termtry,best,0) ) > 0 ) {
+					if ( ( ii = CompareTerms(BHEAD termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( ii = 0; ii < *termtry; ii++ ) *w++ = *t++;
 						i = 0; break; /* restart from beginning */
@@ -398,7 +398,7 @@ int FullRenumber(PHEAD WORD *term, WORD par)
 				AT.WorkPointer = w;
 				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = Compare(BHEAD termtry,best,0) ) > 0 ) {
+					if ( ( ii = CompareTerms(BHEAD termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( i = 0; i < *termtry; i++ ) *w++ = *t++;
 					}
@@ -1088,7 +1088,7 @@ WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 		if ( *r == 0 ) return(0);
 		ReNumber(BHEAD r); Normalize(BHEAD r);
 		if ( *r == 0 ) return(0);
-		if ( ( i = Compare(BHEAD term,r,0) ) < 0 ) return(Generator(BHEAD r,level));
+		if ( ( i = CompareTerms(BHEAD term,r,0) ) < 0 ) return(Generator(BHEAD r,level));
 		if ( i == 0 && CompCoef(term,r) != 0 ) { return(0); }
 	}
 	AT.WorkPointer = r;

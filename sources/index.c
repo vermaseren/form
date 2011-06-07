@@ -96,7 +96,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		else i = -1;
 	}
 	else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-	else i = Compare(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
+	else i = CompareTerms(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
 		AR.SortType = oldsorttype;
 		return(0);
@@ -110,7 +110,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			else i = -1;
 		}
 		else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-		else i = Compare(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
+		else i = CompareTerms(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) { break; }
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
@@ -185,7 +185,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 					else i = -1;
 				}
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
-				else i = Compare(BHEAD bracket,AR.CompressPointer,0);
+				else i = CompareTerms(BHEAD bracket,AR.CompressPointer,0);
 				t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
 					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
@@ -213,7 +213,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				}
 				else if ( t3[0] == 4 ) i = 1;
 				else {
-					i = Compare(BHEAD bracket,t3,0);
+					i = CompareTerms(BHEAD bracket,t3,0);
 				}
 				AT.WorkPointer = oldworkpointer;
 				if ( i == 0 ) {
@@ -318,7 +318,7 @@ VOID PutBracketInIndex(WORD *term, POSITION *newpos)
 			else i = -1;
 		}
 		else if ( b->bracketbuffer[bi->bracket] == 4 ) i = 1;
-		else i = Compare(BHEAD term,b->bracketbuffer+bi->bracket,0);
+		else i = CompareTerms(BHEAD term,b->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) {	/* still the same bracket */
 			bi->termsinbracket++;
 			goto bracketdone;
@@ -491,7 +491,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex :
+  	#] PutBracketInIndex : 
   	#[ ClearBracketIndex :
 */
 

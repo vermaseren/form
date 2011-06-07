@@ -3545,7 +3545,7 @@ OneTerm:
 */
 	while ( i >>= 1 ) {
 		if ( S->tree[i] > 0 ) {
-			if ( ( c = Compare(B0,poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+			if ( ( c = CompareTerms(B0,poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 				S->tree[i] is the smaller. Exchange and go on.
 */
@@ -4023,7 +4023,7 @@ int SortBotMerge(PHEAD0)
 	Now the main loop. Keep going until one of the two hits the end.
 */
 	while ( *term1 && *term2 ) {
-		if ( ( c = Compare(BHEAD term1,term2,(WORD)0) ) > 0 ) {
+		if ( ( c = CompareTerms(BHEAD term1,term2,(WORD)0) ) > 0 ) {
 /*
 			#[ One is smallest :
 */

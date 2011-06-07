@@ -2293,7 +2293,7 @@ twogen:
 */
 		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
-			i1 = Compare(BHEAD s1,s2,(WORD)(-1));
+			i1 = CompareTerms(BHEAD s1,s2,(WORD)(-1));
 			if ( i1 > 0 ) {
 				i2 = *s1;
 				NCOPY(m,s1,i2);
@@ -2738,7 +2738,7 @@ NoPoly:
 							s1 += ARGHEAD; s2 += ARGHEAD;
 							while ( s1 < stopex1 ) {
 								if ( s2 >= stopex2 ) return(PREV(-1));
-								if ( ( c2 = Compare(BHEAD s1,s2,(WORD)1) ) != 0 )
+								if ( ( c2 = CompareTerms(BHEAD s1,s2,(WORD)1) ) != 0 )
 									return(PREV(c2));
 								s1 += *s1;
 								s2 += *s2;
@@ -2974,7 +2974,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
@@ -2996,7 +2996,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	Addition of 23-jul-1999. It makes things a bit faster.
 */
 	if ( newleft > 0 && newright > 0 &&
-	( i = Compare(BHEAD Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
+	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+nleft; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
 		  if ( S->PolyWise ) {
@@ -3030,7 +3030,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( nleft > 0 && nright > 0 && *pp1 && *pp2 ) {
-		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
 			nright--;
@@ -3067,7 +3067,7 @@ VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( number < 2 ) return;
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
@@ -3094,7 +3094,7 @@ VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
-		if ( ( i = Compare(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
 			nright--;
@@ -3618,7 +3618,7 @@ OneTerm:
 */
 		while ( i >>= 1 ) {
 			if ( S->tree[i] > 0 ) {
-				if ( ( c = Compare(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+				if ( ( c = CompareTerms(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 					S->tree[i] is the smaller. Exchange and go on.
 */

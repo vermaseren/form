@@ -1380,7 +1380,7 @@ typedef WORD (*GETTERM)(PHEAD WORD *);
 typedef WORD (*FINISHUFFLE)(PHEAD WORD *);
 typedef WORD (*DO_UFFLE)(PHEAD WORD *,WORD,WORD,WORD);
 
-#define Compare ((COMPARE)AR.CompareRoutine)
+#define CompareTerms ((COMPARE)AR.CompareRoutine)
 #define FiniShuffle ((FINISHUFFLE)AN.SHvar.finishuf)
 #define DoShtuffle ((DO_UFFLE)AN.SHvar.do_uffle)
 

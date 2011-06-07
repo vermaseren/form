@@ -1933,7 +1933,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3281,7 +3281,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 
@@ -3430,7 +3430,7 @@ WORD DoTheta(PHEAD WORD *t)
 	ta += ARGHEAD; tb += ARGHEAD;
 	while ( ta < stopa ) {
 		if ( tb >= stopb ) return(0);
-		if ( ( ia = Compare(BHEAD ta,tb,(WORD)1) ) < 0 ) return(0);
+		if ( ( ia = CompareTerms(BHEAD ta,tb,(WORD)1) ) < 0 ) return(0);
 		if ( ia > 0 ) return(1);
 		ta += *ta;
 		tb += *tb;
