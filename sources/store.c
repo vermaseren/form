@@ -3592,7 +3592,9 @@ static void CheckPower32(UBYTE *p)
  */
 static void RenumberVec32(UBYTE *p)
 {
-	INT32 wildoffset = *((INT32 *)AO.SaveHeader.wildoffset);
+/*	INT32 wildoffset = *((INT32 *)AO.SaveHeader.wildoffset); */
+	void *dummy = (void *)AO.SaveHeader.wildoffset;  /* to remove a warning about strict-aliasing rules in gcc */
+	INT32 wildoffset = *(INT32 *)dummy;
 	INT32 in = *((INT32 *)p);
 	in = in + 2*wildoffset;
 	in = in - 2*WILDOFFSET;
@@ -3758,8 +3760,15 @@ WORD WriteStoreHeader(WORD handle)
 		sh.sVec = sizeof(struct VeCtOr);
 		sh.sFun = sizeof(struct FuNcTiOn);
 
-		*((WORD *)sh.maxpower) = MAXPOWER;
-		*((WORD *)sh.wildoffset) = WILDOFFSET;
+/*		*((WORD *)sh.maxpower) = MAXPOWER;
+		*((WORD *)sh.wildoffset) = WILDOFFSET; */
+		{
+			void *dummy;
+			dummy = (void *)sh.maxpower;  /* to remove a warning about strict-aliasing rules in gcc */
+			*((WORD *)dummy) = MAXPOWER;
+			dummy = (void *)sh.wildoffset;
+			*((WORD *)dummy) = WILDOFFSET;
+		}
 	}
 
 	return ( WriteFile(handle,(UBYTE *)(&sh),(LONG)(sizeof(STOREHEADER)))
@@ -4632,7 +4641,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			}
 		}
 		else if ( id == INDEX ) {
-			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset);
+/*			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset); */
+			void *dummy = (void *)AO.SaveHeader.wildoffset;  /* to remove a warning about strict-aliasing rules in gcc */
+			INT32 vectoroffset = -2 * *((INT32 *)dummy);
 			while ( out < t ) {
 				/* if there is a vector, renumber it */
 				if ( *out < vectoroffset ) {
@@ -4658,7 +4669,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			out = t;
 		}
 		else if ( id == GAMMA || id == LEVICIVITA || (id >= FUNCTION && AO.tensorList[id]) ) {
-			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset);
+/*			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset); */
+			void *dummy = (void *)AO.SaveHeader.wildoffset;  /* to remove a warning about strict-aliasing rules in gcc */
+			INT32 vectoroffset = -2 * *((INT32 *)dummy);
 			while ( out < t ) {
 				/* if there is a vector as an argument, renumber it */
 				if ( *out < vectoroffset ) {

@@ -2399,7 +2399,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 int MinDollar(WORD index)
 {
   int i, error=0, res;
-  WORD *where, size, *r, *t;
+  WORD *where, size = 0, *r, *t;
   DOLLARS d;
 	/*[30sep2005 mt]:*/
 	/*Why?*/
@@ -2499,7 +2499,7 @@ int MinDollar(WORD index)
 int MaxDollar(WORD index)
 {
   int i, error=0, res;
-  WORD *where, size, *r, *t;
+  WORD *where, size = 0, *r, *t;
   DOLLARS d;
 
 	/*[30sep2005 mt]:*/

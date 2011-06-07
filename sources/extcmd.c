@@ -521,18 +521,22 @@ the array is ascendantly ordered. It is supposed that all 0 -- top-1
 elements in the array are already ordered:*/
 static VOID pushDescriptor(int *fifo, int top, int fd)
 {
-int ins=top-1;
-	if( fifo[ins]<=fd )
-		fifo[top]=fd;
-	else{
-		/*Find the position:*/
-		while( (ins>=0)&&(fifo[ins]>fd) )ins--;
-		/*Move all elements starting from the position to the right:*/
-		for(ins++;top>ins; top--)
-			fifo[top]=fifo[top-1];
-		/*Put the element:*/
-		fifo[ins]=fd;
-	}  
+	if ( top == 0 ) {
+		fifo[top] = fd;
+	} else {
+		int ins=top-1;
+		if( fifo[ins]<=fd )
+			fifo[top]=fd;
+		else{
+			/*Find the position:*/
+			while( (ins>=0)&&(fifo[ins]>fd) )ins--;
+			/*Move all elements starting from the position to the right:*/
+			for(ins++;top>ins; top--)
+				fifo[top]=fifo[top-1];
+			/*Put the element:*/
+			fifo[ins]=fd;
+		}
+	}
 }/*pushDescriptor*/
 
 /*Close all descriptors greate or equal than startFrom except those
@@ -775,7 +779,7 @@ the channel (and returns EOF). If the external process was finished, the functio
 returns EOF:*/
 int getcFromExtChannelOk()
 {
-mysighandler_t oldPIPE;
+mysighandler_t oldPIPE = 0;
 EXTHANDLE *h;
 int ret;
 

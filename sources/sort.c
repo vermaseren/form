@@ -617,7 +617,7 @@ LONG EndSort(WORD *buffer, int par, int par2)
   LONG sSpace, over, tover, spare, retval = 0;
   POSITION position, pp;
   off_t lSpace;
-  FILEHANDLE *fout = 0, *oldoutfile, *newout = 0;
+  FILEHANDLE *fout = 0, *oldoutfile = 0, *newout = 0;
 
   if ( AM.exitflag && AR.sLevel == 0 ) return(0);
 #ifdef PARALLEL 

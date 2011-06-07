@@ -1649,7 +1649,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 						case PF_ATTACH_REDEF:
 						  {
 							int ll, kk, ii;
-							UBYTE *value;
+							UBYTE *value = 0;
 							LONG redef;
 							PF_UnPack(&kk,1,PF_INT);
 							while ( --kk >= 0 ) {
@@ -1673,7 +1673,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 /*
 							here we should free the allocated memory of value & name ??
 */
-							M_free(value,"redef value");
+							if (value) M_free(value,"redef value");
 						  }
 						  break;
 						default:
@@ -2822,7 +2822,7 @@ static int  PF_rhsBCastSlave(FILEHANDLE *curfile,EXPRESSIONS e)
 int PF_broadcastRHS(void)/*broadcast RHS expressions*/
 {
 int i;
-FILEHANDLE *curfile;
+FILEHANDLE *curfile = 0;
 
 	for ( i = 0; i < NumExpressions; i++ ) {
 		EXPRESSIONS e = Expressions+i;
