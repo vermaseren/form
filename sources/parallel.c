@@ -3441,7 +3441,14 @@ int PF_RecvFile(int from, FILE *fd)
 	do { \
 		size_t newcapacity_ = newcapacity__; \
 		if ( x.capacity < newcapacity_ ) { \
-			type *newptr_ = (type *)Malloc1(sizeof(type) * newcapacity_, "VectorEnsureCapacity:" #x); \
+			type *newptr_; \
+			{ \
+				size_t t = x.capacity; \
+				if ( t < 8 ) t = 8; \
+				while ( t < newcapacity_ ) t *= 2; \
+				newcapacity_ = t; \
+			} \
+			newptr_ = (type *)Malloc1(sizeof(type) * newcapacity_, "VectorEnsureCapacity:" #x); \
 			if ( x.ptr != NULL ) { \
 				if ( x.size > 0 ) { \
 					const type *src_ = x.ptr; \
@@ -3463,7 +3470,7 @@ int PF_RecvFile(int from, FILE *fd)
 		if ( size_ > 0 ) { \
 			const type *src_ = src__; \
 			type *dst_; \
-			int n_ = size; \
+			int n_ = size_; \
 			VectorEnsureCapacity(type, x, x.size + size_); \
 			dst_ = x.ptr + x.size; \
 			NCOPY(dst_, src_, n_); \
