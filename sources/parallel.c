@@ -2425,24 +2425,19 @@ WORD PF_mkDollarsParallel()
 					case MODMIN:  /*  result must be a minimum  */
 						if(MinDollar(index)) MesPrint("error in MinDollar");
 						break;
-					case MODLOCAL:/*  result is just a DOLZERO  */
-						d = Dollars + index;
-						if(d->where && d->where != &(AM.dollarzero))
-							M_free(d->where, "old content of dollar");
-						d->type  = DOLZERO;
-						d->where = &(AM.dollarzero);
-						d->size  = 0;
-						cbuf[AM.dbufnum].rhs[index] = d->where;
-						break;
+					case MODLOCAL:/*  no change  */
+						continue;
 					default:
 						MesPrint("Serious internal error with module option");
 						Terminate(-1);
 				}
+				/* According to the FORM manual, the results for MODMAX, MODMIN and MODSUM are numbers,
+				   above implementation can give somewhat different results though. We clear all factors. */
+				CleanDollarFactors(Dollars + index);
 			}
 /*
 			#] COMBINING : 
 			#[ CLEANUP :
-			#] CLEANUP : 
 */
 			for ( i = 1; i < NumDollars; i++ ) {
 /*
@@ -2455,6 +2450,9 @@ WORD PF_mkDollarsParallel()
 					}
 				}
 			}
+/*
+			#] CLEANUP :
+*/
 		}
 		else { /*Slave*/
 /*
@@ -2468,7 +2466,9 @@ WORD PF_mkDollarsParallel()
 				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
 				namesize = 1;
 				while(*p++) namesize++;
-				newd = DolToTerms(BHEAD index);
+				/* Why DolToTerm? (TU 10 Jun 2011) */
+/*				newd = DolToTerms(BHEAD index); */
+				newd = Dollars + index;
 /*
 					type newd == 0  will not be send to master
 */
@@ -2478,11 +2478,6 @@ WORD PF_mkDollarsParallel()
 					PF_longSinglePack((UBYTE*)&(newd->type), 1, PF_WORD);
 					PF_longSinglePack((UBYTE*)&(newd->size), 1, PF_LONG);
 					PF_longSinglePack((UBYTE*)newd->where, newd->size+1, PF_WORD);
-/*
-					if ( newd->nfactors > 1 ) {
-	We have to send the factored stuff !!!!!!!!!!!!!!!!!
-					}
-*/
 				} 
 				else {
 					type = DOLZERO;
@@ -2515,8 +2510,9 @@ WORD PF_mkDollarsParallel()
 			p = name = AC.dollarnames->namebuffer+Dollars[index].name;
 			namesize = 1;
 			while ( *p++ ) namesize++;
-
-			newd = DolToTerms(BHEAD index);
+			/* Why DolToTerm? (TU 10 Jun 2011) */
+/*			newd = DolToTerms(BHEAD index); */
+			newd = Dollars + index;
 /*
 				if newd=0, this type of dollars will not be send to master
 */
@@ -2527,11 +2523,21 @@ WORD PF_mkDollarsParallel()
 				PF_longMultiPack((UBYTE*)&(newd->type), 1, sizeof(WORD),PF_WORD);
 				PF_longMultiPack((UBYTE*)&(newd->size), 1, sizeof(LONG),PF_LONG);
 				PF_longMultiPack((UBYTE*)newd->where, newd->size+1, sizeof(WORD),PF_WORD);
-/*
+				/* ...and the factored stuff. */
+				PF_longMultiPack((UBYTE*)&(newd->nfactors), 1, sizeof(WORD), PF_WORD);
 				if ( newd->nfactors > 1 ) {
-	We have to send the factored stuff !!!!!!!!!!!!!!!
+					for ( j = 0; j < newd->nfactors; j++ ) {
+						FACDOLLAR *f = &newd->factors[j];
+						PF_longMultiPack((UBYTE*)&(f->type), 1, sizeof(WORD), PF_WORD);
+						PF_longMultiPack((UBYTE*)&(f->size), 1, sizeof(LONG), PF_LONG);
+						if ( f->size > 0 ) {
+							PF_longMultiPack((UBYTE*)f->where, f->size+1, sizeof(WORD), PF_WORD);
+						}
+						else {
+							PF_longMultiPack((UBYTE*)&(f->value), 1, sizeof(WORD), PF_WORD);
+						}
+					}
 				}
-*/
 			}
 			else {
 				type = DOLZERO;
@@ -2554,6 +2560,9 @@ WORD PF_mkDollarsParallel()
 /*
 			#[ SLAVE UNPACK :
 */
+			WORD nfactors;
+			FACDOLLAR *factors = NULL;
+
 			PF_longMultiUnPack((UBYTE*)&namesize, 1, sizeof(int),PF_INT);
 			name = (UBYTE*)Malloc1(namesize, "dollar name");
 			PF_longMultiUnPack(name, namesize, 1,PF_BYTE);
@@ -2562,6 +2571,25 @@ WORD PF_mkDollarsParallel()
 				PF_longMultiUnPack((UBYTE*)&size, 1, sizeof(LONG),PF_LONG);
 				where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
 				PF_longMultiUnPack((UBYTE*)where, size+1, sizeof(WORD),PF_WORD);
+				/* ...and the factored stuff. */
+				PF_longMultiUnPack((UBYTE*)&nfactors, 1, sizeof(WORD), PF_WORD);
+				if ( nfactors > 1 ) {
+					factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*nfactors, "dollar factored stuff");
+					for ( j = 0; j < nfactors; j++ ) {
+						FACDOLLAR *f = &factors[j];
+						PF_longMultiUnPack((UBYTE*)&(f->type), 1, sizeof(WORD), PF_WORD);
+						PF_longMultiUnPack((UBYTE*)&(f->size), 1, sizeof(LONG), PF_LONG);
+						if ( f->size > 0 ) {
+							f->where = (WORD*)Malloc1(sizeof(WORD)*(f->size+1), "dollar factor content");
+							PF_longMultiUnPack((UBYTE*)(f->where), f->size+1, sizeof(WORD), PF_WORD);
+							f->value = 0;
+						}
+						else {
+							f->where = NULL;
+							PF_longMultiUnPack((UBYTE*)&(f->value), 1, sizeof(WORD), PF_WORD);
+						}
+					}
+				}
 			}
 			else {
 				where = &(AM.dollarzero);
@@ -2574,8 +2602,11 @@ WORD PF_mkDollarsParallel()
 			d = Dollars + index;
 			if (d->where && d->where != &(AM.dollarzero))
 						M_free(d->where, "old content of dollar");
+			CleanDollarFactors(d);
 			d->type  = type;
 			d->where = where;
+			d->nfactors = nfactors;
+			d->factors = factors;
 			if ( type != DOLZERO ) {
 /*
 					Strange stuff... To be investigated.

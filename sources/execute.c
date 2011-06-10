@@ -468,6 +468,7 @@ WORD DoExecute(WORD par, WORD skip)
 			if( AM.hparallelflag != PARALLELFLAG ) {
 				AC.mparallelflag |= ( AC.parallelflag = AM.hparallelflag );
 #ifdef PARALLEL
+				if ( AC.OldParallelStats )
 				MesPrint("WARNING!: $ use in table - module %l is forced to run in sequential mode.", AC.CModule);
 #endif
 			}
@@ -627,10 +628,12 @@ WORD DoExecute(WORD par, WORD skip)
 #ifdef PARALLEL 
 	if ( ( AC.mparallelflag & NOPARALLEL_DOLLAR ) != 0 ) {
 		if ( AC.mparallelflag == NOPARALLEL_DOLLAR )	
+			if ( AC.OldParallelStats )
 			MesPrint("WARNING!: $-variables - module %l is forced to run in sequential mode.", AC.CModule);
 	}
 	if ( par == STOREMODULE ){
 		if ( AC.mparallelflag == PARALLELFLAG )
+			if ( AC.OldParallelStats )
 			MesPrint("WARNING!: store module - module %l is forced to run in sequential mode.", AC.CModule);
 		AC.mparallelflag = NOPARALLEL_STORE;
 	}
@@ -649,6 +652,7 @@ WORD DoExecute(WORD par, WORD skip)
 		} 
 		else {
 			AC.mparallelflag = NOPARALLEL_RHS;
+			if ( AC.OldParallelStats )
 			MesPrint("WARNING!: RHS expression names - module %l is forced to run in sequential mode.", AC.CModule);
 		}
 	}
