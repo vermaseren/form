@@ -953,6 +953,7 @@ void WildDollars(PHEAD0)
 		}
 /*
 		It is not clear what the following code does for TFORM
+
 		if ( dtype != MODLOCAL ) {
 */
 			cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
@@ -1022,7 +1023,7 @@ void WildDollars(PHEAD0)
 }
 
 /*
-  	#] WildDollars : 
+  	#] WildDollars :
   	#[ DolToTensor :    with LOCK
 */
 
@@ -3807,6 +3808,30 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 	WORD num, *w;
 	if ( t+3 < tstop && t[3] == DOLLAREXPR2 ) {
 		d = Dollars + t[2];
+#ifdef WITHPTHREADS
+		{
+			int nummodopt, dtype;
+			dtype = -1;
+			if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+				for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+					if ( t[2] == ModOptdollars[nummodopt].number ) break;
+				}
+				if ( nummodopt < NumModOptdollars ) {
+					dtype = ModOptdollars[nummodopt].type;
+					if ( dtype == MODLOCAL ) {
+						d = ModOptdollars[nummodopt].dstruct+AT.identity;
+					}
+					else {
+						MLOCK(ErrorMessageLock);
+						MesPrint("&Illegal attempt to use $-variable %s in module %l",
+							DOLLARNAME(Dollars,t[2]),AC.CModule);
+						MUNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
+				}
+			}
+		}
+#endif
 		if ( d->factors == 0 ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("Attempt to use a factor of an unfactored $-variable");
@@ -3837,6 +3862,30 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 	}
 	else {
 		d = Dollars + t[2];
+#ifdef WITHPTHREADS
+		{
+			int nummodopt, dtype;
+			dtype = -1;
+			if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+				for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+					if ( t[2] == ModOptdollars[nummodopt].number ) break;
+				}
+				if ( nummodopt < NumModOptdollars ) {
+					dtype = ModOptdollars[nummodopt].type;
+					if ( dtype == MODLOCAL ) {
+						d = ModOptdollars[nummodopt].dstruct+AT.identity;
+					}
+					else {
+						MLOCK(ErrorMessageLock);
+						MesPrint("&Illegal attempt to use $-variable %s in module %l",
+							DOLLARNAME(Dollars,t[2]),AC.CModule);
+						MUNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
+				}
+			}
+		}
+#endif
 		if ( d->type == DOLZERO ) return(0);
 		if ( d->type == DOLTERMS || d->type == DOLNUMBER ) {
 			if ( d->where[0] == 4 && d->where[4] == 0 && d->where[3] == 3

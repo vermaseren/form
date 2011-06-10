@@ -621,6 +621,27 @@ UBYTE * DoModDollar(UBYTE *s, int type)
 					}
 					dlocal->pthreadslockread = dummylock;
 					dlocal->pthreadslockwrite = dummylock;
+					dlocal->nfactors = dglobal->nfactors;
+					if ( dglobal->nfactors > 1 ) {
+						int nsize;
+						WORD *t, *m;
+						dlocal->factors = (FACDOLLAR *)Malloc1(dglobal->nfactors*sizeof(FACDOLLAR),"Dollar factors");
+						for ( i = 0; i < dglobal->nfactors; i++ ) {
+							nsize = dglobal->factors[i].size;
+							dlocal->factors[i].type = DOLUNDEFINED;
+							dlocal->factors[i].value = dglobal->factors[i].value;
+							if ( ( dlocal->factors[i].size = nsize ) > 0 ) {
+								dlocal->factors[i].where = t = (WORD *)Malloc1(sizeof(WORD)*(nsize+1),"DollarCopyFactor");
+								m = dglobal->factors[i].where;
+								NCOPY(t,m,nsize);
+								*t = 0;
+							}
+							else {
+								dlocal->factors[i].where = 0;
+							}
+						}
+					}
+					else { dlocal->factors = 0; }
 				}
 			}
 			else {
