@@ -341,7 +341,7 @@ int PF_ISendSbuf(int to, int tag)
 		r = MPI_Ssend(s->buff[a],size,PF_WORD,MASTER,tag,PF_COMM);
 		if ( r != MPI_SUCCESS ) {
 			fprintf(stderr,"[%d|%d] PF_ISendSbuf: MPI_Ssend returns: %d \n",
-						PF.me,PF.module,r);
+						PF.me,AC.CModule,r);
 			fflush(stderr);
 			return(r);
 		}
@@ -499,7 +499,7 @@ int PF_Put_origin(int to)
 	
 	if ( r != MPI_SUCCESS ) {
 		fprintf(stderr,"[%d|%d] PF_Put_origin: MPI_Put returns: %d \n",
-			  PF.me, PF.module, r);
+			  PF.me, AC.CModule, r);
 		fflush(stderr);
 		return(0);
 	}

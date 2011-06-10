@@ -403,7 +403,7 @@ int PF_ISendSbuf(int to, int tag)
 		r = MPI_Ssend(s->buff[a],size,PF_WORD,MASTER,tag,PF_COMM);
 		if ( r != MPI_SUCCESS ) {
 			fprintf(stderr,"[%d|%d] PF_ISendSbuf: MPI_Ssend returns: %d \n",
-								PF.me,(int)PF.module,r);
+								PF.me,(int)AC.CModule,r);
 			fflush(stderr);
 			return(r);
 		}

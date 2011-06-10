@@ -122,7 +122,7 @@ PARALLELVARS PF;
 
 #ifdef PF_WITHLOG
  #define PRINTFBUF(TEXT,TERM,SIZE)  { if(PF.log){ WORD iii;\
-  fprintf(stderr,"[%d|%ld] %s : ",PF.me,PF.module,(char*)TEXT);\
+  fprintf(stderr,"[%d|%ld] %s : ",PF.me,AC.CModule,(char*)TEXT);\
   if(TERM){ fprintf(stderr,"[%d] ",(int)(*TERM));\
     if((SIZE)<500 && (SIZE)>0) for(iii=1;iii<(SIZE);iii++)\
       fprintf(stderr,"%d ",TERM[iii]); }\
@@ -206,7 +206,7 @@ int PF_Statistics(LONG **stats, int proc)
 			if ( AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("Sum  = %7l.%2i %10l %10l %10l",cpu,cpart,sum[2],sum[3],sum[4]);
 				MesPrint("Real = %7l.%2i %20s (%l) %16s",
-						real,rpart,AC.Commercial,PF.module,EXPRNAME(AR.CurExpr));
+						real,rpart,AC.Commercial,AC.CModule,EXPRNAME(AR.CurExpr));
 				MesPrint("");
 			}
 			PF_laststat = real;
@@ -1483,8 +1483,8 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		static LONG maxinterms=0;
 		static int cmaxinterms=0;
 
-		if ( PF.log && PF.module >= PF.log )
-			MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),PF.module);
+		if ( PF.log && AC.CModule >= PF.log )
+			MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),AC.CModule);
 		if ( GetTerm(BHEAD term) <= 0 ) {
 			MesPrint("[%d] Expression %d has problems in scratchfile",PF.me,i);
 			return(-1);
@@ -1797,7 +1797,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
  		#] Slave : 
 */				  
 		if ( PF.log ) {
-			fprintf(stderr,"[%d|%ld] Endsort,Collect,Broadcast done\n",PF.me,PF.module);
+			fprintf(stderr,"[%d|%ld] Endsort,Collect,Broadcast done\n",PF.me,AC.CModule);
 			fflush(stderr);
 		}
 	}
@@ -1838,7 +1838,6 @@ int PF_Init(int *argc, char ***argv)
 	PF_maxinterms = 1000;
 	PF.log = 0;
 	PF.parallel = 0;
-	PF.module = 0;
 	PF_statsinterval = 10;
 	PF.rhsInParallel=1;
 	PF.exprbufsize=4096;/*in WORDs*/
@@ -2060,7 +2059,7 @@ int PF_InitRedefinedPreVars()
 
 			if ( PF.log ) {
 				printf("[%d] module %ld: PutPreVar(\"%s\",\"%s\",1);\n",
-						PF.me,PF.module,name,value);
+						PF.me,AC.CModule,name,value);
 			}
 /*
 				Re-define the variable:

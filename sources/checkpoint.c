@@ -2260,7 +2260,6 @@ int DoRecovery(int *moduletype)
 	R_SET(PF.synchro, WORD);
 	R_SET(PF.rhsInParallel, int);
 	R_SET(PF.exprbufsize, int);
-	R_SET(PF.module, LONG);
 	R_SET(PF.log, int);
 	/*#] PF : */
 #endif
@@ -2787,7 +2786,6 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&PF.synchro, sizeof(WORD));
 	S_WRITE_B(&PF.rhsInParallel, sizeof(int));
 	S_WRITE_B(&PF.exprbufsize, sizeof(int));
-	S_WRITE_B(&PF.module, sizeof(LONG));
 	S_WRITE_B(&PF.log, sizeof(int));
 #endif
 	/*#] PF :*/

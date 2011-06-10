@@ -91,9 +91,6 @@ WORD Processor()
 		CC->Pointer = CC->Buffer;
 	}
 
-#ifdef PARALLEL
-	PF.module++;
-#endif
 	if ( NumExpressions == 0 ) return(0);
 	AR.expflags = 0;
 	AR.CompressPointer = AR.CompressBuffer;
