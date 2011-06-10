@@ -73,10 +73,12 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"numstorecaches",        NUMERICALVALUE, 0, (long)NUMSTORECACHES}
 	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
+	,{(UBYTE *)"nwriteprocessstatistics",   ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, 0, (long)NEWFACTARG}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
+	,{(UBYTE *)"oldparallelstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
 	,{(UBYTE *)"polygcdchoice",         NUMERICALVALUE, 0, (long)0}
@@ -666,6 +668,10 @@ int AllocSetups()
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritethreadstatistics");
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1-sp->value;
+	sp = GetSetupPar((UBYTE *)"nwriteprocessstatistics");
+	AC.ProcessStats = AM.gProcessStats = AM.ggProcessStats = 1-sp->value;
+	sp = GetSetupPar((UBYTE *)"oldparallelstatistics");
+	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = sp->value;
 	sp = GetSetupPar((UBYTE *)"oldfactarg");
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");

@@ -1309,6 +1309,10 @@ struct M_const {
     int     ggThreadBalancing;
     int     gThreadSortFileSynch;
     int     ggThreadSortFileSynch;
+    int     gProcessStats;
+    int     ggProcessStats;
+    int     gOldParallelStats;
+    int     ggOldParallelStats;
     int     maxFlevels;            /* () maximum function levels */
     int     resetTimeOnClear;      /* (M) */
     int     gcNumDollars;          /* () number of dollars for .clear */
@@ -1577,9 +1581,11 @@ struct C_const {
     int     lSortType;             /* (C) */
     int     ThreadStats;           /* (C) */
     int     FinalStats;            /* (C) */
+    int     OldParallelStats;      /* (C) */
     int     ThreadsFlag;
     int     ThreadBalancing;
     int     ThreadSortFileSynch;
+    int     ProcessStats;          /* (C) */
     int     BracketNormalize;      /* (C) Indicates whether the bracket st is normalized */
     int     maxtermlevel;          /* (C) Size of termstack */
     int     dumnumflag;            /* (C) Where there dummy indices in tokenizer? */
@@ -1663,7 +1669,7 @@ struct C_const {
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
-	PADPOINTER((8+3*MAXNEST),66,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
+	PADPOINTER((8+3*MAXNEST),68,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
 };
 /*
  		#] C :

@@ -829,6 +829,8 @@ VOID StartVariables()
 	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag = 1;
 	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing = 1;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch = 0;
+	AC.ProcessStats = AM.gProcessStats = AM.ggProcessStats = 1;
+	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = 0;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = NEWFACTARG;
 	AM.gcNumDollars = AP.DollarList.num;
 

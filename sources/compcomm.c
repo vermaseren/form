@@ -114,6 +114,8 @@ static KEYWORD onoffoptions[] = {
 	,{"finalstats",	    (TFUN)&(AC.FinalStats),1,	0}
 	,{"fewerstats",		(TFUN)&(AC.ShortStatsMax),	10,		0}
 	,{"fewerstatistics",(TFUN)&(AC.ShortStatsMax),	10,		0}
+	,{"processstats",	(TFUN)&(AC.ProcessStats),1,	0}
+	,{"oldparallelstats",(TFUN)&(AC.OldParallelStats),1,0}
 	,{"parallel",	    (TFUN)&(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
 	,{"nospacesinnumbers",(TFUN)&(AO.NoSpacesInNumbers),1,0}
 	,{"indentspace",    (TFUN)&(AO.IndentSpace),INDENTSPACE,0}

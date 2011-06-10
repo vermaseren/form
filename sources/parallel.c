@@ -182,11 +182,11 @@ int PF_Statistics(LONG **stats, int proc)
 			cpu /= 1000;
 			cpart /= 10;
 			MesPrint("");
-			if ( proc && AC.StatsFlag ) {
+			if ( proc && AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       left       byte");
 				MesPrint("%3d  : %7l.%2i %10l",0,cpu,cpart,PF.ginterms);
 			}
-			else if ( AC.StatsFlag ) {
+			else if ( AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       out        byte");
 				MesPrint("%3d  : %7l.%2i %10l %10l %10l",0,cpu,cpart,PF.ginterms,0,PF.goutterms);
 			}
@@ -195,7 +195,7 @@ int PF_Statistics(LONG **stats, int proc)
 				cpart = (WORD)(PF_stats[i][0]%1000);
 				cpu = PF_stats[i][0] / 1000;
 				cpart /= 10;
-				if ( AC.StatsFlag )
+				if ( AC.StatsFlag && AC.OldParallelStats )
 					MesPrint("%3d  : %7l.%2i %10l %10l %10l",i,cpu,cpart,
 							PF_stats[i][2],PF_stats[i][3],PF_stats[i][4]);
 				for ( j = 0; j < PF_STATS_SIZE; j++ ) sum[j] += PF_stats[i][j];
@@ -203,7 +203,7 @@ int PF_Statistics(LONG **stats, int proc)
 			cpart = (WORD)(sum[0]%1000);
 			cpu = sum[0] / 1000;
 			cpart /= 10;
-			if ( AC.StatsFlag ) {
+			if ( AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("Sum  = %7l.%2i %10l %10l %10l",cpu,cpart,sum[2],sum[3],sum[4]);
 				MesPrint("Real = %7l.%2i %20s (%l) %16s",
 						real,rpart,AC.Commercial,PF.module,EXPRNAME(AR.CurExpr));
@@ -572,6 +572,7 @@ newterms:
 		if ( term + *term > rbuf->full[a] ) goto newterms;
 	}
 	rbuf->fill[a] += *term;
+	PF.ggenterms++;
 	return(term);
 }
 
@@ -841,6 +842,7 @@ int PF_EndSort()
 		Here the global variable should be used since the number of 
 		outterms must be known for EndSort routine
 */
+	PF.ggenterms=0;
 	PF.goutterms=0;
 
 	while ( PF_loser >= 0 ) {
@@ -874,6 +876,7 @@ int PF_EndSort()
 		PutOut(BHEAD outterm,&position,fout,1);
 	}		
 	if( FlushOut(&position,fout,0) ) return(-1);
+	PF.ExprSize = position;
 	return(1);
 }
 
@@ -1637,6 +1640,11 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 */
 		if ( AC.mparallelflag == PARALLELFLAG ) {
 			PF_CatchErrorMessagesForAll();
+			if ( ! AC.OldParallelStats ) {
+				AT.SS->GenTerms = PF.ggenterms;
+				AT.SS->TermsLeft = PF.goutterms;
+				WriteStats(&PF.ExprSize, 2);
+			}
 			for ( k = 1; k < PF.numtasks; k++ ) {
 				PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
 				PF_UnPack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
@@ -1886,8 +1894,10 @@ int PF_Init(int *argc, char ***argv)
 		if ( fp ) {
 			ubp = fp;
 			while ( *ubp++ ) fpsize++;
-			fprintf(stderr,"[%d] changing Path to %s\n",PF.me,fp);
-			fflush(stderr);
+			if ( AC.OldParallelStats ) {
+				fprintf(stderr,"[%d] changing Path to %s\n",PF.me,fp);
+				fflush(stderr);
+			}
 		}
 		else {
 			fp = (UBYTE*)"";
@@ -3168,7 +3178,7 @@ WORD *t;
 	}
 	memcpy(&(exprData.e), e, sizeof(struct ExPrEsSiOn));
 	exprData.i=e-Expressions;
-	if(AC.StatsFlag){
+	if ( AC.StatsFlag && AC.OldParallelStats ) {
 		MesPrint("");
 		MesPrint(" Sending expression %s to slave %d",EXPRNAME(exprData.i),dest);
 	}

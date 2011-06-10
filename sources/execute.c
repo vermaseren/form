@@ -258,6 +258,8 @@ WORD PopVariables()
 	AC.ThreadsFlag = AM.gThreadsFlag;
 	AC.ThreadBalancing = AM.gThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch;
+	AC.ProcessStats = AM.gProcessStats;
+	AC.OldParallelStats = AM.gOldParallelStats;
 	AC.IsFortran90 = AM.gIsFortran90;
 	if ( AC.Fortran90Kind ) {
 		M_free(AC.Fortran90Kind,"Fortran90 Kind");
@@ -340,6 +342,8 @@ VOID MakeGlobal()
 	AM.gThreadsFlag = AC.ThreadsFlag;
 	AM.gThreadBalancing = AC.ThreadBalancing;
 	AM.gThreadSortFileSynch = AC.ThreadSortFileSynch;
+	AM.gProcessStats = AC.ProcessStats;
+	AM.gOldParallelStats = AC.OldParallelStats;
 	AM.gIsFortran90 = AC.IsFortran90;
 	if ( AM.gFortran90Kind ) {
 		M_free(AM.gFortran90Kind,"Fortran 90 Kind");

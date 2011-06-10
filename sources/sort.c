@@ -98,15 +98,9 @@ VOID WriteStats(POSITION *plspace, WORD par)
 	if ( AT.SS == AT.S0 && AC.StatsFlag ) {
 #ifdef WITHPTHREADS
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
-#endif
-#ifdef PARALLEL
-		/**
-		 * TODO: For now, we block all statistics report from slaves because
-		 * they are very annoying. It should be changed as workers do in TFORM,
-		 * with implementing the synchronised output mechanism.
-		 * (TU 26 May 2011)
-		 */
-		if ( PF.me != MASTER ) return;
+#elif defined(PARALLEL)
+		if ( AC.OldParallelStats ) return;
+		if ( ! AC.ProcessStats && PF.me != MASTER ) return;
 #endif
 		if ( Expressions == 0 ) return;
 
@@ -127,6 +121,13 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			else {
 				MesPrint("");
 			}
+#elif defined(PARALLEL)
+			if ( PF.me != MASTER ) {
+				MesPrint("             Process %d reporting",PF.me);
+			}
+			else {
+				MesPrint("");
+			}
 #else
 			MesPrint("");
 #endif
@@ -136,8 +137,13 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		millitime /= 1000;
 		timepart /= 10;
 		if ( AC.ShortStats ) {
+#if defined(WITHPTHREADS) || defined(PARALLEL)
 #ifdef WITHPTHREADS
 		  if ( identity > 0 ) {
+#else
+		  if ( PF.me != MASTER ) {
+			const int identity = PF.me;
+#endif
 			if ( par == 0 || par == 2 ) {
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
@@ -420,6 +426,12 @@ VOID WriteStats(POSITION *plspace, WORD par)
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
+#elif defined(PARALLEL)
+				if ( PF.me != MASTER && par == 2 ) {
+					MesPrint("%16s         Terms in process= %16l",
+					EXPRNAME(AR.CurExpr),S->TermsLeft);
+				}
+				else
 #endif
 				{
 					MesPrint("%16s         Terms %s = %16l",
@@ -430,6 +442,12 @@ VOID WriteStats(POSITION *plspace, WORD par)
 #ifdef WITHPTHREADS
 				if ( identity > 0 && par == 2 ) {
 					MesPrint("%16s         Terms in thread = %10l",
+					EXPRNAME(AR.CurExpr),S->TermsLeft);
+				}
+				else
+#elif defined(PARALLEL)
+				if ( PF.me != MASTER && par == 2 ) {
+					MesPrint("%16s         Terms in process= %10l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
@@ -448,6 +466,12 @@ VOID WriteStats(POSITION *plspace, WORD par)
 #ifdef WITHPTHREADS
 			if ( identity > 0 && par == 2 ) {
 				MesPrint("%16s         Terms in thread = %10l",
+				EXPRNAME(AR.CurExpr),S->TermsLeft);
+			}
+			else
+#elif defined(PARALLEL)
+			if ( PF.me != MASTER && par == 2 ) {
+				MesPrint("%16s         Terms in process= %10l",
 				EXPRNAME(AR.CurExpr),S->TermsLeft);
 			}
 			else
@@ -732,6 +756,9 @@ LONG EndSort(WORD *buffer, int par, int par2)
 #endif
 #ifdef WITHPTHREADS
 			if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
+#endif
+#ifdef PARALLEL
+			if ( PF.exprtodo < 0 ) goto RetRetval;
 #endif
 			DIFPOS(oldpos,position,oldpos);
 			S->SpaceLeft = BASEPOSITION(oldpos);

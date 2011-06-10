@@ -689,6 +689,10 @@ static void print_M()
 	printf("%d\n", AM.ggThreadBalancing);
 	printf("%d\n", AM.gThreadSortFileSynch);
 	printf("%d\n", AM.ggThreadSortFileSynch);
+	printf("%d\n", AM.gProcessStats);
+	printf("%d\n", AM.ggProcessStats);
+	printf("%d\n", AM.gOldParallelStats);
+	printf("%d\n", AM.ggOldParallelStats);
 	printf("%d\n", AM.maxFlevels);
 	printf("--MARK  6\n");
 	printf("%d\n", AM.resetTimeOnClear);
@@ -984,6 +988,8 @@ static void print_C()
 	printf("%d\n", AC.ThreadsFlag);
 	printf("%d\n", AC.ThreadBalancing);
 	printf("%d\n", AC.ThreadSortFileSynch);
+	printf("%d\n", AC.ProcessStats);
+	printf("%d\n", AC.OldParallelStats);
 	printf("%d\n", AC.BracketNormalize);
 	printf("%d\n", AC.maxtermlevel);
 	printf("%d\n", AC.dumnumflag);
@@ -1371,6 +1377,8 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.gThreadsFlag, int);
 	R_SET(AM.gThreadBalancing, int);
 	R_SET(AM.gThreadSortFileSynch, int);
+	R_SET(AM.gProcessStats, int);
+	R_SET(AM.gOldParallelStats, int);
 	R_SET(AM.gSortType, int);
 	R_SET(AM.gShortStatsMax, WORD);
 	R_SET(AM.gIsFortran90, int);
@@ -2372,6 +2380,8 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.gThreadsFlag, sizeof(int));
 	S_WRITE_B(&AM.gThreadBalancing, sizeof(int));
 	S_WRITE_B(&AM.gThreadSortFileSynch, sizeof(int));
+	S_WRITE_B(&AM.gProcessStats, sizeof(int));
+	S_WRITE_B(&AM.gOldParallelStats, sizeof(int));
 	S_WRITE_B(&AM.gSortType, sizeof(int));
 	S_WRITE_B(&AM.gShortStatsMax, sizeof(WORD));
 	S_WRITE_B(&AM.gIsFortran90, sizeof(int));
