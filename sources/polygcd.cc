@@ -401,7 +401,7 @@ const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const po
 					 (UWORD *)&m2[2+AN.poly_num_vars], m2[m2[1]],
 					 (UWORD *)z,&nz);
 
-	TakeNormalModulus (y,&ny,(WORD *)z,nz,NOUNPACK);
+	TakeNormalModulus (y,&ny,(UWORD *)z,nz,NOUNPACK);
 	
 	poly res(y,ny);
 

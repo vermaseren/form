@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
  
 #ifndef __STRUCTS__
 
@@ -222,7 +222,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -638,7 +638,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
@@ -729,7 +729,7 @@ typedef struct StreaM {
 } STREAM;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -787,7 +787,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
 
@@ -904,7 +904,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -1214,7 +1214,7 @@ typedef struct {				/* Used for computing calculational cost in optim.c */
 } COST;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1228,8 +1228,8 @@ typedef struct {				/* Used for computing calculational cost in optim.c */
 
 struct M_const {
     SORTING *S0;                   /**< [D] The main sort buffer */
-    WORD    *gcmod;                /**< Global setting of modulus. Uses AC.cmod's memory */
-    WORD    *gpowmod;              /**< Global setting printing as powers. Uses AC.cmod's memory */
+    UWORD   *gcmod;                /**< Global setting of modulus. Uses AC.cmod's memory */
+    UWORD   *gpowmod;              /**< Global setting printing as powers. Uses AC.cmod's memory */
     UBYTE   *TempDir;              /* (M) Path with where the temporary files go */
     UBYTE   *IncDir;               /* (M) Directory path for include files */
     UBYTE   *InputFileName;        /* (M) */
@@ -1380,7 +1380,7 @@ struct M_const {
 	WORD	ggextrasymbols;
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1437,7 +1437,7 @@ struct P_const {
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1493,8 +1493,8 @@ struct C_const {
                                        Streams are: do loop, file, prevariable. points into Streams memory. */
     LONG    *termstack;            /**< [D] Last term statement {offset} */
     LONG    *termsortstack;        /**< [D] Last sort statement {offset} */
-    WORD    *cmod;                 /**< [D] Local setting of modulus. Pointer to value. */
-    WORD    *powmod;               /**< Local setting printing as powers. Points into cmod memory */
+    UWORD   *cmod;                 /**< [D] Local setting of modulus. Pointer to value. */
+    UWORD   *powmod;               /**< Local setting printing as powers. Points into cmod memory */
     UWORD   *modpowers;            /**< [D] The conversion table for mod-> powers. */
 	UWORD   *halfmod;              /* (C) half the modulus when not zero */
     WORD    *ProtoType;            /* (C) The subexpression prototype {wildcards} */
@@ -1672,7 +1672,7 @@ struct C_const {
 	PADPOINTER((8+3*MAXNEST),68,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1717,7 +1717,7 @@ struct S_const {
 	PADLONG(4,3,0);
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1784,7 +1784,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1886,7 +1886,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1968,7 +1968,7 @@ struct N_const {
 #endif
 	UWORD	*SHcombi;
 	WORD    *poly_vars;
-    WORD    *cmod;                 /* Local setting of modulus. Pointer to value. */
+    UWORD   *cmod;                 /* Local setting of modulus. Pointer to value. */
 	POLYMOD polymod1;              /* For use in PolyModGCD and calling routines */
 	POLYMOD polymod2;              /* For use in PolyModGCD and calling routines */
     POSITION OldPosIn;             /* (R) Used in sort. */
@@ -2052,7 +2052,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2122,7 +2122,7 @@ struct O_const {
 	PADPOINTER(4,3,11,1);
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2149,7 +2149,7 @@ struct X_const {
 	int alignmentdummy;
 };
 /*
- 		#] X :
+ 		#] X : 
  		#[ Definitions :
 */
 
@@ -2201,7 +2201,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
     #] A :
   	#[ FG :
 */
@@ -2238,7 +2238,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

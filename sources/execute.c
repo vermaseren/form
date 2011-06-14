@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes : execute.c
 */
@@ -45,7 +45,7 @@ PFDOLLARS *PFDollars;
 /*:[28sep2005 mt]*/
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -175,7 +175,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -270,7 +270,7 @@ WORD PopVariables()
 	}
 	if ( AC.ThreadsFlag && AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	{
-		WORD *p, *m;
+		UWORD *p, *m;
 		p = AM.gcmod;
 		m = AC.cmod;
 		j = ABS(AC.ncmod);
@@ -285,6 +285,9 @@ WORD PopVariables()
 			}
 			AC.DirtPow = 0;
 		}
+	}
+	{
+		WORD *p, *m;
 		p = AM.gUniTrace;
 		m = AC.lUniTrace;
 		j = 4;
@@ -299,13 +302,14 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables :
+ 		#] PopVariables : 
  		#[ MakeGlobal :
 */
 
 VOID MakeGlobal()
 {
-	WORD i, j, *p, *m;
+	WORD i, j, *pp, *mm;
+	UWORD *p, *m;
 	UBYTE *s;
 	Globalize(0);
 
@@ -360,16 +364,16 @@ VOID MakeGlobal()
 	m = AC.powmod;
 	i = AC.npowmod;
 	NCOPY(p,m,i);
-	p = AM.gUniTrace;
-	m = AC.lUniTrace;
+	pp = AM.gUniTrace;
+	mm = AC.lUniTrace;
 	i = 4;
-	NCOPY(p,m,i);
+	NCOPY(pp,mm,i);
 	AM.gSortType = AC.SortType;
 	AM.gShortStatsMax = AC.ShortStatsMax;
 }
 
 /*
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ TestDrop :
 */
 
@@ -440,7 +444,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop :
+ 		#] TestDrop : 
  		#[ DoExecute :
 */
 
@@ -821,7 +825,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute :
+ 		#] DoExecute : 
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1126,7 +1130,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket :
+ 		#] PutBracket : 
  		#[ SpecialCleanup :
 */
 
@@ -1138,7 +1142,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup :
+ 		#] SpecialCleanup : 
  		#[ SetMods :
 */
 
@@ -1149,7 +1153,7 @@ void SetMods()
 	int i, n;
 	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
 	n = ABS(AN.ncmod);
-	AN.cmod = (WORD *)Malloc1(sizeof(WORD)*n,"AN.cmod");
+	AN.cmod = (UWORD *)Malloc1(sizeof(WORD)*n,"AN.cmod");
 	for ( i = 0; i < n; i++ ) AN.cmod[i] = AC.cmod[i];
 }
 
@@ -1171,7 +1175,7 @@ void UnSetMods()
 #endif
 
 /*
- 		#] UnSetMods :
+ 		#] UnSetMods : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1247,7 +1251,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions :
+ 		#] ExchangeExpressions : 
  		#[ GetFirstBracket :
 */
 
@@ -1352,7 +1356,7 @@ int GetFirstBracket(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstBracket :
+ 		#] GetFirstBracket : 
  		#[ TermsInExpression :
 */
 
@@ -1364,7 +1368,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression :
+ 		#] TermsInExpression : 
  		#[ UpdatePositions :
 */
 
@@ -1391,7 +1395,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions :
+ 		#] UpdatePositions : 
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1502,7 +1506,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 :
+ 		#] CountTerms1 : 
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1693,6 +1697,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level)
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */

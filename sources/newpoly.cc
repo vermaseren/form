@@ -54,8 +54,8 @@ using namespace std;
 inline int sgn (int x) { return x>=0 ? 1 : -1; }
 
 /*
-	  #] sign function :
-		[# small power :
+	  #] sign function : 
+  	#[ small power :
 */
 
 /**  Small power x^n
@@ -126,7 +126,7 @@ void small_power (WORD x, WORD n, UWORD *&c, WORD &nc) {
 }
 
 /*
-  	#] small power :
+  	#] small power : 
   	#[ Constructors :
  		#[ zero polynomial :
 */
@@ -237,8 +237,8 @@ poly::~poly () {
 }
 
 /*
-  	#] Destructor :
-		#[ expand memory
+  	#] Destructor : 
+ 		#[ expand memory :
 */
 
 // doubles the amount of memory allocated for a polynomial
@@ -259,8 +259,8 @@ void poly::expand_memory() {
 }
 
 /*
-		#] expand memory
- 		#[ poly setmod
+.		#] expand memory : 
+ 		#[ poly setmod :
 */
 
 // Sets the coefficient space to ZZ/p^n
@@ -288,7 +288,7 @@ void poly::setmod(WORD _modp, WORD _modn) {
 
 /*
  		#] poly setmod : 
- 		[# coefficients_modulo :
+ 		#[ coefficients_modulo :
 */
 
 // reduces all coefficients of the polynomial modulo a
@@ -305,7 +305,7 @@ void poly::coefficients_modulo (UWORD *a, WORD na) {
 				terms[j+k] = terms[i+k];
 		
 		WORD n = terms[j+terms[j]-1];
-		TakeNormalModulus((UWORD *)&terms[j+1+AN.poly_num_vars], &n, (WORD *)a, na, NOUNPACK);
+		TakeNormalModulus((UWORD *)&terms[j+1+AN.poly_num_vars], &n, (UWORD *)a, na, NOUNPACK);
 		
 		if (n!=0) {
 			terms[j] = 2+AN.poly_num_vars+ABS(n);
@@ -318,8 +318,8 @@ void poly::coefficients_modulo (UWORD *a, WORD na) {
 }
 
 /*
- 		#] coefficients_modulo :
-   	#[ parse :
+ 		#] coefficients_modulo : 
+  	#[ parse :
 */
 
 // Parses the string to a polynomial with coefficients in Z/p^n
@@ -502,7 +502,7 @@ ostream& operator<< (ostream &out, const poly &a) {
 }
 
 /*
-  	#] ostream operator :
+  	#] ostream operator : 
   	#[ monomial_compare :
 */
 
@@ -592,7 +592,7 @@ const poly & poly::normalize() {
 			// bring coefficient to normal form mod p^n
 			WORD ntmp = tmp[j+tmp[j]-1];
 			TakeNormalModulus((UWORD *)&tmp[j+1+AN.poly_num_vars], &ntmp,          
-												(WORD *)modq,nmodq, NOUNPACK);
+												(UWORD *)modq,nmodq, NOUNPACK);
 			tmp[j] = 2+AN.poly_num_vars+ABS(ntmp);
 			tmp[j+tmp[j]-1] = ntmp;
 		}		
@@ -688,7 +688,7 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 							(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
 							(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
 			if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																			 (WORD *)modq, nmodq, NOUNPACK);
+																			 (UWORD *)modq, nmodq, NOUNPACK);
 							
 			if (nc!=0) {
 				c[ci] = 2+AN.poly_num_vars+ABS(nc);
@@ -755,7 +755,7 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 							(UWORD *)&b[bi+1+AN.poly_num_vars],-b[bi+b[bi]-1], // -b[...] causes subtraction
 							(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
 			if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																			 (WORD *)modq, nmodq, NOUNPACK);
+																			 (UWORD *)modq, nmodq, NOUNPACK);
 
 			if (nc!=0) {
 				c[ci] = 2+AN.poly_num_vars+ABS(nc);
@@ -804,7 +804,7 @@ void poly::pop_heap (WORD **heap, int n) {
 }
 
 /*
-  	#] pop_heap :
+  	#] pop_heap : 
   	#[ push_heap :
 */
 
@@ -819,7 +819,7 @@ void poly::push_heap (WORD **heap, int n)  {
 }
 
 /*
-  	#] push_heap :
+  	#] push_heap : 
   	#[ mul_brute :
 */
 
@@ -851,7 +851,7 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
               (UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
               (UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
 			if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																			 (WORD *)modq, nmodq, NOUNPACK);
+																			 (UWORD *)modq, nmodq, NOUNPACK);
 
 			if (nc!=0) {
 				c[ci] = 2+AN.poly_num_vars+ABS(nc);
@@ -864,7 +864,7 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 }
 
 /*
-  	#] mul_brute :
+  	#] mul_brute : 
   	#[ mul_univar :
 */
 
@@ -922,7 +922,7 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 								 (UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
 
 				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																				 (WORD *)modq, nmodq, NOUNPACK);
+																				 (UWORD *)modq, nmodq, NOUNPACK);
 				
 				ai += a[ai];
 				bi -= ABS(b[bi-1]) + 2 + AN.poly_num_vars;
@@ -950,7 +950,7 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 }
 
 /*
-  	#] mul_univar :
+  	#] mul_univar : 
   	#[ mul_heap :
 */
 
@@ -1068,7 +1068,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 								 (UWORD *)&c[ci+AN.poly_num_vars+1],&nc);
 				
 				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																				 (WORD *)modq, nmodq, NOUNPACK);
+																				 (UWORD *)modq, nmodq, NOUNPACK);
 				
 				if (nc!=0) {
 					c[ci] = 2 + AN.poly_num_vars + ABS(nc);
@@ -1088,7 +1088,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 							(UWORD *)&b[p[1]+1+AN.poly_num_vars], b[p[1]+b[p[1]]-1],
 							(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
 			if (c.modp!=0) TakeNormalModulus((UWORD *)&p[4+AN.poly_num_vars], &p[3],
-																			 (WORD *)modq, nmodq, NOUNPACK);
+																			 (UWORD *)modq, nmodq, NOUNPACK);
 
 			p[1] += b[p[1]];
 
@@ -1112,7 +1112,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 									 (UWORD *)&h[4+AN.poly_num_vars], &h[3]);
 					
 					if (c.modp!=0) TakeNormalModulus((UWORD *)&h[4+AN.poly_num_vars], &h[3],
-																					 (WORD *)modq, nmodq, NOUNPACK);
+																					 (UWORD *)modq, nmodq, NOUNPACK);
 				}
 			}
 			else {
@@ -1131,7 +1131,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 }
 
 /*
-  	#] mul_heap :
+  	#] mul_heap : 
   	#[ mul :
 */
 
@@ -1241,7 +1241,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r) {
 								ltbinv, nltbinv,
 								(UWORD *)&q[qi+1+AN.poly_num_vars], &nq);
 				TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &nq,
-													(WORD *)modq,nmodq, NOUNPACK);
+													(UWORD *)modq,nmodq, NOUNPACK);
 				nr=0;
 			}
 		}
@@ -1347,7 +1347,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 								t, &nt);
 				nt *= -1;
 				AddLong(t,nt,s,ns,s,&ns);
-				if (q.modp!=0) TakeNormalModulus((UWORD *)s,&ns,(WORD *)modq, nmodq, NOUNPACK);
+				if (q.modp!=0) TakeNormalModulus((UWORD *)s,&ns,(UWORD *)modq, nmodq, NOUNPACK);
 			}
 		}
 
@@ -1362,7 +1362,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 				else {
 					MulLong(s, ns, ltbinv, nltbinv,	(UWORD *)&q[qi+1+AN.poly_num_vars], &ns);
 					TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &ns,
-														(WORD *)modq,nmodq, NOUNPACK);
+														(UWORD *)modq,nmodq, NOUNPACK);
 					nt=0;
 				}					
 			}
@@ -1537,7 +1537,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r) {
 									 (UWORD *)&t[4+AN.poly_num_vars],  t[3],
 									 (UWORD *)&t[4+AN.poly_num_vars], &t[3]);
 					if (q.modp!=0) TakeNormalModulus((UWORD *)&t[4+AN.poly_num_vars], &t[3],
-																					 (WORD *)modq, nmodq, NOUNPACK);
+																					 (UWORD *)modq, nmodq, NOUNPACK);
 				}
 			}
 			else {
@@ -1572,7 +1572,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r) {
 									(UWORD *)&q[p[1]+1+AN.poly_num_vars], q[p[1]+q[p[1]]-1],
 									(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
 					if (q.modp!=0) TakeNormalModulus((UWORD *)&p[4+AN.poly_num_vars], &p[3],
-																					 (WORD *)modq, nmodq, NOUNPACK);
+																					 (UWORD *)modq, nmodq, NOUNPACK);
 					p[3] *= -1;
 				}
 
@@ -1599,7 +1599,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r) {
 									 (UWORD *)&h[4+AN.poly_num_vars],  h[3],
 									 (UWORD *)&h[4+AN.poly_num_vars], &h[3]);
 					if (q.modp!=0) TakeNormalModulus((UWORD *)&h[4+AN.poly_num_vars], &h[3],
-																					 (WORD *)modq, nmodq, NOUNPACK);
+																					 (UWORD *)modq, nmodq, NOUNPACK);
 
 					if (h[1]<p[1]) {
 						swap(h[0],p[0]);
@@ -1639,7 +1639,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r) {
 			else {
 				if (qi+1+AN.poly_num_vars+t[3] >= q.size_of_terms) q.expand_memory();
 				MulLong((UWORD *)&t[4+AN.poly_num_vars], t[3], ltbinv, nltbinv,	(UWORD *)&q[qi+1+AN.poly_num_vars], &nq);
-				TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &nq, (WORD *)modq, nmodq, NOUNPACK);
+				TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &nq, (UWORD *)modq, nmodq, NOUNPACK);
 				nr=0;
 			}
 
@@ -1972,7 +1972,7 @@ const poly poly::coefficient (int x, int n) const {
 }
 
 /*
-  	#] coefficient :
+  	#] coefficient : 
 		#[ is_zero :
 */
 
@@ -2119,7 +2119,7 @@ const poly poly::simple_poly (int x, const poly &a, int b, int p, int n) {
 }
 
 /*
-  	#] simple_poly :
+  	#] simple_poly : 
 		#[ extract_variables :
 */
 
@@ -2330,7 +2330,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 }
 
 /*
-  	#] poly_to_argument :
+  	#] poly_to_argument : 
 		[# size_of_form_notation :
 */
 

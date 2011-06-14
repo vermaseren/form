@@ -987,12 +987,12 @@ absnogood:					pcom[ncom++] = t;
 						iii = REDLENG(iii);
 						if ( *t == MODFUNCTION ) {
 							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1)
-							,&iii,&cmod,ncmod,UNPACK|NOINVERSES) )
+							,&iii,(UWORD *)(&cmod),ncmod,UNPACK|NOINVERSES) )
 								goto FromNorm;
 						}
 						else {
 							if ( TakeModulus((UWORD *)(ttt+ARGHEAD+1)
-							,&iii,&cmod,ncmod,UNPACK|POSNEG|NOINVERSES) )
+							,&iii,(UWORD *)(&cmod),ncmod,UNPACK|POSNEG|NOINVERSES) )
 								goto FromNorm;
 						}
 						*((UWORD *)lnum) = ttt[ARGHEAD+1];
@@ -1063,7 +1063,7 @@ exitfromhere:
 						coef2 = (UWORD *)(ttt+ARGHEAD+1);
 						ncoef2 = (ttt[ttt[0]-1]-1)/2;
 					}
-					if ( TakeModulus((UWORD *)lnum,&nnum,(WORD *)coef2,ncoef2,
+					if ( TakeModulus((UWORD *)lnum,&nnum,(UWORD *)coef2,ncoef2,
 									UNPACK|NOINVERSES|FROMFUNCTION) ) {
 						goto FromNorm;
 					}

@@ -2720,7 +2720,7 @@ WORD Modulus(WORD *term)
 		This may not be a good idea. To be checked.
 */
 
-WORD TakeModulus(UWORD *a, WORD *na, WORD *cmodvec, WORD ncmod, WORD par)
+WORD TakeModulus(UWORD *a, WORD *na, UWORD *cmodvec, WORD ncmod, WORD par)
 {
 	GETIDENTITY
 	UWORD *c, *d, *e, *f, *g, *h;
@@ -2887,12 +2887,12 @@ ModErr:
 
 /*
  		#] TakeModulus : 
- 		#[ TakeNormalModulus :  WORD TakeModulus(a,na,par)
+ 		#[ TakeNormalModulus :  WORD TakeNormalModulus(a,na,par)
 
 		added by Jan [01-09-2010]
 */
 
-WORD TakeNormalModulus (UWORD *a, WORD *na, WORD *c, WORD nc, WORD par)
+WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 {
 	WORD n;
 	

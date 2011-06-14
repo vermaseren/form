@@ -1832,7 +1832,7 @@ int DoRecovery(int *moduletype)
 	}
 
 	/* exception: here we also change values from struct AM */
-	R_COPY_B(AC.cmod, AM.MaxTal*4*(LONG)sizeof(UWORD), WORD*);
+	R_COPY_B(AC.cmod, AM.MaxTal*4*(LONG)sizeof(UWORD), UWORD*);
 	AM.gcmod = AC.cmod + AM.MaxTal;
 	AC.powmod = AM.gcmod + AM.MaxTal;
 	AM.gpowmod = AC.powmod + AM.MaxTal;

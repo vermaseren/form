@@ -484,7 +484,7 @@ int AllocSetups()
 	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*AM.MaxTal+2,(char *)(sp->parameter));
 	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
 #endif
-	AC.cmod = (WORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
+	AC.cmod = (UWORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
 	AM.gcmod = AC.cmod + AM.MaxTal;
 	AC.powmod = AM.gcmod + AM.MaxTal;
 	AM.gpowmod = AC.powmod + AM.MaxTal;

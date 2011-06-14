@@ -4725,7 +4725,7 @@ void SetMods()
 		AN.ncmod = AC.ncmod;
 		if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
 		n = ABS(AN.ncmod);
-		AN.cmod = (WORD *)Malloc1(sizeof(WORD)*n,"AN.cmod");
+		AN.cmod = (UWORD *)Malloc1(sizeof(WORD)*n,"AN.cmod");
 		for ( i = 0; i < n; i++ ) AN.cmod[i] = AC.cmod[i];
 	}
 }

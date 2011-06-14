@@ -1516,14 +1516,14 @@ DoSpec:
 					}
 					else if ( AN.ncmod != 0 && *t == -SNUMBER ) {
 						if ( AN.ncmod == 1 || AN.ncmod == -1 ) {
-							isp = AC.cmod[0];
+							isp = (UWORD)(AC.cmod[0]);
 							isp = t[1] % isp;
 							if ( ( AC.modmode & POSNEG ) != 0 ) {
-								if ( isp > AC.cmod[0]/2 ) isp = isp - AC.cmod[0];
-								else if ( -isp > AC.cmod[0]/2 ) isp = isp + AC.cmod[0];
+								if ( isp > (UWORD)(AC.cmod[0])/2 ) isp = isp - (UWORD)(AC.cmod[0]);
+								else if ( -isp > (UWORD)(AC.cmod[0])/2 ) isp = isp + (UWORD)(AC.cmod[0]);
 							}
 							else {
-								if ( isp < 0 ) isp += AC.cmod[0];
+								if ( isp < 0 ) isp += (UWORD)(AC.cmod[0]);
 							}
 							if ( isp <= MAXPOSITIVE && isp >= -MAXPOSITIVE ) {
 								t[1] = isp;
