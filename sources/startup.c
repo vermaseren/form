@@ -364,6 +364,21 @@ int OpenInput()
 		}
 		AC.NoShowInput = oldNoShowInput;
 	}
+#ifdef PARALLEL
+	if ( PF.me != MASTER ) {
+		/*
+		 * Only the master writes to the log file. On slaves, we need
+		 * a dummy handle, without opening the file.
+		 */
+		extern FILES **filelist;  /* in tools.c */
+		int i = CreateHandle();
+		RWLOCKW(AM.handlelock);
+		filelist[i] = (FILES *)123;  /* Must be nonzero to prevent a reuse in CreateHandle. */
+		UNRWLOCK(AM.handlelock);
+		AC.LogHandle = i;
+	}
+	else
+#endif
 	if ( AM.LogFileName ) {
 		if ( AC.CheckpointFlag != -1 ) {
 			if ( ( AC.LogHandle = CreateLogFile((char *)(AM.LogFileName)) ) < 0 ) {
@@ -1381,6 +1396,9 @@ dontremove:;
 	if ( AC.LogHandle >= 0 && par <= 0 ) {
 		WORD lh = AC.LogHandle;
 		AC.LogHandle = -1;
+#ifdef PARALLEL
+		if ( PF.me == MASTER )  /* Only the master opened the real file. */
+#endif
 		CloseFile(lh);
 	}
 }

@@ -2466,7 +2466,7 @@ WORD PF_mkDollarsParallel()
 				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
 				namesize = 1;
 				while(*p++) namesize++;
-				/* Why DolToTerm? (TU 10 Jun 2011) */
+				/* Why DolToTerms? (TU 10 Jun 2011) */
 /*				newd = DolToTerms(BHEAD index); */
 				newd = Dollars + index;
 /*
@@ -2510,7 +2510,7 @@ WORD PF_mkDollarsParallel()
 			p = name = AC.dollarnames->namebuffer+Dollars[index].name;
 			namesize = 1;
 			while ( *p++ ) namesize++;
-			/* Why DolToTerm? (TU 10 Jun 2011) */
+			/* Why DolToTerms? (TU 10 Jun 2011) */
 /*			newd = DolToTerms(BHEAD index); */
 			newd = Dollars + index;
 /*

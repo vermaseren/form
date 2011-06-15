@@ -155,7 +155,7 @@ va_dcl
 #endif
 #ifdef PARALLEL
 	if ( PF.me != MASTER && AS.printflag == 0 ) return(0);
-	if ( PF.me != MASTER )
+	if ( PF.me == MASTER )
 #endif
 	FLUSHCONSOLE;
 	/*[19apr2004 mt]:*/
