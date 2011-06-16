@@ -3483,10 +3483,10 @@ int PF_RecvFile(int from, FILE *fd)
 		if ( x.capacity < newcapacity_ ) { \
 			type *newptr_; \
 			{ \
-				size_t t = x.capacity; \
-				if ( t < 8 ) t = 8; \
-				while ( t < newcapacity_ ) t *= 2; \
-				newcapacity_ = t; \
+				size_t t_ = x.capacity; \
+				if ( t_ < 8 ) t_ = 8; \
+				while ( t_ < newcapacity_ ) t_ *= 2; \
+				newcapacity_ = t_; \
 			} \
 			newptr_ = (type *)Malloc1(sizeof(type) * newcapacity_, "VectorEnsureCapacity:" #x); \
 			if ( x.ptr != NULL ) { \
@@ -3586,6 +3586,78 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 			return size;
 		}
 	}
+#ifdef UNIX
+	/**
+	 * On my desktop PC, sometimes a single linefeed "\n" sent to the standard
+	 * output is ignored on the execution of mpiexec. A typical example is:
+	 *   $ cat foo.c
+	 *     #include <unistd.h>
+	 *     int main() {
+	 *       write(1, "    ", 4);
+	 *       write(1, "\n", 1);
+	 *       write(1, "    ", 4);
+	 *       write(1, "123\n", 4);
+	 *       return 0;
+	 *     }
+	 * or even as a shell script:
+	 *   $ cat foo.sh
+	 *     #! bin/sh
+	 *     printf "    "
+	 *     printf "\n"
+	 *     printf "    "
+	 *     printf "123\n"
+	 * When I ran it on mpiexec
+	 *   $ while :; do mpiexec -np 1 ./foo.sh; done
+	 * I observed the single linefeed (printf "\n") was sometimes ignored. Even
+	 * though this phenomenon might be specific to my environment, I added this
+	 * code because someone may encounter a similar phenomenon and feel it
+	 * frustrating. (TU 16 Jun 2011)
+	 *
+	 * Phenomenon:
+	 *   A single linefeed sent to the standard output occasionally ignored
+	 *   on mpiexec.
+	 *
+	 * Environment:
+	 *   openSUSE 11.4 (x86_64)
+	 *   kernel: 2.6.37.6-0.5-desktop
+	 *   gcc: 4.5.1 20101208
+	 *   mpich2-1.3.2p1 configured with '--enable-shared --with-pm=smpd'
+	 *
+	 * Solution:
+	 *   In Unix (in which Uwrite calls write() system call without any buffering),
+	 *   we perform the line buffering here. A single linefeed is also buffered.
+	 *
+	 * XXX:
+	 *   - The buffered output will not written to the standard output at the end.
+	 *     This is not problematic at a normal run.
+	 *   - The buffer allocated for `buf' is not explicitly freed at the end,
+	 *     though we expect at least the OS releases it.
+	 */
+	if ( PF.me == MASTER && handle == AM.StdOut ) {
+		static Vector(UBYTE, buf);
+		size_t oldsize;
+		/* Assume the newline character is LF (when UNIX is defined). */
+		if ( (size > 0 && buffer[size - 1] != LINEFEED) || (size == 1 && buffer[0] == LINEFEED) ) {
+			VectorPushBacks(UBYTE, buf, buffer, size);
+			return size;
+		}
+		if ( (oldsize = VectorSize(UBYTE, buf)) > 0 ) {
+			LONG ret;
+			VectorPushBacks(UBYTE, buf, buffer, size);
+			ret = WriteFileToFile(handle, VectorCPtr(UBYTE, buf), VectorSize(UBYTE, buf));
+			VectorClear(UBYTE, buf);
+			if ( ret < 0 ) {
+				return ret;
+			}
+			else if ( ret < (LONG)oldsize ) {
+				return 0;  /* This means the buffered output in previous calls is lost. */
+			}
+			else {
+				return ret - (LONG)oldsize;
+			}
+		}
+	}
+#endif
 	return WriteFileToFile(handle, buffer, size);
 }
 
