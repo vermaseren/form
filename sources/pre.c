@@ -2047,10 +2047,16 @@ int DoInclude(UBYTE *s)
 		return(-1);
 	}
 	*t = 0;
+	if ( fold ) {
+		fold = strDup1(fold,"foldname");
+	}
 /*
 	We have the name of the file in 'name' and the fold in 'fold' (or NULL)
 */
-	if ( OpenStream(name,FILESTREAM,0,PRENOACTION) == 0 ) return(-1);
+	if ( OpenStream(name,FILESTREAM,0,PRENOACTION) == 0 ) {
+		if ( fold ) { M_free(fold,"foldname"); fold = 0; }
+		return(-1);
+	}
 	if ( fold ) {
 		LONG position = -1;
 		int foldopen = 0;
@@ -2129,11 +2135,12 @@ nofold:
 		M_free(name,"name of include file");
 	}
 	AC.NoShowInput = withnolist;
+	if ( fold ) { M_free(fold,"foldname"); fold = 0; }
 	return(0);
 }
 
 /*
- 		#] DoInclude : 
+ 		#] DoInclude :
  		#[ DoPreExchange :
 
 		Exchanges the names of expressions or the contents of dollars
