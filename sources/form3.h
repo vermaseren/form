@@ -70,8 +70,14 @@
 
 #endif /* def HAVE_CONFIG_H */
 
-#ifdef __GNU_C__
-#if __STDC_VERSION__ < 199901L
+#if !defined(__cplusplus) && !defined(inline)
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (defined(__GNUC__) && !defined(__STRICT_ANSI__))
+/* "inline" is available. */
+#elif defined(__GNUC__)
+#define inline __inline__
+#elif defined(_MSC_VER)
+#define inline __inline
+#else
 #define inline
 #endif
 #endif
