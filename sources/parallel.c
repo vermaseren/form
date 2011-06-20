@@ -3518,9 +3518,20 @@ int PF_RecvFile(int from, FILE *fd)
 		} \
 	} while (0)
 
-static int errorMessageLock = 0;     /* The lock count. See PF_MLock and PF_MUnlock. */
-static Vector(UBYTE, stdoutBuffer);  /* The buffer for AM.StdOut. */
-static Vector(UBYTE, logBuffer);     /* The buffer for AC.LogHandle. */
+static int errorMessageLock = 0;     /* (slaves) The lock count. See PF_MLock and PF_MUnlock. */
+static Vector(UBYTE, stdoutBuffer);  /* (slaves) The buffer for AM.StdOut. */
+static Vector(UBYTE, logBuffer);     /* (slaves) The buffer for AC.LogHandle. */
+#define recvBuffer logBuffer         /* (master) The buffer for receiving messages. */
+
+/*
+ * If PF_ENABLE_STDOUT_BUFFERING is defined, the master performs the line buffering
+ * (using stdoutBuffer) at PF_WriteFileToFile.
+ */
+#ifndef PF_ENABLE_STDOUT_BUFFERING
+#ifdef UNIX
+#define PF_ENABLE_STDOUT_BUFFERING
+#endif
+#endif
 
 /*
   		#[ PF_MLock :
@@ -3586,7 +3597,7 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 			return size;
 		}
 	}
-#ifdef UNIX
+#ifdef PF_ENABLE_STDOUT_BUFFERING
 	/**
 	 * On my desktop PC, sometimes a single linefeed "\n" sent to the standard
 	 * output is ignored on the execution of mpiexec. A typical example is:
@@ -3628,24 +3639,21 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 	 *   we perform the line buffering here. A single linefeed is also buffered.
 	 *
 	 * XXX:
-	 *   - The buffered output will not written to the standard output at the end.
-	 *     This is not problematic at a normal run.
-	 *   - The buffer allocated for `buf' is not explicitly freed at the end,
-	 *     though we expect at least the OS releases it.
+	 *   At the end of the program the buffered output (text without LF) will not be flushed,
+	 *   i.e., will not be written to the standard output. This is not problematic at a normal run.
 	 */
 	if ( PF.me == MASTER && handle == AM.StdOut ) {
-		static Vector(UBYTE, buf);
 		size_t oldsize;
 		/* Assume the newline character is LF (when UNIX is defined). */
 		if ( (size > 0 && buffer[size - 1] != LINEFEED) || (size == 1 && buffer[0] == LINEFEED) ) {
-			VectorPushBacks(UBYTE, buf, buffer, size);
+			VectorPushBacks(UBYTE, stdoutBuffer, buffer, size);
 			return size;
 		}
-		if ( (oldsize = VectorSize(UBYTE, buf)) > 0 ) {
+		if ( (oldsize = VectorSize(UBYTE, stdoutBuffer)) > 0 ) {
 			LONG ret;
-			VectorPushBacks(UBYTE, buf, buffer, size);
-			ret = WriteFileToFile(handle, VectorCPtr(UBYTE, buf), VectorSize(UBYTE, buf));
-			VectorClear(UBYTE, buf);
+			VectorPushBacks(UBYTE, stdoutBuffer, buffer, size);
+			ret = WriteFileToFile(handle, VectorCPtr(UBYTE, stdoutBuffer), VectorSize(UBYTE, stdoutBuffer));
+			VectorClear(UBYTE, stdoutBuffer);
 			if ( ret < 0 ) {
 				return ret;
 			}
@@ -3671,7 +3679,7 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
  * the message to the corresponding output.
  * instead of LOCK(ErrorMessageLock) and UNLOCK(ErrorMessageLock).
  *
- * @param[in] src The source rank. 
+ * @param[in] src The source rank.
  * @param[in] tag The tag value (must be PF_STDOUT_MSGTAG or PF_LOG_MSGTAG or PF_ANY_MSGTAG).
  */
 static void PF_ReceiveErrorMessage(int src, int tag)
@@ -3682,14 +3690,17 @@ static void PF_ReceiveErrorMessage(int src, int tag)
 	if ( ret == 0 ) {
 		switch ( tag ) {
 			case PF_STDOUT_MSGTAG:
-				VectorEnsureCapacity(UBYTE, stdoutBuffer, size);
-				ret = PF_RawRecv(&src, VectorCPtr(UBYTE, stdoutBuffer), size, &tag);
-				if ( ret > 0 ) WriteFileToFile(AM.StdOut, VectorCPtr(UBYTE, stdoutBuffer), size);
-				break;
 			case PF_LOG_MSGTAG:
-				VectorEnsureCapacity(UBYTE, logBuffer, size);
-				ret = PF_RawRecv(&src, VectorCPtr(UBYTE, logBuffer), size, &tag);
-				if ( ret > 0 ) WriteFileToFile(AC.LogHandle, VectorCPtr(UBYTE, logBuffer), size);
+				VectorEnsureCapacity(UBYTE, recvBuffer, size);
+				ret = PF_RawRecv(&src, VectorCPtr(UBYTE, recvBuffer), size, &tag);
+				if ( ret > 0 ) {
+					int handle = (tag == PF_STDOUT_MSGTAG) ? AM.StdOut : AC.LogHandle;
+#ifdef PF_ENABLE_STDOUT_BUFFERING
+					if ( handle == AM.StdOut ) PF_WriteFileToFile(handle, VectorCPtr(UBYTE, recvBuffer), size);
+					else
+#endif
+					WriteFileToFile(handle, VectorCPtr(UBYTE, recvBuffer), size);
+				}
 				break;
 		}
 	}
@@ -3758,5 +3769,5 @@ void PF_FreeErrorMessageBuffers(void)
 
 /*
   		#] PF_FreeErrorMessageBuffers :
-  	#] Synchronised output : 
+  	#] Synchronised output :
 */
