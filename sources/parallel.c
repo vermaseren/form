@@ -916,15 +916,12 @@ static WORD PF_GetTerm(WORD *term)
 	WORD i;
 	WORD *next, *np, *last, *lp = 0, *nextstop, *tp=term;
 
-/* It must be on slaves? (TU 3 Jun 2011) */
-/* assert(PF.me != MASTER); */
+	/* Only on the slaves. */
 
-	if ( AR.GetFile == 2 ) {
-		fi = AR.hidefile;
-	}
-	else {
+	if ( AC.NumberOfRhsExprInModule && PF.rhsInParallel )
+		fi = &PF.slavebuf;
+	else
 		fi = AR.infile;
-	}
 
 	AN.deferskipped = 0;
 	if ( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ) {
@@ -2868,15 +2865,27 @@ FILEHANDLE *curfile = 0;
 		EXPRESSIONS e = Expressions+i;
 		if ( ( e->vflags & ISINRHS ) == 0 ) continue;
 		switch ( e->status ) {
+			case LOCALEXPRESSION:
+			case SKIPLEXPRESSION:
+			case DROPLEXPRESSION:
+			case GLOBALEXPRESSION:
+			case SKIPGEXPRESSION:
+			case DROPGEXPRESSION:
+			case HIDELEXPRESSION:
+			case HIDEGEXPRESSION:
+			case INTOHIDELEXPRESSION:
+			case INTOHIDEGEXPRESSION:
+				AR.GetFile = 0;
+				curfile = AR.infile;
+				break;
+			case HIDDENLEXPRESSION:
+			case HIDDENGEXPRESSION:
+			case DROPHLEXPRESSION:
+			case DROPHGEXPRESSION:
 			case UNHIDELEXPRESSION:
 			case UNHIDEGEXPRESSION:
 				AR.GetFile = 2;
 				curfile = AR.hidefile;
-				break;
-			case LOCALEXPRESSION:
-			case GLOBALEXPRESSION:
-				AR.GetFile = 0;
-				curfile = AR.infile;
 				break;
 		}/*switch ( e->status )*/
 
