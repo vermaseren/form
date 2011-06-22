@@ -1449,6 +1449,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 	LONG size, cpu;
 	POSITION position;
 	int k, src, tag, attach;
+	FILEHANDLE *oldoutfile = AR.outfile;
 
 #ifdef MPI2  
 	if ( PF_shared_buff == NULL ) {
@@ -1489,9 +1490,17 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		if ( AC.bracketindexflag ) OpenBracketIndex(i);
 		term[3] = i;
 		AR.CurExpr = i;
-		SeekScratch(AR.outfile,&position);
-		e->onfile = position;
-		if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) return(-1);
+		if ( AR.outtohide ) {
+			SeekScratch(AR.hidefile,&position);
+			e->onfile = position;
+			if ( PutOut(BHEAD term,&position,AR.hidefile,0) < 0 ) return(-1);
+		}
+		else {
+			SeekScratch(AR.outfile,&position);
+			e->onfile = position;
+			if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) return(-1);
+		}
+		AR.Eside = RHSIDE;
 /*
 			#] write prototype to outfile: 
 			#[ initialize sendbuffer if necessary:
@@ -1622,8 +1631,12 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 			}
 		}
-	
+		if ( AR.outtohide ) AR.outfile = AR.hidefile;
 		if ( EndSort(AM.S0->sBuffer,0,0) < 0 ) return(-1);
+		if ( AR.outtohide ) {
+			AR.outfile = oldoutfile;
+			AR.hidefile->POfull = AR.hidefile->POfill;
+		}
 		if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 		else e->vflags |= ISZERO;
 		if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
@@ -1631,6 +1644,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
 		if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 		AR.GetFile = 0;	
+		AR.outtohide = 0;
 /* 
 			#] Clean up & EndSort: 
 			#[ Collect (stats,prepro,...):
