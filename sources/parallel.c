@@ -111,6 +111,9 @@ PARALLELVARS PF;
  WORD *PF_shared_buff;
 #endif
 
+LONG     PF_goutterms;  /* (master) Total out terms at PF_EndSort, used in PF_Statistics. */
+POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndSort, used in PF_Processor. */
+
 /*
 	This will work well only under Linux, see 
 		#ifdef PF_WITH_SCHED_YIELD
@@ -181,14 +184,14 @@ int PF_Statistics(LONG **stats, int proc)
 			cpart = (WORD)(cpu%1000);
 			cpu /= 1000;
 			cpart /= 10;
-			MesPrint("");
+			if ( AC.OldParallelStats ) MesPrint("");
 			if ( proc && AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       left       byte");
 				MesPrint("%3d  : %7l.%2i %10l",0,cpu,cpart,PF.ginterms);
 			}
 			else if ( AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       out        byte");
-				MesPrint("%3d  : %7l.%2i %10l %10l %10l",0,cpu,cpart,PF.ginterms,0,PF.goutterms);
+				MesPrint("%3d  : %7l.%2i %10l %10l %10l",0,cpu,cpart,PF.ginterms,0,PF_goutterms);
 			}
 
 			for ( i = 1; i < PF.numtasks; i++ ) {
@@ -572,7 +575,6 @@ newterms:
 		if ( term + *term > rbuf->full[a] ) goto newterms;
 	}
 	rbuf->fill[a] += *term;
-	PF.ggenterms++;
 	return(term);
 }
 
@@ -771,15 +773,31 @@ cancelled:
 /*
  		#] PF_GetLoser : 
  		#[ PF_EndSort :
+*/
 
-	if this is not the masterprocess, just initialize the sendbuffers and 
-	return 0, else PF_EndSort sends the rest of the terms in the sendbuffer 
-	to the next slave and a dummy message to all slaves with tag 
-	PF_ENDSORT_MSGTAG. Then it receives the sorted terms, sorts them using a 
-	recursive 'tree of losers' (PF_GetLoser) and writes them to the 
-	outputfile. 
-*/ 
-
+/**
+ * Finishes a master sorting with collecting terms from slaves.
+ *
+ * Called by EndSort.
+ *
+ * If this is not the masterprocess, just initialize the sendbuffers and
+ * return 0, else PF_EndSort sends the rest of the terms in the sendbuffer
+ * to the next slave and a dummy message to all slaves with tag
+ * PF_ENDSORT_MSGTAG. Then it receives the sorted terms, sorts them using a
+ * recursive 'tree of losers' (PF_GetLoser) and writes them to the
+ * outputfile.
+ *
+ * @return   1  if the sorting on the master was done.
+ *           0  if EndSort still must perform a regular sorting becuase it is not
+ *              at the ground level or not on the master or in the sequential mode
+ *              or in the InParallel mode.
+ *          -1  if an error occured.
+ *
+ * @remark  This function has been changed such that when it returns 1,
+ *          AM.S0->TermsLeft is set correctly. But AM.S0->GenTerms is not set:
+ *          it will be set after collecting the statistics from the slaves
+ *          at the end of PF_Processor. (TU 30 Jun 2011)
+ */
 int PF_EndSort()
 {
 	GETIDENTITY
@@ -787,7 +805,7 @@ int PF_EndSort()
 	PF_BUFFER *sbuf=PF.sbuf;
 	SORTING *S = AT.SS;
 	WORD *outterm,*pp;
-	LONG size;
+	LONG size, noutterms;
 	POSITION position;
 	WORD i,cc;
 
@@ -802,7 +820,7 @@ int PF_EndSort()
 		sortiosize on the master and the POsize of our file.
 		First save the original PObuffer and POstop of the outfile
 */
-		size = (AT.SS->sTop2 - AT.SS->lBuffer - 1)/(PF.numtasks - 1);
+		size = (S->sTop2 - S->lBuffer - 1)/(PF.numtasks - 1);
 		size -= (AM.MaxTer/sizeof(WORD) + 2); 
 		if ( fout->POsize < (LONG)(size*sizeof(WORD)) ) size = fout->POsize/sizeof(WORD);
 		if ( sbuf == 0 ) {
@@ -838,17 +856,13 @@ int PF_EndSort()
 	S->PolyFlag = AR.PolyFun ? AR.PolyFunType : 0;
 	*AR.CompressPointer = 0;
 	PUTZERO(position);
-/*
-		Here the global variable should be used since the number of 
-		outterms must be known for EndSort routine
-*/
-	PF.ggenterms=0;
-	PF.goutterms=0;
+
+	noutterms = 0;
 
 	while ( PF_loser >= 0 ) {
 		if ( (PF_loser = PF_GetLoser(PF_root)) == 0 ) break;
 		outterm = PF_term[PF_loser];
-		PF.goutterms++;
+		noutterms++;
 
 		if ( PF_newclen[PF_loser] != 0 ) {
 /*		  
@@ -876,7 +890,8 @@ int PF_EndSort()
 		PutOut(BHEAD outterm,&position,fout,1);
 	}		
 	if( FlushOut(&position,fout,0) ) return(-1);
-	PF.ExprSize = position;
+	S->TermsLeft = PF_goutterms = noutterms;
+	PF_exprsize = position;
 	return(1);
 }
 
@@ -1639,6 +1654,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 		else e->vflags |= ISZERO;
+		/* FIXME: AR.expchanged doesn't reflect those of the slaves. (TU 30 Jun 2011) */
 		if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
 	
 		if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
@@ -1651,11 +1667,6 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 */
 		if ( AC.mparallelflag == PARALLELFLAG ) {
 			PF_CatchErrorMessagesForAll();
-			if ( ! AC.OldParallelStats ) {
-				AT.SS->GenTerms = PF.ggenterms;
-				AT.SS->TermsLeft = PF.goutterms;
-				WriteStats(&PF.ExprSize, 2);
-			}
 			for ( k = 1; k < PF.numtasks; k++ ) {
 				PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
 				PF_UnPack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
@@ -1702,6 +1713,15 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 						  break;
 					}
 				}
+			}
+			if ( ! AC.OldParallelStats ) {
+				/* Now we can calculate AT.SS->GenTerms from the statistics of the slaves. */
+				LONG genterms = 0;
+				for ( k = 1; k < PF.numtasks; k++ ) {
+					genterms += PF_stats[k][3];
+				}
+				AT.SS->GenTerms = genterms;
+				WriteStats(&PF_exprsize, 2);
 			}
 			PF_Statistics(PF_stats,0);
 		}

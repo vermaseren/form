@@ -654,7 +654,7 @@ LONG EndSort(WORD *buffer, int par, int par2)
 	retval = -1; 
 	goto RetRetval; 
   }
-  else{ /* retval = 0: for S != AM.S0 and slaves still do the regular sort */
+	/* PF_EndSort returned 0: for S != AM.S0 and slaves still do the regular sort */
 #endif /* PARALLEL */
 	oldoutfile = AR.outfile;
 	if ( S == AT.S0 ) {
@@ -1003,31 +1003,11 @@ TooLarge:
 	}
 RetRetval:
 
-/*[25nov2003 mt]:*/
-/*For parallel sorting S->TermsLeft is 0, so we have to use PF.goutterms instead:*/
-
-#ifdef REMOVEDBY_MT
-#ifdef PARALLEL /* [11mar1998 ar] */
-	if ( AR.sLevel == 0 && PF.me == MASTER) {
-#else
-	if ( AR.sLevel == 0 ) {
-#endif /* PARALLEL [11mar1998 ar] */
+#ifdef PARALLEL
+	/* NOTE: PF_EndSort has been changed such that it sets S->TermsLeft. (TU 30 Jun 2011) */
+	if ( AR.sLevel == 0 && (PF.me == MASTER || PF.exprtodo >= 0) ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
 	}
-#endif
-
-#ifdef PARALLEL
-/*[20oct2009 mt]:*/
-	if( (PF.exprtodo>=0) && (AR.sLevel == 0) )
-		Expressions[AR.CurExpr].counter = S->TermsLeft;
-	else
-/*:[20oct2009 mt}*/
-	if ( AR.sLevel == 0 && PF.me == MASTER) {
-		if(AC.mparallelflag == PARALLELFLAG)
-			Expressions[AR.CurExpr].counter = PF.goutterms;
-		else
-			Expressions[AR.CurExpr].counter = S->TermsLeft;
-	}/*if ( AR.sLevel == 0 && PF.me == MASTER)*/
 #else
 	if ( AR.sLevel == 0 ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
@@ -1143,9 +1123,6 @@ RetRetval:
 		}
 	}
 	return(retval);
-#ifdef PARALLEL /* [27aug1997 ar] */
-  }
-#endif /* PARALLEL [27aug1997 ar] */
 }
 
 /*
