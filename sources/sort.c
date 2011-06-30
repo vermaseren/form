@@ -758,7 +758,7 @@ LONG EndSort(WORD *buffer, int par, int par2)
 			if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
 #endif
 #ifdef PARALLEL
-			if ( PF.exprtodo < 0 ) goto RetRetval;
+			if ( PF.me != MASTER && PF.exprtodo < 0 ) goto RetRetval;
 #endif
 			DIFPOS(oldpos,position,oldpos);
 			S->SpaceLeft = BASEPOSITION(oldpos);

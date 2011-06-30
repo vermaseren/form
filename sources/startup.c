@@ -661,6 +661,9 @@ VOID StartVariables()
 	AC.cbufList.num = 0;
 	AM.hparallelflag = AM.gparallelflag =
 	AC.parallelflag = AC.mparallelflag = PARALLELFLAG;
+#ifdef PARALLEL
+	if ( PF.numtasks < 2 ) AM.hparallelflag = NOPARALLEL_NPROC;
+#endif
 	AC.tablefilling = 0;
 	AM.resetTimeOnClear = 1;
 
