@@ -143,6 +143,7 @@ WORD CleanExpr(WORD par)
 					e_out->bracketinfo = e_in->bracketinfo;
 					e_out->newbracketinfo = e_in->newbracketinfo;
 					e_out->numdummies = e_in->numdummies;
+					e_out->vflags = e_in->vflags;
 				}
 #ifdef PARALLELCODE
 				e_out->partodo = 0;
@@ -175,7 +176,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -1160,7 +1161,7 @@ void SetMods()
 #endif
 
 /*
- 		#] SetMods :
+ 		#] SetMods : 
  		#[ UnSetMods :
 */
 

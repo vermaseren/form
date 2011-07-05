@@ -1421,32 +1421,34 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 	AN.ErrorInDollar = 0;
 	switch ( d->type ) {
 		case DOLARGUMENT:
-			if ( d->where[0] < 0 ) {
+			t = d->where;
+			if ( t[0] < 0 ) {
+ShortArgument:
 				w = AT.WorkPointer;
-				if ( d->where[0] <= -FUNCTION ) {
-					*w++ = FUNHEAD+4; *w++ = -d->where[0];
+				if ( t[0] <= -FUNCTION ) {
+					*w++ = FUNHEAD+4; *w++ = -t[0];
 					*w++ = FUNHEAD; FILLFUN(w)
 					*w++ = 1; *w++ = 1; *w++ = 3;
 				}
-				else if ( d->where[0] == -SYMBOL ) {
-					*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = d->where[1];
+				else if ( t[0] == -SYMBOL ) {
+					*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = t[1];
 					*w++ = 1; *w++ = 1; *w++ = 1; *w++ = 3;
 				}
-				else if ( d->where[0] == -VECTOR || d->where[0] == -INDEX ) {
-					*w++ = 7; *w++ = INDEX; *w++ = 3; *w++ = d->where[1];
+				else if ( t[0] == -VECTOR || t[0] == -INDEX ) {
+					*w++ = 7; *w++ = INDEX; *w++ = 3; *w++ = t[1];
 					*w++ = 1; *w++ = 1; *w++ = 3;
 				}
-				else if ( d->where[0] == -MINVECTOR ) {
-					*w++ = 7; *w++ = INDEX; *w++ = 3; *w++ = d->where[1];
+				else if ( t[0] == -MINVECTOR ) {
+					*w++ = 7; *w++ = INDEX; *w++ = 3; *w++ = t[1];
 					*w++ = 1; *w++ = 1; *w++ = -3;
 				}
-				else if ( d->where[0] == -SNUMBER ) {
+				else if ( t[0] == -SNUMBER ) {
 					*w++ = 4;
-					if ( d->where[1] < 0 ) {
-						*w++ = -d->where[1]; *w++ = 1; *w++ = -3;
+					if ( t[1] < 0 ) {
+						*w++ = -t[1]; *w++ = 1; *w++ = -3;
 					}
 					else {
-						*w++ = d->where[1]; *w++ = 1; *w++ = 3;
+						*w++ = t[1]; *w++ = 1; *w++ = 3;
 					}
 				}
 				*w = 0; size = w - AT.WorkPointer;
@@ -1474,7 +1476,31 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 			w = AT.WorkPointer; size = 7;
 			break;
 		case DOLWILDARGS:
+/*
+			In some cases we can make a copy
+*/
+			t = d->where+1;
+			if ( *t == 0 ) return(0);
+			NEXTARG(t);
+			if ( *t ) {	/* More than one argument in here */
+				MLOCK(ErrorMessageLock);
+				MesPrint("Trying to convert a $ with an argument field into an expression");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+/*
+			Now we have a single argument
+*/
+			t = d->where+1;
+			if ( *t < 0 ) goto ShortArgument;
+			size = *t - ARGHEAD;
+			w = t + ARGHEAD;
+			break;
 		case DOLUNDEFINED:
+			MLOCK(ErrorMessageLock);
+			MesPrint("Trying to use an undefined $ in an expression");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
 		case DOLZERO:
 		default:
 			return(0);
@@ -1509,7 +1535,7 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DoInside :
 */
 
