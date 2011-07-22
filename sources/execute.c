@@ -35,15 +35,6 @@
 
 #include "form3.h"
 
-/*[28sep2005 mt]:*/
-#ifdef REMOVEDBY_MT
-/*Moved to parallel.c:*/
-#ifdef PARALLEL /* [04dec2002 df] */
-PFDOLLARS *PFDollars;
-#endif
-#endif
-/*:[28sep2005 mt]*/
-
 /*
   	#] Includes : 
 	#[ DoExecute :

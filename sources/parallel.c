@@ -1,11 +1,11 @@
 /** @file parallel.c
- * 
+ *
  *  Message passing library independent functions of parform
  *
- *  This file contains functions needed for the parallel version of form3 
- *  these functions need no real link to the message passing libraries, they 
- *  only need some interface dependent preprocessor definitions (check 
- *  parallel.h). So there still need two different objectfiles to be compiled 
+ *  This file contains functions needed for the parallel version of form3
+ *  these functions need no real link to the message passing libraries, they
+ *  only need some interface dependent preprocessor definitions (check
+ *  parallel.h). So there still need two different objectfiles to be compiled
  *  for mpi and pvm!
  */
 /* #[ License : */
@@ -33,65 +33,50 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ includes :
 */
 #include "form3.h"
+#include "vector.h"
 
+/* mpi.c */
 LONG PF_RealTime(int);
 int PF_LibInit(int*, char***);
-int PF_Terminate(int);
 int PF_Probe(int*);
-int PF_InitPackBuf();
+int PF_RecvWbuf(WORD*,LONG*,int*);
+int PF_IRecvRbuf(PF_BUFFER*,int,int);
+int PF_WaitRbuf(PF_BUFFER *,int,LONG *);
+int PF_Bcast(void *buffer, int count);
+int PF_RawSend(int dest, void *buf, LONG l, int tag);
+LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag);
+int PF_RawProbe(int *src, int *tag, int *bytesize);
 int PF_PrintPackBuf(char*,int);
 #ifdef SHMEM
- int PF_Pack(VOID *,LONG,int);
- int PF_UnPack(VOID*,LONG,int);
+int PF_Pack(VOID *,LONG,int);
+int PF_UnPack(VOID*,LONG,int);
+#elif defined(WITHMPI)
+int PF_Pack(VOID *,LONG,MPI_Datatype);
+int PF_UnPack(VOID*,LONG,MPI_Datatype);
 #else
- #ifdef WITHMPI
-  int PF_Pack(VOID *,LONG,MPI_Datatype);
-  int PF_UnPack(VOID*,LONG,MPI_Datatype);
- #endif
+  #error "SHMEM or WITHMPI should be defined!"
 #endif
-int PF_Send(int,int,int);
-int PF_BroadCast(int);
-int PF_Receive(int,int,int*,int*);
-int PF_ISendSbuf(int,int);
-int PF_RecvWbuf(WORD*,LONG*,int*);
-int PF_WaitRbuf(PF_BUFFER *,int,LONG *);
 int PF_PackString(UBYTE *);
 int PF_UnPackString(UBYTE *);
-int PF_InitRedefinedPreVars();
-int PF_Processor(EXPRESSIONS,WORD,WORD);
-WORD PF_Deferred(WORD *,WORD);
-int PF_EndSort();
-int PF_Init(int*,char ***);
-int PF_longSingleReset();
-int PF_longMultiReset();
+int PF_Send(int,int,int);
+int PF_Receive(int,int,int*,int*);
+int PF_BroadCast(int);
+int PF_longSingleReset(void);
+int PF_longMultiReset(void);
 int PF_longSinglePack(UBYTE *,int,MPI_Datatype);
 int PF_longSingleUnPack(UBYTE*,LONG,MPI_Datatype);
 int PF_longMultiPack(UBYTE *,int,int,MPI_Datatype);
 int PF_longMultiUnPack(UBYTE*,int,int,MPI_Datatype);
 int PF_longSingleSend(int,int);
 int PF_longSingleReceive(int,int,int*,int*);
-int PF_longBroadcast();
-int PF_IRecvRbuf(PF_BUFFER*,int,int);
-int PF_WaitAllSlaves();
-int MinDollar(WORD);
-int MaxDollar(WORD);
-int SumDollars(WORD);
-int PF_Bcast(void *buffer, int count);
-/*
-	Sends l bytes from buf to dest. Returns 0 on success, or -1:
-*/
-int PF_RawSend(int dest, void *buf, LONG l, int tag);
-/*
-	Receives not more than thesize bytes from src,
-	returns the actual number of received bytes, or -1 on failure:
-*/
-LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag);
-int PF_RawProbe(int *src, int *tag, int *bytesize);
+int PF_longBroadcast(void);
+
+static int PF_WaitAllSlaves(void);
 
 static int PF_Wait4MasterIP(int tag);
 static int PF_DoOneExpr(void);
@@ -105,17 +90,18 @@ static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize);
 static void PF_ReceiveErrorMessage(int src, int tag);
 static void PF_CatchErrorMessages(int src);
 static void PF_CatchErrorMessagesForAll(void);
+static int PF_ProbeWithCatchingErrorMessages(int *src);
 
 PARALLELVARS PF;
 #ifdef MPI2
  WORD *PF_shared_buff;
 #endif
 
-LONG     PF_goutterms;  /* (master) Total out terms at PF_EndSort, used in PF_Statistics. */
-POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndSort, used in PF_Processor. */
+static LONG     PF_goutterms;  /* (master) Total out terms at PF_EndSort(), used in PF_Statistics(). */
+static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndSort(), used in PF_Processor(). */
 
 /*
-	This will work well only under Linux, see 
+	This will work well only under Linux, see
 		#ifdef PF_WITH_SCHED_YIELD
 	below in PF_WaitAllSlaves().
 */
@@ -135,39 +121,53 @@ POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndSort, us
  #define PRINTFBUF(TEXT,TERM,SIZE) {}
 #endif
 
+/**
+ * Swaps the variables \a x and \a y. If sizeof(x) != sizeof(y) then a compilation error
+ * will occur. A set of memcpy calls is expected to be inlined by the optimisation.
+ */
+#define SWAP(x, y) \
+	do { \
+		char swap_tmp__[sizeof(x) == sizeof(y) ? (int)sizeof(x) : -1]; \
+		memcpy(swap_tmp__, &y, sizeof(x)); \
+		memcpy(&y, &x, sizeof(x)); \
+		memcpy(&x, swap_tmp__, sizeof(x)); \
+	} while (0)
+
 /*
-  	#] includes : 
+  	#] includes :
   	#[ statistics :
  		#[ variables : (should be part of a struct?)
 */
-static LONG PF_maxinterms;   /* maximum number of terms in one inputpatch */ 
+static LONG PF_maxinterms;   /* maximum number of terms in one inputpatch */
 static LONG PF_linterms;     /* local interms on this proces: PF_Proces */
-#define PF_STATS_SIZE 5 
-static LONG **PF_stats = 0;  /* space for collecting statistics of all procs */
+#define PF_STATS_SIZE 5
+static LONG **PF_stats = NULL;/* space for collecting statistics of all procs */
 static LONG PF_laststat;     /* last realtime when statistics were printed */
 static LONG PF_statsinterval;/* timeinterval for printing statistics */
 /*
- 		#] variables : 
- 		#[ PF_Statistics : (LONG**,int)
-
-	 prints statistics every PF_statinterval seconds
-	 for proc = 0 it prints final statistics for EndSort.
-
-     LONG stats[proc][5] = {cpu,space,in,gen,left} 
-
+ 		#] variables :
+ 		#[ PF_Statistics :
 */
 
-int PF_Statistics(LONG **stats, int proc)
+/**
+ * Prints statistics every PF_statinterval seconds.
+ * For \a proc = 0 it prints final statistics for EndSort().
+ *
+ * @param  stats  the pointer to an array: LONG stats[proc][5] = {cpu,space,in,gen,left}.
+ * @param  proc   the source process number.
+ * @return        0 if OK, nonzero on error.
+ */
+static int PF_Statistics(LONG **stats, int proc)
 {
 	GETIDENTITY
 	LONG real, cpu;
 	WORD rpart, cpart;
 	int i, j;
-  
-	if ( AT.SS == AM.S0 && PF.me == 0 ) {
+
+	if ( AT.SS == AM.S0 && PF.me == MASTER ) {
 		real = PF_RealTime(PF_TIME); rpart = (WORD)(real%100); real /= 100;
 
-		if ( PF_stats == 0 ) {
+		if ( PF_stats == NULL ) {
 			PF_stats = (LONG**)Malloc1(PF.numtasks*sizeof(LONG*),"PF_stats 1");
 			for ( i = 0; i < PF.numtasks; i++ ) {
 				PF_stats[i] = (LONG*)Malloc1(PF_STATS_SIZE*sizeof(LONG),"PF_stats 2");
@@ -185,7 +185,7 @@ int PF_Statistics(LONG **stats, int proc)
 			cpu /= 1000;
 			cpart /= 10;
 			if ( AC.OldParallelStats ) MesPrint("");
-			if ( proc && AC.StatsFlag && AC.OldParallelStats ) {
+			if ( proc > 0 && AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       left       byte");
 				MesPrint("%3d  : %7l.%2i %10l",0,cpu,cpart,PF.ginterms);
 			}
@@ -218,14 +218,15 @@ int PF_Statistics(LONG **stats, int proc)
 	return(0);
 }
 /*
- 		#] PF_Statistics : 
-  	#] statistics : 
+ 		#] PF_Statistics :
+  	#] statistics :
   	#[ sort.c :
  		#[ sort variables :
-
-	a node for the tree of losers in the final sorting on the master
 */
 
+/**
+ * A node for the tree of losers in the final sorting on the master.
+ */
 typedef struct NoDe {
 	struct NoDe *left;
 	struct NoDe *rght;
@@ -248,41 +249,50 @@ static  WORD *PF_newclen;		/* length of new coefficients */
 	preliminary: could also write somewhere else?
 */
 
-static  WORD *PF_WorkSpace;		/* used in PF_EndSort */
-static  UWORD *PF_ScratchSpace;	/* used in PF_GetLosers */
+static  WORD *PF_WorkSpace;		/* used in PF_EndSort() */
+static  UWORD *PF_ScratchSpace;	/* used in PF_GetLoser() */
 
 /*
- 		#] sort variables : 
- 		#[ PF_AllocBuf : (int,LONG,WORD)
-
-	Allocate one PF_BUFFER struct with numbuf buffers of size bsize
-	For the first 'free' buffers there is no space allocated 
-	For the first (index 0) buffer there is no space allocated (!!!)
-	because we use existing space for it. 
-	Maybe this should be really hidden in the send/recv routines and pvm/mpi 
-	files, it is only comlicated because of nonblocking send/receives!
+ 		#] sort variables :
+ 		#[ PF_AllocBuf :
 */
 
-PF_BUFFER* PF_AllocBuf(int nbufs, LONG bsize, WORD free)
+/**
+ * Allocates one PF_BUFFER struct with \a nbuf cyclic buffers of size \a bsize.
+ * For the first \a free buffers there is no space allocated.
+ * For example, if \a free == 1 then for the first (index 0) buffer there is
+ * no space allocated(!!!) (one can reuse existing space for it) and
+ * actually buff[0], stop[0], fill[0] and full[0] in the returned
+ * PF_BUFFER struct are undefined.
+ *
+ * @param  nbufs  the number of cyclic buffers for PF_BUFFER struct.
+ * @param  bsize  the memory allocation size in bytes for each buffer.
+ * @param  free   the number of the buffers without the memory allocation.
+ * @return        the pointer to the PF_BUFFER struct if succeeded. NULL if failed.
+ *
+ * @todo Maybe this should be really hidden in the send/recv routines and pvm/mpi
+ *       files, it is only complicated because of nonblocking send/receives!
+ */
+static PF_BUFFER *PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 {
 	PF_BUFFER *buf;
 	UBYTE *p, *stop;
 	LONG allocsize;
 	int i;
 
-	allocsize = 
-		(LONG)(sizeof(PF_BUFFER) + 4*nbufs*sizeof(WORD*) + (nbufs-free)*bsize); 
+	allocsize =
+		(LONG)(sizeof(PF_BUFFER) + 4*nbufs*sizeof(WORD*) + (nbufs-free)*bsize);
 
 #ifdef WITHMPI
-	allocsize += 
+	allocsize +=
 		(LONG)( nbufs * (  2 * sizeof(MPI_Status)
-			 		   +     sizeof(MPI_Request)
-		               +     sizeof(MPI_Datatype)
-						)  );
+		                 +     sizeof(MPI_Request)
+		                 +     sizeof(MPI_Datatype)
+		                )  );
 #endif
 	allocsize += (LONG)( nbufs * 3 * sizeof(int) );
 
-	if ( ( buf = (PF_BUFFER*)Malloc1(allocsize,"PF_AllocBuf") ) == 0 ) return(0);  
+	if ( ( buf = (PF_BUFFER*)Malloc1(allocsize,"PF_AllocBuf") ) == NULL ) return(NULL);
 
 	p = ((UBYTE *)buf) + sizeof(PF_BUFFER);
 	stop = ((UBYTE *)buf) + allocsize;
@@ -318,26 +328,28 @@ PF_BUFFER* PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 	}
 	if ( p != stop ) {
 		MesPrint("Error in PF_AllocBuf p = %x stop = %x\n",p,stop);
-		return(0);
+		return(NULL);
 	}
 	return(buf);
 }
 
 /*
- 		#] PF_AllocBuf : 
- 		#[ PF_InitTree : ()
-
-	Initializes the sorting tree on the master.
-
-	Allocates bufferspace (if necessary) for:
-		pointers to terms in the tree and their coefficients
-		the cyclic receive buffers for nonblocking receives
-		the nodes of the actual tree
-
-	and initializes these with (hopefully) correct values
+ 		#] PF_AllocBuf :
+ 		#[ PF_InitTree :
 */
 
-int PF_InitTree()
+/**
+ * Initializes the sorting tree on the master.
+ * It allocates bufferspace (if necessary) for
+ *   \li  pointers to terms in the tree and their coefficients
+ *   \li  the cyclic receive buffers for nonblocking receives (PF.rbufs)
+ *   \li  the nodes of the actual tree
+ *
+ * and initializes these with (hopefully) correct values.
+ *
+ * @return  the number of nodes in the merge tree if succeeded. -1 if failed.
+*/
+static int PF_InitTree(void)
 {
 	GETIDENTITY
 	PF_BUFFER **rbuf = PF.rbufs;
@@ -346,11 +358,11 @@ int PF_InitTree()
 	int i, j, src, numnodes;
 	int numslaves = numtasks - 1;
 	long size;
-/* 
- 		#[ the buffers : for the new coefficients and the terms 
- 		   we need one for each slave 
+/*
+ 		#[ the buffers : for the new coefficients and the terms
+ 		   we need one for each slave
 */
-	if ( PF_term == 0 ) { 
+	if ( PF_term == NULL ) {
 		size =  2*numtasks*sizeof(WORD*) + sizeof(WORD)*
 			( numtasks*(1 + AM.MaxTal) + (AM.MaxTer/sizeof(WORD)+1) + 2*(AM.MaxTal+2));
 
@@ -360,7 +372,7 @@ int PF_InitTree()
 
 		PF_newcpos = (WORD **)p;  p += sizeof(WORD*) * numtasks;
 		PF_newclen =  (WORD *)p;  p += sizeof(WORD)  * numtasks;
-		for ( i = 0; i < numtasks; i++ ) { 
+		for ( i = 0; i < numtasks; i++ ) {
 			PF_newcpos[i] = (WORD *)p; p += sizeof(WORD)*AM.MaxTal;
 			PF_newclen[i] = 0;
 		}
@@ -369,8 +381,8 @@ int PF_InitTree()
 
 		if ( p != stop ) { MesPrint("error in PF_InitTree"); return(-1); }
 	}
-/* 
- 		#] the buffers : 
+/*
+ 		#] the buffers :
  		#[ the receive buffers :
 */
 	numrbufs = PF.numrbufs;
@@ -379,12 +391,11 @@ int PF_InitTree()
 */
 	size = (AT.SS->sTop2 - AT.SS->lBuffer - 1)/(PF.numtasks - 1);
 
-	if ( rbuf == 0 ) {
-		if ( ( rbuf = (PF_BUFFER**)Malloc1(numtasks*sizeof(PF_BUFFER*),
-										 "Master: rbufs") ) == 0 ) return(-1);
-		if ( (rbuf[0] = PF_AllocBuf(1,0,1) ) == 0 ) return(-1);
+	if ( rbuf == NULL ) {
+		if ( ( rbuf = (PF_BUFFER**)Malloc1(numtasks*sizeof(PF_BUFFER*), "Master: rbufs") ) == NULL ) return(-1);
+		if ( (rbuf[0] = PF_AllocBuf(1,0,1) ) == NULL ) return(-1);
 		for ( i = 1; i < numtasks; i++ ) {
-			if(!(rbuf[i] = PF_AllocBuf(numrbufs,sizeof(WORD)*size,1))) return(-1);
+			if (!(rbuf[i] = PF_AllocBuf(numrbufs,sizeof(WORD)*size,1))) return(-1);
 		}
 	}
 	rbuf[0]->buff[0] = AT.SS->lBuffer;
@@ -407,13 +418,13 @@ int PF_InitTree()
 	}
 	rbuf[0]->active = 0;
 	PF_term[0] = rbuf[0]->buff[0];
-	PF_term[0][0] = 0;
+	PF_term[0][0] = 0;  /* PF_term[0] is used for a zero term. */
 	PF.rbufs = rbuf;
-/* 
- 		#] the receive buffers : 
+/*
+ 		#] the receive buffers :
  		#[ the actual tree :
-	
-	 calculate number of nodes in mergetree and allocate space for them 
+
+	 calculate number of nodes in mergetree and allocate space for them
 */
 	if ( numslaves < 3 ) numnodes = 1;
 	else {
@@ -422,9 +433,9 @@ int PF_InitTree()
 		numnodes -= 1;
 	}
 
-	if ( PF_root == 0 )
-	if ( ( PF_root = (NODE*)Malloc1(sizeof(NODE)*numnodes,"nodes in mergtree") ) == 0 )
-					return(-1);
+	if ( PF_root == NULL )
+	if ( ( PF_root = (NODE*)Malloc1(sizeof(NODE)*numnodes,"nodes in mergtree") ) == NULL )
+		return(-1);
 /*
 		then initialize all the nodes
 */
@@ -448,36 +459,41 @@ int PF_InitTree()
 		}
 		else {
 			PF_root[i].rght = 0;
-			if(src<numtasks) PF_root[i].rsrc = src++;
-			else PF_root[i].rsrc = 0;
+			if (src<numtasks) PF_root[i].rsrc = src++;
+			else              PF_root[i].rsrc = 0;
 		}
 		PF_root[i].rloser = 0;
 	}
 /*
- 		#] the actual tree : 
+ 		#] the actual tree :
 */
 	return(numnodes);
 }
 
 /*
- 		#] PF_InitTree : 
- 		#[ PF_PutIn : (int)
-
-	PF_PutIn replaces PutIn on the master process and is used in PF_GetLoser. 
-	It puts in the next term from slaveprocess 'src' into the tree of losers
-	on the master and is a lot like GetTerm. The main problems are: 
-	buffering and decompression
-
-	src == 0     => return the zeroterm PF_term[0]
-	source != 0: receive terms from another machine. they are stored in
-				 the large sortbuffer which is divided into PF.buff[i] or 
-				 in the PF.rbufs, if PF.numrbufs > 1.
-
-	PF_term[0][0] == 0 (see InitTree), so PF_term[0] can be used to be the 
-	returnvalue for a zero term (== no more terms);
+ 		#] PF_InitTree :
+ 		#[ PF_PutIn :
 */
 
-WORD* PF_PutIn(int src)
+/**
+ * Replaces PutIn() on the master process and is used in PF_GetLoser().
+ * It puts in the next term from slaveprocess \a src into the tree of losers
+ * on the master and is a lot like GetTerm(). The main problems are:
+ * buffering and decompression.
+ *
+ * If \a src == 0, it returns the zero term (PF_term[0]).
+ *
+ * If \a src != 0, it receives terms from another machine.
+ * They are stored in the large sortbuffer which is divided into buff[i]
+ * in the PF.rbufs[src], if PF.numrbufs > 1.
+ *
+ * @param  src  the source process.
+ * @return      the next term.
+ *
+ * @remark  PF_term[0][0] == 0 (see InitTree()), so PF_term[0] can be used to be
+ *          the returnvalue for a zero term (== no more terms).
+ */
+static WORD *PF_PutIn(int src)
 {
 	int tag;
 	WORD im, r;
@@ -488,7 +504,7 @@ WORD* PF_PutIn(int src)
 	int next = a+1 >= rbuf->numbufs ? 0 : a+1 ;
 	WORD *lastterm = PF_term[src];
 	WORD *term = rbuf->fill[a];
-  
+
 	if ( src <= 0 ) return(PF_term[0]);
 
 	if ( rbuf->full[a] == rbuf->buff[a] + AM.MaxTer/sizeof(WORD) + 2 ) {
@@ -514,7 +530,7 @@ WORD* PF_PutIn(int src)
 	if ( term + *term > rbuf->full[a] || term + 1 >= rbuf->full[a] ) {
 newterms:
 		m1 = rbuf->buff[next] + AM.MaxTer/sizeof(WORD) + 1;
-		if ( *term < 0 || term == rbuf->full[a] ) { 
+		if ( *term < 0 || term == rbuf->full[a] ) {
 /*
 			copy term and lastterm to the new buffer, so that they end at m1
 */
@@ -560,7 +576,7 @@ newterms:
 */
 		a = rbuf->active = next;
 	}
-  
+
 	if ( *term < 0 ) {
 /*
 			We need to decompress the term
@@ -571,7 +587,7 @@ newterms:
 		m2 = lastterm - im + 1;
 		while ( ++im <= 0 ) *--m1 = *--m2;
 		*--m1 = r;
-		rbuf->fill[a] = term = m1; 
+		rbuf->fill[a] = term = m1;
 		if ( term + *term > rbuf->full[a] ) goto newterms;
 	}
 	rbuf->fill[a] += *term;
@@ -579,23 +595,29 @@ newterms:
 }
 
 /*
- 		#] PF_PutIn : (int) 
- 		#[ PF_GetLoser : (*NODE)
-  
-	Find the 'smallest' of all the PF_terms. Take also care of changing 
-	coefficients and cancelling terms. When the coefficient changes, the new is 
-	sitting in the array PF_newcpos, the length of the new coefficient in 
-	PF_newclen. The original term will be untouched until it is copied to the 
-	output buffer!
- 
-	Calling PF_GetLoser with argument node will return the loser of the 
-	subtree under node when the next term of the stream # PF_loser 
-	(the last "loserstream") is filled into the tree.
-	PF_loser == 0 means we are just starting and should fill new terms into
-	all the leaves of the tree.
+ 		#] PF_PutIn :
+ 		#[ PF_GetLoser :
 */
 
-int PF_GetLoser(NODE *n)
+/**
+ * Finds the 'smallest' of all the PF_terms. Take also care of changing
+ * coefficients and cancelling terms. When the coefficient changes, the new is
+ * sitting in the array PF_newcpos, the length of the new coefficient in
+ * PF_newclen. The original term will be untouched until it is copied to the
+ * output buffer!
+ *
+ * Calling PF_GetLoser() with argument node will return the loser of the
+ * subtree under node when the next term of the stream # PF_loser
+ * (the last "loserstream") is filled into the tree.
+ * PF_loser == 0 means we are just starting and should fill new terms into
+ * all the leaves of the tree.
+ *
+ * @param  n  the node.
+ * @return    the loser of the subtree under the node n.
+ *            0 indicates there are no more terms.
+ *            -1 indicates an error.
+ */
+static int PF_GetLoser(NODE *n)
 {
 	GETIDENTITY
 	WORD comp;
@@ -607,21 +629,21 @@ int PF_GetLoser(NODE *n)
 		if ( n->left ) n->lloser = PF_GetLoser(n->left);
 		else {
 			n->lloser = n->lsrc;
-			if( *(PF_term[n->lsrc] = PF_PutIn(n->lsrc)) == 0) n->lloser = 0;
+			if ( *(PF_term[n->lsrc] = PF_PutIn(n->lsrc)) == 0) n->lloser = 0;
 		}
-		PF_loser = 0; 
+		PF_loser = 0;
 		if ( n->rght ) n->rloser = PF_GetLoser(n->rght);
 		else{
 			n->rloser = n->rsrc;
 			if ( *(PF_term[n->rsrc] = PF_PutIn(n->rsrc)) == 0 ) n->rloser = 0;
 		}
-		PF_loser = 0; 
+		PF_loser = 0;
 	}
 	else if ( PF_loser == n->lloser ) {
 		if ( n->left ) n->lloser = PF_GetLoser(n->left);
 		else {
 			n->lloser = n->lsrc;
-			if ( *(PF_term[n->lsrc] = PF_PutIn(n->lsrc)) == 0 ) n->lloser = 0;	  
+			if ( *(PF_term[n->lsrc] = PF_PutIn(n->lsrc)) == 0 ) n->lloser = 0;
 		}
 	}
 	else if ( PF_loser == n->rloser ) {
@@ -637,7 +659,7 @@ newright:
 		if ( comp > 0 )     return(n->lloser);
 		else if (comp < 0 ) return(n->rloser);
 		else {
-/* 
+/*
  		#[ terms are equal :
 */
 			WORD *lcpos, *rcpos;
@@ -645,14 +667,14 @@ newright:
 			WORD lclen, rclen, newclen, newnlen;
 
 			if ( AT.SS->PolyWise ) {
-/* 
+/*
 			#[ Here we work with PolyFun :
 */
 				WORD *tt1, *w;
 				WORD r1,r2;
 				WORD *ml = PF_term[n->lloser];
 				WORD *mr = PF_term[n->rloser];
-		
+
 				if ( ( r1 = (int)*PF_term[n->lloser] ) <= 0 ) r1 = 20;
 				if ( ( r2 = (int)*PF_term[n->rloser] ) <= 0 ) r2 = 20;
 				tt1 = ml;
@@ -665,8 +687,8 @@ newright:
 				}
 				AddArgs(ml,mr,w);
 				r1 = w[1];
-				if ( r1 <= FUNHEAD ) { 
-					goto cancelled; 
+				if ( r1 <= FUNHEAD ) {
+					goto cancelled;
 				}
 				if ( r1 == ml[1] ) {
 					NCOPY(ml,w,r1);
@@ -682,10 +704,10 @@ newright:
 					*ml -= r2;
 					PF_term[n->lloser] = ml;
 				}
-				else { 
-					r2 = r1 - ml[1]; 
-					if( r2 > 2*AM.MaxTal) 
-					MesPrint("warning: new term in polyfun is large");
+				else {
+					r2 = r1 - ml[1];
+					if ( r2 > 2*AM.MaxTal )
+						MesPrint("warning: new term in polyfun is large");
 					mr = tt1 - r2;
 					r1 = AT.SS->PolyWise;
 					ml = tt1;
@@ -698,8 +720,8 @@ newright:
 				PF_newclen[n->rloser] = 0;
 				PF_loser = n->rloser;
 				goto newright;
-		/* 
-			#] Here we work with PolyFun : 
+		/*
+			#] Here we work with PolyFun :
 */
 			}
 /* Please verify that the = shouldn't have been == */
@@ -738,7 +760,7 @@ cancelled:
 				PF_loser = n->lloser;
 				PF_newclen[n->lloser] = 0;
 				if ( n->left ) n->lloser = PF_GetLoser(n->left);
-				else { 
+				else {
 					n->lloser = n->lsrc;
 					if ( *(PF_term[n->lsrc] = PF_PutIn(n->lsrc)) == 0 ) n->lloser = 0;
 				}
@@ -758,47 +780,50 @@ cancelled:
 				if ( newclen < 0 ) newclen = -newclen;
 				while ( newclen-- ) *lcpos++ = *newcpos++;
 				PF_loser = n->rloser;
-				PF_newclen[n->rloser] = 0;	  
+				PF_newclen[n->rloser] = 0;
 				goto newright;
 			}
 /*
- 		#] terms are equal : 
+ 		#] terms are equal :
 */
 		}
 	}
-	if(n->lloser > 0) return(n->lloser);
-	if(n->rloser > 0) return(n->rloser);
+	if (n->lloser > 0) return(n->lloser);
+	if (n->rloser > 0) return(n->rloser);
 	return(0);
 }
 /*
- 		#] PF_GetLoser : 
+ 		#] PF_GetLoser :
  		#[ PF_EndSort :
 */
 
 /**
  * Finishes a master sorting with collecting terms from slaves.
- *
- * Called by EndSort.
+ * Called by EndSort().
  *
  * If this is not the masterprocess, just initialize the sendbuffers and
- * return 0, else PF_EndSort sends the rest of the terms in the sendbuffer
+ * return 0, else PF_EndSort() sends the rest of the terms in the sendbuffer
  * to the next slave and a dummy message to all slaves with tag
  * PF_ENDSORT_MSGTAG. Then it receives the sorted terms, sorts them using a
- * recursive 'tree of losers' (PF_GetLoser) and writes them to the
+ * recursive 'tree of losers' (PF_GetLoser()) and writes them to the
  * outputfile.
  *
  * @return   1  if the sorting on the master was done.
- *           0  if EndSort still must perform a regular sorting becuase it is not
+ *           0  if EndSort() still must perform a regular sorting becuase it is not
  *              at the ground level or not on the master or in the sequential mode
  *              or in the InParallel mode.
  *          -1  if an error occured.
  *
+ * @remark  The slaves will send the sorted terms back to the master in the regular
+ *          sorting (after the initialization of the send buffer in PF_EndSort()).
+ *          See PutOut() and FlushOut().
+ *
  * @remark  This function has been changed such that when it returns 1,
  *          AM.S0->TermsLeft is set correctly. But AM.S0->GenTerms is not set:
  *          it will be set after collecting the statistics from the slaves
- *          at the end of PF_Processor. (TU 30 Jun 2011)
+ *          at the end of PF_Processor(). (TU 30 Jun 2011)
  */
-int PF_EndSort()
+int PF_EndSort(void)
 {
 	GETIDENTITY
 	FILEHANDLE *fout = AR.outfile;
@@ -809,29 +834,28 @@ int PF_EndSort()
 	POSITION position;
 	WORD i,cc;
 
-	if( AT.SS != AM.S0 || (AC.mparallelflag != PARALLELFLAG) ||(PF.exprtodo >= 0) ) 
-		return(0);
+	if ( AT.SS != AM.S0 || AC.mparallelflag != PARALLELFLAG || PF.exprtodo >= 0 ) return(0);
 
 	if ( PF.me != MASTER ) {
-/* 
+/*
  		#[ the slaves have to initialize their sendbuffer :
 
-		this is a slave and it's PObuffer should be the minimum of the 
+		this is a slave and it's PObuffer should be the minimum of the
 		sortiosize on the master and the POsize of our file.
 		First save the original PObuffer and POstop of the outfile
 */
 		size = (S->sTop2 - S->lBuffer - 1)/(PF.numtasks - 1);
-		size -= (AM.MaxTer/sizeof(WORD) + 2); 
+		size -= (AM.MaxTer/sizeof(WORD) + 2);
 		if ( fout->POsize < (LONG)(size*sizeof(WORD)) ) size = fout->POsize/sizeof(WORD);
 		if ( sbuf == 0 ) {
 			if ( (sbuf = PF_AllocBuf(PF.numsbufs,size*sizeof(WORD),1)) == 0 ) return(-1);
 			sbuf->buff[0] = fout->PObuffer;
-			sbuf->stop[0] = fout->PObuffer+size;  
-			if( sbuf->stop[0] > fout->POstop ) return(-1);
+			sbuf->stop[0] = fout->PObuffer+size;
+			if ( sbuf->stop[0] > fout->POstop ) return(-1);
 			sbuf->active = 0;
 		}
 		for ( i = 0; i < PF.numsbufs; i++ )
-				sbuf->fill[i] = sbuf->full[i] = sbuf->buff[i];
+			sbuf->fill[i] = sbuf->full[i] = sbuf->buff[i];
 
 		PF.sbuf = sbuf;
 		fout->PObuffer = sbuf->buff[sbuf->active];
@@ -839,7 +863,7 @@ int PF_EndSort()
 		fout->POsize = size*sizeof(WORD);
 		fout->POfill = fout->POfull = fout->PObuffer;
 /*
- 		#] the slaves have to initialize their sendbuffer : 
+ 		#] the slaves have to initialize their sendbuffer :
 */
 		return(0);
 	}
@@ -847,9 +871,9 @@ int PF_EndSort()
 		this waits for all slaves to be ready to send terms back
 */
 	PF_WaitAllSlaves(); /* Note, the returned value should be 0 on success. */
-/* 
+/*
 		Now collect the terms of all slaves and merge them.
-		PF_GetLoser gives the position of the smallest term, which is the real 
+		PF_GetLoser gives the position of the smallest term, which is the real
 		work. The smallest term needs to be copied to the outbuf: use PutOut.
 */
 	PF_InitTree();
@@ -865,7 +889,7 @@ int PF_EndSort()
 		noutterms++;
 
 		if ( PF_newclen[PF_loser] != 0 ) {
-/*		  
+/*
 			#[ this is only when new coeff was too long :
 */
 			outterm = PF_WorkSpace;
@@ -883,47 +907,50 @@ int PF_EndSort()
 			*PF_newcpos[PF_loser] = 0;
 			PF_newclen[PF_loser] = 0;
 /*
-			#] this is only when new coeff was too long : 
+			#] this is only when new coeff was too long :
 */
 		}
-		PRINTFBUF("PF_EndSort to PutOut: ",outterm,*outterm);  
+		PRINTFBUF("PF_EndSort to PutOut: ",outterm,*outterm);
 		PutOut(BHEAD outterm,&position,fout,1);
-	}		
-	if( FlushOut(&position,fout,0) ) return(-1);
+	}
+	if ( FlushOut(&position,fout,0) ) return(-1);
 	S->TermsLeft = PF_goutterms = noutterms;
 	PF_exprsize = position;
 	return(1);
 }
 
 /*
- 		#] PF_EndSort : 
-  	#] sort.c : 
+ 		#] PF_EndSort :
+  	#] sort.c :
   	#[ proces.c :
  		#[ variables :
 */
 
-static  WORD *PF_CurrentBracket;      
+static  WORD *PF_CurrentBracket;
 
 /*
- 		#] variables : 
- 		#[ PF_GetTerm : (WORD*)
-
-	This replaces GetTerm on the slaves, which get their terms from the master, 
-	not the infile anymore, is nonblocking and buffered ...
-	use AR.infile->PObuffer as buffer. For the moment, don't care 
-	about compression, since terms come uncompressed from master. 
-
-	To enable keep-brackets when AR.DeferFlag isset, we need to do some
-	preparation here:
-
-	1: copy the part ouside brackets to current_bracket
-	2: skip term if part outside brackets is same as for last term
-	3: if POfill >= POfull receive new terms as usual
-
-	different from GetTerm we use an extra buffer for the part outside brackets:
-		PF_CurrentBracket
+ 		#] variables :
+ 		#[ PF_GetTerm :
 */
 
+/**
+ * Replaces GetTerm() on the slaves, which get their terms from the master,
+ * not the infile anymore, is nonblocking and buffered ...
+ * use AR.infile->PObuffer as buffer. For the moment, don't care
+ * about compression, since terms come uncompressed from master.
+ *
+ * To enable keep-brackets when AR.DeferFlag isset, we need to do some
+ * preparation here:
+ *   \li  copy the part ouside brackets to current_bracket
+ *   \li  skip term if part outside brackets is same as for last term
+ *   \li  if POfill >= POfull receive new terms as usual
+ *
+ * Different from GetTerm() we use an extra buffer for the part outside brackets:
+ * PF_CurrentBracket().
+ *
+ * @param[out]  term  the buffer to store the next term.
+ * @return            the length of the next term.
+ */
 static WORD PF_GetTerm(WORD *term)
 {
 	GETIDENTITY
@@ -948,7 +975,7 @@ ReceiveNew:
 		int src = MASTER, tag;
 		int follow = 0;
 		LONG size,cpu,space = 0;
-	  
+
 		if ( PF.log ) {
 			fprintf(stderr,"[%d] Starting to send to Master\n",PF.me);
 			fflush(stderr);
@@ -956,9 +983,9 @@ ReceiveNew:
 
 		PF_Send(MASTER,PF_READY_MSGTAG,0);
 		cpu = TimeCPU(1);
-		PF_Pack(&cpu               ,1,PF_LONG);         
-		PF_Pack(&space             ,1,PF_LONG);          
-		PF_Pack(&PF_linterms       ,1,PF_LONG);   
+		PF_Pack(&cpu               ,1,PF_LONG);
+		PF_Pack(&space             ,1,PF_LONG);
+		PF_Pack(&PF_linterms       ,1,PF_LONG);
 		PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
 		PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
 		PF_Pack(&follow            ,1,PF_INT );
@@ -969,7 +996,7 @@ ReceiveNew:
 		}
 
 		PF_Send(MASTER,PF_READY_MSGTAG,1);
-	  
+
 		if ( PF.log ) {
 			fprintf(stderr,"[%d] returning from send\n",PF.me);
 			fflush(stderr);
@@ -978,7 +1005,7 @@ ReceiveNew:
 		size = fi->POstop - fi->PObuffer - 1;
 #ifdef AbsolutelyExtra
 		PF_Receive(MASTER,PF_ANY_MSGTAG,&src,&tag);
-#ifdef MPI2          
+#ifdef MPI2
 		if ( tag == PF_TERM_MSGTAG ) {
 			PF_UnPack(&size, 1, PF_LONG);
 			if ( PF_Put_target(src) == 0 ) {
@@ -987,7 +1014,7 @@ ReceiveNew:
 		}
 		else {
 			PF_RecvWbuf(fi->PObuffer,&size,&src);
-		}  
+		}
 #else
 		PF_RecvWbuf(fi->PObuffer,&size,&src);
 #endif
@@ -1014,7 +1041,7 @@ ReceiveNew:
 		fi->POfull = fi->PObuffer + size;
 		if ( tag == PF_ENDSORT_MSGTAG ) *fi->POfull++ = 0;
 /*
- 		#] receive new terms from master : 
+ 		#] receive new terms from master :
 */
 	  }
 	  if ( PF_CurrentBracket ) *PF_CurrentBracket = 0;
@@ -1029,11 +1056,11 @@ ReceiveNew:
 /*
  		#[ alloc space :
 */
-			PF_CurrentBracket = 
+			PF_CurrentBracket =
 					(WORD*)Malloc1(AM.MaxTer,"PF_CurrentBracket");
 			*PF_CurrentBracket = 0;
 /*
- 		#] alloc space : 
+ 		#] alloc space :
 */
 		}
 		while ( *PF_CurrentBracket ) {  /* "for each term in the buffer" */
@@ -1054,7 +1081,7 @@ ReceiveNew:
 */
 					PRINTFBUF("PF_GetTerm skips",fi->POfill,*fi->POfill);
 					break;
-				} 
+				}
 /*
 					check if the current subterms are equal
 */
@@ -1070,21 +1097,21 @@ ReceiveNew:
 /*
 				the usual checks
 */
-			if ( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ) 
-								goto ReceiveNew;
+			if ( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer )
+				goto ReceiveNew;
 			if ( *fi->POfill == 0 ) {
 				fi->POfill = fi->POfull = fi->PObuffer;
 				*term = 0;
 				goto RegRet;
 			}
 /*
- 		#] test : 
+ 		#] test :
 */
 		}
 /*
  		#[ copy :
 
-		this term to CurrentBracket and the part outside of bracket 
+		this term to CurrentBracket and the part outside of bracket
 		to WorkSpace at term
 */
 strip:
@@ -1112,7 +1139,7 @@ strip:
 		}
 		tp = term;
 /*
- 		#] copy : 
+ 		#] copy :
 */
 	}
 
@@ -1123,13 +1150,19 @@ RegRet:
 	return(*term);
 }
 
-/*							  
- 		#] PF_GetTerm : 
- 		#[ PF_Deferred : (WORD*,WORD)
-	 
-		Picks up the deferred brackets.
+/*
+ 		#] PF_GetTerm :
+ 		#[ PF_Deferred :
 */
 
+/**
+ * Replaces Deferred() on the slaves.
+ *
+ * @param  term   the term that must be multiplied by the contents of
+ *                the current bracket.
+ * @param  level  the compiler level.
+ * @return        0 if OK, nonzero on error.
+ */
 WORD PF_Deferred(WORD *term, WORD level)
 {
 	GETIDENTITY
@@ -1141,7 +1174,7 @@ WORD PF_Deferred(WORD *term, WORD level)
 
 	AT.WorkPointer = (WORD *)((UBYTE *)(AT.WorkPointer) + AM.MaxTer);
 	AR.DeferFlag = 0;
-  
+
 	PRINTFBUF("PF_Deferred (Term)   ",term,*term);
 	PRINTFBUF("PF_Deferred (Bracket)",PF_CurrentBracket,*PF_CurrentBracket);
 
@@ -1214,15 +1247,18 @@ DefCall:
 }
 
 /*
- 		#] PF_Deferred : 
- 		#[ PF_Wait4Slave : (int)
-
-	Waiting for the slave src to accept terms, it returns the number of that 
-	slave.
+ 		#] PF_Deferred :
+ 		#[ PF_Wait4Slave :
 */
 
 static LONG **PF_W4Sstats = 0;
 
+/**
+ * Waits for the slave \a src to accept terms.
+ *
+ * @param  src  the slave for waiting (can be PF_ANY_SOURCE).
+ * @return      the idle slave.
+ */
 static int PF_Wait4Slave(int src)
 {
 	int j, tag, next;
@@ -1242,7 +1278,7 @@ static int PF_Wait4Slave(int src)
 	PF_Statistics(PF_W4Sstats,next);
 
 	PF_UnPack(&j,1,PF_INT);
-  
+
 	if ( j ) {
 /*
 		actions depending on rest of information in last message
@@ -1252,11 +1288,8 @@ static int PF_Wait4Slave(int src)
 }
 
 /*
- 		#] PF_Wait4Slave : 
-*/
-/*
- 		#[ int PF_Wait4SlaveIP:
-	InParallel version. Returns tag as src.
+ 		#] PF_Wait4Slave :
+ 		#[ PF_Wait4SlaveIP :
 */
 /*
 	array of expression numbers for PF_InParallel processor.
@@ -1264,6 +1297,14 @@ static int PF_Wait4Slave(int src)
 	"next" it sets partodoexr[next]=i:
 */
 static WORD *partodoexr=NULL;
+
+/**
+ * InParallel version of PF_Wait4Slave(). Returns tag as src.
+ *
+ * @param[in,out]  src  the slave for waiting (can be PF_ANY_SOURCE).
+ *                      As output, the tag value of the idle slave.
+ * @return              the idle slave.
+ */
 static int PF_Wait4SlaveIP(int *src)
 {
 	int j,tag,next;
@@ -1282,23 +1323,27 @@ static int PF_Wait4SlaveIP(int *src)
 	PF_Statistics(PF_W4Sstats,next);
 
 	PF_UnPack(&j,1,PF_INT);
-  
+
 	if ( j ) {
 	/* actions depending on rest of information in last message */
 	}
-  
+
 	return(next);
 }
 /*
- 		#] int PF_Wait4SlaveIP: 
- 		#[ PF_WaitAllSlaves : (void)
-
-	This function waits until all slaves are ready to send terms back to the master.
-	If some slave is not working, it sends PF_ENDSORT_MSGTAG and waits for the answer.
-	Messages from slaves will be read only after all slaves are ready, 
-	further in caller function.
+ 		#] PF_Wait4SlaveIP :
+ 		#[ PF_WaitAllSlaves :
 */
-int PF_WaitAllSlaves()
+
+/**
+ * Waits until all slaves are ready to send terms back to the master.
+ * If some slave is not working, it sends PF_ENDSORT_MSGTAG and waits for the answer.
+ * Messages from slaves will be read only after all slaves are ready,
+ * further in caller function.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+static int PF_WaitAllSlaves(void)
 {
 	int i, readySlaves, tag, next = PF_ANY_SOURCE;
 	UBYTE *has_sent = 0;
@@ -1313,20 +1358,9 @@ int PF_WaitAllSlaves()
 			} while ( has_sent[next] == 1 );
 		}
 /*
-			Here PF_Probe is BLOCKING function if next=PF_ANY_SOURCE:
+			Here PF_ProbeWithCatchingErrorMessages() is BLOCKING function if next = PF_ANY_SOURCE:
 */
-		{
-			int oldnext = next;
-			for (;;) {
-				tag = PF_Probe(&next);
-				if ( tag == PF_STDOUT_MSGTAG || tag == PF_LOG_MSGTAG ) {
-					PF_ReceiveErrorMessage(next, tag);
-					next = oldnext;
-					continue;
-				}
-				break;
-			}
-		}
+		tag = PF_ProbeWithCatchingErrorMessages(&next);
 /*
 			Here next != PF_ANY_SOURCE
 */
@@ -1371,7 +1405,7 @@ int PF_WaitAllSlaves()
 				PF_Statistics(PF_stats,0);
 				PF_Slave2MasterIP(next);
 				PF_Master2SlaveIP(next,NULL);
-				if ( has_sent[next] == 0 ){
+				if ( has_sent[next] == 0 ) {
 					has_sent[next]=1;
 					readySlaves++;
 				}else{
@@ -1386,7 +1420,7 @@ int PF_WaitAllSlaves()
 	tag must be == PF_EMPTY_MSGTAG!
 */
 				PF_Master2SlaveIP(next,NULL);
-				if ( has_sent[next] == 0 ){
+				if ( has_sent[next] == 0 ) {
 					has_sent[next]=1;
 					readySlaves++;
 				}else{
@@ -1443,16 +1477,22 @@ int PF_WaitAllSlaves()
 }
 
 /*
- 		#] PF_WaitAllSlaves : 
+ 		#] PF_WaitAllSlaves :
  		#[ PF_Processor :
-
-	replaces parts of Processor on the masters and slaves.
-	On the master PF_Processor is responsible for proper distribution of terms 
-	from the input file to the slaves.
-	On the slaves it calls Generator for all the terms that this process gets,
-	but PF_GetTerm gets terms from the master ( not directly from infile).
 */
 
+/**
+ * Replaces parts of Processor() on the masters and slaves.
+ * On the master PF_Processor() is responsible for proper distribution of terms
+ * from the input file to the slaves.
+ * On the slaves it calls Generator() for all the terms that this process gets,
+ * but PF_GetTerm() gets terms from the master (not directly from infile).
+ *
+ * @param  e               The pointer to the current expression.
+ * @param  i               The index for the current expression.
+ * @param  LastExpression  The flag indicating whether it is the last expression.
+ * @return                 0 if OK, nonzero on error.
+ */
 int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 {
 	GETIDENTITY
@@ -1466,13 +1506,13 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 	int k, src, tag, attach;
 	FILEHANDLE *oldoutfile = AR.outfile;
 
-#ifdef MPI2  
+#ifdef MPI2
 	if ( PF_shared_buff == NULL ) {
 		if ( PF_SMWin_Init() == 0 ) {
 			MesPrint("PF_SMWin_Init error");
 			exit(-1);
-		} 
-	} 
+		}
+	}
 #endif
 
 	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer ) ) > AT.WorkTop ) return(MesWork());
@@ -1480,21 +1520,22 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		allocate and/or reset the variables used for the redefine
 */
 	if ( !PF.redef || NumPre > (LONG)PF.numredefs ) {
-		if(PF.redef) M_free(PF.redef,"resize PF.redef");
+		if (PF.redef) M_free(PF.redef,"resize PF.redef");
 		PF.numredefs = (LONG)NumPre;
 		PF.redef = (LONG*)Malloc1(PF.numredefs*sizeof(LONG),"PF.redef");
 	}
 	PF.mnumredefs = 0;
 	for ( ll = 0; ll < PF.numredefs; ll++ ) PF.redef[ll] = 0;
-	if ( AC.mparallelflag != PARALLELFLAG )
-		return(0);
+
+	if ( AC.mparallelflag != PARALLELFLAG ) return(0);
+
 	if ( PF.me == MASTER ) {
-/* 
+/*
  		#[ Master:
 			#[ write prototype to outfile:
 */
-		static LONG maxinterms=0;
-		static int cmaxinterms=0;
+		LONG maxinterms;
+		int cmaxinterms;
 
 		if ( PF.log && AC.CModule >= PF.log )
 			MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),AC.CModule);
@@ -1517,21 +1558,21 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		AR.Eside = RHSIDE;
 /*
-			#] write prototype to outfile: 
+			#] write prototype to outfile:
 			#[ initialize sendbuffer if necessary:
 
 			the size of the sendbufs is:
 			MIN(1/PF.numtasks*(AT.SS->sBufsize+AT.SS->lBufsize),AR.infile->POsize)
-			No allocation for extra buffers necessary, just make sb->buf... point 
+			No allocation for extra buffers necessary, just make sb->buf... point
 			to the right places in the sortbuffers.
 */
 		NewSort();   /* we need AT.SS to be set for this!!! */
 		if ( sb == 0 || sb->buff[0] != AT.SS->lBuffer ) {
 			size = (LONG)((AT.SS->sTop2 - AT.SS->lBuffer)/(PF.numtasks));
 			if ( size > (LONG)(AR.infile->POsize/sizeof(WORD) - 1) )
-					size = AR.infile->POsize/sizeof(WORD) - 1;
+				size = AR.infile->POsize/sizeof(WORD) - 1;
 			if ( sb == 0 ) {
-				if( ( sb = PF_AllocBuf(PF.numtasks,size*sizeof(WORD),PF.numtasks) ) == 0 ) 
+				if ( ( sb = PF_AllocBuf(PF.numtasks,size*sizeof(WORD),PF.numtasks) ) == NULL )
 					return(-1);
 			}
 			sb->buff[0] = AT.SS->lBuffer;
@@ -1546,21 +1587,20 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			sb->full[j] = sb->fill[j] = sb->buff[j];
 		}
 /*
-			#] initialize sendbuffer if necessary: 
+			#] initialize sendbuffer if necessary:
 			#[ loop for all terms in infile:
 
-			copy them always to sb->buff[0], when that is full, wait for 
-			next slave to accept terms, exchange sb->buff[0] and 
-			sb->buff[next], send sb->buff[next] to next slave and go on 
+			copy them always to sb->buff[0], when that is full, wait for
+			next slave to accept terms, exchange sb->buff[0] and
+			sb->buff[next], send sb->buff[next] to next slave and go on
 			filling the now empty sb->buff[0].
 */
-		AR.DeferFlag = AC.ComDefer;
-/*
-			The master schould leave the brackets in any case!!!
-*/
-		if ( AC.mparallelflag == PARALLELFLAG && PF.me == MASTER ) AR.DeferFlag = 0;
+		AR.DeferFlag = 0;  /* The master should leave the brackets in any case!!! */
 		PF.ginterms = 0;
 		termsinpatch = 0;
+		maxinterms = PF_maxinterms / 100;
+		if ( maxinterms < 2 ) maxinterms = 2;
+		cmaxinterms = 0;
 		*(sb->fill[0])++ = (UWORD)(0);
 		*(sb->fill[0])++ = (UWORD)(1);
 		while ( GetTerm(BHEAD term) ) {
@@ -1570,71 +1610,47 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 					LowerSortLevel(); return(-1);
 				}
 			}
-/* Always this condition holds? (TU 3 Jun 2011) */
-/* assert(AC.mparallelflag == PARALLELFLAG); */
-			if ( AC.mparallelflag == PARALLELFLAG) {
-				if(maxinterms == 0){/*First pass:*/
-					maxinterms=PF_maxinterms/100;
-					if(maxinterms<2)
-					maxinterms=2;
-				}
-
-				PRINTFBUF("PF_Processor gets",term,*term);
-				if ( termsinpatch >= maxinterms || sb->fill[0] + *term >= sb->stop[0] ) {
-					if ( cmaxinterms >= PF.numtasks ) {
-						maxinterms*=2;
-						if ( maxinterms >= PF_maxinterms ) {
-							cmaxinterms=-2;
-							maxinterms = PF_maxinterms;
-						}
-					}/*if ( cmaxinterms >= PF.numtasks ) */
-					else if ( cmaxinterms >= 0 )
-						cmaxinterms++;
-					next = PF_Wait4Slave(PF_ANY_SOURCE);
-					sb->fill[next] = sb->fill[0]; sb->full[next] = sb->full[0];
-					s = sb->stop[next]; sb->stop[next] = sb->stop[0]; sb->stop[0] = s;
-					s = sb->buff[next]; sb->buff[next] = sb->buff[0]; 
-					sb->fill[0] = sb->full[0] = sb->buff[0] = s;
-
-					sb->active = next;
-		  
-					size = sb->fill[next] - sb->buff[next];
-#ifdef MPI2
-					if ( PF_Put_origin(next) == 0 ) {
-						printf("PF_Put_origin error...\n");
+			PRINTFBUF("PF_Processor gets",term,*term);
+			if ( termsinpatch >= maxinterms || sb->fill[0] + *term >= sb->stop[0] ) {
+				if ( cmaxinterms >= PF.numtasks ) {
+					maxinterms*=2;
+					if ( maxinterms >= PF_maxinterms ) {
+						cmaxinterms=-2;
+						maxinterms = PF_maxinterms;
 					}
+				}/*if ( cmaxinterms >= PF.numtasks ) */
+				else if ( cmaxinterms >= 0 )
+					cmaxinterms++;
+				next = PF_Wait4Slave(PF_ANY_SOURCE);
+
+				sb->fill[next] = sb->fill[0];
+				sb->full[next] = sb->full[0];
+				SWAP(sb->stop[next], sb->stop[0]);
+				SWAP(sb->buff[next], sb->buff[0]);
+				sb->fill[0] = sb->full[0] = sb->buff[0];
+				sb->active = next;
+
+#ifdef MPI2
+				if ( PF_Put_origin(next) == 0 ) {
+					printf("PF_Put_origin error...\n");
+				}
 #else
-					PF_ISendSbuf(next,PF_TERM_MSGTAG);
+				PF_ISendSbuf(next,PF_TERM_MSGTAG);
 #endif
 
-					*(sb->fill[0])++ = (UWORD)(PF.ginterms/(LONG)WORDMASK);
-					*(sb->fill[0])++ = (UWORD)(PF.ginterms%(LONG)WORDMASK);
-					termsinpatch = 0;
-				}
-				j = *(s = term);
-				while ( j-- ) { *(sb->fill[0])++ = *s++; }
-				termsinpatch++;
+				*(sb->fill[0])++ = (UWORD)(PF.ginterms/(LONG)WORDMASK);
+				*(sb->fill[0])++ = (UWORD)(PF.ginterms%(LONG)WORDMASK);
+				termsinpatch = 0;
 			}
-			else { /* not parallel */
-				AT.WorkPointer = term + *term;
-				AN.RepPoint = AT.RepCount + 1;
-				AR.CurDum = ReNumber(BHEAD term);
-				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
-					&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
-					PolyFunClean(BHEAD term);
-				}
-				if ( Generator(BHEAD term,0) ) {
-					LowerSortLevel(); return(-1);
-				}
-				PF.ginterms += dd;	
-			}
+			j = *(s = term);
+			while ( j-- ) { *(sb->fill[0])++ = *s++; }
+			termsinpatch++;
 		}
+		/* NOTE: The last chunk will be sent to a slave at EndSort() => PF_EndSort()
+		 *       => PF_WaitAllSlaves(). */
 		PF.ginterms += dd;
-		maxinterms=0;
-		cmaxinterms=0;
 /*
-			#] loop for all terms in infile: 
+			#] loop for all terms in infile:
 			#[ Clean up & EndSort:
 */
 		if ( LastExpression ) {
@@ -1656,39 +1672,36 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		else e->vflags |= ISZERO;
 		/* FIXME: AR.expchanged doesn't reflect those of the slaves. (TU 30 Jun 2011) */
 		if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-	
 		if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
 		if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
-		AR.GetFile = 0;	
+		AR.GetFile = 0;
 		AR.outtohide = 0;
-/* 
-			#] Clean up & EndSort: 
+/*
+			#] Clean up & EndSort:
 			#[ Collect (stats,prepro,...):
 */
-		if ( AC.mparallelflag == PARALLELFLAG ) {
-			PF_CatchErrorMessagesForAll();
-			for ( k = 1; k < PF.numtasks; k++ ) {
-				PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
-				PF_UnPack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
-				PF_UnPack(&attach,1,PF_INT);
-				if ( attach ) {
+		PF_CatchErrorMessagesForAll();
+		for ( k = 1; k < PF.numtasks; k++ ) {
+			PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
+			PF_UnPack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
+			PF_UnPack(&attach,1,PF_INT);
+			if ( attach ) {
 /*
-						actions depending on rest of information in last message
+					actions depending on rest of information in last message
 */
-					switch ( attach ) {
-						case PF_ATTACH_REDEF:
-						  {
-							int ll, kk, ii;
-							UBYTE *value = 0;
-							LONG redef;
-							PF_UnPack(&kk,1,PF_INT);
-							while ( --kk >= 0 ) {
-							  PF_UnPack(&ii,1,PF_INT);
-							  PF_UnPack(&ll,1,PF_INT);
-							  value = (UBYTE*)Malloc1(ll,"redef value");
-							  PF_UnPack(value,ll,PF_BYTE);
-							  PF_UnPack(&redef,1,PF_LONG);
-							  if( redef > PF.redef[ii] ) {
+				switch ( attach ) {
+					case PF_ATTACH_REDEF: {
+						int ll, kk, ii;
+						UBYTE *value = 0;
+						LONG redef;
+						PF_UnPack(&kk,1,PF_INT);
+						while ( --kk >= 0 ) {
+							PF_UnPack(&ii,1,PF_INT);
+							PF_UnPack(&ll,1,PF_INT);
+							value = (UBYTE*)Malloc1(ll,"redef value");
+							PF_UnPack(value,ll,PF_BYTE);
+							PF_UnPack(&redef,1,PF_LONG);
+							if ( redef > PF.redef[ii] ) {
 								if ( PF.redef[ii] == 0 ) /*This term was not counted yet*/
 									PF.mnumredefs++;     /*Count it!*/
 								PF.redef[ii] = redef;    /*Store the latest term number*/
@@ -1698,97 +1711,96 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 									I reduced the possibility to transfer prepro
 									variables with args for the moment
 */
-							  }
 							}
+						}
 /*
 							here we should free the allocated memory of value & name ??
 */
-							if (value) M_free(value,"redef value");
-						  }
-						  break;
-						default:
-/*
-							here should go an error message
-*/
-						  break;
+						if (value) M_free(value,"redef value");
+						break;
 					}
-				}
-			}
-			if ( ! AC.OldParallelStats ) {
-				/* Now we can calculate AT.SS->GenTerms from the statistics of the slaves. */
-				LONG genterms = 0;
-				for ( k = 1; k < PF.numtasks; k++ ) {
-					genterms += PF_stats[k][3];
-				}
-				AT.SS->GenTerms = genterms;
-				WriteStats(&PF_exprsize, 2);
-			}
-			PF_Statistics(PF_stats,0);
-		}
+					default:
 /*
-			#] Collect (stats,prepro,...): 
+						here should go an error message
+*/
+						break;
+				}
+			}
+		}
+		if ( ! AC.OldParallelStats ) {
+			/* Now we can calculate AT.SS->GenTerms from the statistics of the slaves. */
+			LONG genterms = 0;
+			for ( k = 1; k < PF.numtasks; k++ ) {
+				genterms += PF_stats[k][3];
+			}
+			AT.SS->GenTerms = genterms;
+			WriteStats(&PF_exprsize, 2);
+		}
+		PF_Statistics(PF_stats,0);
+/*
+			#] Collect (stats,prepro,...):
 
-		This operation is moved to the beginning of each block, see PreProcessor 
+		This operation is moved to the beginning of each block, see PreProcessor
 		in pre.c.
 
- 		#] Master: 
+ 		#] Master:
 */
 	}
-	else { 
-		if ( AC.mparallelflag != PARALLELFLAG ) return(0);
-/* 
+	else {
+/*
  		#[ Slave :
+*/
+/*
 			#[ Generator Loop & EndSort :
 
 			loop for all terms to get from master, call Generator for each of them
 			then call EndSort and do cleanup (to be implemented)
-*/				  
+*/
 		SeekScratch(AR.outfile,&position);
 		e->onfile = position;
 		AR.DeferFlag = AC.ComDefer;
 		NewSort();
 		PF_linterms = 0;
 		PF.parallel = 1;
-#ifdef MPI2	
+#ifdef MPI2
 		AR.infile->POfull = AR.infile->POfill = AR.infile->PObuffer = PF_shared_buff;
-#endif	
+#endif
 		{
-		FILEHANDLE *fi;
-			if( (AC.NumberOfRhsExprInModule) && (PF.rhsInParallel) )
-				fi=&(PF.slavebuf);
+			FILEHANDLE *fi;
+			if ( AC.NumberOfRhsExprInModule && PF.rhsInParallel )
+				fi = &PF.slavebuf;
 			else
-				fi=AR.infile;
+				fi = AR.infile;
 			fi->POfull = fi->POfill = fi->PObuffer;
-
-			while ( PF_GetTerm(term) ) {
-				PF_linterms++; dd = AN.deferskipped;
-				AT.WorkPointer = term + *term;
-				AN.RepPoint = AT.RepCount + 1;
-				AR.CurDum = ReNumber(BHEAD term);
-				if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-				if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
-					&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
-					PolyFunClean(BHEAD term);
-				}
-				if ( Generator(BHEAD term,0) ) {
-					MesPrint("[%d] PF_Processor: Error in Generator",PF.me);
-					LowerSortLevel(); return(-1);
-				}
-				PF_linterms += dd;
+		}
+		while ( PF_GetTerm(term) ) {
+			PF_linterms++; dd = AN.deferskipped;
+			AT.WorkPointer = term + *term;
+			AN.RepPoint = AT.RepCount + 1;
+			AR.CurDum = ReNumber(BHEAD term);
+			if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+			if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
+				&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
+				PolyFunClean(BHEAD term);
 			}
+			if ( Generator(BHEAD term,0) ) {
+				MesPrint("[%d] PF_Processor: Error in Generator",PF.me);
+				LowerSortLevel(); return(-1);
+			}
+			PF_linterms += dd;
 		}
 		PF_linterms += dd;
 		if ( EndSort(AM.S0->sBuffer,0,0) < 0 ) return(-1);
 /*
-			#] Generator Loop & EndSort : 
+			#] Generator Loop & EndSort :
 			#[ Collect (stats,prepro...) :
 */
 		PF_Send(MASTER,PF_ENDSORT_MSGTAG,0);
 		cpu = TimeCPU(1);
 		size = 0;
-		PF_Pack(&cpu               ,1,PF_LONG);         
-		PF_Pack(&size              ,1,PF_LONG);          
-		PF_Pack(&PF_linterms       ,1,PF_LONG);   
+		PF_Pack(&cpu               ,1,PF_LONG);
+		PF_Pack(&size              ,1,PF_LONG);
+		PF_Pack(&PF_linterms       ,1,PF_LONG);
 		PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
 		PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
 /*
@@ -1802,7 +1814,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		if ( k ) {
 			int l;
 			UBYTE *value, *p;
-	  
+
 			PF_Pack(&k,1,PF_INT);
 			k = NumPre;
 			while ( --k >= 0 ) {
@@ -1819,14 +1831,14 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			}
 		}
 		PF_Send(MASTER,PF_ENDSORT_MSGTAG,1);
-/* 
-			#] Collect (stats,prepro...) : 
+/*
+			#] Collect (stats,prepro...) :
 
 		This operation is moved to the beginning of each block, see PreProcessor
 		in pre.c.
 
- 		#] Slave : 
-*/				  
+ 		#] Slave :
+*/
 		if ( PF.log ) {
 			fprintf(stderr,"[%d|%ld] Endsort,Collect,Broadcast done\n",PF.me,AC.CModule);
 			fflush(stderr);
@@ -1836,15 +1848,20 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 }
 
 /*
- 		#] PF_Processor : 
-  	#] proces.c : 
+ 		#] PF_Processor :
+  	#] proces.c :
   	#[ startup :, prepro & compile
- 		#[ PF_Init : (int*,char***)
-
-		PF_LibInit should do all library dependent initializations.
-		Then PF_Init should do all the library independent stuff.
+ 		#[ PF_Init :
 */
 
+/**
+ * All the library independent stuff.
+ * PF_LibInit() should do all library dependent initializations.
+ *
+ * @param  argc  pointer to the number of arguments.
+ * @param  argv  pointer to the arguments.
+ * @return       0 if OK, nonzero on error.
+ */
 int PF_Init(int *argc, char ***argv)
 {
 	UBYTE *fp, *ubp;
@@ -1893,7 +1910,7 @@ int PF_Init(int *argc, char ***argv)
 			else PF.log = 1;
 			fprintf(stderr,"[%d] changing PF.log to %d\n",PF.me,PF.log);
 			fflush(stderr);
-		}  
+		}
 		if ( ( c = (char*)getenv("PF_RBUFS") ) != 0 ) {
 			PF.numrbufs = (int)atoi(c);
 			fprintf(stderr,"[%d] changing numrbufs to: %d\n",PF.me,PF.numrbufs);
@@ -1937,7 +1954,7 @@ int PF_Init(int *argc, char ***argv)
 #endif
 	}
 /*
-  	#[ BroadCast settings from getenv: could also be done in PF_DoSetup 
+  	#[ BroadCast settings from getenv: could also be done in PF_DoSetup
 */
 	if ( PF.me == MASTER ) {
 		PF_BroadCast(0);
@@ -1966,24 +1983,30 @@ int PF_Init(int *argc, char ***argv)
 		}
 	}
 /*
-  	#] BroadCast settings from getenv: 
-*/  
+  	#] BroadCast settings from getenv:
+*/
 	return(0);
 }
-/*	 
- 		#] PF_Init : 
-  	#] startup : 
+/*
+ 		#] PF_Init :
+  	#] startup :
   	#[ PF_BroadcastNumberOfTerms :
-
-		The procedure is used to broadcast number of terms in expression for
-		preprocessor if-expression 'termsin', see pre.c. The procedure assumes that 
-		x is the value obtained my the master and simply broadcasts it to all slaves.
 */
 
+/**
+ * Broadcasts a LONG value from the master to the all slaves.
+ *
+ * It is used to broadcast the number of terms in an expression for
+ * preprocessor if-expression 'termsin', see pre.c. The procedure assumes that
+ * \a x is the value obtained by the master and simply broadcasts it to all slaves.
+ *
+ * @param  x  the number to be broadcasted (set on the master).
+ * @return    the broadcasted number.
+ */
 LONG PF_BroadcastNumberOfTerms(LONG x)
 {
 /*
-		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag!
 		No if(AC.mparallelflag==PARALLELFLAG) !!
 */
 	if ( MASTER == PF.me ) {        /* Pack the value of x */
@@ -2005,14 +2028,22 @@ LONG PF_BroadcastNumberOfTerms(LONG x)
 }
 
 /*
-  	#] PF_BroadcastNumberOfTerms : 
+  	#] PF_BroadcastNumberOfTerms :
   	#[ PF_InitRedefinedPreVars :
 */
 
-int PF_InitRedefinedPreVars()
+/**
+ * Broadcasts preprocessor variables, which were changed (by Redefine statement)
+ * in the previous module, from the master to the all slaves.
+ *
+ * @return  0 if OK, nonzero on error.
+ *
+ * @remark  Limited by the size of the pack buffer.
+ */
+int PF_InitRedefinedPreVars(void)
 {
 /*
-		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag!
 		No if(AC.mparallelflag==PARALLELFLAG) !!
 */
 	UBYTE *value, *name, *p;
@@ -2022,33 +2053,33 @@ int PF_InitRedefinedPreVars()
 		PF_BroadCast(0);     /* Initialize buffers */
 		PF_Pack(&(PF.mnumredefs),1,PF_INT); /* Pack number of redefined variables:*/
 /*
-			now pack for each of the changed preprovariables the length of the 
-			name, the name, the length of the value and the value into the 
+			now pack for each of the changed preprovariables the length of the
+			name, the name, the length of the value and the value into the
 			sendbuffer:
 */
 		if ( 0 < PF.mnumredefs ) {
-		  for ( i = 0; i < NumPre; i++ ) {
-			if ( PF.redef[i] ) {
-				l = 1;
-				p = name = PreVar[i].name;
-				while ( *p++ ) l++;
+			for ( i = 0; i < NumPre; i++ ) {
+				if ( PF.redef[i] ) {
+					l = 1;
+					p = name = PreVar[i].name;
+					while ( *p++ ) l++;
 
-				PF_Pack(&l,1,PF_INT);
-				PF_Pack(name,l,PF_BYTE);
-				l = 1;
-				value = PreVar[i].value;
-				while ( *p++ ) l++;
+					PF_Pack(&l,1,PF_INT);
+					PF_Pack(name,l,PF_BYTE);
+					l = 1;
+					value = PreVar[i].value;
+					while ( *p++ ) l++;
 
-				PF_Pack(&l,1,PF_INT);
-				PF_Pack(value,l,PF_BYTE);
+					PF_Pack(&l,1,PF_INT);
+					PF_Pack(value,l,PF_BYTE);
+				}
 			}
-		  }
 		}
 	}
 
 	PF_BroadCast(1);
 
-	if ( MASTER != PF.me ){ /*Unpack information about redefined PreVars*/
+	if ( MASTER != PF.me ) { /*Unpack information about redefined PreVars*/
 		int l, nl = 0, vl = 0;
 /*
 			Extract number of redefined variables:
@@ -2067,8 +2098,8 @@ int PF_InitRedefinedPreVars()
 			PF_UnPack(&l,1,PF_INT); /* Extract the name length */
 			if ( l > nl ) {         /* Expand the buffer: */
 				M_free(name,"PreVar name");
-				name = (UBYTE*)Malloc1((int)l,"PreVar name"); 
-				nl = l; 
+				name = (UBYTE*)Malloc1((int)l,"PreVar name");
+				nl = l;
 			}
 /*
 				extract the value of the name:
@@ -2080,8 +2111,8 @@ int PF_InitRedefinedPreVars()
 			PF_UnPack(&l,1,PF_INT);    /* Extract the value length */
 			if ( l > vl ) {            /* Expand the buffer: */
 				M_free(value,"PreVar val");
-				value = (UBYTE*)Malloc1((int)l,"PreVar value"); 
-				vl = l; 
+				value = (UBYTE*)Malloc1((int)l,"PreVar value");
+				vl = l;
 			}
 /*
 				extract the value of the value:
@@ -2098,7 +2129,7 @@ int PF_InitRedefinedPreVars()
 			PutPreVar(name,value,NULL,1);
 /*
 			mt: samebody made the following remark here:
-			I reduced the possibility to transfer prepro variables 
+			I reduced the possibility to transfer prepro variables
 					with args for the moment
 */
 		}
@@ -2109,20 +2140,26 @@ int PF_InitRedefinedPreVars()
 }
 
 /*
-  	#] PF_InitRedefinedPreVars : 
-  	#[ PF_BroadcastString : (UBYTE*)
+  	#] PF_InitRedefinedPreVars :
+  	#[ PF_BroadcastString :
 */
 
+/**
+ * Broadcasts a string from the master to all slaves.
+ *
+ * @param[in,out]  str  The pointer to a null-terminated string.
+ * @return              0 if OK, nonzero on error.
+ */
 int PF_BroadcastString(UBYTE *str)
 {
 	int clength = 0;
 /*
-		If string does not fit to the PF_buffer, it 
+		If string does not fit to the PF_buffer, it
 		will be split into chanks. Next chank is started at  str+clength
 */
 		UBYTE *cstr=str;
 /*
-		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag!
 		No if ( AC.mparallelflag == PARALLELFLAG ) !!
 */
 	do {
@@ -2149,45 +2186,49 @@ int PF_BroadcastString(UBYTE *str)
 }
 
 /*
-  	#] PF_BroadcastString : 
-  	#[ int PF_BroadcastPreDollar :
-
-	Broadcasting dollar variables set as a preprocessor variables.
-	Only the master is able to make an assignment like #$a=g; where g
-	is an expression: only the master has an access to the expression.
-	So, the master broadcasts the result to slaves.
-
-	The result is in *dbuffer of the size is *newsize (in number of WORDs),
-	+1 for trailing zero. For slave newsize and numterms are output 
-	parameters.
-
-	The function returns 0 on success.
+  	#] PF_BroadcastString :
+  	#[ PF_BroadcastPreDollar :
 */
 
+/**
+ * Broadcasts dollar variables set as a preprocessor variables.
+ * Only the master is able to make an assignment like #$a=g; where g
+ * is an expression: only the master has an access to the expression.
+ * So, the master broadcasts the result to slaves.
+ *
+ * The result is in *dbuffer of the size is *newsize (in number of WORDs),
+ * +1 for trailing zero. For slave newsize and numterms are output
+ * parameters.
+ *
+ * @param[in,out]  dbuffer   the buffer for a dollar variable.
+ * @param[in,out]  newsize   the size of the dollar variable in WORDs.
+ * @param[in,out]  numterms  the number of terms in the dollar variable.
+ * @return                   0 if OK, nonzero on error.
+ */
 int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 {
 	int err = 0;
 	LONG i;
 /*
-		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag! 
+		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag!
 		No if(AC.mparallelflag==PARALLELFLAG) !!
 */
 	if ( MASTER == PF.me ) {
 /*
-			The problem is that sometimes dollar variables are longer 
+			The problem is that sometimes dollar variables are longer
 			than PF_packbuf! So we split long expression into chunks.
 			There are n filled chunks and one portially filled chunk:
 */
 		LONG n = ((*newsize)+1)/PF_maxDollarChunkSize;
 /*
-			...and one more chunk for the rest; if the expression fits to 
+			...and one more chunk for the rest; if the expression fits to
 			the buffer without splitting, the latter will be the only one.
 
-			PF_maxDollarChunkSize is the maximal number of items fitted to 
+			PF_maxDollarChunkSize is the maximal number of items fitted to
 			the buffer. It is calculated in PF_LibInit() in mpi.c.
-			PF_maxDollarChunkSize is calculated for the first step, when 
+			PF_maxDollarChunkSize is calculated for the first step, when
 			two fields (numterms and newsize, see below) are already packed.
-			For simplicity, this value is used also for all steps, in 
+			For simplicity, this value is used also for all steps, in
 			despite  of it is	a bit less than maximally available space.
 */
 		WORD *thechunk = *dbuffer;
@@ -2224,7 +2265,7 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 */
 		thesize = (*newsize)+1;
 /*
-			Evaluate the number of completely filled chunks. The last step must be 
+			Evaluate the number of completely filled chunks. The last step must be
 			treated separately, so -1:
 */
 		n = (thesize/PF_maxDollarChunkSize) - 1;
@@ -2232,7 +2273,7 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 			Note, here n can be <0, this is ok.
 */
 		therest = thesize % PF_maxDollarChunkSize;
-		thechunk = *dbuffer = 
+		thechunk = *dbuffer =
 			(WORD*)Malloc1( thesize * sizeof(WORD),"$-buffer slave");
 		if ( thechunk == NULL ) return(err|4);
 /*
@@ -2261,65 +2302,278 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 }
 
 /*
-  	#] int PF_BroadcastPreDollar : 
-  	#[ int PF_mkDollarsParallel :
+  	#] PF_BroadcastPreDollar :
+  	#[ PF_mkDollarsParallel :
 */
 
-PFDOLLARS *PFDollars = NULL;
+typedef struct {
+	WORD **slavebuf;  /* array of slavebuffers for each dollar variable */
+	WORD   type;      /* type of action on dollars: sum, maximum etc. */
+	PADPOINTER(0,0,1,0);
+} PFDOLLARS;
+
+static PFDOLLARS *PFDollars = NULL;
 /*
 	Maximal number of PFDollars:
 */
 static int MaxPFDollars = 0;
 
 /*
-	This procedure combines dollars from the various slaves
-	and broadcasts the result to all slaves.
-
-	There are NumPotModdollars of dollars which could be changed.
-	They are in the array PotModdollars.
-
-	The current module could be executed in parallel only if all
-	"changeable" dollars are listed in the array ModOptdollars which
-	is an array of objects of type MODOPTDOLLAR (there are 
-	NumModOptdollars of them), otherwise the modile was switched
-	to sequential mode.
-
-	If the current module was executed in sequential mode, the master
-	just broadcasts all "changeable" dollars to all slaves.
-
-	If the current module was executed in parallel mode, the master receives
-	dollars from slaves, combines them and broadcasts the result to all slaves.
-
-	The pseudo-code is as follows:
-
-	if parallel then
-		if Master then
-			INITIALIZATION
-			MASTER RECEIVING:receive potentially modified dollars from slaves
-			COMBINING:combine received dollars
-			CLEANUP
-		else
-			SLAVE SENDING:	pack potentially modified dollars
-								send dollars to the Master
-		endif
-	endif
-	if Master then
-		MASTER PACK:pack potentially modified dollars
-	endif
-	Broadcast
-	if Slave then
-		For each dollar:
-		SLAVE UNPACK:Unpack broadcasted data
-		SLAVE STORE: replace corresponding dollar by unpacked data
-	endif
-
-	Note: this function can be invoked only if NumPotModdollars > 0 !!!
-	Since NumPotModdollars>0, then NumDollars>0.
-
-	The function returns 0 in success, or -1.
+ 		#[ MinDollar :
 */
 
-WORD PF_mkDollarsParallel()
+/**
+ * Finds the minimum dollar variable among dollar variables
+ * from different slaves and assigns the value obtained to
+ * the dollar on the master.
+ *
+ * @param  index  the index of the dollar variable.
+ * @return        0 if OK, nonzero on error.
+ */
+static int MinDollar(WORD index)
+{
+	int i;
+	WORD *where, size, *r, *t;
+	DOLLARS d;
+	if ( PF.numtasks < 2 ) return -1;  /* Cannot be when AC.mparallelflag == PARALLELFLAG. */
+
+	PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
+	for ( i = 2; i < PF.numtasks; i++ ){
+		if ( TwoExprCompare(PFDollars[index].slavebuf[i], PFDollars[index].slavebuf[0], LESS) )
+			PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[i];
+	}
+
+	where = NULL;
+	size = 0;
+
+	t = PFDollars[index].slavebuf[0];
+	if ( t != NULL && t != &AM.dollarzero ) {
+		r = t;
+		while ( *r ) r += *r;
+		size = r - t + 1;  /* Must be include the last zero. */
+		where = (WORD *)Malloc1(size * sizeof(WORD), "dollar content");
+		r = where;
+		i = size;
+		NCOPY(r, t, i);
+	}
+
+	d = Dollars + index;
+	if ( d->where != NULL && d->where != &AM.dollarzero )
+		M_free(d->where, "old content of dollar");
+	d->where = where;
+	if ( where == NULL || *where == 0 ) {
+		d->type = DOLZERO;
+		if ( where != NULL ) M_free(where, "buffer of dollar");
+		d->where = &AM.dollarzero;
+		d->size = 0;
+	}
+	else {
+		d->type = DOLTERMS;
+		d->size = size;
+	}
+	cbuf[AM.dbufnum].rhs[index] = d->where;
+
+	return 0;
+}
+
+/*
+ 		#] MinDollar :
+ 		#[ MaxDollar :
+*/
+
+/**
+ * Finds the maximum dollar variable among dollar variables
+ * from different slaves and assigns the value obtained to
+ * the dollar on the master.
+ *
+ * @param  index  the index of the dollar variable.
+ * @return        0 if OK, nonzero on error.
+ */
+static int MaxDollar(WORD index)
+{
+	int i;
+	WORD *where, size, *r, *t;
+	DOLLARS d;
+	if ( PF.numtasks < 2 ) return -1;  /* Cannot be when AC.mparallelflag == PARALLELFLAG. */
+
+	PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
+	for ( i = 2; i < PF.numtasks; i++ ) {
+		if ( TwoExprCompare(PFDollars[index].slavebuf[i], PFDollars[index].slavebuf[0], GREATER) )
+			PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[i];
+	}
+
+	where = NULL;
+	size = 0;
+
+	t = PFDollars[index].slavebuf[0];
+	if (t != NULL && t != &AM.dollarzero ) {
+		r = t;
+		while ( *r ) r += *r;
+		size = r - t + 1;  /* Must be include the last zero. */
+		where = (WORD *)Malloc1(size * sizeof(WORD), "dollar content");
+		r = where;
+		i = size;
+		NCOPY(r, t, i);
+	}
+
+	d = Dollars + index;
+	if ( d->where != NULL && d->where != &AM.dollarzero )
+		M_free(d->where, "old content of dollar");
+	d->where = where;
+	if ( where == NULL || *where == 0 ) {
+		d->type = DOLZERO;
+		if ( where != NULL ) M_free(where, "buffer of dollar");
+		d->where = &AM.dollarzero;
+		d->size = 0;
+	}
+	else {
+		d->type = DOLTERMS;
+		d->size = size;
+	}
+	cbuf[AM.dbufnum].rhs[index] = d->where;
+
+	return 0;
+}
+
+/*
+ 		#] MaxDollar :
+ 		#[ SumDollars :
+*/
+
+/**
+ * Sums the dollar variable content in PFDollars[number].slavebuf
+ * and assigns the result to the dollar variable with \a index.
+ *
+ * @param  index  the index of the dollar variable.
+ * @return        0 if OK, nonzero on error.
+ */
+static int SumDollars(WORD index)
+{
+	GETIDENTITY
+	int i, j, error = 0;
+	WORD *dbuffer, *r, *m;
+	DOLLARS d;
+
+	CBUF *C = cbuf + AM.rbufnum;
+	WORD *oldwork = AT.WorkPointer, *oldcterm = AN.cTerm;
+	WORD olddefer = AR.DeferFlag, oldnumlhs = AR.Cnumlhs, oldnumrhs = C->numrhs;
+
+	AN.cTerm = 0;
+	AR.DeferFlag = 0;
+
+	if ( NewSort() || NewSort() || NewSort() ) {
+		error = -1;
+		goto cleanup;
+	}
+
+	for ( i = 1; i < PF.numtasks; i++ ) {
+		r = PFDollars[index].slavebuf[i];
+		if ( r == &AM.dollarzero ) continue;
+
+		while ( *r ) {
+			m = AT.WorkPointer;
+			j = *r;
+
+			while ( --j >= 0 ) *m++ = *r++;
+			AT.WorkPointer = m;
+
+			AR.Cnumlhs = 0;
+			if ( Generator(BHEAD oldwork, 0) ) {
+				LowerSortLevel(); LowerSortLevel(); LowerSortLevel();
+				error = -1;
+				goto cleanup;
+			}
+
+			AT.WorkPointer = oldwork;
+		}
+	}
+
+	if ( EndSort((WORD *)&dbuffer, 2, 0) < 0 ) {
+		LowerSortLevel(); LowerSortLevel();
+		error = 1;
+	}
+
+	LowerSortLevel(); LowerSortLevel();
+
+	d = Dollars + index;
+	if ( d->where != NULL && d->where != &AM.dollarzero )
+		M_free(d->where, "old content of dollar");
+	d->where = dbuffer;
+	if ( dbuffer == NULL || *dbuffer == 0 ) {
+		d->type = DOLZERO;
+		if ( dbuffer != NULL ) M_free(dbuffer, "buffer of dollar");
+		d->where = &AM.dollarzero;
+		d->size = 0;
+	}
+	else {
+		d->type = DOLTERMS;
+		r = d->where; while ( *r ) r += *r;
+		d->size = r - d->where;  /* +1? (TU 22 Jul 2011) */
+	}
+	cbuf[AM.dbufnum].rhs[index] = d->where;
+
+cleanup:
+	AR.Cnumlhs = oldnumlhs;
+	C->numrhs = oldnumrhs;
+	AR.DeferFlag = olddefer;
+	AN.cTerm = oldcterm;
+	AT.WorkPointer = oldwork;
+
+	return error;
+}
+
+/*
+ 		#] SumDollars :
+*/
+
+/**
+ * Combines dollars from the various slaves
+ * and broadcasts the result to all slaves.
+ *
+ * There are NumPotModdollars of dollars which could be changed.
+ * They are in the array PotModdollars.
+ *
+ * The current module could be executed in parallel only if all
+ * "changeable" dollars are listed in the array ModOptdollars which
+ * is an array of objects of type MODOPTDOLLAR (there are
+ * NumModOptdollars of them), otherwise the module was switched
+ * to sequential mode.
+ *
+ * If the current module was executed in sequential mode, the master
+ * just broadcasts all "changeable" dollars to all slaves.
+ *
+ * If the current module was executed in parallel mode, the master receives
+ * dollars from slaves, combines them and broadcasts the result to all slaves.
+ *
+ * The pseudo-code is as follows:
+@verbatim
+if parallel then
+  if Master then
+    INITIALIZATION
+    MASTER RECEIVING: receive potentially modified dollars from slaves
+    COMBINING: combine received dollars
+    CLEANUP
+  else
+    SLAVE SENDING: pack potentially modified dollars send dollars to the Master
+  endif
+endif
+if Master then
+  MASTER PACK: pack potentially modified dollars
+endif
+Broadcast
+if Slave then
+  For each dollar:
+    SLAVE UNPACK: unpack broadcasted data
+    SLAVE STORE: replace corresponding dollar by unpacked data
+endif
+@endverbatim
+ *
+ * @remark  This function can be invoked only if NumPotModdollars > 0 !!!
+ *          since NumPotModdollars > 0, then NumDollars > 0.
+ *
+ * @return  0 if OK, -1 on error.
+ */
+WORD PF_mkDollarsParallel(void)
 {
 	int i, j, nSlave, src, index, namesize;
 	UBYTE *name, *p;
@@ -2355,12 +2609,12 @@ WORD PF_mkDollarsParallel()
 				for ( i = 1; i < NumDollars; i++ ) {
 					PFDollars[i].slavebuf = (WORD**)Malloc1(PF.numtasks*sizeof(WORD*),
 									"pointer to array of slave buffers");
-					for ( j = 0; j < PF.numtasks; j++ ) 
+					for ( j = 0; j < PF.numtasks; j++ )
 						PFDollars[i].slavebuf[j] = &(AM.dollarzero);
 				}
 			}
 /*
-			#] INITIALIZATION : 
+			#] INITIALIZATION :
 			#[ MASTER RECEIVING :
 
 				Get dollars from each of the slaves, unpack them and put
@@ -2413,7 +2667,7 @@ WORD PF_mkDollarsParallel()
 /*
 						In principle, if the dollar was not found in ModOptdollars,
 						this means that it was not mentioned in the module option.
-						At present, this is impossible since in such situation 
+						At present, this is impossible since in such situation
 						the module must be executed in the sequential mode.
 */
 					if (j >= NumModOptdollars ) return(-1);
@@ -2438,12 +2692,12 @@ WORD PF_mkDollarsParallel()
 /*
 				Now all (raw) info from slaves is in PFDollars
 
-			#] MASTER RECEIVING : 
+			#] MASTER RECEIVING :
 			#[ COMBINING :
 */
 			for ( i = 0; i < NumPotModdollars; i++ ) {
 /*
-					New dollar for the Master is created in the 
+					New dollar for the Master is created in the
 					corresponding function similar to case MODLOCAL
 */
 				switch (PFDollars[index=PotModdollars[i]].type) {
@@ -2467,7 +2721,7 @@ WORD PF_mkDollarsParallel()
 				CleanDollarFactors(Dollars + index);
 			}
 /*
-			#] COMBINING : 
+			#] COMBINING :
 			#[ CLEANUP :
 */
 			for ( i = 1; i < NumDollars; i++ ) {
@@ -2496,7 +2750,7 @@ WORD PF_mkDollarsParallel()
 				index = PotModdollars[i];
 				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
 				namesize = 1;
-				while(*p++) namesize++;
+				while (*p++) namesize++;
 				/* Why DolToTerms? (TU 10 Jun 2011) */
 /*				newd = DolToTerms(BHEAD index); */
 				newd = Dollars + index;
@@ -2509,7 +2763,7 @@ WORD PF_mkDollarsParallel()
 					PF_longSinglePack((UBYTE*)&(newd->type), 1, PF_WORD);
 					PF_longSinglePack((UBYTE*)&(newd->size), 1, PF_LONG);
 					PF_longSinglePack((UBYTE*)newd->where, newd->size+1, PF_WORD);
-				} 
+				}
 				else {
 					type = DOLZERO;
 					PF_longSinglePack((UBYTE*)&type, 1, PF_WORD);
@@ -2517,7 +2771,7 @@ WORD PF_mkDollarsParallel()
 			}
 			PF_longSingleSend(MASTER, PF_DOLLAR_MSGTAG);
 /*
-			#] SLAVE SENDING : 
+			#] SLAVE SENDING :
 */
 		}
 	}
@@ -2577,7 +2831,7 @@ WORD PF_mkDollarsParallel()
 		}
 	}
 /*
- 		#] MASTER PACK : 
+ 		#] MASTER PACK :
 
 		old PF_BroadCast(1); replaced by:
 */
@@ -2626,7 +2880,7 @@ WORD PF_mkDollarsParallel()
 				where = &(AM.dollarzero);
 			}
 /*
-			#] SLAVE UNPACK : 
+			#] SLAVE UNPACK :
 			#[ SLAVE STORE :
 */
 			index = GetDollar(name);
@@ -2641,23 +2895,23 @@ WORD PF_mkDollarsParallel()
 			if ( type != DOLZERO ) {
 /*
 					Strange stuff... To be investigated.
-					How could it be, that 
+					How could it be, that
 					where == 0 || *where == 0 and type != DOLZERO?:
 */
 				if (where == 0 || *where == 0) {
 					d->type  = DOLZERO;
 					if (where) M_free(where, "received dollar content");
 					d->where = &(AM.dollarzero); d->size  = 0;
-				} 
+				}
 				else {
-					r = d->where; while(*r) r += *r;
+					r = d->where; while (*r) r += *r;
 					d->size = r - d->where;
 				}
 			}
 			cbuf[AM.dbufnum].rhs[index] = d->where;
 			if (name) M_free(name, "dollar name");
 /*
-			#] SLAVE STORE : 
+			#] SLAVE STORE :
 */
 		}
 	}
@@ -2665,17 +2919,22 @@ WORD PF_mkDollarsParallel()
 }
 
 /*
-  	#] int PF_mkDollarsParallel : 
-  	#[ PotModDollars:
+  	#] PF_mkDollarsParallel :
+  	#[ Potentially modified dollar variables :
+ 		#[ Explanations :
 
-	Usage of a dollar just in a preprocessor is undistingueshable from the 
-	"real" run-time. Dollars, marked as potentially modified in CoAssign in 
-	comexpr.c may be not of a "really" potentially modified type. This become
-	clear in CatchDollar() in dollar.c, but we cannot just
-	remove the mark: this dollarvar could appear somewhere eles in this 
-	module in a "right" context. So, we count referencies to this dollarvar 
-	in the "right" context, and decrement the counter in CatchDollar(). If at 
-	the end the	counter is > 0, the dollarvar is really "potentially modified".
+	Usage of a dollar just in a preprocessor "#$a=..." is indistingueshable
+	from the "real" run-time "$a=...", "do $a=..." or "factor $a".
+	Dollars, marked as potentially modified in CoAssign in comexpr.c may
+	be not of a "really" potentially modified type.
+	This becomes clear in CatchDollar() in dollar.c, but we cannot just
+	remove the mark: this dollarvar could appear somewhere eles in this
+	module in a "right" context. So, we count references to this dollarvar
+	in the "right" context, and decrement the counter in CatchDollar(). If at
+	the end the counter is > 0, the dollarvar is really "potentially modified".
+
+ 		#] Explanations :
+ 		#[ Variables :
 */
 
 static int * PF_potModDolls = NULL;
@@ -2683,6 +2942,17 @@ static int PF_potModDollsTop = 0;
 static int PF_potModDollsN = -1;
 #define PDLSTDELTA 16
 
+/*
+ 		#] Variables :
+ 		#[ PF_statPotModDollar :
+*/
+
+/**
+ * Increases/decreases a reference counter for a dollar variable.
+ *
+ * @param  dollarnum  the dollar variable number.
+ * @param  valToAdd   the value to be added to the reference counter.
+ */
 void PF_statPotModDollar(int dollarnum, int valToAdd)
 {
 	if ( dollarnum >= PF_potModDollsTop ) {
@@ -2693,13 +2963,20 @@ void PF_statPotModDollar(int dollarnum, int valToAdd)
 		PF_potModDolls =
 			realloc(PF_potModDolls,(PF_potModDollsTop+=PDLSTDELTA)*sizeof(int));
 		if ( PF_potModDolls == NULL ) Terminate(-1);
-		for ( ; i < PF_potModDollsTop; i++ ) PF_potModDolls[i] = 0;		
+		for ( ; i < PF_potModDollsTop; i++ ) PF_potModDolls[i] = 0;
 	}
 	PF_potModDolls[dollarnum] += valToAdd;
 	if ( dollarnum > PF_potModDollsN) PF_potModDollsN = dollarnum;
 }
+/*
+ 		#] PF_statPotModDollar :
+ 		#[ PF_markPotModDollars :
+*/
 
-void PF_markPotModDollars()
+/**
+ * Reflects reference counters of dollar variables into AC.PotModDolList.
+ */
+void PF_markPotModDollars(void)
 {
 	int i;
 	for ( i = 0; i <= PF_potModDollsN; i++ ) {
@@ -2713,22 +2990,38 @@ void PF_markPotModDollars()
 }
 
 /*
-  	#] PotModDollars: 
-  	#[ PF_SetScratch:
+ 		#] PF_markPotModDollars :
+  	#] Potentially modified dollar variables :
+  	#[ PF_SetScratch :
 */
+
+/**
+ * Same as SetScratch() except it always fills the buffer from the given position.
+ *
+ * @param  f         the file handle.
+ * @param  position  the position to be loaded into the buffer.
+ */
 static void PF_SetScratch(FILEHANDLE *f,POSITION *position)
 {
-	if( 
-			( f->handle >= 0) && ISGEPOS(*position,f->POposition) && 
+	if(
+			( f->handle >= 0) && ISGEPOS(*position,f->POposition) &&
 			( ISGEPOSINC(*position,f->POposition,(f->POfull-f->PObuffer)*sizeof(WORD)) ==0 )
 		)/*position is inside the buffer! SetScratch() will do nothing.*/
 			f->POfull=f->PObuffer;/*force SetScratch() to re-read the position from the beginning:*/
 	SetScratch(f,position);
 }
+
 /*
-  	#] PF_SetScratch: 
-  	#[ int PF_pushScratch:
+  	#] PF_SetScratch :
+  	#[ PF_pushScratch :
 */
+
+/**
+ * Flushes a scratch file.
+ *
+ * @param  f  the scratch file to be flushed.
+ * @return    0 if OK, nonzero on error.
+ */
 static int PF_pushScratch(FILEHANDLE *f)
 {
 	LONG size,RetCode;
@@ -2757,14 +3050,16 @@ static int PF_pushScratch(FILEHANDLE *f)
 	}/*if( size > 0 )*/
 	return(0);
 }
+
 /*
-  	#] int PF_pushScratch: 
-  	#[ int PF_WalkThroughExprSlave:
-	Returns <=0 if the expression is ready, or dl+1; 
+  	#] PF_pushScratch :
+  	#[ PF_WalkThroughExprSlave :
+	Returns <=0 if the expression is ready, or dl+1;
 */
+
 static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
 {
-LONG l=0;
+	LONG l=0;
 	for(;;){
 		if(curfile->POstop-curfile->POfill < dl){
 			if(PF_pushScratch(curfile))
@@ -2793,23 +3088,25 @@ LONG l=0;
 				if(PF_pushScratch(curfile))
 					return(-PF.exprbufsize-1);
 			}
-			dl=*(curfile->POfill+1)+2;		
+			dl=*(curfile->POfill+1)+2;
 		}/*if(*(curfile->POfill)<0)*/
 	}/*for(;;)*/
 }
+
 /*
-  	#] int PF_WalkThroughExprSlave: 
-  	#[ PF_WalkThroughExprMaster:
-	Returns <=0 if the expression is ready, or dl+1; 
+  	#] PF_WalkThroughExprSlave :
+  	#[ PF_WalkThroughExprMaster :
+	Returns <=0 if the expression is ready, or dl+1;
 */
+
 static int PF_WalkThroughExprMaster(FILEHANDLE *curfile, int dl)
 {
-LONG l=0;
+	LONG l=0;
 	for(;;){
 		if(curfile->POfull-curfile->POfill < dl){
-				POSITION pos;
-				SeekScratch(curfile,&pos);
-				PF_SetScratch(curfile,&pos);		
+			POSITION pos;
+			SeekScratch(curfile,&pos);
+			PF_SetScratch(curfile,&pos);
 		}/*if(curfile->POfull-curfile->POfill < dl)*/
 		curfile->POfill+=dl;
 		l+=dl;
@@ -2833,15 +3130,24 @@ LONG l=0;
 				SeekScratch(curfile,&pos);
 				PF_SetScratch(curfile,&pos);
 			}/*if(curfile->POfull-curfile->POfill < 1)*/
-			dl=*(curfile->POfill+1)+2;		
+			dl=*(curfile->POfill+1)+2;
 		}/*if(*(curfile->POfill)<0)*/
 	}/*for(;;)*/
 }
+
 /*
-  	#] PF_WalkThroughExprMaster: 
-  	#[ int PF_rhsBCastMaster:
+  	#] PF_WalkThroughExprMaster :
+  	#[ PF_rhsBCastMaster :
 */
-static int  PF_rhsBCastMaster(FILEHANDLE *curfile,EXPRESSIONS e)
+
+/**
+ * On the master, broadcasts an expression to the all slaves.
+ *
+ * @param  curfile  the scratch file in which the expression is stored.
+ * @param  e        the expression to be broadcasted.
+ * @return          0 if OK, nonzero on error.
+ */
+static int PF_rhsBCastMaster(FILEHANDLE *curfile, EXPRESSIONS e)
 {
 	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
 	SetScratch(curfile,&(e->onfile));
@@ -2859,11 +3165,21 @@ static int  PF_rhsBCastMaster(FILEHANDLE *curfile,EXPRESSIONS e)
 		curfile->POfill-=l;
 	return(0);
 }
+
 /*
-  	#] int PF_rhsBCastMaster: 
-  	#[ int PF_rhsBCastSlave:
+  	#] PF_rhsBCastMaster :
+  	#[ PF_rhsBCastSlave :
 */
-static int  PF_rhsBCastSlave(FILEHANDLE *curfile,EXPRESSIONS e)
+
+/**
+ * On the slave, recieves an expression broadcasted from the master.
+ *
+ * @param  curfile  the scratch file to store the broadcasted expression
+ *                  (AR.infile or AR.hidefile).
+ * @param  e        the expression to be broadcasted.
+ * @return          0 if OK, nonzero on error.
+ */
+static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 {
 	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
 	e->counter=0;
@@ -2886,14 +3202,21 @@ static int  PF_rhsBCastSlave(FILEHANDLE *curfile,EXPRESSIONS e)
 	else                          AR.InHiBuf = curfile->POfull-curfile->PObuffer;
 	return(0);
 }
+
 /*
-  	#] int PF_rhsBCastSlave: 
-  	#[ int PF_broadcastRHS:
+  	#] PF_rhsBCastSlave :
+  	#[ PF_broadcastRHS :
 */
-int PF_broadcastRHS(void)/*broadcast RHS expressions*/
+
+/**
+ * Broadcasts expressions in the right-hand side from the master to the all slaves.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+int PF_broadcastRHS(void)
 {
-int i;
-FILEHANDLE *curfile = 0;
+	int i;
+	FILEHANDLE *curfile = 0;
 
 	for ( i = 0; i < NumExpressions; i++ ) {
 		EXPRESSIONS e = Expressions+i;
@@ -2927,22 +3250,28 @@ FILEHANDLE *curfile = 0;
 			POSITION pos;
 			SetEndHScratch(curfile,&pos);
 			e->onfile = pos;
-			if(PF_rhsBCastSlave(curfile,e))
-				return(-1);
+			if ( PF_rhsBCastSlave(curfile,e) ) return(-1);
 		}
-		else{
-			if(PF_rhsBCastMaster(curfile,e))
-				return(-1);
+		else {
+			if ( PF_rhsBCastMaster(curfile,e) ) return(-1);
 		}
 	}/*for ( i = 0; i < NumExpressions; i++ )*/
 	if ( PF.me != MASTER )
 		UpdatePositions();
 	return(0);
 }
+
 /*
-  	#] int PF_broadcastRHS: 
-  	#[ int PF_InParallelProcessor:
+  	#] PF_broadcastRHS :
+  	#[ PF_InParallelProcessor :
 */
+
+/**
+ * Processes expressions in the InParallel mode, i.e.,
+ * dividing expressions marked by partodo over the slaves.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
 int PF_InParallelProcessor(void)
 {
 	GETIDENTITY
@@ -2983,7 +3312,7 @@ int PF_InParallelProcessor(void)
 						continue;
 				}/*switch(e->status)*/
 			}/*for ( i = 0; i < NumExpressions; i++ )*/
-			/*Here some slaves are working, other are waiting on PF_Send. 
+			/*Here some slaves are working, other are waiting on PF_Send.
 				Wait all of them.*/
 			/*At this point no new slaves may be launched so PF_WaitAllSlaves()
 				does not modify partodoexr[].*/
@@ -2992,7 +3321,7 @@ int PF_InParallelProcessor(void)
 			/**/
 			if ( AC.CollectFun ) AR.DeferFlag = 0;
 			if(partodoexr){
- 				M_free(partodoexr,"PF_InParallelProcessor");
+				M_free(partodoexr,"PF_InParallelProcessor");
 				partodoexr=NULL;
 			}/*if(partodoexr)*/
 		}/*if ( PF.numtasks >= 3 ) */
@@ -3006,7 +3335,7 @@ int PF_InParallelProcessor(void)
 	/*Slave:*/
 	if(PF_Wait4MasterIP(PF_EMPTY_MSGTAG))
 		return(-1);
-	/*master is ready to listen to me*/	
+	/*master is ready to listen to me*/
 	do{
 		WORD *oldwork= AT.WorkPointer;
 		tag=PF_ReadMaster();/*reads directly to its scratch!*/
@@ -3026,46 +3355,56 @@ int PF_InParallelProcessor(void)
 	PF.exprtodo=-1;
 	return(0);
 }/*PF_InParallelProcessor*/
+
 /*
-  	#] int PF_InParallelProcessor: 
-  	#[ int PF_Wait4MasterIP:
+  	#] PF_InParallelProcessor :
+  	#[ PF_Wait4MasterIP :
 */
+
 static int PF_Wait4MasterIP(int tag)
 {
-	  int follow = 0;
-	  LONG cpu,space = 0;
-	  
-	  if(PF.log){
+	int follow = 0;
+	LONG cpu,space = 0;
+
+	if(PF.log){
 		fprintf(stderr,"[%d] Starting to send to Master\n",PF.me);
 		fflush(stderr);
-	  }
+	}
 
-	  PF_Send(MASTER,tag,0);
-	  cpu = TimeCPU(1);
-	  PF_Pack(&cpu               ,1,PF_LONG);         
-	  PF_Pack(&space             ,1,PF_LONG);          
-	  PF_Pack(&PF_linterms       ,1,PF_LONG);   
-	  PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
-	  PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
-	  PF_Pack(&follow            ,1,PF_INT );
+	PF_Send(MASTER,tag,0);
+	cpu = TimeCPU(1);
+	PF_Pack(&cpu               ,1,PF_LONG);
+	PF_Pack(&space             ,1,PF_LONG);
+	PF_Pack(&PF_linterms       ,1,PF_LONG);
+	PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
+	PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
+	PF_Pack(&follow            ,1,PF_INT );
 
-	  if(PF.log){
+	if(PF.log){
 		fprintf(stderr,"[%d] Now sending with tag = %d\n",PF.me,tag);
 		fflush(stderr);
-	  }
+	}
 
-	  PF_Send(MASTER,tag,1);
-	  
-	  if(PF.log){
+	PF_Send(MASTER,tag,1);
+
+	if(PF.log){
 		fprintf(stderr,"[%d] returning from send\n",PF.me);
 		fflush(stderr);
-	  }
-		return(0);
+	}
+	return(0);
 }
 /*
-  	#] int PF_Wait4MasterIP: 
-  	#[ int PF_DoOneExpr:
+  	#] PF_Wait4MasterIP :
+  	#[ PF_DoOneExpr :
 */
+
+/**
+ * Processes an expression specified by PF.exprtodo.
+ *
+ * See also "case DOONEEXPRESSION" in RunThread().
+ *
+ * @return        0 if OK, nonzero on error.
+ */
 static int PF_DoOneExpr(void)/*the processor*/
 {
 				EXPRESSIONS e = Expressions + PF.exprtodo;
@@ -3101,7 +3440,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 				if ( fout->handle >= 0 ) {
 					fout->POposition = outposition;
 				}
-				if ( PutOut(BHEAD term,&outposition,fout,0) < 0 ) 
+				if ( PutOut(BHEAD term,&outposition,fout,0) < 0 )
 					return(-1);
 				AR.DeferFlag = AC.ComDefer;
 
@@ -3154,26 +3493,27 @@ static int PF_DoOneExpr(void)/*the processor*/
 				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
 				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
 				AR.GetFile = 0;
- 				fout->POfull = fout->POfill;
+				fout->POfull = fout->POfill;
 	return(0);
 }
+
 /*
-  	#] int PF_DoOneExpr: 
-  	#[ int PF_Slave2MasterIP:
+  	#] PF_DoOneExpr :
+  	#[ PF_Slave2MasterIP :
 */
 
-typedef struct bufIPstruct{
+typedef struct bufIPstruct {
 	LONG i;
 	struct ExPrEsSiOn e;
-}bufIPstruct_t;
+} bufIPstruct_t;
 
 static int PF_Slave2MasterIP(int src)/*both master and slave*/
 {
-EXPRESSIONS e;
-bufIPstruct_t exprData;
-int i,l;
-FILEHANDLE *fout=AR.outfile;
-POSITION pos;
+	EXPRESSIONS e;
+	bufIPstruct_t exprData;
+	int i,l;
+	FILEHANDLE *fout=AR.outfile;
+	POSITION pos;
 	/*Here we know the length of data to send in advance:
 		slave has the only one expression in its scratch file, and it sends
 		this information to the master.*/
@@ -3232,18 +3572,20 @@ POSITION pos;
 	}
 	return(0);
 }
+
 /*
-  	#] int PF_Slave2MasterIP: 
-  	#[ int PF_Master2SlaveIP:
+  	#] PF_Slave2MasterIP :
+  	#[ PF_Master2SlaveIP :
 */
+
 static int PF_Master2SlaveIP(int dest, EXPRESSIONS e)
 {
-bufIPstruct_t exprData;
-FILEHANDLE *fi;
-POSITION pos;
-int l;
-LONG ll=0,count=0;
-WORD *t;
+	bufIPstruct_t exprData;
+	FILEHANDLE *fi;
+	POSITION pos;
+	int l;
+	LONG ll=0,count=0;
+	WORD *t;
 	if(e==NULL){/*Say to the slave that no more job:*/
 		if(PF_RawSend(dest,&exprData,sizeof(bufIPstruct_t),PF_EMPTY_MSGTAG))
 			return(-1);
@@ -3266,17 +3608,19 @@ WORD *t;
 	do{
 		l=PF_SendChunkIP(fi, &pos, dest, PF.exprbufsize*sizeof(WORD));
 		if(l<0)
-			return(-1);		
-		t=fi->PObuffer+ (DIFBASE(pos,fi->POposition))/sizeof(WORD);		
+			return(-1);
+		t=fi->PObuffer+ (DIFBASE(pos,fi->POposition))/sizeof(WORD);
 		ll=PF_WalkThrough(t,ll,l/sizeof(WORD),&count);
 		ADDPOS(pos,l);
 	}while(ll>-2);
 	return(0);
 }
+
 /*
-  	#] int PF_Master2SlaveIP: 
-  	#[ int PF_ReadMaster:
+  	#] PF_Master2SlaveIP :
+  	#[ PF_ReadMaster :
 */
+
 static int PF_ReadMaster(void)/*reads directly to its scratch!*/
 {
 	bufIPstruct_t exprData;
@@ -3310,8 +3654,8 @@ static int PF_ReadMaster(void)/*reads directly to its scratch!*/
 	do{
 		l=PF_RecvChunkIP(fi,MASTER,PF.exprbufsize*sizeof(WORD));
 		if(l<0)
-			return(-1);		
-		t=fi->POfull-l/sizeof(WORD);		
+			return(-1);
+		t=fi->POfull-l/sizeof(WORD);
 		ll=PF_WalkThrough(t,ll,l/sizeof(WORD),&count);
 	}while(ll>-2);
 	/*Now -ll-2 is the number of "extra" elements transferred from the master.*/
@@ -3319,41 +3663,45 @@ static int PF_ReadMaster(void)/*reads directly to its scratch!*/
 	fi->POfill=fi->POfull;
 	return(PF_DATA_MSGTAG);
 }
+
 /*
-  	#] int PF_ReadMaster: 
-  	#[ int PF_SendChunkIP:
+  	#] PF_ReadMaster :
+  	#[ PF_SendChunkIP :
 	thesize is in bytes. Returns the number of sent bytes or <0 on error:
 */
-static int PF_SendChunkIP(FILEHANDLE *curfile,  POSITION *position, int to, LONG thesize)
+
+static int PF_SendChunkIP(FILEHANDLE *curfile, POSITION *position, int to, LONG thesize)
 {
 	LONG l=thesize;
 	if(
 		ISLESSPOS(*position,curfile->POposition) ||
-   	ISGEPOSINC(*position,curfile->POposition,
-         ((curfile->POfull-curfile->PObuffer)*sizeof(WORD)-thesize) )
-		){
+		ISGEPOSINC(*position,curfile->POposition,
+		((curfile->POfull-curfile->PObuffer)*sizeof(WORD)-thesize) )
+	){
 		if(curfile->handle< 0)
 			l=(curfile->POfull-curfile->PObuffer)*sizeof(WORD) - (LONG)(position->p1);
 		else{
 			PF_SetScratch(curfile,position);
 			if(
 				ISGEPOSINC(*position,curfile->POposition,
-				((curfile->POfull-curfile->PObuffer)*sizeof(WORD)-thesize) )				
+				((curfile->POfull-curfile->PObuffer)*sizeof(WORD)-thesize) )
 				)
 			l=(curfile->POfull-curfile->PObuffer)*sizeof(WORD) - (LONG)position->p1;
 		}
 	}
-	/*Now we are able to sent l bytes from the 
+	/*Now we are able to sent l bytes from the
 		curfile->PObuffer[position-curfile->POposition]*/
 	if(PF_RawSend(to,curfile->PObuffer+ (DIFBASE(*position,curfile->POposition))/sizeof(WORD),l,0))
 		return(-1);
 	return(l);
 }
+
 /*
-  	#] int PF_SendChunkIP: 
-  	#[ int PF_RecvChunkIP:
+  	#] PF_SendChunkIP :
+  	#[ PF_RecvChunkIP :
 	thesize is in bytes. Returns the number of sent bytes or <0 on error:
 */
+
 static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize)
 {
 	LONG receivedBytes;
@@ -3372,25 +3720,24 @@ static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize)
 	}/*if(receivedBytes >= 0 )*/
 	return(receivedBytes);
 }
-/*
-  	#] int PF_RecvChunkIP: 
-*/
 
 /*
-  	#[ int PF_WalkThrough:
+  	#] PF_RecvChunkIP :
+  	#[ PF_WalkThrough :
 	Returns:
 	>=  0 -- initial offset,
 		-1 -- the first element of t contains the length of the tail of compressed term,
 	<= -2 -- -(d+2), where d is the number of extra transferred elements.
-	Expects: 
+	Expects:
 	l -- initial offset or -1,
 	chunk -- number of transferred elements (not bytes!)
 	*count -- incremented each time a new term is found
 */
+
 static int PF_WalkThrough(WORD *t, LONG l, LONG chunk, LONG *count)
 {
 	if(l<0) /*==-1!*/
-		l=(*t)+1;/*the first element of t contains the length of 
+		l=(*t)+1;/*the first element of t contains the length of
 						the tail of compressed term*/
 	else{
 		if(l>=chunk)/*next term is out of the chunk*/
@@ -3414,19 +3761,28 @@ static int PF_WalkThrough(WORD *t, LONG l, LONG chunk, LONG *count)
 		else{ /* l<0 */
 			if(chunk < 2)/*i.e., chunk == 1*/
 				return(-1);/*the first WORD in the next chunk is length of the tail of the compressed term*/
-			l=*(t+1)+2;/*+2 since 
+			l=*(t+1)+2;/*+2 since
 					1. t points to the length field -1,
 					2. the size of a tail of compressed term is equal to the number of WORDs in this tail*/
 		}
 	}/*while(l!=0)*/
 	return(-1-chunk);/* -(2+(chunk-1)), chunk>0 ! */
 }
+
 /*
-  	#] int PF_WalkThrough: 
-  	#[ PF_SendFile:
+  	#] PF_WalkThrough :
+  	#[ PF_SendFile :
 */
+
 #define PF_SNDFILEBUFSIZE 4096
 
+/**
+ * Sends a file to the process specified by \a to.
+ *
+ * @param  to  the destination process number.
+ * @param  fd  the file to be sent.
+ * @return     the size of sent data in bytes, or -1 on error.
+ */
 int PF_SendFile(int to, FILE *fd)
 {
 	size_t len=0;
@@ -3452,10 +3808,19 @@ int PF_SendFile(int to, FILE *fd)
 	}/*for(;;)*/
 	return(len);
 }
+
 /*
-  	#] PF_SendFile: 
-  	#[ int PF_RecvFile:
+  	#] PF_SendFile :
+  	#[ PF_RecvFile :
 */
+
+/**
+ * Receives a file from the process specified by \a from.
+ *
+ * @param  from  the source process number.
+ * @param  fd    the file to save the recieved data.
+ * @return       the size of received data in bytes, or -1 on error.
+ */
 int PF_RecvFile(int from, FILE *fd)
 {
 	size_t len=0;
@@ -3475,100 +3840,53 @@ int PF_RecvFile(int from, FILE *fd)
 	}while(tag!=PF_ENDBUFFER_MSGTAG);
 	return(len);
 }
+
 /*
-  	#] int PF_RecvFile: 
+  	#] PF_RecvFile :
   	#[ Synchronised output :
+ 		#[ Explanations :
 */
 
 /*
- * The idea of the syncrhonised output (by, e.g., MesPrint) implemented here is
+ * If the master and slaves output statistics or error messages to the same stream
+ * or file (e.g., the standard output or the log file) simultaneously, then
+ * a mixing of their outputs can occur. To avoid this, TFORM uses a lock of
+ * ErrorMessageLock, but there is no locking functionality in the original MPI
+ * specification. We need to synchronise the output from the master and slaves.
+ *
+ * The idea of the synchronised output (by, e.g., MesPrint()) implemented here is
  *   Slaves:
- *     1. Save the output by WriteFile (set to PF_WriteFileToFile)
+ *     1. Save the output by WriteFile() (set to PF_WriteFileToFile())
  *        into some buffers between MLOCK(ErrorMessageLock) and
- *        MUNLOCK(ErrorMessageLock), which call PF_MLock and PF_MUnlock,
- *        respectively. Currently, AM.StdOut and AC.LogHandle are saved to
+ *        MUNLOCK(ErrorMessageLock), which call PF_MLock() and PF_MUnlock(),
+ *        respectively. The output for AM.StdOut and AC.LogHandle are saved to
  *        the buffers.
- *     2. At MUNLOCK(ErrorMessageLock), send the buffered outputs to the master,
+ *     2. At MUNLOCK(ErrorMessageLock), send the output in the buffer to the master,
  *        with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG.
  *   Master:
  *     1. Recieve the buffered output from slaves, and write them by
- *        WriteFileToFile.
+ *        WriteFileToFile().
  *   The main problem is how and where the master receives messages from
- *   the slaves (PF_ReceiveErrorMessage). For this purpose, there are two
- *   helper functions, PF_CatchErrorMessages and PF_CatchErrorMessagesForAll,
- *   which removes messages with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG from the top
- *   of the message queue.
+ *   the slaves (PF_ReceiveErrorMessage()). For this purpose there are three
+ *   helper functions: PF_CatchErrorMessages() and PF_CatchErrorMessagesForAll()
+ *   which remove messages with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG from the top
+ *   of the message queue, and PF_ProbeWithCatchingErrorMessages() which is same as
+ *   PF_Probe() except removing these messages.
  */
 
 /*
- * An implementation of dynamic arrays.
- */
-#define Vector(type,x) \
-	struct { \
-		type *ptr; \
-		size_t size; \
-		size_t capacity; \
-	} x = { NULL, 0, 0 }
-#define VectorFree(type,x) \
-	do { \
-		M_free(x.ptr, "VectorFree:" #x); \
-		x.ptr = NULL; \
-		x.size = 0; \
-		x.capacity = 0; \
-	} while (0)
-#define VectorSize(type,x) \
-	(x.size)
-#define VectorCPtr(type,x) \
-	(x.ptr)
-#define VectorEnsureCapacity(type,x,newcapacity__) \
-	do { \
-		size_t newcapacity_ = newcapacity__; \
-		if ( x.capacity < newcapacity_ ) { \
-			type *newptr_; \
-			{ \
-				size_t t_ = x.capacity; \
-				if ( t_ < 8 ) t_ = 8; \
-				while ( t_ < newcapacity_ ) t_ *= 2; \
-				newcapacity_ = t_; \
-			} \
-			newptr_ = (type *)Malloc1(sizeof(type) * newcapacity_, "VectorEnsureCapacity:" #x); \
-			if ( x.ptr != NULL ) { \
-				if ( x.size > 0 ) { \
-					const type *src_ = x.ptr; \
-					type *dst_ = newptr_; \
-					int n_ = x.size; \
-					NCOPY(dst_, src_, n_); \
-				} \
-				M_free(x.ptr, "VectorEnsureCapacity:" #x); \
-			} \
-			x.ptr = newptr_; \
-			x.capacity = newcapacity_; \
-		} \
-	} while (0)
-#define VectorClear(type,x) \
-	do { x.size = 0; } while (0)
-#define VectorPushBacks(type,x,src__,size__) \
-	do { \
-		size_t size_ = size__; \
-		if ( size_ > 0 ) { \
-			const type *src_ = src__; \
-			type *dst_; \
-			int n_ = size_; \
-			VectorEnsureCapacity(type, x, x.size + size_); \
-			dst_ = x.ptr + x.size; \
-			NCOPY(dst_, src_, n_); \
-			x.size += size_; \
-		} \
-	} while (0)
+ 		#] Explanations :
+ 		#[ Variables :
+*/
 
-static int errorMessageLock = 0;     /* (slaves) The lock count. See PF_MLock and PF_MUnlock. */
+static int errorMessageLock = 0;     /* (slaves) The lock count. See PF_MLock() and PF_MUnlock(). */
 static Vector(UBYTE, stdoutBuffer);  /* (slaves) The buffer for AM.StdOut. */
 static Vector(UBYTE, logBuffer);     /* (slaves) The buffer for AC.LogHandle. */
 #define recvBuffer logBuffer         /* (master) The buffer for receiving messages. */
 
 /*
  * If PF_ENABLE_STDOUT_BUFFERING is defined, the master performs the line buffering
- * (using stdoutBuffer) at PF_WriteFileToFile.
+ * (using stdoutBuffer) at PF_WriteFileToFile().
  */
 #ifndef PF_ENABLE_STDOUT_BUFFERING
 #ifdef UNIX
@@ -3577,7 +3895,8 @@ static Vector(UBYTE, logBuffer);     /* (slaves) The buffer for AC.LogHandle. */
 #endif
 
 /*
-  		#[ PF_MLock :
+ 		#] Variables :
+ 		#[ PF_MLock :
 */
 
 /**
@@ -3587,13 +3906,13 @@ void PF_MLock(void)
 {
 	/* Only on slaves. */
 	if ( errorMessageLock++ > 0 ) return;
-	VectorClear(UBYTE, stdoutBuffer);
-	VectorClear(UBYTE, logBuffer);
+	VectorClear(stdoutBuffer);
+	VectorClear(logBuffer);
 }
 
 /*
-  		#] PF_MLock :
-  		#[ PF_MUnlock :
+ 		#] PF_MLock :
+ 		#[ PF_MUnlock :
 */
 
 /**
@@ -3603,46 +3922,46 @@ void PF_MUnlock(void)
 {
 	/* Only on slaves. */
 	if ( --errorMessageLock > 0 ) return;
-	if ( VectorSize(UBYTE, stdoutBuffer) > 0 ) {
-		PF_RawSend(MASTER, VectorCPtr(UBYTE, stdoutBuffer), VectorSize(UBYTE, stdoutBuffer), PF_STDOUT_MSGTAG);
+	if ( !VectorEmpty(stdoutBuffer) ) {
+		PF_RawSend(MASTER, VectorPtr(stdoutBuffer), VectorSize(stdoutBuffer), PF_STDOUT_MSGTAG);
 	}
-	if ( VectorSize(UBYTE, logBuffer) > 0 ) {
-		PF_RawSend(MASTER, VectorCPtr(UBYTE, logBuffer), VectorSize(UBYTE, logBuffer), PF_LOG_MSGTAG);
+	if ( !VectorEmpty(logBuffer) ) {
+		PF_RawSend(MASTER, VectorPtr(logBuffer), VectorSize(logBuffer), PF_LOG_MSGTAG);
 	}
 }
 
 /*
-  		#] PF_MUnlock :
-  		#[ PF_WriteFileToFile :
+ 		#] PF_MUnlock :
+ 		#[ PF_WriteFileToFile :
 */
 
 /**
- * Replaces WriteFileToFile on the master and slaves.
+ * Replaces WriteFileToFile() on the master and slaves.
  *
- * It copies the given buffer into internal buffers, if called between
+ * It copies the given buffer into internal buffers if called between
  * MLOCK(ErrorMessageLock) and MUNLOCK(ErrorMessageLock) for slaves and
- * handle is StdOut or LogHandle, otherwise same as WriteFileToFile.
+ * handle is StdOut or LogHandle, otherwise calls WriteFileToFile().
  *
- * @param[in] handle A file handle that specifies the output.
- * @param[in] buffer A pointer to the source buffer containing the data to be written.
- * @param[in] size   The size of data to be written in bytes.
- * @return           The actual size of data written to the output in bytes.
+ * @param  handle  a file handle that specifies the output.
+ * @param  buffer  a pointer to the source buffer containing the data to be written.
+ * @param  size    the size of data to be written in bytes.
+ * @return         the actual size of data written to the output in bytes.
  */
 LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 {
 	if ( PF.me != MASTER && errorMessageLock > 0 ) {
 		if ( handle == AM.StdOut ) {
-			VectorPushBacks(UBYTE, stdoutBuffer, buffer, size);
+			VectorPushBacks(stdoutBuffer, buffer, size);
 			return size;
 		}
 		else if ( handle == AC.LogHandle ) {
-			VectorPushBacks(UBYTE, logBuffer, buffer, size);
+			VectorPushBacks(logBuffer, buffer, size);
 			return size;
 		}
 	}
 #ifdef PF_ENABLE_STDOUT_BUFFERING
-	/**
-	 * On my desktop PC, sometimes a single linefeed "\n" sent to the standard
+	/*
+	 * On my computer, sometimes a single linefeed "\n" sent to the standard
 	 * output is ignored on the execution of mpiexec. A typical example is:
 	 *   $ cat foo.c
 	 *     #include <unistd.h>
@@ -3678,7 +3997,7 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 	 *   mpich2-1.3.2p1 configured with '--enable-shared --with-pm=smpd'
 	 *
 	 * Solution:
-	 *   In Unix (in which Uwrite calls write() system call without any buffering),
+	 *   In Unix (in which Uwrite() calls write() system call without any buffering),
 	 *   we perform the line buffering here. A single linefeed is also buffered.
 	 *
 	 * XXX:
@@ -3689,14 +4008,14 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 		size_t oldsize;
 		/* Assume the newline character is LF (when UNIX is defined). */
 		if ( (size > 0 && buffer[size - 1] != LINEFEED) || (size == 1 && buffer[0] == LINEFEED) ) {
-			VectorPushBacks(UBYTE, stdoutBuffer, buffer, size);
+			VectorPushBacks(stdoutBuffer, buffer, size);
 			return size;
 		}
-		if ( (oldsize = VectorSize(UBYTE, stdoutBuffer)) > 0 ) {
+		if ( (oldsize = VectorSize(stdoutBuffer)) > 0 ) {
 			LONG ret;
-			VectorPushBacks(UBYTE, stdoutBuffer, buffer, size);
-			ret = WriteFileToFile(handle, VectorCPtr(UBYTE, stdoutBuffer), VectorSize(UBYTE, stdoutBuffer));
-			VectorClear(UBYTE, stdoutBuffer);
+			VectorPushBacks(stdoutBuffer, buffer, size);
+			ret = WriteFileToFile(handle, VectorPtr(stdoutBuffer), VectorSize(stdoutBuffer));
+			VectorClear(stdoutBuffer);
 			if ( ret < 0 ) {
 				return ret;
 			}
@@ -3713,17 +4032,17 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 }
 
 /*
-  		#] PF_WriteFileToFile :
-  		#[ PF_ReceiveErrorMessage :
+ 		#] PF_WriteFileToFile :
+ 		#[ PF_ReceiveErrorMessage :
 */
 
 /**
- * Receives an error message from a slave's PF_MUnlock call, and writes
+ * Receives an error message from a slave's PF_MUnlock() call, and writes
  * the message to the corresponding output.
  * instead of LOCK(ErrorMessageLock) and UNLOCK(ErrorMessageLock).
  *
- * @param[in] src The source rank.
- * @param[in] tag The tag value (must be PF_STDOUT_MSGTAG or PF_LOG_MSGTAG or PF_ANY_MSGTAG).
+ * @param  src  the source process.
+ * @param  tag  the tag value (must be PF_STDOUT_MSGTAG or PF_LOG_MSGTAG or PF_ANY_MSGTAG).
  */
 static void PF_ReceiveErrorMessage(int src, int tag)
 {
@@ -3734,15 +4053,15 @@ static void PF_ReceiveErrorMessage(int src, int tag)
 		switch ( tag ) {
 			case PF_STDOUT_MSGTAG:
 			case PF_LOG_MSGTAG:
-				VectorEnsureCapacity(UBYTE, recvBuffer, size);
-				ret = PF_RawRecv(&src, VectorCPtr(UBYTE, recvBuffer), size, &tag);
+				VectorReserve(recvBuffer, size);
+				ret = PF_RawRecv(&src, VectorPtr(recvBuffer), size, &tag);
 				if ( ret > 0 ) {
 					int handle = (tag == PF_STDOUT_MSGTAG) ? AM.StdOut : AC.LogHandle;
 #ifdef PF_ENABLE_STDOUT_BUFFERING
-					if ( handle == AM.StdOut ) PF_WriteFileToFile(handle, VectorCPtr(UBYTE, recvBuffer), size);
+					if ( handle == AM.StdOut ) PF_WriteFileToFile(handle, VectorPtr(recvBuffer), size);
 					else
 #endif
-					WriteFileToFile(handle, VectorCPtr(UBYTE, recvBuffer), size);
+					WriteFileToFile(handle, VectorPtr(recvBuffer), size);
 				}
 				break;
 		}
@@ -3750,8 +4069,8 @@ static void PF_ReceiveErrorMessage(int src, int tag)
 }
 
 /*
-  		#] PF_ReceiveErrorMessage :
-  		#[ PF_CatchErrorMessages :
+ 		#] PF_ReceiveErrorMessage :
+ 		#[ PF_CatchErrorMessages :
 */
 
 /**
@@ -3759,7 +4078,7 @@ static void PF_ReceiveErrorMessage(int src, int tag)
  * or PF_LOG_MSGTAG. It ensures that the next PF_Recieve(src, PF_ANY_MSGTAG, ...)
  * will not receive the message with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG.
  *
- * @param[in] src The source rank.
+ * @param  src  the source process.
  */
 static void PF_CatchErrorMessages(int src)
 {
@@ -3779,12 +4098,12 @@ static void PF_CatchErrorMessages(int src)
 }
 
 /*
-  		#] PF_CatchErrorMessages :
-  		#[ PF_CatchErrorMessagesForAll :
+ 		#] PF_CatchErrorMessages :
+ 		#[ PF_CatchErrorMessagesForAll :
 */
 
 /**
- * Calls PF_CatchErrorMessages for all slaves.
+ * Calls PF_CatchErrorMessages() for all slaves.
  * Note that it is NOT equivalent to PF_CatchErrorMessages(PF_ANY_SOURCE).
  */
 static void PF_CatchErrorMessagesForAll(void)
@@ -3795,22 +4114,50 @@ static void PF_CatchErrorMessagesForAll(void)
 }
 
 /*
-  		#] PF_CatchErrorMessagesForAll :
-  		#[ PF_FreeErrorMessageBuffers :
+ 		#] PF_CatchErrorMessagesForAll :
+ 		#[ PF_ProbeWithCatchingErrorMessages :
+*/
+
+/**
+ * Same as PF_Probe() except processing incoming messages with PF_STDOUT_MSGTAG
+ * and PF_LOG_MSGTAG.
+ *
+ * @param[in,out]  src  the source process. The output value is that of the actual found message.
+ * @return              the tag value of the next incoming message if found,
+ *                      0 if a nonbloking probe (input src != PF_ANY_SOURCE) did not
+ *                      find any messages. The negative returned value indicates an error.
+ */
+static int PF_ProbeWithCatchingErrorMessages(int *src)
+{
+	for (;;) {
+		int newsrc = *src;
+		int tag = PF_Probe(&newsrc);
+		if ( tag == PF_STDOUT_MSGTAG || tag == PF_LOG_MSGTAG ) {
+			PF_ReceiveErrorMessage(newsrc, tag);
+			continue;
+		}
+		if ( tag > 0 ) *src = newsrc;
+		return tag;
+	}
+}
+
+/*
+ 		#] PF_ProbeWithCatchingErrorMessages :
+ 		#[ PF_FreeErrorMessageBuffers :
 */
 
 /**
  * Frees the buffers allocated for the synchronized output.
  *
- * Currently, not used anywhere, but could be used in PF_Terminate.
+ * Currently, not used anywhere, but could be used in PF_Terminate().
  */
 void PF_FreeErrorMessageBuffers(void)
 {
-	VectorFree(UBYTE, stdoutBuffer);
-	VectorFree(UBYTE, logBuffer);
+	VectorFree(stdoutBuffer);
+	VectorFree(logBuffer);
 }
 
 /*
-  		#] PF_FreeErrorMessageBuffers :
+ 		#] PF_FreeErrorMessageBuffers :
   	#] Synchronised output :
 */

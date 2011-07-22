@@ -1385,32 +1385,30 @@ typedef WORD (*DO_UFFLE)(PHEAD WORD *,WORD,WORD,WORD);
 #define DoShtuffle ((DO_UFFLE)AN.SHvar.do_uffle)
 
 #ifdef PARALLEL
-extern LONG   PF_BroadcastNumberOfTerms(LONG);
-extern int    PF_Processor(EXPRESSIONS,WORD,WORD);
-extern int  PF_InitRedefinedPreVars();
-extern WORD PF_Deferred(WORD *,WORD);
-extern int  PF_EndSort();
-extern int  PF_Init(int*,char ***);
-extern int  PF_Terminate(int);
-extern int  PF_ISendSbuf(int,int);
-extern int  PF_PackString(UBYTE *);
-extern int  PF_UnPackString(UBYTE *);
+/* mpi.c */
+extern int    PF_Terminate(int);
+extern int    PF_ISendSbuf(int,int);
 extern int    PF_RawSend(int,void *,LONG,int);
 extern LONG   PF_RawRecv(int *,void *,LONG,int *);
-extern int  PF_BroadcastPreDollar(WORD **, LONG *,int *);
-extern int  PF_BroadcastString(UBYTE *);
-extern LONG PF_BroadcastNumberOfTerms(LONG);
-extern WORD PF_mkDollarsParallel();
-extern void PF_markPotModDollars();
-extern void PF_statPotModDollar(int,int);
-extern int PF_broadcastRHS(void);
+/* parallel.c */
+extern int    PF_EndSort(void);
+extern WORD   PF_Deferred(WORD *,WORD);
+extern int    PF_Processor(EXPRESSIONS,WORD,WORD);
+extern int    PF_Init(int*,char ***);
+extern LONG   PF_BroadcastNumberOfTerms(LONG);
+extern int    PF_InitRedefinedPreVars(void);
+extern int    PF_BroadcastString(UBYTE *);
+extern int    PF_BroadcastPreDollar(WORD **, LONG *,int *);
+extern WORD   PF_mkDollarsParallel(void);
+extern void   PF_statPotModDollar(int,int);
+extern void   PF_markPotModDollars(void);
+extern int    PF_broadcastRHS(void);
 extern int    PF_InParallelProcessor(void);
-extern int PF_SendFile(int to, FILE *fd);
-extern int PF_RecvFile(int from, FILE *fd);
-
-extern void PF_MLock(void);
-extern void PF_MUnlock(void);
-extern LONG PF_WriteFileToFile(int,UBYTE *,LONG);
+extern int    PF_SendFile(int to, FILE *fd);
+extern int    PF_RecvFile(int from, FILE *fd);
+extern void   PF_MLock(void);
+extern void   PF_MUnlock(void);
+extern LONG   PF_WriteFileToFile(int,UBYTE *,LONG);
 #endif
 
 extern UBYTE *defineChannel(UBYTE*, HANDLERS*);

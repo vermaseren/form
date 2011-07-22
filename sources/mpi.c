@@ -1,9 +1,9 @@
 /** @file mpi.c
- * 
+ *
  *   MPI dependent functions of parform
  *
  *  This file contains all the functions for the parallel version of form3 that
- *  explicitly need to call mpi routines. This is the only file that really 
+ *  explicitly need to call mpi routines. This is the only file that really
  *  needs to be linked to the mpi-library!
  */
 /* #[ License : */
@@ -31,11 +31,11 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
-  	#[ includes & variables : 
-
+  	#[ Includes and variables :
 */
+
 #include <stdio.h>
 #include "form3.h"
 
@@ -50,18 +50,14 @@
 /*[12oct2005 mt]:*/
 /*
 	Today there was some cleanup, some stuff is moved into another place
-	in this file, and PF.packsize is removed and PF_packsize is used 
+	in this file, and PF.packsize is removed and PF_packsize is used
 	instead. It is rather difficult to proper comment it, so not all these
 	changing are marked by "[12oct2005 mt]"
 */
 
 #define PF_PACKSIZE 1000
 
-static UBYTE *PF_packbuf=0;
-static UBYTE *PF_packstop=0;
-static int   PF_packpos=0;
-
-/* 
+/*
 	Size in bytes, will be initialized soon as
 	PF_packsize=PF_PACKSIZE/sizeof(int)*sizeof(int); for possible
 	future developing we prefer to do this initialization not here,
@@ -69,21 +65,27 @@ static int   PF_packpos=0;
 */
 
 static LONG PF_packsize = 0;
-static int PF_longPackInit();      /*:[12oct2005 mt]*/
 static MPI_Status PF_status;
 LONG PF_maxDollarChunkSize = 0;      /*:[04oct2005 mt]*/
 
-/*
-  	#] includes & variables :
-  	#[ LONG PF_RealTime(int):
+static int PF_ShortPackInit(void);
+static int PF_longPackInit(void);      /*:[12oct2005 mt]*/
 
-	returns the realtime in 1/100 sec. as a LONG
+/*
+  	#] Includes and variables :
+  	#[ PF_RealTime :
 */
 
+/**
+ * Returns the realtime in 1/100 sec. as a LONG.
+ *
+ * @param  i  the timer will be reset if i == 0.
+ * @return    the real elapsed time in 1/100 second.
+ */
 LONG PF_RealTime(int i)
 {
 	static double starttime;
-	if( i == PF_RESET ){
+	if ( i == PF_RESET ) {
 		starttime = MPI_Wtime();
 		return((LONG)0);
 	}
@@ -91,48 +93,54 @@ LONG PF_RealTime(int i)
 }
 
 /*
-  	#] LONG PF_RealTime(int): 
-  	#[ int  PF_LibInit(int*,char***) :
+  	#] PF_RealTime :
+  	#[ PF_LibInit :
 */
 
+/**
+ * Performs all library dependent initializations.
+ *
+ * @param  argcp  pointer to the number of arguments.
+ * @param  argvp  pointer to the arguments.
+ * @return        0 if OK, nonzero on error.
+ */
 int PF_LibInit(int *argcp, char ***argvp)
-{  
+{
 	int ret;
 	ret = MPI_Init(argcp,argvp);
-	if ( ret != MPI_SUCCESS ) return(ret); 
+	if ( ret != MPI_SUCCESS ) return(ret);
 	ret = MPI_Comm_rank(PF_COMM,&PF.me);
-	if ( ret != MPI_SUCCESS ) return(ret); 
+	if ( ret != MPI_SUCCESS ) return(ret);
 	ret = MPI_Comm_size(PF_COMM,&PF.numtasks);
 	if ( ret != MPI_SUCCESS ) return(ret);
 
+	/* Initialization of packed communications. */
 	PF_packsize = PF_PACKSIZE/sizeof(int)*sizeof(int);
-
-	PF_packbuf = (UBYTE *)Malloc1(sizeof(UBYTE)*PF_packsize,"PF_LibInit");
-	if ( !PF_packbuf ) return(-1);
-	PF_packstop = PF_packbuf + PF_packsize;
+	if ( PF_ShortPackInit() ) return -1;
+	if ( PF_longPackInit() ) return -1;
 
 	{/*Block*/
 		int bytes, totalbytes=0;
 /*
 			There is one problem with maximal possible packing: there is no API to
-			convert bytes to the record number. So, here we calculate the buffer 
+			convert bytes to the record number. So, here we calculate the buffer
 			size needed for storing dollarvars:
 
-			LONG PF_maxDollarChunkSize is the size for the portion of the dollar 
-			variable buffer suitable for broadcasting. This variable should be 
+			LONG PF_maxDollarChunkSize is the size for the portion of the dollar
+			variable buffer suitable for broadcasting. This variable should be
 			visible from parallel.c
 
 			Evaluate PF_Pack(numterms,1,PF_INT):
 */
-		if(  ( ret = MPI_Pack_size(1,PF_INT,PF_COMM,&bytes) )!=MPI_SUCCESS )
-	 		return(ret); 
+		if ( ( ret = MPI_Pack_size(1,PF_INT,PF_COMM,&bytes) )!=MPI_SUCCESS )
+			return(ret);
 
 		totalbytes+=bytes;
 /*
 			Evaluate PF_Pack( newsize,1,PF_LONG):
 */
-		if(  ( ret = MPI_Pack_size(1,PF_LONG,PF_COMM,&bytes) )!=MPI_SUCCESS )
-	 		return(ret); 
+		if ( ( ret = MPI_Pack_size(1,PF_LONG,PF_COMM,&bytes) )!=MPI_SUCCESS )
+			return(ret);
 
 		totalbytes += bytes;
 /*
@@ -164,24 +172,24 @@ int PF_LibInit(int *argcp, char ***argvp)
 				return(ret);
 		} while ( bytes>totalbytes );
 /*
-			Now PF_maxDollarChunkSize is the size of chunk of PF_WORD fitting the 
+			Now PF_maxDollarChunkSize is the size of chunk of PF_WORD fitting the
 			buffer <= (PF_packsize-PF_INT-PF_LONG)
 */
 	}/*Block*/
-/*
-		Initialization buffers for "long" packed communications:
-*/
-	if ( PF_longPackInit() ) return(-1);
 	return(0);
 }
 /*
-  	#] int  PF_LibInit(int*,char***) : 
-  	#[ int  PF_Terminate(int) :
+  	#] PF_LibInit :
+  	#[ PF_Terminate :
+*/
 
-	Exits mpi, when there is an error either indicated or happening,
-	returnvalue is 1, else returnvalue is 0
-*/ 
-
+/**
+ * Exits mpi, when there is an error either indicated or happening,
+ * returnvalue is 1, else returnvalue is 0.
+ *
+ * @param  error  an error code.
+ * @return        0 if OK, nonzero on error.
+ */
 int PF_Terminate(int error)
 {
 	DUMMYUSE(error);
@@ -189,19 +197,24 @@ int PF_Terminate(int error)
 }
 
 /*
-  	#] int  PF_Terminate(int) : 
-  	#[ int  PF_Probe(int*) :
-
-		General Send and Receive Function for packed buffers
-
-		it must return the actual source, and blocks 
-		if source == PF_ANY_SOURCE
+  	#] PF_Terminate :
+  	#[ PF_Probe :
 */
 
+/**
+ * Probes the next incoming message.
+ * If src == PF_ANY_SOURCE this operation is blocking,
+ * otherwise nonbloking.
+ *
+ * @param[in,out]  src  the source process number. In output, the process number of actual found source.
+ * @return              the tag value of the next incoming message if found,
+ *                      0 if a nonbloking probe (input src != PF_ANY_SOURCE) did not
+ *                      find any messages. A negative returned value indicates an error.
+ */
 int PF_Probe(int *src)
 {
 	int ret, flag;
-	if ( *src == PF_ANY_SOURCE ){ /*Blocking call*/
+	if ( *src == PF_ANY_SOURCE ) { /*Blocking call*/
 		ret = MPI_Probe(*src,MPI_ANY_TAG,PF_COMM,&PF_status);
 		flag = 1;
 	}
@@ -215,180 +228,20 @@ int PF_Probe(int *src)
 }
 
 /*
-  	#] int  PF_Probe(int*) :
-  	#[ the packbuffer :
+  	#] PF_Probe :
+  	#[ PF_ISendSbuf :
 */
 
-int PF_InitPackBuf()
-{
-/*
-		This is defenitely not the best place for allocating the
-		buffer! Moved to LibInit:
-
-	if ( PF_packbuf == 0 ) { 
-		PF_packbuf = (UBYTE *)Malloc1(sizeof(UBYTE)*PF.packsize,"PF_InitPackBuf");
-		if ( PF_packbuf == 0 ) return(-1);
-		PF_packstop = PF_packbuf + PF.packsize;
-	}
-*/
-	PF_packpos = 0;
-	return(0);
-}
-
-int PF_PrintPackBuf(char *s, int size)
-{
-#ifdef NOMESPRINTYET
-/*
-		The use of printf should be discouraged. The results are flushed to
-		the output at unpredictable moments. We should use printf only
-		during startup when MesPrint doesn't have its buffers and output
-		channels initialized.
-*/
-	int i;
-	printf("[%d] %s: ",PF.me,s);
-	for(i=0;i<size;i++) printf("%d ",PF_packbuf[i]);
-	printf("\n");
-#else
-	MesPrint("[%d] %s: %a",PF.me,s,size,(WORD *)(PF_packbuf));
-#endif
-	return(0);
-}
-
-/*
-  	#] the packbuffer : 
-  	#[ int  PF_Pack(VOID*,LONG,MPI_Datatype) :
-*/
-
-int PF_Pack(VOID *buffer, LONG count, MPI_Datatype type)
-{
-  int ret, bytes;
-
-  ret = MPI_Pack_size((int)count,type,PF_COMM,&bytes);
-  if ( ret != MPI_SUCCESS ) return(ret);
-  if ( PF_packpos + bytes > PF_packstop - PF_packbuf ) return(-99);
-
-  ret = MPI_Pack(buffer,(int)count,type,
-				 PF_packbuf,(int)PF_packsize,&PF_packpos,PF_COMM);
-  if ( ret != MPI_SUCCESS ) return(ret);
-
-  return(0);
-} 
-
-/*
-  	#] int  PF_Pack(VOID*,LONG,MPI_Datatype) :
-  	#[ int  PF_Send(int,int,int) :
-*/
-
-int PF_Send(int to, int tag, int par)
-{
-	int ret;
-
-	if ( !par ) {
-		if( ( ret = PF_InitPackBuf() ) != 0 ) return(ret);
-	}
-	else{
-		ret = MPI_Ssend(PF_packbuf,PF_packpos,MPI_PACKED,to,tag,PF_COMM);
-		if ( ret != MPI_SUCCESS ) return(ret);
-	}
-	return(0);
-}
-
-/*
-  	#] int  PF_Send(int,int,int) :
-  	#[ int  PF_BroadCast(int) :
-*/
-
-int PF_BroadCast(int par)
-{
-	int ret;
-/*
-		If SHORTBROADCAST, then instead of the whole buffer broadcasting 
-		will be performed in 2 steps. First, the size of buffer is broadcasted, 
-		then the buffer of exactly used size. This should be faster with slow 
-		connections, but slower on SMP shmem MPI.
-*/
-#ifdef SHORTBROADCAST
-	int pos = PF_packpos;
-#endif
-	if ( par == 0 ) {
-/*
-		Comment: initializes PF_packbuf,PF_packstop,PF_packpos:
-*/
-		if( ( ret = PF_InitPackBuf() ) != 0 ) return(ret);
-	}
-	else {
-		if ( PF.me != MASTER ) {
-			if ( ( ret = PF_InitPackBuf() ) != 0 ) return(ret);
-		}
-/*
-			for MPI_Bcast, size must be equal on all processes!
-*/
-#ifndef SHORTBROADCAST
-		ret = MPI_Bcast(PF_packbuf,(int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
-#else
-		ret = MPI_Bcast(&pos,1,MPI_INT,MASTER,PF_COMM);
-		if ( ret != MPI_SUCCESS ) return(ret);
-		ret = MPI_Bcast(PF_packbuf,pos,MPI_PACKED,MASTER,PF_COMM);
-#endif
-		if( ret != MPI_SUCCESS) return(ret);
-	}
-	return(0);
-}
-
-/*
-  	#] int  PF_BroadCast(int) :
-  	#[ int  PF_Bcast(int) :
-*/
-int PF_Bcast(void *buffer, int count)
-{
-	if(MPI_Bcast(buffer,count,MPI_BYTE,MASTER,PF_COMM)!=MPI_SUCCESS)
-		return(-1);
-	return(0);
-}
-/*
-  	#] int  PF_Bcast(int) :
-  	#[ int  PF_UnPack(VOID*,LONG,MPI_Datatype) :
-*/
-
-int PF_UnPack(VOID *buffer, LONG count, MPI_Datatype type)
-{
-	int ret;
-
-	ret = MPI_Unpack(PF_packbuf,(int)PF_packsize,&PF_packpos,
-							buffer,(int)count,type,PF_COMM);
-
-	if ( ret != MPI_SUCCESS ) return(ret);
-	return(0);
-}
-
-/*
-  	#] int  PF_UnPack(VOID*,LONG,MPI_Datatype) : 
-  	#[ int  PF_Receive(int,int,int*,int*) :
-*/
-
-int PF_Receive(int src, int tag, int *srcp, int *tagp)
-{  
-	int ret;
-	PF_InitPackBuf();
-	ret = MPI_Recv(PF_packbuf,(int)PF_packsize,MPI_PACKED,src,tag,
-											PF_COMM,&PF_status);
-	if ( ret != MPI_SUCCESS ) return(ret);
-	*tagp = PF_status.MPI_TAG;
-	*srcp = PF_status.MPI_SOURCE;
-	return(0);
-}
-
-/*
-  	#] int  PF_Receive(int,int,int*,int*) : 
-  	#[ int  PF_ISendSbuf(int,int) :
-
-	Special Send/Receive functions for WORD buffers, also nonblocking
-	nonblocking send operation. it sends everything from buff to fill of the
-	active buffer.
-	Depending on the flag it also can do waiting for other sends to finish or 
-	set the active buffer to the next one.
-*/
-
+/**
+ * Nonblocking send operation. It sends everything from \c buff to \c fill of the
+ * active buffer.
+ * Depending on \a tag it also can do waiting for other sends to finish or
+ * set the active buffer to the next one.
+ *
+ * @param  to   the destination process number.
+ * @param  tag  the message tag.
+ * @return      0 if OK, nonzero on error.
+ */
 int PF_ISendSbuf(int to, int tag)
 {
 	PF_BUFFER *s = PF.sbuf;
@@ -403,16 +256,16 @@ int PF_ISendSbuf(int to, int tag)
 		r = MPI_Ssend(s->buff[a],size,PF_WORD,MASTER,tag,PF_COMM);
 		if ( r != MPI_SUCCESS ) {
 			fprintf(stderr,"[%d|%d] PF_ISendSbuf: MPI_Ssend returns: %d \n",
-								PF.me,(int)AC.CModule,r);
+			        PF.me,(int)AC.CModule,r);
 			fflush(stderr);
 			return(r);
 		}
 		return(0);
 	}
 
-	switch ( tag ) { /* things to do before sending */ 
+	switch ( tag ) { /* things to do before sending */
 		case PF_TERM_MSGTAG:
-			if( PF.sbuf->request[to] != MPI_REQUEST_NULL)
+			if ( PF.sbuf->request[to] != MPI_REQUEST_NULL)
 				r = MPI_Wait(&PF.sbuf->request[to],&PF.sbuf->retstat[to]);
 			if ( r != MPI_SUCCESS ) return(r);
 			break;
@@ -453,14 +306,20 @@ int PF_ISendSbuf(int to, int tag)
 }
 
 /*
-  	#] int  PF_ISendSbuf(int,int) : 
-  	#[ int  PF_RecvWbuf(WORD*,LONG*,int*) :
-
-	Blocking receive of a WORD buffer
+  	#] PF_ISendSbuf :
+  	#[ PF_RecvWbuf :
 */
 
+/**
+ * Blocking receive of a \c WORD buffer.
+ *
+ * @param[out]     b    the buffer to store the received data.
+ * @param[in,out]  s    the size of the buffer. The output value is the actual size of the received data.
+ * @param[in,out]  src  the source process number. The output value is the process number of actual source.
+ * @return              the received message tag. A negative value indicates an error.
+ */
 int PF_RecvWbuf(WORD *b, LONG *s, int *src)
-{  
+{
 	int i, r = 0;
 
 	r = MPI_Recv(b,(int)*s,PF_WORD,*src,PF_ANY_MSGTAG,PF_COMM,&PF_status);
@@ -475,41 +334,53 @@ int PF_RecvWbuf(WORD *b, LONG *s, int *src)
 }
 
 /*
-  	#] int  PF_RecvWbuf(WORD*,LONG*,int*) : 
-  	#[ int  PF_IRecvRbuf(PF_BUFFER*,int,int) :
-
-	 post nonblocking receive for the active receive buffer 
-	 the buffer is filled from full to stop
+  	#] PF_RecvWbuf :
+  	#[ PF_IRecvRbuf :
 */
 
+/**
+ * Posts nonblocking receive for the active receive buffer.
+ * The buffer is filled from \c full to \c stop.
+ *
+ * @param  r     the \c PF_BUFFER struct for the nonblocking receive.
+ * @param  bn    the index of the cyclic buffer.
+ * @param  from  the source process number.
+ * @return       0 if OK, nonzero on error.
+ */
 int PF_IRecvRbuf(PF_BUFFER *r, int bn, int from)
 {
 	int ret;
 	r->type[bn] = PF_WORD;
 
-	if( r->numbufs == 1 ) {
+	if ( r->numbufs == 1 ) {
 		r->tag[bn] = MPI_ANY_TAG;
 		r->from[bn] = from;
 	}
 	else {
 		ret = MPI_Irecv(r->full[bn],(int)(r->stop[bn] - r->full[bn]),PF_WORD,from,
-								MPI_ANY_TAG,PF_COMM,&r->request[bn]);
-		if(ret != MPI_SUCCESS) { if(ret > 0) ret *= -1; return(ret); }
+		                MPI_ANY_TAG,PF_COMM,&r->request[bn]);
+		if (ret != MPI_SUCCESS) { if(ret > 0) ret *= -1; return(ret); }
 	}
 	return(0);
 }
 
 /*
-  	#] int  PF_IRecvRbuf(PF_BUFFER*,int,int) : 
-  	#[ int  PF_WaitRbuf(PF_BUFFER *,int,LONG *) :
-
-	function to wait for the buffer <bn> to finish a pending nonblocking
-	receive. It returns the received tag and in *size the number of field
-	received.
-	If the receive is allready finished, just return the flag and size, 
-	else wait for it to finish, but also check for other pending receives. 
+  	#] PF_IRecvRbuf :
+  	#[ PF_WaitRbuf :
 */
 
+/**
+ * Waits for the buffer \a bn to finish a pending nonblocking
+ * receive. It returns the received tag and in <tt>*size</tt> the number of field
+ * received.
+ * If the receive is already finished, just return the flag and size,
+ * else wait for it to finish, but also check for other pending receives.
+ *
+ * @param       r     the \c PF_BUFFER struct for the pending nonblocking receive.
+ * @param       bn    the index of the cyclic buffer.
+ * @param[out]  size  the actual size of received data.
+ * @return            the received message tag. A negative value indicates an error.
+ */
 int PF_WaitRbuf(PF_BUFFER *r, int bn, LONG *size)
 {
 	int ret, rsize;
@@ -517,7 +388,7 @@ int PF_WaitRbuf(PF_BUFFER *r, int bn, LONG *size)
 	if ( r->numbufs == 1 ) {
 		*size = r->stop[bn] - r->full[bn];
 		ret = MPI_Recv(r->full[bn],(int)*size,r->type[bn],r->from[bn],r->tag[bn],
-										PF_COMM,&(r->status[bn]));
+		               PF_COMM,&(r->status[bn]));
 		if ( ret != MPI_SUCCESS ) { if ( ret > 0 ) ret *= -1; return(ret); }
 		ret = MPI_Get_count(&(r->status[bn]),r->type[bn],&rsize);
 		if ( ret != MPI_SUCCESS ) { if ( ret > 0 ) ret *= -1; return(ret); }
@@ -538,22 +409,265 @@ int PF_WaitRbuf(PF_BUFFER *r, int bn, LONG *size)
 }
 
 /*
-  	#] int  PF_WaitRbuf(PF_BUFFER *,int,LONG *) : 
-  	#[ int PF_PackString(UBYTE*) :
-
-	The following function packs string str into PF_packbuf (INCLUDING the
-	trailing zero!). The first element (PF_INT) is the length of the
-	packed portion of the string. If the string does not fit to the buffer
-	PF_packbuf, the function packs only the initial portion.  It returns
-	the number of packed bytes, so if (str[length-1]=='\0') then the whole
-	string fits to the buffer, if not, then the rest (str+length) bust be
-	packed and send again.  On error, the function returns the negative
-	error code.
-
-	One exception: the string "\0!\0" is used as an image of the NULL,
-	so all 3 characters will be packed.
+  	#] PF_WaitRbuf :
+  	#[ PF_Bcast :
 */
 
+/**
+ * Broadcasts a message from the master to slaves.
+ *
+ * @param[in,out]  buffer  the starting address of buffer. The contents in this buffer
+ *                         on the master will be transferred to those on the slaves.
+ * @param          count   the length of the buffer in bytes.
+ * @return                 0 if OK, nonzero on error.
+ */
+int PF_Bcast(void *buffer, int count)
+{
+	if ( MPI_Bcast(buffer,count,MPI_BYTE,MASTER,PF_COMM) != MPI_SUCCESS )
+		return(-1);
+	return(0);
+}
+
+/*
+  	#] PF_Bcast :
+  	#[ PF_RawSend :
+*/
+
+/**
+ * Sends \a l bytes from \a buf to \a dest.
+ * Returns 0 on success, or -1.
+ *
+ * @param  dest  the destination process number.
+ * @param  buf   the send buffer.
+ * @param  l     the size of data in the send buffer in bytes.
+ * @param  tag   the message tag.
+ * @return       0 if OK, nonzero on error.
+ */
+
+int PF_RawSend(int dest, void *buf, LONG l, int tag)
+{
+	int ret=MPI_Ssend(buf,(int)l,MPI_BYTE,dest,tag,PF_COMM);
+	if ( ret != MPI_SUCCESS ) return(-1);
+	return(0);
+}
+/*
+  	#] PF_RawSend :
+  	#[ PF_RawRecv :
+*/
+
+/**
+ * Receives not more than \a thesize bytes from \a src,
+ * returns the actual number of received bytes, or -1 on failure.
+ *
+ * @param[in,out]  src      the source process number. In output, that of the actual received message.
+ * @param[out]     buf      the recieve buffer.
+ * @param          thesize  the size of the recieve buffer in bytes.
+ * @param[in,out]  tag      the message tag. In output, that of the actual received message.
+ * @return                  the actual sizeof received data in bytes, or -1 on failure.
+ */
+LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag)
+{
+	MPI_Status stat;
+	int ret=MPI_Recv(buf,(int)thesize,MPI_BYTE,*src,MPI_ANY_TAG,PF_COMM,&stat);
+	if ( ret != MPI_SUCCESS ) return(-1);
+	if ( MPI_Get_count(&stat,MPI_BYTE,&ret) != MPI_SUCCESS ) return(-1);
+	*tag = stat.MPI_TAG;
+	*src = stat.MPI_SOURCE;
+	return(ret);
+}
+
+/*
+  	#] PF_RawRecv :
+  	#[ PF_RawProbe :
+*/
+
+/**
+ * Probes an incoming message.
+ *
+ * @param[in,out]  src       the source process number. In output, that of the actual received message.
+ * @param[in,out]  tag       the message tag. In output, that of the actual received message.
+ * @param[out]     bytesize  the size of incoming data in bytes.
+ * @return                   0 if OK, nonzero on error.
+ */
+int PF_RawProbe(int *src, int *tag, int *bytesize)
+{
+	MPI_Status stat;
+	int srcval = src != NULL ? *src : PF_ANY_SOURCE;
+	int tagval = tag != NULL ? *tag : PF_ANY_MSGTAG;
+	int ret = MPI_Probe(srcval, tagval, PF_COMM, &stat);
+	if ( ret != MPI_SUCCESS ) return -1;
+	if ( src != NULL ) *src = stat.MPI_SOURCE;
+	if ( tag != NULL ) *tag = stat.MPI_TAG;
+	if ( bytesize != NULL ) {
+		ret = MPI_Get_count(&stat, MPI_BYTE, bytesize);
+		if ( ret != MPI_SUCCESS ) return -1;
+	}
+	return 0;
+}
+
+/*
+  	#] PF_RawProbe :
+  	#[ The pack buffer :
+ 		#[ Variables :
+*/
+
+/*
+ * The pack buffer with the fixed size (= PF_packsize).
+ */
+static UBYTE *PF_packbuf  = NULL;
+static UBYTE *PF_packstop = NULL;
+static int    PF_packpos  = 0;
+
+/*
+ 		#] Variables :
+ 		#[ PF_ShortPackInit :
+*/
+
+/**
+ * Initializes buffers for "short" packed communications.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+static int PF_ShortPackInit(void)
+{
+	PF_packbuf = (UBYTE *)Malloc1(sizeof(UBYTE) * PF_packsize, "PF_ShortPackInit");
+	if ( PF_packbuf == NULL ) return -1;
+	PF_packstop = PF_packbuf + PF_packsize;
+	return 0;
+}
+
+/*
+ 		#] PF_ShortPackInit :
+ 		#[ PF_InitPackBuf :
+*/
+
+/**
+ * Initializes the pack buffer for the next communication.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+static int PF_InitPackBuf(void)
+{
+/*
+		This is defenitely not the best place for allocating the
+		buffer! Moved to LibInit:
+
+	if ( PF_packbuf == 0 ) {
+		PF_packbuf = (UBYTE *)Malloc1(sizeof(UBYTE)*PF.packsize,"PF_InitPackBuf");
+		if ( PF_packbuf == 0 ) return(-1);
+		PF_packstop = PF_packbuf + PF.packsize;
+	}
+*/
+	PF_packpos = 0;
+	return(0);
+}
+
+/*
+ 		#] PF_InitPackBuf :
+ 		#[ PF_PrintPackBuf :
+*/
+
+/**
+ * Prints the contents in the pack buffer.
+ *
+ * @param   s     a message to be shown.
+ * @param   size  the length of the buffer to be shown.
+ * @return        0 if OK, nonzero on error.
+ */
+int PF_PrintPackBuf(char *s, int size)
+{
+#ifdef NOMESPRINTYET
+/*
+		The use of printf should be discouraged. The results are flushed to
+		the output at unpredictable moments. We should use printf only
+		during startup when MesPrint doesn't have its buffers and output
+		channels initialized.
+*/
+	int i;
+	printf("[%d] %s: ",PF.me,s);
+	for(i=0;i<size;i++) printf("%d ",PF_packbuf[i]);
+	printf("\n");
+#else
+	MesPrint("[%d] %s: %a",PF.me,s,size,(WORD *)(PF_packbuf));
+#endif
+	return(0);
+}
+
+/*
+ 		#] PF_PrintPackBuf :
+ 		#[ PF_Pack :
+*/
+
+/**
+ * Adds data into the pack buffer.
+ *
+ * @param  buffer  the pointer to the buffer storing the data to be packed.
+ * @param  count   the number of elements in the buffer.
+ * @param  type    the data type of elements in the buffer.
+ * @return         0 if OK, nonzero on error.
+ */
+int PF_Pack(VOID *buffer, LONG count, MPI_Datatype type)
+{
+	int ret, bytes;
+
+	ret = MPI_Pack_size((int)count,type,PF_COMM,&bytes);
+	if ( ret != MPI_SUCCESS ) return(ret);
+	if ( PF_packpos + bytes > PF_packstop - PF_packbuf ) return(-99);
+
+	ret = MPI_Pack(buffer,(int)count,type,
+	               PF_packbuf,(int)PF_packsize,&PF_packpos,PF_COMM);
+	if ( ret != MPI_SUCCESS ) return(ret);
+
+	return(0);
+}
+
+/*
+ 		#] PF_Pack :
+ 		#[ PF_UnPack :
+*/
+
+/**
+ * Retrieves the next data in the pack buffer.
+ *
+ * @param[out]  buffer  the pointer to the buffer to store the unpacked data.
+ * @param       count   the number of elements of data to be received.
+ * @param       type    the data type of elements of data to be recieved.
+ * @return              0 if OK, nonzero on error.
+ */
+int PF_UnPack(VOID *buffer, LONG count, MPI_Datatype type)
+{
+	int ret;
+
+	ret = MPI_Unpack(PF_packbuf,(int)PF_packsize,&PF_packpos,
+                     buffer,(int)count,type,PF_COMM);
+
+	if ( ret != MPI_SUCCESS ) return(ret);
+	return(0);
+}
+
+/*
+ 		#] PF_UnPack :
+ 		#[ PF_PackString :
+*/
+
+/**
+ * Packs a string \a str into the packed buffer PF_packbuf, including
+ * the trailing zero.
+ *
+ * The first element (PF_INT) is the length of the packed portion of
+ * the string. If the string does not fit to the buffer PF_packbuf,
+ * the function packs only the initial portion. It returns
+ * the number of packed bytes, so if (str[length-1]=='\0') then the whole
+ * string fits to the buffer, if not, then the rest (str+length) bust be
+ * packed and send again. On error, the function returns the negative
+ * error code.
+ *
+ * One exception: the string "\0!\0" is used as an image of the NULL,
+ * so all 3 characters will be packed.
+ *
+ * @param  str  a string to be packed.
+ * @return      the number of packed bytes, or a negative value on failure.
+ */
 int PF_PackString(UBYTE *str)
 {
 	int ret,buflength,bytes,length;
@@ -576,13 +690,13 @@ int PF_PackString(UBYTE *str)
 /*
 		The string "\0!\0" is used as an image of the NULL.
 */
-	if ( ( str[0] == '\0' )	/* empty string */
+	if ( ( str[0] == '\0' ) /* empty string */
 	  && ( str[1] == '!' )  /* Special case? */
-      && ( str[2] == '\0' ) /* Yes, pass 3 initial symbols */
-			) length += 2;  /* all 3 characters will be packed */
+	  && ( str[2] == '\0' ) /* Yes, pass 3 initial symbols */
+	        ) length += 2;  /* all 3 characters will be packed */
 	length++;               /* Will be decremented in the following loop */
-/* 
-		The problem: packed size of byte may be not equal 1! So first, suppose 
+/*
+		The problem: packed size of byte may be not equal 1! So first, suppose
 		it is 1, and if this is not the case decrease the length of the string
 		until it fits the buffer:
 */
@@ -590,7 +704,7 @@ int PF_PackString(UBYTE *str)
 		if ( ( ret = MPI_Pack_size(--length,PF_BYTE,PF_COMM,&bytes) )
 			!= MPI_SUCCESS ) return(ret);
 	} while ( bytes > buflength );
-/* 
+/*
 		Note, now if str[length-1] == '\0' then the string fits to the buffer
 		(INCLUDING the trailing zero!);if not, the rest must be packed further!
 
@@ -607,19 +721,23 @@ int PF_PackString(UBYTE *str)
 }
 
 /*
-  	#] int PF_PackString(UBYTE*) : 
-  	#[ int  PF_UnPackString(UBYTE*) :
-
-		The following function unpacks string str from PF_packbuf (INCLUDING
-		the trailing zero!). It returns the number of unpacked bytes, so if
-		(str[length-1]=='\0') then the whole string was unpacked, , if not,
-		then the rest must be appended to (str+length). On error, the function
-		returns the negative error code.
+ 		#] PF_PackString :
+ 		#[ PF_UnPackString :
 */
 
+/**
+ * Unpacks a string to \a str from the packed buffer PF_packbuf, including
+ * the trailing zero.
+ *
+ * It returns the number of unpacked bytes, so if (str[length-1]=='\0')
+ * then the whole string was unpacked, if not, then the rest must be appended
+ * to (str+length). On error, the function returns the negative error code.
+ *
+ * @param[out]  str  the buffer to store the unpacked string
+ * @return           the number of unpacked bytes, or a negative value on failure.
+ */
 int PF_UnPackString(UBYTE *str)
 {
-
 	int ret,length;
 /*
 		Unpack the length:
@@ -634,23 +752,155 @@ int PF_UnPackString(UBYTE *str)
 			str,length,PF_BYTE,PF_COMM) ) != MPI_SUCCESS ) return(ret);
 /*
 		Now if str[length-1]=='\0' then the whole string
-		(INCLUDING the trailing zero!) was unpacked ;if not, the rest 
+		(INCLUDING the trailing zero!) was unpacked ;if not, the rest
 		must be unpacked to str+length.
 */
-	return(length);	
+	return(length);
 }
 
 /*
-  	#] int  PF_UnPackString(UBYTE*) : 
-  	#[ Long pack stuff:
+ 		#] PF_UnPackString :
+ 		#[ PF_Send :
+*/
+
+/**
+ * Sends the contents in the pack buffer to the process \a to.
+ *
+ * Example:
+ * @code
+ * if ( PF.me == SRC ) {
+ *   PF_Send(DEST, TAG, 0);
+ *   // Packing operations here...
+ *   PF_Send(DEST, TAG, 1);
+ * }
+ * else if ( PF.me != DEST ) {
+ *   PF_Receive(SRC, TAG, &actual_src, &actual_tag);
+ *   // Unpacking operations here...
+ * }
+ * @endcode
+ *
+ * @param  to   the destination process number.
+ * @param  tag  the message tag.
+ * @param  par  0 for initialization. 1 for actual broadcasting.
+ * @return      0 if OK, nonzero on error.
+ */
+
+int PF_Send(int to, int tag, int par)
+{
+	int ret;
+
+	if ( !par ) {
+		if( ( ret = PF_InitPackBuf() ) != 0 ) return(ret);
+	}
+	else{
+		ret = MPI_Ssend(PF_packbuf,PF_packpos,MPI_PACKED,to,tag,PF_COMM);
+		if ( ret != MPI_SUCCESS ) return(ret);
+	}
+	return(0);
+}
+
+/*
+ 		#] PF_Send :
+ 		#[ PF_Receive :
+*/
+
+/**
+ * Recieves data into the pack buffer from the process specified by \a src.
+ *
+ * See the example of PF_Send().
+ *
+ * @param       src   the source process number (can be PF_ANY_SOURCE).
+ * @param       tag   the source message tag (can be PF_ANY_TAG).
+ * @param[out]  srcp  the actual source process number of received message.
+ * @param[out]  tagp  the received message tag.
+ * @return            0 if OK, nonzero on error.
+ */
+int PF_Receive(int src, int tag, int *srcp, int *tagp)
+{
+	int ret;
+	PF_InitPackBuf();
+	ret = MPI_Recv(PF_packbuf,(int)PF_packsize,MPI_PACKED,src,tag,
+											PF_COMM,&PF_status);
+	if ( ret != MPI_SUCCESS ) return(ret);
+	*tagp = PF_status.MPI_TAG;
+	*srcp = PF_status.MPI_SOURCE;
+	return(0);
+}
+
+/*
+ 		#] PF_Receive :
+ 		#[ PF_BroadCast :
+*/
+
+/**
+ * Broadcasts the contents in the pack buffer on the master to those
+ * on the slaves.
+ *
+ * Example:
+ * @code
+ * if ( PF.me == MASTER ) {
+ *   PF_BroadCast(0);
+ *   // Packing operations here...
+ * }
+ * PF_BroadCast(1);
+ * if ( PF.me != MASTER ) {
+ *   // Unpacking operations here...
+ * }
+ * @endcode
+ *
+ * @param  par  0 for initialization. 1 for actual broadcasting.
+ * @return      0 if OK, nonzero on error.
+ */
+int PF_BroadCast(int par)
+{
+	int ret;
+/*
+		If SHORTBROADCAST, then instead of the whole buffer broadcasting
+		will be performed in 2 steps. First, the size of buffer is broadcasted,
+		then the buffer of exactly used size. This should be faster with slow
+		connections, but slower on SMP shmem MPI.
+*/
+#ifdef SHORTBROADCAST
+	int pos = PF_packpos;
+#endif
+	if ( par == 0 ) {
+/*
+		Comment: initializes PF_packbuf,PF_packstop,PF_packpos:
+*/
+		if( ( ret = PF_InitPackBuf() ) != 0 ) return(ret);
+	}
+	else {
+		if ( PF.me != MASTER ) {
+			if ( ( ret = PF_InitPackBuf() ) != 0 ) return(ret);
+		}
+/*
+			for MPI_Bcast, size must be equal on all processes!
+*/
+#ifndef SHORTBROADCAST
+		ret = MPI_Bcast(PF_packbuf,(int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
+#else
+		ret = MPI_Bcast(&pos,1,MPI_INT,MASTER,PF_COMM);
+		if ( ret != MPI_SUCCESS ) return(ret);
+		ret = MPI_Bcast(PF_packbuf,pos,MPI_PACKED,MASTER,PF_COMM);
+#endif
+		if( ret != MPI_SUCCESS) return(ret);
+	}
+	return(0);
+}
+
+/*
+ 		#] PF_BroadCast :
+  	#] The pack buffer :
+  	#[ Long pack stuff :
+ 		#[ Explanations :
 
 	The problems here are:
 		1. We need to send/receive long dollar variables. For
 	preprocessor-defined dollarvars we used multiply
 	packing/broadcasting  (see parallel.c:PF_BroadcastPreDollar())
-	since each variable must be broadcasted immediately. For run-time 
+	since each variable must be broadcasted immediately. For run-time
 	the changed dollar variables, collecting and broadcasting are
-	performed at the end of the module and all modified dollarvars 
+	performed at the end of the module and all modified dollarvars
 	are transferred "at once", that is why the size of packed and
 	transferred buffers may be really very large.
 		2. There is some strange feature of MPI_Bcast() on Altix MPI
@@ -668,7 +918,7 @@ int PF_UnPackString(UBYTE *str)
 	side, see "Advice to users" on page 180 MPI--The Complete Reference
 	Volume1, second edition.
 		OPTIMIZING:
-		We assume, for most communications, the single buffer of size 
+		We assume, for most communications, the single buffer of size
 	PF_packsize is enough.
 
 		How does it work:
@@ -684,21 +934,21 @@ int PF_UnPackString(UBYTE *str)
 	it's own buffer. This is done for better memory utilisation:
 	longSingle and longMulti are never used simultaneously.
 		When a new cell is needed for LongMulti packing, we increment
-	the counter PF_longPackN and just follow	the list. If it is not 
+	the counter PF_longPackN and just follow	the list. If it is not
 	possible, we allocate the cell's own buffer and link it to the end
 	of the list PF_longMultiRoot.
 		When PF_longPackPos is reallocated, we link new chunks into
-	existing PF_longMultiRoot list before the first longMulti allocated 
+	existing PF_longMultiRoot list before the first longMulti allocated
 	cell's own buffer. The pointer PF_longMultiLastChunk points to the last
-	cell of PF_longMultiRoot containing the pointer to the chunk of 
+	cell of PF_longMultiRoot containing the pointer to the chunk of
 	PF_longPackBuf.
-		Initialization PF_longPackBuf is made by the function 
+		Initialization PF_longPackBuf is made by the function
 	PF_longSingleReset(). In the begin of the PF_longPackBuf it packs
 	the size of the last sent buffer. Upon sending, the program checks,
-	whether there was at list one re-allocation (PF_longPackN>1) . 
-	If so, the sender first packs and sends small buffer 
-	(PF_longPackSmallBuf) containing one integer number -- the 
-	_negative_ new size of the send buffer. Getting the buffer, a 
+	whether there was at list one re-allocation (PF_longPackN>1) .
+	If so, the sender first packs and sends small buffer
+	(PF_longPackSmallBuf) containing one integer number -- the
+	_negative_ new size of the send buffer. Getting the buffer, a
 	receiver unpacks one	integer and checks whether it is <0 . If so,
 	the receiver will repeat receiving, but first it checks whether
 	it has enough buffer and increase it, if necessary.
@@ -711,7 +961,7 @@ int PF_UnPackString(UBYTE *str)
 	times chunk on each cell was accessed by the packing procedure,
 	this information is contained by the nPacks field of the cell
 	structure, and how many non-complete items was at the end ot this
-	chunk the structure field lastLen. Then the sender sends first 
+	chunk the structure field lastLen. Then the sender sends first
 	this auxiliary chunk.
 	The receiver unpacks the integer from obtained chunk and, if this
 	integer is more than 1, it gets more chunks, unpacking information
@@ -719,9 +969,12 @@ int PF_UnPackString(UBYTE *str)
 	fields. Unpacking information from multiple chunks, the reseiver
 	knows, when the chunk is expired and it must switch to the next cell,
 	successively decrementing corresponding nPacks field.
+
+ 		#] Explanations :
+ 		#[ Variables :
 */
 
-typedef struct longMultiStruct {	
+typedef struct longMultiStruct {
 	UBYTE *buffer; /* NULL if */
 	int bufpos;    /* if >=0, PF_longPackBuf+bufpos is the chunk start */
 	int packpos;   /* the current position */
@@ -742,10 +995,12 @@ static PF_LONGMULTI *PF_longMultiLastChunk = NULL;
 static int PF_longPackN = 0;
 
 /*
-   #[ PF_longMultiNewCell:
+ 		#] Variables :
+ 		#[ Long pack private functions :
+ 		#[ PF_longMultiNewCell :
 */
 
-static FORM_INLINE int PF_longMultiNewCell()
+static FORM_INLINE int PF_longMultiNewCell(void)
 {
 /*
 		Allocate a new cell:
@@ -762,7 +1017,7 @@ static FORM_INLINE int PF_longMultiNewCell()
 /*
 		For the private buffer position is -1:
 */
-	PF_longMultiTop->next->bufpos = -1;	
+	PF_longMultiTop->next->bufpos = -1;
 /*
 		This is the last cell in the chain:
 */
@@ -770,14 +1025,14 @@ static FORM_INLINE int PF_longMultiNewCell()
 /*
 		packpos and nPacks are not initialized!
 */
-	return(0);	
+	return(0);
 }
 
 /*
-   #] PF_longMultiNewCell: 
-   #[ PF_longMultiPack2NextCell:
+ 		#] PF_longMultiNewCell :
+ 		#[ PF_longMultiPack2NextCell :
 */
-static FORM_INLINE int PF_longMultiPack2NextCell()
+static FORM_INLINE int PF_longMultiPack2NextCell(void)
 {
 /*
 		Is there a free cell in the chain?
@@ -808,8 +1063,8 @@ static FORM_INLINE int PF_longMultiPack2NextCell()
 }
 
 /*
-   #] PF_longMultiPack2NextCell: 
-   #[ PF_longMultiNewChunkAdded:
+ 		#] PF_longMultiPack2NextCell :
+ 		#[ PF_longMultiNewChunkAdded :
 */
 
 static FORM_INLINE int PF_longMultiNewChunkAdded(int n)
@@ -849,8 +1104,8 @@ static FORM_INLINE int PF_longMultiNewChunkAdded(int n)
 }
 
 /*
-   #] PF_longMultiNewChunkAdded: 
-   #[ PF_longCopyChunk:
+ 		#] PF_longMultiNewChunkAdded :
+ 		#[ PF_longCopyChunk :
 */
 
 static FORM_INLINE void PF_longCopyChunk(int *to, int *from, int n)
@@ -860,15 +1115,15 @@ static FORM_INLINE void PF_longCopyChunk(int *to, int *from, int n)
 }
 
 /*
-   #] PF_longCopyChunk:
-   #[ PF_longAddChunk:
+ 		#] PF_longCopyChunk :
+ 		#[ PF_longAddChunk :
 
-	If n == 0, the chunk must be increased by 1*PF_packsize and 
+	If n == 0, the chunk must be increased by 1*PF_packsize and
 	re-allocated. If n > 0, the chunk must be increased by n*PF_packsize
 	without re-allocation.
 */
 
-int PF_longAddChunk(int n)
+static int PF_longAddChunk(int n)
 {
 	int mustRealloc;
 	UBYTE *newbuf;
@@ -911,13 +1166,13 @@ int PF_longAddChunk(int n)
 }
 
 /*
-   #] PF_longAddChunk: 
-   #[ PF_longMultiHowSplit:
+ 		#] PF_longAddChunk :
+ 		#[ PF_longMultiHowSplit :
 
 	"count" of "type" elements in an input buffer occupy "bytes" bytes.
-	We know from the algorithm, that it is too many. How to split 
+	We know from the algorithm, that it is too many. How to split
 	the buffer so that the head fits to rest of a storage buffer?*/
-	static FORM_INLINE int PF_longMultiHowSplit(int count, MPI_Datatype type, int bytes)
+static FORM_INLINE int PF_longMultiHowSplit(int count, MPI_Datatype type, int bytes)
 {
 	int ret, items, totalbytes;
 
@@ -950,11 +1205,11 @@ int PF_longAddChunk(int n)
 	return(items);
 }
 /*
-   #] PF_longMultiHowSplit: 
-   #[ PF_longPackInit:
+ 		#] PF_longMultiHowSplit :
+ 		#[ PF_longPackInit :
 */
 
-static int PF_longPackInit()
+static int PF_longPackInit(void)
 {
 	int ret;
 	PF_longPackBuf = (UBYTE*)Malloc1(sizeof(UBYTE)*PF_packsize,"PF_longPackBuf");
@@ -985,14 +1240,11 @@ static int PF_longPackInit()
 }
 
 /*
-   #] PF_longPackInit: 
-   #[ PF_longMultiPreparePrefix:
-
-	Before here there was an extra / * to start commentary which had no
-	matching close of commentary. ???????
+ 		#] PF_longPackInit :
+ 		#[ PF_longMultiPreparePrefix :
 */
 
-static FORM_INLINE int PF_longMultiPreparePrefix()
+static FORM_INLINE int PF_longMultiPreparePrefix(void)
 {
 	int ret;
 	PF_LONGMULTI *thePrefix;
@@ -1059,11 +1311,11 @@ static FORM_INLINE int PF_longMultiPreparePrefix()
 }
 
 /*
-   #] PF_longMultiPreparePrefix: 
-   #[ PF_longMultiProcessPrefix:
+ 		#] PF_longMultiPreparePrefix :
+ 		#[ PF_longMultiProcessPrefix :
 */
 
-static FORM_INLINE int PF_longMultiProcessPrefix()
+static FORM_INLINE int PF_longMultiProcessPrefix(void)
 {
 	int ret,i;
 /*
@@ -1103,18 +1355,26 @@ static FORM_INLINE int PF_longMultiProcessPrefix()
 }
 
 /*
-   #] PF_longMultiProcessPrefix: 
-   #[ Long pack public :
-   #[ PF_longSingleReset :
+ 		#] PF_longMultiProcessPrefix :
+ 		#] Long pack private functions :
+ 		#[ PF_longSingleReset :
 */
 
-int PF_longSingleReset()
+/**
+ * Resets the "long single" pack buffer.
+ *
+ * @return  0 if OK, nonzero on error.
+ *
+ * @remark  This function assumes the sending operation is from a slave
+ *          to the master.
+ */
+int PF_longSingleReset(void)
 {
 	int ret;
 	PF_longPackPos=0;
 	if ( PF.me != MASTER ) {
 /*
-		Slaves send info to the master, so the 
+		Slaves send info to the master, so the
 					Master should not add the prefix:
 */
 		ret = MPI_Pack(&PF_longPackTop,1,MPI_INT,
@@ -1129,11 +1389,19 @@ int PF_longSingleReset()
 }
 
 /*
-   #] PF_longSingleReset : 
-   #[ PF_longMultiReset :
+ 		#] PF_longSingleReset :
+ 		#[ PF_longMultiReset :
 */
 
-int PF_longMultiReset()
+/**
+ * Resets the "long multi" pack buffer.
+ *
+ * @return  0 if OK, nonzero on error.
+ *
+ * @remark  This function assumes the sending (broadcasting) operation
+ *          is from the master to the slaves.
+ */
+int PF_longMultiReset(void)
 {
 	int ret, theone = 1;
 	PF_longMultiRoot->packpos = 0;
@@ -1153,10 +1421,18 @@ int PF_longMultiReset()
 }
 
 /*
-   #] PF_longMultiReset : 
-   #[ int PF_longSinglePack :
+ 		#] PF_longMultiReset :
+ 		#[ PF_longSinglePack :
 */
 
+/**
+ * Adds data into the "long single" pack buffer.
+ *
+ * @param  buffer  the pointer to the buffer storing the data to be packed.
+ * @param  count   the number of elements in the buffer.
+ * @param  type    the data type of elements in the buffer.
+ * @return         0 if OK, nonzero on error.
+ */
 int PF_longSinglePack(UBYTE *buffer, int count, MPI_Datatype type)
 {
 	int ret, bytes;
@@ -1167,34 +1443,51 @@ int PF_longSinglePack(UBYTE *buffer, int count, MPI_Datatype type)
 		if ( PF_longAddChunk(0) ) return(-1);
 	}
 /*
-		PF_longAddChunk(0) means, the chunk must 
+		PF_longAddChunk(0) means, the chunk must
 		be increased by 1 and re-allocated
 */
 	ret = MPI_Pack((VOID*)buffer,count,type,
-				 PF_longPackBuf,PF_longPackTop,&PF_longPackPos,PF_COMM);
+	               PF_longPackBuf,PF_longPackTop,&PF_longPackPos,PF_COMM);
 	if ( ret != MPI_SUCCESS ) return(ret);
 	return(0);
 }
 
 /*
-   #] int PF_longSinglePack : 
-   #[ PF_longSingleUnPack:
+ 		#] PF_longSinglePack :
+ 		#[ PF_longSingleUnPack :
 */
 
+/**
+ * Retrieves the next data in the "long single" pack buffer.
+ *
+ * @param[out]  buffer  the pointer to the buffer to store the unpacked data.
+ * @param       count   the number of elements of data to be received.
+ * @param       type    the data type of elements of data to be recieved.
+ * @return              0 if OK, nonzero on error.
+ */
 int PF_longSingleUnPack(UBYTE *buffer, LONG count, MPI_Datatype type)
 {
 	int ret;
 	ret = MPI_Unpack(PF_longPackBuf,PF_longPackTop,&PF_longPackPos,
-				(VOID*)buffer,count,type,PF_COMM);
+	                 (VOID*)buffer,count,type,PF_COMM);
 	if ( ret != MPI_SUCCESS ) return(ret);
 	return(0);
 }
 
 /*
-   #] PF_longSingleUnPack: 
-   #[ PF_longMultiPack:
+ 		#] PF_longSingleUnPack :
+ 		#[ PF_longMultiPack :
 */
 
+/**
+ * Adds data into the "long multi" pack buffer.
+ *
+ * @param  buffer  the pointer to the buffer storing the data to be packed.
+ * @param  count   the number of elements in the buffer.
+ * @param  eSize   the byte size of each elements in the buffer.
+ * @param  type    the data type of elements in the buffer.
+ * @return         0 if OK, nonzero on error.
+ */
 int PF_longMultiPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 {
 	int ret, items;
@@ -1204,7 +1497,7 @@ int PF_longMultiPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 
 	if ( PF_longMultiTop->packpos + items <= PF_packsize ) {
 		ret = MPI_Pack((VOID*)buffer,count,type,PF_longMultiTop->buffer,
-				PF_packsize,&(PF_longMultiTop->packpos),PF_COMM);
+		               PF_packsize,&(PF_longMultiTop->packpos),PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
 		PF_longMultiTop->nPacks++;
 		return(0);
@@ -1220,7 +1513,7 @@ int PF_longMultiPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 
 	if ( items > 0 ) {   /* store the head */
 		ret = MPI_Pack((VOID*)buffer,items,type,PF_longMultiTop->buffer,
-			(int)PF_packsize,&(PF_longMultiTop->packpos),PF_COMM);
+		               (int)PF_packsize,&(PF_longMultiTop->packpos),PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
 		PF_longMultiTop->nPacks++;
 		PF_longMultiTop->lastLen = items;
@@ -1237,9 +1530,19 @@ int PF_longMultiPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 	return(PF_longMultiPack(buffer+items*eSize,count-items,eSize,type));
 }
 /*
-   #] PF_longMultiPack: 
-   #[ PF_longMultiUnPack:
+ 		#] PF_longMultiPack :
+ 		#[ PF_longMultiUnPack :
 */
+
+/**
+ * Retrieves the next data in the "long multi" pack buffer.
+ *
+ * @param[out]  buffer  the pointer to the buffer to store the unpacked data.
+ * @param       count   the number of elements of data to be received.
+ * @param       eSize   the byte size of each element of data.
+ * @param       type    the data type of elements of data.
+ * @return              0 if OK, nonzero on error.
+ */
 int PF_longMultiUnPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 {
 	int ret;
@@ -1300,25 +1603,46 @@ int PF_longMultiUnPack(UBYTE *buffer, int count, int eSize, MPI_Datatype type)
 }
 
 /*
-   #] PF_longMultiUnPack: 
-   #[ PF_longSingleSend:
+ 		#] PF_longMultiUnPack :
+ 		#[ PF_longSingleSend :
 */
 
+/**
+ * Sends the contents in the "long single" pack buffer to the process
+ * specified by \a to.
+ *
+ * Example:
+ * @code
+ * PF_longSingleReset();
+ * if ( PF.me == SLAVE ) {
+ *   // Packing operations to "long single" pack buffer here...
+ *   PF_longSingleSend(MASTER, TAG);
+ * }
+ * else if ( PF.me == MASTER ) {
+ *   PF_longSingleReceive(SLAVE, TAG, &actual_src, &actual_tag);
+ *   // Unpacking operations from "long single" pack buffer here...
+ * }
+ * @endcode
+ *
+ * @param  to   the destination process number.
+ * @param  tag  the message tag.
+ * @return      0 if OK, nonzero on error.
+ */
 int PF_longSingleSend(int to, int tag)
 {
 	int ret, pos = 0;
 /*
-		Note, here we assume that this function couldn't be used 
+		Note, here we assume that this function couldn't be used
 		with to == PF_ANY_SOURCE!
 */
-	if ( PF_longPackN > 1 ) {  /* The buffer was incremented, pack send the new
-									size first: */
+	if ( PF_longPackN > 1 ) {
+		/* The buffer was incremented, pack send the new size first: */
 		int tmp = -PF_longPackTop;
 /*
 			Negative value means there will be the second buffer
 */
 		ret = MPI_Pack(&tmp, 1,PF_INT,
-					PF_longPackSmallBuf,PF_longPackTop,&pos,PF_COMM);
+		               PF_longPackSmallBuf,PF_longPackTop,&pos,PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
 		ret = MPI_Ssend(PF_longPackSmallBuf,pos,MPI_PACKED,to,tag,PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
@@ -1329,16 +1653,28 @@ int PF_longSingleSend(int to, int tag)
 }
 
 /*
-   #] PF_longSingleSend: 
-   #[ PF_longSingleReceive:
+ 		#] PF_longSingleSend :
+ 		#[ PF_longSingleReceive :
 */
 
+/**
+ * Recieves data into the "long single" pack buffer from the process
+ * specified by \a src.
+ *
+ * See the example of PF_longSingleSend().
+ *
+ * @param       src   the source process number (can be PF_ANY_SOURCE).
+ * @param       tag   the source message tag (can be PF_ANY_TAG).
+ * @param[out]  srcp  the actual source process number of received message.
+ * @param[out]  tagp  the received message tag.
+ * @return            0 if OK, nonzero on error.
+ */
 int PF_longSingleReceive(int src, int tag, int *srcp, int *tagp)
 {
 	int ret, missed, oncemore;
 	do {
 		ret = MPI_Recv(PF_longPackBuf,PF_longPackTop,MPI_PACKED,src,tag,
-				 PF_COMM,&PF_status);
+		               PF_COMM,&PF_status);
 		if ( ret != MPI_SUCCESS ) return(ret);
 /*
 			The source must be specified here for the case if
@@ -1350,7 +1686,7 @@ int PF_longSingleReceive(int src, int tag, int *srcp, int *tagp)
 			or just a regular chunk.
 */
 		ret = MPI_Unpack(PF_longPackBuf,PF_longPackTop,&PF_longPackPos,
-				&missed,1,MPI_INT,PF_COMM);
+		                 &missed,1,MPI_INT,PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
 
 		if ( missed < 0 ) { /* The small buffer was received. */
@@ -1375,11 +1711,29 @@ int PF_longSingleReceive(int src, int tag, int *srcp, int *tagp)
 }
 
 /*
-   #] PF_longSingleReceive: 
-   #[ PF_longBroadcast:
+ 		#] PF_longSingleReceive :
+ 		#[ PF_longBroadcast :
 */
 
-int PF_longBroadcast()
+/**
+ * Broadcasts the contents in the "long multi" pack buffer on the master
+ * to those on the slaves.
+ *
+ * Example:
+ * @code
+ * PF_longMultiReset();
+ * if ( PF.me == MASTER ) {
+ *   // Packing operations to "long multi" pack buffer here...
+ * }
+ * PF_longBroadcast();
+ * if ( PF.me != MASTER ) {
+ *   // Unpacking operations from "long multi" pack buffer here...
+ * }
+ * @endcode
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+int PF_longBroadcast(void)
 {
 	int ret, i;
 
@@ -1391,10 +1745,10 @@ int PF_longBroadcast()
 		if ( PF_longPackN > 1 ) {
 			if ( PF_longMultiPreparePrefix() ) return(-1);
 			ret = MPI_Bcast((VOID*)PF_longMultiTop->buffer,
-				(int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
+			                (int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 			if ( ret != MPI_SUCCESS ) return(ret);
 /*
-				PF_longPackN was not inremented by PF_longMultiPreparePrefix()!
+				PF_longPackN was not incremented by PF_longMultiPreparePrefix()!
 */
 		}
 /*
@@ -1406,7 +1760,7 @@ int PF_longBroadcast()
 */
 		for ( i = 0; i < PF_longPackN; i++ ) {
 			ret = MPI_Bcast((VOID*)PF_longMultiTop->buffer,
-				(int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
+			                (int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 			if ( ret != MPI_SUCCESS ) return(ret);
 			PF_longMultiTop = PF_longMultiTop->next;
 		}
@@ -1415,38 +1769,38 @@ int PF_longBroadcast()
 /*
 		else - the slave
 
-		Get the first chunk; it can be either the only data chunk, or 
+		Get the first chunk; it can be either the only data chunk, or
 		an auxiliary chunk, if the data do not fit the single chunk:
 */
 	ret = MPI_Bcast((VOID*)PF_longMultiRoot->buffer,
-				(int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
+	                (int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 	if ( ret != MPI_SUCCESS ) return(ret);
 
 	ret = MPI_Unpack((VOID*)PF_longMultiRoot->buffer,
-							(int)PF_packsize,
-							&(PF_longMultiRoot->packpos),
-							&PF_longPackN,1,MPI_INT,PF_COMM);
+	                 (int)PF_packsize,
+	                 &(PF_longMultiRoot->packpos),
+	                 &PF_longPackN,1,MPI_INT,PF_COMM);
 	if ( ret != MPI_SUCCESS ) return(ret);
 /*
-		Now in PF_longPackN we have the number of cells used 
-		for broadcasting. If it is >1, then we have to allocate 
+		Now in PF_longPackN we have the number of cells used
+		for broadcasting. If it is >1, then we have to allocate
 		enough cells, initialize them and receive all the chunks.
-*/	
+*/
 	if ( PF_longPackN < 2 ) /* That's all, the single chunk is received. */
-					return(0);
+		return(0);
 /*
 		Here we have to get PF_longPackN chunks. But, first,
 		initialize cells by info from the received auxiliary chunk.
 */
 	if ( PF_longMultiProcessPrefix() ) return(-1);
 /*
-		Now we have free PF_longPackN cells, starting 
-		from PF_longMultiRoot->next,  with properly initialized 
+		Now we have free PF_longPackN cells, starting
+		from PF_longMultiRoot->next,  with properly initialized
 		nPacks and lastLen fields. Get chunks:
 */
 	for ( PF_longMultiTop = PF_longMultiRoot->next, i = 0; i < PF_longPackN; i++ ) {
 		ret = MPI_Bcast((VOID*)PF_longMultiTop->buffer,
-			(int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
+		                (int)PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
 		if ( i == 0 ) {   /* The first chunk, it contains extra "1". */
 			int tmp;
@@ -1454,15 +1808,15 @@ int PF_longBroadcast()
 				Extract this 1 into tmp and forget about it.
 */
 			ret = MPI_Unpack((VOID*)PF_longMultiTop->buffer,
-							(int)PF_packsize,
-							&(PF_longMultiTop->packpos),
-							&tmp,1,MPI_INT,PF_COMM);
+			                 (int)PF_packsize,
+			                 &(PF_longMultiTop->packpos),
+			                 &tmp,1,MPI_INT,PF_COMM);
 			if ( ret != MPI_SUCCESS ) return(ret);
 		}
 		PF_longMultiTop = PF_longMultiTop->next;
 	}
 /*
-		multiUnPack starts with PF_longMultiTop, skip auxiliary chunk in 
+		multiUnPack starts with PF_longMultiTop, skip auxiliary chunk in
 		PF_longMultiRoot:
 */
 	PF_longMultiTop = PF_longMultiRoot->next;
@@ -1470,67 +1824,6 @@ int PF_longBroadcast()
 }
 
 /*
-   #] PF_longBroadcast: 
-   #] Long pack public : 
-   #] Long pack stuff:
-*/
-
-/*
-   #[ int PF_RawSend:
-	Sends l bytes from buf to dest. Returns 0 on success, or -1:
-*/
-int PF_RawSend(int dest, void *buf, LONG l, int tag)
-{
-	int ret=MPI_Ssend(buf,(int)l,MPI_BYTE,dest,tag,PF_COMM);
-	if( ret != MPI_SUCCESS) return(-1);
-	return(0);
-}
-/*
-   #] int PF_RawSend:
-   #[ LONG PF_RawRecv:
-	Receives not more than thesize bytes from src,
-	returns the actual number of received bytes, or -1 on failure:
-*/
-LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag)
-{
-	MPI_Status stat;
-	int ret=MPI_Recv(buf,(int)thesize,MPI_BYTE,*src,MPI_ANY_TAG,
-				 PF_COMM,&stat);
-	if( ret != MPI_SUCCESS) return(-1);
-	if(MPI_Get_count(&stat,MPI_BYTE,&ret) != MPI_SUCCESS) return(-1);	
-	*tag = stat.MPI_TAG;
-	*src = stat.MPI_SOURCE;
-	return(ret);
-}
-/*
-   #] LONG PF_RawRecv:
-   #[ PF_RawProbe:
-*/
-
-/**
- * Probes an incoming message.
- *
- * @param[in,out] src      The source rank.
- * @param[in,out] tag      The tag value.
- * @param[out]    bytesize The size of received data in bytes.
- * @return                 The standard return convention (OK = 0).
- */
-int PF_RawProbe(int *src, int *tag, int *bytesize)
-{
-	MPI_Status stat;
-	int srcval = src != NULL ? *src : PF_ANY_SOURCE;
-	int tagval = tag != NULL ? *tag : PF_ANY_MSGTAG;
-	int ret = MPI_Probe(srcval, tagval, PF_COMM, &stat);
-	if ( ret != MPI_SUCCESS ) return -1;
-	if ( src != NULL ) *src = stat.MPI_SOURCE;
-	if ( tag != NULL ) *tag = stat.MPI_TAG;
-	if ( bytesize != NULL ) {
-		ret = MPI_Get_count(&stat, MPI_BYTE, bytesize);
-		if ( ret != MPI_SUCCESS ) return -1;
-	}
-	return 0;
-}
-
-/*
-   #] PF_RawProbe:
+ 		#] PF_longBroadcast :
+  	#] Long pack stuff :
 */

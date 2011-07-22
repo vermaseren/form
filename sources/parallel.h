@@ -1,5 +1,4 @@
 #ifndef __PARALLEL__
- 
 #define __PARALLEL__
 
 /** @file parallel.h
@@ -32,12 +31,13 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 /*
   	#[ macros & definitions :
 */
-#define MASTER 0 
+#define MASTER 0
+
 #define PF_RESET 0
 #define PF_TIME  1
 
@@ -45,30 +45,20 @@
 #define PF_INIT_MSGTAG       1
 #define PF_BC_MSGTAG         2
 
-#define PF_TERM_MSGTAG       10
-#define PF_ENDSORT_MSGTAG    11
-#define PF_DOLLAR_MSGTAG     12
-#define PF_BUFFER_MSGTAG     20
-#define PF_ENDBUFFER_MSGTAG  21
-#define PF_READY_MSGTAG      30
-#define PF_ATTACH_MSGTAG     40
-#define PF_DATA_MSGTAG       50
-#define PF_EMPTY_MSGTAG      52
-#define PF_STDOUT_MSGTAG     60
-#define PF_LOG_MSGTAG        61
+#define PF_TERM_MSGTAG       10  /* master -> slave: sending terms */
+#define PF_ENDSORT_MSGTAG    11  /* master -> slave: no more terms to be distributed, slave -> master: after EndSort() */
+#define PF_DOLLAR_MSGTAG     12  /* slave -> master: sending $-variables */
+#define PF_BUFFER_MSGTAG     20  /* slave -> master: sending sorted terms, or in PF_SendFile()/PF_RecvFile() */
+#define PF_ENDBUFFER_MSGTAG  21  /* same as PF_BUFFER_MSGTAG, but indicates the end of operation */
+#define PF_READY_MSGTAG      30  /* slave -> master: slave is idle and can accept terms */
+#define PF_ATTACH_MSGTAG     40  /* not used */
+#define PF_DATA_MSGTAG       50  /* InParallel, DoCheckpoint() */
+#define PF_EMPTY_MSGTAG      52  /* InParallel, DoCheckpoint(), PF_SendFile(), PF_RecvFile() */
+#define PF_STDOUT_MSGTAG     60  /* slave -> master: sending text to the stdout */
+#define PF_LOG_MSGTAG        61  /* slave -> master: sending text to the log file */
 
-/*[12oct2005 mt]:*/
-/*Better to localize this istuff in mpi.c:*/
-#ifdef REMOVEDBY_MT
-/*[04oct2005 mt]:*/
-/*PF.packsize:*/
-#define PF_PACKSIZE 1000
-/*:[04oct2005 mt]*/
-#endif
-/*:[12oct2005 mt]*/
-
-#define PF_ATTACH_REDEF       1
-#define PF_ATTACH_DOLLAR      2
+#define PF_ATTACH_REDEF       1  /* redefined preprocessor variable */
+#define PF_ATTACH_DOLLAR      2  /* not used */
 
 #ifdef PVM
 #  include "pvm3.h"
@@ -179,31 +169,30 @@ extern "C" {
   	#[ s/r-bufs :
 */
 
-/* 
-   struct for nonblocking,unbuffered send of the sorted terms in the 
-   PObuffers back to the master using several "rotating" PObuffers 
-*/
-
-typedef struct{
-  WORD **buff;
-  WORD **fill;
-  WORD **full;
-  WORD **stop;
+/**
+ * A struct for nonblocking, unbuffered send of the sorted terms in the
+ * PObuffers back to the master using several "rotating" PObuffers.
+ */
+typedef struct {
+	WORD **buff;
+	WORD **fill;
+	WORD **full;
+	WORD **stop;
 #ifdef WITHMPI
-  MPI_Status *status;
-  MPI_Status *retstat;  
-  MPI_Request *request;
-  MPI_Datatype *type;   /* this is needed in PF_Wait for Get_count */
-  int *index;           /* dummies for returnvalues */
+	MPI_Status *status;
+	MPI_Status *retstat;
+	MPI_Request *request;
+	MPI_Datatype *type;   /* this is needed in PF_Wait for Get_count */
+	int *index;           /* dummies for returnvalues */
 #else
-  int *type;            /* these need to be saved between Irecv and Wait */
+	int *type;            /* these need to be saved between Irecv and Wait */
 #endif
-  int *tag;             /* for the version with blocking send/receives */
-  int *from;
-  int numbufs;          /* number of cyclic buffers */
-  int active;           /* flag telling which buffer is active */
-  PADPOINTER(0,2,0,0);
-}PF_BUFFER;
+	int *tag;             /* for the version with blocking send/receives */
+	int *from;
+	int numbufs;          /* number of cyclic buffers */
+	int active;           /* flag telling which buffer is active */
+	PADPOINTER(0,2,0,0);
+} PF_BUFFER;
 
 /*
   	#] s/r-bufs :
@@ -211,31 +200,27 @@ typedef struct{
 */
 
 typedef struct ParallelVars {
-	FILEHANDLE  slavebuf;
+	FILEHANDLE  slavebuf;       /* (slave) allocated if there are RHS expressions */
 	/* special buffers for nonblocking, unbuffered send/receives */
 	PF_BUFFER  *sbuf;           /* set of cyclic send buffers for master _and_ slave */
 	PF_BUFFER **rbufs;          /* array of sets of cyclic receive buffers for master */
 	LONG       *redef;          /* number of term of last redef for each PreProVar */
 	LONG        ginterms;       /* total interms ("on master"): PF_Proces */
 	LONG        numredefs;      /* size of PF.redefs */
-	/*[12oct2005 mt]:*/
-	/*Better to localize this istuff in mpi.c:*/
-	/*LONG      packsize;*/     /* this is only for the packbuffer of the MPI routines */
-	/*:[12oct2005 mt]*/
 	int         me;             /* Internal number of task: master is 0 */
 	int         numtasks;       /* total number of tasks */
 	int         parallel;       /* flags telling the slaves to do the sorting parallel */
-	                            /*[05nov2003 mt] This flag must be set to 0 in iniModule!*/
-	int         rhsInParallel;  /* */
-	int         mkSlaveInfile;
-	int         exprbufsize;
-	int         exprtodo;
+	                            /* [05nov2003 mt] This flag must be set to 0 in iniModule! */
+	int         rhsInParallel;  /* flag for parallel executing even if there are RHS expressions */
+	int         mkSlaveInfile;  /* flag tells that slavebuf is used on the slaves */
+	int         exprbufsize;    /* buffer size in WORDs to be used for transferring expressions */
+	int         exprtodo;       /* >= 0: the expression to do in InParallel, -1: otherwise */
 	/*[26nov2003 mt]:*/
 	int         mnumredefs;     /* number of redefined PreProVar in current module*/
 	/*:[26nov2003 mt]*/
 	int         log;            /* flag for logging mode */
-	WORD        numsbufs;       /* number of cyclic send buffers (PF.sbuf) */
-	WORD        numrbufs;       /* number of cyclic receive buffers */
+	WORD        numsbufs;       /* number of cyclic send buffers (PF.sbuf->numbufs) */
+	WORD        numrbufs;       /* number of cyclic receive buffers (PF.rbufs[i]->numbufs, i=1,...numtasks-1) */
 	/*[28nov2003 mt]:*/
 	/*If !=0, start of each module will be synchronized between all slaves and master:*/
 	WORD synchro;
@@ -243,16 +228,7 @@ typedef struct ParallelVars {
 	PADPOINTER(2,9,3,0);
 } PARALLELVARS;
 
-typedef struct PF_DOLLARS {
-  WORD** slavebuf;     /* array of slavebuffers for each dollar variable*/
-  WORD  type;          /* type of action on dollars: sum, maximum etc. */
-  PADPOINTER(0,0,1,0);
-}PFDOLLARS;
-
 extern PARALLELVARS PF;
-
-extern PFDOLLARS *PFDollars;
-
 /*[04oct2005 mt]:*/
 /*for broadcasting dollarvars, see parallel.c:PF_BroadcastPreDollar():*/
 extern LONG PF_maxDollarChunkSize;
