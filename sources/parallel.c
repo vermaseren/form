@@ -2579,7 +2579,7 @@ WORD PF_mkDollarsParallel(void)
 	UBYTE *name, *p;
 	WORD type, *where, *r;
 	LONG size;
-	DOLLARS  d, newd;
+	DOLLARS d;
 
 	if ( AC.mparallelflag == PARALLELFLAG ) {
 		if ( PF.me == 0 ) { /*Master*/
@@ -2751,18 +2751,13 @@ WORD PF_mkDollarsParallel(void)
 				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
 				namesize = 1;
 				while (*p++) namesize++;
-				/* Why DolToTerms? (TU 10 Jun 2011) */
-/*				newd = DolToTerms(BHEAD index); */
-				newd = Dollars + index;
-/*
-					type newd == 0  will not be send to master
-*/
+				d = Dollars + index;
 				PF_longSinglePack((UBYTE*)&namesize, 1, PF_INT);
 				PF_longSinglePack(name, namesize, PF_BYTE);
-				if ( newd != 0 ) {
-					PF_longSinglePack((UBYTE*)&(newd->type), 1, PF_WORD);
-					PF_longSinglePack((UBYTE*)&(newd->size), 1, PF_LONG);
-					PF_longSinglePack((UBYTE*)newd->where, newd->size+1, PF_WORD);
+				if ( d->type != DOLZERO ) {
+					PF_longSinglePack((UBYTE *)&d->type, 1, PF_WORD);
+					PF_longSinglePack((UBYTE *)&d->size, 1, PF_LONG);
+					PF_longSinglePack((UBYTE *)d->where, d->size + 1, PF_WORD);
 				}
 				else {
 					type = DOLZERO;
@@ -2795,24 +2790,18 @@ WORD PF_mkDollarsParallel(void)
 			p = name = AC.dollarnames->namebuffer+Dollars[index].name;
 			namesize = 1;
 			while ( *p++ ) namesize++;
-			/* Why DolToTerms? (TU 10 Jun 2011) */
-/*			newd = DolToTerms(BHEAD index); */
-			newd = Dollars + index;
-/*
-				if newd=0, this type of dollars will not be send to master
-*/
+			d = Dollars + index;
 			PF_longMultiPack((UBYTE*)&namesize, 1, sizeof(int),PF_INT);
 			PF_longMultiPack(name, namesize, 1,PF_BYTE);
-
-			if ( newd != 0 ) {
-				PF_longMultiPack((UBYTE*)&(newd->type), 1, sizeof(WORD),PF_WORD);
-				PF_longMultiPack((UBYTE*)&(newd->size), 1, sizeof(LONG),PF_LONG);
-				PF_longMultiPack((UBYTE*)newd->where, newd->size+1, sizeof(WORD),PF_WORD);
+			if ( d->type != DOLZERO ) {
+				PF_longMultiPack((UBYTE *)&d->type, 1, sizeof(WORD), PF_WORD);
+				PF_longMultiPack((UBYTE *)&d->size, 1, sizeof(LONG), PF_LONG);
+				PF_longMultiPack((UBYTE *)d->where, d->size + 1, sizeof(WORD), PF_WORD);
 				/* ...and the factored stuff. */
-				PF_longMultiPack((UBYTE*)&(newd->nfactors), 1, sizeof(WORD), PF_WORD);
-				if ( newd->nfactors > 1 ) {
-					for ( j = 0; j < newd->nfactors; j++ ) {
-						FACDOLLAR *f = &newd->factors[j];
+				PF_longMultiPack((UBYTE *)&d->nfactors, 1, sizeof(WORD), PF_WORD);
+				if ( d->nfactors > 1 ) {
+					for ( j = 0; j < d->nfactors; j++ ) {
+						FACDOLLAR *f = &d->factors[j];
 						PF_longMultiPack((UBYTE*)&(f->type), 1, sizeof(WORD), PF_WORD);
 						PF_longMultiPack((UBYTE*)&(f->size), 1, sizeof(LONG), PF_LONG);
 						if ( f->size > 0 ) {
