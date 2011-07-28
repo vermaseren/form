@@ -1537,6 +1537,7 @@ ScanCont:		while ( t < r ) {
 				if ( t[1] == FUNHEAD ) goto defaultcase;
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER &&
 					t[FUNHEAD+1] > 0 ) {
+					if ( t[FUNHEAD+1] == 1 ) break;
 redoshort:
 					((UWORD *)AT.WorkPointer)[0] = wranf(BHEAD0);
 					((UWORD *)AT.WorkPointer)[1] = wranf(BHEAD0);
