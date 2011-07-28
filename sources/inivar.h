@@ -219,6 +219,7 @@ static struct fixedfun {
      From here on we continue with new functions (26-sep-2010)
 */
 	,{"extrasymbol_",0 ,0             ,0               ,0} /* EXTRASYMFUN */
+	,{"random_"  ,0 ,0                ,0               ,0} /* RANDOMFUNCTION */
 };
 
 FIXEDSET fixedsets[] = {

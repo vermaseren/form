@@ -1521,6 +1521,114 @@ ScanCont:		while ( t < r ) {
 				ncoef = INCLENG(ncoef);
 				}
 				break;
+			case RANDOMFUNCTION :
+				{
+				WORD nnc, nc, nca, nr;
+				UWORD xx;
+/*
+				Needs one positive integer argument.
+				returns (wranf()%argument)+1.
+				We may call wranf several times to paste UWORDS together
+				when we need long numbers.
+				We make little errors when taking the % operator
+				(not 100% uniform). We correct for that by redoing the
+				calculation in the (unlikely) case that we are in leftover area
+*/
+				if ( t[1] == FUNHEAD ) goto defaultcase;
+				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER &&
+					t[FUNHEAD+1] > 0 ) {
+redoshort:
+					((UWORD *)AT.WorkPointer)[0] = wranf(BHEAD0);
+					((UWORD *)AT.WorkPointer)[1] = wranf(BHEAD0);
+					nr = 2;
+					if ( ((UWORD *)AT.WorkPointer)[1] == 0 ) {
+						nr = 1;
+						if ( ((UWORD *)AT.WorkPointer)[0] == 0 ) {
+							nr = 0;
+						}
+					}
+					xx = (UWORD)(t[FUNHEAD+1]);
+					if ( nr ) {
+					DivLong((UWORD *)AT.WorkPointer,nr
+							,&xx,1
+							,((UWORD *)AT.WorkPointer)+4,&nnc
+							,((UWORD *)AT.WorkPointer)+2,&nc);
+					((UWORD *)AT.WorkPointer)[4] = 0;
+					((UWORD *)AT.WorkPointer)[5] = 0;
+					((UWORD *)AT.WorkPointer)[6] = 1;
+					DivLong((UWORD *)AT.WorkPointer+4,3
+							,&xx,1
+							,((UWORD *)AT.WorkPointer)+9,&nnc
+							,((UWORD *)AT.WorkPointer)+7,&nca);
+					AddLong((UWORD *)AT.WorkPointer+4,3
+							,((UWORD *)AT.WorkPointer)+7,-nca
+							,((UWORD *)AT.WorkPointer)+9,&nnc);
+					if ( BigLong((UWORD *)AT.WorkPointer,nr
+							,((UWORD *)AT.WorkPointer)+9,nnc) >= 0 ) goto redoshort;
+					}
+					else nc = 0;
+					if ( nc == 0 ) {
+						AT.WorkPointer[2] = (WORD)xx;
+						nc = 1;
+					}
+					ncoef = REDLENG(ncoef);
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,((UWORD *)(AT.WorkPointer))+2,nc) )
+							goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else if ( t[FUNHEAD] > 0 && t[1] == t[FUNHEAD]+FUNHEAD
+				&& ABS(t[t[1]-1]) == t[FUNHEAD]-1-ARGHEAD && t[t[1]-1] > 0 ) {
+					WORD nna, nnb, nni, nnb2, nnb2a;
+					UWORD *nnt;
+					nna = t[t[1]-1];
+					nnb2 = nna-1;
+					nnb = nnb2/2;
+					nnt = (UWORD *)(t+t[1]-1-nnb);  /* start of denominator */
+					if ( *nnt != 1 ) goto defaultcase;
+					for ( nni = 1; nni < nnb; nni++ ) {
+						if ( nnt[nni] != 0 ) goto defaultcase;
+					}
+					nnt = (UWORD *)(t + FUNHEAD + ARGHEAD + 1);
+
+					for ( nni = 0; nni < nnb2; nni++ ) {
+						((UWORD *)AT.WorkPointer)[nni] = wranf(BHEAD0);
+					}
+					nnb2a = nnb2;
+					while ( nnb2a > 0 && ((UWORD *)AT.WorkPointer)[nnb2a-1] == 0 ) nnb2a--;
+					if ( nnb2a > 0 ) {
+					DivLong((UWORD *)AT.WorkPointer,nnb2a
+							,nnt,nnb
+							,((UWORD *)AT.WorkPointer)+2*nnb2,&nnc
+							,((UWORD *)AT.WorkPointer)+nnb2,&nc);
+					for ( nni = 0; nni < nnb2; nni++ ) {
+						((UWORD *)AT.WorkPointer)[nni+2*nnb2] = 0;
+					}
+					((UWORD *)AT.WorkPointer)[3*nnb2] = 1;
+					DivLong((UWORD *)AT.WorkPointer+2*nnb2,nnb2+1
+							,nnt,nnb
+							,((UWORD *)AT.WorkPointer)+4*nnb2+1,&nnc
+							,((UWORD *)AT.WorkPointer)+3*nnb2+1,&nca);
+					AddLong((UWORD *)AT.WorkPointer+2*nnb2,nnb2+1
+							,((UWORD *)AT.WorkPointer)+3*nnb2+1,-nca
+							,((UWORD *)AT.WorkPointer)+4*nnb2+1,&nnc);
+					if ( BigLong((UWORD *)AT.WorkPointer,nnb2a
+							,((UWORD *)AT.WorkPointer)+4*nnb2+1,nnc) >= 0 ) goto redoshort;
+					}
+					else nc = 0;
+					if ( nc == 0 ) {
+						for ( nni = 0; nni < nnb; nni++ ) {
+							((UWORD *)AT.WorkPointer)[nnb2+nni] = nnt[nni];
+						}
+						nc = nnb;
+					}
+					ncoef = REDLENG(ncoef);
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,((UWORD *)(AT.WorkPointer))+nnb2,nc) )
+							goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else goto defaultcase;
+				}
+				break;
 			case INTFUNCTION :
 /*
 				Can be resolved if the first argument is a number
@@ -1933,7 +2041,7 @@ doflags:
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3281,7 +3389,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 

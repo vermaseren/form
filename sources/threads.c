@@ -717,7 +717,11 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AT.bernoullis = 0;
 	AllocPolyModCoefs(&(AN.polymod1),200);
 	AllocPolyModCoefs(&(AN.polymod2),200);
-
+	AR.wranfia = 0;
+	AR.wranfcall = 0;
+	AR.wranfnpair1 = NPAIR1;
+	AR.wranfnpair2 = NPAIR2;
+	AR.wranfseed = 0;
 	AN.SplitScratch = 0;
 	AN.SplitScratchSize = AN.InScratch = 0;
 	AN.SplitScratch1 = 0;

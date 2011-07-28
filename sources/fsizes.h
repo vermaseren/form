@@ -155,3 +155,9 @@
 #define MAXMULTIBRACKETLEVELS 25
 
 #define FBUFFERSIZE 1026
+/*
+	For the random number generator (see commentary there)
+*/
+#define NPAIR1 38
+#define NPAIR2 89
+

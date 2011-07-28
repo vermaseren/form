@@ -794,6 +794,7 @@ extern int    DoRmExternal(UBYTE *);
 /*:[14apr2004 mt]*/
 extern int    DoFactor(UBYTE *);
 extern WORD   GetDollarNumber(UBYTE **,DOLLARS);
+extern int    DoSetRandom(UBYTE *);
 extern int    DoMessage(UBYTE *);
 extern int    DoPreNormPoly(UBYTE *);
 extern int    DoPreOut(UBYTE *);
@@ -1488,7 +1489,8 @@ extern WORD  *PolyGetConfig(PHEAD WORD);
 extern WORD  *RedoPolyRatFun(PHEAD WORD *,int);
 extern int    TestSymbols(WORD *);
 extern WORD  *PolyRatFunTake(PHEAD WORD *);
-extern WORD   wranf(PHEAD0);
+extern UWORD  wranf(PHEAD0);
+extern void   iniwranf(PHEAD0);
 
 extern WORD  *EvaluateGcd(PHEAD WORD *);
 

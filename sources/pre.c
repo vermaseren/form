@@ -87,6 +87,7 @@ static KEYWORD precommands[] = {
 	,{"rmseparator" , DoPreRmSeparator,0, 0}
 	,{"setexternal" , DoSetExternal  , 0, 0}
 	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
+	,{"setrandom"   , DoSetRandom    , 0, 0}
 	,{"show"        , DoPreShow      , 0, 0}
 	,{"switch"      , DoPreSwitch    , 0, 0}
 	,{"system"      , DoSystem       , 0, 0}
@@ -2140,7 +2141,7 @@ nofold:
 }
 
 /*
- 		#] DoInclude :
+ 		#] DoInclude : 
  		#[ DoPreExchange :
 
 		Exchanges the names of expressions or the contents of dollars
@@ -2877,7 +2878,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf :
+ 		#] DoIf : 
  		#[ DoIfdef :
 */
 
@@ -3951,7 +3952,7 @@ illoper:
 }
 
 /*
- 		#] PreIfEval :
+ 		#] PreIfEval : 
  		#[ PreCmp :
 */
 
@@ -4233,7 +4234,7 @@ illend:
 }
 
 /*
- 		#] pParseObject :
+ 		#] pParseObject : 
  		#[ PreCalc :
  
 		To be called when a { is encountered.
@@ -5756,5 +5757,44 @@ IllNum:
 
 /*
  		#] GetDollarNumber : 
+ 		#[ DoSetRandom :
+
+		Executes the #SetRandom number
+*/
+
+int DoSetRandom(UBYTE *s)
+{
+	ULONG x;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == '\t' ) s++;
+	x = 0;
+	while ( FG.cTable[*s] == 1 ) {
+		x = 10*x + (*s++-'0');
+	}
+	while ( *s == ' ' || *s == '\t' ) s++;
+	if ( *s  == 0 ) {
+#ifdef WITHPTHREADS
+		int id;
+		for ( id = 0; id < AM.totalnumberofthreads; id++ ) {
+			AB[id]->R.wranfseed = x;
+			M_free(AB[id]->R.wranfia,"wranf");
+			AB[id]->R.wranfia = 0;
+		}
+#else
+		AR.wranfseed = x;
+		M_free(AR.wranfia,"wranf");
+		AR.wranfia = 0;
+#endif
+		return(0);
+	}
+	else {
+		MesPrint("@proper syntax is #SetRandom number");
+		return(-1);
+	}
+}
+
+/*
+ 		#] DoSetRandom :
  	# ] PreProcessor :
 */

@@ -755,7 +755,7 @@ void PrintSubtermList(int from,int to)
 	CBUF *C = cbuf + AM.sbufnum;
 
 	if ( to < from ) inc = -1;
-	if ( to == from ) inc = 0;
+/*	if ( to == from ) inc = 0; */
 
 	AO.OutFill = AO.OutputLine = outbuffer;
 	AO.OutStop = AO.OutputLine+AC.LineLength;

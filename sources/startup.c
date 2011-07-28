@@ -802,6 +802,11 @@ VOID StartVariables()
 	AT.nfac = AT.nBer = 0;
 	AT.factorials = 0;
 	AT.bernoullis = 0;
+	AR.wranfia = 0;
+	AR.wranfcall = 0;
+	AR.wranfnpair1 = NPAIR1;
+	AR.wranfnpair2 = NPAIR2;
+	AR.wranfseed = 0;
 #endif
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)STRINGIFY(MAJORVERSION),0,0);
@@ -1089,7 +1094,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/

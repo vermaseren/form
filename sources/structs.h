@@ -1740,6 +1740,7 @@ struct R_const {
     WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
     VOID    *CompareRoutine;
+    ULONG   *wranfia;
     FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
 
@@ -1753,6 +1754,7 @@ struct R_const {
     LONG    pWorkSize;             /* (R) Size of pWorkSpace */
     LONG    lWorkSize;             /* (R) Size of lWorkSpace */
     LONG    posWorkSize;           /* (R) Size of posWorkSpace */
+	LONG    wranfseed;
     int     NoCompress;            /* (R) Controls native compression */
     int     gzipCompress;          /* (R) Controls gzip compression */
     int     Cnumlhs;               /* Local copy of cbuf[rbufnum].numlhs */
@@ -1761,6 +1763,10 @@ struct R_const {
     int     exprtodo;              /* The expression to do in parallel mode */
     int     res1;                  /* For allignment */
 #endif
+    int     wranfcall;
+	int     wranfnpair1;
+	int     wranfnpair2;
+	int     dummyforpadding;
     WORD    GetFile;               /* (R) Where to get the terms {like Hide} */
     WORD    KeptInHold;            /* (R) */
     WORD    BracketOn;             /* (R) Intensly used in poly_ */
@@ -1829,7 +1835,6 @@ struct T_const {
     WORD    *lastpolyrem;          /* () Remainder after PolyDiv_ */
     long    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     long    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
-    ULONG   *wranfia;
     WORD    *TMaddr;               /* (R) buffer for TestSub */
     WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
@@ -1852,12 +1857,10 @@ struct T_const {
     int     SortBotIn2;            /* Input stream 2 for a SortBot */
 #endif
 #endif
-    int     wranfcall;
     int     TermMemMax;            /* For TermMalloc. Set zero in Checkpoint */
     int     TermMemTop;            /* For TermMalloc. Set zero in Checkpoint */
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
-    int     res1;                  /* For allignment */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
@@ -1886,7 +1889,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.

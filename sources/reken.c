@@ -3209,60 +3209,88 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 		For NPAIR1, NPAIR2 we can use any pair from the table on page 28.
 		Candidates are 24,55 (the example on the pages 171,172)
 		or (33,97) or (38,89)
+		These values are defined in fsizes.h and used in startup.c and threads.c
 */
 
-#define NPAIR1 38
-#define NPAIR2 89
 #define WARMUP 6
 
 static void wranfnew(PHEAD0)
 {
 	int i;
 	LONG j;
-	for ( i = 0; i < NPAIR1; i++ ) {
-		j = AT.wranfia[i] - AT.wranfia[i+(NPAIR2-NPAIR1)];
+	for ( i = 0; i < AR.wranfnpair1; i++ ) {
+		j = AR.wranfia[i] - AR.wranfia[i+(AR.wranfnpair2-AR.wranfnpair1)];
 		if ( j < 0 ) j += 1L << (2*BITSINWORD-2);
-		AT.wranfia[i] = j;
+		AR.wranfia[i] = j;
 	}
-	for ( i = NPAIR1; i < NPAIR2; i++ ) {
-		j = AT.wranfia[i] - AT.wranfia[i-NPAIR1];
+	for ( i = AR.wranfnpair1; i < AR.wranfnpair2; i++ ) {
+		j = AR.wranfia[i] - AR.wranfia[i-AR.wranfnpair1];
 		if ( j < 0 ) j += 1L << (2*BITSINWORD-2);
-		AT.wranfia[i] = j;
+		AR.wranfia[i] = j;
 	}
 }
 
-WORD wranf(PHEAD0)
+void iniwranf(PHEAD0)
 {
-	int imax = NPAIR2-1;
+	int imax = AR.wranfnpair2-1;
 	ULONG i, ii;
-	LONG j, k;
-
-	if ( AT.wranfia == 0 ) {
-		AT.wranfia = (ULONG *)Malloc1(NPAIR2*sizeof(ULONG),"wranf");
+	LONG j, k, seed;
+	ULONG offset = 12345;
+	seed = AR.wranfseed;
 #ifdef WITHPTHREADS
-		AT.wranfia[imax] = j = (((ULONG)AT.identity+31459L) << (BITSINWORD-2))+12345;
-#else
-		AT.wranfia[imax] = j = ( 31459L << (BITSINWORD-2))+12345;
-#endif
-		k = 1;
-		for ( i = 0; i < (ULONG)(imax); i++ ) {
-			ii = (NPAIR1*i)%NPAIR2;
-			AT.wranfia[ii] = k;
-			k = j - k;
-			if ( k < 0 ) k += 1L << (2*BITSINWORD-2);
-			j = AT.wranfia[ii];
+	seed += AT.identity;
+	i = AT.identity + 1;
+	if ( i > 1 ) {
+		ULONG pow, accu;
+		pow = offset; accu = 1;
+		while ( i ) {
+			if ( ( i & 1 ) != 0 ) accu *= pow;
+			i >>= 1; pow = pow*pow;
 		}
-		for ( i = 0; i < WARMUP; i++ ) wranfnew(BHEAD0);
-		AT.wranfcall = 0;
+		offset = accu;
 	}
-	if ( AT.wranfcall >= NPAIR2 ) {
+#endif
+	if ( seed < 0 ) seed = -seed;
+	if ( seed < ((1L)<<(BITSINWORD-1)) ) {
+		j = ( ((ULONG)seed+31459L) << (BITSINWORD-2))+offset;
+	}
+	else if ( seed < ((1L)<<(BITSINWORD+10-1)) ) {
+		j = ( ((ULONG)seed+31459L) << (BITSINWORD-10-2))+offset;
+	}
+	else {
+		j = ( ((ULONG)seed+31459L) << 1)+offset;
+	}
+	if ( ( seed & 1 ) == 1 ) seed++;
+	j += seed;
+	AR.wranfia[imax] = j;
+	k = 1;
+	for ( i = 0; i <= (ULONG)(imax); i++ ) {
+		ii = (AR.wranfnpair1*i)%AR.wranfnpair2;
+		AR.wranfia[ii] = k;
+		k = j - k;
+		if ( k < 0 ) k += 1L << (2*BITSINWORD-2);
+		j = AR.wranfia[ii];
+	}
+	for ( i = 0; i < WARMUP; i++ ) wranfnew(BHEAD0);
+	AR.wranfcall = 0;
+}
+
+UWORD wranf(PHEAD0)
+{
+	UWORD wval;
+	if ( AR.wranfia == 0 ) {
+		AR.wranfia = (ULONG *)Malloc1(AR.wranfnpair2*sizeof(ULONG),"wranf");
+		iniwranf(BHEAD0);
+	}
+	if ( AR.wranfcall >= AR.wranfnpair2) {
 		wranfnew(BHEAD0);
-		AT.wranfcall = 0;
+		AR.wranfcall = 0;
 	}
-	return((WORD)(AT.wranfia[AT.wranfcall++]>>(BITSINWORD-1)));
+	wval = (UWORD)(AR.wranfia[AR.wranfcall++]>>(BITSINWORD-1));
+	return(wval);
 }
 
 /*
- 		#] wranf : 
-  	#] Functions : 
+ 		#] wranf :
+  	#] Functions :
 */
