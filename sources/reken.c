@@ -3233,13 +3233,18 @@ static void wranfnew(PHEAD0)
 void iniwranf(PHEAD0)
 {
 	int imax = AR.wranfnpair2-1;
-	ULONG i, ii, seed;
+	ULONG i, ii, seed = AR.wranfseed;
 	LONG j, k;
 	ULONG offset = 12345;
-	seed = AR.wranfseed;
-#ifdef WITHPTHREADS
-	seed += AT.identity;
-	i = AT.identity + 1;
+#ifdef PARALLELCODE
+	int id;
+#if defined(WITHPTHREADS)
+	id = AT.identity;
+#elif defined(PARALLEL)
+	id = PF.me;
+#endif
+	seed += id;
+	i = id + 1;
 	if ( i > 1 ) {
 		ULONG pow, accu;
 		pow = offset; accu = 1;
