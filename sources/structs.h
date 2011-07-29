@@ -1754,7 +1754,7 @@ struct R_const {
     LONG    pWorkSize;             /* (R) Size of pWorkSpace */
     LONG    lWorkSize;             /* (R) Size of lWorkSpace */
     LONG    posWorkSize;           /* (R) Size of posWorkSpace */
-	LONG    wranfseed;
+	ULONG   wranfseed;
     int     NoCompress;            /* (R) Controls native compression */
     int     gzipCompress;          /* (R) Controls gzip compression */
     int     Cnumlhs;               /* Local copy of cbuf[rbufnum].numlhs */
@@ -1790,7 +1790,7 @@ struct R_const {
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**

@@ -3233,8 +3233,8 @@ static void wranfnew(PHEAD0)
 void iniwranf(PHEAD0)
 {
 	int imax = AR.wranfnpair2-1;
-	ULONG i, ii;
-	LONG j, k, seed;
+	ULONG i, ii, seed;
+	LONG j, k;
 	ULONG offset = 12345;
 	seed = AR.wranfseed;
 #ifdef WITHPTHREADS
@@ -3250,15 +3250,14 @@ void iniwranf(PHEAD0)
 		offset = accu;
 	}
 #endif
-	if ( seed < 0 ) seed = -seed;
 	if ( seed < ((1L)<<(BITSINWORD-1)) ) {
-		j = ( ((ULONG)seed+31459L) << (BITSINWORD-2))+offset;
+		j = ( (seed+31459L) << (BITSINWORD-2))+offset;
 	}
 	else if ( seed < ((1L)<<(BITSINWORD+10-1)) ) {
-		j = ( ((ULONG)seed+31459L) << (BITSINWORD-10-2))+offset;
+		j = ( (seed+31459L) << (BITSINWORD-10-2))+offset;
 	}
 	else {
-		j = ( ((ULONG)seed+31459L) << 1)+offset;
+		j = ( (seed+31459L) << 1)+offset;
 	}
 	if ( ( seed & 1 ) == 1 ) seed++;
 	j += seed;
