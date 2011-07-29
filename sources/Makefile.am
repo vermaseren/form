@@ -64,7 +64,8 @@ SRCBASE = \
 	polygcd.cc \
 	polygcd.h \
 	mytime.h \
-	mytime.cc
+	mytime.cc \
+	vector.h
 
 SRCPARALLEL = \
 	mpi.c \
