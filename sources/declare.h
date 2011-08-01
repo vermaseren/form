@@ -98,6 +98,8 @@
 					else if(*s=='(')SKIPBRA4(s) \
 					else if(*s=='[')SKIPBRA1(s) s++;} }
 
+#define CYCLE1(a,i) {WORD iX,jX; iX=*a; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
+
 #define AddToCB(c,wx) if(c->Pointer>=c->Top) \
 		DoubleCbuffer(c-cbuf,c->Pointer); \
 		*(c->Pointer)++ = wx;
@@ -124,8 +126,10 @@
 
 #if FUNHEAD > 2
 #define FILLFUN(w) { *w++ = 0; FILLFUN3(w) }
+#define COPYFUN(w,t) { *w++ = *t++; COPYFUN3(w,t) }
 #else
 #define FILLFUN(w)
+#define COPYFUN(w,t)
 #endif
 
 #if FUNHEAD > 3
@@ -1490,6 +1494,7 @@ extern WORD  *RedoPolyRatFun(PHEAD WORD *,int);
 extern int    TestSymbols(WORD *);
 extern WORD  *PolyRatFunTake(PHEAD WORD *);
 extern UWORD  wranf(PHEAD0);
+extern UWORD  iranf(PHEAD UWORD);
 extern void   iniwranf(PHEAD0);
 
 extern WORD  *EvaluateGcd(PHEAD WORD *);

@@ -1630,6 +1630,51 @@ redoshort:
 				else goto defaultcase;
 				}
 				break;
+			case RANPERM :
+				if ( *t == RANPERM && t[1] > FUNHEAD && t[FUNHEAD] <= -FUNCTION ) {
+					WORD **pwork;
+					WORD *mm, *ww, *ow = AT.WorkPointer;
+					WORD *Array, *targ, *argstop, narg = 0, itot;
+					int ie;
+					argstop = t+t[1];
+					targ = t+FUNHEAD+1;
+					while ( targ < argstop ) {
+						narg++; NEXTARG(targ);
+					}
+					WantAddPointers(narg);
+					pwork = AT.pWorkSpace + AT.pWorkPointer;
+					targ = t+FUNHEAD+1; narg = 0;
+					while ( targ < argstop ) {
+						pwork[narg++] = targ;
+						NEXTARG(targ);
+					}
+/*
+					Make a random permutation of the numbers 0,...,narg-1
+					The following code works also for narg == 0 and narg == 1
+*/
+					ow = AT.WorkPointer;
+					Array = AT.WorkPointer;
+					AT.WorkPointer += narg;
+					for ( i = 0; i < narg; i++ ) Array[i] = i;
+					for ( i = 2; i <= narg; i++ ) {
+						itot = (WORD)(iranf(BHEAD i));
+						for ( j = 0; j < itot; j++ ) CYCLE1(Array,i)
+					}
+					mm = AT.WorkPointer;
+					*mm++ = -t[FUNHEAD];
+					*mm++ = t[1] - 1;
+					for ( ie = 2; ie < FUNHEAD; ie++ ) *mm++ = t[ie];
+					for ( i = 0; i < narg; i++ ) {
+						ww = pwork[Array[i]];
+						CopyArg(mm,ww);
+					}
+					mm = AT.WorkPointer; t++; ww = t;
+					i = mm[1]; NCOPY(ww,mm,i)
+					AT.WorkPointer = ow;
+					goto TryAgain;
+				}
+				pnco[nnco++] = t;
+				break;
 			case INTFUNCTION :
 /*
 				Can be resolved if the first argument is a number
@@ -2034,6 +2079,7 @@ doflags:
 				break;
 		}
 		t = r;
+TryAgain:;
 	} while ( t < m );
 	if ( ANsc ) {
 		AN.cTerm = ANsc;

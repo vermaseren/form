@@ -220,6 +220,7 @@ static struct fixedfun {
 */
 	,{"extrasymbol_",0 ,0             ,0               ,0} /* EXTRASYMFUN */
 	,{"random_"  ,0 ,0                ,0               ,0} /* RANDOMFUNCTION */
+	,{"ranperm_" ,1 ,0                ,0               ,0} /* RANPERM */
 };
 
 FIXEDSET fixedsets[] = {

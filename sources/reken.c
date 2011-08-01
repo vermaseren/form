@@ -3295,6 +3295,18 @@ UWORD wranf(PHEAD0)
 }
 
 /*
+	Returns a random UWORD in the range (0,...,imax-1)
+*/
+
+UWORD iranf(PHEAD UWORD imax)
+{
+	UWORD i;
+	ULONG x = 1L << BITSINWORD, xmax = x - x%imax;
+	while ( ( i = wranf(BHEAD0) ) >= xmax ) {}
+	return(i%imax);
+}
+
+/*
  		#] wranf :
   	#] Functions :
 */
