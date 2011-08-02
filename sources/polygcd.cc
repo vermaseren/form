@@ -47,8 +47,10 @@
 //#define DEBUGALL
 #include "mytime.h"
 
+// heuristic+modular works
 // otherwise use GCD_EZ
-// #define USE_GCD_MODULAR
+#define USE_GCD_MODULAR 
+#define USE_GCD_HEURISTIC
 
 #ifdef DEBUG
 #include "mytime.h"
@@ -57,7 +59,7 @@
 using namespace std;
 
 /*
-  	#] include :
+  	#] include : 
   	#[ ostream operator :
 */
 
@@ -236,8 +238,13 @@ const poly poly_gcd::content (const poly &a, int x) {
 		res = gcd(res, b);
 
 		// Optimization: if there are no variables left, return integer content
-		if (res.is_integer()) 
-			return integer_content(a);
+		if (res.is_integer()) {
+			res = integer_content(a);
+#ifdef DEBUG
+			cout << "*** [" << thetime() << "]  RES : content(" << a << "," << x << ") = " << res << endl;
+#endif
+			return res;
+		}
 	}	
 
 	if (modp > 0) {
@@ -278,15 +285,107 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 	cout << "*** [" << thetime() << "]  CALL: poly_gcd_Euclidean("<<a<<","<<b<<")"<<endl;
 #endif
 
-	poly s(a),t(b);
-	while (t!=0) swap(t, s%=t);
-	s /= s.lcoeff();
+	GETIDENTITY;
 	
+	if (a==0) return b;
+	if (b==0) return a;
+
+	int x=0;
+
+	if (!a.is_integer())
+		x = a.first_variable();
+	else if (!b.is_integer())
+		x = b.first_variable();
+	else
+		return integer_gcd(a,b);
+	/*
+	poly s(a),t(b);
+	poly q(0,a.modp,1),r(0,a.modp,1);
+
+	while (!t.is_zero()) {
+		//		poly::divmod_univar (s, t, q, r, x, false);
+		poly::divmod (s, t, q, r, false);
+		s = t;
+		t = r;
+	}
+
+	s /= s.lcoeff();
+
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : poly_gcd_Euclidean("<<a<<","<<b<<") = "<<s<<endl;
 #endif
 
 	return s;
+	*/
+	
+	vector<LONG> ca(1+a[2+x],0),cb(1+b[2+x],0);
+	for (int i=1; i<a[0]; i+=a[i])
+		ca[a[i+1+x]]=((LONG)a[i+a[i]-1]*a[i+a[i]-2] % a.modp + a.modp) % a.modp;
+	for (int i=1; i<b[0]; i+=b[i])
+		cb[b[i+1+x]]=((LONG)b[i+b[i]-1]*b[i+b[i]-2] % a.modp + a.modp) % a.modp;
+
+	while (cb.size() != 0) {		
+		/*
+			WORD inv=0,ninv=0;
+		poly::inverse((UWORD *)&cb.back(), 1,
+									(UWORD *)&a.modp, 1,
+									(UWORD *)&inv, ninv);
+		inv*=ninv;
+		*/
+
+		LONG ss=cb.back(), tt=a.modp;
+		LONG sa=1, sb=0;
+		LONG ta=0, tb=1;
+		
+		while (tt != 0) {
+			LONG x = ss/tt;
+			ss = ss-x*tt;
+			sa = sa-x*ta;
+			sb = sb-x*tb;
+						
+			swap(ss,tt);
+			swap(sa,ta);
+			swap(sb,tb);
+		}
+
+		LONG inv = sa;
+
+		while (ca.size() >= cb.size()) {
+			LONG mul = ca.back() * inv % a.modp;
+			int offset = ca.size()-cb.size();
+			for (int i=0; i<(int)(cb.size()); i++) {
+				ca[offset+i] = (ca[offset+i] - mul*cb[i]) % a.modp;
+				if (ca[offset+i] < 0) ca[offset+i] += a.modp;
+			}
+			while (ca.size()>0 && ca.back()==0) ca.pop_back();
+		}
+		
+		swap(ca,cb);
+	}
+
+	WORD inv=0,ninv=0;
+	poly::inverse((UWORD *)&ca.back(), 1,
+								(UWORD *)&a.modp, 1,
+								(UWORD *)&inv, ninv);
+	inv*=ninv;
+	for (int i=0; i<(int)ca.size(); i++)
+		ca[i] = (ca[i]*inv % a.modp + a.modp) % a.modp;
+	
+	poly res;
+	res[0]=1;
+	for (int i=ca.size()-1; i>=0; i--)
+		if (ca[i] != 0) {
+			res[res[0]] = AN.poly_num_vars+3;
+			for (int j=0; j<AN.poly_num_vars; j++)
+				res[res[0]+1+j]=0;
+			res[res[0]+1+x] = i;
+			res[res[0]+1+AN.poly_num_vars]=ca[i];
+			res[res[0]+1+AN.poly_num_vars+1]=1;
+			res[0] += res[res[0]];
+		}
+
+	res.setmod(a.modp,1);
+	return res;
 }
 
 /*
@@ -363,7 +462,6 @@ const vector<poly> poly_gcd::extended_gcd_Euclidean_lifted (const poly &a, const
 }
 
 /*
-<<<<<<< polygcd.cc
   	#] extended_gcd_Euclidean_lifted :
 	 	#[ modular gcd :
 */
@@ -450,10 +548,10 @@ const poly poly_gcd::content_all_but (const poly &a, int x) {
 			
 			b[0] += a[j];
 		}			
-		
+
 		res = gcd_Euclidean(res, b);
 
-		// Optimization: if there are no variables left, return integer content
+		// Optimization: if there are no variables left, return integer content (TODO: is this true?)
 		if (res.is_integer()) 
 			return integer_content(a);
 	}	
@@ -507,17 +605,76 @@ const poly lcoeff_all_but (const poly &a, int x) {
 	return res;	
 }
 
-const poly interpolate (const poly &a1, const poly &m1, const poly &a2, const poly &m2) {
-	// res = ai (mod mi)
-	// m2 of the form (xi-c)
+
+int powermod (int a, int b, int m) {
+	LONG x=1, y=a;
+	while (b) {
+		if (b&1) { x*=y; x%=m; }
+		y*=y; y%=m;
+		b>>=1;
+	}
+	return (int) x;
+}
+
+const poly substitute_last(const poly &a, int x, int c) {
+
+	GETIDENTITY;
+
+	poly b(0);
+
+	bool zero=true;
+	int bi=1;
+	
+	for (int ai=1; ai<a[0]; ai+=a[ai]) {
+		if (!zero)
+			for (int i=0; i<x; i++)
+				if (a[ai+1+i]!=b[bi+1+i]) {
+					zero=true;
+					bi+=b[bi];
+					break;
+				}
+		
+		if (zero) {
+			b[bi] = 3+AN.poly_num_vars;
+			for (int i=0; i<AN.poly_num_vars; i++)
+				b[bi+1+i] = a[ai+1+i];
+			b[bi+1+x] = 0;
+			b[bi+AN.poly_num_vars+1] = 0;
+			b[bi+AN.poly_num_vars+2] = 1;
+		}
+				
+		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
+		coeff *= powermod(c, a[ai+1+x], a.modp);
+		coeff %= a.modp;
+
+		coeff += b[bi+AN.poly_num_vars+1];
+		coeff = (coeff%a.modp + a.modp) % a.modp;
+		
+		b[bi+AN.poly_num_vars+1] = coeff;
+		if (b[bi+AN.poly_num_vars+1] != 0) zero=false;
+	}
+
+	if (!zero) bi+=b[bi];
+	
+	b[0]=bi;
+	b.setmod(a.modp);
+
+	return b;	
+}
+
+const poly interpolate (const poly &a1, const poly &m1, const poly &a2, WORD x, WORD c) {
+	// res = a1 (mod m1) and res = a2 (mod x-c)
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: interpolate(" << a1 << "," << m1 << "," << a2 << "," << m2 <<  ")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: interpolate(" << a1 << "," << m1 << ","
+			 << a2 << "," << x << "," << c << ")" << endl;
 #endif
 	
 	GETIDENTITY;
 
-	poly coeff = m1 % m2;
+	poly m2 = poly::simple_poly(x,c,1);
+	poly coeff = substitute_last(m1,x,c);
+
 	poly invcoeff(1);
 
 	WORD n;
@@ -529,50 +686,260 @@ const poly interpolate (const poly &a1, const poly &m1, const poly &a2, const po
 	invcoeff[invcoeff[1]] = n;
 	invcoeff.modp = a1.modp;
 	invcoeff.modn = 1;
+
+	//	cout << "(2) divmod("<<a1<<","<<m2<<")\n";
 	
-	poly res = a1 + invcoeff * m1 * (a2 - a1%m2);
+	poly res = a1 + invcoeff * m1 * (a2 - substitute_last(a1,x,c));
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : interpolate(" << a1 << "," << m1 << "," << a2 << "," << m2 <<  ") = " << res << endl;
+	cout << "*** [" << thetime() << "]  RES : interpolate(" << a1 << "," << m1 << ","
+			 << a2 << "," << x << "," << c << ") =" << res << endl;
 #endif
 
 	return res;
 }
 
-const poly poly_gcd::gcd_modular_reduce (const poly &a, const poly &b, const vector<int> &x) {
+const poly allmod (const poly &a, const vector<int> &x, const vector<int> &c) {
+
+	GETIDENTITY;
+
+	poly b(0);
+
+	bool zero=true;
+	int bi=1;
+	
+	for (int ai=1; ai<a[0]; ai+=a[ai]) {
+		if (!zero && a[ai+1+x[0]]!=b[bi+1+x[0]]) {
+			zero=true;
+			bi+=b[bi];
+		}
+		
+		if (zero) {
+			b[bi] = 3+AN.poly_num_vars;
+			for (int i=0; i<AN.poly_num_vars; i++)
+				b[bi+1+i] = 0;
+			b[bi+1+x[0]] = a[ai+1+x[0]];
+			b[bi+AN.poly_num_vars+1] = 0;
+			b[bi+AN.poly_num_vars+2] = 1;
+		}
+				
+		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
+		
+		for (int i=0; i<(int)c.size(); i++) {
+			coeff *= powermod(c[i], a[ai+1+x[i+1]], a.modp);
+			coeff %= a.modp;
+		}
+		
+		coeff += b[bi+AN.poly_num_vars+1];
+		b[bi+AN.poly_num_vars+1] = (coeff%a.modp + a.modp) % a.modp;
+		
+		if (b[bi+AN.poly_num_vars+1] != 0) zero=false;
+	}
+
+	if (!zero) bi+=b[bi];
+	
+	b[0]=bi;
+	b.setmod(a.modp);
+	return b;	
+}
+
+double Tallmod, Teucl, Tmat, Tcont, Teucl2, Tmod, Tipol, Tcheck, Tcomp;
+double Tdiv,Tdivuniv,Tdivheap,Tinv;
+
+const poly poly_gcd::gcd_modular_reduce (const poly &a, const poly &b, const vector<int> &x, const poly &correctlc, const poly &s) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: gcd_modular_reduce(" << a << "," << b << "," << x << ")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_reduce(" << a << "," << b << "," << x << "," << correctlc << "," << s <<")" << endl;
 #endif
-	
-	if (x.size() == 1) return gcd_Euclidean(a,b);
 
-	int X = x[x.size()-1];
-	poly conta = content_all_but(a,X);
-	poly contb = content_all_but(b,X);
+	double t0;
+	
+	if (x.size() == 1) {
+		t0=thetime();
+		poly res = correctlc * gcd_Euclidean(a,b);
+		Teucl += thetime()-t0;
+
+#ifdef DEBUG
+		cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
+				 << x << "," << correctlc << "," << s <<") = " << res << endl;
+#endif
+				
+		return res;
+	}
+
+	GETIDENTITY;
+	
+	if (s != 0) {
+
+		t0=thetime();
+		int N=0;
+		for (int i=1,j; i<s[0]; i=j) 
+			for (j=i; j<s[0] && s[j+1+x[0]]==s[i+1+x[0]]; j+=s[j]) N++;
+		
+   	vector<vector<LONG> > M(N,vector<LONG>(N));
+		vector<LONG> V(N,0);
+		Tmat += thetime()-t0;
+		// fill in random x2...xn, construct eqns & solve by Gauss elim
+
+		int row=0;
+		
+		while (row<N) {
+			t0=thetime();
+			vector<WORD> c(x.size()-1);
+			for (int i=0; i<(int)c.size(); i++)
+				c[i] = 1 + random() % (a.modp-1);
+
+			poly amodI = allmod(a,x,c);
+			poly bmodI = allmod(b,x,c);
+			poly lcmodI = allmod(correctlc,x,c);
+			
+			Tallmod += thetime()-t0;
+			
+			t0=thetime();
+			poly e = lcmodI * gcd_Euclidean(amodI,bmodI);
+			Teucl2 += thetime()-t0;
+			/*
+			cout << "c = " << c << endl;
+			cout << "amodI = " << amodI << endl;
+			cout << "bmodI = " << bmodI << endl;
+			cout << "e     = " << e     << endl;
+			cout << endl;
+			*/
+			t0=thetime();
+			
+			int si=1,col=0;
+			for (int ei=1; ei<e[0]; ei+=e[ei]) {
+				WORD pow = e[ei+1+x[0]];
+				M[row]=vector<LONG>(N,0);
+				while (si<s[0] && s[si+1+x[0]] == pow) {
+					M[row][col] = 1;
+					for (int i=1; i<(int)x.size(); i++)
+						for (int j=0; j<s[si+1+x[i]]; j++) 
+							M[row][col] = (M[row][col]*c[i-1]) % a.modp;
+					col++;
+					si+=s[si];
+				}
+
+				//			cout << "(1) M|B = " << M << " | " << B << endl;
+				V[row] = e[ei+e[ei]-1]*e[ei+e[ei]-2];
+
+				for (int i=0; i<row; i++) {
+					WORD x = M[row][i];
+					for (int j=i; j<N; j++) {
+						M[row][j] -= M[i][j]*x;
+						M[row][j] = (M[row][j] % a.modp + a.modp) % a.modp;
+					}
+					V[row] = V[row] - V[i]*x;
+					V[row] = (V[row] % a.modp + a.modp) % a.modp;
+				}
+
+				//				cout << "(2) M|B = " << M << " | " << B << endl;
+				WORD x = M[row][row];
+				if (x!=0) {
+					WORD nx;
+					poly::inverse((UWORD*)&x,1,(UWORD*)&a.modp,1,(UWORD*)&x,nx);
+					x *= nx;
+					for (int j=0; j<N; j++) {
+						M[row][j] *= x;
+						M[row][j] = (M[row][j] % a.modp + a.modp) % a.modp;
+					}
+					V[row] = V[row]*x;
+					V[row] = (V[row] % a.modp + a.modp) % a.modp;
+					row++;
+					if (row==N) break;
+				}
+			
+				//			cout << "(3) M|B = " << M << " | " << B << endl;
+			}
+			
+			Tmat += thetime()-t0;
+		}
+
+		t0=thetime();
+
+		for (int i=row-1; i>=0; i--)
+			for (int j=0; j<i; j++) {
+				V[j] -= M[j][i] * V[i];
+				V[j] = (V[j] % a.modp + a.modp) % a.modp;
+			}
+
+		poly res;
+		int ri=1, i=0;
+		for (int si=1; si<s[0]; si+=s[si]) {
+			res[ri] = 3 + AN.poly_num_vars;
+			for (int j=0; j<AN.poly_num_vars; j++)
+				res[ri+1+j] = s[si+1+j];
+			res[ri+1+AN.poly_num_vars] = V[i++];
+			res[ri+2+AN.poly_num_vars] = 1;
+			ri += res[ri];
+		}
+		res[0]=ri;
+		res.setmod(a.modp,1);
+		//	cout << "B = " << B << endl;
+		//	cout << "res = " << res << endl;
+		Tmat += thetime()-t0;
+
+#ifdef DEBUG
+		cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
+				 << x << "," << correctlc << "," << s <<") = " << res << endl;
+#endif
+		
+		if (poly::divides(res,a) && poly::divides(res,b)) 
+			return res;
+		else
+			return 0;
+	}
+
+	t0=thetime();
+	WORD X = x[x.size()-1];
+	poly conta = content_all_but(a,X); conta /= conta.lcoeff();
+	poly contb = content_all_but(b,X); contb /= contb.lcoeff();
+	Tcont += thetime()-t0;
+
+	t0=thetime();
+
 	poly gcdconts = gcd_Euclidean(conta,contb);
 	poly ppa = a/conta;
 	poly ppb = b/contb;
+	poly pplc = correctlc/gcdconts;
 
 	poly lcoeffa = lcoeff_all_but(ppa,X);
 	poly lcoeffb = lcoeff_all_but(ppb,X);
 	poly gcdlcoeffs = gcd_Euclidean(lcoeffa,lcoeffb);
-
-	poly res, modpoly(1,a.modp);
 	
-	for (WORD c=0; c<a.modp; c++) {
-		poly simple = poly::simple_poly(X,c,1,a.modp);
+	Teucl += thetime()-t0;
+
+	poly res, newshape, modpoly(1,a.modp);
+	
 #ifdef DEBUG
-		cout << "*** [" << thetime() << "]  ... : gcd_modular_reduce(" << a << "," << b << "," << x <<
-			") substitute " << char('a'+X) << "->" << c << endl;
+	cout << "*** [" << thetime() << "]  ... : gcd_modular_reduce: substitute for " << char('a'+X) << endl;
 #endif
-		if (gcdlcoeffs % simple == 0) continue;
-		poly amodc = ppa % simple;
-		poly bmodc = ppb % simple;
 
-		poly gcdmodc = gcd_modular_reduce(amodc,bmodc,vector<int>(x.begin(),x.end()-1));
-		gcdmodc *= (gcdlcoeffs % simple) / gcdmodc.lcoeff();
+	while (true) {
+		int c = 1 + random() % (a.modp-1);
 
+		t0=thetime();
+		//		cout << "substitute " << char('a'+X) << "->" << c << endl;
+		
+#ifdef DEBUG
+		cout << "*** [" << thetime() << "]  ... : gcd_modular_reduce(" << a << "," << b << "," << x << "," << correctlc << "," << s <<") substitute " << char('a'+X) << "->" << c << endl;
+#endif
+
+		if (substitute_last(gcdlcoeffs,X,c).is_zero()) continue;
+		poly amodc = substitute_last(ppa,X,c);
+		poly bmodc = substitute_last(ppb,X,c);
+		poly lcmodc = substitute_last(pplc,X,c);
+		Tmod += thetime()-t0;
+
+		//		cout << "(1) divmod("<<ppa<<","<<simple<<")\n";
+	
+		poly gcdmodc = gcd_modular_reduce(amodc,bmodc,vector<int>(x.begin(),x.end()-1),lcmodc,newshape);
+		if (gcdmodc==0) return 0;
+		
+		gcdmodc *= substitute_last(gcdconts,X,c);
+		//		gcdmodc *= substitute_last(gcdlcoeffs,X,c) / gcdmodc.lcoeff();
+
+		t0=thetime();
 		int comp=0;
 		if (res.is_zero())
 			comp=-1;
@@ -580,66 +947,96 @@ const poly poly_gcd::gcd_modular_reduce (const poly &a, const poly &b, const vec
 			for (int i=0; i<(int)x.size()-1; i++)
 				if (gcdmodc[2+x[i]] != res[2+x[i]])
 					comp = gcdmodc[2+x[i]] - res[2+x[i]];
+
+		Tcomp += thetime()-t0;
 		
+		poly oldres = res;
+		poly simple = poly::simple_poly(X,c,1,a.modp);
 		if (comp < 0) {
 			res = gcdmodc;
+			newshape = gcdmodc;
 			modpoly = simple;
 		}
 		else if (comp == 0) { 
-			res = interpolate(res,modpoly,gcdmodc,simple);
+			t0=thetime();
+			res = interpolate(res,modpoly,gcdmodc,X,c);
 			modpoly *= simple;
+			Tipol+=thetime()-t0;
 		}
+		
+		//		cout << "*** [" << thetime() << "] ---> " << res << endl;
+		
+		t0=thetime();
 
-		if (lcoeff_all_but(res,X) == gcdlcoeffs) {
-			poly ppres = res / content_all_but(res,X);
-			if (a%ppres==0 && b%ppres==0) {
+		//		cout << "res==oldres : " << res << " == " << oldres << endl;
+		//		cout << "lc==correct : " << lcoeff_all_but(res,X) << " == " << correctlc << endl;
+		if (res==oldres && res.coefficient(x[0], res.degree(x[0]))==correctlc) { // && lcoeff_all_but(res,X)==correctlc) {
+			//		poly ppres = res / content_all_but(res,X);
+			if (poly::divides(res,a) && poly::divides(res,b)) {
 #ifdef DEBUG
-				cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << "," << x << ") = "
-						 << gcdconts*ppres << endl;
+				cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
+						 << x << "," << correctlc << "," << s <<") = " << res << endl;
 #endif
-				return gcdconts*ppres;
+				Tcheck += thetime()-t0;
+				return res;
 			}
 		}
+		Tcheck += thetime()-t0;
 	}
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << "," << x << ") failed" << endl;
+	cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
+			 << x << "," << correctlc << "," << s <<") failed" << endl;
 #endif
 
 	return 0;
 }
 
 // necessary: icont(a)=icont(b)=0
-const poly poly_gcd::gcd_modular (const poly &a, const poly &b, const vector<int> &x) {
+const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const vector<int> &x) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: gcd_modular(" << a << "," << b << "," << x << ")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular(" << origa << "," << origb << "," << x << ")" << endl;
 #endif
 
 	GETIDENTITY;
 
-	int pnum=0;
+	poly lcoeffa = origa.coefficient(x[0], origa.degree(x[0]));
+	poly lcoeffb = origb.coefficient(x[0], origb.degree(x[0]));
+	poly lcoeff  = gcd(lcoeffa,lcoeffb);
 
-	poly lcoeff = integer_gcd(a.lcoeff(), b.lcoeff());
+	poly a = lcoeff * origa;
+	poly b = lcoeff * origb;
 	
+	int pnum=0;
+ 	
 	poly d;
 	poly m1=1;
 	WORD mindeg=MAXPOSITIVE;
-	
+
 	while (true) {
 		WORD p = NextPrime(BHEAD pnum++);
 
-		poly lcoeffmodp(lcoeff,p);
-		if (lcoeffmodp.is_zero()) continue;
+		if (poly(a.lcoeff(),p).is_zero()) continue;
+		if (poly(b.lcoeff(),p).is_zero()) continue;
 
-		poly c = gcd_modular_reduce (poly(a,p),poly(b,p),x);
-		if (c.is_zero()) continue;
-		c *= lcoeff;
+		poly c = gcd_modular_reduce (poly(a,p),poly(b,p),x,poly(lcoeff,p),d);
+
+		if (c.is_zero()) {
+			// unlucky choices somewhere, so start all over again
+			d = 0;
+			m1 = 1;
+			mindeg = MAXPOSITIVE;
+			continue;
+		}
+		
+		if (!(poly(a,p)%c).is_zero()) continue;
+		if (!(poly(b,p)%c).is_zero()) continue;
 
 		WORD deg = c.degree(x[0]);
 
 		if (deg < mindeg) {
-			d=c;
+    	d=c; 
 			d.modp=a.modp;
 			d.modn=a.modn;
 			m1=p;
@@ -672,11 +1069,14 @@ const poly poly_gcd::gcd_modular (const poly &a, const poly &b, const vector<int
 			m1*=p;
 			d=newd;
 		}
+
 		poly ppd = d / integer_content(d);
 
-		if (a%ppd==0 && b%ppd==0) {
+		if (poly::divides(ppd,a) && poly::divides(ppd,b)) {
+
+			ppd /= content(ppd,x[0]);
 #ifdef DEBUG
-			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << a << "," << b << "," << x << ") = "
+			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << origa << "," << origb << "," << x << ") = "
 					 << ppd << endl;
 #endif
 			return ppd;
@@ -1750,6 +2150,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 	for (int i=0; i<AN.poly_num_vars; i++)
 		if (used[i]) x.push_back(i);
 
+	/*
 #ifdef USE_GCD_MODULAR
 	poly iconta = integer_content(a);
 	poly icontb = integer_content(b);
@@ -1757,25 +2158,27 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 	poly ppa = a / iconta;
 	poly ppb = b / icontb;
 #else
+	*/
 	// Calculate the contents, their gcd and the primitive parts
 	poly conta = x.size()==1 ? integer_content(a) : content(a,x[0]);
 	poly contb = x.size()==1 ? integer_content(b) : content(b,x[0]);
 	poly gcdconts = x.size()==1 ? integer_gcd(conta,contb) : gcd(conta,contb);
 	poly ppa = a / conta;
 	poly ppb = b / contb;
-#endif
+	//#endif
 	
 	// Since p^n with n>1 is regarded as over integers (ugly hack)
 	if (modp==0) {
 		ppa.setmod(0,1);
 		ppb.setmod(0,1);
 	}
-
+	
 	if (ppa == ppb) 
 		return ppa * gcdconts;
 	
 	poly gcd;
-	
+
+#ifdef USE_GCD_HEURISTIC
 	// Try the heuristic gcd algorithm
 	if (modp==0) {
 
@@ -1831,7 +2234,8 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 		
 		//		}
 	}
-
+#endif
+	
 	// If gcd==0, the heuristic algorithm failed, so try EZ-GCD
 	if (gcd == 0) {
 #ifdef USE_GCD_MODULAR
@@ -1851,7 +2255,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 }
 
 ///////////////////////////////////////// REMOVE LATER ///////////////////////////////
-poly random_poly (int vars=3, int terms=10, int power=10, int coeff=100) {
+poly random_poly (int vars=3, int terms=10, int power=10, int coeff=10000) {
 	
 	GETIDENTITY;
 	
@@ -1881,14 +2285,25 @@ void testje () {
 	AN.poly_vars[1] = 'y';
 	AN.poly_vars[2] = 'z';
 
-	for (int i=0; i<10; i++) {
+	for (int i=0; i<10000; i++) {
 		poly a = random_poly();
 		poly b = random_poly();
 		poly c = random_poly();
 		a*=c;
 		b*=c;
-		
-		cout << "gcd("<<a<<","<<b<<") = " << poly_gcd::gcd(a,b) << endl;
+		/*
+		cout << "Local E = gcd_(" << a << "," << b << ");\n";
+		cout << "Print +s;\n";
+		cout << ".sort\n";
+		continue;
+		*/
+		/*
+		cout << "TEST #" << i << " : ";
+		cout << "gcd("<<a<<","<<b<<") = " << flush;
+		cout << poly_gcd::gcd(a,b) << endl;
+		*/
+		if (i%100==99) cout << thetime() << " test " << i << endl;
+		poly_gcd::gcd(a,b);
 	}
 	
 	exit(1);
@@ -1956,10 +2371,6 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 	while (*argin != 0) {
 		poly a = poly::argument_to_poly(argin, true, var_to_idx);
 		if (modp > 0) a.setmod(modp,1);
-
-		// remove this time (TODO)
-		//		for (int times=0; times<100; times++) poly_gcd::gcd(gcd, a);
-		
 		gcd = poly_gcd::gcd(gcd, a);
 		argin += *argin;
 	}
@@ -1969,7 +2380,23 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
-	
+	/*
+	printf ("Tallmod = %lf\n",Tallmod);
+	printf ("Tmat    = %lf\n",Tmat   );
+	printf ("Teucl2  = %lf\n",Teucl2 );
+	printf ("---\n");
+	printf ("Tcont   = %lf\n",Tcont  );
+	printf ("Tmod    = %lf\n",Tmod   );
+	printf ("Teucl   = %lf\n",Teucl  );
+	printf ("Tcomp   = %lf\n",Tcomp  );
+	printf ("Tipol   = %lf\n",Tipol  );
+	printf ("Tcheck  = %lf\n",Tcheck );
+	printf ("---\n");
+	printf ("Tdiv    = %lf\n",Tdiv   );
+	printf ("Tdivuniv= %lf\n",Tdivuniv);
+	printf ("Tdivheap= %lf\n",Tdivheap);
+	printf ("Tinv    = %lf\n",Tinv    );
+	*/
 	return 0;
 }
 

@@ -2903,7 +2903,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 	WORD dummy;
 	
 	two[0] = 2;
-	DivLong((UWORD *)c,ABS(nc),two,1,(UWORD *)halfmod,&nhalfmod,remain,&dummy);
+	DivLong(c,ABS(nc),two,1,halfmod,&nhalfmod,remain,&dummy);
 	
 	// takes care of the number never expanding, e.g., -1(mod 100) -> 99 -> -1
 	if (BigLong(a,ABS(*na),halfmod,nhalfmod) <= 0) return(0);
@@ -2912,7 +2912,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 	
 	n = ABS(*na);
 	if (BigLong(a,n,halfmod,nhalfmod) > 0) {
-		SubPLon((UWORD *)c,nc,a,n,a,&n);
+		SubPLon(c,nc,a,n,a,&n);
 		if ( *na > 0 ) { *na = -n; }
 		else { *na = n; }
 		return(1);

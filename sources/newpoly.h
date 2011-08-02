@@ -77,8 +77,9 @@ public:
 	static void mul (const poly &, const poly &, poly &);
 	static void div (const poly &, const poly &, poly &);
 	static void mod (const poly &, const poly &, poly &);
-	static void divmod (const poly &, const poly &, poly &, poly &);
-
+	static void divmod (const poly &, const poly &, poly &, poly &, bool only_divides);
+	static bool divides (const poly &, const poly &);
+	
 	static void push_heap (WORD **heap, int n);
 	static void pop_heap (WORD **heap, int n);
 
@@ -86,9 +87,9 @@ public:
 	static void mul_univar (const poly &, const poly &, poly &, int);
 	static void mul_heap (const poly &, const poly &, poly &);
 
-	static void divmod_one_term (const poly &a, const poly &b, poly &q, poly &r);
-	static void divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int var);
-	static void divmod_heap (const poly &a, const poly &b, poly &q, poly &r);
+	static void divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool only_divide);
+	static void divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int var, bool only_divide);
+	static void divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool only_divide);
 	
 	static void inverse (UWORD*, WORD, UWORD*, WORD, UWORD*, WORD&);
 
