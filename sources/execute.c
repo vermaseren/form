@@ -655,8 +655,13 @@ WORD DoExecute(WORD par, WORD skip)
 /*:[20oct2009 mt]*/
 #endif
 	AR.SortType = AC.SortType;
-	if ( AC.SetupFlag ) WriteSetup();
-	if ( AC.NamesFlag || AC.CodesFlag ) WriteLists();
+#ifdef PARALLEL
+	if ( PF.me == MASTER )
+#endif
+	{
+		if ( AC.SetupFlag ) WriteSetup();
+		if ( AC.NamesFlag || AC.CodesFlag ) WriteLists();
+	}
 	if ( par == GLOBALMODULE ) MakeGlobal();
 	if ( RevertScratch() ) return(-1);
 /*[20oct2009 mt]:*/
