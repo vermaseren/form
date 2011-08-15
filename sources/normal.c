@@ -2088,7 +2088,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3189,7 +3189,7 @@ NextI:;
 							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
 								AR.CompareRoutine = &CompareSymbols;
 							}
-							NewSort();
+							NewSort(BHEAD0);
 							m  = r + ARGHEAD; rnext = r + *r;
 							while ( m < rnext ) {
 								i = *m; tt = m; wt = oldwork;
@@ -3203,7 +3203,7 @@ NextI:;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(oldwork)) + AM.MaxTer);
 							if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 							m = AT.WorkPointer;
-							if ( EndSort(m,1,0) < 0 ) goto FromNorm;
+							if ( EndSort(BHEAD m,1,0) < 0 ) goto FromNorm;
 							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
 								AR.CompareRoutine = oldcompareroutine;
 							}
@@ -3338,12 +3338,12 @@ NextI:;
 			WORD *oldwork = AT.WorkPointer;
 			WORD olddefer = AR.DeferFlag;
 			AR.DeferFlag = 0;
-			NewSort();
+			NewSort(BHEAD0);
 			if ( Generator(BHEAD term,AR.Cnumlhs) ) {
 				LowerSortLevel(); goto FromNorm;
 			}
 		    AT.WorkPointer = oldwork;
-			if ( EndSort(term,1,0) < 0 ) goto FromNorm;
+			if ( EndSort(BHEAD term,1,0) < 0 ) goto FromNorm;
 			if ( *term == 0 ) goto NormZero;
 			AR.DeferFlag = olddefer;
 		}
@@ -3436,7 +3436,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 

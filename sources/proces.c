@@ -207,7 +207,7 @@ WORD Processor()
 			e->onfile = position;
 			if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto ProcErr;
 			AR.DeferFlag = AC.ComDefer;
-			NewSort();
+			NewSort(BHEAD0);
 			AN.ninterms = 0;
 			t = e->inmem;
 			while ( *t ) {
@@ -234,7 +234,7 @@ WORD Processor()
 				AN.ninterms += dd;
 			}
 			AN.ninterms += dd;
-			if ( EndSort(AM.S0->sBuffer,0,0) < 0 ) goto ProcErr;
+			if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) goto ProcErr;
 			if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 			else e->vflags |= ISZERO;
 			if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
@@ -331,7 +331,7 @@ commonread:;
 				else
 #endif
 				{
-					NewSort();
+					NewSort(BHEAD0);
 					AR.MaxDum = AM.IndDum;
 					AN.ninterms = 0;
 					while ( GetTerm(BHEAD term) ) {
@@ -388,7 +388,7 @@ commonread:;
 						AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 					}
 					if ( AR.outtohide ) AR.outfile = AR.hidefile;
-					if ( EndSort(AM.S0->sBuffer,0,0) < 0 ) goto ProcErr;
+					if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) goto ProcErr;
 					if ( AR.outtohide ) {
 						AR.outfile = oldoutfile;
 						AR.hidefile->POfull = AR.hidefile->POfill;
@@ -860,11 +860,11 @@ TooMuch:;
 						*AT.WorkPointer = m-AT.WorkPointer;
 						m = AT.WorkPointer;
 						AT.WorkPointer = m + *m;
-						NewSort();
+						NewSort(BHEAD0);
 						if ( Generator(BHEAD m,AR.Cnumlhs) ) {
 							LowerSortLevel(); goto EndTest;
 						}
-						if ( EndSort(m,0,0) < 0 ) goto EndTest;
+						if ( EndSort(BHEAD m,0,0) < 0 ) goto EndTest;
 						AN.Frozen = m;
 						if ( *m == 0 ) {
 							*m++ = 4; *m++ = 1; *m++ = 1; *m++ = 3;
@@ -1398,7 +1398,7 @@ DoSpec:
 						t = AT.NestPoin->argsize;
 						j = *t;
 						t += ARGHEAD;
-						NewSort();
+						NewSort(BHEAD0);
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.CompareRoutine = &CompareSymbols;
 						}
@@ -1426,7 +1426,7 @@ DoSpec:
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
-						if ( EndSort(AT.WorkPointer+ARGHEAD,0,0) < 0 ) goto EndTest;
+						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,0,0) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.CompareRoutine = oldcompareroutine;
@@ -1805,7 +1805,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 						*m++ = *from++;
 					}
 					to = m;
-					NewSort();
+					NewSort(BHEAD0);
 					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
 						AR.CompareRoutine = &CompareSymbols;
 					}
@@ -1826,7 +1826,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					/* to is new argument */
 
 					to -= ARGHEAD;
-					if ( EndSort(m,1,0) < 0 ) {
+					if ( EndSort(BHEAD m,1,0) < 0 ) {
 						AN.ncmod = oldncmod;
 						goto InFunc;
 					}
@@ -1925,7 +1925,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 							}
 							else if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
 								AR.PolyFun = 0;
-								NewSort();
+								NewSort(BHEAD0);
 								AR.CompareRoutine = &CompareSymbols;
 								r = to + ARGHEAD;
 								while ( r < m ) {
@@ -1937,7 +1937,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 										Terminate(-1);
 									}
 								}
-								if ( EndSort(to+ARGHEAD,1,0) < 0 ) goto InFunc;
+								if ( EndSort(BHEAD to+ARGHEAD,1,0) < 0 ) goto InFunc;
 								AR.PolyFun = oldPolyFun;
 								AR.CompareRoutine = &Compare1;
 								m = to+ARGHEAD;
@@ -2918,14 +2918,14 @@ SkipCount:	level++;
 						jfcode = C->lhs[level]; jc = jfcode[1];
 						ifcode = AT.WorkPointer; AT.WorkPointer += jc;
 						for ( ic = 0; ic < jc; ic++ ) ifcode[ic] = jfcode[ic];
-						while ( !DoIfStatement(ifcode,term) ) {
+						while ( !DoIfStatement(BHEAD ifcode,term) ) {
 							level = C->lhs[level][2];
 							if ( C->lhs[level][0] != TYPEELIF ) break;
 						}
 						AT.WorkPointer = ifcode;
 					}
 #else
-					while ( !DoIfStatement(C->lhs[level],term) ) {
+					while ( !DoIfStatement(BHEAD C->lhs[level],term) ) {
 						level = C->lhs[level][2];
 						if ( C->lhs[level][0] != TYPEELIF ) break;
 					}
@@ -4750,7 +4750,7 @@ retry:
 	Note: We may run into fun(-SNUMBER,value)
 */
 	w = AT.WorkPointer;
-	NewSort();
+	NewSort(BHEAD0);
 	for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
 	for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
 		m = w;
@@ -4804,7 +4804,7 @@ retry:
 		}
 	}	
 	}	
-	if ( EndSort(w,0,0) < 0 ) goto PolyCall;
+	if ( EndSort(BHEAD w,0,0) < 0 ) goto PolyCall;
 	if ( *w == 0 ) {
 		*term = 0;
 		return(0);

@@ -166,8 +166,8 @@ getnumber:;
 }
 
 /*
- 		#] GetIfDollarNum :
- 		#[ DoIfStatement :				WORD DoIfStatement(ifcode,term)
+ 		#] GetIfDollarNum : 
+ 		#[ DoIfStatement :				WORD DoIfStatement(PHEAD ifcode,term)
 
 		The execution time part of the if-statement.
 		The arguments are a pointer to the TYPEIF and a pointer to the term.
@@ -177,9 +177,9 @@ getnumber:;
 		Note that the whole setup asks for recursions.
 */
 
-WORD DoIfStatement(WORD *ifcode, WORD *term)
+WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *ifstop, *ifp;
 	UWORD *coef1 = 0, *coef2, *coef3, *cc;
 	WORD ncoef1, ncoef2, ncoef3, i = 0, first, *r, acoef, ismul1, ismul2, j;
@@ -194,7 +194,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 				else return(0);
 			case MATCH:
 			case TYPEIF:
-				if ( HowMany(ifp,term) ) return(1);
+				if ( HowMany(BHEAD ifp,term) ) return(1);
 				else return(0);
 			case TYPEFINDLOOP:
 				if ( Lus(term,ifp[3],ifp[4],ifp[5],ifp[6],ifp[2]) ) return(1);
@@ -217,7 +217,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 						if ( nummodopt < NumModOptdollars ) {
 							dtype = ModOptdollars[nummodopt].type;
 							if ( dtype == MODLOCAL ) {
-								d = ModOptdollars[nummodopt].dstruct+identity;
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
 							}
 						}
 					}
@@ -245,7 +245,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 /*
 				Now we have a subexpression. Test first for one with a single item.
 */
-				if ( ifp[3] == ( ifp[1] + 3 ) ) return(DoIfStatement(ifp,term));
+				if ( ifp[3] == ( ifp[1] + 3 ) ) return(DoIfStatement(BHEAD ifp,term));
 				ifstop = ifp + ifp[1];
 				ifp += 3;
 				break;
@@ -280,7 +280,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 				break;
 			case MATCH:
 			case TYPEIF:
-				coef2[0] = HowMany(ifp,term);
+				coef2[0] = HowMany(BHEAD ifp,term);
 				coef2[1] = 1;
 				if ( coef2[0] == 0 ) ncoef2 = 0;
 				break;
@@ -308,7 +308,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 				i--; for ( j = 0; j < i; j++ ) coef2[j] = cc[j];
 				break;
 			case SUBEXPR:
-				ncoef2 = coef2[0] = DoIfStatement(ifp,term);
+				ncoef2 = coef2[0] = DoIfStatement(BHEAD ifp,term);
 				coef2[1] = 1;
 				break;
 			case MULTIPLEOF:
@@ -335,7 +335,7 @@ WORD DoIfStatement(WORD *ifcode, WORD *term)
 						if ( nummodopt < NumModOptdollars ) {
 							dtype = ModOptdollars[nummodopt].type;
 							if ( dtype == MODLOCAL ) {
-								d = ModOptdollars[nummodopt].dstruct+identity;
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
 							}
 							else {
 								LOCK(d->pthreadslockread);
@@ -644,7 +644,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement :
+ 		#] DoIfStatement : 
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -653,9 +653,9 @@ SkipCond:
 		Most of the code comes from TestMatch.
 */
 
-WORD HowMany(WORD *ifcode, WORD *term)
+WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD *m, *t, *r, *w, power, RetVal, i, topje, *newterm;
 	WORD *OldWork, *ww, *mm;
 	int *RepSto, RepVal;
@@ -675,7 +675,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 		AT.WorkPointer = ww;
 		RepSto = AN.RepPoint;
 		RepVal = *RepSto;
-		NewSort();
+		NewSort(BHEAD0);
 		if ( Generator(BHEAD OldWork,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			*RepSto = RepVal;
@@ -684,7 +684,7 @@ WORD HowMany(WORD *ifcode, WORD *term)
 			return(-1);
 		}
 		AT.WorkPointer = ww;
-		if ( EndSort(ww,0,0) < 0 ) {}
+		if ( EndSort(BHEAD ww,0,0) < 0 ) {}
 		*RepSto = RepVal;
 		AN.RepPoint = RepSto;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
@@ -878,6 +878,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement :
+  	#] If statement : 
 */
 

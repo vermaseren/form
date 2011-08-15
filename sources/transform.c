@@ -646,14 +646,14 @@ returnvalues:;
 						for ( i = 0; i < *info; i++ ) iterm[i] = info[i];
 						AT.WorkPointer = iterm + *iterm;
 						AR.Eside = LHSIDEX;
-						NewSort();
+						NewSort(BHEAD0);
 						if ( Generator(BHEAD iterm,AR.Cnumlhs) ) {
 							LowerSortLevel();
 							AT.WorkPointer = oldwork;
 							return(-1);
 						}
 						newterm = AT.WorkPointer;
-						if ( EndSort(newterm,0,0) < 0 ) {}
+						if ( EndSort(BHEAD newterm,0,0) < 0 ) {}
 						if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
 							MLOCK(ErrorMessageLock);
 							MesPrint("&yes/no information in islyndon/tolyndon does not evaluate into a single term");
@@ -1166,14 +1166,14 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 	for ( i = 0; i < *info; i++ ) term[i] = info[i];
 	AT.WorkPointer = term + *term;
 	AR.Eside = LHSIDEX;
-	NewSort();
+	NewSort(BHEAD0);
 	if ( Generator(BHEAD term,AR.Cnumlhs) ) {
 		LowerSortLevel();
 		AT.WorkPointer = oldwork;
 		return(-1);
 	}
 	newterm = AT.WorkPointer;
-	if ( EndSort(newterm,0,0) < 0 ) {}
+	if ( EndSort(BHEAD newterm,0,0) < 0 ) {}
 	if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1417,14 +1417,14 @@ getthisone:;
 						*term2 = term3 - term2;
 
 						AT.WorkPointer = term3;
-						NewSort();
+						NewSort(BHEAD0);
 						if ( Generator(BHEAD term2,AR.Cnumlhs) ) {
 							LowerSortLevel();
 							AT.WorkPointer = oldwork;
 							return(-1);
 						}
 						term4 = AT.WorkPointer;
-						if ( EndSort(term4,0,0) < 0 ) {}
+						if ( EndSort(BHEAD term4,0,0) < 0 ) {}
 						if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
 							MLOCK(ErrorMessageLock);
 							MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1543,14 +1543,14 @@ dothisnow:;
 			*term3++ = 1; *term3++ = 1; *term3++ = 3;
 			*term2 = term3-term2;
 			AT.WorkPointer = term3;
-			NewSort();
+			NewSort(BHEAD0);
 			if ( Generator(BHEAD term2,AR.Cnumlhs) ) {
 				LowerSortLevel();
 				AT.WorkPointer = oldwork;
 				return(-1);
 			}
 			term4 = AT.WorkPointer;
-			if ( EndSort(term4,0,0) < 0 ) {}
+			if ( EndSort(BHEAD term4,0,0) < 0 ) {}
 			if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
 				MLOCK(ErrorMessageLock);
 				MesPrint("&information in replace transformation does not evaluate into a single term");

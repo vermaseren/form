@@ -320,8 +320,6 @@ VOID FullCleanUp()
 	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch;
 	AC.ShortStatsMax = AM.gShortStatsMax = AM.ggShortStatsMax;
-	AC.ProcessStats = AM.gProcessStats = AM.ggProcessStats;
-	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats;
 
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {

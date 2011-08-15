@@ -5600,7 +5600,7 @@ int DoFactor(UBYTE *s)
 			MesPrint("@#Factor(ize) should have a single $variable for its argument");
 			return(-1);
 		}
-		NewSort();
+		NewSort(BHEAD0);
 		oldworkpointer = AT.WorkPointer;
 		if ( DollarFactorize(BHEAD numdollar) ) return(-1);
 		AT.WorkPointer = oldworkpointer;
@@ -5795,6 +5795,6 @@ int DoSetRandom(UBYTE *s)
 }
 
 /*
- 		#] DoSetRandom :
+ 		#] DoSetRandom : 
  	# ] PreProcessor :
 */

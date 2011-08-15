@@ -279,7 +279,7 @@ found:
   	#[ PutBracketInIndex :
 
 	Call via
-	if ( AR.BracketOn ) PutBracketInIndex(term);
+	if ( AR.BracketOn ) PutBracketInIndex(BHEAD term);
 
 	This means that there should be a bracket somewhere
 	Note that the brackets come in in proper order.
@@ -287,9 +287,9 @@ found:
 	DON'T forget AR.SortType to be put into e->bracketinfo->SortType
 */
 
-VOID PutBracketInIndex(WORD *term, POSITION *newpos)
+VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	BRACKETINDEX *bi, *b1, *b2, *b3;
 	BRACKETINFO *b;
 	POSITION thepos;
@@ -491,7 +491,7 @@ bracketdone:
 }
 
 /*
-  	#] PutBracketInIndex : 
+  	#] PutBracketInIndex :
   	#[ ClearBracketIndex :
 */
 

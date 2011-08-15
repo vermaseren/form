@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes : polynito.c
 */
@@ -47,7 +47,7 @@ WORD PolyOne[5] = { 4,1,1,3,0 };
 int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3);
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Notation :
 
 	We use several notations internally to deal with polynomials.
@@ -96,7 +96,7 @@ int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3);
 	To not exhaust the WorkSpace too quickly we have to copy polynomials
 	down in the WorkSpace frequently. This is a slight inefficiency.
 
-  	#] Notation :
+  	#] Notation : 
   	#[ SymbolNormalize :
 */
 /**
@@ -237,7 +237,7 @@ Nexti:;
 }
 
 /*
-  	#] SymbolNormalize :
+  	#] SymbolNormalize : 
   	#[ CheckMinTerm :
 */
 /**
@@ -270,7 +270,7 @@ nextm:	m += 2;
 }
 
 /*
-  	#] CheckMinTerm :
+  	#] CheckMinTerm : 
   	#[ ReOrderSymbols :
 */
 /**
@@ -326,7 +326,7 @@ int ReOrderSymbols(WORD *term, WORD *slist, WORD par)
 }
 
 /*
-  	#] ReOrderSymbols :
+  	#] ReOrderSymbols : 
   	#[ CompareSymbols :
 */
 /**
@@ -370,14 +370,15 @@ int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 }
 
 /*
-  	#] CompareSymbols :
+  	#] CompareSymbols : 
   	#[ PolyOrder :
 */
 
 int PolyOrder(PHEAD WORD *poly)
 {
+	GETBIDENTITY
 	WORD *p;
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	AR.CompareRoutine = &CompareSymbols;
 	p = poly;
 	while ( *p ) {
@@ -388,7 +389,7 @@ int PolyOrder(PHEAD WORD *poly)
 		}
 		p += *p;
 	}
-	if ( EndSort(poly,1,0) < 0 ) {
+	if ( EndSort(BHEAD poly,1,0) < 0 ) {
 		AR.CompareRoutine = &Compare1;
 		Terminate(-1);
 	}
@@ -397,7 +398,7 @@ int PolyOrder(PHEAD WORD *poly)
 }
 
 /*
-  	#] PolyOrder :
+  	#] PolyOrder : 
   	#[ PolyAdd :
 */
 /**
@@ -475,7 +476,7 @@ WORD *PolyAdd(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyAdd :
+  	#] PolyAdd : 
   	#[ PolyMul :
 */
 /**
@@ -485,6 +486,7 @@ WORD *PolyAdd(PHEAD WORD *Poly1, WORD *Poly2)
 
 WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 {
+	GETBIDENTITY
 	WORD *buffer = AT.WorkPointer, *b;
 	WORD *p1, *p2, *p3;
 	LONG n1,n2;
@@ -503,7 +505,7 @@ WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 	We have a separate library for those. Here we have multivariate
 	polynomials and hence we have to be rather brutish (or do very complicated)
 */
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	AR.CompareRoutine = &CompareSymbols;
 	
 	p1 = Poly1; n1 = 0; while ( *p1 ) { n1++; p1 += *p1; }
@@ -526,7 +528,7 @@ WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 		p1 += *p1;
 	}
 
-	if ( EndSort(buffer,1,0) < 0 ) {
+	if ( EndSort(BHEAD buffer,1,0) < 0 ) {
 		AR.CompareRoutine = &Compare1;
 		Terminate(-1);
 	}
@@ -541,7 +543,7 @@ WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyMul :
+  	#] PolyMul : 
   	#[ PolyDiv :
 */
 /**
@@ -563,6 +565,7 @@ WORD *PolyMul(PHEAD WORD *Poly1, WORD *Poly2)
 
 WORD *PolyDiv(PHEAD WORD *Poly1, WORD *Poly2)
 {
+	GETBIDENTITY
 	WORD *b = AT.WorkPointer, *bb;
 	WORD *output = b, *out;
 	LONG size;
@@ -600,7 +603,7 @@ WORD *PolyDiv(PHEAD WORD *Poly1, WORD *Poly2)
 	tt = Poly2 + *Poly2; nt = tt[-1]; tt -= ABS(tt[-1]);
 	if ( nt < 0 ) { nt = (nt+1)/2; } else { nt = (nt-1)/2; }
 
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	AR.CompareRoutine = &CompareSymbols;
 
 	for (;;) {
@@ -676,7 +679,7 @@ NegPow:
 		*b++ = 0;
 		AT.WorkPointer = b;
 /*
- 		#] Get q :
+ 		#] Get q : 
 
 		Compute poly1 - q*Poly2
 */
@@ -702,7 +705,7 @@ NegPow:
 */
 	*out++ = 0;
 
-	if ( EndSort(out,1,0) < 0 ) {
+	if ( EndSort(BHEAD out,1,0) < 0 ) {
 		AR.CompareRoutine = &Compare1;
 		LowerSortLevel();
 		Terminate(-1);
@@ -717,7 +720,7 @@ NegPow:
 }
 
 /*
-  	#] PolyDiv :
+  	#] PolyDiv : 
   	#[ PolyDivI :
 */
 /**
@@ -871,7 +874,7 @@ nodivision:
 }
 
 /*
-  	#] PolyDivI :
+  	#] PolyDivI : 
   	#[ PolyMul0 :
 */
 /**
@@ -938,7 +941,7 @@ WORD *PolyMul0(PHEAD WORD *Poly, WORD *term)
 }
 
 /*
-  	#] PolyMul0 :
+  	#] PolyMul0 : 
   	#[ PolyDiv0 :
 */
 /**
@@ -1056,7 +1059,7 @@ NegPow:
 		bb[0] = b - bb;
 		AT.WorkPointer = b;
 /*
- 		#] Get q :
+ 		#] Get q : 
 
 		Compute poly1 - q*Poly2
 */
@@ -1086,7 +1089,7 @@ NegPow:
 }
 
 /*
-  	#] PolyDiv0 :
+  	#] PolyDiv0 : 
   	#[ PolyPow :
 */
 /**
@@ -1155,7 +1158,7 @@ WORD *PolyPow(PHEAD WORD *Poly, WORD pow)
 }
 
 /*
-  	#] PolyPow :
+  	#] PolyPow : 
   	#[ PolyRatNorm :
 */
 /**
@@ -1231,7 +1234,7 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyRatNorm :
+  	#] PolyRatNorm : 
   	#[ PolyRatFunNorm :
 */
 /**
@@ -1244,6 +1247,7 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 
 WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 {
+	GETBIDENTITY
 	WORD *oldworkpointer, *ow = AT.WorkPointer, *retval = 0;
 	WORD buf1[9], buf2[9], *Poly1, *Poly2, *p1, *p2, *p3, *p4, *pp;
 	WORD *T1 = TermMalloc("PolyRatFunNorm");
@@ -1365,7 +1369,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 	oldvalue = *tstop; *tstop = 0; /* For the general case */
 	oldworkpointer = AT.WorkPointer;
 /*
-  	#] Step 1 :
+  	#] Step 1 : 
   	#[ Step 2 : get rid of negative powers
 */
 	np = GetNegPow(BHEAD Poly1);
@@ -1383,11 +1387,11 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		Poly2 = PolyMul0(BHEAD Poly2,np);
 	}
 /*
-  	#] Step 2 :
+  	#] Step 2 : 
   	#[ Step 3 : sort the denominator, sort the numerator
 */
 	if ( Poly1[*Poly1] != 0 ) {
-		if ( NewSort() ) { Terminate(-1); }
+		if ( NewSort(BHEAD0) ) { Terminate(-1); }
 		AR.CompareRoutine = &CompareSymbols;
 		p1 = Poly1; Poly1 = AT.WorkPointer;
 		while ( *p1 ) {
@@ -1398,7 +1402,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 			}
 			p1 += *p1;
 		}
-		if ( EndSort(Poly1,1,0) < 0 ) {
+		if ( EndSort(BHEAD Poly1,1,0) < 0 ) {
 			AR.CompareRoutine = oldcompareroutine;
 			LowerSortLevel();
 			Terminate(-1);
@@ -1408,7 +1412,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		AT.WorkPointer = p1+1;
 	}
 	if ( Poly2[*Poly2] != 0 ) {
-		if ( NewSort() ) { Terminate(-1); }
+		if ( NewSort(BHEAD0) ) { Terminate(-1); }
 		AR.CompareRoutine = &CompareSymbols;
 		p2 = Poly2; Poly2 = AT.WorkPointer;
 		while ( *p2 ) {
@@ -1419,7 +1423,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 			}
 			p2 += *p2;
 		}
-		if ( EndSort(Poly2,1,0) < 0 ) {
+		if ( EndSort(BHEAD Poly2,1,0) < 0 ) {
 			AR.CompareRoutine = oldcompareroutine;
 			LowerSortLevel();
 			Terminate(-1);
@@ -1429,7 +1433,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		AT.WorkPointer = p2+1;
 	}
 /*
-  	#] Step 3 :
+  	#] Step 3 : 
   	#[ Step 4 : normalize the denominator and put the factor in the numerator.
 	Potentially there are two normalizations:
 			a: first term has coefficient 1.
@@ -1474,7 +1478,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 	}
 #endif
 /*
-  	#] Step 4 :
+  	#] Step 4 : 
   	#[ Step 5 : determine the GCD and divide it out (PolyRatNorm)
 */
 	p1 = AT.WorkPointer;
@@ -1484,7 +1488,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 	else                    p2 = PolyRatNorm(BHEAD Poly1,Poly2);
 */
 /*
-  	#] Step 5 :
+  	#] Step 5 : 
   	#[ Step 6 : insert the result in term
 
 	Note that if the denominator is trivial we switch to the other notation
@@ -1560,7 +1564,7 @@ WORD *PolyRatFunNorm(PHEAD WORD *term, WORD par)
 		NCOPY(t,p2,size)
 	}
 /*
-  	#] Step 6 :
+  	#] Step 6 : 
 */
 	t++;
 	if ( par == 0 ) AT.WorkPointer = oldworkpointer;
@@ -1577,7 +1581,7 @@ rett:
 }
 
 /*
-  	#] PolyRatFunNorm :
+  	#] PolyRatFunNorm : 
   	#[ PolyRatFunAdd :
 */
 /**
@@ -1589,6 +1593,7 @@ rett:
 
 WORD *PolyRatFunAdd_OLD(PHEAD WORD *t1, WORD *t2)
 {
+	GETBIDENTITY
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *g1, *g2, *num1, *num2, *den1, *den2;
 	WORD *numn, *num3, *den3, *t, *p1, *r1, *r2, *m1, *m2;
@@ -1609,7 +1614,7 @@ WORD *PolyRatFunAdd_OLD(PHEAD WORD *t1, WORD *t2)
 /*
  		#[ 1,1 : This shouldn't occur. Is here for completeness.
 */
-		if ( NewSort() ) { Terminate(-1); }
+		if ( NewSort(BHEAD0) ) { Terminate(-1); }
 		AR.CompareRoutine = &CompareSymbols;
 		t = t1 + FUNHEAD; tt = t1 + t1[1];
 		if ( *t > 0 ) {
@@ -1708,7 +1713,7 @@ skip2:;
 		*p1++ = t1[1]; *p1++ = 0; FILLFUN(p1)
 		r2 = p1;
 		*p1++ = 0; *p1++ = 0; FILLARG(p1)
-		if ( EndSort(p1,1,0) < 0 ) {
+		if ( EndSort(BHEAD p1,1,0) < 0 ) {
 			AR.CompareRoutine = &Compare1;
 			Terminate(-1);
 		}
@@ -1719,7 +1724,7 @@ skip2:;
 		AT.WorkPointer = p1;
 		return(oldworkpointer);
 /*
- 		#] 1,1 :
+ 		#] 1,1 : 
 */
 	}
 	else if ( narg1 == 2 && narg2 == 2 ) {	/* what we are here for */
@@ -1761,7 +1766,7 @@ skip2:;
 	den2 = num2; while ( *den2 ) den2 += *den2; den2++;
 #endif
 /*
-  	#] Step 1:
+  	#] Step 1: 
   	#[ Step 2: Get g1 = GCD of the two denominators. r1 = den1/g1, r2 = den2/g1
 */
 #ifndef OLDRATADD
@@ -1769,7 +1774,7 @@ skip2:;
 	r1   = PolyDiv0(BHEAD den1,g1);
 	r2   = PolyDiv0(BHEAD den2,g1);
 /*
-  	#] Step 2:
+  	#] Step 2: 
   	#[ Step 3: compute numn = r2*num1+r1*num2
 */
 	m1   = PolyMul(BHEAD num1,r2);
@@ -1777,12 +1782,12 @@ skip2:;
 	numn = PolyAdd(BHEAD m1,m2);
 	if ( numn[0] == 0 ) goto AnswerIsZero;
 /*
-  	#] Step 3:
+  	#] Step 3: 
   	#[ Step 4: compute g2 = gcd of numn and g1.
 */
 	g2   = PolyGCD2(BHEAD numn,g1);
 /*
-  	#] Step 4:
+  	#] Step 4: 
   	#[ Step 5: output is num3 = numn/g2, den3 = r1*r2*(g1/g2)
 */
 	num3 = PolyDiv0(BHEAD numn,g2);
@@ -1813,7 +1818,7 @@ skip2:;
 			while ( *t ) { t += *t; t[-1] = -t[-1]; }
 		}
 /*
-  	#] Step 5:
+  	#] Step 5: 
   	#[ Step 6: put the new polyfun in the buffer.
 */
 	newsize = (g1-num3) + (AT.WorkPointer-den3) + FUNHEAD + 2*ARGHEAD - 2;
@@ -1845,7 +1850,7 @@ skip2:;
 	oldworkpointer[1] = p1 - oldworkpointer;
 	AT.WorkPointer = p1;
 /*
-  	#] Step 6:
+  	#] Step 6: 
 */
 /*
 	if ( PolyTestAdd(BHEAD t1,t2,oldworkpointer) ) {
@@ -1870,7 +1875,7 @@ AnswerIsZero:
 }
 
 /*
-  	#] PolyRatFunAdd :
+  	#] PolyRatFunAdd : 
   	#[ PolyRatFunMul :
 */
 /**
@@ -2106,7 +2111,7 @@ tryothert2:;
 }
 
 /*
-  	#] PolyRatFunMul :
+  	#] PolyRatFunMul : 
   	#[ PolyRemoveContent :
 */
 /**
@@ -2366,7 +2371,7 @@ calledfrom:
 }
 
 /*
-  	#] PolyRemoveContent :
+  	#] PolyRemoveContent : 
   	#[ PolyGCD_OLD :
 */
 /**
@@ -2395,7 +2400,7 @@ WORD *PolyGCD_OLD(PHEAD WORD *Poly1, WORD *Poly2)
 		7: free(n1), n1'=n2', n2'=n3' go to 5
 		Note the abundant recursions here.
 
- 		#] Algorithm:
+ 		#] Algorithm: 
  		#[ Declarations:
 */
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -2406,7 +2411,7 @@ WORD *PolyGCD_OLD(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD pow, numsym1, numsym2, x;
 	VOID *oldcompare = AR.CompareRoutine;
 /*
- 		#] Declarations:
+ 		#] Declarations: 
  		#[ Special cases:
 */
 	if ( *Poly1 == 0 || ( Poly1[*Poly1] == 0 && ABS(Poly1[*Poly1-1]) == *Poly1-1 ) )
@@ -2414,7 +2419,7 @@ WORD *PolyGCD_OLD(PHEAD WORD *Poly1, WORD *Poly2)
 	if ( *Poly2 == 0 || ( Poly2[*Poly2] == 0 && ABS(Poly2[*Poly2-1]) == *Poly2-1 ) )
 		goto gcdisone;
 /*
- 		#] Special cases:
+ 		#] Special cases: 
  		#[ Determine the order of the variables:
 */
 
@@ -2434,7 +2439,7 @@ gcdisone:
 		return(oldworkpointer);
 	}
 /*
- 		#] Determine the order of the variables:
+ 		#] Determine the order of the variables: 
  		#[ Copy the polynomials and renumber them:
 
 	Note that we have to copy the terms before renumbering or we might
@@ -2443,7 +2448,7 @@ gcdisone:
 */
 	AR.CompareRoutine = &CompareSymbols;
 	poly1 = oldworkpointer;
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	p1 = Poly1;
 	while ( *p1 ) {
 		p2 = oldworkpointer; size = *p1; NCOPY(p2,p1,size);
@@ -2455,14 +2460,14 @@ gcdisone:
 		}
 		p1 += *p1;
 	}
-	if ( EndSort(poly1,1,0) < 0 ) {
+	if ( EndSort(BHEAD poly1,1,0) < 0 ) {
 		AR.CompareRoutine = oldcompare;
 		Terminate(-1);
 	}
 	p1 = poly1; while ( *p1 ) p1 += *p1; p1++; AT.WorkPointer = p1;
 
 	poly2 = p1;
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	p1 = Poly2;
 	while ( *p1 ) {
 		p2 = oldworkpointer; size = *p1; NCOPY(p2,p1,size);
@@ -2474,7 +2479,7 @@ gcdisone:
 		}
 		p1 += *p1;
 	}
-	if ( EndSort(poly2,1,0) < 0 ) {
+	if ( EndSort(BHEAD poly2,1,0) < 0 ) {
 		AR.CompareRoutine = oldcompare;
 		Terminate(-1);
 	}
@@ -2486,7 +2491,7 @@ gcdisone:
 		x = numsym1; numsym1 = numsym2; numsym2 = x;
 	}
 /*
- 		#] Copy the polynomials and renumber them:
+ 		#] Copy the polynomials and renumber them: 
  		#[ Determine gcd's of the coefficients of the first variable:
 
 	First copy the part of poly1 with the highest power to g1.
@@ -2529,7 +2534,7 @@ gcdisone:
 		AT.WorkPointer = p1;
 	}
 /*
- 		#] Determine gcd's of the coefficients of the first variable:
+ 		#] Determine gcd's of the coefficients of the first variable: 
  		#[ The loop:
 */
 	for(;;) {
@@ -2553,7 +2558,7 @@ gcdisone:
 		POLYCOPY(n2p,n3p);
 	}
 /*
- 		#] The loop:
+ 		#] The loop: 
  		#[ Renumber the gcd back and copy it into place:
 */
 finishup:
@@ -2563,7 +2568,7 @@ finishup:
 		return(oldworkpointer);
 	}
 	AR.CompareRoutine = &CompareSymbols;
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	p1 = gcd;
 	while ( *p1 ) {
 		ReOrderSymbols(p1,slist,1);
@@ -2574,7 +2579,7 @@ finishup:
 		}
 		p1 += *p1;
 	}
-	if ( EndSort(oldworkpointer,1,0) < 0 ) {
+	if ( EndSort(BHEAD oldworkpointer,1,0) < 0 ) {
 		AR.CompareRoutine = oldcompare;
 		Terminate(-1);
 	}
@@ -2582,7 +2587,7 @@ finishup:
 	p1 = oldworkpointer; while ( *p1 ) p1 += *p1; p1++; AT.WorkPointer = p1;
 	return(oldworkpointer);
 /*
- 		#] Renumber the gcd back and copy it into place:
+ 		#] Renumber the gcd back and copy it into place: 
 */
 calledfrom:
 	AT.WorkPointer = oldworkpointer;
@@ -2605,7 +2610,7 @@ calledfrom:
 }
 
 /*
-  	#] PolyGCD_OLD :
+  	#] PolyGCD_OLD : 
   	#[ PolyGetRenumbering :
 */
 /**
@@ -2740,7 +2745,7 @@ nexti2:;
 }
 
 /*
-  	#] PolyGetRenumbering :
+  	#] PolyGetRenumbering : 
   	#[ PolyTake :
 */
 /**
@@ -2865,7 +2870,7 @@ simplecase:
 }
 
 /*
-  	#] PolyTake :
+  	#] PolyTake : 
   	#[ GetNegPow :
 */
 /**
@@ -2937,7 +2942,7 @@ WORD *GetNegPow(PHEAD WORD *Poly)
 }
 
 /*
-  	#] GetNegPow :
+  	#] GetNegPow : 
   	#[ PolyNormPoly :
 */
 /**
@@ -2946,9 +2951,10 @@ WORD *GetNegPow(PHEAD WORD *Poly)
  
 WORD *PolyNormPoly(PHEAD WORD *Poly)
 {
+	GETBIDENTITY
 	WORD *buffer = AT.WorkPointer;
 	WORD *p;
-	if ( NewSort() ) { Terminate(-1); }
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
 	AR.CompareRoutine = &CompareSymbols;
 	while ( *Poly ) {
 		p = Poly + *Poly;
@@ -2960,7 +2966,7 @@ WORD *PolyNormPoly(PHEAD WORD *Poly)
 		}
 		Poly = p;
 	}
-	if ( EndSort(buffer,1,0) < 0 ) {
+	if ( EndSort(BHEAD buffer,1,0) < 0 ) {
 		AR.CompareRoutine = &Compare1;
 		Terminate(-1);
 	}
@@ -2972,7 +2978,7 @@ WORD *PolyNormPoly(PHEAD WORD *Poly)
 }
 
 /*
-  	#] PolyNormPoly :
+  	#] PolyNormPoly : 
   	#[ PolyGCD1 :
  		#[ Generic routine :
 */
@@ -3029,7 +3035,7 @@ WORD *PolyGCD1(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
- 		#] Generic routine :
+ 		#] Generic routine : 
 
  		#[ Algorithm 1 : The modular method
 */
@@ -3101,7 +3107,7 @@ restart:;
 	WorkSpace. We are going to overwrite poly1 and poly2 continuously.
 
 */
-	AccumTermGCD(content1,content2);
+	AccumTermGCD(BHEAD content1,content2);
 	for ( i = 0; i <= content1[0]; i++ ) POscrath[i] = content1[i];
 
 	if ( ABS(poly1[*poly1-1]) == *poly1-1 || ABS(poly2[*poly2-1]) == *poly2-1 ) {
@@ -3115,7 +3121,7 @@ restart:;
 */
 	if ( poly1[4] < poly2[4] ) { p = poly1; poly1 = poly2; poly2 = p; }
 /*
-  	#] Step C1 :
+  	#] Step C1 : 
 
 	Put the GCD of the leading coefficients in gcdcoef
 */
@@ -3367,7 +3373,7 @@ calledfrom:;
 }
 
 /*
- 		#] Algorithm 1 :
+ 		#] Algorithm 1 : 
  		#[ Algorithm 2 : The classical method
 */
 /**
@@ -3463,7 +3469,7 @@ valueisone:
 }
 
 /* 
- 		#] Algorithm 2 :
+ 		#] Algorithm 2 : 
 
  		#[ Algorithm 3 : The subresultant method
 */
@@ -3487,6 +3493,7 @@ valueisone:
 
 WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 {
+	GETBIDENTITY
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *poly1, *poly2, *p, *t, *rem, *p1, *p2, *t1;
 	WORD *content1, *content2;
@@ -3524,7 +3531,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 */
 	numsize1 = content1[*content1-1];
 	numsize2 = content2[*content2-1];
-	AccumGCD((UWORD *)(content1+1),&numsize1,(UWORD *)(content2+1),numsize2);
+	AccumGCD(BHEAD (UWORD *)(content1+1),&numsize1,(UWORD *)(content2+1),numsize2);
 	content1[0] = ABS(numsize1)+1;
 	content1[*content1-1] = numsize1;
 /*
@@ -3533,7 +3540,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 	POscratg[0] = 1; sizeg = 1;
 	POscrath[0] = 1; sizeh = 1;
 /*
-  	#] Step C1 :
+  	#] Step C1 : 
 
 	And now the loop
 */
@@ -3569,7 +3576,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
 			goto finished;
 		}
 /*
- 		#] Step C2 :
+ 		#] Step C2 : 
  		#[ Step C3 :
 
 		Put poly2 where once was poly1
@@ -3703,7 +3710,7 @@ WORD *PolyGCD1c(PHEAD WORD *Poly1, WORD *Poly2)
             counter = 0;
         }
 /*
- 		#] Step C3 :
+ 		#] Step C3 : 
 */
 	}
 finished:
@@ -3726,8 +3733,8 @@ calledfrom:
 }
 
 /*
- 		#] Algorithm 3 :
-  	#] PolyGCD1 :
+ 		#] Algorithm 3 : 
+  	#] PolyGCD1 : 
   	#[ PolyDiv1 :
 */
 /**
@@ -3982,7 +3989,7 @@ WORD *PolyDiv1(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyDiv1 :
+  	#] PolyDiv1 : 
 
   	#[ PolyPseudoRem1 :
 */
@@ -4067,13 +4074,13 @@ WORD *PolyPseudoRem1(PHEAD WORD *Poly1, WORD *Poly2)
 	}
 	AT.WorkPointer += m2+1;
 /*
-  	#] Step 0: Make an index of coefficients of Poly2
+  	#] Step 0: Make an index of coefficients of Poly2 
   	#[ Copy Poly1 :
 */
 	POLYCOPY(polyin,Poly1)
 	Poly1 = polyin;
 /*
-  	#] Copy Poly1 :
+  	#] Copy Poly1 : 
 
 		for ( k = m1-m2; k >= 0; k-- ) {
 			q(k) = polyin(m2+k)*Poly2(m2)^k
@@ -4195,7 +4202,7 @@ calledfrom:
 }
 
 /*
-  	#] PolyPseudoRem1 :
+  	#] PolyPseudoRem1 : 
   	#[ InvertModular :
 */
 /**
@@ -4227,7 +4234,7 @@ WORD InvertModular(WORD xx, WORD m)
 	return((WORD)a2);
 }
 /*
-  	#] InvertModular :
+  	#] InvertModular : 
 
   	#[ InvertLongModular :
 */
@@ -4311,7 +4318,7 @@ WORD InvertLongModular(PHEAD UWORD *a, WORD na, WORD m, UWORD *b, WORD *nb)
 }
 
 /*
-  	#] InvertLongModular :
+  	#] InvertLongModular : 
   	#[ PolyModGCD :
 */
 /**
@@ -4383,7 +4390,7 @@ relativeprime:
 }
 
 /*
-  	#] PolyModGCD :
+  	#] PolyModGCD : 
   	#[ PolyConvertToModulus :
 */
 /**
@@ -4418,7 +4425,7 @@ int PolyConvertToModulus(WORD *PolyIn, POLYMOD *PolyOut, WORD prime)
 }
 
 /*
-  	#] PolyConvertToModulus :
+  	#] PolyConvertToModulus : 
   	#[ PolyConvertFromModulus :
 */
 /**
@@ -4470,7 +4477,7 @@ WORD *PolyConvertFromModulus(PHEAD POLYMOD *PolyIn, WORD lgcd)
 }
 
 /*
-  	#] PolyConvertFromModulus :
+  	#] PolyConvertFromModulus : 
 
   	#[ PolyChineseRemainder :
 */
@@ -4640,7 +4647,7 @@ calledfrom:;
 }
 
 /*
-  	#] PolyChineseRemainder :
+  	#] PolyChineseRemainder : 
   	#[ PolyHenselUni :
 */
 /**
@@ -4786,7 +4793,7 @@ WORD *PolyHenselUni(PHEAD WORD *Prod, POLYMOD *Poly11, POLYMOD *Poly21)
 #endif
 
 /*
-  	#] PolyHenselUni :
+  	#] PolyHenselUni : 
   	#[ NextPrime :
 */
 /**
@@ -4847,7 +4854,7 @@ nexti:;
 }
  
 /*
-  	#] NextPrime :
+  	#] NextPrime : 
   	#[ ModShortPrime :
 */
 /**
@@ -4865,7 +4872,7 @@ WORD ModShortPrime(UWORD *a, WORD na, WORD x)
 }
 
 /*
-  	#] ModShortPrime :
+  	#] ModShortPrime : 
   	#[ AllocPolyModCoefs :
 */
 /**
@@ -4902,7 +4909,7 @@ int AllocPolyModCoefs(POLYMOD *polymod, WORD size)
 }
 
 /*
-  	#] AllocPolyModCoefs :
+  	#] AllocPolyModCoefs : 
   	#[ AccumTermGCD :
 */
 /**
@@ -4912,8 +4919,9 @@ int AllocPolyModCoefs(POLYMOD *polymod, WORD size)
  *	in which case there isn't much extra work.
  */
 
-int AccumTermGCD(WORD *term1, WORD *term2)
+int AccumTermGCD(PHEAD WORD *term1, WORD *term2)
 {
+	GETBIDENTITY
 	WORD size1, nsize1, pow1, *coef1, *t1, i, j;
 	WORD size2, nsize2, pow2, *coef2, *t2;
 	size1 = term1[*term1-1];
@@ -4924,7 +4932,7 @@ int AccumTermGCD(WORD *term1, WORD *term2)
 	nsize2 = ABS(size2);
 	if ( nsize2 == *term2-1 ) { pow2 = 0; coef2 = term2+1; }
 	else                      { pow2 = 1; coef2 = term2+term2[2]+1; }
-	AccumGCD((UWORD *)coef1,&nsize1,(UWORD *)coef2,nsize2);
+	AccumGCD(BHEAD (UWORD *)coef1,&nsize1,(UWORD *)coef2,nsize2);
 	if ( pow1 == 0 ) {
 		*term1 = nsize1+1; term1[*term1-1] = nsize1;
 	}
@@ -4972,7 +4980,7 @@ nexti:;
 }
 
 /*
-  	#] AccumTermGCD :
+  	#] AccumTermGCD : 
   	#[ PolyTakeSqrt :
 */
 /**
@@ -5118,7 +5126,7 @@ noroot:;
 }
 
 /*
-  	#] PolyTakeSqrt :
+  	#] PolyTakeSqrt : 
   	#[ PolyTakeRoot :
 */
 /**
@@ -5282,7 +5290,7 @@ noroot:;
 }
 
 /*
-  	#] PolyTakeRoot :
+  	#] PolyTakeRoot : 
   	#[ PolyMulti :
  		#[ PolyInterpolation :
 */
@@ -5346,7 +5354,7 @@ WORD *PolyInterpolation(PHEAD WORD *Poly1, WORD *Poly2, WORD numsym)
 }
 #endif
 /*
- 		#] PolyInterpolation :
+ 		#] PolyInterpolation : 
  		#[ PolySubs :
 */
 /**
@@ -5619,7 +5627,7 @@ calledfrom:;
 }
 
 /*
- 		#] PolySubs :
+ 		#] PolySubs : 
  		#[ PolyNewton :
 */
 /**
@@ -5761,7 +5769,7 @@ WORD *PolyNewton(PHEAD WORD **Polynomials, WORD num, WORD numsym)
 }
 
 /*
- 		#] PolyNewton :
+ 		#] PolyNewton : 
  		#[ PolyGetNewtonCoef :
 */
 /**
@@ -5856,7 +5864,7 @@ calledfrom:;
 }
 
 /*
- 		#] PolyGetNewtonCoef :
+ 		#] PolyGetNewtonCoef : 
  		#[ PolyGetGCDPowers :
 */
 /**
@@ -5982,7 +5990,7 @@ WORD *PolyGetGCDPowers(PHEAD WORD *Poly1, WORD *Poly2, WORD *plist1, WORD *plist
 }
 
 /*
- 		#] PolyGetGCDPowers :
+ 		#] PolyGetGCDPowers : 
  		#[ PolyModSubsVector :
 */
 /**
@@ -6094,7 +6102,7 @@ zerovalue:;
 }
 
 /*
- 		#] PolyModSubsVector :
+ 		#] PolyModSubsVector : 
  		#[ ModPow :
 */
 /**
@@ -6134,7 +6142,7 @@ WORD ModPow(WORD num, WORD pow, WORD prime)
 }
 
 /*
- 		#] ModPow :
+ 		#] ModPow : 
  		#[ PolyGetSymbols :
 */
 /**
@@ -6225,7 +6233,7 @@ WORD *PolyGetSymbols(PHEAD WORD *Poly, int *maxi)
 }
 
 /*
- 		#] PolyGetSymbols :
+ 		#] PolyGetSymbols : 
  		#[ PolyGetConfig :
 */
 /**
@@ -6249,8 +6257,8 @@ WORD *PolyGetConfig(PHEAD WORD numvars)
 }
 
 /*
- 		#] PolyGetConfig :
-  	#] PolyMulti :
+ 		#] PolyGetConfig : 
+  	#] PolyMulti : 
   	#[ PolyTestAdd :
 
 	Tests whether PolyRatFun1+PolyRatFun2 = PolyRatFun3
@@ -6438,7 +6446,7 @@ int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3)
 	}
 	AT.WorkPointer = p2;
 /*
- 		#] Get polynomials :
+ 		#] Get polynomials : 
 */
 	a1 = PolyMul(BHEAD num1,den2);
 	a2 = PolyMul(BHEAD a1,den3);
@@ -6464,7 +6472,7 @@ int PolyTestAdd(PHEAD WORD *PolyRatFun1, WORD *PolyRatFun2, WORD *PolyRatFun3)
 }
 
 /*
-  	#] PolyTestAdd :
+  	#] PolyTestAdd : 
   	#[ RedoPolyRatFun :
 */
 /**
@@ -6530,7 +6538,7 @@ WORD *RedoPolyRatFun(PHEAD WORD *termin,int par)
 }
 
 /*
-  	#] RedoPolyRatFun :
+  	#] RedoPolyRatFun : 
   	#[ TestSymbols :
 */
 /**
@@ -6583,7 +6591,7 @@ IllObject:
 }
 
 /*
-  	#] TestSymbols :
+  	#] TestSymbols : 
   	#[ PolyRatFunAdd1 :
 */
 /**
@@ -6617,7 +6625,7 @@ WORD *PolyRatFunAdd1(PHEAD WORD *t1, WORD *t2)
 }
 
 /*
-  	#] PolyRatFunAdd1 :
+  	#] PolyRatFunAdd1 : 
   	#[ PolyRatFunTake :
 */
 /**
@@ -6682,7 +6690,7 @@ WORD *PolyRatFunTake(PHEAD WORD *term)
 }
 
 /*
-  	#] PolyRatFunTake :
+  	#] PolyRatFunTake : 
   	#[ PolyGCD2 :
 */
 
@@ -6693,5 +6701,5 @@ WORD *PolyGCD2(PHEAD WORD *Poly1, WORD *Poly2)
 }
 
 /*
-  	#] PolyGCD2 :
+  	#] PolyGCD2 : 
 */

@@ -85,14 +85,14 @@ WORD execarg(PHEAD WORD *term, WORD level)
 		*v++ = 1; *v++ = 1; *v++ = 3;
 		AT.WorkPointer = v;
 		start = t; AR.Eside = LHSIDEX;
-		NewSort();
+		NewSort(BHEAD0);
 		if ( Generator(BHEAD factor,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = oldwork;
 			return(-1);
 		}
 		AT.WorkPointer = v;
-		if ( EndSort(factor,0,0) < 0 ) {}
+		if ( EndSort(BHEAD factor,0,0) < 0 ) {}
 		if ( *factor && *(factor+*factor) != 0 ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("&$ in () does not evaluate into a single term");
@@ -532,7 +532,7 @@ ScaledVariety:;
 				r3 = r;
 				AR.DeferFlag = 0;
 				if ( *r > 0 ) {
-					NewSort();
+					NewSort(BHEAD0);
 					action = 1;
 					r2 = r + *r;
 					r += ARGHEAD;
@@ -559,7 +559,7 @@ ScaledVariety:;
 					ToGeneral(r,r1,0);
 					m = r1 + ARGHEAD;
 					AT.WorkPointer = r1 + *r1;
-					NewSort();
+					NewSort(BHEAD0);
 					action = 1;
 /*
 					What to do with dummy indices?
@@ -571,7 +571,7 @@ ScaledVariety:;
 					if ( Generator(BHEAD m,level) ) goto execargerr;
 					AT.WorkPointer = r1;
 				}
-				if ( EndSort(AT.WorkPointer+ARGHEAD,1,0) < 0 ) goto execargerr;
+				if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1,0) < 0 ) goto execargerr;
 				AR.DeferFlag = olddefer;
 /*
 				Now shift the sorted entity over the old argument.
@@ -1034,7 +1034,7 @@ ScaledVariety:;
 						while ( t < r3 ) {
 							GETSTOP(t,r6);
 							i = t[t[0]-1];
-							if ( AccumGCD(EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
+							if ( AccumGCD(BHEAD EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
 							if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
 							t += *t;
 						}
@@ -1499,7 +1499,7 @@ nextterm:						mm = mnext;
 					while ( t < r3 ) {
 						GETSTOP(t,r6);
 						i = t[t[0]-1];
-						if ( AccumGCD(EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
+						if ( AccumGCD(BHEAD EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
 						if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
 						t += *t;
 					}
@@ -1627,7 +1627,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 	AR.DeferFlag = 0;
 	do {
 		AR.Cnumlhs = C->lhs[level][3];
-		NewSort();
+		NewSort(BHEAD0);
 		if ( buffer1 ) {
 			term = buffer1;
 			while ( *term ) {
@@ -1644,7 +1644,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 			M_free((void *)buffer1,"buffer in sort statement");
 			buffer1 = 0;
 		}
-		if ( EndSort((WORD *)((VOID *)(&buffer1)),2,0) < 0 ) goto exectermerr;
+		if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer1)),2,0) < 0 ) goto exectermerr;
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );
 	AR.Cnumlhs = oldnumlhs;
@@ -1908,7 +1908,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 	*argout = 0;
 	AR.SortType = SORTHIGHFIRST;
 	if ( oldsorttype != AR.SortType ) {
-		NewSort();
+		NewSort(BHEAD0);
 		oldword = argin[*argin]; argin[*argin] = 0;
 		t = argin+ARGHEAD;
 		while ( *t ) {
@@ -1931,7 +1931,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(argin+ARGHEAD,0,0);
+		EndSort(BHEAD argin+ARGHEAD,0,0);
 		argin[*argin] = oldword;
 	}
 /*
@@ -1973,7 +1973,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		The way we took out objects is rather brutish. We have to
 		normalize
 */
-		NewSort();
+		NewSort(BHEAD0);
 		t = argfree+ARGHEAD;
 		while ( *t ) {
 			tstop = t + *t;
@@ -1981,7 +1981,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(argfree+ARGHEAD,0,0);
+		EndSort(BHEAD argfree+ARGHEAD,0,0);
 		t = argfree+ARGHEAD;
 		while ( *t ) t += *t;
 		*argfree = t - argfree;
@@ -2029,7 +2029,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 	if ( action ) {
 		t = argfree + ARGHEAD;
 		argextra = AT.WorkPointer;
-		NewSort();
+		NewSort(BHEAD0);
 		while ( t < tstop ) {
 			if ( LocalConvertToPoly(BHEAD t,argextra,startebuf) < 0 ) {
 				error = -1;
@@ -2044,7 +2044,7 @@ getout:
 			StoreTerm(BHEAD argextra);
 			t += *t; argextra += *argextra;
 		}
-		if ( EndSort(argfree+ARGHEAD,0,0) ) { error = -2; goto getout; }
+		if ( EndSort(BHEAD argfree+ARGHEAD,0,0) ) { error = -2; goto getout; }
 		t = argfree + ARGHEAD;
 		while ( *t > 0 ) t += *t;
 		*argfree = t - argfree;
@@ -2080,7 +2080,7 @@ getout:
 			t = a1 + ARGHEAD;
 			tstop = a1 + *a1;
 			argextra = AT.WorkPointer;
-			NewSort();
+			NewSort(BHEAD0);
 			while ( t < tstop ) {
 				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
 					TermFree(argcopy2,"argcopy2");
@@ -2101,7 +2101,7 @@ getout:
 				}
 			}
 			AT.WorkPointer = oldworkpointer;
-			if ( EndSort(a2+ARGHEAD,0,0) ) { error = -5; goto getout; }
+			if ( EndSort(BHEAD a2+ARGHEAD,0,0) ) { error = -5; goto getout; }
 			t = a2+ARGHEAD; while ( *t ) t += *t;
 			*a2 = t - a2; a2[1] = 0; ZEROARG(a2); a2 = t;
 			a1 = tstop;
@@ -2150,7 +2150,7 @@ return0:
 		a = argout;
 		while ( *a ) {
 			if ( *a > 0 ) {
-				NewSort();
+				NewSort(BHEAD0);
 				oldword = a[*a]; a[*a] = 0;
 				t = a+ARGHEAD;
 				while ( *t ) {
@@ -2158,7 +2158,7 @@ return0:
 					StoreTerm(BHEAD t);
 					t = tstop;
 				}
-				EndSort(a+ARGHEAD,0,0);
+				EndSort(BHEAD a+ARGHEAD,0,0);
 				a[*a] = oldword;
 				a += *a;
 			}
@@ -2202,7 +2202,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize :
+  	#] ArgFactorize : 
   	#[ FindArg :
 */
 /**
@@ -2491,6 +2491,7 @@ int ArgDotproductMerge(WORD *t1, WORD *t2)
 
 WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
 {
+	GETBIDENTITY
 	WORD *t, *rnext, *r1, *r2, *r3, *r5, *r6, *r7, *r8, *r9;
 	WORD pow, *mm, *mnext, *mstop, *argin2 = argin, *argin3 = argin, *argfree;
 	WORD ncom;
@@ -2825,14 +2826,14 @@ nextterm:						mm = mnext;
 /*
 			We may have to sort the terms in argin2.
 */
-			NewSort();
+			NewSort(BHEAD0);
 			t = argin2+ARGHEAD;
 			while ( *t ) {
 				StoreTerm(BHEAD t);
 				t += *t;
 			}
 			t = argin2+ARGHEAD;
-			if ( EndSort(t,0,0) < 0 ) goto Irreg;
+			if ( EndSort(BHEAD t,0,0) < 0 ) goto Irreg;
 			while ( *t ) t += *t;
 			*argin2 = t - argin2;
 			r3 = t;
@@ -2862,7 +2863,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage
@@ -2946,14 +2947,14 @@ nextterm:						mm = mnext;
 /*
 			We may have to sort the terms in argin3.
 */
-			NewSort();
+			NewSort(BHEAD0);
 			t = argin3+ARGHEAD;
 			while ( *t ) {
 				StoreTerm(BHEAD t);
 				t += *t;
 			}
 			t = argin3+ARGHEAD;
-			if ( EndSort(t,0,0) < 0 ) goto Irreg;
+			if ( EndSort(BHEAD t,0,0) < 0 ) goto Irreg;
 			while ( *t ) t += *t;
 			*argin3 = t - argin3;
 			r3 = t;
@@ -3025,7 +3026,7 @@ Irreg:
 }
 
 /*
-  	#] TakeArgContent :
+  	#] TakeArgContent : 
   	#[ MakeInteger :
 */
 /**

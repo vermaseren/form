@@ -635,7 +635,7 @@ SimpErr:
 
 /*
  		#] Simplify : 
- 		#[ AccumGCD :		WORD AccumGCD(a,na,b,nb)
+ 		#[ AccumGCD :		WORD AccumGCD(PHEAD a,na,b,nb)
 
 		Routine takes the rational GCD of the fractions in a and b and
 		replaces a by the GCD of the two.
@@ -643,9 +643,9 @@ SimpErr:
 		the GCD of the numerators divided by the GCD of the denominators
 */
 
-WORD AccumGCD(UWORD *a, WORD *na, UWORD *b, WORD nb)
+WORD AccumGCD(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	WORD nna,nnb,numa,numb,dena,denb,numc,denc;
 	UWORD *GCDbuffer = NumberMalloc("AccumGCD");
 	int i;
@@ -3307,6 +3307,6 @@ UWORD iranf(PHEAD UWORD imax)
 }
 
 /*
- 		#] wranf :
-  	#] Functions :
+ 		#] wranf : 
+  	#] Functions : 
 */

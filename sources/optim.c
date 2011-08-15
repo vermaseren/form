@@ -733,7 +733,7 @@ WORD HuntNumFactor(LONG number, WORD *coef, int par)
 	if ( ncoef < 0 ) ncoef = -ncoef;
 	t += *t;
 	while ( t < sca->pointer ) {
-		if ( AccumGCD((UWORD *)coef,&ncoef,(UWORD *)(t+4),t[3]) ) goto ExitHunt;
+		if ( AccumGCD(BHEAD (UWORD *)coef,&ncoef,(UWORD *)(t+4),t[3]) ) goto ExitHunt;
 		if ( ncoef == 3 && coef[0] == 1 && coef[1] == 1 ) return(0);
 		t += *t;
 	}

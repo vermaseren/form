@@ -56,8 +56,8 @@ WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 {
 	GETIDENTITY
 	WORD *t, *pbuffer;
-	if ( NewSort() ) { return(0); }
-	if ( NewSort() ) { LowerSortLevel(); return(0); }
+	if ( NewSort(BHEAD0) ) { return(0); }
+	if ( NewSort(BHEAD0) ) { LowerSortLevel(); return(0); }
 	t = poly1;
 	while ( *t ) {
 		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
@@ -68,7 +68,7 @@ WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
 		t += *t;
 	}
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 }
@@ -86,8 +86,8 @@ WORD *PolynoSub(WORD *poly1, WORD *poly2)
 {
 	GETIDENTITY
 	WORD *t, *tt, *pbuffer;
-	if ( NewSort() ) { return(0); }
-	if ( NewSort() ) { LowerSortLevel(); return(0); }
+	if ( NewSort(BHEAD0) ) { return(0); }
+	if ( NewSort(BHEAD0) ) { LowerSortLevel(); return(0); }
 	t = poly1;
 	while ( *t ) {
 		if ( StoreTerm(BHEAD t) ) { LowerSortLevel(); LowerSortLevel(); return(0); }
@@ -102,7 +102,7 @@ WORD *PolynoSub(WORD *poly1, WORD *poly2)
 		}
 		tt[-1] = -tt[-1]; t = tt;
 	}
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 }
@@ -119,8 +119,8 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 	GETIDENTITY
 	WORD *t, *tt, *pbuffer, *w, *t1, *tstop1, *tstop2, *oldwork = AT.WorkPointer;
 	WORD ncoef1, ncoef2, ncoef3;
-	if ( NewSort() ) { return(0); }
-	if ( NewSort() ) { LowerSortLevel(); return(0); }
+	if ( NewSort(BHEAD0) ) { return(0); }
+	if ( NewSort(BHEAD0) ) { LowerSortLevel(); return(0); }
 	t = poly1;
 	while ( *t ) {
 		tt = poly2;
@@ -173,7 +173,7 @@ WORD *PolynoMul(WORD *poly1, WORD *poly2)
 		t += *t;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 abortion:
@@ -422,8 +422,8 @@ dosub:
 			outbuffer[outpoin++] = ncoef3;
 			AT.WorkPointer = ow = w;
 
-			if ( NewSort() ) { goto aborteer; }
-			if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
+			if ( NewSort(BHEAD0) ) { goto aborteer; }
+			if ( NewSort(BHEAD0) ) { LowerSortLevel(); goto aborteer; }
 			t1 = n1 + *n1;
 			while ( *t1 ) {
 				if ( StoreTerm(BHEAD t1) ) { LowerSortLevel(); LowerSortLevel(); goto aborteer; };
@@ -460,7 +460,7 @@ dosub:
 			}
 		}
 		AT.WorkPointer = ow;
-		if ( EndSort((WORD *)((VOID *)(&n3)),2,0) < 0 ) { LowerSortLevel(); goto aborteer; }
+		if ( EndSort(BHEAD (WORD *)((VOID *)(&n3)),2,0) < 0 ) { LowerSortLevel(); goto aborteer; }
 		LowerSortLevel();
 		if ( n1 != poly1 && n1 != poly2 ) M_free(n1,"$-sort space");
 		n1 = n3;
@@ -1012,8 +1012,8 @@ WORD *PolynoNormalize(WORD *poly)
 	GETIDENTITY
 	WORD *t = poly, *oldwork = AT.WorkPointer, *w, *pbuffer;
 	int i;
-	if ( NewSort() ) { return(0); }
-	if ( NewSort() ) { LowerSortLevel(); return(0); }
+	if ( NewSort(BHEAD0) ) { return(0); }
+	if ( NewSort(BHEAD0) ) { LowerSortLevel(); return(0); }
 	while ( *t ) {
 		w = oldwork;
 		i = *t;
@@ -1053,7 +1053,7 @@ WORD *PolynoNormalize(WORD *poly)
 		else if ( StoreTerm(BHEAD oldwork) ) goto aborteer;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	return(pbuffer);
 aborteer:
@@ -1446,12 +1446,12 @@ WORD *MakePolynomial(WORD numexp, int par, int *onevar)
 		AT.proexp[5] = 0;
 	}
 	AT.proexp[3] = numexp;
-	if ( NewSort() ) goto aborteer;
-	if ( NewSort() ) { LowerSortLevel(); goto aborteer; }
+	if ( NewSort(BHEAD0) ) goto aborteer;
+	if ( NewSort(BHEAD0) ) { LowerSortLevel(); goto aborteer; }
 	if ( Generator(BHEAD AT.proexp,localnumlhs) ) {
 		LowerSortLevel(); LowerSortLevel(); goto aborteer;
 	}
-	if ( EndSort((WORD *)((VOID *)(&n1)),2,0) < 0 ) { LowerSortLevel(); goto aborteer; }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&n1)),2,0) < 0 ) { LowerSortLevel(); goto aborteer; }
 	LowerSortLevel();
 /*
 	Now check the 'quality'. Only positive powers of symbols allowed.
@@ -1611,8 +1611,8 @@ WORD *PolynoIntFac(WORD *poly)
 /*
 	Now multiply the whole polynomial with this constant.
 */
-	if ( NewSort() ) goto PIFerror;
-	if ( NewSort() ) goto PIFerror1;
+	if ( NewSort(BHEAD0) ) goto PIFerror;
+	if ( NewSort(BHEAD0) ) goto PIFerror1;
 	for ( t = poly; *t; ) {
 		w = oldwork;
 		i = *t;
@@ -1635,7 +1635,7 @@ WORD *PolynoIntFac(WORD *poly)
 		if ( StoreTerm(BHEAD oldwork) ) goto PIFerror;
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) goto PIFerror1;
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&pbuffer)),2,0) < 0 ) goto PIFerror1;
 	LowerSortLevel();
 	NumberFree(PIFscrat,"PolynoIntFac"); NumberFree(PIFscrat1,"PolynoIntFac"); NumberFree(PIFscrat2,"PolynoIntFac");
 	return(pbuffer);

@@ -1262,7 +1262,7 @@ void *RunThread(void *dummy)
 /*
 				Now fire up the sort buffer.
 */
-				NewSort();
+				NewSort(BHEAD0);
 				break;
 /*
 			#] STARTNEWEXPRESSION : 
@@ -1421,7 +1421,7 @@ bucketstolen:;
 				}
 				AT.SB.FillBlock = 1;
 				AT.SB.MasterFill[1] = AT.SB.MasterStart[1];
-				errorcode = EndSort(AT.S0->sBuffer,0,0);
+				errorcode = EndSort(BHEAD AT.S0->sBuffer,0,0);
 				UNLOCK(AT.SB.MasterBlockLock[AT.SB.FillBlock]);
 				UpdateMaxSize();
 				if ( errorcode ) {
@@ -1575,7 +1575,7 @@ bucketstolen:;
 
 				AR.sLevel = AB[0]->R.sLevel;
 				term = AT.WorkPointer;
-				NewSort();
+				NewSort(BHEAD0);
 				AR.MaxDum = AM.IndDum;
 				AN.ninterms = 0;
 				while ( GetTerm(BHEAD term) ) {
@@ -1620,7 +1620,7 @@ bucketstolen:;
 				  }
 				}
 				AN.ninterms += dd;
-				if ( EndSort(AT.S0->sBuffer,0,0) < 0 ) goto ProcErr;
+				if ( EndSort(BHEAD AT.S0->sBuffer,0,0) < 0 ) goto ProcErr;
 				e->numdummies = AR.MaxDum - AM.IndDum;
 				if ( AT.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
@@ -2392,7 +2392,7 @@ int InParallelProcessor()
 
 int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 {
-	ALLPRIVATES *B0 = AB[0];
+	ALLPRIVATES *B0 = AB[0], *B = B0;
 	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0, bra = 0, first = 1;
 	LONG dd = 0, ddd, thrbufsiz, thrbufsiz0, thrbufsiz2, numbucket = 0, numpasses;
 	LONG num, i;
@@ -2416,7 +2416,7 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 		WakeupThread(id,STARTNEWEXPRESSION);
 	}
 	UNLOCK(availabilitylock);
-	NewSort();
+	NewSort(BHEAD0);
 	AN0.ninterms = 1;
 /*
 	Now for redefine

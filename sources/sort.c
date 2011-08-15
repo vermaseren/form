@@ -550,9 +550,9 @@ VOID WriteStats(POSITION *plspace, WORD par)
  *		@return Regular convention (OK -> 0)
  */
 
-WORD NewSort()
+WORD NewSort(PHEAD0)
 {
-	GETIDENTITY
+	GETBIDENTITY
 	SORTING *S, **newFS;
 	int i, newsize;
 	if ( AN.SoScratC == 0 )
@@ -603,7 +603,7 @@ WORD NewSort()
 
 /*
  		#] NewSort : 
- 		#[ EndSort :				WORD EndSort(buffer,par,par2)
+ 		#[ EndSort :				WORD EndSort(PHEAD buffer,par,par2)
 */
 /**
  *		Finishes a sort.
@@ -633,9 +633,9 @@ WORD NewSort()
  *		@return If negative: error. If positive: number of words in output.
  */
 
-LONG EndSort(WORD *buffer, int par, int par2)
+LONG EndSort(PHEAD WORD *buffer, int par, int par2)
 {
-  GETIDENTITY
+  GETBIDENTITY
   SORTING *S = AT.SS;
   WORD j, **ss, *to, *t;
   LONG sSpace, over, tover, spare, retval = 0;
@@ -1392,7 +1392,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 		}
 		else if ( !AR.NoCompress && ( ncomp > 0 ) && AR.sLevel <= 0 ) {	/* Must compress */
 			if ( dobracketindex ) {
-				PutBracketInIndex(term,position);
+				PutBracketInIndex(BHEAD term,position);
 			}
 			j = *r++ - 1;
 			p = term + 1;
@@ -1446,7 +1446,7 @@ nocompress:
 		else if ( !AR.NoCompress && ( ncomp < 0 ) && AR.sLevel <= 0 ) {
 				/* No compress but put in compress buffer anyway */
 			if ( dobracketindex ) {
-				PutBracketInIndex(term,position);
+				PutBracketInIndex(BHEAD term,position);
 			}
 			j = *r++ - 1;
 			p = term + 1;
@@ -1483,7 +1483,7 @@ nocompress:
 				}
 			}
 			if ( dobracketindex ) {
-				PutBracketInIndex(term,position);
+				PutBracketInIndex(BHEAD term,position);
 			}
 		}
 		ret = i;

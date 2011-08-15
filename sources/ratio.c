@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes : ratio.c
 */
@@ -38,7 +38,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Ratio :
 
 	These are the special operations regarding simple polynomials.
@@ -136,7 +136,7 @@ We have to revise the code for the second case.
 }
 
 /*
- 		#] RatioFind :
+ 		#] RatioFind : 
  		#[ RatioGen :
 
 		The algoritm:
@@ -310,7 +310,7 @@ RatioCall:
 }
 
 /*
- 		#] RatioGen :
+ 		#] RatioGen : 
  		#[ BinomGen :
 
 		Routine for the generation of terms in a binomialtype expansion.
@@ -369,8 +369,8 @@ WORD BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
 }
 
 /*
- 		#] BinomGen :
-  	#] Ratio :
+ 		#] BinomGen : 
+  	#] Ratio : 
   	#[ Sum :
  		#[ DoSumF1 :
 
@@ -448,7 +448,7 @@ SumF1Call:
 }
 
 /*
- 		#] DoSumF1 :
+ 		#] DoSumF1 : 
  		#[ Glue :
 
 		Routine multiplies two terms. The second term is subject
@@ -513,7 +513,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 }
 
 /*
- 		#] Glue :
+ 		#] Glue : 
  		#[ DoSumF2 :
 */
 
@@ -592,14 +592,15 @@ SumF2Call:
 }
 
 /*
- 		#] DoSumF2 :
-  	#] Sum :
+ 		#] DoSumF2 : 
+  	#] Sum : 
   	#[ GCDfunction :
  		#[ GCDfunction :
 */
 
 int GCDfunction(PHEAD WORD *term,WORD level)
 {
+	GETBIDENTITY
 	WORD *t, *tstop, *tf, *termout, *tin, *tout, *tfnext, *m, *mnext, *mstop, *mm;
 	int todo, i, sign;
 	WORD firstshort = 0, firstvalue = 0, gcdisone = 0, mlength, x, tlength, newlength;
@@ -919,7 +920,7 @@ signdone:;
 		WORD oldval = t[t[1]];
 		t[t[1]] = 0;
 		m = TermMalloc("GCDfunction");
-		if ( GCDfunction1(t+FUNHEAD, tf, m) ) goto CalledFrom;
+		if ( GCDfunction1(BHEAD t+FUNHEAD, tf, m) ) goto CalledFrom;
 		t[t[1]] = oldval;
 	}
 	else {	/* All arguments have more than one term. The difficult case. */
@@ -960,15 +961,16 @@ signdone:;
 }
 
 /*
- 		#] GCDfunction :
+ 		#] GCDfunction : 
  		#[ GCDfunction1 :  At least one argument with only one term
 
 	Finds the GCD of the all long arguments in argin of which the one at one
 	has only a single term.
 */
 
-int GCDfunction1(WORD *argin, WORD *one, WORD *argout)
+int GCDfunction1(PHEAD WORD *argin, WORD *one, WORD *argout)
 {
+	GETBIDENTITY
 	WORD *t, *a, i, *tnext;
 	t = one + ARGHEAD;
 	a = argout+1; *a++ = 0; FILLARG(a);
@@ -981,7 +983,7 @@ int GCDfunction1(WORD *argin, WORD *one, WORD *argout)
 		tnext = t + *t;
 		t = t + ARGHEAD;
 		while ( t < tnext ) {
-			GCDterms(a, t, a);
+			GCDterms(BHEAD a, t, a);
 			t += *t;
 		}
 	}
@@ -991,7 +993,7 @@ int GCDfunction1(WORD *argin, WORD *one, WORD *argout)
 }
 
 /*
- 		#] GCDfunction1 :
+ 		#] GCDfunction1 : 
  		#[ GCDfunction2 :  All arguments with at least two terms
 
 	Finds the GCD of the all long arguments in argin each
@@ -1011,6 +1013,7 @@ int GCDfunction1(WORD *argin, WORD *one, WORD *argout)
 
 int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 {
+	GETBIDENTITY
 	WORD *a, *aa, *t, *tt, *ttt, *fac, *argfac, *argfree, *newarg, *term, *term1;
 	int sign, i, count = 0;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
@@ -1085,12 +1088,12 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 			count = 1;
 		}
 		else {
-			GCDterms(term1,term,term1);
+			GCDterms(BHEAD term1,term,term1);
 		}
 /*
 		Collect results in newarg/a while sorting
 */
-		NewSort();
+		NewSort(BHEAD0);
 		t = argfree+ARGHEAD;
 		while ( *t ) {
 			tstop = t + *t;
@@ -1098,7 +1101,7 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(a+ARGHEAD,0,0);
+		EndSort(BHEAD a+ARGHEAD,0,0);
 		t = a+ARGHEAD;
 		while ( *t ) t += *t;
 		*a = t - a; a = t;
@@ -1113,14 +1116,14 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 	while ( *a ) {
 		t = a + ARGHEAD; tstop = a + *a;
 		argextra = AT.WorkPointer;
-		NewSort();
+		NewSort(BHEAD0);
 		while ( t < tstop ) {
 			if ( LocalConvertToPoly(BHEAD t,argextra,startebuf) < 0 ) goto CalledFrom;
 			Normalize(BHEAD argextra);
 			StoreTerm(BHEAD argextra);
 			t += *t; argextra += *argextra;
 		}
-		if ( EndSort(tt+ARGHEAD,0,0) ) goto CalledFrom;
+		if ( EndSort(BHEAD tt+ARGHEAD,0,0) ) goto CalledFrom;
 		t = tt + ARGHEAD;
 		while ( *t > 0 ) t += *t;
 		*tt = t - tt;
@@ -1154,7 +1157,7 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 		t = a1 + ARGHEAD;
 		tstop = a1 + *a1;
 		argextra = AT.WorkPointer;
-		NewSort();
+		NewSort(BHEAD0);
 		while ( t < tstop ) {
 			if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
 				TermFree(argcopy2,"argcopy2");
@@ -1173,7 +1176,7 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 			}
 		}
 		AT.WorkPointer = oldworkpointer;
-		if ( EndSort(a2+ARGHEAD,0,0) ) goto CalledFrom;
+		if ( EndSort(BHEAD a2+ARGHEAD,0,0) ) goto CalledFrom;
 		t = a2+ARGHEAD; while ( *t ) t += *t;
 		*a2 = t - a2; a2++; *a2++ = 0; ZEROARG(a2); a2 = t;
 
@@ -1191,7 +1194,7 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 	Step 5: Multiply argout with term1
 */
 	t = argout+ARGHEAD;
-	NewSort();
+	NewSort(BHEAD0);
 	while ( *t ) {
 		tt = term + 1;
 		tstop = t + *t; tstop -= ABS(tstop[-1]); ttt = t + 1;
@@ -1208,7 +1211,7 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 		StoreTerm(BHEAD term);
 		t += *t;
 	}
-	if ( EndSort(argout+ARGHEAD,0,0) ) goto CalledFrom;
+	if ( EndSort(BHEAD argout+ARGHEAD,0,0) ) goto CalledFrom;
 	t = argout+ARGHEAD; while ( *t ) t += *t;
 	*argout = t - argout; argout[1] = 0;
 /*
@@ -1232,7 +1235,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction2 :
+ 		#] GCDfunction2 : 
  		#[ GCDterms :      GCD of two terms
 
 	Computes the GCD of two terms.
@@ -1240,8 +1243,9 @@ CalledFrom:
 	termout may overlap with term1.
 */
 
-int GCDterms(WORD *term1, WORD *term2, WORD *termout)
+int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 {
+	GETBIDENTITY
 	WORD *t1, *t1stop, *t1next, *t2, *t2stop, *t2next, *tout, *tt1, *tt2;
 	int count1, count2, i, ii, x1, sign;
 	WORD length1, length2;
@@ -1410,7 +1414,7 @@ int GCDterms(WORD *term1, WORD *term2, WORD *termout)
 	if ( t1 != tout ) { NCOPY(tout,t1,i); tout -= ii; }
 	length2 = term2[*term2-1];
 	if ( length1 < 0 && length2 < 0 ) sign = -1;
-	if ( AccumGCD((UWORD *)tout,&length1,(UWORD *)t2stop,length2) ) {
+	if ( AccumGCD(BHEAD (UWORD *)tout,&length1,(UWORD *)t2stop,length2) ) {
 		MLOCK(ErrorMessageLock);
 		MesCall("GCDterms");
 		MUNLOCK(ErrorMessageLock);
@@ -1423,7 +1427,7 @@ int GCDterms(WORD *term1, WORD *term2, WORD *termout)
 }
 
 /*
- 		#] GCDterms :
+ 		#] GCDterms : 
  		#[ DoGCDfunction1 :
 
 
@@ -1437,8 +1441,8 @@ int DoGCDfunction1(PHEAD WORD *argin, WORD *argout)
 */
 
 /*
- 		#] DoGCDfunction1 :
-  	#] GCDfunction :
+ 		#] DoGCDfunction1 : 
+  	#] GCDfunction : 
 */
 
 

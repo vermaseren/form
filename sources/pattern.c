@@ -141,7 +141,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		else return(0);
 	}
 /*
- 		#] Preliminaries :
+ 		#] Preliminaries : 
 */
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -212,7 +212,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		*ww++ = 1; *ww++ = 1; *ww++ = 3;
 		AT.WorkPointer = ww;
 		AR.DeferFlag = 0;
-		NewSort();
+		NewSort(BHEAD0);
 		if ( Generator(BHEAD StartWork,AR.Cnumlhs) ) {
 			LowerSortLevel();
 			AT.WorkPointer = OldWork;
@@ -220,7 +220,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			return(-1);
 		}
 		AT.WorkPointer = ww;
-		if ( EndSort(ww,0,0) < 0 ) {}
+		if ( EndSort(BHEAD ww,0,0) < 0 ) {}
 		AR.DeferFlag = olddefer;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AP.lhdollarerror == 0 ) {

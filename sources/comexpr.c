@@ -727,7 +727,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		return(1);
 	}
 	if ( error == 0 ) {
-		if ( NewSort() || NewSort() ) {
+		if ( NewSort(BHEAD0) || NewSort(BHEAD0) ) {
 			if ( !error ) error = 1;
 			return(error);
 		}
@@ -743,7 +743,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		}
 		AR.Eside = oldEside;
 		AT.WorkPointer = w;
-		if ( EndSort(w,0,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
+		if ( EndSort(BHEAD w,0,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
 		if ( *w == 0 || *(w+*w) != 0 ) {
 			MesPrint("&LHS must be one term");
 			AC.lhdollarflag = 0;

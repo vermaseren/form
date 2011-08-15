@@ -122,8 +122,8 @@ int CatchDollar(int par)
 
 	EXCHINOUT
  
-	if ( NewSort() ) { if ( !error ) error = 1; goto onerror; }
-	if ( NewSort() ) {
+	if ( NewSort(BHEAD0) ) { if ( !error ) error = 1; goto onerror; }
+	if ( NewSort(BHEAD0) ) {
 		LowerSortLevel();
 		if ( !error ) error = 1;
 		goto onerror;
@@ -138,7 +138,7 @@ int CatchDollar(int par)
 		if ( Generator(BHEAD oldwork,C->numlhs) ) { error = 1; break; }
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort((WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; }
 	LowerSortLevel();
 /*[19sep2005 mt]:*/
 #ifdef REMOVEDBY_MT
@@ -443,7 +443,7 @@ NoChangeOne:;
 		New value is an expression that has to be evaluated first
 		This is all generic. It won't foliate due to the sort level 
 */
-		if ( NewSort() ) {
+		if ( NewSort(BHEAD0) ) {
 			AN.ncmod = oldncmod;
 			return(1);
 		}
@@ -462,7 +462,7 @@ NoChangeOne:;
 			}
 			AT.WorkPointer = ww;
 		}
-		if ( ( newsize = EndSort((WORD *)((VOID *)(&ss)),2,0) ) < 0 ) {
+		if ( ( newsize = EndSort(BHEAD (WORD *)((VOID *)(&ss)),2,0) ) < 0 ) {
 			AN.ncmod = oldncmod;
 			return(1);
 		}
@@ -1535,7 +1535,7 @@ ShortArgument:
 }
 
 /*
-  	#] DolToTerms :
+  	#] DolToTerms : 
   	#[ DoInside :
 */
 
@@ -1641,7 +1641,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 		newd = DolToTerms(BHEAD numdol);
 		if ( newd == 0 ) continue;
 		r = newd->where;
-		NewSort();
+		NewSort(BHEAD0);
 		while ( *r ) {	/* Sum over the terms */
 			m = AT.WorkPointer;
 			j = *r;
@@ -1656,7 +1656,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			}
 			AT.WorkPointer = oldwork;
 		}
-		if ( EndSort((WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; break; }
+		if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; break; }
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"old buffer of dollar");
 		d->where = dbuffer;
 		if ( dbuffer == 0 || *dbuffer == 0 ) {
@@ -1985,7 +1985,7 @@ WORD *TranslateExpression(UBYTE *s)
 /*
 	Evaluate this expression
 */
-	if ( NewSort() || NewSort() ) { return(0); }
+	if ( NewSort(BHEAD0) || NewSort(BHEAD0) ) { return(0); }
 	AN.RepPoint = AT.RepCount + 1;
 	oldEside = AR.Eside; AR.Eside = RHSIDE;
 	AR.Cnumlhs = C->numlhs;
@@ -1995,7 +1995,7 @@ WORD *TranslateExpression(UBYTE *s)
 	}
 	AR.Eside = oldEside;
 	AT.WorkPointer = w;
-	if ( EndSort((WORD *)((VOID *)(&outbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&outbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	C->Pointer = C->Buffer + oldcpointer;
 	C->numrhs = oldnumrhs;
@@ -2786,7 +2786,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 	term = d->where;
 	AR.SortType = SORTHIGHFIRST;
 	if ( oldsorttype != AR.SortType ) {
-		NewSort();
+		NewSort(BHEAD0);
 		while ( *term ) {
 			t = term + *term;
 			if ( AN.ncmod != 0 ) {
@@ -2809,7 +2809,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 			StoreTerm(BHEAD term);
 			term = t;
 		}
-		EndSort((WORD *)((void *)(&buf1)),2,0);
+		EndSort(BHEAD (WORD *)((void *)(&buf1)),2,0);
 		t = buf1; while ( *t ) t += *t;
 		insize = t - buf1;
 	}
@@ -2910,7 +2910,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 	if ( action ) {
 		t = buf1;
 		termextra = AT.WorkPointer;
-		NewSort();
+		NewSort(BHEAD0);
 		while ( *t ) {
 			if ( LocalConvertToPoly(BHEAD t,termextra,startebuf) < 0 ) {
 getout:
@@ -2924,7 +2924,7 @@ getout:
 			StoreTerm(BHEAD termextra);
 			t += *t;
 		}
-		if ( EndSort((WORD *)((void *)(&buf2)),0,0) ) { goto getout; }
+		if ( EndSort(BHEAD (WORD *)((void *)(&buf2)),0,0) ) { goto getout; }
 		t = buf2; while ( *t > 0 ) t += *t;
 		insize2 = t - buf2;
 	}
@@ -3007,7 +3007,7 @@ getout:
 		term = buf3;
 		for ( i = 0; i < nfactors; i++ ) {
 			argextra = AT.WorkPointer;
-			NewSort();
+			NewSort(BHEAD0);
 			while ( *term ) {
 				if ( ConvertFromPoly(BHEAD term,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
 					LowerSortLevel();
@@ -3034,7 +3034,7 @@ getout2:			AR.SortType = oldsorttype;
 			}
 			term++;
 			AT.WorkPointer = oldworkpointer;
-			EndSort((WORD *)((void *)(&(d->factors[i].where))),2,0);
+			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2,0);
 			d->factors[i].type = DOLTERMS;
 			t = d->factors[i].where;
 			while ( *t ) t += *t;
@@ -3048,7 +3048,7 @@ getout2:			AR.SortType = oldsorttype;
 		d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*(nfactors+factorsincontent),"factors in dollar");
 		term = buf3;
 		for ( i = 0; i < nfactors; i++ ) {
-			NewSort();
+			NewSort(BHEAD0);
 			while ( *term ) {
 				argextra = oldworkpointer;
 				j = *term;
@@ -3060,7 +3060,7 @@ getout2:			AR.SortType = oldsorttype;
 			}
 			term++;
 			AT.WorkPointer = oldworkpointer;
-			EndSort((WORD *)((void *)(&(d->factors[i].where))),2,0);
+			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2,0);
 			d->factors[i].type = DOLTERMS;
 			t = d->factors[i].where;
 			while ( *t ) t += *t;
@@ -3325,6 +3325,7 @@ WORD *TakeDollarContent(PHEAD WORD *dollarbuffer, WORD **factor)
 
 WORD *MakeDollarInteger(PHEAD WORD *bufin,WORD **bufout)
 {
+	GETBIDENTITY
 	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
 	WORD *r, *r1, *r2, *r3, *rnext, i, k, j, *oldworkpointer, *factor;
 	WORD kGCD, kLCM, kGCD2, kkLCM, jLCM, jGCD;
@@ -3437,7 +3438,7 @@ WORD *MakeDollarInteger(PHEAD WORD *bufin,WORD **bufout)
 	We do this via a sort because the things may be jumbled any way and we
 	do not know in advance how much space we need.
 */
-	NewSort();
+	NewSort(BHEAD0);
 	r = bufin;
 	oldworkpointer = AT.WorkPointer;
 	while ( *r ) {
@@ -3462,7 +3463,7 @@ WORD *MakeDollarInteger(PHEAD WORD *bufin,WORD **bufout)
 		r = rnext;
 	}
 	AT.WorkPointer = oldworkpointer;
-	EndSort((WORD *)bufout,2,0);
+	EndSort(BHEAD (WORD *)bufout,2,0);
 /*
 	Cleanup
 */
@@ -3497,6 +3498,7 @@ MakeDollarIntegerErr:
 
 WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 {
+	GETBIDENTITY
 	WORD *r, *r1, x, xx, ix, ip;
 	WORD *factor, *oldworkpointer;
 	int i;
@@ -3514,7 +3516,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 	This does not make things longer, but we should keep to the conventions
 	of MakeDollarInteger.
 */
-	NewSort();
+	NewSort(BHEAD0);
 	r = buffer;
 	oldworkpointer = AT.WorkPointer;
 	while ( *r ) {
@@ -3528,7 +3530,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 		}
 	}
 	AT.WorkPointer = oldworkpointer;
-	EndSort((WORD *)bufout,2,0);
+	EndSort(BHEAD (WORD *)bufout,2,0);
 	return(factor);
 }
 /*
