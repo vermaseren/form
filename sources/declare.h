@@ -41,6 +41,7 @@
 #define MaX(x,y) ((x) > (y) ? (x): (y))
 #define MiN(x,y) ((x) < (y) ? (x): (y))
 #define ABS(x) ( (x) < 0 ? -(x): (x) )
+#define SGN(x) ( (x) < 0 ? -1 : 1 )
 #define REDLENG(x) ((((x)<0)?((x)+1):((x)-1))>>1)
 #define INCLENG(x) (((x)<0)?(((x)<<1)-1):(((x)<<1)+1))
 #define GETCOEF(x,y) x += *x;y = x[-1];x -= ABS(y);y=REDLENG(y)
@@ -534,9 +535,12 @@ extern WORD   PutInStore(INDEXENTRY *,WORD);
 extern WORD   PutOut(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD);
 extern UWORD  Quotient(UWORD *,WORD *,WORD);
 extern WORD   RaisPow(PHEAD UWORD *,WORD *,UWORD);
+extern VOID   RaisPowSmall (PHEAD WORD x, WORD n, UWORD **c, WORD *nc);
+extern WORD   RaisPowMod (WORD, WORD, WORD);
 extern int    NormalModulus(UWORD *,WORD *);
 extern int    MakeInverses(VOID);
 extern int    GetModInverses(WORD,WORD,WORD *,WORD *);
+extern int    GetLongModInverses(PHEAD UWORD *, WORD, UWORD *, WORD, UWORD *, WORD *, UWORD *, WORD *);
 extern VOID   RatToLine(UWORD *,WORD);
 extern WORD   RatioFind(PHEAD WORD *,WORD *);
 extern WORD   RatioGen(PHEAD WORD *,WORD *,WORD,WORD);
