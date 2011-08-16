@@ -2388,7 +2388,7 @@ const vector<WORD> poly::coefficient_list_divmod (const vector<WORD> &a, const v
 	}
 }
 
-const poly poly::from_coefficient_list (const vector<WORD> &a, int x, WORD p) {
+const poly poly::from_coefficient_list (PHEAD const vector<WORD> &a, int x, WORD p) {
 
 	poly res(BHEAD 0);
 	int ri=1;

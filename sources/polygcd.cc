@@ -308,6 +308,8 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 	cout << "*** [" << thetime() << "]  CALL: poly_gcd_Euclidean("<<a<<","<<b<<")"<<endl;
 #endif
 
+	POLY_GETIDENTITY(a);
+	
 	if (a.is_zero()) return b;
 	if (b.is_zero()) return a;
 	if (a.is_integer() || b.is_integer())	return integer_gcd(a,b);
@@ -315,7 +317,7 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 	vector<WORD> res = coefficient_list_gcd(poly::to_coefficient_list(a),
 																					poly::to_coefficient_list(b), a.modp);
 
-	return poly::from_coefficient_list(res, a.first_variable(), a.modp);
+	return poly::from_coefficient_list(BHEAD res, a.first_variable(), a.modp);
 }
 
 /*

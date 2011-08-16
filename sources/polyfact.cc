@@ -1224,7 +1224,7 @@ const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vect
 	// Convert the densely represented polynomials to sparse ones
 	vector<poly> res(fac.size(),poly(BHEAD 0, p));
 	for (int i=0; i<(int)fac.size(); i++)
-		res[i] = poly::from_coefficient_list(fac[i],x,p);
+		res[i] = poly::from_coefficient_list(BHEAD fac[i],x,p);
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : Berlekamp_find_factors("<<_a<<","<<_q<<") = "<<res<<"\n";

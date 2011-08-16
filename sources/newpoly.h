@@ -154,7 +154,7 @@ public:
 	static const poly argument_to_poly (PHEAD WORD *, bool, const std::map<int,int> &);
 	static void poly_to_argument (const poly &, WORD *, bool);
 
-	static const poly from_coefficient_list (const std::vector<WORD> &, int, WORD);
+	static const poly from_coefficient_list (PHEAD const std::vector<WORD> &, int, WORD);
 	static const std::vector<WORD> to_coefficient_list (const poly &);
 	static const std::vector<WORD> coefficient_list_divmod (const std::vector<WORD> &a, const std::vector<WORD> &b, WORD p, int divmod);
 	
