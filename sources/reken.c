@@ -1351,7 +1351,7 @@ int GetModInverses(WORD m1, WORD m2, WORD *im1, WORD *im2)
 	WORD a1, a2, a3;
 	WORD b1, b2, b3;
 	WORD x = m1, y, c, d = m2;
-	if ( x <= 1 || d <= 1 ) goto somethingwrong;
+	if ( x < 1 || d <= 1 ) goto somethingwrong;
 	a1 = 0; a2 = 1;
 	b1 = 1; b2 = 0;
 	for(;;) {
@@ -1374,7 +1374,7 @@ somethingwrong:
 	return(-1);
 }
 /*
- 		#] GetModInverses : 
+ 		#] GetModInverses :
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -2607,7 +2607,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -2999,7 +2999,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms : 
+  	#] RekenTerms :
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
