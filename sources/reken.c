@@ -1264,7 +1264,95 @@ RaisOvl:
 }
 
 /*
- 		#] RaisPow : 
+ 		#] RaisPow :
+  	#[ RaisPowSmall :
+*/
+
+/**  Computes small power x^n
+ *
+ *   Description
+ *   ===========
+ *   Calculates the power x^n and stores the results for caching
+ *   purposes. The pointer c (i.e., the pointer, and not what it
+ *   points to) is overwritten. What it points to should not be
+ *   overwritten in the calling function.
+ *
+ *   Notes
+ *   =====
+ *   - Caching is done in AT.small_power[]. This array is extended
+ *     if necessary.
+ */
+VOID RaisPowSmall (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
+
+	int i,j;
+	
+	// check whether to extend the array
+	if (x>=AT.small_power_maxx || n>=AT.small_power_maxn) {
+
+		WORD new_small_power_maxx = AT.small_power_maxx;
+		if (x>=AT.small_power_maxx)
+			new_small_power_maxx = MaX(2*AT.small_power_maxx, x+1);
+		
+		WORD new_small_power_maxn = AT.small_power_maxn;
+		if (n>=AT.small_power_maxn)
+			new_small_power_maxn = MaX(2*AT.small_power_maxn, n+1);
+		
+		WORD *new_small_power_n = (WORD*) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(WORD),"RaisPowSmall");
+		UWORD **new_small_power = (UWORD **) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(UWORD *),"RaisPowSmall");
+
+		for (i=0; i<new_small_power_maxx * new_small_power_maxn; i++) {
+			new_small_power_n[i] = 0;
+			new_small_power  [i] = NULL;
+		}
+					 
+		for (i=0; i<AT.small_power_maxx; i++) 
+			for (j=0; j<AT.small_power_maxn; j++) {
+				new_small_power_n[i*new_small_power_maxn+j] =	AT.small_power_n[i*AT.small_power_maxn+j];
+				new_small_power  [i*new_small_power_maxn+j] = AT.small_power  [i*AT.small_power_maxn+j];
+			}
+
+		M_free(AT.small_power_n,"RaisPowSmall");
+		M_free(AT.small_power,"RaisPowSmall");
+
+		AT.small_power_maxx = new_small_power_maxx;
+		AT.small_power_maxn = new_small_power_maxn;
+		AT.small_power_n    = new_small_power_n;
+		AT.small_power      = new_small_power;				
+	}
+
+	// check whether the results is already calculated
+	WORD ID = x * AT.small_power_maxn + n;
+
+	if (AT.small_power[ID] == NULL) {
+		AT.small_power[ID] = NumberMalloc("small power");
+		AT.small_power_n[ID] = 1;
+		AT.small_power[ID][0] = x;
+		RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
+	}
+
+	// return the result
+	*c  = AT.small_power[ID];
+	*nc = AT.small_power_n[ID];
+}
+
+/*
+  	#] RaisPowSmall :
+	 	#[ RaisPowMod :
+		
+   Computes the power x^n mod m
+ */
+WORD RaisPowMod (WORD x, WORD n, WORD m) {
+	LONG y=1, z=x;
+	while (n) {
+		if (n&1) { y*=z; y%=m; }
+		z*=z; z%=m;
+		n>>=1;
+	}
+	return (WORD)y;
+}
+
+/*
+  	#] RaisPowMod :
  		#[ NormalModulus :  int NormalModulus(UWORD *a,WORD *na)
 */
 /**
@@ -1364,8 +1452,8 @@ int GetModInverses(WORD m1, WORD m2, WORD *im1, WORD *im2)
 	if ( x != 1 ) goto somethingwrong;
 	if ( a2 < 0 ) a2 += m2;
 	if ( b2 < 0 ) b2 += m1;
-	*im1 = a2;
-	*im2 = b2;
+	if (im1!=NULL) *im1 = a2;
+	if (im2!=NULL) *im2 = b2;
 	return(0);
 somethingwrong:
 	MLOCK(ErrorMessageLock);
@@ -1375,6 +1463,83 @@ somethingwrong:
 }
 /*
  		#] GetModInverses :
+ 		#[ GetLongModInverses :
+*/
+
+int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WORD *nia, UWORD *ib, WORD *nib) {
+
+	UWORD *s = NumberMalloc("GetLongModInverses");
+	WORD ns = na;
+	memcpy(s, a, ABS(ns)*sizeof(UWORD));
+
+	UWORD *t = NumberMalloc("GetLongModInverses");
+	WORD nt = nb;
+	memcpy(t, b, ABS(nt)*sizeof(UWORD));
+
+	UWORD *sa = NumberMalloc("GetLongModInverses");
+	WORD nsa = 1;
+	sa[0] = 1;
+
+	UWORD *sb = NumberMalloc("GetLongModInverses");
+	WORD nsb = 0;
+
+	UWORD *ta = NumberMalloc("GetLongModInverses");
+	WORD nta = 0;
+
+	UWORD *tb = NumberMalloc("GetLongModInverses");
+	WORD ntb = 1;
+	tb[0] = 1;
+
+	UWORD *x = NumberMalloc("GetLongModInverses");
+	WORD nx;
+	
+	UWORD *y = NumberMalloc("GetLongModInverses");
+	WORD ny;
+
+	UWORD *swap1;
+	WORD swap2;
+	
+	while (nt != 0) {
+		DivLong(s,ns,t,nt,x,&nx,y,&ny);
+		swap1=s; s=y; y=swap1;
+		ns=ny;
+		MulLong(x,nx,ta,nta,y,&ny);
+		AddLong(sa,nsa,y,-ny,sa,&nsa);
+		MulLong(x,nx,tb,ntb,y,&ny);
+		AddLong(sb,nsb,y,-ny,sb,&nsb);
+
+		swap1=s; s=t; t=swap1;
+		swap2=ns; ns=nt; nt=swap2;
+		swap1=sa; sa=ta; ta=swap1;
+		swap2=nsa; nsa=nta; nta=swap2;
+		swap1=sb; sb=tb; tb=swap1;
+		swap2=nsb; nsb=ntb; ntb=swap2;
+	}
+
+	if (ia!=NULL) {
+		*nia = nsa*ns;
+		memcpy(ia,sa,ABS(*nia)*sizeof(UWORD));
+	}
+
+	if (ib!=NULL) {
+		*nib = nsb*ns;
+		memcpy(ib,sb,ABS(*nib)*sizeof(UWORD));
+	}
+	
+	NumberFree(s,"GetLongModInverses");
+	NumberFree(t,"GetLongModInverses");
+	NumberFree(sa,"GetLongModInverses");
+	NumberFree(sb,"GetLongModInverses");
+	NumberFree(ta,"GetLongModInverses");
+	NumberFree(tb,"GetLongModInverses");
+	NumberFree(x,"GetLongModInverses");
+	NumberFree(y,"inverse");
+
+	return 0;
+}
+
+/*
+ 		#] GetLongModInverses :
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.

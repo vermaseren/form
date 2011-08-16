@@ -30,32 +30,53 @@ extern "C" {
 #include "form3.h"
 };
 
-const int MAX_HASH_SIZE = 1048576;
-const int SMALL_POWER_MAXX = 1000;
-
 #include <string>
 #include <set>
 #include <map>
 #include <vector>
 #include "polygcd.h"
 
+#ifndef WITHPTHREADS
+#define POLY_GETIDENTITY(X)
+#define POLY_STOREIDENTITY
+#define PTAIL
+#define PTAILDEF
+#define BTAIL
+#else
+#define POLY_GETIDENTITY(X) ALLPRIVATES *B = (X).Bpointer
+#define POLY_STOREIDENTITY Bpointer = B
+#define PTAIL ,ALLPRIVATES *B
+#define PTAILDEF ,ALLPRIVATES *B=NULL
+#define BTAIL ,B
+#endif
+
+const int MAX_HASH_SIZE = 1048576;
+
 class poly {
 
 public:
+
+#ifdef WITHPTHREADS
+	ALLPRIVATES *Bpointer;
+#endif
 	
 	WORD *terms;
 	WORD modp,modn;
 	WORD size_of_terms;
 
+#ifndef WITHPTHREADS
 	PADPOINTER(1,0,3,0);
+#else
+	PADPOINTER(2,0,3,0);
+#endif
 	
-	poly ();
-	poly (WORD a);
-	poly (const UWORD *a, WORD na);
-	poly (const poly &a);
-	poly (const poly &a, WORD modp, WORD modn=1);
+	poly (PHEAD WORD a, WORD modp=-1, WORD modn=1);
+	poly (PHEAD const UWORD *a, WORD na, WORD modp=-1, WORD modn=1);
+	poly (const poly &a, WORD modp=-1, WORD modn=1);
 	~poly ();
 
+	void check_memory(int);
+	void check_memory_large(int);
 	void expand_memory();
 	
 	void setmod(WORD, WORD=1);
@@ -65,8 +86,8 @@ public:
 	
 	const std::string to_string() const;
 
-	static int monomial_compare (const WORD *, const WORD *);
-	static bool monomial_larger (const WORD *, const WORD *);
+	static int monomial_compare (const WORD *, const WORD * PTAILDEF);
+	static bool monomial_larger (const WORD *, const WORD * PTAILDEF);
 	const poly & normalize ();
 
 	WORD last_monomial_index () const;
@@ -80,8 +101,8 @@ public:
 	static void divmod (const poly &, const poly &, poly &, poly &, bool only_divides);
 	static bool divides (const poly &, const poly &);
 	
-	static void push_heap (WORD **heap, int n);
-	static void pop_heap (WORD **heap, int n);
+	static void push_heap (PHEAD WORD **heap, int n);
+	static void pop_heap (PHEAD WORD **heap, int n);
 
 	static void mul_one_term (const poly &, const poly &, poly &);
 	static void mul_univar (const poly &, const poly &, poly &, int);
@@ -91,8 +112,6 @@ public:
 	static void divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int var, bool only_divide);
 	static void divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool only_divide);
 	
-	static void inverse (UWORD*, WORD, UWORD*, WORD, UWORD*, WORD&);
-
 	poly& operator= (const poly &);
 
 	poly& operator+= (const poly&);
@@ -115,31 +134,44 @@ public:
 	void termscopy (const WORD *, int, int);
 	
 	int first_variable () const;
-	std::vector<int> all_variables () const;
+	const std::vector<int> all_variables () const;
 	
 	int sign () const;
 	WORD degree (int) const;
 	const poly lcoeff () const;
 	const poly coefficient (int, int) const;
-
+	const poly derivative (int) const;
+	
 	bool is_zero () const;
+	bool is_one () const;
 	bool is_integer () const;
 	WORD is_dense_univariate () const;
 
-	static const poly simple_poly (int, int=0, int=1, int=0, int=1);
-	static const poly simple_poly (int, const poly&, int=1, int=0, int=1);
+	static const poly simple_poly (PHEAD int, int=0, int=1, int=0, int=1);
+	static const poly simple_poly (PHEAD int, const poly&, int=1, int=0, int=1);
 
-	static const std::map<int,int> extract_variables (WORD *, bool, bool);
-	static const poly argument_to_poly (WORD *, bool, const std::map<int,int> &);
+	static const std::map<int,int> extract_variables (PHEAD WORD *, bool, bool);
+	static const poly argument_to_poly (PHEAD WORD *, bool, const std::map<int,int> &);
 	static void poly_to_argument (const poly &, WORD *, bool);
+
+	static const poly from_coefficient_list (const std::vector<WORD> &, int, WORD);
+	static const std::vector<WORD> to_coefficient_list (const poly &);
+	static const std::vector<WORD> coefficient_list_divmod (const std::vector<WORD> &a, const std::vector<WORD> &b, WORD p, int divmod);
 	
 	int size_of_form_notation ();
 };
 
 std::ostream& operator<< (std::ostream &, const poly &);
 
-inline WORD& poly::operator[] (int i) {
+inline void poly::check_memory (int i) {
 	if (i + AM.MaxTal >= size_of_terms) expand_memory();
+}
+
+inline void poly::check_memory_large (int i) {
+	while (i + AM.MaxTal >= size_of_terms) expand_memory();
+}
+
+inline WORD& poly::operator[] (int i) {
 	return terms[i];
 }
 
@@ -148,6 +180,6 @@ inline const WORD& poly::operator[] (int i) const {
 }
 
 inline void poly::termscopy (const WORD *from, int dest, int num) {
-	while (dest+num >= size_of_terms) expand_memory();
 	memcpy (terms+dest, from, num*sizeof(WORD));
 }
+

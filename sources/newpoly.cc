@@ -47,116 +47,21 @@ using namespace std;
 
 /*
   	#] includes : 
-  	#[ sign function :
-*/
-
-// sign function
-inline int sgn (int x) { return x>=0 ? 1 : -1; }
-
-/*
-	  #] sign function : 
-  	#[ small power :
-*/
-
-/**  Small power x^n
- *
- *   Description
- *   ===========
- *   Calculates the power x^n and stores the results for caching
- *   purposes. The pointer c (i.e., the pointer, and not what it
- *   points to) is overwritten. What it points to should not be
- *   overwritten in the calling function.
- *
- *   Notes
- *   =====
- *   - Caching is done in AT.small_power[]. This array is extended
- *     if necessary.
- */
-void small_power (WORD x, WORD n, UWORD *&c, WORD &nc) {
-
-	GETIDENTITY;
-	
-	// check whether to extend the array
-	if (x>=AT.small_power_maxx || n>=AT.small_power_maxn) {
-
-		WORD new_small_power_maxx = AT.small_power_maxx;
-		if (x>=AT.small_power_maxx)
-			new_small_power_maxx = max(2*AT.small_power_maxx, x+1);
-		
-		WORD new_small_power_maxn = AT.small_power_maxn;
-		if (n>=AT.small_power_maxn)
-			new_small_power_maxn = max(2*AT.small_power_maxn, n+1);
-		
-		WORD *new_small_power_n = new WORD  [new_small_power_maxx*new_small_power_maxn];
-		UWORD **new_small_power = new UWORD*[new_small_power_maxx*new_small_power_maxn];
-
-		for (int i=0; i<new_small_power_maxx * new_small_power_maxn; i++) {
-			new_small_power_n[i] = 0;
-			new_small_power  [i] = NULL;
-		}
-					 
-		for (int i=0; i<AT.small_power_maxx; i++) 
-			for (int j=0; j<AT.small_power_maxn; j++) {
-				new_small_power_n[i*new_small_power_maxn+j] =	AT.small_power_n[i*AT.small_power_maxn+j];
-				new_small_power  [i*new_small_power_maxn+j] = AT.small_power  [i*AT.small_power_maxn+j];
-			}
-
-		delete AT.small_power_n;
-		delete AT.small_power;
-
-		AT.small_power_maxx = new_small_power_maxx;
-		AT.small_power_maxn = new_small_power_maxn;
-		AT.small_power_n    = new_small_power_n;
-		AT.small_power      = new_small_power;				
-	}
-
-	// check whether the results is already calculated
-	WORD ID = x * AT.small_power_maxn + n;
-
-	if (AT.small_power[ID] == NULL) {
-		AT.small_power[ID] = NumberMalloc("small power");
-		AT.small_power_n[ID] = 1;
-		AT.small_power[ID][0] = x;
-		RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
-	}
-
-	// return the result
-	c  = AT.small_power[ID];
-	nc = AT.small_power_n[ID];
-}
-
-/*
-  	#] small power : 
   	#[ Constructors :
- 		#[ zero polynomial :
-*/
-
-// Constructor for a zero polynomial
-poly::poly ():
-	modp(0),
-	modn(1),
-	size_of_terms(AM.MaxTer/sizeof(WORD))
-{	
-	GETIDENTITY;
-
-	terms = TermMalloc("polynomial constructor");
-	terms[0] = 1; // length
-}
-
-/*
- 		#] zero polynomial : 
  		#[ constant polynomial :
 */
 
 // Constructor for a constant polynomial
-poly::poly (WORD a):
+poly::poly (PHEAD WORD a, WORD modp, WORD modn):
 	modp(0),
 	modn(1),
 	size_of_terms(AM.MaxTer/sizeof(WORD))
 {
-	GETIDENTITY;
+	POLY_STOREIDENTITY;
 	terms = TermMalloc("polynomial constructor");
 
+	//MesPrint ("B=%x malloc=%x\n",B,terms);
+	
 	if (a == 0) {
 		terms[0] = 1; // length
 	}
@@ -167,6 +72,9 @@ poly::poly (WORD a):
 		terms[2+AN.poly_num_vars] = ABS(a);                    // coefficient
 		terms[3+AN.poly_num_vars] = a>0 ? 1 : -1;              // length coefficient
 	}
+
+	if (modp!=-1) setmod(modp,modn);
+	//cout << "--> " << *this << endl;
 }
 
 /*
@@ -175,49 +83,46 @@ poly::poly (WORD a):
 */
 
 // Constructor for a large constant polynomial
-poly::poly (const UWORD *a, WORD na):
+poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
 	modp(0),
 	modn(1),
 	size_of_terms(AM.MaxTer/sizeof(WORD))
 {
-	GETIDENTITY;
+	POLY_STOREIDENTITY;
 	terms = TermMalloc("polynomial constructor");
+
+	//MesPrint ("B=%x malloc=%x\n",B,terms);
 	
 	terms[0] = 3 + AN.poly_num_vars + ABS(na);                   // length
 	terms[1] = terms[0] - 1;                                     // length
 	for (int i=0; i<AN.poly_num_vars; i++) terms[2+i] = 0;       // powers
-	termscopy((WORD *)a, 2+AN.poly_num_vars, ABS(na));                   // coefficient
+	termscopy((WORD *)a, 2+AN.poly_num_vars, ABS(na));           // coefficient
 	terms[2+AN.poly_num_vars+ABS(na)] = na;	                     // length coefficient
+
+	if (modp!=-1) setmod(modp,modn);
+	//cout << "--> " << *this << endl;
 }
 
 /*
  		#] large constant polynomial : 
- 		#[ copy :
-*/
-
-// Copy constructor
-poly::poly (const poly &a):
-	size_of_terms(AM.MaxTer/sizeof(WORD))
-{
-	GETIDENTITY;
-	terms = TermMalloc("polynomial constructor");
-	*this = a;
-}
-
-/*
- 		#] copy : 
  		#[ copy p^n :
 */
 
-// Copy constructor that sets the coefficient space to Z/p^n
+// Copy constructor
 poly::poly (const poly &a, WORD modp, WORD modn):
-	size_of_terms(AM.MaxTer/sizeof(WORD))
+	size_of_terms(AM.MaxTer/sizeof(WORD))	
 {
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
+	POLY_STOREIDENTITY;
+	
 	terms = TermMalloc("polynomial constructor");
+
+	//MesPrint ("B=%x malloc=%x\n",B,terms);
+	
 	*this = a;
 
-	setmod(modp,modn);
+	if (modp!=-1) setmod(modp,modn);
+	//cout << "--> " << *this << endl;
 }
 
 /*
@@ -228,8 +133,11 @@ poly::poly (const poly &a, WORD modp, WORD modn):
 
 // Destructor
 poly::~poly () {
-	GETIDENTITY;
-
+	POLY_GETIDENTITY(*this);
+	
+	//MesPrint ("B=%x free  =%x\n",B,terms);
+	//cout << "--> " << *this << endl;
+	
 	if (size_of_terms == AM.MaxTer/(int)sizeof(WORD))
 		TermFree(terms, "polynomial destructor");
 	else
@@ -237,14 +145,12 @@ poly::~poly () {
 }
 
 /*
-  	#] Destructor : 
- 		#[ expand memory :
+    #] Destructor :
+    [# expand_memory :
 */
-
-// doubles the amount of memory allocated for a polynomial
 void poly::expand_memory() {
-
-	GETIDENTITY;
+	
+	POLY_GETIDENTITY(*this);
 	
 	WORD *newterms = new WORD[2 * size_of_terms];
 	memcpy(newterms, terms, size_of_terms*sizeof(WORD));
@@ -259,12 +165,14 @@ void poly::expand_memory() {
 }
 
 /*
-.		#] expand memory : 
+	  #] expand_memory :
  		#[ poly setmod :
 */
 
 // Sets the coefficient space to ZZ/p^n
 void poly::setmod(WORD _modp, WORD _modn) {
+
+	POLY_GETIDENTITY(*this);
 	
 	if (_modp>0 && (_modp!=modp || _modn<modn)) {
 		modp = _modp;
@@ -272,12 +180,14 @@ void poly::setmod(WORD _modp, WORD _modn) {
 	
 		WORD nmodq=0;
 		UWORD *modq=NULL;
-		if (modp<SMALL_POWER_MAXX)
-			small_power(modp,modn,modq,nmodq);
-		else {
+		if (modn == 1) {
 			modq = (UWORD *)&modp;
 			nmodq = 1;
 		}
+		else {
+			RaisPowSmall(BHEAD modp,modn,&modq,&nmodq);
+		}
+		
 		coefficients_modulo(modq,nmodq);
 	}
 	else {
@@ -294,7 +204,7 @@ void poly::setmod(WORD _modp, WORD _modn) {
 // reduces all coefficients of the polynomial modulo a
 void poly::coefficients_modulo (UWORD *a, WORD na) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	
 	int j=1;
 	for (int i=1, di; i<terms[0]; i+=di) {
@@ -326,7 +236,7 @@ void poly::coefficients_modulo (UWORD *a, WORD na) {
 // The string can be of the form "10x^2y^4+..." or "-3*x^2*y+...".
 void poly::parse (const std::string &s, WORD modp, WORD modn, poly &a) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 		
 	a.modp = modp;
 	a.modn = modn;
@@ -426,7 +336,7 @@ const string int_to_string (WORD x) {
 // Convert a polynomial to a string
 const string poly::to_string() const {
 	
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	
 	string res;
 	
@@ -508,10 +418,15 @@ ostream& operator<< (ostream &out, const poly &a) {
 
 // Compare two monomials with respect to the powers of the variables
 // Result: 0:equal, <0:a smaller, >0:b smaller
-int poly::monomial_compare (const WORD *a, const WORD *b) {
-	GETIDENTITY;
+int poly::monomial_compare (const WORD *a, const WORD *b PTAIL) {
+
+#ifndef WITHPTHREADS
+	int num_vars = AN.poly_num_vars;
+#else
+	int num_vars = B!=NULL ? AN.poly_num_vars : a[0]-ABS(a[a[0]-1])-2;
+#endif
 	
-	for (int i=0; i<AN.poly_num_vars; i++)
+	for (int i=0; i<num_vars; i++)
 		if (a[i+1]!=b[i+1]) return a[i+1]-b[i+1];
 	return 0;
 }
@@ -522,8 +437,8 @@ int poly::monomial_compare (const WORD *a, const WORD *b) {
 */
 
 // Returns wheter a is smaller then b
-bool poly::monomial_larger (const WORD *a, const WORD *b) {
-	return monomial_compare(a,b) > 0;
+bool poly::monomial_larger (const WORD *a, const WORD *b PTAIL) {
+	return monomial_compare(a,b BTAIL) > 0;
 }
 
 /*
@@ -535,17 +450,18 @@ bool poly::monomial_larger (const WORD *a, const WORD *b) {
 // bring coefficients in normal form mod p^n (|coeff| < p^n/2).
 const poly & poly::normalize() {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
  
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
 	if (modp!=0) {
-		if (modp<SMALL_POWER_MAXX)
-			small_power(modp,modn,modq,nmodq);
-		else {
+		if (modn == 1) {
 			modq = (UWORD *)&modp;
 			nmodq = 1;
+		}
+		else {
+			RaisPowSmall(BHEAD modp,modn,&modq,&nmodq);
 		}
 	}
 
@@ -571,7 +487,7 @@ const poly & poly::normalize() {
 	tmp[1]=0;
 
 	for (int i=0; i<nterms; i++) {
-		if (i>0 && monomial_compare(&tmp[j], p[i])==0) {
+		if (i>0 && monomial_compare(&tmp[j], p[i] BTAIL)==0) {
 			// duplicate term, so add coefficients
 			WORD ncoeff = tmp[j+tmp[j]-1];
 			AddLong((UWORD *)&tmp[j+1+AN.poly_num_vars], ncoeff,
@@ -624,7 +540,7 @@ const poly & poly::normalize() {
 
 // Index of the last monomial, i.e., the constant term
 WORD poly::last_monomial_index () const {
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	return terms[0] - ABS(terms[terms[0]-1]) - AN.poly_num_vars - 2;
 }
 
@@ -646,7 +562,7 @@ WORD * poly::last_monomial () const {
 // Addition of polynomials by merging
 void poly::add (const poly &a, const poly &b, poly &c) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 
   c.modp = a.modp;
   c.modn = a.modn;
@@ -655,18 +571,22 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 	UWORD *modq=NULL;
 	
 	if (c.modp!=0) {
-		if (c.modp<SMALL_POWER_MAXX)
-			small_power(c.modp,c.modn,modq,nmodq);
-		else {
+		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+		}
+		else {
+			RaisPowSmall(BHEAD c.modp,c.modn,&modq,&nmodq);
 		}
 	}
 	
 	int ai=1,bi=1,ci=1;
 	
 	while (ai<a[0] || bi<b[0]) {
-		int cmp = ai<a[0] && bi<b[0] ? monomial_compare(&a[ai],&b[bi]) : 0;
+
+		c.check_memory(ci);
+		
+		int cmp = ai<a[0] && bi<b[0] ? monomial_compare(&a[ai],&b[bi] BTAIL) : 0;
 		
 		if (bi==b[0] || cmp>0) {
 			// insert term from a
@@ -712,7 +632,7 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 // Subtraction of polynomials by merging
 void poly::sub (const poly &a, const poly &b, poly &c) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 	
   c.modp = a.modp;
   c.modn = a.modn;
@@ -721,18 +641,22 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 	UWORD *modq=NULL;
 	
 	if (c.modp!=0) {
-		if (c.modp<SMALL_POWER_MAXX)
-			small_power(c.modp,c.modn,modq,nmodq);
-		else {
+		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+		}
+		else {
+			RaisPowSmall(BHEAD c.modp,c.modn,&modq,&nmodq);
 		}
 	}
 	
 	int ai=1,bi=1,ci=1;
 	
 	while (ai<a[0] || bi<b[0]) {
-		int cmp = ai<a[0] && bi<b[0] ? monomial_compare(&a[ai],&b[bi]) : 0;
+
+		c.check_memory(ci);
+		
+		int cmp = ai<a[0] && bi<b[0] ? monomial_compare(&a[ai],&b[bi] BTAIL) : 0;
 		
 		if (bi==b[0] || cmp>0) {
 			// insert term from a
@@ -777,17 +701,17 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 */
 
 // pops the largest monomial from the heap and stores it in heap[n]
-void poly::pop_heap (WORD **heap, int n) {
+void poly::pop_heap (PHEAD WORD **heap, int n) {
 
 	WORD *old = heap[0];
 	
 	heap[0] = heap[--n];
 
 	int i=0;
-	while (2*i+2<n && (monomial_larger(heap[2*i+1]+3, heap[i]+3) ||
-										 monomial_larger(heap[2*i+2]+3, heap[i]+3))) {
+	while (2*i+2<n && (monomial_larger(heap[2*i+1]+3, heap[i]+3 BTAIL) ||
+										 monomial_larger(heap[2*i+2]+3, heap[i]+3 BTAIL))) {
 		
-		if (monomial_larger(heap[2*i+1]+3, heap[2*i+2]+3)) {
+		if (monomial_larger(heap[2*i+1]+3, heap[2*i+2]+3 BTAIL)) {
 			swap(heap[i], heap[2*i+1]);
 			i=2*i+1;
 		}
@@ -797,7 +721,7 @@ void poly::pop_heap (WORD **heap, int n) {
 		}
 	}
 
-	if (2*i+1<n && monomial_larger(heap[2*i+1]+3, heap[i]+3)) 
+	if (2*i+1<n && monomial_larger(heap[2*i+1]+3, heap[i]+3 BTAIL)) 
 		swap(heap[i], heap[2*i+1]);
 
 	heap[n] = old;
@@ -809,10 +733,11 @@ void poly::pop_heap (WORD **heap, int n) {
 */
 
 // pushes the monomial in heap[n] onto the heap
-void poly::push_heap (WORD **heap, int n)  {
+void poly::push_heap (PHEAD WORD **heap, int n)  {
 
 	int i=n-1;
-	while (i>0 && monomial_larger(heap[i]+3, heap[(i-1)/2]+3)) {
+
+	while (i>0 && monomial_larger(heap[i]+3, heap[(i-1)/2]+3 BTAIL)) {
 		swap(heap[(i-1)/2], heap[i]);
 		i=(i-1)/2;
 	}
@@ -826,7 +751,7 @@ void poly::push_heap (WORD **heap, int n)  {
 // a or b must have only one term. Multlply each term with that one.
 void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 
-  GETIDENTITY;
+  POLY_GETIDENTITY(a);
 	
   int ci=1;
 
@@ -834,16 +759,20 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 	UWORD *modq=NULL;
 	
 	if (c.modp!=0) {
-		if (c.modp<SMALL_POWER_MAXX)
-			small_power(c.modp,c.modn,modq,nmodq);
-		else {
+		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+		}
+		else {
+			RaisPowSmall(BHEAD c.modp,c.modn,&modq,&nmodq);
 		}
 	}
 	
   for (int ai=1; ai<a[0]; ai+=a[ai])
     for (int bi=1; bi<b[0]; bi+=b[bi]) {
+			
+			c.check_memory(ci);
+		
       for (int i=0; i<AN.poly_num_vars; i++)
         c[ci+1+i] = a[ai+1+i] + b[bi+1+i];
       WORD nc;
@@ -872,21 +801,22 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 // pairs of monomials that result in that power
 void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
 	if (c.modp!=0) {
-		if (c.modp<SMALL_POWER_MAXX)
-			small_power(c.modp,c.modn,modq,nmodq);
-		else {
+		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
+		else {
+			RaisPowSmall(BHEAD c.modp,c.modn,&modq,&nmodq);
+		}
 	}
 	
-	poly t;
+	poly t(BHEAD 0);
 	WORD nt;
 	
 	WORD ci=1;
@@ -897,6 +827,9 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 	int afirst=1, blast=1;
 
 	for (int pow=maxpow; pow>=minpow; pow--) {
+
+		c.check_memory(ci);
+		
 		WORD nc=0;
 
 		// adjust range in a or b
@@ -973,39 +906,29 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
  */
 void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
 	if (c.modp!=0) {
-		if (c.modp<SMALL_POWER_MAXX)
-			small_power(c.modp,c.modn,modq,nmodq);
-		else {
+		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
 		}
-	}
-
-	// allocate heap
-	int nheap=0;
-	for (int ai=1; ai<a[0]; ai+=a[ai]) nheap++;
-	WORD *heap[nheap];
-
-	for (int ai=1, i=0; ai<a[0]; ai+=a[ai], i++) {
-		heap[i] = (WORD *) NumberMalloc("polynomial multiplication (heap)");
-		heap[i][0] = ai;
-		heap[i][1] = 1;
-		heap[i][2] = -1;
-		heap[i][3] = 0;
-		heap[i][4] = 9999;
+		else {
+			RaisPowSmall(BHEAD c.modp,c.modn,&modq,&nmodq);
+		}
 	}
 
 	// find maximum powers in different variables
-	WORD maxpower[AN.poly_num_vars];
-	WORD maxpowera[AN.poly_num_vars];
-	WORD maxpowerb[AN.poly_num_vars];
-	
+	WORD *maxpower  = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
+	WORD *maxpowera = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
+	WORD *maxpowerb = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
+
 	for (int i=0; i<AN.poly_num_vars; i++)
 		maxpowera[i] = maxpowerb[i] = 0;
 
@@ -1020,7 +943,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	for (int i=0; i<AN.poly_num_vars; i++)
 		maxpower[i] = maxpowera[i] + maxpowerb[i];
 
-	// if PROD(maxpower) small, allocate hash array
+	// if PROD(maxpower) small, use hash array
 	bool use_hash = true;
 	int nhash = 1;
 
@@ -1033,7 +956,24 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 		nhash *= maxpower[i]+1;
 	}
 
-	WORD *hash[nhash];
+	// allocate heap and hash
+	
+	int nheap=0;
+	for (int ai=1; ai<a[0]; ai+=a[ai]) nheap++;
+
+	WantAddPointers(nheap+nhash);
+	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
+
+	for (int ai=1, i=0; ai<a[0]; ai+=a[ai], i++) {
+		heap[i] = (WORD *) NumberMalloc("polynomial multiplication (heap)");
+		heap[i][0] = ai;
+		heap[i][1] = 1;
+		heap[i][2] = -1;
+		heap[i][3] = 0;
+		heap[i][4] = 9999;
+	}
+	
+	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nheap;
 	for (int i=0; i<nhash; i++)
 		hash[i] = NULL;
 
@@ -1042,7 +982,9 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	// multiply
 	while (nheap > 0) {
 
-		pop_heap(heap, nheap--);
+		c.check_memory(ci);
+		
+		pop_heap(BHEAD heap, nheap--);
 		WORD *p = heap[nheap];
 
 		// if non-zero
@@ -1052,7 +994,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 			c[0] = ci;
 
 			// append this term to the result
-			if (use_hash || ci==1 || monomial_compare(p+3, c.last_monomial())!=0) {
+			if (use_hash || ci==1 || monomial_compare(p+3, c.last_monomial() BTAIL)!=0) {
 				p[4 + AN.poly_num_vars + ABS(p[3])] = p[3];
 				p[3] = 2 + AN.poly_num_vars + ABS(p[3]);
 				c.termscopy(&p[3],ci,p[3]);
@@ -1101,7 +1043,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 				if (hash[ID] == NULL) {
 					p[2] = ID;
 					hash[ID] = p;
-					push_heap(heap, ++nheap);
+					push_heap(BHEAD heap, ++nheap);
 					break;
 				}
 				else {
@@ -1118,7 +1060,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 			else {
 				// if no hash, push onto heap
 				p[2] = -1;
-				push_heap(heap, ++nheap);
+				push_heap(BHEAD heap, ++nheap);
 				break;
 			}
 		}
@@ -1128,6 +1070,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	
 	for (int ai=1, i=0; ai<a[0]; ai+=a[ai], i++)
 		NumberFree(heap[i],"polynomial multiplication (heap)");
+	AT.WorkPointer -= 3 * AN.poly_num_vars;
 }
 
 /*
@@ -1150,8 +1093,9 @@ void poly::mul (const poly &a, const poly &b, poly &c) {
   c.modp = a.modp;
   c.modn = a.modn;
 	
-	if (a==0 || b==0) {	c[0]=1; return; }
-	if (a==1) {
+	if (a.is_zero() || b.is_zero()) { c[0]=1; return; }
+	if (a.is_one()) {
+		c.check_memory_large(b[0]);
 		c.termscopy(b.terms,0,b[0]);
 		// normalize if necessary
 		if (a.modp!=b.modp || a.modn!=b.modn) {
@@ -1160,7 +1104,8 @@ void poly::mul (const poly &a, const poly &b, poly &c) {
 		}
 		return;
 	}
-	if (b==1) {
+	if (b.is_one()) {
+		c.check_memory_large(a[0]);
 		c.termscopy(a.terms,0,a[0]);		
 		return;
 	}
@@ -1196,7 +1141,7 @@ void poly::mul (const poly &a, const poly &b, poly &c) {
 // b must have only one term. Divide each term of a by that one
 void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool only_divides) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 
 	int qi=1, ri=1;
 	
@@ -1207,17 +1152,22 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 	UWORD *ltbinv=NULL;
 
 	if (q.modp!=0) {
-		if (q.modp<SMALL_POWER_MAXX)
-			small_power(q.modp,q.modn,modq,nmodq);
-		else {
+		if (q.modn == 1) {
 			modq = (UWORD *)&q.modp;
 			nmodq = 1;
 		}
+		else {
+			RaisPowSmall(BHEAD q.modp,q.modn,&modq,&nmodq);
+		}
 		ltbinv = NumberMalloc("polynomial division (oneterm)");
-		inverse((UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, nltbinv);
+		GetLongModInverses(BHEAD (UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, &nltbinv, NULL, NULL);
 	}
 	
 	for (int ai=1; ai<a[0]; ai+=a[ai]) {
+
+		q.check_memory(qi);
+		r.check_memory(ri);
+		
 		// check divisibility of powers
 		bool div=true;
 		for (int j=0; j<AN.poly_num_vars; j++) {
@@ -1260,7 +1210,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 		}
 		
 		if (nr != 0) {
-			if (only_divides) { r=1; ri=r[0]; break; }
+			if (only_divides) { r = poly(BHEAD 1); ri=r[0]; break; }
 			r[ri] = 2+AN.poly_num_vars+ABS(nr);
 			ri += r[ri];
 			r[ri-1] = nr;
@@ -1290,7 +1240,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
  */
 void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int var, bool only_divides) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 	
 	WORD nmodq=0;
 	UWORD *modq=NULL;
@@ -1299,14 +1249,15 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	UWORD *ltbinv=NULL;
 	
 	if (q.modp!=0) {
-		if (q.modp<SMALL_POWER_MAXX)
-			small_power(q.modp,q.modn,modq,nmodq);
-		else {
+		if (q.modn == 1) {
 			modq = (UWORD *)&q.modp;
 			nmodq = 1;
 		}
+		else {
+			RaisPowSmall(BHEAD q.modp,q.modn,&modq,&nmodq);
+		}
 		ltbinv = NumberMalloc("polynomial division (univar)");
-		inverse((UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, nltbinv);
+		GetLongModInverses(BHEAD (UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, &nltbinv, NULL, NULL);
 	}
 	
 	WORD ns=0;
@@ -1319,6 +1270,10 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	int ai=1, qi=1, ri=1;
 
 	for (int pow=a[2+var]; pow>=0; pow--) {
+
+		q.check_memory(qi);
+		r.check_memory(ri);
+		
 		// look for the correct power in a
 		while (ai<a[0] && a[ai+1+var] > pow)
 			ai+=a[ai];
@@ -1386,7 +1341,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 			}
 			
 			if (nt != 0) {
-				if (only_divides) { r=1; ri=r[0]; break; }
+				if (only_divides) { r=poly(BHEAD 1); ri=r[0]; break; }
 				for (int i=0; i<AN.poly_num_vars; i++)
 					r[ri+1+i] = 0;
 				r[ri+1+var] = pow;
@@ -1437,7 +1392,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
  */
 void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool only_divides) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 
 	q[0] = r[0] = 1;
 	
@@ -1448,34 +1403,24 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	UWORD *ltbinv=NULL;
 	
 	if (q.modp!=0) {
-		if (q.modp<SMALL_POWER_MAXX)
-			small_power(q.modp,q.modn,modq,nmodq);
-		else {
+		if (q.modn == 1) {
 			modq = (UWORD *)&q.modp;
 			nmodq = 1;
 		}
+		else {
+			RaisPowSmall(BHEAD q.modp,q.modn,&modq,&nmodq);
+		}
 		ltbinv = NumberMalloc("polynomial division (heap)");
-		inverse((UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, nltbinv);
+		GetLongModInverses(BHEAD (UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, &nltbinv, NULL, NULL);
 	}
 	
 	// allocate heap
 	int nb=0;
 	for (int bi=1; bi<b[0]; bi+=b[bi]) nb++;
 
-	int nheap = 1;
-	WORD *heap[nb];
-	
-	for (int i=0; i<nb; i++) 
-		heap[i] = (WORD *) NumberMalloc("polynomial division (heap)");
-
-	heap[0][0] = 1;
-	heap[0][1] = 0;
-	heap[0][2] = -1;
-	memcpy (&heap[0][3], &a[1], a[1]*sizeof(WORD));
-	heap[0][3] = a[a[1]];
-
 	// determine maximum power in variables
-	WORD maxpowera[AN.poly_num_vars];
+	WORD *maxpowera = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
 	
 	for (int i=0; i<AN.poly_num_vars; i++)
 		maxpowera[i] = 0;
@@ -1497,7 +1442,19 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 		nhash *= maxpowera[i]+1;
 	}
 
-	WORD *hash[nhash];
+	WantAddPointers(nb+nhash);
+	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
+	
+	for (int i=0; i<nb; i++) 
+		heap[i] = (WORD *) NumberMalloc("polynomial division (heap)");
+	int nheap = 1;
+	heap[0][0] = 1;
+	heap[0][1] = 0;
+	heap[0][2] = -1;
+	memcpy (&heap[0][3], &a[1], a[1]*sizeof(WORD));
+	heap[0][3] = a[a[1]];
+	
+	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nb;
 	for (int i=0; i<nhash; i++)
 		hash[i] = NULL;
 
@@ -1512,6 +1469,9 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	
 	while (insert.size()>0 || nheap>0) {
 
+		q.check_memory(qi);
+		r.check_memory(ri);
+		
 		// collect a term t for the quotient/remainder
 		t[0] = -1;
 		
@@ -1524,7 +1484,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				// extract element from the heap and prepare adding new ones
 				this_insert = false;
 
-				pop_heap(heap, nheap--);
+				pop_heap(BHEAD heap, nheap--);
 				p = heap[nheap];
 				
 				if (p[2]!=-1) hash[p[2]] = NULL;
@@ -1590,7 +1550,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				if (!use_hash || hash[p[2]] == NULL) {
 					if (use_hash) hash[p[2]] = p;
 					swap (heap[nheap],p);
-					push_heap(heap, ++nheap);
+					push_heap(BHEAD heap, ++nheap);
 					break;
 				}
 				else {
@@ -1608,7 +1568,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				}
 			}
 		}
-		while (t[0]==-1 || (nheap>0 && monomial_compare(heap[0]+3, t+3)==0));
+		while (t[0]==-1 || (nheap>0 && monomial_compare(heap[0]+3, t+3 BTAIL)==0));
 
 		if (t[3] == 0) continue;
 		
@@ -1619,7 +1579,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 		
 		if (!div) {
 			// not divisible, so append it to the remainder
-			if (only_divides) { r=1; ri=r[0]; break; }
+			if (only_divides) { r=poly(BHEAD 1); ri=r[0]; break; }
 			t[4 + AN.poly_num_vars + ABS(t[3])] = t[3];
 			t[3] = 2 + AN.poly_num_vars + ABS(t[3]);
 			r.termscopy(&t[3], ri, t[3]);
@@ -1630,15 +1590,12 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 			WORD nq, nr;
 	
 			if (q.modp==0) {
-				if (qi+1+AN.poly_num_vars+t[3] >= q.size_of_terms) q.expand_memory();
-				if (ri+1+AN.poly_num_vars+t[3] >= r.size_of_terms) r.expand_memory();
 				DivLong((UWORD *)&t[4+AN.poly_num_vars], t[3],
 								(UWORD *)&b[2+AN.poly_num_vars], b[b[1]],
 								(UWORD *)&q[qi+1+AN.poly_num_vars], &nq,
 								(UWORD *)&r[ri+1+AN.poly_num_vars], &nr);
 			}
 			else {
-				if (qi+1+AN.poly_num_vars+t[3] >= q.size_of_terms) q.expand_memory();
 				MulLong((UWORD *)&t[4+AN.poly_num_vars], t[3], ltbinv, nltbinv,	(UWORD *)&q[qi+1+AN.poly_num_vars], &nq);
 				TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &nq, modq, nmodq, NOUNPACK);
 				nr=0;
@@ -1679,6 +1636,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	NumberFree(t,"polynomial division (heap)");
 
 	if (q.modp!=0) NumberFree(ltbinv,"polynomial division (heap)");
+	AT.WorkPointer -= AN.poly_num_vars;
 }
 
 /*
@@ -1702,12 +1660,13 @@ void poly::divmod (const poly &a, const poly &b, poly &q, poly &r, bool only_div
 	q.modp = r.modp = a.modp;
 	q.modn = r.modn = a.modn;
 	
-	if (a == 0) {
+	if (a.is_zero()) {
 		q[0]=1;
 		r[0]=1;
 		return;
 	}
-	if (b == 1) {
+	if (b.is_one()) {
+		q.check_memory_large(a[0]);
 		q.termscopy(a.terms,0,a[0]);
 		r[0]=1;
 		return;
@@ -1735,7 +1694,8 @@ void poly::divmod (const poly &a, const poly &b, poly &q, poly &r, bool only_div
 */
 
 bool poly::divides (const poly &a, const poly &b) {
-	poly q,r;
+	POLY_GETIDENTITY(a);
+	poly q(BHEAD 0), r(BHEAD 0);
 	divmod(b,a,q,r,true);
 	return r.is_zero();
 }
@@ -1748,7 +1708,8 @@ bool poly::divides (const poly &a, const poly &b) {
 
 // only the quotient 
 void poly::div (const poly &a, const poly &b, poly &c) {
-	poly d;
+	POLY_GETIDENTITY(a);
+	poly d(BHEAD 0);
 	divmod(a,b,c,d,false);
 }
 
@@ -1759,80 +1720,13 @@ void poly::div (const poly &a, const poly &b, poly &c) {
 
 // only the remainder
 void poly::mod (const poly &a, const poly &b, poly &c) {
-	poly d;
+	POLY_GETIDENTITY(a);
+	poly d(BHEAD 0);
 	divmod(a,b,d,c,false);
 }
 
 /*
   	#] mod : 
-  	#[ inverse :
-*/
-
-// Calculates the inverse of a in mod (Z/b) with the extended Euclidean algorithm
-void poly::inverse (UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *res, WORD &nres) {
-
-	GETIDENTITY;
-	
-	UWORD *s = NumberMalloc("inverse");
-	WORD ns = na;
-	memcpy(s, a, ABS(ns)*sizeof(UWORD));
-
-	UWORD *t = NumberMalloc("inverse");
-	WORD nt = nb;
-	memcpy(t, b, ABS(nt)*sizeof(UWORD));
-
-	UWORD *sa = NumberMalloc("inverse");
-	WORD nsa = 1;
-	sa[0] = 1;
-
-	UWORD *sb = NumberMalloc("inverse");
-	WORD nsb = 0;
-
-	UWORD *ta = NumberMalloc("inverse");
-	WORD nta = 0;
-
-	UWORD *tb = NumberMalloc("inverse");
-	WORD ntb = 1;
-	tb[0] = 1;
-
-	UWORD *x = NumberMalloc("inverse");
-	WORD nx;
-	
-	UWORD *y = NumberMalloc("inverse");
-	WORD ny;
-
-	while (nt != 0) {
-		DivLong(s,ns,t,nt,x,&nx,y,&ny);
-		swap(s,y);
-		ns=ny;
-		MulLong(x,nx,ta,nta,y,&ny);
-		AddLong(sa,nsa,y,-ny,sa,&nsa);
-		MulLong(x,nx,tb,ntb,y,&ny);
-		AddLong(sb,nsb,y,-ny,sb,&nsb);
-
-		swap(s,t);
-		swap(ns,nt);
-		swap(sa,ta);
-		swap(nsa,nta);
-		swap(sb,tb);
-		swap(nsb,ntb);
-	}
-
-	nres = nsa*ns;
-	memcpy(res,sa,ABS(nres)*sizeof(UWORD));
-	
-	NumberFree(s,"inverse");
-	NumberFree(t,"inverse");
-	NumberFree(sa,"inverse");
-	NumberFree(sb,"inverse");
-	NumberFree(ta,"inverse");
-	NumberFree(tb,"inverse");
-	NumberFree(x,"inverse");
-	NumberFree(y,"inverse");
-}
-
-/*
-  	#] inverse : 
   	#[ copy operator :
 */
 
@@ -1842,6 +1736,7 @@ poly & poly::operator= (const poly &a) {
 	if (&a != this) {
 		modp = a.modp;
 		modn = a.modn;
+		check_memory_large(a[0]);
 		termscopy(a.terms,0,a[0]);
 	}
 
@@ -1854,11 +1749,11 @@ poly & poly::operator= (const poly &a) {
 */
 
 // Binary operators for polynomial arithmetic
-const poly poly::operator+ (const poly &a) const { poly b; add(*this,a,b); return b; }
-const poly poly::operator- (const poly &a) const { poly b; sub(*this,a,b); return b; }
-const poly poly::operator* (const poly &a) const { poly b; mul(*this,a,b); return b; }
-const poly poly::operator/ (const poly &a) const { poly b; div(*this,a,b); return b; }
-const poly poly::operator% (const poly &a) const { poly b; mod(*this,a,b); return b; }
+const poly poly::operator+ (const poly &a) const { POLY_GETIDENTITY(a); poly b(BHEAD 0); add(*this,a,b); return b; }
+const poly poly::operator- (const poly &a) const { POLY_GETIDENTITY(a); poly b(BHEAD 0); sub(*this,a,b); return b; }
+const poly poly::operator* (const poly &a) const { POLY_GETIDENTITY(a); poly b(BHEAD 0); mul(*this,a,b); return b; }
+const poly poly::operator/ (const poly &a) const { POLY_GETIDENTITY(a); poly b(BHEAD 0); div(*this,a,b); return b; }
+const poly poly::operator% (const poly &a) const { POLY_GETIDENTITY(a); poly b(BHEAD 0); mod(*this,a,b); return b; }
 
 // Assignment operators for polynomial arithmetic
 poly& poly::operator+= (const poly &a) { return *this = *this + a; }
@@ -1884,7 +1779,7 @@ bool poly::operator!= (const poly &a) const {	return !(*this == a); }
 // Returns the lexcicographically first variable of a polynomial
 int poly::first_variable () const {
 	
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	
 	int var = AN.poly_num_vars;
 	for (int j=0; j<var; j++)
@@ -1898,9 +1793,9 @@ int poly::first_variable () const {
 */
 
 // Returns a list of all variables of a polynomial
-vector<int> poly::all_variables () const {
+const vector<int> poly::all_variables () const {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	
 	vector<bool> used(AN.poly_num_vars, false);
 	
@@ -1937,9 +1832,9 @@ WORD poly::degree (int x) const {
 // Returns the integer coefficient of the leading monomial
 const poly poly::lcoeff () const {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	
-	poly res;
+	poly res(BHEAD 0);
 	res.modp = modp;
 	res.modn = modn;
 
@@ -1970,13 +1865,16 @@ int poly::sign () const {
 // Returns the polynomial coefficient of x^n
 const poly poly::coefficient (int x, int n) const {
 
-	poly res;
+	POLY_GETIDENTITY(*this);
+	
+	poly res(BHEAD 0);
 	res.modp = modp; // res is a poly, so the coefficient field matters
 	res.modn = modn;
 	res[0] = 1;
 	
 	for (int i=1; i<terms[0]; i+=terms[i]) 
 		if (terms[i+1+x] == n) {
+			res.check_memory(res[0]+terms[i]);		
 			res.termscopy(&terms[i], res[0], terms[i]);
 			res[res[0]+1+x] -= n;  // power of x
 			res[0] += res[res[0]]; // length
@@ -1987,6 +1885,49 @@ const poly poly::coefficient (int x, int n) const {
 
 /*
   	#] coefficient : 
+  	#[ derivative :
+*/
+
+/**  Derivative of a polynomial
+ *
+ *   Description
+ *   ===========
+ *   Calcululates the derivative of the polynomial a with respect to
+ *   the variable x.
+ */
+const poly poly::derivative (int x) const {
+
+	POLY_GETIDENTITY(*this);
+	
+	poly b(BHEAD 0);
+	WORD bi=1;
+
+	for (int i=1; i<terms[0]; i+=terms[i]) {
+		
+		WORD power = terms[i+1+x];
+
+		if (power > 0) {
+			b.check_memory(bi+terms[i]);
+			b.termscopy(&terms[i], bi, terms[i]);
+			b[bi+1+x]--;
+			
+			WORD nb = b[bi+b[bi]-1];
+			Product((UWORD *)&b[bi+1+AN.poly_num_vars], &nb, power);
+
+			b[bi] = 2 + AN.poly_num_vars + ABS(nb);
+			b[bi+b[bi]-1] = nb;
+			
+			bi += b[bi];
+		}
+	}
+
+	b[0] = bi;
+	b.setmod(modp, modn);
+	return b;	
+}
+
+/*
+  	#] derivative : 
 		#[ is_zero :
 */
 
@@ -1997,13 +1938,35 @@ bool poly::is_zero () const {
 
 /*
   	#] is_zero :
+		#[ is_one :
+*/
+
+// Returns whether the polynomial is one
+
+// Returns whether the polynomial is one
+bool poly::is_one () const {
+	
+	POLY_GETIDENTITY(*this);
+	
+	if (terms[0] != 4+AN.poly_num_vars) return false;
+	if (terms[1] != 3+AN.poly_num_vars) return false;
+	for (int i=0; i<AN.poly_num_vars; i++)
+		if (terms[2+i] != 0) return false;
+	if (terms[2+AN.poly_num_vars]!=1) return false;
+	if (terms[3+AN.poly_num_vars]!=1) return false;
+	
+	return true;	
+}
+
+/*
+  	#] is_zero :
 		#[ is_integer :
 */
 
 // Returns whether the polynomial is an integer
 bool poly::is_integer () const {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 
 	if (terms[0] == 1) return true;
 	if (terms[0] != terms[1]+1)	return false;
@@ -2038,7 +2001,7 @@ bool poly::is_integer () const {
  */
 WORD poly::is_dense_univariate () const {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 	
 	WORD num_terms=0, res=-1;
 
@@ -2070,12 +2033,10 @@ WORD poly::is_dense_univariate () const {
 
 // Returns the "simple" polynomial (x-a)^b mod p^n
 // note: "a" is a machine size integer
-const poly poly::simple_poly (int x, int a, int b, int p, int n) {
+const poly poly::simple_poly (PHEAD int x, int a, int b, int p, int n) {
 	
-	GETIDENTITY;
-	
-	poly res(1,p,n);
-	poly tmp(0,p,n);
+	poly res(BHEAD 1,p,n);
+	poly tmp(BHEAD 0,p,n);
 	
 	int idx=1;
 	tmp[idx++] = 3 + AN.poly_num_vars;                        // length
@@ -2088,7 +2049,7 @@ const poly poly::simple_poly (int x, int a, int b, int p, int n) {
 		tmp[idx++] = 3 + AN.poly_num_vars;                      // length
 		for (int i=0; i<AN.poly_num_vars; i++) tmp[idx++] = 0;  // powers
 		tmp[idx++] = ABS(a);                                    // coefficient
-		tmp[idx++] = -sgn(a);                                   // length coefficient
+		tmp[idx++] = -SGN(a);                                   // length coefficient
 	}
 	
 	tmp[0] = idx;                                             // length
@@ -2105,12 +2066,10 @@ const poly poly::simple_poly (int x, int a, int b, int p, int n) {
 
 // Returns the "simple" polynomial (x-a)^b mod p^n
 // note: "a" is a large integer (type: polynomial)
-const poly poly::simple_poly (int x, const poly &a, int b, int p, int n) {
-	
-	GETIDENTITY;
-	
-	poly res(1,p,n);
-	poly tmp(0,p,n);
+const poly poly::simple_poly (PHEAD int x, const poly &a, int b, int p, int n) {
+
+	poly res(BHEAD 1,p,n);
+	poly tmp(BHEAD 0,p,n);
 	
 	int idx=1;
 
@@ -2120,7 +2079,7 @@ const poly poly::simple_poly (int x, const poly &a, int b, int p, int n) {
 	tmp[idx++] = 1;                                                   // coefficient
 	tmp[idx++] = 1;                                                   // length coefficient
 
-	if (a != 0) {
+	if (!a.is_zero()) {
 		tmp[idx++] = 2 + AN.poly_num_vars + ABS(a[a[0]-1]); // length
 		for (int i=0; i<AN.poly_num_vars; i++) tmp[idx++] = 0;          // powers
 		for (int i=0; i<ABS(a[a[0]-1]); i++)
@@ -2140,10 +2099,8 @@ const poly poly::simple_poly (int x, const poly &a, int b, int p, int n) {
 		#[ extract_variables :
 */
 
-const map<int,int> poly::extract_variables (WORD *e, bool with_arghead, bool multiple) {
+const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bool multiple) {
 															
-	GETIDENTITY;
-
 	// store old variables in AN.poly_vars
 	map<int,int> var_to_idx;
 	bool idx_empty = AN.poly_num_vars > 0;
@@ -2220,11 +2177,9 @@ const map<int,int> poly::extract_variables (WORD *e, bool with_arghead, bool mul
 */
 
 // Converts a Form function argument to a polynomial class "poly"
-const poly poly::argument_to_poly (WORD *e, bool with_arghead, const map<int,int> &var_to_idx) {
+const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, const map<int,int> &var_to_idx) {
 
-	GETIDENTITY;
-
-	poly res;
+	poly res(BHEAD 0);
 
 	 // fast notation
 	if (*e == -SNUMBER) {
@@ -2234,18 +2189,18 @@ const poly poly::argument_to_poly (WORD *e, bool with_arghead, const map<int,int
 		}
 		else {
 			res[0] = 4 + AN.poly_num_vars;
-			res[1] = res[0] - 1;
+			res[1] = 3 + AN.poly_num_vars;
 			for (int i=0; i<AN.poly_num_vars; i++)
 				res[2+i] = 0;
 			res[2+AN.poly_num_vars] = ABS(e[1]);
-			res[3+AN.poly_num_vars] = sgn(e[1]);
+			res[3+AN.poly_num_vars] = SGN(e[1]);
 			return res;
 		}
 	}
 
 	if (*e == -SYMBOL) {
 		res[0] = 4 + AN.poly_num_vars;
-		res[1] = res[0] - 1;
+		res[1] = 3 + AN.poly_num_vars;
 		for (int i=0; i<AN.poly_num_vars; i++)
 			res[2+i] = 0;
 		res[2+var_to_idx.find(e[1])->second] = 1;
@@ -2254,18 +2209,23 @@ const poly poly::argument_to_poly (WORD *e, bool with_arghead, const map<int,int
 		return res;
 	}
 
+	int ri=1;
+	
 	// ordinary notation
 	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
-		int nc = e[i+e[i]-1]/2;                                   // length coefficient (numerator only)
-		res[res[0]] = ABS(nc) + AN.poly_num_vars + 2; // length
+		res.check_memory(ri);
+		int nc = e[i+e[i]-1]/2;                                                // length coefficient (numerator only)
+		res[ri] = ABS(nc) + AN.poly_num_vars + 2;                              // length
 		for (int j=0; j<AN.poly_num_vars; j++)
-			res[res[0]+1+j]=0;                          // powers=0
-		res.termscopy(&e[i+e[i]-2*ABS(nc)-1], res[0]+1+AN.poly_num_vars, ABS(nc));
-		res[res[0]+res[res[0]]-1] = nc;   // length coefficient
+			res[ri+1+j]=0;                                                       // powers=0
+		res.termscopy(&e[i+e[i]-2*ABS(nc)-1], ri+1+AN.poly_num_vars, ABS(nc)); // coefficient
+		res[ri+res[ri]-1] = nc;                                                // length coefficient
 		for (int j=i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j+=2) 
-			res[res[0]+1+var_to_idx.find(e[j])->second] = e[j+1];    // powers
-		res[0] += res[res[0]];                  // length
+			res[ri+1+var_to_idx.find(e[j])->second] = e[j+1];                    // powers
+		ri += res[ri];                                                         // length
 	}
+
+	res[0] = ri;
 	
 	// normalize, since the Form order is probably not the polynomial order
 	// for multiple variables
@@ -2284,7 +2244,7 @@ const poly poly::argument_to_poly (WORD *e, bool with_arghead, const map<int,int
 // Converts a polynomial class "poly" to a Form function argument
 void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 
-	GETIDENTITY;
+	POLY_GETIDENTITY(a);
 
 	// special case: a=0
 	if (a[0]==1) {
@@ -2331,7 +2291,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 		memset(&res[L+res[L]], 0, ABS(nc)*sizeof(WORD)); // denominator
 		res[L+res[L]] = 1;                               // denominator
 		res[L] += ABS(nc);                               // fix length
-		res[L+res[L]] = sgn(nc) * (2*ABS(nc)+1);         // length of coefficient
+		res[L+res[L]] = SGN(nc) * (2*ABS(nc)+1);         // length of coefficient
 		res[L]++;                                        // fix length
 		L += res[L];                                     // fix length
 	}
@@ -2355,7 +2315,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 // (without argheads and fast notation)
 int poly::size_of_form_notation() {
 	
-	GETIDENTITY;
+	POLY_GETIDENTITY(*this);
 
 	// special case: a=0
 	if (terms[0]==1) return 0;
@@ -2377,3 +2337,76 @@ int poly::size_of_form_notation() {
 /*
 	#] size_of_form_notation :
 */
+
+const vector<WORD> poly::to_coefficient_list (const poly &a) {
+
+	POLY_GETIDENTITY(a);
+	
+	if (a.is_zero()) return vector<WORD>();
+			
+	int x = a.first_variable();
+	if (x == AN.poly_num_vars) x=0;
+		
+	vector<WORD> res(1+a[2+x],0);
+	
+	for (int i=1; i<a[0]; i+=a[i]) 
+		res[a[i+1+x]] = (a[i+a[i]-1] * a[i+a[i]-2]) % a.modp;
+
+	return res;
+}
+
+const vector<WORD> poly::coefficient_list_divmod (const vector<WORD> &a, const vector<WORD> &b, WORD p, int divmod) {
+
+	int bsize = (int)b.size();
+	while (b[bsize-1]==0) bsize--;
+	
+	WORD inv;
+	GetModInverses(b[bsize-1] + (b[bsize-1]<0?p:0), p, &inv, NULL);
+										
+	vector<WORD> q(a.size(),0);
+	vector<WORD> r(a);
+		
+	while ((int)r.size() >= bsize) {
+		LONG mul = ((LONG)inv * r.back()) % p;
+		int off = r.size()-bsize;
+		q[off] = mul;
+		for (int i=0; i<bsize; i++)
+			r[off+i] = (r[off+i] - mul*b[i]) % p;
+		while (r.size()>0 && r.back()==0)
+			r.pop_back();
+	}
+
+	if (divmod==0) {
+		while (q.size()>0 && q.back()==0)
+			q.pop_back();
+		return q;
+	}
+	else {
+		while (r.size()>0 && r.back()==0)
+			r.pop_back();
+		return r;
+	}
+}
+
+const poly poly::from_coefficient_list (const vector<WORD> &a, int x, WORD p) {
+
+	poly res(BHEAD 0);
+	int ri=1;
+	
+	for (int i=(int)a.size()-1; i>=0; i--)
+		if (a[i] != 0) {
+			res.check_memory(ri);
+			res[ri] = AN.poly_num_vars+3;
+			for (int j=0; j<AN.poly_num_vars; j++)
+				res[ri+1+j]=0;
+			res[ri+1+x] = i;
+			res[ri+1+AN.poly_num_vars] = ABS(a[i]);
+			res[ri+1+AN.poly_num_vars+1] = SGN(a[i]);
+			ri += res[ri];
+		}
+	
+	res[0]=ri;
+	res.setmod(p,1);
+	
+	return res;
+}

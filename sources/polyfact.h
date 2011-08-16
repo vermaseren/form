@@ -51,8 +51,16 @@ std::ostream& operator<< (std::ostream &out, const factorized_poly &a);
 
 namespace poly_fact {
 
+	const std::vector<poly> extended_gcd_Euclidean_lifted (const poly &a, const poly &b);
+	const std::vector<poly> solve_Diophantine_univariate (const std::vector<poly> &a, const poly &b);
+	const std::vector<poly> solve_Diophantine_multivariate (const std::vector<poly> &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c, int d);
+	const std::vector<poly> lift_coefficients (const poly &A, const std::vector<poly> &a);
+	void predetermine (int dep, const std::vector<std::vector<int> > &state, std::vector<std::vector<std::vector<int> > > &terms, std::vector<int> &term, int sumdeg=0);
+	const std::vector<poly> lift_variables (const poly &A, const std::vector<poly> &a, const std::vector<int> &x, const std::vector<int> &c, const std::vector<poly> &lc);
+	
+	WORD choose_prime (const poly &a, const std::vector<int> &x, WORD p=0);
+	WORD choose_prime_power (const poly &a, WORD p);
 	const std::vector<int> choose_ideal (const poly &a, int p, const factorized_poly &lc, const std::vector<int> &x);
-	const poly derivative (const poly &a, int var);
 	
 	const factorized_poly squarefree_factors (const poly &_a);
 	const factorized_poly squarefree_factors_Yun (const poly &a);

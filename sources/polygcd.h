@@ -46,23 +46,20 @@ namespace poly_gcd {
 	const poly integer_gcd (const poly &a, const poly &b);
 	const poly content (const poly &a, int x);
 	const poly integer_content (const poly &a);
+	const std::vector<WORD> coefficient_list_gcd (const std::vector<WORD> &a, const std::vector<WORD> &b, WORD p);
 	const poly gcd_Euclidean (const poly &a, const poly &b);
-	const std::vector<poly> extended_gcd_Euclidean_lifted (const poly &a, const poly &b);
 	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);
 	const poly content_all_but (const poly &a, int x);
+	const poly lcoeff_all_but (const poly &a, int x);
+	const poly substitute_last(const poly &a, int x, int c);
+	const poly interpolate (const poly &a1, const poly &m1, const poly &a2, WORD x, WORD c);
+	const poly allmod (const poly &a, const std::vector<int> &x, const std::vector<int> &c);
+	
 	const poly gcd_modular (const poly &a, const poly &b, const std::vector<int> &x);
 	const poly gcd_modular_reduce (const poly &a, const poly &b, const std::vector<int> &x, const poly &correctlc, const poly &shape);
 
-	const std::vector<poly> solve_Diophantine_univariate (const std::vector<poly> &a, const poly &b);
-	const std::vector<poly> solve_Diophantine_multivariate (const std::vector<poly> &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c, int d);
-	const std::vector<poly> lift_coefficients (const poly &A, const std::vector<poly> &a);
-	void predetermine (int dep, const std::vector<std::vector<int> > &state, std::vector<std::vector<std::vector<int> > > &terms, std::vector<int> &term, int sumdeg=0);
-	const std::vector<poly> lift_variables (const poly &A, const std::vector<poly> &a, const std::vector<int> &x, const std::vector<int> &c, const std::vector<poly> &lc);
-	WORD choose_prime (const poly &a, const std::vector<int> &x, WORD p=0);
-	WORD choose_prime_power (const poly &a, WORD p);
 	const std::vector<int> choose_ideal (const std::vector<poly> &a, const std::vector<int> &x);
 	//const poly gcd_modIpn (const poly &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c);
-	const poly gcd_EZ (const poly &a, const poly &b, const std::vector<int> &x);
 	const poly gcd_heuristic (const poly &a, const poly &b, const std::vector<int> &x, int max_tries=GCD_HEURISTIC_MAX_TRIES);
 	const poly gcd (const poly &a, const poly &b);
 }
