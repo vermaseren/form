@@ -49,6 +49,9 @@ public:
 
 std::ostream& operator<< (std::ostream &out, const factorized_poly &a);
 
+//   DoFactorize is outside the namespace, because it is called from C
+int DoFactorize(PHEAD WORD *argin, WORD *argout);
+
 namespace poly_fact {
 
 	const std::vector<poly> extended_gcd_Euclidean_lifted (const poly &a, const poly &b);
@@ -76,6 +79,3 @@ namespace poly_fact {
 	const std::vector<poly> factorize_squarefree (const poly &a, const std::vector<int> &x);
 	const factorized_poly factorize (const poly &a);
 };
-
-//   DoFactorize is outside the namespace, because it is called from C
-int DoFactorize(PHEAD WORD *argin, WORD *argout);

@@ -1265,10 +1265,10 @@ RaisOvl:
 
 /*
  		#] RaisPow :
-  	#[ RaisPowSmall :
+  	#[ RaisPowCached :
 */
 
-/**  Computes small power x^n
+/**  Computes power x^n and caches the value
  *
  *   Description
  *   ===========
@@ -1282,7 +1282,7 @@ RaisOvl:
  *   - Caching is done in AT.small_power[]. This array is extended
  *     if necessary.
  */
-VOID RaisPowSmall (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
+VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 
 	int i,j;
 	

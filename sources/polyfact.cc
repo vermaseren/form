@@ -171,8 +171,8 @@ const vector<poly> poly_fact::extended_gcd_Euclidean_lifted (const poly &a, cons
 	}
 
 	// Normalize the result.
-	sa /= s.lcoeff();
-	sb /= s.lcoeff();
+	sa /= s.integer_lcoeff();
+	sb /= s.integer_lcoeff();
 
 	// Lift the result to modolu p^n with p-adic Newton's iteration.
 	poly samodp(sa);
@@ -419,9 +419,9 @@ const vector<poly> poly_fact::lift_coefficients (const poly &_A, const vector<po
 	int x = A.first_variable();
 
 	// Replace the leading term of all factors with lterm(A) mod p
-	poly lead(A.lcoeff());
+	poly lead(A.integer_lcoeff());
 	for (int i=0; i<(int)a.size(); i++) {
-		a[i] *= lead / a[i].lcoeff();
+		a[i] *= lead / a[i].integer_lcoeff();
 		if (i>0) A*=lead;
 	}
 
@@ -431,7 +431,7 @@ const vector<poly> poly_fact::lift_coefficients (const poly &_A, const vector<po
 	// Replace the leading term of all factors with lterm(A) mod p^n
 	for (int i=0; i<(int)a.size(); i++) {
 		a[i].setmod(A.modp,A.modn);
-		a[i] += (lead - a[i].lcoeff()) * poly::simple_poly(BHEAD x,0,a[i].degree(x));
+		a[i] += (lead - a[i].integer_lcoeff()) * poly::simple_poly(BHEAD x,0,a[i].degree(x));
 	}
 
 	// Calculate the error, express it in terms of ai and add corrections.
@@ -452,7 +452,7 @@ const vector<poly> poly_fact::lift_coefficients (const poly &_A, const vector<po
 	
 	// Fix leading coefficients by dividing out integer contents.
 	for (int i=0; i<(int)a.size(); i++) 
-		a[i] /= poly_gcd::integer_content(a[i]);
+		a[i] /= poly_gcd::integer_content(poly(a[i],0,1));	
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : lift_coefficients("<<_A<<","<<_a<<") = "<<a<<endl;
@@ -579,10 +579,8 @@ const vector<poly> poly_fact::lift_variables (const poly &A, const vector<poly> 
 				if (state[k][terms[i][j][k]] == 1) num_undet[i]++;
 
 	// replace the current leading coefficients by the correct ones
-	for (int i=0; i<(int)a.size(); i++) {
-		int thisdeg = a[i].degree(x[0]);
-		a[i] += (lc[i] - a[i].coefficient(x[0],thisdeg)) * poly::simple_poly(BHEAD x[0],0,thisdeg);
-	}
+	for (int i=0; i<(int)a.size(); i++) 
+		a[i] += (lc[i] - a[i].lcoeff_univar(x[0])) * poly::simple_poly(BHEAD x[0],0,a[i].degree(x[0]));
 	
 	bool changed;
 	do {
@@ -723,7 +721,7 @@ WORD poly_fact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 
 	POLY_GETIDENTITY(a);
 	
-	poly icont_lcoeff(poly_gcd::integer_content(a.coefficient(x[0], a.degree(x[0]))));
+	poly icont_lcoeff(poly_gcd::integer_content(a.lcoeff_univar(x[0])));
 
 	if (p==0) p=17;
 
@@ -1064,7 +1062,7 @@ const vector<vector<WORD> > poly_fact::Berlekamp_Qmatrix (const poly &_a) {
 	int n = a.degree(x);
 	int p = a.modp;
 	
-	poly lc(a.lcoeff());
+	poly lc(a.integer_lcoeff());
 	a /= lc;
 
 	// Cache table of inverses mod p
@@ -1193,7 +1191,7 @@ const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vect
 	int n = a.degree(x);
 	int p = a.modp;
 	
-	a /= a.lcoeff();
+	a /= a.integer_lcoeff();
 
 	// Vector of factors, represented as dense polynomials mod p
 	vector<vector<WORD> > fac(1, vector<WORD>(n+1,0));
@@ -1283,9 +1281,9 @@ const vector<poly> poly_fact::combine_factors (const poly &A, const vector<poly>
 			poly fac(BHEAD 1,A.modp,A.modn);
 			for (int i=0, j=0; i<(int)a.size(); i++)
 				if (!used[i] && next[j++]) fac *= a[i];
-			fac /= fac.lcoeff();
-			fac *= A.lcoeff();
-			fac /= poly_gcd::integer_content(fac);
+			fac /= fac.integer_lcoeff();
+			fac *= A.integer_lcoeff();
+			fac /= poly_gcd::integer_content(poly(fac,0,1));
 				
 			if ((A0 % fac).is_zero()) {
 				res.push_back(fac);
@@ -1304,9 +1302,9 @@ const vector<poly> poly_fact::combine_factors (const poly &A, const vector<poly>
 		poly fac(BHEAD 1,a[0].modp,a[0].modn);
 		for (int i=0; i<(int)a.size(); i++)
 			if (!used[i]) fac *= a[i];
-		fac /= fac.lcoeff();
-		fac *= A.lcoeff();
-		fac /= poly_gcd::integer_content(fac);
+		fac /= fac.integer_lcoeff();
+		fac *= A.integer_lcoeff();
+		fac /= poly_gcd::integer_content(poly(fac,0,1));
 		res.push_back(fac);
 	}
 
@@ -1359,7 +1357,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 	vector<vector<WORD> > q,bestq;
 
 	// Factorize leading coefficient
-	factorized_poly lc(factorize(a.coefficient(x[0], a.degree(x[0]))));
+	factorized_poly lc(factorize(a.lcoeff_univar(x[0])));
 
 	// Try a number of primes
 	int prime_tries = 0;
@@ -1477,7 +1475,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 		vector<poly> correct_lc(f.size(), poly(BHEAD 1,p,n));
 		
 		for (int j=0; j<(int)f.size(); j++) {
-			poly lc_f(f[j].lcoeff() * delta);
+			poly lc_f(f[j].integer_lcoeff() * delta);
 			WORD nlc_f = lc_f[lc_f[1]];
 			poly quo(BHEAD 0),rem(BHEAD 0);
 			WORD nquo,nrem;
@@ -1507,8 +1505,8 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 			for (int j=0; j<(int)c.size(); j++)
 				correct_modI %= poly::simple_poly(BHEAD x[j+1],c[j]);
 			
-			poly d(poly_gcd::integer_gcd(correct_modI, f[i].lcoeff()));
-			correct_lc[i] *= f[i].lcoeff() / d;
+			poly d(poly_gcd::integer_gcd(correct_modI, f[i].integer_lcoeff()));
+			correct_lc[i] *= f[i].integer_lcoeff() / d;
 			delta /= correct_modI / d;
 			f[i] *= correct_modI / d;
 		}
@@ -1541,9 +1539,9 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 		
 		for (int i=0; i<(int)f.size(); i++)
 			if (a.modp == 0)
-				f[i] /= poly_gcd::integer_content(f[i]);
+				f[i] /= poly_gcd::integer_content(poly(f[i],0,1));
 			else
-				f[i] /= poly_gcd::content(f[i], x[0]);
+				f[i] /= poly_gcd::content_univar(f[i], x[0]);
 		
 		if (f==vector<poly>()) {
 #ifdef DEBUG
@@ -1607,7 +1605,7 @@ const factorized_poly poly_fact::factorize (const poly &a) {
 	}
 
 	// Remove content
-	poly conta(poly_gcd::content(a,x[0]));
+	poly conta(poly_gcd::content_univar(a,x[0]));
 	
 	factorized_poly faca(factorize(conta));
 	

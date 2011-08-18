@@ -34,86 +34,39 @@ extern "C" {
 #include <set>
 #include <map>
 #include <vector>
-#include "polygcd.h"
 
+// macros for tform
 #ifndef WITHPTHREADS
 #define POLY_GETIDENTITY(X)
 #define POLY_STOREIDENTITY
-#define PTAIL
-#define PTAILDEF
-#define BTAIL
 #else
 #define POLY_GETIDENTITY(X) ALLPRIVATES *B = (X).Bpointer
 #define POLY_STOREIDENTITY Bpointer = B
-#define PTAIL ,ALLPRIVATES *B
-#define PTAILDEF ,ALLPRIVATES *B=NULL
-#define BTAIL ,B
 #endif
 
+// maximum size of the hash table used for multiplication and division
 const int MAX_HASH_SIZE = 1048576;
 
 class poly {
 
 public:
 
+	// variables
 #ifdef WITHPTHREADS
 	ALLPRIVATES *Bpointer;
 #endif
-	
-	WORD *terms;
-	WORD modp,modn;
-	WORD size_of_terms;
 
-#ifndef WITHPTHREADS
-	PADPOINTER(1,0,3,0);
-#else
-	PADPOINTER(2,0,3,0);
-#endif
-	
-	poly (PHEAD WORD a, WORD modp=-1, WORD modn=1);
-	poly (PHEAD const UWORD *a, WORD na, WORD modp=-1, WORD modn=1);
-	poly (const poly &a, WORD modp=-1, WORD modn=1);
+	WORD *terms;
+	WORD size_of_terms;
+	WORD modp,modn;
+
+	// constructors/destructor
+	poly (PHEAD WORD, WORD=-1, WORD=1);
+	poly (PHEAD const UWORD *, WORD, WORD=-1, WORD=1);
+	poly (const poly &, WORD=-1, WORD=1);
 	~poly ();
 
-	void check_memory(int);
-	void check_memory_large(int);
-	void expand_memory();
-	
-	void setmod(WORD, WORD=1);
-	void coefficients_modulo (UWORD *a, WORD na);
-
-	static void parse (const std::string &, WORD, WORD, poly &);
-	
-	const std::string to_string() const;
-
-	static int monomial_compare (const WORD *, const WORD * PTAILDEF);
-	static bool monomial_larger (const WORD *, const WORD * PTAILDEF);
-	const poly & normalize ();
-
-	WORD last_monomial_index () const;
-	WORD* last_monomial () const;
-	
-	static void add (const poly &, const poly &, poly &);
-	static void sub (const poly &, const poly &, poly &);
-	static void mul (const poly &, const poly &, poly &);
-	static void div (const poly &, const poly &, poly &);
-	static void mod (const poly &, const poly &, poly &);
-	static void divmod (const poly &, const poly &, poly &, poly &, bool only_divides);
-	static bool divides (const poly &, const poly &);
-	
-	static void push_heap (PHEAD WORD **heap, int n);
-	static void pop_heap (PHEAD WORD **heap, int n);
-
-	static void mul_one_term (const poly &, const poly &, poly &);
-	static void mul_univar (const poly &, const poly &, poly &, int);
-	static void mul_heap (const poly &, const poly &, poly &);
-
-	static void divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool only_divide);
-	static void divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int var, bool only_divide);
-	static void divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool only_divide);
-	
-	poly& operator= (const poly &);
-
+	// operators
 	poly& operator+= (const poly&);
 	poly& operator-= (const poly&);
 	poly& operator*= (const poly&);
@@ -128,49 +81,120 @@ public:
 
 	bool operator== (const poly&) const;
 	bool operator!= (const poly&) const;
-
+	poly& operator= (const poly &);
 	WORD& operator[] (int);
 	const WORD& operator[] (int) const;
+
+	// memory management
 	void termscopy (const WORD *, int, int);
-	
-	int first_variable () const;
-	const std::vector<int> all_variables () const;
-	
-	int sign () const;
-	WORD degree (int) const;
-	const poly lcoeff () const;
-	const poly coefficient (int, int) const;
-	const poly derivative (int) const;
-	
+	void check_memory(int);
+	void expand_memory(int);
+
+	// check type of polynomial
 	bool is_zero () const;
 	bool is_one () const;
 	bool is_integer () const;
 	WORD is_dense_univariate () const;
 
+	// properties
+	int sign () const;
+	WORD degree (int) const;
+	int first_variable () const;
+	const std::vector<int> all_variables () const;
+	const poly integer_lcoeff () const;
+	const poly lcoeff_univar (int x) const;
+	const poly lcoeff_multivar (int x) const;
+
+	const poly coefficient (int, int) const;
+	const poly derivative (int) const;
+	
+	// modulus
+	void setmod(WORD, WORD=1);
+	void coefficients_modulo (UWORD *a, WORD na);
+
+	// simple polynomials
 	static const poly simple_poly (PHEAD int, int=0, int=1, int=0, int=1);
 	static const poly simple_poly (PHEAD int, const poly&, int=1, int=0, int=1);
 
+	// conversion from/to form notation
 	static const std::map<int,int> extract_variables (PHEAD WORD *, bool, bool);
 	static const poly argument_to_poly (PHEAD WORD *, bool, const std::map<int,int> &);
 	static void poly_to_argument (const poly &, WORD *, bool);
+	int size_of_form_notation ();
+	const poly & normalize ();
 
+	// operations for coefficient lists
 	static const poly from_coefficient_list (PHEAD const std::vector<WORD> &, int, WORD);
 	static const std::vector<WORD> to_coefficient_list (const poly &);
-	static const std::vector<WORD> coefficient_list_divmod (const std::vector<WORD> &a, const std::vector<WORD> &b, WORD p, int divmod);
+	static const std::vector<WORD> coefficient_list_divmod (const std::vector<WORD> &, const std::vector<WORD> &, WORD, int);
+
+	// string output for debugging
+	const std::string to_string() const;
+
+	// monomials
+	static int monomial_compare (PHEAD const WORD *, const WORD *);
+	//	static bool monomial_larger (const WORD *, const WORD * PTAILDEF);
+	WORD last_monomial_index () const;
+	WORD* last_monomial () const;
+
+	// (internal) mathematical operations
+	static void add (const poly &, const poly &, poly &);
+	static void sub (const poly &, const poly &, poly &);
+	static void mul (const poly &, const poly &, poly &);
+	static void div (const poly &, const poly &, poly &);
+	static void mod (const poly &, const poly &, poly &);
+	static void divmod (const poly &, const poly &, poly &, poly &, bool only_divides);
+	static bool divides (const poly &, const poly &);
 	
-	int size_of_form_notation ();
+	static void mul_one_term (const poly &, const poly &, poly &);
+	static void mul_univar (const poly &, const poly &, poly &, int);
+	static void mul_heap (const poly &, const poly &, poly &);
+
+	static void divmod_one_term (const poly &, const poly &, poly &, poly &, bool);
+	static void divmod_univar (const poly &, const poly &, poly &, poly &, int, bool);
+	static void divmod_heap (const poly &, const poly &, poly &, poly &, bool);
+	
+	static void push_heap (PHEAD WORD **, int);
+	static void pop_heap (PHEAD WORD **, int);
+
+#ifndef WITHPTHREADS
+	PADPOINTER(1,0,3,0);
+#else
+	PADPOINTER(2,0,3,0);
+#endif
 };
 
+// comparison class for monomials (for std::sort)
+class monomial_larger {
+
+public:
+	
+#ifndef WITHPTHREADS
+	monomial_larger() {}
+#else
+	ALLPRIVATES *B;
+	monomial_larger(ALLPRIVATES *b): B(b) {}
+#endif
+	
+	bool operator()(const WORD *a, const WORD *b) {
+		return poly::monomial_compare(BHEAD a, b) > 0;
+	}
+};
+
+// stream operator
 std::ostream& operator<< (std::ostream &, const poly &);
 
+// inline function definitions
+
+/*   Checks whether the terms array is large enough to add another
+ *   term (of size AM.MaxTal) to the polynomials. In case not, it is
+ *   expanded.
+ */
 inline void poly::check_memory (int i) {
-	if (i + AM.MaxTal >= size_of_terms) expand_memory();
+	if (i + AM.MaxTal >= size_of_terms) expand_memory(i+AM.MaxTal);
 }
 
-inline void poly::check_memory_large (int i) {
-	while (i + AM.MaxTal >= size_of_terms) expand_memory();
-}
-
+//   Indexing operators
 inline WORD& poly::operator[] (int i) {
 	return terms[i];
 }
@@ -179,7 +203,10 @@ inline const WORD& poly::operator[] (int i) const {
 	return terms[i];
 }
 
-inline void poly::termscopy (const WORD *from, int dest, int num) {
-	memcpy (terms+dest, from, num*sizeof(WORD));
+/*   Copies "num" WORD-sized terms from the pointer "source" to the
+ *   current polynomial at index "dest"
+ */
+inline void poly::termscopy (const WORD *source, int dest, int num) {
+	memcpy (terms+dest, source, num*sizeof(WORD));
 }
 

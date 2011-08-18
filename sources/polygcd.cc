@@ -45,10 +45,6 @@
 
 //#define DEBUG
 //#define DEBUGALL
-//#include "mytime.h"
-
-#define USE_GCD_MODULAR 
-#define USE_GCD_HEURISTIC
 
 #ifdef DEBUG
 #include "mytime.h"
@@ -61,7 +57,8 @@ using namespace std;
   	#[ ostream operator :
 */
 
-// ostream operator for outputting vector<T>s		 
+#ifdef DEBUG
+// ostream operator for outputting vector<T>s	for debugging purposes
 template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 	out<<"{";
 	for (int i=0; i<(int)x.size(); i++) {
@@ -71,6 +68,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 	out<<"}";
 	return out;
 }
+#endif
 
 /*
   	#] ostream operator :
@@ -83,15 +81,13 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
  *   ===========
  *   Calculates the greatest common divisor of two integers a and b.
  *
- *   Over ZZ/p, this gcd is always one. ZZ/p^n is regarded as the
- *   integers.
- * 
  *   Notes
  *   =====
- *   - The input and output integers are represented are
+ *   - The input and output integers are represented as
  *     polynomials. These polynonials must consist of one term with all
  *     power equal to zero.
  *   - The result is always positive.
+ *   - Over ZZ/p^n, the gcd is defined as 1.
  */
 const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
 
@@ -101,12 +97,10 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
 
 	POLY_GETIDENTITY(a);
 	
-	if (a.modp>0 && a.modn==1) return poly(BHEAD 1,a.modp,1);
-	
 	if (a.is_zero()) return b;
 	if (b.is_zero()) return a;
 
-	poly c(BHEAD 0);
+	poly c(BHEAD 0, a.modp, a.modn);
 	WORD nc;
 	
 	GcdLong(BHEAD
@@ -115,12 +109,12 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
 					(UWORD *)&c[AN.poly_num_vars+2],&nc);
 
 	WORD x = 2 + AN.poly_num_vars + ABS(nc);
-	c[1] = x;
-	c[0] = x+1;
-	c[x] = nc;
+	c[1] = x;     // term length
+	c[0] = x+1;   // total length
+	c[x] = nc;    // coefficient length
 
 	for (int i=0; i<AN.poly_num_vars; i++)
-		c[2+i] = 0;
+		c[2+i] = 0; // powers
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : integer_gcd(" << a << "," << b << ") = " << c << endl;
@@ -141,15 +135,11 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
  *   Calculates the integer content of a polynomial. This is the
  *   greatest common divisor of the coefficients.
  *
- *   Over ZZ/p, the integer content it is convenient to define the
- *   integer content as the leading coefficient of the polynomial,
- *   since every number 1,...,p is a greatest common divisor.
- *
- *   ZZ/p^n is considered as the integers.
- *
  *   Notes
  *   =====
  *   - The result has the sign of lcoeff(a).
+ *   - Over ZZ/p^n, the integer content is defined as the leading
+ *     coefficient of the polynomial.
  */
 const poly poly_gcd::integer_content (const poly &a) {
 
@@ -159,7 +149,7 @@ const poly poly_gcd::integer_content (const poly &a) {
 
 	POLY_GETIDENTITY(a);
 
-	if (a.modp>0 && a.modn==1) return a.lcoeff();
+	if (a.modp>0) return a.integer_lcoeff();	
 
 	poly c(BHEAD 0, 0, 1);
 	WORD *d = (WORD *)NumberMalloc("integer content");
@@ -177,9 +167,9 @@ const poly poly_gcd::integer_content (const poly &a) {
 						(UWORD *)&c[2+AN.poly_num_vars], &nc);
 
 		WORD x = 2 + AN.poly_num_vars + ABS(nc);
-		c[1] = x;
-		c[0] = x+1;
-		c[x] = nc;
+		c[1] = x;   // term length
+		c[0] = x+1; // total length
+		c[x] = nc;  // coefficient length
 	}	
 
 	if (a.sign() != c.sign()) c *= poly(BHEAD -1);
@@ -195,41 +185,36 @@ const poly poly_gcd::integer_content (const poly &a) {
 
 /*
   	#] integer_content :
-  	#[ content :
+  	#[ content_univar :
 */
 
-/**  Content of a polynomial
+/**  Univariate content of a polynomial
  *
  *   Description
  *   ===========
  *   Calculates the content of a polynomial, regarded as a univariate
  *   polynomial in x. The content is the greatest common divisor of
- *   the coefficients in front of the powers of x. These coefficients
- *   can be polynomials in other variables.
+ *   the polynomial coefficients in front of the powers of x. The
+ *   result, therefore, is a polynomial in the variables besides x.
  *
  *   Notes
  *   =====
- *   - Works over the integers and modulo a prime. If called modulo a
- *     prime power, the content over the integers is returned.
  *   - The result has the sign of lcoeff(a).
+ *   - Over ZZ/p, the leading coefficient of the content is defined as
+ *     the leading coefficient of the polynomial.
  */
-const poly poly_gcd::content (const poly &a, int x) {
+const poly poly_gcd::content_univar (const poly &a, int x) {
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: content(" << a << "," << x << ")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: content_univar(" << a << "," << x << ")" << endl;
 #endif
-
+	
 	POLY_GETIDENTITY(a);
 	
-	// If modulo p^n with n>1, then calculate over the integers
-	// (admittedly, this is a bit ugly hack)
-	WORD modp = a.modn>1 ? 0 : a.modp;
-	WORD modn = a.modn>1 ? 1 : a.modn;
-
-	poly res(BHEAD 0,modp,modn);
+	poly res(BHEAD 0, a.modp, a.modn);
 
 	for (int i=1; i<a[0];) {
-		poly b(BHEAD 0,modp,modn);
+		poly b(BHEAD 0, a.modp, a.modn);
 		WORD deg = a[i+1+x];
 		
 		for (; i<a[0] && a[i+1+x]==deg; i+=a[i]) {
@@ -241,49 +226,109 @@ const poly poly_gcd::content (const poly &a, int x) {
 		
 		res = gcd(res, b);
 
-		// Optimization: if there are no variables left, return integer content
 		if (res.is_integer()) {
 			res = integer_content(a);
-#ifdef DEBUG
-			cout << "*** [" << thetime() << "]  RES : content(" << a << "," << x << ") = " << res << endl;
-#endif
-			return res;
+			break;
 		}
 	}	
 
-	if (modp > 0) res *= a.lcoeff();
-	
+	if (a.modp > 0) res *= a.integer_lcoeff();
 	if (a.sign() != res.sign()) res *= poly(BHEAD -1);
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : content(" << a << "," << x << ") = " << res << endl;
+	cout << "*** [" << thetime() << "]  RES : content_univar(" << a << "," << x << ") = " << res << endl;
 #endif
 
 	return res;
 }
 
 /*
-  	#] content :
-  	#[ gcd_Euclidean :
+  	#] content_univar :
+	 	#[ content_multivar :
 */
 
-/**  Euclidean Algorithm
+/**  Multivariate content of a polynomial
  *
  *   Description
  *   ===========
- *   Returns the greatest common divisor of two univariate
- *   polynomials a(x) and b(x) with coefficients modulo a prime.
+ *   Calculates the content of a polynomial, regarded as a
+ *   multivariate polynomial with coefficients in ZZ[x]. The content
+ *   is the greatest common divisor of the ZZ[x] coefficients in front
+ *   of the powers of the remaining variables. The result, therefore,
+ *   is a polynomial in x.
  *
  *   Notes
  *   =====
- *   - Doesn't work for prime powers.
- *   - The result is normalized and has leading coefficient 1.
- *
- *   [for details, see "Algorithms for Computer Algebra", pp. 32-35]
+ *   - The result has the sign of lcoeff(a).
+ *   - Over ZZ/p^n, the leading coefficient of the content is defined as 1
  */
+const poly poly_gcd::content_multivar (const poly &a, int x) {
+	
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  CALL: content_multivar(" << a << "," << x << ")" << endl;
+#endif
 
+	POLY_GETIDENTITY(a);
+
+	poly res(BHEAD 0, a.modp, a.modn);
+
+	for (int i=1,j; i<a[0]; i=j) {
+		poly b(BHEAD 0, a.modp, a.modn);
+
+		for (j=i; j<a[0]; j+=a[j]) {
+			bool same_powers = true;
+			for (int k=0; k<AN.poly_num_vars; k++)
+				if (k!=x && a[i+1+k]!=a[j+1+k]) {
+					same_powers = false;
+					break;
+				}
+			if (!same_powers) break;
+			
+			b.check_memory(b[0]+a[j]);
+			b.termscopy(&a[j],b[0],a[j]);
+			for (int k=0; k<AN.poly_num_vars; k++)
+				if (k!=x) b[b[0]+1+k]=0;
+			
+			b[0] += a[j];
+		}			
+
+		res = gcd_Euclidean(res, b);
+		if (res.is_integer()) {
+			res = integer_content(a);
+			break;
+		}
+	}	
+	
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  RES : content_multivar(" << a << "," << x << ") = " << res << endl;
+#endif
+
+	return res;
+}
+
+/*
+  	#] content_multivar
+		[# coefficient_list_gcd :
+*/
+
+/**  Euclidean algorithm for coefficient lists
+ *
+ *   Description
+ *   ===========
+ *   Calculates the greatest common divisor modulo a prime of two
+ *   univariate polynomials represented by coefficient lists. The
+ *   Euclidean algorithm is used to calculate it.
+ *
+ *   Notes
+ *   =====
+ *   - The result is normalized and has leading coefficient 1.
+ */
 const vector<WORD> poly_gcd::coefficient_list_gcd (const vector<WORD> &_a, const vector<WORD> &_b, WORD p) {
 
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  CALL: coefficient_list_gcd("<<_a<<","<<_b<<","<<p<<")"<<endl;
+#endif
+	
 	vector<WORD> a(_a), b(_b);
 
 	while (b.size() != 0) {
@@ -299,13 +344,38 @@ const vector<WORD> poly_gcd::coefficient_list_gcd (const vector<WORD> &_a, const
 	for (int i=0; i<(int)a.size(); i++)
 		a[i] = (LONG)inv*a[i] % p;
 
+#ifdef DEBUGALL
+	cout << "*** [" << thetime() << "]  RES : coefficient_list_gcd("<<_a<<","<<_b<<","<<p<<") = "<<a<<endl;
+#endif
+	
 	return a;
 }
-	
+
+/*		
+		#] coefficient_list_gcd :
+  	#[ gcd_Euclidean :
+*/
+
+/**  Euclidean Algorithm
+ *
+ *   Description
+ *   ===========
+ *   Returns the greatest common divisor of two univariate polynomials
+ *   a(x) and b(x) with coefficients modulo a prime. If the
+ *   polynomials are dense, they are converted to coefficient lists
+ *   for efficiency.
+ *
+ *   Notes
+ *   =====
+ *   - Doesn't work over the integers or prime powers.
+ *   - The result is normalized and has leading coefficient 1.
+ *
+ *   [for details, see "Algorithms for Computer Algebra", pp. 32-35]
+ */
 const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 
-#ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  CALL: poly_gcd_Euclidean("<<a<<","<<b<<")"<<endl;
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: gcd_Euclidean("<<a<<","<<b<<")"<<endl;
 #endif
 
 	POLY_GETIDENTITY(a);
@@ -314,10 +384,26 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 	if (b.is_zero()) return a;
 	if (a.is_integer() || b.is_integer())	return integer_gcd(a,b);
 
-	vector<WORD> res = coefficient_list_gcd(poly::to_coefficient_list(a),
-																					poly::to_coefficient_list(b), a.modp);
+	poly res(BHEAD 0);
+	
+	if (a.is_dense_univariate()>=-1 && b.is_dense_univariate()>=-1) {
+		vector<WORD> coeff = coefficient_list_gcd(poly::to_coefficient_list(a),
+																								 poly::to_coefficient_list(b), a.modp);
+		res = poly::from_coefficient_list(BHEAD coeff, a.first_variable(), a.modp);
+	}
+	else {
+		res = a;
+		poly rem(b);
+		while (!rem.is_zero()) 
+			swap(res%=rem, rem);
+		res /= res.integer_lcoeff();
+	}
 
-	return poly::from_coefficient_list(BHEAD res, a.first_variable(), a.modp);
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  RES : gcd_Euclidean("<<a<<","<<b<<") = "<<res<<endl;
+#endif
+
+	return res;
 }
 
 /*
@@ -325,7 +411,18 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
 	 	#[ chinese_remainder :
 */
 
-/**  Chinese remainder algorithm
+/**  Chinese Remainder Algorithm
+ *
+ *   Description
+ *   ===========
+ *   Returns the unique number a mod (m1*m2) such that a = ai (mod mi)
+ *   (i=1,2). The number is calculated with the Chinese Remainder Algorithm.
+ *
+ *   Notes
+ *   =====
+ *   - m1 and m2 must be relatively prime.
+ *
+ *   [for details, see "Algorithms for Computer Algebra", pp. 174-183]
  */
 const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2) {
 
@@ -340,7 +437,6 @@ const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const po
 	UWORD *y = (UWORD *)NumberMalloc("chinese remainder");
 	UWORD *z = (UWORD *)NumberMalloc("chinese remainder");
 
-	// is currently called for evert polynomial coefficient (TODO)
 	GetLongModInverses(BHEAD (UWORD *)&m1[2+AN.poly_num_vars], m1[m1[1]],
 										 (UWORD *)&m2[2+AN.poly_num_vars], m2[m2[1]],
 										 (UWORD *)x, &nx, NULL, NULL);
@@ -366,7 +462,7 @@ const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const po
 	NumberFree(y,"chinese remainder");
 	NumberFree(z,"chinese remainder");
 
-#ifdef DEBUG
+#ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : chinese_remainder(" << a1 << "," << m1 << "," << a2 << "," << m2 << ") = " << res << endl;
 #endif
 
@@ -375,112 +471,21 @@ const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const po
 
 /*
   	#] chinese_remainder :
-	 	#[ content_all_but :
-*/
-
-// content, viewed as polynomial with coefficients in Z[x] or Z/p[x]
-const poly poly_gcd::content_all_but (const poly &a, int x) {
-	
-#ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  CALL: content_all_but(" << a << "," << x << ")" << endl;
-#endif
-
-	POLY_GETIDENTITY(a);
-	
-	// If modulo p^n with n>1, then calculate over the integers
-	// (admittedly, this is a bit ugly hack)
-	WORD modp = a.modn>1 ? 0 : a.modp;
-	WORD modn = a.modn>1 ? 1 : a.modn;
-
-	poly res(BHEAD 0,modp,modn);
-
-	for (int i=1,j; i<a[0]; i=j) {
-		poly b(BHEAD 0,modp,modn);
-
-		for (j=i; j<a[0]; j+=a[j]) {
-			bool same_powers = true;
-			for (int k=0; k<AN.poly_num_vars; k++)
-				if (k!=x && a[i+1+k]!=a[j+1+k]) {
-					same_powers = false;
-					break;
-				}
-			if (!same_powers) break;
-			
-			b.check_memory(b[0]+a[j]);
-			b.termscopy(&a[j],b[0],a[j]);
-			for (int k=0; k<AN.poly_num_vars; k++)
-				if (k!=x) b[b[0]+1+k]=0;
-			
-			b[0] += a[j];
-		}			
-
-		res = gcd_Euclidean(res, b);
-
-		// Optimization: if there are no variables left, return integer content (TODO: is this true?)
-		if (res.is_integer()) 
-			return integer_content(a);
-	}	
-
-	if (modp > 0) {
-		res *= a.lcoeff();
-	}
-	
-	if (a.sign() != res.sign()) res *= poly(BHEAD -1);
-	
-#ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  RES : content_all_but(" << a << "," << x << ") = " << res << endl;
-#endif
-
-	return res;
-}
-
-/*
-  	#] content_all_but :
-	 	#[ lcoeff_all_but :
-*/
-
-const poly poly_gcd::lcoeff_all_but (const poly &a, int x) {
-
-#ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  CALL: lcoeff_all_but(" << a << "," << x << ")" << endl;
-#endif
-	
-	POLY_GETIDENTITY(a);
-
-	WORD modp = a.modn>1 ? 0 : a.modp;
-	WORD modn = a.modn>1 ? 1 : a.modn;
-
-	poly res(BHEAD 0,modp,modn);
-
-	for (int i=1; i<a[0]; i+=a[i]) {
-		bool same_powers = true;
-		for (int j=0; j<AN.poly_num_vars; j++)
-			if (j!=x && a[i+1+j]!=a[2+j]) {
-				same_powers = false;
-				break;
-			}
-		if (!same_powers) break;
-		
-		res.check_memory(res[0]+a[i]);
-		res.termscopy(&a[i],res[0],a[i]);
-		for (int k=0; k<AN.poly_num_vars; k++)
-			if (k!=x) res[res[0]+1+k]=0;
-		
-		res[0] += a[i];
-	}
-
-#ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  RES : lcoeff_all_but(" << a << "," << x << ") = " << res << endl;
-#endif
-	
-	return res;	
-}
-
-/*
-  	#] lcoeff_all_but :
 	 	#[ substitute_last :
 */
 
+/**  Substitute the last variable of a polynomial
+ *
+ *   Description
+ *   ===========
+ *   Returns the polynomial that is obtained by substituting the
+ *   variable x in the polynomial a by the constant c
+ *
+ *   Notes
+ *   =====
+ *   - x must be the last variable (in lexicographical order) of the
+ *     polynomial, so that one doesn't have to bother with sorting.
+ */
 const poly poly_gcd::substitute_last(const poly &a, int x, int c) {
 
 	POLY_GETIDENTITY(a);
@@ -490,18 +495,33 @@ const poly poly_gcd::substitute_last(const poly &a, int x, int c) {
 	bool zero=true;
 	int bi=1;
 	
-	for (int ai=1; ai<a[0]; ai+=a[ai]) {
+	for (int ai=1; ai<=a[0]; ai+=a[ai]) {
+		// last term or different power, then add term to b iff non-zero
+		if (!zero) {
+			bool add=false;
+			if (ai==a[0])
+				add=true;
+			else {
+				for (int i=0; i<x; i++)
+					if (a[ai+1+i]!=b[bi+1+i]) {
+						zero=true;
+						add=true;
+						break;
+					}
+			}
 
-		if (!zero)
-			for (int i=0; i<x; i++)
-				if (a[ai+1+i]!=b[bi+1+i]) {
-					zero=true;
-					bi+=b[bi];
-					break;
-				}
+			if (add) {
+				b[bi+AN.poly_num_vars+1] += a.modp;
+				b[bi+AN.poly_num_vars+1] %= a.modp;
+				bi+=b[bi];
+			}
+
+			if (ai==a[0]) break;
+		}
 		
 		b.check_memory(bi);
 
+		// create new term in b
 		if (zero) {
 			b[bi] = 3+AN.poly_num_vars;
 			for (int i=0; i<AN.poly_num_vars; i++)
@@ -510,20 +530,19 @@ const poly poly_gcd::substitute_last(const poly &a, int x, int c) {
 			b[bi+AN.poly_num_vars+1] = 0;
 			b[bi+AN.poly_num_vars+2] = 1;
 		}
-				
+
+		// add term of a to the current term in b
 		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
 		coeff *= RaisPowMod(c, a[ai+1+x], a.modp);
 		coeff %= a.modp;
 
 		coeff += b[bi+AN.poly_num_vars+1];
-		coeff = (coeff%a.modp + a.modp) % a.modp;
+		coeff %= a.modp;
 		
 		b[bi+AN.poly_num_vars+1] = coeff;
 		if (b[bi+AN.poly_num_vars+1] != 0) zero=false;
 	}
 
-	if (!zero) bi+=b[bi];
-	
 	b[0]=bi;
 	b.setmod(a.modp);
 
@@ -532,52 +551,18 @@ const poly poly_gcd::substitute_last(const poly &a, int x, int c) {
 
 /*
   	#] substitute_last :
-	 	#[ interpolate :
+	 	#[ substitute_all :
 */
 
-const poly poly_gcd::interpolate (const poly &a1, const poly &m1, const poly &a2, WORD x, WORD c) {
-	// res = a1 (mod m1) and res = a2 (mod x-c)
-
-#ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: interpolate(" << a1 << "," << m1 << ","
-			 << a2 << "," << x << "," << c << ")" << endl;
-#endif
-	
-	POLY_GETIDENTITY(a1);
-
-	poly m2(poly::simple_poly(BHEAD x,c,1));
-	poly coeff(substitute_last(m1,x,c));
-
-	poly invcoeff(BHEAD 1);
-
-	WORD n;
-	GetLongModInverses(BHEAD (UWORD *)&coeff[2+AN.poly_num_vars], coeff[coeff[1]],
-										 (UWORD *)&a1.modp, 1, (UWORD *)&invcoeff[2+AN.poly_num_vars], &n,
-										 NULL, NULL);
-	invcoeff[1] = 2+AN.poly_num_vars+ABS(n);
-	invcoeff[0] = 1+invcoeff[1];
-	invcoeff[invcoeff[1]] = n;
-	invcoeff.modp = a1.modp;
-	invcoeff.modn = 1;
-
-	//	cout << "(2) divmod("<<a1<<","<<m2<<")\n";
-	
-	poly res(a1 + invcoeff * m1 * (a2 - substitute_last(a1,x,c)));
-
-#ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : interpolate(" << a1 << "," << m1 << ","
-			 << a2 << "," << x << "," << c << ") =" << res << endl;
-#endif
-
-	return res;
-}
-
-/*
-  	#] interpolate :
-	 	#[ allmod :
-*/
-
-const poly poly_gcd::allmod (const poly &a, const vector<int> &x, const vector<int> &c) {
+/**  Substitute all variables of a polynomial
+ *
+ *   Description
+ *   ===========
+ *   Returns the univariate polynomial that is obtained by
+ *   substituting all but one variable x2,...,xn in the polynomial a
+ *   by the constants c2,...,cn.
+ */
+const poly poly_gcd::substitute_all (const poly &a, const vector<int> &x, const vector<int> &c) {
 
 	POLY_GETIDENTITY(a);
 
@@ -587,14 +572,15 @@ const poly poly_gcd::allmod (const poly &a, const vector<int> &x, const vector<i
 	int bi=1;
 	
 	for (int ai=1; ai<a[0]; ai+=a[ai]) {
-
+		// different power in x, then add term to b iff non-zero
 		if (!zero && a[ai+1+x[0]]!=b[bi+1+x[0]]) {
 			zero=true;
 			bi+=b[bi];
 		}
 		
 		b.check_memory(bi);
-		
+
+		// create new term in b
 		if (zero) {
 			b[bi] = 3+AN.poly_num_vars;
 			for (int i=0; i<AN.poly_num_vars; i++)
@@ -603,7 +589,8 @@ const poly poly_gcd::allmod (const poly &a, const vector<int> &x, const vector<i
 			b[bi+AN.poly_num_vars+1] = 0;
 			b[bi+AN.poly_num_vars+2] = 1;
 		}
-				
+
+		// add term of a to term of b
 		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
 		
 		for (int i=0; i<(int)c.size(); i++) {
@@ -624,211 +611,206 @@ const poly poly_gcd::allmod (const poly &a, const vector<int> &x, const vector<i
 	return b;	
 }
 
-//double Tallmod, Teucl, Tmat, Tcont, Teucl2, Tmod, Tipol, Tcheck, Tcomp;
-//double Tdiv,Tdivuniv,Tdivheap,Tinv;
-
 /*
-  	#] allmod :
-	 	#[ gcd_modular_reduce :
+	 	#] substitute_all :
+	 	#[ gcd_modular_sparse_interpolation :
 */
 
-const poly poly_gcd::gcd_modular_reduce (const poly &a, const poly &b, const vector<int> &x, const poly &correctlc, const poly &s) {
+/**  Sparse interpolation for the modular gcd algorithm
+ *
+ *   Description
+ *   ===========
+ *   Assuming that it is known which terms of the gcd are non-zero
+ *   (this is determined by dense interpolation), this method
+ *   generates linear equations for the coefficients by substituting
+ *   random numbers. These equations are then solved by Gaussian
+ *   elimination to give the correct coefficients of the gcd.
+ *
+ *   Notes
+ *   =====
+ *   - The method returns 0 upon failure. This is probably because the
+ *     shape is wrong because of unlucky primes or substitutions.
+ *
+ *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; or
+ *    R.E. Zippel, "Probabilistic Algorithms for Sparse Polynomials", PhD thesis]
+ */
+const poly poly_gcd::gcd_modular_sparse_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: gcd_modular_reduce(" << a << "," << b << "," << x << "," << correctlc << "," << s <<")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_sparse_interpolation("
+			 << a << "," << b << "," << x << "," << correctlc << "," << s <<") = " << endl;
 #endif
 
-	//	double t0;
+	// count the number of terms in the polynomial
+	int N=0;
+	for (int i=1; i<s[0]; i+=s[i]) N++;
+
+	vector<vector<LONG> > M(N,vector<LONG>(N));
+	vector<LONG> V(N,0);
 	
-	if (x.size() == 1) {
-		//		t0=thetime();
-		poly res(correctlc * gcd_Euclidean(a,b));
-		//		Teucl += thetime()-t0;
+	int row=0;
+
+	// repeat until we have N equations in N unknowns
+	while (row<N) {
+
+		// substitute random numbers and calculate the univariate gcd
+		vector<int> c(x.size()-1);
+		for (int i=0; i<(int)c.size(); i++)
+			c[i] = 1 + random() % (a.modp-1);
+		
+		poly amodI(substitute_all(a,x,c));
+		poly bmodI(substitute_all(b,x,c));
+		poly lcmodI(substitute_all(lc,x,c));
+		
+		poly gcd(lcmodI * gcd_Euclidean(amodI,bmodI));
+
+		// for each power in the gcd, generate an equation
+		int si=1,col=0;
+		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
+			WORD pow = gcd[gi+1+x[0]];
+			M[row]=vector<LONG>(N,0);
+			while (si<s[0] && s[si+1+x[0]] == pow) {
+				M[row][col] = 1;
+				for (int i=1; i<(int)x.size(); i++)
+					M[row][col] = (M[row][col]*RaisPowMod(c[i-1],s[si+1+x[i]],a.modp)) % a.modp;
+				
+				col++;
+				si+=s[si];
+			}
+			
+			V[row] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+
+			// Gaussian elimination
+			for (int i=0; i<row; i++) {
+				WORD x = M[row][i];
+				for (int j=i; j<N; j++) 
+					M[row][j] = (M[row][j] - M[i][j]*x) % a.modp;
+				V[row] = (V[row] - V[i]*x) % a.modp;
+			}
+			
+			WORD x = M[row][row];
+
+			// check whether it is an independent equation
+			if (x!=0) {
+				GetModInverses(x + (x<0?a.modp:0), a.modp, &x, NULL);
+				for (int j=0; j<N; j++) 
+					M[row][j] = (M[row][j]*x) % a.modp;
+				V[row] = (V[row]*x) % a.modp;
+				
+				row++;
+				if (row==N) break;
+			}
+		}
+	}
+
+	// solve for the coefficients
+	for (int i=N-1; i>=0; i--)
+		for (int j=i+1; j<N; j++) 
+			V[i] = (V[i] - M[i][j]*V[j]) % a.modp;
+
+	// build resulting polynomial
+	poly res(BHEAD 0);
+	int ri=1, i=0;
+	for (int si=1; si<s[0]; si+=s[si]) {
+		res.check_memory(ri);
+		res[ri] = 3 + AN.poly_num_vars;         // term length
+		for (int j=0; j<AN.poly_num_vars; j++) 
+			res[ri+1+j] = s[si+1+j];              // powers
+		res[ri+1+AN.poly_num_vars] = ABS(V[i]); // coefficient
+		res[ri+2+AN.poly_num_vars] = SGN(V[i]); // coefficient length
+		i++;
+		ri += res[ri];
+	}
+	res[0]=ri;                                // total length
+	res.setmod(a.modp,1);
+
+	// consistency check
+	if (!poly::divides(res,a) || !poly::divides(res,b)) res = poly(BHEAD 0);
+	
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  RES : gcd_modular_sparse_interpolation("
+			 << a << "," << b << "," << x << "," << correctlc << "," << s <<") = " << res << endl;
+#endif
+	
+	return res;
+}
+
+/*
+  	#] gcd_modular_sparse_interpolation :
+	 	#[ gcd_modular_dense_interpolation :
+*/
+
+/**  Dense interpolation for the modular gcd algorithm
+ *
+ *   Description
+ *   ===========
+ *   This method determines the gcd by substituting multiple random
+ *   values for the variables, calculating the univariate gcd with the
+ *   Euclidean algorithm and interpolating a multivariate polynomial
+ *   with Newton interpolation. Once a correct shape is known, sparse
+ *   interpolation is used for efficiency.
+ *
+ *   Notes
+ *   =====
+ *   - The method returns 0 upon failure. This is probably because the
+ *     shape is wrong because of unlucky primes or substitutions.
+ *
+ *   [for details, see "Algorithms for Computer Algebra", pp. 300-311]
+ */
+const poly poly_gcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
 
 #ifdef DEBUG
-		cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
-				 << x << "," << correctlc << "," << s <<") = " << res << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << correctlc << "," << s <<")" << endl;
 #endif
-				
+
+	// if univariate, then use Euclidean algorithm
+	if (x.size() == 1) {
+		poly res(lc * gcd_Euclidean(a,b));
 		return res;
 	}
 
+	// if shape is known, use sparse interpolation
+	if (!s.is_zero())
+		return gcd_modular_sparse_interpolation (a,b,x,lc,s);
+
 	POLY_GETIDENTITY(a);
-	
-	if (!s.is_zero()) {
 
-		//		t0=thetime();
-		int N=0;
-		for (int i=1,j; i<s[0]; i=j) 
-			for (j=i; j<s[0] && s[j+1+x[0]]==s[i+1+x[0]]; j+=s[j]) N++;
-		
-   	vector<vector<LONG> > M(N,vector<LONG>(N));
-		vector<LONG> V(N,0);
-		// Tmat += thetime()-t0;
-		// fill in random x2...xn, construct eqns & solve by Gauss elim
-
-		int row=0;
-		
-		while (row<N) {
-			//			t0=thetime();
-			vector<int> c(x.size()-1);
-			for (int i=0; i<(int)c.size(); i++)
-				c[i] = 1 + random() % (a.modp-1);
-
-			poly amodI(allmod(a,x,c));
-			poly bmodI(allmod(b,x,c));
-			poly lcmodI(allmod(correctlc,x,c));
-			
-			//			Tallmod += thetime()-t0;
-			
-			//			t0=thetime();
-			poly e(lcmodI * gcd_Euclidean(amodI,bmodI));
-			//			Teucl2 += thetime()-t0;
-			/*
-			cout << "c = " << c << endl;
-			cout << "amodI = " << amodI << endl;
-			cout << "bmodI = " << bmodI << endl;
-			cout << "e     = " << e     << endl;
-			cout << endl;
-			*/
-			//			t0=thetime();
-			
-			int si=1,col=0;
-			for (int ei=1; ei<e[0]; ei+=e[ei]) {
-				WORD pow = e[ei+1+x[0]];
-				M[row]=vector<LONG>(N,0);
-				while (si<s[0] && s[si+1+x[0]] == pow) {
-					M[row][col] = 1;
-					for (int i=1; i<(int)x.size(); i++)
-						for (int j=0; j<s[si+1+x[i]]; j++) 
-							M[row][col] = (M[row][col]*c[i-1]) % a.modp;
-					col++;
-					si+=s[si];
-				}
-
-				//			cout << "(1) M|B = " << M << " | " << B << endl;
-				V[row] = e[ei+e[ei]-1]*e[ei+e[ei]-2];
-
-				for (int i=0; i<row; i++) {
-					WORD x = M[row][i];
-					for (int j=i; j<N; j++) {
-						M[row][j] -= M[i][j]*x;
-						M[row][j] = (M[row][j] % a.modp + a.modp) % a.modp;
-					}
-					V[row] = V[row] - V[i]*x;
-					V[row] = (V[row] % a.modp + a.modp) % a.modp;
-				}
-
-				//				cout << "(2) M|B = " << M << " | " << B << endl;
-				WORD x = M[row][row];
-				if (x!=0) {
-					WORD nx;
-					GetLongModInverses(BHEAD (UWORD*)&x,1,(UWORD*)&a.modp,1,(UWORD*)&x,&nx,NULL,NULL);
-					x *= nx;
-					for (int j=0; j<N; j++) {
-						M[row][j] *= x;
-						M[row][j] = (M[row][j] % a.modp + a.modp) % a.modp;
-					}
-					V[row] = V[row]*x;
-					V[row] = (V[row] % a.modp + a.modp) % a.modp;
-					row++;
-					if (row==N) break;
-				}
-			
-				//			cout << "(3) M|B = " << M << " | " << B << endl;
-			}
-			
-			//			Tmat += thetime()-t0;
-		}
-
-		//		t0=thetime();
-
-		for (int i=row-1; i>=0; i--)
-			for (int j=0; j<i; j++) {
-				V[j] -= M[j][i] * V[i];
-				V[j] = (V[j] % a.modp + a.modp) % a.modp;
-			}
-
-		poly res(BHEAD 0);
-		int ri=1, i=0;
-		for (int si=1; si<s[0]; si+=s[si]) {
-			res.check_memory(ri);
-			res[ri] = 3 + AN.poly_num_vars;
-			for (int j=0; j<AN.poly_num_vars; j++)
-				res[ri+1+j] = s[si+1+j];
-			res[ri+1+AN.poly_num_vars] = V[i++];
-			res[ri+2+AN.poly_num_vars] = 1;
-			ri += res[ri];
-		}
-		res[0]=ri;
-		res.setmod(a.modp,1);
-		//	cout << "B = " << B << endl;
-		//	cout << "res = " << res << endl;
-		//		Tmat += thetime()-t0;
-
-#ifdef DEBUG
-		cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
-				 << x << "," << correctlc << "," << s <<") = " << res << endl;
-#endif
-		
-		if (poly::divides(res,a) && poly::divides(res,b)) 
-			return res;
-		else
-			return poly(BHEAD 0);
-	}
-
-	//	t0=thetime();
+	// divide out multivariate content in last variable
 	WORD X = x[x.size()-1];
-	poly conta(content_all_but(a,X)); conta /= conta.lcoeff();
-	poly contb(content_all_but(b,X)); contb /= contb.lcoeff();
-	//	Tcont += thetime()-t0;
 
-	//	t0=thetime();
-
+	poly conta(content_multivar(a,X));
+	poly contb(content_multivar(b,X));
 	poly gcdconts(gcd_Euclidean(conta,contb));
 	poly ppa(a/conta);
 	poly ppb(b/contb);
-	poly pplc(correctlc/gcdconts);
+	poly pplc(lc/gcdconts);
 
-	poly lcoeffa(lcoeff_all_but(ppa,X));
-	poly lcoeffb(lcoeff_all_but(ppb,X));
+	// gcd of leading coefficients
+	poly lcoeffa(ppa.lcoeff_multivar(X));
+	poly lcoeffb(ppb.lcoeff_multivar(X));
 	poly gcdlcoeffs(gcd_Euclidean(lcoeffa,lcoeffb));
-	
-	//	Teucl += thetime()-t0;
 
 	poly res(BHEAD 0);
 	poly newshape(BHEAD 0);
 	poly modpoly(BHEAD 1,a.modp);
 	
-#ifdef DEBUG
-	cout << "*** [" << thetime() << "]  ... : gcd_modular_reduce: substitute for " << char('a'+X) << endl;
-#endif
-
 	while (true) {
+		// generate random constants and substitute it
 		int c = 1 + random() % (a.modp-1);
-
-		//		t0=thetime();
-		//		cout << "substitute " << char('a'+X) << "->" << c << endl;
-		
-#ifdef DEBUG
-		cout << "*** [" << thetime() << "]  ... : gcd_modular_reduce(" << a << "," << b << "," << x << "," << correctlc << "," << s <<") substitute " << char('a'+X) << "->" << c << endl;
-#endif
-
 		if (substitute_last(gcdlcoeffs,X,c).is_zero()) continue;
+		
 		poly amodc(substitute_last(ppa,X,c));
 		poly bmodc(substitute_last(ppb,X,c));
 		poly lcmodc(substitute_last(pplc,X,c));
-		//		Tmod += thetime()-t0;
 
-		//		cout << "(1) divmod("<<ppa<<","<<simple<<")\n";
-	
-		poly gcdmodc(gcd_modular_reduce(amodc,bmodc,vector<int>(x.begin(),x.end()-1),lcmodc,newshape));
+		// calculate gcd recursively
+		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1),lcmodc,newshape));
 		if (gcdmodc.is_zero()) return poly(BHEAD 0);
-		
-		gcdmodc *= substitute_last(gcdconts,X,c);
-		//		gcdmodc *= substitute_last(gcdlcoeffs,X,c) / gcdmodc.lcoeff();
 
-		//		t0=thetime();
+		// normalize
+		gcdmodc *= substitute_last(gcdconts,X,c);
+
+		// compare the new gcd with the old one
 		int comp=0;
 		if (res.is_zero())
 			comp=-1;
@@ -836,57 +818,67 @@ const poly poly_gcd::gcd_modular_reduce (const poly &a, const poly &b, const vec
 			for (int i=0; i<(int)x.size()-1; i++)
 				if (gcdmodc[2+x[i]] != res[2+x[i]])
 					comp = gcdmodc[2+x[i]] - res[2+x[i]];
-
-		//		Tcomp += thetime()-t0;
 		
 		poly oldres(res);
 		poly simple(poly::simple_poly(BHEAD X,c,1,a.modp));
+
+		// if power is smaller, the old one was wrong
 		if (comp < 0) {
 			res = gcdmodc;
 			newshape = gcdmodc;
 			modpoly = simple;
 		}
-		else if (comp == 0) { 
-			//			t0=thetime();
-			res = interpolate(res,modpoly,gcdmodc,X,c);
-			modpoly *= simple;
-			//			Tipol+=thetime()-t0;
-		}
-		
-		//		cout << "*** [" << thetime() << "] ---> " << res << endl;
-		
-		//		t0=thetime();
+		else if (comp == 0) {
+			// equal powers, so interpolate results
 
-		//		cout << "res==oldres : " << res << " == " << oldres << endl;
-		//		cout << "lc==correct : " << lcoeff_all_but(res,X) << " == " << correctlc << endl;
-		if (res==oldres && res.coefficient(x[0], res.degree(x[0]))==correctlc) { // && lcoeff_all_but(res,X)==correctlc) {
-			//		poly ppres(res / content_all_but(res,X));
+			poly coeff(substitute_last(modpoly,X,c));
+			poly invcoeff(BHEAD 1);
+
+			WORD n;
+			GetLongModInverses(BHEAD (UWORD *)&coeff[2+AN.poly_num_vars], coeff[coeff[1]],
+												 (UWORD *)&res.modp, 1, (UWORD *)&invcoeff[2+AN.poly_num_vars], &n,
+												 NULL, NULL);
+			invcoeff[1] = 2+AN.poly_num_vars+ABS(n);
+			invcoeff[0] = 1+invcoeff[1];
+			invcoeff[invcoeff[1]] = n;
+			invcoeff.modp = res.modp;
+			invcoeff.modn = 1;
+
+			res += invcoeff * modpoly * (gcdmodc - substitute_last(res,X,c));
+			modpoly *= simple;
+		}
+
+		// check whether this is the complete gcd
+		if (res==oldres && res.lcoeff_univar(x[0])==lc) {
 			if (poly::divides(res,a) && poly::divides(res,b)) {
 #ifdef DEBUG
-				cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
-						 << x << "," << correctlc << "," << s <<") = " << res << endl;
+				cout << "*** [" << thetime() << "]  RES : gcd_modular_dense_interpolation(" << a << "," << b << ","
+						 << x << "," << lc << "," << s <<") = " << res << endl;
 #endif
-				//				Tcheck += thetime()-t0;
 				return res;
 			}
 		}
-		//		Tcheck += thetime()-t0;
 	}
-	
-#ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : gcd_modular_reduce(" << a << "," << b << ","
-			 << x << "," << correctlc << "," << s <<") failed" << endl;
-#endif
-
-	return poly(BHEAD 0);
 }
 
 /*
-  	#] gcd_modular_reduce :
+  	#] gcd_modular_dense_interpolation : :
 	 	#[ gcd_moduar :
 */
 
-// necessary: icont(a)=icont(b)=0
+/**  Zippel's Modular GCD Algorithm
+ *
+ *   Description
+ *   ===========
+ *   This method choose a prime number and calls the method
+ *   "gcd_modular_dense_interpolation" to calculate the gcd modulo
+ *   this prime. It continues choosing more primes and constructs a
+ *   final result with the Chinese Remainder Algorithm.
+ *
+ *   Notes
+ *   =====
+ *   - Necessary condition: icont(a) = icont(b) = 0
+ */
 const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const vector<int> &x) {
 
 #ifdef DEBUG
@@ -895,8 +887,10 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
 
 	POLY_GETIDENTITY(origa);
 
-	poly lcoeffa(origa.coefficient(x[0], origa.degree(x[0])));
-	poly lcoeffb(origb.coefficient(x[0], origb.degree(x[0])));
+	// multiply a and b with gcd(lcoeffs), so that a gcd with
+	// lc(gcd)=lcoeff exists
+	poly lcoeffa(origa.lcoeff_univar(x[0]));
+	poly lcoeffb(origb.lcoeff_univar(x[0]));
 	poly lcoeff(gcd(lcoeffa,lcoeffb));
 
 	poly a(lcoeff * origa);
@@ -909,12 +903,13 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
 	WORD mindeg=MAXPOSITIVE;
 
 	while (true) {
+		// choose a prime and solve modulo the prime
 		WORD p = NextPrime(BHEAD pnum++);
 
-		if (poly(a.lcoeff(),p).is_zero()) continue;
-		if (poly(b.lcoeff(),p).is_zero()) continue;
+		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
+		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
 
-		poly c(gcd_modular_reduce (poly(a,p),poly(b,p),x,poly(lcoeff,p),d));
+		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(lcoeff,p),d));
 
 		if (c.is_zero()) {
 			// unlucky choices somewhere, so start all over again
@@ -930,6 +925,7 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
 		WORD deg = c.degree(x[0]);
 
 		if (deg < mindeg) {
+			// small degree, so the old one is wrong
     	d=c; 
 			d.modp=a.modp;
 			d.modn=a.modn;
@@ -937,10 +933,11 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
 			mindeg=deg;
 		}
 		else if (deg == mindeg) {
+			// same degree, so use Chinese Remainder Algorithm
 			poly newd(BHEAD 0);
 			
 			for (int ci=1,di=1; ci<c[0]||di<d[0]; ) {
-				int comp = ci==c[0] ? -1 : di==d[0] ? +1 : poly::monomial_compare(&c[ci],&d[di] BTAIL);
+				int comp = ci==c[0] ? -1 : di==d[0] ? +1 : poly::monomial_compare(BHEAD &c[ci],&d[di]);
 				poly a1(BHEAD 0),a2(BHEAD 0);
 				
 				newd.check_memory(newd[0]);
@@ -966,11 +963,13 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
 			d=newd;
 		}
 
+		// divide out spurious integer content
 		poly ppd(d / integer_content(d));
 
+		// check whether this is the complete gcd
 		if (poly::divides(ppd,a) && poly::divides(ppd,b)) {
 
-			ppd /= content(ppd,x[0]);
+			ppd /= content_univar(ppd,x[0]);
 #ifdef DEBUG
 			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << origa << "," << origb << "," << x << ") = "
 					 << ppd << endl;
@@ -982,8 +981,57 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
 
 /*
   	#] modular gcd :
+  	#[ gcd_heuristic_possible :
+*/
+
+/**  Heuristic greatest common divisor of multivariate polynomials
+ *
+ *   Description
+ *   ===========
+ *   Checks whether the heuristic seems possible by estimating
+ *
+ *      MAX_{terms} (coeff ^ PROD_{i=1..#vars} (pow_i+1))
+ *
+ *   and comparing this with GCD_HEURISTIC_MAX_DIGITS.
+ *
+ *   Notes
+ *   =====
+ *   - For small polynomials, this consumes time and never triggers.
+ */
+
+bool gcd_heuristic_possible (const poly &a) {
+	
+#ifndef USE_GCD_HEURISTIC_POSSIBLE
+	return true;
+#endif
+
+	double max_prod_deg = 1;
+	double max_digits = 0;
+	double max_lead = 0;
+	
+	for (int i=1; i<a[0]; i+=a[i]) {
+		double prod_deg = 1;
+		for (int j=0; j<AN.poly_num_vars; j++)
+			prod_deg *= a[i+1+j] + 1;
+		max_prod_deg = max(max_prod_deg, prod_deg);
+
+		WORD digits = ABS(a[i+a[i]-1]);
+		UWORD lead = a[i+1+AN.poly_num_vars];
+		
+		if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
+			max_digits = digits;
+			max_lead = lead;
+		}
+	}
+		
+	return max_prod_deg*(max_digits-1+log(2*ABS(max_lead))/log(2)/(BITSINWORD/2)) < GCD_HEURISTIC_MAX_DIGITS;
+}
+
+/*
+  	#] gcd_heuristic_possible :
   	#[ gcd_heuristic :
 */
+
 
 /**  Heuristic greatest common divisor of multivariate polynomials
  *
@@ -1078,7 +1126,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 				c.coefficients_modulo((UWORD *)&xi[2+AN.poly_num_vars], xi[xi[0]-1]);
 				
 				// Add the terms c * x^power to res
-				res.check_memory_large(res[0]+c[0]);
+				res.check_memory(res[0]+c[0]);
 				res.termscopy(&c[1],res[0],c[0]-1);
 				for (int i=1; i<c[0]; i+=c[i])
 					res[res[0]-1+i+1+x[0]] = power;
@@ -1097,7 +1145,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 			
 			// Reverse the resulting polynomial
 			poly rev(BHEAD 0);
-			rev.check_memory_large(res[0]);
+			rev.check_memory(res[0]);
 			
 			rev[0] = 1;
 			for (int i=idx.size()-1; i>=0; i--) {
@@ -1147,20 +1195,11 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
  *     variable less;
  *   - If the coefficients are integers, try the heuristic gcd
  *     method;
- *   - If this method fails call the Extended Zassenhaus method to
- *     calculate the gcd of the two primitive polynomials pp(a) and
- *     pp(b).
- *
- *   Notes
- *   =====
- *   - If a.modp=0, the gcd over the integers is calculated
- *   - If a.modp>0 and a.modn=1, the gcd over ZZ/p is calculated
- *   - If a.modp>0 and a.modn>1, the gcd over the integers is
- *     calculated 
+ *   - If this method fails call the Zippel's method to calculate
+ *     the gcd of the two primitive polynomials pp(a) and pp(b).
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 314-320]
  */
-
 const poly poly_gcd::gcd (const poly &a, const poly &b) {
 
 #ifdef DEBUG
@@ -1169,15 +1208,12 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 
 	POLY_GETIDENTITY(a);
 	
-	WORD modp = a.modp;
-	if (a.modn>1) modp=0;
-	
-	if (a.is_zero()) return modp==0 ? b : b / b.lcoeff();
-	if (b.is_zero()) return modp==0 ? a : a / a.lcoeff();
- 	if (a==b) return modp==0 ? a : a / a.lcoeff();
+	if (a.is_zero()) return a.modp==0 ? b : b / b.integer_lcoeff();
+	if (b.is_zero()) return a.modp==0 ? a : a / a.integer_lcoeff();
+ 	if (a==b) return a.modp==0 ? a : a / a.integer_lcoeff();
 
 	if (a.is_integer() || b.is_integer()) {
-		if (modp > 0) return poly(BHEAD 1,modp,1);
+		if (a.modp > 0) return poly(BHEAD 1,a.modp,1);
 		return poly(integer_gcd(integer_content(a),integer_content(b)),0,1);
 	}
 
@@ -1192,28 +1228,12 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 	for (int i=0; i<AN.poly_num_vars; i++)
 		if (used[i]) x.push_back(i);
 
-	/*
-#ifdef USE_GCD_MODULAR
-	poly iconta(integer_content(a));
-	poly icontb(integer_content(b));
-	poly gcdconts(integer_gcd(iconta,icontb));
-	poly ppa(a / iconta);
-	poly ppb(b / icontb);
-#else
-	*/
 	// Calculate the contents, their gcd and the primitive parts
-	poly conta(x.size()==1 ? integer_content(a) : content(a,x[0]));
-	poly contb(x.size()==1 ? integer_content(b) : content(b,x[0]));
+	poly conta(x.size()==1 ? integer_content(a) : content_univar(a,x[0]));
+	poly contb(x.size()==1 ? integer_content(b) : content_univar(b,x[0]));
 	poly gcdconts(x.size()==1 ? integer_gcd(conta,contb) : gcd(conta,contb));
 	poly ppa(a / conta);
 	poly ppb(b / contb);
-	//#endif
-	
-	// Since p^n with n>1 is regarded as over integers (ugly hack)
-	if (modp==0) {
-		ppa.setmod(0,1);
-		ppb.setmod(0,1);
-	}
 	
 	if (ppa == ppb) 
 		return ppa * gcdconts;
@@ -1222,59 +1242,12 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 
 #ifdef USE_GCD_HEURISTIC
 	// Try the heuristic gcd algorithm
-	if (modp==0) {
-
-		/* NOTE: this is useful when triggered, but consumes time when
-			 not. It triggers for multivariate/high power polynomials and
-			 not for small univariate ones. Focus on the latter is preferred
-			 now (for Mincer purposes), so this is commented out.
-
-		// Check whether the numbers seem feasible
-
-		double max_prod_deg = 1;
-		double max_digits = 0;
-		double max_lead = 0;
-		
-		for (int i=1; i<ppa[0]; i+=ppa[i]) {
-			double prod_deg = 1;
-			for (int j=0; j<AN.poly_num_vars; j++)
-				prod_deg *= ppa[i+1+j] + 1;
-			max_prod_deg = max(max_prod_deg, prod_deg);
-
-			WORD digits = ABS(ppa[i+ppa[i]-1]);
-			UWORD lead = ppa[i+1+AN.poly_num_vars];
-
-			if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
-				max_digits = digits;
-				max_lead = lead;
-			}
-		}
-		
-		for (int i=1; i<ppb[0]; i+=ppb[i]) {
-			double prod_deg = 1;
-			for (int j=0; j<AN.poly_num_vars; j++)
-				prod_deg *= ppb[i+1+j] + 1;
-			max_prod_deg = max(max_prod_deg, prod_deg);
-			
-			WORD digits = ABS(ppb[i+ppb[i]-1]);
-			UWORD lead = ppb[i+1+AN.poly_num_vars];
-
-			if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
-				max_digits = digits;
-				max_lead = lead;
-			}
-		}
-		
-		if (max_prod_deg*(max_digits-1+log(2*ABS(max_lead))/log(2)/(BITSINWORD/2)) < GCD_HEURISTIC_MAX_DIGITS) {
-		*/
-		
+	if (a.modp==0 && gcd_heuristic_possible(a) && gcd_heuristic_possible(b)) {
 		try {
 			gcd = gcd_heuristic(ppa,ppb,x);
 			if (!gcd.is_zero()) gcd /= integer_content(gcd);
 		}
 		catch (gcd_heuristic_failed) {}
-		
-		//		}
 	}
 #endif
 	
@@ -1290,62 +1263,6 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 
 	return gcd;
 }
-
-///////////////////////////////////////// REMOVE LATER ///////////////////////////////
-poly random_poly (int vars=3, int terms=10, int power=10, int coeff=10000) {
-	
-	GETIDENTITY;
-	
-	poly res(BHEAD 0);
-	res.terms[0]=1;
-	
-	for (int t=0; t<terms; t++) {
-		res[res[0]] = AN.poly_num_vars + 3;
-		for (int v=0; v<vars; v++)
-			res[res[0]+1+v] = random() % power;
-		res[res[0]+1+AN.poly_num_vars] = random()%coeff+1;
-		res[res[0]+2+AN.poly_num_vars] = random()%2*2-1;
-		res[0] += res[res[0]];
-	}
-	
-	res.normalize();
-	return res;
-}
-
-void testje () {
-
-	GETIDENTITY;
-	
-	AN.poly_num_vars = 3;
-	AN.poly_vars = new WORD[3];
-	AN.poly_vars[0] = 'x';
-	AN.poly_vars[1] = 'y';
-	AN.poly_vars[2] = 'z';
-
-	for (int i=0; i<10000; i++) {
-		poly a(random_poly());
-		poly b(random_poly());
-		poly c(random_poly());
-		a*=c;
-		b*=c;
-		/*
-		cout << "Local E = gcd_(" << a << "," << b << ");\n";
-		cout << "Print +s;\n";
-		cout << ".sort\n";
-		continue;
-		*/
-		/*
-		cout << "TEST #" << i << " : ";
-		cout << "gcd("<<a<<","<<b<<") = " << flush;
-		cout << poly_gcd::gcd(a,b) << endl;
-		*/
-		//		if (i%100==99) cout << thetime() << " test " << i << endl;
-		poly_gcd::gcd(a,b);
-	}
-	
-	exit(1);
-}
-////////////////////////////////////////////////////////////////////////////////////////
 
 /*
   	#] gcd :
@@ -1363,8 +1280,6 @@ void testje () {
  */
 int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 
-	//	testje();
-	
 	// Check whether one of the arguments is 1
 	// i.e., [ARGHEAD 4 1 1 3] or [-SNUMBER 1]
 	WORD *p = argin;
@@ -1417,23 +1332,7 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
-	/*
-	printf ("Tallmod = %lf\n",Tallmod);
-	printf ("Tmat    = %lf\n",Tmat   );
-	printf ("Teucl2  = %lf\n",Teucl2 );
-	printf ("---\n");
-	printf ("Tcont   = %lf\n",Tcont  );
-	printf ("Tmod    = %lf\n",Tmod   );
-	printf ("Teucl   = %lf\n",Teucl  );
-	printf ("Tcomp   = %lf\n",Tcomp  );
-	printf ("Tipol   = %lf\n",Tipol  );
-	printf ("Tcheck  = %lf\n",Tcheck );
-	printf ("---\n");
-	printf ("Tdiv    = %lf\n",Tdiv   );
-	printf ("Tdivuniv= %lf\n",Tdivuniv);
-	printf ("Tdivheap= %lf\n",Tdivheap);
-	printf ("Tinv    = %lf\n",Tinv    );
-	*/
+
 	return 0;
 }
 

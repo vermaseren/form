@@ -535,7 +535,7 @@ extern WORD   PutInStore(INDEXENTRY *,WORD);
 extern WORD   PutOut(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD);
 extern UWORD  Quotient(UWORD *,WORD *,WORD);
 extern WORD   RaisPow(PHEAD UWORD *,WORD *,UWORD);
-extern VOID   RaisPowSmall (PHEAD WORD x, WORD n, UWORD **c, WORD *nc);
+extern VOID   RaisPowCached (PHEAD WORD, WORD, UWORD **, WORD *);
 extern WORD   RaisPowMod (WORD, WORD, WORD);
 extern int    NormalModulus(UWORD *,WORD *);
 extern int    MakeInverses(VOID);
