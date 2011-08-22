@@ -1275,7 +1275,7 @@ const vector<poly> polyfact::combine_factors (const poly &a, const vector<poly> 
 	cout << "*** [" << thetime() << "]  CALL: combine_factors("<<a<<","<<f<<")\n";
 #endif
 
-	POLY_GETIDENTITY(A);
+	POLY_GETIDENTITY(a);
 	
 	poly a0(a,0,1);
 	vector<poly> res;
@@ -1728,7 +1728,7 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 
 	// reset modulo calculation
 	AC.ncmod = AN.ncmod;
-	
+
 	return 0;
 }
 

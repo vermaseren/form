@@ -641,6 +641,8 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 			 << a << "," << b << "," << x << "," << lc << "," << s <<") = " << endl;
 #endif
 
+	POLY_GETIDENTITY(a);
+	
 	// count the number of terms in the polynomial
 	int N=0;
 	for (int i=1; i<s[0]; i+=s[i]) N++;
@@ -1015,6 +1017,8 @@ bool gcd_heuristic_possible (const poly &a) {
 	return true;
 #endif
 
+	POLY_GETIDENTITY(a);
+	
 	double max_prod_deg = 1;
 	double max_digits = 0;
 	double max_lead = 0;
