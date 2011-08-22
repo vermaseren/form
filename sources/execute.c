@@ -1009,7 +1009,7 @@ FunBrac:	NCOPY(t1,t,i);
 		}
 		else if ( *t == VECTOR ) {
 			if ( ( b < bStop && *b == VECTOR ) || bwild ) {
-				if ( *b == VECTOR && b < bStop ) {
+				if ( b < bStop && *b == VECTOR ) {
 					bb = b + b[1]; b += 2;
 				}
 				else bb = b;
@@ -1056,7 +1056,7 @@ nextvec:;
 				while ( t < s2 && ( bb < s1 || bwild ) ) {
 					while ( bb < s1 && ( *bb < *t ||
 					( *bb == *t && bb[1] < t[1] ) ) ) bb += 3;
-					if ( *bb == *t && bb[1] == t[1] && bb < s1 ) {
+					if ( bb < s1 && *bb == *t && bb[1] == t[1] ) {
 						*t1++ = *t++; *t1++ = *t++; *t1++ = *t++; bb += 3;
 						goto nextdot;
 					}
@@ -1088,7 +1088,7 @@ nextdot:;
 				s1 = b + b[1]; bb = b+2;
 				s2 = t + i; t += 2;
 				while ( bb < s1 && t < s2 ) {
-					while ( *bb < *t && bb < s1 ) bb += 2;
+					while ( bb < s1 && *bb < *t ) bb += 2;
 					if ( bb >= s1 ) break;
 					if ( *bb == *t ) { *t1++ = *t++; *t1++ = *t++; }
 					else { *t2++ = *t++; *t2++ = *t++; } 
