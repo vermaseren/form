@@ -150,7 +150,7 @@ void factorized_poly::add_factor(const poly &f, int p) {
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 32-37, 205-225]
  */
-const vector<poly> poly_fact::extended_gcd_Euclidean_lifted (const poly &a, const poly &b) {
+const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const poly &b) {
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: extended_Euclidean_lifted("<<a<<","<<b<<")"<<endl;
@@ -239,7 +239,7 @@ const vector<poly> poly_fact::extended_gcd_Euclidean_lifted (const poly &a, cons
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 266-273]
  */
-const vector<poly> poly_fact::solve_Diophantine_univariate (const vector<poly> &a, const poly &b) {
+const vector<poly> polyfact::solve_Diophantine_univariate (const vector<poly> &a, const poly &b) {
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: solve_Diophantine_univariate(" <<a<<","<<b<<")"<<endl;
@@ -302,7 +302,7 @@ const vector<poly> poly_fact::solve_Diophantine_univariate (const vector<poly> &
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 264-273]
  */
-const vector<poly> poly_fact::solve_Diophantine_multivariate (const vector<poly> &a, const poly &b, const vector<int> &x, const vector<int> &c, int d) {
+const vector<poly> polyfact::solve_Diophantine_multivariate (const vector<poly> &a, const poly &b, const vector<int> &x, const vector<int> &c, int d) {
 	
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: solve_Diophantine_multivariate(" <<a<<","<<b<<","<<x<<","<<c<<","<<d<<")"<<endl;
@@ -404,7 +404,7 @@ const vector<poly> poly_fact::solve_Diophantine_multivariate (const vector<poly>
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 232-250]
  */
-const vector<poly> poly_fact::lift_coefficients (const poly &_A, const vector<poly> &_a) {
+const vector<poly> polyfact::lift_coefficients (const poly &_A, const vector<poly> &_a) {
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: lift_coefficients("<<_A<<","<<_a<<")"<<endl;
@@ -452,7 +452,7 @@ const vector<poly> poly_fact::lift_coefficients (const poly &_A, const vector<po
 	
 	// Fix leading coefficients by dividing out integer contents.
 	for (int i=0; i<(int)a.size(); i++) 
-		a[i] /= poly_gcd::integer_content(poly(a[i],0,1));	
+		a[i] /= polygcd::integer_content(poly(a[i],0,1));	
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : lift_coefficients("<<_A<<","<<_a<<") = "<<a<<endl;
@@ -480,7 +480,7 @@ const vector<poly> poly_fact::lift_coefficients (const poly &_A, const vector<po
  *   For details, see Wang, "An Improved Polynomial Factoring
  *   Algorithm", Math. Comput. 32 (1978) pp. 1215-1231]
  */
-void poly_fact::predetermine (int dep, const vector<vector<int> > &state, vector<vector<vector<int> > > &terms, vector<int> &term, int sumdeg) {
+void polyfact::predetermine (int dep, const vector<vector<int> > &state, vector<vector<vector<int> > > &terms, vector<int> &term, int sumdeg) {
 	// store the term
 	if (dep == (int)state.size()) {
 		terms[sumdeg].push_back(term);
@@ -542,7 +542,7 @@ void poly_fact::predetermine (int dep, const vector<vector<int> > &state, vector
  *   - Returns empty vector<poly>() if lifting is impossible.
  */
 
-const vector<poly> poly_fact::lift_variables (const poly &A, const vector<poly> &_a, const vector<int> &x, const vector<int> &c, const vector<poly> &lc) {
+const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &_a, const vector<int> &x, const vector<int> &c, const vector<poly> &lc) {
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: lift_variables("<<A<<","<<_a<<","<<x<<","<<c<<","<<lc<<")\n";
@@ -713,7 +713,7 @@ const vector<poly> poly_fact::lift_variables (const poly &A, const vector<poly> 
  *   =====
  *   If a prime p is provided, it returns the next prime that is good.
  */
-WORD poly_fact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
+WORD polyfact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: choose_prime("<<a<<","<<x<<","<<p<<")"<<endl;
@@ -721,9 +721,9 @@ WORD poly_fact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 
 	POLY_GETIDENTITY(a);
 	
-	poly icont_lcoeff(poly_gcd::integer_content(a.lcoeff_univar(x[0])));
+	poly icont_lcoeff(polygcd::integer_content(a.lcoeff_univar(x[0])));
 
-	if (p==0) p=17;
+	if (p==0) p = POLYFACT_FIRST_PRIME;
 
 	poly icont_lcoeff_modp(BHEAD 0);
 	
@@ -770,7 +770,7 @@ WORD poly_fact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
  *   [for details, see "Bounding the Coefficients of a Divisor of a
  *   Given Polynomial" by Andrew Granville]
  */
-WORD poly_fact::choose_prime_power (const poly &a, WORD p) {
+WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 
 	POLY_GETIDENTITY(a);
 
@@ -825,10 +825,10 @@ WORD poly_fact::choose_prime_power (const poly &a, WORD p) {
  *   -  Wang, "An Improved Polynomial Factoring Algorithm",
  *      Math. Comput. 32 (1978) pp. 1215-1231]
  */
-const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorized_poly &lc, const vector<int> &x) {
+const vector<int> polyfact::choose_ideal (const poly &a, int p, const factorized_poly &lc, const vector<int> &x) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: poly_fact::choose_ideal("
+	cout << "*** [" << thetime() << "]  CALL: polyfact::choose_ideal("
 			 <<a<<","<<p<<","<<lc<<","<<x<<")"<<endl;
 #endif
 
@@ -843,7 +843,7 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 
 	// choose random c
 	for (int i=0; i<(int)c.size(); i++) {
-		c[i] = 1 + random() % ((p-1)/5); // <---------- this fudge factor of 5 causes improvement! (TODO! investigate)
+		c[i] = 1 + random() % ((p-1) / POLYFACT_IDEAL_FRACTION);
 		amodI %= poly::simple_poly(BHEAD x[i+1],c[i],1);
 	}
 	
@@ -855,13 +855,13 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 		return c = vector<int>();
 	
 	// check if leading coefficient is squarefree [equivalent to gcd(a,a')==const]	
-	if (!poly_gcd::gcd_Euclidean(amodIp, amodIp.derivative(x[0])).is_integer()) 
+	if (!polygcd::gcd_Euclidean(amodIp, amodIp.derivative(x[0])).is_integer()) 
 		return c = vector<int>();
 
 	if (a.modp>0 && a.modn==1) return c;
 	
 	// check for unique prime factors in each factor lc[i] of the leading coefficient
-	vector<poly> d(1, poly_gcd::integer_content(amodI));
+	vector<poly> d(1, polygcd::integer_content(amodI));
 	
 	for (int i=0; i<(int)lc.factor.size(); i++) {
 		// constant factor
@@ -880,7 +880,7 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 		for (int j=(int)d.size()-1; j>=0; j--) {
 			poly r(d[j]);
 			while (!r.is_one()) {
-				r = poly_gcd::integer_gcd(r,q); 
+				r = polygcd::integer_gcd(r,q); 
 				q /= r;
 			}
 		}
@@ -891,7 +891,7 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
 	}
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : poly_fact::choose_ideal("
+	cout << "*** [" << thetime() << "]  RES : polyfact::choose_ideal("
 			 <<a<<","<<p<<","<<lc<<","<<x<<") = "<<c<<endl;
 #endif
 
@@ -903,27 +903,13 @@ const vector<int> poly_fact::choose_ideal (const poly &a, int p, const factorize
   	#[ squarefree_factors_Yun :
 */
 
-/**  Squarefree factorization of a primitive polynomial
+/**  Yun's squarefree factorization of a primitive polynomial
  *
  *   Description
  *   ===========
- *   Calculates a squarefree factorization of a multivariate
- *   polynomial, i.e., a factorization of the form
- *
- *     a = PRODUCT(ai^i | i=1,...,k),
- *
- *   with ai squarefree polynomials that are relatively prime. A
- *   polynomial is squarefree iff it is not divisable by b^2 for all b
- *   with degree greater than zero.
- *
- *   Notes
- *   ===== 
- *   - For modp==0, Yun's efficient method is used
- *   - For modp!=0, a simple method is used
- *
- *   [for details, see "Algorithms for Computer Algebra", pp. 337-343]
+ *   See description "squarefree_factors".
  */
-const factorized_poly poly_fact::squarefree_factors_Yun (const poly &_a) {
+const factorized_poly polyfact::squarefree_factors_Yun (const poly &_a) {
 
 	factorized_poly res;
 	poly a(_a);
@@ -932,14 +918,14 @@ const factorized_poly poly_fact::squarefree_factors_Yun (const poly &_a) {
 	int x = a.first_variable();
 	
 	poly b(a.derivative(x));
-	poly c(poly_gcd::gcd(a,b));
+	poly c(polygcd::gcd(a,b));
 
 	while (true) {
 		a /= c;
 		b /= c;
 		b -= a.derivative(x);
 		if (b.is_zero()) break;
-		c = poly_gcd::gcd(a,b);
+		c = polygcd::gcd(a,b);
 		if (!c.is_one()) res.add_factor(c,pow);
 		pow++;
 	}
@@ -953,7 +939,13 @@ const factorized_poly poly_fact::squarefree_factors_Yun (const poly &_a) {
   	#[ squarefree_factors_modp :
 */
 
-const factorized_poly poly_fact::squarefree_factors_modp (const poly &_a) {
+/**  Squarefree factorization of a primitive polynomial modulo a prime
+ *
+ *   Description
+ *   ===========
+ *   See description "squarefree_factors".
+ */
+const factorized_poly polyfact::squarefree_factors_modp (const poly &_a) {
 
 	factorized_poly res;
 	poly a(_a);
@@ -964,11 +956,11 @@ const factorized_poly poly_fact::squarefree_factors_modp (const poly &_a) {
 
 	// poly contains terms of the form c(x)^n (n!=c*p)
 	if (!b.is_zero()) {
-		poly c(poly_gcd::gcd(a,b));
+		poly c(polygcd::gcd(a,b));
 		a /= c;
 		
 		while (!a.is_one()) {
-			b = poly_gcd::gcd(a,c);
+			b = polygcd::gcd(a,c);
 			a /= b;
 			if (!a.is_one()) res.add_factor(a,pow);
 			pow++;
@@ -998,7 +990,27 @@ const factorized_poly poly_fact::squarefree_factors_modp (const poly &_a) {
   	#[ squarefree_factors :
 */
 
-const factorized_poly poly_fact::squarefree_factors (const poly &a) {
+/**  Squarefree factorization of a primitive polynomial
+ *
+ *   Description
+ *   ===========
+ *   Calculates a squarefree factorization of a multivariate
+ *   polynomial, i.e., a factorization of the form
+ *
+ *     a = PRODUCT(ai^i | i=1,...,k),
+ *
+ *   with ai squarefree polynomials that are relatively prime. A
+ *   polynomial is squarefree iff it is not divisable by b^2 for all b
+ *   with degree greater than zero.
+ *
+ *   Notes
+ *   ===== 
+ *   - For modp==0, Yun's efficient method is used
+ *   - For modp!=0, a simple method is used
+ *
+ *   [for details, see "Algorithms for Computer Algebra", pp. 337-343]
+ */
+const factorized_poly polyfact::squarefree_factors (const poly &a) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: squarefree_factors("<<a<<")\n";
@@ -1047,7 +1059,7 @@ const factorized_poly poly_fact::squarefree_factors (const poly &a) {
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 346-359]
  */
-const vector<vector<WORD> > poly_fact::Berlekamp_Qmatrix (const poly &_a) {
+const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: Berlekamp_Qmatrix("<<_a<<")\n";
@@ -1174,7 +1186,7 @@ const vector<vector<WORD> > poly_fact::Berlekamp_Qmatrix (const poly &_a) {
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 346-359]
  */
-const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vector<vector<WORD> > &_q) {
+const vector<poly> polyfact::Berlekamp_find_factors (const poly &_a, const vector<vector<WORD> > &_q) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: Berlekamp_find_factors("<<_a<<","<<_q<<")\n";
@@ -1205,7 +1217,7 @@ const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vect
 		for (int s=0; s<p; s++) {
 			for (int j=0; j<(int)fac.size(); j++) {
 
-				vector<WORD> c = poly_gcd::coefficient_list_gcd(fac[j], q[i], p);
+				vector<WORD> c = polygcd::coefficient_list_gcd(fac[j], q[i], p);
 				
 				// If a non-trivial factor is found, add it to the list
 				if (c.size()!=1 && c.size()!=fac[j].size()) {
@@ -1255,39 +1267,39 @@ const vector<poly> poly_fact::Berlekamp_find_factors (const poly &_a, const vect
  *   Theoretically, this method takes exponential time (for ugly,
  *   constructed cases), but in practice it is fast. This can be fixed
  *   by implementing Van Hoeij's knapsack method. See: "Factoring
- *   polynomials and the knapsack problem" by M. van Hoeij. [TODO]
+ *   polynomials and the knapsack problem" by M. van Hoeij.
  */
-const vector<poly> poly_fact::combine_factors (const poly &A, const vector<poly> &a) {
+const vector<poly> polyfact::combine_factors (const poly &a, const vector<poly> &f) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: combine_factors("<<A<<","<<a<<")\n";
+	cout << "*** [" << thetime() << "]  CALL: combine_factors("<<a<<","<<f<<")\n";
 #endif
 
 	POLY_GETIDENTITY(A);
 	
-	poly A0(A,0,1);
+	poly a0(a,0,1);
 	vector<poly> res;
 
 	int num_used = 0;
-	vector<bool> used(a.size(), false);
+	vector<bool> used(f.size(), false);
 
 	// Loop over all bitmasks with num=1,2,...,size(factors)/2 bits
 	// set, that contain only unused factors
-	for (int num=1; num<=(int)(a.size() - num_used)/2; num++) {
-		vector<int> next(a.size() - num_used, 0);
+	for (int num=1; num<=(int)(f.size() - num_used)/2; num++) {
+		vector<int> next(f.size() - num_used, 0);
 		for (int i=0; i<num; i++) next[next.size()-1-i] = 1;
 
 		do {
-			poly fac(BHEAD 1,A.modp,A.modn);
-			for (int i=0, j=0; i<(int)a.size(); i++)
-				if (!used[i] && next[j++]) fac *= a[i];
+			poly fac(BHEAD 1,a.modp,a.modn);
+			for (int i=0, j=0; i<(int)f.size(); i++)
+				if (!used[i] && next[j++]) fac *= f[i];
 			fac /= fac.integer_lcoeff();
-			fac *= A.integer_lcoeff();
-			fac /= poly_gcd::integer_content(poly(fac,0,1));
+			fac *= a.integer_lcoeff();
+			fac /= polygcd::integer_content(poly(fac,0,1));
 				
-			if ((A0 % fac).is_zero()) {
+			if ((a0 % fac).is_zero()) {
 				res.push_back(fac);
-				for (int i=0, j=0; i<(int)a.size(); i++)
+				for (int i=0, j=0; i<(int)f.size(); i++)
 					if (!used[i]) used[i] = next[j++];
 				num_used += num;
 				num--;
@@ -1298,18 +1310,18 @@ const vector<poly> poly_fact::combine_factors (const poly &A, const vector<poly>
 	}
 			
 	// All unused factors together form one more factor
-	if (num_used != (int)a.size()) {
-		poly fac(BHEAD 1,a[0].modp,a[0].modn);
-		for (int i=0; i<(int)a.size(); i++)
-			if (!used[i]) fac *= a[i];
+	if (num_used != (int)f.size()) {
+		poly fac(BHEAD 1,a.modp,a.modn);
+		for (int i=0; i<(int)f.size(); i++)
+			if (!used[i]) fac *= f[i];
 		fac /= fac.integer_lcoeff();
-		fac *= A.integer_lcoeff();
-		fac /= poly_gcd::integer_content(poly(fac,0,1));
+		fac *= a.integer_lcoeff();
+		fac /= polygcd::integer_content(poly(fac,0,1));
 		res.push_back(fac);
 	}
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : combine_factors("<<A<<","<<a<<") = "<<res<<"\n";
+	cout << "*** [" << thetime() << "]  RES : combine_factors("<<a<<","<<f<<") = "<<res<<"\n";
 #endif
 
 	return res;
@@ -1338,7 +1350,7 @@ const vector<poly> poly_fact::combine_factors (const poly &A, const vector<poly>
  *   ===== 
  *   The polynomial must be primitive and squarefree
  */
-const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<int> &x) {
+const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<int> &x) {
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: factorize_squarefree("<<a<<")\n";
@@ -1362,7 +1374,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 	// Try a number of primes
 	int prime_tries = 0;
 	
-	while (prime_tries<NEEDED_NUM_PRIMES_AFTER && min_factors>1) {
+	while (prime_tries<POLYFACT_NUM_CONFIRMATIONS && min_factors>1) {
 		if (a.modp == 0) {
 			p = choose_prime(a,x,p);
 			n = 0;
@@ -1372,14 +1384,14 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 			// Multivariate case: this check is done after choosing I (for efficiency)
 			if (x.size()==1) {
 				poly amodp(a,p,1);
-				if (poly_gcd::gcd_Euclidean(amodp, amodp.derivative(x[0])).degree(x[0]) != 0)
+				if (polygcd::gcd_Euclidean(amodp, amodp.derivative(x[0])).degree(x[0]) != 0)
 					continue;
 			}
 		}
 
 		// Try a number of ideals
 		if (x.size()>1) 
-			for (int ideal_tries=0; ideal_tries<MAX_BERLEKAMP_IDEAL_TRIES; ideal_tries++) {
+			for (int ideal_tries=0; ideal_tries<POLYFACT_MAX_IDEAL_TRIES; ideal_tries++) {
 				c = choose_ideal(a,p,lc,x);
 				if (c.size()>0) break;
 			}
@@ -1463,7 +1475,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 		poly amodI(a);
 		for (int i=0; i<(int)c.size(); i++)
 			amodI %= poly::simple_poly(BHEAD x[i+1],c[i]);
-		poly delta(poly_gcd::integer_content(amodI));
+		poly delta(polygcd::integer_content(amodI));
 		
 		vector<poly> lcmodI(lc.factor.size(), poly(BHEAD 0));
 		for (int i=0; i<(int)lc.factor.size(); i++) {
@@ -1505,7 +1517,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 			for (int j=0; j<(int)c.size(); j++)
 				correct_modI %= poly::simple_poly(BHEAD x[j+1],c[j]);
 			
-			poly d(poly_gcd::integer_gcd(correct_modI, f[i].integer_lcoeff()));
+			poly d(polygcd::integer_gcd(correct_modI, f[i].integer_lcoeff()));
 			correct_lc[i] *= f[i].integer_lcoeff() / d;
 			delta /= correct_modI / d;
 			f[i] *= correct_modI / d;
@@ -1539,9 +1551,9 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
 		
 		for (int i=0; i<(int)f.size(); i++)
 			if (a.modp == 0)
-				f[i] /= poly_gcd::integer_content(poly(f[i],0,1));
+				f[i] /= polygcd::integer_content(poly(f[i],0,1));
 			else
-				f[i] /= poly_gcd::content_univar(f[i], x[0]);
+				f[i] /= polygcd::content_univar(f[i], x[0]);
 		
 		if (f==vector<poly>()) {
 #ifdef DEBUG
@@ -1588,7 +1600,7 @@ const vector<poly> poly_fact::factorize_squarefree (const poly &a, const vector<
  *   squarefree factors and calls "factorize_squarefree" for each of
  *   these factors.
  */
-const factorized_poly poly_fact::factorize (const poly &a) {
+const factorized_poly polyfact::factorize (const poly &a) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: factorize("<<a<<")\n";
@@ -1605,7 +1617,7 @@ const factorized_poly poly_fact::factorize (const poly &a) {
 	}
 
 	// Remove content
-	poly conta(poly_gcd::content_univar(a,x[0]));
+	poly conta(polygcd::content_univar(a,x[0]));
 	
 	factorized_poly faca(factorize(conta));
 	
@@ -1690,7 +1702,7 @@ int DoFactorize(PHEAD WORD *argin, WORD *argout) {
 	}
 
 	// factorize
-	factorized_poly f(poly_fact::factorize(a));
+	factorized_poly f(polyfact::factorize(a));
 
 	// check size
 	int len = 0;
@@ -1772,7 +1784,7 @@ WORD *DoFactorizeDollar(PHEAD WORD *argin) {
 	}
 
 	// factorize
-	factorized_poly f(poly_fact::factorize(a));
+	factorized_poly f(polyfact::factorize(a));
 
 	// calculate size, allocate memory, write answer
 	int len = 0;

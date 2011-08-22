@@ -29,8 +29,21 @@
 #include <vector>
 #include <string>
 
-const int MAX_BERLEKAMP_IDEAL_TRIES = 3;
-const int NEEDED_NUM_PRIMES_AFTER = 3;
+// First prime modulo which factorization is tried. Too small results
+// in more unsuccesful attempts; too large is slower.
+const int POLYFACT_FIRST_PRIME = 17;
+
+// Fraction of [1,p) that is used for substitutions of variables. Too
+// small results in more unsuccesful attempts; too large is slower.
+const int POLYFACT_IDEAL_FRACTION = 5;
+
+// Number of ideals that are tried before failure due to unlucky
+// choices is accepted.
+const int POLYFACT_MAX_IDEAL_TRIES = 3;
+
+// Number of confirmations for the minimal number of factors before
+// Hensel lifting is started.
+const int POLYFACT_NUM_CONFIRMATIONS = 3;
 
 class poly;
 
@@ -47,35 +60,38 @@ public:
 	friend std::ostream& operator<< (std::ostream &out, const poly &p);
 };
 
-std::ostream& operator<< (std::ostream &out, const factorized_poly &a);
-
 //   DoFactorize is outside the namespace, because it is called from C
 int DoFactorize(PHEAD WORD *argin, WORD *argout);
 
-namespace poly_fact {
+std::ostream& operator<< (std::ostream &out, const factorized_poly &a);
 
-	const std::vector<poly> extended_gcd_Euclidean_lifted (const poly &a, const poly &b);
-	const std::vector<poly> solve_Diophantine_univariate (const std::vector<poly> &a, const poly &b);
-	const std::vector<poly> solve_Diophantine_multivariate (const std::vector<poly> &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c, int d);
-	const std::vector<poly> lift_coefficients (const poly &A, const std::vector<poly> &a);
-	void predetermine (int dep, const std::vector<std::vector<int> > &state, std::vector<std::vector<std::vector<int> > > &terms, std::vector<int> &term, int sumdeg=0);
-	const std::vector<poly> lift_variables (const poly &A, const std::vector<poly> &a, const std::vector<int> &x, const std::vector<int> &c, const std::vector<poly> &lc);
-	
-	WORD choose_prime (const poly &a, const std::vector<int> &x, WORD p=0);
-	WORD choose_prime_power (const poly &a, WORD p);
-	const std::vector<int> choose_ideal (const poly &a, int p, const factorized_poly &lc, const std::vector<int> &x);
-	
-	const factorized_poly squarefree_factors (const poly &_a);
+namespace polyfact {
+
+	// factorization routine
+	const factorized_poly factorize (const poly &a);
+
+	// methods for squarefree factorization
+	const factorized_poly squarefree_factors (const poly &a);
 	const factorized_poly squarefree_factors_Yun (const poly &a);
 	const factorized_poly squarefree_factors_modp (const poly &a);
 	
-	const std::vector<WORD> dense_polynomial_quotient (std::vector<WORD> a, std::vector<WORD> b, const std::vector<WORD> &inv, WORD modp);
-	const std::vector<WORD> dense_polynomial_gcd (std::vector<WORD> a, std::vector<WORD> b, const std::vector<WORD> &inv, WORD modp);
-	
-	const std::vector<std::vector<WORD> > Berlekamp_Qmatrix (const poly &_a);
-	const std::vector<poly> Berlekamp_find_factors (const poly &, const std::vector<std::vector<WORD> > &);
-	const std::vector<poly> combine_factors (const poly &A, const std::vector<poly> &a);
-	
+	// methods for choosing suitable reductions
 	const std::vector<poly> factorize_squarefree (const poly &a, const std::vector<int> &x);
-	const factorized_poly factorize (const poly &a);
+	WORD choose_prime (const poly &a, const std::vector<int> &x, WORD p=0);
+	WORD choose_prime_power (const poly &a, WORD p);
+	const std::vector<int> choose_ideal (const poly &a, int p, const factorized_poly &lc, const std::vector<int> &x);
+
+	// methods for univariate factorization
+	const std::vector<std::vector<WORD> > Berlekamp_Qmatrix (const poly &a);
+	const std::vector<poly> Berlekamp_find_factors (const poly &a, const std::vector<std::vector<WORD> > &Q);
+	const std::vector<poly> combine_factors (const poly &a, const std::vector<poly> &f);
+
+	// methods for Hensel lifting
+	const std::vector<poly> extended_gcd_Euclidean_lifted (const poly &a, const poly &b);
+	const std::vector<poly> solve_Diophantine_univariate (const std::vector<poly> &a, const poly &b);
+	const std::vector<poly> solve_Diophantine_multivariate (const std::vector<poly> &a, const poly &b, const std::vector<int> &x, const std::vector<int> &c, int d);
+	const std::vector<poly> lift_coefficients (const poly &a, const std::vector<poly> &f);
+	const std::vector<poly> lift_variables (const poly &a, const std::vector<poly> &f, const std::vector<int> &x, const std::vector<int> &c, const std::vector<poly> &lc);
+	void predetermine (int dep, const std::vector<std::vector<int> > &state, std::vector<std::vector<std::vector<int> > > &terms, std::vector<int> &term, int sumdeg=0);
+
 };

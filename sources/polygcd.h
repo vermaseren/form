@@ -32,27 +32,27 @@ class poly; // polynomial class
 class gcd_heuristic_failed {}; // class for throwing exceptions
 
 // whether or not to use the heuristic before Zippel's algorithm
-#define USE_GCD_HEURISTIC
+#define POLYGCD_USE_HEURISTIC
 
 // whether or not to use a heuristic check whether using the heuristic
-// seems possible (saves time for too large polynomials, but costs
+// gcd seems possible (saves time for too large polynomials, but costs
 // time for small ones, so for Mincer it's better to turn it off)
-//#define USE_GCD_HEURISTIC_POSSIBLE
+//#define POLYGCD_USE_HEURISTIC_POSSIBLE
 
 // maximum number of words in a coefficient for gcd_heuristic to continue
-const int GCD_HEURISTIC_MAX_DIGITS = 1000;
+const int POLYGCD_HEURISTIC_MAX_DIGITS = 1000;
 
 // maximum number of retries after the heuristic has failed
-const int GCD_HEURISTIC_MAX_TRIES = 10;
+const int POLYGCD_HEURISTIC_MAX_TRIES = 10;
 
 // a fudge factor, which improves efficiency
-const int GCD_HEURISTIC_MAX_ADD_RANDOM = 10;
+const int POLYGCD_HEURISTIC_MAX_ADD_RANDOM = 10;
 
 // outside of the namespace, because these are called from C
 int DoGCDfunction(PHEAD WORD *argin, WORD *argout);
 WORD *DoPolyGCD(PHEAD WORD *a, WORD *b);
 
-namespace poly_gcd {
+namespace polygcd {
 
 	// functions to call the gcd routines
 	const poly integer_gcd (const poly &a, const poly &b);
@@ -65,10 +65,10 @@ namespace poly_gcd {
 	const std::vector<WORD> coefficient_list_gcd (const std::vector<WORD> &a, const std::vector<WORD> &b, WORD p);
 
 	// internal functions
-	const poly gcd_heuristic (const poly &a, const poly &b, const std::vector<int> &x, int max_tries=GCD_HEURISTIC_MAX_TRIES);
+	const poly gcd_heuristic (const poly &a, const poly &b, const std::vector<int> &x, int max_tries=POLYGCD_HEURISTIC_MAX_TRIES);
 	const poly gcd_Euclidean (const poly &a, const poly &b);
 	const poly gcd_modular (const poly &a, const poly &b, const std::vector<int> &x);
-	const poly gcd_modular_dense_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &correctlc, const poly &shape);
+	const poly gcd_modular_dense_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &shape);
 	const poly gcd_modular_sparse_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &shape);
 	
 	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);

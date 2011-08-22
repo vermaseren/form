@@ -83,13 +83,13 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
  *
  *   Notes
  *   =====
- *   - The input and output integers are represented as
- *     polynomials. These polynonials must consist of one term with all
- *     power equal to zero.
+ *   - The input and output integers are represented as polynomials.
+ *     These polynonials must consist of one term with all powers
+ *     equal to zero.
  *   - The result is always positive.
  *   - Over ZZ/p^n, the gcd is defined as 1.
  */
-const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
+const poly polygcd::integer_gcd (const poly &a, const poly &b) {
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: integer_gcd(" << a << "," << b << ")" << endl;
@@ -141,7 +141,7 @@ const poly poly_gcd::integer_gcd (const poly &a, const poly &b) {
  *   - Over ZZ/p^n, the integer content is defined as the leading
  *     coefficient of the polynomial.
  */
-const poly poly_gcd::integer_content (const poly &a) {
+const poly polygcd::integer_content (const poly &a) {
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: integer_content(" << a << ")" << endl;
@@ -188,14 +188,14 @@ const poly poly_gcd::integer_content (const poly &a) {
   	#[ content_univar :
 */
 
-/**  Univariate content of a polynomial
+/**  Content of a univariate polynomial
  *
  *   Description
  *   ===========
  *   Calculates the content of a polynomial, regarded as a univariate
  *   polynomial in x. The content is the greatest common divisor of
  *   the polynomial coefficients in front of the powers of x. The
- *   result, therefore, is a polynomial in the variables besides x.
+ *   result, therefore, is a polynomial in the variables except x.
  *
  *   Notes
  *   =====
@@ -203,7 +203,7 @@ const poly poly_gcd::integer_content (const poly &a) {
  *   - Over ZZ/p, the leading coefficient of the content is defined as
  *     the leading coefficient of the polynomial.
  */
-const poly poly_gcd::content_univar (const poly &a, int x) {
+const poly polygcd::content_univar (const poly &a, int x) {
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: content_univar(" << a << "," << x << ")" << endl;
@@ -247,22 +247,22 @@ const poly poly_gcd::content_univar (const poly &a, int x) {
 	 	#[ content_multivar :
 */
 
-/**  Multivariate content of a polynomial
+/**  Content of a multivariate polynomial
  *
  *   Description
  *   ===========
  *   Calculates the content of a polynomial, regarded as a
- *   multivariate polynomial with coefficients in ZZ[x]. The content
- *   is the greatest common divisor of the ZZ[x] coefficients in front
- *   of the powers of the remaining variables. The result, therefore,
- *   is a polynomial in x.
+ *   multivariate polynomial in all variables except x (so with
+ *   coefficients in ZZ[x]). The content is the greatest common
+ *   divisor of the ZZ[x] coefficients in front of the powers of the
+ *   remaining variables. The result, therefore, is a polynomial in x.
  *
  *   Notes
  *   =====
  *   - The result has the sign of lcoeff(a).
  *   - Over ZZ/p^n, the leading coefficient of the content is defined as 1
  */
-const poly poly_gcd::content_multivar (const poly &a, int x) {
+const poly polygcd::content_multivar (const poly &a, int x) {
 	
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: content_multivar(" << a << "," << x << ")" << endl;
@@ -323,7 +323,7 @@ const poly poly_gcd::content_multivar (const poly &a, int x) {
  *   =====
  *   - The result is normalized and has leading coefficient 1.
  */
-const vector<WORD> poly_gcd::coefficient_list_gcd (const vector<WORD> &_a, const vector<WORD> &_b, WORD p) {
+const vector<WORD> polygcd::coefficient_list_gcd (const vector<WORD> &_a, const vector<WORD> &_b, WORD p) {
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: coefficient_list_gcd("<<_a<<","<<_b<<","<<p<<")"<<endl;
@@ -372,7 +372,7 @@ const vector<WORD> poly_gcd::coefficient_list_gcd (const vector<WORD> &_a, const
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 32-35]
  */
-const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
+const poly polygcd::gcd_Euclidean (const poly &a, const poly &b) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_Euclidean("<<a<<","<<b<<")"<<endl;
@@ -424,7 +424,7 @@ const poly poly_gcd::gcd_Euclidean (const poly &a, const poly &b) {
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 174-183]
  */
-const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2) {
+const poly polygcd::chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2) {
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  CALL: chinese_remainder(" << a1 << "," << m1 << "," << a2 << "," << m2 << ")" << endl;
@@ -486,7 +486,7 @@ const poly poly_gcd::chinese_remainder (const poly &a1, const poly &m1, const po
  *   - x must be the last variable (in lexicographical order) of the
  *     polynomial, so that one doesn't have to bother with sorting.
  */
-const poly poly_gcd::substitute_last(const poly &a, int x, int c) {
+const poly polygcd::substitute_last(const poly &a, int x, int c) {
 
 	POLY_GETIDENTITY(a);
 
@@ -562,7 +562,7 @@ const poly poly_gcd::substitute_last(const poly &a, int x, int c) {
  *   substituting all but one variable x2,...,xn in the polynomial a
  *   by the constants c2,...,cn.
  */
-const poly poly_gcd::substitute_all (const poly &a, const vector<int> &x, const vector<int> &c) {
+const poly polygcd::substitute_all (const poly &a, const vector<int> &x, const vector<int> &c) {
 
 	POLY_GETIDENTITY(a);
 
@@ -631,14 +631,14 @@ const poly poly_gcd::substitute_all (const poly &a, const vector<int> &x, const 
  *   - The method returns 0 upon failure. This is probably because the
  *     shape is wrong because of unlucky primes or substitutions.
  *
- *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; or
+ *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; and
  *    R.E. Zippel, "Probabilistic Algorithms for Sparse Polynomials", PhD thesis]
  */
-const poly poly_gcd::gcd_modular_sparse_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
+const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_sparse_interpolation("
-			 << a << "," << b << "," << x << "," << correctlc << "," << s <<") = " << endl;
+			 << a << "," << b << "," << x << "," << lc << "," << s <<") = " << endl;
 #endif
 
 	// count the number of terms in the polynomial
@@ -729,7 +729,7 @@ const poly poly_gcd::gcd_modular_sparse_interpolation (const poly &a, const poly
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : gcd_modular_sparse_interpolation("
-			 << a << "," << b << "," << x << "," << correctlc << "," << s <<") = " << res << endl;
+			 << a << "," << b << "," << x << "," << lc << "," << s <<") = " << res << endl;
 #endif
 	
 	return res;
@@ -757,10 +757,10 @@ const poly poly_gcd::gcd_modular_sparse_interpolation (const poly &a, const poly
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 300-311]
  */
-const poly poly_gcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
+const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << correctlc << "," << s <<")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << lc << "," << s <<")" << endl;
 #endif
 
 	// if univariate, then use Euclidean algorithm
@@ -875,11 +875,20 @@ const poly poly_gcd::gcd_modular_dense_interpolation (const poly &a, const poly 
  *   this prime. It continues choosing more primes and constructs a
  *   final result with the Chinese Remainder Algorithm.
  *
+ *   The leading coefficient problem is solved by multiplying both
+ *   polynomials with lc=gcd(lcoeff(a),lcoeff(b)). A gcd with a
+ *   leading coefficient lc can be constructed. This leading
+ *   coefficient is passed to the other methods and reduced along the
+ *   way.
+ *
  *   Notes
  *   =====
  *   - Necessary condition: icont(a) = icont(b) = 0
+ *   - More efficient methods for the leading coefficient problem exist,
+ *     such as Linzip (see: De Kleine et al, "Algorithms for the Non-monic
+ *     case of the Sparse Modular GCd Algorithm")
  */
-const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const vector<int> &x) {
+const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vector<int> &x) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular(" << origa << "," << origb << "," << x << ")" << endl;
@@ -997,11 +1006,12 @@ const poly poly_gcd::gcd_modular (const poly &origa, const poly &origb, const ve
  *   Notes
  *   =====
  *   - For small polynomials, this consumes time and never triggers.
+ *   - Is skipped if POLYGCD_USE_HEURISTIC_POSSIBLE is not defined.
  */
 
 bool gcd_heuristic_possible (const poly &a) {
 	
-#ifndef USE_GCD_HEURISTIC_POSSIBLE
+#ifndef POLYGCD_USE_HEURISTIC_POSSIBLE
 	return true;
 #endif
 
@@ -1024,7 +1034,7 @@ bool gcd_heuristic_possible (const poly &a) {
 		}
 	}
 		
-	return max_prod_deg*(max_digits-1+log(2*ABS(max_lead))/log(2)/(BITSINWORD/2)) < GCD_HEURISTIC_MAX_DIGITS;
+	return max_prod_deg*(max_digits-1+log(2*ABS(max_lead))/log(2)/(BITSINWORD/2)) < POLYGCD_HEURISTIC_MAX_DIGITS;
 }
 
 /*
@@ -1059,7 +1069,7 @@ bool gcd_heuristic_possible (const poly &a) {
  *   [for details, see "Algorithms for Computer Algebra", pp. 320-331]
  */
 
-const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<int> &x, int max_tries) {
+const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<int> &x, int max_tries) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_heuristic("<<a<<","<<b<<","<<x<<")\n";
@@ -1094,10 +1104,10 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 	poly xi(BHEAD pxi,nxi);
 	
 	// Addition of another random factor gives better performance
-	xi = xi*poly(BHEAD 2) + poly(BHEAD 2 + random()%GCD_HEURISTIC_MAX_ADD_RANDOM);
+	xi = xi*poly(BHEAD 2) + poly(BHEAD 2 + random()%POLYGCD_HEURISTIC_MAX_ADD_RANDOM);
 
 	// If degree*digits(xi) is too large, throw exception
-	if (max(a.degree(x[0]),b.degree(x[0])) * xi[xi[1]] >= MiN(AM.MaxTal, GCD_HEURISTIC_MAX_DIGITS)) {
+	if (max(a.degree(x[0]),b.degree(x[0])) * xi[xi[1]] >= MiN(AM.MaxTal, POLYGCD_HEURISTIC_MAX_DIGITS)) {
 #ifdef DEBUG
 		cout << "*** [" << thetime() << "]  RES : gcd_heuristic("<<a<<","<<b<<","<<x<<") = overflow\n";
 #endif
@@ -1165,7 +1175,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
 		}
 
 		// Next xi by multiplying with the golden ratio to avoid correlated errors
-		xi = xi * poly(BHEAD 28657) / poly(BHEAD 17711) + poly(BHEAD random()%GCD_HEURISTIC_MAX_ADD_RANDOM);
+		xi = xi * poly(BHEAD 28657) / poly(BHEAD 17711) + poly(BHEAD random() % POLYGCD_HEURISTIC_MAX_ADD_RANDOM);
 	}
 	
 #ifdef DEBUG
@@ -1200,7 +1210,7 @@ const poly poly_gcd::gcd_heuristic (const poly &a, const poly &b, const vector<i
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 314-320]
  */
-const poly poly_gcd::gcd (const poly &a, const poly &b) {
+const poly polygcd::gcd (const poly &a, const poly &b) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd("<<a<<","<<b<<")\n";
@@ -1240,7 +1250,7 @@ const poly poly_gcd::gcd (const poly &a, const poly &b) {
 	
 	poly gcd(BHEAD 0);
 
-#ifdef USE_GCD_HEURISTIC
+#ifdef POLYGCD_USE_HEURISTIC
 	// Try the heuristic gcd algorithm
 	if (a.modp==0 && gcd_heuristic_possible(a) && gcd_heuristic_possible(b)) {
 		try {
@@ -1323,7 +1333,7 @@ int DoGCDfunction(PHEAD WORD *argin, WORD *argout) {
 	while (*argin != 0) {
 		poly a(poly::argument_to_poly(BHEAD argin, true, var_to_idx));
 		if (modp > 0) a.setmod(modp,1);
-		gcd = poly_gcd::gcd(gcd, a);
+		gcd = polygcd::gcd(gcd, a);
 		argin += *argin;
 	}
 
@@ -1394,7 +1404,7 @@ WORD *PolyGCD(PHEAD WORD *a, WORD *b) {
 	}
 
 	// Calculate gcd
-	poly gcd(poly_gcd::gcd(pa,pb));
+	poly gcd(polygcd::gcd(pa,pb));
 
 	// Convert to Form notation
 	poly::poly_to_argument(gcd, AT.WorkPointer, false);
@@ -1487,7 +1497,7 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 
 	// Calculate result
 	if (den1 != den2) {
-		gcd = poly_gcd::gcd(den1,den2);
+		gcd = polygcd::gcd(den1,den2);
 		
 		num = num1*(den2/gcd) + num2*(den1/gcd);
 		den = (den1/gcd)*den2;
@@ -1496,7 +1506,7 @@ WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2) {
 		num = num1 + num2;
 		den = den1;
 	}
-	gcd = poly_gcd::gcd(num,den);
+	gcd = polygcd::gcd(num,den);
 
 	num /= gcd;
 	den /= gcd;
@@ -1615,8 +1625,8 @@ WORD PolyRatFunMul(PHEAD WORD *term) {
 			poly den2(BHEAD 1,modp,1);
 			if (t2<t+t[1]) den2=poly::argument_to_poly(BHEAD t2, true, var_to_idx);
 
-			poly gcd1(poly_gcd::gcd(num1,den2));
-			poly gcd2(poly_gcd::gcd(num2,den1));
+			poly gcd1(polygcd::gcd(num1,den2));
+			poly gcd2(polygcd::gcd(num2,den1));
 
 			num1 = (num1 / gcd1) * (num2 / gcd2);
 			den1 = (den1 / gcd2) * (den2 / gcd1);

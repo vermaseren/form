@@ -104,11 +104,10 @@ public:
 	const poly integer_lcoeff () const;
 	const poly lcoeff_univar (int x) const;
 	const poly lcoeff_multivar (int x) const;
-
 	const poly coefficient (int, int) const;
 	const poly derivative (int) const;
 	
-	// modulus
+	// modulo calculus
 	void setmod(WORD, WORD=1);
 	void coefficients_modulo (UWORD *a, WORD na);
 
@@ -133,7 +132,6 @@ public:
 
 	// monomials
 	static int monomial_compare (PHEAD const WORD *, const WORD *);
-	//	static bool monomial_larger (const WORD *, const WORD * PTAILDEF);
 	WORD last_monomial_index () const;
 	WORD* last_monomial () const;
 
@@ -194,7 +192,7 @@ inline void poly::check_memory (int i) {
 	if (i + AM.MaxTal >= size_of_terms) expand_memory(i+AM.MaxTal);
 }
 
-//   Indexing operators
+// indexing operators
 inline WORD& poly::operator[] (int i) {
 	return terms[i];
 }
