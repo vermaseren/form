@@ -159,9 +159,12 @@ const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const
 	POLY_GETIDENTITY(a);
 	
 	// Calculate s,t,gcd (mod p) with the Extended Euclidean Algorithm.
-	poly s (a,a.modp,1),t (b,b.modp,1);
-	poly sa(BHEAD 1,a.modp,1),sb(BHEAD 0,b.modp,1);
-	poly ta(BHEAD 0,a.modp,1),tb(BHEAD 1,b.modp,1);
+	poly s(a,a.modp,1);
+	poly t(b,b.modp,1);
+	poly sa(BHEAD 1,a.modp,1);
+	poly sb(BHEAD 0,b.modp,1);
+	poly ta(BHEAD 0,a.modp,1);
+	poly tb(BHEAD 1,b.modp,1);
 	
 	while (!t.is_zero()) {
 		poly x(s/t);
@@ -179,18 +182,30 @@ const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const
 	poly sbmodp(sb);
 	poly term(BHEAD 1);
 
+	sa.setmod(0,1);
+	sb.setmod(0,1);
+
+	poly amodp(a,a.modp,1);
+	poly bmodp(b,a.modp,1);	
+	poly error(poly(BHEAD 1) - sa*a - sb*b);
+	poly p(BHEAD a.modp);
+	
+	for (int n=1; n<a.modn && !error.is_zero(); n++) {
+		error /= p;
+		term *= p;
+		poly errormodp(error,a.modp,1);
+		poly dsa((samodp * errormodp) % bmodp);
+		// equivalent, but faster than the symmetric
+		// poly dsb((sbmodp * errormodp) % amodp);
+		poly dsb((errormodp - dsa*amodp) / bmodp);
+		sa += term * dsa;
+		sb += term * dsb;
+		error -= a*dsa + b*dsb;
+	}
+
 	sa.setmod(a.modp,a.modn);
 	sb.setmod(a.modp,a.modn);
 	
-	for (int n=2; n<=a.modn; n++) {
-		poly error(poly(BHEAD 1) - sa*a - sb*b);
-		if (error.is_zero()) break;
-		term *= poly(BHEAD a.modp);
-		error /= term;
-		sa += term * (samodp * error % b);
-		sb += term * (sbmodp * error % a);
-	}
-
 	// Output the result
 	vector<poly> res;
 	res.push_back(sa);
@@ -498,7 +513,6 @@ void polyfact::predetermine (int dep, const vector<vector<int> > &state, vector<
 
 	term.pop_back();
 }
-
 
 /*
 		#] predetermine :
@@ -1266,8 +1280,8 @@ const vector<poly> polyfact::Berlekamp_find_factors (const poly &_a, const vecto
  *   =====
  *   Theoretically, this method takes exponential time (for ugly,
  *   constructed cases), but in practice it is fast. This can be fixed
- *   by implementing Van Hoeij's knapsack method. See: "Factoring
- *   polynomials and the knapsack problem" by M. van Hoeij.
+ *   by implementing Van Hoeij's knapsack method (see: "Factoring
+ *   polynomials and the knapsack problem" by M. van Hoeij). [TODO]
  */
 const vector<poly> polyfact::combine_factors (const poly &a, const vector<poly> &f) {
 

@@ -3060,23 +3060,28 @@ ModErr:
 WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 {
 	WORD n;
-	
-	WORD nhalfmod;
-	UWORD halfmod[nc];
-	
-	UWORD two[1],remain[1];
-	WORD dummy;
-	
-	two[0] = 2;
-	DivLong(c,ABS(nc),two,1,halfmod,&nhalfmod,remain,&dummy);
-	
+	WORD nhalfc;
+	UWORD halfc[nc];
+
+	// determine c/2 by right shifting
+	nhalfc=nc;
+	memcpy(halfc,c,nc*sizeof(UWORD));
+
+	for (n=0; n<nhalfc; n++) {
+		halfc[n] >>= 1;
+		if (n+1<nc) halfc[n] |= c[n+1] << (BITSINWORD-1);
+	}
+
+	if (halfc[nhalfc-1]==0)
+		nhalfc--;
+				 
 	// takes care of the number never expanding, e.g., -1(mod 100) -> 99 -> -1
-	if (BigLong(a,ABS(*na),halfmod,nhalfmod) <= 0) return(0);
+	if (BigLong(a,ABS(*na),halfc,nhalfc) <= 0) return(0);
 	
 	TakeModulus(a,na,c,nc,par);
 	
 	n = ABS(*na);
-	if (BigLong(a,n,halfmod,nhalfmod) > 0) {
+	if (BigLong(a,n,halfc,nhalfc) > 0) {
 		SubPLon(c,nc,a,n,a,&n);
 		if ( *na > 0 ) { *na = -n; }
 		else { *na = n; }

@@ -75,4 +75,3 @@ namespace polygcd {
 	const poly substitute_last(const poly &a, int x, int c);
 	const poly substitute_all(const poly &a, const std::vector<int> &x, const std::vector<int> &c);
 }
-

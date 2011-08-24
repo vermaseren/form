@@ -449,16 +449,20 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
+	bool both_mod_small=false;
+	
 	if (c.modp!=0) {
 		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+			if (a.modp>0 && b.modp>0 && a.modn==1 && b.modn==1)
+				both_mod_small=true;
 		}
 		else {
 			RaisPowCached(BHEAD c.modp,c.modn,&modq,&nmodq);
 		}
 	}
-	
+
 	int ai=1,bi=1,ci=1;
 	
 	while (ai<a[0] || bi<b[0]) {
@@ -482,12 +486,22 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 		else {
 			// insert term from a+b
 			c.termscopy(&a[ai],ci,max(a[ai],b[bi]));
-			WORD nc = c[ci+c[ci]-1];
-			AddLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
-							(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
-							(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
-			if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																			 modq, nmodq, NOUNPACK);
+			WORD nc=0;
+			if (both_mod_small) {
+				c[ci+1+AN.poly_num_vars] = ((LONG)a[ai+1+AN.poly_num_vars]*a[ai+a[ai]-1]+
+																		(LONG)b[bi+1+AN.poly_num_vars]*b[bi+b[bi]-1]) % c.modp;
+				if ((WORD)c[ci+1+AN.poly_num_vars] > +c.modp/2) c[ci+1+AN.poly_num_vars] -= c.modp;
+				if ((WORD)c[ci+1+AN.poly_num_vars] < -c.modp/2) c[ci+1+AN.poly_num_vars] += c.modp;
+				nc = (c[ci+1+AN.poly_num_vars]==0 ? 0 : SGN((WORD)c[ci+1+AN.poly_num_vars]));
+				c[ci+1+AN.poly_num_vars] = ABS((WORD)c[ci+1+AN.poly_num_vars]);													
+			}
+			else {
+				AddLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
+								(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
+								(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
+				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
+																				 modq, nmodq, NOUNPACK);
+			}
 							
 			if (nc!=0) {
 				c[ci] = 2+AN.poly_num_vars+ABS(nc);
@@ -519,10 +533,14 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
+	bool both_mod_small=false;
+	
 	if (c.modp!=0) {
 		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+			if (a.modp>0 && b.modp>0 && a.modn==1 && b.modn==1)
+				both_mod_small=true;
 		}
 		else {
 			RaisPowCached(BHEAD c.modp,c.modn,&modq,&nmodq);
@@ -553,12 +571,22 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 		else {
 			// insert term from a+b
 			c.termscopy(&a[ai],ci,max(a[ai],b[bi]));
-			WORD nc = c[ci+c[ci]-1];
-			AddLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
-							(UWORD *)&b[bi+1+AN.poly_num_vars],-b[bi+b[bi]-1], // -b[...] causes subtraction
-							(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
-			if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																			 modq, nmodq, NOUNPACK);
+			WORD nc=0;
+			if (both_mod_small) {
+				c[ci+1+AN.poly_num_vars] = ((LONG)a[ai+1+AN.poly_num_vars]*a[ai+a[ai]-1]-
+																		(LONG)b[bi+1+AN.poly_num_vars]*b[bi+b[bi]-1]) % c.modp;
+				if ((WORD)c[ci+1+AN.poly_num_vars] > +c.modp/2) c[ci+1+AN.poly_num_vars] -= c.modp;
+				if ((WORD)c[ci+1+AN.poly_num_vars] < -c.modp/2) c[ci+1+AN.poly_num_vars] += c.modp;
+				nc = (c[ci+1+AN.poly_num_vars]==0 ? 0 : SGN((WORD)c[ci+1+AN.poly_num_vars]));
+				c[ci+1+AN.poly_num_vars] = ABS((WORD)c[ci+1+AN.poly_num_vars]);													
+			}
+			else {
+				AddLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
+								(UWORD *)&b[bi+1+AN.poly_num_vars],-b[bi+b[bi]-1], // -b[...] causes subtraction
+								(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
+				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
+																				 modq, nmodq, NOUNPACK);
+			}
 
 			if (nc!=0) {
 				c[ci] = 2+AN.poly_num_vars+ABS(nc);
@@ -637,10 +665,14 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 	WORD nmodq=0;
 	UWORD *modq=NULL;
 	
+	bool both_mod_small=false;
+	
 	if (c.modp!=0) {
 		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+			if (a.modp>0 && b.modp>0 && a.modn==1 && b.modn==1)
+				both_mod_small=true;
 		}
 		else {
 			RaisPowCached(BHEAD c.modp,c.modn,&modq,&nmodq);
@@ -655,19 +687,39 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
       for (int i=0; i<AN.poly_num_vars; i++)
         c[ci+1+i] = a[ai+1+i] + b[bi+1+i];
       WORD nc;
-      MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
-              (UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
-              (UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
-			if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																			 modq, nmodq, NOUNPACK);
+
+			// if both polynomials are modulo p^1, use integer calculus
+			if (both_mod_small) {
+				c[ci+1+AN.poly_num_vars] =
+					((LONG)a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars] *
+					 b[bi+1+AN.poly_num_vars] * b[bi+2+AN.poly_num_vars]) % c.modp;
+				nc = (c[ci+1+AN.poly_num_vars]==0 ? 0 : 1);
+			}
+			else {
+				// otherwise, use form long calculus
+				MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
+								(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
+								(UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
+				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
+																				 modq, nmodq, NOUNPACK);
+			}
 
 			if (nc!=0) {
 				c[ci] = 2+AN.poly_num_vars+ABS(nc);
 				ci += c[ci];
-				c[ci-1] = nc;
+
+				if (both_mod_small) {
+					if (c[ci-2] > +c.modp/2) c[ci-2] -= c.modp;
+					if (c[ci-2] < -c.modp/2) c[ci-2] += c.modp;
+					c[ci-1] = SGN(c[ci-2]);
+					c[ci-2] = ABS(c[ci-2]);
+				}
+				else {
+					c[ci-1] = nc;
+				}
 			}
     }
-
+	
   c[0]=ci;
 }
 
@@ -684,11 +736,15 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 
 	WORD nmodq=0;
 	UWORD *modq=NULL;
+
+	bool both_mod_small=false;
 	
 	if (c.modp!=0) {
 		if (c.modn == 1) {
 			modq = (UWORD *)&c.modp;
 			nmodq = 1;
+			if (a.modp>0 && b.modp>0 && a.modn==1 && b.modn==1)
+				both_mod_small=true;
 		}
 		else {
 			RaisPowCached(BHEAD c.modp,c.modn,&modq,&nmodq);
@@ -725,16 +781,28 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 			int thispow = AN.poly_num_vars==0 ? 0 : a[ai+1+var] + b[bi+1+var];
 			
 			if (thispow == pow) {
-				MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
-								(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
-								(UWORD *)&t[0], &nt);
-				
-				AddLong ((UWORD *)&t[0], nt,
-								 (UWORD *)&c[ci+1+AN.poly_num_vars], nc,
-								 (UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
 
-				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
-																				 modq, nmodq, NOUNPACK);
+				// if both polynomials are modulo p^1, use integer calculus
+				if (both_mod_small) {
+					c[ci+1+AN.poly_num_vars] =
+						(c[ci+1+AN.poly_num_vars] * nc +
+						(LONG)a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars] *
+						 b[bi+1+AN.poly_num_vars] * b[bi+2+AN.poly_num_vars]) % c.modp;
+					nc = (c[ci+1+AN.poly_num_vars]==0 ? 0 : 1);
+				}
+				else {
+					// otherwise, use form long calculus
+					MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
+									(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
+									(UWORD *)&t[0], &nt);
+					
+					AddLong ((UWORD *)&t[0], nt,
+									 (UWORD *)&c[ci+1+AN.poly_num_vars], nc,
+									 (UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
+					
+					if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
+																					 modq, nmodq, NOUNPACK);
+				}
 				
 				ai += a[ai];
 				bi -= ABS(b[bi-1]) + 2 + AN.poly_num_vars;
@@ -754,7 +822,17 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 			
 			c[ci] =	2+AN.poly_num_vars+ABS(nc);
 			ci += c[ci];
-			c[ci-1] = nc;			
+
+			// if necessary, adjust to range [-p/2,p/2]
+			if (both_mod_small) {
+				if (c[ci-2] > +c.modp/2) c[ci-2] -= c.modp;
+				if (c[ci-2] < -c.modp/2) c[ci-2] += c.modp;
+				c[ci-1] = SGN(c[ci-2]);
+				c[ci-2] = ABS(c[ci-2]);
+			}
+			else {
+				c[ci-1] = nc;
+			}
 		}
 	}
 
@@ -884,8 +962,8 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 				WORD nc = c[ci+c[ci]-1];
 
 				AddLong ((UWORD *)&p[4+AN.poly_num_vars], p[3],
-								 (UWORD *)&c[ci+AN.poly_num_vars+1], nc,
-								 (UWORD *)&c[ci+AN.poly_num_vars+1],&nc);
+									 (UWORD *)&c[ci+AN.poly_num_vars+1], nc,
+									 (UWORD *)&c[ci+AN.poly_num_vars+1],&nc);
 				
 				if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
 																				 modq, nmodq, NOUNPACK);
@@ -904,6 +982,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 			for (int j=0; j<AN.poly_num_vars; j++)
 				p[4+j] = a[p[0]+1+j] + b[p[1]+1+j];
 
+			// if both polynomials are modulo p^1, use integer calculus
 			MulLong((UWORD *)&a[p[0]+1+AN.poly_num_vars], a[p[0]+a[p[0]]-1],
 							(UWORD *)&b[p[1]+1+AN.poly_num_vars], b[p[1]+b[p[1]]-1],
 							(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
@@ -1029,10 +1108,14 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 	WORD nltbinv=0;
 	UWORD *ltbinv=NULL;
 
+	bool both_mod_small=false;
+	
 	if (q.modp!=0) {
 		if (q.modn == 1) {
 			modq = (UWORD *)&q.modp;
 			nmodq = 1;
+			if (a.modp>0 && b.modp>0 && a.modn==1 && b.modn==1)
+				both_mod_small=true;
 		}
 		else {
 			RaisPowCached(BHEAD q.modp,q.modn,&modq,&nmodq);
@@ -1065,12 +1148,22 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 								(UWORD *)&r[ri+1+AN.poly_num_vars], &nr);
 			}
 			else {
-				MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
-								ltbinv, nltbinv,
-								(UWORD *)&q[qi+1+AN.poly_num_vars], &nq);
-				TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &nq,
-													modq,nmodq, NOUNPACK);
-				nr=0;
+				// if both polynomials are modulo p^1, use integer calculus
+				if (both_mod_small) {
+					q[qi+1+AN.poly_num_vars] =
+						((LONG)a[ai+1+AN.poly_num_vars] * a[ai+a[ai]-1] * ltbinv[0] * nltbinv) % q.modp;
+					nq = (q[qi+1+AN.poly_num_vars]==0 ? 0 : 1);
+				}
+				else {
+					// otherwise, use form long calculus
+					MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
+									ltbinv, nltbinv,
+									(UWORD *)&q[qi+1+AN.poly_num_vars], &nq);
+					TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &nq,
+														modq,nmodq, NOUNPACK);
+				}
+				
+				nr=0;				
 			}
 		}
 		else {
@@ -1084,7 +1177,17 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 		if (nq!=0) {
 			q[qi] = 2+AN.poly_num_vars+ABS(nq);
 			qi += q[qi];
-			q[qi-1] = nq;
+			
+			// if necessary, adjust to range [-p/2,p/2]
+			if (both_mod_small) {
+				if (q[qi-2] > +q.modp/2) q[qi-2] -= q.modp;
+				if (q[qi-2] < -q.modp/2) q[qi-2] += q.modp;
+				q[qi-1] = SGN(q[qi-2]);
+				q[qi-2] = ABS(q[qi-2]);
+			}
+			else {
+				q[qi-1] = nq;
+			}
 		}
 		
 		if (nr != 0) {
@@ -1126,10 +1229,14 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	WORD nltbinv=0;
 	UWORD *ltbinv=NULL;
 	
+	bool both_mod_small=false;
+	
 	if (q.modp!=0) {
 		if (q.modn == 1) {
 			modq = (UWORD *)&q.modp;
 			nmodq = 1;
+			if (a.modp>0 && b.modp>0 && a.modn==1 && b.modn==1)
+				both_mod_small=true;
 		}
 		else {
 			RaisPowCached(BHEAD q.modp,q.modn,&modq,&nmodq);
@@ -1137,7 +1244,9 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 		ltbinv = NumberMalloc("polynomial division (univar)");
 		GetLongModInverses(BHEAD (UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, &nltbinv, NULL, NULL);
 	}
-	
+
+	//	both_mod_small=false;
+
 	WORD ns=0;
 	WORD nt;
 	UWORD *s = NumberMalloc("polynomial division (univar)");
@@ -1176,16 +1285,35 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 				bi += b[bi];
 			
 			if (bi<b[0] && b[bi+1+var]+q[qj+1+var] == pow) {
-				MulLong((UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
-								(UWORD *)&q[qj+1+AN.poly_num_vars], q[qj+q[qj]-1],
-								t, &nt);
-				nt *= -1;
-				AddLong(t,nt,s,ns,s,&ns);
-				if (q.modp!=0) TakeNormalModulus((UWORD *)s,&ns,modq, nmodq, NOUNPACK);
+				// if both polynomials are modulo p^1, use integer calculus
+
+				if (both_mod_small) {
+					s[0] = ((WORD)s[0]*ns - (LONG)b[bi+1+AN.poly_num_vars] * b[bi+b[bi]-1] *
+									q[qj+1+AN.poly_num_vars] * q[qj+q[qj]-1]) % q.modp;
+					ns = (s[0]==0 ? 0 : 1);
+				}
+				else {
+					// otherwise, use form long calculus
+					MulLong((UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
+									(UWORD *)&q[qj+1+AN.poly_num_vars], q[qj+q[qj]-1],
+									t, &nt);
+					nt *= -1;
+					AddLong(t,nt,s,ns,s,&ns);
+					if (q.modp!=0) TakeNormalModulus((UWORD *)s,&ns,modq, nmodq, NOUNPACK);
+				}
 			}
 		}
 
 		if (ns != 0) {
+			// if necessary, adjust to range [-p/2,p/2]
+			if (both_mod_small) {
+				s[0]*=ns;
+				if ((WORD)s[0] > +q.modp/2) s[0] -= q.modp;
+				if ((WORD)s[0] < -q.modp/2) s[0] += q.modp;
+				ns = SGN((WORD)s[0]);
+				s[0] = ABS((WORD)s[0]);
+			}
+
 			if (pow >= bpow) {
 				// large power, so divide by b
 				if (q.modp == 0) {
@@ -1194,9 +1322,18 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 									(UWORD *)&q[qi+1+AN.poly_num_vars], &ns, t, &nt);
 				}
 				else {
-					MulLong(s, ns, ltbinv, nltbinv,	(UWORD *)&q[qi+1+AN.poly_num_vars], &ns);
-					TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &ns,
-														modq,nmodq, NOUNPACK);
+					if (both_mod_small) {
+						q[qi+1+AN.poly_num_vars] = ((LONG)s[0]*ns*ltbinv[0]*nltbinv) % q.modp;
+						if ((WORD)q[qi+1+AN.poly_num_vars] > +q.modp/2) q[qi+1+AN.poly_num_vars] -= q.modp;
+						if ((WORD)q[qi+1+AN.poly_num_vars] < -q.modp/2) q[qi+1+AN.poly_num_vars] += q.modp;
+						ns = (q[qi+1+AN.poly_num_vars]==0 ? 0 : SGN((WORD)q[qi+1+AN.poly_num_vars]));
+						q[qi+1+AN.poly_num_vars] = ABS((WORD)q[qi+1+AN.poly_num_vars]);									
+					}
+					else {
+						MulLong(s, ns, ltbinv, nltbinv,	(UWORD *)&q[qi+1+AN.poly_num_vars], &ns);
+						TakeNormalModulus((UWORD *)&q[qi+1+AN.poly_num_vars], &ns,
+															modq,nmodq, NOUNPACK);
+					}
 					nt=0;
 				}					
 			}

@@ -593,10 +593,8 @@ const poly polygcd::substitute_all (const poly &a, const vector<int> &x, const v
 		// add term of a to term of b
 		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
 		
-		for (int i=0; i<(int)c.size(); i++) {
-			coeff *= RaisPowMod(c[i], a[ai+1+x[i+1]], a.modp);
-			coeff %= a.modp;
-		}
+		for (int i=0; i<(int)c.size(); i++) 
+			coeff = (coeff*RaisPowMod(c[i],a[ai+1+x[i+1]],a.modp)) % a.modp;
 		
 		coeff += b[bi+AN.poly_num_vars+1];
 		b[bi+AN.poly_num_vars+1] = (coeff%a.modp + a.modp) % a.modp;
@@ -886,9 +884,9 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
  *   Notes
  *   =====
  *   - Necessary condition: icont(a) = icont(b) = 0
- *   - More efficient methods for the leading coefficient problem exist,
- *     such as Linzip (see: De Kleine et al, "Algorithms for the Non-monic
- *     case of the Sparse Modular GCd Algorithm")
+ *   - More efficient methods for the leading coefficient problem
+ *     exist, such as Linzip (see: "Algorithms for the Non-monic case
+ *     of the Sparse Modular GCD Algorithm" by De Kleine et al) [TODO]
  */
 const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vector<int> &x) {
 
@@ -1097,7 +1095,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
 		}
 	}
 	
-	for (int i=1; i<b[0]; i+=b[i]) {
+	for (int i=1; i<b[0]; i+=b[i]) {		
 		WORD nb = ABS(b[i+b[i]-1]);
 		if (BigLong((UWORD *)&b[i+b[i]-1-nb], nb, pxi, nxi) > 0) {
 			pxi = (UWORD *)&b[i+b[i]-1-nb];
