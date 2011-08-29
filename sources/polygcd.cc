@@ -57,7 +57,7 @@ using namespace std;
   	#[ ostream operator :
 */
 
-//#ifdef DEBUG
+#ifdef DEBUG
 // ostream operator for outputting vector<T>s	for debugging purposes
 template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 	out<<"{";
@@ -68,7 +68,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 	out<<"}";
 	return out;
 }
-//#endif
+#endif
 
 /*
   	#] ostream operator :
@@ -294,7 +294,7 @@ const poly polygcd::content_multivar (const poly &a, int x) {
 
 		res = gcd_Euclidean(res, b);
 		if (res.is_integer()) {
-			res = poly(a.sign(),a.modp,a.modn); 
+			res = poly(BHEAD a.sign(),a.modp,a.modn); 
 			break;
 		}
 	}	
@@ -498,7 +498,7 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 	// cache size is bounded by the degree in x, twice the number of terms of
 	// the polynomial and a constant
 	vector<WORD> cache(min(a.degree(x)+1,min(2*a.number_of_terms(),
-																					 SUBSTITUTE_LAST_CACHE_MAX_POWER)), 0);
+																					 RAISPOWMOD_CACHE_MAX_POWER)), 0);
 
 	for (int ai=1; ai<=a[0]; ai+=a[ai]) {
 		// last term or different power, then add term to b iff non-zero
@@ -561,61 +561,34 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 
 /*
   	#] substitute_last :
-	 	#[ substitute_all :
-*/
-
-/**  Substitute all variables of a polynomial
- *
- *   Description
- *   ===========
- *   Returns the univariate polynomial that is obtained by
- *   substituting all but one variable x2,...,xn in the polynomial a
- *   by the constants c1,...,c{n-1}..
- */
-const poly polygcd::substitute_all (const poly &a, const vector<int> &x, const vector<int> &c) {
-
-	POLY_GETIDENTITY(a);
-
-	poly b(BHEAD 0);
-	int bi=1;
-	
-	for (int ai=1; ai<a[0]; ai+=a[ai]) {
-		b.check_memory(bi);
-
-		b[bi] = 3+AN.poly_num_vars;
-		for (int i=0; i<AN.poly_num_vars; i++)
-			b[bi+1+i] = 0;
-		b[bi+1+x[0]] = a[ai+1+x[0]];
-		b[bi+AN.poly_num_vars+1] = 0;
-		b[bi+AN.poly_num_vars+2] = 1;
-
-		// add term of a to term of b
-		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
-		
-		for (int i=0; i<(int)c.size(); i++) 
-			coeff = (coeff*RaisPowMod(c[i],a[ai+1+x[i+1]],a.modp)) % a.modp;
-		
-		b[bi+AN.poly_num_vars+1] = (coeff%a.modp + a.modp) % a.modp;
-		bi+=b[bi];
-	}
-	
-	b[0]=bi;
-	b.setmod(a.modp);
-	return b;
-}
-
-/*
-	 	#] substitute_all :
-	 	#[ sparse_interpolation helper functions :
+		#[ sparse_interpolation helper functions :
 */
 
 // Returns a list of size #terms(a) with entries PROD(ci^powi, i=2..n)
 const vector<int> polygcd::sparse_interpolation_get_mul_list (const poly &a, const vector<int> &x, const vector<int> &c) {
+
+	// cache size for variable x is bounded by the degree in x, twice
+	// the number of terms of the polynomial and a constant
+	vector<vector<WORD> >cache(c.size());
+	int max_cache_size = min(2*a.number_of_terms(),RAISPOWMOD_CACHE_MAX_POWER);
+	for (int i=0; i<(int)c.size(); i++)
+		cache[i] = vector<WORD>(min(a.degree(x[i+1])+1,max_cache_size), 0);
+	
 	vector<int> res;
 	for (int i=1; i<a[0]; i+=a[i]) {
-		res.push_back(1);
-		for (int j=0; j<(int)c.size(); j++) 
-			res.back() = ((LONG)res.back() * RaisPowMod(c[j],a[i+1+x[j+1]],a.modp)) % a.modp;
+		LONG coeff=1;
+		for (int j=0; j<(int)c.size(); j++) {
+			int pow = a[i+1+x[j+1]];
+			if (pow<(int)cache[j].size()) {
+				if (cache[j][pow]==0) 
+					cache[j][pow] = RaisPowMod(c[j], pow, a.modp);
+				coeff = (coeff * cache[j][pow]) % a.modp;
+			}
+			else {
+				coeff = (coeff * RaisPowMod(c[j], pow, a.modp)) % a.modp;
+			}
+		}
+		res.push_back(coeff);
 	}
 	return res;
 }

@@ -43,8 +43,8 @@ const int POLYGCD_HEURISTIC_MAX_TRIES = 10;
 // a fudge factor, which improves efficiency
 const int POLYGCD_HEURISTIC_MAX_ADD_RANDOM = 10;
 
-// the maximum power that is cached in substitute_last
-const int SUBSTITUTE_LAST_CACHE_MAX_POWER = 1000;
+// maximum cached power in substitute_last and sparse_interpolation_get_mul_list
+const int RAISPOWMOD_CACHE_MAX_POWER = 1000;
 
 // outside of the namespace, because these are called from C
 int DoGCDfunction(PHEAD WORD *argin, WORD *argout);
@@ -76,5 +76,4 @@ namespace polygcd {
 	
 	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);
 	const poly substitute_last(const poly &a, int x, int c);
-	const poly substitute_all(const poly &a, const std::vector<int> &x, const std::vector<int> &c);
 }
