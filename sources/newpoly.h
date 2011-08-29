@@ -94,13 +94,15 @@ public:
 	bool is_zero () const;
 	bool is_one () const;
 	bool is_integer () const;
+	bool is_monomial () const;
 	WORD is_dense_univariate () const;
 
 	// properties
 	int sign () const;
 	WORD degree (int) const;
 	int first_variable () const;
-	const std::vector<int> all_variables () const;
+	int number_of_terms () const;
+	const std::vector<int> all_variables () const;	
 	const poly integer_lcoeff () const;
 	const poly lcoeff_univar (int x) const;
 	const poly lcoeff_multivar (int x) const;
@@ -109,7 +111,7 @@ public:
 	
 	// modulo calculus
 	void setmod(WORD, WORD=1);
-	void coefficients_modulo (UWORD *a, WORD na);
+	void coefficients_modulo (UWORD *, WORD, bool);
 
 	// simple polynomials
 	static const poly simple_poly (PHEAD int, int=0, int=1, int=0, int=1);

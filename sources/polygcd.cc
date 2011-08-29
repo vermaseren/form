@@ -57,7 +57,7 @@ using namespace std;
   	#[ ostream operator :
 */
 
-#ifdef DEBUG
+//#ifdef DEBUG
 // ostream operator for outputting vector<T>s	for debugging purposes
 template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 	out<<"{";
@@ -68,7 +68,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 	out<<"}";
 	return out;
 }
-#endif
+//#endif
 
 /*
   	#] ostream operator :
@@ -260,7 +260,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
  *   Notes
  *   =====
  *   - The result has the sign of lcoeff(a).
- *   - Over ZZ/p^n, the leading coefficient of the content is defined as 1
+ *   - Over ZZ/p^n, the leading coefficient of the content is defined as +/-1
  */
 const poly polygcd::content_multivar (const poly &a, int x) {
 	
@@ -294,7 +294,7 @@ const poly polygcd::content_multivar (const poly &a, int x) {
 
 		res = gcd_Euclidean(res, b);
 		if (res.is_integer()) {
-			res = integer_content(a);
+			res = poly(a.sign(),a.modp,a.modn); 
 			break;
 		}
 	}	
@@ -494,7 +494,12 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 
 	bool zero=true;
 	int bi=1;
-	
+
+	// cache size is bounded by the degree in x, twice the number of terms of
+	// the polynomial and a constant
+	vector<WORD> cache(min(a.degree(x)+1,min(2*a.number_of_terms(),
+																					 SUBSTITUTE_LAST_CACHE_MAX_POWER)), 0);
+
 	for (int ai=1; ai<=a[0]; ai+=a[ai]) {
 		// last term or different power, then add term to b iff non-zero
 		if (!zero) {
@@ -533,13 +538,18 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 
 		// add term of a to the current term in b
 		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
-		coeff *= RaisPowMod(c, a[ai+1+x], a.modp);
-		coeff %= a.modp;
-
-		coeff += b[bi+AN.poly_num_vars+1];
-		coeff %= a.modp;
+		int pow = a[ai+1+x];
 		
-		b[bi+AN.poly_num_vars+1] = coeff;
+		if (pow<(int)cache.size()) {
+			if (cache[pow]==0) 
+				cache[pow] = RaisPowMod(c, pow, a.modp);
+			coeff = (coeff * cache[pow]) % a.modp;
+		}
+		else {
+			coeff = (coeff * RaisPowMod(c, pow, a.modp)) % a.modp;
+		}
+		
+		b[bi+AN.poly_num_vars+1] = (coeff + b[bi+AN.poly_num_vars+1]) % a.modp;
 		if (b[bi+AN.poly_num_vars+1] != 0) zero=false;
 	}
 
@@ -560,35 +570,24 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
  *   ===========
  *   Returns the univariate polynomial that is obtained by
  *   substituting all but one variable x2,...,xn in the polynomial a
- *   by the constants c2,...,cn.
+ *   by the constants c1,...,c{n-1}..
  */
 const poly polygcd::substitute_all (const poly &a, const vector<int> &x, const vector<int> &c) {
 
 	POLY_GETIDENTITY(a);
 
 	poly b(BHEAD 0);
-
-	bool zero=true;
 	int bi=1;
 	
 	for (int ai=1; ai<a[0]; ai+=a[ai]) {
-		// different power in x, then add term to b iff non-zero
-		if (!zero && a[ai+1+x[0]]!=b[bi+1+x[0]]) {
-			zero=true;
-			bi+=b[bi];
-		}
-		
 		b.check_memory(bi);
 
-		// create new term in b
-		if (zero) {
-			b[bi] = 3+AN.poly_num_vars;
-			for (int i=0; i<AN.poly_num_vars; i++)
-				b[bi+1+i] = 0;
-			b[bi+1+x[0]] = a[ai+1+x[0]];
-			b[bi+AN.poly_num_vars+1] = 0;
-			b[bi+AN.poly_num_vars+2] = 1;
-		}
+		b[bi] = 3+AN.poly_num_vars;
+		for (int i=0; i<AN.poly_num_vars; i++)
+			b[bi+1+i] = 0;
+		b[bi+1+x[0]] = a[ai+1+x[0]];
+		b[bi+AN.poly_num_vars+1] = 0;
+		b[bi+AN.poly_num_vars+2] = 1;
 
 		// add term of a to term of b
 		LONG coeff = a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars];
@@ -596,21 +595,76 @@ const poly polygcd::substitute_all (const poly &a, const vector<int> &x, const v
 		for (int i=0; i<(int)c.size(); i++) 
 			coeff = (coeff*RaisPowMod(c[i],a[ai+1+x[i+1]],a.modp)) % a.modp;
 		
-		coeff += b[bi+AN.poly_num_vars+1];
 		b[bi+AN.poly_num_vars+1] = (coeff%a.modp + a.modp) % a.modp;
-		
-		if (b[bi+AN.poly_num_vars+1] != 0) zero=false;
+		bi+=b[bi];
 	}
-
-	if (!zero) bi+=b[bi];
 	
 	b[0]=bi;
 	b.setmod(a.modp);
-	return b;	
+	return b;
 }
 
 /*
 	 	#] substitute_all :
+	 	#[ sparse_interpolation helper functions :
+*/
+
+// Returns a list of size #terms(a) with entries PROD(ci^powi, i=2..n)
+const vector<int> polygcd::sparse_interpolation_get_mul_list (const poly &a, const vector<int> &x, const vector<int> &c) {
+	vector<int> res;
+	for (int i=1; i<a[0]; i+=a[i]) {
+		res.push_back(1);
+		for (int j=0; j<(int)c.size(); j++) 
+			res.back() = ((LONG)res.back() * RaisPowMod(c[j],a[i+1+x[j+1]],a.modp)) % a.modp;
+	}
+	return res;
+}
+
+// Multiplies the coefficients of a with the entries of mul
+void polygcd::sparse_interpolation_mul_poly (poly &a, const vector<int> &mul) {
+	for (int i=1,j=0; i<a[0]; i+=a[i],j++) 
+		a[i+a[i]-2] = ((LONG)a[i+a[i]-2]*mul[j]) % a.modp;
+}
+
+// Sets all coefficients to the range 0..modp-1 and the powers of x2...xn to 0
+const poly polygcd::sparse_interpolation_reduce_poly (const poly &a, const vector<int> &x) {
+	poly res(a);
+	for (int i=1; i<a[0]; i+=a[i]) {
+		for (int j=1; j<(int)x.size(); j++)
+			res[i+1+x[j]]=0;
+		if (res[i+a[i]-1]==-1) {
+			res[i+a[i]-1]=1;
+			res[i+a[i]-2]=a.modp-res[i+a[i]-2];
+		}
+	}
+	return res;
+}
+
+// Collects entries with equal powers, so that the result is a proper polynomial
+const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
+	
+	POLY_GETIDENTITY(a);
+	poly res(BHEAD 0,a.modp,1);
+
+	int j=1;
+	bool newterm=true;
+		
+	for (int i=1; i<a[0]; i+=a[i]) {
+		if (newterm)
+			res.termscopy(&a[i], j, a[i]);
+		else 
+			res[j+res[j]-2] = ((LONG)res[j+res[j]-2] + a[i+a[i]-2]) % a.modp;
+		
+		newterm = i+a[i] == a[0] || res[j+1+x] != a[i+a[i]+1+x];
+		if (newterm && res[j+res[j]-2]!=0) j += res[j];
+	}
+
+	res[0]=j;
+	return res;
+}
+
+/*
+	 	#] sparse_interpolation helper functions :
 	 	#[ gcd_modular_sparse_interpolation :
 */
 
@@ -621,14 +675,22 @@ const poly polygcd::substitute_all (const poly &a, const vector<int> &x, const v
  *   Assuming that it is known which terms of the gcd are non-zero
  *   (this is determined by dense interpolation), this method
  *   generates linear equations for the coefficients by substituting
- *   random numbers. These equations are then solved by Gaussian
- *   elimination to give the correct coefficients of the gcd.
+ *   numbers. These equations are then solved by Gaussian elimination
+ *   to give the correct coefficients of the gcd.
+ *
+ *   The first set of substitutions is randomly generated. The next
+ *   set is obtained by squaring these numbers and so on. This results
+ *   in matrix of equations which is solved by Gaussian elimination.
  *
  *   Notes
  *   =====
  *   - The method returns 0 upon failure. This is probably because the
  *     shape is wrong because of unlucky primes or substitutions.
- *
+ *   - The obtained matrix is a Vandermonde matrix, which can be
+ *     inverted faster than with Gaussian elimination, see
+ *     e.g. "Computing the Greatest Common Divisor of Multivariate
+ *     Polynomials over Finite Fields" by Suling Yang. [TODO]
+ * 
  *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; and
  *    R.E. Zippel, "Probabilistic Algorithms for Sparse Polynomials", PhD thesis]
  */
@@ -640,84 +702,145 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 #endif
 
 	POLY_GETIDENTITY(a);
-	
-	// count the number of terms in the polynomial
+			
+	// reduce polynomials
+	poly ared(sparse_interpolation_reduce_poly(a,x));
+	poly bred(sparse_interpolation_reduce_poly(b,x));
+	poly lcred(sparse_interpolation_reduce_poly(lc,x));
+	poly sred(sparse_interpolation_reduce_poly(s,x));
+
+	// set all coefficients to 1
 	int N=0;
-	for (int i=1; i<s[0]; i+=s[i]) N++;
-
-	vector<vector<LONG> > M(N,vector<LONG>(N));
-	vector<LONG> V(N,0);
+	for (int i=1; i<sred[0]; i+=sred[i]) {
+		sred[i+sred[i]-2] = sred[i+sred[i]-1] = 1;
+		N++;
+	}
 	
-	int row=0;
+	// generate random numbers and check there this set doesn't result
+	// in a singular matrix
+	vector<int> c(x.size()-1);
+	vector<int> smul;
 
-	// repeat until we have N equations in N unknowns
-	while (row<N) {
-
-		// substitute random numbers and calculate the univariate gcd
-		vector<int> c(x.size()-1);
+	bool duplicates;
+	do {
 		for (int i=0; i<(int)c.size(); i++)
 			c[i] = 1 + random() % (a.modp-1);
-		
-		poly amodI(substitute_all(a,x,c));
-		poly bmodI(substitute_all(b,x,c));
-		poly lcmodI(substitute_all(lc,x,c));
-		
-		poly gcd(lcmodI * gcd_Euclidean(amodI,bmodI));
+		smul = sparse_interpolation_get_mul_list(s,x,c);
 
-		// for each power in the gcd, generate an equation
-		int si=1,col=0;
-		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
-			WORD pow = gcd[gi+1+x[0]];
-			M[row]=vector<LONG>(N,0);
-			while (si<s[0] && s[si+1+x[0]] == pow) {
-				M[row][col] = 1;
-				for (int i=1; i<(int)x.size(); i++)
-					M[row][col] = (M[row][col]*RaisPowMod(c[i-1],s[si+1+x[i]],a.modp)) % a.modp;
-				
-				col++;
-				si+=s[si];
-			}
-			
-			V[row] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+		duplicates = false;
 
-			// Gaussian elimination
-			for (int i=0; i<row; i++) {
-				WORD x = M[row][i];
-				for (int j=i; j<N; j++) 
-					M[row][j] = (M[row][j] - M[i][j]*x) % a.modp;
-				V[row] = (V[row] - V[i]*x) % a.modp;
-			}
-			
-			WORD x = M[row][row];
+		int fr=0,to=0;
+		for (int i=1; i<s[0];) {
+			WORD pow = s[i+1+x[0]];
+			while (i<s[0] && s[i+1+x[0]]==pow) i+=s[i], to++;
+			for (int j=fr; j<to; j++)
+				for (int k=fr; k<j; k++)
+					if (smul[j] == smul[k]) 
+						duplicates = true;
+			fr=to;
+		}		
+	}
+	while (duplicates);
 
-			// check whether it is an independent equation
-			if (x!=0) {
-				GetModInverses(x + (x<0?a.modp:0), a.modp, &x, NULL);
-				for (int j=0; j<N; j++) 
-					M[row][j] = (M[row][j]*x) % a.modp;
-				V[row] = (V[row]*x) % a.modp;
-				
-				row++;
-				if (row==N) break;
-			}
+	// get the lists to multiply the polynomials with every iteration
+	vector<int> amul(sparse_interpolation_get_mul_list(a,x,c));
+	vector<int> bmul(sparse_interpolation_get_mul_list(b,x,c));
+	vector<int> lcmul(sparse_interpolation_get_mul_list(lc,x,c));
+
+	vector<vector<vector<LONG> > > M;
+	vector<vector<LONG> > V;
+
+	int maxMsize=0;
+
+	// create (empty) matrices
+	for (int i=1; i<s[0]; i+=s[i]) {
+		if (i==1 || s[i+1+x[0]]!=s[i+1+x[0]-s[i]]) {
+			M.push_back(vector<vector<LONG> >());
+			V.push_back(vector<LONG>());
 		}
+		M.back().push_back(vector<LONG>());
+		V.back().push_back(0);
+		maxMsize = max(maxMsize, (int)M.back().size());
 	}
 
-	// solve for the coefficients
-	for (int i=N-1; i>=0; i--)
-		for (int j=i+1; j<N; j++) 
-			V[i] = (V[i] - M[i][j]*V[j]) % a.modp;
+	// generated linear equations
+	for (int numg=0; numg<maxMsize; numg++) {
 
-	// build resulting polynomial
+		poly amodI(sparse_interpolation_fix_poly(ared,x[0]));
+		poly bmodI(sparse_interpolation_fix_poly(bred,x[0]));
+		poly lcmodI(sparse_interpolation_fix_poly(lcred,x[0]));
+				
+		poly gcd(lcmodI * gcd_Euclidean(amodI,bmodI));
+
+		// for each power in the gcd, generate an equation if needed
+		int si=1, col=0, midx=0;
+		
+		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
+			WORD pow = gcd[gi+1+x[0]];
+
+			while (si<sred[0] && sred[si+1+x[0]] == pow) {
+				if (numg < (int)M[midx].size()) 
+					M[midx][numg].push_back(sred[si+1+AN.poly_num_vars]);
+				si+=s[si];
+				col++;
+			}
+
+			if (numg < (int)V[midx].size()) 
+				V[midx][numg] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+			
+			midx++;
+		}
+
+		// multiply polynomials by the lists to obtain new ones
+		sparse_interpolation_mul_poly(ared,amul);
+		sparse_interpolation_mul_poly(bred,bmul);
+		sparse_interpolation_mul_poly(lcred,lcmul);
+		sparse_interpolation_mul_poly(sred,smul);
+	}
+
+	// solve the linear equations
+	for (int i=0; i<(int)M.size(); i++) {
+		int n = M[i].size();
+
+		// Gaussian elimination
+		for (int j=0; j<n; j++) {
+			for (int k=0; k<j; k++) {
+				WORD x = M[i][j][k];
+				for (int l=k; l<n; l++) 
+					M[i][j][l] = (M[i][j][l] - M[i][k][l]*x) % a.modp;
+				V[i][j] = (V[i][j] - V[i][k]*x) % a.modp;
+			}
+			
+			// normalize row
+			WORD x = M[i][j][j];
+			GetModInverses(x + (x<0?a.modp:0), a.modp, &x, NULL);
+			for (int k=0; k<n; k++) 
+				M[i][j][k] = (M[i][j][k]*x) % a.modp;
+			V[i][j] = (V[i][j]*x) % a.modp;
+		}
+
+		// solve
+		for (int j=n-1; j>=0; j--)
+			for (int k=j+1; k<n; k++) 
+				V[i][j] = (V[i][j] - M[i][j][k]*V[i][k]) % a.modp;
+	}
+
+	// create coefficient list
+	vector<LONG> coeff;
+	for (int i=0; i<(int)V.size(); i++)
+		for (int j=0; j<(int)V[i].size(); j++) 
+			coeff.push_back(V[i][j]);
+	
+	// create resulting polynomial
 	poly res(BHEAD 0);
 	int ri=1, i=0;
 	for (int si=1; si<s[0]; si+=s[si]) {
 		res.check_memory(ri);
-		res[ri] = 3 + AN.poly_num_vars;         // term length
+		res[ri] = 3 + AN.poly_num_vars;             // term length
 		for (int j=0; j<AN.poly_num_vars; j++) 
-			res[ri+1+j] = s[si+1+j];              // powers
-		res[ri+1+AN.poly_num_vars] = ABS(V[i]); // coefficient
-		res[ri+2+AN.poly_num_vars] = SGN(V[i]); // coefficient length
+			res[ri+1+j] = s[si+1+j];                  // powers
+		res[ri+1+AN.poly_num_vars] = ABS(coeff[i]); // coefficient
+		res[ri+2+AN.poly_num_vars] = SGN(coeff[i]); // coefficient length
 		i++;
 		ri += res[ri];
 	}
@@ -757,6 +880,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 300-311]
  */
+
 const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
 
 #ifdef DEBUG
@@ -831,20 +955,13 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		else if (comp == 0) {
 			// equal powers, so interpolate results
 
-			poly coeff(substitute_last(modpoly,X,c));
-			poly invcoeff(BHEAD 1);
+			poly coeff_poly(substitute_last(modpoly,X,c));
+			WORD coeff_word = coeff_poly[2+AN.poly_num_vars] * coeff_poly[3+AN.poly_num_vars];
+			if (coeff_word < 0) coeff_word += a.modp;
 
-			WORD n;
-			GetLongModInverses(BHEAD (UWORD *)&coeff[2+AN.poly_num_vars], coeff[coeff[1]],
-												 (UWORD *)&res.modp, 1, (UWORD *)&invcoeff[2+AN.poly_num_vars], &n,
-												 NULL, NULL);
-			invcoeff[1] = 2+AN.poly_num_vars+ABS(n);
-			invcoeff[0] = 1+invcoeff[1];
-			invcoeff[invcoeff[1]] = n;
-			invcoeff.modp = res.modp;
-			invcoeff.modn = 1;
-
-			res += invcoeff * modpoly * (gcdmodc - substitute_last(res,X,c));
+			GetModInverses(coeff_word, a.modp, &coeff_word, NULL);
+			
+			res += poly(BHEAD coeff_word, a.modp, 1) * modpoly * (gcdmodc - substitute_last(res,X,c));
 			modpoly *= simple;
 		}
 
@@ -918,7 +1035,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
 		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
 
-		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(lcoeff,p),d));
+		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(lcoeff,p),poly(d,p)));
 
 		if (c.is_zero()) {
 			// unlucky choices somewhere, so start all over again
@@ -977,7 +1094,6 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 		// check whether this is the complete gcd
 		if (poly::divides(ppd,a) && poly::divides(ppd,b)) {
-
 			ppd /= content_univar(ppd,x[0]);
 #ifdef DEBUG
 			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << origa << "," << origb << "," << x << ") = "
@@ -1006,37 +1122,20 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
  *   Notes
  *   =====
  *   - For small polynomials, this consumes time and never triggers.
- *   - Is skipped if POLYGCD_USE_HEURISTIC_POSSIBLE is not defined.
  */
 
 bool gcd_heuristic_possible (const poly &a) {
 	
-#ifndef POLYGCD_USE_HEURISTIC_POSSIBLE
-	return true;
-#endif
-
 	POLY_GETIDENTITY(a);
 	
-	double max_prod_deg = 1;
-	double max_digits = 0;
-	double max_lead = 0;
-	
-	for (int i=1; i<a[0]; i+=a[i]) {
-		double prod_deg = 1;
-		for (int j=0; j<AN.poly_num_vars; j++)
-			prod_deg *= a[i+1+j] + 1;
-		max_prod_deg = max(max_prod_deg, prod_deg);
+	double prod_deg = 1;
+	for (int j=0; j<AN.poly_num_vars; j++)
+		prod_deg *= a[2+j]+1;
 
-		WORD digits = ABS(a[i+a[i]-1]);
-		UWORD lead = a[i+1+AN.poly_num_vars];
+	double digits = ABS(a[1+a[1]-1]);
+  double lead = a[1+1+AN.poly_num_vars];
 		
-		if (digits>max_digits || (digits==max_digits && lead>max_lead)) {
-			max_digits = digits;
-			max_lead = lead;
-		}
-	}
-		
-	return max_prod_deg*(max_digits-1+log(2*ABS(max_lead))/log(2)/(BITSINWORD/2)) < POLYGCD_HEURISTIC_MAX_DIGITS;
+	return prod_deg*(digits-1+log(2*ABS(lead))/log(2)/(BITSINWORD/2)) < POLYGCD_HEURISTIC_MAX_DIGITS;
 }
 
 /*
@@ -1135,7 +1234,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
 
 				// calculate c = gamma % xi (c and gamma are polynomials, xi is integer)
 				c = gamma;
-				c.coefficients_modulo((UWORD *)&xi[2+AN.poly_num_vars], xi[xi[0]-1]);
+				c.coefficients_modulo((UWORD *)&xi[2+AN.poly_num_vars], xi[xi[0]-1], false);
 				
 				// Add the terms c * x^power to res
 				res.check_memory(res[0]+c[0]);

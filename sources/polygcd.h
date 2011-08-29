@@ -34,11 +34,6 @@ class gcd_heuristic_failed {}; // class for throwing exceptions
 // whether or not to use the heuristic before Zippel's algorithm
 #define POLYGCD_USE_HEURISTIC
 
-// whether or not to use a heuristic check whether using the heuristic
-// gcd seems possible (saves time for too large polynomials, but costs
-// time for small ones, so for Mincer it's better to turn it off)
-//#define POLYGCD_USE_HEURISTIC_POSSIBLE
-
 // maximum number of words in a coefficient for gcd_heuristic to continue
 const int POLYGCD_HEURISTIC_MAX_DIGITS = 1000;
 
@@ -47,6 +42,9 @@ const int POLYGCD_HEURISTIC_MAX_TRIES = 10;
 
 // a fudge factor, which improves efficiency
 const int POLYGCD_HEURISTIC_MAX_ADD_RANDOM = 10;
+
+// the maximum power that is cached in substitute_last
+const int SUBSTITUTE_LAST_CACHE_MAX_POWER = 1000;
 
 // outside of the namespace, because these are called from C
 int DoGCDfunction(PHEAD WORD *argin, WORD *argout);
@@ -68,8 +66,13 @@ namespace polygcd {
 	const poly gcd_heuristic (const poly &a, const poly &b, const std::vector<int> &x, int max_tries=POLYGCD_HEURISTIC_MAX_TRIES);
 	const poly gcd_Euclidean (const poly &a, const poly &b);
 	const poly gcd_modular (const poly &a, const poly &b, const std::vector<int> &x);
-	const poly gcd_modular_dense_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &shape);
-	const poly gcd_modular_sparse_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &shape);
+	const poly gcd_modular_dense_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &s);
+	const poly gcd_modular_sparse_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &s);
+
+	const std::vector<int> sparse_interpolation_get_mul_list (const poly &a, const std::vector<int> &x, const std::vector<int> &c);
+	void sparse_interpolation_mul_poly (poly &a, const std::vector<int> &m);
+	const poly sparse_interpolation_reduce_poly (const poly &a, const std::vector<int> &x);
+	const poly sparse_interpolation_fix_poly (const poly &a, int x);
 	
 	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);
 	const poly substitute_last(const poly &a, int x, int c);
