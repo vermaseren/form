@@ -1543,7 +1543,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			MesPrint("[%d] Expression %d has problems in scratchfile",PF.me,i);
 			return(-1);
 		}
-		if ( AC.bracketindexflag ) OpenBracketIndex(i);
+		if ( AC.bracketindexflag > 0 ) OpenBracketIndex(i);
 		term[3] = i;
 		AR.CurExpr = i;
 		if ( AR.outtohide ) {
@@ -3421,7 +3421,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 					MesPrint("Expression %d has problems in scratchfile",i);
 					Terminate(-1);
 				}
-				if ( AC.bracketindexflag ) OpenBracketIndex(i);
+				if ( AC.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
 				PUTZERO(outposition);
 				fout = AR.outfile;

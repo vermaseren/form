@@ -303,7 +303,7 @@ commonread:;
 					retval = -1;
 					break;
 				}
-				if ( AC.bracketindexflag ) OpenBracketIndex(i);
+				if ( AC.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
 				if ( AR.outtohide ) {
 					SeekScratch(AR.hidefile,&position);
@@ -4598,7 +4598,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		return(0);
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4618,7 +4618,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**

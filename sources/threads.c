@@ -1550,7 +1550,7 @@ bucketstolen:;
 					MesPrint("Expression %d has problems in scratchfile",i);
 					Terminate(-1);
 				}
-				if ( AC.bracketindexflag ) OpenBracketIndex(i);
+				if ( AC.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
 				PUTZERO(outposition);
 				fout = AR.outfile;
