@@ -4286,9 +4286,18 @@ WORD PrepPoly(PHEAD WORD *term)
 	WORD count = 0, i, jcoef, ncoef;
 	WORD *t, *m, *r, *tstop, *poly = 0, *v, *w, *vv, *ww;
 	WORD *oldworkpointer = AT.WorkPointer;
-	if ( AR.PolyFunType == 2 ) {
-		if ( ( term = RedoPolyRatFun(BHEAD term,0) ) == 0 ) Terminate(-1);
-		oldworkpointer = AT.WorkPointer;
+	if ( AM.oldpolyratfun ) {
+/*
+		The problem here is that the function will be forced into 'long'
+		notation. After this -SNUMBER,1 becomes 6,0,4,1,1,3 and the
+		pattern matcher cannot match a short 1 with a long 1.
+		But because this is an undocumented feature for very special
+		purposes, we don't do anything about it. (30-aug-2011)
+*/
+		if ( AR.PolyFunType == 2 ) {
+			if ( ( term = RedoPolyRatFun(BHEAD term,0) ) == 0 ) Terminate(-1);
+			oldworkpointer = AT.WorkPointer;
+		}
 	}
 	AT.PolyAct = 0;
 	t = term;
@@ -4589,7 +4598,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		return(0);
 /*
- 		#] Two arguments : 
+ 		#] Two arguments :
 */
 	}
 	else {
@@ -4609,7 +4618,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**

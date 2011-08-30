@@ -167,7 +167,7 @@ void PolyFunDirty(PHEAD WORD *term)
 
 		Routine marks the PolyFun or the PolyRatFun dirty.
 		This is used when there is modular calculus and the modulus
-		has cahnged for the current module.
+		has changed for the current module.
 */
 
 void PolyFunClean(PHEAD WORD *term)

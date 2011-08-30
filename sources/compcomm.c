@@ -857,11 +857,11 @@ AllExpr:
 			else if ( tolower(*s) == 's' ) {
 				if ( tolower(s[1]) == 's' ) {
 					if ( tolower(s[2]) == 's' ) {	/* [ 2009-11-02 PI] */
-                                                par |= PRINTONEFUNCTION | PRINTONETERM | PRINTALL;
-                                                s++;
-                                        }
-                                        else if ( ( par & 3 ) < 2 ) par |= PRINTONEFUNCTION | PRINTONETERM;
-                                        s++;
+						par |= PRINTONEFUNCTION | PRINTONETERM | PRINTALL;
+						s++;
+					}
+					else if ( ( par & 3 ) < 2 ) par |= PRINTONEFUNCTION | PRINTONETERM;
+					s++;
 				}
 				else {
 					if ( ( par & 3 ) < 2 ) par |= PRINTONETERM;
@@ -908,12 +908,18 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 			if ( ( GetName(AC.exprnames,name,&numexpr,NOAUTO) == CEXPRESSION )
 			&& ( Expressions[numexpr].status == LOCALEXPRESSION
 			|| Expressions[numexpr].status == GLOBALEXPRESSION ) ) {
+FoundExpr:;
 				if ( c == '[' && s[1] == ']' ) {
 					Expressions[numexpr].printflag = par | PRINTCONTENTS;
 					*s++ = c; c = *++s;
 				}
 				else
 					Expressions[numexpr].printflag = par;
+			}
+			else if ( GetLastExprName(name,&numexpr)
+			&& ( Expressions[numexpr].status == LOCALEXPRESSION
+			|| Expressions[numexpr].status == GLOBALEXPRESSION ) ) {
+				goto FoundExpr;
 			}
 			else {
 				MesPrint("&%s is not the name of an active expression",name);
@@ -932,7 +938,7 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 }
 
 /*
-  	#] DoPrint : 
+  	#] DoPrint :
   	#[ CoPrint :
 */
 

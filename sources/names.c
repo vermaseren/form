@@ -328,6 +328,31 @@ NotFound:;
 
 /*
   	#] GetName : 
+  	#[ GetLastExprName :
+
+	When AutoDeclare is an active statement.
+	If par == WITHAUTO and the variable is not found we have to check:
+    1: that nametree != AC.exprnames && nametree != AC.dollarnames
+	2: check that the variable is not in AC.exprnames after all.
+	3: call GetAutoName and return its values.
+*/
+
+int GetLastExprName(UBYTE *name, WORD *number)
+{
+	int i;
+	EXPRESSIONS e;
+	for ( i = NumExpressions; i > 0; i-- ) {
+		e = Expressions+i-1;
+		if ( StrCmp(AC.exprnames->namebuffer+e->name,name) == 0 ) {
+			*number = i-1;
+			return(1);
+		}
+	}
+	return(0);
+}
+
+/*
+  	#] GetLastExprName :
   	#[ GetOName :
 
 	Adds the proper offsets, so we do not have to do that in the calling
@@ -2148,7 +2173,7 @@ int AddDollar(UBYTE *name, WORD type, WORD *start, LONG size)
 }
 
 /*
-  	#] AddDollar :
+  	#] AddDollar : 
   	#[ ReplaceDollar :
 
 	Replacements of dollar variables can happen at any time.

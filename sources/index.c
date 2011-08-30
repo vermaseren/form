@@ -142,7 +142,15 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 */
 	term = AT.WorkPointer;
 	t1 = e->bracketinfo->bracketbuffer+bi->bracket;
-	bsize = j = *t1;
+	j = *t1;
+/*
+	The next is (hopefully) a bug fix. Originally the code read bsize = j
+	but that overcounts one. We have the part outside the bracket and the
+	coefficient which is 1,1,3. But we also have the length indicator.
+	Where we use the variable bsize we do not include the length indicator,
+	and we have the part outside plus 7,3,0 which is also three words.
+*/
+	bsize = j-1;
 	t2 = AR.CompressPointer;
 	NCOPY(t2,t1,j)
 	if ( i == 0 ) {	/* We found the proper bracket already */
@@ -275,7 +283,7 @@ found:
 }
 
 /*
-  	#] FindBracket : 
+  	#] FindBracket :
   	#[ PutBracketInIndex :
 
 	Call via

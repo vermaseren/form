@@ -687,6 +687,7 @@ extern VOID   Terminate(int);
 extern NAMENODE *GetNode(NAMETREE *,UBYTE *);
 extern int    AddName(NAMETREE *,UBYTE *,WORD,WORD,int *);
 extern int    GetName(NAMETREE *,UBYTE *,WORD *,int);
+extern int    GetLastExprName(UBYTE *,WORD *);
 extern int    GetAutoName(UBYTE *,WORD *);
 extern int    GetVar(UBYTE *,WORD *,WORD *,int,int);
 extern int    MakeDubious(NAMETREE *,UBYTE *,WORD *);
