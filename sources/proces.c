@@ -3180,7 +3180,7 @@ CommonEnd:
 							PF.mnumredefs++;
 					/*:[14sep2005 mt]*/
 					/*[08nov2005 mt]:*/
-					PF.redef[j] = PF.ginterms;
+					PF.redef[j] = AN.ninterms;
 					/*:[08nov2005 mt]*/
 #endif
 #ifdef WITHPTHREADS

@@ -205,7 +205,6 @@ typedef struct ParallelVars {
 	PF_BUFFER  *sbuf;           /* set of cyclic send buffers for master _and_ slave */
 	PF_BUFFER **rbufs;          /* array of sets of cyclic receive buffers for master */
 	LONG       *redef;          /* number of term of last redef for each PreProVar */
-	LONG        ginterms;       /* total interms ("on master"): PF_Proces */
 	LONG        numredefs;      /* size of PF.redefs */
 	int         me;             /* Internal number of task: master is 0 */
 	int         numtasks;       /* total number of tasks */
@@ -225,7 +224,7 @@ typedef struct ParallelVars {
 	/*If !=0, start of each module will be synchronized between all slaves and master:*/
 	WORD synchro;
 	/*:[28nov2003 mt]*/
-	PADPOINTER(2,9,3,0);
+	PADPOINTER(1,9,3,0);
 } PARALLELVARS;
 
 extern PARALLELVARS PF;

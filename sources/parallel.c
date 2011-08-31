@@ -133,6 +133,33 @@ static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndS
 		memcpy(&x, swap_tmp__, sizeof(x)); \
 	} while (0)
 
+/**
+ * Packs a LONG value \a n to a WORD buffer \a p.
+ */
+#define PACK_LONG(p, n) \
+	do { \
+		*(p)++ = (UWORD)((ULONG)(n) & (ULONG)WORDMASK); \
+		*(p)++ = (UWORD)(((ULONG)(n) >> BITSINWORD) & (ULONG)WORDMASK); \
+	} while (0)
+
+/**
+ * Unpacks a LONG value \a n from a WORD buffer \a p.
+ */
+#define UNPACK_LONG(p, n) \
+	do { \
+		(n) = (LONG)((((ULONG)(p)[1] & (ULONG)WORDMASK) << BITSINWORD) | ((ULONG)(p)[0] & (ULONG)WORDMASK)); \
+		(p) += 2; \
+	} while (0)
+
+/*
+ * For debugging.
+ */
+#define DBGOUT(lv1, lv2, a) do { if ( lv1 >= lv2 ) { printf a; fflush(stdout); } } while (0)
+
+/* (AN.ninterms of master) == max(AN.ninterms of slaves) == sum(PF_linterms of slaves) at EndSort(). */
+#define DBGOUT_NINTERMS(lv, a)
+/* #define DBGOUT_NINTERMS(lv, a) DBGOUT(1, lv, a) */
+
 /*
   	#] includes : 
   	#[ statistics :
@@ -187,11 +214,11 @@ static int PF_Statistics(LONG **stats, int proc)
 			if ( AC.OldParallelStats ) MesPrint("");
 			if ( proc > 0 && AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       left       byte");
-				MesPrint("%3d  : %7l.%2i %10l",0,cpu,cpart,PF.ginterms);
+				MesPrint("%3d  : %7l.%2i %10l",0,cpu,cpart,AN.ninterms);
 			}
 			else if ( AC.StatsFlag && AC.OldParallelStats ) {
 				MesPrint("proc          CPU         in        gen       out        byte");
-				MesPrint("%3d  : %7l.%2i %10l %10l %10l",0,cpu,cpart,PF.ginterms,0,PF_goutterms);
+				MesPrint("%3d  : %7l.%2i %10l %10l %10l",0,cpu,cpart,AN.ninterms,0,PF_goutterms);
 			}
 
 			for ( i = 1; i < PF.numtasks; i++ ) {
@@ -1022,22 +1049,17 @@ ReceiveNew:
 		tag=PF_RecvWbuf(fi->PObuffer,&size,&src);
 
 		fi->POfill = fi->PObuffer;
-/*
-				get PF.ginterms which sits in the first 2 WORDS
-
-				There is some problem with (LONG)(fi->POfill[1]): it can be negative!
-				Indeed, the  most significant bit of WORDMASK is set while fi->POfill[1] is
-				signed WORD:
-
-					PF.ginterms = (LONG)(fi->POfill[0])*(LONG)WORDMASK + (LONG)(fi->POfill[1]);
-
-				Note, there are no problems with (LONG)(fi->POfill[0])*(LONG)WORDMASK:
-				anyway, it is signed.
-				This should work out:
-*/
-		PF.ginterms = (LONG)(fi->POfill[0])*(LONG)WORDMASK +(LONG)*((UWORD*)(fi->POfill+1));
-
-		fi->POfill += 2;
+		/* Get AN.ninterms which sits in the first 2 WORDs. */
+		{
+			LONG ninterms;
+			UNPACK_LONG(fi->POfill, ninterms);
+			if ( *fi->POfill ) {
+				DBGOUT_NINTERMS(2, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ninterms=%d GET\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms, (int)ninterms));
+				AN.ninterms = ninterms - 1;
+			} else {
+				DBGOUT_NINTERMS(2, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ninterms=%d GETEND\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms, (int)ninterms));
+			}
+		}
 		fi->POfull = fi->PObuffer + size;
 		if ( tag == PF_ENDSORT_MSGTAG ) *fi->POfull++ = 0;
 /*
@@ -1442,10 +1464,9 @@ static int PF_WaitAllSlaves(void)
 				else {
 /*
 						Last chunk was sent, so just send to slave ENDSORT
-						Number of  PF.ginterms must be sent because the slave expects it:
+						AN.ninterms must be sent because the slave expects it:
 */
-					*(PF.sbuf->fill[next])++ = (UWORD)((PF.ginterms+1)/(LONG)WORDMASK);
-					*(PF.sbuf->fill[next])++ = (UWORD)((PF.ginterms+1)%(LONG)WORDMASK);
+					PACK_LONG(PF.sbuf->fill[next], AN.ninterms);
 /*
 						This will tell to the slave that there are no more terms:
 */
@@ -1500,7 +1521,6 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 	LONG dd = 0, ll;
 	PF_BUFFER *sb = PF.sbuf;
 	WORD j, *s, next;
-	LONG termsinpatch;
 	LONG size, cpu;
 	POSITION position;
 	int k, src, tag, attach;
@@ -1534,8 +1554,9 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
  		#[ Master:
 			#[ write prototype to outfile:
 */
-		LONG maxinterms;
-		int cmaxinterms;
+		LONG maxinterms;    /* the maximum number of terms in the next patch */
+		int cmaxinterms;    /* a variable controling the transition of maxinterms */
+		LONG termsinpatch;  /* the number of filled terms in the current patch */
 
 		if ( PF.log && AC.CModule >= PF.log )
 			MesPrint("[%d] working on expression %s in module %l",PF.me,EXPRNAME(i),AC.CModule);
@@ -1595,16 +1616,15 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			sb->buff[next], send sb->buff[next] to next slave and go on
 			filling the now empty sb->buff[0].
 */
-		AR.DeferFlag = 0;  /* The master should leave the brackets in any case!!! */
-		PF.ginterms = 0;
+		AR.DeferFlag = 0;  /* The master leave the brackets!!! */
+		AN.ninterms = 0;
 		termsinpatch = 0;
 		maxinterms = PF_maxinterms / 100;
 		if ( maxinterms < 2 ) maxinterms = 2;
 		cmaxinterms = 0;
-		*(sb->fill[0])++ = (UWORD)(0);
-		*(sb->fill[0])++ = (UWORD)(1);
+		PACK_LONG(sb->fill[0], 1);
 		while ( GetTerm(BHEAD term) ) {
-			PF.ginterms++; dd = AN.deferskipped;
+			AN.ninterms++; dd = AN.deferskipped;
 			if ( AC.CollectFun && *term <= (LONG)(AM.MaxTer/(2*sizeof(WORD))) ) {
 				if ( GetMoreTerms(term) < 0 ) {
 					LowerSortLevel(); return(-1);
@@ -1638,8 +1658,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				PF_ISendSbuf(next,PF_TERM_MSGTAG);
 #endif
 
-				*(sb->fill[0])++ = (UWORD)(PF.ginterms/(LONG)WORDMASK);
-				*(sb->fill[0])++ = (UWORD)(PF.ginterms%(LONG)WORDMASK);
+				PACK_LONG(sb->fill[0], AN.ninterms);
 				termsinpatch = 0;
 			}
 			j = *(s = term);
@@ -1648,7 +1667,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		/* NOTE: The last chunk will be sent to a slave at EndSort() => PF_EndSort()
 		 *       => PF_WaitAllSlaves(). */
-		PF.ginterms += dd;
+		AN.ninterms += dd;
 /*
 			#] loop for all terms in infile: 
 			#[ Clean up & EndSort:
@@ -1680,6 +1699,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			#] Clean up & EndSort: 
 			#[ Collect (stats,prepro,...):
 */
+		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms));
 		PF_CatchErrorMessagesForAll();
 		for ( k = 1; k < PF.numtasks; k++ ) {
 			PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
@@ -1760,6 +1780,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		e->onfile = position;
 		AR.DeferFlag = AC.ComDefer;
 		NewSort(BHEAD0);
+		AN.ninterms = 0;
 		PF_linterms = 0;
 		PF.parallel = 1;
 #ifdef MPI2
@@ -1773,8 +1794,10 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				fi = AR.infile;
 			fi->POfull = fi->POfill = fi->PObuffer;
 		}
+		/* FIXME: AN.ninterms is still broken when AN.deferskipped is non-zero.
+		 *        It still needs some work, also in PF_GetTerm(). (TU 30 Aug 2011) */
 		while ( PF_GetTerm(term) ) {
-			PF_linterms++; dd = AN.deferskipped;
+			PF_linterms++; AN.ninterms++; dd = AN.deferskipped;
 			AT.WorkPointer = term + *term;
 			AN.RepPoint = AT.RepCount + 1;
 			AR.CurDum = ReNumber(BHEAD term);
@@ -1787,10 +1810,11 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				MesPrint("[%d] PF_Processor: Error in Generator",PF.me);
 				LowerSortLevel(); return(-1);
 			}
-			PF_linterms += dd;
+			PF_linterms += dd; AN.ninterms += dd;
 		}
-		PF_linterms += dd;
+		PF_linterms += dd; AN.ninterms += dd;
 		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) return(-1);
+		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms));
 /*
 			#] Generator Loop & EndSort : 
 			#[ Collect (stats,prepro...) :
