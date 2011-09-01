@@ -1092,12 +1092,6 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 	poly lc(a.integer_lcoeff());
 	a /= lc;
 
-	// Cache table of inverses mod p
-	vector<WORD> inv(p);
-	inv[1] = 1;
-	for (int i=2; i<p; i++)
-		inv[i] = - (LONG)(p/i) * inv[p%i] % p;
-	
 	vector<vector<WORD> > Q(n, vector<WORD>(n));
 
 	// c is the vector of coefficients of the polynomial a
@@ -1137,19 +1131,20 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 			swap(Q[k][ii],Q[k][i]);
 		
 		// normalize row i, which becomes the pivot
-		LONG mul = inv[Q[i][i]];
+		WORD mul;
+		GetModInverses (Q[i][i], p, &mul, NULL);
 		vector<int> idx;
 		
 		for (int k=0; k<n; k++) if (Q[k][i] != 0) {
 			// store indices of non-zero elements for sparse matrices
 			idx.push_back(k); 
-			Q[k][i] = (Q[k][i] * mul) % p;
+			Q[k][i] = ((LONG)Q[k][i] * mul) % p;
 		}
 
 		// reduce
 		for (int j=0; j<n; j++)
 			if (j!=i && Q[i][j]!=0) {
-				mul = Q[i][j];
+				LONG mul = Q[i][j];
 				for (int k=0; k<(int)idx.size(); k++) {
 					Q[idx[k]][j] = (Q[idx[k]][j] - mul*Q[idx[k]][i]) % p;
 					if (Q[idx[k]][j] < 0) Q[idx[k]][j]+=p;
