@@ -51,8 +51,8 @@ using namespace std;
 */
 
 // constructor for a small constant polynomial
-poly::poly (PHEAD WORD a, WORD modp, WORD modn):
-	size_of_terms(AM.MaxTer/sizeof(WORD)),
+poly::poly (PHEAD int a, WORD modp, WORD modn):
+	size_of_terms(AM.MaxTer/(LONG)sizeof(WORD)),
 	modp(0),
 	modn(1)
 {
@@ -81,7 +81,7 @@ poly::poly (PHEAD WORD a, WORD modp, WORD modn):
 
 // constructor for a large constant polynomial
 poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
-	size_of_terms(AM.MaxTer/sizeof(WORD)),
+	size_of_terms(AM.MaxTer/(LONG)sizeof(WORD)),
 	modp(0),
 	modn(1)
 {
@@ -105,7 +105,7 @@ poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
 
 // copy constructor: makes a deep copy of a polynomial
 poly::poly (const poly &a, WORD modp, WORD modn):
-	size_of_terms(AM.MaxTer/sizeof(WORD))	
+	size_of_terms(AM.MaxTer/(LONG)sizeof(WORD))	
 {
 	POLY_GETIDENTITY(a);
 	POLY_STOREIDENTITY;
@@ -127,7 +127,7 @@ poly::~poly () {
 
 	POLY_GETIDENTITY(*this);
 	
-	if (size_of_terms == AM.MaxTer/(int)sizeof(WORD))
+	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		TermFree(terms, "polynomial destructor");
 	else
 		delete terms;
@@ -143,11 +143,19 @@ void poly::expand_memory (int i) {
 	
 	POLY_GETIDENTITY(*this);
 
-	int new_size_of_terms = MaX(2*size_of_terms, i);
+	LONG new_size_of_terms = MaX(2*size_of_terms, i);
+	
+	if (new_size_of_terms > (1<<(BITSINWORD-1))) {
+		MLOCK(ErrorMessageLock);
+		MesPrint ((char*)"ERROR: polynomials too large (> WORDSIZE)");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(1);
+	}
+	
 	WORD *newterms = new WORD[new_size_of_terms];
 	memcpy(newterms, terms, size_of_terms*sizeof(WORD));
 
-	if (size_of_terms == AM.MaxTer/(int)sizeof(WORD))
+	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		TermFree(terms, "poly expand memory");
 	else
 		delete terms;
@@ -214,7 +222,7 @@ void poly::coefficients_modulo (UWORD *a, WORD na, bool small) {
 
 		if (ABS(n)==1 && small) {
 			// small number modulo small number
-			terms[j+1+AN.poly_num_vars] = n*(terms[j+1+AN.poly_num_vars] % a[0]);
+			terms[j+1+AN.poly_num_vars] = n*((UWORD)terms[j+1+AN.poly_num_vars] % a[0]);
 			if (terms[j+1+AN.poly_num_vars] == 0)
 				n=0;
 			else {
@@ -373,7 +381,7 @@ const poly & poly::normalize() {
 	sort(&p[0], &p[nterms], monomial_larger(BHEAD0));
 
 	WORD *tmp;
-	if (size_of_terms == AM.MaxTer/(int)sizeof(WORD))
+	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		tmp = (WORD *) TermMalloc("polynomial normalization");
 	else
 		tmp = new WORD[size_of_terms];
@@ -422,7 +430,7 @@ const poly & poly::normalize() {
 	tmp[0] = j;
 	memcpy(terms,tmp,tmp[0]*sizeof(UWORD));
 
-	if (size_of_terms == AM.MaxTer/(int)sizeof(WORD))
+	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		TermFree(tmp, "polynomial normalization");
 	else
 		delete tmp;
@@ -503,7 +511,7 @@ void poly::add (const poly &a, const poly &b, poly &c) {
 		}
 		else {
 			// insert term from a+b
-			c.termscopy(&a[ai],ci,max(a[ai],b[bi]));
+			c.termscopy(&a[ai],ci,MaX(a[ai],b[bi]));
 			WORD nc=0;
 			if (both_mod_small) {
 				c[ci+1+AN.poly_num_vars] = ((LONG)a[ai+1+AN.poly_num_vars]*a[ai+a[ai]-1]+
@@ -588,7 +596,7 @@ void poly::sub (const poly &a, const poly &b, poly &c) {
 		}
 		else {
 			// insert term from a+b
-			c.termscopy(&a[ai],ci,max(a[ai],b[bi]));
+			c.termscopy(&a[ai],ci,MaX(a[ai],b[bi]));
 			WORD nc=0;
 			if (both_mod_small) {
 				c[ci+1+AN.poly_num_vars] = ((LONG)a[ai+1+AN.poly_num_vars]*a[ai+a[ai]-1]-
@@ -772,11 +780,11 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 	poly t(BHEAD 0);
 	WORD nt;
 	
-	WORD ci=1;
+	int ci=1;
 
 	// bounds on the powers in a*b
-	WORD minpow = AN.poly_num_vars==0 ? 0 : a.last_monomial()[1+var] + b.last_monomial()[1+var];
-	WORD maxpow = AN.poly_num_vars==0 ? 0 : a[2+var]+b[2+var];
+	int minpow = AN.poly_num_vars==0 ? 0 : a.last_monomial()[1+var] + b.last_monomial()[1+var];
+	int maxpow = AN.poly_num_vars==0 ? 0 : a[2+var]+b[2+var];
 	int afirst=1, blast=1;
 
 	for (int pow=maxpow; pow>=minpow; pow--) {
@@ -913,11 +921,11 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 
 	for (int ai=1; ai<a[0]; ai+=a[ai])
 		for (int j=0; j<AN.poly_num_vars; j++)
-			maxpowera[j] = max(maxpowera[j], a[ai+1+j]);
+			maxpowera[j] = MaX(maxpowera[j], a[ai+1+j]);
 
 	for (int bi=1; bi<b[0]; bi+=b[bi])
 		for (int j=0; j<AN.poly_num_vars; j++)
-			maxpowerb[j] = max(maxpowerb[j], b[bi+1+j]);
+			maxpowerb[j] = MaX(maxpowerb[j], b[bi+1+j]);
 
 	for (int i=0; i<AN.poly_num_vars; i++)
 		maxpower[i] = maxpowera[i] + maxpowerb[i];
@@ -1142,8 +1150,8 @@ void poly::mul (const poly &a, const poly &b, poly &c) {
 		return;
 	}
 
-	WORD vara = a.is_dense_univariate();
-	WORD varb = b.is_dense_univariate();
+	int vara = a.is_dense_univariate();
+	int varb = b.is_dense_univariate();
 
 	if (vara!=-2 && varb!=-2 && vara==varb) {
 		mul_univar(a,b,c,vara);
@@ -1533,7 +1541,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 
 	for (int ai=1; ai<a[0]; ai+=a[ai])
 		for (int j=0; j<AN.poly_num_vars; j++)
-			maxpowera[j] = max(maxpowera[j], a[ai+1+j]);
+			maxpowera[j] = MaX(maxpowera[j], a[ai+1+j]);
 
 	// if PROD(max.power) small, allocate hash table
 	bool use_hash = true;
@@ -1845,11 +1853,11 @@ void poly::divmod (const poly &a, const poly &b, poly &q, poly &r, bool only_div
 		return;
 	}
 
-	WORD vara = a.is_dense_univariate();
-	WORD varb = b.is_dense_univariate();
+	int vara = a.is_dense_univariate();
+	int varb = b.is_dense_univariate();
 
 	if (vara!=-2 && varb!=-2 && (vara==-1 || varb==-1 || vara==varb)) {
-		divmod_univar(a,b,q,r,max(vara,varb),only_divides);
+		divmod_univar(a,b,q,r,MaX(vara,varb),only_divides);
 	}
 	else {
 		divmod_heap(a,b,q,r,only_divides);
@@ -2008,10 +2016,10 @@ int poly::sign () const {
 */
 
 // returns the degree of x of a polynomial (deg=-1 iff a=0)
-WORD poly::degree (int x) const {
-	WORD deg = -1;
+int poly::degree (int x) const {
+	int deg = -1;
 	for (int i=1; i<terms[0]; i+=terms[i])
-		deg = max(deg, terms[i+1+x]);
+		deg = MaX(deg, terms[i+1+x]);
 	return deg;
 }
 
@@ -2115,11 +2123,11 @@ const poly poly::derivative (int x) const {
 	POLY_GETIDENTITY(*this);
 	
 	poly b(BHEAD 0);
-	WORD bi=1;
+	int bi=1;
 
 	for (int i=1; i<terms[0]; i+=terms[i]) {
 		
-		WORD power = terms[i+1+x];
+		int power = terms[i+1+x];
 
 		if (power > 0) {
 			b.check_memory(bi+terms[i]);
@@ -2222,11 +2230,11 @@ bool poly::is_monomial () const {
  *   A univariate polynomial is considered dense iff more than half of
  *   the coefficients a_0...a_deg are non-zero.
  */
-WORD poly::is_dense_univariate () const {
+int poly::is_dense_univariate () const {
 
 	POLY_GETIDENTITY(*this);
 	
-	WORD num_terms=0, res=-1;
+	int num_terms=0, res=-1;
 
 	// test univariate
 	for (int i=1; i<terms[0]; i+=terms[i]) {
@@ -2243,7 +2251,7 @@ WORD poly::is_dense_univariate () const {
 	if (res == -1) return -1;
 
 	// test density
-	WORD deg = terms[2+res];
+	int deg = terms[2+res];
 	if (2*num_terms < deg+1) return -2;
 	
 	return res;
@@ -2335,7 +2343,7 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
 	
-	vector<WORD> degrees (AN.poly_num_vars);
+	vector<int> degrees (AN.poly_num_vars);
 	
 	// extract all variables
 	do {
@@ -2358,7 +2366,7 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 						degrees.push_back(e[j+1]);
 					}
 					else {
-						degrees[var_to_idx[e[j]]] = max(degrees[var_to_idx[e[j]]], e[j+1]);
+						degrees[var_to_idx[e[j]]] = MaX(degrees[var_to_idx[e[j]]], e[j+1]);
 					}
 		}
 			

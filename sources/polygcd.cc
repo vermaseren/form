@@ -215,7 +215,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
 
 	for (int i=1; i<a[0];) {
 		poly b(BHEAD 0, a.modp, a.modn);
-		WORD deg = a[i+1+x];
+		int deg = a[i+1+x];
 		
 		for (; i<a[0] && a[i+1+x]==deg; i+=a[i]) {
 			b.check_memory(b[0]+a[i]);
@@ -388,7 +388,7 @@ const poly polygcd::gcd_Euclidean (const poly &a, const poly &b) {
 	
 	if (a.is_dense_univariate()>=-1 && b.is_dense_univariate()>=-1) {
 		vector<WORD> coeff = coefficient_list_gcd(poly::to_coefficient_list(a),
-																								 poly::to_coefficient_list(b), a.modp);
+																							poly::to_coefficient_list(b), a.modp);
 		res = poly::from_coefficient_list(BHEAD coeff, a.first_variable(), a.modp);
 	}
 	else {
@@ -516,8 +516,8 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 			}
 
 			if (add) {
-				b[bi+AN.poly_num_vars+1] += a.modp;
-				b[bi+AN.poly_num_vars+1] %= a.modp;
+				if (b[bi+AN.poly_num_vars+1] < 0)
+					b[bi+AN.poly_num_vars+1] += a.modp;
 				bi+=b[bi];
 			}
 
@@ -569,7 +569,7 @@ const vector<int> polygcd::sparse_interpolation_get_mul_list (const poly &a, con
 
 	// cache size for variable x is bounded by the degree in x, twice
 	// the number of terms of the polynomial and a constant
-	vector<vector<WORD> >cache(c.size());
+	vector<vector<WORD> > cache(c.size());
 	int max_cache_size = min(2*a.number_of_terms(),RAISPOWMOD_CACHE_MAX_POWER);
 	for (int i=0; i<(int)c.size(); i++)
 		cache[i] = vector<WORD>(min(a.degree(x[i+1])+1,max_cache_size), 0);
@@ -671,7 +671,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_sparse_interpolation("
-			 << a << "," << b << "," << x << "," << lc << "," << s <<") = " << endl;
+			 << a << "," << b << "," << x << "," << lc << "," << s <<")" << endl;
 #endif
 
 	POLY_GETIDENTITY(a);
@@ -704,7 +704,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 
 		int fr=0,to=0;
 		for (int i=1; i<s[0];) {
-			WORD pow = s[i+1+x[0]];
+			int pow = s[i+1+x[0]];
 			while (i<s[0] && s[i+1+x[0]]==pow) i+=s[i], to++;
 			for (int j=fr; j<to; j++)
 				for (int k=fr; k<j; k++)
@@ -749,7 +749,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 		int si=1, col=0, midx=0;
 		
 		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
-			WORD pow = gcd[gi+1+x[0]];
+			int pow = gcd[gi+1+x[0]];
 
 			while (si<sred[0] && sred[si+1+x[0]] == pow) {
 				if (numg < (int)M[midx].size()) 
@@ -778,7 +778,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 		// Gaussian elimination
 		for (int j=0; j<n; j++) {
 			for (int k=0; k<j; k++) {
-				WORD x = M[i][j][k];
+				LONG x = M[i][j][k];
 				for (int l=k; l<n; l++) 
 					M[i][j][l] = (M[i][j][l] - M[i][k][l]*x) % a.modp;
 				V[i][j] = (V[i][j] - V[i][k]*x) % a.modp;
@@ -873,7 +873,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	POLY_GETIDENTITY(a);
 
 	// divide out multivariate content in last variable
-	WORD X = x[x.size()-1];
+	int X = x[x.size()-1];
 
 	poly conta(content_multivar(a,X));
 	poly contb(content_multivar(b,X));
@@ -895,6 +895,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		// generate random constants and substitute it
 		int c = 1 + random() % (a.modp-1);
 		if (substitute_last(gcdlcoeffs,X,c).is_zero()) continue;
+		if (substitute_last(modpoly,X,c).is_zero()) continue;
 		
 		poly amodc(substitute_last(ppa,X,c));
 		poly bmodc(substitute_last(ppb,X,c));
@@ -999,7 +1000,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
  	
 	poly d(BHEAD 0);
 	poly m1(BHEAD 1);
-	WORD mindeg=MAXPOSITIVE;
+	int mindeg=MAXPOSITIVE;
 
 	while (true) {
 		// choose a prime and solve modulo the prime
@@ -1021,7 +1022,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 		if (!(poly(a,p)%c).is_zero()) continue;
 		if (!(poly(b,p)%c).is_zero()) continue;
 
-		WORD deg = c.degree(x[0]);
+		int deg = c.degree(x[0]);
 
 		if (deg < mindeg) {
 			// small degree, so the old one is wrong

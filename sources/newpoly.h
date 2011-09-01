@@ -45,7 +45,8 @@ extern "C" {
 #endif
 
 // maximum size of the hash table used for multiplication and division
-const int MAX_HASH_SIZE = 1048576;
+
+const int MAX_HASH_SIZE = MiN(1<<20, 1<<(BITSINWORD-1));
 
 class poly {
 
@@ -57,11 +58,11 @@ public:
 #endif
 
 	WORD *terms;
-	WORD size_of_terms;
+	LONG size_of_terms;
 	WORD modp,modn;
 
 	// constructors/destructor
-	poly (PHEAD WORD, WORD=-1, WORD=1);
+	poly (PHEAD int, WORD=-1, WORD=1);
 	poly (PHEAD const UWORD *, WORD, WORD=-1, WORD=1);
 	poly (const poly &, WORD=-1, WORD=1);
 	~poly ();
@@ -95,11 +96,11 @@ public:
 	bool is_one () const;
 	bool is_integer () const;
 	bool is_monomial () const;
-	WORD is_dense_univariate () const;
+	int is_dense_univariate () const;
 
 	// properties
 	int sign () const;
-	WORD degree (int) const;
+	int degree (int) const;
 	int first_variable () const;
 	int number_of_terms () const;
 	const std::vector<int> all_variables () const;	
@@ -157,11 +158,7 @@ public:
 	static void push_heap (PHEAD WORD **, int);
 	static void pop_heap (PHEAD WORD **, int);
 
-#ifndef WITHPTHREADS
-	PADPOINTER(1,0,3,0);
-#else
-	PADPOINTER(2,0,3,0);
-#endif
+	PADPOINTER(1,0,2,0);
 };
 
 // comparison class for monomials (for std::sort)

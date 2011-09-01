@@ -659,7 +659,7 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 	// Calculate the maximum degree of A in x2,...,xm
 	int maxdegA=0;
 	for (int i=1; i<(int)x.size(); i++)
-		maxdegA = max(maxdegA, 1+A.degree(x[i]));
+		maxdegA = MaX(maxdegA, 1+A.degree(x[i]));
 
 	// Iteratively add the variables x2,...,xm
 	for (int xi=1; xi<(int)x.size(); xi++) {
@@ -789,14 +789,14 @@ WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 	POLY_GETIDENTITY(a);
 
 	// analyse the polynomial for calculating the bound
-	WORD maxdegree=0, maxdigits=0, numterms=0;
+	int maxdegree=0, maxdigits=0, numterms=0;
 			
 	for (int i=1; i<a[0]; i+=a[i]) {
 		for (int j=0; j<AN.poly_num_vars; j++)
-			maxdegree = max(maxdegree, a[i+1+j]);
+			maxdegree = MaX(maxdegree, a[i+1+j]);
 
 		// maxdigits is a number of digits in the largest coefficient in base e
-		maxdigits = max(maxdigits, (WORD) ceil(log(a[i+a[i]-2])
+		maxdigits = MaX(maxdigits, (WORD) ceil(log(a[i+a[i]-2])
 																					 + BITSINWORD*(ABS(a[i+a[i]-1])-1)*log(2)));
 		numterms++;
 	}
@@ -852,7 +852,7 @@ const vector<int> polyfact::choose_ideal (const poly &a, int p, const factorized
 	
 	vector<int> c(x.size()-1);
 	
-	WORD dega = a.degree(x[0]);
+	int dega = a.degree(x[0]);
 	poly amodI(a);
 
 	// choose random c
@@ -1079,7 +1079,8 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 	cout << "*** [" << thetime() << "]  CALL: Berlekamp_Qmatrix("<<_a<<")\n";
 #endif
 
-	if (_a.all_variables() == vector<int>()) return vector<vector<WORD> >(0);
+	if (_a.all_variables() == vector<int>())
+		return vector<vector<WORD> >(0);
 
 	POLY_GETIDENTITY(_a);
 	
@@ -1095,7 +1096,7 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 	vector<WORD> inv(p);
 	inv[1] = 1;
 	for (int i=2; i<p; i++)
-		inv[i] = - (p/i) * inv[p%i] % p;
+		inv[i] = - (LONG)(p/i) * inv[p%i] % p;
 	
 	vector<vector<WORD> > Q(n, vector<WORD>(n));
 
@@ -1115,10 +1116,10 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 		// transform d=x^i mod a into d=x^(i+1) mod a
 		vector<WORD> e(n);
 		for (int j=0; j<n; j++) {
-			e[j] = -d[n-1]*c[j];
-			if (j>0) e[j] += d[j-1];
-			e[j] = (e[j]%p+p)%p;
+			e[j] = (-(LONG)d[n-1]*c[j] + (j>0?d[j-1]:0)) % p;
+			if (e[j]<0) e[j]+=p;
 		}
+
 		d=e;
 	}
 
@@ -1136,7 +1137,7 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 			swap(Q[k][ii],Q[k][i]);
 		
 		// normalize row i, which becomes the pivot
-		WORD mul = inv[Q[i][i]];
+		LONG mul = inv[Q[i][i]];
 		vector<int> idx;
 		
 		for (int k=0; k<n; k++) if (Q[k][i] != 0) {
@@ -1161,8 +1162,10 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 		Q[i][i] = Q[i][i]-1;
 
 		// reduce all coefficients in the range 0,1,...,p-1
-		for (int j=0; j<n; j++)
-			Q[i][j] = (-Q[i][j]%p+p)%p;
+		for (int j=0; j<n; j++) {
+			Q[i][j] = -Q[i][j]%p;
+			if (Q[i][j]<0) Q[i][j]+=p;
+		}				
 	}
 
 #ifdef DEBUG
@@ -1445,7 +1448,7 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 	// Determine to which power of p to lift
 	if (n==0) {
 		n = choose_prime_power(amodI,p);
-		n = max(n, choose_prime_power(a,p));
+		n = MaX(n, choose_prime_power(a,p));
 	}
 
 	amodI.setmod(p,n);
