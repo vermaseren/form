@@ -1577,8 +1577,6 @@ extern int DoGCDfunction(PHEAD WORD *, WORD *);
 extern int DoGCDfunction1(PHEAD WORD *, WORD *);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
-
-extern void initialize_geobuckets();
 /*
   	#] Declarations :
 */
