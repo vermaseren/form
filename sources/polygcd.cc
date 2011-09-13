@@ -330,9 +330,9 @@ const vector<WORD> polygcd::coefficient_list_gcd (const vector<WORD> &_a, const 
 #endif
 	
 	vector<WORD> a(_a), b(_b);
-
+	
 	while (b.size() != 0) {
-		a = poly::coefficient_list_divmod(a,b,p,1);
+	  a = poly::coefficient_list_divmod(a,b,p,1);
 		swap(a,b);
 	}
 
@@ -1298,7 +1298,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
  	if (a==b) return a.modp==0 ? a : a / a.integer_lcoeff();
 
 	if (a.is_integer() || b.is_integer()) {
-		if (a.modp > 0) return poly(BHEAD 1,a.modp,1);
+		if (a.modp > 0) return poly(BHEAD 1,a.modp,a.modn);
 		return poly(integer_gcd(integer_content(a),integer_content(b)),0,1);
 	}
 
@@ -1313,6 +1313,25 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 	for (int i=0; i<AN.poly_num_vars; i++)
 		if (used[i]) x.push_back(i);
 
+	if (a.is_monomial() || b.is_monomial()) {
+
+		poly res(BHEAD 1,a.modp,a.modn);
+		if (a.modp == 0) res = integer_gcd(integer_content(a),integer_content(b));
+		
+		for (int i=0; i<(int)x.size(); i++)
+			res[2+x[i]] = 1<<(BITSINWORD-2);
+
+		for (int i=1; i<a[0]; i+=a[i]) 
+			for (int j=0; j<(int)x.size(); j++) 
+				res[2+x[j]] = MiN(res[2+x[j]], a[i+1+x[j]]);
+		
+		for (int i=1; i<b[0]; i+=b[i]) 
+			for (int j=0; j<(int)x.size(); j++) 
+				res[2+x[j]] = MiN(res[2+x[j]], b[i+1+x[j]]);
+
+		return res;
+	}
+
 	// Calculate the contents, their gcd and the primitive parts
 	poly conta(x.size()==1 ? integer_content(a) : content_univar(a,x[0]));
 	poly contb(x.size()==1 ? integer_content(b) : content_univar(b,x[0]));
@@ -1322,31 +1341,31 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 	
 	if (ppa == ppb) 
 		return ppa * gcdconts;
-	
-	poly gcd(BHEAD 0);
 
+	poly res(BHEAD 0);
+	
 #ifdef POLYGCD_USE_HEURISTIC
 	// Try the heuristic gcd algorithm
 	if (a.modp==0 && gcd_heuristic_possible(a) && gcd_heuristic_possible(b)) {
 		try {
-			gcd = gcd_heuristic(ppa,ppb,x);
-			if (!gcd.is_zero()) gcd /= integer_content(gcd);
+			res = gcd_heuristic(ppa,ppb,x);
+			if (!res.is_zero()) res /= integer_content(res);
 		}
 		catch (gcd_heuristic_failed) {}
 	}
 #endif
 	
 	// If gcd==0, the heuristic algorithm failed, so try Zippel's GCD algorithm	
-	if (gcd.is_zero())
-		gcd = gcd_modular(ppa,ppb,x);
+	if (res.is_zero())
+		res = gcd_modular(ppa,ppb,x);
 
-	gcd *= gcdconts * poly(BHEAD gcd.sign());
+	res *= gcdconts * poly(BHEAD res.sign());
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : gcd("<<a<<","<<b<<") = "<<gcd<<endl;
+	cout << "*** [" << thetime() << "]  RES : gcd("<<a<<","<<b<<") = "<<res<<endl;
 #endif
 
-	return gcd;
+	return res;
 }
 
 /*
