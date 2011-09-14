@@ -1779,6 +1779,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		SeekScratch(AR.outfile,&position);
 		e->onfile = position;
 		AR.DeferFlag = AC.ComDefer;
+		AR.Eside = RHSIDE;
 		NewSort(BHEAD0);
 		AN.ninterms = 0;
 		PF_linterms = 0;
