@@ -2858,7 +2858,7 @@ WORD PF_mkDollarsParallel(void)
 /*
 			#[ SLAVE UNPACK :
 */
-			WORD nfactors;
+			WORD nfactors = 0;
 			FACDOLLAR *factors = NULL;
 
 			PF_longMultiUnPack((UBYTE*)&namesize, 1, sizeof(int),PF_INT);
