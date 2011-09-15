@@ -874,17 +874,17 @@ int PF_EndSort(void)
 		size = (S->sTop2 - S->lBuffer - 1)/(PF.numtasks - 1);
 		size -= (AM.MaxTer/sizeof(WORD) + 2);
 		if ( fout->POsize < (LONG)(size*sizeof(WORD)) ) size = fout->POsize/sizeof(WORD);
-		if ( sbuf == 0 ) {
-			if ( (sbuf = PF_AllocBuf(PF.numsbufs,size*sizeof(WORD),1)) == 0 ) return(-1);
-			sbuf->buff[0] = fout->PObuffer;
-			sbuf->stop[0] = fout->PObuffer+size;
-			if ( sbuf->stop[0] > fout->POstop ) return(-1);
+		if ( sbuf == NULL ) {
+			if ( (sbuf = PF_AllocBuf(PF.numsbufs,size*sizeof(WORD),1)) == NULL ) return(-1);
 			sbuf->active = 0;
+			PF.sbuf = sbuf;
 		}
+		sbuf->buff[0] = fout->PObuffer;
+		sbuf->stop[0] = fout->PObuffer+size;
+		if ( sbuf->stop[0] > fout->POstop ) return(-1);
 		for ( i = 0; i < PF.numsbufs; i++ )
 			sbuf->fill[i] = sbuf->full[i] = sbuf->buff[i];
 
-		PF.sbuf = sbuf;
 		fout->PObuffer = sbuf->buff[sbuf->active];
 		fout->POstop = sbuf->stop[sbuf->active];
 		fout->POsize = size*sizeof(WORD);
@@ -1814,7 +1814,30 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			PF_linterms += dd; AN.ninterms += dd;
 		}
 		PF_linterms += dd; AN.ninterms += dd;
-		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) return(-1);
+		{
+			/*
+			 * EndSort() overrides AR.outfile->PObuffer etc. (See also PF_EndSort()),
+			 * but it causes a problem because
+			 *  (1) PF_EndSort() sets AR.outfile->PObuffer to a send-buffer.
+			 *  (2) RevertScratch() clears AR.infile, but then swaps buffers of AR.infile
+			 *      and AR.outfile.
+			 *  (3) RHS expressions are stored to AR.infile->PObuffer.
+			 *  (4) Again, PF_EndSort() sets AR.outfile->PObuffer, but now AR.outfile->PObuffer
+			 *      == AR.infile->PObuffer because of (1) and (2).
+			 *  (5) The result goes to AR.outfile. This breaks the RHS expressions,
+			 *      which may be needed for the next expression.
+			 * Solution: backup & restore AR.outfile->PObuffer etc. (TU 14 Sep 2011)
+			 */
+			FILEHANDLE *fout = AR.outfile;
+			WORD *oldbuff = fout->PObuffer;
+			WORD *oldstop = fout->POstop;
+			LONG  oldsize = fout->POsize;
+			if ( EndSort(BHEAD AM.S0->sBuffer, 0, 0) < 0 ) return -1;
+			fout->PObuffer = oldbuff;
+			fout->POstop   = oldstop;
+			fout->POsize   = oldsize;
+			fout->POfill = fout->POfull = fout->PObuffer;
+		}
 		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms));
 /*
 			#] Generator Loop & EndSort : 
@@ -3084,6 +3107,10 @@ static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
 		l+=dl;
 		if( l >= PF.exprbufsize){
 			if( l == PF.exprbufsize){
+				/*
+				 * This access is valid because PF.exprbufsize+1 WORDs are
+				 * broadcasted, this shortcut is not mandatory though. (TU 15 Sep 2011)
+				 */
 				if( *(curfile->POfill) == 0)/*expression is ready*/
 					return(0);
 				}
@@ -3102,6 +3129,10 @@ static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
 				if(PF_pushScratch(curfile))
 					return(-PF.exprbufsize-1);
 			}
+			/*
+			 * This access is always valid because PF.exprbufsize+1 WORDs are
+			 * broadcasted. (TU 15 Sep 2011)
+			 */
 			dl=*(curfile->POfill+1)+2;
 		}/*if(*(curfile->POfill)<0)*/
 	}/*for(;;)*/
@@ -3166,12 +3197,17 @@ static int PF_rhsBCastMaster(FILEHANDLE *curfile, EXPRESSIONS e)
 	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
 	SetScratch(curfile,&(e->onfile));
 	do{
-		if( curfile->POfull-curfile->POfill < PF.exprbufsize ){
+		/*
+		 * We need to broadcast PF.exprbufsize+1 WORDs because PF_WalkThroughExprSlave
+		 * may access to an additional 1 WORD. It is better to rewrite the routines
+		 * in such a way as to broadcast only PF.exprbufsize WORDs. (TU 15 Sep 2011)
+		 */
+		if ( curfile->POfull - curfile->POfill < PF.exprbufsize + 1 ) {
 			POSITION pos;
 			SeekScratch(curfile,&pos);
 			PF_SetScratch(curfile,&pos);
-		}/*if( curfile->POfull-curfile->POfill < PF.exprbufsize )*/
-		if ( PF_Bcast(curfile->POfill,PF.exprbufsize*sizeof(WORD)))
+		}
+		if ( PF_Bcast(curfile->POfill, (PF.exprbufsize + 1) * sizeof(WORD)) )
 			return -1;
 		l=PF_WalkThroughExprMaster(curfile,l-1);
 	}while(l>0);
@@ -3198,11 +3234,16 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
 	e->counter=0;
 	do{
-		if( curfile->POstop-curfile->POfill < PF.exprbufsize ){
+		/*
+		 * We need to broadcast PF.exprbufsize+1 WORDs because PF_WalkThroughExprSlave
+		 * may access to an additional 1 WORD. It is better to rewrite the routines
+		 * in such a way as to broadcast only PF.exprbufsize WORDs. (TU 15 Sep 2011)
+		 */
+		if ( curfile->POstop - curfile->POfill < PF.exprbufsize + 1 ) {
 			if(PF_pushScratch(curfile))
 				return(-1);
-		}/*if( curfile->POstop-curfile->POfill < PF.exprbufsize )*/
-		if ( PF_Bcast(curfile->POfill,PF.exprbufsize*sizeof(WORD)))
+		}
+		if ( PF_Bcast(curfile->POfill, (PF.exprbufsize + 1) * sizeof(WORD)) )
 			return(-1);
 		l=PF_WalkThroughExprSlave(curfile,e,l-1);
 	}while(l>0);
