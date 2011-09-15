@@ -53,7 +53,7 @@ the errno checkup*/
 
 /*[29apr2004 mt]:*/
 #define WITHEXTERNALCHANNEL
-//#define TRAPSIGNALS
+#define TRAPSIGNALS
 /*:[29apr2004 mt]*/
 
 #define P_term(code)    exit((int)(code<0?-code:code))
