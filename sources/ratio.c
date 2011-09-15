@@ -961,7 +961,7 @@ signdone:;
 }
 
 /*
- 		#] GCDfunction : 
+ 		#] GCDfunction :
  		#[ GCDfunction1 :  At least one argument with only one term
 
 	Finds the GCD of the all long arguments in argin of which the one at one
@@ -1442,7 +1442,7 @@ int DoGCDfunction1(PHEAD WORD *argin, WORD *argout)
 
 /*
  		#] DoGCDfunction1 : 
-  	#] GCDfunction : 
+  	#] GCDfunction :
 */
 
 

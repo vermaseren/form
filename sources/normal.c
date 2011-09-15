@@ -1078,6 +1078,7 @@ exitfromhere:
 				else pcom[ncom++] = t;
 				break;
 			case GCDFUNCTION:
+#ifdef EVALUATEGCD
 #ifdef NEWGCDFUNCTION
 				{
 /*
@@ -1227,6 +1228,10 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 						goto RegEnd;
 					}
 				}
+#endif
+#else
+				MesPrint(" Unexpected call to EvaluateGCD");
+				Terminate(-1);
 #endif
 				break;
 			case MINFUNCTION:
@@ -3825,6 +3830,7 @@ WORD DetCommu(WORD *terms)
      proces.c:		if ( Normalize(BHEAD w) ) { LowerSortLevel(); goto PolyCall; }
      proces.c:		if ( Normalize(BHEAD term) ) goto PolyCall;
 */
+#ifdef EVALUATEGCD
 
 WORD *EvaluateGcd(PHEAD WORD *subterm)
 {
@@ -4126,6 +4132,8 @@ FromGCD:
 	MUNLOCK(ErrorMessageLock);
 	return(0);
 }
+
+#endif
 
 /*
   	#] EvaluateGcd : 
