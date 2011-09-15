@@ -2782,6 +2782,50 @@ NoPoly:
 
 /*
  		#] Compare1 : 
+ 		#[ CompareSymbols :			int CompareSymbols(term1,term2,par)
+*/
+/**
+ *	Compares the terms, based on the value of AN.polysortflag.
+ *	If term1 < term2 the return value is -1
+ *	If term1 > term2 the return value is  1
+ *	If term1 = term2 the return value is  0
+ *	The coefficients may differ.
+ *	The terms contain only a single subterm of type SYMBOL.
+ *	If AN.polysortflag = 0 it is a 'regular' compare.
+ *	If AN.polysortflag = 1 the sum of the powers is more important
+ *	par is a dummy parameter to make the parameter field identical
+ *	to that of Compare1 which is the regular compare routine in sort.c
+ */
+
+int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
+{
+	int sum1, sum2;
+	WORD *t1, *t2, *tt1, *tt2;
+	DUMMYUSE(par);
+	t1 = term1 + 1; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]); t1 += 2;
+	t2 = term2 + 1; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]); t2 += 2;
+	if ( AN.polysortflag > 0 ) {
+		sum1 = 0; sum2 = 0;
+		while ( t1 < tt1 ) { sum1 += t1[1]; t1 += 2; }
+		while ( t2 < tt2 ) { sum2 += t2[1]; t2 += 2; }
+		if ( sum1 < sum2 ) return(-1);
+		if ( sum1 > sum2 ) return(1);
+		t1 = term1+3; t2 = term2 + 3;
+	}
+	while ( t1 < tt1 && t2 < tt2 ) {
+		if ( *t1 > *t2 ) return(-1);
+		if ( *t1 < *t2 ) return(1);
+		if ( t1[1] < t2[1] ) return(-1);
+		if ( t1[1] > t2[1] ) return(1);
+		t1 += 2; t2 += 2;
+	}
+	if ( t1 < tt1 ) return(1);
+	if ( t2 < tt2 ) return(-1);
+	return(0);
+}
+
+/*
+ 		#] CompareSymbols : 
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**

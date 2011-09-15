@@ -4147,4 +4147,101 @@ void DropCoefficient(PHEAD WORD *term)
 
 /*
   	#] DropCoefficient : 
+  	#[ SymbolNormalize :
+*/
+/**
+ *	Routine normalizes terms that contain only symbols.
+ *	Regular minimum and maximum properties are ignored.
+ *
+ *	We check whether there are negative powers in the output.
+ *	This is not allowed.
+ */
+
+int SymbolNormalize(WORD *term)
+{
+	WORD buffer[7*NORMSIZE], *t, *b, *bb, *tt, *m, *tstop;
+	int i;
+	b = buffer;
+	*b++ = SYMBOL; *b++ = 2;
+	t = term + *term;
+	tstop = t - ABS(t[-1]);
+	t = term + 1;
+	while ( t < tstop ) {	/* Step 1: collect symbols */
+	  if ( *t == SYMBOL && t < tstop ) {
+		for ( i = 2; i < t[1]; i += 2 ) {
+			bb = buffer+2;
+			while ( bb < b ) {
+				if ( bb[0] == t[i] ) {	/* add powers */
+					bb[1] += t[i+1];
+					if ( bb[1] > MAXPOWER || bb[1] < -MAXPOWER ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Power in SymbolNormalize out of range");
+						MUNLOCK(ErrorMessageLock);
+						return(-1);
+					}
+					if ( bb[1] == 0 ) {
+						b -= 2;
+						while ( bb < b ) {
+							bb[0] = bb[2]; bb[1] = bb[3]; bb += 2;
+						}
+					}
+					goto Nexti;
+				}
+				else if ( bb[0] > t[i] ) { /* insert it */
+					m = b;
+					while ( m > bb ) { m[1] = m[-1]; m[0] = m[-2]; m -= 2; }
+					b += 2;
+					bb[0] = t[i];
+					bb[1] = t[i+1];
+					goto Nexti;
+				}
+				bb += 2;
+			}
+			if ( bb >= b ) { /* add it to the end */
+				*b++ = t[i]; *b++ = t[i+1];
+			}
+Nexti:;
+		}
+	  }
+	  else {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal term in SymbolNormalize");
+		MUNLOCK(ErrorMessageLock);
+		return(-1);
+	  }
+	  t += t[1];
+	}
+	buffer[1] = b - buffer;
+/*
+	Veto negative powers
+*/
+	b = buffer; bb = b + b[1]; b += 3;
+	while ( b < bb ) {
+		if ( *b < 0 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("Negative power in SymbolNormalize");
+			MUNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		b += 2;
+	}
+/*
+	Now we use the fact that the new term will not be longer than the old one
+	Actually it should be shorter when there is more than one subterm!
+	Copy back.
+*/
+	i = buffer[1];
+	b = buffer; tt = term + 1;
+	if ( i > 2 ) { NCOPY(tt,b,i) }
+	if ( tt < tstop ) {
+		i = term[*term-1];
+		if ( i < 0 ) i = -i;
+		*term -= (tstop-tt);
+		NCOPY(tt,tstop,i)
+	}
+	return(0);
+}
+
+/*
+  	#] SymbolNormalize : 
 */

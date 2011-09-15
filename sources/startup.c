@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 #include "form3.h"
 #include "inivar.h"
@@ -299,7 +299,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -397,7 +397,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput : 
+ 		#] OpenInput :
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -605,7 +605,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles : 
+ 		#] ReserveTempFiles :
  		#[ StartVariables :
 */
 
@@ -766,6 +766,7 @@ VOID StartVariables()
 	AddSymbol((UBYTE *)"den_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"factor_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 
 	AddIndex((UBYTE *)"iarg_",4,0);
 	AddVector((UBYTE *)"parg_",VARTYPENONE,0);
@@ -874,7 +875,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1094,7 +1095,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars : 
+ 		#] IniVars :
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1164,7 +1165,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers : 
+ 		#] Signal handlers :
  		#[ main :
 */
 
@@ -1333,7 +1334,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main : 
+ 		#] main :
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1412,7 +1413,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -1490,7 +1491,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] Terminate :
  		#[ PrintRunningTime :
 */
 
@@ -1530,6 +1531,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 

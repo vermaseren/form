@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -242,7 +242,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -598,7 +598,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1727,7 +1727,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -1930,7 +1930,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 								r = to + ARGHEAD;
 								while ( r < m ) {
 									rr = r; r += *r;
-									if ( SymbolNormalize(rr,0,2) ) goto InFunc;
+									if ( SymbolNormalize(rr) ) goto InFunc;
 									if ( StoreTerm(BHEAD rr) ) {
 										AR.CompareRoutine = &Compare1;
 										LowerSortLevel();
@@ -2251,7 +2251,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2384,7 +2384,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2500,7 +2500,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2575,7 +2575,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2754,7 +2754,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3171,17 +3171,12 @@ CommonEnd:
 				  case TYPEREDEFPRE:
 					j = C->lhs[level][2];
 #ifdef PARALLEL
-					/*[08nov2005 mt] PF.redef[j] = PF.ginterms;*/
-					/*[14sep2005 mt]:*/
 					if(PF.me == MASTER)
 						/*off parallel. The master must collect preprovar for
 							broadcasting itself:*/
 						if(PF.redef[j] == 0)/*Not counted yet, count it:*/
 							PF.mnumredefs++;
-					/*:[14sep2005 mt]*/
-					/*[08nov2005 mt]:*/
 					PF.redef[j] = AN.ninterms;
-					/*:[08nov2005 mt]*/
 #endif
 #ifdef WITHPTHREADS
 					if ( AS.MultiThreaded ) {
@@ -3386,7 +3381,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3903,7 +3898,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4134,7 +4129,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4258,7 +4253,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4286,7 +4281,7 @@ WORD PrepPoly(PHEAD WORD *term)
 	WORD count = 0, i, jcoef, ncoef;
 	WORD *t, *m, *r, *tstop, *poly = 0, *v, *w, *vv, *ww;
 	WORD *oldworkpointer = AT.WorkPointer;
-	if ( AM.oldpolyratfun ) {
+/*	if ( AM.oldpolyratfun ) { */
 /*
 		The problem here is that the function will be forced into 'long'
 		notation. After this -SNUMBER,1 becomes 6,0,4,1,1,3 and the
@@ -4298,7 +4293,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			if ( ( term = RedoPolyRatFun(BHEAD term,0) ) == 0 ) Terminate(-1);
 			oldworkpointer = AT.WorkPointer;
 		}
-	}
+/*	} */
 	AT.PolyAct = 0;
 	t = term;
 	GETSTOP(t,tstop);
@@ -4385,7 +4380,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun : 
+ 		#] Create a PolyFun :
 */
 	}
 	else if ( AR.PolyFunType == 1 ) {
@@ -4535,7 +4530,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument : 
+ 		#] One argument :
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4598,7 +4593,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		return(0);
 /*
- 		#] Two arguments : 
+ 		#] Two arguments :
 */
 	}
 	else {
@@ -4618,7 +4613,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4869,6 +4864,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul : 
+ 		#] PolyFunMul :
 	#] Processor :
 */

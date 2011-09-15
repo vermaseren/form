@@ -1437,7 +1437,8 @@ extern int    writeBufToExtChannelFailure(char *,size_t);
 
 extern int    ReleaseTB(VOID);
 
-extern int    SymbolNormalize(WORD *,WORD *,WORD);
+extern int    SymbolNormalize(WORD *);
+extern int    SymbolNormalizeCheckMin(WORD *,WORD *,WORD);
 extern int    CheckMinTerm(WORD *,WORD *);
 extern int    ReOrderSymbols(WORD *,WORD *,WORD);
 extern int    CompareSymbols(PHEAD WORD *,WORD *,WORD);

@@ -494,6 +494,7 @@ typedef int (*TFUN1)();
 #define DENOMINATORSYMBOL 4
 #define WILDARGSYMBOL 5
 #define DIMENSIONSYMBOL 6
+#define FACTORSYMBOL 7
 
 #define WILDARGVECTOR 0
 #define WILDARGINDEX 0
@@ -745,7 +746,9 @@ typedef int (*TFUN1)();
 #define ISUNMODIFIED 2
 #define ISCOMPRESSED 4
 #define ISINRHS 8
-
+#define ISFACTORIZED 16
+#define TOBEUNFACTORED 32
+/*
 #define SORTWEIGHTS 1
 #define LINSOLVE 2
 #define TOTRIANGLE 4
@@ -761,7 +764,7 @@ typedef int (*TFUN1)();
 #define STEPNORMALFORM 3
 #define STEPGROEBNER 4
 #define NORMALSUBS 5
-
+*/
 #define VARTYPENONE 0
 #define VARTYPECOMPLEX 1
 #define VARTYPEIMAGINARY 2

@@ -133,7 +133,7 @@ void MarkDirty(WORD *term, WORD flags)
 
 		Routine marks the PolyFun or the PolyRatFun dirty.
 		This is used when there is modular calculus and the modulus
-		has cahnged for the current module.
+		has changed for the current module.
 */
 
 void PolyFunDirty(PHEAD WORD *term)
@@ -165,7 +165,7 @@ void PolyFunDirty(PHEAD WORD *term)
  		#] PolyFunDirty : 
  		#[ PolyFunClean :
 
-		Routine marks the PolyFun or the PolyRatFun dirty.
+		Routine marks the PolyFun or the PolyRatFun clean.
 		This is used when there is modular calculus and the modulus
 		has changed for the current module.
 */
@@ -186,7 +186,7 @@ void PolyFunClean(PHEAD WORD *term)
 }
 
 /*
- 		#] PolyFunClean :
+ 		#] PolyFunClean : 
  		#[ Symmetrize :
 
 		(Anti)Symmetrizes the arguments of a function. 
@@ -1002,7 +1002,7 @@ NoGamma:
 		}
 		goto NoCaseB;
 /*
- 		#] GAMMA :
+ 		#] GAMMA : 
  		#[ Tensors :
 */
 	}
@@ -1131,7 +1131,7 @@ enloop:;
 		}
 		goto toploop;
 /*
- 		#] Tensors :
+ 		#] Tensors : 
 */
 	}
 /*
@@ -1514,7 +1514,7 @@ NoCaseB:
 }
 
 /*
- 		#] MatchFunction :
+ 		#] MatchFunction : 
  		#[ ScanFunctions :			WORD ScanFunctions(inpat,inter,par)
 
 		Finds in which functions to look for a match.
