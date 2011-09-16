@@ -33,7 +33,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ includes :
 */
@@ -161,7 +161,7 @@ static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndS
 /* #define DBGOUT_NINTERMS(lv, a) DBGOUT(1, lv, a) */
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ statistics :
  		#[ variables : (should be part of a struct?)
 */
@@ -172,7 +172,7 @@ static LONG **PF_stats = NULL;/* space for collecting statistics of all procs */
 static LONG PF_laststat;     /* last realtime when statistics were printed */
 static LONG PF_statsinterval;/* timeinterval for printing statistics */
 /*
- 		#] variables : 
+ 		#] variables :
  		#[ PF_Statistics :
 */
 
@@ -245,8 +245,8 @@ static int PF_Statistics(LONG **stats, int proc)
 	return(0);
 }
 /*
- 		#] PF_Statistics : 
-  	#] statistics : 
+ 		#] PF_Statistics :
+  	#] statistics :
   	#[ sort.c :
  		#[ sort variables :
 */
@@ -280,7 +280,7 @@ static  WORD *PF_WorkSpace;		/* used in PF_EndSort() */
 static  UWORD *PF_ScratchSpace;	/* used in PF_GetLoser() */
 
 /*
- 		#] sort variables : 
+ 		#] sort variables :
  		#[ PF_AllocBuf :
 */
 
@@ -361,7 +361,7 @@ static PF_BUFFER *PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 }
 
 /*
- 		#] PF_AllocBuf : 
+ 		#] PF_AllocBuf :
  		#[ PF_InitTree :
 */
 
@@ -409,7 +409,7 @@ static int PF_InitTree(void)
 		if ( p != stop ) { MesPrint("error in PF_InitTree"); return(-1); }
 	}
 /*
- 		#] the buffers : 
+ 		#] the buffers :
  		#[ the receive buffers :
 */
 	numrbufs = PF.numrbufs;
@@ -448,7 +448,7 @@ static int PF_InitTree(void)
 	PF_term[0][0] = 0;  /* PF_term[0] is used for a zero term. */
 	PF.rbufs = rbuf;
 /*
- 		#] the receive buffers : 
+ 		#] the receive buffers :
  		#[ the actual tree :
 
 	 calculate number of nodes in mergetree and allocate space for them
@@ -492,13 +492,13 @@ static int PF_InitTree(void)
 		PF_root[i].rloser = 0;
 	}
 /*
- 		#] the actual tree : 
+ 		#] the actual tree :
 */
 	return(numnodes);
 }
 
 /*
- 		#] PF_InitTree : 
+ 		#] PF_InitTree :
  		#[ PF_PutIn :
 */
 
@@ -622,7 +622,7 @@ newterms:
 }
 
 /*
- 		#] PF_PutIn : 
+ 		#] PF_PutIn :
  		#[ PF_GetLoser :
 */
 
@@ -748,7 +748,7 @@ newright:
 				PF_loser = n->rloser;
 				goto newright;
 		/*
-			#] Here we work with PolyFun : 
+			#] Here we work with PolyFun :
 */
 			}
 /* Please verify that the = shouldn't have been == */
@@ -811,7 +811,7 @@ cancelled:
 				goto newright;
 			}
 /*
- 		#] terms are equal : 
+ 		#] terms are equal :
 */
 		}
 	}
@@ -820,7 +820,7 @@ cancelled:
 	return(0);
 }
 /*
- 		#] PF_GetLoser : 
+ 		#] PF_GetLoser :
  		#[ PF_EndSort :
 */
 
@@ -875,13 +875,13 @@ int PF_EndSort(void)
 		size -= (AM.MaxTer/sizeof(WORD) + 2);
 		if ( fout->POsize < (LONG)(size*sizeof(WORD)) ) size = fout->POsize/sizeof(WORD);
 		if ( sbuf == NULL ) {
-			if ( (sbuf = PF_AllocBuf(PF.numsbufs,size*sizeof(WORD),1)) == NULL ) return(-1);
+			if ( (sbuf = PF_AllocBuf(PF.numsbufs, size*sizeof(WORD), 1)) == NULL ) return -1;
 			sbuf->active = 0;
 			PF.sbuf = sbuf;
 		}
 		sbuf->buff[0] = fout->PObuffer;
 		sbuf->stop[0] = fout->PObuffer+size;
-		if ( sbuf->stop[0] > fout->POstop ) return(-1);
+		if ( sbuf->stop[0] > fout->POstop ) return -1;
 		for ( i = 0; i < PF.numsbufs; i++ )
 			sbuf->fill[i] = sbuf->full[i] = sbuf->buff[i];
 
@@ -890,7 +890,7 @@ int PF_EndSort(void)
 		fout->POsize = size*sizeof(WORD);
 		fout->POfill = fout->POfull = fout->PObuffer;
 /*
- 		#] the slaves have to initialize their sendbuffer : 
+ 		#] the slaves have to initialize their sendbuffer :
 */
 		return(0);
 	}
@@ -934,7 +934,7 @@ int PF_EndSort(void)
 			*PF_newcpos[PF_loser] = 0;
 			PF_newclen[PF_loser] = 0;
 /*
-			#] this is only when new coeff was too long : 
+			#] this is only when new coeff was too long :
 */
 		}
 		PRINTFBUF("PF_EndSort to PutOut: ",outterm,*outterm);
@@ -947,8 +947,8 @@ int PF_EndSort(void)
 }
 
 /*
- 		#] PF_EndSort : 
-  	#] sort.c : 
+ 		#] PF_EndSort :
+  	#] sort.c :
   	#[ proces.c :
  		#[ variables :
 */
@@ -956,7 +956,7 @@ int PF_EndSort(void)
 static  WORD *PF_CurrentBracket;
 
 /*
- 		#] variables : 
+ 		#] variables :
  		#[ PF_GetTerm :
 */
 
@@ -966,14 +966,14 @@ static  WORD *PF_CurrentBracket;
  * use AR.infile->PObuffer as buffer. For the moment, don't care
  * about compression, since terms come uncompressed from master.
  *
- * To enable keep-brackets when AR.DeferFlag isset, we need to do some
+ * To enable keep-brackets when AR.DeferFlag is set, we need to do some
  * preparation here:
  *   \li  copy the part ouside brackets to current_bracket
  *   \li  skip term if part outside brackets is same as for last term
  *   \li  if POfill >= POfull receive new terms as usual
  *
  * Different from GetTerm() we use an extra buffer for the part outside brackets:
- * PF_CurrentBracket().
+ * PF_CurrentBracket.
  *
  * @param[out]  term  the buffer to store the next term.
  * @return            the length of the next term.
@@ -1063,7 +1063,7 @@ ReceiveNew:
 		fi->POfull = fi->PObuffer + size;
 		if ( tag == PF_ENDSORT_MSGTAG ) *fi->POfull++ = 0;
 /*
- 		#] receive new terms from master : 
+ 		#] receive new terms from master :
 */
 	  }
 	  if ( PF_CurrentBracket ) *PF_CurrentBracket = 0;
@@ -1082,7 +1082,7 @@ ReceiveNew:
 					(WORD*)Malloc1(AM.MaxTer,"PF_CurrentBracket");
 			*PF_CurrentBracket = 0;
 /*
- 		#] alloc space : 
+ 		#] alloc space :
 */
 		}
 		while ( *PF_CurrentBracket ) {  /* "for each term in the buffer" */
@@ -1127,7 +1127,7 @@ ReceiveNew:
 				goto RegRet;
 			}
 /*
- 		#] test : 
+ 		#] test :
 */
 		}
 /*
@@ -1161,7 +1161,7 @@ strip:
 		}
 		tp = term;
 /*
- 		#] copy : 
+ 		#] copy :
 */
 	}
 
@@ -1173,7 +1173,7 @@ RegRet:
 }
 
 /*
- 		#] PF_GetTerm : 
+ 		#] PF_GetTerm :
  		#[ PF_Deferred :
 */
 
@@ -1270,7 +1270,7 @@ DefCall:
 }
 
 /*
- 		#] PF_Deferred : 
+ 		#] PF_Deferred :
  		#[ PF_Wait4Slave :
 */
 
@@ -1311,7 +1311,7 @@ static int PF_Wait4Slave(int src)
 }
 
 /*
- 		#] PF_Wait4Slave : 
+ 		#] PF_Wait4Slave :
  		#[ PF_Wait4SlaveIP :
 */
 /*
@@ -1354,7 +1354,7 @@ static int PF_Wait4SlaveIP(int *src)
 	return(next);
 }
 /*
- 		#] PF_Wait4SlaveIP : 
+ 		#] PF_Wait4SlaveIP :
  		#[ PF_WaitAllSlaves :
 */
 
@@ -1499,7 +1499,7 @@ static int PF_WaitAllSlaves(void)
 }
 
 /*
- 		#] PF_WaitAllSlaves : 
+ 		#] PF_WaitAllSlaves :
  		#[ PF_Processor :
 */
 
@@ -1580,7 +1580,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		AR.Eside = RHSIDE;
 /*
-			#] write prototype to outfile: 
+			#] write prototype to outfile:
 			#[ initialize sendbuffer if necessary:
 
 			the size of the sendbufs is:
@@ -1609,7 +1609,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			sb->full[j] = sb->fill[j] = sb->buff[j];
 		}
 /*
-			#] initialize sendbuffer if necessary: 
+			#] initialize sendbuffer if necessary:
 			#[ loop for all terms in infile:
 
 			copy them always to sb->buff[0], when that is full, wait for
@@ -1670,7 +1670,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		 *       => PF_WaitAllSlaves(). */
 		AN.ninterms += dd;
 /*
-			#] loop for all terms in infile: 
+			#] loop for all terms in infile:
 			#[ Clean up & EndSort:
 */
 		if ( LastExpression ) {
@@ -1697,7 +1697,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		AR.GetFile = 0;
 		AR.outtohide = 0;
 /*
-			#] Clean up & EndSort: 
+			#] Clean up & EndSort:
 			#[ Collect (stats,prepro,...):
 */
 		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms));
@@ -1759,12 +1759,12 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		PF_Statistics(PF_stats,0);
 /*
-			#] Collect (stats,prepro,...): 
+			#] Collect (stats,prepro,...):
 
 		This operation is moved to the beginning of each block, see PreProcessor
 		in pre.c.
 
- 		#] Master: 
+ 		#] Master:
 */
 	}
 	else {
@@ -1841,7 +1841,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms));
 /*
-			#] Generator Loop & EndSort : 
+			#] Generator Loop & EndSort :
 			#[ Collect (stats,prepro...) :
 */
 		PF_Send(MASTER,PF_ENDSORT_MSGTAG,0);
@@ -1881,12 +1881,12 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		PF_Send(MASTER,PF_ENDSORT_MSGTAG,1);
 /*
-			#] Collect (stats,prepro...) : 
+			#] Collect (stats,prepro...) :
 
 		This operation is moved to the beginning of each block, see PreProcessor
 		in pre.c.
 
- 		#] Slave : 
+ 		#] Slave :
 */
 		if ( PF.log ) {
 			fprintf(stderr,"[%d|%ld] Endsort,Collect,Broadcast done\n",PF.me,AC.CModule);
@@ -1897,8 +1897,8 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 }
 
 /*
- 		#] PF_Processor : 
-  	#] proces.c : 
+ 		#] PF_Processor :
+  	#] proces.c :
   	#[ startup :, prepro & compile
  		#[ PF_Init :
 */
@@ -2032,13 +2032,13 @@ int PF_Init(int *argc, char ***argv)
 		}
 	}
 /*
-  	#] BroadCast settings from getenv: 
+  	#] BroadCast settings from getenv:
 */
 	return(0);
 }
 /*
- 		#] PF_Init : 
-  	#] startup : 
+ 		#] PF_Init :
+  	#] startup :
   	#[ PF_BroadcastNumberOfTerms :
 */
 
@@ -2077,7 +2077,7 @@ LONG PF_BroadcastNumberOfTerms(LONG x)
 }
 
 /*
-  	#] PF_BroadcastNumberOfTerms : 
+  	#] PF_BroadcastNumberOfTerms :
   	#[ PF_InitRedefinedPreVars :
 */
 
@@ -2189,7 +2189,7 @@ int PF_InitRedefinedPreVars(void)
 }
 
 /*
-  	#] PF_InitRedefinedPreVars : 
+  	#] PF_InitRedefinedPreVars :
   	#[ PF_BroadcastString :
 */
 
@@ -2235,7 +2235,7 @@ int PF_BroadcastString(UBYTE *str)
 }
 
 /*
-  	#] PF_BroadcastString : 
+  	#] PF_BroadcastString :
   	#[ PF_BroadcastPreDollar :
 */
 
@@ -2351,7 +2351,7 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 }
 
 /*
-  	#] PF_BroadcastPreDollar : 
+  	#] PF_BroadcastPreDollar :
   	#[ PF_mkDollarsParallel :
 */
 
@@ -2426,7 +2426,7 @@ static int MinDollar(WORD index)
 }
 
 /*
- 		#] MinDollar : 
+ 		#] MinDollar :
  		#[ MaxDollar :
 */
 
@@ -2485,7 +2485,7 @@ static int MaxDollar(WORD index)
 }
 
 /*
- 		#] MaxDollar : 
+ 		#] MaxDollar :
  		#[ SumDollars :
 */
 
@@ -2572,7 +2572,7 @@ cleanup:
 }
 
 /*
- 		#] SumDollars : 
+ 		#] SumDollars :
 */
 
 /**
@@ -2663,7 +2663,7 @@ WORD PF_mkDollarsParallel(void)
 				}
 			}
 /*
-			#] INITIALIZATION : 
+			#] INITIALIZATION :
 			#[ MASTER RECEIVING :
 
 				Get dollars from each of the slaves, unpack them and put
@@ -2741,7 +2741,7 @@ WORD PF_mkDollarsParallel(void)
 /*
 				Now all (raw) info from slaves is in PFDollars
 
-			#] MASTER RECEIVING : 
+			#] MASTER RECEIVING :
 			#[ COMBINING :
 */
 			for ( i = 0; i < NumPotModdollars; i++ ) {
@@ -2770,7 +2770,7 @@ WORD PF_mkDollarsParallel(void)
 				CleanDollarFactors(Dollars + index);
 			}
 /*
-			#] COMBINING : 
+			#] COMBINING :
 			#[ CLEANUP :
 */
 			for ( i = 1; i < NumDollars; i++ ) {
@@ -2785,7 +2785,7 @@ WORD PF_mkDollarsParallel(void)
 				}
 			}
 /*
-			#] CLEANUP : 
+			#] CLEANUP :
 */
 		}
 		else { /*Slave*/
@@ -2815,7 +2815,7 @@ WORD PF_mkDollarsParallel(void)
 			}
 			PF_longSingleSend(MASTER, PF_DOLLAR_MSGTAG);
 /*
-			#] SLAVE SENDING : 
+			#] SLAVE SENDING :
 */
 		}
 	}
@@ -2869,7 +2869,7 @@ WORD PF_mkDollarsParallel(void)
 		}
 	}
 /*
- 		#] MASTER PACK : 
+ 		#] MASTER PACK :
 
 		old PF_BroadCast(1); replaced by:
 */
@@ -2918,7 +2918,7 @@ WORD PF_mkDollarsParallel(void)
 				where = &(AM.dollarzero);
 			}
 /*
-			#] SLAVE UNPACK : 
+			#] SLAVE UNPACK :
 			#[ SLAVE STORE :
 */
 			index = GetDollar(name);
@@ -2949,7 +2949,7 @@ WORD PF_mkDollarsParallel(void)
 			cbuf[AM.dbufnum].rhs[index] = d->where;
 			if (name) M_free(name, "dollar name");
 /*
-			#] SLAVE STORE : 
+			#] SLAVE STORE :
 */
 		}
 	}
@@ -2957,7 +2957,7 @@ WORD PF_mkDollarsParallel(void)
 }
 
 /*
-  	#] PF_mkDollarsParallel : 
+  	#] PF_mkDollarsParallel :
   	#[ Potentially modified dollar variables :
  		#[ Explanations :
 
@@ -2971,7 +2971,7 @@ WORD PF_mkDollarsParallel(void)
 	in the "right" context, and decrement the counter in CatchDollar(). If at
 	the end the counter is > 0, the dollarvar is really "potentially modified".
 
- 		#] Explanations : 
+ 		#] Explanations :
  		#[ Variables :
 */
 
@@ -2981,7 +2981,7 @@ static int PF_potModDollsN = -1;
 #define PDLSTDELTA 16
 
 /*
- 		#] Variables : 
+ 		#] Variables :
  		#[ PF_statPotModDollar :
 */
 
@@ -3007,7 +3007,7 @@ void PF_statPotModDollar(int dollarnum, int valToAdd)
 	if ( dollarnum > PF_potModDollsN) PF_potModDollsN = dollarnum;
 }
 /*
- 		#] PF_statPotModDollar : 
+ 		#] PF_statPotModDollar :
  		#[ PF_markPotModDollars :
 */
 
@@ -3028,8 +3028,8 @@ void PF_markPotModDollars(void)
 }
 
 /*
- 		#] PF_markPotModDollars : 
-  	#] Potentially modified dollar variables : 
+ 		#] PF_markPotModDollars :
+  	#] Potentially modified dollar variables :
   	#[ PF_SetScratch :
 */
 
@@ -3050,7 +3050,7 @@ static void PF_SetScratch(FILEHANDLE *f,POSITION *position)
 }
 
 /*
-  	#] PF_SetScratch : 
+  	#] PF_SetScratch :
   	#[ PF_pushScratch :
 */
 
@@ -3090,8 +3090,51 @@ static int PF_pushScratch(FILEHANDLE *f)
 }
 
 /*
-  	#] PF_pushScratch : 
-  	#[ PF_WalkThroughExprSlave :
+  	#] PF_pushScratch :
+  	#[ Broadcasting RHS expressions :
+ 		#[ PF_WalkThroughExprMaster :
+	Returns <=0 if the expression is ready, or dl+1;
+*/
+
+static int PF_WalkThroughExprMaster(FILEHANDLE *curfile, int dl)
+{
+	LONG l=0;
+	for(;;){
+		if(curfile->POfull-curfile->POfill < dl){
+			POSITION pos;
+			SeekScratch(curfile,&pos);
+			PF_SetScratch(curfile,&pos);
+		}/*if(curfile->POfull-curfile->POfill < dl)*/
+		curfile->POfill+=dl;
+		l+=dl;
+		if( l >= PF.exprbufsize){
+			if( l == PF.exprbufsize){
+				if( *(curfile->POfill) == 0)/*expression is ready*/
+					return(0);
+				}
+			l-=PF.exprbufsize;
+			curfile->POfill-=l;
+			return l+1;
+		}
+
+		dl=*(curfile->POfill);
+		if(dl == 0)
+			return l-PF.exprbufsize;
+
+		if(dl<0){/*compressed term*/
+			if(curfile->POfull-curfile->POfill < 1){
+				POSITION pos;
+				SeekScratch(curfile,&pos);
+				PF_SetScratch(curfile,&pos);
+			}/*if(curfile->POfull-curfile->POfill < 1)*/
+			dl=*(curfile->POfill+1)+2;
+		}/*if(*(curfile->POfill)<0)*/
+	}/*for(;;)*/
+}
+
+/*
+ 		#] PF_WalkThroughExprMaster :
+ 		#[ PF_WalkThroughExprSlave :
 	Returns <=0 if the expression is ready, or dl+1;
 */
 
@@ -3140,50 +3183,8 @@ static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
 }
 
 /*
-  	#] PF_WalkThroughExprSlave : 
-  	#[ PF_WalkThroughExprMaster :
-	Returns <=0 if the expression is ready, or dl+1;
-*/
-
-static int PF_WalkThroughExprMaster(FILEHANDLE *curfile, int dl)
-{
-	LONG l=0;
-	for(;;){
-		if(curfile->POfull-curfile->POfill < dl){
-			POSITION pos;
-			SeekScratch(curfile,&pos);
-			PF_SetScratch(curfile,&pos);
-		}/*if(curfile->POfull-curfile->POfill < dl)*/
-		curfile->POfill+=dl;
-		l+=dl;
-		if( l >= PF.exprbufsize){
-			if( l == PF.exprbufsize){
-				if( *(curfile->POfill) == 0)/*expression is ready*/
-					return(0);
-				}
-			l-=PF.exprbufsize;
-			curfile->POfill-=l;
-			return l+1;
-		}
-
-		dl=*(curfile->POfill);
-		if(dl == 0)
-			return l-PF.exprbufsize;
-
-		if(dl<0){/*compressed term*/
-			if(curfile->POfull-curfile->POfill < 1){
-				POSITION pos;
-				SeekScratch(curfile,&pos);
-				PF_SetScratch(curfile,&pos);
-			}/*if(curfile->POfull-curfile->POfill < 1)*/
-			dl=*(curfile->POfill+1)+2;
-		}/*if(*(curfile->POfill)<0)*/
-	}/*for(;;)*/
-}
-
-/*
-  	#] PF_WalkThroughExprMaster : 
-  	#[ PF_rhsBCastMaster :
+ 		#] PF_WalkThroughExprSlave :
+ 		#[ PF_rhsBCastMaster :
 */
 
 /**
@@ -3218,8 +3219,8 @@ static int PF_rhsBCastMaster(FILEHANDLE *curfile, EXPRESSIONS e)
 }
 
 /*
-  	#] PF_rhsBCastMaster : 
-  	#[ PF_rhsBCastSlave :
+ 		#] PF_rhsBCastMaster :
+ 		#[ PF_rhsBCastSlave :
 */
 
 /**
@@ -3260,8 +3261,8 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 }
 
 /*
-  	#] PF_rhsBCastSlave : 
-  	#[ PF_broadcastRHS :
+ 		#] PF_rhsBCastSlave :
+ 		#[ PF_broadcastRHS :
 */
 
 /**
@@ -3318,8 +3319,10 @@ int PF_broadcastRHS(void)
 }
 
 /*
-  	#] PF_broadcastRHS : 
-  	#[ PF_InParallelProcessor :
+ 		#] PF_broadcastRHS :
+  	#] Broadcasting RHS expressions :
+  	#[ InParallel mode :
+ 		#[ PF_InParallelProcessor :
 */
 
 /**
@@ -3413,8 +3416,8 @@ int PF_InParallelProcessor(void)
 }/*PF_InParallelProcessor*/
 
 /*
-  	#] PF_InParallelProcessor : 
-  	#[ PF_Wait4MasterIP :
+ 		#] PF_InParallelProcessor :
+ 		#[ PF_Wait4MasterIP :
 */
 
 static int PF_Wait4MasterIP(int tag)
@@ -3450,8 +3453,8 @@ static int PF_Wait4MasterIP(int tag)
 	return(0);
 }
 /*
-  	#] PF_Wait4MasterIP : 
-  	#[ PF_DoOneExpr :
+ 		#] PF_Wait4MasterIP :
+ 		#[ PF_DoOneExpr :
 */
 
 /**
@@ -3555,8 +3558,8 @@ static int PF_DoOneExpr(void)/*the processor*/
 }
 
 /*
-  	#] PF_DoOneExpr : 
-  	#[ PF_Slave2MasterIP :
+ 		#] PF_DoOneExpr :
+ 		#[ PF_Slave2MasterIP :
 */
 
 typedef struct bufIPstruct {
@@ -3631,8 +3634,8 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 }
 
 /*
-  	#] PF_Slave2MasterIP : 
-  	#[ PF_Master2SlaveIP :
+ 		#] PF_Slave2MasterIP :
+ 		#[ PF_Master2SlaveIP :
 */
 
 static int PF_Master2SlaveIP(int dest, EXPRESSIONS e)
@@ -3674,8 +3677,8 @@ static int PF_Master2SlaveIP(int dest, EXPRESSIONS e)
 }
 
 /*
-  	#] PF_Master2SlaveIP : 
-  	#[ PF_ReadMaster :
+ 		#] PF_Master2SlaveIP :
+ 		#[ PF_ReadMaster :
 */
 
 static int PF_ReadMaster(void)/*reads directly to its scratch!*/
@@ -3722,8 +3725,8 @@ static int PF_ReadMaster(void)/*reads directly to its scratch!*/
 }
 
 /*
-  	#] PF_ReadMaster : 
-  	#[ PF_SendChunkIP :
+ 		#] PF_ReadMaster :
+ 		#[ PF_SendChunkIP :
 	thesize is in bytes. Returns the number of sent bytes or <0 on error:
 */
 
@@ -3754,8 +3757,8 @@ static int PF_SendChunkIP(FILEHANDLE *curfile, POSITION *position, int to, LONG 
 }
 
 /*
-  	#] PF_SendChunkIP : 
-  	#[ PF_RecvChunkIP :
+ 		#] PF_SendChunkIP :
+ 		#[ PF_RecvChunkIP :
 	thesize is in bytes. Returns the number of sent bytes or <0 on error:
 */
 
@@ -3779,8 +3782,8 @@ static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize)
 }
 
 /*
-  	#] PF_RecvChunkIP : 
-  	#[ PF_WalkThrough :
+ 		#] PF_RecvChunkIP :
+ 		#[ PF_WalkThrough :
 	Returns:
 	>=  0 -- initial offset,
 		-1 -- the first element of t contains the length of the tail of compressed term,
@@ -3827,7 +3830,8 @@ static int PF_WalkThrough(WORD *t, LONG l, LONG chunk, LONG *count)
 }
 
 /*
-  	#] PF_WalkThrough : 
+ 		#] PF_WalkThrough :
+  	#] InParallel mode :
   	#[ PF_SendFile :
 */
 
@@ -3867,7 +3871,7 @@ int PF_SendFile(int to, FILE *fd)
 }
 
 /*
-  	#] PF_SendFile : 
+  	#] PF_SendFile :
   	#[ PF_RecvFile :
 */
 
@@ -3899,7 +3903,7 @@ int PF_RecvFile(int from, FILE *fd)
 }
 
 /*
-  	#] PF_RecvFile : 
+  	#] PF_RecvFile :
   	#[ Synchronised output :
  		#[ Explanations :
 */
@@ -3932,7 +3936,7 @@ int PF_RecvFile(int from, FILE *fd)
  */
 
 /*
- 		#] Explanations : 
+ 		#] Explanations :
  		#[ Variables :
 */
 
@@ -3952,7 +3956,7 @@ static Vector(UBYTE, logBuffer);     /* (slaves) The buffer for AC.LogHandle. */
 #endif
 
 /*
- 		#] Variables : 
+ 		#] Variables :
  		#[ PF_MLock :
 */
 
@@ -3968,7 +3972,7 @@ void PF_MLock(void)
 }
 
 /*
- 		#] PF_MLock : 
+ 		#] PF_MLock :
  		#[ PF_MUnlock :
 */
 
@@ -3988,7 +3992,7 @@ void PF_MUnlock(void)
 }
 
 /*
- 		#] PF_MUnlock : 
+ 		#] PF_MUnlock :
  		#[ PF_WriteFileToFile :
 */
 
@@ -4089,7 +4093,7 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 }
 
 /*
- 		#] PF_WriteFileToFile : 
+ 		#] PF_WriteFileToFile :
  		#[ PF_ReceiveErrorMessage :
 */
 
@@ -4126,7 +4130,7 @@ static void PF_ReceiveErrorMessage(int src, int tag)
 }
 
 /*
- 		#] PF_ReceiveErrorMessage : 
+ 		#] PF_ReceiveErrorMessage :
  		#[ PF_CatchErrorMessages :
 */
 
@@ -4155,7 +4159,7 @@ static void PF_CatchErrorMessages(int src)
 }
 
 /*
- 		#] PF_CatchErrorMessages : 
+ 		#] PF_CatchErrorMessages :
  		#[ PF_CatchErrorMessagesForAll :
 */
 
@@ -4171,7 +4175,7 @@ static void PF_CatchErrorMessagesForAll(void)
 }
 
 /*
- 		#] PF_CatchErrorMessagesForAll : 
+ 		#] PF_CatchErrorMessagesForAll :
  		#[ PF_ProbeWithCatchingErrorMessages :
 */
 
@@ -4199,7 +4203,7 @@ static int PF_ProbeWithCatchingErrorMessages(int *src)
 }
 
 /*
- 		#] PF_ProbeWithCatchingErrorMessages : 
+ 		#] PF_ProbeWithCatchingErrorMessages :
  		#[ PF_FreeErrorMessageBuffers :
 */
 
@@ -4215,6 +4219,6 @@ void PF_FreeErrorMessageBuffers(void)
 }
 
 /*
- 		#] PF_FreeErrorMessageBuffers : 
-  	#] Synchronised output : 
+ 		#] PF_FreeErrorMessageBuffers :
+  	#] Synchronised output :
 */
