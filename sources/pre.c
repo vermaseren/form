@@ -3197,6 +3197,10 @@ int DoPreWrite(UBYTE *s)
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
+#ifdef PARALLEL
+	if ( PF.me != MASTER ) return 0;
+#endif
+
 	h.oldsilent    = AM.silent;
 	h.newlogonly   = h.oldlogonly = AM.FileOnlyFlag;
 	h.newhandle    = h.oldhandle  = AC.LogHandle;
