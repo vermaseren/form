@@ -8,8 +8,13 @@ if RUBY_VERSION =~ /1\.8\..+/ # only for version 1.8.x
 end
 
 # names of the FORM executables
-FORM = "form"
-TFORM = "tform"
+if ENV['bindir']
+	FORM = ENV['bindir'] + "/form"
+	TFORM = ENV['bindir'] + "/tform"
+else
+	FORM = "form"
+	TFORM = "tform"
+end
 
 # maximal running time in seconds of FORM jobs before they get terminated
 TIMEOUT = 10
