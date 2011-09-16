@@ -36,6 +36,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <climits>
 
 #include "polyclass.h"
 #include "polygcd.h"
