@@ -1190,7 +1190,8 @@ WORD PF_Deferred(WORD *term, WORD level)
 	GETIDENTITY
 	WORD *bra, *bstop;
 	WORD *tstart;
-	WORD *next = AR.infile->POfill;
+	FILEHANDLE *fi = AC.NumberOfRhsExprInModule && PF.rhsInParallel ? &PF.slavebuf : AR.infile;
+	WORD *next = fi->POfill;
 	WORD *termout = AT.WorkPointer;
 	WORD *oldwork = AT.WorkPointer;
 
@@ -1237,7 +1238,7 @@ WORD PF_Deferred(WORD *term, WORD level)
 		if ( Generator(BHEAD termout,level) ) goto DefCall;
 		AT.WorkPointer = termout;
 		tstart = next + 1;
-		if ( tstart >= AR.infile->POfull ) goto ThatsIt;
+		if ( tstart >= fi->POfull ) goto ThatsIt;
 		next += *next;
 /*
 			compare with current bracket
