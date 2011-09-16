@@ -2054,7 +2054,7 @@ getout:
 */
 	a = argout;
 	while ( *a ) NEXTARG(a);
-	if ( DoFactorize(BHEAD argfree,a) < 0 ) {
+	if ( poly_factorize_argument(BHEAD argfree,a) < 0 ) {
 		MesCall("ArgFactorize");
 		error = -1;
 	}
@@ -2340,29 +2340,6 @@ int CleanupArgCache(PHEAD WORD bufnum)
 
 /*
   	#] CleanupArgCache : 
-  	#[ DoFactorize1 :
-*/
-/**
- *	Dummy factorization routine
- *	The real routine is in the domain of Jan Kuipers and can
- *	be found in the file polyfact.cc
- *	This routine is just for testing and timing purposes and 
- *	copies the input to the output which is equivalent to that
- *	it does as if the polynomial does not factorize.
-
-
-int DoFactorize1(PHEAD WORD *argin, WORD *argout)
-{
-	int i = *argin;
-	NCOPY(argout,argin,i);
-	*argout = 0;
-	return(0);
-}
-
- */
-
-/*
-  	#] DoFactorize1 : 
   	#[ ArgSymbolMerge :
 */
 

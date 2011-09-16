@@ -2936,7 +2936,7 @@ getout:
  		#] Step 3: ConvertToPoly 
  		#[ Step 4: Now the hard work.
 */
-	if ( ( buf3 = DoFactorizeDollar(BHEAD buf2) ) == 0 ) {
+	if ( ( buf3 = poly_factorize_dollar(BHEAD buf2) ) == 0 ) {
 		MesCall("DollarFactorize");
 		AR.SortType = oldsorttype;
 		if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-3");

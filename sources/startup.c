@@ -1078,8 +1078,10 @@ WORD IniVars()
 	AN.SplitScratch1 = 0;
 	AN.SplitScratchSize1 = AN.InScratch1 = 0;
 
+#ifdef WITHOLDPOLYRATFUN
 	AllocPolyModCoefs(&(AN.polymod1),200);
 	AllocPolyModCoefs(&(AN.polymod2),200);
+#endif
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	C->Pointer = C->Buffer;

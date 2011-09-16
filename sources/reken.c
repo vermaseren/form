@@ -3366,7 +3366,68 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 }
 
 /*
- 		#] Bernoulli : 
+ 		#] Bernoulli :
+  	#[ NextPrime :
+*/
+/**
+ *	Gives the next prime number in the list of prime numbers.
+ *
+ *	If the list isn't long enough we expand it.
+ *	For ease in ParForm and because these lists shouldn't be very big
+ *	we let each worker keep its own list.
+ *
+ *	The list is cut off at MAXPOWER, because we don't want to get into
+ *	trouble that the power of a variable gets larger than the prime number.
+ */
+
+WORD NextPrime(PHEAD WORD num)
+{
+	int i, j;
+	WORD *newpl;
+	LONG newsize, x;
+	if ( num > AT.inprimelist ) {
+		while ( AT.inprimelist < num ) {
+			if ( num >= AT.sizeprimelist ) {
+				if ( AT.sizeprimelist == 0 ) newsize = 32;
+				else newsize = 2*AT.sizeprimelist;
+				while ( num >= newsize ) newsize = newsize*2;
+				newpl = (WORD *)Malloc1(newsize*sizeof(WORD),"NextPrime");
+				for ( i = 0; i < AT.sizeprimelist; i++ ) {
+					newpl[i] = AT.primelist[i];
+				}
+				if ( AT.sizeprimelist > 0 ) {
+					M_free(AT.primelist,"NextPrime");
+				}
+				AT.sizeprimelist = newsize;
+				AT.primelist = newpl;
+			}
+			if ( AT.inprimelist < 0 ) { i = MAXPOSITIVE; }
+			else { i = AT.primelist[AT.inprimelist]; }
+			while ( i > MAXPOWER ) {
+				i -= 2; x = i;
+				for ( j = 3; j*((LONG)j) <= x; j += 2 ) {
+					if ( x % j == 0 ) goto nexti;
+				}
+				AT.inprimelist++;
+				AT.primelist[AT.inprimelist] = i;
+				break;
+nexti:;
+			}
+			if ( i < MAXPOWER ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("There are not enough short prime numbers for this calculation");
+				MesPrint("Try to use a computer with a %d-bits architecture",
+					(int)(BITSINWORD*4));
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+		}
+	}
+	return(AT.primelist[num]);
+}
+ 
+/*
+  	#] NextPrime : 
  		#[ wranf :
 
 		A random number generator that generates random WORDs with a very

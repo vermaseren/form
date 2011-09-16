@@ -916,9 +916,6 @@ extern WORD  *MakeMod(PHEAD WORD *,WORD *,WORD *);
 extern WORD   FindArg(PHEAD WORD *);
 extern WORD   InsertArg(PHEAD WORD *,WORD *,int);
 extern int    CleanupArgCache(PHEAD WORD);
-extern int    DoFactorize(PHEAD WORD *, WORD *);
-extern int    DoFactorize1(PHEAD WORD *, WORD *);
-extern WORD   *DoFactorizeDollar(PHEAD WORD *);
 extern int    ArgSymbolMerge(WORD *, WORD *);
 extern int    ArgDotproductMerge(WORD *, WORD *);
 extern void   SortWeights(LONG *,LONG *,WORD);
@@ -1452,8 +1449,6 @@ extern WORD  *PolyDiv0(PHEAD WORD *,WORD *);
 extern WORD  *PolyRatNorm(PHEAD WORD *,WORD *);
 extern WORD  *PolyRatFunNorm(PHEAD WORD *,WORD);
 extern WORD  *PolyRatFunAdd(PHEAD WORD *,WORD *);
-extern WORD  *PolyRatFunAdd_OLD(PHEAD WORD *,WORD *);
-extern WORD  *PolyRatFunAdd1(PHEAD WORD *,WORD *);
 extern WORD  *PolyRemoveContent(PHEAD WORD *,WORD);
 extern WORD  *PolyGCD(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1(PHEAD WORD *,WORD *);
@@ -1461,15 +1456,12 @@ extern WORD  *PolyGCD1a(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1b(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1c(PHEAD WORD *,WORD *);
 extern WORD  *PolyGCD1d(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD_OLD(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD2(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv1(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv1d(PHEAD WORD *,WORD *);
 extern WORD  *PolyPseudoRem1(PHEAD WORD *,WORD *);
 extern WORD  *GetNegPow(PHEAD WORD *);
 extern WORD  *PolyNormPoly(PHEAD WORD *);
 extern WORD   PolyRatFunMul(PHEAD WORD *);
-extern WORD   PolyRatFunMul_OLD(PHEAD WORD *);
 extern WORD  *PolyTake(PHEAD WORD *,WORD);
 extern WORD   PolyGetRenumbering(PHEAD WORD *,WORD *);
 extern WORD   InvertModular(WORD,WORD);
@@ -1574,10 +1566,17 @@ extern int GCDfunction(PHEAD WORD *,WORD);
 extern int GCDfunction1(PHEAD WORD *,WORD *,WORD *);
 extern int GCDfunction2(PHEAD WORD *,WORD *);
 extern int GCDterms(PHEAD WORD *,WORD *,WORD *);
-extern int DoGCDfunction(PHEAD WORD *, WORD *);
-extern int DoGCDfunction1(PHEAD WORD *, WORD *);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
+
+extern WORD *poly_normalize (PHEAD WORD *);
+extern int   poly_gcd(PHEAD WORD *, WORD *);
+extern WORD *poly_ratfun_normalize(PHEAD WORD *, int);
+extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
+extern int   poly_ratfun_mul(PHEAD WORD *);
+extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
+extern WORD *poly_factorize_dollar(PHEAD WORD *);
+
 /*
   	#] Declarations :
 */

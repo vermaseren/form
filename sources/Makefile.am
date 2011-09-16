@@ -34,6 +34,13 @@ SRCBASE = \
 	pattern.c \
 	poly.c \
 	polynito.c \
+	polyclass.cc \
+	polyclass.h \
+	polyfact.cc \
+	polyfact.h \
+	polygcd.cc \
+	polygcd.h \
+	polywrap.cc \
 	portsignals.h \
 	pre.c \
 	proces.c \
@@ -57,12 +64,6 @@ SRCBASE = \
 	unix.h \
 	variable.h \
 	wildcard.c \
-	newpoly.cc \
-	newpoly.h \
-	polyfact.cc \
-	polyfact.h \
-	polygcd.cc \
-	polygcd.h \
 	mytime.h \
 	mytime.cc \
 	vector.h

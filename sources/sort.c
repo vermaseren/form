@@ -1970,11 +1970,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		AN.SplitScratch = AN.SplitScratch1;
 		AN.SplitScratchSize = AN.SplitScratchSize1;
 		AN.InScratch = AN.InScratch1;
-		PolyRatFunAdd1(BHEAD s1,s2);
-/*
-		if ( AM.oldpolyratfun ) PolyRatFunAdd_OLD(BHEAD s1,s2);
-		else                    PolyRatFunAdd(BHEAD s1,s2);
-*/
+		poly_ratfun_add(BHEAD s1,s2);
 		S->PolyWise = oldpw;
 		AN.SplitScratch1 = AN.SplitScratch;
 		AN.SplitScratchSize1 = AN.SplitScratchSize;
@@ -3688,11 +3684,7 @@ OneTerm:
 						m1 += S->PolyWise;
 						m2 += S->PolyWise;
 						if ( S->PolyFlag == 2 ) {
-							w = PolyRatFunAdd1(BHEAD m1,m2);
-/*
-							if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(BHEAD m1,m2);
-							else                    w = PolyRatFunAdd(BHEAD m1,m2);
-*/
+							w = poly_ratfun_add(BHEAD m1,m2);
 							if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 								MLOCK(ErrorMessageLock);
 								MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);

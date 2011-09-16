@@ -470,9 +470,11 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.primelist = 0;
 		AN.getdivgcd = 0;
 
+#ifdef WITHOLDPOLYRATFUN
 		AllocPolyModCoefs(&(AN.polymod1),200);
 		AllocPolyModCoefs(&(AN.polymod2),200);
-
+#endif
+		
 		AR.CompareRoutine = &Compare1;
 
 		AR.sLevel = 0;
@@ -715,8 +717,10 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AT.nfac = AT.nBer = 0;
 	AT.factorials = 0;
 	AT.bernoullis = 0;
+#ifdef WITHOLDPOLYRATFUN
 	AllocPolyModCoefs(&(AN.polymod1),200);
 	AllocPolyModCoefs(&(AN.polymod2),200);
+#endif
 	AR.wranfia = 0;
 	AR.wranfcall = 0;
 	AR.wranfnpair1 = NPAIR1;
@@ -3571,11 +3575,7 @@ OneTerm:
 					m1 += S->PolyWise;
 					m2 += S->PolyWise;
 					if ( S->PolyFlag == 2 ) {
-						w = PolyRatFunAdd1(B0,m1,m2);
-/*
-						if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(B0,m1,m2);
-						else                    w = PolyRatFunAdd(B0,m1,m2);
-*/
+						w = poly_ratfun_add(B0,m1,m2);
 						if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 							MLOCK(ErrorMessageLock);
 							MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
@@ -4123,11 +4123,7 @@ next2:		im = *term2;
 				m2 += S->PolyWise;
 				if ( S->PolyFlag == 2 ) {
 					AT.WorkPointer = wp;
-					w = PolyRatFunAdd1(BHEAD m1,m2);
-/*
-					if ( AM.oldpolyratfun ) w = PolyRatFunAdd_OLD(BHEAD m1,m2);
-					else                    w = PolyRatFunAdd(BHEAD m1,m2);
-*/
+					w = poly_ratfun_add(BHEAD m1,m2);
 					if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 						MLOCK(ErrorMessageLock);
 						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);

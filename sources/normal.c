@@ -3881,7 +3881,7 @@ gcdzero:;
 				ttt = t1 + *t1;
 				ct = *ttt; *ttt = 0;
 				if ( t1[1] != 0 ) {	/* First normalize the argument */
-					t1 = PolyNormPoly(BHEAD t1+ARGHEAD);
+					t1 = poly_normalize(BHEAD t1+ARGHEAD);
 				}
 				else t1 += ARGHEAD;
 				while ( *t1 ) {
@@ -3928,7 +3928,7 @@ gcdzero:;
 				ttt = t1 + *t1;
 				ct = *ttt; *ttt = 0;
 				if ( t1[1] != 0 ) {	/* First normalize the argument */
-					t2 = PolyNormPoly(BHEAD t1+ARGHEAD);
+					t2 = poly_normalize(BHEAD t1+ARGHEAD);
 				}
 				else t2 = t1 + ARGHEAD;
 				while ( *t2 ) {
@@ -3977,7 +3977,7 @@ gcdillegal:;
 		else if ( ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
 		else if ( t[1] != 0 ) {
 			ttt = t + *t; ct = *ttt; *ttt = 0;
-			t = PolyNormPoly(BHEAD t+ARGHEAD);
+			t = poly_normalize(BHEAD t+ARGHEAD);
 			*ttt = ct;
 			if ( t[*t] == 0 && ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
 			AT.WorkPointer = oldworkpointer;
@@ -4003,7 +4003,7 @@ gcdillegal:;
 		}
 		if ( t[1] != 0 ) {	/* First normalize the argument */
 			ttt = t + *t; ct = *ttt; *ttt = 0;
-			t = PolyNormPoly(BHEAD t+ARGHEAD);
+			t = poly_normalize(BHEAD t+ARGHEAD);
 			*ttt = ct;
 		}
 		t += *t;
@@ -4022,7 +4022,7 @@ gcdillegal:;
 		while ( t < tt ) {
 			ttt = t + *t; ct = *ttt; *ttt = 0;
 			if ( t[1] != 0 ) {
-				t = PolyNormPoly(BHEAD t+ARGHEAD);
+				t = poly_normalize(BHEAD t+ARGHEAD);
 			}
 			else t += ARGHEAD;
 			while ( *t ) {
@@ -4088,7 +4088,7 @@ gcdillegal:;
 		i++;
 		work1 = AT.WorkPointer;
 		ttt = t + *t; ct = *ttt; *ttt = 0;
-		t = PolyNormPoly(BHEAD t+ARGHEAD);
+		t = poly_normalize(BHEAD t+ARGHEAD);
 		if ( *work1 < AT.WorkPointer-work1 ) {
 /*
 			sizearg = AT.WorkPointer-work1;

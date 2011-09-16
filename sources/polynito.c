@@ -1132,7 +1132,7 @@ WORD *PolyRatNorm(PHEAD WORD *Poly1, WORD *Poly2)
 	WORD *gcd;
 	LONG size;
 	WORD *Poly3, *num, *den, *p1, *p2, i, j, *tt, *t;
-	gcd = PolyGCD2(BHEAD Poly1,Poly2);
+	gcd = PolyGCD(BHEAD Poly1,Poly2);
 	if ( gcd[*gcd] == 0 && *gcd-1 == ABS(gcd[*gcd-1]) ) {
 		b2 = b1 = Poly1; while ( *b2 ) b2 += *b2;
 		size = b2-b1+1;
@@ -1547,7 +1547,7 @@ rett:
  *	which is also the return value of the routine.
  */
 
-WORD *PolyRatFunAdd_OLD(PHEAD WORD *t1, WORD *t2)
+WORD *PolyRatFunAdd(PHEAD WORD *t1, WORD *t2)
 {
 	GETBIDENTITY
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -1726,7 +1726,7 @@ skip2:;
   	#[ Step 2: Get g1 = GCD of the two denominators. r1 = den1/g1, r2 = den2/g1
 */
 #ifndef OLDRATADD
-	g1   = PolyGCD2(BHEAD den1,den2);
+	g1   = PolyGCD(BHEAD den1,den2);
 	r1   = PolyDiv0(BHEAD den1,g1);
 	r2   = PolyDiv0(BHEAD den2,g1);
 /*
@@ -1741,7 +1741,7 @@ skip2:;
   	#] Step 3: 
   	#[ Step 4: compute g2 = gcd of numn and g1.
 */
-	g2   = PolyGCD2(BHEAD numn,g1);
+	g2   = PolyGCD(BHEAD numn,g1);
 /*
   	#] Step 4: 
   	#[ Step 5: output is num3 = numn/g2, den3 = r1*r2*(g1/g2)
@@ -1842,7 +1842,7 @@ AnswerIsZero:
  *	PolyRatFun.
  */
 
-WORD PolyRatFunMul_OLD(PHEAD WORD *term)
+WORD PolyRatFunMul(PHEAD WORD *term)
 {
 	WORD *t, *tt, *t1, *t2, *t3, *tstop, *t1stop, *t2stop, *t1a, *t2a;
 	WORD narg1, narg2;
@@ -1993,11 +1993,11 @@ tryothert2:;
 /*
 		Now we can call the relevant routines
 */
-		g1   = PolyGCD2(BHEAD num1,den2);
+		g1   = PolyGCD(BHEAD num1,den2);
 		num1 = PolyDiv0(BHEAD num1,g1);
 		den2 = PolyDiv0(BHEAD den2,g1);
 
-		g1   = PolyGCD2(BHEAD num2,den1);
+		g1   = PolyGCD(BHEAD num2,den1);
 		num2 = PolyDiv0(BHEAD num2,g1);
 		den1 = PolyDiv0(BHEAD den1,g1);
 
@@ -2328,7 +2328,7 @@ calledfrom:
 
 /*
   	#] PolyRemoveContent : 
-  	#[ PolyGCD_OLD :
+  	#[ PolyGCD :
 */
 /**
  *	Calculates the GCD of two polynomials.
@@ -2337,7 +2337,7 @@ calledfrom:
  *  [JK, 03-03-2011] replaced by PolyGCD from "polygcd.cc"
  */
 
-WORD *PolyGCD_OLD(PHEAD WORD *Poly1, WORD *Poly2)
+WORD *PolyGCD(PHEAD WORD *Poly1, WORD *Poly2)
 {
 #ifdef GCDALGORITHM1
 /*
@@ -2460,7 +2460,7 @@ gcdisone:
 	n1p = PolyTake(poly1,numsym1);
 	g2 = AT.WorkPointer;
 	n2p = PolyTake(poly2,numsym1);
-	ga = PolyGCD2(g1,g2);
+	ga = PolyGCD(g1,g2);
 
 	size = AT.WorkPointer - ga;
 	size1 = n1p - g1;
@@ -2797,7 +2797,7 @@ simplecase:
 		}
 		*p2++ = 0;
 		AT.WorkPointer = p2;
-		g1p = PolyGCD2(BHEAD n1,g1);
+		g1p = PolyGCD(BHEAD n1,g1);
 		p3 = g1p; while ( *p3 ) p3 += *p3; p3++; size = p3 - g1p;
 		p2 = g1; p3 = g1p; NCOPY(p2,p3,size);
 		n1 = p2;
@@ -2810,7 +2810,7 @@ simplecase:
 			g1[0] = 4; g1[1] = 1; g1[2] = 1; g1[3] = 3; g1[4] = 0; p2 = g1+5;
 		}
 		else {
-			g1p = PolyGCD2(BHEAD p1,g1);
+			g1p = PolyGCD(BHEAD p1,g1);
 			p3 = g1p; while ( *p3 ) p3 += *p3; p3++; size = p3 - g1p;
 			p2 = g1; p3 = g1p; NCOPY(p2,p3,size);
 		}
@@ -2899,42 +2899,6 @@ WORD *GetNegPow(PHEAD WORD *Poly)
 
 /*
   	#] GetNegPow : 
-  	#[ PolyNormPoly :
-*/
-/**
- *	Normalizes a polynomial.
- */
- 
-WORD *PolyNormPoly(PHEAD WORD *Poly)
-{
-	GETBIDENTITY
-	WORD *buffer = AT.WorkPointer;
-	WORD *p;
-	if ( NewSort(BHEAD0) ) { Terminate(-1); }
-	AR.CompareRoutine = &CompareSymbols;
-	while ( *Poly ) {
-		p = Poly + *Poly;
-		if ( SymbolNormalizeCheckMin(Poly,0,1) < 0 ) return(0);
-		if ( StoreTerm(BHEAD Poly) ) {
-			AR.CompareRoutine = &Compare1;
-			LowerSortLevel();
-			Terminate(-1);
-		}
-		Poly = p;
-	}
-	if ( EndSort(BHEAD buffer,1,0) < 0 ) {
-		AR.CompareRoutine = &Compare1;
-		Terminate(-1);
-	}
-	p = buffer;
-	while ( *p ) p += *p;
-	AR.CompareRoutine = &Compare1;
-	AT.WorkPointer = p + 1;
-	return(buffer);
-}
-
-/*
-  	#] PolyNormPoly : 
   	#[ PolyGCD1 :
  		#[ Generic routine :
 */
@@ -4750,67 +4714,6 @@ WORD *PolyHenselUni(PHEAD WORD *Prod, POLYMOD *Poly11, POLYMOD *Poly21)
 
 /*
   	#] PolyHenselUni : 
-  	#[ NextPrime :
-*/
-/**
- *	Gives the next prime number in the list of prime numbers.
- *
- *	If the list isn't long enough we expand it.
- *	For ease in ParForm and because these lists shouldn't be very big
- *	we let each worker keep its own list.
- *
- *	The list is cut off at MAXPOWER, because we don't want to get into
- *	trouble that the power of a variable gets larger than the prime number.
- */
-
-WORD NextPrime(PHEAD WORD num)
-{
-	int i, j;
-	WORD *newpl;
-	LONG newsize, x;
-	if ( num > AT.inprimelist ) {
-		while ( AT.inprimelist < num ) {
-			if ( num >= AT.sizeprimelist ) {
-				if ( AT.sizeprimelist == 0 ) newsize = 32;
-				else newsize = 2*AT.sizeprimelist;
-				while ( num >= newsize ) newsize = newsize*2;
-				newpl = (WORD *)Malloc1(newsize*sizeof(WORD),"NextPrime");
-				for ( i = 0; i < AT.sizeprimelist; i++ ) {
-					newpl[i] = AT.primelist[i];
-				}
-				if ( AT.sizeprimelist > 0 ) {
-					M_free(AT.primelist,"NextPrime");
-				}
-				AT.sizeprimelist = newsize;
-				AT.primelist = newpl;
-			}
-			if ( AT.inprimelist < 0 ) { i = MAXPOSITIVE; }
-			else { i = AT.primelist[AT.inprimelist]; }
-			while ( i > MAXPOWER ) {
-				i -= 2; x = i;
-				for ( j = 3; j*((LONG)j) <= x; j += 2 ) {
-					if ( x % j == 0 ) goto nexti;
-				}
-				AT.inprimelist++;
-				AT.primelist[AT.inprimelist] = i;
-				break;
-nexti:;
-			}
-			if ( i < MAXPOWER ) {
-				MLOCK(ErrorMessageLock);
-				MesPrint("There are not enough short prime numbers for this calculation");
-				MesPrint("Try to use a computer with a %d-bits architecture",
-					(int)(BITSINWORD*4));
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-		}
-	}
-	return(AT.primelist[num]);
-}
- 
-/*
-  	#] NextPrime : 
   	#[ ModShortPrime :
 */
 /**
@@ -6548,40 +6451,6 @@ IllObject:
 
 /*
   	#] TestSymbols : 
-  	#[ PolyRatFunAdd1 :
-*/
-/**
- *	Routine to make the addition of two polyratfun's
- *	Includes testing of legality.
- */
-
-WORD *PolyRatFunAdd1(PHEAD WORD *t1, WORD *t2)
-{
-	WORD *s1, *s2, iold;
-	WORD *oldworkpointer = AT.WorkPointer;
-	iold = t1[-1];
-	t1[-1] = t1[1]+4;
-	s1 = RedoPolyRatFun(BHEAD t1-1,2);
-	t1[-1] = iold;
-	AT.WorkPointer = oldworkpointer;
-	iold = t2[-1];
-	t2[-1] = t2[1]+4;
-	s2 = RedoPolyRatFun(BHEAD t2-1,2);
-	t2[-1] = iold;
-	AT.WorkPointer = oldworkpointer;
-
-	if ( AM.oldpolyratfun ) PolyRatFunAdd_OLD(BHEAD s1+1,s2+1);
-	else                    PolyRatFunAdd(BHEAD s1+1,s2+1);
-
-	TermFree(s2,"RedoPolyRatFun");
-	TermFree(s1,"RedoPolyRatFun");
-
-	oldworkpointer[2] |= CLEANPRF;
-	return(oldworkpointer);
-}
-
-/*
-  	#] PolyRatFunAdd1 : 
   	#[ PolyRatFunTake :
 */
 /**
@@ -6647,15 +6516,4 @@ WORD *PolyRatFunTake(PHEAD WORD *term)
 
 /*
   	#] PolyRatFunTake : 
-  	#[ PolyGCD2 :
-*/
-
-WORD *PolyGCD2(PHEAD WORD *Poly1, WORD *Poly2)
-{
-	if ( AM.oldpolyratfun ) return(PolyGCD_OLD(BHEAD Poly1,Poly2));
-	else                    return(PolyGCD(BHEAD Poly1,Poly2));
-}
-
-/*
-  	#] PolyGCD2 : 
 */

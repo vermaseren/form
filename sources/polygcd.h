@@ -46,10 +46,6 @@ const int POLYGCD_HEURISTIC_MAX_ADD_RANDOM = 10;
 // maximum cached power in substitute_last and sparse_interpolation_get_mul_list
 const int RAISPOWMOD_CACHE_MAX_POWER = 1000;
 
-// outside of the namespace, because these are called from C
-int DoGCDfunction(PHEAD WORD *argin, WORD *argout);
-WORD *DoPolyGCD(PHEAD WORD *a, WORD *b);
-
 namespace polygcd {
 
 	// functions to call the gcd routines

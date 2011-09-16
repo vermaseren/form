@@ -60,9 +60,6 @@ public:
 	friend std::ostream& operator<< (std::ostream &out, const poly &p);
 };
 
-//   DoFactorize is outside the namespace, because it is called from C
-int DoFactorize(PHEAD WORD *argin, WORD *argout);
-
 std::ostream& operator<< (std::ostream &out, const factorized_poly &a);
 
 namespace polyfact {

@@ -1135,7 +1135,7 @@ int GCDfunction2(PHEAD WORD *argin, WORD *argout)
 /*
 	Step 3: Send the problem to Jan's routines.
 */
-	if ( DoGCDfunction(BHEAD newarg,argout) < 0 ) goto CalledFrom;
+	if ( poly_gcd(BHEAD newarg,argout) < 0 ) goto CalledFrom;
 /*
 	Step 3a: Expand to fast notation if needed
 */
@@ -1428,20 +1428,6 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 
 /*
  		#] GCDterms : 
- 		#[ DoGCDfunction1 :
-
-
-int DoGCDfunction1(PHEAD WORD *argin, WORD *argout)
-{
-	int i;
-	for ( i = 0; i < *argin; i++ ) argout[i] = argin[i];
-	argout[i] = 0;
-	return(1);
-}
-*/
-
-/*
- 		#] DoGCDfunction1 : 
   	#] GCDfunction :
 */
 
