@@ -2837,8 +2837,7 @@ SkipCount:	level++;
 			if ( level > AR.Cnumlhs ) {
 				if ( AR.DeferFlag && AR.sLevel <= 0 ) {
 #ifdef PARALLEL
-					/*[17sen2003 mt]: */
-					if ( PF.me != MASTER && AC.mparallelflag == PARALLELFLAG ){
+				  if ( PF.me != MASTER && AC.mparallelflag == PARALLELFLAG && PF.exprtodo < 0 ) {
 					if ( PF_Deferred(term,level) ) goto GenCall;
 				  }
 				  else
