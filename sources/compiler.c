@@ -239,7 +239,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -787,7 +787,7 @@ int CodeGenerator(SBYTE *tokens)
 	SBYTE *s = tokens, c;
 	int i, sign = 1, first = 1, deno = 1, error = 0, minus, n, needarg, numexp, cc;
 	int base, sumlevel = 0, sumtype = SYMTOSYM, firstsumarg, inset = 0;
-	int funflag = 0, settype, x1, x2;
+	int funflag = 0, settype, x1, x2, mulflag = 0;
 	WORD *t, *v, *r, *term, nnumerator, ndenominator, *oldwork, x3, y, nin;
 	WORD *w1, *w2, *tsize = 0, *relo = 0;
 	UWORD *numerator, *denominator, *innum;
@@ -818,7 +818,7 @@ int CodeGenerator(SBYTE *tokens)
 	nnumerator = ndenominator = 1;
 	while ( *s != TENDOFIT ) {
 		if ( *s == TPLUS || *s == TMINUS ) {
-			if ( first ) { if ( *s == TMINUS ) sign = -sign; }
+			if ( first || mulflag ) { if ( *s == TMINUS ) sign = -sign; }
 			else {
 				*term = t-term;
 				C->NumTerms[numexp]++;
@@ -833,7 +833,7 @@ int CodeGenerator(SBYTE *tokens)
 			s++;
 		}
 		else {
-			first = 0; c = *s++;
+			mulflag = first = 0; c = *s++;
 			switch ( c ) {
 			case TSYMBOL:
 				x1 = 0; while ( *s >= 0 ) { x1 = x1*128 + *s++; }
@@ -1505,8 +1505,10 @@ dofunction:			firstsumarg = 1;
 				deno = 1;
 				break;
 			case TMULTIPLY:
+				mulflag = 1;
 				break;
 			case TDIVIDE:
+				mulflag = 1;
 				deno = -deno;
 				break;
 			case TEXPRESSION:
@@ -1849,6 +1851,10 @@ ErrorBraces:
 				break;
 			}
 		}
+	}
+	if ( mulflag ) {
+		MesPrint("&Irregular end of statement.");
+		error = 1;
 	}
 	if ( !first && error == 0 ) {
 		*term = t-term;

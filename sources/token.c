@@ -597,7 +597,7 @@ writenumber:
 }
 
 /*
- 		#] WriteTokens : 
+ 		#] WriteTokens :
  		#[ simp1token :
 
 		Routine substitutes set elements if possible.
@@ -1052,7 +1052,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token :
+ 		#] simp2token : 
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.
@@ -1325,6 +1325,7 @@ dosymbol:
 				if ( *s != TPOWER ) continue;
 				*fill++ = *s++;
 				if ( *s == TMINUS ) *fill++ = *s++;
+				if ( *s == TPLUS ) s++;
 				if ( *s == TSETNUM ) {
 					*fill++ = *s++; while ( *s >= 0 ) *fill++ = *s++;
 					inset = 1;
