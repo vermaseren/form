@@ -1575,7 +1575,7 @@ extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
 extern int   poly_ratfun_mul(PHEAD WORD *);
 extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
-
+extern WORD  poly_factorize_expression(WORD, WORD, WORD);
 /*
   	#] Declarations :
 */

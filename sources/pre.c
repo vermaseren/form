@@ -5657,10 +5657,10 @@ int DoFactor(UBYTE *s)
 		if ( *s ) goto nosyntax;
 /*
 		Now we have the three names and we can call the proper routine
-
-		if ( ExpressionFactorize(inexpression,outexpression,numsymbol) )
-			return(-1);
 */
+
+		if ( poly_factorize_expression(inexpression,outexpression,numsymbol) )
+			return(-1);
 		return(0);
 	}
 	else {

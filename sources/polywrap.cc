@@ -39,6 +39,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <climits>
 
 using namespace std;
 
@@ -122,7 +123,7 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 	#[ poly_ratfun_read :
 */
 
-/**  Reads a PolyRatFun
+/**  Read a PolyRatFun
  *
  *   Description
  *   ===========
@@ -436,7 +437,7 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 	map<int,int> var_to_idx;
 	AN.poly_num_vars = 0;
 
-	// Store coefficient
+	// Strip coefficient
 	WORD *tstop = term + *term;
 	int ncoeff = tstop[-1];
 	tstop -= ABS(ncoeff);
@@ -712,4 +713,14 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 /*
 	#] poly_factorize_dollar :
+	#[ poly_factorize_expression :
+*/
+
+WORD poly_factorize_expression(WORD exprin, WORD exprout, WORD numsymbol) {
+
+	return -1;
+}
+
+/*
+	#] poly_factorize_expression :
 */
