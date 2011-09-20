@@ -1460,7 +1460,6 @@ extern WORD  *PolyDiv1(PHEAD WORD *,WORD *);
 extern WORD  *PolyDiv1d(PHEAD WORD *,WORD *);
 extern WORD  *PolyPseudoRem1(PHEAD WORD *,WORD *);
 extern WORD  *GetNegPow(PHEAD WORD *);
-extern WORD  *PolyNormPoly(PHEAD WORD *);
 extern WORD   PolyRatFunMul(PHEAD WORD *);
 extern WORD  *PolyTake(PHEAD WORD *,WORD);
 extern WORD   PolyGetRenumbering(PHEAD WORD *,WORD *);
@@ -1495,6 +1494,7 @@ extern UWORD  wranf(PHEAD0);
 extern UWORD  iranf(PHEAD UWORD);
 extern void   iniwranf(PHEAD0);
 
+extern WORD *PolyNormPoly (PHEAD WORD);
 extern WORD  *EvaluateGcd(PHEAD WORD *);
 
 extern WORD   ReadSaveHeader(VOID);
@@ -1569,7 +1569,6 @@ extern int GCDterms(PHEAD WORD *,WORD *,WORD *);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 
-extern WORD *poly_normalize (PHEAD WORD *);
 extern int   poly_gcd(PHEAD WORD *, WORD *);
 extern WORD *poly_ratfun_normalize(PHEAD WORD *, int);
 extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);

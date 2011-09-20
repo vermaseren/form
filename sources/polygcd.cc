@@ -224,7 +224,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
 		res = gcd(res, b);
 
 		if (res.is_integer()) {
-			res = integer_content(a);
+			res = poly(BHEAD 1, a.modp, a.modn);
 			break;
 		}
 	}	
@@ -290,6 +290,7 @@ const poly polygcd::content_multivar (const poly &a, int x) {
 		}			
 
 		res = gcd_Euclidean(res, b);
+		
 		if (res.is_integer()) {
 			res = poly(BHEAD a.sign(),a.modp,a.modn); 
 			break;
@@ -660,6 +661,10 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
  *     inverted faster than with Gaussian elimination, see
  *     e.g. "Computing the Greatest Common Divisor of Multivariate
  *     Polynomials over Finite Fields" by Suling Yang. [TODO]
+ *   - For calculation modulo small prime numbers, such a Vandermonde
+ *     matrix doesnot exist, because there are not enough different
+ *     numbers. In that case, we should resort to random equations of
+ *     which enough exist. [TODO]
  * 
  *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; and
  *    R.E. Zippel, "Probabilistic Algorithms for Sparse Polynomials", PhD thesis]
@@ -744,6 +749,9 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 
 		// for each power in the gcd, generate an equation if needed
 		int si=1, col=0, midx=0;
+
+		cout << "s = " << s << endl;
+		cout << "g = " << gcd << endl;
 		
 		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
 			int pow = gcd[gi+1+x[0]];
@@ -1001,7 +1009,8 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 	while (true) {
 		// choose a prime and solve modulo the prime
-		WORD p = NextPrime(BHEAD pnum++);
+		WORD p = a.modp;
+		if (p==0) p = NextPrime(BHEAD pnum++);
 
 		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
 		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
@@ -1096,7 +1105,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
  */
 
 bool gcd_heuristic_possible (const poly &a) {
-	
+
 	POLY_GETIDENTITY(a);
 	
 	double prod_deg = 1;

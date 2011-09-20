@@ -1,4 +1,4 @@
-/* @file newpoly.cc
+/* @file polyclass.cc
  *
  *  Contains the class for representing sparse multivariate polynomials
  */
@@ -2497,7 +2497,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 	if (with_arghead) {
 		res[1] = AN.poly_num_vars>1 ? DIRTYFLAG : 0; // dirty flag
 		for (int i=2; i<ARGHEAD; i++)
-			res[2] = 0;                                // remainder of arghead	
+			res[i] = 0;                                // remainder of arghead	
 	}
 
 	int L = with_arghead ? ARGHEAD : 0;

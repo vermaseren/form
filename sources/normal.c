@@ -3811,7 +3811,44 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu : 
+  	#] DetCommu :
+    #[ PolyNormPoly :
+
+		Normalizes a polynomial
+*/
+
+#ifdef EVALUATEGCD
+WORD *PolyNormPoly (PHEAD WORD *Poly) {
+	
+	GETBIDENTITY;
+	WORD *buffer = AT.WorkPointer;
+	WORD *p;
+	if ( NewSort(BHEAD0) ) { Terminate(-1); }
+	AR.CompareRoutine = (void *)&CompareSymbols;
+	while ( *Poly ) {
+		p = Poly + *Poly;
+		if ( SymbolNormalize(Poly) < 0 ) return(0);
+		if ( StoreTerm(BHEAD Poly) ) {
+			AR.CompareRoutine = (void *)&Compare1;
+			LowerSortLevel();
+			Terminate(-1);
+		}
+		Poly = p;
+	}
+	if ( EndSort(BHEAD buffer,1,0) < 0 ) {
+		AR.CompareRoutine = (void *)&Compare1;
+		Terminate(-1);
+	}
+	p = buffer;
+	while ( *p ) p += *p;
+	AR.CompareRoutine = (void *)&Compare1;
+	AT.WorkPointer = p + 1;
+	return(buffer);
+}
+#endif
+
+/*
+	#] PolyNormPoly :
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -3881,7 +3918,7 @@ gcdzero:;
 				ttt = t1 + *t1;
 				ct = *ttt; *ttt = 0;
 				if ( t1[1] != 0 ) {	/* First normalize the argument */
-					t1 = poly_normalize(BHEAD t1+ARGHEAD);
+					t1 = PolyNormPoly(BHEAD t1+ARGHEAD);
 				}
 				else t1 += ARGHEAD;
 				while ( *t1 ) {
@@ -3928,7 +3965,7 @@ gcdzero:;
 				ttt = t1 + *t1;
 				ct = *ttt; *ttt = 0;
 				if ( t1[1] != 0 ) {	/* First normalize the argument */
-					t2 = poly_normalize(BHEAD t1+ARGHEAD);
+					t2 = PolyNormPoly(BHEAD t1+ARGHEAD);
 				}
 				else t2 = t1 + ARGHEAD;
 				while ( *t2 ) {
@@ -3977,7 +4014,7 @@ gcdillegal:;
 		else if ( ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
 		else if ( t[1] != 0 ) {
 			ttt = t + *t; ct = *ttt; *ttt = 0;
-			t = poly_normalize(BHEAD t+ARGHEAD);
+			t = PolyNormPoly(BHEAD t+ARGHEAD);
 			*ttt = ct;
 			if ( t[*t] == 0 && ABS(t[*t-1]) == *t-ARGHEAD-1 ) isnumeric = numarg;
 			AT.WorkPointer = oldworkpointer;
@@ -4003,7 +4040,7 @@ gcdillegal:;
 		}
 		if ( t[1] != 0 ) {	/* First normalize the argument */
 			ttt = t + *t; ct = *ttt; *ttt = 0;
-			t = poly_normalize(BHEAD t+ARGHEAD);
+			t = PolyNormPoly(BHEAD t+ARGHEAD);
 			*ttt = ct;
 		}
 		t += *t;
@@ -4022,7 +4059,7 @@ gcdillegal:;
 		while ( t < tt ) {
 			ttt = t + *t; ct = *ttt; *ttt = 0;
 			if ( t[1] != 0 ) {
-				t = poly_normalize(BHEAD t+ARGHEAD);
+				t = PolyNormPoly(BHEAD t+ARGHEAD);
 			}
 			else t += ARGHEAD;
 			while ( *t ) {
@@ -4088,7 +4125,7 @@ gcdillegal:;
 		i++;
 		work1 = AT.WorkPointer;
 		ttt = t + *t; ct = *ttt; *ttt = 0;
-		t = poly_normalize(BHEAD t+ARGHEAD);
+		t = PolyNormPoly(BHEAD t+ARGHEAD);
 		if ( *work1 < AT.WorkPointer-work1 ) {
 /*
 			sizearg = AT.WorkPointer-work1;
