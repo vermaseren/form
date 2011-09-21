@@ -1492,10 +1492,7 @@ nocompress:
 		do {
 			if ( p >= fi->POstop ) {
 #ifdef PARALLEL /* [16mar1998 ar] */
-/*[20oct2009 mt]:*/
-			  /*if ( ( fi == AR.outfile || fi == AR.hidefile ) && PF.me != MASTER && PF.parallel ){*/
-				if ( ( fi == AR.outfile || fi == AR.hidefile ) && PF.me != MASTER && PF.parallel && (PF.exprtodo < 0) ) {
-/*:[20oct2009 mt]*/
+			  if ( PF.me != MASTER && AR.sLevel <= 0 && (fi == AR.outfile || fi == AR.hidefile) && PF.parallel && PF.exprtodo < 0 ) {
 				PF_BUFFER *sbuf = PF.sbuf;
 				sbuf->fill[sbuf->active] = fi->POstop;
 				PF_ISendSbuf(MASTER,PF_BUFFER_MSGTAG);
@@ -1617,10 +1614,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
-/*[20oct2009 mt]:*/
-	/*if (PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel ){*/
-	if ( PF.me != MASTER && ( fi == AR.outfile || fi == AR.hidefile ) && PF.parallel && (PF.exprtodo < 0) ) {
-/*:[20oct2009 mt]*/
+	if ( PF.me != MASTER && AR.sLevel <= 0 && (fi == AR.outfile || fi == AR.hidefile) && PF.parallel && PF.exprtodo < 0 ) {
 		PF_BUFFER *sbuf = PF.sbuf;
 		if ( fi->POfill >= fi->POstop ){
 		  sbuf->fill[sbuf->active] = fi->POstop;
