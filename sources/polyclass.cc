@@ -142,8 +142,7 @@ void poly::expand_memory (int i) {
 	POLY_GETIDENTITY(*this);
 
 	LONG new_size_of_terms = MaX(2*size_of_terms, i);
-	
-	if (new_size_of_terms > (1<<(BITSINWORD-1))) {
+	if (new_size_of_terms > MAXPOSITIVE) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ((char*)"ERROR: polynomials too large (> WORDSIZE)");
 		MUNLOCK(ErrorMessageLock);

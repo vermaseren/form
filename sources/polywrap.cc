@@ -41,6 +41,8 @@
 #include <map>
 #include <climits>
 
+//#define DEBUG
+
 using namespace std;
 
 /*
@@ -63,6 +65,10 @@ using namespace std;
  */
 int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 
+#ifdef DEBUG
+	cout << "CALL : poly_gcd" << endl;
+#endif
+	
 	// Check whether one of the arguments is 1
 	// i.e., [ARGHEAD 4 1 1 3] or [-SNUMBER 1]
 	WORD *p = argin;
@@ -84,20 +90,26 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 	// Check for modulus calculus
 	WORD modp=0;
 
-	if (AC.ncmod != 0) {
-		if (ABS(AC.ncmod)>1) {
-			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(1);
+	if (AC.ncmod!=0) {
+		if (AC.modmode & ALSOFUNARGS) {
+			if (ABS(AC.ncmod)>1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(1);
+			}
+			if (AN.poly_num_vars > 1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: multivariate polynomial GCD with modulus not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(1);
+			}
+			modp = *AC.cmod;
 		}
-		if (AN.poly_num_vars > 1) {
-			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: multivariate polynomial GCD with modulus not implemented");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(1);
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
 		}
-		modp = *AC.cmod;
 	}
 
 	poly gcd(BHEAD 0, modp, 1);
@@ -115,6 +127,9 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
 
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
+	
 	return 0;
 }
 
@@ -136,6 +151,10 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
  *   - Calls polygcd::gcd
  */
 void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to_idx) {
+
+#ifdef DEBUG
+	cout << "CALL : poly_ratfun_read" << endl;
+#endif
 
 	POLY_GETIDENTITY(num);
 
@@ -216,6 +235,10 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
  */
 void poly_sort(PHEAD WORD *a) {
 
+#ifdef DEBUG
+	cout << "CALL : poly_sort" << endl;
+#endif
+	
 	if (NewSort(BHEAD0)) { Terminate(-1); }
 	AR.CompareRoutine = (void *)&CompareSymbols;
 	
@@ -258,6 +281,10 @@ void poly_sort(PHEAD WORD *a) {
  */
 WORD *poly_ratfun_normalize(PHEAD WORD *term, int par) {
 
+#ifdef DEBUG
+	cout << "CALL : poly_ratfun_normalize" << endl;
+#endif
+
 #ifdef WITHOLDPOLYRATFUN
 	if (AM.oldpolyratfun)
 		return RedoPolyRatFun(BHEAD term, par);
@@ -290,6 +317,10 @@ WORD *poly_ratfun_normalize(PHEAD WORD *term, int par) {
  */
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
+#ifdef DEBUG
+	cout << "CALL : poly_ratfun_add" << endl;
+#endif
+	
 	WORD *oldworkpointer = AT.WorkPointer;
 	
 #ifdef WITHOLDPOLYRATFUN
@@ -332,19 +363,25 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	WORD modp=0;
 
 	if (AC.ncmod != 0) {
-		if (ABS(AC.ncmod)>1) {
-			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(1);
+		if (AC.modmode & ALSOFUNARGS) {
+			if (ABS(AC.ncmod)>1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(1);
+			}
+			if (AN.poly_num_vars > 1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(1);
+			}
+			modp = *AC.cmod;
 		}
-		if (AN.poly_num_vars > 1) {
-			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(1);
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
 		}
-		modp = *AC.cmod;
 	}
 	
 	// Find numerators / denominators
@@ -403,6 +440,9 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	if (AN.poly_num_vars > 0) 
 		delete AN.poly_vars;
 
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
+	
 	return oldworkpointer;
 }
 
@@ -427,13 +467,17 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  */
 int poly_ratfun_mul (PHEAD WORD *term) {
 
+#ifdef DEBUG
+	cout << "CALL : poly_ratfun_mul" << endl;
+#endif
+	
 #ifdef WITHOLDPOLYRATFUN
 	if (AM.oldpolyratfun) {
 		PolyRatFunMul(BHEAD term);
 		return 0;
 	}
 #endif
-	
+
 	map<int,int> var_to_idx;
 	AN.poly_num_vars = 0;
 
@@ -467,19 +511,25 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 	WORD modp=0;
 
 	if (AC.ncmod != 0) {
-		if (ABS(AC.ncmod)>1) {
-			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(1);
+		if (AC.modmode & ALSOFUNARGS) {
+			if (ABS(AC.ncmod)>1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(1);
+			}
+			if (AN.poly_num_vars > 1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(1);
+			}
+			modp = *AC.cmod;
 		}
-		if (AN.poly_num_vars > 1) {
-			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(1);
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
 		}
-		modp = *AC.cmod;
 	}	
 	
 	// Accumulate total denominator/numerator and copy the remaining terms
@@ -544,6 +594,9 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 
 	if (AN.poly_num_vars > 0) 
 		delete AN.poly_vars;
+
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
 	
 	return 0;
 }
@@ -568,6 +621,10 @@ int poly_ratfun_mul (PHEAD WORD *term) {
  */
 int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 
+#ifdef DEBUG
+	cout << "CALL : poly_factorize_argument" << endl;
+#endif
+	
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables(BHEAD argin, true, false);
 			 
@@ -622,7 +679,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	*argout = 0;
 
 	// reset modulo calculation
-	AC.ncmod = AN.ncmod;
+	AN.ncmod = AC.ncmod;
 
 	return 0;
 }
@@ -647,7 +704,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: poly_factorize_dollar(...)" << endl;
+	cout << "CALL : poly_factorize_dollar" << endl;
 #endif
 	
 	AN.poly_num_vars = 0;
@@ -702,12 +759,8 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 		delete AN.poly_vars;
 
 	// reset modulo calculation
-	AC.ncmod = AN.ncmod;
+	AN.ncmod = AC.ncmod;
 
-#ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : poly_factorize_dollar(...) = ..." << endl;
-#endif
-	
 	return oldres;
 }
 
@@ -718,7 +771,20 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 WORD poly_factorize_expression(WORD exprin, WORD exprout, WORD numsymbol) {
 
-	return -1;
+#ifdef DEBUG
+	cout << "CALL : poly_factorize_expression" << endl;
+#endif
+	
+	DUMMYUSE(exprin);
+	DUMMYUSE(exprout);
+	DUMMYUSE(numsymbol);
+
+	MUNLOCK(ErrorMessageLock);
+	MesPrint ((char*)"ERROR: factorization of expressions not implemented yet");
+	MLOCK(ErrorMessageLock);
+	Terminate(1);
+	
+	return 0;
 }
 
 /*

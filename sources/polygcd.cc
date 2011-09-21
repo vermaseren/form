@@ -224,12 +224,11 @@ const poly polygcd::content_univar (const poly &a, int x) {
 		res = gcd(res, b);
 
 		if (res.is_integer()) {
-			res = poly(BHEAD 1, a.modp, a.modn);
+			res = integer_content(a);
 			break;
 		}
 	}	
 
-	if (a.modp > 0) res *= a.integer_lcoeff();
 	if (a.sign() != res.sign()) res *= poly(BHEAD -1);
 	
 #ifdef DEBUG
@@ -750,9 +749,6 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 		// for each power in the gcd, generate an equation if needed
 		int si=1, col=0, midx=0;
 
-		cout << "s = " << s << endl;
-		cout << "g = " << gcd << endl;
-		
 		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
 			int pow = gcd[gi+1+x[0]];
 
