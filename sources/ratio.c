@@ -617,7 +617,8 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 		firstshort = 0;
 		tf = t + FUNHEAD;
 		while ( tf < t + t[1] ) {
-			if ( *tf < 0 ) {
+			if ( *tf == -SNUMBER && tf[1] == 0 ) {}
+			else if ( *tf < 0 ) {
 				if ( firstshort == 0 ) {
 					if ( *tf == -SNUMBER && tf[1] == 0 ) { tf += 2; continue; }
 					firstshort = *tf;
@@ -774,6 +775,9 @@ signdone:;
 			tf = t + FUNHEAD;
 			while ( tf < t + t[1] ) {
 				if ( *tf < 0 ) {
+					if ( *tf == -SNUMBER && tf[1] == 0 ) {
+						NEXTARG(tf); continue;
+					}
 					if ( tf[1] != firstvalue ) goto gcdone;
 					if ( ( *tf == -VECTOR || *tf == -MINVECTOR ) &&
 					( firstshort == -VECTOR || firstshort == -MINVECTOR ) ) {
@@ -824,6 +828,9 @@ signdone:;
 					if ( *tf == firstshort && tf[1] == firstvalue ) {
 						NEXTARG(tf); continue;
 					}
+					else if ( *tf == -SNUMBER && tf[1] == 0 ) {
+						NEXTARG(tf); continue;
+					}
 					else goto gcdone;
 				}
 				tfnext = tf + *tf; m = tf + ARGHEAD;
@@ -867,6 +874,9 @@ signdone:;
 			while ( tf < t + t[1] ) {
 				if ( *tf < 0 ) {
 					if ( *tf == firstshort ) {
+						NEXTARG(tf); continue;
+					}
+					else if ( *tf == -SNUMBER && tf[1] == 0 ) {
 						NEXTARG(tf); continue;
 					}
 					else goto gcdone;
