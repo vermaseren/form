@@ -56,6 +56,7 @@ WORD CleanExpr(WORD par)
 	j = 0;
 	e_in = e_out = Expressions;
 	if ( n > 0 ) { do {
+		e_in->vflags &= ~( TOBEFACTORED | TOBEUNFACTORED );
 		if ( par ) {
 			if ( e_in->renumlists ) {
 				if ( e_in->renumlists != AN.dummyrenumlist )

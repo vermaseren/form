@@ -132,8 +132,8 @@ static KEYWORD com2commands[] = {
 	,{"exit",           (TFUN)CoExit,             STATEMENT,    PARTEST}
 	,{"extrasymbols",   (TFUN)CoExtraSymbols,     DECLARATION,  PARTEST}
 	,{"factarg",        (TFUN)CoFactArg,          STATEMENT,    PARTEST}
-	,{"factor",         (TFUN)CoFactor,           STATEMENT,    PARTEST}
-	,{"factorize",      (TFUN)CoFactor,           STATEMENT,    PARTEST}
+	,{"factdollar",     (TFUN)CoFactDollar,       STATEMENT,    PARTEST}
+	,{"factorize",      (TFUN)CoFactorize,        TOOUTPUT,     PARTEST}
 	,{"fill",           (TFUN)CoFill,             DECLARATION,  PARTEST}
 	,{"fillexpression", (TFUN)CoFillExpression,   DECLARATION,  PARTEST}
 	,{"frompolynomial", (TFUN)CoFromPolynomial,   STATEMENT,    PARTEST}
@@ -158,6 +158,7 @@ static KEYWORD com2commands[] = {
 	,{"multi",          (TFUN)CoMulti,            STATEMENT,    PARTEST}
 	,{"multibracket",   (TFUN)CoMultiBracket,     STATEMENT,    PARTEST}
 	,{"ndrop",          (TFUN)CoNoDrop,           SPECIFICATION,PARTEST}
+	,{"nfactorize",     (TFUN)CoNFactorize,       TOOUTPUT,     PARTEST}
 	,{"nhide",          (TFUN)CoNoHide,           SPECIFICATION,PARTEST}
 	,{"normalize",      (TFUN)CoNormalize,        STATEMENT,    PARTEST}
 	,{"notinparallel",  (TFUN)CoNotInParallel,    SPECIFICATION,PARTEST}
@@ -239,7 +240,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 

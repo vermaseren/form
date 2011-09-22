@@ -747,7 +747,8 @@ typedef int (*TFUN1)();
 #define ISCOMPRESSED 4
 #define ISINRHS 8
 #define ISFACTORIZED 16
-#define TOBEUNFACTORED 32
+#define TOBEFACTORED 32
+#define TOBEUNFACTORED 64
 /*
 #define SORTWEIGHTS 1
 #define LINSOLVE 2

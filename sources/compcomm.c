@@ -938,7 +938,7 @@ FoundExpr:;
 }
 
 /*
-  	#] DoPrint :
+  	#] DoPrint : 
   	#[ CoPrint :
 */
 
@@ -5687,10 +5687,10 @@ int CoEndDo(UBYTE *inp)
 
 /*
   	#] CoEndDo : 
-  	#[ CoFactor :
+  	#[ CoFactDollar :
 */
 
-int CoFactor(UBYTE *inp)
+int CoFactDollar(UBYTE *inp)
 {
 	WORD numdollar;
 	if ( *inp == '$' ) {
@@ -5701,7 +5701,7 @@ int CoFactor(UBYTE *inp)
 		}
 		inp = SkipAName(inp+1);
 		if ( *inp != 0 ) {
-			MesPrint("&Factor(ize) should have a single $variable for its argument");
+			MesPrint("&FactDollar should have a single $variable for its argument");
 			return(1);
 		}
 #ifdef WITHPTHREADS
@@ -5730,5 +5730,80 @@ int CoFactor(UBYTE *inp)
 }
 
 /*
-  	#] CoFactor : 
+  	#] CoFactDollar : 
+  	#[ CoFactorize :
+*/
+
+int CoFactorize(UBYTE *s) { return(DoFactorize(s,1)); }
+
+/*
+  	#] CoFactorize :
+  	#[ CoNFactorize :
+*/
+
+int CoNFactorize(UBYTE *s) { return(DoFactorize(s,0)); }
+
+/*
+  	#] CoNFactorize :
+  	#[ DoFactorize :
+*/
+
+int DoFactorize(UBYTE *s,int par)
+{
+	EXPRESSIONS e;
+	WORD i;
+	WORD number;
+	UBYTE *t, c;
+	int error = 0;
+	if ( *s == 0 ) {
+		for ( i = NumExpressions-1; i >= 0; i-- ) {
+			e = Expressions+i;
+			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
+			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+			) {
+				if ( par ) e->vflags |=  TOBEFACTORED;
+				else       e->vflags &= ~TOBEFACTORED;
+			}
+		}
+	}
+	else {
+		for(;;) {	/* Look for a (comma separated) list of variables */
+			while ( *s == ',' ) s++;
+			if ( *s == 0 ) break;
+			if ( *s == '[' || FG.cTable[*s] == 0 ) {
+				t = s;
+				if ( ( s = SkipAName(s) ) == 0 ) {
+					MesPrint("&Improper name for an expression: '%s'",t);
+					return(1);
+				}
+				c = *s; *s = 0;
+				if ( GetName(AC.exprnames,t,&number,NOAUTO) == CEXPRESSION ) {
+					e = Expressions+number;
+					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
+					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+					) {
+						if ( par ) e->vflags |=  TOBEFACTORED;
+						else       e->vflags &= ~TOBEFACTORED;
+					}
+				}
+				else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
+					MesPrint("&%s is not an expression",t);
+					error = 1;
+				}
+				*s = c;
+			}
+			else {
+				MesPrint("&Illegal object in (N)Factorize statement");
+				error = 1;
+				while ( *s && *s != ',' ) s++;
+				if ( *s == 0 ) break;
+			}
+		}
+
+	}
+	return(error);
+}
+
+/*
+  	#] DoFactorize : 
 */
