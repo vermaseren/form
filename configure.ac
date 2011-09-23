@@ -24,17 +24,33 @@ AH_VERBATIM([PRODUCTIONDATE],
 #define PRODUCTIONDATE __DATE__
 #endif])
 
+# Check for automake >= 1.10
+flag=false
+case $am__api_version in
+	1.6|1.7|1.8|1.9)
+		;;
+	*)
+		flag=:
+		;;
+esac
+AM_CONDITIONAL([AUTOMAKE_GE_110], [$flag])
+
 # Check for programs
 cflagsbackup=$CFLAGS
 cxxflagsbackup=$CXXFLAGS
 AC_PROG_CC([gcc cc icc])
 AM_PROG_CC_C_O
 AC_PROG_CXX([g++ c++ icpc])
+CFLAGS=$cflagsbackup
+CXXFLAGS=$cxxflagsbackup
 
 # Checks for header files
 AC_HEADER_STDC
 AC_HEADER_TIME
 AC_CHECK_HEADERS([fcntl.h limits.h sys/file.h])
+
+# Check for inline
+AC_C_INLINE
 
 # Sets _FILE_OFFSET_BITS if possible
 AC_SYS_LARGEFILE
@@ -94,114 +110,307 @@ AM_CONDITIONAL([USINGGCC], [test "x$CC" = xgcc])
 AM_CONDITIONAL([USINGICC], [test "x$CC" = xicc])
 
 # Check for gmp
-GMPLIBS=
-AC_ARG_WITH([gmp], [AS_HELP_STRING([--without-gmp],
-			[do not use GMP for long integer arithmetic @<:@default=use GMP if available@:>@])],
-			[], [USE_GMP=yes])
-AS_IF([test "x$print_os" = xOSX], [USE_GMP=no]) 
-AS_IF([test "x$USE_GMP" = xyes],
-	[AC_CHECK_LIB([gmp], [__gmpz_init],
-		[AC_DEFINE(WITHGMP, , [Define to use GMP for long integer arithmetic.])
-		 AC_SUBST([GMPLIBS], ["-lgmp"])],
-		[AC_MSG_FAILURE([Test for GMP failed. Give --without-gmp if you want to compile without GMP.])])
-	])
+AC_ARG_WITH([gmp],
+	[AS_HELP_STRING([--with-gmp@<:@=DIR@:>@],
+		[use GMP for long integer arithmetic (installed in prefix DIR) @<:@default=check@:>@])],
+	[AS_IF([test "x$withval" != xyes && test "x$withval" != xno && test "x$withval" != xcheck],
+		[with_gmp=yes
+		CPPFLAGS="$CPPFLAGS -I$withval/include"
+		LDFLAGS="$LDFLAGS -L$withval/lib"])],
+	[with_gmp=check])
+AS_IF([test "x$with_gmp" != xno],
+	[flag=:
+	AS_IF([$flag], [AC_CHECK_HEADER([gmp.h], [], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_LIB([gmp], [__gmpz_init], [LIBS="-lgmp $LIBS"], [flag=false])])
+	AS_IF([$flag],
+		[AC_DEFINE(WITHGMP, [], [Define to use GMP for long integer arithmetic.])
+		with_gmp=yes],
+		[AS_IF([test "x$with_gmp" = xyes],
+			[AC_MSG_FAILURE([test for GMP failed. Give --without-gmp if you want to compile without GMP])])
+		AC_MSG_NOTICE([GMP is not available])
+		with_gmp=no])])
 
 # Check for zlib
-ZLIBS=
-AC_ARG_WITH([zlib], [AS_HELP_STRING([--without-zlib],
-			[do not use zlib for compression @<:@default=use zlib if available@:>@])],
-			[], [USE_ZLIB=yes])
-AS_IF([test "x$USE_ZLIB" = xyes],
-	[AC_CHECK_LIB([z], [get_crc_table],
-		[AC_DEFINE(WITHZLIB, , [Define to use zlib for compression.])
-		 AC_SUBST([ZLIBS], ["-lz"])],
-		[AC_MSG_FAILURE([Test for zlib failed. Give --without-zlib if you want to compile without zlib.])])
-	])
+AC_ARG_WITH([zlib],
+	[AS_HELP_STRING([--with-zlib@<:@=DIR@:>@],
+		[use zlib for compression (installed in prefix DIR) @<:@default=check@:>@])],
+	[AS_IF([test "x$withval" != xyes && test "x$withval" != xno && test "x$withval" != xcheck],
+		[with_zlib=yes
+		CPPFLAGS="$CPPFLAGS -I$withval/include"
+		LDFLAGS="$LDFLAGS -L$withval/lib"])],
+	[with_zlib=check])
+AS_IF([test "x$with_zlib" != xno],
+	[flag=:
+	AS_IF([$flag], [AC_CHECK_HEADER([zlib.h], [], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_LIB([z], [get_crc_table], [LIBS="-lz $LIBS"], [flag=false])])
+	AS_IF([$flag],
+		[AC_DEFINE(WITHZLIB, [], [Define to use zlib for compression.])
+		with_zlib=yes],
+		[AS_IF([test "x$with_zlib" = xyes],
+			[AC_MSG_FAILURE([test for zlib failed. Give --without-zlib if you want to compile without zlib])])
+		AC_MSG_NOTICE([zlib is not available])
+		with_zlib=no])])
 
-# Check for disabling scalar version
-AC_ARG_ENABLE([scalar], [AS_HELP_STRING([--disable-scalar],
-	[do not build scalar version (form)])],
-	[enableval=no], [enableval=yes])
-build_form=$enableval
+# enable-scalar/threaded/parform/debug
+AC_ARG_ENABLE([scalar],
+	[AS_HELP_STRING([--enable-scalar],
+		[build scalar version (form) @<:@default=yes@:>@])],
+	[AS_IF([test "x$enableval" != xno], [enable_scalar=yes])],
+	[enable_scalar=yes])
+AC_ARG_ENABLE([threaded],
+	[AS_HELP_STRING([--enable-threaded],
+		[build multi-threaded version (tform) @<:@default=check@:>@])],
+	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_threaded=yes])],
+	[enable_threaded=check])
+AC_ARG_ENABLE([parform],
+	[AS_HELP_STRING([--enable-parform],
+		[build parallel version using MPI (parform) @<:@default=no@:>@])],
+	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_parform=yes])],
+	[enable_parform=no])
+AC_ARG_ENABLE([debug],
+	[AS_HELP_STRING([--enable-debug],
+		[build debugging versions (form/tvorm/parvorm) @<:@default=no@:>@])],
+	[AS_IF([test "x$enableval" != xno], [enable_debug=yes])],
+	[enable_debug=no])
+
+# Check for scalar version
+build_form=$enable_scalar
+AS_IF([test "x$enable_scalar" = xyes && test "x$enable_debug" = xyes], [build_vorm=yes], [build_vorm=no])
 AM_CONDITIONAL([BUILD_FORM], [test "x$build_form" = xyes])
-
-# Check for enabling debugging version
-AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug],
-	[do build debugging versions (vorm/tvorm)])],
-	[enableval=yes], [enableval=no])
-build_vorm=$enableval
 AM_CONDITIONAL([BUILD_VORM], [test "x$build_vorm" = xyes])
 
-# Check for pthread
-AC_ARG_ENABLE([threaded], [AS_HELP_STRING([--disable-threaded],
-	[do not build multi-threaded version (tform)])],
-	[enableval=no], [enableval=yes])
-build_tform=$enableval
-AS_IF([test "$enableval" = yes], [build_tvorm=$build_vorm])
-AS_IF([test "x$build_tform" = xyes],
-	[AC_CHECK_HEADER([pthread.h], [], [build_tform=no build_tvorm=no])
-	 AS_IF([test "x$print_os" != xOSX],
-	 	[AC_CHECK_LIB([rt], [pthread_self], [:], [build_tform=no build_tvorm=no])],
-	 	[AC_CHECK_LIB([pthread], [pthread_self], [:], [build_tform=no build_tvorm=no])])
-	 AS_IF([test "x$build_tform" != xyes],
-		   [AC_MSG_WARN([building tform has been disabled.])
-		    AS_IF([test "x$build_vorm" = xyes],
-		    	AC_MSG_WARN([building tvorm has been disabled.]))])
-	])
+# Check for threaded version
+PTHREAD_CFLAGS=
+PTHREAD_CPPFLAGS=
+PTHREAD_LIBS=
+AH_VERBATIM([WITHPOSIXCLOCK],
+[/* Define to use POSIX thread clock. */
+#ifdef WITHPTHREADS
+#undef WITHPOSIXCLOCK
+#endif])
+posix_thread_clock_ok=no
+AS_IF([test "x$enable_threaded" != xno],
+	[flag=:
+	# Check the flag/library for pthreads
+	AS_IF([$flag],
+		[ok=no
+		# none: Cygwin
+		# -pthread: Linux/gcc
+		# pthread: Linux, OSX
+		for a in none -pthread pthread; do
+			case $a in
+				none)
+					AC_MSG_CHECKING([whether pthreads works without any flags])
+					;;
+				-*)
+					AC_MSG_CHECKING([whether pthreads works with $a])
+					PTHREAD_CFLAGS="$a"
+					;;
+				*)
+					AC_MSG_CHECKING([for the pthreads library -l$a])
+					PTHREAD_LIBS="-l$a"
+					;;
+			esac
+			save_CFLAGS=$CFLAGS
+			save_LIBS=$LIBS
+			CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+			LIBS="$PTHREAD_LIBS $LIBS"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([
+#include <pthread.h>
+static void *start_routine(void *a) { return a; }
+], [
+pthread_t th;
+pthread_create(&th, 0, start_routine, 0);
+pthread_self();
+])],
+				[ok=yes],
+				[])
+			CFLAGS=$save_CFLAGS
+			LIBS=$save_LIBS
+			AC_MSG_RESULT($ok)
+			test "x$ok" = xyes && break
+			PTHREAD_CFLAGS=
+			PTHREAD_LIBS=
+		done
+		test "x$ok" = xno && flag=false])
+	# Check pthread_rwlock_t
+	AS_IF([$flag],
+		[ok=no
+		# -D_XOPEN_SOURCE=500: Scientific Linux 4.8
+		for a in none -D_XOPEN_SOURCE=500; do
+			case $a in
+				none)
+					AC_MSG_CHECKING([for pthread_rwlock_t])
+					;;
+				-D*)
+					AC_MSG_CHECKING([for pthread_rwlock_t with $a])
+					PTHREAD_CPPFLAGS="$a"
+					;;
+			esac
+			save_CPPFLAGS=$CPPFLAGS
+			CPPFLAGS="$PTHREAD_CPPFLAGS $CPPFLAGS"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <errno.h>
+#include <pthread.h>
+pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
+], [
+while (pthread_rwlock_tryrdlock(&rwlock) == EBUSY) {}
+pthread_rwlock_unlock(&rwlock);
+])],
+				[ok=yes],
+				[])
+			CPPFLAGS=$save_CPPFLAGS
+			AC_MSG_RESULT($ok)
+			test "x$ok" = xyes && break
+			PTHREAD_CPPFLAGS=
+		done
+		test "x$ok" = xno && flag=false])
+	# Check clock_gettime with CLOCK_THREAD_CPUTIME_ID
+	AS_IF([$flag],
+		[ok=yes
+		AS_IF([test "x$ok" = xyes],
+			[AC_MSG_CHECKING([for the POSIX thread clock])
+			save_CPPFLAGS=$CPPFLAGS
+			CPPFLAGS="$PTHREAD_CPPFLAGS $CPPFLAGS"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <time.h>
+], [
+struct timespec t;
+clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
+])],
+				[],
+				[ok=no])
+			CPPFLAGS=$save_CPPFLAGS
+			AC_MSG_RESULT($ok)])
+		AS_IF([test "x$ok" = xyes],
+			[AC_CHECK_LIB([rt], [clock_gettime],
+				[PTHREAD_LIBS="-lrt $PTHREAD_LIBS"],
+				[ok=no])])
+		AS_IF([test "x$ok" == xyes],
+			[cat >>confdefs.h <<END
+#ifdef WITHPTHREADS
+#define WITHPOSIXCLOCK /**/
+#endif
+END
+			posix_thread_clock_ok=yes],
+			[AC_MSG_WARN([POSIX thread clock is not available.])])])
+	AS_IF([$flag],
+		[enable_threaded=yes],
+		[AS_IF([test "x$enable_threaded" = xyes],
+			[AC_MSG_FAILURE([test for tform failed. Give --disable-threaded if you do not need to build tform])])
+		AC_MSG_NOTICE([building tform has been disabled])
+		AS_IF([test "x$enable_debug" = xyes],
+			[AC_MSG_NOTICE([building tvorm has been disabled])])
+		enable_threaded=no])])
+AC_SUBST([PTHREAD_CFLAGS])
+AC_SUBST([PTHREAD_CPPFLAGS])
+AC_SUBST([PTHREAD_LIBS])
+build_tform=$enable_threaded
+AS_IF([test "x$enable_threaded" = xyes && test "x$enable_debug" = xyes], [build_tvorm=yes], [build_tvorm=no])
 AM_CONDITIONAL([BUILD_TFORM], [test "x$build_tform" = xyes])
 AM_CONDITIONAL([BUILD_TVORM], [test "x$build_tvorm" = xyes])
 
-# Check for MPI
+# Check for MPI version
 AC_ARG_VAR([MPICC], [C compiler with MPI support])
 AC_ARG_VAR([MPICXX], [C++ compiler with MPI support])
-AC_ARG_ENABLE([parform], [AS_HELP_STRING([--enable-parform],
-	[build parallel version using MPI (parform)])], [], [enable_parform=no])
+AS_IF([test "x$enable_parform" != xno],
+	[flag=:
+	AS_IF([$flag],
+		[AS_IF([test -z "$MPICC"], [AC_CHECK_PROGS([MPICC], [mpicc])])
+		AS_IF([test -z "$MPICC"], [flag=false])])
+	AS_IF([$flag],
+		[AS_IF([test -z "$MPICXX"], [AC_CHECK_PROGS([MPICXX], [mpicxx mpiCC mpic++])])
+		AS_IF([test -z "$MPICXX"], [flag=false])])
+	# Use AC_TRY_COMPILE and not AC_CHECK_HEADER because the latter uses $CPP, which perhaps
+	# does not know the include path for mpi.h.
+	AS_IF([$flag],
+		AC_MSG_CHECKING([for mpi.h])
+		save_CC=$CC
+		CC=$MPICC
+		AC_TRY_COMPILE([#include <mpi.h>], [],
+			[AC_MSG_RESULT(yes)],
+			[AC_MSG_RESULT(no);
+			flag=false])
+		CC=$save_CC
+	)
+	AS_IF([$flag],
+		[AC_MSG_CHECKING([for MPI_Init])
+		AC_LANG_PUSH([C++])
+		save_CXX=$CXX
+		CXX=$MPICXX
+		AC_LINK_IFELSE([AC_LANG_SOURCE([
+#include <mpi.h>
+int main(int argc, char **argv) {
+	MPI_Init(&argc, &argv);
+	MPI_Finalize();
+	return 0;
+}
+])],
+			[AC_MSG_RESULT([yes])],
+			[AC_MSG_RESULT([no])
+			flag=false])
+		CXX=$save_CXX
+		AC_LANG_POP([C++])])
+	AS_IF([$flag],
+		[enable_parform=yes],
+		[AS_IF([test "x$enable_parform" = xyes],
+			[AC_MSG_FAILURE([test for parform failed. Give --disable-parform if you do not need to build parform])])
+		AC_MSG_NOTICE([building parform has been disabled])
+		AS_IF([test "x$enable_debug" = xyes],
+			[AC_MSG_NOTICE([building parvorm has been disabled])])
+		enable_parform=no])])
 build_parform=$enable_parform
-AS_IF([test "x$build_parform" = xyes], [
-	build_parvorm=$build_vorm
-	AS_IF([test -z "$MPICC"], [AC_CHECK_PROGS([MPICC], [mpicc])])
-	AS_IF([test -z "$MPICXX"], [AC_CHECK_PROGS([MPICXX], [mpicxx mpiCC mpic++])])
-	AS_IF([test -z "$MPICC"], [build_parform=no])
-	AS_IF([test -z "$MPICXX"], [build_parform=no])
-	AS_IF([test "x$build_parform" != xyes], [
-		AC_MSG_WARN([building parform has been disabled.])
-		AS_IF([test "x$build_vorm" = xyes], [
-			AC_MSG_WARN([building parvorm has been disabled.])
-			build_parvorm=no
-		])
-	])
-])
+AS_IF([test "x$enable_parform" = xyes && test "x$enable_debug" = xyes], [build_parvorm=yes], [build_parvorm=no])
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
 
 # Check for static linking
-AC_MSG_CHECKING([static linking])
-save_LDFLAGS=$LDFLAGS
-save_LIBS=$LIBS
-LDFLAGS="$LDFLAGS -static"
-LIBS="$ZLIBS $GMPLIBS"
-if test "x$build_tform" = xyes || test "x$build_tvorm" = xyes; then
-	LDFLAGS="$LDFLAGS -pthread"
-	if test "x$print_os" != xOSX; then
-		LIBS="$LIBS -lrt"
-	else
-		LIBS="$LIBS -lpthread"
-	fi
-fi
-AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
-	[AC_MSG_RESULT([yes])
-        static_link=yes],
-	[AC_MSG_RESULT([no])
-        static_link=no])
-LDFLAGS=$save_LDFLAGS
-LIBS=$save_LIBS
-AM_CONDITIONAL([STATIC_LINK], [test "x$static_link" = xyes])
-
-# Provide a clean environment
-CPPFLAGS=
-CFLAGS=$cflagsbackup
-CXXFLAGS=$cxxflagsbackup
-LDFLAGS=
+AC_ARG_ENABLE([static-link],
+	[AS_HELP_STRING([--enable-static-link],
+		[link with static libraries @<:@default=no@:>@])],
+	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_static_link=yes])],
+	[enable_static_link=no])
+AS_IF([test "x$enable_static_link" != xno],
+	[flag=:
+	AS_IF([$flag],
+		[AC_LANG_PUSH([C++])
+		save_CFLAGS=$CFLAGS
+		save_LDFLAGS=$LDFLAGS
+		save_LIBS=$LIBS
+		CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+		LDFLAGS="$LDFLAGS -static"
+		LIBS="$PTHREAD_LIBS $LIBS"
+		AC_MSG_CHECKING([for static linking with $CXX])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
+			[AC_MSG_RESULT([yes])],
+			[AC_MSG_RESULT([no]); flag=false])
+		CFLAGS=$save_CFLAGS
+		LDFLAGS=$save_LDFLAGS
+		LIBS=$save_LIBS
+		AC_LANG_POP([C++])])
+	# TODO: It could be better to distinguish static linking with
+	#       CXX and MPICXX. For now we use the variable STATIC_LINK
+	#       for both cases.  (TU 19 Aug. 2011)
+	AS_IF([$flag && test "x$enable_parform" = xyes],
+		[AC_LANG_PUSH([C++])
+		save_CXX=$CXX
+		save_LDFLAGS=$LDFLAGS
+		CXX=$MPICXX
+		LDFLAGS="$LDFLAGS -static"
+		AC_MSG_CHECKING([for static linking with $CXX])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
+			[AC_MSG_RESULT([yes])],
+			[AC_MSG_RESULT([no]); flag=false])
+		CXX=$save_CXX
+		LDFLAGS=$save_LDFLAGS
+		AC_LANG_POP([C++])])
+	AS_IF([$flag],
+		[enable_static_link=yes],
+		[AS_IF([test "x$enable_static_link" = xyes],
+			[AC_MSG_FAILURE([test for static linking failed. Give --disable-static-link if you want to build without static libraries.])])
+		AC_MSG_NOTICE([static linking has been disabled])
+		enable_static_link=no])])
+AM_CONDITIONAL([STATIC_LINK], [test "x$enable_static_link" = xyes])
 
 # Check for doxygen
 AC_PATH_PROG(DOXYGEN, doxygen, "")
@@ -278,6 +487,23 @@ fi
 if test $atleastone = no; then
 	echo "    <NONE>"
 fi
+if test "x$posix_thread_clock_ok" = xno; then
+	s="none"
+	if test "x$build_tform" = xyes && test "x$build_tvorm" = xyes; then
+		s="tform and tvorm"
+	elif test "x$build_tform" = xyes; then
+		s="tform"
+	elif test "x$build_tvorm" = xyes; then
+		s="tvorm"
+	fi
+	if test "x$s" != xnone; then
+		echo
+		echo "***CAUTION***  $s will be built with clock"
+		echo "problems which make that each worker registers"
+		echo "the complete time used by all workers and the master."
+	fi
+fi
+echo
 echo "Type 'make <executable name>' in the source directory to"
 echo "build a specific version. Type 'make' to build all."
 echo "Type 'make install' to install the executables in"

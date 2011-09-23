@@ -68,7 +68,11 @@
 #define WITHGMP
 #endif
 
-#endif /* def HAVE_CONFIG_H */
+#ifdef WITHPTHREADS
+#ifndef APPLE
+#define WITHPOSIXCLOCK
+#endif
+#endif
 
 #if !defined(__cplusplus) && !defined(inline)
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (defined(__GNUC__) && !defined(__STRICT_ANSI__))
@@ -81,6 +85,8 @@
 #define inline
 #endif
 #endif
+
+#endif /* def HAVE_CONFIG_H */
 
 #ifdef _WIN64
 #define MYWIN64
@@ -108,12 +114,6 @@
 #define WITHSTATS
 */
 #define WITHSORTBOTS
-
-#ifdef WITHPTHREADS
-#ifndef APPLE
-#define WITHPOSIXCLOCK
-#endif
-#endif
 
 #ifdef WITHZLIB
 #include <zlib.h>

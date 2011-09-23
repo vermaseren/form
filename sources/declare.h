@@ -253,12 +253,10 @@ long WinTimer();
 #define ftruncate(ARG1,ARG2) _chsize(ARG1,ARG2)
 /* If arg2 > 4GB _chsize_s should be used... */
 #define fsync(ARG1) _commit(ARG1)
-/* inline is strictly speaking only available in C++, Micrsoft 
-   supports it under C via __inline  */
-#define FORM_INLINE __inline
-#else
-#define FORM_INLINE inline
 #endif
+
+/* inline in form3.h (or config.h). */
+#define FORM_INLINE inline
 
 /*
 	Macro's for memory management. This can be done by routines, but that

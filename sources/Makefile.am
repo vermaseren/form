@@ -93,7 +93,9 @@ COMPILEFLAGS+=-Wextra -Wpadded -O3 -fomit-frame-pointer
 DEBUGCOMPILEFLAGS+=-Wextra -Wpadded -O0
 if ONAPPLE
 COMPILEFLAGS+=-mmacosx-version-min=10.4
+if STATIC_LINK
 LINKFLAGS+=-static-libgcc
+endif
 if OPTOPTERON
 COMPILEFLAGS+=-m64
 LINKFLAGS+=-m64
@@ -105,7 +107,9 @@ else
 if ONCYGWIN
 COMPILEFLAGS+=-fpack-struct=4
 DEBUGCOMPILEFLAGS+=-fpack-struct=4
+if STATIC_LINK
 LINKFLAGS+=-static-libgcc
+endif
 else
 if STATIC_LINK
 LINKFLAGS+=-static -s
@@ -128,7 +132,8 @@ COMPILEFLAGS+=-march=pentium3 -mtune=pentiumpro
 endif
 endif
 
-EXTRALIBS=@GMPLIBS@ @ZLIBS@
+# NOTE: maude_CXXFLAGS is not used while linking maude by default
+#       in automake < 1.10. (TU 22 Sep 2011)
 
 bin_PROGRAMS =
 
@@ -139,7 +144,12 @@ form_CPPFLAGS =
 form_CFLAGS = $(COMPILEFLAGS)
 form_CXXFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS)
-form_LDADD = $(EXTRALIBS)
+form_LDADD =
+if AUTOMAKE_GE_110
+form_LINK = $(CXXLD) $(form_CXXFLAGS) $(CXXFLAGS) $(form_LDFLAGS) $(LDFLAGS) -o $@
+else
+form_LINK = $(CXXLD) $(form_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+endif
 endif
 
 if BUILD_VORM
@@ -149,60 +159,74 @@ vorm_CPPFLAGS = -DDEBUGGING
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
-vorm_LDADD = $(EXTRALIBS)
+vorm_LDADD =
+if AUTOMAKE_GE_110
+vorm_LINK = $(CXXLD) $(vorm_CXXFLAGS) $(CXXFLAGS) $(vorm_LDFLAGS) $(LDFLAGS) -o $@
+else
+vorm_LINK = $(CXXLD) $(vorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+endif
 endif
 
 if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE)
-tform_CPPFLAGS = -DWITHPTHREADS
-tform_CFLAGS = $(COMPILEFLAGS)
-tform_CXXFLAGS = $(COMPILEFLAGS)
-tform_LDFLAGS = $(LINKFLAGS) -pthread
-if ONAPPLE
-tform_LDADD = $(EXTRALIBS) -lpthread
+tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
+tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
+tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
+tform_LDFLAGS = $(LINKFLAGS)
+tform_LDADD = $(PTHREAD_LIBS)
+if AUTOMAKE_GE_110
+tform_LINK = $(CXXLD) $(tform_CXXFLAGS) $(CXXFLAGS) $(tform_LDFLAGS) $(LDFLAGS) -o $@
 else
-tform_LDADD = $(EXTRALIBS) -lrt
+tform_LINK = $(CXXLD) $(tform_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
 
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE)
-tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING
-tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
-tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
-tvorm_LDFLAGS = $(DEBUGLINKFLAGS) -pthread
-if ONAPPLE
-tvorm_LDADD = $(EXTRALIBS) -lpthread
+tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
+tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
+tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
+tvorm_LDFLAGS = $(DEBUGLINKFLAGS)
+tvorm_LDADD = $(PTHREAD_LIBS)
+if AUTOMAKE_GE_110
+tvorm_LINK = $(CXXLD) $(tvorm_CXXFLAGS) $(CXXFLAGS) $(tvorm_LDFLAGS) $(LDFLAGS) -o $@
 else
-tvorm_LDADD = $(EXTRALIBS) -lrt
+tvorm_LINK = $(CXXLD) $(tvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
 
 if BUILD_PARFORM
 bin_PROGRAMS += parform
-parform% : override CC = @MPICC@
-parform% : override CXX = @MPICXX@
-parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
 parform_CPPFLAGS = -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG
-#parform_CFLAGS = -O3 -mcpu=i586
 parform_CFLAGS = $(COMPILEFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS)
 parform_LDFLAGS = $(LINKFLAGS)
-parform_LDADD = $(EXTRALIBS)
+parform_LDADD =
+parform% : override CC = @MPICC@
+parform% : override CXX = @MPICXX@
+if AUTOMAKE_GE_110
+parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
+else
+parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+endif
 endif
 
 if BUILD_PARVORM
 bin_PROGRAMS += parvorm
-parvorm% : override CC = @MPICC@
-parvorm% : override CXX = @MPICXX@
-parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
 parvorm_CPPFLAGS = -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
-parvorm_LDADD = $(EXTRALIBS)
+parvorm_LDADD =
+parvorm% : override CC = @MPICC@
+parvorm% : override CXX = @MPICXX@
+if AUTOMAKE_GE_110
+parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
+else
+parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+endif
 endif
