@@ -704,6 +704,11 @@ WORD DoExecute(WORD par, WORD skip)
 	if(NumPotModdollars > 0)
 		if( (RetCode=PF_mkDollarsParallel())!=0 )
 			return(RetCode);
+	/* Broadcast AR.expflags, which may be used on the slaves in the next module
+	 * via ZERO_ or UNCHANGED_. It also broadcasts e->vflags and e->numdummies
+	 * of each expression. (TU 23 Sep 2011) */
+	RetCode = PF_BroadcastExpFlags();
+	if ( RetCode ) return RetCode;
 #endif
 #ifdef WITHPTHREADS
 	for ( j = 0; j < NumModOptdollars; j++ ) {

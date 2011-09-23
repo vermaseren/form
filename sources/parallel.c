@@ -1688,12 +1688,6 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			AR.outfile = oldoutfile;
 			AR.hidefile->POfull = AR.hidefile->POfill;
 		}
-		if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
-		else e->vflags |= ISZERO;
-		/* FIXME: AR.expchanged doesn't reflect those of the slaves. (TU 30 Jun 2011) */
-		if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-		if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
-		if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 		AR.GetFile = 0;
 		AR.outtohide = 0;
 /*
@@ -1702,9 +1696,17 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 */
 		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms));
 		PF_CatchErrorMessagesForAll();
+		e->numdummies = 0;
 		for ( k = 1; k < PF.numtasks; k++ ) {
 			PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
 			PF_UnPack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
+			{
+				WORD numdummies, expchanged;
+				PF_UnPack(&numdummies, 1, PF_WORD);
+				PF_UnPack(&expchanged, 1, PF_WORD);
+				if ( e->numdummies < numdummies ) e->numdummies = numdummies;
+				AR.expchanged |= expchanged;
+			}
 			PF_UnPack(&attach,1,PF_INT);
 			if ( attach ) {
 /*
@@ -1760,9 +1762,18 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		PF_Statistics(PF_stats,0);
 /*
 			#] Collect (stats,prepro,...):
+			#[ Update flags :
+*/
+		if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
+		else e->vflags |= ISZERO;
+		if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+		if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
+		if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
+/*
+			#] Update flags :
 
 		This operation is moved to the beginning of each block, see PreProcessor
-		in pre.c.
+		in pre.c. (BroadCast PreProcessor variables that have changed)
 
  		#] Master:
 */
@@ -1781,6 +1792,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		e->onfile = position;
 		AR.DeferFlag = AC.ComDefer;
 		AR.Eside = RHSIDE;
+		AR.MaxDum = AM.IndDum;
 		NewSort(BHEAD0);
 		AN.ninterms = 0;
 		PF_linterms = 0;
@@ -1802,8 +1814,18 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			PF_linterms++; AN.ninterms++; dd = AN.deferskipped;
 			AT.WorkPointer = term + *term;
 			AN.RepPoint = AT.RepCount + 1;
-			AR.CurDum = ReNumber(BHEAD term);
+			if ( AR.DeferFlag ) {
+				AR.CurDum = AN.IndDum = Expressions[AR.CurExpr].numdummies + AM.IndDum;
+			}
+			else {
+				AN.IndDum = AM.IndDum;
+				AR.CurDum = ReNumber(BHEAD term);
+			}
 			if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+			if ( AN.ncmod ) {
+				if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+				else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+			}
 			if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 				&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 				PolyFunClean(BHEAD term);
@@ -1852,6 +1874,11 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		PF_Pack(&PF_linterms       ,1,PF_LONG);
 		PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
 		PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
+		{
+			WORD numdummies = AR.MaxDum - AM.IndDum;
+			PF_Pack(&numdummies,    1, PF_WORD);
+			PF_Pack(&AR.expchanged, 1, PF_WORD);
+		}
 /*
 			now handle the redefined Preprovars
 */
@@ -3030,6 +3057,53 @@ void PF_markPotModDollars(void)
 /*
  		#] PF_markPotModDollars :
   	#] Potentially modified dollar variables :
+  	#[ PF_BroadcastExpFlags :
+*/
+
+/**
+ * Broadcasts AR.expflags and e->vflags, e->numdummies of each expression
+ * from the master to all slaves.
+ *
+ * @return 0 if OK, nonzero on error.
+ */
+int PF_BroadcastExpFlags(void) {
+	WORD i;
+	EXPRESSIONS e;
+	if ( PF_longMultiReset() ) return -1;
+	if ( PF.me == MASTER ) {
+/*
+ 		#[ Master :
+*/
+	PF_longMultiPack((UBYTE *)&AR.expflags, 1, sizeof(WORD), PF_WORD);
+	for ( i = 0; i < NumExpressions; i++ ) {
+		e = &Expressions[i];
+		PF_longMultiPack((UBYTE *)&e->vflags,     1, sizeof(WORD), PF_WORD);
+		PF_longMultiPack((UBYTE *)&e->numdummies, 1, sizeof(WORD), PF_WORD);
+	}
+/*
+ 		#] Master :
+*/
+	}
+	if ( PF_longBroadcast() ) return -1;
+	if ( PF.me != MASTER ) {
+/*
+ 		#[ Slave :
+*/
+	PF_longMultiUnPack((UBYTE *)&AR.expflags, 1, sizeof(WORD), PF_WORD);
+	for ( i = 0; i < NumExpressions; i++ ) {
+		e = &Expressions[i];
+		PF_longMultiUnPack((UBYTE *)&e->vflags,     1, sizeof(WORD), PF_WORD);
+		PF_longMultiUnPack((UBYTE *)&e->numdummies, 1, sizeof(WORD), PF_WORD);
+	}
+/*
+ 		#] Slave :
+*/
+	}
+	return 0;
+}
+
+/*
+  	#] PF_BroadcastExpFlags :
   	#[ PF_SetScratch :
 */
 
@@ -3477,6 +3551,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 				i = PF.exprtodo;
 				AR.CurExpr = i;
 				AR.SortType = AC.SortType;
+				AR.expchanged = 0;
 
 				position = AS.OldOnFile[i];
 				if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION ) {
@@ -3550,8 +3625,10 @@ static int PF_DoOneExpr(void)/*the processor*/
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
+/*
 				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
 				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
+*/
 				AR.GetFile = 0;
 				fout->POfull = fout->POfill;
 	return(0);
@@ -3617,6 +3694,8 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 		return(-1);
 	/*Fill in the expression data:*/
 	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn));
+	if ( !(e->vflags & ISZERO) )       AR.expflags |= ISZERO;
+	if ( !(e->vflags & ISUNMODIFIED) ) AR.expflags |= ISUNMODIFIED;
 	SeekScratch(fout,&pos);
 	e->onfile = pos;
 	i=exprData.i;
