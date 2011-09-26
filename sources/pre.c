@@ -65,8 +65,7 @@ static KEYWORD precommands[] = {
 	,{"endswitch"   , DoPreEndSwitch , 0, 0}
 	,{"exchange"    , DoPreExchange  , 0, 0}
 	,{"external"    , DoExternal     , 0, 0}
-	,{"factor"      , DoFactor       , 0, 0}
-	,{"factorize"   , DoFactor       , 0, 0}
+	,{"factdollar"  , DoFactDollar   , 0, 0}
 	,{"fromexternal", DoFromExternal , 0, 0}
 	,{"if"          , DoIf           , 0, 0}
 	,{"ifdef"       , (TFUN)DoIfdef  , 1, 0}
@@ -5578,19 +5577,17 @@ ReturnWithError:
 
 /*
  		#] writeToChannel : 
- 		#[ DoFactor :
+ 		#[ DoFactDollar :
 
-		Executes the #factor(ize) $var
-		      or the #factor(ize) inexpr,outexpr,symbol
+		Executes the #factdollar $var
 		      instruction
 */
 
-int DoFactor(UBYTE *s)
+int DoFactDollar(UBYTE *s)
 {
-	GETIDENTITY
-	WORD numdollar, *oldworkpointer, type;
-	WORD inexpression, outexpression, numsymbol;
-	UBYTE *name, c;
+	GETIDENTITY;
+	WORD numdollar, *oldworkpointer;
+
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -5601,7 +5598,7 @@ int DoFactor(UBYTE *s)
 		}
 		s = SkipAName(s+1);
 		if ( *s != 0 ) {
-			MesPrint("@#Factor(ize) should have a single $variable for its argument");
+			MesPrint("@#FactDollar should have a single $variable for its argument");
 			return(-1);
 		}
 		NewSort(BHEAD0);
@@ -5612,62 +5609,9 @@ int DoFactor(UBYTE *s)
 		return(0);
 	}
 	else if ( ParenthesesTest(s) ) return(-1);
-	else if ( *s ) {
-		name = s;
-		if ( ( s = SkipAName(s) ) == 0 ) return(-1);
-		c = *s; *s = 0;
-		if ( GetVar(name,&type,&inexpression,ALLVARIABLES,NOAUTO) == NAMENOTFOUND ) {
-			MesPrint("@%s is not an existing expression",name);
-			return(-1);
-		}
-		if ( type != CEXPRESSION ) {
-			MesPrint("@%s is not an expression",name);
-			return(-1);
-		}
-		if ( Expressions[inexpression].status == STOREDEXPRESSION ) {
-/*
-			This seems to be the only type we cannot pick up
-*/
-			MesPrint("@%s is not an active expression",name);
-			return(-1);
-		}
-		*s = c;
-		while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
-		if ( *s == 0 ) goto nosyntax;
-		name = s;
-		if ( ( s = SkipAName(s) ) == 0 ) return(-1);
-		c = *s; *s = 0;
-		if ( GetVar(name,&type,&outexpression,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
-			MesPrint("@%s is an existing variable",name);
-			return(-1);
-		}
-		outexpression = EntVar(CEXPRESSION,name,LOCALEXPRESSION,0,0,0);
-		*s = c;
-		while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
-		if ( *s == 0 ) goto nosyntax;
-		name = s;
-		if ( ( s = SkipAName(s) ) == 0 ) return(-1);
-		c = *s; *s = 0;
-		if ( GetVar(name,&type,&numsymbol,ALLVARIABLES,NOAUTO) == NAMENOTFOUND ) {
-			MesPrint("@%s should be the name of a symbol",name);
-			return(-1);
-		}
-		*s = c;
-		while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
-		if ( *s ) goto nosyntax;
-/*
-		Now we have the three names and we can call the proper routine
-*/
-
-		if ( poly_factorize_expression(inexpression,outexpression,numsymbol) )
-			return(-1);
-		return(0);
-	}
 	else {
-nosyntax:
-		MesPrint("@proper syntax is #factor(ize),inexpression,outexpression,symbol");
-		MesPrint("@              or #factor(ize),$variable");
-		return(-1);
+		MesPrint("@#FactDollar should have a single $variable for its argument");
+		return -1;
 	}
 }
 

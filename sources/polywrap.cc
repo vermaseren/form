@@ -769,21 +769,162 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 	#[ poly_factorize_expression :
 */
 
-WORD poly_factorize_expression(WORD exprin, WORD exprout, WORD numsymbol) {
+WORD poly_factorize_expression(EXPRESSIONS expr) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_factorize_expression" << endl;
 #endif
-	
-	DUMMYUSE(exprin);
-	DUMMYUSE(exprout);
-	DUMMYUSE(numsymbol);
 
-	MUNLOCK(ErrorMessageLock);
-	MesPrint ((char*)"ERROR: factorization of expressions not implemented yet");
-	MLOCK(ErrorMessageLock);
-	Terminate(1);
+	cout << "CALL : poly_factorize_expression" << endl;
+	GETIDENTITY;
 	
+	WORD *term = TermMalloc("poly_factorize_expression");
+
+	FILEHANDLE *f;
+	POSITION position, scrpos;
+	WORD *oldPOfill;
+	
+	// why necessary?
+	swap(AR.infile, AR.outfile);
+	
+	if ( expr->status == HIDDENGEXPRESSION ) {
+		AR.InHiBuf = 0; f = AR.hidefile; AR.GetFile = 2;
+	}
+	else {
+		AR.InInBuf = 0; f = AR.infile;   AR.GetFile = 0;
+	}
+
+	if (expr->numdummies > 0 ) {
+		MesPrint("ERROR: factorization with dummy indices not implemented");
+		Terminate(1);
+	}
+	
+	if ( f->handle >= 0 ) {
+		scrpos = expr->onfile;
+		SeekFile(f->handle,&scrpos,SEEK_SET);
+		if ( ISNOTEQUALPOS(scrpos,expr->onfile) ) {
+			MesPrint(":::Error in Scratch file");
+			Terminate(1);
+		}
+		f->POposition = expr->onfile;
+		f->POfull = f->PObuffer;
+		if ( expr->status == HIDDENGEXPRESSION )
+			AR.InHiBuf = 0;
+		else
+			AR.InInBuf = 0;
+	}
+	else {
+		f->POfill = (WORD *)((UBYTE *)(f->PObuffer)+BASEPOSITION(expr->onfile));
+	}
+
+	oldPOfill = f->POfill;
+	SetScratch(AR.infile, &(expr->onfile));
+
+	WORD tmp = GetTerm(BHEAD term);
+	
+	if (tmp <= 0) {
+		MesPrint ("error");
+		Terminate(1);
+	}
+	else {
+		term[3] = 0; // TODO
+		SeekScratch(AR.outfile,&position);
+		expr->onfile = position;
+	
+		if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) {
+			MesPrint ("error");
+			Terminate(1);
+		}
+	}
+
+	WORD *buffer = TermMalloc("poly_factorize_expression");
+	int bufpos = 0;
+	
+	while (GetTerm(BHEAD term)) {
+		memcpy (buffer+bufpos, term, *term*sizeof(WORD));
+		bufpos += *term;
+	}
+	buffer[bufpos] = 0;
+
+	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer, false, false);
+	poly a = poly::argument_to_poly(BHEAD buffer, false, var_to_idx);
+
+	cout << "polynomial    = " << a << endl;
+	factorized_poly fac(polyfact::factorize(a));
+	cout << "factorization = " << fac << endl;
+	
+	NewSort(BHEAD0);
+	//	NewSort(BHEAD0);
+
+	int power = 0;
+	
+	for (int i=0; i<(int)fac.power.size(); i++)
+		for (int j=0; j<fac.power[i]; j++) {
+			poly::poly_to_argument(fac.factor[i], term+5, false);
+
+			power++;
+			
+			for (int *t=term; *(t+5)!=0; t+=*t-5) {
+				
+				*t = *(t+5) + 5;
+				*(t+1) = SYMBOL;
+				*(t+2) = 4;
+				*(t+3) = FACTORSYMBOL;
+				*(t+4) = power;
+				*(t+5) = HAAKJE;
+				
+				if (SymbolNormalize(t+6) < 0) Terminate(1);
+				if (StoreTerm(BHEAD t)) Terminate(1);
+			}
+		}
+
+	if (EndSort(BHEAD AM.S0->sBuffer,0,0) < 0) {
+		LowerSortLevel();
+		Terminate(1);
+	}
+
+	swap(AR.infile, AR.outfile);
+
+	//	LowerSortLevel();
+	
+	MesPrint ("POfill = %d",oldPOfill);
+	MesPrint ("%a",100, AM.S0->sBuffer);
+	/*
+	for (WORD *t=AM.S0->sBuffer; *t!=0; t+=*t) {
+		memcpy(oldPOfill, t, *t*sizeof(WORD));
+		oldPOfill += *oldPOfill;
+	}
+	*/
+	
+	/*
+				{
+					AN.ninterms = 0;
+					while ( GetTerm(BHEAD term) ) {
+					  AN.ninterms++;
+					  AT.WorkPointer = term + *term;
+
+					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+					  if ( AN.ncmod ) {
+						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+						else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+					  }
+					  if ( ( AR.PolyFunType > 0 ) ) error
+					  if ( Generator(BHEAD term,C->numlhs) ) {
+						LowerSortLevel(); LowerSortLevel(); goto ProcErr;
+					  }
+//					  AR.InInBuf = (curfile->POfull-curfile->PObuffer)
+//							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
+					}
+				}
+
+	*/
+
+	TermFree(buffer,"poly_factorize_expression");
+	TermFree(term,"poly_factorize_expression");
+
+	expr->vflags |= ISFACTORIZED;
+
+	MesPrint ("done!");
 	return 0;
 }
 

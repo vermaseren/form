@@ -395,6 +395,8 @@ commonread:;
 					}
 					e->numdummies = AR.MaxDum - AM.IndDum;
 					UpdateMaxSize();
+					if ( e->vflags & TOBEFACTORED)
+						poly_factorize_expression(e);
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;

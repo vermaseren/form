@@ -799,7 +799,7 @@ extern int    DoSetExternalAttr(UBYTE *);
 /*:[10may2006 mt]*/
 extern int    DoRmExternal(UBYTE *);
 /*:[14apr2004 mt]*/
-extern int    DoFactor(UBYTE *);
+extern int    DoFactDollar(UBYTE *);
 extern WORD   GetDollarNumber(UBYTE **,DOLLARS);
 extern int    DoSetRandom(UBYTE *);
 extern int    DoMessage(UBYTE *);
@@ -1549,7 +1549,7 @@ extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
 extern int   poly_ratfun_mul(PHEAD WORD *);
 extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
-extern WORD  poly_factorize_expression(WORD, WORD, WORD);
+extern int   poly_factorize_expression(EXPRESSIONS);
 /*
   	#] Declarations :
 */
