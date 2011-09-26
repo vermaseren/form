@@ -126,6 +126,7 @@ WORD Processor()
 	last = i;
 	for ( i = NumExpressions-1; i >= 0; i-- ) {
 		AS.OldOnFile[i] = Expressions[i].onfile;
+		Expressions[i].vflags &= ~(ISUNMODIFIED|ISZERO);
 	}
 #ifdef WITHPTHREADS
 /*
@@ -182,7 +183,6 @@ WORD Processor()
 		}
 #endif
 		AS.CollectOverFlag = 0;
-		e->vflags &= ~ISUNMODIFIED;
 		AR.expchanged = 0;
 		if ( i == last ) LastExpression = 1;
 		else             LastExpression = 0;

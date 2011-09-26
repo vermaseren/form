@@ -1534,6 +1534,7 @@ bucketstolen:;
 				i = AR.exprtodo;
 				AR.CurExpr = i;
 				AR.SortType = AC.SortType;
+				AR.expchanged = 0;
 
 				position = AS.OldOnFile[i];
 				if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION ) {
@@ -1670,7 +1671,7 @@ bucketstolen:;
 
 				} break;
 /*
-			#] DOONEEXPRESSION : 
+			#] DOONEEXPRESSION :
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat
@@ -1773,7 +1774,7 @@ ProcErr:
 }
 
 /*
-  	#] RunThread : 
+  	#] RunThread :
   	#[ RunSortBot :
 */
 /**
@@ -2342,6 +2343,7 @@ int InParallelProcessor()
 				e->partodo = 0;
 				continue;
 			}
+MesPrint(" i = %d; e->vflags = %d",i,e->vflags);
 /*
 			This expression should go to an idle worker
 */
@@ -2367,7 +2369,7 @@ int InParallelProcessor()
 }
 
 /*
-  	#] InParallelProcessor : 
+  	#] InParallelProcessor :
   	#[ ThreadsProcessor :
 */
 /**
