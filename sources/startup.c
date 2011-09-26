@@ -315,6 +315,10 @@ int OpenInput()
 			Error1("Cannot open file",AM.InputFileName);
 			return(-1);
 		}
+		if ( AC.CurrentStream->inbuffer <= 0 ) {
+			Error1("No input in file",AM.InputFileName);
+			return(-1);
+		}
 		AC.NoShowInput = 1;
 		while ( AM.SkipClears > 0 ) {
 			c = GetInput();
