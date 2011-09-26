@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 #include "polyclass.h"
 #include "polygcd.h"
@@ -46,7 +46,7 @@
 using namespace std;
 
 /*
-	#[ poly_gcd :
+  	#[ poly_gcd :
 */
 
 /**  Polynomial gcd
@@ -134,8 +134,8 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 }
 
 /*
-	#] poly_gcd :
-	#[ poly_ratfun_read :
+  	#] poly_gcd : 
+  	#[ poly_ratfun_read :
 */
 
 /**  Read a PolyRatFun
@@ -218,8 +218,8 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 }
 
 /*
-	#] poly_ratfun_read :
-	#[ poly_sort :
+  	#] poly_ratfun_read : 
+  	#[ poly_sort :
 */
 
 /**  Sort the polynomial terms
@@ -260,8 +260,8 @@ void poly_sort(PHEAD WORD *a) {
 }
 
 /*
-	#] poly_sort :
-	#[ poly_ratfun_normalize :
+  	#] poly_sort : 
+  	#[ poly_ratfun_normalize :
 */
 
 /**  Normalizes a term with PolyRatFuns
@@ -297,8 +297,8 @@ WORD *poly_ratfun_normalize(PHEAD WORD *term, int par) {
 }
 
 /*
-	#] poly_ratfun_normalize :
-	#[ poly_ratfun_add :
+  	#] poly_ratfun_normalize : 
+  	#[ poly_ratfun_add :
 */
 
 /**  Addition of PolyRatFuns
@@ -447,8 +447,8 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 }
 
 /*
-	#] poly_ratfun_add :
-	#[ poly_ratfun_mul :
+  	#] poly_ratfun_add : 
+  	#[ poly_ratfun_mul :
 */
 
 /**  Multiplication of PolyRatFuns
@@ -602,8 +602,8 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 }
 
 /*
-	#] poly_ratfun_mul :
-	#[ poly_factorize_argument :
+  	#] poly_ratfun_mul : 
+  	#[ poly_factorize_argument :
 */
 
  
@@ -685,8 +685,8 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 }
 
 /*
-	#] poly_factorize_argument :
-	#[ poly_factorize_dollar :
+  	#] poly_factorize_argument : 
+  	#[ poly_factorize_dollar :
 */
 
 /**  Factorization of dollar variables
@@ -765,8 +765,8 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 }
 
 /*
-	#] poly_factorize_dollar :
-	#[ poly_factorize_expression :
+  	#] poly_factorize_dollar : 
+  	#[ poly_factorize_expression :
 */
 
 WORD poly_factorize_expression(EXPRESSIONS expr) {
@@ -775,16 +775,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	cout << "CALL : poly_factorize_expression" << endl;
 #endif
 
-	cout << "CALL : poly_factorize_expression" << endl;
 	GETIDENTITY;
 	
 	WORD *term = TermMalloc("poly_factorize_expression");
 
 	FILEHANDLE *f;
-	POSITION position, scrpos;
-	WORD *oldPOfill;
+	POSITION pos;
 	
-	// why necessary?
 	swap(AR.infile, AR.outfile);
 	
 	if ( expr->status == HIDDENGEXPRESSION ) {
@@ -794,21 +791,21 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		AR.InInBuf = 0; f = AR.infile;   AR.GetFile = 0;
 	}
 
-	if (expr->numdummies > 0 ) {
+	if (expr->numdummies > 0) {
 		MesPrint("ERROR: factorization with dummy indices not implemented");
 		Terminate(1);
 	}
 	
-	if ( f->handle >= 0 ) {
-		scrpos = expr->onfile;
-		SeekFile(f->handle,&scrpos,SEEK_SET);
-		if ( ISNOTEQUALPOS(scrpos,expr->onfile) ) {
-			MesPrint(":::Error in Scratch file");
+	if (f->handle >= 0) {
+		pos = expr->onfile;
+		SeekFile(f->handle,&pos,SEEK_SET);
+		if (ISNOTEQUALPOS(pos,expr->onfile)) {
+			MesPrint("ERROR: something wrong in scratch file [poly_factorize_expression]");
 			Terminate(1);
 		}
 		f->POposition = expr->onfile;
 		f->POfull = f->PObuffer;
-		if ( expr->status == HIDDENGEXPRESSION )
+		if (expr->status == HIDDENGEXPRESSION)
 			AR.InHiBuf = 0;
 		else
 			AR.InInBuf = 0;
@@ -817,26 +814,17 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		f->POfill = (WORD *)((UBYTE *)(f->PObuffer)+BASEPOSITION(expr->onfile));
 	}
 
-	oldPOfill = f->POfill;
 	SetScratch(AR.infile, &(expr->onfile));
 
-	WORD tmp = GetTerm(BHEAD term);
-	
-	if (tmp <= 0) {
-		MesPrint ("error");
+	WORD size = GetTerm(BHEAD term);
+	if (size <= 0) {
+		MesPrint ("ERROR: something wrong with expresision [poly_factorize_expression]");
 		Terminate(1);
 	}
-	else {
-		term[3] = 0; // TODO
-		SeekScratch(AR.outfile,&position);
-		expr->onfile = position;
-	
-		if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) {
-			MesPrint ("error");
-			Terminate(1);
-		}
-	}
 
+	pos = expr->onfile;
+	ADDPOS(pos, size*sizeof(WORD));
+	
 	WORD *buffer = TermMalloc("poly_factorize_expression");
 	int bufpos = 0;
 	
@@ -846,34 +834,37 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 	buffer[bufpos] = 0;
 
+	swap(AR.infile, AR.outfile);
+	SetScratch(AR.outfile, &pos);
+
 	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer, false, false);
 	poly a = poly::argument_to_poly(BHEAD buffer, false, var_to_idx);
 
-	cout << "polynomial    = " << a << endl;
 	factorized_poly fac(polyfact::factorize(a));
-	cout << "factorization = " << fac << endl;
 	
 	NewSort(BHEAD0);
-	//	NewSort(BHEAD0);
 
 	int power = 0;
 	
 	for (int i=0; i<(int)fac.power.size(); i++)
 		for (int j=0; j<fac.power[i]; j++) {
-			poly::poly_to_argument(fac.factor[i], term+5, false);
+			poly::poly_to_argument(fac.factor[i], term+7, false);
 
 			power++;
 			
-			for (int *t=term; *(t+5)!=0; t+=*t-5) {
+			for (int *t=term; *(t+7)!=0; t+=*t-7) {
+
+				if (SymbolNormalize(t+7) < 0) Terminate(1);
 				
-				*t = *(t+5) + 5;
+				*t = *(t+7) + 7;
 				*(t+1) = SYMBOL;
 				*(t+2) = 4;
 				*(t+3) = FACTORSYMBOL;
 				*(t+4) = power;
 				*(t+5) = HAAKJE;
+				*(t+6) = 3;
+				*(t+7) = 0;
 				
-				if (SymbolNormalize(t+6) < 0) Terminate(1);
 				if (StoreTerm(BHEAD t)) Terminate(1);
 			}
 		}
@@ -883,51 +874,14 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		Terminate(1);
 	}
 
-	swap(AR.infile, AR.outfile);
-
-	//	LowerSortLevel();
-	
-	MesPrint ("POfill = %d",oldPOfill);
-	MesPrint ("%a",100, AM.S0->sBuffer);
-	/*
-	for (WORD *t=AM.S0->sBuffer; *t!=0; t+=*t) {
-		memcpy(oldPOfill, t, *t*sizeof(WORD));
-		oldPOfill += *oldPOfill;
-	}
-	*/
-	
-	/*
-				{
-					AN.ninterms = 0;
-					while ( GetTerm(BHEAD term) ) {
-					  AN.ninterms++;
-					  AT.WorkPointer = term + *term;
-
-					  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
-					  if ( AN.ncmod ) {
-						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
-						else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
-					  }
-					  if ( ( AR.PolyFunType > 0 ) ) error
-					  if ( Generator(BHEAD term,C->numlhs) ) {
-						LowerSortLevel(); LowerSortLevel(); goto ProcErr;
-					  }
-//					  AR.InInBuf = (curfile->POfull-curfile->PObuffer)
-//							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
-					}
-				}
-
-	*/
+	expr->vflags |= ISFACTORIZED;
 
 	TermFree(buffer,"poly_factorize_expression");
 	TermFree(term,"poly_factorize_expression");
 
-	expr->vflags |= ISFACTORIZED;
-
-	MesPrint ("done!");
 	return 0;
 }
 
 /*
-	#] poly_factorize_expression :
+  	#] poly_factorize_expression :
 */
