@@ -611,7 +611,7 @@ int poly_ratfun_mul (PHEAD WORD *term) {
  *
  *   Description
  *   ===========
- *   The method factorizes the Form-style argument argin.
+ *   This method factorizes the Form-style argument argin.
  *
  *   Notes
  *   =====
@@ -693,7 +693,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
  *
  *   Description
  *   ===========
- *   The method factorizes a dollar variable.
+ *   This method factorizes a dollar variable.
  *
  *   Notes
  *   =====
@@ -769,6 +769,18 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
   	#[ poly_factorize_expression :
 */
 
+/**  Factorization of expressions
+ *
+ *   Description
+ *   ===========
+ *   This method factorizes an expression.
+ *
+ *   Notes
+ *   =====
+ *   - The result overwrites the input expression
+ *   - Called from proces.c
+ *   - Calls polyfact::factorize
+ */
 WORD poly_factorize_expression(EXPRESSIONS expr) {
 
 #ifdef DEBUG
@@ -781,7 +793,8 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 
 	FILEHANDLE *f;
 	POSITION pos;
-	
+
+	// swap: input from output file
 	swap(AR.infile, AR.outfile);
 	
 	if ( expr->status == HIDDENGEXPRESSION ) {
@@ -791,11 +804,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		AR.InInBuf = 0; f = AR.infile;   AR.GetFile = 0;
 	}
 
+	// dummy indices are not allowed
 	if (expr->numdummies > 0) {
 		MesPrint("ERROR: factorization with dummy indices not implemented");
 		Terminate(1);
 	}
 	
+	// determine whether the expression in on file or in memory
 	if (f->handle >= 0) {
 		pos = expr->onfile;
 		SeekFile(f->handle,&pos,SEEK_SET);
@@ -813,46 +828,57 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	else {
 		f->POfill = (WORD *)((UBYTE *)(f->PObuffer)+BASEPOSITION(expr->onfile));
 	}
-
+ 
 	SetScratch(AR.infile, &(expr->onfile));
 
+	// read the first header term
 	WORD size = GetTerm(BHEAD term);
 	if (size <= 0) {
 		MesPrint ("ERROR: something wrong with expresision [poly_factorize_expression]");
 		Terminate(1);
 	}
 
+	// store position: this is where the output will go
 	pos = expr->onfile;
 	ADDPOS(pos, size*sizeof(WORD));
 	
-	WORD *buffer = TermMalloc("poly_factorize_expression");
+	// use polynomial as buffer, because it is easy to extend
+	poly buffer(BHEAD 0);
 	int bufpos = 0;
-	
+
+	// read all terms
 	while (GetTerm(BHEAD term)) {
-		memcpy (buffer+bufpos, term, *term*sizeof(WORD));
+		buffer.check_memory(bufpos);		
+		memcpy (buffer.terms + bufpos, term, *term*sizeof(WORD));
 		bufpos += *term;
 	}
 	buffer[bufpos] = 0;
 
-	swap(AR.infile, AR.outfile);
-	SetScratch(AR.outfile, &pos);
-
-	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer, false, false);
-	poly a = poly::argument_to_poly(BHEAD buffer, false, var_to_idx);
+	// parse and factorize the polynomial
+	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
+	poly a = poly::argument_to_poly(BHEAD buffer.terms, false, var_to_idx);
 
 	factorized_poly fac(polyfact::factorize(a));
 	
-	NewSort(BHEAD0);
+	// swap back: output to output file at position "pos"
+	swap(AR.infile, AR.outfile);
+	SetScratch(AR.outfile, &pos);
 
-	int power = 0;
+	// create output
+	NewSort(BHEAD0);	
+
+	int num_factors = 0;
 	
 	for (int i=0; i<(int)fac.power.size(); i++)
 		for (int j=0; j<fac.power[i]; j++) {
-			poly::poly_to_argument(fac.factor[i], term+7, false);
+			// convert factor to Form notation
+			buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
+			poly::poly_to_argument(fac.factor[i], buffer.terms+7, false);
 
-			power++;
-			
-			for (int *t=term; *(t+7)!=0; t+=*t-7) {
+			num_factors++;
+
+			// add brackets
+			for (int *t=buffer.terms; *(t+7)!=0; t+=*t-7) {
 
 				if (SymbolNormalize(t+7) < 0) Terminate(1);
 				
@@ -860,23 +886,33 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				*(t+1) = SYMBOL;
 				*(t+2) = 4;
 				*(t+3) = FACTORSYMBOL;
-				*(t+4) = power;
+				*(t+4) = num_factors;
 				*(t+5) = HAAKJE;
 				*(t+6) = 3;
 				*(t+7) = 0;
-				
+
 				if (StoreTerm(BHEAD t)) Terminate(1);
 			}
 		}
 
-	if (EndSort(BHEAD AM.S0->sBuffer,0,0) < 0) {
+	term[0] = 7 ;
+	term[1] = HAAKJE;
+	term[2] = 3;
+	term[3] = 0;
+	term[4] = num_factors;
+	term[5] = 1;
+	term[6] = 3;
+	StoreTerm(BHEAD term);
+
+	// create final output
+	if (EndSort(BHEAD NULL,0,0) < 0) {
 		LowerSortLevel();
 		Terminate(1);
 	}
 
+	// set flag
 	expr->vflags |= ISFACTORIZED;
 
-	TermFree(buffer,"poly_factorize_expression");
 	TermFree(term,"poly_factorize_expression");
 
 	return 0;
