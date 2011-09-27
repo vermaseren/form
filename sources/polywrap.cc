@@ -758,7 +758,6 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
-
 	return oldres;
 }
 
@@ -789,19 +788,23 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	
 	WORD *term = TermMalloc("poly_factorize_expression");
 
-	FILEHANDLE *f;
+	FILEHANDLE *file;
+	FILEHANDLE *oldinfile = AR.infile;
+	FILEHANDLE *oldoutfile = AR.outfile;
 	POSITION pos;
 
-	// swap: input from output file
-	swap(AR.infile, AR.outfile);
-	
-	if ( expr->status == HIDDENGEXPRESSION ) {
-		AR.InHiBuf = 0; f = AR.hidefile; AR.GetFile = 2;
+	// locate is the input	
+	if (expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
+			expr->status == INTOHIDEGEXPRESSION || expr->status == INTOHIDELEXPRESSION) {
+		AR.InHiBuf = 0; file = AR.hidefile; AR.GetFile = 2;
 	}
 	else {
-		AR.InInBuf = 0; f = AR.infile;   AR.GetFile = 0;
+		AR.InInBuf = 0; file = AR.outfile;   AR.GetFile = 0;
 	}
 
+	// read and write to expression file
+	AR.infile = AR.outfile = file;
+	
 	// dummy indices are not allowed
 	if (expr->numdummies > 0) {
 		MesPrint("ERROR: factorization with dummy indices not implemented");
@@ -809,24 +812,24 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 	
 	// determine whether the expression in on file or in memory
-	if (f->handle >= 0) {
+	if (file->handle >= 0) {
 		pos = expr->onfile;
-		SeekFile(f->handle,&pos,SEEK_SET);
+		SeekFile(file->handle,&pos,SEEK_SET);
 		if (ISNOTEQUALPOS(pos,expr->onfile)) {
 			MesPrint("ERROR: something wrong in scratch file [poly_factorize_expression]");
 			Terminate(1);
 		}
-		f->POposition = expr->onfile;
-		f->POfull = f->PObuffer;
+		file->POposition = expr->onfile;
+		file->POfull = file->PObuffer;
 		if (expr->status == HIDDENGEXPRESSION)
 			AR.InHiBuf = 0;
 		else
 			AR.InInBuf = 0;
 	}
 	else {
-		f->POfill = (WORD *)((UBYTE *)(f->PObuffer)+BASEPOSITION(expr->onfile));
+		file->POfill = (WORD *)((UBYTE *)(file->PObuffer)+BASEPOSITION(expr->onfile));
 	}
- 
+ 	
 	SetScratch(AR.infile, &(expr->onfile));
 
 	// read the first header term
@@ -876,10 +879,8 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 
 	factorized_poly fac(polyfact::factorize(a));
-	
-	// swap back: output to output file at position "pos"
-	swap(AR.infile, AR.outfile);
-	SetScratch(AR.outfile, &pos);
+
+	SetScratch(file, &pos);
 
 	// create output
 	NewSort(BHEAD0);	
@@ -928,11 +929,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		Terminate(1);
 	}
 
-	// set flag
+	// set factorized flag
 	expr->vflags |= ISFACTORIZED;
 
 	// clean up
 	TermFree(term,"poly_factorize_expression");
+	AR.infile = oldinfile;
+	AR.outfile = oldoutfile;
 	
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;

@@ -5763,6 +5763,7 @@ int DoFactorize(UBYTE *s,int par)
 			}
 			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
 			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+		  || e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION
 			) {
 				if ( par ) e->vflags |=  TOBEFACTORED;
 				else       e->vflags &= ~TOBEFACTORED;
@@ -5787,6 +5788,7 @@ int DoFactorize(UBYTE *s,int par)
 					}
 					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
 					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
+       		|| e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION
 					) {
 						if ( par ) e->vflags |=  TOBEFACTORED;
 						else       e->vflags &= ~TOBEFACTORED;
