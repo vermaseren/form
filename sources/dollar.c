@@ -1535,7 +1535,7 @@ ShortArgument:
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DoInside :
 */
 
@@ -3158,7 +3158,7 @@ getout2:			AR.SortType = oldsorttype;
 		term += term[1];
 	}
 /*
- 		#] Step 6: 
+ 		#] Step 6:
  		#[ Step 7: Numerical factors
 */
 	term = buf1content;
@@ -3246,7 +3246,7 @@ nextj:;
 }
 
 /*
-  	#] DollarFactorize : 
+  	#] DollarFactorize :
   	#[ CleanDollarFactors :
 */
 
