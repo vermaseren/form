@@ -2127,7 +2127,7 @@ const poly poly::derivative (int x) const {
 		int power = terms[i+1+x];
 
 		if (power > 0) {
-			b.check_memory(bi+terms[i]);
+			b.check_memory(bi);
 			b.termscopy(&terms[i], bi, terms[i]);
 			b[bi+1+x]--;
 			
@@ -2412,7 +2412,7 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 */
 
 // converts a form expression to a polynomial class "poly"
-const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, const map<int,int> &var_to_idx) {
+const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar, const map<int,int> &var_to_idx) {
 
 	poly res(BHEAD 0);
 
@@ -2465,7 +2465,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, const map<i
 	// normalize, since the Form order is probably not the polynomial order
 	// for multiple variables
 
-	if (AN.poly_num_vars > 1)
+	if (sort_univar || AN.poly_num_vars>1)
 		res.normalize();
 
 	return res;

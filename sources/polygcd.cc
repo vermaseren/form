@@ -746,25 +746,32 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 				
 		poly gcd(lcmodI * gcd_Euclidean(amodI,bmodI));
 
-		// for each power in the gcd, generate an equation if needed
-		int si=1, col=0, midx=0;
-
-		for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
-			int pow = gcd[gi+1+x[0]];
-
-			while (si<sred[0] && sred[si+1+x[0]] == pow) {
-				if (numg < (int)M[midx].size()) 
-					M[midx][numg].push_back(sred[si+1+AN.poly_num_vars]);
-				si+=s[si];
-				col++;
-			}
-
-			if (numg < (int)V[midx].size()) 
-				V[midx][numg] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+		// if correct gcd
+		if (gcd[2+x[0]] == sred[2+x[0]]) {
 			
-			midx++;
+		// for each power in the gcd, generate an equation if needed
+			int si=1, midx=0;
+			
+			for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
+				int pow = gcd[gi+1+x[0]];
+				
+				while (si<sred[0] && sred[si+1+x[0]] == pow) {
+					if (numg < (int)M[midx].size()) 
+						M[midx][numg].push_back(sred[si+1+AN.poly_num_vars]);
+					si+=s[si];
+				}
+				
+				if (numg < (int)V[midx].size()) 
+					V[midx][numg] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+				
+				midx++;
+			}
 		}
-
+		else {
+			// incorrect gcd
+			numg--;
+		}
+		
 		// multiply polynomials by the lists to obtain new ones
 		sparse_interpolation_mul_poly(ared,amul);
 		sparse_interpolation_mul_poly(bred,bmul);
@@ -786,7 +793,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 			}
 			
 			// normalize row
-			WORD x = M[i][j][j];
+			WORD x = M[i][j][j]; // WORD for GetModInverses
 			GetModInverses(x + (x<0?a.modp:0), a.modp, &x, NULL);
 			for (int k=0; k<n; k++) 
 				M[i][j][k] = (M[i][j][k]*x) % a.modp;
@@ -818,12 +825,12 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 		i++;
 		ri += res[ri];
 	}
-	res[0]=ri;                                // total length
+	res[0]=ri;                                    // total length
 	res.setmod(a.modp,1);
 
 	// consistency check
 	if (!poly::divides(res,a) || !poly::divides(res,b)) res = poly(BHEAD 0);
-	
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : gcd_modular_sparse_interpolation("
 			 << a << "," << b << "," << x << "," << lc << "," << s <<") = " << res << endl;

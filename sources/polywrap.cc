@@ -116,7 +116,7 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 	
 	// Calculate gcd
 	while (*argin != 0) {
-		poly a(poly::argument_to_poly(BHEAD argin, true, var_to_idx));
+		poly a(poly::argument_to_poly(BHEAD argin, true, true, var_to_idx));
 		if (modp > 0) a.setmod(modp,1);
 		gcd = polygcd::gcd(gcd, a);
 		argin += *argin;
@@ -172,15 +172,13 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 		Terminate(1);
 	}
 	
-	num = poly::argument_to_poly(BHEAD a, true, var_to_idx);
+	num = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx);
 	num.setmod(modp,1);
-	if (!clean) num.normalize();
 	NEXTARG(a);
 	
 	if (a < astop) {
-		den = poly::argument_to_poly(BHEAD a, true, var_to_idx);
+		den = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx);
 		den.setmod(modp,1);
-		if (!clean) den.normalize();
 		NEXTARG(a);
 	}
 	else {
@@ -628,7 +626,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables(BHEAD argin, true, false);
 			 
- 	poly a(poly::argument_to_poly(BHEAD argin, true, var_to_idx));
+ 	poly a(poly::argument_to_poly(BHEAD argin, true, true, var_to_idx));
 
 	// check for modulus calculus
 	if (AC.ncmod!=0) {
@@ -710,7 +708,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables(BHEAD argin, false, false);
 			 
- 	poly a(poly::argument_to_poly(BHEAD argin, false, var_to_idx));
+ 	poly a(poly::argument_to_poly(BHEAD argin, false, true, var_to_idx));
 
 	// check for modulus calculus
 	if (AC.ncmod!=0) {
@@ -855,8 +853,27 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	buffer[bufpos] = 0;
 
 	// parse and factorize the polynomial
+	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
-	poly a = poly::argument_to_poly(BHEAD buffer.terms, false, var_to_idx);
+	
+	poly a = poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx);
+
+	// check for modulus calculus
+	if (AC.ncmod!=0) {
+		if (ABS(AC.ncmod)>1) {
+			MUNLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
+			MLOCK(ErrorMessageLock);
+			Terminate(1);
+		}
+		if (AN.poly_num_vars > 1) {
+			MUNLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
+			MLOCK(ErrorMessageLock);
+			Terminate(1);
+		}
+		a.setmod(*AC.cmod, 1);
+	}
 
 	factorized_poly fac(polyfact::factorize(a));
 	
@@ -895,6 +912,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			}
 		}
 
+	// add constant term with the numbers of factors
 	term[0] = 7 ;
 	term[1] = HAAKJE;
 	term[2] = 3;
@@ -913,7 +931,11 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	// set flag
 	expr->vflags |= ISFACTORIZED;
 
+	// clean up
 	TermFree(term,"poly_factorize_expression");
+	
+	if (AN.poly_num_vars > 0)
+		delete AN.poly_vars;
 
 	return 0;
 }

@@ -59,10 +59,11 @@ using namespace std;
 const string factorized_poly::tostring () const {
 	
 	// empty
-	string res;
 	if (factor.size()==0) 
-		res += "no_factors";
+		return "no_factors";
 
+	string res;
+	
 	// polynomial
 	for (int i=0; i<(int)factor.size(); i++) {
 		if (i>0) res += "*";
@@ -928,7 +929,7 @@ const factorized_poly polyfact::squarefree_factors_Yun (const poly &_a) {
 	
 	int pow = 1;
 	int x = a.first_variable();
-	
+
 	poly b(a.derivative(x));
 	poly c(polygcd::gcd(a,b));
 

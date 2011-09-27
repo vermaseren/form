@@ -120,7 +120,7 @@ public:
 
 	// conversion from/to form notation
 	static const std::map<int,int> extract_variables (PHEAD WORD *, bool, bool);
-	static const poly argument_to_poly (PHEAD WORD *, bool, const std::map<int,int> &);
+	static const poly argument_to_poly (PHEAD WORD *, bool, bool, const std::map<int,int> &);
 	static void poly_to_argument (const poly &, WORD *, bool);
 	int size_of_form_notation ();
 	const poly & normalize ();
