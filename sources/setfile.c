@@ -1072,10 +1072,13 @@ int TryFileSetups()
 		c = GetInput();
 		if ( c == '*' || c == '\n' ) {
 			while ( c != '\n' && c != ENDOFINPUT ) c = GetInput();
+			if ( c == ENDOFINPUT ) goto eoi;
 			continue;
 		}
+		if ( c == ENDOFINPUT ) goto eoi;
 		if ( c != '#' ) break;
 		c = GetInput();
+		if ( c == ENDOFINPUT ) goto eoi;
 		if ( c != '-' && c != '+' && c != ':' ) break;
 		if ( c != ':' ) {
 			while ( c != '\n' && c != ENDOFINPUT ) c = GetInput();
@@ -1083,6 +1086,7 @@ int TryFileSetups()
 		}
 		s = buff;
 		while ( ( c = GetInput() ) == ' ' || c == '\t' || c == '\r' ) {}
+		if ( c == ENDOFINPUT ) break;
 		if ( c == LINEFEED ) continue;
 		if ( c == 0 || c == ENDOFINPUT ) break;
 		while ( c != LINEFEED ) {
@@ -1114,10 +1118,13 @@ nextline:;
 	AC.CurrentStream->eqnum = eqnum;
 	ClearPushback();
 	return(error);
+eoi:
+	MesPrint("Input file without a program.");
+	return(-1);
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
