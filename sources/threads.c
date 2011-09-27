@@ -2345,7 +2345,6 @@ int InParallelProcessor()
 				e->partodo = 0;
 				continue;
 			}
-MesPrint(" i = %d; e->vflags = %d",i,e->vflags);
 /*
 			This expression should go to an idle worker
 */
