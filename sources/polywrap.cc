@@ -784,6 +784,8 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	cout << "CALL : poly_factorize_expression" << endl;
 #endif
 
+	if (expr->vflags & ISFACTORIZED) return 0;
+	
 	GETIDENTITY;
 	
 	WORD *term = TermMalloc("poly_factorize_expression");
