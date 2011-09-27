@@ -5758,6 +5758,9 @@ int DoFactorize(UBYTE *s,int par)
 	if ( *s == 0 ) {
 		for ( i = NumExpressions-1; i >= 0; i-- ) {
 			e = Expressions+i;
+			if ( e->replace >= 0 ) {
+				e = Expressions + e->replace;
+			}
 			if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
 			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
 			) {
@@ -5779,6 +5782,9 @@ int DoFactorize(UBYTE *s,int par)
 				c = *s; *s = 0;
 				if ( GetName(AC.exprnames,t,&number,NOAUTO) == CEXPRESSION ) {
 					e = Expressions+number;
+					if ( e->replace >= 0 ) {
+						e = Expressions + e->replace;
+					}
 					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
 					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
 					) {
@@ -5805,5 +5811,5 @@ int DoFactorize(UBYTE *s,int par)
 }
 
 /*
-  	#] DoFactorize : 
+  	#] DoFactorize :
 */

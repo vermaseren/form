@@ -1627,6 +1627,8 @@ bucketstolen:;
 				AN.ninterms += dd;
 				if ( EndSort(BHEAD AT.S0->sBuffer,0,0) < 0 ) goto ProcErr;
 				e->numdummies = AR.MaxDum - AM.IndDum;
+				if ( e->vflags & TOBEFACTORED)
+						poly_factorize_expression(e);
 				if ( AT.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
@@ -1671,7 +1673,7 @@ bucketstolen:;
 
 				} break;
 /*
-			#] DOONEEXPRESSION :
+			#] DOONEEXPRESSION : 
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat
@@ -2369,7 +2371,7 @@ MesPrint(" i = %d; e->vflags = %d",i,e->vflags);
 }
 
 /*
-  	#] InParallelProcessor :
+  	#] InParallelProcessor : 
   	#[ ThreadsProcessor :
 */
 /**
@@ -3006,6 +3008,7 @@ NextBucket:;
 			e->numdummies = AB[id]->R.MaxDum - AM.IndDum;
 		AR0.expchanged |= AB[id]->R.expchanged;
 	}
+	if ( e->vflags & TOBEFACTORED ) poly_factorize_expression(e);
 /*
 	And wait for all to be clean.
 */
@@ -3017,7 +3020,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor : 
+  	#] ThreadsProcessor :
   	#[ LoadReadjusted :
 */
 /**
