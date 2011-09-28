@@ -797,6 +797,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	FILEHANDLE *oldoutfile = AR.outfile;
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
+	WORD *oldworkpointer;
 	
 	// locate is the input	
 	if (expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
@@ -924,8 +925,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				*(term+2) = 4;
 				*(term+3) = FACTORSYMBOL;
 				*(term+4) = num_factors;
-				
-				Generator(term, C->numlhs);
+				oldworkpointer = AT.WorkPointer;
+				{ WORD *t, *w, i;
+					t = term; i = *term; w = AT.WorkPointer;
+					NCOPY(w,t,i);
+				}
+				Generator(BHEAD oldworkpointer, C->numlhs);
+				AT.WorkPointer = oldworkpointer;
 			}
 		}
 
@@ -935,7 +941,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		term[1] = num_factors;
 		term[2] = 1;
 		term[3] = 3;
-		Generator(term, C->numlhs);
+		oldworkpointer = AT.WorkPointer;
+		{ WORD *t, *w, i;
+			t = term; i = *term; w = AT.WorkPointer;
+			NCOPY(w,t,i);
+		}
+		Generator(BHEAD oldworkpointer, C->numlhs);
+		AT.WorkPointer = oldworkpointer;
 	}
 	
 	// create final output
