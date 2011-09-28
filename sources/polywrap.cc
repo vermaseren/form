@@ -854,15 +854,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 
 	// read all terms
 	while (GetTerm(BHEAD term)) {
-		buffer.check_memory(bufpos);		
-
 		// substitute non-symbols by extra symbols
+		buffer.check_memory(bufpos);		
 		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf) < 0) {
 			MesCall("ERROR: in LocalConvertToPoly [factorize_expression]");
 			Terminate(-1);
 			return(-1);
 		}
-		
 		bufpos += *(buffer.terms + bufpos);
 	}
 	buffer[bufpos] = 0;

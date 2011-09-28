@@ -1622,7 +1622,7 @@ const factorized_poly polyfact::factorize (const poly &a) {
 	// No variables, so just one factor
 	if (x.size() == 0) {
 		factorized_poly res;
-		if (a.is_one()) return res;
+		if (a.is_zero()) return res;
 		res.add_factor(a,1);
 		return res;
 	}
