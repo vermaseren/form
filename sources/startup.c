@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 #include "form3.h"
 #include "inivar.h"
@@ -299,7 +299,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -401,7 +401,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -609,7 +609,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -646,6 +646,15 @@ VOID StartVariables()
 	set_sub(AC.separators,AC.separators,AC.separators);
 	set_set(',',AC.separators);
 	set_set('|',AC.separators);
+
+	AM.BracketFactors[0] = 8;
+	AM.BracketFactors[1] = SYMBOL;
+	AM.BracketFactors[2] = 4;
+	AM.BracketFactors[3] = FACTORSYMBOL;
+	AM.BracketFactors[4] = 1;
+	AM.BracketFactors[5] = 1;
+	AM.BracketFactors[6] = 1;
+	AM.BracketFactors[7] = 3;
 
 	AM.SkipClears = 0;
 	AC.OutputMode = 72;
@@ -1088,6 +1097,7 @@ WORD IniVars()
 #endif
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
+	AO.FactorMode = 0;
 	C->Pointer = C->Buffer;
 
 	AP.PreOut = 0;
@@ -1101,7 +1111,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1171,7 +1181,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1340,7 +1350,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1419,7 +1429,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1497,7 +1507,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
  		#[ PrintRunningTime :
 */
 
@@ -1537,6 +1547,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 

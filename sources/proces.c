@@ -74,6 +74,8 @@ WORD Processor()
 	CBUF *CC = cbuf+AT.ebufnum;
 	WORD **w, *cpo, *cbo;
 	FILEHANDLE *curfile, *oldoutfile = AR.outfile;
+	WORD oldBracketOn = AR.BracketOn;
+	WORD *oldBrackBuf = AT.BrackBuf;
 #ifdef WITHPTHREADS
 	int OldMultiThreaded = AS.MultiThreaded, Oldmparallelflag = AC.mparallelflag;
 #endif
@@ -317,6 +319,10 @@ commonread:;
 				}
 				AR.DeferFlag = AC.ComDefer;
 				AR.Eside = RHSIDE;
+				if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
+					AR.BracketOn = 1;
+					AT.BrackBuf = AM.BracketFactors;
+				}
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
 					if ( ThreadsProcessor(e,LastExpression) ) {
@@ -395,8 +401,11 @@ commonread:;
 					}
 					e->numdummies = AR.MaxDum - AM.IndDum;
 					UpdateMaxSize();
-					if ( e->vflags & TOBEFACTORED)
+					AR.BracketOn = oldBracketOn;
+					AT.BrackBuf = oldBrackBuf;
+					if ( ( e->vflags & TOBEFACTORED ) != 0 ) {
 						poly_factorize_expression(e);
+					}
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
@@ -600,7 +609,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -3917,7 +3926,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

@@ -1530,11 +1530,17 @@ bucketstolen:;
 				POSITION position, outposition;
 				FILEHANDLE *fi, *fout, *oldoutfile;
 				LONG dd = 0;
+				WORD oldBracketOn = AR.BracketOn;
+				WORD *oldBrackBuf = AT.BrackBuf;
 				e = Expressions + AR.exprtodo;
 				i = AR.exprtodo;
 				AR.CurExpr = i;
 				AR.SortType = AC.SortType;
 				AR.expchanged = 0;
+				if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
+					AR.BracketOn = 1;
+					AT.BrackBuf = AM.BracketFactors;
+				}
 
 				position = AS.OldOnFile[i];
 				if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION ) {
@@ -1627,6 +1633,8 @@ bucketstolen:;
 				AN.ninterms += dd;
 				if ( EndSort(BHEAD AT.S0->sBuffer,0,0) < 0 ) goto ProcErr;
 				e->numdummies = AR.MaxDum - AM.IndDum;
+				AR.BracketOn = oldBracketOn;
+				AT.BrackBuf = oldBrackBuf;
 				if ( e->vflags & TOBEFACTORED)
 						poly_factorize_expression(e);
 				if ( AT.S0->TermsLeft )   e->vflags &= ~ISZERO;
@@ -1673,7 +1681,7 @@ bucketstolen:;
 
 				} break;
 /*
-			#] DOONEEXPRESSION : 
+			#] DOONEEXPRESSION :
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat

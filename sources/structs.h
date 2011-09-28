@@ -1376,11 +1376,12 @@ struct M_const {
     WORD    ggIndentSpace;
     WORD    gShortStatsMax;        /**< For  On FewerStatistics 10; */
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
-	WORD	gextrasymbols;
-	WORD	ggextrasymbols;
+    WORD    gextrasymbols;
+    WORD    ggextrasymbols;
+    WORD    BracketFactors[8];
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1790,7 +1791,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1889,7 +1890,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -2121,8 +2122,9 @@ struct O_const {
     WORD    FortFirst;             /* (O) Only in sch.c */
     WORD    DoubleFlag;            /* (O) Output in double precision */
     WORD    IndentSpace;           /* For indentation in output */
+    WORD    FactorMode;            /* When the output should be written as factors */
     UBYTE   FortDotChar;           /* (O) */
-	PADPOINTER(4,3,11,1);
+	PADPOINTER(4,3,12,1);
 };
 /*
  		#] O : 

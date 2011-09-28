@@ -1760,6 +1760,9 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 					while ( n > 0 && ( *b++ == *t++ ) ) { n--; }
 					if ( n <= 0 && ( ( AO.InFbrack < AM.FortranCont )
 					|| ( lowestlevel == 0 ) ) ) {
+/*
+						We continue inside a bracket.
+*/
 						AO.IsBracket = 1;
 						if ( ( prtf & PRINTCONTENTS ) != 0 ) {
 							AO.NumInBrack++;
@@ -1776,15 +1779,23 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 					t = term + 1;
 					n = WORDDIF(stopper,t);
 				}
+/*
+				Close the bracket
+*/
 				if ( *lbrac ) {
 					if ( ( prtf & PRINTCONTENTS ) ) PrtTerms();
 					TOKENTOLINE(" )",")")
 					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
+					if ( AO.FactorMode && ( n == 0 ) ) {
+						TokenToLine((UBYTE *)";");
+						return(0);
+					}
 					AC.IsFortran90 = ISNOTFORTRAN90;
 					FiniLine();
 					AC.IsFortran90 = oldIsFortran90;
 					if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE
-						&& AC.OutputSpaces == NORMALFORMAT ) FiniLine();
+						&& AC.OutputSpaces == NORMALFORMAT
+						&& AO.FactorMode == 0 ) FiniLine();
 				}
 				else {
 					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
@@ -1795,12 +1806,10 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 							AC.IsFortran90 = oldIsFortran90;
 						}
 					}
-/*
-					else AO.FortFirst = 0;
-*/
 				}
-				if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
-				 && !first ) {
+				if ( AO.FactorMode == 0 ) {
+				  if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
+				   && !first ) {
 					WORD oldmode = AC.OutputMode;
 					AC.OutputMode = 0;
 					IniLine(0);
@@ -1817,16 +1826,8 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 						TokenToLine(AO.CurBufWrt);
 						TOKENTOLINE(" = ","=")
 					}
-/*
-					TokenToLine(AO.CurBufWrt);
-					TOKENTOLINE(" = ","=")
-					if ( AO.FortFirst == 0 ) {
-						TokenToLine(AO.CurBufWrt);
-					}
-					else AO.FortFirst = 0;
-*/
-				}
-				else if ( AC.OutputMode == CMODE && !first ) {
+				  }
+				  else if ( AC.OutputMode == CMODE && !first ) {
 					IniLine(0);
 					if ( AO.FortFirst == 0 ) {
 						TokenToLine(AO.CurBufWrt);
@@ -1837,20 +1838,12 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 						TokenToLine(AO.CurBufWrt);
 						TOKENTOLINE(" = ","=")
 					}
-/*
-					TokenToLine(AO.CurBufWrt);
-					if ( AO.FortFirst == 0 ) { TOKENTOLINE(" += ","+=") }
-					else {
-						TOKENTOLINE(" = ","=")
-						AO.FortFirst = 0;
-					}
-*/
-				}
-				else if ( startinline == 0 ) {
+				  }
+				  else if ( startinline == 0 ) {
 					IniLine(0);
-				}
-				AO.InFbrack = 0;
-				if ( ( *lbrac = n ) > 0 ) {
+				  }
+				  AO.InFbrack = 0;
+				  if ( ( *lbrac = n ) > 0 ) {
 					b = AO.bracket;
 					*b++ = n + 4;
 					while ( --n >= 0 ) *b++ = *t++;
@@ -1880,10 +1873,35 @@ WrtTmes:				t = term;
 						TokenToLine((UBYTE *)"   ");
 					}
 					else first = 1;
-				}
-				else {
+				  }
+				  else {
 					AO.IsBracket = 0;
 					first = 0;
+				  }
+				}
+				else {
+/*
+					Here is the code that writes the glue between two factors.
+*/
+					if ( ( *lbrac = n ) > 0 ) {
+						b = AO.bracket;
+						*b++ = n + 4;
+						while ( --n >= 0 ) *b++ = *t++;
+						*b++ = 1; *b++ = 1; *b = 3;
+					}
+					else {
+						AO.NumInBrack = 0;
+						return(0);
+					}
+					if ( first == 0 ) {
+/*						IniLine(0); */
+						TOKENTOLINE(" * ( ","*(")
+					}
+					else {
+						TOKENTOLINE(" ( ","(")
+					}
+					AO.NumInBrack = 0;
+					first = 1;
 				}
 				if ( ( prtf & PRINTCONTENTS ) != 0 ) AO.NumInBrack++;
 				else if ( WriteInnerTerm(term,first) ) goto WrtTmes;
@@ -2073,6 +2091,7 @@ WORD WriteAll()
 	int oldIsFortran90 = AC.IsFortran90;
 	POSITION pos;
 	FILEHANDLE *f;
+	EXPRESSIONS e;
 #ifdef PARALLEL
 	if ( AM.exitflag || PF.me != MASTER ) return(0);
 #else
@@ -2099,11 +2118,12 @@ WORD WriteAll()
 	AR.DeferFlag = 0;
 	while ( GetTerm(BHEAD AO.termbuf) ) {
 		t = AO.termbuf + 1;
-		n = Expressions[t[2]].status;
+		e = Expressions + AO.termbuf[3];
+		n = e->status;
 		if ( ( n == LOCALEXPRESSION || n == GLOBALEXPRESSION
 		|| n == UNHIDELEXPRESSION || n == UNHIDEGEXPRESSION ) &&
-		( ( prtf = Expressions[t[2]].printflag ) & PRINTON ) != 0 ) {
-			Expressions[t[2]].printflag = 0;
+		( ( prtf = e->printflag ) & PRINTON ) != 0 ) {
+			e->printflag = 0;
 			AO.NumInBrack = 0;
 			if ( ( prtf & PRINTLFILE ) != 0 ) {
 				if ( AC.LogHandle < 0 ) prtf &= ~PRINTLFILE;
@@ -2111,7 +2131,7 @@ WORD WriteAll()
 			AO.PrintType = prtf;
 			if ( AC.OutputMode == VORTRANMODE ) {
 				AO.OutSkip = 6;
-				if ( Optimize(t[2]) ) goto AboWrite;
+				if ( Optimize(AO.termbuf[3]) ) goto AboWrite;
 				AO.OutSkip = 3;
 				FiniLine();
 				continue;
@@ -2119,7 +2139,7 @@ WORD WriteAll()
 			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 					 AO.OutSkip = 6;
 			FiniLine();
-			AO.CurBufWrt = EXPRNAME(t[2]);
+			AO.CurBufWrt = EXPRNAME(AO.termbuf[3]);
 			TokenToLine(AO.CurBufWrt);
 			stopper = t + t[1];
 			t += SUBEXPSIZE;
@@ -2156,6 +2176,8 @@ WORD WriteAll()
 			else
 				AO.FortFirst = 0;
 			first = 1;
+			if ( ( e->vflags & ISFACTORIZED ) != 0 ) AO.FactorMode = 1;
+			else                                     AO.FactorMode = 0;
 			while ( GetTerm(BHEAD AO.termbuf) ) {
 				WORD *m;
 				GETSTOP(AO.termbuf,m);
@@ -2172,22 +2194,25 @@ WORD WriteAll()
 					goto AboWrite;
 				first = 0;
 			}
-			if ( first ) { TOKENTOLINE(" 0","0") }
-			else if ( lbrac ) {
-				if ( ( prtf & PRINTCONTENTS ) != 0 ) PrtTerms();
-				TOKENTOLINE(" )",")")
+			if ( AO.FactorMode == 0 || first ) {
+				if ( first ) { TOKENTOLINE(" 0","0") }
+				else if ( lbrac ) {
+					if ( ( prtf & PRINTCONTENTS ) != 0 ) PrtTerms();
+					TOKENTOLINE(" )",")")
+				}
+				else if ( ( prtf & PRINTCONTENTS ) != 0 ) {
+					TOKENTOLINE(" + 1 * ( ","+1*(")
+					PrtTerms();
+					TOKENTOLINE(" )",")")
+				}
+				if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE )
+					TokenToLine((UBYTE *)";");
 			}
-			else if ( ( prtf & PRINTCONTENTS ) != 0 ) {
-				TOKENTOLINE(" + 1 * ( ","+1*(")
-				PrtTerms();
-				TOKENTOLINE(" )",")")
-			}
-			if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE )
-				TokenToLine((UBYTE *)";");
 			AO.OutSkip = 3;
 			AC.IsFortran90 = ISNOTFORTRAN90;
 			FiniLine();
 			AC.IsFortran90 = oldIsFortran90;
+			AO.FactorMode = 0;
 		}
 		else {
 			do { } while ( GetTerm(BHEAD AO.termbuf) );
@@ -2212,7 +2237,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll : 
+ 		#] WriteAll :
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
