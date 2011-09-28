@@ -1785,8 +1785,13 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 				if ( *lbrac ) {
 					if ( ( prtf & PRINTCONTENTS ) ) PrtTerms();
 					TOKENTOLINE(" )",")")
-					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
-					if ( AO.FactorMode && ( n == 0 ) ) {
+					if ( AC.OutputMode == CMODE && AO.FactorMode == 0 )
+						TokenToLine((UBYTE *)";");
+					else if ( AO.FactorMode && ( n == 0 ) ) {
+/*
+						We do not want to print the term with nothing outside
+						the bracket. That is the number of factors.
+*/
 						TokenToLine((UBYTE *)";");
 						return(0);
 					}
@@ -1798,7 +1803,8 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 						&& AO.FactorMode == 0 ) FiniLine();
 				}
 				else {
-					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
+					if ( AC.OutputMode == CMODE && AO.FactorMode == 0 )
+						TokenToLine((UBYTE *)";");
 					if ( AO.FortFirst == 0 ) {
 						if ( !first ) {
 							AC.IsFortran90 = ISNOTFORTRAN90;
@@ -2043,7 +2049,7 @@ WrtTmes:				t = term;
 }
 
 /*
- 		#] WriteTerm : 
+ 		#] WriteTerm :
  		#[ WriteExpression :	WORD WriteExpression(terms,ltot)
 
 	Writes a subexpression to output.
@@ -2237,7 +2243,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll :
+ 		#] WriteAll : 
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
