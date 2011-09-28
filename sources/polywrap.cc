@@ -96,13 +96,13 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			if (AN.poly_num_vars > 1) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate polynomial GCD with modulus not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			modp = *AC.cmod;
 		}
@@ -169,7 +169,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 		MLOCK(ErrorMessageLock);
 		MesPrint ((char*)"ERROR: PolyRatFun cannot have zero arguments");
 		MUNLOCK(ErrorMessageLock);
-		Terminate(1);
+		Terminate(-1);
 	}
 	
 	num = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx);
@@ -189,7 +189,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 		MLOCK(ErrorMessageLock);
 		MesPrint ((char*)"ERROR: PolyRatFun cannot have more than two arguments");
 		MUNLOCK(ErrorMessageLock);
-		Terminate(1);
+		Terminate(-1);
 	}
 
 	if (!clean) {
@@ -366,13 +366,13 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			if (AN.poly_num_vars > 1) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			modp = *AC.cmod;
 		}
@@ -413,7 +413,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
 		MUNLOCK(ErrorMessageLock);
-		Terminate(1);
+		Terminate(-1);
 	}
 
 	// Format result in Form notation
@@ -514,13 +514,13 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			if (AN.poly_num_vars > 1) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			modp = *AC.cmod;
 		}
@@ -564,7 +564,7 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
 		MUNLOCK(ErrorMessageLock);
-		Terminate(1);
+		Terminate(-1);
 	}
 
 	// Format result in Form notation
@@ -635,13 +635,13 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			if (AN.poly_num_vars > 1) {
 				MLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
 				MUNLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			a.setmod(*AC.cmod, 1);
 		}
@@ -662,7 +662,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: factorization doesn't fit in a term");
 		MUNLOCK(ErrorMessageLock);
-		Terminate(1);
+		Terminate(-1);
 	}
 	
 	for (int i=0; i<(int)f.factor.size(); i++) 
@@ -717,13 +717,13 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 				MUNLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
 				MLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			if (AN.poly_num_vars > 1) {
 				MUNLOCK(ErrorMessageLock);
 				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
 				MLOCK(ErrorMessageLock);
-				Terminate(1);
+				Terminate(-1);
 			}
 			a.setmod(*AC.cmod, 1);
 		}
@@ -789,19 +789,22 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	GETIDENTITY;
 	
 	WORD *term = TermMalloc("poly_factorize_expression");
-
+	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	FILEHANDLE *file;
-	FILEHANDLE *oldinfile = AR.infile;
-	FILEHANDLE *oldoutfile = AR.outfile;
 	POSITION pos;
 
+	FILEHANDLE *oldinfile = AR.infile;
+	FILEHANDLE *oldoutfile = AR.outfile;
+	WORD oldBracketOn = AR.BracketOn;
+	WORD *oldBrackBuf = AT.BrackBuf;
+	
 	// locate is the input	
 	if (expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
 			expr->status == INTOHIDEGEXPRESSION || expr->status == INTOHIDELEXPRESSION) {
 		AR.InHiBuf = 0; file = AR.hidefile; AR.GetFile = 2;
 	}
 	else {
-		AR.InInBuf = 0; file = AR.outfile;   AR.GetFile = 0;
+		AR.InInBuf = 0; file = AR.outfile; AR.GetFile = 0;
 	}
 
 	// read and write to expression file
@@ -810,7 +813,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	// dummy indices are not allowed
 	if (expr->numdummies > 0) {
 		MesPrint("ERROR: factorization with dummy indices not implemented");
-		Terminate(1);
+		Terminate(-1);
 	}
 	
 	// determine whether the expression in on file or in memory
@@ -819,7 +822,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		SeekFile(file->handle,&pos,SEEK_SET);
 		if (ISNOTEQUALPOS(pos,expr->onfile)) {
 			MesPrint("ERROR: something wrong in scratch file [poly_factorize_expression]");
-			Terminate(1);
+			Terminate(-1);
 		}
 		file->POposition = expr->onfile;
 		file->POfull = file->PObuffer;
@@ -838,7 +841,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	WORD size = GetTerm(BHEAD term);
 	if (size <= 0) {
 		MesPrint ("ERROR: something wrong with expresision [poly_factorize_expression]");
-		Terminate(1);
+		Terminate(-1);
 	}
 
 	// store position: this is where the output will go
@@ -852,15 +855,21 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	// read all terms
 	while (GetTerm(BHEAD term)) {
 		buffer.check_memory(bufpos);		
-		memcpy (buffer.terms + bufpos, term, *term*sizeof(WORD));
-		bufpos += *term;
+
+		// substitute non-symbols by extra symbols
+		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf) < 0) {
+			MesCall("ERROR: in LocalConvertToPoly [factorize_expression]");
+			Terminate(-1);
+			return(-1);
+		}
+		
+		bufpos += *(buffer.terms + bufpos);
 	}
 	buffer[bufpos] = 0;
 
-	// parse and factorize the polynomial
+	// parse the polynomial
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
-	
 	poly a = poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx);
 
 	// check for modulus calculus
@@ -869,66 +878,72 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			MUNLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
 			MLOCK(ErrorMessageLock);
-			Terminate(1);
+			Terminate(-1);
 		}
 		if (AN.poly_num_vars > 1) {
 			MUNLOCK(ErrorMessageLock);
 			MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
 			MLOCK(ErrorMessageLock);
-			Terminate(1);
+			Terminate(-1);
 		}
 		a.setmod(*AC.cmod, 1);
 	}
 
+	// factorize the polynomial
 	factorized_poly fac(polyfact::factorize(a));
 
-	SetScratch(file, &pos);
-
 	// create output
+	SetScratch(file, &pos);
 	NewSort(BHEAD0);	
 
 	int num_factors = 0;
+	CBUF *C = cbuf+AC.cbufnum;
+	CBUF *CC = cbuf+AT.ebufnum;
+
+	// turn brackets on
+	AR.BracketOn = 1;
+	AT.BrackBuf = AM.BracketFactors;
 	
 	for (int i=0; i<(int)fac.power.size(); i++)
 		for (int j=0; j<fac.power[i]; j++) {
 			// convert factor to Form notation
 			buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
-			poly::poly_to_argument(fac.factor[i], buffer.terms+7, false);
-
+			poly::poly_to_argument(fac.factor[i], buffer.terms, false);
+			
 			num_factors++;
 
-			// add brackets
-			for (int *t=buffer.terms; *(t+7)!=0; t+=*t-7) {
+			for (int *t=buffer.terms; *t!=0; t+=*t) {
+				// substitute extra symbols
+				if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+					MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
+					Terminate(-1);
+					return(-1);
+				}
 
-				if (SymbolNormalize(t+7) < 0) Terminate(1);
+				// add special symbol "factor_"
+				*term = *(term+4) + 4;
+				*(term+1) = SYMBOL;
+				*(term+2) = 4;
+				*(term+3) = FACTORSYMBOL;
+				*(term+4) = num_factors;
 				
-				*t = *(t+7) + 7;
-				*(t+1) = SYMBOL;
-				*(t+2) = 4;
-				*(t+3) = FACTORSYMBOL;
-				*(t+4) = num_factors;
-				*(t+5) = HAAKJE;
-				*(t+6) = 3;
-				*(t+7) = 0;
-
-				if (StoreTerm(BHEAD t)) Terminate(1);
+				Generator(term, C->numlhs);
 			}
 		}
 
 	// add constant term with the numbers of factors
-	term[0] = 7 ;
-	term[1] = HAAKJE;
-	term[2] = 3;
-	term[3] = 0;
-	term[4] = num_factors;
-	term[5] = 1;
-	term[6] = 3;
-	StoreTerm(BHEAD term);
-
+	if (num_factors > 0) {
+		term[0] = 4 ;
+		term[1] = num_factors;
+		term[2] = 1;
+		term[3] = 3;
+		Generator(term, C->numlhs);
+	}
+	
 	// create final output
 	if (EndSort(BHEAD NULL,0,0) < 0) {
 		LowerSortLevel();
-		Terminate(1);
+		Terminate(-1);
 	}
 
 	// set factorized flag
@@ -936,8 +951,11 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 
 	// clean up
 	TermFree(term,"poly_factorize_expression");
+	
 	AR.infile = oldinfile;
 	AR.outfile = oldoutfile;
+	AR.BracketOn = oldBracketOn;
+	AT.BrackBuf = oldBrackBuf;
 	
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
