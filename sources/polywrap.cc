@@ -929,6 +929,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				{ WORD *t, *w, i;
 					t = term; i = *term; w = AT.WorkPointer;
 					NCOPY(w,t,i);
+					AT.WorkPointer = w;
 				}
 				Generator(BHEAD oldworkpointer, C->numlhs);
 				AT.WorkPointer = oldworkpointer;
@@ -945,6 +946,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		{ WORD *t, *w, i;
 			t = term; i = *term; w = AT.WorkPointer;
 			NCOPY(w,t,i);
+			AT.WorkPointer = w;
 		}
 		Generator(BHEAD oldworkpointer, C->numlhs);
 		AT.WorkPointer = oldworkpointer;
