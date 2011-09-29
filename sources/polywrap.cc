@@ -914,7 +914,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		term[7] = 3;
 
 		AT.WorkPointer += *term;
-		Generator(term, C->numlhs);
+		Generator(BHEAD term, C->numlhs);
 		AT.WorkPointer = term;
 	}
 	else {
