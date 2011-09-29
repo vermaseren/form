@@ -2877,7 +2877,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf : 
+ 		#] DoIf :
  		#[ DoIfdef :
 */
 
@@ -3955,7 +3955,7 @@ illoper:
 }
 
 /*
- 		#] PreIfEval : 
+ 		#] PreIfEval :
  		#[ PreCmp :
 */
 
@@ -4087,15 +4087,15 @@ illend:
 					else {
 						*tt = c;
 						x = TermsInExpression(numexp);
-/*[26nov2003 mt]:*/
 #ifdef PARALLEL
-/*The problem here is that only the master process can decide how many
- terms the expression contains. So we have to broadcast from master to all others
- the value of x. The corresponding procedure PF_BroadcastNumberOfTerms is in the file 
- 'parallel.c':*/
+/*
+						The problem here is that only the master process can decide how many
+						terms the expression contains. So we have to broadcast from master to all others
+						the value of x. The corresponding procedure PF_BroadcastNumberOfTerms is in the file 
+						'parallel.c':
+*/
 						x = PF_BroadcastNumberOfTerms(x);
 #endif
-/*:[26nov2003 mt]*/
 					}
 				} 
 				while ( *tt == ' ' || *tt == '\t'
@@ -4205,6 +4205,48 @@ illend:
 				*val2 = x;
 				return(s);
 			}
+			else if ( StrICmp(s,(UBYTE *)"isfactorized") == 0 ) {
+				UBYTE *tt;
+				WORD numdol, numexp;
+				*t++ = c;
+				while ( *t == ' ' || *t == '\t' || *t == '\n' || *t == '\r' ) t++;
+				if ( *t == '$' ) {
+					t++; tt = t; while (chartype[*tt] <= 1 ) tt++;
+					c = *tt; *tt = 0;
+					if ( ( numdol = GetDollar(t) ) > 0 ) {
+						if ( Dollars[numdol].factors != 0 ) x = 1;
+						else x = 0;
+					}
+					else {
+						MesPrint("@ %s should be the name of an expression or a $ variable",t-1);
+						Terminate(-1);
+					}
+					*tt = c;
+				}
+				else {
+					tt = SkipAName(t);
+					c = *tt; *tt = 0;
+					if ( GetName(AC.exprnames,t,&numexp,NOAUTO) == NAMENOTFOUND ) {
+						MesPrint("@ %s should be the name of an expression or a $ variable",t);
+						Terminate(-1);
+					}
+					else {
+						if ( ( Expressions[numexp].vflags & ISFACTORIZED ) != 0 ) x = 1;
+						else x = 0;
+					}
+					*tt = c;
+				} 
+				while ( *tt == ' ' || *tt == '\t'
+						 || *tt == '\n' || *tt == '\r' ) tt++;
+				if ( *tt != ')' ) {
+					MesPrint("@Improper use of isfactorized($var) or isfactorized(expr)");
+					Terminate(-1);
+				}
+				*type = 3;
+				s = tt+1;
+				*val2 = x;
+				return(s);
+			}
 			else *t = c;
 		}
 		else if ( *t == '=' || *t == '<' || *t == '>' || *t == '!'
@@ -4237,7 +4279,7 @@ illend:
 }
 
 /*
- 		#] pParseObject : 
+ 		#] pParseObject :
  		#[ PreCalc :
  
 		To be called when a { is encountered.

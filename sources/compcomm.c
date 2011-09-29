@@ -4168,6 +4168,52 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			else goto NoGood;
 			inp = p;
 		}
+		else if ( *p == 'i' || *p == 'I' ) { /* IsFactorized */
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
+			while ( FG.cTable[*++p] == 0 );
+			c = *p; *p = 0;
+			if ( !StrICmp(inp,(UBYTE *)"isfactorized") ) {
+				*p = c;
+				if ( c != '(' ) { /* No expression means current expression */
+				  ww = w; *w++ = IFISFACTORIZED; w++;
+				}
+				else {
+				  p++; ww = w; *w++ = IFISFACTORIZED; w++;
+				  while ( *p != ')' ) {
+					if ( *p == ',' ) { p++; continue; }
+					if ( *p == '[' || FG.cTable[*p] == 0 ) {
+						pp = p;
+						if ( ( p = SkipAName(p) ) == 0 ) {
+							MesPrint("&Improper name for an expression: '%s'",pp);
+							error = 1;
+							goto endofif;
+						}
+						c = *p; *p = 0;
+						if ( GetName(AC.exprnames,pp,&number,NOAUTO) == CEXPRESSION ) {
+							*w++ = number;
+						}
+						else if ( GetName(AC.varnames,pp,&number,NOAUTO) != NAMENOTFOUND ) {
+							MesPrint("&%s is not an expression",pp);
+							error = 1;
+							*w++ = number;
+						}
+						*p = c;
+					}
+					else {
+						MesPrint("&Illegal object in IsFactorized in if-statement");
+						error = 1;
+						while ( *p && *p != ',' && *p != ')' ) p++;
+						if ( *p == 0 || *p == ')' ) break;
+					}
+				  }
+				  p++;
+				}
+				ww[1] = w - ww;
+				gotexp = 1;
+			}
+			else goto NoGood;
+			inp = p;
+		}
 		else if ( *p == '$' ) {
 			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 			p++; inp = p;
@@ -4300,7 +4346,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf : 
+  	#] CoIf :
   	#[ CoElse :
 */
 
@@ -5737,14 +5783,14 @@ int CoFactDollar(UBYTE *inp)
 int CoFactorize(UBYTE *s) { return(DoFactorize(s,1)); }
 
 /*
-  	#] CoFactorize :
+  	#] CoFactorize : 
   	#[ CoNFactorize :
 */
 
 int CoNFactorize(UBYTE *s) { return(DoFactorize(s,0)); }
 
 /*
-  	#] CoNFactorize :
+  	#] CoNFactorize : 
   	#[ DoFactorize :
 */
 
@@ -5813,5 +5859,5 @@ int DoFactorize(UBYTE *s,int par)
 }
 
 /*
-  	#] DoFactorize :
+  	#] DoFactorize : 
 */

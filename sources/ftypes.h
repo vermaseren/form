@@ -811,6 +811,7 @@ typedef int (*TFUN1)();
 #define IFDOLLAR 6
 #define IFEXPRESSION 7
 #define IFDOLLAREXTRA 8
+#define IFISFACTORIZED 9
 #define GREATER	0
 #define GREATEREQUAL 1
 #define LESS 2

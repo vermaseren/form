@@ -99,7 +99,7 @@
 		of an id statement. The only difference is the keyword
 		MATCH vs TYPEIDNEW.
 
- 		#] Syntax : 
+ 		#] Syntax :
  		#[ GetIfDollarNum :
 */
 
@@ -241,6 +241,19 @@ WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 					r++;
 				}
 				return(0);
+			case IFISFACTORIZED:
+				r = ifp+2; j = ifp[1] - 2;
+				if ( j == 0 ) {
+					if ( ( Expressions[AR.CurExpr].vflags & ISFACTORIZED ) != 0 )
+						return(1);
+					else
+						return(0);
+				}
+				while ( --j >= 0 ) {
+					if ( ( Expressions[*r].vflags & ISFACTORIZED ) == 0 ) return(0);
+					r++;
+				}
+				return(1);
 			default:
 /*
 				Now we have a subexpression. Test first for one with a single item.
@@ -547,6 +560,27 @@ generic:;
 				coef2[0] = ncoef2;
 				coef2[1] = 1;
 				break;
+			case IFISFACTORIZED:
+				r = ifp+2; j = ifp[1] - 2;
+				if ( j == 0 ) {
+					ncoef2 = 0;
+					if ( ( Expressions[AR.CurExpr].vflags & ISFACTORIZED ) != 0 ) {
+						ncoef2 = 1;
+					}
+				}
+				else {
+					ncoef2 = 1;
+					while ( --j >= 0 ) {
+						if ( ( Expressions[*r].vflags & ISFACTORIZED ) == 0 ) {
+							ncoef2 = 0;
+							break;
+						}
+						r++;
+					}
+				}
+				coef2[0] = ncoef2;
+				coef2[1] = 1;
+				break;
 			default:
 				break;
 		}
@@ -644,7 +678,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement : 
+ 		#] DoIfStatement :
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -878,6 +912,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement : 
+  	#] If statement :
 */
 
