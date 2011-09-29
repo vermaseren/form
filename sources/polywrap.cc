@@ -784,9 +784,14 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	cout << "CALL : poly_factorize_expression" << endl;
 #endif
 
-	if (expr->vflags & ISFACTORIZED) return 0;
-	
 	GETIDENTITY;
+
+	if (AT.WorkPointer + AM.MaxTer > AT.WorkTop ) {
+		MLOCK(ErrorMessageLock);
+		MesWork();
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 	
 	WORD *term = AT.WorkPointer;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
@@ -918,8 +923,29 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		AT.WorkPointer = term;
 	}
 	else {
-		// factorize the polynomial
-		factorized_poly fac(polyfact::factorize(a));
+		factorized_poly fac;
+		
+		if (!(expr->vflags & ISFACTORIZED)) {
+			// factorize the polynomial
+			fac = polyfact::factorize(a);
+		}
+		else {
+			// already factorized, so factorize the factors
+
+			if (!a.coefficient(var_to_idx[FACTORSYMBOL],0).is_integer()) {
+				MesCall("ERROR: number of factors is not integer [factorize_expression]");
+				Terminate(-1);
+				return(-1);
+			}
+
+			int num_old_factors = a.coefficient(var_to_idx[FACTORSYMBOL],0).terms[AN.poly_num_vars+2];
+
+			for (int i=1; i<=num_old_factors; i++) {
+				factorized_poly fac2(polyfact::factorize(a.coefficient(var_to_idx[FACTORSYMBOL], i)));
+				for (int j=0; j<(int)fac2.power.size(); j++)
+					fac.add_factor(fac2.factor[j], fac2.power[j]);
+			}
+		}
 
 		// convert factors to Form notation
 		for (int i=0; i<(int)fac.power.size(); i++)

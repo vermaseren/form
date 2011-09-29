@@ -399,6 +399,9 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 				r++;
 			}
 		}
+		else if ( *t == HAAKJE) {
+			t += t[1];
+		}
 		else if ( *t >= FUNCTION ) {
 			i = FindSubterm(t);
 			t += t[1];
@@ -527,6 +530,9 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 				*tout++ = 1;
 				r++;
 			}
+		}
+		else if ( *t == HAAKJE) {
+			t += t[1];
 		}
 		else if ( *t >= FUNCTION ) {
 			i = FindLocalSubterm(BHEAD t,startebuf);

@@ -37,7 +37,6 @@
 #include <algorithm>
 #include <map>
 #include <iostream>
-
 #include "polyclass.h"
 #include "polygcd.h"
 
@@ -2330,7 +2329,7 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 															
 	// store old variables in AN.poly_vars
 	map<int,int> var_to_idx;
-	bool idx_empty = AN.poly_num_vars > 0;
+	bool idx_empty = AN.poly_num_vars == 0;
 	
 	vector<int> tmp_vars (AN.poly_num_vars);
 	for (int i=0; i<AN.poly_num_vars; i++) {
@@ -2379,8 +2378,7 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 	}
 	while (with_arghead && multiple && *e!=0);
 	
-	// AN.poly_vars will be deleted in calling function
-	// e.g. doFactorize, doGcdFunction, and PolyRatFun{Add,Mul}
+	// AN.poly_vars will be deleted in calling functions from polywrap.c
 	if (AN.poly_num_vars > 0) 
 		AN.poly_vars = new WORD[AN.poly_num_vars];
 	
@@ -2389,11 +2387,15 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 	
 	// Only sort if the index were empty, otherwise things go wrong
 	if (idx_empty) {
-		// bubble sort variables in increasing order of degree
-		// (this seems slightly better for factorization)
+		// make sure an eventual FACTORSYMBOL appear as last
+		if (var_to_idx.count(FACTORSYMBOL)) 
+			degrees[var_to_idx[FACTORSYMBOL]] = -1;
+		
+		// bubble sort variables in decreasing order of degree
+		// (this seems better for factorization)
 		for (int i=0; i<AN.poly_num_vars; i++)
 			for (int j=0; j+1<AN.poly_num_vars; j++)
-				if (degrees[j] > degrees[j+1]) {
+				if (degrees[j] < degrees[j+1]) {
 					swap(degrees[j], degrees[j+1]);
 					swap(AN.poly_vars[j], AN.poly_vars[j+1]);
 				}
