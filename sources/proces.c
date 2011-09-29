@@ -341,7 +341,11 @@ commonread:;
 					AR.MaxDum = AM.IndDum;
 					AN.ninterms = 0;
 					while ( GetTerm(BHEAD term) ) {
-					  SeekScratch(curfile,&position);
+					 SeekScratch(curfile,&position);
+					 if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
+					  StoreTerm(BHEAD term);
+					 }
+					 else {
 					  AN.ninterms++; dd = AN.deferskipped;
 					  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*(LONG)(sizeof(WORD)))) ) {
 						if ( GetMoreTerms(term) < 0 ) {
@@ -372,15 +376,16 @@ commonread:;
 						LowerSortLevel(); goto ProcErr;
 					  }
 					  AN.ninterms += dd;
-					  SetScratch(curfile,&position);
-					  if ( AR.GetFile == 2 ) {
+					 }
+					 SetScratch(curfile,&position);
+					 if ( AR.GetFile == 2 ) {
 						AR.InHiBuf = (curfile->POfull-curfile->PObuffer)
 							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
-					  }
-					  else {
+					 }
+					 else {
 						AR.InInBuf = (curfile->POfull-curfile->PObuffer)
 							-DIFBASE(position,curfile->POposition)/sizeof(WORD);
-					  }
+					 }
 					}
 					AN.ninterms += dd;
 					if ( LastExpression ) {

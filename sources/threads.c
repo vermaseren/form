@@ -1326,6 +1326,10 @@ void *RunThread(void *dummy)
 */
 				  AN.RepPoint = AT.RepCount + 1;
 
+				  if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
+				    StoreTerm(BHEAD term);
+				  }
+				  else {
 				  if ( AR.DeferFlag ) {
 					AR.CurDum = AN.IndDum = Expressions[AR.CurExpr].numdummies + AM.IndDum;
 				  }
@@ -1356,6 +1360,7 @@ void *RunThread(void *dummy)
 					Terminate(-1);
 				  }
 				  AN.ninterms++;
+				  }
 /*				  if ( AT.LoadBalancing ) { */
 					LOCK(thr->lock);
 					thr->busy = BUCKETPREPARINGTERM;
@@ -1592,6 +1597,10 @@ bucketstolen:;
 				while ( GetTerm(BHEAD term) ) {
 				  SeekScratch(fi,&position);
 				  AN.ninterms++; dd = AN.deferskipped;
+				  if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
+					  StoreTerm(BHEAD term);
+				  }
+				  else {
 				  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*(LONG)sizeof(WORD))) ) {
 					if ( GetMoreTerms(term) < 0 ) {
 					  LowerSortLevel(); goto ProcErr;
@@ -1620,6 +1629,7 @@ bucketstolen:;
 					LowerSortLevel(); goto ProcErr;
 				  }
 				  AN.ninterms += dd;
+				  }
 				  SetScratch(fi,&position);
 				  if ( fi == AR.hidefile ) {
 					AR.InHiBuf = (fi->POfull-fi->PObuffer)
@@ -1681,7 +1691,7 @@ bucketstolen:;
 
 				} break;
 /*
-			#] DOONEEXPRESSION :
+			#] DOONEEXPRESSION : 
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat
@@ -1784,7 +1794,7 @@ ProcErr:
 }
 
 /*
-  	#] RunThread :
+  	#] RunThread : 
   	#[ RunSortBot :
 */
 /**
@@ -3027,7 +3037,7 @@ ProcErr:;
 }
 
 /*
-  	#] ThreadsProcessor :
+  	#] ThreadsProcessor : 
   	#[ LoadReadjusted :
 */
 /**
