@@ -788,7 +788,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	
 	GETIDENTITY;
 	
-	WORD *term = TermMalloc("poly_factorize_expression");
+	WORD *term = AT.WorkPointer;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	FILEHANDLE *file;
 	POSITION pos;
@@ -797,7 +797,6 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	FILEHANDLE *oldoutfile = AR.outfile;
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
-	WORD *oldworkpointer;
 	
 	// locate is the input	
 	if (expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
@@ -888,68 +887,81 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		a.setmod(*AC.cmod, 1);
 	}
 
-	// factorize the polynomial
-	factorized_poly fac(polyfact::factorize(a));
-
 	// create output
 	SetScratch(file, &pos);
 	NewSort(BHEAD0);	
-
+	
 	int num_factors = 0;
 	CBUF *C = cbuf+AC.cbufnum;
 	CBUF *CC = cbuf+AT.ebufnum;
-
+	
 	// turn brackets on
 	AR.BracketOn = 1;
 	AT.BrackBuf = AM.BracketFactors;
-	
-	for (int i=0; i<(int)fac.power.size(); i++)
-		for (int j=0; j<fac.power[i]; j++) {
-			// convert factor to Form notation
-			buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
-			poly::poly_to_argument(fac.factor[i], buffer.terms, false);
+		
+	if (a.is_zero()) {
+		num_factors = 0;
+	}
+	else if (a.is_one()) {
+		num_factors = 1;
+		term[0] = 8;
+		term[1] = SYMBOL;
+		term[2] = 4;
+		term[3] = FACTORSYMBOL;
+		term[4] = 1;
+		term[5] = 1;
+		term[6] = 1;
+		term[7] = 3;
+
+		AT.WorkPointer += *term;
+		Generator(term, C->numlhs);
+		AT.WorkPointer = term;
+	}
+	else {
+		// factorize the polynomial
+		factorized_poly fac(polyfact::factorize(a));
+
+		// convert factors to Form notation
+		for (int i=0; i<(int)fac.power.size(); i++)
+			for (int j=0; j<fac.power[i]; j++) {
+				buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
+				poly::poly_to_argument(fac.factor[i], buffer.terms, false);
 			
-			num_factors++;
+				num_factors++;
 
-			for (int *t=buffer.terms; *t!=0; t+=*t) {
-				// substitute extra symbols
-				if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
-					MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
-					Terminate(-1);
-					return(-1);
-				}
+				for (int *t=buffer.terms; *t!=0; t+=*t) {
+					// substitute extra symbols
+					if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+						MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
+						Terminate(-1);
+						return(-1);
+					}
 
-				// add special symbol "factor_"
-				*term = *(term+4) + 4;
-				*(term+1) = SYMBOL;
-				*(term+2) = 4;
-				*(term+3) = FACTORSYMBOL;
-				*(term+4) = num_factors;
-				oldworkpointer = AT.WorkPointer;
-				{ WORD *t, *w, i;
-					t = term; i = *term; w = AT.WorkPointer;
-					NCOPY(w,t,i);
-					AT.WorkPointer = w;
+					// add special symbol "factor_"
+					*term = *(term+4) + 4;
+					*(term+1) = SYMBOL;
+					*(term+2) = 4;
+					*(term+3) = FACTORSYMBOL;
+					*(term+4) = num_factors;
+
+					// store term
+					AT.WorkPointer += *term;
+					Generator(BHEAD term, C->numlhs);
+					AT.WorkPointer = term;
 				}
-				Generator(BHEAD oldworkpointer, C->numlhs);
-				AT.WorkPointer = oldworkpointer;
 			}
-		}
-
+	}
+	
 	// add constant term with the numbers of factors
 	if (num_factors > 0) {
 		term[0] = 4 ;
 		term[1] = num_factors;
 		term[2] = 1;
 		term[3] = 3;
-		oldworkpointer = AT.WorkPointer;
-		{ WORD *t, *w, i;
-			t = term; i = *term; w = AT.WorkPointer;
-			NCOPY(w,t,i);
-			AT.WorkPointer = w;
-		}
-		Generator(BHEAD oldworkpointer, C->numlhs);
-		AT.WorkPointer = oldworkpointer;
+
+		AT.WorkPointer += *term;
+		Generator(BHEAD term, C->numlhs);
+		AT.WorkPointer = term;
 	}
 	
 	// create final output
@@ -959,11 +971,10 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 
 	// set factorized flag
-	expr->vflags |= ISFACTORIZED;
+	if (num_factors > 0)
+		expr->vflags |= ISFACTORIZED;
 
 	// clean up
-	TermFree(term,"poly_factorize_expression");
-	
 	AR.infile = oldinfile;
 	AR.outfile = oldoutfile;
 	AR.BracketOn = oldBracketOn;

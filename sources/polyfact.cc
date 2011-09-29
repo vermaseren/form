@@ -1616,13 +1616,12 @@ const factorized_poly polyfact::factorize (const poly &a) {
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: factorize("<<a<<")\n";
 #endif
-
 	vector<int> x = a.all_variables();
 
 	// No variables, so just one factor
 	if (x.size() == 0) {
 		factorized_poly res;
-		if (a.is_zero()) return res;
+		if (a.is_one()) return res;
 		res.add_factor(a,1);
 		return res;
 	}
