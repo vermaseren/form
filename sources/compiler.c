@@ -69,6 +69,8 @@ static KEYWORD com1commands[] = {
 	,{"format",         (TFUN)CoFormat,           TOOUTPUT,     PARTEST}
 	,{"fixindex",       (TFUN)CoFixIndex,         DECLARATION,  PARTEST}
 	,{"global",         (TFUN)CoGlobal,           DEFINITION,   PARTEST}
+	,{"gfactorized",    (TFUN)CoGlobalFactorized, DEFINITION,   PARTEST}
+	,{"globalfactorized",(TFUN)CoGlobalFactorized,DEFINITION,   PARTEST}
 	,{"goto",           (TFUN)CoGoTo,             STATEMENT,    PARTEST}
 	,{"index",          (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
 	,{"indices",        (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
@@ -76,6 +78,8 @@ static KEYWORD com1commands[] = {
 	,{"idnew",          (TFUN)CoIdNew,            STATEMENT,    PARTEST}
 	,{"idold",          (TFUN)CoIdOld,            STATEMENT,    PARTEST}
 	,{"local",          (TFUN)CoLocal,            DEFINITION,   PARTEST}
+	,{"lfactorized",    (TFUN)CoLocalFactorized,  DEFINITION,   PARTEST}
+	,{"localfactorized",(TFUN)CoLocalFactorized,  DEFINITION,   PARTEST}
 	,{"load",           (TFUN)CoLoad,             DECLARATION,  PARTEST}
 	,{"label",          (TFUN)CoLabel,            STATEMENT,    PARTEST}
 	,{"modulus",        (TFUN)CoModulus,          DECLARATION,  PARTEST}
@@ -238,9 +242,22 @@ LONG insubexpbuffers = 0;
 
 #endif
 
+#define PUTNUMBER128(t,n) { if ( n >= 2097152 ) { \
+				*t++ = ((n/128)/128)/128; *t++ = ((n/128)/128)%128; *t++ = (n/128)%128; *t++ = n%128; } \
+			else if ( n >= 16384 ) { \
+				*t++ = n/(128*128); *t++ = (n/128)%128; *t++ = n%128; } \
+			else if ( n >= 128 ) { *t++ = n/128; *t++ = n%128; }      \
+			else *t++ = n; }
+#define PUTNUMBER100(t,n) { if ( n >= 1000000 ) { \
+				*t++ = ((n/100)/100)/100; *t++ = ((n/100)/100)%100; *t++ = (n/100)%100; *t++ = n%100; } \
+			else if ( n >= 10000 ) { \
+				*t++ = n/10000; *t++ = (n/100)%100; *t++ = n%100; } \
+			else if ( n >= 100 ) { *t++ = n/100; *t++ = n%100; }   \
+			else *t++ = n; }
+
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -751,6 +768,9 @@ int CompileSubExpressions(SBYTE *tokens)
 	At this stage there are no more subexpressions.
 	Hence we can do the basic compilation.
 */
+	if ( AC.CompileLevel == 1 && AC.ToBeInFactors ) {
+		CodeFactors(tokens);
+	}
 	AC.CompileLevel--;
 	return(CodeGenerator(tokens));
 }
@@ -1017,12 +1037,15 @@ doexpr:					s += 2;
 #endif
 							AR.StoreData.dirtyflag = 1;
 						}
-/* ------------------above code added 16-may-2006 JV--------------------------*/
 						if ( *s != TFUNCLOSE ) {
 							if ( x1 == FIRSTBRACKET )
 								MesPrint("&Problems with argument of FirstBracket_");
 							else if ( x1 == TERMSINEXPR )
 								MesPrint("&Problems with argument of TermsIn_");
+							else if ( x1 == NUMFACTORS )
+								MesPrint("&Problems with argument of NumFactors_");
+							else if ( x1 == UNFACTORIZE )
+								MesPrint("&Problems with argument of UnFactorize_");
 							else
 								MesPrint("&Problems with argument of FactorIn_");
 							error = 1;
@@ -1032,7 +1055,8 @@ doexpr:					s += 2;
 						goto fin;
 					}
 				}
-				else if ( x1 == TERMSINEXPR || x1 == FACTORIN ) {
+				else if ( x1 == TERMSINEXPR || x1 == FACTORIN
+				 || x1 == NUMFACTORS || x1 == UNFACTORIZE ) {
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) goto doexpr;
 					if ( s[0] == TFUNOPEN && s[1] == TDOLLAR ) {
 						s += 2;
@@ -1043,6 +1067,10 @@ doexpr:					s += 2;
 						if ( *s != TFUNCLOSE ) {
 							if ( x1 == TERMSINEXPR )
 								MesPrint("&Problems with argument of TermsIn_");
+							else if ( x1 == NUMFACTORS )
+								MesPrint("&Problems with argument of NumFactors_");
+							else if ( x1 == UNFACTORIZE )
+								MesPrint("&Problems with argument of UnFactorize_");
 							else
 								MesPrint("&Problems with argument of FactorIn_");
 							error = 1;
@@ -1110,7 +1138,6 @@ illpoly:				MesPrint("&Illegal use of Poly_ function");
 #endif
 							AR.StoreData.dirtyflag = 1;
 						}
-/* ------------------above code added 16-may-2006 JV--------------------------*/
 					}
 					else goto illpoly;
 					if ( xx2 != POLYNORM && xx2 != POLYINTFAC ) {
@@ -1153,7 +1180,6 @@ illpoly:				MesPrint("&Illegal use of Poly_ function");
 #endif
 								AR.StoreData.dirtyflag = 1;
 							}
-/* ------------------above code added 16-may-2006 JV--------------------------*/
 						}
 						else goto illpoly;
 					}
@@ -1346,7 +1372,6 @@ dofunction:			firstsumarg = 1;
 #endif
 									AR.StoreData.dirtyflag = 1;
 								}
-/* ------------------above code added 16-may-2006 JV--------------------------*/
 								break;
 							case TINDEX:
 								*t++ = -INDEX; *t++ = x2 + AM.OffsetIndex;
@@ -1628,8 +1653,6 @@ dofunction:			firstsumarg = 1;
 #endif
 					AR.StoreData.dirtyflag = 1;
 				}
-/* ------------------above code added 15-jan-2007 JV----Bug report by T.Hahn-*/
-
 				if ( *s == LBRACE ) {
 /*
 					This should be one term that should be inserted
@@ -1883,7 +1906,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1910,6 +1933,311 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 
 /*
  		#] CompleteTerm : 
+ 		#[ CodeFactors :
+
+		This routine does the part of reading in in terms of factors.
+		If there is more than one term at this level we have only one
+		factor. In that case any expression should first be unfactorized.
+		Then the whole expression gets read as a new subexpression and finally
+		we generate factor_*subexpression.
+		If the whole has only multiplications we have factors. Then the
+		nasty thing is powers of objects and in particular powers of
+		factorized expressions or dollars.
+		For a power we generate a new subexpression of the type
+		  1+factor_+...+factor_^(power-1)
+		with which we multiply.
+
+		WE HAVE NOT YET WORRIED ABOUT SETS
+*/
+
+int CodeFactors(SBYTE *tokens)
+{
+	GETIDENTITY
+	EXPRESSIONS e = Expressions + AR.CurExpr;
+	int nfactor = 1, nparenthesis, i, last = 0;
+	SBYTE *t, *startobject, *tt, *s1, *s2, *out, *outtokens;
+	WORD nexp, subexp = 0, power, pow, x2, powfactor, first;
+/*
+	First scan the number of factors
+*/
+	t = tokens;
+	while ( *t != TENDOFIT ) {
+		while ( *t > 0 ) t++;
+		if ( *t == LPARENTHESIS || *t == LBRACE || *t == TSETOPEN || *t == TFUNOPEN ) {
+			nparenthesis = 0; t++;
+			while ( nparenthesis >= 0 ) {
+				if ( *t == LPARENTHESIS || *t == LBRACE || *t == TSETOPEN || *t == TFUNOPEN ) nparenthesis++;
+				else if ( *t == RPARENTHESIS || *t == RBRACE || *t == TSETCLOSE || *t == TFUNCLOSE ) nparenthesis--;
+				t++;
+			}
+			continue;
+		}
+		else if ( ( *t == TPLUS || *t == TMINUS ) && ( t > tokens )
+		&& ( t[-1] != TPLUS && t[-1] != TMINUS ) ) {
+			if ( t[-1] >= 0 || t[-1] == RPARENTHESIS || t[-1] == RBRACE
+			|| t[-1] == TSETCLOSE || t[-1] == TFUNCLOSE ) {
+				subexp = CodeGenerator(tokens);
+#ifdef MULBUF
+				if ( insubexpbuffers >= 0x3FFFFFL ) {
+					MesPrint("&More than 2^22 subexpressions inside one expression");
+					Terminate(-1);
+				}
+				if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
+					DoubleBuffer((void **)((VOID *)(&subexpbuffers))
+					,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+				}
+				subexpbuffers[insubexpbuffers].subexpnum = subexp;
+				subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
+				subexp = insubexpbuffers++;
+#endif
+				t = tokens;
+				*t++ = TSYMBOL; *t++ = FACTORSYMBOL;
+				*t++ = TMULTIPLY; *t++ = TSUBEXP;
+				PUTNUMBER128(t,subexp)
+				*t++ = TENDOFIT;
+				return(subexp);
+			}
+		}
+		else if ( ( *t == TMULTIPLY || *t == TDIVIDE ) && t > tokens ) {
+			nfactor++;
+		}
+		else if ( *t == TEXPRESSION ) {
+			t++;
+			nexp = 0; while ( *t >= 0 ) { nexp = nexp*128 + *t++; }
+			if ( *t == LBRACE ) continue;
+			if ( ( Expressions[nexp].vflags & ISFACTORIZED ) != 0 ) {
+				nfactor += Expressions[nexp].numfactors;
+			}
+			else { nfactor++; }
+		}
+		else if ( *t == TDOLLAR ) {
+			t++;
+			nexp = 0; while ( *t >= 0 ) { nexp = nexp*128 + *t++; }
+			if ( *t == LBRACE ) continue;
+			if ( Dollars[nexp].nfactors > 0 ) {
+				nfactor += Dollars[nexp].nfactors;
+			}
+			else { nfactor++; }
+		}
+		t++;
+	}
+/*
+	Now the real pass.
+	nfactor is a not so reliable measure for the space we need.
+*/
+	outtokens = (SBYTE *)Malloc1(((t-tokens)+(nfactor+2)*25)*sizeof(SBYTE),"CodeFactors");
+	out = outtokens;
+	t = tokens; first = 1; powfactor = 1;
+	while ( *t == TPLUS || *t == TMINUS ) { if ( *t == TMINUS ) first = -first; t++; }
+	if ( first < 0 ) {
+		*out++ = TMINUS; *out++ = TSYMBOL; *out++ = powfactor++;
+	}
+	startobject = t; power = 1;
+	while ( *t != TENDOFIT ) {
+		while ( *t > 0 ) t++;
+		if ( *t == LPARENTHESIS || *t == LBRACE || *t == TSETOPEN || *t == TFUNOPEN ) {
+			nparenthesis = 0; t++;
+			while ( nparenthesis >= 0 ) {
+				if ( *t == LPARENTHESIS || *t == LBRACE || *t == TSETOPEN || *t == TFUNOPEN ) nparenthesis++;
+				else if ( *t == RPARENTHESIS || *t == RBRACE || *t == TSETCLOSE || *t == TFUNCLOSE ) nparenthesis--;
+				t++;
+			}
+			continue;
+		}
+		else if ( ( *t == TMULTIPLY || *t == TDIVIDE ) && ( t > tokens ) ) {
+			if ( t[-1] >= 0 || t[-1] == RPARENTHESIS || t[-1] == RBRACE
+			|| t[-1] == TSETCLOSE || t[-1] == TFUNCLOSE ) {
+dolast:
+				if ( startobject ) {	/* apparently power is 1 or -1 */
+					*out++ = TPLUS;
+					if ( power < 0 ) { *out++ = TNUMBER; *out++ = 1; *out++ = TDIVIDE; }
+					s1 = startobject;
+					while ( s1 < t ) *out++ = *s1++;
+					*out++ = TMULTIPLY; *out++ = TSYMBOL; *out++ = FACTORSYMBOL;
+					*out++ = TPOWER; *out++ = TNUMBER; PUTNUMBER100(out,powfactor)
+					powfactor++;
+				}
+				if ( last ) { startobject = 0; break; }
+				startobject = t+1;
+				if ( *t == TDIVIDE ) power = -1;
+				if ( *t == TMULTIPLY ) power = 1;
+			}
+		}
+		else if ( *t == TPOWER ) {
+			pow = 1;
+			tt = t+1;
+			while ( ( *tt == TMINUS ) || ( *tt == TPLUS ) ) {
+				if ( *tt == TMINUS ) pow = -pow;
+				tt++;
+			}
+			if ( *tt == TSYMBOL ) {
+				tt++; while ( *tt >= 0 ) tt++;
+				t = tt; continue;
+			}
+			tt++; x2 = 0; while ( *tt >= 0 ) { x2 = 100*x2 + *tt++; }
+/*
+			We have an object in startobject till t. The power is
+			power*pow*x2
+*/
+			power = power*pow*x2;
+			if ( power < 0 ) { pow = -power; power = -1; }
+			else if ( power == 0 ) { t = tt; startobject = tt; continue; }
+			else { pow = power; power = 1; }
+			*out++ = TPLUS;
+			if ( pow > 1 ) {
+				subexp = GenerateFactors(pow);
+				*out++ = TSUBEXP; PUTNUMBER128(out,subexp);
+			}
+			*out++ = TSYMBOL; *out++ = FACTORSYMBOL;
+			*out++ = TPOWER; *out++ = TNUMBER; PUTNUMBER100(out,powfactor)
+			powfactor += pow;
+			if ( power > 0 ) *out++ = TMULTIPLY;
+			else *out++ = TDIVIDE;
+			s1 = startobject; while ( s1 < t ) *out++ = *s1++;
+			startobject = 0; t = tt; continue;
+		}
+		else if ( *t == TEXPRESSION ) {
+			startobject = t;
+			t++;
+			nexp = 0; while ( *t >= 0 ) { nexp = nexp*128 + *t++; }
+			if ( *t == LBRACE ) continue;
+			if ( *t == LPARENTHESIS ) {
+				nparenthesis = 0; t++;
+				while ( nparenthesis >= 0 ) {
+					if ( *t == LPARENTHESIS ) nparenthesis++;
+					else if ( *t == RPARENTHESIS ) nparenthesis--;
+					t++;
+				}
+			}
+			if ( ( Expressions[nexp].vflags & ISFACTORIZED ) == 0 ) continue;
+			if ( *t == TPOWER ) {
+				pow = 1;
+				tt = t+1;
+				while ( ( *tt == TMINUS ) || ( *tt == TPLUS ) ) {
+					if ( *tt == TMINUS ) pow = -pow;
+					tt++;
+				}
+				if ( *tt != TNUMBER ) {
+				}
+				tt++; x2 = 0; while ( *tt >= 0 ) { x2 = 100*x2 + *tt++; }
+/*
+				We have an object in startobject till t. The power is
+				power*pow*x2
+*/
+dopower:
+				power = power*pow*x2;
+				if ( power < 0 ) { pow = -power; power = -1; }
+				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
+				else { pow = power; power = 1; }
+				if ( pow > 1 ) subexp = GenerateFactors(pow);
+				for ( i = 1; i <= Expressions[nexp].numfactors; i++ ) {
+					s1 = startobject; *out++ = TPLUS;
+					while ( s1 < t ) *out++ = *s1++;
+					s2 = out;
+					*s2++ = TSYMBOL; *s2++ = FACTORSYMBOL;
+					*s2++ = TPOWER; *s2++ = TNUMBER; PUTNUMBER100(s2,i)
+					*s2 = TENDOFIT;
+					x2 = CodeGenerator(out);
+#ifdef MULBUF
+					if ( insubexpbuffers >= 0x3FFFFFL ) {
+						MesPrint("&More than 2^22 subexpressions inside one expression");
+						Terminate(-1);
+					}
+					if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
+						DoubleBuffer((void **)((VOID *)(&subexpbuffers))
+						,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+					}
+					subexpbuffers[insubexpbuffers].subexpnum = x2;
+					subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
+					x2 = insubexpbuffers++;
+#endif
+					*out++ = LBRACE; *out++ = TSUBEXP; PUTNUMBER128(out,x2)
+					*out++ = RBRACE;
+					*out++ = TMULTIPLY;
+					*out++ = TSYMBOL; *out++ = FACTORSYMBOL;
+					*out++ = TPOWER; *out++ = TNUMBER; PUTNUMBER100(out,powfactor)
+					powfactor += pow;
+					if ( pow > 1 ) {
+						*out++ = TSUBEXP; PUTNUMBER128(out,subexp)
+					}
+				}
+				startobject = 0; t = tt; continue;
+			}
+			else {
+				tt = t; pow = 1; x2 = 1; goto dopower;
+			}
+		}
+/*
+		else if ( *t == TDOLLAR ) {
+		}
+*/
+		t++;
+	}
+	if ( last == 0 ) { last = 1; goto dolast; }
+	*out = TENDOFIT;
+	e->numfactors = powfactor-1;
+	e->vflags |= ISFACTORIZED;
+	subexp = CodeGenerator(outtokens);
+#ifdef MULBUF
+	if ( insubexpbuffers >= 0x3FFFFFL ) {
+		MesPrint("&More than 2^22 subexpressions inside one expression");
+		Terminate(-1);
+	}
+	if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
+		DoubleBuffer((void **)((VOID *)(&subexpbuffers))
+		,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+	}
+	subexpbuffers[insubexpbuffers].subexpnum = subexp;
+	subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
+	subexp = insubexpbuffers++;
+#endif
+	M_free(outtokens,"CodeFactors");
+	s1 = tokens;
+	*s1++ = TSUBEXP; PUTNUMBER128(s1,subexp); *s1++ = TENDOFIT;
+	return(subexp);
+}
+
+/*
+ 		#] CodeFactors :
+ 		#[ GenerateFactors :
+*/
+
+WORD GenerateFactors(WORD n)
+{
+	WORD subexp;
+	int i;
+	SBYTE *s;
+	SBYTE *tokenbuffer = (SBYTE *)Malloc1(8*n*sizeof(SBYTE),"GenerateFactors");
+	s = tokenbuffer;
+	*s++ = TNUMBER; *s++ = 1;
+	for ( i = 1; i < n; i++ ) {
+		*s++ = TPLUS; *s++ = TSYMBOL; *s++ = FACTORSYMBOL;
+		if ( i > 1 ) {
+			*s++ = TPOWER; *s++ = TNUMBER;
+			PUTNUMBER100(s,i)
+		}
+	}
+	*s++ = TENDOFIT;
+	subexp = CodeGenerator(tokenbuffer);
+	M_free(tokenbuffer,"GenerateFactors");
+#ifdef MULBUF
+	if ( insubexpbuffers >= 0x3FFFFFL ) {
+		MesPrint("&More than 2^22 subexpressions inside one expression");
+		Terminate(-1);
+	}
+	if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
+		DoubleBuffer((void **)((VOID *)(&subexpbuffers))
+		,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+	}
+	subexpbuffers[insubexpbuffers].subexpnum = subexp;
+	subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
+	subexp = insubexpbuffers++;
+#endif
+	return(subexp);
+}
+
+/*
+ 		#] GenerateFactors : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

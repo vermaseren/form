@@ -1017,16 +1017,16 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 	
 	// add constant term with the numbers of factors
-	if (num_factors > 0) {
-		term[0] = 4 ;
-		term[1] = num_factors;
-		term[2] = 1;
-		term[3] = 3;
+//	if (num_factors > 0) {
+//		term[0] = 4 ;
+//		term[1] = num_factors;
+//		term[2] = 1;
+//		term[3] = 3;
 
-		AT.WorkPointer += *term;
-		Generator(BHEAD term, C->numlhs);
-		AT.WorkPointer = term;
-	}
+//		AT.WorkPointer += *term;
+//		Generator(BHEAD term, C->numlhs);
+//		AT.WorkPointer = term;
+//	}
 	
 	// create final output
 	if (EndSort(BHEAD NULL,0,0) < 0) {
@@ -1035,9 +1035,10 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 
 	// set factorized flag
-	if (num_factors > 0)
+	if (num_factors > 0) {
 		expr->vflags |= ISFACTORIZED;
-
+		expr->numfactors = num_factors;
+	}
 	// clean up
 	AR.infile = oldinfile;
 	AR.outfile = oldoutfile;

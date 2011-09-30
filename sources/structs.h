@@ -442,11 +442,12 @@ typedef struct ExPrEsSiOn {
 	WORD	namesize;
 	WORD	compression;
 	WORD	numdummies;
+	WORD	numfactors;
 #ifdef PARALLELCODE
     WORD    partodo;        /* Whether to be done in parallel mode */
-	PADPOINTER(2,0,11,0);
+	PADPOINTER(2,0,12,0);
 #else
-	PADPOINTER(2,0,10,0);
+	PADPOINTER(2,0,11,0);
 #endif
 } *EXPRESSIONS;
 
@@ -1381,7 +1382,7 @@ struct M_const {
     WORD    BracketFactors[8];
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1661,6 +1662,7 @@ struct C_const {
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
 	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
     WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
+    WORD    ToBeInFactors;
 #ifdef PARALLEL
     WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
     WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
@@ -1670,10 +1672,10 @@ struct C_const {
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
-	PADPOINTER((8+3*MAXNEST),68,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
+	PADPOINTER((8+3*MAXNEST),68,(41+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */

@@ -639,6 +639,25 @@ MulIn:
 				*((UWORD *)lnum) = k;
 				nnum = 1;
 				goto MulIn;
+			case NUMFACTORS:
+/*
+				Numerical function giving the number of factors in an expression.
+*/
+				t += FUNHEAD;
+				if ( *t == -EXPRESSION ) {
+					k = Expressions[t[1]].numfactors;
+				}
+				else if ( *t == -DOLLAREXPRESSION ) {
+					k = Dollars[t[1]].nfactors;
+				}
+				else {
+					pcom[ncom++] = t;
+					break;
+				}
+				if ( k == 0 ) goto NormZero;
+				*((UWORD *)lnum) = k;
+				nnum = 1;
+				goto MulIn;
 			case NUMTERMSFUN:
 /*
 				Numerical function giving the number of terms in the single argument.
@@ -2093,7 +2112,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3441,7 +3460,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
@@ -3811,8 +3830,8 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu :
-    #[ PolyNormPoly :
+  	#] DetCommu : 
+  	#[ PolyNormPoly :
 
 		Normalizes a polynomial
 */
@@ -3848,7 +3867,7 @@ WORD *PolyNormPoly (PHEAD WORD *Poly) {
 #endif
 
 /*
-	#] PolyNormPoly :
+  	#] PolyNormPoly : 
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.

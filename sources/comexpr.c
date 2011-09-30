@@ -62,21 +62,37 @@ static struct id_options {
   	#[ CoLocal :
 */
 
-int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION)); }
+int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,0)); }
 
 /*
   	#] CoLocal : 
   	#[ CoGlobal :
 */
 
-int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION)); }
+int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION,0)); }
 
 /*
   	#] CoGlobal : 
-  	#[ DoExpr:
+  	#[ CoLocalFactorized :
 */
 
-int DoExpr(UBYTE *inp, int type)
+int CoLocalFactorized(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,1)); }
+
+/*
+  	#] CoLocalFactorized : 
+  	#[ CoGlobalFactorized :
+*/
+
+int CoGlobalFactorized(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION,1)); }
+
+/*
+  	#] CoGlobalFactorized : 
+  	#[ DoExpr:
+
+
+*/
+
+int DoExpr(UBYTE *inp, int type, int par)
 {
 	GETIDENTITY
 	int error = 0;
@@ -84,6 +100,8 @@ int DoExpr(UBYTE *inp, int type)
 	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
 	POSITION pos;
 	while ( *inp == ',' ) inp++;
+	if ( par ) AC.ToBeInFactors = 1;
+	else       AC.ToBeInFactors = 0;
 	p = inp;
 	while ( *p && *p != '=' ) {
 		if ( *p == '(' ) SKIPBRA4(p)
@@ -112,12 +130,6 @@ int DoExpr(UBYTE *inp, int type)
 							*w = DROPGEXPRESSION;
 					}
 					AC.TransEname = Expressions[c2].name;
-/*
-		Original code:
-					Expressions[c2].replace = j =
-						EntVar(CEXPRESSION,0,type,0,0,0);
-		At some moment it does get the value in j but not in Expressions[c2].replace
-*/
 					j = EntVar(CEXPRESSION,0,type,0,0,0);
 					Expressions[j].node = Expressions[c2].node;
 					Expressions[c2].replace = j;
@@ -244,6 +256,7 @@ int DoExpr(UBYTE *inp, int type)
 			AT.WorkPointer = OldWork;
 			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 		}
+		AC.ToBeInFactors = 0;
 	}
 	else {	/* Variety in which expressions change property */
 /*

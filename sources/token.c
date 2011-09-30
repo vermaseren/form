@@ -547,7 +547,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize :
+ 		#] tokenize : 
  		#[ WriteTokens :
 */
 
@@ -597,7 +597,7 @@ writenumber:
 }
 
 /*
- 		#] WriteTokens :
+ 		#] WriteTokens : 
  		#[ simp1token :
 
 		Routine substitutes set elements if possible.
@@ -910,6 +910,8 @@ int simp2token(SBYTE *s)
 						}
 						else if ( ( n == (FIRSTBRACKET-FUNCTION)
 						|| n == (TERMSINEXPR-FUNCTION)
+						|| n == (NUMFACTORS-FUNCTION)
+						|| n == (UNFACTORIZE-FUNCTION)
 						|| n == (FACTORIN-FUNCTION) )
 						&& fill[-1] == TFUNOPEN ) {
 							v = s+1;
@@ -1862,19 +1864,6 @@ int simp5token(SBYTE *s, int mode)
 
 /*
  		#] simp5token : 
- 		#[ simp6token :
-
-int simp6token(SBYTE *s, int mode)
-{
-	int error = 0;
-	int n;
-	SBYTE *to = s, *fill = s, *t, *v;
-	while ( *s != TENDOFIT ) { s++; }
-	*fill++ = TENDOFIT;
-	return(error);
-}
-
- 		#] simp6token : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

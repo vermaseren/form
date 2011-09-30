@@ -479,8 +479,10 @@ typedef int (*TFUN1)();
 #define EXTRASYMFUN 100
 #define RANDOMFUNCTION 101
 #define RANPERM 102
+#define NUMFACTORS 103
+#define UNFACTORIZE 104
 
-#define MAXBUILTINFUNCTION 102
+#define MAXBUILTINFUNCTION 104
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist
