@@ -208,7 +208,7 @@ typedef struct ParallelVars {
 	LONG        numredefs;      /* size of PF.redefs */
 	int         me;             /* Internal number of task: master is 0 */
 	int         numtasks;       /* total number of tasks */
-	int         parallel;       /* flags telling the slaves to do the sorting parallel */
+	int         parallel;       /* flags telling the master and slaves to do the sorting parallel */
 	                            /* [05nov2003 mt] This flag must be set to 0 in iniModule! */
 	int         rhsInParallel;  /* flag for parallel executing even if there are RHS expressions */
 	int         mkSlaveInfile;  /* flag tells that slavebuf is used on the slaves */

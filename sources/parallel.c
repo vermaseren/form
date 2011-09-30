@@ -861,7 +861,7 @@ int PF_EndSort(void)
 	POSITION position;
 	WORD i,cc;
 
-	if ( AT.SS != AM.S0 || AC.mparallelflag != PARALLELFLAG || PF.exprtodo >= 0 ) return(0);
+	if ( AT.SS != AT.S0 || !PF.parallel ) return 0;
 
 	if ( PF.me != MASTER ) {
 /*
@@ -1555,6 +1555,8 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
  		#[ Master:
 			#[ write prototype to outfile:
 */
+		WORD oldBracketOn = AR.BracketOn;
+		WORD *oldBrackBuf = AT.BrackBuf;
 		LONG maxinterms;    /* the maximum number of terms in the next patch */
 		int cmaxinterms;    /* a variable controling the transition of maxinterms */
 		LONG termsinpatch;  /* the number of filled terms in the current patch */
@@ -1579,6 +1581,10 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) return(-1);
 		}
 		AR.Eside = RHSIDE;
+		if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
+			AR.BracketOn = 1;
+			AT.BrackBuf = AM.BracketFactors;
+		}
 /*
 			#] write prototype to outfile:
 			#[ initialize sendbuffer if necessary:
@@ -1683,10 +1689,17 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			}
 		}
 		if ( AR.outtohide ) AR.outfile = AR.hidefile;
+		PF.parallel = 1;
 		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) return(-1);
+		PF.parallel = 0;
 		if ( AR.outtohide ) {
 			AR.outfile = oldoutfile;
 			AR.hidefile->POfull = AR.hidefile->POfill;
+		}
+		AR.BracketOn = oldBracketOn;
+		AT.BrackBuf = oldBrackBuf;
+		if ( ( e->vflags & TOBEFACTORED ) != 0 ) {
+			poly_factorize_expression(e);
 		}
 		AR.GetFile = 0;
 		AR.outtohide = 0;
@@ -1814,6 +1827,10 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			PF_linterms++; AN.ninterms++; dd = AN.deferskipped;
 			AT.WorkPointer = term + *term;
 			AN.RepPoint = AT.RepCount + 1;
+			if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
+				StoreTerm(BHEAD term);
+				continue;
+			}
 			if ( AR.DeferFlag ) {
 				AR.CurDum = AN.IndDum = Expressions[AR.CurExpr].numdummies + AM.IndDum;
 			}
@@ -3545,6 +3562,8 @@ static int PF_DoOneExpr(void)/*the processor*/
 				POSITION position, outposition;
 				FILEHANDLE *fi, *fout;
 				LONG dd = 0;
+				WORD oldBracketOn = AR.BracketOn;
+				WORD *oldBrackBuf = AT.BrackBuf;
 				int i;
 				WORD *term;
 
@@ -3552,6 +3571,10 @@ static int PF_DoOneExpr(void)/*the processor*/
 				AR.CurExpr = i;
 				AR.SortType = AC.SortType;
 				AR.expchanged = 0;
+				if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
+					AR.BracketOn = 1;
+					AT.BrackBuf = AM.BracketFactors;
+				}
 
 				position = AS.OldOnFile[i];
 				if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION ) {
@@ -3587,6 +3610,10 @@ static int PF_DoOneExpr(void)/*the processor*/
 				while ( GetTerm(BHEAD term) ) {
 				  SeekScratch(fi,&position);
 				  AN.ninterms++; dd = AN.deferskipped;
+				  if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
+					  StoreTerm(BHEAD term);
+				  }
+				  else {
 				  if ( AC.CollectFun && *term <= (LONG)(AM.MaxTer/(2*sizeof(WORD))) ) {
 					if ( GetMoreTerms(term) < 0 ) {
 					  LowerSortLevel(); return(-1);
@@ -3595,7 +3622,13 @@ static int PF_DoOneExpr(void)/*the processor*/
 				  }
 				  AT.WorkPointer = term + *term;
 				  AN.RepPoint = AT.RepCount + 1;
-				  AR.CurDum = ReNumber(BHEAD term);
+				  if ( AR.DeferFlag ) {
+					AR.CurDum = AN.IndDum = Expressions[PF.exprtodo].numdummies;
+				  }
+				  else {
+					AN.IndDum = AM.IndDum;
+					AR.CurDum = ReNumber(BHEAD term);
+				  }
 				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
 				  if ( AN.ncmod ) {
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
@@ -3609,6 +3642,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 					LowerSortLevel(); return(-1);
 				  }
 				  AN.ninterms += dd;
+				  }
 				  SetScratch(fi,&position);
 				  if ( fi == AR.hidefile ) {
 					AR.InHiBuf = (fi->POfull-fi->PObuffer)
@@ -3622,6 +3656,10 @@ static int PF_DoOneExpr(void)/*the processor*/
 				AN.ninterms += dd;
 				if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) return(-1);
 				e->numdummies = AR.MaxDum - AM.IndDum;
+				AR.BracketOn = oldBracketOn;
+				AT.BrackBuf = oldBrackBuf;
+				if ( e->vflags & TOBEFACTORED)
+					poly_factorize_expression(e);
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;

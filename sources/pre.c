@@ -651,8 +651,12 @@ VOID IniModule(int type)
 	CBUF *C = cbuf+AC.cbufnum;
 	/*[05nov2003 mt]:*/ 
 #ifdef PARALLEL
-	/*To prevent FlushOut and PutOut in slaves to send a mess to a master
-		compiling a module:*/
+	/* To prevent
+	 *   (1) FlushOut() and PutOut() on the slaves to send a mess to the master
+	 *       compiling a module,
+	 *   (2) EndSort() called from poly_factorize_expression() on the master
+	 *       waits for the slaves.
+	 */
 	PF.parallel=0;
 	/*BTW, this was the bug preventing usage of more than 1 expression!*/
 #endif
