@@ -171,13 +171,15 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
+
+	poly den_num(BHEAD 1),den_den(BHEAD 1);
 	
-	num = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx);
+	num = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx, &den_num);
 	num.setmod(modp,1);
 	NEXTARG(a);
 	
 	if (a < astop) {
-		den = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx);
+		den = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx, &den_den);
 		den.setmod(modp,1);
 		NEXTARG(a);
 	}
@@ -208,7 +210,9 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 		for (int i=1; i<den[0]; i+=den[i])
 			for (int j=0; j<AN.poly_num_vars; j++)
 				den[i+1+j] -= minpower[j];
-		
+
+		num *= den_den;
+		den *= den_num;
 		poly gcd = polygcd::gcd(num,den);
 		num /= gcd;
 		den /= gcd;
@@ -873,7 +877,8 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	// parse the polynomial
 	AN.poly_num_vars = 0;
 	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
-	poly a = poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx);
+	poly den(BHEAD 0);
+	poly a(poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx, &den));
 
 	// check for modulus calculus
 	if (AC.ncmod!=0) {
@@ -907,7 +912,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	if (a.is_zero()) {
 		num_factors = 0;
 	}
-	else if (a.is_one()) {
+	else if (a.is_one() && den.is_one()) {
 		num_factors = 1;
 		term[0] = 8;
 		term[1] = SYMBOL;
@@ -938,8 +943,11 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				return(-1);
 			}
 
-			int num_old_factors = a.coefficient(var_to_idx[FACTORSYMBOL],0).terms[AN.poly_num_vars+2];
-
+			int num_old_factors = (a.coefficient(var_to_idx[FACTORSYMBOL],0)/den).terms[AN.poly_num_vars+2];
+			poly denpow(1);
+			for (int i=0; i<num_old_factors-1; i++) denpow*=den;
+			den=denpow;
+			
 			for (int i=1; i<=num_old_factors; i++) {
 				factorized_poly fac2(polyfact::factorize(a.coefficient(var_to_idx[FACTORSYMBOL], i)));
 				for (int j=0; j<(int)fac2.power.size(); j++)
@@ -947,35 +955,65 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			}
 		}
 
-		// convert factors to Form notation
-		for (int i=0; i<(int)fac.power.size(); i++)
-			for (int j=0; j<fac.power[i]; j++) {
-				buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
-				poly::poly_to_argument(fac.factor[i], buffer.terms, false);
-			
-				num_factors++;
+		// integer coefficient
+		poly num(BHEAD 1);		
+		for (int i=0; i<(int)fac.factor.size(); i++) 
+			if (fac.factor[i].is_integer())
+				num *= fac.factor[i];
+		poly gcd(polygcd::integer_gcd(num,den));
+		den/=gcd;
+		num/=gcd;
+						 
+		int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
 
-				for (int *t=buffer.terms; *t!=0; t+=*t) {
-					// substitute extra symbols
-					if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
-						MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
-						Terminate(-1);
-						return(-1);
-					}
-
-					// add special symbol "factor_"
-					*term = *(term+4) + 4;
-					*(term+1) = SYMBOL;
-					*(term+2) = 4;
-					*(term+3) = FACTORSYMBOL;
-					*(term+4) = num_factors;
-
-					// store term
-					AT.WorkPointer += *term;
-					Generator(BHEAD term, C->numlhs);
-					AT.WorkPointer = term;
-				}
+		if (!num.is_one() || !den.is_one()) {
+			term[0] = 6 + 2*n;
+			term[1] = SYMBOL;
+			term[2] = 4;
+			term[3] = FACTORSYMBOL;
+			term[4] = 1;
+			for (int i=0; i<n; i++) {
+				term[5+i]   = i<ABS(num[num[1]]) ? num[2+AN.poly_num_vars+i] : 0;
+				term[5+n+i] = i<ABS(den[den[1]]) ? den[2+AN.poly_num_vars+i] : 0;
 			}
+			term[5+2*n] = SGN(num[num[1]]) * (2*n+1);
+			AT.WorkPointer += *term;
+			Generator(BHEAD term, C->numlhs);
+			AT.WorkPointer = term;
+			
+			num_factors++;
+		}
+
+		// convert non-integer factors to Form notation
+		for (int i=0; i<(int)fac.factor.size(); i++)
+			if (!fac.factor[i].is_integer())
+				for (int j=0; j<fac.power[i]; j++) {
+					buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
+					poly::poly_to_argument(fac.factor[i], buffer.terms, false);
+
+					num_factors++;
+					
+					for (int *t=buffer.terms; *t!=0; t+=*t) {
+						// substitute extra symbols
+						if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+							MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
+							Terminate(-1);
+							return(-1);
+						}
+						
+						// add special symbol "factor_"
+						*term = *(term+4) + 4;
+						*(term+1) = SYMBOL;
+						*(term+2) = 4;
+						*(term+3) = FACTORSYMBOL;
+						*(term+4) = num_factors;
+						
+						// store term
+						AT.WorkPointer += *term;
+						Generator(BHEAD term, C->numlhs);
+						AT.WorkPointer = term;
+					}
+				}
 	}
 	
 	// add constant term with the numbers of factors

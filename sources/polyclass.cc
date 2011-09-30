@@ -2414,12 +2414,15 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 */
 
 // converts a form expression to a polynomial class "poly"
-const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar, const map<int,int> &var_to_idx) {
-
+const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar,
+																	 const map<int,int> &var_to_idx, poly *den) {
+	
 	poly res(BHEAD 0);
 
 	 // fast notation
 	if (*e == -SNUMBER) {
+		if (den!=NULL) *den = poly(BHEAD 1);
+		
 		if (e[1] == 0) {
 			res[0] = 1;
 			return res;
@@ -2431,11 +2434,14 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 				res[2+i] = 0;
 			res[2+AN.poly_num_vars] = ABS(e[1]);
 			res[3+AN.poly_num_vars] = SGN(e[1]);
+
 			return res;
 		}
 	}
 
 	if (*e == -SYMBOL) {
+		if (den!=NULL) *den = poly(BHEAD 1);
+		
 		res[0] = 4 + AN.poly_num_vars;
 		res[1] = 3 + AN.poly_num_vars;
 		for (int i=0; i<AN.poly_num_vars; i++)
@@ -2446,16 +2452,31 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 		return res;
 	}
 
+	// find denominator
+	bool free_den = den==NULL;
+	if (free_den) den = new poly(BHEAD 0);
+	*den = poly(BHEAD 1);
+
+	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
+		int n = e[i+e[i]-1]/2;
+		poly coeff(BHEAD (UWORD *)&e[i+e[i]-ABS(n)-1], ABS(n));
+		*den = *den*coeff / polygcd::integer_gcd(*den,coeff);
+	}
+
 	int ri=1;
 	
 	// ordinary notation
 	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
 		res.check_memory(ri);
-		int nc = e[i+e[i]-1]/2;                                                // length coefficient (numerator only)
-		res[ri] = ABS(nc) + AN.poly_num_vars + 2;                              // length
+		int nc = e[i+e[i]-1];                                                  // length coefficient
 		for (int j=0; j<AN.poly_num_vars; j++)
 			res[ri+1+j]=0;                                                       // powers=0
-		res.termscopy(&e[i+e[i]-2*ABS(nc)-1], ri+1+AN.poly_num_vars, ABS(nc)); // coefficient
+		res.termscopy(&e[i+e[i]-ABS(nc)], ri+1+AN.poly_num_vars, ABS(nc));     // coefficient
+		nc /= 2;                                                               // remove denominator
+		Mully(BHEAD (UWORD *)&res[ri+1+AN.poly_num_vars], &nc,
+					      (UWORD *)&den->terms[2+AN.poly_num_vars], den->terms[den->terms[1]]);
+		res[ri] = ABS(nc) + AN.poly_num_vars + 2;                              // length
+		
 		res[ri+res[ri]-1] = nc;                                                // length coefficient
 		for (int j=i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j+=2) 
 			res[ri+1+var_to_idx.find(e[j])->second] = e[j+1];                    // powers
@@ -2470,6 +2491,8 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	if (sort_univar || AN.poly_num_vars>1)
 		res.normalize();
 
+	if (free_den) delete den;
+	
 	return res;
 }
 
