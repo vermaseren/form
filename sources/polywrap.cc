@@ -943,8 +943,9 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				return(-1);
 			}
 
-			int num_old_factors = (a.coefficient(var_to_idx[FACTORSYMBOL],0)/den).terms[AN.poly_num_vars+2];
-			poly denpow(1);
+//			int num_old_factors = (a.coefficient(var_to_idx[FACTORSYMBOL],0)/den).terms[AN.poly_num_vars+2];
+			int num_old_factors = expr->numfactors;
+			poly denpow(BHEAD 1);
 			for (int i=0; i<num_old_factors-1; i++) denpow*=den;
 			den=denpow;
 			
