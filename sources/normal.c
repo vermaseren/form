@@ -645,7 +645,8 @@ MulIn:
 */
 				t += FUNHEAD;
 				if ( *t == -EXPRESSION ) {
-					k = Expressions[t[1]].numfactors;
+					k = AS.OldNumFactors[t[1]];
+/*					k = Expressions[t[1]].numfactors; */
 				}
 				else if ( *t == -DOLLAREXPRESSION ) {
 					k = Dollars[t[1]].nfactors;

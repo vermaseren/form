@@ -109,7 +109,7 @@ the errno checkup*/
 #define AWORDMASK 0xFFFFFFFF00000000L
 #define MAXLONG 0x7FFFFFFFFFFFFFFFL
 #define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[8-((8*(lo)+4*(in)+4*(wo)+(by))&7)]
-#define PADLONG(in,wo,by) UBYTE d_u_m_m_y[8-((4*(wo)+(by))&7)]
+#define PADLONG(in,wo,by) UBYTE d_u_m_m_y[8-((4*(in)+4*(wo)+(by))&7)]
 #define PADINT(wo,by) UBYTE d_u_m_m_y[4-((4*(wo)+(by))&3)]
 #define PADWORD(by) UBYTE d_u_m_m_y[4-((by)&1)]
 #else

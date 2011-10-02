@@ -135,6 +135,7 @@ WORD CleanExpr(WORD par)
 					e_out->bracketinfo = e_in->bracketinfo;
 					e_out->newbracketinfo = e_in->newbracketinfo;
 					e_out->numdummies = e_in->numdummies;
+					e_out->numfactors = e_in->numfactors;
 					e_out->vflags = e_in->vflags;
 				}
 #ifdef PARALLELCODE
@@ -168,7 +169,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -1379,6 +1380,7 @@ void UpdatePositions()
 {
 	EXPRESSIONS e = Expressions;
 	POSITION *old;
+	WORD *oldw;
 	int i;
 	if ( NumExpressions > 0 &&
 		 ( AS.OldOnFile == 0 || AS.NumOldOnFile < NumExpressions ) ) {
@@ -1394,7 +1396,30 @@ void UpdatePositions()
 			AS.NumOldOnFile = NumExpressions;
 		}
 	}
-	for ( i = 0; i < NumExpressions; i++ ) { AS.OldOnFile[i] = e[i].onfile; }
+	if ( NumExpressions > 0 &&
+		 ( AS.OldNumFactors == 0 || AS.NumOldNumFactors < NumExpressions ) ) {
+		if ( AS.OldNumFactors ) {
+			oldw = AS.OldNumFactors;
+			AS.OldNumFactors = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"numfactors pointers");
+			for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.OldNumFactors[i] = oldw[i];
+			M_free(oldw,"numfactors pointers");
+			oldw = AS.Oldvflags;
+			AS.Oldvflags = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"vflags pointers");
+			for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.Oldvflags[i] = oldw[i];
+			AS.NumOldNumFactors = NumExpressions;
+			M_free(oldw,"vflags pointers");
+		}
+		else {
+			AS.OldNumFactors = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"numfactors pointers");
+			AS.Oldvflags = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"vflags pointers");
+			AS.NumOldNumFactors = NumExpressions;
+		}
+	}
+	for ( i = 0; i < NumExpressions; i++ ) {
+		AS.OldOnFile[i] = e[i].onfile;
+		AS.OldNumFactors[i] = e[i].numfactors;
+		AS.Oldvflags[i] = e[i].vflags;
+	}
 }
 
 /*

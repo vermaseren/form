@@ -532,7 +532,7 @@ typedef struct SeTs {
 	WORD	node;
 	WORD	namesize;
 	WORD	dimension;			/* For dimensionality checks */
-	PADLONG(1,6,0);
+	PADLONG(0,6,0);
 } *SETS;
 
 /**
@@ -1675,7 +1675,7 @@ struct C_const {
 	PADPOINTER((8+3*MAXNEST),68,(41+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1697,7 +1697,10 @@ struct S_const {
 	POSITION OutFileSize;          /* ( ) Current outscratch size */
 	POSITION HideFileSize;         /* ( ) Current hidescratch size */
     POSITION *OldOnFile;           /* (S) File positions of expressions */
+    WORD    *OldNumFactors;        /* ( ) NumFactors in (old) expression */
+    WORD    *Oldvflags;            /* ( ) vflags in (old) expression */
     int     NumOldOnFile;          /* (S) Number of expressions in OldOnFile */
+    int     NumOldNumFactors;      /* (S) Number of expressions in OldNumFactors */
     int     MultiThreaded;         /* (S) Are we running multi-threaded? */
 #ifdef WITHPTHREADS
     int     MasterSort;            /* Final stage of sorting to the master */
@@ -1717,10 +1720,10 @@ struct S_const {
 #else
 	WORD    dummyword;
 #endif
-	PADLONG(4,3,0);
+	PADLONG(5,3,0);
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.

@@ -2005,8 +2005,8 @@ int CodeFactors(SBYTE *tokens)
 			t++;
 			nexp = 0; while ( *t >= 0 ) { nexp = nexp*128 + *t++; }
 			if ( *t == LBRACE ) continue;
-			if ( ( Expressions[nexp].vflags & ISFACTORIZED ) != 0 ) {
-				nfactor += Expressions[nexp].numfactors;
+			if ( ( AS.Oldvflags[nexp] & ISFACTORIZED ) != 0 ) {
+				nfactor += AS.OldNumFactors[nexp];
 			}
 			else { nfactor++; }
 		}
@@ -2109,7 +2109,7 @@ dolast:
 					t++;
 				}
 			}
-			if ( ( Expressions[nexp].vflags & ISFACTORIZED ) == 0 ) continue;
+			if ( ( AS.Oldvflags[nexp] & ISFACTORIZED ) == 0 ) continue;
 			if ( *t == TPOWER ) {
 				pow = 1;
 				tt = t+1;
@@ -2118,6 +2118,8 @@ dolast:
 					tt++;
 				}
 				if ( *tt != TNUMBER ) {
+					MesPrint("Internal problems(1) in CodeFactors");
+					return(-1);
 				}
 				tt++; x2 = 0; while ( *tt >= 0 ) { x2 = 100*x2 + *tt++; }
 /*
@@ -2130,7 +2132,8 @@ dopower:
 				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
 				else { pow = power; power = 1; }
 				if ( pow > 1 ) subexp = GenerateFactors(pow);
-				for ( i = 1; i <= Expressions[nexp].numfactors; i++ ) {
+/*				for ( i = 1; i <= Expressions[nexp].numfactors; i++ ) */
+				for ( i = 1; i <= AS.OldNumFactors[nexp]; i++ ) {
 					s1 = startobject; *out++ = TPLUS;
 					while ( s1 < t ) *out++ = *s1++;
 					s2 = out;
@@ -2167,10 +2170,53 @@ dopower:
 				tt = t; pow = 1; x2 = 1; goto dopower;
 			}
 		}
-/*
 		else if ( *t == TDOLLAR ) {
-		}
+			startobject = t;
+			t++;
+			nexp = 0; while ( *t >= 0 ) { nexp = nexp*128 + *t++; }
+			if ( *t == LBRACE ) continue;
+			if ( Dollars[nexp].nfactors == 0 ) continue;
+			if ( *t == TPOWER ) {
+				pow = 1;
+				tt = t+1;
+				while ( ( *tt == TMINUS ) || ( *tt == TPLUS ) ) {
+					if ( *tt == TMINUS ) pow = -pow;
+					tt++;
+				}
+				if ( *tt != TNUMBER ) {
+					MesPrint("Internal problems(2) in CodeFactors");
+					return(-1);
+				}
+				tt++; x2 = 0; while ( *tt >= 0 ) { x2 = 100*x2 + *tt++; }
+/*
+				We have an object in startobject till t. The power is
+				power*pow*x2
 */
+dopowerd:
+				power = power*pow*x2;
+				if ( power < 0 ) { pow = -power; power = -1; }
+				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
+				else { pow = power; power = 1; }
+				if ( pow > 1 ) subexp = GenerateFactors(pow);
+				for ( i = 1; i <= Dollars[nexp].nfactors; i++ ) {
+					s1 = startobject; *out++ = TPLUS;
+					while ( s1 < t ) *out++ = *s1++;
+					*out++ = LBRACE; *out++ = TNUMBER; PUTNUMBER128(out,i)
+					*out++ = RBRACE;
+					*out++ = TMULTIPLY;
+					*out++ = TSYMBOL; *out++ = FACTORSYMBOL;
+					*out++ = TPOWER; *out++ = TNUMBER; PUTNUMBER100(out,powfactor)
+					powfactor += pow;
+					if ( pow > 1 ) {
+						*out++ = TSUBEXP; PUTNUMBER128(out,subexp)
+					}
+				}
+				startobject = 0; t = tt; continue;
+			}
+			else {
+				tt = t; pow = 1; x2 = 1; goto dopowerd;
+			}
+		}
 		t++;
 	}
 	if ( last == 0 ) { last = 1; goto dolast; }

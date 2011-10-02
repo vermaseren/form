@@ -128,6 +128,8 @@ WORD Processor()
 	last = i;
 	for ( i = NumExpressions-1; i >= 0; i-- ) {
 		AS.OldOnFile[i] = Expressions[i].onfile;
+		AS.OldNumFactors[i] = Expressions[i].numfactors;
+		AS.Oldvflags[i] = e[i].vflags;
 		Expressions[i].vflags &= ~(ISUNMODIFIED|ISZERO);
 	}
 #ifdef WITHPTHREADS
@@ -574,10 +576,12 @@ commonread:;
 				if ( e->status == HIDELEXPRESSION ) {
 					e->status = HIDDENLEXPRESSION;
 					AS.OldOnFile[i] = e->onfile;
+					AS.OldNumFactors[i] = Expressions[i].numfactors;
 				}
 				if ( e->status == HIDEGEXPRESSION ) {
 					e->status = HIDDENGEXPRESSION;
 					AS.OldOnFile[i] = e->onfile;
+					AS.OldNumFactors[i] = Expressions[i].numfactors;
 				}
 #ifdef WITHPTHREADS
 				SetHideFiles();
@@ -1749,7 +1753,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
