@@ -1645,8 +1645,11 @@ bucketstolen:;
 				e->numdummies = AR.MaxDum - AM.IndDum;
 				AR.BracketOn = oldBracketOn;
 				AT.BrackBuf = oldBrackBuf;
-				if ( e->vflags & TOBEFACTORED)
+				if ( ( e->vflags & TOBEFACTORED ) != 0 )
 						poly_factorize_expression(e);
+				else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
+				 && ( ( e->vflags & ISFACTORIZED ) != 0 ) )
+						poly_unfactorize_expression(e);
 				if ( AT.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
@@ -3025,7 +3028,11 @@ NextBucket:;
 			e->numdummies = AB[id]->R.MaxDum - AM.IndDum;
 		AR0.expchanged |= AB[id]->R.expchanged;
 	}
-	if ( e->vflags & TOBEFACTORED ) poly_factorize_expression(e);
+	if ( ( e->vflags & TOBEFACTORED ) != 0 )
+			poly_factorize_expression(e);
+	else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
+	 && ( ( e->vflags & ISFACTORIZED ) != 0 ) )
+			poly_unfactorize_expression(e);
 /*
 	And wait for all to be clean.
 */

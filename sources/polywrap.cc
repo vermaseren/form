@@ -1053,5 +1053,30 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression :
+  	#] poly_factorize_expression : 
+  	#[ poly_unfactorize_expression :
+*/
+
+/**  Factorization of expressions
+ *
+ *   Description
+ *   ===========
+ *   This method unfactorizes an expression.
+ *
+ *   Notes
+ *   =====
+ *   - The result overwrites the input expression
+ *   - Called from proces.c
+ */
+WORD poly_unfactorize_expression(EXPRESSIONS expr) {
+
+#ifdef DEBUG
+	cout << "CALL : poly_unfactorize_expression" << endl;
+#endif
+
+	return 0;
+}
+
+/*
+  	#] poly_unfactorize_expression :
 */

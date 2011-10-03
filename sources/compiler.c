@@ -168,6 +168,7 @@ static KEYWORD com2commands[] = {
 	,{"notinparallel",  (TFUN)CoNotInParallel,    SPECIFICATION,PARTEST}
 	,{"nskip",          (TFUN)CoNoSkip,           SPECIFICATION,PARTEST}
 	,{"ntable",         (TFUN)CoNTable,           DECLARATION,  PARTEST}
+	,{"nunfactorize",   (TFUN)CoNUnFactorize,     TOOUTPUT,     PARTEST}
 	,{"nunhide",        (TFUN)CoNoUnHide,         SPECIFICATION,PARTEST}
 	,{"off",            (TFUN)CoOff,              DECLARATION,  PARTEST}
 	,{"on",             (TFUN)CoOn,               DECLARATION,  PARTEST}
@@ -210,6 +211,7 @@ static KEYWORD com2commands[] = {
 	,{"tracen",         (TFUN)CoTraceN,           STATEMENT,    PARTEST}
 	,{"transform",      (TFUN)CoTransform,        STATEMENT,    PARTEST}
 	,{"tryreplace",     (TFUN)CoTryReplace,       STATEMENT,    PARTEST}
+	,{"unfactorize",    (TFUN)CoUnFactorize,      TOOUTPUT,     PARTEST}
 	,{"unhide",         (TFUN)CoUnHide,           SPECIFICATION,PARTEST}
 	,{"while",          (TFUN)CoWhile,            STATEMENT,    PARTEST}
 };
@@ -2244,7 +2246,7 @@ dopowerd:
 }
 
 /*
- 		#] CodeFactors :
+ 		#] CodeFactors : 
  		#[ GenerateFactors :
 */
 

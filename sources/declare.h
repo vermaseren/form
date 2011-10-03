@@ -962,6 +962,8 @@ extern int    CoFactArg(UBYTE *);
 extern int    CoFactDollar(UBYTE *);
 extern int    CoFactorize(UBYTE *);
 extern int    CoNFactorize(UBYTE *);
+extern int    CoUnFactorize(UBYTE *);
+extern int    CoNUnFactorize(UBYTE *);
 extern int    DoFactorize(UBYTE *,int);
 extern int    CoFill(UBYTE *);
 extern int    CoFillExpression(UBYTE *);
@@ -1554,6 +1556,7 @@ extern int   poly_ratfun_mul(PHEAD WORD *);
 extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
+extern int   poly_unfactorize_expression(EXPRESSIONS);
 /*
   	#] Declarations :
 */

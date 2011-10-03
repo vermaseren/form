@@ -4346,7 +4346,7 @@ endofif:;
 }
 
 /*
-  	#] CoIf :
+  	#] CoIf : 
   	#[ CoElse :
 */
 
@@ -5791,6 +5791,20 @@ int CoNFactorize(UBYTE *s) { return(DoFactorize(s,0)); }
 
 /*
   	#] CoNFactorize : 
+  	#[ CoUnFactorize :
+*/
+
+int CoUnFactorize(UBYTE *s) { return(DoFactorize(s,3)); }
+
+/*
+  	#] CoUnFactorize : 
+  	#[ CoNUnFactorize :
+*/
+
+int CoNUnFactorize(UBYTE *s) { return(DoFactorize(s,2)); }
+
+/*
+  	#] CoNUnFactorize : 
   	#[ DoFactorize :
 */
 
@@ -5811,8 +5825,22 @@ int DoFactorize(UBYTE *s,int par)
 			|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
 		  || e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION
 			) {
-				if ( par ) e->vflags |=  TOBEFACTORED;
-				else       e->vflags &= ~TOBEFACTORED;
+				switch ( par ) {
+					case 0:
+						e->vflags &= ~TOBEFACTORED;
+						break;
+					case 1:
+						e->vflags |=  TOBEFACTORED;
+						e->vflags &= ~TOBEUNFACTORED;
+						break;
+					case 2:
+						e->vflags &= ~TOBEUNFACTORED;
+						break;
+					case 3:
+						e->vflags |=  TOBEUNFACTORED;
+						e->vflags &= ~TOBEFACTORED;
+						break;
+				}
 			}
 		}
 	}
@@ -5834,10 +5862,24 @@ int DoFactorize(UBYTE *s,int par)
 					}
 					if ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION
 					|| e->status == UNHIDELEXPRESSION || e->status == UNHIDEGEXPRESSION
-       		|| e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION
+					|| e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION
 					) {
-						if ( par ) e->vflags |=  TOBEFACTORED;
-						else       e->vflags &= ~TOBEFACTORED;
+						switch ( par ) {
+							case 0:
+								e->vflags &= ~TOBEFACTORED;
+								break;
+							case 1:
+								e->vflags |=  TOBEFACTORED;
+								e->vflags &= ~TOBEUNFACTORED;
+								break;
+							case 2:
+								e->vflags &= ~TOBEUNFACTORED;
+								break;
+							case 3:
+								e->vflags |=  TOBEUNFACTORED;
+								e->vflags &= ~TOBEFACTORED;
+								break;
+						}
 					}
 				}
 				else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
