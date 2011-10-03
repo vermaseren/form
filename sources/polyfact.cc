@@ -1208,6 +1208,10 @@ const vector<poly> polyfact::Berlekamp_find_factors (const poly &_a, const vecto
 	POLY_GETIDENTITY(_a);
 
 	vector<vector<WORD> > q=_q;
+
+	int rank=0;
+	for (int i=0; i<(int)q.size(); i++)
+		if (q[i]!=vector<WORD>(q[i].size(),0)) rank++;
 	
 	poly a(_a);
 	int x = a.first_variable();
@@ -1220,20 +1224,21 @@ const vector<poly> polyfact::Berlekamp_find_factors (const poly &_a, const vecto
 	vector<vector<WORD> > fac(1, vector<WORD>(n+1,0));
 
 	fac[0] = poly::to_coefficient_list(a);
-
+	bool finished=false;
+	
 	// Loop over the columns of q + constant, i.e., an exhaustive list of possible factors	
-	for (int i=1; i<n; i++) {
+	for (int i=1; i<n && !finished; i++) {
 		if (q[i] == vector<WORD>(n,0)) continue;
 
-		for (int s=0; s<p; s++) {
-			for (int j=0; j<(int)fac.size(); j++) {
-
+		for (int s=0; s<p && !finished; s++) {
+			for (int j=0; j<(int)fac.size() && !finished; j++) {
 				vector<WORD> c = polygcd::coefficient_list_gcd(fac[j], q[i], p);
 				
 				// If a non-trivial factor is found, add it to the list
 				if (c.size()!=1 && c.size()!=fac[j].size()) {
 					fac.push_back(c);
 					fac[j] = poly::coefficient_list_divmod(fac[j], c, p, 0);
+					if ((int)fac.size() == rank) finished=true;
 				}
 			}
 
