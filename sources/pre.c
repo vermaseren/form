@@ -1529,7 +1529,6 @@ int ExpandTripleDots()
 			while ( n1 < t1 || n2 < t2 ) {
 				m1 = n1;
 				if ( *n1 == *n2 && FG.cTable[*n1] != 1 ) { *s++ = *n1++; n2++; continue; }
-/*				*s++ = 0; */
 				if ( FG.cTable[*n1] == 1 && FG.cTable[*n2] == 1 ) {}
 				else if ( FG.cTable[n1[-1]] == 1 &&
 				 ( FG.cTable[*n1] == 1 || FG.cTable[*n2] == 1 ) ) {}
@@ -1538,16 +1537,20 @@ int ExpandTripleDots()
 				else {
 					n1--; n2--; s[-1] = 0; break;
 				}
+
 				if ( ( *n1 == '-' || *n1 == '+' ) && FG.cTable[*n2] == 1
-				&& FG.cTable[n1[-1]] == 1 ) {
+				 && FG.cTable[n1[-1]] == 1 ) {
 					n1--; n2--; s[-1] = 0; break;
 				}
+
 				if ( ( *n2 == '-' || *n2 == '+' ) && FG.cTable[*n1] == 1
-				&& FG.cTable[n2[-1]] == 1 ) {
+				 && FG.cTable[n2[-1]] == 1 ) {
 					n1--; n2--; s[-1] = 0; break;
 				}
-				while ( FG.cTable[n1[-1]] == 1 || n1[-1] == '+' || n1[-1] == '-' )
-					{ s--; n1--; }
+
+				while ( FG.cTable[n1[-1]] == 1 ) { s--; n1--; }
+				while ( n1[-1] == '+' || n1[-1] == '-' )
+					{ n1--; }
 				while ( FG.cTable[n2[-1]] == 1 || n2[-1] == '+' || n2[-1] == '-' )
 					n2--;
 				ParseSignedNumber(x1,n1)
@@ -1660,7 +1663,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots : 
+ 		#] ExpandTripleDots :
  		#[ FindKeyWord :
 */
 
