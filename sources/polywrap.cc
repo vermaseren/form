@@ -806,7 +806,11 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	FILEHANDLE *oldoutfile = AR.outfile;
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
-	
+	char oldCommercial[COMMERCIALSIZE+2];
+
+	strcpy(oldCommercial, (char*)AC.Commercial);
+	strcpy((char*)AC.Commercial, "factorize");
+
 	// locate is the input	
 	if (expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
 			expr->status == INTOHIDEGEXPRESSION || expr->status == INTOHIDELEXPRESSION) {
@@ -824,7 +828,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		MesPrint("ERROR: factorization with dummy indices not implemented");
 		Terminate(-1);
 	}
-	
+
 	// determine whether the expression in on file or in memory
 	if (file->handle >= 0) {
 		pos = expr->onfile;
@@ -868,7 +872,6 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf) < 0) {
 			MesCall("ERROR: in LocalConvertToPoly [factorize_expression]");
 			Terminate(-1);
-			return(-1);
 		}
 		bufpos += *(buffer.terms + bufpos);
 	}
@@ -901,7 +904,6 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	SetScratch(file, &pos);
 	NewSort(BHEAD0);	
 	
-	int num_factors = 0;
 	CBUF *C = cbuf+AC.cbufnum;
 	CBUF *CC = cbuf+AT.ebufnum;
 	
@@ -910,10 +912,11 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	AT.BrackBuf = AM.BracketFactors;
 		
 	if (a.is_zero()) {
-		num_factors = 0;
+		expr->numfactors = 0;
 	}
 	else if (a.is_one() && den.is_one()) {
-		num_factors = 1;
+		expr->numfactors = 1;
+		
 		term[0] = 8;
 		term[1] = SYMBOL;
 		term[2] = 4;
@@ -936,38 +939,33 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		}
 		else {
 			// already factorized, so factorize the factors
-
-			if (!a.coefficient(var_to_idx[FACTORSYMBOL],0).is_integer()) {
-				MesCall("ERROR: number of factors is not integer [factorize_expression]");
-				Terminate(-1);
-				return(-1);
-			}
-
-//			int num_old_factors = (a.coefficient(var_to_idx[FACTORSYMBOL],0)/den).terms[AN.poly_num_vars+2];
-			int num_old_factors = expr->numfactors;
-			poly denpow(BHEAD 1);
-			for (int i=0; i<num_old_factors-1; i++) denpow*=den;
-			den=denpow;
-			
-			for (int i=1; i<=num_old_factors; i++) {
+			for (int i=1; i<=expr->numfactors; i++) {
 				factorized_poly fac2(polyfact::factorize(a.coefficient(var_to_idx[FACTORSYMBOL], i)));
 				for (int j=0; j<(int)fac2.power.size(); j++)
 					fac.add_factor(fac2.factor[j], fac2.power[j]);
 			}
+
+			// update denominator, since each factor was scaled
+			poly denpow(BHEAD 1);
+			for (int i=0; i<expr->numfactors; i++) denpow*=den;
+			den=denpow;
 		}
 
-		// integer coefficient
+		expr->numfactors = 0;
+		
+		// coefficient
 		poly num(BHEAD 1);		
 		for (int i=0; i<(int)fac.factor.size(); i++) 
 			if (fac.factor[i].is_integer())
 				num *= fac.factor[i];
+
 		poly gcd(polygcd::integer_gcd(num,den));
 		den/=gcd;
 		num/=gcd;
 						 
-		int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
-
 		if (!num.is_one() || !den.is_one()) {
+			int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
+
 			term[0] = 6 + 2*n;
 			term[1] = SYMBOL;
 			term[2] = 4;
@@ -982,17 +980,17 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			Generator(BHEAD term, C->numlhs);
 			AT.WorkPointer = term;
 			
-			num_factors++;
+			expr->numfactors++;
 		}
 
-		// convert non-integer factors to Form notation
+		// convert non-contant factors to Form notation
 		for (int i=0; i<(int)fac.factor.size(); i++)
 			if (!fac.factor[i].is_integer())
 				for (int j=0; j<fac.power[i]; j++) {
-					buffer.check_memory(fac.factor[i].size_of_form_notation() + 8);
+					buffer.check_memory(fac.factor[i].size_of_form_notation()+1);
 					poly::poly_to_argument(fac.factor[i], buffer.terms, false);
 
-					num_factors++;
+					expr->numfactors++;
 					
 					for (int *t=buffer.terms; *t!=0; t+=*t) {
 						// substitute extra symbols
@@ -1007,7 +1005,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 						*(term+1) = SYMBOL;
 						*(term+2) = 4;
 						*(term+3) = FACTORSYMBOL;
-						*(term+4) = num_factors;
+						*(term+4) =	expr->numfactors;
 						
 						// store term
 						AT.WorkPointer += *term;
@@ -1017,18 +1015,6 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				}
 	}
 	
-	// add constant term with the numbers of factors
-//	if (num_factors > 0) {
-//		term[0] = 4 ;
-//		term[1] = num_factors;
-//		term[2] = 1;
-//		term[3] = 3;
-
-//		AT.WorkPointer += *term;
-//		Generator(BHEAD term, C->numlhs);
-//		AT.WorkPointer = term;
-//	}
-	
 	// create final output
 	if (EndSort(BHEAD NULL,0,0) < 0) {
 		LowerSortLevel();
@@ -1036,15 +1022,15 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	}
 
 	// set factorized flag
-	if (num_factors > 0) {
+	if (expr->numfactors > 0) 
 		expr->vflags |= ISFACTORIZED;
-		expr->numfactors = num_factors;
-	}
+
 	// clean up
 	AR.infile = oldinfile;
 	AR.outfile = oldoutfile;
 	AR.BracketOn = oldBracketOn;
 	AT.BrackBuf = oldBrackBuf;
+	strcpy((char*)AC.Commercial, oldCommercial);
 	
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
