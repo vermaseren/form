@@ -2458,8 +2458,10 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	*den = poly(BHEAD 1);
 
 	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
-		int n = e[i+e[i]-1]/2;
-		poly coeff(BHEAD (UWORD *)&e[i+e[i]-ABS(n)-1], ABS(n));
+		int n = ABS(e[i+e[i]-1]/2);
+		UWORD *pcoeff = (UWORD *)&e[i+e[i]-n-1];
+		while (n>0 && pcoeff[n-1]==0) n--;
+		poly coeff(BHEAD pcoeff, n);
 		*den = *den*coeff / polygcd::integer_gcd(*den,coeff);
 	}
 

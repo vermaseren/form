@@ -983,36 +983,61 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			expr->numfactors++;
 		}
 
-		// convert non-contant factors to Form notation
-		for (int i=0; i<(int)fac.factor.size(); i++)
-			if (!fac.factor[i].is_integer())
-				for (int j=0; j<fac.power[i]; j++) {
-					buffer.check_memory(fac.factor[i].size_of_form_notation()+1);
-					poly::poly_to_argument(fac.factor[i], buffer.terms, false);
+		// compare and sort non-constant factors
+		poly buffer2(BHEAD 0);
 
-					expr->numfactors++;
-					
-					for (int *t=buffer.terms; *t!=0; t+=*t) {
-						// substitute extra symbols
-						if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
-							MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
-							Terminate(-1);
-							return(-1);
-						}
+		vector<int> order;
+		vector<vector<int> > comp(fac.factor.size(), vector<int>(fac.factor.size(), 0));
+		for (int i=0; i<(int)fac.factor.size(); i++)
+			if (!fac.factor[i].is_integer()) {
+				order.push_back(i);
+												
+				buffer.check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD); 
+				poly::poly_to_argument(fac.factor[i], buffer.terms, true);
+												
+				for (int j=i+1; j<(int)fac.factor.size(); j++)
+					if (!fac.factor[j].is_integer()) {
+						buffer2.check_memory(fac.factor[j].size_of_form_notation()+ARGHEAD); 
+						poly::poly_to_argument(fac.factor[j], buffer2.terms, true);
 						
-						// add special symbol "factor_"
-						*term = *(term+4) + 4;
-						*(term+1) = SYMBOL;
-						*(term+2) = 4;
-						*(term+3) = FACTORSYMBOL;
-						*(term+4) =	expr->numfactors;
-						
-						// store term
-						AT.WorkPointer += *term;
-						Generator(BHEAD term, C->numlhs);
-						AT.WorkPointer = term;
+						comp[i][j] = CompArg(buffer2.terms, buffer.terms);
+						comp[j][i] = -comp[i][j];
 					}
+			}
+
+		for (int i=0; i<(int)order.size(); i++) 
+			for (int j=0; j+1<(int)order.size(); j++)
+				if (comp[order[i]][order[j]] == 1)
+					swap(order[i],order[j]);		
+
+		// convert non-contant factors to Form notation
+		for (int i=0; i<(int)order.size(); i++)
+			for (int j=0; j<fac.power[order[i]]; j++) {
+				poly::poly_to_argument(fac.factor[order[i]], buffer.terms, false);
+				
+				expr->numfactors++;
+				
+				for (int *t=buffer.terms; *t!=0; t+=*t) {
+					// substitute extra symbols
+					if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+						MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
+						Terminate(-1);
+						return(-1);
+					}
+					
+					// add special symbol "factor_"
+					*term = *(term+4) + 4;
+					*(term+1) = SYMBOL;
+					*(term+2) = 4;
+					*(term+3) = FACTORSYMBOL;
+					*(term+4) =	expr->numfactors;
+					
+					// store term
+					AT.WorkPointer += *term;
+					Generator(BHEAD term, C->numlhs);
+					AT.WorkPointer = term;
 				}
+			}
 	}
 	
 	// create final output
@@ -1043,11 +1068,11 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
   	#[ poly_unfactorize_expression :
 */
 
-/**  Factorization of expressions
+/**  Unfactorization of expressions
  *
  *   Description
  *   ===========
- *   This method unfactorizes an expression.
+ *   This method expands a factorized expression.
  *
  *   Notes
  *   =====
@@ -1060,6 +1085,8 @@ WORD poly_unfactorize_expression(EXPRESSIONS expr) {
 	cout << "CALL : poly_unfactorize_expression" << endl;
 #endif
 
+	DUMMYUSE(expr);
+	
 	return 0;
 }
 
