@@ -870,7 +870,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		// substitute non-symbols by extra symbols
 		buffer.check_memory(bufpos);		
 		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf) < 0) {
-			MesCall("ERROR: in LocalConvertToPoly [factorize_expression]");
+			MesPrint("ERROR: in LocalConvertToPoly [factorize_expression]");
 			Terminate(-1);
 		}
 		bufpos += *(buffer.terms + bufpos);
@@ -984,23 +984,51 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		}
 
 		// compare and sort non-constant factors
-		poly buffer2(BHEAD 0);
+		vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
+		
+		for (int i=0; i<(int)fac.factor.size(); i++)
+			if (!fac.factor[i].is_integer()) {
+				poly::poly_to_argument(fac.factor[i], buffer.terms, false);
+				NewSort(BHEAD0);
+				
+				for (WORD *t=buffer.terms; *t!=0; t+=*t) {
+					// substitute extra symbols
+					if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+						MesPrint("ERROR: in ConvertFromPoly [factorize_expression]");
+						Terminate(-1);
+						return(-1);
+					}
+					
+					// store term
+					AT.WorkPointer += *term;
+					Generator(BHEAD term, C->numlhs);
+					AT.WorkPointer = term;
+				}
+				
+				fac_arg[i].check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD+1);
+				if (EndSort(BHEAD fac_arg[i].terms+ARGHEAD,0,1) < 0) {
+					LowerSortLevel();
+					Terminate(-1);
+				}
 
+				for (int j=0; j<ARGHEAD; j++)
+					fac_arg[i].terms[j] = 0;
+
+				fac_arg[i].terms[0] = ARGHEAD;
+				for (WORD *t=fac_arg[i].terms+ARGHEAD; *t!=0; t+=*t)
+					fac_arg[i].terms[0] += *t;
+			}
+		
 		vector<int> order;
 		vector<vector<int> > comp(fac.factor.size(), vector<int>(fac.factor.size(), 0));
+		
 		for (int i=0; i<(int)fac.factor.size(); i++)
 			if (!fac.factor[i].is_integer()) {
 				order.push_back(i);
 												
-				buffer.check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD); 
-				poly::poly_to_argument(fac.factor[i], buffer.terms, true);
-												
 				for (int j=i+1; j<(int)fac.factor.size(); j++)
-					if (!fac.factor[j].is_integer()) {
-						buffer2.check_memory(fac.factor[j].size_of_form_notation()+ARGHEAD); 
-						poly::poly_to_argument(fac.factor[j], buffer2.terms, true);
-						
-						comp[i][j] = CompArg(buffer2.terms, buffer.terms);
+					if (!fac.factor[j].is_integer()) {						
+						comp[i][j] = CompArg(fac_arg[j].terms, fac_arg[i].terms);
 						comp[j][i] = -comp[i][j];
 					}
 			}
@@ -1013,17 +1041,14 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 		// convert non-contant factors to Form notation
 		for (int i=0; i<(int)order.size(); i++)
 			for (int j=0; j<fac.power[order[i]]; j++) {
-				poly::poly_to_argument(fac.factor[order[i]], buffer.terms, false);
-				
+
 				expr->numfactors++;
+
+				WORD *tstop = fac_arg[order[i]].terms + *fac_arg[order[i]].terms;
 				
-				for (int *t=buffer.terms; *t!=0; t+=*t) {
-					// substitute extra symbols
-					if (ConvertFromPoly(BHEAD t, term+4, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
-						MesCall("ERROR: in ConvertFromPoly [factorize_expression]");
-						Terminate(-1);
-						return(-1);
-					}
+				for (WORD *t=fac_arg[order[i]].terms+ARGHEAD; t<tstop; t+=*t) {
+
+					memcpy(term+4, t, *t*sizeof(WORD));
 					
 					// add special symbol "factor_"
 					*term = *(term+4) + 4;
@@ -1036,7 +1061,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 					AT.WorkPointer += *term;
 					Generator(BHEAD term, C->numlhs);
 					AT.WorkPointer = term;
-				}
+				}				
 			}
 	}
 	
