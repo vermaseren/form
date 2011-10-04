@@ -853,7 +853,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	// read the first header term
 	WORD size = GetTerm(BHEAD term);
 	if (size <= 0) {
-		MesPrint ("ERROR: something wrong with expresision [poly_factorize_expression]");
+		MesPrint ("ERROR: something wrong with expression [poly_factorize_expression]");
 		Terminate(-1);
 	}
 
@@ -983,7 +983,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			expr->numfactors++;
 		}
 
-		// compare and sort non-constant factors
+		// convert the non-constant factors to Form-style arguments
 		vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
 		
 		for (int i=0; i<(int)fac.factor.size(); i++)
@@ -1019,6 +1019,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 					fac_arg[i].terms[0] += *t;
 			}
 		
+		// compare and sort the factors in Form notation
 		vector<int> order;
 		vector<vector<int> > comp(fac.factor.size(), vector<int>(fac.factor.size(), 0));
 		
@@ -1038,14 +1039,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				if (comp[order[i]][order[j]] == 1)
 					swap(order[i],order[j]);		
 
-		// convert non-contant factors to Form notation
+		// create the final expression
 		for (int i=0; i<(int)order.size(); i++)
 			for (int j=0; j<fac.power[order[i]]; j++) {
 
 				expr->numfactors++;
 
 				WORD *tstop = fac_arg[order[i]].terms + *fac_arg[order[i]].terms;
-				
 				for (WORD *t=fac_arg[order[i]].terms+ARGHEAD; t<tstop; t+=*t) {
 
 					memcpy(term+4, t, *t*sizeof(WORD));
@@ -1065,7 +1065,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			}
 	}
 	
-	// create final output
+	// final sorting
 	if (EndSort(BHEAD NULL,0,0) < 0) {
 		LowerSortLevel();
 		Terminate(-1);
@@ -1110,8 +1110,184 @@ WORD poly_unfactorize_expression(EXPRESSIONS expr) {
 	cout << "CALL : poly_unfactorize_expression" << endl;
 #endif
 
-	DUMMYUSE(expr);
+	GETIDENTITY;
+
+	if (AT.WorkPointer + AM.MaxTer > AT.WorkTop ) {
+		MLOCK(ErrorMessageLock);
+		MesWork();
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 	
+	WORD *term = AT.WorkPointer;
+	WORD startebuf = cbuf[AT.ebufnum].numrhs;
+	UWORD *number = NumberMalloc("poly_unfactorize_expression");
+	
+	FILEHANDLE *file;
+	POSITION pos;
+
+	FILEHANDLE *oldinfile = AR.infile;
+	FILEHANDLE *oldoutfile = AR.outfile;
+	char oldCommercial[COMMERCIALSIZE+2];
+
+	strcpy(oldCommercial, (char*)AC.Commercial);
+	strcpy((char*)AC.Commercial, "unfactorize");
+
+	// locate is the input	
+	if (expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
+			expr->status == INTOHIDEGEXPRESSION || expr->status == INTOHIDELEXPRESSION) {
+		AR.InHiBuf = 0; file = AR.hidefile; AR.GetFile = 2;
+	}
+	else {
+		AR.InInBuf = 0; file = AR.outfile; AR.GetFile = 0;
+	}
+
+	// read and write to expression file
+	AR.infile = AR.outfile = file;
+	
+	// determine whether the expression in on file or in memory
+	if (file->handle >= 0) {
+		pos = expr->onfile;
+		SeekFile(file->handle,&pos,SEEK_SET);
+		if (ISNOTEQUALPOS(pos,expr->onfile)) {
+			MesPrint("ERROR: something wrong in scratch file [poly_unfactorize_expression]");
+			Terminate(-1);
+		}
+		file->POposition = expr->onfile;
+		file->POfull = file->PObuffer;
+		if (expr->status == HIDDENGEXPRESSION)
+			AR.InHiBuf = 0;
+		else
+			AR.InInBuf = 0;
+	}
+	else {
+		file->POfill = (WORD *)((UBYTE *)(file->PObuffer)+BASEPOSITION(expr->onfile));
+	}
+ 	
+	SetScratch(AR.infile, &(expr->onfile));
+
+	// read the first header term
+	WORD size = GetTerm(BHEAD term);
+	if (size <= 0) {
+		MesPrint ("ERROR: something wrong with expression [poly_unfactorize_expression]");
+		Terminate(-1);
+	}
+
+	// store position: this is where the output will go
+	pos = expr->onfile;
+	ADDPOS(pos, size*sizeof(WORD));
+	
+	// use polynomial as buffer, because it is easy to extend
+	poly buffer(BHEAD 0);
+	int bufpos = 0;
+
+	// read all terms
+	while (GetTerm(BHEAD term)) {
+		// substitute non-symbols by extra symbols
+		buffer.check_memory(bufpos);		
+		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf) < 0) {
+			MesPrint("ERROR: in LocalConvertToPoly [unfactorize_expression]");
+			Terminate(-1);
+		}
+		bufpos += *(buffer.terms + bufpos);
+	}
+	buffer[bufpos] = 0;
+
+	// parse the polynomial
+	AN.poly_num_vars = 0;
+	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
+	poly den(BHEAD 0);
+	poly a(poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx, &den));
+
+	// check for modulus calculus
+	if (AC.ncmod!=0) {
+		if (ABS(AC.ncmod)>1) {
+			MUNLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
+			MLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		if (AN.poly_num_vars > 1) {
+			MUNLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
+			MLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		a.setmod(*AC.cmod, 1);
+	}
+
+	// create output
+	SetScratch(file, &pos);
+	NewSort(BHEAD0);	
+	
+	CBUF *C = cbuf+AC.cbufnum;
+	CBUF *CC = cbuf+AT.ebufnum;
+
+	poly res(BHEAD 1);
+	poly denpow(BHEAD 1);
+	
+	// multiply all factors
+	for (int i=1; i<=expr->numfactors; i++) {
+	 	res *= a.coefficient(var_to_idx[FACTORSYMBOL], i);
+		if (poly::divides(den,res))
+			res /= den;
+		else
+			denpow *= den;
+	}
+	den = denpow;
+
+	// create Form-style output
+	buffer.check_memory(res.size_of_form_notation()+1);		
+	poly::poly_to_argument(res, buffer.terms, false);
+			
+	for (WORD *t=buffer.terms; *t!=0; t+=*t) {
+		// substitute extra symbols
+		if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+			MesPrint("ERROR: in ConvertFromPoly [unfactorize_expression]");
+			Terminate(-1);
+			return(-1);
+		}
+
+		// add denominator
+		WORD nnum = *(term+*term-1);
+		*term -= ABS(nnum);
+		nnum/=2;
+
+		WORD nden = den[den[1]];
+		memcpy(number, &den[2+AN.poly_num_vars], nden*sizeof(WORD));
+			
+		Simplify(BHEAD (UWORD *)term+*term, &nnum, number, &nden);
+		Pack((UWORD *)term+*term, &nnum, number, nden);
+		
+		*term += 2*ABS(nnum)+1;
+		*(term+*term-1) = SGN(nnum)*(2*ABS(nnum)+1);
+		
+		// store term
+		AT.WorkPointer += *term;
+		Generator(BHEAD term, C->numlhs);
+		AT.WorkPointer = term;
+	}
+	
+	// final sorting
+	if (EndSort(BHEAD NULL,0,0) < 0) {
+		LowerSortLevel();
+		Terminate(-1);
+	}
+
+	// remove factorized flag
+  expr->numfactors = 0;
+  expr->vflags &= ~ISFACTORIZED;
+
+	// clean up
+	AR.infile = oldinfile;
+	AR.outfile = oldoutfile;
+	strcpy((char*)AC.Commercial, oldCommercial);
+	
+	NumberFree(number, "poly_unfactorize_expression");
+	
+	if (AN.poly_num_vars > 0)
+		delete AN.poly_vars;
+
 	return 0;
 }
 

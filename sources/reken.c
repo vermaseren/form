@@ -54,7 +54,7 @@
  		#[ Pack :			VOID Pack(a,na,b,nb)
 
 	Packs the contents of the numerator a and the denominator b into
-	one normalized fraction a. The return value is the half length.
+	one normalized fraction a.
 
 */
 
