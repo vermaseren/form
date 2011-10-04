@@ -255,6 +255,7 @@ higherlevel:
 				}
 				else {
 					s = EndOfToken(namebuf+1);
+					if ( *s == '[' ) { while ( *s ) s++; }
 				}
 				if ( *s == '-' && s[1] == '-' && s[2] == 0 )
 					raiselow = PRELOWERAFTER;
@@ -373,7 +374,7 @@ endofloop:;
 }
 
 /*
- 		#] GetChar : 
+ 		#] GetChar :
  		#[ CharOut :
 */
 
@@ -1359,7 +1360,7 @@ doall:;			if ( AP.eat < 0 ) {
 }
 
 /*
- 		#] LoadStatement : 
+ 		#] LoadStatement :
  		#[ ExpandTripleDots :
 */
 
@@ -1663,7 +1664,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots :
+ 		#] ExpandTripleDots : 
  		#[ FindKeyWord :
 */
 
@@ -2884,7 +2885,7 @@ int DoIf(UBYTE *s)
 }
 
 /*
- 		#] DoIf :
+ 		#] DoIf : 
  		#[ DoIfdef :
 */
 
@@ -3962,7 +3963,7 @@ illoper:
 }
 
 /*
- 		#] PreIfEval :
+ 		#] PreIfEval : 
  		#[ PreCmp :
 */
 
@@ -4286,7 +4287,7 @@ illend:
 }
 
 /*
- 		#] pParseObject :
+ 		#] pParseObject : 
  		#[ PreCalc :
  
 		To be called when a { is encountered.
@@ -5665,7 +5666,7 @@ int DoFactDollar(UBYTE *s)
 }
 
 /*
- 		#] DoFactor : 
+ 		#] DoFactDollar : 
  		#[ GetDollarNumber :
 */
 
