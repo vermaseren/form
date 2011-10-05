@@ -283,7 +283,7 @@ found:
 }
 
 /*
-  	#] FindBracket :
+  	#] FindBracket : 
   	#[ PutBracketInIndex :
 
 	Call via
@@ -529,8 +529,11 @@ VOID OpenBracketIndex(WORD nexpr)
 	LONG i;
 	bi = (BRACKETINFO *)Malloc1(sizeof(BRACKETINFO),"BracketInfo");
 	e->newbracketinfo = bi;
+/*
 	i = 20*AM.MaxTer/sizeof(WORD);
 	if ( i < 1000 ) i = 1000;
+*/
+	i = 2000;
 	bi->bracketbuffer = (WORD *)Malloc1(i*sizeof(WORD),"Bracket Buffer");
 	bi->bracketbuffersize = i;
 	bi->bracketfill = 0;

@@ -3470,6 +3470,7 @@ int DoBrackets(UBYTE *inp, int par)
 	*AT.BrackBuf = 0;
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
+	AT.bracketindexflag = 0;
 	if ( *p == '+' || *p == '-' ) p++;
 	if ( p[-1] == ',' && *p ) p--;
 	if ( p[-1] == '+' && *p ) { biflag = 1;  if ( *p != ',' ) { *--p = ','; } }
@@ -3554,7 +3555,10 @@ redo:	AR.BracketOn++;
 	}
 	AC.BracketNormalize = 0;
 	if ( par == 1 ) AR.BracketOn = -AR.BracketOn;
-	if ( error == 0 ) AC.bracketindexflag = biflag;
+	if ( error == 0 ) {
+		AC.bracketindexflag = biflag;
+		AT.bracketindexflag = biflag;
+	}
 	AT.WorkPointer = WorkSave;
 	return(error);
 }
@@ -3621,6 +3625,7 @@ int CoMultiBracket(UBYTE *inp)
 	*AT.BrackBuf = 0;
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
+	AT.bracketindexflag = 0;
 /*
 	Now loop through the various levels, separated by the colons.
 */
@@ -3685,6 +3690,7 @@ RegEnd:
 	*AT.BrackBuf = 0;
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
+	AT.bracketindexflag = 0;
 	return(error);
 }
 

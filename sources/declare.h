@@ -1557,6 +1557,7 @@ extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
+extern int   unfactorize_expression(EXPRESSIONS);
 /*
   	#] Declarations :
 */

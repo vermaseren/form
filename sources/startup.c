@@ -888,7 +888,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -944,6 +944,7 @@ WORD IniVars()
 #endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
+	AT.bracketindexflag = 0;
 	AO.IsBracket = 0;
 	AM.gfunpowers = AC.funpowers = COMFUNPOWERS;
 	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;

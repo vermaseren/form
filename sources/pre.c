@@ -374,7 +374,7 @@ endofloop:;
 }
 
 /*
- 		#] GetChar :
+ 		#] GetChar : 
  		#[ CharOut :
 */
 
@@ -666,6 +666,7 @@ VOID IniModule(int type)
 	AR.BracketOn = 0;
 	AR.StoreData.dirtyflag = 0;
 	AC.bracketindexflag = 0;
+	AT.bracketindexflag = 0;
 
 /*[06nov2003 mt]:*/
 #ifdef PARALLEL
@@ -1360,7 +1361,7 @@ doall:;			if ( AP.eat < 0 ) {
 }
 
 /*
- 		#] LoadStatement :
+ 		#] LoadStatement : 
  		#[ ExpandTripleDots :
 */
 

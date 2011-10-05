@@ -1723,7 +1723,7 @@ struct S_const {
 	PADLONG(5,3,0);
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1867,6 +1867,8 @@ struct T_const {
     int     TermMemTop;            /* For TermMalloc. Set zero in Checkpoint */
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
+    int     bracketindexflag;      /* Are brackets going to be indexed? */
+    int     res1;                  /* For allignment */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
@@ -1895,7 +1897,7 @@ struct T_const {
     WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.

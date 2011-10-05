@@ -1292,5 +1292,197 @@ WORD poly_unfactorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_unfactorize_expression :
+  	#] poly_unfactorize_expression : 
+  	#[ unfactorize_expression :
+*/
+
+/**  Unfactorization of expressions
+ *
+ *   Description
+ *   ===========
+ *   This method expands a factorized expression.
+ *
+ *   Notes
+ *   =====
+ *   - The result overwrites the input expression
+ *   - Called from proces.c
+ */
+
+#if ( SUBEXPSIZE == 5 )
+static WORD genericterm[] = {38,1,4,FACTORSYMBOL,0
+	,EXPRESSION,15,0,1,0,13,10,8,1,4,FACTORSYMBOL,0,1,1,3
+	,EXPRESSION,15,0,1,0,13,10,8,1,4,FACTORSYMBOL,0,1,1,3
+	,1,1,3,0};
+static WORD genericterm2[] = {23,1,4,FACTORSYMBOL,0
+	,EXPRESSION,15,0,1,0,13,10,8,1,4,FACTORSYMBOL,0,1,1,3
+	,1,1,3,0};
+#endif
+
+WORD unfactorize_expression(EXPRESSIONS expr)
+{
+	GETIDENTITY;
+	int i, j, nfac = expr->numfactors, nfacp, nexpr = expr - Expressions;
+ 
+	FILEHANDLE *oldinfile = AR.infile;
+	FILEHANDLE *oldoutfile = AR.outfile;
+	char oldCommercial[COMMERCIALSIZE+2];
+
+	WORD *oldworkpointer = AT.WorkPointer;	
+	WORD *term = AT.WorkPointer, *t, *w, size;
+	
+	FILEHANDLE *file;
+	POSITION pos;
+
+	WORD oldBracketOn = AR.BracketOn;
+	WORD *oldBrackBuf = AT.BrackBuf;
+	CBUF *C = cbuf+AC.cbufnum;
+
+	if ( ( expr->vflags & ISFACTORIZED ) == 0 ) return(0);
+
+	if ( AT.WorkPointer + AM.MaxTer > AT.WorkTop ) {
+		MLOCK(ErrorMessageLock);
+		MesWork();
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+	strcpy(oldCommercial, (char*)AC.Commercial);
+	strcpy((char*)AC.Commercial, "unfactorize");
+/*
+	locate the input	
+*/
+	if ( expr->status == HIDDENGEXPRESSION || expr->status == HIDDENLEXPRESSION ||
+			expr->status == INTOHIDEGEXPRESSION || expr->status == INTOHIDELEXPRESSION ) {
+		AR.InHiBuf = 0; file = AR.hidefile; AR.GetFile = 2;
+	}
+	else {
+		AR.InInBuf = 0; file = AR.outfile; AR.GetFile = 0;
+	}
+/*
+	read and write to expression file
+*/
+	AR.infile = AR.outfile = file;
+/*
+	set the input file to the correct position	
+*/
+	if ( file->handle >= 0 ) {
+		pos = expr->onfile;
+		SeekFile(file->handle,&pos,SEEK_SET);
+		if (ISNOTEQUALPOS(pos,expr->onfile)) {
+			MesPrint("ERROR: something wrong in scratch file unfactorize_expression");
+			Terminate(-1);
+		}
+		file->POposition = expr->onfile;
+		file->POfull = file->PObuffer;
+		if ( expr->status == HIDDENGEXPRESSION )
+			AR.InHiBuf = 0;
+		else
+			AR.InInBuf = 0;
+	}
+	else {
+		file->POfill = (WORD *)((UBYTE *)(file->PObuffer)+BASEPOSITION(expr->onfile));
+	}
+	SetScratch(AR.infile, &(expr->onfile));
+/*
+	Read the prototype. After this we have the file ready for the output at pos.
+*/
+	size = GetTerm(BHEAD term);
+	if ( size <= 0 ) {
+		MesPrint ("ERROR: something wrong with expression unfactorize_expression");
+		Terminate(-1);
+	}
+	pos = expr->onfile;
+	ADDPOS(pos, size*sizeof(WORD));
+/*
+	Set the brackets straight
+*/
+	AR.BracketOn = 1;
+	AT.BrackBuf = AM.BracketFactors;
+	while ( nfac > 2 ) {
+/*
+		Now generate the terms
+*/
+		nfacp = nfac - nfac%2;
+		NewSort(BHEAD0);
+		for ( i = 0; i < nfacp; i += 2 ) {
+			t = genericterm; w = term = oldworkpointer;
+			j = *t; NCOPY(w,t,j);
+			term[4] = i/2+1;
+			term[7] = nexpr;
+			term[16] = i+1;
+			term[22] = nexpr;
+			term[31] = i+2;
+			AT.WorkPointer = term + *term;
+			Generator(BHEAD term, C->numlhs);
+		}
+		if ( nfac > nfacp ) {
+			t = genericterm2; w = term = oldworkpointer;
+			j = *t; NCOPY(w,t,j);
+			term[4] = i/2+1;
+			term[7] = nexpr;
+			term[16] = nfac;
+			AT.WorkPointer = term + *term;
+			Generator(BHEAD term, C->numlhs);
+		}
+		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) {
+			LowerSortLevel();
+			Terminate(-1);
+		}
+/*
+		Set the file back into reading position
+*/
+		SetScratch(file, &pos);
+		nfac = (nfac+1)/2;
+	}
+/*
+	Reset the brackets to make them ready for the final pass
+*/
+	AR.BracketOn = oldBracketOn;
+	AT.BrackBuf = oldBrackBuf;
+/*
+	We distinguish two cases: nfac == 2 and nfac == 1
+	After preparing the term we skip the factor_ part.
+*/
+	NewSort(BHEAD0);
+	if ( nfac == 1 ) {
+		t = genericterm2; w = term = oldworkpointer;
+		j = *t; NCOPY(w,t,j);
+		term[7] = nexpr;
+		term[16] = nfac;
+	}
+	else if ( nfac == 2 ) {
+		t = genericterm; w = term = oldworkpointer;
+		j = *t; NCOPY(w,t,j);
+		term[7] = nexpr;
+		term[16] = 1;
+		term[22] = nexpr;
+		term[31] = 2;
+	}
+	else {
+		return(-1);
+	}
+	term[4] = term[0]-4;
+	term += 4;
+	AT.WorkPointer = term + *term;
+	Generator(BHEAD term, C->numlhs);
+	if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) {
+		LowerSortLevel();
+		Terminate(-1);
+	}
+/*
+	Final Cleanup
+*/
+	expr->numfactors = 0;
+	expr->vflags &= ~ISFACTORIZED;
+
+	AR.infile = oldinfile;
+	AR.outfile = oldoutfile;
+	strcpy((char*)AC.Commercial, oldCommercial);
+	AT.WorkPointer = oldworkpointer;
+	
+	return(0);
+}
+
+/*
+  	#] unfactorize_expression : 
 */

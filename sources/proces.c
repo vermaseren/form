@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -246,7 +246,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -307,7 +307,7 @@ commonread:;
 					retval = -1;
 					break;
 				}
-				if ( AC.bracketindexflag > 0 ) OpenBracketIndex(i);
+				if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
 				if ( AR.outtohide ) {
 					SeekScratch(AR.hidefile,&position);
@@ -415,7 +415,7 @@ commonread:;
 					}
 					else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
 					 && ( ( e->vflags & ISFACTORIZED ) != 0 ) ) {
-						poly_unfactorize_expression(e);
+						unfactorize_expression(e);
 					}
 				}
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
@@ -622,7 +622,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1364,9 +1364,28 @@ DoSpec:
 			if ( *t >= FUNCTION + WILDOFFSET ) funnum -= WILDOFFSET;
 			if ( ( *t == NUMFACTORS || *t == UNFACTORIZE ) && t[1] == FUNHEAD+2 &&
 			( t[FUNHEAD] == -EXPRESSION || t[FUNHEAD] == -DOLLAREXPRESSION ) ) {
+				if ( *t == NUMFACTORS ) {
 /*
-				This we leave for Normalize
+					This we leave for Normalize
 */				
+				}
+				else if ( *t == UNFACTORIZE ) {
+					WORD nexpr = t[FUNHEAD+1];
+					EXPRESSIONS e = Expressions + nexpr;
+					if ( ( e->vflags & ISFACTORIZED ) == 0 ) {
+#if ( FUNHEAD+2 == SUBEXPSIZE )
+						*t++ = EXPRESSION; *t++ = SUBEXPSIZE;
+						*t++ = nexpr; *t++ = 1; *t++ = 0; FILLSUB(t)
+#endif
+						goto ReStart;
+					}
+/*
+					nfactors = AS.OldNumFactors[nexpr];
+					Now we have to insert nfactors*(SUBEXPSIZE+10) to overwrite
+					FUNHEAD+2 WORDs. This means that we have to move something.
+*/
+/* 5  15  0  1  0  13  10  8  1  4  7  2  1  1  3 */
+				}
 			}
 			else if ( functions[funnum-FUNCTION].spec == 0 ) {
 				AT.NestPoin->funsize = t + 1;
@@ -1757,7 +1776,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2281,7 +2300,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2414,7 +2433,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2530,7 +2549,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2605,7 +2624,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2784,7 +2803,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -2829,18 +2848,6 @@ WORD Generator(PHEAD WORD *term, WORD level)
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1, id;
 #endif
-#ifdef WITHPTHREADS
-/*
-if ( Expressions[0].bracketinfo != 0 &&
-		 Expressions[0].bracketinfo->indexbuffer == 0 &&
-		 Expressions[0].bracketinfo->bracketbuffer != 0 ) {
-	MLOCK(ErrorMessageLock);
-	MesPrint("Problems with bracket index in thread %d",AT.identity);
-	MUNLOCK(ErrorMessageLock);
-}
-*/
-#endif
-
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
 
@@ -3410,7 +3417,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3945,7 +3952,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4176,7 +4183,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4300,7 +4307,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4427,7 +4434,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun :
+ 		#] Create a PolyFun : 
 */
 	}
 	else if ( AR.PolyFunType == 1 ) {
@@ -4577,7 +4584,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4634,7 +4641,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		poly_ratfun_mul(BHEAD term); // TODO: check do nothing with return value
 		return(0);
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4654,7 +4661,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4899,6 +4906,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

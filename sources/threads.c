@@ -1084,6 +1084,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 	AN.TeInFun = 0;
 	AN.ncmod = AC.ncmod;
 	AT.BrackBuf = AT0.BrackBuf;
+	AT.bracketindexflag = AT0.bracketindexflag;
 /*
 	The relevant variables and the term are in their place.
 	There is nothing more to do.
@@ -1566,7 +1567,7 @@ bucketstolen:;
 					MesPrint("Expression %d has problems in scratchfile",i);
 					Terminate(-1);
 				}
-				if ( AC.bracketindexflag > 0 ) OpenBracketIndex(i);
+				if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
 				PUTZERO(outposition);
 				fout = AR.outfile;
