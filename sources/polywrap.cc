@@ -806,6 +806,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	FILEHANDLE *oldoutfile = AR.outfile;
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
+	WORD oldbracketindexflag = AT.bracketindexflag;
 	char oldCommercial[COMMERCIALSIZE+2];
 
 	strcpy(oldCommercial, (char*)AC.Commercial);
@@ -907,9 +908,13 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	CBUF *C = cbuf+AC.cbufnum;
 	CBUF *CC = cbuf+AT.ebufnum;
 	
-	// turn brackets on
+	// turn brackets on. We force the existence of a bracket index.
+	WORD nexpr = expr - Expressions;
 	AR.BracketOn = 1;
 	AT.BrackBuf = AM.BracketFactors;
+	AT.bracketindexflag = 1;
+	ClearBracketIndex(-nexpr-2); // Clears the index made during primary generation
+	OpenBracketIndex(nexpr);     // Set up a new index
 		
 	if (a.is_zero()) {
 		expr->numfactors = 0;
@@ -1080,6 +1085,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	AR.outfile = oldoutfile;
 	AR.BracketOn = oldBracketOn;
 	AT.BrackBuf = oldBrackBuf;
+	AT.bracketindexflag = oldbracketindexflag;
 	strcpy((char*)AC.Commercial, oldCommercial);
 	
 	if (AN.poly_num_vars > 0)
@@ -1089,7 +1095,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression : 
+  	#] poly_factorize_expression :
   	#[ poly_unfactorize_expression :
 */
 
@@ -1398,11 +1404,25 @@ WORD unfactorize_expression(EXPRESSIONS expr)
 */
 	AR.BracketOn = 1;
 	AT.BrackBuf = AM.BracketFactors;
+	AT.bracketinfo = 0;
 	while ( nfac > 2 ) {
-/*
-		Now generate the terms
-*/
 		nfacp = nfac - nfac%2;
+/*
+		Prepare the bracket index. We have:
+			e->bracketinfo:    the old input bracket index
+			e->newbracketinfo: the bracket index made for our current input
+		We need to keep e->bracketinfo in case other workers need it (InParallel)
+		Hence we work with AT.bracketinfo which takes priority.
+		Note that in Processor we forced a newbracketinfo to be made.
+*/
+		if ( AT.bracketinfo != 0 ) ClearBracketIndex(-1);
+		AT.bracketinfo = expr->newbracketinfo;
+		OpenBracketIndex(nexpr);
+/*
+		Now emulate the terms:
+			sum_(i,0,nfacp,2,factor_^(i/2+1)*F[factor_^(i+1)]*F[factor_^(i+2)])
+			+factor_^(nfacp/2+1)*F[factor_^nfac]
+*/
 		NewSort(BHEAD0);
 		for ( i = 0; i < nfacp; i += 2 ) {
 			t = genericterm; w = term = oldworkpointer;
@@ -1434,11 +1454,15 @@ WORD unfactorize_expression(EXPRESSIONS expr)
 		SetScratch(file, &pos);
 		nfac = (nfac+1)/2;
 	}
+	if ( AT.bracketinfo != 0 ) ClearBracketIndex(-1);
+	AT.bracketinfo = expr->newbracketinfo;
+	expr->newbracketinfo = 0;
 /*
 	Reset the brackets to make them ready for the final pass
 */
 	AR.BracketOn = oldBracketOn;
 	AT.BrackBuf = oldBrackBuf;
+	if ( AR.BracketOn ) OpenBracketIndex(nexpr);
 /*
 	We distinguish two cases: nfac == 2 and nfac == 1
 	After preparing the term we skip the factor_ part.
@@ -1474,6 +1498,7 @@ WORD unfactorize_expression(EXPRESSIONS expr)
 */
 	expr->numfactors = 0;
 	expr->vflags &= ~ISFACTORIZED;
+	if ( AT.bracketinfo != 0 ) ClearBracketIndex(-1);
 
 	AR.infile = oldinfile;
 	AR.outfile = oldoutfile;

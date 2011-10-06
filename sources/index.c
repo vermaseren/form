@@ -66,6 +66,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 {
 	GETIDENTITY
 	BRACKETINDEX *bi;
+	BRACKETINFO *bracketinfo;
 	EXPRESSIONS e = &(Expressions[nexp]);
 	LONG hi, low, med;
 	int i;
@@ -87,16 +88,18 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			fi = AR.infile;
 			break;
 	}
-	hi = e->bracketinfo->indexfill; low = 0;
+	if ( AT.bracketinfo ) bracketinfo = AT.bracketinfo;
+	else                  bracketinfo = e->bracketinfo;
+	hi = bracketinfo->indexfill; low = 0;
 	if ( hi <= 0 ) return(0);
-	AR.SortType = e->bracketinfo->SortType;
-	bi = e->bracketinfo->indexbuffer + hi - 1;
+	AR.SortType = bracketinfo->SortType;
+	bi = bracketinfo->indexbuffer + hi - 1;
 	if ( *bracket == 4 ) {
-		if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
+		if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
 		else i = -1;
 	}
-	else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-	else i = CompareTerms(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
+	else if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
+	else i = CompareTerms(BHEAD bracket,bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
 		AR.SortType = oldsorttype;
 		return(0);
@@ -104,13 +107,13 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	else if ( i == 0 ) med = hi-1;
 	else for (;;) {
 		med = (hi+low)/2;
-		bi = e->bracketinfo->indexbuffer + med;
+		bi = bracketinfo->indexbuffer + med;
 		if ( *bracket == 4 ) {
-			if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
+			if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
 			else i = -1;
 		}
-		else if ( e->bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-		else i = CompareTerms(BHEAD bracket,e->bracketinfo->bracketbuffer+bi->bracket,0);
+		else if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
+		else i = CompareTerms(BHEAD bracket,bracketinfo->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) { break; }
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
@@ -141,7 +144,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	Have a look at AR.CompressPointer. (set it right)
 */
 	term = AT.WorkPointer;
-	t1 = e->bracketinfo->bracketbuffer+bi->bracket;
+	t1 = bracketinfo->bracketbuffer+bi->bracket;
 	j = *t1;
 /*
 	The next is (hopefully) a bug fix. Originally the code read bsize = j
@@ -367,13 +370,15 @@ problems:;
 	If there is room for more brackets, we add this one.
 */
 	if ( b->bracketfill+*term >= b->bracketbuffersize
-	&& b->bracketbuffersize < AM.MaxBracketBufferSize ) {
+	&& ( b->bracketbuffersize < AM.MaxBracketBufferSize
+	|| ( e->vflags & ISFACTORIZED ) != 0 ) ) {
 /*
 		Enlarge bracket buffer
 */
 		WORD *oldbracketbuffer = b->bracketbuffer;
 		i = b->bracketbuffersize * 2;
-		if ( i > AM.MaxBracketBufferSize ) i = AM.MaxBracketBufferSize;
+		if ( i > AM.MaxBracketBufferSize && ( e->vflags & ISFACTORIZED ) == 0 )
+				i = AM.MaxBracketBufferSize;
 		if ( i > b->bracketfill+*term ) {
 			b->bracketbuffersize = i;
 			b->bracketbuffer = (WORD *)Malloc1(b->bracketbuffersize*sizeof(WORD),
@@ -505,14 +510,27 @@ bracketdone:
 
 void ClearBracketIndex(WORD numexp)
 {
-	BRACKETINFO *b = Expressions[numexp].bracketinfo;
+	BRACKETINFO *b;
+	if ( numexp >= 0 ) {
+		b = Expressions[numexp].bracketinfo;
+		Expressions[numexp].bracketinfo = 0;
+	}
+	else if ( numexp == -1 ) {
+		GETIDENTITY
+		b = AT.bracketinfo;
+		AT.bracketinfo = 0;
+	}
+	else {
+		numexp = -numexp-2;
+		b = Expressions[numexp].newbracketinfo;
+		Expressions[numexp].newbracketinfo = 0;
+	}
 	if ( b == 0 ) return;
 	b->indexfill = b->indexbuffersize = 0;
 	b->bracketfill = b->bracketbuffersize = 0;
 	M_free(b->bracketbuffer,"ClearBracketBuffer");
 	M_free(b->indexbuffer,"ClearIndexBuffer");
 	M_free(b,"BracketInfo");
-	Expressions[numexp].bracketinfo = 0;
 }
 
 /*

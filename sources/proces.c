@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -76,6 +76,7 @@ WORD Processor()
 	FILEHANDLE *curfile, *oldoutfile = AR.outfile;
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
+	WORD oldbracketindexflag = AT.bracketindexflag;
 #ifdef WITHPTHREADS
 	int OldMultiThreaded = AS.MultiThreaded, Oldmparallelflag = AC.mparallelflag;
 #endif
@@ -246,7 +247,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -307,7 +308,6 @@ commonread:;
 					retval = -1;
 					break;
 				}
-				if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
 				if ( AR.outtohide ) {
 					SeekScratch(AR.hidefile,&position);
@@ -324,7 +324,9 @@ commonread:;
 				if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
 					AR.BracketOn = 1;
 					AT.BrackBuf = AM.BracketFactors;
+					AT.bracketindexflag = 1;
 				}
+				if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
 					if ( ThreadsProcessor(e,LastExpression) ) {
@@ -408,16 +410,18 @@ commonread:;
 					}
 					e->numdummies = AR.MaxDum - AM.IndDum;
 					UpdateMaxSize();
-					AR.BracketOn = oldBracketOn;
-					AT.BrackBuf = oldBrackBuf;
-					if ( ( e->vflags & TOBEFACTORED ) != 0 ) {
-						poly_factorize_expression(e);
-					}
-					else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
-					 && ( ( e->vflags & ISFACTORIZED ) != 0 ) ) {
-						unfactorize_expression(e);
-					}
 				}
+				AR.BracketOn = oldBracketOn;
+				AT.BrackBuf = oldBrackBuf;
+				if ( ( e->vflags & TOBEFACTORED ) != 0 ) {
+					poly_factorize_expression(e);
+				}
+				else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
+				 && ( ( e->vflags & ISFACTORIZED ) != 0 ) ) {
+					unfactorize_expression(e);
+				}
+				AT.bracketindexflag = oldbracketindexflag;
+
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
@@ -622,7 +626,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1776,7 +1780,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2300,7 +2304,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction : 
+ 		#] InFunction :
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2433,7 +2437,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm : 
+ 		#] InsertTerm :
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2549,7 +2553,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile : 
+ 		#] PasteFile :
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2624,7 +2628,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm : 
+ 		#] PasteTerm :
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2803,7 +2807,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm : 
+ 		#] FiniTerm :
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3417,7 +3421,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3952,7 +3956,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4183,7 +4187,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow : 
+ 		#] DoOnePow :
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4307,7 +4311,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred : 
+ 		#] Deferred :
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4434,7 +4438,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun : 
+ 		#] Create a PolyFun :
 */
 	}
 	else if ( AR.PolyFunType == 1 ) {
@@ -4584,7 +4588,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument : 
+ 		#] One argument :
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4641,7 +4645,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		poly_ratfun_mul(BHEAD term); // TODO: check do nothing with return value
 		return(0);
 /*
- 		#] Two arguments : 
+ 		#] Two arguments :
 */
 	}
 	else {
@@ -4661,7 +4665,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4906,6 +4910,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul : 
+ 		#] PolyFunMul :
 	#] Processor :
 */

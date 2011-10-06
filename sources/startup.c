@@ -31,6 +31,9 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /* #] License : */ 
+/*
+ 		#[ includes :
+*/
 
 #include "form3.h"
 #include "inivar.h"
@@ -76,6 +79,7 @@ extern int pcounter;
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
 /*
+ 		#] includes : 
  		#[ DoTail :
 
 		Routine reads the command tail and handles the commandline options.
@@ -945,6 +949,7 @@ WORD IniVars()
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
 	AT.bracketindexflag = 0;
+	AT.bracketinfo = 0;
 	AO.IsBracket = 0;
 	AM.gfunpowers = AC.funpowers = COMFUNPOWERS;
 	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;
