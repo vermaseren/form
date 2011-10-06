@@ -385,6 +385,7 @@ extern VOID   CleanUp(WORD);
 extern VOID   ClearWild(PHEAD0);
 extern WORD   Commute(WORD *,WORD *);
 extern WORD   DetCommu(WORD *);
+extern WORD   DoesCommu(WORD *);
 extern int    CompArg(WORD *,WORD *);
 extern WORD   CompCoef(WORD *, WORD *);
 extern WORD   CompGroup(PHEAD WORD,WORD **,WORD *,WORD *,WORD);

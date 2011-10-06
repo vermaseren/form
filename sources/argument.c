@@ -2019,7 +2019,20 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 	argcopy = TermMalloc("argcopy");
 	for ( i = 0; i <= *argfree; i++ ) argcopy[i] = argfree[i];
 
-	t = argfree + ARGHEAD; tstop = argfree + *argfree;
+	tstop = argfree + *argfree;
+	{
+		WORD sumcommu = 0;
+		t = argfree + ARGHEAD;
+		while ( t < tstop ) {
+			sumcommu += DoesCommu(t);
+		}
+		if ( sumcommu > 1 ) {
+			MesPrint("ERROR: Cannot factorize an argument with more than one noncommuting object");
+			Terminate(-1);
+		}
+	}
+	t = argfree + ARGHEAD;
+
 	while ( t < tstop ) {
 		if ( ( t[1] != SYMBOL ) && ( *t != (ABS(t[*t-1])+1) ) ) {
 			action = 1; break;
@@ -2202,7 +2215,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize : 
+  	#] ArgFactorize :
   	#[ FindArg :
 */
 /**

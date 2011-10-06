@@ -646,7 +646,6 @@ MulIn:
 				t += FUNHEAD;
 				if ( *t == -EXPRESSION ) {
 					k = AS.OldNumFactors[t[1]];
-/*					k = Expressions[t[1]].numfactors; */
 				}
 				else if ( *t == -DOLLAREXPRESSION ) {
 					k = Dollars[t[1]].nfactors;
@@ -2113,7 +2112,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3461,7 +3460,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 
@@ -3832,6 +3831,32 @@ WORD DetCommu(WORD *terms)
 
 /*
   	#] DetCommu : 
+  	#[ DoesCommu :
+
+	Determines the number of noncommuting objects in a term.
+	If the number gets too large we cut it off.
+*/
+
+WORD DoesCommu(WORD *term)
+{
+	WORD *tstop;
+	WORD num = 0;
+	if ( *term == 0 ) return(0);
+	tstop = term + *term;
+	tstop = tstop - ABS(tstop[-1]);
+	term++;
+	while ( term < tstop ) {
+		if ( ( *term >= FUNCTION ) && ( functions[*term-FUNCTION].commute ) ) {
+			num++;
+			if ( num >= MAXNUMBEROFNONCOMTERMS ) return(num);
+		}
+		term += term[1];
+	}
+	return(num);
+}
+
+/*
+  	#] DoesCommu :
   	#[ PolyNormPoly :
 
 		Normalizes a polynomial

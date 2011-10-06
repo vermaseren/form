@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -40,7 +40,7 @@
 static UBYTE underscore[2] = {'_',0};
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CatchDollar :
 
 	Works out a dollar expression during compile type.
@@ -216,7 +216,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar : 
+  	#] CatchDollar :
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -312,7 +312,7 @@ NoChangeZero:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		d->type = DOLZERO;
 		d->where[0] = 0;
@@ -396,7 +396,7 @@ NoChangeOne:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		if ( d->size < 5 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
@@ -553,7 +553,7 @@ HandleDolZero1:;
 		}
 #endif
 /*
- 		#] Thread version : 
+ 		#] Thread version :
 */
 		d->type = DOLTERMS;
 		if ( d->where && d->where != &(AM.dollarzero) ) { M_free(d->where,"dollar contents"); d->where = 0; }
@@ -605,7 +605,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar : 
+  	#] AssignDollar :
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -691,7 +691,7 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 }
 
 /*
-  	#] WriteDollarToBuffer : 
+  	#] WriteDollarToBuffer :
   	#[ WriteDollarFactorToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -757,7 +757,7 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 }
 
 /*
-  	#] WriteDollarFactorToBuffer : 
+  	#] WriteDollarFactorToBuffer :
   	#[ AddToDollarBuffer :
 */
 
@@ -790,7 +790,7 @@ void AddToDollarBuffer(UBYTE *s)
 }
 
 /*
-  	#] AddToDollarBuffer : 
+  	#] AddToDollarBuffer :
   	#[ TermAssign :
 
 	This routine is called from a piece of code in Normalize that has been
@@ -849,7 +849,7 @@ void TermAssign(WORD *term)
 }
 
 /*
-  	#] TermAssign : 
+  	#] TermAssign :
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
@@ -1023,7 +1023,7 @@ void WildDollars(PHEAD0)
 }
 
 /*
-  	#] WildDollars : 
+  	#] WildDollars :
   	#[ DolToTensor :    with LOCK
 */
 
@@ -1084,7 +1084,7 @@ WORD DolToTensor(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToTensor : 
+  	#] DolToTensor :
   	#[ DolToFunction :  with LOCK
 */
 
@@ -1141,7 +1141,7 @@ WORD DolToFunction(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToFunction : 
+  	#] DolToFunction :
   	#[ DolToVector :    with LOCK
 */
 
@@ -1205,7 +1205,7 @@ WORD DolToVector(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToVector : 
+  	#] DolToVector :
   	#[ DolToNumber :
 */
 
@@ -1264,7 +1264,7 @@ WORD DolToNumber(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToNumber : 
+  	#] DolToNumber :
   	#[ DolToSymbol :    with LOCK
 */
 
@@ -1318,7 +1318,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToSymbol : 
+  	#] DolToSymbol :
   	#[ DolToIndex :     with LOCK
 */
 
@@ -1390,7 +1390,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 }
 
 /*
-  	#] DolToIndex : 
+  	#] DolToIndex :
   	#[ DolToTerms :
 
 	Returns a struct of type DOLLARS which contains a copy of the
@@ -1593,7 +1593,7 @@ skipdol:	error = 1;
 }
 
 /*
-  	#] DoInside : 
+  	#] DoInside :
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -1693,7 +1693,7 @@ idcall:;
 }
 
 /*
-  	#] InsideDollar : 
+  	#] InsideDollar :
   	#[ ExchangeDollars :
 */
 
@@ -1711,7 +1711,7 @@ void ExchangeDollars(int num1, int num2)
 }
 
 /*
-  	#] ExchangeDollars : 
+  	#] ExchangeDollars :
   	#[ TermsInDollar :
 */
 
@@ -1760,7 +1760,7 @@ LONG TermsInDollar(WORD num)
 }
 
 /*
-  	#] TermsInDollar : 
+  	#] TermsInDollar :
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.
@@ -1952,7 +1952,7 @@ onerror:
 }
 
 /*
-  	#] PreIfDollarEval : 
+  	#] PreIfDollarEval :
   	#[ TranslateExpression :
 */
 
@@ -2004,7 +2004,7 @@ WORD *TranslateExpression(UBYTE *s)
 }
 
 /*
-  	#] TranslateExpression : 
+  	#] TranslateExpression :
   	#[ IsSetMember :
 
 	Checks whether the expression in the buffer can be seen as an element
@@ -2162,7 +2162,7 @@ int IsSetMember(WORD *buffer, WORD numset)
 }
 
 /*
-  	#] IsSetMember : 
+  	#] IsSetMember :
   	#[ IsProductOf :
 
 	Checks whether the expression in buf1 is a single term multiple of 
@@ -2174,7 +2174,7 @@ int IsProductOf(WORD *buf1, WORD *buf2)
 }
 
 
-  	#] IsProductOf : 
+  	#] IsProductOf :
   	#[ IsMultipleOf :
 
 	Checks whether the expression in buf1 is a numerical multiple of 
@@ -2250,7 +2250,7 @@ int IsMultipleOf(WORD *buf1, WORD *buf2)
 }
 
 /*
-  	#] IsMultipleOf : 
+  	#] IsMultipleOf :
   	#[ TwoExprCompare :
 
 	Compares the expressions in buf1 and buf2 according to oprtr
@@ -2325,7 +2325,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 }
 
 /*
-  	#] TwoExprCompare : 
+  	#] TwoExprCompare :
   	#[ DollarRaiseLow :
 
 	Raises or lowers the numerical value of a dollar variable
@@ -2413,7 +2413,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 }
 
 /*
-  	#] DollarRaiseLow : 
+  	#] DollarRaiseLow :
   	#[ EvalDoLoopArg :
 */
 /**
@@ -2539,7 +2539,7 @@ endofchain:
 }
 
 /*
-  	#] EvalDoLoopArg : 
+  	#] EvalDoLoopArg :
   	#[ TestDoLoop :
 */
 
@@ -2617,7 +2617,7 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 }
 
 /*
-  	#] TestDoLoop : 
+  	#] TestDoLoop :
   	#[ TestEndDoLoop :
 */
 
@@ -2718,7 +2718,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 }
 
 /*
-  	#] TestEndDoLoop : 
+  	#] TestEndDoLoop :
   	#[ DollarFactorize :
 */
 /**
@@ -2822,7 +2822,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		*t++ = 0;
 	}
 /*
- 		#] Step 1: 
+ 		#] Step 1:
  		#[ Step 2: take out the 'content'.
 */
 	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
@@ -2894,7 +2894,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		}
 	}
 /*
- 		#] Step 2: take out the 'content'. 
+ 		#] Step 2: take out the 'content'.
  		#[ Step 3: ConvertToPoly
 				if there are objects that are not SYMBOLs,
 		        invoke ConvertToPoly
@@ -2906,6 +2906,15 @@ int DollarFactorize(PHEAD WORD numdollar)
 			action = 1; break;
 		}
 		t += *t;
+	}
+	if ( DetCommu(buf1) > 1 ) {
+		MesPrint("Cannot factorize a $-expression with more than one noncommuting object");
+		AR.SortType = oldsorttype;
+		M_free(buf1,"DollarFactorize-2");
+		M_free(buf1content,"DollarFactorize-4");
+		MesCall("DollarFactorize");
+		Terminate(-1);
+		return(-1);
 	}
 	if ( action ) {
 		t = buf1;
@@ -2933,7 +2942,7 @@ getout:
 		insize2 = insize;
 	}
 /*
- 		#] Step 3: ConvertToPoly 
+ 		#] Step 3: ConvertToPoly
  		#[ Step 4: Now the hard work.
 */
 	if ( ( buf3 = poly_factorize_dollar(BHEAD buf2) ) == 0 ) {
@@ -2964,7 +2973,7 @@ getout:
 		buf1: the original before ConvertToPoly for if only one factor
 		buf3: the factored expression with nfactors factors
 
- 		#] Step 4: 
+ 		#] Step 4:
  		#[ Step 5: ConvertFromPoly
 				If ConvertToPoly was used, use now ConvertFromPoly
 		        Be careful: there should be more than one factor now.
@@ -3069,7 +3078,7 @@ getout2:			AR.SortType = oldsorttype;
 	}
 	d->nfactors = nfactors + factorsincontent;
 /*
- 		#] Step 5: ConvertFromPoly 
+ 		#] Step 5: ConvertFromPoly
  		#[ Step 6: The factors of the content
 */
 	if ( buf3 ) M_free(buf3,"DollarFactorize-5");
@@ -3191,7 +3200,7 @@ getout2:			AR.SortType = oldsorttype;
 	}
 	M_free(buf1content,"DollarFactorize-5");
 /*
- 		#] Step 7: 
+ 		#] Step 7:
  		#[ Step 8: Sorting the factors
 
 	There are d->nfactors factors. Look which ones have a 'where'
@@ -3237,7 +3246,7 @@ nextj:;
 		M_free(facsize,"SortDollarFactors");
 	}
 /*
- 		#] Step 8: 
+ 		#] Step 8:
 */
 #ifdef WITHPTHREADS
 	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
@@ -3267,7 +3276,7 @@ void CleanDollarFactors(DOLLARS d)
 }
 
 /*
-  	#] CleanDollarFactors : 
+  	#] CleanDollarFactors :
   	#[ TakeDollarContent :
 */
 
@@ -3311,7 +3320,7 @@ WORD *TakeDollarContent(PHEAD WORD *dollarbuffer, WORD **factor)
 }
 
 /*
-  	#] TakeDollarContent : 
+  	#] TakeDollarContent :
   	#[ MakeDollarInteger :
 */
 /**
@@ -3486,7 +3495,7 @@ MakeDollarIntegerErr:
 }
 
 /*
-  	#] MakeDollarInteger : 
+  	#] MakeDollarInteger :
   	#[ MakeDollarMod :
 */
 /**
@@ -3534,7 +3543,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 	return(factor);
 }
 /*
-  	#] MakeDollarMod : 
+  	#] MakeDollarMod :
   	#[ GetDolNum :
 
 	Evaluates a chain of DOLLAREXPR2 into a number
@@ -3643,6 +3652,6 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 }
 
 /*
-  	#] GetDolNum : 
+  	#] GetDolNum :
 */
 

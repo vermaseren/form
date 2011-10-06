@@ -865,10 +865,16 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 	// use polynomial as buffer, because it is easy to extend
 	poly buffer(BHEAD 0);
 	int bufpos = 0;
+	int sumcommu = 0;
 
 	// read all terms
 	while (GetTerm(BHEAD term)) {
 		// substitute non-symbols by extra symbols
+		sumcommu += DoesCommu(term);
+		if ( sumcommu > 1 ) {
+			MesPrint("ERROR: Cannot factorize an expression with more than one noncommuting object");
+			Terminate(-1);
+		}
 		buffer.check_memory(bufpos);		
 		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf) < 0) {
 			MesPrint("ERROR: in LocalConvertToPoly [factorize_expression]");
