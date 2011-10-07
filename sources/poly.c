@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : poly.c
 
@@ -44,7 +44,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Polyno :
  		#[ PolynoAdd :
 
@@ -74,7 +74,7 @@ WORD *PolynoAdd(WORD *poly1, WORD *poly2)
 }
 
 /*
- 		#] PolynoAdd : 
+ 		#] PolynoAdd :
  		#[ PolynoSub :
 
 		Subtraction of two polynomials.
@@ -108,7 +108,7 @@ WORD *PolynoSub(WORD *poly1, WORD *poly2)
 }
 
 /*
- 		#] PolynoSub : 
+ 		#] PolynoSub :
  		#[ PolynoMul :
 
 		Multiply term by term, normalize and put new bracket info if needed.
@@ -185,7 +185,7 @@ abortion:
 }
 
 /*
- 		#] PolynoMul : 
+ 		#] PolynoMul :
  		#[ PolynoDiv :
 */
 
@@ -313,7 +313,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoDiv : 
+ 		#] PolynoDiv :
  		#[ Polyno1Div :
 
 		Division of polynomials in a single variable
@@ -477,7 +477,7 @@ aborteer:
 }
 
 /*
- 		#] Polyno1Div : 
+ 		#] Polyno1Div :
  		#[ PolynoGCD :
 
 		GCD of two multivariate polynomials:
@@ -746,7 +746,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoGCD : 
+ 		#] PolynoGCD :
  		#[ Polyno1GCD :
 */
 
@@ -808,7 +808,7 @@ isone:
 }
 
 /*
- 		#] Polyno1GCD : 
+ 		#] Polyno1GCD :
  		#[ PolynoPrint :
 */
 
@@ -851,7 +851,7 @@ UBYTE *PolynoPrint(WORD *poly)
 }
 
 /*
- 		#] PolynoPrint : 
+ 		#] PolynoPrint :
  		#[ PolynoWrite :
 */
 
@@ -893,7 +893,7 @@ abowrite:
 }
 
 /*
- 		#] PolynoWrite : 
+ 		#] PolynoWrite :
  		#[ PolynoPushBracket :
 */
 
@@ -938,7 +938,7 @@ void PolynoPushBracket(WORD numofsymbol)
 }
 
 /*
- 		#] PolynoPushBracket : 
+ 		#] PolynoPushBracket :
  		#[ PolynoPopBracket :
 */
 
@@ -961,7 +961,7 @@ void PolynoPopBracket()
 }
 
 /*
- 		#] PolynoPopBracket : 
+ 		#] PolynoPopBracket :
  		#[ PolynoStart :
 */
 
@@ -986,7 +986,7 @@ void PolynoStart()
 }
 
 /*
- 		#] PolynoStart : 
+ 		#] PolynoStart :
  		#[ PolynoFinish :
 */
 
@@ -1003,7 +1003,7 @@ void PolynoFinish()
 }
 
 /*
- 		#] PolynoFinish : 
+ 		#] PolynoFinish :
  		#[ PolynoNormalize :
 */
 
@@ -1065,7 +1065,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoNormalize : 
+ 		#] PolynoNormalize :
  		#[ DoPolynomial :
 */
 
@@ -1182,9 +1182,11 @@ aborteer:
 }
 
 /*
- 		#] DoPolynomial : 
+ 		#] DoPolynomial :
  		#[ DoPolyGetRem :
 */
+
+#ifdef OLDPOLY
 
 WORD DoPolyGetRem(WORD *term, WORD level)
 {
@@ -1231,8 +1233,10 @@ WORD DoPolyGetRem(WORD *term, WORD level)
 	return(0);
 }
 
+#endif
+
 /*
- 		#] DoPolyGetRem : 
+ 		#] DoPolyGetRem :
  		#[ CopyOfPolynomial :
 */
 
@@ -1250,7 +1254,7 @@ WORD *CopyOfPolynomial(WORD *poly)
 }
 
 /*
- 		#] CopyOfPolynomial : 
+ 		#] CopyOfPolynomial :
  		#[ PolynoUnify :
 
 		Divides all terms by the coefficient of the first term
@@ -1335,7 +1339,7 @@ WORD *PolynoUnify(WORD *poly, int par)
 }
 
 /*
- 		#] PolynoUnify : 
+ 		#] PolynoUnify :
  		#[ PolynoCoefNorm :
 
 		Routine takes a polynomial, brackets it in x, determines the
@@ -1420,7 +1424,7 @@ aborteer:
 }
 
 /*
- 		#] PolynoCoefNorm : 
+ 		#] PolynoCoefNorm :
  		#[ MakePolynomial :
 
 		Converts an expression (par == 0) or a $-expression (par == 1)
@@ -1480,7 +1484,7 @@ aborteer:
 }
 
 /*
- 		#] MakePolynomial : 
+ 		#] MakePolynomial :
  		#[ DoPolynoNorm :
 */
 
@@ -1570,7 +1574,7 @@ int DoPolynoNorm(int par, WORD numexp, WORD numsym, WORD numdol)
 }
 
 /*
- 		#] DoPolynoNorm : 
+ 		#] DoPolynoNorm :
  		#[ PolynoIntFac :
 
 		Normalizes the polynomial such that all coefficients are integers.
@@ -1650,6 +1654,6 @@ PIFerror:
 }
 
 /*
- 		#] PolynoIntFac : 
+ 		#] PolynoIntFac :
 	#] Polyno :
 */

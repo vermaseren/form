@@ -1326,7 +1326,11 @@ struct M_const {
     int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
     int     gOldFactArgFlag;
     int     ggOldFactArgFlag;
+#ifdef WITHOLDPOLYRATFUN
 	int		oldpolyratfun;
+#else
+    int     dummyint;
+#endif
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1364,7 +1368,6 @@ struct M_const {
     WORD    matchfunnum;           /* (M) internal number of match_ function */
     WORD    countfunnum;           /* (M) internal number of count_ function */
     WORD    polyfunnum;            /* (M) internal number of poly_ function */
-    WORD    polygetremnum;         /* (M) internal number of polygetrem_ function */
     WORD    polytopnum;            /* (M) internal number of maximum poly function */
     WORD    gPolyFun;              /* (M) global value of PolyFun */
     WORD    gPolyFunType;          /* (M) global value of PolyFun */
@@ -1379,10 +1382,11 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
+    WORD    dummyword;
     WORD    BracketFactors[8];
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1846,6 +1850,7 @@ struct T_const {
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
     WORD    **TermMemHeap;        /* For TermMalloc. Set zero in Checkpoint */
     UWORD    **NumberMemHeap;      /* For NumberMalloc. Set zero in Checkpoint */
+	BRACKETINFO *bracketinfo;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */

@@ -444,13 +444,12 @@ typedef int (*TFUN1)();
 #define POLYNOINTFAC 73
 #define POLYNONORM 74
 #define POLYNOFACT 75
-#define POLYNOGETREM 76
-#define MAXPOWEROF 77
-#define MINPOWEROF 78
-#define TABLESTUB 79
-#define FACTORIN 80
-#define TERMSINBRACKET 81
-#define WILDARGFUN 82
+#define MAXPOWEROF 76
+#define MINPOWEROF 77
+#define TABLESTUB 78
+#define FACTORIN 79
+#define TERMSINBRACKET 80
+#define WILDARGFUN 81
 /*
 	In the past we would add new functions here and raise the numbers
 	on the special reserved names. This is impractical in the light of
@@ -458,31 +457,31 @@ typedef int (*TFUN1)();
 	value of MAXBUILTINFUNCTION at the moment of writing. This allows
 	form corrections if this value has changed in the mean time.
 */
-#define SQRTFUNCTION 83
-#define LNFUNCTION 84
-#define SINFUNCTION 85
-#define COSFUNCTION 86
-#define TANFUNCTION 87
-#define ASINFUNCTION 88
-#define ACOSFUNCTION 89
-#define ATANFUNCTION 90
-#define ATAN2FUNCTION 91
-#define SINHFUNCTION 92
-#define COSHFUNCTION 93
-#define TANHFUNCTION 94
-#define ASINHFUNCTION 95
-#define ACOSHFUNCTION 96
-#define ATANHFUNCTION 97
-#define LI2FUNCTION 98
-#define LINFUNCTION 99
+#define SQRTFUNCTION 82
+#define LNFUNCTION 83
+#define SINFUNCTION 84
+#define COSFUNCTION 85
+#define TANFUNCTION 86
+#define ASINFUNCTION 87
+#define ACOSFUNCTION 88
+#define ATANFUNCTION 89
+#define ATAN2FUNCTION 90
+#define SINHFUNCTION 91
+#define COSHFUNCTION 92
+#define TANHFUNCTION 93
+#define ASINHFUNCTION 94
+#define ACOSHFUNCTION 95
+#define ATANHFUNCTION 96
+#define LI2FUNCTION 97
+#define LINFUNCTION 98
 
-#define EXTRASYMFUN 100
-#define RANDOMFUNCTION 101
-#define RANPERM 102
-#define NUMFACTORS 103
-#define UNFACTORIZE 104
+#define EXTRASYMFUN 99
+#define RANDOMFUNCTION 100
+#define RANPERM 101
+#define NUMFACTORS 102
+#define UNFACTORIZE 103
 
-#define MAXBUILTINFUNCTION 104
+#define MAXBUILTINFUNCTION 103
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist

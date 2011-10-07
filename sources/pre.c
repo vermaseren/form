@@ -72,7 +72,9 @@ static KEYWORD precommands[] = {
 	,{"ifndef"      , (TFUN)DoIfdef  , 2, 0}
 	,{"include"     , DoInclude      , 0, 0}
 	,{"message"     , DoMessage      , 0, 0}
+#ifdef OLDPOLY
 	,{"normpoly"    , DoPreNormPoly  , 0, 0}
+#endif
 	,{"pipe"        , DoPipe         , 0, 0}
 	,{"preout"      , DoPreOut       , 0, 0}
 	,{"print"       , DoPrePrint     , 0, 0}
@@ -3510,6 +3512,8 @@ int DoSystem(UBYTE *s)
 		F or $a will be overwritten by the result.
 */
 
+#ifdef OLDPOLY
+
 int DoPreNormPoly(UBYTE *s)
 {
 	GETIDENTITY
@@ -3630,6 +3634,8 @@ syntax:
 	MesPrint("@Proper syntax: %#NormPoly(expr or $var),symbol,$var)");
 	return(-1);
 }
+
+#endif
 
 /*
  		#] DoPreNormPoly : 

@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -247,7 +247,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -626,7 +626,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1246,12 +1246,6 @@ Important: we may not have enough spots here
 				AR.TePos = -1;
 				return(1);
 			  }
-			  else if ( *t == AM.polygetremnum ) {
-				AN.TeInFun = -5;
-				AN.TeSuOut = 0;
-				AR.TePos = -1;
-				return(1);
-			  }
 			  else if ( *t == FACTORIN ) {
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -DOLLAREXPRESSION ) {
 					AN.TeInFun = -6;
@@ -1780,7 +1774,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2304,7 +2298,7 @@ InFunc:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2437,7 +2431,7 @@ InsCall:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2553,7 +2547,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2628,7 +2622,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2807,7 +2801,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3421,7 +3415,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -3454,7 +3448,6 @@ AutoGen:	i = *AT.TMout;
 			else if ( AN.TeInFun == -2 && DoDelta3(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -3 && DoTableExpansion(term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -4 && DoPolynomial(term,level) ) goto GenCall;
-			else if ( AN.TeInFun == -5 && DoPolyGetRem(term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -6 && FactorIn(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -7 && FactorInExpr(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -8 && TermsInBracket(BHEAD term,level) < 0 ) goto GenCall;
@@ -3956,7 +3949,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4187,7 +4180,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4311,7 +4304,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4339,19 +4332,17 @@ WORD PrepPoly(PHEAD WORD *term)
 	WORD count = 0, i, jcoef, ncoef;
 	WORD *t, *m, *r, *tstop, *poly = 0, *v, *w, *vv, *ww;
 	WORD *oldworkpointer = AT.WorkPointer;
-/*	if ( AM.oldpolyratfun ) { */
 /*
-		The problem here is that the function will be forced into 'long'
-		notation. After this -SNUMBER,1 becomes 6,0,4,1,1,3 and the
-		pattern matcher cannot match a short 1 with a long 1.
-		But because this is an undocumented feature for very special
-		purposes, we don't do anything about it. (30-aug-2011)
+	The problem here is that the function will be forced into 'long'
+	notation. After this -SNUMBER,1 becomes 6,0,4,1,1,3 and the
+	pattern matcher cannot match a short 1 with a long 1.
+	But because this is an undocumented feature for very special
+	purposes, we don't do anything about it. (30-aug-2011)
 */
-		if ( AR.PolyFunType == 2 ) {
-			if ( ( term = poly_ratfun_normalize(BHEAD term,0) ) == 0 ) Terminate(-1);
-			oldworkpointer = AT.WorkPointer;
-		}
-/*	} */
+	if ( AR.PolyFunType == 2 ) {
+		if ( ( term = poly_ratfun_normalize(BHEAD term,0) ) == 0 ) Terminate(-1);
+		oldworkpointer = AT.WorkPointer;
+	}
 	AT.PolyAct = 0;
 	t = term;
 	GETSTOP(t,tstop);
@@ -4438,7 +4429,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun :
+ 		#] Create a PolyFun : 
 */
 	}
 	else if ( AR.PolyFunType == 1 ) {
@@ -4588,7 +4579,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4645,7 +4636,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		poly_ratfun_mul(BHEAD term); // TODO: check do nothing with return value
 		return(0);
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4665,7 +4656,7 @@ WORD PrepPoly(PHEAD WORD *term)
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4910,6 +4901,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

@@ -187,7 +187,6 @@ static struct fixedfun {
 	,{"polyintfac_",0 ,0              ,0               ,0} /* POLYNOINTFAC */
 	,{"polynorm_",0 ,0                ,0               ,0} /* POLYNONORM */
 	,{"polyfact_",0 ,0                ,0               ,0} /* POLYNOFACT*/
-	,{"polygetrem_",0 ,0              ,0               ,0} /* POLYNOGETREM */
 	,{"maxpowerof_",0 ,0              ,0               ,0} /* MAXPOWEROF */
 	,{"minpowerof_",0 ,0              ,0               ,0} /* MINPOWEROF */
 	,{"tbl_"     ,0 ,0                ,0               ,0} /* TABLESTUB */

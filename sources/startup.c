@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
  		#[ includes :
 */
@@ -79,7 +79,7 @@ extern int pcounter;
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
 /*
- 		#] includes : 
+ 		#] includes :
  		#[ DoTail :
 
 		Routine reads the command tail and handles the commandline options.
@@ -303,7 +303,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail : 
+ 		#] DoTail :
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -405,7 +405,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput : 
+ 		#] OpenInput :
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -613,7 +613,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles : 
+ 		#] ReserveTempFiles :
  		#[ StartVariables :
 */
 
@@ -856,13 +856,11 @@ VOID StartVariables()
 	GetName(AC.varnames,(UBYTE *)"count_",&AM.countfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"poly_",&AM.polyfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"polynorm_",&AM.polytopnum,NOAUTO);
-	GetName(AC.varnames,(UBYTE *)"polygetrem_",&AM.polygetremnum,NOAUTO);
 	AM.termfunnum += FUNCTION;
 	AM.matchfunnum += FUNCTION;
 	AM.countfunnum += FUNCTION;
 	AM.polyfunnum += FUNCTION;
 	AM.polytopnum += FUNCTION;
-	AM.polygetremnum += FUNCTION;
 
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1;
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats = 1;
@@ -892,7 +890,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1111,13 +1109,14 @@ WORD IniVars()
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AP.PreAssignFlag = 0;
+#ifdef WITHOLDPOLYRATFUN
 	AM.oldpolyratfun = 0;
-
+#endif
 	return(0);
 }
 
 /*
- 		#] IniVars : 
+ 		#] IniVars :
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1187,7 +1186,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers : 
+ 		#] Signal handlers :
  		#[ main :
 */
 
@@ -1356,7 +1355,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main : 
+ 		#] main :
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1435,7 +1434,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp : 
+ 		#] CleanUp :
  		#[ Terminate :
 */
 
@@ -1513,7 +1512,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] Terminate :
  		#[ PrintRunningTime :
 */
 
@@ -1553,6 +1552,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime : 
+ 		#] PrintRunningTime :
 */
 
