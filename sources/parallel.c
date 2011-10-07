@@ -2561,8 +2561,13 @@ static int SumDollars(WORD index)
 		goto cleanup;
 	}
 
-	for ( i = 1; i < PF.numtasks; i++ ) {
-		r = PFDollars[index].slavebuf[i];
+	/*
+	 * Sum up the original $-variable in the master $-variables on all slaves.
+	 * Note that $-variables on the slaves are set to zero at the beginning of
+	 * the module (See also DoExecute).
+	 */
+	for ( i = 0; i < PF.numtasks; i++ ) {
+		r = i == 0 ? Dollars[index].where : PFDollars[index].slavebuf[i];
 		if ( r == &AM.dollarzero ) continue;
 
 		while ( *r ) {

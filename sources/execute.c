@@ -565,6 +565,20 @@ WORD DoExecute(WORD par, WORD skip)
 		  }
 		}
 	}
+	/*
+	 * Set $-variables with MODSUM to zero on the slaves.
+	 */
+	if ( AC.mparallelflag == PARALLELFLAG && PF.me != MASTER ) {
+		for ( i = 0; i < NumModOptdollars; i++ ) {
+			if ( ModOptdollars[i].type == MODSUM ) {
+				DOLLARS d = Dollars + ModOptdollars[i].number;
+				d->type = DOLZERO;
+				d->where = &AM.dollarzero;
+				d->size = 0;
+				CleanDollarFactors(d);
+			}
+		}
+	}
 #endif
 #ifdef WITHPTHREADS
 /*
