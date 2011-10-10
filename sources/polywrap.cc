@@ -1016,13 +1016,12 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			expr->numfactors++;
 		}
 
-		cout << fac << endl;
-		
 		// convert the non-constant factors to Form-style arguments
 		vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
 		
 		for (int i=0; i<(int)fac.factor.size(); i++)
 			if (!fac.factor[i].is_integer()) {
+				buffer.check_memory(fac.factor[i].size_of_form_notation()+1);		
 				poly::poly_to_argument(fac.factor[i], buffer.terms, false);
 				NewSort(BHEAD0);
 				

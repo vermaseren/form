@@ -2025,6 +2025,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		t = argfree + ARGHEAD;
 		while ( t < tstop ) {
 			sumcommu += DoesCommu(t);
+			t += *t;
 		}
 		if ( sumcommu > 1 ) {
 			MesPrint("ERROR: Cannot factorize an argument with more than one noncommuting object");
