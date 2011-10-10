@@ -53,39 +53,25 @@ using namespace std;
  *
  *   Description
  *   ===========
- *   This method calculates the greatest common divisor of any number
- *   of polynomials, given by a zero-terminated Form-style argument
- *   list.
+ *   This method calculates the greatest common divisor of two
+ *   polynomials, given by two zero-terminated Form-style term lists.
  *
  *   Notes
  *   =====
- *   - The result is written at argout
+ *   - The result is written at newly allocated memory
  *   - Called from ratio.c
  *   - Calls polygcd::gcd
  */
-int poly_gcd(PHEAD WORD *argin, WORD *argout) {
+WORD *poly_gcd_new(PHEAD WORD *a, WORD *b) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_gcd" << endl;
 #endif
 	
-	// Check whether one of the arguments is 1
-	// i.e., [ARGHEAD 4 1 1 3] or [-SNUMBER 1]
-	WORD *p = argin;
-
-	while (*p != 0) {
-		if ((p[0]==ARGHEAD+4 && p[ARGHEAD]==4 && p[ARGHEAD+1]==1 && p[ARGHEAD+2]==1 && p[ARGHEAD+3]==3) ||
-				(p[0]==-SNUMBER && p[1] ==1)) {
-			argout[0] = -SNUMBER;
-			argout[1] = 1;
-			return 0;
-		}
-		p+=*p;
-	}
-
 	// Extract variables
 	AN.poly_num_vars = 0;
-	map<int,int> var_to_idx = poly::extract_variables(BHEAD argin, true, true);
+	poly::extract_variables(BHEAD a, false, false);
+	map<int,int> var_to_idx = poly::extract_variables(BHEAD b, false, false);
 
 	// Check for modulus calculus
 	WORD modp=0;
@@ -112,23 +98,59 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 		}
 	}
 
-	poly gcd(BHEAD 0, modp, 1);
-	
-	// Calculate gcd
-	while (*argin != 0) {
-		poly a(poly::argument_to_poly(BHEAD argin, true, true, var_to_idx));
-		if (modp > 0) a.setmod(modp,1);
-		gcd = polygcd::gcd(gcd, a);
-		argin += *argin;
-	}
+	// Convert to polynomials
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx), modp, 1);
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx), modp, 1);
 
-	poly::poly_to_argument(gcd, argout, true);
+	// Calculate gcd
+	poly gcd(polygcd::gcd(pa,pb));
+
+	// Allocate new memory and convert to Form notation
+	WORD *res = (WORD *)Malloc1((gcd.size_of_form_notation()+1)*sizeof(WORD), "poly_gcd");
+	poly::poly_to_argument(gcd, res, false);
 
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
+
+	return res;
+}
+
+// note: for testing purposes only! should be deleted afterwards
+int poly_gcd(PHEAD WORD *argin, WORD *argout) {
+
+	WORD *res = (WORD *)Malloc1(sizeof(WORD), "poly_gcd");
+	*res = 0;
+
+	while (*argin != 0) {
+	
+		WORD *a = (WORD *)Malloc1(*argin*sizeof(WORD), "poly_gcd");
+		memcpy(a, argin+ARGHEAD, (*argin-ARGHEAD)*sizeof(WORD));
+		a[*argin-ARGHEAD] = 0;
+		argin += *argin;
+	
+		WORD *b = poly_gcd_new(BHEAD a,res);
+		
+		M_free(res, "poly_gcd");
+		int size=1;
+		for (WORD *p=b; *p!=0; p+=*p) size+=*p;
+		res = (WORD *)Malloc1(size*sizeof(WORD), "poly_gcd");
+		memcpy(res,b,size*sizeof(WORD));
+		M_free(b, "poly_gcd");
+		M_free(a, "poly_gcd");
+	}
+	
+	memset(argout,0,ARGHEAD*sizeof(WORD));
+	*argout = ARGHEAD;
+
+	for (WORD *p=res; *p!=0; p+=*p) {
+		memcpy(argout+*argout, p, *p*sizeof(WORD));
+		*argout += *p;
+	}
+
+	M_free(res, "poly_gcd");
 	
 	return 0;
 }
@@ -994,6 +1016,8 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 			expr->numfactors++;
 		}
 
+		cout << fac << endl;
+		
 		// convert the non-constant factors to Form-style arguments
 		vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
 		
@@ -1029,7 +1053,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 				for (WORD *t=fac_arg[i].terms+ARGHEAD; *t!=0; t+=*t)
 					fac_arg[i].terms[0] += *t;
 			}
-		
+
 		// compare and sort the factors in Form notation
 		vector<int> order;
 		vector<vector<int> > comp(fac.factor.size(), vector<int>(fac.factor.size(), 0));
