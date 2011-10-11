@@ -462,7 +462,7 @@ int PF_RawSend(int dest, void *buf, LONG l, int tag)
  * @param[in,out]  src      the source process number. In output, that of the actual received message.
  * @param[out]     buf      the recieve buffer.
  * @param          thesize  the size of the recieve buffer in bytes.
- * @param[in,out]  tag      the message tag. In output, that of the actual received message.
+ * @param[out]     tag      the message tag of the actual received message.
  * @return                  the actual sizeof received data in bytes, or -1 on failure.
  */
 LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag)

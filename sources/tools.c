@@ -1325,6 +1325,11 @@ void UpdateMaxSize()
 	POSITION position, sumsize;
 	int i;
 	FILEHANDLE *scr;
+#ifdef PARALLEL
+	/* Currently, it works only on the master. The sort files on the slaves
+	 * are ignored. (TU 11 Oct 2011) */
+	if ( PF.me != MASTER ) return;
+#endif
 	PUTZERO(sumsize);
 	if ( AM.PrintTotalSize ) {
 /*

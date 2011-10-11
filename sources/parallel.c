@@ -1407,7 +1407,7 @@ static int PF_WaitAllSlaves(void)
 				break;
 			case 0:
 /*
-					The slave is not ready. Just go to  the next slave.
+					The slave is not ready. Just go to the next slave.
 					It may appear that there are no more ready slaves, and the master
 					will wait them in infinite loop. Stupid situation - the master can
 					receive buffers from ready slaves!
@@ -1680,6 +1680,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			#[ Clean up & EndSort:
 */
 		if ( LastExpression ) {
+			UpdateMaxSize();
 			if ( AR.infile->handle >= 0 ) {
 				CloseFile(AR.infile->handle);
 				AR.infile->handle = -1;
@@ -1696,13 +1697,14 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			AR.outfile = oldoutfile;
 			AR.hidefile->POfull = AR.hidefile->POfill;
 		}
+		UpdateMaxSize();
 		AR.BracketOn = oldBracketOn;
 		AT.BrackBuf = oldBrackBuf;
 		if ( ( e->vflags & TOBEFACTORED ) != 0 )
-				poly_factorize_expression(e);
+			poly_factorize_expression(e);
 		else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
 		 && ( ( e->vflags & ISFACTORIZED ) != 0 ) )
-				unfactorize_expression(e);
+			unfactorize_expression(e);
 		AR.GetFile = 0;
 		AR.outtohide = 0;
 /*
@@ -1880,11 +1882,11 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			fout->POsize   = oldsize;
 			fout->POfill = fout->POfull = fout->PObuffer;
 		}
-		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms));
 /*
 			#] Generator Loop & EndSort :
 			#[ Collect (stats,prepro...) :
 */
+		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms));
 		PF_Send(MASTER,PF_ENDSORT_MSGTAG,0);
 		cpu = TimeCPU(1);
 		size = 0;
@@ -3666,10 +3668,10 @@ static int PF_DoOneExpr(void)/*the processor*/
 				AR.BracketOn = oldBracketOn;
 				AT.BrackBuf = oldBrackBuf;
 				if ( ( e->vflags & TOBEFACTORED ) != 0 )
-						poly_factorize_expression(e);
+					poly_factorize_expression(e);
 				else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
 				 && ( ( e->vflags & ISFACTORIZED ) != 0 ) )
-						unfactorize_expression(e);
+					unfactorize_expression(e);
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
