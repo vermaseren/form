@@ -2219,8 +2219,9 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		while ( *r3 ) {
 			tt = term + 1; rr = termout + 1;
 			while ( tt < t ) *rr++ = *tt++;
+			r = r3 + 1;
 			r3 = r3 + *r3;
-			r = r3 + 1; rstop = r3 - ABS(r3[-1]);
+			rstop = r3 - ABS(r3[-1]);
 			while ( r < rstop ) *rr++ = *r++;
 			tt += t[1];
 			while ( tt < tstop ) *rr++ = *tt++;
@@ -2319,6 +2320,7 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 			output[FUNHEAD+4] = 0;
 			break;
 	}
+	*type = 0;
 	return(output);
 }
 
