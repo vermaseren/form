@@ -1264,8 +1264,8 @@ RaisOvl:
 }
 
 /*
- 		#] RaisPow :
-  	#[ RaisPowCached :
+ 		#] RaisPow : 
+ 		#[ RaisPowCached :
 */
 
 /**  Computes power x^n and caches the value
@@ -1336,7 +1336,7 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 }
 
 /*
-  	#] RaisPowSmall :
+ 		#] RaisPowCached : 
 	 	#[ RaisPowMod :
 		
    Computes the power x^n mod m
@@ -1352,7 +1352,7 @@ WORD RaisPowMod (WORD x, WORD n, WORD m) {
 }
 
 /*
-  	#] RaisPowMod :
+  	#] RaisPowMod : 
  		#[ NormalModulus :  int NormalModulus(UWORD *a,WORD *na)
 */
 /**
@@ -1462,7 +1462,7 @@ somethingwrong:
 	return(-1);
 }
 /*
- 		#] GetModInverses :
+ 		#] GetModInverses : 
  		#[ GetLongModInverses :
 */
 
@@ -1539,7 +1539,7 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 }
 
 /*
- 		#] GetLongModInverses :
+ 		#] GetLongModInverses : 
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -3169,7 +3169,7 @@ WORD MakeModTable()
 
 /*
  		#] MakeModTable : 
-  	#] RekenTerms :
+  	#] RekenTerms : 
   	#[ Functions :
  		#[ Factorial :		WORD Factorial(n,a,na)
 
@@ -3366,7 +3366,7 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 }
 
 /*
- 		#] Bernoulli :
+ 		#] Bernoulli : 
   	#[ NextPrime :
 */
 /**

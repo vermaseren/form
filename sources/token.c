@@ -912,6 +912,7 @@ int simp2token(SBYTE *s)
 						|| n == (TERMSINEXPR-FUNCTION)
 						|| n == (NUMFACTORS-FUNCTION)
 						|| n == (UNFACTORIZE-FUNCTION)
+						|| n == (GCDFUNCTION-FUNCTION)
 						|| n == (FACTORIN-FUNCTION) )
 						&& fill[-1] == TFUNOPEN ) {
 							v = s+1;
@@ -1036,7 +1037,8 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						if ( *w != TFUNCTION ) { *fill++ = *s++; break; }
 						w++; n = 0;
 						while ( *w >= 0 ) { n = 128*n + *w++; }
-						if ( n == (AM.polyfunnum-FUNCTION) ) {
+						if ( n == (AM.polyfunnum-FUNCTION)
+						|| n == GCDFUNCTION-FUNCTION ) {
 							*t = TEMPTY; s++;
 						}
 						else *fill++ = *s++;
@@ -1054,7 +1056,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token : 
+ 		#] simp2token :
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.

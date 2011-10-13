@@ -1203,6 +1203,9 @@ VOID WriteArgument(WORD *t)
 		*Out++ = '$';
 		StrCopy(AC.dollarnames->namebuffer+d->name,Out);
 	}
+	else if ( *t == -EXPRESSION ) {
+		StrCopy(EXPRNAME(t[1]),Out);
+	}
 	else if ( *t <= -FUNCTION ) {
 		StrCopy(VARNAME(functions,-*t-FUNCTION),Out);
 	}
@@ -2243,7 +2246,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll :
+ 		#] WriteAll : 
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
