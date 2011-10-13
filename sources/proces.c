@@ -1240,12 +1240,14 @@ Important: we may not have enough spots here
 				AR.TePos = -1;
 				return(1);
 			  }
+#ifdef OLDPOLY
 			  else if ( *t == AM.polyfunnum ) {
 				AN.TeInFun = -4;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
 				return(1);
 			  }
+#endif
 			  else if ( *t == FACTORIN ) {
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -DOLLAREXPRESSION ) {
 					AN.TeInFun = -6;
@@ -1376,29 +1378,12 @@ DoSpec:
 			r = t + t[1];
 			funnum = *t;
 			if ( *t >= FUNCTION + WILDOFFSET ) funnum -= WILDOFFSET;
-			if ( ( *t == NUMFACTORS || *t == UNFACTORIZE ) && t[1] == FUNHEAD+2 &&
+			if ( ( *t == NUMFACTORS ) && t[1] == FUNHEAD+2 &&
 			( t[FUNHEAD] == -EXPRESSION || t[FUNHEAD] == -DOLLAREXPRESSION ) ) {
 				if ( *t == NUMFACTORS ) {
 /*
 					This we leave for Normalize
 */				
-				}
-				else if ( *t == UNFACTORIZE ) {
-					WORD nexpr = t[FUNHEAD+1];
-					EXPRESSIONS e = Expressions + nexpr;
-					if ( ( e->vflags & ISFACTORIZED ) == 0 ) {
-#if ( FUNHEAD+2 == SUBEXPSIZE )
-						*t++ = EXPRESSION; *t++ = SUBEXPSIZE;
-						*t++ = nexpr; *t++ = 1; *t++ = 0; FILLSUB(t)
-#endif
-						goto ReStart;
-					}
-/*
-					nfactors = AS.OldNumFactors[nexpr];
-					Now we have to insert nfactors*(SUBEXPSIZE+10) to overwrite
-					FUNHEAD+2 WORDs. This means that we have to move something.
-*/
-/* 5  15  0  1  0  13  10  8  1  4  7  2  1  1  3 */
 				}
 			}
 			else if ( functions[funnum-FUNCTION].spec == 0 ) {
@@ -3463,7 +3448,9 @@ AutoGen:	i = *AT.TMout;
 			if ( AN.TeInFun == -1 && DoDistrib(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -2 && DoDelta3(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -3 && DoTableExpansion(term,level) ) goto GenCall;
+#ifdef OLDPOLY
 			else if ( AN.TeInFun == -4 && DoPolynomial(term,level) ) goto GenCall;
+#endif
 			else if ( AN.TeInFun == -6 && FactorIn(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -7 && FactorInExpr(BHEAD term,level) ) goto GenCall;
 			else if ( AN.TeInFun == -8 && TermsInBracket(BHEAD term,level) < 0 ) goto GenCall;

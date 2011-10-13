@@ -434,22 +434,14 @@ typedef int (*TFUN1)();
 #define TERMSINEXPR 63
 #define NUMTERMSFUN 64
 #define GCDFUNCTION 65
-#define POLYNOMIAL 66
-#define POLYNOADD 67
-#define POLYNOSUB 68
-#define POLYNOMUL 69
-#define POLYNODIV 70
-#define POLYNOREM 71
-#define POLYNOGCD 72
-#define POLYNOINTFAC 73
-#define POLYNONORM 74
-#define POLYNOFACT 75
-#define MAXPOWEROF 76
-#define MINPOWEROF 77
-#define TABLESTUB 78
-#define FACTORIN 79
-#define TERMSINBRACKET 80
-#define WILDARGFUN 81
+#define DIVFUNCTION 66
+#define REMFUNCTION 67
+#define MAXPOWEROF 68
+#define MINPOWEROF 69
+#define TABLESTUB 70
+#define FACTORIN 71
+#define TERMSINBRACKET 72
+#define WILDARGFUN 73
 /*
 	In the past we would add new functions here and raise the numbers
 	on the special reserved names. This is impractical in the light of
@@ -457,33 +449,47 @@ typedef int (*TFUN1)();
 	value of MAXBUILTINFUNCTION at the moment of writing. This allows
 	form corrections if this value has changed in the mean time.
 */
-#define SQRTFUNCTION 82
-#define LNFUNCTION 83
-#define SINFUNCTION 84
-#define COSFUNCTION 85
-#define TANFUNCTION 86
-#define ASINFUNCTION 87
-#define ACOSFUNCTION 88
-#define ATANFUNCTION 89
-#define ATAN2FUNCTION 90
-#define SINHFUNCTION 91
-#define COSHFUNCTION 92
-#define TANHFUNCTION 93
-#define ASINHFUNCTION 94
-#define ACOSHFUNCTION 95
-#define ATANHFUNCTION 96
-#define LI2FUNCTION 97
-#define LINFUNCTION 98
+#define SQRTFUNCTION 74
+#define LNFUNCTION 75
+#define SINFUNCTION 76
+#define COSFUNCTION 77
+#define TANFUNCTION 78
+#define ASINFUNCTION 79
+#define ACOSFUNCTION 80
+#define ATANFUNCTION 81
+#define ATAN2FUNCTION 82
+#define SINHFUNCTION 83
+#define COSHFUNCTION 84
+#define TANHFUNCTION 85
+#define ASINHFUNCTION 86
+#define ACOSHFUNCTION 87
+#define ATANHFUNCTION 88
+#define LI2FUNCTION 89
+#define LINFUNCTION 90
 
-#define EXTRASYMFUN 99
-#define RANDOMFUNCTION 100
-#define RANPERM 101
-#define NUMFACTORS 102
-#define UNFACTORIZE 103
-#define DIVFUNCTION 104
-#define REMFUNCTION 105
+#define EXTRASYMFUN 91
+#define RANDOMFUNCTION 92
+#define RANPERM 93
+#define NUMFACTORS 94
 
-#define MAXBUILTINFUNCTION 105
+#ifdef OLDPOLY
+#define POLYNOMIAL 95
+#define POLYNOADD 96
+#define POLYNOSUB 97
+#define POLYNOMUL 98
+#define POLYNODIV 99
+#define POLYNOREM 100
+#define POLYNOGCD 101
+#define POLYNOINTFAC 102
+#define POLYNONORM 103
+#define POLYNOFACT 104
+#define MAXBUILTINFUNCTION 104
+#else
+#define MAXBUILTINFUNCTION 94
+#endif
+
+#define FIRSTUSERFUNCTION 150
+
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist
@@ -498,6 +504,9 @@ typedef int (*TFUN1)();
 #define WILDARGSYMBOL 5
 #define DIMENSIONSYMBOL 6
 #define FACTORSYMBOL 7
+
+#define BUILTINSYMBOLS 8
+#define FIRSTUSERSYMBOL 20
 
 #define WILDARGVECTOR 0
 #define WILDARGINDEX 0

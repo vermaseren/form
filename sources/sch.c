@@ -761,6 +761,7 @@ VOID WriteLists()
 		*skip = 3;
 		FiniLine();
 		for ( i = 0; i < j; i++ ) {
+			if ( i >= BUILTINSYMBOLS && i < FIRSTUSERSYMBOL ) continue;
 			Out = StrCopy(VARNAME(symbols,i),OutScr);
 			if ( symbols[i].minpower > -MAXPOWER || symbols[i].maxpower < MAXPOWER ) {
 				Out = StrCopy((UBYTE *)"(",Out);
@@ -842,6 +843,8 @@ VOID WriteLists()
 		first = 1;
 		j = NumFunctions;
 		for ( i = startvalue; i < j; i++ ) {
+			if ( i > MAXBUILTINFUNCTION-FUNCTION
+			 && i < FIRSTUSERFUNCTION-FUNCTION ) continue;
 			if ( ( k == 0 && functions[i].commute )
 			|| ( k != 0 && !functions[i].commute ) ) {
 				if ( first ) {
@@ -1112,7 +1115,7 @@ VOID WriteLists()
 }
 
 /*
- 		#] WriteLists : 
+ 		#] WriteLists :
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to

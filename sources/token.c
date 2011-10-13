@@ -117,11 +117,13 @@ dovariable:		c = *in; *in = 0;
 						break;
 					case CVECTOR:       *out++ = TVECTOR;     break;
 					case CFUNCTION:
+#ifdef OLDPOLY
 						if ( number >= AM.polyfunnum-FUNCTION &&
 							number <= AM.polytopnum-FUNCTION ) {
 							polyflag = number+FUNCTION-AM.polyfunnum;
 							number = AM.polyfunnum - FUNCTION;
 						}
+#endif
 						*out++ = TFUNCTION;
 						break;
 					case CSET:          *out++ = TSET;        break;
@@ -911,7 +913,6 @@ int simp2token(SBYTE *s)
 						else if ( ( n == (FIRSTBRACKET-FUNCTION)
 						|| n == (TERMSINEXPR-FUNCTION)
 						|| n == (NUMFACTORS-FUNCTION)
-						|| n == (UNFACTORIZE-FUNCTION)
 						|| n == (GCDFUNCTION-FUNCTION)
 						|| n == (DIVFUNCTION-FUNCTION)
 						|| n == (REMFUNCTION-FUNCTION)
@@ -1039,8 +1040,10 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						if ( *w != TFUNCTION ) { *fill++ = *s++; break; }
 						w++; n = 0;
 						while ( *w >= 0 ) { n = 128*n + *w++; }
-						if ( n == (AM.polyfunnum-FUNCTION)
-						|| n == GCDFUNCTION-FUNCTION
+						if ( n == GCDFUNCTION-FUNCTION
+#ifdef OLDPOLY
+						|| n == (AM.polyfunnum-FUNCTION)
+#endif
 						|| n == DIVFUNCTION-FUNCTION
 						|| n == REMFUNCTION-FUNCTION ) {
 							*t = TEMPTY; s++;
@@ -1060,7 +1063,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token :
+ 		#] simp2token : 
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.

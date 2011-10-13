@@ -37,7 +37,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ includes :
 */
@@ -259,7 +259,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -282,7 +282,7 @@ VOID inictable()
 }
 
 /*
- 		#] inictable :
+ 		#] inictable : 
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -334,7 +334,7 @@ KEYWORD *findcommand(UBYTE *in)
 }
 
 /*
- 		#] findcommand :
+ 		#] findcommand : 
  		#[ ParenthesesTest :
 */
 
@@ -378,7 +378,7 @@ int ParenthesesTest(UBYTE *sin)
 }
 
 /*
- 		#] ParenthesesTest :
+ 		#] ParenthesesTest : 
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -412,7 +412,7 @@ UBYTE *SkipAName(UBYTE *s)
 }
 
 /*
- 		#] SkipAName :
+ 		#] SkipAName : 
  		#[ IsRHS :
 */
 
@@ -458,7 +458,7 @@ UBYTE *IsRHS(UBYTE *s, UBYTE c)
 }
 
 /*
- 		#] IsRHS :
+ 		#] IsRHS : 
  		#[ IsIdStatement :
 */
 
@@ -469,7 +469,7 @@ int IsIdStatement(UBYTE *s)
 }
 
 /*
- 		#] IsIdStatement :
+ 		#] IsIdStatement : 
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -509,7 +509,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 }
 
 /*
- 		#] CompileAlgebra :
+ 		#] CompileAlgebra : 
  		#[ CompileStatement :
 
 */
@@ -622,7 +622,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
@@ -661,7 +661,7 @@ int TestTables()
 }
 
 /*
- 		#] TestTables :
+ 		#] TestTables : 
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -778,7 +778,7 @@ int CompileSubExpressions(SBYTE *tokens)
 }
 
 /*
- 		#] CompileSubExpressions :
+ 		#] CompileSubExpressions : 
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -1046,8 +1046,6 @@ doexpr:					s += 2;
 								MesPrint("&Problems with argument of TermsIn_");
 							else if ( x1 == NUMFACTORS )
 								MesPrint("&Problems with argument of NumFactors_");
-							else if ( x1 == UNFACTORIZE )
-								MesPrint("&Problems with argument of UnFactorize_");
 							else
 								MesPrint("&Problems with argument of FactorIn_");
 							error = 1;
@@ -1058,7 +1056,7 @@ doexpr:					s += 2;
 					}
 				}
 				else if ( x1 == TERMSINEXPR || x1 == FACTORIN
-				 || x1 == NUMFACTORS || x1 == UNFACTORIZE ) {
+				 || x1 == NUMFACTORS ) {
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) goto doexpr;
 					if ( s[0] == TFUNOPEN && s[1] == TDOLLAR ) {
 						s += 2;
@@ -1071,8 +1069,6 @@ doexpr:					s += 2;
 								MesPrint("&Problems with argument of TermsIn_");
 							else if ( x1 == NUMFACTORS )
 								MesPrint("&Problems with argument of NumFactors_");
-							else if ( x1 == UNFACTORIZE )
-								MesPrint("&Problems with argument of UnFactorize_");
 							else
 								MesPrint("&Problems with argument of FactorIn_");
 							error = 1;
@@ -1082,6 +1078,7 @@ doexpr:					s += 2;
 						goto fin;
 					}
 				}
+#ifdef OLDPOLY
 				else if ( x1 == AM.polyfunnum ) {
 					int xx2; WORD *xxv;
 					if ( s[0] != TFUNOPEN ) {
@@ -1190,6 +1187,7 @@ illpoly:				MesPrint("&Illegal use of Poly_ function");
 					s++;
 					goto fin;
 				}
+#endif
 				x3 = x1;
 				if ( inset && ( t-tsize == 2 ) ) x1 -= FUNCTION;
 				if ( *s == TWILDCARD ) { x1 += WILDOFFSET; s++; }
@@ -1908,7 +1906,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1934,7 +1932,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 }
 
 /*
- 		#] CompleteTerm :
+ 		#] CompleteTerm : 
  		#[ CodeFactors :
 
 		This routine does the part of reading in in terms of factors.
@@ -2250,7 +2248,7 @@ dopowerd:
 }
 
 /*
- 		#] CodeFactors :
+ 		#] CodeFactors : 
  		#[ GenerateFactors :
 */
 
@@ -2289,7 +2287,7 @@ WORD GenerateFactors(WORD n)
 }
 
 /*
- 		#] GenerateFactors :
+ 		#] GenerateFactors : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

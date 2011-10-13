@@ -177,16 +177,8 @@ static struct fixedfun {
 	,{"termsin_" ,0 ,0                ,0               ,0} /* TERMSINEXPR */
 	,{"nterms_"  ,0 ,0                ,0               ,0} /* NUMTERMSFUN */
 	,{"gcd_"     ,0 ,0                ,0               ,0} /* GCDFUNCTION */
-	,{"poly_"    ,0 ,0                ,0               ,0} /* POLYNOMIAL */
-	,{"polyadd_" ,0 ,0                ,0               ,0} /* POLYNOADD */
-	,{"polysub_" ,0 ,0                ,0               ,0} /* POLYNOSUB */
-	,{"polymul_" ,0 ,0                ,0               ,0} /* POLYNOMUL */
-	,{"polydiv_" ,0 ,0                ,0               ,0} /* POLYNODIV */
-	,{"polyrem_" ,0 ,0                ,0               ,0} /* POLYNOREM */
-	,{"polygcd_" ,0 ,0                ,0               ,0} /* POLYNOGCD */
-	,{"polyintfac_",0 ,0              ,0               ,0} /* POLYNOINTFAC */
-	,{"polynorm_",0 ,0                ,0               ,0} /* POLYNONORM */
-	,{"polyfact_",0 ,0                ,0               ,0} /* POLYNOFACT*/
+	,{"div_"        ,0 ,0             ,0               ,0} /* DIVFUNCTION */
+	,{"rem_"        ,0 ,0             ,0               ,0} /* REMFUNCTION */
 	,{"maxpowerof_",0 ,0              ,0               ,0} /* MAXPOWEROF */
 	,{"minpowerof_",0 ,0              ,0               ,0} /* MINPOWEROF */
 	,{"tbl_"     ,0 ,0                ,0               ,0} /* TABLESTUB */
@@ -221,9 +213,18 @@ static struct fixedfun {
 	,{"random_"     ,0 ,0             ,0               ,0} /* RANDOMFUNCTION */
 	,{"ranperm_"    ,1 ,0             ,0               ,0} /* RANPERM */
 	,{"numfactors_" ,0 ,0             ,0               ,0} /* NUMFACTORS */
-	,{"unfactorize_",0 ,0             ,0               ,0} /* UNFACTORIZE */
-	,{"div_"        ,0 ,0             ,0               ,0} /* DIVFUNCTION */
-	,{"rem_"        ,0 ,0             ,0               ,0} /* REMFUNCTION */
+#ifdef OLDPOLY 
+	,{"poly_"    ,0 ,0                ,0               ,0} /* POLYNOMIAL */
+	,{"polyadd_" ,0 ,0                ,0               ,0} /* POLYNOADD */
+	,{"polysub_" ,0 ,0                ,0               ,0} /* POLYNOSUB */
+	,{"polymul_" ,0 ,0                ,0               ,0} /* POLYNOMUL */
+	,{"polydiv_" ,0 ,0                ,0               ,0} /* POLYNODIV */
+	,{"polyrem_" ,0 ,0                ,0               ,0} /* POLYNOREM */
+	,{"polygcd_" ,0 ,0                ,0               ,0} /* POLYNOGCD */
+	,{"polyintfac_",0 ,0              ,0               ,0} /* POLYNOINTFAC */
+	,{"polynorm_",0 ,0                ,0               ,0} /* POLYNONORM */
+	,{"polyfact_",0 ,0                ,0               ,0} /* POLYNOFACT*/
+#endif
 };
 
 FIXEDSET fixedsets[] = {

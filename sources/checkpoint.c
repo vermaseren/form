@@ -742,8 +742,10 @@ static void print_M()
 	printf("%d\n", AM.termfunnum);
 	printf("%d\n", AM.matchfunnum);
 	printf("%d\n", AM.countfunnum);
+#ifdef OLDPOLY
 	printf("%d\n", AM.polyfunnum);
 	printf("%d\n", AM.polytopnum);
+#endif
 	printf("%d\n", AM.gPolyFun);
 	printf("%d\n", AM.gPolyFunType);
 	printf("%d\n", AM.safetyfirst);

@@ -1367,8 +1367,10 @@ struct M_const {
     WORD    termfunnum;            /* (M) internal number of term_ function */
     WORD    matchfunnum;           /* (M) internal number of match_ function */
     WORD    countfunnum;           /* (M) internal number of count_ function */
+#ifdef OLDPOLY
     WORD    polyfunnum;            /* (M) internal number of poly_ function */
     WORD    polytopnum;            /* (M) internal number of maximum poly function */
+#endif
     WORD    gPolyFun;              /* (M) global value of PolyFun */
     WORD    gPolyFunType;          /* (M) global value of PolyFun */
     WORD    safetyfirst;           /* (M) for testing special versions */

@@ -32,8 +32,6 @@ SRCBASE = \
 	opera.c \
 	optim.c \
 	pattern.c \
-	poly.c \
-	polynito.c \
 	polyclass.cc \
 	polyclass.h \
 	polyfact.cc \

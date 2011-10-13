@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
  		#[ includes :
 */
@@ -79,7 +79,7 @@ extern int pcounter;
 static char nameversion[] = "";
 /* beware of security here. look in pre.c for shifted name */
 /*
- 		#] includes :
+ 		#] includes : 
  		#[ DoTail :
 
 		Routine reads the command tail and handles the commandline options.
@@ -303,7 +303,7 @@ printversion:;
 }
 
 /*
- 		#] DoTail :
+ 		#] DoTail : 
  		#[ OpenInput :
 
 		Major task here after opening is to skip the proper number of
@@ -405,7 +405,7 @@ int OpenInput()
 }
 
 /*
- 		#] OpenInput :
+ 		#] OpenInput : 
  		#[ ReserveTempFiles :
 
 		Order of preference:
@@ -613,7 +613,7 @@ classic:;
 }
 
 /*
- 		#] ReserveTempFiles :
+ 		#] ReserveTempFiles : 
  		#[ StartVariables :
 */
 
@@ -784,6 +784,19 @@ VOID StartVariables()
 	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"factor_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	i = BUILTINSYMBOLS;  /* update this in ftypes.h when we add new symbols */
+/*
+	Next we add a number of dummy symbols for ensuring that the user defined
+	symbols start at a fixed given number FIRSTUSERSYMBOL
+	We do want to give them unique names though that the user cannot access.
+*/
+	{
+		char dumstr[10];
+		for ( ; i < FIRSTUSERSYMBOL; i++ ) {
+			sprintf(dumstr,":%d:",i);
+			AddSymbol((UBYTE *)dumstr,-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+		}
+	}
 
 	AddIndex((UBYTE *)"iarg_",4,0);
 	AddVector((UBYTE *)"parg_",VARTYPENONE,0);
@@ -796,6 +809,18 @@ VOID StartVariables()
 		                    ,fixedfunctions[i].complx
 		                    ,fixedfunctions[i].symmetric
 							,0);
+/*
+	Next we add a number of dummy functions for ensuring that the user defined
+	functions start at a fixed given number FIRSTUSERFUNCTION.
+	We do want to give them unique names though that the user cannot access.
+*/
+	{
+		char dumstr[10];
+		for ( ; i < FIRSTUSERFUNCTION-FUNCTION; i++ ) {
+			sprintf(dumstr,"::%d::",i);
+			AddFunction((UBYTE *)dumstr,0,0,0,0,0);
+		}
+	}
 	AM.NumFixedSets = sizeof(fixedsets)/sizeof(struct fixedset);
 	for ( i = 0; i < AM.NumFixedSets; i++ ) {
 		ii = AddSet((UBYTE *)fixedsets[i].name,fixedsets[i].dimension);
@@ -854,13 +879,15 @@ VOID StartVariables()
 	GetName(AC.varnames,(UBYTE *)"term_",&AM.termfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"match_",&AM.matchfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"count_",&AM.countfunnum,NOAUTO);
+#ifdef OLDPOLY
 	GetName(AC.varnames,(UBYTE *)"poly_",&AM.polyfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"polynorm_",&AM.polytopnum,NOAUTO);
+	AM.polyfunnum += FUNCTION;
+	AM.polytopnum += FUNCTION;
+#endif
 	AM.termfunnum += FUNCTION;
 	AM.matchfunnum += FUNCTION;
 	AM.countfunnum += FUNCTION;
-	AM.polyfunnum += FUNCTION;
-	AM.polytopnum += FUNCTION;
 
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats = 1;
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats = 1;
@@ -1116,7 +1143,7 @@ WORD IniVars()
 }
 
 /*
- 		#] IniVars :
+ 		#] IniVars : 
  		#[ Signal handlers :
 */
 /*[28apr2004 mt]:*/
@@ -1186,7 +1213,7 @@ VOID setSignalHandlers()
 #endif
 /*:[28apr2004 mt]*/
 /*
- 		#] Signal handlers :
+ 		#] Signal handlers : 
  		#[ main :
 */
 
@@ -1355,7 +1382,7 @@ int main(int argc, char **argv)
 	return(0);
 }
 /*
- 		#] main :
+ 		#] main : 
  		#[ CleanUp :
 
 		if par < 0 we have to keep the storage file.
@@ -1434,7 +1461,7 @@ dontremove:;
 }
 
 /*
- 		#] CleanUp :
+ 		#] CleanUp : 
  		#[ Terminate :
 */
 
@@ -1512,7 +1539,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate :
+ 		#] Terminate : 
  		#[ PrintRunningTime :
 */
 
@@ -1552,6 +1579,6 @@ VOID PrintRunningTime()
 }
 
 /*
- 		#] PrintRunningTime :
+ 		#] PrintRunningTime : 
 */
 
