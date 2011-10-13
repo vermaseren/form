@@ -1189,7 +1189,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction3 : 
+ 		#] GCDfunction3 :
  		#[ PutExtraSymbols :
 */
 
@@ -1215,7 +1215,7 @@ CalledFrom:
 }
 
 /*
- 		#] PutExtraSymbols : 
+ 		#] PutExtraSymbols :
  		#[ TakeExtraSymbols :
 */
 
@@ -2157,7 +2157,9 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	GETBIDENTITY
 	WORD *t, *tt, *r, *arg1 = 0, *arg2 = 0, *arg3, *termout;
 	WORD *tstop, *tend, *r3, *rr, *rstop, tlength, rlength, newlength;
+	WORD *proper1, *proper2, *proper3;
 	int numargs = 0, type1, type2;
+	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	if ( par < 0 || par > 1 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
@@ -2208,9 +2210,29 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	}
 	if ( ( arg1 = ConvertArgument(BHEAD arg1, &type1) ) == 0 ) goto CalledFrom;
 	if ( ( arg2 = ConvertArgument(BHEAD arg2, &type2) ) == 0 ) goto CalledFrom;
-	if ( par == 0 ) arg3 = poly_div(BHEAD arg1, arg2);
-	else            arg3 = poly_rem(BHEAD arg1, arg2);
-	if ( arg3 == 0 ) goto CalledFrom;
+	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf) ) == 0 ) goto CalledFrom;
+	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf) ) == 0 ) goto CalledFrom;
+	if ( type2 == 0 ) M_free(arg2,"DIVfunction");
+	else {
+		DOLLARS d = ((DOLLARS)arg2)-1;
+		if ( d->factors ) M_free(d->factors,"Dollar factors");
+		M_free(d,"Copy of dollar variable");
+	}
+	if ( type1 == 0 ) M_free(arg1,"DIVfunction");
+	else {
+		DOLLARS d = ((DOLLARS)arg1)-1;
+		if ( d->factors ) M_free(d->factors,"Dollar factors");
+		M_free(d,"Copy of dollar variable");
+	}
+
+	if ( par == 0 ) proper3 = poly_div(BHEAD proper1, proper2);
+	else            proper3 = poly_rem(BHEAD proper1, proper2);
+	if ( proper3 == 0 ) goto CalledFrom;
+	if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;
+	cbuf[AT.ebufnum].numrhs = startebuf;
+	M_free(proper3,"DIVfunction");
+	M_free(proper2,"DIVfunction");
+	M_free(proper1,"DIVfunction");
 	if ( *arg3 ) {
 		termout = AT.WorkPointer;
 		tlength = tend[-1];
@@ -2237,20 +2259,8 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	        if ( Generator(BHEAD termout,level) ) goto CalledFrom;
 		}
 		AT.WorkPointer = termout;
-		M_free(arg3,"DIVfunction");
 	}
-	if ( type2 == 0 ) M_free(arg2,"DIVfunction");
-	else {
-		DOLLARS d = ((DOLLARS)arg2)-1;
-		if ( d->factors ) M_free(d->factors,"Dollar factors");
-		M_free(d,"Copy of dollar variable");
-	}
-	if ( type1 == 0 ) M_free(arg1,"DIVfunction");
-	else {
-		DOLLARS d = ((DOLLARS)arg1)-1;
-		if ( d->factors ) M_free(d->factors,"Dollar factors");
-		M_free(d,"Copy of dollar variable");
-	}
+	M_free(arg3,"DIVfunction");
 	return(0);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
