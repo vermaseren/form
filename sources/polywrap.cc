@@ -157,6 +157,53 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 
 /*
   	#] poly_gcd : 
+  	#[ poly_div :
+
+	Routine divides the expression in arg1 by the expression in arg2.
+	We did not take out special cases.
+	The arguments are zero terminated sequences of term(s).
+	The action is to divide arg1 by arg2: [arg1/arg2].
+	The answer should be a buffer (allocated by Malloc1) with a zero
+	terminated sequence of terms (or just zero).
+
+	The current code is just have the routine return something.
+*/
+
+WORD *poly_div(PHEAD WORD *arg1, WORD *arg2)
+{
+	WORD *output;
+	int size = 0;
+	output = (WORD *)Malloc1((size+1)*sizeof(WORD),"poly_div");
+	*output = 0;
+	return(output);
+}
+
+/*
+  	#] poly_div : 
+  	#[ poly_rem :
+
+	Routine divides the expression in arg1 by the expression in arg2
+	and takes the remainder.
+	We did not take out special cases.
+	The arguments are zero terminated sequences of term(s).
+	The action is to divide arg1 by arg2 and take the remainder: [arg1%arg2].
+	The answer should be a buffer (allocated by Malloc1) with a zero
+	terminated sequence of terms (or just zero).
+
+	The current code is just have the routine return something.
+*/
+
+WORD *poly_rem(PHEAD WORD *arg1, WORD *arg2)
+{
+	WORD *output;
+	int size = 0;
+	output = (WORD *)Malloc1((size+1)*sizeof(WORD),"poly_div");
+	*output = 0;
+	return(output);
+}
+
+/*
+  	#] poly_rem : 
   	#[ poly_ratfun_read :
 */
 
@@ -1124,7 +1171,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression :
+  	#] poly_factorize_expression : 
   	#[ poly_unfactorize_expression :
 */
 

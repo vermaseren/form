@@ -1328,11 +1328,27 @@ Important: we may not have enough spots here
                 tf = t + FUNHEAD;
                 while ( tf < t + t[1] ) {
 					if ( *tf > 0 && tf[1] != 0 ) todo = 0;
-					else if ( *tf == -DOLLAREXPRESSION ) todo = 0;
                     NEXTARG(tf);
                 }
 				if ( todo ) {
 					AN.TeInFun = -10;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+              }
+              else if ( *t == DIVFUNCTION || *t == REMFUNCTION ) {
+                WORD *tf;
+				int todo = 1, numargs = 0;
+                tf = t + FUNHEAD;
+                while ( tf < t + t[1] ) {
+					numargs++;
+					if ( *tf > 0 && tf[1] != 0 ) todo = 0;
+                    NEXTARG(tf);
+                }
+				if ( todo && numargs == 2 ) {
+					if ( *t == DIVFUNCTION ) AN.TeInFun = -11;
+					else if ( *t == REMFUNCTION ) AN.TeInFun = -12;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
@@ -3453,6 +3469,8 @@ AutoGen:	i = *AT.TMout;
 			else if ( AN.TeInFun == -8 && TermsInBracket(BHEAD term,level) < 0 ) goto GenCall;
 			else if ( AN.TeInFun == -9 && ExtraSymFun(BHEAD term,level) < 0 ) goto GenCall;
 			else if ( AN.TeInFun == -10 && GCDfunction(BHEAD term,level) < 0 ) goto GenCall;
+			else if ( AN.TeInFun == -11 && DIVfunction(BHEAD term,level,0) < 0 ) goto GenCall;
+			else if ( AN.TeInFun == -12 && DIVfunction(BHEAD term,level,1) < 0 ) goto GenCall;
 		}
 		else {
 			termout = AT.WorkPointer;

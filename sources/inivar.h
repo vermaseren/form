@@ -222,6 +222,8 @@ static struct fixedfun {
 	,{"ranperm_"    ,1 ,0             ,0               ,0} /* RANPERM */
 	,{"numfactors_" ,0 ,0             ,0               ,0} /* NUMFACTORS */
 	,{"unfactorize_",0 ,0             ,0               ,0} /* UNFACTORIZE */
+	,{"div_"        ,0 ,0             ,0               ,0} /* DIVFUNCTION */
+	,{"rem_"        ,0 ,0             ,0               ,0} /* REMFUNCTION */
 };
 
 FIXEDSET fixedsets[] = {

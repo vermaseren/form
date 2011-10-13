@@ -2139,6 +2139,192 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 /*
  		#] GCDterms : 
   	#] GCDfunction :
+  	#[ DIVfunction :
+
+	Input: a div_ function that has two arguments inside a term.
+	Action: Calculates [arg1/arg2] using polynomial techniques if needed.
+	Output: The output result is combined with the remainder of the term
+	and sent to Generator for further processing.
+	Note that the output can be just a number or many terms.
+	In case par == 0 the output is [arg1/arg2]
+	In case par == 1 the output is [arg1%arg2]
+*/
+
+WORD divrem[2] = { DIVFUNCTION, REMFUNCTION };
+
+int DIVfunction(PHEAD WORD *term,WORD level,int par)
+{
+	GETBIDENTITY
+	WORD *t, *tt, *r, *arg1 = 0, *arg2 = 0, *arg3, *termout;
+	WORD *tstop, *tend, *r3, *rr, *rstop, tlength, rlength, newlength;
+	int numargs = 0, type1, type2;
+	if ( par < 0 || par > 1 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+/*
+	Find the function
+*/
+	tend = term + *term; tstop = tend - ABS(tend[-1]);
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *t != divrem[par] ) { t += t[1]; continue; }
+		r = t + FUNHEAD;
+		tt = t + t[1]; numargs = 0;
+		while ( r < tt ) {
+			if ( numargs == 0 ) { arg1 = r; }
+			if ( numargs == 1 ) { arg2 = r; }
+			numargs++;
+			NEXTARG(r);
+		}
+		if ( numargs == 2 ) break;
+		t = tt;
+	}
+	if ( t >= tstop ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Internal error. Indicated div_ or rem_ function not encountered.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+/*
+	We have two arguments in arg1 and arg2.
+*/
+	if ( *arg1 == -SNUMBER && arg1[1] == 0 ) {
+		if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("0/0 in either div_ or rem_ function.");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		return(0);
+	}
+	if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Division by zero in either div_ or rem_ function.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( ( arg1 = ConvertArgument(BHEAD arg1, &type1) ) == 0 ) goto CalledFrom;
+	if ( ( arg2 = ConvertArgument(BHEAD arg2, &type2) ) == 0 ) goto CalledFrom;
+	if ( par == 0 ) arg3 = poly_div(BHEAD arg1, arg2);
+	else            arg3 = poly_rem(BHEAD arg1, arg2);
+	if ( arg3 == 0 ) goto CalledFrom;
+	if ( *arg3 ) {
+		termout = AT.WorkPointer;
+		tlength = tend[-1];
+		tlength = REDLENG(tlength);
+		r3 = arg3;
+		while ( *r3 ) {
+			tt = term + 1; rr = termout + 1;
+			while ( tt < t ) *rr++ = *tt++;
+			r3 = r3 + *r3;
+			r = r3 + 1; rstop = r3 - ABS(r3[-1]);
+			while ( r < rstop ) *rr++ = *r++;
+			tt += t[1];
+			while ( tt < tstop ) *rr++ = *tt++;
+			rlength = r3[-1];
+			rlength = REDLENG(rlength);
+			if ( MulRat(BHEAD (UWORD *)tstop,tlength,(UWORD *)rstop,rlength,
+					(UWORD *)rr,&newlength) < 0 ) goto CalledFrom;
+			rlength = INCLENG(newlength);
+			rr += ABS(rlength);
+			rr[-1] = rlength;
+			*termout = rr - termout;
+			AT.WorkPointer = rr;
+	        if ( Generator(BHEAD termout,level) ) goto CalledFrom;
+		}
+		AT.WorkPointer = termout;
+		M_free(arg3,"DIVfunction");
+	}
+	if ( type2 == 0 ) M_free(arg2,"DIVfunction");
+	else {
+		DOLLARS d = ((DOLLARS)arg2)-1;
+		if ( d->factors ) M_free(d->factors,"Dollar factors");
+		M_free(d,"Copy of dollar variable");
+	}
+	if ( type1 == 0 ) M_free(arg1,"DIVfunction");
+	else {
+		DOLLARS d = ((DOLLARS)arg1)-1;
+		if ( d->factors ) M_free(d->factors,"Dollar factors");
+		M_free(d,"Copy of dollar variable");
+	}
+	return(0);
+CalledFrom:
+	MLOCK(ErrorMessageLock);
+	MesCall("DIVfunction");
+	MUNLOCK(ErrorMessageLock);
+	SETERROR(-1)
+	return(-1);
+}
+
+/*
+  	#] DIVfunction :
+  	#[ ConvertArgument :
+
+	Converts an argument to a general notation in allocated space.
+*/
+
+WORD *ConvertArgument(PHEAD WORD *arg, int *type)
+{
+	WORD *output, *t, *r;
+	int i, size;
+	if ( *arg > 0 ) {
+		output = (WORD *)Malloc1((*arg)*sizeof(WORD),"ConvertArgument");
+		i = *arg - ARGHEAD; t = arg + ARGHEAD; r = output;
+		NCOPY(r,t,i);
+		*r = 0; *type = 0;
+		return(output);
+	}
+	if ( *arg == -EXPRESSION ) {
+		*type = 0;
+		return(CreateExpression(BHEAD arg[1]));
+	}
+	if ( *arg == -DOLLAREXPRESSION ) {
+		DOLLARS d;
+		*type = 1;
+		d = DolToTerms(BHEAD arg[1]);
+		return(d->where);
+	}
+#if ( FUNHEAD > 4 )
+	size = FUNHEAD+5;
+#else
+	size = 9;
+#endif
+	output = (WORD *)Malloc1(size*sizeof(WORD),"ConvertArgument");
+	switch(*arg) {
+		case -SYMBOL:
+			output[0] = 8; output[1] = SYMBOL; output[2] = 4; output[3] = arg[1];
+			output[4] = 1; output[5] = 1; output[6] = 1; output[7] = 3;
+			output[8] = 0;
+			break;
+		case -INDEX:
+		case -VECTOR:
+		case -MINVECTOR:
+			output[0] = 7; output[1] = INDEX; output[2] = 3; output[3] = arg[1];
+			output[4] = 1; output[5] = 1;
+			if ( *arg == -MINVECTOR ) output[6] = -3;
+			else output[6] = 3;
+			output[7] = 0;
+			break;
+		default:
+			output[0] = FUNHEAD+4;
+			output[1] = -*arg;
+			output[2] = FUNHEAD;
+			for ( i = 3; i <= FUNHEAD; i++ ) output[i] = 0;
+			output[FUNHEAD+1] = 1;
+			output[FUNHEAD+2] = 1;
+			output[FUNHEAD+3] = 3;
+			output[FUNHEAD+4] = 0;
+			break;
+	}
+	return(output);
+}
+
+/*
+  	#] ConvertArgument : 
+
 */
 
 

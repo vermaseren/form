@@ -1553,11 +1553,15 @@ extern WORD *TakeContent(PHEAD WORD *, WORD *);
 extern int MergeSymbolLists(PHEAD WORD *, WORD *, int);
 extern int MergeDotproductLists(PHEAD WORD *, WORD *, int);
 extern WORD *CreateExpression(PHEAD WORD);
+extern int DIVfunction(PHEAD WORD *,WORD,int);
+extern WORD *ConvertArgument(PHEAD WORD *,int *);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 
 extern int   poly_gcd(PHEAD WORD *, WORD *);
 extern WORD  *poly_gcd_new(PHEAD WORD *, WORD *);
+extern WORD  *poly_div(PHEAD WORD *, WORD *);
+extern WORD  *poly_rem(PHEAD WORD *, WORD *);
 extern WORD *poly_ratfun_normalize(PHEAD WORD *, int);
 extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
 extern int   poly_ratfun_mul(PHEAD WORD *);

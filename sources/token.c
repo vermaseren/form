@@ -913,6 +913,8 @@ int simp2token(SBYTE *s)
 						|| n == (NUMFACTORS-FUNCTION)
 						|| n == (UNFACTORIZE-FUNCTION)
 						|| n == (GCDFUNCTION-FUNCTION)
+						|| n == (DIVFUNCTION-FUNCTION)
+						|| n == (REMFUNCTION-FUNCTION)
 						|| n == (FACTORIN-FUNCTION) )
 						&& fill[-1] == TFUNOPEN ) {
 							v = s+1;
@@ -1038,7 +1040,9 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						w++; n = 0;
 						while ( *w >= 0 ) { n = 128*n + *w++; }
 						if ( n == (AM.polyfunnum-FUNCTION)
-						|| n == GCDFUNCTION-FUNCTION ) {
+						|| n == GCDFUNCTION-FUNCTION
+						|| n == DIVFUNCTION-FUNCTION
+						|| n == REMFUNCTION-FUNCTION ) {
 							*t = TEMPTY; s++;
 						}
 						else *fill++ = *s++;

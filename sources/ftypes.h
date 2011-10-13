@@ -480,8 +480,10 @@ typedef int (*TFUN1)();
 #define RANPERM 101
 #define NUMFACTORS 102
 #define UNFACTORIZE 103
+#define DIVFUNCTION 104
+#define REMFUNCTION 105
 
-#define MAXBUILTINFUNCTION 103
+#define MAXBUILTINFUNCTION 105
 /*
 	Note: if we add a builtin table we have to look also inside names.c
 	in the routine Globalize because there we assume there does not exist
