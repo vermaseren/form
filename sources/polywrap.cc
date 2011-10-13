@@ -198,14 +198,11 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 
 	// Calculate gcd
 	poly pres(pa / pb);
-	cout << pa << " / " << pb << " = " << pres << endl;
 
 	// Allocate new memory and convert to Form notation
 	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_div");
 	poly::poly_to_argument(pres, res, false);
 
-	MesPrint ("res = [%a]",pres.size_of_form_notation()+1,res);
-	
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
 
@@ -259,13 +256,10 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b)
 
 	// Calculate gcd
 	poly pres(pa % pb);
-	cout << pa << " % " << pb << " = " << pres << endl;
 	
 	// Allocate new memory and convert to Form notation
 	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_div");
 	poly::poly_to_argument(pres, res, false);
-
-	MesPrint ("res = [%a]",pres.size_of_form_notation()+1,res);
 
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
