@@ -165,17 +165,54 @@ int poly_gcd(PHEAD WORD *argin, WORD *argout) {
 	The action is to divide arg1 by arg2: [arg1/arg2].
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
-
-	The current code is just have the routine return something.
 */
 
-WORD *poly_div(PHEAD WORD *arg1, WORD *arg2)
-{
-	WORD *output;
-	int size = 0;
-	output = (WORD *)Malloc1((size+1)*sizeof(WORD),"poly_div");
-	*output = 0;
-	return(output);
+WORD *poly_div(PHEAD WORD *a, WORD *b) {
+
+	AN.poly_num_vars = 0;
+	poly::extract_variables(BHEAD a, false, false);
+	map<int,int> var_to_idx = poly::extract_variables(BHEAD b, false, false);
+
+	// Check for modulus calculus
+	WORD modp=0;
+
+	if (AC.ncmod!=0) {
+		if (AC.modmode & ALSOFUNARGS) {
+			if (ABS(AC.ncmod)>1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: polynomial division with modulus > WORDSIZE not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			modp = *AC.cmod;
+		}
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
+		}
+	}
+
+	// Convert to polynomials
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx), modp, 1);
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx), modp, 1);
+
+	// Calculate gcd
+	poly pres(pa / pb);
+	cout << pa << " / " << pb << " = " << pres << endl;
+
+	// Allocate new memory and convert to Form notation
+	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_div");
+	poly::poly_to_argument(pres, res, false);
+
+	MesPrint ("res = [%a]",pres.size_of_form_notation()+1,res);
+	
+	if (AN.poly_num_vars > 0)
+		delete AN.poly_vars;
+
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
+
+	return res;
 }
 
 /*
@@ -189,17 +226,54 @@ WORD *poly_div(PHEAD WORD *arg1, WORD *arg2)
 	The action is to divide arg1 by arg2 and take the remainder: [arg1%arg2].
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
-
-	The current code is just have the routine return something.
 */
 
-WORD *poly_rem(PHEAD WORD *arg1, WORD *arg2)
+WORD *poly_rem(PHEAD WORD *a, WORD *b)
 {
-	WORD *output;
-	int size = 0;
-	output = (WORD *)Malloc1((size+1)*sizeof(WORD),"poly_div");
-	*output = 0;
-	return(output);
+	AN.poly_num_vars = 0;
+	poly::extract_variables(BHEAD a, false, false);
+	map<int,int> var_to_idx = poly::extract_variables(BHEAD b, false, false);
+
+	// Check for modulus calculus
+	WORD modp=0;
+
+	if (AC.ncmod!=0) {
+		if (AC.modmode & ALSOFUNARGS) {
+			if (ABS(AC.ncmod)>1) {
+				MLOCK(ErrorMessageLock);
+				MesPrint ((char*)"ERROR: polynomial division with modulus > WORDSIZE not implemented");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			modp = *AC.cmod;
+		}
+		else {
+			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
+			AN.ncmod = 0;
+		}
+	}
+
+	// Convert to polynomials
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx), modp, 1);
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx), modp, 1);
+
+	// Calculate gcd
+	poly pres(pa % pb);
+	cout << pa << " % " << pb << " = " << pres << endl;
+	
+	// Allocate new memory and convert to Form notation
+	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_div");
+	poly::poly_to_argument(pres, res, false);
+
+	MesPrint ("res = [%a]",pres.size_of_form_notation()+1,res);
+
+	if (AN.poly_num_vars > 0)
+		delete AN.poly_vars;
+
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
+
+	return res;
 }
 
 /*
