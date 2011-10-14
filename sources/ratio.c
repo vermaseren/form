@@ -1189,7 +1189,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction3 :
+ 		#] GCDfunction3 : 
  		#[ PutExtraSymbols :
 */
 
@@ -2319,6 +2319,16 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 			else output[6] = 3;
 			output[7] = 0;
 			break;
+		case -SNUMBER:
+			output[0] = 4;
+			if ( arg[1] < 0 ) {
+				output[1] = -arg[1]; output[2] = 1; output[3] = -3;
+			}
+			else {
+				output[1] =  arg[1]; output[2] = 1; output[3] =  3;
+			}
+			output[4] = 0;
+			break;
 		default:
 			output[0] = FUNHEAD+4;
 			output[1] = -*arg;
@@ -2335,7 +2345,7 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 }
 
 /*
-  	#] ConvertArgument : 
+  	#] ConvertArgument :
 
 */
 
