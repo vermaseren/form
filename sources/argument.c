@@ -1869,21 +1869,6 @@ NoExplode:
 
 /*
   	#] ArgumentExplode : 
-  	#[ DoRepArg :
-
-	Too be filled in.
-	It makes replacements in the style of replace_, but only in the indicated
-	arguments of the indicated functions.
-	Notice though that it will also replace numbers!!!!!
-*/
-
-int DoRepArg(PHEAD WORD *term,int level)
-{
-	return(Generator(BHEAD term,level));
-}
-
-/*
-  	#] DoRepArg : 
   	#[ ArgFactorize :
 */
 /**
@@ -2216,7 +2201,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize :
+  	#] ArgFactorize : 
   	#[ FindArg :
 */
 /**
@@ -2854,7 +2839,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL : 
+			#] SYMBOL :
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage

@@ -89,7 +89,6 @@ static KEYWORD com1commands[] = {
 	,{"ntensors",       (TFUN)CoNTensor,          DECLARATION,  PARTEST|WITHAUTO}
 	,{"nwrite",         (TFUN)CoNWrite,           DECLARATION,  PARTEST}
 	,{"print",          (TFUN)CoPrint,            MIXED,        0}
-	/*[28nov2003 mt] I use the fact CoRedefine is bound to "redefine", don't change!:*/
 	,{"redefine",       (TFUN)CoRedefine,         STATEMENT,    0}
 	,{"rcyclesymmetrize",(TFUN)CoRCycleSymmetrize,STATEMENT,    PARTEST}
 	,{"symbols",        (TFUN)CoSymbol,           DECLARATION,  PARTEST|WITHAUTO}
@@ -158,7 +157,6 @@ static KEYWORD com2commands[] = {
 	,{"merge",          (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"metric",         (TFUN)CoMetric,           DECLARATION,  PARTEST}
 	,{"moduleoption",   (TFUN)CoModuleOption,     ATENDOFMODULE,PARTEST}
-	,{"modulusgcd",     (TFUN)CoModulusGCD,       STATEMENT,    PARTEST}
 	,{"multi",          (TFUN)CoMulti,            STATEMENT,    PARTEST}
 	,{"multibracket",   (TFUN)CoMultiBracket,     STATEMENT,    PARTEST}
 	,{"ndrop",          (TFUN)CoNoDrop,           SPECIFICATION,PARTEST}
@@ -184,7 +182,6 @@ static KEYWORD com2commands[] = {
 	,{"ratio",          (TFUN)CoRatio,            STATEMENT,    PARTEST}
 	,{"renumber",       (TFUN)CoRenumber,         STATEMENT,    PARTEST}
 	,{"repeat",         (TFUN)CoRepeat,           STATEMENT,    PARTEST}
-	,{"replaceinarg",   (TFUN)CoReplaceInArg,     STATEMENT,    PARTEST}
 	,{"replaceloop",    (TFUN)CoReplaceLoop,      STATEMENT,    PARTEST}
 	,{"select",         (TFUN)CoSelect,           STATEMENT,    PARTEST}
 	,{"set",            (TFUN)CoSet,              DECLARATION,  PARTEST}
@@ -547,12 +544,6 @@ int CompileStatement(UBYTE *in)
 			if ( *s == '+' || *s == '-' ) s++;
 */
 			if ( *s == ',' ) s++;
-#ifdef PARALLEL
-			/*The flag AC.NumberOfRedefsInModule will be used in IniModule to synchronize
-			redefined preVars:*/
-			if(   (k->func) == CoRedefine  )
-				AC.NumberOfRedefsInModule++;
-#endif
 		}
 	}
 /*

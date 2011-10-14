@@ -77,7 +77,6 @@ static KEYWORD precommands[] = {
 #endif
 	,{"pipe"        , DoPipe         , 0, 0}
 	,{"preout"      , DoPreOut       , 0, 0}
-	,{"print"       , DoPrePrint     , 0, 0}
 	,{"printtimes"  , DoPrePrintTimes, 0, 0}
 	,{"procedure"   , DoProcedure    , 0, 0}
 	,{"procedureextension" , DoPrcExtension , 0, 0}
@@ -3011,19 +3010,6 @@ int DoPreOut(UBYTE *s)
 
 /*
  		#] DoPreOut : 
- 		#[ DoPrePrint :
-*/
-
-int DoPrePrint(UBYTE *s)
-{
-	DUMMYUSE(s);
-	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
-	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
-	return(0);
-}
-
-/*
- 		#] DoPrePrint : 
  		#[ DoPrePrintTimes :
 */
 

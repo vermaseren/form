@@ -831,7 +831,6 @@ extern int    DoDo(UBYTE *);
 extern int    DoEnddo(UBYTE *);
 extern int    DoEndprocedure(UBYTE *);
 extern int    DoProcedure(UBYTE *);
-extern int    DoPrePrint(UBYTE *);
 extern int    DoPrePrintTimes(UBYTE *);
 extern int    DoPreWrite(UBYTE *);
 extern int    DoPreClose(UBYTE *);
@@ -992,7 +991,6 @@ extern int    CoStuffle(UBYTE *);
 extern int    CoMetric(UBYTE *);
 extern int    CoModOption(UBYTE *);
 extern int    CoModuleOption(UBYTE *);
-extern int    CoModulusGCD(UBYTE *);
 extern int    CoModulus(UBYTE *);
 extern int    CoMulti(UBYTE *);
 extern int    CoMultiply(UBYTE *);
@@ -1286,8 +1284,6 @@ extern int    LinSumStep(int,char **,MLONG,char *);
 extern int    LinSumDecl(int,char **,MLONG,char *);
 extern int    LinSumFinish(int,char *);
 extern char  *SkipString(char *);
-extern int    ModulusGCD1(WORD,WORD,WORD,WORD *,WORD);
-extern int    MakeMono(WORD,WORD *,WORD,WORD);
 extern int    TryEnvironment(VOID);
 
 #ifdef WITHZLIB
