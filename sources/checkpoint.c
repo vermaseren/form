@@ -786,12 +786,6 @@ static void print_P()
 		print_PROCEDURE(&(Procedures[i]));
 	}
 	printf("--MARK  4\n");
-	print_LIST(&AP.ChDollarList);
-	for ( i=0; i<AP.ChDollarList.num; ++i ) {
-		printf("%d\n", ((WORD *)(AP.ChDollarList.lijst))[i]);
-	}
-	printf("\n");
-	printf("--MARK  5\n");
 	for ( i=0; i<=AP.PreSwitchLevel; ++i ) {
 		print_STR(AP.PreSwitchStrings[i]);
 	}
@@ -804,7 +798,7 @@ static void print_P()
 	print_INTV(AP.PreSwitchModes, AP.NumPreSwitchStrings+1);
 	print_INTV(AP.PreTypes, AP.NumPreTypes+1);
 	printf("%d\n", AP.PreAssignFlag);
-	printf("--MARK  6\n");
+	printf("--MARK  5\n");
 	printf("%d\n", AP.PreContinuation);
 	printf("%ld\n", AP.InOutBuf);
 	printf("%ld\n", AP.pSize);
@@ -814,7 +808,7 @@ static void print_P()
 	printf("%d\n", AP.PreSwitchLevel);
 	printf("%d\n", AP.NumPreSwitchStrings);
 	printf("%d\n", AP.MaxPreTypes);
-	printf("--MARK  7\n");
+	printf("--MARK  6\n");
 	printf("%d\n", AP.NumPreTypes);
 	printf("%d\n", AP.DelayPrevar);
 	printf("%d\n", AP.AllowDelay);
@@ -822,7 +816,7 @@ static void print_P()
 	printf("%d\n", AP.eat);
 	printf("%d\n", AP.gNumPre);
 	printf("%d\n", AP.PreDebug);
-	printf("--MARK  8\n");
+	printf("--MARK  7\n");
 	printf("%d\n", AP.DebugFlag);
 	printf("%d\n", AP.preError);
 	printf("%c\n", AP.ComChar);
@@ -1957,8 +1951,6 @@ int DoRecovery(int *moduletype)
 	}
 	R_FREE(AP.ProcList.lijst);
 
-	R_FREE(AP.ChDollarList.lijst);
-
 	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		R_FREE(AP.PreSwitchStrings[i]);
 	}
@@ -2041,9 +2033,6 @@ int DoRecovery(int *moduletype)
 		R_COPY_S(Procedures[i].name,UBYTE*);
 	}
 	AP.ProcList.message = "procedure";
-
-	R_COPY_LIST(AP.ChDollarList);
-	AP.ChDollarList.message = "changeddollar";
 
 	size = (AP.NumPreSwitchStrings+1)*(LONG)sizeof(UBYTE*);
 	R_COPY_B(AP.PreSwitchStrings, size, UBYTE**);
@@ -2724,8 +2713,6 @@ static int DoSnapshot(int moduletype)
 		S_WRITE_S(Procedures[i].name);
 	}
 
-	S_WRITE_LIST(AP.ChDollarList);
-	
 	S_WRITE_B(AP.PreSwitchStrings, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(UBYTE*));
 	for ( i=1; i<=AP.PreSwitchLevel; ++i ) {
 		S_WRITE_S(AP.PreSwitchStrings[i]);

@@ -630,7 +630,6 @@ VOID StartVariables()
 	The module counter:
 */
 	AC.CModule=0;
-	AP.ChDollarList.lijst = NULL;
 #ifdef PARALLEL
 /*
 	Note, this variable can't be initialized in IniModule!:
@@ -691,8 +690,6 @@ VOID StartVariables()
 	AP.ProcList.size = sizeof(PROCEDURE);
 	AP.LoopList.message = "doloop";
 	AP.LoopList.size = sizeof(DOLOOP);
-	AP.ChDollarList.message = "changeddollar";
-	AP.ChDollarList.size = sizeof(WORD);
 	AP.PreVarList.message = "PreVariable";
 	AP.PreVarList.size = sizeof(PREVAR);
 	AC.SymbolList.message = "symbol";

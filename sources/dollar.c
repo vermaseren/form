@@ -63,24 +63,6 @@ int CatchDollar(int par)
 	if ( AN.ncmod && ( ( AC.modmode & ALSODOLLARS ) == 0 ) ) AN.ncmod = 0;
 	numdollar = C->lhs[C->numlhs][2];
 
-/*[19sep2005 mt]:*/
-/*ChDollarList is newer used!*/
-#ifdef REMOVEDBY_MT
-	{
-/*
-	The following code is basically only for PARALLEL
-*/
-	int i;
-	for ( i = 0; i < NumPPchangeddollars; i++ ) {
-		if ( PPchangeddollars[i] == numdollar ) break;
-	}
-	if ( i >= NumPPchangeddollars ) {
-		w = (WORD *)FromList(&AP.ChDollarList);
-		*w = numdollar;
-	}
-	}
-#endif /*#ifdef REMOVEDBY_MT*/
-
 	/*[06nov2005 mt]:*/
 #ifdef PARALLEL
 	/*This usage of this dollar is just a preprocessor. But, it was already 

@@ -516,36 +516,6 @@ WORD DoExecute(WORD par, WORD skip)
 	if ( RetCode ) return(RetCode);
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 
-/*[28sep2005 mt]:*/
-/*This code is never used*/
-#ifdef REMOVEDBY_MT
-/*
-	@@@@@@@@@@@@@@@@ can be removed? [03dec2002 df]
-	Here we invalidate caches of the slaves for all dollars changed by the
-	preprocessor. They are in PPchangeddollars. there are NumPPchangeddollars
-	of them. It is an array of WORD.
-	This is finished with: NumPPchangeddollars = 0;
-*/
-
-#ifdef PARALLEL
-	if ( AC.mparallelflag == PARALLELFLAG ) {
-	  if ( PF.me == 0 ) {	 
-/*
-			maybe they are not needed at all for the moment or 
-			should be combined from all slaves and again distributed
-*/
-	  } 
-	  else {
-		M_free(PPchangeddollars, "kill PPchangeddollars list");
-			/* PPchangeddollars changed to AP.ChDollarList.lijst because AIX C compiler complained. MF 30/07/2003 */
-		AP.ChDollarList.lijst = NULL;
-		NumPPchangeddollars = 0;			 
-	  } 
-	}  
-#endif /* PARALLEL */
-#endif
-/*:[28sep2005 mt]*/
-
 	if ( ( AS.ExecMode = par ) == GLOBALMODULE ) AS.ExecMode = 0;
 /*
 	Now we compare whether all elements of PotModdollars are contained in

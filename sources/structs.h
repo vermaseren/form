@@ -1405,7 +1405,6 @@ struct P_const {
                                        Points to contents. Can be changed */
     LIST LoopList;                 /* (P) List of do loops */
     LIST ProcList;                 /* (P) List of procedures */
-    LIST ChDollarList;             /* (P) List of Dollars changed by PP in module */
     UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
     UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
     UBYTE *preStop;                /* (P) end of preStart */
