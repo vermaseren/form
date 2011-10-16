@@ -138,9 +138,6 @@ typedef struct compile {
 #define OUTPUTONLY 2
 #define NOCOMPRESS 4
 
-extern DBASE *dbases[];
-extern int numdbases;
-extern FILE *inhandle;
 extern int withoutflush;
 
 #endif

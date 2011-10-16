@@ -1162,7 +1162,7 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 /*
 	And now the real work:
 */
-	gcdout1 = poly_gcd_new(BHEAD proper1,proper2);
+	gcdout1 = poly_gcd(BHEAD proper1,proper2);
 	M_free(proper1,"PutExtraSymbols");
 	M_free(proper2,"PutExtraSymbols");
 
@@ -1215,7 +1215,7 @@ CalledFrom:
 }
 
 /*
- 		#] PutExtraSymbols :
+ 		#] PutExtraSymbols : 
  		#[ TakeExtraSymbols :
 */
 
@@ -2271,7 +2271,7 @@ CalledFrom:
 }
 
 /*
-  	#] DIVfunction :
+  	#] DIVfunction : 
   	#[ ConvertArgument :
 
 	Converts an argument to a general notation in allocated space.
@@ -2345,7 +2345,7 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 }
 
 /*
-  	#] ConvertArgument :
+  	#] ConvertArgument : 
 
 */
 

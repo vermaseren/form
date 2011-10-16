@@ -407,8 +407,3 @@ extern FILES *Ustdout;
 #endif
 
 #endif
-
-// Enables usage of old polyratfuns with the statement "On PolyRatFun"
-// If disabled, it's possible to compile form without polynito.c
-// #define WITHOLDPOLYRATFUN
-

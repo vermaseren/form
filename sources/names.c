@@ -352,7 +352,7 @@ int GetLastExprName(UBYTE *name, WORD *number)
 }
 
 /*
-  	#] GetLastExprName :
+  	#] GetLastExprName : 
   	#[ GetOName :
 
 	Adds the proper offsets, so we do not have to do that in the calling
@@ -2309,6 +2309,7 @@ int AddExpression(UBYTE *name, int x, int y)
 	}
 	expr->vflags = 0;
 	expr->numdummies = 0;
+	expr->numfactors = 0;
 #ifdef PARALLELCODE
 	expr->partodo = 0;
 #endif

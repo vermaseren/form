@@ -62,7 +62,7 @@ using namespace std;
  *   - Called from ratio.c
  *   - Calls polygcd::gcd
  */
-WORD *poly_gcd_new(PHEAD WORD *a, WORD *b) {
+WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_gcd" << endl;
@@ -116,43 +116,6 @@ WORD *poly_gcd_new(PHEAD WORD *a, WORD *b) {
 	AN.ncmod = AC.ncmod;
 
 	return res;
-}
-
-// note: for testing purposes only! should be deleted afterwards
-int poly_gcd(PHEAD WORD *argin, WORD *argout) {
-
-	WORD *res = (WORD *)Malloc1(sizeof(WORD), "poly_gcd");
-	*res = 0;
-
-	while (*argin != 0) {
-	
-		WORD *a = (WORD *)Malloc1(*argin*sizeof(WORD), "poly_gcd");
-		memcpy(a, argin+ARGHEAD, (*argin-ARGHEAD)*sizeof(WORD));
-		a[*argin-ARGHEAD] = 0;
-		argin += *argin;
-	
-		WORD *b = poly_gcd_new(BHEAD a,res);
-		
-		M_free(res, "poly_gcd");
-		int size=1;
-		for (WORD *p=b; *p!=0; p+=*p) size+=*p;
-		res = (WORD *)Malloc1(size*sizeof(WORD), "poly_gcd");
-		memcpy(res,b,size*sizeof(WORD));
-		M_free(b, "poly_gcd");
-		M_free(a, "poly_gcd");
-	}
-	
-	memset(argout,0,ARGHEAD*sizeof(WORD));
-	*argout = ARGHEAD;
-
-	for (WORD *p=res; *p!=0; p+=*p) {
-		memcpy(argout+*argout, p, *p*sizeof(WORD));
-		*argout += *p;
-	}
-
-	M_free(res, "poly_gcd");
-	
-	return 0;
 }
 
 /*
@@ -413,8 +376,7 @@ void poly_sort(PHEAD WORD *a) {
  *
  *   Notes
  *   =====
- *   - Calls poly_ratfun_mul or RedoPolyRatFun, depending on
- *     AM.oldpolyratfun
+ *   - Calls poly_ratfun_mul
  *   - Location of the result depends on par
  *   - Called from proces.c
  */
@@ -424,12 +386,7 @@ WORD *poly_ratfun_normalize(PHEAD WORD *term, int par) {
 	cout << "CALL : poly_ratfun_normalize" << endl;
 #endif
 
-#ifdef WITHOLDPOLYRATFUN
-	if (AM.oldpolyratfun)
-		return RedoPolyRatFun(BHEAD term, par);
-#else
 	DUMMYUSE(par)
-#endif
 	
 	poly_ratfun_mul(BHEAD term);
 	return term;
@@ -449,7 +406,6 @@ WORD *poly_ratfun_normalize(PHEAD WORD *term, int par) {
  *
  *   Notes
  *   =====
- *   - If AM.oldpolyratfun=true, PolyRatFunAdd is called instead
  *   - The result is written at the workpointer
  *   - Called from sort.c and threads.c
  *   - Calls poly::operators and polygcd::gcd
@@ -462,28 +418,6 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	
 	WORD *oldworkpointer = AT.WorkPointer;
 	
-#ifdef WITHOLDPOLYRATFUN
-	if (AM.oldpolyratfun) {
-		WORD *s1, *s2, iold;
-		iold = t1[-1];
-		t1[-1] = t1[1]+4;
-		s1 = RedoPolyRatFun(BHEAD t1-1,2);
-		t1[-1] = iold;
-		AT.WorkPointer = oldworkpointer;
-		iold = t2[-1];
-		t2[-1] = t2[1]+4;
-		s2 = RedoPolyRatFun(BHEAD t2-1,2);
-		t2[-1] = iold;
-		AT.WorkPointer = oldworkpointer;
-
-		PolyRatFunAdd(BHEAD s1+1,s2+1);
-		TermFree(s2,"RedoPolyRatFun");
-		TermFree(s1,"RedoPolyRatFun");
-		oldworkpointer[2] |= CLEANPRF;
-		return oldworkpointer;
-	}
-#endif
-
 	map<int,int> var_to_idx;
 	
 	AN.poly_num_vars = 0;
@@ -599,7 +533,6 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  *
  *   Notes
  *   =====
- *   - If AM.oldpolyratfun=true, PolyRatFunMul is called instead
  *   - The result overwrites the original term
  *   - Called from proces.c
  *   - Calls poly::operators and polygcd::gcd
@@ -610,13 +543,6 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 	cout << "CALL : poly_ratfun_mul" << endl;
 #endif
 	
-#ifdef WITHOLDPOLYRATFUN
-	if (AM.oldpolyratfun) {
-		PolyRatFunMul(BHEAD term);
-		return 0;
-	}
-#endif
-
 	map<int,int> var_to_idx;
 	AN.poly_num_vars = 0;
 

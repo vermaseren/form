@@ -1239,8 +1239,6 @@ struct M_const {
     UBYTE   *Path;                 /* (M) */
     UBYTE   *SetupDir;             /* (M) Directory with setup file */
     UBYTE   *SetupFile;            /* (M) Name of setup file */
-    UBYTE   *Zip1Buffer;           /* (M) First Zip compression buffer */
-    UBYTE   *Zip2Buffer;           /* (M) Second Zip compression buffer */
     UBYTE   *gFortran90Kind;
 	UBYTE   *gextrasym;
 	UBYTE   *ggextrasym;
@@ -1264,7 +1262,6 @@ struct M_const {
     LONG    SSmallSize;            /* (M) */
     LONG    STermsInSmall;         /* (M) */
     LONG    MaxBracketBufferSize;  /* (M) Max Size for B+ or AB+ per expression */
-    LONG    ZipBufferSize;         /* (M) Size of buffer for gzip compression */
     LONG    hSlavePatchSize;       /* (M) */
     LONG    gSlavePatchSize;       /* (M) */
     LONG    shmWinSize;            /* (M) size for shared memory window used in communications */
@@ -1320,17 +1317,11 @@ struct M_const {
     int     MultiRun;
     int     gNoSpacesInNumbers;    /* For very long numbers */
     int     ggNoSpacesInNumbers;   /* For very long numbers */
-    int     polygcdchoice;
     int     gIsFortran90;
 	int		PrintTotalSize;
     int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
     int     gOldFactArgFlag;
     int     ggOldFactArgFlag;
-#ifdef WITHOLDPOLYRATFUN
-	int		oldpolyratfun;
-#else
-    int     dummyint;
-#endif
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1367,10 +1358,6 @@ struct M_const {
     WORD    termfunnum;            /* (M) internal number of term_ function */
     WORD    matchfunnum;           /* (M) internal number of match_ function */
     WORD    countfunnum;           /* (M) internal number of count_ function */
-#ifdef OLDPOLY
-    WORD    polyfunnum;            /* (M) internal number of poly_ function */
-    WORD    polytopnum;            /* (M) internal number of maximum poly function */
-#endif
     WORD    gPolyFun;              /* (M) global value of PolyFun */
     WORD    gPolyFunType;          /* (M) global value of PolyFun */
     WORD    safetyfirst;           /* (M) for testing special versions */
@@ -1610,7 +1597,6 @@ struct C_const {
     int     NoCompress;            /* (R) Controls native compression */
     int     IsFortran90;           /* Tells whether the Fortran is Fortran90 */
     int     MultiBracketLevels;    /* Number of elements in MultiBracketBuf */
-    int     MultiBracketOn;        /* MultiBracket active? */
     int     topolynomialflag;      /* To avoid ToPolynomial and FactArg together */
     int     ffbufnum;              /* Buffer number for user defined factorizations */
     int     OldFactArgFlag;
@@ -1628,6 +1614,7 @@ struct C_const {
 	int     dummyint1;
 	int     dummyint2;
 #endif
+    int     dummyint3;
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
     WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
@@ -1698,9 +1685,6 @@ struct S_const {
 	pthread_mutex_t	MaxExprSizeLock;
 #endif
 	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
-	POSITION InFileSize;           /* ( ) Current inscratch size */
-	POSITION OutFileSize;          /* ( ) Current outscratch size */
-	POSITION HideFileSize;         /* ( ) Current hidescratch size */
     POSITION *OldOnFile;           /* (S) File positions of expressions */
     WORD    *OldNumFactors;        /* ( ) NumFactors in (old) expression */
     WORD    *Oldvflags;            /* ( ) vflags in (old) expression */
@@ -1816,7 +1800,6 @@ struct T_const {
 #ifdef WITHPTHREADS
     SORTBLOCK SB;
 #endif
-	POSITION SortSize;             /* ( ) Maximum size during the sorting */
     SORTING *S0;                   /* (-) The thread specific sort buffer */
     SORTING *SS;                   /* (R) Current sort buffer */
     NESTING     Nest;              /* (R) Nesting of function levels etc. */
@@ -1843,7 +1826,6 @@ struct T_const {
 	  UWORD  **small_power;          /*     the number*/	
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
 	WORD    *primelist;
-    WORD    *lastpolyrem;          /* () Remainder after PolyDiv_ */
     long    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     long    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
     WORD    *TMaddr;               /* (R) buffer for TestSub */
@@ -1876,7 +1858,6 @@ struct T_const {
     int     bracketindexflag;      /* Are brackets going to be indexed? */
     int     res1;                  /* For allignment */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
-    WORD    onesympol[9];          /* () Used in poly.c = {8,SYMBOL,4,1,1,1,1,3,0} */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
     WORD    comnum[4];             /* () Used in tools.c = { 4,1,1,3 } */
     WORD    comfun[FUNHEAD+4];     /* () Used in tools.c = {7,FUNCTION,3,0,1,1,3} */
@@ -1884,8 +1865,6 @@ struct T_const {
     WORD    comind[7];             /* () Used in tools.c = {7,INDEX,3,0,1,1,3} */
     WORD    MinVecArg[7+ARGHEAD];  /* (N) but should be more local */
     WORD    FunArg[4+ARGHEAD+FUNHEAD]; /* (N) but can be more local */
-    WORD    zeropol[1];            /* () Polynomial with value zero */
-    WORD    onepol[5];             /* () Polynomial with value one */
     WORD    locwildvalue[SUBEXPSIZE]; /* () Used in argument.c = {SUBEXPRESSION,SUBEXPSIZE,0,0,0} */
     WORD    mulpat[SUBEXPSIZE+5];  /* () Used in argument.c = {TYPEMULT, SUBEXPSIZE+3, 0, */
                                    /* SUBEXPRESSION, SUBEXPSIZE, 0, 1, 0, 0, 0 } */
@@ -1900,10 +1879,9 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 	WORD    inprimelist;
 	WORD    sizeprimelist;
-    WORD    res2;                  /* For allignment */
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1918,7 +1896,6 @@ struct T_const {
  */
 
 struct N_const {
-    LONG    *polybpstack;          /* () Used in poly */
     WORD    *EndNest;              /* (R) Nesting of function levels etc. */
     WORD    *Frozen;               /* (R) Bracket info */
     WORD    *FullProto;            /* (R) Prototype of a subexpression or table */
@@ -1943,16 +1920,11 @@ struct N_const {
     WORD    *ForFindOnly;          /* (N) For wildcard pattern matching */
     WORD    *findTerm;             /* (N) For wildcard pattern matching */
     WORD    *findPattern;          /* (N) For wildcard pattern matching */
-    WORD    *brackbuf;             /* () Used in poly */
-    WORD    *polybrackets;         /* () Used in poly */
 #ifdef WITHZLIB
 	Bytef	**ziobufnum;           /* () Used in compress.c */
 	Bytef	*ziobuffers;           /* () Used in compress.c */
 #endif
 	WORD	*dummyrenumlist;       /* () Used in execute.c and store.c */
-	WORD	*mgscr1;               /* () Used in factor.c */
-	WORD	*mgscr2;               /* () Used in factor.c */
-	WORD	*mgscr3;               /* () Used in factor.c */
 	int		*funargs;              /* () Used in lus.c */
 	WORD	**funlocs;             /* () Used in lus.c */
 	int		*funinds;              /* () Used in lus.c */
@@ -1966,7 +1938,7 @@ struct N_const {
 	WORD	*RenumScratch;         /* () used in reshuf.c */
 	FUN_INFO *FunInfo;             /* () Used in smart.c */
 	WORD	**SplitScratch;        /* () Used in sort.c */
-	WORD	**SplitScratch1;       /* () Used in sort.c and PolyRatFunAdd */
+	WORD	**SplitScratch1;       /* () Used in sort.c */
 	SORTING **FunSorts;            /* () Used in sort.c */
 	UWORD	*SoScratC;             /* () Used in sort.c */
 	WORD	*listinprint;          /* () Used in proces.c and message.c */
@@ -1977,8 +1949,6 @@ struct N_const {
 	UWORD	*BinoScrat;            /* () Used in proces.c */
 #endif
 	WORD	*compressSpace;        /* () Used in sort.c */
-	WORD	*poly1a;
-	WORD	*poly2a;
 #ifdef WITHPTHREADS
 	THREADBUCKET *threadbuck;
 	EXPRESSIONS expr;
@@ -1986,19 +1956,14 @@ struct N_const {
 	UWORD	*SHcombi;
 	WORD    *poly_vars;
     UWORD   *cmod;                 /* Local setting of modulus. Pointer to value. */
-	POLYMOD polymod1;              /* For use in PolyModGCD and calling routines */
-	POLYMOD polymod2;              /* For use in PolyModGCD and calling routines */
     POSITION OldPosIn;             /* (R) Used in sort. */
     POSITION OldPosOut;            /* (R) Used in sort */
 	POSITION theposition;          /* () Used in index.c */
-    LONG    polybpointer;          /* () Used in poly */
-    LONG    polybsize;             /* () Used in poly */
-    LONG    polybpsize;            /* () Used in poly */
 	LONG	deferskipped;          /* () Used in proces.c store.c and parallel.c */
 	LONG	InScratch;             /* () Used in sort.c */
 	LONG	SplitScratchSize;      /* () Used in sort.c */
-	LONG	InScratch1;            /* () Used in sort.c and PolyRatFunAdd */
-	LONG	SplitScratchSize1;     /* () Used in sort.c and PolyRatFunAdd */
+	LONG	InScratch1;            /* () Used in sort.c */
+	LONG	SplitScratchSize1;     /* () Used in sort.c */
 	LONG	ninterms;              /* () Used in proces.c and sort.c */
 #ifdef WITHPTHREADS
 	LONG	inputnumber;           /* () For use in redefine */
@@ -2013,8 +1978,6 @@ struct N_const {
     int     NumTotWildArgs;        /* (N) Used in pattern matching */
     int     UseFindOnly;           /* (N) Controls pattern routines */
     int     UsedOtherFind;         /* (N) Controls pattern routines */
-    int     doingpoly;             /* () Used in poly */
-    int     sorttype;              /* () Used in poly */
     int     ErrorInDollar;         /* (R) */
 	int		numfargs;              /* () Used in lus.c */
 	int		numflocs;              /* () Used in lus.c */
@@ -2035,6 +1998,7 @@ struct N_const {
 	int		polysortflag;
     int     nogroundlevel;         /* () Used to see whether pattern matching at groundlevel */
 	int		subsubveto;            /* () Sabotage combining subexpressions in TestSub */
+    int     dummyint;
 	WORD	MaxRenumScratch;       /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */
@@ -2049,14 +2013,9 @@ struct N_const {
     WORD    WildArgs;              /* (R) */
     WORD    WildEat;               /* (R) */
     WORD    PolyNormFlag;          /* (R) For polynomial arithmetic */
-    WORD    bracketon;             /* () Used in poly */
-    WORD    maxbracket;            /* () Used in poly */
-    WORD    polyblevel;            /* () Used in poly */
-	WORD	nmgscr;                /* () Used in factor.c */
 	WORD	sizeselecttermundo;    /* () Used in pattern.c */
 	WORD	patternbuffersize;     /* () Used in pattern.c */
 	WORD	numlistinprint;        /* () Used in process.c */
-	WORD	getdivgcd;
     WORD    ncmod;                 /* () used as some type of flag to disable */
 	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
 	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */

@@ -213,18 +213,6 @@ static struct fixedfun {
 	,{"random_"     ,0 ,0             ,0               ,0} /* RANDOMFUNCTION */
 	,{"ranperm_"    ,1 ,0             ,0               ,0} /* RANPERM */
 	,{"numfactors_" ,0 ,0             ,0               ,0} /* NUMFACTORS */
-#ifdef OLDPOLY 
-	,{"poly_"    ,0 ,0                ,0               ,0} /* POLYNOMIAL */
-	,{"polyadd_" ,0 ,0                ,0               ,0} /* POLYNOADD */
-	,{"polysub_" ,0 ,0                ,0               ,0} /* POLYNOSUB */
-	,{"polymul_" ,0 ,0                ,0               ,0} /* POLYNOMUL */
-	,{"polydiv_" ,0 ,0                ,0               ,0} /* POLYNODIV */
-	,{"polyrem_" ,0 ,0                ,0               ,0} /* POLYNOREM */
-	,{"polygcd_" ,0 ,0                ,0               ,0} /* POLYNOGCD */
-	,{"polyintfac_",0 ,0              ,0               ,0} /* POLYNOINTFAC */
-	,{"polynorm_",0 ,0                ,0               ,0} /* POLYNONORM */
-	,{"polyfact_",0 ,0                ,0               ,0} /* POLYNOFACT*/
-#endif
 };
 
 FIXEDSET fixedsets[] = {

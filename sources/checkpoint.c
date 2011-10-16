@@ -50,7 +50,7 @@
  *
  */
 /*
-  	#] Explanations :
+  	#] Explanations : 
   	#[ License :
  *
  *   Copyright (C) 1984-2010 J.A.M. Vermaseren
@@ -77,7 +77,7 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  	#] License :
+  	#] License : 
   	#[ Includes :
 */
 
@@ -94,7 +94,7 @@
 */
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ filenames and system commands :
 */
 
@@ -144,7 +144,7 @@ static char *storefile = 0;
 static int done_snapshot = 0;
 
 /*
-  	#] filenames and system commands :
+  	#] filenames and system commands : 
   	#[ CheckRecoveryFile :
 */
 
@@ -248,7 +248,7 @@ int CheckRecoveryFile()
 }
 
 /*
-  	#] CheckRecoveryFile :
+  	#] CheckRecoveryFile : 
   	#[ DeleteRecoveryFile :
 */
 
@@ -288,7 +288,7 @@ void DeleteRecoveryFile()
 }
 
 /*
-  	#] DeleteRecoveryFile :
+  	#] DeleteRecoveryFile : 
   	#[ RecoveryFilename :
 */
 
@@ -301,7 +301,7 @@ char *RecoveryFilename()
 }
 
 /*
-  	#] RecoveryFilename :
+  	#] RecoveryFilename : 
   	#[ InitRecovery :
 */
 
@@ -349,7 +349,7 @@ void InitRecovery()
 }
 
 /*
-  	#] InitRecovery :
+  	#] InitRecovery : 
   	#[ Debugging :
 */
 
@@ -641,7 +641,6 @@ static void print_M()
 	printf("--MARK  2\n");
 	printf("%ld\n", AM.STermsInSmall);
 	printf("%ld\n", AM.MaxBracketBufferSize);
-	printf("%ld\n", AM.ZipBufferSize);
 	printf("%ld\n", AM.hSlavePatchSize);
 	printf("%ld\n", AM.gSlavePatchSize);
 	printf("%ld\n", AM.shmWinSize);
@@ -700,7 +699,6 @@ static void print_M()
 	printf("%d\n", AM.MultiRun);
 	printf("%d\n", AM.gNoSpacesInNumbers);
 	printf("%d\n", AM.ggNoSpacesInNumbers);
-	printf("%d\n", AM.polygcdchoice);
 	printf("%d\n", AM.MaxTal);
 	printf("%d\n", AM.IndDum);
 	printf("%d\n", AM.DumInd);
@@ -742,10 +740,6 @@ static void print_M()
 	printf("%d\n", AM.termfunnum);
 	printf("%d\n", AM.matchfunnum);
 	printf("%d\n", AM.countfunnum);
-#ifdef OLDPOLY
-	printf("%d\n", AM.polyfunnum);
-	printf("%d\n", AM.polytopnum);
-#endif
 	printf("%d\n", AM.gPolyFun);
 	printf("%d\n", AM.gPolyFunType);
 	printf("%d\n", AM.safetyfirst);
@@ -1112,7 +1106,7 @@ static void print_R()
 #endif /* ifdef PRINTDEBUG */
 
 /*
-  	#] Debugging :
+  	#] Debugging : 
   	#[ Cached file operation functions :
 */
 
@@ -1175,7 +1169,7 @@ size_t flush_cache(FILE *fd)
 #endif
 
 /*
-  	#] Cached file operation functions :
+  	#] Cached file operation functions : 
   	#[ Helper Macros :
 */
 
@@ -1276,7 +1270,7 @@ time_t announce_time;
 #endif
 
 /*
-  	#] Helper Macros :
+  	#] Helper Macros : 
   	#[ DoRecovery :
 */
 
@@ -1395,7 +1389,7 @@ int DoRecovery(int *moduletype)
 	print_M();
 #endif
 
-	/*#] AM : */
+	/*#] AM : */ 
 	/*#[ AC : */
 
 	/* #[ AC free pointers */
@@ -1916,7 +1910,7 @@ int DoRecovery(int *moduletype)
 	print_C();
 #endif
 
-	/*#] AC : */
+	/*#] AC : */ 
 	/*#[ AP : */
 
 	/* #[ AP free pointers */
@@ -2057,7 +2051,7 @@ int DoRecovery(int *moduletype)
 	print_P();
 #endif
 
-	/*#] AP : */
+	/*#] AP : */ 
 	/*#[ AR : */
 
 	R_SET(ofs,long);
@@ -2254,7 +2248,7 @@ int DoRecovery(int *moduletype)
 	print_R();
 #endif
 
-	/*#] AR : */
+	/*#] AR : */ 
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	/*#[ PF : */
@@ -2273,7 +2267,7 @@ int DoRecovery(int *moduletype)
 	R_SET(PF.rhsInParallel, int);
 	R_SET(PF.exprbufsize, int);
 	R_SET(PF.log, int);
-	/*#] PF : */
+	/*#] PF : */ 
 #endif
 /*:[20oct2009 mt]*/
 
@@ -2307,7 +2301,7 @@ int DoRecovery(int *moduletype)
 }
 
 /*
-  	#] DoRecovery :
+  	#] DoRecovery : 
   	#[ DoSnapshot :
 */
 
@@ -2410,7 +2404,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.gOldFactArgFlag,sizeof(int));
 	S_WRITE_B(&AM.ggOldFactArgFlag,sizeof(int));
 
-	/*#] AM :*/
+	/*#] AM :*/ 
 	/*#[ AC :*/
 
 	/* we write AC as a whole and then write all additional data step by step.
@@ -2643,7 +2637,7 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_S(AC.extrasym);
 
-	/*#] AC :*/
+	/*#] AC :*/ 
 	/*#[ AP :*/
 
 	/* we write AP as a whole and then write all additional data step by step. */
@@ -2727,7 +2721,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int));
 
-	/*#] AP :*/
+	/*#] AP :*/ 
 	/*#[ AR :*/
 
 	ANNOUNCE(AR)
@@ -2809,7 +2803,7 @@ static int DoSnapshot(int moduletype)
 	}
 #endif
 
-	/*#] AR :*/
+	/*#] AR :*/ 
 
 /*[20oct2009 mt]:*/
 	/*#[ PF :*/
@@ -2820,7 +2814,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&PF.exprbufsize, sizeof(int));
 	S_WRITE_B(&PF.log, sizeof(int));
 #endif
-	/*#] PF :*/
+	/*#] PF :*/ 
 /*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS
@@ -2890,7 +2884,7 @@ static int DoSnapshot(int moduletype)
 }
 
 /*
-  	#] DoSnapshot :
+  	#] DoSnapshot : 
   	#[ DoCheckpoint :
 */
 
@@ -3041,5 +3035,5 @@ void DoCheckpoint(int moduletype)
 }
 
 /*
-  	#] DoCheckpoint :
+  	#] DoCheckpoint : 
 */

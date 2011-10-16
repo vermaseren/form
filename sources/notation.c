@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -36,7 +36,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  		#[ NormPolyTerm :
 
 		Brings a term to normal form.
@@ -222,7 +222,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm :
+ 		#] NormPolyTerm : 
  		#[ ComparePoly :
 */
 /**
@@ -285,18 +285,7 @@ WORD ComparePoly(WORD *term1, WORD *term2, WORD level)
 #endif
 
 /*
- 		#] ComparePoly :
- 		#[ PolyBracket :
-*/
-/*
-
-int PolyBracket(WORD *term, WORD *bracket, int level)
-{
-	return(0);
-}
-*/
-/*
- 		#] PolyBracket :
+ 		#] ComparePoly : 
  		#[ ConvertToPoly :
 */
 /**
@@ -427,7 +416,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 }
 
 /*
- 		#] ConvertToPoly :
+ 		#] ConvertToPoly : 
  		#[ LocalConvertToPoly :
 */
 /**
@@ -559,7 +548,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 }
 
 /*
- 		#] LocalConvertToPoly :
+ 		#] LocalConvertToPoly : 
  		#[ ConvertFromPoly :
 
 		Converts a generic term from polynomial notation to the original
@@ -620,7 +609,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD pa
 }
 
 /*
- 		#] ConvertFromPoly :
+ 		#] ConvertFromPoly : 
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -689,7 +678,7 @@ WORD FindSubterm(WORD *subterm)
 }
 
 /*
- 		#] FindSubterm :
+ 		#] FindSubterm : 
  		#[ FindLocalSubterm :
 
 		In this routine we look up a variable.
@@ -744,7 +733,7 @@ wearehappy:
 }
 
 /*
- 		#] FindLocalSubterm :
+ 		#] FindLocalSubterm : 
  		#[ PrintSubtermList :
 
 		Prints all the expressions in the subterm compiler buffer.
@@ -827,7 +816,7 @@ void PrintSubtermList(int from,int to)
 }
 
 /*
- 		#] PrintSubtermList :
+ 		#] PrintSubtermList : 
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
@@ -884,7 +873,7 @@ WORD FindSubexpression(WORD *subexpr)
 }
 
 /*
- 		#] FindSubexpression :
+ 		#] FindSubexpression : 
  		#[ ExtraSymFun :
 */
 
@@ -952,5 +941,5 @@ nocase:;
 }
 
 /*
- 		#] ExtraSymFun :
+ 		#] ExtraSymFun : 
 */

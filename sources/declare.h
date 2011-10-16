@@ -46,19 +46,12 @@
 #define INCLENG(x) (((x)<0)?(((x)<<1)-1):(((x)<<1)+1))
 #define GETCOEF(x,y) x += *x;y = x[-1];x -= ABS(y);y=REDLENG(y)
 #define GETSTOP(x,y) y=x+(*x)-1;y -= ABS(*y)-1
-#define MULWWL(x,y) (x)*(y)
-#define MULLONG1(b,nb,norm,e,ne,i,t,v) {                   \
-		for ( i = 0, t = 0, v = (RLONG)norm; i < nb; i++ ) \
-		  { t += b[i] * v; e[i] = t; t >>= BITSINWORD; }   \
-		ne = nb; if ( t ) e[ne++] = t;     }
 #define StuffAdd(x,y)  (((x)<0?-1:1)*(y)+((y)<0?-1:1)*(x))
  
 #define TOKENTOLINE(x,y) if ( AC.OutputSpaces == NOSPACEFORMAT ) { \
 		TokenToLine((UBYTE *)(y)); } else { TokenToLine((UBYTE *)(x)); }
 
 #define UngetFromStream(stream,c) ((stream)->nextchar[(stream)->isnextchar++]=c)
-#define StreamPosition(stream) ((stream)->bufferposition + \
-	((stream)->pointer - (stream)->buffer))
 #ifdef WITHRETURN
 #define AddLineFeed(s,n) { (s)[(n)++] = CARRIAGERETURN; (s)[(n)++] = LINEFEED; }
 #else
@@ -158,13 +151,9 @@
 #define NEXTARG(x) if(*x>0) x += *x; else if(*x <= -FUNCTION)x++; else x += 2;
 #define COPY1ARG(s1,t1) { int ica; if ( (ica=*t1) > 0 ) { NCOPY(s1,t1,ica) } \
 		else if(*t1<=-FUNCTION){*s1++=*t1++;} else{*s1++=*t1++;*s1++=*t1++;} }
-#define GETSETNUM(y) (((y)[2]==4)?((LONG)(y)[4]):\
-	((((LONG)(y)[4])<<(BITSINWORD-1))+(LONG)(y)[5]))
 
 #define TABLESIZE(a,b) (((WORD)sizeof(a))/((WORD)sizeof(b)))
 #define WORDDIF(x,y) (WORD)(x-y)
-#define POINDIF(x,y) (WORD)(x-y)
-#define LONGDIF(x,y) (WORD)(x-y)
 #define wsizeof(a) ((WORD)sizeof(a))
 #define VARNAME(type,num) (AC.varnames->namebuffer+type[num].name)
 #define DOLLARNAME(type,num) (AC.dollarnames->namebuffer+type[num].name)
@@ -228,7 +217,6 @@
 extern VOID TELLFILE(int,POSITION *);
 
 #define TOLONG(x) ((LONG)(x))
-#define StrIcmp(x,y) StrICont((UBYTE *)(y),(UBYTE *)(x))
 
 #define Add2Com(x) { WORD cod[2]; cod[0] = x; cod[1] = 2; AddNtoL(2,cod); }
 #define Add3Com(x1,x2) { WORD cod[3]; cod[0] = x1; cod[1] = 3; cod[2] = x2; AddNtoL(3,cod); }
@@ -281,8 +269,6 @@ long WinTimer();
 #define NumberFree(x,y) NumberFree2(BHEAD (UWORD *)(x),(char *)(y))
 
 #endif
-
-#define ZEROCOST(c) { (c).add = (c).mul = (c).div = (c).pow = 0; }
 
 /*
   	#] Macro's :
@@ -342,7 +328,7 @@ long WinTimer();
 #endif
 
 /*
-  	#] Thread objects :
+  	#] Thread objects : 
   	#[ Declarations :
 */
 
@@ -354,16 +340,8 @@ extern VOID   StartVariables();
 extern VOID   setSignalHandlers(VOID);
 extern UBYTE *CodeToLine(WORD,UBYTE *);
 extern INDEXENTRY *FindInIndex(WORD,FILEDATA *,WORD);
-extern UBYTE *GetLine(UBYTE *,LONG,WORD);
-extern UBYTE *GetOneSet(UBYTE *,WORD *,WORD *,WORD *,WORD *,WORD);
 extern INDEXENTRY *NextFileIndex(POSITION *);
-extern UBYTE *NextWord(UBYTE *);
 extern WORD  *PasteTerm(PHEAD WORD,WORD *,WORD *,WORD,WORD);
-extern UBYTE *SkipExpression(UBYTE *,WORD);
-extern UBYTE *SkipLine(UBYTE *);
-extern UBYTE *SkipName(UBYTE *);
-extern UBYTE *SkipOneName(UBYTE *);
-extern UBYTE *SkipSet(UBYTE *);
 extern UBYTE *StrCopy(UBYTE *,UBYTE *);
 extern UBYTE *WrtPower(UBYTE *,WORD);
 extern WORD   AccumGCD(PHEAD UWORD *,WORD *,UWORD *,WORD);
@@ -377,7 +355,6 @@ extern VOID   AddToLine(UBYTE *);
 extern WORD   AddWild(PHEAD WORD,WORD,WORD);
 extern WORD   BigLong(UWORD *,WORD,UWORD *,WORD);
 extern WORD   BinomGen(PHEAD WORD *,WORD,WORD **,WORD,WORD,WORD,WORD,WORD,UWORD *,WORD);
-extern VOID   Cconout(WORD);
 extern WORD   CheckWild(PHEAD WORD,WORD,WORD,WORD *);
 extern WORD   Chisholm(PHEAD WORD *,WORD);
 extern WORD   CleanExpr(WORD);
@@ -389,9 +366,7 @@ extern WORD   DoesCommu(WORD *);
 extern int    CompArg(WORD *,WORD *);
 extern WORD   CompCoef(WORD *, WORD *);
 extern WORD   CompGroup(PHEAD WORD,WORD **,WORD *,WORD *,WORD);
-extern WORD   CompWord(UBYTE *,char *);
 extern WORD   Compare1(PHEAD WORD *,WORD *,WORD);
-extern WORD   CopyToComp(VOID);
 extern WORD   CountDo(WORD *,WORD *);
 extern WORD   CountFun(WORD *,WORD *);
 extern WORD   DimensionSubterm(WORD *);
@@ -426,7 +401,6 @@ extern WORD   TableReset(VOID);
 extern VOID   ReWorkT(WORD *,WORD *,WORD);
 extern WORD   GetIfDollarNum(WORD *, WORD *);
 extern WORD   DoIfStatement(PHEAD WORD *,WORD *);
-extern WORD   DoModule(VOID);
 extern WORD   DoOnePow(PHEAD WORD *,WORD,WORD,WORD *,WORD *,WORD,WORD *);
 extern void   DoRevert(WORD *,WORD *);
 extern WORD   DoSumF1(PHEAD WORD *,WORD *,WORD,WORD);
@@ -452,7 +426,6 @@ extern WORD   FindSpecial(WORD *);
 extern WORD   FindrNumber(WORD,VARRENUM *);
 extern VOID   FiniLine(VOID);
 extern WORD   FiniTerm(PHEAD WORD *,WORD *,WORD *,WORD,WORD);
-extern VOID   FlushCon(VOID);
 extern WORD   FlushOut(POSITION *,FILEHANDLE *,int);
 extern VOID   FunLevel(PHEAD WORD *);
 extern VOID   AdjustRenumScratch(PHEAD0);
@@ -461,34 +434,21 @@ extern WORD   GcdLong(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern VOID   GCD(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern ULONG  GCD2(ULONG,ULONG);
 extern WORD   Generator(PHEAD WORD *,WORD);
-extern LONG   Get1Long(UBYTE *);
 extern WORD   GetBinom(UWORD *,WORD *,WORD,WORD);
 extern WORD   GetFromStore(WORD *,POSITION *,RENUMBER,WORD *,WORD);
-extern WORD   GetIchar(VOID);
-extern WORD   GetIword(UBYTE *,WORD);
 extern WORD   GetLong(UBYTE *,UWORD *,WORD *);
 extern WORD   GetMoreTerms(WORD *);
 extern WORD   GetMoreFromMem(WORD *,WORD **);
-extern WORD   GetObject(UBYTE *,WORD *,WORD *,WORD);
 extern WORD   GetOneTerm(PHEAD WORD *,FILEHANDLE *,POSITION *,int);
-extern WORD   GetOption(UBYTE **);
-extern WORD   GetParams(VOID);
 extern RENUMBER GetTable(WORD,POSITION *);
 extern WORD   GetTerm(PHEAD WORD *);
-extern WORD   GetWithEcho(VOID);
 extern WORD   Glue(PHEAD WORD *,WORD *,WORD *,WORD);
 extern WORD   InFunction(PHEAD WORD *,WORD *);
-extern WORD   IncLHS(VOID);
-extern WORD   IncRHS(WORD);
-extern VOID   IniGlob(VOID);
 extern VOID   IniLine(WORD);
 extern WORD   IniVars(VOID);
-extern VOID   Init2(VOID);
 extern VOID   Initialize(VOID);
 extern WORD   InsertTerm(PHEAD WORD *,WORD,WORD,WORD *,WORD *,WORD);
-extern WORD   Kraak(UBYTE *,WORD **,WORD *,WORD,WORD);
 extern VOID   LongToLine(UWORD *,WORD);
-extern WORD   LookAhead(VOID);
 extern WORD   MakeDirty(WORD *,WORD *,WORD);
 extern VOID   MarkDirty(WORD *,WORD);
 extern VOID   PolyFunDirty(PHEAD WORD *);
@@ -503,9 +463,6 @@ extern WORD   MatchFunction(PHEAD WORD *,WORD *,WORD *);
 extern WORD   MergePatches(WORD);
 extern WORD   MesCerr(char *, UBYTE *);
 extern WORD   MesComp(char *, UBYTE *, UBYTE *);
-extern WORD   MesLong(char *);
-extern WORD   MesPar(WORD);
-extern WORD   MesSet(WORD);
 extern WORD   Modulus(WORD *);
 extern VOID   MoveDummies(PHEAD WORD *,WORD);
 extern WORD   MulLong(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
@@ -544,24 +501,19 @@ extern VOID   RatToLine(UWORD *,WORD);
 extern WORD   RatioFind(PHEAD WORD *,WORD *);
 extern WORD   RatioGen(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   ReNumber(PHEAD WORD *);
-extern WORD   ReadLHS(VOID);
-extern WORD   ReadRHS(WORD);
 extern WORD   ReadSnum(UBYTE **);
 extern WORD   Remain10(UWORD *,WORD *);
 extern WORD   Remain4(UWORD *,WORD *);
 extern WORD   ResetScratch(VOID);
 extern WORD   ResolveSet(PHEAD WORD *,WORD *,WORD *);
-extern WORD   Reverse5(WORD *term,WORD level);
 extern WORD   RevertScratch(VOID);
 extern WORD   ScanFunctions(PHEAD WORD *,WORD *,WORD);
 extern VOID   SeekScratch(FILEHANDLE *,POSITION *);
 extern VOID   SetEndScratch(FILEHANDLE *,POSITION *);
 extern VOID   SetEndHScratch(FILEHANDLE *,POSITION *);
 extern WORD   SetFileIndex(VOID);
-extern WORD   SetParams(VOID);
 extern WORD   Sflush(FILEHANDLE *);
 extern WORD   Simplify(PHEAD UWORD *,WORD *,UWORD *,WORD *);
-extern WORD   SkipWhite(VOID);
 extern WORD   SortWild(WORD *,WORD);
 extern FILE  *LocateBase(char **,char **);
 #ifdef NEWSPLITMERGE
@@ -570,9 +522,6 @@ extern LONG   SplitMerge(PHEAD WORD **,LONG);
 extern VOID   SplitMerge(PHEAD WORD **,LONG);
 #endif
 extern WORD   StoreTerm(PHEAD WORD *);
-extern WORD   StrCcmp(UBYTE *, char *);
-extern VOID   StrNcop(UBYTE *, UBYTE *, WORD);
-extern WORD   SubEval(UBYTE **);
 extern VOID   SubPLon(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern VOID   Substitute(PHEAD WORD *,WORD *,WORD);
 extern WORD   SymFind(PHEAD WORD *,WORD *);
@@ -607,12 +556,8 @@ extern WORD   TraceNno(WORD,WORD *,TRACES *);
 extern WORD   Traces(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   Trick(WORD *,TRACES *);
 extern WORD   TryDo(PHEAD WORD *,WORD *,WORD);
-extern VOID   UnDefine(WORD);
 extern VOID   UnPack(UWORD *,WORD,WORD *,WORD *);
-extern WORD   Unique(UBYTE *,UBYTE *,WORD);
 extern WORD   VarStore(UBYTE *,WORD,WORD,WORD);
-extern VOID   W_S_L(WORD,LONG);
-extern VOID   W_S_S(WORD,UBYTE *);
 extern WORD   WildFill(PHEAD WORD *,WORD *,WORD *);
 extern WORD   WriteAll(VOID);
 extern WORD   WriteOne(UBYTE *,int,int);
@@ -626,42 +571,16 @@ extern WORD   WriteSubTerm(WORD *,WORD);
 extern WORD   WriteTerm(WORD *,WORD *,WORD,WORD,WORD);
 extern WORD   execarg(PHEAD WORD *,WORD);
 extern WORD   execterm(PHEAD WORD *,WORD);
-extern WORD   execnorm(WORD *,WORD);
 extern VOID   SpecialCleanup(PHEAD0);
 extern void   SetMods();
 extern void   UnSetMods();
+ 
+/*---------------------------------------------------------------------*/
 
-typedef WORD (*WCW)(EXPRESSIONS,WORD);
-
-extern UBYTE *strDup(UBYTE *);
-extern WORD   AddSetElement(EXPRESSIONS,LONG);
-extern WORD   AddToHide(VOID);
-extern LONG   CloseFormFile(UBYTE *,WORD);
-extern LONG   CreateFormFile(UBYTE *,WORD);
 extern WORD   DoExecute(WORD,WORD);
-extern WORD   DoSpolynomial(EXPRESSIONS,WORD,WORD,WORD *);
-extern WORD   ElimOneVar(EXPRESSIONS,WORD);
-extern WORD   FromHide(VOID);
-extern WORD   Groebner(WORD);
-extern WORD   LinSolve(WORD);
-extern WORD   MakeCommercial(UBYTE *,LONG,LONG);
-extern WORD   MakeSubs(WORD *,WORD,WORD);
-extern WORD   MulSetBracket(WORD *,LONG,WORD *,WORD,LONG,LONG);
-extern WORD   NormalForm(VOID);
-extern LONG   OpenFormFile(UBYTE *,WORD);
 extern VOID   SetScratch(FILEHANDLE *,POSITION *);
-extern WORD   SortByWeight(EXPRESSIONS,WORD);
-extern WORD   Spolynomial(EXPRESSIONS,LONG,LONG,LONG,LONG,WORD *,WORD *,WORD *,WORD);
-extern WORD   StepExpressions(WORD,WORD);
-extern WORD   StepGroebner(EXPRESSIONS,WORD);
-extern WORD   StepNormalForm(EXPRESSIONS,WORD);
-extern WORD   TestLinearWeights(UBYTE *);
-extern WORD   TestOneLinearWeight(WORD);
-extern WORD   ToHide(VOID);
-extern WORD   ToTriangle(EXPRESSIONS,WORD);
 extern VOID   Warning(char *);
 extern VOID   HighWarning(char *);
-extern LONG   WriteFormFile(UBYTE *,WORD);
 extern int    SpareTable(TABLES);
 
 extern UBYTE *strDup1(UBYTE *,char *);
@@ -804,7 +723,6 @@ extern int    DoFactDollar(UBYTE *);
 extern WORD   GetDollarNumber(UBYTE **,DOLLARS);
 extern int    DoSetRandom(UBYTE *);
 extern int    DoMessage(UBYTE *);
-extern int    DoPreNormPoly(UBYTE *);
 extern int    DoPreOut(UBYTE *);
 extern int    DoPreAppend(UBYTE *);
 extern int    DoPreCreate(UBYTE *);
@@ -862,12 +780,9 @@ extern int    DoPolyratfun(UBYTE *);
 extern int    CompileStatement(UBYTE *);
 extern UBYTE *ToToken(UBYTE *);
 extern int    GetDollar(UBYTE *);
-extern int    PutDollar(UBYTE *);
 extern int    MesWork(VOID);
 extern int    MesPrint(const char *,...);
 extern int    MesCall(char *);
-extern int    Mes1arr(char *);
-extern int    Mes2arr(char *);
 extern UBYTE *NumCopy(WORD,UBYTE *);
 extern char  *LongCopy(LONG,char *);
 extern char  *LongLongCopy(off_t *,char *);
@@ -906,7 +821,6 @@ extern void   AddToCom(int,WORD *);
 extern int    Add2ComStrings(int,WORD *,UBYTE *,UBYTE *);
 extern int    DoSymmetrize(UBYTE *,int);
 extern int    DoArgument(UBYTE *,int);
-extern int    DoRepArg(PHEAD WORD *,int);
 extern int    ArgFactorize(PHEAD WORD *,WORD *);
 extern WORD  *TakeArgContent(PHEAD WORD *, WORD *);
 extern WORD  *MakeInteger(PHEAD WORD *,WORD *,WORD *);
@@ -1112,7 +1026,6 @@ extern LONG   numcommute(WORD *,LONG *);
 extern int    FullRenumber(PHEAD WORD *,WORD);
 extern int    Lus(WORD *,WORD,WORD,WORD,WORD,WORD);
 extern int    FindLus(int,int,int);
-extern int    CoReplaceInArg(UBYTE *);
 extern int    CoReplaceLoop(UBYTE *);
 extern int    CoFindLoop(UBYTE *);
 extern int    DoFindLoop(UBYTE *,int);
@@ -1188,31 +1101,7 @@ extern void   M_check(VOID);
 extern void   M_print(VOID);
 extern void   M_check1(VOID);
 extern void   PrintTime(VOID);
-extern WORD  *PolynoAdd(WORD *,WORD *);
-extern WORD  *PolynoSub(WORD *,WORD *);
-extern WORD  *PolynoMul(WORD *,WORD *);
-extern WORD  *PolynoDiv(WORD *,WORD *,WORD **);
-extern WORD  *Polyno1Div(WORD *,WORD *,WORD **);
-extern WORD  *PolynoGCD(WORD *,WORD *);
-extern WORD  *Polyno1GCD(WORD *,WORD *);
-extern UBYTE *PolynoPrint(WORD *);
-extern int    PolynoWrite(WORD *);
-extern WORD  *PolynoNormalize(WORD *);
-extern WORD  *PolynoUnify(WORD *,int);
-extern WORD  *PolynoIntFac(WORD *);
-extern void   PolynoPushBracket(WORD);
-extern void   PolynoPopBracket(VOID);
-extern void   PolynoStart(VOID);
-extern void   PolynoFinish(VOID);
-extern WORD   DoPolynomial(WORD *,WORD);
-extern WORD   DoPolyGetRem(WORD *,WORD);
-extern WORD  *CopyOfPolynomial(WORD *);
-extern WORD  *PolynoCoefNorm(WORD *,WORD,WORD **,int);
-extern WORD  *MakePolynomial(WORD,int,int *);
-extern int    DoPolynoNorm(int,WORD,WORD,WORD);
-/*
-int IsProductOf(WORD *,WORD *);
-*/
+
 extern POSITION *FindBracket(WORD,WORD *);
 extern VOID   PutBracketInIndex(PHEAD WORD *,POSITION *);
 extern void   ClearBracketIndex(WORD);
@@ -1235,14 +1124,12 @@ extern int    ArgumentImplode(PHEAD WORD *,WORD *);
 extern int    ArgumentExplode(PHEAD WORD *,WORD *);
 extern int    DenToFunction(WORD *,WORD);
  
-extern WORD   ReadElIf(VOID);
 extern WORD   HowMany(PHEAD WORD *,WORD *);
 extern VOID   RemoveDollars(VOID);
 extern LONG   CountTerms1(PHEAD0);
 extern LONG   TermsInBracket(PHEAD WORD *,WORD);
 extern int    Crash(VOID);
 
-extern void  *mmalloc(size_t,char *);
 extern char  *str_dup(char *);
 extern void   convertblock(INDEXBLOCK *,INDEXBLOCK *,int);
 extern void   convertnamesblock(NAMESBLOCK *,NAMESBLOCK *,int);
@@ -1260,7 +1147,6 @@ extern char  *ReadObject(DBASE *,MLONG,char *);
 extern char  *ReadijObject(DBASE *,MLONG,MLONG,char *);
 extern int    ExistsObject(DBASE *,MLONG,char *);
 extern int    DeleteObject(DBASE *,MLONG,char *);
-extern char  *GetSubString(char *,char **);
 extern int    WriteObject(DBASE *,MLONG,char *,char *,MLONG);
 extern MLONG  AddObject(DBASE *,MLONG,char *,char *);
 extern int    Cleanup(DBASE *);
@@ -1271,19 +1157,6 @@ extern int    PutTableNames(DBASE *);
 extern MLONG  AddTableName(DBASE *,char *,TABLES);
 extern MLONG  GetTableName(DBASE *,char *);
 extern MLONG  FindTableNumber(DBASE *,char *);
-extern int    TouchKey(DBASE *,char *,char *);
-extern int    DumpContents(DBASE *,char *,MLONG,MLONG);
-extern int    RunMake(int,char **,char ***,MLONG,char *);
-extern int    handlefold(DBASE *,char *,char *,char *,char *);
-extern int    SumStart(int,char *);
-extern int    SumStep(int,char **,MLONG,char *);
-extern int    SpecStep(int,char **,char **,MLONG,char *);
-extern int    SumFinish(int,char *);
-extern int    LinSumStart(int,char *);
-extern int    LinSumStep(int,char **,MLONG,char *);
-extern int    LinSumDecl(int,char **,MLONG,char *);
-extern int    LinSumFinish(int,char *);
-extern char  *SkipString(char *);
 extern int    TryEnvironment(VOID);
 
 #ifdef WITHZLIB
@@ -1291,8 +1164,6 @@ extern int    SetupOutputGZIP(FILEHANDLE *);
 extern int    PutOutputGZIP(FILEHANDLE *);
 extern int    FlushOutputGZIP(FILEHANDLE *);
 extern int    SetupAllInputGZIP(SORTING *);
-extern int    SetupInputGZIP(FILEHANDLE *,int);
-extern LONG   GetInputGZIP(FILEHANDLE *,int);
 extern LONG   FillInputGZIP(FILEHANDLE *,POSITION *,UBYTE *,LONG,int);
 #endif
 
@@ -1309,7 +1180,6 @@ extern void   WakeupThread(int,int);
 extern int    MasterWait(VOID);
 extern int    InParallelProcessor(VOID);
 extern int    ThreadsProcessor(EXPRESSIONS,WORD);
-extern int    ThreadsMerge(VOID);
 extern int    MasterMerge(VOID);
 extern int    PutToMaster(PHEAD WORD *);
 extern void   SetWorkerFiles(VOID);
@@ -1334,8 +1204,6 @@ extern int    ThreadWait(int);
 extern int    ThreadClaimedBlock(int);
 extern int    GetThread(int);
 extern int    UpdateOneThread(int);
-extern void   AlsoAvailable(int);
-extern void   AlsoRunning(int);
 extern void   MasterWaitAll(VOID);
 extern void   MasterWaitAllBlocks(VOID);
 extern int    MasterWaitThread(int);
@@ -1350,41 +1218,25 @@ extern void	SetHideFiles(VOID);
 
 extern int    CopyExpression(FILEHANDLE *,FILEHANDLE *);
 
-/*[12dec2003 mt]:*/
 extern int    set_in(UBYTE, set_of_char);
 extern one_byte set_set(UBYTE, set_of_char);
 extern one_byte set_del(UBYTE, set_of_char);
 extern one_byte set_sub (set_of_char, set_of_char, set_of_char);
 extern int    DoPreAddSeparator(UBYTE *);
 extern int    DoPreRmSeparator(UBYTE *);
-/*:[12dec2003 mt]*/
 
-/*[14apr2004 mt]:*/
 /*See the file extcmd.c*/
-/*[08may2006 mt]:*/
-/*
-extern int openExternalChannel(char *);
-*/
 extern int    openExternalChannel(UBYTE *,int,UBYTE *,UBYTE *);
 extern int    initPresetExternalChannels(UBYTE *, int);
-/*:[08may2006 mt]*/
 extern int    closeExternalChannel(int);
 extern int    selectExternalChannel(int);
 extern int    getCurrentExternalChannel(VOID);
 extern VOID   closeAllExternalChannels(VOID);
-/*:[14apr2004 mt]*/
 
-/*[08may2006 mt]:*/
-/*extern int writexactly(int,char *,size_t);*/
-/*:[08may2006 mt]*/
-
-/*[17nov2005 mt]:*/
 typedef int (*WRITEBUFTOEXTCHANNEL)(char *,size_t);
 typedef int (*GETCFROMEXTCHANNEL)(VOID);
 typedef int (*SETTERMINATORFOREXTERNALCHANNEL)(char *);
-/*[08may2006 mt]:*/
 typedef int (*SETKILLMODEFOREXTERNALCHANNEL)(int,int);
-/*:[08may2006 mt]*/
 typedef LONG (*WRITEFILE)(int,UBYTE *,LONG);
 typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
 typedef WORD (*GETTERM)(PHEAD WORD *);
@@ -1412,61 +1264,8 @@ extern int    writeBufToExtChannelFailure(char *,size_t);
 extern int    ReleaseTB(VOID);
 
 extern int    SymbolNormalize(WORD *);
-extern int    SymbolNormalizeCheckMin(WORD *,WORD *,WORD);
-extern int    CheckMinTerm(WORD *,WORD *);
-extern int    ReOrderSymbols(WORD *,WORD *,WORD);
 extern int    CompareSymbols(PHEAD WORD *,WORD *,WORD);
-extern int    PolyOrder(PHEAD WORD *);
-extern WORD  *PolyAdd(PHEAD WORD *,WORD *);
-extern WORD  *PolyMul(PHEAD WORD *,WORD *);
-extern WORD  *PolyDiv(PHEAD WORD *,WORD *);
-extern WORD  *PolyDivI(PHEAD WORD *,WORD *);
-extern WORD  *PolyMul0(PHEAD WORD *,WORD *);
-extern WORD  *PolyDiv0(PHEAD WORD *,WORD *);
-extern WORD  *PolyRatNorm(PHEAD WORD *,WORD *);
-extern WORD  *PolyRatFunNorm(PHEAD WORD *,WORD);
-extern WORD  *PolyRatFunAdd(PHEAD WORD *,WORD *);
-extern WORD  *PolyRemoveContent(PHEAD WORD *,WORD);
-extern WORD  *PolyGCD(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD1(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD1a(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD1b(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD1c(PHEAD WORD *,WORD *);
-extern WORD  *PolyGCD1d(PHEAD WORD *,WORD *);
-extern WORD  *PolyDiv1(PHEAD WORD *,WORD *);
-extern WORD  *PolyDiv1d(PHEAD WORD *,WORD *);
-extern WORD  *PolyPseudoRem1(PHEAD WORD *,WORD *);
-extern WORD  *GetNegPow(PHEAD WORD *);
-extern WORD   PolyRatFunMul(PHEAD WORD *);
-extern WORD  *PolyTake(PHEAD WORD *,WORD);
-extern WORD   PolyGetRenumbering(PHEAD WORD *,WORD *);
-extern WORD   InvertModular(WORD,WORD);
-extern WORD   InvertLongModular(PHEAD UWORD *,WORD,WORD,UWORD *,WORD *);
-/*WORD *PolyModGCD(PHEAD WORD *,WORD *,WORD);*/
-extern int    PolyModGCD(POLYMOD *,POLYMOD *);
-extern int    PolyConvertToModulus(WORD *,POLYMOD *,WORD);
-extern WORD  *PolyConvertFromModulus(PHEAD POLYMOD *,WORD);
-extern WORD  *PolyChineseRemainder(PHEAD WORD *,WORD *,WORD *,WORD,WORD,UWORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
-extern WORD   ModShortPrime(UWORD *,WORD,WORD);
-extern int    AllocPolyModCoefs(POLYMOD *,WORD);
-extern WORD   DivMod(UWORD *,WORD,WORD);
-extern int    AccumTermGCD(PHEAD WORD *,WORD *);
-extern int    PolyTakeSqrt(PHEAD WORD *);
-extern int    PolyTakeRoot(PHEAD WORD *,WORD);
-extern WORD  *PolyPow(PHEAD WORD *,WORD);
-extern WORD  *PolyInterpolation(PHEAD WORD *,WORD *,WORD);
-extern WORD  *PolySubs(PHEAD WORD *,WORD,WORD);
-extern WORD  *PolyNewton(PHEAD WORD **,WORD,WORD);
-extern WORD  *PolyGetNewtonCoef(PHEAD WORD **,WORD);
-extern WORD   ModPow(WORD,WORD,WORD);
-extern WORD   PolyModSubsVector(WORD *,WORD *,WORD,WORD,WORD,WORD,POLYMOD *);
-extern WORD  *PolyGetSymbols(PHEAD WORD *,int *);
-extern WORD  *PolyGetGCDPowers(PHEAD WORD *,WORD *,WORD *,WORD *);
-extern WORD  *PolyGetConfig(PHEAD WORD);
-extern WORD  *RedoPolyRatFun(PHEAD WORD *,int);
-extern int    TestSymbols(WORD *);
-extern WORD  *PolyRatFunTake(PHEAD WORD *);
 extern UWORD  wranf(PHEAD0);
 extern UWORD  iranf(PHEAD UWORD);
 extern void   iniwranf(PHEAD0);
@@ -1518,7 +1317,6 @@ extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par);
 
 extern int NormPolyTerm(PHEAD WORD *);
 extern WORD ComparePoly(WORD *, WORD *, WORD);
-extern int PolyBracket(WORD *term, WORD *, int);
 extern int ConvertToPoly(PHEAD WORD *, WORD *);
 extern int LocalConvertToPoly(PHEAD WORD *, WORD *, WORD);
 extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD, WORD);
@@ -1554,8 +1352,7 @@ extern WORD *ConvertArgument(PHEAD WORD *,int *);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 
-extern int   poly_gcd(PHEAD WORD *, WORD *);
-extern WORD  *poly_gcd_new(PHEAD WORD *, WORD *);
+extern WORD  *poly_gcd(PHEAD WORD *, WORD *);
 extern WORD  *poly_div(PHEAD WORD *, WORD *);
 extern WORD  *poly_rem(PHEAD WORD *, WORD *);
 extern WORD *poly_ratfun_normalize(PHEAD WORD *, int);
@@ -1567,6 +1364,6 @@ extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
 extern int   unfactorize_expression(EXPRESSIONS);
 /*
-  	#] Declarations :
+  	#] Declarations : 
 */
 #endif

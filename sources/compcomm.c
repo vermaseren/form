@@ -123,9 +123,6 @@ static KEYWORD onoffoptions[] = {
 	,{"flag",			(TFUN)&(AC.debugFlags),	1,	0}
 	,{"oldfactarg",		(TFUN)&(AC.OldFactArgFlag),	1,	0}
 	,{"memdebugflag",	(TFUN)&(AC.MemDebugFlag),	1,	0}
-#ifdef WITHOLDPOLYRATFUN
-	,{"oldpolyratfun",	(TFUN)&(AM.oldpolyratfun),	1,	0}
-#endif
 };
 
 static WORD one = 1;
@@ -2230,7 +2227,7 @@ illargs:;
 }
 
 /*
-  	#] CoRedefine :
+  	#] CoRedefine : 
   	#[ CoRenumber :
 
 	renumber    or renumber,0     Only exchanges (n^2 until no improvement)

@@ -876,12 +876,6 @@ VOID StartVariables()
 	GetName(AC.varnames,(UBYTE *)"term_",&AM.termfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"match_",&AM.matchfunnum,NOAUTO);
 	GetName(AC.varnames,(UBYTE *)"count_",&AM.countfunnum,NOAUTO);
-#ifdef OLDPOLY
-	GetName(AC.varnames,(UBYTE *)"poly_",&AM.polyfunnum,NOAUTO);
-	GetName(AC.varnames,(UBYTE *)"polynorm_",&AM.polytopnum,NOAUTO);
-	AM.polyfunnum += FUNCTION;
-	AM.polytopnum += FUNCTION;
-#endif
 	AM.termfunnum += FUNCTION;
 	AM.matchfunnum += FUNCTION;
 	AM.countfunnum += FUNCTION;
@@ -914,7 +908,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1035,21 +1029,6 @@ WORD IniVars()
 	AS.printflag = 0;
 #endif
 
-	AT.zeropol[0] = 0;
-	AT.onepol[0] = 4;
-	AT.onepol[1] = 1;
-	AT.onepol[2] = 1;
-	AT.onepol[3] = 3;
-	AT.onepol[4] = 0;
-	AT.onesympol[0] = 8;
-	AT.onesympol[1] = SYMBOL;
-	AT.onesympol[2] = 4;
-	AT.onesympol[3] = 1;
-	AT.onesympol[4] = 1;
-	AT.onesympol[5] = 1;
-	AT.onesympol[6] = 1;
-	AT.onesympol[7] = 3;
-	AT.onesympol[8] = 0;
 	AT.comsym[0] = 8;
 	AT.comsym[1] = SYMBOL;
 	AT.comsym[2] = 4;
@@ -1108,9 +1087,6 @@ WORD IniVars()
 	AT.dummysubexp[SUBEXPSIZE+2] = 0;
 	AT.dummysubexp[SUBEXPSIZE+3] = 0;
 
-	AN.doingpoly = 0;
-	AN.polyblevel = 0;
-	AN.getdivgcd = 0;
 	AT.inprimelist = -1;
 	AT.sizeprimelist = 0;
 	AT.primelist = 0;
@@ -1118,11 +1094,6 @@ WORD IniVars()
 	AN.SplitScratchSize = AN.InScratch = 0;
 	AN.SplitScratch1 = 0;
 	AN.SplitScratchSize1 = AN.InScratch1 = 0;
-
-#ifdef WITHOLDPOLYRATFUN
-	AllocPolyModCoefs(&(AN.polymod1),200);
-	AllocPolyModCoefs(&(AN.polymod2),200);
-#endif
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	AO.FactorMode = 0;
@@ -1133,9 +1104,6 @@ WORD IniVars()
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AP.PreAssignFlag = 0;
-#ifdef WITHOLDPOLYRATFUN
-	AM.oldpolyratfun = 0;
-#endif
 	return(0);
 }
 

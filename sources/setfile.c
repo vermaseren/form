@@ -81,7 +81,6 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"oldparallelstatistics",     ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
-	,{(UBYTE *)"polygcdchoice",         NUMERICALVALUE, 0, (long)0}
 	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (long)procedureextension}
 	,{(UBYTE *)"resettimeonclear",          ONOFFVALUE, 0, (long)1}
 	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (long)SCRATCHSIZE}
@@ -109,7 +108,6 @@ SETUPPARAMETERS setupparameters[] =
     ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (long)0}
 	,{(UBYTE *)"totalsize",                 ONOFFVALUE, 0, (long)2}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (long)WORKBUFFER}
-	,{(UBYTE *)"zipsize",               NUMERICALVALUE, 0, (long)ZIPBUFFERSIZE}
 };
 
 /*
@@ -421,13 +419,6 @@ int AllocSetups()
 	AT.WorkPointer = AT.WorkSpace;
 #endif
 /*
-	Set the size of the ZipBuffers and allocate them.
-*/
-	sp = GetSetupPar((UBYTE *)"zipsize");
-	AM.ZipBufferSize = sp->value;
-	AM.Zip1Buffer = (UBYTE *)Malloc1(2*sp->value+sp->value/4+2*sizeof(LONG),(char *)(sp->parameter));
-	AM.Zip2Buffer = AM.Zip1Buffer + sp->value + sp->value/8 + sizeof(LONG);
-/*
 	Fixed indices
 */
 	sp = GetSetupPar((UBYTE *)"constindex");
@@ -445,11 +436,6 @@ int AllocSetups()
 	AR.CurDum = AN.IndDum = AM.IndDum;
 #endif
 	AM.mTraceDum = AM.IndDum + 2*WILDOFFSET;
-
-	sp = GetSetupPar((UBYTE *)"polygcdchoice");
-	if ( sp->value < 0 ) sp->value = 0;
-	if ( sp->value > 3 ) sp->value = 3;
-	AM.polygcdchoice = sp->value;
 
 	sp = GetSetupPar((UBYTE *)"parentheses");
 	AM.MaxParLevel = sp->value+1;
@@ -1124,7 +1110,7 @@ eoi:
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
