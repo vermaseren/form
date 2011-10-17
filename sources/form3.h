@@ -96,6 +96,9 @@
 #endif
 #endif
 
+/*
+ * We must not define WITHPOSIXCLOCK in compiling the sequential FORM or ParFORM.
+ */
 #if !defined(WITHPTHREADS) && defined(WITHPOSIXCLOCK)
 #undef WITHPOSIXCLOCK
 #endif
@@ -248,20 +251,8 @@ typedef ULONG RLONG;
 */
 #define WITHSORTBOTS
 
-#ifdef WITHZLIB
-#include <zlib.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
-
-/*[19mar2004 mt]:*/
-/*Problems with the long file support on HP-UX without this include:*/
-#ifdef UNIX
-#include <unistd.h>
-#endif
-/*:[19mar2004 mt]*/
-
 #include <ctype.h>
 #ifdef ANSI
 #include <stdarg.h>
@@ -271,17 +262,24 @@ typedef ULONG RLONG;
 #include "fwin.h"
 #endif
 #ifdef UNIX
+#include <unistd.h>
+#include <time.h>
+#include <fcntl.h>
+#include <sys/file.h>
 #include "unix.h"
+#endif
+#ifdef WITHZLIB
+#include <zlib.h>
+#endif
+#ifdef WITHPTHREADS
+#include <pthread.h>
 #endif
 
 /*
-	PARALLELCODE indicates code that is common for TFORM and parFORM but
+	PARALLELCODE indicates code that is common for TFORM and ParFORM but
 	should not be there for sequential FORM.
 */
-#ifdef PARALLEL
-#define PARALLELCODE
-#endif
-#ifdef WITHPTHREADS
+#if defined(PARALLEL) || defined(WITHPTHREADS)
 #define PARALLELCODE
 #endif
 
@@ -293,10 +291,6 @@ typedef ULONG RLONG;
 #include "declare.h"
 #include "variable.h"
 
-#ifdef WITHPTHREADS
-#include <pthread.h>
-#endif
-
 /*
  * The interface to file routines for UNIX or non-UNIX.
  */
@@ -306,7 +300,6 @@ typedef ULONG RLONG;
 typedef struct FiLeS {
 	int descriptor;
 } FILES;
-#include <fcntl.h>
 extern FILES *Uopen(char *,char *);
 extern int    Uclose(FILES *);
 extern size_t Uread(char *,size_t,size_t,FILES *);

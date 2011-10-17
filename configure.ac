@@ -100,9 +100,11 @@ AC_ARG_WITH([api],
 		[AC_MSG_FAILURE([Invalid argument for API. Use --with-api=posix or --with-api=windows])])],
 	[with_api=posix])
 AS_IF([test "x$with_api" = xposix],
-	[AC_DEFINE(UNIX, , [Compiling for UNIX system])])
+	[AC_CHECK_HEADERS([unistd.h], [], [AC_MSG_FAILURE([unistd.h is not found])])
+	AC_DEFINE(UNIX, , [Compiling for UNIX system])])
 AS_IF([test "x$with_api" = xwindows],
-	[AC_DEFINE(WINDOWS, , [Compiling for WINDOWS system])])
+	[AC_CHECK_HEADERS([windows.h], [],[AC_MSG_FAILURE([windows.h is not found])] )
+	AC_DEFINE(WINDOWS, , [Compiling for WINDOWS system])])
 
 # Check for data model
 AC_CHECK_SIZEOF([char])

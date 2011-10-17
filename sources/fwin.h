@@ -1,6 +1,6 @@
-/** @file windows.h
+/** @file fwin.h
  *
- *  Settings for a 32 bits windows computer.
+ *  Settings for Windows computers.
  */
 
 /* #[ License : */
@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 #define LINEFEED '\n'
 #define CARRIAGERETURN 0x0D

@@ -1,7 +1,6 @@
 /** @file unix.h
  *
- *  Contains the definition of constants connected to the byte structure
- *	of the computer. Like WORD size etc. Used mainly on unix-like systems.
+ *  Settings for Unix-like systems.
  */
 
 /* #[ License : */
@@ -29,14 +28,10 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 #define LINEFEED '\n'
 #define CARRIAGERETURN 0x0D
-
-#include <time.h>
-#include <fcntl.h>
-#include <sys/file.h>
 
 #define WITHPIPE
 #define WITHSYSTEM
