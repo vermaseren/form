@@ -120,17 +120,10 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 /*
   	#] poly_gcd : 
-  	#[ poly_div :
-
-	Routine divides the expression in arg1 by the expression in arg2.
-	We did not take out special cases.
-	The arguments are zero terminated sequences of term(s).
-	The action is to divide arg1 by arg2: [arg1/arg2].
-	The answer should be a buffer (allocated by Malloc1) with a zero
-	terminated sequence of terms (or just zero).
+  	#[ poly_divmod :
 */
 
-WORD *poly_div(PHEAD WORD *a, WORD *b) {
+WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
 	AN.poly_num_vars = 0;
 	poly::extract_variables(BHEAD a, false, false);
@@ -156,15 +149,35 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 	}
 
 	// Convert to polynomials
-	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx), modp, 1);
-	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx), modp, 1);
+	poly dena(BHEAD 0);
+	poly denb(BHEAD 0);
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx, &dena), modp, 1);
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx, &denb), modp, 1);
+	pa *= denb;
+	pb *= dena;
 
+	int pow = pa.degree(0);
+	poly lcoeffb(pb.integer_lcoeff());
+	poly den(BHEAD 1);
+
+	if (divmod==1) den=dena*denb;
+	
+	for (int i=0; i<pow; i++) {
+		pa  *= lcoeffb;
+		den *= lcoeffb;
+	}
+		
 	// Calculate gcd
-	poly pres(pa / pb);
+	poly pres(BHEAD 0);
 
+	if (divmod==0)
+		pres = pa / pb;
+	else
+		pres = pa % pb;
+	
 	// Allocate new memory and convert to Form notation
-	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_div");
-	poly::poly_to_argument(pres, res, false);
+	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_divmod");
+	poly::poly_to_argument(pres, res, false, &den);
 
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
@@ -173,6 +186,22 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 	AN.ncmod = AC.ncmod;
 
 	return res;
+}
+
+/*
+  	#] poly_divmod :
+  	#[ poly_div :
+
+	Routine divides the expression in arg1 by the expression in arg2.
+	We did not take out special cases.
+	The arguments are zero terminated sequences of term(s).
+	The action is to divide arg1 by arg2: [arg1/arg2].
+	The answer should be a buffer (allocated by Malloc1) with a zero
+	terminated sequence of terms (or just zero).
+*/
+
+WORD *poly_div(PHEAD WORD *a, WORD *b) {
+	return poly_divmod(BHEAD a, b, 0);
 }
 
 /*
@@ -188,49 +217,8 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 	terminated sequence of terms (or just zero).
 */
 
-WORD *poly_rem(PHEAD WORD *a, WORD *b)
-{
-	AN.poly_num_vars = 0;
-	poly::extract_variables(BHEAD a, false, false);
-	map<int,int> var_to_idx = poly::extract_variables(BHEAD b, false, false);
-
-	// Check for modulus calculus
-	WORD modp=0;
-
-	if (AC.ncmod!=0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: polynomial division with modulus > WORDSIZE not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			modp = *AC.cmod;
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}
-
-	// Convert to polynomials
-	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx), modp, 1);
-	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx), modp, 1);
-
-	// Calculate gcd
-	poly pres(pa % pb);
-	
-	// Allocate new memory and convert to Form notation
-	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_div");
-	poly::poly_to_argument(pres, res, false);
-
-	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
-
-	// reset modulo calculation
-	AN.ncmod = AC.ncmod;
-
-	return res;
+WORD *poly_rem(PHEAD WORD *a, WORD *b) {
+	return poly_divmod(BHEAD a, b, 1);
 }
 
 /*

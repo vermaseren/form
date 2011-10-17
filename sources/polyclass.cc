@@ -2504,7 +2504,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 */
 
 // converts a polynomial class "poly" to a form expression
-void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
+void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *den) {
 
 	POLY_GETIDENTITY(a);
 
@@ -2527,6 +2527,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 	}
 
 	int L = with_arghead ? ARGHEAD : 0;
+	UWORD *number = (UWORD *)NumberMalloc("poly_to_argument");
 	
 	for (int i=1; i!=a[0]; i+=a[i]) {
 		
@@ -2549,12 +2550,24 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 
 		WORD nc = a[i+a[i]-1];
 		memcpy(&res[L+res[L]], &a[i+a[i]-1-ABS(nc)], ABS(nc)*sizeof(WORD)); // numerator
-		res[L] += ABS(nc);	                             // fix length
-		memset(&res[L+res[L]], 0, ABS(nc)*sizeof(WORD)); // denominator
-		res[L+res[L]] = 1;                               // denominator
-		res[L] += ABS(nc);                               // fix length
-		res[L+res[L]] = SGN(nc) * (2*ABS(nc)+1);         // length of coefficient
-		res[L]++;                                        // fix length
+
+		if (den==NULL || den->is_one()) {
+			res[L] += ABS(nc);	                             // fix length
+			memset(&res[L+res[L]], 0, ABS(nc)*sizeof(WORD)); // denominator one
+			res[L+res[L]] = 1;                               // denominator one
+			res[L] += ABS(nc);                               // fix length
+			res[L+res[L]] = SGN(nc) * (2*ABS(nc)+1);         // length of coefficient
+			res[L]++;                                        // fix length
+		}
+		else {
+			WORD nd = (*den)[(*den)[1]];                                  // length denominator
+			memcpy(number, &(*den)[2+AN.poly_num_vars], nd*sizeof(WORD)); // denominator
+			Simplify(BHEAD (UWORD *)&res[L+res[L]], &nc, number, &nd);    // gcd(num,den);
+			Pack((UWORD *)&res[L+res[L]], &nc, number, nd);               // format
+			res[L] += 2*ABS(nc)+1;                                        // fix length
+			res[L+res[L]-1] = SGN(nc)*(2*ABS(nc)+1);                      // length of coefficient
+		}
+		
 		L += res[L];                                     // fix length
 	}
 
