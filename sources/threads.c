@@ -144,10 +144,12 @@ void FinishIdentity(void *keyp)
 
 int SetIdentity(int *identityretval)
 {
+/*
 #ifdef _MSC_VER
 	printf("addr %d\n",&numberofthreadslock);
 	printf("size %d\n",sizeof(numberofthreadslock));
 #endif
+*/
 	LOCK(numberofthreadslock);
 	*identityretval = identityofthreads++;
 	UNLOCK(numberofthreadslock);

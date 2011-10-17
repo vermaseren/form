@@ -115,9 +115,11 @@ int DoTail(int argc, UBYTE **argv)
 		onlyversion = 0;
 		goto printversion;
 	}
+/*
 #ifdef _MSC_VER
 	printf("Starting Form \n");
 #endif
+*/
 	while ( argc >= 1 ) {
 		s = *argv++; argc--;
 		if ( *s == '-' || ( *s == '/' && ( argc > 0 || AM.Interact ) ) ) {

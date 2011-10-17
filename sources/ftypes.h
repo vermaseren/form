@@ -182,39 +182,6 @@
 */
 #define VOID void
 
-#ifndef ALPHA
-#ifndef OPTERON
-#ifndef MYWIN64
-/*
-#ifndef VOID
-typedef void VOID;
-#endif
-*/
-#ifdef HP
-typedef char SBYTE;
-#else
-typedef signed char SBYTE;
-#endif
-typedef short WORD;
-typedef long LONG;
-typedef unsigned char UBYTE;
-typedef unsigned short UWORD;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned long RLONG;
-typedef UWORD FLOAT;
-typedef short SHORT;
-#define BITSINSHORT 16
-#define SHORTMASK 0xFFFF
-/* ENDIANNESS */
-#define INT16 short
-#define INT32 int
-#undef INT64
-#undef INT128
-#endif
-#endif
-#endif
-
 #ifdef ANSI
 typedef VOID (*PVFUNWP)(WORD *);
 #ifdef INTELCOMPILER

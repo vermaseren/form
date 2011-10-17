@@ -461,7 +461,7 @@ int LocateFile(UBYTE **name, int type)
 		u1 = AM.Path;
 		while ( *u1 ) {
 			u2 = u1; i = 0;
-#ifdef _MSC_VER
+#ifdef WINDOWS
 			while ( *u1 && *u1 != ';' ) {
 				u1++; i++;
 			}
@@ -474,7 +474,7 @@ int LocateFile(UBYTE **name, int type)
 			newname = (UBYTE *)Malloc1(namesize+i,"LocateFile");
 			s = u2; to = newname;
 			while ( s < u1 ) {
-#ifndef _MSC_VER
+#ifndef WINDOWS
 				if ( *s == '\\' ) s++;
 #endif
 				*to++ = *s++;
@@ -2940,17 +2940,9 @@ LONG TimeCPU(WORD par)
  		#] TimeCPU : 
  		#[ Timer :
 */
-/*
-#ifdef WINDOWS
-*/
-#ifdef _MSC_VER
-/*
-#include <windows.h>
-#include <psapi.h>
-#include <Winsock.h>
-*/
-LONG WinTimer(){
-
+#if defined(WINDOWS)
+LONG Timer()
+{
   static int initialized = 0;
   static HANDLE hProcess;
 
@@ -2958,7 +2950,7 @@ LONG WinTimer(){
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
                PROCESS_VM_READ,
                FALSE, GetCurrentProcessId());
- 
+
   {
     FILETIME ftCreate, ftExit, ftKernel, ftUser;
     if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
@@ -2972,12 +2964,8 @@ LONG WinTimer(){
     }
   }
   return(0);
-}   
-
-LONG Timer()
- {
-   return(WinTimer());
 }
+
 /*
 #else
 #include <time.h>
@@ -2997,85 +2985,7 @@ LONG Timer(int par)
 }
 #endif
 */
-#else
-
-#ifdef SUN
-#define _TIME_T_
-#include <sys/time.h>
-#include <sys/resource.h>
-
-LONG Timer(int par)
-{
-    struct rusage rusage;
-	if ( par == 1 ) {
-	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
-		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
-	}
-	else {
-	    getrusage(RUSAGE_SELF,&rusage);
-    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
-		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
-	}
-}
-
-#else
-
-#ifdef LINUX
-#include <sys/time.h>
-#include <sys/resource.h>
-#ifdef WITHPOSIXCLOCK
-#include <time.h>
-/*
-	And include -lrt in the link statement (on blade02)
-*/
-#endif
-
-LONG Timer(int par)
-{
-#ifdef WITHPOSIXCLOCK
-/*
-	Only to be used in combination with WITHPTHREADS
-	This clock seems to be supported by the standard.
-	The getrusage clock returns according to the standard only the combined
-	time of the whole process. But in older versions of Linux LinuxThreads
-	is used which gives a separate id to each thread and individual timings.
-	In NPTL we get, according to the standard, one combined timing.
-	To get individual timings we need to use
-		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing)
-	with AR.timing of the time
-	struct timespec {
-		__time_t tv_sec;            Seconds.
-		long int tv_nsec;           Nanoseconds.
-	};
-
-*/
-	GETIDENTITY
-	if ( par == 0 ) {
-		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing) ) {
-			MesPrint("Error in getting timing information");
-		}
-		return(AR.timing.tv_sec*1000+AR.timing.tv_nsec/1000000);
-	}
-	return(0);
-#else
-	struct rusage rusage;
-	if ( par == 1 ) {
-	    getrusage(RUSAGE_CHILDREN,&rusage);
-    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
-		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
-	}
-	else {
-	    getrusage(RUSAGE_SELF,&rusage);
-    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
-		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
-	}
-#endif
-}
-
-#else
-
-#ifdef OPTERON
+#elif defined(UNIX)
 #include <sys/time.h>
 #include <sys/resource.h>
 #ifdef WITHPOSIXCLOCK
@@ -3127,9 +3037,8 @@ LONG Timer(int par)
 #endif
 }
 
-#else
-
-#ifdef RS6K
+#elif defined(SUN)
+#define _TIME_T_
 #include <sys/time.h>
 #include <sys/resource.h>
 
@@ -3148,9 +3057,26 @@ LONG Timer(int par)
 	}
 }
 
-#else
+#elif defined(RS6K)
+#include <sys/time.h>
+#include <sys/resource.h>
 
-#ifdef ANSI
+LONG Timer(int par)
+{
+    struct rusage rusage;
+	if ( par == 1 ) {
+	    getrusage(RUSAGE_CHILDREN,&rusage);
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+	else {
+	    getrusage(RUSAGE_SELF,&rusage);
+    	return(((LONG)(rusage.ru_utime.tv_sec)+(LONG)(rusage.ru_stime.tv_sec))*1000
+		      +(rusage.ru_utime.tv_usec/1000+rusage.ru_stime.tv_usec/1000));
+	}
+}
+
+#elif defined(ANSI)
 LONG Timer(int par)
 {
 #ifdef ALPHA
@@ -3189,9 +3115,7 @@ LONG Timer(int par)
 #endif
 #endif
 }
-#else
-
-#ifdef VMS
+#elif defined(VMS)
 
 #include <time.h>
 void times(tbuffer_t *buffer);
@@ -3207,8 +3131,7 @@ Timer(int par)
 	}
 }
 
-#endif
-#ifdef mBSD
+#elif defined(mBSD)
 
 #ifdef MICROTIME
 /*
@@ -3284,12 +3207,6 @@ LONG Timer(int par)
 #endif
 }
 
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
 
 /*

@@ -60,53 +60,84 @@ AC_CANONICAL_HOST
 case $host_os in
 	darwin* )
 		print_os="OSX"
-		AC_DEFINE(APPLE, , [Compiling for an Apple system.])
 		;;
 	linux* )
 		print_os="Linux"
+		# "LINUX" is still used in mallocprotect.h. (TU 16 Oct 2011)
 		AC_DEFINE(LINUX, , [Compiling for a Linux system.])
 		;;
 	cygwin* )
 		print_os="Cygwin"
-		AC_DEFINE(LINUX, , [Compiling for a Cygwin/Windows system.])
-		AC_DEFINE(CYGWIN, , [Compiling for a Cygwin/Windows system.])
 		;;
 	* )
-		print_cpu="!!UNKNOWN OS!!"
-		AC_MSG_WARN([Compiling for a unrecognized OS.])
+		print_os="UNKNOWN OS"
 		;;
 esac
 AM_CONDITIONAL([ONAPPLE], [test "x$print_os" = xOSX])
 AM_CONDITIONAL([ONCYGWIN], [test "x$print_os" = xCygwin])
 case $host_cpu in
-	i486 )
-		print_cpu="Pentium"
-		AC_DEFINE(LINUX, , [Compiling for a 32bit CPU.])
-		;;
 	i?86 )
-		AS_IF([test "x$print_os" = xOSX],
-			  [print_cpu="Opteron"
-			   AC_DEFINE(OPTERON, , [Compiling for a 64bit CPU.])],
-			  [print_cpu="Pentium"])
+		print_cpu="Pentium"
 		;;
 	x86_64 )
 		print_cpu="Opteron"
-		AC_DEFINE(OPTERON, , [Compiling for a 64bit CPU.])
 		;;
 	alpha* )
 		print_cpu="Alpha"
-		AC_DEFINE(ALPHA, , [Compiling for an Alpha CPU.])
 		;;
 	* )
-		print_cpu="!!UNKNOWN CPU!!"
-		AC_MSG_WARN([Compiling for an unrecognized CPU.])
+		print_cpu="UNKNOWN CPU"
 		;;
 esac
 AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = "xPentium"])
 AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = "xOpteron"])
 
+# POSIX or Windows API
+AC_ARG_WITH([api],
+	[AS_HELP_STRING([--with-api=API],
+		[use POSIX (posix) or Windows (windows) API @<:@default=posix@:>@])],
+	[AS_IF([test "x$withval" != xposix && test "x$withval" != xwindows],
+		[AC_MSG_FAILURE([Invalid argument for API. Use --with-api=posix or --with-api=windows])])],
+	[with_api=posix])
+AS_IF([test "x$with_api" = xposix],
+	[AC_DEFINE(UNIX, , [Compiling for UNIX system])])
+AS_IF([test "x$with_api" = xwindows],
+	[AC_DEFINE(WINDOWS, , [Compiling for WINDOWS system])])
+
+# Check for data model
+AC_CHECK_SIZEOF([char])
+AC_CHECK_SIZEOF([short])
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([long long])
+AC_CHECK_SIZEOF([void *])
+AC_CHECK_SIZEOF([off_t])
+
+AC_MSG_CHECKING([data model])
+case $ac_cv_sizeof_char-$ac_cv_sizeof_short-$ac_cv_sizeof_int-$ac_cv_sizeof_long-$ac_cv_sizeof_long_long-$ac_cv_sizeof_void_p-$ac_cv_sizeof_off_t in
+	1-2-4-4-*-4-*)
+		# Most of today's 32 bit systems.
+		AC_MSG_RESULT(ILP32)
+		AC_DEFINE(ILP32, , [Compiling for ILP32 data model])
+		;;
+	1-2-4-4-8-8-*)
+		# Microsoft Windows (X64/IA-64).
+		AC_MSG_RESULT(LLP64)
+		AC_DEFINE(LLP64, , [Compiling for LLP64 data model])
+		;;
+	1-2-4-8-*-8-*)
+		# Most Unix and Unix-like systems, e.g., Solaris, Linux and Mac OS X.
+		AC_MSG_RESULT(LP64)
+		AC_DEFINE(LP64, , [Compiling for LP64 data model])
+		;;
+	*)
+		AC_MSG_RESULT(unknown)
+		AC_MSG_FAILURE([Cannot recognize the data model used in the compiler])
+		;;
+esac
+
 # Check for C compiler vendor
-AM_CONDITIONAL([USINGGCC], [test "x$CC" = xgcc])
+AM_CONDITIONAL([USINGGCC], [test "x$GCC" = xyes])
 AM_CONDITIONAL([USINGICC], [test "x$CC" = xicc])
 
 # Check for gmp
@@ -498,7 +529,7 @@ if test "x$posix_thread_clock_ok" = xno; then
 	fi
 	if test "x$s" != xnone; then
 		echo
-		echo "***CAUTION***  $s will be built with clock"
+		echo "***CAUTION***  $s may have clock"
 		echo "problems which make that each worker registers"
 		echo "the complete time used by all workers and the master."
 	fi

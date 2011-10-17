@@ -44,9 +44,11 @@
 #ifndef __STRUCTS__
 
 #define __STRUCTS__
+/* Why is wchar.h included? (TU 16 Oct 2011)
 #ifdef _MSC_VER
 #include <wchar.h>
 #endif
+*/
 /*
   	#[ sav&store :
 */

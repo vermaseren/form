@@ -60,6 +60,7 @@
 #define PF_ATTACH_REDEF       1  /* redefined preprocessor variable */
 #define PF_ATTACH_DOLLAR      2  /* not used */
 
+/* FIXME: Data model for PVM. (TU 16 Oct 2011) */
 #ifdef PVM
 #  include "pvm3.h"
 #  define PF_ANY_SOURCE -1
@@ -137,30 +138,17 @@ extern "C" {
 #  define PF_ANY_SOURCE MPI_ANY_SOURCE
 #  define PF_ANY_MSGTAG MPI_ANY_TAG
 #  define PF_COMM MPI_COMM_WORLD
-#  ifdef ALPHA
-#    ifdef A16BIT /* alpha with 16 bit WORDS */
-#      define PF_BYTE MPI_BYTE
-#      define PF_WORD MPI_SHORT
-#      define PF_INT  MPI_INT
-#      define PF_LONG MPI_INT
-#    else        /* alpha with 32 bit WORDS */
-#      define PF_BYTE MPI_BYTE
-#      define PF_WORD MPI_INT
-#      define PF_INT  MPI_INT
-#      define PF_LONG MPI_LONG
-#    endif
-#  else
-#    ifdef OPTERON
-#      define PF_BYTE MPI_BYTE
-#      define PF_WORD MPI_INT
-#      define PF_INT  MPI_INT
-#      define PF_LONG MPI_LONG
-#    else         /* regular 32 bit architecture with 16 bit WORDS */
-#      define PF_BYTE MPI_BYTE
-#      define PF_WORD MPI_SHORT
-#      define PF_INT  MPI_INT
-#      define PF_LONG MPI_LONG
-#    endif
+#  define PF_BYTE MPI_BYTE
+#  define PF_INT  MPI_INT
+#  if defined(ILP32)
+#    define PF_WORD MPI_SHORT
+#    define PF_LONG MPI_LONG
+#  elif defined(LLP64)
+#    define PF_WORD MPI_INT
+#    define PF_LONG MPI_LONG  /* MPI_LONG_LONG??? (TU 16 Oct 2011) */
+#  elif defined(LP64)
+#    define PF_WORD MPI_INT
+#    define PF_LONG MPI_LONG
 #  endif
 #endif
 
