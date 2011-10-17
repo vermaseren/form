@@ -1009,7 +1009,7 @@ extern int    CompileSubExpressions(SBYTE *);
 extern int    CodeGenerator(SBYTE *);
 extern int    CompleteTerm(WORD *,UWORD *,UWORD *,WORD,WORD,int);
 extern int    CodeFactors(SBYTE *s);
-extern int    GenerateFactors(WORD);
+extern WORD   GenerateFactors(WORD);
 extern int    InsTree(int,int);
 extern int    FindTree(int,WORD *);
 extern void   RedoTree(CBUF *,int);

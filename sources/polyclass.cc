@@ -2470,7 +2470,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	// ordinary notation
 	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
 		res.check_memory(ri);
-		int nc = e[i+e[i]-1];                                                  // length coefficient
+		WORD nc = e[i+e[i]-1];                                                 // length coefficient
 		for (int j=0; j<AN.poly_num_vars; j++)
 			res[ri+1+j]=0;                                                       // powers=0
 		res.termscopy(&e[i+e[i]-ABS(nc)], ri+1+AN.poly_num_vars, ABS(nc));     // coefficient

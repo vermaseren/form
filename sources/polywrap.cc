@@ -845,7 +845,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
  *   - Called from proces.c
  *   - Calls polyfact::factorize
  */
-WORD poly_factorize_expression(EXPRESSIONS expr) {
+int poly_factorize_expression(EXPRESSIONS expr) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_factorize_expression" << endl;
@@ -1180,7 +1180,7 @@ WORD poly_factorize_expression(EXPRESSIONS expr) {
  *   - The result overwrites the input expression
  *   - Called from proces.c
  */
-WORD poly_unfactorize_expression(EXPRESSIONS expr) {
+int poly_unfactorize_expression(EXPRESSIONS expr) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_unfactorize_expression" << endl;
@@ -1394,7 +1394,7 @@ static WORD genericterm2[] = {23,1,4,FACTORSYMBOL,0
 	,1,1,3,0};
 #endif
 
-WORD unfactorize_expression(EXPRESSIONS expr)
+int unfactorize_expression(EXPRESSIONS expr)
 {
 	GETIDENTITY;
 	int i, j, nfac = expr->numfactors, nfacp, nexpr = expr - Expressions;
