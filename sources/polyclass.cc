@@ -2526,8 +2526,11 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 			res[i] = 0;                                // remainder of arghead	
 	}
 
+	UWORD *number = NULL;
+	if (den != NULL)
+		number = (UWORD *)NumberMalloc("poly_to_argument");
+	
 	int L = with_arghead ? ARGHEAD : 0;
-	UWORD *number = (UWORD *)NumberMalloc("poly_to_argument");
 	
 	for (int i=1; i!=a[0]; i+=a[i]) {
 		
@@ -2579,6 +2582,9 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 	else {
 		res[L] = 0;
 	}
+
+	if (den != NULL)
+		NumberFree(number, "poly_to_argument");
 }
 
 /*
