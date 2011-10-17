@@ -1268,7 +1268,7 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term)
 		tt = termout + 1;
 		tstop = in + *in; tstop -= ABS(tstop[-1]); t = in + 1;
 		while ( t < tstop ) *tt++ = *t++;
-		ttstop = term + *term; ttstop -= ABS(t[-1]); t = term + 1;
+		ttstop = term + *term; ttstop -= ABS(ttstop[-1]); t = term + 1;
 		while ( t < ttstop ) *tt++ = *t++;
 		length1 = REDLENG(in[*in-1]); length2 = REDLENG(term[*term-1]);
 		if ( MulRat(BHEAD (UWORD *)tstop,length1,
@@ -1291,7 +1291,7 @@ CalledFrom:
 }
 
 /*
- 		#] MultiplyWithTerm : 
+ 		#] MultiplyWithTerm :
  		#[ TakeContent :
 */
 /**
