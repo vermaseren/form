@@ -44,7 +44,7 @@ const int POLYGCD_HEURISTIC_MAX_TRIES = 10;
 const int POLYGCD_HEURISTIC_MAX_ADD_RANDOM = 10;
 
 // maximum cached power in substitute_last and sparse_interpolation_get_mul_list
-const int RAISPOWMOD_CACHE_MAX_POWER = 1000;
+const int POLYGCD_RAISPOWMOD_CACHE_SIZE = 1000;
 
 namespace polygcd {
 

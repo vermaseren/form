@@ -45,6 +45,10 @@ const int POLYFACT_MAX_IDEAL_TRIES = 3;
 // Hensel lifting is started.
 const int POLYFACT_NUM_CONFIRMATIONS = 3;
 
+// Maximum number of equations for predetermination of coefficients
+// for multivariate Hensel lifting
+const int POLYFACT_MAX_PREDETERMINATION = 1000;
+
 class poly;
 
 class factorized_poly {

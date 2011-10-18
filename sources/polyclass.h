@@ -46,7 +46,7 @@ extern "C" {
 
 // maximum size of the hash table used for multiplication and division
 
-const int MAX_HASH_SIZE = MiN(1<<20, 1<<(BITSINWORD-1));
+const int POLY_MAX_HASH_SIZE = MiN(1<<20, 1<<(BITSINWORD-1));
 
 class poly {
 

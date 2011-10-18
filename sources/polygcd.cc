@@ -495,7 +495,7 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 	// cache size is bounded by the degree in x, twice the number of terms of
 	// the polynomial and a constant
 	vector<WORD> cache(min(a.degree(x)+1,min(2*a.number_of_terms(),
-																					 RAISPOWMOD_CACHE_MAX_POWER)), 0);
+																					 POLYGCD_RAISPOWMOD_CACHE_SIZE)), 0);
 
 	for (int ai=1; ai<=a[0]; ai+=a[ai]) {
 		// last term or different power, then add term to b iff non-zero
@@ -567,7 +567,7 @@ const vector<int> polygcd::sparse_interpolation_get_mul_list (const poly &a, con
 	// cache size for variable x is bounded by the degree in x, twice
 	// the number of terms of the polynomial and a constant
 	vector<vector<WORD> > cache(c.size());
-	int max_cache_size = min(2*a.number_of_terms(),RAISPOWMOD_CACHE_MAX_POWER);
+	int max_cache_size = min(2*a.number_of_terms(),POLYGCD_RAISPOWMOD_CACHE_SIZE);
 	for (int i=0; i<(int)c.size(); i++)
 		cache[i] = vector<WORD>(min(a.degree(x[i+1])+1,max_cache_size), 0);
 	

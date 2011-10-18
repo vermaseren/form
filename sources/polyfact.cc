@@ -569,84 +569,91 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 	vector<poly> a(_a);
 
 	// First method: predetermine coefficients
-	
-	// state[n][d]: coefficient of x^d in a[n] is
-	// 0: non-existent, 1: undetermined, 2: determined
-	int D = A.degree(x[0]);
-	vector<vector<int> > state(a.size(), vector<int>(D+1, 0));
 
-	for (int i=0; i<(int)a.size(); i++)
-		for (int j=1; j<a[i][0]; j+=a[i][j]) 
-			state[i][a[i][j+1+x[0]]] = j==1 ? 2 : 1;
-	
-	// collect all products of terms
-	vector<vector<vector<int> > > terms(D+1);
-	vector<int> term;
-	predetermine(0,state,terms,term);
-
-	// count the number of undetermined coefficients
-	vector<int> num_undet(terms.size(),0);
-	for (int i=0; i<(int)terms.size(); i++) 
-		for (int j=0; j<(int)terms[i].size(); j++)
-			for (int k=0; k<(int)terms[i][j].size(); k++)
-				if (state[k][terms[i][j][k]] == 1) num_undet[i]++;
-
-	// replace the current leading coefficients by the correct ones
+	// check feasibility, otherwise it tries too many possibilities
+	int cnt = POLYFACT_MAX_PREDETERMINATION;
 	for (int i=0; i<(int)a.size(); i++) 
-		a[i] += (lc[i] - a[i].lcoeff_univar(x[0])) * poly::simple_poly(BHEAD x[0],0,a[i].degree(x[0]));
+		cnt /= a[i].number_of_terms();
+
+	if (cnt>0) {
+		// state[n][d]: coefficient of x^d in a[n] is
+		// 0: non-existent, 1: undetermined, 2: determined
+		int D = A.degree(x[0]);
+		vector<vector<int> > state(a.size(), vector<int>(D+1, 0));
+		
+		for (int i=0; i<(int)a.size(); i++)
+			for (int j=1; j<a[i][0]; j+=a[i][j]) 
+				state[i][a[i][j+1+x[0]]] = j==1 ? 2 : 1;
 	
-	bool changed;
-	do {
-		changed = false;
+		// collect all products of terms
+		vector<vector<vector<int> > > terms(D+1);
+		vector<int> term;
+		predetermine(0,state,terms,term);
 
-		for (int i=0; i<(int)terms.size(); i++) {
-			// is only one coefficient in a equation is undetermined, solve
-			// the equation to determine this coefficient
-			if (num_undet[i] == 1) {
-				// generate equation
-				poly lhs(BHEAD 0), rhs(A.coefficient(x[0],i), A.modp, A.modn);
-				int which_idx=-1, which_deg=-1;
-				for (int j=0; j<(int)terms[i].size(); j++) {
-					poly coeff(BHEAD 1, A.modp, A.modn);
-					bool undet=false;
-					for (int k=0; k<(int)terms[i][j].size(); k++) {
-						if (state[k][terms[i][j][k]] == 1) {
-							undet = true;
-							which_idx=k;
-							which_deg=terms[i][j][k];
+		// count the number of undetermined coefficients
+		vector<int> num_undet(terms.size(),0);
+		for (int i=0; i<(int)terms.size(); i++) 
+			for (int j=0; j<(int)terms[i].size(); j++)
+				for (int k=0; k<(int)terms[i][j].size(); k++)
+					if (state[k][terms[i][j][k]] == 1) num_undet[i]++;
+
+		// replace the current leading coefficients by the correct ones
+		for (int i=0; i<(int)a.size(); i++) 
+			a[i] += (lc[i] - a[i].lcoeff_univar(x[0])) * poly::simple_poly(BHEAD x[0],0,a[i].degree(x[0]));
+	
+		bool changed;
+		do {
+			changed = false;
+
+			for (int i=0; i<(int)terms.size(); i++) {
+				// is only one coefficient in a equation is undetermined, solve
+				// the equation to determine this coefficient
+				if (num_undet[i] == 1) {
+					// generate equation
+					poly lhs(BHEAD 0), rhs(A.coefficient(x[0],i), A.modp, A.modn);
+					int which_idx=-1, which_deg=-1;
+					for (int j=0; j<(int)terms[i].size(); j++) {
+						poly coeff(BHEAD 1, A.modp, A.modn);
+						bool undet=false;
+						for (int k=0; k<(int)terms[i][j].size(); k++) {
+							if (state[k][terms[i][j][k]] == 1) {
+								undet = true;
+								which_idx=k;
+								which_deg=terms[i][j][k];
+							}
+							else 
+								coeff *= a[k].coefficient(x[0], terms[i][j][k]);
 						}
-						else 
-							coeff *= a[k].coefficient(x[0], terms[i][j][k]);
+						if (undet) 
+							lhs = coeff;
+						else
+							rhs -= coeff;
 					}
-					if (undet) 
-						lhs = coeff;
-					else
-						rhs -= coeff;
+
+					// solve equation
+					if (A.modn > 1) rhs.setmod(0,1);
+					a[which_idx] += (rhs / lhs - a[which_idx].coefficient(x[0],which_deg)) * poly::simple_poly(BHEAD x[0],0,which_deg);
+					state[which_idx][which_deg] = 2;
+
+					// update number of undetermined coefficients
+					for (int j=0; j<(int)terms.size(); j++)
+						for (int k=0; k<(int)terms[j].size(); k++)
+							if (terms[j][k][which_idx] == which_deg)
+								num_undet[j]--;
+
+					changed = true;
 				}
-
-				// solve equation
-				if (A.modn > 1) rhs.setmod(0,1);
-				a[which_idx] += (rhs / lhs - a[which_idx].coefficient(x[0],which_deg)) * poly::simple_poly(BHEAD x[0],0,which_deg);
-				state[which_idx][which_deg] = 2;
-
-				// update number of undetermined coefficients
-				for (int j=0; j<(int)terms.size(); j++)
-					for (int k=0; k<(int)terms[j].size(); k++)
-						if (terms[j][k][which_idx] == which_deg)
-							num_undet[j]--;
-
-				changed = true;
 			}
 		}
+		while (changed);
+
+		// if this is the complete result, skip lifting
+		poly check(BHEAD 1, A.modn>1?0:A.modp, 1);
+		for (int i=0; i<(int)a.size(); i++)
+			check *= a[i];
+
+		if (check == A) return a;
 	}
-	while (changed);
-
-	// if this is the complete result, skip lifting
-	poly check(BHEAD 1, A.modn>1?0:A.modp, 1);
-	for (int i=0; i<(int)a.size(); i++)
-		check *= a[i];
-
-	if (check == A) return a;
 	
 	// Second method: Hensel lifting
 	
@@ -788,22 +795,22 @@ WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 	POLY_GETIDENTITY(a);
 
 	// analyse the polynomial for calculating the bound
-	int maxdegree=0, maxdigits=0, numterms=0;
+	double maxdegree=0, maxlogcoeff=0, numterms=0;
 			
 	for (int i=1; i<a[0]; i+=a[i]) {
-		for (int j=0; j<AN.poly_num_vars; j++)
+ 		for (int j=0; j<AN.poly_num_vars; j++)
 			maxdegree = MaX(maxdegree, a[i+1+j]);
 
-		// maxdigits is a number of digits in the largest coefficient in base e
-		maxdigits = MaX(maxdigits, (WORD) ceil(log(a[i+a[i]-2])
-																					 + BITSINWORD*(ABS(a[i+a[i]-1])-1)*log(2)));
+		maxlogcoeff = MaX(maxlogcoeff,
+											log(1.0+0*(UWORD)a[i+a[i]-2]) +        // most significant digit + 1
+											BITSINWORD*log(2)*(ABS(a[i+a[i]-1])-1)); // number of digits
 		numterms++;
 	}
 
 	// +5 is a fudge factor to compensate for multiplying with stuff
 	// along the way. Not very well investigated, but +4 is not enough.
 	// Maybe increasing is necessary.
-	return 5 + (WORD)ceil((log((sqrt(5.0)+1)/2) * maxdegree + maxdigits + 0.5*log(numterms)) / log(p));
+	return (WORD)ceil((log((sqrt(5.0)+1)/2)*maxdegree + maxlogcoeff + 0.5*log(numterms)) / log(p));
 }
 
 /*
@@ -1312,7 +1319,7 @@ const vector<poly> polyfact::combine_factors (const poly &a, const vector<poly> 
 			fac /= fac.integer_lcoeff();
 			fac *= a.integer_lcoeff();
 			fac /= polygcd::integer_content(poly(fac,0,1));
-				
+
 			if ((a0 % fac).is_zero()) {
 				res.push_back(fac);
 				for (int i=0, j=0; i<(int)f.size(); i++)

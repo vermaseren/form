@@ -931,7 +931,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	int nhash = 1;
 
 	for (int i=0; i<AN.poly_num_vars; i++) {
-		if (nhash > MAX_HASH_SIZE / (maxpower[i]+1)) {
+		if (nhash > POLY_MAX_HASH_SIZE / (maxpower[i]+1)) {
 			nhash = 1;
 			use_hash = false;
 			break;
@@ -1544,7 +1544,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	int nhash = 1;
 
 	for (int i=0; i<AN.poly_num_vars; i++) {
-		if (nhash > MAX_HASH_SIZE / (maxpowera[i]+1)) {
+		if (nhash > POLY_MAX_HASH_SIZE / (maxpowera[i]+1)) {
 			nhash = 1;
 			use_hash = false;
 			break;
