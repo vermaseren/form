@@ -1148,6 +1148,9 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 {
 	LONG i, RetCode;
 	WORD *from, *to;
+#ifndef WITHZLIB
+	DUMMYUSE(npat);
+#endif
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
 	if ( i*((LONG)(sizeof(WORD))) > AM.MaxTer ) {
@@ -1611,6 +1614,9 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	GETIDENTITY
 	LONG size, RetCode;
 	int dobracketindex = 0;
+#ifndef WITHZLIB
+	DUMMYUSE(compr);
+#endif
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #ifdef PARALLEL /* [16mar1998 ar] */
