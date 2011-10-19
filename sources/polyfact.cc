@@ -38,7 +38,7 @@
 #include <algorithm>
 #include <climits>
 
-#include "polyclass.h"
+#include "poly.h"
 #include "polygcd.h"
 #include "polyfact.h"
 
@@ -572,9 +572,11 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 
 	// check feasibility, otherwise it tries too many possibilities
 	int cnt = POLYFACT_MAX_PREDETERMINATION;
-	for (int i=0; i<(int)a.size(); i++) 
+	for (int i=0; i<(int)a.size(); i++) {
+		if (a[i].number_of_terms() == 0) return vector<poly>();
 		cnt /= a[i].number_of_terms();
-
+	}
+	
 	if (cnt>0) {
 		// state[n][d]: coefficient of x^d in a[n] is
 		// 0: non-existent, 1: undetermined, 2: determined
@@ -792,6 +794,10 @@ WORD polyfact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
  */
 WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: choose_prime_power("<<a<<","<<p<<")"<<endl;
+#endif
+	
 	POLY_GETIDENTITY(a);
 
 	// analyse the polynomial for calculating the bound
@@ -802,15 +808,18 @@ WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 			maxdegree = MaX(maxdegree, a[i+1+j]);
 
 		maxlogcoeff = MaX(maxlogcoeff,
-											log(1.0+0*(UWORD)a[i+a[i]-2]) +        // most significant digit + 1
+											log(1.0+(UWORD)a[i+a[i]-2]) +            // most significant digit + 1
 											BITSINWORD*log(2)*(ABS(a[i+a[i]-1])-1)); // number of digits
 		numterms++;
 	}
 
-	// +5 is a fudge factor to compensate for multiplying with stuff
-	// along the way. Not very well investigated, but +4 is not enough.
-	// Maybe increasing is necessary.
-	return (WORD)ceil((log((sqrt(5.0)+1)/2)*maxdegree + maxlogcoeff + 0.5*log(numterms)) / log(p));
+	WORD res = (WORD)ceil((log((sqrt(5.0)+1)/2)*maxdegree + maxlogcoeff + 0.5*log(numterms)) / log(p));
+	
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: choose_prime_power("<<a<<","<<p<<") = "<<res<<endl;
+#endif
+
+	return res;
 }
 
 /*

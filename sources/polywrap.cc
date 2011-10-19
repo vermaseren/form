@@ -32,7 +32,7 @@
  */
 /* #] License : */ 
 
-#include "polyclass.h"
+#include "poly.h"
 #include "polygcd.h"
 #include "polyfact.h"
 

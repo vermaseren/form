@@ -1,4 +1,4 @@
-/* @file polyclass.cc
+/* @file poly.cc
  *
  *  Contains the class for representing sparse multivariate polynomials
  */
@@ -37,7 +37,7 @@
 #include <algorithm>
 #include <map>
 #include <iostream>
-#include "polyclass.h"
+#include "poly.h"
 #include "polygcd.h"
 
 using namespace std;

@@ -37,7 +37,7 @@
 #include <vector>
 #include <cmath>
 
-#include "polyclass.h"
+#include "poly.h"
 #include "polygcd.h"
 
 //#define DEBUG
