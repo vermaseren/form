@@ -37,7 +37,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ includes :
 */
@@ -241,6 +241,19 @@ LONG insubexpbuffers = 0;
 
 #endif
 
+#if defined(ILP32)
+
+#define PUTNUMBER128(t,n) { if ( n >= 16384 ) { \
+				*t++ = n/(128*128); *t++ = (n/128)%128; *t++ = n%128; } \
+			else if ( n >= 128 ) { *t++ = n/128; *t++ = n%128; }      \
+			else *t++ = n; }
+#define PUTNUMBER100(t,n) { if ( n >= 10000 ) { \
+				*t++ = n/10000; *t++ = (n/100)%100; *t++ = n%100; } \
+			else if ( n >= 100 ) { *t++ = n/100; *t++ = n%100; }   \
+			else *t++ = n; }
+
+#elif ( defined(LLP64) || defined(LP64) )
+
 #define PUTNUMBER128(t,n) { if ( n >= 2097152 ) { \
 				*t++ = ((n/128)/128)/128; *t++ = ((n/128)/128)%128; *t++ = (n/128)%128; *t++ = n%128; } \
 			else if ( n >= 16384 ) { \
@@ -254,9 +267,11 @@ LONG insubexpbuffers = 0;
 			else if ( n >= 100 ) { *t++ = n/100; *t++ = n%100; }   \
 			else *t++ = n; }
 
+#endif
+
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 
@@ -279,7 +294,7 @@ VOID inictable()
 }
 
 /*
- 		#] inictable : 
+ 		#] inictable :
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -331,7 +346,7 @@ KEYWORD *findcommand(UBYTE *in)
 }
 
 /*
- 		#] findcommand : 
+ 		#] findcommand :
  		#[ ParenthesesTest :
 */
 
@@ -375,7 +390,7 @@ int ParenthesesTest(UBYTE *sin)
 }
 
 /*
- 		#] ParenthesesTest : 
+ 		#] ParenthesesTest :
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -409,7 +424,7 @@ UBYTE *SkipAName(UBYTE *s)
 }
 
 /*
- 		#] SkipAName : 
+ 		#] SkipAName :
  		#[ IsRHS :
 */
 
@@ -455,7 +470,7 @@ UBYTE *IsRHS(UBYTE *s, UBYTE c)
 }
 
 /*
- 		#] IsRHS : 
+ 		#] IsRHS :
  		#[ IsIdStatement :
 */
 
@@ -466,7 +481,7 @@ int IsIdStatement(UBYTE *s)
 }
 
 /*
- 		#] IsIdStatement : 
+ 		#] IsIdStatement :
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -506,7 +521,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 }
 
 /*
- 		#] CompileAlgebra : 
+ 		#] CompileAlgebra :
  		#[ CompileStatement :
 
 */
@@ -613,7 +628,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement : 
+ 		#] CompileStatement :
  		#[ TestTables :
 */
 
@@ -652,7 +667,7 @@ int TestTables()
 }
 
 /*
- 		#] TestTables : 
+ 		#] TestTables :
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -769,7 +784,7 @@ int CompileSubExpressions(SBYTE *tokens)
 }
 
 /*
- 		#] CompileSubExpressions : 
+ 		#] CompileSubExpressions :
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -1787,7 +1802,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator : 
+ 		#] CodeGenerator :
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1813,7 +1828,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 }
 
 /*
- 		#] CompleteTerm : 
+ 		#] CompleteTerm :
  		#[ CodeFactors :
 
 		This routine does the part of reading in in terms of factors.
@@ -2129,7 +2144,7 @@ dopowerd:
 }
 
 /*
- 		#] CodeFactors : 
+ 		#] CodeFactors :
  		#[ GenerateFactors :
 */
 
@@ -2168,7 +2183,7 @@ WORD GenerateFactors(WORD n)
 }
 
 /*
- 		#] GenerateFactors : 
+ 		#] GenerateFactors :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */
