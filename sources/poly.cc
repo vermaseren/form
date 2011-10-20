@@ -426,6 +426,8 @@ const poly & poly::normalize() {
 	tmp[0] = j;
 	memcpy(terms,tmp,tmp[0]*sizeof(UWORD));
 
+	delete p;
+	
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		TermFree(tmp, "polynomial normalization");
 	else
@@ -2321,34 +2323,29 @@ const poly poly::simple_poly (PHEAD int x, const poly &a, int b, int p, int n) {
 
 /*
   	#] simple_poly (large) : 
-		#[ extract_variables :
+		#[ get_variables :
 */
 
-// extracts a map of all variables of an expression to the numbers [0,#vars)
-const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bool multiple) {
-															
-	// store old variables in AN.poly_vars
+// gets all variables in the expressions and stores them in AN.poly_vars
+// (it is assumed that AN.poly_vars=NULL)
+void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_vars) {
+
+	AN.poly_num_vars = 0;
+
+	vector<int> vars;
+	vector<int> degrees;
 	map<int,int> var_to_idx;
-	bool idx_empty = AN.poly_num_vars == 0;
-	
-	vector<int> tmp_vars (AN.poly_num_vars);
-	for (int i=0; i<AN.poly_num_vars; i++) {
-		tmp_vars[i] = AN.poly_vars[i];
-		var_to_idx[tmp_vars[i]] = i;
-	}
-	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
-	
-	vector<int> degrees (AN.poly_num_vars);
 	
 	// extract all variables
-	do {
+	for (int ei=0; ei<(int)es.size(); ei++) {
+		WORD *e = es[ei];
+
 		// fast notation
 		if (*e == -SNUMBER) {
 		}
 		else if (*e == -SYMBOL) {
 			if (!var_to_idx.count(e[1])) {
-				tmp_vars.push_back(e[1]);
+				vars.push_back(e[1]);
 				var_to_idx[e[1]] = AN.poly_num_vars++;
 				degrees.push_back(1);
 			}
@@ -2364,7 +2361,7 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 				
 				for (int j=i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j+=2) 
 					if (!var_to_idx.count(e[j])) {
-						tmp_vars.push_back(e[j]);
+						vars.push_back(e[j]);
 						var_to_idx[e[j]] = AN.poly_num_vars++;
 						degrees.push_back(e[j+1]);
 					}
@@ -2373,24 +2370,27 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 					}
 			}
 		}
-			
-		e+=*e;
 	}
-	while (with_arghead && multiple && *e!=0);
+	
+	// make sure an eventual FACTORSYMBOL appear as last
+	if (var_to_idx.count(FACTORSYMBOL)) {
+		int i = var_to_idx[FACTORSYMBOL];
+		while (i+1<AN.poly_num_vars) {
+			swap(vars[i], vars[i+1]);
+			swap(degrees[i], degrees[i+1]);
+			i++;
+		}
+		degrees[i] = -1; // makes sure it stays last
+	}
 	
 	// AN.poly_vars will be deleted in calling functions from polywrap.c
 	if (AN.poly_num_vars > 0) 
 		AN.poly_vars = new WORD[AN.poly_num_vars];
 	
 	for (int i=0; i<AN.poly_num_vars; i++)
-		AN.poly_vars[i] = tmp_vars[i];
-	
-	// Only sort if the index were empty, otherwise things go wrong
-	if (idx_empty) {
-		// make sure an eventual FACTORSYMBOL appear as last
-		if (var_to_idx.count(FACTORSYMBOL)) 
-			degrees[var_to_idx[FACTORSYMBOL]] = -1;
-		
+		AN.poly_vars[i] = vars[i];
+
+	if (sort_vars) {
 		// bubble sort variables in decreasing order of degree
 		// (this seems better for factorization)
 		for (int i=0; i<AN.poly_num_vars; i++)
@@ -2399,14 +2399,8 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 					swap(degrees[j], degrees[j+1]);
 					swap(AN.poly_vars[j], AN.poly_vars[j+1]);
 				}
-		
-		// renumber variables
-		for (int i=0; i<AN.poly_num_vars; i++)
-			var_to_idx[AN.poly_vars[i]] = i;
 	}
-
-	return var_to_idx;
-}	
+}
 
 /*
 		#] extract_variables :
@@ -2414,8 +2408,11 @@ const map<int,int> poly::extract_variables (PHEAD WORD *e, bool with_arghead, bo
 */
 
 // converts a form expression to a polynomial class "poly"
-const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar,
-																	 const map<int,int> &var_to_idx, poly *den) {
+const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar, poly *den) {
+
+	map<int,int> var_to_idx;
+	for (int i=0; i<AN.poly_num_vars; i++)
+		var_to_idx[AN.poly_vars[i]] = i;
 	
 	poly res(BHEAD 0);
 

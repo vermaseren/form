@@ -31,8 +31,6 @@ extern "C" {
 };
 
 #include <string>
-#include <set>
-#include <map>
 #include <vector>
 
 // macros for tform
@@ -119,8 +117,8 @@ public:
 	static const poly simple_poly (PHEAD int, const poly&, int=1, int=0, int=1);
 
 	// conversion from/to form notation
-	static const std::map<int,int> extract_variables (PHEAD WORD *, bool, bool);
-	static const poly argument_to_poly (PHEAD WORD *, bool, bool, const std::map<int,int> &, poly *den=NULL);
+	static void get_variables (PHEAD std::vector<WORD *>, bool, bool);
+	static const poly argument_to_poly (PHEAD WORD *, bool, bool, poly *den=NULL);
 	static void poly_to_argument (const poly &, WORD *, bool, poly *den=NULL);
 	int size_of_form_notation ();
 	const poly & normalize ();

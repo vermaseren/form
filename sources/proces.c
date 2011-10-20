@@ -4323,7 +4323,7 @@ WORD PrepPoly(PHEAD WORD *term)
 	purposes, we don't do anything about it. (30-aug-2011)
 */
 	if ( AR.PolyFunType == 2 ) {
-		if ( ( term = poly_ratfun_normalize(BHEAD term,0) ) == 0 ) Terminate(-1);
+		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1);
 		oldworkpointer = AT.WorkPointer;
 	}
 	AT.PolyAct = 0;
@@ -4585,7 +4585,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		AT.PolyAct = WORDDIF(poly,term);
 /*
 		If needed we convert the coefficient into a PolyRatFun and then
-		we call poly_ratfun_mul
+		we call poly_ratfun_normalize
 */
 		if ( m[-1] == 3 && m[-2] == 1 && m[-3] == 1 ) return(0);
 		if ( m[-1] < 0 ) { sign = -1; size = -m[-1]; } else { sign = 1; size = m[-1]; }
@@ -4616,7 +4616,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		i = v - m;
 		NCOPY(w,m,i);
 		*w++ = 1; *w++ = 1; *w++ = 3; *term = w - term;
-		poly_ratfun_mul(BHEAD term); // TODO: check do nothing with return value
+		poly_ratfun_normalize(BHEAD term);
 		return(0);
 /*
  		#] Two arguments : 
@@ -4668,8 +4668,7 @@ WORD PolyFunMul(PHEAD WORD *term)
 		}
 		if ( count1 <= 1 ) return(0);
 
-		if ( ( term = poly_ratfun_normalize(BHEAD term,0) ) == 0 ) Terminate(-1);
-		retval = poly_ratfun_mul(BHEAD term);
+		retval = poly_ratfun_normalize(BHEAD term);
 	
 		t = term + 1; t1 = term + *term;; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {

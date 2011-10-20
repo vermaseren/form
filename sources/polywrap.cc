@@ -46,6 +46,57 @@
 using namespace std;
 
 /*
+  	#[ poly_determine_modulus :
+*/
+
+/**  Modulus for polynomial algebra
+ *
+ *   Description
+ *   ===========
+ *   This method determines whether polynomial algebra is done with a
+ *   modulus or not. This depends on AC.ncmod. If only_funargs is set
+ *   it also depends on (AC.modmode & ALSOFUNARGS).
+ *
+ *   The program terminates if the feature is not
+ *   implemented. Polynomial algebra modulo M > WORDSIZE in not
+ *   implemented. If multi_error is set, multivariate algebra mod M is
+ *   not implemented.
+ 
+ *   Notes
+ *   =====
+ *   - If AC.ncmod>0 and only_funargs=true and
+ *     AC.modmode&ALSOFUNARGS=false, AN.ncmod is set to zero, for
+ *     otherwise RaisPow calculates mod M.
+ */
+WORD poly_determine_modulus (PHEAD bool multi_error, bool only_funargs, string message) {
+	
+	if (AC.ncmod==0) return 0;
+
+	if (!only_funargs || (AC.modmode & ALSOFUNARGS)) {
+		
+		if (ABS(AC.ncmod)>1) {
+			MLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: %s with modulus > WORDSIZE not implemented",message.c_str());
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+			
+		if (multi_error && AN.poly_num_vars>1) {
+			MLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: multivariate %s with modulus not implemented",message.c_str());
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+			
+		return *AC.cmod;
+	}
+
+	AN.ncmod = 0;
+	return 0;
+}
+
+/*
+  	#] poly_determine_modulus :
   	#[ poly_gcd :
 */
 
@@ -69,38 +120,17 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 #endif
 	
 	// Extract variables
-	AN.poly_num_vars = 0;
-	poly::extract_variables(BHEAD a, false, false);
-	map<int,int> var_to_idx = poly::extract_variables(BHEAD b, false, false);
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	poly::get_variables(BHEAD e, false, true);
 
 	// Check for modulus calculus
-	WORD modp=0;
-
-	if (AC.ncmod!=0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: polynomial GCD with modulus > WORDSIZE not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			if (AN.poly_num_vars > 1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: multivariate polynomial GCD with modulus not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			modp = *AC.cmod;
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}
+	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial GCD");
 
 	// Convert to polynomials
-	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx), modp, 1);
-	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx), modp, 1);
+	poly pa(poly::argument_to_poly(BHEAD a, false, true), modp, 1);
+	poly pb(poly::argument_to_poly(BHEAD b, false, true), modp, 1);
 
 	// Calculate gcd
 	poly gcd(polygcd::gcd(pa,pb));
@@ -125,34 +155,19 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
-	AN.poly_num_vars = 0;
-	poly::extract_variables(BHEAD a, false, false);
-	map<int,int> var_to_idx = poly::extract_variables(BHEAD b, false, false);
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	poly::get_variables(BHEAD e, false, false);
 
 	// Check for modulus calculus
-	WORD modp=0;
-
-	if (AC.ncmod!=0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: polynomial division with modulus > WORDSIZE not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			modp = *AC.cmod;
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}
-
+	WORD modp=poly_determine_modulus(BHEAD false, true, "polynomial division");
+	
 	// Convert to polynomials
 	poly dena(BHEAD 0);
 	poly denb(BHEAD 0);
-	poly pa(poly::argument_to_poly(BHEAD a, false, true, var_to_idx, &dena), modp, 1);
-	poly pb(poly::argument_to_poly(BHEAD b, false, true, var_to_idx, &denb), modp, 1);
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, &dena), modp, 1);
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb), modp, 1);
 	pa *= denb;
 	pb *= dena;
 
@@ -238,7 +253,7 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b) {
  *   =====
  *   - Calls polygcd::gcd
  */
-void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to_idx) {
+void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_ratfun_read" << endl;
@@ -262,12 +277,12 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den, const map<int,int> &var_to
 
 	poly den_num(BHEAD 1),den_den(BHEAD 1);
 	
-	num = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx, &den_num);
+	num = poly::argument_to_poly(BHEAD a, true, !clean, &den_num);
 	num.setmod(modp,1);
 	NEXTARG(a);
 	
 	if (a < astop) {
-		den = poly::argument_to_poly(BHEAD a, true, !clean, var_to_idx, &den_den);
+		den = poly::argument_to_poly(BHEAD a, true, !clean, &den_den);
 		den.setmod(modp,1);
 		NEXTARG(a);
 	}
@@ -351,37 +366,6 @@ void poly_sort(PHEAD WORD *a) {
 
 /*
   	#] poly_sort : 
-  	#[ poly_ratfun_normalize :
-*/
-
-/**  Normalizes a term with PolyRatFuns
- *
- *   Description
- *   ===========
- *   This method just calls poly_rat_fun_mul, since that method does
- *   also this. This method exists to call an old polynito method
- *   if necessary.
- *
- *   Notes
- *   =====
- *   - Calls poly_ratfun_mul
- *   - Location of the result depends on par
- *   - Called from proces.c
- */
-WORD *poly_ratfun_normalize(PHEAD WORD *term, int par) {
-
-#ifdef DEBUG
-	cout << "CALL : poly_ratfun_normalize" << endl;
-#endif
-
-	DUMMYUSE(par)
-	
-	poly_ratfun_mul(BHEAD term);
-	return term;
-}
-
-/*
-  	#] poly_ratfun_normalize : 
   	#[ poly_ratfun_add :
 */
 
@@ -406,50 +390,28 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	
 	WORD *oldworkpointer = AT.WorkPointer;
 	
-	map<int,int> var_to_idx;
-	
-	AN.poly_num_vars = 0;
-	
 	// Extract variables
+	vector<WORD *> e;
+	
 	for (WORD *t=t1+FUNHEAD; t<t1+t1[1];) {
-		var_to_idx = poly::extract_variables(BHEAD t, true, false);
+		e.push_back(t);
 		NEXTARG(t);
 	}
 	for (WORD *t=t2+FUNHEAD; t<t2+t2[1];) {
-		var_to_idx = poly::extract_variables(BHEAD t, true, false);
+		e.push_back(t);
 		NEXTARG(t);
 	}
 
+	poly::get_variables(BHEAD e, true, true);
+	
 	// Check for modulus calculus
-	WORD modp=0;
-
-	if (AC.ncmod != 0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			if (AN.poly_num_vars > 1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			modp = *AC.cmod;
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}
+	WORD modp=poly_determine_modulus(BHEAD true, true, "PolyRatFun");
 	
 	// Find numerators / denominators
 	poly num1(BHEAD 0,modp,1), den1(BHEAD 0,modp,1), num2(BHEAD 0,modp,1), den2(BHEAD 0,modp,1);
 
-	poly_ratfun_read(t1, num1, den1, var_to_idx);
-	poly_ratfun_read(t2, num2, den2, var_to_idx);
+	poly_ratfun_read(t1, num1, den1);
+	poly_ratfun_read(t2, num2, den2);
 
 	poly num(BHEAD 0),den(BHEAD 0),gcd(BHEAD 0);
 
@@ -509,15 +471,17 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
 /*
   	#] poly_ratfun_add : 
-  	#[ poly_ratfun_mul :
+  	#[ poly_ratfun_normalize :
 */
 
-/**  Multiplication of PolyRatFuns
+/**  Multiplication/normalization of PolyRatFuns
  *
  *   Description
  *   ===========
  *   This method seaches a term for multiple polyratfuns and
- *   multiplies their contents. The result is properly normalized.
+ *   multiplies their contents. The result is properly
+ *   normalized. Normalization also works for terms with a single
+ *   polyratfun.
  *
  *   Notes
  *   =====
@@ -525,15 +489,12 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  *   - Called from proces.c
  *   - Calls poly::operators and polygcd::gcd
  */
-int poly_ratfun_mul (PHEAD WORD *term) {
+int poly_ratfun_normalize (PHEAD WORD *term) {
 
 #ifdef DEBUG
 	cout << "CALL : poly_ratfun_mul" << endl;
 #endif
 	
-	map<int,int> var_to_idx;
-	AN.poly_num_vars = 0;
-
 	// Strip coefficient
 	WORD *tstop = term + *term;
 	int ncoeff = tstop[-1];
@@ -553,37 +514,19 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 	if (num_polyratfun <= 1) return 0;
 	
 	// Extract all variables in the polyfuns
+	vector<WORD *> e;
+	
 	for (WORD *t=term+1; t<tstop; t+=t[1])
 		if (*t == AR.PolyFun) 
 			for (WORD *t2 = t+FUNHEAD; t2<t+t[1];) {
-				var_to_idx = poly::extract_variables(BHEAD t2, true, false);
+				e.push_back(t2);
 				NEXTARG(t2);
 			}		
 
-	// Check for modulus calculus
-	WORD modp=0;
+	poly::get_variables(BHEAD e, true, true);
 
-	if (AC.ncmod != 0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: PolyRatFun with modulus > WORDSIZE not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			if (AN.poly_num_vars > 1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: multivariate PolyRatFun with modulus not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			modp = *AC.cmod;
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}	
+	// Check for modulus calculus
+	WORD modp=poly_determine_modulus(BHEAD true, true, "PolyRatFun");
 	
 	// Accumulate total denominator/numerator and copy the remaining terms
 	poly num1(BHEAD (UWORD *)tstop, ncoeff/2, modp, 1);
@@ -596,7 +539,7 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 
 			poly num2(BHEAD 0,modp,1);
 			poly den2(BHEAD 0,modp,1);
-			poly_ratfun_read(t,num2,den2,var_to_idx);
+			poly_ratfun_read(t,num2,den2);
 			t += t[1];
 
 			poly gcd1(polygcd::gcd(num1,den2));
@@ -655,7 +598,7 @@ int poly_ratfun_mul (PHEAD WORD *term) {
 }
 
 /*
-  	#] poly_ratfun_mul : 
+  	#] poly_ratfun_normalize : 
   	#[ poly_factorize_argument :
 */
 
@@ -677,35 +620,14 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 #ifdef DEBUG
 	cout << "CALL : poly_factorize_argument" << endl;
 #endif
-	
-	AN.poly_num_vars = 0;
-	map<int,int> var_to_idx = poly::extract_variables(BHEAD argin, true, false);
-			 
- 	poly a(poly::argument_to_poly(BHEAD argin, true, true, var_to_idx));
+
+	poly::get_variables(BHEAD vector<WORD*>(1,argin), true, true);
+ 	poly a(poly::argument_to_poly(BHEAD argin, true, true));
 
 	// check for modulus calculus
-	if (AC.ncmod!=0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			if (AN.poly_num_vars > 1) {
-				MLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			a.setmod(*AC.cmod, 1);
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}
-
+	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial factorization");
+	a.setmod(modp,1);
+	
 	// factorize
 	factorized_poly f(polyfact::factorize(a));
 
@@ -760,33 +682,12 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 	cout << "CALL : poly_factorize_dollar" << endl;
 #endif
 	
-	AN.poly_num_vars = 0;
-	map<int,int> var_to_idx = poly::extract_variables(BHEAD argin, false, false);
-			 
- 	poly a(poly::argument_to_poly(BHEAD argin, false, true, var_to_idx));
+	poly::get_variables(BHEAD vector<WORD*>(1,argin), false, true);
+ 	poly a(poly::argument_to_poly(BHEAD argin, false, true));
 
 	// check for modulus calculus
-	if (AC.ncmod!=0) {
-		if (AC.modmode & ALSOFUNARGS) {
-			if (ABS(AC.ncmod)>1) {
-				MUNLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
-				MLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			if (AN.poly_num_vars > 1) {
-				MUNLOCK(ErrorMessageLock);
-				MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
-				MLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-			a.setmod(*AC.cmod, 1);
-		}
-		else {
-			// without ALSOFUNARGS, disable modulo calculation (for RaisPow)
-			AN.ncmod = 0;
-		}
-	}
+ 	WORD modp=poly_determine_modulus(BHEAD true, false, "polynomial factorization");
+	a.setmod(modp, 1);
 
 	// factorize
 	factorized_poly f(polyfact::factorize(a));
@@ -811,8 +712,6 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 	if (AN.poly_num_vars > 0)
 		delete AN.poly_vars;
 
-	// reset modulo calculation
-	AN.ncmod = AC.ncmod;
 	return oldres;
 }
 
@@ -936,27 +835,15 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	buffer[bufpos] = 0;
 
 	// parse the polynomial
+			 
 	AN.poly_num_vars = 0;
-	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
+	poly::get_variables(BHEAD vector<WORD*>(1,buffer.terms), false, true);
 	poly den(BHEAD 0);
-	poly a(poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx, &den));
+	poly a(poly::argument_to_poly(BHEAD buffer.terms, false, true, &den));
 
 	// check for modulus calculus
-	if (AC.ncmod!=0) {
-		if (ABS(AC.ncmod)>1) {
-			MUNLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
-			MLOCK(ErrorMessageLock);
-			Terminate(-1);
-		}
-		if (AN.poly_num_vars > 1) {
-			MUNLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
-			MLOCK(ErrorMessageLock);
-			Terminate(-1);
-		}
-		a.setmod(*AC.cmod, 1);
-	}
+ 	WORD modp=poly_determine_modulus(BHEAD true, false, "polynomial factorization");
+	a.setmod(modp,1);
 
 	// create output
 	SetScratch(file, &pos);
@@ -1000,9 +887,14 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 			fac = polyfact::factorize(a);
 		}
 		else {
+			int factorsymbol=-1;
+			for (int i=0; i<AN.poly_num_vars; i++)
+				if (AN.poly_vars[i] == FACTORSYMBOL)
+					factorsymbol = i;
+			
 			// already factorized, so factorize the factors
 			for (int i=1; i<=expr->numfactors; i++) {
-				factorized_poly fac2(polyfact::factorize(a.coefficient(var_to_idx[FACTORSYMBOL], i)));
+				factorized_poly fac2(polyfact::factorize(a.coefficient(factorsymbol, i)));
 				for (int j=0; j<(int)fac2.power.size(); j++)
 					fac.add_factor(fac2.factor[j], fac2.power[j]);
 			}
@@ -1258,28 +1150,14 @@ int poly_unfactorize_expression(EXPRESSIONS expr) {
 	buffer[bufpos] = 0;
 
 	// parse the polynomial
-	AN.poly_num_vars = 0;
-	map<int,int> var_to_idx = poly::extract_variables (BHEAD buffer.terms, false, false);
+	poly::get_variables (BHEAD vector<WORD *>(1,buffer.terms), false, true);
 	poly den(BHEAD 0);
-	poly a(poly::argument_to_poly(BHEAD buffer.terms, false, true, var_to_idx, &den));
+	poly a(poly::argument_to_poly(BHEAD buffer.terms, false, true, &den));
 
 	// check for modulus calculus
-	if (AC.ncmod!=0) {
-		if (ABS(AC.ncmod)>1) {
-			MUNLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: factorization with modulus > WORDSIZE not implemented");
-			MLOCK(ErrorMessageLock);
-			Terminate(-1);
-		}
-		if (AN.poly_num_vars > 1) {
-			MUNLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: multivariate factorization with modulus not implemented");
-			MLOCK(ErrorMessageLock);
-			Terminate(-1);
-		}
-		a.setmod(*AC.cmod, 1);
-	}
-
+	WORD modp=poly_determine_modulus(BHEAD false, false, "polynomial unfactorization");
+	a.setmod(modp,1);
+	
 	// create output
 	SetScratch(file, &pos);
 	NewSort(BHEAD0);	
@@ -1289,10 +1167,15 @@ int poly_unfactorize_expression(EXPRESSIONS expr) {
 
 	poly res(BHEAD 1);
 	poly denpow(BHEAD 1);
+
+	int factorsymbol=-1;
+	for (int i=0; i<AN.poly_num_vars; i++)
+		if (AN.poly_vars[i] == FACTORSYMBOL)
+			factorsymbol = i;
 	
 	// multiply all factors
 	for (int i=1; i<=expr->numfactors; i++) {
-	 	res *= a.coefficient(var_to_idx[FACTORSYMBOL], i);
+	 	res *= a.coefficient(factorsymbol, i);
 		if (poly::divides(den,res))
 			res /= den;
 		else
