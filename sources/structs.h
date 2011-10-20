@@ -597,7 +597,7 @@ typedef struct fixedset {
 	char *name;
 	char *description;
 	int type;
-	WORD dimension;
+	int dimension;
 } FIXEDSET;
 
 /**
@@ -641,7 +641,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
 
@@ -1324,6 +1324,7 @@ struct M_const {
     int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
     int     gOldFactArgFlag;
     int     ggOldFactArgFlag;
+    int     res1;                  /* padding */
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1373,11 +1374,10 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
-    WORD    dummyword;
     WORD    BracketFactors[8];
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1858,7 +1858,6 @@ struct T_const {
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
     int     bracketindexflag;      /* Are brackets going to be indexed? */
-    int     res1;                  /* For allignment */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
     WORD    comnum[4];             /* () Used in tools.c = { 4,1,1,3 } */
@@ -1881,6 +1880,7 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 	WORD    inprimelist;
 	WORD    sizeprimelist;
+    WORD    res1;                  /* Padding */
 };
 /*
  		#] T : 
