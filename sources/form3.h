@@ -143,6 +143,12 @@
 
 /*
  * Data model. ILP32 or LLP64 or LP64 must be defined.
+ *
+ * Here we define basic types WORD, LONG and their unsigned versions
+ * UWORD and ULONG. LONG must be double size of WORD. Their actual types
+ * are system-dependent. BITSINWORD and BITSINLONG are also defined.
+ * INT16, INT32 (also INT64 and INT128 if available) are used for
+ * system independent saved expressions (store.c).
  */
 #if defined(ILP32)
 
@@ -150,27 +156,12 @@ typedef short WORD;
 typedef long LONG;
 typedef unsigned short UWORD;
 typedef unsigned long ULONG;
-/* ENDIANNESS */
+#define BITSINWORD 16
+#define BITSINLONG 32
 #define INT16 short
 #define INT32 int
 #undef INT64
 #undef INT128
-
-#define BITSINWORD 16
-#define BITSINLONG 32
-#define TOPBITONLY 0x08000L
-#define TOPLONGBITONLY 0x80000000L
-#define SPECMASK 0x8000
-#define WILDMASK 0x4000
-#define WORDMASK 0x0FFFFL
-#define MAXPOSITIVE 0x07FFFL
-#define FULLMAX  0x10000L
-#define AWORDMASK 0xFFFF0000L
-#define MAXLONG 0x7FFFFFFFL
-#define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
-#define PADLONG(in,wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
-#define PADINT(wo,by) UBYTE d_u_m_m_y[4-((2*(wo)+(by))&3)]
-#define PADWORD(by) UBYTE d_u_m_m_y[2-((by)&1)]
 
 #elif defined(LLP64)
 
@@ -181,28 +172,12 @@ typedef int WORD;
 typedef long LONG;
 typedef unsigned int UWORD;
 typedef unsigned long ULONG;
-#define WORDSIZE32 1
-/* ENDIANNESS */
+#define BITSINWORD 32
+#define BITSINLONG 64
 #define INT16 short
 #define INT32 int
 #define INT64 long
 #undef INT128
-
-#define BITSINWORD 32
-#define BITSINLONG 64
-#define TOPBITONLY 0x080000000L
-#define TOPLONGBITONLY 0x8000000000000000L
-#define SPECMASK 0x80000000
-#define WILDMASK 0x40000000
-#define WORDMASK 0x0FFFFFFFFL
-#define MAXPOSITIVE 0x07FFFFFFFL
-#define FULLMAX  0x100000000L
-#define AWORDMASK 0xFFFFFFFF00000000L
-#define MAXLONG 0x7FFFFFFFFFFFFFFFL
-#define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[8-((8*(lo)+4*(in)+4*(wo)+(by))&7)]
-#define PADLONG(in,wo,by) UBYTE d_u_m_m_y[8-((4*(in)+4*(wo)+(by))&7)]
-#define PADINT(wo,by) UBYTE d_u_m_m_y[4-((4*(wo)+(by))&3)]
-#define PADWORD(by) UBYTE d_u_m_m_y[4-((by)&1)]
 
 #elif defined(LP64)
 
@@ -210,31 +185,19 @@ typedef int WORD;
 typedef long LONG;
 typedef unsigned int UWORD;
 typedef unsigned long ULONG;
-#define WORDSIZE32 1
-/* ENDIANNESS */
+#define BITSINWORD 32
+#define BITSINLONG 64
 #define INT16 short
 #define INT32 int
 #define INT64 long
 #undef INT128
 
-#define BITSINWORD 32
-#define BITSINLONG 64
-#define TOPBITONLY 0x080000000L
-#define TOPLONGBITONLY 0x8000000000000000L
-#define SPECMASK 0x80000000
-#define WILDMASK 0x40000000
-#define WORDMASK 0x0FFFFFFFFL
-#define MAXPOSITIVE 0x07FFFFFFFL
-#define FULLMAX  0x100000000L
-#define AWORDMASK 0xFFFFFFFF00000000L
-#define MAXLONG 0x7FFFFFFFFFFFFFFFL
-#define PADPOINTER(lo,in,wo,by) UBYTE d_u_m_m_y[8-((8*(lo)+4*(in)+4*(wo)+(by))&7)]
-#define PADLONG(in,wo,by) UBYTE d_u_m_m_y[8-((4*(in)+4*(wo)+(by))&7)]
-#define PADINT(wo,by) UBYTE d_u_m_m_y[4-((4*(wo)+(by))&3)]
-#define PADWORD(by) UBYTE d_u_m_m_y[4-((by)&1)]
-
 #else
 #error ILP32 or LLP64 or LP64 must be defined!
+#endif
+
+#if BITSINWORD == 32
+#define WORDSIZE32 1
 #endif
 
 typedef void VOID;
@@ -242,7 +205,109 @@ typedef char SBYTE;
 typedef unsigned char UBYTE;
 typedef unsigned int UINT;
 typedef ULONG RLONG;
-#define MAXPOSITIVE2 (MAXPOSITIVE/2)
+                                                       /* E.g. in 32-bits */
+#define TOPBITONLY     ((ULONG)1 << (BITSINWORD - 1))  /* 0x00008000UL */
+#define TOPLONGBITONLY ((ULONG)1 << (BITSINLONG - 1))  /* 0x80000000UL */
+#define SPECMASK       ((UWORD)1 << (BITSINWORD - 1))  /*     0x8000U  */
+#define WILDMASK       ((UWORD)1 << (BITSINWORD - 2))  /*     0x4000U  */
+#define WORDMASK       ((ULONG)FULLMAX - 1)            /* 0x0000FFFFUL */
+#define AWORDMASK      (WORDMASK << BITSINWORD)        /* 0xFFFF0000UL */
+#define FULLMAX        ((LONG)1 << BITSINWORD)         /* 0x00010000L  */
+#define MAXPOSITIVE    ((LONG)(TOPBITONLY - 1))        /* 0x00007FFFL  */
+#define MAXLONG        ((LONG)(TOPLONGBITONLY - 1))    /* 0x7FFFFFFFL  */
+#define MAXPOSITIVE2   (MAXPOSITIVE / 2)               /* 0x00003FFFL  */
+
+/*
+ * alignof(type) returns the number of bytes used in the alignment of
+ * the type.
+ */
+#if !defined(alignof)
+#if defined(__GNUC__)
+/* GNU C compiler has "__alignof__". */
+#define alignof(type) __alignof__(type)
+#elif defined(_MSC_VER)
+/* Microsoft C compiler has "__alignof". */
+#define alignof(type) __alignof(type)
+#elif !defined(__cplusplus)
+/* Generic case in C. */
+#include <stddef.h>
+#define alignof(type) offsetof(struct { char c_; type x_; }, x_)
+#else
+/* Generic case in C++, at least works with a POD struct. */
+#include <cstddef>
+namespace alignof_impl_ {
+template<typename T> struct calc {
+	struct X { char c_; T x_; };
+	enum { value = offsetof(X, x_) };
+};
+}
+#define alignof(type) alignof_impl_::calc<type>::value
+#endif
+#endif
+
+/*
+ * Macros inserted to the end of a structure to align the whole structure.
+ *
+ * In the currently available systems,
+ *   sizeof(POSITION) >= sizeof(pointers) >= sizeof(LONG) >= sizeof(int)
+ *                    >= sizeof(WORD) >= sizeof(UBYTE) = 1.
+ * (POSITION is defined in struct.h and contains only an off_t variable.)
+ * Thus, if we put members of a structure in this order and use those macros,
+ * then we can align the data without relying on extra paddings added by
+ * the compiler. For example,
+ *   typedef struct {
+ *     int *a;
+ *     LONG b;
+ *     WORD c[2];
+ *     UBYTE d;
+ *     PADPOINTER(1,0,2,1);
+ *   } A;
+ *   typedef struct {
+ *     POSITION p;
+ *     A a;  // aligned same as pointers
+ *     int *b;
+ *     LONG c;
+ *     UBYTE d;
+ *     PADPOSITION(1,1,0,0,1+sizeof(A));
+ *   } B;
+ * The cost for the use of those PADXXX functions is a padding (>= 1 byte) will
+ * be always inserted even in the case that no padding is actually needed.
+ *
+ * Note that there is a 32-bit system in which off_t is aligned on 8-byte
+ * boundary, (e.g., Cygwin).
+ */
+#define PADDUMMY(type, size) \
+	UBYTE d_u_m_m_y[alignof(type) - ((size) & (alignof(type) - 1))]
+#define PADPOSITION(ptr_,long_,int_,word_,byte_) \
+	PADDUMMY(off_t, \
+		+ sizeof(int *) * (ptr_) \
+		+ sizeof(LONG)  * (long_) \
+		+ sizeof(int)   * (int_) \
+		+ sizeof(WORD)  * (word_) \
+		+ sizeof(UBYTE) * (byte_) \
+	)
+#define PADPOINTER(long_,int_,word_,byte_) \
+	PADDUMMY(int *, \
+		+ sizeof(LONG)  * (long_) \
+		+ sizeof(int)   * (int_) \
+		+ sizeof(WORD)  * (word_) \
+		+ sizeof(UBYTE) * (byte_) \
+	)
+#define PADLONG(int_,word_,byte_) \
+	PADDUMMY(LONG, \
+		+ sizeof(int)   * (int_) \
+		+ sizeof(WORD)  * (word_) \
+		+ sizeof(UBYTE) * (byte_) \
+	)
+#define PADINT(word_,byte_) \
+	PADDUMMY(int, \
+		+ sizeof(WORD)  * (word_) \
+		+ sizeof(UBYTE) * (byte_) \
+	)
+#define PADWORD(byte_) \
+	PADDUMMY(WORD, \
+		+ sizeof(UBYTE) * (byte_) \
+	)
 
 /*
 #define WITHPCOUNTER

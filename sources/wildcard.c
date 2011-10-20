@@ -2334,7 +2334,7 @@ NoMnot:
 				case INDTOIND:
 					if ( *w == newnumber ) goto NoMatch;
 				case INDTOSUB:
-					if ( *w - WILDMASK >= AM.OffsetIndex ) {
+					if ( *w - (WORD)WILDMASK >= AM.OffsetIndex ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;

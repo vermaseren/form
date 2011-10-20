@@ -960,7 +960,7 @@ VOID WriteLists()
 								StrCopy((UBYTE *)"_?",Out);
 								TokenToLine(OutScr);
 							}
-							else if ( number >= AM.OffsetIndex + WILDMASK ) {
+							else if ( number >= AM.OffsetIndex + (WORD)WILDMASK ) {
 								Out = StrCopy(VARNAME(indices,number
 								-AM.OffsetIndex-WILDMASK),OutScr);
 								StrCopy((UBYTE *)"?",Out);
@@ -985,7 +985,7 @@ VOID WriteLists()
 							TokenToLine(VARNAME(vectors,number-AM.OffsetVector));
 							break;
 						case CFUNCTION:
-							if ( number >= FUNCTION + WILDMASK ) {
+							if ( number >= FUNCTION + (WORD)WILDMASK ) {
 								Out = StrCopy(VARNAME(functions,number
 								-FUNCTION-WILDMASK),OutScr);
 								StrCopy((UBYTE *)"?",Out);

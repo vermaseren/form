@@ -730,12 +730,12 @@ MulIn:
 multermnum:			if ( x == 0 ) goto NormZero;
 					if ( x < 0 ) {
 						x = -x;
-						if ( x > WORDMASK ) { lnum[0] = x & WORDMASK;
+						if ( x > (LONG)WORDMASK ) { lnum[0] = x & WORDMASK;
 							lnum[1] = x >> BITSINWORD; nnum = -2;
 						}
 						else { lnum[0] = x; nnum = -1; }
 					}
-					else if ( x > WORDMASK ) {
+					else if ( x > (LONG)WORDMASK ) {
 						lnum[0] = x & WORDMASK;
 						lnum[1] = x >> BITSINWORD;
 						nnum = 2;
