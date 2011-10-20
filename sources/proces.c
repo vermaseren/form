@@ -418,7 +418,7 @@ commonread:;
 				}
 				else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
 				 && ( ( e->vflags & ISFACTORIZED ) != 0 ) ) {
-					unfactorize_expression(e);
+					poly_unfactorize_expression(e);
 				}
 				AT.bracketindexflag = oldbracketindexflag;
 

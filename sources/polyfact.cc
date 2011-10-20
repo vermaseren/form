@@ -1444,14 +1444,17 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 				bestc=c;
 				bestq=q;
 				bestamodI=amodI;
-				if (rank<min_factors) {
-					min_factors = rank;
-					prime_tries = 0;
-				}
+				min_factors = rank;
+				prime_tries = 0;
 			}
 
 			if (rank==min_factors)
 				prime_tries++;
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  ... : factorize_squarefree("<<a<<
+		") try p=" << p << " #factors=" << rank << " (min="<<min_factors<<"x"<<prime_tries<<")" << endl;
+#endif			
 		}
 	}
 
