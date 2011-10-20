@@ -1291,7 +1291,7 @@ CalledFrom:
 }
 
 /*
- 		#] MultiplyWithTerm :
+ 		#] MultiplyWithTerm : 
  		#[ TakeContent :
 */
 /**
@@ -1685,7 +1685,6 @@ nextr1:;
 		AT.WorkPointer = tt;
 		inp = MultiplyWithTerm(BHEAD in,tterm);
 		AT.WorkPointer = tterm;
-		M_free(in,"TakeContent");
 		in = inp;
 	}
 /*
