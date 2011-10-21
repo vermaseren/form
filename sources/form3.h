@@ -165,18 +165,15 @@ typedef unsigned long ULONG;
 
 #elif defined(LLP64)
 
-/* Copied from MYWIN64 in the old form3.h.
-   But should long (32bit) be changed to long long? (TU 14 Oct 2011) */
-
 typedef int WORD;
-typedef long LONG;
+typedef long long LONG;
 typedef unsigned int UWORD;
-typedef unsigned long ULONG;
+typedef unsigned long long ULONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
 #define INT16 short
 #define INT32 int
-#define INT64 long
+#define INT64 long long
 #undef INT128
 
 #elif defined(LP64)
@@ -348,7 +345,6 @@ template<typename T> struct calc {
 #define PARALLELCODE
 #endif
 
-#define ALIGNMENT sizeof(int *)
 #include "ftypes.h"
 #include "fsizes.h"
 #include "minos.h"
