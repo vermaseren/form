@@ -145,7 +145,7 @@ extern "C" {
 #    define PF_LONG MPI_LONG
 #  elif defined(LLP64)
 #    define PF_WORD MPI_INT
-#    define PF_LONG MPI_LONG  /* MPI_LONG_LONG??? (TU 16 Oct 2011) */
+#    define PF_LONG MPI_LONG_LONG_INT
 #  elif defined(LP64)
 #    define PF_WORD MPI_INT
 #    define PF_LONG MPI_LONG
