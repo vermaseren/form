@@ -1664,8 +1664,6 @@ const factorized_poly polyfact::factorize (const poly &a) {
 	cout << "*** [" << thetime() << "]  ... : factorize("<<a<<") : SFF = "<<b<<"\n";
 #endif
 	
-	factorized_poly res;
-
 	// Factorize each squarefree factor and build the "factorized_poly"
 	for (int i=0; i<(int)b.factor.size(); i++) {
 		

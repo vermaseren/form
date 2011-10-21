@@ -599,6 +599,57 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 
 /*
   	#] poly_ratfun_normalize : 
+  	#[ poly_fix_minus_signs :
+*/
+
+void poly_fix_minus_signs (factorized_poly &a) {
+
+	POLY_GETIDENTITY(a.factor[0]);
+	
+	int overall_sign = +1;
+
+	// find term with maximum power of highest symbol
+	for (int i=0; i<(int)a.factor.size(); i++) {
+
+		int maxvar = -1;
+		int maxpow = -1;
+		int sign = +1;
+
+		WORD *tstop = a.factor[i].terms; tstop += *tstop;
+		for (WORD *t=a.factor[i].terms+1; t<tstop; t+=*t) 
+			for (int j=0; j<AN.poly_num_vars; j++) {
+				int var = AN.poly_vars[j];
+				int pow = t[1+j];
+				if (pow>0 && (var>maxvar || (var==maxvar && pow>maxpow))) {
+					maxvar = var;
+					maxpow = pow;
+					sign = SGN(*(t+*t-1));
+				}
+			}
+
+		// if negative coefficient, multiply by -1
+		if (sign==-1) {
+			a.factor[i] *= poly(BHEAD sign);
+			if (a.power[i] % 2 == 1) overall_sign*=-1;
+		}
+	}
+
+	// if overall minus sign
+	if (overall_sign == -1) {
+		// look at constant factor and multiply by -1
+		for (int i=0; i<(int)a.factor.size(); i++)
+			if (a.factor[i].is_integer()) {
+				a.factor[i] *= poly(BHEAD -1);
+				return;
+			}
+
+		// otherwise, add a factor of -1
+		a.add_factor(poly(BHEAD -1), 1);
+	}
+}
+
+/*
+  	#] poly_fix_minus_signs :
   	#[ poly_factorize_argument :
 */
 
@@ -630,7 +681,8 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	
 	// factorize
 	factorized_poly f(polyfact::factorize(a));
-
+	poly_fix_minus_signs(f);
+	
 	// check size
 	int len = 0;
 	for (int i=0; i<(int)f.factor.size(); i++)
@@ -691,6 +743,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 	// factorize
 	factorized_poly f(polyfact::factorize(a));
+	poly_fix_minus_signs(f);
 
 	// calculate size, allocate memory, write answer
 	int len = 0;
@@ -885,6 +938,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 		if (!(expr->vflags & ISFACTORIZED)) {
 			// factorize the polynomial
 			fac = polyfact::factorize(a);
+			poly_fix_minus_signs(fac);
 		}
 		else {
 			int factorsymbol=-1;
@@ -895,6 +949,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 			// already factorized, so factorize the factors
 			for (int i=1; i<=expr->numfactors; i++) {
 				factorized_poly fac2(polyfact::factorize(a.coefficient(factorsymbol, i)));
+				poly_fix_minus_signs(fac2);
 				for (int j=0; j<(int)fac2.power.size(); j++)
 					fac.add_factor(fac2.factor[j], fac2.power[j]);
 			}
