@@ -385,7 +385,7 @@ int InsTree(int bufnum, int h)
 			return(p->value);
 		}
 	}
-	printf("We vallen uit de boom!\n");
+	MesPrint("We vallen uit de boom!");
 	Terminate(-1);
 	return(h);
 balance:;

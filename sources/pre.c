@@ -435,6 +435,7 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		t -= 2; c = *t; *t = 0; tt = t;
 	}
 	else if ( StrICmp(name,(UBYTE *)"time_") == 0 ) {
+		UBYTE millibuf[24];
 		LONG millitime, timepart;
 		int timepart1, timepart2;
 		static char timestring[40];
@@ -444,7 +445,8 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		timepart /= 10;
 		timepart1 = timepart / 10;
 		timepart2 = timepart % 10;
-    	sprintf(timestring,"%ld.%1d%1d",millitime,timepart1,timepart2);
+		NumToStr(millibuf,millitime);
+    	sprintf(timestring,"%s.%1d%1d",millibuf,timepart1,timepart2);
 		return((UBYTE *)timestring);
 	}
 	t = name;
@@ -770,15 +772,13 @@ VOID PreProcessor()
 
 		IniModule(moduletype);
 
-		/*[19nov2003 mt]:*/
 		/*Re-define preprocessor variable CMODULE_ as a current module number, starting from 1*/
 		/*The module counter is AC.CModule, it is incremented in IniModule*/
-		{/*Block:*/
-			UBYTE buf[21];/*64/Log_2[10] = 19.3, this is enough for any integer*/
-			sprintf((char *)buf,"%ld",AC.CModule);
+		{
+			UBYTE buf[24];/*64/Log_2[10] = 19.3, this is enough for any integer*/
+			NumToStr(buf,AC.CModule);
 			PutPreVar((UBYTE *)"CMODULE_",buf,0,1);
-		}/*:Block*/
-		/*:[19nov2003 mt]*/
+		}
 
 		if ( specialtype ) IniSpecialModule(specialtype);
 /*[28nov2003 mt]:*/
@@ -2576,7 +2576,6 @@ int DoDo(UBYTE *s)
 /*
 		Compile and put in dollar variable.
 		Note that we remember the dollar by name and that this name ends in _
-printf ( "%s\n",loop->dollarname);
 */
 		AP.PreAssignFlag = 2;
         CompileStatement(loop->dollarname);

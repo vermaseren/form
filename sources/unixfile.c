@@ -125,9 +125,9 @@ size_t ret;
 #else
 #ifdef DEEPDEBUG
 	{
-	off_t pos;
-	pos = (off_t)lseek(f->descriptor,0L,SEEK_CUR);
-	printf("handle %d: reading %ld bytes from position %ld\n",f->descriptor,size*nobj,pos);
+		POSITION pos;
+		SETBASEPOSITION(pos,lseek(f->descriptor,0L,SEEK_CUR));
+		MesPrint("handle %d: reading %ld bytes from position %p\n",f->descriptor,size*nobj,pos);
 	}
 #endif
 
@@ -139,7 +139,7 @@ size_t ret;
 }
 
 /*
-  	#] Uread :
+  	#] Uread : 
   	#[ Uwrite :
 */
 
@@ -159,9 +159,9 @@ size_t thesize=size*nobj;
 #else
 #ifdef DEEPDEBUG
 	{
-	off_t pos;
-	pos = (off_t)lseek(f->descriptor,0L,SEEK_CUR);
-	printf("handle %d: writing %ld bytes to position %ld\n",f->descriptor,size*nobj,pos);
+		POSITION pos;
+		SETBASEPOSITION(pos,lseek(f->descriptor,0L,SEEK_CUR));
+		MesPrint("handle %d: writing %ld bytes to position %p\n",f->descriptor,size*nobj,pos);
 	}
 #endif
 	return(write(f->descriptor,ptr,size*nobj));
@@ -172,7 +172,7 @@ size_t thesize=size*nobj;
 }
 
 /*
-  	#] Uwrite :
+  	#] Uwrite : 
   	#[ Useek :
 */
 
@@ -183,7 +183,7 @@ int Useek(FILES *f, off_t offset, int origin)
 }
 
 /*
-  	#] Useek :
+  	#] Useek : 
   	#[ Utell :
 */
 
@@ -194,7 +194,7 @@ off_t Utell(FILES *f)
 }
 
 /*
-  	#] Utell :
+  	#] Utell : 
   	#[ Uflush :
 */
 

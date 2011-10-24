@@ -78,7 +78,7 @@ static LONG sizepointers = 0;
 static LONG *multiplicities = 0, multiplicitysize = 0;
 
 /*
-  	#] Includes:
+  	#] Includes: 
   	#[ Optimize:
 */
 
@@ -122,7 +122,7 @@ int Optimize(WORD numexpr)
 }
 
 /*
-  	#] Optimize:
+  	#] Optimize: 
   	#[ LoadOpti:
 */
 
@@ -229,7 +229,7 @@ int LoadOpti(WORD numexpr)
 }
 
 /*
-  	#] LoadOpti:
+  	#] LoadOpti: 
   	#[ CleanOptiBuffer:
 */
 
@@ -260,7 +260,7 @@ void CleanOptiBuffer()
 }
 
 /*
-  	#] CleanOptiBuffer:
+  	#] CleanOptiBuffer: 
   	#[ PutObject:
 */
 
@@ -358,7 +358,7 @@ int PutObject(WORD *object, int type)
 }
 
 /*
-  	#] PutObject:
+  	#] PutObject: 
   	#[ AddToOpti:
 */
 
@@ -417,7 +417,7 @@ int AddToOpti(WORD *term, int num)
 }
 
 /*
-  	#] AddToOpti:
+  	#] AddToOpti: 
   	#[ FindScratchName:
 */
 
@@ -542,13 +542,13 @@ int FindScratchName()
 }
 
 /*
-  	#] FindScratchName:
+  	#] FindScratchName: 
   	#[ PrintOptima:
 */
 
 int PrintOptima(WORD numexpr)
 {
-	UBYTE obuffer[80];
+	UBYTE obuffer[80], lbuf[24];
 	WORD *obj, stermbuf[10], *t, *m, n, oldskip = AO.OutSkip;
 	int i, first, fsym, *used;
 	SCALAR *sca;
@@ -563,8 +563,8 @@ int PrintOptima(WORD numexpr)
 	safely assume that the writing environment is active.
 */
 	FiniLine();
-	sprintf((char *)obuffer,"DOUBLE PRECISION %s(%ld)",(char *)scratchname
-		,numobjects+scanumber-1);
+	NumToStr(lbuf,numobjects+scanumber-1);
+	sprintf((char *)obuffer,"DOUBLE PRECISION %s(%s)",(char *)scratchname,lbuf);
 	TokenToLine(obuffer);
 	FiniLine();
 	for ( i = 1; i <= iniobjects; i++ ) {
@@ -664,7 +664,8 @@ int PrintOptima(WORD numexpr)
 				else if ( m[2] < 0 ) TokenToLine((UBYTE *)"1/");
 				fsym = 0;
 				num = ( (LONG)(m[0]) << BITSINWORD ) + m[1];
-				sprintf((char *)obuffer,"%s(%ld)",(char *)scratchname,num);
+				NumToStr(lbuf,num);
+				sprintf((char *)obuffer,"%s(%s)",(char *)scratchname,lbuf);
 				TokenToLine(obuffer);
 				if ( m[2] > 1 ) {
 					sprintf((char *)obuffer,"**%d",m[2]);
@@ -693,7 +694,7 @@ nexti:;
 }
 
 /*
-  	#] PrintOptima:
+  	#] PrintOptima: 
   	#[ MaxPowerOpti:
 */
 
@@ -715,7 +716,7 @@ WORD MaxPowerOpti(LONG number)
 }
 
 /*
-  	#] MaxPowerOpti:
+  	#] MaxPowerOpti: 
   	#[ HuntNumFactor:
 */
 
@@ -804,7 +805,7 @@ ExitHunt:
 }
 
 /*
-  	#] HuntNumFactor:
+  	#] HuntNumFactor: 
   	#[ HuntFactor:
 
 	Hunts for factors in scalar 'number'
@@ -941,7 +942,7 @@ loosethis:		fr = fm + 3; frr = fm;
 }
 
 /*
-  	#] HuntFactor:
+  	#] HuntFactor: 
   	#[ HuntPairs:
 
 	Routine looks for an object (x) to a power of at least 'power'.
@@ -1153,7 +1154,7 @@ nextterm:;
 }
 
 /*
-  	#] HuntPairs:
+  	#] HuntPairs: 
   	#[ HuntBrackets:
 
 	Routine goes through a sca and tries to find the most popular object.
@@ -1367,7 +1368,7 @@ nextt:;
 }
 
 /*
-  	#] HuntBrackets:
+  	#] HuntBrackets: 
   	#[ HuntNumBrackets:
 
 	Hunts for terms with an identical coefficient
@@ -1380,7 +1381,7 @@ void HuntNumBrackets(LONG number)
 }
 
 /*
-  	#] HuntNumBrackets:
+  	#] HuntNumBrackets: 
   	#[ HuntPowers:
 
 	Tries to look for something of the type
@@ -1524,7 +1525,7 @@ callHP:
 }
 
 /*
-  	#] HuntPowers:
+  	#] HuntPowers: 
   	#[ CombiOpti:
 
 	We try to express the bigger sca's into smaller sca's
@@ -1637,7 +1638,7 @@ nexti2:;
 }
 
 /*
-  	#] CombiOpti:
+  	#] CombiOpti: 
   	#[ TestNewSca:
 */
 
@@ -1703,7 +1704,7 @@ LONG TestNewSca(LONG number, WORD *coef, WORD *ncoef)
 }
 
 /*
-  	#] TestNewSca:
+  	#] TestNewSca: 
   	#[ NormOpti:
 */
 
@@ -1725,7 +1726,7 @@ void NormOpti(WORD *term)
 }
 
 /*
-  	#] NormOpti:
+  	#] NormOpti: 
   	#[ SortOpti:
 */
 
@@ -1766,7 +1767,7 @@ void SortOpti(LONG number)
 }
 
 /*
-  	#] SortOpti:
+  	#] SortOpti: 
   	#[ SplitOpti:
 
 	SplitMerge for the SortOpti routine.
@@ -1824,6 +1825,6 @@ void SplitOpti(WORD **pointers, LONG number)
 }
 
 /*
-  	#] SplitOpti:
+  	#] SplitOpti: 
 */
 

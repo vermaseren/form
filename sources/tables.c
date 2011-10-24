@@ -168,7 +168,7 @@ int InsTableTree(TABLES T, WORD *tp)
 			}
 		}
 	}
-	printf("Serious problems in InsTableTree!\n");
+	MesPrint("Serious problems in InsTableTree!\n");
 	Terminate(-1);
 	return(0);
 balance:;
@@ -313,7 +313,7 @@ int FindTableTree(TABLES T, WORD *tp, int inc)
 			else return(-1);
 		}
 	}
-	printf("Serious problems in FindTableTree\n");
+	MesPrint("Serious problems in FindTableTree\n");
 	Terminate(-1);
 	return(-1);
 }

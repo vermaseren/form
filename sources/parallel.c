@@ -110,8 +110,9 @@ static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndS
 #endif
 
 #ifdef PF_WITHLOG
- #define PRINTFBUF(TEXT,TERM,SIZE)  { if(PF.log){ WORD iii;\
-  fprintf(stderr,"[%d|%ld] %s : ",PF.me,AC.CModule,(char*)TEXT);\
+ #define PRINTFBUF(TEXT,TERM,SIZE)  { UBYTE lbuf[24]; if(PF.log){ WORD iii;\
+  NumToStr(lbuf,AC.CModule); \
+  fprintf(stderr,"[%d|%s] %s : ",PF.me,lbuf,(char*)TEXT);\
   if(TERM){ fprintf(stderr,"[%d] ",(int)(*TERM));\
     if((SIZE)<500 && (SIZE)>0) for(iii=1;iii<(SIZE);iii++)\
       fprintf(stderr,"%d ",TERM[iii]); }\
@@ -1937,7 +1938,9 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
  		#] Slave : 
 */
 		if ( PF.log ) {
-			fprintf(stderr,"[%d|%ld] Endsort,Collect,Broadcast done\n",PF.me,AC.CModule);
+			UBYTE *lbuf[24];
+			NumToStr(lbuf,AC.CModule);
+			fprintf(stderr,"[%d|%s] Endsort,Collect,Broadcast done\n",PF.me,lbuf);
 			fflush(stderr);
 		}
 	}
@@ -2024,13 +2027,17 @@ int PF_Init(int *argc, char ***argv)
 		if ( PF.numrbufs <  1 ) PF.numrbufs = 1;
 
 		if ( ( c = getenv("PF_MAXINTERMS") ) ) {
+			UBYTE *lbuf[24];
 			PF_maxinterms = (LONG)atoi(c);
-			fprintf(stderr,"[%d] changing PF_maxinterms to %ld\n",PF.me,PF_maxinterms);
+			NumToStr(lbuf,PF_maxinterms);
+			fprintf(stderr,"[%d] changing PF_maxinterms to %s\n",PF.me,lbuf);
 			fflush(stderr);
 		}
 		if ( ( c = getenv("PF_STATS") ) ) {
+			UBYTE *lbuf[24];
 			PF_statsinterval = (int)atoi(c);
-			fprintf(stderr,"[%d] changing PF_statsinterval to %ld\n",PF.me,PF_statsinterval);
+			NumToStr(lbuf,PF_statsinterval);
+			fprintf(stderr,"[%d] changing PF_statsinterval to %s\n",PF.me,lbuf);
 			fflush(stderr);
 			if ( PF_statsinterval < 1 ) PF_statsinterval = 10;
 		}
@@ -2065,6 +2072,7 @@ int PF_Init(int *argc, char ***argv)
 	}
 	PF_BroadCast(1);
 	if ( PF.me != MASTER ) {
+		UBYTE *lbuf[24];
 		PF_UnPack(&PF.log,1,PF_INT);
 		PF_UnPack(&PF.synchro,1,PF_WORD);
 		PF_UnPack(&PF.numrbufs,1,PF_WORD);
@@ -2073,9 +2081,10 @@ int PF_Init(int *argc, char ***argv)
 		PF_UnPack(&fpsize,1,PF_INT);
 		AM.Path = (UBYTE*)Malloc1(fpsize*sizeof(UBYTE),"Path");
 		PF_UnPack(AM.Path,(LONG)fpsize,PF_BYTE);
+		NumToStr(lbuf,PF_maxinterms);
 		if ( PF.log ) {
-			fprintf(stderr,"[%d] log=%d rbufs=%d sbufs=%d maxin=%ld path=%s\n",
-					PF.me,PF.log,PF.numrbufs,PF.numsbufs,PF_maxinterms,AM.Path);
+			fprintf(stderr,"[%d] log=%d rbufs=%d sbufs=%d maxin=%s path=%s\n",
+					PF.me,PF.log,PF.numrbufs,PF.numsbufs,lbuf,AM.Path);
 			fflush(stderr);
 		}
 	}
@@ -2217,8 +2226,10 @@ int PF_InitRedefinedPreVars(void)
 			PF_UnPack(value,l,PF_BYTE);
 
 			if ( PF.log ) {
-				printf("[%d] module %ld: PutPreVar(\"%s\",\"%s\",1);\n",
-						PF.me,AC.CModule,name,value);
+				UBYTE lbuf[24];
+				NumToStr(lbuf,AC.CModule);
+				printf("[%d] module %s: PutPreVar(\"%s\",\"%s\",1);\n",
+						PF.me,lbuf,name,value);
 			}
 /*
 				Re-define the variable:

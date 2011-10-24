@@ -1596,7 +1596,7 @@ void help(void)
 int main (void)
 {
 	int i, j, k,last;
-	long long s = 0;
+	long long sum = 0;
 
 	/*openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stderrname)*/
 
@@ -1624,9 +1624,9 @@ int main (void)
 			printf("Reopen channel %d:%d\n",n,selectExternalChannel(n));
 			continue;
 		}else if( *buf == 'K' ) {
-			int s=0,g = 0;
-			sscanf(buf+1,"%d %d",&s,&g);
-			printf("setKillMode %d\n",setKillModeForExternalChannel(s,g));
+			int n=0,g = 0;
+			sscanf(buf+1,"%d %d",&n,&g);
+			printf("setKillMode %d\n",setKillModeForExternalChannel(n,g));
 			continue;
 		}else if( *buf == 'S' ) {			
 			printf("New channel with sh&d&stderr:%d\n",
@@ -1639,7 +1639,7 @@ int main (void)
 		}
 
 		writeBufToExtChannel(buf,k=StrLen(buf));
-		s += k;
+		sum += k;
 		for ( j = 0; ( i = getcFromExtChannel() ) != '\n'; j++) {
 			if ( i == EOF ) {
 				printf("EOF!\n");
@@ -1650,7 +1650,7 @@ int main (void)
 		buf2[j] = '\0';
 		printf("I got:'%s'; pid=%d\n",buf2,getExternalChannelPid());
 	}
-	printf("Total:%lld bytes\n",s);
+	printf("Total:%lld bytes\n",sum);
 	closeAllExternalChannels();
 	return 0;
 }

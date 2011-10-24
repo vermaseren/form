@@ -101,7 +101,9 @@ int MesWork()
 	Kind of a printf function for simple messages.
 	The main concern is getting the arguments in a portable way.
 	Note: many compilers have errors when sizeof(WORD) < sizeof(int)
-	%a	array of size n (two parameters, first is int, second WORD *)
+	%a	array of size n WORDs (two parameters, first is int, second WORD *)
+	%b	array of size n UBYTEs (two parameters, first is int, second UBYTE *)
+	%C	array of size n chars (two parameters, first is int, second char *)
 	%d	word;
 	%l  long;
 	%L  long long *;
@@ -136,12 +138,12 @@ va_dcl
 #endif
 {
 	GETIDENTITY
-	char Out[270], *stopper, *t, *s, *u, c;
+	char Out[270], *stopper, *t, *s, *u, c, *carray;
 	UBYTE extrabuffer[270];
 	int w, x, i, specialerror = 0;
 	LONG num, y;
 	WORD *array;
-	UBYTE *oldoutfill = AO.OutputLine;
+	UBYTE *oldoutfill = AO.OutputLine, *barray;
 	/*[19apr2004 mt]:*/
 	LONG (*OldWrite)(int handle, UBYTE *buffer, LONG size) = WriteFile;
 	/*:[19apr2004 mt]*/
@@ -238,6 +240,71 @@ va_dcl
 				array = va_arg(ap,WORD *);
 				while ( w > 0 ) {
 					t = (char *)NumCopy(*array,(UBYTE *)t);
+					if ( t >= stopper ) {
+						num = t - Out;
+						WriteString(ERROROUT,(UBYTE *)Out,num);
+						t = Out;
+						*t++ = ' ';
+					}
+					*t++ = ' ';
+					w--; array++;
+				}
+			}
+			else if ( *s == 'b' ) {
+				w = va_arg(ap, int);
+				barray = va_arg(ap,UBYTE *);
+				while ( w > 0 ) {
+					*t++ = hex[((*barray)>>4)&0xF];
+					*t++ = hex[(*barray)&0xF];
+					*t = 0;
+					if ( t >= stopper ) {
+						num = t - Out;
+						WriteString(ERROROUT,(UBYTE *)Out,num);
+						t = Out;
+						*t++ = ' ';
+					}
+					*t++ = ' ';
+					w--; barray++;
+				}
+			}
+			else if ( *s == 'C' ) {
+				w = va_arg(ap, int);
+				carray = va_arg(ap,char *);
+				while ( w > 0 ) {
+					if ( *carray < 32 ) *t++ = '^';
+					else *t++ = *carray;
+					*t = 0;
+					if ( t >= stopper ) {
+						num = t - Out;
+						WriteString(ERROROUT,(UBYTE *)Out,num);
+						t = Out;
+						*t++ = ' ';
+					}
+					w--; carray++;
+				}
+			}
+			else if ( *s == 'I' ) {
+				int *iarray;
+				w = va_arg(ap, int);
+				iarray = va_arg(ap,int *);
+				while ( w > 0 ) {
+					t = (char *)LongCopy((LONG)(*iarray),(char *)t);
+					if ( t >= stopper ) {
+						num = t - Out;
+						WriteString(ERROROUT,(UBYTE *)Out,num);
+						t = Out;
+						*t++ = ' ';
+					}
+					*t++ = ' ';
+					w--; array++;
+				}
+			}
+			else if ( *s == 'E' ) {
+				LONG *larray;
+				w = va_arg(ap, int);
+				larray = va_arg(ap,LONG *);
+				while ( w > 0 ) {
+					t = (char *)LongCopy(*larray,(char *)t);
 					if ( t >= stopper ) {
 						num = t - Out;
 						WriteString(ERROROUT,(UBYTE *)Out,num);
@@ -545,7 +612,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					while ( AN.listinprint[0] == DOLLAREXPR2 ) AN.listinprint += 2;
 				}
 /*
-			#] dollars :
+			#] dollars : 
 */
 			}
 #ifdef WITHPTHREADS
@@ -692,7 +759,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 }
 
 /*
- 		#] MesPrint :
+ 		#] MesPrint : 
  		#[ Warning :
 */
 
