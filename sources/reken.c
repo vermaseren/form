@@ -865,7 +865,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			++*nc;
 		} else
 #endif
-		if ( (long)a & (sizeof(mp_limb_t)-1) ) {
+		if ( (LONG)a & (sizeof(mp_limb_t)-1) ) {
 			from = a; a = to = DLscrat9; j = na; NCOPY(to, from, j);
 		}
 
@@ -876,11 +876,11 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 			++*nc;
 		} else
 #endif
-		if ( (long)b & (sizeof(mp_limb_t)-1) ) {
+		if ( (LONG)b & (sizeof(mp_limb_t)-1) ) {
 			from = b; b = to = DLscratA; j = nb; NCOPY(to, from, j);
 		}
 
-		if ( ( *nc > (WORD)i ) || ( (long)c & (long)(sizeof(mp_limb_t)-1) ) ) {
+		if ( ( *nc > (WORD)i ) || ( (LONG)c & (LONG)(sizeof(mp_limb_t)-1) ) ) {
 			ic = DLscratB;
 		}
 		if ( na < nb ) {
@@ -1055,7 +1055,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 			a[na++] = 0;
 		  } else
 #endif
-		  if ( (long)a & (sizeof(mp_limb_t)-1) ) {
+		  if ( (LONG)a & (sizeof(mp_limb_t)-1) ) {
 			from = a; a = to = DLscrat9; i = na; NCOPY(to, from, i);
 		  }
 
@@ -1065,13 +1065,13 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 			b[nb++] = 0;
 		  } else
 #endif
-		  if ( ( (long)b & (sizeof(mp_limb_t)-1) ) != 0 ) {
+		  if ( ( (LONG)b & (sizeof(mp_limb_t)-1) ) != 0 ) {
 			from = b; b = to = DLscratA; i = nb; NCOPY(to, from, i);
 		  }
-		  if ( ( (long)c & (sizeof(mp_limb_t)-1) ) != 0 ) ic = DLscratB;
+		  if ( ( (LONG)c & (sizeof(mp_limb_t)-1) ) != 0 ) ic = DLscratB;
 		  else                                            ic = c;
 
-		  if ( ( (long)d & (sizeof(mp_limb_t)-1) ) != 0 ) id = DLscratC;
+		  if ( ( (LONG)d & (sizeof(mp_limb_t)-1) ) != 0 ) id = DLscratC;
 		  else                                            id = d;
 		  mpn_tdiv_qr((mp_limb_t *)ic,(mp_limb_t *)id,(mp_size_t)0,
 			(const mp_limb_t *)a,(mp_size_t)(na/GMPSPREAD),
@@ -2772,7 +2772,7 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -3188,11 +3188,11 @@ int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 	UWORD *b, *c;
 	WORD nc;
 	int i, j;
-	long ii;
+	LONG ii;
 	if ( n > AT.nfac ) {
 		if ( AT.factorials == 0 ) {
 			AT.nfac = 0; AT.mfac = 50; AT.sfact = 400;
-			AT.pfac = (long *)Malloc1((AT.mfac+2)*sizeof(long),"factorials");
+			AT.pfac = (LONG *)Malloc1((AT.mfac+2)*sizeof(LONG),"factorials");
 			AT.factorials = (UWORD *)Malloc1(AT.sfact*sizeof(UWORD),"factorials");
 			AT.factorials[0] = 1; AT.pfac[0] = 0; AT.pfac[1] = 1;
 		}
@@ -3210,8 +3210,8 @@ int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 				return(-1);
 			}
 			if ( j > AT.mfac ) {  /* double the pfac buffer */
-				long *p;
-				p = (long *)Malloc1((AT.mfac*2+2)*sizeof(long),"factorials");
+				LONG *p;
+				p = (LONG *)Malloc1((AT.mfac*2+2)*sizeof(LONG),"factorials");
 				i = AT.mfac;
 				for ( i = AT.mfac+1; i >= 0; i-- ) p[i] = AT.pfac[i];
 				M_free(AT.pfac,"factorial pointers"); AT.pfac = p; AT.mfac *= 2;
@@ -3269,7 +3269,7 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 	WORD i, i1, i2, nhalf, nqua, nscrib, nntop, nntop1, *oldworkpointer;
 	UWORD twee = 2, twonplus1;
 	int j;
-	long ii;
+	LONG ii;
 	if ( n <= 1 ) {
 		if ( n == 0 ) { a[0] = a[1] = 1; *na = 3; }
 		else if ( n == 1 ) { a[0] = 1; a[1] = 2; *na = 3; }
@@ -3281,7 +3281,7 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 		oldworkpointer = AT.WorkPointer;
 		if ( AT.bernoullis == 0 ) {
 			AT.nBer = 1; AT.mBer = 50; AT.sBer = 400;
-			AT.pBer = (long *)Malloc1((AT.mBer+2)*sizeof(long),"bernoullis");
+			AT.pBer = (LONG *)Malloc1((AT.mBer+2)*sizeof(LONG),"bernoullis");
 			AT.bernoullis = (UWORD *)Malloc1(AT.sBer*sizeof(UWORD),"bernoullis");
 			AT.pBer[1] = 0; AT.pBer[2] = 3;
 			AT.bernoullis[0] = 3; AT.bernoullis[1] = 1; AT.bernoullis[2] = 12;
@@ -3290,8 +3290,8 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 			}
 		}
 		while ( nhalf > AT.mBer ) {
-			long *p;
-			p = (long *)Malloc1((AT.mBer*2+1)*sizeof(long),"bernoullis");
+			LONG *p;
+			p = (LONG *)Malloc1((AT.mBer*2+1)*sizeof(LONG),"bernoullis");
 			i = AT.mBer;
 			for ( i = AT.mBer; i >= 0; i-- ) p[i] = AT.pBer[i];
 			M_free(AT.pBer,"factorial pointers"); AT.pBer = p; AT.mBer *= 2;

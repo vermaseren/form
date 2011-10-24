@@ -72,7 +72,7 @@ int inicbufs()
 }
 
 /*
-  	#] inicbufs :
+  	#] inicbufs : 
   	#[ finishcbuf :
 */
 
@@ -121,10 +121,10 @@ void clearcbuf(WORD num)
 WORD *DoubleCbuffer(int num, WORD *w)
 {
 	CBUF *C = cbuf + num;
-	long newsize = C->BufferSize*2;
+	LONG newsize = C->BufferSize*2;
 	WORD *newbuffer = (WORD *)Malloc1(newsize*sizeof(WORD),"compiler buffer");
 	WORD *w1, *w2;
-	long offset, j, i;
+	LONG offset, j, i;
 	w1 = C->Buffer; w2 = newbuffer;
 	i = w - w1;
 	j = i & 7;
@@ -166,7 +166,7 @@ WORD *AddLHS(int num)
 }
 
 /*
-  	#] AddLHS :
+  	#] AddLHS : 
   	#[ AddRHS :
 */
 
@@ -464,7 +464,7 @@ balance:;
 }
 
 /*
-  	#] InsTree :
+  	#] InsTree : 
   	#[ FindTree :
 
 	Routines for balanced tree searching.

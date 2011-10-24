@@ -3856,7 +3856,7 @@ WORD DoesCommu(WORD *term)
 }
 
 /*
-  	#] DoesCommu :
+  	#] DoesCommu : 
   	#[ PolyNormPoly :
 
 		Normalizes a polynomial
@@ -3925,7 +3925,7 @@ WORD *EvaluateGcd(PHEAD WORD *subterm)
 	WORD *num1, *num2, *num3, *den1, *den2, *den3;
 	WORD sizenum1, sizenum2, sizenum3, sizeden1, sizeden2, sizeden3;
 	int i, isnumeric = 0, numarg = 0 /*, sizearg */;
-	long size;
+	LONG size;
 /*
 	Step 1: Look for -SNUMBER or -SYMBOL arguments.
 	        If encountered, treat everybody with it.

@@ -2067,7 +2067,7 @@ int DoInclude(UBYTE *s)
 	if ( fold ) {
 		LONG position = -1;
 		int foldopen = 0;
-		long linenum = 0, prevline = 0;
+		LONG linenum = 0, prevline = 0;
 		name = strDup1(name,"name of include file");
 		AC.CurrentStream->FoldName = strDup1(fold,"name of fold");
 		AC.NoShowInput++;
@@ -2224,7 +2224,7 @@ int DoCall(UBYTE *s)
 	PROCEDURE *p;
 	int streamoffset;
 	int i, namesize, narg1, narg2, bralevel, numpre;
-	long i1, i2;
+	LONG i1, i2;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 /*
@@ -2460,7 +2460,7 @@ int DoDo(UBYTE *s)
 	UBYTE *t, c, *u, *uu;
 	DOLOOP *loop;
 	WORD expnum;
-	long linenum  = AC.CurrentStream->linenumber;
+	LONG linenum  = AC.CurrentStream->linenumber;
 	int oldNoShowInput = AC.NoShowInput, i;
 
 	if ( ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH )

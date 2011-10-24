@@ -641,7 +641,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
@@ -966,7 +966,7 @@ typedef struct {
 	UBYTE *parameter;
 	int type;
 	int flags;
-	long value;
+	LONG value;
 } SETUPPARAMETERS;
 
 /**
@@ -1828,8 +1828,8 @@ struct T_const {
 	  UWORD  **small_power;          /*     the number*/	
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
 	WORD    *primelist;
-    long    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
-    long    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
+    LONG    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
+    LONG    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
     WORD    *TMaddr;               /* (R) buffer for TestSub */
     WORD    *WildMask;             /* (N) Wildcard info during pattern matching */
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
@@ -2068,14 +2068,14 @@ struct O_const {
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
 #ifdef mBSD
 #ifdef MICROTIME
-    long    wrap;                  /* (O) For statistics time. wrap around */
-    long    wrapnum;               /* (O) For statistics time. wrap around */
+    LONG    wrap;                  /* (O) For statistics time. wrap around */
+    LONG    wrapnum;               /* (O) For statistics time. wrap around */
 #endif
 #endif
 /*
 #ifdef _MSC_VER
-    long    wrap;
-    long    wrapnum;
+    LONG    wrap;
+    LONG    wrapnum;
 #endif
 */
     LONG    NumInBrack;            /* (O) For typing [] option in print */

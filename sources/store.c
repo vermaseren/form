@@ -179,7 +179,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch :
+ 		#] SetScratch : 
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -1322,7 +1322,7 @@ WORD GetMoreTerms(WORD *term)
 /*
 	We use 23% as a quasi-random default value.
 */
-	extra = ((AM.MaxTer/sizeof(WORD))*((long)100-AC.CollectPercentage))/100;
+	extra = ((AM.MaxTer/sizeof(WORD))*((LONG)100-AC.CollectPercentage))/100;
 	if ( extra < 23 ) extra = 23;
 /*
 	First find the bracket pointer
@@ -2284,7 +2284,7 @@ WORD TermRenumber(WORD *term, RENUMBER renumber, WORD nexpr)
 	WORD *stopper;
 /*!!!
 WORD *memterm=term;
-static long ctrap=0;
+static LONG ctrap=0;
   !!!*/
 	WORD *t, *sarg, n;
 	stopper = term + *term - 1;

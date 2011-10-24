@@ -443,7 +443,7 @@ static void print_INTV(int *p, size_t size)
 	}
 }
 
-static void print_LONGV(long *p, size_t size)
+static void print_LONGV(LONG *p, size_t size)
 {
 	size_t i;
 	if ( p ) {
@@ -586,9 +586,9 @@ static void print_STREAM(STREAM *t)
 	if ( t->type == PREVARSTREAM || t->type == DOLLARSTREAM ) {
 		print_STR(t->pname);
 	}
-	printf("%ld\n", (long)t->fileposition);
-	printf("%ld\n", (long)t->linenumber);
-	printf("%ld\n", (long)t->prevline);
+	printf("%ld\n", (LONG)t->fileposition);
+	printf("%ld\n", (LONG)t->linenumber);
+	printf("%ld\n", (LONG)t->prevline);
 	printf("%ld\n", t->buffersize);
 	printf("%ld\n", t->bufferposition);
 	printf("%ld\n", t->inbuffer);
@@ -624,7 +624,7 @@ static void print_M()
 	print_STR(AM.SetupDir);
 	print_STR(AM.SetupFile);
 	printf("--MARK  1\n");
-	printf("%ld\n", (long int)BASEPOSITION(AM.zeropos));
+	printf("%ld\n", (LONG)BASEPOSITION(AM.zeropos));
 #ifdef WITHPTHREADS
 	printf("%ld\n", AM.ThreadScratSize);
 	printf("%ld\n", AM.ThreadScratOutSize);
@@ -1304,11 +1304,11 @@ int DoRecovery(int *moduletype)
 	FILE *fd;
 	POSITION pos;
 	void *buf, *p;
-	long size;
+	LONG size;
 	int i, j;
 	UBYTE *org;
 	char *namebufout, *namebufhide;
-	long ofs;
+	LONG ofs;
 	void *oldAMdollarzero;
 	LIST PotModDolListBackup;
 	LIST ModOptDolListBackup;
@@ -2054,7 +2054,7 @@ int DoRecovery(int *moduletype)
 	/*#] AP : */ 
 	/*#[ AR : */
 
-	R_SET(ofs,long);
+	R_SET(ofs,LONG);
 	if ( ofs ) {
 		AR.infile = AR.Fscr+1;
 		AR.outfile = AR.Fscr;
@@ -2326,7 +2326,7 @@ static int DoSnapshot(int moduletype)
 	FILE *fd;
 	POSITION pos;
 	int i, j;
-	long l;
+	LONG l;
 	WORD *w;
 	void *adr;
 #ifdef WITHPTHREADS
@@ -2727,7 +2727,7 @@ static int DoSnapshot(int moduletype)
 	ANNOUNCE(AR)
 	/* to remember which entry in AR.Fscr corresponds to the infile */
 	l = AR.infile - AR.Fscr;
-	S_WRITE_B(&l, sizeof(long));
+	S_WRITE_B(&l, sizeof(LONG));
 	
 	/* write the FILEHANDLEs */
 	S_WRITE_B(AR.outfile, sizeof(FILEHANDLE));

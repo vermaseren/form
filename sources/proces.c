@@ -1817,6 +1817,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 				*m++ = 3;
 				r = term + *term;
 				while ( t < r ) *m++ = *t++;
+				if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
 				*termout = WORDDIF(m,termout);
 				return(0);
 			}
@@ -1885,6 +1886,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					r = term + *term;
 					t = v;
 					while ( t < r ) *m++ = *t++;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
 					*termout = WORDDIF(m,termout);
 					AR.DeferFlag = olddefer;
 					AN.ncmod = oldncmod;
@@ -2067,6 +2069,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					r = term + *term;
 					t = v;
 					while ( t < r ) *m++ = *t++;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
 					*termout = WORDDIF(m,termout);
 					AR.DeferFlag = olddefer;
 					AN.ncmod = oldncmod;
@@ -2108,6 +2111,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					from++;  /* Skip our function */
 					r = term + *term;
 					while ( from < r ) *m++ = *from++;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
 					*termout = WORDDIF(m,termout);
 					return(0);
 				}
@@ -2248,6 +2252,7 @@ wrongtype:;
 					term += *term;
 					while ( from < term ) *m++ = *from++;
 					if ( sign < 0 ) m[-1] = -m[-1];
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
 					*termout = m - termout;
 					AN.ncmod = oldncmod;
 					return(0);
@@ -2285,6 +2290,13 @@ wrongtype:;
 
 InFunc:
 	MLOCK(ErrorMessageLock);
+	MesCall("InFunction");
+	MUNLOCK(ErrorMessageLock);
+	SETERROR(-1)
+
+TooLarge:
+	MLOCK(ErrorMessageLock);
+	MesPrint("Output term too large. Try to increase MaxTermSize in the setup.");
 	MesCall("InFunction");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
@@ -2800,7 +2812,7 @@ FiniCall:
  
 static WORD zeroDollar[] = { 0, 0 };
 /*
-static long debugcounter = 0;
+static LONG debugcounter = 0;
 */
 
 /**

@@ -51,63 +51,63 @@ char procedureextension[] = "prc";
 
 SETUPPARAMETERS setupparameters[] = 
 {
-	 {(UBYTE *)"bracketindexsize",      NUMERICALVALUE, 0, (long)MAXBRACKETBUFFERSIZE}
-	,{(UBYTE *)"commentchar",              STRINGVALUE, 0, (long)commentchar}
-	,{(UBYTE *)"compresssize",          NUMERICALVALUE, 0, (long)COMPRESSBUFFER}
-	,{(UBYTE *)"constindex",            NUMERICALVALUE, 0, (long)NUMFIXED}
-	,{(UBYTE *)"continuationlines",     NUMERICALVALUE, 0, (long)FORTRANCONTINUATIONLINES}
-	,{(UBYTE *)"define",                   DEFINEVALUE, 0, (long)0}
-	,{(UBYTE *)"dotchar",                  STRINGVALUE, 0, (long)dotchar}
-	,{(UBYTE *)"factorizationcache",    NUMERICALVALUE, 0, (long)FBUFFERSIZE}
-	,{(UBYTE *)"filepatches",           NUMERICALVALUE, 0, (long)MAXFPATCHES}
-	,{(UBYTE *)"functionlevels",        NUMERICALVALUE, 0, (long)MAXFLEVELS}
-	,{(UBYTE *)"hidesize",              NUMERICALVALUE, 0, (long)0}
-	,{(UBYTE *)"incdir",                     PATHVALUE, 0, (long)curdirp}
-	,{(UBYTE *)"indentspace",           NUMERICALVALUE, 0, (long)INDENTSPACE}
-	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (long)1}
-	,{(UBYTE *)"largepatches",          NUMERICALVALUE, 0, (long)MAXPATCHES}
-	,{(UBYTE *)"largesize",             NUMERICALVALUE, 0, (long)LARGEBUFFER}
-	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (long)MAXNUMBERSIZE}
-	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (long)MAXTER}
-	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (long)MAXWILDC}
-	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"numstorecaches",        NUMERICALVALUE, 0, (long)NUMSTORECACHES}
-	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"nwriteprocessstatistics",   ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, 0, (long)NEWFACTARG}
-	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"oldparallelstatistics",     ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (long)MAXPARLEVEL}
-	,{(UBYTE *)"path",                       PATHVALUE, 0, (long)curdirp}
-	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (long)procedureextension}
-	,{(UBYTE *)"resettimeonclear",          ONOFFVALUE, 0, (long)1}
-	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (long)SCRATCHSIZE}
-	,{(UBYTE *)"shmwinsize",            NUMERICALVALUE, 0, (long)SHMWINSIZE}
-	,{(UBYTE *)"sizestorecache",        NUMERICALVALUE, 0, (long)SIZESTORECACHE}
-	,{(UBYTE *)"slavepatchsize",        NUMERICALVALUE, 0, (long)SLAVEPATCHSIZE}
-	,{(UBYTE *)"smallextension",        NUMERICALVALUE, 0, (long)SMALLOVERFLOW}
-	,{(UBYTE *)"smallsize",             NUMERICALVALUE, 0, (long)SMALLBUFFER}
-	,{(UBYTE *)"sortiosize",            NUMERICALVALUE, 0, (long)SORTIOSIZE}
-	,{(UBYTE *)"sorttype",                 STRINGVALUE, 0, (long)lowfirst}
-	,{(UBYTE *)"subfilepatches",        NUMERICALVALUE, 0, (long)SMAXFPATCHES}
-	,{(UBYTE *)"sublargepatches",       NUMERICALVALUE, 0, (long)SMAXPATCHES}
-	,{(UBYTE *)"sublargesize",          NUMERICALVALUE, 0, (long)SLARGEBUFFER}
-	,{(UBYTE *)"subsmallextension",     NUMERICALVALUE, 0, (long)SSMALLOVERFLOW}
-	,{(UBYTE *)"subsmallsize",          NUMERICALVALUE, 0, (long)SSMALLBUFFER}
-	,{(UBYTE *)"subsortiosize",         NUMERICALVALUE, 0, (long)SSORTIOSIZE}
-	,{(UBYTE *)"subtermsinsmall",       NUMERICALVALUE, 0, (long)STERMSSMALL}
-	,{(UBYTE *)"tempdir",                  STRINGVALUE, 0, (long)curdirp}
-	,{(UBYTE *)"termsinsmall",          NUMERICALVALUE, 0, (long)TERMSSMALL}
-    ,{(UBYTE *)"threadbucketsize",      NUMERICALVALUE, 0, (long)DEFAULTTHREADBUCKETSIZE}
-    ,{(UBYTE *)"threadloadbalancing",       ONOFFVALUE, 0, (long)DEFAULTTHREADLOADBALANCING}
-    ,{(UBYTE *)"threads",               NUMERICALVALUE, 0, (long)DEFAULTTHREADS}
-	,{(UBYTE *)"threadscratchoutsize",  NUMERICALVALUE, 0, (long)THREADSCRATCHOUTSIZE}
-	,{(UBYTE *)"threadscratchsize",     NUMERICALVALUE, 0, (long)THREADSCRATCHSIZE}
-    ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (long)0}
-	,{(UBYTE *)"totalsize",                 ONOFFVALUE, 0, (long)2}
-	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (long)WORKBUFFER}
+	 {(UBYTE *)"bracketindexsize",      NUMERICALVALUE, 0, (LONG)MAXBRACKETBUFFERSIZE}
+	,{(UBYTE *)"commentchar",              STRINGVALUE, 0, (LONG)commentchar}
+	,{(UBYTE *)"compresssize",          NUMERICALVALUE, 0, (LONG)COMPRESSBUFFER}
+	,{(UBYTE *)"constindex",            NUMERICALVALUE, 0, (LONG)NUMFIXED}
+	,{(UBYTE *)"continuationlines",     NUMERICALVALUE, 0, (LONG)FORTRANCONTINUATIONLINES}
+	,{(UBYTE *)"define",                   DEFINEVALUE, 0, (LONG)0}
+	,{(UBYTE *)"dotchar",                  STRINGVALUE, 0, (LONG)dotchar}
+	,{(UBYTE *)"factorizationcache",    NUMERICALVALUE, 0, (LONG)FBUFFERSIZE}
+	,{(UBYTE *)"filepatches",           NUMERICALVALUE, 0, (LONG)MAXFPATCHES}
+	,{(UBYTE *)"functionlevels",        NUMERICALVALUE, 0, (LONG)MAXFLEVELS}
+	,{(UBYTE *)"hidesize",              NUMERICALVALUE, 0, (LONG)0}
+	,{(UBYTE *)"incdir",                     PATHVALUE, 0, (LONG)curdirp}
+	,{(UBYTE *)"indentspace",           NUMERICALVALUE, 0, (LONG)INDENTSPACE}
+	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (LONG)1}
+	,{(UBYTE *)"largepatches",          NUMERICALVALUE, 0, (LONG)MAXPATCHES}
+	,{(UBYTE *)"largesize",             NUMERICALVALUE, 0, (LONG)LARGEBUFFER}
+	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)MAXNUMBERSIZE}
+	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (LONG)MAXTER}
+	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (LONG)MAXWILDC}
+	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"numstorecaches",        NUMERICALVALUE, 0, (LONG)NUMSTORECACHES}
+	,{(UBYTE *)"nwritefinalstatistics",     ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"nwriteprocessstatistics",   ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, 0, (LONG)NEWFACTARG}
+	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"oldparallelstatistics",     ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (LONG)MAXPARLEVEL}
+	,{(UBYTE *)"path",                       PATHVALUE, 0, (LONG)curdirp}
+	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (LONG)procedureextension}
+	,{(UBYTE *)"resettimeonclear",          ONOFFVALUE, 0, (LONG)1}
+	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (LONG)SCRATCHSIZE}
+	,{(UBYTE *)"shmwinsize",            NUMERICALVALUE, 0, (LONG)SHMWINSIZE}
+	,{(UBYTE *)"sizestorecache",        NUMERICALVALUE, 0, (LONG)SIZESTORECACHE}
+	,{(UBYTE *)"slavepatchsize",        NUMERICALVALUE, 0, (LONG)SLAVEPATCHSIZE}
+	,{(UBYTE *)"smallextension",        NUMERICALVALUE, 0, (LONG)SMALLOVERFLOW}
+	,{(UBYTE *)"smallsize",             NUMERICALVALUE, 0, (LONG)SMALLBUFFER}
+	,{(UBYTE *)"sortiosize",            NUMERICALVALUE, 0, (LONG)SORTIOSIZE}
+	,{(UBYTE *)"sorttype",                 STRINGVALUE, 0, (LONG)lowfirst}
+	,{(UBYTE *)"subfilepatches",        NUMERICALVALUE, 0, (LONG)SMAXFPATCHES}
+	,{(UBYTE *)"sublargepatches",       NUMERICALVALUE, 0, (LONG)SMAXPATCHES}
+	,{(UBYTE *)"sublargesize",          NUMERICALVALUE, 0, (LONG)SLARGEBUFFER}
+	,{(UBYTE *)"subsmallextension",     NUMERICALVALUE, 0, (LONG)SSMALLOVERFLOW}
+	,{(UBYTE *)"subsmallsize",          NUMERICALVALUE, 0, (LONG)SSMALLBUFFER}
+	,{(UBYTE *)"subsortiosize",         NUMERICALVALUE, 0, (LONG)SSORTIOSIZE}
+	,{(UBYTE *)"subtermsinsmall",       NUMERICALVALUE, 0, (LONG)STERMSSMALL}
+	,{(UBYTE *)"tempdir",                  STRINGVALUE, 0, (LONG)curdirp}
+	,{(UBYTE *)"termsinsmall",          NUMERICALVALUE, 0, (LONG)TERMSSMALL}
+    ,{(UBYTE *)"threadbucketsize",      NUMERICALVALUE, 0, (LONG)DEFAULTTHREADBUCKETSIZE}
+    ,{(UBYTE *)"threadloadbalancing",       ONOFFVALUE, 0, (LONG)DEFAULTTHREADLOADBALANCING}
+    ,{(UBYTE *)"threads",               NUMERICALVALUE, 0, (LONG)DEFAULTTHREADS}
+	,{(UBYTE *)"threadscratchoutsize",  NUMERICALVALUE, 0, (LONG)THREADSCRATCHOUTSIZE}
+	,{(UBYTE *)"threadscratchsize",     NUMERICALVALUE, 0, (LONG)THREADSCRATCHSIZE}
+    ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"totalsize",                 ONOFFVALUE, 0, (LONG)2}
+	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (LONG)WORKBUFFER}
 };
 
 /*
@@ -171,7 +171,7 @@ int ProcessOption(UBYTE *s1, UBYTE *s2, int filetype)
 	SETUPPARAMETERS *sp;
 	int n, giveback = 0, error = 0;
 	UBYTE *s, *t, *s2ret;
-	long x;
+	LONG x;
 	sp = GetSetupPar(s1);
 	if ( sp ) {
 /*
@@ -255,7 +255,7 @@ restart:;
 					*t++ = *s++;
 				}
 				*t = 0;
-				sp->value = (long)strDup1(s2,"Process option");
+				sp->value = (LONG)strDup1(s2,"Process option");
 				sp->flags = USEDFLAG;
 				break;
 			case PATHVALUE:
@@ -279,7 +279,7 @@ restart:;
 			case DEFINEVALUE:
 /*
 				if ( sp->value ) M_free((UBYTE *)(sp->value),"Process option");
-				sp->value = (long)strDup1(s2,"Process option");
+				sp->value = (LONG)strDup1(s2,"Process option");
 */
 				if ( TheDefine(s2,2) ) error = 1;
 				break;
@@ -1044,7 +1044,7 @@ int TryFileSetups()
 	int error = 0, eqnum;
 	int oldNoShowInput = AC.NoShowInput;
 	UBYTE buff[SETBUFSIZE+1], *s, *t, *u, *settop, c;
-	long linenum, prevline;
+	LONG linenum, prevline;
 
 	if ( AC.CurrentStream == 0 ) return(error);
 	oldstream = AC.CurrentStream - AC.Streams;

@@ -149,6 +149,8 @@
  * are system-dependent. BITSINWORD and BITSINLONG are also defined.
  * INT16, INT32 (also INT64 and INT128 if available) are used for
  * system independent saved expressions (store.c).
+ *
+ * For MLONG see commentary in minos.h
  */
 #if defined(ILP32)
 
@@ -156,6 +158,7 @@ typedef short WORD;
 typedef long LONG;
 typedef unsigned short UWORD;
 typedef unsigned long ULONG;
+typedef long long MLONG;
 #define BITSINWORD 16
 #define BITSINLONG 32
 #define INT16 short
@@ -169,6 +172,7 @@ typedef int WORD;
 typedef long long LONG;
 typedef unsigned int UWORD;
 typedef unsigned long long ULONG;
+typedef long long MLONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
 #define INT16 short
@@ -182,6 +186,7 @@ typedef int WORD;
 typedef long LONG;
 typedef unsigned int UWORD;
 typedef unsigned long ULONG;
+typedef long MLONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
 #define INT16 short

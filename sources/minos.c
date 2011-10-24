@@ -132,7 +132,7 @@ void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode)
 		for ( i = 0, obj = in->objects; i < NUMOBJECTS; i++, obj++ ) {
 			CTD(obj->position,s,MLONG,x,j)
 			CTD(obj->size,s,MLONG,x,j)
-			CTD(obj->date,s,time_t,x,j)
+			CTD(obj->date,s,MLONG,x,j)
 			CTD(obj->tablenumber,s,MLONG,x,j)
 			CTD(obj->uncompressed,s,MLONG,x,j)
 			CTD(obj->dummy1,s,MLONG,x,j)
@@ -149,7 +149,7 @@ void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode)
 		for ( i = 0, obj = out->objects; i < NUMOBJECTS; i++, obj++ ) {
 			CFD(obj->position,s,MLONG,x,j)
 			CFD(obj->size,s,MLONG,x,j)
-			CFD(obj->date,s,time_t,x,j)
+			CFD(obj->date,s,MLONG,x,j)
 			CFD(obj->tablenumber,s,MLONG,x,j)
 			CFD(obj->uncompressed,s,MLONG,x,j)
 			CFD(obj->dummy1,s,MLONG,x,j)
@@ -594,7 +594,7 @@ DBASE *NewDbase(char *name,MLONG number)
 	char *s;
 /*----------change 10-feb-2003 */
 	int j, jj;
-	time_t t = time(0);
+	MLONG t = (MLONG)(time(0));
 /*-----------------------------*/
 	if ( number < 0 ) number = 0;
 	if ( ( f = fopen(name,"w+b") ) == 0 ) {
@@ -1048,7 +1048,7 @@ int AddToIndex(DBASE *d,MLONG number)
 	MLONG i, oldnumofindexblocks = d->info.numberofindexblocks;
 	MLONG j, newnumofindexblocks, jj;
 	INDEXBLOCK **ib;
-	time_t t = time(0);
+	MLONG t = (MLONG)(time(0));
 	if ( number == 0 ) return(0);
 	else if ( number < 0 ) {
 		if ( d->info.entriesinindex < -number ) {
@@ -1244,7 +1244,7 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 	}
 	obj->position = position;
 	obj->size = size;
-	obj->date = time(0);
+	obj->date = (MLONG)(time(0));
 	obj->tablenumber = tablenumber;
 #ifdef WITHZLIB
 	obj->uncompressed = oldsize;

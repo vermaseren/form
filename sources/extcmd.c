@@ -156,7 +156,7 @@ Also after #ifdef SELFTEST ... #else there is
 #include "form3.h"
 */
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Selftest initializing:
 */
 
@@ -196,7 +196,7 @@ extern int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup);
 pid_t  getExternalChannelPid(VOID);
 */
 /*
-  	#] Selftest initializing:
+  	#] Selftest initializing: 
   	#[ FailureFunctions:
 */
 
@@ -231,7 +231,7 @@ int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup) =
 	&setKillModeForExternalChannelFailure;
 int (*getcFromExtChannel)() = &getcFromExtChannelFailure;
 /*
-  	#] FailureFunctions:
+  	#] FailureFunctions: 
   	#[ Stubs :
 */
 #ifndef WITHEXTERNALCHANNEL
@@ -245,7 +245,7 @@ int getCurrentExternalChannel() { return(0); };
 void closeAllExternalChannels() {};
 #else /*ifndef WITHEXTERNALCHANNEL*/
 /*
-  	#] Stubs :
+  	#] Stubs : 
   	#[ Local types :
 */
 /*First argument for the function signal:*/
@@ -301,7 +301,7 @@ static int externalChannelsListFill=0;
 /*"current" external channel:*/
 static EXTHANDLE *externalChannelsListTop=0;
 /*
-  	#] Local types :
+  	#] Local types : 
   	#[ Selftest functions :
 */
 #ifdef SELFTEST
@@ -343,7 +343,7 @@ int PutPreVar(UBYTE *a,UBYTE *b,UBYTE *c,int i)
 
 #endif
 /*
-  	#] Selftest functions :
+  	#] Selftest functions : 
   	#[ Local functions :
 */
 
@@ -588,9 +588,9 @@ int n=0;
 /*Reads positive decimal number (not bigger than maxnum)
   from the string and returns it;
   the pointer *b is set to the next non-converted character:*/
-static long str2i(char *str, char **b, long maxnum)
+static LONG str2i(char *str, char **b, LONG maxnum)
 {
-long n=0;
+	LONG n=0;
 	/*Eat trailing spaces:*/
 	while(*str<=' ')if(*str++ == '\0')return(-1);
 	(*b)=str;
@@ -606,7 +606,7 @@ long n=0;
 /*Converts long integer to a decimal representation.
   For portability reasons we cannot use LongCopy from tools.c
   since theoretically LONG may be smaller than pid_t:*/
-static char *l2s(long x, char *to)
+static char *l2s(LONG x, char *to)
 {
 	char *s;
 	int i = 0, j;
@@ -719,7 +719,7 @@ static FORM_INLINE ssize_t readSome(int fd, char *buf, size_t count, int timeout
 }/*readSome*/
 
 /*
-  	#] Local functions :
+  	#] Local functions : 
   	#[ Ok functions:
 */
 
@@ -942,7 +942,7 @@ mysighandler_t oldPIPE;
 	return(ret);
 }/*writeBufToExtChannel*/
 /*
-  	#] Ok functions:
+  	#] Ok functions: 
   	#[ do_run_cmd :
 */
 /*The function returns PID of the started command*/
@@ -1144,7 +1144,7 @@ mysighandler_t oldPIPE=NULL;
 		return((pid_t)-1);
 }/*do_run_cmd*/
 /*
-  	#] do_run_cmd :
+  	#] do_run_cmd : 
   	#[ run_cmd :
 */
 /*Starts the command cmd (directly, if shellpath is NULL, or in a subshell), 
@@ -1201,7 +1201,7 @@ pid_t thepid;
 	return(thepid);
 }/*run_cmd*/
 /*
-  	#] run_cmd :
+  	#] run_cmd : 
   	#[ createExternalChannel :
 */
 /*The structure to pass parameters to createExternalChannel
@@ -1289,7 +1289,7 @@ static FORM_INLINE void *createExternalChannel(
 }/*createExternalChannel*/
 
 /*
-  	#] createExternalChannel :
+  	#] createExternalChannel : 
   	#[ openExternalChannel :
 */
 int openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stderrname)
@@ -1339,7 +1339,7 @@ int i=0;
 	return(-1);
 }/*openExternalChannel*/
 /*
-  	#] openExternalChannel :
+  	#] openExternalChannel : 
   	#[ initPresetExternalChannels :
 */
 /*Just simpe wrapper to invoke  openExternalChannel()
@@ -1386,7 +1386,7 @@ int initPresetExternalChannels(UBYTE *theline, int thetimeout)
 	pid_t ppid;
 	if ( theline == NULL ) return(-1);
 	/*Put into pidtxt PID\n:*/
-	c = l2s((long)getpid(),pidtxt);
+	c = l2s((LONG)getpid(),pidtxt);
 	*c++='\n';
 	*c = '\0';
 	pidln = c-pidtxt;
@@ -1445,7 +1445,7 @@ presetFails:
 		return(-1);
 } /*initPresetExternalChannels*/
 /*
-  	#] initPresetExternalChannels :
+  	#] initPresetExternalChannels : 
   	#[ selectExternalChannel :
 */
 /* 
@@ -1485,7 +1485,7 @@ int ret=0;
 	return(ret);
 }/*selectExternalChannel*/
 /*
-  	#] selectExternalChannel :
+  	#] selectExternalChannel : 
   	#[ closeExternalChannel :
 */
 
@@ -1521,7 +1521,7 @@ int closeExternalChannel(int n)
 	return(0);
 }/*closeExternalChannel*/
 /*
-  	#] closeExternalChannel :
+  	#] closeExternalChannel : 
   	#[ closeAllExternalChannels :
 */
 void closeAllExternalChannels()
@@ -1543,7 +1543,7 @@ int i;
 	}
 }/*closeAllExternalChannels*/
 /*
-  	#] closeAllExternalChannels :
+  	#] closeAllExternalChannels : 
   	#[ getExternalChannelPid :
 */
 #ifdef SELFTEST
@@ -1555,7 +1555,7 @@ pid_t getExternalChannelPid()
 }/*getExternalChannelPid*/
 #endif
 /*
-  	#] getExternalChannelPid :
+  	#] getExternalChannelPid : 
   	#[ getCurrentExternalChannel :
 */
 
@@ -1567,7 +1567,7 @@ int getCurrentExternalChannel()
 	return(0);
 }/*getCurrentExternalChannel*/
 /*
-  	#] getCurrentExternalChannel :
+  	#] getCurrentExternalChannel : 
   	#[ Selftest main :
 */
 
@@ -1656,7 +1656,7 @@ int main (void)
 }
 #endif /*ifdef SELFTEST*/
 /*
-  	#] Selftest main :
+  	#] Selftest main : 
 */
 
 #endif /*ifndef WITHEXTERNALCHANNEL ... else*/

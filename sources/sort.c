@@ -59,11 +59,11 @@ UBYTE THRbuf[100];
 #endif
 
 #ifdef WITHSTATS
-extern long numwrites;
-extern long numreads;
-extern long numseeks;
-extern long nummallocs;
-extern long numfrees;
+extern LONG numwrites;
+extern LONG numreads;
+extern LONG numseeks;
+extern LONG nummallocs;
+extern LONG numfrees;
 #endif
 
 /*

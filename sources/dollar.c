@@ -843,7 +843,7 @@ void WildDollars(PHEAD0)
 	DOLLARS d;
 	WORD *m, *t, *w, *ww, *orig = 0;
 	int numdollar;
-	long weneed, i;
+	LONG weneed, i;
 #ifdef WITHPTHREADS
 	int dtype = -1;
 #endif

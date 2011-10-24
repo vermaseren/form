@@ -58,7 +58,7 @@ int filelistsize = 0;
 #ifdef MALLOCDEBUG
 #define BANNER (4*sizeof(LONG))
 void *malloclist[60000];
-long mallocsizes[60000];
+LONG mallocsizes[60000];
 char *mallocstrings[60000];
 int nummalloclist = 0;
 #endif
@@ -68,11 +68,11 @@ extern "C" getdtablesize();
 #endif
 
 #ifdef WITHSTATS
-long numwrites = 0;
-long numreads = 0;
-long numseeks = 0;
-long nummallocs = 0;
-long numfrees = 0;
+LONG numwrites = 0;
+LONG numreads = 0;
+LONG numseeks = 0;
+LONG nummallocs = 0;
+LONG numfrees = 0;
 #endif
  
 #ifdef MALLOCPROTECT
@@ -98,7 +98,7 @@ long numfrees = 0;
 UBYTE *LoadInputFile(UBYTE *filename, int type)
 {
 	int handle;
-	long filesize;
+	LONG filesize;
 	UBYTE *buffer, *name = filename;
 	POSITION scrpos;
 	handle = LocateFile(&name,type);
@@ -235,7 +235,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 	UBYTE *rhsofvariable, *s, *newname, c;
 	POSITION scrpos;
 	int handle, num;
-	long filesize;
+	LONG filesize;
 	switch ( type ) {
 		case FILESTREAM:
 /*
@@ -2038,7 +2038,7 @@ void M_free(VOID *x, const char *where)
 		}
 	}
 	if ( i < 0 ) {
-		unsigned int xx = ((unsigned long)x);
+		unsigned int xx = ((ULONG)x);
 		printf("Error returning non-allocated address: 0x%x from %s\n"
 			,xx,where);
 /*		MUNLOCK(ErrorMessageLock); */
@@ -2493,7 +2493,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 
 void DoubleBuffer(void **start, void **stop, int size, char *text)
 {
-	long oldsize, newsize, i;
+	LONG oldsize, newsize, i;
 	if ( size == sizeof(char) ) DODOUBLE(char)
 	else if ( size == sizeof(short) ) DODOUBLE(short)
 	else if ( size == sizeof(int) ) DODOUBLE(int)
@@ -2957,8 +2957,8 @@ LONG Timer()
       PFILETIME p_ftUser = &ftUser;
       __int64 tUser64 = (*(__int64 *) p_ftUser / 10);
 
-      long tv_sec = (long) (tUser64 / 1000000);
-      long tv_usec = (long) (tUser64 % 1000000);
+      LONG tv_sec = (LONG) (tUser64 / 1000000);
+      LONG tv_usec = (LONG) (tUser64 % 1000000);
 
       return( tv_sec*1000 + tv_usec/1000);
     }
@@ -2972,7 +2972,7 @@ LONG Timer()
 
 LONG Timer(int par)
 {
-	long t;
+	LONG t;
 	if ( par == 1 ) { return(0); }
 	t = clock();
 	if ( ( AO.wrapnum & 1 ) != 0 ) t ^= 0x80000000;
@@ -3010,7 +3010,7 @@ LONG Timer(int par)
 	with AR.timing of the time
 	struct timespec {
 		__time_t tv_sec;            Seconds.
-		long int tv_nsec;           Nanoseconds.
+		LONG int tv_nsec;           Nanoseconds.
 	};
 
 */
@@ -3081,7 +3081,7 @@ LONG Timer(int par)
 {
 #ifdef ALPHA
 /* 	clock_t t,tikken = clock();									  */
-/* 	MesPrint("ALPHA-clock = %l",(long)tikken);					  */
+/* 	MesPrint("ALPHA-clock = %l",(LONG)tikken);					  */
 /* 	t = tikken % CLOCKS_PER_SEC;								  */
 /* 	tikken /= CLOCKS_PER_SEC;									  */
 /* 	tikken *= 1000;												  */
@@ -3143,7 +3143,7 @@ Timer(int par)
 #include <sys/types.h>
 #include <sys/times.h>
 #include <time.h>
-long pretime = 0;
+LONG pretime = 0;
 #else
 #define _TIME_T_
 #include <sys/time.h>
@@ -3154,7 +3154,7 @@ long pretime = 0;
 LONG Timer(int par)
 {
 #ifdef MICROTIME
-	long t;
+	LONG t;
 	if ( par == 1 ) { return(0); }
 	t = clock();
 	if ( ( AO.wrapnum & 1 ) != 0 ) t ^= 0x80000000;
@@ -3167,11 +3167,11 @@ LONG Timer(int par)
 #else
 #ifdef mBSD2
 	struct tms buffer;
-	long ret;
-	unsigned long a1, a2, a3, a4;
+	LONG ret;
+	ULONG a1, a2, a3, a4;
 	if ( par == 1 ) { return(0); }
 	times(&buffer);
-	a1 = (unsigned long)buffer.tms_utime;
+	a1 = (ULONG)buffer.tms_utime;
 	a2 = a1 >> 16;
 	a3 = a1 & 0xFFFFL;
 	a3 *= 1000;
@@ -3180,8 +3180,8 @@ LONG Timer(int par)
 	a4 = a2/CLK_TCK;
 	a2 %= CLK_TCK;
 	a3 += a2 << 16;
-	ret = (long)((a4 << 16) + a3 / CLK_TCK);
-/*	ret = ((long)buffer.tms_utime * 1000)/CLK_TCK; */
+	ret = (LONG)((a4 << 16) + a3 / CLK_TCK);
+/*	ret = ((LONG)buffer.tms_utime * 1000)/CLK_TCK; */
 	return(ret);
 #else
 #ifdef REALTIME

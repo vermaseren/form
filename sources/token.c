@@ -74,7 +74,7 @@ int tokenize(UBYTE *in, WORD leftright)
 	object = 0;
 	while ( *in ) {
 		if ( out > outtop ) {
-			long oldsize = out - AC.tokens;
+			LONG oldsize = (LONG)(out - AC.tokens);
 			SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
 			SBYTE **pppp = &(AC.toptokens);
 			DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"expand tokens");
@@ -172,7 +172,7 @@ donumber:		i = 0;
 				*out++ = TNUMBER;
 				if ( ( i & 1 ) != 0 ) *out++ = (SBYTE)(*s++ - '0');
 				while ( out + (in-s)/2 >= AC.toptokens ) {
-					long oldsize = out - AC.tokens;
+					LONG oldsize = (LONG)(out - AC.tokens);
 					SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
 					SBYTE **pppp = &(AC.toptokens);
 					DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"more tokens");
@@ -519,7 +519,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 		out = AC.tokens;
 		while ( *out != TENDOFIT ) out++;
 		while ( out+numexp*9+20 > outtop ) {
-			long oldsize = out - AC.tokens;
+			LONG oldsize = (LONG)(out - AC.tokens);
 			SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
 			SBYTE **pppp = &(AC.toptokens);
 			DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"out tokens");
@@ -1071,7 +1071,7 @@ int simp3atoken(SBYTE *s, int mode)
 {
 	int error = 0, n, numexp = 0, denom, base, numprot, i;
 	SBYTE *t, c;
-	long num;
+	LONG num;
 	WORD *prot;
 	if ( mode == RHSIDE ) {
 		prot = AC.ProtoType;
@@ -1294,7 +1294,7 @@ int simp3btoken(SBYTE *s, int mode)
 {
 	int error = 0, i, numprot, n, denom, base, inset = 0, dotp, sube = 0;
 	SBYTE *t, c, *fill, *ff, *ss;
-	long num;
+	LONG num;
 	WORD *prot;
 	if ( mode == RHSIDE ) {
 		prot = AC.ProtoType;

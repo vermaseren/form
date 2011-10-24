@@ -47,8 +47,16 @@
 #include <string.h>
 #include <time.h>
 
+/*
+	The following typedef has been moved to form3.h where all the sizes
+	are defined for the various memory models.
+	We want MLONG to have a more or less fixed size.
+	In form3.h we try to fix it at 8 bytes. This should make files exchangable
+	between various 32-bits and 64-bits systems. At 4 bytes it might have
+	problems with files of more than 2 Gbytes.
+
 typedef long MLONG;
-typedef short MWORD;
+*/
 
 #define MAXBASES 16 
 #ifdef WORDSIZE32
@@ -87,7 +95,7 @@ typedef struct objects {
 /* if any changes, convertblock should be adapted too!!!! */
 	MLONG position;				/* position of RHS= */
 	MLONG size;                 /* size on disk (could be compressed) */
-	time_t date;                /* Time stamp */
+	MLONG date;                 /* Time stamp */
 	MLONG tablenumber;          /* Number of table. Refers to name in special index */
 	MLONG uncompressed;         /* uncompressed size if compressed. If not: 0 */
 	MLONG dummy1;

@@ -1708,7 +1708,7 @@ int CoApply(UBYTE *s)
 	UBYTE *tablename, c;
 	WORD type, funnum, *w;
 	TABLES T;
-	long maxtogo = MAXPOSITIVE;
+	LONG maxtogo = MAXPOSITIVE;
 	int error = 0;
 	w = AT.WorkPointer;
 	if ( FG.cTable[*s] == 1 ) {
