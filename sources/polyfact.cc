@@ -32,15 +32,15 @@
   	#[ include :
 */
 
+#include "poly.h"
+#include "polygcd.h"
+#include "polyfact.h"
+
 #include <cmath>
 #include <vector>
 #include <iostream>
 #include <algorithm>
 #include <climits>
-
-#include "poly.h"
-#include "polygcd.h"
-#include "polyfact.h"
 
 //#define DEBUG
 

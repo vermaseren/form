@@ -33,12 +33,12 @@
   	#[ include :
 */
 
+#include "poly.h"
+#include "polygcd.h"
+
 #include <iostream>
 #include <vector>
 #include <cmath>
-
-#include "poly.h"
-#include "polygcd.h"
 
 //#define DEBUG
 //#define DEBUGALL

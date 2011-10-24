@@ -32,13 +32,14 @@
   	#[ includes :
 */
 
+#include "poly.h"
+#include "polygcd.h"
+
 #include <cctype>
 #include <cmath>
 #include <algorithm>
 #include <map>
 #include <iostream>
-#include "poly.h"
-#include "polygcd.h"
 
 using namespace std;
 
