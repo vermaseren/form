@@ -121,6 +121,16 @@
 #endif  /* HAVE_CONFIG_H */
 
 /*
+ * STATIC_ASSERT(condition) will fail to be compiled if the given
+ * condition is false.
+ */
+#define STATIC_ASSERT(condition) STATIC_ASSERT__1(condition,__LINE__)
+#define STATIC_ASSERT__1(X,L) STATIC_ASSERT__2(X,L)
+#define STATIC_ASSERT__2(X,L) STATIC_ASSERT__3(X,L)
+#define STATIC_ASSERT__3(X,L) \
+	typedef char static_assertion_failed_##L[(!!(X))*2-1]
+
+/*
  * UNIX or WINDOWS must be defined.
  */
 #if defined(UNIX)
@@ -196,6 +206,19 @@ typedef long MLONG;
 
 #else
 #error ILP32 or LLP64 or LP64 must be defined!
+#endif
+
+STATIC_ASSERT(sizeof(WORD) * 8 == BITSINWORD);
+STATIC_ASSERT(sizeof(LONG) * 8 == BITSINLONG);
+STATIC_ASSERT(sizeof(WORD) * 2 == sizeof(LONG));
+STATIC_ASSERT(sizeof(LONG) >= sizeof(int *));
+STATIC_ASSERT(sizeof(INT16) == 2);
+STATIC_ASSERT(sizeof(INT32) == 4);
+#ifdef INT64
+STATIC_ASSERT(sizeof(INT64) == 8);
+#endif
+#ifdef INT128
+STATIC_ASSERT(sizeof(INT128) == 16);
 #endif
 
 #if BITSINWORD == 32

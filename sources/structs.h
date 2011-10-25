@@ -120,6 +120,8 @@ typedef struct {
 	UBYTE reserved[512-8-4-16-4-16-16-1]; /**< Padding to 512 bytes */
 } STOREHEADER;
 
+STATIC_ASSERT(sizeof(STOREHEADER) == 512);
+
 /**
  *  Defines the structure of an entry in a file index (see struct FiLeInDeX).
  *  
@@ -165,6 +167,8 @@ typedef struct FiLeInDeX {
 	INDEXENTRY expression[INFILEINDEX]; /**< File index entries */
 	SBYTE	empty[EMPTYININDEX];		/**< Padding to 512 bytes */
 } FILEINDEX;
+
+STATIC_ASSERT(sizeof(FILEINDEX) == 512);
 
 /**
  *
