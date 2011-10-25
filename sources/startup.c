@@ -1513,7 +1513,7 @@ VOID Terminate(int errorcode)
 VOID PrintRunningTime()
 {
 #ifdef WITHPTHREADS
-#ifdef WITHPOSIXCLOCK
+#if defined(WITHPOSIXCLOCK) || defined(WINDOWS)
 	LONG mastertime;
 	LONG workertime;
 	LONG wallclocktime;

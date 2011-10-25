@@ -2933,51 +2933,45 @@ LONG TimeCPU(WORD par)
  		#[ Timer :
 */
 #if defined(WINDOWS)
-LONG Timer(int par)
-{
-  static int initialized = 0;
-  static HANDLE hProcess;
-  DUMMYUSE(par);
-
-  if ( initialized == 0 )
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-               PROCESS_VM_READ,
-               FALSE, GetCurrentProcessId());
-
-  {
-    FILETIME ftCreate, ftExit, ftKernel, ftUser;
-    if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
-      PFILETIME p_ftUser = &ftUser;
-      __int64 tUser64 = (*(__int64 *) p_ftUser / 10);
-
-      LONG tv_sec = (LONG) (tUser64 / 1000000);
-      LONG tv_usec = (LONG) (tUser64 % 1000000);
-
-      return( tv_sec*1000 + tv_usec/1000);
-    }
-  }
-  return(0);
-}
-
-/*
-#else
-#include <time.h>
 
 LONG Timer(int par)
 {
-	LONG t;
-	if ( par == 1 ) { return(0); }
-	t = clock();
-	if ( ( AO.wrapnum & 1 ) != 0 ) t ^= 0x80000000;
-	if ( t < 0 ) {
-		t ^= 0x80000000;
-		AO.wrapnum++;
-		AO.wrap += 2147584;
+#ifndef WITHPTHREADS
+	static int initialized = 0;
+	static HANDLE hProcess;
+	FILETIME ftCreate, ftExit, ftKernel, ftUser;
+	DUMMYUSE(par);
+
+	if ( !initialized ) {
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
 	}
-	return(AO.wrap+(t/1000));
-}
+	if ( GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser) ) {
+		PFILETIME pftKernel = &ftKernel;  /* to avoid strict-aliasing rule warnings */
+		PFILETIME pftUser   = &ftUser;
+		__int64 t = *(__int64 *)pftKernel + *(__int64 *)pftUser;  /* in 100 nsec. */
+		return t / 10000;  /* in msec. */
+	}
+	return 0;
+#else
+	LONG lResult = 0;
+	HANDLE hThread;
+	FILETIME ftCreate, ftExit, ftKernel, ftUser;
+	DUMMYUSE(par);
+
+	hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, GetCurrentThreadId());
+	if ( hThread ) {
+		if ( GetThreadTimes(hThread, &ftCreate, &ftExit, &ftKernel, &ftUser) ) {
+			PFILETIME pftKernel = &ftKernel;  /* to avoid strict-aliasing rule warnings */
+			PFILETIME pftUser   = &ftUser;
+			__int64 t = *(__int64 *)pftKernel + *(__int64 *)pftUser;  /* in 100 nsec. */
+			lResult = t / 10000;  /* in msec. */
+		}
+		CloseHandle(hThread);
+	}
+	return lResult;
 #endif
-*/
+}
+
 #elif defined(UNIX)
 #include <sys/time.h>
 #include <sys/resource.h>
