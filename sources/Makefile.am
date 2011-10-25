@@ -73,75 +73,83 @@ SRCPARALLEL = \
 	mpidbg.h
 
 # consider argument DATE
-DATEFLAG=$(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)\"'"; fi))
+# XXX: $(shell ...) is a GNU make extension
+DATEFLAG = $(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)\"'"; fi))
+#"  # workaround for a coloring problem in vim.
 
 # for release versions
-COMPILEFLAGS=$(DATEFLAG) -Wall
-LINKFLAGS=
+COMPILEFLAGS =
+LINKFLAGS = -s
+
 # for debugging versions
-DEBUGCOMPILEFLAGS=$(DATEFLAG) -g -Wall
-DEBUGLINKFLAGS=
+DEBUGCOMPILEFLAGS = -g
+DEBUGLINKFLAGS =
 
 # compiler specific parameters
 if USINGGCC
-COMPILEFLAGS+=-Wextra -Wpadded -O3 -fomit-frame-pointer
 # For now -pedantic option is removed because g++ 4.1.2 complains
 # as "ISO C++ forbids variable-size array".
-#DEBUGCOMPILEFLAGS+=-Wextra -Wpadded -pedantic -O0
-DEBUGCOMPILEFLAGS+=-Wextra -Wpadded -O0
-if ONAPPLE
-COMPILEFLAGS+=-mmacosx-version-min=10.4
-if STATIC_LINK
-LINKFLAGS+=-static-libgcc
-endif
-if OPTOPTERON
-COMPILEFLAGS+=-m64
-LINKFLAGS+=-m64
-else
-COMPILEFLAGS+=-m32
-LINKFLAGS+=-m32
-endif
-else
-if ONCYGWIN
-COMPILEFLAGS+=-fpack-struct=4
-DEBUGCOMPILEFLAGS+=-fpack-struct=4
-if STATIC_LINK
-LINKFLAGS+=-static-libgcc
-endif
-else
-if STATIC_LINK
-LINKFLAGS+=-static -s
-else
-LINKFLAGS+=-s
-endif
-endif
+COMPILEFLAGS += -Wall -Wextra -Wpadded -O3 -fomit-frame-pointer
+DEBUGCOMPILEFLAGS += -Wall -Wextra -Wpadded -O0
+if ONILP32
 if OPTPENTIUM
-COMPILEFLAGS+=-march=i686
+# NOTE: In a strict sense, i686 must be used for Pentium Pro or later.
+COMPILEFLAGS += -march=i686
 endif
 if OPTOPTERON
-COMPILEFLAGS+=-march=opteron
+COMPILEFLAGS += -march=opteron
 endif
 endif
 endif
+
 if USINGICC
-COMPILEFLAGS+=-fast
+# NOTE: -fast option may include -static. This may cause an error in linking.
+if ONAPPLE
+COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div
+else
 if OPTPENTIUM
-COMPILEFLAGS+=-march=pentium3 -mtune=pentiumpro
+COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xP
+else
+if OPTOPTERON
+COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xP
+else
+COMPILEFLAGS += -Wall -ipo -O3
+endif
+endif
+endif
+DEBUGCOMPILEFLAGS += -Wall -O0
+endif
+
+# platform specific issues
+if ONAPPLE
+if USINGGCC
+COMPILEFLAGS += -mmacosx-version-min=10.4
+endif
+endif
+
+if ONCYGWIN
+if ONILP32
+if USINGGCC
+# A workaround for alingof(off64_t) = 8 on 32bit System.
+COMPILEFLAGS += -fpack-struct=4
+DEBUGCOMPILEFLAGS += -fpack-struct=4
+endif
 endif
 endif
 
 # NOTE: maude_CXXFLAGS is not used while linking maude by default
-#       in automake < 1.10. (TU 22 Sep 2011)
+#       in automake < 1.10. A workaround is to define maude_LINK
+#       explicitly in all cases. (TU 22 Sep 2011)
 
 bin_PROGRAMS =
 
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CPPFLAGS =
+form_CPPFLAGS = $(DATEFLAG)
 form_CFLAGS = $(COMPILEFLAGS)
 form_CXXFLAGS = $(COMPILEFLAGS)
-form_LDFLAGS = $(LINKFLAGS)
+form_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
 form_LDADD =
 if AUTOMAKE_GE_110
 form_LINK = $(CXXLD) $(form_CXXFLAGS) $(CXXFLAGS) $(form_LDFLAGS) $(LDFLAGS) -o $@
@@ -153,7 +161,7 @@ endif
 if BUILD_VORM
 bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
-vorm_CPPFLAGS = -DDEBUGGING
+vorm_CPPFLAGS = $(DATEFLAG) -DDEBUGGING
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -168,10 +176,10 @@ endif
 if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE)
-tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
+tform_CPPFLAGS = $(DATEFLAG) -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
 tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
-tform_LDFLAGS = $(LINKFLAGS)
+tform_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
 tform_LDADD = $(PTHREAD_LIBS)
 if AUTOMAKE_GE_110
 tform_LINK = $(CXXLD) $(tform_CXXFLAGS) $(CXXFLAGS) $(tform_LDFLAGS) $(LDFLAGS) -o $@
@@ -183,7 +191,7 @@ endif
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE)
-tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
+tvorm_CPPFLAGS = $(DATEFLAG) -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -195,13 +203,15 @@ tvorm_LINK = $(CXXLD) $(tvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
 
+# XXX: parform% : override ... is a GNU make extension.
+
 if BUILD_PARFORM
 bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parform_CPPFLAGS = -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG
+parform_CPPFLAGS = $(DATEFLAG) -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG
 parform_CFLAGS = $(COMPILEFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS)
-parform_LDFLAGS = $(LINKFLAGS)
+parform_LDFLAGS = $(LINKFLAGS) $(MPI_STATIC_LDFLAGS)
 parform_LDADD =
 parform% : override CC = @MPICC@
 parform% : override CXX = @MPICXX@
@@ -215,7 +225,7 @@ endif
 if BUILD_PARVORM
 bin_PROGRAMS += parvorm
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parvorm_CPPFLAGS = -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
+parvorm_CPPFLAGS = $(DATEFLAG) -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)

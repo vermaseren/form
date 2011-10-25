@@ -19,7 +19,9 @@ depcomp \
 install-sh \
 missing \
 mkinstalldirs \
+check/Makefile.in \
 doc/Makefile.in \
+doc/devref/Makefile.in \
 doc/doxygen/Makefile.in \
 doc/manual/Makefile.in \
 sources/Makefile.in \

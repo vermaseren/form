@@ -251,7 +251,7 @@ template<typename T> struct calc {
  * Macros inserted to the end of a structure to align the whole structure.
  *
  * In the currently available systems,
- *   sizeof(POSITION) >= sizeof(pointers) >= sizeof(LONG) >= sizeof(int)
+ *   sizeof(POSITION) >= sizeof(pointers) == sizeof(LONG) >= sizeof(int)
  *                    >= sizeof(WORD) >= sizeof(UBYTE) = 1.
  * (POSITION is defined in struct.h and contains only an off_t variable.)
  * Thus, if we put members of a structure in this order and use those macros,

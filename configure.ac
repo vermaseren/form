@@ -92,6 +92,33 @@ esac
 AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = "xPentium"])
 AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = "xOpteron"])
 
+# Check for C compiler vendor
+vendors="
+intel:     __ICC,__ECC,__INTEL_COMPILER
+gnu:       __GNUC__
+microsoft: _MSC_VER
+unknown:   UNKNOWN
+"
+for ventest in $vendors; do
+	case $ventest in
+		*:)
+			vendor=$ventest
+			continue
+			;;
+		*)
+			vencpp="defined("`echo $ventest | sed 's/,/) || defined(/g'`")"
+			;;
+	esac
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[
+#if !($vencpp)
+choke me
+#endif
+])], [break])
+done
+vendor=`echo $vendor | cut -d: -f1`
+AM_CONDITIONAL([USINGGCC], [test "x$vendor" = xgnu])
+AM_CONDITIONAL([USINGICC], [test "x$vendor" = xintel])
+
 # POSIX or Windows API
 AC_ARG_WITH([api],
 	[AS_HELP_STRING([--with-api=API],
@@ -115,32 +142,47 @@ AC_CHECK_SIZEOF([long long])
 AC_CHECK_SIZEOF([void *])
 AC_CHECK_SIZEOF([off_t])
 
-AC_MSG_CHECKING([data model])
 case $ac_cv_sizeof_char-$ac_cv_sizeof_short-$ac_cv_sizeof_int-$ac_cv_sizeof_long-$ac_cv_sizeof_long_long-$ac_cv_sizeof_void_p-$ac_cv_sizeof_off_t in
 	1-2-4-4-*-4-*)
 		# Most of today's 32 bit systems.
-		AC_MSG_RESULT(ILP32)
+		print_data_model="ILP32"
+		ac_cv_sizeof_WORD=$ac_cv_sizeof_short
+		ac_cv_sizeof_LONG=$ac_cv_sizeof_long
 		AC_DEFINE(ILP32, , [Compiling for ILP32 data model])
 		;;
 	1-2-4-4-8-8-*)
 		# Microsoft Windows (X64/IA-64).
-		AC_MSG_RESULT(LLP64)
+		print_data_model="LLP64"
+		ac_cv_sizeof_WORD=$ac_cv_sizeof_int
+		ac_cv_sizeof_LONG=$ac_cv_sizeof_long_long
 		AC_DEFINE(LLP64, , [Compiling for LLP64 data model])
 		;;
 	1-2-4-8-*-8-*)
 		# Most Unix and Unix-like systems, e.g., Solaris, Linux and Mac OS X.
-		AC_MSG_RESULT(LP64)
+		print_data_model="LP64"
+		ac_cv_sizeof_WORD=$ac_cv_sizeof_int
+		ac_cv_sizeof_LONG=$ac_cv_sizeof_long
 		AC_DEFINE(LP64, , [Compiling for LP64 data model])
 		;;
 	*)
-		AC_MSG_RESULT(unknown)
 		AC_MSG_FAILURE([Cannot recognize the data model used in the compiler])
 		;;
 esac
-
-# Check for C compiler vendor
-AM_CONDITIONAL([USINGGCC], [test "x$GCC" = xyes])
-AM_CONDITIONAL([USINGICC], [test "x$CC" = xicc])
+# Our basic assumption:
+#  sizeof(off_t) >= sizeof(LONG) >= sizeof(void *) >= sizeof(int)
+#                >= sizeof(WORD) >= sizeof(char) == 1.
+flag=:
+$flag && test $ac_cv_sizeof_off_t -lt $ac_cv_sizeof_LONG && flag=false
+$flag && test $ac_cv_sizeof_LONG -lt $ac_cv_sizeof_void_p && flag=false
+$flag && test $ac_cv_sizeof_void_p -lt $ac_cv_sizeof_int && flag=false
+$flag && test $ac_cv_sizeof_int -lt $ac_cv_sizeof_WORD && flag=false
+$flag && test $ac_cv_sizeof_WORD -lt $ac_cv_sizeof_char && flag=false
+$flag && test $ac_cv_sizeof_char -ne 1 && flag=false
+AS_IF([$flag], [], [AC_MSG_FAILURE([Basic assumption sizeof(off_t) >= sizeof(LONG) >= sizeof(void *) >= sizeof(int) >= sizeof(WORD) >= sizeof(char) == 1 does not hold.])])
+# sizeof(off_t) <= 4 means files must <= 2 GB.
+AS_IF([test $ac_cv_sizeof_off_t -le 4], [AC_MSG_WARN([Large files more than 2 GB are not supported])])
+AC_MSG_NOTICE([The data model is $print_data_model])
+AM_CONDITIONAL([ONILP32], [test "x$print_data_model" = "xILP32"])
 
 # Check for gmp
 AC_ARG_WITH([gmp],
@@ -319,7 +361,7 @@ clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
 			[AC_CHECK_LIB([rt], [clock_gettime],
 				[PTHREAD_LIBS="-lrt $PTHREAD_LIBS"],
 				[ok=no])])
-		AS_IF([test "x$ok" == xyes],
+		AS_IF([test "x$ok" = xyes],
 			[cat >>confdefs.h <<END
 #ifdef WITHPTHREADS
 #define WITHPOSIXCLOCK /**/
@@ -349,11 +391,11 @@ AC_ARG_VAR([MPICXX], [C++ compiler with MPI support])
 AS_IF([test "x$enable_parform" != xno],
 	[flag=:
 	AS_IF([$flag],
-		[AS_IF([test -z "$MPICC"], [AC_CHECK_PROGS([MPICC], [mpicc])])
-		AS_IF([test -z "$MPICC"], [flag=false])])
+		[AS_IF([test "x$MPICC" = x], [AC_CHECK_PROGS([MPICC], [mpicc])])
+		AS_IF([test "x$MPICC" = x], [flag=false])])
 	AS_IF([$flag],
-		[AS_IF([test -z "$MPICXX"], [AC_CHECK_PROGS([MPICXX], [mpicxx mpiCC mpic++])])
-		AS_IF([test -z "$MPICXX"], [flag=false])])
+		[AS_IF([test "x$MPICXX" = x], [AC_CHECK_PROGS([MPICXX], [mpicxx mpiCC mpic++])])
+		AS_IF([test "x$MPICXX" = x], [flag=false])])
 	# Use AC_TRY_COMPILE and not AC_CHECK_HEADER because the latter uses $CPP, which perhaps
 	# does not know the include path for mpi.h.
 	AS_IF([$flag],
@@ -398,6 +440,8 @@ AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
 
 # Check for static linking
+STATIC_LDFLAGS=
+MPI_STATIC_LDFLAGS=
 AC_ARG_ENABLE([static-link],
 	[AS_HELP_STRING([--enable-static-link],
 		[link with static libraries @<:@default=no@:>@])],
@@ -405,45 +449,59 @@ AC_ARG_ENABLE([static-link],
 	[enable_static_link=no])
 AS_IF([test "x$enable_static_link" != xno],
 	[flag=:
-	AS_IF([$flag],
-		[AC_LANG_PUSH([C++])
+	if test "x$vendor" = gnu; then
+		static_list="-static -static-libgcc,-static-libstdc++ -static-libgcc"
+	elif test "x$vendor" = intel; then
+		static_list="-static -static-libgcc,-static-intel -static-intel -static-libgcc"
+	else
+		static_list="-static -static-libgcc"
+	fi
+	for a in $static_list; do
+		a=`echo $a | sed 's/,/ /g'`
+		AC_MSG_CHECKING([for static linking with $CXX $a])
+		AC_LANG_PUSH([C++])
 		save_CFLAGS=$CFLAGS
 		save_LDFLAGS=$LDFLAGS
 		save_LIBS=$LIBS
 		CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-		LDFLAGS="$LDFLAGS -static"
+		LDFLAGS="$LDFLAGS $a"
 		LIBS="$PTHREAD_LIBS $LIBS"
-		AC_MSG_CHECKING([for static linking with $CXX])
 		AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
-			[AC_MSG_RESULT([yes])],
-			[AC_MSG_RESULT([no]); flag=false])
+			[AC_MSG_RESULT([yes]); STATIC_LDFLAGS=$a],
+			[AC_MSG_RESULT([no]); flag=no])
 		CFLAGS=$save_CFLAGS
 		LDFLAGS=$save_LDFLAGS
 		LIBS=$save_LIBS
-		AC_LANG_POP([C++])])
-	# TODO: It could be better to distinguish static linking with
-	#       CXX and MPICXX. For now we use the variable STATIC_LINK
-	#       for both cases.  (TU 19 Aug. 2011)
-	AS_IF([$flag && test "x$enable_parform" = xyes],
-		[AC_LANG_PUSH([C++])
+		AC_LANG_POP([C++])
+		test "x$STATIC_LDFLAGS" != x && break
+	done
+	AS_IF([test "x$enable_parform" = xyes],
+	[for a in $static_list; do
+		a=`echo $a | sed 's/,/ /g'`
+		AC_MSG_CHECKING([for static linking with $CXX $a])
+		AC_LANG_PUSH([C++])
 		save_CXX=$CXX
 		save_LDFLAGS=$LDFLAGS
 		CXX=$MPICXX
-		LDFLAGS="$LDFLAGS -static"
-		AC_MSG_CHECKING([for static linking with $CXX])
+		LDFLAGS="$LDFLAGS $a"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
-			[AC_MSG_RESULT([yes])],
-			[AC_MSG_RESULT([no]); flag=false])
+			[AC_MSG_RESULT([yes]); MPI_STATIC_LDFLAGS=$a],
+			[AC_MSG_RESULT([no]); flag=no])
 		CXX=$save_CXX
 		LDFLAGS=$save_LDFLAGS
-		AC_LANG_POP([C++])])
+		AC_LANG_POP([C++])
+		test "x$MPI_STATIC_LDFLAGS" != x && break
+	done])
 	AS_IF([$flag],
 		[enable_static_link=yes],
 		[AS_IF([test "x$enable_static_link" = xyes],
 			[AC_MSG_FAILURE([test for static linking failed. Give --disable-static-link if you want to build without static libraries.])])
-		AC_MSG_NOTICE([static linking has been disabled])
+		AS_IF([test "x$STATIC_LDFLAGS" = x && test "x$MPI_STATIC_LDFLAGS = x"],
+			[AC_MSG_NOTICE([static linking has been disabled])]
+			[AC_MSG_NOTICE([static linking has been partially disabled])])
 		enable_static_link=no])])
-AM_CONDITIONAL([STATIC_LINK], [test "x$enable_static_link" = xyes])
+AC_SUBST([STATIC_LDFLAGS])
+AC_SUBST([MPI_STATIC_LDFLAGS])
 
 # Check for doxygen
 AC_PATH_PROG(DOXYGEN, doxygen, "")
@@ -519,6 +577,11 @@ if test "x$build_parvorm" = xyes; then
 fi
 if test $atleastone = no; then
 	echo "    <NONE>"
+fi
+if test $ac_cv_sizeof_off_t -le 4; then
+	echo
+	echo "***CAUTION***  Large files more than 2 GB will be"
+	echo "not supported."
 fi
 if test "x$posix_thread_clock_ok" = xno; then
 	s="none"

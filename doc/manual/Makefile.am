@@ -32,7 +32,7 @@ $(DATEFILE): FORCE
 	if [ $$(date -d "$$NEWDATE" +%Y%m%d) -gt $$OLDDATE ]; then echo $$NEWDATE > $(DATEFILE); echo DIDIT; fi
 FORCE:
 
-HTMLCLEANFILES = idxmake.dvi idxmake.log $(addprefix $(MAIN),.4ct .4dx .4ix .4tc .aux .css .dvi .html .idv .idx .ilg .ind .lg .log .tmp .xref)
+HTMLCLEANFILES = idxmake.dvi idxmake.log $(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi $(MAIN).html $(MAIN).idv $(MAIN).idx $(MAIN).ilg $(MAIN).ind $(MAIN).lg $(MAIN).log $(MAIN).tmp $(MAIN).xref
 CLEANFILES = $(MAIN).pdf $(MAIN).ps $(MAIN).toc $(DATEFILE) texput.log $(HTMLCLEANFILES)
 clean-local:
 	rm -rf html
