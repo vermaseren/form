@@ -56,6 +56,8 @@
 #define UNIX
 #define LINUX
 #define ILP32
+#define SIZEOF_LONG_LONG 8
+#define _FILE_OFFSET_BITS 64
 #define WITHZLIB
 #define WITHGMP
 #define WITHPOSIXCLOCK
@@ -73,6 +75,8 @@
 #ifdef APPLE32
 #define UNIX
 #define ILP32
+#define SIZEOF_LONG_LONG 8
+#define _FILE_OFFSET_BITS 64
 #define WITHZLIB
 #endif
 
@@ -85,6 +89,7 @@
 #ifdef CYGWIN32
 #define UNIX
 #define ILP32
+#define SIZEOF_LONG_LONG 8
 #endif
 
 #ifdef _MSC_VER
@@ -93,6 +98,7 @@
 #define LLP64
 #elif defined(_WIN32)
 #define ILP32
+#define SIZEOF_LONG_LONG 8
 #endif
 #endif
 
@@ -166,8 +172,6 @@
  * are system-dependent. BITSINWORD and BITSINLONG are also defined.
  * INT16, INT32 (also INT64 and INT128 if available) are used for
  * system independent saved expressions (store.c).
- *
- * For MLONG see commentary in minos.h
  */
 #if defined(ILP32)
 
@@ -175,7 +179,6 @@ typedef short WORD;
 typedef long LONG;
 typedef unsigned short UWORD;
 typedef unsigned long ULONG;
-typedef long long MLONG;
 #define BITSINWORD 16
 #define BITSINLONG 32
 #define INT16 short
@@ -183,13 +186,22 @@ typedef long long MLONG;
 #undef INT64
 #undef INT128
 
+#ifdef SIZEOF_LONG_LONG
+#if SIZEOF_LONG_LONG == 8
+#define INT64 long long
+#endif
+#endif
+
+#ifndef INT64
+#error INT64 is not available!
+#endif
+
 #elif defined(LLP64)
 
 typedef int WORD;
 typedef long long LONG;
 typedef unsigned int UWORD;
 typedef unsigned long long ULONG;
-typedef long long MLONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
 #define INT16 short
@@ -203,7 +215,6 @@ typedef int WORD;
 typedef long LONG;
 typedef unsigned int UWORD;
 typedef unsigned long ULONG;
-typedef long MLONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
 #define INT16 short
@@ -221,9 +232,7 @@ STATIC_ASSERT(sizeof(WORD) * 2 == sizeof(LONG));
 STATIC_ASSERT(sizeof(LONG) >= sizeof(int *));
 STATIC_ASSERT(sizeof(INT16) == 2);
 STATIC_ASSERT(sizeof(INT32) == 4);
-#ifdef INT64
 STATIC_ASSERT(sizeof(INT64) == 8);
-#endif
 #ifdef INT128
 STATIC_ASSERT(sizeof(INT128) == 16);
 #endif
@@ -236,7 +245,8 @@ typedef void VOID;
 typedef char SBYTE;
 typedef unsigned char UBYTE;
 typedef unsigned int UINT;
-typedef ULONG RLONG;
+typedef ULONG RLONG;  /* Used in reken.c. */
+typedef INT64 MLONG;  /* See commentary in minos.h. */
                                                        /* E.g. in 32-bits */
 #define TOPBITONLY     ((ULONG)1 << (BITSINWORD - 1))  /* 0x00008000UL */
 #define TOPLONGBITONLY ((ULONG)1 << (BITSINLONG - 1))  /* 0x80000000UL */
