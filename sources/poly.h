@@ -30,6 +30,10 @@ extern "C" {
 #include "form3.h"
 };
 
+#ifndef UNIX
+#define random rand
+#endif
+
 #include <string>
 #include <vector>
 

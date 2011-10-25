@@ -3451,12 +3451,12 @@ static void wranfnew(PHEAD0)
 	LONG j;
 	for ( i = 0; i < AR.wranfnpair1; i++ ) {
 		j = AR.wranfia[i] - AR.wranfia[i+(AR.wranfnpair2-AR.wranfnpair1)];
-		if ( j < 0 ) j += 1L << (2*BITSINWORD-2);
+		if ( j < 0 ) j += (LONG)1 << (2*BITSINWORD-2);
 		AR.wranfia[i] = j;
 	}
 	for ( i = AR.wranfnpair1; i < AR.wranfnpair2; i++ ) {
 		j = AR.wranfia[i] - AR.wranfia[i-AR.wranfnpair1];
-		if ( j < 0 ) j += 1L << (2*BITSINWORD-2);
+		if ( j < 0 ) j += (LONG)1 << (2*BITSINWORD-2);
 		AR.wranfia[i] = j;
 	}
 }
@@ -3486,10 +3486,10 @@ void iniwranf(PHEAD0)
 		offset = accu;
 	}
 #endif
-	if ( seed < ((1L)<<(BITSINWORD-1)) ) {
+	if ( seed < ((LONG)1<<(BITSINWORD-1)) ) {
 		j = ( (seed+31459L) << (BITSINWORD-2))+offset;
 	}
-	else if ( seed < ((1L)<<(BITSINWORD+10-1)) ) {
+	else if ( seed < ((LONG)1<<(BITSINWORD+10-1)) ) {
 		j = ( (seed+31459L) << (BITSINWORD-10-2))+offset;
 	}
 	else {
@@ -3503,7 +3503,7 @@ void iniwranf(PHEAD0)
 		ii = (AR.wranfnpair1*i)%AR.wranfnpair2;
 		AR.wranfia[ii] = k;
 		k = j - k;
-		if ( k < 0 ) k += 1L << (2*BITSINWORD-2);
+		if ( k < 0 ) k += (LONG)1 << (2*BITSINWORD-2);
 		j = AR.wranfia[ii];
 	}
 	for ( i = 0; i < WARMUP; i++ ) wranfnew(BHEAD0);
@@ -3532,7 +3532,7 @@ UWORD wranf(PHEAD0)
 UWORD iranf(PHEAD UWORD imax)
 {
 	UWORD i;
-	ULONG x = 1L << BITSINWORD, xmax = x - x%imax;
+	ULONG x = (LONG)1 << BITSINWORD, xmax = x - x%imax;
 	while ( ( i = wranf(BHEAD0) ) >= xmax ) {}
 	return(i%imax);
 }

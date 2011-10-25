@@ -135,28 +135,6 @@
 	this module; they are not declared outside of this file.
 
   	#] Documentation : 
-  	#[ Includes :
-*/
-
-#include <stdio.h>
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
-#include <fcntl.h>
-#include <sys/types.h>
-#ifndef _MSC_VER
-#include <sys/time.h>
-#include <sys/wait.h>
-#endif
-#include <errno.h>
-#include <signal.h>
-#include <limits.h>
-/*
-Also after #ifdef SELFTEST ... #else there is 
-#include "form3.h"
-*/
-/*
-  	#] Includes : 
   	#[ Selftest initializing:
 */
 
@@ -197,6 +175,24 @@ pid_t  getExternalChannelPid(VOID);
 */
 /*
   	#] Selftest initializing: 
+  	#[ Includes :
+*/
+#ifdef WITHEXTERNALCHANNEL
+#include <stdio.h>
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
+#include <fcntl.h>
+#include <sys/types.h>
+#ifndef _MSC_VER
+#include <sys/time.h>
+#include <sys/wait.h>
+#endif
+#include <errno.h>
+#include <signal.h>
+#include <limits.h>
+/*
+  	#] Includes :
   	#[ FailureFunctions:
 */
 
@@ -230,6 +226,7 @@ int (*setTerminatorForExternalChannel)(char *buffer) =
 int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup) =
 	&setKillModeForExternalChannelFailure;
 int (*getcFromExtChannel)() = &getcFromExtChannelFailure;
+#endif
 /*
   	#] FailureFunctions: 
   	#[ Stubs :

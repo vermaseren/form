@@ -137,16 +137,23 @@
 #define mBSD
 #define ANSI
 #elif defined(WINDOWS)
-#include <windows.h>
-#include <psapi.h>
-#include <Winsock.h>
-#undef WORD
-#undef LONG
-#undef SHORT
-#undef BYTE
-#undef UBYTE
-#undef SBYTE
 #define ANSI
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <io.h>
+/* Undefine/rename conflicted symbols. */
+#undef VOID  /* WinNT.h */
+#undef MAXLONG  /* WinNT.h */
+#define WORD WORD__Renamed  /* WinDef.h */
+#define LONG LONG__Renamed /* WinNT.h */
+#define ULONG ULONG__Renamed  /* WinDef.h */
+#undef CreateFile  /* WinBase.h */
+#undef CopyFile  /* WinBase.h */
+#define OpenFile OpenFile__Renamed  /* WinBase.h */
+#define ReOpenFile ReOpenFile__Renamed  /* WinBase.h */
+#define ReadFile ReadFile__Renamed  /* WinBase.h */
+#define WriteFile WriteFile__Renamed  /* WinBase.h */
+#define DeleteObject DeleteObject__Renamed  /* WinGDI.h */
 #else
 #error UNIX or WINDOWS must be defined!
 #endif
@@ -399,6 +406,8 @@ extern void   Uflush(FILES *);
 extern int    Ugetpos(FILES *,fpos_t *);
 extern int    Usetpos(FILES *,fpos_t *);
 extern void   Usetbuf(FILES *,char *);
+#define Usync(f) fsync(f->descriptor)
+#define Utruncate(f) ftruncate(f->descriptor,0);
 extern FILES *Ustdout;
 #define MAX_OPEN_FILES getdtablesize()
 
@@ -415,6 +424,8 @@ extern FILES *Ustdout;
 #define Utell(x) ftell(x)
 #define Ugetpos(x,y) fgetpos(x,y)
 #define Usetpos(x,y) fsetpos(x,y)
+#define Usync(x) fflush(x)
+#define Utruncate(x) _chsize(_fileno(x),0)
 #define Ustdout stdout
 #define MAX_OPEN_FILES FOPEN_MAX
 

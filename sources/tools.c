@@ -1183,11 +1183,7 @@ VOID SynchFile(int handle)
 		RWLOCKR(AM.handlelock);
 		f = filelist[handle];
 		UNRWLOCK(AM.handlelock);
-#ifdef UFILES
-		fsync(f->descriptor);
-#else
-		fsync(f);
-#endif
+		Usync(f);
 	}
 }
 
@@ -1209,11 +1205,7 @@ VOID TruncateFile(int handle)
 		RWLOCKR(AM.handlelock);
 		f = filelist[handle];
 		UNRWLOCK(AM.handlelock);
-#ifdef UFILES
-		ftruncate(f->descriptor,0);
-#else
-		ftruncate(f,0);
-#endif
+		Utruncate(f);
 	}
 }
 
@@ -2941,10 +2933,11 @@ LONG TimeCPU(WORD par)
  		#[ Timer :
 */
 #if defined(WINDOWS)
-LONG Timer()
+LONG Timer(int par)
 {
   static int initialized = 0;
   static HANDLE hProcess;
+  DUMMYUSE(par);
 
   if ( initialized == 0 )
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |

@@ -235,13 +235,6 @@ extern VOID TELLFILE(int,POSITION *);
 #define WantAddPositions(x) while((AT.posWorkPointer+(x))>AR.posWorkSize){POSITION **ppp=&AT.posWorkSpace;\
 	ExpandBuffer((void **)ppp,&AR.posWorkSize,sizeof(POSITION));}
 
-#ifdef WINDOWS
-/* #define SEPARATOR `\\` */
-#define ftruncate(ARG1,ARG2) _chsize(ARG1,ARG2)
-/* If arg2 > 4GB _chsize_s should be used... */
-#define fsync(ARG1) _commit(ARG1)
-#endif
-
 /* inline in form3.h (or config.h). */
 #define FORM_INLINE inline
 
