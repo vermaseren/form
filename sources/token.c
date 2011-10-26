@@ -503,7 +503,6 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 	Simplify simple function arguments (and 1/fac_ and 1/invfac_)
 */
 	if ( error == 0 && simp2token(AC.tokens) ) error = 1;
-
 /*
 	Next we try to remove composite denominators or exponents and
 	replace them by their internal functions. This may involve expanding
@@ -1022,7 +1021,20 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						if ( v == t ) { *t = TEMPTY; s++; }
 						else *fill++ = *s++;
 						break;
-					case TEXPRESSION:	/* Find the function */
+					case TEXPRESSION:
+/*
+						First establish that there is only the expression
+						in this argument.
+*/
+						vv = s+1;
+						while ( vv < t ) {
+							if ( *vv != TEXPRESSION ) break;
+							vv++; while ( *vv >= 0 ) vv++;
+						}
+						if ( vv < t ) { *fill++ = *s++; break; }
+/*
+						Find the function
+*/
 						w = fill-1; n = 0;
 						while ( n >= 0 && w >= to ) {
 							if ( *w == TFUNOPEN ) n--;
@@ -1053,7 +1065,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token : 
+ 		#] simp2token :
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.

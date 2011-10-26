@@ -964,9 +964,9 @@ oneterm:;
 			abuf[i].type = 0;
 			mm = arg1+ARGHEAD;
 			j = *arg1-ARGHEAD;
+			abuf[i].size = j;
 			NCOPY(m,mm,j);
 			*m = 0;
-			abuf[i].size = m-abuf[i].buffer;
 		}
 		else if ( *arg1 == -DOLLAREXPRESSION ) {
 			d = DolToTerms(BHEAD arg1[1]);
@@ -1009,7 +1009,9 @@ oneterm:;
 			}
 			mm = mh + *mh; if ( mm[-1] < 0 ) { sign = -1; mm[-1] = -mm[-1]; }
 			mstop = mm - mm[-1]; m = mh+1; mlength = mm[-1];
+			while ( tin < t ) *tout++ = *tin++;
 			while ( m < mstop ) *tout++ = *m++;
+			tin += tin[1];
 			while ( tin < tstop ) *tout++ = *tin++;
 			tlength = REDLENG(tlength);
 			mlength = REDLENG(mlength);
@@ -1035,7 +1037,7 @@ oneterm:;
 		}
 	}
 /*
-  	#] Expand $ and expr : 
+  	#] Expand $ and expr :
   	#[ Multiterm subexpressions :
 */
 	gcdout = abuf[0].buffer;
@@ -1069,7 +1071,7 @@ multiterms:;
 	}
 	if ( action && ( gcdout != abuf[0].buffer ) ) M_free(gcdout,"gcdout");
 /*
-  	#] Multiterm subexpressions : 
+  	#] Multiterm subexpressions :
   	#[ Cleanup :
 */
 cleanup:;
@@ -1101,7 +1103,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction : 
+ 		#] GCDfunction :
  		#[ GCDfunction3 :
 
 	Finds the GCD of the two arguments which are buffers with terms.
