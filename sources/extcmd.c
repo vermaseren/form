@@ -234,10 +234,10 @@ int (*getcFromExtChannel)() = &getcFromExtChannelFailure;
 #ifndef WITHEXTERNALCHANNEL
 /*Stubs for public functions:*/
 int openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stderrname)
-{ return(-1); };
-int initPresetExternalChannels(UBYTE *theline, int thetimeout) { return(-1); };
-int closeExternalChannel(int n) { return(-1); };
-int selectExternalChannel(int n) { return(-1); };
+{ DUMMYUSE(cmd); DUMMYUSE(daemonize); DUMMYUSE(shellname); DUMMYUSE(stderrname); return(-1); };
+int initPresetExternalChannels(UBYTE *theline, int thetimeout) { DUMMYUSE(theline); DUMMYUSE(thetimeout); return(-1); };
+int closeExternalChannel(int n) { DUMMYUSE(n); return(-1); };
+int selectExternalChannel(int n) { DUMMYUSE(n); return(-1); };
 int getCurrentExternalChannel() { return(0); };
 void closeAllExternalChannels() {};
 #else /*ifndef WITHEXTERNALCHANNEL*/

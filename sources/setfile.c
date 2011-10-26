@@ -1124,7 +1124,7 @@ int TryEnvironment()
 	for ( i = 0; i < imax; i++ ) {
 		t = s = (char *)(setupparameters[i].parameter);
 		u = varname+5;
-		while ( *s ) { *u++ = (char)(toupper(*s)); s++; }
+		while ( *s ) { *u++ = (char)(toupper((unsigned char)*s)); s++; }
 		*u = 0;
 		s = (char *)(getenv(varname));
 		if ( s ) {

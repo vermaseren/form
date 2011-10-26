@@ -2928,6 +2928,9 @@ int DoMessage(UBYTE *s)
 
 int DoPipe(UBYTE *s)
 {
+#ifndef WITHPIPE
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 /*[29jul2004 mt]:*/
@@ -4457,8 +4460,12 @@ int DoPreRmSeparator(UBYTE *s)
 */
 int DoExternal(UBYTE *s)
 { 
+#ifdef WITHEXTERNALCHANNEL
 	UBYTE *prevar=0;
 	int externalD= 0;
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4534,6 +4541,9 @@ int DoExternal(UBYTE *s)
 
 int DoPrompt(UBYTE *s)
 {
+#ifndef WITHEXTERNALCHANNEL
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4564,7 +4574,11 @@ int DoPrompt(UBYTE *s)
 
 int DoSetExternal(UBYTE *s)
 {
+#ifdef WITHEXTERNALCHANNEL
 	int n=0;
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4606,7 +4620,7 @@ static FORM_INLINE UBYTE *pickupword(UBYTE *s)
 /*Returns 0 if the first string (case insensitively) equal to
   the beginning of the second string (of length n):
 */
-static int strINCmp(UBYTE *a, UBYTE *b, int n)
+static inline int strINCmp(UBYTE *a, UBYTE *b, int n)
 {
 	for(;n>0;n--)if(tolower(*a++)!=tolower(*b++))
 		return(1);
@@ -4629,8 +4643,12 @@ static int strINCmp(UBYTE *a, UBYTE *b, int n)
 */
 int DoSetExternalAttr(UBYTE *s)
 {
+#ifdef WITHEXTERNALCHANNEL
 	int lnam,lval;
 	UBYTE *nam,*val;
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4740,7 +4758,11 @@ int DoSetExternalAttr(UBYTE *s)
 
 int DoRmExternal(UBYTE *s)
 {
+#ifdef WITHEXTERNALCHANNEL
 	int n = -1;
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
@@ -4800,6 +4822,7 @@ int DoRmExternal(UBYTE *s)
 
 int DoFromExternal(UBYTE *s)
 {
+#ifdef WITHEXTERNALCHANNEL
 	/*[02feb2006 mt]:*/
 	UBYTE *prevar=0; 
 	int lbuf=-1;
@@ -4807,6 +4830,9 @@ int DoFromExternal(UBYTE *s)
 	/*[17may2006 mt]:*/
    int withNoList=AC.NoShowInput;
 	/*:[17may2006 mt]*/
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 #ifdef WITHEXTERNALCHANNEL
@@ -4985,9 +5011,13 @@ LONG WriteToExternalChannel(int handle, UBYTE *buffer, LONG size)
 
 int DoToExternal(UBYTE *s)
 {
+#ifdef WITHEXTERNALCHANNEL
    HANDLERS h;
    LONG	(*OldWrite)(int handle, UBYTE *buffer, LONG size) = WriteFile;
 	int ret=-1;
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 #ifdef WITHEXTERNALCHANNEL
