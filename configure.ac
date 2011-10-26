@@ -15,7 +15,7 @@ AM_INIT_AUTOMAKE([gnu 1.7 dist-bzip2])
 
 AC_DEFINE(MAJORVERSION, FORM_MAJORVERSION, [Major version of FORM.])
 AC_DEFINE(MINORVERSION, FORM_MINORVERSION, [Minor version of FORM.])
-AS_IF([test "x[]VERSION_IS_BETA" = "xyes"],
+AS_IF([test "x[]VERSION_IS_BETA" = xyes],
 	[AC_DEFINE(BETAVERSION, 1, [Define to 1 in the beta version.])])
 
 AH_VERBATIM([PRODUCTIONDATE],
@@ -89,8 +89,8 @@ case $host_cpu in
 		print_cpu="UNKNOWN CPU"
 		;;
 esac
-AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = "xPentium"])
-AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = "xOpteron"])
+AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = xPentium])
+AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = xOpteron])
 
 # Check for C compiler vendor
 vendors="
@@ -127,10 +127,12 @@ AC_ARG_WITH([api],
 		[AC_MSG_FAILURE([Invalid argument for API. Use --with-api=posix or --with-api=windows])])],
 	[with_api=posix])
 AS_IF([test "x$with_api" = xposix],
-	[AC_CHECK_HEADERS([unistd.h], [], [AC_MSG_FAILURE([unistd.h is not found])])
+	[print_api=POSIX
+	AC_CHECK_HEADERS([unistd.h], [], [AC_MSG_FAILURE([unistd.h is not found])])
 	AC_DEFINE(UNIX, , [Compiling for UNIX system])])
 AS_IF([test "x$with_api" = xwindows],
-	[AC_CHECK_HEADERS([windows.h], [],[AC_MSG_FAILURE([windows.h is not found])] )
+	[print_api=Windows
+	AC_CHECK_HEADERS([windows.h], [],[AC_MSG_FAILURE([windows.h is not found])] )
 	AC_DEFINE(WINDOWS, , [Compiling for WINDOWS system])])
 
 # Check for data model
@@ -149,6 +151,9 @@ case $ac_cv_sizeof_char-$ac_cv_sizeof_short-$ac_cv_sizeof_int-$ac_cv_sizeof_long
 		ac_cv_sizeof_WORD=$ac_cv_sizeof_short
 		ac_cv_sizeof_LONG=$ac_cv_sizeof_long
 		AC_DEFINE(ILP32, , [Compiling for ILP32 data model])
+		# We need INT64.
+		AS_IF([test $ac_cv_sizeof_long_long -ne 8],
+			[AC_MSG_FAILURE([64-bit integers are not available])])
 		;;
 	1-2-4-4-8-8-*)
 		# Microsoft Windows (X64/IA-64).
@@ -182,7 +187,7 @@ AS_IF([$flag], [], [AC_MSG_FAILURE([Basic assumption sizeof(off_t) >= sizeof(LON
 # sizeof(off_t) <= 4 means files must <= 2 GB.
 AS_IF([test $ac_cv_sizeof_off_t -le 4], [AC_MSG_WARN([Large files more than 2 GB are not supported])])
 AC_MSG_NOTICE([The data model is $print_data_model])
-AM_CONDITIONAL([ONILP32], [test "x$print_data_model" = "xILP32"])
+AM_CONDITIONAL([ONILP32], [test "x$print_data_model" = xILP32])
 
 # Check for gmp
 AC_ARG_WITH([gmp],
@@ -263,7 +268,7 @@ AH_VERBATIM([WITHPOSIXCLOCK],
 #ifdef WITHPTHREADS
 #undef WITHPOSIXCLOCK
 #endif])
-posix_thread_clock_ok=no
+thread_clock_ok=no
 AS_IF([test "x$enable_threaded" != xno],
 	[flag=:
 	# Check the flag/library for pthreads
@@ -341,7 +346,7 @@ pthread_rwlock_unlock(&rwlock);
 		done
 		test "x$ok" = xno && flag=false])
 	# Check clock_gettime with CLOCK_THREAD_CPUTIME_ID
-	AS_IF([$flag],
+	AS_IF([$flag && test "x$with_api" = xposix],
 		[ok=yes
 		AS_IF([test "x$ok" = xyes],
 			[AC_MSG_CHECKING([for the POSIX thread clock])
@@ -367,8 +372,10 @@ clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
 #define WITHPOSIXCLOCK /**/
 #endif
 END
-			posix_thread_clock_ok=yes],
+			thread_clock_ok=yes],
 			[AC_MSG_WARN([POSIX thread clock is not available.])])])
+	# Windows has GetThreadTimes().
+	$flag && test "x$with_api" = xwindows && thread_clock_ok=yes
 	AS_IF([$flag],
 		[enable_threaded=yes],
 		[AS_IF([test "x$enable_threaded" = xyes],
@@ -449,12 +456,12 @@ AC_ARG_ENABLE([static-link],
 	[enable_static_link=no])
 AS_IF([test "x$enable_static_link" != xno],
 	[flag=:
-	if test "x$vendor" = gnu; then
-		static_list="-static -static-libgcc,-static-libstdc++ -static-libgcc"
-	elif test "x$vendor" = intel; then
-		static_list="-static -static-libgcc,-static-intel -static-intel -static-libgcc"
+	if test "x$vendor" = xgnu; then
+		static_list='-static -static-libgcc,-static-libstdc++ -static-libgcc'
+	elif test "x$vendor" = xintel; then
+		static_list='-static -static-libgcc,-static-intel -static-intel -static-libgcc'
 	else
-		static_list="-static -static-libgcc"
+		static_list='-static -static-libgcc'
 	fi
 	for a in $static_list; do
 		a=`echo $a | sed 's/,/ /g'`
@@ -468,7 +475,7 @@ AS_IF([test "x$enable_static_link" != xno],
 		LIBS="$PTHREAD_LIBS $LIBS"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
 			[AC_MSG_RESULT([yes]); STATIC_LDFLAGS=$a],
-			[AC_MSG_RESULT([no]); flag=no])
+			[AC_MSG_RESULT([no]); flag=false])
 		CFLAGS=$save_CFLAGS
 		LDFLAGS=$save_LDFLAGS
 		LIBS=$save_LIBS
@@ -478,7 +485,7 @@ AS_IF([test "x$enable_static_link" != xno],
 	AS_IF([test "x$enable_parform" = xyes],
 	[for a in $static_list; do
 		a=`echo $a | sed 's/,/ /g'`
-		AC_MSG_CHECKING([for static linking with $CXX $a])
+		AC_MSG_CHECKING([for static linking with $MPICXX $a])
 		AC_LANG_PUSH([C++])
 		save_CXX=$CXX
 		save_LDFLAGS=$LDFLAGS
@@ -486,7 +493,7 @@ AS_IF([test "x$enable_static_link" != xno],
 		LDFLAGS="$LDFLAGS $a"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM(,)],
 			[AC_MSG_RESULT([yes]); MPI_STATIC_LDFLAGS=$a],
-			[AC_MSG_RESULT([no]); flag=no])
+			[AC_MSG_RESULT([no]); flag=false])
 		CXX=$save_CXX
 		LDFLAGS=$save_LDFLAGS
 		AC_LANG_POP([C++])
@@ -496,8 +503,8 @@ AS_IF([test "x$enable_static_link" != xno],
 		[enable_static_link=yes],
 		[AS_IF([test "x$enable_static_link" = xyes],
 			[AC_MSG_FAILURE([test for static linking failed. Give --disable-static-link if you want to build without static libraries.])])
-		AS_IF([test "x$STATIC_LDFLAGS" = x && test "x$MPI_STATIC_LDFLAGS = x"],
-			[AC_MSG_NOTICE([static linking has been disabled])]
+		AS_IF([test "x$STATIC_LDFLAGS" = x && test "x$MPI_STATIC_LDFLAGS" = x],
+			[AC_MSG_NOTICE([static linking has been disabled])],
 			[AC_MSG_NOTICE([static linking has been partially disabled])])
 		enable_static_link=no])])
 AC_SUBST([STATIC_LDFLAGS])
@@ -547,7 +554,7 @@ echo "##################### CONFIGURATION #####################"
 echo
 outputdir=$(eval "echo $bindir")
 outputdir=$(eval "echo $outputdir")
-echo "Compiling for: $print_cpu $print_os"
+echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
 echo
 echo "The following executables can be compiled:"
 atleastone=no
@@ -583,7 +590,7 @@ if test $ac_cv_sizeof_off_t -le 4; then
 	echo "***CAUTION***  Large files more than 2 GB will be"
 	echo "not supported."
 fi
-if test "x$posix_thread_clock_ok" = xno; then
+if test "x$thread_clock_ok" = xno; then
 	s="none"
 	if test "x$build_tform" = xyes && test "x$build_tvorm" = xyes; then
 		s="tform and tvorm"
