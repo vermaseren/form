@@ -1938,7 +1938,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
  		#] Slave : 
 */
 		if ( PF.log ) {
-			UBYTE *lbuf[24];
+			UBYTE lbuf[24];
 			NumToStr(lbuf,AC.CModule);
 			fprintf(stderr,"[%d|%s] Endsort,Collect,Broadcast done\n",PF.me,lbuf);
 			fflush(stderr);
@@ -2027,14 +2027,14 @@ int PF_Init(int *argc, char ***argv)
 		if ( PF.numrbufs <  1 ) PF.numrbufs = 1;
 
 		if ( ( c = getenv("PF_MAXINTERMS") ) ) {
-			UBYTE *lbuf[24];
+			UBYTE lbuf[24];
 			PF_maxinterms = (LONG)atoi(c);
 			NumToStr(lbuf,PF_maxinterms);
 			fprintf(stderr,"[%d] changing PF_maxinterms to %s\n",PF.me,lbuf);
 			fflush(stderr);
 		}
 		if ( ( c = getenv("PF_STATS") ) ) {
-			UBYTE *lbuf[24];
+			UBYTE lbuf[24];
 			PF_statsinterval = (int)atoi(c);
 			NumToStr(lbuf,PF_statsinterval);
 			fprintf(stderr,"[%d] changing PF_statsinterval to %s\n",PF.me,lbuf);
@@ -2072,7 +2072,6 @@ int PF_Init(int *argc, char ***argv)
 	}
 	PF_BroadCast(1);
 	if ( PF.me != MASTER ) {
-		UBYTE *lbuf[24];
 		PF_UnPack(&PF.log,1,PF_INT);
 		PF_UnPack(&PF.synchro,1,PF_WORD);
 		PF_UnPack(&PF.numrbufs,1,PF_WORD);
@@ -2081,8 +2080,9 @@ int PF_Init(int *argc, char ***argv)
 		PF_UnPack(&fpsize,1,PF_INT);
 		AM.Path = (UBYTE*)Malloc1(fpsize*sizeof(UBYTE),"Path");
 		PF_UnPack(AM.Path,(LONG)fpsize,PF_BYTE);
-		NumToStr(lbuf,PF_maxinterms);
 		if ( PF.log ) {
+			UBYTE lbuf[24];
+			NumToStr(lbuf,PF_maxinterms);
 			fprintf(stderr,"[%d] log=%d rbufs=%d sbufs=%d maxin=%s path=%s\n",
 					PF.me,PF.log,PF.numrbufs,PF.numsbufs,lbuf,AM.Path);
 			fflush(stderr);
