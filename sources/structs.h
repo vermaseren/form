@@ -1367,7 +1367,6 @@ struct M_const {
     WORD    countfunnum;           /* (M) internal number of count_ function */
     WORD    gPolyFun;              /* (M) global value of PolyFun */
     WORD    gPolyFunType;          /* (M) global value of PolyFun */
-    WORD    safetyfirst;           /* (M) for testing special versions */
     WORD    dollarzero;            /* (M) for dollars with zero value */
     WORD    atstartup;             /* To protect against DATE_ ending in \n */
     WORD    exitflag;              /* (R) For the exit statement */
@@ -1379,6 +1378,7 @@ struct M_const {
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
     WORD    BracketFactors[8];
+    WORD    padding1;
 };
 /*
  		#] M : 

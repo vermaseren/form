@@ -37,7 +37,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ includes :
 */
@@ -219,12 +219,6 @@ int alfatable1[27];
 #define OPTION1 2
 #define OPTION2 3
 
-/*
-*/
-#define MULBUF
-
-#ifdef MULBUF
-
 typedef struct SuBbUf {
 	WORD	subexpnum;
 	WORD	buffernum;
@@ -238,8 +232,6 @@ LONG insubexpbuffers = 0;
 	M_free(subexpbuffers,"subexpbuffers");\
 	subexpbuffers = (SUBBUF *)Malloc1(256*sizeof(SUBBUF),"subexpbuffers");\
 	topsubexpbuffers = subexpbuffers+256; } insubexpbuffers = 0; }
-
-#endif
 
 #if defined(ILP32)
 
@@ -271,7 +263,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -294,7 +286,7 @@ VOID inictable()
 }
 
 /*
- 		#] inictable :
+ 		#] inictable : 
  		#[ findcommand :
 
 		Checks whether a command is in the command table.
@@ -346,7 +338,7 @@ KEYWORD *findcommand(UBYTE *in)
 }
 
 /*
- 		#] findcommand :
+ 		#] findcommand : 
  		#[ ParenthesesTest :
 */
 
@@ -390,7 +382,7 @@ int ParenthesesTest(UBYTE *sin)
 }
 
 /*
- 		#] ParenthesesTest :
+ 		#] ParenthesesTest : 
  		#[ SkipAName :
 
 		Skips a name and gives a pointer to the object after the name.
@@ -424,7 +416,7 @@ UBYTE *SkipAName(UBYTE *s)
 }
 
 /*
- 		#] SkipAName :
+ 		#] SkipAName : 
  		#[ IsRHS :
 */
 
@@ -470,7 +462,7 @@ UBYTE *IsRHS(UBYTE *s, UBYTE c)
 }
 
 /*
- 		#] IsRHS :
+ 		#] IsRHS : 
  		#[ IsIdStatement :
 */
 
@@ -481,7 +473,7 @@ int IsIdStatement(UBYTE *s)
 }
 
 /*
- 		#] IsIdStatement :
+ 		#] IsIdStatement : 
  		#[ CompileAlgebra :
 
 		Returns either the number of the main level RHS (>= 0)
@@ -506,9 +498,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 		AC.CompileLevel = 0;
 		if ( leftright == LHSIDE ) { AC.DumNum = AR.CurDum = 0; }
 		error = CompileSubExpressions(AC.tokens);
-#ifdef MULBUF 
 		REDUCESUBEXPBUFFERS
-#endif
 	}
 	else {
 		AC.ProtoType = oldproto;
@@ -521,7 +511,7 @@ int CompileAlgebra(UBYTE *s, int leftright, WORD *prototype)
 }
 
 /*
- 		#] CompileAlgebra :
+ 		#] CompileAlgebra : 
  		#[ CompileStatement :
 
 */
@@ -628,7 +618,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
@@ -667,7 +657,7 @@ int TestTables()
 }
 
 /*
- 		#] TestTables :
+ 		#] TestTables : 
  		#[ CompileSubExpressions :
 
 		Now we attack the subexpressions from inside out.
@@ -682,6 +672,7 @@ int CompileSubExpressions(SBYTE *tokens)
 	SBYTE *fill = tokens, *s = tokens, *t;
 	WORD number[MAXNUMSIZE], *oldwork, *w1, *w2;
 	int level, num, i, sumlevel = 0, sumtype = SYMTOSYM;
+	int retval, error = 0;
 /*
 	Eliminate all subexpressions. They are marked by LPARENTHESIS,RPARENTHESIS
 */
@@ -749,7 +740,6 @@ int CompileSubExpressions(SBYTE *tokens)
 			this minimum. Ignoring this might lead to really rare and
 			hard to find errors, years from now.
 */
-#ifdef MULBUF
 			if ( insubexpbuffers >= 0x3FFFFFL ) {
 				MesPrint("&More than 2^22 subexpressions inside one expression");
 				Terminate(-1);
@@ -761,7 +751,6 @@ int CompileSubExpressions(SBYTE *tokens)
 			subexpbuffers[insubexpbuffers].subexpnum = num;
 			subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
 			num = insubexpbuffers++;
-#endif
 			*fill++ = TSUBEXP;
 			i = 0;
 			do { number[i++] = num & 0x7F; num >>= 7; } while ( num );
@@ -777,14 +766,16 @@ int CompileSubExpressions(SBYTE *tokens)
 	Hence we can do the basic compilation.
 */
 	if ( AC.CompileLevel == 1 && AC.ToBeInFactors ) {
-		CodeFactors(tokens);
+		error = CodeFactors(tokens);
 	}
 	AC.CompileLevel--;
-	return(CodeGenerator(tokens));
+	retval = CodeGenerator(tokens);
+	if ( error < 0 ) return(error);
+	return(retval);
 }
 
 /*
- 		#] CompileSubExpressions :
+ 		#] CompileSubExpressions : 
  		#[ CodeGenerator :
 
 		This routine does the real code generation.
@@ -1340,13 +1331,8 @@ dofunction:			firstsumarg = 1;
 								FILLARG(t);
 								*t++ = i + 4;
 								while ( --i >= 0 ) *t++ = *w2++;
-#ifdef MULBUF
 								w1[ARGHEAD+3] = subexpbuffers[x2].subexpnum;
 								w1[ARGHEAD+5] = subexpbuffers[x2].buffernum;
-#else
-								w1[ARGHEAD+3] = x2;
-								w1[ARGHEAD+5] = AC.cbufnum;
-#endif
 								if ( sumlevel > 0 ) {
 									w1[0] += 4;
 									w1[ARGHEAD] += 4;
@@ -1411,19 +1397,11 @@ dofunction:			firstsumarg = 1;
 				else x2 = 1;
 				r = AC.ProtoType; n = r[1] - 5; r += 5;
 				*t++ = SUBEXPRESSION; *t++ = r[-4];
-#ifdef MULBUF
 				*t++ = subexpbuffers[x1].subexpnum;
 				*t++ = x2*deno;
 				*t++ = subexpbuffers[x1].buffernum;
 				NCOPY(t,r,n);
 				if ( cbuf[subexpbuffers[x1].buffernum].CanCommu[subexpbuffers[x1].subexpnum] ) cc = 1;
-#else
-				*t++ = x1;
-				*t++ = x2*deno;
-				*t++ = AC.cbufnum;
-				NCOPY(t,r,n);
-				if ( C->CanCommu[x1] ) cc = 1;
-#endif
 				deno = 1;
 				break;
 			case TMULTIPLY:
@@ -1562,11 +1540,7 @@ dofunction:			firstsumarg = 1;
 						Terminate(-1);
 					}
 					s++; x2 = 0; while ( *s >= 0 ) { x2 = 128*x2 + *s++; }
-#ifdef MULBUF
 					r = cbuf[subexpbuffers[x2].buffernum].rhs[subexpbuffers[x2].subexpnum];
-#else
-					r = C->rhs[x2];
-#endif
 					*t++ = FROMBRAC; *t++ = *r+2;
 					n = *r;
 					NCOPY(t,r,n);
@@ -1605,6 +1579,10 @@ dofunction:			firstsumarg = 1;
 							error = -1;
 							MesPrint("&Division by zero during compilation (0 to the power negative number)");
 						}
+					}
+					else if ( deno < 0 ) {
+						error = -1;
+						MesPrint("&Division by zero during compilation");
 					}
 					sign = 0; break; /* term is zero */
 				}
@@ -1802,7 +1780,7 @@ OverWork:
 }
 
 /*
- 		#] CodeGenerator :
+ 		#] CodeGenerator : 
  		#[ CompleteTerm :
 
 		Completes the term
@@ -1828,7 +1806,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 }
 
 /*
- 		#] CompleteTerm :
+ 		#] CompleteTerm : 
  		#[ CodeFactors :
 
 		This routine does the part of reading in in terms of factors.
@@ -1850,7 +1828,7 @@ int CodeFactors(SBYTE *tokens)
 {
 	GETIDENTITY
 	EXPRESSIONS e = Expressions + AR.CurExpr;
-	int nfactor = 1, nparenthesis, i, last = 0;
+	int nfactor = 1, nparenthesis, i, last = 0, error = 0;
 	SBYTE *t, *startobject, *tt, *s1, *s2, *out, *outtokens;
 	WORD nexp, subexp = 0, power, pow, x2, powfactor, first;
 /*
@@ -1873,7 +1851,7 @@ int CodeFactors(SBYTE *tokens)
 			if ( t[-1] >= 0 || t[-1] == RPARENTHESIS || t[-1] == RBRACE
 			|| t[-1] == TSETCLOSE || t[-1] == TFUNCLOSE ) {
 				subexp = CodeGenerator(tokens);
-#ifdef MULBUF
+				if ( subexp < 0 ) error = -1;
 				if ( insubexpbuffers >= 0x3FFFFFL ) {
 					MesPrint("&More than 2^22 subexpressions inside one expression");
 					Terminate(-1);
@@ -1885,7 +1863,6 @@ int CodeFactors(SBYTE *tokens)
 				subexpbuffers[insubexpbuffers].subexpnum = subexp;
 				subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
 				subexp = insubexpbuffers++;
-#endif
 				t = tokens;
 				*t++ = TSYMBOL; *t++ = FACTORSYMBOL;
 				*t++ = TMULTIPLY; *t++ = TSUBEXP;
@@ -1986,6 +1963,7 @@ dolast:
 			*out++ = TPLUS;
 			if ( pow > 1 ) {
 				subexp = GenerateFactors(pow);
+				if ( subexp < 0 ) { error = -1; subexp = 0; }
 				*out++ = TSUBEXP; PUTNUMBER128(out,subexp);
 			}
 			*out++ = TSYMBOL; *out++ = FACTORSYMBOL;
@@ -2031,7 +2009,10 @@ dopower:
 				if ( power < 0 ) { pow = -power; power = -1; }
 				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
 				else { pow = power; power = 1; }
-				if ( pow > 1 ) subexp = GenerateFactors(pow);
+				if ( pow > 1 ) {
+					subexp = GenerateFactors(pow);
+					if ( subexp < 0 ) { error = -1; subexp = 0; }
+				}
 /*				for ( i = 1; i <= Expressions[nexp].numfactors; i++ ) */
 				for ( i = 1; i <= AS.OldNumFactors[nexp]; i++ ) {
 					s1 = startobject; *out++ = TPLUS;
@@ -2041,7 +2022,7 @@ dopower:
 					*s2++ = TPOWER; *s2++ = TNUMBER; PUTNUMBER100(s2,i)
 					*s2 = TENDOFIT;
 					x2 = CodeGenerator(out);
-#ifdef MULBUF
+					if ( x2 < 0 ) error = -1;
 					if ( insubexpbuffers >= 0x3FFFFFL ) {
 						MesPrint("&More than 2^22 subexpressions inside one expression");
 						Terminate(-1);
@@ -2053,7 +2034,6 @@ dopower:
 					subexpbuffers[insubexpbuffers].subexpnum = x2;
 					subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
 					x2 = insubexpbuffers++;
-#endif
 					*out++ = LBRACE; *out++ = TSUBEXP; PUTNUMBER128(out,x2)
 					*out++ = RBRACE;
 					*out++ = TMULTIPLY;
@@ -2097,7 +2077,10 @@ dopowerd:
 				if ( power < 0 ) { pow = -power; power = -1; }
 				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
 				else { pow = power; power = 1; }
-				if ( pow > 1 ) subexp = GenerateFactors(pow);
+				if ( pow > 1 ) {
+					subexp = GenerateFactors(pow);
+					if ( subexp < 0 ) { error = -1; subexp = 0; }
+				}
 				for ( i = 1; i <= Dollars[nexp].nfactors; i++ ) {
 					s1 = startobject; *out++ = TPLUS;
 					while ( s1 < t ) *out++ = *s1++;
@@ -2124,7 +2107,7 @@ dopowerd:
 	e->numfactors = powfactor-1;
 	e->vflags |= ISFACTORIZED;
 	subexp = CodeGenerator(outtokens);
-#ifdef MULBUF
+	if ( subexp < 0 ) error = -1;
 	if ( insubexpbuffers >= 0x3FFFFFL ) {
 		MesPrint("&More than 2^22 subexpressions inside one expression");
 		Terminate(-1);
@@ -2136,22 +2119,22 @@ dopowerd:
 	subexpbuffers[insubexpbuffers].subexpnum = subexp;
 	subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
 	subexp = insubexpbuffers++;
-#endif
 	M_free(outtokens,"CodeFactors");
 	s1 = tokens;
 	*s1++ = TSUBEXP; PUTNUMBER128(s1,subexp); *s1++ = TENDOFIT;
-	return(subexp);
+	if ( error < 0 ) return(-1);
+	else return(subexp);
 }
 
 /*
- 		#] CodeFactors :
+ 		#] CodeFactors : 
  		#[ GenerateFactors :
 */
 
 WORD GenerateFactors(WORD n)
 {
 	WORD subexp;
-	int i;
+	int i, error = 0;
 	SBYTE *s;
 	SBYTE *tokenbuffer = (SBYTE *)Malloc1(8*n*sizeof(SBYTE),"GenerateFactors");
 	s = tokenbuffer;
@@ -2165,8 +2148,8 @@ WORD GenerateFactors(WORD n)
 	}
 	*s++ = TENDOFIT;
 	subexp = CodeGenerator(tokenbuffer);
+	if ( subexp < 0 ) error = -1;
 	M_free(tokenbuffer,"GenerateFactors");
-#ifdef MULBUF
 	if ( insubexpbuffers >= 0x3FFFFFL ) {
 		MesPrint("&More than 2^22 subexpressions inside one expression");
 		Terminate(-1);
@@ -2178,12 +2161,12 @@ WORD GenerateFactors(WORD n)
 	subexpbuffers[insubexpbuffers].subexpnum = subexp;
 	subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
 	subexp = insubexpbuffers++;
-#endif
+	if ( error < 0 ) return(error);
 	return(subexp);
 }
 
 /*
- 		#] GenerateFactors :
+ 		#] GenerateFactors : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

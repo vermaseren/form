@@ -98,6 +98,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 	int error = 0;
 	UBYTE *p, *q, c;
 	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
+	WORD jold = 0;
 	POSITION pos;
 	while ( *inp == ',' ) inp++;
 	if ( par ) AC.ToBeInFactors = 1;
@@ -139,8 +140,17 @@ int DoExpr(UBYTE *inp, int type, int par)
 					error = 1;
 					j = EntVar(CEXPRESSION,inp,type,0,0,0);
 				}
+				jold = c2;
 			}
-			else j = EntVar(CEXPRESSION,inp,type,0,0,0);
+			else {
+/*
+				Here we have to worry about reuse of the expression in the
+				same module. That will need AS.Oldvflags but that may not
+				be defined or have the proper value.
+*/
+				j = EntVar(CEXPRESSION,inp,type,0,0,0);
+				jold = j;
+			}
 			*q = c;
 			OldWork = w = AT.WorkPointer;
 			*w++ = TYPEEXPRESSION;
@@ -256,6 +266,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 			AT.WorkPointer = OldWork;
 			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 		}
+		PutInVflags(jold);
 		AC.ToBeInFactors = 0;
 	}
 	else {	/* Variety in which expressions change property */

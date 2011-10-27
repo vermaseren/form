@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : execute.c
 */
@@ -36,7 +36,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -169,7 +169,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -296,7 +296,7 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables : 
+ 		#] PopVariables :
  		#[ MakeGlobal :
 */
 
@@ -367,7 +367,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ TestDrop :
 */
 
@@ -407,9 +407,9 @@ VOID TestDrop()
 				ClearBracketIndex(j);
 				e->bracketinfo = e->newbracketinfo; e->newbracketinfo = 0;
 				if ( e->replace >= 0 ) {
-					Expressions[e->replace].replace = -1;
+					Expressions[e->replace].replace = REGULAREXPRESSION;
 					AC.exprnames->namenode[e->node].number = e->replace;
-					e->replace = -1;
+					e->replace = REGULAREXPRESSION;
 				}
 				else {
 					AC.exprnames->namenode[e->node].type = CDELETE;
@@ -434,11 +434,55 @@ VOID TestDrop()
 				ClearBracketIndex(j);
 				break;
 		}
+		if ( e->replace == NEWLYDEFINEDEXPRESSION ) e->replace = REGULAREXPRESSION;
 	}
 }
 
 /*
- 		#] TestDrop : 
+ 		#] TestDrop :
+ 		#[ PutInVflags :
+*/
+
+void PutInVflags(WORD nexpr)
+{
+	EXPRESSIONS e = Expressions + nexpr;
+	POSITION *old;
+	WORD *oldw;
+	int i;
+	if ( AS.OldOnFile == 0 ) {
+		AS.NumOldOnFile = 20;
+		AS.OldOnFile = (POSITION *)Malloc1(AS.NumOldOnFile*sizeof(POSITION),"file pointers");
+	}
+	else if ( nexpr >= AS.NumOldOnFile ) {
+		old = AS.OldOnFile;
+		AS.OldOnFile = (POSITION *)Malloc1(2*AS.NumOldOnFile*sizeof(POSITION),"file pointers");
+		for ( i = 0; i < AS.NumOldOnFile; i++ ) AS.OldOnFile[i] = old[i];
+		AS.NumOldOnFile = 2*AS.NumOldOnFile;
+		M_free(old,"proces file pointers");
+	}
+	if ( AS.OldNumFactors == 0 ) {
+		AS.NumOldNumFactors = 20;
+		AS.OldNumFactors = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"numfactors pointers");
+		AS.Oldvflags = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"vflags pointers");
+	}
+	else if ( nexpr >= AS.NumOldNumFactors ) {
+		oldw = AS.OldNumFactors;
+		AS.OldNumFactors = (WORD *)Malloc1(2*AS.NumOldNumFactors*sizeof(WORD),"numfactors pointers");
+		for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.OldNumFactors[i] = oldw[i];
+		M_free(oldw,"numfactors pointers");
+		oldw = AS.Oldvflags;
+		AS.Oldvflags = (WORD *)Malloc1(2*AS.NumOldNumFactors*sizeof(WORD),"vflags pointers");
+		for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.Oldvflags[i] = oldw[i];
+		AS.NumOldNumFactors = 2*AS.NumOldNumFactors;
+		M_free(oldw,"vflags pointers");
+	}
+	AS.OldOnFile[nexpr] = e->onfile;
+	AS.OldNumFactors[nexpr] = e->numfactors;
+	AS.Oldvflags[nexpr] = e->vflags;
+}
+
+/*
+ 		#] PutInVflags :
  		#[ DoExecute :
 */
 
@@ -813,7 +857,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute : 
+ 		#] DoExecute :
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1118,7 +1162,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket : 
+ 		#] PutBracket :
  		#[ SpecialCleanup :
 */
 
@@ -1130,7 +1174,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup : 
+ 		#] SpecialCleanup :
  		#[ SetMods :
 */
 
@@ -1148,7 +1192,7 @@ void SetMods()
 #endif
 
 /*
- 		#] SetMods : 
+ 		#] SetMods :
  		#[ UnSetMods :
 */
 
@@ -1163,7 +1207,7 @@ void UnSetMods()
 #endif
 
 /*
- 		#] UnSetMods : 
+ 		#] UnSetMods :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1239,7 +1283,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions : 
+ 		#] ExchangeExpressions :
  		#[ GetFirstBracket :
 */
 
@@ -1344,7 +1388,7 @@ int GetFirstBracket(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstBracket : 
+ 		#] GetFirstBracket :
  		#[ TermsInExpression :
 */
 
@@ -1356,7 +1400,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression : 
+ 		#] TermsInExpression :
  		#[ UpdatePositions :
 */
 
@@ -1407,7 +1451,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions : 
+ 		#] UpdatePositions :
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1518,7 +1562,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 : 
+ 		#] CountTerms1 :
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1709,6 +1753,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level)
 	#] Expressions :
 */

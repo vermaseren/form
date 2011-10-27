@@ -76,8 +76,6 @@ extern int pcounter;
 #define STRINGIFY(x)  STRINGIFY__(x)
 #define STRINGIFY__(x) #x
 
-static char nameversion[] = "";
-/* beware of security here. look in pre.c for shifted name */
 /*
  		#] includes : 
  		#[ DoTail :
@@ -853,7 +851,6 @@ VOID StartVariables()
 	AM.atstartup = 1;
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)STRINGIFY(MAJORVERSION),0,0);
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)STRINGIFY(MINORVERSION),0,0);
-	PutPreVar((UBYTE *)"NAMEVERSION_",(UBYTE *)nameversion,0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;

@@ -1597,7 +1597,7 @@ nextt:;
 
 WORD RunImplode(WORD *fun, WORD *args)
 {
-	WORD *tt, *tstop, totarg, arg1, arg2, num, num1, num2, i, i1, n;
+	WORD *tt, *tstop, totarg, arg1, arg2, num1, num2, i, i1, n;
 	WORD *f, *t, *ttt, *t4, *ff, *fff;
 	WORD moveup, numzero, outspace;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
@@ -1619,7 +1619,6 @@ WORD RunImplode(WORD *fun, WORD *args)
 	if ( arg1 > arg2 ) { num1 = arg2; num2 = arg1; }
 	else { num1 = arg1; num2 = arg2; }
 	if ( num1 > totarg || num2 > totarg ) return(0);
-	num = num2-num1+1;
 /*
 	We need, for the most general case 4 spots for each:
 			x,pow,coef,sign
@@ -1801,7 +1800,7 @@ moveinto:
 
 WORD RunExplode(PHEAD WORD *fun, WORD *args)
 {
-	WORD arg1, arg2, num1, num2, num, *tt, *tstop, totarg, *tonew, *newfun;
+	WORD arg1, arg2, num1, num2, *tt, *tstop, totarg, *tonew, *newfun;
 	WORD *ff, *f;
 	int reverse = 0, iarg, i, numzero;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
@@ -1823,7 +1822,6 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args)
 	if ( arg1 > arg2 ) { num1 = arg2; num2 = arg1; reverse = 1; }
 	else { num1 = arg1; num2 = arg2; }
 	if ( num1 > totarg || num2 > totarg ) return(0);
-	num = num2-num1+1;
 	if ( tstop + AM.MaxTer > AT.WorkTop ) goto OverWork;
 /*
 	We will make the new function after the old one in the workspace
@@ -2255,7 +2253,8 @@ OverWork:;
 
 WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
 {
-	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, *f1, n, i;
+	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, n, i;
+/*	WORD *f1; */
 	WORD sign, i1, i2, retval;
 	if ( fun[0] <= GAMMASEVEN && fun[0] >= GAMMA ) return(0);
 	if ( *args != ARGRANGE ) {
@@ -2284,7 +2283,7 @@ WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
 	WantAddPointers(num);	/* Guarantees the presence of enough pointers */
 	f = fun+FUNHEAD; n = 1; i = 0;
 	while ( n < arg1 ) { n++; NEXTARG(f) }
-	f1 = f;
+/*	f1 = f; */
 	while ( n <= arg2 ) { AT.pWorkSpace[AT.pWorkPointer+i++] = f; n++; NEXTARG(f) }
 /*
 	If sign == 1 we should alter the order of the pointers first

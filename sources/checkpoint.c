@@ -94,7 +94,7 @@
 */
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ filenames and system commands :
 */
 
@@ -754,7 +754,6 @@ static void print_M()
 	MesPrint("%d", AM.countfunnum);
 	MesPrint("%d", AM.gPolyFun);
 	MesPrint("%d", AM.gPolyFunType);
-	MesPrint("%d", AM.safetyfirst);
 	MesPrint("--MARK 10");
 	MesPrint("%d", AM.dollarzero);
 	MesPrint("%d", AM.atstartup);
@@ -1389,7 +1388,6 @@ int DoRecovery(int *moduletype)
 	R_FREE(AM.gFortran90Kind);
 	R_SET(AM.gFortran90Kind,UBYTE *);
 	R_COPY_S(AM.gFortran90Kind,UBYTE *);
-	R_SET(AM.safetyfirst, WORD);
 
 	R_COPY_S(AM.gextrasym,UBYTE *);
 	R_COPY_S(AM.ggextrasym,UBYTE *);
@@ -2408,7 +2406,6 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&adr, sizeof(void*));
 	S_WRITE_B(&AM.gFortran90Kind,sizeof(UBYTE *));
 	S_WRITE_S(AM.gFortran90Kind);
-	S_WRITE_B(&AM.safetyfirst, sizeof(WORD));
 
 	S_WRITE_S(AM.gextrasym);
 	S_WRITE_S(AM.ggextrasym);

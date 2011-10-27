@@ -610,7 +610,7 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *tf, *termout, *tin, *tout, *m, *mnext, *mstop, *mm;
-	int todo, i, i0, ii, j, istart, sign = 1, action = 0;
+	int todo, i, ii, j, istart, sign = 1, action = 0;
 	WORD firstshort = 0, firstvalue = 0, gcdisone = 0, mlength, tlength, newlength;
 	WORD totargs = 0, numargs, *mh, oldval1, *g, *gcdout = 0;
 	WORD *arg1, *arg2;
@@ -808,10 +808,6 @@ doshort:
 			sh[FUNHEAD+1] = 1; sh[FUNHEAD+2] = 1; sh[FUNHEAD+3] = 3; sh[FUNHEAD+4] = 0;
 		break;
 	  }
-	  i0 = 1;
-	}
-	else {
-	  i0 = 0;
 	}
 /*
   	#] Convert short argument : 
@@ -1037,7 +1033,7 @@ oneterm:;
 		}
 	}
 /*
-  	#] Expand $ and expr :
+  	#] Expand $ and expr : 
   	#[ Multiterm subexpressions :
 */
 	gcdout = abuf[0].buffer;
@@ -1071,7 +1067,7 @@ multiterms:;
 	}
 	if ( action && ( gcdout != abuf[0].buffer ) ) M_free(gcdout,"gcdout");
 /*
-  	#] Multiterm subexpressions :
+  	#] Multiterm subexpressions : 
   	#[ Cleanup :
 */
 cleanup:;
@@ -1103,7 +1099,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction :
+ 		#] GCDfunction : 
  		#[ GCDfunction3 :
 
 	Finds the GCD of the two arguments which are buffers with terms.

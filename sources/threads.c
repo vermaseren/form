@@ -3426,7 +3426,6 @@ int MasterMerge()
 #ifdef WITHSORTBOTS
 	if ( numberofworkers > 2 ) return(SortBotMasterMerge());
 #endif
-	if ( AM.safetyfirst != 1 ) goto NormalReturn;
 	fin = &S->file;
 	S->PolyFlag = AR0.PolyFun ? AR0.PolyFunType: 0;
 	S->TermsLeft = 0;
@@ -3825,7 +3824,6 @@ EndOfMerge:
 	}
 	WriteStats(&position,2);
 	Expressions[AR0.CurExpr].counter = S->TermsLeft;
-NormalReturn:
 /*
 	Release all locks
 */

@@ -263,7 +263,7 @@ extern VOID TELLFILE(int,POSITION *);
 #endif
 
 /*
-  	#] Macro's :
+  	#] Macro's : 
   	#[ Thread objects :
 */
 
@@ -527,6 +527,7 @@ extern WORD   TenVec(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   TenVecFind(PHEAD WORD *,WORD *);
 extern WORD   TermRenumber(WORD *,RENUMBER,WORD);
 extern VOID   TestDrop(VOID);
+extern VOID   PutInVflags(WORD);
 extern WORD   TestMatch(PHEAD WORD *,WORD *);
 extern WORD   TestSub(PHEAD WORD *,WORD);
 extern LONG   TimeCPU(WORD);
@@ -992,6 +993,7 @@ extern int    simp3atoken(SBYTE *,int);
 extern int    simp3btoken(SBYTE *,int);
 extern int    simp4token(SBYTE *);
 extern int    simp5token(SBYTE *,int);
+extern int    simp6token(SBYTE *,int);
 extern UBYTE *SkipAName(UBYTE *);
 extern int    TestTables(VOID);
 extern int    GetLabel(UBYTE *);

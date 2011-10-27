@@ -2471,7 +2471,7 @@ WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
 	WORD *t, *rnext, *r1, *r2, *r3, *r5, *r6, *r7, *r8, *r9;
 	WORD pow, *mm, *mnext, *mstop, *argin2 = argin, *argin3 = argin, *argfree;
 	WORD ncom;
-	int action = 0, j, i, act;
+	int j, i, act;
 	r5 = t = argin + ARGHEAD;
 	r3 = argin + *argin;
 	rnext = t + *t;
@@ -2513,7 +2513,6 @@ WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
 /*
 				We have a factor
 */
-				action = 1;
 				*r1++ = 8 + ARGHEAD;
 				for ( j = 1; j < ARGHEAD; j++ ) *r1++ = 0;
 				*r1++ = 8; *r1++ = *r7;
@@ -2571,7 +2570,6 @@ WORD *TakeArgContent(PHEAD WORD *argin, WORD *argout)
 /*
 				We have a factor
 */
-				action = 1;
 				if ( *t < 0 ) { *r1++ = -VECTOR; }
 				else          { *r1++ = -INDEX; }
 				*r1++ = *t;
@@ -2639,7 +2637,6 @@ nextmterm:		mm = mnext;
 /*
 			Copy the function
 */
-			action = 1;
 			*r1++ = t[1] + 4 + ARGHEAD;
 			for ( i = 1; i < ARGHEAD; i++ ) *r1++ = 0;
 			*r1++ = t[1] + 4;
@@ -2675,7 +2672,6 @@ nextterm:						mm = mnext;
 					*t = DUMMYTEN;
 			else
 					*t = DUMMYFUN;
-			action = 1;
 			t += t[1];
 		}
 /*
@@ -2839,7 +2835,7 @@ nextterm:						mm = mnext;
 		}
 	}
 /*
-			#] SYMBOL :
+			#] SYMBOL : 
 			#[ DOTPRODUCT :
 
 		Now collect all dotproducts. We can use the space after r1 as storage

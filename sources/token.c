@@ -536,12 +536,17 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 	already wildcards, etc.
 */
 	if ( error == 0 && simp5token(AC.tokens,leftright) ) error = 1;
+/*
+	In simp6token we test for special cases like factorized expressions
+	that occur in the RHS in an improper way.
+*/
+	if ( error == 0 && simp6token(AC.tokens,leftright) ) error = 1;
 
 	return(error);
 }
 
 /*
- 		#] tokenize : 
+ 		#] tokenize :
  		#[ WriteTokens :
 */
 
@@ -1065,7 +1070,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token :
+ 		#] simp2token : 
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.
@@ -1875,6 +1880,69 @@ int simp5token(SBYTE *s, int mode)
 
 /*
  		#] simp5token : 
+ 		#[ simp6token :
+
+	Making sure that factorized expressions are used properly
+*/
+
+int simp6token(SBYTE *tokens, int mode)
+{
+/*	EXPRESSIONS e = Expressions; */
+	int error = 0, n;
+	int level = 0, haveone = 0;
+	SBYTE *s = tokens;
+	LONG numterms;
+	if ( mode == RHSIDE ) {
+		while ( *s == TPLUS || *s == TMINUS ) s++;
+		numterms = 1;
+		while ( *s != TENDOFIT ) {
+			if ( *s == LPARENTHESIS ) level++;
+			else if ( *s == RPARENTHESIS ) level--;
+			else if ( *s == TFUNOPEN ) level++;
+			else if ( *s == TFUNCLOSE ) level--;
+			else if ( ( *s == TPLUS || *s == TMINUS ) && level == 0 ) {
+/*
+				Special exception: x^-1 etc.
+*/
+				if ( s[-1] != TPOWER && s[-1] != TPLUS && s[-1] != TMINUS ) {
+					numterms++;
+				}
+			}
+			else if ( *s == TEXPRESSION ) {
+				s++; n = 0; while ( *s >= 0 ) n = 128*n + *s++;
+				if ( ( ( AS.Oldvflags[n] & ISFACTORIZED ) != 0 ) && *s != LBRACE ) {
+					if ( level == 0 ) {
+						if ( Expressions[n].replace == NEWLYDEFINEDEXPRESSION ) {
+							MesPrint("&Trying to use a factorized expression in the same module that it is defined.");
+							error = 1;
+						}
+						haveone = 1;
+					}
+					else if ( error == 0 ) {
+						MesPrint("&Illegal use of factorized expression(s) in RHS");
+						error = 1;
+					}
+				}
+				continue;
+			}
+			s++;
+		}
+		if ( haveone ) {
+			if ( numterms > 1 ) {
+				MesPrint("&Factorized expression in RHS in an expression of more than one term.");
+				error = 1;
+			}
+			else if ( AC.ToBeInFactors == 0 ) {
+				MesPrint("&Attempt to put a factorized expression inside an unfactorized expression.");
+				error = 1;
+			}
+		}
+	}
+	return(error);
+}
+
+/*
+ 		#] simp6token :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

@@ -33,9 +33,6 @@
 */
 #include "form3.h"
 
-static char nameversion[] = "";
-/* should be shifted from what is in startup.c */
-
 static UBYTE pushbackchar = 0;
 static int oldmode = 0;
 static int stopdelay = 0;
@@ -846,37 +843,23 @@ VOID PreProcessor()
 				if ( moduletype == GLOBALMODULE ) MakeGlobal();
 				else {
 endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
-						if ( AM.safetyfirst == 0 ) {
-							UBYTE *sss, *ssss, rs[14];
-							/* rs[] = "NAMEVERSION_\0\0" */
-							rs[1] = 'A'; rs[3] = rs[5] = 'E';
-							rs[8] = 'I'; rs[2] = 'M';
-							rs[0] = rs[10] = 'N'; rs[9] = 'O';
-							rs[6] = 'R'; rs[7] = 'S'; rs[4] = 'V'; rs[11] = '_';
-							rs[12] = 0; rs[13] = 0;
-							sss = GetPreVar((UBYTE *)rs,WITHOUTERROR);
-							ssss = (UBYTE *)nameversion;
-							if ( sss == 0 ) { AM.safetyfirst = 2; }
-							else {
-							while ( *sss || *ssss ) {
-								if ( *sss == 0 || *ssss == 0 ||
-									*sss != *ssss-1 ) { AM.safetyfirst = 2; break; }
-								sss++; ssss++;
-							} }
-							if ( AM.safetyfirst == 0 ) AM.safetyfirst = 1;
-						}
 						retcode = ExecModule(moduletype);
-						/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 						if(PF.slavebuf.PObuffer!=NULL){
 							M_free(PF.slavebuf.PObuffer,"PF inbuf");
 							PF.slavebuf.PObuffer=NULL;
 						}
 #endif
-						/*:[20oct2009 mt]*/
 						UpdatePositions();
 						if ( retcode < 0 ) error1++;
 						if ( retcode ) { error2++; AP.preError++; }
+					}
+					else {
+						EXPRESSIONS e;
+						WORD j;
+						for ( j = 0, e = Expressions; j < NumExpressions; j++, e++ ) {
+							if ( e->replace == NEWLYDEFINEDEXPRESSION ) e->replace = REGULAREXPRESSION;
+						}
 					}
 					switch ( moduletype ) {
 						case STOREMODULE:

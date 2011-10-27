@@ -639,7 +639,15 @@ typedef int (*TFUN1)();
 #define PRINTLFILE 4
 #define PRINTONETERM 8
 #define PRINTONEFUNCTION 16
-#define PRINTALL 32     /* [ 2009-10-31 PI ] */
+#define PRINTALL 32
+
+/*
+	Special codes for the replace variable in the EXPRESSIONS struct
+*/
+
+#define REGULAREXPRESSION -1
+#define REDEFINEDEXPRESSION -2
+#define NEWLYDEFINEDEXPRESSION -3
 
 /**
  *  @name Defines: function specs

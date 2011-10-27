@@ -2296,13 +2296,13 @@ int AddExpression(UBYTE *name, int x, int y)
 	if ( name ) {
 		expr->name = AddName(AC.exprnames,name,CEXPRESSION,numexpr,&nodenum);
 		expr->node = nodenum;
-		expr->replace = -1;
+		expr->replace = NEWLYDEFINEDEXPRESSION ;
 		s = name;
 		while ( *s ) s++;
 		expr->namesize = (s-name)+1;
 	}
 	else {
-		expr->replace = -2;
+		expr->replace = REDEFINEDEXPRESSION;
 		expr->name = AC.TransEname;
 		expr->node = -1;
 		expr->namesize = 0;

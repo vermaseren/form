@@ -855,7 +855,7 @@ AllExpr:
 			if ( tolower(*s) == 'f' ) par |= PRINTLFILE;
 			else if ( tolower(*s) == 's' ) {
 				if ( tolower(s[1]) == 's' ) {
-					if ( tolower(s[2]) == 's' ) {	/* [ 2009-11-02 PI] */
+					if ( tolower(s[2]) == 's' ) {
 						par |= PRINTONEFUNCTION | PRINTONETERM | PRINTALL;
 						s++;
 					}
@@ -878,18 +878,21 @@ illeg:				MesPrint("&Illegal option in (n)print statement");
 			if ( tolower(*s) == 'f' ) par &= ~PRINTLFILE;
 			else if ( tolower(*s) == 's' ) {
 				if ( tolower(s[1]) == 's' ) {
-                                        if ( tolower(s[2]) == 's' ) {	/* [ 2009-10-30 PI] */
-						par &= ~PRINTONEFUNCTION & ~PRINTONETERM;
+					if ( tolower(s[2]) == 's' ) {
 						par &= ~PRINTALL;
-                                                s++;
+						s++;
 					}
-                                        else if ( ( par & 3 ) < 2 ) par &= ~PRINTONEFUNCTION;
-                                        s++;
+					else if ( ( par & 3 ) < 2 ) {
+						par &= ~PRINTONEFUNCTION;
+						par &= ~PRINTALL;
+					}
+					s++;
 				}
 				else {
 					if ( ( par & 3 ) < 2 ) {
 						par &= ~PRINTONETERM;
 						par &= ~PRINTONEFUNCTION;
+						par &= ~PRINTALL;
 					}
 				}
 			}
@@ -926,6 +929,7 @@ FoundExpr:;
 			}
 			*s++ = c;
 			if ( c == 0 ) return(0);
+			if ( c == '-' || c == '+' ) s--;
 		}
 		else if ( *s == ',' ) s++;
 		else {
@@ -5597,7 +5601,7 @@ int CoDo(UBYTE *inp)
 	AddNtoL(AT.WorkPointer[1],AT.WorkPointer);
 	AC.doloopstack[AC.dolooplevel++] = C->numlhs;
 
-	return(0);
+	return(error);
 
 IllSyntax:
 	MesPrint("&Illegal syntax for do statement");

@@ -3319,7 +3319,6 @@ WORD MergePatches(WORD par)
 		AR.gzipCompress = 0;
 	}
 #endif
-	if ( AM.safetyfirst != 1 ) goto NormalReturn;
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
 	S->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
