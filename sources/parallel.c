@@ -43,6 +43,7 @@
 /* mpi.c */
 LONG PF_RealTime(int);
 int PF_LibInit(int*, char***);
+int PF_LibTerminate(int);
 int PF_Probe(int*);
 int PF_RecvWbuf(WORD*,LONG*,int*);
 int PF_IRecvRbuf(PF_BUFFER*,int,int);
@@ -2095,6 +2096,63 @@ int PF_Init(int *argc, char ***argv)
 }
 /*
  		#] PF_Init : 
+ 		#[ PF_Terminate :
+*/
+
+static LONG slavetimes = 0;  /* Used in PF_GetSlaveTimes() */
+
+/**
+ * Performs the finalization of ParFORM.
+ * To be called by Terminate().
+ *
+ * @param  error  an error code.
+ * @return        0 if OK, nonzero on error.
+ */
+int PF_Terminate(int errorcode)
+{
+#ifdef WITHMPI
+	LONG t = PF.me == MASTER ? 0 : TimeCPU(1);
+	MPI_Reduce(&t, &slavetimes, 1, PF_LONG, MPI_SUM, MASTER, PF_COMM);
+#else
+	if ( PF.me == MASTER ) {
+		int i;
+		slavetimes = 0;
+		for ( i = 1; i < PF.numtasks; i++ ) {
+			int src, tag;
+			LONG t;
+			PF_Receive(i, PF_MISC_MSGTAG, &src, &tag);
+			PF_UnPack(&t, 1, PF_LONG);
+			slavetimes += t;
+		}
+	}
+	else {
+		LONG t = TimeCPU(1);
+		PF_Send(MASTER, PF_MISC_MSGTAG, 0);
+		PF_Pack(&t, 1, PF_LONG);
+		PF_Send(MASTER, PF_MISC_MSGTAG, 1);
+	}
+#endif
+	return PF_LibTerminate(errorcode);
+}
+
+/*
+ 		#] PF_Terminate :
+ 		#[ PF_GetSlaveTimes :
+*/
+
+/**
+ * Returns the total CPU time of all slaves together.
+ * To be called at the end of the ParFORM run.
+ *
+ * @return  the sum of CPU times on all slaves.
+ */
+LONG PF_GetSlaveTimes(void)
+{
+	return slavetimes;
+}
+
+/*
+ 		#] PF_GetSlaveTimes :
   	#] startup : 
   	#[ PF_BroadcastNumberOfTerms :
 */

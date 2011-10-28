@@ -56,6 +56,7 @@
 #define PF_EMPTY_MSGTAG      52  /* InParallel, DoCheckpoint(), PF_SendFile(), PF_RecvFile() */
 #define PF_STDOUT_MSGTAG     60  /* slave -> master: sending text to the stdout */
 #define PF_LOG_MSGTAG        61  /* slave -> master: sending text to the log file */
+#define PF_MISC_MSGTAG       70
 
 #define PF_ATTACH_REDEF       1  /* redefined preprocessor variable */
 #define PF_ATTACH_DOLLAR      2  /* not used */
@@ -227,7 +228,6 @@ extern LONG PF_maxDollarChunkSize;
 */
 
 /* mpi.c */
-extern int    PF_Terminate(int);
 extern int    PF_ISendSbuf(int,int);
 extern int    PF_RawSend(int,void *,LONG,int);
 extern LONG   PF_RawRecv(int *,void *,LONG,int *);
@@ -237,6 +237,8 @@ extern int    PF_EndSort(void);
 extern WORD   PF_Deferred(WORD *,WORD);
 extern int    PF_Processor(EXPRESSIONS,WORD,WORD);
 extern int    PF_Init(int*,char ***);
+extern int    PF_Terminate(int);
+extern LONG   PF_GetSlaveTimes(void);
 extern LONG   PF_BroadcastNumberOfTerms(LONG);
 extern int    PF_InitRedefinedPreVars(void);
 extern int    PF_BroadcastString(UBYTE *);

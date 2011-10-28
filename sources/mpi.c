@@ -180,7 +180,7 @@ int PF_LibInit(int *argcp, char ***argvp)
 }
 /*
   	#] PF_LibInit :
-  	#[ PF_Terminate :
+  	#[ PF_LibTerminate :
 */
 
 /**
@@ -190,14 +190,14 @@ int PF_LibInit(int *argcp, char ***argvp)
  * @param  error  an error code.
  * @return        0 if OK, nonzero on error.
  */
-int PF_Terminate(int error)
+int PF_LibTerminate(int error)
 {
 	DUMMYUSE(error);
 	return(MPI_Finalize());
 }
 
 /*
-  	#] PF_Terminate :
+  	#] PF_LibTerminate :
   	#[ PF_Probe :
 */
 
