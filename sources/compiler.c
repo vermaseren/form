@@ -1962,7 +1962,7 @@ dolast:
 			else { pow = power; power = 1; }
 			*out++ = TPLUS;
 			if ( pow > 1 ) {
-				subexp = GenerateFactors(pow);
+				subexp = GenerateFactors(pow,1);
 				if ( subexp < 0 ) { error = -1; subexp = 0; }
 				*out++ = TSUBEXP; PUTNUMBER128(out,subexp);
 			}
@@ -2009,8 +2009,27 @@ dopower:
 				if ( power < 0 ) { pow = -power; power = -1; }
 				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
 				else { pow = power; power = 1; }
+				*out++ = TPLUS;
 				if ( pow > 1 ) {
-					subexp = GenerateFactors(pow);
+					subexp = GenerateFactors(pow,AS.OldNumFactors[nexp]);
+					if ( subexp < 0 ) { error = -1; subexp = 0; }
+					*out++ = TSUBEXP; PUTNUMBER128(out,subexp)
+					*out++ = TMULTIPLY;
+				}
+				i = powfactor-1;
+				if ( i > 0 ) {
+					*out++ = TSYMBOL; *out++ = FACTORSYMBOL;
+					if ( i > 1 ) {
+						*out++ = TPOWER; *out++ = TNUMBER; PUTNUMBER100(out,i)
+					}
+					*out++ = TMULTIPLY;
+				}
+				powfactor += AS.OldNumFactors[nexp]*pow;
+				*out++ = TEXPRESSION; PUTNUMBER128(out,nexp)
+
+#ifdef XVXVX
+				if ( pow > 1 ) {
+					subexp = GenerateFactors(pow,1);
 					if ( subexp < 0 ) { error = -1; subexp = 0; }
 				}
 /*				for ( i = 1; i <= Expressions[nexp].numfactors; i++ ) */
@@ -2044,6 +2063,7 @@ dopower:
 						*out++ = TSUBEXP; PUTNUMBER128(out,subexp)
 					}
 				}
+#endif
 				startobject = 0; t = tt; continue;
 			}
 			else {
@@ -2078,7 +2098,7 @@ dopowerd:
 				else if ( power == 0 ) { t = tt; startobject = tt; continue; }
 				else { pow = power; power = 1; }
 				if ( pow > 1 ) {
-					subexp = GenerateFactors(pow);
+					subexp = GenerateFactors(pow,1);
 					if ( subexp < 0 ) { error = -1; subexp = 0; }
 				}
 				for ( i = 1; i <= Dollars[nexp].nfactors; i++ ) {
@@ -2129,9 +2149,14 @@ dopowerd:
 /*
  		#] CodeFactors : 
  		#[ GenerateFactors :
+
+	Generates an expression of the type
+	  1+factor_+factor_^2+...+factor_^(n-1)
+	(this is if inc=1)
+	Returns the subexpression pointer of it.
 */
 
-WORD GenerateFactors(WORD n)
+WORD GenerateFactors(WORD n,WORD inc)
 {
 	WORD subexp;
 	int i, error = 0;
@@ -2139,7 +2164,7 @@ WORD GenerateFactors(WORD n)
 	SBYTE *tokenbuffer = (SBYTE *)Malloc1(8*n*sizeof(SBYTE),"GenerateFactors");
 	s = tokenbuffer;
 	*s++ = TNUMBER; *s++ = 1;
-	for ( i = 1; i < n; i++ ) {
+	for ( i = inc; i < n*inc; i += inc ) {
 		*s++ = TPLUS; *s++ = TSYMBOL; *s++ = FACTORSYMBOL;
 		if ( i > 1 ) {
 			*s++ = TPOWER; *s++ = TNUMBER;
@@ -2166,7 +2191,7 @@ WORD GenerateFactors(WORD n)
 }
 
 /*
- 		#] GenerateFactors : 
+ 		#] GenerateFactors :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

@@ -1912,10 +1912,12 @@ int simp6token(SBYTE *tokens, int mode)
 				s++; n = 0; while ( *s >= 0 ) n = 128*n + *s++;
 				if ( ( ( AS.Oldvflags[n] & ISFACTORIZED ) != 0 ) && *s != LBRACE ) {
 					if ( level == 0 ) {
+/*
 						if ( Expressions[n].replace == NEWLYDEFINEDEXPRESSION ) {
 							MesPrint("&Trying to use a factorized expression in the same module that it is defined.");
 							error = 1;
 						}
+*/
 						haveone = 1;
 					}
 					else if ( error == 0 ) {
