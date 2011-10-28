@@ -914,7 +914,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	OpenBracketIndex(nexpr);     // Set up a new index
 		
 	if (a.is_zero()) {
-		expr->numfactors = 0;
+		expr->numfactors = 1;
 	}
 	else if (a.is_one() && den.is_one()) {
 		expr->numfactors = 1;
@@ -948,8 +948,16 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 			
 			// already factorized, so factorize the factors
 			for (int i=1; i<=expr->numfactors; i++) {
-				factorized_poly fac2(polyfact::factorize(a.coefficient(factorsymbol, i)));
-				poly_fix_minus_signs(fac2);
+				poly origfac(a.coefficient(factorsymbol, i));
+				factorized_poly fac2;
+				if (origfac.is_zero()) {
+					fac2.factor.push_back(poly(BHEAD 0));
+					fac2.power.push_back(1);
+				}
+				else {
+					fac2 = polyfact::factorize(origfac);
+					poly_fix_minus_signs(fac2);
+				}
 				for (int j=0; j<(int)fac2.power.size(); j++)
 					fac.add_factor(fac2.factor[j], fac2.power[j]);
 			}
@@ -971,108 +979,112 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 		poly gcd(polygcd::integer_gcd(num,den));
 		den/=gcd;
 		num/=gcd;
-						 
+		
 		if (!num.is_one() || !den.is_one()) {
-			int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
-
-			term[0] = 6 + 2*n;
-			term[1] = SYMBOL;
-			term[2] = 4;
-			term[3] = FACTORSYMBOL;
-			term[4] = 1;
-			for (int i=0; i<n; i++) {
-				term[5+i]   = i<ABS(num[num[1]]) ? num[2+AN.poly_num_vars+i] : 0;
-				term[5+n+i] = i<ABS(den[den[1]]) ? den[2+AN.poly_num_vars+i] : 0;
+			if (!num.is_zero()) {
+				int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
+				
+				term[0] = 6 + 2*n;
+				term[1] = SYMBOL;
+				term[2] = 4;
+				term[3] = FACTORSYMBOL;
+				term[4] = 1;
+				for (int i=0; i<n; i++) {
+					term[5+i]   = i<ABS(num[num[1]]) ? num[2+AN.poly_num_vars+i] : 0;
+					term[5+n+i] = i<ABS(den[den[1]]) ? den[2+AN.poly_num_vars+i] : 0;
+				}
+				term[5+2*n] = SGN(num[num[1]]) * (2*n+1);
+				AT.WorkPointer += *term;
+				Generator(BHEAD term, C->numlhs);
+				AT.WorkPointer = term;
 			}
-			term[5+2*n] = SGN(num[num[1]]) * (2*n+1);
-			AT.WorkPointer += *term;
-			Generator(BHEAD term, C->numlhs);
-			AT.WorkPointer = term;
 			
 			expr->numfactors++;
 		}
 
-		// convert the non-constant factors to Form-style arguments
-		vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
-		
-		for (int i=0; i<(int)fac.factor.size(); i++)
-			if (!fac.factor[i].is_integer()) {
-				buffer.check_memory(fac.factor[i].size_of_form_notation()+1);		
-				poly::poly_to_argument(fac.factor[i], buffer.terms, false);
-				NewSort(BHEAD0);
-				
-				for (WORD *t=buffer.terms; *t!=0; t+=*t) {
-					// substitute extra symbols
-					if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
-						MesPrint("ERROR: in ConvertFromPoly [factorize_expression]");
+		if (!num.is_zero()) {
+			vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
+			
+			// convert the non-constant factors to Form-style arguments
+			for (int i=0; i<(int)fac.factor.size(); i++)
+				if (!fac.factor[i].is_integer()) {
+					buffer.check_memory(fac.factor[i].size_of_form_notation()+1);		
+					poly::poly_to_argument(fac.factor[i], buffer.terms, false);
+					NewSort(BHEAD0);
+					
+					for (WORD *t=buffer.terms; *t!=0; t+=*t) {
+						// substitute extra symbols
+						if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+							MesPrint("ERROR: in ConvertFromPoly [factorize_expression]");
+							Terminate(-1);
+							return(-1);
+						}
+						
+						// store term
+						AT.WorkPointer += *term;
+						Generator(BHEAD term, C->numlhs);
+						AT.WorkPointer = term;
+					}
+					
+					fac_arg[i].check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD+1);
+					if (EndSort(BHEAD fac_arg[i].terms+ARGHEAD,0,1) < 0) {
+						LowerSortLevel();
 						Terminate(-1);
-						return(-1);
 					}
 					
-					// store term
-					AT.WorkPointer += *term;
-					Generator(BHEAD term, C->numlhs);
-					AT.WorkPointer = term;
+					for (int j=0; j<ARGHEAD; j++)
+						fac_arg[i].terms[j] = 0;
+					
+					fac_arg[i].terms[0] = ARGHEAD;
+					for (WORD *t=fac_arg[i].terms+ARGHEAD; *t!=0; t+=*t)
+						fac_arg[i].terms[0] += *t;
 				}
-				
-				fac_arg[i].check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD+1);
-				if (EndSort(BHEAD fac_arg[i].terms+ARGHEAD,0,1) < 0) {
-					LowerSortLevel();
-					Terminate(-1);
-				}
-
-				for (int j=0; j<ARGHEAD; j++)
-					fac_arg[i].terms[j] = 0;
-
-				fac_arg[i].terms[0] = ARGHEAD;
-				for (WORD *t=fac_arg[i].terms+ARGHEAD; *t!=0; t+=*t)
-					fac_arg[i].terms[0] += *t;
-			}
-
-		// compare and sort the factors in Form notation
-		vector<int> order;
-		vector<vector<int> > comp(fac.factor.size(), vector<int>(fac.factor.size(), 0));
 		
-		for (int i=0; i<(int)fac.factor.size(); i++)
-			if (!fac.factor[i].is_integer()) {
-				order.push_back(i);
-												
-				for (int j=i+1; j<(int)fac.factor.size(); j++)
-					if (!fac.factor[j].is_integer()) {						
-						comp[i][j] = CompArg(fac_arg[j].terms, fac_arg[i].terms);
-						comp[j][i] = -comp[i][j];
-					}
-			}
-
-		for (int i=0; i<(int)order.size(); i++) 
-			for (int j=0; j+1<(int)order.size(); j++)
-				if (comp[order[i]][order[j]] == 1)
-					swap(order[i],order[j]);		
-
-		// create the final expression
-		for (int i=0; i<(int)order.size(); i++)
-			for (int j=0; j<fac.power[order[i]]; j++) {
-
-				expr->numfactors++;
-
-				WORD *tstop = fac_arg[order[i]].terms + *fac_arg[order[i]].terms;
-				for (WORD *t=fac_arg[order[i]].terms+ARGHEAD; t<tstop; t+=*t) {
-
-					memcpy(term+4, t, *t*sizeof(WORD));
+			// compare and sort the factors in Form notation
+			vector<int> order;
+			vector<vector<int> > comp(fac.factor.size(), vector<int>(fac.factor.size(), 0));
+			
+			for (int i=0; i<(int)fac.factor.size(); i++)
+				if (!fac.factor[i].is_integer()) {
+					order.push_back(i);
 					
-					// add special symbol "factor_"
-					*term = *(term+4) + 4;
-					*(term+1) = SYMBOL;
-					*(term+2) = 4;
-					*(term+3) = FACTORSYMBOL;
-					*(term+4) =	expr->numfactors;
+					for (int j=i+1; j<(int)fac.factor.size(); j++)
+						if (!fac.factor[j].is_integer()) {						
+							comp[i][j] = CompArg(fac_arg[j].terms, fac_arg[i].terms);
+							comp[j][i] = -comp[i][j];
+						}
+				}
+			
+			for (int i=0; i<(int)order.size(); i++) 
+				for (int j=0; j+1<(int)order.size(); j++)
+					if (comp[order[i]][order[j]] == 1)
+						swap(order[i],order[j]);		
+			
+			// create the final expression
+			for (int i=0; i<(int)order.size(); i++)
+				for (int j=0; j<fac.power[order[i]]; j++) {
 					
-					// store term
-					AT.WorkPointer += *term;
-					Generator(BHEAD term, C->numlhs);
-					AT.WorkPointer = term;
-				}				
-			}
+					expr->numfactors++;
+					
+					WORD *tstop = fac_arg[order[i]].terms + *fac_arg[order[i]].terms;
+					for (WORD *t=fac_arg[order[i]].terms+ARGHEAD; t<tstop; t+=*t) {
+						
+						memcpy(term+4, t, *t*sizeof(WORD));
+						
+						// add special symbol "factor_"
+						*term = *(term+4) + 4;
+						*(term+1) = SYMBOL;
+						*(term+2) = 4;
+						*(term+3) = FACTORSYMBOL;
+						*(term+4) =	expr->numfactors;
+						
+						// store term
+						AT.WorkPointer += *term;
+						Generator(BHEAD term, C->numlhs);
+						AT.WorkPointer = term;
+					}				
+				}
+		}
 	}
 	
 	// final sorting
