@@ -1829,7 +1829,7 @@ int CodeFactors(SBYTE *tokens)
 	GETIDENTITY
 	EXPRESSIONS e = Expressions + AR.CurExpr;
 	int nfactor = 1, nparenthesis, i, last = 0, error = 0;
-	SBYTE *t, *startobject, *tt, *s1, *s2, *out, *outtokens;
+	SBYTE *t, *startobject, *tt, *s1, *out, *outtokens;
 	WORD nexp, subexp = 0, power, pow, x2, powfactor, first;
 /*
 	First scan the number of factors
@@ -2025,45 +2025,8 @@ dopower:
 					*out++ = TMULTIPLY;
 				}
 				powfactor += AS.OldNumFactors[nexp]*pow;
-				*out++ = TEXPRESSION; PUTNUMBER128(out,nexp)
-
-#ifdef XVXVX
-				if ( pow > 1 ) {
-					subexp = GenerateFactors(pow,1);
-					if ( subexp < 0 ) { error = -1; subexp = 0; }
-				}
-/*				for ( i = 1; i <= Expressions[nexp].numfactors; i++ ) */
-				for ( i = 1; i <= AS.OldNumFactors[nexp]; i++ ) {
-					s1 = startobject; *out++ = TPLUS;
-					while ( s1 < t ) *out++ = *s1++;
-					s2 = out;
-					*s2++ = TSYMBOL; *s2++ = FACTORSYMBOL;
-					*s2++ = TPOWER; *s2++ = TNUMBER; PUTNUMBER100(s2,i)
-					*s2 = TENDOFIT;
-					x2 = CodeGenerator(out);
-					if ( x2 < 0 ) error = -1;
-					if ( insubexpbuffers >= 0x3FFFFFL ) {
-						MesPrint("&More than 2^22 subexpressions inside one expression");
-						Terminate(-1);
-					}
-					if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
-						DoubleBuffer((void **)((VOID *)(&subexpbuffers))
-						,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
-					}
-					subexpbuffers[insubexpbuffers].subexpnum = x2;
-					subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
-					x2 = insubexpbuffers++;
-					*out++ = LBRACE; *out++ = TSUBEXP; PUTNUMBER128(out,x2)
-					*out++ = RBRACE;
-					*out++ = TMULTIPLY;
-					*out++ = TSYMBOL; *out++ = FACTORSYMBOL;
-					*out++ = TPOWER; *out++ = TNUMBER; PUTNUMBER100(out,powfactor)
-					powfactor += pow;
-					if ( pow > 1 ) {
-						*out++ = TSUBEXP; PUTNUMBER128(out,subexp)
-					}
-				}
-#endif
+				s1 = startobject;
+				while ( s1 < t ) *out++ = *s1++;
 				startobject = 0; t = tt; continue;
 			}
 			else {
@@ -2147,7 +2110,7 @@ dopowerd:
 }
 
 /*
- 		#] CodeFactors : 
+ 		#] CodeFactors :
  		#[ GenerateFactors :
 
 	Generates an expression of the type
@@ -2191,7 +2154,7 @@ WORD GenerateFactors(WORD n,WORD inc)
 }
 
 /*
- 		#] GenerateFactors :
+ 		#] GenerateFactors : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

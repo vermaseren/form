@@ -2062,7 +2062,7 @@ WrtTmes:				t = term;
 }
 
 /*
- 		#] WriteTerm :
+ 		#] WriteTerm : 
  		#[ WriteExpression :	WORD WriteExpression(terms,ltot)
 
 	Writes a subexpression to output.
@@ -2219,7 +2219,7 @@ WORD WriteAll()
 				first = 0;
 			}
 			if ( AO.FactorMode ) {
-				if ( first ) { TOKENTOLINE(" 0","0") }
+				if ( first ) { AO.FactorNum = 1; TOKENTOLINE(" 0","0") }
 				else TOKENTOLINE(" )",")");
 				for ( i = AO.FactorNum+1; i <= e->numfactors; i++ ) {
 					FiniLine();
@@ -2273,7 +2273,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll : 
+ 		#] WriteAll :
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor
