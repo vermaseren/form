@@ -1115,7 +1115,7 @@ VOID WriteLists()
 }
 
 /*
- 		#] WriteLists :
+ 		#] WriteLists : 
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
@@ -1248,7 +1248,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 	switch ( *sterm ) {
 		case SYMBOL :
 			while ( t < stopper ) {
-				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI] */
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {
 					FiniLine();
 					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 						else IniLine(3);
@@ -1296,7 +1296,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			break;
 		case VECTOR :
 			while ( t < stopper ) {
-				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {
 					FiniLine();
 					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 						else IniLine(3);
@@ -1332,7 +1332,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
   			break;
 		case INDEX :
 			while ( t < stopper ) {
-				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {
 					FiniLine();
 					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 						else IniLine(3);
@@ -1380,7 +1380,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			break;
 		case DELTA :
 			while ( t < stopper ) {
-				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ]*/
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {
 					FiniLine();
 					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 						else IniLine(3);
@@ -1429,7 +1429,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			break;
 		case DOTPRODUCT :
 			while ( t < stopper ) {
-				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+				if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {
 					FiniLine();
 					if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 						else IniLine(3);
@@ -1501,7 +1501,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			}
 			break;
 		default :
-			if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {       /* [ 2009-10-30 PI ] */
+			if ( lowestlevel && ( ( AO.PrintType & PRINTALL ) != 0 ) ) {
 				FiniLine();
 				if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 					else IniLine(3);
@@ -1634,7 +1634,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 		}
 	}
 	else if ( n != 1 || *t != 1 || t[1] != 1 || t <= s ) { 
-		if ( lowestlevel && ( ( AO.PrintType & PRINTONEFUNCTION ) != 0 ) ) {    /* [ 2009-10-30 PI ] */
+		if ( lowestlevel && ( ( AO.PrintType & PRINTONEFUNCTION ) != 0 ) ) {
 				FiniLine();
 				if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 				else IniLine(3);
@@ -1643,7 +1643,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 	}
 	else first = 1;
 	while ( s < t ) {
-		if ( lowestlevel && ( (AO.PrintType & (PRINTONEFUNCTION | PRINTALL)) == PRINTONEFUNCTION ) ) {       /* [ 2009-10-30 PI ] */
+		if ( lowestlevel && ( (AO.PrintType & (PRINTONEFUNCTION | PRINTALL)) == PRINTONEFUNCTION ) ) {
 			FiniLine();
 			if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 			else IniLine(3);
@@ -1752,7 +1752,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 {
 	WORD *t, *stopper, *b, n;
-	int oldIsFortran90 = AC.IsFortran90;
+	int oldIsFortran90 = AC.IsFortran90, i;
 	if ( *lbrac >= 0 ) {
 		t = term + 1;
 		stopper = (term + *term - 1);
@@ -1796,9 +1796,7 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 						TokenToLine((UBYTE *)";");
 					else if ( AO.FactorMode && ( n == 0 ) ) {
 /*
-						We do not want to print the term with nothing outside
-						the bracket. That is the number of factors.
-						TokenToLine((UBYTE *)";");
+						This should not happen.
 */
 						return(0);
 					}
@@ -1895,12 +1893,25 @@ WrtTmes:				t = term;
 				else {
 /*
 					Here is the code that writes the glue between two factors.
+					We should not forget factors that are zero!
 */
 					if ( ( *lbrac = n ) > 0 ) {
 						b = AO.bracket;
 						*b++ = n + 4;
 						while ( --n >= 0 ) *b++ = *t++;
 						*b++ = 1; *b++ = 1; *b = 3;
+						for ( i = AO.FactorNum+1; i < AO.bracket[4]; i++ ) {
+							if ( first ) {
+								TOKENTOLINE(" ( 0 )","(0)")
+								first = 0;
+							}
+							else {
+								TOKENTOLINE(" * ( 0 )","*(0)")
+							}
+							FiniLine();
+							IniLine(0);
+						}
+						AO.FactorNum = AO.bracket[4];
 					}
 					else {
 						AO.NumInBrack = 0;
@@ -2051,7 +2062,7 @@ WrtTmes:				t = term;
 }
 
 /*
- 		#] WriteTerm : 
+ 		#] WriteTerm :
  		#[ WriteExpression :	WORD WriteExpression(terms,ltot)
 
 	Writes a subexpression to output.
@@ -2096,7 +2107,7 @@ WORD WriteAll()
 	GETIDENTITY
 	WORD lbrac, first;
 	WORD *t, *stopper, n, prtf;
-	int oldIsFortran90 = AC.IsFortran90;
+	int oldIsFortran90 = AC.IsFortran90, i;
 	POSITION pos;
 	FILEHANDLE *f;
 	EXPRESSIONS e;
@@ -2184,8 +2195,13 @@ WORD WriteAll()
 			else
 				AO.FortFirst = 0;
 			first = 1;
-			if ( ( e->vflags & ISFACTORIZED ) != 0 ) AO.FactorMode = 1;
-			else                                     AO.FactorMode = 0;
+			if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
+				AO.FactorMode = 1+e->numfactors;
+				AO.FactorNum = 0; /* Which factor are we doing. For factors that are zero */
+			}
+			else {
+				AO.FactorMode = 0;
+			}
 			while ( GetTerm(BHEAD AO.termbuf) ) {
 				WORD *m;
 				GETSTOP(AO.termbuf,m);
@@ -2202,9 +2218,17 @@ WORD WriteAll()
 					goto AboWrite;
 				first = 0;
 			}
-			if ( AO.FactorMode && first == 0
-			 && ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE ) ) {
-				TOKENTOLINE(" );",");");
+			if ( AO.FactorMode ) {
+				if ( first ) { TOKENTOLINE(" 0","0") }
+				else TOKENTOLINE(" )",")");
+				for ( i = AO.FactorNum+1; i <= e->numfactors; i++ ) {
+					FiniLine();
+					IniLine(0);
+					TOKENTOLINE(" * ( 0 )","*(0)");
+				}
+				AO.FactorNum = e->numfactors;
+				if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE )
+					TokenToLine((UBYTE *)";");
 			}
 			else if ( AO.FactorMode == 0 || first ) {
 				if ( first ) { TOKENTOLINE(" 0","0") }

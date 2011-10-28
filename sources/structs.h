@@ -2101,8 +2101,9 @@ struct O_const {
     WORD    DoubleFlag;            /* (O) Output in double precision */
     WORD    IndentSpace;           /* For indentation in output */
     WORD    FactorMode;            /* When the output should be written as factors */
+    WORD    FactorNum;             /* Number of factor currently treated */
     UBYTE   FortDotChar;           /* (O) */
-	PADPOINTER(4,3,12,1);
+	PADPOINTER(4,3,13,1);
 };
 /*
  		#] O : 
