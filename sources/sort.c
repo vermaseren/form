@@ -2455,7 +2455,7 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 					while ( s2 < t2 ) { i1 -= s2[1]; s2 += 2; }
 					s2 = r1;
 					if ( i1 ) {
-						if ( SORTANTIPOWER ) i1 = -i1;
+						if ( AR.SortType >= SORTANTIPOWER ) i1 = -i1;
 						return(PREV(i1));
 					}
 				}
@@ -2512,7 +2512,7 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 					while ( s2 < t2 ) { i1 -= s2[2]; s2 += 3; }
 					s2 = r1;
 					if ( i1 ) {
-						if ( SORTANTIPOWER ) i1 = -i1;
+						if ( AR.SortType >= SORTANTIPOWER ) i1 = -i1;
 						return(PREV(i1));
 					}
 				}
