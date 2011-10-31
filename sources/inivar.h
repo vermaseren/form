@@ -213,6 +213,7 @@ static struct fixedfun {
 	,{"random_"     ,0 ,0             ,0               ,0} /* RANDOMFUNCTION */
 	,{"ranperm_"    ,1 ,0             ,0               ,0} /* RANPERM */
 	,{"numfactors_" ,0 ,0             ,0               ,0} /* NUMFACTORS */
+	,{"firstterm_"  ,0 ,0             ,0               ,0} /* FIRSTTERM */
 };
 
 FIXEDSET fixedsets[] = {

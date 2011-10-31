@@ -709,6 +709,7 @@ MulIn:
 			case FIRSTBRACKET:
 				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
 					if ( GetFirstBracket(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					if ( *termout == 0 ) goto NormZero;
 					if ( *termout > 4 ) {
 						WORD *r1, *r2, *r3;
 						while ( r < m ) *t++ = *r++;
@@ -719,6 +720,33 @@ MulIn:
 						while ( r3 < r2 ) *t++ = *r3++; *term = t - term;
 						if ( AT.WorkPointer > term && AT.WorkPointer < t )
 							AT.WorkPointer = t;
+						goto Restart;
+					}
+				}
+				break;
+			case FIRSTTERM:
+				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
+					if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					if ( *termout == 0 ) goto NormZero;
+					{
+						WORD *r1, *r2, *r3, *r4, *r5, nr1, *rterm;
+						r2 = termout + *termout; lnum = r2 - ABS(r2[-1]);
+						nnum = REDLENG(r2[-1]);
+
+						r1 = term + *term; r3 = r1 - ABS(r1[-1]);
+						nr1 = REDLENG(r1[-1]);
+						if ( Mully(BHEAD (UWORD *)lnum,&nnum,(UWORD *)r3,nr1) ) goto FromNorm;
+						nnum = INCLENG(nnum); nr1 = ABS(nnum); lnum[nr1-1] = nnum;
+						rterm = TermMalloc("FirstTerm");
+						r4 = rterm+1; r5 = term+1; while ( r5 < t ) *r4++ = *r5++;
+						r5 = termout+1; while ( r5 < lnum ) *r4++ = *r5++;
+						r5 = r; while ( r5 < r3 ) *r4++ = *r5++;
+						r5 = lnum; NCOPY(r4,r5,nr1);
+						*rterm = r4-rterm;
+						nr1 = *rterm; r1 = term; r2 = rterm; NCOPY(r1,r2,nr1);
+						TermFree(rterm,"FirstTerm");
+						if ( AT.WorkPointer > term && AT.WorkPointer < r1 )
+							AT.WorkPointer = r1;
 						goto Restart;
 					}
 				}

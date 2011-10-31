@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes : execute.c
 */
@@ -36,7 +36,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -169,7 +169,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -296,7 +296,7 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables :
+ 		#] PopVariables : 
  		#[ MakeGlobal :
 */
 
@@ -367,7 +367,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ TestDrop :
 */
 
@@ -439,7 +439,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop :
+ 		#] TestDrop : 
  		#[ PutInVflags :
 */
 
@@ -482,7 +482,7 @@ void PutInVflags(WORD nexpr)
 }
 
 /*
- 		#] PutInVflags :
+ 		#] PutInVflags : 
  		#[ DoExecute :
 */
 
@@ -857,7 +857,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute :
+ 		#] DoExecute : 
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1162,7 +1162,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket :
+ 		#] PutBracket : 
  		#[ SpecialCleanup :
 */
 
@@ -1174,7 +1174,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup :
+ 		#] SpecialCleanup : 
  		#[ SetMods :
 */
 
@@ -1192,7 +1192,7 @@ void SetMods()
 #endif
 
 /*
- 		#] SetMods :
+ 		#] SetMods : 
  		#[ UnSetMods :
 */
 
@@ -1207,7 +1207,7 @@ void UnSetMods()
 #endif
 
 /*
- 		#] UnSetMods :
+ 		#] UnSetMods : 
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1283,7 +1283,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions :
+ 		#] ExchangeExpressions : 
  		#[ GetFirstBracket :
 */
 
@@ -1388,7 +1388,94 @@ int GetFirstBracket(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstBracket :
+ 		#] GetFirstBracket : 
+ 		#[ GetFirstTerm :
+*/
+
+int GetFirstTerm(WORD *term, int num)
+{
+/*
+		Gets the first term of the expression 'num'
+		Puts it in term.
+		Routine is called from Normalize. Hence it should be thread-safe
+*/
+	GETIDENTITY
+	POSITION position, oldposition;
+	RENUMBER renumber;
+	FILEHANDLE *fi;
+	WORD type, *oldcomppointer, oldonefile, numword;
+
+	oldcomppointer = AR.CompressPointer;
+	type = Expressions[num].status;
+	if ( type == STOREDEXPRESSION ) {
+		WORD TMproto[SUBEXPSIZE];
+		TMproto[0] = EXPRESSION;
+		TMproto[1] = SUBEXPSIZE;
+		TMproto[2] = num;
+		TMproto[3] = 1;
+		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+		AT.TMaddr = TMproto;
+		PUTZERO(position);
+		if ( ( renumber = GetTable(num,&position) ) == 0 ) {
+			MesCall("GetFirstTerm");
+			SETERROR(-1)
+		}
+		if ( GetFromStore(term,&position,renumber,&numword,num) < 0 ) {
+			MesCall("GetFirstTerm");
+			SETERROR(-1)
+		}
+#ifdef WITHPTHREADS
+		M_free(renumber->symb.lo,"VarSpace");
+		M_free(renumber,"Renumber");
+#endif
+	}
+	else {			/* Active expression */
+		oldonefile = AR.GetOneFile;
+		if ( type == HIDDENLEXPRESSION || type == HIDDENGEXPRESSION ) {
+			AR.GetOneFile = 2; fi = AR.hidefile;
+		}
+		else {
+			AR.GetOneFile = 0; fi = AR.infile;
+		}
+		if ( fi->handle >= 0 ) {
+			PUTZERO(oldposition);
+/*
+			SeekFile(fi->handle,&oldposition,SEEK_CUR);
+*/
+			}
+		else {
+			SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
+		}
+		position = AS.OldOnFile[num];
+		if ( GetOneTerm(BHEAD term,fi,&position,1) < 0
+		|| ( GetOneTerm(BHEAD term,fi,&position,1) < 0 ) ) {
+			MLOCK(ErrorMessageLock);
+			MesCall("GetFirstTerm");
+			MUNLOCK(ErrorMessageLock);
+			SETERROR(-1)
+		}
+		if ( fi->handle >= 0 ) {
+/*
+			SeekFile(fi->handle,&oldposition,SEEK_SET);
+			if ( ISNEGPOS(oldposition) ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("File error");
+				MUNLOCK(ErrorMessageLock);
+				SETERROR(-1)
+			}
+*/
+		}
+		else {
+			fi->POfill = fi->PObuffer+BASEPOSITION(oldposition);
+		}
+		AR.GetOneFile = oldonefile;
+	}
+	AR.CompressPointer = oldcomppointer;
+	return(*term);
+}
+
+/*
+ 		#] GetFirstTerm : 
  		#[ TermsInExpression :
 */
 
@@ -1400,7 +1487,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression :
+ 		#] TermsInExpression : 
  		#[ UpdatePositions :
 */
 
@@ -1451,7 +1538,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions :
+ 		#] UpdatePositions : 
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -1562,7 +1649,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 :
+ 		#] CountTerms1 : 
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -1753,6 +1840,6 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level)
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */

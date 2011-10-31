@@ -1083,6 +1083,7 @@ extern int    TryFileSetups(VOID);
 extern void   ExchangeExpressions(int,int);
 extern void   ExchangeDollars(int,int);
 extern int    GetFirstBracket(WORD *,int);
+extern int    GetFirstTerm(WORD *,int);
 extern UBYTE *PreIfDollarEval(UBYTE *,int *);
 extern LONG   TermsInDollar(WORD);
 extern LONG   TermsInExpression(WORD);
