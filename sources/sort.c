@@ -2448,7 +2448,14 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 		|| ( c1 >= FUNCTION && functions[c1-FUNCTION].spec ) ) {
 			if ( c1 == SYMBOL ) {
 				if ( *s1 == FACTORSYMBOL && *s2 == FACTORSYMBOL
-				 && s1[-1] == 4 && s2[-1] == 4 ) {
+				 && s1[-1] == 4 && s2[-1] == 4
+				 && ( ( t1 < stopper1 && *t1 == HAAKJE ) || t1 == stopper1 ) ) {
+/*
+					We have to be very careful with the criteria here, because
+					Compare1 is called both in the regular sorting and by the
+					routine that makes the bracket index. In the last case
+					there is no HAAKJE subterm.
+*/
 					if ( s1[1] != s2[1] ) return(s2[1]-s1[1]);
 					s1 += 2; s2 += 2;
 				}
