@@ -664,7 +664,10 @@ MulIn:
 */
 				if ( t[FUNHEAD] < 0 ) {
 					if ( t[FUNHEAD] <= -FUNCTION && t[1] == FUNHEAD+1 ) break;
-					if ( t[FUNHEAD] > -FUNCTION && t[1] == FUNHEAD+2 ) break;
+					if ( t[FUNHEAD] > -FUNCTION && t[1] == FUNHEAD+2 ) {
+						if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+1] == 0 ) goto NormZero;
+						break;
+					}
 					pcom[ncom++] = t;
 					break;
 				}
@@ -2140,7 +2143,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3488,7 +3491,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
