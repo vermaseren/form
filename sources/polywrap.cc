@@ -173,6 +173,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
 	int pow = pa.degree(0);
 	poly lcoeffb(pb.integer_lcoeff());
+	lcoeffb *= poly(BHEAD lcoeffb.sign());
 	poly den(BHEAD 1);
 
 	if (divmod==1) den=dena*denb;
