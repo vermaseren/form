@@ -2447,7 +2447,12 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 		if ( c1 <= (FUNCTION-1)
 		|| ( c1 >= FUNCTION && functions[c1-FUNCTION].spec ) ) {
 			if ( c1 == SYMBOL ) {
-				if ( AR.SortType >= SORTPOWERFIRST ) {
+				if ( *s1 == FACTORSYMBOL && *s2 == FACTORSYMBOL
+				 && s1[-1] == 4 && s2[-1] == 4 ) {
+					if ( s1[1] != s2[1] ) return(s2[1]-s1[1]);
+					s1 += 2; s2 += 2;
+				}
+				else if ( AR.SortType >= SORTPOWERFIRST ) {
 					WORD i1 = 0, *r1;
 					r1 = s1;
 					while ( s1 < t1 ) { i1 += s1[1]; s1 += 2; }
@@ -2777,7 +2782,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 : 
+ 		#] Compare1 :
  		#[ CompareSymbols :			int CompareSymbols(term1,term2,par)
 */
 /**
