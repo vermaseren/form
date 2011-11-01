@@ -2449,7 +2449,8 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 			if ( c1 == SYMBOL ) {
 				if ( *s1 == FACTORSYMBOL && *s2 == FACTORSYMBOL
 				 && s1[-1] == 4 && s2[-1] == 4
-				 && ( ( t1 < stopper1 && *t1 == HAAKJE ) || t1 == stopper1 ) ) {
+				 && ( ( t1 < stopper1 && *t1 == HAAKJE )
+				 || ( t1 == stopper1 && AT.fromindex ) ) ) {
 /*
 					We have to be very careful with the criteria here, because
 					Compare1 is called both in the regular sorting and by the

@@ -92,6 +92,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	else                  bracketinfo = e->bracketinfo;
 	hi = bracketinfo->indexfill; low = 0;
 	if ( hi <= 0 ) return(0);
+	AT.fromindex = 1;
 	AR.SortType = bracketinfo->SortType;
 	bi = bracketinfo->indexbuffer + hi - 1;
 	if ( *bracket == 4 ) {
@@ -102,6 +103,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	else i = CompareTerms(BHEAD bracket,bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
 		AR.SortType = oldsorttype;
+		AT.fromindex = 0;
 		return(0);
 	}
 	else if ( i == 0 ) med = hi-1;
@@ -118,6 +120,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
 				AR.SortType = oldsorttype;
+				AT.fromindex = 0;
 				return(0);
 			}
 			hi = med;
@@ -158,6 +161,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	NCOPY(t2,t1,j)
 	if ( i == 0 ) {	/* We found the proper bracket already */
 		AR.SortType = oldsorttype;
+		AT.fromindex = 0;
 		return(&AN.theposition);
 	}
 /*
@@ -237,6 +241,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			}
 		}
 		AR.SortType = oldsorttype;
+		AT.fromindex = 0;
 		return(0);	/* Bracket does not exist */
 	}
 	else {
@@ -253,6 +258,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 */
 			if ( *term == 0 ) {
 				AR.SortType = oldsorttype;
+				AT.fromindex = 0;
 				return(0);	/* Bracket does not exist */
 			}
 			tstop = term + *term;
@@ -276,12 +282,14 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			if ( ISGEPOS(AN.theposition,toppos) ) {
 				AR.SortType = oldsorttype;
 				AR.CompressPointer = cp;
+				AT.fromindex = 0;
 				return(0);	/* Bracket does not exist */
 			}
 		}
 	}
 found:
 	AR.SortType = oldsorttype;
+	AT.fromindex = 0;
 	return(&AN.theposition);
 }
 
@@ -316,6 +324,7 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 	if ( *t != HAAKJE ) return; /* no ticket, no laundry */
 	oldt = t; oldsize = *term; *t++ = 1; oldhs = *t; *t++ = 1;
 	oldh = *t; *t++ = 3; *term = t - term;
+	AT.fromindex = 1;
 /*
 	Check now with the last bracket in the buffer.
 	If it is the same we can abort.
@@ -361,6 +370,7 @@ problems:;
 				PrintTerm(term,"term into index");
 				PrintTerm(b->bracketbuffer+bi->bracket,"Last in index");
 				MUNLOCK(ErrorMessageLock);
+				AT.fromindex = 0;
 				Terminate(-1);
 			}
 			i = -1;
@@ -501,10 +511,11 @@ problems:;
 	NCOPY(t2,t1,i)
 bracketdone:
 	*term = oldsize; oldt[0] = HAAKJE; oldt[1] = oldhs; oldt[2] = oldh;
+	AT.fromindex = 0;
 }
 
 /*
-  	#] PutBracketInIndex :
+  	#] PutBracketInIndex : 
   	#[ ClearBracketIndex :
 */
 

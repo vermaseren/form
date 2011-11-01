@@ -1884,7 +1884,7 @@ struct T_const {
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
 	WORD    inprimelist;
 	WORD    sizeprimelist;
-    WORD    res1;                  /* Padding */
+    WORD    fromindex;             /* Tells the compare routine whether call from index */
 };
 /*
  		#] T : 
