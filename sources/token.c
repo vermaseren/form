@@ -1891,8 +1891,9 @@ int simp6token(SBYTE *tokens, int mode)
 /*	EXPRESSIONS e = Expressions; */
 	int error = 0, n;
 	int level = 0, haveone = 0;
-	SBYTE *s = tokens;
+	SBYTE *s = tokens, *ss;
 	LONG numterms;
+	WORD funnum = 0;
 	if ( mode == RHSIDE ) {
 		while ( *s == TPLUS || *s == TMINUS ) s++;
 		numterms = 1;
@@ -1910,22 +1911,23 @@ int simp6token(SBYTE *tokens, int mode)
 				}
 			}
 			else if ( *s == TEXPRESSION ) {
+				ss = s;
 				s++; n = 0; while ( *s >= 0 ) n = 128*n + *s++;
 				if ( ( ( AS.Oldvflags[n] & ISFACTORIZED ) != 0 ) && *s != LBRACE ) {
 					if ( level == 0 ) {
-/*
-						if ( Expressions[n].replace == NEWLYDEFINEDEXPRESSION ) {
-							MesPrint("&Trying to use a factorized expression in the same module that it is defined.");
-							error = 1;
-						}
-*/
 						haveone = 1;
 					}
 					else if ( error == 0 ) {
-						MesPrint("&Illegal use of factorized expression(s) in RHS");
-						error = 1;
+						if ( ss[-1] != TFUNOPEN || funnum != NUMFACTORS-FUNCTION ) {
+							MesPrint("&Illegal use of factorized expression(s) in RHS");
+							error = 1;
+						}
 					}
 				}
+				continue;
+			}
+			else if ( *s == TFUNCTION ) {
+				s++; funnum = 0; while ( *s >= 0 ) funnum = 128*funnum + *s++;
 				continue;
 			}
 			s++;
@@ -1945,7 +1947,7 @@ int simp6token(SBYTE *tokens, int mode)
 }
 
 /*
- 		#] simp6token : 
+ 		#] simp6token :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

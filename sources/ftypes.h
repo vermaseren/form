@@ -720,6 +720,7 @@ typedef int (*TFUN1)();
 #define ISFACTORIZED 16
 #define TOBEFACTORED 32
 #define TOBEUNFACTORED 64
+#define KEEPZERO 128
 
 #define VARTYPENONE 0
 #define VARTYPECOMPLEX 1

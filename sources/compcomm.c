@@ -5723,7 +5723,32 @@ int DoFactorize(UBYTE *s,int par)
 	WORD i;
 	WORD number;
 	UBYTE *t, c;
-	int error = 0;
+	int error = 0, keepzeroflag = 0;
+	if ( *s == '(' ) {
+		s++;
+		while ( *s != ')' && *s ) {
+			if ( FG.cTable[*s] == 0 ) {
+				t = s; while ( FG.cTable[*s] == 0 ) s++;
+				c = *s; *s = 0;
+				if ( StrICmp((UBYTE *)"keepzero",t) == 0 ) {
+					keepzeroflag = 1;
+				}
+				else {
+					MesPrint("&Illegal option in [N][Un]Factorize statement: %s",t);
+					error = 1;
+				}
+				*s = c;
+			}
+			while ( *s == ',' ) s++;
+			if ( *s && *s != ')' && FG.cTable[*s] != 0 ) {
+				MesPrint("&Illegal character in option field of [N][Un]Factorize statement");
+				error = 1;
+				return(error);
+			}
+		}
+		if ( *s ) s++;
+		while ( *s == ',' || *s == ' ' ) s++;
+	}
 	if ( *s == 0 ) {
 		for ( i = NumExpressions-1; i >= 0; i-- ) {
 			e = Expressions+i;
@@ -5751,6 +5776,11 @@ int DoFactorize(UBYTE *s,int par)
 						break;
 				}
 			}
+			if ( ( e->vflags & TOBEFACTORED ) != 0 ) {
+				if ( keepzeroflag ) e->vflags |=  KEEPZERO;
+				else                e->vflags &= ~KEEPZERO;
+			}
+			else                    e->vflags &= ~KEEPZERO;
 		}
 	}
 	else {
@@ -5790,6 +5820,11 @@ int DoFactorize(UBYTE *s,int par)
 								break;
 						}
 					}
+					if ( ( e->vflags & TOBEFACTORED ) != 0 ) {
+						if ( keepzeroflag ) e->vflags |=  KEEPZERO;
+						else                e->vflags &= ~KEEPZERO;
+					}
+					else                    e->vflags &= ~KEEPZERO;
 				}
 				else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
 					MesPrint("&%s is not an expression",t);
@@ -5810,5 +5845,5 @@ int DoFactorize(UBYTE *s,int par)
 }
 
 /*
-  	#] DoFactorize : 
+  	#] DoFactorize :
 */
