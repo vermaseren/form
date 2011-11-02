@@ -806,6 +806,7 @@ int PF_Send(int to, int tag, int par)
 
 /**
  * Recieves data into the pack buffer from the process specified by \a src.
+ * This function allows &src == srcp or &tag == tagp.
  *
  * See the example of PF_Send().
  *

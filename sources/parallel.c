@@ -89,7 +89,7 @@ static int PF_SendChunkIP(FILEHANDLE *curfile,  POSITION *position, int to, LONG
 static int PF_RecvChunkIP(FILEHANDLE *curfile, int from, LONG thesize);
 
 static void PF_ReceiveErrorMessage(int src, int tag);
-static void PF_CatchErrorMessages(int src);
+static void PF_CatchErrorMessages(int *src, int *tag);
 static void PF_CatchErrorMessagesForAll(void);
 static int PF_ProbeWithCatchingErrorMessages(int *src);
 
@@ -151,6 +151,18 @@ static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndS
 	do { \
 		(n) = (LONG)((((ULONG)(p)[1] & (ULONG)WORDMASK) << BITSINWORD) | ((ULONG)(p)[0] & (ULONG)WORDMASK)); \
 		(p) += 2; \
+	} while (0)
+
+/**
+ * A simple check for unrecoverable errors.
+ */
+#define CHECK(condition) _CHECK(condition, __FILE__, __LINE__)
+#define _CHECK(condition, file, line) \
+	do { \
+		if ( !(condition) ) { \
+			Error0("Fatal error at " file ":" #line); \
+			Terminate(-1); \
+		} \
 	} while (0)
 
 /*
@@ -1288,8 +1300,9 @@ static int PF_Wait4Slave(int src)
 {
 	int j, tag, next;
 
-	PF_CatchErrorMessages(src);
-	PF_Receive(src,PF_ANY_MSGTAG,&next,&tag);
+	tag = PF_ANY_MSGTAG;
+	PF_CatchErrorMessages(&src, &tag);
+	PF_Receive(src, tag, &next, &tag);
 
 	if ( tag != PF_READY_MSGTAG ) {
 		MesPrint("[%d] PF_Wait4Slave: received MSGTAG %d",(WORD)PF.me,(WORD)tag);
@@ -1334,8 +1347,9 @@ static int PF_Wait4SlaveIP(int *src)
 {
 	int j,tag,next;
 
-	PF_CatchErrorMessages(*src);
-	PF_Receive(*src,PF_ANY_MSGTAG,&next,&tag);
+	tag = PF_ANY_MSGTAG;
+	PF_CatchErrorMessages(src, &tag);
+	PF_Receive(*src, tag, &next, &tag);
 	*src=tag;
 	if ( PF_W4Sstats == 0 ) {
 		PF_W4Sstats = (LONG**)Malloc1(sizeof(LONG*),"");
@@ -4308,22 +4322,22 @@ static void PF_ReceiveErrorMessage(int src, int tag)
 	/* Only on the master. */
 	int size;
 	int ret = PF_RawProbe(&src, &tag, &size);
-	if ( ret == 0 ) {
-		switch ( tag ) {
-			case PF_STDOUT_MSGTAG:
-			case PF_LOG_MSGTAG:
-				VectorReserve(recvBuffer, size);
-				ret = PF_RawRecv(&src, VectorPtr(recvBuffer), size, &tag);
-				if ( ret > 0 ) {
-					int handle = (tag == PF_STDOUT_MSGTAG) ? AM.StdOut : AC.LogHandle;
+	CHECK(ret == 0);
+	switch ( tag ) {
+		case PF_STDOUT_MSGTAG:
+		case PF_LOG_MSGTAG:
+			VectorReserve(recvBuffer, size);
+			ret = PF_RawRecv(&src, VectorPtr(recvBuffer), size, &tag);
+			CHECK(ret == size);
+			if ( size > 0 ) {
+				int handle = (tag == PF_STDOUT_MSGTAG) ? AM.StdOut : AC.LogHandle;
 #ifdef PF_ENABLE_STDOUT_BUFFERING
-					if ( handle == AM.StdOut ) PF_WriteFileToFile(handle, VectorPtr(recvBuffer), size);
-					else
+				if ( handle == AM.StdOut ) PF_WriteFileToFile(handle, VectorPtr(recvBuffer), size);
+				else
 #endif
-					WriteFileToFile(handle, VectorPtr(recvBuffer), size);
-				}
-				break;
-		}
+				WriteFileToFile(handle, VectorPtr(recvBuffer), size);
+			}
+			break;
 	}
 }
 
@@ -4334,24 +4348,26 @@ static void PF_ReceiveErrorMessage(int src, int tag)
 
 /**
  * Processes all incoming messages whose tag is PF_STDOUT_MSGTAG
- * or PF_LOG_MSGTAG. It ensures that the next PF_Recieve(src, PF_ANY_MSGTAG, ...)
+ * or PF_LOG_MSGTAG. It ensures that the next PF_Recieve(src, tag, ...)
  * will not receive the message with PF_STDOUT_MSGTAG or PF_LOG_MSGTAG.
  *
- * @param  src  the source process.
+ * @param[in,out]  src  the source process.
+ * @param[in,out]  tag  the tag value.
  */
-static void PF_CatchErrorMessages(int src)
+static void PF_CatchErrorMessages(int *src, int *tag)
 {
 	/* Only on the master. */
 	for (;;) {
-		int next = src;
-		int tag = PF_ANY_MSGTAG;
-		int ret = PF_RawProbe(&next, &tag, NULL);
-		if ( ret == 0 ) {
-			if ( tag == PF_STDOUT_MSGTAG || tag == PF_LOG_MSGTAG ) {
-				PF_ReceiveErrorMessage(next, tag);
-				continue;
-			}
+		int asrc = *src;
+		int atag = *tag;
+		int ret = PF_RawProbe(&asrc, &atag, NULL);
+		CHECK(ret == 0);
+		if ( atag == PF_STDOUT_MSGTAG || atag == PF_LOG_MSGTAG ) {
+			PF_ReceiveErrorMessage(asrc, atag);
+			continue;
 		}
+		*src = asrc;
+		*tag = atag;
 		break;
 	}
 }
@@ -4362,14 +4378,18 @@ static void PF_CatchErrorMessages(int src)
 */
 
 /**
- * Calls PF_CatchErrorMessages() for all slaves.
- * Note that it is NOT equivalent to PF_CatchErrorMessages(PF_ANY_SOURCE).
+ * Calls PF_CatchErrorMessages() for all slaves and PF_ANY_MSGTAG.
+ * Note that it is NOT equivalent to PF_CatchErrorMessages() with PF_ANY_SOURCE.
  */
 static void PF_CatchErrorMessagesForAll(void)
 {
 	/* Only on the master. */
 	int i;
-	for ( i = 1; i < PF.numtasks; i++ ) PF_CatchErrorMessages(i);
+	for ( i = 1; i < PF.numtasks; i++ ) {
+		int src = i;
+		int tag = PF_ANY_MSGTAG;
+		PF_CatchErrorMessages(&src, &tag);
+	}
 }
 
 /*
