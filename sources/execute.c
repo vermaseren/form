@@ -1292,7 +1292,7 @@ int GetFirstBracket(WORD *term, int num)
 /*
 		Gets the first bracket of the expression 'num'
 		Puts it in term. If no brackets the answer is one.
-		Routine is called from Normalize. Hence it should be thread-safe
+		Routine should be thread-safe
 */
 	GETIDENTITY
 	POSITION position, oldposition;
@@ -1397,7 +1397,7 @@ int GetFirstTerm(WORD *term, int num)
 /*
 		Gets the first term of the expression 'num'
 		Puts it in term.
-		Routine is called from Normalize. Hence it should be thread-safe
+		Routine should be thread-safe
 */
 	GETIDENTITY
 	POSITION position, oldposition;

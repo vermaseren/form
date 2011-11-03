@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ include :
 */
@@ -68,7 +68,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 #endif
 
 /*
-  	#] ostream operator :
+  	#] ostream operator : 
   	#[ integer_gcd :
 */
 
@@ -121,7 +121,7 @@ const poly polygcd::integer_gcd (const poly &a, const poly &b) {
 }
 
 /*
-  	#] integer_gcd :
+  	#] integer_gcd : 
   	#[ integer_content :
 */
 
@@ -181,7 +181,7 @@ const poly polygcd::integer_content (const poly &a) {
 }
 
 /*
-  	#] integer_content :
+  	#] integer_content : 
   	#[ content_univar :
 */
 
@@ -239,7 +239,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
 }
 
 /*
-  	#] content_univar :
+  	#] content_univar : 
 	 	#[ content_multivar :
 */
 
@@ -304,8 +304,8 @@ const poly polygcd::content_multivar (const poly &a, int x) {
 }
 
 /*
-  	#] content_multivar
-		[# coefficient_list_gcd :
+  	#] content_multivar : 
+ 		#[ coefficient_list_gcd :
 */
 
 /**  Euclidean algorithm for coefficient lists
@@ -349,7 +349,7 @@ const vector<WORD> polygcd::coefficient_list_gcd (const vector<WORD> &_a, const 
 }
 
 /*		
-		#] coefficient_list_gcd :
+ 		#] coefficient_list_gcd : 
   	#[ gcd_Euclidean :
 */
 
@@ -404,7 +404,7 @@ const poly polygcd::gcd_Euclidean (const poly &a, const poly &b) {
 }
 
 /*
-  	#] gcd_Euclidean :
+  	#] gcd_Euclidean : 
 	 	#[ chinese_remainder :
 */
 
@@ -467,7 +467,7 @@ const poly polygcd::chinese_remainder (const poly &a1, const poly &m1, const pol
 }
 
 /*
-  	#] chinese_remainder :
+  	#] chinese_remainder : 
 	 	#[ substitute_last :
 */
 
@@ -557,8 +557,8 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 }
 
 /*
-  	#] substitute_last :
-		#[ sparse_interpolation helper functions :
+  	#] substitute_last : 
+ 		#[ sparse_interpolation helper functions :
 */
 
 // Returns a list of size #terms(a) with entries PROD(ci^powi, i=2..n)
@@ -634,7 +634,7 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
 }
 
 /*
-	 	#] sparse_interpolation helper functions :
+	 	#] sparse_interpolation helper functions : 
 	 	#[ gcd_modular_sparse_interpolation :
 */
 
@@ -840,7 +840,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 }
 
 /*
-  	#] gcd_modular_sparse_interpolation :
+  	#] gcd_modular_sparse_interpolation : 
 	 	#[ gcd_modular_dense_interpolation :
 */
 
@@ -961,8 +961,8 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 }
 
 /*
-  	#] gcd_modular_dense_interpolation : :
-	 	#[ gcd_moduar :
+  	#] gcd_modular_dense_interpolation : : 
+	 	#[ gcd_modular :
 */
 
 /**  Zippel's Modular GCD Algorithm
@@ -1088,7 +1088,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 }
 
 /*
-  	#] modular gcd :
+  	#] gcd_modular : 
   	#[ gcd_heuristic_possible :
 */
 
@@ -1122,7 +1122,7 @@ bool gcd_heuristic_possible (const poly &a) {
 }
 
 /*
-  	#] gcd_heuristic_possible :
+  	#] gcd_heuristic_possible : 
   	#[ gcd_heuristic :
 */
 
@@ -1270,7 +1270,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
 }
 
 /*
-  	#] gcd_heuristic :
+  	#] gcd_heuristic : 
   	#[ gcd :
 */
 
@@ -1378,5 +1378,5 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 }
 
 /*
-  	#] gcd :
+  	#] gcd : 
 */

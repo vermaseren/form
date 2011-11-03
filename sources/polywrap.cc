@@ -96,7 +96,7 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool only_funargs, string m
 }
 
 /*
-  	#] poly_determine_modulus :
+  	#] poly_determine_modulus : 
   	#[ poly_gcd :
 */
 
@@ -205,7 +205,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 }
 
 /*
-  	#] poly_divmod :
+  	#] poly_divmod : 
   	#[ poly_div :
 
 	Routine divides the expression in arg1 by the expression in arg2.
@@ -650,7 +650,7 @@ void poly_fix_minus_signs (factorized_poly &a) {
 }
 
 /*
-  	#] poly_fix_minus_signs :
+  	#] poly_fix_minus_signs : 
   	#[ poly_factorize_argument :
 */
 
@@ -1113,7 +1113,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression : 
+  	#] poly_factorize_expression :
   	#[ poly_unfactorize_expression :
 */
 
@@ -1143,6 +1143,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 {
 	GETIDENTITY;
 	int i, j, nfac = expr->numfactors, nfacp, nexpr = expr - Expressions;
+	int expriszero = 0;
  
 	FILEHANDLE *oldinfile = AR.infile;
 	FILEHANDLE *oldoutfile = AR.outfile;
@@ -1165,6 +1166,13 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 		MesWork();
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+	}
+/*
+	Test for whether the first factor is zero.
+*/
+	if ( GetFirstBracket(term,nexpr) < 0 ) Terminate(-1);
+	if ( term[4] != 1 || *term != 8 || term[1] != SYMBOL || term[3] != FACTORSYMBOL || term[4] != 1 ) {
+		expriszero = 1;
 	}
 
 	strcpy(oldCommercial, (char*)AC.Commercial);
@@ -1239,25 +1247,27 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 			+factor_^(nfacp/2+1)*F[factor_^nfac]
 */
 		NewSort(BHEAD0);
-		for ( i = 0; i < nfacp; i += 2 ) {
-			t = genericterm; w = term = oldworkpointer;
-			j = *t; NCOPY(w,t,j);
-			term[4] = i/2+1;
-			term[7] = nexpr;
-			term[16] = i+1;
-			term[22] = nexpr;
-			term[31] = i+2;
-			AT.WorkPointer = term + *term;
-			Generator(BHEAD term, C->numlhs);
-		}
-		if ( nfac > nfacp ) {
-			t = genericterm2; w = term = oldworkpointer;
-			j = *t; NCOPY(w,t,j);
-			term[4] = i/2+1;
-			term[7] = nexpr;
-			term[16] = nfac;
-			AT.WorkPointer = term + *term;
-			Generator(BHEAD term, C->numlhs);
+		if ( expriszero == 0 ) {
+			for ( i = 0; i < nfacp; i += 2 ) {
+				t = genericterm; w = term = oldworkpointer;
+				j = *t; NCOPY(w,t,j);
+				term[4] = i/2+1;
+				term[7] = nexpr;
+				term[16] = i+1;
+				term[22] = nexpr;
+				term[31] = i+2;
+				AT.WorkPointer = term + *term;
+				Generator(BHEAD term, C->numlhs);
+			}
+			if ( nfac > nfacp ) {
+				t = genericterm2; w = term = oldworkpointer;
+				j = *t; NCOPY(w,t,j);
+				term[4] = i/2+1;
+				term[7] = nexpr;
+				term[16] = nfac;
+				AT.WorkPointer = term + *term;
+				Generator(BHEAD term, C->numlhs);
+			}
 		}
 		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) {
 			LowerSortLevel();
@@ -1283,27 +1293,29 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 	After preparing the term we skip the factor_ part.
 */
 	NewSort(BHEAD0);
-	if ( nfac == 1 ) {
-		t = genericterm2; w = term = oldworkpointer;
-		j = *t; NCOPY(w,t,j);
-		term[7] = nexpr;
-		term[16] = nfac;
+	if ( expriszero == 0 ) {
+		if ( nfac == 1 ) {
+			t = genericterm2; w = term = oldworkpointer;
+			j = *t; NCOPY(w,t,j);
+			term[7] = nexpr;
+			term[16] = nfac;
+		}
+		else if ( nfac == 2 ) {
+			t = genericterm; w = term = oldworkpointer;
+			j = *t; NCOPY(w,t,j);
+			term[7] = nexpr;
+			term[16] = 1;
+			term[22] = nexpr;
+			term[31] = 2;
+		}
+		else {
+			return(-1);
+		}
+		term[4] = term[0]-4;
+		term += 4;
+		AT.WorkPointer = term + *term;
+		Generator(BHEAD term, C->numlhs);
 	}
-	else if ( nfac == 2 ) {
-		t = genericterm; w = term = oldworkpointer;
-		j = *t; NCOPY(w,t,j);
-		term[7] = nexpr;
-		term[16] = 1;
-		term[22] = nexpr;
-		term[31] = 2;
-	}
-	else {
-		return(-1);
-	}
-	term[4] = term[0]-4;
-	term += 4;
-	AT.WorkPointer = term + *term;
-	Generator(BHEAD term, C->numlhs);
 	if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) {
 		LowerSortLevel();
 		Terminate(-1);
@@ -1324,5 +1336,5 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 }
 
 /*
-  	#] poly_unfactorize_expression : 
+  	#] poly_unfactorize_expression :
 */
