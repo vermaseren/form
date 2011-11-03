@@ -947,6 +947,8 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 			for (int i=0; i<AN.poly_num_vars; i++)
 				if (AN.poly_vars[i] == FACTORSYMBOL)
 					factorsymbol = i;
+
+			poly denpow(BHEAD 1);
 			
 			// already factorized, so factorize the factors
 			for (int i=1; i<=expr->numfactors; i++) {
@@ -957,14 +959,13 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 				else {
 					fac2 = polyfact::factorize(origfac);
 					poly_fix_minus_signs(fac2);
+					denpow *= den;
 				}
 				for (int j=0; j<(int)fac2.power.size(); j++)
 					fac.add_factor(fac2.factor[j], fac2.power[j]);
 			}
 
 			// update denominator, since each factor was scaled
-			poly denpow(BHEAD 1);
-			for (int i=0; i<expr->numfactors; i++) denpow*=den;
 			den=denpow;
 		}
 
