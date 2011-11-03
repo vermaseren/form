@@ -1113,7 +1113,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression :
+  	#] poly_factorize_expression : 
   	#[ poly_unfactorize_expression :
 */
 
@@ -1278,6 +1278,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 */
 		SetScratch(file, &pos);
 		nfac = (nfac+1)/2;
+		if ( expriszero ) { nfac = 1; }
 	}
 	if ( AT.bracketinfo != 0 ) ClearBracketIndex(-1);
 	AT.bracketinfo = expr->newbracketinfo;
