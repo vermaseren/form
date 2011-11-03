@@ -935,6 +935,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	}
 	else {
 		factorized_poly fac;
+		bool iszero = false;
 		
 		if (!(expr->vflags & ISFACTORIZED)) {
 			// factorize the polynomial
@@ -951,10 +952,8 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 			for (int i=1; i<=expr->numfactors; i++) {
 				poly origfac(a.coefficient(factorsymbol, i));
 				factorized_poly fac2;
-				if (origfac.is_zero()) {
-					fac2.factor.push_back(poly(BHEAD 0));
-					fac2.power.push_back(1);
-				}
+				if (origfac.is_zero())
+					iszero=true;
 				else {
 					fac2 = polyfact::factorize(origfac);
 					poly_fix_minus_signs(fac2);
@@ -980,16 +979,21 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 		poly gcd(polygcd::integer_gcd(num,den));
 		den/=gcd;
 		num/=gcd;
-		
-		if (!num.is_one() || !den.is_one()) {
-			if (!num.is_zero()) {
+
+		if (iszero) 
+			expr->numfactors++;
+
+		if (!iszero || (expr->vflags & KEEPZERO)) {
+			if (!num.is_one() || !den.is_one()) {
+				expr->numfactors++;
+				
 				int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
 				
 				term[0] = 6 + 2*n;
 				term[1] = SYMBOL;
 				term[2] = 4;
 				term[3] = FACTORSYMBOL;
-				term[4] = 1;
+				term[4] = expr->numfactors;
 				for (int i=0; i<n; i++) {
 					term[5+i]   = i<ABS(num[num[1]]) ? num[2+AN.poly_num_vars+i] : 0;
 					term[5+n+i] = i<ABS(den[den[1]]) ? den[2+AN.poly_num_vars+i] : 0;
@@ -999,11 +1003,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 				Generator(BHEAD term, C->numlhs);
 				AT.WorkPointer = term;
 			}
-			
-			expr->numfactors++;
-		}
 
-		if (!num.is_zero()) {
 			vector<poly> fac_arg(fac.factor.size(), poly(BHEAD 0));
 			
 			// convert the non-constant factors to Form-style arguments
