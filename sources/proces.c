@@ -655,7 +655,7 @@ ProcErr:
 WORD TestSub(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
-	WORD *m, *t, *r, retvalue, funflag, j, oldncmod;
+	WORD *m, *t, *r, retvalue, funflag, j, oldncmod, nexpr;
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum;
 	NESTING n;
 	CBUF *C = cbuf+AT.ebufnum;
@@ -836,17 +836,22 @@ TooMuch:;
 			}
 		}
 		else if ( *t == EXPRESSION ) {
+			WORD *toTMaddr;
 			i = -t[2] - 1;
 			if ( t[3] < 0 ) {
 				AN.TeInFun = 1;
 				AR.TePos = WORDDIF(t,term);
 				return(i);
 			}
-			AN.TeInFun = 0;
-			AR.TePos = 0;
-			AN.TeSuOut = t[3];
+			nexpr = t[3];
+			toTMaddr = m = AT.WorkPointer;
 			AN.Frozen = 0;
-			AT.TMaddr = m = AT.WorkPointer;
+/*
+			We have to be very careful with respect to setting variables
+			like AN.TeInFun, because we may still call Generator and that
+			may change those variables. That is why we set them at the
+			last moment only.
+*/
 			j = t[1];
 			AT.WorkPointer += j;
 			r = t;
@@ -931,6 +936,10 @@ TooMuch:;
 				}
 				t += t[1];
 			}
+			AN.TeInFun = 0;
+			AR.TePos = 0;
+			AN.TeSuOut = nexpr;
+			AT.TMaddr = toTMaddr;
 			return(i);
 		}
 		else if ( *t >= FUNCTION ) {
@@ -1767,7 +1776,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
