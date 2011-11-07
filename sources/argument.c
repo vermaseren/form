@@ -1888,7 +1888,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 	WORD *argfree, *argextra, *argcopy, *t, *tstop, *a, *a1, *a2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs,oldword;
 	WORD oldsorttype = AR.SortType, numargs;
-	int error = 0, action = 0, i, ii, number;
+	int error = 0, action = 0, i, ii, number, sign = 1;
 
 	*argout = 0;
 	AR.SortType = SORTHIGHFIRST;
@@ -1926,12 +1926,14 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 	{
 		a1 = argout;
 		while ( *a1 ) {
-			if ( a1[0] == -SNUMBER && a1[1] == 1 ) {
+			if ( a1[0] == -SNUMBER && ( a1[1] == 1 || a1[1] == -1 ) ) {
+				if ( a1[1] == -1 ) { sign = -sign; a1[1] = 1; }
 				if ( a1[2] ) {
 					a = t = a1+2; while ( *t ) NEXTARG(t);
 					i = t - a1-2;
 					t = a1; NCOPY(t,a,i);
 					*t = 0;
+					continue;
 				}
 				else {
 					a1[0] = 0;
@@ -1985,9 +1987,14 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		but we take no risks here (in case of future developments).
 */
 		t += *t; t++;
-		tstop = t; while ( *tstop ) NEXTARG(tstop);
+		tstop = t;
+		while ( *tstop ) {
+			if ( *tstop == -SNUMBER && tstop[1] == -1 ) { sign = -sign; break; }
+			NEXTARG(tstop);
+		}
 		i = tstop - t;
 		a = argout; while ( *a ) NEXTARG(a);
+		if ( sign == -1 ) { *a++ = -SNUMBER; *a++ = -1; *a = 0; }
 		ii = a - argout;
 		a2 = a; a1 = a + i;
 		*a1 = 0;
@@ -2062,7 +2069,6 @@ getout:
 		        Be careful: there should be more than one argument now.
 */
 	if ( error == 0 && action ) {
-/*!!!!!!WHAT IF IN FAST NOTATION?????*/
 	  a1 = a; NEXTARG(a1);
 	  if ( *a1 != 0 ) {
 		CBUF *C = cbuf+AC.cbufnum;
@@ -2134,11 +2140,16 @@ getout:
 */
 	ii = a - argout;
 	for ( i = 0; i < ii; i++ ) argcopy[i] = argout[i];
-	a1 = a; while ( *a1 ) NEXTARG(a1);
+	a1 = a;
+	while ( *a1 ) {
+		if ( *a1 == -SNUMBER && a1[1] == -1 ) { sign = -sign; break; }
+		NEXTARG(a1);
+	}
 	i = a1 - a;
 	a2 = argout;
 	NCOPY(a2,a,i);
 	for ( i = 0; i < ii; i++ ) *a2++ = argcopy[i];
+	if ( sign == -1 ) { *a2++ = -SNUMBER; *a2++ = -1; }
 	*a2 = 0;
 	TermFree(argcopy,"argcopy");
 return0:
@@ -2201,7 +2212,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize : 
+  	#] ArgFactorize :
   	#[ FindArg :
 */
 /**
