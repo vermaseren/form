@@ -251,11 +251,6 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		for(;;) {
 			auxpos = AN.theposition;
 			GetOneTerm(BHEAD term,fi,&auxpos,0);
-/*
-			SeekFile(fi->handle,&auxpos,SEEK_SET);
-			GetOneTerm(BHEAD term,fi->handle);
-			SeekFile(fi->handle,&auxpos,SEEK_CUR);
-*/
 			if ( *term == 0 ) {
 				AR.SortType = oldsorttype;
 				AT.fromindex = 0;

@@ -1607,17 +1607,6 @@ LONG CountTerms1(PHEAD0)
 	for(;;) {
 		numterms++;
 		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile,&startposition,0);
-/*
-		if ( AR.infile->handle >= 0 ) {
-			SeekFile(AR.infile->handle,&startposition,SEEK_SET);
-		}
-		else { AR.infile->POfill = (WORD *)((UBYTE *)(AR.infile->PObuffer) + BASEPOSITION(startposition)); }
-		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile->handle);
-		if ( AR.infile->handle >= 0 ) {
-			SeekFile(AR.infile->handle,&startposition,SEEK_CUR);
-		}
-		else { SETBASEPOSITION(startposition,(UBYTE *)(AR.infile->POfill)-(UBYTE *)(AR.infile->PObuffer)); }
-*/
 		if ( retval <= 0 ) break;
 
 		AR.CompressPointer = oldipointer;
