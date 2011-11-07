@@ -1154,7 +1154,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 	WORD *term = AT.WorkPointer, *t, *w, size;
 	
 	FILEHANDLE *file;
-	POSITION pos;
+	POSITION pos, oldpos;
 
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
@@ -1168,6 +1168,9 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
+
+	oldpos = AS.OldOnFile[nexpr];
+	AS.OldOnFile[nexpr] = expr->onfile;
 
 	strcpy(oldCommercial, (char*)AC.Commercial);
 	strcpy((char*)AC.Commercial, "unfactorize");
@@ -1213,6 +1216,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 	if ( term[4] != 1 || *term != 8 || term[1] != SYMBOL || term[3] != FACTORSYMBOL || term[4] != 1 ) {
 		expriszero = 1;
 	}
+	SetScratch(AR.infile, &(expr->onfile));
 /*
 	Read the prototype. After this we have the file ready for the output at pos.
 */
@@ -1311,6 +1315,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 			term[31] = 2;
 		}
 		else {
+			AS.OldOnFile[nexpr] = oldpos;
 			return(-1);
 		}
 		term[4] = term[0]-4;
@@ -1333,6 +1338,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 	AR.outfile = oldoutfile;
 	strcpy((char*)AC.Commercial, oldCommercial);
 	AT.WorkPointer = oldworkpointer;
+	AS.OldOnFile[nexpr] = oldpos;
 	
 	return(0);
 }
