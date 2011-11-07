@@ -2964,7 +2964,7 @@ NextBucket:;
 	When we deal with the last expression we can now remove the input
 	scratch file. This saves potentially much disk space (up to 1/3)
 */
-	if ( LastExpression && ( ( e->vflags & (TOBEFACTORED|TOBEUNFACTORED) ) == 0 ) ) {
+	if ( LastExpression ) {
 		UpdateMaxSize();
 		if ( AR0.infile->handle >= 0 ) {
 			CloseFile(AR0.infile->handle);

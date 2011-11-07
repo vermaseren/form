@@ -1168,13 +1168,6 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-/*
-	Test for whether the first factor is zero.
-*/
-	if ( GetFirstBracket(term,nexpr) < 0 ) Terminate(-1);
-	if ( term[4] != 1 || *term != 8 || term[1] != SYMBOL || term[3] != FACTORSYMBOL || term[4] != 1 ) {
-		expriszero = 1;
-	}
 
 	strcpy(oldCommercial, (char*)AC.Commercial);
 	strcpy((char*)AC.Commercial, "unfactorize");
@@ -1213,6 +1206,13 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 		file->POfill = (WORD *)((UBYTE *)(file->PObuffer)+BASEPOSITION(expr->onfile));
 	}
 	SetScratch(AR.infile, &(expr->onfile));
+/*
+	Test for whether the first factor is zero.
+*/
+	if ( GetFirstBracket(term,nexpr) < 0 ) Terminate(-1);
+	if ( term[4] != 1 || *term != 8 || term[1] != SYMBOL || term[3] != FACTORSYMBOL || term[4] != 1 ) {
+		expriszero = 1;
+	}
 /*
 	Read the prototype. After this we have the file ready for the output at pos.
 */

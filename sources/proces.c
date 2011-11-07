@@ -392,7 +392,7 @@ commonread:;
 					 }
 					}
 					AN.ninterms += dd;
-					if ( LastExpression && ( ( e->vflags & (TOBEFACTORED|TOBEUNFACTORED) ) == 0 ) ) {
+					if ( LastExpression ) {
 						UpdateMaxSize();
 						if ( AR.infile->handle >= 0 ) {
 							CloseFile(AR.infile->handle);
@@ -421,18 +421,6 @@ commonread:;
 					poly_unfactorize_expression(e);
 				}
 				AT.bracketindexflag = oldbracketindexflag;
-
-				if ( LastExpression && ( ( e->vflags & (TOBEFACTORED|TOBEUNFACTORED) ) != 0 ) ) {
-					UpdateMaxSize();
-					if ( AR.infile->handle >= 0 ) {
-						CloseFile(AR.infile->handle);
-						AR.infile->handle = -1;
-						remove(AR.infile->name);
-						PUTZERO(AR.infile->POposition);
-					}
-					AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
-				}
-
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;

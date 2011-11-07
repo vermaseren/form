@@ -1695,7 +1695,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			#] loop for all terms in infile: 
 			#[ Clean up & EndSort:
 */
-		if ( LastExpression && ( ( e->vflags & (TOBEFACTORED|TOBEUNFACTORED) ) == 0 ) ) {
+		if ( LastExpression ) {
 			UpdateMaxSize();
 			if ( AR.infile->handle >= 0 ) {
 				CloseFile(AR.infile->handle);
@@ -1723,16 +1723,6 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			poly_unfactorize_expression(e);
 		AR.GetFile = 0;
 		AR.outtohide = 0;
-		if ( LastExpression && ( ( e->vflags & (TOBEFACTORED|TOBEUNFACTORED) ) != 0 ) ) {
-			UpdateMaxSize();
-			if ( AR.infile->handle >= 0 ) {
-				CloseFile(AR.infile->handle);
-				AR.infile->handle = -1;
-				remove(AR.infile->name);
-				PUTZERO(AR.infile->POposition);
-				AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
-			}
-		}
 /*
 			#] Clean up & EndSort: 
 			#[ Collect (stats,prepro,...):
