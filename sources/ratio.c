@@ -1226,7 +1226,7 @@ WORD *TakeExtraSymbols(PHEAD WORD *in,WORD startebuf)
 	termout = AT.WorkPointer;
 	NewSort(BHEAD0);
 	while ( *in ) {
-		if ( ConvertFromPoly(BHEAD in,termout,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
+		if ( ConvertFromPoly(BHEAD in,termout,numxsymbol,CC->numrhs-startebuf+numxsymbol,startebuf-numxsymbol,1) <= 0 ) {
 			LowerSortLevel();
 			goto CalledFrom;
 		}

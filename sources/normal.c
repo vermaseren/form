@@ -729,7 +729,13 @@ MulIn:
 				break;
 			case FIRSTTERM:
 				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
+					EXPRESSIONS e = Expressions+t[FUNHEAD+1];
+					POSITION oldondisk = AS.OldOnFile[t[FUNHEAD+1]];
+					if ( e->replace == NEWLYDEFINEDEXPRESSION ) {
+						AS.OldOnFile[t[FUNHEAD+1]] = e->onfile;
+					}
 					if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					AS.OldOnFile[t[FUNHEAD+1]] = oldondisk;
 					if ( *termout == 0 ) goto NormZero;
 					{
 						WORD *r1, *r2, *r3, *r4, *r5, nr1, *rterm;

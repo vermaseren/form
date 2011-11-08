@@ -3401,7 +3401,7 @@ CommonEnd:
 				  case TYPEFROMPOLYNOMIAL:
 					AT.WorkPointer = term + *term;
 					termout = AT.WorkPointer;
-					if ( ConvertFromPoly(BHEAD term,termout,0,numxsymbol,0) < 0 ) goto GenCall;
+					if ( ConvertFromPoly(BHEAD term,termout,0,numxsymbol,0,0) < 0 ) goto GenCall;
 					if ( *term == 0 ) goto Return0;
 					i = termout[0]; t = term; NCOPY(t,termout,i);
 					AT.WorkPointer = term + *term;
@@ -3492,7 +3492,7 @@ AutoGen:	i = *AT.TMout;
 				  else {
 					if ( (AT.TMdolfac-1) > d->nfactors && d->nfactors > 0 ) {
 						MLOCK(ErrorMessageLock);
-						MesPrint("Attempt to use an unexisting factor %d of a $-variable",(WORD)(AT.TMdolfac-1));
+						MesPrint("Attempt to use an nonexisting factor %d of a $-variable",(WORD)(AT.TMdolfac-1));
 						if ( d->nfactors == 1 )
 							MesPrint("There is only one factor");
 						else

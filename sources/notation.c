@@ -559,7 +559,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 		subexpressions when extra symbols have been replaced.
 */
 
-int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD par)
+int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD offset, WORD par)
 {
 	WORD *tout, *tstop, *tstop1, ncoef, *t, *r, *tt;
 	int i, first = 1;
@@ -584,7 +584,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD pa
 				else {	/* Caught one! */
 					*tout++ = SUBEXPRESSION;
 					*tout++ = SUBEXPSIZE;
-					*tout++ = MAXVARIABLES - *t++;
+					*tout++ = MAXVARIABLES - *t++ + offset;
 					*tout++ = *t++;
 					if ( par ) *tout++ = AT.ebufnum;
 					else       *tout++ = AM.sbufnum;

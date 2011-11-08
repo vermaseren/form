@@ -692,6 +692,14 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 	WORD oldinfbrack = AO.InFbrack;
 	int error = 0;
  
+	if ( numfac > d->nfactors || numfac < 0 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("&Illegal factor number for this dollar variable: %d",numfac);
+		MesPrint("&There are %d factors",d->nfactors);
+		MUNLOCK(ErrorMessageLock);
+		return(0);
+	}
+
 	AO.DollarOutSizeBuffer = 32;
 	AO.DollarOutBuffer = (UBYTE *)Malloc1(AO.DollarOutSizeBuffer,"DollarOutBuffer");
 	AO.DollarInOutBuffer = 1;
@@ -2715,13 +2723,15 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
  *	            fd->value   value if type is DOLNUMBER and it fits in a WORD.
  */
 
+#define STEP2
+
 int DollarFactorize(PHEAD WORD numdollar)
 {
 	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD *buf1, *t, *term, *buf1content, *buf2, *termextra;
 	WORD *buf3, *tstop, *argextra, pow, *r;
-	int i, j, jj, action = 0, sign;
+	int i, j, jj, action = 0, sign = 1;
 	LONG insize, ii;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	WORD nfactors, factorsincontent;
@@ -2807,6 +2817,7 @@ int DollarFactorize(PHEAD WORD numdollar)
  		#] Step 1: 
  		#[ Step 2: take out the 'content'.
 */
+#ifdef STEP2
 	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
 		M_free(buf1,"DollarFactorize-1");
 		AR.SortType = oldsorttype;
@@ -2875,6 +2886,10 @@ int DollarFactorize(PHEAD WORD numdollar)
 			term += term[1];
 		}
 	}
+#else
+	factorsincontent = 0;
+	buf1content = 0;
+#endif
 /*
  		#] Step 2: take out the 'content'. 
  		#[ Step 3: ConvertToPoly
@@ -2893,7 +2908,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		MesPrint("Cannot factorize a $-expression with more than one noncommuting object");
 		AR.SortType = oldsorttype;
 		M_free(buf1,"DollarFactorize-2");
-		M_free(buf1content,"DollarFactorize-4");
+		if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
 		MesCall("DollarFactorize");
 		Terminate(-1);
 		return(-1);
@@ -2902,12 +2917,13 @@ int DollarFactorize(PHEAD WORD numdollar)
 		t = buf1;
 		termextra = AT.WorkPointer;
 		NewSort(BHEAD0);
+		NewSort(BHEAD0);
 		while ( *t ) {
 			if ( LocalConvertToPoly(BHEAD t,termextra,startebuf) < 0 ) {
 getout:
 				AR.SortType = oldsorttype;
 				M_free(buf1,"DollarFactorize-2");
-				M_free(buf1content,"DollarFactorize-4");
+				if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
 				MesCall("DollarFactorize");
 				Terminate(-1);
 				return(-1);
@@ -2915,7 +2931,8 @@ getout:
 			StoreTerm(BHEAD termextra);
 			t += *t;
 		}
-		if ( EndSort(BHEAD (WORD *)((void *)(&buf2)),0,0) ) { goto getout; }
+		if ( EndSort(BHEAD (WORD *)((void *)(&buf2)),2,0) < 0 ) { goto getout; }
+		LowerSortLevel();
 		t = buf2; while ( *t > 0 ) t += *t;
 	}
 	else {
@@ -2928,25 +2945,44 @@ getout:
 	if ( ( buf3 = poly_factorize_dollar(BHEAD buf2) ) == 0 ) {
 		MesCall("DollarFactorize");
 		AR.SortType = oldsorttype;
-		if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-3");
+		if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-3");
 		M_free(buf1,"DollarFactorize-3");
-		M_free(buf1content,"DollarFactorize-4");
+		if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
 		Terminate(-1);
 		return(-1);
 	}
-	if ( buf2 != buf1 ) {
-		if ( buf2 ) M_free(buf2,"DollarFactorize-3");
+	if ( buf2 != buf1 && buf2 ) {
+		M_free(buf2,"DollarFactorize-3");
 		buf2 = 0;
 	}
 	term = buf3;
 	AR.SortType = oldsorttype;
 /*
-	Count the factors:
+	Count the factors and strip a factor -1
 */
 	nfactors = 0;
 	while ( *term ) {
-		term += *term;
-		if ( *term == 0 ) { nfactors++; term++; }
+#ifdef STEP2
+		if ( *term == 4 && term[4] == 0 && term[3] == -3 && term[2] == 1
+			&& term[1] == 1 ) {
+			WORD *tt1, *tt2, *ttstop;
+			sign = -sign;
+			tt1 = term; tt2 = term + *term + 1;
+			ttstop = tt2;
+			while ( *ttstop ) {
+				while ( *ttstop ) ttstop += *ttstop;
+				ttstop++;
+			}
+			while ( tt2 < ttstop ) *tt1++ = *tt2++;
+			*tt1 = 0;
+			factorsincontent++;
+		}
+		else
+#endif 
+		{
+			term += *term;
+			if ( *term == 0 ) { nfactors++; term++; }
+		}
 	}
 /*
 	We have now:
@@ -2969,9 +3005,9 @@ getout:
 #endif
 			AR.SortType = oldsorttype;
 			M_free(buf3,"DollarFactorize-4");
-			if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-4");
+			if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-4");
 			M_free(buf1,"DollarFactorize-4");
-			M_free(buf1content,"DollarFactorize-4");
+			if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
 			return(0);
 		}
 		else {
@@ -2982,7 +3018,7 @@ getout:
 			term = buf1; NCOPY(t,term,i); *t = 0;
 			M_free(buf3,"DollarFactorize-4");
 			buf3 = 0;
-			if ( buf2 != buf1 ) {
+			if ( buf2 != buf1 && buf2 ) {
 				M_free(buf2,"DollarFactorize-4");
 				buf2 = 0;
 			}
@@ -2997,8 +3033,10 @@ getout:
 		for ( i = 0; i < nfactors; i++ ) {
 			argextra = AT.WorkPointer;
 			NewSort(BHEAD0);
+			NewSort(BHEAD0);
 			while ( *term ) {
-				if ( ConvertFromPoly(BHEAD term,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
+				if ( ConvertFromPoly(BHEAD term,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol
+				,startebuf-numxsymbol,1) <= 0 ) {
 					LowerSortLevel();
 getout2:			AR.SortType = oldsorttype;
 					M_free(d->factors,"factors in dollar");
@@ -3007,9 +3045,9 @@ getout2:			AR.SortType = oldsorttype;
 					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
 					M_free(buf3,"DollarFactorize-4");
-					if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-4");
+					if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-4");
 					M_free(buf1,"DollarFactorize-4");
-					M_free(buf1content,"DollarFactorize-4");
+					if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
 					return(-3);
 				}
 				AT.WorkPointer = argextra + *argextra;
@@ -3024,6 +3062,7 @@ getout2:			AR.SortType = oldsorttype;
 			term++;
 			AT.WorkPointer = oldworkpointer;
 			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2,0);
+			LowerSortLevel();
 			d->factors[i].type = DOLTERMS;
 			t = d->factors[i].where;
 			while ( *t ) t += *t;
@@ -3065,10 +3104,10 @@ getout2:			AR.SortType = oldsorttype;
 	if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-5");
 	M_free(buf1,"DollarFactorize-5");
 	j = nfactors;
+#ifdef STEP2
 	term = buf1content;
 	tstop = term + *term;
-	if ( tstop[-1] < 0 ) { tstop[-1] = -tstop[-1]; sign = -1; }
-	else { sign = 1; }
+	if ( tstop[-1] < 0 ) { tstop[-1] = -tstop[-1]; sign = -sign; }
 	tstop -= tstop[-1];	
 	term++;
 	while ( term < tstop ) {
@@ -3146,10 +3185,12 @@ getout2:			AR.SortType = oldsorttype;
 		}
 		term += term[1];
 	}
+#endif
 /*
  		#] Step 6: 
  		#[ Step 7: Numerical factors
 */
+#ifdef STEP2
 	term = buf1content;
 	tstop = term + *term;
 	if ( tstop[-1] == 3 && tstop[-2] == 1 && tstop[-3] == 1 ) {}
@@ -3157,7 +3198,8 @@ getout2:			AR.SortType = oldsorttype;
 		d->factors[j].where = 0;
 		d->factors[j].size  = 0;
 		d->factors[j].type  = DOLNUMBER;
-		d->factors[j].value = tstop[-3];
+		d->factors[j].value = sign*tstop[-3];
+		sign = 1;
 		j++;
 	}
 	else {
@@ -3170,15 +3212,25 @@ getout2:			AR.SortType = oldsorttype;
 		*r++ = tstop[-1]+1;
 		NCOPY(r,t,i);
 		*r = 0;
+		if ( sign < 0 ) {
+			r = d->factors[j].where;
+			while ( *r ) {
+				r += *r; r[-1] = -r[-1];
+			}
+			sign = 1;
+		}
 		j++;
 	}
+#endif
 	if ( sign < 0 ) {
 		d->factors[j].where = 0;
 		d->factors[j].size  = 0;
 		d->factors[j].type  = DOLNUMBER;
 		d->factors[j].value = -1;
+		j++;
 	}
-	M_free(buf1content,"DollarFactorize-5");
+	d->nfactors = j;
+	if ( buf1content ) M_free(buf1content,"DollarFactorize-5");
 /*
  		#] Step 7: 
  		#[ Step 8: Sorting the factors
@@ -3569,7 +3621,7 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 		if ( num == 0 ) return(d->nfactors);
 		if ( num > d->nfactors ) {
 			MLOCK(ErrorMessageLock);
-			MesPrint("Attempt to use an unexisting factor %d of a $-variable",num);
+			MesPrint("Attempt to use an nonexisting factor %d of a $-variable",num);
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
@@ -3619,7 +3671,7 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 				&& d->where[2] == 1 && d->where[1] > 0
 				&& d->where[1] < MAXPOSITIVE ) return(d->where[1]);
 			MLOCK(ErrorMessageLock);
-			MesPrint("Attempt to use an unexisting factor of a $-variable");
+			MesPrint("Attempt to use an nonexisting factor of a $-variable");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}

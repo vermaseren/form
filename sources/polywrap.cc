@@ -1016,7 +1016,8 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 					
 					for (WORD *t=buffer.terms; *t!=0; t+=*t) {
 						// substitute extra symbols
-						if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol, 1) <= 0 ) {
+						if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol,
+						startebuf-numxsymbol, 1) <= 0 ) {
 							MesPrint("ERROR: in ConvertFromPoly [factorize_expression]");
 							Terminate(-1);
 							return(-1);
@@ -1344,5 +1345,5 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 }
 
 /*
-  	#] poly_unfactorize_expression :
+  	#] poly_unfactorize_expression : 
 */

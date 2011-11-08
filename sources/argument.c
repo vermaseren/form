@@ -2087,7 +2087,8 @@ getout:
 			argextra = AT.WorkPointer;
 			NewSort(BHEAD0);
 			while ( t < tstop ) {
-				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol,1) <= 0 ) {
+				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol
+				,startebuf-numxsymbol,1) <= 0 ) {
 					TermFree(argcopy2,"argcopy2");
 					LowerSortLevel();
 					error = -3;
@@ -2212,7 +2213,7 @@ return0:
 }
 
 /*
-  	#] ArgFactorize :
+  	#] ArgFactorize : 
   	#[ FindArg :
 */
 /**

@@ -1435,7 +1435,10 @@ int GetFirstTerm(WORD *term, int num)
 			AR.GetOneFile = 2; fi = AR.hidefile;
 		}
 		else {
-			AR.GetOneFile = 0; fi = AR.infile;
+			AR.GetOneFile = 0;
+			if ( Expressions[num].replace == NEWLYDEFINEDEXPRESSION )
+			     fi = AR.outfile;
+			else fi = AR.infile;
 		}
 		if ( fi->handle >= 0 ) {
 			PUTZERO(oldposition);
@@ -1475,7 +1478,7 @@ int GetFirstTerm(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstTerm : 
+ 		#] GetFirstTerm :
  		#[ TermsInExpression :
 */
 

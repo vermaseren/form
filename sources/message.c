@@ -433,13 +433,16 @@ va_dcl
 					*t = 0;
 					AddToLine((UBYTE *)Out);
 					if ( d->nfactors >= 1 && AN.listinprint[2] == DOLLAREXPR2 ) {
+						if ( d->type == 0 || d->factors == 0 ) goto dollarzero;
 						num = EvalDoLoopArg(BHEAD AN.listinprint+2,-1);
 						if ( num == 0 ) {
 							value[0] = 4; value[1] = d->nfactors; value[2] = 1; value[3] = 3; value[4] = 0;
 							term = value; goto printterms;
 						}
 						if ( num == 1 && d->nfactors == 1 ) {
-							term = d->where; goto printterms;
+							term = d->where;
+							if ( *term == 0 ) goto dollarzero;
+							goto printterms;
 						}
 						if ( num > d->nfactors ) {
 							MesPrint("\nFactor number for dollar is too large.");
@@ -521,7 +524,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 						*t++ = '*'; *t++ = '*'; *t++ = '*'; *t = 0;
 					}
 					else if ( d->type == DOLZERO ) {
-						*t++ = '0'; *t = 0;
+dollarzero:				*t++ = '0'; *t = 0;
 					}
 					else if ( d->type == DOLINDEX ) {
 						tt = indsubterm; *tt = INDEX;
@@ -612,7 +615,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 					while ( AN.listinprint[0] == DOLLAREXPR2 ) AN.listinprint += 2;
 				}
 /*
-			#] dollars : 
+			#] dollars :
 */
 			}
 #ifdef WITHPTHREADS
@@ -759,7 +762,7 @@ dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
 }
 
 /*
- 		#] MesPrint : 
+ 		#] MesPrint :
  		#[ Warning :
 */
 
