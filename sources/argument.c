@@ -2213,6 +2213,9 @@ return0:
 		else if ( *tt == -SNUMBER && sign == -1 ) { tt[1] = -tt[1]; sign = 1; }
 		numargs++;
 	}
+	if ( sign == -1 ) {
+		*t++ = -SNUMBER; *t++ = -1; *t = 0; sign = 1; numargs++;
+	}
 #else
 /*
 	Now we have to sort the arguments

@@ -3222,17 +3222,20 @@ getout2:			AR.SortType = oldsorttype;
 		j++;
 	}
 #endif
-	if ( sign < 0 ) {
-		d->factors[j].where = 0;
-		d->factors[j].size  = 0;
-		d->factors[j].type  = DOLNUMBER;
-		d->factors[j].value = -1;
+	if ( sign < 0 ) { /* Note that this guy should come first */
+		for ( jj = j; jj > 0; jj-- ) {
+			d->factors[jj] = d->factors[jj-1];
+		}
+		d->factors[0].where = 0;
+		d->factors[0].size  = 0;
+		d->factors[0].type  = DOLNUMBER;
+		d->factors[0].value = -1;
 		j++;
 	}
 	d->nfactors = j;
 	if ( buf1content ) M_free(buf1content,"DollarFactorize-5");
 /*
- 		#] Step 7: 
+ 		#] Step 7:
  		#[ Step 8: Sorting the factors
 
 	There are d->nfactors factors. Look which ones have a 'where'
@@ -3287,7 +3290,7 @@ nextj:;
 }
 
 /*
-  	#] DollarFactorize : 
+  	#] DollarFactorize :
   	#[ CleanDollarFactors :
 */
 
