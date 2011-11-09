@@ -1881,16 +1881,31 @@ NoExplode:
  *
  *	The notation of the output should be a string of arguments terminated
  *	by the number zero.
+ *
+ *	Originally we sorted in a way that the constants came last. This gave
+ *	conflicts with the dollar and expression factorizations (in the expressions
+ *	we wanted the zero first and then followed by the constants).
  */
+#define NEWORDER
 
 int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 {
+/*
+  	#[ step 0 : Declarations and initializations
+*/
 	WORD *argfree, *argextra, *argcopy, *t, *tstop, *a, *a1, *a2;
+#ifdef NEWORDER
+	WORD *tt;
+#endif
 	WORD startebuf = cbuf[AT.ebufnum].numrhs,oldword;
 	WORD oldsorttype = AR.SortType, numargs;
 	int error = 0, action = 0, i, ii, number, sign = 1;
 
 	*argout = 0;
+/*
+  	#] step 0 :
+  	#[ step 1 : Take care of ordering
+*/
 	AR.SortType = SORTHIGHFIRST;
 	if ( oldsorttype != AR.SortType ) {
 		NewSort(BHEAD0);
@@ -1920,7 +1935,8 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		argin[*argin] = oldword;
 	}
 /*
-		Step 1: take out the 'content'.
+  	#] step 1 :
+  	#[ step 2 : take out the 'content'.
 */
 	argfree = TakeArgContent(BHEAD argin,argout);
 	{
@@ -1974,7 +1990,8 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		*argfree = t - argfree;
 	}
 /*
-		Step 2: look whether we have done this one already.
+  	#] step 2 :
+  	#[ step 3 : look whether we have done this one already.
 */
 	if ( ( number = FindArg(BHEAD argfree) ) != 0 ) {
 		if ( number > 0 ) t = cbuf[AT.fbufnum].rhs[number-1];
@@ -1994,7 +2011,9 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		}
 		i = tstop - t;
 		a = argout; while ( *a ) NEXTARG(a);
-		if ( sign == -1 ) { *a++ = -SNUMBER; *a++ = -1; *a = 0; }
+#ifndef NEWORDER
+		if ( sign == -1 ) { *a++ = -SNUMBER; *a++ = -1; *a = 0; sign = 1; }
+#endif
 		ii = a - argout;
 		a2 = a; a1 = a + i;
 		*a1 = 0;
@@ -2004,8 +2023,9 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		goto return0;
 	}
 /*
-		Step 3: if there are objects that are not SYMBOLs,
-		        invoke ConvertToPoly
+  	#] step 3 :
+  	#[ step 4 : invoke ConvertToPoly
+
 				We make a copy first in case there are no factors
 */
 	argcopy = TermMalloc("argcopy");
@@ -2056,7 +2076,8 @@ getout:
 		*argfree = t - argfree;
 	}
 /*
-		Step 4: If not in the tables, we have to do this by hard work.
+  	#] step 4 :
+  	#[ step 5 : If not in the tables, we have to do this by hard work.
 */
 	a = argout;
 	while ( *a ) NEXTARG(a);
@@ -2065,7 +2086,9 @@ getout:
 		error = -1;
 	}
 /*
-		Step 5: If ConvertToPoly was used, use now ConvertFromPoly
+  	#] step 5 :
+  	#[ step 6 : use now ConvertFromPoly
+
 		        Be careful: there should be more than one argument now.
 */
 	if ( error == 0 && action ) {
@@ -2127,14 +2150,18 @@ getout:
 	  }
 	}
 /*
-		Step 6: Add this one to the tables and possibly drop some elements
-		          in the tables when they become too full.
+  	#] step 6 :
+  	#[ step 7 : Add this one to the tables.
+
+				Possibly drop some elements in the tables
+				when they become too full.
 */
 	if ( error == 0 && AN.ncmod == 0 ) {
 		if ( InsertArg(BHEAD argcopy,a,0) < 0 ) { error = -1; }
 	}
 /*
-		Step 7: Clean up and return.
+  	#] step 7 :
+  	#[ step 8 : Clean up and return.
 
 		Change the order of the arguments in argout and a.
 		Use argcopy as spare space.
@@ -2150,12 +2177,13 @@ getout:
 	a2 = argout;
 	NCOPY(a2,a,i);
 	for ( i = 0; i < ii; i++ ) *a2++ = argcopy[i];
-	if ( sign == -1 ) { *a2++ = -SNUMBER; *a2++ = -1; }
+#ifndef NEWORDER
+	if ( sign == -1 ) { *a2++ = -SNUMBER; *a2++ = -1; sign = 1; }
+#endif
 	*a2 = 0;
 	TermFree(argcopy,"argcopy");
 return0:
 	if ( argfree != argin ) TermFree(argfree,"argfree");
-/*	AR.SortType = oldsorttype; */
 	if ( oldsorttype != AR.SortType ) {
 		AR.SortType = oldsorttype;
 		a = argout;
@@ -2176,6 +2204,16 @@ return0:
 			else { NEXTARG(a); }
 		}
 	}
+#ifdef NEWORDER
+	t = argout; numargs = 0;
+	while ( *t ) {
+		tt = t;
+		NEXTARG(t);
+		if ( *tt == ABS(t[-1])+1+ARGHEAD && sign == -1 ) { t[-1] = -t[-1]; sign = 1; }
+		else if ( *tt == -SNUMBER && sign == -1 ) { tt[1] = -tt[1]; sign = 1; }
+		numargs++;
+	}
+#else
 /*
 	Now we have to sort the arguments
 	First have the number of 'nontrivial/nonnumerical' arguments
@@ -2189,6 +2227,7 @@ return0:
 		NEXTARG(t);
 		numargs++;
 	}
+#endif
 	if ( numargs > 1 ) {
 		WORD *Lijst;
 		WORD x[3];
@@ -2208,12 +2247,42 @@ return0:
 		argout[-FUNHEAD] = x[0];
 		argout[-FUNHEAD+1] = x[1];
 		argout[-FUNHEAD+2] = x[2];
+#ifdef NEWORDER
+/*
+		Now we have to get a potential numerical argument to the first position
+*/
+		tstop = argout; while ( *tstop ) { NEXTARG(tstop); }
+		t = argout; number = 0;
+		while ( *t ) {
+			tt = t; NEXTARG(t);
+			if ( *tt == -SNUMBER ) {
+				if ( number == 0 ) break;
+				x[0] = tt[1];
+				while ( tt > argout ) { *--t = *--tt; }
+				argout[0] = -SNUMBER; argout[1] = x[1];
+				break;
+			}
+			else if ( *tt == ABS(t[-1])+1+ARGHEAD ) {
+				if ( number == 0 ) break;
+				ii = t - tt;
+				for ( i = 0; i < ii; i++ ) tstop[i] = tt[i];
+				while ( tt > argout ) { *--t = *--tt; }
+				for ( i = 0; i < ii; i++ ) argout[i] = tstop[i];
+				*tstop = 0;
+				break;
+			}
+			number++;
+		}
+#endif
 	}
+/*
+  	#] step 8 :
+*/
 	return(error);
 }
 
 /*
-  	#] ArgFactorize : 
+  	#] ArgFactorize :
   	#[ FindArg :
 */
 /**
