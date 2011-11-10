@@ -2372,7 +2372,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 			}
 		}
 	}
-	
+				 
 	// make sure an eventual FACTORSYMBOL appear as last
 	if (var_to_idx.count(FACTORSYMBOL)) {
 		int i = var_to_idx[FACTORSYMBOL];
@@ -2383,7 +2383,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 		}
 		degrees[i] = -1; // makes sure it stays last
 	}
-	
+
 	// AN.poly_vars will be deleted in calling functions from polywrap.c
 	if (AN.poly_num_vars > 0) 
 		AN.poly_vars = new WORD[AN.poly_num_vars];
@@ -2400,6 +2400,10 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 					swap(degrees[j], degrees[j+1]);
 					swap(AN.poly_vars[j], AN.poly_vars[j+1]);
 				}
+	}
+	else {
+		// sort lexicographically		
+		sort(AN.poly_vars, AN.poly_vars+AN.poly_num_vars - var_to_idx.count(FACTORSYMBOL));
 	}
 }
 

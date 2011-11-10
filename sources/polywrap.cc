@@ -190,7 +190,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		pres = pa / pb;
 	else
 		pres = pa % pb;
-	
+
 	// Allocate new memory and convert to Form notation
 	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_divmod");
 	poly::poly_to_argument(pres, res, false, &den);
@@ -683,7 +683,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	// factorize
 	factorized_poly f(polyfact::factorize(a));
 	poly_fix_minus_signs(f);
-	
+
 	// check size
 	int len = 0;
 	for (int i=0; i<(int)f.factor.size(); i++)
@@ -694,7 +694,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	
+
 	for (int i=0; i<(int)f.factor.size(); i++) 
 		for (int j=0; j<f.power[i]; j++) {
 			poly::poly_to_argument(f.factor[i],argout,true);
