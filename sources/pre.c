@@ -2428,18 +2428,16 @@ nonumber:
  		#] DoTerminate : 
  		#[ DoDo :
 
-		The do loop has two varieties:
+		The do loop has three varieties:
 		#do i = num1,num2 [,num3]
-		#do i = {string1|string2|....|stringn}
-		In the new version the | may also be a comma.
-
-		New variety being under construction
+		#do i = {string1,string2,....,stringn}
+			The | as separator is also allowed for backwards compatibility
 		#do i = expression      One by one all terms of the expression
-		Work started 11-jan-2005 JV
 */
 
 int DoDo(UBYTE *s)
 {
+	GETIDENTITY
 	UBYTE *t, c, *u, *uu;
 	DOLOOP *loop;
 	WORD expnum;
@@ -2459,6 +2457,7 @@ int DoDo(UBYTE *s)
 	AddToPreTypes(PRETYPEDO);
  
 	loop = (DOLOOP *)FromList(&AP.LoopList);
+	loop->firstdollar = loop->lastdollar = loop->incdollar = -1;
 	AC.NoShowInput = 1;
 	if ( PreLoad(&(loop->p),(UBYTE *)"do",(UBYTE *)"enddo",1,"doloop") ) return(-1);
 	AC.NoShowInput = oldNoShowInput;
@@ -2494,26 +2493,71 @@ int DoDo(UBYTE *s)
 		loop->firstnum = 0;
 		loop->contents = s;
 	}
-	else if ( *s == '-' || *s == '+' || chartype[*s] == 1 ) {
+	else if ( *s == '-' || *s == '+' || chartype[*s] == 1 || *s == '$' ) {
 		loop->type = NUMERICALLOOP;
 		t = s;
 		while ( *s && *s != ',' ) s++;
 		if ( *s == 0 ) goto illdo;
-		*s = '}';
-		if ( PreEval(t,&loop->firstnum) == 0 ) goto illdo;
-		*s++ = ',';
+		if ( *t == '$' ) {
+			c = *s; *s = 0;
+			if ( GetName(AC.dollarnames,t+1,&loop->firstdollar,NOAUTO) != CDOLLAR ) {
+				MesPrint("@%s is undefined in first parameter in #do instruction",t);
+				return(-1);
+			}
+			loop->firstnum = DolToLong(BHEAD loop->firstdollar);
+			if ( AN.ErrorInDollar ) {
+				MesPrint("@%s does not evaluate into a valid loop parameter",t);
+				return(-1);
+			}
+			*s++ = c;
+		}
+		else {
+			*s = '}';
+			if ( PreEval(t,&loop->firstnum) == 0 ) goto illdo;
+			*s++ = ',';
+		}
 		t = s;
 		while ( *s && *s != ',' && *s != ';' && *s != LINEFEED ) s++;
 		c = *s;
-		*s = '}';
-		if ( PreEval(t,&loop->lastnum) == 0 ) goto illdo;
-		*s++ = c;
+		if ( *t == '$' ) {
+			*s = 0;
+			if ( GetName(AC.dollarnames,t+1,&loop->lastdollar,NOAUTO) != CDOLLAR ) {
+				MesPrint("@%s is undefined in second parameter in #do instruction",t);
+				return(-1);
+			}
+			loop->lastnum = DolToLong(BHEAD loop->lastdollar);
+			if ( AN.ErrorInDollar ) {
+				MesPrint("@%s does not evaluate into a valid loop parameter",t);
+				return(-1);
+			}
+			*s++ = c;
+		}
+		else {
+			*s = '}';
+			if ( PreEval(t,&loop->lastnum) == 0 ) goto illdo;
+			*s++ = c;
+		}
 		if ( c == ',' ) {
 			t = s;
 			while ( *s && *s != ';' && *s != LINEFEED ) s++;
-			c = *s; *s = '}';
-			if ( PreEval(t,&loop->incnum) == 0 ) goto illdo;
-			*s++ = c;
+			if ( *t == '$' ) {
+				c = *s; *s = 0;
+				if ( GetName(AC.dollarnames,t+1,&loop->incdollar,NOAUTO) != CDOLLAR ) {
+					MesPrint("@%s is undefined in third parameter in #do instruction",t);
+					return(-1);
+				}
+				loop->incnum = DolToLong(BHEAD loop->incdollar);
+				if ( AN.ErrorInDollar ) {
+					MesPrint("@%s does not evaluate into a valid loop parameter",t);
+					return(-1);
+				}
+				*s = c;
+			}
+			else {
+				c = *s; *s = '}';
+				if ( PreEval(t,&loop->incnum) == 0 ) goto illdo;
+				*s++ = c;
+			}
 		}
 		else loop->incnum = 1;
 		loop->contents = s;
@@ -2663,6 +2707,7 @@ int DoElseif(UBYTE *s)
 
 int DoEnddo(UBYTE *s)
 {
+	GETIDENTITY
 	DOLOOP *loop;
 	UBYTE *t, *tt, *value, numstr[16];
 	LONG xval;
@@ -2729,7 +2774,21 @@ int DoEnddo(UBYTE *s)
 					Now we may substitute the loopvalue.
 */
 					if ( xsign < 0 ) xval = -xval;
+					if ( loop->incdollar >= 0 ) {
+						loop->incnum = DolToLong(BHEAD loop->incdollar);
+						if ( AN.ErrorInDollar ) {
+							MesPrint("@%s does not evaluate into a valid third loop parameter",DOLLARNAME(Dollars,loop->incdollar));
+							return(-1);
+						}
+					}
 					loop->firstnum = xval + loop->incnum;
+				}
+			}
+			if ( loop->lastdollar >= 0 ) {
+				loop->lastnum = DolToLong(BHEAD loop->lastdollar);
+				if ( AN.ErrorInDollar ) {
+					MesPrint("@%s does not evaluate into a valid second loop parameter",DOLLARNAME(Dollars,loop->lastdollar));
+					return(-1);
 				}
 			}
 		}
@@ -3964,8 +4023,8 @@ illend:
 				if ( *t == '$' ) {
 					t++; tt = t; while (chartype[*tt] <= 1 ) tt++;
 					c = *tt; *tt = 0;
-					if ( ( numdol = GetDollar(t) ) > 0 ) { x = 1; }
-					else                                 { x = 0; }
+					if ( ( numdol = GetDollar(t) ) >= 0 ) { x = 1; }
+					else                                  { x = 0; }
 					*tt = c;
 				}
 				else {
@@ -3979,6 +4038,65 @@ illend:
 						 || *tt == '\n' || *tt == '\r' ) tt++;
 				if ( *tt != ')' ) {
 					MesPrint("@Improper use of exists($var) or exists(expr)");
+					Terminate(-1);
+				}
+				*type = 3;
+				s = tt+1;
+				*val2 = x;
+				return(s);
+			}
+			else if ( StrICmp(s,(UBYTE *)"isnumerical") == 0 ) {
+				GETIDENTITY
+				UBYTE *tt;
+				WORD numdol, numexp;
+				*t++ = c;
+				while ( *t == ' ' || *t == '\t' || *t == '\n' || *t == '\r' ) t++;
+				if ( *t == '$' ) {
+					t++; tt = t; while (chartype[*tt] <= 1 ) tt++;
+					c = *tt; *tt = 0;
+					if ( ( numdol = GetDollar(t) ) < 0 ) {
+						MesPrint("@$ variable in isnumerical(%s) does not exist",t);
+						Terminate(-1);
+					}
+					x = DolToLong(BHEAD numdol);
+					if ( AN.ErrorInDollar ) {
+						DOLLARS d = Dollars + numdol;
+						x = 0;
+						if ( d->type == DOLNUMBER || d->type == DOLTERMS ) {
+							if ( d->where[0] == 0 ) x = 1;
+							else if ( d->where[d->where[0]] == 0 ) {
+								if ( ABS(d->where[d->where[0]-1]) == d->where[0]-1 )
+									x = 1;
+							}
+						}
+					}
+					else x = 1;
+					*tt = c;
+				}
+				else {
+					tt = SkipAName(t);
+					c = *tt; *tt = 0;
+					if ( GetName(AC.exprnames,t,&numexp,NOAUTO) == NAMENOTFOUND ) {
+						MesPrint("@expression in isnumerical(%s) does not exist",t);
+						Terminate(-1);
+					}
+					x = TermsInExpression(numexp);
+					if ( x != 1 ) x = 0;
+					else {
+						WORD *term = AT.WorkPointer;
+						if ( GetFirstTerm(term,numexp) < 0 ) {
+							MesPrint("@error reading expression in isnumerical(%s)",t);
+							Terminate(-1);
+						}
+						if ( *term == ABS(term[*term-1])+1 ) x = 1;
+						else                                 x = 0;
+					}
+					*tt = c;
+				} 
+				while ( *tt == ' ' || *tt == '\t'
+						 || *tt == '\n' || *tt == '\r' ) tt++;
+				if ( *tt != ')' ) {
+					MesPrint("@Improper use of isnumerical($var) or numerical(expr)");
 					Terminate(-1);
 				}
 				*type = 3;
@@ -4126,7 +4244,7 @@ illend:
 }
 
 /*
- 		#] pParseObject : 
+ 		#] pParseObject :
  		#[ PreCalc :
  
 		To be called when a { is encountered.
