@@ -45,6 +45,7 @@ static KEYWORD precommands[] = {
 	,{"append"      , DoPreAppend    , 0, 0}
 	,{"assign"      , DoPreAssign    , 0, 0}
 	,{"break"       , DoPreBreak     , 0, 0}
+	,{"breakdo"     , DoBreakDo      , 0, 0}
 	,{"call"        , DoCall         , 0, 0}
 	,{"case"        , DoPreCase      , 0, 0}
 	,{"close"       , DoPreClose     , 0, 0}
@@ -2352,7 +2353,7 @@ int DoCall(UBYTE *s)
 	i2 = AC.CurrentStream->prevline;
 	AC.CurrentStream->prevline   =
 	AC.CurrentStream->linenumber = 2;
-	OpenStream(u+1,PREREADSTREAM,numpre,PRENOACTION);
+	OpenStream(u+1,PREREADSTREAM3,numpre,PRENOACTION);
 	AC.Streams[streamoffset].name = args1;
 	AC.Streams[streamoffset].linenumber = i1;
 	AC.Streams[streamoffset].prevline   = i2;
@@ -2501,7 +2502,7 @@ int DoDo(UBYTE *s)
 		if ( *t == '$' ) {
 			c = *s; *s = 0;
 			if ( GetName(AC.dollarnames,t+1,&loop->firstdollar,NOAUTO) != CDOLLAR ) {
-				MesPrint("@%s is undefined in first parameter in #do instruction",t);
+				MesPrint("@%s is undefined in first parameter in %#do instruction",t);
 				return(-1);
 			}
 			loop->firstnum = DolToLong(BHEAD loop->firstdollar);
@@ -2522,7 +2523,7 @@ int DoDo(UBYTE *s)
 		if ( *t == '$' ) {
 			*s = 0;
 			if ( GetName(AC.dollarnames,t+1,&loop->lastdollar,NOAUTO) != CDOLLAR ) {
-				MesPrint("@%s is undefined in second parameter in #do instruction",t);
+				MesPrint("@%s is undefined in second parameter in %#do instruction",t);
 				return(-1);
 			}
 			loop->lastnum = DolToLong(BHEAD loop->lastdollar);
@@ -2543,7 +2544,7 @@ int DoDo(UBYTE *s)
 			if ( *t == '$' ) {
 				c = *s; *s = 0;
 				if ( GetName(AC.dollarnames,t+1,&loop->incdollar,NOAUTO) != CDOLLAR ) {
-					MesPrint("@%s is undefined in third parameter in #do instruction",t);
+					MesPrint("@%s is undefined in third parameter in %#do instruction",t);
 					return(-1);
 				}
 				loop->incnum = DolToLong(BHEAD loop->incdollar);
@@ -2551,7 +2552,7 @@ int DoDo(UBYTE *s)
 					MesPrint("@%s does not evaluate into a valid loop parameter",t);
 					return(-1);
 				}
-				*s = c;
+				*s++ = c;
 			}
 			else {
 				c = *s; *s = '}';
@@ -2630,6 +2631,74 @@ illdo:;
 
 /*
  		#] DoDo : 
+ 		#[ DoBreakDo :
+
+		#dobreak [num]
+		jumps out of num #do-loops (if there are that many) (default is 1)
+*/
+
+int DoBreakDo(UBYTE *s)
+{
+	DOLOOP *loop;
+	WORD levels;
+
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+
+	if ( NumDoLoops <= 0 ) {
+		MesPrint("@%#dobreak without %#do");
+		return(1);
+	}
+/*
+	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEDO ) { MessPreNesting(4); return(-1); }
+*/
+	while ( *s && ( *s == ',' || *s == ' ' || *s == '\t' ) ) s++;
+	if ( *s == 0 ) {
+		levels = 1;
+	}
+	else if ( FG.cTable[*s] == 1 ) {
+		levels = 0;
+		while ( *s >= '0' && *s <= '9' ) { levels = 10*levels + *s++ - '0'; }
+		if ( *s != 0 ) goto improper;
+	}
+	else {
+improper:
+		MesPrint("@Improper syntax of %#dobreak instruction");
+		return(1);
+	}
+	if ( levels > NumDoLoops ) {
+		MesPrint("@Too many loop levels requested in %#breakdo instruction");
+		Terminate(-1);
+	}
+	while ( levels > 0 ) {
+		while ( AC.CurrentStream->type != PREREADSTREAM
+		  && AC.CurrentStream->type != PREREADSTREAM2
+		  && AC.CurrentStream->type != PREREADSTREAM3 ) {
+			AC.CurrentStream = CloseStream(AC.CurrentStream);
+		}
+		while ( AP.PreTypes[AP.NumPreTypes] != PRETYPEDO
+		&& AP.PreTypes[AP.NumPreTypes] != PRETYPEPROCEDURE ) AP.NumPreTypes--;
+		if ( AC.CurrentStream->type == PREREADSTREAM3
+		|| AP.PreTypes[AP.NumPreTypes] == PRETYPEPROCEDURE ) {
+			MesPrint("@Trying to jump out of a procedure with a %#breakdo instruction");
+			Terminate(-1);
+		}
+		loop = &(DoLoops[NumDoLoops-1]);
+
+		NumDoLoops--;
+		DoUndefine(loop->name);
+		M_free(loop->p.buffer,"loop->p.buffer");
+		loop->firstloopcall = 0;
+		AP.NumPreTypes--;
+
+		AC.CurrentStream = CloseStream(AC.CurrentStream);
+		levels--;
+	}
+	return(0);
+}
+
+/*
+ 		#] DoBreakDo : 
  		#[ DoElse :
 */
 
@@ -4244,7 +4313,7 @@ illend:
 }
 
 /*
- 		#] pParseObject :
+ 		#] pParseObject : 
  		#[ PreCalc :
  
 		To be called when a { is encountered.

@@ -618,6 +618,7 @@ static void print_STREAM(STREAM *t)
 		case DOLLARSTREAM: MesPrint("%d == DOLLARSTREAM", t->type); break;
 		case PREREADSTREAM2: MesPrint("%d == PREREADSTREAM2", t->type); break;
 		case EXTERNALCHANNELSTREAM: MesPrint("%d == EXTERNALCHANNELSTREAM", t->type); break;
+		case PREREADSTREAM3: MesPrint("%d == PREREADSTREAM3", t->type); break;
 		default: MesPrint("%d == UNKNOWN", t->type);
 	}
 }

@@ -29,7 +29,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -200,15 +200,20 @@ int CoModOption(UBYTE *s)
 		s = ToToken(s);
 		t = EndOfToken(s);
 		c = *t; *t = 0;
-		if ( StrICmp(s,(UBYTE *)"polyfun") ) {
-			MesPrint("@Unrecognized module option in .instruction: %s",s);
-			error = 1;
-			*t = c;
-		}
-		else {
+		if ( StrICmp(s,(UBYTE *)"polyfun") == 0 ) {
 			*t = c;
 			SKIPBLANKS(t)
 			if ( DoPolyfun(t) ) error = 1;
+		}
+		else if ( StrICmp(s,(UBYTE *)"polyratfun") == 0 ) {
+			*t = c;
+			SKIPBLANKS(t)
+			if ( DoPolyratfun(t) ) error = 1;
+		}
+		else {
+			MesPrint("@Unrecognized module option in .instruction: %s",s);
+			error = 1;
+			*t = c;
 		}
 		while ( *t ) {
 			if ( *t == ',' || *t == ')' ) break;

@@ -739,6 +739,7 @@ extern int    DoIf(UBYTE *);
 extern int    DoCall(UBYTE *);
 extern int    DoDebug(UBYTE *);
 extern int    DoDo(UBYTE *);
+extern int    DoBreakDo(UBYTE *);
 extern int    DoEnddo(UBYTE *);
 extern int    DoEndprocedure(UBYTE *);
 extern int    DoProcedure(UBYTE *);

@@ -335,6 +335,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			break;
 		case PREREADSTREAM:
 		case PREREADSTREAM2:
+		case PREREADSTREAM3:
 		case PRECALCSTREAM:
 			stream = CreateStream((UBYTE *)"calculator");
 			stream->buffer = stream->pointer = s = name;
@@ -404,7 +405,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 	else if ( prevarmode > 0 ) stream->prevars = NumPre;
 	else if ( prevarmode < 0 ) stream->prevars = -prevarmode-1;
 	AC.CurrentStream = stream;
-	if ( type == PREREADSTREAM || type == PRECALCSTREAM
+	if ( type == PREREADSTREAM || type == PREREADSTREAM3 || type == PRECALCSTREAM
 		|| type == DOLLARSTREAM ) AC.NoShowInput = 1;
 	return(stream);
 }
@@ -561,7 +562,7 @@ STREAM *CloseStream(STREAM *stream)
 		stream->buffer = 0;
 	}
 	if ( stream->name && stream->type != PREVARSTREAM
-	&& stream->type != PREREADSTREAM && stream->type != PREREADSTREAM2
+	&& stream->type != PREREADSTREAM && stream->type != PREREADSTREAM2 && stream->type != PREREADSTREAM3
 	&& stream->type != PRECALCSTREAM && stream->type != DOLLARSTREAM ) {
 		M_free(stream->name,"stream->name");
 	}
