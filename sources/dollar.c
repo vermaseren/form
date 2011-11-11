@@ -1526,6 +1526,81 @@ ShortArgument:
 
 /*
   	#] DolToTerms : 
+  	#[ DolToLong :
+*/
+
+LONG DolToLong(PHEAD WORD numdollar)
+{
+	GETBIDENTITY
+	DOLLARS d = Dollars + numdollar;
+	LONG x;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( numdollar == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			if ( dtype == MODLOCAL ) {
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
+			}
+		}
+	}
+#endif
+	AN.ErrorInDollar = 0;
+	if ( ( d->type == DOLTERMS || d->type == DOLNUMBER )
+	 && d->where[0] == 4 &&
+	d->where[4] == 0 && ( d->where[3] == 3 || d->where[3] == -3 )
+	 && d->where[2] == 1 && ( d->where[1] & TOPBITONLY ) == 0 ) {
+		x = d->where[1];
+		if ( d->where[3] > 0 ) return(x);
+		else return(-x);
+	}
+	else if ( ( d->type == DOLTERMS || d->type == DOLNUMBER )
+	 && d->where[0] == 6 &&
+	d->where[6] == 0 && ( d->where[5] == 5 || d->where[5] == -5 )
+	 && d->where[3] == 1 && d->where[4] == 1 && ( d->where[2] & TOPBITONLY ) == 0 ) {
+		x = d->where[1] + ( (LONG)(d->where[2]) << BITSINWORD );
+		if ( d->where[5] > 0 ) return(x);
+		else return(-x);
+	}
+	else if ( d->type == DOLARGUMENT && d->where[0] == -SNUMBER ) {
+		x = d->where[1];
+		return(x);
+	}
+	else if ( d->type == DOLARGUMENT && d->where[0] == -INDEX
+	&& d->where[1] >= 0 && d->where[1] < AM.OffsetIndex ) {
+		x = d->where[1];
+		return(x);
+	}
+	else if ( d->type == DOLZERO ) return(0);
+	else if ( d->type == DOLWILDARGS && d->where[0] == 0
+	&& d->where[1] == -SNUMBER && d->where[3] == 0 ) {
+		x = d->where[2];
+		return(x);
+	}
+	else if ( d->type == DOLINDEX && d->index >= 0 && d->index < AM.OffsetIndex ) {
+		x = d->index;
+		return(x);
+	} 
+	else if ( d->type == DOLWILDARGS && d->where[0] == 1
+	&& d->where[1] >= 0 && d->where[1] < AM.OffsetIndex ) {
+		x = d->where[1];
+		return(x);
+	}
+	else if ( d->type == DOLWILDARGS && d->where[0] == 0
+	&& d->where[1] == -INDEX && d->where[3] == 0 && d->where[2] >= 0
+	&& d->where[2] < AM.OffsetIndex ) {
+		x = d->where[2];
+		return(x);
+	}
+	AN.ErrorInDollar = 1;
+	return(0);
+}
+
+/*
+  	#] DolToLong : 
   	#[ DoInside :
 */
 
@@ -3290,7 +3365,7 @@ nextj:;
 }
 
 /*
-  	#] DollarFactorize :
+  	#] DollarFactorize : 
   	#[ CleanDollarFactors :
 */
 

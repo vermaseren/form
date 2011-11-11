@@ -854,7 +854,10 @@ typedef struct DoLoOp {
 	int NoShowInput;
 	int errorsinloop;
 	int firstloopcall;
-	PADPOINTER(4,4,0,0);
+	WORD firstdollar;   /* When >= 0 we have to get the value from a dollar */
+	WORD lastdollar;    /* When >= 0 we have to get the value from a dollar */
+	WORD incdollar;     /* When >= 0 we have to get the value from a dollar */
+	PADPOINTER(4,4,3,0);
 } DOLOOP;
 
 /**
@@ -911,7 +914,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 

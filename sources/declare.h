@@ -1033,6 +1033,7 @@ extern WORD   DolToVector(PHEAD WORD);
 extern WORD   DolToNumber(PHEAD WORD);
 extern WORD   DolToSymbol(PHEAD WORD);
 extern WORD   DolToIndex(PHEAD WORD);
+extern LONG   DolToLong(PHEAD WORD);
 extern int    DollarFactorize(PHEAD WORD);
 extern int    CoPrintTable(UBYTE *);
 extern int    CoDeallocateTable(UBYTE *);
