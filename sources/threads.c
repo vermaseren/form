@@ -406,7 +406,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	can time the threads with getrusage, and hence this was done. Under NPTL
 	this has been 'corrected' and suddenly getruage doesn't work anymore the
 	way it used to. Now we need
-		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&AR.timing)
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&timing)
 	which is declared in <time.h> and we need -lrt extra in the link statement.
 	(this is at least the case on blade02 at DESY-Zeuthen).
 	See also the code in tools.c at the routine Timer.

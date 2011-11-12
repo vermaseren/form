@@ -2994,20 +2994,20 @@ LONG Timer(int par)
 	is used which gives a separate id to each thread and individual timings.
 	In NPTL we get, according to the standard, one combined timing.
 	To get individual timings we need to use
-		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing)
-	with AR.timing of the time
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &timing)
+	with timing of the time
 	struct timespec {
-		__time_t tv_sec;            Seconds.
-		LONG int tv_nsec;           Nanoseconds.
+		time_t tv_sec;            Seconds.
+		long   tv_nsec;           Nanoseconds.
 	};
 
 */
-	GETIDENTITY
+	struct timespec t;
 	if ( par == 0 ) {
-		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &AR.timing) ) {
+		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t) ) {
 			MesPrint("Error in getting timing information");
 		}
-		return(((LONG)(AR.timing.tv_sec))*1000+AR.timing.tv_nsec/1000000);
+		return (LONG)t.tv_sec * 1000 + (LONG)t.tv_nsec / 1000000;
 	}
 	return(0);
 #else

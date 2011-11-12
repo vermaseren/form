@@ -1749,9 +1749,6 @@ struct R_const {
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
 
     POSITION DefPosition;          /* (R) Deferred position of keep brackets. */
-#ifdef WITHPOSIXCLOCK
-    struct timespec timing;        /* Struct defined in time.h */
-#endif
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
     LONG    InHiBuf;               /* (R) Characters in hide buffer. Scratch file. */
