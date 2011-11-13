@@ -810,6 +810,20 @@ typedef struct pReVaR {
 	int wildarg;		/**< The number of a potential ?var. If none: 0. wildarg<nargs */
 	PADPOINTER(0,2,0,0);
 } PREVAR;
+ 
+/**
+ *	Used for #inside
+ */
+
+typedef struct {
+	WORD *buffer;
+	WORD size;
+	WORD numdollars;
+	WORD oldcbuf;
+	WORD oldrbuf;
+	WORD inscbuf;
+	PADPOINTER(0,0,5,0);
+} INSIDEINFO;
 
 /**
  *	Used by the preprocessor to load the contents of a doloop or a procedure.
@@ -914,7 +928,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -1401,12 +1415,13 @@ struct P_const {
                                        Points to contents. Can be changed */
     LIST LoopList;                 /* (P) List of do loops */
     LIST ProcList;                 /* (P) List of procedures */
+    INSIDEINFO inside;             /*     Information during #inside/#endinside */
     UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
     UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
     UBYTE *preStop;                /* (P) end of preStart */
     UBYTE *preFill;                /* (P) Filling point in preStart */
-	UBYTE *procedureExtension;     /* (P) Extension for procedure files (prc) */
-	UBYTE *cprocedureExtension;    /* (P) Extension after .clear */
+    UBYTE *procedureExtension;     /* (P) Extension for procedure files (prc) */
+    UBYTE *cprocedureExtension;    /* (P) Extension after .clear */
     int *PreIfStack;               /* (P) Tracks nesting of #if */
     int *PreSwitchModes;           /* (P) Stack of switch status */
     int *PreTypes;                 /* (P) stack of #call, #do etc nesting */
@@ -1426,6 +1441,7 @@ struct P_const {
     int     NumPreTypes;           /* (P) Number of nesting objects in PreTypes */
     int     MaxPreIfLevel;         /* (C) Maximum number of nested #if. Dynamic */
     int     PreIfLevel;            /* (C) Current position if PreIfStack */
+    int     PreInsideLevel;        /* (C) #inside active? */
     int     DelayPrevar;           /* (P) Delaying prevar substitution */
     int     AllowDelay;            /* (P) Allow delayed prevar substitution */
     int     lhdollarerror;         /* (R) */
@@ -1436,7 +1452,7 @@ struct P_const {
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-	PADPOINTER(2,17,2,2);
+	PADPOINTER(2,18,2,2);
 };
 
 /*

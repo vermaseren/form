@@ -759,6 +759,7 @@ VOID StartVariables()
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
 	AM.sbufnum = inicbufs();		/* Subterm buffer for polynomials and optimization */
 	AC.ffbufnum = inicbufs();		/* Buffer number for user defined factorizations */
+	AP.inside.inscbuf = inicbufs();	/* For the #inside instruction */
 /*
 	Enter the built in objects
 */
@@ -856,6 +857,8 @@ VOID StartVariables()
 	AP.MaxPreTypes = 10;
 	AP.NumPreTypes = 0;
 	AP.PreTypes = (int *)Malloc1(sizeof(int)*(AP.MaxPreTypes+1),"preprocessor types");
+	AP.inside.buffer = 0;
+	AP.inside.size = 0;
 
 	AC.SortType = AC.lSortType = AM.gSortType = SORTLOWFIRST;
 #ifdef WITHPTHREADS

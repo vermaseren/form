@@ -1386,6 +1386,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 	Returns a struct of type DOLLARS which contains a copy of the
 	original dollar variable, provided it can be expressed in terms of
 	an expression (type = DOLTERMS). Otherwise it returns zero.
+	The dollar is expressed in terms in the buffer "where"
 */
 
 DOLLARS DolToTerms(PHEAD WORD numdollar)
@@ -1601,10 +1602,10 @@ LONG DolToLong(PHEAD WORD numdollar)
 
 /*
   	#] DolToLong : 
-  	#[ DoInside :
+  	#[ ExecInside :
 */
 
-int DoInside(UBYTE *s)
+int ExecInside(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
@@ -1658,7 +1659,7 @@ skipdol:	error = 1;
 }
 
 /*
-  	#] DoInside : 
+  	#] ExecInside : 
   	#[ InsideDollar :
 
 	Execution part of Inside $a;
@@ -3310,7 +3311,7 @@ getout2:			AR.SortType = oldsorttype;
 	d->nfactors = j;
 	if ( buf1content ) M_free(buf1content,"DollarFactorize-5");
 /*
- 		#] Step 7:
+ 		#] Step 7: 
  		#[ Step 8: Sorting the factors
 
 	There are d->nfactors factors. Look which ones have a 'where'

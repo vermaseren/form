@@ -59,6 +59,7 @@ static KEYWORD precommands[] = {
 	,{"elseif"      , DoElseif       , 0, 0}
 	,{"enddo"       , DoEnddo        , 0, 0}
 	,{"endif"       , DoEndif        , 0, 0}
+	,{"endinside"   , DoEndInside    , 0, 0}
 	,{"endprocedure", DoEndprocedure , 0, 0}
 	,{"endswitch"   , DoPreEndSwitch , 0, 0}
 	,{"exchange"    , DoPreExchange  , 0, 0}
@@ -69,6 +70,7 @@ static KEYWORD precommands[] = {
 	,{"ifdef"       , (TFUN)DoIfdef  , 1, 0}
 	,{"ifndef"      , (TFUN)DoIfdef  , 2, 0}
 	,{"include"     , DoInclude      , 0, 0}
+	,{"inside"      , DoInside       , 0, 0}
 	,{"message"     , DoMessage      , 0, 0}
 	,{"pipe"        , DoPipe         , 0, 0}
 	,{"preout"      , DoPreOut       , 0, 0}
@@ -833,6 +835,11 @@ VOID PreProcessor()
 				}
 				if ( ModuleInstruction(&moduletype,&specialtype) ) { error2++; AP.preError++; }
 				if ( specialtype ) SetSpecialMode(moduletype,specialtype);
+				if ( AP.PreInsideLevel != 0 ) {
+					MesPrint("@end of module instructions may not be used inside");
+					MesPrint("@the scope of a %#inside %#endinside construction.");
+					Terminate(-1);
+				}
 				if ( AC.RepLevel > 0 ) {
 					MesPrint("&EndRepeat statement(s) missing");
 					error2++; AP.preError++;
@@ -887,14 +894,8 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 			else {
 				if ( ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ||
 				( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) ) {
-/*					if ( c == '{' || c == '}' ) { */
-						pushbackchar = c;
-						LoadInstruction(5);
-/*					}
-					else {
-						LoadInstruction(1);
-					}
-*/
+					pushbackchar = c;
+					LoadInstruction(5);
 					continue;
 				}
 				UngetChar(c);
@@ -3020,6 +3021,151 @@ int DoIfdef(UBYTE *s, int par)
 
 /*
  		#] DoIfdef : 
+ 		#[ DoInside :
+
+	#inside $var1,...,$varn
+		statements without .sort
+	#endinside
+
+	executes the statements on the contents of the $ variables as if they
+	are a module. The results are put back in the dollar variables.
+	To do this right we need a struct with
+		old compiler buffer
+		list of numbers of dollars
+		length of the list
+		length of the array containing the list
+	Because we need to compose statements, the statement buffer must be
+	empty. This means that we have to test for that. Same at the end. We
+	must have a completed statement.
+*/
+
+int DoInside(UBYTE *s)
+{
+	int numdol, error = 0;
+	WORD *nb, newsize, i;
+	UBYTE *name, c;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.PreInsideLevel != 0 ) {
+		MesPrint("@Illegal nesting of %#inside/%#endinside instructions");
+		return(-1);
+	}
+	if ( AP.PreContinuation ) {
+		error = -1;
+		MesPrint("@%#inside cannot be inside a regular statement");
+	}
+/*
+	Now the dollars to do
+*/
+	AP.inside.numdollars = 0;
+	for(;;) {
+		while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+		if ( *s == 0 ) break;
+		if ( *s != '$' ) {
+			MesPrint("@%#inside instruction can have only $ variables for parameters");
+			return(-1);
+		}
+		s++;
+		name = s;
+		while (chartype[*s] <= 1 ) s++;
+		c = *s; *s = 0;
+		if ( ( numdol = GetDollar(name) ) < 0 ) {
+			MesPrint("@%#inside: $%s has not (yet) been defined",name);
+			*s = c;
+			error = -1;
+		}
+		else {
+			*s = c;
+			if ( AP.inside.numdollars >= AP.inside.size ) {
+				if ( AP.inside.buffer == 0 ) newsize = 20;
+				else                         newsize = 2*AP.inside.size;
+				nb = (WORD *)Malloc1(newsize*sizeof(WORD),"insidebuffer");
+				if ( AP.inside.buffer ) {
+					for ( i = 0; i < AP.inside.size; i++ ) nb[i] = AP.inside.buffer[i];
+					M_free(AP.inside.buffer,"insidebuffer");
+				}
+				AP.inside.buffer = nb;
+				AP.inside.size = newsize;
+			}
+			AP.inside.buffer[AP.inside.numdollars++] = numdol;
+		}
+	}
+/*
+	We have to store the configuration of the compiler buffer, so that
+	we know where to start executing and how to reset the buffer.
+*/
+	AP.inside.oldcbuf = AC.cbufnum;
+	AP.inside.oldrbuf = AM.rbufnum;
+	AddToPreTypes(PRETYPEINSIDE);
+	AP.PreInsideLevel = 1;
+	AC.cbufnum = AP.inside.inscbuf;
+	AM.rbufnum = AP.inside.inscbuf;
+	return(error);
+}
+
+/*
+ 		#] DoInside : 
+ 		#[ DoEndInside :
+*/
+
+int DoEndInside(UBYTE *s)
+{
+	GETIDENTITY
+	WORD numdol, *oldworkpointer = AT.WorkPointer, *term, *t, j, i;
+	DOLLARS d, nd;
+	DUMMYUSE(s);
+	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEINSIDE ) {
+		if ( AP.PreInsideLevel != 1 ) MesPrint("@%#endinside without corresponding %#inside");
+		else MessPreNesting(11);
+		return(-1);
+	}
+	AP.NumPreTypes--;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreInsideLevel != 1 ) {
+		MesPrint("@%#endinside without corresponding %#inside");
+		return(-1);
+	}
+	if ( AP.PreContinuation ) {
+		MesPrint("@%#endinside: previous statement not terminated.");
+		Terminate(-1);
+	}
+/*
+	Now we have to execute the statements on the proper dollars.
+*/
+	for ( i = 0; i < AP.inside.numdollars; i++ ) {
+		numdol = AP.inside.buffer[i];
+		nd = d = Dollars + numdol;
+		if ( d->type != DOLTERMS ) nd = DolToTerms(BHEAD numdol);
+		term = nd->where;
+		NewSort(BHEAD0);
+		NewSort(BHEAD0);
+		while ( *term ) {
+			t = oldworkpointer; j = *term;
+			NCOPY(t,term,j);
+			AT.WorkPointer = t;
+			if ( Generator(BHEAD oldworkpointer,0) ) {
+				MesPrint("@Called from %#endinside");
+				MesPrint("@Evaluating variable $%s",DOLLARNAME(Dollars,numdol));
+				Terminate(-1);
+			}
+		}
+		AT.WorkPointer = oldworkpointer;
+		CleanDollarFactors(d);
+		if ( d->where ) { M_free(d->where,"dollar contents"); d->where = 0; }
+		EndSort(BHEAD (WORD *)((VOID *)(&(d->where))),2,0);
+		LowerSortLevel();
+		term = d->where; while ( *term ) term += *term;
+		d->size = term - d->where;
+		if ( nd != d ) M_free(nd,"Copy of dollar variable");
+	}
+	AC.cbufnum = AP.inside.oldcbuf;
+	AM.rbufnum = AP.inside.oldrbuf;
+	AP.PreInsideLevel = 0;
+	return(0);
+}
+
+/*
+ 		#] DoEndInside : 
  		#[ DoMessage :
 */
 

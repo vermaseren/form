@@ -695,7 +695,7 @@ MulIn:
 				}
 				break;
 			case TERMFUNCTION:
-				if ( AN.cTerm ) {
+				if ( t[1] == FUNHEAD && AN.cTerm ) {
 					ANsr = r; ANsm = m; ANsc = AN.cTerm;
 					AN.cTerm = 0;
 					t = ANsc + 1;

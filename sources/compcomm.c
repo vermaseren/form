@@ -1797,7 +1797,7 @@ int CoEndArgument(UBYTE *s)
   	#[ CoInside :
 */
 
-int CoInside(UBYTE *s) { return(DoInside(s)); }
+int CoInside(UBYTE *s) { return(ExecInside(s)); }
 
 /*
   	#] CoInside : 
@@ -5845,5 +5845,5 @@ int DoFactorize(UBYTE *s,int par)
 }
 
 /*
-  	#] DoFactorize :
+  	#] DoFactorize : 
 */

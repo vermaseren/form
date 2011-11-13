@@ -160,6 +160,7 @@
 #define PRETYPEDO 2
 #define PRETYPEPROCEDURE 3
 #define PRETYPESWITCH 4
+#define PRETYPEINSIDE 5
 
 /*
 	Type of statement. Used to make sure that the statements are in proper order
