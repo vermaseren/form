@@ -2654,6 +2654,35 @@ CalledFrom:
 
 /*
  		#] GetBinom : 
+ 		#[ LcmLong :		WORD LcmLong(a,na,b,nb)
+
+		Computes the LCM of the long numbers a and b and puts the result
+		in c. c is allowed to be equal to a.
+*/
+
+WORD LcmLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+{
+	WORD error = 0;
+	UWORD *d = NumberMalloc("LcmLong");
+	UWORD *e = NumberMalloc("LcmLong");
+	UWORD *f = NumberMalloc("LcmLong");
+	WORD nd, ne, nf;
+	GcdLong(BHEAD a, na, b, nb, d, &nd);
+	DivLong(a,na,d,nd,e,&ne,f,&nf);
+	if ( MulLong(b,nb,e,ne,c,nc) ) {
+		MLOCK(ErrorMessageLock);
+		MesCall("LcmLong");
+		MUNLOCK(ErrorMessageLock);
+		error = -1;
+	}
+	NumberFree(f,"LcmLong");
+	NumberFree(e,"LcmLong");
+	NumberFree(d,"LcmLong");
+	return(error);
+}
+
+/*
+ 		#] LcmLong : 
  		#[ TakeLongRoot:
 
 	Takes the 'power'-root of the long number in a.
@@ -3367,7 +3396,7 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 
 /*
  		#] Bernoulli : 
-  	#[ NextPrime :
+ 		#[ NextPrime :
 */
 /**
  *	Gives the next prime number in the list of prime numbers.
@@ -3427,7 +3456,7 @@ nexti:;
 }
  
 /*
-  	#] NextPrime : 
+ 		#] NextPrime : 
  		#[ wranf :
 
 		A random number generator that generates random WORDs with a very

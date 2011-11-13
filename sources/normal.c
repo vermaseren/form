@@ -728,13 +728,19 @@ MulIn:
 				}
 				break;
 			case FIRSTTERM:
+			case CONTENTTERM:
 				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
 					EXPRESSIONS e = Expressions+t[FUNHEAD+1];
 					POSITION oldondisk = AS.OldOnFile[t[FUNHEAD+1]];
 					if ( e->replace == NEWLYDEFINEDEXPRESSION ) {
 						AS.OldOnFile[t[FUNHEAD+1]] = e->onfile;
 					}
-					if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					if ( *t == FIRSTTERM ) {
+						if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					}
+					else if ( *t == CONTENTTERM ) {
+						if ( GetContent(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+					}
 					AS.OldOnFile[t[FUNHEAD+1]] = oldondisk;
 					if ( *termout == 0 ) goto NormZero;
 					{
@@ -746,14 +752,14 @@ MulIn:
 						nr1 = REDLENG(r1[-1]);
 						if ( Mully(BHEAD (UWORD *)lnum,&nnum,(UWORD *)r3,nr1) ) goto FromNorm;
 						nnum = INCLENG(nnum); nr1 = ABS(nnum); lnum[nr1-1] = nnum;
-						rterm = TermMalloc("FirstTerm");
+						rterm = TermMalloc("FirstTerm/ContentTerm");
 						r4 = rterm+1; r5 = term+1; while ( r5 < t ) *r4++ = *r5++;
 						r5 = termout+1; while ( r5 < lnum ) *r4++ = *r5++;
 						r5 = r; while ( r5 < r3 ) *r4++ = *r5++;
 						r5 = lnum; NCOPY(r4,r5,nr1);
 						*rterm = r4-rterm;
 						nr1 = *rterm; r1 = term; r2 = rterm; NCOPY(r1,r2,nr1);
-						TermFree(rterm,"FirstTerm");
+						TermFree(rterm,"FirstTerm/ContentTerm");
 						if ( AT.WorkPointer > term && AT.WorkPointer < r1 )
 							AT.WorkPointer = r1;
 						goto Restart;
@@ -2149,7 +2155,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3497,7 +3503,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 

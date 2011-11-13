@@ -1001,7 +1001,7 @@ dovector:		if ( inset == 0 ) x1 += AM.OffsetVector;
 				x1 = 0; while ( *s >= 0 ) { x1 = x1*128 + *s++; }
 				if ( x1 == AM.sumnum || x1 == AM.sumpnum ) sumlevel = x1;
 				x1 += FUNCTION;
-				if ( x1 == FIRSTBRACKET || x1 == FIRSTTERM ) {
+				if ( x1 == FIRSTBRACKET || x1 == FIRSTTERM || x1 == CONTENTTERM ) {
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) {
 doexpr:					s += 2;
 						*t++ = x1; *t++ = FUNHEAD+2; *t++ = 0;
@@ -1040,6 +1040,8 @@ doexpr:					s += 2;
 							if ( x1 == FIRSTBRACKET )
 								MesPrint("&Problems with argument of FirstBracket_");
 							else if ( x1 == FIRSTTERM )
+								MesPrint("&Problems with argument of FirstTerm_");
+							else if ( x1 == CONTENTTERM )
 								MesPrint("&Problems with argument of FirstTerm_");
 							else if ( x1 == TERMSINEXPR )
 								MesPrint("&Problems with argument of TermsIn_");

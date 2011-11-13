@@ -1478,7 +1478,364 @@ int GetFirstTerm(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstTerm :
+ 		#] GetFirstTerm : 
+ 		#[ GetContent :
+*/
+
+int GetContent(WORD *content, int num)
+{
+/*
+		Gets the content of the expression 'num'
+		Puts it in content.
+		Routine should be thread-safe
+		The content is defined as the term that will make the expression 'num'
+		with integer coefficients, no GCD and all common factors taken out,
+		all negative powers removed when we divide the expression by this
+		content.
+*/
+	GETIDENTITY
+	POSITION position, oldposition;
+	RENUMBER renumber;
+	FILEHANDLE *fi;
+	WORD type, *oldcomppointer, oldonefile, numword, *term, i;
+	WORD *cbuffer = TermMalloc("GetContent");
+	WORD *oldworkpointer = AT.WorkPointer;
+
+	oldcomppointer = AR.CompressPointer;
+	type = Expressions[num].status;
+	if ( type == STOREDEXPRESSION ) {
+		WORD TMproto[SUBEXPSIZE];
+		TMproto[0] = EXPRESSION;
+		TMproto[1] = SUBEXPSIZE;
+		TMproto[2] = num;
+		TMproto[3] = 1;
+		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+		AT.TMaddr = TMproto;
+		PUTZERO(position);
+		if ( ( renumber = GetTable(num,&position) ) == 0 ) goto CalledFrom;
+		if ( GetFromStore(cbuffer,&position,renumber,&numword,num) < 0 ) goto CalledFrom;
+		for(;;) {
+			term = oldworkpointer;
+			AR.CompressPointer = oldcomppointer;
+			if ( GetFromStore(term,&position,renumber,&numword,num) < 0 ) goto CalledFrom;
+			if ( *term == 0 ) break;
+/*
+			'merge' the two terms
+*/
+			if ( ContentMerge(BHEAD cbuffer,term) < 0 ) goto CalledFrom;
+		}
+
+#ifdef WITHPTHREADS
+		M_free(renumber->symb.lo,"VarSpace");
+		M_free(renumber,"Renumber");
+#endif
+	}
+	else {			/* Active expression */
+		oldonefile = AR.GetOneFile;
+		if ( type == HIDDENLEXPRESSION || type == HIDDENGEXPRESSION ) {
+			AR.GetOneFile = 2; fi = AR.hidefile;
+		}
+		else {
+			AR.GetOneFile = 0;
+			if ( Expressions[num].replace == NEWLYDEFINEDEXPRESSION )
+			     fi = AR.outfile;
+			else fi = AR.infile;
+		}
+		if ( fi->handle >= 0 ) {
+			PUTZERO(oldposition);
+/*
+			SeekFile(fi->handle,&oldposition,SEEK_CUR);
+*/
+			}
+		else {
+			SETBASEPOSITION(oldposition,fi->POfill-fi->PObuffer);
+		}
+		position = AS.OldOnFile[num];
+		if ( GetOneTerm(BHEAD cbuffer,fi,&position,1) < 0 ) goto CalledFrom;
+		AR.CompressPointer = oldcomppointer;
+		if ( GetOneTerm(BHEAD cbuffer,fi,&position,1) < 0 ) goto CalledFrom;
+/*
+		Now go through the terms. For each term we have to test whether
+		what is in cbuffer is also in that term. If not, we have to remove
+		it from cbuffer. Additionally we have to accumulate the GCD of the
+		numerators and the LCM of the denominators. This is all done in the
+		routine ContentMerge.
+*/
+		for(;;) {
+			term = oldworkpointer;
+			AR.CompressPointer = oldcomppointer;
+			if ( GetOneTerm(BHEAD term,fi,&position,1) < 0 ) goto CalledFrom;
+			if ( *term == 0 ) break;
+/*
+			'merge' the two terms
+*/
+			if ( ContentMerge(BHEAD cbuffer,term) < 0 ) goto CalledFrom;
+		}
+		if ( fi->handle < 0 ) {
+			fi->POfill = fi->PObuffer+BASEPOSITION(oldposition);
+		}
+		AR.GetOneFile = oldonefile;
+	}
+	AR.CompressPointer = oldcomppointer;
+	for ( i = 0; i < *cbuffer; i++ ) content[i] = cbuffer[i];
+	TermFree(cbuffer,"GetContent");
+	AT.WorkPointer = oldworkpointer;
+	return(*content);
+CalledFrom:
+	MLOCK(ErrorMessageLock);
+	MesCall("GetContent");
+	MUNLOCK(ErrorMessageLock);
+	SETERROR(-1)
+}
+
+/*
+ 		#] GetContent : 
+ 		#[ CleanupTerm :
+
+		Removes noncommuting objects from the term
+*/
+
+int CleanupTerm(WORD *term)
+{
+	WORD *tstop, *t, *tfill, *tt;
+	GETSTOP(term,tstop);
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *t >= FUNCTION && ( functions[*t-FUNCTION].commute || *t == DENOMINATOR ) ) {
+			tfill = t; tt = t + t[1]; tstop = term + *term;
+			while ( tt < tstop ) *tfill++ = *tt++;
+			*term = tfill - term;
+			tstop -= ABS(tfill[-1]);
+		}
+		else {
+			t += t[1];
+		}
+	}
+	return(0);
+}
+
+/*
+ 		#] CleanupTerm : 
+ 		#[ ContentMerge :
+*/
+
+WORD ContentMerge(PHEAD WORD *content, WORD *term)
+{
+	GETBIDENTITY
+	WORD *cstop, csize, crsize, sign = 1, numsize, densize, i, tnsize, tdsize;
+	UWORD *num, *den, *tnum, *tden;
+	WORD *outfill, *outb = TermMalloc("ContentMerge"), *ct;
+	WORD *t, *tstop, tsize, trsize, *told;
+	WORD *t1, *t2, *c1, *c2, i1, i2, *out1;
+	cstop = content + *content;
+	csize = cstop[-1];
+	if ( csize < 0 ) { sign = -sign; csize = -csize; }
+	cstop -= csize;
+	numsize = densize = crsize = (csize-1)/2;
+	num = NumberMalloc("ContentMerge");
+	den = NumberMalloc("ContentMerge");
+	for ( i = 0; i < numsize; i++ ) num[i] = (UWORD)(cstop[i]);
+	for ( i = 0; i < densize; i++ ) den[i] = (UWORD)(cstop[i+crsize]);
+	while ( num[numsize-1] == 0 ) numsize--;		
+	while ( den[densize-1] == 0 ) densize--;		
+/*
+	First we do the coefficient
+*/
+	tstop = term + *term;
+	tsize = tstop[-1];
+	if ( tsize < 0 ) tsize = -tsize;
+	else { sign = 1; }
+	tstop = tstop - tsize;
+	tnsize = tdsize = trsize = (tsize-1)/2;
+	tnum = (UWORD *)tstop; tden = (UWORD *)(tstop + trsize);
+	while ( tnum[tnsize-1] == 0 ) tnsize--;
+	while ( tden[tdsize-1] == 0 ) tdsize--;
+	GcdLong(BHEAD num, numsize, tnum, tnsize, num, &numsize);
+	if ( LcmLong(BHEAD den, densize, tden, tdsize, den, &densize) ) goto CalledFrom;
+	outfill = outb + 1;
+	ct = content + 1;
+	t = term + 1;
+	while ( ct < cstop ) {
+		switch ( *ct ) {
+			case SYMBOL:
+				t = term+1;
+				while ( t < tstop && *t != *ct ) t += t[1];
+				if ( t >= tstop ) break;
+				t1 = t+2; t2 = t+t[1];
+				c1 = ct+2; c2 = ct+ct[1];
+				out1 = outfill; *outfill++ = *ct; outfill++;
+				while ( c1 < c2 && t1 < t2 ) {
+					if ( *c1 == *t1 ) {
+						if ( t1[1] <= c1[1] ) {
+							*outfill++ = *t1++; *outfill++ = *t1++;
+							c1 += 2;
+						}
+						else {
+							*outfill++ = *c1++; *outfill++ = *c1++;
+							t1 += 2;
+						}
+					}
+					else if ( *c1 < *t1 ) {
+						if ( c1[1] < 0 ) {
+							*outfill++ = *c1++; *outfill++ = *c1++;
+						}
+						else { c1 += 2; }
+					}
+					else {
+						if ( t1[1] < 0 ) {
+							*outfill++ = *t1++; *outfill++ = *t1++;
+						}
+						else t1 += 2;
+					}
+				}
+				while ( c1 < c2 ) {
+					if ( c1[1] < 0 ) { *outfill++ = c1[0]; *outfill++ = c1[1]; }
+					c1 += 2;
+				}
+				while ( t1 < t2 ) {
+					if ( t1[1] < 0 ) { *outfill++ = t1[0]; *outfill++ = t1[1]; }
+					t1 += 2;
+				}
+				out1[1] = outfill - out1;
+				if ( out1[1] == 2 ) outfill = out1;
+				break;
+			case DOTPRODUCT:
+				t = term+1;
+				while ( t < tstop && *t != *ct ) t += t[1];
+				if ( t >= tstop ) break;
+				t1 = t+2; t2 = t+t[1];
+				c1 = ct+2; c2 = ct+ct[1];
+				out1 = outfill; *outfill++ = *ct; outfill++;
+				while ( c1 < c2 && t1 < t2 ) {
+					if ( *c1 == *t1 && c1[1] == t1[1] ) {
+						if ( t1[2] <= c1[2] ) {
+							*outfill++ = *t1++; *outfill++ = *t1++; *outfill++ = *t1++;
+							c1 += 3;
+						}
+						else {
+							*outfill++ = *c1++; *outfill++ = *c1++; *outfill++ = *c1++;
+							t1 += 3;
+						}
+					}
+					else if ( *c1 < *t1 || ( *c1 == *t1 && c1[1] < t1[1] ) ) {
+						if ( c1[2] < 0 ) {
+							*outfill++ = *c1++; *outfill++ = *c1++; *outfill++ = *c1++;
+						}
+						else { c1 += 3; }
+					}
+					else {
+						if ( t1[2] < 0 ) {
+							*outfill++ = *t1++; *outfill++ = *t1++; *outfill++ = *t1++;
+						}
+						else t1 += 3;
+					}
+				}
+				while ( c1 < c2 ) {
+					if ( c1[2] < 0 ) { *outfill++ = c1[0]; *outfill++ = c1[1]; *outfill++ = c1[1]; }
+					c1 += 3;
+				}
+				while ( t1 < t2 ) {
+					if ( t1[2] < 0 ) { *outfill++ = t1[0]; *outfill++ = t1[1]; *outfill++ = t1[1]; }
+					t1 += 3;
+				}
+				out1[1] = outfill - out1;
+				if ( out1[1] == 2 ) outfill = out1;
+				break;
+			case INDEX:
+				t = term+1;
+				while ( t < tstop && *t != *ct ) t += t[1];
+				if ( t >= tstop ) break;
+				t1 = t+2; t2 = t+t[1];
+				c1 = ct+2; c2 = ct+ct[1];
+				out1 = outfill; *outfill++ = *ct; outfill++;
+				while ( c1 < c2 && t1 < t2 ) {
+					if ( *c1 == *t1 ) {
+						*outfill++ = *c1++;
+						t1 += 1;
+					}
+					else if ( *c1 < *t1 ) { c1 += 1; }
+					else { t1 += 1; }
+				}
+				out1[1] = outfill - out1;
+				if ( out1[1] == 2 ) outfill = out1;
+				break;
+			case VECTOR:
+			case DELTA:
+				t = term+1;
+				while ( t < tstop && *t != *ct ) t += t[1];
+				if ( t >= tstop ) break;
+				t1 = t+2; t2 = t+t[1];
+				c1 = ct+2; c2 = ct+ct[1];
+				out1 = outfill; *outfill++ = *ct; outfill++;
+				while ( c1 < c2 && t1 < t2 ) {
+					if ( *c1 == *t1 && c1[1] && t1[1] ) {
+						*outfill++ = *c1++; *outfill++ = *c1++;
+						t1 += 2;
+					}
+					else if ( *c1 < *t1 || ( *c1 == *t1 && c1[1] < t1[1] ) ) {
+						c1 += 2;
+					}
+					else {
+						t1 += 2;
+					}
+				}
+				out1[1] = outfill - out1;
+				if ( out1[1] == 2 ) outfill = out1;
+				break;
+			case GAMMA:
+			default:			/* Functions */
+				told = t;
+				while ( *t < *ct && t < tstop ) t += t[1];
+				if ( t >= tstop ) { t = told; }
+				else {
+					t1 = t; t2 = ct; i1 = t1[1]; i2 = t2[1];
+					if ( i1 != i2 ) { t = told; }
+					else {
+						while ( i1 > 0 ) {
+							if ( *t1 != *t2 ) break;
+							t1++; t2++; i1--;
+						}
+						if ( i1 == 0 ) {
+							for ( i = 0; i < i2; i++ ) { *outfill++ = *t++; }
+						}
+						else { t = told; }
+					}
+				}
+				break;
+		}
+		ct += ct[1];
+	}
+/*
+	Now put the coefficient back.
+*/
+	if ( numsize < densize ) {
+		for ( i = numsize; i < densize; i++ ) num[i] = 0;
+		numsize = densize;
+	}
+	else if ( densize < numsize ) {
+		for ( i = densize; i < numsize; i++ ) den[i] = 0;
+		densize = numsize;
+	}
+	for ( i = 0; i < numsize; i++ ) *outfill++ = num[i];
+	for ( i = 0; i < densize; i++ ) *outfill++ = den[i];
+	csize = numsize+densize+1;
+	if ( sign < 0 ) csize = -csize;
+	*outfill++ = csize;
+	*outb = outfill-outb;
+	NumberFree(den,"ContentMerge");
+	NumberFree(num,"ContentMerge");
+	for ( i = 0; i < *outb; i++ ) content[i] = outb[i];
+	TermFree(outb,"ContentMerge");
+	return(*content);
+CalledFrom:
+	MLOCK(ErrorMessageLock);
+	MesCall("GetContent");
+	MUNLOCK(ErrorMessageLock);
+	SETERROR(-1)
+}
+
+/*
+ 		#] ContentMerge : 
  		#[ TermsInExpression :
 */
 

@@ -914,7 +914,8 @@ int simp2token(SBYTE *s)
 						|| n == (DIVFUNCTION-FUNCTION)
 						|| n == (REMFUNCTION-FUNCTION)
 						|| n == (FACTORIN-FUNCTION)
-						|| n == (FIRSTTERM-FUNCTION) )
+						|| n == (FIRSTTERM-FUNCTION)
+						|| n == (CONTENTTERM-FUNCTION) )
 						&& fill[-1] == TFUNOPEN ) {
 							v = s+1;
 							if ( *v == TEXPRESSION ) {
@@ -1947,7 +1948,7 @@ int simp6token(SBYTE *tokens, int mode)
 }
 
 /*
- 		#] simp6token :
+ 		#] simp6token : 
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */
