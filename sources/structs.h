@@ -817,12 +817,13 @@ typedef struct pReVaR {
 
 typedef struct {
 	WORD *buffer;
+	int oldcompiletype;
 	WORD size;
 	WORD numdollars;
 	WORD oldcbuf;
 	WORD oldrbuf;
 	WORD inscbuf;
-	PADPOINTER(0,0,5,0);
+	PADPOINTER(0,1,5,0);
 } INSIDEINFO;
 
 /**

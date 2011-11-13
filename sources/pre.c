@@ -3094,12 +3094,14 @@ int DoInside(UBYTE *s)
 	We have to store the configuration of the compiler buffer, so that
 	we know where to start executing and how to reset the buffer.
 */
+	AP.inside.oldcompiletype = AC.compiletype;
 	AP.inside.oldcbuf = AC.cbufnum;
 	AP.inside.oldrbuf = AM.rbufnum;
 	AddToPreTypes(PRETYPEINSIDE);
 	AP.PreInsideLevel = 1;
 	AC.cbufnum = AP.inside.inscbuf;
 	AM.rbufnum = AP.inside.inscbuf;
+	AC.compiletype = 0;
 	return(error);
 }
 
@@ -3114,13 +3116,14 @@ int DoEndInside(UBYTE *s)
 	WORD numdol, *oldworkpointer = AT.WorkPointer, *term, *t, j, i;
 	DOLLARS d, nd;
 	DUMMYUSE(s);
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	if ( AP.PreTypes[AP.NumPreTypes] != PRETYPEINSIDE ) {
 		if ( AP.PreInsideLevel != 1 ) MesPrint("@%#endinside without corresponding %#inside");
 		else MessPreNesting(11);
 		return(-1);
 	}
 	AP.NumPreTypes--;
-	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreInsideLevel != 1 ) {
 		MesPrint("@%#endinside without corresponding %#inside");
 		return(-1);
@@ -3129,6 +3132,7 @@ int DoEndInside(UBYTE *s)
 		MesPrint("@%#endinside: previous statement not terminated.");
 		Terminate(-1);
 	}
+	AC.compiletype = AP.inside.oldcompiletype;
 /*
 	Now we have to execute the statements on the proper dollars.
 */
