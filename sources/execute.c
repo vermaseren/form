@@ -1644,7 +1644,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	tstop = term + *term;
 	tsize = tstop[-1];
 	if ( tsize < 0 ) tsize = -tsize;
-	else { sign = 1; }
+/*	else { sign = 1; } */
 	tstop = tstop - tsize;
 	tnsize = tdsize = trsize = (tsize-1)/2;
 	tnum = (UWORD *)tstop; tden = (UWORD *)(tstop + trsize);
