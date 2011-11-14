@@ -1900,7 +1900,7 @@ WORD *CreateExpression(PHEAD WORD nexp)
 {
 	GETBIDENTITY
 	CBUF *C = cbuf+AC.cbufnum;
-	POSITION startposition;
+	POSITION startposition, oldposition;
 	FILEHANDLE *fi;
 	WORD *term, *oldipointer = AR.CompressPointer;
 ;
@@ -1917,6 +1917,7 @@ WORD *CreateExpression(PHEAD WORD nexp)
 			AR.GetOneFile = 0; fi = AR.infile;
 			break;
 	}
+	SeekScratch(fi,&oldposition);
 	startposition = AS.OldOnFile[nexp];
 	term = AT.WorkPointer;
 	if ( GetOneTerm(BHEAD term,fi,&startposition,0) <= 0 ) goto CalledFrom;
@@ -1932,6 +1933,7 @@ WORD *CreateExpression(PHEAD WORD nexp)
 	}
 	AT.WorkPointer = term;
 	if ( EndSort(BHEAD (WORD *)((VOID *)(&term)),2,0) < 0 ) goto CalledFrom;
+	SetScratch(fi,&oldposition);
 	return(term);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
@@ -2264,7 +2266,6 @@ CalledFrom:
 	MesCall("DIVfunction");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
-	return(-1);
 }
 
 /*

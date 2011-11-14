@@ -130,7 +130,8 @@ WORD Processor()
 	for ( i = NumExpressions-1; i >= 0; i-- ) {
 		AS.OldOnFile[i] = Expressions[i].onfile;
 		AS.OldNumFactors[i] = Expressions[i].numfactors;
-		AS.Oldvflags[i] = e[i].vflags;
+/*		AS.Oldvflags[i] = e[i].vflags; */
+		AS.Oldvflags[i] = Expressions[i].vflags;
 		Expressions[i].vflags &= ~(ISUNMODIFIED|ISZERO);
 	}
 #ifdef WITHPTHREADS
@@ -625,7 +626,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor : 
+ 		#] Processor :
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**

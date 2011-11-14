@@ -45,7 +45,7 @@ using namespace std;
 
 /*
   	#] includes : 
- 		#[ constructor (small constant polynomial) :
+  	#[ constructor (small constant polynomial) :
 */
 
 // constructor for a small constant polynomial
@@ -73,8 +73,8 @@ poly::poly (PHEAD int a, WORD modp, WORD modn):
 }
 
 /*
- 		#] constructor (constant polynomial) :
- 		#[ constructor (large constant polynomial) :
+  	#] constructor (small constant polynomial) : 
+  	#[ constructor (large constant polynomial) :
 */
 
 // constructor for a large constant polynomial
@@ -97,8 +97,8 @@ poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
 }
 
 /*
- 		#] constructor (large constant polynomial) :
- 		#[ constructor (deep copy polynomial) :
+  	#] constructor (large constant polynomial) : 
+  	#[ constructor (deep copy polynomial) :
 */
 
 // copy constructor: makes a deep copy of a polynomial
@@ -116,7 +116,7 @@ poly::poly (const poly &a, WORD modp, WORD modn):
 }
 
 /*
- 		#] constructor (deep copy polynomial) :
+  	#] constructor (deep copy polynomial) : 
   	#[ destructor :
 */
 
@@ -132,8 +132,8 @@ poly::~poly () {
 }
 
 /*
-    #] destructor :
-    [# expand_memory :
+  	#] destructor : 
+  	#[ expand_memory :
 */
 
 // expands the memory allocated for terms to at least twice its size
@@ -162,8 +162,8 @@ void poly::expand_memory (int i) {
 }
 
 /*
-	  #] expand_memory :
- 		#[ setmod
+  	#] expand_memory : 
+  	#[ setmod :
 */
 
 // sets the coefficient space to ZZ/p^n
@@ -198,8 +198,8 @@ void poly::setmod(WORD _modp, WORD _modn) {
 }
 
 /*
- 		#] setmod : 
- 		#[ coefficients_modulo :
+  	#] setmod : 
+  	#[ coefficients_modulo :
 */
 
 // reduces all coefficients of the polynomial modulo a
@@ -243,7 +243,7 @@ void poly::coefficients_modulo (UWORD *a, WORD na, bool small) {
 }
 
 /*
- 		#] coefficients_modulo : 
+  	#] coefficients_modulo : 
   	#[ to_string :
 */
 
@@ -749,7 +749,7 @@ void poly::mul_one_term (const poly &a, const poly &b, poly &c) {
 }
 
 /*
-  	#] mul_one_term :
+  	#] mul_one_term : 
   	#[ mul_univar :
 */
 
@@ -1864,7 +1864,7 @@ void poly::divmod (const poly &a, const poly &b, poly &q, poly &r, bool only_div
 }
 
 /*
-  	#] divmod :
+  	#] divmod : 
   	#[ divides :
 */
 
@@ -1877,7 +1877,7 @@ bool poly::divides (const poly &a, const poly &b) {
 }
 
 /*
-  	#] divides :
+  	#] divides : 
   	#[ div :
 */
 
@@ -1947,8 +1947,8 @@ bool poly::operator== (const poly &a) const {
 bool poly::operator!= (const poly &a) const {	return !(*this == a); }
 
 /*
-  	#] operator overloads :
-		#[ num_terms :
+  	#] operator overloads : 
+  	#[ num_terms :
 */
 
 int poly::number_of_terms () const {
@@ -1960,7 +1960,7 @@ int poly::number_of_terms () const {
 }
 
 /*
-		#] num_terms :
+  	#] num_terms : 
   	#[ first_variable :
 */
 
@@ -2045,7 +2045,7 @@ const poly poly::integer_lcoeff () const {
 }
 
 /*
-  	#] lcoeff : 
+  	#] integer_lcoeff : 
   	#[ coefficient :
 */
 
@@ -2072,7 +2072,7 @@ const poly poly::coefficient (int x, int n) const {
 
 /*
   	#] coefficient : 
-	 	#[ lcoeff_multivar :
+  	#[ lcoeff_multivar :
 */
 
 // returns the leading coefficient with the polynomial viewed as a
@@ -2112,7 +2112,7 @@ const poly poly::lcoeff_multivar (int x) const {
 }
 
 /*
-  	#] lcoeff_multivar :
+  	#] lcoeff_multivar : 
   	#[ derivative :
 */
 
@@ -2150,7 +2150,7 @@ const poly poly::derivative (int x) const {
 
 /*
   	#] derivative : 
-		#[ is_zero :
+  	#[ is_zero :
 */
 
 // returns whether the polynomial is zero
@@ -2159,8 +2159,8 @@ bool poly::is_zero () const {
 }
 
 /*
-  	#] is_zero :
-		#[ is_one :
+  	#] is_zero : 
+  	#[ is_one :
 */
 
 // returns whether the polynomial is one
@@ -2179,8 +2179,8 @@ bool poly::is_one () const {
 }
 
 /*
-  	#] is_one :
-		#[ is_integer :
+  	#] is_one : 
+  	#[ is_integer :
 */
 
 // returns whether the polynomial is an integer
@@ -2199,8 +2199,8 @@ bool poly::is_integer () const {
 }
 
 /*
-  	#] is_integer :
-		#[ is_monomial :
+  	#] is_integer : 
+  	#[ is_monomial :
 */
 
 // returns whether the polynomial consist of one term
@@ -2209,7 +2209,7 @@ bool poly::is_monomial () const {
 }
 
 /*
-		#] is_monomial :
+  	#] is_monomial : 
   	#[ is_dense_univariate :
 */
 
@@ -2257,7 +2257,7 @@ int poly::is_dense_univariate () const {
 }
 
 /*
-  	#] is_dense_univariate :
+  	#] is_dense_univariate : 
   	#[ simple_poly (small) :
 */
 
@@ -2324,7 +2324,7 @@ const poly poly::simple_poly (PHEAD int x, const poly &a, int b, int p, int n) {
 
 /*
   	#] simple_poly (large) : 
-		#[ get_variables :
+  	#[ get_variables :
 */
 
 // gets all variables in the expressions and stores them in AN.poly_vars
@@ -2408,7 +2408,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 }
 
 /*
-		#] extract_variables :
+  	#] get_variables : 
   	#[ argument_to_poly :
 */
 
@@ -2591,7 +2591,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 
 /*
   	#] poly_to_argument : 
-		[# size_of_form_notation :
+  	#[ size_of_form_notation :
 */
 
 // the size of the polynomial in form notation (without argheads and fast notation)
@@ -2617,8 +2617,8 @@ int poly::size_of_form_notation() {
 }
 
 /*
-	#] size_of_form_notation :
-	[# to_coefficient_list :
+  	#] size_of_form_notation : 
+  	#[ to_coefficient_list :
 */
 
 // returns the coefficient list of a univariate polynomial
@@ -2640,8 +2640,8 @@ const vector<WORD> poly::to_coefficient_list (const poly &a) {
 }
 
 /*
-	#] to_coefficient_list :
-	[# coefficient_list_divmod :
+  	#] to_coefficient_list : 
+  	#[ coefficient_list_divmod :
 */
 
 // divides two polynomials represented by coefficient lists
@@ -2679,8 +2679,8 @@ const vector<WORD> poly::coefficient_list_divmod (const vector<WORD> &a, const v
 }
 
 /*
-	#] coefficient_list_divmod :
-	[# from_coefficient_list :
+  	#] coefficient_list_divmod : 
+  	#[ from_coefficient_list :
 */
 
 // converts a coefficient list to a "poly"
@@ -2708,5 +2708,5 @@ const poly poly::from_coefficient_list (PHEAD const vector<WORD> &a, int x, WORD
 }
 
 /*
-	#] from_coefficient_list :
+  	#] from_coefficient_list : 
 */
