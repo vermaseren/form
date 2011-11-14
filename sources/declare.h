@@ -788,7 +788,7 @@ extern VOID   PrintTerm(WORD *,char *);
 extern VOID   PrintTermC(WORD *,char *);
 extern VOID   PrintSubTerm(WORD *,char *);
 extern VOID   PrintWords(WORD *,LONG);
-extern int    ExpandTripleDots(VOID);
+extern int    ExpandTripleDots(int);
 extern LONG   ComPress(WORD **,LONG *);
 extern VOID   StageSort(FILEHANDLE *);
 

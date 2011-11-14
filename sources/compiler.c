@@ -263,7 +263,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes : 
+  	#] includes :
 	#[ Compiler :
  		#[ inictable :
 
@@ -557,6 +557,13 @@ int CompileStatement(UBYTE *in)
 	programs. Hence the first error message should explain!
 */
 	if ( AP.PreAssignFlag == 0 && AM.OldOrderFlag == 0 ) {
+	 if ( AP.PreInsideLevel ) {
+	  if ( k->type != STATEMENT ) {
+		MesPrint("&Only executable statements are allowed in an %#inside/%#endinside construction");
+		return(-1);
+	  }
+	 }
+	 else {
 	  if ( ( AC.compiletype == DECLARATION || AC.compiletype == SPECIFICATION )
 	  && ( k->type == STATEMENT || k->type == DEFINITION || k->type == TOOUTPUT ) ) {
 		if ( AC.tablecheck == 0 ) {
@@ -603,6 +610,7 @@ int CompileStatement(UBYTE *in)
 		}
 		error1 = 1;
 	  }
+	 }
 	}
 /*
 	Now we execute the tests that are prescribed by the flags.
@@ -618,7 +626,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement : 
+ 		#] CompileStatement :
  		#[ TestTables :
 */
 

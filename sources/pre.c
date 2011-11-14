@@ -1215,6 +1215,9 @@ dodollar:		s = sstart;
 	}
 	*s = 0;
 	oldmode = mode;
+	if ( mode == 0 ) {
+		if ( ExpandTripleDots(1) < 0 ) return(-1);
+	}
 	return(0);
 }
 
@@ -1338,7 +1341,7 @@ doall:;			if ( AP.eat < 0 ) {
 		retval = -1;
 	}
 	if ( retval == 1 ) {
-		if ( ExpandTripleDots() < 0 ) retval = -1;
+		if ( ExpandTripleDots(0) < 0 ) retval = -1;
 	}
 	return(retval);
 }
@@ -1348,17 +1351,23 @@ doall:;			if ( AP.eat < 0 ) {
  		#[ ExpandTripleDots :
 */
 
-int ExpandTripleDots()
+int ExpandTripleDots(int par)
 {
 	UBYTE *s, *s1, *s2, *n1, *n2, *m1, *t1, *t2, *startp, operator1, operator2, c, cc;
-	UBYTE *nBuffer, *strngs;
+	UBYTE *nBuffer, *strngs, *Buffer, *Stop;
 	LONG withquestion, x1, x2, y1, y2, number, inc, newsize, pow, fullsize;
 	int i, error = 0, i1 ,i2, ii, *nums = 0;
 
-	s = AC.iBuffer; while ( *s ) s++;
-	fullsize = s - AC.iBuffer;
+	if ( par == 0 ) {
+		Buffer = AC.iBuffer; Stop = AC.iStop;
+	}
+	else {
+		Buffer = AP.preStart; Stop = AP.preStop;
+	}
+	s = Buffer; while ( *s ) s++;
+	fullsize = s - Buffer;
 
-	s = AC.iBuffer+2;
+	s = Buffer+2;
 	while ( *s ) {
 		if ( *s != '.' || ( s[-1] != ',' && FG.cTable[s[-1]] != 5 ) )
 			{ s++; continue; }
@@ -1387,13 +1396,13 @@ int ExpandTripleDots()
 		if ( *s2 != '<' || *s1 != '>' ) {	/* Special case */
 			startp = s1+1;
 			withquestion = ( *s1 == '?' ); s1--;
-			while ( FG.cTable[*s1] == 1 && s1 >= AC.iBuffer ) s1--;
+			while ( FG.cTable[*s1] == 1 && s1 >= Buffer ) s1--;
 			n1 = s1+1;		/* Beginning of first number */ 
 			if ( FG.cTable[*n1] != 1 ) {
 				MesPrint("&No first number in ... operator");
 				error = -1;
 			} 
-			while ( FG.cTable[*s1] <= 1 && s1 >= AC.iBuffer ) s1--;
+			while ( FG.cTable[*s1] <= 1 && s1 >= Buffer ) s1--;
 			s1++;
 /*
 			We have now the first string from s1 to n1, number from n1
@@ -1441,21 +1450,37 @@ int ExpandTripleDots()
 				else if ( y2 >= pow ) newsize += y2-pow+1;
 				else break;
 			}
-			while ( AC.iBuffer+(fullsize+newsize-(s-s1)) >= AC.iStop ) {
-				LONG strpos = s1-AC.iBuffer;
-				LONG endstr = n1-AC.iBuffer;
-				LONG startq = startp - AC.iBuffer;
-				LONG position = s - AC.iBuffer;
-				UBYTE **ppp = &(AC.iBuffer); /* to avoid a compiler warning */
-				if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
-					,sizeof(UBYTE),"statement buffer") ) {
-						Terminate(-1);
+			while ( Buffer+(fullsize+newsize-(s-s1)) >= Stop ) {
+				LONG strpos = s1-Buffer;
+				LONG endstr = n1-Buffer;
+				LONG startq = startp - Buffer;
+				LONG position = s - Buffer;
+				UBYTE **ppp;
+				if ( par == 0 ) {
+					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
+					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
+						,sizeof(UBYTE),"statement buffer") ) {
+							Terminate(-1);
+					}
+					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
+					Buffer = AC.iBuffer; Stop = AC.iStop;
 				}
-				AC.iStop = AC.iBuffer + AC.iBufferSize-2;
-				s  = AC.iBuffer + position;
-				n1 = AC.iBuffer + endstr;
-				s1 = AC.iBuffer + strpos;
-				startp = AC.iBuffer + startq;
+				else {
+					LONG fillpos = 0;
+					if ( AP.preFill ) fillpos = AP.preFill - AP.preStart;
+					ppp = &(AP.preStart); /* to avoid a compiler warning */
+					if ( DoubleLList((VOID ***)ppp,&AP.pSize,sizeof(UBYTE),
+						"instruction buffer") ) {
+							Terminate(-1);
+					}
+					AP.preStop = AP.preStart + AP.pSize-3;
+					if ( AP.preFill ) AP.preFill = fillpos + AP.preStart;
+					Buffer = AP.preStart; Stop = AP.preStop;
+				}
+				s  = Buffer + position;
+				n1 = Buffer + endstr;
+				s1 = Buffer + strpos;
+				startp = Buffer + startq;
 			}
 /*
 			We have space for the expansion in the buffer.
@@ -1464,7 +1489,7 @@ int ExpandTripleDots()
 			Note that whereever we move things, it will be at least startp.
 */
 			if ( newsize > (s-s1) ) {
-				t2 = AC.iBuffer + fullsize;
+				t2 = Buffer + fullsize;
 				t1 = t2 + (newsize - (s-s1));
 				*t1 = 0;
 				while ( t2 > s ) { *--t1 = *--t2; }
@@ -1492,7 +1517,7 @@ int ExpandTripleDots()
 		}
 		else {		/* General case. Find the patterns first */
 			t1 = s1; s1--;
-			while ( s1 > AC.iBuffer ) {
+			while ( s1 > Buffer ) {
 				if ( *s1 == '<' ) break;
 				s1--;
 			}
@@ -1598,7 +1623,7 @@ theend:			M_free(nums,"Expand ...");
 			x2 = x2 - (x2 & (sizeof(UBYTE *)-1));
 
 			nBuffer = (UBYTE *)Malloc1(x2,"input buffer");
-			n1 = nBuffer; s = AC.iBuffer; s1--;
+			n1 = nBuffer; s = Buffer; s1--;
 			while ( s < s1 ) *n1++ = *s++;
 /*
 			Solution of the special case that no comma was generated
@@ -1635,12 +1660,23 @@ theend:			M_free(nums,"Expand ...");
 
 			while ( *s ) *n1++ = *s++;
 			*n1 = 0;
-			AC.iStop = nBuffer + x2 - 2;
-			AC.iBufferSize = x2;
-			M_free(AC.iBuffer,"input buffer");
-			M_free(nums,"Expand ...");
-			AC.iBuffer = nBuffer;
-			fullsize = n1 - AC.iBuffer;
+			if ( par == 0 ) {
+				AC.iStop = nBuffer + x2 - 2;
+				AC.iBufferSize = x2;
+				M_free(AC.iBuffer,"input buffer");
+				M_free(nums,"Expand ...");
+				AC.iBuffer = nBuffer;
+				Buffer = AC.iBuffer; Stop = AC.iStop;
+			}
+			else {
+				AP.preStop = nBuffer + x2 - 2;
+				AP.pSize = x2;
+				M_free(AP.preStart,"input buffer");
+				M_free(nums,"Expand ...");
+				AP.preStart = nBuffer;
+				Buffer = AP.preStart; Stop = AP.preStop;
+			}
+			fullsize = n1 - Buffer;
 			s = n2;
 		}
 	}
@@ -1648,7 +1684,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots : 
+ 		#] ExpandTripleDots :
  		#[ FindKeyWord :
 */
 
