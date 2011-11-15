@@ -215,6 +215,7 @@ static struct fixedfun {
 	,{"numfactors_" ,0 ,0             ,0               ,0} /* NUMFACTORS */
 	,{"firstterm_"  ,0 ,0             ,0               ,0} /* FIRSTTERM */
 	,{"content_"    ,0 ,0             ,0               ,0} /* CONTENTTERM */
+	,{"prime_"      ,0 ,0             ,0               ,0} /* PRIMENUMBER */
 };
 
 FIXEDSET fixedsets[] = {

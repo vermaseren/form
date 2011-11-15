@@ -1422,6 +1422,16 @@ nospec:				pcom[ncom++] = t;
 				}
 				else { pcom[ncom++] = t; }
 				break;
+			case PRIMENUMBER :
+				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER
+					 && t[FUNHEAD+1] > 0 ) {
+					UWORD xp = (UWORD)(NextPrime(BHEAD t[FUNHEAD+1]));
+					ncoef = REDLENG(ncoef);
+					if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,&xp,1) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else goto defaultcase;
+				break;
 			case LNUMBER :
 				ncoef = REDLENG(ncoef);
 				if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;
