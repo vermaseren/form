@@ -2595,7 +2595,8 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 */
 
 // the size of the polynomial in form notation (without argheads and fast notation)
-int poly::size_of_form_notation() {
+// note: it's assumed that num/den doesn't collapse, therefore it's an upperbound
+int poly::size_of_form_notation(poly *den) {
 	
 	POLY_GETIDENTITY(*this);
 
@@ -2603,6 +2604,7 @@ int poly::size_of_form_notation() {
 	if (terms[0]==1) return 0;
 
 	int len = 0;
+	int densize = den==NULL ? 1 : ABS((*den)[(*den)[1]]);
 	
 	for (int i=1; i!=terms[0]; i+=terms[i]) {
 		len++;
@@ -2610,7 +2612,7 @@ int poly::size_of_form_notation() {
 		for (int j=0; j<AN.poly_num_vars; j++)
 			if (terms[i+1+j] > 0) npow++;
 		if (npow > 0) len += 2*npow + 2;
-		len += 2 * ABS(terms[i+terms[i]-1]) + 1;
+		len += 2 * ABS(MaX(densize,terms[i+terms[i]-1])) + 1;
 	}
 
 	return len;

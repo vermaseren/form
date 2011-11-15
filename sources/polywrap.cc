@@ -192,9 +192,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		pres = pa % pb;
 
 	// Allocate new memory and convert to Form notation
- LONG psof = pres.size_of_form_notation()+den.size_of_form_notation();
- WORD *res = (WORD *)Malloc1(2*(psof+3)*sizeof(WORD), "poly_divmod");
-//	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_divmod");
+	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation(&den)+1)*sizeof(WORD), "poly_divmod");
 	poly::poly_to_argument(pres, res, false, &den);
 
 	if (AN.poly_num_vars > 0)
