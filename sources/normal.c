@@ -1139,6 +1139,132 @@ exitfromhere:
 				}
 				else pcom[ncom++] = t;
 				break;
+			case MODINVERSES:
+				{
+					WORD argcount = 0, *tc, *ts, xc, xs, *tcc;
+					UWORD *Num1, *Num2, *Num3, *Num4;
+					WORD size1, size2, size3, size4, space;
+					tc = t+FUNHEAD; ts = t + t[1];
+					while ( argcount < 3 && tc < ts ) { NEXTARG(tc); argcount++; }
+					if ( argcount != 2 ) goto defaultcase;
+					if ( t[FUNHEAD] == -SNUMBER ) {
+						if ( t[FUNHEAD+1] <= 1 ) goto defaultcase;
+						if ( t[FUNHEAD+2] == -SNUMBER ) {
+							if ( t[FUNHEAD+3] <= 1 ) goto defaultcase;
+							Num2 = NumberMalloc("modinverses");
+							*Num2 = t[FUNHEAD+3]; size2 = 1;
+						}
+						else {
+							if ( ts[-1] < 0 ) goto defaultcase;
+							if ( ts[-1] != t[FUNHEAD+2]-ARGHEAD-1 ) goto defaultcase;
+							xs = (ts[-1]-1)/2;
+							tcc = ts-xs-1;
+							if ( *tcc != 1 ) goto defaultcase;
+							for ( i = 1; i < xs; i++ ) {
+								if ( tcc[i] != 0 ) goto defaultcase;
+							}
+							Num2 = NumberMalloc("modinverses");
+							size2 = xs;
+							for ( i = 0; i < xs; i++ ) Num2[i] = t[FUNHEAD+ARGHEAD+3+i];
+						}
+						Num1 = NumberMalloc("modinverses");
+						*Num1 = t[FUNHEAD+1]; size1 = 1;
+					}
+					else {
+						tc = t + FUNHEAD + t[FUNHEAD];
+						if ( tc[-1] < 0 ) goto defaultcase;
+						if ( tc[-1] != t[FUNHEAD]-ARGHEAD-1 ) goto defaultcase;
+						xc = (tc[-1]-1)/2;
+						tcc = tc-xc-1;
+						if ( *tcc != 1 ) goto defaultcase;
+						for ( i = 1; i < xc; i++ ) {
+							if ( tcc[i] != 0 ) goto defaultcase;
+						}
+						if ( *tc == -SNUMBER ) {
+							if ( tc[1] <= 1 ) goto defaultcase;
+							Num2 = NumberMalloc("modinverses");
+							*Num2 = tc[1]; size2 = 1;
+						}
+						else {
+							if ( ts[-1] < 0 ) goto defaultcase;
+							if ( ts[-1] != t[FUNHEAD+2]-ARGHEAD-1 ) goto defaultcase;
+							xs = (ts[-1]-1)/2;
+							tcc = ts-xs-1;
+							if ( *tcc != 1 ) goto defaultcase;
+							for ( i = 1; i < xs; i++ ) {
+								if ( tcc[i] != 0 ) goto defaultcase;
+							}
+							Num2 = NumberMalloc("modinverses");
+							size2 = xs;
+							for ( i = 0; i < xs; i++ ) Num2[i] = tc[ARGHEAD+1+i];
+						}
+						Num1 = NumberMalloc("modinverses");
+						size1 = xc;
+						for ( i = 0; i < xc; i++ ) Num2[i] = t[FUNHEAD+ARGHEAD+1+i];
+					}
+					Num3 = NumberMalloc("modinverses");
+					Num4 = NumberMalloc("modinverses");
+					if ( GetLongModInverses(BHEAD Num1,size1,Num2,size2
+								,Num3,&size3,Num4,&size4) ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Probably trying to determine the mod-inverses of numbers that are not relative prime");
+						MUNLOCK(ErrorMessageLock);
+						Terminate(-1);
+					}
+/*
+					Now we have to compose the answer. This needs more space
+					and hence we have to put this inside the term.
+					Compute first how much extra space we need.
+					Then move the trailing part of the term upwards.
+					Do not forget relevant pointers!!! (r, m, termout, AT.WorkPointer)
+*/
+					space = 0;
+					if ( ( size3 == 1 || size3 == -1 ) && (*Num3&TOPBITONLY) == 0 ) space += 2;
+					else space += ARGHEAD + 2*ABS(size3) + 2;
+					if ( ( size4 == 1 || size4 == -1 ) && (*Num4&TOPBITONLY) == 0 ) space += 2;
+					else space += ARGHEAD + 2*ABS(size4) + 2;
+					tt = term + *term; u = tt + space;
+					while ( tt >= ts ) *--u = *--tt;
+					m += space; r += space;
+					t[1] += space;
+					if ( ( size3 == 1 || size3 == -1 ) && (*Num3&TOPBITONLY) == 0 ) {
+						*ts++ = -SNUMBER; *ts = (WORD)(*Num3);
+						if ( size3 < 0 ) *ts = -*ts;
+						ts++;
+					}
+					else {
+						*ts++ = 2*ABS(size3)+ARGHEAD+2;
+						*ts++ = 0; FILLARG(ts)
+						*ts++ = 2*ABS(size3)+1;
+						for ( i = 0; i < ABS(size3); i++ ) *ts++ = Num3[i];
+						*ts++ = 1;
+						for ( i = 1; i < ABS(size3); i++ ) *ts++ = 0;
+						if ( size3 < 0 ) *ts++ = 2*size3-1;
+						else             *ts++ = 2*size3+1;
+					}
+					if ( ( size4 == 1 || size4 == -1 ) && (*Num4&TOPBITONLY) == 0 ) {
+						*ts++ = -SNUMBER; *ts = *Num4;
+						if ( size4 < 0 ) *ts = -*ts;
+						ts++;
+					}
+					else {
+						*ts++ = 2*ABS(size4)+ARGHEAD+2;
+						*ts++ = 0; FILLARG(ts)
+						*ts++ = 2*ABS(size4)+1;
+						for ( i = 0; i < ABS(size4); i++ ) *ts++ = Num4[i];
+						*ts++ = 1;
+						for ( i = 1; i < ABS(size4); i++ ) *ts++ = 0;
+						if ( size4 < 0 ) *ts++ = 2*size4-1;
+						else             *ts++ = 2*size4+1;
+					}
+					NumberFree(Num4,"modinverses");
+					NumberFree(Num3,"modinverses");
+					NumberFree(Num1,"modinverses");
+					NumberFree(Num2,"modinverses");
+					t[2] = 0; /* mark function as clean. */
+					goto defaultcase;
+				}
+				break;
 			case GCDFUNCTION:
 #ifdef EVALUATEGCD
 #ifdef NEWGCDFUNCTION

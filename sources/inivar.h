@@ -216,6 +216,7 @@ static struct fixedfun {
 	,{"firstterm_"  ,0 ,0             ,0               ,0} /* FIRSTTERM */
 	,{"content_"    ,0 ,0             ,0               ,0} /* CONTENTTERM */
 	,{"prime_"      ,0 ,0             ,0               ,0} /* PRIMENUMBER */
+	,{"modinverses_",0 ,0             ,0               ,0} /* MODINVERSES */
 };
 
 FIXEDSET fixedsets[] = {
