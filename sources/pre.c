@@ -1684,7 +1684,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots :
+ 		#] ExpandTripleDots : 
  		#[ FindKeyWord :
 */
 
@@ -3142,7 +3142,7 @@ int DoInside(UBYTE *s)
 }
 
 /*
- 		#] DoInside : 
+ 		#] DoInside :
  		#[ DoEndInside :
 */
 
@@ -3151,6 +3151,7 @@ int DoEndInside(UBYTE *s)
 	GETIDENTITY
 	WORD numdol, *oldworkpointer = AT.WorkPointer, *term, *t, j, i;
 	DOLLARS d, nd;
+	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
 	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3169,43 +3170,53 @@ int DoEndInside(UBYTE *s)
 		Terminate(-1);
 	}
 	AC.compiletype = AP.inside.oldcompiletype;
+	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
+	AR.BracketOn = 0;
 /*
 	Now we have to execute the statements on the proper dollars.
 */
 	for ( i = 0; i < AP.inside.numdollars; i++ ) {
 		numdol = AP.inside.buffer[i];
 		nd = d = Dollars + numdol;
-		if ( d->type != DOLTERMS ) nd = DolToTerms(BHEAD numdol);
-		term = nd->where;
-		NewSort(BHEAD0);
-		NewSort(BHEAD0);
-		while ( *term ) {
-			t = oldworkpointer; j = *term;
-			NCOPY(t,term,j);
-			AT.WorkPointer = t;
-			if ( Generator(BHEAD oldworkpointer,0) ) {
-				MesPrint("@Called from %#endinside");
-				MesPrint("@Evaluating variable $%s",DOLLARNAME(Dollars,numdol));
-				Terminate(-1);
+		if ( d->type != DOLZERO ) {
+			if ( d->type != DOLTERMS ) nd = DolToTerms(BHEAD numdol);
+			term = nd->where;
+			NewSort(BHEAD0);
+			NewSort(BHEAD0);
+			while ( *term ) {
+				t = oldworkpointer; j = *term;
+				NCOPY(t,term,j);
+				AT.WorkPointer = t;
+				if ( Generator(BHEAD oldworkpointer,0) ) {
+					MesPrint("@Called from %#endinside");
+					MesPrint("@Evaluating variable $%s",DOLLARNAME(Dollars,numdol));
+					Terminate(-1);
+				}
+			}
+			AT.WorkPointer = oldworkpointer;
+			CleanDollarFactors(d);
+			if ( d->where ) { M_free(d->where,"dollar contents"); d->where = 0; }
+			EndSort(BHEAD (WORD *)((VOID *)(&(d->where))),2,0);
+			LowerSortLevel();
+			term = d->where; while ( *term ) term += *term;
+			d->size = term - d->where;
+			if ( nd != d ) M_free(nd,"Copy of dollar variable");
+			if ( d->where[0] == 0 ) {
+				M_free(d->where,"dollar contents"); d->where = 0;
+				d->type = DOLZERO;
 			}
 		}
-		AT.WorkPointer = oldworkpointer;
-		CleanDollarFactors(d);
-		if ( d->where ) { M_free(d->where,"dollar contents"); d->where = 0; }
-		EndSort(BHEAD (WORD *)((VOID *)(&(d->where))),2,0);
-		LowerSortLevel();
-		term = d->where; while ( *term ) term += *term;
-		d->size = term - d->where;
-		if ( nd != d ) M_free(nd,"Copy of dollar variable");
 	}
 	AC.cbufnum = AP.inside.oldcbuf;
 	AM.rbufnum = AP.inside.oldrbuf;
+	AR.Cnumlhs = oldcnumlhs;
+	AR.BracketOn = oldbracketon;
 	AP.PreInsideLevel = 0;
 	return(0);
 }
 
 /*
- 		#] DoEndInside : 
+ 		#] DoEndInside :
  		#[ DoMessage :
 */
 

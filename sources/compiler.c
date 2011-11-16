@@ -263,7 +263,7 @@ LONG insubexpbuffers = 0;
 
 /*
 	)]}
-  	#] includes :
+  	#] includes : 
 	#[ Compiler :
  		#[ inictable :
 
@@ -558,8 +558,8 @@ int CompileStatement(UBYTE *in)
 */
 	if ( AP.PreAssignFlag == 0 && AM.OldOrderFlag == 0 ) {
 	 if ( AP.PreInsideLevel ) {
-	  if ( k->type != STATEMENT ) {
-		MesPrint("&Only executable statements are allowed in an %#inside/%#endinside construction");
+	  if ( k->type != STATEMENT && k->type != MIXED ) {
+		MesPrint("&Only executable and print statements are allowed in an %#inside/%#endinside construction");
 		return(-1);
 	  }
 	 }
@@ -626,7 +626,7 @@ int CompileStatement(UBYTE *in)
 }
 
 /*
- 		#] CompileStatement :
+ 		#] CompileStatement : 
  		#[ TestTables :
 */
 
