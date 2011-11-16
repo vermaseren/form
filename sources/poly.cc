@@ -2612,7 +2612,7 @@ int poly::size_of_form_notation(poly *den) {
 		for (int j=0; j<AN.poly_num_vars; j++)
 			if (terms[i+1+j] > 0) npow++;
 		if (npow > 0) len += 2*npow + 2;
-		len += 2 * ABS(MaX(densize,terms[i+terms[i]-1])) + 1;
+		len += 2 * MaX(densize,ABS(terms[i+terms[i]-1])) + 1;
 	}
 
 	return len;
