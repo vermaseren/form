@@ -2683,7 +2683,7 @@ WORD LcmLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 /*
  		#] LcmLong : 
- 		#[ TakeLongRoot:
+ 		#[ TakeLongRoot:	int TakeLongRoot(a,n,power)
 
 	Takes the 'power'-root of the long number in a.
 	If the root could be taken the return value is zero.
@@ -2697,7 +2697,7 @@ WORD LcmLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 {
 	GETIDENTITY
-	int numbits, guessbits, i;
+	int numbits, guessbits, i, retval = 0;
 	UWORD x, *b, *c, *d, *e;
 	WORD na, nb, nc, nd, ne;
 	if ( *n < 0 && ( power & 1 ) == 0 ) return(1);
@@ -2751,17 +2751,24 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 		nb = -nb;
 		if ( nc == 0 ) {
 			if ( ne == 0 ) break;
+			retval = 1; break;
+/*
 			else {
 				NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
 				NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
 				return(1);
 			}
+*/
 		}
 		DivLong(c,nc,(UWORD *)(&power),1,d,&nd,e,&ne);
 		if ( nd == 0 ) {
+			retval = 1;
+			break;
+/*
 			NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
 			NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
 			return(1);
+*/
 /*
 			This code tries b+1 as a final possibility.
 			We believe this is not needed
@@ -2788,7 +2795,7 @@ int TakeLongRoot(UWORD *a, WORD *n, WORD power)
 	else          *n =  nb;
 	NumberFree(b,"TakeLongRoot"); NumberFree(c,"TakeLongRoot");
 	NumberFree(d,"TakeLongRoot"); NumberFree(e,"TakeLongRoot");
-	return(0);
+	return(retval);
 TLcall:
 	MLOCK(ErrorMessageLock);
 	MesCall("TakeLongRoot");
@@ -2801,7 +2808,137 @@ TLcall:
 
 /*
  		#] TakeLongRoot: 
-  	#] RekenLong : 
+ 		#[ MakeRational:
+
+		Makes the integer a mod m into a traction b/c with |b|,|c| < sqrt(m)
+		For the algorithm, see MakeLongRational.
+*/
+
+int MakeRational(WORD a,WORD m, WORD *b, WORD *c)
+{
+	LONG x1,x2,x3,x4,y1,y2;
+	if ( a < 0 ) { a = a+m; }
+	if ( a <= 1 ) {
+		if ( a > m/2 ) a = a-m;
+		*b = a; *c = 1; return(0);
+	}
+	x1 = m; x2 = a;
+	if ( x2*x2 >= m ) {
+		y1 = x1/x2; y2 = x1%x2; x3 = 1; x4 = -y1; x1 = x2; x2 = y2;
+		while ( x2*x2 >= m ) {
+			y1 = x1/x2; y2 = x1%x2; x1 = x2; x2 = y2; y2 = x3-y1*x4; x3 = x4; x4 = y2;
+		}
+	}
+	else x4 = 1;
+	if ( x2 == 0 ) { return(1); }
+	if ( x2 > m/2 ) *b = x2-m;
+	else            *b = x2;
+	if ( x4 > m/2 ) { *c = x4-m; *c = -*c; *b = -*b; }
+	else if ( x4 <= -m/2 ) { x4 += m; *c = x4; }
+	else if ( x4 < 0 ) { x4 = -x4; *c = x4; *b = -*b; }
+	else            *c = x4;
+	return(0);
+}
+
+/*
+ 		#] MakeRational:
+ 		#[ MakeLongRational:
+
+		Converts the long number a mod m into the fraction b
+		One of the properties of b is that num,den < sqrt(m)
+		The algorithm: Start with:   m 0
+		                             a 1
+		Make now c=m%a, c1=m/a       c c2=0-c1*1
+		Make now d=a%c  d1=a/c       d d2=1-d1*c2
+		Make now e=c%d  e1=c/d       e e2=1-e1*d2
+			etc till in the first column we get a number < sqrt(m)
+			We have then f,f2 and the fraction is f/f2.
+		If at any moment we get a zero, m contained an unlucky prime.
+
+		Note that this can be made a lot faster when we make the same
+		improvements as in the GCD routine. That is something for later.
+#ifdef WITHMAKERATIONAL
+*/
+
+#define COPYLONG(x1,nx1,x2,nx2) { int i; for(i=0;i<ABS(nx2);i++)x1[i]=x2[i];nx1=nx2; }
+
+int MakeLongRational(PHEAD UWORD *a, WORD na, UWORD *m, WORD nm, UWORD *b, WORD *nb)
+{
+	UWORD *root = NumberMalloc("MakeRational");
+	UWORD *x1 = NumberMalloc("MakeRational");
+	UWORD *x2 = NumberMalloc("MakeRational");
+	UWORD *x3 = NumberMalloc("MakeRational");
+	UWORD *x4 = NumberMalloc("MakeRational");
+	UWORD *y1 = NumberMalloc("MakeRational");
+	UWORD *y2 = NumberMalloc("MakeRational");
+	WORD nroot,nx1,nx2,nx3,nx4,ny1,ny2,retval = 0;
+	WORD sign = 1;
+/*
+	Step 1: Take the square root of m
+*/
+	COPYLONG(root,nroot,m,nm)
+	TakeLongRoot(root,&nroot,2);
+/*
+	Step 2: Set the start values
+*/
+	if ( na < 0 ) { na = -na; sign = -sign; }
+	COPYLONG(x1,nx1,m,nm)
+	COPYLONG(x2,nx2,a,na)
+/*
+	x3[0] = 0, nx3 = 0;
+	x4[0] = 1, nx4 = 1;
+*/
+/*
+	The start operation needs some special attention because of the zero.
+*/
+	if ( BigLong(x2,nx2,root,nroot) <= 0 ) {
+		x4[0] = 1, nx4 = 1;
+		goto gottheanswer;
+	}
+	DivLong(x1,nx1,x2,nx2,y1,&ny1,y2,&ny2);
+	if ( ny2 == 0 ) goto cleanup;
+	COPYLONG(x1,nx1,x2,nx2)
+	COPYLONG(x2,nx2,y2,ny2)
+	x3[0] = 1; nx3 = 1;
+	COPYLONG(x4,nx4,y1,ny1)
+	nx4 = -nx4;
+/*
+	Now the loop.
+*/
+	while ( BigLong(x2,nx2,root,nroot) > 0 ) {
+		DivLong(x1,nx1,x2,nx2,y1,&ny1,y2,&ny2);
+		if ( ny2 == 0 ) goto cleanup;
+		COPYLONG(x1,nx1,x2,nx2)
+		COPYLONG(x2,nx2,y2,ny2)
+		MulLong(y1,ny1,x4,nx4,y2,&ny2);
+		ny2 = -ny2;
+		AddLong(x3,nx3,y2,ny2,y1,&ny1);
+		COPYLONG(x3,nx3,x4,nx4)
+		COPYLONG(x4,nx4,y1,ny1)
+	}
+/*
+	Now we have the answer. It is x2/x4. It has to be packed into b.
+*/
+gottheanswer:
+	if ( nx4 < 0 ) { sign = -sign; nx4 = -nx4; }
+	COPYLONG(b,*nb,x2,nx2)
+	Pack(b,nb,x4,nx4);
+	if ( sign < 0 ) *nb = -*nb;
+cleanup:
+	NumberFree(y2,"MakeRational");
+	NumberFree(y1,"MakeRational");
+	NumberFree(x4,"MakeRational");
+	NumberFree(x3,"MakeRational");
+	NumberFree(x2,"MakeRational");
+	NumberFree(x1,"MakeRational");
+	NumberFree(root,"MakeRational");
+	return(retval);
+}
+
+/*
+#endif
+ 		#] MakeLongRational:
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 

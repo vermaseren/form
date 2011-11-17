@@ -694,6 +694,116 @@ MulIn:
 					goto MulIn;
 				}
 				break;
+			case MAKERATIONAL:
+				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] == -SNUMBER
+					&& t[1] == FUNHEAD+4 && t[FUNHEAD+3] > 1 ) {
+					WORD x1[2], sgn;
+					if ( t[FUNHEAD+1] < 0 ) { t[FUNHEAD+1] = -t[FUNHEAD+1]; sgn = -1; }
+					else sgn = 1;
+					MakeRational(t[FUNHEAD+1],t[FUNHEAD+3],x1,x1+1);
+					if ( sgn < 0 ) { t[FUNHEAD+1] = -t[FUNHEAD+1]; x1[0] = -x1[0]; }
+					if ( x1[0] < 0 ) { sgn = -1; x1[0] = -x1[0]; }
+					else sgn = 1;
+					ncoef = REDLENG(ncoef);
+					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,(UWORD *)x1,sgn,
+					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+				}
+				else {
+					WORD narg = 0, *tt, *ttstop, *arg1 = 0, *arg2 = 0;
+					UWORD *x1, *x2, *xx;
+					WORD nx1,nx2,nxx;
+					ttstop = t + t[1]; tt = t+FUNHEAD;
+					while ( tt < ttstop ) {
+						narg++;
+						if ( narg == 1 ) arg1 = tt;
+						else arg2 = tt;
+						NEXTARG(tt);
+					}
+					if ( narg != 2 ) goto defaultcase;
+					if ( *arg2 == -SNUMBER && arg2[1] <= 1 ) goto defaultcase;
+					else if ( *arg2 > 0 && ttstop[-1] < 0 ) goto defaultcase;
+					x1 = NumberMalloc("Norm-MakeRational");
+					if ( *arg1 == -SNUMBER ) {
+						if ( arg1[1] == 0 ) {
+							NumberFree(x1,"Norm-MakeRational");
+							goto NormZero;
+						}
+						if ( arg1[1] < 0 ) { x1[0] = -arg1[1]; nx1 = -1; }
+						else { x1[0] = arg1[1]; nx1 = 1; }
+					}
+					else if ( *arg1 > 0 ) {
+						WORD *tc;
+						nx1 = (ABS(arg2[-1])-1)/2;
+						tc = arg1+ARGHEAD+1+nx1;
+						if ( tc[0] != 1 ) {
+							NumberFree(x1,"Norm-MakeRational");
+							goto defaultcase;
+						}
+						for ( i = 1; i < nx1; i++ ) if ( tc[i] != 0 ) {
+							NumberFree(x1,"Norm-MakeRational");
+							goto defaultcase;
+						}
+						tc = arg1+ARGHEAD+1;
+						for ( i = 0; i < nx1; i++ ) x1[i] = tc[i];
+						if ( arg2[-1] < 0 ) nx1 = -nx1;
+					}
+					else {
+						NumberFree(x1,"Norm-MakeRational");
+						goto defaultcase;
+					}
+					x2 = NumberMalloc("Norm-MakeRational");
+					if ( *arg2 == -SNUMBER ) {
+						if ( arg2[1] <= 1 ) {
+							NumberFree(x2,"Norm-MakeRational");
+							NumberFree(x1,"Norm-MakeRational");
+							goto defaultcase;
+						}
+						else { x2[0] = arg2[1]; nx2 = 1; }
+					}
+					else if ( *arg2 > 0 ) {
+						WORD *tc;
+						nx2 = (ttstop[-1]-1)/2;
+						tc = arg2+ARGHEAD+1+nx2;
+						if ( tc[0] != 1 ) {
+							NumberFree(x2,"Norm-MakeRational");
+							NumberFree(x1,"Norm-MakeRational");
+							goto defaultcase;
+						}
+						for ( i = 1; i < nx2; i++ ) if ( tc[i] != 0 ) {
+							NumberFree(x2,"Norm-MakeRational");
+							NumberFree(x1,"Norm-MakeRational");
+							goto defaultcase;
+						}
+						tc = arg2+ARGHEAD+1;
+						for ( i = 0; i < nx2; i++ ) x2[i] = tc[i];
+					}
+					else {
+						NumberFree(x2,"Norm-MakeRational");
+						NumberFree(x1,"Norm-MakeRational");
+						goto defaultcase;
+					}
+					if ( BigLong(x1,ABS(nx1),x2,nx2) >= 0 ) {
+						UWORD *x3 = NumberMalloc("Norm-MakeRational");
+						UWORD *x4 = NumberMalloc("Norm-MakeRational");
+						WORD nx3, nx4;
+						DivLong(x1,nx1,x2,nx2,x3,&nx3,x4,&nx4);
+						for ( i = 0; i < ABS(nx4); i++ ) x1[i] = x4[i];
+						nx1 = nx4;
+						NumberFree(x4,"Norm-MakeRational");
+						NumberFree(x3,"Norm-MakeRational");
+					}
+					xx = (UWORD *)(TermMalloc("Norm-MakeRational"));
+					MakeLongRational(BHEAD x1,nx1,x2,nx2,xx,&nxx);
+					ncoef = REDLENG(ncoef);
+					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,xx,nxx,
+					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
+					ncoef = INCLENG(ncoef);
+					TermFree(xx,"Norm-MakeRational");
+					NumberFree(x2,"Norm-MakeRational");
+					NumberFree(x1,"Norm-MakeRational");
+				}
+				break;
 			case TERMFUNCTION:
 				if ( t[1] == FUNHEAD && AN.cTerm ) {
 					ANsr = r; ANsm = m; ANsc = AN.cTerm;
@@ -1139,7 +1249,7 @@ exitfromhere:
 				}
 				else pcom[ncom++] = t;
 				break;
-			case MODINVERSES:
+			case EXTEUCLIDEAN:
 				{
 					WORD argcount = 0, *tc, *ts, xc, xs, *tcc;
 					UWORD *Num1, *Num2, *Num3, *Num4;
@@ -1204,13 +1314,8 @@ exitfromhere:
 					}
 					Num3 = NumberMalloc("modinverses");
 					Num4 = NumberMalloc("modinverses");
-					if ( GetLongModInverses(BHEAD Num1,size1,Num2,size2
-								,Num3,&size3,Num4,&size4) ) {
-						MLOCK(ErrorMessageLock);
-						MesPrint("Probably trying to determine the mod-inverses of numbers that are not relative prime");
-						MUNLOCK(ErrorMessageLock);
-						Terminate(-1);
-					}
+					GetLongModInverses(BHEAD Num1,size1,Num2,size2
+								,Num3,&size3,Num4,&size4);
 /*
 					Now we have to compose the answer. This needs more space
 					and hence we have to put this inside the term.
@@ -2291,7 +2396,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3639,7 +3744,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 

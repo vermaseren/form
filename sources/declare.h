@@ -1066,6 +1066,8 @@ extern void   SplitOpti(WORD **,LONG);
 extern void   CombiOpti(VOID);
 extern int    TakeLongRoot(UWORD *,WORD *,WORD);
 extern int    TakeRatRoot(UWORD *,WORD *,WORD);
+extern int    MakeRational(WORD ,WORD , WORD *, WORD *);
+extern int    MakeLongRational(PHEAD UWORD *,WORD ,UWORD *,WORD ,UWORD *,WORD *);
 extern void   HuntPowers(LONG,WORD);
 extern void   HuntNumBrackets(LONG);
 extern void   ClearTableTree(TABLES);
