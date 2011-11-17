@@ -872,7 +872,7 @@ int PF_EndSort(void)
 	SORTING *S = AT.SS;
 	WORD *outterm,*pp;
 	LONG size, noutterms;
-	POSITION position;
+	POSITION position, oldposition;
 	WORD i,cc;
 
 	if ( AT.SS != AT.S0 || !PF.parallel ) return 0;
@@ -920,7 +920,8 @@ int PF_EndSort(void)
 	PF_InitTree();
 	S->PolyFlag = AR.PolyFun ? AR.PolyFunType : 0;
 	*AR.CompressPointer = 0;
-	PUTZERO(position);
+	SeekScratch(fout, &position);
+	oldposition = position;
 
 	noutterms = 0;
 
@@ -956,7 +957,7 @@ int PF_EndSort(void)
 	}
 	if ( FlushOut(&position,fout,0) ) return(-1);
 	S->TermsLeft = PF_goutterms = noutterms;
-	PF_exprsize = position;
+	DIFPOS(PF_exprsize, position, oldposition);
 	return(1);
 }
 
