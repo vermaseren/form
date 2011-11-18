@@ -1462,7 +1462,7 @@ somethingwrong:
 	return(-1);
 }
 /*
- 		#] GetModInverses : 
+ 		#] GetModInverses :
  		#[ GetLongModInverses :
 */
 
@@ -1539,7 +1539,7 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 }
 
 /*
- 		#] GetLongModInverses : 
+ 		#] GetLongModInverses :
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -2841,7 +2841,7 @@ int MakeRational(WORD a,WORD m, WORD *b, WORD *c)
 }
 
 /*
- 		#] MakeRational:
+ 		#] MakeRational: 
  		#[ MakeLongRational:
 
 		Converts the long number a mod m into the fraction b
@@ -2937,7 +2937,61 @@ cleanup:
 
 /*
 #endif
- 		#] MakeLongRational:
+ 		#] MakeLongRational: 
+ 		#[ ChineseRemainder:
+*/
+/**
+ *		Routine takes a1 mod m1 and a2 mod m2 and returns a mod m1*m2 with
+ *		a mod m1 = a1 and a mod m2 = a2
+ *	Chinese remainder:
+ *		a%(m1*m2) = q1*m1+a1
+ *		a%(m1*m2) = q2*m2+a2
+ *	Compute n1 such that (n1*m1)%m2 is one
+ *	Compute n2 such that (n2*m2)%m1 is one
+ *	Then (a1*n2*m2+a2*n1*m1)%(m1*m2) is a%(m1*m2)
+ *
+ */
+
+int ChineseRemainder(PHEAD MODNUM *a1, MODNUM *a2, MODNUM *a)
+{
+	UWORD *inv1 = NumberMalloc("ChineseRemainder");
+	UWORD *inv2 = NumberMalloc("ChineseRemainder");
+	UWORD *fac1 = NumberMalloc("ChineseRemainder");
+	UWORD *fac2 = NumberMalloc("ChineseRemainder");
+	UWORD two[1];
+	WORD ninv1, ninv2, nfac1, nfac2;
+	if ( a1->na < 0 ) {
+		AddLong(a1->a,a1->na,a1->m,a1->nm,a1->a,&(a1->na));
+	}
+	if ( a2->na < 0 ) {
+		AddLong(a2->a,a2->na,a2->m,a2->nm,a2->a,&(a2->na));
+	}
+	MulLong(a1->m,a1->nm,a2->m,a2->nm,a->m,&(a->nm));
+
+	GetLongModInverses(BHEAD a1->m,a1->nm,a2->m,a2->nm,inv1,&ninv1,inv2,&ninv2);
+	MulLong(inv1,ninv1,a1->m,a1->nm,fac1,&nfac1);
+	MulLong(inv2,ninv2,a2->m,a2->nm,fac2,&nfac2);
+
+	MulLong(fac1,nfac1,a2->a,a2->na,inv1,&ninv1);
+	MulLong(fac2,nfac2,a1->a,a1->na,inv2,&ninv2);
+	AddLong(inv1,ninv1,inv2,ninv2,a->a,&(a->na));
+
+	two[0] = 2;
+	MulLong(a->a,a->na,two,1,fac1,&nfac1);
+	if ( BigLong(fac1,nfac1,a->m,a->nm) > 0 ) {
+		a->nm = -a->nm;
+		AddLong(a->a,a->na,a->m,a->nm,a->a,&(a->na));
+		a->nm = -a->nm;
+	}
+	NumberFree(fac2,"ChineseRemainder");
+	NumberFree(fac1,"ChineseRemainder");
+	NumberFree(inv2,"ChineseRemainder");
+	NumberFree(inv1,"ChineseRemainder");
+	return(0);
+}
+
+/*
+ 		#] ChineseRemainder:
   	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)

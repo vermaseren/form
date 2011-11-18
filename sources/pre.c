@@ -3137,12 +3137,13 @@ int DoInside(UBYTE *s)
 	AP.PreInsideLevel = 1;
 	AC.cbufnum = AP.inside.inscbuf;
 	AM.rbufnum = AP.inside.inscbuf;
+	clearcbuf(AC.cbufnum);
 	AC.compiletype = 0;
 	return(error);
 }
 
 /*
- 		#] DoInside : 
+ 		#] DoInside :
  		#[ DoEndInside :
 */
 
@@ -3152,6 +3153,7 @@ int DoEndInside(UBYTE *s)
 	WORD numdol, *oldworkpointer = AT.WorkPointer, *term, *t, j, i;
 	DOLLARS d, nd;
 	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
+	WORD *oldcompresspointer = AR.CompressPointer;
 	FILEHANDLE *f;
 	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -3173,6 +3175,7 @@ int DoEndInside(UBYTE *s)
 	AC.compiletype = AP.inside.oldcompiletype;
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 	AR.BracketOn = 0;
+	if ( AR.CompressPointer == 0 ) AR.CompressPointer = AR.CompressBuffer;
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 /*
 	Now we have to execute the statements on the proper dollars.
@@ -3215,6 +3218,7 @@ int DoEndInside(UBYTE *s)
 	AR.Cnumlhs = oldcnumlhs;
 	AR.BracketOn = oldbracketon;
 	AP.PreInsideLevel = 0;
+	AR.CompressPointer = oldcompresspointer;
 	return(0);
 }
 

@@ -1310,7 +1310,7 @@ exitfromhere:
 						}
 						Num1 = NumberMalloc("modinverses");
 						size1 = xc;
-						for ( i = 0; i < xc; i++ ) Num2[i] = t[FUNHEAD+ARGHEAD+1+i];
+						for ( i = 0; i < xc; i++ ) Num1[i] = t[FUNHEAD+ARGHEAD+1+i];
 					}
 					Num3 = NumberMalloc("modinverses");
 					Num4 = NumberMalloc("modinverses");
@@ -1331,6 +1331,7 @@ exitfromhere:
 					tt = term + *term; u = tt + space;
 					while ( tt >= ts ) *--u = *--tt;
 					m += space; r += space;
+					*term += space;
 					t[1] += space;
 					if ( ( size3 == 1 || size3 == -1 ) && (*Num3&TOPBITONLY) == 0 ) {
 						*ts++ = -SNUMBER; *ts = (WORD)(*Num3);
@@ -1355,7 +1356,7 @@ exitfromhere:
 					else {
 						*ts++ = 2*ABS(size4)+ARGHEAD+2;
 						*ts++ = 0; FILLARG(ts)
-						*ts++ = 2*ABS(size4)+1;
+						*ts++ = 2*ABS(size4)+2;
 						for ( i = 0; i < ABS(size4); i++ ) *ts++ = Num4[i];
 						*ts++ = 1;
 						for ( i = 1; i < ABS(size4); i++ ) *ts++ = 0;
@@ -1367,7 +1368,7 @@ exitfromhere:
 					NumberFree(Num1,"modinverses");
 					NumberFree(Num2,"modinverses");
 					t[2] = 0; /* mark function as clean. */
-					goto defaultcase;
+					goto Restart;
 				}
 				break;
 			case GCDFUNCTION:
@@ -2396,7 +2397,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3744,7 +3745,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 
