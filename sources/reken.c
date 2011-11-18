@@ -1462,7 +1462,7 @@ somethingwrong:
 	return(-1);
 }
 /*
- 		#] GetModInverses :
+ 		#] GetModInverses : 
  		#[ GetLongModInverses :
 */
 
@@ -1539,7 +1539,7 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 }
 
 /*
- 		#] GetLongModInverses :
+ 		#] GetLongModInverses : 
  		#[ Product :		WORD Product(a,na,b)
 
 	Multiplies the Long number in a with the WORD b.
@@ -2951,6 +2951,7 @@ cleanup:
  *	Then (a1*n2*m2+a2*n1*m1)%(m1*m2) is a%(m1*m2)
  *
  */
+#ifdef WITHCHINESEREMAINDER
 
 int ChineseRemainder(PHEAD MODNUM *a1, MODNUM *a2, MODNUM *a)
 {
@@ -2989,6 +2990,8 @@ int ChineseRemainder(PHEAD MODNUM *a1, MODNUM *a2, MODNUM *a)
 	NumberFree(inv1,"ChineseRemainder");
 	return(0);
 }
+
+#endif
 
 /*
  		#] ChineseRemainder:
