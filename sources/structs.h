@@ -1192,27 +1192,6 @@ typedef struct {
 	WORD	modnum;				/* The prime number of the modulus */
 } POLYMOD;
 
-/**
- *	The POLYPADIC struct controls one univariate polynomial of which the
- *	coefficients are in p-adic notation rather than notation modulus FULLMAX.
- *	The terms are stored in sparse notation as regular terms that have
- *	a subterm of type SYMBOL. The difference is the coefficient.
- *	The coefficient is an integer expanded in powers of a prime which is
- *	given in the element modnum (the prime has to fit inside a variable
- *	of type WORD).
- */
-
-typedef struct {
-	POLYMOD	*ppoly;				/* An array of polynomials */
-	WORD	*ncoefs;			/* How many powers of the prime in each coef */
-	WORD	numsym;				/* The number of the symbol in the polynomial */
-	WORD	padicsize;			/* Elements allocated in ppoly; */
-	WORD	numpow;				/* Maximum power of modnum actually used */
-	WORD	arraysize;			/* The size of the allocation of coefs */
-	WORD	polysize;			/* The maximum power in the polynomial */
-	WORD	modnum;				/* The prime number of the modulus */
-} POLYPADIC;
-
 typedef struct {
 	WORD	*outterm;            /* Used in DoShuffle/Merge/FinishShuffle system */
 	WORD	*outfun;
@@ -1238,8 +1217,15 @@ typedef struct {				/* Used for computing calculational cost in optim.c */
 	LONG	pow;
 } COST;
 
+typedef struct {
+	UWORD	*a;		/* The number array */
+	UWORD	*m;		/* The modulus array */
+	WORD	na;		/* Size of the number */
+	WORD	nm;		/* size of the number in the modulus array */
+} MODNUM;
+
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */

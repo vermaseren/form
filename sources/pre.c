@@ -3143,7 +3143,7 @@ int DoInside(UBYTE *s)
 }
 
 /*
- 		#] DoInside :
+ 		#] DoInside : 
  		#[ DoEndInside :
 */
 
@@ -3154,6 +3154,8 @@ int DoEndInside(UBYTE *s)
 	DOLLARS d, nd;
 	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
 	WORD *oldcompresspointer = AR.CompressPointer;
+	int oldmultithreaded = AS.MultiThreaded;
+	int oldmparallelflag = AC.mparallelflag;
 	FILEHANDLE *f;
 	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -3175,6 +3177,8 @@ int DoEndInside(UBYTE *s)
 	AC.compiletype = AP.inside.oldcompiletype;
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 	AR.BracketOn = 0;
+	AS.MultiThreaded = 0;
+	AC.mparallelflag = 0;
 	if ( AR.CompressPointer == 0 ) AR.CompressPointer = AR.CompressBuffer;
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 /*
@@ -3219,11 +3223,13 @@ int DoEndInside(UBYTE *s)
 	AR.BracketOn = oldbracketon;
 	AP.PreInsideLevel = 0;
 	AR.CompressPointer = oldcompresspointer;
+	AS.MultiThreaded = oldmultithreaded;
+	AC.mparallelflag = oldmparallelflag;
 	return(0);
 }
 
 /*
- 		#] DoEndInside :
+ 		#] DoEndInside : 
  		#[ DoMessage :
 */
 
