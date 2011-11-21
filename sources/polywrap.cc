@@ -43,6 +43,10 @@
 
 //#define DEBUG
 
+#ifdef DEBUG
+#include "mytime.h"
+#endif
+
 using namespace std;
 
 /*
@@ -116,7 +120,7 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool only_funargs, string m
 WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_gcd" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_gcd" << endl;
 #endif
 	
 	// Extract variables
@@ -155,6 +159,10 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_divmod" << endl;
+#endif
+	
 	vector<WORD *> e;
 	e.push_back(a);
 	e.push_back(b);
@@ -170,9 +178,11 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb), modp, 1);
 	pa *= denb;
 	pb *= dena;
-
+	
 	int pow = pa.degree(0);
 	poly lcoeffb(pb.integer_lcoeff());
+	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
+	
 	lcoeffb *= poly(BHEAD lcoeffb.sign());
 	poly den(BHEAD 1);
 
@@ -217,6 +227,11 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 */
 
 WORD *poly_div(PHEAD WORD *a, WORD *b) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_div" << endl;
+#endif
+	
 	return poly_divmod(BHEAD a, b, 0);
 }
 
@@ -234,6 +249,11 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 */
 
 WORD *poly_rem(PHEAD WORD *a, WORD *b) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_rem" << endl;
+#endif
+
 	return poly_divmod(BHEAD a, b, 1);
 }
 
@@ -257,7 +277,7 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b) {
 void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_ratfun_read" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_ratfun_read" << endl;
 #endif
 
 	POLY_GETIDENTITY(num);
@@ -342,7 +362,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 void poly_sort(PHEAD WORD *a) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_sort" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_sort" << endl;
 #endif
 	
 	if (NewSort(BHEAD0)) { Terminate(-1); }
@@ -386,7 +406,7 @@ void poly_sort(PHEAD WORD *a) {
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_ratfun_add" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_ratfun_add" << endl;
 #endif
 	
 	WORD *oldworkpointer = AT.WorkPointer;
@@ -493,7 +513,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 int poly_ratfun_normalize (PHEAD WORD *term) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_ratfun_mul" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_ratfun_normalize" << endl;
 #endif
 	
 	// Strip coefficient
@@ -670,7 +690,7 @@ void poly_fix_minus_signs (factorized_poly &a) {
 int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_factorize_argument" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_factorize_argument" << endl;
 #endif
 
 	poly::get_variables(BHEAD vector<WORD*>(1,argin), true, true);
@@ -732,7 +752,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_factorize_dollar" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_factorize_dollar" << endl;
 #endif
 	
 	poly::get_variables(BHEAD vector<WORD*>(1,argin), false, true);
@@ -789,7 +809,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 int poly_factorize_expression(EXPRESSIONS expr) {
 
 #ifdef DEBUG
-	cout << "CALL : poly_factorize_expression" << endl;
+	cout << "*** [" << thetime() << "]  CALL : poly_factorize_expression" << endl;
 #endif
 
 	GETIDENTITY;
