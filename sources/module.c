@@ -29,7 +29,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -37,7 +37,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Modules :
  		#[ ModuleInstruction :
 
@@ -83,6 +83,7 @@ int ModuleInstruction(int *moduletype, int *specialtype)
 	AC.firstctypemessage = 0;
 	s = AP.preStart; SKIPBLANKS(s)
 	t = EndOfToken(s); c = *t; *t = 0;
+	AC.origin = FROMPOINTINSTRUCTION;
 	key = FindKeyWord(AP.preStart,ModuleWords,sizeof(ModuleWords)/sizeof(KEYWORD));
 	if ( key == 0 ) {
 		MesPrint("@Unrecognized module terminator: %s",s);
@@ -133,7 +134,7 @@ int ModuleInstruction(int *moduletype, int *specialtype)
 }
 
 /*
- 		#] ModuleInstruction :
+ 		#] ModuleInstruction : 
  		#[ CoModuleOption :
 
 	ModuleOption, options;
@@ -143,7 +144,8 @@ int CoModuleOption(UBYTE *s)
 {
 	UBYTE *t,*tt,c;
 	KEYWORD *option;
-	int error = 0;
+	int error = 0, polyflag = 0;
+	AC.origin = FROMMODULEOPTION;
 	if ( *s ) do {
 		s = ToToken(s);
 		t = EndOfToken(s);
@@ -151,15 +153,28 @@ int CoModuleOption(UBYTE *s)
 		option = FindKeyWord(s,ModuleOptions,
 			sizeof(ModuleOptions)/sizeof(KEYWORD));
 		if ( option == 0 ) {
-			MesPrint("@Unrecognized module option: %s",s);
-			error = 1;
-			*t = c;
+			if ( polyflag ) {
+				*t = c; t++; s = SkipAName(t);
+				polyflag = 0;
+				continue;
+			}
+			else {
+				MesPrint("@Unrecognized module option: %s",s);
+				error = 1;
+				polyflag = 0;
+				*t = c;
+			}
 		}
 		else {
 			*t = c;
 			SKIPBLANKS(t)
 			if ( (option->func)(t) ) error = 1;
 		}
+		if ( StrCmp((UBYTE *)(option->name),(UBYTE *)("polyfun")) == 0
+		 || StrCmp((UBYTE *)(option->name),(UBYTE *)("polyratfun")) == 0 ) {
+			polyflag = 1;
+		}
+		else polyflag = 0;
 		if ( option->flags > 0 ) return(error);
 		while ( *t ) {
 			if ( *t == ',' ) {
@@ -196,6 +211,7 @@ int CoModOption(UBYTE *s)
 {
 	UBYTE *t,c;
 	int error = 0;
+	AC.origin = FROMPOINTINSTRUCTION;
 	if ( *s ) do {
 		s = ToToken(s);
 		t = EndOfToken(s);
@@ -232,7 +248,7 @@ int CoModOption(UBYTE *s)
 }
 
 /*
- 		#] CoModOption :
+ 		#] CoModOption : 
  		#[ SetSpecialMode :
 */
 
@@ -242,14 +258,14 @@ VOID SetSpecialMode(int moduletype, int specialtype)
 }
 
 /*
- 		#] SetSpecialMode :
+ 		#] SetSpecialMode : 
  		#[ MakeGlobal :
 
 VOID MakeGlobal()
 {
 }
 
- 		#] MakeGlobal :
+ 		#] MakeGlobal : 
  		#[ ExecModule :
 */
 
@@ -259,7 +275,7 @@ int ExecModule(int moduletype)
 }
 
 /*
- 		#] ExecModule :
+ 		#] ExecModule : 
  		#[ ExecStore :
 */
 
@@ -269,7 +285,7 @@ int ExecStore()
 }
 
 /*
- 		#] ExecStore :
+ 		#] ExecStore : 
  		#[ FullCleanUp :
 
 		Remark 27-oct-2005 by JV
@@ -338,7 +354,7 @@ VOID FullCleanUp()
 }
 
 /*
- 		#] FullCleanUp :
+ 		#] FullCleanUp : 
  		#[ DoPolyfun :
 */
 
@@ -347,13 +363,25 @@ int DoPolyfun(UBYTE *s)
 	GETIDENTITY
 	UBYTE *t, c;
 	WORD funnum;
-	if ( *s == 0 || *s == ',' || *s == ')' ) {
-		AR.PolyFun = 0; AR.PolyFunType = 0;
-		return(0);
+	if ( AC.origin == FROMPOINTINSTRUCTION ) {
+		if ( *s == 0 || *s == ',' || *s == ')' ) {
+			AR.PolyFun = 0; AR.PolyFunType = 0;
+			return(0);
+		}
+		if ( *s != '=' ) {
+			MesPrint("@Proper use in point instructions is: PolyFun[=functionname]");
+			return(-1);
+		}
 	}
-	if ( *s != '=' ) {
-		MesPrint("@Proper use is: PolyFun[=functionname]");
-		return(-1);
+	else {
+		if ( *s == 0 ) {
+			AR.PolyFun = 0; AR.PolyFunType = 0;
+			return(0);
+		}
+		if ( *s != '=' && *s != ',' ) {
+			MesPrint("@Proper use is: PolyFun[{ ,=}functionname]");
+			return(-1);
+		}
 	}
 	s++;
 	SKIPBLANKS(s)
@@ -383,7 +411,7 @@ int DoPolyfun(UBYTE *s)
 }
 
 /*
- 		#] DoPolyfun :
+ 		#] DoPolyfun : 
  		#[ DoPolyratfun :
 */
 
@@ -392,13 +420,25 @@ int DoPolyratfun(UBYTE *s)
 	GETIDENTITY
 	UBYTE *t, c;
 	WORD funnum;
-	if ( *s == 0 || *s == ',' || *s == ')' ) {
-		AR.PolyFun = 0; AR.PolyFunType = 0;
-		return(0);
+	if ( AC.origin == FROMPOINTINSTRUCTION ) {
+		if ( *s == 0 || *s == ',' || *s == ')' ) {
+			AR.PolyFun = 0; AR.PolyFunType = 0;
+			return(0);
+		}
+		if ( *s != '=' ) {
+			MesPrint("@Proper use in point instructions is: PolyFun[=functionname]");
+			return(-1);
+		}
 	}
-	if ( *s != '=' ) {
-		MesPrint("@Proper use is: PolyRatFun[=functionname]");
-		return(-1);
+	else {
+		if ( *s == 0 ) {
+			AR.PolyFun = 0; AR.PolyFunType = 0;
+			return(0);
+		}
+		if ( *s != '=' && *s != ',' ) {
+			MesPrint("@Proper use is: PolyFun[{ ,=}functionname]");
+			return(-1);
+		}
 	}
 	s++;
 	SKIPBLANKS(s)
@@ -428,7 +468,7 @@ int DoPolyratfun(UBYTE *s)
 }
 
 /*
- 		#] DoPolyratfun :
+ 		#] DoPolyratfun : 
  		#[ DoNoParallel :
 */
 
@@ -446,7 +486,7 @@ int DoNoParallel(UBYTE *s)
 }
 
 /*
- 		#] DoNoParallel :
+ 		#] DoNoParallel : 
  		#[ DoParallel :
 */
 
@@ -471,7 +511,7 @@ int DoParallel(UBYTE *s)
 }
 
 /*
- 		#] DoParallel :
+ 		#] DoParallel : 
  		#[ DoModSum :
 */
 
@@ -491,7 +531,7 @@ int DoModSum(UBYTE *s)
 }
 
 /*
- 		#] DoModSum :
+ 		#] DoModSum : 
  		#[ DoModMax :
 */
 
@@ -511,7 +551,7 @@ int DoModMax(UBYTE *s)
 }
 
 /*
- 		#] DoModMax :
+ 		#] DoModMax : 
  		#[ DoModMin :
 */
 
@@ -531,7 +571,7 @@ int DoModMin(UBYTE *s)
 }
 
 /*
- 		#] DoModMin :
+ 		#] DoModMin : 
  		#[ DoModLocal :
 */
 
@@ -551,7 +591,7 @@ int DoModLocal(UBYTE *s)
 }
 
 /*
- 		#] DoModLocal :
+ 		#] DoModLocal : 
  		#[ DoSlavePatch :
 */
 
@@ -569,7 +609,7 @@ int DoSlavePatch(UBYTE *s)
 }
 
 /*
- 		#] DoSlavePatch :
+ 		#] DoSlavePatch : 
  		#[ DoModDollar :
 */
 
@@ -663,7 +703,7 @@ UBYTE * DoModDollar(UBYTE *s, int type)
 }
 
 /*
- 		#] DoModDollar :
+ 		#] DoModDollar : 
  		#[ DoinParallel :
 
 		The idea is that we should have the commands
@@ -680,7 +720,7 @@ int DoinParallel(UBYTE *s)
 }
 
 /*
- 		#] DoinParallel :
+ 		#] DoinParallel : 
  		#[ DonotinParallel :
 */
 
@@ -690,7 +730,7 @@ int DonotinParallel(UBYTE *s)
 }
 
 /*
- 		#] DonotinParallel :
+ 		#] DonotinParallel : 
 	#] Modules :
 	#[ External :
  		#[ DoExecStatement :
@@ -709,7 +749,7 @@ int DoExecStatement()
 }
 
 /*
- 		#] DoExecStatement :
+ 		#] DoExecStatement : 
  		#[ DoPipeStatement :
 */
 
@@ -726,6 +766,6 @@ int DoPipeStatement()
 }
 
 /*
- 		#] DoPipeStatement :
+ 		#] DoPipeStatement : 
 	#] External :
 */

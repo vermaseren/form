@@ -944,3 +944,7 @@ typedef int (*TFUN1)();
 
 #define OLDFACTARG 1
 #define NEWFACTARG 0
+
+#define FROMMODULEOPTION 0
+#define FROMPOINTINSTRUCTION 1
+

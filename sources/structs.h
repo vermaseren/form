@@ -1225,7 +1225,7 @@ typedef struct {
 } MODNUM;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1626,7 +1626,7 @@ struct C_const {
 	int     dummyint1;
 	int     dummyint2;
 #endif
-    int     dummyint3;
+    int     origin;                /* Determines whether .sort or ModuleOption */
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
     WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
