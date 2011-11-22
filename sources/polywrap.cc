@@ -72,11 +72,11 @@ using namespace std;
  *     AC.modmode&ALSOFUNARGS=false, AN.ncmod is set to zero, for
  *     otherwise RaisPow calculates mod M.
  */
-WORD poly_determine_modulus (PHEAD bool multi_error, bool only_funargs, string message) {
+WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string message) {
 	
 	if (AC.ncmod==0) return 0;
 
-	if (!only_funargs || (AC.modmode & ALSOFUNARGS)) {
+	if (!is_fun_arg || (AC.modmode & ALSOFUNARGS)) {
 		
 		if (ABS(AC.ncmod)>1) {
 			MLOCK(ErrorMessageLock);
@@ -671,9 +671,135 @@ void poly_fix_minus_signs (factorized_poly &a) {
 
 /*
   	#] poly_fix_minus_signs : 
-  	#[ poly_factorize_argument :
+  	#[ poly_factorize :
 */
 
+/**  Factorization of function arguments / dollars
+ *
+ *   Description
+ *   ===========
+ *   This method factorizes a Form style argument or zero-terminated
+ *   term list.
+ *
+ *   Notes
+ *   =====
+ *   - Called from poly_factorize_{argument,dollar}
+ *   - Calls polyfact::factorize
+ */
+WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool is_fun_arg) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_factorize" << endl;
+#endif
+	
+	poly::get_variables(BHEAD vector<WORD*>(1,argin), with_arghead, true);
+	poly den(BHEAD 0);
+ 	poly a(poly::argument_to_poly(BHEAD argin, with_arghead, true, &den));
+
+	// check for modulus calculus
+	WORD modp=poly_determine_modulus(BHEAD true, is_fun_arg, "polynomial factorization");
+	a.setmod(modp,1);
+
+	// factorize
+	factorized_poly f(polyfact::factorize(a));
+	poly_fix_minus_signs(f);
+
+	poly num(BHEAD 1);
+	for (int i=0; i<(int)f.factor.size(); i++)
+		if (f.factor[i].is_integer())
+			num = f.factor[i];	
+	
+	// determine size
+	int len = with_arghead ? ARGHEAD : 0;
+
+	if (!num.is_one() || !den.is_one()) {
+		len += MaX(ABS(num[num[1]]), den[den[1]])*2+1;
+		len += with_arghead ? ARGHEAD : 1;
+	}
+	
+	for (int i=0; i<(int)f.factor.size(); i++) {
+		if (!f.factor[i].is_integer()) {
+			len += f.power[i] * f.factor[i].size_of_form_notation();
+			len += f.power[i] * (with_arghead ? ARGHEAD : 1);
+		}
+	}
+	
+	len++;
+	
+	if (argout != NULL) {
+		// check size
+		if (len >= AM.MaxTer) {
+			MLOCK(ErrorMessageLock);
+			MesPrint ("ERROR: factorization doesn't fit in a term");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+	}
+	else {
+		// allocate size
+		argout = (WORD*) Malloc1(len*sizeof(WORD), "poly_factorize");
+	}
+
+	WORD *old_argout = argout;
+
+	// constant factor
+	if (!num.is_one() || !den.is_one()) {
+		int n = max(ABS(num[num[1]]), ABS(den[den[1]]));
+
+		if (with_arghead) {
+			*argout++ = ARGHEAD + 2 + 2*n;
+			for (int i=1; i<ARGHEAD; i++)
+				*argout++ = 0;
+		}
+		
+		*argout++ = 2 + 2*n;
+		
+		for (int i=0; i<n; i++) 
+			*argout++ = i<ABS(num[num[1]]) ? num[2+AN.poly_num_vars+i] : 0;
+		for (int i=0; i<n; i++) 
+			*argout++ = i<ABS(den[den[1]]) ? den[2+AN.poly_num_vars+i] : 0;
+
+		*argout++ = SGN(num[num[1]]) * (2*n+1);
+
+		if (!with_arghead)
+			*argout++=0;
+		else {
+			/*
+			if (ToFast(old_argout, old_argout))
+				argout = old_argout+2;
+			*/
+		}
+	}
+
+	// non-constant factors
+	for (int i=0; i<(int)f.factor.size(); i++)
+		if (!f.factor[i].is_integer()) 
+			for (int j=0; j<f.power[i]; j++) {			
+				poly::poly_to_argument(f.factor[i],argout,with_arghead);
+				
+				if (with_arghead)
+					argout += *argout > 0 ? *argout : 2;
+				else {
+					while (*argout!=0) argout+=*argout;
+					argout++;
+				}
+			}
+	
+	*argout=0;
+
+	if (AN.poly_num_vars > 0)
+		delete AN.poly_vars;
+
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
+
+	return old_argout;
+}
+
+/*
+  	#] poly_factorize : 
+  	#[ poly_factorize_argument :
+*/
  
 /**  Factorization of function arguments
  *
@@ -685,7 +811,7 @@ void poly_fix_minus_signs (factorized_poly &a) {
  *   =====
  *   - The result is written at argout
  *   - Called from argument.c
- *   - Calls polyfact::factorize
+ *   - Calls poly_factorize
  */
 int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 
@@ -693,42 +819,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	cout << "*** [" << thetime() << "]  CALL : poly_factorize_argument" << endl;
 #endif
 
-	poly::get_variables(BHEAD vector<WORD*>(1,argin), true, true);
- 	poly a(poly::argument_to_poly(BHEAD argin, true, true));
-
-	// check for modulus calculus
-	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial factorization");
-	a.setmod(modp,1);
-	
-	// factorize
-	factorized_poly f(polyfact::factorize(a));
-	poly_fix_minus_signs(f);
-
-	// check size
-	int len = 0;
-	for (int i=0; i<(int)f.factor.size(); i++)
-		len += f.power[i] * f.factor[i].size_of_form_notation();
-	if (len >= AM.MaxTer) {
-		MLOCK(ErrorMessageLock);
-		MesPrint ("ERROR: factorization doesn't fit in a term");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
-	}
-
-	for (int i=0; i<(int)f.factor.size(); i++) 
-		for (int j=0; j<f.power[i]; j++) {
-			poly::poly_to_argument(f.factor[i],argout,true);
-			argout += *argout > 0 ? *argout : 2;
-		}
-
-	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
-	
-	*argout = 0;
-
-	// reset modulo calculation
-	AN.ncmod = AC.ncmod;
-
+	poly_factorize(BHEAD argin,argout,true,true);
 	return 0;
 }
 
@@ -747,46 +838,15 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
  *   =====
  *   - The result is written at newly allocated memory.
  *   - Called from dollar.c
- *   - Calls polyfact::factorize
+ *   - Calls poly_factorize
  */
 WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_factorize_dollar" << endl;
 #endif
-	
-	poly::get_variables(BHEAD vector<WORD*>(1,argin), false, true);
- 	poly a(poly::argument_to_poly(BHEAD argin, false, true));
 
-	// check for modulus calculus
- 	WORD modp=poly_determine_modulus(BHEAD true, false, "polynomial factorization");
-	a.setmod(modp, 1);
-
-	// factorize
-	factorized_poly f(polyfact::factorize(a));
-	poly_fix_minus_signs(f);
-
-	// calculate size, allocate memory, write answer
-	int len = 0;
-	for (int i=0; i<(int)f.factor.size(); i++)
-		len += f.power[i] * (f.factor[i].size_of_form_notation()+1);
-	len++;
-	
-	WORD *res = (WORD*) Malloc1(len*sizeof(WORD), "DoFactorizeDollar");
-	WORD *oldres = res;
-	
-	for (int i=0; i<(int)f.factor.size(); i++) 
-		for (int j=0; j<f.power[i]; j++) {
-			poly::poly_to_argument(f.factor[i],res,false);
-			while (*res!=0) res+=*res;
-			res++;
-		}
-	*res=0;
-	
-	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
-
-	return oldres;
+	return poly_factorize(BHEAD argin,NULL,false,false);
 }
 
 /*
