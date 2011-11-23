@@ -1139,11 +1139,19 @@ absnogood:					pcom[ncom++] = t;
 				if ( t[1] == FUNHEAD+4 && t[FUNHEAD] == -SNUMBER
 					&& t[FUNHEAD+2] == -SNUMBER && t[FUNHEAD+3] > 1 ) {
 					WORD tmod;
-					tmod = t[FUNHEAD+1]%t[FUNHEAD+3];
+					tmod = (t[FUNHEAD+1]%t[FUNHEAD+3]);
 					if ( tmod < 0 ) tmod += t[FUNHEAD+3];
-					*((UWORD *)lnum) = tmod;
-					if ( *lnum == 0 ) goto NormZero;
-					nnum = 1;
+					if ( *t == MOD2FUNCTION && tmod > t[FUNHEAD+3]/2 )
+							tmod -= t[FUNHEAD+3];
+					if ( tmod < 0 ) {
+						*((UWORD *)lnum) = -tmod;
+						nnum = -1;
+					}
+					else if ( tmod > 0 ) {
+						*((UWORD *)lnum) = tmod;
+						nnum = 1;
+					}
+					else goto NormZero;
 					goto MulIn;
 				}
 				else if ( t[1] > t[FUNHEAD+2] && t[FUNHEAD] > 0
@@ -1167,9 +1175,18 @@ absnogood:					pcom[ncom++] = t;
 							,&iii,(UWORD *)(&cmod),ncmod,UNPACK|POSNEG|NOINVERSES) )
 								goto FromNorm;
 						}
-						*((UWORD *)lnum) = ttt[ARGHEAD+1];
-						if ( *lnum == 0 ) goto NormZero;
-						nnum = 1;
+						if ( *t == MOD2FUNCTION && ttt[ARGHEAD+1] > cmod/2 && iii > 0 ) {
+							ttt[ARGHEAD+1] -= cmod;
+						}
+						if ( ttt[ARGHEAD+1] < 0 ) {
+							*((UWORD *)lnum) = -ttt[ARGHEAD+1];
+							nnum = -1;
+						}
+						else if ( ttt[ARGHEAD+1] > 0 ) {
+							*((UWORD *)lnum) = ttt[ARGHEAD+1];
+							nnum = 1;
+						}
+						else goto NormZero;
 						goto MulIn;
 					}						
 				}
@@ -1238,6 +1255,19 @@ exitfromhere:
 					if ( TakeModulus((UWORD *)lnum,&nnum,(UWORD *)coef2,ncoef2,
 									UNPACK|NOINVERSES|FROMFUNCTION) ) {
 						goto FromNorm;
+					}
+					if ( *t == MOD2FUNCTION && nnum > 0 ) {
+						UWORD *coef3 = NumberMalloc("Mod2Function"), two = 2;
+						WORD ncoef3;
+						if ( MulLong((UWORD *)lnum,nnum,&two,1,coef3,&ncoef3) )
+							goto FromNorm;
+						if ( BigLong(coef3,ncoef3,(UWORD *)coef2,ncoef2) > 0 ) {
+							nnum = -nnum;
+							AddLong((UWORD *)lnum,nnum,(UWORD *)coef2,ncoef2
+									,(UWORD *)lnum,&nnum);
+							nnum = -nnum;
+						}
+						NumberFree(coef3,"Mod2Function");
 					}
 /*
 					Do we have to pack? No, because the answer is not a fraction

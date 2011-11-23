@@ -1880,6 +1880,8 @@ int CodeFactors(SBYTE *tokens)
 				*t++ = TMULTIPLY; *t++ = TSUBEXP;
 				PUTNUMBER128(t,subexp)
 				*t++ = TENDOFIT;
+				e->numfactors = 1;
+				e->vflags |= ISFACTORIZED;
 				return(subexp);
 			}
 		}

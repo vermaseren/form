@@ -199,7 +199,7 @@ int CoModuleOption(UBYTE *s)
 }
 
 /*
- 		#] CoModuleOption :
+ 		#] CoModuleOption : 
  		#[ CoModOption :
 
 	To be called from a .instruction.
@@ -362,7 +362,7 @@ int DoPolyfun(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *t, c;
-	WORD funnum;
+	WORD funnum, eqsign = 0;
 	if ( AC.origin == FROMPOINTINSTRUCTION ) {
 		if ( *s == 0 || *s == ',' || *s == ')' ) {
 			AR.PolyFun = 0; AR.PolyFunType = 0;
@@ -372,6 +372,7 @@ int DoPolyfun(UBYTE *s)
 			MesPrint("@Proper use in point instructions is: PolyFun[=functionname]");
 			return(-1);
 		}
+		eqsign = 1;
 	}
 	else {
 		if ( *s == 0 ) {
@@ -382,6 +383,7 @@ int DoPolyfun(UBYTE *s)
 			MesPrint("@Proper use is: PolyFun[{ ,=}functionname]");
 			return(-1);
 		}
+		if ( *s == '=' ) eqsign = 1;
 	}
 	s++;
 	SKIPBLANKS(s)
@@ -389,6 +391,10 @@ int DoPolyfun(UBYTE *s)
 	c = *t; *t = 0;
 
 	if ( GetName(AC.varnames,s,&funnum,WITHAUTO) != CFUNCTION ) {
+		if ( AC.origin != FROMPOINTINSTRUCTION && eqsign == 0 ) {
+			AR.PolyFun = 0; AR.PolyFunType = 0;
+			return(0);
+		}
 		MesPrint("@ %s is not a properly declared function",s);
 		*t = c;
 		return(-1);

@@ -2806,7 +2806,10 @@ int DollarFactorize(PHEAD WORD numdollar)
 	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
 	WORD *buf1, *t, *term, *buf1content, *buf2, *termextra;
-	WORD *buf3, *tstop, *argextra, pow, *r;
+	WORD *buf3, *argextra;
+#ifdef STEP2
+	WORD *tstop, pow, *r;
+#endif
 	int i, j, jj, action = 0, sign = 1;
 	LONG insize, ii;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
