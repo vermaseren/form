@@ -626,7 +626,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1379,13 +1379,14 @@ DoSpec:
 			r = t + t[1];
 			funnum = *t;
 			if ( *t >= FUNCTION + WILDOFFSET ) funnum -= WILDOFFSET;
-			if ( ( *t == NUMFACTORS ) && t[1] == FUNHEAD+2 &&
+			if ( ( *t == NUMFACTORS || *t == FIRSTTERM || *t == CONTENTTERM )
+			 && t[1] == FUNHEAD+2 &&
 			( t[FUNHEAD] == -EXPRESSION || t[FUNHEAD] == -DOLLAREXPRESSION ) ) {
-				if ( *t == NUMFACTORS ) {
 /*
+				if ( *t == NUMFACTORS ) {
 					This we leave for Normalize
-*/				
 				}
+*/				
 			}
 			else if ( functions[funnum-FUNCTION].spec == 0 ) {
 				AT.NestPoin->funsize = t + 1;

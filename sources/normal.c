@@ -840,19 +840,22 @@ MulIn:
 			case FIRSTTERM:
 			case CONTENTTERM:
 				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
-					EXPRESSIONS e = Expressions+t[FUNHEAD+1];
-					POSITION oldondisk = AS.OldOnFile[t[FUNHEAD+1]];
-					if ( e->replace == NEWLYDEFINEDEXPRESSION ) {
-						AS.OldOnFile[t[FUNHEAD+1]] = e->onfile;
+					{
+						EXPRESSIONS e = Expressions+t[FUNHEAD+1];
+						POSITION oldondisk = AS.OldOnFile[t[FUNHEAD+1]];
+						if ( e->replace == NEWLYDEFINEDEXPRESSION ) {
+							AS.OldOnFile[t[FUNHEAD+1]] = e->onfile;
+						}
+						if ( *t == FIRSTTERM ) {
+							if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+						}
+						else if ( *t == CONTENTTERM ) {
+							if ( GetContent(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+						}
+						AS.OldOnFile[t[FUNHEAD+1]] = oldondisk;
+						if ( *termout == 0 ) goto NormZero;
 					}
-					if ( *t == FIRSTTERM ) {
-						if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
-					}
-					else if ( *t == CONTENTTERM ) {
-						if ( GetContent(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
-					}
-					AS.OldOnFile[t[FUNHEAD+1]] = oldondisk;
-					if ( *termout == 0 ) goto NormZero;
+PasteIn:;
 					{
 						WORD *r1, *r2, *r3, *r4, *r5, nr1, *rterm;
 						r2 = termout + *termout; lnum = r2 - ABS(r2[-1]);
@@ -874,6 +877,54 @@ MulIn:
 							AT.WorkPointer = r1;
 						goto Restart;
 					}
+				}
+				else if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -DOLLAREXPRESSION ) {
+					DOLLARS d = Dollars + t[FUNHEAD+1], newd = 0;
+					int idol, ido;
+#ifdef WITHPTHREADS
+					int nummodopt, dtype = -1;
+					if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( t[FUNHEAD+1] == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
+							}
+						}
+					}
+#endif
+					if ( d->where && ( d->type == DOLTERMS || d->type == DOLNUMBER ) ) {
+						newd = d;
+					}
+					else {
+						if ( ( newd = DolToTerms(BHEAD t[FUNHEAD+1]) ) == 0 ) {
+							goto NormZero;
+						}
+					}
+					if ( newd->where[0] == 0 ) goto NormZero;
+					if ( *t == FIRSTTERM ) {
+						idol = newd->where[0];
+						for ( ido = 0; ido < idol; ido++ ) termout[ido] = newd->where[ido];
+					}
+					else if ( *t == CONTENTTERM ) {
+						WORD *tterm;
+						tterm = newd->where;
+						idol = tterm[0];
+						for ( ido = 0; ido < idol; ido++ ) termout[ido] = tterm[ido];
+						tterm += *tterm;
+						while ( *tterm ) {
+							if ( ContentMerge(BHEAD termout,tterm) < 0 ) goto FromNorm;
+							tterm += *tterm;
+						}
+					}
+					if ( newd != d ) {
+						if ( newd->factors ) M_free(newd->factors,"Dollar factors");
+						M_free(newd,"Copy of dollar variable");
+						newd = 0;
+					}
+					goto PasteIn;
 				}
 				break;
 			case TERMSINEXPR:
@@ -2427,7 +2478,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3770,12 +3821,12 @@ OverWork:
 #endif
 
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
