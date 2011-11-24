@@ -157,7 +157,8 @@ static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndS
  * A simple check for unrecoverable errors.
  */
 #define CHECK(condition) _CHECK(condition, __FILE__, __LINE__)
-#define _CHECK(condition, file, line) \
+#define _CHECK(condition, file, line) __CHECK(condition, file, line)
+#define __CHECK(condition, file, line) \
 	do { \
 		if ( !(condition) ) { \
 			Error0("Fatal error at " file ":" #line); \
@@ -1574,6 +1575,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 */
 		WORD oldBracketOn = AR.BracketOn;
 		WORD *oldBrackBuf = AT.BrackBuf;
+		WORD oldbracketindexflag = AT.bracketindexflag;
 		LONG maxinterms;    /* the maximum number of terms in the next patch */
 		int cmaxinterms;    /* a variable controling the transition of maxinterms */
 		LONG termsinpatch;  /* the number of filled terms in the current patch */
@@ -1584,9 +1586,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			MesPrint("[%d] Expression %d has problems in scratchfile",PF.me,i);
 			return(-1);
 		}
-		if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 		term[3] = i;
-		AR.CurExpr = i;
 		if ( AR.outtohide ) {
 			SeekScratch(AR.hidefile,&position);
 			e->onfile = position;
@@ -1597,11 +1597,14 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			e->onfile = position;
 			if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) return(-1);
 		}
+		AR.DeferFlag = 0;  /* The master leave the brackets!!! */
 		AR.Eside = RHSIDE;
 		if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
 			AR.BracketOn = 1;
 			AT.BrackBuf = AM.BracketFactors;
+			AT.bracketindexflag = 1;
 		}
+		if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 /*
 			#] write prototype to outfile: 
 			#[ initialize sendbuffer if necessary:
@@ -1640,7 +1643,6 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			sb->buff[next], send sb->buff[next] to next slave and go on
 			filling the now empty sb->buff[0].
 */
-		AR.DeferFlag = 0;  /* The master leave the brackets!!! */
 		AN.ninterms = 0;
 		termsinpatch = 0;
 		maxinterms = PF_maxinterms / 100;
@@ -1703,8 +1705,8 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				AR.infile->handle = -1;
 				remove(AR.infile->name);
 				PUTZERO(AR.infile->POposition);
-				AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 			}
+			AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 		}
 		if ( AR.outtohide ) AR.outfile = AR.hidefile;
 		PF.parallel = 1;
@@ -1722,8 +1724,13 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
 		 && ( ( e->vflags & ISFACTORIZED ) != 0 ) )
 			poly_unfactorize_expression(e);
+		AT.bracketindexflag = oldbracketindexflag;
 		AR.GetFile = 0;
 		AR.outtohide = 0;
+		/*
+		 * NOTE: e->numdummies, e->vflags and AR.exprflags will be updated
+		 *       after gathering the information from all slaves.
+		 */
 /*
 			#] Clean up & EndSort: 
 			#[ Collect (stats,prepro,...):
@@ -1822,12 +1829,21 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			loop for all terms to get from master, call Generator for each of them
 			then call EndSort and do cleanup (to be implemented)
 */
+		WORD oldBracketOn = AR.BracketOn;
+		WORD *oldBrackBuf = AT.BrackBuf;
+		WORD oldbracketindexflag = AT.bracketindexflag;
+
 		SeekScratch(AR.outfile,&position);
 		e->onfile = position;
 		AR.DeferFlag = AC.ComDefer;
 		AR.Eside = RHSIDE;
-		AR.MaxDum = AM.IndDum;
+		if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
+			AR.BracketOn = 1;
+			AT.BrackBuf = AM.BracketFactors;
+			AT.bracketindexflag = 1;
+		}
 		NewSort(BHEAD0);
+		AR.MaxDum = AM.IndDum;
 		AN.ninterms = 0;
 		PF_linterms = 0;
 		PF.parallel = 1;
@@ -1899,6 +1915,9 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			fout->POsize   = oldsize;
 			fout->POfill = fout->POfull = fout->PObuffer;
 		}
+		AR.BracketOn = oldBracketOn;
+		AT.BrackBuf = oldBrackBuf;
+		AT.bracketindexflag = oldbracketindexflag;
 /*
 			#] Generator Loop & EndSort : 
 			#[ Collect (stats,prepro...) :
@@ -3171,8 +3190,8 @@ void PF_markPotModDollars(void)
 */
 
 /**
- * Broadcasts AR.expflags and e->vflags, e->numdummies of each expression
- * from the master to all slaves.
+ * Broadcasts AR.expflags and several properties of each expression,
+ * e.g., e->vflags, from the master to all slaves.
  *
  * @return 0 if OK, nonzero on error.
  */
@@ -3184,14 +3203,16 @@ int PF_BroadcastExpFlags(void) {
 /*
  		#[ Master :
 */
-	PF_longMultiPack((UBYTE *)&AR.expflags, 1, sizeof(WORD), PF_WORD);
-	for ( i = 0; i < NumExpressions; i++ ) {
-		e = &Expressions[i];
-		PF_longMultiPack((UBYTE *)&e->vflags,     1, sizeof(WORD), PF_WORD);
-		PF_longMultiPack((UBYTE *)&e->numdummies, 1, sizeof(WORD), PF_WORD);
-	}
+		PF_longMultiPack((UBYTE *)&AR.expflags, 1, sizeof(WORD), PF_WORD);
+		for ( i = 0; i < NumExpressions; i++ ) {
+			e = &Expressions[i];
+			PF_longMultiPack((UBYTE *)&e->counter,    1, sizeof(WORD), PF_WORD);
+			PF_longMultiPack((UBYTE *)&e->vflags,     1, sizeof(WORD), PF_WORD);
+			PF_longMultiPack((UBYTE *)&e->numdummies, 1, sizeof(WORD), PF_WORD);
+			PF_longMultiPack((UBYTE *)&e->numfactors, 1, sizeof(WORD), PF_WORD);
+		}
 /*
- 		#] Master : 
+ 		#] Master :
 */
 	}
 	if ( PF_longBroadcast() ) return -1;
@@ -3199,21 +3220,23 @@ int PF_BroadcastExpFlags(void) {
 /*
  		#[ Slave :
 */
-	PF_longMultiUnPack((UBYTE *)&AR.expflags, 1, sizeof(WORD), PF_WORD);
-	for ( i = 0; i < NumExpressions; i++ ) {
-		e = &Expressions[i];
-		PF_longMultiUnPack((UBYTE *)&e->vflags,     1, sizeof(WORD), PF_WORD);
-		PF_longMultiUnPack((UBYTE *)&e->numdummies, 1, sizeof(WORD), PF_WORD);
-	}
+		PF_longMultiUnPack((UBYTE *)&AR.expflags, 1, sizeof(WORD), PF_WORD);
+		for ( i = 0; i < NumExpressions; i++ ) {
+			e = &Expressions[i];
+			PF_longMultiUnPack((UBYTE *)&e->counter,    1, sizeof(WORD), PF_WORD);
+			PF_longMultiUnPack((UBYTE *)&e->vflags,     1, sizeof(WORD), PF_WORD);
+			PF_longMultiUnPack((UBYTE *)&e->numdummies, 1, sizeof(WORD), PF_WORD);
+			PF_longMultiUnPack((UBYTE *)&e->numfactors, 1, sizeof(WORD), PF_WORD);
+		}
 /*
- 		#] Slave : 
+ 		#] Slave :
 */
 	}
 	return 0;
 }
 
 /*
-  	#] PF_BroadcastExpFlags : 
+  	#] PF_BroadcastExpFlags :
   	#[ PF_SetScratch :
 */
 
@@ -3322,7 +3345,7 @@ static int PF_WalkThroughExprMaster(FILEHANDLE *curfile, int dl)
 	Returns <=0 if the expression is ready, or dl+1;
 */
 
-static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
+static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, LONG *counter, int dl)
 {
 	LONG l=0;
 	for(;;){
@@ -3351,7 +3374,7 @@ static int PF_WalkThroughExprSlave(FILEHANDLE *curfile, EXPRESSIONS e, int dl)
 		dl=*(curfile->POfill);
 		if(dl == 0)
 			return l-PF.exprbufsize;
-		(e->counter)++;
+		(*counter)++;
 		if(dl<0){/*compressed term*/
 			if(curfile->POstop-curfile->POfill < 1){
 				if(PF_pushScratch(curfile))
@@ -3418,7 +3441,7 @@ static int PF_rhsBCastMaster(FILEHANDLE *curfile, EXPRESSIONS e)
 static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 {
 	LONG l=1;/*PF_WalkThroughExpr returns length + 1*/
-	e->counter=0;
+	LONG counter = 0;
 	do{
 		/*
 		 * We need to broadcast PF.exprbufsize+1 WORDs because PF_WalkThroughExprSlave
@@ -3431,7 +3454,7 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 		}
 		if ( PF_Bcast(curfile->POfill, (PF.exprbufsize + 1) * sizeof(WORD)) )
 			return(-1);
-		l=PF_WalkThroughExprSlave(curfile,e,l-1);
+		l = PF_WalkThroughExprSlave(curfile, &counter, l - 1);
 	}while(l>0);
 	if(l<0){/*The tail is extra, decrease POfill*/
 		if(l<-PF.exprbufsize)/*error due to a PF_pushScratch() failure */
@@ -3441,6 +3464,7 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 	curfile->POfull=curfile->POfill;
 	if ( curfile != AR.hidefile ) AR.InInBuf = curfile->POfull-curfile->PObuffer;
 	else                          AR.InHiBuf = curfile->POfull-curfile->PObuffer;
+	CHECK(counter == e->counter + 1);  /* The first term is the prototype. */
 	return(0);
 }
 
@@ -3651,15 +3675,16 @@ static int PF_Wait4MasterIP(int tag)
 static int PF_DoOneExpr(void)/*the processor*/
 {
 				GETIDENTITY
-				EXPRESSIONS e = Expressions + PF.exprtodo;
+				EXPRESSIONS e;
+				int i;
+				WORD *term;
 				POSITION position, outposition;
 				FILEHANDLE *fi, *fout;
 				LONG dd = 0;
 				WORD oldBracketOn = AR.BracketOn;
 				WORD *oldBrackBuf = AT.BrackBuf;
-				int i;
-				WORD *term;
-
+				WORD oldbracketindexflag = AT.bracketindexflag;
+				e = Expressions + PF.exprtodo;
 				i = PF.exprtodo;
 				AR.CurExpr = i;
 				AR.SortType = AC.SortType;
@@ -3667,6 +3692,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 				if ( ( e->vflags & ISFACTORIZED ) != 0 ) {
 					AR.BracketOn = 1;
 					AT.BrackBuf = AM.BracketFactors;
+					AT.bracketindexflag = 1;
 				}
 
 				position = AS.OldOnFile[i];
@@ -3676,6 +3702,12 @@ static int PF_DoOneExpr(void)/*the processor*/
 				else {
 					AR.GetFile = 0; fi = AR.infile;
 				}
+/*
+				PUTZERO(fi->POposition);
+				if ( fi->handle >= 0 ) {
+					fi->POfill = fi->POfull = fi->PObuffer;
+				}
+*/
 				SetScratch(fi,&position);
 				term = AT.WorkPointer;
 				if ( GetTerm(BHEAD term) <= 0 ) {
@@ -3691,8 +3723,18 @@ static int PF_DoOneExpr(void)/*the processor*/
 				if ( fout->handle >= 0 ) {
 					fout->POposition = outposition;
 				}
-				if ( PutOut(BHEAD term,&outposition,fout,0) < 0 )
-					return(-1);
+/*
+				The next statement is needed because we need the system
+				to believe that the expression is at position zero for
+				the moment. In this worker, with no memory of other expressions,
+				it is. This is needed for when a bracket index is made
+				because there e->onfile is an offset. Afterwards, when the
+				expression is written to its final location in the masters
+				output e->onfile will get its real value.
+*/
+				PUTZERO(e->onfile);
+				if ( PutOut(BHEAD term,&outposition,fout,0) < 0 ) return -1;
+
 				AR.DeferFlag = AC.ComDefer;
 
 /*				AR.sLevel = AB[0]->R.sLevel;*/
@@ -3707,7 +3749,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 					  StoreTerm(BHEAD term);
 				  }
 				  else {
-				  if ( AC.CollectFun && *term <= (LONG)(AM.MaxTer/(2*sizeof(WORD))) ) {
+				  if ( AC.CollectFun && *term <= (AM.MaxTer/(2*(LONG)sizeof(WORD))) ) {
 					if ( GetMoreTerms(term) < 0 ) {
 					  LowerSortLevel(); return(-1);
 					}
@@ -3728,8 +3770,8 @@ static int PF_DoOneExpr(void)/*the processor*/
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  }
 				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
-					  && ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
-					  PolyFunClean(BHEAD term);
+						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
+						PolyFunClean(BHEAD term);
 				  }
 				  if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); return(-1);
@@ -3752,18 +3794,18 @@ static int PF_DoOneExpr(void)/*the processor*/
 				AR.BracketOn = oldBracketOn;
 				AT.BrackBuf = oldBrackBuf;
 				if ( ( e->vflags & TOBEFACTORED ) != 0 )
-					poly_factorize_expression(e);
+						poly_factorize_expression(e);
 				else if ( ( ( e->vflags & TOBEUNFACTORED ) != 0 )
 				 && ( ( e->vflags & ISFACTORIZED ) != 0 ) )
-					poly_unfactorize_expression(e);
+						poly_unfactorize_expression(e);
 				if ( AM.S0->TermsLeft )   e->vflags &= ~ISZERO;
 				else                      e->vflags |= ISZERO;
 				if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
-/*
-				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
-				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;
-*/
+/*				if ( AM.S0->TermsLeft ) AR.expflags |= ISZERO;
+				if ( AR.expchanged )    AR.expflags |= ISUNMODIFIED;*/
 				AR.GetFile = 0;
+				AT.bracketindexflag = oldbracketindexflag;
+
 				fout->POfull = fout->POfill;
 	return(0);
 }
@@ -3827,7 +3869,10 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 	if (PF_RawRecv(&src, &exprData,sizeof(bufIPstruct_t),&i)!= sizeof(bufIPstruct_t))
 		return(-1);
 	/*Fill in the expression data:*/
-	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn));
+/*	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn)); */
+	e->counter    = exprData.e.counter;
+	e->vflags     = exprData.e.vflags;
+	e->numdummies = exprData.e.numdummies;
 	if ( !(e->vflags & ISZERO) )       AR.expflags |= ISZERO;
 	if ( !(e->vflags & ISUNMODIFIED) ) AR.expflags |= ISUNMODIFIED;
 	SeekScratch(fout,&pos);
@@ -3916,7 +3961,7 @@ static int PF_ReadMaster(void)/*reads directly to its scratch!*/
 	PF.exprtodo=exprData.i;
 	e=Expressions + PF.exprtodo;
 	/*Fill in the expression data:*/
-	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn));
+/*	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn)); */
 	if ( e->status == HIDDENLEXPRESSION || e->status == HIDDENGEXPRESSION )
 		fi = AR.hidefile;
 	else

@@ -734,7 +734,7 @@ WORD DoExecute(WORD par, WORD skip)
 		if( (RetCode=PF_mkDollarsParallel())!=0 )
 			return(RetCode);
 	/* Broadcast AR.expflags, which may be used on the slaves in the next module
-	 * via ZERO_ or UNCHANGED_. It also broadcasts e->vflags and e->numdummies
+	 * via ZERO_ or UNCHANGED_. It also broadcasts e->vflags, e->numdummies, ...
 	 * of each expression. (TU 23 Sep 2011) */
 	RetCode = PF_BroadcastExpFlags();
 	if ( RetCode ) return RetCode;
