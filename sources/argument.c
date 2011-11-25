@@ -2079,6 +2079,7 @@ getout:
   	#] step 4 :
   	#[ step 5 : If not in the tables, we have to do this by hard work.
 */
+
 	a = argout;
 	while ( *a ) NEXTARG(a);
 	if ( poly_factorize_argument(BHEAD argfree,a) < 0 ) {
@@ -2170,7 +2171,31 @@ getout:
 	for ( i = 0; i < ii; i++ ) argcopy[i] = argout[i];
 	a1 = a;
 	while ( *a1 ) {
-		if ( *a1 == -SNUMBER && a1[1] == -1 ) { sign = -sign; break; }
+		if ( *a1 == -SNUMBER && a1[1] < 0 ) {
+			sign = -sign; a1[1] = -a1[1];
+			if ( a1[1] == 1 ) {
+				a2 = a1+2; while ( *a2 ) NEXTARG(a2);
+				i = a2-a1-2; a2 = a1+2;
+				NCOPY(a1,a2,i);
+				*a1 = 0;
+			}
+			while ( *a1 ) NEXTARG(a1);
+			break;
+		}
+		else {
+			if ( *a1 > 0 && *a1 == a1[ARGHEAD]+ARGHEAD && a1[*a1-1] < 0 ) {
+				a1[*a1-1] = -a1[*a1-1]; sign = -sign;
+			}
+			if ( *a1 == ARGHEAD+4 && a1[ARGHEAD+1] == 1 && a1[ARGHEAD+2] == 1 ) {
+				a2 = a1+ARGHEAD+4; while ( *a2 ) NEXTARG(a2);
+				i = a2-a1-ARGHEAD-4; a2 = a1+ARGHEAD+4;
+				NCOPY(a1,a2,i);
+				*a1 = 0;
+				break;
+			}
+			while ( *a1 ) NEXTARG(a1);
+			break;
+		}
 		NEXTARG(a1);
 	}
 	i = a1 - a;
