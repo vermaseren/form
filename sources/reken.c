@@ -2994,8 +2994,8 @@ int ChineseRemainder(PHEAD MODNUM *a1, MODNUM *a2, MODNUM *a)
 #endif
 
 /*
- 		#] ChineseRemainder:
-  	#] RekenLong :
+ 		#] ChineseRemainder: 
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -3603,11 +3603,28 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
  *	trouble that the power of a variable gets larger than the prime number.
  */
 
+void StartPrimeList(PHEAD0)
+{
+	int i, j;
+	AR.PrimeList[AR.numinprimelist++] = 3;
+	for ( i = 5; i < 46340; i += 2 ) {
+		for ( j = 0; j < AR.numinprimelist && AR.PrimeList[j]*AR.PrimeList[j] <= i; j++ ) {
+			if ( i % AR.PrimeList[j] == 0 ) goto nexti;
+		}
+		AR.PrimeList[AR.numinprimelist++] = i;
+nexti:;
+	}
+	AR.notfirstprime = 1;
+}
+
 WORD NextPrime(PHEAD WORD num)
 {
 	int i, j;
 	WORD *newpl;
 	LONG newsize, x;
+#if ( BITSINWORD == 32 )
+	if ( AR.notfirstprime == 0 ) StartPrimeList(BHEAD0);
+#endif
 	if ( num > AT.inprimelist ) {
 		while ( AT.inprimelist < num ) {
 			if ( num >= AT.sizeprimelist ) {
@@ -3628,9 +3645,15 @@ WORD NextPrime(PHEAD WORD num)
 			else { i = AT.primelist[AT.inprimelist]; }
 			while ( i > MAXPOWER ) {
 				i -= 2; x = i;
+#if ( BITSINWORD == 32 )
+				for ( j = 0; j < AR.numinprimelist && AR.PrimeList[j]*(LONG)(AR.PrimeList[j]) <= x; j++ ) {
+					if ( x % AR.PrimeList[j] == 0 ) goto nexti;
+				}
+#else
 				for ( j = 3; j*((LONG)j) <= x; j += 2 ) {
 					if ( x % j == 0 ) goto nexti;
 				}
+#endif
 				AT.inprimelist++;
 				AT.primelist[AT.inprimelist] = i;
 				break;

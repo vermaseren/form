@@ -1771,6 +1771,11 @@ struct R_const {
 	int     wranfnpair1;
 	int     wranfnpair2;
 	int     dummyforpadding;
+#if ( BITSINWORD == 32 )
+    WORD    PrimeList[5000];
+	WORD    numinprimelist;
+    WORD    notfirstprime;
+#endif
     WORD    GetFile;               /* (R) Where to get the terms {like Hide} */
     WORD    KeptInHold;            /* (R) */
     WORD    BracketOn;             /* (R) Intensly used in poly_ */
