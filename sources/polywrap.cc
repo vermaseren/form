@@ -181,7 +181,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	
 	int pow = pa.degree(0);
 	poly lcoeffb(pb.integer_lcoeff());
-	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
+//	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
 	
 	lcoeffb *= poly(BHEAD lcoeffb.sign());
 	poly den(BHEAD 1);
@@ -737,7 +737,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 	}
 	else {
 		// allocate size
-		argout = (WORD*) Malloc1(len*sizeof(WORD), "poly_factorize");
+		argout = (WORD*) Malloc1((len+1)*sizeof(WORD), "poly_factorize");
 	}
 
 	WORD *old_argout = argout;
@@ -797,7 +797,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 }
 
 /*
-  	#] poly_factorize : 
+  	#] poly_factorize :
   	#[ poly_factorize_argument :
 */
  
@@ -850,7 +850,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 }
 
 /*
-  	#] poly_factorize_dollar : 
+  	#] poly_factorize_dollar :
   	#[ poly_factorize_expression :
 */
 

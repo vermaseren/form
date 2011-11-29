@@ -3603,6 +3603,8 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
  *	trouble that the power of a variable gets larger than the prime number.
  */
 
+#if ( BITSINWORD == 32 )
+
 void StartPrimeList(PHEAD0)
 {
 	int i, j;
@@ -3616,6 +3618,8 @@ nexti:;
 	}
 	AR.notfirstprime = 1;
 }
+
+#endif
 
 WORD NextPrime(PHEAD WORD num)
 {
@@ -3673,7 +3677,7 @@ nexti:;
 }
  
 /*
- 		#] NextPrime : 
+ 		#] NextPrime :
  		#[ wranf :
 
 		A random number generator that generates random WORDs with a very
@@ -3785,5 +3789,5 @@ UWORD iranf(PHEAD UWORD imax)
 
 /*
  		#] wranf : 
-  	#] Functions : 
+  	#] Functions :
 */
