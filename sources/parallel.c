@@ -3873,6 +3873,7 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 	e->counter    = exprData.e.counter;
 	e->vflags     = exprData.e.vflags;
 	e->numdummies = exprData.e.numdummies;
+	e->numfactors = exprData.e.numfactors;
 	if ( !(e->vflags & ISZERO) )       AR.expflags |= ISZERO;
 	if ( !(e->vflags & ISUNMODIFIED) ) AR.expflags |= ISUNMODIFIED;
 	SeekScratch(fout,&pos);
