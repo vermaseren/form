@@ -179,9 +179,14 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	pa *= denb;
 	pb *= dena;
 	
-	int pow = pa.degree(0);
+	int pow = 0;
+	if (!pa.is_zero()) {
+		for (int i=0; i<AN.poly_num_vars; i++)
+			pow += pa[2+i];
+	}
+	
 	poly lcoeffb(pb.integer_lcoeff());
-//	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
+	//	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
 	
 	lcoeffb *= poly(BHEAD lcoeffb.sign());
 	poly den(BHEAD 1);
@@ -193,14 +198,14 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		den *= lcoeffb;
 	}
 		
-	// Calculate gcd
+	// Calculate div/mod
 	poly pres(BHEAD 0);
 
 	if (divmod==0)
 		pres = pa / pb;
 	else
 		pres = pa % pb;
-
+	
 	// Allocate new memory and convert to Form notation
 	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation(&den)+1)*sizeof(WORD), "poly_divmod");
 	poly::poly_to_argument(pres, res, false, &den);
