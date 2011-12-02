@@ -530,6 +530,10 @@ AM_CONDITIONAL(CONFIG_HTLATEX, [test ! -z "$HTLATEX"])
 AC_PATH_PROG(RUBY, ruby, "")
 AM_CONDITIONAL(CONFIG_RUBY, [test ! -z "$RUBY"])
 
+# Check for strace
+AC_PATH_PROG(STRACE, strace, "")
+AM_CONDITIONAL(CONFIG_STRACE, [test ! -z "$STRACE"])
+
 AC_CONFIG_FILES([
 	Makefile
 	sources/Makefile
