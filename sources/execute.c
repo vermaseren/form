@@ -243,7 +243,7 @@ WORD PopVariables()
 	AC.funpowers = AM.gfunpowers;
 	AC.lPolyFun = AM.gPolyFun;
 	AC.lPolyFunType = AM.gPolyFunType;
-	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;
+	AC.parallelflag = AM.gparallelflag;
 	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
 	AC.properorderflag = AM.gproperorderflag;
     AC.ThreadBucketSize = AM.gThreadBucketSize;
@@ -498,30 +498,6 @@ WORD DoExecute(WORD par, WORD skip)
 	/*See comments to PF_PotModDollars in parallel.c*/
 	PF_markPotModDollars();	
 #endif
-/*
-		AC.mparallelflag was set to PARALLELFLAG in IniModule.
-		It can be set to NOPARALLEL_MOPT or PARALLEL_MOPT (module option)
-		by the compiler. If AC.mparallelflag contains PARALLEL_MOPT,
-		it must be set to PARALLELFLAG, if AM.hparallelflag is PARALLELFLAG:
-*/
-	if ( ( AC.parallelflag == PARALLELFLAG ) ||
-		( ( AC.mparallelflag & PARALLEL_MOPT ) != 0 ) ) {
-		if( ( AC.mparallelflag & NOPARALLEL_MOPT ) == 0 ) {
-			if( AM.hparallelflag != PARALLELFLAG ) {
-				AC.mparallelflag |= ( AC.parallelflag = AM.hparallelflag );
-#ifdef PARALLEL
-				if ( AC.OldParallelStats )
-				MesPrint("WARNING!: $ use in table - module %l is forced to run in sequential mode.", AC.CModule);
-#endif
-			}
-			else {
-				AC.mparallelflag = PARALLELFLAG;
-			}
-		}
-	}
-	else {
-		AC.mparallelflag |= AC.parallelflag;
-	}
 
 	SpecialCleanup(BHEAD0);
 	if ( skip ) goto skipexec;
@@ -568,13 +544,13 @@ WORD DoExecute(WORD par, WORD skip)
 #ifdef PARALLEL
 	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
 	  if ( NumPotModdollars > NumModOptdollars ) 
-		AC.mparallelflag = NOPARALLEL_DOLLAR;
+		AC.mparallelflag |= NOPARALLEL_DOLLAR;
 	  else 
 		for ( i = 0; i < NumPotModdollars; i++ ) {
 		  for ( j = 0; j < NumModOptdollars; j++ ) 
 			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
 		  if ( j >= NumModOptdollars ) {
-			AC.parallelflag = NOPARALLEL_DOLLAR;
+			AC.parallelflag |= NOPARALLEL_DOLLAR;
 			break;
 		  }
 		}
@@ -609,7 +585,7 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 	if ( AC.partodoflag > 0 || ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) ) {
 	  if ( NumPotModdollars > NumModOptdollars ) {
-		AC.mparallelflag = NOPARALLEL_DOLLAR;
+		AC.mparallelflag |= NOPARALLEL_DOLLAR;
 		AS.MultiThreaded = 0;
 		AC.partodoflag = 0;
 	  }
@@ -618,7 +594,7 @@ WORD DoExecute(WORD par, WORD skip)
 		  for ( j = 0; j < NumModOptdollars; j++ ) 
 			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
 		  if ( j >= NumModOptdollars ) {
-			AC.mparallelflag = NOPARALLEL_DOLLAR;
+			AC.mparallelflag |= NOPARALLEL_DOLLAR;
 			AS.MultiThreaded = 0;
 			AC.partodoflag = 0;
 			break;
@@ -630,7 +606,7 @@ WORD DoExecute(WORD par, WORD skip)
 			case MODLOCAL:
 				break;
 			default:
-				AC.mparallelflag = NOPARALLEL_DOLLAR;
+				AC.mparallelflag |= NOPARALLEL_DOLLAR;
 				AS.MultiThreaded = 0;
 				AC.partodoflag = 0;
 				break;
@@ -651,17 +627,9 @@ WORD DoExecute(WORD par, WORD skip)
 		AC.partodoflag = 0;
 	}
 #endif
-#ifdef PARALLEL 
-	if ( ( AC.mparallelflag & NOPARALLEL_DOLLAR ) != 0 ) {
-		if ( AC.mparallelflag == NOPARALLEL_DOLLAR )	
-			if ( AC.OldParallelStats )
-			MesPrint("WARNING!: $-variables - module %l is forced to run in sequential mode.", AC.CModule);
-	}
+#ifdef PARALLEL
 	if ( par == STOREMODULE ){
-		if ( AC.mparallelflag == PARALLELFLAG )
-			if ( AC.OldParallelStats )
-			MesPrint("WARNING!: store module - module %l is forced to run in sequential mode.", AC.CModule);
-		AC.mparallelflag = NOPARALLEL_STORE;
+		AC.mparallelflag |= NOPARALLEL_STORE;
 	}
 /*[20oct2009 mt]:*/
 	if ( ( AC.NumberOfRhsExprInModule > 0 ) &&
@@ -677,9 +645,7 @@ WORD DoExecute(WORD par, WORD skip)
 			}/*if(PF.me != MASTER)*/
 		} 
 		else {
-			AC.mparallelflag = NOPARALLEL_RHS;
-			if ( AC.OldParallelStats )
-			MesPrint("WARNING!: RHS expression names - module %l is forced to run in sequential mode.", AC.CModule);
+			AC.mparallelflag |= NOPARALLEL_RHS;
 		}
 	}
 /*:[20oct2009 mt]*/
@@ -709,6 +675,35 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 #endif
 	if ( AC.ncmod ) SetMods();
+/*
+	Warn if the module has to run in sequential mode due to some problems.
+*/
+#ifdef PARALLEL
+	if ( PF.me == MASTER )
+#endif
+	{
+		if ( !AC.ThreadsFlag || AC.mparallelflag & NOPARALLEL_USER ) {
+			/* The user switched off the parallel execution explicitly. */
+		}
+		else if ( AC.mparallelflag & NOPARALLEL_DOLLAR ) {
+			HighWarning("This module is forced to run in sequential mode due to $-variables");
+		}
+		else if ( AC.mparallelflag & NOPARALLEL_STORE ) {
+			HighWarning("This module is forced to run in sequential mode because it is a store module");
+		}
+		else if ( AC.mparallelflag & NOPARALLEL_RHS ) {
+			HighWarning("This module is forced to run in sequential mode due to RHS expression names");
+		}
+		else if ( AC.mparallelflag & NOPARALLEL_CONVPOLY ) {
+			HighWarning("This module is forced to run in sequential mode due to topolynomial/frompolynomial");
+		}
+		else if ( AC.mparallelflag & NOPARALLEL_TBLDOLLAR ) {
+			HighWarning("This module is forced to run in sequential mode due to $-variable assignments in tables");
+		}
+		else if ( AC.mparallelflag & NOPARALLEL_NPROC ) {
+			HighWarning("This module is forced to run in sequential mode because there is only one processor");
+		}
+	}
 /*
 	Now the actual execution
 */
@@ -830,7 +825,7 @@ skipexec:
 			CleanUp(1);
 			ResetVariables(2);
 			AM.gSlavePatchSize = AM.hSlavePatchSize;
-			AM.gparallelflag = AM.hparallelflag;
+			AM.gparallelflag = PARALLELFLAG;
 			IniVars();
 		}
 	}

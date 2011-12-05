@@ -678,7 +678,7 @@ VOID StartVariables()
 	AM.hparallelflag = AM.gparallelflag =
 	AC.parallelflag = AC.mparallelflag = PARALLELFLAG;
 #ifdef PARALLEL
-	if ( PF.numtasks < 2 ) AM.hparallelflag = NOPARALLEL_NPROC;
+	if ( PF.numtasks < 2 ) AM.hparallelflag |= NOPARALLEL_NPROC;
 #endif
 	AC.tablefilling = 0;
 	AM.resetTimeOnClear = 1;
@@ -970,7 +970,7 @@ WORD IniVars()
 	AT.bracketinfo = 0;
 	AO.IsBracket = 0;
 	AM.gfunpowers = AC.funpowers = COMFUNPOWERS;
-	AC.parallelflag = AC.mparallelflag = AM.gparallelflag;
+	AC.parallelflag = AM.gparallelflag;
 	AC.properorderflag = AM.gproperorderflag = PROPERORDERFLAG;
 	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
     AC.ThreadBucketSize = AM.gThreadBucketSize;

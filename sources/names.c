@@ -1639,8 +1639,8 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 			if ( *tw == LOADDOLLAR ) {
 				Warning("The use of $-variable assignments in tables disables parallel\
  execution for the whole program.");
-				AM.gparallelflag = AC.mparallelflag = AC.parallelflag =
-				AM.hparallelflag = NOPARALLEL_TBLDOLLAR;
+				AM.hparallelflag |= NOPARALLEL_TBLDOLLAR;
+				AC.mparallelflag |= NOPARALLEL_TBLDOLLAR;
 				for ( imd = 0; imd < NumPotModdollars; i++ ) {
 					if ( tw[2] == PotModdollars[imd] ) break;
 				}

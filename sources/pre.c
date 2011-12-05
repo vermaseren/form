@@ -661,7 +661,6 @@ VOID IniModule(int type)
 	PF.parallel=0;
 	/*BTW, this was the bug preventing usage of more than 1 expression!*/
 #endif
-	AC.mparallelflag = PARALLELFLAG;
 
 	AR.BracketOn = 0;
 	AR.StoreData.dirtyflag = 0;
@@ -725,7 +724,7 @@ VOID IniModule(int type)
 	AP.lhdollarerror = 0;
 	AR.PolyFun = AC.lPolyFun;
 	AR.PolyFunType = AC.lPolyFunType;
-	AC.mparallelflag = AC.parallelflag;
+	AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	AC.inparallelflag = 0;
 	NumPotModdollars = 0;
 	AC.topolynomialflag = 0;
@@ -3178,7 +3177,7 @@ int DoEndInside(UBYTE *s)
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 	AR.BracketOn = 0;
 	AS.MultiThreaded = 0;
-	AC.mparallelflag = 0;
+	AC.mparallelflag = PARALLELFLAG;
 	if ( AR.CompressPointer == 0 ) AR.CompressPointer = AR.CompressBuffer;
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 /*

@@ -64,7 +64,7 @@ static KEYWORD ModuleOptions[] = {
 	,{"local",	 			DoModLocal,		MODLOCAL,		0}
 	,{"maximum",			DoModMax,		MODMAX,			0}
 	,{"minimum",			DoModMin,		MODMIN,			0}
-	,{"noparallel",			DoNoParallel,	NOPARALLEL_MOPT,0}
+	,{"noparallel",			DoNoParallel,	NOPARALLEL_USER,0}
 	,{"notinparallel",		DonotinParallel,0,              1}
 	,{"parallel",			DoParallel,     PARALLELFLAG,	0}
 	,{"polyfun",			DoPolyfun,		POLYFUN,		0}
@@ -481,10 +481,7 @@ int DoPolyratfun(UBYTE *s)
 int DoNoParallel(UBYTE *s)
 {
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
-		/*[30jan2004 mt]:*/
-		/*AC.mparallelflag = NOPARALLELFLAG;*/
-		AC.mparallelflag = NOPARALLEL_MOPT;
-		/*:[30jan2004 mt]*/
+		AC.mparallelflag |= NOPARALLEL_USER;
 		return(0);
 	}
 	MesPrint("@NoParallel should not have extra parameters");
@@ -499,17 +496,7 @@ int DoNoParallel(UBYTE *s)
 int DoParallel(UBYTE *s)
 {
 	if ( *s == 0 || *s == ',' || *s == ')' ) {
-		/*[30jan2004 mt]:*/ 
-		/*
-		if ( AM.hparallelflag == NOPARALLELFLAG )
-			AC.mparallelflag = PARALLELFLAG;
-		*/
-		if ( AM.hparallelflag == PARALLELFLAG )
-			AC.mparallelflag = PARALLEL_MOPT;/*Further will be changed to PARALLELFLAG*/
-		/*:[30jan2004 mt]*/
-		else {
-			Warning("Sorry: Parallel execution switched off by $ use in table definition");
-		}
+		AC.mparallelflag &= ~NOPARALLEL_USER;
 		return(0);
 	}
 	MesPrint("@Parallel should not have extra parameters");

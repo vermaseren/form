@@ -5255,7 +5255,9 @@ int CoToPolynomial(UBYTE *inp)
 	if ( *inp == 0 ) {
 		Add2Com(TYPETOPOLYNOMIAL)
 		AC.topolynomialflag |= TOPOLYNOMIALFLAG;
-/*		AC.mparallelflag = NOPARALLEL_MOPT; */
+#ifdef PARALLEL
+		AC.mparallelflag |= NOPARALLEL_CONVPOLY;
+#endif
 		return(0);
 	}
 	MesPrint("&Illegal argument in ToPolynomial statement: '%s'",inp);
@@ -5275,6 +5277,9 @@ int CoFromPolynomial(UBYTE *inp)
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
 	if ( *inp == 0 ) {
 		Add2Com(TYPEFROMPOLYNOMIAL)
+#ifdef PARALLEL
+		AC.mparallelflag |= NOPARALLEL_CONVPOLY;
+#endif
 		return(0);
 	}
 	MesPrint("&Illegal argument in FromPolynomial statement: '%s'",inp);
