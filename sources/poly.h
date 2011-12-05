@@ -103,6 +103,7 @@ public:
 	// properties
 	int sign () const;
 	int degree (int) const;
+	int total_degree () const;
 	int first_variable () const;
 	int number_of_terms () const;
 	const std::vector<int> all_variables () const;	

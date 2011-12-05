@@ -2024,6 +2024,26 @@ int poly::degree (int x) const {
 
 /*
   	#] degree : 
+  	#[ total_degree :
+*/
+
+// returns the total degree of a polynomial (deg=-1 iff a=0)
+int poly::total_degree () const {
+
+	POLY_GETIDENTITY(*this);
+	
+	int tot_deg = -1;
+	for (int i=1; i<terms[0]; i+=terms[i]) {
+		int deg=0;
+		for (int j=0; j<AN.poly_num_vars; j++)
+			deg += terms[i+1+j];
+		tot_deg = MaX(deg, tot_deg);
+	}
+	return tot_deg;
+}
+
+/*
+  	#] total_degree : 
   	#[ integer_lcoeff :
 */
 

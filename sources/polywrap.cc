@@ -179,11 +179,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	pa *= denb;
 	pb *= dena;
 	
-	int pow = 0;
-	if (!pa.is_zero()) {
-		for (int i=0; i<AN.poly_num_vars; i++)
-			pow += pa[2+i];
-	}
+	int pow = pa.total_degree();
 	
 	poly lcoeffb(pb.integer_lcoeff());
 	//	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
