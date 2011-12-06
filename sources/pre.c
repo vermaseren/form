@@ -2600,6 +2600,7 @@ int DoDo(UBYTE *s)
 		loop->contents = s;
 	}
 	else if ( ( chartype[*s] == 0 ) || ( *s == '[' ) ) {
+		int oldNumPotModdollars = NumPotModdollars;
 		t = s;
 		if ( ( s = SkipAName(s) ) == 0 ) goto illdo;
 		c = *s; *s = 0;
@@ -2648,6 +2649,7 @@ int DoDo(UBYTE *s)
 			return(-1);
 		}
 		AP.PreAssignFlag = 0;
+		NumPotModdollars = oldNumPotModdollars;
 		*uu = 0;
 	}
 	else goto illdo; /* Syntax problems */
@@ -5331,6 +5333,7 @@ int DoFromExternal(UBYTE *s)
 		}
 		/*[18may20006 mt]:*/
 		if(*prevar == '$'){/*Put the answer to the dollar variable*/
+			int oldNumPotModdollars = NumPotModdollars;
 			/*Here lbuf is the actual length of buf!*/
 			/*"prevar=buf'\0'":*/
 			UBYTE *pbuf=Malloc1(StrLen(prevar)+1+lbuf+1,"Fromexternal to dollar");
@@ -5345,6 +5348,7 @@ int DoFromExternal(UBYTE *s)
 				Error1("External channel: can't asign output to dollar variable ",prevar);
 			}
 			AP.PreAssignFlag = 0;
+			NumPotModdollars = oldNumPotModdollars;
 			M_free(pbuf,"Fromexternal to dollar");
 		}else{
 			/*:[18may20006 mt]*/

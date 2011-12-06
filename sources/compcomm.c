@@ -5553,7 +5553,6 @@ int CoDo(UBYTE *inp)
 		}
 		*w++ = numparam;
 		*inp = c;
-#ifdef WITHPTHREADS
 		{
 		  int i;
 		  WORD *pmd;
@@ -5565,10 +5564,6 @@ int CoDo(UBYTE *inp)
 			*pmd = numparam;
 		  }
 		}
-#endif
-#ifdef PARALLEL
-		PF_statPotModDollar(numparam,1);
-#endif
 	}
 	w++;  /* space for the level of the enddo statement */
 	while ( *inp == ',' ) inp++;
@@ -5664,7 +5659,6 @@ int CoFactDollar(UBYTE *inp)
 			MesPrint("&FactDollar should have a single $variable for its argument");
 			return(1);
 		}
-#ifdef WITHPTHREADS
 		{
 		  int i;
 		  WORD *pmd;
@@ -5676,10 +5670,6 @@ int CoFactDollar(UBYTE *inp)
 			*pmd = numdollar;
 		  }
 		}
-#endif
-#ifdef PARALLEL
-		PF_statPotModDollar(numdollar,1);
-#endif
 	}
 	else {
 		MesPrint("&%s is not a $-variable",inp);

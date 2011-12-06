@@ -1821,8 +1821,6 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 /*
 	Add to the list of potentially modified dollars (for PARALLEL)
 */
-/*[06nov2005 mt]:*/
-#ifdef WITHPTHREADS
 	{
 	  int i;
 	  WORD *pmd;
@@ -1834,25 +1832,6 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 		*pmd = number;
 	  }
 	}
-#else
-#ifdef REMOVEDBY_MT
-	{
-	  int i;
-	  WORD *pmd;
-	  for ( i = 0; i < NumPotModdollars; i++ ) {
-		if ( number == PotModdollars[i] ) break;
-	  }
-	  if ( i >= NumPotModdollars ) {
-		pmd = (WORD *)FromList(&AC.PotModDolList);
-		*pmd = number;
-	  }
-	}
-#endif
-#endif
-#ifdef PARALLEL
-	PF_statPotModDollar(number,1);
-#endif
-/*:[06nov2005 mt]*/
 	return(error);
 }
 
@@ -1950,15 +1929,3 @@ int CoFactorCache(UBYTE *inp)
 /*
   	#] CoFactorCache : 
 */
-
-
-
-
-
-
-
-
-
-
-
-

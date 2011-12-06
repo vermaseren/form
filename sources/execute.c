@@ -494,10 +494,6 @@ WORD DoExecute(WORD par, WORD skip)
 #ifdef PARALLELCODE
 	int j;
 #endif
-#ifdef PARALLEL
-	/*See comments to PF_PotModDollars in parallel.c*/
-	PF_markPotModDollars();	
-#endif
 
 	SpecialCleanup(BHEAD0);
 	if ( skip ) goto skipexec;
