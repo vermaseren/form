@@ -5351,9 +5351,7 @@ int DoFromExternal(UBYTE *s)
 			NumPotModdollars = oldNumPotModdollars;
 			M_free(pbuf,"Fromexternal to dollar");
 		}else{
-			/*:[18may20006 mt]*/
-			cc=PutPreVar(prevar,buf,0,1);
-			/*[18may20006 mt]:*/
+			cc = PutPreVar(prevar, buf, 0, 1) < 0;
 		}
 		/*:[18may20006 mt]*/
 		M_free(buf,"Fromexternal");
