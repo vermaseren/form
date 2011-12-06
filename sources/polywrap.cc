@@ -714,6 +714,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 	int len = with_arghead ? ARGHEAD : 0;
 
 	if (!num.is_one() || !den.is_one()) {
+		len++;
 		len += MaX(ABS(num[num[1]]), den[den[1]])*2+1;
 		len += with_arghead ? ARGHEAD : 1;
 	}
@@ -738,7 +739,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 	}
 	else {
 		// allocate size
-		argout = (WORD*) Malloc1((len+1)*sizeof(WORD), "poly_factorize");
+		argout = (WORD*) Malloc1(len*sizeof(WORD), "poly_factorize");
 	}
 
 	WORD *old_argout = argout;
@@ -765,7 +766,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 		if (!with_arghead)
 			*argout++=0;
 		else {
-			/*
+			/* TODO: uncomment!?
 			if (ToFast(old_argout, old_argout))
 				argout = old_argout+2;
 			*/
@@ -793,7 +794,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
-
+	
 	return old_argout;
 }
 
