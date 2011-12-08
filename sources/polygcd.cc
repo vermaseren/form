@@ -149,7 +149,7 @@ const poly polygcd::integer_content (const poly &a) {
 	if (a.modp>0) return a.integer_lcoeff();	
 
 	poly c(BHEAD 0, 0, 1);
-	WORD *d = (WORD *)NumberMalloc("integer content");
+	WORD *d = (WORD *)NumberMalloc("polygcd::integer_content");
 	WORD nc=0;
 
 	for (int i=0; i<AN.poly_num_vars; i++)
@@ -171,7 +171,7 @@ const poly polygcd::integer_content (const poly &a) {
 
 	if (a.sign() != c.sign()) c *= poly(BHEAD -1);
 	
-	NumberFree(d,"integer content");
+	NumberFree(d,"polygcd::integer_content");
 	
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : integer_content(" << a << ") = " << c << endl;
@@ -430,9 +430,9 @@ const poly polygcd::chinese_remainder (const poly &a1, const poly &m1, const pol
 	POLY_GETIDENTITY(a1);
 	
 	WORD nx,ny,nz;
-	UWORD *x = (UWORD *)NumberMalloc("chinese remainder");
-	UWORD *y = (UWORD *)NumberMalloc("chinese remainder");
-	UWORD *z = (UWORD *)NumberMalloc("chinese remainder");
+	UWORD *x = (UWORD *)NumberMalloc("polygcd::chinese_remainder");
+	UWORD *y = (UWORD *)NumberMalloc("polygcd::chinese_remainder");
+	UWORD *z = (UWORD *)NumberMalloc("polygcd::chinese_remainder");
 
 	GetLongModInverses(BHEAD (UWORD *)&m1[2+AN.poly_num_vars], m1[m1[1]],
 										 (UWORD *)&m2[2+AN.poly_num_vars], m2[m2[1]],
@@ -455,9 +455,9 @@ const poly polygcd::chinese_remainder (const poly &a1, const poly &m1, const pol
 	
 	poly res(BHEAD y,ny);
 
-	NumberFree(x,"chinese remainder");
-	NumberFree(y,"chinese remainder");
-	NumberFree(z,"chinese remainder");
+	NumberFree(x,"polygcd::chinese_remainder");
+	NumberFree(y,"polygcd::chinese_remainder");
+	NumberFree(z,"polygcd::chinese_remainder");
 
 #ifdef DEBUGALL
 	cout << "*** [" << thetime() << "]  RES : chinese_remainder(" << a1 << "," << m1 << "," << a2 << "," << m2 << ") = " << res << endl;

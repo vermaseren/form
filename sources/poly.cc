@@ -56,7 +56,7 @@ poly::poly (PHEAD int a, WORD modp, WORD modn):
 {
 	POLY_STOREIDENTITY;
 	
-	terms = TermMalloc("polynomial constructor");
+	terms = TermMalloc("poly::poly(int)");
 
 	if (a == 0) {
 		terms[0] = 1; // length
@@ -85,7 +85,7 @@ poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
 {
 	POLY_STOREIDENTITY;
 	
-	terms = TermMalloc("polynomial constructor");
+	terms = TermMalloc("poly::poly(UWORD*,WORD)");
 
 	terms[0] = 3 + AN.poly_num_vars + ABS(na);               // length
 	terms[1] = terms[0] - 1;                                 // length
@@ -108,7 +108,7 @@ poly::poly (const poly &a, WORD modp, WORD modn):
 	POLY_GETIDENTITY(a);
 	POLY_STOREIDENTITY;
 	
-	terms = TermMalloc("polynomial constructor");
+	terms = TermMalloc("poly::poly(poly&)");
 
 	*this = a;
 
@@ -126,9 +126,9 @@ poly::~poly () {
 	POLY_GETIDENTITY(*this);
 	
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
-		TermFree(terms, "polynomial destructor");
+		TermFree(terms, "poly::~poly");
 	else
-		delete terms;
+		M_free(terms, "poly::~poly");
 }
 
 /*
@@ -149,13 +149,13 @@ void poly::expand_memory (int i) {
 		Terminate(1);
 	}
 	
-	WORD *newterms = new WORD[new_size_of_terms];
+	WORD *newterms = (WORD *)Malloc1(new_size_of_terms * sizeof(WORD), "poly::expand_memory");
 	memcpy(newterms, terms, size_of_terms*sizeof(WORD));
 
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
-		TermFree(terms, "poly expand memory");
+		TermFree(terms, "poly::expand_memory");
 	else
-		delete terms;
+		M_free(terms, "poly::expand_memory");
 
 	terms = newterms;
 	size_of_terms = new_size_of_terms;
@@ -369,7 +369,7 @@ const poly & poly::normalize() {
 
 	// find and sort all monomials
 	// terms[0]/num_vars+3 is an upper bound for number of terms in a
-	WORD **p = new WORD*[terms[0]/(AN.poly_num_vars+3)];
+	WORD **p = (WORD **)Malloc1(terms[0]/(AN.poly_num_vars+3) * sizeof(WORD*), "poly::normalize");
 	
 	int nterms = 0;
 	for (int i=1; i<terms[0]; i+=terms[i])
@@ -379,9 +379,9 @@ const poly & poly::normalize() {
 
 	WORD *tmp;
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
-		tmp = (WORD *) TermMalloc("polynomial normalization");
+		tmp = (WORD *)TermMalloc("poly::normalize");
 	else
-		tmp = new WORD[size_of_terms];
+		tmp = (WORD *)Malloc1(size_of_terms * sizeof(WORD), "poly::normalize");
 		
 	int j=1;
 	int prevj=0;
@@ -427,12 +427,12 @@ const poly & poly::normalize() {
 	tmp[0] = j;
 	memcpy(terms,tmp,tmp[0]*sizeof(UWORD));
 
-	delete p;
+	M_free(p, "poly::normalize");
 	
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
-		TermFree(tmp, "polynomial normalization");
+		TermFree(tmp, "poly::normalize");
 	else
-		delete tmp;
+		M_free(tmp, "poly::normalize");
 
 	return *this;
 }
@@ -949,7 +949,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
 
 	for (int ai=1, i=0; ai<a[0]; ai+=a[ai], i++) {
-		heap[i] = (WORD *) NumberMalloc("polynomial multiplication (heap)");
+		heap[i] = (WORD *) NumberMalloc("poly::mul_heap");
 		heap[i][0] = ai;
 		heap[i][1] = 1;
 		heap[i][2] = -1;
@@ -1100,7 +1100,7 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 	c[0] = ci;
 	
 	for (int ai=1, i=0; ai<a[0]; ai+=a[ai], i++)
-		NumberFree(heap[i],"polynomial multiplication (heap)");
+		NumberFree(heap[i],"poly::mul_heap");
 	AT.WorkPointer -= 3 * AN.poly_num_vars;
 }
 
@@ -1194,7 +1194,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 			RaisPowCached(BHEAD q.modp,q.modn,&modq,&nmodq);
 		}
 		
-		ltbinv = NumberMalloc("polynomial division (oneterm)");
+		ltbinv = NumberMalloc("poly::div_one_term");
 
 		if (both_mod_small) {
 			WORD ltb = b[b[1]]*b[2+AN.poly_num_vars];
@@ -1282,7 +1282,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 	q[0]=qi;
 	r[0]=ri;
 	
-	if (q.modp!=0) NumberFree(ltbinv,"polynomial division (oneterm)");
+	if (q.modp!=0) NumberFree(ltbinv,"poly::div_one_term");
 }	
 
 /*
@@ -1322,7 +1322,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 		else {
 			RaisPowCached(BHEAD q.modp,q.modn,&modq,&nmodq);
 		}
-		ltbinv = NumberMalloc("polynomial division (univar)");
+		ltbinv = NumberMalloc("poly::div_univar");
 
 		if (both_mod_small) {
 			WORD ltb = b[b[1]]*b[2+AN.poly_num_vars];
@@ -1337,8 +1337,8 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 
 	WORD ns=0;
 	WORD nt;
-	UWORD *s = NumberMalloc("polynomial division (univar)");
-	UWORD *t = NumberMalloc("polynomial division (univar)");
+	UWORD *s = NumberMalloc("poly::div_univar");
+	UWORD *t = NumberMalloc("poly::div_univar");
 
 	int bpow = b[2+var];
 		
@@ -1462,10 +1462,10 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	q[0] = qi;
 	r[0] = ri;
 
-	NumberFree(s,"polynomial division (univar)");
-	NumberFree(t,"polynomial division (univar)");
+	NumberFree(s,"poly::div_univar");
+	NumberFree(t,"poly::div_univar");
 
-	if (q.modp!=0) NumberFree(ltbinv,"polynomial division (univar)");
+	if (q.modp!=0) NumberFree(ltbinv,"poly::div_univar");
 }
 
 /*
@@ -1517,7 +1517,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 		else {
 			RaisPowCached(BHEAD q.modp,q.modn,&modq,&nmodq);
 		}
-		ltbinv = NumberMalloc("polynomial division (heap)");
+		ltbinv = NumberMalloc("poly::div_heap");
 
 		if (both_mod_small) {
 			WORD ltb = b[b[1]]*b[2+AN.poly_num_vars];
@@ -1559,7 +1559,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
 	
 	for (int i=0; i<nb; i++) 
-		heap[i] = (WORD *) NumberMalloc("polynomial division (heap)");
+		heap[i] = (WORD *) NumberMalloc("poly::div_heap");
 	int nheap = 1;
 	heap[0][0] = 1;
 	heap[0][1] = 0;
@@ -1574,7 +1574,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	int qi=1, ri=1;
 
 	int s = nb;
-	WORD *t = (WORD *) NumberMalloc("polynomial divsion (heap)");
+	WORD *t = (WORD *) NumberMalloc("poly::div_heap");
 
 	// insert contains element that still have to be inserted to the heap
 	// (exists to avoid code duplication).
@@ -1807,11 +1807,11 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	r[0] = ri;
 
 	for (int i=0; i<nb; i++)
-		NumberFree(heap[i],"polynomial division (heap)");
+		NumberFree(heap[i],"poly::div_heap");
 
-	NumberFree(t,"polynomial division (heap)");
+	NumberFree(t,"poly::div_heap");
 
-	if (q.modp!=0) NumberFree(ltbinv,"polynomial division (heap)");
+	if (q.modp!=0) NumberFree(ltbinv,"poly::div_heap");
 	AT.WorkPointer -= AN.poly_num_vars;
 }
 
@@ -2406,7 +2406,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 
 	// AN.poly_vars will be deleted in calling functions from polywrap.c
 	if (AN.poly_num_vars > 0) 
-		AN.poly_vars = new WORD[AN.poly_num_vars];
+		AN.poly_vars = (WORD *)Malloc1(AN.poly_num_vars*sizeof(WORD), "AN.poly_vars");
 	
 	for (int i=0; i<AN.poly_num_vars; i++)
 		AN.poly_vars[i] = vars[i];
@@ -2433,7 +2433,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 */
 
 // converts a form expression to a polynomial class "poly"
-const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar, poly *den) {
+const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_univar, poly *denpoly) {
 
 	map<int,int> var_to_idx;
 	for (int i=0; i<AN.poly_num_vars; i++)
@@ -2443,7 +2443,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 
 	 // fast notation
 	if (*e == -SNUMBER) {
-		if (den!=NULL) *den = poly(BHEAD 1);
+		if (denpoly!=NULL) *denpoly = poly(BHEAD 1);
 		
 		if (e[1] == 0) {
 			res[0] = 1;
@@ -2462,7 +2462,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	}
 
 	if (*e == -SYMBOL) {
-		if (den!=NULL) *den = poly(BHEAD 1);
+		if (denpoly!=NULL) *denpoly = poly(BHEAD 1);
 		
 		res[0] = 4 + AN.poly_num_vars;
 		res[1] = 3 + AN.poly_num_vars;
@@ -2475,18 +2475,24 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	}
 
 	// find denominator
-	bool free_den = den==NULL;
-	if (free_den) den = new poly(BHEAD 0);
-	*den = poly(BHEAD 1);
-
-	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
-		int n = ABS(e[i+e[i]-1]/2);
-		UWORD *pcoeff = (UWORD *)&e[i+e[i]-n-1];
-		while (n>0 && pcoeff[n-1]==0) n--;
-		poly coeff(BHEAD pcoeff, n);
-		*den = *den*coeff / polygcd::integer_gcd(*den,coeff);
+	WORD nden=1, npro=0, ngcd=0, ndum=0;
+	UWORD *den = NumberMalloc("poly::argument_to_poly");
+	UWORD *pro = NumberMalloc("poly::argument_to_poly");
+	UWORD *gcd = NumberMalloc("poly::argument_to_poly");
+	UWORD *dum = NumberMalloc("poly::argument_to_poly");
+	den[0]=1;
+	
+ 	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
+		int ncoe = ABS(e[i+e[i]-1]/2);
+		UWORD *coe = (UWORD *)&e[i+e[i]-ncoe-1];
+		while (ncoe>0 && coe[ncoe-1]==0) ncoe--;
+		MulLong(den,nden,coe,ncoe,pro,&npro);
+		GcdLong(BHEAD den,nden,coe,ncoe,gcd,&ngcd);
+		DivLong(pro,npro,gcd,ngcd,den,&nden,dum,&ndum);
 	}
 
+	if (denpoly!=NULL) *denpoly = poly(BHEAD den, nden);
+	
 	int ri=1;
 	
 	// ordinary notation
@@ -2497,8 +2503,8 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 			res[ri+1+j]=0;                                                       // powers=0
 		res.termscopy(&e[i+e[i]-ABS(nc)], ri+1+AN.poly_num_vars, ABS(nc));     // coefficient
 		nc /= 2;                                                               // remove denominator
-		Mully(BHEAD (UWORD *)&res[ri+1+AN.poly_num_vars], &nc,
-					      (UWORD *)&den->terms[2+AN.poly_num_vars], den->terms[den->terms[1]]);
+		Mully(BHEAD (UWORD *)&res[ri+1+AN.poly_num_vars], &nc, den, nden);
+		//					      (UWORD *)&den>terms[2+AN.poly_num_vars], den->terms[den->terms[1]]);
 		res[ri] = ABS(nc) + AN.poly_num_vars + 2;                              // length
 		
 		res[ri+res[ri]-1] = nc;                                                // length coefficient
@@ -2515,7 +2521,10 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	if (sort_univar || AN.poly_num_vars>1)
 		res.normalize();
 
-	if (free_den) delete den;
+	NumberFree(den,"poly::argument_to_poly");
+	NumberFree(pro,"poly::argument_to_poly");
+	NumberFree(gcd,"poly::argument_to_poly");
+	NumberFree(dum,"poly::argument_to_poly");
 	
 	return res;
 }
@@ -2550,7 +2559,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 
 	UWORD *number = NULL;
 	if (den != NULL)
-		number = (UWORD *)NumberMalloc("poly_to_argument");
+		number = (UWORD *)NumberMalloc("poly::poly_to_argument");
 	
 	int L = with_arghead ? ARGHEAD : 0;
 	
@@ -2606,7 +2615,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 	}
 
 	if (den != NULL)
-		NumberFree(number, "poly_to_argument");
+		NumberFree(number, "poly::poly_to_argument");
 }
 
 /*

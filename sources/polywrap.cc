@@ -144,7 +144,7 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 	poly::poly_to_argument(gcd, res, false);
 
 	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
+		M_free(AN.poly_vars, "AN.poly_vars");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -207,7 +207,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	poly::poly_to_argument(pres, res, false, &den);
 
 	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
+		M_free(AN.poly_vars, "AN.poly_vars");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -483,7 +483,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	AT.WorkPointer = t;
 
 	if (AN.poly_num_vars > 0) 
-		delete AN.poly_vars;
+		M_free(AN.poly_vars, "AN.poly_vars");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -611,7 +611,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	term[0] = t-term;                    // term length
 
 	if (AN.poly_num_vars > 0) 
-		delete AN.poly_vars;
+		M_free(AN.poly_vars, "AN.poly_vars");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -790,7 +790,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 	*argout=0;
 
 	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
+		M_free(AN.poly_vars, "AN.poly_vars");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -1191,7 +1191,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	strcpy((char*)AC.Commercial, oldCommercial);
 	
 	if (AN.poly_num_vars > 0)
-		delete AN.poly_vars;
+		M_free(AN.poly_vars, "AN.poly_vars");
 
 	return 0;
 }

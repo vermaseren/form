@@ -35,8 +35,10 @@
  */
 /* #] License : */ 
 /*
-  	#[ Includes :
 #define MALLOCDEBUG 1
+#define MALLOCDEBUGOUTPUT
+
+  	#[ Includes :
 */
 
 /*
@@ -2000,6 +2002,12 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 /*	MUNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
+
+#ifdef MALLOCDEBUGOUTPUT
+	printf ("Malloc1: %s, allocated %li bytes at %.8x\n",messageifwrong,size,mem);
+	fflush (stdout);
+#endif
+	
 	return(mem);
 }
 
@@ -2067,6 +2075,11 @@ void M_free(VOID *x, const char *where)
 	numfrees++;
 #endif
 	if ( x ) {
+#ifdef MALLOCDEBUGOUTPUT
+		printf ("M_free: %s, memory freed at %.8x\n",where,x);
+		fflush(stdout);
+#endif
+		
 #ifdef MALLOCPROTECT
 		mprotectFree((void *)x);
 #else
@@ -2194,18 +2207,21 @@ MesPrint("AT.TermMemMax is now %l",AT.TermMemMax);
 WORD *TermMalloc2(PHEAD char *text)
 {
 	if ( AT.TermMemTop <= 0 ) TermMallocAddMemory(BHEAD0);
-/*
-MesPrint("TermMalloc: %s, %l",text,AT.TermMemTop);
-*/
+
+#ifdef MALLOCDEBUGOUTPUT
+	MesPrint("TermMalloc: %s, %l/%l (%x)",text,AT.TermMemTop,AT.TermMemMax,AT.TermMemHeap[AT.TermMemTop-1]);
+#endif
+	
 	return(AT.TermMemHeap[--AT.TermMemTop]);
 }
  
 VOID TermFree2(PHEAD WORD *TermMem, char *text)
 {
 	AT.TermMemHeap[AT.TermMemTop++] = TermMem;
-/*
-MesPrint("TermFree: %s, %l",text,AT.TermMemTop);
-*/
+	
+#ifdef MALLOCDEBUGOUTPUT
+	MesPrint("TermFree: %s, %l/%l (%x)",text,AT.TermMemTop,AT.TermMemMax,TermMem);
+#endif
 }
 
 #endif
@@ -2262,18 +2278,21 @@ MesPrint("AT.NumberMemMax is now %l",AT.NumberMemMax);
 UWORD *NumberMalloc2(PHEAD char *text)
 {
 	if ( AT.NumberMemTop <= 0 ) NumberMallocAddMemory(BHEAD0);
-/*
-MesPrint("NumberMalloc: %s, %l",text,AT.NumberMemTop);
-*/
+
+#ifdef MALLOCDEBUGOUTPUT
+	MesPrint("NumberMalloc: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,AT.NumberMemHeap[AT.NumberMemTop-1]);
+#endif
+
 	return(AT.NumberMemHeap[--AT.NumberMemTop]);
 }
  
 VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 {
 	AT.NumberMemHeap[AT.NumberMemTop++] = NumberMem;
-/*
-MesPrint("NumberFree: %s, %l",text,AT.NumberMemTop);
-*/
+	
+#ifdef MALLOCDEBUGOUTPUT
+	MesPrint("NumberFree: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,NumberMem);
+#endif
 }
 
 #endif

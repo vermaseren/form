@@ -1297,8 +1297,8 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 		if (n>=AT.small_power_maxn)
 			new_small_power_maxn = MaX(2*AT.small_power_maxn, n+1);
 		
-		WORD *new_small_power_n = (WORD*) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(WORD),"RaisPowSmall");
-		UWORD **new_small_power = (UWORD **) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(UWORD *),"RaisPowSmall");
+		WORD *new_small_power_n = (WORD*) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(WORD),"RaisPowCached");
+		UWORD **new_small_power = (UWORD **) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(UWORD *),"RaisPowCached");
 
 		for (i=0; i<new_small_power_maxx * new_small_power_maxn; i++) {
 			new_small_power_n[i] = 0;
@@ -1311,8 +1311,10 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 				new_small_power  [i*new_small_power_maxn+j] = AT.small_power  [i*AT.small_power_maxn+j];
 			}
 
-		M_free(AT.small_power_n,"RaisPowSmall");
-		M_free(AT.small_power,"RaisPowSmall");
+		if (AT.small_power_n != NULL) {
+			M_free(AT.small_power_n,"RaisPowCached");
+			M_free(AT.small_power,"RaisPowCached");
+		}
 
 		AT.small_power_maxx = new_small_power_maxx;
 		AT.small_power_maxn = new_small_power_maxn;
@@ -1324,7 +1326,7 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 	WORD ID = x * AT.small_power_maxn + n;
 
 	if (AT.small_power[ID] == NULL) {
-		AT.small_power[ID] = NumberMalloc("small power");
+		AT.small_power[ID] = NumberMalloc("RaisPowCached");
 		AT.small_power_n[ID] = 1;
 		AT.small_power[ID][0] = x;
 		RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
@@ -1533,7 +1535,7 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 	NumberFree(ta,"GetLongModInverses");
 	NumberFree(tb,"GetLongModInverses");
 	NumberFree(x,"GetLongModInverses");
-	NumberFree(y,"inverse");
+	NumberFree(y,"GetLongModInverses");
 
 	return 0;
 }
