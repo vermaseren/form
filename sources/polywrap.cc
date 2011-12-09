@@ -154,6 +154,194 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 /*
   	#] poly_gcd : 
+  	#[ poly_scale_factor :
+*/
+
+int poly_scale_factor (const poly &a, const poly &b) {
+
+	POLY_GETIDENTITY(a);
+
+	// allocate heap
+	int nb=b.number_of_terms();
+
+	// determine maximum power in variables
+	WORD *maxpowera = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
+	
+	for (int i=0; i<AN.poly_num_vars; i++)
+		maxpowera[i] = 0;
+
+	for (int ai=1; ai<a[0]; ai+=a[ai])
+		for (int j=0; j<AN.poly_num_vars; j++)
+			maxpowera[j] = MaX(maxpowera[j], a[ai+1+j]);
+
+	// if PROD(max.power) small, allocate hash table
+	bool use_hash = false;//true;
+	int nhash = 1;
+
+	for (int i=0; i<AN.poly_num_vars; i++) {
+		if (nhash > POLY_MAX_HASH_SIZE / (maxpowera[i]+1)) {
+			nhash = 1;
+			use_hash = false;
+			break;
+		}
+		nhash *= maxpowera[i]+1;
+	}
+
+	WantAddPointers(nb+nhash);
+	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
+	
+	for (int i=0; i<nb; i++) 
+		heap[i] = (WORD *) NumberMalloc("poly_scale_factor");
+	int nheap = 1;
+	heap[0][0] = 1;
+	heap[0][1] = 0;
+	heap[0][2] = -1;
+	memcpy (&heap[0][3], &a[1], a[1]*sizeof(WORD));
+	heap[0][3] = 0;
+	
+	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nb;
+	for (int i=0; i<nhash; i++)
+		hash[i] = NULL;
+
+	poly q(BHEAD 0);
+	int qi=1;
+
+	int s = nb;
+	WORD *t = (WORD *) NumberMalloc("poly_scale_factor");
+
+	// insert contains element that still have to be inserted to the heap
+	// (exists to avoid code duplication).
+	vector<pair<int,int> > insert;
+	
+	while (insert.size()>0 || nheap>0) {
+
+		q.check_memory(qi);
+		
+		// collect a term t for the quotient/remainder
+		t[0] = -1;
+		
+		do {
+			WORD *p = heap[nheap];
+			bool this_insert;
+		 
+			if (insert.empty()) {
+				// extract element from the heap and prepare adding new ones
+				this_insert = false;
+
+				poly::pop_heap(BHEAD heap, nheap--);
+				p = heap[nheap];
+				
+				if (p[2]!=-1) hash[p[2]] = NULL;
+
+				if (t[0] == -1) 
+					memcpy (t, p, (4+AN.poly_num_vars)*sizeof(WORD));
+				else
+					t[3] = MaX(p[3],t[3]);
+			}
+			else {
+				// prepare adding an element of insert to the heap
+				this_insert = true;
+
+				p[0] = insert.back().first;
+				p[1] = insert.back().second;
+				insert.pop_back();
+			}
+
+			// add elements to the heap
+			while (true) {
+				// prepare the element
+				if (p[1]==0) {
+					p[0] += a[p[0]];
+					if (p[0]==a[0]) break;
+					memcpy(&p[3], &a[p[0]], a[p[0]]*sizeof(WORD));
+					p[3] = 0;
+				}			
+				else {
+					if (!this_insert)
+						p[1] += q[p[1]];
+					this_insert = false;
+					
+					if (p[1]==qi) {	s++; break; }
+
+					for (int i=0; i<AN.poly_num_vars; i++)
+						p[4+i] = b[p[0]+1+i] + q[p[1]+1+i];
+
+					p[3] = q[p[1]+AN.poly_num_vars+1];
+				}
+
+				// with hashing, calculate hash value
+				if (use_hash) {
+					p[2] = 0;				
+					for (int i=0; i<AN.poly_num_vars; i++)
+						p[2] = (maxpowera[i]+1)*p[2] + p[4+i];				
+				}
+				else {
+					p[2] = -1;
+				}
+
+				// add it to a heap element if possible, otherwise push it
+				if (!use_hash || hash[p[2]] == NULL) {
+					if (use_hash) hash[p[2]] = p;
+					swap (heap[nheap],p);
+					poly::push_heap(BHEAD heap, ++nheap);
+					break;
+				}
+				else {
+					WORD *h = hash[p[2]];
+					h[3] = MaX(h[3],p[3]);
+
+					if (h[1]<p[1]) {
+						swap(h[0],p[0]);
+						swap(h[1],p[1]);
+					}
+				}
+			}
+		}
+		while (t[0]==-1 || (nheap>0 && poly::monomial_compare(BHEAD heap[0]+3, t+3)==0));
+
+		//		printf ("nheap=%i pow=%i denpow=%i\n",nheap,t[4],t[3]);
+		// check divisibility 
+		bool div = true;
+		for (int i=0; i<AN.poly_num_vars; i++)
+			if (t[4+i] < b[2+i]) div=false;
+		
+		if (div) {
+			// divisable, so divide coefficient as well
+			int bi = 1;
+			for (int j=1; j<s; j++) {
+				bi += b[bi];
+				insert.push_back(make_pair(bi,qi));
+			}
+			s=1;
+				
+			q[qi] = 3+AN.poly_num_vars;
+			for (int i=0; i<AN.poly_num_vars; i++)
+				q[qi+1+i] = t[4+i] - b[2+i];
+			qi += q[qi];
+			q[qi-1] = 1;
+			q[qi-2] = t[3]+1;
+		}
+	}
+
+	q[0]=qi;
+	
+	int res=0;
+	for (int i=1; i<qi; i+=q[i])
+		res = MaX(res, q[i+AN.poly_num_vars+1]);
+	
+	for (int i=0; i<nb; i++)
+		NumberFree(heap[i],"poly_scale_factor");
+
+	NumberFree(t,"poly_scale_factor");
+
+	AT.WorkPointer -= AN.poly_num_vars;
+
+	return res;
+}
+
+/*
+  	#] poly_scale_factor :
   	#[ poly_divmod :
 */
 
@@ -176,13 +364,18 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	poly denb(BHEAD 0);
 	poly pa(poly::argument_to_poly(BHEAD a, false, true, &dena), modp, 1);
 	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb), modp, 1);
+
 	pa *= denb;
 	pb *= dena;
-	
-	int pow = pa.total_degree();
-	
+
+	poly iconta = polygcd::integer_content(pa);
+	poly icontb = polygcd::integer_content(pb);
+	poly gcdiconts = polygcd::integer_gcd(iconta,icontb);
+	pa /= gcdiconts;
+	pb /= gcdiconts;
+
+	int pow = poly_scale_factor(pa,pb);
 	poly lcoeffb(pb.integer_lcoeff());
-	//	lcoeffb /= polygcd::integer_gcd(pa.integer_lcoeff(), lcoeffb);
 	
 	lcoeffb *= poly(BHEAD lcoeffb.sign());
 	poly den(BHEAD 1);

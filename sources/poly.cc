@@ -1,6 +1,7 @@
 /* @file poly.cc
  *
- *  Contains the class for representing sparse multivariate polynomials
+ *  Contains the class for representing sparse multivariate
+ *  polynomials with integer coefficients
  */
 /* #[ License : */
 /*
