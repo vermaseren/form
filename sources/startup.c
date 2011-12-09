@@ -731,6 +731,7 @@ VOID StartVariables()
 	AC.ModOptDolList.size = sizeof(MODOPTDOLLAR);
 
 	AO.FortDotChar = '_';
+	AO.ErrorBlock = 0;
 	AC.firstconstindex = 1;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;

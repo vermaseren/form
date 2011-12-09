@@ -2059,6 +2059,7 @@ struct O_const {
     UBYTE   *OutFill;              /* (O) Filling point in OutputLine buffer */
     WORD    *bracket;              /* (O) For writing brackets */
     WORD    *termbuf;              /* (O) For writing terms */
+    WORD    *tabstring;
     UBYTE   *wpos;                 /* (O) Only when storing file {local?} */
     UBYTE   *wpoin;                /* (O) Only when storing file {local?} */
     UBYTE   *DollarOutBuffer;      /* (O) Outputbuffer for Dollars */
@@ -2110,11 +2111,12 @@ struct O_const {
     WORD    IndentSpace;           /* For indentation in output */
     WORD    FactorMode;            /* When the output should be written as factors */
     WORD    FactorNum;             /* Number of factor currently treated */
+    WORD    ErrorBlock;
     UBYTE   FortDotChar;           /* (O) */
-	PADPOINTER(4,3,13,1);
+	PADPOINTER(4,3,14,1);
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**

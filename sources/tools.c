@@ -892,8 +892,9 @@ int CreateHandle()
         i = 0;
 	}
 	else if ( numinfilelist >= filelistsize ) {
-		i = filelistsize;
-		if ( DoubleList((VOID ***)((VOID *)(&filelist)),&filelistsize,(int)sizeof(FILES *),
+        VOID **fl = (VOID **)filelist;
+        i = filelistsize;
+        if ( DoubleList((VOID ***)(&fl),&filelistsize,(int)sizeof(FILES *),
 			"list of open files") != 0 ) Terminate(-1);
 		for ( j = i; j < filelistsize; j++ ) filelist[j] = 0;
 		numinfilelist = i + 1;
@@ -927,7 +928,7 @@ int CreateHandle()
 }
 
 /*
- 		#] CreateHandle : 
+ 		#] CreateHandle :
  		#[ ReadFile :
 */
 
@@ -1400,7 +1401,7 @@ MUNLOCK(ErrorMessageLock);
 
 /*
  		#] UpdateMaxSize : 
-  	#] Files : 
+  	#] Files :
   	#[ Strings :
  		#[ StrCmp :
 */

@@ -5475,7 +5475,7 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 {
 	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
 	WORD  num, number, nfac;
-	UBYTE Out[270], *stopper;
+	UBYTE Out[MAXLINELENGTH+14], *stopper;
 	int nosemi;
 
 /*
@@ -5505,8 +5505,8 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 		return(-1);
 	}
 	*to = 0; s++;
-	if ( AC.LineLength > 20 && AC.LineLength <= 256 ) stopper = Out + AC.LineLength;
-	else stopper = Out + 256;
+	if ( AC.LineLength > 20 && AC.LineLength <= MAXLINELENGTH ) stopper = Out + AC.LineLength;
+	else stopper = Out + MAXLINELENGTH;
 	to = Out;
 /*
 	s points now at the list of objects (if any)

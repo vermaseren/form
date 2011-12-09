@@ -608,7 +608,7 @@ int CoFormat(UBYTE *s)
 	if ( FG.cTable[*s] == 1 ) {
 		x = 0;
 		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
-		if ( x <= 0 || x > 255 ) {
+		if ( x <= 0 || x >= MAXLINELENGTH ) {
 			x = 72;
 			error = 1;
 			MesPrint("&Illegal value for linesize: %d",x);

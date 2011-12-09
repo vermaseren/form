@@ -123,10 +123,14 @@ int MesWork()
 	%%	%
 	%#	#
 	#   " ==> "
-	@   " ==> "   Terminates do-loops
-	&   ' --> '   Terminates do-loops
+	@   " ==> "   Preprocessor error
+	&   ' --> '   Regular compiler error
 	Each call is terminated with a new line.
 	Put a % at the end of the string to suppress the new line.
+
+	New feature (7-dec-2011): The & will only work when we do not block it
+	from the execution of the print statement because we need the & also for
+	the tabulator in the print "" statement.
 */
 
 int
@@ -138,8 +142,8 @@ va_dcl
 #endif
 {
 	GETIDENTITY
-	char Out[270], *stopper, *t, *s, *u, c, *carray;
-	UBYTE extrabuffer[270];
+	char Out[MAXLINELENGTH+14], *stopper, *t, *s, *u, c, *carray;
+	UBYTE extrabuffer[MAXLINELENGTH+14];
 	int w, x, i, specialerror = 0;
 	LONG num, y;
 	WORD *array;
@@ -172,7 +176,7 @@ va_dcl
 	t = Out;
 	stopper = Out + AC.LineLength;
 	while ( *s ) {
-		if ( ( *s == '&' || *s == '@' || *s == '#' ) && AC.CurrentStream != 0 ) {
+		if ( ( ( *s == '&' && AO.ErrorBlock == 0 ) || *s == '@' || *s == '#' ) && AC.CurrentStream != 0 ) {
 			u = (char *)AC.CurrentStream->name;
 			while ( *u ) {
 				*t++ = *u++;
@@ -196,12 +200,17 @@ va_dcl
 				for ( i = 0; i < NumDoLoops; i++ ) DoLoops[i].errorsinloop = 1;
 			}
 		}
-		if ( *s == '&' ) {
+		if ( ( *s == '&' && AO.ErrorBlock == 0 ) ) {
 			*t++ = ' '; *t++ = '-'; *t++ = '-'; *t++ = '>'; *t++ = ' '; s++;
 		}
 		else if ( *s == '@' || *s == '#' ) {
 			*t++ = ' '; *t++ = '='; *t++ = '='; *t++ = '>'; *t++ = ' '; s++;
 		}
+/*
+		else if ( *s == '&' && AO.ErrorBlock == 1 ) {
+			
+		}
+*/
 		else if ( *s != '%' ) {
 			*t++ = *s++;
 			if ( t >= stopper ) {
@@ -334,7 +343,7 @@ va_dcl
 				WORD oldlength = AC.LineLength;
 				UBYTE *oldStop = AO.OutStop;
 				if ( AN.currentTerm ) {
-					if ( AC.LineLength > 256 ) AC.LineLength = 256;
+					if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 					AO.IsBracket = 0;
 					AO.OutSkip = 1;
 					AC.OutputMode = 0;
@@ -365,7 +374,7 @@ va_dcl
 				UBYTE *oldStop = AO.OutStop;
 				if ( AN.currentTerm ) {
 					WORD *tt = AN.currentTerm;
-					if ( AC.LineLength > 256 ) AC.LineLength = 256;
+					if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 					AO.IsBracket = 0;
 					AO.OutSkip = 1;
 					AC.OutputMode = 0;
@@ -464,7 +473,7 @@ va_dcl
 						term = d->where;
 printterms:				first = 1;
 						do {
-							if ( AC.LineLength > 256 ) AC.LineLength = 256;
+							if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 							AO.IsBracket = 0;
 							AO.OutSkip = 1;
 							AC.OutputMode = 0;
@@ -495,7 +504,7 @@ printterms:				first = 1;
 					}
 					else if ( d->type == DOLSUBTERM ) {
 						tt = d->where;
-dosubterm:				if ( AC.LineLength > 256 ) AC.LineLength = 256;
+dosubterm:				if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 						AO.IsBracket = 0;
 						AO.OutSkip = 1;
 						AC.OutputMode = 0;
@@ -532,7 +541,7 @@ dollarzero:				*t++ = '0'; *t = 0;
 						goto dosubterm;
 					}
 					else if ( d->type == DOLARGUMENT ) {
-						if ( AC.LineLength > 256 ) AC.LineLength = 256;
+						if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 						AO.IsBracket = 0;
 						AO.OutSkip = 1;
 						AC.OutputMode = 0;
@@ -556,7 +565,7 @@ dollarzero:				*t++ = '0'; *t = 0;
 						tt = d->where;
 						if ( *tt == 0 ) { tt++;
 						 while ( *tt ) {
-						  if ( AC.LineLength > 256 ) AC.LineLength = 256;
+						  if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 						  AO.IsBracket = 0;
 						  AO.OutSkip = 1;
 						  AC.OutputMode = 0;
@@ -585,7 +594,7 @@ dollarzero:				*t++ = '0'; *t = 0;
 								indsubterm[0] = INDEX;
 								indsubterm[1] = 3;
 								indsubterm[2] = *tt++;
-								if ( AC.LineLength > 256 ) AC.LineLength = 256;
+								if ( AC.LineLength > MAXLINELENGTH ) AC.LineLength = MAXLINELENGTH;
 								AO.IsBracket = 0;
 								AO.OutSkip = 1;
 								AC.OutputMode = 0;
@@ -615,7 +624,7 @@ dollarzero:				*t++ = '0'; *t = 0;
 					while ( AN.listinprint[0] == DOLLAREXPR2 ) AN.listinprint += 2;
 				}
 /*
-			#] dollars :
+			#] dollars : 
 */
 			}
 #ifdef WITHPTHREADS
@@ -740,6 +749,9 @@ dollarzero:				*t++ = '0'; *t = 0;
 			else if ( *s == '#' ) *t++ = *s;
 			else if ( *s == '%' ) *t++ = *s;
 			else if ( *s == 0 ) { *t++ = 0; break; }
+			else if ( *s == '&' ) {
+				*t++ = *s;
+			}
 			else {
 				*t++ = '%';
 				s--;

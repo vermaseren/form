@@ -234,7 +234,7 @@ FIXEDSET fixedsets[] = {
 	,{"number_","all rationals", CSYMBOL, 0}  /* Q_     10  */
 };
 
-UBYTE BufferForOutput[260];
+UBYTE BufferForOutput[MAXLINELENGTH+14];
 
 char *setupfilename = "form.set";
 
