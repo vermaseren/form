@@ -40,6 +40,15 @@
 #include "form3.h"
 #include "vector.h"
 
+/*
+#define PF_DEBUG_BCAST_LONG
+#define PF_DEBUG_BCAST_PREVAR
+#define PF_DEBUG_BCAST_PREDOLLAR
+#define PF_DEBUG_BCAST_RHSEXPR
+#define PF_DEBUG_BCAST_DOLLAR
+#define PF_DEBUG_BCAST_EXPRFLAGS
+*/
+
 /* mpi.c */
 LONG PF_RealTime(int);
 int PF_LibInit(int*, char***);
@@ -2223,6 +2232,9 @@ LONG PF_BroadcastNumberOfTerms(LONG x)
 		if ( PF_PreparePack() != 0 ) /* initialize buffers */
 			Terminate(-1);
 		if ( PF_Pack(&x,1,PF_LONG) != 0 ) Terminate(-1);
+#ifdef PF_DEBUG_BCAST_LONG
+		MesPrint(">> Broadcast LONG: %d", (int)x);
+#endif
 	}
 
 	PF_Broadcast();
@@ -2282,6 +2294,9 @@ int PF_InitRedefinedPreVars(void)
 
 					PF_Pack(&l,1,PF_INT);
 					PF_Pack(value,l,PF_BYTE);
+#ifdef PF_DEBUG_BCAST_PREVAR
+					MesPrint(">> Broadcast PreVar: %s", name);
+#endif
 				}
 			}
 		}
@@ -2465,6 +2480,9 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 			err |= PF_Pack(thechunk,n,PF_WORD);
 			err |= PF_Broadcast();
 		}
+#ifdef PF_DEBUG_BCAST_PREDOLLAR
+		MesPrint(">> Broadcast PreDollar: newsize=%d numterms=%d", (int)*newsize, *numterms);
+#endif
 	}
 	if ( MASTER != PF.me ) {  /* Slave - unpack received buffer */
 		WORD *thechunk;
@@ -3017,6 +3035,9 @@ WORD PF_mkDollarsParallel(void)
 				type = DOLZERO;
 				PF_LongMultiPack(&type, 1, PF_WORD);
 			}
+#ifdef PF_DEBUG_BCAST_DOLLAR
+			MesPrint(">> Broadcast $-var: %s", name);
+#endif
 		}
 	}
 /*
@@ -3131,6 +3152,9 @@ int PF_BroadcastExpFlags(void) {
 			PF_LongMultiPack(&e->vflags,     1, PF_WORD);
 			PF_LongMultiPack(&e->numdummies, 1, PF_WORD);
 			PF_LongMultiPack(&e->numfactors, 1, PF_WORD);
+#ifdef PF_DEBUG_BCAST_EXPRFLAGS
+			MesPrint(">> Broadcast ExprFlags: %s", AC.exprnames->namebuffer + e->name);
+#endif
 		}
 /*
  		#] Master :
@@ -3440,6 +3464,9 @@ int PF_broadcastRHS(void)
 		}
 		else {
 			if ( PF_rhsBCastMaster(curfile,e) ) return(-1);
+#ifdef PF_DEBUG_BCAST_RHSEXPR
+			MesPrint(">> Broadcast RhsExpr: %s", AC.exprnames->namebuffer + e->name);
+#endif
 		}
 	}/*for ( i = 0; i < NumExpressions; i++ )*/
 	if ( PF.me != MASTER )

@@ -76,6 +76,10 @@ static int PF_longPackInit(void);      /*:[12oct2005 mt]*/
  * is not MPI_SUCCESS.
  *
  * @param  err  The return value of a MPI function to be checked.
+ *
+ * @remark  The MPI standard defines MPI_SUCCESS == 0. Then (_tmp_err == 0) appears
+ *          twice and we can expect the second evaluation will be eliminated by
+ *          the compiler optimization.
  */
 #define MPI_ERRCODE_CHECK(err) \
 	do { \
@@ -156,7 +160,7 @@ int PF_LibInit(int *argcp, char ***argvp)
 
 		totalbytes += bytes;
 /*
-			Now avaulable room is PF_packsize-totalbytes
+			Now available room is PF_packsize-totalbytes
 */
 		totalbytes = PF_packsize-totalbytes;
 /*
@@ -710,7 +714,7 @@ int PF_PackString(const UBYTE *str)
 		return(ret);
 	buflength = PF_packsize - bytes;
 /*
-		Calcuate the string length (INCLUDING the trailing zero!):
+		Calculate the string length (INCLUDING the trailing zero!):
 */
 	for ( length = 0; length < buflength; length++ ) {
 		if ( str[length] == '\0' ) {
@@ -913,14 +917,14 @@ int PF_Broadcast(void)
 		1. We need to send/receive long dollar variables. For
 	preprocessor-defined dollarvars we used multiply
 	packing/broadcasting  (see parallel.c:PF_BroadcastPreDollar())
-	since each variable must be broadcasted immediately. For run-time
+	since each variable must be broadcast immediately. For run-time
 	the changed dollar variables, collecting and broadcasting are
 	performed at the end of the module and all modified dollarvars
 	are transferred "at once", that is why the size of packed and
 	transferred buffers may be really very large.
 		2. There is some strange feature of MPI_Bcast() on Altix MPI
 	implementation, namely, sometimes it silently fails with big
-	buffers. For better performance, it whould be useful to send one
+	buffers. For better performance, it would be useful to send one
 	big buffer instead of several small ones (since the latency is more
 	important than the bandwidth). That is why we need two different
 	sets of routines: for long point-to-point communication we collect
@@ -949,7 +953,7 @@ int PF_Broadcast(void)
 	it's own buffer. This is done for better memory utilisation:
 	longSingle and longMulti are never used simultaneously.
 		When a new cell is needed for LongMulti packing, we increment
-	the counter PF_longPackN and just follow	the list. If it is not
+	the counter PF_longPackN and just follow the list. If it is not
 	possible, we allocate the cell's own buffer and link it to the end
 	of the list PF_longMultiRoot.
 		When PF_longPackPos is reallocated, we link new chunks into
@@ -964,24 +968,24 @@ int PF_Broadcast(void)
 	If so, the sender first packs and sends small buffer
 	(PF_longPackSmallBuf) containing one integer number -- the
 	_negative_ new size of the send buffer. Getting the buffer, a
-	receiver unpacks one	integer and checks whether it is <0 . If so,
+	receiver unpacks one integer and checks whether it is <0 . If so,
 	the receiver will repeat receiving, but first it checks whether
 	it has enough buffer and increase it, if necessary.
 		Initialization PF_longMultiRoot is made by the function
 	PF_longMultiReset(). In the begin of the first chunk it packs
 	one integer -- the number 1. Upon sending, the program checks,
 	how many cells were packed (PF_longPackN). If more than 1, the
-	sender packs to the next cell the integer PF_longPackN , than
+	sender packs to the next cell the integer PF_longPackN, than
 	packs PF_longPackN pairs of integers -- the information about how many
 	times chunk on each cell was accessed by the packing procedure,
 	this information is contained by the nPacks field of the cell
-	structure, and how many non-complete items was at the end ot this
+	structure, and how many non-complete items was at the end of this
 	chunk the structure field lastLen. Then the sender sends first
 	this auxiliary chunk.
 	The receiver unpacks the integer from obtained chunk and, if this
 	integer is more than 1, it gets more chunks, unpacking information
 	from the first auxiliary chunk into the corresponding nPacks
-	fields. Unpacking information from multiple chunks, the reseiver
+	fields. Unpacking information from multiple chunks, the receiver
 	knows, when the chunk is expired and it must switch to the next cell,
 	successively decrementing corresponding nPacks field.
 
@@ -1336,7 +1340,7 @@ static inline int PF_longMultiProcessPrefix(void)
 /*
 		We have PF_longPackN records packed in PF_longMultiRoot->buffer,
 		pairs nPacks and lastLen. Loop through PF_longPackN cells,
-		unpaking these integers into proper fields:
+		unpacking these integers into proper fields:
 */
 	for ( PF_longMultiTop = PF_longMultiRoot, i = 0; i < PF_longPackN; i++ ) {
 /*
