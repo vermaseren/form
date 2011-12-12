@@ -74,21 +74,22 @@ int CatchDollar(int par)
 		AN.ncmod = oldncmod;
 		return(0);
 	}
-	/*[19sep2005 mt]:*/
 #ifdef PARALLEL
 	/*
-	The problem here is that only the master is able to make an assignment
-	like #$a=g; where g is an expression: only the master has an access to
-	the whole expression. So, only the master invokes Generator, and then
-	it broadcasts the result to slaves.
-   	Broadcasting must be performed immediately, one cannot postponed
-	broadcasting to the end of the module since the dollar variable is
-	visible in the current module. For the same reason, this should be
-	done independently on on/off parallel status.
-	*/
-	if(MASTER == PF.me){
+	 * The problem here is that only the master can make an assignment
+	 * like #$a=g; where g is an expression: only the master has an access to
+	 * the expression. So, in cases where the RHS contains expression names,
+	 * only the master invokes Generator() and then broadcasts the result to
+	 * the all slaves.
+	 * Broadcasting must be performed immediately; one cannot postpone it
+	 * to the end of the module because the dollar variable is visible
+	 * in the current module. For the same reason, this should be done
+	 * regardless of on/off parallel status.
+	 * If the RHS does not contain any expression names, it can be processed
+	 * in each slave.
+	 */
+	if ( PF.me == MASTER || !AC.RhsExprInModuleFlag ) {
 #endif
-	/*:[19sep2005 mt]*/
 
 	EXCHINOUT
  
@@ -110,14 +111,6 @@ int CatchDollar(int par)
 	AT.WorkPointer = oldwork;
 	if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; }
 	LowerSortLevel();
-/*[19sep2005 mt]:*/
-#ifdef REMOVEDBY_MT
-	if ( error == 0 ) {
-		w = dbuffer;
-		while ( *w ) { w += *w; numterms++; }
-	}
-	w++; newsize = w - dbuffer;
-#endif /*REMOVEDBY_MT*/
 	w = dbuffer;
 	if ( error == 0 )
 		while ( *w ) { w += *w; numterms++; }
@@ -125,12 +118,12 @@ int CatchDollar(int par)
 		goto onerror;
 	newsize = w - dbuffer+1;
 #ifdef PARALLEL
-	}/*if(MASTER == PF.me)*/
-	/*PF_BroadcastPreDollar allocates dbuffer for slaves!:*/
-	if( (error=PF_BroadcastPreDollar(&dbuffer,&newsize,&numterms))!=0 )
-		goto onerror;
+	}
+	if ( AC.RhsExprInModuleFlag )
+		/* PF_BroadcastPreDollar allocates dbuffer for slaves! */
+		if ( (error = PF_BroadcastPreDollar(&dbuffer, &newsize, &numterms)) != 0 )
+			goto onerror;
 #endif
-/*:[19sep2005 mt]*/
 	if ( numterms == 0 ) {
 		d->type = DOLZERO;
 		goto docopy;
@@ -170,17 +163,10 @@ docopy:;
 	if ( C->Pointer > C->rhs[C->numrhs] ) C->Pointer = C->rhs[C->numrhs];
 	C->numlhs--; C->numrhs--;
 onerror:
-/*[19sep2005 mt]:*/
 #ifdef PARALLEL
-	if(MASTER == PF.me){
+	if ( PF.me == MASTER || !AC.RhsExprInModuleFlag )
 #endif
-/*:[19sep2005 mt]*/
 	BACKINOUT
-/*[19sep2005 mt]:*/
-#ifdef PARALLEL
-	}/*if(MASTER == PF.me)*/
-#endif
-/*:[19sep2005 mt]*/
 	AN.ncmod = oldncmod;
 	return(error);
 }

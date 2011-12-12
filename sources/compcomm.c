@@ -2133,11 +2133,11 @@ int CoRedefine(UBYTE *s)
 	WORD code[2];
 	name = s;
 #ifdef PARALLEL
-/*
-	The flag AC.NumberOfRedefsInModule will be used in
-	IniModule to synchronize redefined preVars
-*/
-	AC.NumberOfRedefsInModule++;
+	/*
+	 * The flag AC.RedefsInModuleFlag indicates that at the beginning of the next
+	 * module we need to synchronize redefined preprocessor variables.
+	 */
+	AC.RedefsInModuleFlag = 1;
 #endif
 	if ( FG.cTable[*s] || ( s = SkipAName(s) ) == 0 || s[-1] == '_' ) {
 		MesPrint("&Illegal name for preprocessor variable in redefine statement");

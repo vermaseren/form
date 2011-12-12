@@ -669,8 +669,8 @@ VOID IniModule(int type)
 
 /*[06nov2003 mt]:*/
 #ifdef PARALLEL
-	/*the counter will be incremented in the procedure tokenize:*/
-	AC.NumberOfRhsExprInModule=0;
+	/* This flag may be set in the procedure tokenize(). */
+	AC.RhsExprInModuleFlag = 0;
 /*[20oct2009 mt]:*/
 	PF.mkSlaveInfile=0;
 	PF.slavebuf.PObuffer=NULL;
@@ -782,12 +782,12 @@ VOID PreProcessor()
 		if ( specialtype ) IniSpecialModule(specialtype);
 /*[28nov2003 mt]:*/
 #ifdef PARALLEL
-		if( (PF.synchro!=0)||(AC.NumberOfRedefsInModule!=0) ){
-			/*synchronize redefined preVars:*/
+		if( PF.synchro || AC.RedefsInModuleFlag ){
+			/* Synchronize redefined preprocessor variables. */
 			PF_InitRedefinedPreVars();
-			/*We can't put AC.NumberOfRedefsInModule=0 to IniModule():*/
-			AC.NumberOfRedefsInModule=0;
-		}/*if(AC.NumberOfRedefsInModule!=0)*/
+			/* We can't put AC.RedefsInModuleFlag=0 to IniModule(). */
+			AC.RedefsInModuleFlag = 0;
+		}
 #endif
 /*:[28nov2003 mt]*/
 		numstatement = 0;
@@ -917,6 +917,10 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( error1 == 0 && !AP.PreContinuation ) {
 					if ( ( AP.PreDebug & PREPROONLY ) == 0 ) {
 						int onpmd = NumPotModdollars;
+#ifdef PARALLEL
+						WORD oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
+						if ( AP.PreAssignFlag ) AC.RhsExprInModuleFlag = 0;
+#endif
 						if ( AP.PreOut || ( AP.PreDebug & DUMPTOCOMPILER )
 								== DUMPTOCOMPILER ) MesPrint(" %s",AC.iBuffer);
 						retcode = CompileStatement(AC.iBuffer);
@@ -930,6 +934,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 							else CatchDollar(-1);
 							AP.PreAssignFlag = 0;
 							NumPotModdollars = onpmd;
+#ifdef PARALLEL
+							AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
+#endif
 						}
 					}
 					else {
@@ -2601,6 +2608,10 @@ int DoDo(UBYTE *s)
 	}
 	else if ( ( chartype[*s] == 0 ) || ( *s == '[' ) ) {
 		int oldNumPotModdollars = NumPotModdollars;
+#ifdef PARALLEL
+		WORD oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
+		AC.RhsExprInModuleFlag = 0;
+#endif
 		t = s;
 		if ( ( s = SkipAName(s) ) == 0 ) goto illdo;
 		c = *s; *s = 0;
@@ -2650,6 +2661,9 @@ int DoDo(UBYTE *s)
 		}
 		AP.PreAssignFlag = 0;
 		NumPotModdollars = oldNumPotModdollars;
+#ifdef PARALLEL
+		AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
+#endif
 		*uu = 0;
 	}
 	else goto illdo; /* Syntax problems */
@@ -5334,6 +5348,10 @@ int DoFromExternal(UBYTE *s)
 		/*[18may20006 mt]:*/
 		if(*prevar == '$'){/*Put the answer to the dollar variable*/
 			int oldNumPotModdollars = NumPotModdollars;
+#ifdef PARALLEL
+			WORD oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
+			AC.RhsExprInModuleFlag = 0;
+#endif
 			/*Here lbuf is the actual length of buf!*/
 			/*"prevar=buf'\0'":*/
 			UBYTE *pbuf=Malloc1(StrLen(prevar)+1+lbuf+1,"Fromexternal to dollar");
@@ -5349,6 +5367,9 @@ int DoFromExternal(UBYTE *s)
 			}
 			AP.PreAssignFlag = 0;
 			NumPotModdollars = oldNumPotModdollars;
+#ifdef PARALLEL
+			AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
+#endif
 			M_free(pbuf,"Fromexternal to dollar");
 		}else{
 			cc = PutPreVar(prevar, buf, 0, 1) < 0;

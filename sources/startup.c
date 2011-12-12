@@ -634,7 +634,7 @@ VOID StartVariables()
 /*
 	Note, this variable can't be initialized in IniModule!:
 */
-	AC.NumberOfRedefsInModule=0;
+	AC.RedefsInModuleFlag = 0;
 #endif
 #ifdef WITHPTHREADS
 /*

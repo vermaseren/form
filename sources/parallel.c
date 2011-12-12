@@ -1018,16 +1018,11 @@ static  WORD *PF_CurrentBracket;
 static WORD PF_GetTerm(WORD *term)
 {
 	GETIDENTITY
-	FILEHANDLE *fi;
+	FILEHANDLE *fi = AC.RhsExprInModuleFlag && PF.rhsInParallel ? &PF.slavebuf : AR.infile;
 	WORD i;
 	WORD *next, *np, *last, *lp = 0, *nextstop, *tp=term;
 
 	/* Only on the slaves. */
-
-	if ( AC.NumberOfRhsExprInModule && PF.rhsInParallel )
-		fi = &PF.slavebuf;
-	else
-		fi = AR.infile;
 
 	AN.deferskipped = 0;
 	if ( fi->POfill >= fi->POfull || fi->POfull == fi->PObuffer ) {
@@ -1227,7 +1222,7 @@ WORD PF_Deferred(WORD *term, WORD level)
 	GETIDENTITY
 	WORD *bra, *bstop;
 	WORD *tstart;
-	FILEHANDLE *fi = AC.NumberOfRhsExprInModule && PF.rhsInParallel ? &PF.slavebuf : AR.infile;
+	FILEHANDLE *fi = AC.RhsExprInModuleFlag && PF.rhsInParallel ? &PF.slavebuf : AR.infile;
 	WORD *next = fi->POfill;
 	WORD *termout = AT.WorkPointer;
 	WORD *oldwork = AT.WorkPointer;
@@ -1872,11 +1867,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		AR.infile->POfull = AR.infile->POfill = AR.infile->PObuffer = PF_shared_buff;
 #endif
 		{
-			FILEHANDLE *fi;
-			if ( AC.NumberOfRhsExprInModule && PF.rhsInParallel )
-				fi = &PF.slavebuf;
-			else
-				fi = AR.infile;
+			FILEHANDLE *fi = AC.RhsExprInModuleFlag && PF.rhsInParallel ? &PF.slavebuf : AR.infile;
 			fi->POfull = fi->POfill = fi->PObuffer;
 		}
 		/* FIXME: AN.ninterms is still broken when AN.deferskipped is non-zero.

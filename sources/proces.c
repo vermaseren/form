@@ -162,10 +162,10 @@ WORD Processor()
 	}
 #endif
 #ifdef PARALLEL
-	if ( ( AC.NumberOfRhsExprInModule > 0 ) &&
-		( AC.mparallelflag == PARALLELFLAG ) && (PF.rhsInParallel) ) {
-			if ( PF_broadcastRHS() )
-				retval = -1;
+	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && AC.mparallelflag == PARALLELFLAG ) {
+		if ( PF_broadcastRHS() ) {
+			retval = -1;
+		}
 	}
 	PF.exprtodo = -1; /* This means, the slave does not perform inparallel */
 	if ( AC.partodoflag > 0 ) {

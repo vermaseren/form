@@ -628,8 +628,7 @@ WORD DoExecute(WORD par, WORD skip)
 		AC.mparallelflag |= NOPARALLEL_STORE;
 	}
 /*[20oct2009 mt]:*/
-	if ( ( AC.NumberOfRhsExprInModule > 0 ) &&
-			( AC.mparallelflag == PARALLELFLAG ) ) {
+	if ( AC.RhsExprInModuleFlag && AC.mparallelflag == PARALLELFLAG ) {
 		if (PF.rhsInParallel) {
 			PF.mkSlaveInfile=1;
 			if(PF.me != MASTER){

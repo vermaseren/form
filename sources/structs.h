@@ -1668,8 +1668,8 @@ struct C_const {
     WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
     WORD    ToBeInFactors;
 #ifdef PARALLEL
-    WORD NumberOfRhsExprInModule;  /* (C) Number of RHS expressions*/
-    WORD NumberOfRedefsInModule;   /* (C) Number of redefined variables in the module*/
+    WORD    RhsExprInModuleFlag;   /* (C) Set by the compiler if RHS expressions exists. */
+    WORD    RedefsInModuleFlag;    /* (C) Set by the compiler if the redefine statement is used. */
 #else
 	WORD dummyword1;
 	WORD dummyword2;
