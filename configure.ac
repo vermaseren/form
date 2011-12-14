@@ -69,6 +69,15 @@ case $host_os in
 	cygwin* )
 		print_os="Cygwin"
 		;;
+	freebsd* )
+		print_os="FreeBSD"
+		;;
+	netbsd* )
+		print_os="NetBSD"
+		;;
+	openbsd* )
+		print_os="OpenBSD"
+		;;
 	* )
 		print_os="UNKNOWN OS"
 		;;
@@ -274,9 +283,9 @@ AS_IF([test "x$enable_threaded" != xno],
 	# Check the flag/library for pthreads
 	AS_IF([$flag],
 		[ok=no
-		# none: Cygwin
-		# -pthread: Linux/gcc
-		# pthread: Linux, OSX
+		#  none    : Cygwin
+		# -pthread : Linux/gcc (kernel threads), BSD/gcc (userland threads)
+		#  pthread : Linux, OSX
 		for a in none -pthread pthread; do
 			case $a in
 				none)
@@ -300,8 +309,9 @@ AS_IF([test "x$enable_threaded" != xno],
 static void *start_routine(void *a) { return a; }
 ], [
 pthread_t th;
+pthread_condattr_t attr;
 pthread_create(&th, 0, start_routine, 0);
-pthread_self();
+pthread_condattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE);
 ])],
 				[ok=yes],
 				[])
@@ -363,9 +373,12 @@ clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
 			CPPFLAGS=$save_CPPFLAGS
 			AC_MSG_RESULT($ok)])
 		AS_IF([test "x$ok" = xyes],
-			[AC_CHECK_LIB([rt], [clock_gettime],
-				[PTHREAD_LIBS="-lrt $PTHREAD_LIBS"],
-				[ok=no])])
+			[save_LIBS=$LIBS
+			AC_SEARCH_LIBS([clock_gettime], [rt], [], [ok=no])
+			LIBS=$save_LIBS
+			if test "x$ac_cv_search_clock_gettime" != "xnone required" && test "x$ac_cv_search_clock_gettime" != "xno"; then
+				PTHREAD_LIBS="$ac_cv_search_clock_gettime $PTHREAD_LIBS"
+			fi])
 		AS_IF([test "x$ok" = xyes],
 			[cat >>confdefs.h <<END
 #ifdef WITHPTHREADS
@@ -445,6 +458,9 @@ build_parform=$enable_parform
 AS_IF([test "x$enable_parform" = xyes && test "x$enable_debug" = xyes], [build_parvorm=yes], [build_parvorm=no])
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
+
+# Check for ftime
+AC_SEARCH_LIBS([ftime], [compat], [], [])
 
 # Check for static linking
 STATIC_LDFLAGS=

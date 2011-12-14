@@ -1,7 +1,7 @@
 #include <sys/time.h>
 #include <cstdlib>
 
-#ifndef mBSD
+#ifndef timersub
 /* timersub is not in POSIX, but presents on most BSD derivatives.
    This implementation is borrowed from glibc. (TU 23 Oct 2011) */
 #define timersub(a, b, result) \
