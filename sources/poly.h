@@ -108,8 +108,8 @@ public:
 	int number_of_terms () const;
 	const std::vector<int> all_variables () const;	
 	const poly integer_lcoeff () const;
-	const poly lcoeff_univar (int x) const;
-	const poly lcoeff_multivar (int x) const;
+	const poly lcoeff_univar (int) const;
+	const poly lcoeff_multivar (int) const;
 	const poly coefficient (int, int) const;
 	const poly derivative (int) const;
 	
@@ -124,7 +124,7 @@ public:
 	// conversion from/to form notation
 	static void get_variables (PHEAD std::vector<WORD *>, bool, bool);
 	static const poly argument_to_poly (PHEAD WORD *, bool, bool, poly *den=NULL);
-	static void poly_to_argument (const poly &, WORD *, bool, poly *den=NULL);
+	static void poly_to_argument (const poly &, WORD *, bool);
 	int size_of_form_notation (poly *den=NULL);
 	const poly & normalize ();
 

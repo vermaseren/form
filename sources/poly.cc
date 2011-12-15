@@ -2304,7 +2304,11 @@ const poly poly::simple_poly (PHEAD int x, int a, int b, int p, int n) {
 	
 	tmp[0] = idx;                                             // length
 
-	for (int i=0; i<b; i++) res*=tmp;
+	while (b!=0) {
+		if (b&1) res*=tmp;
+		tmp*=tmp;
+		b>>=1;
+	}
 
 	return res;
 }
@@ -2338,7 +2342,11 @@ const poly poly::simple_poly (PHEAD int x, const poly &a, int b, int p, int n) {
 	
 	tmp[0] = idx;                                                     // length
 
-	for (int i=0; i<b; i++) res*=tmp;
+	while (b!=0) {
+		if (b&1) res*=tmp;
+		tmp*=tmp;
+		b>>=1;
+	}
 	
 	return res;
 }
@@ -2504,8 +2512,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 			res[ri+1+j]=0;                                                       // powers=0
 		res.termscopy(&e[i+e[i]-ABS(nc)], ri+1+AN.poly_num_vars, ABS(nc));     // coefficient
 		nc /= 2;                                                               // remove denominator
-		Mully(BHEAD (UWORD *)&res[ri+1+AN.poly_num_vars], &nc, den, nden);
-		//					      (UWORD *)&den>terms[2+AN.poly_num_vars], den->terms[den->terms[1]]);
+		Mully(BHEAD (UWORD *)&res[ri+1+AN.poly_num_vars], &nc, den, nden);     // multiply with overall den
 		res[ri] = ABS(nc) + AN.poly_num_vars + 2;                              // length
 		
 		res[ri+res[ri]-1] = nc;                                                // length coefficient
@@ -2536,7 +2543,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 */
 
 // converts a polynomial class "poly" to a form expression
-void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *den) {
+void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 
 	POLY_GETIDENTITY(a);
 
@@ -2558,10 +2565,6 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 			res[i] = 0;                                // remainder of arghead	
 	}
 
-	UWORD *number = NULL;
-	if (den != NULL)
-		number = (UWORD *)NumberMalloc("poly::poly_to_argument");
-	
 	int L = with_arghead ? ARGHEAD : 0;
 	
 	for (int i=1; i!=a[0]; i+=a[i]) {
@@ -2586,23 +2589,12 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 		WORD nc = a[i+a[i]-1];
 		memcpy(&res[L+res[L]], &a[i+a[i]-1-ABS(nc)], ABS(nc)*sizeof(WORD)); // numerator
 
-		if (den==NULL || den->is_one()) {
-			res[L] += ABS(nc);	                             // fix length
-			memset(&res[L+res[L]], 0, ABS(nc)*sizeof(WORD)); // denominator one
-			res[L+res[L]] = 1;                               // denominator one
-			res[L] += ABS(nc);                               // fix length
-			res[L+res[L]] = SGN(nc) * (2*ABS(nc)+1);         // length of coefficient
-			res[L]++;                                        // fix length
-		}
-		else {
-			WORD nd = (*den)[(*den)[1]];                                  // length denominator
-			memcpy(number, &(*den)[2+AN.poly_num_vars], nd*sizeof(WORD)); // denominator
-			Simplify(BHEAD (UWORD *)&res[L+res[L]], &nc, number, &nd);    // gcd(num,den);
-			Pack((UWORD *)&res[L+res[L]], &nc, number, nd);               // format
-			res[L] += 2*ABS(nc)+1;                                        // fix length
-			res[L+res[L]-1] = SGN(nc)*(2*ABS(nc)+1);                      // length of coefficient
-		}
-		
+		res[L] += ABS(nc);	                             // fix length
+		memset(&res[L+res[L]], 0, ABS(nc)*sizeof(WORD)); // denominator one
+		res[L+res[L]] = 1;                               // denominator one
+		res[L] += ABS(nc);                               // fix length
+		res[L+res[L]] = SGN(nc) * (2*ABS(nc)+1);         // length of coefficient
+		res[L]++;                                        // fix length
 		L += res[L];                                     // fix length
 	}
 
@@ -2614,9 +2606,6 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead, poly *
 	else {
 		res[L] = 0;
 	}
-
-	if (den != NULL)
-		NumberFree(number, "poly::poly_to_argument");
 }
 
 /*

@@ -138,7 +138,7 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 	// Calculate gcd
 	poly gcd(polygcd::gcd(pa,pb));
-
+	
 	// Allocate new memory and convert to Form notation
 	WORD *res = (WORD *)Malloc1((gcd.size_of_form_notation()+1)*sizeof(WORD), "poly_gcd");
 	poly::poly_to_argument(gcd, res, false);
@@ -148,201 +148,12 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
-
 	return res;
 }
 
 /*
   	#] poly_gcd : 
-  	#[ poly_scale_factor :
-*/
-
-int poly_scale_factor (const poly &a, const poly &b) {
-
-	POLY_GETIDENTITY(a);
-
-	// allocate heap
-	int nb=b.number_of_terms();
-
-	// determine maximum power in variables
-	WORD *maxpowera = AT.WorkPointer;
-	AT.WorkPointer += AN.poly_num_vars;
-	
-	for (int i=0; i<AN.poly_num_vars; i++)
-		maxpowera[i] = 0;
-
-	for (int ai=1; ai<a[0]; ai+=a[ai])
-		for (int j=0; j<AN.poly_num_vars; j++)
-			maxpowera[j] = MaX(maxpowera[j], a[ai+1+j]);
-
-	// if PROD(max.power) small, allocate hash table
-	bool use_hash = false;//true;
-	int nhash = 1;
-
-	for (int i=0; i<AN.poly_num_vars; i++) {
-		if (nhash > POLY_MAX_HASH_SIZE / (maxpowera[i]+1)) {
-			nhash = 1;
-			use_hash = false;
-			break;
-		}
-		nhash *= maxpowera[i]+1;
-	}
-
-	WantAddPointers(nb+nhash);
-	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
-	
-	for (int i=0; i<nb; i++) 
-		heap[i] = (WORD *) NumberMalloc("poly_scale_factor");
-	int nheap = 1;
-	heap[0][0] = 1;
-	heap[0][1] = 0;
-	heap[0][2] = -1;
-	memcpy (&heap[0][3], &a[1], a[1]*sizeof(WORD));
-	heap[0][3] = 0;
-	
-	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nb;
-	for (int i=0; i<nhash; i++)
-		hash[i] = NULL;
-
-	poly q(BHEAD 0);
-	int qi=1;
-
-	int s = nb;
-	WORD *t = (WORD *) NumberMalloc("poly_scale_factor");
-
-	// insert contains element that still have to be inserted to the heap
-	// (exists to avoid code duplication).
-	vector<pair<int,int> > insert;
-	
-	while (insert.size()>0 || nheap>0) {
-
-		q.check_memory(qi);
-		
-		// collect a term t for the quotient/remainder
-		t[0] = -1;
-		
-		do {
-			WORD *p = heap[nheap];
-			bool this_insert;
-		 
-			if (insert.empty()) {
-				// extract element from the heap and prepare adding new ones
-				this_insert = false;
-
-				poly::pop_heap(BHEAD heap, nheap--);
-				p = heap[nheap];
-				
-				if (p[2]!=-1) hash[p[2]] = NULL;
-
-				if (t[0] == -1) 
-					memcpy (t, p, (4+AN.poly_num_vars)*sizeof(WORD));
-				else
-					t[3] = MaX(p[3],t[3]);
-			}
-			else {
-				// prepare adding an element of insert to the heap
-				this_insert = true;
-
-				p[0] = insert.back().first;
-				p[1] = insert.back().second;
-				insert.pop_back();
-			}
-
-			// add elements to the heap
-			while (true) {
-				// prepare the element
-				if (p[1]==0) {
-					p[0] += a[p[0]];
-					if (p[0]==a[0]) break;
-					memcpy(&p[3], &a[p[0]], a[p[0]]*sizeof(WORD));
-					p[3] = 0;
-				}			
-				else {
-					if (!this_insert)
-						p[1] += q[p[1]];
-					this_insert = false;
-					
-					if (p[1]==qi) {	s++; break; }
-
-					for (int i=0; i<AN.poly_num_vars; i++)
-						p[4+i] = b[p[0]+1+i] + q[p[1]+1+i];
-
-					p[3] = q[p[1]+AN.poly_num_vars+1];
-				}
-
-				// with hashing, calculate hash value
-				if (use_hash) {
-					p[2] = 0;				
-					for (int i=0; i<AN.poly_num_vars; i++)
-						p[2] = (maxpowera[i]+1)*p[2] + p[4+i];				
-				}
-				else {
-					p[2] = -1;
-				}
-
-				// add it to a heap element if possible, otherwise push it
-				if (!use_hash || hash[p[2]] == NULL) {
-					if (use_hash) hash[p[2]] = p;
-					swap (heap[nheap],p);
-					poly::push_heap(BHEAD heap, ++nheap);
-					break;
-				}
-				else {
-					WORD *h = hash[p[2]];
-					h[3] = MaX(h[3],p[3]);
-
-					if (h[1]<p[1]) {
-						swap(h[0],p[0]);
-						swap(h[1],p[1]);
-					}
-				}
-			}
-		}
-		while (t[0]==-1 || (nheap>0 && poly::monomial_compare(BHEAD heap[0]+3, t+3)==0));
-
-		//		printf ("nheap=%i pow=%i denpow=%i\n",nheap,t[4],t[3]);
-		// check divisibility 
-		bool div = true;
-		for (int i=0; i<AN.poly_num_vars; i++)
-			if (t[4+i] < b[2+i]) div=false;
-		
-		if (div) {
-			// divisable, so divide coefficient as well
-			int bi = 1;
-			for (int j=1; j<s; j++) {
-				bi += b[bi];
-				insert.push_back(make_pair(bi,qi));
-			}
-			s=1;
-				
-			q[qi] = 3+AN.poly_num_vars;
-			for (int i=0; i<AN.poly_num_vars; i++)
-				q[qi+1+i] = t[4+i] - b[2+i];
-			qi += q[qi];
-			q[qi-1] = 1;
-			q[qi-2] = t[3]+1;
-		}
-	}
-
-	q[0]=qi;
-	
-	int res=0;
-	for (int i=1; i<qi; i+=q[i])
-		res = MaX(res, q[i+AN.poly_num_vars+1]);
-	
-	for (int i=0; i<nb; i++)
-		NumberFree(heap[i],"poly_scale_factor");
-
-	NumberFree(t,"poly_scale_factor");
-
-	AT.WorkPointer -= AN.poly_num_vars;
-
-	return res;
-}
-
-/*
-  	#] poly_scale_factor :
-  	#[ poly_divmod :
+  	#[ poly_divmod : 
 */
 
 WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
@@ -350,55 +161,145 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_divmod" << endl;
 #endif
-	
+
+	// get variables
 	vector<WORD *> e;
 	e.push_back(a);
 	e.push_back(b);
 	poly::get_variables(BHEAD e, false, false);
 
-	// Check for modulus calculus
+	// add extra variables to keep track of denominators
+	const int DENOMSYMBOL = MAXPOSITIVE;
+	const int DENOMPOWER  = MAXPOSITIVE;
+
+	WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
+	memcpy (new_poly_vars, AN.poly_vars, AN.poly_num_vars*sizeof(WORD));
+	new_poly_vars[AN.poly_num_vars] = DENOMSYMBOL;
+	if (AN.poly_num_vars > 0)
+		M_free(AN.poly_vars, "AN.poly_vars");
+	AN.poly_num_vars++;
+	AN.poly_vars = new_poly_vars;
+	
+	// check for modulus calculus
 	WORD modp=poly_determine_modulus(BHEAD false, true, "polynomial division");
 	
-	// Convert to polynomials
+	// convert to polynomials
 	poly dena(BHEAD 0);
 	poly denb(BHEAD 0);
 	poly pa(poly::argument_to_poly(BHEAD a, false, true, &dena), modp, 1);
 	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb), modp, 1);
+	poly denres(divmod==0 ? poly(BHEAD 1) : dena*denb);
 
 	pa *= denb;
 	pb *= dena;
 
-	poly iconta = polygcd::integer_content(pa);
-	poly icontb = polygcd::integer_content(pb);
-	poly gcdiconts = polygcd::integer_gcd(iconta,icontb);
-	pa /= gcdiconts;
-	pb /= gcdiconts;
-
-	int pow = poly_scale_factor(pa,pb);
-	poly lcoeffb(pb.integer_lcoeff());
-	
-	lcoeffb *= poly(BHEAD lcoeffb.sign());
-	poly den(BHEAD 1);
-
-	if (divmod==1) den=dena*denb;
-	
-	for (int i=0; i<pow; i++) {
-		pa  *= lcoeffb;
-		den *= lcoeffb;
+	// remove integer content
+	if (modp==0) {
+		poly iconta = polygcd::integer_content(pa);
+		poly icontb = polygcd::integer_content(pb);
+		poly gcdiconts = polygcd::integer_gcd(iconta,icontb);
+		pa /= gcdiconts;
+		pb /= gcdiconts;
 	}
-		
-	// Calculate div/mod
-	poly pres(BHEAD 0);
 
-	if (divmod==0)
-		pres = pa / pb;
-	else
-		pres = pa % pb;
+	// multiply a by DENOMSYMBOL^DENOMPOWER
+	pa *= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,DENOMPOWER);
 	
-	// Allocate new memory and convert to Form notation
-	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation(&den)+1)*sizeof(WORD), "poly_divmod");
-	poly::poly_to_argument(pres, res, false, &den);
+	// replace lcoeff(b) by DENOMSYMBOL
+	poly lcoeffb(pb.integer_lcoeff());
 
+	poly modifyb(BHEAD 1);
+	for (int i=0; i<AN.poly_num_vars; i++)
+		modifyb[2+i] = pb[2+i];
+	modifyb *= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,1) - lcoeffb;
+	pb += modifyb;
+
+	// calculate div/mod
+	poly pres(divmod==0 ? pa/pb : pa%pb);
+	
+	// allocate new memory and convert to Form notation
+	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation(&denres)+1)*sizeof(WORD), "poly_divmod");
+		
+	// special case: a=0
+	if (pres[0]==1) {
+		res[0] = 0;
+	}
+	else {
+		WORD nden=0, ntmp=0, nmul=0;
+		UWORD *den = (UWORD *)NumberMalloc("poly_divmod");
+		UWORD *mul = (UWORD *)NumberMalloc("poly_divmod");
+		UWORD *tmp = (UWORD *)NumberMalloc("poly_divmod");
+
+		int L=0;
+		
+		for (int i=1; i!=pres[0]; i+=pres[i]) {
+			
+			res[L]=1; // length
+			bool first = true;
+			WORD denompower = 0;
+			
+			for (int j=0; j<AN.poly_num_vars; j++)
+				if (pres[i+1+j] > 0) {
+					if (AN.poly_vars[j] == DENOMSYMBOL) {
+						denompower = DENOMPOWER - pres[i+1+j];
+					}
+					else {
+						if (first) {
+							first = false;
+							res[L+1] = 1; // symbols
+							res[L+2] = 2; // length
+						}
+						res[L+1+res[L+2]++] = AN.poly_vars[j]; // symbol
+						res[L+1+res[L+2]++] = pres[i+1+j];     // power
+					}
+				}
+			
+			if (!first)	res[L] += res[L+2]; // fix length
+			
+			WORD nnum = pres[i+pres[i]-1];
+			memcpy(&res[L+res[L]], &pres[i+pres[i]-1-ABS(nnum)], ABS(nnum)*sizeof(UWORD)); // numerator
+
+			// calculate denominator
+			nden = denres[denres[1]];
+			memcpy (den, &denres[2+AN.poly_num_vars], nden*sizeof(UWORD));
+
+			if (!lcoeffb.is_one()) {
+				nmul = lcoeffb[lcoeffb[1]];
+				memcpy (mul, &lcoeffb[2+AN.poly_num_vars], ABS(nmul)*sizeof(UWORD));
+				
+				while (denompower!=0) {
+					if (denompower&1) {
+						MulLong(den,nden,mul,nmul,tmp,&ntmp);
+						swap(tmp,den);
+						nden=ntmp;
+						if (modp!=0) TakeModulus(den,&nden,(UWORD *)&modp,1, NOUNPACK);
+					}
+					
+					MulLong(mul,nmul,mul,nmul,tmp,&ntmp);
+					swap(tmp,mul);
+					nmul=ntmp;
+					if (modp!=0) TakeModulus(mul,&nmul,(UWORD *)&modp,1, NOUNPACK);
+					
+					denompower>>=1;
+				}
+			}
+
+			if (nden!=1 || den[0]!=1)
+				Simplify(BHEAD (UWORD *)&res[L+res[L]], &nnum, den, &nden); // gcd(num,den)
+			Pack((UWORD *)&res[L+res[L]], &nnum, den, nden);              // format
+			res[L] += 2*ABS(nnum)+1;                                      // fix length
+			res[L+res[L]-1] = SGN(nnum)*(2*ABS(nnum)+1);                  // length of coefficient
+			L += res[L];                                                  // fix length
+		}
+		
+		res[L] = 0;
+		
+		NumberFree(den,"poly_divmod");	
+		NumberFree(mul,"poly_divmod");	
+		NumberFree(tmp,"poly_divmod");	
+	}
+
+	// clean up
 	if (AN.poly_num_vars > 0)
 		M_free(AN.poly_vars, "AN.poly_vars");
 
