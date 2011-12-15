@@ -780,16 +780,7 @@ VOID PreProcessor()
 		}
 
 		if ( specialtype ) IniSpecialModule(specialtype);
-/*[28nov2003 mt]:*/
-#ifdef PARALLEL
-		if( PF.synchro || AC.RedefsInModuleFlag ){
-			/* Synchronize redefined preprocessor variables. */
-			PF_InitRedefinedPreVars();
-			/* We can't put AC.RedefsInModuleFlag=0 to IniModule(). */
-			AC.RedefsInModuleFlag = 0;
-		}
-#endif
-/*:[28nov2003 mt]*/
+
 		numstatement = 0;
 		for(;;) {	/* Read a single line/statement */
 			c = GetChar(0);
@@ -1951,16 +1942,31 @@ int TheUndefine(UBYTE *name)
 			p->name = 0; p->value = 0;
 			{
 				CBUF *CC = cbuf + AC.cbufnum;
-				int j;
+				int j, k;
 				for ( j = 1; j <= CC->numlhs; j++ ) {
 					if ( CC->lhs[j][0] == TYPEREDEFPRE ) {
 						if ( CC->lhs[j][2] > inum ) CC->lhs[j][2]--;
 						else if ( CC->lhs[j][2] == inum ) {
-							MesPrint("@Conflict between undefining a preprocessor variable and a redefine statement");
-							error = 1;
+							for ( k = inum - 1; k >= 0; k-- )
+								if ( StrCmp(name, PreVar[k].name) == 0 ) break;
+							if ( k >= 0 ) CC->lhs[j][2] = k;
+							else {
+								MesPrint("@Conflict between undefining a preprocessor variable and a redefine statement");
+								error = 1;
+							}
 						}
 					}
 				}
+#ifdef PARALLELCODE
+				for ( j = 0; j < AC.numpfirstnum; j++ ) {
+					if ( AC.pfirstnum[j] > inum ) AC.pfirstnum[j]--;
+					else if ( AC.pfirstnum[j] == inum ) {
+						for ( k = inum - 1; k >= 0; k-- )
+							if ( StrCmp(name, PreVar[k].name) == 0 ) break;
+						if ( k >= 0 ) AC.pfirstnum[j] = k;
+					}
+				}
+#endif
 			}
 			break;
 		}

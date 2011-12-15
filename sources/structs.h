@@ -1531,9 +1531,11 @@ struct C_const {
     char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
                                         created the snapshot. =0 if no script shall be executed.*/
     WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
+#endif
+#ifdef WITHPTHREADS
     pthread_mutex_t halfmodlock;   /* () Lock for adding buffer for halfmod */
 #endif
 	POSITION StoreFileSize;        /* () Size of store file */
@@ -1619,7 +1621,7 @@ struct C_const {
                                         -1 : do recovery from snapshot, set by command line option;
                                         0 : do nothing; 1 : create snapshots, set by On checkpoint
                                         statement */
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
 #else
@@ -1669,14 +1671,12 @@ struct C_const {
     WORD    ToBeInFactors;
 #ifdef PARALLEL
     WORD    RhsExprInModuleFlag;   /* (C) Set by the compiler if RHS expressions exists. */
-    WORD    RedefsInModuleFlag;    /* (C) Set by the compiler if the redefine statement is used. */
 #else
 	WORD dummyword1;
-	WORD dummyword2;
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
-	PADPOINTER((8+3*MAXNEST),68,(41+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
+	PADPOINTER((8+3*MAXNEST),68,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
 };
 /*
  		#] C : 

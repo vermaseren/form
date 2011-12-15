@@ -723,6 +723,11 @@ WORD DoExecute(WORD par, WORD skip)
 	if(NumPotModdollars > 0)
 		if( (RetCode=PF_mkDollarsParallel())!=0 )
 			return(RetCode);
+	/* Broadcast redefined preprocessor variables. */
+	if ( AC.numpfirstnum > 0 ) {
+		RetCode = PF_BroadcastRedefinedPreVars();
+		if ( RetCode ) return RetCode;
+	}
 	/* Broadcast AR.expflags, which may be used on the slaves in the next module
 	 * via ZERO_ or UNCHANGED_. It also broadcasts e->vflags, e->numdummies, ...
 	 * of each expression. (TU 23 Sep 2011) */
@@ -778,7 +783,7 @@ WORD DoExecute(WORD par, WORD skip)
 	NumModOptdollars = 0;
 
 skipexec:
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 	AC.numpfirstnum = 0;
 #endif
 	AC.DidClean = 0;

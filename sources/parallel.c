@@ -42,10 +42,10 @@
 
 /*
 #define PF_DEBUG_BCAST_LONG
-#define PF_DEBUG_BCAST_PREVAR
 #define PF_DEBUG_BCAST_PREDOLLAR
 #define PF_DEBUG_BCAST_RHSEXPR
 #define PF_DEBUG_BCAST_DOLLAR
+#define PF_DEBUG_BCAST_PREVAR
 #define PF_DEBUG_BCAST_EXPRFLAGS
 */
 
@@ -97,6 +97,9 @@ static inline size_t sizeof_datatype(MPI_Datatype type)
 /* Private functions */
 
 static int PF_WaitAllSlaves(void);
+
+static void PF_PackRedefinedPreVars(void);
+static void PF_UnpackRedefinedPreVars(void);
 
 static int PF_Wait4MasterIP(int tag);
 static int PF_DoOneExpr(void);
@@ -1553,12 +1556,12 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 {
 	GETIDENTITY
 	WORD *term = AT.WorkPointer;
-	LONG dd = 0, ll;
+	LONG dd = 0;
 	PF_BUFFER *sb = PF.sbuf;
 	WORD j, *s, next;
 	LONG size, cpu;
 	POSITION position;
-	int k, src, tag, attach;
+	int k, src, tag;
 	FILEHANDLE *oldoutfile = AR.outfile;
 
 #ifdef MPI2
@@ -1571,16 +1574,13 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 #endif
 
 	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer ) ) > AT.WorkTop ) return(MesWork());
-/*
-		allocate and/or reset the variables used for the redefine
-*/
-	if ( !PF.redef || NumPre > (LONG)PF.numredefs ) {
-		if (PF.redef) M_free(PF.redef,"resize PF.redef");
-		PF.numredefs = (LONG)NumPre;
-		PF.redef = (LONG*)Malloc1(PF.numredefs*sizeof(LONG),"PF.redef");
+
+	/* For redefine statements. */
+	if ( AC.numpfirstnum > 0 ) {
+		for ( j = 0; j < AC.numpfirstnum; j++ ) {
+			AC.inputnumbers[j] = -1;
+		}
 	}
-	PF.mnumredefs = 0;
-	for ( ll = 0; ll < PF.numredefs; ll++ ) PF.redef[ll] = 0;
 
 	if ( AC.mparallelflag != PARALLELFLAG ) return(0);
 
@@ -1755,57 +1755,17 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		PF_CatchErrorMessagesForAll();
 		e->numdummies = 0;
 		for ( k = 1; k < PF.numtasks; k++ ) {
-			PF_Receive(PF_ANY_SOURCE,PF_ENDSORT_MSGTAG,&src,&tag);
-			PF_Unpack(PF_stats[src],PF_STATS_SIZE,PF_LONG);
+			PF_LongSingleReceive(PF_ANY_SOURCE, PF_ENDSORT_MSGTAG, &src, &tag);
+			PF_LongSingleUnpack(PF_stats[src], PF_STATS_SIZE, PF_LONG);
 			{
 				WORD numdummies, expchanged;
-				PF_Unpack(&numdummies, 1, PF_WORD);
-				PF_Unpack(&expchanged, 1, PF_WORD);
+				PF_LongSingleUnpack(&numdummies, 1, PF_WORD);
+				PF_LongSingleUnpack(&expchanged, 1, PF_WORD);
 				if ( e->numdummies < numdummies ) e->numdummies = numdummies;
 				AR.expchanged |= expchanged;
 			}
-			PF_Unpack(&attach,1,PF_INT);
-			if ( attach ) {
-/*
-					actions depending on rest of information in last message
-*/
-				switch ( attach ) {
-					case PF_ATTACH_REDEF: {
-						int ll, kk, ii;
-						UBYTE *value = 0;
-						LONG redef;
-						PF_Unpack(&kk,1,PF_INT);
-						while ( --kk >= 0 ) {
-							PF_Unpack(&ii,1,PF_INT);
-							PF_Unpack(&ll,1,PF_INT);
-							value = (UBYTE*)Malloc1(ll,"redef value");
-							PF_Unpack(value,ll,PF_BYTE);
-							PF_Unpack(&redef,1,PF_LONG);
-							if ( redef > PF.redef[ii] ) {
-								if ( PF.redef[ii] == 0 ) /*This term was not counted yet*/
-									PF.mnumredefs++;     /*Count it!*/
-								PF.redef[ii] = redef;    /*Store the latest term number*/
-								PutPreVar(PreVar[ii].name,value,0,1);
-/*
-									Redefine preVar
-									I reduced the possibility to transfer prepro
-									variables with args for the moment
-*/
-							}
-						}
-/*
-							here we should free the allocated memory of value & name ??
-*/
-						if (value) M_free(value,"redef value");
-						break;
-					}
-					default:
-/*
-						here should go an error message
-*/
-						break;
-				}
-			}
+			/* Now handle redefined preprocessor variables. */
+			if ( AC.numpfirstnum > 0 ) PF_UnpackRedefinedPreVars();
 		}
 		if ( ! AC.OldParallelStats ) {
 			/* Now we can calculate AT.SS->GenTerms from the statistics of the slaves. */
@@ -1848,6 +1808,13 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		WORD oldBracketOn = AR.BracketOn;
 		WORD *oldBrackBuf = AT.BrackBuf;
 		WORD oldbracketindexflag = AT.bracketindexflag;
+
+		/* For redefine statements. */
+		if ( AC.numpfirstnum > 0 ) {
+			for ( j = 0; j < AC.numpfirstnum; j++ ) {
+				AC.inputnumbers[j] = -1;
+			}
+		}
 
 		SeekScratch(AR.outfile,&position);
 		e->onfile = position;
@@ -1935,47 +1902,22 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			#[ Collect (stats,prepro...) :
 */
 		DBGOUT_NINTERMS(1, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ENDSORT\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms));
-		PF_PreparePack();
+		PF_PrepareLongSinglePack();
 		cpu = TimeCPU(1);
 		size = 0;
-		PF_Pack(&cpu               ,1,PF_LONG);
-		PF_Pack(&size              ,1,PF_LONG);
-		PF_Pack(&PF_linterms       ,1,PF_LONG);
-		PF_Pack(&(AM.S0->GenTerms) ,1,PF_LONG);
-		PF_Pack(&(AM.S0->TermsLeft),1,PF_LONG);
+		PF_LongSinglePack(&cpu,              1, PF_LONG);
+		PF_LongSinglePack(&size,             1, PF_LONG);
+		PF_LongSinglePack(&PF_linterms,      1, PF_LONG);
+		PF_LongSinglePack(&AM.S0->GenTerms,  1, PF_LONG);
+		PF_LongSinglePack(&AM.S0->TermsLeft, 1, PF_LONG);
 		{
 			WORD numdummies = AR.MaxDum - AM.IndDum;
-			PF_Pack(&numdummies,    1, PF_WORD);
-			PF_Pack(&AR.expchanged, 1, PF_WORD);
+			PF_LongSinglePack(&numdummies,    1, PF_WORD);
+			PF_LongSinglePack(&AR.expchanged, 1, PF_WORD);
 		}
-/*
-			now handle the redefined Preprovars
-*/
-		k = attach = 0;
-		for ( ll = 0; ll < PF.numredefs; ll++ ) { if (PF.redef[ll]) k++; }
-
-		if ( k ) attach = PF_ATTACH_REDEF;
-		PF_Pack(&attach,1,PF_INT);
-		if ( k ) {
-			int l;
-			UBYTE *value, *p;
-
-			PF_Pack(&k,1,PF_INT);
-			k = NumPre;
-			while ( --k >= 0 ) {
-				if ( PF.redef[k] ) {
-					PF_Pack(&k,1,PF_INT);
-
-					l = 1;
-					p = value = PreVar[k].value;
-					while ( *p++ ) l++;
-					PF_Pack(&l,1,PF_INT);
-					PF_Pack(value,l,PF_BYTE);
-					PF_Pack(&(PF.redef[k]),1,PF_LONG);
-				}
-			}
-		}
-		PF_Send(MASTER, PF_ENDSORT_MSGTAG);
+		/* Now handle redefined preprocessor variables. */
+		if ( AC.numpfirstnum > 0 ) PF_PackRedefinedPreVars();
+		PF_LongSingleSend(MASTER, PF_ENDSORT_MSGTAG);
 /*
 			#] Collect (stats,prepro...) :
 
@@ -2023,10 +1965,6 @@ int PF_Init(int *argc, char ***argv)
 	PF.numsbufs = 2; /* might be changed by LibInit ! */
 	PF.numrbufs = 2; /* might be changed by LibInit ! */
 
-	PF.numredefs = 0;
-	PF.redef = 0;
-	PF.mnumredefs = 0;
-
 	PF_LibInit(argc,argv);
 	PF_RealTime(PF_RESET);
 
@@ -2037,18 +1975,8 @@ int PF_Init(int *argc, char ***argv)
 	PF.rhsInParallel=1;
 	PF.exprbufsize=4096;/*in WORDs*/
 
-/*
-		If !=0, start of each module will be synchronized between all slaves and master
-*/
-	PF.synchro = 0;
-
 	if ( PF.me == MASTER ) {
 #ifdef PF_WITHGETENV
-		if ( getenv("PF_SYNC") !=NULL ) {
-			PF.synchro = 1;
-			fprintf(stderr,"Start of each module is synchronized\n");
-			fflush(stderr);
-		}
 /*
 			get these from the environment at the moment sould be in setfile/tail
 */
@@ -2110,7 +2038,6 @@ int PF_Init(int *argc, char ***argv)
 	if ( PF.me == MASTER ) {
 		PF_PreparePack();
 		PF_Pack(&PF.log,1,PF_INT);
-		PF_Pack(&PF.synchro,1,PF_WORD);
 		PF_Pack(&PF.numrbufs,1,PF_WORD);
 		PF_Pack(&PF.numsbufs,1,PF_WORD);
 		PF_Pack(&PF_maxinterms,1,PF_LONG);
@@ -2120,7 +2047,6 @@ int PF_Init(int *argc, char ***argv)
 	PF_Broadcast();
 	if ( PF.me != MASTER ) {
 		PF_Unpack(&PF.log,1,PF_INT);
-		PF_Unpack(&PF.synchro,1,PF_WORD);
 		PF_Unpack(&PF.numrbufs,1,PF_WORD);
 		PF_Unpack(&PF.numsbufs,1,PF_WORD);
 		PF_Unpack(&PF_maxinterms,1,PF_LONG);
@@ -2242,123 +2168,6 @@ LONG PF_BroadcastNumberOfTerms(LONG x)
 
 /*
   	#] PF_BroadcastNumberOfTerms :
-  	#[ PF_InitRedefinedPreVars :
-*/
-
-/**
- * Broadcasts preprocessor variables, which were changed (by Redefine statement)
- * in the previous module, from the master to the all slaves.
- *
- * @return  0 if OK, nonzero on error.
- *
- * @remark  Limited by the size of the pack buffer.
- */
-int PF_InitRedefinedPreVars(void)
-{
-/*
-		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag!
-		No if(AC.mparallelflag==PARALLELFLAG) !!
-*/
-	UBYTE *value, *name, *p;
-	int i, l;
-
-	if ( MASTER == PF.me ) { /* Pack information about redefined PreVars */
-		PF_PreparePack();     /* Initialize buffers */
-		PF_Pack(&(PF.mnumredefs),1,PF_INT); /* Pack number of redefined variables:*/
-/*
-			now pack for each of the changed preprovariables the length of the
-			name, the name, the length of the value and the value into the
-			sendbuffer:
-*/
-		if ( 0 < PF.mnumredefs ) {
-			for ( i = 0; i < NumPre; i++ ) {
-				if ( PF.redef[i] ) {
-					l = 1;
-					p = name = PreVar[i].name;
-					while ( *p++ ) l++;
-
-					PF_Pack(&l,1,PF_INT);
-					PF_Pack(name,l,PF_BYTE);
-					l = 1;
-					value = PreVar[i].value;
-					while ( *p++ ) l++;
-
-					PF_Pack(&l,1,PF_INT);
-					PF_Pack(value,l,PF_BYTE);
-#ifdef PF_DEBUG_BCAST_PREVAR
-					MesPrint(">> Broadcast PreVar: %s", name);
-#endif
-				}
-			}
-		}
-	}
-
-	PF_Broadcast();
-
-	if ( MASTER != PF.me ) { /*Unpack information about redefined PreVars*/
-		int l, nl = 0, vl = 0;
-/*
-			Extract number of redefined variables:
-*/
-		PF_Unpack(&(PF.mnumredefs),1,PF_INT);
-/*
-			Initialize name and values by empty strings:
-*/
-		*( name = (UBYTE*)Malloc1(1,"PreVar name") ) = '\0';
-		*( value = (UBYTE*)Malloc1(1,"PreVar value") ) = '\0';
-
-		for ( i = 0; i < PF.mnumredefs; i++ ) {
-/*
-				extract name:
-*/
-			PF_Unpack(&l,1,PF_INT); /* Extract the name length */
-			if ( l > nl ) {         /* Expand the buffer: */
-				M_free(name,"PreVar name");
-				name = (UBYTE*)Malloc1((int)l,"PreVar name");
-				nl = l;
-			}
-/*
-				extract the value of the name:
-*/
-			PF_Unpack(name,l,PF_BYTE); /* l >= 1 */
-/*
-				extract value:
-*/
-			PF_Unpack(&l,1,PF_INT);    /* Extract the value length */
-			if ( l > vl ) {            /* Expand the buffer: */
-				M_free(value,"PreVar val");
-				value = (UBYTE*)Malloc1((int)l,"PreVar value");
-				vl = l;
-			}
-/*
-				extract the value of the value:
-*/
-			PF_Unpack(value,l,PF_BYTE);
-
-			if ( PF.log ) {
-				UBYTE lbuf[24];
-				NumToStr(lbuf,AC.CModule);
-				printf("[%d] module %s: PutPreVar(\"%s\",\"%s\",1);\n",
-						PF.me,lbuf,name,value);
-			}
-/*
-				Re-define the variable:
-*/
-			PutPreVar(name,value,NULL,1);
-/*
-			mt: samebody made the following remark here:
-			I reduced the possibility to transfer prepro variables
-					with args for the moment
-*/
-		}
-		M_free(name,"PreVar name");
-		M_free(value,"PreVar value");
-	}
-	return (0);
-}
-
-/*
-  	#] PF_InitRedefinedPreVars :
   	#[ PF_BroadcastString :
 */
 
@@ -3119,6 +2928,164 @@ WORD PF_mkDollarsParallel(void)
 
 /*
   	#] PF_mkDollarsParallel :
+  	#[ Synchronization of redefined preprocessor variables :
+ 		#[ Variables :
+*/
+
+/* A buffer used in receivers. */
+static Vector(UBYTE, prevarbuf);
+
+/*
+ 		#] Variables :
+ 		#[ PF_PackRedefinedPreVars :
+*/
+
+/**
+ * Packs information of redefined preprocessor variables into the long single
+ * pack buffer.
+ */
+static void PF_PackRedefinedPreVars(void)
+{
+	int i;
+	/* First, pack the number of redefined preprocessor variables. */
+	int nredefs = 0;
+	for ( i = 0; i < AC.numpfirstnum; i++ )
+		if ( AC.inputnumbers[i] >= 0 ) nredefs++;
+	PF_LongSinglePack(&nredefs, 1, PF_INT);
+	/* Then, pack each preprocessor variable. */
+	for ( i = 0; i < AC.numpfirstnum; i++ )
+		if ( AC.inputnumbers[i] >= 0) {
+			WORD index = AC.pfirstnum[i];
+			UBYTE *value = PreVar[index].value;
+			int bytes = strlen((char *)value);
+			PF_LongSinglePack(&index, 1, PF_WORD);
+			PF_LongSinglePack(&bytes, 1, PF_INT);
+			PF_LongSinglePack(value, bytes, PF_BYTE);
+			PF_LongSinglePack(&AC.inputnumbers[i], 1, PF_LONG);
+	}
+}
+
+/*
+ 		#] PF_PackRedefinedPreVars :
+ 		#[ PF_UnpackRedefinedPreVars :
+*/
+
+/**
+ * Unpacks information of redefined preprocessor variables from the long single
+ * pack buffer.
+ */
+static void PF_UnpackRedefinedPreVars(void)
+{
+	int i, j;
+	/* Unpack the number of redefined preprocessor variables. */
+	int nredefs;
+	PF_LongSingleUnpack(&nredefs, 1, PF_INT);
+	if ( nredefs > 0 ) {
+		/* Then unpack each preprocessor variable. */
+		for ( i = 0; i < nredefs; i++ ) {
+			WORD index;
+			int bytes;
+			UBYTE *value;
+			LONG inputnumber;
+			PF_LongSingleUnpack(&index, 1, PF_WORD);
+			PF_LongSingleUnpack(&bytes, 1, PF_INT);
+			VectorReserve(prevarbuf, bytes + 1);
+			value = VectorPtr(prevarbuf);
+			PF_LongSingleUnpack(value, bytes, PF_BYTE);
+			value[bytes] = '\0';
+			PF_LongSingleUnpack(&inputnumber, 1, PF_LONG);
+			/* Put this variable if needed. */
+			for ( j = 0; j < AC.numpfirstnum; j++ )
+				if ( AC.pfirstnum[j] == index ) break;
+			if ( AC.inputnumbers[j] < inputnumber ) {
+				AC.inputnumbers[j] = inputnumber;
+				PutPreVar(PreVar[index].name, value, NULL, 1);
+			}
+		}
+	}
+}
+
+/*
+ 		#] PF_UnpackRedefinedPreVars :
+ 		#[ PF_BroadcastRedefinedPreVars :
+*/
+
+/**
+ * Broadcasts preprocessor variables, which were changed (by Redefine statement)
+ * in the previous module, from the master to the all slaves.
+ *
+ * @return  0 if OK, nonzero on error.
+ *
+ * @remark  Limited by the size of the pack buffer.
+ */
+int PF_BroadcastRedefinedPreVars(void)
+{
+	/*
+	 * NOTE: Because the compilation is performed on the all processes
+	 * independently on AC.mparallelflag, we always have to broadcast redefined
+	 * preprocessor variables from the master to the all slaves.
+	 */
+	if ( PF.me == MASTER ) {
+/*
+ 		#[ Master :
+*/
+		int i, nredefs;
+		PF_PrepareLongMultiPack();
+		/* First, pack the number of redefined preprocessor variables. */
+		nredefs = 0;
+		for ( i = 0; i < AC.numpfirstnum; i++ )
+			if ( AC.inputnumbers[i] >= 0 ) nredefs++;
+		PF_LongMultiPack(&nredefs, 1, PF_INT);
+		/* Then, pack each preprocessor variable. */
+		for ( i = 0; i < AC.numpfirstnum; i++ )
+			if ( AC.inputnumbers[i] >= 0) {
+				WORD index = AC.pfirstnum[i];
+				UBYTE *value = PreVar[index].value;
+				int bytes = strlen((char *)value);
+				PF_LongMultiPack(&index, 1, PF_WORD);
+				PF_LongMultiPack(&bytes, 1, PF_INT);
+				PF_LongMultiPack(value, bytes, PF_BYTE);
+#ifdef PF_DEBUG_BCAST_PREVAR
+				MesPrint(">> Broadcast PreVar: %s = \"%s\"", PreVar[index].name, value);
+#endif
+			}
+/*
+ 		#] Master :
+*/
+	}
+	if ( PF_LongMultiBroadcast() ) return -1;
+	if ( PF.me != MASTER ) {
+/*
+ 		#[ Slave :
+*/
+		int i, nredefs;
+		/* Unpack the number of redefined preprocessor variables. */
+		PF_LongMultiUnpack(&nredefs, 1, PF_INT);
+		if ( nredefs > 0 ) {
+			/* Then unpack each preprocessor variable and put it. */
+			for ( i = 0; i < nredefs; i++ ) {
+				WORD index;
+				int bytes;
+				UBYTE *value;
+				PF_LongMultiUnpack(&index, 1, PF_WORD);
+				PF_LongMultiUnpack(&bytes, 1, PF_INT);
+				VectorReserve(prevarbuf, bytes + 1);
+				value = VectorPtr(prevarbuf);
+				PF_LongMultiUnpack(value, bytes, PF_BYTE);
+				value[bytes] = '\0';
+				PutPreVar(PreVar[index].name, value, NULL, 1);
+			}
+		}
+/*
+ 		#] Slave :
+*/
+	}
+	return 0;
+}
+
+/*
+ 		#] PF_BroadcastRedefinedPreVars :
+  	#] Synchronization of redefined preprocessor variables :
   	#[ PF_BroadcastExpFlags :
 */
 
@@ -3549,6 +3516,15 @@ int PF_InParallelProcessor(void)
 			return(-1);
 		if(tag == PF_DATA_MSGTAG){
 			oldwork = AT.WorkPointer;
+
+			/* For redefine statements. */
+			if ( AC.numpfirstnum > 0 ) {
+				int j;
+				for ( j = 0; j < AC.numpfirstnum; j++ ) {
+					AC.inputnumbers[j] = -1;
+				}
+			}
+
 			if(PF_DoOneExpr())/*the processor*/
 				return(-1);
 			if(PF_Wait4MasterIP(PF_DATA_MSGTAG))
@@ -3799,6 +3775,12 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 			PUTZERO(fout->filesize);
 			fout->POfill = fout->POfull = fout->PObuffer;
 		}
+		/* Now handle redefined preprocessor variables. */
+		if ( AC.numpfirstnum > 0 ) {
+			PF_PrepareLongSinglePack();
+			PF_PackRedefinedPreVars();
+			PF_LongSingleSend(MASTER, PF_MISC_MSGTAG);
+		}
 		return(0);
 	}/*if(PF.me != MASTER)*/
 	/*Master*/
@@ -3827,6 +3809,11 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 		if(l<0)
 			return(-1);
 		i-=l;
+	}
+	/* Now handle redefined preprocessor variables. */
+	if ( AC.numpfirstnum > 0 ) {
+		PF_LongSingleReceive(src, PF_MISC_MSGTAG, NULL, NULL);
+		PF_UnpackRedefinedPreVars();
 	}
 	return(0);
 }

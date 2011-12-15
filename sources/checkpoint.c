@@ -2276,7 +2276,6 @@ int DoRecovery(int *moduletype)
 			Terminate(-1);
 		}
 	}/*Block*/
-	R_SET(PF.synchro, WORD);
 	R_SET(PF.rhsInParallel, int);
 	R_SET(PF.exprbufsize, int);
 	R_SET(PF.log, int);
@@ -2821,7 +2820,6 @@ static int DoSnapshot(int moduletype)
 	/*#[ PF :*/
 #ifdef PARALLEL
 	S_WRITE_B(&PF.numtasks, sizeof(int));
-	S_WRITE_B(&PF.synchro, sizeof(WORD));
 	S_WRITE_B(&PF.rhsInParallel, sizeof(int));
 	S_WRITE_B(&PF.exprbufsize, sizeof(int));
 	S_WRITE_B(&PF.log, sizeof(int));

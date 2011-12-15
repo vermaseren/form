@@ -51,15 +51,11 @@
 #define PF_BUFFER_MSGTAG     20  /* slave -> master: sending sorted terms, or in PF_SendFile()/PF_RecvFile() */
 #define PF_ENDBUFFER_MSGTAG  21  /* same as PF_BUFFER_MSGTAG, but indicates the end of operation */
 #define PF_READY_MSGTAG      30  /* slave -> master: slave is idle and can accept terms */
-#define PF_ATTACH_MSGTAG     40  /* not used */
 #define PF_DATA_MSGTAG       50  /* InParallel, DoCheckpoint() */
 #define PF_EMPTY_MSGTAG      52  /* InParallel, DoCheckpoint(), PF_SendFile(), PF_RecvFile() */
 #define PF_STDOUT_MSGTAG     60  /* slave -> master: sending text to the stdout */
 #define PF_LOG_MSGTAG        61  /* slave -> master: sending text to the log file */
 #define PF_MISC_MSGTAG       70
-
-#define PF_ATTACH_REDEF       1  /* redefined preprocessor variable */
-#define PF_ATTACH_DOLLAR      2  /* not used */
 
 /* FIXME: Data model for PVM. (TU 16 Oct 2011) */
 #ifdef PVM
@@ -193,8 +189,6 @@ typedef struct ParallelVars {
 	/* special buffers for nonblocking, unbuffered send/receives */
 	PF_BUFFER  *sbuf;           /* set of cyclic send buffers for master _and_ slave */
 	PF_BUFFER **rbufs;          /* array of sets of cyclic receive buffers for master */
-	LONG       *redef;          /* number of term of last redef for each PreProVar */
-	LONG        numredefs;      /* size of PF.redefs */
 	int         me;             /* Internal number of task: master is 0 */
 	int         numtasks;       /* total number of tasks */
 	int         parallel;       /* flags telling the master and slaves to do the sorting parallel */
@@ -203,17 +197,10 @@ typedef struct ParallelVars {
 	int         mkSlaveInfile;  /* flag tells that slavebuf is used on the slaves */
 	int         exprbufsize;    /* buffer size in WORDs to be used for transferring expressions */
 	int         exprtodo;       /* >= 0: the expression to do in InParallel, -1: otherwise */
-	/*[26nov2003 mt]:*/
-	int         mnumredefs;     /* number of redefined PreProVar in current module*/
-	/*:[26nov2003 mt]*/
 	int         log;            /* flag for logging mode */
 	WORD        numsbufs;       /* number of cyclic send buffers (PF.sbuf->numbufs) */
 	WORD        numrbufs;       /* number of cyclic receive buffers (PF.rbufs[i]->numbufs, i=1,...numtasks-1) */
-	/*[28nov2003 mt]:*/
-	/*If !=0, start of each module will be synchronized between all slaves and master:*/
-	WORD synchro;
-	/*:[28nov2003 mt]*/
-	PADPOINTER(1,9,3,0);
+	PADPOINTER(0,8,2,0);
 } PARALLELVARS;
 
 extern PARALLELVARS PF;
@@ -240,12 +227,10 @@ extern int    PF_Init(int*,char ***);
 extern int    PF_Terminate(int);
 extern LONG   PF_GetSlaveTimes(void);
 extern LONG   PF_BroadcastNumberOfTerms(LONG);
-extern int    PF_InitRedefinedPreVars(void);
 extern int    PF_BroadcastString(UBYTE *);
 extern int    PF_BroadcastPreDollar(WORD **, LONG *,int *);
 extern WORD   PF_mkDollarsParallel(void);
-extern void   PF_statPotModDollar(int,int);
-extern void   PF_markPotModDollars(void);
+extern int    PF_BroadcastRedefinedPreVars(void);
 extern int    PF_BroadcastExpFlags(void);
 extern int    PF_broadcastRHS(void);
 extern int    PF_InParallelProcessor(void);

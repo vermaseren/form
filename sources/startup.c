@@ -630,12 +630,6 @@ VOID StartVariables()
 	The module counter:
 */
 	AC.CModule=0;
-#ifdef PARALLEL
-/*
-	Note, this variable can't be initialized in IniModule!:
-*/
-	AC.RedefsInModuleFlag = 0;
-#endif
 #ifdef WITHPTHREADS
 /*
 	We need a value in AB because in the startup some routines may call AB[0].

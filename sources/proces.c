@@ -3222,12 +3222,19 @@ CommonEnd:
 				  case TYPEREDEFPRE:
 					j = C->lhs[level][2];
 #ifdef PARALLEL
-					if(PF.me == MASTER)
-						/*off parallel. The master must collect preprovar for
-							broadcasting itself:*/
-						if(PF.redef[j] == 0)/*Not counted yet, count it:*/
-							PF.mnumredefs++;
-					PF.redef[j] = AN.ninterms;
+					{
+						/*
+						 * Regardless of parallel/nonparallel switch, we need to set
+						 * AC.inputnumbers[ii], which indicates that the corresponding
+						 * preprocessor variable is redefined and so we need to
+						 * send/broadcast it.
+						 */
+						int ii;
+						for ( ii = 0; ii < AC.numpfirstnum; ii++ ) {
+							if ( AC.pfirstnum[ii] == j ) break;
+						}
+						AC.inputnumbers[ii] = AN.ninterms;
+					}
 #endif
 #ifdef WITHPTHREADS
 					if ( AS.MultiThreaded ) {

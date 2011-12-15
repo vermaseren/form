@@ -2132,13 +2132,6 @@ int CoRedefine(UBYTE *s)
 	int numprevar;
 	WORD code[2];
 	name = s;
-#ifdef PARALLEL
-	/*
-	 * The flag AC.RedefsInModuleFlag indicates that at the beginning of the next
-	 * module we need to synchronize redefined preprocessor variables.
-	 */
-	AC.RedefsInModuleFlag = 1;
-#endif
 	if ( FG.cTable[*s] || ( s = SkipAName(s) ) == 0 || s[-1] == '_' ) {
 		MesPrint("&Illegal name for preprocessor variable in redefine statement");
 		return(1);
@@ -2188,7 +2181,7 @@ encl:	MesPrint("&Value for %s should be enclosed in double quotes"
 */
 	Add2ComStrings(2,code,name,args);
 	*s = '"';
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 /*
 	Now we prepare the input numbering system for pthreads.
 	We need a list of preprocessor variables that are redefined in this
