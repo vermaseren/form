@@ -2231,10 +2231,8 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		if ( d->factors ) M_free(d->factors,"Dollar factors");
 		M_free(d,"Copy of dollar variable");
 	}
-  printf ("before poly_div cpu=%lf real=%lf\n",TimeCPU(1)/1000.,TimeWallClock(1)/100.);
 	if ( par == 0 ) proper3 = poly_div(BHEAD proper1, proper2);
 	else            proper3 = poly_rem(BHEAD proper1, proper2);
-  printf ("after  poly_div cpu=%lf real=%lf\n",TimeCPU(1)/1000.,TimeWallClock(1)/100.);
 	if ( proper3 == 0 ) goto CalledFrom;
 	if ( actionflag1 || actionflag2 ) {
 		if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;
@@ -2273,7 +2271,6 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		}
 		AT.WorkPointer = termout;
 	}
-  printf ("end of DIVfunction cpu=%lf real=%lf\n",TimeCPU(1)/1000.,TimeWallClock(1)/100.);
 	M_free(arg3,"DIVfunction");
 	return(0);
 CalledFrom:
