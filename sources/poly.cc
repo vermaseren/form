@@ -1334,8 +1334,6 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 			GetLongModInverses(BHEAD (UWORD *)&b[2+AN.poly_num_vars], b[b[1]], modq, nmodq, ltbinv, &nltbinv, NULL, NULL);
 	}
 
-	//	both_mod_small=false;
-
 	WORD ns=0;
 	WORD nt;
 	UWORD *s = NumberMalloc("poly::div_univar");

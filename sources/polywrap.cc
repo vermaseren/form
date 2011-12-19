@@ -858,12 +858,10 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 		*argout++ = SGN(num[num[1]]) * (2*n+1);
 
 		if (!with_arghead)
-			*argout++=0;
+			*argout++ = 0;
 		else {
-			/* TODO: uncomment!?
 			if (ToFast(old_argout, old_argout))
 				argout = old_argout+2;
-			*/
 		}
 	}
 
