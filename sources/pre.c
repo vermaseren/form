@@ -3152,6 +3152,8 @@ int DoInside(UBYTE *s)
 	we know where to start executing and how to reset the buffer.
 */
 	AP.inside.oldcompiletype = AC.compiletype;
+	AP.inside.oldparallelflag = AC.mparallelflag;
+	AP.inside.oldnumpotmoddollars = NumPotModdollars;
 	AP.inside.oldcbuf = AC.cbufnum;
 	AP.inside.oldrbuf = AM.rbufnum;
 	AddToPreTypes(PRETYPEINSIDE);
@@ -3160,6 +3162,7 @@ int DoInside(UBYTE *s)
 	AM.rbufnum = AP.inside.inscbuf;
 	clearcbuf(AC.cbufnum);
 	AC.compiletype = 0;
+	AC.mparallelflag = PARALLELFLAG;
 	return(error);
 }
 
@@ -3176,7 +3179,7 @@ int DoEndInside(UBYTE *s)
 	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
 	WORD *oldcompresspointer = AR.CompressPointer;
 	int oldmultithreaded = AS.MultiThreaded;
-	int oldmparallelflag = AC.mparallelflag;
+//	int oldmparallelflag = AC.mparallelflag;
 	FILEHANDLE *f;
 	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -3199,7 +3202,7 @@ int DoEndInside(UBYTE *s)
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 	AR.BracketOn = 0;
 	AS.MultiThreaded = 0;
-	AC.mparallelflag = PARALLELFLAG;
+//	AC.mparallelflag = PARALLELFLAG;
 	if ( AR.CompressPointer == 0 ) AR.CompressPointer = AR.CompressBuffer;
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 /*
@@ -3213,10 +3216,13 @@ int DoEndInside(UBYTE *s)
 			term = nd->where;
 			NewSort(BHEAD0);
 			NewSort(BHEAD0);
+			AR.MaxDum = AM.IndDum;
 			while ( *term ) {
 				t = oldworkpointer; j = *term;
 				NCOPY(t,term,j);
 				AT.WorkPointer = t;
+				AN.IndDum = AM.IndDum;
+				AR.CurDum = ReNumber(BHEAD term);
 				if ( Generator(BHEAD oldworkpointer,0) ) {
 					MesPrint("@Called from %#endinside");
 					MesPrint("@Evaluating variable $%s",DOLLARNAME(Dollars,numdol));
@@ -3245,7 +3251,8 @@ int DoEndInside(UBYTE *s)
 	AP.PreInsideLevel = 0;
 	AR.CompressPointer = oldcompresspointer;
 	AS.MultiThreaded = oldmultithreaded;
-	AC.mparallelflag = oldmparallelflag;
+	AC.mparallelflag = AP.inside.oldparallelflag;
+	NumPotModdollars = AP.inside.oldnumpotmoddollars;
 	return(0);
 }
 

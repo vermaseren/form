@@ -1821,7 +1821,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 /*
 	Add to the list of potentially modified dollars (for PARALLEL)
 */
-	{
+	if ( AP.PreInsideLevel <= 0 ) {
 	  int i;
 	  WORD *pmd;
 	  for ( i = 0; i < NumPotModdollars; i++ ) {

@@ -818,12 +818,14 @@ typedef struct pReVaR {
 typedef struct {
 	WORD *buffer;
 	int oldcompiletype;
+	int oldparallelflag;
+	int oldnumpotmoddollars;
 	WORD size;
 	WORD numdollars;
 	WORD oldcbuf;
 	WORD oldrbuf;
 	WORD inscbuf;
-	PADPOINTER(0,1,5,0);
+	PADPOINTER(0,3,5,0);
 } INSIDEINFO;
 
 /**
@@ -2116,7 +2118,7 @@ struct O_const {
 	PADPOINTER(4,3,14,1);
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
