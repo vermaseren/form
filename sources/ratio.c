@@ -1123,7 +1123,7 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	GETBIDENTITY
 	WORD oldsorttype = AR.SortType;
 	WORD *t, *tt, *gcdout, *term1, *term2, *confree1, *confree2, *gcdout1, *proper1, *proper2;
-	int i;
+	int i, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	if ( in2[*in2] == 0 ) { t = in1; in1 = in2; in2 = t; }
 	if ( in1[*in1] == 0 ) {	/* First input with only one term */
@@ -1153,9 +1153,9 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	Now we have to replace all non-symbols and symbols to a negative power
 	by extra symbols.
 */
-	if ( ( proper1 = PutExtraSymbols(BHEAD confree1,startebuf) ) == 0 ) goto CalledFrom;
+	if ( ( proper1 = PutExtraSymbols(BHEAD confree1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
 	if ( confree1 != in1 ) M_free(confree1,"TakeContent");
-	if ( ( proper2 = PutExtraSymbols(BHEAD confree2,startebuf) ) == 0 ) goto CalledFrom;
+	if ( ( proper2 = PutExtraSymbols(BHEAD confree2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
 	if ( confree2 != in2 ) M_free(confree2,"TakeContent");
 /*
 	And now the real work:
@@ -1165,10 +1165,15 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	M_free(proper2,"PutExtraSymbols");
 
 	AR.SortType = oldsorttype;
-	if ( ( gcdout = TakeExtraSymbols(BHEAD gcdout1,startebuf) ) == 0 ) goto CalledFrom;
-	cbuf[AT.ebufnum].numrhs = startebuf;
+	if ( actionflag1 || actionflag2 ) {
+		if ( ( gcdout = TakeExtraSymbols(BHEAD gcdout1,startebuf) ) == 0 ) goto CalledFrom;
+		M_free(gcdout1,"gcdout");
+	}
+	else {
+		gcdout = gcdout1;
+	}
 
-	M_free(gcdout1,"gcdout");
+	cbuf[AT.ebufnum].numrhs = startebuf;
 /*
 	Now multiply gcdout by term1
 */
@@ -1191,15 +1196,18 @@ CalledFrom:
  		#[ PutExtraSymbols :
 */
 
-WORD *PutExtraSymbols(PHEAD WORD *in,WORD startebuf)
+WORD *PutExtraSymbols(PHEAD WORD *in,WORD startebuf,int *actionflag)
 {
 	WORD *termout = AT.WorkPointer;
+	int action;
+	*actionflag = 0;
 	NewSort(BHEAD0);
 	while ( *in ) {
-		if ( LocalConvertToPoly(BHEAD in,termout,startebuf) < 0 ) {
+		if ( ( action = LocalConvertToPoly(BHEAD in,termout,startebuf) ) < 0 ) {
 			LowerSortLevel();
 			goto CalledFrom;
 		}
+		if ( action > 0 ) *actionflag = 1;
 		StoreTerm(BHEAD termout);
 		in += *in;
 	}
@@ -2157,7 +2165,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	WORD *t, *tt, *r, *arg1 = 0, *arg2 = 0, *arg3, *termout;
 	WORD *tstop, *tend, *r3, *rr, *rstop, tlength, rlength, newlength;
 	WORD *proper1, *proper2, *proper3;
-	int numargs = 0, type1, type2;
+	int numargs = 0, type1, type2, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	if ( par < 0 || par > 1 ) {
 		MLOCK(ErrorMessageLock);
@@ -2209,8 +2217,8 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	}
 	if ( ( arg1 = ConvertArgument(BHEAD arg1, &type1) ) == 0 ) goto CalledFrom;
 	if ( ( arg2 = ConvertArgument(BHEAD arg2, &type2) ) == 0 ) goto CalledFrom;
-	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf) ) == 0 ) goto CalledFrom;
-	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf) ) == 0 ) goto CalledFrom;
+	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
+	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
 	if ( type2 == 0 ) M_free(arg2,"DIVfunction");
 	else {
 		DOLLARS d = ((DOLLARS)arg2)-1;
@@ -2223,15 +2231,21 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		if ( d->factors ) M_free(d->factors,"Dollar factors");
 		M_free(d,"Copy of dollar variable");
 	}
-
+  printf ("before poly_div cpu=%lf real=%lf\n",TimeCPU(1)/1000.,TimeWallClock(1)/100.);
 	if ( par == 0 ) proper3 = poly_div(BHEAD proper1, proper2);
 	else            proper3 = poly_rem(BHEAD proper1, proper2);
+  printf ("after  poly_div cpu=%lf real=%lf\n",TimeCPU(1)/1000.,TimeWallClock(1)/100.);
 	if ( proper3 == 0 ) goto CalledFrom;
-	if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;
-	cbuf[AT.ebufnum].numrhs = startebuf;
-	M_free(proper3,"DIVfunction");
+	if ( actionflag1 || actionflag2 ) {
+		if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;
+		M_free(proper3,"DIVfunction");
+	}
+	else {
+		arg3 = proper3;
+	}
 	M_free(proper2,"DIVfunction");
 	M_free(proper1,"DIVfunction");
+	cbuf[AT.ebufnum].numrhs = startebuf;
 	if ( *arg3 ) {
 		termout = AT.WorkPointer;
 		tlength = tend[-1];
@@ -2259,6 +2273,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		}
 		AT.WorkPointer = termout;
 	}
+  printf ("end of DIVfunction cpu=%lf real=%lf\n",TimeCPU(1)/1000.,TimeWallClock(1)/100.);
 	M_free(arg3,"DIVfunction");
 	return(0);
 CalledFrom:

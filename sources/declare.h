@@ -1345,7 +1345,7 @@ extern void IniFbufs(VOID);
 extern int GCDfunction(PHEAD WORD *,WORD);
 extern WORD *GCDfunction3(PHEAD WORD *,WORD *);
 extern int GCDterms(PHEAD WORD *,WORD *,WORD *);
-extern WORD *PutExtraSymbols(PHEAD WORD *,WORD);
+extern WORD *PutExtraSymbols(PHEAD WORD *,WORD,int *);
 extern WORD *TakeExtraSymbols(PHEAD WORD *,WORD);
 extern WORD *MultiplyWithTerm(PHEAD WORD *, WORD *);
 extern WORD *TakeContent(PHEAD WORD *, WORD *);

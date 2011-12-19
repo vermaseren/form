@@ -304,7 +304,7 @@ static int FirstWarnConvertToPoly = 1;
 int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 {
 	WORD *tout, *tstop, ncoef, *t, *r, *tt;
-	int i;
+	int i, action = 0;
 	tt = term + *term;
 	ncoef = ABS(tt[-1]);
 	tstop = tt - ncoef;
@@ -331,6 +331,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 					*tout++ = 4;
 					*tout++ = MAXVARIABLES-i;
 					*tout++ = -r[1];
+					action = 1;
 				}
 				r += 2;
 			}
@@ -355,6 +356,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 				*tout++ = MAXVARIABLES-i;
 				*tout++ = ABS(r[2]);
 				r += 3;
+				action = 1;
 			}
 		}
 		else if ( *t == VECTOR ) {
@@ -371,6 +373,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 				*tout++ = MAXVARIABLES-i;
 				*tout++ = 1;
 				r += 2;
+				action = 1;
 			}
 		}
 		else if ( *t == INDEX ) {
@@ -386,6 +389,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 				*tout++ = MAXVARIABLES-i;
 				*tout++ = 1;
 				r++;
+				action = 1;
 			}
 		}
 		else if ( *t == HAAKJE) {
@@ -398,6 +402,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 			*tout++ = 4;
 			*tout++ = MAXVARIABLES-i;
 			*tout++ = 1;
+			action = 1;
 		}
 		else {
 			if ( FirstWarnConvertToPoly ) {
@@ -411,7 +416,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 	}
 	NCOPY(tout,tstop,ncoef)
 	*outterm = tout-outterm;
-	i = NormPolyTerm(BHEAD outterm);
+	if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
 	return(i);
 }
 
@@ -436,7 +441,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 {
 	WORD *tout, *tstop, ncoef, *t, *r, *tt;
-	int i;
+	int i, action = 0;
 	tt = term + *term;
 	ncoef = ABS(tt[-1]);
 	tstop = tt - ncoef;
@@ -463,6 +468,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 					*tout++ = 4;
 					*tout++ = MAXVARIABLES-i;
 					*tout++ = -r[1];
+					action = 1;
 				}
 				r += 2;
 			}
@@ -487,6 +493,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 				*tout++ = MAXVARIABLES-i;
 				*tout++ = ABS(r[2]);
 				r += 3;
+				action = 1;
 			}
 		}
 		else if ( *t == VECTOR ) {
@@ -503,6 +510,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 				*tout++ = MAXVARIABLES-i;
 				*tout++ = 1;
 				r += 2;
+				action = 1;
 			}
 		}
 		else if ( *t == INDEX ) {
@@ -518,6 +526,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 				*tout++ = MAXVARIABLES-i;
 				*tout++ = 1;
 				r++;
+				action = 1;
 			}
 		}
 		else if ( *t == HAAKJE) {
@@ -530,6 +539,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 			*tout++ = 4;
 			*tout++ = MAXVARIABLES-i;
 			*tout++ = 1;
+			action = 1;
 		}
 		else {
 			if ( FirstWarnConvertToPoly ) {
@@ -543,7 +553,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 	}
 	NCOPY(tout,tstop,ncoef)
 	*outterm = tout-outterm;
-	i = NormPolyTerm(BHEAD outterm);
+	if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
 	return(i);
 }
 
@@ -570,9 +580,19 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD of
 	r = t = term + 1;
 	while ( t < tstop ) {
 		if ( *t == SYMBOL ) {
+			tstop1 = t + t[1];
+			tt = t + 2;
+			while ( tt < tstop1 ) {
+				if ( ( *tt < MAXVARIABLES - to )
+				  || ( *tt >= MAXVARIABLES - from ) ) {
+					tt += 2;
+				}
+				else break;
+			}
+			if ( tt >= tstop1 ) { t = tstop1; continue; }
 			while ( r < t ) *tout++ = *r++;
+			t += 2;
 			first = 0;
-			tstop1 = t + t[1]; t += 2;
 			while ( t < tstop1 ) {
 				if ( ( *t < MAXVARIABLES - to )
 				  || ( *t >= MAXVARIABLES - from ) ) {
