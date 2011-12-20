@@ -320,9 +320,13 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
 */
+//WORD *poly_inverse(PHEAD WORD *a, WORD *b);
 
 WORD *poly_div(PHEAD WORD *a, WORD *b) {
 
+	// TODO: remove this test line!!
+	//	return poly_inverse(BHEAD a,b);
+	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_div" << endl;
 #endif
@@ -343,6 +347,7 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 	terminated sequence of terms (or just zero).
 */
 
+// TODO: remove
 WORD *poly_rem(PHEAD WORD *a, WORD *b) {
 
 #ifdef DEBUG
@@ -1520,4 +1525,90 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 
 /*
   	#] poly_unfactorize_expression : 
+  	#[ poly_inverse : 
+*/
+
+WORD *poly_inverse(PHEAD WORD *a, WORD *b) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_inverse" << endl;
+#endif
+	
+	// Extract variables
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	poly::get_variables(BHEAD e, false, true);
+
+	if (AN.poly_num_vars > 1) {
+		MLOCK(ErrorMessageLock);
+		MesPrint ((char*)"ERROR: multivariate polynomial inverse is generally impossible");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	
+	// Convert to polynomials
+	poly pa(poly::argument_to_poly(BHEAD a, false, true));
+	poly pb(poly::argument_to_poly(BHEAD b, false, true));
+
+	// Check for modulus calculus
+	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial inverse");
+	WORD modn=1;
+	
+	if (modp == 0) { // pa * pb / lcoeff ?? TODO
+		vector<int> x(1,0);
+		modp = polyfact::choose_prime(pa,x);
+		modn = polyfact::choose_prime_power(pa,modp);
+		modn += 2; // fudge factor TODO
+	}
+
+	pa.setmod(modp,modn);
+	pb.setmod(modp,modn);
+
+	// Calculate gcd
+	poly pres(polyfact::extended_gcd_Euclidean_lifted(pa,pb)[0]);
+
+	cout << "a = " << pa << endl;
+	cout << "b = " << pb << endl;
+	cout << "ainv = " << pres << endl;
+	// Allocate new memory and convert to Form notation
+	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_inverse");
+	//poly::poly_to_argument(pres, res, false);
+	//int MakeLongRational(PHEAD UWORD *a, WORD na, UWORD *m, WORD nm, UWORD *b, WORD *nb)
+
+	UWORD *mod;
+	WORD nmod;
+	RaisPowCached(BHEAD modp, modn, &mod, &nmod);
+		
+	int j=0, n=0;
+
+	MesPrint ("converting...");
+	
+	for (int i=1; i<pres[0]; i+=pres[i]) {
+		res[j] = 1;
+		if (pres[i+1]>0) {
+			res[j+res[j]++] = SYMBOL;
+			res[j+res[j]++] = 4;
+			res[j+res[j]++] = AN.poly_vars[0];
+			res[j+res[j]++] = pres[i+1];
+		}
+		MakeLongRational(BHEAD (UWORD *)&pres[i+2], pres[i+pres[i]-1], mod, nmod, (UWORD *)&res[j+res[j]], &n);
+		res[j] += 2*ABS(n);
+		res[j+res[j]++] = SGN(n)*(2*ABS(n)+1);
+		j += res[j];
+	}
+	res[j]=0;
+	
+	MesPrint ("%a",20,res);
+	
+	if (AN.poly_num_vars > 0)
+		M_free(AN.poly_vars, "AN.poly_vars");
+
+	// reset modulo calculation
+	AN.ncmod = AC.ncmod;
+	return res;
+}
+
+/*
+  	#] poly_inverse :
 */
