@@ -564,6 +564,13 @@ int IniFbuffer(WORD bufnum)
 	C->maxrhs = AM.fbuffersize;
 	C->MaxTreeSize = AM.fbuffersize;
 
+	/*
+	 * Note that bufnum is a return value of inicbufs(). So C has been already
+	 * initialized. (TU 20 Dec 2011)
+	 */
+	if ( C->boomlijst ) M_free(C->boomlijst, "IniFbuffer-tree");
+	if ( C->rhs ) M_free(C->rhs, "IniFbuffer-rhs");
+
 	C->boomlijst = (COMPTREE *)Malloc1((C->MaxTreeSize+1)*sizeof(COMPTREE),"IniFbuffer-tree");
 	root = C->boomlijst;
 	C->numtree = 0;

@@ -559,6 +559,7 @@ WORD DoExecute(WORD par, WORD skip)
 			if ( ModOptdollars[i].type == MODSUM ) {
 				DOLLARS d = Dollars + ModOptdollars[i].number;
 				d->type = DOLZERO;
+				if ( d->where && d->where != &AM.dollarzero ) M_free(d->where, "old content of dollar");
 				d->where = &AM.dollarzero;
 				d->size = 0;
 				CleanDollarFactors(d);
