@@ -216,19 +216,31 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
 	// calculate div/mod
 	poly pres(divmod==0 ? pa/pb : pa%pb);
-	
-	// allocate new memory and convert to Form notation
-	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation(&denres)+1)*sizeof(WORD), "poly_divmod");
-		
+
+	// convert to Form notation	
+	WORD *res;
+
 	// special case: a=0
 	if (pres[0]==1) {
+		res = (WORD *)Malloc1(sizeof(WORD), "poly_divmod");
 		res[0] = 0;
 	}
 	else {
-		WORD nden=0, ntmp=0, nmul=0;
+		WORD nden, npow;
 		UWORD *den = (UWORD *)NumberMalloc("poly_divmod");
-		UWORD *mul = (UWORD *)NumberMalloc("poly_divmod");
-		UWORD *tmp = (UWORD *)NumberMalloc("poly_divmod");
+		UWORD *pow = (UWORD *)NumberMalloc("poly_divmod");
+
+		// calculate size of the largest denominator
+		npow = lcoeffb[lcoeffb[1]];
+		memcpy (pow, &lcoeffb[2+AN.poly_num_vars], ABS(npow)*sizeof(UWORD));
+		WORD denompower = DENOMPOWER - pres.degree(AN.poly_num_vars-1);
+		RaisPow(pow,&npow,denompower);
+		MulLong (pow, npow, (UWORD *)&denres[2+AN.poly_num_vars], denres[denres[1]], den, &nden);
+
+		// allocate the memory; note that this overestimates the size,
+		// since the estimated denominators are too large
+		res = (WORD *)Malloc1((pres.size_of_form_notation() +
+													 pres.number_of_terms()*2*ABS(nden)+1)*sizeof(WORD), "poly_divmod");
 
 		int L=0;
 		
@@ -255,34 +267,17 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 				}
 			
 			if (!first)	res[L] += res[L+2]; // fix length
-			
+
+			// numerator			
 			WORD nnum = pres[i+pres[i]-1];
-			memcpy(&res[L+res[L]], &pres[i+pres[i]-1-ABS(nnum)], ABS(nnum)*sizeof(UWORD)); // numerator
+			memcpy(&res[L+res[L]], &pres[i+pres[i]-1-ABS(nnum)], ABS(nnum)*sizeof(UWORD));
 
 			// calculate denominator
-			nden = denres[denres[1]];
-			memcpy (den, &denres[2+AN.poly_num_vars], nden*sizeof(UWORD));
-
-			if (!lcoeffb.is_one()) {
-				nmul = lcoeffb[lcoeffb[1]];
-				memcpy (mul, &lcoeffb[2+AN.poly_num_vars], ABS(nmul)*sizeof(UWORD));
-				
-				while (denompower!=0) {
-					if (denompower&1) {
-						MulLong(den,nden,mul,nmul,tmp,&ntmp);
-						swap(tmp,den);
-						nden=ntmp;
-						if (modp!=0) TakeModulus(den,&nden,(UWORD *)&modp,1, NOUNPACK);
-					}
-					
-					MulLong(mul,nmul,mul,nmul,tmp,&ntmp);
-					swap(tmp,mul);
-					nmul=ntmp;
-					if (modp!=0) TakeModulus(mul,&nmul,(UWORD *)&modp,1, NOUNPACK);
-					
-					denompower>>=1;
-				}
-			}
+			npow = lcoeffb[lcoeffb[1]];
+			memcpy (pow, &lcoeffb[2+AN.poly_num_vars], ABS(npow)*sizeof(UWORD));
+			RaisPow(pow,&npow,denompower);
+			MulLong (pow, npow, (UWORD *)&denres[2+AN.poly_num_vars], denres[denres[1]], den, &nden);
+			if (modp!=0) TakeModulus(den,&nden,(UWORD *)&modp,1, NOUNPACK);
 
 			if (nden!=1 || den[0]!=1)
 				Simplify(BHEAD (UWORD *)&res[L+res[L]], &nnum, den, &nden); // gcd(num,den)
@@ -295,8 +290,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		res[L] = 0;
 		
 		NumberFree(den,"poly_divmod");	
-		NumberFree(mul,"poly_divmod");	
-		NumberFree(tmp,"poly_divmod");	
+		NumberFree(pow,"poly_divmod");	
 	}
 
 	// clean up

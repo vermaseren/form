@@ -125,7 +125,7 @@ public:
 	static void get_variables (PHEAD std::vector<WORD *>, bool, bool);
 	static const poly argument_to_poly (PHEAD WORD *, bool, bool, poly *den=NULL);
 	static void poly_to_argument (const poly &, WORD *, bool);
-	int size_of_form_notation (poly *den=NULL);
+	int size_of_form_notation ();
 	const poly & normalize ();
 
 	// operations for coefficient lists

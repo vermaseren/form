@@ -1212,7 +1212,6 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 
 	Raises a to the power b. a is a Long integer and b >= 0.
 	The method that is used works with a bitdecomposition of b.
-
 */
 
 WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
@@ -1224,9 +1223,10 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 	WORD ns, nt, nmod;
 	nmod = ABS(AN.ncmod);
 	if ( !*na || ( ( *na == 1 ) && ( *a == 1 ) ) ) return(0);
+	if ( !b ) {	*na=1; *a=1; return(0); }
 	is = NumberMalloc("RaisPow");
 	it = NumberMalloc("RaisPow");
-	for ( i = 0; i < *na; i++ ) is[i] = a[i];
+	for ( i = 0; i < ABS(*na); i++ ) is[i] = a[i];
 	ns = *na;
 	c = b;
 	for ( i = 0; i < BITSINWORD; i++ ) {
@@ -1252,7 +1252,7 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 	if ( ( nmod != 0 ) && ( ( AC.modmode & POSNEG ) != 0 ) ) {
 		NormalModulus(is,&ns);
 	}
-	if ( ( *na = i = ns ) > 0 ) { iss = is; NCOPY(a,iss,i); }
+	if ( ( *na = i = ns ) != 0 ) { iss = is; i=ABS(i); NCOPY(a,iss,i); }
 	NumberFree(is,"RaisPow"); NumberFree(it,"RaisPow");
 	return(0);
 RaisOvl:
