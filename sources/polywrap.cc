@@ -234,7 +234,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		npow = lcoeffb[lcoeffb[1]];
 		memcpy (pow, &lcoeffb[2+AN.poly_num_vars], ABS(npow)*sizeof(UWORD));
 		WORD denompower = DENOMPOWER - pres.degree(AN.poly_num_vars-1);
-		RaisPow(pow,&npow,denompower);
+		RaisPow(BHEAD pow,&npow,denompower);
 		MulLong (pow, npow, (UWORD *)&denres[2+AN.poly_num_vars], denres[denres[1]], den, &nden);
 
 		// allocate the memory; note that this overestimates the size,
@@ -275,7 +275,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 			// calculate denominator
 			npow = lcoeffb[lcoeffb[1]];
 			memcpy (pow, &lcoeffb[2+AN.poly_num_vars], ABS(npow)*sizeof(UWORD));
-			RaisPow(pow,&npow,denompower);
+			RaisPow(BHEAD pow,&npow,denompower);
 			MulLong (pow, npow, (UWORD *)&denres[2+AN.poly_num_vars], denres[denres[1]], den, &nden);
 			if (modp!=0) TakeModulus(den,&nden,(UWORD *)&modp,1, NOUNPACK);
 
