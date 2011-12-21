@@ -2157,17 +2157,17 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 	In case par == 1 the output is [arg1%arg2]
 */
 
-WORD divrem[2] = { DIVFUNCTION, REMFUNCTION };
+WORD divrem[3] = { DIVFUNCTION, REMFUNCTION, INVERSEFUNCTION };
 
 int DIVfunction(PHEAD WORD *term,WORD level,int par)
 {
 	GETBIDENTITY
-	WORD *t, *tt, *r, *arg1 = 0, *arg2 = 0, *arg3, *termout;
+	WORD *t, *tt, *r, *arg1 = 0, *arg2 = 0, *arg3 = 0, *termout;
 	WORD *tstop, *tend, *r3, *rr, *rstop, tlength, rlength, newlength;
-	WORD *proper1, *proper2, *proper3;
+	WORD *proper1, *proper2, *proper3 = 0;
 	int numargs = 0, type1, type2, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
-	if ( par < 0 || par > 1 ) {
+	if ( par < 0 || par > 2 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
 		MUNLOCK(ErrorMessageLock);
@@ -2231,8 +2231,9 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		if ( d->factors ) M_free(d->factors,"Dollar factors");
 		M_free(d,"Copy of dollar variable");
 	}
-	if ( par == 0 ) proper3 = poly_div(BHEAD proper1, proper2);
-	else            proper3 = poly_rem(BHEAD proper1, proper2);
+	if ( par == 0 )      proper3 = poly_div(BHEAD proper1, proper2);
+	else if ( par == 1 ) proper3 = poly_rem(BHEAD proper1, proper2);
+	else if ( par == 2 ) proper3 = poly_inverse(BHEAD proper1, proper2);
 	if ( proper3 == 0 ) goto CalledFrom;
 	if ( actionflag1 || actionflag2 ) {
 		if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;

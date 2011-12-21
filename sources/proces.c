@@ -1340,7 +1340,7 @@ Important: we may not have enough spots here
 					return(1);
 				}
               }
-              else if ( *t == DIVFUNCTION || *t == REMFUNCTION ) {
+              else if ( *t == DIVFUNCTION || *t == REMFUNCTION || *t == INVERSEFUNCTION ) {
                 WORD *tf;
 				int todo = 1, numargs = 0;
                 tf = t + FUNHEAD;
@@ -1352,6 +1352,7 @@ Important: we may not have enough spots here
 				if ( todo && numargs == 2 ) {
 					if ( *t == DIVFUNCTION ) AN.TeInFun = -9;
 					else if ( *t == REMFUNCTION ) AN.TeInFun = -10;
+					else if ( *t == INVERSEFUNCTION ) AN.TeInFun = -11;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
@@ -3467,6 +3468,9 @@ AutoGen:	i = *AT.TMout;
 			else if ( AN.TeInFun == -8 && GCDfunction(BHEAD term,level) < 0 ) goto GenCall;
 			else if ( AN.TeInFun == -9 && DIVfunction(BHEAD term,level,0) < 0 ) goto GenCall;
 			else if ( AN.TeInFun == -10 && DIVfunction(BHEAD term,level,1) < 0 ) goto GenCall;
+			else if ( AN.TeInFun == -11 ) {
+				if ( DIVfunction(BHEAD term,level,2) < 0 ) goto GenCall;
+			}
 		}
 		else {
 			termout = AT.WorkPointer;

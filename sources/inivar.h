@@ -218,6 +218,7 @@ static struct fixedfun {
 	,{"prime_"      ,0 ,0             ,0               ,0} /* PRIMENUMBER */
 	,{"exteuclidean_",0 ,0            ,0               ,0} /* EXTEUCLIDEAN */
 	,{"makerational_",0 ,0            ,0               ,0} /* MAKERATIONAL */
+	,{"inverse_"    ,0 ,0             ,0               ,0} /* INVERSEFUNCTION */
 };
 
 FIXEDSET fixedsets[] = {

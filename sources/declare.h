@@ -1360,6 +1360,7 @@ extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 extern WORD  *poly_gcd(PHEAD WORD *, WORD *);
 extern WORD  *poly_div(PHEAD WORD *, WORD *);
 extern WORD  *poly_rem(PHEAD WORD *, WORD *);
+extern WORD  *poly_inverse(PHEAD WORD *, WORD *);
 extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
 extern int   poly_ratfun_normalize(PHEAD WORD *);
 extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
