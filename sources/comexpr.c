@@ -1821,7 +1821,13 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 /*
 	Add to the list of potentially modified dollars (for PARALLEL)
 */
+/*
+ * In ParFORM we need to add it to the list even in #inside.
+ * (TU 21 Dec 2011)
+ */
+#ifndef PARALLEL
 	if ( AP.PreInsideLevel <= 0 ) {
+#endif
 	  int i;
 	  WORD *pmd;
 	  for ( i = 0; i < NumPotModdollars; i++ ) {
@@ -1831,7 +1837,9 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 		pmd = (WORD *)FromList(&AC.PotModDolList);
 		*pmd = number;
 	  }
+#ifndef PARALLEL
 	}
+#endif
 	return(error);
 }
 

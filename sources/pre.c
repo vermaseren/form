@@ -3163,6 +3163,19 @@ int DoInside(UBYTE *s)
 	clearcbuf(AC.cbufnum);
 	AC.compiletype = 0;
 	AC.mparallelflag = PARALLELFLAG;
+#ifdef PARALLEL
+	/*
+	 * We use AC.RhsExprInModuleFlag, PotModdollars, and AC.pfirstnum
+	 * in order to check (1) whether there are expression names in RHS,
+	 * (2) which dollar variables can be modified, and (3) which
+	 * preprocessor variables can be redefined, in #inside.
+	 * We store the current values of them, and then reset them.
+	 */
+	PF_StoreInsideInfo();
+	AC.RhsExprInModuleFlag = 0;
+	NumPotModdollars = 0;
+	AC.numpfirstnum = 0;
+#endif
 	return(error);
 }
 
@@ -3181,6 +3194,9 @@ int DoEndInside(UBYTE *s)
 	int oldmultithreaded = AS.MultiThreaded;
 //	int oldmparallelflag = AC.mparallelflag;
 	FILEHANDLE *f;
+#ifdef PARALLEL
+	int error = 0;
+#endif
 	DUMMYUSE(s);
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -3200,6 +3216,14 @@ int DoEndInside(UBYTE *s)
 	}
 	AC.compiletype = AP.inside.oldcompiletype;
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
+#ifdef PARALLEL
+	/*
+	 * If the #inside...#endinside contains expressions in RHS, only the master executes it
+	 * and then broadcasts the result to the all slaves. If not, the all processes execute
+	 * it and in this case no MPI interactions are needed.
+	 */
+	if ( PF.me == MASTER || !AC.RhsExprInModuleFlag ) {
+#endif
 	AR.BracketOn = 0;
 	AS.MultiThreaded = 0;
 //	AC.mparallelflag = PARALLELFLAG;
@@ -3243,6 +3267,33 @@ int DoEndInside(UBYTE *s)
 			}
 		}
 	}
+#ifdef PARALLEL
+	}
+	if ( AC.RhsExprInModuleFlag ) {
+		/*
+		 * The only master executed the statements in #inside.
+		 * We need to broadcast it to the all slaves.
+		 */
+		for ( i = 0; i < AP.inside.numdollars; i++ ) {
+			int j;
+			WORD number = AP.inside.buffer[i];
+			/* Add the "number" to PotModdollars. */
+			for ( j = 0; j < NumPotModdollars; j++ )
+				if ( number == PotModdollars[j] ) break;
+			if ( j >= NumPotModdollars )
+				*(WORD *)FromList(&AC.PotModDolList) = number;
+		}
+		if ( NumPotModdollars > 0 ) {
+			error = PF_BroadcastModifiedDollars();
+			if ( error ) goto cleanup;
+		}
+		if ( AC.numpfirstnum > 0 ) {
+			error = PF_BroadcastRedefinedPreVars();
+			if ( error ) goto cleanup;
+		}
+	}
+cleanup:
+#endif
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 	AC.cbufnum = AP.inside.oldcbuf;
 	AM.rbufnum = AP.inside.oldrbuf;
@@ -3253,6 +3304,10 @@ int DoEndInside(UBYTE *s)
 	AS.MultiThreaded = oldmultithreaded;
 	AC.mparallelflag = AP.inside.oldparallelflag;
 	NumPotModdollars = AP.inside.oldnumpotmoddollars;
+#ifdef PARALLEL
+	PF_RestoreInsideInfo();
+	if ( error ) return error;
+#endif
 	return(0);
 }
 

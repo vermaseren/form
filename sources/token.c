@@ -134,11 +134,6 @@ dovariable:		c = *in; *in = 0;
 											AC.RhsExprInModuleFlag = 1;
 											if ( !AP.PreAssignFlag && !AP.PreInsideLevel )
 												Expressions[number].vflags |= ISINRHS;
-											/* For now RHS expressions in #inside are not supported. (TU 12 Dec 2011) */
-											if ( AP.PreInsideLevel ) {
-												MesPrint("&Sorry: RHS expressions in %#inside are currently unsupported in ParFORM");
-												Terminate(-1);
-											}
 #endif
 /*:[06nov2003 mt]*/
 										if ( AC.exprfillwarning == 0 ) {

@@ -3018,6 +3018,70 @@ int PF_BroadcastRedefinedPreVars(void)
 /*
  		#] PF_BroadcastRedefinedPreVars :
   	#] Synchronization of redefined preprocessor variables :
+  	#[ Preprocessor Inside instruction :
+ 		#[ Variables :
+*/
+
+/* Saved values of AC.RhsExprInModuleFlag, PotModdollars and AC.pfirstnum. */
+static WORD oldRhsExprInModuleFlag;
+static Vector(WORD, oldPotModdollars);
+static Vector(WORD, oldpfirstnum);
+
+/*
+ 		#] Variables :
+ 		#[ PF_StoreInsideInfo :
+*/
+
+/*
+ * Saves the current values of AC.RhsExprInModuleFlag, PotModdollars
+ * and AC.pfirstnum.
+ *
+ * Called by DoInside().
+ *
+ * @return  0  if OK, nonzero on error.
+ */
+int PF_StoreInsideInfo(void)
+{
+	int i;
+	oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
+	VectorClear(oldPotModdollars);
+	for ( i = 0; i < NumPotModdollars; i++ )
+		VectorPushBack(oldPotModdollars, PotModdollars[i]);
+	VectorClear(oldpfirstnum);
+	for ( i = 0; i < AC.numpfirstnum; i++ )
+		VectorPushBack(oldpfirstnum, AC.pfirstnum[i]);
+	return 0;
+}
+
+/*
+ 		#] PF_StoreInsideInfo :
+ 		#[ PF_RestoreInsideInfo :
+*/
+
+/*
+ * Restores the saved values of AC.RhsExprInModuleFlag, PotModdollars
+ * and AC.pfirstnum.
+ *
+ * Called by DoEndInside().
+ *
+ * @return  0  if OK, nonzero on error.
+ */
+int PF_RestoreInsideInfo(void)
+{
+	int i;
+	AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
+	NumPotModdollars = VectorSize(oldPotModdollars);
+	for ( i = 0; i < NumPotModdollars; i++ )
+		PotModdollars[i] = VectorPtr(oldPotModdollars)[i];
+	AC.numpfirstnum = VectorSize(oldpfirstnum);
+	for ( i = 0; i < AC.numpfirstnum; i++ )
+		AC.pfirstnum[i] = VectorPtr(oldpfirstnum)[i];
+	return 0;
+}
+
+/*
+ 		#] PF_RestoreInsideInfo :
+  	#] Preprocessor Inside instruction :
   	#[ PF_BroadcastExpFlags :
 */
 
