@@ -47,6 +47,7 @@
 #define PF_DEBUG_BCAST_DOLLAR
 #define PF_DEBUG_BCAST_PREVAR
 #define PF_DEBUG_BCAST_EXPRFLAGS
+#define PF_DEBUG_REDUCE_DOLLAR
 */
 
 /* mpi.c */
@@ -2333,488 +2334,439 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 
 /*
   	#] PF_BroadcastPreDollar :
-  	#[ PF_mkDollarsParallel :
+  	#[ Synchronization of modified dollar variables :
+ 		#[ Helper functions :
+			#[ dollarlen :
+*/
+
+/**
+ * Returns the size of \a terms in WORDs, not including the null terminator.
+ */
+static inline LONG dollarlen(const WORD *terms)
+{
+	const WORD *p = terms;
+	while ( *p ) p += *p;
+	return p - terms;  /* Not including the null terminator. */
+}
+
+/*
+			#] dollarlen :
+			#[ dollar_mod_type :
+*/
+
+/**
+ * Returns the module option type of a dollar variable specified by \a index.
+ * If no module option is given for the variable, this function returns -1.
+ */
+static inline WORD dollar_mod_type(WORD index)
+{
+	int i;
+	for ( i = 0; i < NumModOptdollars; i++ )
+		if ( ModOptdollars[i].number == index ) break;
+	if ( i >= NumModOptdollars ) return -1;
+	return ModOptdollars[i].type;
+}
+
+
+/*
+			#] dollar_mod_type :
+ 		#] Helper functions :
+ 		#[ PF_CollectModifiedDollars :
+*/
+
+/*
+			#[ dollar_to_be_collected :
+*/
+
+/**
+ * Returns true if the dollar variable specified by \a index has to be collected
+ * from each slave to the master, i.e., declared as MODSUM, MODMAX or MODMIN.
+ */
+static inline int dollar_to_be_collected(WORD index)
+{
+	switch ( dollar_mod_type(index) ) {
+		case MODSUM:
+		case MODMAX:
+		case MODMIN:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+/*
+			#] dollar_to_be_collected :
+			#[ copy_dollar :
+*/
+
+/**
+ * Copy the data given by \a type, \a where and \a size to a dollar variable
+ * specified by \a index.
+ */
+static inline void copy_dollar(WORD index, WORD type, const WORD *where, LONG size)
+{
+	DOLLARS d = Dollars + index;
+
+	CleanDollarFactors(d);
+
+	if ( type != DOLZERO && where != NULL && where != &AM.dollarzero && where[0] != 0 && size > 0 ) {
+		if ( size > d->size || size < d->size / 4 ) {  /* Reallocate if not enough or too much. */
+			if ( d->where && d->where != &AM.dollarzero )
+				M_free(d->where, "old content of dollar");
+			d->where = Malloc1(sizeof(WORD) * size, "copy buffer to dollar");
+			d->size  = size;
+		}
+		d->type  = type;
+		memcpy(d->where, where, sizeof(WORD) * size);
+	}
+	else {
+		if ( d->where && d->where != &AM.dollarzero )
+			M_free(d->where, "old content of dollar");
+		d->type  = DOLZERO;
+		d->where = &AM.dollarzero;
+		d->size  = 0;
+	}
+}
+
+/*
+			#] copy_dollar :
+			#[ Variables :
 */
 
 typedef struct {
-	WORD **slavebuf;  /* array of slavebuffers for each dollar variable */
-	WORD   type;      /* type of action on dollars: sum, maximum etc. */
-	PADPOINTER(0,0,1,0);
-} PFDOLLARS;
-
-static PFDOLLARS *PFDollars = NULL;
-/*
-	Maximal number of PFDollars:
-*/
-static int MaxPFDollars = 0;
-
-/*
- 		#[ MinDollar :
-*/
-
-/**
- * Finds the minimum dollar variable among dollar variables
- * from different slaves and assigns the value obtained to
- * the dollar on the master.
- *
- * @param  index  the index of the dollar variable.
- * @return        0 if OK, nonzero on error.
- */
-static int MinDollar(WORD index)
-{
-	int i;
-	WORD *where, size, *r, *t;
-	DOLLARS d;
-	if ( PF.numtasks < 2 ) return -1;  /* Cannot be when AC.mparallelflag == PARALLELFLAG. */
-
-	PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
-	for ( i = 2; i < PF.numtasks; i++ ){
-		if ( TwoExprCompare(PFDollars[index].slavebuf[i], PFDollars[index].slavebuf[0], LESS) )
-			PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[i];
-	}
-
-	where = NULL;
-	size = 0;
-
-	t = PFDollars[index].slavebuf[0];
-	if ( t != NULL && t != &AM.dollarzero ) {
-		r = t;
-		while ( *r ) r += *r;
-		size = r - t + 1;  /* Must be include the last zero. */
-		where = (WORD *)Malloc1(size * sizeof(WORD), "dollar content");
-		r = where;
-		i = size;
-		NCOPY(r, t, i);
-	}
-
-	d = Dollars + index;
-	if ( d->where != NULL && d->where != &AM.dollarzero )
-		M_free(d->where, "old content of dollar");
-	d->where = where;
-	if ( where == NULL || *where == 0 ) {
-		d->type = DOLZERO;
-		if ( where != NULL ) M_free(where, "buffer of dollar");
-		d->where = &AM.dollarzero;
-		d->size = 0;
-	}
-	else {
-		d->type = DOLTERMS;
-		d->size = size;
-	}
-	cbuf[AM.dbufnum].rhs[index] = d->where;
-
-	return 0;
-}
-
-/*
- 		#] MinDollar :
- 		#[ MaxDollar :
-*/
-
-/**
- * Finds the maximum dollar variable among dollar variables
- * from different slaves and assigns the value obtained to
- * the dollar on the master.
- *
- * @param  index  the index of the dollar variable.
- * @return        0 if OK, nonzero on error.
- */
-static int MaxDollar(WORD index)
-{
-	int i;
-	WORD *where, size, *r, *t;
-	DOLLARS d;
-	if ( PF.numtasks < 2 ) return -1;  /* Cannot be when AC.mparallelflag == PARALLELFLAG. */
-
-	PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[1];
-	for ( i = 2; i < PF.numtasks; i++ ) {
-		if ( TwoExprCompare(PFDollars[index].slavebuf[i], PFDollars[index].slavebuf[0], GREATER) )
-			PFDollars[index].slavebuf[0] = PFDollars[index].slavebuf[i];
-	}
-
-	where = NULL;
-	size = 0;
-
-	t = PFDollars[index].slavebuf[0];
-	if (t != NULL && t != &AM.dollarzero ) {
-		r = t;
-		while ( *r ) r += *r;
-		size = r - t + 1;  /* Must be include the last zero. */
-		where = (WORD *)Malloc1(size * sizeof(WORD), "dollar content");
-		r = where;
-		i = size;
-		NCOPY(r, t, i);
-	}
-
-	d = Dollars + index;
-	if ( d->where != NULL && d->where != &AM.dollarzero )
-		M_free(d->where, "old content of dollar");
-	d->where = where;
-	if ( where == NULL || *where == 0 ) {
-		d->type = DOLZERO;
-		if ( where != NULL ) M_free(where, "buffer of dollar");
-		d->where = &AM.dollarzero;
-		d->size = 0;
-	}
-	else {
-		d->type = DOLTERMS;
-		d->size = size;
-	}
-	cbuf[AM.dbufnum].rhs[index] = d->where;
-
-	return 0;
-}
-
-/*
- 		#] MaxDollar :
- 		#[ SumDollars :
-*/
-
-/**
- * Sums the dollar variable content in PFDollars[number].slavebuf
- * and assigns the result to the dollar variable with \a index.
- *
- * @param  index  the index of the dollar variable.
- * @return        0 if OK, nonzero on error.
- */
-static int SumDollars(WORD index)
-{
-	GETIDENTITY
-	int i, j, error = 0;
-	WORD *dbuffer, *r, *m;
-	DOLLARS d;
-
-	CBUF *C = cbuf + AM.rbufnum;
-	WORD *oldwork = AT.WorkPointer, *oldcterm = AN.cTerm;
-	WORD olddefer = AR.DeferFlag, oldnumlhs = AR.Cnumlhs, oldnumrhs = C->numrhs;
-
-	AN.cTerm = 0;
-	AR.DeferFlag = 0;
-
-	if ( NewSort(BHEAD0) || NewSort(BHEAD0) || NewSort(BHEAD0) ) {
-		error = -1;
-		goto cleanup;
-	}
-
-	/*
-	 * Sum up the original $-variable in the master $-variables on all slaves.
-	 * Note that $-variables on the slaves are set to zero at the beginning of
-	 * the module (See also DoExecute).
-	 */
-	for ( i = 0; i < PF.numtasks; i++ ) {
-		r = i == 0 ? Dollars[index].where : PFDollars[index].slavebuf[i];
-		if ( r == &AM.dollarzero ) continue;
-
-		while ( *r ) {
-			m = AT.WorkPointer;
-			j = *r;
-
-			while ( --j >= 0 ) *m++ = *r++;
-			AT.WorkPointer = m;
-
-			AR.Cnumlhs = 0;
-			if ( Generator(BHEAD oldwork, 0) ) {
-				LowerSortLevel(); LowerSortLevel(); LowerSortLevel();
-				error = -1;
-				goto cleanup;
-			}
-
-			AT.WorkPointer = oldwork;
-		}
-	}
-
-	if ( EndSort(BHEAD (WORD *)&dbuffer, 2, 0) < 0 ) {
-		LowerSortLevel(); LowerSortLevel();
-		error = 1;
-	}
-
-	LowerSortLevel(); LowerSortLevel();
-
-	d = Dollars + index;
-	if ( d->where != NULL && d->where != &AM.dollarzero )
-		M_free(d->where, "old content of dollar");
-	d->where = dbuffer;
-	if ( dbuffer == NULL || *dbuffer == 0 ) {
-		d->type = DOLZERO;
-		if ( dbuffer != NULL ) M_free(dbuffer, "buffer of dollar");
-		d->where = &AM.dollarzero;
-		d->size = 0;
-	}
-	else {
-		d->type = DOLTERMS;
-		r = d->where; while ( *r ) r += *r;
-		d->size = r - d->where;  /* +1? (TU 22 Jul 2011) */
-	}
-	cbuf[AM.dbufnum].rhs[index] = d->where;
-
-cleanup:
-	AR.Cnumlhs = oldnumlhs;
-	C->numrhs = oldnumrhs;
-	AR.DeferFlag = olddefer;
-	AN.cTerm = oldcterm;
-	AT.WorkPointer = oldwork;
-
-	return error;
-}
-
-/*
- 		#] SumDollars :
-*/
-
-/**
- * Combines dollars from the various slaves
- * and broadcasts the result to all slaves.
- *
- * There are NumPotModdollars of dollars which could be changed.
- * They are in the array PotModdollars.
- *
- * The current module could be executed in parallel only if all
- * "changeable" dollars are listed in the array ModOptdollars which
- * is an array of objects of type MODOPTDOLLAR (there are
- * NumModOptdollars of them), otherwise the module was switched
- * to sequential mode.
- *
- * If the current module was executed in sequential mode, the master
- * just broadcasts all "changeable" dollars to all slaves.
- *
- * If the current module was executed in parallel mode, the master receives
- * dollars from slaves, combines them and broadcasts the result to all slaves.
- *
- * The pseudo-code is as follows:
-@verbatim
-if parallel then
-  if Master then
-    INITIALIZATION
-    MASTER RECEIVING: receive potentially modified dollars from slaves
-    COMBINING: combine received dollars
-    CLEANUP
-  else
-    SLAVE SENDING: pack potentially modified dollars send dollars to the Master
-  endif
-endif
-if Master then
-  MASTER PACK: pack potentially modified dollars
-endif
-Broadcast
-if Slave then
-  For each dollar:
-    SLAVE UNPACK: unpack broadcasted data
-    SLAVE STORE: replace corresponding dollar by unpacked data
-endif
-@endverbatim
- *
- * @remark  This function can be invoked only if NumPotModdollars > 0 !!!
- *          since NumPotModdollars > 0, then NumDollars > 0.
- *
- * @return  0 if OK, -1 on error.
- */
-WORD PF_mkDollarsParallel(void)
-{
-	int i, j, nSlave, src, index, namesize;
-	UBYTE *name, *p;
-	WORD type, *where, *r;
+	VectorStruct(WORD) buf;
 	LONG size;
-	DOLLARS d;
+	WORD type;
+	PADPOINTER(1,0,1,0);
+} dollar_buf;
 
-	if ( AC.mparallelflag == PARALLELFLAG ) {
-		if ( PF.me == MASTER ) { /*Master*/
-/*
-			#[ INITIALIZATION :
-				Data from slaves will be placed into an array PFDollars.
-				It must be re-allocated, if it's length is not enough.
-				Realloc PFDollars, if needed:
-*/
-			if ( MaxPFDollars < NumDollars ) {
-/*
-						First, free previous allocation:
-*/
-				for ( i = 1; i < MaxPFDollars; i++ )
-					M_free(PFDollars[i].slavebuf, "pointer to slave buffers");
-				if ( PFDollars != NULL )
-					M_free(PFDollars, "pointer to PFDOLLARS");
-/*
-						Allocate new one:
-*/
-				MaxPFDollars = NumDollars;
-				PFDollars = (PFDOLLARS *)Malloc1(NumDollars*sizeof(PFDOLLARS),
-															"pointer to PFDOLLARS");
-/*
-					and initialize it:
-*/
-				for ( i = 1; i < NumDollars; i++ ) {
-					PFDollars[i].slavebuf = (WORD**)Malloc1(PF.numtasks*sizeof(WORD*),
-									"pointer to array of slave buffers");
-					for ( j = 0; j < PF.numtasks; j++ )
-						PFDollars[i].slavebuf[j] = &(AM.dollarzero);
-				}
-			}
-/*
-			#] INITIALIZATION :
-			#[ MASTER RECEIVING :
-
-				Get dollars from each of the slaves, unpack them and put
-				data into PFDollars:
-*/
-			for ( nSlave = 1; nSlave < PF.numtasks; nSlave++ ) {
-				if ( PF_LongSingleReceive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, NULL) )
-					return(-1);
-/*
-					Now all the info is in PF_buffer.
-					Here NumPotModdollars dollars totally available; we trust
-					this number is the same on each slave:
-*/
-				for (i = 0; i < NumPotModdollars; i++) {
-					PF_LongSingleUnpack(&namesize, 1, PF_INT);
-					name = (UBYTE*)Malloc1(namesize, "dollar name");
-					PF_LongSingleUnpack(name, namesize, PF_BYTE);
-					PF_LongSingleUnpack(&type, 1, PF_WORD);
-					if (type != DOLZERO) {
-						PF_LongSingleUnpack(&size, 1, PF_LONG);
-						where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
-						PF_LongSingleUnpack(where, size + 1, PF_WORD);
-					}
-					else {
-						where = &(AM.dollarzero);
-					}
-/*
-						Now we have the dollar name in "name", the dollar type in "type",
-						the contents in "where" (of size "size").
-
-						Find the dollar "index" (its order number):
-*/
-					index = GetDollar(name);
-/*
-						and find the corresponding index (j) of this dollar in the
-						ModOptdollars array:
-*/
-					for ( j = 0; j < NumModOptdollars; j++ ) {
-						if (ModOptdollars[j].number == index) break;
-					}
-/*
-						In principle, if the dollar was not found in ModOptdollars,
-						this means that it was not mentioned in the module option.
-						At present, this is impossible since in such situation
-						the module must be executed in the sequential mode.
-*/
-					if (j >= NumModOptdollars ) return(-1);
+/* Buffers used to store data for each variable from each slave. */
+static Vector(dollar_buf, dollar_slave_bufs);
 
 /*
-						Now put data into PFDollars:
+			#] Variables :
+*/
 
-						The following type is NOT a dollar type, this is the
-						module option type:
-*/
-					PFDollars[index].type = ModOptdollars[j].type;
-/*
-						Note the dollar type (from "type") is not used :O
-*/
-					PFDollars[index].slavebuf[src] = where;
-/*
-						Static buffer instead of name!!:
-*/
-					if ( name ) M_free(name, "dollar name");
-				}
-			}
-/*
-				Now all (raw) info from slaves is in PFDollars
+/**
+ * Combines modified dollar variables on the all slaves, and store them into
+ * those on the master.
+ *
+ * The potentially modified dollar variables are given in PotModdollars,
+ * and the number of them is given by NumPotModdollars.
+ *
+ * The current module could be executed in parallel only if all potentially
+ * modified variables are listed in ModOptdollars, otherwise the module was
+ * switched to the sequential mode.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+int PF_CollectModifiedDollars(void)
+{
+	int i, j, ndollars;
+	/*
+	 * If the current module was executed in the sequential mode,
+	 * there are no modified module on the slaves.
+	 */
+	if ( AC.mparallelflag != PARALLELFLAG ) return 0;
+	/*
+	 * Count the number of (potentially) modified dollar variables, which we need to collect.
+	 * Here we need to collect all max/min/sum variables.
+	 */
+	ndollars = 0;
+	for ( i = 0; i < NumPotModdollars; i++ ) {
+		WORD index = PotModdollars[i];
+		if ( dollar_to_be_collected(index) ) ndollars++;
+	}
+	if ( ndollars == 0 ) return 0;  /* No dollars to be collected. */
 
-			#] MASTER RECEIVING :
-			#[ COMBINING :
-*/
-			for ( i = 0; i < NumPotModdollars; i++ ) {
+	if ( PF.me == MASTER ) {
 /*
-					New dollar for the Master is created in the
-					corresponding function similar to case MODLOCAL
+			#[ Master :
 */
-				switch (PFDollars[index=PotModdollars[i]].type) {
-					case MODSUM:  /*  result must be summed up  */
-						if(SumDollars(index)) MesPrint("error in SumDollars");
-						break;
-					case MODMAX:  /*  result must be a maximum  */
-						if(MaxDollar(index)) MesPrint("error in MaxDollar");
-						break;
-					case MODMIN:  /*  result must be a minimum  */
-						if(MinDollar(index)) MesPrint("error in MinDollar");
-						break;
-					case MODLOCAL:/*  no change  */
-						continue;
-					default:
-						MesPrint("Serious internal error with module option");
-						Terminate(-1);
-				}
-				/* According to the FORM manual, the results for MODMAX, MODMIN and MODSUM are numbers,
-				   above implementation can give somewhat different results though. We clear all factors. */
-				CleanDollarFactors(Dollars + index);
-			}
-/*
-			#] COMBINING :
-			#[ CLEANUP :
-*/
-			for ( i = 1; i < NumDollars; i++ ) {
-/*
-					Note, slavebuf[0] was not allocated! It is just a copy!
-*/
-				for ( j = 1; j < PF.numtasks; j++ ) {
-					if ( PFDollars[i].slavebuf[j] != &(AM.dollarzero) ) {
-						M_free(PFDollars[i].slavebuf[j], "slave buffer");
-						PFDollars[i].slavebuf[j] = &(AM.dollarzero);
-					}
-				}
-			}
-/*
-			#] CLEANUP :
-*/
+		int nslaves, nvars;
+		/* Prepare receive buffers. We need ndollars*(PF.numtasks-1) buffers. */
+		int nbufs = ndollars * (PF.numtasks - 1);
+		VectorReserve(dollar_slave_bufs, nbufs);
+		for ( i = VectorSize(dollar_slave_bufs); i < nbufs; i++ ) {
+			VectorInit(VectorPtr(dollar_slave_bufs)[i].buf);
 		}
-		else { /*Slave*/
-/*
-			#[ SLAVE SENDING :
-*/
-			if ( PF_PrepareLongSinglePack() ) return(-1);
+		VectorSize(dollar_slave_bufs) = nbufs;
+		/* Receive data from each slave. */
+		for ( nslaves = 1; nslaves < PF.numtasks; nslaves++ ) {
+			int src;
+			PF_LongSingleReceive(PF_ANY_SOURCE, PF_DOLLAR_MSGTAG, &src, NULL);
+			nvars = 0;
 			for ( i = 0; i < NumPotModdollars; i++ ) {
-				index = PotModdollars[i];
-				p = name  = AC.dollarnames->namebuffer+Dollars[index].name;
-				namesize = 1;
-				while (*p++) namesize++;
-				d = Dollars + index;
-				PF_LongSinglePack((UBYTE*)&namesize, 1, PF_INT);
-				PF_LongSinglePack(name, namesize, PF_BYTE);
-				if ( d->type != DOLZERO ) {
-					PF_LongSinglePack(&d->type, 1, PF_WORD);
-					PF_LongSinglePack(&d->size, 1, PF_LONG);
-					PF_LongSinglePack(d->where, d->size + 1, PF_WORD);
+				WORD index = PotModdollars[i];
+				dollar_buf *b;
+				if ( !dollar_to_be_collected(index) ) continue;
+				b = &VectorPtr(dollar_slave_bufs)[(PF.numtasks - 1) * nvars + (src - 1)];
+				PF_LongSingleUnpack(&b->type, 1, PF_WORD);
+				if ( b->type != DOLZERO ) {
+					LONG size;
+					WORD *where;
+					PF_LongSingleUnpack(&size, 1, PF_LONG);
+					VectorReserve(b->buf, size + 1);
+					where = VectorPtr(b->buf);
+					PF_LongSingleUnpack(where, size, PF_WORD);
+					where[size] = 0;  /* The null terminator is needed. */
+					b->size = size + 1;  /* Including the null terminator. */
+					/* Note that we don't collect factored stuff for max/min/sum variables. */
 				}
 				else {
-					type = DOLZERO;
-					PF_LongSinglePack(&type, 1, PF_WORD);
+					VectorReserve(b->buf, 1);
+					VectorPtr(b->buf)[0] = 0;
+					b->size = 0;
+				}
+				nvars++;
+			}
+		}
+		/* Combine received dollars. */
+		nvars = 0;
+		for ( i = 0; i < NumPotModdollars; i++ ) {
+			WORD index = PotModdollars[i];
+			WORD dtype;
+			DOLLARS d;
+			dollar_buf *b;
+			if ( !dollar_to_be_collected(index) ) continue;
+			d = Dollars + index;
+			b = &VectorPtr(dollar_slave_bufs)[(PF.numtasks - 1) * nvars];
+			dtype = dollar_mod_type(index);
+			switch ( dtype ) {
+				case MODMAX:
+				case MODMIN: {
+/*
+			#[ MODMAX & MODMIN :
+*/
+					int selected = 0;
+					for ( j = 1; j < PF.numtasks - 1; j++ )
+						if ( TwoExprCompare(VectorPtr(b[j].buf), VectorPtr(b[selected].buf), dtype == MODMAX ? GREATER : LESS ) )
+							selected = j;
+					b = b + selected;
+					copy_dollar(index, b->type, VectorPtr(b->buf), b->size);
+/*
+			#] MODMAX & MODMIN :
+*/
+					break;
+				}
+				case MODSUM: {
+/*
+			#[ MODSUM :
+*/
+					GETIDENTITY
+					int err = 0;
+
+					CBUF *C = cbuf + AM.rbufnum;
+					WORD *oldwork = AT.WorkPointer, *oldcterm = AN.cTerm;
+					WORD olddefer = AR.DeferFlag, oldnumlhs = AR.Cnumlhs, oldnumrhs = C->numrhs;
+
+					LONG size;
+					WORD type, *dbuf;
+
+					AN.cTerm = 0;
+					AR.DeferFlag = 0;
+
+					if ( ((WORD *)((UBYTE *)AT.WorkPointer + AM.MaxTer)) > AT.WorkTop ) {
+						err = -1;
+						goto cleanup;
+						MesWork();
+					}
+
+					if ( NewSort(BHEAD0) ) {
+						err = -1;
+						goto cleanup;
+					}
+					if ( NewSort(BHEAD0) ) {
+						LowerSortLevel();
+						err = -1;
+						goto cleanup;
+					}
+
+					/*
+					 * Sum up the original $-variable in the master and $-variables on all slaves.
+					 * Note that $-variables on the slaves are set to zero at the beginning of
+					 * the module (See also DoExecute()).
+					 */
+					for ( j = 0; j < PF.numtasks; j++ ) {
+						const WORD *r;
+						for ( r = j == 0 ? Dollars[index].where : VectorPtr(b[j - 1].buf); *r; r += *r ) {
+							WORD *m = AT.WorkPointer;
+							memcpy(m, r, sizeof(WORD) * *r);
+							AT.WorkPointer += sizeof(WORD) * *r;
+							AR.Cnumlhs = 0;
+							if ( Generator(BHEAD oldwork, 0) ) {
+								LowerSortLevel(); LowerSortLevel();
+								err = -1;
+								goto cleanup;
+							}
+							AT.WorkPointer = oldwork;
+						}
+					}
+
+					size = EndSort(BHEAD (WORD *)&dbuf, 2, 0);
+					if ( size < 0 ) {
+						LowerSortLevel();
+						err = -1;
+						goto cleanup;
+					}
+					LowerSortLevel();
+
+					/* Find special cases. */
+					type = DOLTERMS;
+					if ( dbuf[0] == 0 ) {
+						type = DOLZERO;
+					}
+					else if ( dbuf[dbuf[0]] == 0 ) {
+						const WORD *t = dbuf, *w;
+						WORD n, nsize;
+						n = *t;
+						nsize = t[n - 1];
+						if ( nsize < 0 ) nsize = -nsize;
+						if ( nsize == n - 1 ) {
+							nsize = (nsize - 1) / 2;
+							w = t + 1 + nsize;
+							if ( *w == 1 ) {
+								w++; while ( w < t + n - 1 ) { if ( *w ) break; w++; }
+								if ( w >= t + n - 1 ) type =  DOLNUMBER;
+							}
+							else if ( n == 7 && t[6] == 3 && t[5] == 1 && t[4] == 1 && t[1] == INDEX && t[2] == 3 ) {
+								type = DOLINDEX;
+								d->index = t[3];
+							}
+						}
+					}
+					copy_dollar(index, type, dbuf, dollarlen(dbuf) + 1);
+					M_free(dbuf, "temporary dollar buffer");
+cleanup:
+					AR.Cnumlhs = oldnumlhs;
+					C->numrhs = oldnumrhs;
+					AR.DeferFlag = olddefer;
+					AN.cTerm = oldcterm;
+					AT.WorkPointer = oldwork;
+
+					if ( err ) return err;
+/*
+			#] MODSUM :
+*/
+					break;
 				}
 			}
-			PF_LongSingleSend(MASTER, PF_DOLLAR_MSGTAG);
-/*
-			#] SLAVE SENDING :
-*/
+			if ( d->type == DOLTERMS )
+				cbuf[AM.dbufnum].CanCommu[index] = numcommute(d->where, &cbuf[AM.dbufnum].NumTerms[index]);
+			cbuf[AM.dbufnum].rhs[index] = d->where;
+			nvars++;
+#ifdef PF_DEBUG_REDUCE_DOLLAR
+			MesPrint("<< Reduce $-var: %s", AC.dollarnames->namebuffer + d->name);
+#endif
 		}
-	}
 /*
-		The Master must pack and broadcast independently on mparallelflag!
+			#] Master :
+*/
+	}
+	else {
+/*
+			#[ Slave :
+*/
+		PF_PrepareLongSinglePack();
+		/* Pack each variable. */
+		for ( i = 0; i < NumPotModdollars; i++ ) {
+			WORD index = PotModdollars[i];
+			DOLLARS d;
+			if ( !dollar_to_be_collected(index) ) continue;
+			d = Dollars + index;
+			PF_LongSinglePack(&d->type, 1, PF_WORD);
+			if ( d->type != DOLZERO ) {
+				/*
+				 * NOTE: d->size is the allocated buffer size for d->where in WORDs.
+				 *       So dollarlen(d->where) can be < d->size-1. (TU 15 Dec 2011)
+				 */
+				LONG size = dollarlen(d->where);
+				PF_LongSinglePack(&size, 1, PF_LONG);
+				PF_LongSinglePack(d->where, size, PF_WORD);
+				/* Note that we don't collect factored stuff for max/min/sum variables. */
+			}
+		}
+		PF_LongSingleSend(MASTER, PF_DOLLAR_MSGTAG);
+/*
+			#] Slave :
+*/
+	}
+	return 0;
+}
+
+/*
+ 		#] PF_CollectModifiedDollars :
+ 		#[ PF_BroadcastModifiedDollars :
 */
 
 /*
- 		#[ MASTER PACK :
+			#[ dollar_to_be_broadcast :
 */
+
+/**
+ * Returns true if the dollar variable specified by \a index has to be broadcast
+ * from the master to the all slaves, i.e., non-local.
+ */
+static inline int dollar_to_be_broadcast(WORD index)
+{
+	switch ( dollar_mod_type(index) ) {
+		case MODLOCAL:
+			return 0;
+		default:
+			return 1;
+	}
+}
+
+/*
+			#] dollar_to_be_broadcast :
+*/
+
+/**
+ * Broadcasts modified dollar variables on the master to the all slaves.
+ *
+ * The potentially modified dollar variables are given in PotModdollars,
+ * and the number of them is given by NumPotModdollars.
+ *
+ * The current module could be executed in parallel only if all potentially
+ * modified variables are listed in ModOptdollars, otherwise the module was
+ * switched to the sequential mode. In either cases, we need to broadcast them.
+ *
+ * @return  0 if OK, nonzero on error.
+ */
+int PF_BroadcastModifiedDollars(void)
+{
+	int i, j, ndollars;
+	/*
+	 * Count the number of (potentially) modified dollar variables, which we need to broadcast.
+	 * Here we need to broadcast all non-local variables.
+	 */
+	ndollars = 0;
+	for ( i = 0; i < NumPotModdollars; i++ ) {
+		WORD index = PotModdollars[i];
+		if ( dollar_to_be_broadcast(index) ) ndollars++;
+	}
+	if ( ndollars == 0 ) return 0;  /* No dollars to be broadcast. */
+
 	if ( PF.me == MASTER ) {
+/*
+			#[ Master :
+*/
 		PF_PrepareLongMultiPack();
+		/* Pack each variable. */
 		for ( i = 0; i < NumPotModdollars; i++ ) {
-			index = PotModdollars[i];
-			p = name = AC.dollarnames->namebuffer+Dollars[index].name;
-			namesize = 1;
-			while ( *p++ ) namesize++;
+			WORD index = PotModdollars[i];
+			DOLLARS d;
+			if ( !dollar_to_be_broadcast(index) ) continue;
 			d = Dollars + index;
-			PF_LongMultiPack(&namesize, 1, PF_INT);
-			PF_LongMultiPack(name, namesize, PF_BYTE);
+			PF_LongMultiPack(&d->type, 1, PF_WORD);
 			if ( d->type != DOLZERO ) {
-				PF_LongMultiPack(&d->type, 1, PF_WORD);
-				PF_LongMultiPack(&d->size, 1, PF_LONG);
-				PF_LongMultiPack(d->where, d->size + 1, PF_WORD);
+				/*
+				 * NOTE: d->size is the allocated buffer size for d->where in WORDs.
+				 *       So dollarlen(d->where) can be < d->size-1. (TU 15 Dec 2011)
+				 */
+				LONG size = dollarlen(d->where);
+				PF_LongMultiPack(&size, 1, PF_LONG);
+				PF_LongMultiPack(d->where, size, PF_WORD);
 				/* ...and the factored stuff. */
 				PF_LongMultiPack(&d->nfactors, 1, PF_WORD);
 				if ( d->nfactors > 1 ) {
@@ -2822,59 +2774,58 @@ WORD PF_mkDollarsParallel(void)
 						FACDOLLAR *f = &d->factors[j];
 						PF_LongMultiPack(&f->type, 1, PF_WORD);
 						PF_LongMultiPack(&f->size, 1, PF_LONG);
-						if ( f->size > 0 ) {
-							PF_LongMultiPack(f->where, f->size + 1, PF_WORD);
-						}
-						else {
+						if ( f->size > 0 )
+							PF_LongMultiPack(f->where, f->size, PF_WORD);
+						else
 							PF_LongMultiPack(&f->value, 1, PF_WORD);
-						}
 					}
 				}
 			}
-			else {
-				type = DOLZERO;
-				PF_LongMultiPack(&type, 1, PF_WORD);
-			}
 #ifdef PF_DEBUG_BCAST_DOLLAR
-			MesPrint(">> Broadcast $-var: %s", name);
+			MesPrint(">> Broadcast $-var: %s", AC.dollarnames->namebuffer + d->name);
 #endif
 		}
-	}
 /*
- 		#] MASTER PACK :
+			#] Master :
 */
-	if ( PF_LongMultiBroadcast() ) return(-1);
-
+	}
+	if ( PF_LongMultiBroadcast() ) return -1;
 	if ( PF.me != MASTER ) {
 /*
-			For each dollar:
+			#[ Slave :
 */
 		for ( i = 0; i < NumPotModdollars; i++ ) {
-/*
-			#[ SLAVE UNPACK :
-*/
-			WORD nfactors = 0;
-			FACDOLLAR *factors = NULL;
-
-			PF_LongMultiUnpack(&namesize, 1, PF_INT);
-			name = (UBYTE*)Malloc1(namesize, "dollar name");
-			PF_LongMultiUnpack(name, namesize, PF_BYTE);
-			PF_LongMultiUnpack(&type, 1, PF_WORD);
-			if ( type != DOLZERO ) {
+			WORD index = PotModdollars[i];
+			DOLLARS d;
+			if ( !dollar_to_be_broadcast(index) ) continue;
+			d = Dollars + index;
+			/* Clear the contents of the dollar variable. */
+			if ( d->where && d->where != &AM.dollarzero )
+				M_free(d->where, "old content of dollar");
+			d->where = &AM.dollarzero;
+			d->size = 0;
+			CleanDollarFactors(d);
+			/* Unpack and store the contents. */
+			PF_LongMultiUnpack(&d->type, 1, PF_WORD);
+			if ( d->type != DOLZERO ) {
+				LONG size;
 				PF_LongMultiUnpack(&size, 1, PF_LONG);
-				where = (WORD*)Malloc1(sizeof(WORD)*(size+1), "dollar content");
-				PF_LongMultiUnpack(where, size + 1, PF_WORD);
+				d->size = size + 1;
+				d->where = (WORD *)Malloc1(sizeof(WORD) * d->size, "dollar content");
+				PF_LongMultiUnpack(d->where, size, PF_WORD);
+				d->where[size] = 0;  /* The null terminator is needed. */
 				/* ...and the factored stuff. */
-				PF_LongMultiUnpack(&nfactors, 1, PF_WORD);
-				if ( nfactors > 1 ) {
-					factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*nfactors, "dollar factored stuff");
-					for ( j = 0; j < nfactors; j++ ) {
-						FACDOLLAR *f = &factors[j];
+				PF_LongMultiUnpack(&d->nfactors, 1, PF_WORD);
+				if ( d->nfactors > 1 ) {
+					d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR) * d->nfactors, "dollar factored stuff");
+					for ( j = 0; j < d->nfactors; j++ ) {
+						FACDOLLAR *f = &d->factors[j];
 						PF_LongMultiUnpack(&f->type, 1, PF_WORD);
 						PF_LongMultiUnpack(&f->size, 1, PF_LONG);
 						if ( f->size > 0 ) {
-							f->where = (WORD*)Malloc1(sizeof(WORD)*(f->size+1), "dollar factor content");
-							PF_LongMultiUnpack(f->where, f->size + 1, PF_WORD);
+							f->where = (WORD *)Malloc1(sizeof(WORD) * (f->size + 1), "dollar factor content");
+							PF_LongMultiUnpack(f->where, f->size, PF_WORD);
+							f->where[f->size] = 0;  /* The null terminator is needed. */
 							f->value = 0;
 						}
 						else {
@@ -2884,50 +2835,20 @@ WORD PF_mkDollarsParallel(void)
 					}
 				}
 			}
-			else {
-				where = &(AM.dollarzero);
-			}
-/*
-			#] SLAVE UNPACK :
-			#[ SLAVE STORE :
-*/
-			index = GetDollar(name);
-			d = Dollars + index;
-			if (d->where && d->where != &(AM.dollarzero))
-						M_free(d->where, "old content of dollar");
-			CleanDollarFactors(d);
-			d->type  = type;
-			d->where = where;
-			d->nfactors = nfactors;
-			d->factors = factors;
-			if ( type != DOLZERO ) {
-/*
-					Strange stuff... To be investigated.
-					How could it be, that
-					where == 0 || *where == 0 and type != DOLZERO?:
-*/
-				if (where == 0 || *where == 0) {
-					d->type  = DOLZERO;
-					if (where) M_free(where, "received dollar content");
-					d->where = &(AM.dollarzero); d->size  = 0;
-				}
-				else {
-					r = d->where; while (*r) r += *r;
-					d->size = r - d->where;
-				}
-			}
+			if ( d->type == DOLTERMS )
+				cbuf[AM.dbufnum].CanCommu[index] = numcommute(d->where, &cbuf[AM.dbufnum].NumTerms[index]);
 			cbuf[AM.dbufnum].rhs[index] = d->where;
-			if (name) M_free(name, "dollar name");
-/*
-			#] SLAVE STORE :
-*/
 		}
+/*
+			#] Slave :
+*/
 	}
-	return (0);
+	return 0;
 }
 
 /*
-  	#] PF_mkDollarsParallel :
+ 		#] PF_BroadcastModifiedDollars :
+  	#] Synchronization of modified dollar variables :
   	#[ Synchronization of redefined preprocessor variables :
  		#[ Variables :
 */

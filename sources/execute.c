@@ -719,11 +719,13 @@ WORD DoExecute(WORD par, WORD skip)
 
 /*[28sep2005 mt]:*/
 #ifdef PARALLEL
-	/*Here there was a long code written by df in December 2002. I re-write
-	it completely and moved it to PF_mkDollarsParallel() in paralle.c:*/
-	if(NumPotModdollars > 0)
-		if( (RetCode=PF_mkDollarsParallel())!=0 )
-			return(RetCode);
+	/* Combine and then broadcast modified dollar variables. */
+	if ( NumPotModdollars > 0 ) {
+		RetCode = PF_CollectModifiedDollars();
+		if ( RetCode ) return RetCode;
+		RetCode = PF_BroadcastModifiedDollars();
+		if ( RetCode ) return RetCode;
+	}
 	/* Broadcast redefined preprocessor variables. */
 	if ( AC.numpfirstnum > 0 ) {
 		RetCode = PF_BroadcastRedefinedPreVars();
