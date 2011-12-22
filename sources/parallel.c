@@ -2942,7 +2942,11 @@ static Vector(UBYTE, prevarbuf);
 
 /**
  * Packs information of redefined preprocessor variables into the long single
- * pack buffer.
+ * pack buffer, with the corresponding value in AC.inputnumbers.
+ *
+ * The potentially redefined preprocessor variables are given in AC.pfirstnum,
+ * and the number of them is given by AC.numpfirstnum. For an actually redefined
+ * variable, the corresponding value in AC.inputnumbers is non-negative.
  */
 static void PF_PackRedefinedPreVars(void)
 {
@@ -2952,7 +2956,7 @@ static void PF_PackRedefinedPreVars(void)
 	for ( i = 0; i < AC.numpfirstnum; i++ )
 		if ( AC.inputnumbers[i] >= 0 ) nredefs++;
 	PF_LongSinglePack(&nredefs, 1, PF_INT);
-	/* Then, pack each preprocessor variable. */
+	/* Then, pack each variable. */
 	for ( i = 0; i < AC.numpfirstnum; i++ )
 		if ( AC.inputnumbers[i] >= 0) {
 			WORD index = AC.pfirstnum[i];
@@ -2972,7 +2976,12 @@ static void PF_PackRedefinedPreVars(void)
 
 /**
  * Unpacks information of redefined preprocessor variables from the long single
- * pack buffer.
+ * pack buffer. If the attached value of the input number is greater than
+ * the corresponding current value in AC.inputnumbers, this function updates
+ * the preprocessor variable.
+ *
+ * The potentially redefined preprocessor variables are given in AC.pfirstnum,
+ * and the number of them is AC.numpfirstnum.
  */
 static void PF_UnpackRedefinedPreVars(void)
 {
@@ -2981,7 +2990,7 @@ static void PF_UnpackRedefinedPreVars(void)
 	int nredefs;
 	PF_LongSingleUnpack(&nredefs, 1, PF_INT);
 	if ( nredefs > 0 ) {
-		/* Then unpack each preprocessor variable. */
+		/* Then unpack each variable. */
 		for ( i = 0; i < nredefs; i++ ) {
 			WORD index;
 			int bytes;
@@ -2992,9 +3001,9 @@ static void PF_UnpackRedefinedPreVars(void)
 			VectorReserve(prevarbuf, bytes + 1);
 			value = VectorPtr(prevarbuf);
 			PF_LongSingleUnpack(value, bytes, PF_BYTE);
-			value[bytes] = '\0';
+			value[bytes] = '\0';  /* The null terminator is needed. */
 			PF_LongSingleUnpack(&inputnumber, 1, PF_LONG);
-			/* Put this variable if needed. */
+			/* Put this variable if it must be updated. */
 			for ( j = 0; j < AC.numpfirstnum; j++ )
 				if ( AC.pfirstnum[j] == index ) break;
 			if ( AC.inputnumbers[j] < inputnumber ) {
@@ -3011,12 +3020,14 @@ static void PF_UnpackRedefinedPreVars(void)
 */
 
 /**
- * Broadcasts preprocessor variables, which were changed (by Redefine statement)
- * in the previous module, from the master to the all slaves.
+ * Broadcasts preprocessor variables, which were changed by the Redefine statements
+ * in the current module, from the master to the all slaves.
+ *
+ * The potentially redefined preprocessor variables are given in AC.pfirstnum,
+ * and the number of them is given by AC.numpfirstnum. For an actually redefined
+ * variable, the corresponding value in AC.inputnumbers is non-negative.
  *
  * @return  0 if OK, nonzero on error.
- *
- * @remark  Limited by the size of the pack buffer.
  */
 int PF_BroadcastRedefinedPreVars(void)
 {
@@ -3027,7 +3038,7 @@ int PF_BroadcastRedefinedPreVars(void)
 	 */
 	if ( PF.me == MASTER ) {
 /*
- 		#[ Master :
+			#[ Master :
 */
 		int i, nredefs;
 		PF_PrepareLongMultiPack();
@@ -3036,7 +3047,7 @@ int PF_BroadcastRedefinedPreVars(void)
 		for ( i = 0; i < AC.numpfirstnum; i++ )
 			if ( AC.inputnumbers[i] >= 0 ) nredefs++;
 		PF_LongMultiPack(&nredefs, 1, PF_INT);
-		/* Then, pack each preprocessor variable. */
+		/* Then, pack each variable. */
 		for ( i = 0; i < AC.numpfirstnum; i++ )
 			if ( AC.inputnumbers[i] >= 0) {
 				WORD index = AC.pfirstnum[i];
@@ -3050,19 +3061,19 @@ int PF_BroadcastRedefinedPreVars(void)
 #endif
 			}
 /*
- 		#] Master :
+			#] Master :
 */
 	}
 	if ( PF_LongMultiBroadcast() ) return -1;
 	if ( PF.me != MASTER ) {
 /*
- 		#[ Slave :
+			#[ Slave :
 */
 		int i, nredefs;
 		/* Unpack the number of redefined preprocessor variables. */
 		PF_LongMultiUnpack(&nredefs, 1, PF_INT);
 		if ( nredefs > 0 ) {
-			/* Then unpack each preprocessor variable and put it. */
+			/* Then unpack each variable and put it. */
 			for ( i = 0; i < nredefs; i++ ) {
 				WORD index;
 				int bytes;
@@ -3072,12 +3083,12 @@ int PF_BroadcastRedefinedPreVars(void)
 				VectorReserve(prevarbuf, bytes + 1);
 				value = VectorPtr(prevarbuf);
 				PF_LongMultiUnpack(value, bytes, PF_BYTE);
-				value[bytes] = '\0';
+				value[bytes] = '\0';  /* The null terminator is needed. */
 				PutPreVar(PreVar[index].name, value, NULL, 1);
 			}
 		}
 /*
- 		#] Slave :
+			#] Slave :
 */
 	}
 	return 0;
