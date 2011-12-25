@@ -896,6 +896,7 @@ int CreateHandle()
         i = filelistsize;
         if ( DoubleList((VOID ***)(&fl),&filelistsize,(int)sizeof(FILES *),
 			"list of open files") != 0 ) Terminate(-1);
+		filelist = (FILES **)fl;
 		for ( j = i; j < filelistsize; j++ ) filelist[j] = 0;
 		numinfilelist = i + 1;
 	}

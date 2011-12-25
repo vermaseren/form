@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
 #define HIDEDEBUG
   	#[ Includes : store.c
@@ -37,7 +37,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -57,7 +57,7 @@ WORD OpenTemp()
 }
 
 /*
- 		#] OpenTemp :
+ 		#] OpenTemp : 
  		#[ SeekScratch :
 */
 
@@ -68,7 +68,7 @@ VOID SeekScratch(FILEHANDLE *fi, POSITION *pos)
 }
 
 /*
- 		#] SeekScratch :
+ 		#] SeekScratch : 
  		#[ SetEndScratch :
 */
 
@@ -82,7 +82,7 @@ VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndScratch :
+ 		#] SetEndScratch : 
  		#[ SetEndHScratch :
 */
 
@@ -108,7 +108,7 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndHScratch :
+ 		#] SetEndHScratch : 
  		#[ SetScratch :
 */
 
@@ -179,7 +179,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch :
+ 		#] SetScratch : 
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -223,7 +223,7 @@ WORD RevertScratch()
 }
 
 /*
- 		#] RevertScratch :
+ 		#] RevertScratch : 
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -265,7 +265,7 @@ WORD ResetScratch()
 }
 
 /*
- 		#] ResetScratch :
+ 		#] ResetScratch : 
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -471,7 +471,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave :
+ 		#] CoSave : 
  		#[ CoLoad :
 */
 
@@ -668,7 +668,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad :
+ 		#] CoLoad : 
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -753,7 +753,7 @@ WORD DeleteStore(WORD par)
 }
 
 /*
- 		#] DeleteStore :
+ 		#] DeleteStore : 
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -859,7 +859,7 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore :
+ 		#] PutInStore : 
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -1121,7 +1121,7 @@ RegRet:;
 		}
 	}
 /*
-			#] debug :
+			#] debug : 
 */
 	return(*from);
 GTerr:
@@ -1131,7 +1131,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm :
+ 		#] GetTerm : 
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.
@@ -1302,7 +1302,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm :
+ 		#] GetOneTerm : 
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1404,7 +1404,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms :
+ 		#] GetMoreTerms : 
  		#[ GetMoreFromMem :
 
 */
@@ -1496,7 +1496,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem :
+ 		#] GetMoreFromMem : 
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1706,7 +1706,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore :
+ 		#] GetFromStore : 
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1890,7 +1890,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars :
+ 		#] DetVars : 
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -2057,14 +2057,22 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 		Look in GetTable on how to recover numdummies.
 		Forgetting numdummies has been in there from the beginning.
 */
-	if ( e->numdummies > 0 ) {
-		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->numdummies)),(LONG)sizeof(WORD)) != 
-			sizeof(WORD) ) {
-				MesPrint("Error while writing storage file");
-				goto ErrReturn;
-			}
-		TELLFILE(AR.StoreData.Handle,&(indexent->position));
+	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->numdummies)),(LONG)sizeof(WORD)) != 
+		sizeof(WORD) ) {
+			MesPrint("Error while writing storage file");
+			goto ErrReturn;
 	}
+	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->numfactors)),(LONG)sizeof(WORD)) != 
+		sizeof(WORD) ) {
+			MesPrint("Error while writing storage file");
+			goto ErrReturn;
+	}
+	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->vflags)),(LONG)sizeof(WORD)) != 
+		sizeof(WORD) ) {
+			MesPrint("Error while writing storage file");
+			goto ErrReturn;
+	}
+	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	if ( f->handle >= 0 ) {
 		POSITION llength;
 		llength = *length;
@@ -2128,7 +2136,7 @@ ErrReturn:
 }
 
 /*
- 		#] ToStorage :
+ 		#] ToStorage : 
  		#[ NextFileIndex :
 */
 
@@ -2181,7 +2189,7 @@ ErrNextS:
 }
 
 /*
- 		#] NextFileIndex :
+ 		#] NextFileIndex : 
  		#[ SetFileIndex :
 */
 
@@ -2229,7 +2237,7 @@ WORD SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex :
+ 		#] SetFileIndex : 
  		#[ VarStore :
 */
 
@@ -2272,7 +2280,7 @@ WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 }
 
 /*
- 		#] VarStore :
+ 		#] VarStore : 
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2438,7 +2446,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber :
+ 		#] TermRenumber : 
  		#[ FindrNumber :
 */
 
@@ -2503,7 +2511,7 @@ ErrFindr2:
 }
 
 /*
- 		#] FindrNumber :
+ 		#] FindrNumber : 
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2645,7 +2653,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex :
+ 		#] FindInIndex : 
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2823,7 +2831,7 @@ RENUMBER GetTable(WORD expr, POSITION *position)
 	}
 	}
 /*
-			#] Symbols :
+			#] Symbols : 
 			#[ Indices :
 */
 	{
@@ -2886,7 +2894,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices :
+			#] Indices : 
 			#[ Vectors :
 */
 	{
@@ -2930,7 +2938,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors :
+			#] Vectors : 
 			#[ Functions :
 */
 	{
@@ -2978,7 +2986,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions :
+			#] Functions : 
 
 	Now we skip the prototype. This sets the start position at the first term
 */
@@ -2993,6 +3001,12 @@ GetTb3:
 		For clarity we look where we are.
 		We want to know: is this position already known?
 		Could we have inserted extra information here?
+
+		nummystery indicates extra words. We have currently in order
+		(if they exist)
+			numdummies
+			numfactors
+			vflags
 */
 		POSITION pos;
 		int nummystery;
@@ -3014,9 +3028,42 @@ GetTb3:
 /*
 			MesPrint("--> numdummies = %d",Expressions[expr].numdummies);
 */
+			nummystery -= sizeof(WORD);
 		}
 		else {
 			Expressions[expr].numdummies = 0;
+		}
+		if ( nummystery > 0 ) {
+			if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+			sizeof(WORD) ) {
+				UNLOCK(AM.storefilelock);
+				AT.WorkPointer = oldwork;
+				return(0);
+			}
+			Expressions[expr].numfactors = *AT.WorkPointer;
+/*
+			MesPrint("--> numfactors = %d",Expressions[expr].numfactors);
+*/
+			nummystery -= sizeof(WORD);
+		}
+		else {
+			Expressions[expr].numfactors = 0;
+		}
+		if ( nummystery > 0 ) {
+			if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+			sizeof(WORD) ) {
+				UNLOCK(AM.storefilelock);
+				AT.WorkPointer = oldwork;
+				return(0);
+			}
+			Expressions[expr].vflags = *AT.WorkPointer;
+/*
+			MesPrint("--> vflags = %d",Expressions[expr].vflags);
+*/
+			nummystery -= sizeof(WORD);
+		}
+		else {
+			Expressions[expr].vflags = 0;
 		}
 	}
 
@@ -3056,7 +3103,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
@@ -3230,7 +3277,7 @@ WriteTrailer:
 }
 
 /*
- 		#] CopyExpression :
+ 		#] CopyExpression : 
  		#[ ExprStatus :
 */
 
@@ -3269,7 +3316,7 @@ void ExprStatus(EXPRESSIONS e)
 #endif
 
 /*
- 		#] ExprStatus :
+ 		#] ExprStatus : 
 	#] StoreExpressions :
 	#[ System Independent Saved Expressions :
 
@@ -3356,7 +3403,7 @@ static void Flip64(UBYTE *p) { FlipN(p, 8); }
 static void Flip128(UBYTE *p) { FlipN(p, 16); }
 
 /*
- 		#] Flip :
+ 		#] Flip : 
  		#[ Resize :
 */
 
@@ -3563,7 +3610,7 @@ static void Resize128t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8
 static void Resize128t64NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /*
- 		#] Resize :
+ 		#] Resize : 
  		#[ CheckPower and RenumberVec :
 */
 
@@ -3605,7 +3652,7 @@ static void RenumberVec32(UBYTE *p)
 }
 
 /*
- 		#] CheckPower and RenumberVec :
+ 		#] CheckPower and RenumberVec : 
  		#[ ResizeCoeff :
 */
 
@@ -3717,7 +3764,7 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 }
 
 /*
- 		#] ResizeCoeff :
+ 		#] ResizeCoeff : 
  		#[ WriteStoreHeader :
 */
 
@@ -3781,7 +3828,7 @@ WORD WriteStoreHeader(WORD handle)
 }
 
 /*
- 		#] WriteStoreHeader :
+ 		#] WriteStoreHeader : 
  		#[ CompactifySizeof :
 */
 
@@ -3805,7 +3852,7 @@ static unsigned int CompactifySizeof(unsigned int size)
 }
 
 /*
- 		#] CompactifySizeof :
+ 		#] CompactifySizeof : 
  		#[ ReadSaveHeader :
 */
 
@@ -3910,7 +3957,7 @@ WORD ReadSaveHeader()
 }
 
 /*
- 		#] ReadSaveHeader :
+ 		#] ReadSaveHeader : 
  		#[ ReadSaveIndex :
 */
 
@@ -4079,7 +4126,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 }
 
 /*
- 		#] ReadSaveIndex :
+ 		#] ReadSaveIndex : 
  		#[ ReadSaveVariables :
 */
 
@@ -4398,7 +4445,21 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				continue;
 			}
 			/* handle numdummies */
-			if ( end - in == lenW ) {
+			if ( end - in >= lenW ) {
+				if ( flip ) AO.FlipWORD(in);
+				AO.ResizeWORD(in, out);
+				*size += lenW;
+				*outsize += sizeof(WORD);
+			}
+			/* handle numfactors */
+			if ( end - in >= lenW ) {
+				if ( flip ) AO.FlipWORD(in);
+				AO.ResizeWORD(in, out);
+				*size += lenW;
+				*outsize += sizeof(WORD);
+			}
+			/* handle vflags */
+			if ( end - in >= lenW ) {
 				if ( flip ) AO.FlipWORD(in);
 				AO.ResizeWORD(in, out);
 				*size += lenW;
@@ -4420,7 +4481,7 @@ RSVEnd:
 }
 
 /*
- 		#] ReadSaveVariables :
+ 		#] ReadSaveVariables : 
  		#[ ReadSaveTerm :
 */
 
@@ -4837,7 +4898,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 }
 
 /*
- 		#] ReadSaveTerm :
+ 		#] ReadSaveTerm : 
  		#[ ReadSaveExpression :
 */
 
@@ -4963,6 +5024,6 @@ WORD ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 }
 
 /*
- 		#] ReadSaveExpression :
+ 		#] ReadSaveExpression : 
 	#] System Independent Saved Expressions :
 */
