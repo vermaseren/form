@@ -1574,7 +1574,8 @@ WORD *poly_inverse(PHEAD WORD *a, WORD *b) {
 	WORD nmod;
 	RaisPowCached(BHEAD modp, modn, &mod, &nmod);
 		
-	int j=0, n=0;
+	int j=0;
+	WORD n=0;
 
 	MesPrint ("converting...");
 	
