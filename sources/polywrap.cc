@@ -314,13 +314,8 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
 */
-//WORD *poly_inverse(PHEAD WORD *a, WORD *b);
-
 WORD *poly_div(PHEAD WORD *a, WORD *b) {
 
-	// TODO: remove this test line!!
-	//	return poly_inverse(BHEAD a,b);
-	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_div" << endl;
 #endif
@@ -1522,7 +1517,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
   	#[ poly_inverse : 
 */
 
-WORD *poly_inverse(PHEAD WORD *a, WORD *b) {
+WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_inverse" << endl;
@@ -1530,8 +1525,8 @@ WORD *poly_inverse(PHEAD WORD *a, WORD *b) {
 	
 	// Extract variables
 	vector<WORD *> e;
-	e.push_back(a);
-	e.push_back(b);
+	e.push_back(arga);
+	e.push_back(argb);
 	poly::get_variables(BHEAD e, false, true);
 
 	if (AN.poly_num_vars > 1) {
@@ -1542,64 +1537,100 @@ WORD *poly_inverse(PHEAD WORD *a, WORD *b) {
 	}
 	
 	// Convert to polynomials
-	poly pa(poly::argument_to_poly(BHEAD a, false, true));
-	poly pb(poly::argument_to_poly(BHEAD b, false, true));
-
+	poly a(poly::argument_to_poly(BHEAD arga, false, true));
+	poly b(poly::argument_to_poly(BHEAD argb, false, true));
+	
 	// Check for modulus calculus
 	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial inverse");
-	WORD modn=1;
+	a.setmod(modp,1);
+	b.setmod(modp,1);
 	
-	if (modp == 0) { // pa * pb / lcoeff ?? TODO
+	if (modp == 0) {
 		vector<int> x(1,0);
-		modp = polyfact::choose_prime(pa,x);
-		modn = polyfact::choose_prime_power(pa,modp);
-		modn += 2; // fudge factor TODO
+		modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(),x);
 	}
 
-	pa.setmod(modp,modn);
-	pb.setmod(modp,modn);
+	poly amodp(a,modp,1);
+	poly bmodp(b,modp,1);	
 
 	// Calculate gcd
-	poly pres(polyfact::extended_gcd_Euclidean_lifted(pa,pb)[0]);
-
-	cout << "a = " << pa << endl;
-	cout << "b = " << pb << endl;
-	cout << "ainv = " << pres << endl;
-	// Allocate new memory and convert to Form notation
-	WORD *res = (WORD *)Malloc1((pres.size_of_form_notation()+1)*sizeof(WORD), "poly_inverse");
-	//poly::poly_to_argument(pres, res, false);
-	//int MakeLongRational(PHEAD UWORD *a, WORD na, UWORD *m, WORD nm, UWORD *b, WORD *nb)
-
-	UWORD *mod;
-	WORD nmod;
-	RaisPowCached(BHEAD modp, modn, &mod, &nmod);
-		
-	int j=0;
-	WORD n=0;
-
-	MesPrint ("converting...");
+	vector<poly> xgcd(polyfact::extended_gcd_Euclidean_lifted(amodp,bmodp));
+	poly invamodp(xgcd[0]);
+	poly invbmodp(xgcd[1]);
 	
-	for (int i=1; i<pres[0]; i+=pres[i]) {
-		res[j] = 1;
-		if (pres[i+1]>0) {
-			res[j+res[j]++] = SYMBOL;
-			res[j+res[j]++] = 4;
-			res[j+res[j]++] = AN.poly_vars[0];
-			res[j+res[j]++] = pres[i+1];
-		}
-		MakeLongRational(BHEAD (UWORD *)&pres[i+2], pres[i+pres[i]-1], mod, nmod, (UWORD *)&res[j+res[j]], &n);
-		res[j] += 2*ABS(n);
-		res[j+res[j]++] = SGN(n)*(2*ABS(n)+1);
-		j += res[j];
+	if (!((invamodp * amodp) % bmodp).is_one()) {
+		MLOCK(ErrorMessageLock);
+		MesPrint ((char*)"ERROR: polynomial inverse does not exist");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);		
 	}
-	res[j]=0;
-	
-	MesPrint ("%a",20,res);
-	
+
+	// estimate of the size of the Form notation; might be extended later
+	int ressize = invamodp.size_of_form_notation()+1;
+	WORD *res = (WORD *)Malloc1(ressize*sizeof(WORD), "poly_inverse");
+
+	// initialize polynomials needed for lifting
+	poly primepower(BHEAD 1);
+	poly inva(invamodp,0,1);
+	poly invb(invbmodp,0,1);
+		
+	poly error(poly(BHEAD 1) - inva*a - invb*b);
+	poly prime(BHEAD modp);
+			
+	while (true) {
+		error /= prime;
+		primepower *= prime;
+
+		// convert to Form notation 
+		int j=0, n=0;		
+		for (int i=1; i<inva[0]; i+=inva[i]) {
+
+			// check whether res should be extended
+			while (ressize < j + 2*ABS(inva[i+inva[i]-1]) + (inva[i+1]>0?4:0) + 3) {
+				int newressize = 2*ressize;
+				WORD *newres = (WORD *)Malloc1(newressize*sizeof(WORD), "poly_inverse");
+				memcpy(newres, res, ressize*sizeof(WORD));
+				M_free(res, "poly_inverse");
+				res = newres;
+				ressize = newressize;
+			}
+			
+			res[j] = 1;
+			if (inva[i+1]>0) {
+				res[j+res[j]++] = SYMBOL;
+				res[j+res[j]++] = 4;
+				res[j+res[j]++] = AN.poly_vars[0];
+				res[j+res[j]++] = inva[i+1];
+			}
+			MakeLongRational(BHEAD (UWORD *)&inva[i+2], inva[i+inva[i]-1],
+											 (UWORD*)&primepower.terms[3], primepower.terms[primepower.terms[1]],
+											 (UWORD *)&res[j+res[j]], &n);
+			res[j] += 2*ABS(n);
+			res[j+res[j]++] = SGN(n)*(2*ABS(n)+1);
+			j += res[j];
+		}
+		res[j]=0;
+
+		// if modulus calculus is set, this is the answer
+		if (a.modp != 0) break;
+
+		// otherwise check over integers
+		poly check(poly::argument_to_poly(BHEAD res, false, true));
+		if (((check * a) % b).is_integer()) break;
+
+		// if incorrect, lift with p-adic Newton's iteration.
+		poly errormodp(error,modp,1);
+		poly dinva((invamodp * errormodp) % bmodp);		
+ 		poly dinvb((errormodp - dinva*amodp) / bmodp);
+		inva += primepower * dinva;
+		invb += primepower * dinvb;
+		error -= a*dinva + b*dinvb;
+	}
+
+	// clean up and reset modulo calculation
 	if (AN.poly_num_vars > 0)
 		M_free(AN.poly_vars, "AN.poly_vars");
-
-	// reset modulo calculation
+	
 	AN.ncmod = AC.ncmod;
 	return res;
 }
