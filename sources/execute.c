@@ -731,9 +731,10 @@ WORD DoExecute(WORD par, WORD skip)
 		RetCode = PF_BroadcastRedefinedPreVars();
 		if ( RetCode ) return RetCode;
 	}
-	/* Broadcast AR.expflags, which may be used on the slaves in the next module
-	 * via ZERO_ or UNCHANGED_. It also broadcasts e->vflags, e->numdummies, ...
-	 * of each expression. (TU 23 Sep 2011) */
+	/*
+	 * Broadcast AR.expflags, which may be used on the slaves in the next module
+	 * via ZERO_ or UNCHANGED_. It also broadcasts several flags of each expression.
+	 */
 	RetCode = PF_BroadcastExpFlags();
 	if ( RetCode ) return RetCode;
 #endif

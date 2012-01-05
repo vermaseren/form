@@ -5249,6 +5249,7 @@ int CoToPolynomial(UBYTE *inp)
 		Add2Com(TYPETOPOLYNOMIAL)
 		AC.topolynomialflag |= TOPOLYNOMIALFLAG;
 #ifdef PARALLEL
+		/* In ParFORM, ToPolynomial has to be executed on the master. */
 		AC.mparallelflag |= NOPARALLEL_CONVPOLY;
 #endif
 		return(0);

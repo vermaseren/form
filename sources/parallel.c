@@ -3091,7 +3091,8 @@ int PF_RestoreInsideInfo(void)
  *
  * @return 0 if OK, nonzero on error.
  */
-int PF_BroadcastExpFlags(void) {
+int PF_BroadcastExpFlags(void)
+{
 	WORD i;
 	EXPRESSIONS e;
 	if ( PF.me == MASTER ) {
