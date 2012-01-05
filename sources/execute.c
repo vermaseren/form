@@ -731,6 +731,11 @@ WORD DoExecute(WORD par, WORD skip)
 		RetCode = PF_BroadcastRedefinedPreVars();
 		if ( RetCode ) return RetCode;
 	}
+	/* Broadcast the list of objects converted to symbols in AM.sbufnum. */
+	if ( AC.topolynomialflag & TOPOLYNOMIALFLAG ) {
+		RetCode = PF_BroadcastCBuf(AM.sbufnum);
+		if ( RetCode ) return RetCode;
+	}
 	/*
 	 * Broadcast AR.expflags, which may be used on the slaves in the next module
 	 * via ZERO_ or UNCHANGED_. It also broadcasts several flags of each expression.

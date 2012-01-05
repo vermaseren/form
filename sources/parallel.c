@@ -46,6 +46,7 @@
 #define PF_DEBUG_BCAST_RHSEXPR
 #define PF_DEBUG_BCAST_DOLLAR
 #define PF_DEBUG_BCAST_PREVAR
+#define PF_DEBUG_BCAST_CBUF
 #define PF_DEBUG_BCAST_EXPRFLAGS
 #define PF_DEBUG_REDUCE_DOLLAR
 */
@@ -3082,6 +3083,118 @@ int PF_RestoreInsideInfo(void)
 /*
  		#] PF_RestoreInsideInfo :
   	#] Preprocessor Inside instruction :
+  	#[ PF_BroadcastCBuf :
+*/
+
+/**
+ * Broadcasts a compiler buffer specified by \a bufnum from the master
+ * to the all slaves.
+ *
+ * @param  bufnum  The index of the compiler buffer to be broadcast.
+ * @return         0 if OK, nonzero on error.
+ */
+int PF_BroadcastCBuf(int bufnum)
+{
+	CBUF *C = cbuf + bufnum;
+	int i;
+	LONG l;
+	if ( PF.me == MASTER ) {
+/*
+ 		#[ Master :
+*/
+		PF_PrepareLongMultiPack();
+		/* Pack CBUF struct except pointers. */
+		PF_LongMultiPack(&C->BufferSize, 1, PF_LONG);
+		PF_LongMultiPack(&C->numlhs, 1, PF_INT);
+		PF_LongMultiPack(&C->numrhs, 1, PF_INT);
+		PF_LongMultiPack(&C->maxlhs, 1, PF_INT);
+		PF_LongMultiPack(&C->maxrhs, 1, PF_INT);
+		PF_LongMultiPack(&C->mnumlhs, 1, PF_INT);
+		PF_LongMultiPack(&C->mnumrhs, 1, PF_INT);
+		PF_LongMultiPack(&C->numtree, 1, PF_INT);
+		PF_LongMultiPack(&C->rootnum, 1, PF_INT);
+		PF_LongMultiPack(&C->MaxTreeSize, 1, PF_INT);
+		/* Now pointers. Pointer, lhs and rhs are packed as offsets. We don't pack Top. */
+		l = C->Pointer - C->Buffer;
+		PF_LongMultiPack(&l, 1, PF_LONG);
+		PF_LongMultiPack(C->Buffer, l, PF_WORD);
+		for ( i = 0; i < C->numlhs + 1; i++ ) {
+			l = C->lhs[i] - C->Buffer;
+			PF_LongMultiPack(&l, 1, PF_LONG);
+		}
+		for ( i = 0; i < C->numrhs + 1; i++ ) {
+			l = C->rhs[i] - C->Buffer;
+			PF_LongMultiPack(&l, 1, PF_LONG);
+		}
+		PF_LongMultiPack(C->CanCommu, C->maxrhs + 1, PF_LONG);
+		PF_LongMultiPack(C->NumTerms, C->maxrhs + 1, PF_LONG);
+		PF_LongMultiPack(C->numdum, C->maxrhs + 1, PF_WORD);
+		PF_LongMultiPack(C->dimension, C->maxrhs + 1, PF_WORD);
+		if ( C->MaxTreeSize > 0 )
+			PF_LongMultiPack(C->boomlijst, (C->numtree + 1) * (sizeof(COMPTREE) / sizeof(int)), PF_INT);
+#ifdef PF_DEBUG_BCAST_CBUF
+		MesPrint(">> Broadcast CBuf %d", bufnum);
+#endif
+/*
+ 		#] Master :
+*/
+	}
+	if ( PF_LongMultiBroadcast() ) return -1;
+	if ( PF.me != MASTER ) {
+/*
+ 		#[ Slave :
+*/
+		/* First, free already allocated buffers. */
+		finishcbuf(bufnum);
+		/* Unpack CBUF struct except pointers. */
+		PF_LongMultiUnpack(&C->BufferSize, 1, PF_LONG);
+		PF_LongMultiUnpack(&C->numlhs, 1, PF_INT);
+		PF_LongMultiUnpack(&C->numrhs, 1, PF_INT);
+		PF_LongMultiUnpack(&C->maxlhs, 1, PF_INT);
+		PF_LongMultiUnpack(&C->maxrhs, 1, PF_INT);
+		PF_LongMultiUnpack(&C->mnumlhs, 1, PF_INT);
+		PF_LongMultiUnpack(&C->mnumrhs, 1, PF_INT);
+		PF_LongMultiUnpack(&C->numtree, 1, PF_INT);
+		PF_LongMultiUnpack(&C->rootnum, 1, PF_INT);
+		PF_LongMultiUnpack(&C->MaxTreeSize, 1, PF_INT);
+		/* Allocate new buffers. */
+		C->Buffer = (WORD *)Malloc1(C->BufferSize * sizeof(WORD), "compiler buffer");
+		C->Top = C->Buffer + C->BufferSize;
+		C->lhs = (WORD **)Malloc1(C->maxlhs * sizeof(WORD *), "compiler buffer");
+		C->rhs = (WORD **)Malloc1(C->maxrhs * (sizeof(WORD *) + 2 * sizeof(LONG) + 2 * sizeof(WORD)), "compiler buffer");
+		C->CanCommu = (LONG *)(C->rhs + C->maxrhs);
+		C->NumTerms = C->CanCommu + C->maxrhs;
+		C->numdum = (WORD *)(C->NumTerms + C->maxrhs);
+		C->dimension = C->numdum + C->maxrhs;
+		if ( C->MaxTreeSize > 0 )
+			C->boomlijst = (COMPTREE *)Malloc1(C->MaxTreeSize * sizeof(COMPTREE), "compiler buffer");
+		/* Unpack buffers. */
+		PF_LongMultiUnpack(&l, 1, PF_LONG);
+		PF_LongMultiUnpack(C->Buffer, l, PF_WORD);
+		C->Pointer = C->Buffer + l;
+		for ( i = 0; i < C->numlhs + 1; i++ ) {
+			PF_LongMultiUnpack(&l, 1, PF_LONG);
+			C->lhs[i] = C->Buffer + l;
+		}
+		for ( i = 0; i < C->numrhs + 1; i++ ) {
+			PF_LongMultiUnpack(&l, 1, PF_LONG);
+			C->rhs[i] = C->Buffer + l;
+		}
+		PF_LongMultiUnpack(C->CanCommu, C->maxrhs + 1, PF_LONG);
+		PF_LongMultiUnpack(C->NumTerms, C->maxrhs + 1, PF_LONG);
+		PF_LongMultiUnpack(C->numdum, C->maxrhs + 1, PF_WORD);
+		PF_LongMultiUnpack(C->dimension, C->maxrhs + 1, PF_WORD);
+		if ( C->MaxTreeSize > 0 )
+			PF_LongMultiUnpack(C->boomlijst, (C->numtree + 1) * (sizeof(COMPTREE) / sizeof(int)), PF_INT);
+/*
+ 		#] Slave :
+*/
+	}
+	return 0;
+}
+
+/*
+  	#] PF_BroadcastCBuf :
   	#[ PF_BroadcastExpFlags :
 */
 

@@ -232,6 +232,7 @@ extern int    PF_BroadcastPreDollar(WORD **, LONG *,int *);
 extern int    PF_CollectModifiedDollars(void);
 extern int    PF_BroadcastModifiedDollars(void);
 extern int    PF_BroadcastRedefinedPreVars(void);
+extern int    PF_BroadcastCBuf(int bufnum);
 extern int    PF_BroadcastExpFlags(void);
 extern int    PF_StoreInsideInfo(void);
 extern int    PF_RestoreInsideInfo(void);
