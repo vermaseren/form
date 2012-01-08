@@ -117,6 +117,23 @@ dovariable:		c = *in; *in = 0;
 						break;
 					case CVECTOR:       *out++ = TVECTOR;     break;
 					case CFUNCTION:
+#ifdef PARALLEL
+						/*
+						 * In the preprocessor, random functions in #$var=... and #inside
+						 * may cause troubles, because the program flow on a slave may be
+						 * different from those on others. We set AC.RhsExprInModuleFlag in order
+						 * to make the change of $-variable be done on the master and thus keep the
+						 * consistency among the master and all slave processes. The previous value
+						 * of AC.RhsExprInModuleFlag will be restored after #$var=... and #inside.
+						 */
+						if ( AP.PreAssignFlag || AP.PreInsideLevel ) {
+							switch ( number + FUNCTION ) {
+								case RANDOMFUNCTION:
+								case RANPERM:
+									AC.RhsExprInModuleFlag = 1;
+							}
+						}
+#endif
 						*out++ = TFUNCTION;
 						break;
 					case CSET:          *out++ = TSET;        break;
