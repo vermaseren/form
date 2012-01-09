@@ -1539,17 +1539,23 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	// Convert to polynomials
 	poly a(poly::argument_to_poly(BHEAD arga, false, true));
 	poly b(poly::argument_to_poly(BHEAD argb, false, true));
-	
+
 	// Check for modulus calculus
 	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial inverse");
 	a.setmod(modp,1);
 	b.setmod(modp,1);
 	
 	if (modp == 0) {
-		vector<int> x(1,0);
-		modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(),x);
+		//		vector<int> x(1,0);
+		//		modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(),x);
+
+		// TODO: check whether it divides lcoeff		
+		modp = NextPrime(BHEAD 0);
+		//		cout << modp << endl;
 	}
 
+	//	cout << "call xgcd" << endl;
+	
 	poly amodp(a,modp,1);
 	poly bmodp(b,modp,1);	
 
@@ -1578,6 +1584,8 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	poly prime(BHEAD modp);
 			
 	while (true) {
+		//		cout << "lift ("<< primepower << ")" << endl;
+		
 		error /= prime;
 		primepower *= prime;
 
@@ -1588,6 +1596,7 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 			// check whether res should be extended
 			while (ressize < j + 2*ABS(inva[i+inva[i]-1]) + (inva[i+1]>0?4:0) + 3) {
 				int newressize = 2*ressize;
+				
 				WORD *newres = (WORD *)Malloc1(newressize*sizeof(WORD), "poly_inverse");
 				memcpy(newres, res, ressize*sizeof(WORD));
 				M_free(res, "poly_inverse");
@@ -1611,6 +1620,8 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 		}
 		res[j]=0;
 
+		//		cout << "filled " << j << " / " << ressize << endl;
+		
 		// if modulus calculus is set, this is the answer
 		if (a.modp != 0) break;
 

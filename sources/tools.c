@@ -37,7 +37,6 @@
 /*
 #define MALLOCDEBUG 1
 #define MALLOCDEBUGOUTPUT
-
   	#[ Includes :
 */
 
@@ -1996,6 +1995,12 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 			}
 		}
 	}
+
+#ifdef MALLOCDEBUGOUTPUT
+	printf ("Malloc1: %s, allocated %li bytes at %.8x\n",messageifwrong,size,mem);
+	fflush (stdout);
+#endif
+	
 	t = (char *)mem;
 	u = t + size;
 	for ( i = 0; i < BANNER; i++ ) { *t++ = 0; *--u = 0; }
@@ -2005,11 +2010,6 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 	UNLOCK(MallocLock);
 #endif
 
-#ifdef MALLOCDEBUGOUTPUT
-	printf ("Malloc1: %s, allocated %li bytes at %.8x\n",messageifwrong,size,mem);
-	fflush (stdout);
-#endif
-	
 	return(mem);
 }
 
