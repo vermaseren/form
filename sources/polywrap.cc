@@ -162,6 +162,9 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	cout << "*** [" << thetime() << "]  CALL : poly_divmod" << endl;
 #endif
 
+	// check for modulus calculus
+	WORD modp=poly_determine_modulus(BHEAD false, true, "polynomial division");
+
 	// get variables
 	vector<WORD *> e;
 	e.push_back(a);
@@ -171,7 +174,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	// add extra variables to keep track of denominators
 	const int DENOMSYMBOL = MAXPOSITIVE;
 	const int DENOMPOWER  = MAXPOSITIVE;
-
+	
 	WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
 	memcpy (new_poly_vars, AN.poly_vars, AN.poly_num_vars*sizeof(WORD));
 	new_poly_vars[AN.poly_num_vars] = DENOMSYMBOL;
@@ -180,41 +183,78 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	AN.poly_num_vars++;
 	AN.poly_vars = new_poly_vars;
 	
-	// check for modulus calculus
-	WORD modp=poly_determine_modulus(BHEAD false, true, "polynomial division");
-	
 	// convert to polynomials
 	poly dena(BHEAD 0);
 	poly denb(BHEAD 0);
 	poly pa(poly::argument_to_poly(BHEAD a, false, true, &dena), modp, 1);
 	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb), modp, 1);
-	poly denres(divmod==0 ? poly(BHEAD 1) : dena*denb);
+	
+	// remove contents
+	poly numres(polygcd::integer_content(pa));
+	poly denres(polygcd::integer_content(pb));
+	pa /= numres;
+	pb /= denres;
 
-	pa *= denb;
-	pb *= dena;
-
-	// remove integer content
-	if (modp==0) {
-		poly iconta = polygcd::integer_content(pa);
-		poly icontb = polygcd::integer_content(pb);
-		poly gcdiconts = polygcd::integer_gcd(iconta,icontb);
-		pa /= gcdiconts;
-		pb /= gcdiconts;
+	if (divmod==0) {
+		numres *= denb;
+		denres *= dena;
+	}
+	else {
+		denres = dena;
 	}
 
-	// multiply a by DENOMSYMBOL^DENOMPOWER
-	pa *= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,DENOMPOWER);
-	
-	// replace lcoeff(b) by DENOMSYMBOL
+	poly gcdres(polygcd::integer_gcd(numres,denres));
+	numres /= gcdres;
+	denres /= gcdres;							
+
+	// determine lcoeff(b)
 	poly lcoeffb(pb.integer_lcoeff());
+	int denompower = 0;
 
-	poly modifyb(BHEAD 1);
-	for (int i=0; i<AN.poly_num_vars; i++)
-		modifyb[2+i] = pb[2+i];
-	modifyb *= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,1) - lcoeffb;
-	pb += modifyb;
+	if (!lcoeffb.is_one()) {
+		
+		if (AN.poly_num_vars > 2) {
+			// the original polynomial is multivariate (one dummy variable has
+			// been added), so it is not trivial to determine which power of
+			// lcoeff(b) can be in the answer
+			
+			// multiply a by DENOMSYMBOL^DENOMPOWER
+			poly modifya(poly::simple_poly(BHEAD AN.poly_num_vars-1,0,DENOMPOWER));
+			pa *= modifya;
+			
+			// replace lcoeff(b) by DENOMSYMBOL		
+			poly modifyb(BHEAD 1);
+			for (int i=0; i<AN.poly_num_vars; i++)
+				modifyb[2+i] = pb[2+i];
+			modifyb *= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,1) - lcoeffb;
+			pb += modifyb;
+			
+			// divide and determine the power
+			poly ppow(pa/pb);
+			for (int i=1; i<ppow[0]; i+=ppow[i])
+				denompower = max(denompower, DENOMPOWER - ppow[i+AN.poly_num_vars]);
 
-	// calculate div/mod
+			// restore a,b
+			pb -= modifyb;	
+			pa /= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,DENOMPOWER);			
+		}
+		else {
+			// one variable, so the power is the difference of the degrees
+			
+			denompower = pa.degree(0) - pb.degree(0) + 1;
+		}
+	
+		// multiply a by that power
+		WORD n = lcoeffb[lcoeffb[1]];
+		RaisPow(BHEAD (UWORD *)&lcoeffb[2+AN.poly_num_vars], &n, denompower);
+		lcoeffb[1] = 2 + AN.poly_num_vars + ABS(n);
+		lcoeffb[0] = 1 + lcoeffb[1];
+		lcoeffb[lcoeffb[1]] = n;
+
+		pa *= lcoeffb;
+		denres *= lcoeffb;
+	}
+
 	poly pres(divmod==0 ? pa/pb : pa%pb);
 
 	// convert to Form notation	
@@ -226,44 +266,32 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		res[0] = 0;
 	}
 	else {
-		WORD nden, npow;
+		pres *= numres;
+		
+		WORD nden;
 		UWORD *den = (UWORD *)NumberMalloc("poly_divmod");
-		UWORD *pow = (UWORD *)NumberMalloc("poly_divmod");
-
-		// calculate size of the largest denominator
-		npow = lcoeffb[lcoeffb[1]];
-		memcpy (pow, &lcoeffb[2+AN.poly_num_vars], ABS(npow)*sizeof(UWORD));
-		WORD denompower = DENOMPOWER - pres.degree(AN.poly_num_vars-1);
-		RaisPow(BHEAD pow,&npow,denompower);
-		MulLong (pow, npow, (UWORD *)&denres[2+AN.poly_num_vars], denres[denres[1]], den, &nden);
 
 		// allocate the memory; note that this overestimates the size,
 		// since the estimated denominators are too large
-		res = (WORD *)Malloc1((pres.size_of_form_notation() +
-													 pres.number_of_terms()*2*ABS(nden)+1)*sizeof(WORD), "poly_divmod");
+		int ressize = pres.size_of_form_notation() + pres.number_of_terms()*2*ABS(denres[denres[1]]) + 1;
+		res = (WORD *)Malloc1(ressize*sizeof(WORD), "poly_divmod");
 
 		int L=0;
-		
+
 		for (int i=1; i!=pres[0]; i+=pres[i]) {
-			
+
 			res[L]=1; // length
 			bool first = true;
-			WORD denompower = 0;
 			
 			for (int j=0; j<AN.poly_num_vars; j++)
 				if (pres[i+1+j] > 0) {
-					if (AN.poly_vars[j] == DENOMSYMBOL) {
-						denompower = DENOMPOWER - pres[i+1+j];
+					if (first) {
+						first = false;
+						res[L+1] = 1; // symbols
+						res[L+2] = 2; // length
 					}
-					else {
-						if (first) {
-							first = false;
-							res[L+1] = 1; // symbols
-							res[L+2] = 2; // length
-						}
-						res[L+1+res[L+2]++] = AN.poly_vars[j]; // symbol
-						res[L+1+res[L+2]++] = pres[i+1+j];     // power
-					}
+					res[L+1+res[L+2]++] = AN.poly_vars[j]; // symbol
+					res[L+1+res[L+2]++] = pres[i+1+j];     // power
 				}
 			
 			if (!first)	res[L] += res[L+2]; // fix length
@@ -273,11 +301,8 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 			memcpy(&res[L+res[L]], &pres[i+pres[i]-1-ABS(nnum)], ABS(nnum)*sizeof(UWORD));
 
 			// calculate denominator
-			npow = lcoeffb[lcoeffb[1]];
-			memcpy (pow, &lcoeffb[2+AN.poly_num_vars], ABS(npow)*sizeof(UWORD));
-			RaisPow(BHEAD pow,&npow,denompower);
-			MulLong (pow, npow, (UWORD *)&denres[2+AN.poly_num_vars], denres[denres[1]], den, &nden);
-			if (modp!=0) TakeModulus(den,&nden,(UWORD *)&modp,1, NOUNPACK);
+			nden = denres[denres[1]];
+			memcpy (den, &denres[2+AN.poly_num_vars], ABS(nden)*sizeof(UWORD));
 
 			if (nden!=1 || den[0]!=1)
 				Simplify(BHEAD (UWORD *)&res[L+res[L]], &nnum, den, &nden); // gcd(num,den)
@@ -290,7 +315,6 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		res[L] = 0;
 		
 		NumberFree(den,"poly_divmod");	
-		NumberFree(pow,"poly_divmod");	
 	}
 
 	// clean up
@@ -1546,16 +1570,10 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	b.setmod(modp,1);
 	
 	if (modp == 0) {
-		//		vector<int> x(1,0);
-		//		modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(),x);
-
-		// TODO: check whether it divides lcoeff		
-		modp = NextPrime(BHEAD 0);
-		//		cout << modp << endl;
+		vector<int> x(1,0);
+		modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(), x);
 	}
 
-	//	cout << "call xgcd" << endl;
-	
 	poly amodp(a,modp,1);
 	poly bmodp(b,modp,1);	
 
@@ -1575,20 +1593,13 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	int ressize = invamodp.size_of_form_notation()+1;
 	WORD *res = (WORD *)Malloc1(ressize*sizeof(WORD), "poly_inverse");
 
-	// initialize polynomials needed for lifting
-	poly primepower(BHEAD 1);
-	poly inva(invamodp,0,1);
-	poly invb(invbmodp,0,1);
-		
-	poly error(poly(BHEAD 1) - inva*a - invb*b);
-	poly prime(BHEAD modp);
+	// initialize polynomials to store the result
+	poly primepower(BHEAD modp);
+	poly inva(invamodp,modp,1);
+	poly invb(invbmodp,modp,1);
 			
 	while (true) {
-		//		cout << "lift ("<< primepower << ")" << endl;
 		
-		error /= prime;
-		primepower *= prime;
-
 		// convert to Form notation 
 		int j=0, n=0;		
 		for (int i=1; i<inva[0]; i+=inva[i]) {
@@ -1620,8 +1631,6 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 		}
 		res[j]=0;
 
-		//		cout << "filled " << j << " / " << ressize << endl;
-		
 		// if modulus calculus is set, this is the answer
 		if (a.modp != 0) break;
 
@@ -1629,13 +1638,20 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 		poly check(poly::argument_to_poly(BHEAD res, false, true));
 		if (((check * a) % b).is_integer()) break;
 
-		// if incorrect, lift with p-adic Newton's iteration.
-		poly errormodp(error,modp,1);
-		poly dinva((invamodp * errormodp) % bmodp);		
- 		poly dinvb((errormodp - dinva*amodp) / bmodp);
-		inva += primepower * dinva;
-		invb += primepower * dinvb;
-		error -= a*dinva + b*dinvb;
+		// if incorrect, lift with quadratic p-adic Newton's iteration.
+		poly error((poly(BHEAD 1) - a*inva - b*invb) / primepower);
+		poly errormodpp(error, modp, inva.modn);
+		
+		inva.modn *= 2;
+		invb.modn *= 2;
+		
+		poly dinva((inva * errormodpp) % b);
+		poly dinvb((invb * errormodpp) % a);
+
+		inva += dinva * primepower;
+		invb += dinvb * primepower;
+		
+		primepower *= primepower;
 	}
 
 	// clean up and reset modulo calculation
