@@ -1597,11 +1597,11 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	poly primepower(BHEAD modp);
 	poly inva(invamodp,modp,1);
 	poly invb(invbmodp,modp,1);
-			
+
 	while (true) {
-		
 		// convert to Form notation 
-		int j=0, n=0;		
+		int j=0;
+		WORD n=0;		
 		for (int i=1; i<inva[0]; i+=inva[i]) {
 
 			// check whether res should be extended
@@ -1635,13 +1635,17 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 		if (a.modp != 0) break;
 
 		// otherwise check over integers
-		poly check(poly::argument_to_poly(BHEAD res, false, true));
-		if (((check * a) % b).is_integer()) break;
-
+		poly den(BHEAD 0);
+		poly check(poly::argument_to_poly(BHEAD res, false, true, &den));
+		if (poly::divides(b.integer_lcoeff(), check.integer_lcoeff())) {
+			check = check*a - den;
+			if (poly::divides(b, check)) break;
+		}
+		
 		// if incorrect, lift with quadratic p-adic Newton's iteration.
 		poly error((poly(BHEAD 1) - a*inva - b*invb) / primepower);
 		poly errormodpp(error, modp, inva.modn);
-		
+
 		inva.modn *= 2;
 		invb.modn *= 2;
 		
