@@ -1903,7 +1903,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 
 	*argout = 0;
 /*
-  	#] step 0 :
+  	#] step 0 : 
   	#[ step 1 : Take care of ordering
 */
 	AR.SortType = SORTHIGHFIRST;
@@ -1935,7 +1935,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		argin[*argin] = oldword;
 	}
 /*
-  	#] step 1 :
+  	#] step 1 : 
   	#[ step 2 : take out the 'content'.
 */
 	argfree = TakeArgContent(BHEAD argin,argout);
@@ -1990,7 +1990,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		*argfree = t - argfree;
 	}
 /*
-  	#] step 2 :
+  	#] step 2 : 
   	#[ step 3 : look whether we have done this one already.
 */
 	if ( ( number = FindArg(BHEAD argfree) ) != 0 ) {
@@ -2006,8 +2006,18 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		t += *t; t++;
 		tstop = t;
 		while ( *tstop ) {
-			if ( *tstop == -SNUMBER && tstop[1] == -1 ) { sign = -sign; break; }
-			NEXTARG(tstop);
+			if ( *tstop == -SNUMBER && tstop[1] == -1 ) {
+				WORD *t1, *t2, *t3;
+				t3 = tstop + 2;
+				while ( *t3 ) { NEXTARG(t3); }
+				t1 = t; t2 = tstop + 2;
+				while ( t2 < t3 ) *t1++ = *t2++;
+				*t1 = 0;
+				sign = -sign;
+			}
+			else {
+				NEXTARG(tstop);
+			}
 		}
 		i = tstop - t;
 		a = argout; while ( *a ) NEXTARG(a);
@@ -2076,7 +2086,7 @@ getout:
 		*argfree = t - argfree;
 	}
 /*
-  	#] step 4 :
+  	#] step 4 : 
   	#[ step 5 : If not in the tables, we have to do this by hard work.
 */
 
@@ -2087,7 +2097,7 @@ getout:
 		error = -1;
 	}
 /*
-  	#] step 5 :
+  	#] step 5 : 
   	#[ step 6 : use now ConvertFromPoly
 
 		        Be careful: there should be more than one argument now.
@@ -2151,7 +2161,7 @@ getout:
 	  }
 	}
 /*
-  	#] step 6 :
+  	#] step 6 : 
   	#[ step 7 : Add this one to the tables.
 
 				Possibly drop some elements in the tables
@@ -2161,7 +2171,7 @@ getout:
 		if ( InsertArg(BHEAD argcopy,a,0) < 0 ) { error = -1; }
 	}
 /*
-  	#] step 7 :
+  	#] step 7 : 
   	#[ step 8 : Clean up and return.
 
 		Change the order of the arguments in argout and a.
@@ -2304,7 +2314,7 @@ return0:
 #endif
 	}
 /*
-  	#] step 8 :
+  	#] step 8 : 
 */
 	return(error);
 }
