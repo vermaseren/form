@@ -638,7 +638,7 @@ LONG EndSort(PHEAD WORD *buffer, int par, int par2)
   GETBIDENTITY
   SORTING *S = AT.SS;
   WORD j, **ss, *to, *t;
-  LONG sSpace, over, tover, spare, retval = 0;
+  LONG sSpace, over, tover, spare, retval = 0, jj;
   POSITION position, pp;
   off_t lSpace;
   FILEHANDLE *fout = 0, *oldoutfile = 0, *newout = 0;
@@ -879,17 +879,25 @@ TooLarge:
 					}
 					else {
 						t = newout->PObuffer;
-						j = newout->POfill - t;
-						to = buffer;
-						if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
-							MLOCK(ErrorMessageLock);
-							MesWork();
-							MesCall("EndSort");
-							MUNLOCK(ErrorMessageLock);
-							Terminate(-1);
+						if ( par == 2 ) {
+							jj = newout->POfill - t;
+							to = (WORD *)Malloc1(jj*sizeof(WORD),"$-sort space");
+							*((WORD **)buffer) = to;
+							NCOPY(to,t,jj);
 						}
-						if ( j > AM.MaxTer ) goto TooLarge;
-						NCOPY(to,t,j);
+						else {
+							j = newout->POfill - t;
+							to = buffer;
+							if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
+								MLOCK(ErrorMessageLock);
+								MesWork();
+								MesCall("EndSort");
+								MUNLOCK(ErrorMessageLock);
+								Terminate(-1);
+							}
+							if ( j > AM.MaxTer ) goto TooLarge;
+							NCOPY(to,t,j);
+						}
 					}
 				}
 				goto RetRetval;
@@ -1126,7 +1134,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort : 
+ 		#] EndSort :
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**

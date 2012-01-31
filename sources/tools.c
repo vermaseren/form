@@ -928,7 +928,7 @@ int CreateHandle()
 }
 
 /*
- 		#] CreateHandle :
+ 		#] CreateHandle : 
  		#[ ReadFile :
 */
 
@@ -1401,7 +1401,7 @@ MUNLOCK(ErrorMessageLock);
 
 /*
  		#] UpdateMaxSize : 
-  	#] Files :
+  	#] Files : 
   	#[ Strings :
  		#[ StrCmp :
 */
@@ -1912,14 +1912,14 @@ VOID *Malloc(LONG size)
 	}
 	t = (char *)mem;
 	u = t + size;
-	for ( i = 0; i < BANNER; i++ ) { *t++ = 0; *--u = 0; }
+	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = 0; *--u = 0; }
 	mem = (void *)t;
 	{
 		int j = nummalloclist-1, i;
 		while ( --j >= 0 ) {
 			t = (char *)(malloclist[j]);
 			u = t + mallocsizes[j];
-			for ( i = 0; i < BANNER; i++ ) {
+			for ( i = 0; i < (int)BANNER; i++ ) {
 				u--;
 				if ( *t != 0 || *u != 0 ) {
 					MesPrint("Writing outside memory for %s",malloclist[i]);
@@ -1997,13 +1997,13 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 	}
 
 #ifdef MALLOCDEBUGOUTPUT
-	printf ("Malloc1: %s, allocated %li bytes at %.8x\n",messageifwrong,size,mem);
+	printf ("Malloc1: %s, allocated %li bytes at %.8lx\n",messageifwrong,size,(unsigned long)mem);
 	fflush (stdout);
 #endif
 	
 	t = (char *)mem;
 	u = t + size;
-	for ( i = 0; i < BANNER; i++ ) { *t++ = 0; *--u = 0; }
+	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = 0; *--u = 0; }
 	mem = (void *)t;
 	M_check();
 /*	MUNLOCK(ErrorMessageLock); */
@@ -2049,7 +2049,7 @@ void M_free(VOID *x, const char *where)
 		exit(-1);
 	}
 	else {
-		for ( k = 0, j = 0; k < BANNER; k++ ) {
+		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
 			if ( *--t ) j++;
 		}
 		if ( j ) {
@@ -2058,7 +2058,7 @@ void M_free(VOID *x, const char *where)
 			tt[0],tt[1],tt[2],tt[3]);
 		}
 		t += size;
-		for ( k = 0, j = 0; k < BANNER; k++ ) {
+		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
 			if ( *--t ) j++;
 		}
 		if ( j ) {
@@ -2078,7 +2078,7 @@ void M_free(VOID *x, const char *where)
 #endif
 	if ( x ) {
 #ifdef MALLOCDEBUGOUTPUT
-		printf ("M_free: %s, memory freed at %.8x\n",where,x);
+		printf ("M_free: %s, memory freed at %.8lx\n",where,(unsigned long)x);
 		fflush(stdout);
 #endif
 		
@@ -2106,7 +2106,7 @@ void M_check()
 	LONG *tt;
 	for ( i = 0; i < nummalloclist; i++ ) {
 		t = (char *)(malloclist[i]);
-		for ( k = 0, j = 0; k < BANNER; k++ ) {
+		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
 			if ( *t++ ) j++;
 		}
 		if ( j ) {
@@ -2117,7 +2117,7 @@ void M_check()
 			error = 1;
 		}
 		t = (char *)(malloclist[i]) + mallocsizes[i];
-		for ( k = 0, j = 0; k < BANNER; k++ ) {
+		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
 			if ( *--t ) j++;
 		}
 		if ( j ) {
