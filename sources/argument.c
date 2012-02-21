@@ -1903,7 +1903,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 
 	*argout = 0;
 /*
-  	#] step 0 : 
+  	#] step 0 :
   	#[ step 1 : Take care of ordering
 */
 	AR.SortType = SORTHIGHFIRST;
@@ -2005,31 +2005,27 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 */
 		t += *t; t++;
 		tstop = t;
+		ii = 0;
 		while ( *tstop ) {
 			if ( *tstop == -SNUMBER && tstop[1] == -1 ) {
-				WORD *t1, *t2, *t3;
-				t3 = tstop + 2;
-				while ( *t3 ) { NEXTARG(t3); }
-				t1 = t; t2 = tstop + 2;
-				while ( t2 < t3 ) *t1++ = *t2++;
-				*t1 = 0;
-				sign = -sign;
+				sign = -sign; ii += 2;
 			}
-			else {
-				NEXTARG(tstop);
-			}
+			NEXTARG(tstop);
 		}
-		i = tstop - t;
 		a = argout; while ( *a ) NEXTARG(a);
 #ifndef NEWORDER
 		if ( sign == -1 ) { *a++ = -SNUMBER; *a++ = -1; *a = 0; sign = 1; }
 #endif
+		i = tstop - t - ii;
 		ii = a - argout;
 		a2 = a; a1 = a + i;
 		*a1 = 0;
 		while ( ii > 0 ) { *--a1 = *--a2; ii--; }
 		a = argout;
-		NCOPY(a,t,i)
+		while ( *t ) {
+			if ( *t == -SNUMBER && t[1] == -1 ) { t += 2; }
+			else { COPY1ARG(a,t) }
+		}
 		goto return0;
 	}
 /*
@@ -2314,7 +2310,7 @@ return0:
 #endif
 	}
 /*
-  	#] step 8 : 
+  	#] step 8 :
 */
 	return(error);
 }
