@@ -737,17 +737,17 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 		maxMsize = max(maxMsize, (int)M.back().size());
 	}
 
-	// generated linear equations
+	// generate linear equations
 	for (int numg=0; numg<maxMsize; numg++) {
 
 		poly amodI(sparse_interpolation_fix_poly(ared,x[0]));
 		poly bmodI(sparse_interpolation_fix_poly(bred,x[0]));
 		poly lcmodI(sparse_interpolation_fix_poly(lcred,x[0]));
-				
+
 		poly gcd(lcmodI * gcd_Euclidean(amodI,bmodI));
 
 		// if correct gcd
-		if (gcd[2+x[0]] == sred[2+x[0]]) {
+		if (!gcd.is_zero() && gcd[2+x[0]]==sred[2+x[0]]) {
 			
 		// for each power in the gcd, generate an equation if needed
 			int si=1, midx=0;
