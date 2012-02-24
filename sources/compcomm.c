@@ -608,8 +608,10 @@ int CoFormat(UBYTE *s)
 /*
 	First the optimization level
 */
-	if ( ( *s == 'O' || *s == 'o' ) && FG.cTable[*s] == 1 ) {
-		s++; x = 0;
+	if ( ( *s == 'O' || *s == 'o' ) && ( ( FG.cTable[s[1]] == 1 ) ||
+	( s[1] == '=' && FG.cTable[s[2]] == 1 ) ) ) {
+		s++; if ( *s == '=' ) s++;
+		x = 0;
 		while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
 		AO.OptimizationLevel = x;
 		while ( *s == ',' && s[1] == ',' ) s++;
