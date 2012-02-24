@@ -782,7 +782,7 @@ void PrintSubtermList(int from,int to)
 		AO.OutSkip = 6;
 	}
 	else if ( AO.OutSkip > 0 ) {
-		for ( i = 0; i <= AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
+		for ( i = 0; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
 	}
 /*
 	FiniLine();
@@ -794,22 +794,16 @@ void PrintSubtermList(int from,int to)
 			TokenToLine((UBYTE *)"id ");
 		}
 */
+		if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {}
+		else { TokenToLine((UBYTE *)" "); }
+
 		out = StrCopy((UBYTE *)AC.extrasym,buffer);
 		if ( AC.extrasymbols == 0 ) {
 			out = NumCopy(i,out);
 			out = StrCopy((UBYTE *)"_",out);
 		}
 		else if ( AC.extrasymbols == 1 ) {
-			if ( AC.OutputMode == CMODE ) {
-				out = StrCopy((UBYTE *)"[",out);
-				out = NumCopy(i,out);
-				out = StrCopy((UBYTE *)"]",out);
-			}
-			else {
-				out = StrCopy((UBYTE *)"(",out);
-				out = NumCopy(i,out);
-				out = StrCopy((UBYTE *)")",out);
-			}
+			out = AddArrayIndex(i,out);
 		}
 		out = StrCopy((UBYTE *)"=",out);
 		TokenToLine(buffer);
@@ -817,6 +811,9 @@ void PrintSubtermList(int from,int to)
 		first = 1;
 		if ( *term == 0 ) {
 			out = StrCopy((UBYTE *)"0",buffer);
+			if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE ) {
+				out = StrCopy((UBYTE *)";",out);
+			}
 			TokenToLine(buffer);
 		}
 		else {
@@ -837,6 +834,87 @@ void PrintSubtermList(int from,int to)
 
 /*
  		#] PrintSubtermList : 
+ 		#[ PrintExtraSymbol :
+
+		Prints the definition of extra symbol num as the contents
+		of the expression in terms.
+		The parameter par has three options:
+			EXTRASYMBOL      num is interpreted as the number of an extra symbol
+			REGULARSYMBOL    num is interpreted as the number of a symbol.
+			                 It could still be an extra symbol.
+			EXPRESSIONNUMBER num is the number of an expression.
+		terms contains the rhs expression.
+*/
+
+void PrintExtraSymbol(int num, WORD *terms,int par)
+{
+	UBYTE buffer[80], *out, outbuffer[300];
+	int first, i;
+	WORD *term;
+
+	AO.OutFill = AO.OutputLine = outbuffer;
+	AO.OutStop = AO.OutputLine+AC.LineLength;
+	AO.IsBracket = 0;
+	AO.OutSkip = 3;
+
+	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
+		TokenToLine((UBYTE *)"      ");
+		AO.OutSkip = 6;
+	}
+	else if ( AO.OutSkip > 0 ) {
+		for ( i = 0; i <= AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
+	}
+	out = buffer;
+	switch ( par ) {
+		case REGULARSYMBOL:
+			if ( num >= MAXVARIABLES-cbuf[AM.sbufnum].numrhs ) {
+				num = MAXVARIABLES-num;
+			}
+			else {
+				out = StrCopy(VARNAME(symbols,num),out);
+				break;
+			}
+		case EXTRASYMBOL:
+			out = StrCopy((UBYTE *)AC.extrasym,out);
+			if ( AC.extrasymbols == 0 ) {
+				out = NumCopy(num,out);
+				out = StrCopy((UBYTE *)"_",out);
+			}
+			else if ( AC.extrasymbols == 1 ) {
+				out = AddArrayIndex(num,out);
+			}
+			break;
+		case EXPRESSIONNUMBER:
+			out = StrCopy(EXPRNAME(num),out);
+			break;
+		default:
+			MesPrint("Illegal option in PrintExtraSymbol");
+			Terminate(-1);
+	}
+	out = StrCopy((UBYTE *)"=",out);
+	TokenToLine(buffer);
+	term = terms;
+	first = 1;
+	if ( *term == 0 ) {
+		out = StrCopy((UBYTE *)"0",buffer);
+		TokenToLine(buffer);
+	}
+	else {
+		while ( *term ) {
+			if ( WriteInnerTerm(term,first) ) Terminate(-1);
+			term += *term;
+			first = 0;
+		}
+	}
+	if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE ) {
+		out = StrCopy((UBYTE *)";",buffer);
+		TokenToLine(buffer);
+	}
+	FiniLine();
+}
+
+/*
+ 		#] PrintExtraSymbol : 
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.

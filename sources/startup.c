@@ -893,6 +893,7 @@ VOID StartVariables()
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers = 0;
 	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace = INDENTSPACE;
 	AO.BlockSpaces = 0;
+	AO.OptimizationLevel = 0;
 	PUTZERO(AS.MaxExprSize);
 	PUTZERO(AC.StoreFileSize);
 

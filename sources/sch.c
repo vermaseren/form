@@ -656,6 +656,26 @@ UBYTE *CodeToLine(WORD number, UBYTE *Out)
 
 /*
  		#] CodeToLine : 
+ 		#[ AddArrayIndex :
+*/
+
+UBYTE *AddArrayIndex(WORD num,UBYTE *out)
+{
+	if ( AC.OutputMode == CMODE ) {
+		out = StrCopy((UBYTE *)"[",out);
+		out = NumCopy(num,out);
+		out = StrCopy((UBYTE *)"]",out);
+	}
+	else {
+		out = StrCopy((UBYTE *)"(",out);
+		out = NumCopy(num,out);
+		out = StrCopy((UBYTE *)")",out);
+	}
+	return(out);
+}
+
+/*
+ 		#] AddArrayIndex : 
  		#[ PrtTerms :			VOID PrtTerms()
 */
 
@@ -1147,16 +1167,7 @@ VOID WriteArgument(WORD *t)
 				Out = StrCopy((UBYTE *)"_",Out);
 			}
 			else if ( AC.extrasymbols == 1 ) {
-				if ( AC.OutputMode == CMODE ) {
-					Out = StrCopy((UBYTE *)"[",Out);
-					Out = NumCopy((MAXVARIABLES-t[1]),Out);
-					Out = StrCopy((UBYTE *)"]",Out);
-				}
-				else {
-					Out = StrCopy((UBYTE *)"(",Out);
-					Out = NumCopy((MAXVARIABLES-t[1]),Out);
-					Out = StrCopy((UBYTE *)")",Out);
-				}
+				Out = AddArrayIndex((MAXVARIABLES-t[1]),Out);
 			}
 /*
 			else if ( AC.extrasymbols == 2 ) {
@@ -1270,16 +1281,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						Out = StrCopy((UBYTE *)"_",Out);
 					}
 					else if ( AC.extrasymbols == 1 ) {
-						if ( AC.OutputMode ==  CMODE ) {
-							Out = StrCopy((UBYTE *)"[",Out);
-							Out = NumCopy((MAXVARIABLES-*t),Out);
-							Out = StrCopy((UBYTE *)"]",Out);
-						}
-						else {
-							Out = StrCopy((UBYTE *)"(",Out);
-							Out = NumCopy((MAXVARIABLES-*t),Out);
-							Out = StrCopy((UBYTE *)")",Out);
-						}
+						Out = AddArrayIndex((MAXVARIABLES-*t),Out);
 					}
 /*
 					else if ( AC.extrasymbols == 2 ) {
@@ -1902,7 +1904,7 @@ WrtTmes:				t = term;
 						*b++ = 1; *b++ = 1; *b = 3;
 						for ( i = AO.FactorNum+1; i < AO.bracket[4]; i++ ) {
 							if ( first ) {
-								TOKENTOLINE(" ( 0 )","(0)")
+								TOKENTOLINE("   ( 0 )"," (0)")
 								first = 0;
 							}
 							else {
@@ -1918,7 +1920,7 @@ WrtTmes:				t = term;
 						return(0);
 					}
 					if ( first == 0 ) { TOKENTOLINE(" * ( ","*(") }
-					else              { TOKENTOLINE(" ( ","(") }
+					else              { TOKENTOLINE("   ( "," (") }
 					AO.NumInBrack = 0;
 					first = 1;
 				}
@@ -2155,6 +2157,13 @@ WORD WriteAll()
 				FiniLine();
 				continue;
 			}
+			else if ( AO.OptimizationLevel > 0 ) {
+				AO.OutSkip = 6;
+				if ( Optimize(AO.termbuf[3]) ) goto AboWrite;
+				AO.OutSkip = 3;
+				FiniLine();
+				continue;
+			}
 			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 					 AO.OutSkip = 6;
 			FiniLine();
@@ -2219,7 +2228,7 @@ WORD WriteAll()
 				first = 0;
 			}
 			if ( AO.FactorMode ) {
-				if ( first ) { AO.FactorNum = 1; TOKENTOLINE(" 0","0") }
+				if ( first ) { AO.FactorNum = 1; TOKENTOLINE("   ( 0 )","  (0)") }
 				else TOKENTOLINE(" )",")");
 				for ( i = AO.FactorNum+1; i <= e->numfactors; i++ ) {
 					FiniLine();
@@ -2273,7 +2282,7 @@ AboWrite:
 }
 
 /*
- 		#] WriteAll :
+ 		#] WriteAll : 
  		#[ WriteOne :			WORD WriteOne(name,alreadyinline)
 
 		Writes one expression from the preprocessor

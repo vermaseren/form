@@ -331,6 +331,7 @@ extern VOID TELLFILE(int,POSITION *);
 extern VOID   StartVariables();
 extern VOID   setSignalHandlers(VOID);
 extern UBYTE *CodeToLine(WORD,UBYTE *);
+extern UBYTE *AddArrayIndex(WORD ,UBYTE *);
 extern INDEXENTRY *FindInIndex(WORD,FILEDATA *,WORD);
 extern INDEXENTRY *NextFileIndex(POSITION *);
 extern WORD  *PasteTerm(PHEAD WORD,WORD *,WORD *,WORD,WORD);
@@ -1328,6 +1329,7 @@ extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD, WORD, WORD);
 extern WORD FindSubterm(WORD *);
 extern WORD FindLocalSubterm(PHEAD WORD *, WORD);
 extern void PrintSubtermList(int,int);
+extern void PrintExtraSymbol(int,WORD *,int);
 extern WORD FindSubexpression(WORD *);
 
 extern void UpdateMaxSize(VOID);

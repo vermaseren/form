@@ -62,7 +62,8 @@ typedef struct PoSiTiOn {
 } POSITION;
 
 /**
- *
+ *	It seems that the next two structs are obsolete.
+ *	They were used in the old save files.
  */
  
 #define INFILEINDX 15
@@ -2114,8 +2115,9 @@ struct O_const {
     WORD    FactorMode;            /* When the output should be written as factors */
     WORD    FactorNum;             /* Number of factor currently treated */
     WORD    ErrorBlock;
+    WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
-	PADPOINTER(4,3,14,1);
+	PADPOINTER(4,3,15,1);
 };
 /*
  		#] O : 

@@ -605,6 +605,22 @@ int CoFormat(UBYTE *s)
 	int error = 0, x;
 	KEYWORD *key;
 	UBYTE *ss;
+/*
+	First the optimization level
+*/
+	if ( ( *s == 'O' || *s == 'o' ) && FG.cTable[*s] == 1 ) {
+		s++; x = 0;
+		while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
+		AO.OptimizationLevel = x;
+		while ( *s == ',' && s[1] == ',' ) s++;
+		if ( *s == 0 || ( *s == ',' && s[1] == 0 ) ) return(0);
+		if ( *s != ',' ) {
+			error = 1;
+			MesPrint("&Illegal optimization specification in format statement");
+			return(error);
+		}
+		while ( *s == ',' ) s++;
+	}
 	if ( FG.cTable[*s] == 1 ) {
 		x = 0;
 		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
@@ -702,7 +718,7 @@ int CoFormat(UBYTE *s)
 }
 
 /*
-  	#] CoFormat : 
+  	#] CoFormat :
   	#[ CoKeep :
 */
 
