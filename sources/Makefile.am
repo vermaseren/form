@@ -30,7 +30,7 @@ SRCBASE = \
 	normal.c \
 	notation.c \
 	opera.c \
-	optim.c \
+	optimize.cc \
 	pattern.c \
 	poly.cc \
 	poly.h \
