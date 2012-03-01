@@ -1354,7 +1354,7 @@ void UpdateMaxSize()
 		ALLPRIVATES *B;
 		for ( j = 0; j < AM.totalnumberofthreads; j++ ) {
 			B = AB[j];
-			if ( AT.SS->file.handle >= 0 ) {
+			if ( AT.SS && AT.SS->file.handle >= 0 ) {
 				position = AT.SS->file.filesize;
 /*
 MLOCK(ErrorMessageLock);
@@ -1370,7 +1370,7 @@ MUNLOCK(ErrorMessageLock);
 		}
 	}
 #else
-	if ( AT.SS->file.handle >= 0 ) {
+	if ( AT.SS && AT.SS->file.handle >= 0 ) {
 		position = AT.SS->file.filesize;
 		ADD2POS(sumsize,position);
 	}
