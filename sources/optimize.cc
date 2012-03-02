@@ -113,7 +113,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 					while (op == OPER_ADD);
 				}
 				
-				prefix.pop_back(); // ONLY POP A SMALLER POWER! prefix = y(1+y(...
+				prefix.pop_back();
 				prefix.pop_back();
 				prefixparts.pop_back();
 			}
@@ -157,7 +157,6 @@ vector<WORD> Horner_tree (WORD *expr) {
 		for (int i=t[0]-ABS(t[t[0]-1]); i<t[0]; i++)
 			postfix.push_back(t[i]);
 		trailing_one = t[t[0]-1]==3 && t[t[0]-2]==1 && t[t[0]-3]==1;
-		//		trailing_one = false;
 	}
 
 	while (!operators.empty()) {
@@ -439,15 +438,18 @@ vector<WORD> reuse_variables (vector<WORD> instr) {
 		int i=s.top(); s.pop();
 
 		if (i>0) {
-			s.push(-i);
 			i--;
+			if (vis[i]) continue;
+			vis[i]=1;
+			s.push(-(i+1));
+			
 			int idx = instr_idx[i];
 
 			for (int j=idx+3; j<idx+instr[idx+2]; j+=instr[j+1])
 				if (instr[j]==EXTRASYMBOL) {
 					WORD k = instr[j+2];
 					conn[i].push_back(k);
-					if (!vis[k]) { vis[k]=1; s.push(k+1); }
+					s.push(k+1);
 				}
 		}
 		else {
@@ -472,13 +474,14 @@ vector<WORD> reuse_variables (vector<WORD> instr) {
 	while (!s.empty()) {
 		
 		int i=s.top(); s.pop();
-		if (i>0) {			
-			s.push(-i);
+
+		if (i>0) {
 			i--;
-			for (int j=(int)conn[i].size()-1; j>=0; j--) {
-				WORD k = conn[i][j];
-				if (!vis[k]) { vis[k]=1; s.push(k+1); }
-			}
+			if (vis[i]) continue;
+			vis[i]=1;			
+			s.push(-(i+1));
+			for (int j=(int)conn[i].size()-1; j>=0; j--) 
+				s.push(conn[i][j]+1);
 		}
 		else {
 			i=-i-1;
@@ -512,20 +515,18 @@ vector<WORD> reuse_variables (vector<WORD> instr) {
 		int x = order[i];
 		int j = newinstr.size();
 		newinstr.insert(newinstr.end(), &instr[instr_idx[x]], &instr[instr_idx[x]] + instr[instr_idx[x]+2]);
-		
+
 		newinstr[j] = renum[newinstr[j]];
 		
 		for (int k=j+3; k<j+newinstr[j+2]; k+=newinstr[k+1])
 			if (newinstr[k]==EXTRASYMBOL)
 				newinstr[k+2] = renum[newinstr[k+2]];
 	}
-
 	/*
 	for (int i=0; i<n; i++)
 		printf ("%i. %i : %i-%i --> %i [need=%i]\n",i,order[i],
 						first[order[i]],last[order[i]],renum[order[i]],vars_needed[order[i]]);
 	*/
-	
 	return newinstr;
 }
 
@@ -623,11 +624,9 @@ VOID optimize_code (WORD *expr, WORD numexpr) {
 	//	printtree(horner);
 	vector<WORD> instr = generate_instructions(horner);
 	//	MesPrint ("no reuse");
-	//	printinstr(instr, -1);
-	//	MesPrint ("");
+	//	printinstr(instr, -1, cbuf[AM.sbufnum].numrhs); MesPrint ("");
 	instr = merge_operators(instr);
-	//	printinstr(instr, -1);	
-	//	MesPrint ("");
+	//	printinstr(instr, -1, cbuf[AM.sbufnum].numrhs);	MesPrint ("");
 	instr = reuse_variables(instr);	
 	//	MesPrint ("reuse");	
 	printinstr(instr, numexpr, cbuf[AM.sbufnum].numrhs);
