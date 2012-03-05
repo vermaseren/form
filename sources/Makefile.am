@@ -72,10 +72,9 @@ SRCPARALLEL = \
 	parallel.h \
 	mpidbg.h
 
-# consider argument DATE
-# XXX: $(shell ...) is a GNU make extension
-DATEFLAG = $(shell (if [ "x$(DATE)" != x ]; then echo "-DPRODUCTIONDATE='\"$(DATE)\"'"; fi))
-#"  # workaround for a coloring problem in vim.
+DATE =
+DATEFLAG_ = -DPRODUCTIONDATE='"$(DATE)"'
+DATEFLAG = $(DATEFLAG_:'""'=__DATE__)
 
 # for release versions
 COMPILEFLAGS =
@@ -203,38 +202,32 @@ tvorm_LINK = $(CXXLD) $(tvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
 
-# XXX: parform% : override ... is a GNU make extension.
-
 if BUILD_PARFORM
 bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parform_CPPFLAGS = $(DATEFLAG) -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG
-parform_CFLAGS = $(COMPILEFLAGS)
-parform_CXXFLAGS = $(COMPILEFLAGS)
+parform_CPPFLAGS = $(DATEFLAG) -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS)
+parform_CFLAGS = $(COMPILEFLAGS) $(MPI_CFLAGS)
+parform_CXXFLAGS = $(COMPILEFLAGS) $(MPI_CXXFLAGS)
 parform_LDFLAGS = $(LINKFLAGS) $(MPI_STATIC_LDFLAGS)
 parform_LDADD =
-parform% : override CC = @MPICC@
-parform% : override CXX = @MPICXX@
 if AUTOMAKE_GE_110
-parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
+parform_LINK = $(MPICXX) $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
 else
-parform_LINK = @MPICXX@ $(parform_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+parform_LINK = $(MPICXX) $(parform_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
 
 if BUILD_PARVORM
 bin_PROGRAMS += parvorm
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parvorm_CPPFLAGS = $(DATEFLAG) -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING
-parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
-parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
+parvorm_CPPFLAGS = $(DATEFLAG) -DPARALLEL -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS)
+parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CFLAGS)
+parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CXXFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
 parvorm_LDADD =
-parvorm% : override CC = @MPICC@
-parvorm% : override CXX = @MPICXX@
 if AUTOMAKE_GE_110
-parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
+parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
 else
-parvorm_LINK = @MPICXX@ $(parvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif

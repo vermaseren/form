@@ -405,49 +405,126 @@ AS_IF([test "x$enable_threaded" = xyes && test "x$enable_debug" = xyes], [build_
 AM_CONDITIONAL([BUILD_TFORM], [test "x$build_tform" = xyes])
 AM_CONDITIONAL([BUILD_TVORM], [test "x$build_tvorm" = xyes])
 
-# Check for MPI version
-AC_ARG_VAR([MPICC], [C compiler with MPI support])
-AC_ARG_VAR([MPICXX], [C++ compiler with MPI support])
-AS_IF([test "x$enable_parform" != xno],
-	[flag=:
-	AS_IF([$flag],
-		[AS_IF([test "x$MPICC" = x], [AC_CHECK_PROGS([MPICC], [mpicc])])
-		AS_IF([test "x$MPICC" = x], [flag=false])])
-	AS_IF([$flag],
-		[AS_IF([test "x$MPICXX" = x], [AC_CHECK_PROGS([MPICXX], [mpicxx mpiCC mpic++])])
-		AS_IF([test "x$MPICXX" = x], [flag=false])])
-	# Use AC_TRY_COMPILE and not AC_CHECK_HEADER because the latter uses $CPP, which perhaps
-	# does not know the include path for mpi.h.
-	AS_IF([$flag],
-		AC_MSG_CHECKING([for mpi.h])
-		save_CC=$CC
-		CC=$MPICC
-		AC_TRY_COMPILE([#include <mpi.h>], [],
-			[AC_MSG_RESULT(yes)],
-			[AC_MSG_RESULT(no);
-			flag=false])
-		CC=$save_CC
-	)
-	AS_IF([$flag],
-		[AC_MSG_CHECKING([for MPI_Init])
-		AC_LANG_PUSH([C++])
-		save_CXX=$CXX
-		CXX=$MPICXX
-		AC_LINK_IFELSE([AC_LANG_SOURCE([
-#include <mpi.h>
+# AX_PROG_MPICC
+# -------------
+AC_DEFUN([AX_PROG_MPICC], [
+	AC_REQUIRE([AC_PROG_CC])
+	AC_ARG_VAR([MPICC], [C compiler with MPI support])
+	AS_IF([test "x$MPICC" != x], [
+		AC_CHECK_PROGS([MPICC], [$MPICC])
+	], [
+		AC_CHECK_PROGS([MPICC], [mpicc hcc mpxlc_r mpxlc mpcc cmpicc], $CC)
+	])
+	AC_LANG_PUSH([C])
+	save_CC=$CC
+	CC=$MPICC
+	_AX_CHECK_MPI([MPICC], [C])
+	CC=$save_CC
+	AC_LANG_POP([C])
+])
+
+# AX_PROG_MPICXX
+# --------------
+AC_DEFUN([AX_PROG_MPICXX], [
+	AC_REQUIRE([AC_PROG_CXX])
+	AC_ARG_VAR([MPICXX], [C++ compiler with MPI support])
+	AS_IF([test "x$MPICXX" != x], [
+		AC_CHECK_PROGS([MPICXX], [$MPICXX])
+	], [
+		AC_CHECK_PROGS([MPICXX], [mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++], $CXX)
+	])
+	AC_LANG_PUSH([C++])
+	save_CXX=$CXX
+	CXX=$MPICXX
+	_AX_CHECK_MPI([MPICXX], [CXX])
+	CXX=$save_CXX
+	AC_LANG_POP([C++])
+])
+
+# _AX_CHECK_MPI(compiler, output-var-prefix)
+# ------------------------------------------
+AC_DEFUN([_AX_CHECK_MPI], [
+	# Check whether MPI works or not.
+	AC_MSG_CHECKING([whether MPI works with $$1])
+	AC_LINK_IFELSE([AC_LANG_SOURCE([_AX_CHECK_MPI_SOURCE])], [
+		AC_MSG_RESULT([yes])
+		# Find a flag for showing the compile and link lines.
+		ax_ok=false
+		for ax_show in -show -showme -compile-info; do
+			AC_MSG_CHECKING([whether $$1 accepts $ax_show])
+			ax_mpi_cmdline=`$$1 $ax_show 2>/dev/null`
+			AS_IF([test $? -eq 0], [
+				AC_MSG_RESULT([yes])
+				ax_ok=:
+				break
+			], [
+				AC_MSG_RESULT([no])
+			])
+		done
+		AS_IF([$ax_ok], [], [AC_MSG_WARN([Cannot extract compiler and linker flags from $$1])])
+		# Extract the compile and link flags.
+		ax_mpi_cflags=
+		ax_mpi_cppflags=
+		ax_mpi_ldflags=
+		ax_mpi_libs=
+		ax_first=:
+		for ax_opt in $ax_mpi_cmdline; do
+			case $ax_opt in
+				-I*|-D*)
+					ax_mpi_cppflags="$ax_mpi_cppflags $ax_opt"
+					;;
+				-L*|-Wl,*)
+					ax_mpi_ldflags="$ax_mpi_ldflags $ax_opt"
+					;;
+				-l*)
+					ax_mpi_libs="$ax_mpi_libs $ax_opt"
+					;;
+				*)
+					$ax_first || ax_mpi_cflags="$ax_mpi_cflags $ax_opt"
+					;;
+			esac
+			ax_first=false
+		done
+		MPI_$2FLAGS=`  echo "$ax_mpi_cflags"   | sed 's/^ *//;s/ *$//;s/   */ /g'`
+		MPI_$2PPFLAGS=`echo "$ax_mpi_cppflags" | sed 's/^ *//;s/ *$//;s/   */ /g'`
+		MPI_$2LDFLAGS=`echo "$ax_mpi_ldflags"  | sed 's/^ *//;s/ *$//;s/   */ /g'`
+		MPI_$2LIBS=`   echo "$ax_mpi_libs"     | sed 's/^ *//;s/ *$//;s/   */ /g'`
+	], [
+		AC_MSG_RESULT([no])
+		$1=
+		MPI_$2FLAGS=
+		MPI_$2LDFLAGS=
+		MPI_$2LIBS=
+	])
+])
+
+AC_DEFUN([_AX_CHECK_MPI_SOURCE], [_AC_LANG_DISPATCH([$0], _AC_LANG, $@)])
+
+m4_define([_AX_CHECK_MPI_SOURCE(C)],
+[#include <mpi.h>
 int main(int argc, char **argv) {
+	int rank, size;
 	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Finalize();
 	return 0;
-}
-])],
-			[AC_MSG_RESULT([yes])],
-			[AC_MSG_RESULT([no])
-			flag=false])
-		CXX=$save_CXX
-		AC_LANG_POP([C++])])
+}])
+
+m4_copy([_AX_CHECK_MPI_SOURCE(C)], [_AX_CHECK_MPI_SOURCE(C++)])
+
+# Check for MPI version
+AS_IF([test "x$enable_parform" != xno],
+	[flag=:
+	AS_IF([$flag], [AX_PROG_MPICC
+		AS_IF([test "x$MPICC" = x], [flag=false])])
+	AS_IF([$flag], [AX_PROG_MPICXX
+		AS_IF([test "x$MPICXX" = x], [flag=false])])
 	AS_IF([$flag],
-		[enable_parform=yes],
+		[enable_parform=yes
+		AC_SUBST([MPI_CFLAGS])
+		AC_SUBST([MPI_CXXFLAGS])
+		AC_SUBST([MPI_CPPFLAGS])],
 		[AS_IF([test "x$enable_parform" = xyes],
 			[AC_MSG_FAILURE([test for parform failed. Give --disable-parform if you do not need to build parform])])
 		AC_MSG_NOTICE([building parform has been disabled])
