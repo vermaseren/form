@@ -1937,6 +1937,35 @@ int simp6token(SBYTE *tokens, int mode)
 			else if ( *s == TEXPRESSION ) {
 				ss = s;
 				s++; n = 0; while ( *s >= 0 ) n = 128*n + *s++;
+
+				if ( Expressions[n].status == STOREDEXPRESSION ) {
+					POSITION position;
+#ifdef WITHPTHREADS
+					RENUMBER renumber;
+#endif
+					WORD TMproto[SUBEXPSIZE];
+					TMproto[0] = EXPRESSION;
+					TMproto[1] = SUBEXPSIZE;
+					TMproto[2] = n;
+					TMproto[3] = 1;
+					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
+					AT.TMaddr = TMproto;
+					PUTZERO(position);
+					if ( (
+#ifdef WITHPTHREADS
+						renumber = 
+#endif
+							GetTable(n,&position) ) == 0 ) {
+						error = 1;
+						MesPrint("&Problems getting information about stored expression %s"
+						,EXPRNAME(n));
+					}
+#ifdef WITHPTHREADS
+					M_free(renumber->symb.lo,"VarSpace");
+					M_free(renumber,"Renumber");
+#endif
+				}
+
 				if ( ( ( AS.Oldvflags[n] & ISFACTORIZED ) != 0 ) && *s != LBRACE ) {
 					if ( level == 0 ) {
 						haveone = 1;
@@ -1971,7 +2000,7 @@ int simp6token(SBYTE *tokens, int mode)
 }
 
 /*
- 		#] simp6token : 
+ 		#] simp6token :
 	#] Compiler :
 */
 /* temporary commentary for forcing cvs merge */

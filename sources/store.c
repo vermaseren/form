@@ -3040,6 +3040,7 @@ GetTb3:
 				AT.WorkPointer = oldwork;
 				return(0);
 			}
+			AS.OldNumFactors[expr] =
 			Expressions[expr].numfactors = *AT.WorkPointer;
 /*
 			MesPrint("--> numfactors = %d",Expressions[expr].numfactors);
@@ -3056,6 +3057,7 @@ GetTb3:
 				AT.WorkPointer = oldwork;
 				return(0);
 			}
+			AS.Oldvflags[expr] =
 			Expressions[expr].vflags = *AT.WorkPointer;
 /*
 			MesPrint("--> vflags = %d",Expressions[expr].vflags);
@@ -3103,7 +3105,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable : 
+ 		#] GetTable :
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
