@@ -3497,11 +3497,16 @@ AutoGen:	i = *AT.TMout;
 				iscopy = 1;
 				if ( AT.TMdolfac > 0 ) {	/* We need a factor */
 				  if ( AT.TMdolfac == 1 ) {
-					numfac[0] = 4;
-					numfac[1] = d->nfactors;
-					numfac[2] = 1;
-					numfac[3] = 3;
-					numfac[4] = 0;
+					if ( d->nfactors ) {
+						numfac[0] = 4;
+						numfac[1] = d->nfactors;
+						numfac[2] = 1;
+						numfac[3] = 3;
+						numfac[4] = 0;
+					}
+					else {
+						numfac[0] = 0;
+					}
 					StartBuf = numfac;
 				  }
 				  else {
@@ -3967,7 +3972,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
