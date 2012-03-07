@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 */
@@ -38,7 +38,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Compiler :
  		#[ tokenize :
 
@@ -567,7 +567,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize : 
+ 		#] tokenize :
  		#[ WriteTokens :
 */
 
@@ -617,7 +617,7 @@ writenumber:
 }
 
 /*
- 		#] WriteTokens : 
+ 		#] WriteTokens :
  		#[ simp1token :
 
 		Routine substitutes set elements if possible.
@@ -696,7 +696,7 @@ if ( n < 0 ) {
 }
 
 /*
- 		#] simp1token : 
+ 		#] simp1token :
  		#[ simpwtoken :
 
 		Only to be called in the LHS.
@@ -856,7 +856,7 @@ firsterr:		if ( first ) {
 }
 
 /*
- 		#] simpwtoken : 
+ 		#] simpwtoken :
  		#[ simp2token :
 
 		Deals with function arguments.
@@ -1095,7 +1095,7 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 }
 
 /*
- 		#] simp2token : 
+ 		#] simp2token :
  		#[ simp3atoken :
 
 		We hunt for denominators and exponents that seem hidden.
@@ -1328,7 +1328,7 @@ doublepower:
 }
 
 /*
- 		#] simp3atoken : 
+ 		#] simp3atoken :
  		#[ simp3btoken :
 */
 
@@ -1702,7 +1702,7 @@ doublepower:;
 }
 
 /*
- 		#] simp3btoken : 
+ 		#] simp3btoken :
  		#[ simp4token :
 
 		Deal with the set[n] objects in the RHS.
@@ -1858,7 +1858,7 @@ int simp4token(SBYTE *s)
 }
 
 /*
- 		#] simp4token : 
+ 		#] simp4token :
  		#[ simp5token :
 
 	Making sure that first argument of sumfunction is not a wildcard already
@@ -1904,7 +1904,7 @@ int simp5token(SBYTE *s, int mode)
 }
 
 /*
- 		#] simp5token : 
+ 		#] simp5token :
  		#[ simp6token :
 
 	Making sure that factorized expressions are used properly
@@ -1918,6 +1918,7 @@ int simp6token(SBYTE *tokens, int mode)
 	SBYTE *s = tokens, *ss;
 	LONG numterms;
 	WORD funnum = 0;
+	GETIDENTITY
 	if ( mode == RHSIDE ) {
 		while ( *s == TPLUS || *s == TMINUS ) s++;
 		numterms = 1;
