@@ -13,7 +13,6 @@ using namespace std;
 
 const WORD OPER_ADD = -1;
 const WORD OPER_MUL = -2;
-const WORD OPER_POW = -3;
 
 bool term_compare (WORD *a, WORD *b) {
 	if (a[1]!=SYMBOL) return true;
@@ -39,7 +38,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 				cnt[t[i]]++;
 
 	vector<pair<int,WORD> > order;
-	for (map<WORD,WORD>::iterator i=cnt.begin(); i!=cnt.end(); i++)
+	for (map<WORD,int>::iterator i=cnt.begin(); i!=cnt.end(); i++)
 		order.push_back(make_pair(i->second, i->first));
 	sort(order.rbegin(), order.rend());
 
@@ -157,6 +156,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 		for (int i=t[0]-ABS(t[t[0]-1]); i<t[0]; i++)
 			postfix.push_back(t[i]);
 		trailing_one = t[t[0]-1]==3 && t[t[0]-2]==1 && t[t[0]-3]==1;
+		//		trailing_one = false; // TODO: remove trailing_one once move_coefficients works
 	}
 
 	while (!operators.empty()) {
@@ -224,13 +224,13 @@ vector<WORD> generate_instructions (const vector<WORD> &a) {
 			i++;
 		else {
 			if (a[i]==SYMBOL && a[i+3]>1) { // symbol with power>1
-				vector<int> x;
+				vector<WORD> x;
 				x.push_back(SYMBOL);
 				x.push_back(a[i+2]);
 				x.push_back(a[i+3]);
 				if (!ID.count(x)) {
 					instr.push_back(numinstr);
-					instr.push_back(OPER_POW);
+					instr.push_back(OPER_MUL);
 					instr.push_back(7);
 					instr.push_back(SYMBOL);
 					instr.push_back(4);
@@ -247,7 +247,7 @@ vector<WORD> generate_instructions (const vector<WORD> &a) {
 		vector<WORD> x;
 		
 		if (a[i]==SNUMBER) {
-			x = vector<int>(&a[i],&a[i]+a[i+1]);
+			x = vector<WORD>(&a[i],&a[i]+a[i+1]);
 			if (!ID.count(x)) ID[x]=i;
 			s.push(ID[x]);
 			s.push(-SNUMBER);
@@ -348,7 +348,7 @@ vector<WORD> merge_operators (vector<WORD> instr) {
 				if (!vis[k]) { vis[k]=true; s.push(k); }
 			}
 
-		if (numpar[i]==1 && (instr[idx+1]==OPER_POW || instr[idx+1]==instr[instr_idx[par[i]]+1])) 
+		if (numpar[i]==1 && instr[idx+1]==instr[instr_idx[par[i]]+1]) 
 			par[i] = par[par[i]];
 		else
 			par[i] = i;
@@ -405,12 +405,70 @@ vector<WORD> merge_operators (vector<WORD> instr) {
 		if (par[i]==i) renum[i]=next++;
 
 	for (int i=0; i<(int)newinstr.size(); i+=newinstr[i+2]) {
-
 		newinstr[i] = renum[newinstr[i]];
-		
 		for (int j=i+3; j<i+newinstr[i+2]; j+=newinstr[j+1])
 			if (newinstr[j]==EXTRASYMBOL)
 				newinstr[j+2] = renum[newinstr[j+2]];
+	}
+
+	return newinstr;
+}
+
+vector<WORD> move_coefficients (const vector<WORD> &instr) {
+
+	int n=0;
+	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) n++;
+	vector<int> instr_idx(n);
+	for (int i=0; i<(int)instr.size(); i+=instr[i+2])
+		instr_idx[instr[i]]=i;
+
+	vector<WORD> newinstr;
+	
+	vector<bool> vis(n,false);
+	
+	stack<int> s;
+	s.push(n);
+	
+	vector<int> coeff(n,-1);
+	
+	while (!s.empty()) {
+
+		int i=s.top(); s.pop();
+
+		if (i>0) {
+			i--;
+			int idx=instr_idx[i];
+			
+			for (int j=idx+3; j<idx+instr[idx+2]; j+=instr[j+1]) {
+				if (instr[j]==EXTRASYMBOL) {
+					int k = instr[j+2];
+					if (!vis[k]) { vis[k]=true; s.push(k); }
+				}
+				if (instr[idx+1]==OPER_MUL && instr[j]==SNUMBER)
+					coeff[i] = j;
+			}
+		}
+		else {
+			i=-i-1;
+			int idx=instr_idx[i];
+			int start=newinstr.size();
+
+			newinstr.push_back(instr[idx]);   // expr.nr
+			newinstr.push_back(instr[idx+1]); // operator
+			newinstr.push_back(3);            // length
+							 
+			if (instr[idx+1]==OPER_MUL) {
+				// remove coefficients
+
+			}
+			else {
+				// add coefficients
+				for (int j=idx+3; j<idx+instr[idx+2]; j+=instr[j+1]) {
+					if (instr[j]==EXTRASYMBOL) {
+					}
+				}
+			}			
+		}
 	}
 
 	return newinstr;
@@ -421,7 +479,6 @@ vector<WORD> reuse_variables (vector<WORD> instr) {
 	int n=0;
 	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) n++;
 	vector<int> instr_idx(n);
-	
 	for (int i=0; i<(int)instr.size(); i+=instr[i+2])
 		instr_idx[instr[i]]=i;
 
@@ -509,7 +566,7 @@ vector<WORD> reuse_variables (vector<WORD> instr) {
 		renum[order[i]] = *var.begin(); var.erase(var.begin());
 	}
 
-	vector<int> newinstr;
+	vector<WORD> newinstr;
 	
 	for (int i=0; i<n; i++) {
 		int x = order[i];
@@ -540,17 +597,7 @@ VOID printinstr (const vector<WORD> &instr, WORD numexpr, WORD extraoffset) {
 
 		WORD *t = AT.WorkPointer;
 		
-		if (instr[i+1]==OPER_POW) {
-			*t++ = 8;
-			*t++ = SYMBOL;
-			*t++ = 4;
-			*t++ = AN.poly_vars[instr[i+5]];
-			*t++ = instr[i+6];
-			*t++ = 1;
-			*t++ = 1;
-			*t++ = 3;
-		}
-		else if (instr[i+1]==OPER_ADD) {
+		if (instr[i+1]==OPER_ADD) {
 			for (int j=i+3; j<i+instr[i+2]; j+=instr[j+1]) {
 				if (instr[j]==SNUMBER) {
 					*t++ = instr[j+1]-1;
@@ -617,8 +664,9 @@ VOID optimize_code (WORD *expr, WORD numexpr) {
 	}
 
 	GETIDENTITY;
-	
-	PrintSubtermList(1,cbuf[AM.sbufnum].numrhs);
+
+	if (cbuf[AM.sbufnum].numrhs > 0)
+		PrintSubtermList(1,cbuf[AM.sbufnum].numrhs);
 	
 	vector<WORD> horner = Horner_tree(expr);
 	//	printtree(horner);
@@ -626,7 +674,7 @@ VOID optimize_code (WORD *expr, WORD numexpr) {
 	//	MesPrint ("no reuse");
 	//	printinstr(instr, -1, cbuf[AM.sbufnum].numrhs); MesPrint ("");
 	instr = merge_operators(instr);
-	//	printinstr(instr, -1, cbuf[AM.sbufnum].numrhs);	MesPrint ("");
+	//	MesPrint("merge");printinstr(instr, -1, cbuf[AM.sbufnum].numrhs);	MesPrint ("");
 	instr = reuse_variables(instr);	
 	//	MesPrint ("reuse");	
 	printinstr(instr, numexpr, cbuf[AM.sbufnum].numrhs);
