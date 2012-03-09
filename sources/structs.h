@@ -61,36 +61,6 @@ typedef struct PoSiTiOn {
 	off_t p1;
 } POSITION;
 
-/**
- *	It seems that the next two structs are obsolete.
- *	They were used in the old save files.
- */
- 
-#define INFILEINDX 15
-
-/**
- *
- */
-
-typedef struct {
-	POSITION	nameposition;	/* Position of the name of the expression */
-	POSITION	varposition;	/* Position of the list with variables */
-	POSITION	varlength;		/* Length of the variable list */
-	POSITION	exprposition;	/* Position of the expression itself */
-/*	POSITION	exprlength;		   Length of the expression itself */
-} INDXENTRY;
-
-/**
- *
- */
-
-typedef struct {
-	POSITION	nextindex;			/* Position of next FILEINDX if any */
-	LONG		number;				/* Number of used entries in this index */
-	LONG		reserved;			/* For the future, and for padding */
-	INDXENTRY	entries[INFILEINDX];
-} FILEINDX;
-
 /*	Next are the index structs for stored and saved expressions */
 
 /**
@@ -147,12 +117,12 @@ typedef struct InDeXeNtRy {
  *  FiLeInDeX). Number is calculated such that the size of a file index is no
  *  more than 512 bytes.
  */
-#define INFILEINDEX ((512-sizeof(LONG)-sizeof(POSITION))/sizeof(INDEXENTRY))
+#define INFILEINDEX ((512-2*sizeof(POSITION))/sizeof(INDEXENTRY))
 /**
  *  Number of empty filling bytes for a file index (struct FiLeInDeX). It is
  *  calculated such that the size of a file index is always 512 bytes.
  */
-#define EMPTYININDEX (512-sizeof(LONG)-sizeof(POSITION)-INFILEINDEX*sizeof(INDEXENTRY))
+#define EMPTYININDEX (512-2*sizeof(POSITION)-INFILEINDEX*sizeof(INDEXENTRY))
 
 /**
  *  Defines the structure of a file index in store-files and save-files.
@@ -160,11 +130,15 @@ typedef struct InDeXeNtRy {
  *  It contains several entries (see struct InDeXeNtRy) up to a maximum of
  *  #INFILEINDEX.
  *
- *  It is always 512 bytes long.
+ *  The variable number has been made of type POSITION to avoid padding
+ *  problems with some types of computers/OS and keep system independence
+ *  of the .sav files.
+ *
+ *  This struct is always 512 bytes long.
  */
 typedef struct FiLeInDeX {
 	POSITION	next;			/**< Position of next FILEINDEX if any */
-	LONG	number;				/**< Number of used entries in this index */
+	POSITION	number;			/**< Number of used entries in this index */
 	INDEXENTRY expression[INFILEINDEX]; /**< File index entries */
 	SBYTE	empty[EMPTYININDEX];		/**< Padding to 512 bytes */
 } FILEINDEX;
@@ -229,7 +203,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 

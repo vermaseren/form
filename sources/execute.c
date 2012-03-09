@@ -449,6 +449,7 @@ void PutInVflags(WORD nexpr)
 	POSITION *old;
 	WORD *oldw;
 	int i;
+restart:;
 	if ( AS.OldOnFile == 0 ) {
 		AS.NumOldOnFile = 20;
 		AS.OldOnFile = (POSITION *)Malloc1(AS.NumOldOnFile*sizeof(POSITION),"file pointers");
@@ -476,13 +477,17 @@ void PutInVflags(WORD nexpr)
 		AS.NumOldNumFactors = 2*AS.NumOldNumFactors;
 		M_free(oldw,"vflags pointers");
 	}
+/*
+	The next is needed when we Load a .sav file with lots of expressions.
+*/
+	if ( nexpr >= AS.NumOldOnFile || nexpr >= AS.NumOldNumFactors ) goto restart;
 	AS.OldOnFile[nexpr] = e->onfile;
 	AS.OldNumFactors[nexpr] = e->numfactors;
 	AS.Oldvflags[nexpr] = e->vflags;
 }
 
 /*
- 		#] PutInVflags : 
+ 		#] PutInVflags :
  		#[ DoExecute :
 */
 

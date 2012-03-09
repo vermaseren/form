@@ -314,7 +314,7 @@ int CoSave(UBYTE *inp)
 		*p++ = c;
 		inp = p;
 		i = (WORD)(INFILEINDEX);
-		AO.SaveData.Index.number = 0;
+		PUTZERO(AO.SaveData.Index.number);
 		PUTZERO(AO.SaveData.Index.next);
 		PUTZERO(AO.SaveData.Position);
 		ind = AO.SaveData.Index.expression;
@@ -358,7 +358,7 @@ int CoSave(UBYTE *inp)
 								goto SavWrt;
 							i = (WORD)(INFILEINDEX);
 							AO.SaveData.Position = AO.SaveData.Index.next;
-							AO.SaveData.Index.number = 0;
+							PUTZERO(AO.SaveData.Index.number);
 							PUTZERO(AO.SaveData.Index.next);
 							ind = AO.SaveData.Index.expression;
 							scrpos = AO.SaveData.Position;
@@ -397,7 +397,7 @@ int CoSave(UBYTE *inp)
 							!= wSize ) goto SavWrt;
 							ADDPOS(scrpos,-wSize);
 						} while ( ISPOSPOS(scrpos) );
-						(AO.SaveData.Index.number)++;
+						ADDPOS(AO.SaveData.Index.number,1);
 						ind++;
 					}
 					else error = -1;
@@ -586,7 +586,7 @@ int CoLoad(UBYTE *inp)
 			,(LONG)sizeof(struct FiLeInDeX)) != (LONG)sizeof(struct FiLeInDeX) ) goto LoadWrt;
 	}
 	else {				/* All saved expressions should be stored. Easy */
-		i = (WORD)(AO.SaveData.Index.number);
+		i = (WORD)BASEPOSITION(AO.SaveData.Index.number);
 		ind = AO.SaveData.Index.expression;
 #ifdef SYSDEPENDENTSAVE
 		if ( i > 0 ) { do {
@@ -609,7 +609,7 @@ int CoLoad(UBYTE *inp)
 				SeekFile(AO.SaveData.Handle,&(AO.SaveData.Index.next),SEEK_SET);
 				if ( ReadFile(AO.SaveData.Handle,(UBYTE *)(&(AO.SaveData.Index)),
 					(LONG)sizeof(struct FiLeInDeX)) != (LONG)sizeof(struct FiLeInDeX) ) goto LoadRead;
-				i = (WORD)(AO.SaveData.Index.number);
+				i = (WORD)BASEPOSITION(AO.SaveData.Index.number);
 				ind = AO.SaveData.Index.expression;
 			}
 			else ind++;
@@ -635,7 +635,7 @@ int CoLoad(UBYTE *inp)
 				if ( i == 0 && (ISNOTZEROPOS(AO.SaveData.Index.next) || AO.bufferedInd) ) {
 					SeekFile(AO.SaveData.Handle,&(AO.SaveData.Index.next),SEEK_SET);
 					if ( ReadSaveIndex(&AO.SaveData.Index) ) goto LoadRead;
-					i = (WORD)(AO.SaveData.Index.number);
+					i = (WORD)BASEPOSITION(AO.SaveData.Index.number);
 					ind = AO.SaveData.Index.expression;
 				}
 				else ind++;
@@ -2116,7 +2116,7 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 	SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
 /* --COMPRESS-- */
 	if ( WriteFile(AR.StoreData.Handle,((UBYTE *)&(AR.StoreData.Index.number))
-		,(LONG)(sizeof(LONG))) != sizeof(LONG) ) goto ErrInSto;
+		,(LONG)(sizeof(POSITION))) != sizeof(POSITION) ) goto ErrInSto;
 	SeekFile(AR.StoreData.Handle,&indexpos,SEEK_SET);
 /* --COMPRESS-- */
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)indexent,(LONG)(sizeof(INDEXENTRY))) !=
@@ -2143,20 +2143,21 @@ ErrReturn:
 INDEXENTRY *NextFileIndex(POSITION *indexpos)
 {
 	GETIDENTITY
+	INDEXENTRY *ind;
 	if ( AR.StoreData.Handle <= 0 ) {
 		if ( SetFileIndex() ) {
 			MesCall("NextFileIndex");
 			return(0);
 		}
-		AR.StoreData.Index.number = 1;
+		SETBASEPOSITION(AR.StoreData.Index.number,1);
 #ifdef SYSDEPENDENTSAVE
-		SETBASEPOSITION(*indexpos,(sizeof(LONG)+sizeof(POSITION)));
+		SETBASEPOSITION(*indexpos,(2*sizeof(POSITION)));
 #else
-		SETBASEPOSITION(*indexpos,(sizeof(LONG)+sizeof(POSITION)+sizeof(STOREHEADER)));
+		SETBASEPOSITION(*indexpos,(2*sizeof(POSITION)+sizeof(STOREHEADER)));
 #endif
 		return(AR.StoreData.Index.expression);
 	}
-	while ( AR.StoreData.Index.number >= (LONG)(INFILEINDEX) ) {
+	while ( BASEPOSITION(AR.StoreData.Index.number) >= (LONG)(INFILEINDEX) ) {
 		if ( ISNOTZEROPOS(AR.StoreData.Index.next) ) {
 			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Index.next),SEEK_SET);
 			AR.StoreData.Position = AR.StoreData.Index.next;
@@ -2165,7 +2166,7 @@ INDEXENTRY *NextFileIndex(POSITION *indexpos)
 			(LONG)(sizeof(FILEINDEX)) ) goto ErrNextS;
 		}
 		else {
-			AR.StoreData.Index.number = 0;
+			PUTZERO(AR.StoreData.Index.number);
 			SeekFile(AR.StoreData.Handle,&(AR.StoreData.Position),SEEK_SET);
 /* --COMPRESS-- */
 			if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(AR.StoreData.Fill)),(LONG)(sizeof(POSITION)))
@@ -2180,9 +2181,11 @@ INDEXENTRY *NextFileIndex(POSITION *indexpos)
 		}
 	}
 	*indexpos = AR.StoreData.Position;
-	ADDPOS(*indexpos,(sizeof(LONG)+sizeof(POSITION)) +
-		AR.StoreData.Index.number * sizeof(INDEXENTRY));
-	return(&AR.StoreData.Index.expression[(AR.StoreData.Index.number)++]);
+	ADDPOS(*indexpos,(2*sizeof(POSITION)) +
+		BASEPOSITION(AR.StoreData.Index.number) * sizeof(INDEXENTRY));
+	ind = &AR.StoreData.Index.expression[BASEPOSITION(AR.StoreData.Index.number)];
+	ADDPOS(AR.StoreData.Index.number,1);
+	return(ind);
 ErrNextS:
 	MesPrint("Error in storage file");
 	return(0);
@@ -2205,7 +2208,7 @@ WORD SetFileIndex()
 	if ( AR.StoreData.Handle < 0 ) {
 		AR.StoreData.Handle = AC.StoreHandle;
 		PUTZERO(AR.StoreData.Index.next);
-		AR.StoreData.Index.number = 0;
+		PUTZERO(AR.StoreData.Index.number);
 #ifdef SYSDEPENDENTSAVE
 		SETBASEPOSITION(AR.StoreData.Fill,sizeof(FILEINDEX));
 #else
@@ -2546,9 +2549,9 @@ INDEXENTRY *FindInIndex(WORD expr, FILEDATA *f, WORD par)
 	if ( !par ) hand = AR.StoreData.Handle;
 	else        hand = AO.SaveData.Handle;
 	for(;;) {
-		if ( ( i = (WORD)(f->Index.number) ) != 0 ) {
+		if ( ( i = (WORD)BASEPOSITION(f->Index.number) ) != 0 ) {
 			indexpos = f->Position;
-			ADDPOS(indexpos,((sizeof(LONG))+sizeof(POSITION)));
+			ADDPOS(indexpos,(2*sizeof(POSITION)));
 			ind = f->Index.expression;
 			do {
 				if ( ( !par && ISEQUALPOS(indexpos,Expressions[expr].onfile) )
@@ -3105,7 +3108,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
@@ -3391,10 +3394,10 @@ static void Flip64(UBYTE *p)
 {
 	INT64 in = *((INT64 *)p);
 	INT64 out =
-		( (((in) >> 56) & 0x00000000000000FF) | (((in) >> 40) & 0x000000000000FF00) | \
-		  (((in) >> 24) & 0x0000000000FF0000) | (((in) >>  8) & 0x00000000FF000000) | \
-		  (((in) <<  8) & 0x000000FF00000000) | (((in) << 24) & 0x0000FF0000000000) | \
-		  (((in) << 40) & 0x00FF000000000000) | (((in) << 56) & 0xFF00000000000000) );
+		( (((in) >> 56) & (INT64)0x00000000000000FFLL) | (((in) >> 40) & (INT64)0x000000000000FF00LL) | \
+		  (((in) >> 24) & (INT64)0x0000000000FF0000LL) | (((in) >>  8) & (INT64)0x00000000FF000000LL) | \
+		  (((in) <<  8) & (INT64)0x000000FF00000000LL) | (((in) << 24) & (INT64)0x0000FF0000000000LL) | \
+		  (((in) << 40) & (INT64)0x00FF000000000000LL) | (((in) << 56) & (INT64)0xFF00000000000000LL) );
 	*((INT64 *)p) = out;
 }
 #else
@@ -3770,6 +3773,8 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
  		#[ WriteStoreHeader :
 */
 
+#define SAVEREVISION 0x02
+
 /**
  *  Writes header with information about system architecture and FORM revision
  *  to an open store file.
@@ -3789,7 +3794,7 @@ WORD WriteStoreHeader(WORD handle)
 		0, 0, 0, 0,											/* sizeof variable structs */
 		{ 0 },												/* maxpower */
 		{ 0 },												/* wildoffset */
-		0x01,												/* revision */
+		SAVEREVISION,										/* revision */
 		{ 0 } };											/* reserved */
 	int endian, i;
 
@@ -3817,6 +3822,7 @@ WORD WriteStoreHeader(WORD handle)
         {
             WORD dumw[8];
             UBYTE *dummy;
+            for ( i = 0; i < 8; i++ ) dumw[i] = 0;
             dummy = (UBYTE *)dumw;
             dumw[0] = (WORD)MAXPOWER;
             for ( i = 0; i < 16; i++ ) sh.maxpower[i] = dummy[i];
@@ -3914,6 +3920,10 @@ WORD ReadSaveHeader()
 		}
 	}
 
+	if ( AO.SaveHeader.revision != SAVEREVISION ) {
+		return(MesPrint("Save file header from an old version. Cannot read this file."));
+	}
+
 	endian = 1;
 	for ( i = 1; i < (int)sizeof(int); ++i ) {
 		endian <<= 8;
@@ -4003,7 +4013,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 
 		if ( ReadFile(AO.SaveData.Handle, (UBYTE *)fileind, sizeof(FILEINDEX))
 				!= sizeof(FILEINDEX) ) {
-			return ( MesPrint("Error reading stored expression.") );
+			return ( MesPrint("Error(1) reading stored expression.") );
 		}
 
 		/* do we need to flip the endianness? */
@@ -4013,9 +4023,9 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 			int padp = lenL - ((lenW*5+(MAXENAME + 1)) & (lenL-1));
 			p = (UBYTE *)fileind;
 			AO.FlipPOS(p); p += lenP;			/* next */
-			AO.FlipLONG(p);						/* number */
-			AO.ResizeLONG(p, (UBYTE *)&number);
-			p += lenL;
+			AO.FlipPOS(p);						/* number */
+			AO.ResizePOS(p, (UBYTE *)&number);
+			p += lenP;
 			for ( i = 0; i < number; ++i ) {
 				AO.FlipPOS(p); p += lenP;		/* position */
 				AO.FlipPOS(p); p += lenP;		/* length */
@@ -4041,9 +4051,9 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 			p = (UBYTE *)fileind; q = (UBYTE *)&buffer;
 			AO.ResizePOS(p, q);						/* next */
 			p += lenP; q += sizeof(POSITION);
-			AO.ResizeLONG(p, q);					/* number */
-			p += lenL;
-			number = *((LONG *)q);
+			AO.ResizePOS(p, q);					/* number */
+			p += lenP;
+			number = BASEPOSITION(*((POSITION *)q));
 			/* if FILEINDEX in file contains more entries than the FILEINDEX in
 			   memory can contain, then adjust the numbers and prepare for
 			   buffering */
@@ -4055,12 +4065,12 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 					return ( MesPrint("Too many index entries.") );
 				}
 				maxnumber = INFILEINDEX;
-				*((LONG *)q) = INFILEINDEX;
+				SETBASEPOSITION(*((POSITION *)q),INFILEINDEX);
 			}
 			else {
 				maxnumber = number;
 			}
-			q += sizeof(LONG);
+			q += sizeof(POSITION);
 			/* read all INDEXENTRY that fit into the output buffer */
 			for ( i = 0; i < maxnumber; ++i ) {
 				AO.ResizePOS(p, q);					/* position */
@@ -4089,7 +4099,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 			/* read all the remaining INDEXENTRY and put them into the static buffer */
 			if ( AO.bufferedInd ) {
 				sbuffer.next = buffer.next;
-				sbuffer.number = AO.bufferedInd;
+				SETBASEPOSITION(sbuffer.number,AO.bufferedInd);
 				q = (UBYTE *)&sbuffer + sizeof(POSITION) + sizeof(LONG);
 				for ( i = maxnumber; i < number; ++i ) {
 					AO.ResizePOS(p, q);				/* position */
@@ -4177,6 +4187,7 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 
 		POSITION pos;
 		UBYTE *in, *out, *pp = 0, *end, *outbuf;
+		LONG numread;
 		WORD namelen, realnamelen;
 		/* shortcuts */
 		WORD lenW = AO.SaveHeader.lenWORD;
@@ -4214,8 +4225,8 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 			if ( *size > newsize ) *size = newsize;
 		}
 
-		if ( ReadFile(AO.SaveData.Handle, in, *size) != *size ) {
-			return ( MesPrint("Error reading stored expression.") );
+		if ( ( numread = ReadFile(AO.SaveData.Handle, in, *size) ) != *size ) {
+			return ( MesPrint("Error(2) reading stored expression.") );
 		}
 
 		*size = 0;
@@ -4256,11 +4267,11 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node     */
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* namesize */
-				AO.ResizeWORD(in, out); in += lenW;                      /* dimension */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* dimension */
 				while ( in < pp ) {
 					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
 				}
@@ -4357,11 +4368,11 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node     */
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* namesize */
-				AO.ResizeWORD(in, out); in += lenW;                      /* dimension */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* dimension */
 				while ( in < pp ) {
 					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
 				}
@@ -4415,11 +4426,11 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* spec      */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* symmetric */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node      */
-				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* namesize  */
-				AO.ResizeWORD(in, out); in += lenW;                      /* dimension */
+				AO.ResizeWORD(in, out); in += lenW;                      /* namesize  */
 				realnamelen = *((WORD *)out);
 				realnamelen += sizeof(void *)-1; realnamelen &= -(sizeof(void *));
 				out += sizeof(WORD);
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* dimension */
 				while ( in < pp ) {
 					AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD);
 				}
@@ -4962,7 +4973,7 @@ WORD ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 		outend = out + *size;
 
 		if ( ReadFile(AO.SaveData.Handle, in, *size) != *size ) {
-			return ( MesPrint("Error reading stored expression.") );
+			return ( MesPrint("Error(3) reading stored expression.") );
 		}
 
 		if ( AO.transFlag & 1 ) {
