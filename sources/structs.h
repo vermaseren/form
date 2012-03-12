@@ -203,7 +203,7 @@ typedef struct {
 } VARINFO;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -2077,6 +2077,7 @@ struct O_const {
     int     BlockSpaces;           /*     For very long numbers */
     WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
     WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
+    WORD    mpower;                /*     For maxpower adjustment to larger value */
     WORD    resizeFlag;            /* ()  >0 indicades that something went wrong when resizing words */
     WORD    bufferedInd;           /* ()  Contains extra INDEXENTRIES, see ReadSaveIndex() for an explanation */
     WORD    OutSkip;               /* (O) How many chars to skip in output line */
@@ -2091,10 +2092,10 @@ struct O_const {
     WORD    ErrorBlock;
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
-	PADPOINTER(4,3,15,1);
+	PADPOINTER(4,3,16,1);
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**

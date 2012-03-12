@@ -1035,7 +1035,7 @@ doexpr:					s += 2;
 #endif
 									GetTable(x2,&position) ) == 0 ) {
 								error = 1;
-								MesPrint("&Problems getting information about stored expression %s"
+								MesPrint("&Problems getting information about stored expression %s(1)"
 								,EXPRNAME(x2));
 							}
 #ifdef WITHPTHREADS
@@ -1262,7 +1262,7 @@ dofunction:			firstsumarg = 1;
 #endif
 											GetTable(x2,&position) ) == 0 ) {
 										error = 1;
-										MesPrint("&Problems getting information about stored expression %s"
+										MesPrint("&Problems getting information about stored expression %s(2)"
 										,EXPRNAME(x2));
 									}
 #ifdef WITHPTHREADS
@@ -1530,7 +1530,7 @@ dofunction:			firstsumarg = 1;
 #endif
 							GetTable(x1,&position) ) == 0 ) {
 						error = 1;
-						MesPrint("&Problems getting information about stored expression %s"
+						MesPrint("&Problems getting information about stored expression %s(3)"
 						,EXPRNAME(x1));
 					}
 #ifdef WITHPTHREADS
