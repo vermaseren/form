@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes and variables :
 */
@@ -88,7 +88,7 @@ static int PF_longPackInit(void);      /*:[12oct2005 mt]*/
 	} while (0)
 
 /*
-  	#] Includes and variables :
+  	#] Includes and variables : 
   	#[ PF_RealTime :
 */
 
@@ -109,7 +109,7 @@ LONG PF_RealTime(int i)
 }
 
 /*
-  	#] PF_RealTime :
+  	#] PF_RealTime : 
   	#[ PF_LibInit :
 */
 
@@ -195,7 +195,7 @@ int PF_LibInit(int *argcp, char ***argvp)
 	return(0);
 }
 /*
-  	#] PF_LibInit :
+  	#] PF_LibInit : 
   	#[ PF_LibTerminate :
 */
 
@@ -213,7 +213,7 @@ int PF_LibTerminate(int error)
 }
 
 /*
-  	#] PF_LibTerminate :
+  	#] PF_LibTerminate : 
   	#[ PF_Probe :
 */
 
@@ -244,7 +244,7 @@ int PF_Probe(int *src)
 }
 
 /*
-  	#] PF_Probe :
+  	#] PF_Probe : 
   	#[ PF_ISendSbuf :
 */
 
@@ -322,7 +322,7 @@ int PF_ISendSbuf(int to, int tag)
 }
 
 /*
-  	#] PF_ISendSbuf :
+  	#] PF_ISendSbuf : 
   	#[ PF_RecvWbuf :
 */
 
@@ -350,7 +350,7 @@ int PF_RecvWbuf(WORD *b, LONG *s, int *src)
 }
 
 /*
-  	#] PF_RecvWbuf :
+  	#] PF_RecvWbuf : 
   	#[ PF_IRecvRbuf :
 */
 
@@ -381,7 +381,7 @@ int PF_IRecvRbuf(PF_BUFFER *r, int bn, int from)
 }
 
 /*
-  	#] PF_IRecvRbuf :
+  	#] PF_IRecvRbuf : 
   	#[ PF_WaitRbuf :
 */
 
@@ -425,7 +425,7 @@ int PF_WaitRbuf(PF_BUFFER *r, int bn, LONG *size)
 }
 
 /*
-  	#] PF_WaitRbuf :
+  	#] PF_WaitRbuf : 
   	#[ PF_Bcast :
 */
 
@@ -445,7 +445,7 @@ int PF_Bcast(void *buffer, int count)
 }
 
 /*
-  	#] PF_Bcast :
+  	#] PF_Bcast : 
   	#[ PF_RawSend :
 */
 
@@ -467,7 +467,7 @@ int PF_RawSend(int dest, void *buf, LONG l, int tag)
 	return(0);
 }
 /*
-  	#] PF_RawSend :
+  	#] PF_RawSend : 
   	#[ PF_RawRecv :
 */
 
@@ -493,7 +493,7 @@ LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag)
 }
 
 /*
-  	#] PF_RawRecv :
+  	#] PF_RawRecv : 
   	#[ PF_RawProbe :
 */
 
@@ -522,7 +522,7 @@ int PF_RawProbe(int *src, int *tag, int *bytesize)
 }
 
 /*
-  	#] PF_RawProbe :
+  	#] PF_RawProbe : 
   	#[ The pack buffer :
  		#[ Variables :
 */
@@ -535,7 +535,7 @@ static UBYTE *PF_packstop = NULL;
 static int    PF_packpos  = 0;
 
 /*
- 		#] Variables :
+ 		#] Variables : 
  		#[ PF_ShortPackInit :
 */
 
@@ -554,7 +554,7 @@ static int PF_ShortPackInit(void)
 }
 
 /*
- 		#] PF_ShortPackInit :
+ 		#] PF_ShortPackInit : 
  		#[ PF_InitPackBuf :
 */
 
@@ -580,7 +580,7 @@ static inline int PF_InitPackBuf(void)
 }
 
 /*
- 		#] PF_InitPackBuf :
+ 		#] PF_InitPackBuf : 
  		#[ PF_PrintPackBuf :
 */
 
@@ -611,7 +611,7 @@ int PF_PrintPackBuf(char *s, int size)
 }
 
 /*
- 		#] PF_PrintPackBuf :
+ 		#] PF_PrintPackBuf : 
  		#[ PF_PreparePack :
 */
 
@@ -627,7 +627,7 @@ int PF_PreparePack(void)
 }
 
 /*
- 		#] PF_PreparePack :
+ 		#] PF_PreparePack : 
  		#[ PF_Pack :
 */
 
@@ -656,7 +656,7 @@ int PF_Pack(const void *buffer, size_t count, MPI_Datatype type)
 }
 
 /*
- 		#] PF_Pack :
+ 		#] PF_Pack : 
  		#[ PF_Unpack :
 */
 
@@ -681,7 +681,7 @@ int PF_Unpack(void *buffer, size_t count, MPI_Datatype type)
 }
 
 /*
- 		#] PF_Unpack :
+ 		#] PF_Unpack : 
  		#[ PF_PackString :
 */
 
@@ -756,7 +756,7 @@ int PF_PackString(const UBYTE *str)
 }
 
 /*
- 		#] PF_PackString :
+ 		#] PF_PackString : 
  		#[ PF_UnpackString :
 */
 
@@ -794,7 +794,7 @@ int PF_UnpackString(UBYTE *str)
 }
 
 /*
- 		#] PF_UnpackString :
+ 		#] PF_UnpackString : 
  		#[ PF_Send :
 */
 
@@ -828,7 +828,7 @@ int PF_Send(int to, int tag)
 }
 
 /*
- 		#] PF_Send :
+ 		#] PF_Send : 
  		#[ PF_Receive :
 */
 
@@ -858,7 +858,7 @@ int PF_Receive(int src, int tag, int *psrc, int *ptag)
 }
 
 /*
- 		#] PF_Receive :
+ 		#] PF_Receive : 
  		#[ PF_Broadcast :
 */
 
@@ -908,8 +908,8 @@ int PF_Broadcast(void)
 }
 
 /*
- 		#] PF_Broadcast :
-  	#] The pack buffer :
+ 		#] PF_Broadcast : 
+  	#] The pack buffer : 
   	#[ Long pack stuff :
  		#[ Explanations :
 
@@ -989,7 +989,7 @@ int PF_Broadcast(void)
 	knows, when the chunk is expired and it must switch to the next cell,
 	successively decrementing corresponding nPacks field.
 
- 		#] Explanations :
+ 		#] Explanations : 
  		#[ Variables :
 */
 
@@ -1014,7 +1014,7 @@ static PF_LONGMULTI *PF_longMultiLastChunk = NULL;
 static int PF_longPackN = 0;
 
 /*
- 		#] Variables :
+ 		#] Variables : 
  		#[ Long pack private functions :
  		#[ PF_longMultiNewCell :
 */
@@ -1048,7 +1048,7 @@ static inline int PF_longMultiNewCell(void)
 }
 
 /*
- 		#] PF_longMultiNewCell :
+ 		#] PF_longMultiNewCell : 
  		#[ PF_longMultiPack2NextCell :
 */
 static inline int PF_longMultiPack2NextCell(void)
@@ -1082,7 +1082,7 @@ static inline int PF_longMultiPack2NextCell(void)
 }
 
 /*
- 		#] PF_longMultiPack2NextCell :
+ 		#] PF_longMultiPack2NextCell : 
  		#[ PF_longMultiNewChunkAdded :
 */
 
@@ -1123,7 +1123,7 @@ static inline int PF_longMultiNewChunkAdded(int n)
 }
 
 /*
- 		#] PF_longMultiNewChunkAdded :
+ 		#] PF_longMultiNewChunkAdded : 
  		#[ PF_longCopyChunk :
 */
 
@@ -1134,7 +1134,7 @@ static inline void PF_longCopyChunk(int *to, int *from, int n)
 }
 
 /*
- 		#] PF_longCopyChunk :
+ 		#] PF_longCopyChunk : 
  		#[ PF_longAddChunk :
 
 	If n == 0, the chunk must be increased by 1*PF_packsize and
@@ -1185,7 +1185,7 @@ static int PF_longAddChunk(int n)
 }
 
 /*
- 		#] PF_longAddChunk :
+ 		#] PF_longAddChunk : 
  		#[ PF_longMultiHowSplit :
 
 	"count" of "type" elements in an input buffer occupy "bytes" bytes.
@@ -1224,7 +1224,7 @@ static inline int PF_longMultiHowSplit(int count, MPI_Datatype type, int bytes)
 	return(items);
 }
 /*
- 		#] PF_longMultiHowSplit :
+ 		#] PF_longMultiHowSplit : 
  		#[ PF_longPackInit :
 */
 
@@ -1259,7 +1259,7 @@ static int PF_longPackInit(void)
 }
 
 /*
- 		#] PF_longPackInit :
+ 		#] PF_longPackInit : 
  		#[ PF_longMultiPreparePrefix :
 */
 
@@ -1330,7 +1330,7 @@ static inline int PF_longMultiPreparePrefix(void)
 }
 
 /*
- 		#] PF_longMultiPreparePrefix :
+ 		#] PF_longMultiPreparePrefix : 
  		#[ PF_longMultiProcessPrefix :
 */
 
@@ -1374,7 +1374,7 @@ static inline int PF_longMultiProcessPrefix(void)
 }
 
 /*
- 		#] PF_longMultiProcessPrefix :
+ 		#] PF_longMultiProcessPrefix : 
  		#[ PF_longSingleReset :
 */
 
@@ -1402,7 +1402,7 @@ static inline int PF_longSingleReset(int is_sender)
 }
 
 /*
- 		#] PF_longSingleReset :
+ 		#] PF_longSingleReset : 
  		#[ PF_longMultiReset :
 */
 
@@ -1433,8 +1433,8 @@ static inline int PF_longMultiReset(int is_sender)
 }
 
 /*
- 		#] PF_longMultiReset :
- 		#] Long pack private functions :
+ 		#] PF_longMultiReset : 
+ 		#] Long pack private functions : 
  		#[ PF_PrepareLongSinglePack :
 */
 
@@ -1450,7 +1450,7 @@ int PF_PrepareLongSinglePack(void)
 }
 
 /*
- 		#] PF_PrepareLongSinglePack :
+ 		#] PF_PrepareLongSinglePack : 
  		#[ PF_LongSinglePack :
 */
 
@@ -1484,7 +1484,7 @@ int PF_LongSinglePack(const void *buffer, size_t count, MPI_Datatype type)
 }
 
 /*
- 		#] PF_LongSinglePack :
+ 		#] PF_LongSinglePack : 
  		#[ PF_LongSingleUnpack :
 */
 
@@ -1508,7 +1508,7 @@ int PF_LongSingleUnpack(void *buffer, size_t count, MPI_Datatype type)
 }
 
 /*
- 		#] PF_LongSingleUnpack :
+ 		#] PF_LongSingleUnpack : 
  		#[ PF_LongSingleSend :
 */
 
@@ -1558,7 +1558,7 @@ int PF_LongSingleSend(int to, int tag)
 }
 
 /*
- 		#] PF_LongSingleSend :
+ 		#] PF_LongSingleSend : 
  		#[ PF_LongSingleReceive :
 */
 
@@ -1621,7 +1621,7 @@ int PF_LongSingleReceive(int src, int tag, int *psrc, int *ptag)
 }
 
 /*
- 		#] PF_LongSingleReceive :
+ 		#] PF_LongSingleReceive : 
  		#[ PF_PrepareLongMultiPack :
 */
 
@@ -1637,7 +1637,7 @@ int PF_PrepareLongMultiPack(void)
 }
 
 /*
- 		#] PF_PrepareLongMultiPack :
+ 		#] PF_PrepareLongMultiPack : 
  		#[ PF_LongMultiPack :
 */
 
@@ -1696,7 +1696,7 @@ int PF_LongMultiPack(const void*buffer, size_t count, size_t eSize, MPI_Datatype
 }
 
 /*
- 		#] PF_LongMultiPack :
+ 		#] PF_LongMultiPack : 
  		#[ PF_LongMultiUnpack :
 */
 
@@ -1773,7 +1773,7 @@ int PF_LongMultiUnpack(void *buffer, size_t count, size_t eSize, MPI_Datatype ty
 }
 
 /*
- 		#] PF_LongMultiUnpack :
+ 		#] PF_LongMultiUnpack : 
  		#[ PF_LongMultiBroadcast :
 */
 
@@ -1888,6 +1888,6 @@ int PF_LongMultiBroadcast(void)
 }
 
 /*
- 		#] PF_LongMultiBroadcast :
-  	#] Long pack stuff :
+ 		#] PF_LongMultiBroadcast : 
+  	#] Long pack stuff : 
 */

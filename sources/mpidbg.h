@@ -9,7 +9,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -32,7 +32,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 /*
   	#[ Includes :
@@ -44,7 +44,7 @@
 #include <mpi.h>
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Utilities :
   		#[ MPIDBG_RANK :
 */
@@ -128,7 +128,7 @@ static inline void MPIDBG_sprint_statuses(char *buf, int count, const MPI_Reques
 
 /*
   		#] MPIDBG_sprint_statuses :
-  	#] Utilities :
+  	#] Utilities : 
   	#[ MPI APIs :
 */
 
@@ -668,7 +668,7 @@ static inline int MPIDBG_Bcast(void* buffer, int count, MPI_Datatype datatype, i
 
 /*
   		#] MPI_Bcast :
-  	#] MPI APIs :
+  	#] MPI APIs : 
 */
 
 #endif  /* MPIDBG_H */

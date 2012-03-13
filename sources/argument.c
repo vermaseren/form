@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1903,7 +1903,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 
 	*argout = 0;
 /*
-  	#] step 0 :
+  	#] step 0 : 
   	#[ step 1 : Take care of ordering
 */
 	AR.SortType = SORTHIGHFIRST;
@@ -2029,7 +2029,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		goto return0;
 	}
 /*
-  	#] step 3 :
+  	#] step 3 : 
   	#[ step 4 : invoke ConvertToPoly
 
 				We make a copy first in case there are no factors
@@ -2310,13 +2310,13 @@ return0:
 #endif
 	}
 /*
-  	#] step 8 :
+  	#] step 8 : 
 */
 	return(error);
 }
 
 /*
-  	#] ArgFactorize :
+  	#] ArgFactorize : 
   	#[ FindArg :
 */
 /**

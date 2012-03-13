@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -328,7 +328,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 }
 
 /*
-  	#] poly_divmod :
+  	#] poly_divmod : 
   	#[ poly_div :
 
 	Routine divides the expression in arg1 by the expression in arg2.
@@ -909,7 +909,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 }
 
 /*
-  	#] poly_factorize :
+  	#] poly_factorize : 
   	#[ poly_factorize_argument :
 */
  
@@ -962,7 +962,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 }
 
 /*
-  	#] poly_factorize_dollar :
+  	#] poly_factorize_dollar : 
   	#[ poly_factorize_expression :
 */
 
@@ -1667,5 +1667,5 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 }
 
 /*
-  	#] poly_inverse :
+  	#] poly_inverse : 
 */

@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -821,7 +821,7 @@ WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 }
 
 /*
- 		#] Trace4 :
+ 		#] Trace4 : 
  		#[ Trace4Gen :			WORD Trace4Gen(t,number)
 
 		The recursive breakdown of a trace in 4 dimensions.
@@ -1323,7 +1323,7 @@ TracCall:
 }
 
 /*
- 		#] Trace4Gen :
+ 		#] Trace4Gen : 
  		#[ TraceNno :			WORD TraceNno(number,kron,t)
 
 		Routine takes the trace in N dimensions of a string
@@ -2501,7 +2501,7 @@ fromTenVec:
 
 /*
  		#] TenVec : 
-  	#] Operations :
+  	#] Operations : 
 */
 
 /* temporary commentary for forcing cvs merge */

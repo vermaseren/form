@@ -19,7 +19,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -42,7 +42,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -52,7 +52,7 @@
 #include "declare.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ Vector :
  		#[ VectorStruct :
 */
@@ -70,7 +70,7 @@
 	}
 
 /*
- 		#] VectorStruct :
+ 		#] VectorStruct : 
  		#[ Vector :
 */
 
@@ -85,7 +85,7 @@
 	VectorStruct(T) X = { NULL, 0, 0 }
 
 /*
- 		#] Vector :
+ 		#] Vector : 
  		#[ DeclareVector :
 */
 
@@ -100,7 +100,7 @@
 	VectorStruct(T) X
 
 /*
- 		#] DeclareVector :
+ 		#] DeclareVector : 
  		#[ VectorInit :
 */
 
@@ -118,7 +118,7 @@
 	} while (0)
 
 /*
- 		#] VectorInit :
+ 		#] VectorInit : 
  		#[ VectorFree :
 */
 
@@ -136,7 +136,7 @@
 	} while (0)
 
 /*
- 		#] VectorFree :
+ 		#] VectorFree : 
  		#[ VectorPtr :
 */
 
@@ -151,7 +151,7 @@
 	((X).ptr)
 
 /*
- 		#] VectorPtr :
+ 		#] VectorPtr : 
  		#[ VectorFront :
 */
 
@@ -166,7 +166,7 @@
 	((X).ptr[0])
 
 /*
- 		#] VectorFront :
+ 		#] VectorFront : 
  		#[ VectorBack :
 */
 
@@ -181,7 +181,7 @@
 	((X).ptr[(X).size - 1])
 
 /*
- 		#] VectorBack :
+ 		#] VectorBack : 
  		#[ VectorSize :
 */
 
@@ -195,7 +195,7 @@
 	((X).size)
 
 /*
- 		#] VectorSize :
+ 		#] VectorSize : 
  		#[ VectorCapacity :
 */
 
@@ -209,7 +209,7 @@
 	((X).capacity)
 
 /*
- 		#] VectorCapacity :
+ 		#] VectorCapacity : 
  		#[ VectorEmpty :
 */
 
@@ -223,7 +223,7 @@
 	((X).size == 0)
 
 /*
- 		#] VectorEmpty :
+ 		#] VectorEmpty : 
  		#[ VectorClear :
 */
 
@@ -236,7 +236,7 @@
 	do { (X).size = 0; } while (0)
 
 /*
- 		#] VectorClear :
+ 		#] VectorClear : 
  		#[ VectorReserve :
 */
 
@@ -264,7 +264,7 @@
 	} while (0)
 
 /*
- 		#] VectorReserve :
+ 		#] VectorReserve : 
  		#[ VectorPushBack :
 */
 
@@ -281,7 +281,7 @@
 	} while (0)
 
 /*
- 		#] VectorPushBack :
+ 		#] VectorPushBack : 
  		#[ VectorPushBacks :
 */
 
@@ -301,7 +301,7 @@
 	} while (0)
 
 /*
- 		#] VectorPushBacks :
+ 		#] VectorPushBacks : 
  		#[ VectorPopBack :
 */
 
@@ -315,7 +315,7 @@
 	do { (X).size --; } while (0)
 
 /*
- 		#] VectorPopBack :
+ 		#] VectorPopBack : 
  		#[ VectorInsert :
 */
 
@@ -337,7 +337,7 @@
 	} while (0)
 
 /*
- 		#] VectorInsert :
+ 		#] VectorInsert : 
  		#[ VectorInserts :
 */
 
@@ -360,7 +360,7 @@
 	} while (0)
 
 /*
- 		#] VectorInserts :
+ 		#] VectorInserts : 
  		#[ VectorErase :
 */
 
@@ -379,7 +379,7 @@
 	} while (0)
 
 /*
- 		#] VectorErase :
+ 		#] VectorErase : 
  		#[ VectorErases :
 */
 
@@ -399,7 +399,7 @@
 	} while (0)
 
 /*
- 		#] VectorErases :
-  	#] Vector :
+ 		#] VectorErases : 
+  	#] Vector : 
 */
 #endif  /* VECTOR_H_ */

@@ -8,7 +8,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 /*
   	#[ macros & definitions :
@@ -150,7 +150,7 @@ extern "C" {
 #endif
 
 /*
-  	#] macros & definitions :
+  	#] macros & definitions : 
   	#[ s/r-bufs :
 */
 
@@ -180,7 +180,7 @@ typedef struct {
 } PF_BUFFER;
 
 /*
-  	#] s/r-bufs :
+  	#] s/r-bufs : 
   	#[ global variables used by the PF_functions : need to be known everywhere
 */
 
@@ -210,7 +210,7 @@ extern LONG PF_maxDollarChunkSize;
 /*:[04oct2005 mt]*/
 
 /*
-  	#] global variables used by the PF_functions :
+  	#] global variables used by the PF_functions : 
   	#[ Function prototypes :
 */
 
@@ -245,7 +245,7 @@ extern void   PF_MUnlock(void);
 extern LONG   PF_WriteFileToFile(int,UBYTE *,LONG);
 
 /*
-  	#] Function prototypes :
+  	#] Function prototypes : 
 */
 
 #endif

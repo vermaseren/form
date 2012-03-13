@@ -9,7 +9,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -99,7 +99,7 @@ reading over the allocated ares.
 The leftmost extra page is always allocated and mprotected. The size
 of the allocated chunk is stored in the beginning of this page.
 
-  	#] Documentation :
+  	#] Documentation : 
   	#[ Includes :
 */
 
@@ -116,7 +116,7 @@ of the allocated chunk is stored in the beginning of this page.
 #endif
 
 /*
-  	#] Includes :
+  	#] Includes : 
 */
 
 static int pageSize=4096;/*the default value*/
@@ -263,7 +263,7 @@ static void segv_handler(int sig, siginfo_t *sip, void *xxx) {
 }/*segv_handler*/
 
 /*
-  	#] segv_handler :
+  	#] segv_handler : 
 */
 
 /*
@@ -302,7 +302,7 @@ static FORM_INLINE int mprotectInit(void)
 }/*mprotectInit*/
 
 /*
-  	#] mprotectInit :
+  	#] mprotectInit : 
 */
 
 

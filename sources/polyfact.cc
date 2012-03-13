@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -128,7 +128,7 @@ void factorized_poly::add_factor(const poly &f, int p) {
 }
 
 /*
-    #] add_factor :
+  	#] add_factor : 
   	#[ extended_gcd_Euclidean_lifted :
 */
 
@@ -218,7 +218,7 @@ const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const
 }
 
 /*
-    #] extended_gcd_Euclidean_lifted :
+  	#] extended_gcd_Euclidean_lifted : 
   	#[ solve_Diophantine_univariate :
 */
 
@@ -281,7 +281,7 @@ const vector<poly> polyfact::solve_Diophantine_univariate (const vector<poly> &a
 }
 
 /*
-  	#] solve_Diophantine_univariate :
+  	#] solve_Diophantine_univariate : 
   	#[ solve_Diophantine_multivariate :
 */
 
@@ -382,7 +382,7 @@ const vector<poly> polyfact::solve_Diophantine_multivariate (const vector<poly> 
 }
 
 /*
-  	#] solve_Diophantine_multivariate :
+  	#] solve_Diophantine_multivariate : 
   	#[ lift_coefficients :
 */
 																																																 
@@ -476,8 +476,8 @@ const vector<poly> polyfact::lift_coefficients (const poly &_A, const vector<pol
 }
 
 /*
-  	#] lift_coefficients :
-		#[ predetermine :
+  	#] lift_coefficients : 
+ 		#[ predetermine :
 */
 
 /**  Predetermine coefficients
@@ -514,7 +514,7 @@ void polyfact::predetermine (int dep, const vector<vector<int> > &state, vector<
 }
 
 /*
-		#] predetermine :
+ 		#] predetermine : 
   	#[ lift_variables :
 */
 
@@ -774,7 +774,7 @@ WORD polyfact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 }
 
 /*
-  	#] choose_prime :
+  	#] choose_prime : 
   	#[ choose_prime_power :
 */
 
@@ -823,7 +823,7 @@ WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 }
 
 /*
-  	#] choose_prime_power :
+  	#] choose_prime_power : 
   	#[ choose_ideal :
 */
 
@@ -964,7 +964,7 @@ const factorized_poly polyfact::squarefree_factors_Yun (const poly &_a) {
 }	
 
 /*
-  	#] squarefree_factors_Yun :
+  	#] squarefree_factors_Yun : 
   	#[ squarefree_factors_modp :
 */
 
@@ -1015,7 +1015,7 @@ const factorized_poly polyfact::squarefree_factors_modp (const poly &_a) {
 }
 
 /*
-  	#] squarefree_factors_modp :
+  	#] squarefree_factors_modp : 
   	#[ squarefree_factors :
 */
 
@@ -1623,7 +1623,7 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 }
 
 /*
-  	#] factorize_squarefree :
+  	#] factorize_squarefree : 
   	#[ factorize :
 */
 

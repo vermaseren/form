@@ -16,7 +16,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1134,7 +1134,7 @@ RetRetval:
 }
 
 /*
- 		#] EndSort :
+ 		#] EndSort : 
  		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
 */
 /**
@@ -2798,7 +2798,7 @@ NoPoly:
 }
 
 /*
- 		#] Compare1 :
+ 		#] Compare1 : 
  		#[ CompareSymbols :			int CompareSymbols(term1,term2,par)
 */
 /**

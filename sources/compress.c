@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2010 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2012 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -368,7 +368,7 @@ int FlushOutputGZIP(FILEHANDLE *f)
 }
 
 /*
-  	#] FlushOutputGZIP :
+  	#] FlushOutputGZIP : 
   	#[ SetupAllInputGZIP :
 
 	Routine prepares all gzip input streams for a merge.
@@ -461,7 +461,7 @@ int SetupAllInputGZIP(SORTING *S)
 }
 
 /*
-  	#] SetupAllInputGZIP :
+  	#] SetupAllInputGZIP : 
   	#[ FillInputGZIP :
 
 	Routine is called when we need new input in the specified buffer.
@@ -703,6 +703,6 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 }
 
 /*
-  	#] FillInputGZIP :
+  	#] FillInputGZIP : 
 */
 #endif
