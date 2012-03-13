@@ -116,6 +116,12 @@ vector<WORD> Horner_tree (WORD *expr) {
 			for (int i=3; i<t[2]; i+=2)
 				cnt[t[i]]++;
 
+	bool factorized=false;
+	if (cnt.count(FACTORSYMBOL)) {
+		factorized=true;
+		cnt[FACTORSYMBOL] = MAXPOSITIVE;
+	}
+	
 	// determine the order of the variables
 	vector<pair<int,WORD> > order;
 	for (map<WORD,int>::iterator i=cnt.begin(); i!=cnt.end(); i++)
@@ -204,9 +210,32 @@ vector<WORD> Horner_tree (WORD *expr) {
 				operators.pop();
 			}
 
-			// push OPER_ADD, except for the first term
-			if (i != 0) operators.push(OPER_ADD);
+			if (factorized && match==0) {
+				// a new factor of a factorized polynomial begins
 
+				while (!operators.empty()) {
+					tree.push_back(operators.top());
+					operators.pop();
+				}
+
+				if (prefix.size()==2) {
+					prefix.pop_back();
+					prefix.pop_back();
+					prefixparts.pop_back();
+				}
+
+				prefix.push_back(t[3]);
+				prefix.push_back(t[4]);
+				prefixparts.push_back(1);
+				match=2;
+
+				if (i != 0) operators.push(OPER_MUL);
+			}
+			else {
+				// push OPER_ADD, except for the first term
+				if (i != 0) operators.push(OPER_ADD);
+			}
+			
 			// matching first symbol, but non-matching power
 			if (match+2 == (int)prefix.size()) {
 				tree.push_back(SYMBOL);                       // SYMBOL
