@@ -161,17 +161,9 @@ int SetIdentity(int *identityretval)
  		#] SetIdentity : 
  		#[ WhoAmI :
 */
- 
-#ifdef WITHPCOUNTER
-int pcounter = 0;
-#endif
 
 /**
  *	Returns the number of the current thread in our administration
- *
- *	pcounter is for debugging purposes only. It tells how often the WhoAmI
- *	routine is called. We would like this to be substantially less than the
- *	number of terms being manipulated (in the limit that this number is large)
  *
  *	This routine is to be called in routines that need access to the thread
  *	specific data and that don't get their B-struct passed as an argument.
@@ -186,9 +178,6 @@ int WhoAmI()
 /*
 	First a fast exit for when there is at most one thread
 */
-#ifdef WITHPCOUNTER
-	pcounter++;
-#endif
 	if ( identityofthreads <= 1 ) return(0);
 /*
 	Now the reading of the key.
@@ -291,7 +280,7 @@ int StartAllThreads(int number)
 	topofavailables = 0;
 	for ( j = 1; j < number; j++ ) {
 		if ( pthread_create(&thethread,NULL,RunThread,(void *)(&dummy)) )
-			return(-1);
+			goto failure;
 	}
 /*
 	Now we initialize the master at the same time that the workers are doing so.
@@ -318,7 +307,7 @@ int StartAllThreads(int number)
 		numberofsortbots = numberofworkers-2;
 		for ( j = numberofworkers+1; j < 2*numberofworkers-1; j++ ) {
 			if ( pthread_create(&thethread,NULL,RunSortBot,(void *)(&dummy)) )
-				return(-1);
+				goto failure;
 		}
 	}
 	else {
@@ -334,6 +323,10 @@ int StartAllThreads(int number)
 MesPrint("AB = %x %x %x  %d",AB[0],AB[1],AB[2], identityofthreads);
 */
 	return(0);
+failure:
+	MesPrint("Cannot start %d threads",number);
+	Terminate(-1);
+	return(-1);
 }
 
 /*

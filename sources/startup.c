@@ -44,12 +44,6 @@
 #include <signal.h>
 #endif
 
-#ifdef WITHPTHREADS
-#ifdef WITHPCOUNTER
-extern int pcounter;
-#endif
-#endif
-
 /*
  * FORMNAME = "FORM" or "TFORM" or "ParFORM".
  */
@@ -903,10 +897,74 @@ VOID StartVariables()
 	AC.numpfirstnum = AC.sizepfirstnum = 0;
 #endif
 	AC.MemDebugFlag = 0;
+
+#ifdef WITHEXTERNALCHANNEL
+	AX.currentExternalChannel=0;
+	AX.killSignal=SIGKILL;
+	AX.killWholeGroup=1;
+	AX.daemonize=1;
+	AX.currentPrompt=0;
+	AX.timeout=1000;/*One second to initialize preset channels*/
+	AX.shellname=strDup1((UBYTE *)"/bin/sh -c","external channel shellname");
+	AX.stderrname=strDup1((UBYTE *)"/dev/null","external channel stderrname");
+#endif
 }
 
 /*
  		#] StartVariables : 
+ 		#[ StartMore :
+*/
+
+VOID StartMore()
+{
+#ifdef WITHEXTERNALCHANNEL
+	/*If env.variable "FORM_PIPES" is defined, we have to initialize 
+		corresponding pre-set external channels, see file extcmd.c.*/
+	/*This line must be after all setup settings: in future, timeout
+		could be changed at setup.*/
+	if(AX.timeout>=0)/*if AX.timeout<0, this was done by cmdline option -pipe*/
+		initPresetExternalChannels((UBYTE*)getenv("FORM_PIPES"),AX.timeout);
+#endif
+
+#ifdef PARALLEL
+/*
+	Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master
+	Define preprocessor variable NPARALLELTASKS_ as a total number of processes
+*/
+	{
+		UBYTE buf[32];
+		sprintf((char*)buf,"%d",PF.me);
+		PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
+		sprintf((char*)buf,"%d",PF.numtasks);
+		PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
+	}
+#else
+	PutPreVar((UBYTE *)"PARALLELTASK_",(UBYTE *)"0",0,0);
+	PutPreVar((UBYTE *)"NPARALLELTASKS_",(UBYTE *)"1",0,0);
+#endif
+
+	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
+}
+
+/*
+ 		#] StartMore : 
+ 		#[ PrintHeader :
+*/
+
+VOID PrintHeader()
+{
+#ifdef PARALLEL
+	if ( PF.me == MASTER && !AM.silent ) {
+#else
+	if ( !AM.silent ) {
+#endif
+		MesPrint(FORMNAME" by J.Vermaseren %s(%s) Run at: %s",
+		         VERSIONSTR,PRODUCTIONDATE,MakeDate());
+	}
+}
+
+/*
+ 		#] PrintHeader : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -921,6 +979,11 @@ WORD IniVars()
 #endif
 	WORD *fi, i, one = 1;
 	CBUF *C = cbuf+AC.cbufnum;
+	UBYTE buf[32];
+
+	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
+	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
+
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
 	AR.SortType = AC.SortType = AC.lSortType = AM.gSortType;
@@ -1186,27 +1249,17 @@ ALLPRIVATES *ABdummy[10];
 
 int main(int argc, char **argv)
 {
-	UBYTE buf[21]; /* long enough for 64 bit integers */
-	char *sa;
-	int i = sizeof(A);
-
+	bzero((VOID *)(&A),sizeof(A)); /* make sure A is initialized at zero */
 	iniTools();
+#ifdef TRAPSIGNALS
+	setSignalHandlers();
+#endif
 
 #ifdef WITHPTHREADS
 	AB = ABdummy;
 	StartHandleLock();
-#endif
-/*[28apr2004 mt]:*/
-#ifdef TRAPSIGNALS
-	setSignalHandlers();
-#endif
-/*:[28apr2004 mt]*/
-
-	sa = (char *)(&A); while ( --i >= 0 ) *sa++ = 0;
-/*
-	To prevent some undefined variables
-*/
-#ifndef WITHPTHREADS
+	BeginIdentities();
+#else
 	TimeCPU(0);
 	TimeWallClock(0);
 #endif
@@ -1215,22 +1268,6 @@ int main(int argc, char **argv)
 	if ( PF_Init(&argc,&argv) ) exit(-1);
 #endif
 
-/*[08may2006 mt]:*/
-#ifdef WITHEXTERNALCHANNEL
-	AX.currentExternalChannel=0;
-	AX.killSignal=SIGKILL;
-	AX.killWholeGroup=1;
-	AX.daemonize=1;
-	AX.currentPrompt=0;
-	AX.timeout=1000;/*One second to initialize preset channels*/
-	AX.shellname=strDup1((UBYTE *)"/bin/sh -c","external channel shellname");
-	AX.stderrname=strDup1((UBYTE *)"/dev/null","external channel stderrname");
-#endif
-/*:[08may2006 mt]*/
-
-#ifdef WITHPTHREADS
-	BeginIdentities();
-#endif
 	StartFiles();
 	StartVariables();
 
@@ -1240,94 +1277,19 @@ int main(int argc, char **argv)
 	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
 	if ( MakeSetupAllocs() ) Terminate(-2);
-/*[15may2006 mt]:*/
-#ifdef WITHEXTERNALCHANNEL
-	/*If env.variable "FORM_PIPES" is defined, we have to initialize 
-		corresponding pre-set external channels, see file extcmd.c.*/
-	/*This line must be after all setup settings: in future, timeout
-		could be changed at setup.*/
-	if(AX.timeout>=0)/*if AX.timeout<0, this was done by cmdline option -pipe*/
-		initPresetExternalChannels((UBYTE*)getenv("FORM_PIPES"),AX.timeout);
-#endif
-/*:[15may2006 mt]*/
-
-#ifdef PARALLEL
-/*
-	Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master
-	Define preprocessor variable NPARALLELTASKS_ as a total number of processes
-*/
-	sprintf((char*)buf,"%d",PF.me);
-	PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
-	sprintf((char*)buf,"%d",PF.numtasks);
-	PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
-	if ( PF.me == MASTER && !AM.silent )
-#else
-/*[20sep2005 mt]:*/
-/*
-	Define preprocessor variable PARALLELTASK_ as 0:
-*/
-	PutPreVar((UBYTE *)"PARALLELTASK_",(UBYTE *)"0",0,0);
-/*
-	Define preprocessor variable NPARALLELTASKS_ as 1:
-*/
-	PutPreVar((UBYTE *)"NPARALLELTASKS_",(UBYTE *)"1",0,0);
-/*:[20sep2005 mt]*/
-	if ( !AM.silent ) 
-#endif
-		MesPrint(FORMNAME" by J.Vermaseren %s(%s) Run at: %s",
-		         VERSIONSTR,PRODUCTIONDATE,MakeDate());
-	PutPreVar((UBYTE *)"NAME_",AM.InputFileName,0,0);
+	StartMore();
+	PrintHeader();
 	InitRecovery();
-/*[20oct2009 mt]:*/
-	{/*Block*/
-	int ret=CheckRecoveryFile();
-	if ( ret < 0 ){/*In ParFORM CheckRecoveryFile() may return a fatal error.*/
-		MesPrint("Fail checking recovery file");
-		Terminate(-1);
-	}
-	else if  ( ret > 0 ) {
-/*:[20oct2009 mt]*/
-		if ( AC.CheckpointFlag != -1 ) {
-			/* recovery file exists but recovery option is not given */
-			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
-			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
-			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-			if(PF.me != MASTER)
-				remove(RecoveryFilename());
-#endif
-/*:[20oct2009 mt]*/
-			Terminate(-1);
-		}
-	}
-	else {
-		if ( AC.CheckpointFlag == -1 ) {
-			/* recovery option given but recovery file does not exist */
-			MesPrint("Option -R for recovery has been given, but the recovery file %s does not exist!", RecoveryFilename());
-			Terminate(-1);
-		}
-	}
-/*[20oct2009 mt]:*/
-	}/*Block*/
-/*:[20oct2009 mt]*/
+	CheckRecoveryFile();
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
 	AS.MultiThreaded = 0;
 #ifdef WITHPTHREADS
 	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	ReserveTempFiles(1);
-	if ( StartAllThreads(AM.totalnumberofthreads) ) {
-		MesPrint("Cannot start %d threads",AM.totalnumberofthreads);
-		Terminate(-1);
-	}
-#else
-	ReserveTempFiles(0);
-#endif
-	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
-	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
-#ifdef WITHPTHREADS
+	StartAllThreads(AM.totalnumberofthreads);
 	IniFbufs();
 #else
+	ReserveTempFiles(0);
 	IniFbuffer(AT.fbufnum);
 #endif
 	IniVars();
@@ -1336,11 +1298,6 @@ int main(int argc, char **argv)
 	TimeChildren(0);
 	TimeWallClock(0);
 	PreProcessor();
-#ifdef WITHPTHREADS
-#ifdef WITHPCOUNTER
-	MesPrint("pcounter = %l",pcounter);
-#endif
-#endif
 	Terminate(0);
 	return(0);
 }
@@ -1441,11 +1398,6 @@ VOID Terminate(int errorcode)
 #endif
 		Crash();
 	}
-#ifdef WITHPTHREADS
-#ifdef WITHPCOUNTER
-	MesPrint("pcounter = %l",pcounter);
-#endif
-#endif
 #ifdef TRAPSIGNALS
 	exitInProgress=1;
 #endif

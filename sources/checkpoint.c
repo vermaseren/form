@@ -152,7 +152,6 @@ static int done_snapshot = 0;
  *  Checks whether a snapshot/recovery file exists.
  *  Returns 1 if it exists, 0 otherwise.
  */
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 
 /**
@@ -228,23 +227,44 @@ static int PF_CheckRecoveryFile()
 	return(1);
 }
 #endif
-/*:[20oct2009 mt]*/
+
 int CheckRecoveryFile()
 {
-/*[20oct2009 mt]:*/
+	int ret = 0;
 #ifdef PARALLEL
-	return(PF_CheckRecoveryFile());
+	ret = PF_CheckRecoveryFile();
 #else
 	FILE *fd;
-/*:[20oct2009 mt]*/
 	if ( (fd = fopen(recoveryfile, "r")) ) {
 		fclose(fd);
-		return(1);
+		ret = 1;
 	}
-	return(0);
-/*[20oct2009 mt]:*/
 #endif
-/*:[20oct2009 mt]*/
+	if ( ret < 0 ){/*In ParFORM CheckRecoveryFile() may return a fatal error.*/
+		MesPrint("Fail checking recovery file");
+		Terminate(-1);
+	}
+	else if  ( ret > 0 ) {
+		if ( AC.CheckpointFlag != -1 ) {
+			/* recovery file exists but recovery option is not given */
+			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
+			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
+			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
+#ifdef PARALLEL
+			if(PF.me != MASTER)
+				remove(RecoveryFilename());
+#endif
+			Terminate(-1);
+		}
+	}
+	else {
+		if ( AC.CheckpointFlag == -1 ) {
+			/* recovery option given but recovery file does not exist */
+			MesPrint("Option -R for recovery has been given, but the recovery file %s does not exist!", RecoveryFilename());
+			Terminate(-1);
+		}
+	}
+	return(ret);
 }
 
 /*
@@ -333,13 +353,11 @@ static char *InitName(char *str, char *ext)
 void InitRecovery()
 {
 	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	sprintf(basename,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
 	/*Now basename has a form ?XXXXFORMrecv where ? == 'm' for master and 's' for slave,
 		XXXX is a zero - padded PF.me*/
 #endif	
-/*:[20oct2009 mt]*/
 	recoveryfile = (char*)Malloc1(5*(lenpath+strlen(basename)+4+1),"InitRecovery");
 	intermedfile = InitName(recoveryfile, "tmp");
 	sortfile     = InitName(intermedfile, "XXX");
