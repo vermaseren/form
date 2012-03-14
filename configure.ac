@@ -83,7 +83,6 @@ case $host_os in
 		;;
 esac
 AM_CONDITIONAL([ONAPPLE], [test "x$print_os" = xOSX])
-AM_CONDITIONAL([ONCYGWIN], [test "x$print_os" = xCygwin])
 case $host_cpu in
 	i?86 )
 		print_cpu="Pentium"
@@ -143,6 +142,8 @@ AS_IF([test "x$with_api" = xwindows],
 	[print_api=Windows
 	AC_CHECK_HEADERS([windows.h], [],[AC_MSG_FAILURE([windows.h is not found])] )
 	AC_DEFINE(WINDOWS, , [Compiling for WINDOWS system])])
+AM_CONDITIONAL([ONUNIX], [test "x$with_api" = xposix])
+AM_CONDITIONAL([ONWINDOWS], [test "x$with_api" = xwindows])
 
 # Check for data model
 AC_CHECK_SIZEOF([char])

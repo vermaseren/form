@@ -16,7 +16,6 @@ SRCBASE = \
 	fsizes.h \
 	ftypes.h \
 	function.c \
-	fwin.h \
 	if.c \
 	index.c \
 	inivar.h \
@@ -54,17 +53,28 @@ SRCBASE = \
 	structs.h \
 	symmetr.c \
 	tables.c \
-	threads.c \
 	token.c \
 	tools.c \
 	transform.c \
-	unixfile.c \
-	unix.h \
 	variable.h \
 	wildcard.c \
 	mytime.h \
 	mytime.cc \
 	vector.h
+
+if ONUNIX
+SRCBASE += \
+	unixfile.c \
+	unix.h
+endif
+
+if ONWINDOWS
+SRCBASE += \
+	fwin.h
+endif
+
+SRCPTHREAD = \
+	threads.c
 
 SRCPARALLEL = \
 	mpi.c \
@@ -126,16 +136,6 @@ COMPILEFLAGS += -mmacosx-version-min=10.4
 endif
 endif
 
-if ONCYGWIN
-if ONILP32
-if USINGGCC
-# A workaround for alingof(off64_t) = 8 on 32bit System.
-COMPILEFLAGS += -fpack-struct=4
-DEBUGCOMPILEFLAGS += -fpack-struct=4
-endif
-endif
-endif
-
 # NOTE: maude_CXXFLAGS is not used while linking maude by default
 #       in automake < 1.10. A workaround is to define maude_LINK
 #       explicitly in all cases. (TU 22 Sep 2011)
@@ -174,7 +174,7 @@ endif
 
 if BUILD_TFORM
 bin_PROGRAMS += tform
-tform_SOURCES = $(SRCBASE)
+tform_SOURCES = $(SRCBASE) $(SRCPTHREAD)
 tform_CPPFLAGS = $(DATEFLAG) -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
 tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
@@ -189,7 +189,7 @@ endif
 
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
-tvorm_SOURCES = $(SRCBASE)
+tvorm_SOURCES = $(SRCBASE) $(SRCPTHREAD)
 tvorm_CPPFLAGS = $(DATEFLAG) -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
