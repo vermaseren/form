@@ -1525,7 +1525,6 @@ WORD GetFromStore(WORD *to, POSITION *position, RENUMBER renumber, WORD *InCompS
 	gfs++;
 	sc.next = AT.StoreCache;
 	sold = s = &sc;
-//	sold = s = (STORECACHE)(&AT.StoreCache);
 	snext = s->next;
 	while ( snext ) {
 		sold = s;

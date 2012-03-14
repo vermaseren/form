@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
  
 #ifndef __STRUCTS__
 
@@ -109,7 +109,7 @@ typedef struct InDeXeNtRy {
 	WORD	nfunctions;			/**< Number of functions in the list */
 	WORD    size;				/**< Size of variables field */
 	SBYTE	name[MAXENAME+1];	/**< Name of expression */
-	PADLONG(0,5,MAXENAME+1);
+	PADPOSITION(0,1,0,5,MAXENAME+1);
 } INDEXENTRY;
 
 /**
@@ -155,7 +155,7 @@ typedef struct FiLeDaTa {
 	POSITION Position;
 	WORD Handle;
 	WORD dirtyflag;
-	PADLONG(0,2,0);
+	PADPOSITION(0,0,0,2,0);
 } FILEDATA;
 
 /**
@@ -177,6 +177,7 @@ typedef struct VaRrEnUm {
  */
 
 typedef struct ReNuMbEr {
+	POSITION   startposition;
 	/* First stage renumbering */
 	VARRENUM   symb;          /**< Symbols */
 	VARRENUM   indi;          /**< Indices */
@@ -187,23 +188,11 @@ typedef struct ReNuMbEr {
 	WORD       *indnum;       /**< Renumbered indices */
 	WORD       *vecnum;       /**< Renumbered vectors */
 	WORD       *funnum;       /**< Renumbered functions */
-	POSITION   startposition;
+	PADPOSITION(4,0,0,0,sizeof(VARRENUM)*4);
 } *RENUMBER;
 
-/**
- *
- */
-
-typedef struct {
-	WORD	nsymbols;			/* Number of symbols in the list */
-	WORD	nindices;			/* Number of indices in the list */
-	WORD	nvectors;			/* Number of vectors in the list */
-	WORD	nfunctions;			/* Number of functions in the list */
-	PADLONG(0,4,0);
-} VARINFO;
-
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
@@ -239,19 +228,6 @@ typedef struct {
 } KEYWORD;
 
 /**
- *	The names of variables are kept in an array. Elements of type NAMELIST
- *	point to the names and tell us what these names corresponds to in
- *	internal notation (type of the variable and its number)
- */
-
-typedef struct NameLi {         /* For fast namesearching */
-    WORD where;
-    WORD type;
-    WORD number;
-	PADLONG(0,3,0);
-} NAMELIST;
-
-/**
  *  The names of variables are kept in an array. Elements of type #NAMENODE
  *  define a tree (that is kept balanced) that make it easy and fast to look for
  *  variables. See also #NAMETREE.
@@ -278,11 +254,11 @@ typedef struct NaMeNode {
 typedef struct NaMeTree {
 	NAMENODE *namenode;      /**< [D] Vector of #NAMENODE's. Number of elements is #nodesize.
 	                              =0 if no memory has been allocated. */
-	LONG     nodesize;       /**< Maximum number of elements in #namenode. */
-	LONG     nodefill;       /**< Number of currently used nodes in #namenode. */
 	UBYTE    *namebuffer;    /**< [D] Buffer that holds all the name strings refered to by the
 	                              NAMENODE's. Allocation size is #namesize. =0 if no memory
 	                              has been allocated. */
+	LONG     nodesize;       /**< Maximum number of elements in #namenode. */
+	LONG     nodefill;       /**< Number of currently used nodes in #namenode. */
 	LONG     namesize;       /**< Allocation size of #namebuffer in bytes. */
 	LONG     namefill;       /**< Number of bytes occupied. */
 	LONG     oldnamefill;    /**< UNUSED */
@@ -321,7 +297,6 @@ typedef struct MiNmAx {
 	WORD mini;          /**< Minimum value */
 	WORD maxi;          /**< Maximum value */
 	WORD size;          /**< Value of one unit in this position. */
-	PADLONG(0,3,0);
 } MINMAX;
 
 /**
@@ -333,7 +308,7 @@ typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
 	POSITION next;				/* Place of next indexed bracket in expr */
 	LONG bracket;				/* Offset of position in bracketbuffer */
 	LONG termsinbracket;
-	PADPOINTER(2,0,0,0);
+	PADPOSITION(0,2,0,0,0);
 } BRACKETINDEX;
 
 /**
@@ -403,14 +378,14 @@ typedef struct TaBlEs {
  */
 
 typedef struct ExPrEsSiOn {
+	POSITION	onfile;
+	POSITION	prototype;
 	RENUMBER renum;			/* For Renumbering of global stored expressions */
 	BRACKETINFO *bracketinfo;
 	BRACKETINFO *newbracketinfo;
 	WORD	*renumlists;    /**< Allocated only for threaded version if variables exist,
 	                             else points to AN.dummyrenumlist */
 	WORD	*inmem;			/* If in memory like e.g. a polynomial */
-	POSITION	onfile;
-	POSITION	prototype;
 	LONG	counter;
 	LONG	name;
 	WORD	hidelevel;
@@ -426,9 +401,9 @@ typedef struct ExPrEsSiOn {
 	WORD	numfactors;
 #ifdef PARALLELCODE
     WORD    partodo;        /* Whether to be done in parallel mode */
-	PADPOINTER(2,0,12,0);
+	PADPOSITION(5,2,0,12,0);
 #else
-	PADPOINTER(2,0,11,0);
+	PADPOSITION(5,2,0,11,0);
 #endif
 } *EXPRESSIONS;
 
@@ -550,7 +525,11 @@ typedef struct DoLlArS {
 	WORD	zero;
 	WORD	numdummies;
 	WORD	nfactors;
+#ifdef WITHPTHREADS
 	PADPOINTER(2,0,6,0);
+#else
+	PADPOINTER(2,0,6,sizeof(pthread_mutex_t)*2);
+#endif
 } *DOLLARS;
 
 /**
@@ -586,6 +565,7 @@ typedef struct fixedset {
 typedef struct TaBlEbAsEsUbInDeX {
 	POSITION where;
 	LONG size;
+	PADPOSITION(0,1,0,0,0);
 } TABLEBASESUBINDEX;
 
 /**
@@ -593,13 +573,13 @@ typedef struct TaBlEbAsEsUbInDeX {
  */
 
 typedef struct TaBlEbAsE {
+	POSITION fillpoint;
+	POSITION current;
 	UBYTE *name;
 	int *tablenumbers;		/* Number of each table */
 	TABLEBASESUBINDEX *subindex;		/* For each table */
-	POSITION fillpoint;
-	POSITION current;
 	int numtables;
-	PADPOINTER(0,1,0,0);
+	PADPOSITION(3,0,1,0,0);
 } TABLEBASE;
 
 /**
@@ -620,7 +600,7 @@ typedef struct {
 } FUN_INFO;
  
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Files :
 */
 
@@ -636,6 +616,8 @@ typedef struct {
  */
 
 typedef struct FiLe {
+	POSITION POposition;    	/* File position */
+    POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
     WORD *PObuffer;             /* Address of the intermediate buffer */
     WORD *POstop;               /* End of the buffer */
     WORD *POfill;               /* Fill position of the buffer */
@@ -651,8 +633,6 @@ typedef struct FiLe {
 	z_streamp zsp;				/* The pointer to the stream struct for gzip */
 	Bytef *ziobuffer;			/* The output buffer for compression */
 #endif
-	POSITION POposition;    	/* File position */
-    POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
 	ULONG numblocks;			/* Number of blocks in file */
 	ULONG inbuffer;				/* Block in the buffer */
     LONG POsize;                /* size of the buffer */
@@ -665,10 +645,18 @@ typedef struct FiLe {
 #endif
     int handle;					/**< Our own handle. Equal -1 if no file exists. */
 	int active;					/* File is open or closed. Not used. */
+#ifdef WITHPTHREADS
 #ifdef WITHZLIB
-	PADPOINTER(4,2,0,0);
+	PADPOSITION(11,5,2,0,sizeof(pthread_mutex_t));
 #else
-	PADPOINTER(3,2,0,0);
+	PADPOSITION(9,4,2,0,sizeof(pthread_mutex_t));
+#endif
+#else
+#ifdef WITHZLIB
+	PADPOSITION(7,4,2,0,0);
+#else
+	PADPOSITION(5,3,2,0,0);
+#endif
 #endif
 } FILEHANDLE;
 
@@ -682,6 +670,9 @@ typedef struct FiLe {
  */
  
 typedef struct StreaM {
+	off_t fileposition;
+	off_t linenumber;
+	off_t prevline;
 	UBYTE *buffer;        /**< [D] Size in buffersize */
 	UBYTE *pointer;       /**< pointer into buffer memory */
 	UBYTE *top;           /**< pointer into buffer memory */
@@ -689,9 +680,6 @@ typedef struct StreaM {
 	UBYTE *name;          /**< [D] */
 	UBYTE *pname;         /**< for DOLLARSTREAM and PREVARSTREAM it points always to name, else it
 	                           is undefined */
-	off_t fileposition;
-	off_t linenumber;
-	off_t prevline;
 	LONG buffersize;
 	LONG bufferposition;
 	LONG inbuffer;
@@ -707,11 +695,11 @@ typedef struct StreaM {
 	UBYTE isnextchar;
 	UBYTE nextchar[2];
 	UBYTE reserved;
-	PADPOINTER(3,9,0,4);
+	PADPOSITION(6,3,9,0,4);
 } STREAM;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -764,12 +752,11 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 	WORD		*perm;		/* number */
 	WORD		*inlist;	/* number */
 	WORD		sgn,num,level,factor,allsign;
-	WORD		allignment;
-	PADPOINTER(0,0,6,0);
+	PADPOINTER(0,0,5,0);
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
 
@@ -906,7 +893,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
@@ -989,11 +976,11 @@ typedef struct NeStInG {
  */
 
 typedef struct StOrEcAcHe {
-	struct StOrEcAcHe *next;
 	POSITION position;
 	POSITION toppos;
+	struct StOrEcAcHe *next;
 	WORD buffer[2];
-	PADPOINTER(0,0,2,0);
+	PADPOSITION(1,0,0,2,0);
 } *STORECACHE;
 
 /**
@@ -1036,6 +1023,8 @@ typedef struct DiStRiBuTe {
  */
 
 typedef struct sOrT {
+	FILEHANDLE file;			/* The own sort file */
+	POSITION SizeInFile[3];		/* Sizes in the various files */
 	WORD *lBuffer;				/* The large buffer */
 	WORD *lTop;					/* End of the large buffer */
 	WORD *lFill;				/* The filling point of the large buffer */
@@ -1065,9 +1054,7 @@ typedef struct sOrT {
 	POSITION *fPatchesStop;		/* Positions of output file patches */
 	POSITION *iPatches;			/* Input file patches, Points to fPatches or inPatches */
 	FILEHANDLE *f;				/* The actual output file */
-	FILEHANDLE file;			/* The own sort file */
 	FILEHANDLE **ff;			/* Handles for a staged sort */
-	POSITION SizeInFile[3];		/* Sizes in the various files */
 	LONG sTerms;				/* Terms in small buffer */
 	LONG LargeSize;				/* Size of large buffer (in words) */
 	LONG SmallSize;				/* Size of small buffer (in words) */
@@ -1095,7 +1082,11 @@ typedef struct sOrT {
 	WORD fPatchN;				/* Number of patches on file (output) */
 	WORD inNum;					/* Number of patches on file (input) */
 	WORD stage4;				/* Are we using stage4? */
-	PADPOINTER(12,12,3,0);
+#ifdef WITHZLIB
+	PADPOSITION(28,12,12,3,0);
+#else
+	PADPOSITION(25,12,12,3,0);
+#endif
 } SORTING;
 
 #ifdef WITHPTHREADS
@@ -1123,7 +1114,6 @@ typedef struct DeBuGgInG {
     int printflag;
     int logfileflag;
     int stdoutflag;
-    PADPOINTER(0,4,0,0);
 } DEBUGSTR;
 #endif
 
@@ -1149,7 +1139,7 @@ typedef struct ThReAdBuCkEt {
 	int  usenum;                /* Which is the term being used at the moment */
 	int  busy;                  /*  */
 	int  type;                  /* Doing brackets? */
-	PADPOINTER(5,5,0,0);
+	PADPOINTER(5,5,0,sizeof(pthread_mutex_t));
 } THREADBUCKET;
 
 #endif
@@ -1202,7 +1192,7 @@ typedef struct {
 } MODNUM;
 
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1215,6 +1205,7 @@ typedef struct {
  */
 
 struct M_const {
+    POSITION zeropos;              /* (M) is zero */
     SORTING *S0;                   /**< [D] The main sort buffer */
     UWORD   *gcmod;                /**< Global setting of modulus. Uses AC.cmod's memory */
     UWORD   *gpowmod;              /**< Global setting printing as powers. Uses AC.cmod's memory */
@@ -1229,7 +1220,6 @@ struct M_const {
     UBYTE   *gFortran90Kind;
 	UBYTE   *gextrasym;
 	UBYTE   *ggextrasym;
-    POSITION zeropos;              /* (M) is zero */
 #ifdef WITHPTHREADS
     pthread_rwlock_t handlelock;   /* (M) */
     pthread_mutex_t storefilelock; /* (M) */
@@ -1309,7 +1299,6 @@ struct M_const {
     int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
     int     gOldFactArgFlag;
     int     ggOldFactArgFlag;
-    int     res1;                  /* padding */
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1359,10 +1348,14 @@ struct M_const {
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
     WORD    BracketFactors[8];
-    WORD    padding1;
+#ifdef WITHPTHREADS
+	PADPOSITION(14,23,51,73,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+#else
+	PADPOSITION(14,21,51,73,0);
+#endif
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1420,7 +1413,7 @@ struct P_const {
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1434,6 +1427,7 @@ struct P_const {
 
 struct C_const {
     set_of_char separators;        /**< Separators in #call and #do */
+	POSITION StoreFileSize;        /* () Size of store file */
     NAMETREE *dollarnames;         /**< [D] Names of dollar variables */
     NAMETREE *exprnames;           /**< [D] Names of expressions */
     NAMETREE *varnames;            /**< [D] Names of regular variables */
@@ -1515,7 +1509,6 @@ struct C_const {
 #ifdef WITHPTHREADS
     pthread_mutex_t halfmodlock;   /* () Lock for adding buffer for halfmod */
 #endif
-	POSITION StoreFileSize;        /* () Size of store file */
     LONG    argstack[MAXNEST];     /* (C) {contents} Stack for nesting of Argument */
     LONG    insidestack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
     LONG    inexprstack[MAXNEST];  /* (C) {contents} Stack for Argument or Inside. */
@@ -1601,9 +1594,6 @@ struct C_const {
 #ifdef PARALLELCODE
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
-#else
-	int     dummyint1;
-	int     dummyint2;
 #endif
     int     origin;                /* Determines whether .sort or ModuleOption */
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
@@ -1648,15 +1638,19 @@ struct C_const {
     WORD    ToBeInFactors;
 #ifdef PARALLEL
     WORD    RhsExprInModuleFlag;   /* (C) Set by the compiler if RHS expressions exists. */
-#else
-	WORD dummyword1;
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
-	PADPOINTER((8+3*MAXNEST),68,(40+3*MAXNEST+MAXREPEAT),(COMMERCIALSIZE+MAXFLAGS+4));
+#if defined(WITHPTHREADS)
+	PADPOSITION(45,8+3*MAXNEST,68,39+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+#elif defined(PARALLEL)
+	PADPOSITION(45,8+3*MAXNEST,68,39+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+#else
+	PADPOSITION(43,8+3*MAXNEST,66,39+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+#endif
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1668,12 +1662,12 @@ struct C_const {
  */
 
 struct S_const {
+	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
 	pthread_mutex_t	outputslock;
 	pthread_mutex_t	MaxExprSizeLock;
 #endif
-	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
     POSITION *OldOnFile;           /* (S) File positions of expressions */
     WORD    *OldNumFactors;        /* ( ) NumFactors in (old) expression */
     WORD    *Oldvflags;            /* ( ) vflags in (old) expression */
@@ -1682,12 +1676,9 @@ struct S_const {
     int     MultiThreaded;         /* (S) Are we running multi-threaded? */
 #ifdef WITHPTHREADS
     int     MasterSort;            /* Final stage of sorting to the master */
-#else
+#endif
 #ifdef PARALLEL
 	int     printflag;
-#else
-	int     dummyint;
-#endif
 #endif
     int     Balancing;             /* For second stage loadbalancing */
     WORD    ExecMode;              /* (S) */
@@ -1695,13 +1686,17 @@ struct S_const {
     WORD    CollectOverFlag;       /* (R) Indicates overflow at Collect */
 #ifdef WITHPTHREADS
 	WORD	sLevel;                /* Copy of AR0.sLevel because it can get messy */
-#else
-	WORD    dummyword;
 #endif
-	PADLONG(5,3,0);
+#if defined(WITHPTHREADS)
+	PADPOSITION(3,0,5,3,sizeof(pthread_mutex_t)*3);
+#elif defined(PARALLEL)
+	PADPOSITION(3,0,5,2,0);
+#else
+	PADPOSITION(3,0,4,2,0);
+#endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1715,20 +1710,20 @@ struct S_const {
  */
 
 struct R_const {
+    FILEDATA    StoreData;         /* (O) */
+    FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
+    FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
+    POSITION DefPosition;          /* (R) Deferred position of keep brackets. */
     FILEHANDLE *infile;            /* (R) Points alternatingly to Fscr[0] or Fscr[1] */
     FILEHANDLE *outfile;           /* (R) Points alternatingly to Fscr[1] or Fscr[0] */
     FILEHANDLE *hidefile;          /* (R) Points to Fscr[2] */
-    FILEDATA    StoreData;         /* (O) */
 
     WORD    *CompressBuffer;       /* (M) */
     WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
     VOID    *CompareRoutine;
     ULONG   *wranfia;
-    FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
-    FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
 
-    POSITION DefPosition;          /* (R) Deferred position of keep brackets. */
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
     LONG    InHiBuf;               /* (R) Characters in hide buffer. Scratch file. */
@@ -1742,12 +1737,10 @@ struct R_const {
 	int     outtohide;             /* Indicates that output is directly to hide */
 #ifdef WITHPTHREADS
     int     exprtodo;              /* The expression to do in parallel mode */
-    int     res1;                  /* For allignment */
 #endif
     int     wranfcall;
 	int     wranfnpair1;
 	int     wranfnpair2;
-	int     dummyforpadding;
 #if ( BITSINWORD == 32 )
     WORD    PrimeList[5000];
 	WORD    numinprimelist;
@@ -1773,10 +1766,23 @@ struct R_const {
     WORD    CurExpr;               /* (S) Number of current expression */
     WORD    SortType;              /* A copy of AC.SortType to play with */
     WORD    ShortSortCount;        /* For On FewerStatistics 10; */
+#if ( BITSINWORD == 32 )
+#ifdef WITHPTHREADS
+	PADPOSITION(8,7,8,5022,0);
+#else
+	PADPOSITION(8,7,7,5022,0);
+#endif
+#else
+#ifdef WITHPTHREADS
+	PADPOSITION(8,7,8,20,0);
+#else
+	PADPOSITION(8,7,7,20,0);
+#endif
+#endif
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -1811,8 +1817,6 @@ struct T_const {
     WORD    *n_coef;               /* (M) Used by normal. local. */
     WORD    *n_llnum;              /* (M) Used by normal. local. */
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
-  	WORD     small_power_maxx;     /*     size of the cache for small powers  */
-	  WORD     small_power_maxn;     /*     size of the cache for small powers */
   	WORD    *small_power_n;        /*     length of the number */
 	  UWORD  **small_power;          /*     the number*/	
     UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
@@ -1847,6 +1851,8 @@ struct T_const {
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
     int     bracketindexflag;      /* Are brackets going to be indexed? */
+    WORD    small_power_maxx;      /*     size of the cache for small powers  */
+    WORD    small_power_maxn;      /*     size of the cache for small powers */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
     WORD    comsym[8];             /* () Used in tools.c = {8,SYMBOL,4,0,1,1,1,3} */
     WORD    comnum[4];             /* () Used in tools.c = { 4,1,1,3 } */
@@ -1870,9 +1876,18 @@ struct T_const {
 	WORD    inprimelist;
 	WORD    sizeprimelist;
     WORD    fromindex;             /* Tells the compare routine whether call from index */
+#ifdef WITHPTHREADS
+#ifdef WITHSORTBOTS
+	PADPOINTER(4,14,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+#else
+	PADPOINTER(4,12,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+#endif
+#else
+	PADPOINTER(4,10,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+#endif
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -1887,6 +1902,9 @@ struct T_const {
  */
 
 struct N_const {
+    POSITION OldPosIn;             /* (R) Used in sort. */
+    POSITION OldPosOut;            /* (R) Used in sort */
+	POSITION theposition;          /* () Used in index.c */
     WORD    *EndNest;              /* (R) Nesting of function levels etc. */
     WORD    *Frozen;               /* (R) Bracket info */
     WORD    *FullProto;            /* (R) Prototype of a subexpression or table */
@@ -1947,9 +1965,7 @@ struct N_const {
 	UWORD	*SHcombi;
 	WORD    *poly_vars;
     UWORD   *cmod;                 /* Local setting of modulus. Pointer to value. */
-    POSITION OldPosIn;             /* (R) Used in sort. */
-    POSITION OldPosOut;            /* (R) Used in sort */
-	POSITION theposition;          /* () Used in index.c */
+	SHvariables SHvar;
 	LONG	deferskipped;          /* () Used in proces.c store.c and parallel.c */
 	LONG	InScratch;             /* () Used in sort.c */
 	LONG	SplitScratchSize;      /* () Used in sort.c */
@@ -1964,7 +1980,6 @@ struct N_const {
 	LONG	last2;                 /* () Used in proces.c */
 	LONG	last3;                 /* () Used in proces.c */
 #endif
-	SHvariables SHvar;
 	LONG	SHcombisize;
     int     NumTotWildArgs;        /* (N) Used in pattern matching */
     int     UseFindOnly;           /* (N) Controls pattern routines */
@@ -1989,7 +2004,6 @@ struct N_const {
 	int		polysortflag;
     int     nogroundlevel;         /* () Used to see whether pattern matching at groundlevel */
 	int		subsubveto;            /* () Sabotage combining subexpressions in TestSub */
-    int     dummyint;
 	WORD	MaxRenumScratch;       /* () used in reshuf.c */
     WORD    oldtype;               /* (N) WildCard info at pattern matching */
     WORD    oldvalue;              /* (N) WildCard info at pattern matching */
@@ -2016,10 +2030,39 @@ struct N_const {
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
 #endif
+#ifdef WITHPTHREADS
+#ifdef WHICHSUBEXPRESSION
+#ifdef WITHZLIB
+	PADPOSITION(54,11,23,24,sizeof(SHvariables));
+#else
+	PADPOSITION(52,11,23,24,sizeof(SHvariables));
+#endif
+#else
+#ifdef WITHZLIB
+	PADPOSITION(53,9,23,22,sizeof(SHvariables));
+#else
+	PADPOSITION(51,9,23,22,sizeof(SHvariables));
+#endif
+#endif
+#else
+#ifdef WHICHSUBEXPRESSION
+#ifdef WITHZLIB
+	PADPOSITION(52,9,23,24,sizeof(SHvariables));
+#else
+	PADPOSITION(50,9,23,24,sizeof(SHvariables));
+#endif
+#else
+#ifdef WITHZLIB
+	PADPOSITION(51,7,23,22,sizeof(SHvariables));
+#else
+	PADPOSITION(49,7,23,22,sizeof(SHvariables));
+#endif
+#endif
+#endif
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2031,6 +2074,8 @@ struct N_const {
  */
 
 struct O_const {
+    FILEDATA    SaveData;          /* (O) */
+    STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
     UBYTE   *OutputLine;           /* (O) Sits also in debug statements */
     UBYTE   *OutStop;              /* (O) Top of OutputLine buffer */
     UBYTE   *OutFill;              /* (O) Filling point in OutputLine buffer */
@@ -2041,8 +2086,6 @@ struct O_const {
     UBYTE   *wpoin;                /* (O) Only when storing file {local?} */
     UBYTE   *DollarOutBuffer;      /* (O) Outputbuffer for Dollars */
     UBYTE   *CurBufWrt;            /* (O) Name of currently written expr. */
-    FILEDATA    SaveData;          /* (O) */
-    STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
     VOID    (*FlipWORD)(UBYTE *);  /* ()  Function pointers for translations. Initialized by ReadSaveHeader() */
     VOID    (*FlipLONG)(UBYTE *);
     VOID    (*FlipPOS)(UBYTE *);
@@ -2056,18 +2099,10 @@ struct O_const {
     VOID    (*CheckPower)(UBYTE *);
     VOID    (*RenumberVec)(UBYTE *);
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
-#ifdef mBSD
-#ifdef MICROTIME
+#if defined(mBSD) && defined(MICROTIME)
     LONG    wrap;                  /* (O) For statistics time. wrap around */
     LONG    wrapnum;               /* (O) For statistics time. wrap around */
 #endif
-#endif
-/*
-#ifdef _MSC_VER
-    LONG    wrap;
-    LONG    wrapnum;
-#endif
-*/
     LONG    NumInBrack;            /* (O) For typing [] option in print */
     LONG    wlen;                  /* (O) Used to store files. */
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
@@ -2092,10 +2127,14 @@ struct O_const {
     WORD    ErrorBlock;
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
-	PADPOINTER(4,3,16,1);
+#if defined(mBSD) && defined(MICROTIME)
+	PADPOSITION(23,6,3,16,1);
+#else
+	PADPOSITION(23,4,3,16,1);
+#endif
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2107,6 +2146,10 @@ struct O_const {
 
 struct X_const {
 	UBYTE *currentPrompt;
+	UBYTE *shellname;          /* if !=NULL (default is "/bin/sh -c"), start in 
+	                              the specified subshell*/
+	UBYTE *stderrname;         /* If !=NULL (default if "/dev/null"), stderr is 
+	                              redirected to the specified file*/
 	int timeout;               /* timeout to initialize preset channels.
 	                              If timeout<0, the preset channels are 
 	                              already initialized*/
@@ -2114,15 +2157,11 @@ struct X_const {
 	int killWholeGroup;        /* if 0, the signal is sent only to a process, 
 	                              if !=0 (default) is sent to a whole process group*/
 	int daemonize;             /* if !=0 (default), start in a daemon mode */
-	UBYTE *shellname;          /* if !=NULL (default is "/bin/sh -c"), start in 
-	                              the specified subshell*/
-	UBYTE *stderrname;         /* If !=NULL (default if "/dev/null"), stderr is 
-	                              redirected to the specified file*/
 	int	currentExternalChannel;
-	int alignmentdummy;
+	PADPOINTER(0,5,0,0);
 };
 /*
- 		#] X : 
+ 		#] X :
  		#[ Definitions :
 */
 
@@ -2135,11 +2174,12 @@ struct X_const {
 
 typedef struct AllGlobals {
     struct M_const M;
-    struct P_const P;
     struct C_const C;
     struct S_const S;
     struct O_const O;
+    struct P_const P;
 	struct X_const X;
+	PADPOSITION(0,0,0,0,sizeof(struct P_const)+sizeof(struct X_const));
 } ALLGLOBALS;
 
 /**
@@ -2149,8 +2189,9 @@ typedef struct AllGlobals {
 
 typedef struct AllPrivates {
     struct R_const R;
-    struct T_const T;
     struct N_const N;
+    struct T_const T;
+	PADPOSITION(0,0,0,0,sizeof(struct T_const));
 } ALLPRIVATES;
 
 #else
@@ -2161,20 +2202,21 @@ typedef struct AllPrivates {
 
 typedef struct AllGlobals {
     struct M_const M;
-    struct P_const P;
     struct C_const C;
     struct S_const S;
     struct R_const R;
-    struct T_const T;
     struct N_const N;
     struct O_const O;
+    struct P_const P;
+    struct T_const T;
 	struct X_const X;
+	PADPOSITION(0,0,0,0,sizeof(struct P_const)+sizeof(struct T_const)+sizeof(struct X_const));
 } ALLGLOBALS;
 
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
     #] A :
   	#[ FG :
 */
@@ -2211,7 +2253,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif
