@@ -63,12 +63,12 @@ typedef long MLONG;
 #define NUMOBJECTS 1024
 #define MAXINDEXSIZE 1000000000L
 #define NAMETABLESIZE 1008
-#define ELEMENTSIZE 200
+#define ELEMENTSIZE 256
 #else
 #define NUMOBJECTS 100
 #define MAXINDEXSIZE 33000000L
 #define NAMETABLESIZE 1008
-#define ELEMENTSIZE 100
+#define ELEMENTSIZE 128
 #endif
 
 int minosread(FILE *f,char *buffer,MLONG size);
@@ -98,8 +98,9 @@ typedef struct objects {
 	MLONG date;                 /* Time stamp */
 	MLONG tablenumber;          /* Number of table. Refers to name in special index */
 	MLONG uncompressed;         /* uncompressed size if compressed. If not: 0 */
-	MLONG dummy1;
-	MLONG dummy2;
+	MLONG spare1;
+	MLONG spare2;
+	MLONG spare3;
 	char element[ELEMENTSIZE];  /* table element in character form */
 } OBJECTS;
 

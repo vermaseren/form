@@ -29,7 +29,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 
@@ -45,7 +45,7 @@
 int withoutflush = 0;
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ Variables :
 */
  
@@ -58,7 +58,7 @@ static NAMESBLOCK scratchnamesblock;
                       x>>=8;} s += sizeof(type);
 
 /*
-  	#] Variables : 
+  	#] Variables :
   	#[ Utilities :
  		#[ minosread :
 */
@@ -76,7 +76,7 @@ int minosread(FILE *f,char *buffer,MLONG size)
 }
 
 /*
- 		#] minosread : 
+ 		#] minosread :
  		#[ minoswrite :
 */
 
@@ -94,7 +94,7 @@ int minoswrite(FILE *f,char *buffer,MLONG size)
 }
 
 /*
- 		#] minoswrite : 
+ 		#] minoswrite :
  		#[ str_dup :
 */
 
@@ -113,7 +113,7 @@ char *str_dup(char *str)
 }
 
 /*
- 		#] str_dup : 
+ 		#] str_dup :
  		#[ convertblock :
 */
 
@@ -135,8 +135,9 @@ void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode)
 			CTD(obj->date,s,MLONG,x,j)
 			CTD(obj->tablenumber,s,MLONG,x,j)
 			CTD(obj->uncompressed,s,MLONG,x,j)
-			CTD(obj->dummy1,s,MLONG,x,j)
-			CTD(obj->dummy2,s,MLONG,x,j)
+			CTD(obj->spare1,s,MLONG,x,j)
+			CTD(obj->spare2,s,MLONG,x,j)
+			CTD(obj->spare3,s,MLONG,x,j)
 			t = obj->element;
 			for ( j = 0; j < ELEMENTSIZE; j++ ) *s++ = *t++;
 		}
@@ -152,8 +153,9 @@ void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode)
 			CFD(obj->date,s,MLONG,x,j)
 			CFD(obj->tablenumber,s,MLONG,x,j)
 			CFD(obj->uncompressed,s,MLONG,x,j)
-			CFD(obj->dummy1,s,MLONG,x,j)
-			CFD(obj->dummy2,s,MLONG,x,j)
+			CFD(obj->spare1,s,MLONG,x,j)
+			CFD(obj->spare2,s,MLONG,x,j)
+			CFD(obj->spare3,s,MLONG,x,j)
 			t = obj->element;
 			for ( j = 0; j < ELEMENTSIZE; j++ ) *t++ = *s++;
 		}
@@ -162,7 +164,7 @@ void convertblock(INDEXBLOCK *in,INDEXBLOCK *out,int mode)
 }
 
 /*
- 		#] convertblock : 
+ 		#] convertblock :
  		#[ convertnamesblock :
 */
 
@@ -188,7 +190,7 @@ void convertnamesblock(NAMESBLOCK *in,NAMESBLOCK *out,int mode)
 }
 
 /*
- 		#] convertnamesblock : 
+ 		#] convertnamesblock :
  		#[ convertiniinfo :
 */
 
@@ -216,7 +218,7 @@ void convertiniinfo(INIINFO *in,INIINFO *out,int mode)
 }
 
 /*
- 		#] convertiniinfo : 
+ 		#] convertiniinfo :
  		#[ LocateBase :
 */
 
@@ -277,8 +279,8 @@ FILE *LocateBase(char **name, char **newname)
 }
 
 /*
- 		#] LocateBase : 
-  	#] Utilities : 
+ 		#] LocateBase :
+  	#] Utilities :
   	#[ ReadIndex :
 */
 
@@ -391,7 +393,7 @@ thisiswrong:
 }
 
 /*
-  	#] ReadIndex : 
+  	#] ReadIndex :
   	#[ WriteIndexBlock :
 */
 
@@ -412,7 +414,7 @@ int WriteIndexBlock(DBASE *d,MLONG num)
 }
 
 /*
-  	#] WriteIndexBlock : 
+  	#] WriteIndexBlock :
   	#[ WriteNamesBlock :
 */
 
@@ -433,7 +435,7 @@ int WriteNamesBlock(DBASE *d,MLONG num)
 }
 
 /*
-  	#] WriteNamesBlock : 
+  	#] WriteNamesBlock :
   	#[ WriteIndex :
 
 	Problem here is to get the links right.
@@ -498,7 +500,7 @@ int WriteIndex(DBASE *d)
 }
 
 /*
-  	#] WriteIndex : 
+  	#] WriteIndex :
   	#[ WriteIniInfo :
 */
 
@@ -515,7 +517,7 @@ int WriteIniInfo(DBASE *d)
 }
 
 /*
-  	#] WriteIniInfo : 
+  	#] WriteIniInfo :
   	#[ ReadIniInfo :
 */
 
@@ -538,7 +540,7 @@ int ReadIniInfo(DBASE *d)
 }
 
 /*
-  	#] ReadIniInfo : 
+  	#] ReadIniInfo :
   	#[ GetDbase :
 */
 
@@ -580,7 +582,7 @@ DBASE *GetDbase(char *filename)
 }
 
 /*
-  	#] GetDbase : 
+  	#] GetDbase :
   	#[ NewDbase :
 
 	Creates a new database with 'number' entries in the index.
@@ -672,8 +674,9 @@ getout:
 				d->iblocks[i]->objects[j].position = -1;
 				d->iblocks[i]->objects[j].tablenumber = 0;
 				d->iblocks[i]->objects[j].uncompressed = 0;
-				d->iblocks[i]->objects[j].dummy1 = 0;
-				d->iblocks[i]->objects[j].dummy2 = 0;
+				d->iblocks[i]->objects[j].spare1 = 0;
+				d->iblocks[i]->objects[j].spare2 = 0;
+				d->iblocks[i]->objects[j].spare3 = 0;
 				for ( jj = 0; jj < ELEMENTSIZE; jj++ ) d->iblocks[i]->objects[j].element[jj] = 0;
 			}
 		convertblock(d->iblocks[i],&scratchblock,TODISK);
@@ -715,7 +718,7 @@ getout:
 }
 
 /*
-  	#] NewDbase : 
+  	#] NewDbase :
   	#[ FreeTableBase :
 */
 
@@ -744,7 +747,7 @@ void FreeTableBase(DBASE *d)
 }
 
 /*
-  	#] FreeTableBase : 
+  	#] FreeTableBase :
   	#[ ComposeTableNames :
 
 		The nameblocks are supposed to be in memory.
@@ -796,7 +799,7 @@ gotall:;
 }
 
 /*
-  	#] ComposeTableNames : 
+  	#] ComposeTableNames :
   	#[ OpenDbase :
 */
 
@@ -825,7 +828,7 @@ DBASE *OpenDbase(char *filename)
 }
 
 /*
-  	#] OpenDbase : 
+  	#] OpenDbase :
   	#[ AddTableName :
 
 	Adds a name of a table. Writes the namelist to disk.
@@ -909,7 +912,7 @@ MLONG AddTableName(DBASE *d,char *name,TABLES T)
 }
 
 /*
-  	#] AddTableName : 
+  	#] AddTableName :
   	#[ GetTableName :
 
 	Gets a name of a table.
@@ -942,7 +945,7 @@ MLONG GetTableName(DBASE *d,char *name)
 }
 
 /*
-  	#] GetTableName : 
+  	#] GetTableName :
   	#[ PutTableNames :
 
 	Takes the names string in d->tablenames and puts it in the nblocks
@@ -1039,7 +1042,7 @@ int PutTableNames(DBASE *d)
 }
 
 /*
-  	#] PutTableNames : 
+  	#] PutTableNames :
   	#[ AddToIndex :
 */
 
@@ -1095,8 +1098,9 @@ dowrite:
 				ib[i]->objects[j].position = -1;
 				ib[i]->objects[j].tablenumber = 0;
 				ib[i]->objects[j].uncompressed = 0;
-				ib[i]->objects[j].dummy1 = 0;
-				ib[i]->objects[j].dummy2 = 0;
+				ib[i]->objects[j].spare1 = 0;
+				ib[i]->objects[j].spare2 = 0;
+				ib[i]->objects[j].spare3 = 0;
 				for ( jj = 0; jj < ELEMENTSIZE; jj++ ) ib[i]->objects[j].element[jj] = 0;
 			}
 			fseek(d->handle,0,SEEK_END);
@@ -1125,7 +1129,7 @@ dowrite:
 }
 
 /*
-  	#] AddToIndex : 
+  	#] AddToIndex :
   	#[ AddObject :
 */
 
@@ -1139,7 +1143,7 @@ MLONG AddObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs)
 }
 
 /*
-  	#] AddObject : 
+  	#] AddObject :
   	#[ FindTableNumber :
 */
 
@@ -1167,7 +1171,7 @@ MLONG FindTableNumber(DBASE *d,char *name)
 }
 
 /*
-  	#] FindTableNumber : 
+  	#] FindTableNumber :
   	#[ WriteObject :
 */
 
@@ -1206,7 +1210,7 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 	while ( *a ) *s++ = *a++;
 	*s++ = 0;
 	while ( n < ELEMENTSIZE ) { *s++ = 0; n++; }
-	obj->dummy1 = obj->dummy2 = 0;
+	obj->spare1 = obj->spare2 = obj->spare3 = 0;
 
 	fseek(d->handle,0,SEEK_END);
 	position = ftell(d->handle);
@@ -1256,7 +1260,7 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 }
 
 /*
-  	#] WriteObject : 
+  	#] WriteObject :
   	#[ ReadObject :
 
 	Returns a pointer to the proper rhs
@@ -1335,7 +1339,7 @@ foundelement:;
 }
 
 /*
-  	#] ReadObject : 
+  	#] ReadObject :
   	#[ ReadijObject :
 
 	Returns a pointer to the proper rhs
@@ -1387,7 +1391,7 @@ char *ReadijObject(DBASE *d,MLONG i,MLONG j,char *arguments)
 }
 
 /*
-  	#] ReadijObject : 
+  	#] ReadijObject :
   	#[ ExistsObject :
 
 	Returns 1 if Object exists
@@ -1417,7 +1421,7 @@ int ExistsObject(DBASE *d,MLONG tablenumber,char *arguments)
 }
 
 /*
-  	#] ExistsObject : 
+  	#] ExistsObject :
   	#[ DeleteObject :
 
 	Returns 1 if Object has been deleteted.
@@ -1453,6 +1457,6 @@ int DeleteObject(DBASE *d,MLONG tablenumber,char *arguments)
 }
 
 /*
-  	#] DeleteObject : 
+  	#] DeleteObject :
 */
 
