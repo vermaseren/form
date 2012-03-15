@@ -127,7 +127,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 	for (map<WORD,int>::iterator i=cnt.begin(); i!=cnt.end(); i++)
 		order.push_back(make_pair(i->second, i->first));
 	sort(order.rbegin(), order.rend());
-
+	
 	// find the renumbering scheme (new numbers are 0,1,...,#vars-1)
 	map<WORD,WORD> renum;
 	AN.poly_num_vars = order.size();
@@ -891,6 +891,55 @@ VOID print_instructions (const vector<WORD> &instr, WORD numexpr, WORD extraoffs
   	#[ Optimize:
 */
 
+/*
+// for debugging
+void print_stats (WORD *expr, vector<WORD> instr) {
+
+	// analyse expression
+	int cntpow=0, cntmul=0, cntadd=0;
+
+	for (WORD *t=expr; *t!=0; t+=*t) {
+
+		if (t!=expr) cntadd++;
+		if (*t==ABS(*(t+*t-1))+1) continue;
+				
+		int cntsym=0;
+		
+		if (t[1]==SYMBOL)
+			for (int i=3; i<t[2]; i+=2) {
+				if (t[i+1]>2) cntpow++;
+				if (t[i+1]==2) cntmul++;
+				cntsym++;
+			}
+
+		int n = *(t+*t-1);
+		if (ABS(n)!=3 || *(t+*t-3)!=1) cntsym++;
+
+		cntmul+=cntsym-1;
+	}
+
+	MesPrint ("*** STATS: original  %dP + %dM + %dA = %d", cntpow,cntmul,cntadd,cntpow+cntmul+cntadd);
+
+	// analyse instructions	
+	cntpow=cntmul=cntadd=0;
+
+	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) {
+		for (WORD *t=&instr[i+3]; *t!=0; t+=*t) {
+			if (t!=&instr[i+3]) {
+				if (instr[i+1]==OPER_ADD) cntadd++;
+				if (instr[i+1]==OPER_MUL) cntmul++;
+			}
+			if (*t == ABS(*(t+*t-1))+1) continue;			
+			if (*(t+1)==SYMBOL || *(t+1)==EXTRASYMBOL)
+				if (*(t+4)>2) cntpow++;
+				if (*(t+4)==2) cntmul++;
+		}
+	}
+
+	MesPrint ("*** STATS: optimized %dP + %dM + %dA = %d", cntpow,cntmul,cntadd,cntpow+cntmul+cntadd);
+}
+*/
+
 /**  Optimization of expression
  *
  *   Description
@@ -907,6 +956,7 @@ VOID print_instructions (const vector<WORD> &instr, WORD numexpr, WORD extraoffs
  */
 int Optimize (WORD numexpr) {
 
+	MesPrint("optimize");
 	GETIDENTITY;
 
 	CBUF *C = cbuf + AM.sbufnum;
@@ -928,7 +978,7 @@ int Optimize (WORD numexpr) {
 	NewSort(BHEAD0);
 
 	// get terms
-	while ( GetTerm(BHEAD term) > 0 ) {
+	while (GetTerm(BHEAD term) > 0) {
 		AT.WorkPointer = term + *term;
 		WORD *t1 = term;
 		WORD *t2 = term + *term;
@@ -951,7 +1001,7 @@ int Optimize (WORD numexpr) {
 		PrintSubtermList(1,C->numrhs);
 
 	if (buffer[0]==0 || buffer[buffer[0]]==0) {
-		// zero or one term(s), so to optimization
+		// zero or one term(s), so no optimization
 		PrintExtraSymbol(numexpr, buffer, EXPRESSIONNUMBER);		
 	}
 	else {

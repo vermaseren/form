@@ -1209,7 +1209,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 					for (WORD *t=buffer.terms; *t!=0; t+=*t) {
 						// substitute extra symbols
 						if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol,
-						startebuf-numxsymbol, 1) <= 0 ) {
+																startebuf-numxsymbol, 1) <= 0 ) {
 							MesPrint("ERROR: in ConvertFromPoly [factorize_expression]");
 							Terminate(-1);
 							return(-1);
@@ -1220,19 +1220,22 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 						Generator(BHEAD term, C->numlhs);
 						AT.WorkPointer = term;
 					}
+
+					// sort and store in buffer
+					WORD *buffer;
+					if (EndSort(BHEAD (WORD *)((VOID *)(&buffer)),2) < 0) return -1;
 					
-					fac_arg[i].check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD+1);
-					if (EndSort(BHEAD fac_arg[i].terms+ARGHEAD,0) < 0) {//!!! par2 was 1
-						LowerSortLevel();
-						Terminate(-1);
-					}
+					LONG bufsize=0;
+					for (WORD *t=buffer; *t!=0; t+=*t)
+						bufsize+=*t;
 					
+					fac_arg[i].check_memory(bufsize+ARGHEAD+1);
+
 					for (int j=0; j<ARGHEAD; j++)
 						fac_arg[i].terms[j] = 0;
-					
-					fac_arg[i].terms[0] = ARGHEAD;
-					for (WORD *t=fac_arg[i].terms+ARGHEAD; *t!=0; t+=*t)
-						fac_arg[i].terms[0] += *t;
+					fac_arg[i].terms[0] = ARGHEAD + bufsize;
+					memcpy(fac_arg[i].terms+ARGHEAD, buffer, bufsize*sizeof(WORD));
+					M_free(buffer, "polynomial factorization");
 				}
 		
 			// compare and sort the factors in Form notation
