@@ -1728,7 +1728,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		}
 		if ( AR.outtohide ) AR.outfile = AR.hidefile;
 		PF.parallel = 1;
-		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) return(-1);
+		if ( EndSort(BHEAD AM.S0->sBuffer,0) < 0 ) return(-1);
 		PF.parallel = 0;
 		if ( AR.outtohide ) {
 			AR.outfile = oldoutfile;
@@ -1890,7 +1890,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			WORD *oldbuff = fout->PObuffer;
 			WORD *oldstop = fout->POstop;
 			LONG  oldsize = fout->POsize;
-			if ( EndSort(BHEAD AM.S0->sBuffer, 0, 0) < 0 ) return -1;
+			if ( EndSort(BHEAD AM.S0->sBuffer, 0) < 0 ) return -1;
 			fout->PObuffer = oldbuff;
 			fout->POstop   = oldstop;
 			fout->POsize   = oldsize;
@@ -2604,7 +2604,7 @@ int PF_CollectModifiedDollars(void)
 						}
 					}
 
-					size = EndSort(BHEAD (WORD *)&dbuf, 2, 0);
+					size = EndSort(BHEAD (WORD *)&dbuf, 2);
 					if ( size < 0 ) {
 						LowerSortLevel();
 						err = -1;
@@ -3814,7 +3814,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 				  }
 				}
 				AN.ninterms += dd;
-				if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) return(-1);
+				if ( EndSort(BHEAD AM.S0->sBuffer,0) < 0 ) return(-1);
 				e->numdummies = AR.MaxDum - AM.IndDum;
 				AR.BracketOn = oldBracketOn;
 				AT.BrackBuf = oldBrackBuf;

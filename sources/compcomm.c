@@ -1666,7 +1666,7 @@ int DoArgument(UBYTE *s, int par)
 					if ( Generator(BHEAD mm,C->numlhs) ) {
 						LowerSortLevel(); error = 1;
 					}
-					else if ( EndSort(BHEAD mm,0,0) < 0 ) {
+					else if ( EndSort(BHEAD mm,0) < 0 ) {
 						error = 1;
 						AT.WorkPointer = mm;
 					}

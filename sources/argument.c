@@ -92,7 +92,7 @@ WORD execarg(PHEAD WORD *term, WORD level)
 			return(-1);
 		}
 		AT.WorkPointer = v;
-		if ( EndSort(BHEAD factor,0,0) < 0 ) {}
+		if ( EndSort(BHEAD factor,0) < 0 ) {}
 		if ( *factor && *(factor+*factor) != 0 ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("&$ in () does not evaluate into a single term");
@@ -571,7 +571,7 @@ ScaledVariety:;
 					if ( Generator(BHEAD m,level) ) goto execargerr;
 					AT.WorkPointer = r1;
 				}
-				if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1,0) < 0 ) goto execargerr;
+				if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
 				AR.DeferFlag = olddefer;
 /*
 				Now shift the sorted entity over the old argument.
@@ -1644,7 +1644,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 			M_free((void *)buffer1,"buffer in sort statement");
 			buffer1 = 0;
 		}
-		if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer1)),2,0) < 0 ) goto exectermerr;
+		if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer1)),2) < 0 ) goto exectermerr;
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );
 	AR.Cnumlhs = oldnumlhs;
@@ -1931,7 +1931,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(BHEAD argin+ARGHEAD,0,0);
+		EndSort(BHEAD argin+ARGHEAD,0);
 		argin[*argin] = oldword;
 	}
 /*
@@ -1984,7 +1984,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(BHEAD argfree+ARGHEAD,0,0);
+		EndSort(BHEAD argfree+ARGHEAD,0);
 		t = argfree+ARGHEAD;
 		while ( *t ) t += *t;
 		*argfree = t - argfree;
@@ -2076,7 +2076,7 @@ getout:
 			StoreTerm(BHEAD argextra);
 			t += *t; argextra += *argextra;
 		}
-		if ( EndSort(BHEAD argfree+ARGHEAD,0,0) ) { error = -2; goto getout; }
+		if ( EndSort(BHEAD argfree+ARGHEAD,0) ) { error = -2; goto getout; }
 		t = argfree + ARGHEAD;
 		while ( *t > 0 ) t += *t;
 		*argfree = t - argfree;
@@ -2137,7 +2137,7 @@ getout:
 				}
 			}
 			AT.WorkPointer = oldworkpointer;
-			if ( EndSort(BHEAD a2+ARGHEAD,0,0) ) { error = -5; goto getout; }
+			if ( EndSort(BHEAD a2+ARGHEAD,0) ) { error = -5; goto getout; }
 			t = a2+ARGHEAD; while ( *t ) t += *t;
 			*a2 = t - a2; a2[1] = 0; ZEROARG(a2); a2 = t;
 			a1 = tstop;
@@ -2228,7 +2228,7 @@ return0:
 					StoreTerm(BHEAD t);
 					t = tstop;
 				}
-				EndSort(BHEAD a+ARGHEAD,0,0);
+				EndSort(BHEAD a+ARGHEAD,0);
 				a[*a] = oldword;
 				a += *a;
 			}
@@ -2920,7 +2920,7 @@ nextterm:						mm = mnext;
 				t += *t;
 			}
 			t = argin2+ARGHEAD;
-			if ( EndSort(BHEAD t,0,0) < 0 ) goto Irreg;
+			if ( EndSort(BHEAD t,0) < 0 ) goto Irreg;
 			while ( *t ) t += *t;
 			*argin2 = t - argin2;
 			r3 = t;
@@ -3041,7 +3041,7 @@ nextterm:						mm = mnext;
 				t += *t;
 			}
 			t = argin3+ARGHEAD;
-			if ( EndSort(BHEAD t,0,0) < 0 ) goto Irreg;
+			if ( EndSort(BHEAD t,0) < 0 ) goto Irreg;
 			while ( *t ) t += *t;
 			*argin3 = t - argin3;
 			r3 = t;

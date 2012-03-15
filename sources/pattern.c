@@ -220,7 +220,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			return(-1);
 		}
 		AT.WorkPointer = ww;
-		if ( EndSort(BHEAD ww,0,0) < 0 ) {}
+		if ( EndSort(BHEAD ww,0) < 0 ) {}
 		AR.DeferFlag = olddefer;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {
 			if ( AP.lhdollarerror == 0 ) {

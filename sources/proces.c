@@ -240,7 +240,7 @@ WORD Processor()
 				AN.ninterms += dd;
 			}
 			AN.ninterms += dd;
-			if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) goto ProcErr;
+			if ( EndSort(BHEAD AM.S0->sBuffer,0) < 0 ) goto ProcErr;
 			if ( AM.S0->TermsLeft ) e->vflags &= ~ISZERO;
 			else e->vflags |= ISZERO;
 			if ( AR.expchanged == 0 ) e->vflags |= ISUNMODIFIED;
@@ -404,7 +404,7 @@ commonread:;
 						AR.infile->POfill = AR.infile->POfull = AR.infile->PObuffer;
 					}
 					if ( AR.outtohide ) AR.outfile = AR.hidefile;
-					if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) goto ProcErr;
+					if ( EndSort(BHEAD AM.S0->sBuffer,0) < 0 ) goto ProcErr;
 					if ( AR.outtohide ) {
 						AR.outfile = oldoutfile;
 						AR.hidefile->POfull = AR.hidefile->POfill;
@@ -897,7 +897,7 @@ TooMuch:;
 						if ( Generator(BHEAD m,AR.Cnumlhs) ) {
 							LowerSortLevel(); goto EndTest;
 						}
-						if ( EndSort(BHEAD m,0,0) < 0 ) goto EndTest;
+						if ( EndSort(BHEAD m,0) < 0 ) goto EndTest;
 						AN.Frozen = m;
 						if ( *m == 0 ) {
 							*m++ = 4; *m++ = 1; *m++ = 1; *m++ = 3;
@@ -1477,7 +1477,7 @@ DoSpec:
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
-						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,0,0) < 0 ) goto EndTest;
+						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.CompareRoutine = oldcompareroutine;
@@ -1878,7 +1878,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					/* to is new argument */
 
 					to -= ARGHEAD;
-					if ( EndSort(BHEAD m,1,0) < 0 ) {
+					if ( EndSort(BHEAD m,1) < 0 ) {
 						AN.ncmod = oldncmod;
 						goto InFunc;
 					}
@@ -1990,7 +1990,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 										Terminate(-1);
 									}
 								}
-								if ( EndSort(BHEAD to+ARGHEAD,1,0) < 0 ) goto InFunc;
+								if ( EndSort(BHEAD to+ARGHEAD,1) < 0 ) goto InFunc;
 								AR.PolyFun = oldPolyFun;
 								AR.CompareRoutine = &Compare1;
 								m = to+ARGHEAD;
@@ -4867,7 +4867,7 @@ retry:
 		}
 	}	
 	}	
-	if ( EndSort(BHEAD w,0,0) < 0 ) goto PolyCall;
+	if ( EndSort(BHEAD w,0) < 0 ) goto PolyCall;
 	if ( *w == 0 ) {
 		*term = 0;
 		return(0);

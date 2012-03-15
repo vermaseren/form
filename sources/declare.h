@@ -399,7 +399,7 @@ extern void   DoRevert(WORD *,WORD *);
 extern WORD   DoSumF1(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoSumF2(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   DoTheta(PHEAD WORD *);
-extern LONG   EndSort(PHEAD WORD *,int,int);
+extern LONG   EndSort(PHEAD WORD *,int);
 extern WORD   EntVar(WORD,UBYTE *,WORD,WORD,WORD,WORD);
 extern WORD   EpfCon(PHEAD WORD *,WORD *,WORD,WORD);
 extern WORD   EpfFind(PHEAD WORD *,WORD *);

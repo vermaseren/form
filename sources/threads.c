@@ -1401,7 +1401,7 @@ bucketstolen:;
 				}
 				AT.SB.FillBlock = 1;
 				AT.SB.MasterFill[1] = AT.SB.MasterStart[1];
-				errorcode = EndSort(BHEAD AT.S0->sBuffer,0,0);
+				errorcode = EndSort(BHEAD AT.S0->sBuffer,0);
 				UNLOCK(AT.SB.MasterBlockLock[AT.SB.FillBlock]);
 				UpdateMaxSize();
 				if ( errorcode ) {
@@ -1614,7 +1614,7 @@ bucketstolen:;
 				  }
 				}
 				AN.ninterms += dd;
-				if ( EndSort(BHEAD AT.S0->sBuffer,0,0) < 0 ) goto ProcErr;
+				if ( EndSort(BHEAD AT.S0->sBuffer,0) < 0 ) goto ProcErr;
 				e->numdummies = AR.MaxDum - AM.IndDum;
 				AR.BracketOn = oldBracketOn;
 				AT.BrackBuf = oldBrackBuf;

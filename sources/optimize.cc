@@ -941,8 +941,8 @@ int Optimize (WORD numexpr) {
 	}
 
 	// sort and store in buffer
-	WORD *buffer = (WORD *)Malloc1((bufsize+1)*sizeof(WORD),"LoadOptim");
-	if ( EndSort(BHEAD buffer,0,0) < 0 ) return(-1);
+	WORD *buffer;
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer)),2) < 0 ) return(-1);
 	LowerSortLevel();
 	AT.WorkPointer = term;
 

@@ -109,7 +109,7 @@ int CatchDollar(int par)
 		if ( Generator(BHEAD oldwork,C->numlhs) ) { error = 1; break; }
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; }
 	LowerSortLevel();
 	w = dbuffer;
 	if ( error == 0 )
@@ -418,7 +418,7 @@ NoChangeOne:;
 			}
 			AT.WorkPointer = ww;
 		}
-		if ( ( newsize = EndSort(BHEAD (WORD *)((VOID *)(&ss)),2,0) ) < 0 ) {
+		if ( ( newsize = EndSort(BHEAD (WORD *)((VOID *)(&ss)),2) ) < 0 ) {
 			AN.ncmod = oldncmod;
 			return(1);
 		}
@@ -1696,7 +1696,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			}
 			AT.WorkPointer = oldwork;
 		}
-		if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2,0) < 0 ) { error = 1; break; }
+		if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; break; }
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"old buffer of dollar");
 		d->where = dbuffer;
 		if ( dbuffer == 0 || *dbuffer == 0 ) {
@@ -2035,7 +2035,7 @@ WORD *TranslateExpression(UBYTE *s)
 	}
 	AR.Eside = oldEside;
 	AT.WorkPointer = w;
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&outbuffer)),2,0) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&outbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	C->Pointer = C->Buffer + oldcpointer;
 	C->numrhs = oldnumrhs;
@@ -2854,7 +2854,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 			StoreTerm(BHEAD term);
 			term = t;
 		}
-		EndSort(BHEAD (WORD *)((void *)(&buf1)),2,0);
+		EndSort(BHEAD (WORD *)((void *)(&buf1)),2);
 		t = buf1; while ( *t ) t += *t;
 		insize = t - buf1;
 	}
@@ -2984,7 +2984,7 @@ getout:
 			StoreTerm(BHEAD termextra);
 			t += *t;
 		}
-		if ( EndSort(BHEAD (WORD *)((void *)(&buf2)),2,0) < 0 ) { goto getout; }
+		if ( EndSort(BHEAD (WORD *)((void *)(&buf2)),2) < 0 ) { goto getout; }
 		LowerSortLevel();
 		t = buf2; while ( *t > 0 ) t += *t;
 	}
@@ -3114,7 +3114,7 @@ getout2:			AR.SortType = oldsorttype;
 			}
 			term++;
 			AT.WorkPointer = oldworkpointer;
-			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2,0);
+			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2);
 			LowerSortLevel();
 			d->factors[i].type = DOLTERMS;
 			t = d->factors[i].where;
@@ -3141,7 +3141,7 @@ getout2:			AR.SortType = oldsorttype;
 			}
 			term++;
 			AT.WorkPointer = oldworkpointer;
-			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2,0);
+			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2);
 			d->factors[i].type = DOLTERMS;
 			t = d->factors[i].where;
 			while ( *t ) t += *t;
@@ -3560,7 +3560,7 @@ WORD *MakeDollarInteger(PHEAD WORD *bufin,WORD **bufout)
 		r = rnext;
 	}
 	AT.WorkPointer = oldworkpointer;
-	EndSort(BHEAD (WORD *)bufout,2,0);
+	EndSort(BHEAD (WORD *)bufout,2);
 /*
 	Cleanup
 */
@@ -3627,7 +3627,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 		}
 	}
 	AT.WorkPointer = oldworkpointer;
-	EndSort(BHEAD (WORD *)bufout,2,0);
+	EndSort(BHEAD (WORD *)bufout,2);
 	return(factor);
 }
 /*

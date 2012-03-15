@@ -767,7 +767,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		}
 		AR.Eside = oldEside;
 		AT.WorkPointer = w;
-		if ( EndSort(BHEAD w,0,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
+		if ( EndSort(BHEAD w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
 		if ( *w == 0 || *(w+*w) != 0 ) {
 			MesPrint("&LHS must be one term");
 			AC.lhdollarflag = 0;

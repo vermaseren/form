@@ -489,7 +489,7 @@ void poly_sort(PHEAD WORD *a) {
 		}
 	}
 	
-	if (EndSort(BHEAD a+ARGHEAD,1,0) < 0) {
+	if (EndSort(BHEAD a+ARGHEAD,1) < 0) {
 		AR.CompareRoutine = (void *)&Compare1;
 		Terminate(-1);
 	}
@@ -1222,7 +1222,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 					}
 					
 					fac_arg[i].check_memory(fac.factor[i].size_of_form_notation()+ARGHEAD+1);
-					if (EndSort(BHEAD fac_arg[i].terms+ARGHEAD,0,1) < 0) {
+					if (EndSort(BHEAD fac_arg[i].terms+ARGHEAD,0) < 0) {//!!! par2 was 1
 						LowerSortLevel();
 						Terminate(-1);
 					}
@@ -1283,7 +1283,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	}
 	
 	// final sorting
-	if (EndSort(BHEAD NULL,0,0) < 0) {
+	if (EndSort(BHEAD NULL,0) < 0) {
 		LowerSortLevel();
 		Terminate(-1);
 	}
@@ -1467,7 +1467,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 				Generator(BHEAD term, C->numlhs);
 			}
 		}
-		if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) {
+		if ( EndSort(BHEAD AM.S0->sBuffer,0) < 0 ) {
 			LowerSortLevel();
 			Terminate(-1);
 		}
@@ -1516,7 +1516,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 		AT.WorkPointer = term + *term;
 		Generator(BHEAD term, C->numlhs);
 	}
-	if ( EndSort(BHEAD AM.S0->sBuffer,0,0) < 0 ) {
+	if ( EndSort(BHEAD AM.S0->sBuffer,0) < 0 ) {
 		LowerSortLevel();
 		Terminate(-1);
 	}

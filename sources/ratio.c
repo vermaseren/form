@@ -1211,7 +1211,7 @@ WORD *PutExtraSymbols(PHEAD WORD *in,WORD startebuf,int *actionflag)
 		StoreTerm(BHEAD termout);
 		in += *in;
 	}
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2,0) < 0 ) goto CalledFrom;
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2) < 0 ) goto CalledFrom;
 	return(termout);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
@@ -1249,7 +1249,7 @@ WORD *TakeExtraSymbols(PHEAD WORD *in,WORD startebuf)
 		}
 	}
 	AT.WorkPointer = oldworkpointer;
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2,0) < 0 ) goto CalledFrom;
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2) < 0 ) goto CalledFrom;
 	return(termout);
 
 CalledFrom:
@@ -1286,7 +1286,7 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term)
 		StoreTerm(BHEAD termout);
 		in += *in;
 	}
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2,0) < 0 ) goto CalledFrom;
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2) < 0 ) goto CalledFrom;
 	return(termout);
 
 CalledFrom:
@@ -1940,7 +1940,7 @@ WORD *CreateExpression(PHEAD WORD nexp)
 		AR.CompressPointer = oldipointer;
 	}
 	AT.WorkPointer = term;
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&term)),2,0) < 0 ) goto CalledFrom;
+	if ( EndSort(BHEAD (WORD *)((VOID *)(&term)),2) < 0 ) goto CalledFrom;
 	SetScratch(fi,&oldposition);
 	return(term);
 CalledFrom:

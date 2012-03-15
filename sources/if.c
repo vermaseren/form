@@ -718,7 +718,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 			return(-1);
 		}
 		AT.WorkPointer = ww;
-		if ( EndSort(BHEAD ww,0,0) < 0 ) {}
+		if ( EndSort(BHEAD ww,0) < 0 ) {}
 		*RepSto = RepVal;
 		AN.RepPoint = RepSto;
 		if ( *ww == 0 || *(ww+*ww) != 0 ) {

@@ -3256,7 +3256,7 @@ int DoEndInside(UBYTE *s)
 			AT.WorkPointer = oldworkpointer;
 			CleanDollarFactors(d);
 			if ( d->where ) { M_free(d->where,"dollar contents"); d->where = 0; }
-			EndSort(BHEAD (WORD *)((VOID *)(&(d->where))),2,0);
+			EndSort(BHEAD (WORD *)((VOID *)(&(d->where))),2);
 			LowerSortLevel();
 			term = d->where; while ( *term ) term += *term;
 			d->size = term - d->where;

@@ -603,7 +603,7 @@ WORD NewSort(PHEAD0)
 
 /*
  		#] NewSort : 
- 		#[ EndSort :				WORD EndSort(PHEAD buffer,par,par2)
+ 		#[ EndSort :				WORD EndSort(PHEAD buffer,par)
 */
 /**
  *		Finishes a sort.
@@ -612,7 +612,7 @@ WORD NewSort(PHEAD0)
  *		The AR.sLevel will be popped.
  *		All ongoing stages are finished and if the sortfile is open
  *		it is closed.
- *		The statistics are printed when AR.sLevel == 0 and par2 != 1.
+ *		The statistics are printed when AR.sLevel == 0
  *		par == 0  Output to the buffer.
  *		par == 1  Sort for function arguments.
  *		          The output will be copied into the buffer.
@@ -622,18 +622,14 @@ WORD NewSort(PHEAD0)
  *		          We first catch the output in a file (unless we can
  *		          intercept things after the small buffer has been sorted)
  *		          Then we read from the file into a buffer.
- *		par2 == 1 Forces output into the buffer, even at sLevel == 0
- *		          Note that this can be used only when the outfile is unused!!
- *		          STILL UNDER CONSTRUCTION
  *		Only when par == 0 data compression can be attempted at AT.SS==AT.S0.
  *
  *		@param buffer buffer for output when needed
  *		@param par    See above
- *		@param par2   See above
  *		@return If negative: error. If positive: number of words in output.
  */
 
-LONG EndSort(PHEAD WORD *buffer, int par, int par2)
+LONG EndSort(PHEAD WORD *buffer, int par)
 {
   GETBIDENTITY
   SORTING *S = AT.SS;
@@ -697,7 +693,7 @@ LONG EndSort(PHEAD WORD *buffer, int par, int par2)
 				sSpace = 0;
 				while ( ( t = *ss++ ) != 0 ) {
 					j = *t;
-					if ( ( par2 != 1 ) && ( ( sSpace += j ) > AM.MaxTer/((LONG)sizeof(WORD)) ) ) {
+					if ( ( sSpace += j ) > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 						MLOCK(ErrorMessageLock);
 						MesPrint("Sorted function argument too long.");
 						MUNLOCK(ErrorMessageLock);
@@ -915,12 +911,10 @@ TooLarge:
 			if ( S == AT.S0 )
 #endif
 			{
-			  if ( par2 != 1 ) {
 				WORD oldLogHandle = AC.LogHandle;
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
 				WriteStats(&pp,(WORD)1);
 				AC.LogHandle = oldLogHandle;
-			  }
 			}
 #ifdef WITHERRORXXX
 			if ( S != AT.S0 ) {
@@ -1058,7 +1052,7 @@ RetRetval:
 			Hence
 */
 			j = newout->POfill-newout->PObuffer;
-			if ( par2 != 1 && ( j+buffer >= AT.WorkTop ) ) {
+			if ( j+buffer >= AT.WorkTop ) {
 				MLOCK(ErrorMessageLock);
 				MesWork();
 				MUNLOCK(ErrorMessageLock);

@@ -3593,7 +3593,7 @@ NextI:;
 						    AT.WorkPointer = (WORD *)(((UBYTE *)(oldwork)) + AM.MaxTer);
 							if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 							m = AT.WorkPointer;
-							if ( EndSort(BHEAD m,1,0) < 0 ) goto FromNorm;
+							if ( EndSort(BHEAD m,1) < 0 ) goto FromNorm;
 							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
 								AR.CompareRoutine = oldcompareroutine;
 							}
@@ -3733,7 +3733,7 @@ NextI:;
 				LowerSortLevel(); goto FromNorm;
 			}
 		    AT.WorkPointer = oldwork;
-			if ( EndSort(BHEAD term,1,0) < 0 ) goto FromNorm;
+			if ( EndSort(BHEAD term,1) < 0 ) goto FromNorm;
 			if ( *term == 0 ) goto NormZero;
 			AR.DeferFlag = olddefer;
 		}
@@ -4246,7 +4246,7 @@ WORD *PolyNormPoly (PHEAD WORD *Poly) {
 		}
 		Poly = p;
 	}
-	if ( EndSort(BHEAD buffer,1,0) < 0 ) {
+	if ( EndSort(BHEAD buffer,1) < 0 ) {
 		AR.CompareRoutine = (void *)&Compare1;
 		Terminate(-1);
 	}
