@@ -884,13 +884,8 @@ TooLarge:
 						else {
 							j = newout->POfill - t;
 							to = buffer;
-							if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
-								MLOCK(ErrorMessageLock);
-								MesWork();
-								MesCall("EndSort");
-								MUNLOCK(ErrorMessageLock);
-								Terminate(-1);
-							}
+							if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop )
+								goto WorkSpaceError;
 							if ( j > AM.MaxTer ) goto TooLarge;
 							NCOPY(to,t,j);
 						}
@@ -926,13 +921,8 @@ TooLarge:
 				t = newout->PObuffer;
 				j = newout->POfill - t;
 				to = buffer;
-				if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop ) {
-					MLOCK(ErrorMessageLock);
-					MesWork();
-					MesCall("EndSort");
-					MUNLOCK(ErrorMessageLock);
-					Terminate(-1);
-				}
+				if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop )
+					goto WorkSpaceError;
 				if ( j > AM.MaxTer ) goto TooLarge;
 				NCOPY(to,t,j);
 				goto RetRetval;
@@ -1052,12 +1042,8 @@ RetRetval:
 			Hence
 */
 			j = newout->POfill-newout->PObuffer;
-			if ( j+buffer >= AT.WorkTop ) {
-				MLOCK(ErrorMessageLock);
-				MesWork();
-				MUNLOCK(ErrorMessageLock);
-				retval = -1;
-			}
+			if ( buffer >= AT.WorkSpace && buffer < AT.WorkTop && buffer+j > AT.WorkTop )
+				goto WorkSpaceError;
 			else {
 				to = buffer; t = newout->PObuffer;
 				while ( j-- > 0 ) *to++ = *t++;
@@ -1125,6 +1111,13 @@ RetRetval:
 		}
 	}
 	return(retval);
+WorkSpaceError:
+	MLOCK(ErrorMessageLock);
+	MesWork();
+	MesCall("EndSort");
+	MUNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(-1);
 }
 
 /*
