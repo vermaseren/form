@@ -177,6 +177,7 @@ static KEYWORD com2commands[] = {
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}
 	,{"print[]",        (TFUN)CoPrintB,           TOOUTPUT,     PARTEST}
 	,{"printtable",     (TFUN)CoPrintTable,       MIXED,        PARTEST}
+	,{"processbucketsize",(TFUN)CoProcessBucket,  DECLARATION,  PARTEST}
 	,{"propercount",    (TFUN)CoProperCount,      DECLARATION,  PARTEST}
 	,{"pushhide",       (TFUN)CoPushHide,         SPECIFICATION,PARTEST}
 	,{"ratio",          (TFUN)CoRatio,            STATEMENT,    PARTEST}
@@ -188,7 +189,6 @@ static KEYWORD com2commands[] = {
 	,{"setexitflag",    (TFUN)CoSetExitFlag,      STATEMENT,    PARTEST}
 	,{"shuffle",        (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"skip",           (TFUN)CoSkip,             SPECIFICATION,PARTEST}
-	,{"slavepatchsize", (TFUN)CoSlavePatch,       DECLARATION,  PARTEST}
 	,{"sort",           (TFUN)CoSort,             STATEMENT,    PARTEST}
 	,{"splitarg",       (TFUN)CoSplitArg,         STATEMENT,    PARTEST}
 	,{"splitfirstarg",  (TFUN)CoSplitFirstArg,    STATEMENT,    PARTEST}

@@ -82,11 +82,11 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (LONG)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (LONG)curdirp}
 	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (LONG)procedureextension}
+	,{(UBYTE *)"processbucketsize",     NUMERICALVALUE, 0, (LONG)DEFAULTPROCESSBUCKETSIZE}
 	,{(UBYTE *)"resettimeonclear",          ONOFFVALUE, 0, (LONG)1}
 	,{(UBYTE *)"scratchsize",           NUMERICALVALUE, 0, (LONG)SCRATCHSIZE}
 	,{(UBYTE *)"shmwinsize",            NUMERICALVALUE, 0, (LONG)SHMWINSIZE}
 	,{(UBYTE *)"sizestorecache",        NUMERICALVALUE, 0, (LONG)SIZESTORECACHE}
-	,{(UBYTE *)"slavepatchsize",        NUMERICALVALUE, 0, (LONG)SLAVEPATCHSIZE}
 	,{(UBYTE *)"smallextension",        NUMERICALVALUE, 0, (LONG)SMALLOVERFLOW}
 	,{(UBYTE *)"smallsize",             NUMERICALVALUE, 0, (LONG)SMALLBUFFER}
 	,{(UBYTE *)"sortiosize",            NUMERICALVALUE, 0, (LONG)SORTIOSIZE}
@@ -672,9 +672,9 @@ int AllocSetups()
 		error = -2;
 	}
 
-	sp = GetSetupPar((UBYTE *)"slavepatchsize");
-	AM.hSlavePatchSize = AM.gSlavePatchSize =
-	AC.SlavePatchSize = AC.mSlavePatchSize = sp->value;
+	sp = GetSetupPar((UBYTE *)"processbucketsize");
+	AM.hProcessBucketSize = AM.gProcessBucketSize =
+	AC.ProcessBucketSize = AC.mProcessBucketSize = sp->value;
 /*
 	The store caches (code installed 15-aug-2006 JV)
 */

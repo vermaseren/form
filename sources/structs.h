@@ -1239,8 +1239,8 @@ struct M_const {
     LONG    SSmallSize;            /* (M) */
     LONG    STermsInSmall;         /* (M) */
     LONG    MaxBracketBufferSize;  /* (M) Max Size for B+ or AB+ per expression */
-    LONG    hSlavePatchSize;       /* (M) */
-    LONG    gSlavePatchSize;       /* (M) */
+    LONG    hProcessBucketSize;    /* (M) */
+    LONG    gProcessBucketSize;    /* (M) */
     LONG    shmWinSize;            /* (M) size for shared memory window used in communications */
     LONG    OldChildTime;          /* (M) Zero time. Needed in timer. */
     LONG    OldSecTime;            /* (M) Zero time for measuring wall clock time */
@@ -1515,8 +1515,8 @@ struct C_const {
     LONG    iBufferSize;           /* (C) Size of the input buffer */
     LONG    TransEname;            /* (C) Used when a new definition overwrites
                                        an old expression. */
-    LONG    SlavePatchSize;        /* (C) */
-    LONG    mSlavePatchSize;       /* (C) */
+    LONG    ProcessBucketSize;     /* (C) */
+    LONG    mProcessBucketSize;    /* (C) */
     LONG    CModule;               /* (C) Counter of current module */
     LONG    ThreadBucketSize;      /* (C) Roughly the maximum number of input terms */
     LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)).*/

@@ -1031,7 +1031,7 @@ WORD IniVars()
 	AM.gfunpowers = AC.funpowers = COMFUNPOWERS;
 	AC.parallelflag = AM.gparallelflag;
 	AC.properorderflag = AM.gproperorderflag = PROPERORDERFLAG;
-	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
+	AC.ProcessBucketSize = AC.mProcessBucketSize = AM.gProcessBucketSize;
     AC.ThreadBucketSize = AM.gThreadBucketSize;
 	AC.ShortStatsMax = 0;
 	AM.gShortStatsMax = 0;

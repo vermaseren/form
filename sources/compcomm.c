@@ -5014,24 +5014,24 @@ tests:	*ss = c;
 
 /*
   	#] CoStuffle : 
-  	#[ CoSlavePatch :
+  	#[ CoProcessBucket :
 */
 
-int CoSlavePatch(UBYTE *s)
+int CoProcessBucket(UBYTE *s)
 {
 	LONG x;
 	while ( *s == ',' || *s == '=' ) s++;
 	ParseNumber(x,s)
 	if ( *s && *s != ' ' && *s != '\t' ) {
-		MesPrint("&Numerical value expected for SlavePatchSize");
+		MesPrint("&Numerical value expected for ProcessBucketSize");
 		return(1);
 	}
-	AC.SlavePatchSize = x;
+	AC.ProcessBucketSize = x;
 	return(0);
 }
 
 /*
-  	#] CoSlavePatch : 
+  	#] CoProcessBucket :
   	#[ CoThreadBucket :
 */
 

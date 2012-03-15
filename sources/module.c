@@ -69,7 +69,7 @@ static KEYWORD ModuleOptions[] = {
 	,{"parallel",			DoParallel,     PARALLELFLAG,	0}
 	,{"polyfun",			DoPolyfun,		POLYFUN,		0}
 	,{"polyratfun",			DoPolyratfun,	POLYFUN,		0}
-	,{"slavepatchsize",		DoSlavePatch,	MODSLAVEPATCH,	0}
+	,{"processbucketsize",	DoProcessBucket,0,				0}
 	,{"sum",				DoModSum,		MODSUM,			0}
 };
 
@@ -585,24 +585,24 @@ int DoModLocal(UBYTE *s)
 
 /*
  		#] DoModLocal : 
- 		#[ DoSlavePatch :
+ 		#[ DoProcessBucket :
 */
 
-int DoSlavePatch(UBYTE *s)
+int DoProcessBucket(UBYTE *s)
 {
 	LONG x;
 	while ( *s == ',' || *s == '=' ) s++;
 	ParseNumber(x,s)
 	if ( *s && *s != ' ' && *s != '\t' ) {
-		MesPrint("&Numerical value expected for SlavePatchSize");
+		MesPrint("&Numerical value expected for ProcessBucketSize");
 		return(1);
 	}
-	AC.mSlavePatchSize = x;
+	AC.mProcessBucketSize = x;
 	return(0);
 }
 
 /*
- 		#] DoSlavePatch : 
+ 		#] DoProcessBucket :
  		#[ DoModDollar :
 */
 

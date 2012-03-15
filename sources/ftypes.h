@@ -838,7 +838,6 @@ typedef int (*TFUN1)();
 #define MODMAX 2
 #define MODMIN 3
 #define MODLOCAL 4
-#define MODSLAVEPATCH 5
 
 #define ELEMENTUSED 1
 #define ELEMENTLOADED 2

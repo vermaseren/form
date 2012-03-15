@@ -726,6 +726,7 @@ VOID IniModule(int type)
 	AR.PolyFunType = AC.lPolyFunType;
 	AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	AC.inparallelflag = 0;
+	AC.mProcessBucketSize = AC.ProcessBucketSize;
 	NumPotModdollars = 0;
 	AC.topolynomialflag = 0;
 #ifdef WITHPTHREADS

@@ -935,7 +935,7 @@ extern int    CoSelect(UBYTE *);
 extern int    CoSet(UBYTE *);
 extern int    CoSetExitFlag(UBYTE *);
 extern int    CoSkip(UBYTE *);
-extern int    CoSlavePatch(UBYTE *);
+extern int    CoProcessBucket(UBYTE *);
 extern int    CoPushHide(UBYTE *);
 extern int    CoPopHide(UBYTE *);
 extern int    CoHide(UBYTE *);
@@ -1119,7 +1119,7 @@ extern int    DoModMax(UBYTE *);
 extern int    DoModMin(UBYTE *);
 extern int    DoModLocal(UBYTE *);
 extern UBYTE *DoModDollar(UBYTE *,int);
-extern int    DoSlavePatch(UBYTE *);
+extern int    DoProcessBucket(UBYTE *);
 extern int    DoinParallel(UBYTE *);
 extern int    DonotinParallel(UBYTE *);
 

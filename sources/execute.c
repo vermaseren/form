@@ -244,7 +244,7 @@ WORD PopVariables()
 	AC.lPolyFun = AM.gPolyFun;
 	AC.lPolyFunType = AM.gPolyFunType;
 	AC.parallelflag = AM.gparallelflag;
-	AC.SlavePatchSize = AC.mSlavePatchSize = AM.gSlavePatchSize;
+	AC.ProcessBucketSize = AC.mProcessBucketSize = AM.gProcessBucketSize;
 	AC.properorderflag = AM.gproperorderflag;
     AC.ThreadBucketSize = AM.gThreadBucketSize;
 	AC.ThreadStats = AM.gThreadStats;
@@ -332,7 +332,7 @@ VOID MakeGlobal()
 	AM.gPolyFun = AC.lPolyFun;
 	AM.gPolyFunType = AC.lPolyFunType;
 	AM.gparallelflag = AC.parallelflag;
-	AM.gSlavePatchSize = AC.SlavePatchSize;
+	AM.gProcessBucketSize = AC.ProcessBucketSize;
 	AM.gproperorderflag = AC.properorderflag;
     AM.gThreadBucketSize = AC.ThreadBucketSize;
 	AM.gThreadStats = AC.ThreadStats;
@@ -838,7 +838,7 @@ skipexec:
 			else RetCode = 0;
 			CleanUp(1);
 			ResetVariables(2);
-			AM.gSlavePatchSize = AM.hSlavePatchSize;
+			AM.gProcessBucketSize = AM.hProcessBucketSize;
 			AM.gparallelflag = PARALLELFLAG;
 			IniVars();
 		}

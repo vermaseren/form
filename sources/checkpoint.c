@@ -672,8 +672,8 @@ static void print_M()
 	MesPrint("--MARK  2");
 	MesPrint("%l", AM.STermsInSmall);
 	MesPrint("%l", AM.MaxBracketBufferSize);
-	MesPrint("%l", AM.hSlavePatchSize);
-	MesPrint("%l", AM.gSlavePatchSize);
+	MesPrint("%l", AM.hProcessBucketSize);
+	MesPrint("%l", AM.gProcessBucketSize);
 	MesPrint("%l", AM.shmWinSize);
 	MesPrint("%l", AM.OldChildTime);
 	MesPrint("%l", AM.OldSecTime);
@@ -965,8 +965,8 @@ static void print_C()
     print_LONGV(AC.inexprstack, MAXNEST);
 	MesPrint("%l", AC.iBufferSize);
 	MesPrint("%l", AC.TransEname);
-	MesPrint("%l", AC.SlavePatchSize);
-	MesPrint("%l", AC.mSlavePatchSize);
+	MesPrint("%l", AC.ProcessBucketSize);
+	MesPrint("%l", AC.mProcessBucketSize);
 	MesPrint("%l", AC.CModule);
 	MesPrint("%l", AC.ThreadBucketSize);
 	MesPrint("%d", AC.NoShowInput);
@@ -1387,7 +1387,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.gfunpowers, int);
 	R_SET(AM.gPolyFun, WORD);
 	R_SET(AM.gPolyFunType, WORD);
-	R_SET(AM.gSlavePatchSize, LONG);
+	R_SET(AM.gProcessBucketSize, LONG);
 	R_SET(AM.OldChildTime, LONG);
 	R_SET(AM.OldSecTime, LONG);
 	R_SET(AM.OldMilliTime, LONG);
@@ -2404,7 +2404,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.gfunpowers, sizeof(int));
 	S_WRITE_B(&AM.gPolyFun, sizeof(WORD));
 	S_WRITE_B(&AM.gPolyFunType, sizeof(WORD));
-	S_WRITE_B(&AM.gSlavePatchSize, sizeof(LONG));
+	S_WRITE_B(&AM.gProcessBucketSize, sizeof(LONG));
 	S_WRITE_B(&AM.OldChildTime, sizeof(LONG));
 	S_WRITE_B(&AM.OldSecTime, sizeof(LONG));
 	S_WRITE_B(&AM.OldMilliTime, sizeof(LONG));
