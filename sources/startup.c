@@ -839,9 +839,11 @@ VOID StartVariables()
 	AR.wranfseed = 0;
 #endif
 	AM.atstartup = 1;
+	AM.oldnumextrasymbols = strDup1((UBYTE *)"OLDNUMEXTRASYMBOLS_","oldnumextrasymbols");
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)STRINGIFY(MAJORVERSION),0,0);
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)STRINGIFY(MINORVERSION),0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
+	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;
 	AP.NumPreTypes = 0;
@@ -911,7 +913,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ StartMore :
 */
 
@@ -953,6 +955,21 @@ VOID StartMore()
 
 VOID PrintHeader()
 {
+#ifdef XCXC4
+/*
+	The header starting with the release of version 4.0
+*/
+#ifdef PARALLEL
+	if ( PF.me == MASTER && !AM.silent ) {
+#else
+	if ( !AM.silent ) {
+#endif
+		
+	}
+#else
+/*
+	The header till version 4.0 beta
+*/
 #ifdef PARALLEL
 	if ( PF.me == MASTER && !AM.silent ) {
 #else
@@ -961,6 +978,7 @@ VOID PrintHeader()
 		MesPrint(FORMNAME" by J.Vermaseren %s(%s) Run at: %s",
 		         VERSIONSTR,PRODUCTIONDATE,MakeDate());
 	}
+#endif
 }
 
 /*

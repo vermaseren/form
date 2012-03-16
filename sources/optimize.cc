@@ -29,7 +29,7 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  	#] License : 
+  	#] License :
   	#[ includes :
 */
 
@@ -50,7 +50,7 @@ const WORD OPER_ADD = -1;
 const WORD OPER_MUL = -2;
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ term_compare :
 */
 
@@ -72,7 +72,7 @@ bool term_compare (WORD *a, WORD *b) {
 }
 
 /*
-  	#] term_compare : 
+  	#] term_compare :
   	#[ Horner_tree :
 */
 
@@ -308,7 +308,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 }
 
 /*
-  	#] Horner_tree : 
+  	#] Horner_tree :
   	#[ print_tree :
 */
 
@@ -358,7 +358,7 @@ void print_tree (const vector<WORD> &tree) {
 */
 
 /*
-  	#] print_tree : 
+  	#] print_tree :
   	#[ generate_instructions :
 */
 
@@ -540,7 +540,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree) {
 }
 
 /*
-  	#] generate_instructions : 
+  	#] generate_instructions :
   	#[ merge_operators :
 */
 
@@ -658,7 +658,7 @@ vector<WORD> merge_operators (vector<WORD> all_instr) {
 }
 
 /*
-  	#] merge_operators : 
+  	#] merge_operators :
   	#[ recycle_variables :
 */
 
@@ -802,7 +802,7 @@ vector<WORD> recycle_variables (vector<WORD> all_instr) {
 }
 
 /*
-  	#] recycle_variables : 
+  	#] recycle_variables :
   	#[ print_instructions :
 */
 
@@ -887,7 +887,7 @@ VOID print_instructions (const vector<WORD> &instr, WORD numexpr, WORD extraoffs
 }
 	
 /*
-  	#] print_instructions : 
+  	#] print_instructions :
   	#[ Optimize:
 */
 
@@ -956,7 +956,7 @@ void print_stats (WORD *expr, vector<WORD> instr) {
  */
 int Optimize (WORD numexpr) {
 
-	MesPrint("optimize");
+//	MesPrint("optimize");
 	GETIDENTITY;
 
 	CBUF *C = cbuf + AM.sbufnum;
@@ -1012,6 +1012,12 @@ int Optimize (WORD numexpr) {
 		instr = recycle_variables(instr);	
 		print_instructions(instr, numexpr, cbuf[AM.sbufnum].numrhs);
 
+		// put the number of variables used in a preprocessor variable
+
+		UBYTE numbuf[24];
+		NumCopy(AN.poly_num_vars-1,numbuf);
+		PutPreVar(AM.oldnumextrasymbols,numbuf,0,1);
+
 		// clean poly_vars, that are allocated by Horner_tree
 		AN.poly_num_vars = 0;
 		M_free(AN.poly_vars,"poly_vars"); 
@@ -1019,6 +1025,7 @@ int Optimize (WORD numexpr) {
 	
 	// cleanup
 	M_free(buffer,"LoadOptim");
+
 	C->Pointer = C->Buffer + oldCpointer;
 	C->numrhs = oldCnumrhs;
 	
@@ -1026,5 +1033,5 @@ int Optimize (WORD numexpr) {
 }
 
 /*
-  	#] Optimize: 
+  	#] Optimize:
 */

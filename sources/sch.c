@@ -2146,6 +2146,8 @@ WORD WriteAll()
 		( ( prtf = e->printflag ) & PRINTON ) != 0 ) {
 			e->printflag = 0;
 			AO.NumInBrack = 0;
+			PutPreVar(AM.oldnumextrasymbols,
+					GetPreVar((UBYTE *)"EXTRASYMBOLS_",0),0,1);
 			if ( ( prtf & PRINTLFILE ) != 0 ) {
 				if ( AC.LogHandle < 0 ) prtf &= ~PRINTLFILE;
 			}
@@ -2362,41 +2364,57 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 		MesPrint("@ReadError in expression %s",name);
 		goto AboWrite;
 	}
-	lbrac = 0;
-	AO.InFbrack = 0;
-	AO.FortFirst = 0;
-	first = 1;
-	while ( GetTerm(BHEAD AO.termbuf) ) {
-		WORD *m;
-		GETSTOP(AO.termbuf,m);
+	PutPreVar(AM.oldnumextrasymbols,
+			GetPreVar((UBYTE *)"EXTRASYMBOLS_",0),0,1);
+	if ( AC.OutputMode == VORTRANMODE ) {
+		AO.OutSkip = 6;
+		if ( Optimize(AO.termbuf[3]) ) goto AboWrite;
+		AO.OutSkip = 3;
+		FiniLine();
+	}
+	else if ( AO.OptimizationLevel > 0 ) {
+		AO.OutSkip = 6;
+		if ( Optimize(AO.termbuf[3]) ) goto AboWrite;
+		AO.OutSkip = 3;
+		FiniLine();
+	}
+	else {
+		lbrac = 0;
+		AO.InFbrack = 0;
+		AO.FortFirst = 0;
+		first = 1;
+		while ( GetTerm(BHEAD AO.termbuf) ) {
+			WORD *m;
+			GETSTOP(AO.termbuf,m);
+			if ( first ) {
+				IniLine(0);
+				startinline = alreadyinline;
+				AO.OutFill = AO.OutputLine + startinline;
+			}
+			if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
+				goto AboWrite;
+			first = 0;
+		}
 		if ( first ) {
 			IniLine(0);
 			startinline = alreadyinline;
 			AO.OutFill = AO.OutputLine + startinline;
+			TOKENTOLINE(" 0","0");
 		}
-		if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
-			goto AboWrite;
-		first = 0;
-	}
-	if ( first ) {
-		IniLine(0);
-		startinline = alreadyinline;
-		AO.OutFill = AO.OutputLine + startinline;
-		TOKENTOLINE(" 0","0");
-	}
-	else if ( lbrac ) {
-		TOKENTOLINE(" )",")");
-	}
-	if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE
-		 && nosemi == 0 ) TokenToLine((UBYTE *)";");
-	AO.OutSkip = 3;
-	if ( AC.OutputSpaces == NORMALFORMAT && nosemi == 0 ) {
-		FiniLine();
-	}
-	else {
-		noextralinefeed = 1;
-		FiniLine();
-		noextralinefeed = 0;
+		else if ( lbrac ) {
+			TOKENTOLINE(" )",")");
+		}
+		if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE
+			 && nosemi == 0 ) TokenToLine((UBYTE *)";");
+		AO.OutSkip = 3;
+		if ( AC.OutputSpaces == NORMALFORMAT && nosemi == 0 ) {
+			FiniLine();
+		}
+		else {
+			noextralinefeed = 1;
+			FiniLine();
+			noextralinefeed = 0;
+		}
 	}
 	AO.IsBracket = 0;
 	AT.WorkPointer = AO.termbuf;
