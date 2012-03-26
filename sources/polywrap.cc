@@ -684,7 +684,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 		}
 		else {
 			int i = t[1];
-			if (s!=t)	memcpy(s,t,i*sizeof(WORD));
+			if (s!=t)	memmove(s,t,i*sizeof(WORD));
 			t += i; s += i;
 		}			
 	
