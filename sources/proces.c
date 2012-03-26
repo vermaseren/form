@@ -3493,7 +3493,7 @@ AutoGen:	i = *AT.TMout;
 		extractbuff = AT.TMbuff;
 		if ( extractbuff == AM.dbufnum ) {
 			d = DolToTerms(BHEAD replac);
-			if ( d ) {
+			if ( d && d->where != 0 ) {
 				iscopy = 1;
 				if ( AT.TMdolfac > 0 ) {	/* We need a factor */
 				  if ( AT.TMdolfac == 1 ) {

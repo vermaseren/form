@@ -65,6 +65,7 @@
 #define ParseSignedNumber(x,s) { int sgn; ParseSign(sgn,s)\
           ParseNumber(x,s) if ( sgn ) x = -x; }
 #define NCOPY(s,t,n) while ( --n >= 0 ) *s++ = *t++;
+#define WCOPY(s,t,n) { int nn=n; WORD *ss=(WORD *)s, *tt=(WORD *)t; while ( --nn >= 0 ) *ss++=*tt++; }
 #define NeedNumber(x,s,err) { int sgn = 1;                               \
 		while ( *s == ' ' || *s == '\t' || *s == '-' || *s == '+' ) {    \
 			if ( *s == '-' ) sgn = -sgn; s++; }                          \

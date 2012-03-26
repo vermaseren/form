@@ -913,7 +913,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ StartMore :
 */
 
@@ -964,7 +964,26 @@ VOID PrintHeader()
 #else
 	if ( !AM.silent ) {
 #endif
-		
+		char buffer[100], *s = buffer;
+		sprintf(s,"%s %s (%s)",FORMNAME,VERSIONSTR,PRODUCTIONDATE);
+		while ( *s ) s++;
+#if defined(WITHPTHREADS)
+		sprintf(s," %d worker",AM.totalnumberofthreads-1);
+		while ( *s ) s++;
+		if ( AM.totalnumberofthreads != 2 ) *s++ = 's';
+		else *s++ = ' ';
+#elif defined(PARALLEL)
+		sprintf(s," %d worker",PF.numtasks-1);
+		while ( *s ) s++;
+		if ( PF.numtasks != 2 ) *s++ = 's';
+		else *s++ = ' ';
+#else
+		sprintf(s,"           ");
+		while ( *s ) s++;
+#endif
+		while ( s-buffer < 45 ) *s++ = ' ';
+		sprintf(s," Run at: %s",MakeDate());
+		MesPrint("%s",buffer);
 	}
 #else
 /*
@@ -982,7 +1001,7 @@ VOID PrintHeader()
 }
 
 /*
- 		#] PrintHeader : 
+ 		#] PrintHeader :
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1296,7 +1315,6 @@ int main(int argc, char **argv)
 	if ( TryFileSetups() ) Terminate(-2);
 	if ( MakeSetupAllocs() ) Terminate(-2);
 	StartMore();
-	PrintHeader();
 	InitRecovery();
 	CheckRecoveryFile();
 	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
@@ -1310,6 +1328,7 @@ int main(int argc, char **argv)
 	ReserveTempFiles(0);
 	IniFbuffer(AT.fbufnum);
 #endif
+	PrintHeader();
 	IniVars();
 	Globalize(1);
 	TimeCPU(0);

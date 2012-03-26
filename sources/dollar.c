@@ -1467,6 +1467,9 @@ ShortArgument:
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		case DOLZERO:
+			d->where[0] = 0; size = 0;
+			w = d->where;
+			break;
 		default:
 			return(0);
 	}
@@ -1500,7 +1503,7 @@ ShortArgument:
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DolToLong :
 */
 
@@ -1679,7 +1682,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 		}
 #endif
 		newd = DolToTerms(BHEAD numdol);
-		if ( newd == 0 ) continue;
+		if ( newd == 0 || newd->where[0] == 0 ) continue;
 		r = newd->where;
 		NewSort(BHEAD0);
 		while ( *r ) {	/* Sum over the terms */

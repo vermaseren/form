@@ -899,11 +899,13 @@ PasteIn:;
 						newd = d;
 					}
 					else {
-						if ( ( newd = DolToTerms(BHEAD t[FUNHEAD+1]) ) == 0 ) {
+						if ( ( newd = DolToTerms(BHEAD t[FUNHEAD+1]) ) == 0 )
 							goto NormZero;
-						}
 					}
-					if ( newd->where[0] == 0 ) goto NormZero;
+					if ( newd->where[0] == 0 ) {
+						M_free(newd,"Copy of dollar variable");
+						goto NormZero;
+					}
 					if ( *t == FIRSTTERM ) {
 						idol = newd->where[0];
 						for ( ido = 0; ido < idol; ido++ ) termout[ido] = newd->where[ido];
@@ -2478,7 +2480,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3826,7 +3828,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 

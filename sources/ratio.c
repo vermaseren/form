@@ -863,18 +863,19 @@ oneterm:;
 				arg1[*arg1] = oldval1;
 			}
 			else if ( *arg1 == -DOLLAREXPRESSION ) {
-				d = DolToTerms(BHEAD arg1[1]);
-				m = d->where;
-				while ( *m ) {
-					GCDterms(BHEAD mh,m,mh); m += *m;
-					if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
-						gcdisone = 1; sign = 1;
-						if ( d->factors ) M_free(d->factors,"Dollar factors");
-						M_free(d,"Copy of dollar variable"); goto gcdone;
+				if ( ( d = DolToTerms(BHEAD arg1[1]) ) != 0 ) {
+					m = d->where;
+					while ( *m ) {
+						GCDterms(BHEAD mh,m,mh); m += *m;
+						if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
+							gcdisone = 1; sign = 1;
+							if ( d->factors ) M_free(d->factors,"Dollar factors");
+							M_free(d,"Copy of dollar variable"); goto gcdone;
+						}
 					}
+					if ( d->factors ) M_free(d->factors,"Dollar factors");
+					M_free(d,"Copy of dollar variable");
 				}
-				if ( d->factors ) M_free(d->factors,"Dollar factors");
-				M_free(d,"Copy of dollar variable");
 			}
 			else {
 				mm = CreateExpression(BHEAD arg1[1]);
@@ -2202,6 +2203,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 */
 	if ( *arg1 == -SNUMBER && arg1[1] == 0 ) {
 		if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
+zerozero:;
 			MLOCK(ErrorMessageLock);
 			MesPrint("0/0 in either div_ or rem_ function.");
 			MUNLOCK(ErrorMessageLock);
@@ -2210,6 +2212,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		return(0);
 	}
 	if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
+divzero:;
 		MLOCK(ErrorMessageLock);
 		MesPrint("Division by zero in either div_ or rem_ function.");
 		MUNLOCK(ErrorMessageLock);
@@ -2217,6 +2220,21 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	}
 	if ( ( arg1 = ConvertArgument(BHEAD arg1, &type1) ) == 0 ) goto CalledFrom;
 	if ( ( arg2 = ConvertArgument(BHEAD arg2, &type2) ) == 0 ) goto CalledFrom;
+	if ( *arg1 == 0 ) {
+		if ( *arg2 == 0 ) {
+			M_free(arg2,"DIVfunction");
+			M_free(arg1,"DIVfunction");
+			goto zerozero;
+		}
+		M_free(arg2,"DIVfunction");
+		M_free(arg1,"DIVfunction");
+		return(0);
+	}
+	if ( *arg2 == 0 ) {
+		M_free(arg2,"DIVfunction");
+		M_free(arg1,"DIVfunction");
+		goto divzero;
+	}
 	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
 	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
 	if ( type2 == 0 ) M_free(arg2,"DIVfunction");
@@ -2307,7 +2325,16 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 		DOLLARS d;
 		*type = 1;
 		d = DolToTerms(BHEAD arg[1]);
-		return(d->where);
+/*
+		The problem is that DolToTerms creates a copy of the dollar variable.
+		If we just return d->where we create a memory leak. Hence we have to
+		copy the contents of d->where to a new buffer
+*/
+		output = (WORD *)Malloc1((d->size+1)*sizeof(WORD),"Copy of dollar content");
+		WCOPY(output,d->where,d->size+1);
+		if ( d->factors ) M_free(d->factors,"Dollar factors");
+		M_free(d,"Copy of dollar variable");
+		return(output);
 	}
 #if ( FUNHEAD > 4 )
 	size = FUNHEAD+5;
@@ -2356,7 +2383,7 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 }
 
 /*
-  	#] ConvertArgument : 
+  	#] ConvertArgument :
 
 */
 
