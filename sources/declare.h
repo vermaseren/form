@@ -32,7 +32,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 /*
   	#[ Macro's :
@@ -64,7 +64,13 @@
           if ( *(s)++ == '-' ) sgn ^= 1;}}
 #define ParseSignedNumber(x,s) { int sgn; ParseSign(sgn,s)\
           ParseNumber(x,s) if ( sgn ) x = -x; }
+/*
+#define NCOPY(s,t,n) { memmove(s,t,n*sizeof(WORD)); s+=n; t+=n; n = -1; }
+*/
 #define NCOPY(s,t,n) while ( --n >= 0 ) *s++ = *t++;
+#define NCOPYI(s,t,n) while ( --n >= 0 ) *s++ = *t++;
+#define NCOPYB(s,t,n) while ( --n >= 0 ) *s++ = *t++;
+#define NCOPYI32(s,t,n) while ( --n >= 0 ) *s++ = *t++;
 #define WCOPY(s,t,n) { int nn=n; WORD *ss=(WORD *)s, *tt=(WORD *)t; while ( --nn >= 0 ) *ss++=*tt++; }
 #define NeedNumber(x,s,err) { int sgn = 1;                               \
 		while ( *s == ' ' || *s == '\t' || *s == '-' || *s == '+' ) {    \
@@ -264,7 +270,7 @@ extern VOID TELLFILE(int,POSITION *);
 #endif
 
 /*
-  	#] Macro's : 
+  	#] Macro's :
   	#[ Thread objects :
 */
 
@@ -321,7 +327,7 @@ extern VOID TELLFILE(int,POSITION *);
 #endif
 
 /*
-  	#] Thread objects : 
+  	#] Thread objects :
   	#[ Declarations :
 */
 
@@ -1371,6 +1377,6 @@ extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
 /*
-  	#] Declarations : 
+  	#] Declarations :
 */
 #endif

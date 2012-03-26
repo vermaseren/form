@@ -4079,7 +4079,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 				AO.ResizeWORD(p, q);				/* size (unchanged!) */
 				p += lenW; q += sizeof(WORD);
 				n = MAXENAME + 1;
-				NCOPY(q, p, n)
+				NCOPYB(q, p, n)
 				p += padp;
 				q += padq;
 			}
@@ -4108,14 +4108,14 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 					AO.ResizeWORD(p, q);			/* size (unchanged!) */
 					p += lenW; q += sizeof(WORD);
 					n = MAXENAME + 1;
-					NCOPY(q, p, n)
+					NCOPYB(q, p, n)
 					p += padp;
 					q += padq;
 				}
 			}
 			/* copy to output */
 			p = (UBYTE *)fileind; q = (UBYTE *)&buffer; n = sizeof(FILEINDEX);
-			NCOPY(p, q, n)
+			NCOPYB(p, q, n)
 		}
 		return ( 0 );
 	} else {
@@ -4275,12 +4275,12 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				*outsize += sizeof(struct SyMbOl) + realnamelen;
 				if ( realnamelen > namelen ) {
 					int j = namelen;
-					NCOPY(out, in, j);
+					NCOPYB(out, in, j);
 					out += realnamelen - namelen;
 				}
 				else {
 					int j = realnamelen;
-					NCOPY(out, in, j);
+					NCOPYB(out, in, j);
 					in += namelen - realnamelen;
 				}
 				++numReadSym;
@@ -4326,12 +4326,12 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				*outsize += sizeof(struct InDeX) + realnamelen;
 				if ( realnamelen > namelen ) {
 					int j = namelen;
-					NCOPY(out, in, j);
+					NCOPYB(out, in, j);
 					out += realnamelen - namelen;
 				}
 				else {
 					int j = realnamelen;
-					NCOPY(out, in, j);
+					NCOPYB(out, in, j);
 					in += namelen - realnamelen;
 				}
 				++numReadInd;
@@ -4376,12 +4376,12 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				*outsize += sizeof(struct VeCtOr) + realnamelen;
 				if ( realnamelen > namelen ) {
 					int j = namelen;
-					NCOPY(out, in, j)
+					NCOPYB(out, in, j)
 					out += realnamelen - namelen;
 				}
 				else {
 					int j = realnamelen;
-					NCOPY(out, in, j)
+					NCOPYB(out, in, j)
 					in += namelen - realnamelen;
 				}
 				++numReadVec;
@@ -4434,12 +4434,12 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				*outsize += sizeof(struct FuNcTiOn) + realnamelen;
 				if ( realnamelen > namelen ) {
 					int j = namelen;
-					NCOPY(out, in, j);
+					NCOPYB(out, in, j);
 					out += realnamelen - namelen;
 				}
 				else {
 					int j = realnamelen;
-					NCOPY(out, in, j);
+					NCOPYB(out, in, j);
 					in += namelen - realnamelen;
 				}
 				++numReadFun;
@@ -4646,7 +4646,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 					a = ++r;
 					b = out;
 					n = rend - r;
-					NCOPY(b, a, n)
+					NCOPYI32(b, a, n)
 				}
 				else {
 					++out; ++r;
@@ -4696,7 +4696,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 					a = ++r;
 					b = out;
 					n = rend - r;
-					NCOPY(b, a, n)
+					NCOPYI32(b, a, n)
 				}
 				else {
 					++out; ++r;
@@ -4790,7 +4790,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 									a = ++r;
 									b = out;
 									n = rend - r;
-									NCOPY(b, a, n)
+									NCOPYI32(b, a, n)
 								}
 								else {
 									++out; ++r;
@@ -4849,7 +4849,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 							a = r;
 							b = out;
 							n = rend - r;
-							NCOPY(b, a, n)
+							NCOPYI32(b, a, n)
 							coeff += extention;
 							end += extention;
 							argEnd += extention;
@@ -4862,7 +4862,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 							a = keepsizep;
 							b = out;
 							n = rend - r;
-							NCOPY(b, a, n)
+							NCOPYI32(b, a, n)
 							coeff -= extention;
 							end -= extention;
 							argEnd -= extention;

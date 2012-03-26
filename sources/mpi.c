@@ -1129,7 +1129,7 @@ static inline int PF_longMultiNewChunkAdded(int n)
 
 static inline void PF_longCopyChunk(int *to, int *from, int n)
 {
-	NCOPY(to,from,n)
+	NCOPYI(to,from,n)
 /*	for ( ; n > 0; n-- ) *to++ = *from++; */
 }
 

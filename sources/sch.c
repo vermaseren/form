@@ -624,13 +624,13 @@ VOID TokenToLine(UBYTE *s)
 			if ( i > (WORD)(AO.OutStop-Out) ) j = (WORD)(AO.OutStop - Out);
 			else						   j = i;
 			i -= j;
-			NCOPY(Out,s,j);
+			NCOPYB(Out,s,j);
 		}
 		else {
 			if ( i > (WORD)(AO.OutStop-Out) ) j = (WORD)(AO.OutStop - Out - 1);
 			else						   j = i;
 			i -= j;
-			NCOPY(Out,s,j);
+			NCOPYB(Out,s,j);
 			if ( i > 0 ) *Out++ = '\\';
 		}
 	}

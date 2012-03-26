@@ -518,7 +518,7 @@ extrashort:;
 }
 
 /*
- 		#] GetPreVar :
+ 		#] GetPreVar : 
  		#[ PutPreVar :
 */
 
@@ -4637,7 +4637,7 @@ UBYTE *PreCalc()
 			if ( buff ) {
 				i = n;
 				t = buff;
-				NCOPY(s,t,i);
+				NCOPYB(s,t,i);
 				M_free(buff,"pre calc buffer");
 			}
 			else s = newb;
@@ -4678,7 +4678,7 @@ UBYTE *PreCalc()
 		answer /= 10;
 		n++;
 	} while ( answer > 0 );
-	NCOPY(s,t,n);
+	NCOPYB(s,t,n);
 	*s = 0;
 setstring:;
 /*
