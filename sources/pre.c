@@ -5991,7 +5991,7 @@ ReturnWithError:
 
 int DoFactDollar(UBYTE *s)
 {
-	GETIDENTITY;
+	GETIDENTITY
 	WORD numdollar, *oldworkpointer;
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);

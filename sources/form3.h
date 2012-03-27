@@ -438,6 +438,7 @@ extern FILES *Ustdout;
 #define Utruncate(x) _chsize(_fileno(x),0)
 #define Ustdout stdout
 #define MAX_OPEN_FILES FOPEN_MAX
+#define bzero(b,len) (memset((b), 0, (len)), (void)0)
 
 #endif  /* UNIX */
 
