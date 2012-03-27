@@ -151,7 +151,7 @@ static POSITION PF_exprsize;   /* (master) The size of the expression at PF_EndS
 
 /**
  * Swaps the variables \a x and \a y. If sizeof(x) != sizeof(y) then a compilation error
- * will occur. A set of memcpy calls is expected to be inlined by the optimisation.
+ * will occur. A set of memcpy calls with constant sizes is expected to be inlined by the optimisation.
  */
 #define SWAP(x, y) \
 	do { \
@@ -1721,7 +1721,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				}
 			}
 			j = *(s = term);
-			while ( j-- ) { *(sb->fill[0])++ = *s++; }
+			NCOPY(sb->fill[0], s, j);
 			termsinbucket++;
 		}
 		/* NOTE: The last chunk will be sent to a slave at EndSort() => PF_EndSort()
@@ -1805,10 +1805,6 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 /*
 			#] Update flags :
-
-		This operation is moved to the beginning of each block, see PreProcessor
-		in pre.c. (BroadCast PreProcessor variables that have changed)
-
  		#] Master:
 */
 	}
@@ -2421,7 +2417,7 @@ static inline void copy_dollar(WORD index, WORD type, const WORD *where, LONG si
 			d->size  = size;
 		}
 		d->type  = type;
-		memcpy(d->where, where, sizeof(WORD) * size);
+		WCOPY(d->where, where, size);
 	}
 	else {
 		if ( d->where && d->where != &AM.dollarzero )
@@ -2594,9 +2590,8 @@ int PF_CollectModifiedDollars(void)
 					for ( j = 0; j < PF.numtasks; j++ ) {
 						const WORD *r;
 						for ( r = j == 0 ? Dollars[index].where : VectorPtr(b[j - 1].buf); *r; r += *r ) {
-							WORD *m = AT.WorkPointer;
-							memcpy(m, r, sizeof(WORD) * *r);
-							AT.WorkPointer += sizeof(WORD) * *r;
+							WCOPY(AT.WorkPointer, r, *r);
+							AT.WorkPointer += *r;
 							AR.Cnumlhs = 0;
 							if ( Generator(BHEAD oldwork, 0) ) {
 								LowerSortLevel(); LowerSortLevel();
