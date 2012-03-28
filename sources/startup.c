@@ -161,7 +161,7 @@ int DoTail(int argc, UBYTE **argv)
 							while ( *s >= '0' && *s <= '9' )
 								threadnum = 10*threadnum + *s++ - '0';
 							if ( *s ) {
-								Error1("Illegal value for option m or w: ",t);
+								printf("Illegal value for option m or w: %s\n",t);
 								errorflag++;
 							}
 /*							if ( threadnum == 1 ) threadnum = 0; */
@@ -180,13 +180,13 @@ int DoTail(int argc, UBYTE **argv)
 							/*Initialize pre-set external channels, see 
 								the file extcmd.c:*/
 							if(initPresetExternalChannels(*argv++,AX.timeout)<1){
-								Error0("Error initializing preset external channels");
+								printf("Error initializing preset external channels\n");
 								errorflag++;
 							}
 							AX.timeout=-1;/*This indicates that preset channels 
 													are initialized from cmdline*/
 						}else{
-							Error1("Illegal option in call of FORM: ",s);
+							printf("Illegal option in call of FORM: %s\n",s);
 							errorflag++;
 						}
 					}else
@@ -194,10 +194,10 @@ int DoTail(int argc, UBYTE **argv)
 					if ( s[1] ) {
 						if ( ( s[1]=='i' ) && ( s[2] == 'p' ) && (s[3] == 'e' )
 						&& ( s[4] == '\0' ) ){
-							Error0("Illegal option: Pipes not supported on this system.");
+							printf("Illegal option: Pipes not supported on this system.\n");
 						}
 						else {
-							Error1("Illegal option: ",s);
+							printf("Illegal option: %s\n",s);
 						}
 						errorflag++;
 					}
@@ -229,10 +229,16 @@ printversion:;
 #ifdef PARALLEL
 							if ( PF.me == MASTER )
 #endif
-							printf(FORMNAME" version %s(%s)\n",VERSIONSTR,PRODUCTIONDATE);
-							if ( onlyversion ) return(-1);
-							AM.InputFileName = 0;
-							break;
+							{
+								char buffer[100], *s = buffer;
+								sprintf(s,"%s %s (%s)",FORMNAME,VERSIONSTR,PRODUCTIONDATE);
+								while ( *s ) s++;
+								sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
+								while ( *s ) s++;
+								printf("%s\n",buffer);
+							}
+							if ( onlyversion ) return(1);
+							goto NoFile;
 				case 'y': /* Preprocessor dumps output. No compilation. */
 							AP.PreDebug = PREPROONLY;   break;
 				default:
@@ -241,12 +247,12 @@ printversion:;
 							while ( FG.cTable[*t] == 1 )
 								AM.SkipClears = 10*AM.SkipClears + *t++ - '0';
 							if ( *t != 0 ) {
-								Error1("Illegal numerical option in call of FORM: ",s);
+								printf("Illegal numerical option in call of FORM: %s\n",s);
 								errorflag++;
 							}
 						}
 						else {
-							Error1("Illegal option in call of FORM: ",s);
+							printf("Illegal option in call of FORM: %s\n",s);
 							errorflag++;
 						}
 						break;
@@ -254,7 +260,7 @@ printversion:;
 		}
 		else if ( argc == 0 && !AM.Interact ) AM.InputFileName = argv[-1];
 		else {
-			Error1("Illegal option in call of FORM: ",s);
+			printf("Illegal option in call of FORM: %s\n",s);
 			errorflag++;
 		}
 	}
@@ -289,7 +295,8 @@ printversion:;
 	}
 #endif
 	else {
-		Error0("No filename specified in call of FORM");
+NoFile:
+		printf("No filename specified in call of FORM\n");
 		errorflag++;
 	}
 	if ( AM.Path == 0 ) AM.Path = (UBYTE *)getenv("FORMPATH");
@@ -955,7 +962,7 @@ VOID StartMore()
 
 VOID PrintHeader()
 {
-#ifdef XCXC4
+#ifndef BETAVERSION
 /*
 	The header starting with the release of version 4.0
 */
@@ -966,6 +973,8 @@ VOID PrintHeader()
 #endif
 		char buffer[100], *s = buffer;
 		sprintf(s,"%s %s (%s)",FORMNAME,VERSIONSTR,PRODUCTIONDATE);
+		while ( *s ) s++;
+		sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
 		while ( *s ) s++;
 #if defined(WITHPTHREADS)
 		sprintf(s," %d worker",AM.totalnumberofthreads-1);
@@ -981,8 +990,8 @@ VOID PrintHeader()
 		sprintf(s,"           ");
 		while ( *s ) s++;
 #endif
-		while ( s-buffer < 45 ) *s++ = ' ';
-		sprintf(s," Run at: %s",MakeDate());
+		while ( s-buffer < 48 ) *s++ = ' ';
+		sprintf(s," Run: %s",MakeDate());
 		MesPrint("%s",buffer);
 	}
 #else
@@ -1001,7 +1010,7 @@ VOID PrintHeader()
 }
 
 /*
- 		#] PrintHeader :
+ 		#] PrintHeader : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1286,6 +1295,7 @@ ALLPRIVATES *ABdummy[10];
 
 int main(int argc, char **argv)
 {
+	int retval;
 	bzero((VOID *)(&A),sizeof(A)); /* make sure A is initialized at zero */
 	iniTools();
 #ifdef TRAPSIGNALS
@@ -1308,7 +1318,10 @@ int main(int argc, char **argv)
 	StartFiles();
 	StartVariables();
 
-	if ( DoTail(argc,(UBYTE **)argv) ) Terminate(-1);
+	if ( ( retval = DoTail(argc,(UBYTE **)argv) ) != 0 ) {
+		if ( retval > 0 ) Terminate(0);
+		else              Terminate(-1);
+	}
 	if ( DoSetups() ) Terminate(-2);
 	if ( OpenInput() ) Terminate(-3);
 	if ( TryEnvironment() ) Terminate(-2);
