@@ -889,8 +889,6 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
  */
 void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 
-	cout << a << endl;
-	cout << b << endl;
 	POLY_GETIDENTITY(a);
 
 	WORD nmodq=0;
