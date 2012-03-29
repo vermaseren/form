@@ -889,6 +889,8 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
  */
 void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 
+	cout << a << endl;
+	cout << b << endl;
 	POLY_GETIDENTITY(a);
 
 	WORD nmodq=0;
@@ -955,7 +957,8 @@ void poly::mul_heap (const poly &a, const poly &b, poly &c) {
 		heap[i][1] = 1;
 		heap[i][2] = -1;
 		heap[i][3] = 0;
-		heap[i][4] = 9999;
+		for (int j=0; j<AN.poly_num_vars; j++)
+			heap[i][4+j] = MAXPOSITIVE;
 	}
 	
 	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nheap;
