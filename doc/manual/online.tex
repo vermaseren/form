@@ -3,6 +3,8 @@
 \usepackage{html}
 \usepackage{graphics}
 
+\usepackage{makeidx}
+
 %\makeatletter
 %\renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
 %\makeatother
@@ -38,11 +40,11 @@
 \begin{document}
 
 \begin{center}
-{\Huge FORM \\ \Large version 4.0 beta \\ \huge Reference manual} \\
+{\Huge FORM \\ \Large version 4.0 \\ \huge Reference manual} \\
 
-{11-mar-2010} \\
+{29-mar-2012} \\
 
-{J.A.M.Vermaseren, J. Kuipers, M.Tentyukov and J.Vollinga}
+{J.A.M.~Vermaseren, J.~Kuipers, M.~Tentyukov, T.~Ueda and J.~Vollinga}
 \end{center}
 
 \tableofcontents
@@ -56,6 +58,7 @@
 \input{statements}
 \input{functions}
 \input{bracket}
+\input{polynomials}
 \input{tablebas}
 \input{gamma}
 \input{metric}
@@ -63,5 +66,7 @@
 \input{setup}
 \input{parallel}
 \input{external}
+
+\printindex
 
 \end{document}

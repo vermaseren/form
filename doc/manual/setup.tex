@@ -41,7 +41,7 @@ preprocessor variables\index{preprocessor variables} (see also
 preprocessor variables in the setup, provided it is not in the name of the 
 parameter/keyword.
 
-\leftvitem{3.8cm}{bracketindexsize\index{setup!bracketindexsize}\index{bracketindexsize}}
+\leftvitem{4.0cm}{bracketindexsize\index{setup!bracketindexsize}\index{bracketindexsize}}
 \rightvitem{12.6cm}{Maximum size in bytes of any individual index of a 
 bracketted expression. Each expression will have its own index. The index 
 starts with a relatively small size and will grow if needed. But it will 
@@ -49,12 +49,12 @@ never grow beyond the specified size. If more space is needed, \FORM\ will
 start skipping brackets and find those back later by linear search. See 
 also chapter~\ref{brackets} and section~\ref{substabracket}.}
 
-\leftvitem{3.8cm}{CommentChar\index{setup!commentchar}\index{commentchar}}
+\leftvitem{4.0cm}{CommentChar\index{setup!commentchar}\index{commentchar}}
 \rightvitem{12.6cm}{This should be followed by one or more blanks and a 
 single non-blank character. This character will be used to indicate 
 commentary, instead of the regular $*$ in column 1.}
 
-\leftvitem{3.8cm}{CompressSize\index{setup!compresssize}\index{compresssize}}
+\leftvitem{4.0cm}{CompressSize\index{setup!compresssize}\index{compresssize}}
 \rightvitem{12.6cm}{When compressing output terms, \FORM\ needs a compression 
 buffer. This buffer deals recursively with compression and decompression of 
 terms that are either written or read. Its size will be at least 
@@ -63,19 +63,19 @@ side of definitions or substitution it would have to be considerably
 longer. It is hoped that in the future this parameter can be eliminated. 
 CompressSize should be given in bytes.}
 
-\leftvitem{3.8cm}{ConstIndex\index{setup!constindex}\index{constindex}}
+\leftvitem{4.0cm}{ConstIndex\index{setup!constindex}\index{constindex}}
 \rightvitem{12.6cm}{This is the number of indices that are considered to be 
 constant indices like in fixed vector components (the so-called fixed 
 indices). The size of this parameter is not coupled to any array space, but 
 it should not go much beyond 1000 on a 32\index{32 bits} bit machine. On a 
 64\index{64 bits} bit machine it can go considerably further.}
 
-\leftvitem{3.8cm}{ContinuationLines\index{setup!continuationlines}\index{continuationlines}}
+\leftvitem{4.0cm}{ContinuationLines\index{setup!continuationlines}\index{continuationlines}}
 \rightvitem{12.6cm}{The number of continuation lines that the local Fortran 
 compiler will allow. This limits the number of continuation lines, when the 
 output option `Format Fortran' (see \ref{substaformat}) is selected.}
 
-\leftvitem{3.8cm}{Define\index{setup!define}\index{define}}
+\leftvitem{4.0cm}{Define\index{setup!define}\index{define}}
 \rightvitem{12.6cm}{The syntax is as in the \#define instruction in the 
 preprocessor (see \ref{preprovariables}), with the remark that in the setup 
 file there should be no leading \# character as that would make the line 
@@ -85,7 +85,7 @@ which could be used
 at a later point in the program to activate a modulus statement (see 
 \ref{substamodulus}).}
 
-\leftvitem{3.8cm}{DotChar\index{setup!dotchar}\index{dotchar}}
+\leftvitem{4.0cm}{DotChar\index{setup!dotchar}\index{dotchar}}
 \rightvitem{12.6cm}{There should be a single character following this name 
 (and the blank(s) after it). This character will be used instead of the \_, 
 when dotproducts\index{dotproducts} are printed in Fortran\index{Fortran} 
@@ -94,30 +94,30 @@ recognize the underscore as a valid character. In the olden days one could
 use here the dollar character but nowadays many Fortran compilers do not 
 recognize this character as belonging to a variable name.}
 
-\leftvitem{3.8cm}{FunctionLevels\index{setup!functionlevels}\index{functionlevels}}
+\leftvitem{4.0cm}{FunctionLevels\index{setup!functionlevels}\index{functionlevels}}
 \rightvitem{12.6cm}{The maximum number of levels that may occur, when 
 functions have functions in their arguments.}
 
-\leftvitem{3.8cm}{HideSize\index{setup!hidesize}\index{hidesize}}
+\leftvitem{4.0cm}{HideSize\index{setup!hidesize}\index{hidesize}}
 \rightvitem{12.6cm}{The size of the hide buffer. The size of this buffer is 
 normally set equal to scratchsize (see below). If one uses the setting of 
 HideSize after the setting of ScratchSize, one can give the hide buffer its 
 own size. There are cases that this can make the program faster.}
  
-\leftvitem{3.8cm}{IncDir\index{setup!incdir}\index{incdir}}
+\leftvitem{4.0cm}{IncDir\index{setup!incdir}\index{incdir}}
 \rightvitem{12.6cm}{Directory (or path of directories) in which \FORM\ will 
 look for files if they are not to be found in the current directory. This 
 involves files for the \#include\index{\#include} and \#call\index{\#call} 
 instructions. This variable takes precedence over the 
 Path\index{setup!path}\index{path} variable.}
 
-%\leftvitem{3.8cm}{IndentSpace\index{setup!indentspace}\index{indentspace}}
+%\leftvitem{4.0cm}{IndentSpace\index{setup!indentspace}\index{indentspace}}
 %\rightvitem{12.6cm}{}
 
-\leftvitem{3.8cm}{InsideFirst\index{setup!insidefirst}\index{insidefirst}}
+\leftvitem{4.0cm}{InsideFirst\index{setup!insidefirst}\index{insidefirst}}
 \rightvitem{12.6cm}{Not having any effect at the moment.}
  
-\leftvitem{3.8cm}{MaxNumberSize\index{setup!maxnumbersize}\index{maxnumbersize}}
+\leftvitem{4.0cm}{MaxNumberSize\index{setup!maxnumbersize}\index{maxnumbersize}}
 \rightvitem{12.6cm}{Allows the setting of the maximum size of the numbers 
 in \FORM. The number should be given in words. For 32\index{32 bits} bit 
 systems a word is two bytes and for 64\index{64 bits} bit systems a word is 
@@ -130,7 +130,7 @@ before a runaway algorithm runs into limitations of size (arithmetic for
 very long fractions is not very fast due to the continuous need for 
 computing GCD's)}
 
-\leftvitem{3.8cm}{MaxTermSize\index{setup!maxtermsize}\index{maxtermsize}}
+\leftvitem{4.0cm}{MaxTermSize\index{setup!maxtermsize}\index{maxtermsize}}
 \rightvitem{12.6cm}{This\label{setupmaxtermsize}
 is the maximum size that an individual term may occupy in words. This 
 size does not affect any allocations. One should realize however that the 
@@ -144,12 +144,12 @@ absolute maximum is 32568 on 32\index{32 bits} bit systems and about $10^9$
 on 64\index{64 bits} bit systems (of course the workspace would have to be 
 considerably larger than that....).}
 
-\leftvitem{3.8cm}{MaxWildCards\index{setup!maxwildcards}\index{maxwildcards}}
+\leftvitem{4.0cm}{MaxWildCards\index{setup!maxwildcards}\index{maxwildcards}}
 \rightvitem{12.6cm}{The maximum number of wildcards that 
 can be active in a single matching of a pattern. Under normal circumstance 
 the default value of 100 should be more than enough.}
 
-\leftvitem{3.8cm}{NoSpacesInNumbers\index{setup!nospacesinnumbers}\index{nospacesinnumbers}}
+\leftvitem{4.0cm}{NoSpacesInNumbers\index{setup!nospacesinnumbers}\index{nospacesinnumbers}}
 \rightvitem{12.6cm}{Long\label{nospacesinnumbers} numbers are usually spread over several lines 
 by placing a backspace character at the end of each line and then 
 continuing at the next line. For cosmetic purposes \FORM\ puts usually a few 
@@ -159,58 +159,64 @@ blanks are omitted. The values of the variable are ON or OFF. There is also
 a command to change this behaviour at runtime. See the on and off commands 
 in sections \ref{staonnospacesinnumbers} and \ref{staoffnospacesinnumbers}.}
 
-\leftvitem{3.8cm}{NumStoreCaches\index{setup!numstorecaches}\index{numstorecaches}}
+\leftvitem{4.0cm}{NumStoreCaches\index{setup!numstorecaches}\index{numstorecaches}}
 \rightvitem{12.6cm}{This number determines how many store caches (see 
 the description of the SizeStoreCache setup parameter below) there will 
 be. In the case of parallel processing this will be the number of caches 
 per processor.}
 
-\leftvitem{3.8cm}{NwriteStatistics\index{setup!nwritestatistics}\index{nwritestatistics}}
+\leftvitem{4.0cm}{NwriteStatistics\index{setup!nwritestatistics}\index{nwritestatistics}}
 \rightvitem{12.6cm}{When this word is mentioned, the default setting for the 
 statistics is that no run time statistics will be shown. Ordinarily they 
 will be shown.}
 
-\leftvitem{3.8cm}{NwriteThreadStatistics\index{setup!nwritethreadstatistics}
+\leftvitem{4.0cm}{NwriteThreadStatistics\index{setup!nwritethreadstatistics}
 \index{nwritethreadstatistics}}
 \rightvitem{12.6cm}{\vspace{1ex}This variable has the values ON or OFF. It controls for 
 \TFORM{} whether the statistics of the individual threads will be printed. The
 default value is ON.}
  
-\leftvitem{3.8cm}{OldOrder\index{setup!oldorder}\index{oldorder}}
+\leftvitem{4.0cm}{OldOrder\index{setup!oldorder}\index{oldorder}}
 \rightvitem{12.6cm}{A special flag (values ON/OFF) by which one can still 
 select the old option of not checking for the order of statements inside a 
 module. This should be used only in the case that it is nearly impossible 
 to change a program to the new mode in which the order of the statements 
 (declarations etc) is relevant. In the future this old mode may not exist.}
  
-\leftvitem{3.8cm}{Parentheses\index{setup!parentheses}\index{parentheses}}
+\leftvitem{4.0cm}{Parentheses\index{setup!parentheses}\index{parentheses}}
 \rightvitem{12.6cm}{The maximum number of nestings of parentheses or 
 functions inside functions. The variable may be eliminated in a later 
 version.}
  
-\leftvitem{3.8cm}{Path\index{setup!path}\index{path}}
+\leftvitem{4.0cm}{Path\index{setup!path}\index{path}}
 \rightvitem{12.6cm}{Directory (or path of directories) in which \FORM\ will 
 look for files if they are not to be found in the current directory. This 
 involves files for the \#include\index{\#include} and \#call\index{\#call} 
 instructions. \FORM\ will test this path after a potential path specified as 
 IncDir\index{setup!incdir}\index{incdir}.}
 
-%\leftvitem{3.8cm}{PolyGCDchoice\index{setup!polygcdchoice}\index{polygcdchoice}}
+%\leftvitem{4.0cm}{PolyGCDchoice\index{setup!polygcdchoice}\index{polygcdchoice}}
 %\rightvitem{12.6cm}{}
  
-\leftvitem{3.8cm}{ProcedureExtension\index{setup!procedureEetension}\index{procedureextension}}
+\leftvitem{4.0cm}{ProcedureExtension\index{setup!procedureEetension}\index{procedureextension}}
 \rightvitem{12.6cm}{The extension that will be used by \FORM\ for finding the 
 procedures that are in separate files. Restrictions on the strings used are 
 as explained in the preprocessor 
 \#procedureextension\index{\#procedureextension} instruction in section 
 \ref{preprocedureextension}.}
  
-\leftvitem{3.8cm}{ResetTimeOnClear\index{setup!resettimeonclear}\index{resettimeonclear}}
+\leftvitem{4.0cm}{ProcessBucketSize\index{setup!processbucketsize}\index{processbucketsize}}
+\rightvitem{12.6cm}{\label{setupprocessbucketsize} For the parallel version 
+\ParFORM. It is ignored in other versions. Tells \ParFORM\ how many terms 
+there should be in the buckets that are being distributed over the 
+secondary processors. See also \ref{substaprocessbucketsize}.}
+ 
+\leftvitem{4.0cm}{ResetTimeOnClear\index{setup!resettimeonclear}\index{resettimeonclear}}
 \rightvitem{12.6cm}{The value is ON or OFF. The default value is ON. This 
 means that by default the clock is reset after each .clear\index{.clear} 
 (see chapter \ref{modules} on modules) instruction at the end of a module.}
 
-\leftvitem{3.8cm}{ScratchSize\index{setup!scratchsize}\index{scratchsize}}
+\leftvitem{4.0cm}{ScratchSize\index{setup!scratchsize}\index{scratchsize}}
 \rightvitem{12.6cm}{The size of the input and the output buffers for the 
 regular algebra processing. Terms are read in in chunks this size and are 
 written to the output file using buffers of this size. There are either two 
@@ -221,7 +227,7 @@ buffers act as caches for the files with the extension .sc1\index{.sc1},
 .sc2\index{.sc2} and .sc3\index{.sc3}. See also the HideSize parameter 
 above for the independent setting of the size of the hide buffer.}
 
-\leftvitem{3.8cm}{SizeStoreCache\index{setup!sizestorecache}\index{sizestorecache}}
+\leftvitem{4.0cm}{SizeStoreCache\index{setup!sizestorecache}\index{sizestorecache}}
 \rightvitem{12.6cm}{The size of the caches\index{caches} that are used for 
 reading terms when stored expressions are used in the r.h.s.\ of a 
 statement. Typically there are several such caches and they make the 
@@ -234,14 +240,7 @@ described above. The size of these caches doesn't have to be very large as
 compared to some of the other buffers. It is recommended though to have 
 them at least as large as MaxTermSize\index{maxtermsize} (see above).}
  
-\leftvitem{3.8cm}{SlavePatchSize\index{setup!slavepatchsize}\index{slavepatchsize}}
-\rightvitem{12.6cm}{For the parallel version. It is ignored in sequential 
-versions. Tells \FORM\ how big the patches of terms that are being 
-distributed over the secondary processors should be. See also 
-\ref{substaslavepatchsize}. If the number is too small, \FORM\ will basically 
-send individual terms.}
- 
-\leftvitem{3.8cm}{SortType\index{setup!sorttype}\index{sorttype}}
+\leftvitem{4.0cm}{SortType\index{setup!sorttype}\index{sorttype}}
 \rightvitem{12.6cm}{Possible values are "lowfirst"\index{lowfirst}, 
 "highfirst"\index{highfirst} and "powerfirst"\index{powerfirst}. "lowfirst" 
 is the default. Determines the order in which the terms are placed during 
@@ -251,29 +250,29 @@ the case of powerfirst the combined powers of all symbols together are
 considered and the highest combined powers come first. See also the 
 on\index{on} statement in \ref{substaon}.}
 
-\leftvitem{3.8cm}{TempDir\index{setup!tempdir}\index{tempdir}}
+\leftvitem{4.0cm}{TempDir\index{setup!tempdir}\index{tempdir}}
 \rightvitem{12.6cm}{This variable should contain the name of a directory 
 that is the directory in which \FORM\ should make its temporary files. If the 
 -t (or -T) option is used when \FORM\ is started, the TempDir variable in the 
 setup file is ignored. \FORM\ can create a number of different temporary 
 files.}
  
-\leftvitem{3.8cm}{ThreadBucketSize\index{setup!threadbucketsize}\index{threadbucketsize}}
+\leftvitem{4.0cm}{ThreadBucketSize\index{setup!threadbucketsize}\index{threadbucketsize}}
 \rightvitem{12.6cm}{Only relevant for \TFORM. The size of the number of 
 terms sent to the workers simultaneously. 
 For details see the chapter on the parallel version (\ref{parallel}).}
  
-\leftvitem{3.8cm}{ThreadLoadBalancing\index{setup!threadloadbalancing}\index{threadloadbalancing}}
+\leftvitem{4.0cm}{ThreadLoadBalancing\index{setup!threadloadbalancing}\index{threadloadbalancing}}
 \rightvitem{12.6cm}{\indent Only relevant for \TFORM. Possible values are ON 
 or OFF. For details see the chapter on the parallel version (\ref{parallel}).}
  
-\leftvitem{3.8cm}{Threads\index{setup!threads}\index{threads}}
+\leftvitem{4.0cm}{Threads\index{setup!threads}\index{threads}}
 \rightvitem{12.6cm}{Only relevant for \TFORM\ (see chapter on the parallel 
 version). Specifies the default number of worker threads to be used. The 
 values 0 and 1 will indicate that running will only be done by the master 
 thread (\ref{parallel}).}
 
-\leftvitem{3.8cm}{ThreadScratchOutSize\index{setup!threadscratchoutsize}\index{threadscratchoutsize}}
+\leftvitem{4.0cm}{ThreadScratchOutSize\index{setup!threadscratchoutsize}\index{threadscratchoutsize}}
 \rightvitem{12.6cm}{The size of the output scratch buffers for each of the 
 worker threads. These buffers will be used when the InParallel 
 statement~\ref{substainparallel} is active. They are used to catch the 
@@ -282,7 +281,7 @@ they are copied to the output scratch buffer/file of the master. The output
 scratch buffer/file of each worker will never contain more than one 
 expression at a time.}
 
-\leftvitem{3.8cm}{ThreadScratchSize\index{setup!threadscratchsize}\index{threadscratchsize}}
+\leftvitem{4.0cm}{ThreadScratchSize\index{setup!threadscratchsize}\index{threadscratchsize}}
 \rightvitem{12.6cm}{The size of the input scratch buffers for each of the 
 worker threads. These buffers are only used when the main scratch buffers 
 of the master process aren't sufficient and scratch files have been made. 
@@ -294,11 +293,11 @@ productive if these buffers are very large. This parameter sets the value
 for the input and the hide\index{hide} scratch files. The output scratch 
 size for the workers is set with the ThreadScratchOutSize parameter.}
 
-%\leftvitem{3.8cm}{ThreadSortFileSynch\index{setup!threadsortfilesynch}\index{threadsortfilesynch}}
+%\leftvitem{4.0cm}{ThreadSortFileSynch\index{setup!threadsortfilesynch}\index{threadsortfilesynch}}
 %\rightvitem{12.6cm}{\indent Only relevant for \TFORM. Possible values are ON 
 %or OFF. For details see the chapter on the parallel version (\ref{parallel}).}
 
-\leftvitem{3.8cm}{TotalSize\index{setup!totalsize}\index{totalsize}}
+\leftvitem{4.0cm}{TotalSize\index{setup!totalsize}\index{totalsize}}
 \rightvitem{12.6cm}{Puts \FORM\ in a mode in which it tries to determine 
 the maximum space occupied by all expressions at any given moment during 
 the execution of the program. This space is the sum of the 
@@ -307,19 +306,11 @@ maximum is printed at the end of the program. The same can be obtained with
 the "On TotalSize" statement (see \ref{ontotalsize}) or the -T option 
 in the command tail when \FORM\ is started (see \ref{running}).}
 
-\leftvitem{3.8cm}{WorkSpace\index{setup!workspace}\index{workspace}}
+\leftvitem{4.0cm}{WorkSpace\index{setup!workspace}\index{workspace}}
 \rightvitem{12.6cm}{The size of the heap that is used by the algebra 
 processor when it is evaluating the substitution tree. It will contain 
 terms, half finished terms and other information. The size of the workspace 
 may be a limitation on the depth of a substitution tree.}
-
-%\leftvitem{3.8cm}{ZipSize\index{setup!zipsize}\index{zipsize}}
-%\rightvitem{12.6cm}{This parameter defines the maximum size of a buffer for 
-%compression and decompression of parts of expressions with the ZIP 
-%algorithm. Currently this algorithm is not in use yet, but it is one of the 
-%relatively urgent future projects. ZIP compression can reduce intermediate 
-%files by a factor 4.}
-%%%%%%%for compressing .sav files?
 
 Variables that take a path\index{path} for their value expect a sequence of 
 directories, separated by colon characters as in the UNIX\index{UNIX} way 
@@ -462,9 +453,9 @@ oldorder &              OFF           & OFF \\
 parentheses &           100           & 100 \\
 path &                  .             & . \\
 %polygcdchoice &        0             & 0 \\
+processbucketsize &     1000          & 1000 \\
 scratchsize &           50000000      & 50000000 \\
 sizestorecache &        32768         & 32768 \\
-slavepatchsize &        10            & 10 \\
 smallextension &        20000000      & 20000000 \\
 smallsize &             10000000      & 10000000 \\
 sortiosize &            100000        & 100000 \\

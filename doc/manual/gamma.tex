@@ -277,4 +277,17 @@ Time =       0.02 sec    Generated terms =       1053
 The precise workings of the distrib\_\index{distrib\_} function is given in 
 \ref{fundistrib}.
 
-
+One should be careful when using projection operators of spinors. The 
+sloppy way is to write
+\begin{verbatim}
+    (g_(1,p)+m)
+\end{verbatim}
+but technically this is not correct. The correct way is
+\begin{verbatim}
+    (g_(1,p)+m*gi_(1))
+\end{verbatim}
+to avoid the possibility that in the end a trace will be taken over a term 
+that does not have any gamma matrix. If the projection operator is however 
+multiplied by other gamma matrices, it makes no difference whether the unit 
+matrix is present. That is why the sloppy notation will almost always give 
+the correct result. Almost always....

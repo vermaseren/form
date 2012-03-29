@@ -33,7 +33,7 @@ the same time as a declaration.
 
 What can be stored in a dollar variable?
 \begin{itemize}
-\item Algebraic expressions like in \verb:$var = (a+b)^2;:
+\item Algebraic expressions as in \verb:$var = (a+b)^2;:
 \item Individual objects like indices, numbers, symbols.
 \item Zero.
 \item Parts of a term.
@@ -138,11 +138,15 @@ Note the difference between \verb:#$a = 0;: and \verb:$a = 0;:. One CANNOT
 make a wildcard\index{wildcard} construction for dollar variables 
 themselves as in \verb:id f($var?) = ...;:
 
-Dollar variables CANNOT be indexed as in \verb:$var(2): or something 
+Dollar variables CANNOT have arguments as in \verb:$var(2): or something 
 equivalent. There is however a solution at the preprocessor level for this 
 by defining individual variables \verb:$var1: to \verb:$varn: and then 
 using \verb:$var`i': or \verb:`$var`i'': for some preprocessor variable 
-\verb:i:.
+\verb:i:. The exception is the indication of factors when a dollar variable 
+has been factorized (see the \#factdollar instruction~\ref{prefactdollar} 
+and the factdollar statement~\ref{substafactdollar}). This is explained 
+later in this chapter and in the chapter about 
+polynomials~\ref{polynomials}.
 
 Printing dollar\index{dollar!printing} variables:
 \begin{itemize}
@@ -209,6 +213,43 @@ Counting terms:
     .end
 \end{verbatim}
 
+Starting with version 4, \FORM\ has the capability to factorize polynomials 
+(see the chapter on polynomials~\ref{polynomials}). One type of objects 
+that can be factorized is the dollar variables. The immediate question here 
+is how to access the factors. As we mentioned before in this chapter, 
+normally there is no direct way to use arguments for dollar variables. For 
+the factors however we have a way of indexing the dollar variables as in 
+\verb:$var[1]:,...,\verb:$var[n]: when there are n factors. The number of 
+factors can be obtained as \verb:$var[0]:. In the index field can only be 
+(nonnegative integer) numbers, dollar variables or factors of dollar 
+variables that evaluate into (nonnegative integer) numbers.
+\begin{verbatim}
+    Symbol x,y;
+    CFunction f1,f2;
+    Local F = f1(x^2+2*x*y+y^2)+f1(x^4-y^4);
+    id  f1(x?$x) = f2(x);
+    FactDollar,$x;
+    Do $i = 1,$x[0];
+      Print "In %t factor %$ is %$",$i,$x[$i];
+    Enddo;
+    .end
+In  + f2(y^2 + 2*x*y + x^2) factor 1 is y + x
+In  + f2(y^2 + 2*x*y + x^2) factor 2 is y + x
+In  + f2( - y^4 + x^4) factor 1 is  - 1
+In  + f2( - y^4 + x^4) factor 2 is y - x
+In  + f2( - y^4 + x^4) factor 3 is y + x
+In  + f2( - y^4 + x^4) factor 4 is y^2 + x^2
+\end{verbatim}
+
+One thing to note is that the use of
+\begin{verbatim}
+     f(<$x[1]>,...,<$x[$x[0]]>)
+\end{verbatim}
+is illegal. \verb:$x[0]: will be inserted during execution time, while the 
+expansion of the triple dot operator is done by the preprocessor. Hence we 
+should use \verb:`$x[0]': but then \verb:$x: must be known and factorized 
+already at compile time.
+ 
 \section{Dollar variables in a parallel environment}
 \label{pardollars}
 
@@ -233,7 +274,7 @@ Usually this program will give the 'correct' answer, but in principle one
 thread could define \verb:$x: and then the next thread could overwrite this 
 value before the first thread has used it. This is serious. Hence \FORM\ 
 will veto\index{veto} the use of multiple threads/processors for modules in 
-which dollar variables get values during the execution of the program, 
+which dollar variables obtain values during the execution of the program, 
 unless the user can give \FORM\ more information about the use of the 
 dollar variables. In the above case the value of \verb:$x: will be local to 
 each term and hence to each thread\index{thread}. The value in previous 
@@ -251,13 +292,13 @@ This would be:
     ModuleOption,local,$x;
     .end
 \end{verbatim}
-In this case \FORM\ makes at the start of the execution of the module a copy 
-of whatever value \verb:$x: has at that moment (in this case no value yet 
-and hence it gets set to zero) for each thread/processor and then each 
-thread/processor uses its own copy during execution. After the module has 
-been completed the local copies are removed and the original global value 
-is accessible again. This way execution will be safe in a parallel 
-environment.
+In this case \FORM\ makes at the start of the execution of the module a 
+copy of whatever value \verb:$x: has at that moment for each 
+thread/processor (in this case no value yet and hence it gets set to zero) 
+and then each thread/processor uses its own copy during execution. After 
+the module has been completed the local copies are removed and the original 
+global value is accessible again. This way execution will be safe in a 
+parallel environment.
 
 There are more cases that \FORM\ can handle in a parallel environment. 
 These are also options in the moduleoption statement:
@@ -298,3 +339,4 @@ sample program is given below:
     .end
 \end{verbatim}
 The print statement is showing which thread is dealing with which term.
+

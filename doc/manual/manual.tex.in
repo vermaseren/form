@@ -7,6 +7,16 @@
 
 \usepackage{makeidx}
 
+% Use hyperref package (hyperlinks) with correct option for pdflatex/latex:
+\usepackage{ifpdf}
+\ifpdf
+\RequirePackage[pdftex]{hyperref}
+\else
+\RequirePackage[hypertex]{hyperref}
+\fi
+% and link indices back to text:
+\hypersetup{hyperindex,pagebackref,pdfpagemode={None},draft=false} 
+
 \newcommand{\pfill}{\hfill}
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
 \newcommand{\lefttabitem}[1]{\noindent{\begin{minipage}[t]{4cm}{#1}

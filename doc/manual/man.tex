@@ -7,6 +7,17 @@
 
 \usepackage{makeidx}
 
+% Use hyperref package (hyperlinks) with correct option for pdflatex/latex:
+\usepackage{ifpdf}
+\ifpdf
+\RequirePackage[pdftex]{hyperref}
+\else
+\RequirePackage[hypertex]{hyperref}
+\fi
+% and link indices back to text:
+%\hypersetup{pdfpagemode={None},draft=false} 
+%\hypersetup{hyperindex,pagebackref,pdfpagemode={None},draft=false} 
+
 \newcommand{\pfill}{\hfill}
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
 \newcommand{\lefttabitem}[1]{\noindent{\begin{minipage}[t]{4cm}{#1}
@@ -22,7 +33,7 @@
 \textheight 655pt      % Height of text (including footnotes and figures,
                        % excluding running head and foot).
                        % Note 1cm = 28.453pt
-\textwidth 16.5cm      % Width of text line.
+\textwidth 16.7cm      % Width of text line.
 %
 % Need to move the origin on the page to centre the block of text:
 %
@@ -48,9 +59,9 @@
 
 \begin{document}
 \begin{titlepage}
-\title{\Huge FORM \\ \Large version 4.0 beta \\ \huge Reference manual}
-\date{11-mar-2010}
-\author{J.A.M.Vermaseren, J. Kuipers, M.Tentyukov and J.Vollinga}
+\title{\Huge FORM \\ \Large version 4.0 \\ \huge Reference manual}
+\date{29-mar-2012}
+\author{J.A.M.~Vermaseren, J.~Kuipers, M.~Tentyukov, T.~Ueda and J.~Vollinga}
 \end{titlepage}
 \maketitle
 %\clearemptydoublepage
@@ -85,6 +96,7 @@
 \input{statements}
 \input{functions}
 \input{bracket}
+\input{polynomials}
 \input{tablebas}
 \input{gamma}
 \input{metric}

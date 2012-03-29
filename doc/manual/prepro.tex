@@ -60,10 +60,8 @@ any longer.
 \noindent \FORM\ has a number of built in preprocessor variables. They are:
 
 \noindent \begin{tabular}{ll}
-VERSION\_     &\index{VERSION\_} The current version as the 3 in 3.2.\\
-SUBVERSION\_  &\index{SUBVERSION\_} The sub-version as the 2 in 3.2.\\
-NAMEVERSION\_ &\index{NAMEVERSION\_} For special versions that are 
-                experimental. Otherwise empty.\\
+VERSION\_     &\index{VERSION\_} The current version as the 4 in 4.0.\\
+SUBVERSION\_  &\index{SUBVERSION\_} The sub-version as the 0 in 4.0.\\
 NAME\_        &\index{NAME\_} The name of the program file.\\
 DATE\_        &\index{DATE\_} The date of the current run.\\
 CMODULE\_     &\index{CMODULE\_} The number of the current module.\\
@@ -249,6 +247,29 @@ the above constructions, creating code that was very hard to read. The
 much.
 
 %--#] ... : 
+%--#[ addseparator :
+ 
+\section{\#addseparator}
+\label{preaddseparator}
+
+\noindent Syntax:
+
+\#addseparator character
+ 
+\noindent See also \#rmseparator (\ref{prermseparator}),
+            \#call (\ref{precall}), \#do (\ref{predo})
+
+\noindent Adds a character\index{\#addseparator} to the list of permissible 
+separator characters for arguments of \#call or \#do instructions. By 
+default the two characters that are permitted are the comma and the 
+character \verb:|:. Blanks, tabs and double quotes are ignored. Note that 
+the comma must be specified between double quotes as in
+\begin{verbatim}
+  #addseparator ","
+\end{verbatim}
+
+
+%--#] addseparator : 
 %--#[ append :
  
 \section{\#append}
@@ -289,6 +310,24 @@ instruction. The \#break instruction must of course be inside the range of
 a \#switch\index{\#switch}/\#endswitch construction.
 
 %--#] break : 
+%--#[ breakdo :
+ 
+\section{\#breakdo}
+\label{prebreakdo}
+
+\noindent Syntax:
+
+\#breakdo [{\tt<}number{\tt>}]
+
+\noindent See also \#do (\ref{predo} and \#enddo (\ref{preenddo})
+
+\noindent The \#breakdo\index{\#breakdo} instruction allows one to jump out 
+of a \#do loop. If a (nonzero integer) number is specified it indicates the 
+number of loops the program should terminate. Control will continue after 
+the the \#enddo instruction of the number of loops indicated by `number'. 
+The default value is one. If the value is zero the statement has no effect.
+
+%--#] breakdo : 
 %--#[ call :
 
 \section{\#call}
@@ -593,20 +632,26 @@ should be referred to by enclosing its name between a backquote/quote pair
 as is usual for preprocessor variables. The various possible parameter 
 fields have the following meaning:
 \begin{description}
-\item[\#do lvar = i1,i2] The parameters i1 and i2 should be integers. The 
+\item[\#do lvar = i1,i2] The parameters i1 and i2 should be integers or 
+names of dollar expressions that evaluate into integers. The 
 first time in the loop lvar will get the value of i1 (as a string) and each 
 next time its value will be one greater (translated into a string again). 
 The last time in the loop the value of lvar will be the greatest integer 
 that is less or equal to i2. If i2 is less than i1, the loop is skipped 
-completely.
-\item[\#do lvar = i1,i2,i3] The parameters i1,i2 and i3 should be integers. 
+completely. If i2 is the name of a dollar variable, each time the control 
+reaches the end of the loop the dollar variable is evaluated and the 
+current value is used.
+\item[\#do lvar = i1,i2,i3] The parameters i1,i2 and i3 should be integers 
+or names of dollar expressions that evaluate into integers. 
 The first time in the loop lvar will get the value of i1 (as a string) and 
 each next time its value will be incremented by adding i3 (translated into 
 a string again). If i3 is positive, the last value of lvar will be the one 
 for which lvar+i3 is greater than i2. If i2 is less than i1, the loop is 
 skipped completely. If i3 is negative the last value of lvar will be the 
 one for which lvar+i3 is less than i2. If i3 is zero there will be an 
-error.
+error. If i2 or i3 are the names of a dollar variable, each time the control 
+reaches the end of the loop the dollar variable(s) is/are evaluated and the 
+current value is used.
 \item[\#do lvar = $\{$string1$|$...$|$stringn$\}$] The first time in the 
 loop the value of lvar is the string indicated by string1, the next time 
 will be string2 etc till the last time when it will be stringn. This is 
@@ -784,6 +829,22 @@ do\index{do loop} loop. See the \#do\index{\#do} instruction.
 Reading will continue after it.
 
 %--#] endif : 
+%--#[ endinside :
+
+\section{\#endinside}
+\label{preendinside}
+
+\noindent Syntax:
+
+\#endinside
+ 
+\noindent See also \#inside (\ref{preinside})
+
+\noindent Used to\index{\#endinside} terminate a \#inside construction in 
+the preprocessor. For more details, see the \#inside\index{\#inside} 
+instruction.
+
+%--#] endinside : 
 %--#[ endprocedure :
 
 \section{\#endprocedure}
@@ -884,6 +945,28 @@ external command.  All further instructions
 deal with the current external command.
 
 %--#] external : 
+%--#[ factdollar :
+
+\section{\#factdollar}
+\label{prefactdollar}
+
+\noindent Syntax:
+
+\#factdollar \$-variable
+ 
+\noindent See also the chapters on polynomials\ref{polynomials} and 
+\$-variables\ref{dollars}
+
+\noindent The \#factdollar\index{\#factdollar} instruction causes the 
+factorization of the indicated \$-variable. After this instruction and 
+until the \$-variable is redefined there will be two versions of the 
+variable: one is the original unfactorized version and the other is a list 
+of factors. If the name of the variable is \$a the factors can be accessed 
+as $\$a[1],\cdots,\$a[n]$. The total number of factors is given by 
+$\$a[0]$. These factors can also be treated as preprocessor variables by 
+putting them between quotes as in `$\$a[2]$'.
+
+%--#] factdollar : 
 %--#[ fromexternal :
 
 \section{\#fromexternal}
@@ -989,12 +1072,23 @@ matching \#endif instruction.
 
 Like with the regular if-statement (see \ref{substaif}), there are some special 
 functions that allow the asking of questions about objects. These are
+ 
+\leftvitem{3cm}{exists()}
+\rightvitem{13cm}{The argument of exists\index{exists} is the name of an 
+expression or a \$-variable. This function then returns one if this object 
+exists, cq. has been defined. Otherwise it returns zero. }
+ 
+\leftvitem{3cm}{isfactorized()}
+\rightvitem{13cm}{The argument of isfactorized\index{isfactorized} is the 
+name of an expression or a \$-variable. This function then returns one if 
+the object has been factorized. Otherwise it returns zero. }
 
-\leftvitem{3cm}{termsin()}
-\rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
-expression or a \$-variable. This function then evaluates into the number 
-of terms in that expression.}
-
+\leftvitem{3cm}{isnumerical()}
+\rightvitem{13cm}{The argument of isnumerical\index{isnumerical} is the 
+name of an expression or a \$-variable. This function then returns one if 
+the object contains a single term that is purely numerical in nature. 
+Otherwise it returns zero. }
+ 
 \leftvitem{3cm}{maxpowerof()}
 \rightvitem{13cm}{The argument of maxpowerof\index{maxpowerof} is the name 
 of a symbol. This function then evaluates into the maximum power of that 
@@ -1008,6 +1102,11 @@ of a symbol. This function then evaluates into the minimum power of that
 symbol as it has been declared. If no minimum power has been set in the 
 declaration of the symbol, the general minimum power for symbols is 
 returned (see \ref{substasymbols}).}
+ 
+\leftvitem{3cm}{termsin()}
+\rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
+expression or a \$-variable. This function then evaluates into the number 
+of terms in that expression.}
 
 %--#] if : 
 %--#[ ifdef :
@@ -1098,6 +1197,29 @@ manual of the STedi editor which is also provided in the \FORM\
 distribution.
 
 %--#] include : 
+%--#[ inside :
+
+\section{\#inside}
+\label{preinside}
+
+\noindent Syntax:
+
+\#inside \$var1 [more \$variables]
+ 
+\noindent See also \#endinside (\ref{preendinside})
+
+\noindent Used to\index{\#inside} execute a few statements on the contents 
+of one or more dollar variables (see \ref{dollars}) during compilation time.
+Although this is a preprocessor instruction one can use the 
+triple dot operator provided one uses the generic version with the $<>$.
+
+\noindent The statements in the scope of the \#inside / \#endinside 
+construction must be regular executable statements. They may not contain 
+end-of-module instructions like the .sort instruction. It is allowed to use 
+dollar variables, procedures and preprocessor do loops and if's, but it is 
+not allowed to nest the \#inside / \#endinside constructions.
+
+%--#] inside : 
 %--#[ message :
 
 \section{\#message}
@@ -1368,6 +1490,28 @@ every process in its process group and waits for the external command to be
 finished.
 
 %--#] rmexternal : 
+%--#[ rmseparator :
+ 
+\section{\#rmseparator}
+\label{prermseparator}
+
+\noindent Syntax:
+
+\#rmseparator character
+ 
+\noindent See also \#addseparator (\ref{preaddseparator}),
+            \#call (\ref{precall}), \#do (\ref{predo})
+
+\noindent Removes a character\index{\#rmseparator} from the list of permissible 
+separator characters for arguments of \#call or \#do instructions. By 
+default the two characters that are permitted are the comma and the 
+character \verb:|:. Blanks, tabs and double quotes are ignored. Note that 
+the comma must be specified between double quotes as in
+\begin{verbatim}
+  #rmseparator ","
+\end{verbatim}
+
+%--#] rmseparator : 
 %--#[ setexternal :
 
 \section{\#setexternal}
@@ -1450,6 +1594,31 @@ KILL\index{KILL signal} signal to the wholegroup, which means that also
 \FORM\ itself will be killed.
 
 %--#] setexternalattr : 
+%--#[ setrandom :
+
+\section{\#setrandom}
+\label{presetrandom}
+
+\noindent Syntax:
+
+\#setrandom number
+ 
+\noindent See also random\_ (\ref{funrandom}) and ranperm\_ (\ref{funranperm})
+
+\noindent The \#setrandom\index{\#setrandom} instruction initializes the 
+random number generator 
+random\_\ref{funrandom}\index{random\_}\index{function!random\_}. The 
+number that is used as a seed can have the length of two words in FORM. 
+This means that on a 32-bits computer it can be an (unsigned) 32-bits 
+integer and on a 64-bits computer it can be an (unsigned) 64 bits integer. 
+If there is no \#setrandom instruction the random number generator is 
+initialized in a built in standard way. The \#setrandom instruction also 
+initializes the random number generators of the workers when one uses TFORM 
+or ParFORM. They are initialized with different seeds that are derived in a 
+non-trivial way from the seed given by the user and the number of the 
+worker.
+
+%--#] setrandom : 
 %--#[ show :
 
 \section{\#show}
@@ -1776,7 +1945,7 @@ selected). The output file looks like
 and each time after 19 continuation lines we have to break the expression 
 and use the \verb:fun = fun +: trick to continue.
 
-%--#] write :
+%--#] write : 
 %--#[ Some remarks :
 
 \section{Some remarks}

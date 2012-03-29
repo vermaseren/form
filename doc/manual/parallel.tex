@@ -12,9 +12,9 @@ version of \FORM. The parallel versions are:
 \begin{itemize}
 \item \ParFORM\index{ParFORM}: This version runs on processors that have 
 their own memory and preferably their own disk. Each processor gets a copy 
-of the complete program and a system like MPI\index{MPI} is used for the 
+of the complete program and MPI\index{MPI} is used for the 
 communication\index{communication}. When the network connections are very 
-fast one can also use \ParFORM\ on clusters of workstations. \ParFORM\ was 
+fast one can also use \ParFORM\ on computer clusters. \ParFORM\ was 
 developed at the university of Karlsruhe\index{Karlsruhe}.
 \item \TFORM\index{TFORM}: This version uses POSIX threads and runs on computers 
 which have several processors with a shared memory. Data is kept as common 
@@ -41,15 +41,15 @@ Whether this would give significant extra benefits needs to be
 investigated. When this project will be undertaken depends very much on the 
 availability of such computers.
 
-Because \ParFORM\ uses protocols like MPI\index{MPI}, and because these 
-protocols don't have rigorous standards (each platform seems to have its 
-own variety), the port to new machines is often rather painful. Hence 
-currently (year 2007) we don't have large numbers of executables ready in 
-the distribution site. Ports will take place on demand and availability of 
-time and resources. For \TFORM\ the situation is much more favorable. Its 
-treatment of the parallelization follows the standard for 
-POSIX\index{POSIX} threads (or PThreads) for which the libraries are 
-implemented on almost any UNIX\index{UNIX} system and many other systems.
+Because \ParFORM{} uses MPI\index{MPI} and because different MPI 
+environments are normally not binary compatible, the port to a new machine 
+requires a recompilation of the source code and a relinking to the MPI 
+library. Hence we do not have executables in the distribution site.
+One needs to build \ParFORM{} on one's computer.
+For \TFORM\ the situation is much more favorable. Its treatment of the 
+parallelization follows the standard for POSIX\index{POSIX} threads (or 
+PThreads) for which the libraries are implemented on almost any 
+UNIX\index{UNIX} system and many other systems.
 
 The ideal of a parallel version of \FORM\ is that it should execute nearly 
 any regular \FORM\ program, whether it was written for parallelization or 
@@ -160,23 +160,6 @@ file-to-masterbuffers-to-combined-output. Yet the writing and subsequent
 merging of the 4 files at the same time can be disastrous. Work is done to 
 improve this, but it may not be easy to circumvent facilities of the 
 operating system. Apparently the quality of the drivers is crucial here. 
-%There is a variable that can force FORM to make sure that the part of the 
-%file system that concerns the sort files is synchronized. This can be done 
-%with
-%\begin{verbatim}
-%    ThreadSortFileSynch ON
-%\end{verbatim}
-%or
-%\begin{verbatim}
-%    ThreadSortFileSynch OFF
-%\end{verbatim}
-%or in the setup file with the variable threadsortfilesynch to be set either 
-%on or off. Of course what can be done in the setup file can be done at the 
-%start of the program as with
-%\begin{verbatim}
-%    #: ThreadSortFileSynch on
-%\end{verbatim}
-%or in the environment.
 
 One can switch the parallel processing on or off (for the complete module) 
 at any moment in the program with the 
@@ -184,6 +167,12 @@ statements\index{on!threads}\index{off!threads}
 \begin{verbatim}
     On Threads;
     Off Threads;
+\end{verbatim}
+or using the moduleoption statement (\ref{substamoduleoption}) that
+affects \TFORM{}'s behaviour for just the current module:
+\begin{verbatim}
+    ModuleOption Parallel;
+    ModuleOption NoParallel;
 \end{verbatim}
 Additionally one can switch the statistics per thread on or off with
 \begin{verbatim}
@@ -226,31 +215,105 @@ buffers of the master. The workers get each 1/N times the size for these
 buffers, when there are N workers. In the case that makes these buffers too 
 small because of for instance MaxTermSize, the buffers may become larger.
 
-%--#] TFORM :
-%--%[ ParFORM :
+%--#] TFORM : 
+%--#[ ParFORM :
 
 \section{ParFORM}
 \label{parform}
 
-This section is still to be written. The current version does not have all 
-its necessary commands running yet (as specified in the moduleoption 
-statement \ref{substamoduleoption}). Keep tuned!
+Let us call the executable of \ParFORM\index{ParFORM} parform.
+The user must execute parform as an MPI\index{MPI} application.
+In many MPI implementations, this is done by using the mpirun\index{mpirun}
+command:
+\begin{verbatim}
+    mpirun -np 4 parform calcdia
+\end{verbatim}
+This example executes the program in the file calcdia.frm, using 4 
+processes,in which one process is the master process and the other 3 
+processes are the worker processes.
+One has to keep in mind that in some MPI implementations environment 
+variables will not be passed to an MPI application. Alternatively extra 
+options are needed for passing them.
+If one wants to run \ParFORM{} under a job scheduler on a computer cluster
+environment, one may need to write a job script, which depends to a great 
+extent on the environment.
 
-To be addressed:
+\ParFORM{} uses MPI for communications between the master and workers. 
+Actually terms are distributed by using point-to-point send/receive 
+operations of MPI. Since there is some latency for establishing a 
+connection between processes, especially between those running on different 
+computers, it is best to send terms in groups, like buckets in \TFORM{}. 
+The default number of terms in a bucket is currently 1000 in \ParFORM{}. It 
+can be changed with the ProcessBucketSize statement 
+(\ref{substaprocessbucketsize}\index{processbucketsize}) if this is deemed 
+necessary. It can also be changed for the current module with the statement 
+(\ref{substamoduleoption}\index{moduleoption!processbucketsize}).
+\begin{verbatim}
+    ModuleOption ProcessBucketSize number;
+\end{verbatim}
+And finally it can also be changed in the setup, using the 
+ProcessBucketSize (\ref{setupprocessbucketsize}) setup parameter.
+The first terms in an expression will be sent in smaller buckets to get the 
+workers something to do as soon as possible.
+
+One can switch the parallel processing on or off (for the complete module) 
+at any moment in the program with the statements\index{on!parallel}%
+\index{off!parallel}
+\begin{verbatim}
+    On Parallel;
+    Off Parallel;
+\end{verbatim}
+or using the moduleoption statement (\ref{substamoduleoption}) that
+affects \ParFORM{}'s behaviour for just the current module:
+\begin{verbatim}
+    ModuleOption Parallel;
+    ModuleOption NoParallel;
+\end{verbatim}
+Additionally one can switch the statistics per process on or off with
+\begin{verbatim}
+    On ProcessStats;
+    Off ProcessStats;
+\end{verbatim}
+When the process\index{on!processstats}\index{on!processstats} statistics 
+are switched off only the statistics of the master process are printed 
+which are usually only the final statistics for each of the expressions.
+
+As in \TFORM{}, \verb:%W: and \verb:%w: in the term by term 
+print\index{print} statement (see \ref{substaprint}) are available in 
+\ParFORM{}. They print the number of the current process and the 
+CPU-time used thus far in that process.
+
+In principle one can run all \FORM{} or \TFORM{} programs with \ParFORM{}.
+In practice \ParFORM{} is not so efficient for some problems, in which
+more data have to be synchronized between the master and the workers.
+The cases for which \ParFORM{} needs to send data via MPI include:
 \begin{itemize}
-\item How to run \ParFORM. Selection of processors.
-\item How \ParFORM\ runs (like one worker per processor and the master with 
-its own processor and waiting in loops rather than working with wakeup 
-signals).
-\item Special commands for controlling its performance.
-\item Buffer sizes.
-\item etc.
+  \item The redefine statements, which modify preprocessor variables
+        on the workers.
+  \item Modifying \$-variables in regular statements with a moduleoption
+        statement (see \ref{pardollars}, \ref{substamoduleoption}
+        and~\ref{dollars-in-parallel}).
+  \item Expression names appearing in right hand sides of definition or
+        substitution statements.
 \end{itemize}
+The last case may need more explanation.
+Consider the following code:
+\begin{verbatim}
+    Local G = F;
+    id a = F;
+\end{verbatim}
+where the expression F is supposed to be already defined. The point is that 
+these substitutions of the expression F are performed on the workers. The 
+workers, however, do not know the contents of the expression F because it 
+is stored on the master. Therefore, before executing this module \ParFORM{} 
+needs to make the master broadcast the expression F to the workers. This 
+may be quite time-consuming because the expression could be very large.
 
-%--%] ParFORM :
+%--#] ParFORM :
 %--#[ Some problems :
 
 \section{Some problems}
+\label{dollars-in-parallel}
 
 Both parallel versions share a number of problems which are inherent to 
 running in an environment in which the order\index{order of terms} in which 
@@ -309,34 +372,39 @@ it had before the module started execution. At the end of the module, all
 private values will be forgotten.
 \end{itemize}
 
-%Currently the only other way in which FORM switches automatically to its 
-%sequential mode for the entire module is when the redefine statement is 
-%detected by the compiler. The redefine statement makes FORM to change the 
-%value of a global object (a preprocessor variable) which cannot be done 
-%reliably. For this there is no solution. The best way around it is using 
-%\verb:$:-variables and preprocessor instructions. We show this in an 
-%example in which we construct the equivalent of a conditional repeat that 
-%includes a .sort instruction:
-%\begin{verbatim}
-%    #do i = 1,1
-%      statements
-%      if ( count(x,1) > 0 ) redefine i "0";
-%      .sort
-%    #enddo
-%\end{verbatim}
-%To run this in parallel, one could use
-%\begin{verbatim}
-%    #do i = 1,1
-%      #$i = 1;
-%      statements
-%      if ( count(x,1) > 0 ) $i = 0;
-%      ModuleOption minimum $i;
-%      .sort
-%      #redefine i "`$i'"
-%    #enddo
-%\end{verbatim}
-%Admitedly this isn't as simple as the redefine statement, but it works in 
-%all versions of \FORM\ starting with version 3.0.
+The redefine statement is a major inefficiency in a parallel environment. 
+It redefines a preprocessor variable and there is only a single bookkeeping 
+for such variables. This means that the variable has to be sent to the 
+master process (\ParFORM) or that a lock has to be placed to prevent other 
+workers to write to the same storage simultaneously (\TFORM). In addition 
+the final value in the preprocessor variable will be determined by the last 
+term processed in any of the workers. This may not be the same term in 
+different runs. It is up to the user to write programs that still give 
+correct results under such conditions. The best way around the inefficiency 
+is using \verb:$:-variables and preprocessor instructions. We show this in 
+an example in which we construct the equivalent of a conditional repeat 
+that includes a .sort instruction.
+\begin{verbatim}
+    #do i = 1,1
+      statements
+      if ( count(x,1) > 0 ) redefine i "0";
+      .sort
+    #enddo
+\end{verbatim}
+To run this in parallel, it is better to use the following code.
+\begin{verbatim}
+    #do i = 1,1
+      #$i = 1;
+      statements
+      if ( count(x,1) > 0 ) $i = 0;
+      ModuleOption minimum $i;
+      .sort
+      #redefine i "`$i'"
+    #enddo
+\end{verbatim}
+In this program the centrally stored value of \verb:$i: is updated at most 
+once. Admitedly it isn't as simple as the redefine statement, but it 
+works in all versions of \FORM\ starting with version 3.0.
 
 It should be noted that when a new expression is defined in its defining 
 module it starts out as a single term. Hence it cannot benefit from 
@@ -368,6 +436,4 @@ however allow such an implementation.
 %lack of access to suitable computers stopped further development at that 
 %moment.}
 
-%--#] Some problems :
-
-
+%--#] Some problems : 

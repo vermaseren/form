@@ -170,12 +170,12 @@ cannot be written to the large buffer. Hence the large buffer is sorted
 The result of this is written as a sorted patch to the
 sort\index{sort file} file. This file is one of the 
 temporary\index{temporary files} files that \FORM\ can create. It has the 
-extension .sor\index{.sor extension}. Then the third patch is written into 
-the --by now empty-- large buffer. At the end of term generation, the last 
-small buffer is sorted, its results written into the large buffer, then 
-that is sorted and its results written as the final patch into the sort 
-file. Then, finally the patches in the sort file are merged in a method 
-similar to the way the large buffer is sorted. This final sort is a 
+extension .sor\index{.sor extension}. Now the third patch can be written 
+into the --by now empty-- large buffer. At the end of term generation, the 
+last small buffer is sorted, its results written into the large buffer, 
+then that is sorted and its results written as the final patch into the 
+sort file. Then, finally the patches in the sort file are merged in a 
+method similar to the way the large buffer is sorted. This final sort is a 
 disk\index{disk to disk sort} to disk sort. Hence it can use the disk 
 rather intensely and the use of the CPU may drop temporarily, although it 
 is nothing so dramatic as when the computer is involved in heavy 

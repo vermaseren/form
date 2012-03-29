@@ -471,6 +471,7 @@ See also & trace4 (\ref{substatrace}) and the chapter on gamma algebra
     \gamma_a\gamma_\mu\gamma_b \Tr[\gamma_\mu S] & = &
          2\gamma_a( S + S^R ) \gamma_b  \nonumber
 \end{eqnarray}
+\setcounter{equation}{2}
 in order to contract traces. $S$ is here a string of
 gamma\index{gamma matrices} matrices and $S^R$ is the reverse string. This 
 identity is particularly useful when the matrices $\gamma_6 = 1+\gamma_5$ 
@@ -901,6 +902,64 @@ statement (see \ref{substaidentify}). It is just a shorthand notation for
 `id disorder'. \vspace{10mm}
 
 %--#] disorder : 
+%--#[ do :
+
+\section{do}
+\label{substado}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & do \$loopvar = lowvalue,highvalue\verb:{:,increment\verb:}:;
+\\ See also & enddo (\ref{substaenddo})
+\end{tabular} \vspace{4mm}
+
+\noindent The syntax is the typical syntax for do-loops. The loop variable 
+has to be a dollar variable. For parallel performance this variable can be 
+declared local in a moduleoption (see \ref{substamoduleoption}) statement, 
+unless it is also used in other ways in the current module. The loop 
+parameters should either be (short) integers or dollar variables or factors 
+of dollar variables provided they evaluate at run time to (short) integers. 
+The enddo statement should be in the same module as the do statement. In 
+addition it should be properly nested with if, repeat, while and argument 
+constructions.
+
+\noindent The do-loop facility is in principle superfuous, because the 
+repeat(\ref{substarepeat}), if(\ref{substaif} and the pattern matcher can 
+basically do everything the do-loop can do. Sometimes however the do-loop 
+is easier to program and gives more readable code as shown here:
+\begin{verbatim}
+   do $i = 1,5;
+      id,only,x^$i = f(F[factor_^$i]);
+   enddo;
+\end{verbatim}
+\noindent versus
+\begin{verbatim}
+   id,only,x^n?{1,2,3,4,5} = ff(n);
+   repeat id ff(n?pos_) = ff(n-1)*f(F[factor_^n]);
+   id ff(n?neg0_) = 1;
+\end{verbatim}
+\noindent One should note that the do-loop is evaluated at run time. Hence 
+the dollar variables need to be evaluated at run time as well. Therefore, 
+if it is possible, the preprocessor variety (see \ref{predo}) is almost 
+always faster in execution as in
+\begin{verbatim}
+   #do i = 1,5
+      id,only,x^`i' = f(F[factor_^`i']);
+   #enddo
+\end{verbatim}
+\noindent This can of course not be done in constructions like
+\begin{verbatim}
+   id  f1(x?$x) = f2(x);
+   FactDollar,$x;
+   Do $i = 1,$x[0];
+     Multiply f($i,$x[$i]);
+   Enddo;
+\end{verbatim}
+\noindent because here \verb:$x: and its factors are only known at run time 
+and may be different for each term.
+\vspace{10mm}
+
+%--#] do : 
 %--#[ drop :
 
 \section{drop}
@@ -1015,6 +1074,21 @@ same module. Argument environments can be nested with all other
 environments. \vspace{10mm}
 
 %--#] endargument : 
+%--#[ enddo :
+
+\section{enddo}
+\label{substaenddo}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & enddo;
+\\ See also & do (\ref{substado})
+\end{tabular} \vspace{4mm}
+
+See the do statement (\ref{substado}).
+\vspace{10mm}
+
+%--#] enddo : 
 %--#[ endif :
 
 \section{endif}
@@ -1157,9 +1231,9 @@ indicate where \FORM\ ran into the exit statement. \vspace{10mm}
 
 \noindent \begin{tabular}{ll}
 Type & Declaration statement\\
-Syntax & extrasymbols,array/vector/underscore,name;
-\\ See also & ToPolynomial (\ref{substatopolynomial}) ,FromPolynomial 
-(\ref{substafrompolynomial}) and the section on extra symbols 
+Syntax & extrasymbols,array|vector|underscore,name;
+\\ See also & ToPolynomial (\ref{substatopolynomial}), FromPolynomial 
+(\ref{substafrompolynomial}) and extra symbols 
 (\ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
@@ -1258,6 +1332,75 @@ compatibility mode with versions before version 4.0.
 \vspace{10mm}
 
 %--#] factarg : 
+%--#[ factdollar :
+
+\section{factdollar}
+\label{substafactdollar}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & factdollar options \verb:{:{\tt<}name of dollar variable{\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials}.
+\end{tabular} \vspace{4mm}
+
+\noindent The FactDollar statement will factorize a dollar expression. If 
+the dollar expression was already factorized the old factors will be 
+removed first. Unlike expressions (see \ref{substafactorize}) where only 
+either the expanded or the factorized version exists, with dollar 
+expressions we have both versions simultaneously. This means that one can 
+refer to the complete dollar in its unfactorized form and its factors. The 
+factors are indicated between braces as in \verb:$x[1]: which would be the 
+first factor. The number of factors of \verb:$x: is given by \verb:$x[0]:. 
+One can also obtain the number of factors of a dollar variable with the 
+numfactors\_ function (see \ref{funnumfactors}).
+
+\noindent The index indicating the number of the factor can be a nonzero 
+integer, no greater than the number of factors, or (a factor of) a dollar 
+variable that evaluates into such a number. Composite expressions are not 
+allowed. They should be worked out first in a separate dollar variable, 
+after which this dollar variable can then be used as a factor indicator.
+\vspace{10mm}
+
+%--#] factdollar : 
+%--#[ factorize :
+
+\section{factorize}
+\label{substafactorize}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & factorize \verb:{:(options)\verb:}: \verb:{:{\tt<}name of expression(s){\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials}.
+\end{tabular} \vspace{4mm}
+
+\noindent If no expressions are mentioned all expressions will be affected 
+by the action of this statement. One may exclude certain expressions with 
+the nfactorize statement ( see \ref{substanfactorize}). If one or more 
+expressions are mentoned they will be added to the list of expressions that 
+will be affected.
+
+\noindent The statement causes the output expression(s) that is/are marked 
+as such to be factorized after they have been processed and already written 
+to the output. This means that each expression, after having been written, 
+is read again and factorized. Then the factorized result is written over 
+the original output. After that FORM will start executing the statements of 
+the current module on the next expression, sort it, write it to output, and 
+if necessary read it again and factorize it.
+
+\noindent Expressions never exists in two varieties as the dollar variable 
+that have been factorized. It is either unfactorized (default) or 
+factorized. An expression remains factorized untill an UnFactorize 
+statement is encoutered that mentions that this expression should be 
+brought to unfactorized representation (see also 
+UnFactorize~\ref{substaunfactorize} and 
+NunFactorize~\ref{substanunfactorize}).
+
+\noindent One should realize that factorization of complicated expressions 
+can be a rather costly operation.
+
+\vspace{10mm}
+
+%--#] factorize : 
 %--#[ fill :
 
 \section{fill}
@@ -1461,32 +1604,32 @@ Syntax & fo[rmat] {\tt<}option{\tt>};
 \noindent Controls the format\index{format} for the 
 printing\index{printing} of expressions. There is a variety of options.
 
-\leftvitem{3cm}{$<$number$>$}
+\leftvitem{3.5cm}{$<$number$>$}
 \rightvitem{13cm}{Output will be printed using the indicated number of 
 characters per line. The default is 72. Numbers outside the range 1-255 are 
 corrected to 72. Positive numbers less than 39 are corrected to 39.}
 
-\leftvitem{3cm}{float\index{float}\index{format!float} \hfill \\ \null\quad{\tt[}$<$number$>${\tt]}}
+\leftvitem{3.5cm}{float\index{float}\index{format!float} \hfill \\ \null\quad{\tt[}$<$number$>${\tt]}}
 \rightvitem{13cm}{Numbers are printed in floating\index{floating point} 
 point notation, even though internally they remain fractions. This is 
 purely cosmetic. If no number is specified the precision of the output will 
 be 10 digits. If a number is specified it indicates the number of digits to 
 be used for the precision.}
 
-\leftvitem{3cm}{rational\index{rational}\index{format!rational}}
+\leftvitem{3.5cm}{rational\index{rational}\index{format!rational}}
 \rightvitem{13cm}{Output format is switched back to rational numbers (in 
 contrast to floating point output). This is the default.}
 
-\leftvitem{3cm}{nospaces\index{nospaces}\index{format!nospaces}}
+\leftvitem{3.5cm}{nospaces\index{nospaces}\index{format!nospaces}}
 \rightvitem{13cm}{The output is printed without the spaces that make the 
 output slightly more readable. This gives a more compact output.}
 
-\leftvitem{3cm}{spaces\index{spaces}\index{format!spaces}}
+\leftvitem{3.5cm}{spaces\index{spaces}\index{format!spaces}}
 \rightvitem{13cm}{The output is printed with extra spaces between the terms 
 and around certain operators to make it slightly more readable. This is the 
 default.}
 
-\leftvitem{3cm}{fortran\index{fortran}\index{format!fortran}}
+\leftvitem{3.5cm}{fortran\index{fortran}\index{format!fortran}}
 \rightvitem{13cm}{The output is printed in a way that is readable by a 
 fortran compiler. This includes continuation characters and the splitting 
 of the output into blocks of no more than 15 continuation lines. This 
@@ -1495,13 +1638,13 @@ number can be changed with the setup parameter ContinuationLines (see
 in the place of the period between the vectors. This dotchar can be set in 
 the setup file (see \ref{setup}). Its default is the underscore character.}
 
-\leftvitem{3cm}{doublefortran\index{doublefortran}\index{format!doublefortran}}
+\leftvitem{3.5cm}{doublefortran\index{doublefortran}\index{format!doublefortran}}
 \rightvitem{13cm}{Same as the fortran mode, but fractions are printed with 
 double floating point numbers, because some compilers convert numbers like 
 1. into 1.E0. With this format \FORM\ will force double precision by using 
 1.D0.}
 
-\leftvitem{3cm}{fortran90\index{fortran90}\index{format!fortran90}}
+\leftvitem{3.5cm}{fortran90\index{fortran90}\index{format!fortran90}}
 \rightvitem{13cm}{Similar to the fortran option, but prints the 
 continuation lines according to the syntax of Fortran 90. If the fortran90 
 option is followed by a comma and a string that does not contain white space 
@@ -1522,7 +1665,7 @@ When there is no string attached it defaults to a period as in the regular
 Fortran option.
 }
 
-\leftvitem{3cm}{C\index{C}\index{format!C}}
+\leftvitem{3.5cm}{C\index{C}\index{format!C}}
 \rightvitem{13cm}{Output will be C compatible. The
 exponent\index{exponent operator} operator ($\wedge$) is represented by the 
 function pow\index{pow}. It is the responsibility of the user that this 
@@ -1531,20 +1674,24 @@ function will be properly defined. Dotproducts are printed with the
 This dotchar can be set in the setup file (see \ref{setup}). Its default is 
 the underscore\index{underscore character} character.}
 
-\leftvitem{3cm}{maple\index{maple}\index{format!maple}}
+\leftvitem{3.5cm}{maple\index{maple}\index{format!maple}}
 \rightvitem{13cm}{Output will be as much as possible compatible with Maple 
 format. It is not guaranteed that this is perfect.}
 
-\leftvitem{3cm}{mathematica\index{mathematica}\index{format!mathematica}}
+\leftvitem{3.5cm}{mathematica\index{mathematica}\index{format!mathematica}}
 \rightvitem{13cm}{Output will be as much as possible compatible with 
 Mathematica format. It is not guaranteed that this is perfect.}
 
-\leftvitem{3cm}{reduce\index{reduce}\index{format!reduce}}
+\leftvitem{3.5cm}{reduce\index{reduce}\index{format!reduce}}
 \rightvitem{13cm}{Output will be as much as possible compatible with 
 Reduce format. It is not guaranteed that this is perfect.}
 
 \noindent The last few formats have not been tried out extensively. The 
 author is open for suggestions. \vspace{10mm}
+
+\leftvitem{3.5cm}{normal\index{normal}\index{format!normal}}
+\rightvitem{13cm}{Will return to the regular \FORM\ formatting mode.}
+
 
 %--#] format : 
 %--#[ frompolynomial :
@@ -1556,7 +1703,7 @@ author is open for suggestions. \vspace{10mm}
 Type & Executable statement\\
 Syntax & frompolynomial
 \\ See also & factarg (\ref{substafactarg}), ToPolynomial 
-(\ref{substatopolynomial}) and ExtraSymbols (\ref{stubstaextrasymbols},
+(\ref{substatopolynomial}) and ExtraSymbols (\ref{substaextrasymbols},
 \ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
@@ -1662,6 +1809,27 @@ user should try to use the funpowers option of the on\index{on} (see
 \vspace{10mm}
 
 %--#] funpowers : 
+%--#[ gfactorized :
+
+\section{gfactorized}
+\label{substagfactorized}
+
+\noindent \begin{tabular}{ll}
+Type & Definition statement\\
+Syntax & g[lobal]factorized {\tt<}option{\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials}, the 
+factorize statement~\ref{substafactorize} and the LocalFactorized \\ &
+statement~\ref{substalfactorized}.\hfill
+\end{tabular}
+\smallskip
+
+\noindent The syntax is like the syntax of the LocalFactorized (or 
+LFactorized) statement~\ref{substalfactorized}. The only difference is that 
+now the expression defined by the statement will become a global 
+expression (see the Global statement~\ref{substaglobal}).
+\vspace{10mm}
+
+%--#] gfactorized : 
 %--#[ global :
 
 \section{global}
@@ -1926,7 +2094,7 @@ the condition is met.
 \noindent The condition in the if statement should be enclosed by 
 parentheses. Its primary components are:
 
-\leftvitem{3cm}{count()\index{count}}
+\leftvitem{3.5cm}{count()\index{count}}
 \rightvitem{13cm}{Returns an integer power counting value for the current 
 term. Should have arguments that come in pairs. The first element of the 
 pair is a variable. The second is its integer weight\index{weight}. The 
@@ -1950,7 +2118,7 @@ assumed that those functions are linear in the given vector}\end{minipage}
 
 When no options are specified the result is identical to +vfd.}
 
-\leftvitem{3cm}{match()\index{match}}
+\leftvitem{3.5cm}{match()\index{match}}
 \rightvitem{13cm}{The argument of the match condition can be any left hand 
 side of an id statement, including options as once\index{once}, 
 only\index{only}, multi\index{multi}, many\index{many} and 
@@ -1959,34 +2127,34 @@ should not be included. \FORM\ will invoke the pattern\index{pattern matcher}
 matcher and see how many times the pattern matches. This number is 
 returned. In the case of once or only this is of course at most one.}
 
-\leftvitem{3cm}{expression()\index{expression}}
+\leftvitem{3.5cm}{expression()\index{expression}}
 \rightvitem{13cm}{The argument(s) of this condition is/are a list of 
 expressions. In the case that the current term belongs to any of the given 
 expressions the return value is 1. If it does not belong to any of the 
 given expressions the return value is 0.}
 
-\leftvitem{3cm}{findloop()\index{findloop}}
+\leftvitem{3.5cm}{findloop()\index{findloop}}
 \rightvitem{13cm}{The arguments are as in the 
 replaceloop\index{replaceloop} statement (see \ref{substareplaceloop}) with 
 the exception of the outfun which should be omitted. If \FORM\ detects an 
 index\index{index loop} loop in the current term that fulfils the specified 
 conditions the return value is 1. It is 0 otherwise.}
  
-\leftvitem{3cm}{multipleof()\index{multipleof}}
+\leftvitem{3.5cm}{multipleof()\index{multipleof}}
 \rightvitem{13cm}{The argument should be a positive integer. This object is 
 to be compared with a number (could be obtained from a condition) and if 
 this number is an integer multiple of the argument there will be a match. 
 If should be obvious that such a compare only makes sense for the == and != 
 operators.}
 
-\leftvitem{3cm}{$<$integer$>$}
+\leftvitem{3.5cm}{$<$integer$>$}
 \rightvitem{13cm}{To be compared either with another number, the result of a 
 condition or a multipleof object.}
  
-\leftvitem{3cm}{coefficient\index{coefficient}}
+\leftvitem{3.5cm}{coefficient\index{coefficient}}
 \rightvitem{13cm}{Represents the coefficient of the current term.}
 
-\leftvitem{3cm}{\$-variable}
+\leftvitem{3.5cm}{\$-variable}
 \rightvitem{13cm}{Will be evaluated at runtime when the if statement is 
 encountered. Should evaluate into a numerical value. If it does not, an 
 error will result.}
@@ -2117,7 +2285,7 @@ declaration of an index one can specify its dimension\index{dimension}.
 This is done by appending one or two options to the name of the index to be 
 declared:\vspace{4mm}
 
-\leftvitem{3cm}{name=dim}
+\leftvitem{3.5cm}{name=dim}
 \rightvitem{13cm}{The dimension is either a nonnegative integer or a 
 previously declared symbol. If the dimension is zero\index{zero!dimension} 
 this means that no dimension is attached to the index. The consequence is 
@@ -2126,7 +2294,7 @@ performed for this index. If no dimension is specified the default
 dimension will be assumed (see the dimension statement 
 \ref{substadimension}).}
 
-\leftvitem{3cm}{name=dim:ext}
+\leftvitem{3.5cm}{name=dim:ext}
 \rightvitem{13cm}{The dimension is a symbol as above. Ext is an extra 
 symbol which indicates the value of dim-4. This option is useful when 
 traces over gamma matrices are considered (see \ref{substatrace} and 
@@ -2348,6 +2516,48 @@ readability though but it is a good thing when third party libraries are
 used). \vspace{10mm}
 
 %--#] label : 
+%--#[ lfactorized :
+
+\section{lfactorized}
+\label{substalfactorized}
+
+\noindent \begin{tabular}{ll}
+Type & Definition statement\\
+Syntax & l[ocal]factorized {\tt<}name{\tt>} = {\tt<}expression{\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials} and the 
+factorize statement~\ref{substafactorize}.
+\end{tabular} \vspace{4mm}
+
+\noindent Used to define a local\index{local} expression in factorized 
+notation and keep it that way. The factors are recognized by multiplication 
+and division signs at lowest bracket level. For the rest the expression is 
+treated as a regular local expression. Example:
+\begin{verbatim}
+    Symbols x,y,z;
+    LocalFactorized F1 = 3*(x+y)*(y+z)*((x+z)*(2*x+1));
+    LocalFactorized F2 = 3*(x+y)*(y+z)+((x+z)*(2*x+1));
+    Print;
+    .end
+
+   F1 =
+         ( 3 )
+       * ( y + x )
+       * ( z + y )
+       * ( z + x + 2*x*z + 2*x^2 );
+
+   F2 =
+         ( z + 3*y*z + 3*y^2 + x + 5*x*z + 3*x*y + 2*x^2 );
+\end{verbatim}
+\noindent As one can see in the second expression, the plus at ground level 
+makes that there is only one factor. In the first expression the last 
+factor is seen as a single factor and not two factor2 because of the extra 
+parentheses. Only parentheses at ground level are used to recognize 
+factors. If one needs those factors anyway, one should either leave away 
+those parentheses or use an extra Factorize statement to have FORM 
+refactorize the expression.
+\vspace{10mm}
+
+%--#] lfactorized : 
 %--#[ load :
 
 \section{load}
@@ -2502,7 +2712,7 @@ Should have no effect.
 Type & Module control statement\\
 Syntax & moduleoption {\tt<}option{\tt>}[,{\tt<}value{\tt>}];
 \\ See also & polyfun (\ref{substapolyfun}),
-              slavepatchsize (\ref{substaslavepatchsize}),
+              processbucketsize (\ref{substaprocessbucketsize}),
               dollar variables (\ref{pardollars})
 \end{tabular} \vspace{4mm}
 
@@ -2510,14 +2720,14 @@ Syntax & moduleoption {\tt<}option{\tt>}[,{\tt<}value{\tt>}];
 module. It overrides the normal setting and will revert to this normal 
 setting after this module. The settings are:
 
-\leftvitem{3cm}{parallel\index{moduleoption!parallel}}
+\leftvitem{3.5cm}{parallel\index{moduleoption!parallel}}
 \rightvitem{13cm}{Allows parallel\index{parallel} execution of the current module if all 
 other conditions are right. This is the default.}
 
-\leftvitem{3cm}{noparallel\index{moduleoption!noparallel}}
+\leftvitem{3.5cm}{noparallel\index{moduleoption!noparallel}}
 \rightvitem{13cm}{Vetoes parallel\index{parallel} execution of the current module.}
 
-\leftvitem{3cm}{inparallel\index{moduleoption!inparallel}}
+\leftvitem{3.5cm}{inparallel\index{moduleoption!inparallel}}
 \rightvitem{13cm}{This option is more or less equivalent to the 
 InParallel~\ref{substainparallel} statement. The difference is that because 
 this statement comes at the end of the module, its effects include also the 
@@ -2530,7 +2740,7 @@ be used inside the same ModuleOption statement. This is to avoid potential
 confusion that could arise when expressions are used with a name identical 
 to the name of one of the options.}
 
-\leftvitem{3cm}{notinparallel\index{moduleoption!notinparallel}}
+\leftvitem{3.5cm}{notinparallel\index{moduleoption!notinparallel}}
 \rightvitem{13cm}{This option is more or less equivalent to the 
 NotInParallel~\ref{substanotinparallel} statement. The difference is that 
 because this statement comes at the end of the module, its effects include 
@@ -2543,18 +2753,18 @@ can be used inside the same ModuleOption statement. This is to avoid
 potential confusion that could arise when expressions are used with a name 
 identical to the name of one of the options.}
 
-\leftvitem{3cm}{polyfun\index{moduleoption!polyfun}}
+\leftvitem{3.5cm}{polyfun\index{moduleoption!polyfun}}
 \rightvitem{13cm}{Possibly followed by the name of a 
 `polyfun'\index{polyfun}. Is similar to the polyfun statement (see 
 \ref{substapolyfun}) but only valid for the current module.}
 
-\leftvitem{3cm}{slavepatchsize\index{moduleoption!slavepatchsize}}
+\leftvitem{3.5cm}{processbucketsize\index{moduleoption!processbucketsize}}
 \rightvitem{13cm}{Followed by a number. Similar to the 
-slavepatchsize\index{slavepatchsize} 
-statement (see \ref{substaslavepatchsize}) but only valid for the current 
+processbucketsize\index{processbucketsize} 
+statement (see \ref{substaprocessbucketsize}) but only valid for the current 
 module.}
 
-\leftvitem{3cm}{local\index{moduleoption!local}}
+\leftvitem{3.5cm}{local\index{moduleoption!local}}
 \rightvitem{13cm}{Should be followed by a list of \$-variables. Indicates 
 that the contents of the indicated \$-variables\index{\$-variable} are not 
 relevant once the module has been finished and neither is the term by term 
@@ -2562,21 +2772,21 @@ order in which the \$-variables obtain their value. In practise each
 processor\index{processor}/thread\index{thread} will work with its own copy 
 of this variable.}
 
-\leftvitem{3cm}{maximum\index{moduleoption!maximum}}
+\leftvitem{3.5cm}{maximum\index{moduleoption!maximum}}
 \rightvitem{13cm}{Should be followed by a list of 
 \$-variables\index{\$-variable}. Indicates that of the contents of the 
 indicated \$-variables the maximum is the only thing that is relevant once 
 the module has been finished. The term by term order in which the 
 \$-variables obtain their value is not relevant.}
 
-\leftvitem{3cm}{minimum\index{moduleoption!minimum}}
+\leftvitem{3.5cm}{minimum\index{moduleoption!minimum}}
 \rightvitem{13cm}{Should be followed by a list of 
 \$-variables\index{\$-variable}. Indicates that of the contents of the 
 indicated \$-variables the minimum is the only thing that is relevant once 
 the module has been finished. The term by term order in which the 
 \$-variables obtain their value is not relevant.}
 
-\leftvitem{3cm}{sum\index{moduleoption!sum}}
+\leftvitem{3.5cm}{sum\index{moduleoption!sum}}
 \rightvitem{13cm}{Should be followed by a list of 
 \$-variables\index{\$-variable}. Indicates that the indicated \$-variables 
 are representing a sum. The term by term order in which the \$-variables 
@@ -2662,17 +2872,7 @@ previous syntax. As however there were many bugs in the old implementation
 we suspect that a slight change of the options does not inconvenience any 
 many users.
 
-%--#] modulus :
-%--#[ modulusgcd : To do <------
-%
-%	ModulusGCD,m,x,f1,f2;   Look inside factor.c
-%	Assume m fits inside a word and x is a symbol.
-%	Takes all occurrences of function f1 in the variable x.
-%	Takes the arguments mod m and determines their GCD.
-%	Puts the result in f2. Leaves the f1.
-%	Because it doesn't work too well yet is isn't officially supported.
-%
-%--#] modulusgcd :
+%--#] modulus : 
 %--#[ multi :
  
 \section{multi}
@@ -2696,6 +2896,20 @@ is just a shorthand notation for
 \vspace{10mm}
 
 %--#] multi : 
+%--#[ multibracket : ????????????
+% 
+%\section{multibracket}
+%\label{substamultibracket}
+%
+%\noindent \begin{tabular}{ll}
+%Type & Output control statement\\
+%Syntax & multibracket ??????????????
+%\\ See also & bracket (\ref{substabracket})
+%\end{tabular} \vspace{4mm}
+%
+%\vspace{10mm}
+%
+%--#] multibracket : 
 %--#[ multiply :
  
 \section{multiply}
@@ -2751,6 +2965,37 @@ This drops all expressions, except for the expressions \verb:F1: and
 \verb:F2:. \vspace{10mm}
 
 %--#] ndrop : 
+%--#[ nfactorize :
+
+\section{nfactorize}
+\label{substanfactorize}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & nfactorize \verb:{:{\tt<}name of expression(s){\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials} and 
+\ref{substafactorize}.
+\end{tabular} \vspace{4mm}
+
+\noindent When one uses a factorize (see \ref{substafactorize}) statement 
+without arguments all expressions will be marked for factorization. If one 
+would like to exclude a few expressions this can be done with the 
+NFactorize statement. There should be at least one expression mentioned as 
+in:
+\begin{verbatim}
+   Factorize;
+   NFactorize expr12,expr29;
+\end{verbatim}
+One can also use the Factorize statement with a number of expressions after 
+which the NFactorize statement can remove some from the list again as in:
+\begin{verbatim}
+   Factorize expr1,...,expr100;
+   NFactorize expr12,expr29;
+\end{verbatim}
+
+\vspace{10mm}
+
+%--#] nfactorize : 
 %--#[ nfunctions :
  
 \section{nfunctions}
@@ -2942,6 +3187,37 @@ the rest it is equal to the tensor\index{tensor} statement (see
 those for functions (see \ref{substafunctions}). \vspace{10mm}
 
 %--#] ntensors : 
+%--#[ nunfactorize :
+
+\section{nunfactorize}
+\label{substanunfactorize}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & nunfactorize \verb:{:{\tt<}name of expression(s){\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials} and 
+\ref{substaunfactorize}.
+\end{tabular} \vspace{4mm}
+
+\noindent When one uses an UnFactorize (see \ref{substaunfactorize}) 
+statement without arguments all expressions will be marked for being 
+unfactorized. If one would like to exclude a few expressions this can be 
+done with the NUnFactorize statement. There should be at least one expression 
+mentioned as in:
+\begin{verbatim}
+   UnFactorize;
+   NUnFactorize expr12,expr29;
+\end{verbatim}
+One can also use the UnFactorize statement with a number of expressions after 
+which the NUnFactorize statement can remove some from the list again as in:
+\begin{verbatim}
+   UnFactorize expr1,...,expr100;
+   NUnFactorize expr12,expr29;
+\end{verbatim}
+
+\vspace{10mm}
+
+%--#] nunfactorize : 
 %--#[ nunhide :
 
 \section{nunhide}
@@ -2993,43 +3269,43 @@ that have been written for version 2. For completeness we still give the
 syntax and how it should be converted.
 The keywords are: \vspace{4mm}
 
-\leftvitem{3cm}{stats\index{nwrite!stats}}
+\leftvitem{3.5cm}{stats\index{nwrite!stats}}
 \rightvitem{13cm}{Same as: Off stats;}
 
-\leftvitem{3cm}{statistics\index{nwrite!statistics}}
+\leftvitem{3.5cm}{statistics\index{nwrite!statistics}}
 \rightvitem{13cm}{Same as: Off statistics;}
 
-\leftvitem{3cm}{shortstats\index{nwrite!shortstats}}
+\leftvitem{3.5cm}{shortstats\index{nwrite!shortstats}}
 \rightvitem{13cm}{Same as: Off shortstats;}
 
-\leftvitem{3cm}{shortstatistics\index{nwrite!shortstatistics}}
+\leftvitem{3.5cm}{shortstatistics\index{nwrite!shortstatistics}}
 \rightvitem{13cm}{Same as: Off shortstatistics;}
 
-\leftvitem{3cm}{warnings\index{nwrite!warnings}}
+\leftvitem{3.5cm}{warnings\index{nwrite!warnings}}
 \rightvitem{13cm}{Same as: Off warnings;}
 
-\leftvitem{3cm}{allwarnings\index{nwrite!allwarnings}}
+\leftvitem{3.5cm}{allwarnings\index{nwrite!allwarnings}}
 \rightvitem{13cm}{Same as: Off allwarnings;}
 
-\leftvitem{3cm}{setup\index{nwrite!setup}}
+\leftvitem{3.5cm}{setup\index{nwrite!setup}}
 \rightvitem{13cm}{Same as: Off setup;}
 
-\leftvitem{3cm}{names\index{nwrite!names}}
+\leftvitem{3.5cm}{names\index{nwrite!names}}
 \rightvitem{13cm}{Same as: Off names;}
 
-\leftvitem{3cm}{allnames\index{nwrite!allnames}}
+\leftvitem{3.5cm}{allnames\index{nwrite!allnames}}
 \rightvitem{13cm}{Same as: Off allnames;}
 
-\leftvitem{3cm}{shortstats\index{nwrite!shortstats}}
+\leftvitem{3.5cm}{shortstats\index{nwrite!shortstats}}
 \rightvitem{13cm}{Same as: Off shortstats;}
 
-\leftvitem{3cm}{highfirst\index{nwrite!highfirst}}
+\leftvitem{3.5cm}{highfirst\index{nwrite!highfirst}}
 \rightvitem{13cm}{Same as: Off highfirst;}
 
-\leftvitem{3cm}{lowfirst\index{nwrite!lowfirst}}
+\leftvitem{3.5cm}{lowfirst\index{nwrite!lowfirst}}
 \rightvitem{13cm}{Same as: Off lowfirst;}
 
-\leftvitem{3cm}{powerfirst\index{nwrite!powerfirst}}
+\leftvitem{3.5cm}{powerfirst\index{nwrite!powerfirst}}
 \rightvitem{13cm}{Same as: Off powerfirst;}
 \vspace{10mm}
 
@@ -3050,39 +3326,39 @@ Syntax & off {\tt<}keyword{\tt>}; \\
 execution. Many of these settings replace older statements. The settings 
 and their keywords are:
  
-\leftvitem{3cm}{allnames\index{off!allnames}}
+\leftvitem{3.5cm}{allnames\index{off!allnames}}
 \rightvitem{13cm}{Turns the allnames mode off. The default.}
  
-\leftvitem{3cm}{allwarnings\index{off!allwarnings}}
+\leftvitem{3.5cm}{allwarnings\index{off!allwarnings}}
 \rightvitem{13cm}{Turns off the printing of all warnings.}
 
-\leftvitem{3cm}{checkpoint\index{off!checkpoint}}
+\leftvitem{3.5cm}{checkpoint\index{off!checkpoint}}
 \rightvitem{13cm}{Deactivates the checkpoint mechanism. See
 \ref{checkpoints}.}
 
-\leftvitem{3cm}{compress\index{off!compress}}
+\leftvitem{3.5cm}{compress\index{off!compress}}
 \rightvitem{13cm}{Turns compression mode off.}
  
-\leftvitem{3cm}{finalstats\index{off!finalstats}}
+\leftvitem{3.5cm}{finalstats\index{off!finalstats}}
 \rightvitem{13cm}{Turns off the last line of statistics that is normally 
 printed at the end of the run (introduced in version 3.2).}
  
-\leftvitem{3cm}{highfirst\index{off!highfirst}}
+\leftvitem{3.5cm}{highfirst\index{off!highfirst}}
 \rightvitem{13cm}{Puts the sorting in a low first mode.}
 
-\leftvitem{3cm}{insidefirst\index{off!insidefirst}}
+\leftvitem{3.5cm}{insidefirst\index{off!insidefirst}}
 \rightvitem{13cm}{Not active at the moment.}
  
-\leftvitem{3cm}{lowfirst\index{off!lowfirst}}
+\leftvitem{3.5cm}{lowfirst\index{off!lowfirst}}
 \rightvitem{13cm}{Leaves the default low first mode and puts the sorting in 
 a high first mode.}
  
-\leftvitem{3cm}{names\index{off!names}}
+\leftvitem{3.5cm}{names\index{off!names}}
 \rightvitem{13cm}{Turns the names mode off. This is the default.}
 
-\leftvitem{3cm}{nospacesinnumbers\index{off!nospacesinnumbers}}
-\rightvitem{13cm}{\label{staoffnospacesinnumbers}\vspace{1ex}Makes that very
-long numbers are printed with leading blank spaces at the beginning of a new
+\leftvitem{3.5cm}{nospacesinnumbers\index{off!nospacesinnumbers}}
+\rightvitem{13cm}{\label{staoffnospacesinnumbers}\vspace{1ex}Allows very
+long numbers to be printed with leading blank spaces at the beginning of a new
 line. The numbers are usually broken up by placing a backslash character at
 the end of the line and then continuing at the next line. For cosmetic
 purposes \FORM\ puts usually a few blank spaces at the beginning of the line.
@@ -3091,64 +3367,70 @@ off by the `on nospacesinnumbers;' statement. The printing of the blank
 characters can be restored by turning this variable off. See also page 
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
-\leftvitem{3cm}{oldfactarg\index{off!oldfactarg}}
+\leftvitem{3.5cm}{oldfactarg\index{off!oldfactarg}}
 \rightvitem{13cm}{\label{staoffoldfactarg}Switches the use of the FactArg 
 statement\ref{substafactarg}\index{factarg} to the new mode of version 4 or 
 later in which expressions in the argument of the mentioned function are 
 completely factored over the rationals. The default is off.}
  
-\leftvitem{3cm}{parallel\index{off!parallel}}
+\leftvitem{3.5cm}{parallel\index{off!parallel}}
 \rightvitem{13cm}{Disallows the running of the program in parallel mode 
 (only relevant for parallel versions of \FORM).}
  
-\leftvitem{3cm}{powerfirst\index{off!powerfirst}}
+\leftvitem{3.5cm}{powerfirst\index{off!powerfirst}}
 \rightvitem{13cm}{Puts the sorting back into `highfirst' mode.}
 
-\leftvitem{3cm}{propercount\index{off!propercount}}
+\leftvitem{3.5cm}{processstats\index{off!processstats}}
+\rightvitem{13cm}{Turns the process by process printing of the statistics 
+in \ParFORM{} off. Only the master process will be printing statistics. 
+Other versions of \FORM{} will ignore this option.}
+
+\leftvitem{3.5cm}{propercount\index{off!propercount}}
 \rightvitem{13cm}{Turns the propercounting mode off. This means that for the 
 generated terms in the statistics not only the `ground level' terms are 
 counted but also terms that were generated inside function arguments.}
  
-\leftvitem{3cm}{properorder\index{off!properorder}}
+\leftvitem{3.5cm}{properorder\index{off!properorder}}
 \rightvitem{13cm}{Turns the properorder mode off. This is the default.}
  
-\leftvitem{3cm}{setup\index{off!setup}}
+\leftvitem{3.5cm}{setup\index{off!setup}}
 \rightvitem{13cm}{Switches off the mode in which the setup parameters are 
 printed. This is the default.}
 
-\leftvitem{3cm}{stats\index{off!stats}}
+\leftvitem{3.5cm}{stats\index{off!stats}}
 \rightvitem{13cm}{Same as `Off statistics'.}
 
-\leftvitem{3cm}{statistics\index{off!statistics}}
+\leftvitem{3.5cm}{statistics\index{off!statistics}}
 \rightvitem{13cm}{Turns off the printing of statistics.}
 
-\leftvitem{3cm}{shortstats\index{off!shortstats}}
+\leftvitem{3.5cm}{shortstats\index{off!shortstats}}
 \rightvitem{13cm}{Same as `Off shortstatistics'.}
 
-\leftvitem{3cm}{shortstatistics\index{off!shortstatistics}}
+\leftvitem{3.5cm}{shortstatistics\index{off!shortstatistics}}
 \rightvitem{13cm}{Takes the writing of the statistics back from shorthand 
 mode to the regular statistics mode in which each statistics messages takes 
 three lines of text and one blank line.}
  
-\leftvitem{3cm}{threadloadbalancing\index{off!threadloadbalancing}}
-\rightvitem{13cm}{\vspace{1.5ex}Disallows the loadbalancing of \TFORM\ in parallel mode. 
-In other versions of \FORM\ this option is ignored.}
+\leftvitem{3.5cm}{threadloadbalancing\index{off!threadloadbalancing}}
+\rightvitem{13cm}{\vspace{1.5ex}Disables the loadbalancing mechanism of 
+\TFORM\ in parallel mode. In other versions of \FORM\ this option is 
+ignored.}
  
-\leftvitem{3cm}{threads\index{off!threads}}
+\leftvitem{3.5cm}{threads\index{off!threads}}
 \rightvitem{13cm}{Disallows multithreaded running in \TFORM.
 In other versions of \FORM\ this option is ignored.}
 
-\leftvitem{3cm}{threadstats\index{off!threadstats}}
+\leftvitem{3.5cm}{threadstats\index{off!threadstats}}
 \rightvitem{13cm}{Turns off the thread by thread printing of the statistics 
 in \TFORM. Only the master thread will be printing statistics. Other 
 versions of \FORM\ will ignore this option.}
  
-\leftvitem{3cm}{totalsize\index{off!totalsize}}
+\leftvitem{3.5cm}{totalsize\index{off!totalsize}}
 \rightvitem{13cm}{Switches the totalsize mode off. For a more detailed 
 description of the totalsize mode, see the "On TotalSize;" 
 command\ref{ontotalsize}.}
 
-\leftvitem{3cm}{warnings\index{off!warnings}}
+\leftvitem{3.5cm}{warnings\index{off!warnings}}
 \rightvitem{13cm}{Turns off the printing of warnings.}
 
 \noindent If a description is too short, one should also consult the 
@@ -3170,26 +3452,26 @@ Syntax & on {\tt<}keyword{\tt>}; \\
 \noindent New statement to control settings during execution. Many of these 
 settings replace older statements. The settings and their keywords are:
  
-\leftvitem{3cm}{allnames\index{on!allnames}}
+\leftvitem{3.5cm}{allnames\index{on!allnames}}
 \rightvitem{13cm}{Same as `On names' but additionally all system variables 
 are printed as well. Default is off. }
  
-\leftvitem{3cm}{allwarnings\index{on!allwarnings}}
+\leftvitem{3.5cm}{allwarnings\index{on!allwarnings}}
 \rightvitem{13cm}{Puts the printing of warnings in a mode in which all 
 warnings, even the very unimportant warnings are printed.}
 
-\leftvitem{3cm}{checkpoint\index{on!checkpoint}}
+\leftvitem{3.5cm}{checkpoint\index{on!checkpoint}}
 \rightvitem{13cm}{Activates the checkpoint mechanism that allows for
 the recovery of a crashed \FORM\ session. See \ref{checkpoints} for
 detailed information.}
 
-\leftvitem{3cm}{compress\index{on!compress}}
+\leftvitem{3.5cm}{compress\index{on!compress}}
 \rightvitem{13cm}{Turns compression mode on. This compression is a 
 relatively simple compression that hardly costs extra computer time but 
 saves roughly a factor two in disk storage. The old statement was `compress 
 on' but this should be avoided in the future. This setting is the default.}
 
-\leftvitem{3cm}{compress,gzip\index{gzip}}
+\leftvitem{3.5cm}{compress,gzip\index{gzip}}
 \rightvitem{13cm}{This option should be followed by a comma or a space and 
 a single digit. It activates the gzip compression for the sort file. This 
 compression can make the intermediate sort file considerably shorter at the 
@@ -3198,40 +3480,40 @@ premium. The digit indicates the compression level. Zero means no
 compression and 9 is the highest level. The default level is 6. Above that 
 the compression becomes very slow and doesn't gain very much extra.}
 
-\leftvitem{3cm}{fewerstatistics\index{on!fewerstatistics}}
+\leftvitem{3.5cm}{fewerstatistics\index{on!fewerstatistics}}
 \rightvitem{13cm}{Determines how many of the statistics \FORM\ prints when a 
 small buffer is full. The keyword can be followed by a positive integer in 
 which case one out of that many of these statistics will be printed. If no 
 number is given the default value of 10 is used. When the number that 
 follows is zero, this feature is turned off (same effect as the value one).}
 
-\leftvitem{3cm}{fewerstats\index{on!fewerstats}}
+\leftvitem{3.5cm}{fewerstats\index{on!fewerstats}}
 \rightvitem{13cm}{Same as the above fewerstatistics.}
 
-\leftvitem{3cm}{finalstats\index{on!finalstats}}
+\leftvitem{3.5cm}{finalstats\index{on!finalstats}}
 \rightvitem{13cm}{Determines whether \FORM\ prints a final line of run time 
 statistics at the end of the run. Default is on.}
  
-\leftvitem{3cm}{highfirst\index{on!highfirst}}
+\leftvitem{3.5cm}{highfirst\index{on!highfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
 powers come before low powers.}
 
-%\leftvitem{3cm}{indentspace\index{on!indentspace}}
+%\leftvitem{3.5cm}{indentspace\index{on!indentspace}}
 %\rightvitem{13cm}{Not active at the moment.}
 
-\leftvitem{3cm}{insidefirst\index{on!insidefirst}}
+\leftvitem{3.5cm}{insidefirst\index{on!insidefirst}}
 \rightvitem{13cm}{Not active at the moment.}
  
-\leftvitem{3cm}{lowfirst\index{on!lowfirst}}
+\leftvitem{3.5cm}{lowfirst\index{on!lowfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that low 
 powers come before high powers. This is the default.}
  
-\leftvitem{3cm}{names\index{on!names}}
+\leftvitem{3.5cm}{names\index{on!names}}
 \rightvitem{13cm}{Turns on the mode in which at the end of each module the 
 names of all variables that have been defined by the user are printed. This 
 is an inspection mode for debugging by the user. Default is off.}
 
-\leftvitem{3cm}{nospacesinnumbers\index{on!nospacesinnumbers}}
+\leftvitem{3.5cm}{nospacesinnumbers\index{on!nospacesinnumbers}}
 \rightvitem{13cm}{\label{staonnospacesinnumbers}\vspace{1ex}Makes that very
 long numbers are printed with no leading blank spaces at the beginning of a
 new line. The numbers are usually broken up by placing a backspace character
@@ -3241,30 +3523,35 @@ purposes \FORM\ puts usually a few blank spaces at the beginning of the line.
 blank characters can be omitted by turning this variable on. See also page
 \ref{nospacesinnumbers} for a corresponding variable in the setup file.}
  
-\leftvitem{3cm}{oldfactarg\index{on!oldfactarg}}
+\leftvitem{3.5cm}{oldfactarg\index{on!oldfactarg}}
 \rightvitem{13cm}{\label{staonoldfactarg}Switches the use of the FactArg 
 statement\ref{substafactarg}\index{factarg} to the old mode from before 
 version 4. This is a compatibility mode to allow oldprograms that rely on a 
 specific working of the FactArg statement to still run. The default is 
 off.}
  
-\leftvitem{3cm}{parallel\index{on!parallel}}
+\leftvitem{3.5cm}{parallel\index{on!parallel}}
 \rightvitem{13cm}{Allows the running of the program in parallel mode unless 
 other problems prevent this. This is of course only relevant for parallel 
 versions of \FORM. The default is on.}
  
-\leftvitem{3cm}{powerfirst\index{on!powerfirst}}
+\leftvitem{3.5cm}{powerfirst\index{on!powerfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
 powers come before low powers. The most relevant is however the combined 
 power of all symbols.}
 
-\leftvitem{3cm}{propercount\index{on!propercount}}
+\leftvitem{3.5cm}{processstats\index{on!processstats}}
+\rightvitem{13cm}{Only active for \ParFORM{}. It determines whether all
+processes print their run time statistics or only the master process does so.
+Default is on.}
+
+\leftvitem{3.5cm}{propercount\index{on!propercount}}
 \rightvitem{13cm}{Sets the counting of the terms during generation into 
 `propercount' mode. This means that only terms at the `ground level' are 
 counted and terms inside functions arguments are not counted in the 
 statistics. This setting is the default.}
  
-\leftvitem{3cm}{properorder\index{on!properorder}}
+\leftvitem{3.5cm}{properorder\index{on!properorder}}
 \rightvitem{13cm}{Turns the properorder mode on. The default is off. In the 
 properorder mode \FORM\ pays particular attention to function arguments when 
 bringing terms and expressions to normal form. This may cost a considerable 
@@ -3273,40 +3560,40 @@ faster) about this, resulting sometimes in an ordering that appears without
 logic. This concerns only function arguments! This mode is mainly intended 
 for the few moments in which the proper ordering is important.}
  
-\leftvitem{3cm}{setup\index{on!setup}}
+\leftvitem{3.5cm}{setup\index{on!setup}}
 \rightvitem{13cm}{Causes the printing of the current setup parameters for 
 inspection. Default is off.}
 
-\leftvitem{3cm}{shortstatistics\index{on!shortstatistics}}
+\leftvitem{3.5cm}{shortstatistics\index{on!shortstatistics}}
 \rightvitem{13cm}{Puts the writing of the statistics in a shorthand mode in 
 which the complete statistics are written on a single line only.}
  
-\leftvitem{3cm}{shortstats\index{on!shortstats}}
+\leftvitem{3.5cm}{shortstats\index{on!shortstats}}
 \rightvitem{13cm}{Same as `On shortstatistics'.}
 
-\leftvitem{3cm}{statistics\index{on!statistics}}
+\leftvitem{3.5cm}{statistics\index{on!statistics}}
 \rightvitem{13cm}{Turns the writing of runtime statistics on. This is the 
 default. It is possible to change this default with one of the setup 
 parameters in the setup file (see \ref{setup}).}
  
-\leftvitem{3cm}{stats\index{on!stats}}
+\leftvitem{3.5cm}{stats\index{on!stats}}
 \rightvitem{13cm}{Same as `On statistics'.}
  
-\leftvitem{3cm}{threadloadbalancing\index{on!threadloadbalancing}}
+\leftvitem{3.5cm}{threadloadbalancing\index{on!threadloadbalancing}}
 \rightvitem{13cm}{\vspace{1.5ex}Causes the load balancing mechanism in \TFORM
 to be turned on or off. Default is on. Ignored by other versions of \FORM.}
  
-\leftvitem{3cm}{threads\index{on!threads}}
+\leftvitem{3.5cm}{threads\index{on!threads}}
 \rightvitem{13cm}{Allows the running of the program in multithreaded mode 
 unless other problems prevent this. This is of course only relevant for 
 \TFORM. Other versions of \FORM\ ignore this. The default is on.}
  
-\leftvitem{3cm}{threadstats\index{on!threadstats}}
+\leftvitem{3.5cm}{threadstats\index{on!threadstats}}
 \rightvitem{13cm}{Only active for \TFORM. It determines whether all threads 
 print their run time statistics or only the master thread does so. Default 
 is on.}
  
-\leftvitem{3cm}{totalsize\index{on!totalsize}}
+\leftvitem{3.5cm}{totalsize\index{on!totalsize}}
 \rightvitem{13cm}{\label{ontotalsize} Puts \FORM\ in a 
 mode\index{totalsize} in which it tries to determine 
 the maximum space occupied by all expressions at any given moment during 
@@ -3316,7 +3603,7 @@ maximum is printed at the end of the program. The same can be obtained with
 the "TotalSize ON" command in the setup (see \ref{setup}) or the -T option 
 in the command tail when \FORM\ is started (see \ref{running}).}
  
-\leftvitem{3cm}{warnings\index{on!warnings}}
+\leftvitem{3.5cm}{warnings\index{on!warnings}}
 \rightvitem{13cm}{Turns on the printing of warnings in regular mode. This 
 is the default.}
 \vspace{10mm}
@@ -3523,11 +3810,30 @@ the log\index{log} file\index{file!log}. This is the default.}
 \rightvitem{15cm}{Each term will start a new line. This is called the 
 single\index{single term mode} term mode\index{mode!single term}.}
 
+\leftvitem{1cm}{+ss}
+\rightvitem{15cm}{Each term will start a new line. In addition each 
+internal group will start a new line. A group is either a single function 
+or all symbols together, or all dotproducts together, or all vectors 
+together, or all Kronecker delta's together.}
+
+\leftvitem{1cm}{+sss}
+\rightvitem{15cm}{Like the +ss option but now each symbol and its power 
+will start a new line. The same for individual dotproducts (and their 
+power), vectors and Kronecker delta's.}
+
 \leftvitem{1cm}{-s}
 \rightvitem{15cm}{Regular term mode. There can be more terms in a line. 
 Linebreaks\index{linebreaks} are placed when the line is full. The line 
 size is set in the format\index{format} statement (see \ref{substaformat}). 
 This is the default.}
+
+\leftvitem{1cm}{-ss}
+\rightvitem{15cm}{Lowers the single term mode to -s. If one would like to 
+switch off the single term mode altogether, -s suffices.}
+
+\leftvitem{1cm}{-sss}
+\rightvitem{15cm}{Lowers the single term mode to -ss. If one would like to 
+switch off the single term mode altogether, -s suffices.}
 
 \noindent In the second mode one can specify
 individual\index{individual expressions} expressions to be printed. The 
@@ -3606,7 +3912,7 @@ more than one location in the module. \vspace{10mm}
 %--#] print : 
 %--#[ print[] :
 
-\section{print[\,]}
+\section{\texorpdfstring{print[\,]}{print[ ]}}
 \label{substaprintc}
 
 \noindent \begin{tabular}{ll}
@@ -3691,6 +3997,26 @@ a file.}
 \vspace{10mm}
 
 %--#] printtable : 
+%--#[ processbucketsize :
+
+\section{processbucketsize}
+\label{substaprocessbucketsize}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & processbucketsize {\tt<}value{\tt>};
+\\ See also & moduleoption (\ref{substamoduleoption}), setup 
+(\ref{setupprocessbucketsize})
+\end{tabular}\vspace{4mm}
+
+\noindent Sets the number of terms\index{processbucketsize} in the buckets that are sent 
+to the secondary processors in \ParFORM\index{ParFORM}, one of the 
+parallel\index{parallel} versions of \FORM\ (see chapter \ref{parallel}). In 
+all other versions this statement is ignored. See also the moduleoption 
+(\ref{substamoduleoption}) statement and the corresponding parameter for 
+the setup (\ref{setupprocessbucketsize}). \vspace{10mm}
+
+%--#] processbucketsize : 
 %--#[ propercount :
 
 \section{propercount}
@@ -3759,6 +4085,7 @@ will assume that $c = b-a$ and then make the substitutions
             c^ib^{n-m-i}
             \ \ \ \ \ \ \ \hfill m<n \nonumber
 \end{eqnarray}
+\setcounter{equation}{3}
 Of course, such substitutions can be made also by the user in a more 
 flexible way. This statement has however the advantage of the best speed.
 \vspace{4mm}
@@ -4250,26 +4577,6 @@ multiply\index{multiply} statements (see \ref{substamultiply}), etc.
 \vspace{10mm}
 
 %--#] skip : 
-%--#[ slavepatchsize :
-
-\section{slavepatchsize}
-\label{substaslavepatchsize}
-
-\noindent \begin{tabular}{ll}
-Type & Declaration statement\\
-Syntax & slavepatchsize {\tt<}value{\tt>};
-\\ See also & moduleoption (\ref{substamoduleoption})
-\end{tabular}\vspace{4mm}
-
-\noindent Sets the size\index{slavepatchsize} of the buffer for sending 
-terms to the secondary processors in \ParFORM\index{ParFORM}, one of the 
-parallel\index{parallel} versions of \FORM\ (see chapter \ref{parallel}). In 
-all other versions this statement is ignored. If the value of 
-slavepatchsize is less than the maximum term size (see \ref{setup}) it will 
-be readjusted to the value of maxtermsize\index{maxtermsize} (see 
-\ref{setupmaxtermsize}). \vspace{10mm}
-
-%--#] slavepatchsize : 
 %--#[ sort :
 
 \section{sort}
@@ -4416,12 +4723,14 @@ sign, the definition is
         + \sum_{j=1}^N \sum_{i=1}^{j-1}
         + \sum_{i=j=1}^N
 \end{eqnarray}
+\setcounter{equation}{4}
 while in the case of the minus the definition is
 \begin{eqnarray}
     \sum_{i=1}^N \sum_{i=1}^N & = & \sum_{i=1}^N \sum_{j=1}^{i}
         + \sum_{j=1}^N \sum_{i=1}^{j}
         - \sum_{i=j=1}^N
 \end{eqnarray}
+\setcounter{equation}{5}
 It is assumed that we have harmonic sums\index{harmonic sum} (see the 
 summer library in the \FORM\ distribution). For such sums we expect 
 functions with lists of nonzero integer arguments. Example:
@@ -4523,31 +4832,31 @@ Syntax & s[ymbols] {\tt<}list of symbols to be declared{\tt>};
 followed by a number of options. These are (assuming that x is the symbol 
 to be declared):
 
-\leftvitem{2cm}{x\hash{}r}
-\rightvitem{14cm}{The symbol is real\index{real}. This is the default.}
+\leftvitem{2.4cm}{x\hash{}r}
+\rightvitem{13.8cm}{The symbol is real\index{real}. This is the default.}
 
-\leftvitem{2cm}{x\hash{}c}
-\rightvitem{14cm}{The symbol is complex\index{complex}. This means that two 
+\leftvitem{2.4cm}{x\hash{}c}
+\rightvitem{13.8cm}{The symbol is complex\index{complex}. This means that two 
 spaces are reserved for this symbol, one for x and one for x\hash (the 
 complex conjugate).}
 
-\leftvitem{2cm}{x\hash{}i}
-\rightvitem{14cm}{The symbol is imaginary\index{imaginary}.}
+\leftvitem{2.4cm}{x\hash{}i}
+\rightvitem{13.8cm}{The symbol is imaginary\index{imaginary}.}
 
-\leftvitem{2cm}{x\hash{}=number}
-\rightvitem{14cm}{The symbol is a number-th root of
+\leftvitem{2.4cm}{x\hash{}=number}
+\rightvitem{13.8cm}{The symbol is a number-th root of
 unity\index{root of unity}\label{rootofunity} This means that the number-th 
 power of the symbol will be replaced by one and half this power (if even) 
 by -1. Negative powers will be replaced by corresponding positive powers.}
 
-\leftvitem{2cm}{x(:5)}
-\rightvitem{14cm}{The symbol has the maximum power 5. This means that $x^6$ 
+\leftvitem{2.4cm}{x(:5)}
+\rightvitem{13.8cm}{The symbol has the maximum power 5. This means that $x^6$ 
 and higher powers are automatically eliminated during the 
 normalization\index{normalization} of a term. Of course any other number, 
 positive or negative, is allowed.}
 
-\leftvitem{2cm}{x(-3:)}
-\rightvitem{14cm}{The symbol has the minimum power -3. This means that 
+\leftvitem{2.4cm}{x(-3:)}
+\rightvitem{13.8cm}{The symbol has the minimum power -3. This means that 
 $x^{-4}$ and lower powers are automatically eliminated during the 
 normalization of a term. Of course any other number, positive or negative, 
 is allowed. Note that when the minimum power is positive, terms that have 
@@ -4557,8 +4866,8 @@ count\index{if!count}\index{count} option of an if\index{if} statement (see
 \ref{substaif}) and a discard\index{discard} statement (see 
 \ref{substadiscard}).}
 
-\leftvitem{2cm}{x(-3:5)}
-\rightvitem{14cm}{The combination of a maximum and a minimum power 
+\leftvitem{2.4cm}{x(-3:5)}
+\rightvitem{13.8cm}{The combination of a maximum and a minimum power 
 restriction (see above).}\vspace{4mm}
 
 \noindent Complexity properties and power restrictions can be combined. In 
@@ -4879,7 +5188,7 @@ section on \TFORM\ (\ref{tform}). To find out what its value is, use the
 Type & Executable statement\\
 Syntax & topolynomial
 \\ See also & factarg (\ref{substafactarg}), FromPolynomial 
-(\ref{substafrompolynomial}) and ExtraSymbols (\ref{stubstaextrasymbols},
+(\ref{substafrompolynomial}) and ExtraSymbols (\ref{substaextrasymbols},
 \ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
@@ -4918,6 +5227,7 @@ make this clearer:
 \begin{eqnarray}
     p^{\mu_1}p^{\mu_2}p^{\mu_3} \rightarrow t^{\mu_1\mu_2\mu_3} \nonumber
 \end{eqnarray}
+\setcounter{equation}{6}
 and hence
 \begin{verbatim}
    p.p1^2*f(p,p1)*p(mu)*tt(p1,p,p2,p)
@@ -4929,19 +5239,19 @@ gives after \verb:totensor p,t;:
 
 \noindent The options are
 
-\leftvitem{3cm}{nosquare\index{totensor!nosquare}}
+\leftvitem{3.5cm}{nosquare\index{totensor!nosquare}}
 \rightvitem{13cm}{Dotproducts with twice the specified vector (square of 
 the vector) are not taken into account.}
 
-\leftvitem{3cm}{functions\index{totensor!functions}}
+\leftvitem{3.5cm}{functions\index{totensor!functions}}
 \rightvitem{13cm}{Vectors that are arguments of regular functions will also 
 be considered. By default this is not done.}
 
-\leftvitem{3cm}{!vector\index{totensor!"!vector}}
+\leftvitem{3.5cm}{!vector\index{totensor!"!vector}}
 \rightvitem{13cm}{Dotproducts involving the specified vector are not 
 treated.}
 
-\leftvitem{3cm}{!set\index{totensor!"!set}}
+\leftvitem{3.5cm}{!set\index{totensor!"!set}}
 \rightvitem{13cm}{The set should be a set of vectors. All dotproducts 
 involving a vector of the set are not treated.}\vspace{10mm}
 
@@ -4964,6 +5274,7 @@ with one of the indices of the tensor as in:
 \begin{eqnarray}
     t^{\mu_1\mu_2\mu_3} \rightarrow p^{\mu_1}p^{\mu_2}p^{\mu_3} \nonumber
 \end{eqnarray}\vspace{10mm}
+\setcounter{equation}{7}
 
 %--#] tovector : 
 %--#[ trace4 :
@@ -5087,7 +5398,7 @@ this is relevant. In the descriptions below we will indicate the range by
 
 The transformations that are allowed currently are:
  
-\leftvitem{3cm}{replace\index{transform!replace}\index{replace}}
+\leftvitem{3.2cm}{replace\index{transform!replace}\index{replace}}
 \rightvitem{13cm}{replace(r1,r2)=(from1,to1,from2,to2,...,fromn,ton) in 
 which the from-to pairs are as in the replace\_ function. Here however 
 there are more options than in the replace\_ function as we can specify 
@@ -5099,14 +5410,14 @@ replace(1,last)=(xarg\_,2\*xarg\_+1,p) which would replace f(2,a) by f(5,
 2\*a+1,p) if a is a symbol and p a vector. To catch p one would need to use 
 parg\_.}
 
-\leftvitem{3cm}{encode\index{transform!encode}\index{encode}}
+\leftvitem{3.2cm}{encode\index{transform!encode}\index{encode}}
 \rightvitem{13cm}{encode(r1,r2):base=number will interprete the arguments as 
 the digits in a base 2 number system, compute the complete number and 
 replace the arguments by a single argument that is that number. The number 
 must fit inside a single FORM word and so must each of the original 
 arguments. They should actually be smaller than the number of the base.}
 
-\leftvitem{3cm}{decode\index{transform!decode}\index{decode}}
+\leftvitem{3.2cm}{decode\index{transform!decode}\index{decode}}
 \rightvitem{13cm}{decode(r1,r2):base=number will do the opposite of encode. 
 It will take a single argument (the smallest of the two given) and expand 
 it into digits in a number system given by the base. It will create the 
@@ -5114,7 +5425,7 @@ specified number of digits and replace the original number by the given
 number of arguments representing these digits. If r2 is less than r1 the 
 digits will be in reverse order.}
 
-\leftvitem{3cm}{tosumnotation\index{transform!tosumnotation}\index{tosumnotation}
+\leftvitem{3.2cm}{tosumnotation\index{transform!tosumnotation}\index{tosumnotation}
 \index{transform!implode}\index{implode}}
 \rightvitem{13cm}{tosumnotation(r1,r2) or implode(r1,r2) realizes an 
 encoding in which zeroes are absorbed as extra values in the first nonzero 
@@ -5126,7 +5437,7 @@ integers because otherwise the reverse operation (explode) would generate
 too many arguments. Instead of ``tosumnotation'' one may also use the word 
 ``implode'' in accordance with the argimplode statement.}
 
-\leftvitem{3cm}{tointegralnotation\index{transform!tointegralnotation}
+\leftvitem{3.2cm}{tointegralnotation\index{transform!tointegralnotation}
 \index{tointegralnotation}\index{transform!explode}\index{explode}}
 \rightvitem{13cm}{tointegralnotation(r1,r2) or explode(r1,r2) undoes what 
 implode might have done. Hence each integer with an absolute value $n$ 
@@ -5134,22 +5445,22 @@ generates $n-1$ zeroes and leaves something with absolute value one.
 Instead of ``tointegralnotation'' one may also use the word 
 ``explode'' in accordance with the argexplode statement.}
 
-\leftvitem{3cm}{permute\index{transform!permute}\index{permute}}
+\leftvitem{3.2cm}{permute\index{transform!permute}\index{permute}}
 \rightvitem{13cm}{permute(1,3,5)(2,6) will permute the arguments 
 according to the cycles indicated. The cycles are executed in order and may 
 overlap. Their number is not restricted.}
 
-\leftvitem{3cm}{reverse\index{transform!reverse}\index{reverse}}
+\leftvitem{3.2cm}{reverse\index{transform!reverse}\index{reverse}}
 \rightvitem{13cm}{reverse(r1,r2) reverses the order of the arguments in 
 specified range.}
 
-\leftvitem{3cm}{cycle\index{transform!cycle}\index{cycle}}
+\leftvitem{3.2cm}{cycle\index{transform!cycle}\index{cycle}}
 \rightvitem{13cm}{cycle(r1,r2)=+/-number will perform a cyclic permutation 
 of the indicated range of arguments. If the number is preceeded by a - the 
 cycling is to the left. If there is a plus sign the cycling is to the 
 right. Note that either the plus or the minus sign is mandatory.}
 
-\leftvitem{3cm}{islyndon\index{transform!islyndon}\index{islyndon}}
+\leftvitem{3.2cm}{islyndon\index{transform!islyndon}\index{islyndon}}
 \rightvitem{13cm}{islyndon(r1,r2)=(yes,no) will test whether the indicated 
 range of arguments forms a Lyndon word\index{Lyndon word} according to the 
 ordering of arguments in FORM. The yes and no arguments are what the main 
@@ -5161,7 +5472,7 @@ may also use islyndon$<$(r1,r2)=(yes,no) or islyndon-(r1,r2)=(yes,no),
 while for the maximum one may use islyndon$>$(r1,r2)=(yes,no) or 
 islyndon+(r1,r2)=(yes,no).}
 
-\leftvitem{3cm}{tolyndon\index{transform!tolyndon}\index{tolyndon}}
+\leftvitem{3.2cm}{tolyndon\index{transform!tolyndon}\index{tolyndon}}
 \rightvitem{13cm}{tolyndon(r1,r2)=(yes,no) will permute the given range in 
 a cyclic manner till it is (if possible) a Lyndon word\index{Lyndon word} 
 according to the ordering of arguments in FORM. The yes and no arguments 
@@ -5251,6 +5562,41 @@ the current term, the current term is replaced by the new variety.
 \vspace{10mm}
 
 %--#] tryreplace : 
+%--#[ unfactorize :
+
+\section{unfactorize}
+\label{substaunfactorize}
+
+\noindent \begin{tabular}{ll}
+Type & Output control statement\\
+Syntax & unfactorize \verb:{:{\tt<}name of expression(s){\tt>};
+\\ See also & the chapter on polynomials~\ref{polynomials} and the 
+factorize statement~\ref{substafactorize}.
+\end{tabular} \vspace{4mm}
+
+\noindent Without arguments the statement causes all expressions that were 
+factorized to be 'unfactorized'. This means that all factors are multiplied 
+and the expression is replaced by this new version. Like the factorize 
+statement this statement is an output control statement, which means that 
+it takes effect after an expression has been processed in the current 
+module (see also the factorize~\ref{substafactorize} statement).
+
+\noindent Because an immediate multiplication of all factors is sometimes 
+far from optimal, FORM uses a binary scheme to combine factors. After each 
+step there will be a sort operation. This means that when statistics are 
+printed, there may be several statistics for this step.
+
+\noindent When the statement has arguments, these arguments should be names 
+of expressions. In that case the unfactorization is applied only to the 
+expressions that are specified.
+
+\noindent If one likes to unfactorized all expressions except for a few 
+ones, one can use the unfactorize statement without arguments and then 
+exclude the few expressions that should not be treated with the 
+nunfactorize statement (see \ref{substanunfactorize}).
+\vspace{10mm} 
+
+%--#] unfactorize : 
 %--#[ unhide :
 
 \section{unhide}
@@ -5294,8 +5640,8 @@ again) and then send the relevant expressions back to the hide system.
 Type & Declaration statement\\
 Syntax & u[nittrace] {\tt<}value{\tt>}; \\
 See also & trace4 (\ref{substatrace}), tracen (\ref{substatracen}),
-    chisholm (\ref{substachisholm})
-    and the chapter on gamma algebra (\ref{gammaalgebra})
+    chisholm (\ref{substachisholm}) \\ &
+    and the chapter on gamma algebra (\ref{gammaalgebra}).
 \end{tabular} \vspace{4mm}
 
 \noindent Sets\index{unittrace} the value of the trace of the 
@@ -5391,40 +5737,40 @@ program conv2to3 should help in the conversion of programs written for
 version 2. For completeness we still give the syntax and how it should be 
 converted. The keywords are: \vspace{4mm}
  
-\leftvitem{3cm}{allnames\index{write!allnames}}
+\leftvitem{3.5cm}{allnames\index{write!allnames}}
 \rightvitem{13cm}{Same as: On allnames;}
 
-\leftvitem{3cm}{allwarnings\index{write!allwarnings}}
+\leftvitem{3.5cm}{allwarnings\index{write!allwarnings}}
 \rightvitem{13cm}{Same as: On allwarnings;}
  
-\leftvitem{3cm}{highfirst\index{write!highfirst}}
+\leftvitem{3.5cm}{highfirst\index{write!highfirst}}
 \rightvitem{13cm}{Same as: On highfirst;}
  
-\leftvitem{3cm}{lowfirst\index{write!lowfirst}}
+\leftvitem{3.5cm}{lowfirst\index{write!lowfirst}}
 \rightvitem{13cm}{Same as: On lowfirst;}
 
-\leftvitem{3cm}{names\index{write!names}}
+\leftvitem{3.5cm}{names\index{write!names}}
 \rightvitem{13cm}{Same as: On names;}
  
-\leftvitem{3cm}{powerfirst\index{write!powerfirst}}
+\leftvitem{3.5cm}{powerfirst\index{write!powerfirst}}
 \rightvitem{13cm}{Same as: On powerfirst;}
  
-\leftvitem{3cm}{setup\index{write!setup}}
+\leftvitem{3.5cm}{setup\index{write!setup}}
 \rightvitem{13cm}{Same as: On setup;}
  
-\leftvitem{3cm}{shortstatistics\index{write!shortstatistics}}
+\leftvitem{3.5cm}{shortstatistics\index{write!shortstatistics}}
 \rightvitem{13cm}{Same as: On shortstatistics;}
 
-\leftvitem{3cm}{shortstats\index{write!shortstats}}
+\leftvitem{3.5cm}{shortstats\index{write!shortstats}}
 \rightvitem{13cm}{Same as: On shortstats;}
  
-\leftvitem{3cm}{statistics\index{write!statistics}}
+\leftvitem{3.5cm}{statistics\index{write!statistics}}
 \rightvitem{13cm}{Same as: On statistics;}
  
-\leftvitem{3cm}{stats\index{write!stats}}
+\leftvitem{3.5cm}{stats\index{write!stats}}
 \rightvitem{13cm}{Same as: On stats;}
  
-\leftvitem{3cm}{warnings\index{write!warnings}}
+\leftvitem{3.5cm}{warnings\index{write!warnings}}
 \rightvitem{13cm}{Same as: On warnings;}
 
 \vspace{10mm}
