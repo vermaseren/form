@@ -1,5 +1,5 @@
-FORM version 3.3(Aug 27 2010)
-=============================
+FORM version 4.0 (Mar 29 2012)
+==============================
 
 FORM is a Symbolic Manipulation System. It reads symbolic expressions from files
 and executes symbolic/algebraic transformations upon them. The answers are

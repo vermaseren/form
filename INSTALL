@@ -13,10 +13,6 @@ into the default path "/usr/bin". Nevertheless, you are strongly advised to
 carefully read the following sections in order to prevent common mistakes and to
 be able to choose the best configuration settings for your system.
 
-NOTE for Apple users: If you compile on an Apple system, please read the
-special advice below in the Configuration section about the 32bit/64bit
-problem!
-
 
 Prerequisites
 =============
@@ -25,13 +21,13 @@ In case you need to (re-)generate the script "configure" (see next section), you
 have to have the GNU autoconf/automake programs installed on your system. You
 should have at least autoconf version >= 2.59 and automake version >= 1.7.
 
-To compile the sources you need a C compiler that understands ANSI C, i.e. the
-C89 standard, like for example the GNU compiler collection (GCC) or the Intel C
-compiler. The facilities in FORM for external communication need a POSIX
-compliant C library, like the GNU glibc.
+To compile the sources you need reasonably modern C and C++ compilers, like for
+example the GNU compiler collection (GCC) or the Intel C compiler. The
+facilities in FORM for external communication need a POSIX compliant C library,
+like the GNU glibc.
 
 The threaded version of FORM needs a Posix compliant implementation of threads
-(pthreads). The parallel version ParFORM needs a MPI 2 implementation.
+(pthreads). The parallel version ParFORM needs an MPI implementation.
 
 The manual needs a LaTeX installation with the commands "latex" and "dvips" or
 "pdflatex" available. For the html format the command "latex2html" is needed.
@@ -99,13 +95,6 @@ to prevent FORM from using one of these libraries. The executable will not be
 linked against this library then and the functionality will be provided by
 internal code. Usually, you don't need to care about these options.
 
-The configure script automatically recognizes your CPU architecture and sets it
-to 32bit or 64bit, accordingly.  On Apple systems this doesn't work properly.
-There, the CPU is always set to 64bit! If you need to build a 32bit executable,
-use the option
-
-    ./configure --build=i486-apple-darwin
-
 The option
 
     ./configure --disable-largefile
@@ -115,9 +104,10 @@ thereby restrict files to be less than 4GB in size on 32bit machines. Usually,
 you don't need to care about this option.
 
 To choose a compiler that is different from the one "configure" automatically
-determines, you can set the environment variable "CC" on the command line:
+determines, you can set the environment variables "CC" and "CXX" on the command
+line:
 
-    ./configure CC=icc CFLAGS=-Werror
+    ./configure CC=icc CXX=icpc CFLAGS=-Werror CXXFLAGS=-Werror
 
 The above example shows also how to set additional compiler flags.
 
@@ -148,11 +138,12 @@ To compile only a specific flavor of FORM, name it as a parameter:
     make vorm
     make tvorm
     make parform
+    make parvorm
 
 Additional flags for the compiler or linker can be given at the command line,
 for example:
 
-    make vorm CFLAGS=-O1
+    make vorm CFLAGS=-O1 CXXFLAGS=-O1
 
 To cleanup the distribution directory, the command
 
