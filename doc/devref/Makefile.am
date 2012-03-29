@@ -14,8 +14,19 @@ EXTRA_DIST = $(TEXFILES)
 
 DATEFILE = devrefdate.tex
 $(DATEFILE): FORCE
-	if [ "x$(DATE)" != x ]; then echo $(DATE) > $(DATEFILE); else echo `date +"%d %b %Y"` > $(DATEFILE); fi
+	OLDDATE=0; if [ -f $(DATEFILE) ]; then OLDDATE=$$(cat $(DATEFILE)); OLDDATE=$$(date -d "$$OLDDATE" +%Y%m%d); fi; \
+	NEWDATE=0; if [ "x$(DATE)" != x ]; then NEWDATE=$(DATE); else NEWDATE=$$(date +"%d %b %Y"); fi; \
+	if [ $$(date -d "$$NEWDATE" +%Y%m%d) -gt $$OLDDATE ]; then echo $$NEWDATE > $(DATEFILE); echo DIDIT; fi
 FORCE:
+
+CLEANFILES = \
+	$(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi \
+	$(MAIN).html $(MAIN)2.html $(MAIN).idv $(MAIN).idx $(MAIN).ilg $(MAIN).ind $(MAIN).lg \
+	$(MAIN).log $(MAIN).out $(MAIN).pdf $(MAIN).ps $(MAIN).tmp $(MAIN).toc $(MAIN).xref \
+	idxmake.dvi idxmake.log texput.log $(DATEFILE)
+
+clean-local:
+	rm -rf html
 
 #################### CONFIG_TEX
 if CONFIG_TEX
@@ -68,8 +79,3 @@ endif
 
 endif
 #################### CONFIG_TEX
-
-CLEANFILES = $(MAIN).aux $(MAIN).dvi $(MAIN).idx $(MAIN).log $(MAIN).ps $(MAIN).pdf $(MAIN).toc html/* $(DATEFILE)
-
-clean-local:
-	rm -rf html

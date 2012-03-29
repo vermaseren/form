@@ -10,7 +10,6 @@ TEXFILES = \
 	module.tex \
 	parallel.tex \
 	pattern.tex \
-	poly.tex \
 	prepro.tex \
 	setup.tex \
 	sorting.tex \
@@ -23,7 +22,7 @@ MAIN = manual
 
 EXTRA_DIST = $(TEXFILES)
 
-.PHONY: FORCE dvi html ps pdf clean-html clean-local
+.PHONY: FORCE dvi html ps pdf clean-local
 
 DATEFILE = manualdate.tex
 $(DATEFILE): FORCE
@@ -32,8 +31,12 @@ $(DATEFILE): FORCE
 	if [ $$(date -d "$$NEWDATE" +%Y%m%d) -gt $$OLDDATE ]; then echo $$NEWDATE > $(DATEFILE); echo DIDIT; fi
 FORCE:
 
-HTMLCLEANFILES = idxmake.dvi idxmake.log $(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi $(MAIN).html $(MAIN).idv $(MAIN).idx $(MAIN).ilg $(MAIN).ind $(MAIN).lg $(MAIN).log $(MAIN).tmp $(MAIN).xref
-CLEANFILES = $(MAIN).pdf $(MAIN).ps $(MAIN).toc $(DATEFILE) texput.log $(HTMLCLEANFILES)
+CLEANFILES = \
+	$(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi \
+	$(MAIN).html $(MAIN)2.html $(MAIN).idv $(MAIN).idx $(MAIN).ilg $(MAIN).ind $(MAIN).lg \
+	$(MAIN).log $(MAIN).out $(MAIN).pdf $(MAIN).ps $(MAIN).tmp $(MAIN).toc $(MAIN).xref \
+	idxmake.dvi idxmake.log texput.log $(DATEFILE)
+
 clean-local:
 	rm -rf html
 
@@ -45,13 +48,13 @@ dvi: $(DATEFILE) $(MAIN).dvi
 if CONFIG_MAKEINDEX
 $(MAIN).dvi: $(DATEFILE) $(TEXFILES)
 	@set -e ;\
-	${LATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${LATEX} $(MAIN).tex; done; \
+	$(LATEX) $(MAIN).tex; while [ `grep -v 'Package: rerunfilecheck' $(MAIN).log | grep -c Rerun` -gt 0 ]; do $(LATEX) $(MAIN).tex; done; \
 	${MAKEINDEX} $(MAIN); \
-	${LATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${LATEX} $(MAIN).tex; done
+	$(LATEX) $(MAIN).tex; while [ `grep -v 'Package: rerunfilecheck' $(MAIN).log | grep -c Rerun` -gt 0 ]; do $(LATEX) $(MAIN).tex; done
 else
 $(MAIN).dvi: $(DATEFILE) $(TEXFILES)
 	@set -e ;\
-	${LATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${LATEX} $(MAIN).tex; done
+	$(LATEX) $(MAIN).tex; while [ `grep -v 'Package: rerunfilecheck' $(MAIN).log | grep -c Rerun` -gt 0 ]; do $(LATEX) $(MAIN).tex; done
 endif
 
 ########## CONFIG_HTLATEX
@@ -101,13 +104,13 @@ pdf: $(DATEFILE) $(MAIN).pdf
 if CONFIG_MAKEINDEX
 $(MAIN).pdf: $(DATEFILE) $(TEXFILES)
 	@set -e ;\
-	${PDFLATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${PDFLATEX} $(MAIN).tex; done; \
+	$(PDFLATEX) $(MAIN).tex; while [ `grep -v 'Package: rerunfilecheck' $(MAIN).log | grep -c Rerun` -gt 0 ]; do $(PDFLATEX) $(MAIN).tex; done; \
 	${MAKEINDEX} $(MAIN); \
-	${PDFLATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${PDFLATEX} $(MAIN).tex; done
+	$(PDFLATEX) $(MAIN).tex; while [ `grep -v 'Package: rerunfilecheck' $(MAIN).log | grep -c Rerun` -gt 0 ]; do $(PDFLATEX) $(MAIN).tex; done
 else
 $(MAIN).pdf: $(DATEFILE) $(TEXFILES)
 	@set -e ;\
-	${PDFLATEX} $(MAIN).tex; while [ `cat $(MAIN).log | grep -c Rerun` -gt 0 ]; do ${PDFLATEX} $(MAIN).tex; done
+	$(PDFLATEX) $(MAIN).tex; while [ `grep -v 'Package: rerunfilecheck' $(MAIN).log | grep -c Rerun` -gt 0 ]; do $(PDFLATEX) $(MAIN).tex; done
 endif
 
 endif

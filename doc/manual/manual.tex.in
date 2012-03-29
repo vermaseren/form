@@ -58,13 +58,9 @@
 
 \begin{document}
 \begin{titlepage}
-\title{\Huge FORM \\ \Large version
-@VERSION@
-\\ \huge Reference manual}
-\date{
-\input{manualdate.tex}
-}
-\author{J.A.M.Vermaseren, M.Tentyukov and J.Vollinga}
+\title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Reference manual}
+\date{\input{manualdate.tex}}
+\author{J.A.M.~Vermaseren, J.~Kuipers, M.~Tentyukov, T.~Ueda and J.~Vollinga}
 \end{titlepage}
 \maketitle
 %\clearemptydoublepage
@@ -99,6 +95,7 @@
 \input{@srcdir@/statements}
 \input{@srcdir@/functions}
 \input{@srcdir@/bracket}
+\input{@srcdir@/polynomials}
 \input{@srcdir@/tablebas}
 \input{@srcdir@/gamma}
 \input{@srcdir@/metric}
