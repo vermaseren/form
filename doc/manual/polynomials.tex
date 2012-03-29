@@ -1,0 +1,622 @@
+
+\chapter{Polynomials and Factorization}
+\label{polynomials}
+
+\noindent Starting with version 4, FORM is equipped with powerful handling 
+of rational polynomials and with factorization capabilities. Because this 
+creates many new possibilities, it brings a whole new category of commands 
+with it. We will list most of these here.
+
+\noindent First there are the rational polynomials. These work a bit like 
+the PolyFun\ref{substapolyfun}, but now with two arguments: a numerator and 
+a denominator. Instead of PolyFun the function is designated as 
+PolyRatFun\ref{substapolyratfun} as in the example below:
+\begin{verbatim}
+    Symbol x,y;
+    CFunction rat;
+    PolyRatFun rat;
+    L   F = rat(x+y,x-y)+rat(x-y,x+y);
+    Print;
+    .end
+
+   F =
+      rat(2*x^2 + 2*y^2,x^2 - y^2);
+\end{verbatim}
+Dealing with a PolyRatFun can be very handy, but one should realize that 
+there is a limit to the size of the arguments, because the PolyRatFun with 
+its arguments is part of a term and hence is limited by the maximum size of 
+a term\ref{setupmaxtermsize}. One should also take into account that the 
+manipulation of multivariate polynomials, and in particular the GCD 
+operation, can be rather time consuming.
+
+\noindent The PolyRatFun has one limitation as compared to the regular 
+PolyFun: in its arguments one may use only symbols. Of course FORM is 
+equipped with a mechanism to replace other objects by extra internally 
+generated symbols\ref{substaextrasymbols}. One could imagine FORM to 
+automatically convert these objects to symbols, do the polynomial 
+arithmetic and then convert back. This is done with factorization and the 
+gcd\_\ref{fungcd}\index{gcd\_}\index{function!gcd\_}, 
+div\_\ref{fundiv}\index{div\_}\index{function!div\_} 
+and rem\_\ref{funrem}\index{rem\_}\index{function!rem\_} functions. But 
+because the addition of PolyRatFun's is such a frequent event, this would 
+be very costly in time. Hence it is better that the user does this once 
+in a controled way.
+
+\noindent The PolyFun and PolyRatFun declarations are mutually exclusive. 
+The PolyRatFun is considered a special type of PolyFun and there can be 
+only one PolyFun at any moment. If one wants to switch back to a mode in 
+which there is neither a PolyFun nor a PolyRatFun one can use
+\begin{verbatim}
+   PolyRatFun;
+\end{verbatim}
+to indicate that after this there is no function with that status.
+
+\noindent When a PolyRatFun has only a single argument, this argument is 
+interpreted as the numerator of a fraction. FORM will add automatically a 
+second argument which has the value 1.
+
+\noindent The second important polynomial facility is factorization. This 
+is not necessarily something trivial. First of all, with very lengthy 
+multivariate input, this can be unpractically slow. Second of all, there 
+are various types of objects that we may factorize and each has its special 
+needs. One of those needs is access to the factors, which is different for 
+the factors of function arguments, of \$-expressions or even complete 
+expressions. In addition \$-expressions should be factorizable either from 
+the preprocessor or on a term by term basis. Let us start with function 
+arguments.
+
+\noindent One can factorize function arguments with the FactArg 
+statement\ref{substafactarg}. The factors are each represented by a 
+separate argument as in
+\begin{verbatim}
+    Symbol x,y;
+    CFunction f1,f2;
+    Local F = f1(x^4-y^4)+f2(3*y^4-3*x^4);
+    FactArg,f1,f2;
+    Print;
+    .end
+
+   F=
+      f1(y-x,y+x,y^2+x^2,-1)+f2(y-x,y+x,y^2+x^2,3);
+\end{verbatim}
+Overal constants and overal signs are taken separately as one can see. If 
+one wants the factors in separate functions one can use the 
+ChainOut\ref{substachainout} command as in
+\begin{verbatim}
+    Symbol x,y;
+    CFunction f1,f2;
+    Local F = f2(3*y^4-3*x^4);
+    FactArg,f2;
+    Print;
+    .sort
+
+   F=
+      f2(y-x,y+x,y^2+x^2,3);
+
+    ChainOut,f2;
+    id f2(x?number_) = x;
+    Print;
+    .end
+
+   F=
+      3*f2(y-x)*f2(y+x)*f2(y^2+x^2);
+\end{verbatim}
+
+\noindent Factorization of expressions is a bit more complicated. Clearly 
+this cannot be a command at the term level. Hence we had two options on how 
+to implement this. One would have been as a preprocessor instruction, which 
+we did not select, and the other is as some type of format statement, which 
+is what we did opt for. In the case we factorize an expression, the 
+original unfactorized expression is replaced by the factorized version. 
+After that we keep the factorized version only and that may bring some 
+restrictions with it. Of course, in the same way one can factorize an 
+expression, one can unfactorize it. The corresponding statements are 
+Factorize\ref{substafactorize}, NFactorize\ref{substanfactorize}, 
+UnFactorize\ref{substaunfactorize} and 
+NUnFactorize\ref{substanunfactorize}. These statements are used at the end 
+of the module in the same place as one might use the bracket 
+statement\ref{substabracket}. It should be noticed however that a 
+factorized expression will never apply the bracket mechanism. They are 
+mutually exclusive, because internally we use the bracket mechanism with a 
+built in symbol factor\_ to indicate the factors. Here is an example:
+\begin{verbatim}
+    Symbol x,y;
+    Local F = x^4-y^4;
+    Print;
+    .sort
+
+Time =       0.00 sec    Generated terms =          2
+               F         Terms in output =          2
+                         Bytes used      =         64
+
+   F=
+      -y^4+x^4;
+
+    Print;
+    Factorize F;
+    .end
+
+Time =       0.00 sec    Generated terms =          2
+               F         Terms in output =          2
+                         Bytes used      =         64
+
+Time =       0.00 sec    Generated terms =          7
+               F         Terms in output =          7
+               factorize Bytes used      =        288
+
+   F=
+       (-1)
+      *(y-x)
+      *(y+x)
+      *(y^2+x^2);
+\end{verbatim}
+We have printed the statistics in this example to show that the 
+factorization prints its own statistics. This factorization is executed 
+after the expression has been completed and before manipulations on the 
+next expression start. This way it is possible to overwrite the first 
+output by the factorized output and we do not loose diskspace 
+unnecessarily.
+
+\noindent The next question is of course how to find out how many factors 
+an expression has and how to access individual factors. There is a function 
+numfactors\_ which gives the number of factors in an expression:
+\begin{verbatim}
+    Symbol x,y;
+    Local F1 = x^4-y^4;
+    Local F2 = 0;
+    Local F3 = 1;
+    Local F4 = x^4-y^4;
+    Print;
+    Factorize F1,F2,F3;
+    .sort
+
+   F1=
+       (-1)
+      *(y-x)
+      *(y+x)
+      *(y^2+x^2);
+    
+   F2=0;
+
+   F3=
+       (1);
+
+   F4=
+      -y^4+x^4;
+    #do i = 1,4
+    #$n`i' = numfactors_(F`i');
+    #message expression F`i' has `$n`i'' factors
+~~~expression F1 has 4 factors
+    #enddo
+~~~expression F2 has 1 factors
+~~~expression F3 has 1 factors
+~~~expression F4 has 0 factors
+    .end
+\end{verbatim}
+As we see, an expression that is zero still gives one factor when it is 
+factorized. When the expression is not factorized it will return 0 in all 
+cases. The factors can be accessed easily once one knows that the factors 
+are stored by means of the bracket mechanism and the n-th factor is the 
+bracket with the n-th power of the symbol factor\_ outside the bracket:
+\begin{verbatim}
+    Symbol x,y;
+    Local F = x^4-y^4;
+    Factorize F;
+    .sort
+    #$n = numfactors_(F);
+    #do i = 1,`$n'
+    Local F`i' = F[factor_^`i'];
+    #enddo
+    Print;
+    .end
+
+   F=
+       (-1)
+      *(y-x)
+      *(y+x)
+      *(y^2+x^2);
+
+   F1=
+      -1;
+
+   F2=
+      y-x;
+
+   F3=
+      y+x;
+
+   F4=
+      y^2+x^2;
+\end{verbatim}
+
+\noindent It is also possible to put an expression in the input in a 
+factorized format. For this we have the 
+LocalFactorized\ref{substalfactorized} and 
+GlobalFactorized\ref{substagfactorized} commands. These commands can 
+be abbreviated to LFactorized, GFactorized or even LF and GF. One should 
+notice that these commands do not execute a factorization. They accept the 
+factors as the user provides them:
+\begin{verbatim}
+    Symbol x,y;
+    LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
+    Print;
+    .end
+
+   E =
+         (  - 1 )
+       * ( 1 + x )
+       * ( 2 + x )
+       * ( 12 + 7*x + x^2 );
+\end{verbatim}
+\noindent This can go to some extremes when we feed in expressions 
+containing powers and expressions that are potentially already factorized:
+\begin{verbatim}
+    Symbol x,y;
+    LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
+    Local   F = -(x+1)*(x+2)*((x+3)*(x+4));
+    Print;
+    .sort
+
+   E=
+       (-1)
+      *(1+x)
+      *(2+x)
+      *(12+7*x+x^2);
+
+   F=
+      -24-50*x-35*x^2-10*x^3-x^4;
+
+    LF G = (x-1)*(x+2)^2*E^2*F^2;
+    Print G;
+    .end
+
+   G=
+       (-1+x)
+      *(2+x)
+      *(2+x)
+      *(-1)
+      *(1+x)
+      *(2+x)
+      *(12+7*x+x^2)
+      *(-1)
+      *(1+x)
+      *(2+x)
+      *(12+7*x+x^2)
+      *(-24-50*x-35*x^2-10*x^3-x^4)
+      *(-24-50*x-35*x^2-10*x^3-x^4);
+\end{verbatim}
+\noindent To put some order in this one may factorize the new expression 
+again:
+\begin{verbatim}
+    Symbol x,y;
+    LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
+    Local   F = -(x+1)*(x+2)*((x+3)*(x+4));
+    .sort
+    LF G = (x-1)*(x+2)^2*E^2*F^2;
+    Print G;
+    Factorize G;
+    .end
+
+   G=
+       (-1+x)
+      *(1+x)
+      *(1+x)
+      *(1+x)
+      *(1+x)
+      *(2+x)
+      *(2+x)
+      *(2+x)
+      *(2+x)
+      *(2+x)
+      *(2+x)
+      *(3+x)
+      *(3+x)
+      *(3+x)
+      *(3+x)
+      *(4+x)
+      *(4+x)
+      *(4+x)
+      *(4+x);
+\end{verbatim}
+\noindent In this case all constants are multiplied, all factors are 
+factorized, and all factors in the new format are sorted.
+
+\noindent The case that one or more factors are zero is special. In 
+principle the zero factors are kept as in:
+\begin{verbatim}
+    Symbol x,y;
+    LocalFactorize E = -0*(x+1)*(x+2)*0*((x+3)*(x+4));
+    Print;
+    .end
+
+   E=
+       (-1)
+      *(0)
+      *(1+x)
+      *(2+x)
+      *(0)
+      *(12+7*x+x^2);
+\end{verbatim}
+\noindent This way one can see what has happened when a substitution makes 
+a factor zero. When we factorize this expression again however the whole 
+expression becomes zero. If this is not intended and one would like to 
+continue with the factors that are nonzero we have the keepzero option in 
+the factorize statement as in:
+\begin{verbatim}
+    Symbol x,y;
+    Format Nospaces;
+    LocalFactorize E = -0*3*(x+1)*(x+2)/2*0*((x+3)*(x+4));
+    Print;
+    .sort
+
+   E=
+       (-1)
+      *(0)
+      *(3)
+      *(1+x)
+      *(2+x)
+      *(1/2)
+      *(0)
+      *(12+7*x+x^2);
+    Print;
+    Factorize(keepzero) E;
+    .end
+
+   E=
+       (0)
+      *(-3/2)
+      *(1+x)
+      *(2+x)
+      *(3+x)
+      *(4+x);
+\end{verbatim}
+\noindent We see here that first all constants are separate factors and the 
+new factorization combines them. The keepzero option does the same with the 
+factors that are zero. The zero factor will always be the first. Hence it 
+is rather easy to test for whether the total expression should actually be 
+zero. We just have to look whether \verb:E[factor_]: is zero.
+
+\noindent The unfactorize\ref{substaunfactorize} statement is the opposite 
+of the factorize statement. It takes the factorized expression and 
+multiplies out the factors. It also uses the current brackets for 
+formatting the output.
+\begin{verbatim}
+    Symbol x,y;
+    LFactorized F = (x+1)*(x+y)*(y+1);
+    Print;
+    .sort
+
+   F=
+       (1+x)
+      *(y+x)
+      *(1+y);
+
+    Print;
+    Bracket x;
+    UnFactorize F;
+    .end
+
+   F=
+      +x*(1+2*y+y^2)
+      +x^2*(1+y)
+      +y+y^2;
+\end{verbatim}
+\noindent In principle there are various models by which the 
+unfactorization can be done in an efficient way. In addition it would be 
+less efficient when the master would do all the work as is the case with 
+the factorize statement. Currently this statement is still being developed 
+internally. It is possible to make ones own emulation of it. Here we give 
+the `brute force' way:
+\begin{verbatim}
+    Symbol x,y;
+    LFactorized F = (x+1)*(x+y)*(y+1);
+    Print;
+    .sort
+
+   F=
+       (1+x)
+      *(y+x)
+      *(1+y);
+
+    #$num = numfactors_(F);
+    Local   G = <F[factor_^1]>*...*<F[factor_^`$num']>;
+    Bracket x;
+    Print;
+    .end
+
+   F=
+       (1+x)
+      *(y+x)
+      *(1+y);
+
+   G=
+      +x*(1+2*y+y^2)
+      +x^2*(1+y)
+      +y+y^2;
+\end{verbatim}
+
+\noindent Factorization of \$-expressions is yet a different thing. The 
+\$-expressions do not have a bracket mechanism. Hence we need different 
+ways of storing the factors. In the case of expressions we have to work in 
+a way that is potentially disk based. With \$-expressions we work in 
+allocated memory. Hence we also store the factors in allocated memory. In 
+that case we can keep both the original and the factors. The factors are 
+accessed by referring to their number between braces. The number zero 
+refers to the number of factors:
+\begin{verbatim}
+    Symbol x,y;
+    CFunction f;
+    Off Statistics;
+    #$a = x^4-y^4;
+    Local F = f(x^4-y^4)+f(x^6-y^6);
+    Print;
+    .sort
+
+   F=
+      f(-y^4+x^4)+f(-y^6+x^6);
+    #factdollar $a;
+    #do i = 1,`$a[0]'
+    #write <> "Factor `i' of `$a' is `$a[`i']'"
+Factor 1 of -y^4+x^4 is -1
+    #enddo
+Factor 2 of -y^4+x^4 is y-x
+Factor 3 of -y^4+x^4 is y+x
+Factor 4 of -y^4+x^4 is y^2+x^2
+    id  f(x?$b) = f(x);
+    FactDollar $b;
+    do $i = 1,$b[0];
+      Print "Factor %$ of %$ is %$",$i,$b,$b[$i];
+    enddo;
+    Print;
+    .end
+Factor 1 of -y^4+x^4 is -1
+Factor 2 of -y^4+x^4 is y-x
+Factor 3 of -y^4+x^4 is y+x
+Factor 4 of -y^4+x^4 is y^2+x^2
+Factor 1 of -y^6+x^6 is -1
+Factor 2 of -y^6+x^6 is y-x
+Factor 3 of -y^6+x^6 is y+x
+Factor 4 of -y^6+x^6 is y^2-x*y+x^2
+Factor 5 of -y^6+x^6 is y^2+x*y+x^2
+
+   F=
+      f(-y^4+x^4)+f(-y^6+x^6);
+\end{verbatim}
+\noindent We see here a variety of new features. The preprocessor can 
+factorize \$a with the \#FactDollar instruction. We do indeed pick up the 
+number of factors in the preprocessor as `\$a[0]' and the factors 
+themselves as `\$a[1]' etc. For the \$-variable that needs to be 
+manipulated during running time things as a bit more complicated. We define 
+\$b as part of a wildcard pattern matching. This is still rather normal. 
+Then we use the FactDollar statement. Notice that for each term we will 
+have a different \$b. To access the factors we cannot use the preprocessor 
+methods because those are only available at compile time. Hence we cannot 
+use the preprocessor \#do instruction and therefore we need an execution 
+time do statement. The loop parameter will have to be a \$-variable as 
+well. The do statement and the print statement show now how one can use the 
+factors. In the output one can see that indeed we had two different 
+contents for \$b. And the arguments of the function f remain unaffected.
+
+\noindent One may also ask for the number of factors in a \$-expression 
+with the numfactors\_ function as in:
+\begin{verbatim}
+    Symbol x,y;
+    CFunction f;
+    Format Nospaces;
+    #$a = x^4-y^4;
+    #factdollar $a;
+    Local F = f(numfactors_($a))
+        +f(<$a[1]>,...,<$a[`$a[0]']>);
+    Print;
+    .end
+
+   F=
+      f(-1,y-x,y+x,y^2+x^2)+f(4);
+\end{verbatim}
+\noindent Note that in the second case we need to use the construction 
+`\$a[0]' because the preprocessor needs to substitute the number 
+immediately in order to expand the triple dot operator. This cannot wait 
+till execution time.
+
+\noindent Some remarks.
+
+\noindent The time needed for a factorization depends strongly on the 
+number of variables used. For example factorization of $x^{60}-1$ is much 
+faster than factorization of $x^{60}-y^{60}$. One could argue that the 
+second formula can be converted into the first, but there is a limit to 
+what FORM should do and what the user should do.
+\begin{verbatim}
+    Symbol x,y;
+    Format NoSpaces;
+    On ShortStats;
+    Local F1 = x^60-1;
+    Local F2 = y^60-x^60;
+    Factorize F1,F2;
+    Print;
+    .end
+      0.00s        1>         2-->         2:        52 F1 
+      0.07s        1>        51-->        51:      1524 F1 factorize
+      0.07s        1>         2-->         2:        64 F2 
+      1.17s        1>        51-->        51:      1944 F2 factorize
+
+   F1=
+       (-1+x)
+      *(1-x+x^2)
+      *(1-x+x^2-x^3+x^4)
+      *(1-x+x^3-x^4+x^5-x^7+x^8)
+      *(1+x)
+      *(1+x+x^2)
+      *(1+x+x^2+x^3+x^4)
+      *(1+x-x^3-x^4-x^5+x^7+x^8)
+      *(1-x^2+x^4)
+      *(1-x^2+x^4-x^6+x^8)
+      *(1+x^2)
+      *(1+x^2-x^6-x^8-x^10+x^14+x^16);
+
+   F2=
+       (y-x)
+      *(y+x)
+      *(y^2-x*y+x^2)
+      *(y^4-x*y^3+x^2*y^2-x^3*y+x^4)
+      *(y^4+x*y^3+x^2*y^2+x^3*y+x^4)
+      *(y^2+x*y+x^2)
+      *(y^2+x^2)
+      *(y^8-x*y^7+x^3*y^5-x^4*y^4+x^5*y^3-x^7*y+x^8)
+      *(y^8+x*y^7-x^3*y^5-x^4*y^4-x^5*y^3+x^7*y+x^8)
+      *(y^8-x^2*y^6+x^4*y^4-x^6*y^2+x^8)
+      *(y^4-x^2*y^2+x^4)
+      *(y^16+x^2*y^14-x^6*y^10-x^8*y^8-x^10*y^6+x^14*y^2+x^16);
+\end{verbatim}
+
+\noindent When one has a factorized expression and one uses the multiply 
+statement, all terms in the factorized expression are multiplied the the 
+specified amount. This may lead to a counterintuitive result:
+\begin{verbatim}
+    Symbols a,b;
+    LF F = (a+b)^2;
+    multiply 2;
+    Print;
+    .end
+
+   F =
+       ( 2*b + 2*a )
+       * ( 2*b + 2*a );
+\end{verbatim}
+This is a consequence of the way we store the factors. This way each factor 
+will be multiplied by two. If one would like to add a factor one can do 
+this by the following simple mechanism:
+\begin{verbatim}
+    Symbols a,b;
+    LF F = (a+b)^2;
+    .sort
+    LF F = 2*F;
+    Print;
+    .end
+
+   F =
+         ( 2 )
+       * ( b + a )
+       * ( b + a );
+\end{verbatim}
+
+\noindent In version 3 there were some experimental polynomial functions 
+like polygcd\_\index{polygcd\_}\index{function!polygcd\_}. These have been 
+removed as their functionality has been completely taken over by the new 
+functions gcd\_\ref{fungcd}, div\_\ref{fundiv} and rem\_\ref{funrem} and 
+some statements like normalize\ref{substanormalize}, 
+makeinteger\ref{substamakeinteger} and factarg\ref{substafactarg}. Unlike 
+regular functions, the functions gcd\_. div\_ and rem\_ have the 
+peculiarity that if one of the arguments is just an expression or a 
+\$-expression, this expression is not evaluated until the function is 
+evaluated. This means that the evaluated expression does not have to fit 
+inside the maximum size reserved for a single term. In some cases, when the 
+gcd\_ function is invoked with many arguments, the expression may not have 
+to be evaluated at all! The GCD of the other arguments may be one already.
+
+%\begin{verbatim}
+%\end{verbatim}
+%\begin{verbatim}
+%\end{verbatim}
+%\begin{verbatim}
+%\end{verbatim}
+
