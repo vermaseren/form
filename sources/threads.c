@@ -83,7 +83,9 @@ static pthread_cond_t wakeupmasterconditions = PTHREAD_COND_INITIALIZER;
 static pthread_cond_t *wakeupmasterthreadconditions;
 static int wakeupmaster = 0;
 static int identityretval;
+/* static INILOCK(clearclocklock); */
 static LONG *timerinfo;
+static LONG *sumtimerinfo;
 static int numberclaimed;
 
 static THREADBUCKET **threadbuckets, **freebuckets;
@@ -252,11 +254,13 @@ int StartAllThreads(int number)
 
 #ifdef WITHSORTBOTS
 	timerinfo = (LONG *)Malloc1(sizeof(LONG)*number*2,"timerinfo");
-	for ( j = 0; j < number*2; j++ ) timerinfo[j] = 0;
+	sumtimerinfo = (LONG *)Malloc1(sizeof(LONG)*number*2,"sumtimerinfo");
+	for ( j = 0; j < number*2; j++ ) { timerinfo[j] = 0; sumtimerinfo[j] = 0; }
 	mul = 2;
 #else
 	timerinfo = (LONG *)Malloc1(sizeof(LONG)*number,"timerinfo");
-	for ( j = 0; j < number; j++ ) timerinfo[j] = 0;
+	sumtimerinfo = (LONG *)Malloc1(sizeof(LONG)*number,"sumtimerinfo");
+	for ( j = 0; j < number; j++ ) { timerinfo[j] = 0; sumtimerinfo[j] = 0; }
 	mul = 1;
 #endif
  
@@ -778,6 +782,30 @@ void FinalizeOneThread(int identity)
 
 /*
   	#] FinalizeOneThread : 
+  	#[ ClearAllThreads :
+*/
+/**
+ *	To be called at the end of running TFORM.
+ *	Theoretically the system can clean up after up, but it may be better
+ *	to do it ourselves.
+ */
+
+VOID ClearAllThreads()
+{
+	int i;
+	MasterWaitAll();
+	for ( i = 1; i <= numberofworkers; i++ ) {
+		WakeupThread(i,CLEARCLOCK);
+	}
+#ifdef WITHSORTBOTS
+	for ( i = numberofworkers+1; i <= numberofworkers+numberofsortbots; i++ ) {
+		WakeupThread(i,CLEARCLOCK);
+	}
+#endif
+}
+
+/*
+  	#] ClearAllThreads : 
   	#[ TerminateAllThreads :
 */
 /**
@@ -893,9 +921,10 @@ int MakeThreadBuckets(int number, int par)
  *  its size. This is used by the checkpoint code to save this information in
  *  the recovery file.
  */
-int GetTimerInfo(LONG** ti)
+int GetTimerInfo(LONG** ti,LONG** sti)
 {
 	*ti = timerinfo;
+	*sti = sumtimerinfo;
 #ifdef WITHSORTBOTS
 	return AM.totalnumberofthreads*2;
 #else
@@ -912,7 +941,7 @@ int GetTimerInfo(LONG** ti)
  *  Writes data into the static timerinfo variable. This is used by the
  *  checkpoint code to restore the correct timings for the individual threads.
  */
-void WriteTimerInfo(LONG* ti)
+void WriteTimerInfo(LONG* ti,LONG* sti)
 {
 	int i;
 #ifdef WITHSORTBOTS
@@ -922,6 +951,7 @@ void WriteTimerInfo(LONG* ti)
 #endif
 	for ( i=0; i<max; ++i ) {
 		timerinfo[i] = ti[i];
+		sumtimerinfo[i] = sti[i];
 	}
 }
 
@@ -938,10 +968,10 @@ LONG GetWorkerTimes()
 {
 	LONG retval = 0;
 	int i;
-	for ( i = 1; i <= numberofworkers; i++ ) retval += timerinfo[i];
+	for ( i = 1; i <= numberofworkers; i++ ) retval += timerinfo[i] + sumtimerinfo[i];
 #ifdef WITHSORTBOTS
 	for ( i = numberofworkers+1; i <= numberofworkers+numberofsortbots; i++ )
-		retval += timerinfo[i];
+		retval += timerinfo[i] + sumtimerinfo[i];
 #endif
 	return(retval);
 }
@@ -1747,6 +1777,18 @@ bucketstolen:;
 			}
 /*
 			#] DOBRACKETS : 
+			#[ CLEARCLOCK :
+
+			The program only comes here after a .clear
+*/
+			case CLEARCLOCK:
+/*				LOCK(clearclocklock); */
+				sumtimerinfo[identity] += TimeCPU(1);
+				timerinfo[identity] = TimeCPU(0);
+/*				UNLOCK(clearclocklock); */
+				break;
+/*
+			#] CLEARCLOCK : 
 */
 			default:
 				MLOCK(ErrorMessageLock);
@@ -1828,6 +1870,18 @@ void *RunSortBot(void *dummy)
 				goto EndOfThread;
 /*
 			#] TERMINATETHREAD : 
+			#[ CLEARCLOCK :
+
+			The program only comes here after a .clear
+*/
+			case CLEARCLOCK:
+/*				LOCK(clearclocklock); */
+				sumtimerinfo[identity] += TimeCPU(1);
+				timerinfo[identity] = TimeCPU(0);
+/*				UNLOCK(clearclocklock); */
+				break;
+/*
+			#] CLEARCLOCK : 
 */
 			default:
 				MLOCK(ErrorMessageLock);

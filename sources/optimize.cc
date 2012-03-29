@@ -29,7 +29,7 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  	#] License :
+  	#] License : 
   	#[ includes :
 */
 
@@ -50,7 +50,7 @@ const WORD OPER_ADD = -1;
 const WORD OPER_MUL = -2;
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ term_compare :
 */
 
@@ -72,7 +72,7 @@ bool term_compare (WORD *a, WORD *b) {
 }
 
 /*
-  	#] term_compare :
+  	#] term_compare : 
   	#[ Horner_tree :
 */
 
@@ -141,7 +141,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 	WORD *sorted = AT.WorkPointer;
 
 	for (WORD *t=expr; *t!=0; t+=*t) {
-		memcpy(sorted, t, *t*sizeof(WORD));
+		WCOPY(sorted, t, *t);
 
 		if (sorted[1] == SYMBOL) {
 			for (int i=3; i<sorted[2]; i+=2)
@@ -308,7 +308,7 @@ vector<WORD> Horner_tree (WORD *expr) {
 }
 
 /*
-  	#] Horner_tree :
+  	#] Horner_tree : 
   	#[ print_tree :
 */
 
@@ -358,7 +358,7 @@ void print_tree (const vector<WORD> &tree) {
 */
 
 /*
-  	#] print_tree :
+  	#] print_tree : 
   	#[ generate_instructions :
 */
 
@@ -540,7 +540,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree) {
 }
 
 /*
-  	#] generate_instructions :
+  	#] generate_instructions : 
   	#[ merge_operators :
 */
 
@@ -658,7 +658,7 @@ vector<WORD> merge_operators (vector<WORD> all_instr) {
 }
 
 /*
-  	#] merge_operators :
+  	#] merge_operators : 
   	#[ recycle_variables :
 */
 
@@ -802,7 +802,7 @@ vector<WORD> recycle_variables (vector<WORD> all_instr) {
 }
 
 /*
-  	#] recycle_variables :
+  	#] recycle_variables : 
   	#[ print_instructions :
 */
 
@@ -825,7 +825,7 @@ VOID print_instructions (const vector<WORD> &instr, WORD numexpr, WORD extraoffs
 	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) {
 
 		// copy arguments
-		memcpy(AT.WorkPointer, &instr[i+3], (instr[i+2]-3)*sizeof(WORD));
+		WCOPY(AT.WorkPointer, &instr[i+3], (instr[i+2]-3));
 
 		// renumber symbols and extrasymbols to correct values
 		for (WORD *t=AT.WorkPointer; *t!=0; t+=*t) {
@@ -887,7 +887,7 @@ VOID print_instructions (const vector<WORD> &instr, WORD numexpr, WORD extraoffs
 }
 	
 /*
-  	#] print_instructions :
+  	#] print_instructions : 
   	#[ Optimize:
 */
 
@@ -1033,5 +1033,5 @@ int Optimize (WORD numexpr) {
 }
 
 /*
-  	#] Optimize:
+  	#] Optimize: 
 */

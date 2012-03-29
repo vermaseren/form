@@ -157,7 +157,7 @@ const poly polygcd::integer_content (const poly &a) {
 
 	for (int i=1; i<a[0]; i+=a[i]) {
 
-		memcpy(d,&c[2+AN.poly_num_vars],nc*sizeof(WORD));
+		WCOPY(d,&c[2+AN.poly_num_vars],nc);
 		
 		GcdLong(BHEAD (UWORD *)d, nc,
 						(UWORD *)&a[i+1+AN.poly_num_vars], a[i+a[i]-1],

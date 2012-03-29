@@ -870,7 +870,13 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 							FullCleanUp();
 							error1 = error2 = AP.preError = 0;
 							PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,1);
-							if ( AM.resetTimeOnClear ) TimeCPU(0);
+							if ( AM.resetTimeOnClear ) {
+#ifdef WITHPTHREADS
+								ClearAllThreads();
+#endif
+								AM.SumTime += TimeCPU(1);
+								TimeCPU(0);
+							}
 							break;
 						case ENDMODULE:
 							Terminate( -( error1 | error2 ) );

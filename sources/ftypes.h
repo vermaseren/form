@@ -881,6 +881,7 @@ typedef int (*TFUN1)();
 #define RUNSORTBOT 8
 #define DOONEEXPRESSION 9
 #define DOBRACKETS 10
+#define CLEARCLOCK 11
 
 #define MASTERBUFFERISFULL 1
 

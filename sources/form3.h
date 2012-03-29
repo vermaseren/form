@@ -44,13 +44,14 @@
 #define VERSION "4.0"
 #define MAJORVERSION 4
 #define MINORVERSION 0
-#define BETAVERSION
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "1-apr-2011"
+#define PRODUCTIONDATE "29-mar-2012"
 #endif
+
+#undef BETAVERSION
 
 #ifdef LINUX32
 #define UNIX

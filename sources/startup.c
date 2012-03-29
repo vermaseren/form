@@ -1307,7 +1307,7 @@ int main(int argc, char **argv)
 	StartHandleLock();
 	BeginIdentities();
 #else
-	TimeCPU(0);
+	AM.SumTime = TimeCPU(0);
 	TimeWallClock(0);
 #endif
 
@@ -1522,7 +1522,7 @@ VOID PrintRunningTime()
 	if ( PF.me == MASTER ) {
 		workertime = PF_GetSlaveTimes();
 #endif
-		mastertime = TimeCPU(1);
+		mastertime = AM.SumTime + TimeCPU(1);
 		wallclocktime = TimeWallClock(1);
 		totaltime = mastertime+workertime;
 		MesPrint("  %l.%2i sec + %l.%2i sec: %l.%2i sec out of %l.%2i sec",
@@ -1532,7 +1532,7 @@ VOID PrintRunningTime()
 			wallclocktime/100,(WORD)(wallclocktime%100));
 	}
 #else
-	LONG mastertime = TimeCPU(1);
+	LONG mastertime = AM.SumTime + TimeCPU(1);
 	LONG wallclocktime = TimeWallClock(1);
 	MesPrint("  %l.%2i sec out of %l.%2i sec",
 		mastertime/1000,(WORD)((mastertime%1000)/10),

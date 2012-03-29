@@ -2308,8 +2308,8 @@ int DoRecovery(int *moduletype)
 		/* ... and correcting OldTime */
 		AB[j]->R.OldTime = -(*((LONG*)p+j));
 	}
-	WriteTimerInfo((LONG*)p);
-	p = (unsigned char*)p + i*(LONG)sizeof(LONG);
+	WriteTimerInfo((LONG*)p,(LONG *)((unsigned char*)p + i*(LONG)sizeof(LONG)));
+	p = (unsigned char*)p + 2*i*(LONG)sizeof(LONG);
 #endif /* ifdef WITHPTHREADS */
 
 	if ( fclose(fd) ) return(__LINE__);
@@ -2360,7 +2360,7 @@ static int DoSnapshot(int moduletype)
 	WORD *w;
 	void *adr;
 #ifdef WITHPTHREADS
-	LONG *longp;
+	LONG *longp,*longpp;
 #endif /* ifdef WITHPTHREADS */
 
 	MesPrint("Saving recovery point ... %"); fflush(0);
@@ -2848,9 +2848,11 @@ static int DoSnapshot(int moduletype)
 #ifdef WITHPTHREADS
 	ANNOUNCE(GetTimerInfo)
 	/* write timing information of individual threads */
-	i = GetTimerInfo(&longp);
+	i = GetTimerInfo(&longp,&longpp);
 	S_WRITE_B(&i, sizeof(int));
 	S_WRITE_B(longp, i*(LONG)sizeof(LONG));
+	S_WRITE_B(&i, sizeof(int));
+	S_WRITE_B(longpp, i*(LONG)sizeof(LONG));
 #endif /* ifdef WITHPTHREADS */
 
 	S_FLUSH_B /* because we will call fwrite() directly in the following code */

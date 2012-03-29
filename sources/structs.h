@@ -1247,6 +1247,7 @@ struct M_const {
     LONG    WorkSize;              /* (M) Size of WorkSpace */
     LONG    gThreadBucketSize;     /* (C) */
     LONG    ggThreadBucketSize;    /* (C) */
+    LONG    SumTime;               /*     Used in .clear */
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
     int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
@@ -1348,9 +1349,9 @@ struct M_const {
     WORD    ggextrasymbols;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,23,51,73,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,51,73,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,21,51,73,0);
+	PADPOSITION(15,22,51,73,0);
 #endif
 };
 /*

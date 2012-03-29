@@ -1472,11 +1472,11 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 
 	UWORD *s = NumberMalloc("GetLongModInverses");
 	WORD ns = na;
-	memcpy(s, a, ABS(ns)*sizeof(UWORD));
+	WCOPY(s, a, ABS(ns));
 
 	UWORD *t = NumberMalloc("GetLongModInverses");
 	WORD nt = nb;
-	memcpy(t, b, ABS(nt)*sizeof(UWORD));
+	WCOPY(t, b, ABS(nt));
 
 	UWORD *sa = NumberMalloc("GetLongModInverses");
 	WORD nsa = 1;
@@ -1520,12 +1520,12 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 
 	if (ia!=NULL) {
 		*nia = nsa*ns;
-		memcpy(ia,sa,ABS(*nia)*sizeof(UWORD));
+		WCOPY(ia,sa,ABS(*nia));
 	}
 
 	if (ib!=NULL) {
 		*nib = nsb*ns;
-		memcpy(ib,sb,ABS(*nib)*sizeof(UWORD));
+		WCOPY(ib,sb,ABS(*nib));
 	}
 	
 	NumberFree(s,"GetLongModInverses");
@@ -3290,7 +3290,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 
 	// determine c/2 by right shifting
 	nhalfc=nc;
-	memcpy(halfc,c,nc*sizeof(UWORD));
+	WCOPY(halfc,c,nc);
 
 	for (n=0; n<nhalfc; n++) {
 		halfc[n] >>= 1;

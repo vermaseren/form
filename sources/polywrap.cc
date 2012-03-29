@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 #include "poly.h"
 #include "polygcd.h"
@@ -100,7 +100,7 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string mes
 }
 
 /*
-  	#] poly_determine_modulus :
+  	#] poly_determine_modulus : 
   	#[ poly_gcd :
 */
 
@@ -152,7 +152,7 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 }
 
 /*
-  	#] poly_gcd :
+  	#] poly_gcd : 
   	#[ poly_divmod : 
 */
 
@@ -176,7 +176,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	const int DENOMPOWER  = MAXPOSITIVE;
 	
 	WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
-	memcpy (new_poly_vars, AN.poly_vars, AN.poly_num_vars*sizeof(WORD));
+	WCOPY(new_poly_vars, AN.poly_vars, AN.poly_num_vars);
 	new_poly_vars[AN.poly_num_vars] = DENOMSYMBOL;
 	if (AN.poly_num_vars > 0)
 		M_free(AN.poly_vars, "AN.poly_vars");
@@ -298,11 +298,11 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
 			// numerator			
 			WORD nnum = pres[i+pres[i]-1];
-			memcpy(&res[L+res[L]], &pres[i+pres[i]-1-ABS(nnum)], ABS(nnum)*sizeof(UWORD));
+			WCOPY(&res[L+res[L]], &pres[i+pres[i]-1-ABS(nnum)], ABS(nnum));
 
 			// calculate denominator
 			nden = denres[denres[1]];
-			memcpy (den, &denres[2+AN.poly_num_vars], ABS(nden)*sizeof(UWORD));
+			WCOPY(den, &denres[2+AN.poly_num_vars], ABS(nden));
 
 			if (nden!=1 || den[0]!=1)
 				Simplify(BHEAD (UWORD *)&res[L+res[L]], &nnum, den, &nden); // gcd(num,den)
@@ -328,7 +328,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 }
 
 /*
-  	#] poly_divmod :
+  	#] poly_divmod : 
   	#[ poly_div :
 
 	Routine divides the expression in arg1 by the expression in arg2.
@@ -348,7 +348,7 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 }
 
 /*
-  	#] poly_div :
+  	#] poly_div : 
   	#[ poly_rem :
 
 	Routine divides the expression in arg1 by the expression in arg2
@@ -371,7 +371,7 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b) {
 }
 
 /*
-  	#] poly_rem :
+  	#] poly_rem : 
   	#[ poly_ratfun_read :
 */
 
@@ -457,7 +457,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 }
 
 /*
-  	#] poly_ratfun_read :
+  	#] poly_ratfun_read : 
   	#[ poly_sort :
 */
 
@@ -499,7 +499,7 @@ void poly_sort(PHEAD WORD *a) {
 }
 
 /*
-  	#] poly_sort :
+  	#] poly_sort : 
   	#[ poly_ratfun_add :
 */
 
@@ -604,7 +604,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 }
 
 /*
-  	#] poly_ratfun_add :
+  	#] poly_ratfun_add : 
   	#[ poly_ratfun_normalize :
 */
 
@@ -684,8 +684,8 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 		}
 		else {
 			int i = t[1];
-			if (s!=t)	memmove(s,t,i*sizeof(WORD));
-			t += i; s += i;
+			if ( s != t ) {	NCOPY(s,t,i) }
+			else { t += i; s += i; }
 		}			
 	
 	// Fix sign
@@ -732,7 +732,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 }
 
 /*
-  	#] poly_ratfun_normalize :
+  	#] poly_ratfun_normalize : 
   	#[ poly_fix_minus_signs :
 */
 
@@ -783,7 +783,7 @@ void poly_fix_minus_signs (factorized_poly &a) {
 }
 
 /*
-  	#] poly_fix_minus_signs :
+  	#] poly_fix_minus_signs : 
   	#[ poly_factorize :
 */
 
@@ -909,7 +909,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 }
 
 /*
-  	#] poly_factorize :
+  	#] poly_factorize : 
   	#[ poly_factorize_argument :
 */
  
@@ -936,7 +936,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 }
 
 /*
-  	#] poly_factorize_argument :
+  	#] poly_factorize_argument : 
   	#[ poly_factorize_dollar :
 */
 
@@ -962,7 +962,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 }
 
 /*
-  	#] poly_factorize_dollar :
+  	#] poly_factorize_dollar : 
   	#[ poly_factorize_expression :
 */
 
@@ -1234,7 +1234,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 					for (int j=0; j<ARGHEAD; j++)
 						fac_arg[i].terms[j] = 0;
 					fac_arg[i].terms[0] = ARGHEAD + bufsize;
-					memcpy(fac_arg[i].terms+ARGHEAD, buffer, bufsize*sizeof(WORD));
+					WCOPY(fac_arg[i].terms+ARGHEAD, buffer, bufsize);
 					M_free(buffer, "polynomial factorization");
 				}
 		
@@ -1267,7 +1267,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 					WORD *tstop = fac_arg[order[i]].terms + *fac_arg[order[i]].terms;
 					for (WORD *t=fac_arg[order[i]].terms+ARGHEAD; t<tstop; t+=*t) {
 						
-						memcpy(term+4, t, *t*sizeof(WORD));
+						WCOPY(term+4, t, *t);
 						
 						// add special symbol "factor_"
 						*term = *(term+4) + 4;
@@ -1310,7 +1310,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression :
+  	#] poly_factorize_expression : 
   	#[ poly_unfactorize_expression :
 */
 
@@ -1540,7 +1540,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 }
 
 /*
-  	#] poly_unfactorize_expression :
+  	#] poly_unfactorize_expression : 
   	#[ poly_inverse : 
 */
 
@@ -1612,7 +1612,7 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 				int newressize = 2*ressize;
 				
 				WORD *newres = (WORD *)Malloc1(newressize*sizeof(WORD), "poly_inverse");
-				memcpy(newres, res, ressize*sizeof(WORD));
+				WCOPY(newres, res, ressize);
 				M_free(res, "poly_inverse");
 				res = newres;
 				ressize = newressize;
@@ -1670,5 +1670,5 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 }
 
 /*
-  	#] poly_inverse :
+  	#] poly_inverse : 
 */

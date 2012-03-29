@@ -151,7 +151,7 @@ void poly::expand_memory (int i) {
 	}
 	
 	WORD *newterms = (WORD *)Malloc1(new_size_of_terms * sizeof(WORD), "poly::expand_memory");
-	memcpy(newterms, terms, size_of_terms*sizeof(WORD));
+	WCOPY(newterms, terms, size_of_terms);
 
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		TermFree(terms, "poly::expand_memory");
@@ -404,7 +404,7 @@ const poly & poly::normalize() {
 			// new term
 			prevj = j;
 			j += tmp[j];
-			memcpy(&tmp[j],p[i],p[i][0]*sizeof(UWORD));
+			WCOPY(&tmp[j],p[i],p[i][0]);
 		}
 
 		if (modp!=0) {
@@ -426,7 +426,7 @@ const poly & poly::normalize() {
 	j+=tmp[j];
 
 	tmp[0] = j;
-	memcpy(terms,tmp,tmp[0]*sizeof(UWORD));
+	WCOPY(terms,tmp,tmp[0]);
 
 	M_free(p, "poly::normalize");
 	
@@ -1356,7 +1356,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 		// first term of the r.h.s. of the above equation
 		if (ai<a[0] && a[ai+1+var] == pow) {
 			ns = a[ai+a[ai]-1];
-			memcpy (s, &a[ai+1+AN.poly_num_vars], ABS(ns)*sizeof(UWORD));
+			WCOPY(s, &a[ai+1+AN.poly_num_vars], ABS(ns));
 		}
 		else {
 			ns = 0;
@@ -1427,7 +1427,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 			}
 			else {
 				// small power, so remainder
-				memcpy(t,s,ABS(ns)*sizeof(UWORD));
+				WCOPY(t,s,ABS(ns));
 				nt = ns;
 				ns = 0;
 			}
@@ -1564,7 +1564,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	heap[0][0] = 1;
 	heap[0][1] = 0;
 	heap[0][2] = -1;
-	memcpy (&heap[0][3], &a[1], a[1]*sizeof(WORD));
+	WCOPY(&heap[0][3], &a[1], a[1]);
 	heap[0][3] = a[a[1]];
 	
 	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nb;
@@ -1603,7 +1603,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				if (p[2]!=-1) hash[p[2]] = NULL;
 
 				if (t[0] == -1) {
-					memcpy (t, p, (5+ABS(p[3])+AN.poly_num_vars)*sizeof(WORD));
+					WCOPY(t, p, (5+ABS(p[3])+AN.poly_num_vars));
 				}				
 				else {
 					// if both polynomials are modulo p^1, use integer calculus
@@ -1643,7 +1643,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				if (p[1]==0) {
 					p[0] += a[p[0]];
 					if (p[0]==a[0]) break;
-					memcpy(&p[3], &a[p[0]], a[p[0]]*sizeof(WORD));
+					WCOPY(&p[3], &a[p[0]], a[p[0]]);
 					p[3] = p[2+p[3]];
 				}			
 				else {
@@ -2508,15 +2508,15 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 		res.check_memory(ri);
 		WORD nc = e[i+e[i]-1];                                                 // length coefficient
 		for (int j=0; j<AN.poly_num_vars; j++)
-			res[ri+1+j]=0;                                                       // powers=0
-		memcpy(dum, &e[i+e[i]-ABS(nc)], ABS(nc)*sizeof(UWORD));                // coefficient to dummy
+			res[ri+1+j]=0;                                                     // powers=0
+		WCOPY(dum, &e[i+e[i]-ABS(nc)], ABS(nc));                               // coefficient to dummy
 		nc /= 2;                                                               // remove denominator
 		Mully(BHEAD dum, &nc, den, nden);                                      // multiply with overall den
 		res.termscopy((WORD *)dum, ri+1+AN.poly_num_vars, ABS(nc));            // coefficient to res
 		res[ri] = ABS(nc) + AN.poly_num_vars + 2;                              // length
 		res[ri+res[ri]-1] = nc;                                                // length coefficient
 		for (int j=i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j+=2) 
-			res[ri+1+var_to_idx.find(e[j])->second] = e[j+1];                    // powers
+			res[ri+1+var_to_idx.find(e[j])->second] = e[j+1];                  // powers
 		ri += res[ri];                                                         // length
 	}
 
@@ -2586,7 +2586,7 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 		if (!first)	res[L] += res[L+2]; // fix length
 
 		WORD nc = a[i+a[i]-1];
-		memcpy(&res[L+res[L]], &a[i+a[i]-1-ABS(nc)], ABS(nc)*sizeof(WORD)); // numerator
+		WCOPY(&res[L+res[L]], &a[i+a[i]-1-ABS(nc)], ABS(nc)); // numerator
 
 		res[L] += ABS(nc);	                             // fix length
 		memset(&res[L+res[L]], 0, ABS(nc)*sizeof(WORD)); // denominator one
