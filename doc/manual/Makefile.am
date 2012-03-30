@@ -10,6 +10,7 @@ TEXFILES = \
 	module.tex \
 	parallel.tex \
 	pattern.tex \
+	polynomials.tex \
 	prepro.tex \
 	setup.tex \
 	sorting.tex \
