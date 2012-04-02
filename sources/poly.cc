@@ -1532,27 +1532,38 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	int nb=b.number_of_terms();
 
 	// determine maximum power in variables
+	WORD *maxpower  = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
 	WORD *maxpowera = AT.WorkPointer;
 	AT.WorkPointer += AN.poly_num_vars;
-	
+	WORD *maxpowerb = AT.WorkPointer;
+	AT.WorkPointer += AN.poly_num_vars;
+
 	for (int i=0; i<AN.poly_num_vars; i++)
-		maxpowera[i] = 0;
+		maxpowera[i] = maxpowerb[i] = 0;
 
 	for (int ai=1; ai<a[0]; ai+=a[ai])
 		for (int j=0; j<AN.poly_num_vars; j++)
 			maxpowera[j] = MaX(maxpowera[j], a[ai+1+j]);
+
+	for (int bi=1; bi<b[0]; bi+=b[bi])
+		for (int j=0; j<AN.poly_num_vars; j++)
+			maxpowerb[j] = MaX(maxpowerb[j], b[bi+1+j]);
+
+	for (int i=0; i<AN.poly_num_vars; i++)
+		maxpower[i] = MaX(maxpowera[i],maxpowerb[i]);
 
 	// if PROD(max.power) small, allocate hash table
 	bool use_hash = true;
 	int nhash = 1;
 
 	for (int i=0; i<AN.poly_num_vars; i++) {
-		if (nhash > POLY_MAX_HASH_SIZE / (maxpowera[i]+1)) {
+		if (nhash > POLY_MAX_HASH_SIZE / (maxpower[i]+1)) {
 			nhash = 1;
 			use_hash = false;
 			break;
 		}
-		nhash *= maxpowera[i]+1;
+		nhash *= maxpower[i]+1;
 	}
 
 	WantAddPointers(nb+nhash);
@@ -1685,14 +1696,15 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				if (use_hash) {
 					p[2] = 0;				
 					for (int i=0; i<AN.poly_num_vars; i++)
-						p[2] = (maxpowera[i]+1)*p[2] + p[4+i];				
+						p[2] = (maxpower[i]+1)*p[2] + p[4+i];				
 				}
 				else {
 					p[2] = -1;
 				}
 
 				// add it to a heap element if possible, otherwise push it
-				if (!use_hash || hash[p[2]] == NULL) {
+				
+				if (!use_hash || (use_hash && hash[p[2]] == NULL)) {
 					if (use_hash) hash[p[2]] = p;
 					swap (heap[nheap],p);
 					push_heap(BHEAD heap, ++nheap);
