@@ -811,13 +811,14 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 				// if both polynomials are modulo p^1, use integer calculus
 				if (both_mod_small) {
 					c[ci+1+AN.poly_num_vars] =
-						((LONG)c[ci+1+AN.poly_num_vars] * nc +
+						((nc==0 ? 0 : (LONG)c[ci+1+AN.poly_num_vars] * nc) +
 						(LONG)a[ai+1+AN.poly_num_vars] * a[ai+2+AN.poly_num_vars] *
 						 b[bi+1+AN.poly_num_vars] * b[bi+2+AN.poly_num_vars]) % c.modp;
 					nc = (c[ci+1+AN.poly_num_vars]==0 ? 0 : 1);
 				}
 				else {
 					// otherwise, use form long calculus
+
 					MulLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
 									(UWORD *)&b[bi+1+AN.poly_num_vars], b[bi+b[bi]-1],
 									(UWORD *)&t[0], &nt);
@@ -825,7 +826,7 @@ void poly::mul_univar (const poly &a, const poly &b, poly &c, int var) {
 					AddLong ((UWORD *)&t[0], nt,
 									 (UWORD *)&c[ci+1+AN.poly_num_vars], nc,
 									 (UWORD *)&c[ci+1+AN.poly_num_vars], &nc);
-					
+
 					if (c.modp!=0) TakeNormalModulus((UWORD *)&c[ci+1+AN.poly_num_vars], &nc,
 																					 modq, nmodq, NOUNPACK);
 				}
@@ -1339,7 +1340,8 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	WORD nt;
 	UWORD *s = NumberMalloc("poly::div_univar");
 	UWORD *t = NumberMalloc("poly::div_univar");
-
+	s[0]=0;
+	
 	int bpow = b[2+var];
 		
 	int ai=1, qi=1, ri=1;
@@ -2296,7 +2298,6 @@ int poly::is_dense_univariate () const {
 // returns the simple polynomial (x-a)^b mod p^n with a small
 const poly poly::simple_poly (PHEAD int x, int a, int b, int p, int n) {
 	
-	poly res(BHEAD 1,p,n);
 	poly tmp(BHEAD 0,p,n);
 	
 	int idx=1;
@@ -2315,6 +2316,10 @@ const poly poly::simple_poly (PHEAD int x, int a, int b, int p, int n) {
 	
 	tmp[0] = idx;                                             // length
 
+	if (b == 1) return tmp;
+	
+	poly res(BHEAD 1,p,n);
+	
 	while (b!=0) {
 		if (b&1) res*=tmp;
 		tmp*=tmp;
