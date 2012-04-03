@@ -1372,6 +1372,7 @@ int ExpandTripleDots(int par)
 	}
 	s = Buffer; while ( *s ) s++;
 	fullsize = s - Buffer;
+	if ( fullsize < 7 ) return(error);
 
 	s = Buffer+2;
 	while ( *s ) {
@@ -1690,7 +1691,7 @@ theend:			M_free(nums,"Expand ...");
 }
 
 /*
- 		#] ExpandTripleDots : 
+ 		#] ExpandTripleDots :
  		#[ FindKeyWord :
 */
 

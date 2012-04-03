@@ -2237,18 +2237,24 @@ divzero:;
 	}
 	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
 	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
+/*
 	if ( type2 == 0 ) M_free(arg2,"DIVfunction");
 	else {
 		DOLLARS d = ((DOLLARS)arg2)-1;
 		if ( d->factors ) M_free(d->factors,"Dollar factors");
 		M_free(d,"Copy of dollar variable");
 	}
+*/
+	M_free(arg2,"DIVfunction");
+/*
 	if ( type1 == 0 ) M_free(arg1,"DIVfunction");
 	else {
 		DOLLARS d = ((DOLLARS)arg1)-1;
 		if ( d->factors ) M_free(d->factors,"Dollar factors");
 		M_free(d,"Copy of dollar variable");
 	}
+*/
+	M_free(arg1,"DIVfunction");
 	if ( par == 0 )      proper3 = poly_div(BHEAD proper1, proper2);
 	else if ( par == 1 ) proper3 = poly_rem(BHEAD proper1, proper2);
 	else if ( par == 2 ) proper3 = poly_inverse(BHEAD proper1, proper2);
@@ -2300,7 +2306,7 @@ CalledFrom:
 }
 
 /*
-  	#] DIVfunction : 
+  	#] DIVfunction :
   	#[ ConvertArgument :
 
 	Converts an argument to a general notation in allocated space.
@@ -2332,7 +2338,7 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 */
 		output = (WORD *)Malloc1((d->size+1)*sizeof(WORD),"Copy of dollar content");
 		WCOPY(output,d->where,d->size+1);
-		if ( d->factors ) M_free(d->factors,"Dollar factors");
+		if ( d->factors ) { M_free(d->factors,"Dollar factors"); d->factors = 0; }
 		M_free(d,"Copy of dollar variable");
 		return(output);
 	}
