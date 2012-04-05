@@ -1487,10 +1487,14 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
  *   A heap element h is formatted as follows:
  *   - h[0] = index in a
  *   - h[1] = index in b
- *   - h[2] = hash code (-1 if no hash is used)
+ *   - h[2] = -1 (no hash is used)
  *   - h[3] = length of coefficient with sign
  *   - h[4...4+AN.poly_num_vars-1] = powers 
  *   - h[4+AN.poly_num_vars...4+h[3]-1] = coefficient
+ *
+ *   Note: the hashing trick as in multiplication cannot be used
+ *   easily, since there is no tight upperbound on the exponents in
+ *   the answer.
  *
  *   For details, see M. Monagan, "Polynomial Division using Dynamic
  *   Array, Heaps, and Packed Exponent Vectors"
@@ -1533,42 +1537,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	// allocate heap
 	int nb=b.number_of_terms();
 
-	// determine maximum power in variables
-	WORD *maxpower  = AT.WorkPointer;
-	AT.WorkPointer += AN.poly_num_vars;
-	WORD *maxpowera = AT.WorkPointer;
-	AT.WorkPointer += AN.poly_num_vars;
-	WORD *maxpowerb = AT.WorkPointer;
-	AT.WorkPointer += AN.poly_num_vars;
-
-	for (int i=0; i<AN.poly_num_vars; i++)
-		maxpowera[i] = maxpowerb[i] = 0;
-
-	for (int ai=1; ai<a[0]; ai+=a[ai])
-		for (int j=0; j<AN.poly_num_vars; j++)
-			maxpowera[j] = MaX(maxpowera[j], a[ai+1+j]);
-
-	for (int bi=1; bi<b[0]; bi+=b[bi])
-		for (int j=0; j<AN.poly_num_vars; j++)
-			maxpowerb[j] = MaX(maxpowerb[j], b[bi+1+j]);
-
-	for (int i=0; i<AN.poly_num_vars; i++)
-		maxpower[i] = MaX(maxpowera[i],maxpowerb[i]);
-
-	// if PROD(max.power) small, allocate hash table
-	bool use_hash = true;
-	int nhash = 1;
-
-	for (int i=0; i<AN.poly_num_vars; i++) {
-		if (nhash > POLY_MAX_HASH_SIZE / (maxpower[i]+1)) {
-			nhash = 1;
-			use_hash = false;
-			break;
-		}
-		nhash *= maxpower[i]+1;
-	}
-
-	WantAddPointers(nb+nhash);
+	WantAddPointers(nb);
 	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
 	
 	for (int i=0; i<nb; i++) 
@@ -1579,10 +1548,6 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	heap[0][2] = -1;
 	WCOPY(&heap[0][3], &a[1], a[1]);
 	heap[0][3] = a[a[1]];
-	
-	WORD **hash = AT.pWorkSpace + AT.pWorkPointer + nb;
-	for (int i=0; i<nhash; i++)
-		hash[i] = NULL;
 
 	int qi=1, ri=1;
 
@@ -1613,8 +1578,6 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				pop_heap(BHEAD heap, nheap--);
 				p = heap[nheap];
 				
-				if (p[2]!=-1) hash[p[2]] = NULL;
-
 				if (t[0] == -1) {
 					WCOPY(t, p, (5+ABS(p[3])+AN.poly_num_vars));
 				}				
@@ -1650,97 +1613,55 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				insert.pop_back();
 			}
 
-			// add elements to the heap
-			while (true) {
-				// prepare the element
-				if (p[1]==0) {
-					p[0] += a[p[0]];
-					if (p[0]==a[0]) break;
-					WCOPY(&p[3], &a[p[0]], a[p[0]]);
-					p[3] = p[2+p[3]];
-				}			
-				else {
-					if (!this_insert)
-						p[1] += q[p[1]];
-					this_insert = false;
-					
-					if (p[1]==qi) {	s++; break; }
-
-					for (int i=0; i<AN.poly_num_vars; i++)
-						p[4+i] = b[p[0]+1+i] + q[p[1]+1+i];
-					
-					// if both polynomials are modulo p^1, use integer calculus
-					if (both_mod_small) {
-						p[4+AN.poly_num_vars] = ((LONG)b[p[0]+1+AN.poly_num_vars]*b[p[0]+b[p[0]]-1]*
-																		 q[p[1]+1+AN.poly_num_vars]*q[p[1]+q[p[1]]-1]) % q.modp;
-						if (p[4+AN.poly_num_vars]==0)
-							p[3]=0;
-						else {
-							if (p[4+AN.poly_num_vars] > +q.modp/2) p[4+AN.poly_num_vars] -= q.modp;
-							if (p[4+AN.poly_num_vars] < -q.modp/2) p[4+AN.poly_num_vars] += q.modp;
-							p[3] = SGN(p[4+AN.poly_num_vars]);
-							p[4+AN.poly_num_vars] = ABS(p[4+AN.poly_num_vars]);
-						}
-					}
-					else {
-						// otherwise, use form long calculus
-						MulLong((UWORD *)&b[p[0]+1+AN.poly_num_vars], b[p[0]+b[p[0]]-1],
-										(UWORD *)&q[p[1]+1+AN.poly_num_vars], q[p[1]+q[p[1]]-1],
-										(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
-						if (q.modp!=0) TakeNormalModulus((UWORD *)&p[4+AN.poly_num_vars], &p[3],
-																						 modq, nmodq, NOUNPACK);
-					}
-					
-					p[3] *= -1;
-				}
-
-				// with hashing, calculate hash value
-				if (use_hash) {
-					p[2] = 0;				
-					for (int i=0; i<AN.poly_num_vars; i++)
-						p[2] = (maxpower[i]+1)*p[2] + p[4+i];				
-				}
-				else {
-					p[2] = -1;
-				}
-
-				// add it to a heap element if possible, otherwise push it
+			// prepare the element to add to the heap
+			if (p[1]==0) {
+				p[0] += a[p[0]];
+				if (p[0]==a[0]) break;
+				WCOPY(&p[3], &a[p[0]], a[p[0]]);
+				p[3] = p[2+p[3]];
+			}			
+			else {
+				if (!this_insert)
+					p[1] += q[p[1]];
+				this_insert = false;
 				
-				if (!use_hash || (use_hash && hash[p[2]] == NULL)) {
-					if (use_hash) hash[p[2]] = p;
-					swap (heap[nheap],p);
-					push_heap(BHEAD heap, ++nheap);
-					break;
+				if (p[1]==qi) {	s++; break; }
+				
+				for (int i=0; i<AN.poly_num_vars; i++)
+					p[4+i] = b[p[0]+1+i] + q[p[1]+1+i];
+				
+				// if both polynomials are modulo p^1, use integer calculus
+				if (both_mod_small) {
+					p[4+AN.poly_num_vars] = ((LONG)b[p[0]+1+AN.poly_num_vars]*b[p[0]+b[p[0]]-1]*
+																	 q[p[1]+1+AN.poly_num_vars]*q[p[1]+q[p[1]]-1]) % q.modp;
+					if (p[4+AN.poly_num_vars]==0)
+						p[3]=0;
+					else {
+						if (p[4+AN.poly_num_vars] > +q.modp/2) p[4+AN.poly_num_vars] -= q.modp;
+						if (p[4+AN.poly_num_vars] < -q.modp/2) p[4+AN.poly_num_vars] += q.modp;
+						p[3] = SGN(p[4+AN.poly_num_vars]);
+						p[4+AN.poly_num_vars] = ABS(p[4+AN.poly_num_vars]);
+					}
 				}
 				else {
-					WORD *h = hash[p[2]];
-					// if both polynomials are modulo p^1, use integer calculus
-					if (both_mod_small) {
-						h[4+AN.poly_num_vars] = ((LONG)p[4+AN.poly_num_vars]*p[3] + h[4+AN.poly_num_vars]*h[3]) % q.modp;
-						if (h[4+AN.poly_num_vars]==0)
-							h[3]=0;
-						else {
-							if (h[4+AN.poly_num_vars] > +q.modp/2) h[4+AN.poly_num_vars] -= q.modp;
-							if (h[4+AN.poly_num_vars] < -q.modp/2) h[4+AN.poly_num_vars] += q.modp;
-							h[3] = SGN(h[4+AN.poly_num_vars]);
-							h[4+AN.poly_num_vars] = ABS(h[4+AN.poly_num_vars]);
-						}
-					}
-					else {
-						// otherwise, use form long calculus
-						AddLong ((UWORD *)&p[4+AN.poly_num_vars],  p[3],
-										 (UWORD *)&h[4+AN.poly_num_vars],  h[3],
-										 (UWORD *)&h[4+AN.poly_num_vars], &h[3]);
-						if (q.modp!=0) TakeNormalModulus((UWORD *)&h[4+AN.poly_num_vars], &h[3],
-																						 modq, nmodq, NOUNPACK);
-					}
-
-					if (h[1]<p[1]) {
-						swap(h[0],p[0]);
-						swap(h[1],p[1]);
-					}
+					// otherwise, use form long calculus
+					MulLong((UWORD *)&b[p[0]+1+AN.poly_num_vars], b[p[0]+b[p[0]]-1],
+									(UWORD *)&q[p[1]+1+AN.poly_num_vars], q[p[1]+q[p[1]]-1],
+									(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
+					if (q.modp!=0) TakeNormalModulus((UWORD *)&p[4+AN.poly_num_vars], &p[3],
+																					 modq, nmodq, NOUNPACK);
 				}
+				
+				p[3] *= -1;
 			}
+			
+			// no hashing
+			p[2] = -1;
+			
+			// add it to a heap element if possible, otherwise push it
+			
+			swap (heap[nheap],p);
+			push_heap(BHEAD heap, ++nheap);
 		}
 		while (t[0]==-1 || (nheap>0 && monomial_compare(BHEAD heap[0]+3, t+3)==0));
 
@@ -1826,7 +1747,6 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	NumberFree(t,"poly::div_heap");
 
 	if (q.modp!=0) NumberFree(ltbinv,"poly::div_heap");
-	AT.WorkPointer -= AN.poly_num_vars;
 }
 
 /*
