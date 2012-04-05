@@ -1495,7 +1495,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
  *   Note: the hashing trick as in multiplication cannot be used
  *   easily, since there is no tight upperbound on the exponents in
  *   the answer.
- *
+
  *   For details, see M. Monagan, "Polynomial Division using Dynamic
  *   Array, Heaps, and Packed Exponent Vectors"
  */
@@ -1536,7 +1536,6 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	
 	// allocate heap
 	int nb=b.number_of_terms();
-
 	WantAddPointers(nb);
 	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
 	
@@ -1548,7 +1547,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	heap[0][2] = -1;
 	WCOPY(&heap[0][3], &a[1], a[1]);
 	heap[0][3] = a[a[1]];
-
+	
 	int qi=1, ri=1;
 
 	int s = nb;
@@ -1613,55 +1612,58 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 				insert.pop_back();
 			}
 
-			// prepare the element to add to the heap
-			if (p[1]==0) {
-				p[0] += a[p[0]];
-				if (p[0]==a[0]) break;
-				WCOPY(&p[3], &a[p[0]], a[p[0]]);
-				p[3] = p[2+p[3]];
-			}			
-			else {
-				if (!this_insert)
-					p[1] += q[p[1]];
-				this_insert = false;
-				
-				if (p[1]==qi) {	s++; break; }
-				
-				for (int i=0; i<AN.poly_num_vars; i++)
-					p[4+i] = b[p[0]+1+i] + q[p[1]+1+i];
-				
-				// if both polynomials are modulo p^1, use integer calculus
-				if (both_mod_small) {
-					p[4+AN.poly_num_vars] = ((LONG)b[p[0]+1+AN.poly_num_vars]*b[p[0]+b[p[0]]-1]*
-																	 q[p[1]+1+AN.poly_num_vars]*q[p[1]+q[p[1]]-1]) % q.modp;
-					if (p[4+AN.poly_num_vars]==0)
-						p[3]=0;
-					else {
-						if (p[4+AN.poly_num_vars] > +q.modp/2) p[4+AN.poly_num_vars] -= q.modp;
-						if (p[4+AN.poly_num_vars] < -q.modp/2) p[4+AN.poly_num_vars] += q.modp;
-						p[3] = SGN(p[4+AN.poly_num_vars]);
-						p[4+AN.poly_num_vars] = ABS(p[4+AN.poly_num_vars]);
-					}
-				}
+			// add elements to the heap
+			while (true) {
+				// prepare the element
+				if (p[1]==0) {
+					p[0] += a[p[0]];
+					if (p[0]==a[0]) break;
+					WCOPY(&p[3], &a[p[0]], a[p[0]]);
+					p[3] = p[2+p[3]];
+				}			
 				else {
-					// otherwise, use form long calculus
-					MulLong((UWORD *)&b[p[0]+1+AN.poly_num_vars], b[p[0]+b[p[0]]-1],
-									(UWORD *)&q[p[1]+1+AN.poly_num_vars], q[p[1]+q[p[1]]-1],
-									(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
-					if (q.modp!=0) TakeNormalModulus((UWORD *)&p[4+AN.poly_num_vars], &p[3],
-																					 modq, nmodq, NOUNPACK);
+					if (!this_insert)
+						p[1] += q[p[1]];
+					this_insert = false;
+					
+					if (p[1]==qi) {	s++; break; }
+
+					for (int i=0; i<AN.poly_num_vars; i++)
+						p[4+i] = b[p[0]+1+i] + q[p[1]+1+i];
+					
+					// if both polynomials are modulo p^1, use integer calculus
+					if (both_mod_small) {
+						p[4+AN.poly_num_vars] = ((LONG)b[p[0]+1+AN.poly_num_vars]*b[p[0]+b[p[0]]-1]*
+																		 q[p[1]+1+AN.poly_num_vars]*q[p[1]+q[p[1]]-1]) % q.modp;
+						if (p[4+AN.poly_num_vars]==0)
+							p[3]=0;
+						else {
+							if (p[4+AN.poly_num_vars] > +q.modp/2) p[4+AN.poly_num_vars] -= q.modp;
+							if (p[4+AN.poly_num_vars] < -q.modp/2) p[4+AN.poly_num_vars] += q.modp;
+							p[3] = SGN(p[4+AN.poly_num_vars]);
+							p[4+AN.poly_num_vars] = ABS(p[4+AN.poly_num_vars]);
+						}
+					}
+					else {
+						// otherwise, use form long calculus
+						MulLong((UWORD *)&b[p[0]+1+AN.poly_num_vars], b[p[0]+b[p[0]]-1],
+										(UWORD *)&q[p[1]+1+AN.poly_num_vars], q[p[1]+q[p[1]]-1],
+										(UWORD *)&p[4+AN.poly_num_vars], &p[3]);
+						if (q.modp!=0) TakeNormalModulus((UWORD *)&p[4+AN.poly_num_vars], &p[3],
+																						 modq, nmodq, NOUNPACK);
+					}
+					
+					p[3] *= -1;
 				}
-				
-				p[3] *= -1;
+
+				// no hashing
+				p[2] = -1;
+
+				// add it to a heap element
+				swap (heap[nheap],p);
+				push_heap(BHEAD heap, ++nheap);
+				break;
 			}
-			
-			// no hashing
-			p[2] = -1;
-			
-			// add it to a heap element if possible, otherwise push it
-			
-			swap (heap[nheap],p);
-			push_heap(BHEAD heap, ++nheap);
 		}
 		while (t[0]==-1 || (nheap>0 && monomial_compare(BHEAD heap[0]+3, t+3)==0));
 
