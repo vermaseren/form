@@ -2864,7 +2864,6 @@ WORD Generator(PHEAD WORD *term, WORD level)
 #endif
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
-
 ReStart:
 	if ( ( replac = TestSub(BHEAD term,level) ) == 0 ) {
 		if ( applyflag ) { TableReset(); applyflag = 0; }
@@ -3458,18 +3457,40 @@ AutoGen:	i = *AT.TMout;
 		if ( AN.TeInFun < 0 && !AN.TeSuOut ) {
 
 			if ( AR.TePos >= 0 ) goto AutoGen;
-			if ( AN.TeInFun == -1 && DoDistrib(BHEAD term,level) ) goto GenCall;
-			else if ( AN.TeInFun == -2 && DoDelta3(BHEAD term,level) ) goto GenCall;
-			else if ( AN.TeInFun == -3 && DoTableExpansion(term,level) ) goto GenCall;
-			else if ( AN.TeInFun == -4 && FactorIn(BHEAD term,level) ) goto GenCall;
-			else if ( AN.TeInFun == -5 && FactorInExpr(BHEAD term,level) ) goto GenCall;
-			else if ( AN.TeInFun == -6 && TermsInBracket(BHEAD term,level) < 0 ) goto GenCall;
-			else if ( AN.TeInFun == -7 && ExtraSymFun(BHEAD term,level) < 0 ) goto GenCall;
-			else if ( AN.TeInFun == -8 && GCDfunction(BHEAD term,level) < 0 ) goto GenCall;
-			else if ( AN.TeInFun == -9 && DIVfunction(BHEAD term,level,0) < 0 ) goto GenCall;
-			else if ( AN.TeInFun == -10 && DIVfunction(BHEAD term,level,1) < 0 ) goto GenCall;
-			else if ( AN.TeInFun == -11 ) {
-				if ( DIVfunction(BHEAD term,level,2) < 0 ) goto GenCall;
+			switch ( AN.TeInFun ) {
+				case -1:
+					if ( DoDistrib(BHEAD term,level) ) goto GenCall;
+					break;
+				case -2:
+					if ( DoDelta3(BHEAD term,level) ) goto GenCall;
+					break;
+				case -3:
+					if ( DoTableExpansion(term,level) ) goto GenCall;
+					break;
+				case -4:
+					if ( FactorIn(BHEAD term,level) ) goto GenCall;
+					break;
+				case -5:
+					if ( FactorInExpr(BHEAD term,level) ) goto GenCall;
+					break;
+				case -6:
+					if ( TermsInBracket(BHEAD term,level) < 0 ) goto GenCall;
+					break;
+				case -7:
+					if ( ExtraSymFun(BHEAD term,level) < 0 ) goto GenCall;
+					break;
+				case -8:
+					if ( GCDfunction(BHEAD term,level) < 0 ) goto GenCall;
+					break;
+				case -9:
+					if ( DIVfunction(BHEAD term,level,0) < 0 ) goto GenCall;
+					break;
+				case -10:
+					if ( DIVfunction(BHEAD term,level,1) < 0 ) goto GenCall;
+					break;
+				case -11:
+					if ( DIVfunction(BHEAD term,level,2) < 0 ) goto GenCall;
+					break;
 			}
 		}
 		else {

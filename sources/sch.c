@@ -2153,16 +2153,20 @@ WORD WriteAll()
 			}
 			AO.PrintType = prtf;
 			if ( AC.OutputMode == VORTRANMODE ) {
+				UBYTE *oldOutFill = AO.OutFill, *oldOutputLine = AO.OutputLine;
 				AO.OutSkip = 6;
 				if ( Optimize(AO.termbuf[3]) ) goto AboWrite;
 				AO.OutSkip = 3;
+				AO.OutFill = oldOutFill; AO.OutputLine = oldOutputLine;
 				FiniLine();
 				continue;
 			}
 			else if ( AO.OptimizationLevel > 0 ) {
+				UBYTE *oldOutFill = AO.OutFill, *oldOutputLine = AO.OutputLine;
 				AO.OutSkip = 6;
 				if ( Optimize(AO.termbuf[3]) ) goto AboWrite;
 				AO.OutSkip = 3;
+				AO.OutFill = oldOutFill; AO.OutputLine = oldOutputLine;
 				FiniLine();
 				continue;
 			}

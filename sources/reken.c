@@ -1135,7 +1135,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 			}
 			else {
 				w2 = f+ni+ne; nh = ne+1;
-				while ( !*w2 && ( nh > 0 ) ) { nh--; w2--; }
+				while ( ( nh > 0 ) && !*w2 ) { nh--; w2--; }
 			}
 			if ( BigLong(f+ni,nh,e,ne) >= 0 ) {
 				estim++;
@@ -1207,7 +1207,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 }
 
 /*
- 		#] DivLong : 
+ 		#] DivLong :
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -2997,7 +2997,7 @@ int ChineseRemainder(PHEAD MODNUM *a1, MODNUM *a2, MODNUM *a)
 
 /*
  		#] ChineseRemainder: 
-  	#] RekenLong : 
+  	#] RekenLong :
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
