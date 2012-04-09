@@ -212,7 +212,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	int denompower = 0;
 
 	if (!lcoeffb.is_one()) {
-		
+
 		if (AN.poly_num_vars > 2) {
 			// the original polynomial is multivariate (one dummy variable has
 			// been added), so it is not trivial to determine which power of
@@ -231,6 +231,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 			
 			// divide and determine the power
 			poly ppow(pa/pb);
+			cout << pa << " / " << pb << " = " << ppow << endl;
 			for (int i=1; i<ppow[0]; i+=ppow[i])
 				denompower = max(denompower, DENOMPOWER - ppow[i+AN.poly_num_vars]);
 
@@ -241,9 +242,9 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		else {
 			// one variable, so the power is the difference of the degrees
 			
-			denompower = pa.degree(0) - pb.degree(0) + 1;
+			denompower = MaX(0, pa.degree(0) - pb.degree(0) + 1);
 		}
-	
+
 		// multiply a by that power
 		WORD n = lcoeffb[lcoeffb[1]];
 		RaisPow(BHEAD (UWORD *)&lcoeffb[2+AN.poly_num_vars], &n, denompower);
