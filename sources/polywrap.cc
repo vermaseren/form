@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 #include "poly.h"
 #include "polygcd.h"
@@ -100,7 +100,7 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string mes
 }
 
 /*
-  	#] poly_determine_modulus : 
+  	#] poly_determine_modulus :
   	#[ poly_gcd :
 */
 
@@ -152,7 +152,7 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 }
 
 /*
-  	#] poly_gcd : 
+  	#] poly_gcd :
   	#[ poly_divmod : 
 */
 
@@ -231,7 +231,9 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 			
 			// divide and determine the power
 			poly ppow(pa/pb);
+#ifdef DEBUG
 			cout << pa << " / " << pb << " = " << ppow << endl;
+#endif
 			for (int i=1; i<ppow[0]; i+=ppow[i])
 				denompower = max(denompower, DENOMPOWER - ppow[i+AN.poly_num_vars]);
 
@@ -329,7 +331,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 }
 
 /*
-  	#] poly_divmod : 
+  	#] poly_divmod :
   	#[ poly_div :
 
 	Routine divides the expression in arg1 by the expression in arg2.
@@ -349,7 +351,7 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 }
 
 /*
-  	#] poly_div : 
+  	#] poly_div :
   	#[ poly_rem :
 
 	Routine divides the expression in arg1 by the expression in arg2
@@ -372,7 +374,7 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b) {
 }
 
 /*
-  	#] poly_rem : 
+  	#] poly_rem :
   	#[ poly_ratfun_read :
 */
 
@@ -458,7 +460,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 }
 
 /*
-  	#] poly_ratfun_read : 
+  	#] poly_ratfun_read :
   	#[ poly_sort :
 */
 
@@ -500,7 +502,7 @@ void poly_sort(PHEAD WORD *a) {
 }
 
 /*
-  	#] poly_sort : 
+  	#] poly_sort :
   	#[ poly_ratfun_add :
 */
 
@@ -605,7 +607,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 }
 
 /*
-  	#] poly_ratfun_add : 
+  	#] poly_ratfun_add :
   	#[ poly_ratfun_normalize :
 */
 
@@ -733,7 +735,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 }
 
 /*
-  	#] poly_ratfun_normalize : 
+  	#] poly_ratfun_normalize :
   	#[ poly_fix_minus_signs :
 */
 
@@ -784,7 +786,7 @@ void poly_fix_minus_signs (factorized_poly &a) {
 }
 
 /*
-  	#] poly_fix_minus_signs : 
+  	#] poly_fix_minus_signs :
   	#[ poly_factorize :
 */
 
@@ -910,7 +912,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 }
 
 /*
-  	#] poly_factorize : 
+  	#] poly_factorize :
   	#[ poly_factorize_argument :
 */
  
@@ -937,7 +939,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 }
 
 /*
-  	#] poly_factorize_argument : 
+  	#] poly_factorize_argument :
   	#[ poly_factorize_dollar :
 */
 
@@ -963,7 +965,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 }
 
 /*
-  	#] poly_factorize_dollar : 
+  	#] poly_factorize_dollar :
   	#[ poly_factorize_expression :
 */
 
@@ -1311,7 +1313,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 }
 
 /*
-  	#] poly_factorize_expression : 
+  	#] poly_factorize_expression :
   	#[ poly_unfactorize_expression :
 */
 
@@ -1541,7 +1543,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 }
 
 /*
-  	#] poly_unfactorize_expression : 
+  	#] poly_unfactorize_expression :
   	#[ poly_inverse : 
 */
 
@@ -1671,5 +1673,5 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 }
 
 /*
-  	#] poly_inverse : 
+  	#] poly_inverse :
 */
