@@ -55,12 +55,14 @@ int CatchDollar(int par)
 {
 	GETIDENTITY
 	CBUF *C = cbuf + AC.cbufnum;
-	int error = 0, numterms = 0, numdollar;
+	int error = 0, numterms = 0, numdollar, resetmods = 0;
 	LONG newsize;
 	WORD *w, *t, n, nsize, *oldwork = AT.WorkPointer, *dbuffer;
 	WORD oldncmod = AN.ncmod;
 	DOLLARS d;
 	if ( AN.ncmod && ( ( AC.modmode & ALSODOLLARS ) == 0 ) ) AN.ncmod = 0;
+	if ( AN.ncmod && AN.cmod == 0 ) { SetMods(); resetmods = 1; }
+
 	numdollar = C->lhs[C->numlhs][2];
 
 	d = Dollars+numdollar;
@@ -72,6 +74,7 @@ int CatchDollar(int par)
 		d->size = 0; d->where = &(AM.dollarzero);
 		cbuf[AM.dbufnum].rhs[numdollar] = d->where;
 		AN.ncmod = oldncmod;
+		if ( resetmods ) UnSetMods();
 		return(0);
 	}
 #ifdef PARALLEL
@@ -168,11 +171,12 @@ onerror:
 #endif
 	BACKINOUT
 	AN.ncmod = oldncmod;
+	if ( resetmods ) UnSetMods();
 	return(error);
 }
 
 /*
-  	#] CatchDollar : 
+  	#] CatchDollar :
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -1503,7 +1507,7 @@ ShortArgument:
 }
 
 /*
-  	#] DolToTerms :
+  	#] DolToTerms : 
   	#[ DolToLong :
 */
 
