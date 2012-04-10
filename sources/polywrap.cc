@@ -231,9 +231,6 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 			
 			// divide and determine the power
 			poly ppow(pa/pb);
-#ifdef DEBUG
-			cout << pa << " / " << pb << " = " << ppow << endl;
-#endif
 			for (int i=1; i<ppow[0]; i+=ppow[i])
 				denompower = max(denompower, DENOMPOWER - ppow[i+AN.poly_num_vars]);
 
