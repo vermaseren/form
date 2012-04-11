@@ -776,11 +776,13 @@ VOID WriteLists()
 	AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
 	FiniLine();
 	OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
-	if ( ( j = NumSymbols ) > 0 ) {
+	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
+	else startvalue = FIRSTUSERSYMBOL;
+	if ( ( j = NumSymbols ) > startvalue ) {
 		TokenToLine((UBYTE *)" Symbols");
 		*skip = 3;
 		FiniLine();
-		for ( i = 0; i < j; i++ ) {
+		for ( i = startvalue; i < j; i++ ) {
 			if ( i >= BUILTINSYMBOLS && i < FIRSTUSERSYMBOL ) continue;
 			Out = StrCopy(VARNAME(symbols,i),OutScr);
 			if ( symbols[i].minpower > -MAXPOWER || symbols[i].maxpower < MAXPOWER ) {
@@ -816,11 +818,13 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
-	if ( ( j = NumIndices ) > 0 ) {
+	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
+	else startvalue = BUILTININDICES;
+	if ( ( j = NumIndices ) > startvalue ) {
 		TokenToLine((UBYTE *)" Indices");
 		*skip = 3;
 		FiniLine();
-		for ( i = 0; i < j; i++ ) {
+		for ( i = startvalue; i < j; i++ ) {
 			Out = StrCopy(VARNAME(indices,i),OutScr);
 			if ( indices[i].dimension >= 0 ) {
 				if ( indices[i].dimension != AC.lDefDim ) {
@@ -843,11 +847,13 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
-	if ( ( j = NumVectors ) > 0 ) {
+	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
+	else startvalue = BUILTINVECTORS;
+	if ( ( j = NumVectors ) > startvalue ) {
 		TokenToLine((UBYTE *)" Vectors");
 		*skip = 3;
 		FiniLine();
-		for ( i = 0; i < j; i++ ) {
+		for ( i = startvalue; i < j; i++ ) {
 			Out = StrCopy(VARNAME(vectors,i),OutScr);
 			if ( AC.CodesFlag ) Out = CodeToLine(i+AM.OffsetVector,Out);
 			StrCopy((UBYTE *)" ",Out);
@@ -1027,11 +1033,15 @@ VOID WriteLists()
 	if ( AS.ExecMode ) {
 		e = Expressions;
 		j = NumExpressions;
-		TokenToLine((UBYTE *)" Expressions");
-		*skip = 3;
-		FiniLine();
+		first = 1;
 		for ( i = 0; i < j; i++, e++ ) {
 			if ( e->status >= 0 ) {
+				if ( first ) {
+					TokenToLine((UBYTE *)" Expressions");
+					*skip = 3;
+					FiniLine();
+					first = 0;
+				}
 				Out = StrCopy(AC.exprnames->namebuffer+e->name,OutScr);
 				Out = StrCopy((UBYTE *)(FG.ExprStat[e->status]),Out);
 				if ( AC.CodesFlag ) Out = CodeToLine(i,Out);
@@ -1039,30 +1049,87 @@ VOID WriteLists()
 				TokenToLine(OutScr);
 			}
 		}
-		*skip = 0;
-		FiniLine();
+		if ( !first ) {
+			*skip = 0;
+			FiniLine();
+		}
 	}
 	e = Expressions;
 	j = NumExpressions;
-	first = 0;
+	first = 1;
 	for ( i = 0; i < j; i++ ) {
 		if ( e->printflag && ( e->status == LOCALEXPRESSION ||
 		e->status == GLOBALEXPRESSION || e->status == UNHIDELEXPRESSION
 		|| e->status == UNHIDEGEXPRESSION ) ) {
-			if ( !first ) {
+			if ( first ) {
 				TokenToLine((UBYTE *)" Expressions to be printed");
 				*skip = 3;
 				FiniLine();
+				first = 0;
 			}
 			Out = StrCopy(AC.exprnames->namebuffer+e->name,OutScr);
 			StrCopy((UBYTE *)" ",Out);
 			TokenToLine(OutScr);
-			first = 1;
 		}
 		e++;
 	}
-	*skip = 0;
-	FiniLine();
+	if ( !first ) {
+		*skip = 0;
+		FiniLine();
+	}
+
+	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
+	else startvalue = BUILTINDOLLARS;
+	if ( ( j = NumDollars ) > startvalue ) {
+		TokenToLine((UBYTE *)" Dollar variables");
+		*skip = 3;
+		FiniLine();
+		for ( i = startvalue; i < j; i++ ) {
+			Out = StrCopy((UBYTE *)"$", OutScr);
+			Out = StrCopy(DOLLARNAME(Dollars, i), Out);
+			if ( AC.CodesFlag ) Out = CodeToLine(i, Out);
+			StrCopy((UBYTE *)" ", Out);
+			TokenToLine(OutScr);
+		}
+		*skip = 0;
+		FiniLine();
+	}
+
+	if ( ( j = NumPotModdollars ) > 0 ) {
+		TokenToLine((UBYTE *)" Dollar variables to be modified");
+		*skip = 3;
+		FiniLine();
+		for ( i = 0; i < j; i++ ) {
+			Out = StrCopy((UBYTE *)"$", OutScr);
+			Out = StrCopy(DOLLARNAME(Dollars, PotModdollars[i]), Out);
+			for ( k = 0; k < NumModOptdollars; k++ )
+				if ( ModOptdollars[k].number == PotModdollars[i] ) break;
+			if ( k < NumModOptdollars ) {
+				switch ( ModOptdollars[k].type ) {
+					case MODSUM:
+						Out = StrCopy((UBYTE *)"(sum)", Out);
+						break;
+					case MODMAX:
+						Out = StrCopy((UBYTE *)"(maximum)", Out);
+						break;
+					case MODMIN:
+						Out = StrCopy((UBYTE *)"(minimum)", Out);
+						break;
+					case MODLOCAL:
+						Out = StrCopy((UBYTE *)"(local)", Out);
+						break;
+					default:
+						Out = StrCopy((UBYTE *)"(?)", Out);
+						break;
+				}
+			}
+			StrCopy((UBYTE *)" ", Out);
+			TokenToLine(OutScr);
+		}
+		*skip = 0;
+		FiniLine();
+	}
+
 	if ( AC.ncmod != 0 ) {
 		TokenToLine((UBYTE *)"All arithmetic is modulus ");
 		LongToLine((UWORD *)AC.cmod,ABS(AC.ncmod));
