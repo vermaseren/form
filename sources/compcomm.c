@@ -605,6 +605,12 @@ int CoFormat(UBYTE *s)
 	int error = 0, x;
 	KEYWORD *key;
 	UBYTE *ss;
+	while ( *s == ' ' || *s == ',' ) s++;
+	if ( *s == 0 ) {
+		AC.OutputMode = 72;
+		AC.OutputSpaces = NORMALFORMAT;
+		return(error);
+	}
 /*
 	First the optimization level
 */
@@ -5031,7 +5037,7 @@ int CoProcessBucket(UBYTE *s)
 }
 
 /*
-  	#] CoProcessBucket :
+  	#] CoProcessBucket : 
   	#[ CoThreadBucket :
 */
 
