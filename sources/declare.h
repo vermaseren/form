@@ -1054,6 +1054,7 @@ extern WORD   *TakeDollarContent(PHEAD WORD *,WORD **);
 extern WORD   *MakeDollarInteger(PHEAD WORD *,WORD **);
 extern WORD   *MakeDollarMod(PHEAD WORD *,WORD **);
 extern int    GetDolNum(PHEAD WORD *, WORD *);
+extern void   AddPotModdollar(WORD);
  
 extern int    Optimize(WORD);
 extern int    LoadOpti(WORD);

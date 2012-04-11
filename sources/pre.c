@@ -3282,17 +3282,16 @@ int DoEndInside(UBYTE *s)
 	if ( AC.RhsExprInModuleFlag ) {
 		/*
 		 * The only master executed the statements in #inside.
-		 * We need to broadcast it to the all slaves.
+		 * We need to broadcast the result to the all slaves.
 		 */
 		for ( i = 0; i < AP.inside.numdollars; i++ ) {
-			int j;
-			WORD number = AP.inside.buffer[i];
-			/* Add the "number" to PotModdollars. */
-			for ( j = 0; j < NumPotModdollars; j++ )
-				if ( number == PotModdollars[j] ) break;
-			if ( j >= NumPotModdollars )
-				*(WORD *)FromList(&AC.PotModDolList) = number;
+			/*
+			 * Mark $-variables specified in the #inside instruction as modified
+			 * such that they will be broadcast.
+			 */
+			AddPotModdollar(AP.inside.buffer[i]);
 		}
+		/* Now actual broadcast of modified variables. */
 		if ( NumPotModdollars > 0 ) {
 			error = PF_BroadcastModifiedDollars();
 			if ( error ) goto cleanup;

@@ -1624,6 +1624,7 @@ int ExecInside(UBYTE *s)
 			}
 			*s = c;
 			*w++ = number;
+			AddPotModdollar(number);
 		}
 		else {
 			MLOCK(ErrorMessageLock);
@@ -3748,5 +3749,27 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 
 /*
   	#] GetDolNum : 
+  	#[ AddPotModdollar :
+*/
+
+/**
+ * Adds a $-variable specified by \a numdollar to the list of potentially
+ * modified $-variables unless it has already been included in the list.
+ *
+ * @param  numdollar  The index of the $-variable to be added.
+ */
+void AddPotModdollar(WORD numdollar)
+{
+	int i, n = NumPotModdollars;
+	for ( i = 0; i < n; i++ ) {
+		if ( numdollar == PotModdollars[i] ) break;
+	}
+	if ( i >= n ) {
+		*(WORD *)FromList(&AC.PotModDolList) = numdollar;
+	}
+}
+
+/*
+  	#] AddPotModdollar :
 */
 

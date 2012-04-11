@@ -718,17 +718,11 @@ IllField:			c = *p; *p = 0;
 	Now check whether wildcards get converted to dollars (for PARALLEL)
 */
 	{
-		WORD *tw, *twstop, *pmd, imd;
+		WORD *tw, *twstop;
 		tw = AC.ProtoType; twstop = tw + tw[1]; tw += SUBEXPSIZE;
 		while ( tw < twstop ) {
 			if ( *tw == LOADDOLLAR ) {
-				for ( imd = 0; imd < NumPotModdollars; imd++ ) {
-					if ( tw[2] == PotModdollars[imd] ) break;
-				}
-				if ( imd >= NumPotModdollars ) {
-					pmd = (WORD *)FromList(&AC.PotModDolList);
-					*pmd = tw[2];
-				}
+				AddPotModdollar(tw[2]);
 			}
 			tw += tw[1];
 		}
@@ -1821,25 +1815,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 /*
 	Add to the list of potentially modified dollars (for PARALLEL)
 */
-/*
- * In ParFORM we need to add it to the list even in #inside.
- * (TU 21 Dec 2011)
- */
-#ifndef PARALLEL
-	if ( AP.PreInsideLevel <= 0 ) {
-#endif
-	  int i;
-	  WORD *pmd;
-	  for ( i = 0; i < NumPotModdollars; i++ ) {
-		if ( number == PotModdollars[i] ) break;
-	  }
-	  if ( i >= NumPotModdollars ) {
-		pmd = (WORD *)FromList(&AC.PotModDolList);
-		*pmd = number;
-	  }
-#ifndef PARALLEL
-	}
-#endif
+	AddPotModdollar(number);
 	return(error);
 }
 

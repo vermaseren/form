@@ -1628,7 +1628,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 		We give a warning!
 */
 	{
-		WORD *tw, *twstop, *pmd, imd;
+		WORD *tw, *twstop;
 #ifdef WITHPTHREADS
 		tw = T->prototype[0];
 #else
@@ -1641,13 +1641,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
  execution for the whole program.");
 				AM.hparallelflag |= NOPARALLEL_TBLDOLLAR;
 				AC.mparallelflag |= NOPARALLEL_TBLDOLLAR;
-				for ( imd = 0; imd < NumPotModdollars; i++ ) {
-					if ( tw[2] == PotModdollars[imd] ) break;
-				}
-				if ( imd >= NumPotModdollars ) {
-					pmd = (WORD *)FromList(&AC.PotModDolList);
-					*pmd = tw[2];
-				}
+				AddPotModdollar(tw[2]);
 			}
 			tw += tw[1];
 		}

@@ -5568,17 +5568,7 @@ int CoDo(UBYTE *inp)
 		}
 		*w++ = numparam;
 		*inp = c;
-		{
-		  int i;
-		  WORD *pmd;
-		  for ( i = 0; i < NumPotModdollars; i++ ) {
-			if ( numparam == PotModdollars[i] ) break;
-		  }
-		  if ( i >= NumPotModdollars ) {
-			pmd = (WORD *)FromList(&AC.PotModDolList);
-			*pmd = numparam;
-		  }
-		}
+		AddPotModdollar(numparam);
 	}
 	w++;  /* space for the level of the enddo statement */
 	while ( *inp == ',' ) inp++;
@@ -5674,17 +5664,7 @@ int CoFactDollar(UBYTE *inp)
 			MesPrint("&FactDollar should have a single $variable for its argument");
 			return(1);
 		}
-		{
-		  int i;
-		  WORD *pmd;
-		  for ( i = 0; i < NumPotModdollars; i++ ) {
-			if ( numdollar == PotModdollars[i] ) break;
-		  }
-		  if ( i >= NumPotModdollars ) {
-			pmd = (WORD *)FromList(&AC.PotModDolList);
-			*pmd = numdollar;
-		  }
-		}
+		AddPotModdollar(numdollar);
 	}
 	else {
 		MesPrint("&%s is not a $-variable",inp);
