@@ -2511,7 +2511,7 @@ void DoubleBuffer(void **start, void **stop, int size, char *text)
 	if ( size == sizeof(char) ) DODOUBLE(char)
 	else if ( size == sizeof(short) ) DODOUBLE(short)
 	else if ( size == sizeof(int) ) DODOUBLE(int)
-	else if ( size == sizeof(long) ) DODOUBLE(long)
+	else if ( size == sizeof(LONG) ) DODOUBLE(LONG)
 	else if ( size % sizeof(int) == 0 ) DODOUBLE(int)
 	else {
 		MesPrint("---Cannot handle doubling buffers of size %d",size);
@@ -2538,7 +2538,7 @@ void ExpandBuffer(void **buffer, LONG *oldsize, int type)
 	if ( type == sizeof(char) ) DOEXPAND(char)
 	else if ( type == sizeof(short) ) DOEXPAND(short)
 	else if ( type == sizeof(int) ) DOEXPAND(int)
-	else if ( type == sizeof(long) ) DOEXPAND(long)
+	else if ( type == sizeof(LONG) ) DOEXPAND(LONG)
 	else if ( type == sizeof(POSITION) ) DOEXPAND(POSITION)
 	else {
 		MesPrint("---Cannot handle expanding buffers with objects of size %d",type);
