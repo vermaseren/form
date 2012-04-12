@@ -3202,7 +3202,7 @@ int DoEndInside(UBYTE *s)
 	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
 	WORD *oldcompresspointer = AR.CompressPointer;
 	int oldmultithreaded = AS.MultiThreaded;
-//	int oldmparallelflag = AC.mparallelflag;
+	/* int oldmparallelflag = AC.mparallelflag; */
 	FILEHANDLE *f;
 #ifdef PARALLEL
 	int error = 0;
@@ -3236,7 +3236,7 @@ int DoEndInside(UBYTE *s)
 #endif
 	AR.BracketOn = 0;
 	AS.MultiThreaded = 0;
-//	AC.mparallelflag = PARALLELFLAG;
+	/* AC.mparallelflag = PARALLELFLAG; */
 	if ( AR.CompressPointer == 0 ) AR.CompressPointer = AR.CompressBuffer;
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 /*

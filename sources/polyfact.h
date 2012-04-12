@@ -95,4 +95,4 @@ namespace polyfact {
 	const std::vector<poly> lift_variables (const poly &a, const std::vector<poly> &f, const std::vector<int> &x, const std::vector<int> &c, const std::vector<poly> &lc);
 	void predetermine (int dep, const std::vector<std::vector<int> > &state, std::vector<std::vector<std::vector<int> > > &terms, std::vector<int> &term, int sumdeg=0);
 
-};
+}

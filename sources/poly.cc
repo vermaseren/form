@@ -253,7 +253,7 @@ const string int_to_string (WORD x) {
 	char res[20];
 	sprintf (res,"%i",x);
 	return res;
-};
+}
 
 // converts a polynomial to a string
 const string poly::to_string() const {

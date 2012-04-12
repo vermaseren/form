@@ -28,7 +28,7 @@
 
 extern "C" {
 #include "form3.h"
-};
+}
 
 #ifndef UNIX
 #define random rand
