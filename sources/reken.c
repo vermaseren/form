@@ -3286,9 +3286,12 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 {
 	WORD n;
 	WORD nhalfc;
-	UWORD *halfc = NumberMalloc("TakeNormalModulus");
+	UWORD *halfc;
 
+	GETIDENTITY;
+	
 	/* determine c/2 by right shifting */
+	halfc = NumberMalloc("TakeNormalModulus");
 	nhalfc=nc;
 	WCOPY(halfc,c,nc);
 
