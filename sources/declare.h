@@ -67,7 +67,7 @@
 
 #define NCOPY(s,t,n) while ( --n >= 0 ) *s++ = *t++;
 
-//#define NCOPY(s,t,n) { memcpy(s,t,n*sizeof(WORD)); s+=n; t+=n; n = -1; }
+/*#define NCOPY(s,t,n) { memcpy(s,t,n*sizeof(WORD)); s+=n; t+=n; n = -1; }*/
 #define NCOPYI(s,t,n) while ( --n >= 0 ) *s++ = *t++;
 #define NCOPYB(s,t,n) while ( --n >= 0 ) *s++ = *t++;
 #define NCOPYI32(s,t,n) while ( --n >= 0 ) *s++ = *t++;

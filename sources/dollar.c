@@ -2781,7 +2781,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
  *	            fd->value   value if type is DOLNUMBER and it fits in a WORD.
  */
 
-//#define STEP2
+/* #define STEP2 */
 
 int DollarFactorize(PHEAD WORD numdollar)
 {

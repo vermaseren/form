@@ -1285,20 +1285,23 @@ RaisOvl:
 VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 
 	int i,j;
+	WORD new_small_power_maxx, new_small_power_maxn, ID;
+	WORD *new_small_power_n;
+	UWORD **new_small_power;
 	
-	// check whether to extend the array
+	/* check whether to extend the array */
 	if (x>=AT.small_power_maxx || n>=AT.small_power_maxn) {
 
-		WORD new_small_power_maxx = AT.small_power_maxx;
+		new_small_power_maxx = AT.small_power_maxx;
 		if (x>=AT.small_power_maxx)
 			new_small_power_maxx = MaX(2*AT.small_power_maxx, x+1);
 		
-		WORD new_small_power_maxn = AT.small_power_maxn;
+		new_small_power_maxn = AT.small_power_maxn;
 		if (n>=AT.small_power_maxn)
 			new_small_power_maxn = MaX(2*AT.small_power_maxn, n+1);
 		
-		WORD *new_small_power_n = (WORD*) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(WORD),"RaisPowCached");
-		UWORD **new_small_power = (UWORD **) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(UWORD *),"RaisPowCached");
+		new_small_power_n = (WORD*) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(WORD),"RaisPowCached");
+		new_small_power = (UWORD **) Malloc1(new_small_power_maxx*new_small_power_maxn*sizeof(UWORD *),"RaisPowCached");
 
 		for (i=0; i<new_small_power_maxx * new_small_power_maxn; i++) {
 			new_small_power_n[i] = 0;
@@ -1322,8 +1325,8 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 		AT.small_power      = new_small_power;				
 	}
 
-	// check whether the results is already calculated
-	WORD ID = x * AT.small_power_maxn + n;
+	/* check whether the results is already calculated */
+	ID = x * AT.small_power_maxn + n;
 
 	if (AT.small_power[ID] == NULL) {
 		AT.small_power[ID] = NumberMalloc("RaisPowCached");
@@ -1332,7 +1335,7 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 		RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
 	}
 
-	// return the result
+	/* return the result */
 	*c  = AT.small_power[ID];
 	*nc = AT.small_power_n[ID];
 }
@@ -1470,37 +1473,34 @@ somethingwrong:
 
 int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WORD *nia, UWORD *ib, WORD *nib) {
 
-	UWORD *s = NumberMalloc("GetLongModInverses");
-	WORD ns = na;
+	UWORD *s, *t, *sa, *sb, *ta, *tb, *x, *y, *swap1;
+	WORD ns, nt, nsa, nsb, nta, ntb, nx, ny, swap2;
+		 
+	s = NumberMalloc("GetLongModInverses");
+	ns = na;
 	WCOPY(s, a, ABS(ns));
 
-	UWORD *t = NumberMalloc("GetLongModInverses");
-	WORD nt = nb;
+	t = NumberMalloc("GetLongModInverses");
+	nt = nb;
 	WCOPY(t, b, ABS(nt));
 
-	UWORD *sa = NumberMalloc("GetLongModInverses");
-	WORD nsa = 1;
+	sa = NumberMalloc("GetLongModInverses");
+	nsa = 1;
 	sa[0] = 1;
 
-	UWORD *sb = NumberMalloc("GetLongModInverses");
-	WORD nsb = 0;
+	sb = NumberMalloc("GetLongModInverses");
+	nsb = 0;
 
-	UWORD *ta = NumberMalloc("GetLongModInverses");
-	WORD nta = 0;
+	ta = NumberMalloc("GetLongModInverses");
+	nta = 0;
 
-	UWORD *tb = NumberMalloc("GetLongModInverses");
-	WORD ntb = 1;
+	tb = NumberMalloc("GetLongModInverses");
+	ntb = 1;
 	tb[0] = 1;
 
-	UWORD *x = NumberMalloc("GetLongModInverses");
-	WORD nx;
-	
-	UWORD *y = NumberMalloc("GetLongModInverses");
-	WORD ny;
+	x = NumberMalloc("GetLongModInverses");
+	y = NumberMalloc("GetLongModInverses");
 
-	UWORD *swap1;
-	WORD swap2;
-	
 	while (nt != 0) {
 		DivLong(s,ns,t,nt,x,&nx,y,&ny);
 		swap1=s; s=y; y=swap1;
@@ -3286,9 +3286,9 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 {
 	WORD n;
 	WORD nhalfc;
-	UWORD halfc[nc];
+	UWORD *halfc = NumberMalloc("TakeNormalModulus");
 
-	// determine c/2 by right shifting
+	/* determine c/2 by right shifting */
 	nhalfc=nc;
 	WCOPY(halfc,c,nc);
 
@@ -3300,19 +3300,19 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 	if (halfc[nhalfc-1]==0)
 		nhalfc--;
 				 
-	// takes care of the number never expanding, e.g., -1(mod 100) -> 99 -> -1
-	if (BigLong(a,ABS(*na),halfc,nhalfc) <= 0) return(0);
+	/* takes care of the number never expanding, e.g., -1(mod 100) -> 99 -> -1 */
+	if (BigLong(a,ABS(*na),halfc,nhalfc) > 0) {
 	
-	TakeModulus(a,na,c,nc,par);
+		TakeModulus(a,na,c,nc,par);
 	
-	n = ABS(*na);
-	if (BigLong(a,n,halfc,nhalfc) > 0) {
-		SubPLon(c,nc,a,n,a,&n);
-		if ( *na > 0 ) { *na = -n; }
-		else { *na = n; }
-		return(1);
+		n = ABS(*na);
+		if (BigLong(a,n,halfc,nhalfc) > 0) {
+			SubPLon(c,nc,a,n,a,&n);
+			*na = (*na > 0 ? -n : n);
+		}
 	}
-	
+
+	NumberFree(halfc,"TakeNormalModulus");
 	return(0);
 }
 
