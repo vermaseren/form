@@ -809,11 +809,11 @@ WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 
 		maxlogcoeff = MaX(maxlogcoeff,
 											log(1.0+(UWORD)a[i+a[i]-2]) +            // most significant digit + 1
-											BITSINWORD*log(2)*(ABS(a[i+a[i]-1])-1)); // number of digits
+											BITSINWORD*log(2.0)*(ABS(a[i+a[i]-1])-1)); // number of digits
 		numterms++;
 	}
 
-	WORD res = (WORD)ceil((log((sqrt(5.0)+1)/2)*maxdegree + maxlogcoeff + 0.5*log(numterms)) / log(p));
+	WORD res = (WORD)ceil((log((sqrt(5.0)+1)/2)*maxdegree + maxlogcoeff + 0.5*log(numterms)) / log((double)p));
 	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: choose_prime_power("<<a<<","<<p<<") = "<<res<<endl;

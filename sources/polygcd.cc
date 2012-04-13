@@ -1118,7 +1118,7 @@ bool gcd_heuristic_possible (const poly &a) {
 	double digits = ABS(a[1+a[1]-1]);
   double lead = a[1+1+AN.poly_num_vars];
 		
-	return prod_deg*(digits-1+log(2*ABS(lead))/log(2)/(BITSINWORD/2)) < POLYGCD_HEURISTIC_MAX_DIGITS;
+	return prod_deg*(digits-1+log(2*ABS(lead))/log(2.0)/(BITSINWORD/2)) < POLYGCD_HEURISTIC_MAX_DIGITS;
 }
 
 /*

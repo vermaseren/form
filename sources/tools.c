@@ -2971,7 +2971,7 @@ LONG Timer(int par)
 		PFILETIME pftKernel = &ftKernel;  /* to avoid strict-aliasing rule warnings */
 		PFILETIME pftUser   = &ftUser;
 		__int64 t = *(__int64 *)pftKernel + *(__int64 *)pftUser;  /* in 100 nsec. */
-		return t / 10000;  /* in msec. */
+		return (LONG)(t / 10000);  /* in msec. */
 	}
 	return 0;
 #else
@@ -2986,7 +2986,7 @@ LONG Timer(int par)
 			PFILETIME pftKernel = &ftKernel;  /* to avoid strict-aliasing rule warnings */
 			PFILETIME pftUser   = &ftUser;
 			__int64 t = *(__int64 *)pftKernel + *(__int64 *)pftUser;  /* in 100 nsec. */
-			lResult = t / 10000;  /* in msec. */
+			lResult = (LONG)(t / 10000);  /* in msec. */
 		}
 		CloseHandle(hThread);
 	}

@@ -95,6 +95,7 @@
 
 #ifdef _MSC_VER
 #define WINDOWS
+#define _CRT_SECURE_NO_WARNINGS
 #if defined(_WIN64)
 #define LLP64
 #elif defined(_WIN32)
