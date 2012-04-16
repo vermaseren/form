@@ -2903,6 +2903,7 @@ LONG ComPress(WORD **ss, LONG *n)
 			if ( j > AN.compressSize ) {
 				newsize = j + 64;
 				t = (WORD *)Malloc1(newsize*sizeof(WORD),"Compression");
+				t[0] = 0;
 				if ( AN.compressSpace ) {
 					for ( i = 0; i < *AN.compressSpace; i++ ) t[i] = AN.compressSpace[i];
 					M_free(AN.compressSpace,"Compression");
