@@ -725,7 +725,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 	vector<vector<LONG> > V;
 
 	int maxMsize=0;
-
+	
 	// create (empty) matrices
 	for (int i=1; i<s[0]; i+=s[i]) {
 		if (i==1 || s[i+1+x[0]]!=s[i+1+x[0]-s[i]]) {
@@ -748,27 +748,32 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 
 		// if correct gcd
 		if (!gcd.is_zero() && gcd[2+x[0]]==sred[2+x[0]]) {
+
+			// for each power in the gcd, generate an equation if needed
+			int gi=1, midx=0;
 			
-		// for each power in the gcd, generate an equation if needed
-			int si=1, midx=0;
-			
-			for (int gi=1; gi<gcd[0]; gi+=gcd[gi]) {
-				int pow = gcd[gi+1+x[0]];
-				
-				while (si<sred[0] && sred[si+1+x[0]] == pow) {
-					if (numg < (int)M[midx].size()) 
-						M[midx][numg].push_back(sred[si+1+AN.poly_num_vars]);
-					si+=s[si];
+			for (int si=1; si<s[0];) {
+				// if the term exists, set Vi=coeff, otherwise Vi remains 0
+				if (gi<gcd[0] && gcd[gi+1+x[0]]==sred[si+1+x[0]]) {
+					if (numg < (int)V[midx].size()) 
+						V[midx][numg] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+					gi += gcd[gi];
 				}
-				
-				if (numg < (int)V[midx].size()) 
-					V[midx][numg] = gcd[gi+gcd[gi]-1]*gcd[gi+gcd[gi]-2];
+
+				// add the coefficients of s to the matrix M
+				for (int i=0; i<(int)M[midx].size(); i++) {
+					if (numg < (int)M[midx].size())
+						M[midx][numg].push_back(sred[si+1+AN.poly_num_vars]);
+					si += s[si];
+				}
 				
 				midx++;
 			}
 		}
 		else {
 			// incorrect gcd
+			if (!gcd.is_zero() && gcd[2+x[0]]<sred[2+x[0]])
+				return poly(BHEAD 0);
 			numg--;
 		}
 		
@@ -863,7 +868,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
  */
 
 const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
-
+	
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << lc << "," << s <<")" << endl;
 #endif
@@ -922,8 +927,10 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 			comp=-1;
 		else
 			for (int i=0; i<(int)x.size()-1; i++)
-				if (gcdmodc[2+x[i]] != res[2+x[i]])
+				if (gcdmodc[2+x[i]] != res[2+x[i]]) {
 					comp = gcdmodc[2+x[i]] - res[2+x[i]];
+					break;
+				}
 		
 		poly oldres(res);
 		poly simple(poly::simple_poly(BHEAD X,c,1,a.modp));
@@ -1003,7 +1010,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 	poly a(lcoeff * origa);
 	poly b(lcoeff * origb);
-	
+
 	int pnum=0;
  	
 	poly d(BHEAD 0);
@@ -1014,7 +1021,6 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 		// choose a prime and solve modulo the prime
 		WORD p = a.modp;
 		if (p==0) p = NextPrime(BHEAD pnum++);
-
 		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
 		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
 
