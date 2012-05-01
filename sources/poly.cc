@@ -88,6 +88,10 @@ poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
 	
 	terms = TermMalloc("poly::poly(UWORD*,WORD)");
 
+	// remove leading zeros
+	while (*(a+ABS(na)-1)==0)
+		na -= SGN(na);
+		
 	terms[0] = 3 + AN.poly_num_vars + ABS(na);               // length
 	terms[1] = terms[0] - 1;                                 // length
 	for (int i=0; i<AN.poly_num_vars; i++) terms[2+i] = 0;   // powers
