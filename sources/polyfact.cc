@@ -1598,8 +1598,8 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 		}
 	}
 	
-	// if n>1, factorize over the integers, otherwise over ZZ/p
-	if (n>1) 
+	// set modulus of the factors correctly
+	if (a.modp==0) 
 		for (int i=0; i<(int)f.size(); i++)
 			f[i].setmod(0,1);
 	
