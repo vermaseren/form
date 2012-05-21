@@ -270,6 +270,24 @@ extern VOID TELLFILE(int,POSITION *);
 #endif
 
 /*
+ * Macros for checking nesting levels in the compiler, used as follows:
+ *
+ *   AC.IfSumCheck[AC.IfLevel] = NestingChecksum();
+ *   AC.IfLevel++;
+ *
+ *   AC.IfLevel--;
+ *   if ( AC.IfSumCheck[AC.IfLevel] != NestingChecksum() ) {
+ *     MesNesting();
+ *   }
+ *
+ * Note that NestingChecksum() also contains AC.IfLevel and so in this case
+ * using increment/decrement operators on it in the left-hand side may be
+ * confusing.
+ */
+#define NestingChecksum() (AC.IfLevel + AC.RepLevel + AC.arglevel + AC.insidelevel + AC.termlevel + AC.inexprlevel + AC.dolooplevel)
+#define MesNesting() MesPrint("&Illegal nesting of if, repeat, argument, inside, term, inexpression and do")
+
+/*
   	#] Macro's : 
   	#[ Thread objects :
 */

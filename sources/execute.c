@@ -522,6 +522,10 @@ WORD DoExecute(WORD par, WORD skip)
 		MesPrint(" %d endinside statement(s) missing",AC.insidelevel);
 		RetCode = 1;
 	}
+	if ( AC.inexprlevel > 0 ) {
+		MesPrint(" %d endinexpression statement(s) missing",AC.inexprlevel);
+		RetCode = 1;
+	}
 	if ( AC.NumLabels > 0 ) {
 		for ( i = 0; i < AC.NumLabels; i++ ) {
 			if ( AC.Labels[i] < 0 ) {

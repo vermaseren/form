@@ -1571,8 +1571,7 @@ int DoArgument(UBYTE *s, int par)
         	    ,(WORD)MAXNEST);
             	return(-1);
 	        }
-    	    AC.argsumcheck[AC.arglevel] = AC.IfLevel + AC.RepLevel + AC.insidelevel
-				+ AC.termlevel + AC.dolooplevel;
+			AC.argsumcheck[AC.arglevel] = NestingChecksum();
         	AC.argstack[AC.arglevel] = cbuf[AC.cbufnum].Pointer
 			                       - cbuf[AC.cbufnum].Buffer + 2;
 			AC.arglevel++;
@@ -1808,9 +1807,8 @@ int CoEndArgument(UBYTE *s)
 	}
 	AC.arglevel--;
 	cbuf[AC.cbufnum].Buffer[AC.argstack[AC.arglevel]] = C->numlhs;
-	if ( AC.argsumcheck[AC.arglevel] != ( AC.IfLevel + AC.RepLevel + AC.insidelevel
-		+ AC.termlevel + AC.dolooplevel ) ) {
-		MesPrint("&Illegal nesting of if, repeat, argument");
+	if ( AC.argsumcheck[AC.arglevel] != NestingChecksum() ) {
+		MesNesting();
 		return(1);
 	}
 	return(0);
@@ -1842,9 +1840,8 @@ int CoEndInside(UBYTE *s)
 	}
 	AC.insidelevel--;
 	cbuf[AC.cbufnum].Buffer[AC.insidestack[AC.insidelevel]] = C->numlhs;
-	if ( AC.insidesumcheck[AC.insidelevel] != ( AC.IfLevel + AC.RepLevel
-		+ AC.arglevel + AC.termlevel + AC.dolooplevel ) ) {
-		MesPrint("&Illegal nesting of if, repeat, argument, inside");
+	if ( AC.insidesumcheck[AC.insidelevel] != NestingChecksum() ) {
+		MesNesting();
 		return(1);
 	}
 	return(0);
@@ -3034,8 +3031,7 @@ int CoInExpression(UBYTE *s)
 		MesPrint("@Nesting of inexpression statements more than %d levels",(WORD)MAXNEST);
 		return(-1);
 	}
-	AC.inexprsumcheck[AC.inexprlevel] = AC.IfLevel + AC.RepLevel
-				+ AC.arglevel + AC.termlevel + AC.insidelevel + AC.dolooplevel;
+	AC.inexprsumcheck[AC.inexprlevel] = NestingChecksum();
 	AC.inexprstack[AC.inexprlevel] = cbuf[AC.cbufnum].Pointer
 								 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.inexprlevel++;
@@ -3091,9 +3087,8 @@ int CoEndInExpression(UBYTE *s)
 	}
 	AC.inexprlevel--;
 	cbuf[AC.cbufnum].Buffer[AC.inexprstack[AC.inexprlevel]] = C->numlhs;
-	if ( AC.inexprsumcheck[AC.inexprlevel] != ( AC.IfLevel + AC.RepLevel
-		+ AC.arglevel + AC.termlevel + AC.insidelevel + AC.dolooplevel ) ) {
-		MesPrint("&Illegal nesting of if, repeat, argument, inside, inexpression");
+	if ( AC.inexprsumcheck[AC.inexprlevel] != NestingChecksum() ) {
+		MesNesting();
 		return(1);
 	}
 	return(0);
@@ -3412,8 +3407,7 @@ badsyntax:
 int CoRepeat(UBYTE *inp)
 {
 	int error = 0;
-	AC.RepSumCheck[AC.RepLevel] = AC.IfLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel + AC.dolooplevel;
+	AC.RepSumCheck[AC.RepLevel] = NestingChecksum();
 	AC.RepLevel++;
 	if ( AC.RepLevel > AM.RepMax ) {
 		MesPrint("&Too many repeat levels. Maximum is %d",AM.RepMax);
@@ -3444,9 +3438,8 @@ int CoEndRepeat(UBYTE *inp)
 		AC.RepLevel = 0;
 		return(1);
 	}
-	else if ( AC.RepSumCheck[AC.RepLevel] != AC.IfLevel + AC.arglevel
-		+ AC.insidelevel + AC.termlevel ) {
-		MesPrint("&Illegal nesting of if, repeat, argument");
+	else if ( AC.RepSumCheck[AC.RepLevel] != NestingChecksum() ) {
+		MesNesting();
 		error = 1;
 	}
 	level = C->numlhs+1;
@@ -3954,8 +3947,8 @@ int CoIf(UBYTE *inp)
 /*
 	IfSumCheck is used to test for illegal nesting of if, argument or repeat.
 */
-	AC.IfSumCheck[AC.IfLevel++] = AC.RepLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel + AC.dolooplevel;
+	AC.IfSumCheck[AC.IfLevel] = NestingChecksum();
+	AC.IfLevel++;
 	w = OldWork = AT.WorkPointer;
 	*w++ = TYPEIF;
 	w += 2;
@@ -4387,9 +4380,9 @@ int CoElse(UBYTE *p)
 		error = 1;
 	}
 	if ( AC.IfLevel <= 0 ) { MesPrint("&else statement without if"); return(1); }
-	if ( AC.IfSumCheck[AC.IfLevel-1] != AC.RepLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel + AC.dolooplevel ) {
-		MesPrint("&Illegal nesting of if, repeat, argument"); error = 1;
+	if ( AC.IfSumCheck[AC.IfLevel-1] != NestingChecksum() - 1 ) {
+		MesNesting();
+		error = 1;
 	}
 	Add3Com(TYPEELSE,AC.IfLevel)
 	C->Buffer[AC.IfStack[-1]] = C->numlhs;
@@ -4444,9 +4437,8 @@ int CoEndIf(UBYTE *inp)
 	}
 	AC.IfLevel--;
 	C->Buffer[*--AC.IfStack] = i+1;
-	if ( AC.IfSumCheck[AC.IfLevel] != AC.RepLevel + AC.arglevel + AC.insidelevel
-		+ AC.termlevel + AC.dolooplevel ) {
-		MesPrint("&Illegal nesting of if, repeat, argument");
+	if ( AC.IfSumCheck[AC.IfLevel] != NestingChecksum() ) {
+		MesNesting();
 		error = 1;
 	}
 	Add3Com(TYPEENDIF,i+1)
@@ -4751,8 +4743,7 @@ int CoTerm(UBYTE *s)
 			AC.maxtermlevel *= 2;
 		}
 	}
-	AC.termsumcheck[AC.termlevel] = AC.IfLevel + AC.RepLevel + AC.insidelevel
-								+ AC.arglevel + AC.dolooplevel;
+	AC.termsumcheck[AC.termlevel] = NestingChecksum();
 	AC.termstack[AC.termlevel] = cbuf[AC.cbufnum].Pointer
 			                 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.termsortstack[AC.termlevel] = AC.termstack[AC.termlevel] + 1;
@@ -4786,9 +4777,8 @@ int CoEndTerm(UBYTE *s)
 	AC.termlevel--;
 	cbuf[AC.cbufnum].Buffer[AC.termstack[AC.termlevel]] = C->numlhs;
 	cbuf[AC.cbufnum].Buffer[AC.termsortstack[AC.termlevel]] = C->numlhs;
-	if ( AC.termsumcheck[AC.termlevel] != ( AC.IfLevel + AC.RepLevel
-		 + AC.insidelevel + AC.arglevel + AC.dolooplevel ) ) {
-		MesPrint("&Illegal nesting of if, repeat, argument, term");
+	if ( AC.termsumcheck[AC.termlevel] != NestingChecksum() ) {
+		MesNesting();
 		return(1);
 	}
 	return(0);
@@ -4822,9 +4812,8 @@ int CoSort(UBYTE *s)
 	w++;
 	AC.termsortstack[AC.termlevel-1] = cbuf[AC.cbufnum].Pointer
 			                 - cbuf[AC.cbufnum].Buffer + 3;
-	if ( AC.termsumcheck[AC.termlevel-1] != ( AC.IfLevel + AC.RepLevel
-		 + AC.insidelevel + AC.arglevel + AC.dolooplevel ) ) {
-		MesPrint("&Illegal nesting of if, repeat, argument, term");
+	if ( AC.termsumcheck[AC.termlevel-1] != NestingChecksum() - 1 ) {
+		MesNesting();
 		return(1);
 	}
 	AT.WorkPointer[1] = w - AT.WorkPointer;
@@ -5540,8 +5529,7 @@ int CoDo(UBYTE *inp)
 		AC.doloopnest = newnest;
 		AC.doloopstacksize = newsize;
 	}
-	AC.doloopnest[AC.dolooplevel] = AC.IfLevel + AC.RepLevel
-		 + AC.insidelevel + AC.arglevel + AC.termlevel;
+	AC.doloopnest[AC.dolooplevel] = NestingChecksum();
 
 	w = AT.WorkPointer;
 	*w++ = TYPEDOLOOP;
@@ -5637,9 +5625,8 @@ int CoEndDo(UBYTE *inp)
 	scratch[2] = AC.doloopstack[AC.dolooplevel];
 	AddNtoL(3,scratch);
 	cbuf[AC.cbufnum].lhs[AC.doloopstack[AC.dolooplevel]][3] = C->numlhs;
-	if ( AC.doloopnest[AC.dolooplevel] != ( AC.IfLevel + AC.RepLevel
-		 + AC.insidelevel + AC.arglevel + AC.termlevel ) ) {
-		MesPrint("&Illegal nesting of if, repeat, argument, term, do");
+	if ( AC.doloopnest[AC.dolooplevel] != NestingChecksum() ) {
+		MesNesting();
 		return(1);
 	}
 	return(0);

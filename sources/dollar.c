@@ -1599,8 +1599,7 @@ int ExecInside(UBYTE *s)
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
-	AC.insidesumcheck[AC.insidelevel] = AC.IfLevel + AC.RepLevel
-				+ AC.arglevel + AC.termlevel;
+	AC.insidesumcheck[AC.insidelevel] = NestingChecksum();
 	AC.insidestack[AC.insidelevel] = cbuf[AC.cbufnum].Pointer
 								 - cbuf[AC.cbufnum].Buffer + 2;
 	AC.insidelevel++;
