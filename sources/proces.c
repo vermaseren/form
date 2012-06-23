@@ -1664,20 +1664,33 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 						i *= TABLEEXTENSION;
 						if ( T->tablepointers[i] == -1 ) {
 teststrict:					if ( T->strict == -2 ) {
+/*
 								AN.ncmod = oldncmod;
-								term[0] = 0; return(0);
+								term[0] = 0;
+								return(0);
+
+								This goes wrong inside functions.
+								We need a pointer to a zero expression.
+								The following is slower but more general
+*/
+								rhsnumber = AM.zerorhs;
+								tbufnum = AM.zbufnum;
 							}
-							if ( T->strict < 0 ) goto NextFun;
-							MLOCK(ErrorMessageLock);
-							MesPrint("Element in table is undefined");
-							goto showtable;
+							else if ( T->strict < 0 ) goto NextFun;
+							else {
+								MLOCK(ErrorMessageLock);
+								MesPrint("Element in table is undefined");
+								goto showtable;
+							}
 						}
-						rhsnumber = T->tablepointers[i];
+						else {
+							rhsnumber = T->tablepointers[i];
 #if ( TABLEEXTENSION == 2 )
-						tbufnum = T->bufnum;
+							tbufnum = T->bufnum;
 #else
-						tbufnum = T->tablepointers[i+1];
+							tbufnum = T->tablepointers[i+1];
 #endif
+						}
 					}
 /*
 					If there are more arguments we have to do some
@@ -1778,7 +1791,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -3874,7 +3887,7 @@ AutoGen:	i = *AT.TMout;
 				PUTZERO(AT.posWorkSpace[position]); position++;
 			}
 			position = olpw;
-			if ( ( renumber = GetTable(replac,&(AT.posWorkSpace[position])) ) == 0 ) goto GenCall;
+			if ( ( renumber = GetTable(replac,&(AT.posWorkSpace[position]),1) ) == 0 ) goto GenCall;
 			dummies = AT.WorkPointer;
 			*dummies++ = AR.CurDum;
 			AT.WorkPointer += power+2;

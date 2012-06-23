@@ -755,6 +755,14 @@ VOID StartVariables()
 	AM.dbufnum = inicbufs();		/* Buffer for dollar variables */
 	AM.sbufnum = inicbufs();		/* Subterm buffer for polynomials and optimization */
 	AC.ffbufnum = inicbufs();		/* Buffer number for user defined factorizations */
+	AM.zbufnum = inicbufs();		/* For very special values */
+	{
+		CBUF *C = cbuf+AM.zbufnum;
+		WORD zero = 0;
+		AddRHS(AM.zbufnum,1);
+		AM.zerorhs = C->numrhs;
+		AddNtoC(AM.zbufnum,1,&zero);
+	}
 	AP.inside.inscbuf = inicbufs();	/* For the #inside instruction */
 /*
 	Enter the built in objects
@@ -920,7 +928,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables : 
+ 		#] StartVariables :
  		#[ StartMore :
 */
 

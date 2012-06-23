@@ -1263,6 +1263,7 @@ struct M_const {
     int     rbufnum;               /* (M) startup compiler buffer */
     int     dbufnum;               /* (M) dollar variables */
     int     sbufnum;               /* (M) subterm variables */
+    int     zbufnum;               /* (M) special values */
     int     SkipClears;            /* (M) Number of .clear to skip at start */
     int     gTokensWriteFlag;      /* (M) */
     int     gfunpowers;            /* (M) */
@@ -1347,11 +1348,12 @@ struct M_const {
     WORD    ggShortStatsMax;       /**< For  On FewerStatistics 10; */
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
+    WORD    zerorhs;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,51,73,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,52,74,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,51,73,0);
+	PADPOSITION(15,22,52,74,0);
 #endif
 };
 /*
