@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
 #define HIDEDEBUG
   	#[ Includes : store.c
@@ -37,7 +37,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ StoreExpressions :
  		#[ OpenTemp :
 
@@ -57,7 +57,7 @@ WORD OpenTemp()
 }
 
 /*
- 		#] OpenTemp :
+ 		#] OpenTemp : 
  		#[ SeekScratch :
 */
 
@@ -68,7 +68,7 @@ VOID SeekScratch(FILEHANDLE *fi, POSITION *pos)
 }
 
 /*
- 		#] SeekScratch :
+ 		#] SeekScratch : 
  		#[ SetEndScratch :
 */
 
@@ -82,7 +82,7 @@ VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndScratch :
+ 		#] SetEndScratch : 
  		#[ SetEndHScratch :
 */
 
@@ -108,7 +108,7 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
 }
 
 /*
- 		#] SetEndHScratch :
+ 		#] SetEndHScratch : 
  		#[ SetScratch :
 */
 
@@ -179,7 +179,7 @@ endpos:
 }
 
 /*
- 		#] SetScratch :
+ 		#] SetScratch : 
  		#[ RevertScratch :
 
 		Reverts the input/output directions. This way input comes
@@ -223,7 +223,7 @@ WORD RevertScratch()
 }
 
 /*
- 		#] RevertScratch :
+ 		#] RevertScratch : 
  		#[ ResetScratch :
 
 		Resets the output scratch file to its beginning in such a way
@@ -264,7 +264,7 @@ WORD ResetScratch()
 }
 
 /*
- 		#] ResetScratch :
+ 		#] ResetScratch : 
  		#[ CoSave :
 
 		The syntax of the save statement is:
@@ -347,7 +347,7 @@ int CoSave(UBYTE *inp)
 					TMproto[3] = 1;
 					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 					AT.TMaddr = TMproto;
-					if ( ( indold = FindInIndex(number,&AR.StoreData,0) ) != 0 ) {
+					if ( ( indold = FindInIndex(number,&AR.StoreData,0,0) ) != 0 ) {
 						if ( i <= 0 ) {
 /*
 							AO.SaveData.Index.next = filesize;
@@ -468,7 +468,7 @@ SavWrt:
 }
 
 /*
- 		#] CoSave :
+ 		#] CoSave : 
  		#[ CoLoad :
 */
 
@@ -548,7 +548,7 @@ int CoLoad(UBYTE *inp)
 					SeekFile(AO.SaveData.Handle,&firstposition,SEEK_SET);
 					AO.SaveData.Position = firstposition;
 					if ( ReadSaveIndex(&AO.SaveData.Index) ) goto LoadRead;
-					if ( ( ind = FindInIndex(num,&AO.SaveData,1) ) != 0 ) {
+					if ( ( ind = FindInIndex(num,&AO.SaveData,1,0) ) != 0 ) {
 						if ( !error ) {
 							if ( PutInStore(ind,num) ) error = -1;
 							else if ( !AM.silent && silentload == 0 )
@@ -664,7 +664,7 @@ LoadRead:
 }
 
 /*
- 		#] CoLoad :
+ 		#] CoLoad : 
  		#[ DeleteStore :
 
 		Routine deletes the contents of the entire storage file.
@@ -749,7 +749,7 @@ WORD DeleteStore(WORD par)
 }
 
 /*
- 		#] DeleteStore :
+ 		#] DeleteStore : 
  		#[ PutInStore :
 
 		Copies the expression indicated by ind from a load file to the
@@ -855,7 +855,7 @@ PutErrS:
 }
 
 /*
- 		#] PutInStore :
+ 		#] PutInStore : 
  		#[ GetTerm :
 
 		Gets one term from input scratch stream.
@@ -1117,7 +1117,7 @@ RegRet:;
 		}
 	}
 /*
-			#] debug :
+			#] debug : 
 */
 	return(*from);
 GTerr:
@@ -1127,7 +1127,7 @@ GTerr:
 }
 
 /*
- 		#] GetTerm :
+ 		#] GetTerm : 
  		#[ GetOneTerm :
 
 		Gets one term from stream AR.infile->handle.
@@ -1298,7 +1298,7 @@ ErrGet:
 }
 
 /*
- 		#] GetOneTerm :
+ 		#] GetOneTerm : 
  		#[ GetMoreTerms :
 	Routine collects more contents of brackets inside a function,
 	indicated by the number in AC.CollectFun.
@@ -1400,7 +1400,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreTerms :
+ 		#] GetMoreTerms : 
  		#[ GetMoreFromMem :
 
 */
@@ -1492,7 +1492,7 @@ FullTerm:
 }
 
 /*
- 		#] GetMoreFromMem :
+ 		#] GetMoreFromMem : 
  		#[ GetFromStore :
 
 		Gets a single term from the storage file at position and puts
@@ -1701,7 +1701,7 @@ PastErr:
 }
 
 /*
- 		#] GetFromStore :
+ 		#] GetFromStore : 
  		#[ DetVars :			VOID DetVars(term)
 
 	Determines which variables are used in term.
@@ -1885,7 +1885,7 @@ Tensors:
 }
 
 /*
- 		#] DetVars :
+ 		#] DetVars : 
  		#[ ToStorage :
 
 	This routine takes an expression in the scratch buffer (indicated by e)
@@ -2126,7 +2126,7 @@ ErrReturn:
 }
 
 /*
- 		#] ToStorage :
+ 		#] ToStorage : 
  		#[ NextFileIndex :
 */
 
@@ -2183,7 +2183,7 @@ ErrNextS:
 }
 
 /*
- 		#] NextFileIndex :
+ 		#] NextFileIndex : 
  		#[ SetFileIndex :
 */
 
@@ -2233,7 +2233,7 @@ WORD SetFileIndex()
 }
 
 /*
- 		#] SetFileIndex :
+ 		#] SetFileIndex : 
  		#[ VarStore :
 */
 
@@ -2273,7 +2273,7 @@ WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 }
 
 /*
- 		#] VarStore :
+ 		#] VarStore : 
  		#[ TermRenumber :
 
 		renumbers the variables inside term according to the information
@@ -2439,7 +2439,7 @@ ErrR:
 }
 
 /*
- 		#] TermRenumber :
+ 		#] TermRenumber : 
  		#[ FindrNumber :
 */
 
@@ -2504,7 +2504,7 @@ ErrFindr2:
 }
 
 /*
- 		#] FindrNumber :
+ 		#] FindrNumber : 
  		#[ FindInIndex :
 
 		Finds an expression in the storage index if it exists.
@@ -2516,9 +2516,11 @@ ErrFindr2:
 		to be searched are in AT.TMaddr. This includes the primary expression
 		and a possible FROMBRAC information. The FROMBRAC is always last.
 
+		The parameter mode tells whether we should worry about arguments of
+		a stored expression.
 */
 
-INDEXENTRY *FindInIndex(WORD expr, FILEDATA *f, WORD par)
+INDEXENTRY *FindInIndex(WORD expr, FILEDATA *f, WORD par, WORD mode)
 {
 	GETIDENTITY
 	INDEXENTRY *ind;
@@ -2593,7 +2595,7 @@ MesPrint("index: size: %d",ind->size);
 						m += m[1];
 						m2 += m2[1];
 					}
-					if ( m >= stop && m2 >= stop2 ) {
+					if ( ( m >= stop && m2 >= stop2 ) || mode == 0 ) {
 						AT.WorkPointer = stop2;
 
 						return(ind);
@@ -2644,7 +2646,7 @@ ErrGt2:
 }
 
 /*
- 		#] FindInIndex :
+ 		#] FindInIndex : 
  		#[ GetTable :
 
 		Locates stored files and constructs the renumbering tables.
@@ -2674,9 +2676,12 @@ ErrGt2:
 		This Doesn't work well for TFORM yet.!!!!!!!!
 		e[x1,x2] versus e[x2,x1] messes up.
 		For the rest is the reloading during execution not thread safe.
+
+		The parameter mode tells whether we should worry about arguments
+		of a stored expression.
 */
 
-RENUMBER GetTable(WORD expr, POSITION *position)
+RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 {
 	GETIDENTITY
 	WORD i, j;
@@ -2712,7 +2717,7 @@ RENUMBER GetTable(WORD expr, POSITION *position)
 	This sets the WorkPointer. Hence be careful now.
 */
 	LOCK(AM.storefilelock);
-	if ( ( ind = FindInIndex(expr,&AR.StoreData,0) ) == 0 ) {
+	if ( ( ind = FindInIndex(expr,&AR.StoreData,0,mode) ) == 0 ) {
 		UNLOCK(AM.storefilelock);
 		return(0);
 	}
@@ -2881,7 +2886,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Indices :
+			#] Indices : 
 			#[ Vectors :
 */
 	{
@@ -2923,7 +2928,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Vectors :
+			#] Vectors : 
 			#[ Functions :
 */
 	{
@@ -2969,7 +2974,7 @@ GetTb3:
 	}
 	}
 /*
-			#] Functions :
+			#] Functions : 
 
 	Now we skip the prototype. This sets the start position at the first term
 */
@@ -3093,7 +3098,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.
@@ -3267,7 +3272,7 @@ WriteTrailer:
 }
 
 /*
- 		#] CopyExpression :
+ 		#] CopyExpression : 
  		#[ ExprStatus :
 */
 
@@ -3306,7 +3311,7 @@ void ExprStatus(EXPRESSIONS e)
 #endif
 
 /*
- 		#] ExprStatus :
+ 		#] ExprStatus : 
 	#] StoreExpressions :
 	#[ System Independent Saved Expressions :
 
@@ -3393,7 +3398,7 @@ static void Flip64(UBYTE *p) { FlipN(p, 8); }
 static void Flip128(UBYTE *p) { FlipN(p, 16); }
 
 /*
- 		#] Flip :
+ 		#] Flip : 
  		#[ Resize :
 */
 
@@ -3600,7 +3605,7 @@ static void Resize128t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8
 static void Resize128t64NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 8); }
 
 /*
- 		#] Resize :
+ 		#] Resize : 
  		#[ CheckPower and RenumberVec :
 */
 
@@ -3642,7 +3647,7 @@ static void RenumberVec32(UBYTE *p)
 }
 
 /*
- 		#] CheckPower and RenumberVec :
+ 		#] CheckPower and RenumberVec : 
  		#[ ResizeCoeff :
 */
 
@@ -3754,7 +3759,7 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 }
 
 /*
- 		#] ResizeCoeff :
+ 		#] ResizeCoeff : 
  		#[ WriteStoreHeader :
 */
 
@@ -3821,7 +3826,7 @@ WORD WriteStoreHeader(WORD handle)
 }
 
 /*
- 		#] WriteStoreHeader :
+ 		#] WriteStoreHeader : 
  		#[ CompactifySizeof :
 */
 
@@ -3845,7 +3850,7 @@ static unsigned int CompactifySizeof(unsigned int size)
 }
 
 /*
- 		#] CompactifySizeof :
+ 		#] CompactifySizeof : 
  		#[ ReadSaveHeader :
 */
 
@@ -3963,7 +3968,7 @@ WORD ReadSaveHeader()
 }
 
 /*
- 		#] ReadSaveHeader :
+ 		#] ReadSaveHeader : 
  		#[ ReadSaveIndex :
 */
 
@@ -4132,7 +4137,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 }
 
 /*
- 		#] ReadSaveIndex :
+ 		#] ReadSaveIndex : 
  		#[ ReadSaveVariables :
 */
 
@@ -4492,7 +4497,7 @@ RSVEnd:
 }
 
 /*
- 		#] ReadSaveVariables :
+ 		#] ReadSaveVariables : 
  		#[ ReadSaveTerm :
 */
 
@@ -4909,7 +4914,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 }
 
 /*
- 		#] ReadSaveTerm :
+ 		#] ReadSaveTerm : 
  		#[ ReadSaveExpression :
 */
 
@@ -5035,6 +5040,6 @@ WORD ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 }
 
 /*
- 		#] ReadSaveExpression :
+ 		#] ReadSaveExpression : 
 	#] System Independent Saved Expressions :
 */

@@ -1255,7 +1255,7 @@ void ExchangeExpressions(int num1, int num2)
 		TMproto[3] = 1;
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
-		ind = FindInIndex(num1,&AR.StoreData,0);
+		ind = FindInIndex(num1,&AR.StoreData,0,0);
 		s1 = (SBYTE *)(AC.exprnames->namebuffer+e1->name);
 		i = e1->namesize;
 		s2 = ind->name;
@@ -1279,7 +1279,7 @@ void ExchangeExpressions(int num1, int num2)
 		TMproto[3] = 1;
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
-		ind = FindInIndex(num1,&AR.StoreData,0);
+		ind = FindInIndex(num1,&AR.StoreData,0,0);
 		s1 = (SBYTE *)(AC.exprnames->namebuffer+e2->name);
 		i = e2->namesize;
 		s2 = ind->name;
@@ -1325,7 +1325,7 @@ int GetFirstBracket(WORD *term, int num)
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
 		PUTZERO(position);
-		if ( ( renumber = GetTable(num,&position) ) == 0 ) {
+		if ( ( renumber = GetTable(num,&position,0) ) == 0 ) {
 			MesCall("GetFirstBracket");
 			SETERROR(-1)
 		}
@@ -1429,7 +1429,7 @@ int GetFirstTerm(WORD *term, int num)
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
 		PUTZERO(position);
-		if ( ( renumber = GetTable(num,&position) ) == 0 ) {
+		if ( ( renumber = GetTable(num,&position,0) ) == 0 ) {
 			MesCall("GetFirstTerm");
 			SETERROR(-1)
 		}
@@ -1525,7 +1525,7 @@ int GetContent(WORD *content, int num)
 		{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 		AT.TMaddr = TMproto;
 		PUTZERO(position);
-		if ( ( renumber = GetTable(num,&position) ) == 0 ) goto CalledFrom;
+		if ( ( renumber = GetTable(num,&position,0) ) == 0 ) goto CalledFrom;
 		if ( GetFromStore(cbuffer,&position,renumber,&numword,num) < 0 ) goto CalledFrom;
 		for(;;) {
 			term = oldworkpointer;

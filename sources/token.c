@@ -1956,7 +1956,7 @@ int simp6token(SBYTE *tokens, int mode)
 #ifdef WITHPTHREADS
 						renumber = 
 #endif
-							GetTable(n,&position) ) == 0 ) {
+							GetTable(n,&position,0) ) == 0 ) {
 						error = 1;
 						MesPrint("&Problems getting information about stored expression %s(4)"
 						,EXPRNAME(n));
