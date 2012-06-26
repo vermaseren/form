@@ -1357,9 +1357,20 @@ doall:;			if ( AP.eat < 0 ) {
  		#[ ExpandTripleDots :
 */
 
+static inline int IsSignChar(const UBYTE *s)
+{
+	return *s == '+' || *s == '-';
+}
+
+static inline int CanParseSignedNumber(const UBYTE *s)
+{
+	while ( IsSignChar(s) ) s++;
+	return FG.cTable[*s] == 1;
+}
+
 int ExpandTripleDots(int par)
 {
-	UBYTE *s, *s1, *s2, *n1, *n2, *m1, *t1, *t2, *startp, operator1, operator2, c, cc;
+	UBYTE *s, *s1, *s2, *n1, *n2, *t1, *t2, *startp, operator1, operator2, c, cc;
 	UBYTE *nBuffer, *strngs, *Buffer, *Stop;
 	LONG withquestion, x1, x2, y1, y2, number, inc, newsize, pow, fullsize;
 	int i, error = 0, i1 ,i2, ii, *nums = 0;
@@ -1544,39 +1555,30 @@ int ExpandTripleDots(int par)
 			n1 = s1; n2 = s2; ii = -1; i = 0;
 			s = strngs;			
 			while ( n1 < t1 || n2 < t2 ) {
-				m1 = n1;
-				if ( *n1 == *n2 && FG.cTable[*n1] != 1 ) { *s++ = *n1++; n2++; continue; }
-				if ( FG.cTable[*n1] == 1 && FG.cTable[*n2] == 1 ) {}
-				else if ( FG.cTable[n1[-1]] == 1 &&
-				 ( FG.cTable[*n1] == 1 || FG.cTable[*n2] == 1 ) ) {}
-				else if ( ( *n1 == '+' || *n1 == '-' || FG.cTable[*n1] == 1 )
-				&& ( *n2 == '+' || *n2 == '-' || FG.cTable[*n2] == 1 ) ) {}
-				else {
-					n1--; n2--; s[-1] = 0; break;
+				/* Check the next characters can be parsed as numbers including signs. */
+				if ( CanParseSignedNumber(n1) && CanParseSignedNumber(n2) ) {
+					/* Don't allow the cases that one has the sign and the other doesn't. */
+					if ( ! ( IsSignChar(n1) ^ IsSignChar(n2) ) ) {
+						if ( IsSignChar(n1) ) {
+							*s++ = *n1;  /* Marker indicating we need the sign. */
+						}
+					} else break;
+				} else {
+					/* If they are not numbers, they should be same. */
+					if ( *n1 == *n2 ) { *s++ = *n1++; n2++; continue; }
+					else break;
 				}
-
-				if ( ( *n1 == '-' || *n1 == '+' ) && FG.cTable[*n2] == 1
-				 && FG.cTable[n1[-1]] == 1 ) {
-					n1--; n2--; s[-1] = 0; break;
-				}
-
-				if ( ( *n2 == '-' || *n2 == '+' ) && FG.cTable[*n1] == 1
-				 && FG.cTable[n2[-1]] == 1 ) {
-					n1--; n2--; s[-1] = 0; break;
-				}
-
-				while ( FG.cTable[n1[-1]] == 1 ) { s--; n1--; }
-				while ( n1[-1] == '+' || n1[-1] == '-' )
-					{ n1--; }
-				while ( FG.cTable[n2[-1]] == 1 || n2[-1] == '+' || n2[-1] == '-' )
-					n2--;
 				ParseSignedNumber(x1,n1)
 				ParseSignedNumber(x2,n2)
-				if ( FG.cTable[n1[-1]] != 1 || FG.cTable[n2[-1]] != 1 ) {
-					n1--; n2--; s[-1] = 0; break;
-				}
 				if ( x1 == x2 ) {
-					while ( m1 < n1 ) *s++ = *m1++;
+					if ( s != strngs && ( s[-1] == '+' || s[-1] == '-' ) ) {
+						/* We need the sign. */
+						s--;
+						if ( x1 >= 0 ) {
+							*s++ = '+';
+						}
+					}
+					s = NumCopy(x1, s);
 				}
 				else {
 					nums[2*i] = x1; nums[2*i+1] = x2;
@@ -1647,6 +1649,13 @@ theend:			M_free(nums,"Expand ...");
 			for ( i1 = 0; i1 < ii; i1++ ) {
 				s = strngs; while ( *s ) *n1++ = *s++;
 				for ( i2 = 0; i2 < i; i2++ ) {
+					if ( s != strngs && ( n1[-1] == '+' || n1[-1] == '-' ) ) {
+						/* We need the sign of counters. */
+						n1--;
+						if ( nums[2*i2] >= 0 ) {
+							*n1++ = '+';
+						}
+					}
 					n1 = NumCopy((WORD)(nums[2*i2]),n1);
 					if ( nums[2*i2] > nums[2*i2+1] ) nums[2*i2]--;
 					else nums[2*i2]++;
