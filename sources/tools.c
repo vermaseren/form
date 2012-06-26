@@ -512,7 +512,11 @@ STREAM *CloseStream(STREAM *stream)
 		M_free(stream->FoldName,"stream->FoldName");
 		stream->FoldName = 0;
 	}
-	if ( stream->type == FILESTREAM ) CloseFile(stream->handle);
+	if ( stream->type == FILESTREAM ) {
+		CloseFile(stream->handle);
+		if ( stream->buffer != 0 ) M_free(stream->buffer,"name of input stream");
+		stream->buffer = 0;
+	}
 #ifdef WITHPIPE
 	else if ( stream->type == PIPESTREAM ) {
 		RWLOCKW(AM.handlelock);
