@@ -576,7 +576,7 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 		if (a[i].number_of_terms() == 0) return vector<poly>();
 		cnt /= a[i].number_of_terms();
 	}
-	
+
 	if (cnt>0) {
 		// state[n][d]: coefficient of x^d in a[n] is
 		// 0: non-existent, 1: undetermined, 2: determined
@@ -631,9 +631,9 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 						else
 							rhs -= coeff;
 					}
-
 					// solve equation
 					if (A.modn > 1) rhs.setmod(0,1);
+					if (lhs.is_zero() || !(rhs%lhs).is_zero()) return vector<poly>();
 					a[which_idx] += (rhs / lhs - a[which_idx].coefficient(x[0],which_deg)) * poly::simple_poly(BHEAD x[0],0,which_deg);
 					state[which_idx][which_deg] = 2;
 
@@ -656,7 +656,7 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 
 		if (check == A) return a;
 	}
-	
+
 	// Second method: Hensel lifting
 	
 	// Calculate A and lc's modulo Ii = <xi-c{i-1],...,xm-c{m-1}> (for i=2,...,m)
