@@ -728,6 +728,10 @@ VOID StartVariables()
 	AO.FortDotChar = '_';
 	AO.ErrorBlock = 0;
 	AC.firstconstindex = 1;
+	AO.Optimize.horner = O_MCTS;
+	AO.Optimize.method = O_CSEGREEDY;
+	AO.Optimize.timelimit = 100;
+	AO.Optimize.mctscount = 10000;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;
  	AC.doloopstacksize = 0;

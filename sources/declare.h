@@ -944,6 +944,7 @@ extern int    CoOff(UBYTE *);
 extern int    CoOn(UBYTE *);
 extern int    CoOnce(UBYTE *);
 extern int    CoOnly(UBYTE *);
+extern int    CoOptimize(UBYTE *);
 extern int    CoPolyFun(UBYTE *);
 extern int    CoPolyRatFun(UBYTE *);
 extern int    CoPrint(UBYTE *);

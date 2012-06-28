@@ -5823,4 +5823,105 @@ int DoFactorize(UBYTE *s,int par)
 
 /*
   	#] DoFactorize : 
+  	#[ CoOptimize :
+
+*/
+
+int CoOptimize(UBYTE *s)
+{
+	UBYTE *name, *t1, *t2, c1, c2, *value, *u;
+	int error = 0, x;
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	while ( *s ) {
+		name = s; while ( FG.cTable[*s] == 0 ) s++;
+		t1 = s; c1 = *t1;
+		while ( *s == ' ' || *s == '\t' ) s++;
+		if ( *s != '=' ) {
+correctuse:
+			MesPrint("&Correct use in Optimize statement is Optionname=value");
+			error = 1;
+			while ( *s == ' ' || *s == ',' || *s == '\t' || *s == '=' ) s++;
+			*t1 = c1;
+			continue;
+		}
+		*t1 = 0;
+		s++;
+		while ( *s == ' ' || *s == '\t' ) s++;
+		if ( *s == 0 ) goto correctuse;
+		value = s; while ( FG.cTable[*s] <= 1 ) s++;
+		t2 = s; c2 = *t2;
+		while ( *s == ' ' || *s == '\t' ) s++;
+		if ( *s && *s != ',' ) goto correctuse;
+		if ( *s ) {
+			s++;
+			while ( *s == ' ' || *s == '\t' ) s++;
+		}
+		*t2 = 0;
+/*
+		Now we have name=value with name and value zero terminated strings.
+*/
+		if ( StrICmp(name,(UBYTE *)"horner") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"occurrence") == 0 ) {
+				AO.Optimize.horner = O_OCCURRENCE;
+			}
+			else if ( StrICmp(value,(UBYTE *)"mcts") == 0 ) {
+				AO.Optimize.horner = O_MCTS;
+			}
+			else {
+				AO.Optimize.horner = -1;
+				MesPrint("&Unrecognized option value in Optimize statement: %s=%s",name,value);
+				error = 1;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"method") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"cse") == 0 ) {
+				AO.Optimize.method = O_CSE;
+			}
+			else if ( StrICmp(value,(UBYTE *)"csegreedy") == 0 ) {
+				AO.Optimize.method = O_CSEGREEDY;
+			}
+			else if ( StrICmp(value,(UBYTE *)"greedy") == 0 ) {
+				AO.Optimize.method = O_GREEDY;
+			}
+			else {
+				AO.Optimize.method = -1;
+				MesPrint("&Unrecognized option value in Optimize statement: %s=%s",name,value);
+				error = 1;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"timelimit") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option TimeLimit in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.timelimit = 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.timelimit = x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"mctscount") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option MCTScount in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.mctscount= 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.mctscount= x;
+			}
+		}
+		else {
+			MesPrint("&Unrecognized option name in Optimize statement: %s",name);
+			error = 1;
+		}
+		*t1 = c1; *t2 = c2;
+	}
+	return(error);
+}
+
+/*
+  	#] CoOptimize :
 */

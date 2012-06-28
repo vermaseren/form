@@ -1190,6 +1190,17 @@ typedef struct {
 } MODNUM;
 
 /*
+	Struct for optimizing outputs. If changed, do not forget to change
+	the padding information in the AO struct.
+*/
+typedef struct {
+	int		horner;
+	int		method;
+	int		timelimit;
+	int		mctscount;
+} OPTIMIZE;
+
+/*
   	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
@@ -2109,6 +2120,7 @@ struct O_const {
     LONG    wlen;                  /* (O) Used to store files. */
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
     LONG    DollarInOutBuffer;     /* (O) Characters in DollarOutBuffer */
+	OPTIMIZE Optimize;             /* Contains 4 ints */
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
@@ -2130,9 +2142,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(23,6,3,16,1);
+	PADPOSITION(23,6,7,16,1);
 #else
-	PADPOSITION(23,4,3,16,1);
+	PADPOSITION(23,4,7,16,1);
 #endif
 };
 /*
