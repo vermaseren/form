@@ -1357,14 +1357,19 @@ doall:;			if ( AP.eat < 0 ) {
  		#[ ExpandTripleDots :
 */
 
-static inline int IsSignChar(const UBYTE *s)
+static inline int IsSignChar(UBYTE c)
 {
-	return *s == '+' || *s == '-';
+	return c == '+' || c == '-';
+}
+
+static inline int IsAlphanumericChar(UBYTE c)
+{
+	return FG.cTable[c] == 0 || FG.cTable[c] == 1;
 }
 
 static inline int CanParseSignedNumber(const UBYTE *s)
 {
-	while ( IsSignChar(s) ) s++;
+	while ( IsSignChar(*s) ) s++;
 	return FG.cTable[*s] == 1;
 }
 
@@ -1557,12 +1562,22 @@ int ExpandTripleDots(int par)
 			while ( n1 < t1 || n2 < t2 ) {
 				/* Check the next characters can be parsed as numbers including signs. */
 				if ( CanParseSignedNumber(n1) && CanParseSignedNumber(n2) ) {
-					/* Don't allow the cases that one has the sign and the other doesn't. */
-					if ( ! ( IsSignChar(n1) ^ IsSignChar(n2) ) ) {
-						if ( IsSignChar(n1) ) {
-							*s++ = *n1;  /* Marker indicating we need the sign. */
-						}
-					} else break;
+					/*
+					 * Don't allow the cases that one has the sign and the other doesn't,
+					 * and the meaning changes without the sign. For example,
+					 *   <f(1)>+...+<f(3)>       Allowed
+					 *   <f(-2)>+...+<f(2)>      Allowed
+					 *   <f(x-2)>+...+<f(x+2)>   Allowed
+					 *   <f(x-2)>+...+<f(x2)>    Not allowed
+					 */
+					int sign1 = IsSignChar(*n1);
+					int sign2 = IsSignChar(*n2);
+					int inword1 = s1 < n1 && IsAlphanumericChar(n1[-1]);
+					int inword2 = s2 < n2 && IsAlphanumericChar(n2[-1]);
+					if ( ( sign1 ^ sign2 ) && ( inword1 || inword2 ) ) break;  /* Not allowed. */
+					if ( sign1 || sign2 ) {
+						*s++ = '+';  /* Marker indicating we need the sign. */
+					}
 				} else {
 					/* If they are not numbers, they should be same. */
 					if ( *n1 == *n2 ) { *s++ = *n1++; n2++; continue; }
@@ -1649,7 +1664,7 @@ theend:			M_free(nums,"Expand ...");
 			for ( i1 = 0; i1 < ii; i1++ ) {
 				s = strngs; while ( *s ) *n1++ = *s++;
 				for ( i2 = 0; i2 < i; i2++ ) {
-					if ( s != strngs && ( n1[-1] == '+' || n1[-1] == '-' ) ) {
+					if ( n1 > nBuffer && IsSignChar(n1[-1]) ) {
 						/* We need the sign of counters. */
 						n1--;
 						if ( nums[2*i2] >= 0 ) {
