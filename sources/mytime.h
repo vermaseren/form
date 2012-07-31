@@ -27,3 +27,4 @@
 /* #] License : */ 
 
 double thetime();
+std::string thetime_str();

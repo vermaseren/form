@@ -1,5 +1,7 @@
 #include <sys/time.h>
 #include <cstdlib>
+#include <cstdio>
+#include <string>
 
 #ifndef timersub
 /* timersub is not in POSIX, but presents on most BSD derivatives.
@@ -28,4 +30,10 @@ double thetime () {
   gettimeofday(&now,NULL);
   timersub(&now,&starttime,&diff);
   return diff.tv_sec+diff.tv_usec/1000000.0;
+}
+
+std::string thetime_str() {
+	char res[10];
+	sprintf (res,"%.4lf", thetime());
+	return res;
 }

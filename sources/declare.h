@@ -41,7 +41,7 @@
 #define MaX(x,y) ((x) > (y) ? (x): (y))
 #define MiN(x,y) ((x) < (y) ? (x): (y))
 #define ABS(x) ( (x) < 0 ? -(x): (x) )
-#define SGN(x) ( (x) < 0 ? -1 : 1 )
+#define SGN(x) ( (x) > 0 ? 1 : (x) < 0 ? -1 : 0 )
 #define REDLENG(x) ((((x)<0)?((x)+1):((x)-1))>>1)
 #define INCLENG(x) (((x)<0)?(((x)<<1)-1):(((x)<<1)+1))
 #define GETCOEF(x,y) x += *x;y = x[-1];x -= ABS(y);y=REDLENG(y)
@@ -1397,6 +1397,14 @@ extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
+
+#ifdef WITHPTHREADS
+extern void find_Horner_MCTS_expand_tree();
+extern void find_Horner_MCTS_expand_tree_threaded();
+extern void optimize_expression_given_Horner();
+extern void optimize_expression_given_Horner_threaded();
+#endif
+
 /*
   	#] Declarations : 
 */

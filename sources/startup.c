@@ -729,9 +729,14 @@ VOID StartVariables()
 	AO.ErrorBlock = 0;
 	AC.firstconstindex = 1;
 	AO.Optimize.horner = O_MCTS;
-	AO.Optimize.method = O_CSEGREEDY;
-	AO.Optimize.timelimit = 100;
-	AO.Optimize.mctscount = 10000;
+	AO.Optimize.method = O_GREEDY;
+	AO.Optimize.mctstimelimit = 0;
+	AO.Optimize.mctsnumexpand = 1000;
+	AO.Optimize.mctsconstant = 1.0;
+	AO.Optimize.mctsnumkeep = 10;
+	AO.Optimize.greedytimelimit = 0;
+	AO.Optimize.greedyminnum = 10;
+	AO.Optimize.greedymaxperc = 5;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;
  	AC.doloopstacksize = 0;

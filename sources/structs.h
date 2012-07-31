@@ -1194,10 +1194,17 @@ typedef struct {
 	the padding information in the AO struct.
 */
 typedef struct {
-	int		horner;
-	int		method;
-	int		timelimit;
-	int		mctscount;
+	int   horner;
+	int   method;
+	int   mctstimelimit;
+	int   mctsnumexpand;
+	int   mctsnumkeep;
+	float mctsconstant;
+	int   greedytimelimit;
+	int   greedyminnum;
+	int   greedymaxperc;
+	
+	PADLONG(9,0,0);
 } OPTIMIZE;
 
 /*

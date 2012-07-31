@@ -1790,6 +1790,14 @@ bucketstolen:;
 /*
 			#] CLEARCLOCK : 
 */
+  		case MCTSEXPANDTREE:
+				find_Horner_MCTS_expand_tree();
+				break;
+
+    	case OPTIMIZEEXPRESSION:
+				optimize_expression_given_Horner();
+				break;
+			
 			default:
 				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
@@ -4799,4 +4807,19 @@ void UnSetMods()
 /*
   	#] UnSetMods : 
 */
+
+void find_Horner_MCTS_expand_tree_threaded() {
+	int id;
+	while (( id = GetAvailableThread() ) < 0)
+		MasterWait();	
+	WakeupThread(id,MCTSEXPANDTREE);
+}
+
+extern void optimize_expression_given_Horner_threaded() {
+	int id;
+	while (( id = GetAvailableThread() ) < 0)
+		MasterWait();	
+	WakeupThread(id,OPTIMIZEEXPRESSION);
+}
+
 #endif

@@ -5831,6 +5831,7 @@ int CoOptimize(UBYTE *s)
 {
 	UBYTE *name, *t1, *t2, c1, c2, *value, *u;
 	int error = 0, x;
+	double d;
 	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 	while ( *s ) {
 		name = s; while ( FG.cTable[*s] == 0 ) s++;
@@ -5848,7 +5849,7 @@ correctuse:
 		s++;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s == 0 ) goto correctuse;
-		value = s; while ( FG.cTable[*s] <= 1 ) s++;
+		value = s; while ( FG.cTable[*s] <= 1 || *s=='.') s++;
 		t2 = s; c2 = *t2;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s && *s != ',' ) goto correctuse;
@@ -5894,23 +5895,96 @@ correctuse:
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
 				MesPrint("&Option TimeLimit in Optimize statement should be a positive number: %s",value);
-				AO.Optimize.timelimit = 0;
+				AO.Optimize.mctstimelimit = 0;
+				AO.Optimize.greedytimelimit = 0;
 				error = 1;
 			}
 			else {
-				AO.Optimize.timelimit = x;
+				AO.Optimize.mctstimelimit = x/2;
+				AO.Optimize.greedytimelimit = x/2;
 			}
 		}
-		else if ( StrICmp(name,(UBYTE *)"mctscount") == 0 ) {
+		else if ( StrICmp(name,(UBYTE *)"mctstimelimit") == 0 ) {
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option MCTScount in Optimize statement should be a positive number: %s",value);
-				AO.Optimize.mctscount= 0;
+				MesPrint("&Option MCTSTimeLimit in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.mctstimelimit = 0;
 				error = 1;
 			}
 			else {
-				AO.Optimize.mctscount= x;
+				AO.Optimize.mctstimelimit = x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"mctsnumexpand") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option MCTSNumExpand in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.mctsnumexpand= 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.mctsnumexpand= x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"mctsnumkeep") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option MCTSNumKeep in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.mctsnumkeep= 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.mctsnumkeep= x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"mctsconstant") == 0 ) {
+			d = 0;
+			if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
+				MesPrint("&Option MCTSConstant in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.mctsconstant= 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.mctsconstant= d;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"greedytimelimit") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option GreedyTimeLimit in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.greedytimelimit = 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.greedytimelimit = x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"greedyminnum") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option GreedyMinNum in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.greedyminnum= 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.greedyminnum= x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"greedymaxperc") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option GreedyMaxPerc in Optimize statement should be a positive number: %s",value);
+				AO.Optimize.greedymaxperc= 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.greedymaxperc= x;
 			}
 		}
 		else {

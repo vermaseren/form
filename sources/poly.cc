@@ -1780,6 +1780,12 @@ void poly::divmod (const poly &a, const poly &b, poly &q, poly &r, bool only_div
 		r[0]=1;
 		return;
 	}
+	if (b.is_zero()) {
+		MLOCK(ErrorMessageLock);
+		MesPrint ((char*)"ERROR: division by zero polynomial");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(1);
+	}
 	if (b.is_one()) {
 		q.check_memory(a[0]);
 		q.termscopy(a.terms,0,a[0]);
