@@ -432,7 +432,7 @@ int DoPolyratfun(UBYTE *s)
 			return(0);
 		}
 		if ( *s != '=' ) {
-			MesPrint("@Proper use in point instructions is: PolyFun[=functionname]");
+			MesPrint("@Proper use in point instructions is: PolyRatFun[=functionname]");
 			return(-1);
 		}
 	}
@@ -442,7 +442,7 @@ int DoPolyratfun(UBYTE *s)
 			return(0);
 		}
 		if ( *s != '=' && *s != ',' ) {
-			MesPrint("@Proper use is: PolyFun[{ ,=}functionname]");
+			MesPrint("@Proper use is: PolyRatFun[{ ,=}functionname]");
 			return(-1);
 		}
 	}
@@ -462,6 +462,7 @@ int DoPolyratfun(UBYTE *s)
 		return(-1);
 	}
 	AR.PolyFun = funnum+FUNCTION; AR.PolyFunType = 2;
+	AC.PolyRatFunChanged = 1;
 	*t = c;
 	SKIPBLANKS(t)
 	if ( *t && *t != ',' && *t != ')' ) {
@@ -474,7 +475,7 @@ int DoPolyratfun(UBYTE *s)
 }
 
 /*
- 		#] DoPolyratfun : 
+ 		#] DoPolyratfun :
  		#[ DoNoParallel :
 */
 
@@ -602,7 +603,7 @@ int DoProcessBucket(UBYTE *s)
 }
 
 /*
- 		#] DoProcessBucket :
+ 		#] DoProcessBucket : 
  		#[ DoModDollar :
 */
 

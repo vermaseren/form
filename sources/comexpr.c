@@ -65,7 +65,7 @@ static struct id_options {
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,0)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
@@ -122,18 +122,24 @@ int DoExpr(UBYTE *inp, int type, int par)
 			c = *q; *q = 0;
 			if ( GetVar(inp,&c1,&c2,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
 				if ( c1 == CEXPRESSION ) {
-					HighWarning("Expression is replaced by new definition");
-					if ( Expressions[c2].status != DROPPEDEXPRESSION ) {
-						w = &(Expressions[c2].status);
-						if ( *w == LOCALEXPRESSION || *w == SKIPLEXPRESSION )
-							*w = DROPLEXPRESSION;
-						else if ( *w == GLOBALEXPRESSION || *w == SKIPGEXPRESSION )
-							*w = DROPGEXPRESSION;
+					if ( Expressions[c2].status == STOREDEXPRESSION ) {
+						MesPrint("&Illegal attempt to overwrite a stored expression");
+						error = 1;
 					}
-					AC.TransEname = Expressions[c2].name;
-					j = EntVar(CEXPRESSION,0,type,0,0,0);
-					Expressions[j].node = Expressions[c2].node;
-					Expressions[c2].replace = j;
+					else {
+						HighWarning("Expression is replaced by new definition");
+						if ( Expressions[c2].status != DROPPEDEXPRESSION ) {
+							w = &(Expressions[c2].status);
+							if ( *w == LOCALEXPRESSION || *w == SKIPLEXPRESSION )
+								*w = DROPLEXPRESSION;
+							else if ( *w == GLOBALEXPRESSION || *w == SKIPGEXPRESSION )
+								*w = DROPGEXPRESSION;
+						}
+						AC.TransEname = Expressions[c2].name;
+						j = EntVar(CEXPRESSION,0,type,0,0,0);
+						Expressions[j].node = Expressions[c2].node;
+						Expressions[c2].replace = j;
+					}
 				}
 				else {
 					MesPrint("&name of expression is also name of a variable");
@@ -353,7 +359,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
