@@ -605,7 +605,7 @@ int CoFormat(UBYTE *s)
 {
 	int error = 0, x;
 	KEYWORD *key;
-	UBYTE *ss;
+	UBYTE *ss, c;
 	while ( *s == ' ' || *s == ',' ) s++;
 	if ( *s == 0 ) {
 		AC.OutputMode = 72;
@@ -615,22 +615,33 @@ int CoFormat(UBYTE *s)
 /*
 	First the optimization level
 */
-	if ( ( *s == 'O' || *s == 'o' ) && ( ( FG.cTable[s[1]] == 1 ) ||
-	( s[1] == '=' && FG.cTable[s[2]] == 1 ) ) ) {
-		s++; if ( *s == '=' ) s++;
-		x = 0;
-		while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
-		AO.OptimizationLevel = x;
-		while ( *s == ',' && s[1] == ',' ) s++;
-		if ( *s == 0 || ( *s == ',' && s[1] == 0 ) ) return(0);
-		if ( *s != ',' ) {
-			error = 1;
-			MesPrint("&Illegal optimization specification in format statement");
+	if ( *s == 'O' || *s == 'o' ) {
+		if ( ( FG.cTable[s[1]] == 1 ) ||
+			 ( s[1] == '=' && FG.cTable[s[2]] == 1 ) ) {
+			s++; if ( *s == '=' ) s++;
+			x = 0;
+			while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
+			AO.OptimizationLevel = x;
+			while ( *s == ',' ) s++;
+			if ( *s != 0 ) {
+opterr:			error = 1;
+				MesPrint("&Illegal optimization specification in format statement");
+			}
 			return(error);
 		}
-		while ( *s == ',' ) s++;
+		ss = s;
+		while ( FG.cTable[*s] == 0 ) s++;
+		c = *s; *s = 0;
+		if ( StrICont(ss,(UBYTE *)"optimize") == 0 ) {
+			*s = c;
+			while ( *s == ',' ) s++;
+			if ( *s == '=' ) s++;
+			AO.OptimizationLevel = 9;
+			return(CoOptimizeOption(s));
+		}
+		else goto opterr;
 	}
-	if ( FG.cTable[*s] == 1 ) {
+	else if ( FG.cTable[*s] == 1 ) {
 		x = 0;
 		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
 		if ( x <= 0 || x >= MAXLINELENGTH ) {
@@ -5824,11 +5835,11 @@ int DoFactorize(UBYTE *s,int par)
 
 /*
   	#] DoFactorize : 
-  	#[ CoOptimize :
+  	#[ CoOptimizeOption :
 
 */
 
-int CoOptimize(UBYTE *s)
+int CoOptimizeOption(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *name, *t1, *t2, c1, c2, *value, *u;
@@ -5841,7 +5852,7 @@ int CoOptimize(UBYTE *s)
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s != '=' ) {
 correctuse:
-			MesPrint("&Correct use in Optimize statement is Optionname=value");
+			MesPrint("&Correct use in Format,Optimize statement is Optionname=value");
 			error = 1;
 			while ( *s == ' ' || *s == ',' || *s == '\t' || *s == '=' ) s++;
 			*t1 = c1;
@@ -5876,7 +5887,7 @@ correctuse:
 			}
 			else {
 				AO.Optimize.horner = -1;
-				MesPrint("&Unrecognized option value in Optimize statement: %s=%s",name,value);
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}
 		}
@@ -5892,7 +5903,7 @@ correctuse:
 			}
 			else {
 				AO.Optimize.method = -1;
-				MesPrint("&Unrecognized option value in Optimize statement: %s=%s",name,value);
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}
 		}
@@ -5900,7 +5911,7 @@ correctuse:
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option TimeLimit in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option TimeLimit in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctstimelimit = 0;
 				AO.Optimize.greedytimelimit = 0;
 				error = 1;
@@ -5914,7 +5925,7 @@ correctuse:
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option MCTSTimeLimit in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option MCTSTimeLimit in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctstimelimit = 0;
 				error = 1;
 			}
@@ -5926,7 +5937,7 @@ correctuse:
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option MCTSNumExpand in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option MCTSNumExpand in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctsnumexpand= 0;
 				error = 1;
 			}
@@ -5938,7 +5949,7 @@ correctuse:
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option MCTSNumKeep in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option MCTSNumKeep in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctsnumkeep= 0;
 				error = 1;
 			}
@@ -5983,7 +5994,7 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 						char buff[100];
 						double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
 						AO.Optimize.mctsconstant = d + (dd-d)*xx;
-						sprintf(buff,"   Optimize: MCTSconstant set to %10.4f\n",AO.Optimize.mctsconstant);
+						sprintf(buff,"   Format,Optimize: MCTSconstant set to %10.4f\n",AO.Optimize.mctsconstant);
 						MesPrint("%s",buff);
 					}
 					else if ( linlog == 1 ) {
@@ -5991,13 +6002,13 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 						char buff[100];
 						double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
 						AO.Optimize.mctsconstant = d * pow(dd/d,xx);
-						sprintf(buff,"   Optimize: MCTSconstant set to %15.9f\n",AO.Optimize.mctsconstant);
+						sprintf(buff,"   Format,Optimize: MCTSconstant set to %15.9f\n",AO.Optimize.mctsconstant);
 						MesPrint("%s",buff);
 					}
 				}
 			}
 			else if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
-				MesPrint("&Option MCTSConstant in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option MCTSConstant in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctsconstant= 0;
 				error = 1;
 			}
@@ -6009,7 +6020,7 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option GreedyTimeLimit in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option GreedyTimeLimit in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.greedytimelimit = 0;
 				error = 1;
 			}
@@ -6021,7 +6032,7 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option GreedyMinNum in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option GreedyMinNum in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.greedyminnum= 0;
 				error = 1;
 			}
@@ -6033,7 +6044,7 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 			if ( *u != 0 ) {
-				MesPrint("&Option GreedyMaxPerc in Optimize statement should be a positive number: %s",value);
+				MesPrint("&Option GreedyMaxPerc in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.greedymaxperc= 0;
 				error = 1;
 			}
@@ -6042,7 +6053,7 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 			}
 		}
 		else {
-			MesPrint("&Unrecognized option name in Optimize statement: %s",name);
+			MesPrint("&Unrecognized option name in Format,Optimize statement: %s",name);
 			error = 1;
 		}
 		*t1 = c1; *t2 = c2;
@@ -6051,5 +6062,18 @@ ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)")
 }
 
 /*
-  	#] CoOptimize :
+  	#] CoOptimizeOption : 
+  	#[ CoOptimize :
+
+*/
+
+int CoOptimize(UBYTE *s)
+{
+	int error = 0;
+	DUMMYUSE(*s)
+	return(error);
+}
+
+/*
+  	#] CoOptimize : 
 */
