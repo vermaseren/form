@@ -38,6 +38,7 @@
 */
 
 #include "form3.h"
+#include <math.h>
  
 static KEYWORD formatoptions[] = {
 	 {"c",				(TFUN)0,	CMODE,				0}
@@ -5829,6 +5830,7 @@ int DoFactorize(UBYTE *s,int par)
 
 int CoOptimize(UBYTE *s)
 {
+	GETIDENTITY
 	UBYTE *name, *t1, *t2, c1, c2, *value, *u;
 	int error = 0, x;
 	double d;
@@ -5849,7 +5851,11 @@ correctuse:
 		s++;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s == 0 ) goto correctuse;
-		value = s; while ( FG.cTable[*s] <= 1 || *s=='.') s++;
+		value = s;
+		while ( FG.cTable[*s] <= 1 || *s=='.' || *s == '(' || *s == ')' ) {
+			if ( *s == '(' ) { SKIPBRA4(s) }
+			s++;
+		}
 		t2 = s; c2 = *t2;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s && *s != ',' ) goto correctuse;
@@ -5942,7 +5948,55 @@ correctuse:
 		}
 		else if ( StrICmp(name,(UBYTE *)"mctsconstant") == 0 ) {
 			d = 0;
-			if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
+			if ( *value == 'r' || *value == 'R' ) {
+				UBYTE *ss = value, cc;
+				int linlog = 0;
+				double dd = 0;
+				while ( FG.cTable[*ss] == 0 ) ss++;
+				cc = *ss; *ss = 0;
+				if ( StrICmp(value,(UBYTE *)"random") ) {
+ranopt:				MesPrint("&Option Random should have syntax random(lin/log,min,max)");
+					AO.Optimize.mctsconstant= 0;
+					error = 1;
+				}
+				else {
+					*ss = cc;
+					if ( *ss != '(' ) goto ranopt;
+					ss++;
+					if ( ( ss[0] == 'l' || ss[0] == 'L' )
+					  && ( ss[1] == 'o' || ss[1] == 'O' )
+					  && ( ss[2] == 'g' || ss[1] == 'G' ) ) {
+						linlog = 1;
+					}
+					else if ( ( ss[0] == 'l' || ss[0] == 'L' )
+					  && ( ss[1] == 'i' || ss[1] == 'I' )
+					  && ( ss[2] == 'n' || ss[1] == 'N' ) ) {
+						linlog = 0;
+					}
+					else goto ranopt;
+					ss += 3;
+					if ( *ss != ',' ) goto ranopt;
+					ss++;
+					if ( sscanf ((char*)ss, "%lf,%lf)", &d, &dd) != 2 ) goto ranopt;
+					if ( linlog == 0 ) {
+						UWORD x = wranf(BHEAD0);
+						char buff[100];
+						double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
+						AO.Optimize.mctsconstant = d + (dd-d)*xx;
+						sprintf(buff,"   Optimize: MCTSconstant set to %10.4f\n",AO.Optimize.mctsconstant);
+						MesPrint("%s",buff);
+					}
+					else if ( linlog == 1 ) {
+						UWORD x = wranf(BHEAD0);
+						char buff[100];
+						double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
+						AO.Optimize.mctsconstant = d * pow(dd/d,xx);
+						sprintf(buff,"   Optimize: MCTSconstant set to %15.9f\n",AO.Optimize.mctsconstant);
+						MesPrint("%s",buff);
+					}
+				}
+			}
+			else if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
 				MesPrint("&Option MCTSConstant in Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctsconstant= 0;
 				error = 1;
