@@ -39,6 +39,7 @@
 */
 
 #include "form3.h"
+#include <math.h>
 
 #ifdef WITHGMP
 #include <gmp.h>
@@ -1207,7 +1208,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 }
 
 /*
- 		#] DivLong :
+ 		#] DivLong : 
  		#[ RaisPow :		WORD RaisPow(a,na,b)
 
 	Raises a to the power b. a is a Long integer and b >= 0.
@@ -2997,7 +2998,7 @@ int ChineseRemainder(PHEAD MODNUM *a1, MODNUM *a2, MODNUM *a)
 
 /*
  		#] ChineseRemainder: 
-  	#] RekenLong :
+  	#] RekenLong : 
   	#[ RekenTerms :
  		#[ CompCoef :		WORD CompCoef(term1,term2)
 
@@ -3794,5 +3795,80 @@ UWORD iranf(PHEAD UWORD imax)
 
 /*
  		#] wranf : 
+ 		#[ PreRandom :
+
+		The random number generator of the preprocessor.
+		This one is completely different from the execution time generator
+		random_(number). In the preprocessor we generate a floating point
+		number in a string according to a distribution.
+		Currently allowed are:
+			RANDOM_(log,min,max)
+			RANDOM_(lin,min,max)
+		The return value is a string with the floating point number.
+*/
+
+UBYTE *PreRandom(UBYTE *s)
+{
+	GETIDENTITY
+	UBYTE *mode,*mins = 0,*maxs = 0, *outval;
+	float num;
+	double minval, maxval, value = 0;
+	int linlog = -1;
+	mode = s;
+	while ( FG.cTable[*s] <= 1 ) s++;
+	if ( *s == ',' ) { *s = 0; s++; }
+	mins = s;
+	while ( *s && *s != ',' ) s++;
+	if ( *s == ',' ) { *s = 0; s++; }
+	maxs = s;
+	while ( *s && *s != ',' ) s++;
+	if ( *s || *maxs == 0 || *mins == 0 ) {
+		MesPrint("@Illegal arguments in macro RANDOM_");
+		Terminate(-1);
+	}
+	if ( StrICmp(mode,(UBYTE *)"lin") == 0 ) {
+		linlog = 0;
+	}
+	else if ( StrICmp(mode,(UBYTE *)"log") == 0 ) {
+		linlog = 1;
+	}
+	else {
+		MesPrint("@Illegal mode argument in macro RANDOM_");
+		Terminate(-1);
+	}
+
+	sscanf((char *)mins,"%f",&num); minval = num;
+	sscanf((char *)maxs,"%f",&num); maxval = num;
+
+	if ( linlog == 0 ) {
+		UWORD x = wranf(BHEAD0);
+		double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
+		value = minval + (maxval-minval)*xx;
+	}
+	else if ( linlog == 1 ) {
+		UWORD x = wranf(BHEAD0);
+		double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
+		value = minval * pow(maxval/minval,xx);
+	}
+
+	outval = (UBYTE *)Malloc1(64,"PreRandom");
+	if ( ABS(value) < 0.00001 || ABS(value) > 1000000. ) {
+		sprintf((char *)outval,"%e",value);
+	}
+	else if ( ABS(value) < 0.0001 ) { sprintf((char *)outval,"%10f",value); }
+	else if ( ABS(value) < 0.001 ) { sprintf((char *)outval,"%9f",value); }
+	else if ( ABS(value) < 0.01 ) { sprintf((char *)outval,"%8f",value); }
+	else if ( ABS(value) < 0.1 ) { sprintf((char *)outval,"%7f",value); }
+	else if ( ABS(value) < 1. ) { sprintf((char *)outval,"%6f",value); }
+	else if ( ABS(value) < 10. ) { sprintf((char *)outval,"%5f",value); }
+	else if ( ABS(value) < 100. ) { sprintf((char *)outval,"%4f",value); }
+	else if ( ABS(value) < 1000. ) { sprintf((char *)outval,"%3f",value); }
+	else if ( ABS(value) < 10000. ) { sprintf((char *)outval,"%2f",value); }
+	else { sprintf((char *)outval,"%1f",value); }
+	return(outval);
+}
+
+/*
+ 		#] PreRandom : 
   	#] Functions : 
 */

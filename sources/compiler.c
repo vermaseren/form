@@ -172,7 +172,6 @@ static KEYWORD com2commands[] = {
 	,{"on",             (TFUN)CoOn,               DECLARATION,  PARTEST}
 	,{"once",           (TFUN)CoOnce,             STATEMENT,    PARTEST}
 	,{"only",           (TFUN)CoOnly,             STATEMENT,    PARTEST}
-	,{"optimize",       (TFUN)CoOptimize,         TOOUTPUT,     PARTEST}
 	,{"polyfun",        (TFUN)CoPolyFun,          DECLARATION,  PARTEST}
 	,{"polyratfun",     (TFUN)CoPolyRatFun,       DECLARATION,  PARTEST}
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}

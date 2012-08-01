@@ -867,6 +867,7 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"VERSION_",(UBYTE *)STRINGIFY(MAJORVERSION),0,0);
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)STRINGIFY(MINORVERSION),0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
+	PutPreVar((UBYTE *)"random_",(UBYTE *)"________",(UBYTE *)"?a",0);
 	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;
@@ -937,7 +938,7 @@ VOID StartVariables()
 }
 
 /*
- 		#] StartVariables :
+ 		#] StartVariables : 
  		#[ StartMore :
 */
 
