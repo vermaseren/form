@@ -301,9 +301,9 @@ WORD ComparePoly(WORD *term1, WORD *term2, WORD level)
 
 static int FirstWarnConvertToPoly = 1;
 
-int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
+int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD par)
 {
-	WORD *tout, *tstop, ncoef, *t, *r, *tt;
+	WORD *tout, *tstop, ncoef, *t, *r, *tt, *ttwo = 0;
 	int i, action = 0;
 	tt = term + *term;
 	ncoef = ABS(tt[-1]);
@@ -393,7 +393,16 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 			}
 		}
 		else if ( *t == HAAKJE) {
-			t += t[1];
+			if ( par ) { 
+				tout[0] = 1; tout[1] = 1; tout[2] = 3;
+				*outterm = (tout+3)-outterm;
+				if ( NormPolyTerm(BHEAD outterm) < 0 ) return(-1);
+				tout = outterm + *outterm;
+				tout -= 3;
+				i = t[1]; NCOPY(tout,t,i);
+				ttwo = tout-1;
+			}
+			else { t += t[1]; }
 		}
 		else if ( *t >= FUNCTION ) {
 			i = FindSubterm(t);
@@ -415,8 +424,18 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
 		}
 	}
 	NCOPY(tout,tstop,ncoef)
-	*outterm = tout-outterm;
-	if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
+	if ( ttwo ) {
+		WORD hh = *ttwo;
+		*ttwo = tout-ttwo;
+		if ( ( i = NormPolyTerm(BHEAD ttwo) ) >= 0 ) i = action;
+		tout = ttwo + *ttwo;
+		*ttwo = hh;
+		*outterm = tout - outterm;
+	}
+	else {
+		*outterm = tout-outterm;
+		if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
+	}
 	return(i);
 }
 
@@ -438,9 +457,9 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm)
  *		module as ConvertToPoly.
  */
 
-int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
+int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf, WORD par)
 {
-	WORD *tout, *tstop, ncoef, *t, *r, *tt;
+	WORD *tout, *tstop, ncoef, *t, *r, *tt, *ttwo = 0;
 	int i, action = 0;
 	tt = term + *term;
 	ncoef = ABS(tt[-1]);
@@ -530,7 +549,16 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 			}
 		}
 		else if ( *t == HAAKJE) {
-			t += t[1];
+			if ( par ) { 
+				tout[0] = 1; tout[1] = 1; tout[2] = 3;
+				*outterm = (tout+3)-outterm;
+				if ( NormPolyTerm(BHEAD outterm) < 0 ) return(-1);
+				tout = outterm + *outterm;
+				tout -= 3;
+				i = t[1]; NCOPY(tout,t,i);
+				ttwo = tout-1;
+			}
+			else { t += t[1]; }
 		}
 		else if ( *t >= FUNCTION ) {
 			i = FindLocalSubterm(BHEAD t,startebuf);
@@ -552,8 +580,18 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf)
 		}
 	}
 	NCOPY(tout,tstop,ncoef)
-	*outterm = tout-outterm;
-	if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
+	if ( ttwo ) {
+		WORD hh = *ttwo;
+		*ttwo = tout-ttwo;
+		if ( ( i = NormPolyTerm(BHEAD ttwo) ) >= 0 ) i = action;
+		tout = ttwo + *ttwo;
+		*ttwo = hh;
+		*outterm = tout - outterm;
+	}
+	else {
+		*outterm = tout-outterm;
+		if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
+	}
 	return(i);
 }
 

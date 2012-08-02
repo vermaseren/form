@@ -176,7 +176,7 @@ onerror:
 }
 
 /*
-  	#] CatchDollar :
+  	#] CatchDollar : 
   	#[ AssignDollar :
 
 	To be called from Generator. Assigns an expression to a $ variable.
@@ -2979,7 +2979,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		NewSort(BHEAD0);
 		NewSort(BHEAD0);
 		while ( *t ) {
-			if ( LocalConvertToPoly(BHEAD t,termextra,startebuf) < 0 ) {
+			if ( LocalConvertToPoly(BHEAD t,termextra,startebuf,0) < 0 ) {
 getout:
 				AR.SortType = oldsorttype;
 				M_free(buf1,"DollarFactorize-2");
@@ -3769,6 +3769,6 @@ void AddPotModdollar(WORD numdollar)
 }
 
 /*
-  	#] AddPotModdollar :
+  	#] AddPotModdollar : 
 */
 

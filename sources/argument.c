@@ -2063,7 +2063,7 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 		argextra = AT.WorkPointer;
 		NewSort(BHEAD0);
 		while ( t < tstop ) {
-			if ( LocalConvertToPoly(BHEAD t,argextra,startebuf) < 0 ) {
+			if ( LocalConvertToPoly(BHEAD t,argextra,startebuf,0) < 0 ) {
 				error = -1;
 getout:
 				AR.SortType = oldsorttype;

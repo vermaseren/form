@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ include :
 */
@@ -50,7 +50,7 @@
 using namespace std;
 
 /*
-  	#] include : 
+  	#] include :
   	#[ ostream operator :
 */
 
@@ -68,7 +68,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
 #endif
 
 /*
-  	#] ostream operator : 
+  	#] ostream operator :
   	#[ integer_gcd :
 */
 
@@ -121,7 +121,7 @@ const poly polygcd::integer_gcd (const poly &a, const poly &b) {
 }
 
 /*
-  	#] integer_gcd : 
+  	#] integer_gcd :
   	#[ integer_content :
 */
 
@@ -181,7 +181,7 @@ const poly polygcd::integer_content (const poly &a) {
 }
 
 /*
-  	#] integer_content : 
+  	#] integer_content :
   	#[ content_univar :
 */
 
@@ -239,7 +239,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
 }
 
 /*
-  	#] content_univar : 
+  	#] content_univar :
 	 	#[ content_multivar :
 */
 
@@ -304,7 +304,7 @@ const poly polygcd::content_multivar (const poly &a, int x) {
 }
 
 /*
-  	#] content_multivar : 
+  	#] content_multivar :
  		#[ coefficient_list_gcd :
 */
 
@@ -349,7 +349,7 @@ const vector<WORD> polygcd::coefficient_list_gcd (const vector<WORD> &_a, const 
 }
 
 /*		
- 		#] coefficient_list_gcd : 
+ 		#] coefficient_list_gcd :
   	#[ gcd_Euclidean :
 */
 
@@ -404,7 +404,7 @@ const poly polygcd::gcd_Euclidean (const poly &a, const poly &b) {
 }
 
 /*
-  	#] gcd_Euclidean : 
+  	#] gcd_Euclidean :
 	 	#[ chinese_remainder :
 */
 
@@ -467,7 +467,7 @@ const poly polygcd::chinese_remainder (const poly &a1, const poly &m1, const pol
 }
 
 /*
-  	#] chinese_remainder : 
+  	#] chinese_remainder :
 	 	#[ substitute_last :
 */
 
@@ -557,7 +557,7 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 }
 
 /*
-  	#] substitute_last : 
+  	#] substitute_last :
  		#[ sparse_interpolation helper functions :
 */
 
@@ -634,7 +634,7 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
 }
 
 /*
-	 	#] sparse_interpolation helper functions : 
+	 	#] sparse_interpolation helper functions :
 	 	#[ gcd_modular_sparse_interpolation :
 */
 
@@ -698,7 +698,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 	bool duplicates;
 	do {
 		for (int i=0; i<(int)c.size(); i++)
-			c[i] = 1 + random() % (a.modp-1);
+			c[i] = 1 + wranf(BHEAD0) % (a.modp-1);
 		smul = sparse_interpolation_get_mul_list(s,x,c);
 
 		duplicates = false;
@@ -845,7 +845,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 }
 
 /*
-  	#] gcd_modular_sparse_interpolation : 
+  	#] gcd_modular_sparse_interpolation :
 	 	#[ gcd_modular_dense_interpolation :
 */
 
@@ -906,7 +906,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	
 	while (true) {
 		// generate random constants and substitute it
-		int c = 1 + random() % (a.modp-1);
+		int c = 1 + wranf(BHEAD0) % (a.modp-1);
 		if (substitute_last(gcdlcoeffs,X,c).is_zero()) continue;
 		if (substitute_last(modpoly,X,c).is_zero()) continue;
 		
@@ -968,7 +968,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 }
 
 /*
-  	#] gcd_modular_dense_interpolation : : 
+  	#] gcd_modular_dense_interpolation : :
 	 	#[ gcd_modular :
 */
 
@@ -1094,7 +1094,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 }
 
 /*
-  	#] gcd_modular : 
+  	#] gcd_modular :
   	#[ gcd_heuristic_possible :
 */
 
@@ -1128,7 +1128,7 @@ bool gcd_heuristic_possible (const poly &a) {
 }
 
 /*
-  	#] gcd_heuristic_possible : 
+  	#] gcd_heuristic_possible :
   	#[ gcd_heuristic :
 */
 
@@ -1194,7 +1194,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
 	poly xi(BHEAD pxi,nxi);
 	
 	// Addition of another random factor gives better performance
-	xi = xi*poly(BHEAD 2) + poly(BHEAD 2 + random()%POLYGCD_HEURISTIC_MAX_ADD_RANDOM);
+	xi = xi*poly(BHEAD 2) + poly(BHEAD 2 + wranf(BHEAD0)%POLYGCD_HEURISTIC_MAX_ADD_RANDOM);
 
 	// If degree*digits(xi) is too large, throw exception
 	if (max(a.degree(x[0]),b.degree(x[0])) * xi[xi[1]] >= MiN(AM.MaxTal, POLYGCD_HEURISTIC_MAX_DIGITS)) {
@@ -1265,7 +1265,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
 		}
 
 		// Next xi by multiplying with the golden ratio to avoid correlated errors
-		xi = xi * poly(BHEAD 28657) / poly(BHEAD 17711) + poly(BHEAD random() % POLYGCD_HEURISTIC_MAX_ADD_RANDOM);
+		xi = xi * poly(BHEAD 28657) / poly(BHEAD 17711) + poly(BHEAD wranf(BHEAD0) % POLYGCD_HEURISTIC_MAX_ADD_RANDOM);
 	}
 	
 #ifdef DEBUG
@@ -1276,7 +1276,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
 }
 
 /*
-  	#] gcd_heuristic : 
+  	#] gcd_heuristic :
   	#[ gcd :
 */
 
@@ -1384,5 +1384,5 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 }
 
 /*
-  	#] gcd : 
+  	#] gcd :
 */

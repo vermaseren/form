@@ -193,7 +193,7 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 }
 
 /*
-  	#] count_operators :
+  	#] count_operators : 
   	#[ occurrence_order :
 */
 
@@ -233,8 +233,8 @@ vector<WORD> occurrence_order (const WORD *expr) {
 }
 
 /*
-  	#] occurrence_order :
-		#[ Horner_tree
+  	#] occurrence_order : 
+  	#[ Horner_tree :
 */
 
 /**  Horner tree building
@@ -978,7 +978,7 @@ void printpstree () {
 */
 
 /*
-  	#] printpstree :
+  	#] printpstree : 
   	#[ find_Horner_MCTS_expand_tree :
 */
 
@@ -1167,7 +1167,7 @@ void find_Horner_MCTS_expand_tree () {
 }
 
 /*
-  	#] find_Horner_MCTS_expand_tree :
+  	#] find_Horner_MCTS_expand_tree : 
   	#[ find_Horner_MCTS :
 */
 
@@ -1579,7 +1579,7 @@ public:
 };
 
 /*
-  	#] class Optimization :
+  	#] class Optimization : 
   	#[ find_optimizations :
 */
 
@@ -1799,7 +1799,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 }
 
 /*
-  	#] find_optimizations :
+  	#] find_optimizations : 
   	#[ do_optimizations :
 */
 
@@ -2317,7 +2317,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 }
 
 /*
-  	#] do_optimizations :
+  	#] do_optimizations : 
   	#[ optimize_greedy :
 */
 
@@ -2781,7 +2781,7 @@ void optimize_expression_given_Horner () {
 }
 
 /*
-  	#] optimize_expression_given_Horner :
+  	#] optimize_expression_given_Horner : 
   	#[ Optimize :
 */
 
@@ -2844,7 +2844,7 @@ int Optimize (WORD numexpr) {
 		AT.WorkPointer = term + *term;
 		WORD *t1 = term;
 		WORD *t2 = term + *term;
-		if (ConvertToPoly(BHEAD t1,t2) < 0) return(-1);
+		if (ConvertToPoly(BHEAD t1,t2,0) < 0) return(-1);
 		int n = *t2;
 		NCOPY(t1,t2,n);
 		AT.WorkPointer = term + *term;
@@ -2941,5 +2941,5 @@ int Optimize (WORD numexpr) {
 }
 
 /*
-  	#] Optimize: 
+  	#] Optimize : 
 */

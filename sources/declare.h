@@ -99,7 +99,10 @@
 					else if(*s=='(')SKIPBRA4(s) \
 					else if(*s=='[')SKIPBRA1(s) s++;} }
 
+/*
 #define CYCLE1(a,i) {WORD iX,jX; iX=*a; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
+*/
+#define CYCLE1(t,a,i) {t iX=*a; WORD jX; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
 
 #define AddToCB(c,wx) if(c->Pointer>=c->Top) \
 		DoubleCbuffer(c-cbuf,c->Pointer); \
@@ -1355,8 +1358,8 @@ extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par);
 
 extern int NormPolyTerm(PHEAD WORD *);
 extern WORD ComparePoly(WORD *, WORD *, WORD);
-extern int ConvertToPoly(PHEAD WORD *, WORD *);
-extern int LocalConvertToPoly(PHEAD WORD *, WORD *, WORD);
+extern int ConvertToPoly(PHEAD WORD *, WORD *,WORD);
+extern int LocalConvertToPoly(PHEAD WORD *, WORD *, WORD,WORD);
 extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD, WORD, WORD);
 extern WORD FindSubterm(WORD *);
 extern WORD FindLocalSubterm(PHEAD WORD *, WORD);

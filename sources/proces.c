@@ -1791,7 +1791,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -3417,7 +3417,7 @@ CommonEnd:
 				  case TYPETOPOLYNOMIAL:
 					AT.WorkPointer = term + *term;
 					termout = AT.WorkPointer;
-					if ( ConvertToPoly(BHEAD term,termout) < 0 ) goto GenCall;
+					if ( ConvertToPoly(BHEAD term,termout,0) < 0 ) goto GenCall;
 					if ( *termout == 0 ) goto Return0;
 					i = termout[0]; t = term; NCOPY(t,termout,i);
 					AT.WorkPointer = term + *term;

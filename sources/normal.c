@@ -2050,7 +2050,7 @@ redoshort:
 					for ( i = 0; i < narg; i++ ) Array[i] = i;
 					for ( i = 2; i <= narg; i++ ) {
 						itot = (WORD)(iranf(BHEAD i));
-						for ( j = 0; j < itot; j++ ) CYCLE1(Array,i)
+						for ( j = 0; j < itot; j++ ) CYCLE1(WORD,Array,i)
 					}
 					mm = AT.WorkPointer;
 					*mm++ = -t[FUNHEAD];
@@ -2480,7 +2480,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3828,7 +3828,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 

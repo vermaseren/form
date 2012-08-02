@@ -1204,7 +1204,7 @@ WORD *PutExtraSymbols(PHEAD WORD *in,WORD startebuf,int *actionflag)
 	*actionflag = 0;
 	NewSort(BHEAD0);
 	while ( *in ) {
-		if ( ( action = LocalConvertToPoly(BHEAD in,termout,startebuf) ) < 0 ) {
+		if ( ( action = LocalConvertToPoly(BHEAD in,termout,startebuf,0) ) < 0 ) {
 			LowerSortLevel();
 			goto CalledFrom;
 		}
@@ -2306,7 +2306,7 @@ CalledFrom:
 }
 
 /*
-  	#] DIVfunction :
+  	#] DIVfunction : 
   	#[ ConvertArgument :
 
 	Converts an argument to a general notation in allocated space.
@@ -2389,7 +2389,7 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 }
 
 /*
-  	#] ConvertArgument :
+  	#] ConvertArgument : 
 
 */
 
