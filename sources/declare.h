@@ -1081,7 +1081,7 @@ extern WORD   *MakeDollarMod(PHEAD WORD *,WORD **);
 extern int    GetDolNum(PHEAD WORD *, WORD *);
 extern void   AddPotModdollar(WORD);
  
-extern int    Optimize(WORD);
+extern int    Optimize(WORD, int);
 extern int    LoadOpti(WORD);
 extern int    PutObject(WORD *,int);
 extern void   CleanOptiBuffer(VOID);
@@ -1404,6 +1404,8 @@ extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
+
+extern VOID optimize_print_code (int);
 
 #ifdef WITHPTHREADS
 extern void find_Horner_MCTS_expand_tree();

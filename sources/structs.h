@@ -1207,6 +1207,13 @@ typedef struct {
 	PADLONG(9,0,0);
 } OPTIMIZE;
 
+typedef struct {
+	WORD *code;
+	WORD  exprnr,minvar,maxvar;
+	
+	PADLONG(3,0,0);
+} OPTIMIZERESULT;
+
 /*
   	#] Varia : 
     #[ A :
@@ -2127,7 +2134,8 @@ struct O_const {
     LONG    wlen;                  /* (O) Used to store files. */
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
     LONG    DollarInOutBuffer;     /* (O) Characters in DollarOutBuffer */
-	OPTIMIZE Optimize;             /* Contains 4 ints */
+	OPTIMIZE Optimize;          
+	OPTIMIZERESULT OptimizeResult;
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */

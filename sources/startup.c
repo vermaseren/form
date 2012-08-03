@@ -737,6 +737,7 @@ VOID StartVariables()
 	AO.Optimize.greedytimelimit = 0;
 	AO.Optimize.greedyminnum = 10;
 	AO.Optimize.greedymaxperc = 5;
+	AO.OptimizeResult.code = NULL;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;
  	AC.doloopstacksize = 0;
@@ -795,6 +796,7 @@ VOID StartVariables()
 	AddSymbol((UBYTE *)"xarg_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"factor_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"sep_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	i = BUILTINSYMBOLS;  /* update this in ftypes.h when we add new symbols */
 /*
 	Next we add a number of dummy symbols for ensuring that the user defined
@@ -868,6 +870,8 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)STRINGIFY(MINORVERSION),0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
 	PutPreVar((UBYTE *)"random_",(UBYTE *)"________",(UBYTE *)"?a",0);
+	PutPreVar((UBYTE *)"optim_minvar_",(UBYTE *)("0"),0,0);
+	PutPreVar((UBYTE *)"optim_maxvar_",(UBYTE *)("0"),0,0);
 	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;

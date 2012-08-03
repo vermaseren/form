@@ -5840,9 +5840,7 @@ writealloc:
 			}
 			else if ( *fstring == 'O' ) {
 				fstring++;
-/*
-				PrintOptimizeList();
-*/
+				optimize_print_code(0);
 			}
 			else if ( *fstring == 'e' || *fstring == 'E' ) {
 				if ( *fstring == 'E' ) nosemi = 1;
@@ -5880,6 +5878,8 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				num = to - Out;
 				if ( num > 0 ) WriteUnfinString(wtype,Out,num);
 				to = Out;
+				WORD oldOptimizationLevel = AO.OptimizationLevel;
+				AO.OptimizationLevel = 0;
 				if ( WriteOne(ss,(int)num,nosemi) < 0 ) {
 					AM.FileOnlyFlag = h->oldlogonly;
 					AC.LogHandle = h->oldhandle;
@@ -5887,6 +5887,7 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 					AM.silent = h->oldsilent;
 					return(-1);
 				}
+				AO.OptimizationLevel = oldOptimizationLevel;
 				*s1 = c1;
 				if ( s > s1 ) *s++ = c;
 			}
@@ -6209,9 +6210,10 @@ int DoSetRandom(UBYTE *s)
 
 int DoOptimize(UBYTE *s)
 {
+	GETIDENTITY
 	UBYTE *exprname;
 	WORD numexpr;
-	int error = 0;
+	int error = 0, i;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	DUMMYUSE(*s)
@@ -6226,9 +6228,68 @@ int DoOptimize(UBYTE *s)
 		error = 1;
 	}
 	else {
+		EXPRESSIONS e;
+		POSITION position;
+		int firstterm;
+		WORD *term = AT.WorkPointer;
 		DoClearOptimize(s);
+		RevertScratch();
+		for ( i = NumExpressions-1; i >= 0; i-- ) {
+			AS.OldOnFile[i] = Expressions[i].onfile;
+			AS.OldNumFactors[i] = Expressions[i].numfactors;
+			AS.Oldvflags[i] = Expressions[i].vflags;
+			Expressions[i].vflags &= ~(ISUNMODIFIED|ISZERO);
+		}
+		for ( i = 0; i < NumExpressions; i++ ) {
+			if ( i == numexpr ) {
+				Optimize(numexpr, 0);
+				continue;
+			}
+			e = Expressions + i;
+			AR.GetFile = 0;
+			SetScratch(AR.infile,&(e->onfile));
+			if ( GetTerm(BHEAD term) <= 0 ) {
+				MesPrint("@Expression %d has problems reading from scratchfile",i);
+				Terminate(-1);
+			}
+			term[3] = i;
+			AR.DeferFlag = 0;
+			SeekScratch(AR.outfile,&position);
+			e->onfile = position;
+			*AM.S0->sBuffer = 0; firstterm = -1;
+			do {
+				WORD *oldipointer = AR.CompressPointer;
+				WORD *comprtop = AR.ComprTop;
+				AR.ComprTop = AM.S0->sTop;
+				AR.CompressPointer = AM.S0->sBuffer;
+				if ( firstterm > 0 ) {
+					if ( PutOut(BHEAD term,&position,AR.outfile,1) < 0 ) goto DoSerr;
+				}
+				else if ( firstterm < 0 ) {
+					if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) goto DoSerr;
+					firstterm++;
+				}
+				else {
+					if ( PutOut(BHEAD term,&position,AR.outfile,-1) < 0 ) goto DoSerr;
+					firstterm++;
+				}
+				AR.CompressPointer = oldipointer;
+				AR.ComprTop = comprtop;
+			} while ( GetTerm(BHEAD term) );
+			if ( FlushOut(&position,AR.outfile,1) ) {
+DoSerr:
+				MesPrint("@Expression %d has problems writing to scratchfile",i);
+				Terminate(-1);
+			}
+		}
+/*
+		Now some administration and we are done
+*/
+		UpdateMaxSize();
+		
 	}
 	return(error);
+	
 }
 
 /*
@@ -6242,7 +6303,19 @@ int DoClearOptimize(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
-	DUMMYUSE(*s)
+	DUMMYUSE(*s);
+
+	if (AO.OptimizeResult.code != NULL) {
+		M_free(AO.OptimizeResult.code, "optimize output");
+		AO.OptimizeResult.code = NULL;
+	}
+	
+ 	/*
+	 *  TODO:
+	 *  drop the optimized equation
+	 *  clear prevars
+	 */
+
 	return(0);
 }
 
