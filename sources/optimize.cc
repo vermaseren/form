@@ -29,7 +29,7 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  	#] License : 
+  	#] License :
   	#[ includes :
 */
 
@@ -65,14 +65,14 @@ using namespace std;
  *   2. occurrence order Horner, then greedy (slower and better)
  *   3. MCTS Horner, then greedy (even slower and much better)
  */
-const int OPTIMIZE_NUM_DEFINED_SETTINGS = 3;
-const OPTIMIZE OPTIMIZE_DEFINED_SETTINGS[OPTIMIZE_NUM_DEFINED_SETTINGS] = {
-	//                            MCTS     MCTS   MCTS   MCTS     greedy   greedy greedy
-  //   horner       method    timelimit #expand #keep constant timelimit minnum maxperc dummy
-	{ O_OCCURRENCE , O_CSE    ,    0    ,   -1  ,  -1  ,  -1    ,   0    ,  -1  ,  -1    , {0} }, // AO.OptimizationLevel = 1
-	{ O_OCCURRENCE , O_GREEDY ,    0    ,   -1  ,  -1  ,  -1    ,   0    ,  10  ,   5    , {0} }, // AO.OptimizationLevel = 2
-	{ O_MCTS       , O_GREEDY ,    0    , 1000  ,  10  ,  1.0   ,   0    ,  10  ,   5    , {0} }  // AO.OptimizationLevel = 3
-};
+//const int OPTIMIZE_NUM_DEFINED_SETTINGS = 3;
+//const OPTIMIZE OPTIMIZE_DEFINED_SETTINGS[OPTIMIZE_NUM_DEFINED_SETTINGS] = {
+//    // MCTS                                MCTS     MCTS   MCTS   greedy   greedy greedy
+//    //constant    horner       method    timelimit #expand #keep timelimit minnum maxperc
+//	{ { -1.0 },O_OCCURRENCE , O_CSE    ,    0    ,   -1  ,  -1  ,   0    ,  -1  ,  -1    }, // AO.OptimizationLevel = 1
+//	{ { -1.0 },O_OCCURRENCE , O_GREEDY ,    0    ,   -1  ,  -1  ,   0    ,  10  ,   5    }, // AO.OptimizationLevel = 2
+//	{ {  1.0 },O_MCTS       , O_GREEDY ,    0    , 1000  ,  10  ,   0    ,  10  ,   5    }  // AO.OptimizationLevel = 3
+//};
 
 // operators
 const WORD OPER_ADD = -1;
@@ -113,7 +113,7 @@ pthread_mutex_t optimize_lock;
 #endif
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ count_operators :
 */
 
@@ -193,7 +193,7 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 }
 
 /*
-  	#] count_operators : 
+  	#] count_operators :
   	#[ occurrence_order :
 */
 
@@ -235,7 +235,7 @@ vector<WORD> occurrence_order (const WORD *expr) {
 }
 
 /*
-  	#] occurrence_order : 
+  	#] occurrence_order :
   	#[ Horner_tree :
 */
 
@@ -644,7 +644,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 }
 
 /*
-  	#] Horner_tree : 
+  	#] Horner_tree :
   	#[ print_tree :
 */
 
@@ -698,7 +698,7 @@ void print_tree (const vector<WORD> &tree) {
 */
 
 /*
-  	#] print_tree : 
+  	#] print_tree :
   	#[ generate_instructions :
 */
 
@@ -954,7 +954,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 }
 
 /*
-  	#] generate_instructions : 
+  	#] generate_instructions :
   	#[ printpstree :
 */
 
@@ -989,7 +989,7 @@ void printpstree () {
 */
 
 /*
-  	#] printpstree : 
+  	#] printpstree :
   	#[ find_Horner_MCTS_expand_tree :
 */
 
@@ -1050,7 +1050,7 @@ void find_Horner_MCTS_expand_tree () {
 			if (p->num_visits >= 1) {
 				// there are results calculated, so select with the UCT formula
 				score = mcts_expr_score / (p->sum_results/p->num_visits) +
-					2 * optimize_settings.mctsconstant * sqrt(2*log(select->num_visits) / p->num_visits);
+					2 * optimize_settings.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
 					
 #ifdef DEBUG_MCTS
 				printf("%d: %.2lf [x=%.2lf n=%d fin=%i]\n",p->var,score,mcts_expr_score / (p->sum_results/p->num_visits),
@@ -1178,7 +1178,7 @@ void find_Horner_MCTS_expand_tree () {
 }
 
 /*
-  	#] find_Horner_MCTS_expand_tree : 
+  	#] find_Horner_MCTS_expand_tree :
   	#[ find_Horner_MCTS :
 */
 
@@ -1265,7 +1265,7 @@ vector<vector<WORD> > find_Horner_MCTS () {
 }
 
 /*
-  	#] find_Horner_MCTS : 
+  	#] find_Horner_MCTS :
   	#[ merge_operators :
 */
 
@@ -1548,7 +1548,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 }
 
 /*
-  	#] merge_operators : 
+  	#] merge_operators :
   	#[ class Optimization :
 */
 
@@ -1591,7 +1591,7 @@ public:
 };
 
 /*
-  	#] class Optimization : 
+  	#] class Optimization :
   	#[ find_optimizations :
 */
 
@@ -1811,7 +1811,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 }
 
 /*
-  	#] find_optimizations : 
+  	#] find_optimizations :
   	#[ do_optimizations :
 */
 
@@ -2329,7 +2329,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 }
 
 /*
-  	#] do_optimizations : 
+  	#] do_optimizations :
   	#[ optimize_greedy :
 */
 
@@ -2459,7 +2459,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, const OPTIMIZE &settings, LONG
 }
 
 /*
-  	#] optimize_greedy : 
+  	#] optimize_greedy :
   	#[ recycle_variables :
 */
 
@@ -2624,7 +2624,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 }
 
 /*
-  	#] recycle_variables : 
+  	#] recycle_variables :
   	#[ optimize_expression_given_Horner :
 */
 
@@ -2706,7 +2706,7 @@ void optimize_expression_given_Horner () {
 }
 
 /*
-  	#] optimize_expression_given_Horner : 
+  	#] optimize_expression_given_Horner :
   	#[ generate_output :
 */
 
@@ -2837,13 +2837,13 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 
 	char str[100];
 	sprintf (str,"%d",AO.OptimizeResult.minvar);
-	PutPreVar((UBYTE *)"optim_minvar_",(UBYTE *)str,0,1);
+	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)str,0,1);
 	sprintf (str,"%d",AO.OptimizeResult.maxvar);
-	PutPreVar((UBYTE *)"optim_maxvar_",(UBYTE *)str,0,1);
+	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)str,0,1);
 }
 	
 /*
-  	#] generate_output : 
+  	#] generate_output :
   	#[ optimize_print_code :
 */
 
@@ -2863,7 +2863,7 @@ VOID optimize_print_code (int print_expr) {
 }
 
 /*
-  	#] optimize_print_code : 
+  	#] optimize_print_code :
   	#[ Optimize :
 */
 
@@ -3064,9 +3064,9 @@ int Optimize (WORD exprnr, int do_print) {
 	}
 	else {
 		// determine optimization level
-		if (AO.OptimizationLevel <= OPTIMIZE_NUM_DEFINED_SETTINGS)
-			optimize_settings = OPTIMIZE_DEFINED_SETTINGS[AO.OptimizationLevel-1];
-		else
+//		if (AO.OptimizationLevel <= OPTIMIZE_NUM_DEFINED_SETTINGS)
+//			optimize_settings = OPTIMIZE_DEFINED_SETTINGS[AO.OptimizationLevel-1];
+//		else
 			optimize_settings = AO.Optimize;
 
 		// find Horner scheme(s)

@@ -622,9 +622,44 @@ int CoFormat(UBYTE *s)
 			while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
 			AO.OptimizationLevel = x;
 			while ( *s == ',' ) s++;
-			if ( *s != 0 ) {
-opterr:			error = 1;
-				MesPrint("&Illegal optimization specification in format statement");
+			if ( *s != 0 ) goto opterr;
+			AO.OptimizationLevel = x;
+			AO.Optimize.greedytimelimit = 0;
+			AO.Optimize.mctstimelimit = 0;
+			switch ( x ) {
+				case 0:
+					break;
+				case 1:
+					AO.Optimize.mctsconstant.fval = -1.0;
+					AO.Optimize.horner = O_OCCURRENCE;
+					AO.Optimize.method = O_CSE;
+					AO.Optimize.mctsnumexpand = -1;
+					AO.Optimize.mctsnumkeep = -1;
+					AO.Optimize.greedyminnum = -1;
+					AO.Optimize.greedymaxperc = -1;
+					break;
+				case 2:
+					AO.Optimize.mctsconstant.fval = -1.0;
+					AO.Optimize.horner = O_OCCURRENCE;
+					AO.Optimize.method = O_GREEDY;
+					AO.Optimize.mctsnumexpand = -1;
+					AO.Optimize.mctsnumkeep = -1;
+					AO.Optimize.greedyminnum = 10;
+					AO.Optimize.greedymaxperc = 5;
+					break;
+				case 3:
+					AO.Optimize.mctsconstant.fval = 1.0;
+					AO.Optimize.horner = O_MCTS;
+					AO.Optimize.method = O_GREEDY;
+					AO.Optimize.mctsnumexpand = 1000;
+					AO.Optimize.mctsnumkeep = 10;
+					AO.Optimize.greedyminnum = 10;
+					AO.Optimize.greedymaxperc = 5;
+					break;
+				default:
+opterr:				error = 1;
+					MesPrint("&Illegal optimization specification in format statement");
+					break;
 			}
 			return(error);
 		}
@@ -636,6 +671,15 @@ opterr:			error = 1;
 			while ( *s == ',' ) s++;
 			if ( *s == '=' ) s++;
 			AO.OptimizationLevel = 9;
+			AO.Optimize.mctsconstant.fval = 1.0;
+			AO.Optimize.horner = O_MCTS;
+			AO.Optimize.method = O_GREEDY;
+			AO.Optimize.mctstimelimit = 0;
+			AO.Optimize.mctsnumexpand = 1000;
+			AO.Optimize.mctsnumkeep = 10;
+			AO.Optimize.greedytimelimit = 0;
+			AO.Optimize.greedyminnum = 10;
+			AO.Optimize.greedymaxperc = 5;
 			return(CoOptimizeOption(s));
 		}
 		else goto opterr;
@@ -5959,11 +6003,11 @@ correctuse:
 			d = 0;
 			if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
 				MesPrint("&Option MCTSConstant in Format,Optimize statement should be a positive number: %s",value);
-				AO.Optimize.mctsconstant= 0;
+				AO.Optimize.mctsconstant.fval = 0;
 				error = 1;
 			}
 			else {
-				AO.Optimize.mctsconstant= d;
+				AO.Optimize.mctsconstant.fval = d;
 			}
 		}
 		else if ( StrICmp(name,(UBYTE *)"greedytimelimit") == 0 ) {
@@ -6012,5 +6056,5 @@ correctuse:
 }
 
 /*
-  	#] CoOptimizeOption : 
+  	#] CoOptimizeOption :
 */

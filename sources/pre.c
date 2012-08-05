@@ -6233,6 +6233,15 @@ int DoOptimize(UBYTE *s)
 		int firstterm;
 		WORD *term = AT.WorkPointer;
 		DoClearOptimize(s);
+		switch ( Expressions[numexpr].status ) {
+			case LOCALEXPRESSION:
+			case GLOBALEXPRESSION:
+				break;
+			default:
+				MesPrint("@Expression %s is not an active unhidden local or global expression.",exprname);
+				Terminate(-1);
+				break;
+		}
 		RevertScratch();
 		for ( i = NumExpressions-1; i >= 0; i-- ) {
 			AS.OldOnFile[i] = Expressions[i].onfile;
@@ -6243,9 +6252,28 @@ int DoOptimize(UBYTE *s)
 		for ( i = 0; i < NumExpressions; i++ ) {
 			if ( i == numexpr ) {
 				Optimize(numexpr, 0);
+				AO.OptimizeResult.nameofexpr = strDup1(exprname,"optimize expression name");
 				continue;
 			}
 			e = Expressions + i;
+			switch ( e->status ) {
+				case LOCALEXPRESSION:
+				case SKIPLEXPRESSION:
+				case DROPLEXPRESSION:
+				case DROPPEDEXPRESSION:
+				case GLOBALEXPRESSION:
+				case SKIPGEXPRESSION:
+				case DROPGEXPRESSION:
+				case HIDELEXPRESSION:
+				case HIDEGEXPRESSION:
+				case DROPHLEXPRESSION:
+				case DROPHGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				case INTOHIDEGEXPRESSION:
+					break;
+				default:
+					continue;
+			}
 			AR.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
 			if ( GetTerm(BHEAD term) <= 0 ) {
@@ -6286,7 +6314,6 @@ DoSerr:
 		Now some administration and we are done
 */
 		UpdateMaxSize();
-		
 	}
 	return(error);
 	
@@ -6301,22 +6328,36 @@ DoSerr:
 
 int DoClearOptimize(UBYTE *s)
 {
+	WORD numexpr, *w;
+	int error = 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	DUMMYUSE(*s);
 
-	if (AO.OptimizeResult.code != NULL) {
+	if ( AO.OptimizeResult.code != NULL ) {
 		M_free(AO.OptimizeResult.code, "optimize output");
 		AO.OptimizeResult.code = NULL;
+		PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)("0"),0,1);
+		PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)("0"),0,1);
 	}
-	
- 	/*
-	 *  TODO:
-	 *  drop the optimized equation
-	 *  clear prevars
-	 */
-
-	return(0);
+	if ( AO.OptimizeResult.nameofexpr != NULL ) {
+/*
+		We have to pick up the expression by its name. Numbers may change.
+		Note that this requires that when we overwrite an expression, we
+		check that it is not an optimized expression. See execute.c and
+		comexpr.c
+*/
+	    if ( GetName(AC.exprnames,AO.OptimizeResult.nameofexpr,&numexpr,NOAUTO) != CEXPRESSION ) {
+			MesPrint("@Internal error while clearing optimized expression %s ",AO.OptimizeResult.nameofexpr);
+			Terminate(-1);
+		}
+		M_free(AO.OptimizeResult.nameofexpr, "optimize expression name");
+		AO.OptimizeResult.nameofexpr = NULL;
+		w = &(Expressions[numexpr].status);
+		*w = SetExprCases(DROP,1,*w);
+		if ( *w < 0 ) error = 1;
+	}
+	return(error);
 }
 
 /*

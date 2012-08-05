@@ -1194,24 +1194,26 @@ typedef struct {
 	the padding information in the AO struct.
 */
 typedef struct {
+	union { /* we do this to allow padding */
+		float fval;
+		int ival[2]; /* This should be enough */
+	} mctsconstant;
 	int   horner;
 	int   method;
 	int   mctstimelimit;
 	int   mctsnumexpand;
 	int   mctsnumkeep;
-	float mctsconstant;
 	int   greedytimelimit;
 	int   greedyminnum;
 	int   greedymaxperc;
-	
-	PADLONG(9,0,0);
 } OPTIMIZE;
 
 typedef struct {
 	WORD *code;
+	UBYTE *nameofexpr;
 	WORD  exprnr,minvar,maxvar;
 	
-	PADLONG(3,0,0);
+	PADPOSITION(2,0,3,0,0);
 } OPTIMIZERESULT;
 
 /*
@@ -2103,6 +2105,7 @@ struct N_const {
 struct O_const {
     FILEDATA    SaveData;          /* (O) */
     STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
+	OPTIMIZERESULT OptimizeResult;
     UBYTE   *OutputLine;           /* (O) Sits also in debug statements */
     UBYTE   *OutStop;              /* (O) Top of OutputLine buffer */
     UBYTE   *OutFill;              /* (O) Filling point in OutputLine buffer */
@@ -2135,7 +2138,6 @@ struct O_const {
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
     LONG    DollarInOutBuffer;     /* (O) Characters in DollarOutBuffer */
 	OPTIMIZE Optimize;          
-	OPTIMIZERESULT OptimizeResult;
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
@@ -2157,9 +2159,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(23,6,7,16,1);
+	PADPOSITION(23,6,13,16,1);
 #else
-	PADPOSITION(23,4,7,16,1);
+	PADPOSITION(23,4,13,16,1);
 #endif
 };
 /*

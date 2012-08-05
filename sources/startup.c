@@ -728,11 +728,11 @@ VOID StartVariables()
 	AO.FortDotChar = '_';
 	AO.ErrorBlock = 0;
 	AC.firstconstindex = 1;
+	AO.Optimize.mctsconstant.fval = 1.0;
 	AO.Optimize.horner = O_MCTS;
 	AO.Optimize.method = O_GREEDY;
 	AO.Optimize.mctstimelimit = 0;
 	AO.Optimize.mctsnumexpand = 1000;
-	AO.Optimize.mctsconstant = 1.0;
 	AO.Optimize.mctsnumkeep = 10;
 	AO.Optimize.greedytimelimit = 0;
 	AO.Optimize.greedyminnum = 10;
@@ -870,8 +870,8 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"SUBVERSION_",(UBYTE *)STRINGIFY(MINORVERSION),0,0);
 	PutPreVar((UBYTE *)"DATE_",(UBYTE *)MakeDate(),0,0);
 	PutPreVar((UBYTE *)"random_",(UBYTE *)"________",(UBYTE *)"?a",0);
-	PutPreVar((UBYTE *)"optim_minvar_",(UBYTE *)("0"),0,0);
-	PutPreVar((UBYTE *)"optim_maxvar_",(UBYTE *)("0"),0,0);
+	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)("0"),0,0);
+	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)("0"),0,0);
 	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;
