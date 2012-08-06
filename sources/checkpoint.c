@@ -1336,7 +1336,7 @@ int DoRecovery(int *moduletype)
 	FILE *fd;
 	POSITION pos;
 	void *buf, *p;
-	LONG size;
+	LONG size, l;
 	int i, j;
 	UBYTE *org;
 	char *namebufout, *namebufhide;
@@ -2280,7 +2280,24 @@ int DoRecovery(int *moduletype)
 #endif
 
 	/*#] AR : */ 
-/*[20oct2009 mt]:*/
+	/*#[ AO :*/
+/*
+	We copy all non-pointer variables.
+*/
+	l = sizeof(A.O) - ((UBYTE *)(&(A.O.NumInBrack))-(UBYTE *)(&A.O));
+	memcpy(&(A.O.NumInBrack), p, l); p = (unsigned char*)p + l;
+/*
+	Now the variables in OptimizeResult
+*/
+	memcpy(&(A.O.OptimizeResult),p,sizeof(OPTIMIZERESULT));
+		p = (unsigned char*)p + sizeof(OPTIMIZERESULT);
+
+	if ( A.O.OptimizeResult.codesize > 0 ) {
+		R_COPY_B(A.O.OptimizeResult.code,A.O.OptimizeResult.codesize*sizeof(WORD),WORD *);
+	}
+	R_COPY_S(A.O.OptimizeResult.nameofexpr,UBYTE *);
+
+	/*#] AO :*/ 
 #ifdef PARALLEL
 	/*#[ PF : */
 	{/*Block*/
@@ -2299,7 +2316,6 @@ int DoRecovery(int *moduletype)
 	R_SET(PF.log, int);
 	/*#] PF : */ 
 #endif
-/*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS
 	/* read timing information of individual threads */
@@ -2833,8 +2849,23 @@ static int DoSnapshot(int moduletype)
 #endif
 
 	/*#] AR :*/ 
+	/*#[ AO :*/
+/*
+	We copy all non-pointer variables.
+*/
+	ANNOUNCE(AO)
+	l = sizeof(A.O) - ((UBYTE *)(&(A.O.NumInBrack))-(UBYTE *)(&A.O));
+	S_WRITE_B(&(A.O.NumInBrack),l);
+/*
+	Now the variables in OptimizeResult
+*/
+	S_WRITE_B(&(A.O.OptimizeResult),sizeof(OPTIMIZERESULT));
+	if ( A.O.OptimizeResult.codesize > 0 ) {
+		S_WRITE_B(A.O.OptimizeResult.code,A.O.OptimizeResult.codesize*sizeof(WORD));
+	}
+	S_WRITE_S(A.O.OptimizeResult.nameofexpr);
 
-/*[20oct2009 mt]:*/
+	/*#] AO :*/ 
 	/*#[ PF :*/
 #ifdef PARALLEL
 	S_WRITE_B(&PF.numtasks, sizeof(int));
@@ -2843,17 +2874,20 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&PF.log, sizeof(int));
 #endif
 	/*#] PF :*/ 
-/*:[20oct2009 mt]*/
 
 #ifdef WITHPTHREADS
+
 	ANNOUNCE(GetTimerInfo)
-	/* write timing information of individual threads */
+/*
+	write timing information of individual threads
+*/
 	i = GetTimerInfo(&longp,&longpp);
 	S_WRITE_B(&i, sizeof(int));
 	S_WRITE_B(longp, i*(LONG)sizeof(LONG));
 	S_WRITE_B(&i, sizeof(int));
 	S_WRITE_B(longpp, i*(LONG)sizeof(LONG));
-#endif /* ifdef WITHPTHREADS */
+
+#endif
 
 	S_FLUSH_B /* because we will call fwrite() directly in the following code */
 
@@ -2866,36 +2900,36 @@ static int DoSnapshot(int moduletype)
 
 	ANNOUNCE(file close)
 	if ( fclose(fd) ) return(__LINE__);
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
-	if(PF.me == MASTER){
+	if ( PF.me == MASTER ) {
 #endif
-/*:[20oct2009 mt]*/
-	/* copy store file if necessary */
-	ANNOUNCE(copy store file)
-	if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
-		if ( CopyFile(FG.fname, storefile) ) return(__LINE__);
-	}
-
-	/* copy sort file if necessary */
-	ANNOUNCE(copy sort file)
-	if ( AR.outfile->handle >= 0 ) {
-		if ( CopyFile(AR.outfile->name, sortfile) ) return(__LINE__);
-	}
-
-	/* copy hide file if necessary */
-	ANNOUNCE(copy hide file)
-	if ( AR.hidefile->handle >= 0 ) {
-		if ( CopyFile(AR.hidefile->name, hidefile) ) return(__LINE__);
-	}
-
-/*[20oct2009 mt]:*/
+/*
+		copy store file if necessary
+*/
+		ANNOUNCE(copy store file)
+		if ( ISNOTZEROPOS(AR.StoreData.Fill) ) {
+			if ( CopyFile(FG.fname, storefile) ) return(__LINE__);
+		}
+/*
+		copy sort file if necessary
+*/
+		ANNOUNCE(copy sort file)
+		if ( AR.outfile->handle >= 0 ) {
+			if ( CopyFile(AR.outfile->name, sortfile) ) return(__LINE__);
+		}
+/*
+		copy hide file if necessary
+*/
+		ANNOUNCE(copy hide file)
+		if ( AR.hidefile->handle >= 0 ) {
+			if ( CopyFile(AR.hidefile->name, hidefile) ) return(__LINE__);
+		}
 #ifdef PARALLEL
-	}/*if(PF.me == MASTER)*/
+	}
 #endif
-/*:[20oct2009 mt]*/
-
-	/* make the intermediate file the recovery file */
+/*
+	make the intermediate file the recovery file
+*/
 	ANNOUNCE(rename intermediate file)
 	if ( rename(intermedfile, recoveryfile) ) return(__LINE__);
 

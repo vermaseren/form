@@ -2132,14 +2132,15 @@ struct O_const {
     VOID    (*CheckPower)(UBYTE *);
     VOID    (*RenumberVec)(UBYTE *);
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
-#if defined(mBSD) && defined(MICROTIME)
-    LONG    wrap;                  /* (O) For statistics time. wrap around */
-    LONG    wrapnum;               /* (O) For statistics time. wrap around */
-#endif
+/*----Leave NumInBrack as first non-pointer. This is used by the checkpoints--*/
     LONG    NumInBrack;            /* (O) For typing [] option in print */
     LONG    wlen;                  /* (O) Used to store files. */
     LONG    DollarOutSizeBuffer;   /* (O) Size of DollarOutBuffer */
     LONG    DollarInOutBuffer;     /* (O) Characters in DollarOutBuffer */
+#if defined(mBSD) && defined(MICROTIME)
+    LONG    wrap;                  /* (O) For statistics time. wrap around */
+    LONG    wrapnum;               /* (O) For statistics time. wrap around */
+#endif
 	OPTIMIZE Optimize;          
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
@@ -2168,7 +2169,7 @@ struct O_const {
 #endif
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
