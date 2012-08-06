@@ -2219,6 +2219,7 @@ WORD WriteAll()
 				if ( AC.LogHandle < 0 ) prtf &= ~PRINTLFILE;
 			}
 			AO.PrintType = prtf;
+/*
 			if ( AC.OutputMode == VORTRANMODE ) {
 				UBYTE *oldOutFill = AO.OutFill, *oldOutputLine = AO.OutputLine;
 				AO.OutSkip = 6;
@@ -2228,8 +2229,11 @@ WORD WriteAll()
 				FiniLine();
 				continue;
 			}
-			else if ( AO.OptimizationLevel > 0 ) {
+			else
+*/
+			if ( AO.OptimizationLevel > 0 ) {
 				UBYTE *oldOutFill = AO.OutFill, *oldOutputLine = AO.OutputLine;
+				ClearOptimize();
 				AO.OutSkip = 6;
 				if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;
 				AO.OutSkip = 3;
@@ -2437,13 +2441,17 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 	}
 	PutPreVar(AM.oldnumextrasymbols,
 			GetPreVar((UBYTE *)"EXTRASYMBOLS_",0),0,1);
+/*
 	if ( AC.OutputMode == VORTRANMODE ) {
 		AO.OutSkip = 6;
 		if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;
 		AO.OutSkip = 3;
 		FiniLine();
 	}
-	else if ( AO.OptimizationLevel > 0 ) {
+	else
+*/
+	if ( AO.OptimizationLevel > 0 ) {
+		ClearOptimize();
 		AO.OutSkip = 6;
 		if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;
 		AO.OutSkip = 3;

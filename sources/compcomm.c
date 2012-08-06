@@ -5314,6 +5314,10 @@ int CoToPolynomial(UBYTE *inp)
 		return(1);
 	}
 	if ( *inp == 0 ) {
+		if ( AO.OptimizeResult.code != NULL ) {
+			Warning("ToPolynomial statement looses optimization results");
+			ClearOptimize();
+		}
 		Add2Com(TYPETOPOLYNOMIAL)
 		AC.topolynomialflag |= TOPOLYNOMIALFLAG;
 #ifdef PARALLEL
@@ -5338,6 +5342,10 @@ int CoFromPolynomial(UBYTE *inp)
 {
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
 	if ( *inp == 0 ) {
+		if ( AO.OptimizeResult.code != NULL ) {
+			Warning("FromPolynomial statement looses optimization results");
+			ClearOptimize();
+		}
 		Add2Com(TYPEFROMPOLYNOMIAL)
 		return(0);
 	}
@@ -6056,5 +6064,5 @@ correctuse:
 }
 
 /*
-  	#] CoOptimizeOption :
+  	#] CoOptimizeOption : 
 */

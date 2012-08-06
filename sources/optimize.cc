@@ -29,7 +29,7 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  	#] License :
+  	#] License : 
   	#[ includes :
 */
 
@@ -113,7 +113,7 @@ pthread_mutex_t optimize_lock;
 #endif
 
 /*
-  	#] includes :
+  	#] includes : 
   	#[ count_operators :
 */
 
@@ -193,7 +193,7 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 }
 
 /*
-  	#] count_operators :
+  	#] count_operators : 
   	#[ occurrence_order :
 */
 
@@ -235,7 +235,7 @@ vector<WORD> occurrence_order (const WORD *expr) {
 }
 
 /*
-  	#] occurrence_order :
+  	#] occurrence_order : 
   	#[ Horner_tree :
 */
 
@@ -644,7 +644,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 }
 
 /*
-  	#] Horner_tree :
+  	#] Horner_tree : 
   	#[ print_tree :
 */
 
@@ -698,7 +698,7 @@ void print_tree (const vector<WORD> &tree) {
 */
 
 /*
-  	#] print_tree :
+  	#] print_tree : 
   	#[ generate_instructions :
 */
 
@@ -954,7 +954,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 }
 
 /*
-  	#] generate_instructions :
+  	#] generate_instructions : 
   	#[ printpstree :
 */
 
@@ -989,7 +989,7 @@ void printpstree () {
 */
 
 /*
-  	#] printpstree :
+  	#] printpstree : 
   	#[ find_Horner_MCTS_expand_tree :
 */
 
@@ -1178,7 +1178,7 @@ void find_Horner_MCTS_expand_tree () {
 }
 
 /*
-  	#] find_Horner_MCTS_expand_tree :
+  	#] find_Horner_MCTS_expand_tree : 
   	#[ find_Horner_MCTS :
 */
 
@@ -1265,7 +1265,7 @@ vector<vector<WORD> > find_Horner_MCTS () {
 }
 
 /*
-  	#] find_Horner_MCTS :
+  	#] find_Horner_MCTS : 
   	#[ merge_operators :
 */
 
@@ -1548,7 +1548,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 }
 
 /*
-  	#] merge_operators :
+  	#] merge_operators : 
   	#[ class Optimization :
 */
 
@@ -1591,7 +1591,7 @@ public:
 };
 
 /*
-  	#] class Optimization :
+  	#] class Optimization : 
   	#[ find_optimizations :
 */
 
@@ -1811,7 +1811,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 }
 
 /*
-  	#] find_optimizations :
+  	#] find_optimizations : 
   	#[ do_optimizations :
 */
 
@@ -2329,7 +2329,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 }
 
 /*
-  	#] do_optimizations :
+  	#] do_optimizations : 
   	#[ optimize_greedy :
 */
 
@@ -2459,7 +2459,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, const OPTIMIZE &settings, LONG
 }
 
 /*
-  	#] optimize_greedy :
+  	#] optimize_greedy : 
   	#[ recycle_variables :
 */
 
@@ -2624,7 +2624,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 }
 
 /*
-  	#] recycle_variables :
+  	#] recycle_variables : 
   	#[ optimize_expression_given_Horner :
 */
 
@@ -2706,7 +2706,7 @@ void optimize_expression_given_Horner () {
 }
 
 /*
-  	#] optimize_expression_given_Horner :
+  	#] optimize_expression_given_Horner : 
   	#[ generate_output :
 */
 
@@ -2831,7 +2831,8 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	output.push_back(0);
 	if (AO.OptimizeResult.code != NULL)
 		M_free(AO.OptimizeResult.code, "optimize output");
-	
+
+	AO.OptimizeResult.codesize = output.size();
 	AO.OptimizeResult.code  = (WORD *)Malloc1(output.size()*sizeof(WORD), "optimize output");
 	memcpy(AO.OptimizeResult.code, &output[0], output.size()*sizeof(WORD));
 
@@ -2843,7 +2844,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 }
 	
 /*
-  	#] generate_output :
+  	#] generate_output : 
   	#[ optimize_print_code :
 */
 
@@ -2863,8 +2864,9 @@ VOID optimize_print_code (int print_expr) {
 }
 
 /*
-  	#] optimize_print_code :
+  	#] optimize_print_code : 
   	#[ Optimize :
+ 		#[ get_expression :
 */
 
 WORD get_expression (int exprnr) {
@@ -2903,6 +2905,11 @@ WORD get_expression (int exprnr) {
 
 	return 0;
 }
+
+/*
+ 		#] get_expression : 
+ 		#[ get_brackets :
+*/
 
 vector<vector<WORD> > get_brackets () {
 
@@ -2964,6 +2971,11 @@ vector<vector<WORD> > get_brackets () {
 	return brackets;
 }
 
+/*
+ 		#] get_brackets : 
+ 		#[ generate_expression :
+*/
+
 WORD generate_expression (WORD exprnr) {
 	
 	GETIDENTITY;
@@ -3009,6 +3021,11 @@ WORD generate_expression (WORD exprnr) {
 	return 0;
 }
 
+/*
+ 		#] generate_expression : 
+ 		#[ Optimize :
+*/
+
 /**  Optimization of expression
  *
  *   Description
@@ -3023,8 +3040,8 @@ int Optimize (WORD exprnr, int do_print) {
 
 	/* for randomization in results from paper
 	timeval now;
-  gettimeofday(&now,NULL);
-  int seed = now.tv_usec;
+	gettimeofday(&now,NULL);
+	int seed = now.tv_usec;
 	seed = 655176;
 	srandom(seed);
 	int numshuf = random()%1000000;
@@ -3124,5 +3141,54 @@ int Optimize (WORD exprnr, int do_print) {
 }
 
 /*
-  	#] Optimize :
+ 		#] Optimize : 
+ 		#[ ClearOptimize :
+
+		Clears the buffers that were used for optimization output.
+		Clears the expression from the buffers (marks it to be dropped).
+		Note: we need to use the expression by its name, because numbers
+		may change if we drop other expressions between when we do the
+		optimizations and clear the results (in execute.c).
+		Also this is not 100% safe, because we could overwrite the
+		optimized expression. But that can be done only in a Local or
+		Global statement and hence we only have to test there that we might
+		have to call ClearOptimize first. (in file comexpr.c)
+*/
+
+int ClearOptimize()
+{
+	WORD numexpr, *w;
+	int error = 0;
+	if ( AO.OptimizeResult.code != NULL ) {
+		M_free(AO.OptimizeResult.code, "optimize output");
+		AO.OptimizeResult.code = NULL;
+		AO.OptimizeResult.codesize = 0;
+		PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)("0"),0,1);
+		PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)("0"),0,1);
+		cbuf[AM.sbufnum].numrhs = AO.OptimizeResult.minvar-1;
+		AO.OptimizeResult.minvar = AO.OptimizeResult.maxvar = 0;
+	}
+	if ( AO.OptimizeResult.nameofexpr != NULL ) {
+/*
+		We have to pick up the expression by its name. Numbers may change.
+		Note that this requires that when we overwrite an expression, we
+		check that it is not an optimized expression. See execute.c and
+		comexpr.c
+*/
+	    if ( GetName(AC.exprnames,AO.OptimizeResult.nameofexpr,&numexpr,NOAUTO) != CEXPRESSION ) {
+			MesPrint("@Internal error while clearing optimized expression %s ",AO.OptimizeResult.nameofexpr);
+			Terminate(-1);
+		}
+		M_free(AO.OptimizeResult.nameofexpr, "optimize expression name");
+		AO.OptimizeResult.nameofexpr = NULL;
+		w = &(Expressions[numexpr].status);
+		*w = SetExprCases(DROP,1,*w);
+		if ( *w < 0 ) error = 1;
+	}
+	return(error);
+}
+
+/*
+ 		#] ClearOptimize : 
+  	#] Optimize : 
 */

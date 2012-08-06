@@ -1082,6 +1082,7 @@ extern int    GetDolNum(PHEAD WORD *, WORD *);
 extern void   AddPotModdollar(WORD);
  
 extern int    Optimize(WORD, int);
+extern int    ClearOptimize(VOID);
 extern int    LoadOpti(WORD);
 extern int    PutObject(WORD *,int);
 extern void   CleanOptiBuffer(VOID);

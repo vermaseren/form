@@ -6232,7 +6232,7 @@ int DoOptimize(UBYTE *s)
 		POSITION position;
 		int firstterm;
 		WORD *term = AT.WorkPointer;
-		DoClearOptimize(s);
+		ClearOptimize();
 		switch ( Expressions[numexpr].status ) {
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
@@ -6320,7 +6320,7 @@ DoSerr:
 }
 
 /*
- 		#] DoOptimize : 
+ 		#] DoOptimize :
  		#[ DoClearOptimize :
 
 		Clears all relevant buffers of the output optimization
@@ -6328,39 +6328,13 @@ DoSerr:
 
 int DoClearOptimize(UBYTE *s)
 {
-	WORD numexpr, *w;
-	int error = 0;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	DUMMYUSE(*s);
-
-	if ( AO.OptimizeResult.code != NULL ) {
-		M_free(AO.OptimizeResult.code, "optimize output");
-		AO.OptimizeResult.code = NULL;
-		PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)("0"),0,1);
-		PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)("0"),0,1);
-	}
-	if ( AO.OptimizeResult.nameofexpr != NULL ) {
-/*
-		We have to pick up the expression by its name. Numbers may change.
-		Note that this requires that when we overwrite an expression, we
-		check that it is not an optimized expression. See execute.c and
-		comexpr.c
-*/
-	    if ( GetName(AC.exprnames,AO.OptimizeResult.nameofexpr,&numexpr,NOAUTO) != CEXPRESSION ) {
-			MesPrint("@Internal error while clearing optimized expression %s ",AO.OptimizeResult.nameofexpr);
-			Terminate(-1);
-		}
-		M_free(AO.OptimizeResult.nameofexpr, "optimize expression name");
-		AO.OptimizeResult.nameofexpr = NULL;
-		w = &(Expressions[numexpr].status);
-		*w = SetExprCases(DROP,1,*w);
-		if ( *w < 0 ) error = 1;
-	}
-	return(error);
+	return(ClearOptimize());
 }
 
 /*
- 		#] DoClearOptimize : 
+ 		#] DoClearOptimize :
  	# ] PreProcessor :
 */

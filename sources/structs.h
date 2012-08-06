@@ -896,202 +896,202 @@ typedef struct {
 */
 
 /**
- *	The CBUF struct is used by the compiler. It is a compiler buffer of which
- *	since version 3.0 there can be many.
+ *  The CBUF struct is used by the compiler. It is a compiler buffer of which
+ *  since version 3.0 there can be many.
  */
 
 typedef struct CbUf {
-	WORD *Buffer;         /**< [D] Size in BufferSize */
-	WORD *Top;            /**< pointer to the end of the Buffer memory */
-	WORD *Pointer;        /**< pointer into the Buffer memory */
-	WORD **lhs;           /**< [D] Size in maxlhs. list of pointers into Buffer. */
-	WORD **rhs;           /**< [D] Size in maxrhs. list of pointers into Buffer. */
-	LONG *CanCommu;       /**< points into rhs memory behind WORD* area. */
-	LONG *NumTerms;       /**< points into rhs memory behind CanCommu area */
-	WORD *numdum;         /**< points into rhs memory behind NumTerms */
-	WORD *dimension;      /**< points into rhs memory behind numdum */
-	COMPTREE *boomlijst;  /**< [D] Number elements in MaxTreeSize */
-	LONG BufferSize;      /**< Number of allocated WORD's in Buffer */
-	int numlhs;
-	int numrhs;
-	int maxlhs;
-	int maxrhs;
-	int mnumlhs;
-	int mnumrhs;
-	int numtree;
-	int rootnum;
-	int MaxTreeSize;
-	PADPOINTER(1,9,0,0);
+    WORD *Buffer;         /**< [D] Size in BufferSize */
+    WORD *Top;            /**< pointer to the end of the Buffer memory */
+    WORD *Pointer;        /**< pointer into the Buffer memory */
+    WORD **lhs;           /**< [D] Size in maxlhs. list of pointers into Buffer. */
+    WORD **rhs;           /**< [D] Size in maxrhs. list of pointers into Buffer. */
+    LONG *CanCommu;       /**< points into rhs memory behind WORD* area. */
+    LONG *NumTerms;       /**< points into rhs memory behind CanCommu area */
+    WORD *numdum;         /**< points into rhs memory behind NumTerms */
+    WORD *dimension;      /**< points into rhs memory behind numdum */
+    COMPTREE *boomlijst;  /**< [D] Number elements in MaxTreeSize */
+    LONG BufferSize;      /**< Number of allocated WORD's in Buffer */
+    int numlhs;
+    int numrhs;
+    int maxlhs;
+    int maxrhs;
+    int mnumlhs;
+    int mnumrhs;
+    int numtree;
+    int rootnum;
+    int MaxTreeSize;
+    PADPOINTER(1,9,0,0);
 } CBUF;
 
 /**
- *	When we read input from text files we have to remember not only their
- *	handle but also their name. This is needed for error messages.
- *	Hence we call such a file a channel and reserve a struct of type
- *	#CHANNEL to allow to lay this link.
+ *  When we read input from text files we have to remember not only their
+ *  handle but also their name. This is needed for error messages.
+ *  Hence we call such a file a channel and reserve a struct of type
+ *  #CHANNEL to allow to lay this link.
  */
 
 typedef struct ChAnNeL {
-	char *name;          /**< [D] Name of the channel */
-	int handle;          /**< File handle */
-	PADPOINTER(0,1,0,0);
+    char *name;          /**< [D] Name of the channel */
+    int handle;          /**< File handle */
+    PADPOINTER(0,1,0,0);
 } CHANNEL;
 
 /**
- *	Each setup parameter has one element of the struct SETUPPARAMETERS
- *	assigned to it. By binary search in the array of them we can then
- *	locate the proper element by name.
- *	We have to assume that two ints make a long and either one or two longs
- *	make a pointer. The long before the ints and padding gives a problem
- *	in the initialization.
+ *  Each setup parameter has one element of the struct SETUPPARAMETERS
+ *  assigned to it. By binary search in the array of them we can then
+ *  locate the proper element by name.
+ *  We have to assume that two ints make a long and either one or two longs
+ *  make a pointer. The long before the ints and padding gives a problem
+ *  in the initialization.
  */
  
 typedef struct {
-	UBYTE *parameter;
-	int type;
-	int flags;
-	LONG value;
+    UBYTE *parameter;
+    int type;
+    int flags;
+    LONG value;
 } SETUPPARAMETERS;
 
 /**
- *	The NESTING struct is used when we enter the argument of functions and
- *	there is the possibility that we have to change something there.
- *	Because functions can be nested we have to keep track of all levels
- *	of functions in case we have to move the outer layers to make room
- *	for a larger function argument.
+ *  The NESTING struct is used when we enter the argument of functions and
+ *  there is the possibility that we have to change something there.
+ *  Because functions can be nested we have to keep track of all levels
+ *  of functions in case we have to move the outer layers to make room
+ *  for a larger function argument.
  */
 
 typedef struct NeStInG {
-	WORD *termsize;
-	WORD *funsize;
-	WORD *argsize;
+    WORD *termsize;
+    WORD *funsize;
+    WORD *argsize;
 } *NESTING;
 
 /**
- *	The struct of type STORECACHE is used by a caching system for reading
- *	terms from stored expressions. Each thread should have its own system
- *	of caches.
+ *  The struct of type STORECACHE is used by a caching system for reading
+ *  terms from stored expressions. Each thread should have its own system
+ *  of caches.
  */
 
 typedef struct StOrEcAcHe {
-	POSITION position;
-	POSITION toppos;
-	struct StOrEcAcHe *next;
-	WORD buffer[2];
-	PADPOSITION(1,0,0,2,0);
+    POSITION position;
+    POSITION toppos;
+    struct StOrEcAcHe *next;
+    WORD buffer[2];
+    PADPOSITION(1,0,0,2,0);
 } *STORECACHE;
 
 /**
- *	The struct PERM is used to generate all permutations when the pattern
- *	matcher has to try to match (anti)symmetric functions.
+ *  The struct PERM is used to generate all permutations when the pattern
+ *  matcher has to try to match (anti)symmetric functions.
  */
 
 typedef struct PeRmUtE {
-	WORD *objects;
-	WORD sign;
-	WORD n;
-	WORD cycle[MAXMATCH];
-	PADPOINTER(0,0,MAXMATCH+2,0);
+    WORD *objects;
+    WORD sign;
+    WORD n;
+    WORD cycle[MAXMATCH];
+    PADPOINTER(0,0,MAXMATCH+2,0);
 } PERM;
 
 /**
- *	The struct DISTRIBUTE is used to help the pattern
- *	matcher when matching antisymmetric tensors.
+ *  The struct DISTRIBUTE is used to help the pattern
+ *  matcher when matching antisymmetric tensors.
  */
 
 typedef struct DiStRiBuTe {
-	WORD *obj1;
-	WORD *obj2;
-	WORD *out;
-	WORD sign;
-	WORD n1;
-	WORD n2;
-	WORD n;
-	WORD cycle[MAXMATCH];
-	PADPOINTER(0,0,(MAXMATCH+4),0);
+    WORD *obj1;
+    WORD *obj2;
+    WORD *out;
+    WORD sign;
+    WORD n1;
+    WORD n2;
+    WORD n;
+    WORD cycle[MAXMATCH];
+    PADPOINTER(0,0,(MAXMATCH+4),0);
 } DISTRIBUTE;
 
 /**
- *	The struct SORTING is used to control a sort operation.
- *	It includes a small and a large buffer and arrays for keeping track
- *	of various stages of the (merge) sorts.
- *	Each sort level has its own struct and different levels can have
- *	different sizes for its arrays.
- *	Also different threads have their own set of SORTING structs.
+ *  The struct SORTING is used to control a sort operation.
+ *  It includes a small and a large buffer and arrays for keeping track
+ *  of various stages of the (merge) sorts.
+ *  Each sort level has its own struct and different levels can have
+ *  different sizes for its arrays.
+ *  Also different threads have their own set of SORTING structs.
  */
 
 typedef struct sOrT {
-	FILEHANDLE file;			/* The own sort file */
-	POSITION SizeInFile[3];		/* Sizes in the various files */
-	WORD *lBuffer;				/* The large buffer */
-	WORD *lTop;					/* End of the large buffer */
-	WORD *lFill;				/* The filling point of the large buffer */
-	WORD *used;					/*  auxiliary during actual sort */
-	WORD *sBuffer;				/* The small buffer */
-	WORD *sTop;					/* End of the small buffer */
-	WORD *sTop2;				/* End of the extension of the small buffer */
-	WORD *sHalf;				/* Halfway point in the extension */
-	WORD *sFill;				/* Filling point in the small buffer */
-	WORD **sPointer;			/* Pointers to terms in the small buffer */
-	WORD **PoinFill;			/* Filling point for pointers to the sm.buf */
-	WORD **SplitScratch;		/* Excess pointer space for the merge sort */
-	WORD *cBuffer;				/* Compress buffer (if it exists) */
-	WORD **Patches;				/* Positions of patches in large buffer */
-	WORD **pStop;				/* Ends of patches in the large buffer */
-	WORD **poina;				/*  auxiliary during actual sort */
-	WORD **poin2a;				/*  auxiliary during actual sort */
-	WORD *ktoi;					/*  auxiliary during actual sort */
-	WORD *tree;					/*  auxiliary during actual sort */
+    FILEHANDLE file;            /* The own sort file */
+    POSITION SizeInFile[3];     /* Sizes in the various files */
+    WORD *lBuffer;              /* The large buffer */
+    WORD *lTop;                 /* End of the large buffer */
+    WORD *lFill;                /* The filling point of the large buffer */
+    WORD *used;                 /*  auxiliary during actual sort */
+    WORD *sBuffer;              /* The small buffer */
+    WORD *sTop;                 /* End of the small buffer */
+    WORD *sTop2;                /* End of the extension of the small buffer */
+    WORD *sHalf;                /* Halfway point in the extension */
+    WORD *sFill;                /* Filling point in the small buffer */
+    WORD **sPointer;            /* Pointers to terms in the small buffer */
+    WORD **PoinFill;            /* Filling point for pointers to the sm.buf */
+    WORD **SplitScratch;        /* Excess pointer space for the merge sort */
+    WORD *cBuffer;              /* Compress buffer (if it exists) */
+    WORD **Patches;             /* Positions of patches in large buffer */
+    WORD **pStop;               /* Ends of patches in the large buffer */
+    WORD **poina;               /*  auxiliary during actual sort */
+    WORD **poin2a;              /*  auxiliary during actual sort */
+    WORD *ktoi;                 /*  auxiliary during actual sort */
+    WORD *tree;                 /*  auxiliary during actual sort */
 #ifdef WITHZLIB
-	WORD *fpcompressed;			/*  is output filepatch compressed? */
-	WORD *fpincompressed;		/*  is input filepatch compressed? */
-	z_streamp zsparray;			/*  the array of zstreams for decompression */
+    WORD *fpcompressed;         /*  is output filepatch compressed? */
+    WORD *fpincompressed;       /*  is input filepatch compressed? */
+    z_streamp zsparray;         /*  the array of zstreams for decompression */
 #endif
-	POSITION *fPatches;			/* Positions of output file patches */
-	POSITION *inPatches;		/* Positions of input file patches */
-	POSITION *fPatchesStop;		/* Positions of output file patches */
-	POSITION *iPatches;			/* Input file patches, Points to fPatches or inPatches */
-	FILEHANDLE *f;				/* The actual output file */
-	FILEHANDLE **ff;			/* Handles for a staged sort */
-	LONG sTerms;				/* Terms in small buffer */
-	LONG LargeSize;				/* Size of large buffer (in words) */
-	LONG SmallSize;				/* Size of small buffer (in words) */
-	LONG SmallEsize;			/* Size of small + extension (in words) */
-	LONG TermsInSmall;			/* Maximum number of terms in small buffer */
-	LONG Terms2InSmall;			/* with extension for polyfuns etc. */
-	LONG GenTerms;				/* Number of generated terms */
-	LONG TermsLeft;				/* Number of terms still in existence */
-	LONG GenSpace;				/* Amount of space of generated terms */
-	LONG SpaceLeft;				/* Space needed for still existing terms */
-	LONG putinsize;				/* Size of buffer in putin */
-	LONG ninterms;				/* Which input term ? */
-	int MaxPatches;				/* Maximum number of patches in large buffer */
-	int MaxFpatches;			/* Maximum number of patches in one filesort */
-	int type;					/* Main, function or sub(routine) */
-	int lPatch;					/* Number of patches in the large buffer */
-	int fPatchN1;				/* Number of patches in input file */
-	int PolyWise;				/* Is there a polyfun and if so, where? */
-	int PolyFlag;				/*  */
-	int cBufferSize;			/* Size of the compress buffer */
-	int maxtermsize;			/* Keeps track for buffer allocations */
-	int newmaxtermsize;			/* Auxiliary for maxtermsize */
-	int outputmode;				/* Tells where the output is going */
-	int stagelevel;				/* In case we have a 'staged' sort */
-	WORD fPatchN;				/* Number of patches on file (output) */
-	WORD inNum;					/* Number of patches on file (input) */
-	WORD stage4;				/* Are we using stage4? */
+    POSITION *fPatches;         /* Positions of output file patches */
+    POSITION *inPatches;        /* Positions of input file patches */
+    POSITION *fPatchesStop;     /* Positions of output file patches */
+    POSITION *iPatches;         /* Input file patches, Points to fPatches or inPatches */
+    FILEHANDLE *f;              /* The actual output file */
+    FILEHANDLE **ff;            /* Handles for a staged sort */
+    LONG sTerms;                /* Terms in small buffer */
+    LONG LargeSize;             /* Size of large buffer (in words) */
+    LONG SmallSize;             /* Size of small buffer (in words) */
+    LONG SmallEsize;            /* Size of small + extension (in words) */
+    LONG TermsInSmall;          /* Maximum number of terms in small buffer */
+    LONG Terms2InSmall;         /* with extension for polyfuns etc. */
+    LONG GenTerms;              /* Number of generated terms */
+    LONG TermsLeft;             /* Number of terms still in existence */
+    LONG GenSpace;              /* Amount of space of generated terms */
+    LONG SpaceLeft;             /* Space needed for still existing terms */
+    LONG putinsize;             /* Size of buffer in putin */
+    LONG ninterms;              /* Which input term ? */
+    int MaxPatches;             /* Maximum number of patches in large buffer */
+    int MaxFpatches;            /* Maximum number of patches in one filesort */
+    int type;                   /* Main, function or sub(routine) */
+    int lPatch;                 /* Number of patches in the large buffer */
+    int fPatchN1;               /* Number of patches in input file */
+    int PolyWise;               /* Is there a polyfun and if so, where? */
+    int PolyFlag;               /*  */
+    int cBufferSize;            /* Size of the compress buffer */
+    int maxtermsize;            /* Keeps track for buffer allocations */
+    int newmaxtermsize;         /* Auxiliary for maxtermsize */
+    int outputmode;             /* Tells where the output is going */
+    int stagelevel;             /* In case we have a 'staged' sort */
+    WORD fPatchN;               /* Number of patches on file (output) */
+    WORD inNum;                 /* Number of patches on file (input) */
+    WORD stage4;                /* Are we using stage4? */
 #ifdef WITHZLIB
-	PADPOSITION(28,12,12,3,0);
+    PADPOSITION(28,12,12,3,0);
 #else
-	PADPOSITION(25,12,12,3,0);
+    PADPOSITION(25,12,12,3,0);
 #endif
 } SORTING;
 
 #ifdef WITHPTHREADS
 
 /**
- *	The SORTBLOCK's are used by TFORM when the master has to merge the sorted
- *	results of each of the workers.
+ *  The SORTBLOCK's are used by TFORM when the master has to merge the sorted
+ *  results of each of the workers.
  */
 
 typedef struct SoRtBlOcK {
@@ -1102,7 +1102,7 @@ typedef struct SoRtBlOcK {
     int     MasterNumBlocks;
     int     MasterBlock;
     int     FillBlock;
-	PADPOINTER(0,3,0,0);
+    PADPOINTER(0,3,0,0);
 } SORTBLOCK;
 #endif
 
@@ -1118,102 +1118,105 @@ typedef struct DeBuGgInG {
 #ifdef WITHPTHREADS
 
 /**
- *	The THREADBUCKET struct defines one of the buckets used to pass terms
- *	from the master to the workers in TFORM.
+ *  The THREADBUCKET struct defines one of the buckets used to pass terms
+ *  from the master to the workers in TFORM.
  */
 
 typedef struct ThReAdBuCkEt {
-	POSITION *deferbuffer;      /* For Keep Brackets: remember position */
-	WORD *threadbuffer;         /* Here are the (primary) terms */
-	WORD *compressbuffer;       /* For keep brackets we need the compressbuffer */
-	LONG threadbuffersize;      /* Number of words in threadbuffer */
-	LONG ddterms;               /* Number of primary+secondary terms represented */
-	LONG firstterm;				/* The number of the first term in the bucket */
-	LONG firstbracket;          /* When doing complete brackets */
-	LONG lastbracket;           /* When doing complete brackets */
-	pthread_mutex_t lock;       /* For the load balancing phase */
-	int  free;                  /* Status of the bucket */
-	int  totnum;                /* Total number of primary terms */
-	int  usenum;                /* Which is the term being used at the moment */
-	int  busy;                  /*  */
-	int  type;                  /* Doing brackets? */
-	PADPOINTER(5,5,0,sizeof(pthread_mutex_t));
+    POSITION *deferbuffer;      /* For Keep Brackets: remember position */
+    WORD *threadbuffer;         /* Here are the (primary) terms */
+    WORD *compressbuffer;       /* For keep brackets we need the compressbuffer */
+    LONG threadbuffersize;      /* Number of words in threadbuffer */
+    LONG ddterms;               /* Number of primary+secondary terms represented */
+    LONG firstterm;             /* The number of the first term in the bucket */
+    LONG firstbracket;          /* When doing complete brackets */
+    LONG lastbracket;           /* When doing complete brackets */
+    pthread_mutex_t lock;       /* For the load balancing phase */
+    int  free;                  /* Status of the bucket */
+    int  totnum;                /* Total number of primary terms */
+    int  usenum;                /* Which is the term being used at the moment */
+    int  busy;                  /*  */
+    int  type;                  /* Doing brackets? */
+    PADPOINTER(5,5,0,sizeof(pthread_mutex_t));
 } THREADBUCKET;
 
 #endif
 
 /**
- *	The POLYMOD struct controls one univariate polynomial of which the
- *	coefficients have been taken modulus a (prime) number that fits inside
- *	a variable of type WORD. The polynomial is stored as an array of
- *	coefficients of size WORD.
+ *  The POLYMOD struct controls one univariate polynomial of which the
+ *  coefficients have been taken modulus a (prime) number that fits inside
+ *  a variable of type WORD. The polynomial is stored as an array of
+ *  coefficients of size WORD.
  */
 
 typedef struct {
-	WORD	*coefs;				/* The array of coefficients */
-	WORD	numsym;				/* The number of the symbol in the polynomial */
-	WORD	arraysize;			/* The size of the allocation of coefs */
-	WORD	polysize;			/* The maximum power in the polynomial */
-	WORD	modnum;				/* The prime number of the modulus */
+    WORD    *coefs;             /* The array of coefficients */
+    WORD    numsym;             /* The number of the symbol in the polynomial */
+    WORD    arraysize;          /* The size of the allocation of coefs */
+    WORD    polysize;           /* The maximum power in the polynomial */
+    WORD    modnum;             /* The prime number of the modulus */
 } POLYMOD;
 
 typedef struct {
-	WORD	*outterm;            /* Used in DoShuffle/Merge/FinishShuffle system */
-	WORD	*outfun;
-	WORD	*incoef;
-	WORD	*stop1;
-	WORD	*stop2;
-	WORD	*ststop1;
-	WORD	*ststop2;
-	void    *finishuf;
-	void    *do_uffle;
-	LONG	combilast;
-	WORD	nincoef;
-	WORD	level;
-	WORD	thefunction;
-	WORD	option;
-	PADPOINTER(1,0,4,0);
+    WORD    *outterm;            /* Used in DoShuffle/Merge/FinishShuffle system */
+    WORD    *outfun;
+    WORD    *incoef;
+    WORD    *stop1;
+    WORD    *stop2;
+    WORD    *ststop1;
+    WORD    *ststop2;
+    void    *finishuf;
+    void    *do_uffle;
+    LONG    combilast;
+    WORD    nincoef;
+    WORD    level;
+    WORD    thefunction;
+    WORD    option;
+    PADPOINTER(1,0,4,0);
 } SHvariables;
 
-typedef struct {				/* Used for computing calculational cost in optim.c */
-	LONG	add;
-	LONG	mul;
-	LONG	div;
-	LONG	pow;
+typedef struct {                /* Used for computing calculational cost in optim.c */
+    LONG    add;
+    LONG    mul;
+    LONG    div;
+    LONG    pow;
 } COST;
 
 typedef struct {
-	UWORD	*a;		/* The number array */
-	UWORD	*m;		/* The modulus array */
-	WORD	na;		/* Size of the number */
-	WORD	nm;		/* size of the number in the modulus array */
+    UWORD   *a;     /* The number array */
+    UWORD   *m;     /* The modulus array */
+    WORD    na;     /* Size of the number */
+    WORD    nm;     /* size of the number in the modulus array */
 } MODNUM;
 
 /*
-	Struct for optimizing outputs. If changed, do not forget to change
-	the padding information in the AO struct.
+    Struct for optimizing outputs. If changed, do not forget to change
+    the padding information in the AO struct.
 */
 typedef struct {
-	union { /* we do this to allow padding */
-		float fval;
-		int ival[2]; /* This should be enough */
-	} mctsconstant;
-	int   horner;
-	int   method;
-	int   mctstimelimit;
-	int   mctsnumexpand;
-	int   mctsnumkeep;
-	int   greedytimelimit;
-	int   greedyminnum;
-	int   greedymaxperc;
+    union { /* we do this to allow padding */
+        float fval;
+        int ival[2]; /* This should be enough */
+    } mctsconstant;
+    int   horner;
+    int   method;
+    int   mctstimelimit;
+    int   mctsnumexpand;
+    int   mctsnumkeep;
+    int   greedytimelimit;
+    int   greedyminnum;
+    int   greedymaxperc;
 } OPTIMIZE;
 
 typedef struct {
-	WORD *code;
-	UBYTE *nameofexpr;
-	WORD  exprnr,minvar,maxvar;
-	
-	PADPOSITION(2,0,3,0,0);
+    WORD  *code;
+    UBYTE *nameofexpr;  /* It is easier to remember an expression by name */
+    LONG  codesize;     /* We need this for the checkpoints */
+    WORD  exprnr;       /* Problem here is: we renumber them in execute.c */
+    WORD  minvar;
+    WORD  maxvar;
+    
+    PADPOSITION(2,1,3,0,0);
 } OPTIMIZERESULT;
 
 /*

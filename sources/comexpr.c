@@ -65,7 +65,7 @@ static struct id_options {
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,0)); }
 
 /*
-  	#] CoLocal :
+  	#] CoLocal : 
   	#[ CoGlobal :
 */
 
@@ -128,6 +128,10 @@ int DoExpr(UBYTE *inp, int type, int par)
 					}
 					else {
 						HighWarning("Expression is replaced by new definition");
+						if ( AO.OptimizeResult.nameofexpr != NULL &&
+							StrCmp(inp,AO.OptimizeResult.nameofexpr) == 0 ) {
+							ClearOptimize();
+						}
 						if ( Expressions[c2].status != DROPPEDEXPRESSION ) {
 							w = &(Expressions[c2].status);
 							if ( *w == LOCALEXPRESSION || *w == SKIPLEXPRESSION )
@@ -359,7 +363,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
