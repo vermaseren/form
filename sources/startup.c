@@ -737,6 +737,7 @@ VOID StartVariables()
 	AO.Optimize.greedytimelimit = 0;
 	AO.Optimize.greedyminnum = 10;
 	AO.Optimize.greedymaxperc = 5;
+	AO.Optimize.printstats = 0;
 	AO.OptimizeResult.code = NULL;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;

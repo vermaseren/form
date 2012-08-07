@@ -33,7 +33,6 @@
   	#[ includes :
 */
 
-#define DEBUGPRINTNUMOPER
 //#define DEBUG
 //#define DEBUG_MORE
 //#define DEBUG_MCTS
@@ -99,7 +98,7 @@ pthread_mutex_t optimize_lock;
 
 /*
   	#] includes : 
- 		#[ get_expression :
+  	#[ get_expression :
 */
 
 /**  Get expression
@@ -148,8 +147,8 @@ WORD get_expression (int exprnr) {
 }
 
 /*
- 		#] get_expression : 
- 		#[ get_brackets :
+  	#] get_expression : 
+  	#[ get_brackets :
 */
 
 /**  Get brackets
@@ -231,7 +230,7 @@ vector<vector<WORD> > get_brackets () {
 }
 
 /*
- 		#] get_brackets : 
+  	#] get_brackets : 
   	#[ count_operators :
 */
 
@@ -2967,7 +2966,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	
 /*
   	#] generate_output : 
- 		#[ generate_expression :
+  	#[ generate_expression :
 */
 
 /**  Generate expression
@@ -3025,7 +3024,7 @@ WORD generate_expression (WORD exprnr) {
 }
 
 /*
- 		#] generate_expression : 
+  	#] generate_expression : 
   	#[ optimize_print_code :
 */
 
@@ -3055,7 +3054,7 @@ VOID optimize_print_code (int print_expr) {
 
 /*
   	#] optimize_print_code : 
- 		#[ Optimize :
+  	#[ Optimize :
 */
 
 /**  Optimization of expression
@@ -3171,10 +3170,10 @@ int Optimize (WORD exprnr, int do_print) {
 			generate_expression(exprnr);
 		}
 	
-#ifdef DEBUGPRINTNUMOPER
-		count_operators(optimize_expr,true);
-		count_operators(optimize_best_instr,true);
-#endif
+		if ( AO.Optimize.printstats > 0 ) {
+			count_operators(optimize_expr,true);
+			count_operators(optimize_best_instr,true);
+		}
 	}
 	
 	// cleanup
@@ -3191,8 +3190,8 @@ int Optimize (WORD exprnr, int do_print) {
 }
 
 /*
- 		#] Optimize : 
- 		#[ ClearOptimize :
+  	#] Optimize : 
+  	#[ ClearOptimize :
 */
 
 /**  Optimization of expression
@@ -3243,5 +3242,5 @@ int ClearOptimize()
 }
 
 /*
- 		#] ClearOptimize : 
+  	#] ClearOptimize : 
 */

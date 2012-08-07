@@ -626,6 +626,7 @@ int CoFormat(UBYTE *s)
 			AO.OptimizationLevel = x;
 			AO.Optimize.greedytimelimit = 0;
 			AO.Optimize.mctstimelimit = 0;
+			AO.Optimize.printstats = 0;
 			switch ( x ) {
 				case 0:
 					break;
@@ -680,6 +681,7 @@ opterr:				error = 1;
 			AO.Optimize.greedytimelimit = 0;
 			AO.Optimize.greedyminnum = 10;
 			AO.Optimize.greedymaxperc = 5;
+			AO.Optimize.printstats = 0;
 			return(CoOptimizeOption(s));
 		}
 		else goto opterr;
@@ -6052,6 +6054,19 @@ correctuse:
 			}
 			else {
 				AO.Optimize.greedymaxperc= x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"stats") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"on") == 0 ) {
+				AO.Optimize.printstats = 1;
+			}
+			else if ( StrICmp(value,(UBYTE *)"off") == 0 ) {
+				AO.Optimize.printstats = 0;
+			}
+			else {
+				AO.Optimize.printstats = 0;
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
+				error = 1;
 			}
 		}
 		else {

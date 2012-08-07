@@ -1206,6 +1206,7 @@ typedef struct {
     int   greedytimelimit;
     int   greedyminnum;
     int   greedymaxperc;
+    int   printstats;
 } OPTIMIZE;
 
 typedef struct {
@@ -2163,13 +2164,13 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(23,6,13,16,1);
+	PADPOSITION(23,6,14,16,1);
 #else
-	PADPOSITION(23,4,13,16,1);
+	PADPOSITION(23,4,14,16,1);
 #endif
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
