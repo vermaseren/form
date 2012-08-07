@@ -33,7 +33,7 @@
   	#[ includes :
 */
 
-//#define DEBUGPRINTNUMOPER
+#define DEBUGPRINTNUMOPER
 //#define DEBUG
 //#define DEBUG_MORE
 //#define DEBUG_MCTS
@@ -60,20 +60,6 @@ extern "C" {
 
 using namespace std;
 
-/**  predefined optimization levels:
- *   1. occurrence order Horner, then CSE (takes linearish time)
- *   2. occurrence order Horner, then greedy (slower and better)
- *   3. MCTS Horner, then greedy (even slower and much better)
- */
-//const int OPTIMIZE_NUM_DEFINED_SETTINGS = 3;
-//const OPTIMIZE OPTIMIZE_DEFINED_SETTINGS[OPTIMIZE_NUM_DEFINED_SETTINGS] = {
-//    // MCTS                                MCTS     MCTS   MCTS   greedy   greedy greedy
-//    //constant    horner       method    timelimit #expand #keep timelimit minnum maxperc
-//	{ { -1.0 },O_OCCURRENCE , O_CSE    ,    0    ,   -1  ,  -1  ,   0    ,  -1  ,  -1    }, // AO.OptimizationLevel = 1
-//	{ { -1.0 },O_OCCURRENCE , O_GREEDY ,    0    ,   -1  ,  -1  ,   0    ,  10  ,   5    }, // AO.OptimizationLevel = 2
-//	{ {  1.0 },O_MCTS       , O_GREEDY ,    0    , 1000  ,  10  ,   0    ,  10  ,   5    }  // AO.OptimizationLevel = 3
-//};
-
 // operators
 const WORD OPER_ADD = -1;
 const WORD OPER_MUL = -2;
@@ -95,7 +81,6 @@ public:
 
 // global variables for multithreading
 WORD *optimize_expr;
-OPTIMIZE optimize_settings;
 vector<vector<WORD> > optimize_best_Horner_schemes;
 int optimize_best_num_oper;
 vector<WORD> optimize_best_instr;
@@ -114,6 +99,139 @@ pthread_mutex_t optimize_lock;
 
 /*
   	#] includes : 
+ 		#[ get_expression :
+*/
+
+/**  Get expression
+ *
+ *   Description
+ *   ===========
+ *   Reads an expression from the input file into a buffer (called
+ *   optimize_expr). This buffer is used during the optimization
+ *   process. Non-symbols are removed by ConvertToPoly and are put in
+ *   temporary symbols.
+ */
+WORD get_expression (int exprnr) {
+
+	GETIDENTITY;
+	
+  AR.NoCompress = 1;
+
+  NewSort(BHEAD0);
+  EXPRESSIONS e = Expressions+exprnr;
+  SetScratch(AR.infile,&(e->onfile));
+
+  // get header term
+  WORD *term = AT.WorkPointer;
+	GetTerm(BHEAD term);
+
+  NewSort(BHEAD0);
+
+  // get terms
+  while (GetTerm(BHEAD term) > 0) {
+    AT.WorkPointer = term + *term;
+    WORD *t1 = term;
+    WORD *t2 = term + *term;
+    if (ConvertToPoly(BHEAD t1,t2,1) < 0) return -1;
+    int n = *t2;
+    NCOPY(t1,t2,n);
+    AT.WorkPointer = term + *term;
+    if (StoreTerm(BHEAD term)) return -1;
+  }
+
+  // sort and store in buffer
+  if (EndSort(BHEAD (WORD *)((VOID *)(&optimize_expr)),2) < 0) return -1;
+  LowerSortLevel();
+  AT.WorkPointer = term;
+
+	return 0;
+}
+
+/*
+ 		#] get_expression : 
+ 		#[ get_brackets :
+*/
+
+/**  Get brackets
+ *
+ *   Description
+ *   ===========
+ *   Checks whether the input expression (stored in optimize_expr)
+ *   contains brackets. If so, this method replaces terms outside
+ *   brackets by powers of SEPERATESYMBOL (equal brackets have equal
+ *   powers) and the brackets are returned. If not, the result is
+ *   empty.
+ *
+ *   Brackets are used for simultaneous optimization. The symbol
+ *   SEPARATESYMBOL is always the first one used in a Horner scheme.
+ */
+
+vector<vector<WORD> > get_brackets () {
+
+  // check for brackets in expression
+  bool has_brackets = false;
+  for (WORD *t=optimize_expr; *t!=0; t+=*t) {
+    WORD *tend=t+*t; tend-=ABS(*(tend-1));
+    for (WORD *t1=t+1; t1<tend; t1+=*(t1+1))
+      if (*t1 == HAAKJE)
+        has_brackets=true;
+  }
+
+  // replace brackets by SEPARATESYMBOL
+  vector<vector<WORD> > brackets;
+
+  if (has_brackets) {
+		int exprlen=0;
+		for (WORD *t=optimize_expr; *t!=0; t+=*t)
+			exprlen += *t;
+    WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
+
+    int i=0;
+    int sep_power = 0;
+
+    for (WORD *t=optimize_expr; *t!=0; t+=*t) {
+      WORD *t1 = t+1;
+
+			// scan for bracket
+      vector<WORD> bracket;
+      for (; *t1!=HAAKJE; t1+=*(t1+1))
+        bracket.insert(bracket.end(), t1, t1+*(t1+1));
+
+      if (brackets.size()==0 || bracket!=brackets.back()) {
+        sep_power++;
+        brackets.push_back(bracket);
+      }
+      t1+=*(t1+1);
+
+      WORD left = t + *t - t1;
+      bool more_symbols = (left != ABS(*(t+*t-1)));
+
+			// add power of SEPARATESYMBOL
+      newexpr[i++] = 1 + left + (more_symbols ? 2 : 4);
+      newexpr[i++] = SYMBOL;
+      newexpr[i++] = (more_symbols ? *(t1+1) + 2 : 4);
+      newexpr[i++] = SEPARATESYMBOL;
+      newexpr[i++] = sep_power;
+
+			// add remaining terms
+      if (more_symbols) {
+        t1+=2;
+        left-=2;
+      }
+      while (left-->0)
+        newexpr[i++] = *(t1++);
+    }
+
+    newexpr[i++] = 0;
+    memcpy(optimize_expr, newexpr, i*sizeof(WORD));
+    M_free(newexpr,"optimize newexpr");
+  }
+
+	return brackets;
+}
+
+/*
+ 		#] get_brackets : 
   	#[ count_operators :
 */
 
@@ -1050,7 +1168,7 @@ void find_Horner_MCTS_expand_tree () {
 			if (p->num_visits >= 1) {
 				// there are results calculated, so select with the UCT formula
 				score = mcts_expr_score / (p->sum_results/p->num_visits) +
-					2 * optimize_settings.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
+					2 * AO.Optimize.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
 					
 #ifdef DEBUG_MCTS
 				printf("%d: %.2lf [x=%.2lf n=%d fin=%i]\n",p->var,score,mcts_expr_score / (p->sum_results/p->num_visits),
@@ -1101,7 +1219,8 @@ void find_Horner_MCTS_expand_tree () {
 		for (int i=0; i<(int)mcts_vars.size(); i++)
 			if (!var_used.count(mcts_vars[i])) 
 				new_node.childs.push_back(tree_node(mcts_vars[i]));
-
+		random_shuffle(new_node.childs.begin(), new_node.childs.end());
+		
 		// here locking is necessary, since operator=(tree_node) is a
 		// non-atomic operation (using pointers makes this lock obsolete)
 		LOCK(optimize_lock);
@@ -1151,7 +1270,7 @@ void find_Horner_MCTS_expand_tree () {
 #endif
 	
 	// update the (global) list of best Horner scheme
-	if ((int)mcts_best_schemes.size() < optimize_settings.mctsnumkeep ||
+	if ((int)mcts_best_schemes.size() < AO.Optimize.mctsnumkeep ||
 			(--mcts_best_schemes.end())->first > num_oper) {
 		// here locking is necessary, for otherwise best_schemes may
 		// become corrupted; lock can be prevented if each thread keeps
@@ -1159,7 +1278,7 @@ void find_Horner_MCTS_expand_tree () {
 		// but this seems not useful to implement
 		LOCK(optimize_lock);
 		mcts_best_schemes.insert(make_pair(num_oper,order));
-		if ((int)mcts_best_schemes.size() > optimize_settings.mctsnumkeep)
+		if ((int)mcts_best_schemes.size() > AO.Optimize.mctsnumkeep)
 			mcts_best_schemes.erase(--mcts_best_schemes.end());
 		UNLOCK(optimize_lock);
 	}
@@ -1214,9 +1333,9 @@ vector<vector<WORD> > find_Horner_MCTS () {
 	// isn't include in the MCTS
 	mcts_factorized = var_set.count(FACTORSYMBOL);
 	if (mcts_factorized) var_set.erase(FACTORSYMBOL);
-	
-	mcts_vars = vector<WORD>(var_set.begin(), var_set.end());
 
+	mcts_vars = vector<WORD>(var_set.begin(), var_set.end());
+	
 	// initialize MCTS tree root
 
 	for (int i=0; i<(int)mcts_vars.size(); i++)
@@ -1227,8 +1346,8 @@ vector<vector<WORD> > find_Horner_MCTS () {
 	
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
-	for (int times=0; times<optimize_settings.mctsnumexpand && !mcts_root.finished && 
-				 (optimize_settings.mctstimelimit==0 ||	(TimeWallClock(1)-start_time)/100 < optimize_settings.mctstimelimit);
+	for (int times=0; times<AO.Optimize.mctsnumexpand && !mcts_root.finished && 
+				 (AO.Optimize.mctstimelimit==0 ||	(TimeWallClock(1)-start_time)/100 < AO.Optimize.mctstimelimit);
 			 times++) {
 
   	// call expand_tree routine depending on threading mode
@@ -2351,7 +2470,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
  *   the instructions are "compressed" again to remove these extra
  *   zeroes.
  */
-vector<WORD> optimize_greedy (vector<WORD> instr, const OPTIMIZE &settings, LONG time_limit) {
+vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 
 #ifdef DEBUG
 	int old_num_oper = count_operators(instr);
@@ -2387,7 +2506,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, const OPTIMIZE &settings, LONG
 		vector<int> add_eqnidxs;
 
 		// number of optimizations to do
-		int num_do_optims = max(settings.greedyminnum, (int)optim.size()*settings.greedymaxperc/100);
+		int num_do_optims = max(AO.Optimize.greedyminnum, (int)optim.size()*AO.Optimize.greedymaxperc/100);
 
 		// if best improvement is one, do all optimizations
 		int best_improve=0;
@@ -2651,8 +2770,7 @@ void optimize_expression_given_Horner () {
 
 	// initialize timer
 	LONG start_time = TimeWallClock(1);
-	LONG time_limit = 100 * optimize_settings.greedytimelimit /
-	                  (optimize_settings.horner == O_MCTS ? optimize_settings.mctsnumkeep : 1);
+	LONG time_limit = 100 * AO.Optimize.greedytimelimit / (AO.Optimize.horner == O_MCTS ? AO.Optimize.mctsnumkeep : 1);
 	if (time_limit == 0) time_limit=MAXPOSITIVE;
 
 	// pick a Horner scheme from the list
@@ -2667,17 +2785,17 @@ void optimize_expression_given_Horner () {
 	// generate instructions, eventually with CSE
 	vector<WORD> instr;
 
-	if (optimize_settings.method == O_CSE || optimize_settings.method == O_CSEGREEDY) 
+	if (AO.Optimize.method == O_CSE || AO.Optimize.method == O_CSEGREEDY) 
 		instr = generate_instructions(tree, true);
 	else
 		instr = generate_instructions(tree, false);
 	
 	/// eventually do greedy optimations
-	if (optimize_settings.method == O_CSEGREEDY || optimize_settings.method == O_GREEDY) {
+	if (AO.Optimize.method == O_CSEGREEDY || AO.Optimize.method == O_GREEDY) {
 		instr = merge_operators(instr, false);
-		instr = optimize_greedy(instr, optimize_settings, time_limit-(TimeWallClock(1)-start_time));
+		instr = optimize_greedy(instr, time_limit-(TimeWallClock(1)-start_time));
 		instr = merge_operators(instr, true);
-		instr = optimize_greedy(instr, optimize_settings, time_limit-(TimeWallClock(1)-start_time));
+		instr = optimize_greedy(instr, time_limit-(TimeWallClock(1)-start_time));
 	}
 	
 	instr = merge_operators(instr, true);
@@ -2710,14 +2828,14 @@ void optimize_expression_given_Horner () {
   	#[ generate_output :
 */
 
-/**  Generate Output (TODO: fix comments)
+/**  Generate output
  *
  *   Description
  *   ===========
- *   This method prints the instructions. It uses Form's print
- *   routines for the correct language, spacing, etc. Add instructions
- *   are already correctly formatted. while multiplication
- *   instructions need reformatting.
+ *   This method prepares the instructions for printing. They are
+ *   stored in Form format, so that they can be printed by
+ *   "PrintExtraSymbol". The results are stored in the buffer
+ *   AO.OptimizeResult.
  */
 VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, const vector<vector<WORD> > &brackets) {
 
@@ -2727,12 +2845,15 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	// one-indexed instead of zero-indexed
 	extraoffset++;
 
+	// set some properties of the result
 	AO.OptimizeResult.exprnr = exprnr;
 	AO.OptimizeResult.minvar = extraoffset;
 
 	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) {
 		// copy arguments
 		WCOPY(AT.WorkPointer, &instr[i+3], (instr[i+2]-3));
+
+		// update maximal variable number
 		AO.OptimizeResult.maxvar = MaX(AO.OptimizeResult.maxvar, instr[i]+extraoffset);
 
 		// renumber symbols and extrasymbols to correct values
@@ -2790,6 +2911,8 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 			*now++ = 0;
 		}
 
+		// in the case of simultaneous optimzation of expressions, add the
+		// brackets to the final expression
 		if (instr[i+1]==OPER_COMMA) {
 			WORD *start = AT.WorkPointer + instr[i+2];
 			WORD *now = start;
@@ -2806,36 +2929,35 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 			memmove(AT.WorkPointer, start, (now-start)*sizeof(WORD));
 		}
 		
-		// print the expression; if it is the last one, replace the extra
-		// symbol with the expression number
-
+		// add the number of the extra symbol; if it is the last one,
+		// replace the extra symbol number with the expression number
 		if (i+instr[i+2]<(int)instr.size())
 			output.push_back(instr[i]+extraoffset);
 		else {
 			output.push_back(-(exprnr+1));
 		}
-		
+
+		// add code for this symbol
 		int n=0;
 		while (*(AT.WorkPointer+n)!=0) 
 			n += *(AT.WorkPointer+n);
 		n++;
 		output.insert(output.end(), AT.WorkPointer, AT.WorkPointer+n);
-		/*
-		if (i+instr[i+2]<(int)instr.size())
-			PrintExtraSymbol(instr[i]+extraoffset, AT.WorkPointer, EXTRASYMBOL);
-		else
-			PrintExtraSymbol(numexpr, AT.WorkPointer, EXPRESSIONNUMBER);
-		*/
 	}
 
+	// trailing zero
 	output.push_back(0);
+
+	// clear buffer
 	if (AO.OptimizeResult.code != NULL)
 		M_free(AO.OptimizeResult.code, "optimize output");
 
+	// copy buffer
 	AO.OptimizeResult.codesize = output.size();
 	AO.OptimizeResult.code  = (WORD *)Malloc1(output.size()*sizeof(WORD), "optimize output");
 	memcpy(AO.OptimizeResult.code, &output[0], output.size()*sizeof(WORD));
 
+	// set preprocessor variables
 	char str[100];
 	sprintf (str,"%d",AO.OptimizeResult.minvar);
 	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)str,0,1);
@@ -2845,137 +2967,16 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	
 /*
   	#] generate_output : 
-  	#[ optimize_print_code :
-*/
-
-VOID optimize_print_code (int print_expr) {
-
-	WORD *t = AO.OptimizeResult.code;
-
-	while (*t!=0) {
-		if (*t > 0)
-			PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
-		else if (print_expr)
-			PrintExtraSymbol(-*t-1, t+1, EXPRESSIONNUMBER);
-		t++;
-		while (*t!=0) t+=*t;
-		t++;
-	}
-}
-
-/*
-  	#] optimize_print_code : 
-  	#[ Optimize :
- 		#[ get_expression :
-*/
-
-WORD get_expression (int exprnr) {
-
-	GETIDENTITY;
-	
-  // load expression in a buffer and convert to polynomial
-  AR.NoCompress = 1;
-
-  NewSort(BHEAD0);
-  EXPRESSIONS e = Expressions+exprnr;
-  SetScratch(AR.infile,&(e->onfile));
-
-  // get header term
-  WORD *term = AT.WorkPointer;
-	GetTerm(BHEAD term);
-
-  NewSort(BHEAD0);
-
-  // get terms
-  while (GetTerm(BHEAD term) > 0) {
-    AT.WorkPointer = term + *term;
-    WORD *t1 = term;
-    WORD *t2 = term + *term;
-    if (ConvertToPoly(BHEAD t1,t2,1) < 0) return -1;
-    int n = *t2;
-    NCOPY(t1,t2,n);
-    AT.WorkPointer = term + *term;
-    if (StoreTerm(BHEAD term)) return -1;
-  }
-
-  // sort and store in buffer
-  if (EndSort(BHEAD (WORD *)((VOID *)(&optimize_expr)),2) < 0) return -1;
-  LowerSortLevel();
-  AT.WorkPointer = term;
-
-	return 0;
-}
-
-/*
- 		#] get_expression : 
- 		#[ get_brackets :
-*/
-
-vector<vector<WORD> > get_brackets () {
-
-  // check for brackets in expression, i.e. simultaneous optimization
-  bool has_brackets = false;
-  for (WORD *t=optimize_expr; *t!=0; t+=*t) {
-    WORD *tend=t+*t; tend-=ABS(*(tend-1));
-    for (WORD *t1=t+1; t1<tend; t1+=*(t1+1))
-      if (*t1 == HAAKJE)
-        has_brackets=true;
-  }
-
-  // replace brackets by SEPARATESYMBOL
-  vector<vector<WORD> > brackets;
-
-  if (has_brackets) {
-		int exprlen=0;
-		for (WORD *t=optimize_expr; *t!=0; t+=*t)
-			exprlen += *t;
-    WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
-
-    int i=0;
-    int sep_power = 0;
-
-    for (WORD *t=optimize_expr; *t!=0; t+=*t) {
-      WORD *t1 = t+1;
-
-      vector<WORD> bracket;
-      for (; *t1!=HAAKJE; t1+=*(t1+1))
-        bracket.insert(bracket.end(), t1, t1+*(t1+1));
-
-      if (brackets.size()==0 || bracket!=brackets.back()) {
-        sep_power++;
-        brackets.push_back(bracket);
-      }
-      t1+=*(t1+1);
-
-      WORD left = t + *t - t1;
-      bool more_symbols = (left != ABS(*(t+*t-1)));
-
-      newexpr[i++] = 1 + left + (more_symbols ? 2 : 4);
-      newexpr[i++] = SYMBOL;
-      newexpr[i++] = (more_symbols ? *(t1+1) + 2 : 4);
-      newexpr[i++] = SEPARATESYMBOL;
-      newexpr[i++] = sep_power;
-      if (more_symbols) {
-        t1+=2;
-        left-=2;
-      }
-      while (left-->0)
-        newexpr[i++] = *(t1++);
-    }
-
-    newexpr[i++] = 0;
-    memcpy(optimize_expr, newexpr, i*sizeof(WORD));
-    M_free(newexpr,"optimize newexpr");
-  }
-
-	return brackets;
-}
-
-/*
- 		#] get_brackets : 
  		#[ generate_expression :
 */
 
+/**  Generate expression
+ *
+ *   Description
+ *   ===========
+ *   This method modifies the original optimized expression by an
+ *   expression with extra symbols. This is used for "#Optimize".
+ */
 WORD generate_expression (WORD exprnr) {
 	
 	GETIDENTITY;
@@ -2999,6 +3000,8 @@ WORD generate_expression (WORD exprnr) {
 
 	NewSort(BHEAD0);
 
+	// scan for the original expression (marked by *t<0) and give the
+	// terms to Generator
 	WORD *t = AO.OptimizeResult.code;
 
 	while (*t!=0) {
@@ -3023,6 +3026,35 @@ WORD generate_expression (WORD exprnr) {
 
 /*
  		#] generate_expression : 
+  	#[ optimize_print_code :
+*/
+
+/**  Print optimized code
+ *
+ *   Description
+ *   ===========
+ *   This method prints the optimized code via
+ *   "PrintExtraSymbol". Depending on the flag, the original
+ *   expression is printed (for "Print") or not (for "#Optimize /
+ *   #write "%O").
+ */
+VOID optimize_print_code (int print_expr) {
+
+	WORD *t = AO.OptimizeResult.code;
+
+	while (*t!=0) {
+		if (*t > 0)
+			PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
+		else if (print_expr)
+			PrintExtraSymbol(-*t-1, t+1, EXPRESSIONNUMBER);
+		t++;
+		while (*t!=0) t+=*t;
+		t++;
+	}
+}
+
+/*
+  	#] optimize_print_code : 
  		#[ Optimize :
 */
 
@@ -3030,10 +3062,28 @@ WORD generate_expression (WORD exprnr) {
  *
  *   Description
  *   ===========
- *   This method takes an input expression and outputs optimized code
- *   to calculate its value. First, non-symbols are replaced by extra
- *   symbols. Then optimization is performed. The amount of
- *   optimization depends on AO->OptimizationLevel and AO->Optimize.
+ *   This method takes an input expression and generates optimized
+ *   code to calculate its value. The following methods are called to
+ *   do so:
+ *
+ *   (1) get_expression : to read to expression
+ *
+ *   (2) get_brackets : find brackets for simultaneous optimization
+ *
+ *   (3) occurrence_order or find_Horner_MCTS : to determine (the)
+ *   Horner scheme(s) to use; this depends on AO.optimize.horner
+ *
+ *   (4) optimize_expression_given_Horner : to do the optimizations
+ *   for each Horner scheme; this method does either CSE or greedy
+ *   optimizations dependings on AO.optimize.method
+ *
+ *   (5) generate_output : to format the output in Form notation and
+ *   store it in a buffer
+ *
+ *   (6a) optimize_print_code : to print the expression (for "Print")
+ *   or
+ *   (6b) generate_expression : to modify the expression (for
+ *   "#Optimize")
  */
 
 int Optimize (WORD exprnr, int do_print) {
@@ -3080,14 +3130,8 @@ int Optimize (WORD exprnr, int do_print) {
 		PrintExtraSymbol(exprnr, optimize_expr, EXPRESSIONNUMBER);		
 	}
 	else {
-		// determine optimization level
-//		if (AO.OptimizationLevel <= OPTIMIZE_NUM_DEFINED_SETTINGS)
-//			optimize_settings = OPTIMIZE_DEFINED_SETTINGS[AO.OptimizationLevel-1];
-//		else
-			optimize_settings = AO.Optimize;
-
 		// find Horner scheme(s)
-		if (optimize_settings.horner == O_OCCURRENCE)
+		if (AO.Optimize.horner == O_OCCURRENCE)
 			optimize_best_Horner_schemes = vector<vector<WORD> >(1,occurrence_order(optimize_expr));
 		else 
 			optimize_best_Horner_schemes = find_Horner_MCTS();
@@ -3096,7 +3140,7 @@ int Optimize (WORD exprnr, int do_print) {
 		MesPrint ("*** runtime after Horner: %"); PrintRunningTime();
 #endif
 
-		// find best Horner scheme
+		// find best Horner scheme and results
 		optimize_best_num_oper = INT_MAX;
 
 		int imax = (int)optimize_best_Horner_schemes.size();
@@ -3116,10 +3160,16 @@ int Optimize (WORD exprnr, int do_print) {
 		MasterWaitAll();
 #endif
 
+		// format results, then print it (for "Print") or modify
+		// expression (for "#Optimize")
 		generate_output(optimize_best_instr, exprnr, cbuf[AM.sbufnum].numrhs, brackets);
-		if (do_print)
+		if (do_print) {
 			optimize_print_code(1);
-		generate_expression(exprnr);
+			ClearOptimize();
+		}
+		else {
+			generate_expression(exprnr);
+		}
 	
 #ifdef DEBUGPRINTNUMOPER
 		count_operators(optimize_expr,true);
@@ -3143,18 +3193,22 @@ int Optimize (WORD exprnr, int do_print) {
 /*
  		#] Optimize : 
  		#[ ClearOptimize :
-
-		Clears the buffers that were used for optimization output.
-		Clears the expression from the buffers (marks it to be dropped).
-		Note: we need to use the expression by its name, because numbers
-		may change if we drop other expressions between when we do the
-		optimizations and clear the results (in execute.c).
-		Also this is not 100% safe, because we could overwrite the
-		optimized expression. But that can be done only in a Local or
-		Global statement and hence we only have to test there that we might
-		have to call ClearOptimize first. (in file comexpr.c)
 */
 
+/**  Optimization of expression
+ *
+ *   Description
+ *   ===========
+ *   Clears the buffers that were used for optimization output.
+ *   Clears the expression from the buffers (marks it to be dropped).
+ *   Note: we need to use the expression by its name, because numbers
+ *   may change if we drop other expressions between when we do the
+ *   optimizations and clear the results (in execute.c). Also this is
+ *   not 100% safe, because we could overwrite the optimized
+ *   expression. But that can be done only in a Local or Global
+ *   statement and hence we only have to test there that we might have
+ *   to call ClearOptimize first. (in file comexpr.c)
+ */
 int ClearOptimize()
 {
 	WORD numexpr, *w;
@@ -3175,7 +3229,7 @@ int ClearOptimize()
 		check that it is not an optimized expression. See execute.c and
 		comexpr.c
 */
-	    if ( GetName(AC.exprnames,AO.OptimizeResult.nameofexpr,&numexpr,NOAUTO) != CEXPRESSION ) {
+		if ( GetName(AC.exprnames,AO.OptimizeResult.nameofexpr,&numexpr,NOAUTO) != CEXPRESSION ) {
 			MesPrint("@Internal error while clearing optimized expression %s ",AO.OptimizeResult.nameofexpr);
 			Terminate(-1);
 		}
@@ -3190,5 +3244,4 @@ int ClearOptimize()
 
 /*
  		#] ClearOptimize : 
-  	#] Optimize : 
 */
