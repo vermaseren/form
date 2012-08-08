@@ -1199,6 +1199,7 @@ typedef struct {
         int ival[2]; /* This should be enough */
     } mctsconstant;
     int   horner;
+    int   hornerdirection;
     int   method;
     int   mctstimelimit;
     int   mctsnumexpand;
@@ -1207,7 +1208,6 @@ typedef struct {
     int   greedyminnum;
     int   greedymaxperc;
     int   printstats;
-    int   orderhorner;
 } OPTIMIZE;
 
 typedef struct {

@@ -730,6 +730,7 @@ VOID StartVariables()
 	AC.firstconstindex = 1;
 	AO.Optimize.mctsconstant.fval = 1.0;
 	AO.Optimize.horner = O_MCTS;
+	AO.Optimize.hornerdirection = O_BOTH;
 	AO.Optimize.method = O_GREEDY;
 	AO.Optimize.mctstimelimit = 0;
 	AO.Optimize.mctsnumexpand = 1000;
@@ -738,7 +739,6 @@ VOID StartVariables()
 	AO.Optimize.greedyminnum = 10;
 	AO.Optimize.greedymaxperc = 5;
 	AO.Optimize.printstats = 0;
-	AO.Optimize.orderhorner = O_ORDEROCCURRENCE;
 	AO.OptimizeResult.code = NULL;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;

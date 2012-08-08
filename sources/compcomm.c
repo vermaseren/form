@@ -632,24 +632,20 @@ int CoFormat(UBYTE *s)
 				case 1:
 					AO.Optimize.mctsconstant.fval = -1.0;
 					AO.Optimize.horner = O_OCCURRENCE;
+					AO.Optimize.hornerdirection = O_BOTH;
 					AO.Optimize.method = O_CSE;
-					AO.Optimize.mctsnumexpand = -1;
-					AO.Optimize.mctsnumkeep = -1;
-					AO.Optimize.greedyminnum = -1;
-					AO.Optimize.greedymaxperc = -1;
 					break;
 				case 2:
-					AO.Optimize.mctsconstant.fval = -1.0;
 					AO.Optimize.horner = O_OCCURRENCE;
+					AO.Optimize.hornerdirection = O_BOTH;
 					AO.Optimize.method = O_GREEDY;
-					AO.Optimize.mctsnumexpand = -1;
-					AO.Optimize.mctsnumkeep = -1;
 					AO.Optimize.greedyminnum = 10;
 					AO.Optimize.greedymaxperc = 5;
 					break;
 				case 3:
 					AO.Optimize.mctsconstant.fval = 1.0;
 					AO.Optimize.horner = O_MCTS;
+					AO.Optimize.hornerdirection = O_BOTH;
 					AO.Optimize.method = O_GREEDY;
 					AO.Optimize.mctsnumexpand = 1000;
 					AO.Optimize.mctsnumkeep = 10;
@@ -674,6 +670,7 @@ opterr:				error = 1;
 			AO.OptimizationLevel = 9;
 			AO.Optimize.mctsconstant.fval = 1.0;
 			AO.Optimize.horner = O_MCTS;
+			AO.Optimize.hornerdirection = O_BOTH;
 			AO.Optimize.method = O_GREEDY;
 			AO.Optimize.mctstimelimit = 0;
 			AO.Optimize.mctsnumexpand = 1000;
@@ -5947,8 +5944,27 @@ correctuse:
 				error = 1;
 			}
 		}
+		else if ( StrICmp(name,(UBYTE *)"hornerdirection") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"both") == 0 ) {
+				AO.Optimize.hornerdirection = O_BOTH;
+			}
+			else if ( StrICmp(value,(UBYTE *)"forward") == 0 ) {
+				AO.Optimize.hornerdirection = O_FORWARD;
+			}
+			else if ( StrICmp(value,(UBYTE *)"backward") == 0 ) {
+				AO.Optimize.hornerdirection = O_BACKWARD;
+			}
+			else {
+				AO.Optimize.method = -1;
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
+				error = 1;
+			}
+		}
 		else if ( StrICmp(name,(UBYTE *)"method") == 0 ) {
-			if ( StrICmp(value,(UBYTE *)"cse") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"none") == 0 ) {
+				AO.Optimize.method = O_NONE;
+			}
+			else if ( StrICmp(value,(UBYTE *)"cse") == 0 ) {
 				AO.Optimize.method = O_CSE;
 			}
 			else if ( StrICmp(value,(UBYTE *)"csegreedy") == 0 ) {
@@ -6069,19 +6085,6 @@ correctuse:
 			}
 			else {
 				AO.Optimize.printstats = 0;
-				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
-				error = 1;
-			}
-		}
-		else if ( StrICmp(name,(UBYTE *)"orderhorner") == 0 ) {
-			if ( StrICmp(value,(UBYTE *)"occurrence") == 0 ) {
-				AO.Optimize.orderhorner = O_ORDEROCCURRENCE;
-			}
-			else if ( StrICmp(value,(UBYTE *)"antioccurrence") == 0 ) {
-				AO.Optimize.orderhorner = O_ORDERANTIOCCURRENCE;
-			}
-			else {
-				AO.Optimize.orderhorner = -1;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}

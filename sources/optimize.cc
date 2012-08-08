@@ -337,9 +337,9 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
  *   Description
  *   ===========
  *   Extracts all variables from an expression and sorts them with
- *   most occurring first.
+ *   most occurring first (or last, with rev=true)
  */
-vector<WORD> occurrence_order (const WORD *expr) {
+vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 
 	// count the number of occurrences of variables
 	map<WORD,int> cnt;
@@ -365,7 +365,8 @@ vector<WORD> occurrence_order (const WORD *expr) {
 	for (int i=0; i<(int)cnt_order.size(); i++)
 		order.push_back(cnt_order[i].second);
 
-	//	reverse(order.begin(),order.end()); // TODO: implement rev.occ.order
+	if (rev) reverse(order.begin(),order.end());
+	
 	return order;
 }
 
@@ -1256,18 +1257,20 @@ void find_Horner_MCTS_expand_tree () {
 	// MCTS step III: simulation
 
 	// complete Horner scheme
-	int old_order_size = order.size();
+	int old_order_size = order.size() - 1;
 	for (int i=0; i<(int)mcts_vars.size(); i++)
 		if (!var_used.count(mcts_vars[i])) 
 			order.push_back(mcts_vars[i]);
 
+	// check for backward order, remove indicator
+	bool rev = order[0] == O_BACKWARD;
+	order = vector<WORD>(order.begin()+1, order.end());
+
 	// randomize completion
 	my_random_shuffle(BHEAD order.begin()+old_order_size, order.end());
 
-	//	bool do_reverse = order[0]==-1;
-	//	order = vector<WORD>(order.begin()+1, order.end());
-	//	if (do_reverse) 
-	reverse(order.begin(),order.end());
+	// reverse if necessary
+	if (rev) reverse(order.begin(),order.end());
 	
 	// add FACTORSYMBOL/SEPARATESYMBOL is necessary
 	if (mcts_factorized) 
@@ -1359,11 +1362,15 @@ vector<vector<WORD> > find_Horner_MCTS () {
 	
 	// initialize MCTS tree root
 
+	/*
 	for (int i=0; i<(int)mcts_vars.size(); i++)
 		mcts_root.childs.push_back(tree_node(mcts_vars[i]));
+	*/
 
-	//	mcts_root.childs.push_back(-1);
-	//	mcts_root.childs.push_back(-2);
+	if (AO.Optimize.hornerdirection==O_FORWARD || AO.Optimize.hornerdirection==O_BOTH)
+		mcts_root.childs.push_back(O_FORWARD);
+	if (AO.Optimize.hornerdirection==O_BACKWARD || AO.Optimize.hornerdirection==O_BOTH)
+		mcts_root.childs.push_back(O_BACKWARD);
 	
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
@@ -1400,7 +1407,11 @@ vector<vector<WORD> > find_Horner_MCTS () {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS", thetime_str().c_str());
 #endif
-
+	/*
+	for (int i=0; i<(int)mcts_root.childs.size(); i++)
+		MesPrint ("cnt(%d) = %d", mcts_root.childs[i].var,
+							mcts_root.childs[i].num_visits);
+	*/
 	return res;
 }
 
@@ -3157,8 +3168,13 @@ int Optimize (WORD exprnr, int do_print) {
 	}
 	else {
 		// find Horner scheme(s)
-		if (AO.Optimize.horner == O_OCCURRENCE)
-			optimize_best_Horner_schemes = vector<vector<WORD> >(1,occurrence_order(optimize_expr));
+		if (AO.Optimize.horner == O_OCCURRENCE) {
+			optimize_best_Horner_schemes.clear();
+			if (AO.Optimize.hornerdirection==O_FORWARD || AO.Optimize.hornerdirection==O_BOTH)
+				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, false));
+			if (AO.Optimize.hornerdirection==O_BACKWARD || AO.Optimize.hornerdirection==O_BOTH)
+				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, true));
+		}
 		else 
 			optimize_best_Horner_schemes = find_Horner_MCTS();
 		

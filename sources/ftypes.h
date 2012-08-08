@@ -958,11 +958,15 @@ typedef int (*TFUN1)();
 #define REGULARSYMBOL 1
 #define EXPRESSIONNUMBER 2
 
-#define O_CSE 0
-#define O_CSEGREEDY 1
-#define O_GREEDY 2
+#define O_NONE 0
+#define O_CSE 1
+#define O_CSEGREEDY 2
+#define O_GREEDY 3
+
 #define O_OCCURRENCE 0
 #define O_MCTS 1
-#define O_ORDEROCCURRENCE 0
-#define O_ORDERANTIOCCURRENCE 1
+
+#define O_BOTH 0
+#define O_FORWARD -1
+#define O_BACKWARD -2
 
