@@ -33,7 +33,6 @@
   	#[ includes :
 */
 
-//#define DEBUGPRINTNUMOPER
 //#define DEBUG
 //#define DEBUG_MORE
 //#define DEBUG_MCTS
@@ -2871,10 +2870,6 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	// one-indexed instead of zero-indexed
 	extraoffset++;
 
-	// set some properties of the result
-	AO.OptimizeResult.exprnr = exprnr;
-	AO.OptimizeResult.minvar = extraoffset;
-
 	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) {
 		// copy arguments
 		WCOPY(AT.WorkPointer, &instr[i+3], (instr[i+2]-3));
@@ -2980,15 +2975,8 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 
 	// copy buffer
 	AO.OptimizeResult.codesize = output.size();
-	AO.OptimizeResult.code  = (WORD *)Malloc1(output.size()*sizeof(WORD), "optimize output");
+	AO.OptimizeResult.code = (WORD *)Malloc1(output.size()*sizeof(WORD), "optimize output");
 	memcpy(AO.OptimizeResult.code, &output[0], output.size()*sizeof(WORD));
-
-	// set preprocessor variables
-	char str[100];
-	sprintf (str,"%d",AO.OptimizeResult.minvar);
-	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)str,0,1);
-	sprintf (str,"%d",AO.OptimizeResult.maxvar);
-	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)str,0,1);
 
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: generate_output", thetime_str().c_str());
@@ -3083,6 +3071,11 @@ VOID optimize_print_code (int print_expr) {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: optimize_print_code", thetime_str().c_str());
 #endif
+
+	// print extra symbols from ConvertToPoly in optimization
+	CBUF *C = cbuf + AM.sbufnum;
+	if (C->numrhs >= AO.OptimizeResult.minvar)
+		PrintSubtermList(AO.OptimizeResult.minvar, C->numrhs);
 	
 	WORD *t = AO.OptimizeResult.code;
 	
@@ -3133,21 +3126,7 @@ VOID optimize_print_code (int print_expr) {
  *   (6b) generate_expression : to modify the expression (for
  *   "#Optimize")
  */
-
 int Optimize (WORD exprnr, int do_print) {
-
-	/* for randomization in results from paper
-	timeval now;
-	gettimeofday(&now,NULL);
-	int seed = now.tv_usec;
-	seed = 655176;
-	srandom(seed);
-	int numshuf = random()%1000000;
-	MesPrint ("seed=%d numshuf(seed) = %d", seed, numshuf);
-	vector<int> dummy(10,0);
-	while (numshuf--) 
-		random_shuffle(dummy.begin(),dummy.end());
-	*/
 	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: Optimize", thetime_str().c_str());
@@ -3158,24 +3137,23 @@ int Optimize (WORD exprnr, int do_print) {
 	optimize_lock = dummylock;
 #endif
 	
-	CBUF *C = cbuf + AM.sbufnum;
-	LONG oldCpointer = C->Pointer-C->Buffer;
-	int oldCnumrhs = C->numrhs;
-
+	AO.OptimizeResult.minvar = (cbuf + AM.sbufnum)->numrhs + 1;
+	
 	if (get_expression(exprnr) != 0) return -1;
   vector<vector<WORD> > brackets = get_brackets();
-
-	// print extra symbols from ConvertToPoly
-	if (C->numrhs > 0)
-		PrintSubtermList(oldCnumrhs+1,C->numrhs);
 
 	if (optimize_expr[0]==0 ||
 			(optimize_expr[optimize_expr[0]]==0 && optimize_expr[0]==ABS(optimize_expr[optimize_expr[0]-1])+1) ||
 			(optimize_expr[optimize_expr[0]]==0 && optimize_expr[0]==8 &&
 			 optimize_expr[5]==1 && optimize_expr[6]==1 && ABS(optimize_expr[7])==3)) {
 		// zero terms or one trivial term (number or +/-variable), so no
-		// optimization; special case because without operators it crashes
-		PrintExtraSymbol(exprnr, optimize_expr, EXPRESSIONNUMBER);		
+		// optimization, so copy expression; special case because without
+		// operators the optimization crashes
+		
+		AO.OptimizeResult.code = (WORD *)Malloc1((optimize_expr[0]+3)*sizeof(WORD), "optimize output");
+		AO.OptimizeResult.code[0] = -(exprnr+1);
+		memcpy(AO.OptimizeResult.code+1, optimize_expr, (optimize_expr[0]+1)*sizeof(WORD));
+		AO.OptimizeResult.code[optimize_expr[0]+2] = 0;
 	}
 	else {
 		// find Horner scheme(s)
@@ -3211,25 +3189,30 @@ int Optimize (WORD exprnr, int do_print) {
 		// format results, then print it (for "Print") or modify
 		// expression (for "#Optimize")
 		generate_output(optimize_best_instr, exprnr, cbuf[AM.sbufnum].numrhs, brackets);
-		if (do_print) {
-			optimize_print_code(1);
-			ClearOptimize();
-		}
-		else {
-			generate_expression(exprnr);
-		}
+	}
 	
-		if ( AO.Optimize.printstats > 0 ) {
-			count_operators(optimize_expr,true);
-			count_operators(optimize_best_instr,true);
-		}
+	// set preprocessor variables
+	char str[100];
+	sprintf (str,"%d",AO.OptimizeResult.minvar);
+	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)str,0,1);
+	sprintf (str,"%d",AO.OptimizeResult.maxvar);
+	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)str,0,1);
+
+	if (do_print) {
+		optimize_print_code(1);
+		ClearOptimize();
+	}
+	else {
+		generate_expression(exprnr);
+	}
+	
+	if ( AO.Optimize.printstats > 0 ) {
+		count_operators(optimize_expr,true);
+		count_operators(optimize_best_instr,true);
 	}
 	
 	// cleanup
 	M_free(optimize_expr,"LoadOptim");
-
-	C->Pointer = C->Buffer + oldCpointer;
-	C->numrhs = oldCnumrhs;
 
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: Optimize", thetime_str().c_str());
