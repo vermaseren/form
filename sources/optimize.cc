@@ -99,6 +99,24 @@ pthread_mutex_t optimize_lock;
 
 /*
   	#] includes : 
+  	#[ my_random_shuffle :
+*/
+
+/**  Random shuffle
+ * 
+ *   Description
+ *   ===========
+ *   Randomly permutes elements in the range [fr,to). Functionality is
+ *   the same as C++'s "random_shuffle", but it uses Form's "wranf".
+ */
+template <class RandomAccessIterator>
+void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) {
+  for (int i=to-fr-1; i>0; --i)
+		swap (fr[i],fr[wranf(BHEAD0) % (i+1)]);
+}
+
+/*
+  	#] my_random_shuffle :
   	#[ get_expression :
 */
 
@@ -1219,7 +1237,7 @@ void find_Horner_MCTS_expand_tree () {
 		for (int i=0; i<(int)mcts_vars.size(); i++)
 			if (!var_used.count(mcts_vars[i])) 
 				new_node.childs.push_back(tree_node(mcts_vars[i]));
-		random_shuffle(new_node.childs.begin(), new_node.childs.end());
+		my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
 		
 		// here locking is necessary, since operator=(tree_node) is a
 		// non-atomic operation (using pointers makes this lock obsolete)
@@ -1245,7 +1263,7 @@ void find_Horner_MCTS_expand_tree () {
 			order.push_back(mcts_vars[i]);
 
 	// randomize completion
-	random_shuffle(order.begin()+old_order_size, order.end());
+	my_random_shuffle(BHEAD order.begin()+old_order_size, order.end());
 
 	//	bool do_reverse = order[0]==-1;
 	//	order = vector<WORD>(order.begin()+1, order.end());
@@ -2934,7 +2952,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 				b++;
 			}
 			*now++ = 0;
-			memmove(AT.WorkPointer, start, (now-start)*sizeof(WORD));
+			memmove(AT.WorkPointer, start, (now-start)*sizeof(WORD));			
 		}
 		
 		// add the number of the extra symbol; if it is the last one,
@@ -2994,7 +3012,7 @@ WORD generate_expression (WORD exprnr) {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: generate_expression", thetime_str().c_str());
 #endif
-	
+
 	GETIDENTITY;
 	
 	CBUF *C = cbuf+AC.cbufnum;
@@ -3024,8 +3042,10 @@ WORD generate_expression (WORD exprnr) {
 		bool is_expr = *t < 0;
 		t++;
 		while (*t!=0) {
-			if (is_expr)
-				Generator(BHEAD t, C->numlhs);
+			if (is_expr) {
+				memcpy(AT.WorkPointer, t, *t*sizeof(WORD));
+				Generator(BHEAD AT.WorkPointer, C->numlhs);
+			}
 			t+=*t;
 		}
 		t++;
@@ -3065,7 +3085,7 @@ VOID optimize_print_code (int print_expr) {
 #endif
 	
 	WORD *t = AO.OptimizeResult.code;
-
+	
 	while (*t!=0) {
 		if (*t > 0)
 			PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
