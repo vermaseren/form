@@ -1207,6 +1207,7 @@ typedef struct {
     int   greedyminnum;
     int   greedymaxperc;
     int   printstats;
+    int   orderhorner;
 } OPTIMIZE;
 
 typedef struct {
@@ -2164,9 +2165,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(23,6,14,16,1);
+	PADPOSITION(23,6,15,16,1);
 #else
-	PADPOSITION(23,4,14,16,1);
+	PADPOSITION(23,4,15,16,1);
 #endif
 };
 /*

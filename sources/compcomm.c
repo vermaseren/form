@@ -6069,6 +6069,19 @@ correctuse:
 				error = 1;
 			}
 		}
+		else if ( StrICmp(name,(UBYTE *)"orderhorner") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"occurrence") == 0 ) {
+				AO.Optimize.orderhorner = O_ORDEROCCURRENCE;
+			}
+			else if ( StrICmp(value,(UBYTE *)"antioccurrence") == 0 ) {
+				AO.Optimize.orderhorner = O_ORDERANTIOCCURRENCE;
+			}
+			else {
+				AO.Optimize.orderhorner = -1;
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
+				error = 1;
+			}
+		}
 		else {
 			MesPrint("&Unrecognized option name in Format,Optimize statement: %s",name);
 			error = 1;

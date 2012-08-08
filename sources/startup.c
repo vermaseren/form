@@ -738,6 +738,7 @@ VOID StartVariables()
 	AO.Optimize.greedyminnum = 10;
 	AO.Optimize.greedymaxperc = 5;
 	AO.Optimize.printstats = 0;
+	AO.Optimize.orderhorner = O_ORDEROCCURRENCE;
 	AO.OptimizeResult.code = NULL;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;

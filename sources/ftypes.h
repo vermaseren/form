@@ -963,4 +963,6 @@ typedef int (*TFUN1)();
 #define O_GREEDY 2
 #define O_OCCURRENCE 0
 #define O_MCTS 1
+#define O_ORDEROCCURRENCE 0
+#define O_ORDERANTIOCCURRENCE 1
 
