@@ -622,7 +622,6 @@ int CoFormat(UBYTE *s)
 			while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
 			AO.OptimizationLevel = x;
 			while ( *s == ',' ) s++;
-			if ( *s != 0 ) goto opterr;
 			AO.OptimizationLevel = x;
 			AO.Optimize.greedytimelimit = 0;
 			AO.Optimize.mctstimelimit = 0;
@@ -662,6 +661,7 @@ opterr:				error = 1;
 					MesPrint("&Illegal optimization specification in format statement");
 					break;
 			}
+			if ( error == 0 && *s != 0 ) return(CoOptimizeOption(s));
 			return(error);
 		}
 		ss = s;
