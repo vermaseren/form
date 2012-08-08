@@ -33,6 +33,7 @@
   	#[ includes :
 */
 
+//#define DEBUGPRINTNUMOPER
 //#define DEBUG
 //#define DEBUG_MORE
 //#define DEBUG_MCTS
@@ -86,7 +87,7 @@ vector<WORD> optimize_best_instr;
 vector<WORD> optimize_best_vars;
 
 // global variables for MCTS
-bool mcts_factorized;
+bool mcts_factorized, mcts_separated;
 vector<WORD> mcts_vars;
 tree_node mcts_root;
 int mcts_expr_score;
@@ -1251,9 +1252,11 @@ void find_Horner_MCTS_expand_tree () {
 	//	if (do_reverse) 
 	reverse(order.begin(),order.end());
 	
-	// add FACTORSYMBOL is necessary
+	// add FACTORSYMBOL/SEPARATESYMBOL is necessary
 	if (mcts_factorized) 
 		order.insert(order.begin(),FACTORSYMBOL);
+	if (mcts_separated) 
+		order.insert(order.begin(),SEPARATESYMBOL);
 	
 	// do Horner, CSE and count the number of operators
 	vector<WORD> tree = Horner_tree(optimize_expr, order);
@@ -1328,11 +1331,13 @@ vector<vector<WORD> > find_Horner_MCTS () {
 			for (int i=3; i<t[2]; i+=2)
 				var_set.insert(t[i]);
 
-	// check for factorized expression and make sure that FACTORSYMBOL
-	// isn't include in the MCTS
+	// check for factorized/separated expression and make sure that
+	// FACTORSYMBOL/SEPARATESYMBOL isn't included in the MCTS
 	mcts_factorized = var_set.count(FACTORSYMBOL);
 	if (mcts_factorized) var_set.erase(FACTORSYMBOL);
-
+	mcts_separated = var_set.count(SEPARATESYMBOL);
+	if (mcts_separated) var_set.erase(SEPARATESYMBOL);
+	
 	mcts_vars = vector<WORD>(var_set.begin(), var_set.end());
 	
 	// initialize MCTS tree root
@@ -1692,7 +1697,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
  *   "eqns" is a list of equation, where this optimization can be
  *   performed.
  * 
- *   "improve" is the total improvement of this optimzation.
+ *   "improve" is the total improvement of this optimization.
  */
 class optimization {
 public:
@@ -1720,7 +1725,7 @@ public:
  *   This method find all optimization of the form described in "class
  *   Optimization". It process every equation, looking for possible
  *   optimizations and stores them in a fast-access data structure to
- *   count the total improvement of an optimzation.
+ *   count the total improvement of an optimization.
  */
 vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
@@ -2788,7 +2793,7 @@ void optimize_expression_given_Horner () {
 		instr = generate_instructions(tree, true);
 	else
 		instr = generate_instructions(tree, false);
-	
+
 	/// eventually do greedy optimations
 	if (AO.Optimize.method == O_CSEGREEDY || AO.Optimize.method == O_GREEDY) {
 		instr = merge_operators(instr, false);
@@ -2798,7 +2803,7 @@ void optimize_expression_given_Horner () {
 	}
 	
 	instr = merge_operators(instr, true);
-	
+
 	// recycle the temporary variables
 	instr = recycle_variables(instr);
 
@@ -2816,7 +2821,7 @@ void optimize_expression_given_Horner () {
   // clean poly_vars, that are allocated by Horner_tree
 	AN.poly_num_vars = 0;
 	M_free(AN.poly_vars,"poly_vars");
-
+	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: optimize_expression_given_Horner", thetime_str().c_str());
 #endif
@@ -2837,6 +2842,10 @@ void optimize_expression_given_Horner () {
  *   AO.OptimizeResult.
  */
 VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, const vector<vector<WORD> > &brackets) {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: generate_output", thetime_str().c_str());
+#endif
 
 	GETIDENTITY;
 	vector<WORD> output;
@@ -2910,7 +2919,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 			*now++ = 0;
 		}
 
-		// in the case of simultaneous optimzation of expressions, add the
+		// in the case of simultaneous optimization of expressions, add the
 		// brackets to the final expression
 		if (instr[i+1]==OPER_COMMA) {
 			WORD *start = AT.WorkPointer + instr[i+2];
@@ -2935,7 +2944,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 		else {
 			output.push_back(-(exprnr+1));
 		}
-
+		
 		// add code for this symbol
 		int n=0;
 		while (*(AT.WorkPointer+n)!=0) 
@@ -2962,6 +2971,10 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)str,0,1);
 	sprintf (str,"%d",AO.OptimizeResult.maxvar);
 	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)str,0,1);
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: generate_output", thetime_str().c_str());
+#endif
 }
 	
 /*
@@ -2977,6 +2990,10 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
  *   expression with extra symbols. This is used for "#Optimize".
  */
 WORD generate_expression (WORD exprnr) {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: generate_expression", thetime_str().c_str());
+#endif
 	
 	GETIDENTITY;
 	
@@ -3020,6 +3037,10 @@ WORD generate_expression (WORD exprnr) {
 		Terminate(-1);
 	}
 
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: generate_expression", thetime_str().c_str());
+#endif
+	
 	return 0;
 }
 
@@ -3039,6 +3060,10 @@ WORD generate_expression (WORD exprnr) {
  */
 VOID optimize_print_code (int print_expr) {
 
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: optimize_print_code", thetime_str().c_str());
+#endif
+	
 	WORD *t = AO.OptimizeResult.code;
 
 	while (*t!=0) {
@@ -3050,6 +3075,10 @@ VOID optimize_print_code (int print_expr) {
 		while (*t!=0) t+=*t;
 		t++;
 	}
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: optimize_print_code", thetime_str().c_str());
+#endif
 }
 
 /*
@@ -3112,8 +3141,8 @@ int Optimize (WORD exprnr, int do_print) {
 	CBUF *C = cbuf + AM.sbufnum;
 	LONG oldCpointer = C->Pointer-C->Buffer;
 	int oldCnumrhs = C->numrhs;
-	
-  if (get_expression(exprnr) != 0) return -1;
+
+	if (get_expression(exprnr) != 0) return -1;
   vector<vector<WORD> > brackets = get_brackets();
 
 	// print extra symbols from ConvertToPoly
