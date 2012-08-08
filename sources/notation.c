@@ -610,11 +610,13 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf, WORD par
 int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD offset, WORD par)
 {
 	WORD *tout, *tstop, *tstop1, ncoef, *t, *r, *tt;
-	int i, first = 1;
+	int i;
+/*	first = 1; */
 	tt = term + *term;
 	tout = outterm+1;
 	ncoef = ABS(tt[-1]);
 	tstop = tt - ncoef;
+/*
 	r = t = term + 1;
 	while ( t < tstop ) {
 		if ( *t == SYMBOL ) {
@@ -639,7 +641,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD of
 					*tout++ = *t++;
 					*tout++ = *t++;
 				}
-				else {	/* Caught one! */
+				else {
 					*tout++ = SUBEXPRESSION;
 					*tout++ = SUBEXPSIZE;
 					*tout++ = MAXVARIABLES - *t++ + offset;
@@ -661,6 +663,46 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD of
 		return(*term);
 	}
 	while ( r < t ) *tout++ = *r++;
+	NCOPY(tout,tstop,ncoef)
+	*outterm = tout-outterm;
+*/
+	t = term + 1;
+	while ( t < tstop ) {
+		if ( *t == SYMBOL ) {
+			tstop1 = t + t[1];
+			tt = t + 2;
+			while ( tt < tstop1 ) {
+				if ( ( *tt < MAXVARIABLES - to )
+				  || ( *tt >= MAXVARIABLES - from ) ) {
+					tt += 2;
+				}
+				else {
+					*tout++ = SUBEXPRESSION;
+					*tout++ = SUBEXPSIZE;
+					*tout++ = MAXVARIABLES - *t++ + offset;
+					*tout++ = *t++;
+					if ( par ) *tout++ = AT.ebufnum;
+					else       *tout++ = AM.sbufnum;
+					FILLSUB(tout)
+				}
+			}
+			r = tout; t += 2;
+			*tout++ = SYMBOL; *tout++ = 0;
+			while ( t < tstop1 ) {
+				if ( ( *t < MAXVARIABLES - to )
+				  || ( *t >= MAXVARIABLES - from ) ) {
+					*tout++ = *t++;
+					*tout++ = *t++;
+				}
+				else { t += 2; }
+			}
+			r[1] = tout - r;
+			if ( r[1] <= 2 ) tout = r;
+		}
+		else {
+			i = t[1]; NCOPY(tout,t,i)
+		}
+	}
 	NCOPY(tout,tstop,ncoef)
 	*outterm = tout-outterm;
 	return(*outterm);
@@ -893,14 +935,15 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 	AO.OutFill = AO.OutputLine = outbuffer;
 	AO.OutStop = AO.OutputLine+AC.LineLength;
 	AO.IsBracket = 0;
-	AO.OutSkip = 3;
+/*	AO.OutSkip = 3; */
 
 	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
 		TokenToLine((UBYTE *)"      ");
 		AO.OutSkip = 6;
 	}
 	else if ( AO.OutSkip > 0 ) {
-		for ( i = 0; i <= AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
+		for ( i = 0; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
+/*		for ( i = 0; i <= AO.OutSkip; i++ ) TokenToLine((UBYTE *)" "); */
 	}
 	out = buffer;
 	switch ( par ) {

@@ -5839,8 +5839,25 @@ writealloc:
 				}
 			}
 			else if ( *fstring == 'O' ) {
+				number = AO.OutSkip;
+dooptim:
 				fstring++;
-				optimize_print_code(0);
+/*
+				First test whether there is an optimization buffer
+*/
+				if ( AO.OptimizeResult.code == NULL ) {
+					MesPrint("@In #write instruction: no optimization results available!");
+					return(-1);
+				}
+				num = to - Out;
+				WriteString(wtype,Out,num);
+				to = Out;
+				{
+					WORD oldoutskip = AO.OutSkip;
+					AO.OutSkip = number;
+					optimize_print_code(0);
+					AO.OutSkip = oldoutskip;
+				}
 			}
 			else if ( *fstring == 'e' || *fstring == 'E' ) {
 				if ( *fstring == 'E' ) nosemi = 1;
@@ -5931,7 +5948,8 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				while ( FG.cTable[*fstring] == 1 ) {
 					number = 10*number + *fstring++ - '0';
 				}
-				if ( *fstring == 'X' || *fstring == 'x' ) {
+				if ( *fstring == 'O' ) goto dooptim;
+				else if ( *fstring == 'X' || *fstring == 'x' ) {
 					if ( number > 0 && number <= cbuf[AM.sbufnum].numrhs ) {
 						UBYTE buffer[80], *out, *old1, *old2, *old3;
 						WORD *term, first;
@@ -6320,7 +6338,7 @@ DoSerr:
 }
 
 /*
- 		#] DoOptimize :
+ 		#] DoOptimize : 
  		#[ DoClearOptimize :
 
 		Clears all relevant buffers of the output optimization
@@ -6335,6 +6353,6 @@ int DoClearOptimize(UBYTE *s)
 }
 
 /*
- 		#] DoClearOptimize :
+ 		#] DoClearOptimize : 
  	# ] PreProcessor :
 */

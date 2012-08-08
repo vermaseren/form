@@ -2233,7 +2233,6 @@ WORD WriteAll()
 */
 			if ( AO.OptimizationLevel > 0 ) {
 				UBYTE *oldOutFill = AO.OutFill, *oldOutputLine = AO.OutputLine;
-				ClearOptimize();
 				AO.OutSkip = 6;
 				if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;
 				AO.OutSkip = 3;
@@ -2384,16 +2383,20 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 		case HIDEGEXPRESSION:
 		case UNHIDELEXPRESSION:
 		case UNHIDEGEXPRESSION:
+/*
 		case DROPHLEXPRESSION:
 		case DROPHGEXPRESSION:
+*/
 			AR.GetFile = 2;
 			break;
 		case LOCALEXPRESSION:
 		case GLOBALEXPRESSION:
 		case SKIPLEXPRESSION:
-		case DROPLEXPRESSION:
 		case SKIPGEXPRESSION:
+/*
+		case DROPLEXPRESSION:
 		case DROPGEXPRESSION:
+*/
 			AR.GetFile = 0;
 			break;
 		default:
@@ -2451,7 +2454,6 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 	else
 */
 	if ( AO.OptimizationLevel > 0 ) {
-		ClearOptimize();
 		AO.OutSkip = 6;
 		if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;
 		AO.OutSkip = 3;

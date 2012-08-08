@@ -5317,8 +5317,10 @@ int CoToPolynomial(UBYTE *inp)
 	}
 	if ( *inp == 0 ) {
 		if ( AO.OptimizeResult.code != NULL ) {
-			Warning("ToPolynomial statement looses optimization results");
-			ClearOptimize();
+			MesPrint("&Using ToPolynomial statement when there are still optimization results active.");
+			MesPrint("&Please use #ClearOptimize instruction first.");
+			MesPrint("&This will loose the optimized expression.");
+			return(1);
 		}
 		Add2Com(TYPETOPOLYNOMIAL)
 		AC.topolynomialflag |= TOPOLYNOMIALFLAG;
@@ -5345,8 +5347,10 @@ int CoFromPolynomial(UBYTE *inp)
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
 	if ( *inp == 0 ) {
 		if ( AO.OptimizeResult.code != NULL ) {
-			Warning("FromPolynomial statement looses optimization results");
-			ClearOptimize();
+			MesPrint("&Using FromPolynomial statement when there are still optimization results active.");
+			MesPrint("&Please use #ClearOptimize instruction first.");
+			MesPrint("&This will loose the optimized expression.");
+			return(1);
 		}
 		Add2Com(TYPEFROMPOLYNOMIAL)
 		return(0);
