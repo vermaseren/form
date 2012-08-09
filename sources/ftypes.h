@@ -966,7 +966,7 @@ typedef int (*TFUN1)();
 #define O_OCCURRENCE 0
 #define O_MCTS 1
 
-#define O_BOTH 0
-#define O_FORWARD -1
-#define O_BACKWARD -2
-
+#define O_FORWARD 0
+#define O_BACKWARD 1
+#define O_FORWARDORBACKWARD 2
+#define O_FORWARDANDBACKWARD 3

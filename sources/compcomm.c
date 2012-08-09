@@ -632,12 +632,12 @@ int CoFormat(UBYTE *s)
 				case 1:
 					AO.Optimize.mctsconstant.fval = -1.0;
 					AO.Optimize.horner = O_OCCURRENCE;
-					AO.Optimize.hornerdirection = O_BOTH;
+					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
 					AO.Optimize.method = O_CSE;
 					break;
 				case 2:
 					AO.Optimize.horner = O_OCCURRENCE;
-					AO.Optimize.hornerdirection = O_BOTH;
+					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
 					AO.Optimize.method = O_GREEDY;
 					AO.Optimize.greedyminnum = 10;
 					AO.Optimize.greedymaxperc = 5;
@@ -645,7 +645,7 @@ int CoFormat(UBYTE *s)
 				case 3:
 					AO.Optimize.mctsconstant.fval = 1.0;
 					AO.Optimize.horner = O_MCTS;
-					AO.Optimize.hornerdirection = O_BOTH;
+					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
 					AO.Optimize.method = O_GREEDY;
 					AO.Optimize.mctsnumexpand = 1000;
 					AO.Optimize.mctsnumkeep = 10;
@@ -670,7 +670,7 @@ opterr:				error = 1;
 			AO.OptimizationLevel = 9;
 			AO.Optimize.mctsconstant.fval = 1.0;
 			AO.Optimize.horner = O_MCTS;
-			AO.Optimize.hornerdirection = O_BOTH;
+			AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
 			AO.Optimize.method = O_GREEDY;
 			AO.Optimize.mctstimelimit = 0;
 			AO.Optimize.mctsnumexpand = 1000;
@@ -5945,14 +5945,17 @@ correctuse:
 			}
 		}
 		else if ( StrICmp(name,(UBYTE *)"hornerdirection") == 0 ) {
-			if ( StrICmp(value,(UBYTE *)"both") == 0 ) {
-				AO.Optimize.hornerdirection = O_BOTH;
-			}
-			else if ( StrICmp(value,(UBYTE *)"forward") == 0 ) {
+			if ( StrICmp(value,(UBYTE *)"forward") == 0 ) {
 				AO.Optimize.hornerdirection = O_FORWARD;
 			}
 			else if ( StrICmp(value,(UBYTE *)"backward") == 0 ) {
 				AO.Optimize.hornerdirection = O_BACKWARD;
+			}
+			else if ( StrICmp(value,(UBYTE *)"forwardorbackward") == 0 ) {
+				AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
+			}
+			else if ( StrICmp(value,(UBYTE *)"forwardandbackward") == 0 ) {
+				AO.Optimize.hornerdirection = O_FORWARDANDBACKWARD;
 			}
 			else {
 				AO.Optimize.method = -1;

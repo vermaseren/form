@@ -730,7 +730,7 @@ VOID StartVariables()
 	AC.firstconstindex = 1;
 	AO.Optimize.mctsconstant.fval = 1.0;
 	AO.Optimize.horner = O_MCTS;
-	AO.Optimize.hornerdirection = O_BOTH;
+	AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
 	AO.Optimize.method = O_GREEDY;
 	AO.Optimize.mctstimelimit = 0;
 	AO.Optimize.mctsnumexpand = 1000;

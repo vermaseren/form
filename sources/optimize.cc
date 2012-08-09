@@ -1229,14 +1229,20 @@ void find_Horner_MCTS_expand_tree () {
 #endif
 
 	// variables used so far
-	set<WORD> var_used(order.begin(),order.end());
+	set<WORD> var_used;
+	for (int i=0; i<(int)order.size(); i++)
+		var_used.insert(ABS(order[i])-1);
 
 	// if this a new node, create node and add children
 	if (!select->finished && select->childs.size()==0) {
 		tree_node new_node(select->var);
+		int sign = SGN(order.back());
 		for (int i=0; i<(int)mcts_vars.size(); i++)
-			if (!var_used.count(mcts_vars[i])) 
-				new_node.childs.push_back(tree_node(mcts_vars[i]));
+			if (!var_used.count(mcts_vars[i])) {
+				new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
+				if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD) 
+					new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
+			}
 		my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
 		
 		// here locking is necessary, since operator=(tree_node) is a
@@ -1256,30 +1262,29 @@ void find_Horner_MCTS_expand_tree () {
 
 	// MCTS step III: simulation
 
-	// complete Horner scheme
-	int old_order_size = order.size() - 1;
+	// create complete Horner scheme
+	deque<WORD> scheme;
+
 	for (int i=0; i<(int)mcts_vars.size(); i++)
 		if (!var_used.count(mcts_vars[i])) 
-			order.push_back(mcts_vars[i]);
+			scheme.push_back(mcts_vars[i]);
+	my_random_shuffle(BHEAD scheme.begin(), scheme.end());
 
-	// check for backward order, remove indicator
-	bool rev = order[0] == O_BACKWARD;
-	order = vector<WORD>(order.begin()+1, order.end());
+	for (int i=(int)order.size()-1; i>=0; i--) {
+		if (order[i] > 0)
+			scheme.push_front(order[i]-1);
+		else
+			scheme.push_back(-order[i]-1);
+	}
 
-	// randomize completion
-	my_random_shuffle(BHEAD order.begin()+old_order_size, order.end());
-
-	// reverse if necessary
-	if (rev) reverse(order.begin(),order.end());
-	
 	// add FACTORSYMBOL/SEPARATESYMBOL is necessary
 	if (mcts_factorized) 
-		order.insert(order.begin(),FACTORSYMBOL);
+		scheme.push_front(FACTORSYMBOL);
 	if (mcts_separated) 
-		order.insert(order.begin(),SEPARATESYMBOL);
+		scheme.push_front(SEPARATESYMBOL);
 	
 	// do Horner, CSE and count the number of operators
-	vector<WORD> tree = Horner_tree(optimize_expr, order);
+	vector<WORD> tree = Horner_tree(optimize_expr, vector<WORD>(scheme.begin(),scheme.end()));
 	vector<WORD> instr = generate_instructions(tree, true);
 	int num_oper = count_operators(instr);
 
@@ -1288,7 +1293,8 @@ void find_Horner_MCTS_expand_tree () {
 	M_free(AN.poly_vars,"poly_vars");
 	
 #ifdef DEBUG_MCTS
-	MesPrint ("{%a | %a } -> %d", order.size()-old_order_size, &order[0], old_order_size, &order[order.size()-old_order_size], num_oper);
+	vector<WORD> tmp(scheme.begin(),scheme.end());
+	MesPrint ("{%a} -> {%a} -> %d", order.size(), &order[0], tmp.size(), &tmp[0], num_oper);
 #endif
 	
 	// update the (global) list of best Horner scheme
@@ -1299,7 +1305,7 @@ void find_Horner_MCTS_expand_tree () {
 		// track of it's own list and those lists are merged in the end,
 		// but this seems not useful to implement
 		LOCK(optimize_lock);
-		mcts_best_schemes.insert(make_pair(num_oper,order));
+		mcts_best_schemes.insert(make_pair(num_oper,vector<WORD>(scheme.begin(),scheme.end())));
 		if ((int)mcts_best_schemes.size() > AO.Optimize.mctsnumkeep)
 			mcts_best_schemes.erase(--mcts_best_schemes.end());
 		UNLOCK(optimize_lock);
@@ -1314,7 +1320,7 @@ void find_Horner_MCTS_expand_tree () {
 
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS_expand_tree(%a-> %d)",
-						thetime_str().c_str(), order.size(), &order[0], num_oper);
+						thetime_str().c_str(), scheme.size(), &scheme[0], num_oper);
 #endif	
 }
 
@@ -1332,11 +1338,13 @@ void find_Horner_MCTS_expand_tree () {
  *   number of times and does some post-processing.
  */
 vector<vector<WORD> > find_Horner_MCTS () {
-
+	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: find_Horner_MCTS", thetime_str().c_str());
 #endif
 
+	GETIDENTITY;
+	
 	LONG start_time = TimeWallClock(1);
 	
 	// initialize the used global variables
@@ -1361,16 +1369,13 @@ vector<vector<WORD> > find_Horner_MCTS () {
 	mcts_vars = vector<WORD>(var_set.begin(), var_set.end());
 	
 	// initialize MCTS tree root
-
-	/*
-	for (int i=0; i<(int)mcts_vars.size(); i++)
-		mcts_root.childs.push_back(tree_node(mcts_vars[i]));
-	*/
-
-	if (AO.Optimize.hornerdirection==O_FORWARD || AO.Optimize.hornerdirection==O_BOTH)
-		mcts_root.childs.push_back(O_FORWARD);
-	if (AO.Optimize.hornerdirection==O_BACKWARD || AO.Optimize.hornerdirection==O_BOTH)
-		mcts_root.childs.push_back(O_BACKWARD);
+	for (int i=0; i<(int)mcts_vars.size(); i++) {
+		if (AO.Optimize.hornerdirection != O_BACKWARD)
+			mcts_root.childs.push_back(tree_node(+(mcts_vars[i]+1)));
+		if (AO.Optimize.hornerdirection != O_FORWARD)
+			mcts_root.childs.push_back(tree_node(-(mcts_vars[i]+1)));
+	}
+	my_random_shuffle(BHEAD mcts_root.childs.begin(), mcts_root.childs.end());
 	
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
@@ -1407,11 +1412,7 @@ vector<vector<WORD> > find_Horner_MCTS () {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS", thetime_str().c_str());
 #endif
-	/*
-	for (int i=0; i<(int)mcts_root.childs.size(); i++)
-		MesPrint ("cnt(%d) = %d", mcts_root.childs[i].var,
-							mcts_root.childs[i].num_visits);
-	*/
+
 	return res;
 }
 
@@ -3170,9 +3171,9 @@ int Optimize (WORD exprnr, int do_print) {
 		// find Horner scheme(s)
 		if (AO.Optimize.horner == O_OCCURRENCE) {
 			optimize_best_Horner_schemes.clear();
-			if (AO.Optimize.hornerdirection==O_FORWARD || AO.Optimize.hornerdirection==O_BOTH)
+			if (AO.Optimize.hornerdirection != O_BACKWARD)
 				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, false));
-			if (AO.Optimize.hornerdirection==O_BACKWARD || AO.Optimize.hornerdirection==O_BOTH)
+			if (AO.Optimize.hornerdirection != O_FORWARD)
 				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, true));
 		}
 		else 
