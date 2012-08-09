@@ -6246,12 +6246,12 @@ int DoOptimize(UBYTE *s)
 		error = 1;
 	}
 	else {
-		EXPRESSIONS e;
+		EXPRESSIONS e = Expressions + numexpr;
 		POSITION position;
 		int firstterm;
 		WORD *term = AT.WorkPointer;
 		ClearOptimize();
-		switch ( Expressions[numexpr].status ) {
+		switch ( e->status ) {
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
 				break;

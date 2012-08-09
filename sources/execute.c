@@ -808,6 +808,7 @@ skipexec:
 	AC.PolyRatFunChanged = 0;
 	TestDrop();
 	if ( par == STOREMODULE || par == CLEARMODULE ) {
+		ClearOptimize();
 		if ( par == STOREMODULE && PopVariables() ) RetCode = -1;
 		if ( AR.infile->handle >= 0 ) {
 			CloseFile(AR.infile->handle);
