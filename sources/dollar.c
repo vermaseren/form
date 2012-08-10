@@ -2786,6 +2786,8 @@ int DollarFactorize(PHEAD WORD numdollar)
 {
 	GETBIDENTITY
 	DOLLARS d = Dollars + numdollar;
+	CBUF *C, *CC;
+	WORD *oldworkpointer;
 	WORD *buf1, *t, *term, *buf1content, *buf2, *termextra;
 	WORD *buf3, *argextra;
 #ifdef STEP2
@@ -3085,9 +3087,9 @@ getout:
 		}
 	}
 	else if ( action ) {
-		CBUF *C = cbuf+AC.cbufnum;
-		CBUF *CC = cbuf+AT.ebufnum;
-		WORD *oldworkpointer = AT.WorkPointer;
+		C = cbuf+AC.cbufnum;
+		CC = cbuf+AT.ebufnum;
+		oldworkpointer = AT.WorkPointer;
 		d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*(nfactors+factorsincontent),"factors in dollar");
 		term = buf3;
 		for ( i = 0; i < nfactors; i++ ) {
@@ -3131,8 +3133,8 @@ getout2:			AR.SortType = oldsorttype;
 		CC->numrhs = startebuf;
 	}
 	else {
-		CBUF *C = cbuf+AC.cbufnum;
-		WORD *oldworkpointer = AT.WorkPointer;
+		C = cbuf+AC.cbufnum;
+		oldworkpointer = AT.WorkPointer;
 		d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR)*(nfactors+factorsincontent),"factors in dollar");
 		term = buf3;
 		for ( i = 0; i < nfactors; i++ ) {
