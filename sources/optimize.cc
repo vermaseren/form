@@ -348,12 +348,16 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 			for (int i=3; i<t[2]; i+=2) 
 				cnt[t[i]]++;
 
-	// check for factorization
-	if (cnt.count(FACTORSYMBOL)) 
-		cnt[FACTORSYMBOL] = MAXPOSITIVE;
-	if (cnt.count(SEPARATESYMBOL)) 
-		cnt[SEPARATESYMBOL] = MAXPOSITIVE;
-
+	bool is_fac=false, is_sep=false;
+	if (cnt.count(FACTORSYMBOL)) {
+		is_fac=true;
+		cnt.erase(FACTORSYMBOL);
+	}
+	if (cnt.count(SEPARATESYMBOL)) {
+		is_sep=true;
+		cnt.erase(SEPARATESYMBOL);
+	}
+	
 	// determine the order of the variables
 	vector<pair<int,WORD> > cnt_order;
 	for (map<WORD,int>::iterator i=cnt.begin(); i!=cnt.end(); i++)
@@ -366,6 +370,10 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 		order.push_back(cnt_order[i].second);
 
 	if (rev) reverse(order.begin(),order.end());
+
+	// add FACTORSYMBOL/SEPARATESYMBOL
+	if (is_fac) order.insert(order.begin(), FACTORSYMBOL);
+	if (is_sep) order.insert(order.begin(), SEPARATESYMBOL);
 	
 	return order;
 }
@@ -3014,6 +3022,8 @@ WORD generate_expression (WORD exprnr) {
 #endif
 
 	GETIDENTITY;
+
+	WORD *oldWorkPointer = AT.WorkPointer;
 	
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD *term = AT.WorkPointer;
@@ -3057,6 +3067,8 @@ WORD generate_expression (WORD exprnr) {
 		Terminate(-1);
 	}
 
+	AT.WorkPointer = oldWorkPointer;
+	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: generate_expression", thetime_str().c_str());
 #endif
@@ -3139,7 +3151,7 @@ VOID optimize_print_code (int print_expr) {
  *   "#Optimize")
  */
 int Optimize (WORD exprnr, int do_print) {
-	
+
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: Optimize", thetime_str().c_str());
 	MesPrint ("*** %"); PrintRunningTime();
@@ -3234,7 +3246,7 @@ int Optimize (WORD exprnr, int do_print) {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: Optimize", thetime_str().c_str());
 #endif
-	
+
 	return 0;
 }
 
