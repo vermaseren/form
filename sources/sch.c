@@ -1375,7 +1375,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 
 				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer);
 				t++;
-				*Out++ = '(';
+				if ( AC.OutputMode == MATHEMATICAMODE ) *Out++ = '[';
+				else *Out++ = '(';
 				if ( *t >= AM.OffsetIndex ) {
 					i = *t++;
 					if ( i >= AM.IndDum ) {
@@ -1393,7 +1394,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 				else {
 					Out = NumCopy(*t++,Out);
 				}
-				*Out++ = ')';
+				if ( AC.OutputMode == MATHEMATICAMODE ) *Out++ = ']';
+				else *Out++ = ')';
 				*Out = 0;
 				TokenToLine(buffer);
 				first = 0;
@@ -1654,7 +1656,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 }
 
 /*
- 		#] WriteSubTerm : 
+ 		#] WriteSubTerm :
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
