@@ -679,8 +679,8 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD of
 				else {
 					*tout++ = SUBEXPRESSION;
 					*tout++ = SUBEXPSIZE;
-					*tout++ = MAXVARIABLES - *t++ + offset;
-					*tout++ = *t++;
+					*tout++ = MAXVARIABLES - *tt++ + offset;
+					*tout++ = *tt++;
 					if ( par ) *tout++ = AT.ebufnum;
 					else       *tout++ = AM.sbufnum;
 					FILLSUB(tout)
