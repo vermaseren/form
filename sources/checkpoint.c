@@ -99,19 +99,19 @@
 */
 
 /**
- *  basename of recovery files
+ *  BaseName of recovery files
  */
 /*[20oct2009 mt]:*/
 #ifdef PARALLEL
 #define BASENAME_FMT "%c%04dFORMrecv"
 /**
  * The basenames for ParFORM will be created from BASENAME_FMT by means of 
- * sprintf(basename,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
+ * sprintf(BaseName,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
  * in InitRecovery(). Here just reserve the space:
  */
-static char basename[] = BASENAME_FMT;
+static char BaseName[] = BASENAME_FMT;
 #else
-static char *basename = "FORMrecv";
+static char *BaseName = "FORMrecv";
 #endif
 /*:[20oct2009 mt]*/
 /**
@@ -336,7 +336,7 @@ static char *InitName(char *str, char *ext)
 		while ( *s ) { *d++ = *s++; }
 		*d++ = SEPARATOR;
 	}
-	s = basename;
+	s = BaseName;
 	while ( *s ) { *d++ = *s++; }
 	*d++ = '.';
 	s = ext;
@@ -354,11 +354,11 @@ void InitRecovery()
 {
 	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
 #ifdef PARALLEL
-	sprintf(basename,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
-	/*Now basename has a form ?XXXXFORMrecv where ? == 'm' for master and 's' for slave,
+	sprintf(BaseName,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
+	/*Now BaseName has a form ?XXXXFORMrecv where ? == 'm' for master and 's' for slave,
 		XXXX is a zero - padded PF.me*/
 #endif	
-	recoveryfile = (char*)Malloc1(5*(lenpath+strlen(basename)+4+1),"InitRecovery");
+	recoveryfile = (char*)Malloc1(5*(lenpath+strlen(BaseName)+4+1),"InitRecovery");
 	intermedfile = InitName(recoveryfile, "tmp");
 	sortfile     = InitName(intermedfile, "XXX");
 	hidefile     = InitName(sortfile, "out");
