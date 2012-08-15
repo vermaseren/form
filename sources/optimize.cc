@@ -242,8 +242,19 @@ vector<vector<WORD> > get_brackets () {
     newexpr[i++] = 0;
     memcpy(optimize_expr, newexpr, i*sizeof(WORD));
     M_free(newexpr,"optimize newexpr");
-  }
 
+		// if factorized, replace SEP by FAC and remove brackets
+		if (brackets[0].size()>0 && brackets[0][2]==FACTORSYMBOL) {
+			for (WORD *t=optimize_expr; *t!=0; t+=*t) {
+				if (*t == ABS(*(t+*t-1))+1) continue;
+				if (t[1]==SYMBOL)
+					for (int i=3; i<t[2]; i+=2)
+						if (t[i]==SEPARATESYMBOL) t[i]=FACTORSYMBOL;
+			}
+			return vector<vector<WORD> >();
+		}
+	}
+	
 	return brackets;
 }
 
@@ -260,10 +271,13 @@ vector<vector<WORD> > get_brackets () {
  */
 int count_operators (const WORD *expr, bool print=false) {
 
+	int n=0;
+	while (*(expr+n)!=0) n+=*(expr+n);
+	
 	int cntpow=0, cntmul=0, cntadd=0, sumpow=0;
-
+	int maxpowfac=1, maxpowsep=1;
+	
 	for (const WORD *t=expr; *t!=0; t+=*t) {
-
 		if (t!=expr) cntadd++;              // new term
 		if (*t==ABS(*(t+*t-1))+1) continue; // only coefficient
 				
@@ -271,6 +285,14 @@ int count_operators (const WORD *expr, bool print=false) {
 		
 		if (t[1]==SYMBOL)
 			for (int i=3; i<t[2]; i+=2) {
+				if (t[i]==FACTORSYMBOL) {
+					maxpowfac = max(maxpowfac, t[i+1]);
+					continue;
+				}
+				if (t[i]==SEPARATESYMBOL) {
+					maxpowsep = max(maxpowsep, t[i+1]);
+					continue;
+				}				
 				if (t[i+1]>2) {          // (extra)symbol power>2
 					cntpow++;
 					sumpow += (int)floor(log(t[i+1])/log(2.0)) + __builtin_popcount(t[i+1]) - 1;
@@ -281,9 +303,14 @@ int count_operators (const WORD *expr, bool print=false) {
 
 		if (ABS(*(t+*t-1))!=3 || *(t+*t-2)!=1 || *(t+*t-3)!=1) cntsym++; // non +/-1 coefficient
 
-		cntmul+=cntsym-1;
+		if (cntsym > 0)	cntmul+=cntsym-1;
 	}
-	
+
+	cntadd -= maxpowfac-1;
+	cntmul += maxpowfac-1;
+
+	cntadd -= maxpowsep-1;
+		
 	if (print)
 		MesPrint ("*** STATS: original  %lP %lM %lA : %l", cntpow,cntmul,cntadd,sumpow+cntmul+cntadd);
 
@@ -1920,7 +1947,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				for (const WORD *t1=e+3; *t1!=0; t1+=*t1) {
 					if (*t1 == ABS(*(t1+*t1-1))+1) continue;
 					int x1 = (*(t1+1)==SYMBOL ? 1 : -1) * (*(t1+3) + 1);
-					
+
 					for (const WORD *t2=t1+*t1; *t2!=0; t2+=*t2) {
 						if (*t2 == ABS(*(t2+*t2-1))+1) continue;
 						int x2 = (*(t2+1)==SYMBOL ? 1 : -1) * (*(t2+3) + 1);
@@ -2015,11 +2042,18 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 	  	optim.type==2 ? '*' : '+', num,den);
   }
 #endif
-			
+
   bool substituted = false;
 
 	WORD *ebegin = &*instr.begin();
-	
+
+	/*
+	MesPrint ("equations:");
+	for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
+		WORD *e = ebegin + optim.eqnidxs[i];
+		MesPrint("%a",*(e+2),e);
+	}
+	*/
 	// substitution of the form z=x^n (optim.type==0)
 	if (optim.type == 0) {
 
@@ -2482,7 +2516,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 	}
 
 #ifdef DEBUG_GREEDY
-			MesPrint ("*** [%s, w=%w] DONE: do_optimization : res=false", thetime_str().c_str(), optim.improve);
+	MesPrint ("*** [%s, w=%w] DONE: do_optimization : res=true", thetime_str().c_str(), optim.improve);
 #endif
 	
 	return true;
@@ -2490,6 +2524,255 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 
 /*
   	#] do_optimizations : 
+  	#[ partial_factorize :
+*/
+
+/**  Partial factorization of instructions
+ *
+ *   Description
+ *   ===========
+ *   This method performs partial factorization of instructions. In
+ *   particular the following instructions
+ *
+ *     Z1 = x*a*b
+ *     Z2 = x*c*d*e
+ *     Z3 = 2*x + Z1 + Z2 + more
+ *
+ *   are replaced by
+ *  
+ *     Z1 = a*b
+ *     Z2 = c*d*e
+ *     Z3 = Zj + more
+ *     Zi = 2 + Z1 + Z2
+ *     Zj = x*Zj
+ *
+ *   Here it is necessary that no other equations refer to Z1 and
+ *   Z2. The generation of trivial instructions (Zi=Zj or Zi=x) is
+ *   prevented.
+ */
+int partial_factorize (vector<WORD> &instr, int n, int improve) {
+	
+#ifdef DEBUG_GREEDY
+	MesPrint ("*** [%s, w=%w] CALL: partial_factorize (n=%d)", thetime_str().c_str(), n);
+#endif
+
+	// get starting positions of instructions
+	vector<int> instr_idx(n);
+	WORD *ebegin = &*instr.begin();
+	WORD *eend = ebegin+instr.size();	
+	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) 
+		instr_idx[*e] = e - ebegin;
+
+	// get reference counts
+	vector<WORD> numpar(n);
+	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) 
+		for (WORD *t=e+3; *t!=0; t+=*t) {
+			if (*t == ABS(*(t+*t-1))+1) continue;
+			if (*(t+1) == EXTRASYMBOL) numpar[*(t+3)]++;
+		}
+	
+	// find factorizable expressions
+	for (int i=0; i<n; i++) {
+		WORD *e = &*instr.begin() + instr_idx[i];
+		if (*(e+1) != OPER_ADD) continue;
+
+		// count symbol occurrences
+		map<WORD,WORD> cnt; // 1-indexed, <0:EXTRASYMBOL, >0:SYMBOL
+		
+		for (WORD *t=e+3; *t!=0; t+=*t) {
+			if (*t==ABS(*(t+*t-1))+1) continue;
+
+			// count symbols in t
+			if (*(t+4)==1) 
+				cnt[(*(t+1)==SYMBOL ? 1 : -1) * (*(t+3)+1)]++;
+
+			// count symbols in extrasymbols of t
+			if (*(t+1)==EXTRASYMBOL && *(t+4)==1 && numpar[*(t+3)]==1) {
+				WORD *t2 = &*instr.begin() + instr_idx[*(t+3)];
+				if (*(t2+1) != OPER_MUL) continue;
+				for (t2+=3; *t2!=0; t2+=*t2) {
+					if (*t2 == ABS(*(t2+*t2-1))+1) continue;
+					if (*(t2+4)==1) 
+						cnt[(*(t2+1)==SYMBOL ? 1 : -1) * (*(t2+3)+1)]++;
+				}
+			}
+		}
+
+		// find most-occurring symbol
+		WORD x=0, best=0;
+		for (map<WORD,WORD>::iterator it=cnt.begin(); it!=cnt.end(); it++) 
+			if (it->second > best) { x=it->first; best=it->second; }
+
+		// occurrence>=2 and occurrence>improve, so factorize
+		if (best>=2 && best>improve) {
+			// initialize new equation (Zi from example above)
+			vector<int> new_eqn;
+			new_eqn.push_back(n);
+			new_eqn.push_back(OPER_ADD);
+			new_eqn.push_back(0); // length
+			
+			WORD dt;
+			WORD *newt=e+3;
+			for (WORD *t=e+3; *t!=0; t+=dt) {
+				dt = *t;
+				bool keep=true;
+				
+				if (*t!=ABS(*(t+*t-1))+1) {
+
+					// factorized symbol is in t itself
+					if (*(t+4)==1) {
+						WORD y = (*(t+1)==SYMBOL ? 1 : -1) * (*(t+3)+1);
+						if (y==x) {
+							new_eqn.push_back(*t-4);
+							new_eqn.insert(new_eqn.end(), t+5, t+dt);
+							keep=false;
+						}
+					}
+
+					// look in extrasymbol of t with ref.count=1
+					if (*(t+1)==EXTRASYMBOL && *(t+4)==1 && numpar[*(t+3)]==1) {
+						WORD *t2 = &*instr.begin() + instr_idx[*(t+3)];
+						if (*(t2+1) == OPER_MUL) {
+							bool has_x=false;
+							for (t2+=3; *t2!=0; t2+=*t2) {
+								if (*t2 == ABS(*(t2+*t2-1))+1) continue;
+								WORD y = (*(t2+1)==SYMBOL ? 1 : -1) * (*(t2+3)+1);
+								// extrasymbol has factorized symbol
+								if (y==x && *(t2+4)==1) {
+									has_x=true;
+									// copy remaining part
+									WORD *tend=t2+*t2;
+									WORD sign = SGN(*(tend-1));
+									while (*tend!=0) tend+=*tend;
+									int dt2 = tend - (t2+*t2);
+									memmove(t2, t2+*t2, (dt2+1)*sizeof(WORD));
+									t2 += dt2;
+									*(t2-1) *= sign;
+									break;
+								}
+							}
+							if (has_x) {
+								// extrasymbol has x, so add it to new equation
+								keep=false;
+								int thisidx=new_eqn.size();
+								new_eqn.insert(new_eqn.end(), t, t+dt);
+								t2 = &*instr.begin() + instr_idx[*(t+3)] + 3;
+								// if becomes trivial, substitute the term
+								if (*(t2+*t2)==0) {
+									// it's a number
+									if (*t2 == ABS(*(t2+*t2-1))+1) { // TODO: multiply ??
+										new_eqn.erase(new_eqn.begin()+thisidx, new_eqn.end());
+										new_eqn.insert(new_eqn.end(), t2, t2+*t2);
+										*t2 = 0;
+									}									
+									else if (*(t2+4)==1) {
+										// it's a variable
+										new_eqn.back() *= SGN(*(t2+*t2-1));
+										new_eqn[thisidx+1] = *(t2+1);
+										new_eqn[thisidx+2] = *(t2+2);
+										new_eqn[thisidx+3] = *(t2+3);
+										new_eqn[thisidx+4] = *(t2+4);
+										*t2 = 0;
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// no x, so copy it
+				if (keep) {
+					memmove(newt, t, dt*sizeof(WORD));
+					newt += dt;
+				}
+			}
+
+			// finalize new equation
+			new_eqn.push_back(0);
+			new_eqn[2] = new_eqn.size();
+
+			bool empty = newt == e+3;
+			n++;
+
+			// if original is not empty, add new equation (Zj) to it
+			// otherwise replace it later
+			if (!empty) {
+				*newt++ = 8;
+				*newt++ = EXTRASYMBOL;
+				*newt++ = 4;
+				*newt++ = n;
+				*newt++ = 1;
+				*newt++ = 1;
+				*newt++ = 1;
+				*newt++ = 3;			
+				*newt++ = 0;
+			}
+
+			// add new equation to instructions
+			instr_idx.push_back(instr.size());
+			instr.insert(instr.end(), new_eqn.begin(), new_eqn.end());
+
+			// generate another new equation (Zj=x*Zi)
+			new_eqn.clear();
+			new_eqn.push_back(n);
+			new_eqn.push_back(OPER_MUL);
+			new_eqn.push_back(20);
+			new_eqn.push_back(8);
+
+			// add factorized symbol
+			if (x>0) {
+				new_eqn.push_back(SYMBOL);
+				new_eqn.push_back(4);
+				new_eqn.push_back(x-1);
+				new_eqn.push_back(1);
+			}
+			else {
+				new_eqn.push_back(EXTRASYMBOL);
+				new_eqn.push_back(4);
+				new_eqn.push_back(-x-1);
+				new_eqn.push_back(1);
+			}
+			new_eqn.push_back(1);
+			new_eqn.push_back(1);
+			new_eqn.push_back(3);
+			new_eqn.push_back(8);
+			// add new equation (Zi)
+			new_eqn.push_back(EXTRASYMBOL);
+			new_eqn.push_back(4);
+			new_eqn.push_back(n-1);
+			new_eqn.push_back(1);
+			new_eqn.push_back(1);
+			new_eqn.push_back(1);
+			new_eqn.push_back(3);
+			new_eqn.push_back(0);
+
+			if (!empty) {
+				// add new equation (Zj) to instructions
+				instr_idx.push_back(instr.size());
+				instr.insert(instr.end(), new_eqn.begin(), new_eqn.end());
+				n++;
+			}
+			else {
+				// replace e with Zj				
+				e = &*instr.begin() + instr_idx[i];
+				e[1] = OPER_MUL;
+				memcpy(e+3, &new_eqn[3], (new_eqn.size()-3)*sizeof(WORD));
+			}
+
+			// decrease i, so this expression is factorized again if possible
+			i--;
+		}
+	}
+
+#ifdef DEBUG_GREEDY
+	MesPrint ("*** [%s, w=%w] DONE: partial_factorize (n=%d)", thetime_str().c_str(), n);
+#endif
+
+	return n;
+}
+
+/*
+  	#] partial_factorize : 
   	#[ optimize_greedy :
 */
 
@@ -2525,23 +2808,20 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 	WORD *eend = ebegin+instr.size();
 	
 	// store final equation, since it must be the last equation later
-	int final_eqn = 0;
 	int final_eqn_idx = 0;
-
+	int next_eqn = 0;
+	
 	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) {
-		final_eqn = *e;
+		next_eqn = *e + 1;
 		final_eqn_idx = e-ebegin;
 	}
 
-	// the next temporary equation is final_eqn and final_eqn is renumber later
-	int next_eqn = final_eqn;
-	
 	// optimize instructions
 	while (TimeWallClock(1)-start_time < time_limit) {
-
+		int old_next_eqn = next_eqn;
+		
 		// find optimizations
 		vector<optimization> optim = find_optimizations(instr);
-		if (optim.size() == 0) break;
 
 		// add_eqnidxs contains modified equations, which might have to be updated later again
 		vector<int> add_eqnidxs;
@@ -2560,16 +2840,19 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 		while (optim.size() > 0 && num_do_optims-- > 0) {
 
 			// find best optimization
-			int best=0;			
+			int best=0;
+			best_improve=0;
 			for (int i=0; i<(int)optim.size(); i++)
-				if (optim[i].improve > optim[best].improve)
+				if (optim[i].improve > best_improve) {
 					best=i;
+					best_improve=optim[i].improve;
+				}
 
 			// add extra equations
 			for (int i=0; i<(int)add_eqnidxs.size(); i++)
 				optim[best].eqnidxs.push_back(add_eqnidxs[i]);
 
-			// do optimization, update next_eqn is successful
+			// do optimization, update next_eqn if successful
 			int next_idx = instr.size();
 			if (do_optimization(optim[best], instr, next_eqn)) {
 				next_eqn++;
@@ -2578,28 +2861,30 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 			
 			optim.erase(optim.begin()+best);
 		}
+
+		// partially factorize with improve >= best_improve
+		next_eqn = partial_factorize(instr, next_eqn, best_improve);
+
+		// check whether nothing has changed
+		if (next_eqn == old_next_eqn) break;
 	}
-
+	
 	// add final equation to the back (must be by definition)
-	instr.insert(instr.end(), instr.begin()+final_eqn_idx, instr.begin()+final_eqn_idx+instr[final_eqn_idx+2]);
+	instr.push_back(next_eqn);
+	instr.insert(instr.end(), instr.begin()+final_eqn_idx+1, instr.begin()+final_eqn_idx+instr[final_eqn_idx+2]);
 
-	// removed extra zeroes, skipping original final equation
+	// removed original final equation
+	instr[final_eqn_idx+3] = 0;
+
+	// remove extra zeroes
 	WORD *t = &instr[0];
 
-	bool final_eqn_skipped=false;
-	
 	ebegin = &*instr.begin();
 	eend = ebegin+instr.size();
 	int de=0;
 	
 	for (WORD *e=ebegin; e!=eend; e+=de) {
 		de = *(e+2);
-	
-		if (*e==final_eqn && !final_eqn_skipped) {
-			final_eqn_skipped=true;
-			continue;
-		}
-
 		int n=3;
 		while (*(e+n) != 0) n+=*(e+n);
 		n++;
@@ -3199,6 +3484,7 @@ int Optimize (WORD exprnr, int do_print) {
 		optimize_best_num_oper = INT_MAX;
 
 		int imax = (int)optimize_best_Horner_schemes.size();
+		imax=1; // TODO : FIX !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		for (int i=0; i<imax; i++) {
 #ifndef WITHPTHREADS
 			optimize_expression_given_Horner();
