@@ -1594,7 +1594,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 		bool first_copy=true;
 		int lenidx = newinstr.size()+2;
 
-		// 1-index, since signs may occur
+		// 1-indexed, since signs may occur
 		stack<WORD> this_expr;
 		this_expr.push(x+1);
 		
@@ -1613,7 +1613,8 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 				bool copy = !skip[i];
 				if (*t!=1+ABS(*(t+*t-1)) && *(t+1)==EXTRASYMBOL) {
 					if (par[*(t+3)] == x) {
-						this_expr.push(sign*(skip[i]||skipcoeff[i]?1:SGN(*(t+*t-1)))*(1+*(t+3)));
+						this_expr.push(sign * (skip[i]||skipcoeff[i] ? 1 : SGN(*(t+*t-1))) * (1+*(t+3)));
+						if (*(instr[i]+1) == OPER_MUL) sign=1;
 						copy=false;
 					}
 					else {
@@ -1637,6 +1638,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 					int thislenidx = newinstr.size();
 					newinstr.insert(newinstr.end(), t, t+*t);
 					newinstr.back()*=sign;
+					if (*(instr[i]+1) == OPER_MUL) sign=1;
 					newinstr[lenidx] += *t;
 
 					// check for moving coefficients up
@@ -3484,7 +3486,7 @@ int Optimize (WORD exprnr, int do_print) {
 		optimize_best_num_oper = INT_MAX;
 
 		int imax = (int)optimize_best_Horner_schemes.size();
-		imax=1; // TODO : FIX !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 		for (int i=0; i<imax; i++) {
 #ifndef WITHPTHREADS
 			optimize_expression_given_Horner();
