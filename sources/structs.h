@@ -1218,7 +1218,7 @@ typedef struct {
     WORD  minvar;
     WORD  maxvar;
     
-    PADPOSITION(2,1,3,0,0);
+    PADPOSITION(2,1,0,3,0);
 } OPTIMIZERESULT;
 
 /*

@@ -275,7 +275,7 @@ int count_operators (const WORD *expr, bool print=false) {
 	while (*(expr+n)!=0) n+=*(expr+n);
 	
 	int cntpow=0, cntmul=0, cntadd=0, sumpow=0;
-	int maxpowfac=1, maxpowsep=1;
+	WORD maxpowfac=1, maxpowsep=1;
 	
 	for (const WORD *t=expr; *t!=0; t+=*t) {
 		if (t!=expr) cntadd++;              // new term
@@ -2328,7 +2328,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 				if (*t == ABS(*(t+*t-1))+1 && BigLong((UWORD *)&optim.coeff[0],ABS(ncoeff)-1,
 																							(UWORD *)t+*t-ABS(*(t+*t-1)),ABS(*(t+*t-1))-1) == 0) 
 					coeff_match = SGN(ncoeff) * SGN(*(t+*t-1));
-				else if (*(t+1)==vartype && ABS(*(t+3))==varnum && *(t+4)==1) // TODO check for coeff 1 ??
+				else if (*(t+1)==vartype && ABS(*(t+3))==varnum && *(t+4)==1)
 					var_match = SGN(*(t+7));
 			} 
 
@@ -2558,6 +2558,8 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 	MesPrint ("*** [%s, w=%w] CALL: partial_factorize (n=%d)", thetime_str().c_str(), n);
 #endif
 
+	GETIDENTITY;
+	
 	// get starting positions of instructions
 	vector<int> instr_idx(n);
 	WORD *ebegin = &*instr.begin();
@@ -2608,7 +2610,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 		// occurrence>=2 and occurrence>improve, so factorize
 		if (best>=2 && best>improve) {
 			// initialize new equation (Zi from example above)
-			vector<int> new_eqn;
+			vector<WORD> new_eqn;
 			new_eqn.push_back(n);
 			new_eqn.push_back(OPER_ADD);
 			new_eqn.push_back(0); // length
@@ -2662,10 +2664,29 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 								// if becomes trivial, substitute the term
 								if (*(t2+*t2)==0) {
 									// it's a number
-									if (*t2 == ABS(*(t2+*t2-1))+1) { // TODO: multiply ??
-										new_eqn.erase(new_eqn.begin()+thisidx, new_eqn.end());
-										new_eqn.insert(new_eqn.end(), t2, t2+*t2);
-										*t2 = 0;
+									if (*t2 == ABS(*(t2+*t2-1))+1) {
+										if (ABS(new_eqn[new_eqn.size()-1])==3 && new_eqn[new_eqn.size()-2]==1 && new_eqn[new_eqn.size()-3]==1) {
+											// original equation has coefficient of +/-1, so replace it
+											WORD sign = SGN(new_eqn.back());
+											new_eqn.erase(new_eqn.begin()+thisidx, new_eqn.end());
+											new_eqn.insert(new_eqn.end(), t2, t2+*t2);
+											new_eqn.back() *= sign;
+											*t2 = 0;
+										}
+										else {
+											// two non-trivial coefficients, so multiply them
+											// note: untested code (found no way to trigger it)											
+											UWORD *tmp = NumberMalloc("partial_factorize");
+											WORD ntmp=0;
+											MulRat(BHEAD (UWORD *)t2+*t2-ABS(*(t2+*t2-1)), *(t2+*t2-1),
+														 (UWORD *)&*(new_eqn.end()-ABS(new_eqn.back())), new_eqn.back(),
+														 tmp, &ntmp);
+											new_eqn.erase(new_eqn.begin()+thisidx, new_eqn.end());
+											new_eqn.push_back(ABS(ntmp)+1);
+											new_eqn.insert(new_eqn.end(), tmp, tmp+ABS(ntmp));											
+											NumberFree(tmp,"partial_factorize");
+											*t2 = 0;
+										}
 									}									
 									else if (*(t2+4)==1) {
 										// it's a variable

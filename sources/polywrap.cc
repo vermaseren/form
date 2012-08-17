@@ -359,8 +359,6 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
 */
-
-// TODO: remove
 WORD *poly_rem(PHEAD WORD *a, WORD *b) {
 
 #ifdef DEBUG
