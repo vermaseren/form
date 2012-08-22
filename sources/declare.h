@@ -507,6 +507,7 @@ extern WORD   Product(UWORD *,WORD *,WORD);
 extern VOID   PrtLong(UWORD *,WORD,UBYTE *);
 extern VOID   PrtTerms(VOID);
 extern VOID   PrintRunningTime(VOID);
+extern LONG   GetRunningTime(VOID);
 extern WORD   PutBracket(PHEAD WORD *);
 extern LONG   PutIn(FILEHANDLE *,POSITION *,WORD *,WORD **,int);
 extern WORD   PutInStore(INDEXENTRY *,WORD);

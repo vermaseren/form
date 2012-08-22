@@ -1502,9 +1502,6 @@ VOID Terminate(int errorcode)
 	}
 	/*:[08may2006 mt]*/
 #endif
-#ifdef PARALLEL
-	PF_Terminate(errorcode);
-#endif
 #ifdef WITHPTHREADS
 	TerminateAllThreads();
 #endif
@@ -1518,6 +1515,9 @@ VOID Terminate(int errorcode)
 		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
 		getchar();
 	}
+#ifdef PARALLEL
+	PF_Terminate(errorcode);
+#endif
 	CleanUp(errorcode);
 	M_print();
 #ifdef VMS
@@ -1543,8 +1543,8 @@ VOID PrintRunningTime()
 	if ( AB[0] != 0 ) {
 		workertime = GetWorkerTimes();
 #else
+	workertime = PF_GetSlaveTimes();  /* must be called on all processors */
 	if ( PF.me == MASTER ) {
-		workertime = PF_GetSlaveTimes();
 #endif
 		mastertime = AM.SumTime + TimeCPU(1);
 		wallclocktime = TimeWallClock(1);
@@ -1581,8 +1581,8 @@ LONG GetRunningTime()
 		return(mastertime+workertime);
 	}
 #else
+	workertime = PF_GetSlaveTimes();  /* must be called on all processors */
 	if ( PF.me == MASTER ) {
-		workertime = PF_GetSlaveTimes();
 		mastertime = AM.SumTime + TimeCPU(1);
 		return(mastertime+workertime);
 	}

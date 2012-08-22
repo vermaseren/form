@@ -2072,8 +2072,6 @@ int PF_Init(int *argc, char ***argv)
  		#[ PF_Terminate :
 */
 
-static LONG slavetimes = 0;  /* Used in PF_GetSlaveTimes() */
-
 /**
  * Performs the finalization of ParFORM.
  * To be called by Terminate().
@@ -2083,28 +2081,6 @@ static LONG slavetimes = 0;  /* Used in PF_GetSlaveTimes() */
  */
 int PF_Terminate(int errorcode)
 {
-#ifdef WITHMPI
-	LONG t = PF.me == MASTER ? 0 : TimeCPU(1);
-	MPI_Reduce(&t, &slavetimes, 1, PF_LONG, MPI_SUM, MASTER, PF_COMM);
-#else
-	if ( PF.me == MASTER ) {
-		int i;
-		slavetimes = 0;
-		for ( i = 1; i < PF.numtasks; i++ ) {
-			int src, tag;
-			LONG t;
-			PF_Receive(i, PF_MISC_MSGTAG, &src, &tag);
-			PF_Unpack(&t, 1, PF_LONG);
-			slavetimes += t;
-		}
-	}
-	else {
-		LONG t = TimeCPU(1);
-		PF_Send(MASTER, PF_MISC_MSGTAG, 0);
-		PF_Pack(&t, 1, PF_LONG);
-		PF_Send(MASTER, PF_MISC_MSGTAG, 1);
-	}
-#endif
 	return PF_LibTerminate(errorcode);
 }
 
@@ -2115,12 +2091,34 @@ int PF_Terminate(int errorcode)
 
 /**
  * Returns the total CPU time of all slaves together.
- * To be called at the end of the ParFORM run.
+ * This function must be called on the master and all slaves.
  *
- * @return  the sum of CPU times on all slaves.
+ * @return  on the master, the sum of CPU times on all slaves.
  */
 LONG PF_GetSlaveTimes(void)
 {
+	LONG slavetimes = 0;
+#ifdef WITHMPI
+	LONG t = PF.me == MASTER ? 0 : AM.SumTime + TimeCPU(1);
+	MPI_Reduce(&t, &slavetimes, 1, PF_LONG, MPI_SUM, MASTER, PF_COMM);
+#else
+	if ( PF.me == MASTER ) {
+		int i;
+		for ( i = 1; i < PF.numtasks; i++ ) {
+			int src, tag;
+			LONG t;
+			PF_Receive(i, PF_MISC_MSGTAG, &src, &tag);
+			PF_Unpack(&t, 1, PF_LONG);
+			slavetimes += t;
+		}
+	}
+	else {
+		LONG t = AM.SumTime + TimeCPU(1);
+		PF_PreparePack();
+		PF_Pack(&t, 1, PF_LONG);
+		PF_Send(MASTER, PF_MISC_MSGTAG);
+	}
+#endif
 	return slavetimes;
 }
 
