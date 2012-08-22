@@ -448,7 +448,8 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		LONG millitime, timepart;
 		int timepart1, timepart2;
 		static char timestring[40];
-		millitime = TimeCPU(1);
+/*		millitime = TimeCPU(1); */
+		millitime = GetRunningTime();
 		timepart = millitime%1000;
 		millitime /= 1000;
 		timepart /= 10;

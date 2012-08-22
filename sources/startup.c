@@ -1566,5 +1566,36 @@ VOID PrintRunningTime()
 
 /*
  		#] PrintRunningTime : 
+ 		#[ GetRunningTime :
+*/
+
+LONG GetRunningTime()
+{
+#if (defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))) || defined(PARALLEL)
+	LONG mastertime;
+	LONG workertime;
+#if defined(WITHPTHREADS)
+	if ( AB[0] != 0 ) {
+		workertime = GetWorkerTimes();
+		mastertime = AM.SumTime + TimeCPU(1);
+		return(mastertime+workertime);
+	}
+#else
+	if ( PF.me == MASTER ) {
+		workertime = PF_GetSlaveTimes();
+		mastertime = AM.SumTime + TimeCPU(1);
+		return(mastertime+workertime);
+	}
+#endif
+	else {
+		return(AM.SumTime + TimeCPU(1));
+	}
+#else
+	return(AM.SumTime + TimeCPU(1));
+#endif
+}
+
+/*
+ 		#] GetRunningTime : 
 */
 
