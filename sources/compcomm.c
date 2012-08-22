@@ -649,6 +649,7 @@ int CoFormat(UBYTE *s)
 					AO.Optimize.method = O_GREEDY;
 					AO.Optimize.mctsnumexpand = 1000;
 					AO.Optimize.mctsnumkeep = 10;
+					AO.Optimize.mctsnumrepeat = 1;
 					AO.Optimize.greedyminnum = 10;
 					AO.Optimize.greedymaxperc = 5;
 					break;
@@ -675,6 +676,7 @@ opterr:				error = 1;
 			AO.Optimize.mctstimelimit = 0;
 			AO.Optimize.mctsnumexpand = 1000;
 			AO.Optimize.mctsnumkeep = 10;
+			AO.Optimize.mctsnumrepeat = 1;
 			AO.Optimize.greedytimelimit = 0;
 			AO.Optimize.greedyminnum = 10;
 			AO.Optimize.greedymaxperc = 5;
@@ -5916,7 +5918,7 @@ correctuse:
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s == 0 ) goto correctuse;
 		value = s;
-		while ( FG.cTable[*s] <= 1 || *s=='.' || *s == '(' || *s == ')' ) {
+		while ( FG.cTable[*s] <= 1 || *s=='.' || *s=='*' || *s == '(' || *s == ')' ) {
 			if ( *s == '(' ) { SKIPBRA4(s) }
 			s++;
 		}
@@ -6009,15 +6011,36 @@ correctuse:
 			}
 		}
 		else if ( StrICmp(name,(UBYTE *)"mctsnumexpand") == 0 ) {
+			int y;
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u == '*' || *u == 'x' || *u == 'X' ) {
+				u++; y = x;
+				x = 0;
+				while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			}
+			else { y = 1; }
 			if ( *u != 0 ) {
 				MesPrint("&Option MCTSNumExpand in Format,Optimize statement should be a positive number: %s",value);
 				AO.Optimize.mctsnumexpand= 0;
+				AO.Optimize.mctsnumrepeat= 1;
 				error = 1;
 			}
 			else {
 				AO.Optimize.mctsnumexpand= x;
+				AO.Optimize.mctsnumrepeat= y;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"mctsnumrepeat") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option MCTSNumExpand in Format,Optimize statement should be a positive number: %s",value);
+				AO.Optimize.mctsnumrepeat= 1;
+				error = 1;
+			}
+			else {
+				AO.Optimize.mctsnumrepeat= x;
 			}
 		}
 		else if ( StrICmp(name,(UBYTE *)"mctsnumkeep") == 0 ) {

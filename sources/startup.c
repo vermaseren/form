@@ -735,6 +735,7 @@ VOID StartVariables()
 	AO.Optimize.mctstimelimit = 0;
 	AO.Optimize.mctsnumexpand = 1000;
 	AO.Optimize.mctsnumkeep = 10;
+	AO.Optimize.mctsnumrepeat = 1;
 	AO.Optimize.greedytimelimit = 0;
 	AO.Optimize.greedyminnum = 10;
 	AO.Optimize.greedymaxperc = 5;

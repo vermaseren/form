@@ -2227,7 +2227,7 @@ int poly::is_dense_univariate () const {
   	#[ simple_poly (small) :
 */
 
-// returns the simple polynomial (x-a)^b mod p^n with a small
+// returns the polynomial (x-a)^b mod p^n with a small
 const poly poly::simple_poly (PHEAD int x, int a, int b, int p, int n) {
 	
 	poly tmp(BHEAD 0,p,n);
@@ -2266,7 +2266,7 @@ const poly poly::simple_poly (PHEAD int x, int a, int b, int p, int n) {
   	#[ simple_poly (large) :
 */
 
-// returns the "simple" polynomial (x-a)^b mod p^n with a large
+// returns the polynomial (x-a)^b mod p^n with a large
 const poly poly::simple_poly (PHEAD int x, const poly &a, int b, int p, int n) {
 
 	poly res(BHEAD 1,p,n);
@@ -2431,7 +2431,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 		return res;
 	}
 
-	// find denominator
+	// find LCM of denominators of all terms
 	WORD nden=1, npro=0, ngcd=0, ndum=0;
 	UWORD *den = NumberMalloc("poly::argument_to_poly");
 	UWORD *pro = NumberMalloc("poly::argument_to_poly");

@@ -115,7 +115,7 @@ void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) 
 }
 
 /*
-  	#] my_random_shuffle :
+  	#] my_random_shuffle : 
   	#[ get_expression :
 */
 
@@ -1372,7 +1372,8 @@ void find_Horner_MCTS_expand_tree () {
  *   some pre-processing, calls "find_Horner_MCTS_expand_tree" a
  *   number of times and does some post-processing.
  */
-vector<vector<WORD> > find_Horner_MCTS () {
+//vector<vector<WORD> > find_Horner_MCTS () {
+void find_Horner_MCTS () {
 	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: find_Horner_MCTS", thetime_str().c_str());
@@ -1384,10 +1385,9 @@ vector<vector<WORD> > find_Horner_MCTS () {
 	
 	// initialize the used global variables
 	mcts_expr_score = count_operators(optimize_expr);
-	mcts_best_schemes.clear();
 	mcts_root = tree_node();
 
-	// extract all symbol from the expression
+	// extract all symbols from the expression
 	set<WORD> var_set;
 	for (WORD *t=optimize_expr; *t!=0; t+=*t) 
 		if (t[1] == SYMBOL)
@@ -1433,22 +1433,10 @@ vector<vector<WORD> > find_Horner_MCTS () {
 #ifdef WITHPTHREADS
 	MasterWaitAll();
 #endif
-
-	// generate results
-	vector<vector<WORD> > res;
-	for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
-		res.push_back(i->second);
-			
-#ifdef DEBUG_MCTS
-		MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
-#endif
-	}
-	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS", thetime_str().c_str());
 #endif
 
-	return res;
 }
 
 /*
@@ -2049,13 +2037,6 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 
 	WORD *ebegin = &*instr.begin();
 
-	/*
-	MesPrint ("equations:");
-	for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
-		WORD *e = ebegin + optim.eqnidxs[i];
-		MesPrint("%a",*(e+2),e);
-	}
-	*/
 	// substitution of the form z=x^n (optim.type==0)
 	if (optim.type == 0) {
 
@@ -3410,7 +3391,6 @@ VOID optimize_print_code (int print_expr) {
 		PrintSubtermList(AO.OptimizeResult.minvar, C->numrhs);
 	
 	WORD *t = AO.OptimizeResult.code;
-	
 	while (*t!=0) {
 		if (*t > 0)
 			PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
@@ -3427,7 +3407,7 @@ VOID optimize_print_code (int print_expr) {
 }
 
 /*
-  	#] optimize_print_code : 
+  	#] optimize_print_code :
   	#[ Optimize :
 */
 
@@ -3472,7 +3452,7 @@ int Optimize (WORD exprnr, int do_print) {
 	AO.OptimizeResult.minvar = (cbuf + AM.sbufnum)->numrhs + 1;
 	
 	if (get_expression(exprnr) != 0) return -1;
-  vector<vector<WORD> > brackets = get_brackets();
+	vector<vector<WORD> > brackets = get_brackets();
 
 	if (optimize_expr[0]==0 ||
 			(optimize_expr[optimize_expr[0]]==0 && optimize_expr[0]==ABS(optimize_expr[optimize_expr[0]-1])+1) ||
@@ -3489,16 +3469,28 @@ int Optimize (WORD exprnr, int do_print) {
 	}
 	else {
 		// find Horner scheme(s)
+		optimize_best_Horner_schemes.clear();
 		if (AO.Optimize.horner == O_OCCURRENCE) {
-			optimize_best_Horner_schemes.clear();
 			if (AO.Optimize.hornerdirection != O_BACKWARD)
 				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, false));
 			if (AO.Optimize.hornerdirection != O_FORWARD)
 				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, true));
 		}
-		else 
-			optimize_best_Horner_schemes = find_Horner_MCTS();
-		
+		else {
+			mcts_best_schemes.clear();
+			for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
+				find_Horner_MCTS();
+			// generate results
+			for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
+				optimize_best_Horner_schemes.push_back(i->second);
+			
+#ifdef DEBUG_MCTS
+				MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
+#endif
+			}
+			// clear the tree by making a new empty one.
+			mcts_root = tree_node();
+		}
 #ifdef DEBUG
 		MesPrint ("*** runtime after Horner: %"); PrintRunningTime();
 #endif
@@ -3614,3 +3606,4 @@ int ClearOptimize()
 /*
   	#] ClearOptimize : 
 */
+

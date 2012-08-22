@@ -1204,6 +1204,7 @@ typedef struct {
     int   mctstimelimit;
     int   mctsnumexpand;
     int   mctsnumkeep;
+    int   mctsnumrepeat;
     int   greedytimelimit;
     int   greedyminnum;
     int   greedymaxperc;
@@ -2165,9 +2166,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(23,6,15,16,1);
+	PADPOSITION(23,6,16,16,1);
 #else
-	PADPOSITION(23,4,15,16,1);
+	PADPOSITION(23,4,16,16,1);
 #endif
 };
 /*

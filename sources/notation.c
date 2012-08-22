@@ -859,14 +859,11 @@ void PrintSubtermList(int from,int to)
 
 	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
 		TokenToLine((UBYTE *)"      ");
-		AO.OutSkip = 6;
+		AO.OutSkip = 7;
 	}
 	else if ( AO.OutSkip > 0 ) {
 		for ( i = 0; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
 	}
-/*
-	FiniLine();
-*/
 	i = from;
 	do {
 /*
@@ -935,15 +932,13 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 	AO.OutFill = AO.OutputLine = outbuffer;
 	AO.OutStop = AO.OutputLine+AC.LineLength;
 	AO.IsBracket = 0;
-/*	AO.OutSkip = 3; */
 
 	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
 		TokenToLine((UBYTE *)"      ");
-		AO.OutSkip = 6;
+		AO.OutSkip = 7;
 	}
 	else if ( AO.OutSkip > 0 ) {
 		for ( i = 0; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
-/*		for ( i = 0; i <= AO.OutSkip; i++ ) TokenToLine((UBYTE *)" "); */
 	}
 	out = buffer;
 	switch ( par ) {
