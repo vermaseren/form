@@ -1572,25 +1572,25 @@ VOID PrintRunningTime()
 
 LONG GetRunningTime()
 {
-#if (defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))) || defined(PARALLEL)
+#if defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))
 	LONG mastertime;
 	LONG workertime;
-#if defined(WITHPTHREADS)
 	if ( AB[0] != 0 ) {
 		workertime = GetWorkerTimes();
 		mastertime = AM.SumTime + TimeCPU(1);
 		return(mastertime+workertime);
 	}
-#else
-	workertime = PF_GetSlaveTimes();  /* must be called on all processors */
-	if ( PF.me == MASTER ) {
-		mastertime = AM.SumTime + TimeCPU(1);
-		return(mastertime+workertime);
-	}
-#endif
 	else {
 		return(AM.SumTime + TimeCPU(1));
 	}
+#elif defined(PARALLEL)
+	LONG mastertime, t = 0;
+	LONG workertime = PF_GetSlaveTimes();  /* must be called on all processors */
+	if ( PF.me == MASTER ) {
+		mastertime = AM.SumTime + TimeCPU(1);
+		t = mastertime + workertime;
+	}
+	return PF_BroadcastNumber(t);  /* must be called on all processors */
 #else
 	return(AM.SumTime + TimeCPU(1));
 #endif

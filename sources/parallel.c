@@ -2038,7 +2038,7 @@ int PF_Init(int *argc, char ***argv)
 #endif
 	}
 /*
-  	#[ BroadCast settings from getenv: could also be done in PF_DoSetup
+  	#[ Broadcast settings from getenv: could also be done in PF_DoSetup
 */
 	if ( PF.me == MASTER ) {
 		PF_PreparePack();
@@ -2063,7 +2063,7 @@ int PF_Init(int *argc, char ***argv)
 		}
 	}
 /*
-  	#] BroadCast settings from getenv:
+  	#] Broadcast settings from getenv:
 */
 	return(0);
 }
@@ -2125,48 +2125,33 @@ LONG PF_GetSlaveTimes(void)
 /*
  		#] PF_GetSlaveTimes :
   	#] startup :
-  	#[ PF_BroadcastNumberOfTerms :
+  	#[ PF_BroadcastNumber :
 */
 
 /**
  * Broadcasts a LONG value from the master to the all slaves.
  *
- * It is used to broadcast the number of terms in an expression for
- * preprocessor if-expression 'termsin', see pre.c. The procedure assumes that
- * \a x is the value obtained by the master and simply broadcasts it to all slaves.
- *
- * @param  x  the number to be broadcasted (set on the master).
- * @return    the broadcasted number.
+ * @param  x  the number to be broadcast (set on the master).
+ * @return    the synchronised result.
  */
-LONG PF_BroadcastNumberOfTerms(LONG x)
+LONG PF_BroadcastNumber(LONG x)
 {
-/*
-		Note, compilation is performed INDEPENDENTLY on AC.mparallelflag!
-		No if(AC.mparallelflag==PARALLELFLAG) !!
-*/
-	if ( MASTER == PF.me ) {        /* Pack the value of x */
-		if ( PF_PreparePack() != 0 ) /* initialize buffers */
-			Terminate(-1);
-		if ( PF_Pack(&x,1,PF_LONG) != 0 ) Terminate(-1);
+	if ( MASTER == PF.me ) {
+		PF_PreparePack();
+		PF_Pack(&x, 1, PF_LONG);
 #ifdef PF_DEBUG_BCAST_LONG
 		MesPrint(">> Broadcast LONG: %d", (int)x);
 #endif
 	}
-
 	PF_Broadcast();
-
 	if ( MASTER != PF.me ) {
-/*
-			Slave - unpack received x
-			For slaves buffers are initialised automatically.
-*/
-		if ( PF_Unpack(&x,1,PF_LONG) != 0 ) Terminate(-1);
+		PF_Unpack(&x, 1, PF_LONG);
 	}
-	return (x);
+	return x;
 }
 
 /*
-  	#] PF_BroadcastNumberOfTerms :
+  	#] PF_BroadcastNumber :
   	#[ PF_BroadcastString :
 */
 

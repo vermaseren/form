@@ -4403,17 +4403,8 @@ illend:
 					else {
 						*tt = c;
 						x = TermsInExpression(numexp);
-#ifdef PARALLEL
-/*
-						The problem here is that only the master process can decide how many
-						terms the expression contains. So we have to broadcast from master to all others
-						the value of x. The corresponding procedure PF_BroadcastNumberOfTerms is in the file 
-						'parallel.c':
-*/
-						x = PF_BroadcastNumberOfTerms(x);
-#endif
 					}
-				} 
+				}
 				while ( *tt == ' ' || *tt == '\t'
 						 || *tt == '\n' || *tt == '\r' ) tt++;
 				if ( *tt != ')' ) {

@@ -226,7 +226,7 @@ extern int    PF_Processor(EXPRESSIONS,WORD,WORD);
 extern int    PF_Init(int*,char ***);
 extern int    PF_Terminate(int);
 extern LONG   PF_GetSlaveTimes(void);
-extern LONG   PF_BroadcastNumberOfTerms(LONG);
+extern LONG   PF_BroadcastNumber(LONG);
 extern int    PF_BroadcastString(UBYTE *);
 extern int    PF_BroadcastPreDollar(WORD **, LONG *,int *);
 extern int    PF_CollectModifiedDollars(void);
