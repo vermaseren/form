@@ -740,6 +740,7 @@ static void print_M()
 	MesPrint("--MARK  7");
 	MesPrint("%d", AM.gUnitTrace);
 	MesPrint("%d", AM.gOutputMode);
+	MesPrint("%d", AM.gCnumpows);
 	MesPrint("%d", AM.gOutputSpaces);
 	MesPrint("%d", AM.gOutNumberType);
 	MesPrint("%d %d %d %d", AM.gUniTrace[0], AM.gUniTrace[1], AM.gUniTrace[2], AM.gUniTrace[3]);
@@ -1052,6 +1053,7 @@ static void print_C()
 	MesPrint("%d", AC.AltCollectFun);
 	MesPrint("--MARK 17");
 	MesPrint("%d", AC.OutputMode);
+	MesPrint("%d", AC.Cnumpows);
 	MesPrint("%d", AC.OutputSpaces);
 	MesPrint("%d", AC.OutNumberType);
 	print_WORDV(AC.lUniTrace, 4);
@@ -1382,6 +1384,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.gnpowmod, WORD);
 	R_SET(AM.gmodmode, WORD);
 	R_SET(AM.gOutputMode, WORD);
+	R_SET(AM.gCnumpows, WORD);
 	R_SET(AM.gOutputSpaces, WORD);
 	R_SET(AM.gOutNumberType, WORD);
 	R_SET(AM.gfunpowers, int);
@@ -2415,6 +2418,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.gnpowmod, sizeof(WORD));
 	S_WRITE_B(&AM.gmodmode, sizeof(WORD));
 	S_WRITE_B(&AM.gOutputMode, sizeof(WORD));
+	S_WRITE_B(&AM.gCnumpows, sizeof(WORD));
 	S_WRITE_B(&AM.gOutputSpaces, sizeof(WORD));
 	S_WRITE_B(&AM.gOutNumberType, sizeof(WORD));
 	S_WRITE_B(&AM.gfunpowers, sizeof(int));

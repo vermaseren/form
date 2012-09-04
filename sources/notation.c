@@ -937,6 +937,10 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 		TokenToLine((UBYTE *)"      ");
 		AO.OutSkip = 7;
 	}
+	else if ( ( AO.Optimize.debugflags & 1 ) == 1 ) {
+		TokenToLine((UBYTE *)"id ");
+		for ( i = 3; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
+	}
 	else if ( AO.OutSkip > 0 ) {
 		for ( i = 0; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
 	}

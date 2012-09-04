@@ -1319,7 +1319,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 {
 	UBYTE buffer[80];
 	UBYTE *Out, closepar[2] = { (UBYTE)')', 0};
-	WORD *stopper, *t, *tt, i, j;
+	WORD *stopper, *t, *tt, i, j, po = 0;
 	int oldoutsidefun;
 	stopper = sterm + sterm[1];
 	t = sterm + 2;
@@ -1333,8 +1333,18 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 					if ( first ) TokenToLine((UBYTE *)" ");
 				}
 				if ( !first ) TokenToLine((UBYTE *)"*");
-				if ( AC.OutputMode == CMODE && t[1] != 1 )
-					TokenToLine((UBYTE *)"pow(");
+				if ( AC.OutputMode == CMODE && t[1] != 1 ) {
+					if ( AC.Cnumpows >= t[1] && t[1] > 0 ) {
+						po = t[1];
+						Out = StrCopy((UBYTE *)"POW",buffer);
+						Out = NumCopy(po,Out);
+						Out = StrCopy((UBYTE *)"(",Out);
+						TokenToLine(buffer);
+					}
+					else {
+						TokenToLine((UBYTE *)"pow(");
+					}
+				}
 				if ( *t < NumSymbols ) {
 					Out = StrCopy(VARNAME(symbols,*t),buffer); t++;
 				}
@@ -1357,7 +1367,12 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 */
 					t++;
 				}
-				if ( *t != 1 ) WrtPower(Out,*t);
+				if ( AC.OutputMode == CMODE && po > 1
+				  && AC.Cnumpows >= po ) {
+					Out = StrCopy((UBYTE *)")",Out);
+					po = 0;
+				}
+				else if ( *t != 1 ) WrtPower(Out,*t);
 				TokenToLine(buffer);
 				t++;
 				first = 0;

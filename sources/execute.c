@@ -287,6 +287,7 @@ WORD PopVariables()
 		j = 4;
 		NCOPY(m,p,j);
 	}
+	AC.Cnumpows = AM.gCnumpows;
 	AC.OutputMode = AM.gOutputMode;
 	AC.OutputSpaces = AM.gOutputSpaces;
 	AC.OutNumberType = AM.gOutNumberType;
@@ -325,6 +326,7 @@ VOID MakeGlobal()
 	AM.gncmod = AC.ncmod;
 	AM.gnpowmod = AC.npowmod;
 	AM.gmodmode = AC.modmode;
+	AM.gCnumpows = AC.Cnumpows;
 	AM.gOutputMode = AC.OutputMode;
 	AM.gOutputSpaces = AC.OutputSpaces;
 	AM.gOutNumberType = AC.OutNumberType;

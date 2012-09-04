@@ -655,11 +655,13 @@ VOID StartVariables()
 	AM.BracketFactors[7] = 3;
 
 	AM.SkipClears = 0;
+	AC.Cnumpows = 0;
 	AC.OutputMode = 72;
 	AC.OutputSpaces = NORMALFORMAT;
 	AC.LineLength = 79;
 	AM.gIsFortran90 = AC.IsFortran90 = ISNOTFORTRAN90;
 	AM.gFortran90Kind = AC.Fortran90Kind = 0;
+	AM.gCnumpows = 0;
 	AC.exprfillwarning = 0;
 	AM.gLineLength = 79;
 	AM.OutBufSize = 80;
@@ -740,7 +742,10 @@ VOID StartVariables()
 	AO.Optimize.greedyminnum = 10;
 	AO.Optimize.greedymaxperc = 5;
 	AO.Optimize.printstats = 0;
+	AO.Optimize.debugflags = 0;
 	AO.OptimizeResult.code = NULL;
+	AO.inscheme = 0;
+	AO.schemenum = 0;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;
  	AC.doloopstacksize = 0;

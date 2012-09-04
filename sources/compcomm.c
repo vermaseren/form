@@ -626,6 +626,11 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.greedytimelimit = 0;
 			AO.Optimize.mctstimelimit = 0;
 			AO.Optimize.printstats = 0;
+			AO.Optimize.debugflags = 0;
+			if ( AO.inscheme ) {
+				M_free(AO.inscheme,"Horner input scheme");
+				AO.inscheme = 0; AO.schemenum = 0;
+			}
 			switch ( x ) {
 				case 0:
 					break;
@@ -681,6 +686,11 @@ opterr:				error = 1;
 			AO.Optimize.greedyminnum = 10;
 			AO.Optimize.greedymaxperc = 5;
 			AO.Optimize.printstats = 0;
+			AO.Optimize.debugflags = 0;
+			if ( AO.inscheme ) {
+				M_free(AO.inscheme,"Horner input scheme");
+				AO.inscheme = 0; AO.schemenum = 0;
+			}
 			return(CoOptimizeOption(s));
 		}
 		else goto opterr;
@@ -775,7 +785,17 @@ opterr:				error = 1;
 				AC.OutputMode = key->type & NODOUBLEMASK;
 			}
 		}
-		else { MesPrint("&Unknown option: %s",s); error = 1; }
+		else if ( ( *s == 'c' || *s == 'C' ) && ( FG.cTable[s[1]] == 1 ) ) {
+			UBYTE *ss = s+1;
+			WORD x = 0;
+			while ( *ss >= '0' && *ss <= '9' ) x = 10*x + *ss++ - '0';
+			if ( *ss != 0 ) goto Unknown;
+			AC.OutputMode = CMODE;
+			AC.Cnumpows = x;
+		}
+		else {
+Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
+		}
 		AC.LineLength = 72;
 	}
 	return(error);
@@ -6113,6 +6133,62 @@ correctuse:
 				AO.Optimize.printstats = 0;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"debugflag") == 0 ) {
+/*
+			This option is for debugging purposes only. Not in the manual!
+			0x1: Print statements in reverse order.
+*/
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option DebugFlag in Format,Optimize statement should be a positive number: %s",value);
+				AO.Optimize.debugflags = 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.debugflags = x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"scheme") == 0 ) {
+			UBYTE *ss;
+			int i = 0;
+			AO.schemenum = 0;
+			u = value;
+			if ( *u != '(' ) {
+noscheme:
+				MesPrint("&Option Scheme in Format,Optimize statement should be an array of integers between (): %s",value);
+				error = 1;
+				break;
+			}
+			u++; ss = u;
+			while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
+			for(;;) {
+				if ( *ss == ')' ) break;
+				if ( FG.cTable[*ss] != 1 ) break;
+				while ( FG.cTable[*ss] == 1 ) ss++;
+				AO.schemenum++;
+				while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
+			}
+			if ( *ss != ')' ) goto noscheme;
+			*ss++ = 0; while ( *ss == ' ' ) ss++;
+			if ( *ss != 0 ) goto noscheme;
+			ss = u;
+			if ( AO.schemenum < 1 ) {
+				MesPrint("&Option Scheme in Format,Optimize statement should have at least one number between ()");
+				error = 1;
+				break;
+			}
+			if ( AO.inscheme ) M_free(AO.inscheme,"Horner input scheme");
+			AO.inscheme = (WORD *)Malloc1(AO.schemenum*sizeof(WORD),"Horner input scheme");
+			while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
+			for(;;) {
+				if ( *ss == 0 ) break;
+				x = 0;
+				while ( FG.cTable[*ss] == 1 ) x = 10*x + *ss++ - '0';
+				AO.inscheme[i++] = x;
+				while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
 			}
 		}
 		else {

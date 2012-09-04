@@ -1209,6 +1209,7 @@ typedef struct {
     int   greedyminnum;
     int   greedymaxperc;
     int   printstats;
+    int   debugflags;
 } OPTIMIZE;
 
 typedef struct {
@@ -1344,6 +1345,7 @@ struct M_const {
     WORD    gOutputMode;           /* (M) */
     WORD    gOutputSpaces;         /* (M) */
     WORD    gOutNumberType;        /* (M) */
+    WORD    gCnumpows;             /* (M) */
     WORD    gUniTrace[4];          /* (M) */
     WORD    MaxWildcards;          /* (M) Maximum number of wildcards */
     WORD    mTraceDum;             /* (M) Position/Offset for generated dummies */
@@ -1384,9 +1386,9 @@ struct M_const {
     WORD    zerorhs;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,52,74,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,52,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,52,74,0);
+	PADPOSITION(15,22,52,75,0);
 #endif
 };
 /*
@@ -1654,6 +1656,7 @@ struct C_const {
     WORD    CollectFun;            /* (C) Collect function number */
     WORD    AltCollectFun;         /* (C) Alternate Collect function number */
     WORD    OutputMode;            /* (C) */
+    WORD    Cnumpows;
     WORD    OutputSpaces;          /* (C) */
     WORD    OutNumberType;         /* (C) Controls RATIONAL/FLOAT output */
     WORD    DidClean;              /* (C) Test whether nametree needs cleaning */
@@ -1677,11 +1680,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(45,8+3*MAXNEST,68,39+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(45,8+3*MAXNEST,68,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(PARALLEL)
-	PADPOSITION(45,8+3*MAXNEST,68,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(45,8+3*MAXNEST,68,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(43,8+3*MAXNEST,66,39+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(43,8+3*MAXNEST,66,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -2135,6 +2138,7 @@ struct O_const {
     VOID    (*CheckPower)(UBYTE *);
     VOID    (*RenumberVec)(UBYTE *);
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
+    WORD    *inscheme;             /* for feeding a Horner scheme to Optimize */
 /*----Leave NumInBrack as first non-pointer. This is used by the checkpoints--*/
     LONG    NumInBrack;            /* (O) For typing [] option in print */
     LONG    wlen;                  /* (O) Used to store files. */
@@ -2148,6 +2152,7 @@ struct O_const {
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
+    WORD    schemenum;             /* for feeding a Horner scheme to Optimize */
     WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
     WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
     WORD    mpower;                /*     For maxpower adjustment to larger value */
@@ -2166,9 +2171,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(23,6,16,16,1);
+	PADPOSITION(24,6,17,17,1);
 #else
-	PADPOSITION(23,4,16,16,1);
+	PADPOSITION(24,4,17,17,1);
 #endif
 };
 /*

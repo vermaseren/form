@@ -1956,6 +1956,14 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 				}
 				break;
 			}
+			else if ( a1[0] == FUNHEAD+ARGHEAD+4 && a1[ARGHEAD] == FUNHEAD+4
+			&& a1[*a1-1] == 3 && a1[*a1-2] == 1 && a1[*a1-3] == 1
+			&& a1[ARGHEAD+1] >= FUNCTION ) {
+				a = t = a1+*a1; while ( *t ) NEXTARG(t);
+				i = t - a;
+				*a1 = -a1[ARGHEAD+1]; t = a1+1; NCOPY(t,a,i);
+				*t = 0;
+			}
 			NEXTARG(a1);
 		}
 	}
@@ -2139,7 +2147,8 @@ getout:
 			AT.WorkPointer = oldworkpointer;
 			if ( EndSort(BHEAD a2+ARGHEAD,0) ) { error = -5; goto getout; }
 			t = a2+ARGHEAD; while ( *t ) t += *t;
-			*a2 = t - a2; a2[1] = 0; ZEROARG(a2); a2 = t;
+			*a2 = t - a2; a2[1] = 0; ZEROARG(a2);
+			ToFast(a2,a2); NEXTARG(a2);
 			a1 = tstop;
 		}
 		i = a2 - argcopy2;
