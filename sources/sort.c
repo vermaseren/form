@@ -1201,11 +1201,13 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 
 WORD Sflush(FILEHANDLE *fi)
 {
-	GETIDENTITY
 	LONG size, RetCode;
+#ifdef WITHZLIB
+	GETIDENTITY
 	int dobracketindex = 0;
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
+#endif
 	if ( fi->handle < 0 ) {
 		if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
 #ifdef GZIPDEBUG
