@@ -732,8 +732,9 @@ newright:
 			WORD *lcpos, *rcpos;
 			UWORD *newcpos;
 			WORD lclen, rclen, newclen, newnlen;
+			SORTING *S = AT.SS;
 
-			if ( AT.SS->PolyWise ) {
+			if ( S->PolyWise ) {
 /*
 			#[ Here we work with PolyFun :
 */
@@ -745,16 +746,26 @@ newright:
 				if ( ( r1 = (int)*PF_term[n->lloser] ) <= 0 ) r1 = 20;
 				if ( ( r2 = (int)*PF_term[n->rloser] ) <= 0 ) r2 = 20;
 				tt1 = ml;
-				ml += AT.SS->PolyWise;
-				mr += AT.SS->PolyWise;
-				w = AT.WorkPointer;
-				if ( w + ml[1] + mr[1] > AT.WorkTop ) {
-					MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
-					Terminate(-1);
+				ml += S->PolyWise;
+				mr += S->PolyWise;
+				if ( S->PolyFlag == 2 ) {
+					w = poly_ratfun_add(BHEAD ml,mr);
+					if ( *tt1 + w[1] - ml[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
+						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+						Terminate(-1);
+					}
+					AT.WorkPointer = w;
 				}
-				AddArgs(ml,mr,w);
+				else {
+					w = AT.WorkPointer;
+					if ( w + ml[1] + mr[1] > AT.WorkTop ) {
+						MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
+						Terminate(-1);
+					}
+					AddArgs(BHEAD ml,mr,w);
+				}
 				r1 = w[1];
-				if ( r1 <= FUNHEAD ) {
+				if ( r1 <= FUNHEAD || ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) ) {
 					goto cancelled;
 				}
 				if ( r1 == ml[1] ) {
@@ -766,7 +777,7 @@ newright:
 					ml += ml[1];
 					while ( --r1 >= 0 ) *--ml = *--mr;
 					mr = ml - r2;
-					r1 = AT.SS->PolyWise;
+					r1 = S->PolyWise;
 					while ( --r1 >= 0 ) *--ml = *--mr;
 					*ml -= r2;
 					PF_term[n->lloser] = ml;
@@ -776,7 +787,7 @@ newright:
 					if ( r2 > 2*AM.MaxTal )
 						MesPrint("warning: new term in polyfun is large");
 					mr = tt1 - r2;
-					r1 = AT.SS->PolyWise;
+					r1 = S->PolyWise;
 					ml = tt1;
 					*ml += r2;
 					PF_term[n->lloser] = mr;
@@ -787,11 +798,10 @@ newright:
 				PF_newclen[n->rloser] = 0;
 				PF_loser = n->rloser;
 				goto newright;
-		/*
+/*
 			#] Here we work with PolyFun :
 */
 			}
-/* Please verify that the = shouldn't have been == */
 			if ( ( lclen = PF_newclen[n->lloser] ) != 0 ) lcpos = PF_newcpos[n->lloser];
 			else {
 				lcpos = PF_term[n->lloser];
