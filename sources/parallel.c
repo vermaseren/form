@@ -1920,6 +1920,19 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		AR.BracketOn = oldBracketOn;
 		AT.BrackBuf = oldBrackBuf;
 		AT.bracketindexflag = oldbracketindexflag;
+		/*
+		 * Clean the hide file on the slave, which was used for RHS expressions
+		 * broadcast from the master at the beginning of the module.
+		 */
+		if ( AR.hidefile->PObuffer ) {
+			if ( AR.hidefile->handle >= 0 ) {
+				CloseFile(AR.hidefile->handle);
+				AR.hidefile->handle = -1;
+				remove(AR.hidefile->name);
+			}
+			AR.hidefile->POfull = AR.hidefile->POfill = AR.hidefile->PObuffer;
+			PUTZERO(AR.hidefile->POposition);
+		}
 /*
 			#] Generator Loop & EndSort :
 			#[ Collect (stats,prepro...) :
@@ -3465,6 +3478,9 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 			return(-1);
 		curfile->POfill-=l;
 	}
+	if ( curfile->handle >= 0 ) {
+		if ( PF_pushScratch(curfile) ) return -1;
+	}
 	curfile->POfull=curfile->POfill;
 	if ( curfile != AR.hidefile ) AR.InInBuf = curfile->POfull-curfile->PObuffer;
 	else                          AR.InHiBuf = curfile->POfull-curfile->PObuffer;
@@ -3474,7 +3490,7 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 
 /*
  		#] PF_rhsBCastSlave :
- 		#[ PF_broadcastRHS :
+ 		#[ PF_BroadcastRHS :
 */
 
 /**
@@ -3482,7 +3498,7 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
  *
  * @return  0 if OK, nonzero on error.
  */
-int PF_broadcastRHS(void)
+int PF_BroadcastRHS(void)
 {
 	int i;
 	FILEHANDLE *curfile = 0;
@@ -3534,7 +3550,7 @@ int PF_broadcastRHS(void)
 }
 
 /*
- 		#] PF_broadcastRHS :
+ 		#] PF_BroadcastRHS :
   	#] Broadcasting RHS expressions :
   	#[ InParallel mode :
  		#[ PF_InParallelProcessor :

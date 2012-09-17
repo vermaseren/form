@@ -163,7 +163,7 @@ WORD Processor()
 #endif
 #ifdef PARALLEL
 	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && AC.mparallelflag == PARALLELFLAG ) {
-		if ( PF_broadcastRHS() ) {
+		if ( PF_BroadcastRHS() ) {
 			retval = -1;
 		}
 	}
