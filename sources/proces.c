@@ -3955,10 +3955,16 @@ skippedfirst:
 			AT.WorkPointer = accum;
 			AT.posWorkPointer = olpw;
 			AT.pWorkPointer = opw;
+/*
+		Bug fix. See also GetTable
 #ifdef WITHPTHREADS
 			M_free(renumber->symb.lo,"VarSpace");
 			M_free(renumber,"Renumber");
 #endif
+*/
+			M_free(renumber->symb.lo,"VarSpace");
+			M_free(renumber,"Renumber");
+
 		}
 		else {			/* Active expression */
 			aa = accum = AT.WorkPointer;

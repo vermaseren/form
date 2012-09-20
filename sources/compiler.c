@@ -822,9 +822,12 @@ int CodeGenerator(SBYTE *tokens)
 	CBUF *C;
 	POSITION position;
 	WORD TMproto[SUBEXPSIZE];
+/*
 #ifdef WITHPTHREADS
 	RENUMBER renumber;
 #endif
+*/
+	RENUMBER renumber;
 	if ( AC.TokensWriteFlag ) WriteTokens(tokens);
 	if ( CGscrat7 == 0 )
 		CGscrat7 = (UWORD *)Malloc1((AM.MaxTal+2)*sizeof(WORD),"CodeGenerator");
@@ -1029,6 +1032,7 @@ doexpr:					s += 2;
 							{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 							AT.TMaddr = TMproto;
 							PUTZERO(position);
+/*
 							if ( (
 #ifdef WITHPTHREADS
 									renumber = 
@@ -1042,6 +1046,14 @@ doexpr:					s += 2;
 							M_free(renumber->symb.lo,"VarSpace");
 							M_free(renumber,"Renumber");
 #endif
+*/
+							if ( ( renumber = GetTable(x2,&position,0) ) == 0 ) {
+								error = 1;
+								MesPrint("&Problems getting information about stored expression %s(1)"
+								,EXPRNAME(x2));
+							}
+							M_free(renumber->symb.lo,"VarSpace");
+							M_free(renumber,"Renumber");
 							AR.StoreData.dirtyflag = 1;
 						}
 						if ( *s != TFUNCLOSE ) {
@@ -1256,6 +1268,7 @@ dofunction:			firstsumarg = 1;
 									{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 									AT.TMaddr = TMproto;
 									PUTZERO(position);
+/*
 									if ( ( 
 #ifdef WITHPTHREADS
 										renumber = 
@@ -1269,6 +1282,14 @@ dofunction:			firstsumarg = 1;
 									M_free(renumber->symb.lo,"VarSpace");
 									M_free(renumber,"Renumber");
 #endif
+*/
+									if ( ( renumber = GetTable(x2,&position,0) ) == 0 ) {
+										error = 1;
+										MesPrint("&Problems getting information about stored expression %s(2)"
+										,EXPRNAME(x2));
+									}
+									M_free(renumber->symb.lo,"VarSpace");
+									M_free(renumber,"Renumber");
 									AR.StoreData.dirtyflag = 1;
 								}
 								break;
@@ -1524,6 +1545,7 @@ dofunction:			firstsumarg = 1;
 					v[1] = t-v;
 					AT.TMaddr = v;
 					PUTZERO(position);
+/*
 					if ( (
 #ifdef WITHPTHREADS
 						renumber = 
@@ -1537,6 +1559,14 @@ dofunction:			firstsumarg = 1;
 					M_free(renumber->symb.lo,"VarSpace");
 					M_free(renumber,"Renumber");
 #endif
+*/
+					if ( ( renumber = GetTable(x1,&position,0) ) == 0 ) {
+						error = 1;
+						MesPrint("&Problems getting information about stored expression %s(3)"
+						,EXPRNAME(x1));
+					}
+					M_free(renumber->symb.lo,"VarSpace");
+					M_free(renumber,"Renumber");
 					AR.StoreData.dirtyflag = 1;
 				}
 				if ( *s == LBRACE ) {

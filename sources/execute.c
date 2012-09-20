@@ -86,8 +86,14 @@ WORD CleanExpr(WORD par)
 					i = n-1;
 					while ( --i >= 0 ) {
 						e++;
-						if ( e->status == GLOBALEXPRESSION
-						|| e->status == LOCALEXPRESSION ) break;
+						if ( e_in->status == HIDDENGEXPRESSION ) {
+							if ( e->status == HIDDENGEXPRESSION
+							|| e->status == HIDDENLEXPRESSION ) break;
+						}
+						else {
+							if ( e->status == GLOBALEXPRESSION
+							|| e->status == LOCALEXPRESSION ) break;
+						}
 					}
 					if ( i >= 0 ) {
 						DIFPOS(length,e->onfile,e_in->onfile);
@@ -105,7 +111,7 @@ WORD CleanExpr(WORD par)
 						}
 					}
 					if ( ToStorage(e_in,&length) ) {
-						return(MesCall("PopVariables"));
+						return(MesCall("CleanExpr"));
 					}
 					e_in->status = STOREDEXPRESSION;
 					if ( e_in->status != HIDDENGEXPRESSION )
@@ -170,7 +176,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr :
+ 		#] CleanExpr : 
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -1337,10 +1343,14 @@ int GetFirstBracket(WORD *term, int num)
 			MesCall("GetFirstBracket");
 			SETERROR(-1)
 		}
+/*
 #ifdef WITHPTHREADS
+*/
 		M_free(renumber->symb.lo,"VarSpace");
 		M_free(renumber,"Renumber");
+/*
 #endif
+*/
 	}
 	else {			/* Active expression */
 		oldonefile = AR.GetOneFile;
@@ -1441,10 +1451,14 @@ int GetFirstTerm(WORD *term, int num)
 			MesCall("GetFirstTerm");
 			SETERROR(-1)
 		}
+/*
 #ifdef WITHPTHREADS
+*/
 		M_free(renumber->symb.lo,"VarSpace");
 		M_free(renumber,"Renumber");
+/*
 #endif
+*/
 	}
 	else {			/* Active expression */
 		oldonefile = AR.GetOneFile;
@@ -1541,11 +1555,14 @@ int GetContent(WORD *content, int num)
 */
 			if ( ContentMerge(BHEAD cbuffer,term) < 0 ) goto CalledFrom;
 		}
-
+/*
 #ifdef WITHPTHREADS
+*/
 		M_free(renumber->symb.lo,"VarSpace");
 		M_free(renumber,"Renumber");
+/*
 #endif
+*/
 	}
 	else {			/* Active expression */
 		oldonefile = AR.GetOneFile;

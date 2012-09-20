@@ -2699,6 +2699,8 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 	Prepare for FindInIndex to put the prototype in the WorkSpace.
 	oldw will point at the "wildcards"
 */
+/*
+		Bug fix. Look also in Generator.
 #ifndef WITHPTHREADS
 
 	if ( ( r = Expressions[expr].renum ) != 0 ) { }
@@ -2709,6 +2711,8 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 #else
 		r = (RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
 #endif
+*/
+		r = (RENUMBER)Malloc1(sizeof(struct ReNuMbEr),"Renumber");
 
 	oldw = AT.WorkPointer + 1 + SUBEXPSIZE;
 /*
@@ -2825,7 +2829,7 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 	}
 	}
 /*
-			#] Symbols :
+			#] Symbols : 
 			#[ Indices :
 */
 	{

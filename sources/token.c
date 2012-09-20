@@ -1941,9 +1941,13 @@ int simp6token(SBYTE *tokens, int mode)
 
 				if ( Expressions[n].status == STOREDEXPRESSION ) {
 					POSITION position;
+/*
 #ifdef WITHPTHREADS
 					RENUMBER renumber;
 #endif
+*/
+					RENUMBER renumber;
+
 					WORD TMproto[SUBEXPSIZE];
 					TMproto[0] = EXPRESSION;
 					TMproto[1] = SUBEXPSIZE;
@@ -1952,19 +1956,27 @@ int simp6token(SBYTE *tokens, int mode)
 					{ int ie; for ( ie = 4; ie < SUBEXPSIZE; ie++ ) TMproto[ie] = 0; }
 					AT.TMaddr = TMproto;
 					PUTZERO(position);
+/*
 					if ( (
 #ifdef WITHPTHREADS
 						renumber = 
 #endif
-							GetTable(n,&position,0) ) == 0 ) {
+							GetTable(n,&position,0) ) == 0 )
+*/
+					if ( ( renumber = GetTable(n,&position,0) ) == 0 )
+					{
 						error = 1;
 						MesPrint("&Problems getting information about stored expression %s(4)"
 						,EXPRNAME(n));
 					}
+/*
 #ifdef WITHPTHREADS
+*/
 					M_free(renumber->symb.lo,"VarSpace");
 					M_free(renumber,"Renumber");
+/*
 #endif
+*/
 				}
 
 				if ( ( ( AS.Oldvflags[n] & ISFACTORIZED ) != 0 ) && *s != LBRACE ) {
