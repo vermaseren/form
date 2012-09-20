@@ -970,3 +970,5 @@ typedef int (*TFUN1)();
 #define O_BACKWARD 1
 #define O_FORWARDORBACKWARD 2
 #define O_FORWARDANDBACKWARD 3
+
+#define OPTHEAD 3

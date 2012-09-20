@@ -93,14 +93,15 @@ WORD CleanExpr(WORD par)
 						DIFPOS(length,e->onfile,e_in->onfile);
 					}
 					else {
-						if ( AR.outfile->handle < 0 ) {
-							SETBASELENGTH(length,TOLONG(AR.outfile->POfull)
-							 - TOLONG(AR.outfile->PObuffer)
+						FILEHANDLE *f = e_in->status == HIDDENGEXPRESSION ? AR.hidefile : AR.outfile;
+						if ( f->handle < 0 ) {
+							SETBASELENGTH(length,TOLONG(f->POfull)
+							 - TOLONG(f->PObuffer)
 							 - BASEPOSITION(e_in->onfile));
 						}
 						else {
-							SeekFile(AR.outfile->handle,&(AR.outfile->filesize),SEEK_SET);
-							DIFPOS(length,AR.outfile->filesize,e_in->onfile);
+							SeekFile(f->handle,&(f->filesize),SEEK_SET);
+							DIFPOS(length,f->filesize,e_in->onfile);
 						}
 					}
 					if ( ToStorage(e_in,&length) ) {
@@ -169,7 +170,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.

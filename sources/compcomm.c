@@ -6139,6 +6139,7 @@ correctuse:
 /*
 			This option is for debugging purposes only. Not in the manual!
 			0x1: Print statements in reverse order.
+			0x2: Print the scheme of the variables.
 */
 			x = 0;
 			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';

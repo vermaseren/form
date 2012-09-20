@@ -5604,7 +5604,7 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
 	WORD  num, number, nfac;
 	UBYTE Out[MAXLINELENGTH+14], *stopper;
-	int nosemi;
+	int nosemi, i;
 
 /*
 	Now determine the format string
@@ -5668,7 +5668,9 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 			fstring++;
 			if ( *fstring == '$' ) {
 				UBYTE *dolalloc;
+dodollar:
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+				number = AO.OutSkip;
 				if ( *s != '$' ) {
 nodollar:			MesPrint("@$-variable expected in #write instruction");
 					AM.FileOnlyFlag = h->oldlogonly;
@@ -5742,6 +5744,7 @@ writealloc:
 							num = to - Out;
 							WriteString(wtype,Out,num);
 							to = Out;
+							for ( i = 0; i < number; i++ ) *to++ = ' ';
 						}
 						if ( chartype[*ss] > 3 ) { *to++ = *ss++; }
 						else {
@@ -5752,6 +5755,7 @@ writealloc:
 										num = to - Out;
 										WriteString(wtype,Out,num);
 										to = Out;
+										for ( i = 0; i < number; i++ ) *to++ = ' ';
 									}
 									while ( (ss-sss) >= (stopper-Out) ) {
 										while ( to < stopper-1 ) {
@@ -5761,12 +5765,14 @@ writealloc:
 										num = to - Out;
 										WriteString(wtype,Out,num);
 										to = Out;
+										for ( i = 0; i < number; i++ ) *to++ = ' ';
 									}
 								}
 								else {
 									num = to - Out;
 									WriteString(wtype,Out,num);
 									to = Out;
+									for ( i = 0; i < number; i++ ) *to++ = ' ';
 								}
 							}
 							while ( sss < ss ) *to++ = *sss++;
@@ -5941,6 +5947,7 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 					number = 10*number + *fstring++ - '0';
 				}
 				if ( *fstring == 'O' ) goto dooptim;
+				else if ( *fstring == '$' ) goto dodollar;
 				else if ( *fstring == 'X' || *fstring == 'x' ) {
 					if ( number > 0 && number <= cbuf[AM.sbufnum].numrhs ) {
 						UBYTE buffer[80], *out, *old1, *old2, *old3;
