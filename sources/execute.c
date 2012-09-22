@@ -760,6 +760,19 @@ WORD DoExecute(WORD par, WORD skip)
 	 */
 	RetCode = PF_BroadcastExpFlags();
 	if ( RetCode ) return RetCode;
+	/*
+	 * Clean the hide file on the slaves, which was used for RHS expressions
+	 * broadcast from the master at the beginning of the module.
+	 */
+	if ( PF.me != MASTER && AR.hidefile->PObuffer ) {
+		if ( AR.hidefile->handle >= 0 ) {
+			CloseFile(AR.hidefile->handle);
+			AR.hidefile->handle = -1;
+			remove(AR.hidefile->name);
+		}
+		AR.hidefile->POfull = AR.hidefile->POfill = AR.hidefile->PObuffer;
+		PUTZERO(AR.hidefile->POposition);
+	}
 #endif
 #ifdef WITHPTHREADS
 	for ( j = 0; j < NumModOptdollars; j++ ) {
