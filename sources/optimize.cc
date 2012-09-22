@@ -1125,7 +1125,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 }
 
 /*
-  	#] generate_instructions :
+  	#] generate_instructions : 
   	#[ printpstree :
 */
 
@@ -1360,7 +1360,7 @@ void find_Horner_MCTS_expand_tree () {
 }
 
 /*
-  	#] find_Horner_MCTS_expand_tree :
+  	#] find_Horner_MCTS_expand_tree : 
   	#[ find_Horner_MCTS :
 */
 
@@ -1440,7 +1440,7 @@ void find_Horner_MCTS () {
 }
 
 /*
-  	#] find_Horner_MCTS :
+  	#] find_Horner_MCTS : 
   	#[ merge_operators :
 */
 
@@ -1727,7 +1727,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 }
 
 /*
-  	#] merge_operators :
+  	#] merge_operators : 
   	#[ class Optimization :
 */
 
@@ -1770,7 +1770,7 @@ public:
 };
 
 /*
-  	#] class Optimization :
+  	#] class Optimization : 
   	#[ find_optimizations :
 */
 
@@ -1810,7 +1810,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
 	  optimization optim;
 		optim.type = optim_type;
-//	#] Startup :
+//	#] Startup : 
 
 //	#[ type 0 :	  find optimizations of the form z=x^n (optim.type==0)
 		if (optim_type == 0) {
@@ -1826,7 +1826,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 0 :
+//	#] type 0 : 
 //	#[ type 1 :   find optimizations of the form z=x*y (optim.type==1)
 		if (optim_type == 1) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -1858,7 +1858,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 1 :
+//	#] type 1 : 
 //	#[ type 2 :   find optimizations of the form z=c*x (optim.type==2)
 		if (optim_type == 2) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -1904,7 +1904,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 2 :
+//	#] type 2 : 
 //	#[ type 3 :   find optimizations of the form z=x+c (optim.type==3)
 		if (optim_type == 3) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -1932,7 +1932,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 3 :
+//	#] type 3 : 
 //	#[ type 4,5 : find optimizations of the form z=x+y or z=x-y (optim.type==4 or 5)
 		if (optim_type == 4) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -1970,7 +1970,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 4,5 :
+//	#] type 4,5 : 
 //	#[ add :
 
 		// add optimizations with positive improvement to the result
@@ -1986,7 +1986,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 			}
 		}
 	}
-//	#] add :
+//	#] add : 
 
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: find_optimizations",thetime_str().c_str());
@@ -1996,7 +1996,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 }
 
 /*
-  	#] find_optimizations :
+  	#] find_optimizations : 
   	#[ do_optimization :
 */
 
@@ -2041,7 +2041,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 	  	optim.type==2 ? '*' : '+', num,den);
   }
 #endif
-//	#] Debug code :
+//	#] Debug code : 
 
 	bool substituted = false;
 	WORD *ebegin = &*instr.begin();
@@ -2095,7 +2095,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		instr.push_back(3);
 		instr.push_back(0);        // trailing 0
 	}
-//	#] type 0 :
+//	#] type 0 : 
 //	#[ type 1 : substitution of the form z=x*y (optim.type==1)
 	if (optim.type == 1) {
 
@@ -2181,7 +2181,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		instr.push_back(3);
 		instr.push_back(0);        // trailing 0
 	}
-//	#] type 1 :
+//	#] type 1 : 
 //	#[ type 2 : substitution of the form z=c*x (optim.type==2)
 
 	if (optim.type == 2) {
@@ -2298,7 +2298,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 			instr.push_back(optim.coeff[i]);
 		instr.push_back(0);                // trailing 0
 	}
-//	#] type 2 :
+//	#] type 2 : 
 //	#[ type 3 : substitution of the form z=x+c (optim.type==3)
 	if (optim.type == 3) {
 		int vartype = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
@@ -2374,7 +2374,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 			instr.push_back(optim.coeff[i]);
 		instr.push_back(0);               // trailing zero
 	}
-//	#] type 3 :
+//	#] type 3 : 
 //	#[ type 4,5 : substitution of the form z=x+y or z=x-y (optim.type=4 or 5)
 	if (optim.type >= 4) { 
 
@@ -2487,7 +2487,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		instr.push_back(3*(optim.type==4?1:-1));
 		instr.push_back(0);        // trailing 0
 	}
-//	#] type 4,5 :
+//	#] type 4,5 : 
 //	#[ trivial :  remove trivial equations of the form Zi = +/-Zj
 	vector<int> renum(newid+1, 0);
 	bool do_renum=false;
@@ -2511,7 +2511,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		// remove equation
 		*t=0;
 	}
-//	#] trivial :	
+//	#] trivial :	 
 //	#[ renumbering :
 
 	// there are renumberings to be done, so loop through all equations
@@ -2528,7 +2528,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 			}
 		}
 	}
-//	#] renumbering :
+//	#] renumbering : 
 
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: do_optimization : res=true", thetime_str().c_str(), optim.improve);
@@ -2538,7 +2538,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 }
 
 /*
-  	#] do_optimization :
+  	#] do_optimization : 
   	#[ partial_factorize :
 */
 
@@ -2808,7 +2808,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 }
 
 /*
-  	#] partial_factorize :
+  	#] partial_factorize : 
   	#[ optimize_greedy :
 */
 
@@ -2938,7 +2938,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 }
 
 /*
-  	#] optimize_greedy :
+  	#] optimize_greedy : 
   	#[ recycle_variables :
 */
 
@@ -3103,7 +3103,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 }
 
 /*
-  	#] recycle_variables :
+  	#] recycle_variables : 
   	#[ optimize_expression_given_Horner :
 */
 
@@ -3139,8 +3139,9 @@ void optimize_expression_given_Horner () {
 	optimize_best_Horner_schemes.pop_back();
 	UNLOCK(optimize_lock);
 
-	if ( ( AO.Optimize.debugflags&2 ) == 2 )
-		MesPrint ("Scheme: %a",Horner_scheme.size(),&(Horner_scheme[0]));
+//	if ( ( AO.Optimize.debugflags&2 ) == 2 ) {
+//		MesPrint ("Scheme: %a",Horner_scheme.size(),&(Horner_scheme[0]));
+//	}
 	
 	// apply Horner scheme
 	vector<WORD> tree = Horner_tree(optimize_expr, Horner_scheme);
@@ -3173,10 +3174,29 @@ void optimize_expression_given_Horner () {
 		optimize_best_num_oper = num_oper;
 		optimize_best_instr = instr;
 		optimize_best_vars = vector<WORD>(AN.poly_vars, AN.poly_vars+AN.poly_num_vars);
-		if ( ( AO.Optimize.debugflags&2 ) == 2 )
+		if ( ( AO.Optimize.schemeflags&1 ) == 1 )
 			MesPrint("Scheme: selected at %d instructions",num_oper);
 	}
 	UNLOCK(optimize_lock);
+
+	if ( ( AO.Optimize.schemeflags&1 ) == 1 ) {
+		UBYTE *OutScr, *old1 = AO.OutputLine, *old2 = AO.OutFill;
+		int i, sym, siz = Horner_scheme.size();
+		AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
+		FiniLine();
+		OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
+		TokenToLine((UBYTE *)" Scheme: ");
+		for ( i = 0; i < siz; i++ ) {
+			sym = Horner_scheme[i];
+			if ( i > 0 ) TokenToLine((UBYTE *)",");
+			StrCopy(VARNAME(symbols,sym),OutScr);
+			TokenToLine(OutScr);
+		}
+		FiniLine();
+		AO.OutFill = old2;
+		AO.OutputLine = old1;
+		MesPrint("*** Number of operations = %d",num_oper);
+	}
 
   // clean poly_vars, that are allocated by Horner_tree
 	AN.poly_num_vars = 0;
@@ -3188,7 +3208,7 @@ void optimize_expression_given_Horner () {
 }
 
 /*
-  	#] optimize_expression_given_Horner :
+  	#] optimize_expression_given_Horner : 
   	#[ generate_output :
 */
 
@@ -3348,7 +3368,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 }
 	
 /*
-  	#] generate_output :
+  	#] generate_output : 
   	#[ generate_expression :
 */
 
@@ -3421,7 +3441,7 @@ WORD generate_expression (WORD exprnr) {
 }
 
 /*
-  	#] generate_expression :
+  	#] generate_expression : 
   	#[ optimize_print_code :
 */
 
@@ -3462,7 +3482,7 @@ VOID optimize_print_code (int print_expr) {
 }
 
 /*
-  	#] optimize_print_code :
+  	#] optimize_print_code : 
   	#[ Optimize :
 */
 
@@ -3614,7 +3634,7 @@ int Optimize (WORD exprnr, int do_print) {
 }
 
 /*
-  	#] Optimize :
+  	#] Optimize : 
   	#[ ClearOptimize :
 */
 
@@ -3666,6 +3686,6 @@ int ClearOptimize()
 }
 
 /*
-  	#] ClearOptimize :
+  	#] ClearOptimize : 
 */
 
