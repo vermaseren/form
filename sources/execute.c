@@ -1359,7 +1359,8 @@ int GetFirstBracket(WORD *term, int num)
 /*
 #ifdef WITHPTHREADS
 */
-		M_free(renumber->symb.lo,"VarSpace");
+		if ( renumber->symb.lo != AN.dummyrenumlist )
+			M_free(renumber->symb.lo,"VarSpace");
 		M_free(renumber,"Renumber");
 /*
 #endif
@@ -1467,7 +1468,8 @@ int GetFirstTerm(WORD *term, int num)
 /*
 #ifdef WITHPTHREADS
 */
-		M_free(renumber->symb.lo,"VarSpace");
+		if ( renumber->symb.lo != AN.dummyrenumlist )
+			M_free(renumber->symb.lo,"VarSpace");
 		M_free(renumber,"Renumber");
 /*
 #endif
@@ -1571,7 +1573,8 @@ int GetContent(WORD *content, int num)
 /*
 #ifdef WITHPTHREADS
 */
-		M_free(renumber->symb.lo,"VarSpace");
+		if ( renumber->symb.lo != AN.dummyrenumlist )
+			M_free(renumber->symb.lo,"VarSpace");
 		M_free(renumber,"Renumber");
 /*
 #endif

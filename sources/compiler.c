@@ -1052,7 +1052,8 @@ doexpr:					s += 2;
 								MesPrint("&Problems getting information about stored expression %s(1)"
 								,EXPRNAME(x2));
 							}
-							M_free(renumber->symb.lo,"VarSpace");
+							if ( renumber->symb.lo != AN.dummyrenumlist )
+								M_free(renumber->symb.lo,"VarSpace");
 							M_free(renumber,"Renumber");
 							AR.StoreData.dirtyflag = 1;
 						}
@@ -1288,7 +1289,8 @@ dofunction:			firstsumarg = 1;
 										MesPrint("&Problems getting information about stored expression %s(2)"
 										,EXPRNAME(x2));
 									}
-									M_free(renumber->symb.lo,"VarSpace");
+									if ( renumber->symb.lo != AN.dummyrenumlist )
+										M_free(renumber->symb.lo,"VarSpace");
 									M_free(renumber,"Renumber");
 									AR.StoreData.dirtyflag = 1;
 								}
@@ -1565,7 +1567,8 @@ dofunction:			firstsumarg = 1;
 						MesPrint("&Problems getting information about stored expression %s(3)"
 						,EXPRNAME(x1));
 					}
-					M_free(renumber->symb.lo,"VarSpace");
+					if ( renumber->symb.lo != AN.dummyrenumlist )
+						M_free(renumber->symb.lo,"VarSpace");
 					M_free(renumber,"Renumber");
 					AR.StoreData.dirtyflag = 1;
 				}

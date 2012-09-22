@@ -2732,9 +2732,11 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 		w = AN.dummyrenumlist;
 	}
 	else {
+/*
 #ifndef WITHPTHREADS
 		Expressions[expr].renumlists = 
 #endif
+*/
 		w = (WORD *)Malloc1(sizeof(WORD)*(xx*2),"VarSpace");
 	}
 	r->symb.lo = w;
@@ -3102,7 +3104,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable : 
+ 		#] GetTable :
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.

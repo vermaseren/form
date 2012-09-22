@@ -1972,7 +1972,8 @@ int simp6token(SBYTE *tokens, int mode)
 /*
 #ifdef WITHPTHREADS
 */
-					M_free(renumber->symb.lo,"VarSpace");
+					if ( renumber->symb.lo != AN.dummyrenumlist )
+						M_free(renumber->symb.lo,"VarSpace");
 					M_free(renumber,"Renumber");
 /*
 #endif
