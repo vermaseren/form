@@ -82,6 +82,13 @@ WORD CleanExpr(WORD par)
 			case GLOBALEXPRESSION:
 			case HIDDENGEXPRESSION:
 				if ( par ) {
+#ifdef PARALLEL
+					/*
+					 * Broadcast the global expression from the master to the all workers.
+					 */
+					if ( PF_BroadcastExpr(e_in, e_in->status == HIDDENGEXPRESSION ? AR.hidefile : AR.outfile) ) return -1;
+					if ( PF.me == MASTER ) {
+#endif
 					e = e_in;
 					i = n-1;
 					while ( --i >= 0 ) {
@@ -95,6 +102,16 @@ WORD CleanExpr(WORD par)
 							|| e->status == LOCALEXPRESSION ) break;
 						}
 					}
+#ifdef PARALLEL
+					}
+					else {
+						/*
+						 * On the slaves, the broadcast expression is sitting at the end of the file.
+						 */
+						e = e_in;
+						i = -1;
+					}
+#endif
 					if ( i >= 0 ) {
 						DIFPOS(length,e->onfile,e_in->onfile);
 					}
@@ -643,9 +660,6 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 #endif
 #ifdef PARALLEL
-	if ( par == STOREMODULE ){
-		AC.mparallelflag |= NOPARALLEL_STORE;
-	}
 /*[20oct2009 mt]:*/
 	if ( AC.RhsExprInModuleFlag && AC.mparallelflag == PARALLELFLAG ) {
 		if (PF.rhsInParallel) {
@@ -701,9 +715,6 @@ WORD DoExecute(WORD par, WORD skip)
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_DOLLAR ) {
 			HighWarning("This module is forced to run in sequential mode due to $-variables");
-		}
-		else if ( AC.mparallelflag & NOPARALLEL_STORE ) {
-			HighWarning("This module is forced to run in sequential mode because it is a store module");
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_RHS ) {
 			HighWarning("This module is forced to run in sequential mode due to RHS expression names");

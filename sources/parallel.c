@@ -3477,22 +3477,50 @@ static int PF_rhsBCastSlave(FILEHANDLE *curfile, EXPRESSIONS e)
 
 /*
  		#] PF_rhsBCastSlave :
+ 		#[ PF_BroadcastExpr :
+*/
+
+/**
+ * Broadcasts an expression from the master to the all slaves.
+ *
+ * @param  e     The expression to be broadcast.
+ * @param  file  The file in which the expression is sitting.
+ * @return       0 if OK, nonzero on error.
+ */
+int PF_BroadcastExpr(EXPRESSIONS e, FILEHANDLE *file)
+{
+	if ( PF.me == MASTER ) {
+		if ( PF_rhsBCastMaster(file, e) ) return -1;
+#ifdef PF_DEBUG_BCAST_RHSEXPR
+		MesPrint(">> Broadcast RhsExpr: %s", AC.exprnames->namebuffer + e->name);
+#endif
+	}
+	else {
+		POSITION pos;
+		SetEndHScratch(file, &pos);
+		e->onfile = pos;
+		if ( PF_rhsBCastSlave(file, e) ) return -1;
+	}
+	return 0;
+}
+
+/*
+ 		#] PF_BroadcastExpr :
  		#[ PF_BroadcastRHS :
 */
 
 /**
- * Broadcasts expressions in the right-hand side from the master to the all slaves.
+ * Broadcasts expressions appearing in the right-hand side from
+ * the master to the all slaves.
  *
  * @return  0 if OK, nonzero on error.
  */
 int PF_BroadcastRHS(void)
 {
 	int i;
-	FILEHANDLE *curfile = 0;
-
 	for ( i = 0; i < NumExpressions; i++ ) {
-		EXPRESSIONS e = Expressions+i;
-		if ( ( e->vflags & ISINRHS ) == 0 ) continue;
+		EXPRESSIONS e = &Expressions[i];
+		if ( !(e->vflags & ISINRHS) ) continue;
 		switch ( e->status ) {
 			case LOCALEXPRESSION:
 			case SKIPLEXPRESSION:
@@ -3504,8 +3532,7 @@ int PF_BroadcastRHS(void)
 			case HIDEGEXPRESSION:
 			case INTOHIDELEXPRESSION:
 			case INTOHIDEGEXPRESSION:
-				AR.GetFile = 0;
-				curfile = AR.infile;
+				if ( PF_BroadcastExpr(e, AR.infile) ) return -1;
 				break;
 			case HIDDENLEXPRESSION:
 			case HIDDENGEXPRESSION:
@@ -3513,27 +3540,13 @@ int PF_BroadcastRHS(void)
 			case DROPHGEXPRESSION:
 			case UNHIDELEXPRESSION:
 			case UNHIDEGEXPRESSION:
-				AR.GetFile = 2;
-				curfile = AR.hidefile;
+				if ( PF_BroadcastExpr(e, AR.hidefile) ) return -1;
 				break;
-		}/*switch ( e->status )*/
-
-		if ( PF.me != MASTER ){
-			POSITION pos;
-			SetEndHScratch(curfile,&pos);
-			e->onfile = pos;
-			if ( PF_rhsBCastSlave(curfile,e) ) return(-1);
 		}
-		else {
-			if ( PF_rhsBCastMaster(curfile,e) ) return(-1);
-#ifdef PF_DEBUG_BCAST_RHSEXPR
-			MesPrint(">> Broadcast RhsExpr: %s", AC.exprnames->namebuffer + e->name);
-#endif
-		}
-	}/*for ( i = 0; i < NumExpressions; i++ )*/
+	}
 	if ( PF.me != MASTER )
 		UpdatePositions();
-	return(0);
+	return 0;
 }
 
 /*

@@ -236,6 +236,7 @@ extern int    PF_BroadcastCBuf(int bufnum);
 extern int    PF_BroadcastExpFlags(void);
 extern int    PF_StoreInsideInfo(void);
 extern int    PF_RestoreInsideInfo(void);
+extern int    PF_BroadcastExpr(EXPRESSIONS e, FILEHANDLE *file);
 extern int    PF_BroadcastRHS(void);
 extern int    PF_InParallelProcessor(void);
 extern int    PF_SendFile(int to, FILE *fd);
