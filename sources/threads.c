@@ -472,6 +472,11 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AR.CompareRoutine = &Compare1;
 
 		AR.sLevel = 0;
+		AR.wranfia = 0;
+		AR.wranfcall = 0;
+		AR.wranfnpair1 = NPAIR1;
+		AR.wranfnpair2 = NPAIR2;
+		AR.wranfseed = 0;
 		AN.NumFunSorts = 5;
 		AN.MaxFunSorts = 5;
 		AN.SplitScratch = 0;
