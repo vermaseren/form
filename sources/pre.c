@@ -6197,17 +6197,19 @@ int DoSetRandom(UBYTE *s)
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s  == 0 ) {
 #ifdef WITHPTHREADS
-		int id;
-		for ( id = 0; id < AM.totalnumberofthreads; id++ ) {
+#ifdef WITHSORTBOTS
+		int id, totnum = 2*AM.totalnumberofthreads;
+#else
+		int id, totnum = AM.totalnumberofthreads;
+#endif
+		for ( id = 0; id < totnum; id++ ) {
 			AB[id]->R.wranfseed = x;
-			srandom((unsigned int)(x+id));
-			M_free(AB[id]->R.wranfia,"wranf");
+			if ( AB[id]->R.wranfia ) M_free(AB[id]->R.wranfia,"wranf");
 			AB[id]->R.wranfia = 0;
 		}
 #else
 		AR.wranfseed = x;
-		srandom((unsigned int)x);
-		M_free(AR.wranfia,"wranf");
+		if ( AR.wranfia ) M_free(AR.wranfia,"wranf");
 		AR.wranfia = 0;
 #endif
 		return(0);
