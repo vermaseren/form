@@ -2939,6 +2939,7 @@ SkipCount:	level++;
 				}
 				else {
 					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
+					if ( AT.WorkPointer >= AT.WorkTop ) goto OverWork;
 					*AT.WorkPointer = 0;
 					AN.RepPoint = RepSto;
 					i = StoreTerm(BHEAD term);

@@ -746,6 +746,9 @@ VOID StartVariables()
 	AO.OptimizeResult.code = NULL;
 	AO.inscheme = 0;
 	AO.schemenum = 0;
+	AO.wpos = 0;
+	AO.wpoin = 0;
+	AO.wlen = 0;
 	AM.dollarzero = 0;
  	AC.doloopstack = 0;
  	AC.doloopstacksize = 0;

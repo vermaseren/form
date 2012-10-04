@@ -1945,8 +1945,6 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 		MesWork();
 		goto ErrReturn;
 	}
-	AO.wpos = (UBYTE *)w;
-	AO.wlen = TOLONG(AT.WorkTop) - TOLONG(w);
 	w = AN.UsedSymbol;
 	i = NumSymbols + NumVectors + NumIndices + NumFunctions;
 	do { *w++ = 0; } while ( --i > 0 );
@@ -1984,8 +1982,10 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 	indexent->variables = AR.StoreData.Fill;
 /*	indexent->position = AR.StoreData.Fill + size; */
 	StrCopy(AC.exprnames->namebuffer+e->name,(UBYTE *)(indexent->name));
-	AO.wpoin = AO.wpos;
 	SeekFile(AR.StoreData.Handle,&(AR.StoreData.Fill),SEEK_SET);
+	AO.wlen = 100000;
+	AO.wpos = (UBYTE *)Malloc1(AO.wlen,"AO.wpos buffer");
+	AO.wpoin = AO.wpos;
 	{
 		 SYMBOLS a;
 		w = AN.UsedSymbol;
@@ -2043,6 +2043,8 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 		}
 	}
 	if ( VarStore((UBYTE *)0L,(WORD)0,(WORD)0,(WORD)0) ) goto ErrToSto;	/* Flush buffer */
+	M_free(AO.wpos,"AO.wpos buffer");
+	AO.wpos = AO.wpoin = 0;
 	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	indexent->size = (WORD)DIFBASE(indexent->position,indexent->variables);
 /*
@@ -2235,6 +2237,11 @@ WORD SetFileIndex()
 /*
  		#] SetFileIndex : 
  		#[ VarStore :
+
+		The n -= sizeof(WORD); makes that the real length comes in the
+		padding space, provided there is padding space (it seems so).
+		The reading of the information assumes this is the case and hence
+		things work....
 */
 
 WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
@@ -2244,23 +2251,34 @@ WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 	if ( s ) {
 		n -= sizeof(WORD);
 		t = (UBYTE *)AO.wpoin;
+/*
 		u = (UBYTE *)AT.WorkTop;
-		while ( n && t < u ) { *t++ = *s++; n--; }
-		if ( t >= u ) {
+*/
+		u = AO.wpos+AO.wlen;
+		while ( n > 0 && t < u ) { *t++ = *s++; n--; }
+		while ( t >= u ) {
 			if ( WriteFile(AR.StoreData.Handle,AO.wpos,AO.wlen) != AO.wlen ) return(-1);
 			t = AO.wpos;
-			do { *t++ = *s++; n--; } while ( n && t < u );
+			while ( n > 0 && t < u ) { *t++ = *s++; n--; }
 		}
 		s = AC.varnames->namebuffer + name;
 		n = namesize;
 		n += sizeof(void *)-1; n &= -(sizeof(void *));
 		*((WORD *)t) = n;
 		t += sizeof(WORD);
-		while ( n > 0 && t < u ) { *t++ = *s++; n--; }
-		if ( n > 0 ) {
+		while ( n > 0 && t < u ) {
+			if ( namesize > 0 ) { *t++ = *s++; namesize--; }
+			else { *t++ = 0; }
+			n--;
+		}
+		while ( t >= u ) {
 			if ( WriteFile(AR.StoreData.Handle,AO.wpos,AO.wlen) != AO.wlen ) return(-1);
 			t = AO.wpos;
-			do { *t++ = *s++; n--; } while ( n && t < u );
+			while ( n > 0 && t < u ) {
+				if ( namesize > 0 ) { *t++ = *s++; namesize--; }
+				else { *t++ = 0; }
+				n--;
+			}
 		}
 		AO.wpoin = t;
 	}
@@ -2268,6 +2286,7 @@ WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 		LONG size;
 		size = AO.wpoin - AO.wpos;
 		if ( WriteFile(AR.StoreData.Handle,AO.wpos,size) != size ) return(-1);
+		AO.wpoin = AO.wpos;
 	}
 	return(0);
 }
@@ -3037,7 +3056,9 @@ GetTb3:
 			if ( ( AS.OldNumFactors == 0 ) || ( AS.NumOldNumFactors < NumExpressions ) ) {
 				AS.NumOldNumFactors = 20;
 				if ( AS.NumOldNumFactors < NumExpressions ) AS.NumOldNumFactors = NumExpressions*2;
+				if ( AS.OldNumFactors ) M_free(AS.OldNumFactors,"numfactors pointers");
 				AS.OldNumFactors = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"numfactors pointers");
+				if ( AS.Oldvflags ) M_free(AS.Oldvflags,"vflags pointers");
 				AS.Oldvflags = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"vflags pointers");
 			}
 
@@ -3104,7 +3125,7 @@ ErrGt2:
 }
 
 /*
- 		#] GetTable :
+ 		#] GetTable : 
  		#[ CopyExpression :
 
 		Copies from one scratch buffer to another.

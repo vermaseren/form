@@ -2559,7 +2559,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
  *     Z2 = c*d*e
  *     Z3 = Zj + more
  *     Zi = 2 + Z1 + Z2
- *     Zj = x*Zj
+ *     Zj = x*Zi
  *
  *   Here it is necessary that no other equations refer to Z1 and
  *   Z2. The generation of trivial instructions (Zi=Zj or Zi=x) is
@@ -2581,7 +2581,14 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 		instr_idx[*e] = e - ebegin;
 
 	// get reference counts
-	vector<WORD> numpar(n);
+/*
+ *	The next construction replaces the vector construction which is
+ *	rather costly for valgrind (and maybe also in normal running)
+ */
+	int nmax = 2*n;
+	WORD *numpar = (WORD *)Malloc1(nmax*sizeof(WORD),"numpar");
+	for ( int i = 0; i < nmax; i++ ) numpar[i] = 0;
+//	vector<WORD> numpar(n);
 	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) 
 		for (WORD *t=e+3; *t!=0; t+=*t) {
 			if (*t == ABS(*(t+*t-1))+1) continue;
@@ -2728,6 +2735,16 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 			new_eqn[2] = new_eqn.size();
 
 			bool empty = newt == e+3;
+			if ( n+1 >= nmax ) {
+				int i, newnmax = nmax*2;
+				WORD *newnumpar = (WORD *)Malloc1(newnmax*sizeof(WORD),"newnumpar");
+				for ( i = 0; i < n; i++ ) newnumpar[i] = numpar[i];
+				for ( ; i < newnmax; i++ ) newnumpar[i] = 0;
+				M_free(numpar,"numpar");
+				numpar = newnumpar;
+				nmax = newnmax;
+			}
+//			numpar.push_back(0);
 			n++;
 
 			// if original is not empty, add new equation (Zj) to it
@@ -2786,6 +2803,16 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 				// add new equation (Zj) to instructions
 				instr_idx.push_back(instr.size());
 				instr.insert(instr.end(), new_eqn.begin(), new_eqn.end());
+				if ( n+1 >= nmax ) {
+					int i, newnmax = nmax*2;
+					WORD *newnumpar = (WORD *)Malloc1(newnmax*sizeof(WORD),"newnumpar");
+					for ( i = 0; i < n; i++ ) newnumpar[i] = numpar[i];
+					for ( ; i < newnmax; i++ ) newnumpar[i] = 0;
+					M_free(numpar,"numpar");
+					numpar = newnumpar;
+					nmax = newnmax;
+				}
+//				numpar.push_back(0);
 				n++;
 			}
 			else {
@@ -2803,7 +2830,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: partial_factorize (n=%d)", thetime_str().c_str(), n);
 #endif
-
+	M_free(numpar,"numpar");
 	return n;
 }
 

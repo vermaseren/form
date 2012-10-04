@@ -824,6 +824,7 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx, int dim)
 	int nodenum, numsymbol = AC.Symbols->num;
 	UBYTE *s = name;
 	SYMBOLS sym = (SYMBOLS)FromVarList(AC.Symbols);
+	bzero(sym,sizeof(struct SyMbOl));
 	sym->name = AddName(*AC.activenames,name,CSYMBOL,numsymbol,&nodenum);
 	sym->minpower = minpow;
 	sym->maxpower = maxpow;
@@ -984,6 +985,7 @@ int AddIndex(UBYTE *name, int dim, int dim4)
 	int nodenum, numindex = AC.Indices->num;
 	INDICES ind = (INDICES)FromVarList(AC.Indices);
 	UBYTE *s = name;
+	bzero(ind,sizeof(struct InDeX));
 	ind->name      = AddName(*AC.activenames,name,CINDEX,numindex,&nodenum);
 	ind->type      = 0;
 	ind->dimension = dim;
@@ -1135,6 +1137,7 @@ int AddVector(UBYTE *name, int cplx, int dim)
 	int nodenum, numvector = AC.Vectors->num;
 	VECTORS v = (VECTORS)FromVarList(AC.Vectors);
 	UBYTE *s = name;
+	bzero(v,sizeof(struct VeCtOr));
 	v->name = AddName(*AC.activenames,name,CVECTOR,numvector,&nodenum);
 	v->complex = cplx;
 	v->node    = nodenum;
@@ -1215,6 +1218,7 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int 
 	int nodenum, numfunction = AC.Functions->num;
 	FUNCTIONS fun = (FUNCTIONS)FromVarList(AC.Functions);
 	UBYTE *s = name;
+	bzero(fun,sizeof(struct FuNcTiOn));
 	fun->name = AddName(*AC.activenames,name,CFUNCTION,numfunction,&nodenum);
 	fun->commute = comm;
 	fun->spec = istensor;

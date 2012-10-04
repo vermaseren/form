@@ -687,12 +687,13 @@ int AllocSetups()
 	Install the store caches (15-aug-2006 JV)
 	Note that in the case of PTHREADS this is done in InitializeOneThread
 */
-	AT.StoreCache = 0;
+	AT.StoreCache = AT.StoreCacheAlloc = 0;
 	if ( AM.NumStoreCaches > 0 ) {
 		STORECACHE sa, sb;
 		size = sizeof(struct StOrEcAcHe)+AM.SizeStoreCache;
 		size = ((size-1)/sizeof(size_t)+1)*sizeof(size_t);
-		AT.StoreCache = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
+		AT.StoreCacheAlloc = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
+		AT.StoreCache = AT.StoreCacheAlloc;
 		sa = AT.StoreCache;
 		for ( j = 0; j < AM.NumStoreCaches; j++ ) {
 			sb = (STORECACHE)(VOID *)((UBYTE *)sa+size);

@@ -1843,7 +1843,7 @@ struct T_const {
     NESTING     NestPoin;          /* (R) */
     WORD    *BrackBuf;             /* (R) Bracket buffer. Used by poly_ at runtime. */
     STORECACHE  StoreCache;        /* (R) Cache for picking up stored expr. */
-                                   /*     Seems not to be active */
+    STORECACHE  StoreCacheAlloc;   /* (R) Permanent address of StoreCache to keep valgrind happy */
     WORD    **pWorkSpace;          /* (R) Workspace for pointers. Dynamic. */
     LONG    *lWorkSpace;           /* (R) WorkSpace for LONG. Dynamic. */
     POSITION *posWorkSpace;        /* (R) WorkSpace for file positions */

@@ -733,14 +733,14 @@ ALLPRIVATES *InitializeOneThread(int identity)
 /*
 	Install the store caches (15-aug-2006 JV)
 */
-	AT.StoreCache = 0;
+	AT.StoreCache = AT.StoreCacheAlloc = 0;
 	if ( AM.NumStoreCaches > 0 ) {
 		STORECACHE sa, sb;
 		LONG size;
 		size = sizeof(struct StOrEcAcHe)+AM.SizeStoreCache;
 		size = ((size-1)/sizeof(size_t)+1)*sizeof(size_t);
-		AT.StoreCache = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
-		sa = AT.StoreCache;
+		AT.StoreCacheAlloc = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
+		sa = AT.StoreCache = AT.StoreCacheAlloc;
 		for ( i = 0; i < AM.NumStoreCaches; i++ ) {
 			sb = (STORECACHE)(VOID *)((UBYTE *)sa+size);
 			if ( i == AM.NumStoreCaches-1 ) {
