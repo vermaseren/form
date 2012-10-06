@@ -5320,6 +5320,20 @@ int CoDropCoefficient(UBYTE *s)
 }
 /*
   	#] CoDropCoefficient : 
+  	#[ CoDropSymbols :
+*/
+
+int CoDropSymbols(UBYTE *s)
+{
+	if ( *s == 0 ) {
+		Add2Com(TYPEDROPSYMBOLS)
+		return(0);
+	}
+	MesPrint("&Illegal argument in DropSymbols statement: '%s'",s);
+	return(1);
+}
+/*
+  	#] CoDropSymbols : 
   	#[ CoToPolynomial :
 
 	Converts the current term as much as possible to symbols.

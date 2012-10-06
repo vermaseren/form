@@ -4605,6 +4605,28 @@ void DropCoefficient(PHEAD WORD *term)
 
 /*
   	#] DropCoefficient : 
+  	#[ DropSymbols :
+*/
+
+void DropSymbols(PHEAD WORD *term)
+{
+	GETBIDENTITY
+	WORD *tend = term + *term, *t1, *t2, *tstop;
+	tstop = tend - ABS(tend[-1]);
+	t1 = term+1;
+	while ( t1 < tstop ) {
+		if ( *t1 == SYMBOL ) {
+			t2 = t1+t1[1];
+			while ( t2 < tend ) *t1++ = *t2++;
+			*term = t1 - term;
+			break;
+		}
+		t1 += t1[1];
+	}
+}
+
+/*
+  	#] DropSymbols : 
   	#[ SymbolNormalize :
 */
 /**

@@ -3439,6 +3439,9 @@ CommonEnd:
 					level = TestEndDoLoop(BHEAD C->lhs[C->lhs[level][2]],C->lhs[level][2]);
 					if ( level < 0 ) goto GenCall;
 					break;
+				  case TYPEDROPSYMBOLS:
+					DropSymbols(BHEAD term);
+					break;
 				}
 				goto SkipCount;
 /*

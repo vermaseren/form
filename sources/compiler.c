@@ -122,6 +122,7 @@ static KEYWORD com2commands[] = {
 	,{"do",             (TFUN)CoDo,               STATEMENT,    PARTEST}
 	,{"drop",           (TFUN)CoDrop,             SPECIFICATION,PARTEST}
 	,{"dropcoefficient",(TFUN)CoDropCoefficient,  STATEMENT,    PARTEST}
+	,{"dropsymbols",    (TFUN)CoDropSymbols,      STATEMENT,    PARTEST}
 	,{"else",           (TFUN)CoElse,             STATEMENT,    PARTEST}
 	,{"elseif",         (TFUN)CoElseIf,           STATEMENT,    PARTEST}
 	,{"endargument",    (TFUN)CoEndArgument,      STATEMENT,    PARTEST}

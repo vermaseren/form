@@ -547,6 +547,7 @@ typedef int (*TFUN1)();
 #define TYPEFROMPOLYNOMIAL 73
 #define TYPEDOLOOP 74
 #define TYPEENDDOLOOP 75
+#define TYPEDROPSYMBOLS 76
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
