@@ -4616,6 +4616,7 @@ void DropSymbols(PHEAD WORD *term)
 	t1 = term+1;
 	while ( t1 < tstop ) {
 		if ( *t1 == SYMBOL ) {
+			*AN.RepPoint = 1;
 			t2 = t1+t1[1];
 			while ( t2 < tend ) *t1++ = *t2++;
 			*term = t1 - term;
