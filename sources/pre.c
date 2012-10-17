@@ -2557,6 +2557,9 @@ int DoDo(UBYTE *s)
  
 	loop = (DOLOOP *)FromList(&AP.LoopList);
 	loop->firstdollar = loop->lastdollar = loop->incdollar = -1;
+	loop->NumPreTypes = AP.NumPreTypes-1;
+	loop->PreIfLevel = AP.PreIfLevel;
+	loop->PreSwitchLevel = AP.PreSwitchLevel;
 	AC.NoShowInput = 1;
 	if ( PreLoad(&(loop->p),(UBYTE *)"do",(UBYTE *)"enddo",1,"doloop") ) return(-1);
 	AC.NoShowInput = oldNoShowInput;
@@ -2791,12 +2794,16 @@ improper:
 			Terminate(-1);
 		}
 		loop = &(DoLoops[NumDoLoops-1]);
-
+		AP.NumPreTypes = loop->NumPreTypes;
+		AP.PreIfLevel = loop->PreIfLevel;
+		AP.PreSwitchLevel = loop->PreSwitchLevel;
+/*
+		AP.NumPreTypes--;
+*/
 		NumDoLoops--;
 		DoUndefine(loop->name);
 		M_free(loop->p.buffer,"loop->p.buffer");
 		loop->firstloopcall = 0;
-		AP.NumPreTypes--;
 
 		AC.CurrentStream = CloseStream(AC.CurrentStream);
 		levels--;

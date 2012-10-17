@@ -3259,27 +3259,15 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	
 	// one-indexed instead of zero-indexed
 	extraoffset++;
-/*
- * 	The next code is for debugging purposes. We may want the statements
- *	in reverse order to substitute them all back.
- *	Jan used a Mathematica program to do this. Here we make that
- *	    Format Ox,debugflag=1;
- *	Creates reverse order. All we have to do is put id in front of the statements.
- */
 	int num = 0;
 	int maxsize = (int)instr.size();
 	for (int i=0; i<maxsize; i+=instr[i+2]) num++;
 	int *tstart = (int *)Malloc1(num*sizeof(int),"nplaces");
 	num = 0;
 	for (int i=0; i<maxsize; i+=instr[i+2]) tstart[num++] = i;
-	if ( ( AO.Optimize.debugflags & 1 ) != 0 ) {
-		int halfnum = num/2;
-		for (int i=0; i<halfnum; i++) { swap(tstart[i],tstart[num-1-i]); }
-	}
 	for (int j=0; j<num; j++) {
 		int i = tstart[j];
 
-//	for (int i=0; i<(int)instr.size(); i+=instr[i+2]) {   }
 		// copy arguments
 		WCOPY(AT.WorkPointer, &instr[i+3], (instr[i+2]-3));
 
@@ -3486,21 +3474,58 @@ VOID optimize_print_code (int print_expr) {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: optimize_print_code", thetime_str().c_str());
 #endif
-
-	// print extra symbols from ConvertToPoly in optimization
-	CBUF *C = cbuf + AM.sbufnum;
-	if (C->numrhs >= AO.OptimizeResult.minvar)
-		PrintSubtermList(AO.OptimizeResult.minvar, C->numrhs);
+	if ( ( AO.Optimize.debugflags & 1 ) != 0 ) {
+/*
+ * 		The next code is for debugging purposes. We may want the statements
+ *		in reverse order to substitute them all back.
+ *		Jan used a Mathematica program to do this. Here we make that
+ *	    	Format Ox,debugflag=1;
+ *		Creates reverse order during printing.
+ *		All we have to do is put id in front of the statements. This is done
+ *		in PrintExtraSymbol.
+ */
+		WORD *t = AO.OptimizeResult.code;
+		WORD num = 0;	// First we count the number of objects.
+		while (*t!=0) {
+			num++;
+			t++; while (*t!=0) t+=*t; t++;
+		}
+		WORD **tstart = (WORD **)Malloc1(num*sizeof(WORD *),"print objects");
+		t = AO.OptimizeResult.code; num = 0; // Now we get the addresses
+		while (*t!=0) {
+			tstart[num++] = t;
+			t++; while (*t!=0) t+=*t; t++;
+		}
+		// Flip the addresses
+		int halfnum = num/2;
+		for (int i=0; i<halfnum; i++) { swap(tstart[i],tstart[num-1-i]); }
+		for ( int i = 0; i < num; i++ ) {
+			t = tstart[i];
+			if (*t > 0)
+				PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
+			else if (print_expr)
+				PrintExtraSymbol(-*t-1, t+1, EXPRESSIONNUMBER);
+		}
+		CBUF *C = cbuf + AM.sbufnum;
+		if (C->numrhs >= AO.OptimizeResult.minvar)
+			PrintSubtermList(AO.OptimizeResult.minvar, C->numrhs);
+	}
+	else {
+		// print extra symbols from ConvertToPoly in optimization
+		CBUF *C = cbuf + AM.sbufnum;
+		if (C->numrhs >= AO.OptimizeResult.minvar)
+			PrintSubtermList(AO.OptimizeResult.minvar, C->numrhs);
 	
-	WORD *t = AO.OptimizeResult.code;
-	while (*t!=0) {
-		if (*t > 0)
-			PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
-		else if (print_expr)
-			PrintExtraSymbol(-*t-1, t+1, EXPRESSIONNUMBER);
-		t++;
-		while (*t!=0) t+=*t;
-		t++;
+		WORD *t = AO.OptimizeResult.code;
+		while (*t!=0) {
+			if (*t > 0)
+				PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
+			else if (print_expr)
+				PrintExtraSymbol(-*t-1, t+1, EXPRESSIONNUMBER);
+			t++;
+			while (*t!=0) t+=*t;
+			t++;
+		}
 	}
 
 #ifdef DEBUG
