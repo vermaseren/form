@@ -1512,8 +1512,9 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 	const WORD *tbegin = &*all_instr.begin();
 	const WORD *tend = tbegin+all_instr.size();
 	// copy all instructions to temp space. There will be n of them in instr.
-	for (const WORD *t=tbegin; t!=tend; t+=*(t+2))
+	for (const WORD *t=tbegin; t!=tend; t+=*(t+2)) {
 		instr.push_back(t);
+	}
 	int n = instr.size();
 	
 	// find parents and number of parents of instructions
@@ -1628,7 +1629,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 					// copy term and adjust sign
 					int thislenidx = newinstr.size();
 					newinstr.insert(newinstr.end(), t, t+*t); // Put the whole term in newinstr
-					newinstr.back()*=sign;
+					newinstr.back() *= sign;
 					if (*(instr[i]+1) == OPER_MUL) sign=1;
 					newinstr[lenidx] += *t;
 
@@ -1646,19 +1647,20 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 							
 							// remove old coefficient of 1
 							WORD *t3 = &*newinstr.end();                     //
-							int sign = SGN(t3[-1]);                          //
+							int sign2 = SGN(t3[-1]);                          //
 							newinstr.erase(newinstr.end()-3, newinstr.end());
 							// count number of arguments; iff it is 2 move the (extra)symbol too
 							int numargs=0;
-							for (const WORD *tt=t1; *tt!=0; tt+=*tt)
+							for (const WORD *tt=t1; *tt!=0; tt+=*tt) {
 								numargs++;
+							}
 							if (numargs==2 && *(t2+4)==1) {
 								// replace (extra)symbol
 								newinstr[newinstr.size()-4] = *(t2+1);
 								newinstr[newinstr.size()-3] = *(t2+2);
 								newinstr[newinstr.size()-2] = *(t2+3);
 								newinstr[newinstr.size()-1] = *(t2+4);
-								sign *= SGN(*(t2+*t2-1));          // was t2[7]
+								sign2 *= SGN(*(t2+*t2-1));          // was t2[7]
 								
 								// ignore this expression from now on
 								skip[*(t+3)]=true;
@@ -1667,12 +1669,23 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 							}
 							else {
 								// otherwise, ignore coefficient from now on
+								// we need to collect the signs of the terms
+								// first and set them to one. This was forgotten
+                                // before. Gave occasional errors.
+								if ( numargs > 2 || ( numargs == 2 && t2[4] > 1 ) ) {
+									for (WORD *tt=(WORD *)t2; *tt!=0; tt+=*tt) {
+										if ( tt[*tt-1] < 0 ) {
+											tt[*tt-1] = -tt[*tt-1];
+											sign2 = -sign2;
+										}
+									}
+								}
 								skipcoeff[*(t+3)]=true;
 							}
 							
 							// add new coefficient
 							newinstr.insert(newinstr.end(), t1+1, t1+*t1);
-							newinstr.back() *= sign;
+							newinstr.back() *= sign2;
 							newinstr[thislenidx] += ABS(newinstr.back()) - 3;
 							newinstr[lenidx] += ABS(newinstr.back()) - 3;
 						}
@@ -2576,9 +2589,10 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 	// get starting positions of instructions
 	vector<int> instr_idx(n);
 	WORD *ebegin = &*instr.begin();
-	WORD *eend = ebegin+instr.size();	
-	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) 
+	WORD *eend = ebegin+instr.size();
+	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 		instr_idx[*e] = e - ebegin;
+	}
 
 	// get reference counts
 /*
@@ -2628,6 +2642,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 			if (it->second > best) { x=it->first; best=it->second; }
 
 		// occurrence>=2 and occurrence>improve, so factorize
+
 		if (best>=2 && best>improve) {
 			// initialize new equation (Zi from example above)
 			vector<WORD> new_eqn;
