@@ -98,6 +98,20 @@ pthread_mutex_t optimize_lock;
 
 /*
   	#] includes : 
+  	#[ print_instr :
+*/
+
+void print_instr (const vector<WORD> &instr, WORD num)
+{
+	const WORD *tbegin = &*instr.begin();
+	const WORD *tend = tbegin+instr.size();
+	for (const WORD *t=tbegin; t!=tend; t+=*(t+2)) {
+		MesPrint("<%d> %a",num,t[2],t);
+	}
+}
+
+/*
+  	#] print_instr : 
   	#[ my_random_shuffle :
 */
 
@@ -198,7 +212,7 @@ vector<vector<WORD> > get_brackets () {
   vector<vector<WORD> > brackets;
 
   if (has_brackets) {
-		int exprlen=0;
+		int exprlen=8;  // we need potential space for an empty bracket
 		for (WORD *t=optimize_expr; *t!=0; t+=*t)
 			exprlen += *t;
     WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
@@ -238,24 +252,58 @@ vector<vector<WORD> > get_brackets () {
       while (left-->0)
         newexpr[i++] = *(t1++);
     }
+/*
+	We insert here an empty bracket that is zero.
+	It is used for the case that there is only a single bracket which is
+	outside the notation for trees at a later stage.
 
-    newexpr[i++] = 0;
+	There may be a problem now in that in the case of sep_power==1
+	newexpr is bigger than optimize_expr. We have to check that.
+*/
+	if ( sep_power == 1 )
+	{
+	  WORD *t;
+      vector<WORD> bracket;
+      bracket.push_back(0);
+      bracket.push_back(0);
+      bracket.push_back(0);
+      bracket.push_back(0);
+      sep_power++;
+      brackets.push_back(bracket);
+	  newexpr[i++] = 8;
+	  newexpr[i++] = SYMBOL;
+	  newexpr[i++] = 4;
+      newexpr[i++] = SEPARATESYMBOL;
+      newexpr[i++] = sep_power;
+	  newexpr[i++] = 1;
+	  newexpr[i++] = 1;
+	  newexpr[i++] = 3;
+      newexpr[i++] = 0;
+	  for (t=optimize_expr; *t!=0; t+=*t) {}
+      if ( t-optimize_expr+1 < i ) {  // We have to redo this
+		M_free(optimize_expr,"$-sort space");
+		optimize_expr = (WORD *)Malloc1(i*sizeof(WORD),"$-sort space");
+	  }
+	}
+	else {
+	    newexpr[i++] = 0;
+	}
     memcpy(optimize_expr, newexpr, i*sizeof(WORD));
     M_free(newexpr,"optimize newexpr");
 
-		// if factorized, replace SEP by FAC and remove brackets
-		if (brackets[0].size()>0 && brackets[0][2]==FACTORSYMBOL) {
-			for (WORD *t=optimize_expr; *t!=0; t+=*t) {
-				if (*t == ABS(*(t+*t-1))+1) continue;
-				if (t[1]==SYMBOL)
-					for (int i=3; i<t[2]; i+=2)
-						if (t[i]==SEPARATESYMBOL) t[i]=FACTORSYMBOL;
-			}
-			return vector<vector<WORD> >();
+	// if factorized, replace SEP by FAC and remove brackets
+	if (brackets[0].size()>0 && brackets[0][2]==FACTORSYMBOL) {
+		for (WORD *t=optimize_expr; *t!=0; t+=*t) {
+			if (*t == ABS(*(t+*t-1))+1) continue;
+			if (t[1]==SYMBOL)
+				for (int i=3; i<t[2]; i+=2)
+					if (t[i]==SEPARATESYMBOL) t[i]=FACTORSYMBOL;
 		}
+		return vector<vector<WORD> >();
 	}
+  }
 	
-	return brackets;
+  return brackets;
 }
 
 /*
@@ -819,7 +867,6 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
   	#[ print_tree :
 */
 
-/*
 // print Horner tree (for debugging)
 void print_tree (const vector<WORD> &tree) {
 
@@ -866,7 +913,6 @@ void print_tree (const vector<WORD> &tree) {
 	
 	MesPrint("");
 }
-*/
 
 /*
   	#] print_tree : 
@@ -919,6 +965,9 @@ void print_tree (const vector<WORD> &tree) {
  *
  *   (Extra)symbols are 1-indexed, because -X is also needed to
  *   represent -1 times this term.
+ *
+ *   There is currently a bug. The notation cannot tell if there is a single
+ *   bracket and then ignores the bracket.
  */
 vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 
@@ -3195,7 +3244,6 @@ void optimize_expression_given_Horner () {
 		instr = generate_instructions(tree, true);
 	else
 		instr = generate_instructions(tree, false);
-
 	/// eventually do greedy optimations
 	if (AO.Optimize.method == O_CSEGREEDY || AO.Optimize.method == O_GREEDY) {
 		instr = merge_operators(instr, false);
@@ -3351,6 +3399,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 			WORD *now = start;
 			int b=0;			
 			for (const WORD *t=AT.WorkPointer; *t!=0; t+=*t) {
+				if ( ( brackets[b].size() != 0 ) && ( brackets[b][0] == 0 ) ) break;
 				*now++ = *t + brackets[b].size();
 				memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
 				now += brackets[b].size();
@@ -3664,7 +3713,6 @@ int Optimize (WORD exprnr, int do_print) {
 #ifdef WITHPTHREADS
 		MasterWaitAll();
 #endif
-
 		// format results, then print it (for "Print") or modify
 		// expression (for "#Optimize")
 		generate_output(optimize_best_instr, exprnr, cbuf[AM.sbufnum].numrhs, brackets);

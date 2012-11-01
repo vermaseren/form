@@ -72,7 +72,7 @@ static KEYWORD com1commands[] = {
 	,{"gfactorized",    (TFUN)CoGlobalFactorized, DEFINITION,   PARTEST}
 	,{"globalfactorized",(TFUN)CoGlobalFactorized,DEFINITION,   PARTEST}
 	,{"goto",           (TFUN)CoGoTo,             STATEMENT,    PARTEST}
-	,{"index",          (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
+	,{"indexes",        (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
 	,{"indices",        (TFUN)CoIndex,            DECLARATION,  PARTEST|WITHAUTO}
 	,{"identify",       (TFUN)CoId,               STATEMENT,    PARTEST}
 	,{"idnew",          (TFUN)CoIdNew,            STATEMENT,    PARTEST}
