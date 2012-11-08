@@ -545,7 +545,7 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	SetScratch(file,&position);
 	if ( GetTerm(BHEAD oldwork) <= 0 ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint("Expression %d has problems in scratchfile",expr);
+		MesPrint("(5) Expression %d has problems in scratchfile",expr);
 		MUNLOCK(ErrorMessageLock);
 		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");

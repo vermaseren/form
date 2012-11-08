@@ -2043,8 +2043,6 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 		}
 	}
 	if ( VarStore((UBYTE *)0L,(WORD)0,(WORD)0,(WORD)0) ) goto ErrToSto;	/* Flush buffer */
-	M_free(AO.wpos,"AO.wpos buffer");
-	AO.wpos = AO.wpoin = 0;
 	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	indexent->size = (WORD)DIFBASE(indexent->position,indexent->variables);
 /*
@@ -2116,6 +2114,8 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 	FlushFile(AR.StoreData.Handle);
 	SeekFile(AR.StoreData.Handle,&(AC.StoreFileSize),SEEK_END);
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
+	if ( AO.wpos ) M_free(AO.wpos,"AO.wpos buffer");
+	AO.wpos = AO.wpoin = 0;
 	return(0);
 ErrToSto:
 	MesPrint("---Error while storing namelists");
@@ -2123,6 +2123,8 @@ ErrToSto:
 ErrInSto:
 	MesPrint("Error in storage");
 ErrReturn:
+	if ( AO.wpos ) M_free(AO.wpos,"AO.wpos buffer");
+	AO.wpos = AO.wpoin = 0;
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 	return(-1);
 }

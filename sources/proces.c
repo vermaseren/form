@@ -203,7 +203,7 @@ WORD Processor()
 			AR.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
 			if ( GetTerm(BHEAD term) <= 0 ) {
-				MesPrint("Expression %d has problems in scratchfile",i);
+				MesPrint("(1) Expression %d has problems in scratchfile",i);
 				retval = -1;
 				break;
 			}
@@ -305,7 +305,7 @@ commonread:;
 					MesPrint("Error condition 1a");
 					ExprStatus(e);
 #endif
-					MesPrint("Expression %d has problems in scratchfile(process)",i);
+					MesPrint("(2) Expression %d has problems in scratchfile(process)",i);
 					retval = -1;
 					break;
 				}
@@ -455,7 +455,7 @@ commonread:;
 					MesPrint("Error condition 1b");
 					ExprStatus(e);
 #endif
-					MesPrint("Expression %d has problems in scratchfile",i);
+					MesPrint("(3) Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
 				}
@@ -498,7 +498,7 @@ commonread:;
 					MesPrint("Error condition 1c");
 					ExprStatus(e);
 #endif
-					MesPrint("Expression %d has problems in scratchfile",i);
+					MesPrint("(4) Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
 				}
