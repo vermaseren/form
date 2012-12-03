@@ -115,6 +115,12 @@
 #endif
 
 #ifdef WITHMPI
+/*
+ * The macro "indices" defined in variable.h collides with some function
+ * argument names in the MPI-3.0 standard.
+ */
+#undef indices
+
 #  ifdef __cplusplus
      /*
       * form3.h (which includes parallel.h) is included from newpoly.h as
@@ -132,6 +138,10 @@ extern "C" {
 #  else
 #    include <mpi.h>
 #  endif
+
+/* Now redefine "indices" in the same way as in variable.h. */
+#define indices ((INDICES)(AC.IndexList.lijst))
+
 #  define PF_ANY_SOURCE MPI_ANY_SOURCE
 #  define PF_ANY_MSGTAG MPI_ANY_TAG
 #  define PF_COMM MPI_COMM_WORLD
