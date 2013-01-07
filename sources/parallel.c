@@ -4366,6 +4366,7 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 	 * XXX:
 	 *   At the end of the program the buffered output (text without LF) will not be flushed,
 	 *   i.e., will not be written to the standard output. This is not problematic at a normal run.
+	 *   The buffer can be explicitly flushed by PF_FlushStdOutBuffer().
 	 */
 	if ( PF.me == MASTER && handle == AM.StdOut ) {
 		size_t oldsize;
@@ -4396,6 +4397,25 @@ LONG PF_WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 
 /*
  		#] PF_WriteFileToFile :
+ 		#[ PF_FlushStdOutBuffer :
+*/
+
+/**
+ * Explicitly Flushes the buffer for the standard output on the master, which is
+ * used if PF_ENABLE_STDOUT_BUFFERING is defined.
+ */
+void PF_FlushStdOutBuffer(void)
+{
+#ifdef PF_ENABLE_STDOUT_BUFFERING
+	if ( PF.me == MASTER && VectorSize(stdoutBuffer) > 0 ) {
+		WriteFileToFile(AM.StdOut, VectorPtr(stdoutBuffer), VectorSize(stdoutBuffer));
+		VectorClear(stdoutBuffer);
+	}
+#endif
+}
+
+/*
+ 		#] PF_FlushStdOutBuffer :
  		#[ PF_ReceiveErrorMessage :
 */
 

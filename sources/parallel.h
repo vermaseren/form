@@ -254,6 +254,7 @@ extern int    PF_RecvFile(int from, FILE *fd);
 extern void   PF_MLock(void);
 extern void   PF_MUnlock(void);
 extern LONG   PF_WriteFileToFile(int,UBYTE *,LONG);
+extern void   PF_FlushStdOutBuffer(void);
 
 /*
   	#] Function prototypes : 

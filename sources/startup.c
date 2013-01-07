@@ -107,11 +107,6 @@ int DoTail(int argc, UBYTE **argv)
 		onlyversion = 0;
 		goto printversion;
 	}
-/*
-#ifdef _MSC_VER
-	printf("Starting Form \n");
-#endif
-*/
 	while ( argc >= 1 ) {
 		s = *argv++; argc--;
 		if ( *s == '-' || ( *s == '/' && ( argc > 0 || AM.Interact ) ) ) {
@@ -161,6 +156,9 @@ int DoTail(int argc, UBYTE **argv)
 							while ( *s >= '0' && *s <= '9' )
 								threadnum = 10*threadnum + *s++ - '0';
 							if ( *s ) {
+#ifdef PARALLEL
+								if ( PF.me == MASTER )
+#endif
 								printf("Illegal value for option m or w: %s\n",t);
 								errorflag++;
 							}
@@ -180,12 +178,18 @@ int DoTail(int argc, UBYTE **argv)
 							/*Initialize pre-set external channels, see 
 								the file extcmd.c:*/
 							if(initPresetExternalChannels(*argv++,AX.timeout)<1){
+#ifdef PARALLEL
+								if ( PF.me == MASTER )
+#endif
 								printf("Error initializing preset external channels\n");
 								errorflag++;
 							}
 							AX.timeout=-1;/*This indicates that preset channels 
 													are initialized from cmdline*/
 						}else{
+#ifdef PARALLEL
+							if ( PF.me == MASTER )
+#endif
 							printf("Illegal option in call of FORM: %s\n",s);
 							errorflag++;
 						}
@@ -194,9 +198,15 @@ int DoTail(int argc, UBYTE **argv)
 					if ( s[1] ) {
 						if ( ( s[1]=='i' ) && ( s[2] == 'p' ) && (s[3] == 'e' )
 						&& ( s[4] == '\0' ) ){
+#ifdef PARALLEL
+							if ( PF.me == MASTER )
+#endif
 							printf("Illegal option: Pipes not supported on this system.\n");
 						}
 						else {
+#ifdef PARALLEL
+							if ( PF.me == MASTER )
+#endif
 							printf("Illegal option: %s\n",s);
 						}
 						errorflag++;
@@ -247,11 +257,17 @@ printversion:;
 							while ( FG.cTable[*t] == 1 )
 								AM.SkipClears = 10*AM.SkipClears + *t++ - '0';
 							if ( *t != 0 ) {
+#ifdef PARALLEL
+								if ( PF.me == MASTER )
+#endif
 								printf("Illegal numerical option in call of FORM: %s\n",s);
 								errorflag++;
 							}
 						}
 						else {
+#ifdef PARALLEL
+							if ( PF.me == MASTER )
+#endif
 							printf("Illegal option in call of FORM: %s\n",s);
 							errorflag++;
 						}
@@ -260,6 +276,9 @@ printversion:;
 		}
 		else if ( argc == 0 && !AM.Interact ) AM.InputFileName = argv[-1];
 		else {
+#ifdef PARALLEL
+			if ( PF.me == MASTER )
+#endif
 			printf("Illegal option in call of FORM: %s\n",s);
 			errorflag++;
 		}
@@ -296,6 +315,9 @@ printversion:;
 #endif
 	else {
 NoFile:
+#ifdef PARALLEL
+		if ( PF.me == MASTER )
+#endif
 		printf("No filename specified in call of FORM\n");
 		errorflag++;
 	}
@@ -1520,10 +1542,18 @@ VOID Terminate(int errorcode)
 		}
 		PrintRunningTime();
 	}
+#ifdef PARALLEL
+	if ( AM.HoldFlag && PF.me == MASTER ) {
+		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
+		PF_FlushStdOutBuffer();
+		getchar();
+	}
+#else
 	if ( AM.HoldFlag ) {
 		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
 		getchar();
 	}
+#endif
 #ifdef PARALLEL
 	PF_Terminate(errorcode);
 #endif
