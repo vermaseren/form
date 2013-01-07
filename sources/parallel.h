@@ -57,6 +57,17 @@
 #define PF_LOG_MSGTAG        61  /* slave -> master: sending text to the log file */
 #define PF_MISC_MSGTAG       70
 
+/*
+ * A macro for checking the version of gcc.
+ */
+#if defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__)
+#  define GNUC_PREREQ(major, minor, patchlevel) \
+     ((__GNUC__ << 16) + (__GNUC_MINOR__ << 8) + __GNUC_PATCHLEVEL__ >= \
+     ((major) << 16) + ((minor) << 8) + (patchlevel))
+#else
+#  define GNUC_PREREQ(major, minor, patchlevel) 0
+#endif
+
 /* FIXME: Data model for PVM. (TU 16 Oct 2011) */
 #ifdef PVM
 #  include "pvm3.h"
@@ -121,6 +132,12 @@
  */
 #undef indices
 
+/* Avoid messy padding warnings which may appear in mpi.h. */
+#if GNUC_PREREQ(4, 6, 0)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wpadded"
+#endif
+
 #  ifdef __cplusplus
      /*
       * form3.h (which includes parallel.h) is included from newpoly.h as
@@ -141,6 +158,11 @@ extern "C" {
 
 /* Now redefine "indices" in the same way as in variable.h. */
 #define indices ((INDICES)(AC.IndexList.lijst))
+
+/* Restore the warning settings. */
+#if GNUC_PREREQ(4, 6, 0)
+#  pragma GCC diagnostic pop
+#endif
 
 #  define PF_ANY_SOURCE MPI_ANY_SOURCE
 #  define PF_ANY_MSGTAG MPI_ANY_TAG
