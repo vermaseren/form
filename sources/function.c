@@ -711,9 +711,9 @@ int ChainIn(PHEAD WORD *term, WORD funnum)
 			m = t;
 			t += t[1];
 			tt = t;
-			if ( *t != funnum ) continue;
+			if ( t >= tend || *t != funnum ) continue;
 			action = 1;
-			while ( *t == funnum ) {
+			while ( t < tend && *t == funnum ) {
 				ts = t + t[1];
 				t += FUNHEAD;
 				while ( t < ts ) *tt++ = *t++;
