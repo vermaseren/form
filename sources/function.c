@@ -754,7 +754,7 @@ int ChainOut(PHEAD WORD *term, WORD funnum)
 	tend -= ABS(tend[-1]);
 	t = term+1; tt = term; w = AT.WorkPointer;
 	while ( t < tend ) {
-		if ( *t != funnum ) { t += t[1]; continue; }
+		if ( *t != funnum || t[1] == FUNHEAD ) { t += t[1]; continue; }
 		flag = 1;
 		while ( tt < t ) *w++ = *tt++;
 		ts = t + t[1];
