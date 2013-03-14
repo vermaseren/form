@@ -3654,7 +3654,7 @@ redo:	AR.BracketOn++;
 }
 
 /*
-  	#] DoBrackets : 
+  	#] DoBrackets :
   	#[ CoBracket :
 */
 
@@ -5341,32 +5341,76 @@ int CoDropSymbols(UBYTE *s)
 	Note that this cannot be executed in parallel because we have only
 	a single compiler buffer for this. Hence we switch on the noparallel
 	module option.
+
+	Option(s):
+		OnlyFunctions [,name1][,name2][,...,namem];
 */
 
 int CoToPolynomial(UBYTE *inp)
 {
+	int error = 0;
 	while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
 	if ( ( AC.topolynomialflag & ~TOPOLYNOMIALFLAG ) != 0 ) {
 		MesPrint("&ToPolynomial statement and FactArg statement are not allowed in the same module");
 		return(1);
 	}
+	if ( AO.OptimizeResult.code != NULL ) {
+		MesPrint("&Using ToPolynomial statement when there are still optimization results active.");
+		MesPrint("&Please use #ClearOptimize instruction first.");
+		MesPrint("&This will loose the optimized expression.");
+		return(1);
+	}
 	if ( *inp == 0 ) {
-		if ( AO.OptimizeResult.code != NULL ) {
-			MesPrint("&Using ToPolynomial statement when there are still optimization results active.");
-			MesPrint("&Please use #ClearOptimize instruction first.");
-			MesPrint("&This will loose the optimized expression.");
+		Add3Com(TYPETOPOLYNOMIAL,DOALL)
+	}
+	else {
+		int numargs = 0;
+		WORD *funnums = 0, type, num;
+		UBYTE *s, c;
+		s = SkipAName(inp);
+		if ( s == 0 ) return(1);
+		c = *s; *s = 0;
+		if ( StrICmp(inp,(UBYTE *)"onlyfunctions") ) {
+			MesPrint("&Illegal option %s in ToPolynomial statement",inp);
+			*s = c;
 			return(1);
 		}
-		Add2Com(TYPETOPOLYNOMIAL)
-		AC.topolynomialflag |= TOPOLYNOMIALFLAG;
-#ifdef PARALLEL
-		/* In ParFORM, ToPolynomial has to be executed on the master. */
-		AC.mparallelflag |= NOPARALLEL_CONVPOLY;
-#endif
-		return(0);
+		*s = c;
+		inp = s;
+		while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+		s = inp;
+		while ( *s ) s++;
+/*
+		Get definitely enough space for the numbers of the functions
+*/
+		funnums = (WORD *)Malloc1(((LONG)(s-inp)+3)*sizeof(WORD),"ToPlynomial");
+		while ( *inp ) {
+			s = SkipAName(inp);
+			if ( s == 0 ) return(1);
+			c = *s; *s = 0;
+		    type = GetName(AC.varnames,inp,&num,WITHAUTO);
+			if ( type != CFUNCTION ) {
+				MesPrint("&%s is not a function in ToPolynomial statement",inp);
+				error = 1;
+			}
+			funnums[3+numargs++] = num+FUNCTION;
+			*s = c;
+			inp = s;
+			while ( *inp == ' ' || *inp == ',' || *inp == '\t' ) inp++;
+		}
+		funnums[0] = TYPETOPOLYNOMIAL;
+		funnums[1] = numargs+3;
+		funnums[2] = ONLYFUNCTIONS;
+
+		AddNtoL(numargs+3,funnums);
+		if ( funnums ) M_free(funnums,"ToPolynomial");
 	}
-	MesPrint("&Illegal argument in ToPolynomial statement: '%s'",inp);
-	return(1);
+	AC.topolynomialflag |= TOPOLYNOMIALFLAG;
+#ifdef PARALLEL
+	/* In ParFORM, ToPolynomial has to be executed on the master. */
+	AC.mparallelflag |= NOPARALLEL_CONVPOLY;
+#endif
+	return(error);
 }
 
 /*
@@ -6236,4 +6280,128 @@ noscheme:
 
 /*
   	#] CoOptimizeOption : 
+  	#[ DoPutInside :
+
+	Syntax:
+		PutIn[side],functionname[,brackets]  -> par = 1
+		AntiPutIn[side],functionname,antibrackets  -> par = -1
+*/
+
+int CoPutInside(UBYTE *inp) { return(DoPutInside(inp,1)); }
+int CoAntiPutInside(UBYTE *inp) { return(DoPutInside(inp,-1)); }
+
+int DoPutInside(UBYTE *inp, int par)
+{
+	GETIDENTITY
+	UBYTE *p, c;
+	WORD *to, type, c1,c2,funnum, *WorkSave;
+	int error = 0;
+	while ( *inp == ' ' || *inp == '\t' || *inp == ',' ) inp++;
+/*
+	First we need the name of a function. (Not a tensor or table!)
+*/
+	p = SkipAName(inp);
+	if ( p == 0 ) return(1);
+	c = *p; *p = 0;
+	type = GetName(AC.varnames,inp,&funnum,WITHAUTO);
+	if ( type != CFUNCTION || functions[funnum].tabl != 0 || functions[funnum].spec ) {
+		MesPrint("&PutInside/AntiPutInside expects a regular function for its first argument");
+		MesPrint("&Argument is %s",inp);
+		error = 1;
+	}
+	funnum += FUNCTION;
+	*p = c;
+	inp = p;
+	while ( *inp == ' ' || *inp == '\t' || *inp == ',' ) inp++;
+	if ( *inp == 0 ) {
+		if ( par == 1 ) {
+			WORD tocompiler[4];
+			tocompiler[0] = TYPEPUTINSIDE;
+			tocompiler[1] = 4;
+			tocompiler[2] = 0;
+			tocompiler[3] = funnum;
+			AddNtoL(4,tocompiler);
+		}
+		else {
+			MesPrint("&AntiPutInside needs inside information.");
+			error = 1;
+		}
+		return(error);
+	}
+	WorkSave = to = AT.WorkPointer;
+	*to++ = TYPEPUTINSIDE;
+	*to++ = 4;
+	*to++ = par;
+	*to++ = funnum;
+	to++;
+	while ( *inp ) {
+		while ( *inp == ' ' || *inp == '\t' || *inp == ',' ) inp++;
+		if ( *inp == 0 ) break;
+		p = SkipAName(inp);
+		if ( p == 0 ) { error = 1; break; }
+		c = *p; *p = 0;
+		type = GetName(AC.varnames,inp,&c1,WITHAUTO);
+		if ( c == '.' ) {
+			if ( type == CVECTOR || type == CDUBIOUS ) {
+				*p++ = c;
+				inp = p;
+				p = SkipAName(inp);
+				if ( p == 0 ) return(1);
+				c = *p; *p = 0;
+				type = GetName(AC.varnames,inp,&c2,WITHAUTO);
+				if ( type != CVECTOR && type != CDUBIOUS ) {
+					MesPrint("&Not a vector in dotproduct in PutInside/AntiPutInside statement: %s",inp);
+					error = 1;
+				}
+				else type = CDOTPRODUCT;
+			}
+			else {
+				MesPrint("&Illegal use of . after %s in PutInside/AntiPutInside statement",inp);
+				error = 1;
+				*p = c; inp = p;
+				continue;
+			}
+		}
+		switch ( type ) {
+			case CSYMBOL :
+				*to++ = SYMBOL; *to++ = 4; *to++ = c1; *to++ = 1; break;
+			case CVECTOR :
+				*to++ = INDEX; *to++ = 3; *to++ = AM.OffsetVector + c1; break;
+			case CFUNCTION :
+				*to++ = c1+FUNCTION; *to++ = FUNHEAD; *to++ = 0;
+				FILLFUN3(to)
+				break;
+			case CDOTPRODUCT :
+				*to++ = DOTPRODUCT; *to++ = 5; *to++ = c1 + AM.OffsetVector;
+				*to++ = c2 + AM.OffsetVector; *to++ = 1; break;
+			case CDELTA :
+				*to++ = DELTA; *to++ = 4; *to++ = EMPTYINDEX; *to++ = EMPTYINDEX; break;
+			default :
+				MesPrint("&Illegal variable request for %s in PutInside/AntiPutInside statement",inp);
+				error = 1; break;
+		}
+		*p = c;
+		inp = p;
+	}
+	*to++ = 1; *to++ = 1; *to++ = 3;
+	AT.WorkPointer[1] = to - AT.WorkPointer;
+	AT.WorkPointer[4] = AT.WorkPointer[1]-4;
+	AT.WorkPointer = to;
+	AC.BracketNormalize = 1;
+	if ( Normalize(BHEAD WorkSave+4) ) { error = 1; }
+	else {
+		WorkSave[1] = WorkSave[4]+4;
+		to = WorkSave + WorkSave[1] - 1;
+		c1 = ABS(*to);
+		WorkSave[1] -= c1;
+		WorkSave[4] -= c1;
+		AddNtoL(WorkSave[1],WorkSave);
+	}
+	AC.BracketNormalize = 0;
+	AT.WorkPointer = WorkSave;
+	return(error);
+}
+
+/*
+  	#] DoPutInside :
 */

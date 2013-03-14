@@ -548,7 +548,7 @@ typedef int (*TFUN1)();
 #define TYPEDOLOOP 74
 #define TYPEENDDOLOOP 75
 #define TYPEDROPSYMBOLS 76
-
+#define TYPEPUTINSIDE 77
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
 */
@@ -972,3 +972,5 @@ typedef int (*TFUN1)();
 #define O_FORWARDANDBACKWARD 3
 
 #define OPTHEAD 3
+#define DOALL 1
+#define ONLYFUNCTIONS 2

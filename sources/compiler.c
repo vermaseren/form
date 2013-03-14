@@ -101,7 +101,9 @@ static KEYWORD com1commands[] = {
 };
 
 static KEYWORD com2commands[] = {
-	 {"apply",          (TFUN)CoApply,            STATEMENT,    PARTEST}
+	 {"antiputinside",  (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
+	,{"aputinside",     (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
+	,{"apply",          (TFUN)CoApply,            STATEMENT,    PARTEST}
 	,{"argexplode",     (TFUN)CoArgExplode,       STATEMENT,    PARTEST}
 	,{"argimplode",     (TFUN)CoArgImplode,       STATEMENT,    PARTEST}
 	,{"argument",       (TFUN)CoArgument,         STATEMENT,    PARTEST}
@@ -181,6 +183,7 @@ static KEYWORD com2commands[] = {
 	,{"processbucketsize",(TFUN)CoProcessBucket,  DECLARATION,  PARTEST}
 	,{"propercount",    (TFUN)CoProperCount,      DECLARATION,  PARTEST}
 	,{"pushhide",       (TFUN)CoPushHide,         SPECIFICATION,PARTEST}
+	,{"putinside",      (TFUN)CoPutInside,        STATEMENT,    PARTEST}
 	,{"ratio",          (TFUN)CoRatio,            STATEMENT,    PARTEST}
 	,{"renumber",       (TFUN)CoRenumber,         STATEMENT,    PARTEST}
 	,{"repeat",         (TFUN)CoRepeat,           STATEMENT,    PARTEST}

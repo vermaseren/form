@@ -496,6 +496,7 @@ extern WORD   ExtraSymbol(WORD,WORD,WORD,WORD *,WORD *);
 extern WORD   Normalize(PHEAD WORD *);
 extern VOID   DropCoefficient(PHEAD WORD *);
 extern VOID   DropSymbols(PHEAD WORD *);
+extern int    PutInside(PHEAD WORD *, WORD *);
 extern WORD   OpenTemp(VOID);
 extern VOID   Pack(UWORD *,WORD *,UWORD *,WORD );
 extern LONG   PasteFile(PHEAD WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD);
@@ -862,6 +863,7 @@ extern int    ArgSymbolMerge(WORD *, WORD *);
 extern int    ArgDotproductMerge(WORD *, WORD *);
 extern void   SortWeights(LONG *,LONG *,WORD);
 extern int    DoBrackets(UBYTE *,int);
+extern int    DoPutInside(UBYTE *,int);
 extern WORD  *CountComp(UBYTE *,WORD *);
 extern int    CoAntiBracket(UBYTE *);
 extern int    CoAntiSymmetrize(UBYTE *);
@@ -877,6 +879,8 @@ extern int    CoNotInParallel(UBYTE *);
 extern int    DoInParallel(UBYTE *,int);
 extern int    CoEndInExpression(UBYTE *);
 extern int    CoBracket(UBYTE *);
+extern int    CoPutInside(UBYTE *);
+extern int    CoAntiPutInside(UBYTE *);
 extern int    CoMultiBracket(UBYTE *);
 extern int    CoCFunction(UBYTE *);
 extern int    CoCTensor(UBYTE *);
@@ -1362,7 +1366,7 @@ extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par);
 
 extern int NormPolyTerm(PHEAD WORD *);
 extern WORD ComparePoly(WORD *, WORD *, WORD);
-extern int ConvertToPoly(PHEAD WORD *, WORD *,WORD);
+extern int ConvertToPoly(PHEAD WORD *, WORD *,WORD *,WORD);
 extern int LocalConvertToPoly(PHEAD WORD *, WORD *, WORD,WORD);
 extern int ConvertFromPoly(PHEAD WORD *, WORD *, WORD, WORD, WORD, WORD);
 extern WORD FindSubterm(WORD *);
@@ -1419,6 +1423,6 @@ extern void optimize_expression_given_Horner_threaded();
 #endif
 
 /*
-  	#] Declarations : 
+  	#] Declarations :
 */
 #endif

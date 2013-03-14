@@ -297,11 +297,12 @@ WORD ComparePoly(WORD *term1, WORD *term2, WORD level)
  *		symbols is down from the maximum. In principle there can be a
  *		problem when running into the already assigned ones.
  *		The output overwrites the input.
+ *		comlist is the compiler code. Used for the various options
  */
 
 static int FirstWarnConvertToPoly = 1;
 
-int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD par)
+int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD *comlist, WORD par)
 {
 	WORD *tout, *tstop, ncoef, *t, *r, *tt, *ttwo = 0;
 	int i, action = 0;
@@ -310,7 +311,8 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD par)
 	tstop = tt - ncoef;
 	tout = outterm+1;
 	t = term + 1;
-	while ( t < tstop ) {
+	if ( comlist[2] == DOALL ) {
+	  while ( t < tstop ) {
 		if ( *t == SYMBOL ) {
 			r = t+2;
 			t += t[1];
@@ -422,19 +424,65 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD par)
 			}
 			return(-1);
 		}
-	}
-	NCOPY(tout,tstop,ncoef)
-	if ( ttwo ) {
+	  }
+	  NCOPY(tout,tstop,ncoef)
+	  if ( ttwo ) {
 		WORD hh = *ttwo;
 		*ttwo = tout-ttwo;
 		if ( ( i = NormPolyTerm(BHEAD ttwo) ) >= 0 ) i = action;
 		tout = ttwo + *ttwo;
 		*ttwo = hh;
 		*outterm = tout - outterm;
-	}
-	else {
+	  }
+	  else {
 		*outterm = tout-outterm;
 		if ( ( i = NormPolyTerm(BHEAD outterm) ) >= 0 ) i = action;
+	  }
+	}
+	else if ( comlist[2] == ONLYFUNCTIONS ) {
+	  while ( t < tstop ) {
+		if ( *t >= FUNCTION ) {
+			if ( comlist[1] == 3 ) {
+				i = FindSubterm(t);
+				t += t[1];
+				*tout++ = SYMBOL;
+				*tout++ = 4;
+				*tout++ = MAXVARIABLES-i;
+				*tout++ = 1;
+				action = 1;
+			}
+			else {
+				for ( i = 3; i < comlist[1]; i++ ) {
+					if ( *t == comlist[i] ) break;
+				}
+				if ( i < comlist[1] ) {
+					i = FindSubterm(t);
+					t += t[1];
+					*tout++ = SYMBOL;
+					*tout++ = 4;
+					*tout++ = MAXVARIABLES-i;
+					*tout++ = 1;
+					action = 1;
+				}
+				else {
+					i = t[1]; NCOPY(tout,t,i);
+				}
+			}
+		}
+		else {
+			i = t[1]; NCOPY(tout,t,i);
+		}
+	  }
+	  NCOPY(tout,tstop,ncoef)
+	  *outterm = tout-outterm;
+	  Normalize(BHEAD outterm);
+	  i = action;
+	}
+	else {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal internal code in conversion to polynomial notation");
+		MUNLOCK(ErrorMessageLock);
+		i = -1;
 	}
 	return(i);
 }

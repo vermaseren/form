@@ -2585,7 +2585,7 @@ int DoDo(UBYTE *s)
 		s++; loop->vars = s;
 		loop->lastnum = 0;
 		while ( *s != '}' && *s != 0 ) {
-			if ( *s == ',' || *s == '|' ) { *s = 0; loop->lastnum++; }
+			if ( set_in(*s,AC.separators) ) { *s = 0; loop->lastnum++; }
 			else if ( *s == '\\' ) s++;
 			s++;
 		}

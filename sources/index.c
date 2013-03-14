@@ -570,6 +570,81 @@ VOID OpenBracketIndex(WORD nexpr)
 
 /*
   	#] OpenBracketIndex : 
+  	#[ PutInside :
+
+	Puts a term, or a bracket determined part of a term inside a function.
+
+	AT.WorkPointer points at term+*term
+*/
+
+int PutInside(PHEAD WORD *term, WORD *code)
+{
+	WORD *from, *to, *oldbuf, *tStop, *t, *tt, oldon, inc, argsize, *termout;
+	int i, ii, error;
+	
+	if ( code[1] == 4 && ( code[2] == 0 || code[2] == 1 ) ) {
+/*
+		Put all inside. Move the term by 1+FUNHEAD+ARGHEAD
+*/
+		from = term+*term; to = from+1+ARGHEAD+FUNHEAD; i = ii = *term;
+		to[0] = 1; to[1] = 1; to[2] = 3;
+		while ( --i >= 0 ) *--to = *--from;
+		to = term;
+		*to++ = term[0]+4+ARGHEAD+FUNHEAD;
+		*to++ = code[3];
+		*to++ = ii+FUNHEAD+ARGHEAD;
+		*to++ = 1;	/* set dirty flags, because there could be a fast notation */
+		FILLFUN3(to)
+		*to++ = ii+ARGHEAD;
+		*to++ = 1;
+		FILLARG(to)
+		return(0);
+	}
+/*
+	First we save the old bracket variables. Then we set variables to
+	influence the PutBracket routine and call it.
+	After that we set the values back and sort out the results by placing the
+	inside of the bracket inside the function.
+*/
+	termout = AT.WorkPointer;
+	oldbuf = AT.BrackBuf;
+	oldon  = AR.BracketOn;
+	AR.BracketOn = -code[2];
+	AT.BrackBuf  = code+4;
+	error = PutBracket(BHEAD term);
+	AT.BrackBuf = oldbuf;
+	AR.BracketOn = oldon;
+	if ( error ) return(error);
+	i = *termout; from = termout; to = term;
+	NCOPY(to,from,i);
+	tStop = term +*term; tStop -= tStop[-1];
+	t = term+1;
+	while ( t < tStop && *t != HAAKJE ) t += t[1];
+    from = term + *term;
+	inc = FUNHEAD+ARGHEAD-t[1]+1;
+	tt = t + t[1];
+	argsize = from-tt+1;
+	to = from + inc;
+	to[0] = 1;
+	to[1] = 1;
+	to[2] = 3;
+	while ( from > tt ) *--to = *--from;
+	*--to = argsize;
+	*t++ = code[3];
+	*t++ = argsize+FUNHEAD+ARGHEAD;
+	*t++ = 1;
+	FILLFUN3(t);
+	*t++ = argsize+ARGHEAD;
+	*t++ = 1;
+	FILLARG(t);
+	*term += inc+3;
+	AT.WorkPointer = term+*term;
+	if ( Normalize(BHEAD term) ) error = 1;
+	return(error);
+}
+
+/*
+  	#] PutInside :
 */
 
 /*

@@ -3418,7 +3418,7 @@ CommonEnd:
 				  case TYPETOPOLYNOMIAL:
 					AT.WorkPointer = term + *term;
 					termout = AT.WorkPointer;
-					if ( ConvertToPoly(BHEAD term,termout,0) < 0 ) goto GenCall;
+					if ( ConvertToPoly(BHEAD term,termout,C->lhs[level],0) < 0 ) goto GenCall;
 					if ( *termout == 0 ) goto Return0;
 					i = termout[0]; t = term; NCOPY(t,termout,i);
 					AT.WorkPointer = term + *term;
@@ -3442,10 +3442,15 @@ CommonEnd:
 				  case TYPEDROPSYMBOLS:
 					DropSymbols(BHEAD term);
 					break;
+				  case TYPEPUTINSIDE:
+					AT.WorkPointer = term + *term;
+					if ( PutInside(BHEAD term,C->lhs[level]) < 0 ) goto GenCall;
+					AT.WorkPointer = term + *term;
+					break;
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -4017,7 +4022,7 @@ OverWork:
 }
 
 /*
- 		#] Generator : 
+ 		#] Generator :
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

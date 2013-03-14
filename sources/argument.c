@@ -443,14 +443,20 @@ HaveTodo:
 */
 						if ( scale && ( factor == 0 || *factor > 0 ) )
 							goto ScaledVariety;
-						size = term[*term-1];
-						size = REDLENG(size);
-						if ( MulRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
-								(UWORD *)rstop,&size) ) goto execargerr;
-						size = INCLENG(size);
-						k = size < 0 ? -size: size;
-						rstop[k-1] = size*sign;
-						*term = (WORD)(rstop - term) + k;
+/*
+						The if was added 28-nov-2012 to give MakeInteger also
+						the (0) option.
+*/
+						if ( scale && ( factor == 0 || *factor ) ) {
+							size = term[*term-1];
+							size = REDLENG(size);
+							if ( MulRat(BHEAD (UWORD *)rstop,size,(UWORD *)r3,k,
+									(UWORD *)rstop,&size) ) goto execargerr;
+							size = INCLENG(size);
+							k = size < 0 ? -size: size;
+							rstop[k-1] = size*sign;
+							*term = (WORD)(rstop - term) + k;
+						}
 					}
 					else {
 						if ( factor && *factor >= 1 ) {
@@ -618,7 +624,7 @@ ScaledVariety:;
 		t += t[1];
 	}
 /*
-  	#] Argument detection : 
+  	#] Argument detection :
   	#[ SplitArg : + varieties
 */
 	if ( ( type == TYPESPLITARG || type == TYPESPLITARG2
@@ -1610,7 +1616,7 @@ execargerr:
 }
 
 /*
-  	#] execarg : 
+  	#] execarg :
   	#[ execterm :
 */
 

@@ -133,6 +133,8 @@ void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) 
   	#[ get_expression :
 */
 
+static WORD comlist[3] = {TYPETOPOLYNOMIAL,3,DOALL};
+
 /**  Get expression
  *
  *   Description
@@ -145,7 +147,7 @@ void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) 
 WORD get_expression (int exprnr) {
 
 	GETIDENTITY;
-	
+
   AR.NoCompress = 1;
 
   NewSort(BHEAD0);
@@ -163,7 +165,7 @@ WORD get_expression (int exprnr) {
     AT.WorkPointer = term + *term;
     WORD *t1 = term;
     WORD *t2 = term + *term;
-    if (ConvertToPoly(BHEAD t1,t2,1) < 0) return -1;
+    if (ConvertToPoly(BHEAD t1,t2,comlist,1) < 0) return -1;
     int n = *t2;
     NCOPY(t1,t2,n);
     AT.WorkPointer = term + *term;
