@@ -54,6 +54,29 @@ expressions are inserted. It is identical to the idold statement (see
 \ref{substaidentify}). \vspace{10mm}
 
 %--#] also : 
+%--#[ antiputinside :
+
+\section{antiputinside}
+\label{substaantiputinside}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & antiputinside {\tt<}name of function{\tt>} [,$<$antibracket information$>$];
+\\ See also & PutInside (\ref{substaputinside})
+\end{tabular}\vspace{4mm}
+
+\noindent This statement\index{antiputinside} puts all parts of the term 
+with the exception of the variables in the antibracket information inside a 
+function argument. The function must be a regular function (hence no tensor 
+or table which are special types of functions). The 
+antibracket\index{antibracket} information should adhere to the syntax of 
+the bracket statement (\ref{substabracket},\ref{substaantibracket}) and all 
+occurrences of all variables with the exception of the antibracket 
+variables will be put inside the function. The coefficient will also be put 
+inside the function.
+\vspace{10mm}
+
+%--#] antiputinside : 
 %--#[ antisymmetrize :
 
 \section{antisymmetrize}
@@ -1687,13 +1710,13 @@ Mathematica format. It is not guaranteed that this is perfect.}
 Reduce format. It is not guaranteed that this is perfect.}
 
 \noindent The last few formats have not been tried out extensively. The 
-author is open for suggestions. \vspace{10mm}
-
+author is open for suggestions.
+ 
 \leftvitem{3.5cm}{normal\index{normal}\index{format!normal}}
 \rightvitem{13cm}{Will return to the regular \FORM\ formatting mode.}
 
-\noindent If the stement has no arguments the formatting will be reset to 
-the mode it was in when the program started.
+\noindent If the statement has no arguments the formatting will be reset to 
+the mode it was in when the program started. \vspace{10mm}
 
 %--#] format : 
 %--#[ frompolynomial :
@@ -4057,6 +4080,27 @@ expressions (see \ref{substahide}). The pophide\index{pophide} statement
 \vspace{10mm}
 
 %--#] pushhide : 
+%--#[ putinside :
+
+\section{putinside}
+\label{substaputinside}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & putinside {\tt<}name of function{\tt>} [,$<$bracket information$>$];
+\\ See also & AntiPutInside (\ref{substaantiputinside})
+\end{tabular}\vspace{4mm}
+
+\noindent This statement\index{putinside} puts the complete term inside a 
+function argument. The function must be a regular function (hence no tensor 
+or table which are special types of functions). If there is 
+bracket\index{bracket} information, this information should adhere to the 
+syntax of the bracket statement (\ref{substaantiputinside}) and only 
+occurrences of the bracket variables will be put inside the function. The 
+coefficient will also be put inside the function.
+\vspace{10mm}
+
+%--#] putinside : 
 %--#[ ratio :
  
 \section{ratio}
@@ -5188,7 +5232,7 @@ section on \TFORM\ (\ref{tform}). To find out what its value is, use the
 
 \noindent \begin{tabular}{ll}
 Type & Executable statement\\
-Syntax & topolynomial
+Syntax & topolynomial[,OnlyFunctions[,{\tt<}list of functions{\tt>}]];
 \\ See also & factarg (\ref{substafactarg}), FromPolynomial 
 (\ref{substafrompolynomial}) and ExtraSymbols (\ref{substaextrasymbols},
 \ref{sect-extrasymbols}).
@@ -5199,11 +5243,17 @@ statements can only deal with symbols and numbers. Examples of this are
 factorization(\ref{substafactarg}) and output simplification (still to be 
 implemented). The ToPolynomial statement takes each term, looks for objects 
 that are not symbols to positive powers and replaces them by symbols. If 
-the object has been encountered before the same symbol will be used, 
+the object has been encountered before, the same symbol will be used, 
 otherwise a new symbol will be defined. The object represented by the 
 `extra symbol' is stored internally and can be printed if needed with the 
 \%X option in the \#write instruction (\ref{prewrite}). Note that negative 
 powers of symbols will also be replaced.
+
+In some cases one would like to do this only for a subset of objects. It is 
+possible to do this only for functions, using the OnlyFunctions option. If 
+no functions are specified, all functions will be replaced by extra 
+symbols. If a list of functions is specified, only those functions will be 
+replaced.
 \vspace{10mm}
 
 %--#] topolynomial : 
