@@ -119,7 +119,8 @@ AllLev:
 	}
 	else {
 		fac = type + FUNHEAD;
-		while ( *t != LEVICIVITA && t < tstop && t[1] != fac ) t += t[1];
+		while ( *t != LEVICIVITA && t < tstop ) t += t[1];
+		while ( *t == LEVICIVITA && t < tstop && t[1] != fac ) t += t[1];
 		if ( t >= tstop ) return(0);
 		m = t;
 		while ( *m == LEVICIVITA && m < tstop && m[1] == fac ) { n1++; m += m[1]; }

@@ -1310,6 +1310,7 @@ int SetExpr(UBYTE *s, int setunset, int par)
 	}
 	while ( *s ) {
 		if ( *s == ',' ) { s++; continue; }
+		if ( *s == '0' ) { s++; continue; }
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
 			MesPrint("&Improper name for an expression: '%s'",name);
@@ -1333,14 +1334,14 @@ int SetExpr(UBYTE *s, int setunset, int par)
 }
 
 /*
-  	#] SetExpr : 
+  	#] SetExpr :
   	#[ CoDrop :
 */
 
 int CoDrop(UBYTE *s) { return(SetExpr(s,1,DROP)); }
 
 /*
-  	#] CoDrop : 
+  	#] CoDrop :
   	#[ CoNoDrop :
 */
 
@@ -3570,6 +3571,10 @@ int DoBrackets(UBYTE *inp, int par)
 redo:	AR.BracketOn++;
 		while ( *p == ',' ) p++;
 		if ( *p == 0 ) break;
+		if ( *p == '0' ) {
+			p++; while ( *p == '0' ) p++;
+			continue;
+		}
 		inp = pp = p;
 		p = SkipAName(p);
 		if ( p == 0 ) return(1);

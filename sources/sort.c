@@ -765,6 +765,8 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	else if ( par == 1 && newout == 0 ) { AR.outfile = newout = AllocFileHandle(); }
 	sSpace++;
 	lSpace = sSpace + (S->lFill - S->lBuffer) - (LONG)S->lPatch*(AM.MaxTer/sizeof(WORD));
+/*         Note wrt MaxTer and lPatch: each patch starts with space for decompression */
+/*         Not needed if only large buffer, but needed when using files (?) */
 	SETBASEPOSITION(pp,lSpace);
 	MULPOS(pp,sizeof(WORD));
 	if ( S->file.handle >= 0 ) {
@@ -786,7 +788,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 */
 #ifdef GZIPDEBUG
 			MLOCK(ErrorMessageLock);
-			MesPrint("%w EndSort: lPatch = %d, MaxPatches = %d,lFill = %12x, sSpace = %ld, MaxTer = %d, lTop = %12x"
+			MesPrint("%w EndSort: lPatch = %d, MaxPatches = %d,lFill = %x, sSpace = %ld, MaxTer = %d, lTop = %x"
 					,S->lPatch,S->MaxPatches,S->lFill,sSpace,AM.MaxTer/sizeof(WORD),S->lTop);
 			MUNLOCK(ErrorMessageLock);
 #endif
@@ -3450,24 +3452,17 @@ ConMer:
 	}
 	else {	/* Load the patches */
 		S->lPatch = (S->inNum);
-#ifdef PARALLEL /* [16aug1998 ar] */
-		/*if ( S->lPatch > 1 || fout == AR.outfile || fout == AR.hidefile ) {*/
-/*[20oct2009 mt]:*/
+#ifdef PARALLEL
 		if ( S->lPatch > 1 || ( (PF.exprtodo <0) && (fout == AR.outfile || fout == AR.hidefile ) ) ) {
-/*:[20oct2009 mt]*/
 #else
 		if ( S->lPatch > 1 ) {
-#endif /* PARALLEL [16aug1998 ar] */
+#endif
 #ifdef WITHZLIB
 			SetupAllInputGZIP(S);
 #endif
 			p = S->lBuffer;
 			for ( i = 0; i < S->lPatch; i++ ) {
 				p = (WORD *)(((UBYTE *)p)+2*AM.MaxTer+COMPINC*sizeof(WORD));
-/*
-	Bad bug caught 31-aug-2006
-				p += AM.MaxTer + COMPINC;
-*/
 				S->Patches[i] = p;
 				p = (WORD *)(((UBYTE *)p) + fin->POsize);
 				S->pStop[i] = m2 = p;
@@ -3544,21 +3539,39 @@ ConMer:
 		}
 		else {				/* File to file */
 #ifdef WITHZLIB
+/*
+			Note: if we change FRONTSIZE we need to make the minimum value
+			of SmallEsize in AllocSort correspondingly larger or smaller.
+			Theoretically we could get close to 2*AM.MaxTer!
+*/
+			#define FRONTSIZE (2*AM.MaxTer)
+			WORD *copybuf = (WORD *)(((UBYTE *)(S->sBuffer)) + FRONTSIZE);
+			WORD *copytop;
 			SetupOutputGZIP(fout);
 			SetupAllInputGZIP(S);
-			m1 = m2 = (WORD *)(((UBYTE *)(S->sBuffer)) + 2*AM.MaxTer);
+			m1 = m2 = copybuf;
 			position2 = S->iPatches[0];
 			while ( ( length = FillInputGZIP(fin,&position2,
-					(((UBYTE *)(S->sBuffer))+2*AM.MaxTer),
-					(S->SmallEsize*sizeof(WORD)-2*AM.MaxTer),0) ) > 0 ) {
-				while ( *m1 && ( (WORD *)(((UBYTE *)(m1)) + AM.MaxTer ) < S->sTop2 ) ) {
+					(UBYTE *)copybuf,
+					(S->SmallEsize*sizeof(WORD)-FRONTSIZE),0) ) > 0 ) {
+				copytop = (WORD *)(((UBYTE *)copybuf)+length);
+				while ( *m1 && ( ( *m1 > 0 && m1+*m1 < copytop ) ||
+				( *m1 < 0 && ( m1+1 < copytop ) && ( m1+m1[1]+1 < copytop ) ) ) )
+/*
+	22-jun-2013 JV  Extremely nasty bug that has been around for a while.
+	                What if the end is in the remaining part? We will loose terms!
+				while ( *m1 && ( (WORD *)(((UBYTE *)(m1)) + AM.MaxTer ) < S->sTop2 ) )
+*/
+				{
 					if ( *m1 < 0 ) { /* Need to uncompress */
 						i = -(*m1++); m2 += i; im = *m1+i+1;
 						while ( i > 0 ) { *m1-- = *m2--; i--; }
 						*m1 = im;
 					}
 #ifdef WITHPTHREADS
-					if ( AS.MasterSort && ( fout == AR.outfile ) ) { im = PutToMaster(BHEAD m1); }
+					if ( AS.MasterSort && ( fout == AR.outfile ) ) {
+						im = PutToMaster(BHEAD m1);
+					}
 					else
 #endif
 					if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
@@ -3566,12 +3579,12 @@ ConMer:
 					m2 = m1;
 					m1 += *m1;
 				}
-				if ( *m1 == 0 ) break;
+				if ( m1 < copytop && *m1 == 0 ) break;
 /*
 				Now move the remaining part 'back'
 */
-			    m3 = (WORD *)(((UBYTE *)(S->sBuffer)) + 2*AM.MaxTer);
-				m1 = S->sTop2;
+			    m3 = copybuf;
+				m1 = copytop;
 				while ( m1 > m2 ) *--m3 = *--m1;
 				m2 = m3;
 				m1 = m2 + *m2;
@@ -4171,7 +4184,11 @@ VOID StageSort(FILEHANDLE *fout)
 		POSITION position;
 		PUTZERO(position);
 		MLOCK(ErrorMessageLock);
+#ifdef WITHPTHREADS
+		MesPrint("StageSort in thread %d",identity);
+#else
 		MesPrint("StageSort");
+#endif
 		MUNLOCK(ErrorMessageLock);
 		SeekFile(fout->handle,&position,SEEK_END);
 /*

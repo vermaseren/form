@@ -59,7 +59,7 @@
 	functions into account.
 */
 
-void StudyPattern(WORD *lhs)
+int StudyPattern(WORD *lhs)
 {
 	GETIDENTITY
 	WORD *fullproto, *pat, *p, *p1, *p2, *pstop, *info, f;
@@ -73,10 +73,27 @@ void StudyPattern(WORD *lhs)
 
 	p = pat + 1;
 	while ( p < info ) {
-		if ( *p >= FUNCTION ) numfun++;
+		if ( *p >= FUNCTION ) {
+			numfun++;
+/*
+			We check here for cases that are not allowed like ?a inside
+			symmetric functions or tensors.
+*/
+			if ( ( functions[*p-FUNCTION].symmetric == SYMMETRIC ) ||
+				 ( functions[*p-FUNCTION].symmetric == ANTISYMMETRIC ) ) {
+				p2 = p+p[1]; p1 = p+FUNHEAD;
+				while ( p1 < p2 ) {
+					if ( *p1 == FUNNYWILD ) {
+						MesPrint("&Argument field wildcards are not allowed inside (anti)symmetric functions or tensors");
+						return(1);
+					}
+					NEXTARG(p1);
+				}
+			}
+		}
 		p += p[1];
 	}
-	if ( numfun == 0 ) return;
+	if ( numfun == 0 ) return(0);
 /*
 	We need now some room for the information about the functions
 */
@@ -157,8 +174,8 @@ void StudyPattern(WORD *lhs)
 			allwilds += finf->numwildcards + finf->numfunnies;
 		}
 	}
-	if ( numsym == 0 ) return;
-	if ( allwilds == 0 ) return;
+	if ( numsym == 0 ) return(0);
+	if ( allwilds == 0 ) return(0);
 /*
 	We have the information in the array AN.FunInfo.
 	We sort things and then write the sorted pattern.
@@ -245,10 +262,11 @@ void StudyPattern(WORD *lhs)
 	}
 	*info = p2-info;
 	lhs[1] = p2-lhs;
+	return(0);
 }
 
 /*
-  	#] StudyPattern : 
+  	#] StudyPattern :
   	#[ MatchIsPossible :
 
 	We come here when there are functions and there is nontrivial

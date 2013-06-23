@@ -897,7 +897,9 @@ IllLeft:MesPrint("&Illegal LHS");
 	*m++ = 0;
 	OldWork[1] = m - OldWork;
 	AC.ProtoType = OldWork+idhead;
-	if ( !error ) StudyPattern(OldWork);
+	if ( !error ) {
+		if ( StudyPattern(OldWork) ) error = 1;
+	}
 	AT.WorkPointer = OldWork + OldWork[1];
 	OldWork[4] = AC.lhdollarflag;
 	AC.lhdollarflag = 0;

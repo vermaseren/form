@@ -1070,7 +1070,7 @@ extern int    DoFindLoop(UBYTE *,int);
 extern int    CoFunPowers(UBYTE *);
 extern int    SortTheList(int *,int);
 extern int    MatchIsPossible(WORD *,WORD *);
-extern void   StudyPattern(WORD *);
+extern int    StudyPattern(WORD *);
 extern WORD   DolToTensor(PHEAD WORD);
 extern WORD   DolToFunction(PHEAD WORD);
 extern WORD   DolToVector(PHEAD WORD);
@@ -1423,6 +1423,6 @@ extern void optimize_expression_given_Horner_threaded();
 #endif
 
 /*
-  	#] Declarations :
+  	#] Declarations : 
 */
 #endif

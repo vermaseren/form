@@ -62,7 +62,7 @@ WORD MatchE(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 	WORD tfixvec[MAXMATCH],tfixind[MAXMATCH];
 	WORD vwc,vfix,ifix,iwc,tvfix,tifix,nv,ni;
 	WORD sign = 0, *rstop, first1, first2, first3, funwild;
-	WORD *OldWork, nwstore;
+	WORD *OldWork, nwstore, oRepFunNum;
 	PERM perm1,perm2;
 	DISTRIBUTE distr;
 	WORD *newpat, /* *newter, *instart, */ offset;
@@ -383,6 +383,7 @@ NextWV:
 /*
 				Go into the recursion
 */
+				oRepFunNum = AN.RepFunNum;
 				AN.RepFunList[AN.RepFunNum++] = offset;
 				AN.RepFunList[AN.RepFunNum++] =
 					( perm1.sign + perm2.sign + distr.sign + sign ) & 1;
@@ -404,7 +405,7 @@ NextWV:
 /*
 				Restore the old Wildcard assignments
 */
-				AN.RepFunNum -= 2;
+				AN.RepFunNum = oRepFunNum;
 NoCaseB:		m = AN.WildValue;
 				t = OldWork; r = AT.WildMask; i = nwstore;
 				if ( i > 0 ) {
@@ -421,7 +422,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE : 
+  	#] MatchE :
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.

@@ -348,10 +348,6 @@ int RecalcSetups()
 	LONG totalsize, minimumsize;
 	sp = GetSetupPar((UBYTE *)"largesize");
 	totalsize = sp1->value+sp->value;
-/*
-	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
-	AM.MaxTer = sp2->value*sizeof(WORD);
-*/
 	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
 	AM.MaxTer = sp2->value*sizeof(WORD);
 	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = 200*(LONG)(sizeof(WORD));
@@ -825,6 +821,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	TermsInSmall = (TermsInSmall+15) & (-16L);
 	terms2insmall = 2*TermsInSmall;  /* Used to be just + 100 rather than *2 */
 	if ( SmallEsize < (SmallSize*3)/2 ) SmallEsize = (SmallSize*3)/2;
+	if ( SmallEsize < 3*AM.MaxTer ) SmallEsize = 3*AM.MaxTer;
 	SmallEsize = (SmallEsize+15) & (-16L);
 	if ( LargeSize < 0 ) LargeSize = 0;
 	sortsize = sizeof(SORTING);
@@ -846,7 +843,8 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 
 	IOtry = ((LargeSize+SmallEsize)/MaxFpatches-2*AM.MaxTer)/sizeof(WORD)-COMPINC;
 
-	if ( IObuffersize < IOtry ) IObuffersize = IOtry;
+	if ( (LONG)(IObuffersize*sizeof(WORD)) < IOtry )
+		IObuffersize = (IOtry+sizeof(WORD)-1)/sizeof(WORD);
 
 	allocation =
 		 3*sizeof(POSITION)*(LONG)longer				/* Filepositions!! */

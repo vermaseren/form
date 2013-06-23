@@ -624,7 +624,7 @@ ScaledVariety:;
 		t += t[1];
 	}
 /*
-  	#] Argument detection :
+  	#] Argument detection : 
   	#[ SplitArg : + varieties
 */
 	if ( ( type == TYPESPLITARG || type == TYPESPLITARG2
@@ -1616,7 +1616,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 
@@ -2308,7 +2308,7 @@ return0:
 				if ( number == 0 ) break;
 				x[0] = tt[1];
 				while ( tt > argout ) { *--t = *--tt; }
-				argout[0] = -SNUMBER; argout[1] = x[1];
+				argout[0] = -SNUMBER; argout[1] = x[0];
 				break;
 			}
 			else if ( *tt == ABS(t[-1])+1+ARGHEAD ) {

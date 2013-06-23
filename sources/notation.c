@@ -1148,7 +1148,7 @@ nocase:;
 	}
 	while ( t3 < tend ) *t2++ = *t3++;
 	*termout = t2 - termout;
-	AT.WorkPointer = termout;
+	AT.WorkPointer = t2;
 	if ( AT.WorkPointer >= AT.WorkTop ) {
 		MLOCK(ErrorMessageLock);
 		MesWork();
@@ -1167,5 +1167,5 @@ nocase:;
 }
 
 /*
- 		#] ExtraSymFun : 
+ 		#] ExtraSymFun :
 */
