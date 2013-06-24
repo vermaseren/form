@@ -4186,6 +4186,8 @@ VOID StageSort(FILEHANDLE *fout)
 		MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 		MesPrint("StageSort in thread %d",identity);
+#elif defined(PARALLEL)
+		MesPrint("StageSort in process %d",PF.me);
 #else
 		MesPrint("StageSort");
 #endif
