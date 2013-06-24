@@ -102,8 +102,8 @@ static KEYWORD com1commands[] = {
 
 static KEYWORD com2commands[] = {
 	 {"antiputinside",  (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
-	,{"aputinside",     (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
 	,{"apply",          (TFUN)CoApply,            STATEMENT,    PARTEST}
+	,{"aputinside",     (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
 	,{"argexplode",     (TFUN)CoArgExplode,       STATEMENT,    PARTEST}
 	,{"argimplode",     (TFUN)CoArgImplode,       STATEMENT,    PARTEST}
 	,{"argument",       (TFUN)CoArgument,         STATEMENT,    PARTEST}

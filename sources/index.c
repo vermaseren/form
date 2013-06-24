@@ -579,7 +579,7 @@ VOID OpenBracketIndex(WORD nexpr)
 
 int PutInside(PHEAD WORD *term, WORD *code)
 {
-	WORD *from, *to, *oldbuf, *tStop, *t, *tt, oldon, inc, argsize, *termout;
+	WORD *from, *to, *oldbuf, *tStop, *t, *tt, oldon, oldact, inc, argsize, *termout;
 	int i, ii, error;
 	
 	if ( code[1] == 4 && ( code[2] == 0 || code[2] == 1 ) ) {
@@ -609,9 +609,12 @@ int PutInside(PHEAD WORD *term, WORD *code)
 	termout = AT.WorkPointer;
 	oldbuf = AT.BrackBuf;
 	oldon  = AR.BracketOn;
+	oldact = AT.PolyAct;
 	AR.BracketOn = -code[2];
 	AT.BrackBuf  = code+4;
+	AT.PolyAct = 0;
 	error = PutBracket(BHEAD term);
+	AT.PolyAct = oldact;
 	AT.BrackBuf = oldbuf;
 	AR.BracketOn = oldon;
 	if ( error ) return(error);
@@ -644,7 +647,7 @@ int PutInside(PHEAD WORD *term, WORD *code)
 }
 
 /*
-  	#] PutInside :
+  	#] PutInside : 
 */
 
 /*
