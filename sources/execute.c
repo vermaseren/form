@@ -733,6 +733,9 @@ WORD DoExecute(WORD par, WORD skip)
 	Now the actual execution
 */
 #ifdef PARALLEL
+	/*
+	 * Turn on AS.printflag to print runtime errors occurring on slaves.
+	 */
 	AS.printflag = 1;
 #endif
 	if ( AP.preError == 0 && ( Processor() || WriteAll() ) ) RetCode = -1;

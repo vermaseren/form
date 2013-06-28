@@ -4195,7 +4195,7 @@ int PF_RecvFile(int from, FILE *fd)
 			if(l<0)
 				return(-1);
 			if(tag == PF_EMPTY_MSGTAG)
-				return(0);
+				return(-1);
 
 			if( fwrite(buf,l,1,fd)!=1 )
 				return(-1);

@@ -1720,7 +1720,7 @@ struct S_const {
     int     MasterSort;            /* Final stage of sorting to the master */
 #endif
 #ifdef PARALLEL
-	int     printflag;
+    int     printflag;             /* controls MesPrint() on each slave */
 #endif
     int     Balancing;             /* For second stage loadbalancing */
     WORD    ExecMode;              /* (S) */

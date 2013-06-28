@@ -101,7 +101,6 @@
 /**
  *  BaseName of recovery files
  */
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 #define BASENAME_FMT "%c%04dFORMrecv"
 /**
@@ -113,7 +112,6 @@ static char BaseName[] = BASENAME_FMT;
 #else
 static char *BaseName = "FORMrecv";
 #endif
-/*:[20oct2009 mt]*/
 /**
  *  filename for the recovery file
  */
@@ -143,6 +141,44 @@ static char *storefile = 0;
  */
 static int done_snapshot = 0;
 
+#ifdef PARALLEL
+/**
+ *  The position at which BASENAME_FMT should be applied.
+ *  Initialized in InitRecovery().
+ */
+static int PF_fmt_pos;
+
+/**
+ *  Returns the contents of recoveryfile or intermedfile but with the renaming
+ *  specified by the arguments.
+ */
+static const char *PF_recoveryfile(char prefix, int id, int intermed)
+{
+	/*
+	 * Assume that InitRecovery() has been already called, namely
+	 * recoveryfile, intermedfile and PF_fmt_pos are already initialized.
+	 */
+	static char *tmp_recovery = NULL;
+	static char *tmp_intermed  = NULL;
+	char *tmp, c;
+	if ( tmp_recovery == NULL ) {
+		if ( PF.numtasks > 9999 ) {  /* see BASENAME_FMT */
+			MesPrint("Checkpoint: too many number of processors.");
+			Terminate(-1);
+		}
+		tmp_recovery = (char *)Malloc1(strlen(recoveryfile) + strlen(intermedfile) + 2, "PF_recoveryfile");
+		tmp_intermed = tmp_recovery + strlen(recoveryfile) + 1;
+		strcpy(tmp_recovery, recoveryfile);
+		strcpy(tmp_intermed, intermedfile);
+	}
+	tmp = intermed ? tmp_intermed : tmp_recovery;
+	c = tmp[PF_fmt_pos + 13];  /* The magic number 13 comes from BASENAME_FMT. */
+	sprintf(tmp + PF_fmt_pos, BASENAME_FMT, prefix, id);
+	tmp[PF_fmt_pos + 13] = c;
+	return tmp;
+}
+#endif
+
 /*
   	#] filenames and system commands : 
   	#[ CheckRecoveryFile :
@@ -163,14 +199,26 @@ static int PF_CheckRecoveryFile()
 {
 	int i,ret=0;
 	FILE *fd;
+	/* Check if the recovery file for the master exists. */
+	if ( PF.me == MASTER ) {
+		if ( (fd = fopen(recoveryfile, "r")) ) {
+			fclose(fd);
+			PF_BroadcastNumber(1);
+		}
+		else {
+			PF_BroadcastNumber(0);
+			return 0;
+		}
+	}
+	else {
+		if ( !PF_BroadcastNumber(0) )
+			return 0;
+	}
+	/* Now the main part. */
 	if (PF.me == MASTER){
-		char tmpnam[128];/*ATT! buffer overflow may ahppen!*/
 		/*We have to have recovery files for the master and all the slaves:*/
-		for(i=0; i<PF.numtasks;i++){
-			char *s1=tmpnam+6,*s2=recoveryfile+6;
-			sprintf(tmpnam,BASENAME_FMT,'m',i);
-			while( (*s1++ = *s2++)!='\0' );
-			/*now tmpnam is equal to recoveryfile for PF.me == i*/
+		for(i=1; i<PF.numtasks;i++){
+			const char *tmpnam = PF_recoveryfile('m', i, 0);
 			if ( (fd = fopen(tmpnam, "r")) )
 				fclose(fd);
 			else
@@ -194,10 +242,7 @@ static int PF_CheckRecoveryFile()
 		/*All the files are here.*/
 		/*Send all slaves success and files:*/
 		for(i=1; i<PF.numtasks;i++){
-			char *s1=tmpnam+6,*s2=recoveryfile+6;
-			sprintf(tmpnam,BASENAME_FMT,'m',i);
-			while( (*s1++ = *s2++)!='\0' );
-			/*now tmpnam is equal to recoveryfile for PF.me == i*/
+			const char *tmpnam = PF_recoveryfile('m', i, 0);
 			fd = fopen(tmpnam, "r");
 			ret=PF_SendFile(i, fd);/*if fd==NULL, PF_SendFile seds to a slave the failure tag*/
 			if(fd == NULL)
@@ -212,8 +257,10 @@ static int PF_CheckRecoveryFile()
 	/*Slave:*/
 	/*Get the answer from the master:*/
 	fd=fopen(recoveryfile,"w");
-	if(fd == NULL)
+	if(fd == NULL) {
+		MesPrint("Failed to open %s in write mode in process %w", recoveryfile);
 		return(-1);
+	}
 	ret=PF_RecvFile(MASTER,fd);
 	if(ret<0)
 		return(-1);
@@ -247,10 +294,14 @@ int CheckRecoveryFile()
 	else if  ( ret > 0 ) {
 		if ( AC.CheckpointFlag != -1 ) {
 			/* recovery file exists but recovery option is not given */
+#ifdef PARALLEL
+			if ( PF.me == MASTER ) {
+#endif
 			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
 			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
 			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
 #ifdef PARALLEL
+			}
 			if(PF.me != MASTER)
 				remove(RecoveryFilename());
 #endif
@@ -260,6 +311,9 @@ int CheckRecoveryFile()
 	else {
 		if ( AC.CheckpointFlag == -1 ) {
 			/* recovery option given but recovery file does not exist */
+#ifdef PARALLEL
+			if ( PF.me == MASTER )
+#endif
 			MesPrint("Option -R for recovery has been given, but the recovery file %s does not exist!", RecoveryFilename());
 			Terminate(-1);
 		}
@@ -280,16 +334,11 @@ void DeleteRecoveryFile()
 {
 	if ( done_snapshot ) {
 		remove(recoveryfile);
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 		if( PF.me == MASTER){
 			int i;
 			for(i=1; i<PF.numtasks;i++){
-				char tmpnam[128];/*ATT! buffer overflow may ahppen!*/
-				char *s1=tmpnam+6,*s2=recoveryfile+6;
-				sprintf(tmpnam,BASENAME_FMT,'m',i);
-				while( (*s1++ = *s2++)!='\0' );
-				/*now tmpnam is equal to recoveryfile for PF.me == i*/
+				const char *tmpnam = PF_recoveryfile('m', i, 0);
 				remove(tmpnam);
 			}/*for(i=1; i<PF.numtasks;i++)*/
 			remove(storefile);
@@ -297,13 +346,10 @@ void DeleteRecoveryFile()
 			remove(hidefile);
 		}/*if( PF.me == MASTER)*/
 #else
-/*:[20oct2009 mt]*/
 		remove(storefile);
 		remove(sortfile);
 		remove(hidefile);
-/*[20oct2009 mt]:*/
 #endif
-/*:[20oct2009 mt]*/
 	}
 }
 
@@ -357,6 +403,7 @@ void InitRecovery()
 	sprintf(BaseName,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
 	/*Now BaseName has a form ?XXXXFORMrecv where ? == 'm' for master and 's' for slave,
 		XXXX is a zero - padded PF.me*/
+	PF_fmt_pos = lenpath;
 #endif	
 	recoveryfile = (char*)Malloc1(5*(lenpath+strlen(BaseName)+4+1),"InitRecovery");
 	intermedfile = InitName(recoveryfile, "tmp");
@@ -2148,11 +2195,9 @@ int DoRecovery(int *moduletype)
 	AR.outfile->ziobuffer = 0;
 #endif
 	/* reopen old outfile */
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	if(PF.me==MASTER)
 #endif
-/*:[20oct2009 mt]*/
 	if ( AR.outfile->handle >= 0 ) {
 		if ( CopyFile(sortfile, AR.outfile->name) ) {
 			MesPrint("ERROR: Could not copy old output sort file %s!",sortfile);
@@ -2930,7 +2975,11 @@ static int DoSnapshot(int moduletype)
 		}
 #ifdef PARALLEL
 	}
-#endif
+	/*
+	 * For ParFORM, the renaming will be performed after the master got
+	 * all recovery files from the slaves.
+	 */
+#else
 /*
 	make the intermediate file the recovery file
 */
@@ -2940,6 +2989,7 @@ static int DoSnapshot(int moduletype)
 	done_snapshot = 1;
 
 	MesPrint("done."); fflush(0);
+#endif
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -2964,11 +3014,9 @@ void DoCheckpoint(int moduletype)
 {
 	int error;
 	LONG timestamp = TimeWallClock(1);
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	if(PF.me == MASTER){
 #endif
-/*:[20oct2009 mt]*/
 	if ( timestamp - AC.CheckpointStamp >= AC.CheckpointInterval ) {
 		char argbuf[20];
 		int retvalue = 0;
@@ -2988,31 +3036,21 @@ void DoCheckpoint(int moduletype)
 				MesPrint("Script returned error -> no recovery file will be created.");
 			}
 		}
-		if ( retvalue == 0 ) {
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
-			/*confirm slaves to do a snapshot:*/
-			int i;
-			for(i=1;i<PF.numtasks; i++)
-				if( PF_RawSend(i,&i,sizeof(i),PF_DATA_MSGTAG) ){
-					MesPrint("Error sending recovery confirmation to slave No. %d",i);
-					Terminate(-1);
-	      	}
+		/* Confirm slaves to make snapshots. */
+		PF_BroadcastNumber(retvalue == 0);
 #endif
-/*:[20oct2009 mt]*/
+		if ( retvalue == 0 ) {
 			if ( (error = DoSnapshot(moduletype)) ) {
 				MesPrint("Error creating recovery files: %d", error);
 			}
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
+			{
+			int i;
 			/*get recovery files from slaves:*/
 			for(i=1; i<PF.numtasks;i++){
 				FILE *fd;
-				char tmpnam[128];/*ATT! buffer overflow may ahppen!*/
-				char *s1=tmpnam+6,*s2=recoveryfile+6;
-				sprintf(tmpnam,BASENAME_FMT,'m',i);
-				while( (*s1++ = *s2++)!='\0' );
-				/*now tmpnam is equal to recoveryfile for PF.me == i*/
+				const char *tmpnam = PF_recoveryfile('m', i, 1);
 				fd = fopen(tmpnam, "w");
 				if(fd == NULL){
 					MesPrint("Error opening recovery file for slave %d",i);
@@ -3025,22 +3063,22 @@ void DoCheckpoint(int moduletype)
 				}/*if(retvalue<=0)*/
 				fclose(fd);
 			}/*for(i=0; i<PF.numtasks;i++)*/
+			/*
+			 * Make the intermediate files the recovery files.
+			 */
+			ANNOUNCE(rename intermediate file)
+			for ( i = 0; i < PF.numtasks; i++ ) {
+				const char *src = PF_recoveryfile('m', i, 1);
+				const char *dst = PF_recoveryfile('m', i, 0);
+				if ( rename(src, dst) ) {
+					MesPrint("Error renaming recovery file %s -> %s", src, dst);
+				}
+			}
+			done_snapshot = 1;
+			MesPrint("done."); fflush(0);
+			}
 #endif
-/*:[20oct2009 mt]*/
 		}
-/*[20oct2009 mt]:*/
-#ifdef PARALLEL
-		else{
-			/*discard  slave snapshots:*/
-			int i;
-			for(i=1;i<PF.numtasks; i++)
-				if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) ){
-					MesPrint("Error sending recovery cancellation to slave No. %d",i);
-					Terminate(-1);
-	      	}/*if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) )*/
-		}
-#endif
-/*:[20oct2009 mt]*/
 		if ( AC.CheckpointRunAfter ) {
 			size_t l, l2;
 			char *str;
@@ -3059,28 +3097,25 @@ void DoCheckpoint(int moduletype)
 		}
 		AC.CheckpointStamp = TimeWallClock(1);
 	}
-/*[20oct2009 mt]:*/
 #ifdef PARALLEL
 	else{/* timestamp - AC.CheckpointStamp < AC.CheckpointInterval*/
-		/*discard  slave snapshots:*/
-		int i;
-		for(i=1;i<PF.numtasks; i++)
-			if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) ){
-				MesPrint("Error sending recovery cancellation to slave No. %d",i);
-				Terminate(-1);
-      	}/*if( PF_RawSend(i,&i,sizeof(i),PF_EMPTY_MSGTAG) )*/
+		/* The slaves don't need to make snapshots. */
+		PF_BroadcastNumber(0);
 	}
 	}/*if(PF.me == MASTER)*/
 	else{/*Slave*/
-		int i,tag,m=MASTER;
-		/*Wait the master to confirm snapshot:*/
-		PF_RawRecv(&m,&i,sizeof(i),&tag);/*Only tag is relevant*/
-		if(tag==PF_DATA_MSGTAG){/*ok*/
+		int i;
+		/* Check if the slave needs to make a snapshot. */
+		if ( PF_BroadcastNumber(0) ) {
 			error = DoSnapshot(moduletype);
 			if(error == 0){
 				FILE *fd;
-				/*send the recovery file to the master*/
-				fd = fopen(recoveryfile, "r");
+				/*
+				 * Send the recovery file to the master. Note that no renaming
+				 * has been performed and what we have to send is actually sitting
+				 * in the intermediate file.
+				 */
+				fd = fopen(intermedfile, "r");
 				i=PF_SendFile(MASTER, fd);/*if fd==NULL, PF_SendFile seds to a slave the failure tag*/
 				if(fd == NULL)
 					Terminate(-1);
@@ -3088,18 +3123,17 @@ void DoCheckpoint(int moduletype)
 				if(i<=0)
 					Terminate(-1);
 				/*Now the slave need not the recovery file so remove it:*/
-				remove(recoveryfile);
+				remove(intermedfile);
 			}
 			else{
 				/*send the error tag to the master:*/
 				PF_SendFile(MASTER,NULL);/*if fd==NULL, PF_SendFile seds to a slave the failure tag*/
 				Terminate(-1);
 			}
+			done_snapshot = 1;
 		}/*if(tag=PF_DATA_MSGTAG)*/
-		/*else -- no confirmation from the master, do nothing*/
 	}/*if(PF.me != MASTER)*/
 #endif
-/*:[20oct2009 mt]*/
 }
 
 /*

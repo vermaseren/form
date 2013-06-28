@@ -160,18 +160,26 @@ va_dcl
 	s = va_arg(ap,char *);
 #endif
 #ifdef PARALLEL
+	/*
+	 * On slaves, if AS.printflag is
+	 *   = 0 : print nothing.
+	 *   > 0 : synchronized output. All text will be sent to the master
+	 *         in the next MUNLOCK().
+	 *   < 0 : normal output.
+	 */
 	if ( PF.me != MASTER && AS.printflag == 0 ) return(0);
-	if ( PF.me == MASTER )
+	if ( PF.me == MASTER || AS.printflag < 0 )
 #endif
 	FLUSHCONSOLE;
-	/*[19apr2004 mt]:*/
-	/*MesPrint never prints a message to an external channel!*/
+	/*
+	 * MesPrints() never prints a message to an external channel even if
+	 * WriteFile is set to &WriteToExternalChannel.
+	 */
 #ifdef PARALLEL
-	WriteFile = &PF_WriteFileToFile;
+	WriteFile = PF.me == MASTER || AS.printflag > 0 ? &PF_WriteFileToFile : &WriteFileToFile;
 #else
 	WriteFile = &WriteFileToFile;
 #endif
-	/*:[19apr2004 mt]*/
 	AO.OutputLine = extrabuffer;
 	t = Out;
 	stopper = Out + AC.LineLength;

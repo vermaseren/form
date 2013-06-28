@@ -1372,13 +1372,38 @@ int main(int argc, char **argv)
 
 	StartFiles();
 	StartVariables();
+#ifdef PARALLEL
+	/*
+	 * Here MesPrint() is ready. We turn on AS.printflag to print possible
+	 * errors occurring on slaves in the initialization. With AS.printflag = -1
+	 * MesPrint() does not use the synchronized output. This may lead broken
+	 * texts in the output somewhat, but it is safer to implement in this way
+	 * for the situation in which some of MesPrint() calls use MLOCK()-MUNLOCK()
+	 * and some do not. In future if we set AS.printflag = 1 and modify the
+	 * source code such that all MesPrint() calls are sandwiched by MLOCK()-
+	 * MUNLOCK(), we need also to modify the code for the master to catch
+	 * messages corresponding to MUNLOCK() calls at some point.
+	 *
+	 * AS.printflag will be set to 0 in IniVars() to prevent slaves from
+	 * printing redundant errors in the preprocessor and compiler (e.g., syntax
+	 * errors).
+	 */
+	AS.printflag = -1;
+#endif
 
 	if ( ( retval = DoTail(argc,(UBYTE **)argv) ) != 0 ) {
 		if ( retval > 0 ) Terminate(0);
 		else              Terminate(-1);
 	}
 	if ( DoSetups() ) Terminate(-2);
+#ifdef PARALLEL
+	/* It is messy if all errors in OpenInput() on slaves are printed. */
+	AS.printflag = 0;
+#endif
 	if ( OpenInput() ) Terminate(-3);
+#ifdef PARALLEL
+	AS.printflag = -1;
+#endif
 	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
 	if ( MakeSetupAllocs() ) Terminate(-2);
@@ -1498,6 +1523,8 @@ VOID Terminate(int errorcode)
 		firstterminate = 0;
 #ifdef WITHPTHREADS
 		MesPrint("Program terminating in thread %w at &");
+#elif defined(PARALLEL)
+		MesPrint("Program terminating in process %w at &");
 #else
 		MesPrint("Program terminating at &");
 #endif
