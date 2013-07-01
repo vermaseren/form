@@ -62,7 +62,7 @@
 int StudyPattern(WORD *lhs)
 {
 	GETIDENTITY
-	WORD *fullproto, *pat, *p, *p1, *p2, *pstop, *info, f;
+	WORD *fullproto, *pat, *p, *p1, *p2, *pstop, *info, f, nn;
 	int numfun = 0, numsym = 0, allwilds = 0, i, j, k, nc;
 	FUN_INFO *finf, *fmin, *f1, *f2, funscratch;
 
@@ -75,12 +75,14 @@ int StudyPattern(WORD *lhs)
 	while ( p < info ) {
 		if ( *p >= FUNCTION ) {
 			numfun++;
+			nn = *p - FUNCTION;
+			if ( nn >= WILDOFFSET ) nn -= WILDOFFSET;
 /*
 			We check here for cases that are not allowed like ?a inside
 			symmetric functions or tensors.
 */
-			if ( ( functions[*p-FUNCTION].symmetric == SYMMETRIC ) ||
-				 ( functions[*p-FUNCTION].symmetric == ANTISYMMETRIC ) ) {
+			if ( ( functions[nn].symmetric == SYMMETRIC ) ||
+				 ( functions[nn].symmetric == ANTISYMMETRIC ) ) {
 				p2 = p+p[1]; p1 = p+FUNHEAD;
 				while ( p1 < p2 ) {
 					if ( *p1 == FUNNYWILD ) {
@@ -266,7 +268,7 @@ int StudyPattern(WORD *lhs)
 }
 
 /*
-  	#] StudyPattern :
+  	#] StudyPattern : 
   	#[ MatchIsPossible :
 
 	We come here when there are functions and there is nontrivial
