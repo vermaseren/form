@@ -3392,12 +3392,6 @@ int DoPipe(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
-/*[29jul2004 mt]:*/
-#ifdef PARALLEL
-Error0("Temporary pipes not supported in parallel mode");
-   return(-1);
-#endif
-/*:[29jul2004 mt]*/
 #ifdef WITHPIPE
 	FLUSHCONSOLE;
 	while ( *s == ' ' || *s == '\t' ) s++;

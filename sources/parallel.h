@@ -248,6 +248,7 @@ extern LONG PF_maxDollarChunkSize;
 
 /* mpi.c */
 extern int    PF_ISendSbuf(int,int);
+extern int    PF_Bcast(void *buffer, int count);
 extern int    PF_RawSend(int,void *,LONG,int);
 extern LONG   PF_RawRecv(int *,void *,LONG,int *);
 

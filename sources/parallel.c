@@ -59,7 +59,6 @@ int PF_Probe(int*);
 int PF_RecvWbuf(WORD*,LONG*,int*);
 int PF_IRecvRbuf(PF_BUFFER*,int,int);
 int PF_WaitRbuf(PF_BUFFER *,int,LONG *);
-int PF_Bcast(void *buffer, int count);
 int PF_RawSend(int dest, void *buf, LONG l, int tag);
 LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag);
 int PF_RawProbe(int *src, int *tag, int *bytesize);

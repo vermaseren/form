@@ -133,6 +133,7 @@ UBYTE ReadFromStream(STREAM *stream)
 	POSITION scrpos;
 #ifdef WITHPIPE
 	if ( stream->type == PIPESTREAM ) {
+#ifndef PARALLEL
 		FILE *f;
 		int cc;
 		RWLOCKR(AM.handlelock);
@@ -141,6 +142,41 @@ UBYTE ReadFromStream(STREAM *stream)
 		cc = getc(f);
 		if ( cc == EOF ) return(ENDOFSTREAM);
 		c = (UBYTE)cc;
+#else
+		if ( stream->pointer >= stream->top ) {
+			/* The master reads the pipe and broadcasts it to the slaves. */
+			LONG len;
+			if ( PF.me == MASTER ) {
+				FILE *f;
+				UBYTE *p, *end;
+				RWLOCKR(AM.handlelock);
+				f = (FILE *)filelist[stream->handle];
+				UNRWLOCK(AM.handlelock);
+				p = stream->buffer;
+				end = stream->buffer + stream->buffersize;
+				while ( p < end ) {
+					int cc = getc(f);
+					if ( cc == EOF ) {
+						break;
+					}
+					*p++ = (UBYTE)cc;
+				}
+				len = p - stream->buffer;
+				PF_BroadcastNumber(len);
+			}
+			else {
+				len = PF_BroadcastNumber(0);
+			}
+			if ( len > 0 ) {
+				PF_Bcast(stream->buffer, len);
+			}
+			stream->pointer = stream->buffer;
+			stream->inbuffer = len;
+			stream->top = stream->buffer + stream->inbuffer;
+			if ( stream->pointer == stream->top ) return ENDOFSTREAM;
+		}
+		c = (UBYTE)*stream->pointer++;
+#endif
 		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
 		if ( c == LINEFEED ) stream->eqnum = 1;
 		return(c);
@@ -351,6 +387,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 #ifdef WITHPIPE
 		case PIPESTREAM:
 			stream = CreateStream((UBYTE *)"pipe");
+#ifndef PARALLEL
 			{
 				FILE *f;
 				if ( ( f = popen((char *)name,"r") ) == 0 ) {
@@ -363,6 +400,31 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			}
 			stream->buffer = stream->top = 0;
 			stream->inbuffer = 0;
+#else
+			{
+				/* Only the master opens the pipe. */
+				FILE *f;
+				if ( PF.me == MASTER ) {
+					f = popen((char *)name, "r");
+					PF_BroadcastNumber(f == 0);
+					if ( f == 0 ) Error0("@Cannot create pipe");
+				}
+				else {
+					if ( PF_BroadcastNumber(0) ) Error0("@Cannot create pipe");
+					f = (FILE *)123;  /* dummy */
+				}
+				stream->handle = CreateHandle();
+				RWLOCKW(AM.handlelock);
+				filelist[stream->handle] = (FILES *)f;
+				UNRWLOCK(AM.handlelock);
+			}
+			/* stream->buffer as a send/receive buffer. */
+			stream->buffersize = AM.MaxStreamSize;
+			stream->buffer = (UBYTE *)Malloc1(stream->buffersize, "pipe buffer");
+			stream->inbuffer = 0;
+			stream->top = stream->buffer;
+			stream->pointer = stream->buffer;
+#endif
 			stream->name = strDup1((UBYTE *)"pipe","pipe");
 			stream->prevline = stream->linenumber = 1;
 			stream->eqnum = 0;
@@ -520,10 +582,19 @@ STREAM *CloseStream(STREAM *stream)
 #ifdef WITHPIPE
 	else if ( stream->type == PIPESTREAM ) {
 		RWLOCKW(AM.handlelock);
+#ifdef PARALLEL
+		if ( PF.me == MASTER )
+#endif
 		pclose((FILE *)(filelist[stream->handle]));
 		filelist[stream->handle] = 0;
 		numinfilelist--;
 		UNRWLOCK(AM.handlelock);
+#ifdef PARALLEL
+		if ( stream->buffer != 0 ) {
+			M_free(stream->buffer, "pipe buffer");
+			stream->buffer = 0;
+		}
+#endif
 	}
 #endif
 /*[14apr2004 mt]:*/
