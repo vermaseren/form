@@ -2422,6 +2422,67 @@ static inline void copy_dollar(WORD index, WORD type, const WORD *where, LONG si
 
 /*
 			#] copy_dollar :
+			#[ compare_two_expressions :
+*/
+
+/**
+ * Compares two expressions \a e1 and \a e2 and returns a positive value if
+ * \a e1 > \a e2, a negative value if \a e1 < \a e2, or zero if \a e1 == \a e2.
+ */
+static inline int compare_two_expressions(const WORD *e1, const WORD *e2)
+{
+	GETIDENTITY
+	/*
+	 * We consider the cases that
+	 *   (1) the expression has no term,
+	 *   (2) the expression has only one term and it is a number,
+	 *   (3) otherwise.
+	 * Assume that the expressions are sorted and all terms are normalized.
+	 * The numerators of the coefficients must never be zero.
+	 *
+	 * Note that TwoExprCompare() is not adequate for our purpose
+	 * (as of 6 Aug. 2013), e.g., TwoExprCompare({0}, {4, 1, 1, -1}, LESS)
+	 * returns TRUE.
+	 */
+	if ( e1[0] == 0 ) {
+		if ( e2[0] == 0 ) {
+			return(0);
+		}
+		else if ( e2[e2[0]] == 0 && e2[0] == ABS(e2[e2[0] - 1]) + 1 ) {
+			if ( e2[e2[0] - 1] > 0 )
+				return(-1);
+			else
+				return(+1);
+		}
+	}
+	else if ( e1[e1[0]] == 0 && e1[0] == ABS(e1[e1[0] - 1]) + 1 ) {
+		if ( e2[0] == 0 ) {
+			if ( e1[e1[0] - 1] > 0 )
+				return(+1);
+			else
+				return(-1);
+		}
+		else if ( e2[e2[0]] == 0 && e2[0] == ABS(e2[e2[0] - 1]) + 1 ) {
+			return(CompCoef((WORD *)e1, (WORD *)e2));
+		}
+	}
+	/* The expressions are not so simple. Define the order by each term. */
+	while ( e1[0] && e2[0] ) {
+		int c = CompareTerms(BHEAD (WORD *)e1, (WORD *)e2, 1);
+		if ( c < 0 )
+			return(-1);
+		else if ( c > 0 )
+			return(+1);
+		e1 += e1[0];
+		e2 += e2[0];
+	}
+	if ( e1[0] ) return(+1);
+	if ( e2[0] ) return(-1);
+	return(0);
+}
+
+/*
+			#] compare_two_expressions :
 			#[ Variables :
 */
 
@@ -2513,7 +2574,12 @@ int PF_CollectModifiedDollars(void)
 				nvars++;
 			}
 		}
-		/* Combine received dollars. */
+		/*
+		 * Combine received dollars. The FORM reference manual says maximum/minimum/sum
+		 * $-variables must have a numerical value, however, this routine should work also
+		 * for non-numerical cases, although the maximum/minimum value for non-numerical
+		 * terms has ambiguity.
+		 */
 		nvars = 0;
 		for ( i = 0; i < NumPotModdollars; i++ ) {
 			WORD index = PotModdollars[i];
@@ -2531,9 +2597,11 @@ int PF_CollectModifiedDollars(void)
 			#[ MODMAX & MODMIN :
 */
 					int selected = 0;
-					for ( j = 1; j < PF.numtasks - 1; j++ )
-						if ( TwoExprCompare(VectorPtr(b[j].buf), VectorPtr(b[selected].buf), dtype == MODMAX ? GREATER : LESS ) )
+					for ( j = 1; j < PF.numtasks - 1; j++ ) {
+						int c = compare_two_expressions(VectorPtr(b[j].buf), VectorPtr(b[selected].buf));
+						if ( (dtype == MODMAX && c > 0) || (dtype == MODMIN && c < 0) )
 							selected = j;
+					}
 					b = b + selected;
 					copy_dollar(index, b->type, VectorPtr(b->buf), b->size);
 /*
