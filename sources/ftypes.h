@@ -334,6 +334,9 @@ typedef int (*TFUN1)();
 	Don't forget MAXBUILTINFUNCTION when adding codes!
 	The object FUNCTION is at the start of the functions that are in regular
 	notation. Anything below it is in special notation.
+
+	Remark: HAAKJE0 is for compression purposes and should only occur
+	at moments that ARGWILD cannot occur.
 */
 #define SYMBOL 1
 #define DOTPRODUCT 2
@@ -347,6 +350,7 @@ typedef int (*TFUN1)();
 #define MINVECTOR 10
 #define SETEXP 11
 #define DOLLAREXPR2 12
+#define HAAKJE0 9
 #define FUNCTION 20
 
 #define ARGFIELD 15
@@ -677,17 +681,18 @@ typedef int (*TFUN1)();
 	Special sets
 */
 
-#define POS_    0   /* integer > 0 */
-#define POS0_   1   /* integer >= 0 */
-#define NEG_    2   /* integer < 0 */
-#define NEG0_   3   /* integer <= 0 */
-#define EVEN_   4   /* integer (even) */
-#define ODD_    5   /* integer (odd) */
-#define Z_      6   /* integer */
-#define SYMBOL_ 7   /* symbol only */
-#define FIXED_  8   /* fixed index */
-#define INDEX_  9   /* index only */
-#define Q_     10   /* rational */
+#define POS_         0   /* integer > 0 */
+#define POS0_        1   /* integer >= 0 */
+#define NEG_         2   /* integer < 0 */
+#define NEG0_        3   /* integer <= 0 */
+#define EVEN_        4   /* integer (even) */
+#define ODD_         5   /* integer (odd) */
+#define Z_           6   /* integer */
+#define SYMBOL_      7   /* symbol only */
+#define FIXED_       8   /* fixed index */
+#define INDEX_       9   /* index only */
+#define Q_          10   /* rational */
+#define DUMMYINDEX_ 11   /* dummy index only */
 
 /*
 	Special indices.

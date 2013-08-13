@@ -565,7 +565,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar : 
+  	#] AssignDollar :
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -1471,7 +1471,9 @@ ShortArgument:
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		case DOLZERO:
-			d->where[0] = 0; size = 0;
+			if ( d->where ) { d->where[0] = 0; }
+			else d->where = &(AM.dollarzero);
+			size = 0;
 			w = d->where;
 			break;
 		default:
@@ -1507,7 +1509,7 @@ ShortArgument:
 }
 
 /*
-  	#] DolToTerms : 
+  	#] DolToTerms :
   	#[ DolToLong :
 */
 
@@ -2088,6 +2090,13 @@ int IsSetMember(WORD *buffer, WORD numset)
 			&& t[4] == 1 && t[3] > 0 && t[3] < AM.OffsetIndex ) return(1);
 			if ( *t == 4 && t[3] == 3 && t[2] == 1 && t[1] < AM.OffsetIndex)
 				return(1);
+			return(0);
+		}
+		if ( numset == DUMMYINDEX_ ) {
+			if ( *t == 7 && t[1] == INDEX && t[6] == 3 && t[5] == 1
+			&& t[4] == 1 && t[3] >= AM.IndDum && t[3] < AM.IndDum+MAXDUMMIES ) return(1);
+			if ( *t == 4 && t[3] == 3 && t[2] == 1
+				 && t[1] >= AM.IndDum && t[1] < AM.IndDum+MAXDUMMIES ) return(1);
 			return(0);
 		}
 		tt = t + *t - 1;

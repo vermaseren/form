@@ -806,6 +806,11 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #endif
 			{
 				WORD oldLogHandle = AC.LogHandle;
+				POSITION pppp;
+				SETBASEPOSITION(pppp,0);
+				SeekFile(S->file.handle,&pppp,SEEK_CUR);
+				SeekFile(S->file.handle,&pp,SEEK_END);
+				SeekFile(S->file.handle,&pppp,SEEK_SET);
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
 				WriteStats(&pp,(WORD)1);
 				AC.LogHandle = oldLogHandle;
@@ -909,6 +914,11 @@ TooLarge:
 #endif
 			{
 				WORD oldLogHandle = AC.LogHandle;
+				POSITION pppp;
+				SETBASEPOSITION(pppp,0);
+				SeekFile(S->file.handle,&pppp,SEEK_CUR);
+				SeekFile(S->file.handle,&pp,SEEK_END);
+				SeekFile(S->file.handle,&pppp,SEEK_SET);
 				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
 				WriteStats(&pp,(WORD)1);
 				AC.LogHandle = oldLogHandle;

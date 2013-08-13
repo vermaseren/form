@@ -2168,6 +2168,10 @@ TestSet:
 						if ( ABS(sstop[-1]) == ss[0]-1 ) break;
 					}
 					goto NoMnot;
+				case DUMMYINDEX_:
+					if ( type != INDTOIND ||
+					newnumber < AM.IndDum || newnumber >= AM.IndDum+MAXDUMMIES ) goto NoMnot;
+					break;
 				default:
 					goto NoMnot;
 			}
@@ -2431,7 +2435,7 @@ NoM:
 }
 
 /*
- 		#] CheckWild : 
+ 		#] CheckWild :
  	#] Wildcards :
   	#[ DenToFunction :
 

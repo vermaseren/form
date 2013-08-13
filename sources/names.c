@@ -408,7 +408,7 @@ int GetAutoName(UBYTE *name, WORD *number)
 				return(type); }
 			case CFUNCTION: {
 				FUNCTIONS fun = ((FUNCTIONS)(AC.AutoFunctionList.lijst)) + *number;
-				*number = AddFunction(name,fun->commute,fun->spec,fun->complex,fun->symmetric,fun->dimension);
+				*number = AddFunction(name,fun->commute,fun->spec,fun->complex,fun->symmetric,fun->dimension,fun->numargs);
 				return(type); }
 			default:
 				break;
@@ -469,7 +469,7 @@ WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z, WORD d)
 			return(AddVector(name,x,d));
 			break;
 		case CFUNCTION:
-			return(AddFunction(name,y,z,x,0,d));
+			return(AddFunction(name,y,z,x,0,d,-1));
 			break;
 		case CSET:
 			AC.SetList.numtemp++;
@@ -1213,7 +1213,7 @@ IllDim:				MesPrint("&Error: Illegal dimension field for variable %s",name);
 	The actual addition. Special routine for additions 'on the fly'
 */
 
-int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int dim)
+int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int dim, int argmax)
 {
 	int nodenum, numfunction = AC.Functions->num;
 	FUNCTIONS fun = (FUNCTIONS)FromVarList(AC.Functions);
@@ -1228,6 +1228,7 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int 
 	fun->symminfo = 0;
 	fun->symmetric = symprop;
 	fun->dimension = dim;
+	fun->numargs = argmax;
 	while ( *s ) s++;
 	fun->namesize = (s-name)+1;
 	return(numfunction);
@@ -1244,11 +1245,11 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int 
 
 int CoFunction(UBYTE *s, int comm, int istensor)
 {
-	int type, error = 0, cplx, symtype, dim;
-	WORD numfunction, reverseorder = 0;
+	int type, error = 0, cplx, symtype, dim, argmax;
+	WORD numfunction, reverseorder = 0, addone;
 	UBYTE *name, *oldc, *par, c, cc;
 	do {
-		symtype = cplx = 0;
+		symtype = cplx = 0, argmax = -1;
 		dim = 0;
 		name = s;
 		if ( ( s = SkipAName(s) ) == 0 ) {
@@ -1324,12 +1325,36 @@ illegsym:		*s = cc;
 			|| ( StrICont(par,(UBYTE *)"reversecyclic") == 0 ) ) symtype = RCYCLESYMMETRIC;
 			else goto illegsym;
 			*s = cc;
-			if ( *s != ')' || ( s[1] && s[1] != ',' ) ) {
+			if ( *s != ')' || ( s[1] && s[1] != ',' && s[1] != '<' ) ) {
 				Warning("&Excess information in symmetric properties currently ignored");
 				s = SkipField(s,1);
 			}
 			else s++;
 			symtype |= reverseorder;
+			cc = *s;
+		}
+		if ( cc == '<' ) {
+			s++; addone = 0;
+			if ( *s == '=' ) { addone++; s++; }
+			argmax = 0;
+			while ( FG.cTable[*s] == 1 ) { argmax = 10*argmax + *s++ - '0'; }
+			argmax += addone;
+			par = s;
+			while ( FG.cTable[*s] == 0 ) s++;
+			if ( s > par ) {
+				cc = *s; *s = 0;
+				if ( ( StrICont(par,(UBYTE *)"arguments") == 0 )
+				|| ( StrICont(par,(UBYTE *)"args") == 0 ) ) {}
+				else {
+					Warning("&Illegal information in number of arguments properties currently ignored");
+					error = 1;
+				}
+				*s = cc;
+			}
+			if ( argmax <= 0 ) {
+				MesPrint("&Error: Cannot have fewer than 0 arguments for variable %s",name);
+				error = 1;
+			}
 		}
 		if ( ( AC.AutoDeclareFlag == 0 &&
 		 ( ( type = GetName(AC.exprnames,name,&numfunction,NOAUTO) )
@@ -1354,10 +1379,11 @@ illegsym:		*s = cc;
 					fun->symmetric = symtype;
 					AC.SymChangeFlag = 1;
 				}
+				fun->numargs = argmax;
 			}
 		}
 		else {
-			AddFunction(name,comm,istensor,cplx,symtype,dim);
+			AddFunction(name,comm,istensor,cplx,symtype,dim,argmax);
 		}
 		*oldc = c;
 eol:	while ( *s == ',' ) s++;
@@ -1371,7 +1397,7 @@ int CoNTensor(UBYTE *s) { return(CoFunction(s,1,2)); }
 int CoCTensor(UBYTE *s) { return(CoFunction(s,0,2)); }
 
 /*
-  	#] CoFunction + ...: 
+  	#] CoFunction + ...:
   	#[ DoTable :
 
         Syntax:

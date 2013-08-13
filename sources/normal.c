@@ -698,9 +698,17 @@ MulIn:
 				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] == -SNUMBER
 					&& t[1] == FUNHEAD+4 && t[FUNHEAD+3] > 1 ) {
 					WORD x1[2], sgn;
+					if ( t[FUNHEAD+1] == 0 ) goto NormZero;
 					if ( t[FUNHEAD+1] < 0 ) { t[FUNHEAD+1] = -t[FUNHEAD+1]; sgn = -1; }
 					else sgn = 1;
-					MakeRational(t[FUNHEAD+1],t[FUNHEAD+3],x1,x1+1);
+					if ( MakeRational(t[FUNHEAD+1],t[FUNHEAD+3],x1,x1+1) ) {
+						static int warnflag = 1;
+						if ( warnflag ) {
+							MesPrint("%w Warning: fraction could not be reconstructed in MakeRational_");
+							warnflag = 0;
+						}
+						x1[0] = t[FUNHEAD+1]; x1[1] = 1;
+					}
 					if ( sgn < 0 ) { t[FUNHEAD+1] = -t[FUNHEAD+1]; x1[0] = -x1[0]; }
 					if ( x1[0] < 0 ) { sgn = -1; x1[0] = -x1[0]; }
 					else sgn = 1;
@@ -794,10 +802,21 @@ MulIn:
 						NumberFree(x3,"Norm-MakeRational");
 					}
 					xx = (UWORD *)(TermMalloc("Norm-MakeRational"));
-					MakeLongRational(BHEAD x1,nx1,x2,nx2,xx,&nxx);
-					ncoef = REDLENG(ncoef);
-					if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,xx,nxx,
-					(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
+					if ( MakeLongRational(BHEAD x1,nx1,x2,nx2,xx,&nxx) ) {
+						static int warnflag = 1;
+						if ( warnflag ) {
+							MesPrint("%w Warning: fraction could not be reconstructed in MakeRational_");
+							warnflag = 0;
+						}
+						ncoef = REDLENG(ncoef);
+						if ( Mully(BHEAD (UWORD *)AT.n_coef,&ncoef,x1,nx1) )
+							goto FromNorm;
+					}
+					else {
+						ncoef = REDLENG(ncoef);
+						if ( MulRat(BHEAD (UWORD *)AT.n_coef,ncoef,xx,nxx,
+						(UWORD *)AT.n_coef,&ncoef) ) goto FromNorm;
+					}
 					ncoef = INCLENG(ncoef);
 					TermFree(xx,"Norm-MakeRational");
 					NumberFree(x2,"Norm-MakeRational");
@@ -2398,6 +2417,17 @@ NoRep:
 				if ( *t == DUMMYFUN || *t == DUMMYTEN ) {}
 				else {
 					if ( *t < (FUNCTION + WILDOFFSET) ) {
+						if ( ( functions[*t-FUNCTION].numargs > 0 ) && ( ( t[2] & DIRTYFLAG ) != 0 ) ) {
+/*
+							Number of arguments is bounded. And we have not checked.
+*/
+							WORD *ta = t + FUNHEAD, *tb = t + t[1];
+							int numarg = functions[*t-FUNCTION].numargs;
+							while ( ta < tb ) {
+								numarg--; if ( numarg <= 0 ) goto NormZero;
+								NEXTARG(ta)
+							}
+						}
 doflags:
 						if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION].tabl == 0 ) ) {
 							t[2] &= ~DIRTYFLAG;
@@ -2480,7 +2510,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3828,7 +3858,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 

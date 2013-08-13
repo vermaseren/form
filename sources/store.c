@@ -2989,12 +2989,17 @@ GetTb3:
 					MesPrint("Warning: Conflicting symmetry properties for %s",(AT.WorkPointer));
 					error = -1;
 				}
+				else if ( s->numargs != functions[k].numargs ) {
+					MesPrint("Warning: Conflicting argument restriction properties for %s",(AT.WorkPointer));
+					error = -1;
+				}
 			}
 		}
 		else {
 			if ( ( k = EntVar(CFUNCTION,(UBYTE *)(AT.WorkPointer),
 			s->complex,s->commute,s->spec,s->dimension) ) < 0 ) goto GetTcall;
 			functions[k].symmetric = s->symmetric;
+			functions[k].numargs = s->numargs;
 		}
 		*(w+j) = k + FUNCTION;
 		w++;
@@ -4457,6 +4462,7 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags     */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* spec      */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* symmetric */
+				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* numargs */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* node      */
 				AO.ResizeWORD(in, out); in += lenW;                      /* namesize  */
 				realnamelen = *((WORD *)out);

@@ -167,7 +167,7 @@ int CoCollect(UBYTE *s)
 		MesPrint("&%s should be a regular function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0);
+				AddFunction(s,0,0,0,0,0,-1);
 		}
 		return(1);
 	}
@@ -179,7 +179,7 @@ int CoCollect(UBYTE *s)
 			MesPrint("&%s should be a regular function",t1);
 			if ( type < 0 ) {
 				if ( GetName(AC.exprnames,t1,&numfun,NOAUTO) == NAMENOTFOUND )
-					AddFunction(t1,0,0,0,0,0);
+					AddFunction(t1,0,0,0,0,0,-1);
 			}
 			return(1);
 		}
@@ -218,7 +218,7 @@ int CoCompress(UBYTE *s)
 	UBYTE *t, c;
 	if ( StrICmp(s,(UBYTE *)"on") == 0 ) {
 		AC.NoCompress = 0;
-		AR.gzipCompress = GZIPDEFAULT;
+		AR.gzipCompress = 0;
 	}
 	else if ( StrICmp(s,(UBYTE *)"off") == 0 ) {
 		AC.NoCompress = 1;
@@ -367,7 +367,7 @@ int CoOn(UBYTE *s)
 			*s = c; return(-1);
 		}
 		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
-			AR.gzipCompress = GZIPDEFAULT;
+			AR.gzipCompress = 0;
 			*s = c;
 			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 			if ( *s ) {
@@ -392,7 +392,10 @@ int CoOn(UBYTE *s)
 					return(-1);
 				}
 			  }
-			  else if ( *s ) {
+			  else if ( *s == 0 ) {
+				AR.gzipCompress = GZIPDEFAULT;
+			  }
+			  else {
 				MesPrint("&Unrecognized option in ON compress gzip statement: %s, single digit expected",t);
 				return(-1);
 			  }
@@ -1334,14 +1337,14 @@ int SetExpr(UBYTE *s, int setunset, int par)
 }
 
 /*
-  	#] SetExpr :
+  	#] SetExpr : 
   	#[ CoDrop :
 */
 
 int CoDrop(UBYTE *s) { return(SetExpr(s,1,DROP)); }
 
 /*
-  	#] CoDrop :
+  	#] CoDrop : 
   	#[ CoNoDrop :
 */
 
@@ -2010,7 +2013,7 @@ int DoSymmetrize(UBYTE *s, int par)
 	}
 	if ( ( err = GetVar(name,&type,&funnum,CFUNCTION,WITHAUTO) ) == NAMENOTFOUND ) {
 		MesPrint("&Undefined function: %s",name);
-		AddFunction(name,0,0,0,0,0);
+		AddFunction(name,0,0,0,0,0,-1);
 		*s++ = c;
 		return(1);
 	}
@@ -2942,7 +2945,7 @@ tests:	s = SkipAName(s);
 	}
 	else {
 		MesPrint("&%s is not a function",s);
-		numfunc = AddFunction(s,0,0,0,0,0) + FUNCTION;
+		numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
 		return(1);
 	}
 	Add3Com(option,numfunc);
@@ -3659,7 +3662,7 @@ redo:	AR.BracketOn++;
 }
 
 /*
-  	#] DoBrackets :
+  	#] DoBrackets : 
   	#[ CoBracket :
 */
 
@@ -4932,7 +4935,7 @@ int CoPolyFun(UBYTE *s)
 		MesPrint("&%s should be a regular commuting function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0);
+				AddFunction(s,0,0,0,0,0,-1);
 		}
 		return(1);
 	}
@@ -4969,7 +4972,7 @@ int CoPolyRatFun(UBYTE *s)
 		MesPrint("&%s should be a regular commuting function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0);
+				AddFunction(s,0,0,0,0,0,-1);
 		}
 		return(1);
 	}
@@ -5024,7 +5027,7 @@ tests:	s = SkipAName(s);
 	}
 	else {
 		MesPrint("&%s is not a function",s);
-		numfunc = AddFunction(s,0,0,0,0,0) + FUNCTION;
+		numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
 		return(1);
 	}
 	Add4Com(TYPEMERGE,numfunc,option);
@@ -5083,7 +5086,7 @@ tests:	*ss = c;
 	}
 	else {
 		MesPrint("&%s is not a function",s);
-		numfunc = AddFunction(s,0,0,0,0,0) + FUNCTION;
+		numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
 		return(1);
 	}
 	Add4Com(TYPESTUFFLE,numfunc,option);
@@ -5169,7 +5172,7 @@ int DoArgPlode(UBYTE *s, int par)
 		}
 		else {
 			MesPrint("&%s is not a function",s);
-			numfunc = AddFunction(s,0,0,0,0,0) + FUNCTION;
+			numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
 			return(1);
 		}
 		s = SkipAName(s);
@@ -5227,7 +5230,7 @@ int CoClearTable(UBYTE *s)
 		&& type != CDUBIOUS ) {
 nofunc:		MesPrint("&%s is not a sparse table",t);
 			error = 4;
-			if ( type < 0 ) numfun = AddFunction(t,0,0,0,0,0);
+			if ( type < 0 ) numfun = AddFunction(t,0,0,0,0,0,-1);
 			*s = c;
 			if ( *s == ',' ) s++;
 			continue;
@@ -5298,7 +5301,7 @@ int CoDenominators(UBYTE *s)
 	|| ( functions[numfun].spec != 0 ) ) {
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0);
+				AddFunction(s,0,0,0,0,0,-1);
 		}
 		goto syntaxerror;
 	}
@@ -6408,5 +6411,5 @@ int DoPutInside(UBYTE *inp, int par)
 }
 
 /*
-  	#] DoPutInside :
+  	#] DoPutInside : 
 */

@@ -37,6 +37,7 @@
 #include "form3.h"
 
 char curdirp[] = ".";
+char cursortdirp[] = ".";
 char commentchar[] = "*";
 char dotchar[] = "_";
 char highfirst[] = "highfirst";
@@ -99,6 +100,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"subsortiosize",         NUMERICALVALUE, 0, (LONG)SSORTIOSIZE}
 	,{(UBYTE *)"subtermsinsmall",       NUMERICALVALUE, 0, (LONG)STERMSSMALL}
 	,{(UBYTE *)"tempdir",                  STRINGVALUE, 0, (LONG)curdirp}
+	,{(UBYTE *)"tempsortdir",              STRINGVALUE, 0, (LONG)cursortdirp}
 	,{(UBYTE *)"termsinsmall",          NUMERICALVALUE, 0, (LONG)TERMSSMALL}
     ,{(UBYTE *)"threadbucketsize",      NUMERICALVALUE, 0, (LONG)DEFAULTTHREADBUCKETSIZE}
     ,{(UBYTE *)"threadloadbalancing",       ONOFFVALUE, 0, (LONG)DEFAULTTHREADLOADBALANCING}

@@ -97,7 +97,7 @@ int DoTail(int argc, UBYTE **argv)
 	argc--; argv++;
 	AM.LogType = -1;
 	AM.HoldFlag = AM.qError = AM.Interact = AM.FileOnlyFlag = 0;
-	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir =
+	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
 #ifdef PARALLEL
 	AM.SetupDir = AM.SetupFile = 0;
 #else
@@ -218,16 +218,28 @@ int DoTail(int argc, UBYTE **argv)
 						TAKEPATH(AM.Path)
 					}
 					break;
-				case 'q': /* Quiet option. Only output */
+				case 'q': /* Quiet option. Only output. Same as -si */
 							AM.silent = 1; break;
 				case 'R': /* recover from saved snapshot */
 							AC.CheckpointFlag = -1;
 							break;
 				case 's': /* Next arg is dir with form.set to be used */
-							if ( s[1] == 'i' ) { /* compatibility */
-								AM.silent = 1; break;
+							if ( ( s[1] == 'o' ) && ( s[2] == 'r' ) && ( s[3] == 't' ) ) {
+								if(s[4]== '=' ) {
+									AM.TempSortDir = s+5;
+								}
+								else {
+									AM.TempSortDir = *argv++;
+									argc--;
+								}
 							}
-							TAKEPATH(AM.SetupDir)  break;
+							else if ( s[1] == 'i' ) { /* compatibility: silent/quiet */
+								AM.silent = 1;
+							}
+							else {
+								TAKEPATH(AM.SetupDir)
+							}
+							break;
 				case 'S': /* Next arg is setup file */
 							TAKEPATH(AM.SetupFile) break;
 				case 't': /* Next arg is directory for temp files */
@@ -854,7 +866,7 @@ VOID StartVariables()
 		                    ,fixedfunctions[i].tensor
 		                    ,fixedfunctions[i].complx
 		                    ,fixedfunctions[i].symmetric
-							,0);
+							,0,-1);
 /*
 	Next we add a number of dummy functions for ensuring that the user defined
 	functions start at a fixed given number FIRSTUSERFUNCTION.
@@ -864,7 +876,7 @@ VOID StartVariables()
 		char dumstr[10];
 		for ( ; i < FIRSTUSERFUNCTION-FUNCTION; i++ ) {
 			sprintf(dumstr,"::%d::",i);
-			AddFunction((UBYTE *)dumstr,0,0,0,0,0);
+			AddFunction((UBYTE *)dumstr,0,0,0,0,0,-1);
 		}
 	}
 	AM.NumFixedSets = sizeof(fixedsets)/sizeof(struct fixedset);
@@ -1122,7 +1134,7 @@ WORD IniVars()
 	AC.OutNumberType = RATIONALMODE;
 	AM.gOutNumberType = RATIONALMODE;
 #ifdef WITHZLIB
-	AR.gzipCompress = GZIPDEFAULT;
+	AR.gzipCompress = 0;
 #endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;

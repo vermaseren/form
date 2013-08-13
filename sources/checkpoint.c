@@ -694,6 +694,7 @@ static void print_M()
 	MesPrint("%d", *AM.gcmod);
 	MesPrint("%d", *AM.gpowmod);
 	print_STR(AM.TempDir);
+	print_STR(AM.TempSortDir);
 	print_STR(AM.IncDir);
 	print_STR(AM.InputFileName);
 	print_STR(AM.LogFileName);

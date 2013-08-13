@@ -2899,7 +2899,7 @@ int MakeLongRational(PHEAD UWORD *a, WORD na, UWORD *m, WORD nm, UWORD *b, WORD 
 		goto gottheanswer;
 	}
 	DivLong(x1,nx1,x2,nx2,y1,&ny1,y2,&ny2);
-	if ( ny2 == 0 ) goto cleanup;
+	if ( ny2 == 0 ) { retval = 1; goto cleanup; }
 	COPYLONG(x1,nx1,x2,nx2)
 	COPYLONG(x2,nx2,y2,ny2)
 	x3[0] = 1; nx3 = 1;
@@ -2910,7 +2910,7 @@ int MakeLongRational(PHEAD UWORD *a, WORD na, UWORD *m, WORD nm, UWORD *b, WORD 
 */
 	while ( BigLong(x2,nx2,root,nroot) > 0 ) {
 		DivLong(x1,nx1,x2,nx2,y1,&ny1,y2,&ny2);
-		if ( ny2 == 0 ) goto cleanup;
+		if ( ny2 == 0 ) { retval = 1; goto cleanup; }
 		COPYLONG(x1,nx1,x2,nx2)
 		COPYLONG(x2,nx2,y2,ny2)
 		MulLong(y1,ny1,x4,nx4,y2,&ny2);
