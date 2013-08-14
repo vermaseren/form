@@ -3477,6 +3477,8 @@ badsyntax:
 	if ( sign < 0 ) AC.ncmod = -AC.ncmod;
 	AN.ncmod = AC.ncmod;
 	if ( ( AC.modmode & INVERSETABLE ) != 0 ) MakeInverses();
+	if ( AC.halfmod ) M_free(AC.halfmod,"halfmod");
+	AC.halfmod = 0; AC.nhalfmod = 0;
 	return(Retval);
 #endif
 }
