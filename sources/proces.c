@@ -161,7 +161,7 @@ WORD Processor()
 		AC.mparallelflag = Oldmparallelflag;
 	}
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && AC.mparallelflag == PARALLELFLAG ) {
 		if ( PF_BroadcastRHS() ) {
 			retval = -1;
@@ -182,7 +182,7 @@ WORD Processor()
 			continue;
 		}
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( AC.partodoflag > 0 && e->partodo > 0 && PF.numtasks > 2 ) {
 			e->partodo = 0;
 			continue;
@@ -257,7 +257,7 @@ WORD Processor()
 			case UNHIDELEXPRESSION:
 			case UNHIDEGEXPRESSION:
 				AR.GetFile = 2;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	            if ( PF.me == MASTER ) SetScratch(AR.hidefile,&(e->onfile));
 #else
 				SetScratch(AR.hidefile,&(e->onfile));
@@ -282,14 +282,14 @@ WORD Processor()
 			case GLOBALEXPRESSION:
 				AR.GetFile = 0;
 /*[20oct2009 mt]:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 				if( ( PF.me == MASTER ) || (PF.mkSlaveInfile) )
 #endif
                 SetScratch(AR.infile,&(e->onfile));
 /*:[20oct2009 mt]*/
 				curfile = AR.infile;
 commonread:;
-#ifdef PARALLEL
+#ifdef WITHMPI
 				if ( PF_Processor(e,i,LastExpression) ) {
 					MesPrint("Error in PF_Processor");
 					goto ProcErr;
@@ -430,7 +430,7 @@ commonread:;
 				AR.GetFile = 0;
 				AR.outtohide = 0;
 /*[20oct2009 mt]:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 				}
 #endif
 #ifdef WITHPTHREADS
@@ -445,7 +445,7 @@ commonread:;
 /*
 				This can be greatly improved of course by file-to-file copy.
 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 				if ( PF.me != MASTER ) break;
 #endif
 				AR.GetFile = 0;
@@ -488,7 +488,7 @@ commonread:;
 				break;
 			case HIDELEXPRESSION:
 			case HIDEGEXPRESSION:
-#ifdef PARALLEL
+#ifdef WITHMPI
 				if ( PF.me != MASTER ) break;
 #endif
 				AR.GetFile = 0;
@@ -2899,7 +2899,7 @@ Renormalize:
 SkipCount:	level++;
 			if ( level > AR.Cnumlhs ) {
 				if ( AR.DeferFlag && AR.sLevel <= 0 ) {
-#ifdef PARALLEL
+#ifdef WITHMPI
 				  if ( PF.me != MASTER && AC.mparallelflag == PARALLELFLAG && PF.exprtodo < 0 ) {
 					if ( PF_Deferred(term,level) ) goto GenCall;
 				  }
@@ -3235,7 +3235,7 @@ CommonEnd:
 					break;
 				  case TYPEREDEFPRE:
 					j = C->lhs[level][2];
-#ifdef PARALLEL
+#ifdef WITHMPI
 					{
 						/*
 						 * Regardless of parallel/nonparallel switch, we need to set

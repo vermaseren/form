@@ -101,7 +101,7 @@
 /**
  *  BaseName of recovery files
  */
-#ifdef PARALLEL
+#ifdef WITHMPI
 #define BASENAME_FMT "%c%04dFORMrecv"
 /**
  * The basenames for ParFORM will be created from BASENAME_FMT by means of 
@@ -141,7 +141,7 @@ static char *storefile = 0;
  */
 static int done_snapshot = 0;
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 /**
  *  The position at which BASENAME_FMT should be applied.
  *  Initialized in InitRecovery().
@@ -188,7 +188,7 @@ static const char *PF_recoveryfile(char prefix, int id, int intermed)
  *  Checks whether a snapshot/recovery file exists.
  *  Returns 1 if it exists, 0 otherwise.
  */
-#ifdef PARALLEL
+#ifdef WITHMPI
 
 /**
  * The master has all the recovery files. It checks whether these files
@@ -278,7 +278,7 @@ static int PF_CheckRecoveryFile()
 int CheckRecoveryFile()
 {
 	int ret = 0;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	ret = PF_CheckRecoveryFile();
 #else
 	FILE *fd;
@@ -294,13 +294,13 @@ int CheckRecoveryFile()
 	else if  ( ret > 0 ) {
 		if ( AC.CheckpointFlag != -1 ) {
 			/* recovery file exists but recovery option is not given */
-#ifdef PARALLEL
+#ifdef WITHMPI
 			if ( PF.me == MASTER ) {
 #endif
 			MesPrint("The recovery file %s exists, but the recovery option -R has not been given!", RecoveryFilename());
 			MesPrint("FORM will be terminated to avoid unintentional loss of data.");
 			MesPrint("Delete the recovery file manually, if you want to start FORM without recovery.");
-#ifdef PARALLEL
+#ifdef WITHMPI
 			}
 			if(PF.me != MASTER)
 				remove(RecoveryFilename());
@@ -311,7 +311,7 @@ int CheckRecoveryFile()
 	else {
 		if ( AC.CheckpointFlag == -1 ) {
 			/* recovery option given but recovery file does not exist */
-#ifdef PARALLEL
+#ifdef WITHMPI
 			if ( PF.me == MASTER )
 #endif
 			MesPrint("Option -R for recovery has been given, but the recovery file %s does not exist!", RecoveryFilename());
@@ -334,7 +334,7 @@ void DeleteRecoveryFile()
 {
 	if ( done_snapshot ) {
 		remove(recoveryfile);
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if( PF.me == MASTER){
 			int i;
 			for(i=1; i<PF.numtasks;i++){
@@ -399,7 +399,7 @@ static char *InitName(char *str, char *ext)
 void InitRecovery()
 {
 	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	sprintf(BaseName,BASENAME_FMT,(PF.me == MASTER)?'m':'s',PF.me);
 	/*Now BaseName has a form ?XXXXFORMrecv where ? == 'm' for master and 's' for slave,
 		XXXX is a zero - padded PF.me*/
@@ -2196,7 +2196,7 @@ int DoRecovery(int *moduletype)
 	AR.outfile->ziobuffer = 0;
 #endif
 	/* reopen old outfile */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if(PF.me==MASTER)
 #endif
 	if ( AR.outfile->handle >= 0 ) {
@@ -2347,7 +2347,7 @@ int DoRecovery(int *moduletype)
 	R_COPY_S(A.O.OptimizeResult.nameofexpr,UBYTE *);
 
 	/*#] AO :*/ 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*#[ PF : */
 	{/*Block*/
 		int numtasks;
@@ -2917,7 +2917,7 @@ static int DoSnapshot(int moduletype)
 
 	/*#] AO :*/ 
 	/*#[ PF :*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 	S_WRITE_B(&PF.numtasks, sizeof(int));
 	S_WRITE_B(&PF.rhsInParallel, sizeof(int));
 	S_WRITE_B(&PF.exprbufsize, sizeof(int));
@@ -2950,7 +2950,7 @@ static int DoSnapshot(int moduletype)
 
 	ANNOUNCE(file close)
 	if ( fclose(fd) ) return(__LINE__);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER ) {
 #endif
 /*
@@ -2974,7 +2974,7 @@ static int DoSnapshot(int moduletype)
 		if ( AR.hidefile->handle >= 0 ) {
 			if ( CopyFile(AR.hidefile->name, hidefile) ) return(__LINE__);
 		}
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}
 	/*
 	 * For ParFORM, the renaming will be performed after the master got
@@ -3015,7 +3015,7 @@ void DoCheckpoint(int moduletype)
 {
 	int error;
 	LONG timestamp = TimeWallClock(1);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if(PF.me == MASTER){
 #endif
 	if ( timestamp - AC.CheckpointStamp >= AC.CheckpointInterval ) {
@@ -3037,7 +3037,7 @@ void DoCheckpoint(int moduletype)
 				MesPrint("Script returned error -> no recovery file will be created.");
 			}
 		}
-#ifdef PARALLEL
+#ifdef WITHMPI
 		/* Confirm slaves to make snapshots. */
 		PF_BroadcastNumber(retvalue == 0);
 #endif
@@ -3045,7 +3045,7 @@ void DoCheckpoint(int moduletype)
 			if ( (error = DoSnapshot(moduletype)) ) {
 				MesPrint("Error creating recovery files: %d", error);
 			}
-#ifdef PARALLEL
+#ifdef WITHMPI
 			{
 			int i;
 			/*get recovery files from slaves:*/
@@ -3098,7 +3098,7 @@ void DoCheckpoint(int moduletype)
 		}
 		AC.CheckpointStamp = TimeWallClock(1);
 	}
-#ifdef PARALLEL
+#ifdef WITHMPI
 	else{/* timestamp - AC.CheckpointStamp < AC.CheckpointInterval*/
 		/* The slaves don't need to make snapshots. */
 		PF_BroadcastNumber(0);

@@ -5416,7 +5416,7 @@ int CoToPolynomial(UBYTE *inp)
 		if ( funnums ) M_free(funnums,"ToPolynomial");
 	}
 	AC.topolynomialflag |= TOPOLYNOMIALFLAG;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* In ParFORM, ToPolynomial has to be executed on the master. */
 	AC.mparallelflag |= NOPARALLEL_CONVPOLY;
 #endif

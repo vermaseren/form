@@ -77,7 +77,7 @@ int CatchDollar(int par)
 		if ( resetmods ) UnSetMods();
 		return(0);
 	}
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*
 	 * The problem here is that only the master can make an assignment
 	 * like #$a=g; where g is an expression: only the master has an access to
@@ -120,7 +120,7 @@ int CatchDollar(int par)
 	else
 		goto onerror;
 	newsize = w - dbuffer+1;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}
 	if ( AC.RhsExprInModuleFlag )
 		/* PF_BroadcastPreDollar allocates dbuffer for slaves! */
@@ -166,7 +166,7 @@ docopy:;
 	if ( C->Pointer > C->rhs[C->numrhs] ) C->Pointer = C->rhs[C->numrhs];
 	C->numlhs--; C->numrhs--;
 onerror:
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER || !AC.RhsExprInModuleFlag )
 #endif
 	BACKINOUT

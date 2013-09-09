@@ -1617,7 +1617,7 @@ int CoPrintTable(UBYTE *inp)
 	WORD oldSkip = AO.OutSkip, oldMode = AC.OutputMode, oldHandle = AC.LogHandle;
 	WORD oldType = AO.PrintType, *oldwork = AT.WorkPointer;
 	UBYTE *oldFill = AO.OutFill, *oldLine = AO.OutputLine;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me != MASTER ) return 0;
 #endif
 /*

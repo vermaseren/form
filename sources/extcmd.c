@@ -786,7 +786,7 @@ int ret;
 	/*else -- the buffer is empty*/
 	ret=EOF;
 	h= externalChannelsListTop;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER ){
 #endif
 	/* Temporary ignore this signal:*/
@@ -794,7 +794,7 @@ int ret;
 		mysighandler_t on the beginning of this file
 		(just define INTSIGHANDLER).*/
 	oldPIPE=signal(SIGPIPE,SIG_IGN);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if(  fgets(h->INbuf,h->IBstop - h->INbuf, h->frec) == 0  )/*Fail! EOF?*/
 		*(h->INbuf)='\0';/*Empty line may not appear here!*/
 #else
@@ -807,7 +807,7 @@ int ret;
 		/*Here we assume that fgets is never interrupted by singals*/
 	}/*if( fgets(h->INbuf,h->IBstop - h->INbuf, h->frec) == 0 )*/
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}/*if ( PF.me == MASTER */
 
 	/*Master broadcasts result to slaves, slaves read it from the master:*/
@@ -861,7 +861,7 @@ int ret;
 		M_free(h->INbuf,"External channel buffer");
 		h->INbuf = newbuf;
 		h->IBstop = h->INbuf+l;
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( PF.me == MASTER ){
 			(h->IBfull)[1]='\0';/*Will mark (h->IBfull)[1] as '!' for failure*/
 			if(  fgets(h->IBfull,h->IBstop - h->IBfull, h->frec) == 0 ){
@@ -899,11 +899,11 @@ int ret;
 	h->IBfill++;/*Next time a new, isn't it?*/
 
 	getcFromExtChannelReady:
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER ){
 #endif
 			signal(SIGPIPE,oldPIPE);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}/*if ( PF.me == MASTER )*/
 #endif
 			return(ret);
@@ -919,7 +919,7 @@ int writeBufToExtChannelOk(char *buf, size_t count)
 
 int ret;
 mysighandler_t oldPIPE;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*Only master communicates with the external program:*/
 	if ( PF.me == MASTER ){
 #endif
@@ -930,7 +930,7 @@ mysighandler_t oldPIPE;
 		oldPIPE=signal(SIGPIPE,SIG_IGN);
 		ret=writexactly( externalChannelsListTop->fsend, buf, count);
 		signal(SIGPIPE,oldPIPE);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}else{
 		/*Do not wait the master status: this would be too slow!*/
 		ret=0;
@@ -1224,7 +1224,7 @@ static FORM_INLINE void *createExternalChannel(
 	int fdreceive=0;
 	int gpid = 0;
 	ECINFOSTRUCT *psetInfo;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
 #endif
 	extHandlerInit(h);
@@ -1239,7 +1239,7 @@ static FORM_INLINE void *createExternalChannel(
 	}
 
 	/*Create a channel:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER ){
 #endif
 		if(cmd!=NULL)
@@ -1251,7 +1251,7 @@ static FORM_INLINE void *createExternalChannel(
 			h->fsend=psetInfo->fdout;
 			fdreceive=psetInfo->fdin;
 		}
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if(h->pid<0)
 			statusbuf[0]='!';/*Brodcast fail to slaves*/
 	}
@@ -1265,14 +1265,14 @@ static FORM_INLINE void *createExternalChannel(
 #endif
 
 	if(h->pid<0)goto createExternalChannelFails;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER ){
 #endif
 		h->gpid=gpid;
 	/*Open stdout of a newly created program as FILE* :*/
 		if( (h->frec=fdopen(fdreceive,"r")) == 0 )goto createExternalChannelFails;
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}
 #endif      
 	/*Initialize buffers:*/

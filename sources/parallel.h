@@ -41,10 +41,6 @@
 #define PF_RESET 0
 #define PF_TIME  1
 
-/* these two are only for PVM */
-#define PF_INIT_MSGTAG       1
-#define PF_BC_MSGTAG         2
-
 #define PF_TERM_MSGTAG       10  /* master -> slave: sending terms */
 #define PF_ENDSORT_MSGTAG    11  /* master -> slave: no more terms to be distributed, slave -> master: after EndSort() */
 #define PF_DOLLAR_MSGTAG     12  /* slave -> master: sending $-variables */
@@ -68,64 +64,6 @@
 #  define GNUC_PREREQ(major, minor, patchlevel) 0
 #endif
 
-/* FIXME: Data model for PVM. (TU 16 Oct 2011) */
-#ifdef PVM
-#  include "pvm3.h"
-#  define PF_ANY_SOURCE -1
-#  define PF_ANY_MSGTAG -1
-#  define Useek(x,y,z) fseek(x,y,z)
-#  ifdef ALPHA
-#    ifdef A16BIT /* alpha with 16 bit WORDS */
-#      define PF_BYTE PVM_BYTE
-#      define PF_WORD PVM_SHORT
-#      define PF_INT  PVM_INT
-#      define PF_LONG PVM_INT
-#      define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
-#      define pvm_pkWORD(x,y,z) pvm_pkshort(x,y,z)
-#      define pvm_pkLONG(x,y,z) pvm_pkint(x,y,z)
-#      define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
-#      define pvm_upkWORD(x,y,z) pvm_upkshort(x,y,z)
-#      define pvm_upkLONG(x,y,z) pvm_upkint(x,y,z)
-#    else /* alpha with 32 bit WORDS */
-#      define PF_BYTE PVM_BYTE
-#      define PF_WORD PVM_INT
-#      define PF_INT  PVM_INT
-#      define PF_LONG PVM_LONG
-#      define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
-#      define pvm_pkWORD(x,y,z) pvm_pkint(x,y,z)
-#      define pvm_pkLONG(x,y,z) pvm_pklong(x,y,z)
-#      define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
-#      define pvm_upkWORD(x,y,z) pvm_upkint(x,y,z)
-#      define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
-#    endif
-#  else
-#    ifdef OPTERON
-#      define PF_BYTE PVM_BYTE
-#      define PF_WORD PVM_INT
-#      define PF_INT  PVM_INT
-#      define PF_LONG PVM_LONG
-#      define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
-#      define pvm_pkWORD(x,y,z) pvm_pkint(x,y,z)
-#      define pvm_pkLONG(x,y,z) pvm_pklong(x,y,z)
-#      define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
-#      define pvm_upkWORD(x,y,z) pvm_upkint(x,y,z)
-#      define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
-#    else /* regular 32 bit architecture with 16 bit WORDS */
-#      define PF_BYTE PVM_BYTE
-#      define PF_WORD PVM_SHORT
-#      define PF_INT  PVM_INT
-#      define PF_LONG PVM_LONG
-#      define pvm_pkBYTE(x,y,z) pvm_pkbyte(x,y,z)
-#      define pvm_pkWORD(x,y,z) pvm_pkshort(x,y,z)
-#      define pvm_pkLONG(x,y,z) pvm_pklong(x,y,z)
-#      define pvm_upkBYTE(x,y,z) pvm_upkbyte(x,y,z)
-#      define pvm_upkWORD(x,y,z) pvm_upkshort(x,y,z)
-#      define pvm_upkLONG(x,y,z) pvm_upklong(x,y,z)
-#    endif
-#  endif
-#endif
-
-#ifdef WITHMPI
 /*
  * The macro "indices" defined in variable.h collides with some function
  * argument names in the MPI-3.0 standard.
@@ -179,7 +117,6 @@ extern "C" {
 #    define PF_WORD MPI_INT
 #    define PF_LONG MPI_LONG
 #  endif
-#endif
 
 /*
   	#] macros & definitions : 
@@ -195,15 +132,11 @@ typedef struct {
 	WORD **fill;
 	WORD **full;
 	WORD **stop;
-#ifdef WITHMPI
 	MPI_Status *status;
 	MPI_Status *retstat;
 	MPI_Request *request;
 	MPI_Datatype *type;   /* this is needed in PF_Wait for Get_count */
 	int *index;           /* dummies for returnvalues */
-#else
-	int *type;            /* these need to be saved between Irecv and Wait */
-#endif
 	int *tag;             /* for the version with blocking send/receives */
 	int *from;
 	int numbufs;          /* number of cyclic buffers */

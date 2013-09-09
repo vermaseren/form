@@ -291,7 +291,7 @@ int CoSave(UBYTE *inp)
 	while ( *inp == ',' ) inp++;
 	p = inp;
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if(	PF.me != MASTER) return(0);
 #endif
 

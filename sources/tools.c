@@ -133,7 +133,7 @@ UBYTE ReadFromStream(STREAM *stream)
 	POSITION scrpos;
 #ifdef WITHPIPE
 	if ( stream->type == PIPESTREAM ) {
-#ifndef PARALLEL
+#ifndef WITHMPI
 		FILE *f;
 		int cc;
 		RWLOCKR(AM.handlelock);
@@ -387,7 +387,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 #ifdef WITHPIPE
 		case PIPESTREAM:
 			stream = CreateStream((UBYTE *)"pipe");
-#ifndef PARALLEL
+#ifndef WITHMPI
 			{
 				FILE *f;
 				if ( ( f = popen((char *)name,"r") ) == 0 ) {
@@ -582,14 +582,14 @@ STREAM *CloseStream(STREAM *stream)
 #ifdef WITHPIPE
 	else if ( stream->type == PIPESTREAM ) {
 		RWLOCKW(AM.handlelock);
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( PF.me == MASTER )
 #endif
 		pclose((FILE *)(filelist[stream->handle]));
 		filelist[stream->handle] = 0;
 		numinfilelist--;
 		UNRWLOCK(AM.handlelock);
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( stream->buffer != 0 ) {
 			M_free(stream->buffer, "pipe buffer");
 			stream->buffer = 0;
@@ -1142,7 +1142,7 @@ LONG WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 	}
 	return(totalwritten);
 }
-#ifndef PARALLEL
+#ifndef WITHMPI
 /*[17nov2005]:*/
 WRITEFILE WriteFile = &WriteFileToFile;
 /*
@@ -1396,7 +1396,7 @@ void UpdateMaxSize()
 	POSITION position, sumsize;
 	int i;
 	FILEHANDLE *scr;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* Currently, it works only on the master. The sort files on the slaves
 	 * are ignored. (TU 11 Oct 2011) */
 	if ( PF.me != MASTER ) return;

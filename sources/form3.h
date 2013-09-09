@@ -388,7 +388,7 @@ template<typename T> struct calc {
 	PARALLELCODE indicates code that is common for TFORM and ParFORM but
 	should not be there for sequential FORM.
 */
-#if defined(PARALLEL) || defined(WITHPTHREADS)
+#if defined(WITHMPI) || defined(WITHPTHREADS)
 #define PARALLELCODE
 #endif
 
@@ -444,7 +444,7 @@ extern FILES *Ustdout;
 
 #endif  /* UNIX */
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 #include "parallel.h"
 #endif
 

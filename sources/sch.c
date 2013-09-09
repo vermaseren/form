@@ -2197,7 +2197,7 @@ WORD WriteAll()
 	POSITION pos;
 	FILEHANDLE *f;
 	EXPRESSIONS e;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( AM.exitflag || PF.me != MASTER ) return(0);
 #else
 	if ( AM.exitflag ) return(0);

@@ -159,7 +159,7 @@ va_dcl
 	va_start(ap);
 	s = va_arg(ap,char *);
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*
 	 * On slaves, if AS.printflag is
 	 *   = 0 : print nothing.
@@ -175,7 +175,7 @@ va_dcl
 	 * MesPrints() never prints a message to an external channel even if
 	 * WriteFile is set to &WriteToExternalChannel.
 	 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	WriteFile = PF.me == MASTER || AS.printflag > 0 ? &PF_WriteFileToFile : &WriteFileToFile;
 #else
 	WriteFile = &WriteFileToFile;
@@ -658,7 +658,7 @@ dollarzero:				*t++ = '0'; *t = 0;
 			else if ( *s == 'w' ) {	/* number of the thread */
 				t = (char *)NumCopy(identity,(UBYTE *)t);
 			}
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 			else if ( *s == 'W' ) {	/* number of the thread with time */
 				LONG millitime;
 				WORD timepart;

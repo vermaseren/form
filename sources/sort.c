@@ -98,7 +98,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 	if ( AT.SS == AT.S0 && AC.StatsFlag ) {
 #ifdef WITHPTHREADS
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 		if ( AC.OldParallelStats ) return;
 		if ( ! AC.ProcessStats && PF.me != MASTER ) return;
 #endif
@@ -121,7 +121,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			else {
 				MesPrint("");
 			}
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 			if ( PF.me != MASTER ) {
 				MesPrint("             Process %d reporting",PF.me);
 			}
@@ -137,7 +137,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		millitime /= 1000;
 		timepart /= 10;
 		if ( AC.ShortStats ) {
-#if defined(WITHPTHREADS) || defined(PARALLEL)
+#if defined(WITHPTHREADS) || defined(WITHMPI)
 #ifdef WITHPTHREADS
 		  if ( identity > 0 ) {
 #else
@@ -426,7 +426,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 				if ( PF.me != MASTER && par == 2 ) {
 					MesPrint("%16s         Terms in process= %16l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
@@ -445,7 +445,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 				if ( PF.me != MASTER && par == 2 ) {
 					MesPrint("%16s         Terms in process= %10l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
@@ -469,7 +469,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 				EXPRNAME(AR.CurExpr),S->TermsLeft);
 			}
 			else
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 			if ( PF.me != MASTER && par == 2 ) {
 				MesPrint("%16s         Terms in process= %10l",
 				EXPRNAME(AR.CurExpr),S->TermsLeft);
@@ -640,7 +640,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
   FILEHANDLE *fout = 0, *oldoutfile = 0, *newout = 0;
 
   if ( AM.exitflag && AR.sLevel == 0 ) return(0);
-#ifdef PARALLEL 
+#ifdef WITHMPI 
   if( (retval = PF_EndSort()) > 0){
 	oldoutfile = AR.outfile;
 	retval = 0;
@@ -651,7 +651,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	goto RetRetval; 
   }
 	/* PF_EndSort returned 0: for S != AM.S0 and slaves still do the regular sort */
-#endif /* PARALLEL */
+#endif /* WITHMPI */
 	oldoutfile = AR.outfile;
 	if ( S == AT.S0 ) {
 		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
@@ -753,7 +753,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef WITHPTHREADS
 			if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 			if ( PF.me != MASTER && PF.exprtodo < 0 ) goto RetRetval;
 #endif
 			DIFPOS(oldpos,position,oldpos);
@@ -1007,7 +1007,7 @@ TooLarge:
 	}
 RetRetval:
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* NOTE: PF_EndSort has been changed such that it sets S->TermsLeft. (TU 30 Jun 2011) */
 	if ( AR.sLevel == 0 && (PF.me == MASTER || PF.exprtodo >= 0) ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
@@ -1503,7 +1503,7 @@ nocompress:
 		p = fi->POfill;
 		do {
 			if ( p >= fi->POstop ) {
-#ifdef PARALLEL /* [16mar1998 ar] */
+#ifdef WITHMPI /* [16mar1998 ar] */
 			  if ( PF.me != MASTER && AR.sLevel <= 0 && (fi == AR.outfile || fi == AR.hidefile) && PF.parallel && PF.exprtodo < 0 ) {
 				PF_BUFFER *sbuf = PF.sbuf;
 				sbuf->fill[sbuf->active] = fi->POstop;
@@ -1513,7 +1513,7 @@ nocompress:
 				fi->POstop = sbuf->stop[sbuf->active];
 			  }
 			  else
-#endif /* PARALLEL [16mar1998 ar] */
+#endif /* WITHMPI [16mar1998 ar] */
 			  {
 				if ( fi->handle < 0 ) {
 					if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
@@ -1628,7 +1628,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 #endif
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
-#ifdef PARALLEL /* [16mar1998 ar] */
+#ifdef WITHMPI /* [16mar1998 ar] */
 	if ( PF.me != MASTER && AR.sLevel <= 0 && (fi == AR.outfile || fi == AR.hidefile) && PF.parallel && PF.exprtodo < 0 ) {
 		PF_BUFFER *sbuf = PF.sbuf;
 		if ( fi->POfill >= fi->POstop ){
@@ -1644,7 +1644,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		fi->POstop = sbuf->stop[sbuf->active];
 		return(0);
 	}
-#endif /* PARALLEL [16mar1998 ar] */
+#endif /* WITHMPI [16mar1998 ar] */
 	if ( fi->POfill >= fi->POstop ) {
 		if ( fi->handle < 0 ) {
 			if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
@@ -3462,7 +3462,7 @@ ConMer:
 	}
 	else {	/* Load the patches */
 		S->lPatch = (S->inNum);
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( S->lPatch > 1 || ( (PF.exprtodo <0) && (fout == AR.outfile || fout == AR.hidefile ) ) ) {
 #else
 		if ( S->lPatch > 1 ) {
@@ -4196,7 +4196,7 @@ VOID StageSort(FILEHANDLE *fout)
 		MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 		MesPrint("StageSort in thread %d",identity);
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 		MesPrint("StageSort in process %d",PF.me);
 #else
 		MesPrint("StageSort");

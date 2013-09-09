@@ -1680,14 +1680,14 @@ struct C_const {
 	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
     WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
     WORD    ToBeInFactors;
-#ifdef PARALLEL
+#ifdef WITHMPI
     WORD    RhsExprInModuleFlag;   /* (C) Set by the compiler if RHS expressions exists. */
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
 	PADPOSITION(45,8+3*MAXNEST,68,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 	PADPOSITION(45,8+3*MAXNEST,68,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
 	PADPOSITION(43,8+3*MAXNEST,66,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
@@ -1721,7 +1721,7 @@ struct S_const {
 #ifdef WITHPTHREADS
     int     MasterSort;            /* Final stage of sorting to the master */
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
     int     printflag;             /* controls MesPrint() on each slave */
 #endif
     int     Balancing;             /* For second stage loadbalancing */
@@ -1733,7 +1733,7 @@ struct S_const {
 #endif
 #if defined(WITHPTHREADS)
 	PADPOSITION(3,0,5,3,sizeof(pthread_mutex_t)*3);
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 	PADPOSITION(3,0,5,2,0);
 #else
 	PADPOSITION(3,0,4,2,0);

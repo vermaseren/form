@@ -335,7 +335,7 @@ extern VOID TELLFILE(int,POSITION *);
 #define RWLOCKR(x)
 #define RWLOCKW(x)
 #define UNRWLOCK(x)
-#ifdef PARALLEL
+#ifdef WITHMPI
 #define MLOCK(x)      do { if ( PF.me != MASTER ) PF_MLock(); } while (0)
 #define MUNLOCK(x)    do { if ( PF.me != MASTER ) PF_MUnlock(); } while (0)
 #else

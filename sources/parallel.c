@@ -349,13 +349,11 @@ static PF_BUFFER *PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 	allocsize =
 		(LONG)(sizeof(PF_BUFFER) + 4*nbufs*sizeof(WORD*) + (nbufs-free)*bsize);
 
-#ifdef WITHMPI
 	allocsize +=
 		(LONG)( nbufs * (  2 * sizeof(MPI_Status)
 		                 +     sizeof(MPI_Request)
 		                 +     sizeof(MPI_Datatype)
 		                )  );
-#endif
 	allocsize += (LONG)( nbufs * 3 * sizeof(int) );
 
 	if ( ( buf = (PF_BUFFER*)Malloc1(allocsize,"PF_AllocBuf") ) == NULL ) return(NULL);
@@ -370,7 +368,6 @@ static PF_BUFFER *PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 	buf->fill    = (WORD**)p;		  p += buf->numbufs*sizeof(WORD*);
 	buf->full    = (WORD**)p;		  p += buf->numbufs*sizeof(WORD*);
 	buf->stop    = (WORD**)p;		  p += buf->numbufs*sizeof(WORD*);
-#ifdef WITHMPI
 	buf->status  = (MPI_Status *)p;	  p += buf->numbufs*sizeof(MPI_Status);
 	buf->retstat = (MPI_Status *)p;	  p += buf->numbufs*sizeof(MPI_Status);
 	buf->request = (MPI_Request *)p;  p += buf->numbufs*sizeof(MPI_Request);
@@ -378,10 +375,6 @@ static PF_BUFFER *PF_AllocBuf(int nbufs, LONG bsize, WORD free)
 	buf->index   = (int *)p;		  p += buf->numbufs*sizeof(int);
 
 	for ( i = 0; i < buf->numbufs; i++ ) buf->request[i] = MPI_REQUEST_NULL;
-#endif
-#ifdef PVM
-	buf->type    = (int *)p;		  p += buf->numbufs*sizeof(int);
-#endif
 	buf->tag     = (int *)p;		  p += buf->numbufs*sizeof(int);
 	buf->from    = (int *)p;		  p += buf->numbufs*sizeof(int);
 /*
@@ -2107,27 +2100,8 @@ int PF_Terminate(int errorcode)
 LONG PF_GetSlaveTimes(void)
 {
 	LONG slavetimes = 0;
-#ifdef WITHMPI
 	LONG t = PF.me == MASTER ? 0 : AM.SumTime + TimeCPU(1);
 	MPI_Reduce(&t, &slavetimes, 1, PF_LONG, MPI_SUM, MASTER, PF_COMM);
-#else
-	if ( PF.me == MASTER ) {
-		int i;
-		for ( i = 1; i < PF.numtasks; i++ ) {
-			int src, tag;
-			LONG t;
-			PF_Receive(i, PF_MISC_MSGTAG, &src, &tag);
-			PF_Unpack(&t, 1, PF_LONG);
-			slavetimes += t;
-		}
-	}
-	else {
-		LONG t = AM.SumTime + TimeCPU(1);
-		PF_PreparePack();
-		PF_Pack(&t, 1, PF_LONG);
-		PF_Send(MASTER, PF_MISC_MSGTAG);
-	}
-#endif
 	return slavetimes;
 }
 

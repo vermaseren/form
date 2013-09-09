@@ -112,7 +112,7 @@ UBYTE GetInput()
 	while ( AC.CurrentStream ) {
 		c = GetFromStream(AC.CurrentStream);
 		if ( c != ENDOFSTREAM ) {
-#ifdef PARALLEL
+#ifdef WITHMPI
 			if ( PF.me == MASTER 
 				 && AC.NoShowInput <= 0
 				 && AC.CurrentStream->type != PREVARSTREAM )
@@ -668,7 +668,7 @@ VOID IniModule(int type)
 	WORD **w, i;
 	CBUF *C = cbuf+AC.cbufnum;
 	/*[05nov2003 mt]:*/ 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* To prevent
 	 *   (1) FlushOut() and PutOut() on the slaves to send a mess to the master
 	 *       compiling a module,
@@ -685,7 +685,7 @@ VOID IniModule(int type)
 	AT.bracketindexflag = 0;
 
 /*[06nov2003 mt]:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* This flag may be set in the procedure tokenize(). */
 	AC.RhsExprInModuleFlag = 0;
 /*[20oct2009 mt]:*/
@@ -860,7 +860,7 @@ VOID PreProcessor()
 				else {
 endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						retcode = ExecModule(moduletype);
-#ifdef PARALLEL
+#ifdef WITHMPI
 						if(PF.slavebuf.PObuffer!=NULL){
 							M_free(PF.slavebuf.PObuffer,"PF inbuf");
 							PF.slavebuf.PObuffer=NULL;
@@ -932,7 +932,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 				if ( error1 == 0 && !AP.PreContinuation ) {
 					if ( ( AP.PreDebug & PREPROONLY ) == 0 ) {
 						int onpmd = NumPotModdollars;
-#ifdef PARALLEL
+#ifdef WITHMPI
 						WORD oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
 						if ( AP.PreAssignFlag ) AC.RhsExprInModuleFlag = 0;
 #endif
@@ -949,7 +949,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 							else CatchDollar(-1);
 							AP.PreAssignFlag = 0;
 							NumPotModdollars = onpmd;
-#ifdef PARALLEL
+#ifdef WITHMPI
 							AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
 #endif
 						}
@@ -2666,7 +2666,7 @@ int DoDo(UBYTE *s)
 	}
 	else if ( ( chartype[*s] == 0 ) || ( *s == '[' ) ) {
 		int oldNumPotModdollars = NumPotModdollars;
-#ifdef PARALLEL
+#ifdef WITHMPI
 		WORD oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
 		AC.RhsExprInModuleFlag = 0;
 #endif
@@ -2719,7 +2719,7 @@ int DoDo(UBYTE *s)
 		}
 		AP.PreAssignFlag = 0;
 		NumPotModdollars = oldNumPotModdollars;
-#ifdef PARALLEL
+#ifdef WITHMPI
 		AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
 #endif
 		*uu = 0;
@@ -3219,7 +3219,7 @@ int DoInside(UBYTE *s)
 	clearcbuf(AC.cbufnum);
 	AC.compiletype = 0;
 	AC.mparallelflag = PARALLELFLAG;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*
 	 * We use AC.RhsExprInModuleFlag, PotModdollars, and AC.pfirstnum
 	 * in order to check (1) whether there are expression names in RHS,
@@ -3250,7 +3250,7 @@ int DoEndInside(UBYTE *s)
 	int oldmultithreaded = AS.MultiThreaded;
 	/* int oldmparallelflag = AC.mparallelflag; */
 	FILEHANDLE *f;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	int error = 0;
 #endif
 	DUMMYUSE(s);
@@ -3272,7 +3272,7 @@ int DoEndInside(UBYTE *s)
 	}
 	AC.compiletype = AP.inside.oldcompiletype;
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*
 	 * If the #inside...#endinside contains expressions in RHS, only the master executes it
 	 * and then broadcasts the result to the all slaves. If not, the all processes execute
@@ -3323,7 +3323,7 @@ int DoEndInside(UBYTE *s)
 			}
 		}
 	}
-#ifdef PARALLEL
+#ifdef WITHMPI
 	}
 	if ( AC.RhsExprInModuleFlag ) {
 		/*
@@ -3359,7 +3359,7 @@ cleanup:
 	AS.MultiThreaded = oldmultithreaded;
 	AC.mparallelflag = AP.inside.oldparallelflag;
 	NumPotModdollars = AP.inside.oldnumpotmoddollars;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	PF_RestoreInsideInfo();
 	if ( error ) return error;
 #endif
@@ -3645,7 +3645,7 @@ int DoPreWrite(UBYTE *s)
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me != MASTER ) return 0;
 #endif
 
@@ -5456,7 +5456,7 @@ int DoFromExternal(UBYTE *s)
 		/*[18may20006 mt]:*/
 		if(*prevar == '$'){/*Put the answer to the dollar variable*/
 			int oldNumPotModdollars = NumPotModdollars;
-#ifdef PARALLEL
+#ifdef WITHMPI
 			WORD oldRhsExprInModuleFlag = AC.RhsExprInModuleFlag;
 			AC.RhsExprInModuleFlag = 0;
 #endif
@@ -5475,7 +5475,7 @@ int DoFromExternal(UBYTE *s)
 			}
 			AP.PreAssignFlag = 0;
 			NumPotModdollars = oldNumPotModdollars;
-#ifdef PARALLEL
+#ifdef WITHMPI
 			AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
 #endif
 			M_free(pbuf,"Fromexternal to dollar");

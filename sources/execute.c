@@ -82,7 +82,7 @@ WORD CleanExpr(WORD par)
 			case GLOBALEXPRESSION:
 			case HIDDENGEXPRESSION:
 				if ( par ) {
-#ifdef PARALLEL
+#ifdef WITHMPI
 					/*
 					 * Broadcast the global expression from the master to the all workers.
 					 */
@@ -102,7 +102,7 @@ WORD CleanExpr(WORD par)
 							|| e->status == LOCALEXPRESSION ) break;
 						}
 					}
-#ifdef PARALLEL
+#ifdef WITHMPI
 					}
 					else {
 						/*
@@ -572,7 +572,7 @@ WORD DoExecute(WORD par, WORD skip)
 	Now we compare whether all elements of PotModdollars are contained in
 	ModOptdollars. If not, we may not run parallel.
 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
 	  if ( NumPotModdollars > NumModOptdollars ) 
 		AC.mparallelflag |= NOPARALLEL_DOLLAR;
@@ -659,7 +659,7 @@ WORD DoExecute(WORD par, WORD skip)
 		AC.partodoflag = 0;
 	}
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 /*[20oct2009 mt]:*/
 	if ( AC.RhsExprInModuleFlag && AC.mparallelflag == PARALLELFLAG ) {
 		if (PF.rhsInParallel) {
@@ -679,7 +679,7 @@ WORD DoExecute(WORD par, WORD skip)
 /*:[20oct2009 mt]*/
 #endif
 	AR.SortType = AC.SortType;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER )
 #endif
 	{
@@ -689,7 +689,7 @@ WORD DoExecute(WORD par, WORD skip)
 	if ( par == GLOBALMODULE ) MakeGlobal();
 	if ( RevertScratch() ) return(-1);
 /*[20oct2009 mt]:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 	AC.partodoflag = 0;
 	if ( PF.numtasks >= 3 ) {
 		for ( i = 0; i < NumExpressions; i++ ) {
@@ -706,7 +706,7 @@ WORD DoExecute(WORD par, WORD skip)
 /*
 	Warn if the module has to run in sequential mode due to some problems.
 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER )
 #endif
 	{
@@ -732,14 +732,14 @@ WORD DoExecute(WORD par, WORD skip)
 /*
 	Now the actual execution
 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*
 	 * Turn on AS.printflag to print runtime errors occurring on slaves.
 	 */
 	AS.printflag = 1;
 #endif
 	if ( AP.preError == 0 && ( Processor() || WriteAll() ) ) RetCode = -1;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	AS.printflag = 0;
 #endif
 /*
@@ -750,7 +750,7 @@ WORD DoExecute(WORD par, WORD skip)
 	TableReset();
 
 /*[28sep2005 mt]:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* Combine and then broadcast modified dollar variables. */
 	if ( NumPotModdollars > 0 ) {
 		RetCode = PF_CollectModifiedDollars();

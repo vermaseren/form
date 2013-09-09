@@ -49,7 +49,7 @@
  */
 #if defined(WITHPTHREADS)
 	#define FORMNAME "TFORM"
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 	#define FORMNAME "ParFORM"
 #else
 	#define FORMNAME "FORM"
@@ -98,7 +98,7 @@ int DoTail(int argc, UBYTE **argv)
 	AM.LogType = -1;
 	AM.HoldFlag = AM.qError = AM.Interact = AM.FileOnlyFlag = 0;
 	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
-#ifdef PARALLEL
+#ifdef WITHMPI
 	AM.SetupDir = AM.SetupFile = 0;
 #else
 	AM.SetupDir = AM.SetupFile = AM.Path = 0;
@@ -156,7 +156,7 @@ int DoTail(int argc, UBYTE **argv)
 							while ( *s >= '0' && *s <= '9' )
 								threadnum = 10*threadnum + *s++ - '0';
 							if ( *s ) {
-#ifdef PARALLEL
+#ifdef WITHMPI
 								if ( PF.me == MASTER )
 #endif
 								printf("Illegal value for option m or w: %s\n",t);
@@ -178,7 +178,7 @@ int DoTail(int argc, UBYTE **argv)
 							/*Initialize pre-set external channels, see 
 								the file extcmd.c:*/
 							if(initPresetExternalChannels(*argv++,AX.timeout)<1){
-#ifdef PARALLEL
+#ifdef WITHMPI
 								if ( PF.me == MASTER )
 #endif
 								printf("Error initializing preset external channels\n");
@@ -187,7 +187,7 @@ int DoTail(int argc, UBYTE **argv)
 							AX.timeout=-1;/*This indicates that preset channels 
 													are initialized from cmdline*/
 						}else{
-#ifdef PARALLEL
+#ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
 							printf("Illegal option in call of FORM: %s\n",s);
@@ -198,13 +198,13 @@ int DoTail(int argc, UBYTE **argv)
 					if ( s[1] ) {
 						if ( ( s[1]=='i' ) && ( s[2] == 'p' ) && (s[3] == 'e' )
 						&& ( s[4] == '\0' ) ){
-#ifdef PARALLEL
+#ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
 							printf("Illegal option: Pipes not supported on this system.\n");
 						}
 						else {
-#ifdef PARALLEL
+#ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
 							printf("Illegal option: %s\n",s);
@@ -248,7 +248,7 @@ int DoTail(int argc, UBYTE **argv)
 							AM.PrintTotalSize = 1; break;
 				case 'v':
 printversion:;
-#ifdef PARALLEL
+#ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
 							{
@@ -269,7 +269,7 @@ printversion:;
 							while ( FG.cTable[*t] == 1 )
 								AM.SkipClears = 10*AM.SkipClears + *t++ - '0';
 							if ( *t != 0 ) {
-#ifdef PARALLEL
+#ifdef WITHMPI
 								if ( PF.me == MASTER )
 #endif
 								printf("Illegal numerical option in call of FORM: %s\n",s);
@@ -277,7 +277,7 @@ printversion:;
 							}
 						}
 						else {
-#ifdef PARALLEL
+#ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
 							printf("Illegal option in call of FORM: %s\n",s);
@@ -288,7 +288,7 @@ printversion:;
 		}
 		else if ( argc == 0 && !AM.Interact ) AM.InputFileName = argv[-1];
 		else {
-#ifdef PARALLEL
+#ifdef WITHMPI
 			if ( PF.me == MASTER )
 #endif
 			printf("Illegal option in call of FORM: %s\n",s);
@@ -327,7 +327,7 @@ printversion:;
 #endif
 	else {
 NoFile:
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( PF.me == MASTER )
 #endif
 		printf("No filename specified in call of FORM\n");
@@ -408,7 +408,7 @@ int OpenInput()
 		AC.NoShowInput = oldNoShowInput;
 	}
 	if ( AM.LogFileName ) {
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( PF.me != MASTER ) {
 			/*
 			 * Only the master writes to the log file. On slaves, we need
@@ -488,7 +488,7 @@ VOID ReserveTempFiles(int par)
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
 	s = defaulttempfilename;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	{ 
 	  int iii;
 #ifdef SMP
@@ -708,7 +708,7 @@ VOID StartVariables()
 	AC.cbufList.num = 0;
 	AM.hparallelflag = AM.gparallelflag =
 	AC.parallelflag = AC.mparallelflag = PARALLELFLAG;
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.numtasks < 2 ) AM.hparallelflag |= NOPARALLEL_NPROC;
 #endif
 	AC.tablefilling = 0;
@@ -1002,7 +1002,7 @@ VOID StartMore()
 		initPresetExternalChannels((UBYTE*)getenv("FORM_PIPES"),AX.timeout);
 #endif
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 /*
 	Define preprocessor variable PARALLELTASK_ as a process number, 0 is the master
 	Define preprocessor variable NPARALLELTASKS_ as a total number of processes
@@ -1033,7 +1033,7 @@ VOID PrintHeader()
 /*
 	The header starting with the release of version 4.0
 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER && !AM.silent ) {
 #else
 	if ( !AM.silent ) {
@@ -1048,7 +1048,7 @@ VOID PrintHeader()
 		while ( *s ) s++;
 		if ( AM.totalnumberofthreads != 2 ) *s++ = 's';
 		else *s++ = ' ';
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 		sprintf(s," %d worker",PF.numtasks-1);
 		while ( *s ) s++;
 		if ( PF.numtasks != 2 ) *s++ = 's';
@@ -1065,7 +1065,7 @@ VOID PrintHeader()
 /*
 	The header till version 4.0 beta
 */
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF.me == MASTER && !AM.silent ) {
 #else
 	if ( !AM.silent ) {
@@ -1199,7 +1199,7 @@ WORD IniVars()
 	for ( i = 2; i < FUNHEAD; i++ ) *t++ = 0;
 	*t++ = 1; *t++ = 1; *t++ = 3;
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	AS.printflag = 0;
 #endif
 
@@ -1378,13 +1378,13 @@ int main(int argc, char **argv)
 	TimeWallClock(0);
 #endif
 
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( PF_Init(&argc,&argv) ) exit(-1);
 #endif
 
 	StartFiles();
 	StartVariables();
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/*
 	 * Here MesPrint() is ready. We turn on AS.printflag to print possible
 	 * errors occurring on slaves in the initialization. With AS.printflag = -1
@@ -1408,12 +1408,12 @@ int main(int argc, char **argv)
 		else              Terminate(-1);
 	}
 	if ( DoSetups() ) Terminate(-2);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	/* It is messy if all errors in OpenInput() on slaves are printed. */
 	AS.printflag = 0;
 #endif
 	if ( OpenInput() ) Terminate(-3);
-#ifdef PARALLEL
+#ifdef WITHMPI
 	AS.printflag = -1;
 #endif
 	if ( TryEnvironment() ) Terminate(-2);
@@ -1515,7 +1515,7 @@ dontremove:;
 	if ( AC.LogHandle >= 0 && par <= 0 ) {
 		WORD lh = AC.LogHandle;
 		AC.LogHandle = -1;
-#ifdef PARALLEL
+#ifdef WITHMPI
 		if ( PF.me == MASTER )  /* Only the master opened the real file. */
 #endif
 		CloseFile(lh);
@@ -1535,7 +1535,7 @@ VOID Terminate(int errorcode)
 		firstterminate = 0;
 #ifdef WITHPTHREADS
 		MesPrint("Program terminating in thread %w at &");
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 		MesPrint("Program terminating in process %w at &");
 #else
 		MesPrint("Program terminating at &");
@@ -1581,7 +1581,7 @@ VOID Terminate(int errorcode)
 		}
 		PrintRunningTime();
 	}
-#ifdef PARALLEL
+#ifdef WITHMPI
 	if ( AM.HoldFlag && PF.me == MASTER ) {
 		WriteFile(AM.StdOut,(UBYTE *)("Hit any key "),12);
 		PF_FlushStdOutBuffer();
@@ -1593,7 +1593,7 @@ VOID Terminate(int errorcode)
 		getchar();
 	}
 #endif
-#ifdef PARALLEL
+#ifdef WITHMPI
 	PF_Terminate(errorcode);
 #endif
 	CleanUp(errorcode);
@@ -1612,7 +1612,7 @@ VOID Terminate(int errorcode)
 
 VOID PrintRunningTime()
 {
-#if (defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))) || defined(PARALLEL)
+#if (defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))) || defined(WITHMPI)
 	LONG mastertime;
 	LONG workertime;
 	LONG wallclocktime;
@@ -1660,7 +1660,7 @@ LONG GetRunningTime()
 	else {
 		return(AM.SumTime + TimeCPU(1));
 	}
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 	LONG mastertime, t = 0;
 	LONG workertime = PF_GetSlaveTimes();  /* must be called on all processors */
 	if ( PF.me == MASTER ) {

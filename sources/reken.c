@@ -3727,7 +3727,7 @@ void iniwranf(PHEAD0)
 	int id;
 #if defined(WITHPTHREADS)
 	id = AT.identity;
-#elif defined(PARALLEL)
+#elif defined(WITHMPI)
 	id = PF.me;
 #endif
 	seed += id;

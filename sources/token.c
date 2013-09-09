@@ -117,7 +117,7 @@ dovariable:		c = *in; *in = 0;
 						break;
 					case CVECTOR:       *out++ = TVECTOR;     break;
 					case CFUNCTION:
-#ifdef PARALLEL
+#ifdef WITHMPI
 						/*
 						 * In the preprocessor, random functions in #$var=... and #inside
 						 * may cause troubles, because the program flow on a slave may be
@@ -143,7 +143,7 @@ dovariable:		c = *in; *in = 0;
 											MesPrint("&Expression not allowed in LH-side of substitution: %s",s);
 										}
 /*[06nov2003 mt]:*/
-#ifdef PARALLEL
+#ifdef WITHMPI
 										else/*RHSide*/
 											/* NOTE: We always set AC.RhsExprInModuleFlag regardless of
 											 *       AP.PreAssignFlag or AP.PreInsideLevel because we have to detect
