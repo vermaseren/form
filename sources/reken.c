@@ -3840,15 +3840,29 @@ UBYTE *PreRandom(UBYTE *s)
 	sscanf((char *)mins,"%f",&num); minval = num;
 	sscanf((char *)maxs,"%f",&num); maxval = num;
 
-	if ( linlog == 0 ) {
-		UWORD x = wranf(BHEAD0);
-		double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
-		value = minval + (maxval-minval)*xx;
-	}
-	else if ( linlog == 1 ) {
-		UWORD x = wranf(BHEAD0);
-		double two = 2., xx = x/pow(two,(double)(BITSINWORD-1));
-		value = minval * pow(maxval/minval,xx);
+	/*
+	 * Note on ParFORM: we should use the same random number on all the
+	 * processes in the complication phase. The random number is generated
+	 * on the master and broadcast to the other processes.
+	 */
+	{
+		UWORD x;
+		double xx;
+#ifdef WITHMPI
+		if ( PF.me == MASTER ) {
+			x = wranf(BHEAD0);
+		}
+		x = (UWORD)PF_BroadcastNumber((LONG)x);
+#else
+		x = wranf(BHEAD0);
+#endif
+		xx = x/pow(2.0,(double)(BITSINWORD-1));
+		if ( linlog == 0 ) {
+			value = minval + (maxval-minval)*xx;
+		}
+		else if ( linlog == 1 ) {
+			value = minval * pow(maxval/minval,xx);
+		}
 	}
 
 	outval = (UBYTE *)Malloc1(64,"PreRandom");
