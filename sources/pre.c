@@ -1845,7 +1845,7 @@ int TheDefine(UBYTE *s, int mode)
 		if ( PutPreVar(name,value,args,mode) < 0 ) return(-1);
 	}
 	else {
-illval:	MesPrint("@Illegal valpoin for preprocessor variable %s",name);
+		MesPrint("@Illegal string for preprocessor variable %s. Forgotten double quotes (\") ?",name);
 		return(-1);
 	}
 	return(0);
@@ -1857,6 +1857,9 @@ illarg:;
 	return(-1);
 illargs:;
 	MesPrint("@Illegally formed arguments of preprocessor definition");
+	return(-1);
+illval:;
+	MesPrint("@Illegal valpoin for preprocessor variable %s",name);
 	return(-1);
 }
 
