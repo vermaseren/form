@@ -45,10 +45,10 @@
                     <a class="brand" href="?page=intro">FORM</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="?page=intro">Home</a></li>
-                            <li><a href="?page=features">Features</a></li>
-                            <li><a href="?page=doc">Documentation</a></li>
-                            <li><a href="?page=contact">Contact</a></li>
+                            <li><a href="index.html">Home</a></li>
+                            <li><a href="features.html">Features</a></li>
+                            <li><a href="doc.html">Documentation</a></li>
+                            <li class="active"><a href="contact.html">Contact</a></li>
                         </ul>
                     </div><!--/.nav-collapse -->
                 </div>
@@ -58,15 +58,15 @@
         <div style="position:absolute;right:0px;top:40px"><a href="https://github.com/vermaseren/form"><img src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a></div>
         <div class="container">
 
-            <?php
-            $active_page = $_GET['page'];
-            
-            if (empty($active_page)) {
-                $active_page = 'intro';
-            }
-            
-            require_once($active_page . '.php'); // FIXME: not safe
-            ?>
+<h1>Contact</h1>
+For questions about the usage of form, you can go to the <a href="http://www.nikhef.nl/~form/forum/">official FORM forum</a>.
+
+<h2>Bugs</h2>
+Bugs can best be reported via the <a href="https://github.com/vermaseren/form/issues">Bug Tracker</a> on Github.
+
+<h2>Other</h2>
+For other questions or comments, you can contact us at <a href="mailto:form@nikhef.nl">form@nikhef.nl</a>.
+
 
             <hr>
 
