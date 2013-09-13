@@ -11,7 +11,7 @@ AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE([gnu 1.7 dist-bzip2])
+AM_INIT_AUTOMAKE([foreign 1.7 dist-bzip2])
 
 AC_DEFINE(MAJORVERSION, FORM_MAJORVERSION, [Major version of FORM.])
 AC_DEFINE(MINORVERSION, FORM_MINORVERSION, [Minor version of FORM.])
