@@ -32,7 +32,7 @@
         <script src="js/bootstrap.min.js"></script>
     </head>
 
-    <body>
+    <body data-spy="scroll" data-target=".bs-docs-sidebar">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -64,6 +64,19 @@ $(document).ready(function() {
 });
 </script>
 
+    <div class="row" >
+      <div class="span3 bs-docs-sidebar">
+        <ul class="nav nav-list bs-docs-sidenav affix">
+          <li><a href="#installation"><i class="icon-chevron-right"></i> Installation</a></li>
+          <li><a href="#tutorial"><i class="icon-chevron-right"></i> Tutorial</a></li>
+          <li><a href="#reference"><i class="icon-chevron-right"></i> Reference manual</a></li>
+          <li><a href="#courses"><i class="icon-chevron-right"></i> Courses</a></li>
+          <li><a href="#publications"><i class="icon-chevron-right"></i> Publications</a></li>
+        </ul>
+      </div>
+
+<div class="span9">
+
 <h1>Documentation</h1>
 
 <p>On this page you will find a collection of documents that will help you get used to FORM.</p>
@@ -72,7 +85,7 @@ $(document).ready(function() {
 
 <p>For people who would like to understand a bit more about FORM and how to write efficient FORM programs there is <a href="http://www.nikhef.nl/~form/maindir/documentation/lattice.pdf">a paper</a> about the writing of a program to evaluate chromatic polynomials on rectangular lattices. This project was originally suggested by Denny Fliegner.</p>
 
-<h2>Installation</h2>
+<h2 id="installation">Installation</h2>
 <p>Installation should be fairly straightforward on most systems.</p>
 
 <h3>Step 1.</h3>
@@ -91,17 +104,17 @@ make install
 
 <p><span class="label label-info">Info</span> For detailed instructions, read the INSTALL file.</p>
 
-<h2>Tutorial</h2>
+<h2 id="tutorial">Tutorial</h2>
 <p>There is also an extensive tutorial available, written by André Heck:</p>
 
 <a href="http://www.nikhef.nl/~form/maindir/documentation/tutorial/book.pdf"><img style="width:50px" src="img/pdf.svg" alt="Download pdf" /> Tutorial</a>
 
-<h2>Reference manual</h2>
+<h2 id="reference">Reference manual</h2>
 <p>The reference manual by Jos Vermaseren is available here:</p>
 
 <a href="http://www.nikhef.nl/~form/maindir/documentation/reference/man.pdf"><img style="width:50px" src="img/pdf.svg" alt="Download pdf" /> Reference</a>
 
-<h2>Courses</h2>
+<h2 id="courses">Courses</h2>
 <ul>
   <li>Introductory lectures about FORM -- Nikhef, January 2006
 	<ul>
@@ -160,7 +173,7 @@ make install
 
 <p><span class="label label-info">Contribute?</span> If you would like to contribute a course you have given or a link to one, please send an e-mail to one of the authors.</p>
 
-<h2>Publications</h2>
+<h2 id="publications">Publications</h2>
 
 <ul>
   <li><a href="http://www.nikhef.nl/~form/maindir/publications/form3.0.pdf">The article about the release of version 3.0</a></li>
@@ -173,12 +186,14 @@ make install
   <li><a href="http://arxiv.org/pdf/1203.6543.pdf">The article about the release of version 4.0</a></li>
 </ul>
 
+
             <hr>
 
             <footer>
                 <p>FORM &copy; Jos Vermaseren 2013</p>
             </footer>
 
+</div>
         </div>
 
     </body>
