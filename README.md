@@ -1,5 +1,5 @@
-FORM version 4.0 (Mar 29 2012)
-==============================
+FORM
+====
 
 FORM is a Symbolic Manipulation System. It reads symbolic expressions from files
 and executes symbolic/algebraic transformations upon them. The answers are
@@ -13,21 +13,28 @@ file "AUTHORS".
 
 
 Installation
-============
+------------
 
 See the file "INSTALL".
 
+Documentation
+-------------
+
+See [our website](http://vermaseren.github.io/form/) for documentation, lectures and papers on FORM. 
+
 
 Additional Information
-======================
+----------------------
 
 Information about copying and licencing of this software can be found in the
 file "COPYING".
 
-More background information, the latest version and a collection of FORM
-programs can be found on the official FORM website
+More background information and a collection of FORM programs can be found on the old FORM website:
 
                               http://www.nikhef.nl/~form
 
-In case of more question or remarks, please contact the developer(s) under the
-email address "form@nikhef.nl".
+Bugs and remarks
+----------------
+Bugs can be reported via the [Issue Tracker](https://github.com/vermaseren/form/issues) of Github. 
+
+In case of more question or remarks, please visit the official FORM [forum](http://www.nikhef.nl/~form/forum/).
