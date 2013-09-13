@@ -83,8 +83,17 @@ SRCPARALLEL = \
 	mpidbg.h
 
 DATE =
-DATEFLAG_ = -DPRODUCTIONDATE='"$(DATE)"'
-DATEFLAG = $(DATEFLAG_:'""'=__DATE__)
+# The aim of the next variable is to pass an argument -DPRODUCTIONDATE='"..."'
+# to the compiler when DATE is defined. The back quotes need to be surrounded by
+# double quotes, otherwise word splittings happen after the back quote
+# expansion and, for example, -DPRODUCTIONDATE="Mar 29 2012" is passed to the
+# compiler as three arguments '-DPRODUCTIONDATE="Mar', '29' and '2012"'. Then
+# the compiler complains the files '29' and '2012"' don't exist.
+# On the other hand, if the back quotes expansion prints nothing, the compiler
+# gets an argument '""', and complains the file doesn't exist. We avoid it by
+# printing -DPRODUCTIONDATEDUMMY='""' when DATE is empty, which is a legal
+# argument for the compiler and doesn't define PRODUCTIONDATE unnecessarily.
+DATEFLAG = "`suffix=; [ "x$(DATE)" = x ] && suffix=DUMMY; echo -DPRODUCTIONDATE$$suffix='"$(DATE)"'`"
 
 # for release versions
 COMPILEFLAGS =
@@ -231,3 +240,29 @@ else
 parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
+
+# Prints #define PRODUCTIONDATE "...". It uses
+#   1. DATE variable if it is not empty,
+#   2. the last commit date of the Git repository if available,
+#   3. if all else fails, the current date (by date command).
+#
+print_production_date = \
+  { \
+    my_date=; \
+    [ "x$(DATE)" != x ] && my_date="$(DATE)"; \
+    if [ "x$$my_date" = x ] && type git >/dev/null 2>&1; then \
+      my_date=`LANG=en_US TZ=UTC git log -1 --format=%cd --date=local 2>/dev/null || :`; \
+      if [ "x$$my_date" != x ]; then \
+        my_month=`echo $$my_date | cut -f 2 -d ' '`; \
+        my_day=`echo $$my_date | cut -f 3 -d ' '`; \
+        my_year=`echo $$my_date | cut -f 5 -d ' '`; \
+        [ $$my_day -lt 10 ] && my_day=" $$my_day"; \
+        my_date="$$my_month $$my_day $$my_year"; \
+      fi; \
+    fi; \
+    [ "x$$my_date" = x ] && my_date="`LANG=en_US TZ=UTC date -u +'%b %e %Y'`"; \
+    echo "\#define PRODUCTIONDATE \"$$my_date\""; \
+  }
+
+dist-hook:
+	$(print_production_date) >$(distdir)/production-date.h

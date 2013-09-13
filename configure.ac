@@ -21,8 +21,14 @@ AS_IF([test "x[]VERSION_IS_BETA" = xyes],
 AH_VERBATIM([PRODUCTIONDATE],
 [/* Set production date. */
 #ifndef PRODUCTIONDATE
+#ifdef HAVE_PRODUCTIONDATE_H
+#include "production-date.h"
+#else
 #define PRODUCTIONDATE __DATE__
+#endif
 #endif])
+AS_IF([test -f $srcdir/sources/production-date.h],
+	[AC_DEFINE(HAVE_PRODUCTIONDATE_H, , [Define to include production-date.h.])])
 
 # Check for automake >= 1.10
 flag=false
