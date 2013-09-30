@@ -167,7 +167,7 @@ int CoCollect(UBYTE *s)
 		MesPrint("&%s should be a regular function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0,-1);
+				AddFunction(s,0,0,0,0,0,-1,-1);
 		}
 		return(1);
 	}
@@ -179,7 +179,7 @@ int CoCollect(UBYTE *s)
 			MesPrint("&%s should be a regular function",t1);
 			if ( type < 0 ) {
 				if ( GetName(AC.exprnames,t1,&numfun,NOAUTO) == NAMENOTFOUND )
-					AddFunction(t1,0,0,0,0,0,-1);
+					AddFunction(t1,0,0,0,0,0,-1,-1);
 			}
 			return(1);
 		}
@@ -607,7 +607,7 @@ int CoFormat(UBYTE *s)
 {
 	int error = 0, x;
 	KEYWORD *key;
-	UBYTE *ss, c;
+	UBYTE *ss;
 	while ( *s == ' ' || *s == ',' ) s++;
 	if ( *s == 0 ) {
 		AC.OutputMode = 72;
@@ -623,7 +623,6 @@ int CoFormat(UBYTE *s)
 			s++; if ( *s == '=' ) s++;
 			x = 0;
 			while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
-			AO.OptimizationLevel = x;
 			while ( *s == ',' ) s++;
 			AO.OptimizationLevel = x;
 			AO.Optimize.greedytimelimit = 0;
@@ -663,13 +662,15 @@ int CoFormat(UBYTE *s)
 					AO.Optimize.greedymaxperc = 5;
 					break;
 				default:
-opterr:				error = 1;
+					error = 1;
 					MesPrint("&Illegal optimization specification in format statement");
 					break;
 			}
-			if ( error == 0 && *s != 0 ) return(CoOptimizeOption(s));
+			if ( error == 0 && *s != 0 && x > 0 ) return(CoOptimizeOption(s));
 			return(error);
 		}
+#ifdef EXPOPT
+		{ UBYTE c;
 		ss = s;
 		while ( FG.cTable[*s] == 0 ) s++;
 		c = *s; *s = 0;
@@ -698,7 +699,13 @@ opterr:				error = 1;
 			}
 			return(CoOptimizeOption(s));
 		}
-		else goto opterr;
+		else {
+			error = 1;
+			MesPrint("&Illegal optimization specification in format statement");
+			return(error);
+		}
+		}
+#endif
 	}
 	else if ( FG.cTable[*s] == 1 ) {
 		x = 0;
@@ -807,7 +814,7 @@ Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
 }
 
 /*
-  	#] CoFormat : 
+  	#] CoFormat :
   	#[ CoKeep :
 */
 
@@ -2013,7 +2020,7 @@ int DoSymmetrize(UBYTE *s, int par)
 	}
 	if ( ( err = GetVar(name,&type,&funnum,CFUNCTION,WITHAUTO) ) == NAMENOTFOUND ) {
 		MesPrint("&Undefined function: %s",name);
-		AddFunction(name,0,0,0,0,0,-1);
+		AddFunction(name,0,0,0,0,0,-1,-1);
 		*s++ = c;
 		return(1);
 	}
@@ -2945,7 +2952,7 @@ tests:	s = SkipAName(s);
 	}
 	else {
 		MesPrint("&%s is not a function",s);
-		numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
+		numfunc = AddFunction(s,0,0,0,0,0,-1,-1) + FUNCTION;
 		return(1);
 	}
 	Add3Com(option,numfunc);
@@ -4937,7 +4944,7 @@ int CoPolyFun(UBYTE *s)
 		MesPrint("&%s should be a regular commuting function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0,-1);
+				AddFunction(s,0,0,0,0,0,-1,-1);
 		}
 		return(1);
 	}
@@ -4974,7 +4981,7 @@ int CoPolyRatFun(UBYTE *s)
 		MesPrint("&%s should be a regular commuting function",s);
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0,-1);
+				AddFunction(s,0,0,0,0,0,-1,-1);
 		}
 		return(1);
 	}
@@ -5029,7 +5036,7 @@ tests:	s = SkipAName(s);
 	}
 	else {
 		MesPrint("&%s is not a function",s);
-		numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
+		numfunc = AddFunction(s,0,0,0,0,0,-1,-1) + FUNCTION;
 		return(1);
 	}
 	Add4Com(TYPEMERGE,numfunc,option);
@@ -5088,7 +5095,7 @@ tests:	*ss = c;
 	}
 	else {
 		MesPrint("&%s is not a function",s);
-		numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
+		numfunc = AddFunction(s,0,0,0,0,0,-1,-1) + FUNCTION;
 		return(1);
 	}
 	Add4Com(TYPESTUFFLE,numfunc,option);
@@ -5174,7 +5181,7 @@ int DoArgPlode(UBYTE *s, int par)
 		}
 		else {
 			MesPrint("&%s is not a function",s);
-			numfunc = AddFunction(s,0,0,0,0,0,-1) + FUNCTION;
+			numfunc = AddFunction(s,0,0,0,0,0,-1,-1) + FUNCTION;
 			return(1);
 		}
 		s = SkipAName(s);
@@ -5232,7 +5239,7 @@ int CoClearTable(UBYTE *s)
 		&& type != CDUBIOUS ) {
 nofunc:		MesPrint("&%s is not a sparse table",t);
 			error = 4;
-			if ( type < 0 ) numfun = AddFunction(t,0,0,0,0,0,-1);
+			if ( type < 0 ) numfun = AddFunction(t,0,0,0,0,0,-1,-1);
 			*s = c;
 			if ( *s == ',' ) s++;
 			continue;
@@ -5303,7 +5310,7 @@ int CoDenominators(UBYTE *s)
 	|| ( functions[numfun].spec != 0 ) ) {
 		if ( type < 0 ) {
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
-				AddFunction(s,0,0,0,0,0,-1);
+				AddFunction(s,0,0,0,0,0,-1,-1);
 		}
 		goto syntaxerror;
 	}

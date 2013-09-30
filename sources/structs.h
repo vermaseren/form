@@ -471,8 +471,9 @@ typedef struct FuNcTiOn {  /* Don't change unless altering .sav too */
 	WORD    node;          /**< Location in namenode of #NAMETREE */
 	WORD    namesize;      /**< Length of the name */
 	WORD    dimension;     /* For dimensionality checks */
-	WORD    numargs;
-	PADPOINTER(2,0,10,0);
+	WORD    maxnumargs;
+	WORD    minnumargs;
+	PADPOINTER(2,0,11,0);
 } *FUNCTIONS;
 
 /**

@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ include :
 */
@@ -51,7 +51,7 @@
 using namespace std;
 
 /*
-  	#] include :
+  	#] include : 
   	#[ tostring :
 */
 
@@ -96,7 +96,7 @@ const string factorized_poly::tostring () const {
 }
 
 /*
-  	#] tostring :
+  	#] tostring : 
   	#[ ostream operator :
 */
 
@@ -117,7 +117,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &v) {
 }
 
 /*
-  	#] ostream operator :
+  	#] ostream operator : 
   	#[ add_factor :
 */
 
@@ -128,7 +128,7 @@ void factorized_poly::add_factor(const poly &f, int p) {
 }
 
 /*
-  	#] add_factor :
+  	#] add_factor : 
   	#[ extended_gcd_Euclidean_lifted :
 */
 
@@ -218,7 +218,7 @@ const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const
 }
 
 /*
-  	#] extended_gcd_Euclidean_lifted :
+  	#] extended_gcd_Euclidean_lifted : 
   	#[ solve_Diophantine_univariate :
 */
 
@@ -281,7 +281,7 @@ const vector<poly> polyfact::solve_Diophantine_univariate (const vector<poly> &a
 }
 
 /*
-  	#] solve_Diophantine_univariate :
+  	#] solve_Diophantine_univariate : 
   	#[ solve_Diophantine_multivariate :
 */
 
@@ -382,7 +382,7 @@ const vector<poly> polyfact::solve_Diophantine_multivariate (const vector<poly> 
 }
 
 /*
-  	#] solve_Diophantine_multivariate :
+  	#] solve_Diophantine_multivariate : 
   	#[ lift_coefficients :
 */
 																																																 
@@ -476,7 +476,7 @@ const vector<poly> polyfact::lift_coefficients (const poly &_A, const vector<pol
 }
 
 /*
-  	#] lift_coefficients :
+  	#] lift_coefficients : 
  		#[ predetermine :
 */
 
@@ -514,7 +514,7 @@ void polyfact::predetermine (int dep, const vector<vector<int> > &state, vector<
 }
 
 /*
- 		#] predetermine :
+ 		#] predetermine : 
   	#[ lift_variables :
 */
 
@@ -720,7 +720,7 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 }
 
 /*
-  	#] lift_variables :
+  	#] lift_variables : 
   	#[ choose_prime :
 */
 
@@ -774,7 +774,7 @@ WORD polyfact::choose_prime (const poly &a, const vector<int> &x, WORD p) {
 }
 
 /*
-  	#] choose_prime :
+  	#] choose_prime : 
   	#[ choose_prime_power :
 */
 
@@ -823,7 +823,7 @@ WORD polyfact::choose_prime_power (const poly &a, WORD p) {
 }
 
 /*
-  	#] choose_prime_power :
+  	#] choose_prime_power : 
   	#[ choose_ideal :
 */
 
@@ -928,7 +928,7 @@ const vector<int> polyfact::choose_ideal (const poly &a, int p, const factorized
 }
 
 /*
-  	#] choose_ideal :
+  	#] choose_ideal : 
   	#[ squarefree_factors_Yun :
 */
 
@@ -964,7 +964,7 @@ const factorized_poly polyfact::squarefree_factors_Yun (const poly &_a) {
 }	
 
 /*
-  	#] squarefree_factors_Yun :
+  	#] squarefree_factors_Yun : 
   	#[ squarefree_factors_modp :
 */
 
@@ -1015,7 +1015,7 @@ const factorized_poly polyfact::squarefree_factors_modp (const poly &_a) {
 }
 
 /*
-  	#] squarefree_factors_modp :
+  	#] squarefree_factors_modp : 
   	#[ squarefree_factors :
 */
 
@@ -1062,7 +1062,7 @@ const factorized_poly polyfact::squarefree_factors (const poly &a) {
 }
 
 /*
-  	#] squarefree_factors :
+  	#] squarefree_factors : 
   	#[ Berlekamp_Qmatrix :
 */
 
@@ -1186,7 +1186,7 @@ const vector<vector<WORD> > polyfact::Berlekamp_Qmatrix (const poly &_a) {
 }
 
 /*
-  	#] Berlekamp_Qmatrix :
+  	#] Berlekamp_Qmatrix : 
   	#[ Berlekamp_find_factors :
 */
 
@@ -1276,7 +1276,7 @@ const vector<poly> polyfact::Berlekamp_find_factors (const poly &_a, const vecto
 }
 
 /*
-  	#] Berlekamp_find_factors :
+  	#] Berlekamp_find_factors : 
   	#[ combine_factors :
 */
 
@@ -1360,7 +1360,7 @@ const vector<poly> polyfact::combine_factors (const poly &a, const vector<poly> 
 }
 
 /*
-  	#] combine_factors :
+  	#] combine_factors : 
   	#[ factorize_squarefree :
 */
 
@@ -1452,7 +1452,7 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 				prime_tries++;
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  ... : factorize_squarefree("<<a<<
+	cout << "*** [" << thetime() << "]  (A) : factorize_squarefree("<<a<<
 		") try p=" << p << " #factors=" << rank << " (min="<<min_factors<<"x"<<prime_tries<<")" << endl;
 #endif			
 		}
@@ -1472,9 +1472,9 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 	amodI.setmod(p,n);
 
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  ... : factorize_squarefree("<<a<<
+	cout << "*** [" << thetime() << "]  (B) : factorize_squarefree("<<a<<
 		") chosen c = " << c << ", p^n = "<<p<<"^"<<n<<endl;
-	cout << "*** [" << thetime() << "]  ... : factorize_squarefree("<<a<<
+	cout << "*** [" << thetime() << "]  (C) : factorize_squarefree("<<a<<
 		") #factors = " << min_factors << endl;
 #endif
 
@@ -1623,7 +1623,7 @@ const vector<poly> polyfact::factorize_squarefree (const poly &a, const vector<i
 }
 
 /*
-  	#] factorize_squarefree :
+  	#] factorize_squarefree : 
   	#[ factorize :
 */
 
@@ -1683,5 +1683,5 @@ const factorized_poly polyfact::factorize (const poly &a) {
 }
 
 /*
-  	#] factorize :
+  	#] factorize : 
 */

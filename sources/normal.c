@@ -2417,16 +2417,21 @@ NoRep:
 				if ( *t == DUMMYFUN || *t == DUMMYTEN ) {}
 				else {
 					if ( *t < (FUNCTION + WILDOFFSET) ) {
-						if ( ( functions[*t-FUNCTION].numargs > 0 ) && ( ( t[2] & DIRTYFLAG ) != 0 ) ) {
+						if ( ( ( functions[*t-FUNCTION].maxnumargs > 0 )
+						|| ( functions[*t-FUNCTION].minnumargs > 0 ) )
+						 && ( ( t[2] & DIRTYFLAG ) != 0 ) ) {
 /*
 							Number of arguments is bounded. And we have not checked.
 */
 							WORD *ta = t + FUNHEAD, *tb = t + t[1];
-							int numarg = functions[*t-FUNCTION].numargs;
-							while ( ta < tb ) {
-								numarg--; if ( numarg <= 0 ) goto NormZero;
-								NEXTARG(ta)
-							}
+							int numarg = 0;
+							while ( ta < tb ) { numarg++; NEXTARG(ta) }
+							if ( ( functions[*t-FUNCTION].maxnumargs > 0 )
+							&& ( numarg >= functions[*t-FUNCTION].maxnumargs ) )
+								goto NormZero;
+							if ( ( functions[*t-FUNCTION].minnumargs > 0 )
+							&& ( numarg < functions[*t-FUNCTION].minnumargs ) )
+								goto NormZero;
 						}
 doflags:
 						if ( ( ( t[2] & DIRTYFLAG ) != 0 ) && ( functions[*t-FUNCTION].tabl == 0 ) ) {
@@ -2510,7 +2515,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3858,7 +3863,7 @@ OverWork:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 

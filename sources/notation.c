@@ -893,13 +893,19 @@ wearehappy:
 void PrintSubtermList(int from,int to)
 {
 	UBYTE buffer[80], *out, outbuffer[300];
-	int first, i, inc = 1;
+	int first, i, ii, inc = 1;
 	WORD *term;
 	CBUF *C = cbuf + AM.sbufnum;
-
+/*
 	if ( to < from ) inc = -1;
-/*	if ( to == from ) inc = 0; */
-
+	if ( to == from ) inc = 0;
+*/
+	if ( from <= to ) {
+		inc = 1; to += inc;
+	}
+	else {
+		inc = -1; to += inc;
+	}
 	AO.OutFill = AO.OutputLine = outbuffer;
 	AO.OutStop = AO.OutputLine+AC.LineLength;
 	AO.IsBracket = 0;
@@ -909,17 +915,22 @@ void PrintSubtermList(int from,int to)
 		TokenToLine((UBYTE *)"      ");
 		AO.OutSkip = 7;
 	}
+	else if ( ( AO.Optimize.debugflags & 1 ) == 1 ) {}
 	else if ( AO.OutSkip > 0 ) {
 		for ( i = 0; i < AO.OutSkip; i++ ) TokenToLine((UBYTE *)" ");
 	}
 	i = from;
 	do {
+		if ( ( AO.Optimize.debugflags & 1 ) == 1 ) {
+			TokenToLine((UBYTE *)"id ");
+			for ( ii = 3; ii < AO.OutSkip; ii++ ) TokenToLine((UBYTE *)" ");
+		}
 /*
 		if ( AC.OutputMode == NORMALFORMAT ) {
 			TokenToLine((UBYTE *)"id ");
 		}
 */
-		if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {}
+		else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {}
 		else { TokenToLine((UBYTE *)" "); }
 
 		out = StrCopy((UBYTE *)AC.extrasym,buffer);
@@ -952,13 +963,23 @@ void PrintSubtermList(int from,int to)
 				TokenToLine(buffer);
 			}
 		}
+/*
+		There is a problem with FiniLine because it prepares for a
+		continuation line in fortran mode.
+		But the next statement should start on a blank line.
+*/
 		FiniLine();
+		if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
+			AO.OutFill = AO.OutputLine; /* Clear the line */
+			TokenToLine((UBYTE *)"      ");
+			AO.OutSkip = 7;
+		}
 		i += inc;
-	} while ( i <= to );
+	} while ( i != to );
 }
 
 /*
- 		#] PrintSubtermList : 
+ 		#] PrintSubtermList :
  		#[ PrintExtraSymbol :
 
 		Prints the definition of extra symbol num as the contents
@@ -1167,5 +1188,5 @@ nocase:;
 }
 
 /*
- 		#] ExtraSymFun :
+ 		#] ExtraSymFun : 
 */

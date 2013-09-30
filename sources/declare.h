@@ -652,7 +652,7 @@ extern int    AddVector(UBYTE *,int,int);
 extern int    AddDubious(UBYTE *);
 extern int    AddIndex(UBYTE *,int,int);
 extern UBYTE *DoDimension(UBYTE *,int *,int *);
-extern int    AddFunction(UBYTE *,int,int,int,int,int,int);
+extern int    AddFunction(UBYTE *,int,int,int,int,int,int,int);
 extern int    CoFunction(UBYTE *,int,int);
 extern int    TestName(UBYTE *);
 extern int    AddSet(UBYTE *,WORD);

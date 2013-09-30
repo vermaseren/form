@@ -866,7 +866,7 @@ VOID StartVariables()
 		                    ,fixedfunctions[i].tensor
 		                    ,fixedfunctions[i].complx
 		                    ,fixedfunctions[i].symmetric
-							,0,-1);
+							,0,-1,-1);
 /*
 	Next we add a number of dummy functions for ensuring that the user defined
 	functions start at a fixed given number FIRSTUSERFUNCTION.
@@ -876,7 +876,7 @@ VOID StartVariables()
 		char dumstr[10];
 		for ( ; i < FIRSTUSERFUNCTION-FUNCTION; i++ ) {
 			sprintf(dumstr,"::%d::",i);
-			AddFunction((UBYTE *)dumstr,0,0,0,0,0,-1);
+			AddFunction((UBYTE *)dumstr,0,0,0,0,0,-1,-1);
 		}
 	}
 	AM.NumFixedSets = sizeof(fixedsets)/sizeof(struct fixedset);

@@ -2989,7 +2989,8 @@ GetTb3:
 					MesPrint("Warning: Conflicting symmetry properties for %s",(AT.WorkPointer));
 					error = -1;
 				}
-				else if ( s->numargs != functions[k].numargs ) {
+				else if ( ( s->maxnumargs != functions[k].maxnumargs )
+				|| ( s->minnumargs != functions[k].minnumargs ) ) {
 					MesPrint("Warning: Conflicting argument restriction properties for %s",(AT.WorkPointer));
 					error = -1;
 				}
@@ -2999,7 +3000,8 @@ GetTb3:
 			if ( ( k = EntVar(CFUNCTION,(UBYTE *)(AT.WorkPointer),
 			s->complex,s->commute,s->spec,s->dimension) ) < 0 ) goto GetTcall;
 			functions[k].symmetric = s->symmetric;
-			functions[k].numargs = s->numargs;
+			functions[k].maxnumargs = s->maxnumargs;
+			functions[k].minnumargs = s->minnumargs;
 		}
 		*(w+j) = k + FUNCTION;
 		w++;
