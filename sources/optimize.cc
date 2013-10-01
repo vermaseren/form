@@ -81,6 +81,7 @@ public:
 // global variables for multithreading
 WORD *optimize_expr;
 vector<vector<WORD> > optimize_best_Horner_schemes;
+int optimize_num_vars;
 int optimize_best_num_oper;
 vector<WORD> optimize_best_instr;
 vector<WORD> optimize_best_vars;
@@ -3263,32 +3264,12 @@ void optimize_expression_given_Horner () {
 	
 	LOCK(optimize_lock);
 	if (num_oper < optimize_best_num_oper) {
+		optimize_num_vars = Horner_scheme.size();
 		optimize_best_num_oper = num_oper;
 		optimize_best_instr = instr;
 		optimize_best_vars = vector<WORD>(AN.poly_vars, AN.poly_vars+AN.poly_num_vars);
-		if ( ( AO.Optimize.schemeflags&1 ) == 1 )
-			MesPrint("Scheme: selected at %d instructions",num_oper);
 	}
 	UNLOCK(optimize_lock);
-
-	if ( ( AO.Optimize.schemeflags&1 ) == 1 ) {
-		UBYTE *OutScr, *old1 = AO.OutputLine, *old2 = AO.OutFill;
-		int i, sym, siz = Horner_scheme.size();
-		AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
-		FiniLine();
-		OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
-		TokenToLine((UBYTE *)" Scheme: ");
-		for ( i = 0; i < siz; i++ ) {
-			sym = Horner_scheme[i];
-			if ( i > 0 ) TokenToLine((UBYTE *)",");
-			StrCopy(VARNAME(symbols,sym),OutScr);
-			TokenToLine(OutScr);
-		}
-		FiniLine();
-		AO.OutFill = old2;
-		AO.OutputLine = old1;
-		MesPrint("*** Number of operations = %d",num_oper);
-	}
 
   // clean poly_vars, that are allocated by Horner_tree
 	AN.poly_num_vars = 0;
@@ -3736,8 +3717,40 @@ int Optimize (WORD exprnr, int do_print) {
 	}
 	
 	if ( AO.Optimize.printstats > 0 ) {
+		MesPrint("");
 		count_operators(optimize_expr,true);
 		count_operators(optimize_best_instr,true);
+	}
+ 
+	if ( ( AO.Optimize.schemeflags&1 ) == 1 ) {
+		GETIDENTITY
+		UBYTE *OutScr, *Out, *old1 = AO.OutputLine, *old2 = AO.OutFill;
+		int i, sym;
+		AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
+		FiniLine();
+		OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
+		TokenToLine((UBYTE *)" Scheme selected: ");
+		for ( i = 0; i < optimize_num_vars; i++ ) {
+			Out = OutScr;
+			sym = optimize_best_vars[i];
+			if ( i > 0 ) TokenToLine((UBYTE *)",");
+			if ( sym < NumSymbols ) { StrCopy(VARNAME(symbols,sym),OutScr); }
+			else {
+				Out = StrCopy((UBYTE *)AC.extrasym,Out);
+				if ( AC.extrasymbols == 0 ) {
+					Out = NumCopy((MAXVARIABLES-sym),Out);
+					Out = StrCopy((UBYTE *)"_",Out);
+				}
+				else if ( AC.extrasymbols == 1 ) {
+					Out = AddArrayIndex((MAXVARIABLES-sym),Out);
+				}
+			}
+			TokenToLine(OutScr);
+		}
+		TokenToLine((UBYTE *)";");
+		FiniLine();
+		AO.OutFill = old2;
+		AO.OutputLine = old1;
 	}
 	
 	// cleanup

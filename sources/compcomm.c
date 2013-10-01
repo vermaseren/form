@@ -814,7 +814,7 @@ Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
 }
 
 /*
-  	#] CoFormat :
+  	#] CoFormat : 
   	#[ CoKeep :
 */
 
@@ -6232,14 +6232,28 @@ correctuse:
 			0x2: Print the scheme of the variables.
 */
 			x = 0;
-			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
-			if ( *u != 0 ) {
-				MesPrint("&Option DebugFlag in Format,Optimize statement should be a positive number: %s",value);
-				AO.Optimize.debugflags = 0;
-				error = 1;
+			u = value;
+			if ( FG.cTable[*u] == 1 ) {
+				while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+				if ( *u != 0 ) {
+					MesPrint("&Numerical value for DebugFlag in Format,Optimize statement should be a nonnegative number: %s",value);
+					AO.Optimize.debugflags = 0;
+					error = 1;
+				}
+				else {
+					AO.Optimize.debugflags = x;
+				}
+			}
+			else if ( StrICmp(value,(UBYTE *)"on") == 0 ) {
+				AO.Optimize.printstats = 1;
+			}
+			else if ( StrICmp(value,(UBYTE *)"off") == 0 ) {
+				AO.Optimize.printstats = 0;
 			}
 			else {
-				AO.Optimize.debugflags = x;
+				AO.Optimize.printstats = 0;
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
+				error = 1;
 			}
 		}
 		else if ( StrICmp(name,(UBYTE *)"scheme") == 0 ) {
@@ -6274,13 +6288,52 @@ noscheme:
 				for(;;) {
 					if ( *ss == 0 ) break;
 					s1 = ss; ss = SkipAName(s1); c = *ss; *ss = 0;
-					if ( ( ( type = GetName(AC.varnames,s1,&numsym,WITHAUTO) ) != CSYMBOL )
-					&& type != CDUBIOUS ) {
+
+					if ( ss[-1] == '_' ) {
+/*
+						Now AC.extrasym followed by a number and _
+*/
+						UBYTE *u1, *u2;
+						u1 = s1; u2 = AC.extrasym;
+						while ( *u1 == *u2 ) { u1++; u2++; }
+						if ( *u2 == 0 ) { /* Good start */
+							numsym = 0;
+							while ( *u1 >= '0' && *u1 <= '9' ) numsym = 10*numsym + *u1++ - '0';
+							if ( u1 != ss-1 || numsym == 0 || AC.extrasymbols != 0 ) {
+								MesPrint("&Improper use of extra symbol in scheme format option");
+								goto noscheme;
+							}
+							numsym = MAXVARIABLES-numsym;
+							ss++;
+							goto GotTheNumber;
+						}
+					}
+					else if ( c == '(' ) {
+						if ( StrCmp(s1,AC.extrasym) == 0 ) {
+							if ( (AC.extrasymbols&1) != 1 ) {
+								MesPrint("&Improper use of extra symbol in scheme format option");
+								goto noscheme;
+							}
+							*ss++ = c;
+							numsym = 0;
+							while ( *ss >= '0' && *ss <= '9' ) numsym = 10*numsym + *ss++ - '0';
+							if ( *ss != ')' ) {
+								MesPrint("&Extra symbol should have a number for its argument.");
+								goto noscheme;
+							}
+							numsym = MAXVARIABLES-numsym;
+							ss++;
+							goto GotTheNumber;
+						}
+					}
+					type = GetName(AC.varnames,s1,&numsym,WITHAUTO);
+					if ( ( type != CSYMBOL ) && type != CDUBIOUS ) {
 						MesPrint("&%s is not a symbol",s1);
 						error = 4;
 						if ( type < 0 ) numsym = AddSymbol(s1,-MAXPOWER,MAXPOWER,0,0);
 					}
 					*ss = c;
+GotTheNumber:
 					AO.inscheme[AO.schemenum++] = numsym;
 					while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
 				}
