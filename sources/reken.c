@@ -3537,7 +3537,6 @@ int Bernoulli(WORD n, UWORD *a, WORD *na)
 				i = (WORD)(REDLENG(nscrib));
 				MulRat(BHEAD b,i,b,i,scrib,&nscrib);
 				ntop = scrib + 2*nscrib;
-				nscrib = nscrib;
 				nqua--;
 			}
 			for ( j = 1; j <= nqua; j++ ) {
