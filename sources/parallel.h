@@ -41,17 +41,20 @@
 #define PF_RESET 0
 #define PF_TIME  1
 
-#define PF_TERM_MSGTAG       10  /* master -> slave: sending terms */
-#define PF_ENDSORT_MSGTAG    11  /* master -> slave: no more terms to be distributed, slave -> master: after EndSort() */
-#define PF_DOLLAR_MSGTAG     12  /* slave -> master: sending $-variables */
-#define PF_BUFFER_MSGTAG     20  /* slave -> master: sending sorted terms, or in PF_SendFile()/PF_RecvFile() */
-#define PF_ENDBUFFER_MSGTAG  21  /* same as PF_BUFFER_MSGTAG, but indicates the end of operation */
-#define PF_READY_MSGTAG      30  /* slave -> master: slave is idle and can accept terms */
-#define PF_DATA_MSGTAG       50  /* InParallel, DoCheckpoint() */
-#define PF_EMPTY_MSGTAG      52  /* InParallel, DoCheckpoint(), PF_SendFile(), PF_RecvFile() */
-#define PF_STDOUT_MSGTAG     60  /* slave -> master: sending text to the stdout */
-#define PF_LOG_MSGTAG        61  /* slave -> master: sending text to the log file */
-#define PF_MISC_MSGTAG       70
+#define PF_TERM_MSGTAG          10  /* master -> slave: sending terms */
+#define PF_ENDSORT_MSGTAG       11  /* master -> slave: no more terms to be distributed, slave -> master: after EndSort() */
+#define PF_DOLLAR_MSGTAG        12  /* slave -> master: sending $-variables */
+#define PF_BUFFER_MSGTAG        20  /* slave -> master: sending sorted terms, or in PF_SendFile()/PF_RecvFile() */
+#define PF_ENDBUFFER_MSGTAG     21  /* same as PF_BUFFER_MSGTAG, but indicates the end of operation */
+#define PF_READY_MSGTAG         30  /* slave -> master: slave is idle and can accept terms */
+#define PF_DATA_MSGTAG          50  /* InParallel, DoCheckpoint() */
+#define PF_EMPTY_MSGTAG         52  /* InParallel, DoCheckpoint(), PF_SendFile(), PF_RecvFile() */
+#define PF_STDOUT_MSGTAG        60  /* slave -> master: sending text to the stdout */
+#define PF_LOG_MSGTAG           61  /* slave -> master: sending text to the log file */
+#define PF_OPT_MCTS_MSGTAG      70  /* master <-> slave: optimization */
+#define PF_OPT_HORNER_MSGTAG    71  /* master <-> slave: optimization */
+#define PF_OPT_COLLECT_MSGTAG   72  /* slave -> master: optimization */
+#define PF_MISC_MSGTAG         100
 
 /*
  * A macro for checking the version of gcc.
@@ -185,6 +188,38 @@ extern int    PF_Bcast(void *buffer, int count);
 extern int    PF_RawSend(int,void *,LONG,int);
 extern LONG   PF_RawRecv(int *,void *,LONG,int *);
 
+extern int    PF_PreparePack(void);
+extern int    PF_Pack(const void *buffer, size_t count, MPI_Datatype type);
+extern int    PF_Unpack(void *buffer, size_t count, MPI_Datatype type);
+extern int    PF_PackString(const UBYTE *str);
+extern int    PF_UnpackString(UBYTE *str);
+extern int    PF_Send(int to, int tag);
+extern int    PF_Receive(int src, int tag, int *psrc, int *ptag);
+extern int    PF_Broadcast(void);
+
+extern int    PF_PrepareLongSinglePack(void);
+extern int    PF_LongSinglePack(const void *buffer, size_t count, MPI_Datatype type);
+extern int    PF_LongSingleUnpack(void *buffer, size_t count, MPI_Datatype type);
+extern int    PF_LongSingleSend(int to, int tag);
+extern int    PF_LongSingleReceive(int src, int tag, int *psrc, int *ptag);
+
+extern int    PF_PrepareLongMultiPack(void);
+extern int    PF_LongMultiPackImpl(const void *buffer, size_t count, size_t eSize, MPI_Datatype type);
+extern int    PF_LongMultiUnpackImpl(void *buffer, size_t count, size_t eSize, MPI_Datatype type);
+extern int    PF_LongMultiBroadcast(void);
+
+static inline size_t sizeof_datatype(MPI_Datatype type)
+{
+	if ( type == PF_BYTE ) return sizeof(char);
+	if ( type == PF_INT  ) return sizeof(int);
+	if ( type == PF_WORD ) return sizeof(WORD);
+	if ( type == PF_LONG ) return sizeof(LONG);
+	return(0);
+}
+
+#define PF_LongMultiPack(buffer, count, type) PF_LongMultiPackImpl(buffer, count, sizeof_datatype(type), type)
+#define PF_LongMultiUnpack(buffer, count, type) PF_LongMultiUnpackImpl(buffer, count, sizeof_datatype(type), type)
+
 /* parallel.c */
 extern int    PF_EndSort(void);
 extern WORD   PF_Deferred(WORD *,WORD);
@@ -193,6 +228,7 @@ extern int    PF_Init(int*,char ***);
 extern int    PF_Terminate(int);
 extern LONG   PF_GetSlaveTimes(void);
 extern LONG   PF_BroadcastNumber(LONG);
+extern void   PF_BroadcastBuffer(WORD **buffer, LONG *length);
 extern int    PF_BroadcastString(UBYTE *);
 extern int    PF_BroadcastPreDollar(WORD **, LONG *,int *);
 extern int    PF_CollectModifiedDollars(void);

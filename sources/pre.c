@@ -6265,6 +6265,9 @@ int DoOptimize(UBYTE *s)
 				Terminate(-1);
 				break;
 		}
+#ifdef WITHMPI
+		if ( PF.me == MASTER )
+#endif
 		RevertScratch();
 		for ( i = NumExpressions-1; i >= 0; i-- ) {
 			AS.OldOnFile[i] = Expressions[i].onfile;
@@ -6278,6 +6281,9 @@ int DoOptimize(UBYTE *s)
 				AO.OptimizeResult.nameofexpr = strDup1(exprname,"optimize expression name");
 				continue;
 			}
+#ifdef WITHMPI
+			if ( PF.me == MASTER ) {
+#endif
 			e = Expressions + i;
 			switch ( e->status ) {
 				case LOCALEXPRESSION:
@@ -6332,6 +6338,9 @@ DoSerr:
 				MesPrint("@Expression %d has problems writing to scratchfile",i);
 				Terminate(-1);
 			}
+#ifdef WITHMPI
+			}
+#endif
 		}
 /*
 		Now some administration and we are done

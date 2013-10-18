@@ -989,6 +989,23 @@ int PF_Broadcast(void)
 	knows, when the chunk is expired and it must switch to the next cell,
 	successively decrementing corresponding nPacks field.
 
+	XXX: There are still some flaws:
+	PF_LongSingleSend/PF_LongSingleReceive may fail, for example, for data
+	transfers from the master to many slaves. Suppose that the master sends big
+	data to slaves, which needs an increase of the buffer of the receivers. For
+	the first data transfer, the master sends the new buffer size as the first
+	message, and then sends the data as the second message, because
+	PF_LongSinglePack records the increase of the buffer size on the master. For
+	the next time, however, the master sends the data without sending the new
+	buffer size, and then MPI_Recv fails due to the data overflow.
+	In parallel.c, they are used for the communication from slaves to the
+	master. In this case, this problem does not occur because the master always
+	has enough buffer.
+	The maximum size that PF_LongMultiBroadcast can broadcast is limited
+	around 125kB because the current implementation tries to pack all
+	information of chained buffers into one buffer, whose size is PF_packsize
+	= 1000B.
+
  		#] Explanations : 
  		#[ Variables :
 */
@@ -1137,25 +1154,12 @@ static inline void PF_longCopyChunk(int *to, int *from, int n)
  		#] PF_longCopyChunk : 
  		#[ PF_longAddChunk :
 
-	If n == 0, the chunk must be increased by 1*PF_packsize and
-	re-allocated. If n > 0, the chunk must be increased by n*PF_packsize
-	without re-allocation.
+	The chunk must be increased by n*PF_packsize.
 */
 
-static int PF_longAddChunk(int n)
+static int PF_longAddChunk(int n, int mustRealloc)
 {
-	int mustRealloc;
 	UBYTE *newbuf;
-/*
-		If n == 0, the chunk must be increased by 1 and re-allocated:
-*/
-	if ( n == 0 ) {
-		mustRealloc=1;
-		n=1;
-	}
-	else {
-		mustRealloc=0;
-	}
 	if ( ( newbuf = (UBYTE*)Malloc1(sizeof(UBYTE)*(PF_longPackTop+n*PF_packsize),
 				"PF_longPackBuf") ) == NULL ) return(-1);
 /*
@@ -1203,7 +1207,7 @@ static inline int PF_longMultiHowSplit(int count, MPI_Datatype type, int bytes)
 /*
 	Rough estimate:
 */
-	items = totalbytes*count/bytes;
+	items = (int)((double)totalbytes*count/bytes);
 /*
 		Go to the up limit:
 */
@@ -1471,10 +1475,10 @@ int PF_LongSinglePack(const void *buffer, size_t count, MPI_Datatype type)
 	if ( ret != MPI_SUCCESS ) return(ret);
 
 	while ( PF_longPackPos+bytes > PF_longPackTop ) {
-		if ( PF_longAddChunk(0) ) return(-1);
+		if ( PF_longAddChunk(1, 1) ) return(-1);
 	}
 /*
-		PF_longAddChunk(0) means, the chunk must
+		PF_longAddChunk(1, 1) means, the chunk must
 		be increased by 1 and re-allocated
 */
 	ret = MPI_Pack((void *)buffer,(int)count,type,
@@ -1586,11 +1590,13 @@ int PF_LongSingleReceive(int src, int tag, int *psrc, int *ptag)
 		               PF_COMM,&status);
 		if ( ret != MPI_SUCCESS ) return(ret);
 /*
-			The source must be specified here for the case if
+			The source and tag must be specified here for the case if
 			MPI_Recv is performed more than once:
 */
 		src = status.MPI_SOURCE;
+		tag = status.MPI_TAG;
 		if ( psrc ) *psrc = status.MPI_SOURCE;
+		if ( ptag ) *ptag = status.MPI_TAG;
 /*
 			Now we got either small buffer with the new PF_longPackTop,
 			or just a regular chunk.
@@ -1611,12 +1617,15 @@ int PF_LongSingleReceive(int src, int tag, int *psrc, int *ptag)
 		else {
 			oncemore = 0;  /* That's all, no repetition */
 		}
-		if ( missed > PF_longPackTop ) { /* The room must be increased */
-			if ( PF_longAddChunk( (missed-PF_longPackTop)/PF_packsize )   )
+		if ( missed > PF_longPackTop ) {
+			/*
+			 * The room must be increased. We need a re-allocation for the
+			 * case that there is no repetition.
+			 */
+			if ( PF_longAddChunk( (missed-PF_longPackTop)/PF_packsize, !oncemore ) )
 				return(-1);
 		}
 	} while ( oncemore );
-	if ( ptag ) *ptag = status.MPI_TAG;
 	return(0);
 }
 
@@ -1638,7 +1647,7 @@ int PF_PrepareLongMultiPack(void)
 
 /*
  		#] PF_PrepareLongMultiPack : 
- 		#[ PF_LongMultiPack :
+ 		#[ PF_LongMultiPackImpl :
 */
 
 /**
@@ -1650,7 +1659,7 @@ int PF_PrepareLongMultiPack(void)
  * @param  type    the data type of elements in the buffer.
  * @return         0 if OK, nonzero on error.
  */
-int PF_LongMultiPack(const void*buffer, size_t count, size_t eSize, MPI_Datatype type)
+int PF_LongMultiPackImpl(const void*buffer, size_t count, size_t eSize, MPI_Datatype type)
 {
 	int ret, items;
 
@@ -1692,12 +1701,12 @@ int PF_LongMultiPack(const void*buffer, size_t count, size_t eSize, MPI_Datatype
 /*
 		Pack the rest to the next cell:
 */
-	return(PF_LongMultiPack((char *)buffer+items*eSize,count-items,eSize,type));
+	return(PF_LongMultiPackImpl((char *)buffer+items*eSize,count-items,eSize,type));
 }
 
 /*
- 		#] PF_LongMultiPack : 
- 		#[ PF_LongMultiUnpack :
+ 		#] PF_LongMultiPackImpl :
+ 		#[ PF_LongMultiUnpackImpl :
 */
 
 /**
@@ -1709,7 +1718,7 @@ int PF_LongMultiPack(const void*buffer, size_t count, size_t eSize, MPI_Datatype
  * @param       type    the data type of elements of data to be received.
  * @return              0 if OK, nonzero on error.
  */
-int PF_LongMultiUnpack(void *buffer, size_t count, size_t eSize, MPI_Datatype type)
+int PF_LongMultiUnpackImpl(void *buffer, size_t count, size_t eSize, MPI_Datatype type)
 {
 	int ret;
 
@@ -1769,11 +1778,11 @@ int PF_LongMultiUnpack(void *buffer, size_t count, size_t eSize, MPI_Datatype ty
 		Here PF_longMultiTop->nPacks == 0
 */
 	if ( ( PF_longMultiTop = PF_longMultiTop->next ) == NULL ) return(-1);
-	return(PF_LongMultiUnpack(buffer,count,eSize,type));
+	return(PF_LongMultiUnpackImpl(buffer,count,eSize,type));
 }
 
 /*
- 		#] PF_LongMultiUnpack : 
+ 		#] PF_LongMultiUnpackImpl :
  		#[ PF_LongMultiBroadcast :
 */
 

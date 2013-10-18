@@ -42,6 +42,7 @@
 
 /*
 #define PF_DEBUG_BCAST_LONG
+#define PF_DEBUG_BCAST_BUF
 #define PF_DEBUG_BCAST_PREDOLLAR
 #define PF_DEBUG_BCAST_RHSEXPR
 #define PF_DEBUG_BCAST_DOLLAR
@@ -62,38 +63,6 @@ int PF_WaitRbuf(PF_BUFFER *,int,LONG *);
 int PF_RawSend(int dest, void *buf, LONG l, int tag);
 LONG PF_RawRecv(int *src,void *buf,LONG thesize,int *tag);
 int PF_RawProbe(int *src, int *tag, int *bytesize);
-
-int PF_PreparePack(void);
-int PF_Pack(const void *buffer, size_t count, MPI_Datatype type);
-int PF_Unpack(void *buffer, size_t count, MPI_Datatype type);
-int PF_PackString(const UBYTE *str);
-int PF_UnpackString(UBYTE *str);
-int PF_Send(int to, int tag);
-int PF_Receive(int src, int tag, int *psrc, int *ptag);
-int PF_Broadcast(void);
-
-int PF_PrepareLongSinglePack(void);
-int PF_LongSinglePack(const void *buffer, size_t count, MPI_Datatype type);
-int PF_LongSingleUnpack(void *buffer, size_t count, MPI_Datatype type);
-int PF_LongSingleSend(int to, int tag);
-int PF_LongSingleReceive(int src, int tag, int *psrc, int *ptag);
-
-int PF_PrepareLongMultiPack(void);
-int PF_LongMultiPack(const void *buffer, size_t count, size_t eSize, MPI_Datatype type);
-int PF_LongMultiUnpack(void *buffer, size_t count, size_t eSize, MPI_Datatype type);
-int PF_LongMultiBroadcast(void);
-
-static inline size_t sizeof_datatype(MPI_Datatype type)
-{
-	if ( type == PF_BYTE ) return sizeof(char);
-	if ( type == PF_INT  ) return sizeof(int);
-	if ( type == PF_WORD ) return sizeof(WORD);
-	if ( type == PF_LONG ) return sizeof(LONG);
-	return 0;
-}
-
-#define PF_LongMultiPack(buffer, count, type) PF_LongMultiPack(buffer, count, sizeof_datatype(type), type)
-#define PF_LongMultiUnpack(buffer, count, type) PF_LongMultiUnpack(buffer, count, sizeof_datatype(type), type)
 
 /* Private functions */
 
@@ -2126,22 +2095,64 @@ LONG PF_GetSlaveTimes(void)
  */
 LONG PF_BroadcastNumber(LONG x)
 {
-	if ( MASTER == PF.me ) {
-		PF_PreparePack();
-		PF_Pack(&x, 1, PF_LONG);
 #ifdef PF_DEBUG_BCAST_LONG
-		MesPrint(">> Broadcast LONG: %d", (int)x);
+	if ( PF.me == MASTER ) {
+		MesPrint(">> Broadcast LONG: %l", x);
+	}
 #endif
-	}
-	PF_Broadcast();
-	if ( MASTER != PF.me ) {
-		PF_Unpack(&x, 1, PF_LONG);
-	}
+	PF_Bcast(&x, sizeof(LONG));
 	return x;
 }
 
 /*
   	#] PF_BroadcastNumber :
+  	#[ PF_BroadcastBuffer :
+*/
+
+/**
+ * Broadcasts a buffer from the master to all the slaves.
+ *
+ * @param[in,out]  buffer  on the master, the buffer to be broadcast. On the
+ * slaves, the buffer will be allocated if the length is greater than 0. The
+ * caller must free it.
+ *
+ * @param[in,out]  length  on the master, the length of the buffer to be
+ * broadcast. On the slaves, it receives the length of transfered buffer.
+ * The actual transfer occurs only if the length is greater than 0.
+ */
+void PF_BroadcastBuffer(WORD **buffer, LONG *length)
+{
+	WORD *p;
+	LONG rest;
+#ifdef PF_DEBUG_BCAST_BUF
+	if ( PF.me == MASTER ) {
+		MesPrint(">> Broadcast Buffer: length=%l", *length);
+	}
+#endif
+	/* Initialize the buffer on the slaves. */
+	if ( PF.me != MASTER ) {
+		*buffer = NULL;
+	}
+	/* Broadcast the length of the buffer. */
+	*length = PF_BroadcastNumber(*length);
+	if ( *length <= 0 ) return;
+	/* Allocate the buffer on the slaves. */
+	if ( PF.me != MASTER ) {
+		*buffer = (WORD *)Malloc1(*length * sizeof(WORD), "PF_BroadcastBuffer");
+	}
+	/* Broadcast the data in the buffer. */
+	p = *buffer;
+	rest = *length;
+	while ( rest > 0 ) {
+		int l = rest < (LONG)PF.exprbufsize ? (int)rest : PF.exprbufsize;
+		PF_Bcast(p, l * sizeof(WORD));
+		p += l;
+		rest -= l;
+	}
+}
+
+/*
+  	#] PF_BroadcastBuffer :
   	#[ PF_BroadcastString :
 */
 

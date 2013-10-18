@@ -2197,10 +2197,35 @@ WORD WriteAll()
 	POSITION pos;
 	FILEHANDLE *f;
 	EXPRESSIONS e;
-#ifdef WITHMPI
-	if ( AM.exitflag || PF.me != MASTER ) return(0);
-#else
 	if ( AM.exitflag ) return(0);
+#ifdef WITHMPI
+	if ( PF.me != MASTER ) {
+		/*
+		 * For the slaves, we need to call Optimize() the same number of times
+		 * as the master. The first argument doesn't have any important role.
+		 */
+		for ( n = 0; n < NumExpressions; n++ ) {
+			e = &Expressions[n];
+			if ( !e->printflag & PRINTON ) continue;
+			switch ( e->status ) {
+				case LOCALEXPRESSION:
+				case GLOBALEXPRESSION:
+				case UNHIDELEXPRESSION:
+				case UNHIDEGEXPRESSION:
+					break;
+				default:
+					continue;
+			}
+			e->printflag = 0;
+/* Needed? (TU 27 Jul 2013)
+			PutPreVar(AM.oldnumextrasymbols, GetPreVar((UBYTE *)"EXTRASYMBOLS_", 0), 0, 1);
+*/
+			if ( AO.OptimizationLevel > 0 ) {
+				if ( Optimize(0, 1) ) return(-1);
+			}
+		}
+		return(0);
+	}
 #endif
 	SeekScratch(AR.outfile,&pos);
 	if ( ResetScratch() ) {
@@ -2470,6 +2495,12 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 	}
 	else
 */
+	/*
+	 * Currently WriteOne() is called only from writeToChannel() with setting
+	 * AO.OptimizationLevel = 0, which means Optimize() is never called here.
+	 * So we don't need to think about how to ensure that the master and the
+	 * slaves call Optimize() at the same time. (TU 26 Jul 2013)
+	 */
 	if ( AO.OptimizationLevel > 0 ) {
 		AO.OutSkip = 6;
 		if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;

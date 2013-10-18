@@ -144,8 +144,11 @@ static WORD comlist[3] = {TYPETOPOLYNOMIAL,3,DOALL};
  *   optimize_expr). This buffer is used during the optimization
  *   process. Non-symbols are removed by ConvertToPoly and are put in
  *   temporary symbols.
+ *
+ *   The return value is the length of the expression in WORDs, or a
+ *   negative number if it failed.
  */
-WORD get_expression (int exprnr) {
+LONG get_expression (int exprnr) {
 
 	GETIDENTITY;
 
@@ -174,15 +177,37 @@ WORD get_expression (int exprnr) {
   }
 
   // sort and store in buffer
-  if (EndSort(BHEAD (WORD *)((VOID *)(&optimize_expr)),2) < 0) return -1;
+  LONG len = EndSort(BHEAD (WORD *)((VOID *)(&optimize_expr)),2);
   LowerSortLevel();
   AT.WorkPointer = term;
 
-	return 0;
+	return len;
 }
 
 /*
-  	#] get_expression : 
+  	#] get_expression :
+  	#[ PF_get_expression :
+*/
+#ifdef WITHMPI
+
+// get_expression for ParFORM
+LONG PF_get_expression (int exprnr) {
+	LONG len;
+	if (PF.me == MASTER) {
+		len = get_expression(exprnr);
+	}
+	if (PF.numtasks > 1) {
+		PF_BroadcastBuffer(&optimize_expr, &len);
+	}
+	return len;
+}
+
+// replace get_expression called in Optimize
+#define get_expression PF_get_expression
+
+#endif
+/*
+  	#] PF_get_expression :
   	#[ get_brackets :
 */
 
@@ -1240,21 +1265,30 @@ void printpstree () {
  *   - The method is called from "find_Horner_MCTS" in Form and from
  *     "RunThread" via "find_Horner_MCTS_expand_tree_threaded" in
  *     TForm.
+ *   - The code is divided into three functions: "next_MCTS_scheme",
+ *     "try_MCTS_scheme" and "update_MCTS_scheme". In this way, the
+ *     source code is shared with ParForm; "try_MCTS_scheme" is
+ *     assumed to run on workers, while the others are assumed to run
+ *     on the master.
  */
-void find_Horner_MCTS_expand_tree () {
 
-#ifdef DEBUG
-	MesPrint ("*** [%s, w=%w] CALL: find_Horner_MCTS_expand_tree", thetime_str().c_str());
-#endif
+/*
+ 		#[ next_MCTS_scheme :
+*/
 
-	GETIDENTITY;
+// find a Horner scheme to be used for the next simulation
+inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *pscheme, vector<tree_node *> *ppath) {
 
-	// the order for the Horner scheme
-	vector<WORD> order;
-	
+	vector<WORD> &order = *porder;
+	vector<WORD> &schemev = *pscheme;
+	vector<tree_node *> &path = *ppath;
+
+	order.clear();
+	path.clear();
+
 	// MCTS step I: select
 	tree_node *select = &mcts_root;
-	vector<tree_node *> path(1, select);
+	path.push_back(select);
 	
 	while (select->childs.size() > 0) {
 		// add virtual loss
@@ -1370,8 +1404,21 @@ void find_Horner_MCTS_expand_tree () {
 	if (mcts_separated) 
 		scheme.push_front(SEPARATESYMBOL);
 	
+	// Horner scheme as a vector
+	schemev = vector<WORD>(scheme.begin(), scheme.end());
+
+}
+
+/*
+ 		#] next_MCTS_scheme :
+ 		#[ try_MCTS_scheme :
+*/
+
+// count the number of operators in the given Horner scheme
+inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_oper) {
+
 	// do Horner, CSE and count the number of operators
-	vector<WORD> tree = Horner_tree(optimize_expr, vector<WORD>(scheme.begin(),scheme.end()));
+	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
 	vector<WORD> instr = generate_instructions(tree, true);
 	int num_oper = count_operators(instr);
 
@@ -1379,11 +1426,20 @@ void find_Horner_MCTS_expand_tree () {
 	AN.poly_num_vars = 0;
 	M_free(AN.poly_vars,"poly_vars");
 	
-#ifdef DEBUG_MCTS
-	vector<WORD> tmp(scheme.begin(),scheme.end());
-	MesPrint ("{%a} -> {%a} -> %d", order.size(), &order[0], tmp.size(), &tmp[0], num_oper);
-#endif
-	
+	*pnum_oper = num_oper;
+
+}
+
+/*
+ 		#] try_MCTS_scheme :
+ 		#[ update_MCTS_scheme :
+*/
+
+// update the best score and the search tree
+inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme, vector<tree_node *> *ppath) {
+
+	vector<tree_node *> &path = *ppath;
+
 	// update the (global) list of best Horner scheme
 	if ((int)mcts_best_schemes.size() < AO.Optimize.mctsnumkeep ||
 			(--mcts_best_schemes.end())->first > num_oper) {
@@ -1392,7 +1448,7 @@ void find_Horner_MCTS_expand_tree () {
 		// track of it's own list and those lists are merged in the end,
 		// but this seems not useful to implement
 		LOCK(optimize_lock);
-		mcts_best_schemes.insert(make_pair(num_oper,vector<WORD>(scheme.begin(),scheme.end())));
+		mcts_best_schemes.insert(make_pair(num_oper,scheme));
 		if ((int)mcts_best_schemes.size() > AO.Optimize.mctsnumkeep)
 			mcts_best_schemes.erase(--mcts_best_schemes.end());
 		UNLOCK(optimize_lock);
@@ -1405,14 +1461,201 @@ void find_Horner_MCTS_expand_tree () {
  	for (vector<tree_node *>::iterator p=path.begin(); p<path.end(); p++) 
 		(*p)->sum_results += num_oper - mcts_expr_score;
 
+}
+
+/*
+ 		#] update_MCTS_scheme :
+*/
+
+void find_Horner_MCTS_expand_tree () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: find_Horner_MCTS_expand_tree", thetime_str().c_str());
+#endif
+
+	GETIDENTITY;
+
+	// the order for the Horner scheme up to the selected node, with signs
+	// indicating forward or backward.
+	vector<WORD> order;
+
+	// complete Horner scheme
+	vector<WORD> scheme;
+
+	// path to the selected node
+	vector<tree_node *> path;
+
+	// the number of operations obtained by the simulation
+	int num_oper;
+
+	next_MCTS_scheme(BHEAD &order, &scheme, &path);
+	try_MCTS_scheme(BHEAD scheme, &num_oper);
+#ifdef DEBUG_MCTS
+	// Actually "order" is needed only for this debug output.
+	MesPrint ("{%a} -> {%a} -> %d", order.size(), &order[0], scheme.size(), &scheme[0], num_oper);
+#endif
+	update_MCTS_scheme(num_oper, scheme, &path);
+
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS_expand_tree(%a-> %d)",
 						thetime_str().c_str(), scheme.size(), &scheme[0], num_oper);
 #endif	
+
 }
 
 /*
   	#] find_Horner_MCTS_expand_tree : 
+  	#[ PF_find_Horner_MCTS_expand_tree :
+*/
+#ifdef WITHMPI
+
+// To remember which task is assigned to each slave. A task is represented by
+// a pair of a Horner scheme and the selected path for the scheme.
+// The index range is from 1 to PF.numtasks-1.
+vector<pair<vector<WORD>, vector<tree_node *> > > PF_opt_MCTS_tasks;
+
+// Initialization.
+void PF_find_Horner_MCTS_expand_tree_master_init () {
+
+	PF_opt_MCTS_tasks.resize(PF.numtasks);
+	for (int i = 1; i < PF.numtasks; i++) {
+		pair<vector<WORD>, vector<tree_node *> > &p = PF_opt_MCTS_tasks[i];
+		p.first.clear();
+		p.second.clear();
+	}
+
+}
+
+// Wait for an idle slave and return the process number.
+int PF_find_Horner_MCTS_expand_tree_master_next () {
+
+	// Find an idle slave.
+	int next;
+	PF_Receive(PF_ANY_SOURCE, PF_OPT_MCTS_MSGTAG, &next, NULL);
+
+	// Check if the slave had a task.
+	pair<vector<WORD>, vector<tree_node *> > &p = PF_opt_MCTS_tasks[next];
+	if (!p.first.empty()) {
+		// If so, update the result.
+		int num_oper;
+		PF_Unpack(&num_oper, 1, PF_INT);
+		update_MCTS_scheme(num_oper, p.first, &p.second);
+
+		// Clear the task.
+		p.first.clear();
+		p.second.clear();
+	}
+
+	return next;
+
+}
+
+// The main function on the master.
+void PF_find_Horner_MCTS_expand_tree_master () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: PF_find_Horner_MCTS_expand_tree_master", thetime_str().c_str());
+#endif
+
+	vector<WORD> order;
+	vector<WORD> scheme;
+	vector<tree_node *> path;
+
+	next_MCTS_scheme(BHEAD &order, &scheme, &path);
+
+	// Find an idle slave.
+	int next = PF_find_Horner_MCTS_expand_tree_master_next();
+
+	// Send a new task to the slave.
+	PF_PrepareLongSinglePack();
+	int len = scheme.size();
+	PF_LongSinglePack(&len, 1, PF_INT);
+	PF_LongSinglePack(&scheme[0], len, PF_WORD);
+	PF_LongSingleSend(next, PF_OPT_MCTS_MSGTAG);
+
+	// Remember the task.
+	pair<vector<WORD>, vector<tree_node *> > &p = PF_opt_MCTS_tasks[next];
+	p.first = scheme;
+	p.second = path;
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: PF_find_Horner_MCTS_expand_tree_master", thetime_str().c_str());
+#endif
+
+}
+
+// Wait for all the slaves to finish their tasks.
+void PF_find_Horner_MCTS_expand_tree_master_wait () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: PF_find_Horner_MCTS_expand_tree_master_wait", thetime_str().c_str());
+#endif
+
+	// Wait for all the slaves.
+	for (int i = 1; i < PF.numtasks; i++) {
+		int next = PF_find_Horner_MCTS_expand_tree_master_next();
+		// Send a null task.
+		PF_PrepareLongSinglePack();
+		int len = 0;
+		PF_LongSinglePack(&len, 1, PF_INT);
+		PF_LongSingleSend(next, PF_OPT_MCTS_MSGTAG);
+	}
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: PF_find_Horner_MCTS_expand_tree_master_wait", thetime_str().c_str());
+#endif
+
+}
+
+// The main function on the slaves.
+void PF_find_Horner_MCTS_expand_tree_slave () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: PF_find_Horner_MCTS_expand_tree_slave", thetime_str().c_str());
+#endif
+
+	vector<WORD> scheme;
+
+	{
+		// Send the first message to the master, which indicates I am idle.
+		PF_PreparePack();
+		int dummy = 0;
+		PF_Pack(&dummy, 1, PF_INT);
+		PF_Send(MASTER, PF_OPT_MCTS_MSGTAG);
+	}
+
+	for (;;) {
+		// Get a task from the master.
+		PF_LongSingleReceive(MASTER, PF_OPT_MCTS_MSGTAG, NULL, NULL);
+
+		// Length of the task.
+		int len;
+		PF_LongSingleUnpack(&len, 1, PF_INT);
+
+		// No task remains.
+		if (len == 0) break;
+
+		// Perform the given task.
+		scheme.resize(len);
+		PF_LongSingleUnpack(&scheme[0], len, PF_WORD);
+		int num_oper;
+		try_MCTS_scheme(scheme, &num_oper);
+
+		// Send the result to the master.
+		PF_PreparePack();
+		PF_Pack(&num_oper, 1, PF_INT);
+		PF_Send(MASTER, PF_OPT_MCTS_MSGTAG);
+	}
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: PF_find_Horner_MCTS_expand_tree_slave", thetime_str().c_str());
+#endif
+
+}
+
+#endif
+/*
+  	#] PF_find_Horner_MCTS_expand_tree :
   	#[ find_Horner_MCTS :
 */
 
@@ -1426,7 +1669,15 @@ void find_Horner_MCTS_expand_tree () {
  */
 //vector<vector<WORD> > find_Horner_MCTS () {
 void find_Horner_MCTS () {
-	
+
+#ifdef WITHMPI
+	if (PF.me != MASTER) {
+		if (PF.numtasks <= 1) return;
+		PF_find_Horner_MCTS_expand_tree_slave();
+		return;
+	}
+#endif
+
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: find_Horner_MCTS", thetime_str().c_str());
 #endif
@@ -1463,7 +1714,11 @@ void find_Horner_MCTS () {
 			mcts_root.childs.push_back(tree_node(-(mcts_vars[i]+1)));
 	}
 	my_random_shuffle(BHEAD mcts_root.childs.begin(), mcts_root.childs.end());
-	
+
+#if defined(WITHMPI)
+	PF_find_Horner_MCTS_expand_tree_master_init();
+#endif
+
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
 	for (int times=0; times<AO.Optimize.mctsnumexpand && !mcts_root.finished && 
@@ -1471,19 +1726,24 @@ void find_Horner_MCTS () {
 			 times++) {
 
   	// call expand_tree routine depending on threading mode
-#ifndef WITHPTHREADS
-		find_Horner_MCTS_expand_tree();
-#else
+#if defined(WITHPTHREADS)
 		if (AM.totalnumberofthreads > 1)
 			find_Horner_MCTS_expand_tree_threaded();
-		else 
-			find_Horner_MCTS_expand_tree();
+		else
+#elif defined(WITHMPI)
+		if (PF.numtasks > 1)
+			PF_find_Horner_MCTS_expand_tree_master();
+		else
 #endif
+			find_Horner_MCTS_expand_tree();
 	}
 
-	// if TForm, wait for everyone to finish
+	// if TForm or ParForm, wait for everyone to finish
 #ifdef WITHPTHREADS
 	MasterWaitAll();
+#endif
+#ifdef WITHMPI
+	PF_find_Horner_MCTS_expand_tree_master_wait();
 #endif
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS", thetime_str().c_str());
@@ -3282,6 +3542,157 @@ void optimize_expression_given_Horner () {
 
 /*
   	#] optimize_expression_given_Horner : 
+  	#[ PF_optimize_expression_given_Horner :
+*/
+#ifdef WITHMPI
+
+// Initialization.
+void PF_optimize_expression_given_Horner_master_init () {
+	// Nothing to do for now.
+}
+
+// Wait for an idle slave and return the process number.
+int PF_optimize_expression_given_Horner_master_next() {
+
+	// Find an idle slave.
+	int next;
+	PF_LongSingleReceive(PF_ANY_SOURCE, PF_OPT_HORNER_MSGTAG, &next, NULL);
+	return next;
+
+}
+
+// The main function on the master.
+void PF_optimize_expression_given_Horner_master () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: PF_optimize_expression_given_Horner_master", thetime_str().c_str());
+#endif
+
+	// pick a Horner scheme from the list
+	vector<WORD> Horner_scheme = optimize_best_Horner_schemes.back();
+	optimize_best_Horner_schemes.pop_back();
+
+	// Find an idle slave.
+	int next = PF_optimize_expression_given_Horner_master_next();
+
+	// Send a new task to the slave.
+	PF_PrepareLongSinglePack();
+	int len = Horner_scheme.size();
+	PF_LongSinglePack(&len, 1, PF_INT);
+	PF_LongSinglePack(&Horner_scheme[0], len, PF_WORD);
+	PF_LongSingleSend(next, PF_OPT_HORNER_MSGTAG);
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: PF_optimize_expression_given_Horner_master", thetime_str().c_str());
+#endif
+
+}
+
+// Wait for all the slaves to finish their tasks.
+void PF_optimize_expression_given_Horner_master_wait () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: PF_optimize_expression_given_Horner_master_wait", thetime_str().c_str());
+#endif
+
+	// Wait for all the slaves.
+	for (int i = 1; i < PF.numtasks; i++) {
+		int next = PF_optimize_expression_given_Horner_master_next();
+		// Send a null task.
+		PF_PrepareLongSinglePack();
+		int len = 0;
+		PF_LongSinglePack(&len, 1, PF_INT);
+		PF_LongSingleSend(next, PF_OPT_HORNER_MSGTAG);
+	}
+
+	// Combine the result from all the slaves.
+	optimize_best_num_oper = INT_MAX;
+	for (int i = 1; i < PF.numtasks; i++) {
+		PF_LongSingleReceive(PF_ANY_SOURCE, PF_OPT_COLLECT_MSGTAG, NULL, NULL);
+
+		int len;
+
+		// The first integer is the number of operations.
+		PF_LongSingleUnpack(&len, 1, PF_INT);
+
+		if (len >= optimize_best_num_oper) continue;
+
+		// Update the best result.
+		optimize_best_num_oper = len;
+		PF_LongSingleUnpack(&len, 1, PF_INT);
+		optimize_best_instr.resize(len);
+		PF_LongSingleUnpack(&optimize_best_instr[0], len, PF_WORD);
+		PF_LongSingleUnpack(&len, 1, PF_INT);
+		optimize_best_vars.resize(len);
+		PF_LongSingleUnpack(&optimize_best_vars[0], len, PF_WORD);
+
+		optimize_num_vars = optimize_best_vars.size();  // TODO
+	}
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: PF_optimize_expression_given_Horner_master_wait", thetime_str().c_str());
+#endif
+
+}
+
+// The main function on the slaves.
+void PF_optimize_expression_given_Horner_slave () {
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] CALL: PF_optimize_expression_given_Horner_slave", thetime_str().c_str());
+#endif
+
+	optimize_best_Horner_schemes.clear();
+	optimize_best_num_oper = INT_MAX;
+
+	int dummy = 0;
+	int len;
+
+	for (;;) {
+		// Ask the master for the next task.
+		PF_PrepareLongSinglePack();
+		PF_LongSinglePack(&dummy, 1, PF_INT);
+		PF_LongSingleSend(MASTER, PF_OPT_HORNER_MSGTAG);
+
+		// Get a task from the master.
+		PF_LongSingleReceive(MASTER, PF_OPT_HORNER_MSGTAG, NULL, NULL);
+
+		// Length of the task.
+		PF_LongSingleUnpack(&len, 1, PF_INT);
+
+		// No task remains.
+		if (len == 0) break;
+
+		// Perform the given task.
+		optimize_best_Horner_schemes.push_back(vector<WORD>());
+		vector<WORD> &Horner_scheme = optimize_best_Horner_schemes.back();
+		Horner_scheme.resize(len);
+		PF_LongSingleUnpack(&Horner_scheme[0], len, PF_WORD);
+		optimize_expression_given_Horner ();
+	}
+
+	// Send the result to the master.
+	PF_PrepareLongSinglePack();
+	PF_LongSinglePack(&optimize_best_num_oper, 1, PF_INT);
+	if (optimize_best_num_oper != INT_MAX) {
+		len = optimize_best_instr.size();
+		PF_LongSinglePack(&len, 1, PF_INT);
+		PF_LongSinglePack(&optimize_best_instr[0], len, PF_WORD);
+		len = optimize_best_vars.size();
+		PF_LongSinglePack(&len, 1, PF_INT);
+		PF_LongSinglePack(&optimize_best_vars[0], len, PF_WORD);
+	}
+	PF_LongSingleSend(MASTER, PF_OPT_COLLECT_MSGTAG);
+
+#ifdef DEBUG
+	MesPrint ("*** [%s, w=%w] DONE: PF_optimize_expression_given_Horner_slave", thetime_str().c_str());
+#endif
+
+}
+
+#endif
+/*
+  	#] PF_optimize_expression_given_Horner :
   	#[ generate_output :
 */
 
@@ -3611,8 +4022,38 @@ VOID optimize_print_code (int print_expr) {
  *   or
  *   (6b) generate_expression : to modify the expression (for
  *   "#Optimize")
+ *
+ *   On ParFORM, all the processes must call this function at the same
+ *   time. Then
+ *
+ *   (1) Because only the master can access to the expression to be
+ *   optimized, the master broadcast the expression to all the slaves
+ *   after reading the expression (PF_get_expression).
+ *
+ *   (2) get_brackets reads optimize_expr as the input and it works
+ *   also on the slaves. We leave it although the bracket information
+ *   is not needed on the slaves (used in (5) on the master).
+ *
+ *   (3) and (4) find_Horner_MCTS and optimize_expression_given_Horner
+ *   are parallelized.
+ *
+ *   (5), (6a) and (6b) are needed only on the master.
  */
 int Optimize (WORD exprnr, int do_print) {
+
+#if defined(WITHMPI) && (defined(DEBUG) || defined(DEBUG_MORE) || defined(DEBUG_MCTS) || defined(DEBUG_GREEDY))
+	// set AS.printflag negative temporary.
+	struct save_printflag {
+		save_printflag() {
+			oldprintflag = AS.printflag;
+			AS.printflag = -1;
+		}
+		~save_printflag() {
+			AS.printflag = oldprintflag;
+		}
+		int oldprintflag;
+	} save_printflag_;
+#endif
 
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: Optimize", thetime_str().c_str());
@@ -3625,8 +4066,15 @@ int Optimize (WORD exprnr, int do_print) {
 	
 	AO.OptimizeResult.minvar = (cbuf + AM.sbufnum)->numrhs + 1;
 	
-	if (get_expression(exprnr) != 0) return -1;
+	if (get_expression(exprnr) < 0) return -1;
 	vector<vector<WORD> > brackets = get_brackets();
+
+#ifdef DEBUG
+#ifdef WITHMPI
+		if (PF.me == MASTER)
+#endif
+		MesPrint ("*** runtime after preparing the expression: %"); PrintRunningTime();
+#endif
 
 	if (optimize_expr[0]==0 ||
 			(optimize_expr[optimize_expr[0]]==0 && optimize_expr[0]==ABS(optimize_expr[optimize_expr[0]-1])+1) ||
@@ -3635,7 +4083,6 @@ int Optimize (WORD exprnr, int do_print) {
 		// zero terms or one trivial term (number or +/-variable), so no
 		// optimization, so copy expression; special case because without
 		// operators the optimization crashes
-		
 		AO.OptimizeResult.code = (WORD *)Malloc1((optimize_expr[0]+3)*sizeof(WORD), "optimize output");
 		AO.OptimizeResult.code[0] = -(exprnr+1);
 		memcpy(AO.OptimizeResult.code+1, optimize_expr, (optimize_expr[0]+1)*sizeof(WORD));
@@ -3660,20 +4107,27 @@ int Optimize (WORD exprnr, int do_print) {
 			else {
 				for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
 					find_Horner_MCTS();
-			// generate results
-			for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
-				optimize_best_Horner_schemes.push_back(i->second);
-			}
-			
+				// generate results
+				for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
+					optimize_best_Horner_schemes.push_back(i->second);
 #ifdef DEBUG_MCTS
-				MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
+					MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
 #endif
+				}
 			}
 			// clear the tree by making a new empty one.
 			mcts_root = tree_node();
 		}
 #ifdef DEBUG
+#ifdef WITHMPI
+		if (PF.me == MASTER)
+#endif
 		MesPrint ("*** runtime after Horner: %"); PrintRunningTime();
+#endif
+
+#ifdef WITHMPI
+		if (PF.me == MASTER ) {
+			PF_optimize_expression_given_Horner_master_init();
 #endif
 
 		// find best Horner scheme and results
@@ -3682,25 +4136,57 @@ int Optimize (WORD exprnr, int do_print) {
 		int imax = (int)optimize_best_Horner_schemes.size();
 
 		for (int i=0; i<imax; i++) {
-#ifndef WITHPTHREADS
-			optimize_expression_given_Horner();
-#else
-			if (AM.totalnumberofthreads > 1) {
+#if defined(WITHPTHREADS)
+			if (AM.totalnumberofthreads > 1)
 				optimize_expression_given_Horner_threaded();
-			}
 			else
-				optimize_expression_given_Horner();
+#elif defined(WITHMPI)
+			if (PF.numtasks > 1)
+				PF_optimize_expression_given_Horner_master();
+			else
 #endif
+				optimize_expression_given_Horner();
 		}
+
+#ifdef WITHMPI
+			PF_optimize_expression_given_Horner_master_wait();
+		}
+		else {
+			if (PF.numtasks > 1)
+				PF_optimize_expression_given_Horner_slave();
+		}
+#endif
 
 #ifdef WITHPTHREADS
 		MasterWaitAll();
 #endif
 		// format results, then print it (for "Print") or modify
 		// expression (for "#Optimize")
+#ifdef WITHMPI
+		if (PF.me == MASTER)
+#endif
 		generate_output(optimize_best_instr, exprnr, cbuf[AM.sbufnum].numrhs, brackets);
+#ifdef WITHMPI
+		else {
+			// non-null dummy code for slaves
+			AO.OptimizeResult.code = (WORD *)Malloc1(sizeof(WORD), "optimize output");
+		}
+#endif
 	}
-	
+
+#ifdef WITHMPI
+	if (PF.me == MASTER) {
+		PF_PreparePack();
+		PF_Pack(&AO.OptimizeResult.minvar, 1, PF_WORD);
+		PF_Pack(&AO.OptimizeResult.maxvar, 1, PF_WORD);
+	}
+	PF_Broadcast();
+	if (PF.me != MASTER) {
+		PF_Unpack(&AO.OptimizeResult.minvar, 1, PF_WORD);
+		PF_Unpack(&AO.OptimizeResult.maxvar, 1, PF_WORD);
+	}
+#endif
+
 	// set preprocessor variables
 	char str[100];
 	sprintf (str,"%d",AO.OptimizeResult.minvar);
@@ -3709,13 +4195,23 @@ int Optimize (WORD exprnr, int do_print) {
 	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)str,0,1);
 
 	if (do_print) {
+#ifdef WITHMPI
+		if (PF.me == MASTER)
+#endif
 		optimize_print_code(1);
 		ClearOptimize();
 	}
 	else {
+#ifdef WITHMPI
+		if (PF.me == MASTER)
+#endif
 		generate_expression(exprnr);
 	}
-	
+
+#ifdef WITHMPI
+	if (PF.me == MASTER) {
+#endif
+
 	if ( AO.Optimize.printstats > 0 ) {
 		MesPrint("");
 		count_operators(optimize_expr,true);
@@ -3753,6 +4249,10 @@ int Optimize (WORD exprnr, int do_print) {
 		AO.OutputLine = old1;
 	}
 	
+#ifdef WITHMPI
+	}
+#endif
+
 	// cleanup
 	M_free(optimize_expr,"LoadOptim");
 
