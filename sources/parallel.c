@@ -902,6 +902,7 @@ int PF_EndSort(void)
 	LONG size, noutterms;
 	POSITION position, oldposition;
 	WORD i,cc;
+	int oldgzipCompress;
 
 	if ( AT.SS != AT.S0 || !PF.parallel ) return 0;
 
@@ -950,6 +951,8 @@ int PF_EndSort(void)
 	*AR.CompressPointer = 0;
 	SeekScratch(fout, &position);
 	oldposition = position;
+	oldgzipCompress = AR.gzipCompress;
+	AR.gzipCompress = 0;
 
 	noutterms = 0;
 
@@ -983,9 +986,13 @@ int PF_EndSort(void)
 		PRINTFBUF("PF_EndSort to PutOut: ",outterm,*outterm);
 		PutOut(BHEAD outterm,&position,fout,1);
 	}
-	if ( FlushOut(&position,fout,0) ) return(-1);
+	if ( FlushOut(&position,fout,0) ) {
+		AR.gzipCompress = oldgzipCompress;
+		return(-1);
+	}
 	S->TermsLeft = PF_goutterms = noutterms;
 	DIFPOS(PF_exprsize, position, oldposition);
+	AR.gzipCompress = oldgzipCompress;
 	return(1);
 }
 
