@@ -3790,6 +3790,9 @@ static int PF_DoOneExpr(void)/*the processor*/
 */
 				SetScratch(fi,&position);
 				term = AT.WorkPointer;
+				AR.CompressPointer = AR.CompressBuffer;
+				AR.CompressPointer[0] = 0;
+				AR.KeptInHold = 0;
 				if ( GetTerm(BHEAD term) <= 0 ) {
 					MesPrint("Expression %d has problems in scratchfile",i);
 					Terminate(-1);
