@@ -968,11 +968,21 @@ void PrintSubtermList(int from,int to)
 		continuation line in fortran mode.
 		But the next statement should start on a blank line.
 */
+/*
 		FiniLine();
 		if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
-			AO.OutFill = AO.OutputLine; /* Clear the line */
+			AO.OutFill = AO.OutputLine;
 			TokenToLine((UBYTE *)"      ");
 			AO.OutSkip = 7;
+		}
+*/
+		if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE ) {
+			AO.OutSkip = 6;
+			FiniLine();
+			AO.OutSkip = 7;
+		}
+		else {
+			FiniLine();
 		}
 		i += inc;
 	} while ( i != to );
