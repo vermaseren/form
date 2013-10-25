@@ -8,6 +8,7 @@ TEXFILES = \
 	manual.tex \
 	metric.tex \
 	module.tex \
+	optim.tex \
 	parallel.tex \
 	pattern.tex \
 	polynomials.tex \

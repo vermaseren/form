@@ -1,5 +1,5 @@
 m4_define([FORM_MAJORVERSION], [4])
-m4_define([FORM_MINORVERSION], [0])
+m4_define([FORM_MINORVERSION], [1])
 m4_define([FORM_VERSION], [FORM_MAJORVERSION.FORM_MINORVERSION])
 # set to 'yes' for beta verstions
 m4_define([VERSION_IS_BETA], [no])

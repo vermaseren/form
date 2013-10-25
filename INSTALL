@@ -42,9 +42,9 @@ version 4.2. The zlib library should be a recent version, >= 1.2.
 Preparations
 ============
 
-If you have acquired the FORM sources via CVS, several files will be missing,
-especially the script "configure". To generate these files you have to issue the
-command
+If you have acquired the FORM sources via CVS or GIT, several files will be
+missing, especially the script "configure". To generate these files you have to
+issue the command
 
     autoreconf -i
 
@@ -152,8 +152,9 @@ To cleanup the distribution directory, the command
 can be used.
 
 The production date printed by the executable will be set to the time of the
-compilation. If one wants to have another date printed one can give the DATE
-option to the make command like
+release of the tar-file distribution, or the time of the compilation if you
+use the sources acquired from CVS or GIT. If one wants to have another date
+printed one can give the DATE option to the make command like
 
     make vorm DATE="11 Nov 2011"
 

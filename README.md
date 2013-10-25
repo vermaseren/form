@@ -17,11 +17,6 @@ Installation
 
 See the file "INSTALL".
 
-Documentation
--------------
-
-See [our website](http://vermaseren.github.io/form/) for documentation, lectures and papers on FORM. 
-
 
 Additional Information
 ----------------------
@@ -29,12 +24,14 @@ Additional Information
 Information about copying and licencing of this software can be found in the
 file "COPYING".
 
-More background information and a collection of FORM programs can be found on the old FORM website:
+More background information, the latest version and a collection of FORM
+programs can be found on the official FORM website: http://www.nikhef.nl/~form.
 
-                              http://www.nikhef.nl/~form
 
 Bugs and remarks
 ----------------
-Bugs can be reported via the [Issue Tracker](https://github.com/vermaseren/form/issues) of Github. 
+Bugs can be reported via the
+[Issue Tracker](https://github.com/vermaseren/form/issues) of Github.
 
-In case of more question or remarks, please visit the official FORM [forum](http://www.nikhef.nl/~form/forum/).
+In case of more question or remarks, please visit the official
+FORM [forum](http://www.nikhef.nl/~form/forum/).

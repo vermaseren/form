@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2012 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2013 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -41,14 +41,14 @@
 
 #else  /* HAVE_CONFIG_H */
 
-#define VERSION "4.0"
+#define VERSION "4.1"
 #define MAJORVERSION 4
-#define MINORVERSION 0
+#define MINORVERSION 1
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "29-mar-2012"
+#define PRODUCTIONDATE "25-oct-2013"
 #endif
 
 #undef BETAVERSION
