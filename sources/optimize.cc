@@ -185,7 +185,7 @@ LONG get_expression (int exprnr) {
 }
 
 /*
-  	#] get_expression :
+  	#] get_expression : 
   	#[ PF_get_expression :
 */
 #ifdef WITHMPI
@@ -207,7 +207,7 @@ LONG PF_get_expression (int exprnr) {
 
 #endif
 /*
-  	#] PF_get_expression :
+  	#] PF_get_expression : 
   	#[ get_brackets :
 */
 
@@ -1410,7 +1410,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 }
 
 /*
- 		#] next_MCTS_scheme :
+ 		#] next_MCTS_scheme : 
  		#[ try_MCTS_scheme :
 */
 
@@ -1431,7 +1431,7 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 }
 
 /*
- 		#] try_MCTS_scheme :
+ 		#] try_MCTS_scheme : 
  		#[ update_MCTS_scheme :
 */
 
@@ -1464,7 +1464,7 @@ inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme,
 }
 
 /*
- 		#] update_MCTS_scheme :
+ 		#] update_MCTS_scheme : 
 */
 
 void find_Horner_MCTS_expand_tree () {
@@ -1655,7 +1655,7 @@ void PF_find_Horner_MCTS_expand_tree_slave () {
 
 #endif
 /*
-  	#] PF_find_Horner_MCTS_expand_tree :
+  	#] PF_find_Horner_MCTS_expand_tree : 
   	#[ find_Horner_MCTS :
 */
 
@@ -3430,9 +3430,9 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 	}
 
 	// put the number of variables used in a preprocessor variable
-	UBYTE numbuf[24];
-	NumCopy(numvar,numbuf);
-	PutPreVar(AM.oldnumextrasymbols,numbuf,0,1);
+//	UBYTE numbuf[24];
+//	NumCopy(numvar,numbuf);
+//	PutPreVar(AM.oldnumextrasymbols,numbuf,0,1);
 	
 	// generate new instructions with the renumbering
 	vector<WORD> newinstr;
@@ -3692,7 +3692,7 @@ void PF_optimize_expression_given_Horner_slave () {
 
 #endif
 /*
-  	#] PF_optimize_expression_given_Horner :
+  	#] PF_optimize_expression_given_Horner : 
   	#[ generate_output :
 */
 
@@ -4312,6 +4312,7 @@ int ClearOptimize()
 		*w = SetExprCases(DROP,1,*w);
 		if ( *w < 0 ) error = 1;
 	}
+	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
 	return(error);
 }
 

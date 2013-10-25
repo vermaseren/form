@@ -5837,7 +5837,16 @@ writealloc:
 			else if ( *fstring == 'X' ) {
 				fstring++;
 				if ( cbuf[AM.sbufnum].numrhs > 0 ) {
-					PrintSubtermList(1,cbuf[AM.sbufnum].numrhs);
+/*
+					This should be only to the value of AM.oldnumextrasymbols
+*/
+					UBYTE *s = GetPreVar(AM.oldnumextrasymbols,0);
+					WORD x = 0;
+					while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
+					if ( x > 0 )
+						PrintSubtermList(1,x);
+					else
+						PrintSubtermList(1,cbuf[AM.sbufnum].numrhs);
 				}
 			}
 			else if ( *fstring == 'O' ) {
@@ -5847,14 +5856,14 @@ dooptim:
 /*
 				First test whether there is an optimization buffer
 */
-				if ( AO.OptimizeResult.code == NULL ) {
+				if ( AO.OptimizeResult.code == NULL && AO.OptimizationLevel != 0 ) {
 					MesPrint("@In #write instruction: no optimization results available!");
 					return(-1);
 				}
 				num = to - Out;
 				WriteString(wtype,Out,num);
 				to = Out;
-				{
+				if ( AO.OptimizationLevel != 0 ) {
 					WORD oldoutskip = AO.OutSkip;
 					AO.OutSkip = number;
 					optimize_print_code(0);
@@ -6256,6 +6265,7 @@ int DoOptimize(UBYTE *s)
 		int firstterm;
 		WORD *term = AT.WorkPointer;
 		ClearOptimize();
+		if ( AO.OptimizationLevel == 0 ) return(0);
 		switch ( e->status ) {
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
@@ -6277,6 +6287,8 @@ int DoOptimize(UBYTE *s)
 		}
 		for ( i = 0; i < NumExpressions; i++ ) {
 			if ( i == numexpr ) {
+				PutPreVar(AM.oldnumextrasymbols,
+						GetPreVar((UBYTE *)"EXTRASYMBOLS_",0),0,1);
 				Optimize(numexpr, 0);
 				AO.OptimizeResult.nameofexpr = strDup1(exprname,"optimize expression name");
 				continue;

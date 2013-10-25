@@ -1671,7 +1671,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 }
 
 /*
- 		#] WriteSubTerm :
+ 		#] WriteSubTerm : 
  		#[ WriteInnerTerm :		WORD WriteInnerTerm(term,first)
 
 	Writes the contents of term to the output.
@@ -2217,9 +2217,7 @@ WORD WriteAll()
 					continue;
 			}
 			e->printflag = 0;
-/* Needed? (TU 27 Jul 2013)
 			PutPreVar(AM.oldnumextrasymbols, GetPreVar((UBYTE *)"EXTRASYMBOLS_", 0), 0, 1);
-*/
 			if ( AO.OptimizationLevel > 0 ) {
 				if ( Optimize(0, 1) ) return(-1);
 			}
@@ -2484,16 +2482,9 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 		MesPrint("@ReadError in expression %s",name);
 		goto AboWrite;
 	}
+/*
 	PutPreVar(AM.oldnumextrasymbols,
 			GetPreVar((UBYTE *)"EXTRASYMBOLS_",0),0,1);
-/*
-	if ( AC.OutputMode == VORTRANMODE ) {
-		AO.OutSkip = 6;
-		if ( Optimize(AO.termbuf[3], 1) ) goto AboWrite;
-		AO.OutSkip = 3;
-		FiniLine();
-	}
-	else
 */
 	/*
 	 * Currently WriteOne() is called only from writeToChannel() with setting
