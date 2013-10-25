@@ -6245,13 +6245,13 @@ correctuse:
 				}
 			}
 			else if ( StrICmp(value,(UBYTE *)"on") == 0 ) {
-				AO.Optimize.printstats = 1;
+				AO.Optimize.debugflags = 1;
 			}
 			else if ( StrICmp(value,(UBYTE *)"off") == 0 ) {
-				AO.Optimize.printstats = 0;
+				AO.Optimize.debugflags = 0;
 			}
 			else {
-				AO.Optimize.printstats = 0;
+				AO.Optimize.debugflags = 0;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}
