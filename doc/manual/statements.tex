@@ -70,7 +70,7 @@ with the exception of the variables in the antibracket information inside a
 function argument. The function must be a regular function (hence no tensor 
 or table which are special types of functions). The 
 antibracket\index{antibracket} information should adhere to the syntax of 
-the bracket statement (\ref{substabracket},\ref{substaantibracket}) and all 
+the bracket statement (\ref{substabracket},\ref{substaabrackets}) and all 
 occurrences of all variables with the exception of the antibracket 
 variables will be put inside the function. The coefficient will also be put 
 inside the function.
@@ -1263,8 +1263,9 @@ Syntax & extrasymbols,array|vector|underscore,name;
 \noindent Starting with version 4.0 of \FORM{} some built in operations or
 statements can only deal with symbols and numbers. Examples of this are 
 factorization(\ref{substafactarg}) (which uses the topolynomial facilities 
-automatically) and output simplification (still to be 
-implemented). The ToPolynomial statement takes each term, looks for objects 
+automatically) and output simplification (see the Format 
+statement\ref{substaformat}).
+The ToPolynomial statement takes each term, looks for objects 
 that are not symbols to positive powers and replaces them by symbols. If 
 the object has been encountered before the same symbol will be used, 
 otherwise a new symbol will be defined. The object represented by the 
@@ -1651,6 +1652,22 @@ output slightly more readable. This gives a more compact output.}
 \rightvitem{13cm}{The output is printed with extra spaces between the terms 
 and around certain operators to make it slightly more readable. This is the 
 default.}
+ 
+\leftvitem{3.5cm}{O0\index{optimize}\index{format!optimize}}
+\rightvitem{13cm}{\FORM\ will turn off output optimization. See the section 
+on output optimization\ref{optimization}}
+ 
+\leftvitem{3.5cm}{O1[options]\index{optimize}\index{format!optimize}}
+\rightvitem{13cm}{\FORM\ will use level 1 output optimization. See the section 
+on output optimization\ref{optimization}}
+ 
+\leftvitem{3.5cm}{O2[options]\index{optimize}\index{format!optimize}}
+\rightvitem{13cm}{\FORM\ will use level 2 output optimization. See the section 
+on output optimization\ref{optimization}}
+ 
+\leftvitem{3.5cm}{O3[options]\index{optimize}\index{format!optimize}}
+\rightvitem{13cm}{\FORM\ will use level 3 output optimization. See the section 
+on output optimization\ref{optimization}}
 
 \leftvitem{3.5cm}{fortran\index{fortran}\index{format!fortran}}
 \rightvitem{13cm}{The output is printed in a way that is readable by a 
@@ -1716,7 +1733,19 @@ author is open for suggestions.
 \rightvitem{13cm}{Will return to the regular \FORM\ formatting mode.}
 
 \noindent If the statement has no arguments the formatting will be reset to 
-the mode it was in when the program started. \vspace{10mm}
+the mode it was in when the program started.\vspace{4mm}
+
+%\leftvitem{3.5cm}{}
+%\rightvitem{13cm}{}
+
+%\leftvitem{3.5cm}{}
+%\rightvitem{13cm}{}
+
+
+
+
+
+\vspace{10mm}
 
 %--#] format : 
 %--#[ frompolynomial :
@@ -1807,12 +1836,27 @@ cycle symmetric\index{symmetric!reverse cycle} in all its arguments. This
 means that during normalization {\FORM} will order the arguments according 
 to its internal notion of order by trying cyclic permutations and/or a 
 complete reverse order of all arguments. The result will depend on the 
-order of declaration of variables.}\vspace{2mm}
+order of declaration of variables.}
 
-\noindent The complexity properties and the symmetric properties can be 
-combined. In that case the complexity properties should come first as in
+\leftvitem{4.1cm}{name<number
+
+name<=number
+
+name>number
+
+name>=number}
+\rightvitem{12cm}{The function has a restriction on the number of 
+arguments. If the number of arguments of an occurrence of the function is 
+not fulfilling the condition during normalization {\FORM} will set the term 
+equal to zero.}\vspace{2mm}
+
+\noindent The complexity properties, the symmetric properties and the 
+number of arguments restrictions can be 
+combined. In that case the complexity properties should come first and the 
+argument restrictions should come last as in
 \begin{verbatim}
-    Function f1#i(symmetric);
+    Function f1#i(symmetric)>=4<8;
+    Function f1#i<=8;
 \end{verbatim}
 \vspace{10mm}
 

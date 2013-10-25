@@ -95,6 +95,7 @@
 \input{@srcdir@/statements}
 \input{@srcdir@/functions}
 \input{@srcdir@/bracket}
+\input{@srcdir@/optim}
 \input{@srcdir@/polynomials}
 \input{@srcdir@/tablebas}
 \input{@srcdir@/gamma}

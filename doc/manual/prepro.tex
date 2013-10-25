@@ -59,14 +59,22 @@ any longer.
 
 \noindent \FORM\ has a number of built in preprocessor variables. They are:
 
-\noindent \begin{tabular}{ll}
-VERSION\_     &\index{VERSION\_} The current version as the 4 in 4.0.\\
-SUBVERSION\_  &\index{SUBVERSION\_} The sub-version as the 0 in 4.0.\\
-NAME\_        &\index{NAME\_} The name of the program file.\\
-DATE\_        &\index{DATE\_} The date of the current run.\\
-CMODULE\_     &\index{CMODULE\_} The number of the current module.\\
-SHOWINPUT\_   &\index{SHOWINPUT\_} If input listing is on: 1, if off: 0.
-\end{tabular}
+\begin{description}
+\item[VERSION\_]  The current version\index{VERSION\_} as the 4 in 4.1.
+\item[SUBVERSION\_]  The sub-version\index{SUBVERSION\_} as the 1 in 4.1.
+\item[NAME\_]        The name\index{NAME\_} of the program file.
+\item[DATE\_]        The date\index{DATE\_} of the current run.
+\item[CMODULE\_]     The number\index{CMODULE\_} of the current module.
+\item[SHOWINPUT\_]   If input listing\index{SHOWINPUT\_} is on: 1, if off: 0.
+\item[EXTRASYMBOLS\_]  The current number of extra symbols\index{EXTRASYMBOLS\_}
+       (see \ref{substaextrasymbols}).
+\item[OLDNUMEXTRASYMBOLS\_]  The number of extra symbols\index{OLDNUMEXTRASYMBOLS\_}
+            before the current optimization started (see chapter \ref{optimization}).
+\item[OPTIMMINVAR\_]  The number of the first extra symbol\index{OPTIMMINVAR\_} needed
+               for the current optimization (see chapter \ref{optimization}).
+\item[OPTIMMAXVAR\_]  The number of the last extra symbol\index{OPTIMMAXVAR\_} needed
+               for the current optimization (see chapter \ref{optimization}).
+\end{description}
 
 \noindent If \FORM\ cannot find a preprocessor variable, because it has 
 neither been defined by the user, nor is it one of the built in variables, 
@@ -455,6 +463,18 @@ matching \#break instruction, or until the matching
 \#endswitch\index{\#endswitch} instruction.
 
 %--#] case : 
+%--#[ clearoptimize :
+
+\section{\#clearoptimize}
+\label{preclearoptimize}
+
+\noindent Syntax:
+
+\#clearoptimize
+
+See the chapter about optimization\ref{optimization}
+ 
+%--#] clearoptimize : 
 %--#[ close :
 
 \section{\#close}
@@ -1248,6 +1268,18 @@ printed as well. If one needs messages without this clear marking, one
 should use the \#write\index{\#write} instruction.
  
 %--#] message : 
+%--#[ optimize :
+
+\section{\#optimize}
+\label{preoptimize}
+
+\noindent Syntax:
+
+\#optimize nameofoneexpression
+
+See the chapter about optimization\ref{optimization}
+ 
+%--#] optimize : 
 %--#[ pipe :
  
 \section{\#pipe}
@@ -1874,6 +1906,9 @@ directories for the given file. If none is found there will be an error
 message and execution will be halted.
 \item[\%X] Forces the printing of the list of extra symbols 
 (\ref{sect-extrasymbols}) and their definitions\index{extrasymbols}.
+\item[\%O] Forces the printing of the definitions of the extra symbols in 
+the buffer with the temporary variables from the previous optimization (see 
+the chapter on optimizations\ref{optimization}). 
 \end{description}
 If no special variables are asked for (by means of \%\$, \%e, \%E or \%s) 
 the list of variables will be ignored (if present). Example:

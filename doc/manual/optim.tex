@@ -1,0 +1,314 @@
+
+\chapter{Output optimization}
+\label{optimization}
+
+One of the uses of symbolic programs is to prepare formulas for further 
+numerical processing\index{numerical processing}. Technically speaking such 
+processing is not part of computer algebra, although some packages may 
+provide facilities for this. In \FORM\ such facilities, like for instance 
+Monte Carlo integration, do not exist at the moment, but, starting with 
+version 4.1, \FORM\ does provide statements to construct outputs in C or 
+Fortran that are highly optimized with respect to the number of arithmetic 
+operations\index{arithmetic operations} that are needed for their 
+evaluation. The algorithms used for this are described in the paper "Code 
+Optimization in FORM" which can be found in the \FORM\ pages under 
+documentation. There are also some example programs. Here the precise 
+format of the commands that concern the optimizations will be described.
+
+In optimized output \FORM\ needs temporary variables\index{temporary 
+variables}. In order to avoid conflicts with user defined objects \FORM\ 
+uses the extra symbols\ref{substaextrasymbols}\index{extra symbols} for 
+these variables. This means that the user can control their output 
+representation in the standard way. In addition there are preprocessor 
+variables that tell how many of these extra symbols were needed:
+\begin{description}
+\item[optimminvar\_] The number of extra symbols before the optimization 
+process started\index{optimminvar\_}.
+\item[optimmaxvar\_] The number of extra symbols after the optimization 
+process finished\index{optimmaxvar\_}.
+\end{description}
+Each new optimization will remove the old optimization results and start 
+the extra symbols from the number there were before the optimization 
+started. Because this may cause interference with the functioning of the 
+extrasymbol statement, regular printing with output optimization and the 
+extrasymbol statement cannot occur inside the same module. Such occurrence 
+would result in an error message.
+
+Because the output optimization is done for expressions that contain only 
+symbols\index{symbols}, \FORM\ has to convert all non-symbols and negative 
+powers of symbols to extra symbols\index{extra symbols} before it starts 
+the optimization. This is another reason why interference between the 
+extrasymbol\ref{substaextrasymbols}\index{extra symbols} statement and 
+output optimizations is forbidden. When the results are printed, the 
+definition of the extra symbols that are introduced this way are printed as 
+well.
+
+\FORM\ has two ways to perform optimizations. The first and easiest is in 
+the regular output. If one asks for optimization (by specifying the proper 
+format for this) and follows this by a print statement, the output printed 
+will be in optimized form. This is however just a representation of the 
+expression and the next module will obtain the original expression for its 
+input.
+
+The more useful way to obtain an optimized output is with the \#optimize 
+instruction. To use this instruction properly one should understand what 
+\FORM\ does when it optimizes an expression. The whole process of 
+optimization takes place inside the memory. Hence, \FORM\ cannot optimize 
+expressions that do not fit inside the CPU memory. The notation is however 
+fairly compact and \FORM\ needs far less space than for instance the 
+compiler (and gives better results). The result of the optimization is 
+stored inside a buffer. There is only a single optimization 
+buffer\index{optimization buffer} and the preprocessor variables 
+optimminvar\_\index{optimminvar\_} and optimmaxvar\_\index{optimmaxvar\_} 
+refer to the contents of this buffer. When the \#optimize instruction is 
+used it loads this buffer and the contents stay around untill either a 
+\#clearoptimize instruction is used or a new \#optimize instruction is 
+issued.
+
+The \#optimize instruction changes the original expression to its optimized 
+shape in which it is usually a very short expression that refers to one or 
+more extra symbols. The optimization information is automatically erased, 
+and with it the expression that was optimized, when a second \#optimize 
+instruction is issued. Clearing the optimization buffer means that the 
+information of the first expression is irretrievably lost and the contents 
+of the first expression become meaningless, because its extra symbols have 
+been erased. Hence if the user still needs this expression it is necessary 
+to make a copy of it before optimization.
+
+The optimization buffers, and the optimized expression, can be removed by 
+the user with the \#clearoptimize instruction. This is mandatory before the 
+use of a ToPolynomial\ref{substatopolynomial}\index{ToPolynomial} 
+statement, because that may introduce new extra symbols.
+
+The contents of the optimization buffer\index{optimization buffer} can be 
+written with the \%O combination in the format string in the \#write 
+instruction. This means that it is easy to write this output to file. 
+Consider for instance the following program:
+\begin{verbatim}
+   CF  f;
+   S   a,b,c;
+   L   H = f(a)+f(b)+(a+b+c)^2;
+   L   G = f(c)+(a+b+c)^3;
+   Format O2;
+   Print +f;
+   .sort
+   ExtraSymbols,array,w;
+   Format Fortran;
+   #optimize G
+   #write <outg.f> "      REAL*8 w(`optimmaxvar_')"
+   #write <outg.f> "%O"
+   #write <outg.f> "      G = %e",G
+   #clearoptimize
+   .sort
+   #optimize H
+   #write <outh.f> "      REAL*8 w(`optimmaxvar_')"
+   #write <outh.f> "%O"
+   #write <outh.f> "      H = %e",H
+   .end
+\end{verbatim}
+This program shows the two different methods and shows what is left of the 
+expressions G and H. It also shows that we have to deal with the 
+expressions one by one when we use the \#optimize instruction, while in the 
+regular printing of the output this is not needed because the expression 
+itself remains in its unoptimized version.
+
+\subsection{Optimization options of the Format statement}
+
+The \verb|Format| statement has a number of options to control the
+code optimization. The easiest to use are the following:
+
+\begin{description}
+\item[O0] Switches off all optimizations and prints the output the
+  normal \FORM\ way. This is the default.
+
+\item[O1] Activates the lowest level of optimization. It is very fast,
+  i.e., linear in the size of the expression, and gives reasonably
+  efficient code.
+
+\item[O2] Activates the medium level of optimization. This is slower
+  than the previous setting, but usually gives better results.
+
+\item[O3] Activates the highest level of optimization. It can be
+  rather slow, but usually gives even better results.
+\end{description}
+
+These levels of optimization refer to some default settings of all
+controlling parameters. These default values are in
+Tab.~\ref{tbl:defaults}. It is also possible to set each parameter
+individually to fine-tune the optimization process. The parameters
+that can be set are divided in several categories. First, it is
+possible to set which Horner schemes\index{Horner scheme} are tried:
+
+\begin{description}
+\item[Horner=(Occurrence $|$ MCTS)] Determines whether an 
+  occurrence order\index{occurrence order} Horner scheme is used
+  or whether MCTS\index{MCTS}\index{Monte Carlo tree search} is employed to
+  find Horner schemes.
+
+\item[HornerDirection=(Forward $|$ Backward $|$ ForwardOrBackward $|$] \hfill
+  {\bf ForwardAndBackward)}
+  Forward makes that the MCTS search in the O3 option will 
+  determine the outermost variables in the multivariate Horner scheme first 
+  and then work its way inward.
+  In the case of backward, the tree search determines the innermost variable 
+  first. In some cases this can give much better results when there are 
+  many common subexpressions involving a limited number of variables.
+  ForwardOrBackward tries both of these
+  schemes. ForwardAndBackward fills the order from both sides
+  simultaneously, resulting in more options, but also a much larger
+  search tree. If there are many variables, it could make the search tree 
+  too large to obtain good results. \hfill \\
+  When the option Horner=Occurrence is used the option backward will switch 
+  to something called `anti-occurrence' which means that the most frequent 
+  variable corresponds to the innermost brackets.
+\end{description}
+
+In the case of MCTS\index{MCTS}\index{Monte Carlo tree search} there are 
+various parameters that can control thesearch process:
+
+\begin{description}
+\item[MCTSConstant=$<$\emph{value}$>$] 
+  This sets the constant $C_P$ in the UCT formula that governs 
+  the Monte Carlo tree search. It is supposed to be given as a real number 
+  with a decimal point (no floating point notation that includes powers).
+\item[MCTSNumExpand=$<$\emph{value}$>$] The number of times the tree
+  is traversed and hence the number of times that a Horner scheme is
+  constructed.
+\item[MCTSNumKeep=$<$\emph{value}$>$] 
+  During the MCTS procedure \FORM\ only tries to construct 
+  a proper ordering for the Horner scheme, followed by a common subexpression 
+  elimination in the style of the O1 option. The best `value' schemes are 
+  remembered and for those a common subexpression elimination in the style of 
+  the O2 option is done afterward. This second style elimination is far more 
+  costly. In nearly all cases the best O2-style scheme is in the very few top 
+  O1-style schemes.
+\item[MCTSNumRepeat=$<$\emph{value}$>$] 
+  Sometimes it is more advantageous to run
+  a new tree search several times, each with a smaller number of
+  expansions. This parameter tells how many times we will run with a
+  new tree. The total number of tree traversals is the product of 
+  MCTSNumRepeat and MCTSNumExpand.
+\item[MCTSNumExpand=$<$\emph{value1*value2}$>$] 
+  Makes \FORM\ to run `value1' trees, each with `value2' Horner scheme
+  constructions. Hence this option is equivalent to the combination \hfill \\
+  MCTSNumRepeat=$<$\emph{value1}$>$, MCTSNumExpand=$<$\emph{value2}$>$.
+\item[MCTSTimeLimit=$<$\emph{value}$>$] The maximum time in seconds
+  that is used when searching through the tree.
+\end{description}
+
+The Horner methods generate a number of Horner schemes: one or two in
+the case of occurrence order schemes, depending of the direction
+parameter, and a number equal to MCTSNumKeep in the case of
+MCTS. Next, for each stored Horner scheme other optimizations are
+performed as determined by the following parameter:
+
+\begin{description}
+\item[Method=(None $|$ CSE $|$ Greedy $|$ CSEGreedy)] Determines what
+method is used for optimizing the generated Horner schemes. 
+CSE\index{CSE}\index{Common subexpression elimination} performs a simple 
+common subexpression elimination and Greedy performs greedy 
+optimizations\index{greedy optimizations} (see the paper for more 
+explanations) which are more sophisticated versions of CSE's. CSEGreedy 
+performs CSE followed by greedy optimizations; usually this is somewhat 
+faster than just greedy optimizations, but it gives slightly worse results. 
+The option None does nothing after applying the Horner scheme and is only 
+useful for debugging purposes.
+\end{description}
+
+When the method of greedy optimizations is used, repeatedly all
+potential optimizations are determined and a few of them are performed. The 
+following parameters are used to tune the greedy method:
+\begin{description}
+\item[GreedyMaxPerc] The percentage of the possible optimizations that is
+  performed.
+\item[GreedyMinNum] The minimum number of possible optimizations that
+  is performed.
+\item[GreedyTimeLimit] The maximum time in seconds that is spent in
+  the process of greedy optimization.
+\end{description}
+
+There are also two more general settings:
+\begin{description}
+\item[Stats=(On $|$ Off)] This parameter determines whether statistics
+  of the optimization are shown. Statistics are printed in the format
+
+{\tt *** STATS: original  1P 16M 5A : 23}
+
+{\tt *** STATS: optimized 0P 10M 5A : 15}
+
+in which P indicates power operations (at least a third power), M the 
+number of multiplications and A the number of additions/subtractions. The 
+last number is the total number of operations in which an $n$-th power counts 
+as $n-1$ operations.
+\item[TimeLimit=$<$\emph{value}$>$] This set both the MCTSTimeLimit
+  and the GreedyTimeLimit to half of the given value.
+\end{description}
+
+Finally there are some parameters that are of a rather specialized nature. 
+They can be used for debugging\index{debugging} purposes or in the case 
+that one knows already what is the best Horner scheme. Their default values 
+are Off.
+
+\begin{description}
+\item[DebugFlag=(On $|$ Off)] 
+In the case that the value is On, the list of temporary variables is 
+printed in reverse order with the the string "id " in front. This makes 
+them into a set of \FORM\ substitutions that undo the optimizations. One 
+can use this for instance to make sure that the optimized code is identical 
+to the original.
+\item[PrintScheme=(On $|$ Off)]
+This option (when On) will print the Horner scheme. That is the order in 
+which the variables were taken outside parentheses.
+\item[Scheme=(list of symbols)] The list should be enclosed by parentheses 
+and the symbols should be separated by either blanks or comma's. This 
+option will fix the Horner scheme\index{Horner scheme} to be used. One 
+could for instance use the output of the PrintScheme option for this to 
+avoid a lengthy search when a good order of the variables is already known. 
+Things become a bit tricky when extra symbols are involved. One should make 
+sure that their labelling is identical to when the scheme was created! When 
+extra symbols are used in their array/vector notation, one needs to 
+separate them by comma's, because blank spaces next to parentheses are 
+eliminated by the preprocessor. If one specifies the wrong number of 
+variables, the results can be quite unpredictable. At the moment of 
+compilation \FORM\ does not know the variables that are actually used. The 
+safe thing is to verify the actual variables with a testrun using the 
+PrintScheme option in the O1 mode.
+\end{description}
+
+{ \small
+\begin{table}[!ht]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+                &     O1      &    O2       & O3 (default) \\
+ \hline
+Horner          &  occurrence &  occurrence &   MCTS   \\
+HornerDirection &     OR      &      OR     &    OR    \\
+MCTSConstant    &    ---      &     ---     &   1.0    \\
+MCTSNumExpand   &    ---      &     ---     &  1000    \\
+MCTSNumKeep     &    ---      &     ---     &   10     \\
+MCTSNumRepeat   &    ---      &     ---     &    1     \\
+MCTSTimeLimit   &    ---      &     ---     &    0     \\
+Method          &    cse      &    greedy   &  greedy  \\
+GreedyMinNum    &    ---      &     10      &   10     \\
+GreedyMaxPerc   &    ---      &      5      &    5     \\
+GreedyTimeLimit &    ---      &      0      &    0     \\
+Stats           &    off      &     off     &   off    \\ 
+TimeLimit       &     0       &      0      &    0     \\
+\hline
+\end{tabular}
+\caption{Values for the various parameters in the predefined
+  optimization levels. OR stands for ForwardOrBackward.}
+\label{tbl:defaults}
+\end{table}
+} 
+
+All options should be specified in a single format statement and be
+separated either by commas or blank spaces. When
+\verb|Format Optimize| is used, first the default settings are taken
+and then the options that are specified overwrite them. It is allowed
+to have the O1, O2, O3 optimization specifications followed by
+options. In that case the program first sets the values of those
+specifications and then modifies according to what it encounters in
+the rest of the statement.
+
