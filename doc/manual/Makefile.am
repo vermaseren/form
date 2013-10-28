@@ -1,11 +1,10 @@
-TEXFILES = \
+TEXSRC = \
 	bracket.tex \
 	calculus.tex \
 	dollar.tex \
 	external.tex \
 	functions.tex \
 	gamma.tex \
-	manual.tex \
 	metric.tex \
 	module.tex \
 	optim.tex \
@@ -22,7 +21,9 @@ TEXFILES = \
 
 MAIN = manual
 
-EXTRA_DIST = $(TEXFILES)
+TEXFILES = $(TEXSRC) $(MAIN).tex
+
+EXTRA_DIST = $(TEXSRC)
 
 .PHONY: FORCE dvi html ps pdf clean-local
 

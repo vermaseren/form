@@ -17,7 +17,7 @@ format of the commands that concern the optimizations will be described.
 
 In optimized output \FORM\ needs temporary variables\index{temporary 
 variables}. In order to avoid conflicts with user defined objects \FORM\ 
-uses the extra symbols\ref{substaextrasymbols}\index{extra symbols} for 
+uses the extra symbols \ref{substaextrasymbols}\index{extra symbols} for 
 these variables. This means that the user can control their output 
 representation in the standard way. In addition there are preprocessor 
 variables that tell how many of these extra symbols were needed:
@@ -38,7 +38,7 @@ Because the output optimization is done for expressions that contain only
 symbols\index{symbols}, \FORM\ has to convert all non-symbols and negative 
 powers of symbols to extra symbols\index{extra symbols} before it starts 
 the optimization. This is another reason why interference between the 
-extrasymbol\ref{substaextrasymbols}\index{extra symbols} statement and 
+extrasymbol \ref{substaextrasymbols}\index{extra symbols} statement and 
 output optimizations is forbidden. When the results are printed, the 
 definition of the extra symbols that are introduced this way are printed as 
 well.
@@ -61,7 +61,7 @@ stored inside a buffer. There is only a single optimization
 buffer\index{optimization buffer} and the preprocessor variables 
 optimminvar\_\index{optimminvar\_} and optimmaxvar\_\index{optimmaxvar\_} 
 refer to the contents of this buffer. When the \#optimize instruction is 
-used it loads this buffer and the contents stay around untill either a 
+used it loads this buffer and the contents stay around until either a 
 \#clearoptimize instruction is used or a new \#optimize instruction is 
 issued.
 
@@ -77,7 +77,7 @@ to make a copy of it before optimization.
 
 The optimization buffers, and the optimized expression, can be removed by 
 the user with the \#clearoptimize instruction. This is mandatory before the 
-use of a ToPolynomial\ref{substatopolynomial}\index{ToPolynomial} 
+use of a ToPolynomial \ref{substatopolynomial}\index{ToPolynomial} 
 statement, because that may introduce new extra symbols.
 
 The contents of the optimization buffer\index{optimization buffer} can be 
@@ -252,7 +252,7 @@ are Off.
 \begin{description}
 \item[DebugFlag=(On $|$ Off)] 
 In the case that the value is On, the list of temporary variables is 
-printed in reverse order with the the string "id " in front. This makes 
+printed in reverse order with the string "id " in front. This makes 
 them into a set of \FORM\ substitutions that undo the optimizations. One 
 can use this for instance to make sure that the optimized code is identical 
 to the original.

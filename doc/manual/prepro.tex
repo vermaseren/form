@@ -327,12 +327,12 @@ a \#switch\index{\#switch}/\#endswitch construction.
 
 \#breakdo [{\tt<}number{\tt>}]
 
-\noindent See also \#do (\ref{predo} and \#enddo (\ref{preenddo})
+\noindent See also \#do (\ref{predo}) and \#enddo (\ref{preenddo})
 
 \noindent The \#breakdo\index{\#breakdo} instruction allows one to jump out 
 of a \#do loop. If a (nonzero integer) number is specified it indicates the 
 number of loops the program should terminate. Control will continue after 
-the the \#enddo instruction of the number of loops indicated by `number'. 
+the \#enddo instruction of the number of loops indicated by `number'. 
 The default value is one. If the value is zero the statement has no effect.
 
 %--#] breakdo : 
@@ -472,7 +472,7 @@ matching \#break instruction, or until the matching
 
 \#clearoptimize
 
-See the chapter about optimization\ref{optimization}
+See the chapter about optimization \ref{optimization}
  
 %--#] clearoptimize : 
 %--#[ close :
@@ -484,8 +484,8 @@ See the chapter about optimization\ref{optimization}
 
 \#close $<$filename$>$
  
-\noindent See also write (\ref{prewrite}), append (\ref{preappend},
-            create (\ref{precreate}, remove (\ref{preremove})
+\noindent See also write (\ref{prewrite}), append (\ref{preappend}),
+            create (\ref{precreate}), remove (\ref{preremove})
 
 \noindent This instruction closes\index{\#close} the file\index{file!close} 
 by the given name, if such a file had been opened by the previous 
@@ -974,8 +974,8 @@ deal with the current external command.
 
 \#factdollar \$-variable
  
-\noindent See also the chapters on polynomials\ref{polynomials} and 
-\$-variables\ref{dollars}
+\noindent See also the chapters on polynomials \ref{polynomials} and 
+\$-variables \ref{dollars}
 
 \noindent The \#factdollar\index{\#factdollar} instruction causes the 
 factorization of the indicated \$-variable. After this instruction and 
@@ -1277,7 +1277,7 @@ should use the \#write\index{\#write} instruction.
 
 \#optimize nameofoneexpression
 
-See the chapter about optimization\ref{optimization}
+See the chapter about optimization \ref{optimization}
  
 %--#] optimize : 
 %--#[ pipe :
@@ -1908,7 +1908,7 @@ message and execution will be halted.
 (\ref{sect-extrasymbols}) and their definitions\index{extrasymbols}.
 \item[\%O] Forces the printing of the definitions of the extra symbols in 
 the buffer with the temporary variables from the previous optimization (see 
-the chapter on optimizations\ref{optimization}). 
+the chapter on optimizations \ref{optimization}). 
 \end{description}
 If no special variables are asked for (by means of \%\$, \%e, \%E or \%s) 
 the list of variables will be ignored (if present). Example:
