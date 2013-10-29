@@ -698,10 +698,24 @@ WORD DeleteStore(WORD par)
 							AC.exprnames->namebuffer+e_in->name);
 						node->number = (WORD)(e_out - Expressions);
 						e_out->onfile = e_in->onfile;
+						e_out->prototype = e_in->prototype;
 						e_out->printflag = 0;
 						e_out->status = e_in->status;
 						e_out->name = e_in->name;
 						e_out->inmem = e_in->inmem;
+						e_out->counter = e_in->counter;
+						e_out->numfactors = e_in->numfactors;
+						e_out->numdummies = e_in->numdummies;
+						e_out->compression = e_in->compression;
+						e_out->namesize = e_in->namesize;
+						e_out->whichbuffer = e_in->whichbuffer;
+						e_out->hidelevel = e_in->hidelevel;
+						e_out->node = e_in->node;
+						e_out->replace = e_in->replace;
+						e_out->vflags = e_in->vflags;
+#ifdef PARALLELCODE
+						e_out->partodo = e_in->partodo;
+#endif
 					}
 					e_out++;
 					j++;
@@ -899,10 +913,10 @@ WORD GetTerm(PHEAD WORD *term)
 	if ( AR.KeptInHold ) {
 		r = AR.CompressBuffer;
 		i = *r;
+		AR.KeptInHold = 0;
 		if ( i <= 0 ) { *term = 0; goto RegRet; }
 		m = term;
 		NCOPY(m,r,i);
-		AR.KeptInHold = 0;
 		goto RegRet;
 	}
 	if ( AR.DeferFlag ) {

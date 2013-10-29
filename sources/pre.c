@@ -5872,7 +5872,7 @@ dooptim:
 			}
 			else if ( *fstring == 'e' || *fstring == 'E' ) {
 				if ( *fstring == 'E' ) nosemi = 1;
-				else nosemi = 0;
+				else nosemi = 1;
 				fstring++;
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
 				if ( chartype[*s] != 0 && *s != '[' ) {
@@ -6063,7 +6063,7 @@ ReturnWithError:
 }
 
 /*
- 		#] writeToChannel : 
+ 		#] writeToChannel :
  		#[ DoFactDollar :
 
 		Executes the #factdollar $var
