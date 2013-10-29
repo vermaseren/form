@@ -1027,6 +1027,25 @@ statement would drop the coefficient of the terms inside the argument.
 \vspace{10mm}
 
 %--#] dropcoefficient : 
+%--#[ dropsymbols :
+
+\section{dropsymbols}
+\label{substadropsymbols}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & DropSymbols;
+\end{tabular} \vspace{4mm}
+
+\noindent This statement removes all symbols from a term. 
+It has the same effect as
+\begin{verbatim}
+   id,many,x?^n? = 1;
+\end{verbatim}
+(x and n are symbols) except for that it is much faster.
+\vspace{10mm}
+
+%--#] dropsymbols : 
 %--#[ else :
 
 \section{else}
@@ -2713,9 +2732,17 @@ friendly. It can be used in combination with the
 AntiBracket\index{antibracket} statement (\ref{substaabrackets}) and the 
 function dum\_\index{dum\_} (\ref{fundum}) to imitate a smart extra level 
 of brackets and make outputs shorter.
+
+It is possible to introduce a scale factor when extracting the coefficient 
+and multiplying it into the complete term.
+
+\leftvitem{4cm}{MakeInteger,$\wedge<n>$:,f;}
+\rightvitem{12cm}{The number n must be an integer (may be negative) and if 
+the coefficient that is extracted is c the whole term is multiplied by the 
+factor $c^n$.}
 \vspace{10mm}
 
-%--#] makeinteger : 
+%--#] makeinteger :
 %--#[ many :
  
 \section{many}
@@ -3141,9 +3168,17 @@ extra option
 
 \leftvitem{4cm}{Normalize,(0),f;}
 \rightvitem{12cm}{changes {\tt f(2*x+3*y)} into {\tt f(x+3/2*y)}.}
+
+A more flexible way to extract the coefficient of the (first) term is by 
+providing a scale factor as in
+
+\leftvitem{4cm}{Normalize,$\wedge<n>$:,f;}
+\rightvitem{12cm}{The number n must be an integer (may be negative) and if 
+the coefficient of the first term was c the whole term is multiplied by the 
+factor $c^n$.}
 \vspace{10mm}
 
-%--#] normalize : 
+%--#] normalize :
 %--#[ notinparallel :
 
 \section{notinparallel}
