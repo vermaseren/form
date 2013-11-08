@@ -1630,6 +1630,40 @@ VOID WriteUnfinString(int type, UBYTE *str, int num)
 
 /*
  		#] WriteUnfinString : 
+ 		#[ AddToString :
+*/
+
+UBYTE *AddToString(UBYTE *outstring, UBYTE *extrastring, int par)
+{
+	UBYTE *s = extrastring, *t, *newstring;
+	int n, nn;
+	while ( *s ) { s++; }
+	n = s-extrastring;
+	if ( outstring == 0 ) {
+		s = extrastring;
+		t = outstring = (UBYTE *)Malloc1(n+1,"AddToString");
+		NCOPY(t,s,n)
+		*t++ = 0;
+		return(outstring);
+	}
+	else {
+		t = outstring;
+		while ( *t ) t++;
+		nn = t - outstring;
+		t = newstring = (UBYTE *)Malloc1(n+nn+2,"AddToString");
+		s = outstring;
+		NCOPY(t,s,nn)
+		if ( par == 1 ) *t++ = ',';
+		s = extrastring;
+		NCOPY(t,s,n)
+		*t = 0;
+		M_free(outstring,"AddToString");
+		return(newstring);
+	}
+}
+
+/*
+ 		#] AddToString : 
  		#[ strDup1 :
 
 		string duplication with message passing for Malloc1, allowing
@@ -1913,7 +1947,7 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 }/*set_sub*/
 /*
  		#] set_sub : 
-  	#] Strings : 
+  	#] Strings :
   	#[ Mixed :
  		#[ iniTools :
 */
@@ -3511,5 +3545,5 @@ finish:
 
 /*
  		#] TestTerm : 
-  	#] Mixed : 
+  	#] Mixed :
 */

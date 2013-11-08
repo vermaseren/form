@@ -788,6 +788,7 @@ extern int    DoCommentChar(UBYTE *);
 extern int    DoPrcExtension(UBYTE *);
 extern VOID   WriteString(int,UBYTE *,int);
 extern VOID   WriteUnfinString(int,UBYTE *,int);
+extern UBYTE *AddToString(UBYTE *,UBYTE *,int);
 extern UBYTE *PreCalc(VOID);
 extern UBYTE *PreEval(UBYTE *,LONG *);
 extern VOID   NumToStr(UBYTE *,LONG);

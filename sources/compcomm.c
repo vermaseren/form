@@ -630,6 +630,7 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.printstats = 0;
 			AO.Optimize.debugflags = 0;
 			AO.Optimize.schemeflags = 0;
+			AO.Optimize.experiments = 0;
 			if ( AO.inscheme ) {
 				M_free(AO.inscheme,"Horner input scheme");
 				AO.inscheme = 0; AO.schemenum = 0;
@@ -678,7 +679,7 @@ int CoFormat(UBYTE *s)
 			*s = c;
 			while ( *s == ',' ) s++;
 			if ( *s == '=' ) s++;
-			AO.OptimizationLevel = 9;
+			AO.OptimizationLevel = 3;
 			AO.Optimize.mctsconstant.fval = 1.0;
 			AO.Optimize.horner = O_MCTS;
 			AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
@@ -693,6 +694,7 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.printstats = 0;
 			AO.Optimize.debugflags = 0;
 			AO.Optimize.schemeflags = 0;
+			AO.Optimize.experiments = 0;
 			if ( AO.inscheme ) {
 				M_free(AO.inscheme,"Horner input scheme");
 				AO.inscheme = 0; AO.schemenum = 0;
@@ -6269,7 +6271,7 @@ noscheme:
 			}
 			u++; ss = u;
 			while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
-			if ( FG.cTable[*ss] == 0 || *ss == '[' ) { /* Name */
+			if ( FG.cTable[*ss] == 0 || *ss == '$' || *ss == '[' ) { /* Name */
 				s1 = u; SKIPBRA3(s1)
 				if ( *s1 != ')' ) goto noscheme;
 				while ( ss < s1 ) { if ( *ss++ == ',' ) AO.schemenum++; }
@@ -6308,6 +6310,20 @@ noscheme:
 							goto GotTheNumber;
 						}
 					}
+					else if ( *s1 == '$' ) {
+						GETIDENTITY
+						int numdollar;
+						if ( ( numdollar = GetDollar(s1+1) ) < 0 ) {
+							MesPrint("&Undefined variable %s",s1);
+							error = 5;
+						}
+						else if ( ( numsym = DolToSymbol(BHEAD numdollar) ) < 0 ) {
+							MesPrint("&$%s does not evaluate to a symbol",s1);
+							error = 5;
+						}
+						*ss = c;
+						goto GotTheNumber;
+					}
 					else if ( c == '(' ) {
 						if ( StrCmp(s1,AC.extrasym) == 0 ) {
 							if ( (AC.extrasymbols&1) != 1 ) {
@@ -6337,6 +6353,26 @@ GotTheNumber:
 					AO.inscheme[AO.schemenum++] = numsym;
 					while ( *ss == ' ' || *ss == '\t' || *ss == ',' ) ss++;
 				}
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"experiments") == 0 ) {
+			x = 0;
+			u = value;
+			if ( FG.cTable[*u] == 1 ) {
+				while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+				if ( *u != 0 ) {
+					MesPrint("&Numerical value for DebugFlag in Format,Optimize statement should be a nonnegative number: %s",value);
+					AO.Optimize.experiments = 0;
+					error = 1;
+				}
+				else {
+					AO.Optimize.experiments = x;
+				}
+			}
+			else {
+				AO.Optimize.experiments = 0;
+				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
+				error = 1;
 			}
 		}
 		else {

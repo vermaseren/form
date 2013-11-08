@@ -6063,7 +6063,7 @@ ReturnWithError:
 }
 
 /*
- 		#] writeToChannel :
+ 		#] writeToChannel : 
  		#[ DoFactDollar :
 
 		Executes the #factdollar $var
@@ -6259,7 +6259,7 @@ int DoOptimize(UBYTE *s)
 		MesPrint("@%s is not an expression",exprname);
 		error = 1;
 	}
-	else {
+	else if ( AP.preError == 0 ) {
 		EXPRESSIONS e = Expressions + numexpr;
 		POSITION position;
 		int firstterm;
@@ -6358,6 +6358,9 @@ DoSerr:
 		Now some administration and we are done
 */
 		UpdateMaxSize();
+	}
+	else {
+		ClearOptimize();
 	}
 	return(error);
 	

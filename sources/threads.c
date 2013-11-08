@@ -1798,15 +1798,22 @@ bucketstolen:;
 				break;
 /*
 			#] CLEARCLOCK : 
+			#[ MCTSEXPANDTREE :
 */
-  		case MCTSEXPANDTREE:
+			case MCTSEXPANDTREE:
+				AT.slide_down_factor.fval = AB[0]->T.slide_down_factor.fval;
 				find_Horner_MCTS_expand_tree();
 				break;
-
-    	case OPTIMIZEEXPRESSION:
+/*
+			#] MCTSEXPANDTREE : 
+			#[ OPTIMIZEEXPRESSION :
+*/
+			case OPTIMIZEEXPRESSION:
 				optimize_expression_given_Horner();
 				break;
-			
+/*
+			#] OPTIMIZEEXPRESSION : 
+*/
 			default:
 				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
@@ -4815,8 +4822,9 @@ void UnSetMods()
 
 /*
   	#] UnSetMods : 
+  	#[ find_Horner_MCTS_expand_tree_threaded :
 */
-
+ 
 void find_Horner_MCTS_expand_tree_threaded() {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
@@ -4824,11 +4832,20 @@ void find_Horner_MCTS_expand_tree_threaded() {
 	WakeupThread(id,MCTSEXPANDTREE);
 }
 
+/*
+  	#] find_Horner_MCTS_expand_tree_threaded : 
+  	#[ optimize_expression_given_Horner_threaded :
+*/
+ 
 extern void optimize_expression_given_Horner_threaded() {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
 		MasterWait();	
 	WakeupThread(id,OPTIMIZEEXPRESSION);
 }
+
+/*
+  	#] optimize_expression_given_Horner_threaded : 
+*/
 
 #endif
