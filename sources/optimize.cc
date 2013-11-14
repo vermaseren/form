@@ -68,6 +68,7 @@ const WORD OPER_COMMA = -3;
 class tree_node {
 public:
 	vector<tree_node> childs;
+        double variance;
 	double sum_results;
 	int num_visits;
 	WORD var;
@@ -75,7 +76,7 @@ public:
 	PADPOINTER(1,1,1,1);
 	
 	tree_node (int _var=0):
-		sum_results(0), num_visits(0), var(_var), finished(false) {}
+		variance(0), sum_results(0), num_visits(0), var(_var), finished(false) {}
 };
 
 // global variables for multithreading
@@ -1302,13 +1303,15 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		// find most-promising node
 		double best=0;
 		tree_node *next=NULL;
-		for (vector<tree_node>::iterator p=select->childs.begin(); p<select->childs.end(); p++) {
+                double l = 2 * log(select->num_visits);
+                for (vector<tree_node>::iterator p=select->childs.begin(); p<select->childs.end(); p++) {
 			double score;
 			if (p->num_visits >= 1) {
-				// there are results calculated, so select with the UCT formula
-				score = mcts_expr_score / (p->sum_results/p->num_visits) +
-					2 * AO.Optimize.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
-					
+                                // apply UCB1-Tuned
+                                double V = p->variance + sqrt(l / (float) p->num_visits);
+                                score = mcts_expr_score / (p->sum_results/p->num_visits) +
+                                        2 * AO.Optimize.mctsconstant.fval * sqrt(0.5 * l / p->num_visits * min(0.25, V));
+
 #ifdef DEBUG_MCTS
 				printf("%d: %.2lf [x=%.2lf n=%d fin=%i]\n",p->var,score,mcts_expr_score / (p->sum_results/p->num_visits),
 							 p->num_visits,p->finished?1:0);
@@ -1458,8 +1461,14 @@ inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme,
 
 	// add number of operator and subtract mcts_expr_score, which
 	// behaves as a "virtual loss"
- 	for (vector<tree_node *>::iterator p=path.begin(); p<path.end(); p++) 
-		(*p)->sum_results += num_oper - mcts_expr_score;
+        double score = num_oper - mcts_expr_score;
+ 	for (vector<tree_node *>::iterator p=path.begin(); p<path.end(); p++) {
+                if ((*p)->num_visits >= 2)
+                        (*p)->variance = ((*p)->num_visits - 2) / (double) ((*p)->num_visits - 1) * (*p)->variance +
+                            (score - (*p)->sum_results / (double) ((*p)->num_visits - 1)) * (score - (*p)->sum_results / (float) ((*p)->num_visits - 1)) /
+                            ((double) (*p)->num_visits * (*p)->num_visits);
+		(*p)->sum_results += score;
+        }
 
 }
 
