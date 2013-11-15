@@ -860,13 +860,16 @@ VOID StartVariables()
 	AddVector((UBYTE *)"parg_",VARTYPENONE,0);
 
 	AM.NumFixedFunctions = sizeof(fixedfunctions)/sizeof(struct fixedfun);
-	for ( i = 0; i < AM.NumFixedFunctions; i++ )
-		AddFunction((UBYTE *)fixedfunctions[i].name
-		                    ,fixedfunctions[i].commu
-		                    ,fixedfunctions[i].tensor
-		                    ,fixedfunctions[i].complx
-		                    ,fixedfunctions[i].symmetric
-							,0,-1,-1);
+	for ( i = 0; i < AM.NumFixedFunctions; i++ ) {
+		ii = AddFunction((UBYTE *)fixedfunctions[i].name
+		                         ,fixedfunctions[i].commu
+		                         ,fixedfunctions[i].tensor
+		                         ,fixedfunctions[i].complx
+		                         ,fixedfunctions[i].symmetric
+		                         ,0,-1,-1);
+		if ( fixedfunctions[i].tensor == GAMMAFUNCTION )
+							functions[ii].flags |= COULDCOMMUTE;
+	}
 /*
 	Next we add a number of dummy functions for ensuring that the user defined
 	functions start at a fixed given number FIRSTUSERFUNCTION.
@@ -959,6 +962,8 @@ VOID StartVariables()
 	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = 0;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = NEWFACTARG;
 	AM.gcNumDollars = AP.DollarList.num;
+	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
+	AC.CommuteInSet = 0;
 
 	AM.PrintTotalSize = 0;
 

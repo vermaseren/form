@@ -787,7 +787,8 @@ typedef struct {
 	WORD oldcbuf;
 	WORD oldrbuf;
 	WORD inscbuf;
-	PADPOINTER(0,3,5,0);
+	WORD oldcnumlhs;
+	PADPOINTER(0,3,6,0);
 } INSIDEINFO;
 
 /**
@@ -1317,6 +1318,7 @@ struct M_const {
     int     hparallelflag;         /* (M) */
     int     gparallelflag;         /* (M) */
     int     totalnumberofthreads;  /* (M) */
+    int     gSizeCommuteInSet;
     int     gThreadStats;
     int     ggThreadStats;
     int     gFinalStats;
@@ -1394,9 +1396,9 @@ struct M_const {
     WORD    zerorhs;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,52,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,53,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,52,75,0);
+	PADPOSITION(15,22,53,75,0);
 #endif
 };
 /*
@@ -1547,6 +1549,7 @@ struct C_const {
     char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
                                         created the snapshot. =0 if no script shall be executed.*/
     WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
+    WORD    *CommuteInSet;         /* groups of noncommuting functions that can commute */
 #ifdef PARALLELCODE
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1636,6 +1639,7 @@ struct C_const {
                                         -1 : do recovery from snapshot, set by command line option;
                                         0 : do nothing; 1 : create snapshots, set by On checkpoint
                                         statement */
+    int     SizeCommuteInSet;      /* Size of the CommuteInSet buffer */
 #ifdef PARALLELCODE
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
@@ -1688,11 +1692,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(45,8+3*MAXNEST,68,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(46,8+3*MAXNEST,69,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(45,8+3*MAXNEST,68,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(46,8+3*MAXNEST,69,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(43,8+3*MAXNEST,66,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(44,8+3*MAXNEST,67,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*

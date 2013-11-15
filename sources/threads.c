@@ -876,11 +876,15 @@ int MakeThreadBuckets(int number, int par)
 	THREADBUCKET *thr;
 /*
 	First we need a decent estimate. Not all terms should be maximal.
+	Note that AM.MaxTer is in bytes!!!
+	Maybe we should try to limit the size here a bit more effectively.
+	This is a great consumer of memory.
 */
-	sizethreadbuckets = ( AC.ThreadBucketSize + 1 ) * AM.MaxTer + 2;
+	sizethreadbuckets = ( AC.ThreadBucketSize + 1 ) * AM.MaxTer + 2*sizeof(WORD);
 	if ( AC.ThreadBucketSize >= 250 )      sizethreadbuckets /= 4;
 	else if ( AC.ThreadBucketSize >= 90 )  sizethreadbuckets /= 3;
 	else if ( AC.ThreadBucketSize >= 40 )  sizethreadbuckets /= 2;
+	sizethreadbuckets /= sizeof(WORD);
 	
 	if ( par == 0 ) {
 		numthreadbuckets = 2*(number-1);
@@ -1274,7 +1278,7 @@ void *RunThread(void *dummy)
 				NewSort(BHEAD0);
 				break;
 /*
-			#] STARTNEWEXPRESSION : 
+			#] STARTNEWEXPRESSION :
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -1446,7 +1450,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION : 
+			#] FINISHEXPRESSION :
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -1485,7 +1489,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION : 
+			#] CLEANUPEXPRESSION :
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1504,7 +1508,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] HIGHERLEVELGENERATION : 
+			#] HIGHERLEVELGENERATION :
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1514,13 +1518,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE : 
+			#] STARTNEWMODULE :
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD : 
+			#] TERMINATETHREAD :
 			#[ DOONEEXPRESSION :
 
 				When a thread has to do a complete (not too big) expression.
@@ -1707,7 +1711,7 @@ bucketstolen:;
 
 				} break;
 /*
-			#] DOONEEXPRESSION : 
+			#] DOONEEXPRESSION :
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat
@@ -1785,7 +1789,7 @@ bucketstolen:;
 				break;
 			}
 /*
-			#] DOBRACKETS : 
+			#] DOBRACKETS :
 			#[ CLEARCLOCK :
 
 			The program only comes here after a .clear
@@ -1797,7 +1801,7 @@ bucketstolen:;
 /*				UNLOCK(clearclocklock); */
 				break;
 /*
-			#] CLEARCLOCK : 
+			#] CLEARCLOCK :
 			#[ MCTSEXPANDTREE :
 */
 			case MCTSEXPANDTREE:
@@ -1805,14 +1809,14 @@ bucketstolen:;
 				find_Horner_MCTS_expand_tree();
 				break;
 /*
-			#] MCTSEXPANDTREE : 
+			#] MCTSEXPANDTREE :
 			#[ OPTIMIZEEXPRESSION :
 */
 			case OPTIMIZEEXPRESSION:
 				optimize_expression_given_Horner();
 				break;
 /*
-			#] OPTIMIZEEXPRESSION : 
+			#] OPTIMIZEEXPRESSION :
 */
 			default:
 				MLOCK(ErrorMessageLock);

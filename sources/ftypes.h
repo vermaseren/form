@@ -979,3 +979,6 @@ typedef int (*TFUN1)();
 #define OPTHEAD 3
 #define DOALL 1
 #define ONLYFUNCTIONS 2
+
+#define INUSE 1
+#define COULDCOMMUTE 2

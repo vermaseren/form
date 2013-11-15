@@ -1012,6 +1012,9 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	stack<int> s;
 	vector<WORD> instr;
 	WORD numinstr = 0;
+ 
+	// To avoid frequent memory allocations, we recycle a vector of int.
+	vector<int> xtmp;
 
 	// calculate all necessary powers of variables if do_CSE is set
 	if (do_CSE) {
@@ -1020,7 +1023,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 				i++;
 			else {
 				if (tree[i]==SYMBOL && tree[i+3]>1) { // symbol with power>1
-					vector<int> x;
+					vector<int> &x = xtmp; x.clear();
+//					vector<int> x;
 					x.push_back(SYMBOL);           // SYMBOL
 					x.push_back(tree[i+2]+1);      // variable (1-indexed)
 					x.push_back(tree[i+3]);        // power
@@ -1053,7 +1057,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
 
-		vector<int> x;
+//		vector<int> x;
+		vector<int> &x = xtmp; x.clear();
 		
 		if (tree[i]==SNUMBER) {
 			// for numbers, check whether it has been seen before for CSE
@@ -3893,7 +3898,7 @@ WORD generate_expression (WORD exprnr) {
 	WORD *oldWorkPointer = AT.WorkPointer;
 	
 	CBUF *C = cbuf+AC.cbufnum;
-	WORD *term = AT.WorkPointer;
+	WORD *term = AT.WorkPointer, oldcurexpr = AR.CurExpr;
 	POSITION position;
 	EXPRESSIONS e = Expressions+exprnr;
 	SetScratch(AR.infile,&(e->onfile));
@@ -3909,6 +3914,7 @@ WORD generate_expression (WORD exprnr) {
 		Terminate(-1);
 	}
 
+	AR.CurExpr = exprnr;
 	NewSort(BHEAD0);
 
 	// scan for the original expression (marked by *t<0) and give the
@@ -3935,6 +3941,7 @@ WORD generate_expression (WORD exprnr) {
 	}
 
 	AT.WorkPointer = oldWorkPointer;
+	AR.CurExpr = oldcurexpr;
 	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: generate_expression", thetime_str().c_str());

@@ -3157,6 +3157,7 @@ int DoIfdef(UBYTE *s, int par)
 
 int DoInside(UBYTE *s)
 {
+	GETIDENTITY
 	int numdol, error = 0;
 	WORD *nb, newsize, i;
 	UBYTE *name, c;
@@ -3215,6 +3216,7 @@ int DoInside(UBYTE *s)
 	AP.inside.oldnumpotmoddollars = NumPotModdollars;
 	AP.inside.oldcbuf = AC.cbufnum;
 	AP.inside.oldrbuf = AM.rbufnum;
+	AP.inside.oldcnumlhs = AR.Cnumlhs, 
 	AddToPreTypes(PRETYPEINSIDE);
 	AP.PreInsideLevel = 1;
 	AC.cbufnum = AP.inside.inscbuf;
@@ -3248,7 +3250,7 @@ int DoEndInside(UBYTE *s)
 	GETIDENTITY
 	WORD numdol, *oldworkpointer = AT.WorkPointer, *term, *t, j, i;
 	DOLLARS d, nd;
-	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
+	WORD oldbracketon = AR.BracketOn;
 	WORD *oldcompresspointer = AR.CompressPointer;
 	int oldmultithreaded = AS.MultiThreaded;
 	/* int oldmparallelflag = AC.mparallelflag; */
@@ -3355,7 +3357,7 @@ cleanup:
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 	AC.cbufnum = AP.inside.oldcbuf;
 	AM.rbufnum = AP.inside.oldrbuf;
-	AR.Cnumlhs = oldcnumlhs;
+	AR.Cnumlhs = AP.inside.oldcnumlhs;
 	AR.BracketOn = oldbracketon;
 	AP.PreInsideLevel = 0;
 	AR.CompressPointer = oldcompresspointer;

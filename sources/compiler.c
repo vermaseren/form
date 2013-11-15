@@ -115,6 +115,7 @@ static KEYWORD com2commands[] = {
 	,{"chisholm",       (TFUN)CoChisholm,         STATEMENT,    PARTEST}
 	,{"cleartable",     (TFUN)CoClearTable,       DECLARATION,  PARTEST}
 	,{"collect",        (TFUN)CoCollect,          SPECIFICATION,PARTEST}
+	,{"commuteinset",   (TFUN)CoCommuteInSet,     DECLARATION,  PARTEST}
 	,{"contract",       (TFUN)CoContract,         STATEMENT,    PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
 	,{"deallocatetable",(TFUN)CoDeallocateTable,  DECLARATION,  PARTEST}

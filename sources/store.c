@@ -1740,28 +1740,28 @@ VOID DetVars(WORD *term, WORD par)
 			SYMBOLS tt;
 			tt = symbols;
 			do {
-				(tt++)->flags = 0;
+				(tt++)->flags &= ~INUSE;
 			} while ( --n > 0 );
 		}
 		if ( ( n = NumIndices ) > 0 ) {
 			INDICES tt;
 			tt = indices;
 			do {
-				(tt++)->flags = 0;
+				(tt++)->flags &= ~INUSE;
 			} while ( --n > 0 );
 		}
 		if ( ( n = NumVectors ) > 0 ) {
 			VECTORS tt;
 			tt = vectors;
 			do {
-				(tt++)->flags = 0;
+				(tt++)->flags &= ~INUSE;
 			} while ( --n > 0 );
 		}
 		if ( ( n = NumFunctions ) > 0 ) {
 			FUNCTIONS tt;
 			tt = functions;
 			do {
-				(tt++)->flags = 0;
+				(tt++)->flags &= ~INUSE;
 			} while ( --n > 0 );
 		}
 		term += SUBEXPSIZE;
@@ -1769,12 +1769,12 @@ VOID DetVars(WORD *term, WORD par)
 			if ( *term == SYMTOSYM || *term == SYMTONUM ) {
 				term += 2;
 				AN.UsedSymbol[*term] = 1;
-				symbols[*term].flags = 1;
+				symbols[*term].flags |= INUSE;
 			}
 			else if ( *term == VECTOVEC ) {
 				term += 2;
 				AN.UsedVector[*term-AM.OffsetVector] = 1;
-				vectors[*term-AM.OffsetVector].flags = 1;
+				vectors[*term-AM.OffsetVector].flags |= INUSE;
 			}
 			else if ( *term == INDTOIND ) {
 				term += 2;
@@ -1783,12 +1783,12 @@ VOID DetVars(WORD *term, WORD par)
 				AN.UsedIndex[(*term) - AM.OffsetIndex] = 1;
 				sym = indices[*term-AM.OffsetIndex].nmin4;
 				if ( sym < -NMIN4SHIFT ) AN.UsedSymbol[-sym-NMIN4SHIFT] = 1;
-				indices[*term-AM.OffsetIndex].flags = 1;
+				indices[*term-AM.OffsetIndex].flags |= INUSE;
 			}
 			else if ( *term == FUNTOFUN ) {
 				term += 2;
 				AN.UsedFunction[*term-FUNCTION] = 1;
-				functions[*term-FUNCTION].flags = 1;
+				functions[*term-FUNCTION].flags |= INUSE;
 			}
 			term += 2;
 		}
@@ -2822,7 +2822,7 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number;
-		if ( s->flags ) {
+		if ( ( s->flags & INUSE ) != 0 ) {
 			/* Find the replacement. It must exist! */
 			neww = oldw;
 			while ( *neww != SYMTOSYM || neww[2] != *w ) neww += neww[1];
@@ -2887,7 +2887,7 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 				,&(r->symb))]-NMIN4SHIFT;
 			}
 		}
-		if ( s->flags ) {
+		if ( ( s->flags & INUSE ) != 0 ) {
 			/* Find the replacement. It must exist! */
 			neww = oldw;
 			while ( *neww != INDTOIND || neww[2] != *w ) neww += neww[1];
@@ -2941,7 +2941,7 @@ GetTb3:
 		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + AM.OffsetVector;
-		if ( s->flags ) {
+		if ( ( s->flags & INUSE ) != 0 ) {
 			/* Find the replacement. It must exist! */
 			neww = oldw;
 			while ( *neww != VECTOVEC || neww[2] != *w ) neww += neww[1];
@@ -2983,7 +2983,7 @@ GetTb3:
 		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer),nsize)
 		!= nsize ) goto ErrGt2;
 		*w = s->number + FUNCTION;
-		if ( s->flags ) {
+		if ( ( s->flags & INUSE ) != 0 ) {
 			/* Find the replacement. It must exist! */
 			neww = oldw;
 			while ( *neww != FUNTOFUN || neww[2] != *w ) neww += neww[1];
