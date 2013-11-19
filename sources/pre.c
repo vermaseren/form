@@ -82,6 +82,7 @@ static KEYWORD precommands[] = {
 	,{"prompt"       , DoPrompt       , 0, 0}
 	,{"redefine"     , DoRedefine     , 0, 0}
 	,{"remove"       , DoPreRemove    , 0, 0}
+	,{"reverseinclude"   , DoReverseInclude   , 0, 0}
 	,{"rmexternal"   , DoRmExternal   , 0, 0}
 	,{"rmseparator"  , DoPreRmSeparator,0, 0}
 	,{"setexternal"  , DoSetExternal  , 0, 0}
@@ -2083,7 +2084,21 @@ illname:;
  		#[ DoInclude :
 */
 
-int DoInclude(UBYTE *s)
+int DoInclude(UBYTE *s) { return(Include(s,FILESTREAM)); }
+
+/*
+ 		#] DoInclude : 
+ 		#[ DoInclude :
+*/
+
+int DoReverseInclude(UBYTE *s) { return(Include(s,REVERSEFILESTREAM)); }
+
+/*
+ 		#] DoInclude : 
+ 		#[ Include :
+*/
+
+int Include(UBYTE *s, int type)
 {
 	UBYTE *name = s, *fold, *t, c, c1 = 0, c2 = 0, c3 = 0;
 	int str1offset, withnolist = AC.NoShowInput;
@@ -2145,7 +2160,7 @@ int DoInclude(UBYTE *s)
 /*
 	We have the name of the file in 'name' and the fold in 'fold' (or NULL)
 */
-	if ( OpenStream(name,FILESTREAM,0,PRENOACTION) == 0 ) {
+	if ( OpenStream(name,type,0,PRENOACTION) == 0 ) {
 		if ( fold ) { M_free(fold,"foldname"); fold = 0; }
 		return(-1);
 	}
@@ -2232,7 +2247,7 @@ nofold:
 }
 
 /*
- 		#] DoInclude : 
+ 		#] Include : 
  		#[ DoPreExchange :
 
 		Exchanges the names of expressions or the contents of dollars

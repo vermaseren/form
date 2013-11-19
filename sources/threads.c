@@ -1278,7 +1278,7 @@ void *RunThread(void *dummy)
 				NewSort(BHEAD0);
 				break;
 /*
-			#] STARTNEWEXPRESSION :
+			#] STARTNEWEXPRESSION : 
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
@@ -1450,7 +1450,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] FINISHEXPRESSION :
+			#] FINISHEXPRESSION : 
 			#[ CLEANUPEXPRESSION :
 */
 			case CLEANUPEXPRESSION:
@@ -1489,7 +1489,7 @@ bucketstolen:;
 				}
 				break;
 /*
-			#] CLEANUPEXPRESSION :
+			#] CLEANUPEXPRESSION : 
 			#[ HIGHERLEVELGENERATION :
 */
 			case HIGHERLEVELGENERATION:
@@ -1508,7 +1508,7 @@ bucketstolen:;
 				AT.WorkPointer = term;
 				break;
 /*
-			#] HIGHERLEVELGENERATION :
+			#] HIGHERLEVELGENERATION : 
 			#[ STARTNEWMODULE :
 */
 			case STARTNEWMODULE:
@@ -1518,13 +1518,13 @@ bucketstolen:;
 				SpecialCleanup(B);
 				break;
 /*
-			#] STARTNEWMODULE :
+			#] STARTNEWMODULE : 
 			#[ TERMINATETHREAD :
 */
 			case TERMINATETHREAD:
 				goto EndOfThread;
 /*
-			#] TERMINATETHREAD :
+			#] TERMINATETHREAD : 
 			#[ DOONEEXPRESSION :
 
 				When a thread has to do a complete (not too big) expression.
@@ -1711,7 +1711,7 @@ bucketstolen:;
 
 				} break;
 /*
-			#] DOONEEXPRESSION :
+			#] DOONEEXPRESSION : 
 			#[ DOBRACKETS :
 
 				In case we have a bracket index we can have the worker treat
@@ -1789,7 +1789,7 @@ bucketstolen:;
 				break;
 			}
 /*
-			#] DOBRACKETS :
+			#] DOBRACKETS : 
 			#[ CLEARCLOCK :
 
 			The program only comes here after a .clear
@@ -1801,22 +1801,22 @@ bucketstolen:;
 /*				UNLOCK(clearclocklock); */
 				break;
 /*
-			#] CLEARCLOCK :
+			#] CLEARCLOCK : 
 			#[ MCTSEXPANDTREE :
 */
 			case MCTSEXPANDTREE:
-				AT.slide_down_factor.fval = AB[0]->T.slide_down_factor.fval;
+				AT.optimtimes = AB[0]->T.optimtimes;
 				find_Horner_MCTS_expand_tree();
 				break;
 /*
-			#] MCTSEXPANDTREE :
+			#] MCTSEXPANDTREE : 
 			#[ OPTIMIZEEXPRESSION :
 */
 			case OPTIMIZEEXPRESSION:
 				optimize_expression_given_Horner();
 				break;
 /*
-			#] OPTIMIZEEXPRESSION :
+			#] OPTIMIZEEXPRESSION : 
 */
 			default:
 				MLOCK(ErrorMessageLock);

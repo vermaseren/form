@@ -1287,6 +1287,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	vector<WORD> &order = *porder;
 	vector<WORD> &schemev = *pscheme;
 	vector<tree_node *> &path = *ppath;
+	int depth = 0;
 
 	order.clear();
 	path.clear();
@@ -1310,10 +1311,36 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		for (vector<tree_node>::iterator p=select->childs.begin(); p<select->childs.end(); p++) {
 			double score;
 			if (p->num_visits >= 1) {
+				float slide_down_factor = 1.0;
+//-------------------------------------------------------------------
+				switch ( AO.Optimize.experiments ) {
+					case 1:  // This is what Ben suggested
+						slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-AT.optimtimes);
+						slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
+						break;
+					case 2:  // This gives a bit more cleanup time at the end.
+						if ( 2*AT.optimtimes < AO.Optimize.mctsnumexpand ) {
+							slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-2*AT.optimtimes);
+							slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
+						}
+						else {
+							slide_down_factor = 0.01;
+						}
+						break;
+					case 3:  // depth dependent factor combined with Ben's method
+						slide_down_factor = 1.0*(optimize_num_vars-depth);
+						slide_down_factor /= 1.0*optimize_num_vars;
+						slide_down_factor *= 1.0*AO.Optimize.mctsnumexpand;
+						slide_down_factor = ( slide_down_factor - AT.optimtimes )/slide_down_factor;
+						if ( slide_down_factor > 1.0 ) slide_down_factor = 1.0;
+						break;
+				}
+//-------------------------------------------------------------------
+
 				// there are results calculated, so select with the UCT formula
 				score = mcts_expr_score / (p->sum_results/p->num_visits) +
 //-------------------------------------------------------------------------
-					AT.slide_down_factor.fval *
+					slide_down_factor *
 //-------------------------------------------------------------------------
 					2 * AO.Optimize.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
 					
@@ -1349,6 +1376,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		select = next;
 		path.push_back(select);
 		order.push_back(select->var);
+		depth++;
 	}
 
 	// MCTS step II: expand
@@ -1728,41 +1756,14 @@ void find_Horner_MCTS () {
 #endif
 
 	// initialize a potential variable mctsconstant scheme.
-	AT.slide_down_factor.fval = 1.0;
+	AT.optimtimes = 0;
 
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
 	for (int times=0; times<AO.Optimize.mctsnumexpand && !mcts_root.finished && 
 				 (AO.Optimize.mctstimelimit==0 ||	(TimeWallClock(1)-start_time)/100 < AO.Optimize.mctstimelimit);
 			 times++) {
-//-------------------------------------------------------------------
-		switch ( AO.Optimize.experiments ) {
-			case 0:
-				AT.slide_down_factor.fval = 1.0;
-				break;
-			case 1:  // This is what Ben suggested
-				AT.slide_down_factor.fval = 1.0*(AO.Optimize.mctsnumexpand-times);
-				AT.slide_down_factor.fval /= 1.0*AO.Optimize.mctsnumexpand;
-				break;
-			case 2:  // This gives a bit more cleanup time at the end.
-				if ( 2*times < AO.Optimize.mctsnumexpand ) {
-					AT.slide_down_factor.fval = 1.0*(AO.Optimize.mctsnumexpand-2*times);
-					AT.slide_down_factor.fval /= 1.0*AO.Optimize.mctsnumexpand;
-				}
-				else {
-					AT.slide_down_factor.fval = 0.01;
-				}
-				break;
-			case 3:  // Keep trying both ways
-				if ( iranf(BHEAD 2) > 0 ) AT.slide_down_factor.fval = 1.0;
-				else                      AT.slide_down_factor.fval = 0.01;
-				break;
-			default:
-				AT.slide_down_factor.fval = 1.0;
-				break;
-		}
-//-------------------------------------------------------------------
-
+		AT.optimtimes = times;
   	// call expand_tree routine depending on threading mode
 #if defined(WITHPTHREADS)
 		if (AM.totalnumberofthreads > 1)

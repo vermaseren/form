@@ -626,6 +626,7 @@ extern STREAM *OpenStream(UBYTE *,int,int,int);
 extern int    LocateFile(UBYTE **,int);
 extern STREAM *CloseStream(STREAM *);
 extern VOID   PositionStream(STREAM *,LONG);
+extern int    ReverseStatements(STREAM *);
 extern int    ProcessOption(UBYTE *,UBYTE *,int);
 extern int    DoSetups(VOID);
 extern VOID   Terminate(int);
@@ -736,6 +737,8 @@ extern int    TheUndefine(UBYTE *);
 extern int    ClearMacro(UBYTE *);
 extern int    DoUndefine(UBYTE *);
 extern int    DoInclude(UBYTE *);
+extern int    DoReverseInclude(UBYTE *);
+extern int    Include(UBYTE *,int);
 /*[14apr2004 mt]:*/
 extern int    DoExternal(UBYTE *);
 extern int    DoToExternal(UBYTE *);
