@@ -1208,9 +1208,12 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 
 /**
 * Count number of operators in a binary tree, while removing CSEs on the fly.
-* The instruction set is not created, which makes this method faster.
+* The instruction set is not created, which makes this method slightly faster.
+
+* TODO: perform count top-down instead of bottom-up. This removes many calls to
+* the CSE map
 */
-WORD count_operators_cse (const vector<WORD> &tree) {
+int count_operators_cse (const vector<WORD> &tree) {
 
 	// TODO: make set
 	map<vector<int>, int> ID;
@@ -1219,33 +1222,7 @@ WORD count_operators_cse (const vector<WORD> &tree) {
 	// in the postfix expression tree. Operands consist of three WORDs,
 	// formatted as the LHS/RHS of the keys in ID.
 	stack<int> s;
-	WORD numinstr = 0;
-
-	// calculate all necessary powers of variables,
-	// TODO: is it necessary to do before main loop?
-		for (int i=0; i<(int)tree.size();) {
-			if (tree[i] < 0)
-				i++;
-			else {
-				if (tree[i]==SYMBOL && tree[i+3]>1) { // symbol with power>1
-					vector<int> x;
-					x.push_back(SYMBOL);           // SYMBOL
-					x.push_back(tree[i+2]+1);      // variable (1-indexed)
-					x.push_back(tree[i+3]);        // power
-
-					if (ID.find(x) == ID.end()) {
-						if (numinstr == MAXPOSITIVE) {
-							MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
-							Terminate(-1);
-						}
-
-						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
-						ID[x] = numinstr;
-					}
-				}
-				i+=tree[i+1];
-			}
-		}
+	int numinstr = 0;
 
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
@@ -1269,10 +1246,12 @@ WORD count_operators_cse (const vector<WORD> &tree) {
 			x.push_back(SYMBOL);
 			x.push_back(tree[i+2]+1); // variable (1-indexed)
 			x.push_back(tree[i+3]);   // power
-			if (ID.find(x) != ID.end()) {
+			
+			map<vector<int>,int>::iterator it = ID.find(x);
+			if (it != ID.end()) {
 				// already-seen power of a symbol
 				s.push(1);
-				s.push(ID[x]);
+				s.push(it->second);
 				s.push(EXTRASYMBOL);
 			}
 			else if (tree[i+3]>1) {
@@ -1286,6 +1265,7 @@ WORD count_operators_cse (const vector<WORD> &tree) {
 				else
 					numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
 
+				ID[x] = numinstr;
 				s.push(1);
 				s.push(numinstr);
 				s.push(EXTRASYMBOL);
@@ -1339,19 +1319,23 @@ WORD count_operators_cse (const vector<WORD> &tree) {
 
 			// check whether this subexpression has been seen before
 			// if not, generate instruction to define it
-			if (ID.find(x) == ID.end()) {
+			map<vector<int>,int>::iterator it = ID.find(x);
+			if (it == ID.end()) {
 				if (numinstr == MAXPOSITIVE) {
 					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
 					Terminate(-1);
 				}
 
 				ID[x] = ++numinstr;
+				s.push(1);
+				s.push(numinstr);
+				s.push(EXTRASYMBOL);
+			} else {
+				// push new expression on the stack
+				s.push(1);
+				s.push(it->second);
+				s.push(EXTRASYMBOL);
 			}
-
-			// push new expression on the stack
-			s.push(1);
-			s.push(ID[x]);
-			s.push(EXTRASYMBOL);
 		}
 	}
 
@@ -1579,7 +1563,7 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 	//vector<WORD> instr = generate_instructions(tree, true);
 	//int num_oper = count_operators(instr);
 	int num_oper = count_operators_cse(tree);
-	//MesPrint("%d %d", num_oper, op2);
+	//MesPrint("%d %d", num_oper, num_oper2);
 
 	// clean poly_vars, that is allocated by Horner_tree
 	AN.poly_num_vars = 0;
