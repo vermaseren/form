@@ -1243,39 +1243,36 @@ int count_operators_cse (const vector<WORD> &tree) {
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
-			x.push_back(SYMBOL);
-			x.push_back(tree[i+2]+1); // variable (1-indexed)
-			x.push_back(tree[i+3]);   // power
-			
-			map<vector<int>,int>::iterator it = ID.find(x);
-			if (it != ID.end()) {
-				// already-seen power of a symbol
-				s.push(1);
-				s.push(it->second);
-				s.push(EXTRASYMBOL);
-			}
-			else if (tree[i+3]>1) {
-				if (numinstr == MAXPOSITIVE) {
-					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
-					Terminate(-1);
+			if (tree[i+3]>1) {			
+				x.push_back(SYMBOL);
+				x.push_back(tree[i+2]+1); // variable (1-indexed)
+				x.push_back(tree[i+3]);   // power
+				
+				map<vector<int>,int>::iterator it = ID.find(x);
+				if (it != ID.end()) {
+					// already-seen power of a symbol
+					s.push(1);
+					s.push(it->second);
+					s.push(EXTRASYMBOL);
+				} else {
+					if (tree[i + 3] == 2)
+						numinstr++;
+					else
+						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
+
+					ID[x] = numinstr;
+					s.push(1);
+					s.push(numinstr);
+					s.push(EXTRASYMBOL);
 				}
-
-				if (tree[i + 3] == 2)
-					numinstr++;
-				else
-					numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
-
-				ID[x] = numinstr;
-				s.push(1);
-				s.push(numinstr);
-				s.push(EXTRASYMBOL);
-			}
+			} 
 			else {
 				// power of 1
 				s.push(tree[i+3]);   // power
 				s.push(tree[i+2]+1); // variable (1-indexed)
 				s.push(SYMBOL);
 			}
+
 			i+=tree[i+1];
 		}
 		else { // tree[i]==OPERATOR
@@ -1344,6 +1341,85 @@ int count_operators_cse (const vector<WORD> &tree) {
 
 /*
 	#] count_operators_cse :
+  	#[ count_operators_cse_topdown :
+*/
+
+// (a+b*c+d)*c+e*z => b c * a + d + c * + e z * +
+//                 => + * e z * c + a + d + * b c
+int count_operators_cse_topdown (const vector<WORD> &tree) {
+	// copy to reverse, because we need prefix notation
+	// prefix has higher prob. of early difference in map?
+	vector<WORD> prefix;
+	
+	int count = 0;
+	for (int i=0; i<(int)tree.size();) {
+		if (tree[i]==SYMBOL) {
+			prefix.push_back(SYMBOL);
+			prefix.push_back(tree[i+2]+1); // variable (1-indexed)
+			prefix.push_back(tree[i+3]);
+			i+=tree[i+1];
+			count += tree[i + 1];
+		} else {
+			if (tree[i] == SNUMBER) {
+				prefix.insert(prefix.end(),&tree[i],&tree[i]+tree[i+1]);
+				i+=tree[i+1];
+				count += tree[i+1];
+			} else {
+				prefix.push_back(tree[i]); // operator
+				prefix.push_back(count + 1); // add size for easy access
+				count = 1;
+				i++;
+			}
+		}
+	}
+	
+
+	// TODO: prevent copy of partial arrays by storing indices?
+	set< vector<int> > ID;
+
+	int numinstr = 0;	
+	stack<int> stack; // starting index of node
+	stack.push(0);
+	while (!stack.empty())
+	{
+		int c = stack.top();
+		stack.pop();
+		
+		if (prefix[c]==SYMBOL) {
+			if (prefix[c+3] > 1) {
+				std::vector<WORD> x(prefix[c], prefix[c + prefix[c + 1]]);
+				
+				std::pair<set< vector<int> >::iterator, bool> suc = ID.insert(x);
+				if (suc.second) { // new
+					if (prefix[c + 3] == 2)
+						numinstr++;
+					else
+						numinstr += (int)floor(log(prefix[c+3])/log(2.0)) + __builtin_popcount(prefix[c+3]) - 1;
+				}
+			}
+		} else {
+			if (prefix[c] == SNUMBER) {
+				// don't do anything now. Is this ok?
+			} else {
+				// operator
+				// TODO: filter *1 and *-1
+				std::vector<WORD> x(prefix[c], prefix[c + prefix[c + 1]]);
+				std::pair<set< vector<int> >::iterator, bool> suc = ID.insert(x);
+				if (suc.second) { // not seen before
+				  stack.push(c + 1); // push children
+				  stack.push(c + prefix[c + 1]);
+				  numinstr++;
+				}
+			}
+		}
+		
+	}
+	
+	return numinstr;
+}
+
+/*
+	#] count_operators_cse_topdown :
   	#[ printpstree :
 */
 
