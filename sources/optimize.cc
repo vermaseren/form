@@ -53,9 +53,9 @@ extern "C" {
 #include "form3.h"
 }
 
-#ifdef DEBUG
+//#ifdef DEBUG
 #include "mytime.h"
-#endif
+//#endif
 
 using namespace std;
 
@@ -1214,6 +1214,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 * the CSE map
 */
 int count_operators_cse (const vector<WORD> &tree) {
+	MesPrint ("*** [%s] Started Count", thetime_str().c_str());
+
 
 	// TODO: make set
 	map<vector<int>, int> ID;
@@ -1336,6 +1338,8 @@ int count_operators_cse (const vector<WORD> &tree) {
 		}
 	}
 
+MesPrint ("*** [%s, w=%w] Ended Count", thetime_str().c_str());
+
 	return numinstr;
 }
 
@@ -1344,34 +1348,43 @@ int count_operators_cse (const vector<WORD> &tree) {
   	#[ count_operators_cse_topdown :
 */
 
-// (a+b*c+d)*c+e*z => b c * a + d + c * + e z * +
-//                 => + * e z * c + a + d + * b c
+// (a+b*c+d)*c+e*z => b c * a + d + c * e z * +
+//                 => + * e z * c + a + d * b c
 int count_operators_cse_topdown (const vector<WORD> &tree) {
-	// copy to reverse, because we need prefix notation
-	// prefix has higher prob. of early difference in map?
-	vector<WORD> prefix;
+	// convert to prefix notation
+	// FIXME: is copy necessary? deque is probaly slow?
+	std::deque <WORD> prefix;
 	
-	int count = 0;
+	int count = 0, nonopcount=0, nonopsize=0;
 	for (int i=0; i<(int)tree.size();) {
 		if (tree[i]==SYMBOL) {
-			prefix.push_back(SYMBOL);
-			prefix.push_back(tree[i+2]+1); // variable (1-indexed)
-			prefix.push_back(tree[i+3]);
+			prefix.push_front(tree[i+3]);
+			prefix.push_front(tree[i+2]+1); // variable (1-indexed)
+			prefix.push_front(4); // push size
+			prefix.push_front(SYMBOL);
+
+			nonopcount++;
+			nonopcount += 4;
+			count += 4;
 			i+=tree[i+1];
-			count += tree[i + 1];
 		} else {
 			if (tree[i] == SNUMBER) {
-				prefix.insert(prefix.end(),&tree[i],&tree[i]+tree[i+1]);
-				i+=tree[i+1];
+				prefix.insert(prefix.begin(),&tree[i],&tree[i]+tree[i+1]);
 				count += tree[i+1];
+				nonopcount += tree[i+1];
+				nonopcount++;
+				i+=tree[i+1];
 			} else {
-				prefix.push_back(tree[i]); // operator
-				prefix.push_back(count + 1); // add size for easy access
+				nonopcount=0;				
+				prefix.push_front(count + 1); // add size for easy access
+				prefix.push_front(tree[i]); // operator
 				count = 1;
 				i++;
 			}
 		}
 	}
+
+	MesPrint("Sizes: %d %d, stack size: %d", tree.size(), prefix.size(), prefix[1]);
 	
 
 	// TODO: prevent copy of partial arrays by storing indices?
@@ -1384,10 +1397,12 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 	{
 		int c = stack.top();
 		stack.pop();
+
+		MesPrint("%d %d %d", prefix[c], SYMBOL, SNUMBER);
 		
-		if (prefix[c]==SYMBOL) {
+		if (prefix[c] == SYMBOL) {
 			if (prefix[c+3] > 1) {
-				std::vector<WORD> x(prefix[c], prefix[c + prefix[c + 1]]);
+				std::vector<WORD> x(&prefix[c], &prefix[c] + prefix[c + 1]);
 				
 				std::pair<set< vector<int> >::iterator, bool> suc = ID.insert(x);
 				if (suc.second) { // new
@@ -1403,11 +1418,11 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 			} else {
 				// operator
 				// TODO: filter *1 and *-1
-				std::vector<WORD> x(prefix[c], prefix[c + prefix[c + 1]]);
+				std::vector<WORD> x(&prefix[c], &prefix[c] + prefix[c + 1]);
 				std::pair<set< vector<int> >::iterator, bool> suc = ID.insert(x);
 				if (suc.second) { // not seen before
-				  stack.push(c + 1); // push children
-				  stack.push(c + prefix[c + 1]);
+				  stack.push(c + 2 + prefix[c + 3]); // get location of second child
+                                  stack.push(c + 2); // left child, c + 1 is total size
 				  numinstr++;
 				}
 			}
@@ -1639,7 +1654,8 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 	//vector<WORD> instr = generate_instructions(tree, true);
 	//int num_oper = count_operators(instr);
 	int num_oper = count_operators_cse(tree);
-	//MesPrint("%d %d", num_oper, num_oper2);
+	int num_oper2 = count_operators_cse_topdown(tree);
+	MesPrint("%d %d", num_oper, num_oper2);
 
 	// clean poly_vars, that is allocated by Horner_tree
 	AN.poly_num_vars = 0;
