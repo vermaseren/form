@@ -1214,9 +1214,6 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 * the CSE map
 */
 int count_operators_cse (const vector<WORD> &tree) {
-	MesPrint ("*** [%s] Started Count", thetime_str().c_str());
-
-
 	// TODO: make set
 	map<vector<int>, int> ID;
 
@@ -1233,7 +1230,6 @@ int count_operators_cse (const vector<WORD> &tree) {
 
 		// TODO: is a number relevant for CSE?
 		if (tree[i]==SNUMBER) {
-			// for numbers, check whether it has been seen before for CSE
 			x.push_back(SNUMBER);
 			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
 			int sign = SGN(x.back());
@@ -1337,9 +1333,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 			}
 		}
 	}
-
-MesPrint ("*** [%s, w=%w] Ended Count", thetime_str().c_str());
-
+	
 	return numinstr;
 }
 
@@ -1348,86 +1342,127 @@ MesPrint ("*** [%s, w=%w] Ended Count", thetime_str().c_str());
   	#[ count_operators_cse_topdown :
 */
 
-// (a+b*c+d)*c+e*z => b c * a + d + c * e z * +
-//                 => + * e z * c + a + d * b c
-int count_operators_cse_topdown (const vector<WORD> &tree) {
-	// convert to prefix notation
-	// FIXME: is copy necessary? deque is probaly slow?
-	std::deque <WORD> prefix;
+typedef struct node {
+	const WORD* data;
+	struct node* l;
+	struct node* r; // TODO: add l,r to data?
 	
-	int count = 0, nonopcount=0, nonopsize=0;
-	for (int i=0; i<(int)tree.size();) {
-		if (tree[i]==SYMBOL) {
-			prefix.push_front(tree[i+3]);
-			prefix.push_front(tree[i+2]+1); // variable (1-indexed)
-			prefix.push_front(4); // push size
-			prefix.push_front(SYMBOL);
+	node() {};
+	node(const WORD* data) : data(data) {};
+	
+	int cmp(const struct node* lhs, const struct node* rhs) const {
+		if (lhs->data[0] != rhs->data[0]) return lhs->data[0] < rhs->data[0] ? -1 : 1;
+  		if (lhs->data[0] == SYMBOL || lhs->data[0] == SNUMBER) {
+  			for (int i = 0; i < lhs->data[1]; i++) {
+  				if (lhs->data[i] != rhs->data[i]) return lhs->data[i] < rhs->data[i] ? -1 : 1;
+    			}
+  		} else {
+  			int l = cmp(lhs->l, rhs->l);
+  			if (l != 0) return l;
+  			return cmp(lhs->r, rhs->r); 
+  		}
+  		
+  		return 0;
+	}
+	
+	bool operator() (const struct node* lhs, const struct node* rhs) const
+  	{
+  		return cmp(lhs, rhs) < 0;
+  	}
+} NODE;
 
-			nonopcount++;
-			nonopcount += 4;
-			count += 4;
+int count_operators_cse_topdown (const vector<WORD> &tree) {
+
+	// convert to tree. TODO: is this necessary?
+	stack<NODE*> st;
+	for (int i=0; i<(int)tree.size();) {
+		// TODO: make all numbers positive? Since -x is the same as x?
+		if (tree[i]==SYMBOL || tree[i] == SNUMBER) {
+			st.push(new NODE(&tree[i]));
 			i+=tree[i+1];
 		} else {
-			if (tree[i] == SNUMBER) {
-				prefix.insert(prefix.begin(),&tree[i],&tree[i]+tree[i+1]);
-				count += tree[i+1];
-				nonopcount += tree[i+1];
-				nonopcount++;
-				i+=tree[i+1];
-			} else {
-				nonopcount=0;				
-				prefix.push_front(count + 1); // add size for easy access
-				prefix.push_front(tree[i]); // operator
-				count = 1;
+			// filter *1 and *-1 
+			// TODO: also multiply if there are two numbers?
+			// TODO: what to do with -1?						
+			
+			NODE* c = new NODE(&tree[i]);
+			c->r = st.top(); st.pop();
+			c->l = st.top(); st.pop();
+			
+			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
+				MesPrint("%d %d %d %d %d", c->r->data[4], c->l->data[0], SNUMBER, c->l->data[2], c->l->data[3]);
+				st.push(c->l);
+				delete c;
 				i++;
+				continue;
+			}
+			if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
+				st.push(c->r);
+				delete c;
+				i++;
+				continue;
+			}
+			
+			st.push(c);
+			i++;
+		}
+	}				
+	
+	typedef set<NODE*, node> nodeset;
+	nodeset ID;
+	
+	int numinstr = 0;	
+	stack<NODE*> stack; // starting index of node
+	stack.push(st.top());
+	while (!stack.empty())
+	{
+		NODE* c = stack.top();
+		stack.pop();
+
+		if (c->data[0] == SYMBOL) {
+			if (c->data[3] > 1) {
+				
+				std::pair<nodeset::iterator, bool> suc = ID.insert(c);
+				if (suc.second) { // new
+					if (c->data[3] == 2)
+						numinstr++;
+					else
+						numinstr += (int)floor(log(c->data[3])/log(2.0)) + __builtin_popcount(c->data[3]) - 1;
+				}
+			}
+		} else {
+			if (c->data[0] == SNUMBER) {
+				// don't do anything now. Is this ok?
+			} else {
+			
+				// operator
+				std::pair<nodeset::iterator, bool> suc = ID.insert(c);
+				if (suc.second) {
+					stack.push(c->r);
+					stack.push(c->l);
+					
+					numinstr++;
+					
+					// don't count *1 and *-1
+					//if (c->data[0] == OPER_MUL && ((c->r->data[0] == SNUMBER && c->r->data[1]==5 && c->r->data[2]==1 && c->r->data[3]==1)
+					//|| (c->l->data[0] == SNUMBER && c->l->data[1]==5 && c->l->data[2]==1 && c->l->data[3]==1)))
+					//	numinstr--;
+				}
 			}
 		}
 	}
 
-	MesPrint("Sizes: %d %d, stack size: %d", tree.size(), prefix.size(), prefix[1]);
-	
-
-	// TODO: prevent copy of partial arrays by storing indices?
-	set< vector<int> > ID;
-
-	int numinstr = 0;	
-	stack<int> stack; // starting index of node
-	stack.push(0);
-	while (!stack.empty())
-	{
-		int c = stack.top();
+	// free tree	
+	stack.push(st.top());
+	while (!stack.empty()) {
+		NODE* c = stack.top();
 		stack.pop();
-
-		MesPrint("%d %d %d", prefix[c], SYMBOL, SNUMBER);
-		
-		if (prefix[c] == SYMBOL) {
-			if (prefix[c+3] > 1) {
-				std::vector<WORD> x(&prefix[c], &prefix[c] + prefix[c + 1]);
-				
-				std::pair<set< vector<int> >::iterator, bool> suc = ID.insert(x);
-				if (suc.second) { // new
-					if (prefix[c + 3] == 2)
-						numinstr++;
-					else
-						numinstr += (int)floor(log(prefix[c+3])/log(2.0)) + __builtin_popcount(prefix[c+3]) - 1;
-				}
-			}
-		} else {
-			if (prefix[c] == SNUMBER) {
-				// don't do anything now. Is this ok?
-			} else {
-				// operator
-				// TODO: filter *1 and *-1
-				std::vector<WORD> x(&prefix[c], &prefix[c] + prefix[c + 1]);
-				std::pair<set< vector<int> >::iterator, bool> suc = ID.insert(x);
-				if (suc.second) { // not seen before
-				  stack.push(c + 2 + prefix[c + 3]); // get location of second child
-                                  stack.push(c + 2); // left child, c + 1 is total size
-				  numinstr++;
-				}
-			}
+		if (c->data[0] != SYMBOL && c->data[0] != SNUMBER) {
+			stack.push(c->r);
+			stack.push(c->l);
 		}
 		
+		delete c;
 	}
 	
 	return numinstr;
