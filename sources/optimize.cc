@@ -794,9 +794,7 @@ bool term_compare (const WORD *a, const WORD *b) {
  */
 vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 
-#ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
-#endif
 	
 	GETIDENTITY;
 
@@ -883,9 +881,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 	}
 	res.resize(j);
 	
-#ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
-#endif
 	
 	return res;
 }
@@ -998,7 +994,7 @@ void print_tree (const vector<WORD> &tree) {
  *   bracket and then ignores the bracket.
  */
 vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
-
+	MesPrint ("*** [%s] Starting instruction generation", thetime_str().c_str());
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: generate_instructions(cse=%d)",
 						thetime_str().c_str(), do_CSE?1:0);
@@ -1209,11 +1205,10 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 /**
 * Count number of operators in a binary tree, while removing CSEs on the fly.
 * The instruction set is not created, which makes this method slightly faster.
-
-* TODO: perform count top-down instead of bottom-up. This removes many calls to
-* the CSE map
 */
 int count_operators_cse (const vector<WORD> &tree) {
+	MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
+
 	// TODO: make set
 	map<vector<int>, int> ID;
 
@@ -1307,7 +1302,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 							break;
 						}
 					}
-				}
+				}	
 
 				if (do_continue) continue;
 			}
@@ -1334,6 +1329,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 		}
 	}
 	
+	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	return numinstr;
 }
 
@@ -1346,11 +1342,14 @@ typedef struct node {
 	const WORD* data;
 	struct node* l;
 	struct node* r; // TODO: add l,r to data?
+	char sign; // TODO: use data for this?
+	size_t hash;
 	
-	node() {};
-	node(const WORD* data) : data(data) {};
+	node() : sign(1), hash(0) {};
+	node(const WORD* data) : data(data), sign(1), hash(0) {};
 	
 	int cmp(const struct node* lhs, const struct node* rhs) const {
+		if (lhs->sign != rhs->sign) return lhs->sign < rhs->sign ? -1 : 1;
 		if (lhs->data[0] != rhs->data[0]) return lhs->data[0] < rhs->data[0] ? -1 : 1;
   		if (lhs->data[0] == SYMBOL || lhs->data[0] == SNUMBER) {
   			for (int i = 0; i < lhs->data[1]; i++) {
@@ -1369,44 +1368,76 @@ typedef struct node {
   	{
   		return cmp(lhs, rhs) < 0;
   	}
+  	
+  	void calcHash() {
+  		if (n->data[0] == SYMBOL || n->data[0] == SNUMBER) {
+			for (int i = 0; i < lhs->data[1]; i++) {
+				hash = (hash * 31) + n->data[i]; // TODO: improve
+			}
+		} else {
+			if (n->l->hash == 0) n->l->calcHash();
+			if (n->r->hash == 0) n->r->calcHash();
+			
+			hash = data[0] + 3767 * n->l->hash + 21929 * n->r->hash; // TODO: improve
+		}
+  	}
 } NODE;
 
+struct NodeHash {
+	size_t operator()(const NODE* n) const {
+		return n->hash();
+	}
+}
+
 int count_operators_cse_topdown (const vector<WORD> &tree) {
+	MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
 
 	// convert to tree. TODO: is this necessary?
 	stack<NODE*> st;
 	for (int i=0; i<(int)tree.size();) {
 		// TODO: make all numbers positive? Since -x is the same as x?
 		if (tree[i]==SYMBOL || tree[i] == SNUMBER) {
-			st.push(new NODE(&tree[i]));
+			NODE* c = new NODE(&tree[i]);
+			
+			// 
+			//if (c->r->data[0] == SNUMBER) c->sign = SNG(c->data[c->data[1] -1]) * -1;
+			
+			c->calcHash();
+			st.push(c);
 			i+=tree[i+1];
 		} else {
 			// filter *1 and *-1 
 			// TODO: also multiply if there are two numbers?
-			// TODO: what to do with -1?						
+			// TODO: what to do with -1? This is wrong because V = T + -T != T + T					
 			
 			NODE* c = new NODE(&tree[i]);
 			c->r = st.top(); st.pop();
 			c->l = st.top(); st.pop();
 			
 			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
-				MesPrint("%d %d %d %d %d", c->r->data[4], c->l->data[0], SNUMBER, c->l->data[2], c->l->data[3]);
+				//MesPrint("%d %d %d %d %d", c->r->data[4], c->l->data[0], SNUMBER, c->l->data[2], c->l->data[3]);
+				if (c->r->data[4] < 0) c->l->sign *= -1; //  transfer sign
 				st.push(c->l);
 				delete c;
 				i++;
 				continue;
 			}
+			
 			if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
+				if (c->l->data[4] < 0) c->r->sign *= -1; //  transfer sign
 				st.push(c->r);
 				delete c;
 				i++;
 				continue;
 			}
 			
+			c->calcHash();
 			st.push(c);
 			i++;
 		}
-	}				
+	}
+	
+	MesPrint ("*** [%s] Done building tree", thetime_str().c_str());				
 	
 	typedef set<NODE*, node> nodeset;
 	nodeset ID;
@@ -1431,10 +1462,7 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 				}
 			}
 		} else {
-			if (c->data[0] == SNUMBER) {
-				// don't do anything now. Is this ok?
-			} else {
-			
+			if (c->data[0] != SNUMBER) {			
 				// operator
 				std::pair<nodeset::iterator, bool> suc = ID.insert(c);
 				if (suc.second) {
@@ -1442,15 +1470,17 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 					stack.push(c->l);
 					
 					numinstr++;
-					
+					/*
 					// don't count *1 and *-1
-					//if (c->data[0] == OPER_MUL && ((c->r->data[0] == SNUMBER && c->r->data[1]==5 && c->r->data[2]==1 && c->r->data[3]==1)
-					//|| (c->l->data[0] == SNUMBER && c->l->data[1]==5 && c->l->data[2]==1 && c->l->data[3]==1)))
-					//	numinstr--;
+					if (c->data[0] == OPER_MUL && ((c->r->data[0] == SNUMBER && c->r->data[1]==5 && c->r->data[2]==1 && c->r->data[3]==1)
+					|| (c->l->data[0] == SNUMBER && c->l->data[1]==5 && c->l->data[2]==1 && c->l->data[3]==1)))
+						numinstr--;*/
 				}
 			}
 		}
 	}
+	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
+	
 
 	// free tree	
 	stack.push(st.top());
@@ -1465,7 +1495,23 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 		delete c;
 	}
 	
+	MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
 	return numinstr;
+}
+
+// flatten a part of a Horner tree. Useful to update partial Horner schemes
+NODE* flatten_tree(NODE* node) {		
+	if (node->data[0] == OPER_ADD) {
+		node->l = flatten_tree(node->l);
+		node->r = flatten_tree(node->r);
+	}
+	
+	if (node->data[0] == OPER_MUL) {
+		if (node->l->data[0] == OPER_ADD) {}
+		if (node->r->data[0] == OPER_ADD) {}
+	}
+	
+	return node;
 }
 
 /*
