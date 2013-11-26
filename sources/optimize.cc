@@ -49,6 +49,7 @@
 #include <algorithm>
 #include <iostream>
 #include <tr1/unordered_set>
+#include <tr1/unordered_map>
 
 extern "C" {
 #include "form3.h"
@@ -1203,14 +1204,34 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	#[ count_operators_cse :
 */
 
+struct CSEHash {
+	size_t operator()(const vector<int>& n) const {
+		return n[0];
+	}
+};
+
+struct CSEEq {
+	bool operator()(const vector<int>& lhs, const vector<int>& rhs) const {
+            if (lhs.size() != rhs.size()) return false;
+            for (unsigned int i = 1; i < lhs.size(); i++) {
+                if (lhs[i] != rhs[i]) return false;
+            }
+            return true;
+	}
+};
+
 /**
 * Count number of operators in a binary tree, while removing CSEs on the fly.
 * The instruction set is not created, which makes this method slightly faster.
+*
+* A hash is created on the fly and is passed through the stack.
+* TODO: find better hash functions
 */
 int count_operators_cse (const vector<WORD> &tree) {
 	MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
 
-	map<vector<int>, int> ID;
+        typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	csemap ID;
 
 	// s is a stack of operands to process when you encounter operators
 	// in the postfix expression tree. Operands consist of three WORDs,
@@ -1225,23 +1246,34 @@ int count_operators_cse (const vector<WORD> &tree) {
 
 		// TODO: is a number relevant for CSE?
 		if (tree[i]==SNUMBER) {
+                        WORD hash = 0;
+                    	for (int j = 0; j < tree[i + 1]; j++) {
+				hash = (hash * 31) + tree[i + j]; // TODO: improve
+			}
+                        hash *= 2657; // number ID
+                    
+                        x.push_back(hash);
 			x.push_back(SNUMBER);
 			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
 			int sign = SGN(x.back());
 			x.back() *= sign;
-			if (!ID.count(x)) ID[x]=i+1; // new number: index in tree is 1-indexed
+                        
+                        std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
 			s.push(0);
-			s.push(sign*ID[x]);
+			s.push(sign* suc.first->second);
 			s.push(SNUMBER);
+                        s.push(hash);
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
-			if (tree[i+3]>1) {			
+                        WORD hash = (tree[i+3] * 31 * 31 + tree[i+2] * 31) * 6359;
+			if (tree[i+3]>1) {
+                                x.push_back(hash);
 				x.push_back(SYMBOL);
 				x.push_back(tree[i+2]+1); // variable (1-indexed)
 				x.push_back(tree[i+3]);   // power
 				
-				map<vector<int>,int>::iterator it = ID.find(x);
+				csemap::iterator it = ID.find(x);
 				if (it != ID.end()) {
 					// already-seen power of a symbol
 					s.push(1);
@@ -1265,6 +1297,8 @@ int count_operators_cse (const vector<WORD> &tree) {
 				s.push(tree[i+2]+1); // variable (1-indexed)
 				s.push(SYMBOL);
 			}
+                        
+                        s.push(hash); // push hash
 
 			i+=tree[i+1];
 		}
@@ -1272,22 +1306,27 @@ int count_operators_cse (const vector<WORD> &tree) {
 			int oper = tree[i];
 			i++;
 
+                        x.push_back(0); // placeholder for hash
 			x.push_back(oper);
+                        vector<WORD> hash;
 
 			// get two operands from the stack
 			for (int operand=0; operand<2; operand++) {
+                                hash.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 			}
+                        
+                        x[0] = 7793 * oper * (hash[0] * 31 * 31 + hash[1] * 31);
 
 			// get rid of multiplications by +/-1
-			if (x[0]==OPER_MUL) {
+			if (oper==OPER_MUL) {
 				bool do_continue = false;
 
 				for (int operand=0; operand<2; operand++) {
-					int idx_oper1 = operand==0 ? 1 : 4;
-					int idx_oper2 = operand==0 ? 4 : 1;
+					int idx_oper1 = operand==0 ? 2 : 5;
+					int idx_oper2 = operand==0 ? 5 : 2;
 
 					// check whether operand 1 equals +/-1
 					if (x[idx_oper1]==SNUMBER) {
@@ -1298,6 +1337,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 							s.push(x[idx_oper2+2]);
 							s.push(x[idx_oper2+1]*SGN(x[idx_oper1+1]));
 							s.push(x[idx_oper2]);
+                                                        s.push(hash[(operand + 1) % 2]);
 							do_continue = true;
 							break;
 						}
@@ -1309,7 +1349,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 
 			// check whether this subexpression has been seen before
 			// if not, generate instruction to define it
-			map<vector<int>,int>::iterator it = ID.find(x);
+			csemap::iterator it = ID.find(x);
 			if (it == ID.end()) {
 				if (numinstr == MAXPOSITIVE) {
 					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
@@ -1326,6 +1366,8 @@ int count_operators_cse (const vector<WORD> &tree) {
 				s.push(it->second);
 				s.push(EXTRASYMBOL);
 			}
+                        
+                        s.push(x[0]); // push hash
 		}
 	}
 	
@@ -1391,7 +1433,7 @@ struct NodeHash {
 };
 
 struct NodeEq {
-	size_t operator()(const NODE* lhs, const NODE* rhs) const {
+	bool operator()(const NODE* lhs, const NODE* rhs) const {
 		return lhs->cmp(rhs) == 0;
 	}
 };
