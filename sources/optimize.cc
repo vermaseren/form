@@ -48,6 +48,7 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <tr1/unordered_set>
 
 extern "C" {
 #include "form3.h"
@@ -1209,7 +1210,6 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 int count_operators_cse (const vector<WORD> &tree) {
 	MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
 
-	// TODO: make set
 	map<vector<int>, int> ID;
 
 	// s is a stack of operands to process when you encounter operators
@@ -1348,46 +1348,53 @@ typedef struct node {
 	node() : sign(1), hash(0) {};
 	node(const WORD* data) : data(data), sign(1), hash(0) {};
 	
-	int cmp(const struct node* lhs, const struct node* rhs) const {
-		if (lhs->sign != rhs->sign) return lhs->sign < rhs->sign ? -1 : 1;
-		if (lhs->data[0] != rhs->data[0]) return lhs->data[0] < rhs->data[0] ? -1 : 1;
-  		if (lhs->data[0] == SYMBOL || lhs->data[0] == SNUMBER) {
-  			for (int i = 0; i < lhs->data[1]; i++) {
-  				if (lhs->data[i] != rhs->data[i]) return lhs->data[i] < rhs->data[i] ? -1 : 1;
+	int cmp(const struct node* rhs) const {
+		if (sign != rhs->sign) return sign < rhs->sign ? -1 : 1;
+		if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;
+  		if (data[0] == SYMBOL || data[0] == SNUMBER) {
+  			for (int i = 0; i < data[1]; i++) {
+  				if (data[i] != rhs->data[i]) return data[i] < rhs->data[i] ? -1 : 1;
     			}
   		} else {
-  			int l = cmp(lhs->l, rhs->l);
-  			if (l != 0) return l;
-  			return cmp(lhs->r, rhs->r); 
+  			int lv = l->cmp(rhs->l);
+  			if (lv != 0) return lv;
+  			return r->cmp(rhs->r); 
   		}
   		
   		return 0;
 	}
 	
+        // less than operator
 	bool operator() (const struct node* lhs, const struct node* rhs) const
   	{
-  		return cmp(lhs, rhs) < 0;
+  		return lhs->cmp(rhs) < 0;
   	}
   	
   	void calcHash() {
-  		if (n->data[0] == SYMBOL || n->data[0] == SNUMBER) {
-			for (int i = 0; i < lhs->data[1]; i++) {
-				hash = (hash * 31) + n->data[i]; // TODO: improve
+  		if (data[0] == SYMBOL || data[0] == SNUMBER) {
+			for (int i = 0; i < data[1]; i++) {
+				hash = (hash * 31) + data[i]; // TODO: improve
 			}
 		} else {
-			if (n->l->hash == 0) n->l->calcHash();
-			if (n->r->hash == 0) n->r->calcHash();
+			if (l->hash == 0) l->calcHash();
+			if (r->hash == 0) r->calcHash();
 			
-			hash = data[0] + 3767 * n->l->hash + 21929 * n->r->hash; // TODO: improve
+			hash = data[0] + 3767 * l->hash + 21929 * r->hash; // TODO: improve
 		}
   	}
 } NODE;
 
 struct NodeHash {
 	size_t operator()(const NODE* n) const {
-		return n->hash();
+		return n->hash; // already computed
 	}
-}
+};
+
+struct NodeEq {
+	size_t operator()(const NODE* lhs, const NODE* rhs) const {
+		return lhs->cmp(rhs) == 0;
+	}
+};
 
 int count_operators_cse_topdown (const vector<WORD> &tree) {
 	MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
@@ -1439,7 +1446,7 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 	
 	MesPrint ("*** [%s] Done building tree", thetime_str().c_str());				
 	
-	typedef set<NODE*, node> nodeset;
+	typedef tr1::unordered_set<NODE*, NodeHash, NodeEq> nodeset;
 	nodeset ID;
 	
 	int numinstr = 0;	
