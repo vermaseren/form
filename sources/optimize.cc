@@ -1413,8 +1413,10 @@ typedef struct node {
   	}
   	
   	void calcHash() {
+                hash = 0;
+                int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
   		if (data[0] == SYMBOL || data[0] == SNUMBER) {
-			for (int i = 0; i < data[1]; i++) {
+			for (int i = 0; i < data[1] + mod; i++) {
 				hash = (hash * 31) + data[i]; // TODO: improve
 			}
 		} else {
@@ -1423,6 +1425,8 @@ typedef struct node {
 			
 			hash = data[0] + 3767 * l->hash + 21929 * r->hash; // TODO: improve
 		}
+                
+                hash *= sign;
   	}
 } NODE;
 
@@ -1438,18 +1442,19 @@ struct NodeEq {
 	}
 };
 
-int count_operators_cse_topdown (const vector<WORD> &tree) {
+int count_operators_cse_topdown (vector<WORD> &tree) {
 	MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
 
 	// convert to tree. TODO: is this necessary?
 	stack<NODE*> st;
 	for (int i=0; i<(int)tree.size();) {
-		// TODO: make all numbers positive? Since -x is the same as x?
 		if (tree[i]==SYMBOL || tree[i] == SNUMBER) {
 			NODE* c = new NODE(&tree[i]);
 			
-			// 
-			//if (c->r->data[0] == SNUMBER) c->sign = SNG(c->data[c->data[1] -1]) * -1;
+                        // extract the sign to a new class member
+			if (tree[i] == SNUMBER) { 
+                            c->sign = SGN(tree[i + tree[i + 1] -1]);
+                        }
 			
 			c->calcHash();
 			st.push(c);
@@ -1457,29 +1462,30 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 		} else {
 			// filter *1 and *-1 
 			// TODO: also multiply if there are two numbers?
-			// TODO: what to do with -1? This is wrong because V = T + -T != T + T					
-			
+
 			NODE* c = new NODE(&tree[i]);
 			c->r = st.top(); st.pop();
 			c->l = st.top(); st.pop();
-			
-			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
-				//MesPrint("%d %d %d %d %d", c->r->data[4], c->l->data[0], SNUMBER, c->l->data[2], c->l->data[3]);
-				if (c->r->data[4] < 0) c->l->sign *= -1; //  transfer sign
-				st.push(c->l);
-				delete c;
-				i++;
-				continue;
-			}
-			
-			if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
-				if (c->l->data[4] < 0) c->r->sign *= -1; //  transfer sign
+                        
+                        if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
+				c->r->sign *= c->l->sign; // transfer sign
+                                c->r->calcHash(); // update hash
 				st.push(c->r);
 				delete c;
 				i++;
 				continue;
 			}
 			
+			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
+				//MesPrint("%d %d %d %d %d", c->r->data[4], c->l->data[0], SNUMBER, c->l->data[2], c->l->data[3]);
+                                c->l->sign *= c->r->sign; // transfer sign
+                                c->l->calcHash(); // update hash
+				st.push(c->l);
+				delete c;
+				i++;
+				continue;
+			}
+					
 			c->calcHash();
 			st.push(c);
 			i++;
@@ -1519,11 +1525,13 @@ int count_operators_cse_topdown (const vector<WORD> &tree) {
 					stack.push(c->l);
 					
 					numinstr++;
-					/*
+					
 					// don't count *1 and *-1
 					if (c->data[0] == OPER_MUL && ((c->r->data[0] == SNUMBER && c->r->data[1]==5 && c->r->data[2]==1 && c->r->data[3]==1)
-					|| (c->l->data[0] == SNUMBER && c->l->data[1]==5 && c->l->data[2]==1 && c->l->data[3]==1)))
-						numinstr--;*/
+					|| (c->l->data[0] == SNUMBER && c->l->data[1]==5 && c->l->data[2]==1 && c->l->data[3]==1))) {
+                                            MesPrint("yo");
+						numinstr--;
+                                        }
 				}
 			}
 		}
