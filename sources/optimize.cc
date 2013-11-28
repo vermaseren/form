@@ -1384,24 +1384,31 @@ typedef struct node {
 	const WORD* data;
 	struct node* l;
 	struct node* r; // TODO: add l,r to data?
-	char sign; // TODO: use data for this?
+	int sign; // TODO: use data for this?
 	size_t hash;
 	
 	node() : sign(1), hash(0) {};
 	node(const WORD* data) : data(data), sign(1), hash(0) {};
 	
+        // a minus sign in the tree should only count as a different entry if
+        // it is a compound expression: a = -a, but T+-V != T+V
 	int cmp(const struct node* rhs) const {
-		if (sign != rhs->sign) return sign < rhs->sign ? -1 : 1;
-		if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;
+         	if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;       
+                int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
   		if (data[0] == SYMBOL || data[0] == SNUMBER) {
-  			for (int i = 0; i < data[1]; i++) {
+  			for (int i = 0; i < data[1] + mod; i++) {
   				if (data[i] != rhs->data[i]) return data[i] < rhs->data[i] ? -1 : 1;
     			}
   		} else {
   			int lv = l->cmp(rhs->l);
   			if (lv != 0) return lv;
-  			return r->cmp(rhs->r); 
-  		}
+                        int rv = r->cmp(rhs->r);
+  			if (rv != 0) return rv;
+                        
+                        // TODO: only for ADD operation
+                        if (l->sign != rhs->l->sign) return l->sign < rhs->l->sign ? -1 : 1;
+                        if (r->sign != rhs->r->sign) return r->sign < rhs->r->sign ? -1 : 1;
+                }
   		
   		return 0;
 	}
@@ -1422,11 +1429,10 @@ typedef struct node {
 		} else {
 			if (l->hash == 0) l->calcHash();
 			if (r->hash == 0) r->calcHash();
-			
-			hash = data[0] + 3767 * l->hash + 21929 * r->hash; // TODO: improve
+	
+                        // signs only matter for compound expressions
+			hash = data[0] + 3767 * l->hash * l->sign + 21929 * r->hash * r->sign; // TODO: improve
 		}
-                
-                hash *= sign;
   	}
 } NODE;
 
@@ -1467,17 +1473,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 			c->r = st.top(); st.pop();
 			c->l = st.top(); st.pop();
                         
-                        if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
-				c->r->sign *= c->l->sign; // transfer sign
-                                c->r->calcHash(); // update hash
-				st.push(c->r);
-				delete c;
-				i++;
-				continue;
-			}
-			
-			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
-				//MesPrint("%d %d %d %d %d", c->r->data[4], c->l->data[0], SNUMBER, c->l->data[2], c->l->data[3]);
+       			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
                                 c->l->sign *= c->r->sign; // transfer sign
                                 c->l->calcHash(); // update hash
 				st.push(c->l);
@@ -1485,6 +1481,17 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 				i++;
 				continue;
 			}
+
+                        
+                        if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
+                                c->r->sign *= c->l->sign; // transfer sign
+                                c->r->calcHash(); // update hash
+				st.push(c->r);
+				delete c;
+				i++;
+				continue;
+			}
+			
 					
 			c->calcHash();
 			st.push(c);
@@ -1525,13 +1532,6 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 					stack.push(c->l);
 					
 					numinstr++;
-					
-					// don't count *1 and *-1
-					if (c->data[0] == OPER_MUL && ((c->r->data[0] == SNUMBER && c->r->data[1]==5 && c->r->data[2]==1 && c->r->data[3]==1)
-					|| (c->l->data[0] == SNUMBER && c->l->data[1]==5 && c->l->data[2]==1 && c->l->data[3]==1))) {
-                                            MesPrint("yo");
-						numinstr--;
-                                        }
 				}
 			}
 		}
@@ -1557,6 +1557,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 }
 
 // flatten a part of a Horner tree. Useful to update partial Horner schemes
+// TODO: complete
 NODE* flatten_tree(NODE* node) {		
 	if (node->data[0] == OPER_ADD) {
 		node->l = flatten_tree(node->l);
