@@ -1448,7 +1448,7 @@ struct NodeEq {
 	}
 };
 
-int count_operators_cse_topdown (vector<WORD> &tree) {
+NODE* buildTree(vector<WORD> &tree) {
 	MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
 
 	// convert to tree. TODO: is this necessary?
@@ -1466,32 +1466,23 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 			st.push(c);
 			i+=tree[i+1];
 		} else {
-			// filter *1 and *-1 
-			// TODO: also multiply if there are two numbers?
-
+			
 			NODE* c = new NODE(&tree[i]);
 			c->r = st.top(); st.pop();
 			c->l = st.top(); st.pop();
                         
-       			if (c->data[0] == OPER_MUL && c->r->data[0] == SNUMBER && c->r->data[1] == 5 && c->r->data[2]==1 && c->r->data[3]==1) {
-                                c->l->sign *= c->r->sign; // transfer sign
-                                c->l->calcHash(); // update hash
-				st.push(c->l);
-				delete c;
-				i++;
-				continue;
-			}
-
-                        
-                        if (c->data[0] == OPER_MUL && c->l->data[0] == SNUMBER && c->l->data[1] == 5 && c->l->data[2]==1 && c->l->data[3]==1) {
-                                c->r->sign *= c->l->sign; // transfer sign
-                                c->r->calcHash(); // update hash
-				st.push(c->r);
-				delete c;
-				i++;
-				continue;
-			}
-			
+                        // filter *1 and *-1 
+			// TODO: also multiply if there are two numbers?
+                        if (c->data[0] == OPER_MUL) {
+                            NODE* ch[] = {c->r, c->l};
+                            for (int j = 0; j < 2; j++)
+                                if (ch[j]->data[0] == SNUMBER && ch[j]->data[1] == 5 && ch[j]->data[2]==1 && ch[j]->data[3]==1) {
+                                        ch[(j+1)%2]->sign *= ch[j]->sign; // transfer sign
+                                        delete c;
+                                        c = ch[(j+1)%2];
+                                        break;
+                                }
+                        }
 					
 			c->calcHash();
 			st.push(c);
@@ -1499,22 +1490,42 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 		}
 	}
 	
-	MesPrint ("*** [%s] Done building tree", thetime_str().c_str());				
-	
+	MesPrint ("*** [%s] Done building tree", thetime_str().c_str());
+        return st.top();
+}
+
+void freeTree(NODE* root) {
+        stack<NODE*> stack;
+    	stack.push(root);
+	while (!stack.empty()) {
+		NODE* c = stack.top();
+		stack.pop();
+		if (c->data[0] != SYMBOL && c->data[0] != SNUMBER) {
+			stack.push(c->r);
+			stack.push(c->l);
+		}
+		
+		delete c;
+	}
+        
+        MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
+}
+
+int count_operators_cse_topdown (vector<WORD> &tree) {
 	typedef tr1::unordered_set<NODE*, NodeHash, NodeEq> nodeset;
 	nodeset ID;
-	
-	int numinstr = 0;	
-	stack<NODE*> stack; // starting index of node
-	stack.push(st.top());
+	int numinstr = 0;
+        
+        NODE* root = buildTree(tree);
+	stack<NODE*> stack;
+	stack.push(root);
 	while (!stack.empty())
 	{
 		NODE* c = stack.top();
 		stack.pop();
 
 		if (c->data[0] == SYMBOL) {
-			if (c->data[3] > 1) {
-				
+			if (c->data[3] > 1) {	
 				std::pair<nodeset::iterator, bool> suc = ID.insert(c);
 				if (suc.second) { // new
 					if (c->data[3] == 2)
@@ -1538,38 +1549,8 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 	}
 	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	
-
-	// free tree	
-	stack.push(st.top());
-	while (!stack.empty()) {
-		NODE* c = stack.top();
-		stack.pop();
-		if (c->data[0] != SYMBOL && c->data[0] != SNUMBER) {
-			stack.push(c->r);
-			stack.push(c->l);
-		}
-		
-		delete c;
-	}
-	
-	MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
+        freeTree(root);
 	return numinstr;
-}
-
-// flatten a part of a Horner tree. Useful to update partial Horner schemes
-// TODO: complete
-NODE* flatten_tree(NODE* node) {		
-	if (node->data[0] == OPER_ADD) {
-		node->l = flatten_tree(node->l);
-		node->r = flatten_tree(node->r);
-	}
-	
-	if (node->data[0] == OPER_MUL) {
-		if (node->l->data[0] == OPER_ADD) {}
-		if (node->r->data[0] == OPER_ADD) {}
-	}
-	
-	return node;
 }
 
 /*
