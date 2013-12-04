@@ -1232,6 +1232,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 
         typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
+        
 
 	// s is a stack of operands to process when you encounter operators
 	// in the postfix expression tree. Operands consist of three WORDs,
@@ -1380,12 +1381,25 @@ int count_operators_cse (const vector<WORD> &tree) {
   	#[ count_operators_cse_topdown :
 */
 
+int compcount = 0;
+int compsuc = 0;
+
+template<typename T> size_t hash_range(T* array, int size) {
+    size_t hash = 0;
+    
+    for (int i = 0; i < size; i++) {
+        hash ^= array[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+    
+    return hash;
+}
+
 typedef struct node {
 	const WORD* data;
 	struct node* l;
 	struct node* r; // TODO: add l,r to data?
-	int sign; // TODO: use data for this?
-	size_t hash;
+	WORD sign; // TODO: use data for this?
+	UWORD hash;
 	
 	node() : sign(1), hash(0) {};
 	node(const WORD* data) : data(data), sign(1), hash(0) {};
@@ -1393,6 +1407,7 @@ typedef struct node {
         // a minus sign in the tree should only count as a different entry if
         // it is a compound expression: a = -a, but T+-V != T+V
 	int cmp(const struct node* rhs) const {
+            compcount++;
          	if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;       
                 int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
   		if (data[0] == SYMBOL || data[0] == SNUMBER) {
@@ -1409,7 +1424,7 @@ typedef struct node {
                         if (l->sign != rhs->l->sign) return l->sign < rhs->l->sign ? -1 : 1;
                         if (r->sign != rhs->r->sign) return r->sign < rhs->r->sign ? -1 : 1;
                 }
-
+                compsuc++;
   		return 0;
 	}
 	
@@ -1420,18 +1435,16 @@ typedef struct node {
   	}
   	
   	void calcHash() {
-                hash = 0;
                 int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
   		if (data[0] == SYMBOL || data[0] == SNUMBER) {
-			for (int i = 0; i < data[1] + mod; i++) {
-				hash = (hash * 31) + data[i]; // TODO: improve
-			}
+                    hash = hash_range(data, data[1] + mod);
 		} else {
 			if (l->hash == 0) l->calcHash();
 			if (r->hash == 0) r->calcHash();
 	
                         // signs only matter for compound expressions
-			hash = data[0] + 3767 * l->hash * l->sign + 21929 * r->hash * r->sign; // TODO: improve
+                        size_t newr[] = {(size_t)data[0], l->hash, (size_t)l->sign, r->hash, (size_t)r->sign};
+                        hash = hash_range(newr, 5);
 		}
   	}
 } NODE;
@@ -1514,9 +1527,16 @@ void freeTree(NODE* root) {
 int count_operators_cse_topdown (vector<WORD> &tree) {
 	typedef tr1::unordered_set<NODE*, NodeHash, NodeEq> nodeset;
 	nodeset ID;
+        
+        // reserve lots of space, to prevent later rehashes
+        // TODO: what if this is too large? make a parameter?
+        ID.rehash(mcts_expr_score * 2); 
+        
 	int numinstr = 0;
         
         NODE* root = buildTree(tree);
+        compcount = 0; compsuc = 0;
+        
 	stack<NODE*> stack;
 	stack.push(root);
 	while (!stack.empty())
@@ -1547,6 +1567,8 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 			}
 		}
 	}
+        
+        MesPrint("Hash count: %d %d", compsuc, compcount);
 	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	
         freeTree(root);
@@ -1773,9 +1795,9 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
 	//vector<WORD> instr = generate_instructions(tree, true);
 	//int num_oper = count_operators(instr);
-	int num_oper = count_operators_cse(tree);
-	int num_oper2 = count_operators_cse_topdown(tree);
-	MesPrint("%d %d", num_oper, num_oper2);
+	//int num_oper = count_operators_cse(tree);
+	int num_oper = count_operators_cse_topdown(tree);
+	//MesPrint("%d %d", num_oper, num_oper2);
 
 	// clean poly_vars, that is allocated by Horner_tree
 	AN.poly_num_vars = 0;
