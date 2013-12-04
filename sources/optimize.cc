@@ -1409,7 +1409,7 @@ typedef struct node {
                         if (l->sign != rhs->l->sign) return l->sign < rhs->l->sign ? -1 : 1;
                         if (r->sign != rhs->r->sign) return r->sign < rhs->r->sign ? -1 : 1;
                 }
-  		
+
   		return 0;
 	}
 	
@@ -1454,9 +1454,10 @@ NODE* buildTree(vector<WORD> &tree) {
 	// convert to tree. TODO: is this necessary?
 	stack<NODE*> st;
 	for (int i=0; i<(int)tree.size();) {
+                NODE* c = (NODE*)Malloc1(sizeof(NODE), "CSE tree node");
+                new (c) NODE(&tree[i]); // placement new
+
 		if (tree[i]==SYMBOL || tree[i] == SNUMBER) {
-			NODE* c = new NODE(&tree[i]);
-			
                         // extract the sign to a new class member
 			if (tree[i] == SNUMBER) { 
                             c->sign = SGN(tree[i + tree[i + 1] -1]);
@@ -1466,8 +1467,6 @@ NODE* buildTree(vector<WORD> &tree) {
 			st.push(c);
 			i+=tree[i+1];
 		} else {
-			
-			NODE* c = new NODE(&tree[i]);
 			c->r = st.top(); st.pop();
 			c->l = st.top(); st.pop();
                         
@@ -1478,7 +1477,8 @@ NODE* buildTree(vector<WORD> &tree) {
                             for (int j = 0; j < 2; j++)
                                 if (ch[j]->data[0] == SNUMBER && ch[j]->data[1] == 5 && ch[j]->data[2]==1 && ch[j]->data[3]==1) {
                                         ch[(j+1)%2]->sign *= ch[j]->sign; // transfer sign
-                                        delete c;
+                                        M_free(c, "CSE tree node");
+                                        M_free(ch[j], "1 and -1 filter");
                                         c = ch[(j+1)%2];
                                         break;
                                 }
@@ -1505,7 +1505,7 @@ void freeTree(NODE* root) {
 			stack.push(c->l);
 		}
 		
-		delete c;
+		M_free(c, "CSE tree node");
 	}
         
         MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
