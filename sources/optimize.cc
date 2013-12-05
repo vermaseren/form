@@ -1220,6 +1220,17 @@ struct CSEEq {
 	}
 };
 
+
+template<typename T> size_t hash_range(T* array, int size) {
+    size_t hash = 0;
+    
+    for (int i = 0; i < size; i++) {
+        hash ^= array[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+    
+    return hash;
+}
+
 /**
 * Count number of operators in a binary tree, while removing CSEs on the fly.
 * The instruction set is not created, which makes this method slightly faster.
@@ -1233,6 +1244,9 @@ int count_operators_cse (const vector<WORD> &tree) {
         typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
         
+        // reserve lots of space, to prevent later rehashes
+        // TODO: what if this is too large? make a parameter?
+        ID.rehash(mcts_expr_score * 2);
 
 	// s is a stack of operands to process when you encounter operators
 	// in the postfix expression tree. Operands consist of three WORDs,
@@ -1245,14 +1259,8 @@ int count_operators_cse (const vector<WORD> &tree) {
 
 		vector<int> x;
 
-		// TODO: is a number relevant for CSE?
 		if (tree[i]==SNUMBER) {
-                        WORD hash = 0;
-                    	for (int j = 0; j < tree[i + 1]; j++) {
-				hash = (hash * 31) + tree[i + j]; // TODO: improve
-			}
-                        hash *= 2657; // number ID
-                    
+                        WORD hash = hash_range(&tree[i], tree[i + 1]);
                         x.push_back(hash);
 			x.push_back(SNUMBER);
 			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
@@ -1267,7 +1275,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
-                        WORD hash = (tree[i+3] * 31 * 31 + tree[i+2] * 31) * 6359;
+                        WORD hash = hash_range(&tree[i], tree[i + 1]);
 			if (tree[i+3]>1) {
                                 x.push_back(hash);
 				x.push_back(SYMBOL);
@@ -1310,7 +1318,8 @@ int count_operators_cse (const vector<WORD> &tree) {
                         x.push_back(0); // placeholder for hash
 			x.push_back(oper);
                         vector<WORD> hash;
-
+                        hash.push_back(oper);
+                        
 			// get two operands from the stack
 			for (int operand=0; operand<2; operand++) {
                                 hash.push_back(s.top()); s.pop();
@@ -1319,7 +1328,8 @@ int count_operators_cse (const vector<WORD> &tree) {
 				x.push_back(s.top()); s.pop();
 			}
                         
-                        x[0] = 7793 * oper * (hash[0] * 31 * 31 + hash[1] * 31);
+                        
+                        x[0] = hash_range(&hash[0], 3);
 
 			// get rid of multiplications by +/-1
 			if (oper==OPER_MUL) {
@@ -1338,7 +1348,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 							s.push(x[idx_oper2+2]);
 							s.push(x[idx_oper2+1]*SGN(x[idx_oper1+1]));
 							s.push(x[idx_oper2]);
-                                                        s.push(hash[(operand + 1) % 2]);
+                                                        s.push(hash[1 + (operand + 1) % 2]);
 							do_continue = true;
 							break;
 						}
@@ -1383,16 +1393,6 @@ int count_operators_cse (const vector<WORD> &tree) {
 
 int compcount = 0;
 int compsuc = 0;
-
-template<typename T> size_t hash_range(T* array, int size) {
-    size_t hash = 0;
-    
-    for (int i = 0; i < size; i++) {
-        hash ^= array[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    }
-    
-    return hash;
-}
 
 typedef struct node {
 	const WORD* data;
@@ -1795,9 +1795,9 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
 	//vector<WORD> instr = generate_instructions(tree, true);
 	//int num_oper = count_operators(instr);
-	//int num_oper = count_operators_cse(tree);
-	int num_oper = count_operators_cse_topdown(tree);
-	//MesPrint("%d %d", num_oper, num_oper2);
+	int num_oper = count_operators_cse(tree);
+	int num_oper2 = count_operators_cse_topdown(tree);
+	MesPrint("%d %d", num_oper, num_oper2);
 
 	// clean poly_vars, that is allocated by Horner_tree
 	AN.poly_num_vars = 0;
