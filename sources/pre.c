@@ -82,6 +82,7 @@ static KEYWORD precommands[] = {
 	,{"prompt"       , DoPrompt       , 0, 0}
 	,{"redefine"     , DoRedefine     , 0, 0}
 	,{"remove"       , DoPreRemove    , 0, 0}
+	,{"reverseinclude"   , DoReverseInclude   , 0, 0}
 	,{"rmexternal"   , DoRmExternal   , 0, 0}
 	,{"rmseparator"  , DoPreRmSeparator,0, 0}
 	,{"setexternal"  , DoSetExternal  , 0, 0}
@@ -2083,7 +2084,21 @@ illname:;
  		#[ DoInclude :
 */
 
-int DoInclude(UBYTE *s)
+int DoInclude(UBYTE *s) { return(Include(s,FILESTREAM)); }
+
+/*
+ 		#] DoInclude : 
+ 		#[ DoInclude :
+*/
+
+int DoReverseInclude(UBYTE *s) { return(Include(s,REVERSEFILESTREAM)); }
+
+/*
+ 		#] DoInclude : 
+ 		#[ Include :
+*/
+
+int Include(UBYTE *s, int type)
 {
 	UBYTE *name = s, *fold, *t, c, c1 = 0, c2 = 0, c3 = 0;
 	int str1offset, withnolist = AC.NoShowInput;
@@ -2145,7 +2160,7 @@ int DoInclude(UBYTE *s)
 /*
 	We have the name of the file in 'name' and the fold in 'fold' (or NULL)
 */
-	if ( OpenStream(name,FILESTREAM,0,PRENOACTION) == 0 ) {
+	if ( OpenStream(name,type,0,PRENOACTION) == 0 ) {
 		if ( fold ) { M_free(fold,"foldname"); fold = 0; }
 		return(-1);
 	}
@@ -2232,7 +2247,7 @@ nofold:
 }
 
 /*
- 		#] DoInclude : 
+ 		#] Include : 
  		#[ DoPreExchange :
 
 		Exchanges the names of expressions or the contents of dollars
@@ -3157,6 +3172,7 @@ int DoIfdef(UBYTE *s, int par)
 
 int DoInside(UBYTE *s)
 {
+	GETIDENTITY
 	int numdol, error = 0;
 	WORD *nb, newsize, i;
 	UBYTE *name, c;
@@ -3215,6 +3231,7 @@ int DoInside(UBYTE *s)
 	AP.inside.oldnumpotmoddollars = NumPotModdollars;
 	AP.inside.oldcbuf = AC.cbufnum;
 	AP.inside.oldrbuf = AM.rbufnum;
+	AP.inside.oldcnumlhs = AR.Cnumlhs, 
 	AddToPreTypes(PRETYPEINSIDE);
 	AP.PreInsideLevel = 1;
 	AC.cbufnum = AP.inside.inscbuf;
@@ -3248,7 +3265,7 @@ int DoEndInside(UBYTE *s)
 	GETIDENTITY
 	WORD numdol, *oldworkpointer = AT.WorkPointer, *term, *t, j, i;
 	DOLLARS d, nd;
-	WORD oldcnumlhs = AR.Cnumlhs, oldbracketon = AR.BracketOn;
+	WORD oldbracketon = AR.BracketOn;
 	WORD *oldcompresspointer = AR.CompressPointer;
 	int oldmultithreaded = AS.MultiThreaded;
 	/* int oldmparallelflag = AC.mparallelflag; */
@@ -3355,7 +3372,7 @@ cleanup:
 	f = AR.infile; AR.infile = AR.outfile; AR.outfile = f;
 	AC.cbufnum = AP.inside.oldcbuf;
 	AM.rbufnum = AP.inside.oldrbuf;
-	AR.Cnumlhs = oldcnumlhs;
+	AR.Cnumlhs = AP.inside.oldcnumlhs;
 	AR.BracketOn = oldbracketon;
 	AP.PreInsideLevel = 0;
 	AR.CompressPointer = oldcompresspointer;
@@ -6063,7 +6080,7 @@ ReturnWithError:
 }
 
 /*
- 		#] writeToChannel :
+ 		#] writeToChannel : 
  		#[ DoFactDollar :
 
 		Executes the #factdollar $var
@@ -6259,7 +6276,7 @@ int DoOptimize(UBYTE *s)
 		MesPrint("@%s is not an expression",exprname);
 		error = 1;
 	}
-	else {
+	else if ( AP.preError == 0 ) {
 		EXPRESSIONS e = Expressions + numexpr;
 		POSITION position;
 		int firstterm;
@@ -6358,6 +6375,9 @@ DoSerr:
 		Now some administration and we are done
 */
 		UpdateMaxSize();
+	}
+	else {
+		ClearOptimize();
 	}
 	return(error);
 	

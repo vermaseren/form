@@ -1010,6 +1010,9 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	stack<int> s;
 	vector<WORD> instr;
 	WORD numinstr = 0;
+ 
+	// To avoid frequent memory allocations, we recycle a vector of int.
+	vector<int> xtmp;
 
 	// calculate all necessary powers of variables if do_CSE is set
 	if (do_CSE) {
@@ -1018,7 +1021,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 				i++;
 			else {
 				if (tree[i]==SYMBOL && tree[i+3]>1) { // symbol with power>1
-					vector<int> x;
+					vector<int> &x = xtmp; x.clear();
+//					vector<int> x;
 					x.push_back(SYMBOL);           // SYMBOL
 					x.push_back(tree[i+2]+1);      // variable (1-indexed)
 					x.push_back(tree[i+3]);        // power
@@ -1051,7 +1055,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
 
-		vector<int> x;
+//		vector<int> x;
+		vector<int> &x = xtmp; x.clear();
 		
 		if (tree[i]==SNUMBER) {
 			// for numbers, check whether it has been seen before for CSE
@@ -1656,6 +1661,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	vector<WORD> &order = *porder;
 	vector<WORD> &schemev = *pscheme;
 	vector<tree_node *> &path = *ppath;
+	int depth = 0;
 
 	order.clear();
 	path.clear();
@@ -1679,8 +1685,37 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		for (vector<tree_node>::iterator p=select->childs.begin(); p<select->childs.end(); p++) {
 			double score;
 			if (p->num_visits >= 1) {
+				float slide_down_factor = 1.0;
+//-------------------------------------------------------------------
+				switch ( AO.Optimize.experiments ) {
+					case 1:  // This is what Ben suggested
+						slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-AT.optimtimes);
+						slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
+						break;
+					case 2:  // This gives a bit more cleanup time at the end.
+						if ( 2*AT.optimtimes < AO.Optimize.mctsnumexpand ) {
+							slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-2*AT.optimtimes);
+							slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
+						}
+						else {
+							slide_down_factor = 0.01;
+						}
+						break;
+					case 3:  // depth dependent factor combined with Ben's method
+						slide_down_factor = 1.0*(optimize_num_vars-depth);
+						slide_down_factor /= 1.0*optimize_num_vars;
+						slide_down_factor *= 1.0*AO.Optimize.mctsnumexpand;
+						slide_down_factor = ( slide_down_factor - AT.optimtimes )/slide_down_factor;
+						if ( slide_down_factor > 1.0 ) slide_down_factor = 1.0;
+						break;
+				}
+//-------------------------------------------------------------------
+
 				// there are results calculated, so select with the UCT formula
 				score = mcts_expr_score / (p->sum_results/p->num_visits) +
+//-------------------------------------------------------------------------
+					slide_down_factor *
+//-------------------------------------------------------------------------
 					2 * AO.Optimize.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
 					
 #ifdef DEBUG_MCTS
@@ -1715,6 +1750,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		select = next;
 		path.push_back(select);
 		order.push_back(select->var);
+		depth++;
 	}
 
 	// MCTS step II: expand
@@ -2096,12 +2132,15 @@ void find_Horner_MCTS () {
 	PF_find_Horner_MCTS_expand_tree_master_init();
 #endif
 
+	// initialize a potential variable mctsconstant scheme.
+	AT.optimtimes = 0;
+
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
 	for (int times=0; times<AO.Optimize.mctsnumexpand && !mcts_root.finished && 
 				 (AO.Optimize.mctstimelimit==0 ||	(TimeWallClock(1)-start_time)/100 < AO.Optimize.mctstimelimit);
 			 times++) {
-
+		AT.optimtimes = times;
   	// call expand_tree routine depending on threading mode
 #if defined(WITHPTHREADS)
 		if (AM.totalnumberofthreads > 1)
@@ -3807,9 +3846,6 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 	}
 
 	// put the number of variables used in a preprocessor variable
-//	UBYTE numbuf[24];
-//	NumCopy(numvar,numbuf);
-//	PutPreVar(AM.oldnumextrasymbols,numbuf,0,1);
 	
 	// generate new instructions with the renumbering
 	vector<WORD> newinstr;
@@ -4240,7 +4276,7 @@ WORD generate_expression (WORD exprnr) {
 	WORD *oldWorkPointer = AT.WorkPointer;
 	
 	CBUF *C = cbuf+AC.cbufnum;
-	WORD *term = AT.WorkPointer;
+	WORD *term = AT.WorkPointer, oldcurexpr = AR.CurExpr;
 	POSITION position;
 	EXPRESSIONS e = Expressions+exprnr;
 	SetScratch(AR.infile,&(e->onfile));
@@ -4256,6 +4292,7 @@ WORD generate_expression (WORD exprnr) {
 		Terminate(-1);
 	}
 
+	AR.CurExpr = exprnr;
 	NewSort(BHEAD0);
 
 	// scan for the original expression (marked by *t<0) and give the
@@ -4282,6 +4319,7 @@ WORD generate_expression (WORD exprnr) {
 	}
 
 	AT.WorkPointer = oldWorkPointer;
+	AR.CurExpr = oldcurexpr;
 	
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: generate_expression", thetime_str().c_str());
@@ -4590,9 +4628,18 @@ int Optimize (WORD exprnr, int do_print) {
 #endif
 
 	if ( AO.Optimize.printstats > 0 ) {
+		char str[20];
 		MesPrint("");
 		count_operators(optimize_expr,true);
-		count_operators(optimize_best_instr,true);
+		int numop = count_operators(optimize_best_instr,true);
+		sprintf(str,"%d",numop);
+		PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)str,0,1);
+	}
+	else {
+		char str[20];
+		int numop = count_operators(optimize_best_instr,false);
+		sprintf(str,"%d",numop);
+		PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)str,0,1);
 	}
  
 	if ( ( AO.Optimize.schemeflags&1 ) == 1 ) {
@@ -4624,6 +4671,31 @@ int Optimize (WORD exprnr, int do_print) {
 		FiniLine();
 		AO.OutFill = old2;
 		AO.OutputLine = old1;
+	}
+ 
+	{
+		GETIDENTITY
+		UBYTE *OutScr, *Out, *outstring = 0;
+		int i, sym;
+		AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
+		OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
+		for ( i = 0; i < optimize_num_vars; i++ ) {
+			Out = OutScr;
+			sym = optimize_best_vars[i];
+			if ( sym < NumSymbols ) { StrCopy(VARNAME(symbols,sym),OutScr); }
+			else {
+				Out = StrCopy((UBYTE *)AC.extrasym,Out);
+				if ( AC.extrasymbols == 0 ) {
+					Out = NumCopy((MAXVARIABLES-sym),Out);
+					Out = StrCopy((UBYTE *)"_",Out);
+				}
+				else if ( AC.extrasymbols == 1 ) {
+					Out = AddArrayIndex((MAXVARIABLES-sym),Out);
+				}
+			}
+			outstring = AddToString(outstring,OutScr,1);
+		}
+		PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)outstring,0,1);
 	}
 	
 #ifdef WITHMPI
@@ -4689,7 +4761,9 @@ int ClearOptimize()
 		*w = SetExprCases(DROP,1,*w);
 		if ( *w < 0 ) error = 1;
 	}
-	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
+	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,1);
+	PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)("0"),0,1);
+	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,1);
 	return(error);
 }
 

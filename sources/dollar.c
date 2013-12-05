@@ -565,7 +565,7 @@ NoChange:;
 }
 
 /*
-  	#] AssignDollar :
+  	#] AssignDollar : 
   	#[ WriteDollarToBuffer :
 
 	Takes the numbered dollar expression and writes it to output.
@@ -1262,7 +1262,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 	if ( d->type == DOLTERMS && d->where[0] == 8 &&
 	d->where[8] == 0 && d->where[7] == 3 && d->where[6] == 1
 	 && d->where[5] == 1 && d->where[4] == 1 && d->where[1] == SYMBOL ) {
-		retval = d->where[2];
+		retval = d->where[3];
 	}
 	else if ( d->type == DOLARGUMENT && d->where[0] == -SYMBOL ) {
 		retval = d->where[1];
@@ -1277,7 +1277,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 	}
 	else {
 		AN.ErrorInDollar = 1;
-		retval = 0;
+		retval = -1;
 	}
 #ifdef WITHPTHREADS
 	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
@@ -1509,7 +1509,7 @@ ShortArgument:
 }
 
 /*
-  	#] DolToTerms :
+  	#] DolToTerms : 
   	#[ DolToLong :
 */
 

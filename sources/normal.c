@@ -42,6 +42,60 @@
 /*
   	#] Includes : 
  	#[ Normalize :
+ 		#[ CompareFunctions :
+*/
+
+WORD CompareFunctions(WORD *fleft,WORD *fright)
+{
+	WORD k, kk;
+	if ( AC.properorderflag ) {
+		if ( ( *fleft >= (FUNCTION+WILDOFFSET)
+		&& functions[*fleft-FUNCTION-WILDOFFSET].spec >= TENSORFUNCTION )
+		|| ( *fleft >= FUNCTION && *fleft < (FUNCTION + WILDOFFSET)
+		&& functions[*fleft-FUNCTION].spec >= TENSORFUNCTION ) ) {}
+		else {
+			WORD *s1, *s2, *ss1, *ss2;
+			s1 = fleft+FUNHEAD; s2 = fright+FUNHEAD;
+			ss1 = fleft + fleft[1]; ss2 = fright + fright[1];
+			while ( s1 < ss1 && s2 < ss2 ) {
+				k = CompArg(s1,s2);
+				if ( k > 0 ) return(1);
+				if ( k < 0 ) return(0);
+				NEXTARG(s1)
+				NEXTARG(s2)
+			}
+			if ( s1 < ss1 ) return(1);
+			return(0);
+		}
+		k = fleft[1] - FUNHEAD;
+		kk = fright[1] - FUNHEAD;
+		fleft += FUNHEAD;
+		fright += FUNHEAD;
+		while ( k > 0 && kk > 0 ) {
+			if ( *fleft < *fright ) return(0);
+			else if ( *fleft++ > *fright++ ) return(1);
+			k--; kk--;
+		}
+		if ( k > 0 ) return(1);
+		return(0);
+	}
+	else {
+		k = fleft[1] - FUNHEAD;
+		kk = fright[1] - FUNHEAD;
+		fleft += FUNHEAD;
+		fright += FUNHEAD;
+		while ( k > 0 && kk > 0 ) {
+			if ( *fleft < *fright ) return(0);
+			else if ( *fleft++ > *fright++ ) return(1);
+			k--; kk--;
+		}
+		if ( k > 0 ) return(1);
+		return(0);
+	}
+}
+
+/*
+ 		#] CompareFunctions : 
  		#[ Commute :
 
 	This function gets two adjacent function pointers and decides
@@ -51,19 +105,67 @@
 	Currently there is only an ordering of gamma matrices belonging
 	to different spin lines.
 
+	Note that we skip for now the cases of (F)^(3/2) or 1/F and a few more
+	of such funny functions.
 */
 
 WORD Commute(WORD *fleft, WORD *fright)
 {
+	WORD fun1 = ABS(*fleft), fun2 = ABS(*fright);
 	if ( *fleft >= GAMMA && *fleft <= GAMMASEVEN
-	  && *fright >= GAMMA && *fright <= GAMMASEVEN ) {
+	    && *fright >= GAMMA && *fright <= GAMMASEVEN ) {
 		if ( fleft[FUNHEAD] < AM.OffsetIndex && fleft[FUNHEAD] > fright[FUNHEAD] )
 			return(1);
+		return(0);
 	}
+	if ( ( ( functions[fun1-FUNCTION].flags & COULDCOMMUTE ) == 0 )
+	  || ( ( functions[fun2-FUNCTION].flags & COULDCOMMUTE ) == 0 ) ) return(0);
 /*
 	if other conditions will come here, keep in mind that if *fleft < 0
-	or *fright < 0 they are arguments in the exponent function as in f^2
+	or *fright < 0 they are arguments in the exponent function as in f^(3/2)
 */
+	if ( AC.CommuteInSet == 0 ) return(0);
+/*
+	The code for CompareFunctions can be stolen from the commuting case.
+
+	We need the syntax:
+		Commute Fun1,Fun2,...,Fun`n';
+	For this Fun1,...,Fun`n' need to be noncommuting functions.
+	These functions will commute with all members of the group.
+	In the AC.paircommute buffer the representation is
+		`n'+1,element1,...,element`n',`m'+1,element1,...,element`m',0
+	A function can belong to more than one group.
+	If a function commutes with itself, it is most efficient to make a separate
+	group of two elements for it as in
+		Commute T,T;   -> 3,T,T
+*/
+    if ( fun1 >= fun2 ) {
+		WORD *group = AC.CommuteInSet, *g1, *g2, *g3;
+		while ( *group > 0 ) {
+			g3 = group + *group;
+			g1 = group+1;
+			while ( g1 < g3 ) {
+				if ( *g1 == fun1 || ( fun1 <= GAMMASEVEN && fun1 >= GAMMA 
+				 && *g1 <= GAMMASEVEN && *g1 >= GAMMA ) ) {
+					g2 = group+1;
+					while ( g2 < g3 ) {
+						if ( g1 != g2 && ( *g2 == fun2 ||
+						 ( fun2 <= GAMMASEVEN && fun2 >= GAMMA 
+						 && *g2 <= GAMMASEVEN && *g2 >= GAMMA ) ) ) {
+							if ( fun1 != fun2 ) return(1);
+							if ( *fleft < 0 ) return(0);
+							if ( *fright < 0 ) return(1);
+							return(CompareFunctions(fleft,fright));
+						}
+						g2++;
+					}
+					break;
+				}
+				g1++;
+			}
+			group = g3;
+		}
+	}
 	return(0);
 }
 

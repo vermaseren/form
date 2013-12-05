@@ -829,6 +829,7 @@ int AddSymbol(UBYTE *name, int minpow, int maxpow, int cplx, int dim)
 	sym->minpower = minpow;
 	sym->maxpower = maxpow;
 	sym->complex  = cplx;
+	sym->flags    = 0;
 	sym->node     = nodenum;
 	sym->dimension= dim;
 	while ( *s ) s++;
@@ -989,6 +990,7 @@ int AddIndex(UBYTE *name, int dim, int dim4)
 	ind->name      = AddName(*AC.activenames,name,CINDEX,numindex,&nodenum);
 	ind->type      = 0;
 	ind->dimension = dim;
+	ind->flags     = 0;
 	ind->nmin4     = dim4;
 	ind->node      = nodenum;
 	while ( *s ) s++;
@@ -1142,6 +1144,7 @@ int AddVector(UBYTE *name, int cplx, int dim)
 	v->complex = cplx;
 	v->node    = nodenum;
 	v->dimension = dim;
+	v->flags = 0;
 	while ( *s ) s++;
 	v->namesize = (s-name)+1;
 	return(numvector);
@@ -1224,6 +1227,7 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int 
 	fun->spec = istensor;
 	fun->complex  = cplx;
 	fun->tabl = 0;
+	fun->flags = 0;
 	fun->node = nodenum;
 	fun->symminfo = 0;
 	fun->symmetric = symprop;
@@ -1237,6 +1241,94 @@ int AddFunction(UBYTE *name, int comm, int istensor, int cplx, int symprop, int 
 
 /*
   	#] AddFunction : 
+  	#[ CoCommuteInSet :
+
+	Commuting,f1,...,fn;
+*/
+
+int CoCommuteInSet(UBYTE *s)
+{
+	UBYTE *name, *ss, c, *start = s;
+	WORD number, type, *g, *gg;
+	int error = 0, i, len = StrLen(s), len2 = 0;
+	if ( AC.CommuteInSet != 0 ) {
+		g = AC.CommuteInSet;
+		while ( *g ) g += *g;
+		len2 = g - AC.CommuteInSet;
+		if ( len2+len+3 > AC.SizeCommuteInSet ) {
+			gg = (WORD *)Malloc1((len2+len+3)*sizeof(WORD),"CommuteInSet");
+			for ( i = 0; i < len2; i++ ) gg[i] = AC.CommuteInSet[i];
+			gg[len2] = 0;
+			M_free(AC.CommuteInSet,"CommuteInSet");
+			AC.CommuteInSet = gg;
+			AC.SizeCommuteInSet = len+len2+3;
+			g = AC.CommuteInSet+len2;
+		}
+	}
+	else {
+		AC.SizeCommuteInSet = len+2;
+		g = AC.CommuteInSet = (WORD *)Malloc1((len+3)*sizeof(WORD),"CommuteInSet");
+		*g = 0;
+	}
+	gg = g++;
+	ss = s-1;
+	for(;;) {
+		while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+		if ( *s == 0 ) {
+			if ( s - start >= len ) break;
+			*s = '}'; s++;
+			*g = 0;
+			*gg = g-gg;
+			if ( *gg < 2 ) {
+				MesPrint("&There should be at least two noncommuting functions or tensors in a commuting statement.");
+				error = 1;		
+			}
+			else if ( *gg == 2 ) {
+				gg[2] = gg[1]; gg[3] = 0; gg[0] = 3;
+			}
+			gg = g++;
+			continue;
+		}
+		if ( s > ss ) {
+			if ( *s != '{' ) {
+				MesPrint("&The CommuteInSet statement should have sets enclosed in {}.");
+				error = 1;
+				break;
+			}
+			ss = s;
+			SKIPBRA2(ss) /* Note that parentheses were tested before */
+			*ss = 0;
+			s++;
+		}
+		name = s;
+		s = SkipAName(s);
+		c = *s; *s = 0;
+		if ( ( type = GetName(AC.varnames,name,&number,NOAUTO) ) != CFUNCTION ) {
+			MesPrint("&%s is not a function or tensor",name);
+			error = 1;
+		}
+		else if ( functions[number].commute == 0 ){
+			MesPrint("&%s is not a noncommuting function or tensor",name);
+			error = 1;
+		}
+		else {
+			*g++ = number+FUNCTION;
+			functions[number].flags |= COULDCOMMUTE;
+			if ( number+FUNCTION >= GAMMA && number+FUNCTION <= GAMMASEVEN ) {
+				functions[GAMMA-FUNCTION].flags |= COULDCOMMUTE;
+				functions[GAMMAI-FUNCTION].flags |= COULDCOMMUTE;
+				functions[GAMMAFIVE-FUNCTION].flags |= COULDCOMMUTE;
+				functions[GAMMASIX-FUNCTION].flags |= COULDCOMMUTE;
+				functions[GAMMASEVEN-FUNCTION].flags |= COULDCOMMUTE;
+			}
+		}
+		*s = c;
+	}
+	return(error);
+}
+
+/*
+  	#] CoCommuteInSet : 
   	#[ CoFunction + ...:
 
 	Function declarations.

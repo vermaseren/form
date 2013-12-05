@@ -757,6 +757,7 @@ static void print_M()
 	MesPrint("%d", AM.hparallelflag);
 	MesPrint("%d", AM.gparallelflag);
 	MesPrint("%d", AM.totalnumberofthreads);
+	MesPrint("%d", AM.gSizeCommuteInSet);
 	MesPrint("%d", AM.gThreadStats);
 	MesPrint("%d", AM.ggThreadStats);
 	MesPrint("%d", AM.gFinalStats);
@@ -1444,6 +1445,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.OldMilliTime, LONG);
 	R_SET(AM.gproperorderflag, int);
 	R_SET(AM.gThreadBucketSize, LONG);
+	R_SET(AM.gSizeCommuteInSet, int);
 	R_SET(AM.gThreadStats, int);
 	R_SET(AM.gFinalStats, int);
 	R_SET(AM.gThreadsFlag, int);
@@ -1587,6 +1589,7 @@ int DoRecovery(int *moduletype)
 	R_FREE(AC.inputnumbers);
 #endif
 	R_FREE(AC.IfSumCheck);
+	R_FREE(AC.CommuteInSet);
 	R_FREE(AC.CheckpointRunAfter);
 	R_FREE(AC.CheckpointRunBefore);
 
@@ -1979,6 +1982,9 @@ int DoRecovery(int *moduletype)
 
 	if ( AC.IfSumCheck ) {
 		R_COPY_B(AC.IfSumCheck, (LONG)sizeof(WORD)*(AC.MaxIf+1), WORD*);
+	}
+	if ( AC.CommuteInSet ) {
+		R_COPY_B(AC.CommuteInSet, (LONG)sizeof(WORD)*(AC.SizeCommuteInSet+1), WORD*);
 	}
 
 	AC.LogHandle = oldLogHandle;
@@ -2476,6 +2482,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.OldMilliTime, sizeof(LONG));
 	S_WRITE_B(&AM.gproperorderflag, sizeof(int));
 	S_WRITE_B(&AM.gThreadBucketSize, sizeof(LONG));
+	S_WRITE_B(&AM.gSizeCommuteInSet, sizeof(int));
 	S_WRITE_B(&AM.gThreadStats, sizeof(int));
 	S_WRITE_B(&AM.gFinalStats, sizeof(int));
 	S_WRITE_B(&AM.gThreadsFlag, sizeof(int));
@@ -2725,6 +2732,9 @@ static int DoSnapshot(int moduletype)
 
 	if ( AC.IfSumCheck ) {
 		S_WRITE_B(AC.IfSumCheck, (LONG)sizeof(WORD)*(AC.MaxIf+1));
+	}
+	if ( AC.CommuteInSet ) {
+		S_WRITE_B(AC.CommuteInSet, (LONG)sizeof(WORD)*(AC.SizeCommuteInSet+1));
 	}
 
 	S_WRITE_S(AC.CheckpointRunAfter);

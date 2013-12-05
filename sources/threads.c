@@ -876,11 +876,15 @@ int MakeThreadBuckets(int number, int par)
 	THREADBUCKET *thr;
 /*
 	First we need a decent estimate. Not all terms should be maximal.
+	Note that AM.MaxTer is in bytes!!!
+	Maybe we should try to limit the size here a bit more effectively.
+	This is a great consumer of memory.
 */
-	sizethreadbuckets = ( AC.ThreadBucketSize + 1 ) * AM.MaxTer + 2;
+	sizethreadbuckets = ( AC.ThreadBucketSize + 1 ) * AM.MaxTer + 2*sizeof(WORD);
 	if ( AC.ThreadBucketSize >= 250 )      sizethreadbuckets /= 4;
 	else if ( AC.ThreadBucketSize >= 90 )  sizethreadbuckets /= 3;
 	else if ( AC.ThreadBucketSize >= 40 )  sizethreadbuckets /= 2;
+	sizethreadbuckets /= sizeof(WORD);
 	
 	if ( par == 0 ) {
 		numthreadbuckets = 2*(number-1);
@@ -1798,15 +1802,22 @@ bucketstolen:;
 				break;
 /*
 			#] CLEARCLOCK : 
+			#[ MCTSEXPANDTREE :
 */
-  		case MCTSEXPANDTREE:
+			case MCTSEXPANDTREE:
+				AT.optimtimes = AB[0]->T.optimtimes;
 				find_Horner_MCTS_expand_tree();
 				break;
-
-    	case OPTIMIZEEXPRESSION:
+/*
+			#] MCTSEXPANDTREE : 
+			#[ OPTIMIZEEXPRESSION :
+*/
+			case OPTIMIZEEXPRESSION:
 				optimize_expression_given_Horner();
 				break;
-			
+/*
+			#] OPTIMIZEEXPRESSION : 
+*/
 			default:
 				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
@@ -4815,8 +4826,9 @@ void UnSetMods()
 
 /*
   	#] UnSetMods : 
+  	#[ find_Horner_MCTS_expand_tree_threaded :
 */
-
+ 
 void find_Horner_MCTS_expand_tree_threaded() {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
@@ -4824,11 +4836,20 @@ void find_Horner_MCTS_expand_tree_threaded() {
 	WakeupThread(id,MCTSEXPANDTREE);
 }
 
+/*
+  	#] find_Horner_MCTS_expand_tree_threaded : 
+  	#[ optimize_expression_given_Horner_threaded :
+*/
+ 
 extern void optimize_expression_given_Horner_threaded() {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
 		MasterWait();	
 	WakeupThread(id,OPTIMIZEEXPRESSION);
 }
+
+/*
+  	#] optimize_expression_given_Horner_threaded : 
+*/
 
 #endif

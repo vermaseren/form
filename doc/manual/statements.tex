@@ -592,6 +592,43 @@ be as compared to MaxTermSize (see chapter \ref{setup} on the setup) before
 use is made of the alternate collect function. \vspace{10mm}
 
 %--#] collect : 
+%--#[ commuteinset :
+ 
+\section{commuteinset}
+\label{substacommuteinset}
+
+\noindent \begin{tabular}{ll}
+Type & Declaration statement\\
+Syntax & commuteinset {\tt<}$\{$list of noncommuting functions/tensors$\}${\tt>}; \\
+See also & functions (\ref{substafunctions})
+\end{tabular} \vspace{4mm}
+
+\noindent This statement\index{commuteinset} allows one or more sets of 
+noncommuting functions and or tensors for its argument(s). The functions 
+inside each set will commute with each other. It is allowed to have the 
+same function inside more than one set. For a function to commute with 
+itself (with for instance different arguments) it needs to be specified 
+twice inside the same set. In that case it is more efficient to have a 
+separate set with only two arguments. Example:
+\begin{verbatim}
+    I   i1,...,i10;
+    F   A1,...,A10;
+    CommuteInSet{A1,A3,A5},{A1,g_},{A1,A1};
+    L   F = A5*A1*A5*A1*A5*A2*A3*A5*A1*A5*A3*A1;
+    L   G = g_(2,i1)*g_(2,i2,i3)*A1(i2)*g_(1,i4)*g_(1,5_,i5,i6)
+                    *A1(i1)*A1(i3)*g5_(1)*A3(i5)*A3(i4)*g5_(1);
+    Print +f +s;
+    .end
+
+   F =
+       + A1*A1*A5*A5*A5*A2*A1*A1*A3*A3*A5*A5;
+   G =
+       + g_(1,i4,i5,i6)*g_(2,i1,i2,i3)*A1(i1)*A1(i2)*A1(i3)*
+       A3(i5)*A3(i4)*g_(1,5_);
+\end{verbatim}
+\vspace{10mm}
+
+%--#] commuteinset : 
 %--#[ commuting :
  
 \section{commuting}
@@ -1674,15 +1711,15 @@ default.}
  
 \leftvitem{3.5cm}{O0\index{optimize}\index{format!optimize}}
 \rightvitem{13cm}{\FORM\ will turn off output optimization. See the section 
-on output optimization \ref{optimization}.}
+on output optimization \ref{optimization}}
  
 \leftvitem{3.5cm}{O1[options]\index{optimize}\index{format!optimize}}
 \rightvitem{13cm}{\FORM\ will use level 1 output optimization. See the section 
-on output optimization \ref{optimization}.}
+on output optimization \ref{optimization}}
  
 \leftvitem{3.5cm}{O2[options]\index{optimize}\index{format!optimize}}
 \rightvitem{13cm}{\FORM\ will use level 2 output optimization. See the section 
-on output optimization \ref{optimization}.}
+on output optimization \ref{optimization}}
  
 \leftvitem{3.5cm}{O3[options]\index{optimize}\index{format!optimize}}
 \rightvitem{13cm}{\FORM\ will use level 3 output optimization. See the section 
@@ -2742,7 +2779,7 @@ the coefficient that is extracted is c the whole term is multiplied by the
 factor $c^n$.}
 \vspace{10mm}
 
-%--#] makeinteger :
+%--#] makeinteger : 
 %--#[ many :
  
 \section{many}
@@ -3178,7 +3215,7 @@ the coefficient of the first term was c the whole term is multiplied by the
 factor $c^n$.}
 \vspace{10mm}
 
-%--#] normalize :
+%--#] normalize : 
 %--#[ notinparallel :
 
 \section{notinparallel}

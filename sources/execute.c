@@ -279,6 +279,7 @@ WORD PopVariables()
 	AC.ProcessStats = AM.gProcessStats;
 	AC.OldParallelStats = AM.gOldParallelStats;
 	AC.IsFortran90 = AM.gIsFortran90;
+	AC.SizeCommuteInSet = AM.gSizeCommuteInSet;
 	if ( AC.Fortran90Kind ) {
 		M_free(AC.Fortran90Kind,"Fortran90 Kind");
 		AC.Fortran90Kind = 0;
@@ -317,6 +318,29 @@ WORD PopVariables()
 	AC.OutNumberType = AM.gOutNumberType;
 	AR.SortType = AC.SortType = AM.gSortType;
 	AC.ShortStatsMax = AM.gShortStatsMax;
+/*
+	Now we have to clean up the commutation properties
+*/
+	for ( i = 0; i < NumFunctions; i++ ) functions[i].flags &= ~COULDCOMMUTE;
+	if ( AC.CommuteInSet ) {
+		WORD *g, *gg;
+		g = AC.CommuteInSet;
+		while ( *g ) {
+			gg = g+1; g += *g;
+			while ( gg < g ) {
+				if ( *gg <= GAMMASEVEN && *gg >= GAMMA ) {
+					functions[GAMMA-FUNCTION].flags |= COULDCOMMUTE;
+					functions[GAMMAI-FUNCTION].flags |= COULDCOMMUTE;
+					functions[GAMMAFIVE-FUNCTION].flags |= COULDCOMMUTE;
+					functions[GAMMASIX-FUNCTION].flags |= COULDCOMMUTE;
+					functions[GAMMASEVEN-FUNCTION].flags |= COULDCOMMUTE;
+				}
+				else {
+					functions[*gg-FUNCTION].flags |= COULDCOMMUTE;
+				}
+			}
+		}
+	}
 	return(retval);
 }
 
@@ -369,6 +393,7 @@ VOID MakeGlobal()
 	AM.gProcessStats = AC.ProcessStats;
 	AM.gOldParallelStats = AC.OldParallelStats;
 	AM.gIsFortran90 = AC.IsFortran90;
+	AM.gSizeCommuteInSet = AC.SizeCommuteInSet;
 	if ( AM.gFortran90Kind ) {
 		M_free(AM.gFortran90Kind,"Fortran 90 Kind");
 		AM.gFortran90Kind = 0;

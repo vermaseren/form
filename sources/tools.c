@@ -274,6 +274,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 	int handle, num;
 	LONG filesize;
 	switch ( type ) {
+		case REVERSEFILESTREAM:
 		case FILESTREAM:
 /*
 			Notice that FILESTREAM is only used for text files:
@@ -289,10 +290,20 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			filesize = BASEPOSITION(scrpos);
 			PUTZERO(scrpos);
 			SeekFile(handle,&scrpos,SEEK_SET);
-			if ( filesize > AM.MaxStreamSize ) filesize = AM.MaxStreamSize;
+			if ( filesize > AM.MaxStreamSize && type == FILESTREAM )
+					filesize = AM.MaxStreamSize;
 			stream = CreateStream((UBYTE *)"filestream");
-			stream->buffer = (UBYTE *)Malloc1(filesize,"name of input stream");
+/*
+			The extra +1 in the Malloc1 is potentially needed in ReverseStatements!
+*/
+			stream->buffer = (UBYTE *)Malloc1(filesize+1,"name of input stream");
 			stream->inbuffer = ReadFile(handle,stream->buffer,filesize);
+			if ( type == REVERSEFILESTREAM ) {
+				if ( ReverseStatements(stream) ) {
+					M_free(stream->buffer,"name of input stream");
+					return(0);
+				}
+			}
 			stream->top = stream->buffer + stream->inbuffer;
 			stream->pointer = stream->buffer;
 			stream->handle = handle;
@@ -574,7 +585,7 @@ STREAM *CloseStream(STREAM *stream)
 		M_free(stream->FoldName,"stream->FoldName");
 		stream->FoldName = 0;
 	}
-	if ( stream->type == FILESTREAM ) {
+	if ( stream->type == FILESTREAM || stream->type == REVERSEFILESTREAM ) {
 		CloseFile(stream->handle);
 		if ( stream->buffer != 0 ) M_free(stream->buffer,"name of input stream");
 		stream->buffer = 0;
@@ -741,6 +752,109 @@ VOID PositionStream(STREAM *stream, LONG position)
 
 /*
  		#] PositionStream : 
+ 		#[ ReverseStatements :
+
+		Reverses the order of the statements in the buffer.
+		We allocate an extra buffer and copy a bit to and fro.
+		Note that there are some nasties that cannot be resolved.
+*/
+
+int ReverseStatements(STREAM *stream)
+{
+	UBYTE *spare = (UBYTE *)Malloc1((stream->inbuffer+1)*sizeof(UBYTE),"Reverse copy");
+	UBYTE *top = stream->buffer + stream->inbuffer, *in, *s, *ss, *out;
+	out = spare+stream->inbuffer+1;
+	in = stream->buffer;
+	while ( in < top ) {
+		s = in;
+		if ( *s == AP.ComChar ) {
+toeol:;
+			for(;;) {
+				if ( s == top ) { *--out = '\n'; break; }
+				if ( *s == '\\' ) {
+					s++;
+					if ( s >= top ) { /* This is an error! */
+irrend:					MesPrint("@Irregular end of reverse include file.");
+						return(1);
+					}
+				}
+				else if ( *s == '\n' ) {
+					s++; ss = s;
+					while ( ss > in ) *--out = *--ss;
+					in = s;
+					if ( out[0] == AP.ComChar && ss+6 < s && out[3] == '#' ) {
+/*
+						For folds we have to exchange begin and end
+*/
+						if ( out[4] == '[' ) out[4] = ']';
+						else if ( out[4] == ']' ) out[4] = '[';
+					}
+					break;
+				}
+				s++;
+			}
+			continue;
+		}
+		while ( s < top && ( *s == ' ' || *s == '\t' ) ) s++;
+		if ( *s == '#' ) {	/* preprocessor instruction */
+			goto toeol;		/* read to end of line */
+		}
+		if ( *s == '.' ) {	/* end-of-module instruction */
+			goto toeol;		/* read to end of line */
+		}
+/*
+		Here we have a regular statement. In principle we scan to ; and its \n
+		but there are special cases.
+		1: ; inside a string (in print "......;";)
+		2: multiple statements on one line.
+		3: ; + commentary after some blanks.
+		4: `var' can cause problems.....
+*/
+		while ( s < top ) {
+			if ( *s == ';' ) {
+				s++;
+				while ( s < top && ( *s == ' ' || *s == '\t' ) ) s++;
+				while ( s < top && *s == '\n' ) s++;
+				if ( s >= top && s[-1] != '\n' ) *s++ = '\n';
+				ss = s;
+				while ( ss > in ) *--out = *--ss;
+				in = s;
+				break;
+			}
+			else if ( *s == '"' ) {
+				s++;
+				while ( s < top ) {
+					if ( *s == '"' ) break;
+					if ( *s == '\\' ) { s++; }
+					s++;
+				}
+				if ( s >= top ) goto irrend;
+			}
+			else if ( *s == '\\' ) {
+				s++;
+				if ( s >= top ) goto irrend;
+			}
+			s++;
+		}
+		if ( in < top ) { /* Like blank lines at the end */
+			if ( s >= top && s[-1] != '\n' ) *s++ = '\n';
+			ss = s;
+			while ( ss > in ) *--out = *--ss;
+			in = s;
+		}
+	}
+	if ( out == spare ) stream->inbuffer++;
+	if ( out > spare+1 ) {
+		MesPrint("@Internal error in #reverseinclude instruction.");
+		return(1);
+	}
+	memcpy((void *)(stream->buffer),(void *)out,(size_t)(stream->inbuffer*sizeof(UBYTE)));
+	M_free(spare,"Reverse copy");
+	return(0);
+}
+
+/*
+ 		#] ReverseStatements : 
   	#] Streams : 
   	#[ Files :
  		#[ StartFiles :
@@ -1630,6 +1744,40 @@ VOID WriteUnfinString(int type, UBYTE *str, int num)
 
 /*
  		#] WriteUnfinString : 
+ 		#[ AddToString :
+*/
+
+UBYTE *AddToString(UBYTE *outstring, UBYTE *extrastring, int par)
+{
+	UBYTE *s = extrastring, *t, *newstring;
+	int n, nn;
+	while ( *s ) { s++; }
+	n = s-extrastring;
+	if ( outstring == 0 ) {
+		s = extrastring;
+		t = outstring = (UBYTE *)Malloc1(n+1,"AddToString");
+		NCOPY(t,s,n)
+		*t++ = 0;
+		return(outstring);
+	}
+	else {
+		t = outstring;
+		while ( *t ) t++;
+		nn = t - outstring;
+		t = newstring = (UBYTE *)Malloc1(n+nn+2,"AddToString");
+		s = outstring;
+		NCOPY(t,s,nn)
+		if ( par == 1 ) *t++ = ',';
+		s = extrastring;
+		NCOPY(t,s,n)
+		*t = 0;
+		M_free(outstring,"AddToString");
+		return(newstring);
+	}
+}
+
+/*
+ 		#] AddToString : 
  		#[ strDup1 :
 
 		string duplication with message passing for Malloc1, allowing

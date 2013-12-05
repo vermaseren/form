@@ -1498,6 +1498,31 @@ syntax of the operating system. Hence the \#remove instruction can always
 be used.
 
 %--#] remove : 
+%--#[ reverseinclude :
+
+\section{\#reverseinclude}
+\label{prereverseinclude}
+
+\noindent Syntax:
+
+\#reverseinclude[$-+$] filename
+
+\#reverseinclude[$-+$] filename \# foldname
+
+\noindent This instruction is identical to the \#include \ref{preinclude} 
+instruction, with the exception that the statements and instructions in the 
+file are read in reverse order. This can be useful at times when code is 
+generated in a particular order in a file and one would like to 'undo' this 
+code. It is somewhat related to the effects of the debugflag option 
+(\ref{optimdebugflag}) in the optimization options of the format statement 
+\ref{optimization}.
+
+There are a few limitations. If, for instance, linefeeds or semicolons 
+occur inside preprocessor variables, the reading routines cannot see this. 
+Additionally unfinished strings (unmatched double quotes) will result in 
+a fatal error. On the other hand the fold structure remains preserved.
+
+%--#] reverseinclude : 
 %--#[ rmexternal :
 
 \section{\#rmexternal}

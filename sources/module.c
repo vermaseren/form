@@ -341,6 +341,7 @@ VOID FullCleanUp()
 	AC.ThreadBalancing = AM.gThreadBalancing = AM.ggThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch;
 	AC.ShortStatsMax = AM.gShortStatsMax = AM.ggShortStatsMax;
+	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
 
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {
@@ -475,7 +476,7 @@ int DoPolyratfun(UBYTE *s)
 }
 
 /*
- 		#] DoPolyratfun :
+ 		#] DoPolyratfun : 
  		#[ DoNoParallel :
 */
 

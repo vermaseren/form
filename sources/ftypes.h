@@ -75,6 +75,7 @@
 #define PREREADSTREAM2 6
 #define EXTERNALCHANNELSTREAM 7
 #define PREREADSTREAM3 8
+#define REVERSEFILESTREAM 9
  
 #define ENDOFSTREAM 0xFF
 #define ENDOFINPUT 0xFF
@@ -979,3 +980,6 @@ typedef int (*TFUN1)();
 #define OPTHEAD 3
 #define DOALL 1
 #define ONLYFUNCTIONS 2
+
+#define INUSE 1
+#define COULDCOMMUTE 2

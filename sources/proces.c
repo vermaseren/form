@@ -3297,6 +3297,7 @@ CommonEnd:
 					goto Return0;
 				  case TYPEASSIGN:
 					{ WORD onc = AR.NoCompress, oldEside = AR.Eside;
+					WORD oldrepeat = *AN.RepPoint;
 /*
 					Here we have to assign an expression to a $ variable.
 */
@@ -3308,6 +3309,7 @@ CommonEnd:
 					if ( AssignDollar(BHEAD term,level) ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					AN.cTerm = 0;
+					*AN.RepPoint = oldrepeat;
 					AR.NoCompress = onc;
 					AR.Eside = oldEside;
 					break;
@@ -3450,7 +3452,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -4022,7 +4024,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**

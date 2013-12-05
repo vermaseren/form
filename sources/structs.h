@@ -787,7 +787,8 @@ typedef struct {
 	WORD oldcbuf;
 	WORD oldrbuf;
 	WORD inscbuf;
-	PADPOINTER(0,3,5,0);
+	WORD oldcnumlhs;
+	PADPOINTER(0,3,6,0);
 } INSIDEINFO;
 
 /**
@@ -1216,6 +1217,7 @@ typedef struct {
     int   printstats;
     int   debugflags;
     int   schemeflags;
+    int   experiments;
 } OPTIMIZE;
 
 typedef struct {
@@ -1316,6 +1318,7 @@ struct M_const {
     int     hparallelflag;         /* (M) */
     int     gparallelflag;         /* (M) */
     int     totalnumberofthreads;  /* (M) */
+    int     gSizeCommuteInSet;
     int     gThreadStats;
     int     ggThreadStats;
     int     gFinalStats;
@@ -1393,9 +1396,9 @@ struct M_const {
     WORD    zerorhs;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,52,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,53,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,52,75,0);
+	PADPOSITION(15,22,53,75,0);
 #endif
 };
 /*
@@ -1546,6 +1549,7 @@ struct C_const {
     char    *CheckpointRunBefore;  /**< [D] Filename of script to be executed _after_ having
                                         created the snapshot. =0 if no script shall be executed.*/
     WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
+    WORD    *CommuteInSet;         /* groups of noncommuting functions that can commute */
 #ifdef PARALLELCODE
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1635,6 +1639,7 @@ struct C_const {
                                         -1 : do recovery from snapshot, set by command line option;
                                         0 : do nothing; 1 : create snapshots, set by On checkpoint
                                         statement */
+    int     SizeCommuteInSet;      /* Size of the CommuteInSet buffer */
 #ifdef PARALLELCODE
     int     numpfirstnum;          /* For redefine */
     int     sizepfirstnum;         /* For redefine */
@@ -1687,11 +1692,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(45,8+3*MAXNEST,68,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(46,8+3*MAXNEST,69,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(45,8+3*MAXNEST,68,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(46,8+3*MAXNEST,69,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(43,8+3*MAXNEST,66,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(44,8+3*MAXNEST,67,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1896,6 +1901,7 @@ struct T_const {
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
     int     bracketindexflag;      /* Are brackets going to be indexed? */
+    int     optimtimes;            /* Number of the evaluation of the MCTS tree */
     WORD    small_power_maxx;      /*     size of the cache for small powers  */
     WORD    small_power_maxn;      /*     size of the cache for small powers */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
@@ -1923,12 +1929,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,14,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,15,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,12,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,13,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,10,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,11,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*
@@ -2178,9 +2184,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(24,6,18,17,1);
+	PADPOSITION(24,6,19,17,1);
 #else
-	PADPOSITION(24,4,18,17,1);
+	PADPOSITION(24,4,19,17,1);
 #endif
 };
 /*
