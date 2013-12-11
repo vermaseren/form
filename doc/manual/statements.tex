@@ -820,20 +820,38 @@ has been used. \vspace{10mm}
 
 \noindent \begin{tabular}{ll}
 Type & Specification statement\\
-Syntax & delete storage;
-\\ See also & save (\ref{substasave}), load (\ref{substaload})
+Syntax & delete storage; \\
+See also & save (\ref{substasave}), load (\ref{substaload}) \\
+Syntax & delete extrasymbols; \\
+Syntax & delete extrasymbols>number; \\
+See also & extrasymbols (\ref{substaextrasymbols}) \\
+
 \end{tabular} \vspace{4mm}
 
-\noindent This statement\index{delete} clears the complete 
-storage\index{storage file} file\index{file!storage} and 
-reduces it to zero size. The effect is that all stored expressions are 
-removed from the system. Because it is impossible to remove individual 
-expressions from the store file (there is no mechanism to fill the 
-resulting holes) it is the only way to clean up the storage file. If some 
-expressions should be excluded from this elimination process, one should 
-copy them first into active global expressions, then delete the storage 
-file, after which the expressions can be written to storage again with a 
-.store\index{.store} instruction. \vspace{10mm}
+\noindent This statement has currently two varieties. The delete 
+storage\index{delete} clears the complete storage\index{storage file} 
+file\index{file!storage} and reduces it to zero size. The effect is that 
+all stored expressions are removed from the system. Because it is 
+impossible to remove individual expressions from the store file (there is 
+no mechanism to fill the resulting holes) it is the only way to clean up 
+the storage file. If some expressions should be excluded from this 
+elimination process, one should copy them first into active global 
+expressions, then delete the storage file, after which the expressions can 
+be written to storage again with a .store\index{.store} instruction.
+
+\noindent The delete extrasymbols\index{delete}\index{} variety removes 
+extra symbols\index{extra symbols} from the list. The default is that all 
+extra symbols are removed, but one can also remove the symbols above a 
+given number as in
+\begin{verbatim}
+   #$es = `extrasymbols_';
+   ToPolynomial;
+     ....some code....
+   .sort
+   * now the new extra symbols are not needed anylonger
+   Delete extrasymbols>`$es';
+\end{verbatim}
+\vspace{10mm}
 
 %--#] delete : 
 %--#[ denominators :
@@ -1321,19 +1339,20 @@ statements can only deal with symbols and numbers. Examples of this are
 factorization(\ref{substafactarg}) (which uses the topolynomial facilities 
 automatically) and output simplification (see the Format 
 statement \ref{substaformat}).
-The ToPolynomial statement takes each term, looks for objects 
-that are not symbols to positive powers and replaces them by symbols. If 
-the object has been encountered before the same symbol will be used, 
-otherwise a new symbol will be defined. The object represented by the 
-`extra symbol' is stored internally and can be printed if needed with the 
-\%X option in the \#write instruction (\ref{prewrite}). The representation 
-of the extra symbols is by default the name Z followed by a number and an 
-underscore character. If another name is desired this should be specified 
-in an `ExtraSymbols' statement. The name given may contain only alphabetic 
-characters! Because some compilers do not like the underscore character, 
-there is an alternative notation for the extra symbols. This is just for 
-cosmetic reasons and one cannot feed these symbols into the compiler this 
-way. This is with an array notation. The statement
+The ToPolynomial statement\index{topolynomial} takes each term, looks for 
+objects that are not symbols to positive powers and replaces them by 
+symbols. If the object has been encountered before the same symbol will be 
+used, otherwise a new symbol will be defined. The object represented by the 
+`extra symbol'\index{extra symbols} is stored internally and can be printed 
+if needed with the \%X option in the \#write instruction (\ref{prewrite}). 
+The representation of the extra symbols is by default the name Z followed 
+by a number and an underscore character. If another name is desired this 
+should be specified in an `ExtraSymbols' statement. The name given may 
+contain only alphabetic characters! Because some compilers do not like the 
+underscore character, there is an alternative notation for the extra 
+symbols. This is just for cosmetic reasons and one cannot feed these 
+symbols into the compiler this way. This is with an array notation. The 
+statement
 \begin{verbatim}
    ExtraSymbols,array,Ab;
 \end{verbatim}
@@ -1455,7 +1474,7 @@ Syntax & factorize \verb:{:(options)\verb:}: \verb:{:{\tt<}name of expression(s)
 
 \noindent If no expressions are mentioned all expressions will be affected 
 by the action of this statement. One may exclude certain expressions with 
-the nfactorize statement ( see \ref{substanfactorize}). If one or more 
+the nfactorize statement (see \ref{substanfactorize}). If one or more 
 expressions are mentoned they will be added to the list of expressions that 
 will be affected.
 
@@ -2749,7 +2768,7 @@ divider being one. This still leaves the possibility that the first term of
 this argument may be negative. If this is not desired one can first 
 normalize\index{normalize} the argument and then make its coefficients 
 integer. The overall factor that is needed to make the coefficients like 
-described is taken from the overall factor of the complete term. Example
+described is taken from the overall factor of the complete term. Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
 % WELL!
 \begin{verbatim}
@@ -2759,7 +2778,6 @@ described is taken from the overall factor of the complete term. Example
     MakeInteger,f;
     Print +f;
     .end
-
    F =
       2/105*f(135*c + 147*b + 385*a);
 \end{verbatim}
@@ -2773,7 +2791,7 @@ of brackets and make outputs shorter.
 It is possible to introduce a scale factor when extracting the coefficient 
 and multiplying it into the complete term.
 
-\leftvitem{4cm}{MakeInteger,$\wedge<n>$:,f;}
+\leftvitem{4cm}{MakeInteger,$\wedge<n>$,f;}
 \rightvitem{12cm}{The number n must be an integer (may be negative) and if 
 the coefficient that is extracted is c the whole term is multiplied by the 
 factor $c^n$.}
@@ -3209,7 +3227,7 @@ extra option
 A more flexible way to extract the coefficient of the (first) term is by 
 providing a scale factor as in
 
-\leftvitem{4cm}{Normalize,$\wedge<n>$:,f;}
+\leftvitem{4cm}{Normalize,$\wedge<n>$,f;}
 \rightvitem{12cm}{The number n must be an integer (may be negative) and if 
 the coefficient of the first term was c the whole term is multiplied by the 
 factor $c^n$.}

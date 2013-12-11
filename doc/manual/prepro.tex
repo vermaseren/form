@@ -1726,6 +1726,57 @@ if the listing of the input is on and the value zero if the listing of the
 input is off.
 
 %--#] show : 
+%--#[ skipextrasymbols :
+
+\section{\#skipextrasymbols}
+\label{preskipextrasymbols}
+
+\noindent Syntax:
+
+\#skipextrasymbols positivenumber
+
+\noindent See also ExtraSymbols(\ref{substaextrasymbols}) and the chapter 
+on optimization(\ref{optimization}).
+
+\noindent This instructions adds a number of dummy extra 
+symbols\index{extra symbols} to the list of extra 
+symbols(\ref{substaextrasymbols}). This can be used when several 
+optimizations are done on an expression in such a way that the extra 
+symbols of previous optimizations are still present. Normally the number 
+space for them is erased in a \#clearoptimize instruction. This can be 
+avoided with a sequence like
+\begin{verbatim}
+	#skipextrasymbols,{`optimmaxvar_'-`optimminvar_'+1}
+\end{verbatim}
+In this case the numbering of the next optimization will start after the 
+last extra symbol of the previous optimization.
+One should realize however that the definitions of the extra symbols are 
+not kept once the new optimization is started or once a \#clearoptimize 
+instruction is issued. Example:
+\begin{verbatim}
+   #-
+   S   a,b,c,d,e;
+   L   F = (a+b+c+d+3*e)^3;
+   B   b;
+   .sort
+   ExtraSymbols,array,w;
+   Format O3,stats=ON;
+   #optimize F
+   #write <> "  %4O"
+   .sort
+   #SkipExtraSymbols,{`optimmaxvar_'-`optimminvar_'+1}
+   id  b = b+1;
+   Print +f;
+   B   b;
+   .end
+\end{verbatim}
+Because the O3 format is still active, the final printing uses the 
+optimization as well. If the \#SkipExtraSymbols instruction would have been 
+omitted, the numbering would start again from one, while the rhs. of their 
+definitions would contain the old extra symbols. The result would be 
+incorrect.
+
+%--#] skipextrasymbols : 
 %--#[ switch :
 
 \section{\#switch}
