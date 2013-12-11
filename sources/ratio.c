@@ -2146,7 +2146,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 
 /*
  		#] GCDterms : 
-  	#] GCDfunction :
+  	#] GCDfunction : 
   	#[ DIVfunction :
 
 	Input: a div_ function that has two arguments inside a term.

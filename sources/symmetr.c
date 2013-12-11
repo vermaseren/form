@@ -422,7 +422,7 @@ NoCaseB:		m = AN.WildValue;
 }
 
 /*
-  	#] MatchE :
+  	#] MatchE : 
   	#[ Permute :				WORD Permute(perm,first)
 
 		Special permutation function.

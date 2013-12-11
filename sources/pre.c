@@ -78,7 +78,7 @@ static KEYWORD precommands[] = {
 	,{"preout"       , DoPreOut       , 0, 0}
 	,{"printtimes"   , DoPrePrintTimes, 0, 0}
 	,{"procedure"    , DoProcedure    , 0, 0}
-	,{"procedureextension" , DoPrcExtension , 0, 0}
+	,{"procedureextension" , DoPrcExtension   , 0, 0}
 	,{"prompt"       , DoPrompt       , 0, 0}
 	,{"redefine"     , DoRedefine     , 0, 0}
 	,{"remove"       , DoPreRemove    , 0, 0}
@@ -89,6 +89,7 @@ static KEYWORD precommands[] = {
 	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
 	,{"setrandom"    , DoSetRandom    , 0, 0}
 	,{"show"         , DoPreShow      , 0, 0}
+	,{"skipextrasymbols" , DoSkipExtraSymbols , 0, 0}
 	,{"switch"       , DoPreSwitch    , 0, 0}
 	,{"system"       , DoSystem       , 0, 0}
 	,{"terminate"    , DoTerminate    , 0, 0}
@@ -4016,7 +4017,7 @@ int PreLoad(PRELOAD *p, UBYTE *start, UBYTE *stop, int mode, char *message)
 				level--;
 				if ( level <= 0 ) break;
 				if ( c == ENDOFINPUT ) Error1("Missing #",stop);
-				*t++ = LINEFEED; *t = 0;
+				*t++ = LINEFEED; *t = 0; last = 1;
 			}
 		  }
 		  if ( ( i == size1 ) && mode && ( com == 0 ) ) {
@@ -6400,5 +6401,44 @@ int DoClearOptimize(UBYTE *s)
 
 /*
  		#] DoClearOptimize : 
+ 		#[ DoSkipExtraSymbols :
+
+		Adds the intermediate variables of the previous optimization
+		to the list of extra symbols, provided it has not yet been erased
+		by a #clearoptimize
+		To remove them again one needs to use the 'delete extrasymbols;'
+		or the 'delete extrasymbols>num;' statement in which num is the
+		old number of extra symbols.
+*/
+
+int DoSkipExtraSymbols(UBYTE *s)
+{
+	CBUF *C = cbuf + AM.sbufnum;
+	WORD tt = 0, j = 0;
+	if ( AO.OptimizeResult.code == NULL ) return(0);
+	if ( AO.OptimizationLevel == 0 ) return(0);
+	while ( *s == ',' ) s++;
+	while ( *s <= '9' && *s >= '0' ) j = 10*j + *s++ - '0';
+	if ( *s ) {
+		MesPrint("@Illegal use of #SkipExtraSymbols instruction");
+		Terminate(-1);
+	}
+	while ( j > 0 ) {
+		AddRHS(AM.sbufnum,1);
+		AddNtoC(AM.sbufnum,1,&tt);
+		AddToCB(C,0)
+		InsTree(AM.sbufnum,C->numrhs);
+		j--;
+	}
+/*
+	The next statement is needed to avoid that #clearoptimize removes the
+	extra symbols in spite of our efforts.
+*/
+	AO.OptimizeResult.minvar = C->numrhs + 1;
+	return(0);
+}
+
+/*
+ 		#] DoSkipExtraSymbols : 
  	# ] PreProcessor :
 */

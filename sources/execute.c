@@ -280,6 +280,8 @@ WORD PopVariables()
 	AC.OldParallelStats = AM.gOldParallelStats;
 	AC.IsFortran90 = AM.gIsFortran90;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet;
+	PruneExtraSymbols(AM.gnumextrasym);
+
 	if ( AC.Fortran90Kind ) {
 		M_free(AC.Fortran90Kind,"Fortran90 Kind");
 		AC.Fortran90Kind = 0;
@@ -394,6 +396,7 @@ VOID MakeGlobal()
 	AM.gOldParallelStats = AC.OldParallelStats;
 	AM.gIsFortran90 = AC.IsFortran90;
 	AM.gSizeCommuteInSet = AC.SizeCommuteInSet;
+	AM.gnumextrasym = (cbuf+AM.sbufnum)->numrhs;
 	if ( AM.gFortran90Kind ) {
 		M_free(AM.gFortran90Kind,"Fortran 90 Kind");
 		AM.gFortran90Kind = 0;
@@ -906,6 +909,8 @@ skipexec:
 			ResetVariables(2);
 			AM.gProcessBucketSize = AM.hProcessBucketSize;
 			AM.gparallelflag = PARALLELFLAG;
+			AM.gnumextrasym = AM.ggnumextrasym;
+			PruneExtraSymbols(AM.ggnumextrasym);
 			IniVars();
 		}
 	}

@@ -713,7 +713,7 @@ VOID StartVariables()
 #endif
 	AC.tablefilling = 0;
 	AM.resetTimeOnClear = 1;
-
+	AM.gnumextrasym = AM.ggnumextrasym = 0;
 /*
 	Information for the lists of variables. Part of error message and size:
 */

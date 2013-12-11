@@ -585,17 +585,42 @@ int CoProperCount(UBYTE *s) { return(setonoff(s,&AC.BottomLevel,1,0)); }
 
 int CoDelete(UBYTE *s)
 {
+	int error = 0;
 	if ( StrICmp(s,(UBYTE *)"storage") == 0 ) {
 		if ( DeleteStore(1) < 0 ) {
 			MesPrint("&Cannot restart storage file");
-			return(1);
+			error = 1;
 		}
-		return(0);
 	}
 	else {
-		MesPrint("&Unknown option: %s",s);
-		return(1);
+		UBYTE *t = s, c;
+		while ( *t && *t != ',' && *t != '>' ) t++;
+		c = *t; *t = 0;
+		if ( ( StrICmp(s,(UBYTE *)"extrasymbols") == 0 )
+		|| ( StrICmp(s,(UBYTE *)"extrasymbol") == 0 ) ) {
+			WORD x = 0;
+/*
+			Either deletes all extra symbols or deletes above a given number
+*/
+			*t = c; s = t;
+			if ( *s == '>' ) {
+				s++;
+				if ( FG.cTable[*s] != 1 ) goto unknown;
+				while ( *s <= '9' && *s >= '0' ) x = 10*x + *s++ - '0';
+				if ( *s ) goto unknown;
+			}
+			else if ( *s ) goto unknown;
+			if ( x < AM.gnumextrasym ) x = AM.gnumextrasym;
+			PruneExtraSymbols(x);
+		}
+		else {
+			*t = c;
+unknown:
+			MesPrint("&Unknown option: %s",s);
+			error = 1;
+		}
 	}
+	return(error);
 }
 
 /*

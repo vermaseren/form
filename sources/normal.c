@@ -3662,7 +3662,7 @@ NextI:;
 			r += *term; r -= ABS(r[-1]);
 			m++;
 			while ( m < r ) {
-				if ( *m > FUNCTION && m[1] > FUNHEAD &&
+				if ( *m >= FUNCTION && m[1] > FUNHEAD &&
 				functions[*m-FUNCTION].spec != TENSORFUNCTION )
 					m[2] |= DIRTYFLAG;
 				m += m[1];

@@ -989,7 +989,7 @@ void PrintSubtermList(int from,int to)
 }
 
 /*
- 		#] PrintSubtermList :
+ 		#] PrintSubtermList : 
  		#[ PrintExtraSymbol :
 
 		Prints the definition of extra symbol num as the contents
@@ -1199,4 +1199,30 @@ nocase:;
 
 /*
  		#] ExtraSymFun : 
+ 		#[ PruneExtraSymbols :
+*/
+
+int PruneExtraSymbols(WORD downto)
+{
+	CBUF *C = cbuf + AM.sbufnum;
+	if ( downto < C->numrhs && downto >= 0 ) {  /* !!!!! */
+		ClearTree(AM.sbufnum);
+		C->numrhs = downto;
+		if ( downto == 0 ) {
+			C->Pointer = C->Buffer;
+		}
+		else {
+			WORD *w = C->rhs[downto], i;
+			while ( *w ) w += *w;
+			C->Pointer = w+1;
+			for ( i = 1; i <= downto; i++ ) {
+				InsTree(AM.sbufnum,i);
+			}
+		}
+	}
+	return(0);
+}
+
+/*
+ 		#] PruneExtraSymbols : 
 */

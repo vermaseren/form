@@ -1287,7 +1287,8 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	vector<WORD> &order = *porder;
 	vector<WORD> &schemev = *pscheme;
 	vector<tree_node *> &path = *ppath;
-	int depth = 0;
+	int depth = 0, nchild0;
+	float slide_down_factor = 1.0;
 
 	order.clear();
 	path.clear();
@@ -1295,11 +1296,35 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	// MCTS step I: select
 	tree_node *select = &mcts_root;
 	path.push_back(select);
-	
+	nchild0 = select->childs.size();
 	while (select->childs.size() > 0) {
 		// add virtual loss
 		select->num_visits++;
 		select->sum_results+=mcts_expr_score;
+
+//-------------------------------------------------------------------
+				switch ( AO.Optimize.experiments ) {
+					case 1:  // This is what Ben suggested
+						slide_down_factor = 1.0-(1.0*AT.optimtimes)/(1.0*AO.Optimize.mctsnumexpand);
+						break;
+					case 2:  // This gives a bit more cleanup time at the end.
+						if ( 2*AT.optimtimes < AO.Optimize.mctsnumexpand ) {
+							slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-2*AT.optimtimes);
+							slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
+						}
+						else {
+							slide_down_factor = 0.0001;
+						}
+						break;
+					case 3:  // depth dependent factor combined with Ben's method
+						float dd = 1.0-(1.0*depth)/(1.0*nchild0);
+						slide_down_factor = 1.0-(1.0*AT.optimtimes)/(1.0*AO.Optimize.mctsnumexpand);
+						if ( dd <= 0.000001 ) slide_down_factor = 1.0;
+						else slide_down_factor /= dd;
+						if ( slide_down_factor > 1.0 ) slide_down_factor = 1.0;
+						break;
+				}
+//-------------------------------------------------------------------
 		
 #ifdef DEBUG_MCTS
 		MesPrint("select %d",select->var);
@@ -1311,31 +1336,6 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		for (vector<tree_node>::iterator p=select->childs.begin(); p<select->childs.end(); p++) {
 			double score;
 			if (p->num_visits >= 1) {
-				float slide_down_factor = 1.0;
-//-------------------------------------------------------------------
-				switch ( AO.Optimize.experiments ) {
-					case 1:  // This is what Ben suggested
-						slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-AT.optimtimes);
-						slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
-						break;
-					case 2:  // This gives a bit more cleanup time at the end.
-						if ( 2*AT.optimtimes < AO.Optimize.mctsnumexpand ) {
-							slide_down_factor = 1.0*(AO.Optimize.mctsnumexpand-2*AT.optimtimes);
-							slide_down_factor /= 1.0*AO.Optimize.mctsnumexpand;
-						}
-						else {
-							slide_down_factor = 0.01;
-						}
-						break;
-					case 3:  // depth dependent factor combined with Ben's method
-						slide_down_factor = 1.0*(optimize_num_vars-depth);
-						slide_down_factor /= 1.0*optimize_num_vars;
-						slide_down_factor *= 1.0*AO.Optimize.mctsnumexpand;
-						slide_down_factor = ( slide_down_factor - AT.optimtimes )/slide_down_factor;
-						if ( slide_down_factor > 1.0 ) slide_down_factor = 1.0;
-						break;
-				}
-//-------------------------------------------------------------------
 
 				// there are results calculated, so select with the UCT formula
 				score = mcts_expr_score / (p->sum_results/p->num_visits) +
@@ -1741,7 +1741,7 @@ void find_Horner_MCTS () {
 	if (mcts_separated) var_set.erase(SEPARATESYMBOL);
 	
 	mcts_vars = vector<WORD>(var_set.begin(), var_set.end());
-	
+	optimize_num_vars = (int)mcts_vars.size();
 	// initialize MCTS tree root
 	for (int i=0; i<(int)mcts_vars.size(); i++) {
 		if (AO.Optimize.hornerdirection != O_BACKWARD)
@@ -4319,6 +4319,7 @@ int Optimize (WORD exprnr, int do_print) {
 			outstring = AddToString(outstring,OutScr,1);
 		}
 		PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)outstring,0,1);
+		M_free(outstring,"AddToString");
 	}
 	
 #ifdef WITHMPI
@@ -4364,7 +4365,8 @@ int ClearOptimize()
 		AO.OptimizeResult.codesize = 0;
 		PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)("0"),0,1);
 		PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)("0"),0,1);
-		cbuf[AM.sbufnum].numrhs = AO.OptimizeResult.minvar-1;
+		PruneExtraSymbols(AO.OptimizeResult.minvar-1);
+//		cbuf[AM.sbufnum].numrhs = AO.OptimizeResult.minvar-1;
 		AO.OptimizeResult.minvar = AO.OptimizeResult.maxvar = 0;
 	}
 	if ( AO.OptimizeResult.nameofexpr != NULL ) {
