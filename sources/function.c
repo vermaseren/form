@@ -790,7 +790,7 @@ int ChainOut(PHEAD WORD *term, WORD funnum)
 
 /*
  		#] ChainOut : 
-  	#] Utilities :
+  	#] Utilities : 
 	#[ Patterns :
  		#[ MatchFunction :			WORD MatchFunction(pattern,interm,wilds)
 

@@ -1398,12 +1398,12 @@ DoSpec:
 						AT.NestPoin->argsize = t;
 						AT.NestPoin++;
 /*						stop = t + *t; */
-/*						t2 = t; */
+						t2 = t;
 						t += ARGHEAD;
 						while ( t < AT.NestPoin[-1].argsize+*(AT.NestPoin[-1].argsize) ) {
 											/* Sum over terms */
 							AT.RecFlag++;
-/*							i = *t; */
+							i = *t;
 							AN.subsubveto = 1;
 /*
 							AN.subsubveto repairs a bug that became apparent
@@ -1416,8 +1416,9 @@ DoSpec:
 /*
 								Possible size changes:
 								Note defs at 471,467,460,400,425,328
+*/
 								if ( i > *t ) {
-									i -= *t;
+redosize:							i -= *t;
 									*t2 -= i;
 									t1[1] -= i;
 									t += *t;
@@ -1426,7 +1427,6 @@ DoSpec:
 									while ( r < m ) *t++ = *r++;
 									*term -= i;
 								}
-*/
 								AN.subsubveto = 0;
 								t1[2] = 1;
 								AT.RecFlag--;
@@ -1435,6 +1435,10 @@ DoSpec:
 								AR.TePos = 0;
 								AN.ncmod = oldncmod;
 								return(retvalue);
+							}
+							else {
+								Normalize(BHEAD t);
+								if ( i > *t ) { retvalue = 1; goto redosize; }
 							}
 							AN.subsubveto = 0;
 							AT.RecFlag--;

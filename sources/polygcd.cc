@@ -971,7 +971,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 }
 
 /*
-  	#] gcd_modular_dense_interpolation : :
+  	#] gcd_modular_dense_interpolation : : 
 	 	#[ gcd_modular :
 */
 

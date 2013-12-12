@@ -1344,6 +1344,8 @@ struct M_const {
     int     fbuffersize;           /* Size for the AT.fbufnum factorization caches */
     int     gOldFactArgFlag;
     int     ggOldFactArgFlag;
+    int     gnumextrasym;
+    int     ggnumextrasym;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1396,9 +1398,9 @@ struct M_const {
     WORD    zerorhs;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,53,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,55,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,53,75,0);
+	PADPOSITION(15,22,55,75,0);
 #endif
 };
 /*
@@ -2273,7 +2275,7 @@ typedef struct AllGlobals {
 
 /*
  		#] Definitions : 
-    #] A :
+    #] A : 
   	#[ FG :
 */
 

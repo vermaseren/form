@@ -1705,7 +1705,7 @@ int PF_LongMultiPackImpl(const void*buffer, size_t count, size_t eSize, MPI_Data
 }
 
 /*
- 		#] PF_LongMultiPackImpl :
+ 		#] PF_LongMultiPackImpl : 
  		#[ PF_LongMultiUnpackImpl :
 */
 
@@ -1782,7 +1782,7 @@ int PF_LongMultiUnpackImpl(void *buffer, size_t count, size_t eSize, MPI_Datatyp
 }
 
 /*
- 		#] PF_LongMultiUnpackImpl :
+ 		#] PF_LongMultiUnpackImpl : 
  		#[ PF_LongMultiBroadcast :
 */
 

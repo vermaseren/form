@@ -47,7 +47,7 @@ const int POLYFACT_NUM_CONFIRMATIONS = 3;
 
 // Maximum number of equations for predetermination of coefficients
 // for multivariate Hensel lifting
-const int POLYFACT_MAX_PREDETERMINATION = 1000;
+const int POLYFACT_MAX_PREDETERMINATION = 10000;
 
 class poly;
 

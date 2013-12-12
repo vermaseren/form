@@ -55,7 +55,7 @@ static inline int MPIDBG_Get_rank(void) {
 #define MPIDBG_RANK MPIDBG_Get_rank()
 
 /*
-  		#] MPIDBG_RANK :
+  		#] MPIDBG_RANK : 
   		#[ MPIDBG_Out :
 */
 
@@ -72,7 +72,7 @@ static inline void MPIDBG_Out(const char *file, int line, const char *func, cons
 #define MPIDBG_Out(...) MPIDBG_Out(file, line, func, __VA_ARGS__)
 
 /*
-  		#] MPIDBG_Out :
+  		#] MPIDBG_Out : 
   		#[ MPIDBG_sprint_requests :
 */
 
@@ -99,7 +99,7 @@ static inline void MPIDBG_sprint_requests(char *buf, int count, const MPI_Reques
 }
 
 /*
-  		#] MPIDBG_sprint_requests :
+  		#] MPIDBG_sprint_requests : 
   		#[ MPIDBG_sprint_statuses :
 */
 
@@ -127,7 +127,7 @@ static inline void MPIDBG_sprint_statuses(char *buf, int count, const MPI_Reques
 }
 
 /*
-  		#] MPIDBG_sprint_statuses :
+  		#] MPIDBG_sprint_statuses : 
   	#] Utilities : 
   	#[ MPI APIs :
 */
@@ -157,7 +157,7 @@ static inline int MPIDBG_Send(void *buf, int count, MPI_Datatype datatype, int d
 #define MPI_Send(...) MPIDBG_Send(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Send :
+  		#] MPI_Send : 
   		#[ MPI_Recv :
 */
 
@@ -178,7 +178,7 @@ static inline int MPIDBG_Recv(void* buf, int count, MPI_Datatype datatype, int s
 #define MPI_Recv(...) MPIDBG_Recv(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Recv :
+  		#] MPI_Recv : 
   		#[ MPI_Bsend :
 */
 
@@ -197,7 +197,7 @@ static inline int MPIDBG_Bsend(void* buf, int count, MPI_Datatype datatype, int 
 #define MPI_Bsend(...) MPIDBG_Bsend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Bsend :
+  		#] MPI_Bsend : 
   		#[ MPI_Ssend :
 */
 
@@ -216,7 +216,7 @@ static inline int MPIDBG_Ssend(void* buf, int count, MPI_Datatype datatype, int 
 #define MPI_Ssend(...) MPIDBG_Ssend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Ssend :
+  		#] MPI_Ssend : 
   		#[ MPI_Rsend :
 */
 
@@ -235,7 +235,7 @@ static inline int MPIDBG_Rsend(void* buf, int count, MPI_Datatype datatype, int 
 #define MPI_Rsend(...) MPIDBG_Rsend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Rsend :
+  		#] MPI_Rsend : 
   		#[ MPI_Isend :
 */
 
@@ -254,7 +254,7 @@ static inline int MPIDBG_Isend(void* buf, int count, MPI_Datatype datatype, int 
 #define MPI_Isend(...) MPIDBG_Isend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Isend :
+  		#] MPI_Isend : 
   		#[ MPI_Ibsend :
 */
 
@@ -273,7 +273,7 @@ static inline int MPIDBG_Ibsend(void* buf, int count, MPI_Datatype datatype, int
 #define MPI_Ibsend(...) MPIDBG_Ibsend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Ibsend :
+  		#] MPI_Ibsend : 
   		#[ MPI_Issend :
 */
 
@@ -292,7 +292,7 @@ static inline int MPIDBG_Issend(void* buf, int count, MPI_Datatype datatype, int
 #define MPI_Issend(...) MPIDBG_Issend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Issend :
+  		#] MPI_Issend : 
   		#[ MPI_Irsend :
 */
 
@@ -311,7 +311,7 @@ static inline int MPIDBG_Irsend(void* buf, int count, MPI_Datatype datatype, int
 #define MPI_Irsend(...) MPIDBG_Irsend(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Irsend :
+  		#] MPI_Irsend : 
   		#[ MPI_Irecv :
 */
 
@@ -330,7 +330,7 @@ static inline int MPIDBG_Irecv(void* buf, int count, MPI_Datatype datatype, int 
 #define MPI_Irecv(...) MPIDBG_Irecv(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Irecv :
+  		#] MPI_Irecv : 
   		#[ MPI_Wait :
 */
 
@@ -353,7 +353,7 @@ static inline int MPIDBG_Wait(MPI_Request *request, MPI_Status *status, MPIDBG_E
 #define MPI_Wait(...) MPIDBG_Wait(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Wait :
+  		#] MPI_Wait : 
   		#[ MPI_Test :
 */
 
@@ -381,7 +381,7 @@ static inline int MPIDBG_Test(MPI_Request *request, int *flag, MPI_Status *statu
 #define MPI_Test(...) MPIDBG_Test(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Test :
+  		#] MPI_Test : 
   		#[ MPI_Waitany :
 */
 
@@ -407,7 +407,7 @@ static inline int MPIDBG_Waitany(int count, MPI_Request *array_of_requests, int 
 #define MPI_Waitany(...) MPIDBG_Waitany(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Waitany :
+  		#] MPI_Waitany : 
   		#[ MPI_Testany :
 */
 
@@ -438,7 +438,7 @@ static inline int MPIDBG_Testany(int count, MPI_Request *array_of_requests, int 
 #define MPI_Testany(...) MPIDBG_Testany(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Testany :
+  		#] MPI_Testany : 
   		#[ MPI_Waitall :
 */
 
@@ -462,7 +462,7 @@ static inline int MPIDBG_Waitall(int count, MPI_Request *array_of_requests, MPI_
 #define MPI_Waitall(...) MPIDBG_Waitall(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Waitall :
+  		#] MPI_Waitall : 
   		#[ MPI_Testall :
 */
 
@@ -491,7 +491,7 @@ static inline int MPIDBG_Testall(int count, MPI_Request *array_of_requests, int 
 #define MPI_Testall(...) MPIDBG_Testall(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Testall :
+  		#] MPI_Testall : 
   		#[ MPI_Waitsome :
 */
 
@@ -515,7 +515,7 @@ static inline int MPIDBG_Waitsome(int incount, MPI_Request *array_of_requests, i
 #define MPI_Waitsome(...) MPIDBG_Waitsome(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Waitsome :
+  		#] MPI_Waitsome : 
   		#[ MPI_Testsome :
 */
 
@@ -539,7 +539,7 @@ static inline int MPIDBG_Testsome(int incount, MPI_Request *array_of_requests, i
 #define MPI_Testsome(...) MPIDBG_Testsome(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Testsome :
+  		#] MPI_Testsome : 
   		#[ MPI_Iprobe :
 */
 
@@ -565,7 +565,7 @@ static inline int MPIDBG_Iprobe(int source, int tag, MPI_Comm comm, int *flag, M
 #define MPI_Iprobe(...) MPIDBG_Iprobe(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Iprobe :
+  		#] MPI_Iprobe : 
   		#[ MPI_Probe :
 */
 
@@ -586,7 +586,7 @@ static inline int MPIDBG_Probe(int source, int tag, MPI_Comm comm, MPI_Status *s
 #define MPI_Probe(...) MPIDBG_Probe(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Probe :
+  		#] MPI_Probe : 
   		#[ MPI_Cancel :
 */
 
@@ -605,7 +605,7 @@ static inline int MPIDBG_Cancel(MPI_Request *request, MPIDBG_EXTARG)
 #define MPI_Cancel(...) MPIDBG_Cancel(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Cancel :
+  		#] MPI_Cancel : 
   		#[ MPI_Test_cancelled :
 */
 
@@ -629,7 +629,7 @@ static inline int MPIDBG_Test_cancelled(MPI_Status *status, int *flag, MPIDBG_EX
 #define MPI_Test_cancelled(...) MPIDBG_Test_cancelled(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Test_cancelled :
+  		#] MPI_Test_cancelled : 
   		#[ MPI_Barrier :
 */
 
@@ -648,7 +648,7 @@ static inline int MPIDBG_Barrier(MPI_Comm comm, MPIDBG_EXTARG)
 #define MPI_Barrier(...) MPIDBG_Barrier(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Barrier :
+  		#] MPI_Barrier : 
   		#[ MPI_Bcast :
 */
 
@@ -667,7 +667,7 @@ static inline int MPIDBG_Bcast(void* buffer, int count, MPI_Datatype datatype, i
 #define MPI_Bcast(...) MPIDBG_Bcast(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 /*
-  		#] MPI_Bcast :
+  		#] MPI_Bcast : 
   	#] MPI APIs : 
 */
 
