@@ -50,6 +50,7 @@
 #include <iostream>
 #include <tr1/unordered_set>
 #include <tr1/unordered_map>
+#include <tbb/concurrent_unordered_set.h>
 
 extern "C" {
 #include "form3.h"
@@ -1576,6 +1577,38 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 	return numinstr;
 }
 
+typedef tbb::concurrent_unordered_set<NODE*, NodeHash, NodeEq> nodeset;
+
+int count_operators_cse_topdown_rec (NODE* tree, nodeset& ID) {
+        if (tree->data[0] == SYMBOL) {
+                if (tree->data[3] > 1) {	
+                        std::pair<nodeset::iterator, bool> suc = ID.insert(tree);
+                        if (suc.second) { // new
+                                if (tree->data[3] == 2)
+                                        return 1;
+                                else
+                                        return (int)floor(log(tree->data[3])/log(2.0)) + __builtin_popcount(tree->data[3]) - 1;
+                        }
+                }
+        } 
+       
+        if (tree->data[0] != SNUMBER) {			
+                // operator
+                std::pair<nodeset::iterator, bool> suc = ID.insert(tree);
+                if (suc.second) {
+                        int numinstr = 1;
+                        #pragma omp task shared(numinstr, ID) 
+                        numinstr += count_operators_cse_topdown_rec(tree->r, ID);
+                        #pragma omp task shared(numinstr, ID)
+                        numinstr += count_operators_cse_topdown_rec(tree->l, ID);
+                        #pragma omp taskwait
+                        
+                        return numinstr;
+                }
+        }
+        
+	return 0;
+}
 /*
 	#] count_operators_cse_topdown :
   	#[ printpstree :
@@ -1825,8 +1858,18 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 
 	// do Horner, CSE and count the number of operators
 	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
-	vector<WORD> instr = generate_instructions(tree, true);
-	int num_oper = count_operators(instr);
+	//vector<WORD> instr = generate_instructions(tree, true);
+	
+        nodeset ID;
+        // reserve lots of space, to prevent later rehashes
+        // TODO: what if this is too large? make a parameter?
+        ID.rehash(mcts_expr_score * 2); 
+        NODE* root = buildTree(tree);
+        int num_oper = count_operators_cse_topdown_rec(root, ID);
+	MesPrint ("*** [%s] Stopping CSEE REC", thetime_str().c_str());
+        freeTree(root);
+
+        //int num_oper = count_operators(instr);
 	//int num_oper = count_operators_cse(tree);
 	int num_oper2 = count_operators_cse_topdown(tree);
 	MesPrint("%d %d", num_oper, num_oper2);

@@ -96,12 +96,12 @@ DATE =
 DATEFLAG = "`suffix=; [ "x$(DATE)" = x ] && suffix=DUMMY; echo -DPRODUCTIONDATE$$suffix='"$(DATE)"'`"
 
 # for release versions
-COMPILEFLAGS =
-LINKFLAGS = -s
+COMPILEFLAGS = -fopenmp
+LINKFLAGS = -s -ltbb
 
 # for debugging versions
-DEBUGCOMPILEFLAGS = -g
-DEBUGLINKFLAGS =
+DEBUGCOMPILEFLAGS = -g -fopenmp
+DEBUGLINKFLAGS = -ltbb
 
 # compiler specific parameters
 if USINGGCC
