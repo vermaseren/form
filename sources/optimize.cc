@@ -1510,20 +1510,14 @@ NODE* buildTree(vector<WORD> &tree) {
 }
 
 void freeTree(NODE* root) {
-        stack<NODE*> stack;
-    	stack.push(root);
-	while (!stack.empty()) {
-		NODE* c = stack.top();
-		stack.pop();
-		if (c->data[0] != SYMBOL && c->data[0] != SNUMBER) {
-			stack.push(c->r);
-			stack.push(c->l);
-		}
-		
-		M_free(c, "CSE tree node");
-	}
-        
-        MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
+        if (root->data[0] != SYMBOL && root->data[0] != SNUMBER) {
+                #pragma omp task
+                freeTree(root->r);
+                #pragma omp task
+                freeTree(root->l);
+        }
+       
+        M_free(root, "CSE tree node");
 }
 
 int count_operators_cse_topdown (vector<WORD> &tree) {
@@ -1574,6 +1568,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	
         freeTree(root);
+        MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
 	return numinstr;
 }
 
@@ -1590,18 +1585,26 @@ int count_operators_cse_topdown_rec (NODE* tree, nodeset& ID) {
                                         return (int)floor(log(tree->data[3])/log(2.0)) + __builtin_popcount(tree->data[3]) - 1;
                         }
                 }
+
+                return 0;
         } 
        
         if (tree->data[0] != SNUMBER) {			
                 // operator
                 std::pair<nodeset::iterator, bool> suc = ID.insert(tree);
+                
                 if (suc.second) {
                         int numinstr = 1;
+
+                        #pragma omp parallel
+                        {
                         #pragma omp task shared(numinstr, ID) 
                         numinstr += count_operators_cse_topdown_rec(tree->r, ID);
                         #pragma omp task shared(numinstr, ID)
                         numinstr += count_operators_cse_topdown_rec(tree->l, ID);
-                        #pragma omp taskwait
+                        
+                        }
+                         // #pragma omp taskwait
                         
                         return numinstr;
                 }
@@ -1867,7 +1870,10 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
         NODE* root = buildTree(tree);
         int num_oper = count_operators_cse_topdown_rec(root, ID);
 	MesPrint ("*** [%s] Stopping CSEE REC", thetime_str().c_str());
+
+        #pragma omp parallel
         freeTree(root);
+        MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
 
         //int num_oper = count_operators(instr);
 	//int num_oper = count_operators_cse(tree);
