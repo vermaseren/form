@@ -1594,19 +1594,15 @@ int count_operators_cse_topdown_rec (NODE* tree, nodeset& ID) {
                 std::pair<nodeset::iterator, bool> suc = ID.insert(tree);
                 
                 if (suc.second) {
-                        int numinstr = 1;
+                        int l, r;
 
-                        #pragma omp parallel
-                        {
-                        #pragma omp task shared(numinstr, ID) 
-                        numinstr += count_operators_cse_topdown_rec(tree->r, ID);
-                        #pragma omp task shared(numinstr, ID)
-                        numinstr += count_operators_cse_topdown_rec(tree->l, ID);
+                        #pragma omp task shared(r, ID)
+                        r = count_operators_cse_topdown_rec(tree->r, ID);
+                        #pragma omp task shared(l, ID)
+                        l = count_operators_cse_topdown_rec(tree->l, ID);
+                        #pragma omp taskwait
                         
-                        }
-                         // #pragma omp taskwait
-                        
-                        return numinstr;
+                        return 1 + r + l;
                 }
         }
         
@@ -1863,17 +1859,23 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
 	//vector<WORD> instr = generate_instructions(tree, true);
 	
-        nodeset ID;
-        // reserve lots of space, to prevent later rehashes
-        // TODO: what if this is too large? make a parameter?
-        ID.rehash(mcts_expr_score * 2); 
-        NODE* root = buildTree(tree);
-        int num_oper = count_operators_cse_topdown_rec(root, ID);
+    nodeset ID;
+    // reserve lots of space, to prevent later rehashes
+    // TODO: what if this is too large? make a parameter?
+    ID.rehash(mcts_expr_score * 2);
+    NODE* root = buildTree(tree);
+    
+    int num_oper;
+	#pragma omp parallel shared(num_oper)
+    #pragma omp single nowait
+    num_oper = count_operators_cse_topdown_rec(root, ID);
 	MesPrint ("*** [%s] Stopping CSEE REC", thetime_str().c_str());
 
-        #pragma omp parallel
-        freeTree(root);
-        MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
+
+    #pragma omp parallel
+    #pragma omp single nowait
+    freeTree(root);
+    MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
 
         //int num_oper = count_operators(instr);
 	//int num_oper = count_operators_cse(tree);
