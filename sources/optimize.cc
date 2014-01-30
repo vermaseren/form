@@ -796,7 +796,7 @@ bool term_compare (const WORD *a, const WORD *b) {
  */
 vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 
-	MesPrint ("*** [%s, w=%w] CALL: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
+	//MesPrint ("*** [%s, w=%w] CALL: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
 	
 	GETIDENTITY;
 
@@ -883,7 +883,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 	}
 	res.resize(j);
 	
-	MesPrint ("*** [%s, w=%w] DONE: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
+	//MesPrint ("*** [%s, w=%w] DONE: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
 	
 	return res;
 }
@@ -1240,7 +1240,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 * TODO: find better hash functions
 */
 int count_operators_cse (const vector<WORD> &tree) {
-	MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
+	//MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
 
         typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
@@ -1463,7 +1463,7 @@ struct NodeEq {
 };
 
 NODE* buildTree(vector<WORD> &tree) {
-	MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
+	//MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
 
 	// convert to tree. TODO: is this necessary?
 	stack<NODE*> st;
@@ -1504,7 +1504,7 @@ NODE* buildTree(vector<WORD> &tree) {
 		}
 	}
 	
-	MesPrint ("*** [%s] Done building tree", thetime_str().c_str());
+	//MesPrint ("*** [%s] Done building tree", thetime_str().c_str());
         return st.top();
 }
 
@@ -1522,7 +1522,7 @@ void freeTree(NODE* root) {
 		M_free(c, "CSE tree node");
 	}
         
-        MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
+ //       MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
 }
 
 int count_operators_cse_topdown (vector<WORD> &tree) {
@@ -1569,15 +1569,69 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 		}
 	}
         
-        MesPrint("Hash count: %d %d", compsuc, compcount);
-	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
+    //    MesPrint("Hash count: %d %d", compsuc, compcount);
+	//MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	
-        freeTree(root);
+    freeTree(root);
 	return numinstr;
 }
 
 /*
 	#] count_operators_cse_topdown :
+  	#[ simulated_annealing :
+*/
+vector<WORD> simulated_annealing() {
+	float minT = 1;
+	float maxT = 1600; // TODO: make parameters
+	float T = maxT;
+	float coolrate = pow(minT / maxT, 1 / (float)AO.Optimize.saIter);
+
+	GETIDENTITY;
+    
+    vector<WORD> state = occurrence_order(optimize_expr, false);
+	my_random_shuffle(BHEAD state.begin(), state.end()); // start from random scheme
+
+    vector<WORD> tree = Horner_tree(optimize_expr, state);
+    int curscore = count_operators_cse_topdown(tree);
+
+    std::vector<int> best; // best state
+    int bestscore = curscore;
+    
+    for (int o = 0; o < AO.Optimize.saIter; o++) {
+        int inda = iranf(BHEAD state.size());
+        int indb = iranf(BHEAD state.size());
+
+        swap(state[inda], state[indb]); // swap works best for Horner
+
+        vector<WORD> tree = Horner_tree(optimize_expr, state);
+        int newscore = count_operators_cse_topdown(tree);
+
+        if (newscore <= curscore || 2.0 * wranf(BHEAD0) / (float)(UWORD)(-1) < exp((curscore - newscore) / T)) {
+	        curscore = newscore;
+
+            if (curscore < bestscore) {
+                bestscore = curscore;
+                best = state;
+            }
+        } else {
+            swap(state[inda], state[indb]);
+        }
+
+#ifdef DEBUG_SA            
+		MesPrint("Score at step %d: %d", o, curscore);
+#endif
+        T *= coolrate;
+    }
+
+#ifdef DEBUG_SA
+	MesPrint("Simulated annealing score: %d", min);
+#endif
+
+    return state;
+}
+
+/*
+	#] simulated_annealing :
   	#[ printpstree :
 */
 
@@ -4509,25 +4563,30 @@ int Optimize (WORD exprnr, int do_print) {
 				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, true));
 		}
 		else {
-			mcts_best_schemes.clear();
-			if ( AO.inscheme ) {
-				optimize_best_Horner_schemes.push_back(vector<WORD>(AO.schemenum));
-				for ( int i=0; i < AO.schemenum; i++ )
-					optimize_best_Horner_schemes[0][i] = AO.inscheme[i];
+			if (AO.Optimize.horner == O_SIMULATED_ANNEALING) {
+				optimize_best_Horner_schemes.push_back(simulated_annealing());
 			}
 			else {
-				for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
-					find_Horner_MCTS();
-				// generate results
-				for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
-					optimize_best_Horner_schemes.push_back(i->second);
-#ifdef DEBUG_MCTS
-					MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
-#endif
+				mcts_best_schemes.clear();
+				if ( AO.inscheme ) {
+					optimize_best_Horner_schemes.push_back(vector<WORD>(AO.schemenum));
+					for ( int i=0; i < AO.schemenum; i++ )
+						optimize_best_Horner_schemes[0][i] = AO.inscheme[i];
 				}
+				else {
+					for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
+						find_Horner_MCTS();
+					// generate results
+					for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
+						optimize_best_Horner_schemes.push_back(i->second);
+#ifdef DEBUG_MCTS
+						MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
+#endif
+					}
+				}
+				// clear the tree by making a new empty one.
+				mcts_root = tree_node();
 			}
-			// clear the tree by making a new empty one.
-			mcts_root = tree_node();
 		}
 #ifdef DEBUG
 #ifdef WITHMPI

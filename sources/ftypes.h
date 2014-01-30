@@ -971,6 +971,7 @@ typedef int (*TFUN1)();
 
 #define O_OCCURRENCE 0
 #define O_MCTS 1
+#define O_SIMULATED_ANNEALING 2
 
 #define O_FORWARD 0
 #define O_BACKWARD 1

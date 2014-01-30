@@ -1218,6 +1218,7 @@ typedef struct {
     int   debugflags;
     int   schemeflags;
     int   experiments;
+    int   saIter; /* Simulated annealing updates */
 } OPTIMIZE;
 
 typedef struct {
@@ -2163,7 +2164,7 @@ struct O_const {
     LONG    wrap;                  /* (O) For statistics time. wrap around */
     LONG    wrapnum;               /* (O) For statistics time. wrap around */
 #endif
-	OPTIMIZE Optimize;          
+    OPTIMIZE Optimize;          
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
@@ -2186,9 +2187,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(24,6,19,17,1);
+	PADPOSITION(24,6,20,17,1);
 #else
-	PADPOSITION(24,4,19,17,1);
+	PADPOSITION(24,4,20,17,1);
 #endif
 };
 /*

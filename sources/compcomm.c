@@ -687,6 +687,10 @@ int CoFormat(UBYTE *s)
 					AO.Optimize.greedyminnum = 10;
 					AO.Optimize.greedymaxperc = 5;
 					break;
+                                case 4:
+                                        AO.Optimize.horner = O_SIMULATED_ANNEALING;
+					AO.Optimize.saIter = 1000;
+                                        break;
 				default:
 					error = 1;
 					MesPrint("&Illegal optimization specification in format statement");
@@ -6398,6 +6402,18 @@ GotTheNumber:
 				AO.Optimize.experiments = 0;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"saiter") == 0 ) {
+			x = 0;
+			u = value; while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
+			if ( *u != 0 ) {
+				MesPrint("&Option SAIter in Format,Optimize statement should be a positive integer: %s",value);
+				AO.Optimize.saIter = 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.saIter= x;
 			}
 		}
 		else {
