@@ -377,8 +377,11 @@ template<typename T> struct calc {
 #include <sys/file.h>
 #include "unix.h"
 #endif
-#ifdef WITHZLIB
-#include <zlib.h>
+#ifdef WITHZLIB        
+#include <zlib.h>       
+#endif                  
+#ifdef WITHBZLIB
+#include <bzlib.h>
 #endif
 #ifdef WITHPTHREADS
 #include <pthread.h>

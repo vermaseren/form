@@ -218,11 +218,21 @@ int CoCompress(UBYTE *s)
 	UBYTE *t, c;
 	if ( StrICmp(s,(UBYTE *)"on") == 0 ) {
 		AC.NoCompress = 0;
-		AR.gzipCompress = 0;
+#ifdef WITHZLIB
+                AR.gzipCompress = 0;
+#elif defined WITHBZLIB
+                AR.bzipCompress = 0;
+#endif
+		
+                
 	}
 	else if ( StrICmp(s,(UBYTE *)"off") == 0 ) {
 		AC.NoCompress = 1;
+#ifdef WITHZLIB
 		AR.gzipCompress = 0;
+#elif defined WITHBZLIB
+                AR.bzipCompress = 0;
+#endif
 	}
 	else {
 		t = s; while ( FG.cTable[*t] <= 1 ) t++;
@@ -233,13 +243,17 @@ int CoCompress(UBYTE *s)
 #endif
 			s = t; *s = c;
 			if ( *s == 0 ) {
+#ifdef WITHZLIB
 				AR.gzipCompress = GZIPDEFAULT;  /* Normally should be 6 */
+#endif
 				return(0);
 			}
 			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 			t = s;
 			if ( FG.cTable[*s] == 1 ) {
+#ifdef WITHZLIB
 				AR.gzipCompress = *s - '0';
+#endif
 				s++;
 				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 				if ( *s == 0 ) return(0);
@@ -248,8 +262,34 @@ int CoCompress(UBYTE *s)
 			return(1);
 
 		}
+                else if ( StrICmp(s,(UBYTE *)"bzip") == 0 ) {
+                    /* TODO Jos:add workfactor to the command and read*/
+#ifndef WITHBZLIB
+			Warning("bzip compression not supported on this platform");
+#endif
+			s = t; *s = c;
+			if ( *s == 0 ) {
+#ifdef WITHBZLIB
+				AR.bzipCompress = BZIPDEFAULT;  /* Normally should be 4 */
+#endif
+				return(0);
+			}
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			t = s;
+			if ( FG.cTable[*s] == 1 ) {
+#ifdef WITHBZLIB
+				AR.bzipCompress = *s - '0';
+#endif
+				s++;
+				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+				if ( *s == 0 ) return(0);
+			}
+			MesPrint("&Unknown bzip option: %s, a digit was expected",t);
+			return(1);
+
+		}
 		else {
-			MesPrint("&Unknown option: %s, on, off or gzip expected",s);
+			MesPrint("&Unknown option: %s, on, off, gzip or bzip expected",s);
 			return(1);
 		}
 	}
@@ -318,7 +358,11 @@ int CoOff(UBYTE *s)
 			*s = c; return(-1);
 		}
 		else if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
+#ifdef WITHZLIB
 			AR.gzipCompress = 0;
+#elif defined WITHBZLIB
+                        AR.bzipCompress = 0;
+#endif
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
 			AC.CheckpointInterval = 0;
@@ -367,7 +411,10 @@ int CoOn(UBYTE *s)
 			*s = c; return(-1);
 		}
 		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
+#ifdef WITHZLIB
 			AR.gzipCompress = 0;
+
+
 			*s = c;
 			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 			if ( *s ) {
@@ -375,6 +422,7 @@ int CoOn(UBYTE *s)
 			  while ( FG.cTable[*s] <= 1 ) s++;
 			  c = *s; *s = 0;
 			  if ( StrICmp(t,(UBYTE *)"gzip") == 0 ) {}
+                          else if ( StrICmp(t,(UBYTE *)"bzip") == 0 ) {} /* sam:Added*/
 			  else {
 				MesPrint("&Unrecognized option in ON compress statement: %s",t);
 				return(-1);
@@ -400,6 +448,47 @@ int CoOn(UBYTE *s)
 				return(-1);
 			  }
 			}
+#endif
+/* sam:Added */
+#ifdef WITHBZLIB        
+                        AR.bzipCompress = 0;
+
+			*s = c;
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			if ( *s ) {
+			  t = s;
+			  while ( FG.cTable[*s] <= 1 ) s++;
+			  c = *s; *s = 0;
+			  if ( StrICmp(t,(UBYTE *)"bzip") == 0 ) {}
+			  else {
+				MesPrint("&Unrecognized option in ON compress statement: %s",t);
+				return(-1);
+			  }
+			  *s = c;
+			  while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+/*
+ * TODO sam:Where should it be?
+#ifndef WITHZLIB
+			  Warning("bzip compression not supported on this platform");
+#endif
+*/
+			  if ( FG.cTable[*s] == 1 ) {
+				AR.bzipCompress = *s++ - '0';
+				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+				if ( *s ) {
+					MesPrint("&Unrecognized option in ON compress bzip statement: %s",t);
+					return(-1);
+				}
+			  }
+			  else if ( *s == 0 ) {
+				AR.bzipCompress = BZIPDEFAULT;
+			  }
+			  else {
+				MesPrint("&Unrecognized option in ON compress bzip statement: %s, single digit expected",t);
+				return(-1);
+			  }
+			}
+#endif
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
 			AC.CheckpointInterval = 0;

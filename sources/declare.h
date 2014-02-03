@@ -1221,6 +1221,14 @@ extern int    SetupAllInputGZIP(SORTING *);
 extern LONG   FillInputGZIP(FILEHANDLE *,POSITION *,UBYTE *,LONG,int);
 #endif
 
+#ifdef WITHBZLIB        /* sam:Added */
+extern int    SetupOutputBZIP(FILEHANDLE *);
+extern int    PutOutputBZIP(FILEHANDLE *);
+extern int    FlushOutputBZIP(FILEHANDLE *);
+extern int    SetupAllInputBZIP(SORTING *);
+extern LONG   FillInputBZIP(FILEHANDLE *,POSITION *,UBYTE *,LONG,int);
+#endif
+
 #ifdef WITHPTHREADS
 extern VOID   BeginIdentities(VOID);
 extern int    WhoAmI(VOID);

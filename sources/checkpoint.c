@@ -2278,7 +2278,14 @@ int DoRecovery(int *moduletype)
 	R_SET(AR.InHiBuf, LONG);
 
 	R_SET(AR.NoCompress, int);
-	R_SET(AR.gzipCompress, int);
+#ifdef WITHZLIB
+        R_SET(AR.gzipCompress, int);
+#elif defined WITHBZLIB
+        R_SET(AR.bzipCompress, int);
+#else
+        R_SET(AR.gzipCompress, int);
+#endif
+	
 
 	R_SET(AR.outtohide, int);
 
@@ -2861,7 +2868,14 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AR.InHiBuf, sizeof(LONG));
 	
 	S_WRITE_B(&AR.NoCompress, sizeof(int));
-	S_WRITE_B(&AR.gzipCompress, sizeof(int));
+#ifdef WITHGZLIB        /* sam:The following lines are added */
+        S_WRITE_B(&AR.gzipCompress, sizeof(int));
+#elif defined WITHBZLIB
+        S_WRITE_B(&AR.bzipCompress, sizeof(int));
+#else
+        S_WRITE_B(&AR.gzipCompress, sizeof(int));
+#endif
+	//S_WRITE_B(&AR.gzipCompress, sizeof(int)); /* sam:This lines is removed */
 	
 	S_WRITE_B(&AR.outtohide, sizeof(int));
 

@@ -725,6 +725,11 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			{ int oldgzipCompress = AR.gzipCompress;
 				AR.gzipCompress = 0;
 				/* SetupOutputGZIP(fout); */
+#elif defined WITHBZLIB
+                         /* sam:Added */
+                         { int oldbzipCompress = AR.bzipCompress;
+				AR.bzipCompress = 0;
+				/* SetupOutputBZIP(fout); */       
 #endif
 			if ( tover > 0 ) {
 				ss = S->sPointer;
@@ -749,6 +754,10 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef WITHZLIB
 				AR.gzipCompress = oldgzipCompress;
 			}
+#elif defined WITHBZLIB
+                                /* sam:Added*/
+                        	AR.bzipCompress = oldbzipCompress;
+			}        
 #endif
 #ifdef WITHPTHREADS
 			if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
@@ -949,6 +958,7 @@ TooLarge:
 			,S->fPatchN,S->lPatch,&(S->fPatches[S->fPatchN]));
 		MUNLOCK(ErrorMessageLock);
 #endif
+                
 		if ( S->lPatch <= 0 ) {
 			StageSort(&(S->file));
 			position = S->fPatches[S->fPatchN];
@@ -961,6 +971,13 @@ TooLarge:
 				else
 					S->fpcompressed[S->fPatchN] = 0;
 				SetupOutputGZIP(&(S->file));
+#elif defined WITHBZLIB /* sam:Added */
+                                *AR.CompressPointer = 0;
+				if ( S == AT.S0 && AR.NoCompress == 0 && AR.bzipCompress > 0 )
+					S->fpcompressed[S->fPatchN] = 1;
+				else
+					S->fpcompressed[S->fPatchN] = 0;
+				SetupOutputBZIP(&(S->file));
 #endif
 				while ( ( t = *ss++ ) != 0 ) {
 					if ( PutOut(BHEAD t,&position,&(S->file),1) < 0 ) {
@@ -1156,7 +1173,9 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	LONG i, RetCode;
 	WORD *from, *to;
 #ifndef WITHZLIB
-	DUMMYUSE(npat);
+#ifndef WITHBZLIB
+	DUMMYUSE(npat);         /* TODO sam:What should be added for bzip */
+#endif
 #endif
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
@@ -1166,11 +1185,20 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	to = buffer;
-	while ( --i >= 0 ) *--to = *--from;
-	*take = to;
+	to = buffer;    //sam: initialize to with the start address of patch npat
+	while ( --i >= 0 ) *--to = *--from;     //sam: copy from end to start of buffer
+	*take = to;     //sam: update the address of the end of patch npat. Why should it be done???
 #ifdef WITHZLIB
 	if ( ( RetCode = FillInputGZIP(file,position,(UBYTE *)buffer
+									,file->POsize,npat) ) < 0 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
+			RetCode,file->POsize);
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+#elif defined WITHBZLIB         /* sam:Added */
+        if ( ( RetCode = FillInputBZIP(file,position,(UBYTE *)buffer
 									,file->POsize,npat) ) < 0 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
@@ -1219,6 +1247,11 @@ WORD Sflush(FILEHANDLE *fi)
 	int dobracketindex = 0;
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
+#elif defined WITHBZLIB         /* sam:Added */
+        GETIDENTITY
+	int dobracketindex = 0;
+	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
+		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
 #endif
 	if ( fi->handle < 0 ) {
 		if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
@@ -1245,6 +1278,13 @@ WORD Sflush(FILEHANDLE *fi)
 		fi->POfill = fi->PObuffer;
 	}
 	else
+#elif defined WITHBZLIB         /* sam:Added */
+        if ( AT.SS == AT.S0 && !AR.NoCompress && AR.bzipCompress > 0
+	&& dobracketindex == 0 ) {
+		if ( FlushOutputBZIP(fi) ) return(-1);
+		fi->POfill = fi->PObuffer;
+	}
+	else 
 #endif
 	{
 #ifdef ALLLOCK
@@ -1303,27 +1343,27 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 	WORD i, *p, ret, *r, *rr, j, k, first;
 	int dobracketindex = 0;
 	LONG RetCode;
-
-	if ( AT.SS != AT.S0 ) {
+        //sam: what dose it mean???
+	if ( AT.SS != AT.S0 ) { 
 /*
 		For this case no compression should be used
 */
 		if ( ( i = *term ) <= 0 ) return(0);
 		ret = i;
-		ADDPOS(*position,i*sizeof(WORD));
-		p = fi->POfill;
+		ADDPOS(*position,i*sizeof(WORD));       //sam: Update position in file
+		p = fi->POfill; //sam: get fill position of the buffer in the specified file
 		do {
-			if ( p >= fi->POstop ) {
-				if ( fi->handle < 0 ) {
-					if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {
+			if ( p >= fi->POstop ) {        //if the current position is larger than or equal to the end of buffer
+				if ( fi->handle < 0 ) { //sam: check if the file exists
+					if ( ( RetCode = CreateFile(fi->name) ) >= 0 ) {        //sam: create the file
 #ifdef GZIPDEBUG
 						MLOCK(ErrorMessageLock);
 						MesPrint("%w PutOut created sortfile %s",fi->name);
 						MUNLOCK(ErrorMessageLock);
 #endif
-						fi->handle = (WORD)RetCode;
-						PUTZERO(fi->filesize);
-						PUTZERO(fi->POposition);
+						fi->handle = (WORD)RetCode;     //sam: set the file file handle
+						PUTZERO(fi->filesize);  //sam: set the filesize to zero   
+						PUTZERO(fi->POposition);        //sam: set the file position to zero
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1335,10 +1375,10 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 #ifdef ALLLOCK
 				LOCK(fi->pthreadslock);
 #endif
-				if ( fi == AR.hidefile ) {
+				if ( fi == AR.hidefile ) {      //sam: what does it mean???
 					LOCK(AS.inputslock);
 				}
-				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+				SeekFile(fi->handle,&(fi->POposition),SEEK_SET);        //sam: set the file handle to the current position
 				if ( ( RetCode = WriteFile(fi->handle,(UBYTE *)(fi->PObuffer),fi->POsize) ) != fi->POsize ) {
 					if ( fi == AR.hidefile ) {
 						UNLOCK(AS.inputslock);
@@ -1541,6 +1581,14 @@ nocompress:
 					p = fi->PObuffer;
 				}
 				else
+#elif defined WITHBZLIB         /* sam:Added */
+                                 if ( !AR.NoCompress && ncomp > 0 && AR.bzipCompress > 0
+					&& dobracketindex == 0 ) {
+					fi->POfill = p;
+					if ( PutOutputBZIP(fi) ) return(-1);
+					p = fi->PObuffer;
+				}
+				else   
 #endif
 				{
 #ifdef ALLLOCK
@@ -1624,7 +1672,9 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	LONG size, RetCode;
 	int dobracketindex = 0;
 #ifndef WITHZLIB
-	DUMMYUSE(compr);
+#ifndef WITHBZLIB
+	DUMMYUSE(compr);        /* TODO sam:What should be done for bzip */
+#endif
 #endif
 	if ( AR.sLevel <= 0 && Expressions[AR.CurExpr].newbracketinfo
 		&& ( fi == AR.outfile || fi == AR.hidefile ) ) dobracketindex = 1;
@@ -1671,6 +1721,13 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 			fi->POfill = fi->PObuffer;
 		}
 		else
+#elif defined WITHBZLIB         /* sam:Added */
+                 if ( AT.SS == AT.S0 && !AR.NoCompress && AR.bzipCompress > 0
+		&& dobracketindex == 0 && ( compr > 0 ) ) {
+			if ( PutOutputBZIP(fi) ) return(-1);
+			fi->POfill = fi->PObuffer;
+		}
+		else   
 #endif
 		{
 #ifdef ALLLOCK
@@ -1734,6 +1791,13 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 			fi->POfill = fi->PObuffer;
 		}
 		else
+#elif defined WITHBZLIB         /* sam:Added */
+                if ( AT.SS == AT.S0 && !AR.NoCompress && AR.bzipCompress > 0
+		&& dobracketindex == 0 && ( compr > 0 ) ) {
+			if ( FlushOutputBZIP(fi) ) return(-1);
+			fi->POfill = fi->PObuffer;
+		}
+		else  
 #endif
 		{
 #ifdef ALLLOCK
@@ -1785,6 +1849,24 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	}
 #ifdef WITHZLIB
 	if ( AT.SS == AT.S0 && !AR.NoCompress && AR.gzipCompress > 0
+		&& dobracketindex == 0 && ( compr > 0 ) ) {
+		PUTZERO(*position);
+		if ( fi->handle >= 0 ) {
+#ifdef ALLLOCK
+			LOCK(fi->pthreadslock);
+#endif
+			SeekFile(fi->handle,position,SEEK_END);
+#ifdef ALLLOCK
+			UNLOCK(fi->pthreadslock);
+#endif
+		}
+		else {
+			ADDPOS(*position,((UBYTE *)fi->POfill-(UBYTE *)fi->PObuffer));
+		}
+	}
+	else
+#elif defined WITHBZLIB         /* sam:Added */
+            	if ( AT.SS == AT.S0 && !AR.NoCompress && AR.bzipCompress > 0
 		&& dobracketindex == 0 && ( compr > 0 ) ) {
 		PUTZERO(*position);
 		if ( fi->handle >= 0 ) {
@@ -3341,6 +3423,12 @@ WORD MergePatches(WORD par)
 	if ( par == 2 ) {
 		AR.gzipCompress = 0;
 	}
+#elif defined WITHBZLIB         /* sam:Added */
+        POSITION position2;
+	int oldbzipCompress = AR.bzipCompress;
+	if ( par == 2 ) {
+		AR.bzipCompress = 0;
+	}
 #endif
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
@@ -3392,6 +3480,12 @@ ConMer:
 		else
 			S->fpcompressed[S->fPatchN] = 0;
 		SetupOutputGZIP(fout);
+#elif defined WITHBZLIB         /* sam:Added */
+                if ( S == AT.S0 && AR.NoCompress == 0 && AR.bzipCompress > 0 )
+			S->fpcompressed[S->fPatchN] = 1;
+		else
+			S->fpcompressed[S->fPatchN] = 0;
+		SetupOutputBZIP(fout);
 #endif
 	}
 	else if ( par == 0 && S->stage4 > 0 ) {
@@ -3423,6 +3517,18 @@ ConMer:
 			MUNLOCK(ErrorMessageLock);
 #endif
 		}
+#elif defined WITHBZLIB         /* sam:Added */
+           	m1 = S->fpincompressed;
+		S->fpincompressed = S->fpcompressed;
+		S->fpcompressed = m1;
+		for ( i = 0; i < S->inNum; i++ ) {
+			S->fPatchesStop[i] = S->iPatches[i+1];
+#ifdef BZIPDEBUG
+			MLOCK(ErrorMessageLock);
+			MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
+			MUNLOCK(ErrorMessageLock);
+#endif
+		}     
 #endif
 		S->stage4 = 0;
 		goto FileMake;
@@ -3433,6 +3539,11 @@ ConMer:
 		The next statement is just for now
 */
 		AR.gzipCompress = 0;
+#elif defined WITHBZLIB         /* sam:Added */
+                /*
+		The next statement is just for now
+*/
+		AR.bzipCompress = 0;
 #endif
 		if ( par == 0 ) {
 			S->iPatches = S->fPatches;
@@ -3449,6 +3560,18 @@ ConMer:
 				MUNLOCK(ErrorMessageLock);
 #endif
 			}
+#elif defined WITHBZLIB         /* sam:Added */
+                     	m1 = S->fpincompressed;
+			S->fpincompressed = S->fpcompressed;
+			S->fpcompressed = m1;
+			for ( i = 0; i < S->inNum; i++ ) {
+				S->fPatchesStop[i] = S->fPatches[i+1];
+#ifdef BZIPDEBUG
+				MLOCK(ErrorMessageLock);
+				MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
+				MUNLOCK(ErrorMessageLock);
+#endif
+			}   
 #endif
 		}
 		fout = AR.outfile;
@@ -3468,35 +3591,39 @@ ConMer:
 		if ( S->lPatch > 1 ) {
 #endif
 #ifdef WITHZLIB
-			SetupAllInputGZIP(S);
+			SetupAllInputGZIP(S);   //sam: set input stream for gzip
+#elif defined WITHBZLIB         /* sam:Added */
+                        SetupAllInputBZIP(S);
 #endif
-			p = S->lBuffer;
-			for ( i = 0; i < S->lPatch; i++ ) {
-				p = (WORD *)(((UBYTE *)p)+2*AM.MaxTer+COMPINC*sizeof(WORD));
+			p = S->lBuffer; //sam: set p to the start address of large buffer
+			for ( i = 0; i < S->lPatch; i++ ) {     //sam: iterate equal to number of patches in input file
+				p = (WORD *)(((UBYTE *)p)+2*AM.MaxTer+COMPINC*sizeof(WORD));    //sam: calculate the start address of patch i
 				S->Patches[i] = p;
-				p = (WORD *)(((UBYTE *)p) + fin->POsize);
+				p = (WORD *)(((UBYTE *)p) + fin->POsize);       //sam: calculate the end address of patch i
 				S->pStop[i] = m2 = p;
 #ifdef WITHZLIB
-				PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i);
+				PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i);       //sam: read patch i from file and put it in buffer
+#elif defined WITHBZLIB         /* sam:Added */
+                                PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i);
 #else
-				ADDPOS(S->iPatches[i],PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i));
+				ADDPOS(S->iPatches[i],PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i)); //sam: increase the address of input patches position
 #endif
 			}
 		}
 	}
 	if ( fout->handle >= 0 ) {
-		PUTZERO(position);
+		PUTZERO(position);      //sam: make the output file ready to write in
 #ifdef ALLLOCK
 		LOCK(fout->pthreadslock);
 #endif
-		SeekFile(fout->handle,&position,SEEK_END);
-		ADDPOS(position,((fout->POfill-fout->PObuffer)*sizeof(WORD)));
+		SeekFile(fout->handle,&position,SEEK_END);      //sam: set the output file handle to correct position
+		ADDPOS(position,((fout->POfill-fout->PObuffer)*sizeof(WORD)));  //sam: update position
 #ifdef ALLLOCK
 		UNLOCK(fout->pthreadslock);
 #endif
 	}
 	else {
-		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));
+		SETBASEPOSITION(position,(fout->POfill-fout->PObuffer)*sizeof(WORD));   //sam: update position
 	}
 /*
  		#] Setup : 
@@ -3508,18 +3635,18 @@ ConMer:
 	if ( S->lPatch == 1 ) {	/* Single patch --> direct copy. Very rare. */
 		LONG length;
 
-		if ( fout->handle < 0 ) if ( Sflush(fout) ) goto PatCall;
-		if ( par ) {		/* Memory to file */
+		if ( fout->handle < 0 ) if ( Sflush(fout) ) goto PatCall;       //sam: put the buffer to output
+		if ( par ) {		/* Memory to file */    //sam: if the sort is for large buffer
 #ifdef WITHZLIB
 /*
 			We fix here the problem that the thing needs to go through PutOut
-*/
-			m2 = m1 = *S->Patches; /* The m2 is to keep the compiler from complaining */
+*/                      //sam: m1 is a term
+			m2 = m1 = *S->Patches; /* The m2 is to keep the compiler from complaining */ 
 			while ( *m1 ) {
-				if ( *m1 < 0 ) { /* Need to uncompress */
+				if ( *m1 < 0 ) { /* Need to uncompress */       //sam: what does it mean???
 					i = -(*m1++); m2 += i; im = *m1+i+1;
 					while ( i > 0 ) { *m1-- = *m2--; i--; }
-					*m1 = im;
+					*m1 = im;       
 				}
 #ifdef WITHPTHREADS
 				if ( AS.MasterSort && ( fout == AR.outfile ) ) { im = PutToMaster(BHEAD m1); }
@@ -3528,7 +3655,33 @@ ConMer:
 				if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
 				ADDPOS(S->SizeInFile[par],im);
 				m2 = m1;
-				m1 += *m1;
+				m1 += *m1;      //sam: get the next term
+			}
+#ifdef WITHPTHREADS
+			if ( AS.MasterSort && ( fout == AR.outfile ) ) { PutToMaster(BHEAD 0); }
+			else
+#endif
+			if ( FlushOut(&position,fout,1) ) goto ReturnError;
+			ADDPOS(S->SizeInFile[par],1);
+#elif defined WITHBZLIB         /* TODO sam:Same code code be used for both libraries */
+                        /*
+			We fix here the problem that the thing needs to go through PutOut
+*/                      //sam: m1 is a term
+			m2 = m1 = *S->Patches; /* The m2 is to keep the compiler from complaining */ 
+			while ( *m1 ) {
+				if ( *m1 < 0 ) { /* Need to uncompress */       //sam: what does it mean???
+					i = -(*m1++); m2 += i; im = *m1+i+1;
+					while ( i > 0 ) { *m1-- = *m2--; i--; }
+					*m1 = im;       
+				}
+#ifdef WITHPTHREADS
+				if ( AS.MasterSort && ( fout == AR.outfile ) ) { im = PutToMaster(BHEAD m1); }
+				else
+#endif
+				if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
+				ADDPOS(S->SizeInFile[par],im);
+				m2 = m1;
+				m1 += *m1;      //sam: get the next term
 			}
 #ifdef WITHPTHREADS
 			if ( AS.MasterSort && ( fout == AR.outfile ) ) { PutToMaster(BHEAD 0); }
@@ -3610,6 +3763,68 @@ ConMer:
 #endif
 			if ( FlushOut(&position,fout,1) ) goto ReturnError;
 			ADDPOS(S->SizeInFile[par],1);
+#elif defined WITHBZLIB         /* sam:Added */
+ /*
+			Note: if we change FRONTSIZE we need to make the minimum value
+			of SmallEsize in AllocSort correspondingly larger or smaller.
+			Theoretically we could get close to 2*AM.MaxTer!
+*/
+			#define FRONTSIZE (2*AM.MaxTer)
+			WORD *copybuf = (WORD *)(((UBYTE *)(S->sBuffer)) + FRONTSIZE);
+			WORD *copytop;
+			SetupOutputBZIP(fout);
+			SetupAllInputBZIP(S);
+			m1 = m2 = copybuf;
+			position2 = S->iPatches[0];
+			while ( ( length = FillInputBZIP(fin,&position2,
+					(UBYTE *)copybuf,
+					(S->SmallEsize*sizeof(WORD)-FRONTSIZE),0) ) > 0 ) {
+				copytop = (WORD *)(((UBYTE *)copybuf)+length);
+				while ( *m1 && ( ( *m1 > 0 && m1+*m1 < copytop ) ||
+				( *m1 < 0 && ( m1+1 < copytop ) && ( m1+m1[1]+1 < copytop ) ) ) )
+/*
+	22-jun-2013 JV  Extremely nasty bug that has been around for a while.
+	                What if the end is in the remaining part? We will loose terms!
+				while ( *m1 && ( (WORD *)(((UBYTE *)(m1)) + AM.MaxTer ) < S->sTop2 ) )
+*/
+				{
+					if ( *m1 < 0 ) { /* Need to uncompress */
+						i = -(*m1++); m2 += i; im = *m1+i+1;
+						while ( i > 0 ) { *m1-- = *m2--; i--; }
+						*m1 = im;
+					}
+#ifdef WITHPTHREADS
+					if ( AS.MasterSort && ( fout == AR.outfile ) ) {
+						im = PutToMaster(BHEAD m1);
+					}
+					else
+#endif
+					if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
+					ADDPOS(S->SizeInFile[par],im);
+					m2 = m1;
+					m1 += *m1;
+				}
+				if ( m1 < copytop && *m1 == 0 ) break;
+/*
+				Now move the remaining part 'back'
+*/
+			    m3 = copybuf;
+				m1 = copytop;
+				while ( m1 > m2 ) *--m3 = *--m1;
+				m2 = m3;
+				m1 = m2 + *m2;
+			}
+			if ( length < 0 ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Readerror");
+				goto PatCall2;
+			}
+#ifdef WITHPTHREADS
+			if ( AS.MasterSort && ( fout == AR.outfile ) ) { PutToMaster(BHEAD 0); }
+			else
+#endif
+			if ( FlushOut(&position,fout,1) ) goto ReturnError;
+			ADDPOS(S->SizeInFile[par],1);                       
 #else
 /* old code */
 			SeekFile(fin->handle,&(S->iPatches[0]),SEEK_SET); /* needed for stage4 */
@@ -3821,6 +4036,8 @@ cancelled:
 						&& im > 0 ) {
 #ifdef WITHZLIB
 							PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[ul]),ki);
+#elif defined WITHBZLIB
+                                                        PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[ul]),ki);
 #else
 							ADDPOS(S->iPatches[ki],PutIn(fin,&(S->iPatches[ki]),
 							S->Patches[ki],&(poin[ul]),ki));
@@ -3890,6 +4107,9 @@ NextTerm:
 					&& im > 0 ) {
 #ifdef WITHZLIB
 						PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[k]),ki);
+
+#elif defined WITHBZLIB         /* TODO sam:Same code for both libraries */
+                                                PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[k]),ki);
 #else
 						ADDPOS(S->iPatches[ki],PutIn(fin,&(S->iPatches[ki]),
 						S->Patches[ki],&(poin[k]),ki));
@@ -3939,6 +4159,8 @@ EndOfAll:
 	if ( par == 1 ) {	/* Set the fpatch pointers */
 #ifdef WITHZLIB
 		SeekFile(fout->handle,&position,SEEK_CUR);
+#elif defined WITHBZLIB         /* TODO sam:Same code for both libs */
+                SeekFile(fout->handle,&position,SEEK_CUR);
 #endif
 		(S->fPatchN)++;
 		S->fPatches[S->fPatchN] = position;
@@ -3977,6 +4199,15 @@ EndOfAll:
 			for ( i = 0; i < S->inNum; i++ ) {
 				S->fPatchesStop[i] = S->iPatches[i+1];
 #ifdef GZIPDEBUG
+				MLOCK(ErrorMessageLock);
+				MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
+				MUNLOCK(ErrorMessageLock);
+#endif
+			}
+#elif defined WITHBZLIB         /* TODO sam:Same code for both libs */
+                        for ( i = 0; i < S->inNum; i++ ) {
+				S->fPatchesStop[i] = S->iPatches[i+1];
+#ifdef BZIPDEBUG
 				MLOCK(ErrorMessageLock);
 				MesPrint("%w fPatchesStop[%d] = %10p",i,&(S->fPatchesStop[i]));
 				MUNLOCK(ErrorMessageLock);
@@ -4030,18 +4261,24 @@ EndOfAll:
 NormalReturn:
 #ifdef WITHZLIB
 	AR.gzipCompress = oldgzipCompress;
+#elif defined WITHBZLIB         /* sam:Added */
+        AR.bzipCompress = oldbzipCompress;
 #endif
 	return(0);
 ReturnError:
 #ifdef WITHZLIB
 	AR.gzipCompress = oldgzipCompress;
+#elif defined WITHBZLIB         /* sam:Added */
+        AR.bzipCompress = oldbzipCompress;
 #endif
 	return(-1);
 #ifndef WITHZLIB
+#ifndef WITHBZLIB       /* TODO sam:The following code should be executed if there are no libs for compression */
 PatwCall:
 	MLOCK(ErrorMessageLock);
 	MesPrint("Error while writing to file.");
 	goto PatCall2;
+#endif
 #endif
 PatCall:;
 	MLOCK(ErrorMessageLock);
@@ -4050,6 +4287,8 @@ PatCall2:;
 	MUNLOCK(ErrorMessageLock);
 #ifdef WITHZLIB
 	AR.gzipCompress = oldgzipCompress;
+#elif defined WITHBZLIB
+        AR.bzipCompress = oldbzipCompress;
 #endif
 	SETERROR(-1)
 }

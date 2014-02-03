@@ -43,6 +43,9 @@
  
 #ifndef __STRUCTS__
 
+#include "form3.h"
+
+
 #define __STRUCTS__
 #ifdef _MSC_VER
 #include <wchar.h>  /* off_t */
@@ -633,11 +636,18 @@ typedef struct FiLe {
 	z_streamp zsp;				/* The pointer to the stream struct for gzip */
 	Bytef *ziobuffer;			/* The output buffer for compression */
 #endif
+#ifdef WITHBZLIB
+        bz_stream *bzsp;         /* sam:The pointer to the stream struct for bzip */
+        char *bziobuffer;      /* sam: The output buffer for compression */
+#endif
 	ULONG numblocks;			/* Number of blocks in file */
 	ULONG inbuffer;				/* Block in the buffer */
     LONG POsize;                /* size of the buffer */
 #ifdef WITHZLIB
     LONG ziosize;               /* size of the zoutbuffer */
+#endif
+#ifdef WITHBZLIB
+    LONG bziosize;              /* sam: Size of the bziobuffer */
 #endif
 #ifdef WITHPTHREADS
     LONG wPOsize;                /* size of the worker buffer */
@@ -648,12 +658,16 @@ typedef struct FiLe {
 #ifdef WITHPTHREADS
 #ifdef WITHZLIB
 	PADPOSITION(11,5,2,0,sizeof(pthread_mutex_t));
+#elif defined WITHBZLIB
+        PADPOSITION(11,5,2,0,sizeof(pthread_mutex_t));  /*TODO sam:Check the parameters value for bzip? */
 #else
 	PADPOSITION(9,4,2,0,sizeof(pthread_mutex_t));
 #endif
 #else
 #ifdef WITHZLIB
 	PADPOSITION(7,4,2,0,0);
+#elif defined WITHBZLIB
+        PADPOSITION(7,4,2,0,0);         /*TODO sam:Check the parameters values for bzip? */
 #else
 	PADPOSITION(5,3,2,0,0);
 #endif
@@ -1053,6 +1067,11 @@ typedef struct sOrT {
     WORD *fpincompressed;       /*  is input filepatch compressed? */
     z_streamp zsparray;         /*  the array of zstreams for decompression */
 #endif
+#ifdef WITHBZLIB
+    WORD *fpcompressed;         /* sam:It is output filepatch compressed */
+    WORD *fpincompressed;       /* sam:It is input filepatch compressed */
+    bz_stream * bzsparray;      /* sam:The array of bzstreams for decompression */
+#endif
     POSITION *fPatches;         /* Positions of output file patches */
     POSITION *inPatches;        /* Positions of input file patches */
     POSITION *fPatchesStop;     /* Positions of output file patches */
@@ -1088,6 +1107,8 @@ typedef struct sOrT {
     WORD stage4;                /* Are we using stage4? */
 #ifdef WITHZLIB
     PADPOSITION(28,12,12,3,0);
+#elif defined WITHBZLIB
+    PADPOSITION(28,12,12,3,0);  /* sam:Check the parameters value for bzlib? */
 #else
     PADPOSITION(25,12,12,3,0);
 #endif
@@ -1784,7 +1805,12 @@ struct R_const {
     LONG    posWorkSize;           /* (R) Size of posWorkSpace */
 	ULONG   wranfseed;
     int     NoCompress;            /* (R) Controls native compression */
+#ifdef WITHZLIB
     int     gzipCompress;          /* (R) Controls gzip compression */
+#elif defined WITHBZLIB /* TODO Jos:use same variable for both bzip and gzip */
+    int     bzipCompress;          /* TODO sam:(R) Controls bzip compression add both of variables */
+#endif
+    //int     gzipCompress;          /* (R) Controls gzip compression sam:Removed*/
     int     Cnumlhs;               /* Local copy of cbuf[rbufnum].numlhs */
 	int     outtohide;             /* Indicates that output is directly to hide */
 #ifdef WITHPTHREADS
@@ -1982,9 +2008,13 @@ struct N_const {
     WORD    *ForFindOnly;          /* (N) For wildcard pattern matching */
     WORD    *findTerm;             /* (N) For wildcard pattern matching */
     WORD    *findPattern;          /* (N) For wildcard pattern matching */
-#ifdef WITHZLIB
+#ifdef  WITHZLIB
 	Bytef	**ziobufnum;           /* () Used in compress.c */
 	Bytef	*ziobuffers;           /* () Used in compress.c */
+#endif
+#ifdef  WITHBZLIB
+	UBYTE	**bziobufnum;           /* sam:() Used in compress.c */
+	UBYTE	*bziobuffers;           /* sam:() Used in compress.c */
 #endif
 	WORD	*dummyrenumlist;       /* () Used in execute.c and store.c */
 	int		*funargs;              /* () Used in lus.c */
@@ -2090,9 +2120,16 @@ struct N_const {
 #else
 	PADPOSITION(52,11,23,24,sizeof(SHvariables));
 #endif
+#ifdef WITHBZLIB
+        PADPOSITION(54,11,23,24,sizeof(SHvariables));   /* TODO sam:Check the parameters value */
+#else
+        PADPOSITION(52,11,23,24,sizeof(SHvariables));
+#endif
 #else
 #ifdef WITHZLIB
 	PADPOSITION(53,9,23,22,sizeof(SHvariables));
+#elif defined WITHBZLIB
+        PADPOSITION(53,9,23,22,sizeof(SHvariables));     /* TODO sam:Check the parameters value */
 #else
 	PADPOSITION(51,9,23,22,sizeof(SHvariables));
 #endif
@@ -2101,12 +2138,16 @@ struct N_const {
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
 	PADPOSITION(52,9,23,24,sizeof(SHvariables));
+#elif defined WITHBZLIB
+        PADPOSITION(52,9,23,24,sizeof(SHvariables));    /* TODO sam:Check the parameters value */
 #else
 	PADPOSITION(50,9,23,24,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
 	PADPOSITION(51,7,23,22,sizeof(SHvariables));
+#elif defined WITHBZLIB
+        PADPOSITION(51,7,23,22,sizeof(SHvariables));    /* TODO sam:Check the parameters value */
 #else
 	PADPOSITION(49,7,23,22,sizeof(SHvariables));
 #endif

@@ -1143,6 +1143,7 @@ WORD IniVars()
 #ifdef WITHZLIB
 	AR.gzipCompress = 0;
 #endif
+        /* TODO sam:Add AR.gzipCompress for WTIHBZLIB*/
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
 	AT.bracketindexflag = 0;
