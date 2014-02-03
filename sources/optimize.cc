@@ -1506,18 +1506,16 @@ NODE* buildTree(vector<WORD> &tree) {
 	}
 	
 	MesPrint ("*** [%s] Done building tree", thetime_str().c_str());
-        return st.top();
+    return st.top();
 }
 
 void freeTree(NODE* root) {
-        if (root->data[0] != SYMBOL && root->data[0] != SNUMBER) {
-                #pragma omp task
-                freeTree(root->r);
-                #pragma omp task
-                freeTree(root->l);
-        }
-       
-        M_free(root, "CSE tree node");
+	if (root->data[0] != SYMBOL && root->data[0] != SNUMBER) {
+        freeTree(root->r);
+        freeTree(root->l);
+    }
+   
+    M_free(root, "CSE tree node");
 }
 
 int count_operators_cse_topdown (vector<WORD> &tree) {
@@ -1572,12 +1570,18 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 	return numinstr;
 }
 
-typedef tbb::concurrent_unordered_set<NODE*, NodeHash, NodeEq> nodeset;
+//typedef tbb::concurrent_unordered_set<NODE*, NodeHash, NodeEq> nodeset; // 3.5 times as slow as unordered_set!
+typedef tr1::unordered_set<NODE*, NodeHash, NodeEq> nodeset;
 
-int count_operators_cse_topdown_rec (NODE* tree, nodeset& ID) {
+
+// the recursive method itself is slower than stack based. what is going on?
+int count_operators_cse_topdown_rec (NODE* tree, nodeset& ID, unsigned int level = 0) {
         if (tree->data[0] == SYMBOL) {
-                if (tree->data[3] > 1) {	
-                        std::pair<nodeset::iterator, bool> suc = ID.insert(tree);
+                if (tree->data[3] > 1) {
+                		std::pair<nodeset::iterator, bool> suc;
+                		#pragma omp critical (updatecse)
+                		suc = ID.insert(tree); // TODO: make suc shared?
+
                         if (suc.second) { // new
                                 if (tree->data[3] == 2)
                                         return 1;
@@ -1591,17 +1595,24 @@ int count_operators_cse_topdown_rec (NODE* tree, nodeset& ID) {
        
         if (tree->data[0] != SNUMBER) {			
                 // operator
-                std::pair<nodeset::iterator, bool> suc = ID.insert(tree);
+        		std::pair<nodeset::iterator, bool> suc;
+        		#pragma omp critical (updatecse)
+                suc = ID.insert(tree);
                 
                 if (suc.second) {
                         int l, r;
+                
+                    	if (level < 2) { // code if faster if I remove level + 1, what's going on?
+	                        #pragma omp task shared(r, ID, level) 
+	                        r = count_operators_cse_topdown_rec(tree->r, ID, level + 1);
+	                        #pragma omp task shared(l, ID, level)
+	                        l = count_operators_cse_topdown_rec(tree->l, ID, level + 1);
+	                        #pragma omp taskwait
+                    	} else {
+                    		r = count_operators_cse_topdown_rec(tree->r, ID, level + 1);
+                        	l = count_operators_cse_topdown_rec(tree->l, ID, level + 1);
+                    	}
 
-                        #pragma omp task shared(r, ID)
-                        r = count_operators_cse_topdown_rec(tree->r, ID);
-                        #pragma omp task shared(l, ID)
-                        l = count_operators_cse_topdown_rec(tree->l, ID);
-                        #pragma omp taskwait
-                        
                         return 1 + r + l;
                 }
         }
@@ -1867,14 +1878,15 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
     
     int num_oper;
 	#pragma omp parallel shared(num_oper)
-    #pragma omp single nowait
-    num_oper = count_operators_cse_topdown_rec(root, ID);
+	{
+    	#pragma omp single nowait
+    	num_oper = count_operators_cse_topdown_rec(root, ID);
+	}
+
+	//num_oper = count_operators_cse_topdown_rec(root, ID);
 	MesPrint ("*** [%s] Stopping CSEE REC", thetime_str().c_str());
 
-
-    #pragma omp parallel
-    #pragma omp single nowait
-    freeTree(root);
+    freeTree(root); // TODO: perform in different thread
     MesPrint ("*** [%s] Done freeing", thetime_str().c_str());
 
         //int num_oper = count_operators(instr);
