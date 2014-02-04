@@ -1581,8 +1581,8 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
   	#[ simulated_annealing :
 */
 vector<WORD> simulated_annealing() {
-	float minT = 1;
-	float maxT = 1600; // TODO: make parameters
+	float minT = AO.Optimize.saMinT.fval;
+	float maxT = AO.Optimize.saMaxT.fval;
 	float T = maxT;
 	float coolrate = pow(minT / maxT, 1 / (float)AO.Optimize.saIter);
 

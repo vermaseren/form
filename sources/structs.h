@@ -1219,6 +1219,14 @@ typedef struct {
     int   schemeflags;
     int   experiments;
     int   saIter; /* Simulated annealing updates */
+    union {
+        float fval;
+        int ival[2];
+    } saMaxT; /* Maximum temperature of SA */
+    union {
+        float fval;
+        int ival[2];
+    } saMinT; /* Minimum temperature of SA */
 } OPTIMIZE;
 
 typedef struct {
@@ -2187,9 +2195,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(24,6,20,17,1);
+	PADPOSITION(24,6,20,21,1);
 #else
-	PADPOSITION(24,4,20,17,1);
+	PADPOSITION(24,4,20,21,1);
 #endif
 };
 /*

@@ -687,10 +687,12 @@ int CoFormat(UBYTE *s)
 					AO.Optimize.greedyminnum = 10;
 					AO.Optimize.greedymaxperc = 5;
 					break;
-                                case 4:
-                                        AO.Optimize.horner = O_SIMULATED_ANNEALING;
+				case 4:
+					AO.Optimize.horner = O_SIMULATED_ANNEALING;
 					AO.Optimize.saIter = 1000;
-                                        break;
+					AO.Optimize.saMaxT.fval = 2000;
+					AO.Optimize.saMinT.fval = 1;
+					break;
 				default:
 					error = 1;
 					MesPrint("&Illegal optimization specification in format statement");
@@ -6068,6 +6070,9 @@ correctuse:
 			else if ( StrICmp(value,(UBYTE *)"mcts") == 0 ) {
 				AO.Optimize.horner = O_MCTS;
 			}
+			else if ( StrICmp(value,(UBYTE *)"sa") == 0 ) {
+				AO.Optimize.horner = O_SIMULATED_ANNEALING;
+			}
 			else {
 				AO.Optimize.horner = -1;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
@@ -6414,6 +6419,28 @@ GotTheNumber:
 			}
 			else {
 				AO.Optimize.saIter= x;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"samaxt") == 0 ) {
+			d = 0;
+			if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
+				MesPrint("&Option SAMaxT in Format,Optimize statement should be a positive number: %s",value);
+				AO.Optimize.saMaxT.fval = 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.saMaxT.fval = d;
+			}
+		}
+		else if ( StrICmp(name,(UBYTE *)"samint") == 0 ) {
+			d = 0;
+			if ( sscanf ((char*)value, "%lf", &d) != 1 ) {
+				MesPrint("&Option SAMinT in Format,Optimize statement should be a positive number: %s",value);
+				AO.Optimize.saMinT.fval = 0;
+				error = 1;
+			}
+			else {
+				AO.Optimize.saMinT.fval = d;
 			}
 		}
 		else {
