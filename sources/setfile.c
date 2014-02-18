@@ -250,6 +250,7 @@ restart:;
 				sp->flags = USEDFLAG;
 				break;
 			case STRINGVALUE:
+				if ( StrICmp(s1,(UBYTE *)"tempsortdir") == 0 ) AM.havesortdir = 1;
 				s = s2; t = s2;
 				while ( *s ) {
 					if ( *s == ' ' || *s == '\t' ) break;
@@ -257,6 +258,8 @@ restart:;
 					*t++ = *s++;
 				}
 				*t = 0;
+				if ( sp->flags == USEDFLAG && sp->value != 0 )
+						M_free((VOID *)(sp->value),"Process option");
 				sp->value = (LONG)strDup1(s2,"Process option");
 				sp->flags = USEDFLAG;
 				break;
@@ -768,6 +771,9 @@ VOID WriteSetup()
 				if ( StrICmp(sp->parameter,(UBYTE *)"tempdir") == 0 && AM.TempDir ) {
 					MesPrint("   %s: '%s'",sp->parameter,(UBYTE *)(AM.TempDir));
 				}
+				else if ( StrICmp(sp->parameter,(UBYTE *)"tempsortdir") == 0 && AM.TempSortDir ) {
+					MesPrint("   %s: '%s'",sp->parameter,(UBYTE *)(AM.TempSortDir));
+				}
 				else {
 					MesPrint("   %s: '%s'",sp->parameter,(UBYTE *)(sp->value));
 				}
@@ -807,9 +813,8 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	int i = 0, j = 0;
 	char *s;
 	if ( AM.S0 != 0 ) {
-		s = FG.fname; i = 0;
+		s = FG.fname2; i = 0;
 		while ( *s ) { s++; i++; }
-/*		i += 11; */
 		i += 16;
 	}
 	if ( MaxFpatches < 4 ) MaxFpatches = 4;
@@ -932,9 +937,9 @@ VOID AllocSortFileName(SORTING *sort)
 	char *s, *t;
 /*
 		This is not the allocation before the tempfiles are determined.
-		Hence we can use the name in FG.fname and modify the tail
+		Hence we can use the name in FG.fname2 and modify the tail
 */
-	s = FG.fname; t = sort->file.name;
+	s = FG.fname2; t = sort->file.name;
 	while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 	t[-2] = 'F';
@@ -959,7 +964,7 @@ FILEHANDLE *AllocFileHandle()
 	int i = 0;
 	char *s, *t;
 
-	s = FG.fname; i = 0;
+	s = FG.fname2; i = 0;
 	while ( *s ) { s++; i++; }
 	i += 16;
 /*	i += 11; */
@@ -978,7 +983,7 @@ FILEHANDLE *AllocFileHandle()
 #endif
 	if ( AM.S0 != 0 ) {
 		fh->name = (char *)(fh->POstop + 1);
-		s = FG.fname; t = fh->name;
+		s = FG.fname2; t = fh->name;
 		while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 		t[-2] = 'F';
