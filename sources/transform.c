@@ -1842,7 +1842,8 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args)
 	We have reached the first argument to be done
 */
 	while ( iarg <= num2 ) {
-		if ( *ff == -SYMBOL ) { *tonew++ = *ff++; *tonew++ = *ff++; }
+		if ( *ff == -SYMBOL || ( *ff == -SNUMBER && ff[1] == 0 ) )
+			{ *tonew++ = *ff++; *tonew++ = *ff++; }
 		else if ( *ff == -SNUMBER ) {
 			numzero = ABS(ff[1])-1;
 			if ( reverse ) {
@@ -1883,13 +1884,12 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args)
 				while ( numzero > 0 ) {
 					*tonew++ = -SNUMBER; *tonew++ = 0; numzero--;
 				}
-				if ( ff[ARGHEAD+7] > 0 ) { *tonew++ = -SNUMBER; *tonew++ = 1; }
-				else {
-					*tonew++ = ARGHEAD+8; *tonew++ = 0; FILLARG(tonew)
-					*tonew++ = 8; *tonew++ = SYMBOL; *tonew++ = ff[ARGHEAD+3];
-					*tonew++ = ff[ARGHEAD+4]; *tonew++ = 1; *tonew++ = 1;
-					*tonew++ = -3;
-				}
+				*tonew++ = ARGHEAD+8; *tonew++ = 0; FILLARG(tonew)
+				*tonew++ = 8; *tonew++ = SYMBOL; *tonew++ = 4;
+				*tonew++ = ff[ARGHEAD+3]; *tonew++ = ff[ARGHEAD+4];
+				*tonew++ = 1; *tonew++ = 1;
+				if ( ff[ARGHEAD+7] > 0 ) *tonew++ = 3;
+				else                     *tonew++ = -3;
 			}
 			ff += *ff;
 		}
@@ -1911,7 +1911,7 @@ OverWork:;
 }
 
 /*
- 		#] RunExplode : 
+ 		#] RunExplode :
  		#[ RunPermute :
 */
 

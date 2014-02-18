@@ -85,6 +85,7 @@ FIXEDGLOBALS FG = {
 		,"in output"}
 
 	,(char *)0
+	,(char *)0
 	,(UBYTE *)"1"
 
 /*  ASCII table of character types. Note that on some computers this

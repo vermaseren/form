@@ -336,6 +336,7 @@ int CoOff(UBYTE *s)
 		*s = c;
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
 		AR.SortType = AC.SortType;
+		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
 }
 
@@ -561,6 +562,7 @@ int CoOn(UBYTE *s)
 		else { *s = c; }
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
 		AR.SortType = AC.SortType;
+		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
 }
 

@@ -869,12 +869,13 @@ IllForm:	MesPrint("&Illegally formed name in symbol statement");
 			     if ( tolower(*s) == 'r' ) cplx = VARTYPENONE;
 			else if ( tolower(*s) == 'c' ) cplx = VARTYPECOMPLEX;
 			else if ( tolower(*s) == 'i' ) cplx = VARTYPEIMAGINARY;
-			else if ( ( ( *s == '-' || *s == '+' ) && ( s[1] >= '0' && s[1] <= '9' ) )
+			else if ( ( ( *s == '-' || *s == '+' || *s == '=' )
+				 && ( s[1] >= '0' && s[1] <= '9' ) )
 				 || ( *s >= '0' && *s <= '9' ) ) {
 				LONG x;
 				sgn = 0;
 				if ( *s == '-' ) { sgn = VARTYPEMINUS; s++; }
-				else if ( *s == '+' ) { sgn = 0; s++; }
+				else if ( *s == '+' || *s == '=' ) { sgn = 0; s++; }
 				x = *s -'0';
 				while ( s[1] >= '0' && s[1] <= '9' ) {
 					x = 10*x + (s[1] - '0'); s++;
@@ -975,7 +976,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol : 
+  	#] CoSymbol :
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
