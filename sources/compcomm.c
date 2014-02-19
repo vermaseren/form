@@ -6086,7 +6086,7 @@ correctuse:
 				AO.Optimize.hornerdirection = O_FORWARDANDBACKWARD;
 			}
 			else {
-				AO.Optimize.method = -1;
+				AO.Optimize.hornerdirection = -1;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}
