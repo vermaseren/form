@@ -1612,10 +1612,10 @@ vector<WORD> simulated_annealing() {
     }
 
 #ifdef DEBUG_SA
-	MesPrint("Simulated annealing score: %d", min);
+	MesPrint("Simulated annealing score: %d", bestscore);
 #endif
 
-    return state;
+    return best;
 }
 
 /*
