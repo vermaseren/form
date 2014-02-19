@@ -795,8 +795,9 @@ bool term_compare (const WORD *a, const WORD *b) {
  *   lists of power is used for the construction of the Horner tree.
  */
 vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
-
+#ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
+#endif
 
 	GETIDENTITY;
 
@@ -883,7 +884,9 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 	}
 	res.resize(j);
 
+#ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
+#endif
 
 	return res;
 }
@@ -1026,20 +1029,19 @@ template<typename T> size_t hash_range(T* array, int size) {
  *   TODO: check if this method performs properly if do_CSE=false
  */
 vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
-	MesPrint ("*** [%s] Starting instruction generation", thetime_str().c_str());
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: generate_instructions(cse=%d)",
 						thetime_str().c_str(), do_CSE?1:0);
 #endif
 
-		typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
 
-		// reserve lots of space, to prevent later rehashes
-		// TODO: what if this is too large? make a parameter?
-		if (do_CSE) {
-				ID.rehash(mcts_expr_score * 2);
-		}
+	// reserve lots of space, to prevent later rehashes
+	// TODO: what if this is too large? make a parameter?
+	if (do_CSE) {
+			ID.rehash(mcts_expr_score * 2);
+	}
 
 	// s is a stack of operands to process when you encounter operators
 	// in the postfix expression tree. Operands consist of three WORDs,
@@ -1047,8 +1049,6 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	stack<int> s;
 	vector<WORD> instr;
 	WORD numinstr = 0;
-
-	// To avoid frequent memory allocations, we recycle a vector of int.
 	vector<int> x;
 
 	// process the expression tree
@@ -1056,54 +1056,54 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 		x.clear();
 
 		if (tree[i]==SNUMBER) {
-						WORD hash = hash_range(&tree[i], tree[i + 1]);
-						x.push_back(hash);
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
+			x.push_back(hash);
 			x.push_back(SNUMBER);
 			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
 			int sign = SGN(x.back());
 			x.back() *= sign;
 
-						std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
+			std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
 			s.push(0);
 			s.push(sign * suc.first->second);
 			s.push(SNUMBER);
-						s.push(hash);
+			s.push(hash);
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
-						WORD hash = hash_range(&tree[i], tree[i + 1]);
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
 			if (tree[i+3]>1) {
-								x.push_back(hash);
-								x.push_back(SYMBOL);
-								x.push_back(tree[i+2]+1); // variable (1-indexed)
-								x.push_back(tree[i+3]);   // power
+				x.push_back(hash);
+				x.push_back(SYMBOL);
+				x.push_back(tree[i+2]+1); // variable (1-indexed)
+				x.push_back(tree[i+3]);   // power
 
-							csemap::iterator it = ID.find(x);
+				csemap::iterator it = ID.find(x);
 				if (do_CSE && it != ID.end()) {
 					// already-seen power of a symbol
 					s.push(1);
 					s.push(it->second);
 					s.push(EXTRASYMBOL);
 				} else {
-									//MesPrint("strange");
-										if (numinstr == MAXPOSITIVE) {
-											MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
-											Terminate(-1);
-										}
+					//MesPrint("strange");
+					if (numinstr == MAXPOSITIVE) {
+						MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
+						Terminate(-1);
+					}
 
-										// new power greater than 1 of a symbol
-										instr.push_back(numinstr);   // expr.nr
-										instr.push_back(OPER_MUL);   // operator
-										instr.push_back(9+OPTHEAD);  // length total
-										instr.push_back(8);          // length operand
-										instr.push_back(SYMBOL);     // SYMBOL
-										instr.push_back(4);          // length symbol
-										instr.push_back(tree[i+2]);  // variable
-										instr.push_back(tree[i+3]);  // power
-										instr.push_back(1);          // numerator
-										instr.push_back(1);          // denominator
-										instr.push_back(3);          // length coeff
-										instr.push_back(0);          // trailing 0
+					// new power greater than 1 of a symbol
+					instr.push_back(numinstr);   // expr.nr
+					instr.push_back(OPER_MUL);   // operator
+					instr.push_back(9+OPTHEAD);  // length total
+					instr.push_back(8);          // length operand
+					instr.push_back(SYMBOL);     // SYMBOL
+					instr.push_back(4);          // length symbol
+					instr.push_back(tree[i+2]);  // variable
+					instr.push_back(tree[i+3]);  // power
+					instr.push_back(1);          // numerator
+					instr.push_back(1);          // denominator
+					instr.push_back(3);          // length coeff
+					instr.push_back(0);          // trailing 0
 
 					ID[x] = ++numinstr;
 					s.push(1);
@@ -1111,35 +1111,34 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 					s.push(EXTRASYMBOL);
 				}
 			}
-						else {
-								// power of 1
+			else {
+				// power of 1
 				s.push(tree[i+3]);   // power
 				s.push(tree[i+2]+1); // variable (1-indexed)
 				s.push(SYMBOL);
 			}
 
-						s.push(hash); // push hash
+			s.push(hash); // push hash
 			i+=tree[i+1];
 		}
 		else { // tree[i]==OPERATOR
 			int oper = tree[i];
 			i++;
 
-						x.push_back(0); // placeholder for hash
+			x.push_back(0); // placeholder for hash
 			x.push_back(oper);
-						vector<WORD> hash;
-						hash.push_back(oper);
+			vector<WORD> hash;
+			hash.push_back(oper);
 
 			// get two operands from the stack
 			for (int operand=0; operand<2; operand++) {
-								hash.push_back(s.top()); s.pop();
+				hash.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 			}
 
-
-						x[0] = hash_range(&hash[0], 3);
+			x[0] = hash_range(&hash[0], 3);
 
 			// get rid of multiplications by +/-1
 			if (oper==OPER_MUL) {
@@ -1158,7 +1157,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 							s.push(x[idx_oper2+2]);
 							s.push(x[idx_oper2+1]*SGN(x[idx_oper1+1]));
 							s.push(x[idx_oper2]);
-														s.push(hash[1 + (operand + 1) % 2]);
+							s.push(hash[1 + (operand + 1) % 2]);
 							do_continue = true;
 							break;
 						}
@@ -1170,9 +1169,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 
 			// check whether this subexpression has been seen before
 			// if not, generate instruction to define it
-						csemap::iterator it = ID.find(x);
-						if (!do_CSE || it == ID.end()) {
-
+			csemap::iterator it = ID.find(x);
+			if (!do_CSE || it == ID.end()) {
 				if (numinstr == MAXPOSITIVE) {
 					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
 					Terminate(-1);
@@ -1214,7 +1212,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 			s.push(1);
 			s.push(ID[x]);
 			s.push(EXTRASYMBOL);
-						s.push(x[0]); // push hash
+			s.push(x[0]); // push hash
 		}
 	}
 
@@ -1242,43 +1240,43 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 int count_operators_cse (const vector<WORD> &tree) {
 	MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
 
-		typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
 
-		// reserve lots of space, to prevent later rehashes
-		// TODO: what if this is too large? make a parameter?
-		ID.rehash(mcts_expr_score * 2);
+	// reserve lots of space, to prevent later rehashes
+	// TODO: what if this is too large? make a parameter?
+	ID.rehash(mcts_expr_score * 2);
 
 	// s is a stack of operands to process when you encounter operators
 	// in the postfix expression tree. Operands consist of three WORDs,
 	// formatted as the LHS/RHS of the keys in ID.
 	stack<int> s;
-	int numinstr = 0;
+	int numinstr = 0, numcommas = 0;
+	vector<int> x;
 
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
-
-		vector<int> x;
+		x.clear();
 
 		if (tree[i]==SNUMBER) {
-						WORD hash = hash_range(&tree[i], tree[i + 1]);
-						x.push_back(hash);
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
+			x.push_back(hash);
 			x.push_back(SNUMBER);
 			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
 			int sign = SGN(x.back());
 			x.back() *= sign;
 
-						std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
+			std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
 			s.push(0);
 			s.push(sign * suc.first->second);
 			s.push(SNUMBER);
-						s.push(hash);
+			s.push(hash);
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
-						WORD hash = hash_range(&tree[i], tree[i + 1]);
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
 			if (tree[i+3]>1) {
-								x.push_back(hash);
+				x.push_back(hash);
 				x.push_back(SYMBOL);
 				x.push_back(tree[i+2]+1); // variable (1-indexed)
 				x.push_back(tree[i+3]);   // power
@@ -1308,7 +1306,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 				s.push(SYMBOL);
 			}
 
-						s.push(hash); // push hash
+			s.push(hash); // push hash
 
 			i+=tree[i+1];
 		}
@@ -1316,21 +1314,21 @@ int count_operators_cse (const vector<WORD> &tree) {
 			int oper = tree[i];
 			i++;
 
-						x.push_back(0); // placeholder for hash
+			x.push_back(0); // placeholder for hash
 			x.push_back(oper);
-						vector<WORD> hash;
-						hash.push_back(oper);
+			vector<WORD> hash;
+			hash.push_back(oper);
 
 			// get two operands from the stack
 			for (int operand=0; operand<2; operand++) {
-								hash.push_back(s.top()); s.pop();
+				hash.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 			}
 
 
-						x[0] = hash_range(&hash[0], 3);
+			x[0] = hash_range(&hash[0], 3);
 
 			// get rid of multiplications by +/-1
 			if (oper==OPER_MUL) {
@@ -1349,7 +1347,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 							s.push(x[idx_oper2+2]);
 							s.push(x[idx_oper2+1]*SGN(x[idx_oper1+1]));
 							s.push(x[idx_oper2]);
-														s.push(hash[1 + (operand + 1) % 2]);
+							s.push(hash[1 + (operand + 1) % 2]);
 							do_continue = true;
 							break;
 						}
@@ -1368,6 +1366,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 					Terminate(-1);
 				}
 
+				if (oper == OPER_COMMA) numcommas++;
 				ID[x] = ++numinstr;
 				s.push(1);
 				s.push(numinstr);
@@ -1379,12 +1378,12 @@ int count_operators_cse (const vector<WORD> &tree) {
 				s.push(EXTRASYMBOL);
 			}
 
-						s.push(x[0]); // push hash
+			s.push(x[0]); // push hash
 		}
 	}
 
 	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
-	return numinstr;
+	return numinstr - numcommas;
 }
 
 /*
@@ -1552,7 +1551,9 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 					stack.push(c->r);
 					stack.push(c->l);
 
-					numinstr++;
+					// ignore OPER_COMMA
+					if (c->data[0] == OPER_MUL || c->data[0] == OPER_ADD)
+						numinstr++;
 				}
 			}
 		}
@@ -1816,7 +1817,7 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
 	vector<WORD> instr = generate_instructions(tree, true);
 	int num_oper = count_operators(instr);
-	//int num_oper = count_operators_cse(tree);
+	//int num_oper2 = count_operators_cse(tree);
 	int num_oper2 = count_operators_cse_topdown(tree);
 	MesPrint("%d %d", num_oper, num_oper2);
 
