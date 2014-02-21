@@ -1566,7 +1566,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 
 /*
 	#] count_operators_cse_topdown :
-  	#[ simulated_annealing :
+	#[ simulated_annealing :
 */
 vector<WORD> simulated_annealing() {
 	float minT = AO.Optimize.saMinT.fval;
@@ -1575,52 +1575,57 @@ vector<WORD> simulated_annealing() {
 	float coolrate = pow(minT / maxT, 1 / (float)AO.Optimize.saIter);
 
 	GETIDENTITY;
-    
-    vector<WORD> state = occurrence_order(optimize_expr, false);
-	my_random_shuffle(BHEAD state.begin(), state.end()); // start from random scheme
 
-    vector<WORD> tree = Horner_tree(optimize_expr, state);
-    int curscore = count_operators_cse_topdown(tree);
+	// create a valid state where FACTORSYMBOL/SEPARATESYMBOL remains first
+	vector<WORD> state = occurrence_order(optimize_expr, false);
+	int startindex = 0;
+	if (state[0] == SEPARATESYMBOL || state[1] == FACTORSYMBOL) startindex++;
+	if (state[1] == FACTORSYMBOL) startindex++;
 
-    std::vector<int> best; // best state
-    int bestscore = curscore;
-    
-    for (int o = 0; o < AO.Optimize.saIter; o++) {
-        int inda = iranf(BHEAD state.size());
-        int indb = iranf(BHEAD state.size());
+	my_random_shuffle(BHEAD state.begin() + startindex, state.end()); // start from random scheme
 
-        swap(state[inda], state[indb]); // swap works best for Horner
+	vector<WORD> tree = Horner_tree(optimize_expr, state);
+	int curscore = count_operators_cse_topdown(tree);
 
-        vector<WORD> tree = Horner_tree(optimize_expr, state);
-        int newscore = count_operators_cse_topdown(tree);
+	std::vector<int> best = state; // best state
+	int bestscore = curscore;
+	
+	for (int o = 0; o < AO.Optimize.saIter; o++) {
+		int inda = iranf(BHEAD state.size() - startindex) + startindex;
+		int indb = iranf(BHEAD state.size() - startindex) + startindex;
 
-        if (newscore <= curscore || 2.0 * wranf(BHEAD0) / (float)(UWORD)(-1) < exp((curscore - newscore) / T)) {
-	        curscore = newscore;
+		swap(state[inda], state[indb]); // swap works best for Horner
 
-            if (curscore < bestscore) {
-                bestscore = curscore;
-                best = state;
-            }
-        } else {
-            swap(state[inda], state[indb]);
-        }
+		vector<WORD> tree = Horner_tree(optimize_expr, state);
+		int newscore = count_operators_cse_topdown(tree);
 
-#ifdef DEBUG_SA            
-		MesPrint("Score at step %d: %d", o, curscore);
+		if (newscore <= curscore || 2.0 * wranf(BHEAD0) / (float)(UWORD)(-1) < exp((curscore - newscore) / T)) {
+			curscore = newscore;
+
+			if (curscore < bestscore) {
+				bestscore = curscore;
+				best = state;
+			}
+		} else {
+			swap(state[inda], state[indb]);
+		}
+
+#ifdef DEBUG_SA
+	MesPrint("Score at step %d: %d", o, curscore);
 #endif
-        T *= coolrate;
-    }
+		T *= coolrate;
+	}
 
 #ifdef DEBUG_SA
 	MesPrint("Simulated annealing score: %d", bestscore);
 #endif
 
-    return best;
+	return best;
 }
 
 /*
 	#] simulated_annealing :
-  	#[ printpstree :
+	#[ printpstree :
 */
 
 /*
