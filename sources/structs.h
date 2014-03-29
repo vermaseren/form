@@ -1068,8 +1068,8 @@ typedef struct sOrT {
     z_streamp zsparray;         /*  the array of zstreams for decompression */
 #endif
 #ifdef WITHBZLIB
-    WORD *fpcompressed;         /* sam:It is output filepatch compressed */
-    WORD *fpincompressed;       /* sam:It is input filepatch compressed */
+    WORD *bzfpcompressed;         /* sam:It is output filepatch compressed */
+    WORD *bzfpincompressed;       /* sam:It is input filepatch compressed */
     bz_stream * bzsparray;      /* sam:The array of bzstreams for decompression */
 #endif
     POSITION *fPatches;         /* Positions of output file patches */
@@ -1805,12 +1805,8 @@ struct R_const {
     LONG    posWorkSize;           /* (R) Size of posWorkSpace */
 	ULONG   wranfseed;
     int     NoCompress;            /* (R) Controls native compression */
-#ifdef WITHZLIB
-    int     gzipCompress;          /* (R) Controls gzip compression */
-#elif defined WITHBZLIB /* TODO Jos:use same variable for both bzip and gzip */
-    int     bzipCompress;          /* TODO sam:(R) Controls bzip compression add both of variables */
-#endif
-    //int     gzipCompress;          /* (R) Controls gzip compression sam:Removed*/
+    int     gzipCompress;          /* (R) Controls gzip compression*/
+    int     CompressLib;           /* sam:Specify compression library*/
     int     Cnumlhs;               /* Local copy of cbuf[rbufnum].numlhs */
 	int     outtohide;             /* Indicates that output is directly to hide */
 #ifdef WITHPTHREADS
@@ -2013,7 +2009,7 @@ struct N_const {
 	Bytef	*ziobuffers;           /* () Used in compress.c */
 #endif
 #ifdef  WITHBZLIB
-	UBYTE	**bziobufnum;           /* sam:() Used in compress.c */
+	SBYTE	**bziobufnum;           /* sam:() Used in compress.c */
 	UBYTE	*bziobuffers;           /* sam:() Used in compress.c */
 #endif
 	WORD	*dummyrenumlist;       /* () Used in execute.c and store.c */

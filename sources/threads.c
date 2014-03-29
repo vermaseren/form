@@ -1039,10 +1039,8 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 
 	AR.DefPosition = AR0.DefPosition;
 	AR.NoCompress = AR0.NoCompress;
-#ifdef WITHZLIB /* sam:Added */
+#if defined( WITHZLIB ) || defined( WITHBZLIB ) /* sam:Added */
 	AR.gzipCompress = AR0.gzipCompress;
-#elif defined WITHBZLIB
-        AR.bzipCompress = AR0.bzipCompress;
 #endif
 	AR.BracketOn = AR0.BracketOn;
 	AR.CurDum = AR0.CurDum;
@@ -2485,7 +2483,7 @@ int InParallelProcessor()
 int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
 {
 	ALLPRIVATES *B0 = AB[0], *B = B0;
-	int id, oldgzipCompress, oldbzipCompress, endofinput = 0, j, still, k, defcount = 0, bra = 0, first = 1;
+	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0, bra = 0, first = 1;
 	LONG dd = 0, ddd, thrbufsiz, thrbufsiz0, thrbufsiz2, numbucket = 0, numpasses;
 	LONG num, i;
 	WORD *oldworkpointer = AT0.WorkPointer, *tt, *ttco = 0, *t1 = 0, ter, *tstop = 0, *t2;
@@ -3066,28 +3064,21 @@ NextBucket:;
 	2: It would definitely not be very compatible with the second
 	   stage load balancing.
 */
-#ifdef WITHZLIB 
+#if defined( WITHZLIB ) || defined( WITHBZLIB ) /* sam:Added */
 	oldgzipCompress = AR0.gzipCompress;
 	AR0.gzipCompress = 0;
-#elif defined WITHBZLIB /* sam:Added */
-        oldbzipCompress = AR0.bzipCompress;
-	AR0.bzipCompress = 0;
 #endif
 	if ( AR0.outtohide ) AR0.outfile = AR0.hidefile;
 	if ( MasterMerge() < 0 ) {
 		if ( AR0.outtohide ) AR0.outfile = oldoutfile;
-#ifdef WITHZLIB             
+#if defined( WITHZLIB )  || defined ( WITHBZLIB ) /* sam:Added */           
 		AR0.gzipCompress = oldgzipCompress;
-#elif defined WITHBZLIB /* sam:Added */
-                AR0.bzipCompress = oldbzipCompress;
 #endif
 		goto ProcErr;
 	}
 	if ( AR0.outtohide ) AR0.outfile = oldoutfile;
-#ifdef WITHZLIB
+#if defined( WITHZLIB ) || defined( WITHBZLIB ) /* sam:Added */
 	AR0.gzipCompress = oldgzipCompress;
-#elif defined WITHBZLIB /* sam:Added */
-        AR0.bzipCompress = oldbzipCompress;
 #endif
 /*
 	Now wait for all threads to be ready to give them the cleaning up signal.

@@ -31,6 +31,8 @@
  */
 /* #] License : */ 
 
+#include <bzlib.h>
+
 #include "form3.h"
 
 #ifdef WITHZLIB
@@ -708,6 +710,11 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 #endif
 
 #ifdef WITHBZLIB
+/*
+ * #define BZIPDEBUG
+	Low level routines for dealing with bzlib during sorting and handling
+	the scratch files. Work started 5-dec-2013.
+*/
 /*  	#[ SetupOutputBZIP :
 
 
@@ -719,7 +726,7 @@ int SetupOutputBZIP(FILEHANDLE *f)
         int bzerror;
 	if ( AT.SS != AT.S0 ) return(0);
 	if ( AR.NoCompress == 1 ) return(0);
-	if ( AR.bzipCompress <= 0 ) return(0);
+	if ( AR.gzipCompress <= 0 ) return(0);
 
 	if ( f->bziobuffer == 0 ) {
 /*
@@ -761,11 +768,7 @@ int SetupOutputBZIP(FILEHANDLE *f)
 /*
 	6: Initiate the compression
 */
-        /* TODO sam:Change 0 and 30 to global variables */
-        /* TODO sam:Solve struct alignment problem when adding bzipCompress to AR.
-         * gzipCompress takes same values for compression level as blockSize100K */
-        /* jos:0 is ok*/
-	if ((bzerror = BZ2_bzCompressInit(f->bzsp,5,0,30)) != BZ_OK) {
+	if ((bzerror = BZ2_bzCompressInit(f->bzsp,AR.gzipCompress,0,BZIPDEFAULTWF)) != BZ_OK) {
             if(bzerror == BZ_CONFIG_ERROR)
             {
                 MLOCK(ErrorMessageLock);
@@ -815,12 +818,12 @@ int PutOutputBZIP(FILEHANDLE *f)
 	f->bzsp->total_in_lo32 = 0;
         f->bzsp->total_in_hi32 = 0;
 
-	while ( ( bzerror = BZ2_bzCompress(f->bzsp,BZ_RUN) ) == BZ_OK ) {
+	while ( ( bzerror = BZ2_bzCompress(f->bzsp,BZ_RUN) ) == BZ_RUN_OK ) {
 		if ( f->bzsp->avail_out == 0 ) {
 /*
 			bziobuffer is full. Write the output.
 */
-                    /* TODO sam:define BZIPDEBUG in the appropriate file */
+
 #ifdef BZIPDEBUG
 			{
 				char *s = (char *)((UBYTE *)(f->bziobuffer)+f->bziosize);
@@ -887,7 +890,7 @@ int PutOutputBZIP(FILEHANDLE *f)
 			break;
 		}
 	}
-	MLOCK(ErrorMessageLock);
+        MLOCK(ErrorMessageLock);
 	MesPrint("%wError in bzip handling of output. bzerror = %d",bzerror);
 	MUNLOCK(ErrorMessageLock);
 	return(-1);
@@ -906,7 +909,7 @@ int FlushOutputBZIP(FILEHANDLE *f)
 {
 	GETIDENTITY
 	int bzerror;
-        int total_out;
+        LONG total_out;
 /*
 	Set the proper parameters
 */
@@ -915,14 +918,14 @@ int FlushOutputBZIP(FILEHANDLE *f)
 	f->bzsp->total_in_lo32 = 0;
         f->bzsp->total_in_hi32 = 0;
 
-	while ( ( bzerror = BZ2_bzCompress(f->bzsp,BZ_FINISH) ) == BZ_OK ) {
+	while ( ( bzerror = BZ2_bzCompress(f->bzsp,BZ_FINISH) ) == BZ_FINISH_OK ) {
 		if ( f->bzsp->avail_out == 0 ) {
 /*
 			Write the output
 */
 #ifdef BZIPDEBUG
 			MLOCK(ErrorMessageLock);
-			MesPrint("%wWriting %l bytes at %10p",f->ziosize,&(f->POposition));
+			MesPrint("%wWriting %l bytes at %10p",f->bziosize,&(f->POposition));
 			MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
@@ -971,10 +974,10 @@ int FlushOutputBZIP(FILEHANDLE *f)
 /*
 		Write the output
 */
-            /* TODO sam:Why should we have the following statements */
+
 #ifdef BZIPDEBUG
 		MLOCK(ErrorMessageLock);
-		MesPrint("%wWriting %l bytes at %10p",(LONG)(f->zsp->avail_out),&(f->POposition));
+		MesPrint("%wWriting %l bytes at %10p",(LONG)(f->bzsp->avail_out),&(f->POposition));
 		MUNLOCK(ErrorMessageLock);
 #endif
 #ifdef ALLLOCK
@@ -984,9 +987,9 @@ int FlushOutputBZIP(FILEHANDLE *f)
 			LOCK(AS.inputslock);
 		}
 		SeekFile(f->handle,&(f->POposition),SEEK_SET);
-                /* TODO sam:Make sure the this works fine for both 64bit and 32bit platforms */
-		if ( WriteFile(f->handle,(UBYTE *)(f->bziobuffer),(f->bzsp->total_out_hi32+f->bzsp->total_out_lo32))
-						!= (LONG)(f->bzsp->total_out_hi32+f->bzsp->total_out_lo32) ) {
+
+		if ( WriteFile(f->handle,(UBYTE *)(f->bziobuffer),(((LONG)f->bzsp->total_out_hi32<<32)+f->bzsp->total_out_lo32))
+						!= (LONG)(((LONG)f->bzsp->total_out_hi32<<32)+f->bzsp->total_out_lo32) ) {
 			if ( f == AR.hidefile ) {
 				UNLOCK(AS.inputslock);
 			}
@@ -1004,7 +1007,8 @@ int FlushOutputBZIP(FILEHANDLE *f)
 #ifdef ALLLOCK
 		UNLOCK(f->pthreadslock);
 #endif
-                total_out = (f->bzsp->total_out_hi32+f->bzsp->total_out_lo32);
+      
+                total_out = (LONG)(((LONG)f->bzsp->total_out_hi32<<32)+f->bzsp->total_out_lo32);
 		ADDPOS(f->filesize,total_out);
 		ADDPOS(f->POposition,total_out);
 #ifdef WITHPTHREADS
@@ -1014,7 +1018,7 @@ int FlushOutputBZIP(FILEHANDLE *f)
 #endif
 #ifdef BZIPDEBUG
 		MLOCK(ErrorMessageLock);
-		{  char *s = f->ziobuffer+f->zsp->total_out;
+		{  char *s = f->bziobuffer+(LONG)(((LONG)f->bzsp->total_out_hi32<<32)+f->bzsp->total_out_lo32);
 			MesPrint("%w   Last bytes written: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 		}
 		MesPrint("%w     Perceived position in FlushOutputGZIP is %10p",&(f->POposition));
@@ -1059,7 +1063,7 @@ int SetupAllInputBZIP(SORTING *S)
 	bz_stream *bzsp;
 
 	for ( i = 0; i < S->inNum; i++ ) {
-		if ( S->fpincompressed[i] ) break;
+		if ( S->bzfpincompressed[i] ) break;
 	}
 	if ( i >= S->inNum ) return(0);
 
@@ -1071,11 +1075,11 @@ int SetupAllInputBZIP(SORTING *S)
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-                /* TODO sam:Do we need different iobuffers for bzip2? */
-                /* sam: Bytef is unsigned char*/
+
+
 		AN.bziobuffers = (UBYTE *)Malloc1(S->MaxFpatches*S->file.bziosize*sizeof(UBYTE),"input raw buffers");
 
-		AN.bziobufnum  = (UBYTE **)Malloc1(S->MaxFpatches*sizeof(UBYTE *),"input raw pointers");
+		AN.bziobufnum  = (SBYTE **)Malloc1(S->MaxFpatches*sizeof(UBYTE *),"input raw pointers");
 		if ( AN.bziobuffers == 0 || AN.bziobufnum == 0 ) {
 			MLOCK(ErrorMessageLock);
 			MesCall("SetupAllInputBZIP");
@@ -1089,10 +1093,10 @@ int SetupAllInputBZIP(SORTING *S)
 	for ( i = 0; i < S->inNum; i++ ) {
 #ifdef BZIPDEBUG
 		MLOCK(ErrorMessageLock);
-		MesPrint("%wPreparing z-stream %d with compression %d",i,S->fpincompressed[i]);
+		MesPrint("%wPreparing z-stream %d with compression %d",i,S->bzfpincompressed[i]);
 		MUNLOCK(ErrorMessageLock);
 #endif
-		if ( S->fpincompressed[i] ) {
+		if ( S->bzfpincompressed[i] ) {
 			bzsp = &(S->bzsparray[i]);
 /*
 			1: Set the default fields:
@@ -1117,7 +1121,7 @@ int SetupAllInputBZIP(SORTING *S)
 /*
 			4: Initiate the inflation
 */
-                        /* TODO sam:verbosity and small parameters is set to zero statically */
+                        /* Verbosity and small parameters is set to zero statically */
 			if ( (bzerror=BZ2_bzDecompressInit(bzsp,0,0)) != BZ_OK ) {
 				MLOCK(ErrorMessageLock);
 				if ( bzerror==BZ_MEM_ERROR ) MesPrint("%wError from DecompressInit: %s","insufficient memory is available");
@@ -1149,9 +1153,9 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 	SORTING *S = AT.SS;     /* sam:Get current sortfile */
 	bz_stream *bzsp;
 	POSITION pos;
-	if ( S->fpincompressed[numstream] ) {
+	if ( S->bzfpincompressed[numstream] ) {
 		bzsp = &(S->bzsparray[numstream]);
-		bzsp->next_out = (UBYTE *)buffer;
+		bzsp->next_out = (SBYTE *)buffer;
 		bzsp->avail_out = buffersize;
 		bzsp->total_out_lo32 = 0;
                 bzsp->total_out_hi32 = 0;
@@ -1160,7 +1164,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			First loading of the input.
  *                      sam:Equal to or less than that bziosize
 */
-                    /* TODO sam:Toread variable needs to be initialize to zero?*/
+                    
 			if ( ISGEPOSINC(S->fPatchesStop[numstream],*position,f->bziosize) ) {
 				toread = f->bziosize;  
 			}
@@ -1185,7 +1189,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 #endif
 #ifdef BZIPDEBUG
 				MLOCK(ErrorMessageLock);
-				{  char *s = AN.ziobufnum[numstream]+readsize;
+				{  char *s = AN.bziobufnum[numstream]+readsize;
 					MesPrint("%w read: %l +Last bytes read: %d %d %d %d %d in %s, newpos = %10p",readsize,s[-5],s[-4],s[-3],s[-2],s[-1],f->name,position);
 				}
 				MUNLOCK(ErrorMessageLock);
@@ -1195,7 +1199,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					bzsp->avail_in = f->bziosize;
 					bzsp->total_in_lo32 = 0;
                                         bzsp->total_in_hi32 = 0;
-					return(bzsp->total_out_lo32+bzsp->total_in_hi32);
+					return((LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_in_lo32));
 				}
 				if ( readsize < 0 ) {
 					MLOCK(ErrorMessageLock);
@@ -1219,7 +1223,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 /*
 				Finish
 */
-				return((LONG)(bzsp->total_out_lo32+bzsp->total_out_hi32));
+				return((LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32));
 			}
 			if ( bzsp->avail_in == 0 ) {
 				
@@ -1228,7 +1232,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					We finished this stream. Try to terminate.
 */
 					if ( ( bzerror = BZ2_bzDecompress(bzsp) ) == BZ_OK ) {
-						return((LONG)(bzsp->total_out_lo32+bzsp->total_out_hi32));
+						return((LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32));
 					}
 					else
 						break;
@@ -1237,10 +1241,10 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					MLOCK(ErrorMessageLock);
 					MesPrint("%wClosing stream %d",numstream);
 #endif
-					readsize = bzsp->total_out_lo32+bzsp->total_out_hi32;
+					readsize = (LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32);
 #ifdef BZIPDEBUG
 					if ( readsize > 0 ) {
-						WORD *s = (WORD *)(buffer+bzsp->total_out_lo32+bzsp->total_out_hi32);
+						WORD *s = (WORD *)((LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32));
 						MesPrint("%w   Last words: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 					}
 					else {
@@ -1285,7 +1289,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 #endif
 #ifdef BZIPDEBUG
 				MLOCK(ErrorMessageLock);
-				{  char *s = AN.ziobufnum[numstream]+readsize;
+				{  char *s = AN.bziobufnum[numstream]+readsize;
 					MesPrint("%w   Last bytes read: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 				}
 				MUNLOCK(ErrorMessageLock);
@@ -1295,7 +1299,7 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					bzsp->avail_in = f->bziosize;
 					bzsp->total_in_lo32 = 0;
                                         bzsp->total_in_hi32 = 0;
-					return(bzsp->total_out_lo32+bzsp->total_out_hi32);
+					return((LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32));
 				}
 				if ( readsize < 0 ) {
 					MLOCK(ErrorMessageLock);
@@ -1337,10 +1341,10 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			MLOCK(ErrorMessageLock);
 			MesPrint("%wClosing stream %d",numstream);
 #endif
-			readsize = bzsp->total_out_lo32+bzsp->total_out_hi32;
+			readsize = (LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32);
 #ifdef BZIPDEBUG
 			if ( readsize > 0 ) {
-				WORD *s = (WORD *)(buffer+zsp->total_out);
+				WORD *s = (WORD *)(buffer+(LONG)(((LONG)bzsp->total_out_hi32<<32)+bzsp->total_out_lo32));
 				MesPrint("%w  -Last words: %d %d %d %d %d",s[-5],s[-4],s[-3],s[-2],s[-1]);
 			}
 			else {
@@ -1348,11 +1352,12 @@ LONG FillInputBZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			}
 			MUNLOCK(ErrorMessageLock);
 #endif
-			if ( BZ2_bzDecompress(bzsp) == BZ_OK ) return(readsize);
+			//if ( BZ2_bzDecompress(bzsp) == BZ_STREAM_END ) return(readsize);
+                        if ( bzerror == BZ_STREAM_END ) return(readsize);
 		}
 
 		MLOCK(ErrorMessageLock);
-		MesPrint("%wFillInputGZIP: Error in bzip handling of input.");
+		MesPrint("%wFillInputBZIP: Error in bzip handling of input bzerror= %d .",bzerror);
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}

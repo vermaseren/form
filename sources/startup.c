@@ -1140,7 +1140,7 @@ WORD IniVars()
 	AM.gOutputSpaces = NORMALFORMAT;
 	AC.OutNumberType = RATIONALMODE;
 	AM.gOutNumberType = RATIONALMODE;
-#ifdef WITHZLIB
+#if defined( WITHZLIB ) || defined ( WITHBZLIB ) /* sam:Added */
 	AR.gzipCompress = 0;
 #endif
         /* TODO sam:Add AR.gzipCompress for WTIHBZLIB*/

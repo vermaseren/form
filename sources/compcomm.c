@@ -220,8 +220,9 @@ int CoCompress(UBYTE *s)
 		AC.NoCompress = 0;
 #ifdef WITHZLIB
                 AR.gzipCompress = 0;
-#elif defined WITHBZLIB
-                AR.bzipCompress = 0;
+#endif
+#ifdef WITHBZLIB
+                AR.gzipCompress = 0;
 #endif
 		
                 
@@ -230,14 +231,16 @@ int CoCompress(UBYTE *s)
 		AC.NoCompress = 1;
 #ifdef WITHZLIB
 		AR.gzipCompress = 0;
-#elif defined WITHBZLIB
-                AR.bzipCompress = 0;
+#endif
+#ifdef WITHBZLIB
+                AR.gzipCompress = 0;
 #endif
 	}
 	else {
 		t = s; while ( FG.cTable[*t] <= 1 ) t++;
 		c = *t; *t = 0;
 		if ( StrICmp(s,(UBYTE *)"gzip") == 0 ) {
+                    AR.CompressLib=1;
 #ifndef WITHZLIB
 			Warning("gzip compression not supported on this platform");
 #endif
@@ -262,15 +265,15 @@ int CoCompress(UBYTE *s)
 			return(1);
 
 		}
-                else if ( StrICmp(s,(UBYTE *)"bzip") == 0 ) {
-                    /* TODO Jos:add workfactor to the command and read*/
+                else if ( StrICmp(s,(UBYTE *)"bzip2") == 0 ) {
+                    AR.CompressLib=2;
 #ifndef WITHBZLIB
 			Warning("bzip compression not supported on this platform");
 #endif
 			s = t; *s = c;
 			if ( *s == 0 ) {
 #ifdef WITHBZLIB
-				AR.bzipCompress = BZIPDEFAULT;  /* Normally should be 4 */
+				AR.gzipCompress = BZIPDEFAULT;  /* Normally should be 9 */
 #endif
 				return(0);
 			}
@@ -278,7 +281,7 @@ int CoCompress(UBYTE *s)
 			t = s;
 			if ( FG.cTable[*s] == 1 ) {
 #ifdef WITHBZLIB
-				AR.bzipCompress = *s - '0';
+				AR.gzipCompress = *s - '0';
 #endif
 				s++;
 				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
@@ -358,11 +361,7 @@ int CoOff(UBYTE *s)
 			*s = c; return(-1);
 		}
 		else if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
-#ifdef WITHZLIB
 			AR.gzipCompress = 0;
-#elif defined WITHBZLIB
-                        AR.bzipCompress = 0;
-#endif
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
 			AC.CheckpointInterval = 0;
@@ -411,7 +410,6 @@ int CoOn(UBYTE *s)
 			*s = c; return(-1);
 		}
 		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
-#ifdef WITHZLIB
 			AR.gzipCompress = 0;
 
 
@@ -421,12 +419,8 @@ int CoOn(UBYTE *s)
 			  t = s;
 			  while ( FG.cTable[*s] <= 1 ) s++;
 			  c = *s; *s = 0;
-			  if ( StrICmp(t,(UBYTE *)"gzip") == 0 ) {}
-                          else if ( StrICmp(t,(UBYTE *)"bzip") == 0 ) {} /* sam:Added*/
-			  else {
-				MesPrint("&Unrecognized option in ON compress statement: %s",t);
-				return(-1);
-			  }
+			  if ( StrICmp(t,(UBYTE *)"gzip") == 0 ) {
+                              AR.CompressLib=1;
 			  *s = c;
 			  while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 #ifndef WITHZLIB
@@ -447,33 +441,17 @@ int CoOn(UBYTE *s)
 				MesPrint("&Unrecognized option in ON compress gzip statement: %s, single digit expected",t);
 				return(-1);
 			  }
-			}
-#endif
-/* sam:Added */
-#ifdef WITHBZLIB        
-                        AR.bzipCompress = 0;
-
-			*s = c;
-			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-			if ( *s ) {
-			  t = s;
-			  while ( FG.cTable[*s] <= 1 ) s++;
-			  c = *s; *s = 0;
-			  if ( StrICmp(t,(UBYTE *)"bzip") == 0 ) {}
-			  else {
-				MesPrint("&Unrecognized option in ON compress statement: %s",t);
-				return(-1);
-			  }
-			  *s = c;
+                        }
+                          else if(StrICmp(t,(UBYTE *)"bzip2") == 0 )
+                          {
+                              AR.CompressLib=2;
+                          *s = c;
 			  while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-/*
- * TODO sam:Where should it be?
-#ifndef WITHZLIB
+#ifndef WITHBZLIB
 			  Warning("bzip compression not supported on this platform");
 #endif
-*/
 			  if ( FG.cTable[*s] == 1 ) {
-				AR.bzipCompress = *s++ - '0';
+				AR.gzipCompress = *s++ - '0';
 				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 				if ( *s ) {
 					MesPrint("&Unrecognized option in ON compress bzip statement: %s",t);
@@ -481,14 +459,18 @@ int CoOn(UBYTE *s)
 				}
 			  }
 			  else if ( *s == 0 ) {
-				AR.bzipCompress = BZIPDEFAULT;
+				AR.gzipCompress = BZIPDEFAULT;
 			  }
 			  else {
 				MesPrint("&Unrecognized option in ON compress bzip statement: %s, single digit expected",t);
 				return(-1);
 			  }
+                          }
+                          			  else {
+				MesPrint("&Unrecognized option in ON compress statement: %s",t);
+				return(-1);
+			  }
 			}
-#endif
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
 			AC.CheckpointInterval = 0;

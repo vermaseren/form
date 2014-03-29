@@ -373,6 +373,7 @@ int RecalcSetups()
 
 int AllocSetups()
 {
+        GETIDENTITY; /* sam:Added */
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
 	int MaxPatches, MaxFpatches, error = 0;
@@ -537,29 +538,40 @@ int AllocSetups()
 	if ( IOsize < AM.MaxTer ) { IOsize = AM.MaxTer; sp->value = IOsize; }
 #ifndef WITHPTHREADS
 #ifdef WITHZLIB
+        
 	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize; }
-#elif defined WITHBZLIB
+        
+#endif
+#if defined WITHBZLIB
+        
         for ( j = 0; j < 2; j++ ) { AR.Fscr[j].bziosize = IOsize; }
+        
 #endif
 #endif
 	AM.S0 = 0;
 	AM.S0 = AllocSort(LargeSize,SmallSize,SmallEsize,TermsInSmall
 					,MaxPatches,MaxFpatches,IOsize);
 #ifdef WITHZLIB
+        
 	AM.S0->file.ziosize = IOsize;
 #ifndef WITHPTHREADS
 	AR.FoStage4[0].ziosize = IOsize;
 	AR.FoStage4[1].ziosize = IOsize;
 	AT.S0 = AM.S0;
 #endif
-#elif defined WITHBZLIB
+        
+#endif
+#if defined WITHBZLIB
+        
        	AM.S0->file.bziosize = IOsize;
 #ifndef WITHPTHREADS
 	AR.FoStage4[0].bziosize = IOsize;
 	AR.FoStage4[1].bziosize = IOsize;
 	AT.S0 = AM.S0;
 #endif 
-#else
+        
+#endif
+#if !defined( WITHZLIB ) && !defined( WITHBZLIB )
 #ifndef WITHPTHREADS
 	AT.S0 = AM.S0;
 #endif
@@ -809,6 +821,7 @@ VOID WriteSetup()
 SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsInSmall,
                    int MaxPatches, int MaxFpatches, LONG IOsize)
 {
+    
 	LONG allocation,longer,terms2insmall,sortsize,longerp;
 	LONG IObuffersize = IOsize;
 	LONG IOtry;
@@ -890,16 +903,22 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	sort->tree = (WORD *)(sort->inPatches + longer);
 	sort->used = sort->tree+longerp;
 #ifdef WITHZLIB
+       
 	sort->fpcompressed = sort->used+longerp;
 	sort->fpincompressed = sort->fpcompressed+longerp;
-	sort->ktoi = sort->fpincompressed+longerp;
+	sort->ktoi = sort->fpincompressed+longerp; /* TODO sam:This variable is share between two libraries */
 	sort->zsparray = 0;
-#elif defined WITHBZLIB
-        sort->fpcompressed = sort->used+longerp;
-	sort->fpincompressed = sort->fpcompressed+longerp;
-	sort->ktoi = sort->fpincompressed+longerp;
+        
+#endif
+#if defined WITHBZLIB
+        
+        sort->bzfpcompressed = sort->used+longerp;
+	sort->bzfpincompressed = sort->bzfpcompressed+longerp;
+	sort->ktoi = sort->bzfpincompressed+longerp;
 	sort->bzsparray = 0;
-#else
+        
+#endif
+#if !defined( WITHBZLIB ) && !defined(WITHZLIB)
 	sort->ktoi = sort->used + longerp;
 #endif
 	sort->lBuffer = (WORD *)(sort->ktoi + longerp + 2);
@@ -920,11 +939,16 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	sort->file.pthreadslock = dummylock;
 #endif
 #ifdef WITHZLIB
+        
 /*	sort->file.ziosize = IOsize; */
 	sort->file.ziosize = IObuffersize*sizeof(WORD);
-#elif defined WITHBZLIB
+      
+#endif
+#if defined( WITHBZLIB )
+        
         /*	sort->file.bziosize = IOsize; */
 	sort->file.bziosize = IObuffersize*sizeof(WORD);
+        
 #endif
 	if ( AM.S0 != 0 ) {
 		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
