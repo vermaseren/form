@@ -243,7 +243,15 @@ int DoTail(int argc, UBYTE **argv)
 				case 'S': /* Next arg is setup file */
 							TAKEPATH(AM.SetupFile) break;
 				case 't': /* Next arg is directory for temp files */
-							TAKEPATH(AM.TempDir)   break;
+							if ( s[1] == 's' ) {
+								s++;
+								AM.havesortdir = 1;
+								TAKEPATH(AM.TempSortDir)
+							}
+							else {
+								TAKEPATH(AM.TempDir)
+							}
+							break;
 				case 'T': /* Print the total size used at end of job */
 							AM.PrintTotalSize = 1; break;
 				case 'v':
@@ -462,7 +470,7 @@ VOID ReserveTempFiles(int par)
 {
 	GETIDENTITY
 	SETUPPARAMETERS *sp;
-	UBYTE *s, *t, c;	
+	UBYTE *s, *t, *tenddir, *tenddir2, c;	
 	int i = 0;
 	WORD j;
 	if ( par == 0 || par == 1 ) {
@@ -473,6 +481,16 @@ VOID ReserveTempFiles(int par)
 			if ( AM.TempDir == 0 ) AM.TempDir = emptystring;
 		}
 		else AM.TempDir = (UBYTE *)(sp->value);
+	}
+	if ( AM.TempSortDir == 0 ) {
+		if ( AM.havesortdir ) {
+			sp = GetSetupPar((UBYTE *)"tempsortdir");
+			AM.TempSortDir = (UBYTE *)(sp->value);
+		}
+		else {
+			AM.TempSortDir = (UBYTE *)getenv("FORMTMPSORT");
+			if ( AM.TempSortDir == 0 ) AM.TempSortDir = AM.TempDir;
+		}
 	}
 /*
 	We have now in principle a path but we will use its first element only.
@@ -487,6 +505,21 @@ VOID ReserveTempFiles(int par)
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
+	*t = 0;
+	tenddir = t;
+
+	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
+	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
+
+	FG.fname2 = (char *)Malloc1(sizeof(UBYTE)*(i+10),"name for sort files");
+	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
+	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
+	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
+		*t++ = SEPARATOR;
+	*t = 0;
+	tenddir2 = t;
+
+	t = tenddir;
 	s = defaulttempfilename;
 #ifdef WITHMPI
 	{ 
@@ -526,7 +559,7 @@ VOID ReserveTempFiles(int par)
 		There are problems when running many FORM jobs at the same time
 		from make or minos. If they start up simultaneously, occasionally
 		they can make the same .str file. We prevent this with first trying
-		a file that contains the last three digits of the pid. If this file
+		a file that contains the digits of the pid. If this file
 		has already been taken we fall back on the old scheme.
 		The whole is controled with the -M (MultiRun) parameter in the
 		command tail.
@@ -589,11 +622,18 @@ classic:;
 	  }
 	}
 /*
+	Now we should make sure that the tempsortdir cq tempsortfilename makes it
+	into a similar construction.
+*/
+	s = tenddir; t = tenddir2; while ( *s ) *t++ = *s++;
+	*t = 0;
+
+/*
 	Now we should asign a name to the main sort file and the two stage 4 files.
 */
 	AM.S0->file.name = (char *)Malloc1(sizeof(char)*i,"name for temporary files");
 	s = (UBYTE *)AM.S0->file.name;
-	t = (UBYTE *)FG.fname;
+	t = (UBYTE *)FG.fname2;
 	i = 1;
 	while ( *t ) { *s++ = *t++; i++; }
 	s[-2] = 'o'; *s = 0;
@@ -604,13 +644,17 @@ classic:;
 	are threads of course.
 */
 	if ( par == 0 ) {
+		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
+		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file a");
-		AR.FoStage4[0].name = (char *)s;
-		t = (UBYTE *)FG.fname;
+		AR.FoStage4[1].name = (char *)s;
+		t = (UBYTE *)FG.fname2;
 		while ( *t ) *s++ = *t++;
 		s[-2] = '4'; s[-1] = 'a'; *s = 0;
+		s = (UBYTE *)((void *)(FG.fname)); i = 0;
+		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file b");
-		AR.FoStage4[1].name = (char *)s;
+		AR.FoStage4[0].name = (char *)s;
 		t = (UBYTE *)FG.fname;
 		while ( *t ) *s++ = *t++;
 		s[-2] = '4'; s[-1] = 'b'; *s = 0;
@@ -624,16 +668,18 @@ classic:;
 	}
 #ifdef WITHPTHREADS
 	else if ( par == 2 ) {
-		s = (UBYTE *)((void *)(FG.fname)); i = 0;
+		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file a");
-		sprintf((char *)s,"%s.%d",FG.fname,AT.identity);
+		sprintf((char *)s,"%s.%d",FG.fname2,AT.identity);
 		s[i-2] = '4'; s[i-1] = 'a';
-		AR.FoStage4[0].name = (char *)s;
+		AR.FoStage4[1].name = (char *)s;
+		s = (UBYTE *)((void *)(FG.fname)); i = 0;
+		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file b");
 		sprintf((char *)s,"%s.%d",FG.fname,AT.identity);
 		s[i-2] = '4'; s[i-1] = 'b';
-		AR.FoStage4[1].name = (char *)s;
+		AR.FoStage4[0].name = (char *)s;
 		if ( AT.identity == 0 ) {
 			for ( j = 0; j < 3; j++ ) {
 				s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
@@ -714,6 +760,7 @@ VOID StartVariables()
 	AC.tablefilling = 0;
 	AM.resetTimeOnClear = 1;
 	AM.gnumextrasym = AM.ggnumextrasym = 0;
+	AM.havesortdir = 0;
 /*
 	Information for the lists of variables. Part of error message and size:
 */

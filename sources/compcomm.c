@@ -379,6 +379,7 @@ int CoOff(UBYTE *s)
 		*s = c;
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
 		AR.SortType = AC.SortType;
+		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
 }
 
@@ -632,6 +633,7 @@ int CoOn(UBYTE *s)
 		else { *s = c; }
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
 		AR.SortType = AC.SortType;
+		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
 }
 
@@ -6155,7 +6157,7 @@ correctuse:
 				AO.Optimize.hornerdirection = O_FORWARDANDBACKWARD;
 			}
 			else {
-				AO.Optimize.method = -1;
+				AO.Optimize.hornerdirection = -1;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}

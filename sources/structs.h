@@ -1417,11 +1417,12 @@ struct M_const {
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
     WORD    zerorhs;
+    WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,55,75,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(15,24,55,76,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,55,75,0);
+	PADPOSITION(15,22,55,76,0);
 #endif
 };
 /*
@@ -2343,6 +2344,7 @@ typedef struct FixedGlobals {
 	char	*FunNam[2];
 	char	*swmes[3];
 	char	*fname;
+	char	*fname2;
 	UBYTE	*s_one;
 	UINT	cTable[256];
 } FIXEDGLOBALS;
