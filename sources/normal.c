@@ -118,6 +118,8 @@ WORD Commute(WORD *fleft, WORD *fright)
 			return(1);
 		return(0);
 	}
+	if ( fun1 >= WILDOFFSET ) fun1 -= WILDOFFSET;
+	if ( fun2 >= WILDOFFSET ) fun2 -= WILDOFFSET;
 	if ( ( ( functions[fun1-FUNCTION].flags & COULDCOMMUTE ) == 0 )
 	  || ( ( functions[fun2-FUNCTION].flags & COULDCOMMUTE ) == 0 ) ) return(0);
 /*
