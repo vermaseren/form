@@ -3848,6 +3848,7 @@ UBYTE *PreRandom(UBYTE *s)
 		UWORD x;
 		double xx;
 #ifdef WITHMPI
+		x = 0;
 		if ( PF.me == MASTER ) {
 			x = wranf(BHEAD0);
 		}
