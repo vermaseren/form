@@ -1,7 +1,6 @@
 # this file is to be included (required) in the actual tests
 
 require 'open3'     # for popen3() to run FORM
-require 'rbconfig'  # for Config::CONFIG to determine OS
 require 'test/unit' # for the unit test classes
 if RUBY_VERSION =~ /1\.8\..+/ # only for version 1.8.x
 	require 'test/unit/ui/console/testrunner'
@@ -32,14 +31,6 @@ def cleanup_tempfiles
 	File.delete(TESTPRG_NAME) if File.exist?(TESTPRG_NAME)
 	File.delete(LOGFILE_NAME) if File.exist?(LOGFILE_NAME)
 	cleanup_pidfiles
-end
-
-# determine OS we are running on
-osname = Config::CONFIG["target_os"]
-if osname =~ /linux/
-	LINUX = true
-elsif osname =~ /mswin32/
-	WINDOWS = true
 end
 
 class FormTest < Test::Unit::TestCase
