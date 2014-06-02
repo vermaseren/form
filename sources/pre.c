@@ -293,7 +293,7 @@ higherlevel:
 					raiselow = PRERAISEAFTER;
 				else if ( *s == '(' && namebuf[i-2] == ')' ) {
 /*
-					Now count the arguments and separate then by zeroes
+					Now count the arguments and separate them by zeroes
 					Check on the ?var construction and if present, reset
 					some comma's.
 					Make the assignments of the variables
@@ -308,6 +308,18 @@ higherlevel:
 						ranvalue = PreRandom(s);
 						PutPreVar(namebuf,ranvalue,(UBYTE *)"?a",1);
 						M_free(ranvalue,"PreRandom");
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"tolower_") == 0 ) {
+						UBYTE *ss = s;
+						while ( *ss ) { *ss = (UBYTE)(tolower(*ss)); ss++; }
+						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"toupper_") == 0 ) {
+						UBYTE *ss = s;
+						while ( *ss ) { *ss = (UBYTE)(toupper(*ss)); ss++; }
+						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
 						goto dostream;
 					}
 					while ( *s ) {
@@ -4635,6 +4647,26 @@ illend:
 				*val2 = x;
 				return(s);
 			}
+			else if ( StrICmp(s,(UBYTE *)"isdefined") == 0 ) {
+				UBYTE *tt;
+				*t++ = c;
+				while ( *t == ' ' || *t == '\t' || *t == '\n' || *t == '\r' ) t++;
+				tt = SkipAName(t);
+				c = *tt; *tt = 0;
+				if ( GetPreVar(t,WITHOUTERROR) != 0 ) x = 1;
+				else x = 0;
+				*tt = c;
+				while ( *tt == ' ' || *tt == '\t'
+						 || *tt == '\n' || *tt == '\r' ) tt++;
+				if ( *tt != ')' ) {
+					MesPrint("@Improper use of isdefined(var)");
+					Terminate(-1);
+				}
+				*type = 3;
+				s = tt+1;
+				*val2 = x;
+				return(s);
+			}
 			else *t = c;
 		}
 		else if ( *t == '=' || *t == '<' || *t == '>' || *t == '!'
@@ -5890,7 +5922,7 @@ dooptim:
 			}
 			else if ( *fstring == 'e' || *fstring == 'E' ) {
 				if ( *fstring == 'E' ) nosemi = 1;
-				else nosemi = 1;
+				else nosemi = 0;
 				fstring++;
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
 				if ( chartype[*s] != 0 && *s != '[' ) {

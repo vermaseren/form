@@ -422,6 +422,7 @@ extern WORD   ApplyReset(WORD);
 extern WORD   TableReset(VOID);
 extern VOID   ReWorkT(WORD *,WORD *,WORD);
 extern WORD   GetIfDollarNum(WORD *, WORD *);
+extern int    FindVar(WORD *,WORD *);
 extern WORD   DoIfStatement(PHEAD WORD *,WORD *);
 extern WORD   DoOnePow(PHEAD WORD *,WORD,WORD,WORD *,WORD *,WORD,WORD *);
 extern void   DoRevert(WORD *,WORD *);

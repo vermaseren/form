@@ -214,6 +214,13 @@ int DoExpr(UBYTE *inp, int type, int par)
 				}
 				AC.ProtoType[1] = w - AC.ProtoType;
 			}
+			else if ( c != '=' ) {
+/*
+				The dummy accepted L F := RHS;
+*/
+				MesPrint("&Illegal LHS for expression definition");
+				error = 1;
+			}
 			*w++ = 1;
 			*w++ = 1;
 			*w++ = 3;

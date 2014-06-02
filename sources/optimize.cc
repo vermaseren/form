@@ -1,6 +1,6 @@
 /** @file optimize.cc
  *
- *  experimental routines for the optimization of FORTRAN or C output.
+ *	experimental routines for the optimization of FORTRAN or C output.
  */
 
 /* #[ License : */
@@ -29,8 +29,8 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-	#] License :
-	#[ includes :
+  	#] License : 
+  	#[ includes :
 */
 
 //#define DEBUG
@@ -100,8 +100,8 @@ pthread_mutex_t optimize_lock;
 #endif
 
 /*
-	#] includes :
-	#[ print_instr :
+  	#] includes : 
+  	#[ print_instr :
 */
 
 void print_instr (const vector<WORD> &instr, WORD num)
@@ -114,16 +114,16 @@ void print_instr (const vector<WORD> &instr, WORD num)
 }
 
 /*
-	#] print_instr :
-	#[ my_random_shuffle :
+  	#] print_instr : 
+  	#[ my_random_shuffle :
 */
 
 /**  Random shuffle
  *
- *   Description
- *   ===========
- *   Randomly permutes elements in the range [fr,to). Functionality is
- *   the same as C++'s "random_shuffle", but it uses Form's "wranf".
+ *	 Description
+ *	 ===========
+ *	 Randomly permutes elements in the range [fr,to). Functionality is
+ *	 the same as C++'s "random_shuffle", but it uses Form's "wranf".
  */
 template <class RandomAccessIterator>
 void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) {
@@ -132,23 +132,23 @@ void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) 
 }
 
 /*
-	#] my_random_shuffle :
-	#[ get_expression :
+  	#] my_random_shuffle : 
+  	#[ get_expression :
 */
 
 static WORD comlist[3] = {TYPETOPOLYNOMIAL,3,DOALL};
 
 /**  Get expression
  *
- *   Description
- *   ===========
- *   Reads an expression from the input file into a buffer (called
- *   optimize_expr). This buffer is used during the optimization
- *   process. Non-symbols are removed by ConvertToPoly and are put in
- *   temporary symbols.
+ *	 Description
+ *	 ===========
+ *	 Reads an expression from the input file into a buffer (called
+ *	 optimize_expr). This buffer is used during the optimization
+ *	 process. Non-symbols are removed by ConvertToPoly and are put in
+ *	 temporary symbols.
  *
- *   The return value is the length of the expression in WORDs, or a
- *   negative number if it failed.
+ *	 The return value is the length of the expression in WORDs, or a
+ *	 negative number if it failed.
  */
 LONG get_expression (int exprnr) {
 
@@ -187,8 +187,8 @@ LONG get_expression (int exprnr) {
 }
 
 /*
-	#] get_expression :
-	#[ PF_get_expression :
+  	#] get_expression : 
+  	#[ PF_get_expression :
 */
 #ifdef WITHMPI
 
@@ -209,22 +209,22 @@ LONG PF_get_expression (int exprnr) {
 
 #endif
 /*
-	#] PF_get_expression :
-	#[ get_brackets :
+  	#] PF_get_expression : 
+  	#[ get_brackets :
 */
 
 /**  Get brackets
  *
- *   Description
- *   ===========
- *   Checks whether the input expression (stored in optimize_expr)
- *   contains brackets. If so, this method replaces terms outside
- *   brackets by powers of SEPERATESYMBOL (equal brackets have equal
- *   powers) and the brackets are returned. If not, the result is
- *   empty.
+ *	 Description
+ *	 ===========
+ *	 Checks whether the input expression (stored in optimize_expr)
+ *	 contains brackets. If so, this method replaces terms outside
+ *	 brackets by powers of SEPERATESYMBOL (equal brackets have equal
+ *	 powers) and the brackets are returned. If not, the result is
+ *	 empty.
  *
- *   Brackets are used for simultaneous optimization. The symbol
- *   SEPARATESYMBOL is always the first one used in a Horner scheme.
+ *	 Brackets are used for simultaneous optimization. The symbol
+ *	 SEPARATESYMBOL is always the first one used in a Horner scheme.
  */
 
 vector<vector<WORD> > get_brackets () {
@@ -242,7 +242,7 @@ vector<vector<WORD> > get_brackets () {
   vector<vector<WORD> > brackets;
 
   if (has_brackets) {
-		int exprlen=8;  // we need potential space for an empty bracket
+		int exprlen=8;	// we need potential space for an empty bracket
 		for (WORD *t=optimize_expr; *t!=0; t+=*t)
 			exprlen += *t;
 	WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
@@ -337,15 +337,15 @@ vector<vector<WORD> > get_brackets () {
 }
 
 /*
-	#] get_brackets :
-	#[ count_operators :
+  	#] get_brackets : 
+  	#[ count_operators :
 */
 
 /**  Count operators
  *
- *   Description
- *   ===========
- *   Counts the number of operators in a Form-style expression.
+ *	 Description
+ *	 ===========
+ *	 Counts the number of operators in a Form-style expression.
  */
 int count_operators (const WORD *expr, bool print=false) {
 
@@ -356,7 +356,7 @@ int count_operators (const WORD *expr, bool print=false) {
 	WORD maxpowfac=1, maxpowsep=1;
 
 	for (const WORD *t=expr; *t!=0; t+=*t) {
-		if (t!=expr) cntadd++;              // new term
+		if (t!=expr) cntadd++;				// new term
 		if (*t==ABS(*(t+*t-1))+1) continue; // only coefficient
 
 		int cntsym=0;
@@ -371,7 +371,7 @@ int count_operators (const WORD *expr, bool print=false) {
 					maxpowsep = max(maxpowsep, t[i+1]);
 					continue;
 				}
-				if (t[i+1]>2) {          // (extra)symbol power>2
+				if (t[i+1]>2) { 		 // (extra)symbol power>2
 					cntpow++;
 					sumpow += (int)floor(log(t[i+1])/log(2.0)) + __builtin_popcount(t[i+1]) - 1;
 				}
@@ -390,16 +390,16 @@ int count_operators (const WORD *expr, bool print=false) {
 	cntadd -= maxpowsep-1;
 
 	if (print)
-		MesPrint ("*** STATS: original  %lP %lM %lA : %l", cntpow,cntmul,cntadd,sumpow+cntmul+cntadd);
+		MesPrint ("*** STATS: original	%lP %lM %lA : %l", cntpow,cntmul,cntadd,sumpow+cntmul+cntadd);
 
 	return sumpow+cntmul+cntadd;
 }
 
 /**  Count operators
  *
- *   Description
- *   ===========
- *   Counts the number of operators in a vector of instructions
+ *	 Description
+ *	 ===========
+ *	 Counts the number of operators in a vector of instructions
  */
 int count_operators (const vector<WORD> &instr, bool print=false) {
 
@@ -411,13 +411,13 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 	for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 		for (const WORD *t=e+3; *t!=0; t+=*t) {
 			if (t!=e+3) {
-				if (*(e+1)==OPER_ADD) cntadd++;     // new term
-				if (*(e+1)==OPER_MUL) cntmul++;     // new term
+				if (*(e+1)==OPER_ADD) cntadd++; 	// new term
+				if (*(e+1)==OPER_MUL) cntmul++; 	// new term
 			}
 			if (*t == ABS(*(t+*t-1))+1) continue;	// only coefficient
 			if (*(t+1)==SYMBOL || *(t+1)==EXTRASYMBOL) {
-				if (*(t+4)==2) cntmul++;            // (extra)symbol squared
-				if (*(t+4)>2) {                     // (extra)symbol power>2
+				if (*(t+4)==2) cntmul++;			// (extra)symbol squared
+				if (*(t+4)>2) { 					// (extra)symbol power>2
 					cntpow++;
 					sumpow += (int)floor(log(*(t+4))/log(2.0)) + __builtin_popcount(*(t+4)) - 1;
 				}
@@ -433,16 +433,16 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 }
 
 /*
-	#] count_operators :
-	#[ occurrence_order :
+  	#] count_operators : 
+  	#[ occurrence_order :
 */
 
 /**  Occurrence order
  *
- *   Description
- *   ===========
- *   Extracts all variables from an expression and sorts them with
- *   most occurring first (or last, with rev=true)
+ *	 Description
+ *	 ===========
+ *	 Extracts all variables from an expression and sorts them with
+ *	 most occurring first (or last, with rev=true)
  */
 vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 
@@ -484,58 +484,58 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 }
 
 /*
-	#] occurrence_order :
-	#[ Horner_tree :
+  	#] occurrence_order : 
+  	#[ Horner_tree :
 */
 
 /**  Horner tree building
  *
- *   Description
- *   ===========
- *   Given a Form-style expression (in a buffer in memory), this
- *   builds an expression tree. The tree is determined by a
- *   multivariate Horner scheme, i.e., something of the form:
+ *	 Description
+ *	 ===========
+ *	 Given a Form-style expression (in a buffer in memory), this
+ *	 builds an expression tree. The tree is determined by a
+ *	 multivariate Horner scheme, i.e., something of the form:
  *
- *      1+y+x*(2+y*(1+y)+x*(3-y*(...)))
+ *		1+y+x*(2+y*(1+y)+x*(3-y*(...)))
  *
- *   The order of the variables is given to the method "Horner_tree",
- *   which renumbers ad reorders the terms of the expression. Next,
- *   the recursive method "build_Horner_tree" does the actual tree
- *   construction.
+ *	 The order of the variables is given to the method "Horner_tree",
+ *	 which renumbers ad reorders the terms of the expression. Next,
+ *	 the recursive method "build_Horner_tree" does the actual tree
+ *	 construction.
  *
- *   The tree is represented in postfix notation. Tokens are of the
- *   following forms:
+ *	 The tree is represented in postfix notation. Tokens are of the
+ *	 following forms:
  *
- *   - SNUMBER tokenlength num den coefflength
- *   - SYMBOL tokenlength variable power
- *   - OPER_ADD or OPER_MUL
+ *	 - SNUMBER tokenlength num den coefflength
+ *	 - SYMBOL tokenlength variable power
+ *	 - OPER_ADD or OPER_MUL
  *
- *   Note
- *   ====
- *   Sets AN.poly_num_vars and allocates AN.poly_vars. The latter
- *   should be freed later.
+ *	 Note
+ *	 ====
+ *	 Sets AN.poly_num_vars and allocates AN.poly_vars. The latter
+ *	 should be freed later.
  */
 
 /**  Get power of variable (helper function for build_Horner_tree)
  *
- *   Description
- *   ===========
- *   Returns the power of the variable "var", which is at position
- *   "pos" in this term, if it is present.
+ *	 Description
+ *	 ===========
+ *	 Returns the power of the variable "var", which is at position
+ *	 "pos" in this term, if it is present.
  */
 WORD getpower (const WORD *term, int var, int pos) {
 	if (*term == ABS(*(term+*term-1))+1) return 0; // constant term
-	if (2*pos+2 >= term[2]) return 0;              // too few symbols
-	if (term[2*pos+3] != var) return 0;            // incorrect symbol
-	return term[2*pos+4];                          // return power
+	if (2*pos+2 >= term[2]) return 0;			   // too few symbols
+	if (term[2*pos+3] != var) return 0; 		   // incorrect symbol
+	return term[2*pos+4];						   // return power
 }
 
 /**  Call GcdLong/DivLong with leading zeroes
  *
- *   Description
- *   ===========
- *   These method remove leading zeroes, so that GcdLong and DivLong
- *   can safely be called.
+ *	 Description
+ *	 ===========
+ *	 These method remove leading zeroes, so that GcdLong and DivLong
+ *	 can safely be called.
  */
 void fixarg (UWORD *t, WORD &n) {
 	int an=ABS(n), sn=SGN(n);
@@ -557,23 +557,23 @@ void DivLong_fix_args(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,	WORD *nc, 
 
 /**  Build the Horner tree
  *
- *   Description
- *   ===========
- *   Constructs the Horner tree. The method processes one variable and
- *   continues recursively until the Horner scheme is completed.
+ *	 Description
+ *	 ===========
+ *	 Constructs the Horner tree. The method processes one variable and
+ *	 continues recursively until the Horner scheme is completed.
  *
- *   "terms" is a pointer to the starts of the terms. "numterms" is
- *   the number of terms to be processed. "var" is the next variable
- *   to be processed (index between 0 and #maxvar) and "maxvar" is the
- *   last variable to be processed, so that partial Horner trees can
- *   also be constructed. "pos" is the position that the power of
- *   "var" should be in (one level further in the recursion, "pos" has
- *   increased by 0 or 1 depending on whether the previous power was 0
- *   or not). The result is written at the pointer "res".
+ *	 "terms" is a pointer to the starts of the terms. "numterms" is
+ *	 the number of terms to be processed. "var" is the next variable
+ *	 to be processed (index between 0 and #maxvar) and "maxvar" is the
+ *	 last variable to be processed, so that partial Horner trees can
+ *	 also be constructed. "pos" is the position that the power of
+ *	 "var" should be in (one level further in the recursion, "pos" has
+ *	 increased by 0 or 1 depending on whether the previous power was 0
+ *	 or not). The result is written at the pointer "res".
  *
- *   This method also factors out gcds of the coefficients. The result
- *   should end with "gcd OPER_MUL" at all times, so that one level
- *   higher gcds can be extracted again.
+ *	 This method also factors out gcds of the coefficients. The result
+ *	 should end with "gcd OPER_MUL" at all times, so that one level
+ *	 higher gcds can be extracted again.
  */
 void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, int pos, vector<WORD> *res) {
 
@@ -738,10 +738,10 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 						res->pop_back();
 
 					// add product
-					res->back() = 2*ABS(ntmp)+3;                   // adjust size of term
+					res->back() = 2*ABS(ntmp)+3;				   // adjust size of term
 					res->insert(res->end(), tmp, tmp+2*ABS(ntmp)); // num/den coefficient
-					res->push_back(SGN(ntmp)*(2*ABS(ntmp)+1));     // size of coefficient
-					res->push_back(OPER_MUL);                      // operator
+					res->push_back(SGN(ntmp)*(2*ABS(ntmp)+1));	   // size of coefficient
+					res->push_back(OPER_MUL);					   // operator
 				}
 
 				prev_coeff_idx = res->size() - ABS(res->at(res->size()-2)) - 3;
@@ -769,11 +769,11 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 
 /**  Term compare (helper function for Horner_tree)
  *
- *   Description
- *   ===========
- *   Compares two terms of the form "L SYM 4 x n coeff" or "L
- *   coeff". Lower powers of lower-indexed symbols come first. This is
- *   used to sort the terms in correct order.
+ *	 Description
+ *	 ===========
+ *	 Compares two terms of the form "L SYM 4 x n coeff" or "L
+ *	 coeff". Lower powers of lower-indexed symbols come first. This is
+ *	 used to sort the terms in correct order.
  */
 bool term_compare (const WORD *a, const WORD *b) {
 	if (a[1]!=SYMBOL) return true;
@@ -787,12 +787,12 @@ bool term_compare (const WORD *a, const WORD *b) {
 
 /**  Prepare Horner tree building
  *
- *   Description
- *   ===========
- *   This method renumbers the variables to 0...#vars-1 according to
- *   the specified order. Next, it stored pointer to individual terms
- *   and sorts the terms with higher power first. Then the sorted
- *   lists of power is used for the construction of the Horner tree.
+ *	 Description
+ *	 ===========
+ *	 This method renumbers the variables to 0...#vars-1 according to
+ *	 the specified order. Next, it stored pointer to individual terms
+ *	 and sorts the terms with higher power first. Then the sorted
+ *	 lists of power is used for the construction of the Horner tree.
  */
 vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 #ifdef DEBUG
@@ -837,7 +837,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 			for (int i=0; i<sorted[2]/2; i++)
 				for (int j=3; j+2<sorted[2]; j+=2)
 					if (sorted[j] > sorted[j+2]) {
-						swap(sorted[j]  , sorted[j+2]);
+						swap(sorted[j]	, sorted[j+2]);
 						swap(sorted[j+1], sorted[j+3]);
 					}
 		}
@@ -892,8 +892,8 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 }
 
 /*
-	#] Horner_tree :
-	#[ print_tree :
+  	#] Horner_tree : 
+  	#[ print_tree :
 */
 
 // print Horner tree (for debugging)
@@ -944,8 +944,8 @@ void print_tree (const vector<WORD> &tree) {
 }
 
 /*
-	#] print_tree :
-	#[ generate_instructions :
+  	#] print_tree : 
+  	#[ generate_instructions :
 */
 
 
@@ -978,55 +978,55 @@ template<typename T> size_t hash_range(T* array, int size) {
 
 /**  Generate instructions
  *
- *   Description
- *   ===========
- *   Converts the expression tree to a list of instructions that
- *   directly translate to code. Instructions are of the form:
+ *	 Description
+ *	 ===========
+ *	 Converts the expression tree to a list of instructions that
+ *	 directly translate to code. Instructions are of the form:
  *
- *      expr.nr operator length [operands]+ trailing.zero
+ *		expr.nr operator length [operands]+ trailing.zero
  *
- *   The operands are of the form:
+ *	 The operands are of the form:
  *
- *      length [(EXTRA)SYMBOL length variable power] coeff
+ *		length [(EXTRA)SYMBOL length variable power] coeff
  *
- *   This method only generates binary operators. Merging is done
- *   later. The method also checks for common subexpressions and
- *   eliminates them and the flag "do_CSE" is set.
+ *	 This method only generates binary operators. Merging is done
+ *	 later. The method also checks for common subexpressions and
+ *	 eliminates them and the flag "do_CSE" is set.
  *
- *   Implementation details
- *   ======================
- *   The map "ID" keeps track of which subexpressions already
- *   exist. The key is formatted as one of the following:
+ *	 Implementation details
+ *	 ======================
+ *	 The map "ID" keeps track of which subexpressions already
+ *	 exist. The key is formatted as one of the following:
  *
- *      SYMBOL x n
- *      SNUMBER coeff
- *      OPERATOR LHS RHS
+ *		SYMBOL x n
+ *		SNUMBER coeff
+ *		OPERATOR LHS RHS
  *
- *   with LHS/RHS formatted as one of the following:
+ *	 with LHS/RHS formatted as one of the following:
  *
- *      SNUMBER idx 0
- *      (EXTRA)SYMBOL x n
+ *		SNUMBER idx 0
+ *		(EXTRA)SYMBOL x n
  *
- *   ID[symbol] or ID[operator] equals a subexpression
- *   number. ID[coeff] equals the position of the number in the input.
+ *	 ID[symbol] or ID[operator] equals a subexpression
+ *	 number. ID[coeff] equals the position of the number in the input.
  *
- *   The stack s is used the process the postfix expression
- *   tree. Three-word tokens of the form:
+ *	 The stack s is used the process the postfix expression
+ *	 tree. Three-word tokens of the form:
  *
- *      SNUMBER idx.of.coeff 0
- *      SYMBOL x n
- *      EXTRASYMBOL x 1
+ *		SNUMBER idx.of.coeff 0
+ *		SYMBOL x n
+ *		EXTRASYMBOL x 1
  *
- *   are pushed onto it. Operators pop two operands and push the
- *   resulting expression.
+ *	 are pushed onto it. Operators pop two operands and push the
+ *	 resulting expression.
  *
- *   (Extra)symbols are 1-indexed, because -X is also needed to
- *   represent -1 times this term.
+ *	 (Extra)symbols are 1-indexed, because -X is also needed to
+ *	 represent -1 times this term.
  *
- *   There is currently a bug. The notation cannot tell if there is a single
- *   bracket and then ignores the bracket.
+ *	 There is currently a bug. The notation cannot tell if there is a single
+ *	 bracket and then ignores the bracket.
  *
- *   TODO: check if this method performs properly if do_CSE=false
+ *	 TODO: check if this method performs properly if do_CSE=false
  */
 vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 #ifdef DEBUG
@@ -1092,18 +1092,18 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 					}
 
 					// new power greater than 1 of a symbol
-					instr.push_back(numinstr);   // expr.nr
-					instr.push_back(OPER_MUL);   // operator
+					instr.push_back(numinstr);	 // expr.nr
+					instr.push_back(OPER_MUL);	 // operator
 					instr.push_back(9+OPTHEAD);  // length total
-					instr.push_back(8);          // length operand
-					instr.push_back(SYMBOL);     // SYMBOL
-					instr.push_back(4);          // length symbol
+					instr.push_back(8); 		 // length operand
+					instr.push_back(SYMBOL);	 // SYMBOL
+					instr.push_back(4); 		 // length symbol
 					instr.push_back(tree[i+2]);  // variable
 					instr.push_back(tree[i+3]);  // power
-					instr.push_back(1);          // numerator
-					instr.push_back(1);          // denominator
-					instr.push_back(3);          // length coeff
-					instr.push_back(0);          // trailing 0
+					instr.push_back(1); 		 // numerator
+					instr.push_back(1); 		 // denominator
+					instr.push_back(3); 		 // length coeff
+					instr.push_back(0); 		 // trailing 0
 
 					ID[x] = ++numinstr;
 					s.push(1);
@@ -1113,7 +1113,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 			}
 			else {
 				// power of 1
-				s.push(tree[i+3]);   // power
+				s.push(tree[i+3]);	 // power
 				s.push(tree[i+2]+1); // variable (1-indexed)
 				s.push(SYMBOL);
 			}
@@ -1177,8 +1177,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 				}
 
 				instr.push_back(numinstr); // expr.nr.
-				instr.push_back(x[1]);     // operator
-				instr.push_back(3);        // length
+				instr.push_back(x[1]);	   // operator
+				instr.push_back(3); 	   // length
 
 				ID[x] = ++numinstr;
 
@@ -1186,19 +1186,19 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 
 				for (int j=0; j<2; j++)
 					if (x[3*j+2]==SYMBOL || x[3*j+2]==EXTRASYMBOL) {
-						instr.push_back(8);                        // length total
-						instr.push_back(x[3*j+2]);                 // (extra)symbol
-						instr.push_back(4);                        // length (extra)symbol
-						instr.push_back(ABS(x[3*j+3])-1);          // variable (0-indexed)
-						instr.push_back(x[3*j+4]);                 // power
-						instr.push_back(1);                        // numerator
-						instr.push_back(1);                        // denominator
-						instr.push_back(3*SGN(x[3*j+3]));          // length coeff
+						instr.push_back(8); 					   // length total
+						instr.push_back(x[3*j+2]);				   // (extra)symbol
+						instr.push_back(4); 					   // length (extra)symbol
+						instr.push_back(ABS(x[3*j+3])-1);		   // variable (0-indexed)
+						instr.push_back(x[3*j+4]);				   // power
+						instr.push_back(1); 					   // numerator
+						instr.push_back(1); 					   // denominator
+						instr.push_back(3*SGN(x[3*j+3]));		   // length coeff
 						instr[lenidx] += 8;
 					}
 					else { // x[3*j+1]==SNUMBER
 						int t = ABS(x[3*j+3])-1;
-						instr.push_back(tree[t+1]-1);                              // length number
+						instr.push_back(tree[t+1]-1);							   // length number
 						instr.insert(instr.end(), &tree[t+2], &tree[t]+tree[t+1]); // digits
 						instr.back() *= SGN(instr.back()) * SGN(x[3*j+3]);
 						instr[lenidx] += tree[t+1]-1;
@@ -1225,8 +1225,8 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 }
 
 /*
-	#] generate_instructions :
-	#[ count_operators_cse :
+  	#] generate_instructions : 
+  	#[ count_operators_cse :
 */
 
 
@@ -1301,7 +1301,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 			}
 			else {
 				// power of 1
-				s.push(tree[i+3]);   // power
+				s.push(tree[i+3]);	 // power
 				s.push(tree[i+2]+1); // variable (1-indexed)
 				s.push(SYMBOL);
 			}
@@ -1387,8 +1387,8 @@ int count_operators_cse (const vector<WORD> &tree) {
 }
 
 /*
-	#] count_operators_cse :
-	#[ count_operators_cse_topdown :
+  	#] count_operators_cse : 
+  	#[ count_operators_cse_topdown :
 */
 
 int compcount = 0;
@@ -1565,8 +1565,8 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 }
 
 /*
-	#] count_operators_cse_topdown :
-	#[ simulated_annealing :
+  	#] count_operators_cse_topdown : 
+  	#[ simulated_annealing :
 */
 vector<WORD> simulated_annealing() {
 	float minT = AO.Optimize.saMinT.fval;
@@ -1624,8 +1624,8 @@ vector<WORD> simulated_annealing() {
 }
 
 /*
-	#] simulated_annealing :
-	#[ printpstree :
+  	#] simulated_annealing : 
+  	#[ printpstree :
 */
 
 /*
@@ -1641,7 +1641,7 @@ void printpstree_rec (tree_node x, string pre="") {
 						 x.var);
 		for (int i=0; i<(int)x.childs.size(); i++)
 			if (x.childs[i].num_visits>0)
-				printpstree_rec(x.childs[i], pre+"  ");
+				printpstree_rec(x.childs[i], pre+"	");
 		MesPrint("%s}",pre.c_str());
 	}
 }
@@ -1659,43 +1659,43 @@ void printpstree () {
 */
 
 /*
-	#] printpstree :
-	#[ find_Horner_MCTS_expand_tree :
+  	#] printpstree : 
+  	#[ find_Horner_MCTS_expand_tree :
 */
 
 /**  Expand MCTS tree
  *
- *   Description
- *   ===========
- *   This method does one MCTS step: it selects the most-promising
- *   node, expands it, randomly completes the Horner scheme and
- *   backpropagates the results.
+ *	 Description
+ *	 ===========
+ *	 This method does one MCTS step: it selects the most-promising
+ *	 node, expands it, randomly completes the Horner scheme and
+ *	 backpropagates the results.
  *
- *   Selection is done according to the UCT formula:
+ *	 Selection is done according to the UCT formula:
  *
- *      UCT(i) = <x(i)> + C * sqrt(2*log(N)/n(i)),
+ *		UCT(i) = <x(i)> + C * sqrt(2*log(N)/n(i)),
  *
- *   where <x(i)> is the average result of child i, n(i) is the number
- *   of time child i is visited, N=SUM(n(i)) and C is a constant to be
- *   determined experimentally (can be set via mctsconstant).
+ *	 where <x(i)> is the average result of child i, n(i) is the number
+ *	 of time child i is visited, N=SUM(n(i)) and C is a constant to be
+ *	 determined experimentally (can be set via mctsconstant).
  *
- *   A "virtual loss" is added once a node is selected. This is
- *   relevant to avoid duplicate work in the parallel version.
+ *	 A "virtual loss" is added once a node is selected. This is
+ *	 relevant to avoid duplicate work in the parallel version.
  *
- *   Notes
- *   =====
- *   - The method is called from "find_Horner_MCTS" in Form and from
- *     "RunThread" via "find_Horner_MCTS_expand_tree_threaded" in
- *     TForm.
- *   - The code is divided into three functions: "next_MCTS_scheme",
- *     "try_MCTS_scheme" and "update_MCTS_scheme". In this way, the
- *     source code is shared with ParForm; "try_MCTS_scheme" is
- *     assumed to run on workers, while the others are assumed to run
- *     on the master.
+ *	 Notes
+ *	 =====
+ *	 - The method is called from "find_Horner_MCTS" in Form and from
+ *	   "RunThread" via "find_Horner_MCTS_expand_tree_threaded" in
+ *	   TForm.
+ *	 - The code is divided into three functions: "next_MCTS_scheme",
+ *	   "try_MCTS_scheme" and "update_MCTS_scheme". In this way, the
+ *	   source code is shared with ParForm; "try_MCTS_scheme" is
+ *	   assumed to run on workers, while the others are assumed to run
+ *	   on the master.
  */
 
 /*
-		#[ next_MCTS_scheme :
+ 		#[ next_MCTS_scheme :
 */
 
 // find a Horner scheme to be used for the next simulation
@@ -1804,6 +1804,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 
 	// variables used so far
 	set<WORD> var_used;
+<<<<<<< HEAD
 	for (int i=0; i<(int)order.size(); i++)
 		var_used.insert(ABS(order[i])-1);
 
@@ -1824,8 +1825,29 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		LOCK(optimize_lock);
 		*select = new_node;
 		UNLOCK(optimize_lock);
+	if ( (int)order.size() > 0 ) {
+		for (int i=0; i<(int)order.size(); i++) {
+			var_used.insert(ABS(order[i])-1);
+		}
+		// if this a new node, create node and add children
+		if (!select->finished && select->childs.size()==0) {
+			tree_node new_node(select->var);
+			int sign = SGN(order.back());
+			for (int i=0; i<(int)mcts_vars.size(); i++)
+				if (!var_used.count(mcts_vars[i])) {
+					new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
+					if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD) 
+						new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
+				}
+			my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
+			
+			// here locking is necessary, since operator=(tree_node) is a
+			// non-atomic operation (using pointers makes this lock obsolete)
+			LOCK(optimize_lock);
+			*select = new_node;
+			UNLOCK(optimize_lock);
+		}
 	}
-
 	// set finished if necessary
 	if (select->childs.size()==0)
 		select->finished = true;
@@ -1863,8 +1885,8 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 }
 
 /*
-		#] next_MCTS_scheme :
-		#[ try_MCTS_scheme :
+ 		#] next_MCTS_scheme : 
+ 		#[ try_MCTS_scheme :
 */
 
 // count the number of operators in the given Horner scheme
@@ -1887,8 +1909,8 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 }
 
 /*
-		#] try_MCTS_scheme :
-		#[ update_MCTS_scheme :
+ 		#] try_MCTS_scheme : 
+ 		#[ update_MCTS_scheme :
 */
 
 // update the best score and the search tree
@@ -1920,7 +1942,7 @@ inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme,
 }
 
 /*
-		#] update_MCTS_scheme :
+ 		#] update_MCTS_scheme : 
 */
 
 void find_Horner_MCTS_expand_tree () {
@@ -1960,8 +1982,8 @@ void find_Horner_MCTS_expand_tree () {
 }
 
 /*
-	#] find_Horner_MCTS_expand_tree :
-	#[ PF_find_Horner_MCTS_expand_tree :
+  	#] find_Horner_MCTS_expand_tree : 
+  	#[ PF_find_Horner_MCTS_expand_tree :
 */
 #ifdef WITHMPI
 
@@ -2111,17 +2133,17 @@ void PF_find_Horner_MCTS_expand_tree_slave () {
 
 #endif
 /*
-	#] PF_find_Horner_MCTS_expand_tree :
-	#[ find_Horner_MCTS :
+  	#] PF_find_Horner_MCTS_expand_tree : 
+  	#[ find_Horner_MCTS :
 */
 
 /**  Find best Horner schemes using MCTS
  *
- *   Description
- *   ===========
- *   The method governs the MCTS for the best Horner schemes. It does
- *   some pre-processing, calls "find_Horner_MCTS_expand_tree" a
- *   number of times and does some post-processing.
+ *	 Description
+ *	 ===========
+ *	 The method governs the MCTS for the best Horner schemes. It does
+ *	 some pre-processing, calls "find_Horner_MCTS_expand_tree" a
+ *	 number of times and does some post-processing.
  */
 //vector<vector<WORD> > find_Horner_MCTS () {
 void find_Horner_MCTS () {
@@ -2211,66 +2233,66 @@ void find_Horner_MCTS () {
 }
 
 /*
-	#] find_Horner_MCTS :
-	#[ merge_operators :
+  	#] find_Horner_MCTS : 
+  	#[ merge_operators :
 */
 
 /**  Merge operators
  *
- *   Description
- *   ===========
- *   The input instructions form a binary DAG. This method merges
- *   expressions like
+ *	 Description
+ *	 ===========
+ *	 The input instructions form a binary DAG. This method merges
+ *	 expressions like
  *
- *      Z1 = a+b;
- *      Z2 = Z1+c;
+ *		Z1 = a+b;
+ *		Z2 = Z1+c;
  *
- *   into
+ *	 into
  *
- *      Z2 = a+b+c;
+ *		Z2 = a+b+c;
  *
- *   An instruction is merged iff it only has one parent and the
- *   operator equals its parent's operator.
+ *	 An instruction is merged iff it only has one parent and the
+ *	 operator equals its parent's operator.
  *
- *   This still leaves some freedom: where should the coefficients end
- *   up in cases as:
+ *	 This still leaves some freedom: where should the coefficients end
+ *	 up in cases as:
  *
- *      Z1 = Z2 + x    <=>   Z1 = 2*Z2 + x
- *      Z2 = 2*x*y           Z2 = x*y
+ *		Z1 = Z2 + x    <=>	 Z1 = 2*Z2 + x
+ *		Z2 = 2*x*y			 Z2 = x*y
  *
- *   Both are relevant, e.g. for CSE of the form "2*x" and "2*Z2". The
- *   flag "move_coeff" moves coefficients from LHS-like expressions to
- *   RHS-like expressions.
+ *	 Both are relevant, e.g. for CSE of the form "2*x" and "2*Z2". The
+ *	 flag "move_coeff" moves coefficients from LHS-like expressions to
+ *	 RHS-like expressions.
  *
- *   Furthermore, this method removes empty equation (Z1=0), that are
- *   introduced by some "optimize_greedy" substitutions.
+ *	 Furthermore, this method removes empty equation (Z1=0), that are
+ *	 introduced by some "optimize_greedy" substitutions.
  *
- *   Implementation details
- *   ======================
- *   Expressions are mostly traversed via a stack, so that parents are
- *   evaluated before their children.
+ *	 Implementation details
+ *	 ======================
+ *	 Expressions are mostly traversed via a stack, so that parents are
+ *	 evaluated before their children.
  *
- *   With "move_coeff" set coefficients are moved, but this leads to
- *   some tricky cases, e.g.
+ *	 With "move_coeff" set coefficients are moved, but this leads to
+ *	 some tricky cases, e.g.
  *
- *     Z1 = Z2 + x
- *     Z2 = 2*y
+ *	   Z1 = Z2 + x
+ *	   Z2 = 2*y
  *
- *   Here Z2 reduces to the trivial equation Z2=y, which should be
- *   eliminated. Here the array skip[i] comes in.
+ *	 Here Z2 reduces to the trivial equation Z2=y, which should be
+ *	 eliminated. Here the array skip[i] comes in.
  *
- *   Furthermore in the case
+ *	 Furthermore in the case
  *
- *     Z1 = Z2 + x
- *     Z2 = 2*Z3
- *     Z3 = x*Z4
- *     Z4 = y*z
+ *	   Z1 = Z2 + x
+ *	   Z2 = 2*Z3
+ *	   Z3 = x*Z4
+ *	   Z4 = y*z
  *
- *   after substituting Z1 = 2*Z3 + x, the parent expression for Z4
- *   becomes Z3 instead of Z2. This is where renum_par[i] comes in.
+ *	 after substituting Z1 = 2*Z3 + x, the parent expression for Z4
+ *	 becomes Z3 instead of Z2. This is where renum_par[i] comes in.
  *
- *   Finally, once a coefficient has been moved, skip_coeff[i] is set
- *   and this coefficient is copied into the new expression anymore.
+ *	 Finally, once a coefficient has been moved, skip_coeff[i] is set
+ *	 and this coefficient is copied into the new expression anymore.
  */
 vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 
@@ -2393,7 +2415,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 					if (first_copy) {
 						newinstr.push_back(renum_par[x]);  // expr.nr.
 						newinstr.push_back(*(instr[x]+1)); // operator
-						newinstr.push_back(3);             // length   OPTHEAD?
+						newinstr.push_back(3);			   // length   OPTHEAD?
 						first_copy=false;
 					}
 
@@ -2417,8 +2439,8 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 							// t1 pointer to a coefficient, so move it
 
 							// remove old coefficient of 1
-							WORD *t3 = &*newinstr.end();                     //
-							int sign2 = SGN(t3[-1]);                          //
+							WORD *t3 = &*newinstr.end();					 //
+							int sign2 = SGN(t3[-1]);						  //
 							newinstr.erase(newinstr.end()-3, newinstr.end());
 							// count number of arguments; iff it is 2 move the (extra)symbol too
 							int numargs=0;
@@ -2431,7 +2453,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 								newinstr[newinstr.size()-3] = *(t2+2);
 								newinstr[newinstr.size()-2] = *(t2+3);
 								newinstr[newinstr.size()-1] = *(t2+4);
-								sign2 *= SGN(*(t2+*t2-1));          // was t2[7]
+								sign2 *= SGN(*(t2+*t2-1));			// was t2[7]
 
 								// ignore this expression from now on
 								skip[*(t+3)]=true;
@@ -2511,33 +2533,33 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 }
 
 /*
-	#] merge_operators :
-	#[ class Optimization :
+  	#] merge_operators : 
+  	#[ class Optimization :
 */
 
 /**  class Optimization
  *
- *   Description
- *   ===========
- *   This object represents an optimization. Its type is a number in
- *   the range 0 to 5. Depending on this type, the variables arg1, arg2
- *   and coeff indicate:
+ *	 Description
+ *	 ===========
+ *	 This object represents an optimization. Its type is a number in
+ *	 the range 0 to 5. Depending on this type, the variables arg1, arg2
+ *	 and coeff indicate:
  *
- *   type==0 : optimization of the form x[arg1] ^ arg2 (coeff=empty)
- *   type==1 : optimization of the form x[arg1] * x[arg2] (coeff=empty)
- *   type==2 : optimization of the form x[arg1] * coeff (arg2=0)
- *   type==3 : optimization of the form x[arg1] + coeff (arg2=0)
- *   type==4 : optimization of the form x[arg1] + x[arg2] (coeff=empty)
- *   type==5 : optimization of the form x[arg1] - x[arg2] (coeff=empty)
+ *	 type==0 : optimization of the form x[arg1] ^ arg2 (coeff=empty)
+ *	 type==1 : optimization of the form x[arg1] * x[arg2] (coeff=empty)
+ *	 type==2 : optimization of the form x[arg1] * coeff (arg2=0)
+ *	 type==3 : optimization of the form x[arg1] + coeff (arg2=0)
+ *	 type==4 : optimization of the form x[arg1] + x[arg2] (coeff=empty)
+ *	 type==5 : optimization of the form x[arg1] - x[arg2] (coeff=empty)
  *
- *   Here, "x[arg]" represents a symbol (if positive) or an
- *   extrasymbol (if negative). The represented symbol's id is
- *   ABS(x[arg])-1.
+ *	 Here, "x[arg]" represents a symbol (if positive) or an
+ *	 extrasymbol (if negative). The represented symbol's id is
+ *	 ABS(x[arg])-1.
  *
- *   "eqns" is a list of equation, where this optimization can be
- *   performed.
+ *	 "eqns" is a list of equation, where this optimization can be
+ *	 performed.
  *
- *   "improve" is the total improvement of this optimization.
+ *	 "improve" is the total improvement of this optimization.
  */
 class optimization {
 public:
@@ -2554,18 +2576,18 @@ public:
 };
 
 /*
-	#] class Optimization :
-	#[ find_optimizations :
+  	#] class Optimization : 
+  	#[ find_optimizations :
 */
 
 /**  Find optimizations
  *
- *   Description
- *   ===========
- *   This method find all optimization of the form described in "class
- *   Optimization". It process every equation, looking for possible
- *   optimizations and stores them in a fast-access data structure to
- *   count the total improvement of an optimization.
+ *	 Description
+ *	 ===========
+ *	 This method find all optimization of the form described in "class
+ *	 Optimization". It process every equation, looking for possible
+ *	 optimizations and stores them in a fast-access data structure to
+ *	 count the total improvement of an optimization.
  */
 vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
@@ -2594,7 +2616,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
 	  optimization optim;
 		optim.type = optim_type;
-//	#] Startup :
+//	#] Startup : 
 
 //	#[ type 0 :	  find optimizations of the form z=x^n (optim.type==0)
 		if (optim_type == 0) {
@@ -2610,8 +2632,8 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 0 :
-//	#[ type 1 :   find optimizations of the form z=x*y (optim.type==1)
+//	#] type 0 : 
+//	#[ type 1 :	 find optimizations of the form z=x*y (optim.type==1)
 		if (optim_type == 1) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 				if (*(e+1) != OPER_MUL) continue;
@@ -2642,8 +2664,8 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 1 :
-//	#[ type 2 :   find optimizations of the form z=c*x (optim.type==2)
+//	#] type 1 : 
+//	#[ type 2 :	 find optimizations of the form z=c*x (optim.type==2)
 		if (optim_type == 2) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 
@@ -2688,8 +2710,8 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 2 :
-//	#[ type 3 :   find optimizations of the form z=x+c (optim.type==3)
+//	#] type 2 : 
+//	#[ type 3 :	 find optimizations of the form z=x+c (optim.type==3)
 		if (optim_type == 3) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 
@@ -2716,7 +2738,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 3 :
+//	#] type 3 : 
 //	#[ type 4,5 : find optimizations of the form z=x+y or z=x-y (optim.type==4 or 5)
 		if (optim_type == 4) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -2754,7 +2776,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 4,5 :
+//	#] type 4,5 : 
 //	#[ add :
 
 		// add optimizations with positive improvement to the result
@@ -2770,7 +2792,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 			}
 		}
 	}
-//	#] add :
+//	#] add : 
 
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: find_optimizations",thetime_str().c_str());
@@ -2780,24 +2802,24 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 }
 
 /*
-	#] find_optimizations :
-	#[ do_optimization :
+  	#] find_optimizations : 
+  	#[ do_optimization :
 */
 
 /**  Do optimization
  *
- *   Description
- *   ===========
- *   This method performs an optimization. It scans through the
- *   equations of "optim.eqnidxs" and looks in which this optimization
- *   can still be performed (due to other performed optimizations this
- *   isn't always the case). If possible, it substitutes the common
- *   subexpression by a new extra symbol numbered "newid". Finally,
- *   the new extrasymbol is defined accordingly.
+ *	 Description
+ *	 ===========
+ *	 This method performs an optimization. It scans through the
+ *	 equations of "optim.eqnidxs" and looks in which this optimization
+ *	 can still be performed (due to other performed optimizations this
+ *	 isn't always the case). If possible, it substitutes the common
+ *	 subexpression by a new extra symbol numbered "newid". Finally,
+ *	 the new extrasymbol is defined accordingly.
  *
- *   Substitutions may lead to trivial equations of the form "Zi=Zj",
- *   but these are removed in the end of the method. The method returns
- *   whether the substitution has been done once or more (or not).
+ *	 Substitutions may lead to trivial equations of the form "Zi=Zj",
+ *	 but these are removed in the end of the method. The method returns
+ *	 whether the substitution has been done once or more (or not).
  */
 
 bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) {
@@ -2825,7 +2847,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		optim.type==2 ? '*' : '+', num,den);
   }
 #endif
-//	#] Debug code :
+//	#] Debug code : 
 
 	bool substituted = false;
 	WORD *ebegin = &*instr.begin();
@@ -2868,18 +2890,18 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		// add extra equation (Tnew = x^n)
 		instr.push_back(newid);    // eqn.nr
 		instr.push_back(OPER_MUL); // operator
-		instr.push_back(12);       // total length
-		instr.push_back(8);        // term length
+		instr.push_back(12);	   // total length
+		instr.push_back(8); 	   // term length
 		instr.push_back(vartypex); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumx);  // symbol id
-		instr.push_back(n);        // power
+		instr.push_back(n); 	   // power
 		instr.push_back(1);
-		instr.push_back(1);        // coeffient 1
+		instr.push_back(1); 	   // coeffient 1
 		instr.push_back(3);
-		instr.push_back(0);        // trailing 0
+		instr.push_back(0); 	   // trailing 0
 	}
-//	#] type 0 :
+//	#] type 0 : 
 //	#[ type 1 : substitution of the form z=x*y (optim.type==1)
 	if (optim.type == 1) {
 
@@ -2922,15 +2944,15 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 					t+=dt;
 				}
 
-				*newt++ = 8;           // term length
+				*newt++ = 8;		   // term length
 				*newt++ = EXTRASYMBOL; // extrasymbol
-				*newt++ = 4;           // symbol length
-				*newt++ = newid;       // symbol id
-				*newt++ = powx;        // power
+				*newt++ = 4;		   // symbol length
+				*newt++ = newid;	   // symbol id
+				*newt++ = powx; 	   // power
 				*newt++ = 1;
-				*newt++ = 1;           // coefficient +/-1
+				*newt++ = 1;		   // coefficient +/-1
 				*newt++ = 3*sign;
-				*newt++ = 0;           // trailing 0
+				*newt++ = 0;		   // trailing 0
 
 				substituted = true;
 			}
@@ -2946,31 +2968,31 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		// add extra equation (Tnew = x*y)
 		instr.push_back(newid);    // eqn.nr
 		instr.push_back(OPER_MUL); // operator
-		instr.push_back(20);       // total length
-		instr.push_back(8);        // LHS length
+		instr.push_back(20);	   // total length
+		instr.push_back(8); 	   // LHS length
 		instr.push_back(vartypex); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumx);  // symbol id
-		instr.push_back(1);        // power 1
+		instr.push_back(1); 	   // power 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient 1
+		instr.push_back(1); 	   // coefficient 1
 		instr.push_back(3);
-		instr.push_back(8);        // RHS length
+		instr.push_back(8); 	   // RHS length
 		instr.push_back(vartypey); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumy);  // symbol id
-		instr.push_back(1);        // power 1
+		instr.push_back(1); 	   // power 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient 1
+		instr.push_back(1); 	   // coefficient 1
 		instr.push_back(3);
-		instr.push_back(0);        // trailing 0
+		instr.push_back(0); 	   // trailing 0
 	}
-//	#] type 1 :
+//	#] type 1 : 
 //	#[ type 2 : substitution of the form z=c*x (optim.type==2)
 
 	if (optim.type == 2) {
 		int vartype = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
-		int varnum  = ABS(optim.arg1) - 1;
+		int varnum	= ABS(optim.arg1) - 1;
 
 		WORD ncoeff = optim.coeff.back();
 
@@ -2997,15 +3019,15 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 						memmove(t, t+*t, nmove*sizeof(WORD));
 						t += nmove;
 
-						*t++ = 8;           // term length
+						*t++ = 8;			// term length
 						*t++ = EXTRASYMBOL; // (extra)symbol
-						*t++ = 4;           // symbol length
-						*t++ = newid;       // symbol id
-						*t++ = 1;           // power of 1
+						*t++ = 4;			// symbol length
+						*t++ = newid;		// symbol id
+						*t++ = 1;			// power of 1
 						*t++ = 1;
-						*t++ = 1;           // coefficient of +/-1
+						*t++ = 1;			// coefficient of +/-1
 						*t++ = 3 * sign;
-						*t++ = 0;           // trailing 0
+						*t++ = 0;			// trailing 0
 
 						substituted = true;
 						break;
@@ -3047,15 +3069,15 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 						t+=dt;
 					}
 
-					*newt++ = 8;           // term length
+					*newt++ = 8;		   // term length
 					*newt++ = EXTRASYMBOL; // extrasymbol
-					*newt++ = 4;           // symbol length
-					*newt++ = newid;       // symbol id
-					*newt++ = 1;           // power of 1
+					*newt++ = 4;		   // symbol length
+					*newt++ = newid;	   // symbol id
+					*newt++ = 1;		   // power of 1
 					*newt++ = 1;
-					*newt++ = 1;           // coefficient of +/-1
+					*newt++ = 1;		   // coefficient of +/-1
 					*newt++ = 3 * sign;
-					*newt++ = 0;           // trailing 0
+					*newt++ = 0;		   // trailing 0
 
 					substituted = true;
 				}
@@ -3070,23 +3092,23 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		}
 
 		// add extra equation (Tnew = c*y)
-		instr.push_back(newid);            // eqn.nr
-		instr.push_back(OPER_ADD);         // operator
+		instr.push_back(newid); 		   // eqn.nr
+		instr.push_back(OPER_ADD);		   // operator
 		instr.push_back(9+ABS(ncoeff));    // total length
 		instr.push_back(5+ABS(ncoeff));    // term length
-		instr.push_back(vartype);          // (extra)symbol
-		instr.push_back(4);                // symbol length
-		instr.push_back(varnum);           // symbol id
-		instr.push_back(1);                // power of 1
+		instr.push_back(vartype);		   // (extra)symbol
+		instr.push_back(4); 			   // symbol length
+		instr.push_back(varnum);		   // symbol id
+		instr.push_back(1); 			   // power of 1
 		for (int i=0; i<ABS(ncoeff); i++)  // coefficient
 			instr.push_back(optim.coeff[i]);
-		instr.push_back(0);                // trailing 0
+		instr.push_back(0); 			   // trailing 0
 	}
-//	#] type 2 :
+//	#] type 2 : 
 //	#[ type 3 : substitution of the form z=x+c (optim.type==3)
 	if (optim.type == 3) {
 		int vartype = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
-		int varnum  = ABS(optim.arg1) - 1;
+		int varnum	= ABS(optim.arg1) - 1;
 
 		WORD ncoeff = optim.coeff.back();
 
@@ -3120,15 +3142,15 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 					t+=dt;
 				}
 
-				*newt++ = 8;            // term length
-				*newt++ = EXTRASYMBOL;  // extrasymbol
-				*newt++ = 4;            // symbol length
-				*newt++ = newid;        // symbol id
-				*newt++ = 1;            // power of 1
+				*newt++ = 8;			// term length
+				*newt++ = EXTRASYMBOL;	// extrasymbol
+				*newt++ = 4;			// symbol length
+				*newt++ = newid;		// symbol id
+				*newt++ = 1;			// power of 1
 				*newt++ = 1;
-				*newt++ = 1;            // coefficient of +/-1
+				*newt++ = 1;			// coefficient of +/-1
 				*newt++ = 3*coeff_match;
-				*newt++ = 0;            // trailing zero
+				*newt++ = 0;			// trailing zero
 
 				substituted = true;
 			}
@@ -3142,23 +3164,23 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		}
 
 		// add extra equation (Tnew = x+c)
-		instr.push_back(newid);           // eqn.nr
-		instr.push_back(OPER_ADD);        // operator
+		instr.push_back(newid); 		  // eqn.nr
+		instr.push_back(OPER_ADD);		  // operator
 		instr.push_back(13+ABS(ncoeff));  // total length
-		instr.push_back(8);               // x-term length
-		instr.push_back(vartype);         // (extra)symbol
-		instr.push_back(4);               // symbol length
-		instr.push_back(varnum);          // symbol id
-		instr.push_back(1);               // power of 1
+		instr.push_back(8); 			  // x-term length
+		instr.push_back(vartype);		  // (extra)symbol
+		instr.push_back(4); 			  // symbol length
+		instr.push_back(varnum);		  // symbol id
+		instr.push_back(1); 			  // power of 1
 		instr.push_back(1);
-		instr.push_back(1);               // coefficient of 1
+		instr.push_back(1); 			  // coefficient of 1
 		instr.push_back(3);
 		instr.push_back(ABS(ncoeff)+1);   // c-term length
 		for (int i=0; i<ABS(ncoeff); i++) // coefficient
 			instr.push_back(optim.coeff[i]);
-		instr.push_back(0);               // trailing zero
+		instr.push_back(0); 			  // trailing zero
 	}
-//	#] type 3 :
+//	#] type 3 : 
 //	#[ type 4,5 : substitution of the form z=x+y or z=x-y (optim.type=4 or 5)
 	if (optim.type >= 4) {
 
@@ -3202,7 +3224,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 if ( optim.type == 5 ) {
 	while ( *newt ) newt+=*newt;
 	int i = (newt - e) - 3;
-	MesPrint("  < %a",i,e+3);
+	MesPrint("	< %a",i,e+3);
 	newt = e+3;
 }
 */
@@ -3217,19 +3239,19 @@ if ( optim.type == 5 ) {
 						t+=dt;
 					}
 
-					*newt++ = 5 + ABS(ncoeffx);       // term length
-					*newt++ = EXTRASYMBOL;            // extrasymbol
-					*newt++ = 4;                      // symbol length
-					*newt++ = newid;                  // symbol id
-					*newt++ = 1;                      // power of 1
+					*newt++ = 5 + ABS(ncoeffx); 	  // term length
+					*newt++ = EXTRASYMBOL;			  // extrasymbol
+					*newt++ = 4;					  // symbol length
+					*newt++ = newid;				  // symbol id
+					*newt++ = 1;					  // power of 1
 					for (int j=0; j<ABS(ncoeffx); j++)// coefficient
 						*newt++ = coeff[j];
-					*newt++ = 0;                      // trailing 0
+					*newt++ = 0;					  // trailing 0
 					substituted = true;
 /*
 if ( optim.type == 5 ) {
 	int i = (newt - e) - 4;
-	MesPrint("  > %a",i,e+3);
+	MesPrint("	> %a",i,e+3);
 }
 */
 				}
@@ -3252,26 +3274,26 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		// add extra equation (Tnew = x+/-y)
 		instr.push_back(newid);    // eqn.nr
 		instr.push_back(OPER_ADD); // operator
-		instr.push_back(20);       // total length
-		instr.push_back(8);        // term length
+		instr.push_back(20);	   // total length
+		instr.push_back(8); 	   // term length
 		instr.push_back(vartypex); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumx);  // symbol id
-		instr.push_back(1);        // power of 1
+		instr.push_back(1); 	   // power of 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient of 1
+		instr.push_back(1); 	   // coefficient of 1
 		instr.push_back(3);
-		instr.push_back(8);        // term length
+		instr.push_back(8); 	   // term length
 		instr.push_back(vartypey); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumy);  // symbol id
-		instr.push_back(1);        // power of 1
+		instr.push_back(1); 	   // power of 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient of +/-1
+		instr.push_back(1); 	   // coefficient of +/-1
 		instr.push_back(3*(optim.type==4?1:-1));
-		instr.push_back(0);        // trailing 0
+		instr.push_back(0); 	   // trailing 0
 	}
-//	#] type 4,5 :
+//	#] type 4,5 : 
 //	#[ trivial :  remove trivial equations of the form Zi = +/-Zj
 	vector<int> renum(newid+1, 0);
 	bool do_renum=false;
@@ -3282,9 +3304,9 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 	for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
 		WORD *e = ebegin + optim.eqnidxs[i];
 		WORD *t = e+3;
-		if (*t==0) continue;      // empty (removed) equation
+		if (*t==0) continue;	  // empty (removed) equation
 		if (*(t+*t)!=0) continue; // more than 1 term
-		if (*t!=8) continue;      // term not of correct form
+		if (*t!=8) continue;	  // term not of correct form
 		if (*(t+4)!=1) continue;  // power != 1
 		if (*(t+5)!=1 || *(t+6)!=1) continue; // coeff != +/-1
 
@@ -3295,7 +3317,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		// remove equation
 		*t=0;
 	}
-//	#] trivial :
+//	#] trivial : 
 //	#[ renumbering :
 
 	// there are renumberings to be done, so loop through all equations
@@ -3312,7 +3334,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 			}
 		}
 	}
-//	#] renumbering :
+//	#] renumbering : 
 
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: do_optimization : res=true", thetime_str().c_str(), optim.improve);
@@ -3322,32 +3344,32 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 }
 
 /*
-	#] do_optimization :
-	#[ partial_factorize :
+  	#] do_optimization : 
+  	#[ partial_factorize :
 */
 
 /**  Partial factorization of instructions
  *
- *   Description
- *   ===========
- *   This method performs partial factorization of instructions. In
- *   particular the following instructions
+ *	 Description
+ *	 ===========
+ *	 This method performs partial factorization of instructions. In
+ *	 particular the following instructions
  *
- *     Z1 = x*a*b
- *     Z2 = x*c*d*e
- *     Z3 = 2*x + Z1 + Z2 + more
+ *	   Z1 = x*a*b
+ *	   Z2 = x*c*d*e
+ *	   Z3 = 2*x + Z1 + Z2 + more
  *
- *   are replaced by
+ *	 are replaced by
  *
- *     Z1 = a*b
- *     Z2 = c*d*e
- *     Z3 = Zj + more
- *     Zi = 2 + Z1 + Z2
- *     Zj = x*Zi
+ *	   Z1 = a*b
+ *	   Z2 = c*d*e
+ *	   Z3 = Zj + more
+ *	   Zi = 2 + Z1 + Z2
+ *	   Zj = x*Zi
  *
- *   Here it is necessary that no other equations refer to Z1 and
- *   Z2. The generation of trivial instructions (Zi=Zj or Zi=x) is
- *   prevented.
+ *	 Here it is necessary that no other equations refer to Z1 and
+ *	 Z2. The generation of trivial instructions (Zi=Zj or Zi=x) is
+ *	 prevented.
  */
 int partial_factorize (vector<WORD> &instr, int n, int improve) {
 
@@ -3621,27 +3643,27 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 }
 
 /*
-	#] partial_factorize :
-	#[ optimize_greedy :
+  	#] partial_factorize : 
+  	#[ optimize_greedy :
 */
 
 /**  Optimize instructions greedily
  *
- *   Description
- *   ===========
- *   This method optimizes an expression greedily. It calls
- *   "find_optimizations" to obtain candidates and performs the best
- *   one(s) by calling "do_optimization".
+ *	 Description
+ *	 ===========
+ *	 This method optimizes an expression greedily. It calls
+ *	 "find_optimizations" to obtain candidates and performs the best
+ *	 one(s) by calling "do_optimization".
  *
- *   How many different optimization are done, before
- *   "find_optimization" is called again, is determined by the
- *   settings "greedyminnum" and "greedymaxperc".
+ *	 How many different optimization are done, before
+ *	 "find_optimization" is called again, is determined by the
+ *	 settings "greedyminnum" and "greedymaxperc".
  *
- *   During the optimization process, sequences of zeroes are
- *   introduced in the instructions, since moving all instructions
- *   when one gets optimized, is very costly. Therefore, in the end,
- *   the instructions are "compressed" again to remove these extra
- *   zeroes.
+ *	 During the optimization process, sequences of zeroes are
+ *	 introduced in the instructions, since moving all instructions
+ *	 when one gets optimized, is very costly. Therefore, in the end,
+ *	 the instructions are "compressed" again to remove these extra
+ *	 zeroes.
  */
 vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 
@@ -3751,37 +3773,37 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 }
 
 /*
-	#] optimize_greedy :
-	#[ recycle_variables :
+  	#] optimize_greedy : 
+  	#[ recycle_variables :
 */
 
 /**  Recycle variables
  *
- *   Description
- *   ===========
- *   The current input uses many temporary variables. Many of them
- *   become obsolete at some point during the evaluation of the code,
- *   so can be recycled. This method renumbers the temporary
- *   variables, so that they are recycled. Furthermore, the input is
- *   order in depth-first order, so that the instructions can be
- *   performed consecutively.
+ *	 Description
+ *	 ===========
+ *	 The current input uses many temporary variables. Many of them
+ *	 become obsolete at some point during the evaluation of the code,
+ *	 so can be recycled. This method renumbers the temporary
+ *	 variables, so that they are recycled. Furthermore, the input is
+ *	 order in depth-first order, so that the instructions can be
+ *	 performed consecutively.
  *
- *   Implementation details
- *   ======================
- *   First, for each subDAG, an estimate for the number of variables
- *   needed is made. This is done by the following recursive formula:
+ *	 Implementation details
+ *	 ======================
+ *	 First, for each subDAG, an estimate for the number of variables
+ *	 needed is made. This is done by the following recursive formula:
  *
- *      #vars(x) = max(#vars(ch_i(x)) + i),
+ *		#vars(x) = max(#vars(ch_i(x)) + i),
  *
- *   with ch_i(x) the i-th child of x, where the childs are ordered
- *   w.r.t. #vars(ch_i). This formula is exact if the input forms a
- *   tree, and otherwise gives a reasonable estimate.
+ *	 with ch_i(x) the i-th child of x, where the childs are ordered
+ *	 w.r.t. #vars(ch_i). This formula is exact if the input forms a
+ *	 tree, and otherwise gives a reasonable estimate.
  *
- *   Then, the instructions are reordered in a depth-first order with
- *   childs ordered w.r.t. #vars. Next, the times that variables
- *   become obsolete are found. Each LHS of an instruction is
- *   renumbered to the lowest-numbered temporary variable that is
- *   available at that time.
+ *	 Then, the instructions are reordered in a depth-first order with
+ *	 childs ordered w.r.t. #vars. Next, the times that variables
+ *	 become obsolete are found. Each LHS of an instruction is
+ *	 renumbered to the lowest-numbered temporary variable that is
+ *	 available at that time.
  */
 vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 
@@ -3913,22 +3935,22 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 }
 
 /*
-	#] recycle_variables :
-	#[ optimize_expression_given_Horner :
+  	#] recycle_variables : 
+  	#[ optimize_expression_given_Horner :
 */
 
 /**  Optimize expression given a Horner scheme
  *
- *   Description
- *   ===========
- *   This method picks one Horner scheme from the list of best Horner
- *   schemes, applies this scheme to the expression and then,
- *   depending on optimize.settings, does a common subexpression
- *   elimination (CSE) or performs greedy optimizations.
+ *	 Description
+ *	 ===========
+ *	 This method picks one Horner scheme from the list of best Horner
+ *	 schemes, applies this scheme to the expression and then,
+ *	 depending on optimize.settings, does a common subexpression
+ *	 elimination (CSE) or performs greedy optimizations.
  *
- *   CSE is fast, while greedy might be slow. CSE followed by greedy
- *   is faster than greedy alone, but typically results in slightly
- *   worse code (not proven; just observed).
+ *	 CSE is fast, while greedy might be slow. CSE followed by greedy
+ *	 is faster than greedy alone, but typically results in slightly
+ *	 worse code (not proven; just observed).
  */
 void optimize_expression_given_Horner () {
 
@@ -3997,8 +4019,8 @@ void optimize_expression_given_Horner () {
 }
 
 /*
-	#] optimize_expression_given_Horner :
-	#[ PF_optimize_expression_given_Horner :
+  	#] optimize_expression_given_Horner : 
+  	#[ PF_optimize_expression_given_Horner :
 */
 #ifdef WITHMPI
 
@@ -4082,7 +4104,7 @@ void PF_optimize_expression_given_Horner_master_wait () {
 		optimize_best_vars.resize(len);
 		PF_LongSingleUnpack(&optimize_best_vars[0], len, PF_WORD);
 
-		optimize_num_vars = optimize_best_vars.size();  // TODO
+		optimize_num_vars = optimize_best_vars.size();	// TODO
 	}
 
 #ifdef DEBUG
@@ -4148,18 +4170,18 @@ void PF_optimize_expression_given_Horner_slave () {
 
 #endif
 /*
-	#] PF_optimize_expression_given_Horner :
-	#[ generate_output :
+  	#] PF_optimize_expression_given_Horner : 
+  	#[ generate_output :
 */
 
 /**  Generate output
  *
- *   Description
- *   ===========
- *   This method prepares the instructions for printing. They are
- *   stored in Form format, so that they can be printed by
- *   "PrintExtraSymbol". The results are stored in the buffer
- *   AO.OptimizeResult.
+ *	 Description
+ *	 ===========
+ *	 This method prepares the instructions for printing. They are
+ *	 stored in Form format, so that they can be printed by
+ *	 "PrintExtraSymbol". The results are stored in the buffer
+ *	 AO.OptimizeResult.
  */
 VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, const vector<vector<WORD> > &brackets) {
 
@@ -4297,16 +4319,16 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 }
 
 /*
-	#] generate_output :
-	#[ generate_expression :
+  	#] generate_output : 
+  	#[ generate_expression :
 */
 
 /**  Generate expression
  *
- *   Description
- *   ===========
- *   This method modifies the original optimized expression by an
- *   expression with extra symbols. This is used for "#Optimize".
+ *	 Description
+ *	 ===========
+ *	 This method modifies the original optimized expression by an
+ *	 expression with extra symbols. This is used for "#Optimize".
  */
 WORD generate_expression (WORD exprnr) {
 
@@ -4372,18 +4394,18 @@ WORD generate_expression (WORD exprnr) {
 }
 
 /*
-	#] generate_expression :
-	#[ optimize_print_code :
+  	#] generate_expression : 
+  	#[ optimize_print_code :
 */
 
 /**  Print optimized code
  *
- *   Description
- *   ===========
- *   This method prints the optimized code via
- *   "PrintExtraSymbol". Depending on the flag, the original
- *   expression is printed (for "Print") or not (for "#Optimize /
- *   #write "%O").
+ *	 Description
+ *	 ===========
+ *	 This method prints the optimized code via
+ *	 "PrintExtraSymbol". Depending on the flag, the original
+ *	 expression is printed (for "Print") or not (for "#Optimize /
+ *	 #write "%O").
  */
 VOID optimize_print_code (int print_expr) {
 
@@ -4392,10 +4414,10 @@ VOID optimize_print_code (int print_expr) {
 #endif
 	if ( ( AO.Optimize.debugflags & 1 ) != 0 ) {
 /*
- * 		The next code is for debugging purposes. We may want the statements
+ *		The next code is for debugging purposes. We may want the statements
  *		in reverse order to substitute them all back.
  *		Jan used a Mathematica program to do this. Here we make that
- *	    	Format Ox,debugflag=1;
+ *			Format Ox,debugflag=1;
  *		Creates reverse order during printing.
  *		All we have to do is put id in front of the statements. This is done
  *		in PrintExtraSymbol.
@@ -4450,52 +4472,52 @@ VOID optimize_print_code (int print_expr) {
 }
 
 /*
-	#] optimize_print_code :
-	#[ Optimize :
+  	#] optimize_print_code : 
+  	#[ Optimize :
 */
 
 /**  Optimization of expression
  *
- *   Description
- *   ===========
- *   This method takes an input expression and generates optimized
- *   code to calculate its value. The following methods are called to
- *   do so:
+ *	 Description
+ *	 ===========
+ *	 This method takes an input expression and generates optimized
+ *	 code to calculate its value. The following methods are called to
+ *	 do so:
  *
- *   (1) get_expression : to read to expression
+ *	 (1) get_expression : to read to expression
  *
- *   (2) get_brackets : find brackets for simultaneous optimization
+ *	 (2) get_brackets : find brackets for simultaneous optimization
  *
- *   (3) occurrence_order or find_Horner_MCTS : to determine (the)
- *   Horner scheme(s) to use; this depends on AO.optimize.horner
+ *	 (3) occurrence_order or find_Horner_MCTS : to determine (the)
+ *	 Horner scheme(s) to use; this depends on AO.optimize.horner
  *
- *   (4) optimize_expression_given_Horner : to do the optimizations
- *   for each Horner scheme; this method does either CSE or greedy
- *   optimizations dependings on AO.optimize.method
+ *	 (4) optimize_expression_given_Horner : to do the optimizations
+ *	 for each Horner scheme; this method does either CSE or greedy
+ *	 optimizations dependings on AO.optimize.method
  *
- *   (5) generate_output : to format the output in Form notation and
- *   store it in a buffer
+ *	 (5) generate_output : to format the output in Form notation and
+ *	 store it in a buffer
  *
- *   (6a) optimize_print_code : to print the expression (for "Print")
- *   or
- *   (6b) generate_expression : to modify the expression (for
- *   "#Optimize")
+ *	 (6a) optimize_print_code : to print the expression (for "Print")
+ *	 or
+ *	 (6b) generate_expression : to modify the expression (for
+ *	 "#Optimize")
  *
- *   On ParFORM, all the processes must call this function at the same
- *   time. Then
+ *	 On ParFORM, all the processes must call this function at the same
+ *	 time. Then
  *
- *   (1) Because only the master can access to the expression to be
- *   optimized, the master broadcast the expression to all the slaves
- *   after reading the expression (PF_get_expression).
+ *	 (1) Because only the master can access to the expression to be
+ *	 optimized, the master broadcast the expression to all the slaves
+ *	 after reading the expression (PF_get_expression).
  *
- *   (2) get_brackets reads optimize_expr as the input and it works
- *   also on the slaves. We leave it although the bracket information
- *   is not needed on the slaves (used in (5) on the master).
+ *	 (2) get_brackets reads optimize_expr as the input and it works
+ *	 also on the slaves. We leave it although the bracket information
+ *	 is not needed on the slaves (used in (5) on the master).
  *
- *   (3) and (4) find_Horner_MCTS and optimize_expression_given_Horner
- *   are parallelized.
+ *	 (3) and (4) find_Horner_MCTS and optimize_expression_given_Horner
+ *	 are parallelized.
  *
- *   (5), (6a) and (6b) are needed only on the master.
+ *	 (5), (6a) and (6b) are needed only on the master.
  */
 int Optimize (WORD exprnr, int do_print) {
 
@@ -4743,8 +4765,13 @@ int Optimize (WORD exprnr, int do_print) {
 			}
 			outstring = AddToString(outstring,OutScr,1);
 		}
-		PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)outstring,0,1);
-		M_free(outstring,"AddToString");
+		if ( outstring == 0 ) {
+			PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)"",0,1);
+		}
+		else {
+			PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)outstring,0,1);
+			M_free(outstring,"AddToString");
+		}
 	}
 
 #ifdef WITHMPI
@@ -4762,23 +4789,23 @@ int Optimize (WORD exprnr, int do_print) {
 }
 
 /*
-	#] Optimize :
-	#[ ClearOptimize :
+  	#] Optimize : 
+  	#[ ClearOptimize :
 */
 
 /**  Optimization of expression
  *
- *   Description
- *   ===========
- *   Clears the buffers that were used for optimization output.
- *   Clears the expression from the buffers (marks it to be dropped).
- *   Note: we need to use the expression by its name, because numbers
- *   may change if we drop other expressions between when we do the
- *   optimizations and clear the results (in execute.c). Also this is
- *   not 100% safe, because we could overwrite the optimized
- *   expression. But that can be done only in a Local or Global
- *   statement and hence we only have to test there that we might have
- *   to call ClearOptimize first. (in file comexpr.c)
+ *	 Description
+ *	 ===========
+ *	 Clears the buffers that were used for optimization output.
+ *	 Clears the expression from the buffers (marks it to be dropped).
+ *	 Note: we need to use the expression by its name, because numbers
+ *	 may change if we drop other expressions between when we do the
+ *	 optimizations and clear the results (in execute.c). Also this is
+ *	 not 100% safe, because we could overwrite the optimized
+ *	 expression. But that can be done only in a Local or Global
+ *	 statement and hence we only have to test there that we might have
+ *	 to call ClearOptimize first. (in file comexpr.c)
  */
 int ClearOptimize()
 {
@@ -4818,6 +4845,6 @@ int ClearOptimize()
 }
 
 /*
-	#] ClearOptimize :
+  	#] ClearOptimize : 
 */
 

@@ -970,6 +970,8 @@ VOID StartVariables()
 	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,0);
 	PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)("0"),0,0);
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,0);
+	PutPreVar((UBYTE *)"tolower_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"toupper_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;
 	AP.NumPreTypes = 0;

@@ -1759,6 +1759,15 @@ double floating point numbers, because some compilers convert numbers like
 1. into 1.E0. With this format \FORM\ will force double precision by using 
 1.D0.}
 
+\leftvitem{3.5cm}{quadruplefortran\index{quadruplefortran}\index{format!quadruplefortran}}
+\rightvitem{13cm}{Same as the fortran mode, but fractions are printed with 
+quadruple floating point numbers, because some compilers convert numbers like 
+1. into 1.E0. With this format \FORM\ will force quadruple precision by using 
+1.Q0.}
+
+\leftvitem{3.5cm}{quadfortran\index{quadfortran}\index{format!quadfortran}}
+\rightvitem{13cm}{Same as quadruplefortran.}
+
 \leftvitem{3.5cm}{fortran90\index{fortran90}\index{format!fortran90}}
 \rightvitem{13cm}{Similar to the fortran option, but prints the 
 continuation lines according to the syntax of Fortran 90. If the fortran90 
@@ -2276,6 +2285,12 @@ returned. In the case of once or only this is of course at most one.}
 expressions. In the case that the current term belongs to any of the given 
 expressions the return value is 1. If it does not belong to any of the 
 given expressions the return value is 0.}
+
+\leftvitem{3.5cm}{occurs()\index{expression}}
+\rightvitem{13cm}{The argument(s) of this condition is/are a list of 
+variables. In the case that any of the variables occurs inside the current 
+term (including inside function arguments) the 
+return value is 1. Otherwise the return value is zero.}
 
 \leftvitem{3.5cm}{findloop()\index{findloop}}
 \rightvitem{13cm}{The arguments are as in the 

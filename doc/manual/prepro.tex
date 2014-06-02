@@ -82,6 +82,25 @@ it will look in the systems environment\index{environment} to see whether
 there is an environment variable by that name. If this is the case its 
 string value will be substituted.
 
+\noindent Preprocessor variables can have arguments and thereby become 
+macro's. One should consult the description of the \#define\ref{predefine} 
+instruction about the delayed substitution feature to avoid the value of 
+the preprocessor variables in the macro would be substituted immediately 
+during the definition. Hence proper use is
+\begin{verbatim}
+    #define EXCHANGE(x,y) "Multiply replace_(`~x',`~y',`~y',`~x');"
+\end{verbatim}
+
+\noindent \FORM has the following built in macro's:
+\begin{description}
+\item[TOLOWER\_(string)] in which the character string in the argument is 
+converted to lower case. After this it will become input.
+\item[TOUPPER\_(string)] in which the character string in the argument is 
+converted to upper case. After this it will become input.
+\end{description}
+It is anticipated that some more macro's will become available to allow for 
+the editing of names of variables.
+
 %--#] The preprocessor variables : 
 %--#[ Calculator :
 \section{The preprocessor calculator}
@@ -1098,6 +1117,14 @@ functions that allow the asking of questions about objects. These are
 expression or a \$-variable. This function then returns one if this object 
 exists, cq. has been defined. Otherwise it returns zero. }
  
+\leftvitem{3cm}{isdefined()}
+\rightvitem{13cm}{The argument of isdefined\index{isdefined} is the name of a 
+preprocessor variable. This function then returns one if this object 
+has been defined. Otherwise it returns zero. Technically \verb:#ifdef 
+`VAR': and 
+\verb:#if ( isdefined(`NAME') ): are the same. The isdefined function 
+allows for greater flexibility in composite conditions.}
+ 
 \leftvitem{3cm}{isfactorized()}
 \rightvitem{13cm}{The argument of isfactorized\index{isfactorized} is the 
 name of an expression or a \$-variable. This function then returns one if 
@@ -1146,6 +1173,8 @@ of terms in that expression.}
 \noindent If the named\index{\#ifdef} preprocessor variable has been 
 defined the condition is true, else it is false. For the rest the 
 instruction behaves like the \#if\index{\#if} instruction.
+
+An alternative is to use the isdefined object inside the \#if instruction.
 
 %--#] ifdef : 
 %--#[ ifndef :

@@ -50,6 +50,8 @@ static KEYWORD formatoptions[] = {
 	,{"normal",			(TFUN)0,	NORMALFORMAT,		1}
 	,{"nospaces",		(TFUN)0,	NOSPACEFORMAT,		3}
 	,{"pfortran",		(TFUN)0,	PFORTRANMODE,		0}
+	,{"quadfortran",	(TFUN)0,	QUADRUPLEFORTRANMODE,	0}
+	,{"quadruplefortran",	(TFUN)0,	QUADRUPLEFORTRANMODE,	0}
 	,{"rational",		(TFUN)0,	RATIONALMODE,		1}
 	,{"reduce",			(TFUN)0,	REDUCEMODE,			0}
 	,{"spaces",			(TFUN)0,	NORMALFORMAT,		3}
@@ -768,7 +770,8 @@ int CoFormat(UBYTE *s)
 		if ( key ) {
 			if ( key->flags == 0 ) {
 				if ( key->type == FORTRANMODE || key->type == PFORTRANMODE
-				|| key->type == DOUBLEFORTRANMODE || key->type == VORTRANMODE ) {
+				|| key->type == DOUBLEFORTRANMODE
+				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
 					AC.IsFortran90 = ISNOTFORTRAN90;
 					if ( AC.Fortran90Kind ) {
 						M_free(AC.Fortran90Kind,"Fortran90 Kind");
@@ -3889,13 +3892,13 @@ WORD *CountComp(UBYTE *inp, WORD *to)
 					*p = 0;
 					type = GetName(AC.varnames,inp,&c2,WITHAUTO);
 					if ( type != CVECTOR && type != CDUBIOUS ) {
-						MesPrint("&Not a vector in dotproduct in bracket statement: %s",inp);
+						MesPrint("&Not a vector in dotproduct in if statement: %s",inp);
 						error = 1;
 					}
 					else type = CDOTPRODUCT;
 				}
 				else {
-					MesPrint("&Illegal use of . after %s in bracket statement",inp);
+					MesPrint("&Illegal use of . after %s in if statement",inp);
 					if ( type == NAMENOTFOUND )
 						MesPrint("&%s is not a properly declared variable",inp);
 					error = 1;
@@ -4358,6 +4361,122 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 				}
 				ww[1] = w - ww;
 				gotexp = 1;
+			}
+			else goto NoGood;
+			inp = p;
+		}
+		else if ( *p == 'o' || *p == 'O' ) { /* Occurs */
+/*
+			Tests whether variables occur inside a term.
+			At the moment this is done one by one.
+			If we want to do them in groups we should do the reading
+			a bit different: each as a variable in a term, and then
+			use Normalize to get the variables grouped and in order.
+			That way FindVar (in if.c) can work more efficiently.
+			Still to be done!!!
+			TASK: Nice little task for someone to learn.
+*/
+			UBYTE cc;
+			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
+			while ( FG.cTable[*++p] == 0 );
+			c = cc = *p; *p = 0;
+			if ( !StrICmp(inp,(UBYTE *)"occurs") ) {
+				WORD c1, c2, type;
+				*p = cc;
+				if ( cc != '(' ) {
+					MesPrint("&no ( after occurs");
+					error = 1;
+					goto endofif;
+				}
+				inp = p;
+				SKIPBRA4(p);
+				cc = *++p; *p = 0; *inp = ','; pp = p;
+				ww = w;
+				*w++ = IFOCCURS; *w++ = 0;
+				while ( *inp ) {
+					while ( *inp == ',' ) inp++;
+					if ( *inp == 0 || *inp == ')' ) break;
+/*
+					Now read a list of names
+					We can have symbols, vectors, dotproducts, indices, functions.
+					There could also be dummy indices and/or extra symbols.
+*/
+					if ( *inp == '[' || FG.cTable[*inp] == 0 ) {
+						if ( ( p = SkipAName(inp) ) == 0 ) return(0);
+						c = *p; *p = 0;
+						type = GetName(AC.varnames,inp,&c1,WITHAUTO);
+						if ( c == '.' ) {
+							if ( type == CVECTOR || type == CDUBIOUS ) {
+								*p++ = c;
+								inp = p;
+								p = SkipAName(p);
+								if ( p == 0 ) return(0);
+								c = *p;
+								*p = 0;
+								type = GetName(AC.varnames,inp,&c2,WITHAUTO);
+								if ( type != CVECTOR && type != CDUBIOUS ) {
+									MesPrint("&Not a vector in dotproduct in if statement: %s",inp);
+									error = 1;
+								}
+								else type = CDOTPRODUCT;
+							}
+							else {
+								MesPrint("&Illegal use of . after %s in if statement",inp);
+								if ( type == NAMENOTFOUND )
+									MesPrint("&%s is not a properly declared variable",inp);
+								error = 1;
+								*p++ = c;
+								while ( *p && *p != ')' && *p != ',' ) p++;
+								if ( *p == ',' && FG.cTable[p[1]] == 1 ) {
+									p++;
+									while ( *p && *p != ')' && *p != ',' ) p++;
+								}
+								continue;
+							}
+						}
+						*p = c;
+						switch ( type ) {
+							case CSYMBOL: /* To worry about extra symbols */
+								*w++ = SYMBOL;
+								*w++ = c1;
+							break;
+							case CINDEX:
+								*w++ = INDEX;
+								*w++ = c1 + AM.OffsetIndex;
+							break;
+							case CVECTOR:
+								*w++ = VECTOR;
+								*w++ = c1 + AM.OffsetVector;
+							break;
+							case CDOTPRODUCT:
+								*w++ = DOTPRODUCT;
+								*w++ = c1 + AM.OffsetVector;
+								*w++ = c2 + AM.OffsetVector;
+							break;
+							case CFUNCTION:
+								*w++ = FUNCTION;
+								*w++ = c1+FUNCTION;
+							break;
+							default:
+								MesPrint("&Illegal variable %s in occurs condition in if statement",inp);
+								error = 1;
+							break;
+						}
+						inp = p;
+					}
+					else {
+						MesPrint("&Illegal object %s in occurs condition in if statement",inp);
+						error = 1;
+						break;
+					}
+				}
+				ww[1] = w-ww;
+				p = pp; *p = cc; *inp = '(';
+				gotexp = 1;
+				if ( ww[1] <= 2 ) {
+					MesPrint("&The occurs condition in the if statement needs arguments.");
+					error = 1;
+				}
 			}
 			else goto NoGood;
 			inp = p;
@@ -6096,6 +6215,7 @@ correctuse:
 			}
 			else {
 				AO.Optimize.hornerdirection = -1;
+				AO.Optimize.method = -1;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}

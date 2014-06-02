@@ -3077,12 +3077,25 @@ GetTb3:
 				return(0);
 			}
 			if ( ( AS.OldNumFactors == 0 ) || ( AS.NumOldNumFactors < NumExpressions ) ) {
-				AS.NumOldNumFactors = 20;
-				if ( AS.NumOldNumFactors < NumExpressions ) AS.NumOldNumFactors = NumExpressions*2;
-				if ( AS.OldNumFactors ) M_free(AS.OldNumFactors,"numfactors pointers");
-				AS.OldNumFactors = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"numfactors pointers");
-				if ( AS.Oldvflags ) M_free(AS.Oldvflags,"vflags pointers");
-				AS.Oldvflags = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"vflags pointers");
+				WORD *buffer;
+				int capacity = 20;
+				if (capacity < NumExpressions) capacity = NumExpressions * 2;
+
+				buffer = (WORD *)Malloc1(capacity * sizeof(WORD), "numfactors pointers");
+				if (AS.OldNumFactors) {
+					WCOPY(buffer, AS.OldNumFactors, AS.NumOldNumFactors);
+					M_free(AS.OldNumFactors, "numfactors pointers");
+				}
+				AS.OldNumFactors = buffer;
+
+				buffer = (WORD *)Malloc1(capacity * sizeof(WORD), "vflags pointers");
+				if (AS.Oldvflags) {
+					WCOPY(buffer, AS.Oldvflags, AS.NumOldNumFactors);
+					M_free(AS.Oldvflags, "vflags pointers");
+				}
+				AS.Oldvflags = buffer;
+
+				AS.NumOldNumFactors = capacity;
 			}
 
 			AS.OldNumFactors[expr] =

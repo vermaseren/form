@@ -167,6 +167,85 @@ getnumber:;
 
 /*
  		#] GetIfDollarNum : 
+ 		#[ FindVar :
+*/
+
+int FindVar(WORD *v, WORD *term)
+{
+	WORD *t, *tstop, *m, *mstop, *f, *fstop, *a, *astop;
+	GETSTOP(term,tstop);
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *v == *t && *v < FUNCTION ) {	/* VECTOR, INDEX, SYMBOL, DOTPRODUCT */
+			switch ( *v ) {
+				case SYMBOL:
+					m = t+2; mstop = t+t[1];
+					while ( m < mstop ) {
+						if ( *m == v[1] ) return(1);
+						m += 2;
+					}
+					break;
+				case INDEX:
+				case VECTOR:
+					m = t+2; mstop = t+t[1];
+					while ( m < mstop ) {
+						if ( *m == v[1] ) return(1);
+						m++;
+					}
+					break;
+				case DOTPRODUCT:
+					m = t+2; mstop = t+t[1];
+					while ( m < mstop ) {
+						if ( *m == v[1] && m[1] == v[2] ) return(1);
+						if ( *m == v[2] && m[1] == v[1] ) return(1);
+						m += 3;
+					}
+					break;
+			}
+		}
+		else if ( *t >= FUNCTION ) {
+			if ( *v == FUNCTION && v[1] == *t ) return(1);
+			fstop = t + t[1]; f = t + FUNHEAD;
+			while ( f < fstop ) { /* Do the arguments one by one */
+				if ( *f <= 0 ) {
+					switch ( *f ) {
+						case -SYMBOL:
+							if ( *v == SYMBOL && v[1] == f[1] ) return(1);
+							f += 2;
+							break;
+						case -VECTOR:
+						case -MINVECTOR:
+						case -INDEX:
+							if ( ( *v == VECTOR || *v == INDEX )
+							 && ( v[1] == f[1] ) ) return(1);
+							f += 2;
+							break;
+						case -SNUMBER:
+							f += 2;
+							break;
+						default:
+							if ( *v == FUNCTION && v[1] == -*f && *f <= -FUNCTION ) return(1);
+							if ( *f <= -FUNCTION ) f++;
+							else f += 2;
+							break;
+					}
+				}
+				else {
+					a = f + ARGHEAD; astop = f + *f;
+					while ( a < astop ) {
+						if ( FindVar(v,a) == 1 ) return(1);
+					}
+					f = astop;
+				}
+			}
+		}
+		t += t[1];
+	}
+	return(0);
+}
+
+/*
+ 		#] FindVar : 
  		#[ DoIfStatement :				WORD DoIfStatement(PHEAD ifcode,term)
 
 		The execution time part of the if-statement.
@@ -254,6 +333,17 @@ WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 					r++;
 				}
 				return(1);
+			case IFOCCURS:
+				{
+					WORD *OccStop = ifp + ifp[1];
+					ifp += 2;
+					while ( ifp < OccStop ) {
+						if ( FindVar(ifp,term) == 1 ) return(1);
+						if ( *ifp == DOTPRODUCT ) ifp += 3;
+						else ifp += 2;
+					}
+				}
+				return(0);
 			default:
 /*
 				Now we have a subexpression. Test first for one with a single item.

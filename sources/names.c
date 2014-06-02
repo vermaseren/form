@@ -976,7 +976,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol :
+  	#] CoSymbol : 
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
