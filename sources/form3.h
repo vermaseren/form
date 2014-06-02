@@ -420,7 +420,15 @@ extern int    Ugetpos(FILES *,fpos_t *);
 extern int    Usetpos(FILES *,fpos_t *);
 extern void   Usetbuf(FILES *,char *);
 #define Usync(f) fsync(f->descriptor)
-#define Utruncate(f) ftruncate(f->descriptor,0);
+#define Utruncate(f) { \
+	if ( ftruncate(f->descriptor, 0) ) { \
+		MLOCK(ErrorMessageLock); \
+		MesPrint("Utruncate failed"); \
+		MUNLOCK(ErrorMessageLock); \
+		/* Calling Terminate() here may cause an infinite loop due to CleanUpSort(). */ \
+		/* Terminate(-1); */ \
+	} \
+}
 extern FILES *Ustdout;
 #define MAX_OPEN_FILES getdtablesize()
 
