@@ -5921,7 +5921,9 @@ dooptim:
 				}
 			}
 			else if ( *fstring == 'e' || *fstring == 'E' ) {
-				if ( *fstring == 'E' ) nosemi = 1;
+				if ( *fstring == 'E'
+					|| AC.OutputMode == FORTRANMODE
+					|| AC.OutputMode == PFORTRANMODE ) nosemi = 1;
 				else nosemi = 0;
 				fstring++;
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
