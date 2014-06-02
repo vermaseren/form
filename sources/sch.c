@@ -356,23 +356,35 @@ VOID RatToLine(UWORD *a, WORD na)
 		  }
 		  if ( adenom == 1 && a[na] == 1 ) {
 			LongToLine(a,anumer);
-			if ( anumer > 1 ) { AddToLine((UBYTE *)".D0"); }
+			if ( anumer > 1 ) {
+				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+				else { AddToLine((UBYTE *)".D0"); }
+			}
 		  }
 		  else if ( anumer == 1 && a[0] == 1 ) {
 			a += na;
 			AddToLine((UBYTE *)"(one/");
 			LongToLine(a,adenom);
-			if ( adenom > 1 ) { AddToLine((UBYTE *)".D0"); }
+			if ( adenom > 1 ) {
+				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+				else { AddToLine((UBYTE *)".D0"); }
+			}
 			AddToLine((UBYTE *)")");
 		  }
 		  else {
 			if ( anumer > 1 || adenom > 1 ) {
 				LongToLine(a,anumer);
-				if ( anumer > 1 ) { AddToLine((UBYTE *)".D0"); }
+				if ( anumer > 1 ) {
+					if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+					else { AddToLine((UBYTE *)".D0"); }
+				}
 				a += na;
 				AddToLine((UBYTE *)"/");
 				LongToLine(a,adenom);
-				if ( adenom > 1 ) { AddToLine((UBYTE *)".D0"); }
+				if ( adenom > 1 ) {
+					if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+					else { AddToLine((UBYTE *)".D0"); }
+				}
 			}
 			else {
 				AddToLine((UBYTE *)"((one*");
@@ -399,7 +411,8 @@ VOID RatToLine(UWORD *a, WORD na)
 				}
 			}
 			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
-				if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0/"); }
+				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0/"); }
+				else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0/"); }
 				else { AddToLine((UBYTE *)"./"); }
 			}
 			else AddToLine((UBYTE *)"/");
@@ -413,7 +426,8 @@ VOID RatToLine(UWORD *a, WORD na)
 				}
 			}
 			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
-				if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0"); }
+				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+				else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
 				else { AddToLine((UBYTE *)"."); }
 			}
 		  }
@@ -427,7 +441,8 @@ VOID RatToLine(UWORD *a, WORD na)
 					AddToLine((UBYTE *)".");
 				}
 			}
-			else if ( AO.DoubleFlag ) { AddToLine((UBYTE *)".D0"); }
+			else if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+			else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
 			else { AddToLine((UBYTE *)"."); }
 		  }
 		  else if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
@@ -440,7 +455,8 @@ VOID RatToLine(UWORD *a, WORD na)
 		  }
 		  else if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE )
 		  && AO.DoubleFlag ) {
-			AddToLine((UBYTE *)".D0");
+			if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+			else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
 		  }
 		}
 	}
@@ -2558,6 +2574,3 @@ AboWrite:
  		#] WriteOne : 
   	#] schryf-Writes : 
 */
-
-
-

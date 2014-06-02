@@ -310,6 +310,9 @@ typedef int (*TFUN1)();
 #define DOUBLEFORTRANMODE 33
 #define DOUBLEPRECISIONFLAG 32
 #define NODOUBLEMASK 31
+#define QUADRUPLEFORTRANMODE 65
+#define QUADRUPLEPRECISIONFLAG 64
+#define NOQUADMASK 63
 #define NORMALFORMAT 0
 #define NOSPACEFORMAT 1
 
@@ -784,6 +787,7 @@ typedef int (*TFUN1)();
 #define IFEXPRESSION 7
 #define IFDOLLAREXTRA 8
 #define IFISFACTORIZED 9
+#define IFOCCURS 10
 #define GREATER	0
 #define GREATEREQUAL 1
 #define LESS 2
@@ -983,3 +987,5 @@ typedef int (*TFUN1)();
 
 #define INUSE 1
 #define COULDCOMMUTE 2
+#define DOESNOTCOMMUTE 4
+

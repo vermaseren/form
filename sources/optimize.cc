@@ -1387,28 +1387,29 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 
 	// variables used so far
 	set<WORD> var_used;
-	for (int i=0; i<(int)order.size(); i++)
-		var_used.insert(ABS(order[i])-1);
-
-	// if this a new node, create node and add children
-	if (!select->finished && select->childs.size()==0) {
-		tree_node new_node(select->var);
-		int sign = SGN(order.back());
-		for (int i=0; i<(int)mcts_vars.size(); i++)
-			if (!var_used.count(mcts_vars[i])) {
-				new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
-				if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD) 
-					new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
-			}
-		my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
-		
-		// here locking is necessary, since operator=(tree_node) is a
-		// non-atomic operation (using pointers makes this lock obsolete)
-		LOCK(optimize_lock);
-		*select = new_node;
-		UNLOCK(optimize_lock);
+	if ( (int)order.size() > 0 ) {
+		for (int i=0; i<(int)order.size(); i++) {
+			var_used.insert(ABS(order[i])-1);
+		}
+		// if this a new node, create node and add children
+		if (!select->finished && select->childs.size()==0) {
+			tree_node new_node(select->var);
+			int sign = SGN(order.back());
+			for (int i=0; i<(int)mcts_vars.size(); i++)
+				if (!var_used.count(mcts_vars[i])) {
+					new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
+					if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD) 
+						new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
+				}
+			my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
+			
+			// here locking is necessary, since operator=(tree_node) is a
+			// non-atomic operation (using pointers makes this lock obsolete)
+			LOCK(optimize_lock);
+			*select = new_node;
+			UNLOCK(optimize_lock);
+		}
 	}
-
 	// set finished if necessary
 	if (select->childs.size()==0) 
 		select->finished = true;
@@ -4318,8 +4319,13 @@ int Optimize (WORD exprnr, int do_print) {
 			}
 			outstring = AddToString(outstring,OutScr,1);
 		}
-		PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)outstring,0,1);
-		M_free(outstring,"AddToString");
+		if ( outstring == 0 ) {
+			PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)"",0,1);
+		}
+		else {
+			PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)outstring,0,1);
+			M_free(outstring,"AddToString");
+		}
 	}
 	
 #ifdef WITHMPI

@@ -85,6 +85,7 @@
 #define UNIX
 #define LP64
 #define WITHZLIB
+#define WITHGMP
 #endif
 
 #ifdef CYGWIN32
