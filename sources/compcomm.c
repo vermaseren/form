@@ -777,6 +777,9 @@ int CoFormat(UBYTE *s)
 				if ( ( key->type & DOUBLEPRECISIONFLAG ) != 0 ) {
 					AO.DoubleFlag = 1;
 				}
+				else if ( ( key->type & QUADRUPLEPRECISIONFLAG ) != 0 ) {
+					AO.DoubleFlag = 2;
+				}
 			}
 			else if ( key->flags == 1 ) {
 				AC.OutputMode = AC.OutNumberType = key->type;
