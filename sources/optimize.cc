@@ -29,7 +29,7 @@
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  	#] License : 
+  	#] License :
   	#[ includes :
 */
 
@@ -100,7 +100,7 @@ pthread_mutex_t optimize_lock;
 #endif
 
 /*
-  	#] includes : 
+  	#] includes :
   	#[ print_instr :
 */
 
@@ -114,7 +114,7 @@ void print_instr (const vector<WORD> &instr, WORD num)
 }
 
 /*
-  	#] print_instr : 
+  	#] print_instr :
   	#[ my_random_shuffle :
 */
 
@@ -132,7 +132,7 @@ void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) 
 }
 
 /*
-  	#] my_random_shuffle : 
+  	#] my_random_shuffle :
   	#[ get_expression :
 */
 
@@ -187,7 +187,7 @@ LONG get_expression (int exprnr) {
 }
 
 /*
-  	#] get_expression : 
+  	#] get_expression :
   	#[ PF_get_expression :
 */
 #ifdef WITHMPI
@@ -209,7 +209,7 @@ LONG PF_get_expression (int exprnr) {
 
 #endif
 /*
-  	#] PF_get_expression : 
+  	#] PF_get_expression :
   	#[ get_brackets :
 */
 
@@ -337,7 +337,7 @@ vector<vector<WORD> > get_brackets () {
 }
 
 /*
-  	#] get_brackets : 
+  	#] get_brackets :
   	#[ count_operators :
 */
 
@@ -433,7 +433,7 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 }
 
 /*
-  	#] count_operators : 
+  	#] count_operators :
   	#[ occurrence_order :
 */
 
@@ -484,7 +484,7 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 }
 
 /*
-  	#] occurrence_order : 
+  	#] occurrence_order :
   	#[ Horner_tree :
 */
 
@@ -892,7 +892,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 }
 
 /*
-  	#] Horner_tree : 
+  	#] Horner_tree :
   	#[ print_tree :
 */
 
@@ -944,7 +944,7 @@ void print_tree (const vector<WORD> &tree) {
 }
 
 /*
-  	#] print_tree : 
+  	#] print_tree :
   	#[ generate_instructions :
 */
 
@@ -1225,7 +1225,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 }
 
 /*
-  	#] generate_instructions : 
+  	#] generate_instructions :
   	#[ count_operators_cse :
 */
 
@@ -1387,7 +1387,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 }
 
 /*
-  	#] count_operators_cse : 
+  	#] count_operators_cse :
   	#[ count_operators_cse_topdown :
 */
 
@@ -1565,7 +1565,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 }
 
 /*
-  	#] count_operators_cse_topdown : 
+  	#] count_operators_cse_topdown :
   	#[ simulated_annealing :
 */
 vector<WORD> simulated_annealing() {
@@ -1624,7 +1624,7 @@ vector<WORD> simulated_annealing() {
 }
 
 /*
-  	#] simulated_annealing : 
+  	#] simulated_annealing :
   	#[ printpstree :
 */
 
@@ -1659,7 +1659,7 @@ void printpstree () {
 */
 
 /*
-  	#] printpstree : 
+  	#] printpstree :
   	#[ find_Horner_MCTS_expand_tree :
 */
 
@@ -1825,28 +1825,6 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		LOCK(optimize_lock);
 		*select = new_node;
 		UNLOCK(optimize_lock);
-	if ( (int)order.size() > 0 ) {
-		for (int i=0; i<(int)order.size(); i++) {
-			var_used.insert(ABS(order[i])-1);
-		}
-		// if this a new node, create node and add children
-		if (!select->finished && select->childs.size()==0) {
-			tree_node new_node(select->var);
-			int sign = SGN(order.back());
-			for (int i=0; i<(int)mcts_vars.size(); i++)
-				if (!var_used.count(mcts_vars[i])) {
-					new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
-					if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD) 
-						new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
-				}
-			my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
-			
-			// here locking is necessary, since operator=(tree_node) is a
-			// non-atomic operation (using pointers makes this lock obsolete)
-			LOCK(optimize_lock);
-			*select = new_node;
-			UNLOCK(optimize_lock);
-		}
 	}
 	// set finished if necessary
 	if (select->childs.size()==0)
@@ -1885,7 +1863,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 }
 
 /*
- 		#] next_MCTS_scheme : 
+ 		#] next_MCTS_scheme :
  		#[ try_MCTS_scheme :
 */
 
@@ -1909,7 +1887,7 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 }
 
 /*
- 		#] try_MCTS_scheme : 
+ 		#] try_MCTS_scheme :
  		#[ update_MCTS_scheme :
 */
 
@@ -1942,7 +1920,7 @@ inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme,
 }
 
 /*
- 		#] update_MCTS_scheme : 
+ 		#] update_MCTS_scheme :
 */
 
 void find_Horner_MCTS_expand_tree () {
@@ -1982,7 +1960,7 @@ void find_Horner_MCTS_expand_tree () {
 }
 
 /*
-  	#] find_Horner_MCTS_expand_tree : 
+  	#] find_Horner_MCTS_expand_tree :
   	#[ PF_find_Horner_MCTS_expand_tree :
 */
 #ifdef WITHMPI
@@ -2133,7 +2111,7 @@ void PF_find_Horner_MCTS_expand_tree_slave () {
 
 #endif
 /*
-  	#] PF_find_Horner_MCTS_expand_tree : 
+  	#] PF_find_Horner_MCTS_expand_tree :
   	#[ find_Horner_MCTS :
 */
 
@@ -2233,7 +2211,7 @@ void find_Horner_MCTS () {
 }
 
 /*
-  	#] find_Horner_MCTS : 
+  	#] find_Horner_MCTS :
   	#[ merge_operators :
 */
 
@@ -2533,7 +2511,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 }
 
 /*
-  	#] merge_operators : 
+  	#] merge_operators :
   	#[ class Optimization :
 */
 
@@ -2576,7 +2554,7 @@ public:
 };
 
 /*
-  	#] class Optimization : 
+  	#] class Optimization :
   	#[ find_optimizations :
 */
 
@@ -2616,7 +2594,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
 	  optimization optim;
 		optim.type = optim_type;
-//	#] Startup : 
+//	#] Startup :
 
 //	#[ type 0 :	  find optimizations of the form z=x^n (optim.type==0)
 		if (optim_type == 0) {
@@ -2632,7 +2610,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 0 : 
+//	#] type 0 :
 //	#[ type 1 :	 find optimizations of the form z=x*y (optim.type==1)
 		if (optim_type == 1) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -2664,7 +2642,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 1 : 
+//	#] type 1 :
 //	#[ type 2 :	 find optimizations of the form z=c*x (optim.type==2)
 		if (optim_type == 2) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -2710,7 +2688,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 2 : 
+//	#] type 2 :
 //	#[ type 3 :	 find optimizations of the form z=x+c (optim.type==3)
 		if (optim_type == 3) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -2738,7 +2716,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 3 : 
+//	#] type 3 :
 //	#[ type 4,5 : find optimizations of the form z=x+y or z=x-y (optim.type==4 or 5)
 		if (optim_type == 4) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
@@ -2776,7 +2754,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				}
 			}
 		}
-//	#] type 4,5 : 
+//	#] type 4,5 :
 //	#[ add :
 
 		// add optimizations with positive improvement to the result
@@ -2792,7 +2770,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 			}
 		}
 	}
-//	#] add : 
+//	#] add :
 
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: find_optimizations",thetime_str().c_str());
@@ -2802,7 +2780,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 }
 
 /*
-  	#] find_optimizations : 
+  	#] find_optimizations :
   	#[ do_optimization :
 */
 
@@ -2847,7 +2825,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		optim.type==2 ? '*' : '+', num,den);
   }
 #endif
-//	#] Debug code : 
+//	#] Debug code :
 
 	bool substituted = false;
 	WORD *ebegin = &*instr.begin();
@@ -2901,7 +2879,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		instr.push_back(3);
 		instr.push_back(0); 	   // trailing 0
 	}
-//	#] type 0 : 
+//	#] type 0 :
 //	#[ type 1 : substitution of the form z=x*y (optim.type==1)
 	if (optim.type == 1) {
 
@@ -2987,7 +2965,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		instr.push_back(3);
 		instr.push_back(0); 	   // trailing 0
 	}
-//	#] type 1 : 
+//	#] type 1 :
 //	#[ type 2 : substitution of the form z=c*x (optim.type==2)
 
 	if (optim.type == 2) {
@@ -3104,7 +3082,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 			instr.push_back(optim.coeff[i]);
 		instr.push_back(0); 			   // trailing 0
 	}
-//	#] type 2 : 
+//	#] type 2 :
 //	#[ type 3 : substitution of the form z=x+c (optim.type==3)
 	if (optim.type == 3) {
 		int vartype = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
@@ -3180,7 +3158,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 			instr.push_back(optim.coeff[i]);
 		instr.push_back(0); 			  // trailing zero
 	}
-//	#] type 3 : 
+//	#] type 3 :
 //	#[ type 4,5 : substitution of the form z=x+y or z=x-y (optim.type=4 or 5)
 	if (optim.type >= 4) {
 
@@ -3293,7 +3271,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		instr.push_back(3*(optim.type==4?1:-1));
 		instr.push_back(0); 	   // trailing 0
 	}
-//	#] type 4,5 : 
+//	#] type 4,5 :
 //	#[ trivial :  remove trivial equations of the form Zi = +/-Zj
 	vector<int> renum(newid+1, 0);
 	bool do_renum=false;
@@ -3317,7 +3295,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		// remove equation
 		*t=0;
 	}
-//	#] trivial : 
+//	#] trivial :
 //	#[ renumbering :
 
 	// there are renumberings to be done, so loop through all equations
@@ -3334,7 +3312,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 			}
 		}
 	}
-//	#] renumbering : 
+//	#] renumbering :
 
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: do_optimization : res=true", thetime_str().c_str(), optim.improve);
@@ -3344,7 +3322,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 }
 
 /*
-  	#] do_optimization : 
+  	#] do_optimization :
   	#[ partial_factorize :
 */
 
@@ -3643,7 +3621,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 }
 
 /*
-  	#] partial_factorize : 
+  	#] partial_factorize :
   	#[ optimize_greedy :
 */
 
@@ -3773,7 +3751,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 }
 
 /*
-  	#] optimize_greedy : 
+  	#] optimize_greedy :
   	#[ recycle_variables :
 */
 
@@ -3935,7 +3913,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 }
 
 /*
-  	#] recycle_variables : 
+  	#] recycle_variables :
   	#[ optimize_expression_given_Horner :
 */
 
@@ -4019,7 +3997,7 @@ void optimize_expression_given_Horner () {
 }
 
 /*
-  	#] optimize_expression_given_Horner : 
+  	#] optimize_expression_given_Horner :
   	#[ PF_optimize_expression_given_Horner :
 */
 #ifdef WITHMPI
@@ -4170,7 +4148,7 @@ void PF_optimize_expression_given_Horner_slave () {
 
 #endif
 /*
-  	#] PF_optimize_expression_given_Horner : 
+  	#] PF_optimize_expression_given_Horner :
   	#[ generate_output :
 */
 
@@ -4319,7 +4297,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 }
 
 /*
-  	#] generate_output : 
+  	#] generate_output :
   	#[ generate_expression :
 */
 
@@ -4394,7 +4372,7 @@ WORD generate_expression (WORD exprnr) {
 }
 
 /*
-  	#] generate_expression : 
+  	#] generate_expression :
   	#[ optimize_print_code :
 */
 
@@ -4472,7 +4450,7 @@ VOID optimize_print_code (int print_expr) {
 }
 
 /*
-  	#] optimize_print_code : 
+  	#] optimize_print_code :
   	#[ Optimize :
 */
 
@@ -4789,7 +4767,7 @@ int Optimize (WORD exprnr, int do_print) {
 }
 
 /*
-  	#] Optimize : 
+  	#] Optimize :
   	#[ ClearOptimize :
 */
 
@@ -4845,6 +4823,6 @@ int ClearOptimize()
 }
 
 /*
-  	#] ClearOptimize : 
+  	#] ClearOptimize :
 */
 
