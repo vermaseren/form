@@ -671,6 +671,21 @@ generic:;
 				coef2[0] = ncoef2;
 				coef2[1] = 1;
 				break;
+			case IFOCCURS:
+				{
+					WORD *OccStop = ifp + ifp[1], *ifpp = ifp+2;
+					ncoef2 = 0;
+					while ( ifpp < OccStop ) {
+						if ( FindVar(ifpp,term) == 1 ) {
+							ncoef2 = 1; break;
+						}
+						if ( *ifpp == DOTPRODUCT ) ifp += 3;
+						else ifpp += 2;
+					}
+					coef2[0] = ncoef2;
+					coef2[1] = 1;
+				}
+				break;
 			default:
 				break;
 		}
