@@ -455,7 +455,8 @@ VOID RatToLine(UWORD *a, WORD na)
 		  }
 		  else if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE )
 		  && AO.DoubleFlag ) {
-			if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+			if ( anumer == 1 && adenom == 1 && a[0] == 1 ) {}
+			else if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
 			else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
 		  }
 		}
