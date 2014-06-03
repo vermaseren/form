@@ -11,7 +11,14 @@ AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE([foreign 1.7 dist-bzip2])
+dnl Use the serial-tests option if automake >= 1.13.
+dnl Assume the automake command is ${AUTOMAKE:-automake} as autoreconf does.
+dnl It may not work if "make" re-runs a different version of automake.
+m4_define([serial_tests], [m4_esyscmd([
+	${AUTOMAKE:-automake} --version | head -1 |
+	awk '{split ($NF,a,"."); if (a[1] >= 2 || (a[1] == 1 && a[2] >= 13)) { print "serial-tests" }}'
+])])
+AM_INIT_AUTOMAKE([1.7 foreign -Wall dist-bzip2] serial_tests)
 
 AC_DEFINE(MAJORVERSION, FORM_MAJORVERSION, [Major version of FORM.])
 AC_DEFINE(MINORVERSION, FORM_MINORVERSION, [Minor version of FORM.])
