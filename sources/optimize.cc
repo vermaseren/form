@@ -1391,9 +1391,6 @@ int count_operators_cse (const vector<WORD> &tree) {
   	#[ count_operators_cse_topdown :
 */
 
-int compcount = 0;
-int compsuc = 0;
-
 typedef struct node {
 	const WORD* data;
 	struct node* l;
@@ -1401,15 +1398,16 @@ typedef struct node {
 	WORD sign; // TODO: use data for this?
 	UWORD hash;
 
-	node() : sign(1), hash(0) {};
-	node(const WORD* data) : data(data), sign(1), hash(0) {};
+	node() : l(NULL), r(NULL), sign(1), hash(0) {};
+	node(const WORD* data) : data(data), l(NULL), r(NULL), sign(1), hash(0) {};
 
-		// a minus sign in the tree should only count as a different entry if
-		// it is a compound expression: a = -a, but T+-V != T+V
+	// a minus sign in the tree should only count as a different entry if
+	// it is a compound expression: a = -a, but T+-V != T+V
 	int cmp(const struct node* rhs) const {
-			compcount++;
-			if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;
-				int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
+		if (this == rhs) return 0;
+
+		if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;
+		int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
 		if (data[0] == SYMBOL || data[0] == SNUMBER) {
 			for (int i = 0; i < data[1] + mod; i++) {
 				if (data[i] != rhs->data[i]) return data[i] < rhs->data[i] ? -1 : 1;
@@ -1417,14 +1415,14 @@ typedef struct node {
 		} else {
 			int lv = l->cmp(rhs->l);
 			if (lv != 0) return lv;
-						int rv = r->cmp(rhs->r);
+			int rv = r->cmp(rhs->r);
 			if (rv != 0) return rv;
 
-						// TODO: only for ADD operation
-						if (l->sign != rhs->l->sign) return l->sign < rhs->l->sign ? -1 : 1;
-						if (r->sign != rhs->r->sign) return r->sign < rhs->r->sign ? -1 : 1;
-				}
-				compsuc++;
+			// TODO: only for ADD operation
+			if (l->sign != rhs->l->sign) return l->sign < rhs->l->sign ? -1 : 1;
+			if (r->sign != rhs->r->sign) return r->sign < rhs->r->sign ? -1 : 1;
+		}
+
 		return 0;
 	}
 
@@ -1435,16 +1433,16 @@ typedef struct node {
 	}
 
 	void calcHash() {
-				int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
+		int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
 		if (data[0] == SYMBOL || data[0] == SNUMBER) {
-					hash = hash_range(data, data[1] + mod);
+			hash = hash_range(data, data[1] + mod);
 		} else {
 			if (l->hash == 0) l->calcHash();
 			if (r->hash == 0) r->calcHash();
 
-						// signs only matter for compound expressions
-						size_t newr[] = {(size_t)data[0], l->hash, (size_t)l->sign, r->hash, (size_t)r->sign};
-						hash = hash_range(newr, 5);
+			// signs only matter for compound expressions
+			size_t newr[] = {(size_t)data[0], l->hash, (size_t)l->sign, r->hash, (size_t)r->sign};
+			hash = hash_range(newr, 5);
 		}
 	}
 } NODE;
@@ -1506,8 +1504,20 @@ NODE* buildTree(vector<WORD> &tree) {
 		}
 	}
 
-	// root should be first element
-	swap(ar[0], *st.top());
+	// TODO: reallocate to smaller size? Could save memory
+	//MesPrint("Memory difference: %d vs %d", curIndex, tree.size());
+
+	// we want to make the root of the tree the first element
+	// so that we can easily free the array.
+	// we swap the first element with the root
+	// we need to change the pointer in the operator node that has this element as a child
+	// TODO: check performance
+	for (unsigned int i = 0; i < curIndex; i++) {
+		if (ar[i].l == ar) ar[i].l = st.top();
+		if (ar[i].r == ar) ar[i].r = st.top();
+	}
+
+	swap(ar[0], *st.top());	
 	return ar;
 }
 
@@ -1522,7 +1532,6 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 	int numinstr = 0;
 
 	NODE* root = buildTree(tree);
-	compcount = 0; compsuc = 0;
 
 	stack<NODE*> stack;
 	stack.push(root);
@@ -1557,7 +1566,6 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 		}
 	}
 
-	//MesPrint("Hash count: %d %d", compsuc, compcount);
 	//MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	M_free(root, "CSE tree");
 
