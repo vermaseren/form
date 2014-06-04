@@ -823,7 +823,7 @@ Type & Specification statement\\
 Syntax & delete storage; \\
 See also & save (\ref{substasave}), load (\ref{substaload}) \\
 Syntax & delete extrasymbols; \\
-Syntax & delete extrasymbols>number; \\
+Syntax & delete extrasymbols\textgreater{}number; \\
 See also & extrasymbols (\ref{substaextrasymbols}) \\
 
 \end{tabular} \vspace{4mm}
@@ -1328,7 +1328,7 @@ indicate where \FORM\ ran into the exit statement. \vspace{10mm}
 
 \noindent \begin{tabular}{ll}
 Type & Declaration statement\\
-Syntax & extrasymbols,array|vector|underscore,name;
+Syntax & extrasymbols,array\textbar{}vector\textbar{}underscore,name;
 \\ See also & ToPolynomial (\ref{substatopolynomial}), FromPolynomial 
 (\ref{substafrompolynomial}) and extra symbols 
 (\ref{sect-extrasymbols}).
@@ -1438,7 +1438,7 @@ compatibility mode with versions before version 4.0.
 
 \noindent \begin{tabular}{ll}
 Type & Executable statement\\
-Syntax & factdollar options \verb:{:{\tt<}name of dollar variable{\tt>};
+Syntax & factdollar {\tt<}name of dollar variable{\tt>};
 \\ See also & the chapter on polynomials~\ref{polynomials}.
 \end{tabular} \vspace{4mm}
 
@@ -1468,7 +1468,7 @@ after which this dollar variable can then be used as a factor indicator.
 
 \noindent \begin{tabular}{ll}
 Type & Output control statement\\
-Syntax & factorize \verb:{:(options)\verb:}: \verb:{:{\tt<}name of expression(s){\tt>};
+Syntax & factorize \verb:{:{\tt<}name of expression(s){\tt>}\verb:}:;
 \\ See also & the chapter on polynomials~\ref{polynomials}.
 \end{tabular} \vspace{4mm}
 
@@ -3138,7 +3138,7 @@ This drops all expressions, except for the expressions \verb:F1: and
 
 \noindent \begin{tabular}{ll}
 Type & Output control statement\\
-Syntax & nfactorize \verb:{:{\tt<}name of expression(s){\tt>};
+Syntax & nfactorize \verb:{:{\tt<}name of expression(s){\tt>}\verb:}:;
 \\ See also & the chapter on polynomials~\ref{polynomials} and 
 \ref{substafactorize}.
 \end{tabular} \vspace{4mm}
@@ -3368,7 +3368,7 @@ those for functions (see \ref{substafunctions}). \vspace{10mm}
 
 \noindent \begin{tabular}{ll}
 Type & Output control statement\\
-Syntax & nunfactorize \verb:{:{\tt<}name of expression(s){\tt>};
+Syntax & nunfactorize \verb:{:{\tt<}name of expression(s){\tt>}\verb:}:;
 \\ See also & the chapter on polynomials~\ref{polynomials} and 
 \ref{substaunfactorize}.
 \end{tabular} \vspace{4mm}
@@ -5770,7 +5770,7 @@ the current term, the current term is replaced by the new variety.
 
 \noindent \begin{tabular}{ll}
 Type & Output control statement\\
-Syntax & unfactorize \verb:{:{\tt<}name of expression(s){\tt>};
+Syntax & unfactorize \verb:{:{\tt<}name of expression(s){\tt>}\verb:}:;
 \\ See also & the chapter on polynomials~\ref{polynomials} and the 
 factorize statement~\ref{substafactorize}.
 \end{tabular} \vspace{4mm}
