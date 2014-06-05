@@ -4330,6 +4330,44 @@ int Optimize (WORD exprnr, int do_print) {
 	
 #ifdef WITHMPI
 	}
+
+	// synchronize optimvalue_ and optimscheme_
+	if ( PF.me == MASTER ) {
+		UBYTE *value;
+		int bytes;
+
+		PF_PrepareLongMultiPack();
+
+		value = GetPreVar((UBYTE *)"optimvalue_", WITHERROR);
+		bytes = strlen((char *)value);
+		PF_LongMultiPack(&bytes, 1, PF_INT);
+		PF_LongMultiPack(value, bytes, PF_BYTE);
+
+		value = GetPreVar((UBYTE *)"optimscheme_", WITHERROR);
+		bytes = strlen((char *)value);
+		PF_LongMultiPack(&bytes, 1, PF_INT);
+		PF_LongMultiPack(value, bytes, PF_BYTE);
+	}
+	PF_LongMultiBroadcast();
+	if ( PF.me != MASTER ) {
+		static vector<UBYTE> prevarbuf;
+		UBYTE *value;
+		int bytes;
+
+		PF_LongMultiUnpack(&bytes, 1, PF_INT);
+		prevarbuf.reserve(bytes + 1);
+		value = &prevarbuf[0];
+		PF_LongMultiUnpack(value, bytes, PF_BYTE);
+		value[bytes] = '\0';  // null terminator
+		PutPreVar((UBYTE *)"optimvalue_", value, NULL, 1);
+
+		PF_LongMultiUnpack(&bytes, 1, PF_INT);
+		prevarbuf.reserve(bytes + 1);
+		value = &prevarbuf[0];
+		PF_LongMultiUnpack(value, bytes, PF_BYTE);
+		value[bytes] = '\0';  // null terminator
+		PutPreVar((UBYTE *)"optimscheme_", value, NULL, 1);
+	}
 #endif
 
 	// cleanup
