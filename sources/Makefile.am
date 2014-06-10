@@ -241,28 +241,5 @@ parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
 
-# Prints #define PRODUCTIONDATE "...". It uses
-#   1. DATE variable if it is not empty,
-#   2. the last commit date of the Git repository if available,
-#   3. if all else fails, the current date (by date command).
-#
-print_production_date = \
-  { \
-    my_date=; \
-    [ "x$(DATE)" != x ] && my_date="$(DATE)"; \
-    if [ "x$$my_date" = x ] && type git >/dev/null 2>&1; then \
-      my_date=`LANG=en_US TZ=UTC git log -1 --format=%cd --date=local 2>/dev/null || :`; \
-      if [ "x$$my_date" != x ]; then \
-        my_month=`echo $$my_date | cut -f 2 -d ' '`; \
-        my_day=`echo $$my_date | cut -f 3 -d ' '`; \
-        my_year=`echo $$my_date | cut -f 5 -d ' '`; \
-        [ $$my_day -lt 10 ] && my_day=" $$my_day"; \
-        my_date="$$my_month $$my_day $$my_year"; \
-      fi; \
-    fi; \
-    [ "x$$my_date" = x ] && my_date="`LANG=en_US TZ=UTC date -u +'%b %e %Y'`"; \
-    echo "\#define PRODUCTIONDATE \"$$my_date\""; \
-  }
-
 dist-hook:
-	$(print_production_date) >$(distdir)/production-date.h
+	$(SHELL) $(top_srcdir)/gendate.sh -c $(srcdir)/production-date.h $(distdir)/production-date.h "$(DATE)"

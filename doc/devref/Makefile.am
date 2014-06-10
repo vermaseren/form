@@ -14,10 +14,11 @@ EXTRA_DIST = $(TEXFILES)
 
 DATEFILE = devrefdate.tex
 $(DATEFILE): FORCE
-	OLDDATE=0; if [ -f $(DATEFILE) ]; then OLDDATE=$$(cat $(DATEFILE)); OLDDATE=$$(date -d "$$OLDDATE" +%Y%m%d); fi; \
-	NEWDATE=0; if [ "x$(DATE)" != x ]; then NEWDATE=$(DATE); else NEWDATE=$$(date +"%d %b %Y"); fi; \
-	if [ $$(date -d "$$NEWDATE" +%Y%m%d) -gt $$OLDDATE ]; then echo $$NEWDATE > $(DATEFILE); echo DIDIT; fi
+	$(SHELL) $(top_srcdir)/gendate.sh -t $(srcdir)/$(DATEFILE).in $(DATEFILE) "$(DATE)"
 FORCE:
+
+dist-hook:
+	$(SHELL) $(top_srcdir)/gendate.sh -t $(srcdir)/$(DATEFILE).in $(distdir)/$(DATEFILE).in "$(DATE)"
 
 CLEANFILES = \
 	$(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi \

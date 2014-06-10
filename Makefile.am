@@ -1,3 +1,3 @@
 SUBDIRS = doc sources check
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md gendate.sh
