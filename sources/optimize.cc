@@ -4278,7 +4278,10 @@ int Optimize (WORD exprnr, int do_print) {
 			Out = OutScr;
 			sym = optimize_best_vars[i];
 			if ( i > 0 ) TokenToLine((UBYTE *)",");
-			if ( sym < NumSymbols ) { StrCopy(VARNAME(symbols,sym),OutScr); }
+			if ( sym < NumSymbols ) {
+				StrCopy(FindSymbol(sym),OutScr);
+/*				StrCopy(VARNAME(symbols,sym),OutScr); */
+			}
 			else {
 				Out = StrCopy((UBYTE *)AC.extrasym,Out);
 				if ( AC.extrasymbols == 0 ) {
@@ -4306,7 +4309,10 @@ int Optimize (WORD exprnr, int do_print) {
 		for ( i = 0; i < optimize_num_vars; i++ ) {
 			Out = OutScr;
 			sym = optimize_best_vars[i];
-			if ( sym < NumSymbols ) { StrCopy(VARNAME(symbols,sym),OutScr); }
+			if ( sym < NumSymbols ) {
+				StrCopy(FindSymbol(sym),OutScr);
+/*				StrCopy(VARNAME(symbols,sym),OutScr); */
+			}
 			else {
 				Out = StrCopy((UBYTE *)AC.extrasym,Out);
 				if ( AC.extrasymbols == 0 ) {

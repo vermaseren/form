@@ -800,6 +800,8 @@ int CoTBaddto(UBYTE *s)
 			}
 			else if ( ExistsObject(d,basenumber,(char *)es) ) {}
 			else {
+			  int dict = AO.CurrentDictionary;
+			  AO.CurrentDictionary = 0;
 			  sum = i + T->numind;
 /*
 			  See also commentary below
@@ -824,6 +826,7 @@ int CoTBaddto(UBYTE *s)
 			  AO.OutInBuffer = 0;
 			  AddObject(d,basenumber,(char *)es,(char *)(AO.DollarOutBuffer));
 			  *s++ = c;
+			  AO.CurrentDictionary = dict;
 			}
 		}
 		else {
@@ -909,9 +912,12 @@ int CoTBenter(UBYTE *s)
 	int i, j, error = 0, error1 = 0, printall = 0;
 	TABLES T = 0;
 	WORD type, funnum;
+	int dict = AO.CurrentDictionary;
+	AO.CurrentDictionary = 0;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
 		MesPrint("&No open tablebase with the name %s",tablebasename);
-		return(-1);
+		error = -1;
+		goto Endofall;
 	}
 	while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
 	if ( *s == '!' ) { printall = 1; s++; }
@@ -919,7 +925,7 @@ int CoTBenter(UBYTE *s)
 	if ( *s ) {
 	  while ( *s ) {
 		tablename = s;
-		if ( ( s = SkipAName(s) ) == 0 ) return(1);
+		if ( ( s = SkipAName(s) ) == 0 ) { error = 1; goto Endofall; }
 		c = *s; *s = 0;
 		if ( ( GetVar(tablename,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
 			|| ( T = functions[funnum].tabl ) == 0 ) {
@@ -970,7 +976,7 @@ int CoTBenter(UBYTE *s)
 
 						error1 = CoFill(buffer);
 
-						if ( error1 < 0 ) { return(error); }
+						if ( error1 < 0 ) goto Endofall;
 						if ( error1 != 0 ) error = error1;
 						M_free(buffer,"TableBase copy");
 					}
@@ -1031,7 +1037,7 @@ int CoTBenter(UBYTE *s)
 
 						error1 = CoFill(buffer);
 
-						if ( error1 < 0 ) { return(error); }
+						if ( error1 < 0 ) goto Endofall;
 						if ( error1 != 0 ) error = error1;
 						M_free(buffer,"TableBase copy");
 					}
@@ -1040,6 +1046,8 @@ int CoTBenter(UBYTE *s)
 		}
 	  }
 	}
+Endofall:;
+	AO.CurrentDictionary = dict;
 	return(error);
 }
 

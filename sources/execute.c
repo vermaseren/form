@@ -343,6 +343,17 @@ WORD PopVariables()
 			}
 		}
 	}
+/*
+	Clean up the dictionaries.
+*/
+	for ( i = AO.NumDictionaries-1; i >= AO.gNumDictionaries; i-- ) {
+		RemoveDictionary(AO.Dictionaries[i]);
+		M_free(AO.Dictionaries[i],"Dictionary");
+	}
+	for( ; i >= 0; i-- ) {
+		ShrinkDictionary(AO.Dictionaries[i]);
+	}
+	AO.NumDictionaries = AO.gNumDictionaries;
 	return(retval);
 }
 
@@ -418,6 +429,17 @@ VOID MakeGlobal()
 	NCOPY(pp,mm,i);
 	AM.gSortType = AC.SortType;
 	AM.gShortStatsMax = AC.ShortStatsMax;
+
+	if ( AO.CurrentDictionary > 0 || AP.OpenDictionary > 0 ) {
+		Warning("You cannot have an open or selected dictionary at a .global. Dictionary closed.");
+		AP.OpenDictionary = 0;
+		AO.CurrentDictionary = 0;
+	}
+
+	AO.gNumDictionaries = AO.NumDictionaries;
+	for ( i = 0; i < AO.NumDictionaries; i++ ) {
+		AO.Dictionaries[i]->gnumelements = AO.Dictionaries[i]->numelements;
+	}
 }
 
 /*
@@ -590,6 +612,12 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 	if ( AC.dolooplevel > 0 ) {
 		MesPrint(" %d enddo statement(s) missing",AC.dolooplevel);
+		RetCode = 1;
+	}
+	if ( AP.OpenDictionary > 0 ) {
+		MesPrint(" Dictionary %s has not been closed.",
+			AO.Dictionaries[AP.OpenDictionary-1]->name);
+		AP.OpenDictionary = 0;
 		RetCode = 1;
 	}
 	if ( RetCode ) return(RetCode);

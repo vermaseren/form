@@ -583,6 +583,7 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 	WORD *t, lbrac = 0, first = 0, arg[2], oldOutputMode = AC.OutputMode;
 	WORD oldinfbrack = AO.InFbrack;
 	int error = 0;
+	int dict = AO.CurrentDictionary;
  
 	AO.DollarOutSizeBuffer = 32;
 	AO.DollarOutBuffer = (UBYTE *)Malloc1(AO.DollarOutSizeBuffer,"DollarOutBuffer");
@@ -591,7 +592,10 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 	AO.InFbrack = 0;
 	s = AO.DollarOutBuffer;
 	*s = 0;
-	if ( par > 0 ) { AC.OutputMode = NORMALFORMAT; }
+	if ( par > 0 ) {
+		AC.OutputMode = NORMALFORMAT;
+		AO.CurrentDictionary = 0;
+	}
 	else {
 		AO.CurBufWrt = (UBYTE *)underscore;
 	}
@@ -638,6 +642,7 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 	AO.OutInBuffer = 0;
 	AO.InFbrack = oldinfbrack;
 	AO.CurBufWrt = oldcurbufwrt;
+	AO.CurrentDictionary = dict;
 	if ( error ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
@@ -669,6 +674,7 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 	WORD *t, lbrac = 0, first = 0, n[5], oldOutputMode = AC.OutputMode;
 	WORD oldinfbrack = AO.InFbrack;
 	int error = 0;
+	int dict = AO.CurrentDictionary;
  
 	if ( numfac > d->nfactors || numfac < 0 ) {
 		MLOCK(ErrorMessageLock);
@@ -685,7 +691,10 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 	AO.InFbrack = 0;
 	s = AO.DollarOutBuffer;
 	*s = 0;
-	if ( par > 0 ) { AC.OutputMode = NORMALFORMAT; }
+	if ( par > 0 ) {
+		AC.OutputMode = NORMALFORMAT;
+		AO.CurrentDictionary = 0;
+	}
 	else {
 		AO.CurBufWrt = (UBYTE *)underscore;
 	}
@@ -712,6 +721,7 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 	AO.OutInBuffer = 0;
 	AO.InFbrack = oldinfbrack;
 	AO.CurBufWrt = oldcurbufwrt;
+	AO.CurrentDictionary = dict;
 	if ( error ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("&Illegal dollar object for writing");
@@ -749,9 +759,14 @@ void AddToDollarBuffer(UBYTE *s)
 	t = AO.DollarOutBuffer + AO.DollarInOutBuffer-1;
 	while ( t == AO.DollarOutBuffer && ( *s == '+' || *s == ' ' ) ) s++;
 	i = 0;
-	while ( *s ) {
-		if ( *s == ' ' ) { s++; continue; }
-		*t++ = *s++; i++;
+	if ( AO.CurrentDictionary == 0 ) {
+		while ( *s ) {
+			if ( *s == ' ' ) { s++; continue; }
+			*t++ = *s++; i++;
+		}
+	}
+	else {
+		while ( *s ) { *t++ = *s++; i++; }
 	}
 	*t = 0;
 	AO.DollarInOutBuffer += i;

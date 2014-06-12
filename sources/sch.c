@@ -676,6 +676,31 @@ UBYTE *CodeToLine(WORD number, UBYTE *Out)
 
 /*
  		#] CodeToLine : 
+ 		#[ MultiplyToLine :
+*/
+
+void MultiplyToLine()
+{
+	int i;
+	if ( AO.CurrentDictionary > 0 && AO.CurDictSpecials > 0
+	 && AO.CurDictSpecials == DICT_DOSPECIALS ) {
+		DICTIONARY *dict = AO.Dictionaries[AO.CurrentDictionary-1];
+/*
+		Find the star:
+*/
+		for ( i = 0; i < dict->numelements; i++ ) {
+			if ( dict->elements[i]->type != DICT_SPECIALCHARACTER ) continue;
+			if ( (UBYTE)dict->elements[i]->lhs[0] == (UBYTE)('*') ) {
+				TokenToLine((UBYTE *)(dict->elements[i]->rhs));
+				return;
+			}
+		}
+	}
+	TokenToLine((UBYTE *)"*");
+}
+
+/*
+ 		#] MultiplyToLine : 
  		#[ AddArrayIndex :
 */
 
@@ -733,7 +758,8 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 		if ( Power < 2*MAXPOWER )
 			Out = NumCopy(Power,Out);
 		else
-			Out = StrCopy(VARNAME(symbols,(LONG)Power-2*MAXPOWER),Out);
+			Out = StrCopy(FindSymbol((WORD)((LONG)Power-2*MAXPOWER)),Out);
+/*			Out = StrCopy(VARNAME(symbols,(LONG)Power-2*MAXPOWER),Out); */
 		if ( AC.OutputMode == CMODE ) *Out++ = ')';
 		*Out = 0;
 	}
@@ -745,7 +771,8 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 		if ( Power > -2*MAXPOWER )
 			Out = NumCopy(-Power,Out);
 		else
-			Out = StrCopy(VARNAME(symbols,(LONG)(-Power)-2*MAXPOWER),Out);
+			Out = StrCopy(FindSymbol((WORD)((LONG)Power-2*MAXPOWER)),Out);
+/*			Out = StrCopy(VARNAME(symbols,(LONG)(-Power)-2*MAXPOWER),Out); */
 		if ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE ) *Out++ = ')';
 		*Out = 0;
 	}
@@ -791,9 +818,11 @@ VOID WriteLists()
 	UBYTE *OutScr, *Out;
 	EXPRESSIONS e;
 	CBUF *C = cbuf+AC.cbufnum;
+	int olddict = AO.CurrentDictionary;
 	skip = &AO.OutSkip;
 	*skip = 0;
 	AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
+	AO.CurrentDictionary = 0;
 	FiniLine();
 	OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
@@ -845,6 +874,7 @@ VOID WriteLists()
 		*skip = 3;
 		FiniLine();
 		for ( i = startvalue; i < j; i++ ) {
+			Out = StrCopy(FindIndex(i),OutScr);
 			Out = StrCopy(VARNAME(indices,i),OutScr);
 			if ( indices[i].dimension >= 0 ) {
 				if ( indices[i].dimension != AC.lDefDim ) {
@@ -1191,6 +1221,16 @@ VOID WriteLists()
 		}
 		FiniLine();
 	}
+	if ( AO.NumDictionaries > 0 ) {
+		for ( i = 0; i < AO.NumDictionaries; i++ ) {
+			WriteDictionary(AO.Dictionaries[i]);
+		}
+		if ( olddict > 0 )
+			MesPrint("\nCurrently dictionary %s is active\n",
+				AO.Dictionaries[olddict-1]->name);
+		else
+			MesPrint("\nCurrently there is no actice dictionary\n");
+	}
 	if ( AC.CodesFlag ) {
 		if ( C->numlhs > 0 ) {
 			TokenToLine((UBYTE *)" Left Hand Sides:");
@@ -1219,10 +1259,126 @@ VOID WriteLists()
 			FiniLine();
 		}
 	}
+	AO.CurrentDictionary = olddict;
 }
 
 /*
  		#] WriteLists : 
+ 		#[ WriteDictionary :
+
+	This routine is part of WriteLists and should be called from there.
+*/
+
+void WriteDictionary(DICTIONARY *dict)
+{
+	GETIDENTITY
+	int i, first;
+	WORD *skip, na, *a, spec, *t, *tstop, j;
+	UBYTE str[2], *OutScr, *Out;
+	WORD oldoutputmode = AC.OutputMode, oldoutputspaces = AC.OutputSpaces;
+	WORD oldoutskip = AO.OutSkip;
+	AC.OutputMode = NORMALFORMAT;
+	AC.OutputSpaces = NOSPACEFORMAT;
+	MesPrint("===Contents of dictionary %s===",dict->name);
+	skip = &AO.OutSkip;
+	*skip = 3;
+	AO.OutputLine = AO.OutFill = (UBYTE *)AT.WorkPointer;
+	for ( j = 0; j < *skip; j++ ) *(AO.OutFill)++ = ' ';
+
+	OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
+	for ( i = 0; i < dict->numelements; i++ ) {
+		switch ( dict->elements[i]->type ) {
+			case DICT_INTEGERNUMBER:
+				LongToLine((UWORD *)(dict->elements[i]->lhs),dict->elements[i]->size);
+				Out = OutScr; *Out = 0;
+				break;
+			case DICT_RATIONALNUMBER:
+				a = dict->elements[i]->lhs;
+				na = a[a[0]-1]; na = (ABS(na)-1)/2;
+				RatToLine((UWORD *)(a+1),na);
+				Out = OutScr; *Out = 0;
+				break;
+			case DICT_SYMBOL:
+				na = dict->elements[i]->lhs[0];
+				Out = StrCopy(VARNAME(symbols,na),OutScr);
+				break;
+			case DICT_VECTOR:
+				na = dict->elements[i]->lhs[0]-AM.OffsetVector;
+				Out = StrCopy(VARNAME(vectors,na),OutScr);
+				break;
+			case DICT_INDEX:
+				na = dict->elements[i]->lhs[0]-AM.OffsetIndex;
+				Out = StrCopy(VARNAME(indices,na),OutScr);
+				break;
+			case DICT_FUNCTION:
+				na = dict->elements[i]->lhs[0]-FUNCTION;
+				Out = StrCopy(VARNAME(functions,na),OutScr);
+				break;
+			case DICT_FUNCTION_WITH_ARGUMENTS:
+				t = dict->elements[i]->lhs;
+				na = *t-FUNCTION;
+				Out = StrCopy(VARNAME(functions,na),OutScr);
+				spec = functions[*t - FUNCTION].spec;
+				tstop = t + t[1];
+				first = 1;
+				if ( t[1] <= FUNHEAD ) {}
+				else if ( spec >= TENSORFUNCTION ) {
+					t += FUNHEAD; *Out++ = (UBYTE)'(';
+					while ( t < tstop ) {
+						if ( first == 0 ) *Out++ = (UBYTE)(',');
+						else first = 0;
+						j = *t++;
+						if ( j >= 0 ) {
+							if ( j < AM.OffsetIndex ) { Out = NumCopy(j,Out); }
+							else if ( j < AM.IndDum ) {
+								Out = StrCopy(VARNAME(indices,j-AM.OffsetIndex),Out);
+							}
+							else {
+								MesPrint("Currently wildcards are not allowed in dictionary elements");
+								Terminate(-1);
+							}
+						}
+						else {
+							Out = StrCopy(VARNAME(vectors,j-AM.OffsetVector),Out);
+						}
+					}
+					*Out++ = (UBYTE)')'; *Out = 0;
+				}
+				else {
+					t += FUNHEAD; *Out++ = (UBYTE)'('; *Out = 0;
+					TokenToLine(OutScr);
+					while ( t < tstop ) {
+						if ( !first ) TokenToLine((UBYTE *)",");
+						WriteArgument(t);
+						NEXTARG(t)
+						first = 0;
+					}
+					Out = OutScr;
+					*Out++ = (UBYTE)')'; *Out = 0;
+				}
+				break;
+			case DICT_SPECIALCHARACTER:
+				str[0] = (UBYTE)(dict->elements[i]->lhs[0]);
+				str[1] = 0; 
+				Out = StrCopy(str,OutScr);
+				break;
+			default:
+				break;
+		}
+		Out = StrCopy((UBYTE *)": \"",Out);
+		Out = StrCopy((UBYTE *)(dict->elements[i]->rhs),Out);
+		Out = StrCopy((UBYTE *)"\"",Out);
+		TokenToLine(OutScr);
+		FiniLine();
+	}
+	MesPrint("========End of dictionary %s===",dict->name);
+	AC.OutputMode = oldoutputmode;
+	AC.OutputSpaces = oldoutputspaces;
+	AO.OutSkip = oldoutskip;
+}
+
+/*
+ 		#] WriteDictionary : 
  		#[ WriteArgument :		VOID WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
@@ -1263,17 +1419,20 @@ VOID WriteArgument(WORD *t)
 */
 		}
 		else {
-			StrCopy(VARNAME(symbols,t[1]),Out);
+			StrCopy(FindSymbol(t[1]),Out);
+/*			StrCopy(VARNAME(symbols,t[1]),Out); */
 		}
 	}
 	else if ( *t == -VECTOR ) {
 		if ( t[1] == FUNNYVEC ) { *Out++ = '?'; *Out = 0; }
 		else
-			StrCopy(VARNAME(vectors,t[1] - AM.OffsetVector),Out);
+			StrCopy(FindVector(t[1]),Out);
+/*			StrCopy(VARNAME(vectors,t[1] - AM.OffsetVector),Out); */
 	}
 	else if ( *t == -MINVECTOR ) {
 		*Out++ = '-';
-		StrCopy(VARNAME(vectors,t[1] - AM.OffsetVector),Out);
+		StrCopy(FindVector(t[1]),Out);
+/*		StrCopy(VARNAME(vectors,t[1] - AM.OffsetVector),Out); */
 	}
 	else if ( *t == -INDEX ) {
 		if ( t[1] >= 0 ) {
@@ -1290,14 +1449,16 @@ VOID WriteArgument(WORD *t)
 				}
 				else {
 					i -= AM.OffsetIndex;
-					Out = StrCopy(VARNAME(indices,i%WILDOFFSET),Out);
-						if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
+					Out = StrCopy(FindIndex(i%WILDOFFSET),Out);
+/*					Out = StrCopy(VARNAME(indices,i%WILDOFFSET),Out); */
+					if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
 				}
 			}
 		}
 		else if ( t[1] == FUNNYVEC ) { *Out++ = '?'; *Out = 0; }
 		else
-			StrCopy(VARNAME(vectors,t[1] - AM.OffsetVector),Out);
+			StrCopy(FindVector(t[1]),Out);
+/*			StrCopy(VARNAME(vectors,t[1] - AM.OffsetVector),Out); */
 	}
 	else if ( *t == -DOLLAREXPRESSION ) {
 		DOLLARS d = Dollars + t[1];
@@ -1308,7 +1469,8 @@ VOID WriteArgument(WORD *t)
 		StrCopy(EXPRNAME(t[1]),Out);
 	}
 	else if ( *t <= -FUNCTION ) {
-		StrCopy(VARNAME(functions,-*t-FUNCTION),Out);
+		StrCopy(FindFunction(-*t),Out);
+/*		StrCopy(VARNAME(functions,-*t-FUNCTION),Out); */
 	}
 	else {
 		MesPrint("Illegal function argument while writing");
@@ -1352,7 +1514,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						else IniLine(3);
 					if ( first ) TokenToLine((UBYTE *)" ");
 				}
-				if ( !first ) TokenToLine((UBYTE *)"*");
+				if ( !first ) MultiplyToLine();
 				if ( AC.OutputMode == CMODE && t[1] != 1 ) {
 					if ( AC.Cnumpows >= t[1] && t[1] > 0 ) {
 						po = t[1];
@@ -1366,7 +1528,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 					}
 				}
 				if ( *t < NumSymbols ) {
-					Out = StrCopy(VARNAME(symbols,*t),buffer); t++;
+					Out = StrCopy(FindSymbol(*t),buffer); t++;
+/*					Out = StrCopy(VARNAME(symbols,*t),buffer); t++; */
 				}
 				else {
 /*
@@ -1406,9 +1569,10 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						else IniLine(3);
 					if ( first ) TokenToLine((UBYTE *)" ");
 				}
-				if ( !first ) TokenToLine((UBYTE *)"*");
+				if ( !first ) MultiplyToLine();
 
-				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer);
+				Out = StrCopy(FindVector(*t),buffer);
+/*				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer); */
 				t++;
 				if ( AC.OutputMode == MATHEMATICAMODE ) *Out++ = '[';
 				else *Out++ = '(';
@@ -1423,7 +1587,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						*Out = 0;
 					}
 					else
-						Out = StrCopy(VARNAME(indices,i - AM.OffsetIndex),Out);
+						Out = StrCopy(FindIndex(i),Out);
+/*						Out = StrCopy(VARNAME(indices,i - AM.OffsetIndex),Out); */
 				}
 				else if ( *t == FUNNYVEC ) { *Out++ = '?'; *Out = 0; }
 				else {
@@ -1444,7 +1609,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						else IniLine(3);
 					if ( first ) TokenToLine((UBYTE *)" ");
 				}
-				if ( !first ) TokenToLine((UBYTE *)"*");
+				if ( !first ) MultiplyToLine();
 			if ( *t >= 0 ) {
 				if ( *t < AM.OffsetIndex ) {
 					TalToLine((UWORD)(*t++));
@@ -1462,14 +1627,16 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 					}
 					else {
 						i -= AM.OffsetIndex;
-						Out = StrCopy(VARNAME(indices,i%WILDOFFSET),buffer);
+						Out = StrCopy(FindIndex(i%WILDOFFSET),buffer);
+/*						Out = StrCopy(VARNAME(indices,i%WILDOFFSET),buffer); */
 						if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
 					}
 					TokenToLine(buffer);
 				}
 			}
 			else {
-				TokenToLine(VARNAME(vectors,*t - AM.OffsetVector)); t++;
+				TokenToLine(FindVector(*t)); t++;
+/*				TokenToLine(VARNAME(vectors,*t - AM.OffsetVector)); t++; */
 			}
 			first = 0;
 			}
@@ -1492,11 +1659,12 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						else IniLine(3);
 					if ( first ) TokenToLine((UBYTE *)" ");
 				}
-				if ( !first ) TokenToLine((UBYTE *)"*");
+				if ( !first ) MultiplyToLine();
 				Out = StrCopy((UBYTE *)"d_(",buffer);
 				if ( *t >= AM.OffsetIndex ) {
 					if ( *t < AM.IndDum ) {
-						Out = StrCopy(VARNAME(indices,*t - AM.OffsetIndex),Out);
+						Out = StrCopy(FindIndex(*t),Out);
+/*						Out = StrCopy(VARNAME(indices,*t - AM.OffsetIndex),Out); */
 						t++;
 					}
 					else {
@@ -1514,7 +1682,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 				*Out++ = ',';
 				if ( *t >= AM.OffsetIndex ) {
 					if ( *t < AM.IndDum ) {
-						Out = StrCopy(VARNAME(indices,*t - AM.OffsetIndex),Out);
+						Out = StrCopy(FindIndex(*t),Out);
+/*						Out = StrCopy(VARNAME(indices,*t - AM.OffsetIndex),Out); */
 						t++;
 					}
 					else {
@@ -1541,16 +1710,18 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						else IniLine(3);
 					if ( first ) TokenToLine((UBYTE *)" ");
 				}
-				if ( !first ) TokenToLine((UBYTE *)"*");
+				if ( !first ) MultiplyToLine();
 				if ( AC.OutputMode == CMODE && t[2] != 1 )
 					TokenToLine((UBYTE *)"pow(");
-				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer);
+				Out = StrCopy(FindVector(*t),buffer);
+/*				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer); */
 				t++;
 				if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE
 				 || AC.OutputMode == CMODE )
 					*Out++ = AO.FortDotChar;
 				else *Out++ = '.';
-				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),Out);
+				Out = StrCopy(FindVector(*t),Out);
+/*				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),Out); */
 				t++;
 				if ( *t != 1 ) WrtPower(Out,*t);
 				t++;
@@ -1562,7 +1733,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 #if FUNHEAD != 2
 			t += FUNHEAD - 2;
 #endif
-			if ( !first ) TokenToLine((UBYTE *)"*");
+			if ( !first ) MultiplyToLine();
 			if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)"pow(");
 			else TokenToLine((UBYTE *)"(");
 			WriteArgument(t);
@@ -1585,7 +1756,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			TokenToLine((UBYTE *)")");
 			break;
 		case SUBEXPRESSION:
-			if ( !first ) TokenToLine((UBYTE *)"*");
+			if ( !first ) MultiplyToLine();
 			TokenToLine((UBYTE *)"(");
 			t = cbuf[sterm[4]].rhs[sterm[2]];
 			tt = t;
@@ -1616,7 +1787,14 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			if ( *sterm < FUNCTION ) {
 			return(MesPrint("Illegal subterm while writing"));
 			}
-			if ( !first ) TokenToLine((UBYTE *)"*");
+			if ( !first ) MultiplyToLine();
+			first = 1;
+			{ UBYTE *tmp;
+				if ( ( tmp = FindFunWithArgs(sterm) ) != 0 ) {
+					TokenToLine(tmp);
+					break;
+				}
+			}
 			t += FUNHEAD-2;
 
 			if ( *sterm == GAMMA && t[-FUNHEAD+1] == FUNHEAD+1 ) {
@@ -1624,7 +1802,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			}
 			else {
 				if ( *sterm != DUMFUN ) {
-					Out = StrCopy(VARNAME(functions,*sterm - FUNCTION),buffer);
+					Out = StrCopy(FindFunction(*sterm),buffer);
+/*					Out = StrCopy(VARNAME(functions,*sterm - FUNCTION),buffer); */
 				}
 				else { Out = buffer; *Out = 0; }
 				if ( t >= stopper ) {
@@ -1636,7 +1815,6 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 				*Out = 0;
 				TokenToLine(buffer);
 			}
-			first = 1;
 			i = functions[*sterm - FUNCTION].spec;
 			if ( i >= TENSORFUNCTION ) {
 				t = sterm + FUNHEAD;
@@ -1648,7 +1826,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						if ( j < AM.OffsetIndex ) TalToLine((UWORD)(j));
 						else if ( j < AM.IndDum ) {
 							i = j - AM.OffsetIndex;
-							Out = StrCopy(VARNAME(indices,i%WILDOFFSET),buffer);
+							Out = StrCopy(FindIndex(i%WILDOFFSET),buffer);
+/*							Out = StrCopy(VARNAME(indices,i%WILDOFFSET),buffer); */
 							if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
 							TokenToLine(buffer);
 						}
@@ -1671,7 +1850,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						TokenToLine(buffer);					
 					}
 					else {
-						TokenToLine(VARNAME(vectors,j - AM.OffsetVector));
+						TokenToLine(FindVector(j));
+/*						TokenToLine(VARNAME(vectors,j - AM.OffsetVector)); */
 					}
 				}
 			}
@@ -1745,7 +1925,9 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 				if ( AC.OutputSpaces == NOSPACEFORMAT ) IniLine(1);
 				else IniLine(3);
 		}
-		RatToLine((UWORD *)t,n); first = 0;
+		if ( AO.CurrentDictionary > 0 ) TransformRational((UWORD *)t,n);
+		else                             RatToLine((UWORD *)t,n);
+		first = 0;
 	}
 	else first = 1;
 	while ( s < t ) {
@@ -1810,7 +1992,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 				}
 				if ( pow > 1 ) {
 					if ( AC.OutputMode == CMODE ) {
-						if ( !first ) TokenToLine((UBYTE *)"*");
+						if ( !first ) MultiplyToLine();
 						TokenToLine((UBYTE *)"pow(");
 						first = 1;
 					}
@@ -2315,16 +2497,20 @@ WORD WriteAll()
 					if ( !first ) TokenToLine((UBYTE *)",");
 					switch ( n ) {
 						case SYMTOSYM :
-							TokenToLine(VARNAME(symbols,t[2]));
+							TokenToLine(FindSymbol(t[2]));
+/*							TokenToLine(VARNAME(symbols,t[2])); */
 							break;
 						case VECTOVEC :
-							TokenToLine(VARNAME(vectors,t[2] - AM.OffsetVector));
+							TokenToLine(FindVector(t[2]));
+/*							TokenToLine(VARNAME(vectors,t[2] - AM.OffsetVector)); */
 							break;
 						case INDTOIND :
-							TokenToLine(VARNAME(indices,t[2] - AM.OffsetIndex));
+							TokenToLine(FindIndex(t[2]));
+/*							TokenToLine(VARNAME(indices,t[2] - AM.OffsetIndex)); */
 							break;
 						default :
-							TokenToLine(VARNAME(functions,t[2] - FUNCTION));
+							TokenToLine(FindFunction(t[2]));
+/*							TokenToLine(VARNAME(functions,t[2] - FUNCTION)); */
 							break;
 					}
 					t += t[1];
