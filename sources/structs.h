@@ -1230,6 +1230,26 @@ typedef struct {
     
     PADPOSITION(2,1,0,3,0);
 } OPTIMIZERESULT;
+ 
+typedef struct {
+    WORD *lhs;      /* Object to be replaced */
+    WORD *rhs;      /* Depending on the type it will be UBYTE* or WORD* */
+    int type;
+    int size;       /* Size of the lhs */
+} DICTIONARY_ELEMENT;
+
+typedef struct {
+    DICTIONARY_ELEMENT **elements;
+    UBYTE *name;
+    int sizeelements;
+    int numelements;
+    int numbers;        /* deal with numbers */
+    int variables;      /* deal with single variables */
+    int characters;     /* deal with special characters */
+    int funwith;        /* deal with functions with arguments */
+    int gnumelements;   /* if .global shrinks the dictionary */
+    int reserved;
+} DICTIONARY;
 
 /*
   	#] Varia : 
@@ -1409,10 +1429,10 @@ struct M_const {
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
- *	The P_const struct is part of the global data and resides in the
- *	ALLGLOBALS struct A under the name P
- *	We see it used with the macro AP as in AP.InOutBuf
- *	It contains objects that have dealings with the preprocessor.
+ *  The P_const struct is part of the global data and resides in the
+ *  ALLGLOBALS struct A under the name P
+ *  We see it used with the macro AP as in AP.InOutBuf
+ *  It contains objects that have dealings with the preprocessor.
  */
 
 struct P_const {
@@ -1433,7 +1453,7 @@ struct P_const {
     int *PreSwitchModes;           /* (P) Stack of switch status */
     int *PreTypes;                 /* (P) stack of #call, #do etc nesting */
 #ifdef WITHPTHREADS
-	pthread_mutex_t PreVarLock;    /* (P) */
+    pthread_mutex_t PreVarLock;    /* (P) */
 #endif
     LONG    InOutBuf;              /* (P) Characters in the output buf in pre.c */
     LONG    pSize;                 /* (P) size of preStart */
@@ -1452,14 +1472,15 @@ struct P_const {
     int     DelayPrevar;           /* (P) Delaying prevar substitution */
     int     AllowDelay;            /* (P) Allow delayed prevar substitution */
     int     lhdollarerror;         /* (R) */
-	int		eat;                   /* () */
-	int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
+    int     eat;                   /* () */
+    int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
     int     PreDebug;              /* (C) */
+    int     OpenDictionary;
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-	PADPOINTER(2,18,2,2);
+    PADPOINTER(2,19,2,2);
 };
 
 /*
@@ -2153,6 +2174,7 @@ struct O_const {
     VOID    (*ResizePOINTER)(UBYTE *,UBYTE *);
     VOID    (*CheckPower)(UBYTE *);
     VOID    (*RenumberVec)(UBYTE *);
+	DICTIONARY **Dictionaries;
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
     WORD    *inscheme;             /* for feeding a Horner scheme to Optimize */
 /*----Leave NumInBrack as first non-pointer. This is used by the checkpoints--*/
@@ -2168,6 +2190,15 @@ struct O_const {
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
+    int     CurrentDictionary;
+    int     SizeDictionaries;
+    int     NumDictionaries;
+    int     CurDictNumbers;
+    int     CurDictVariables;
+    int     CurDictSpecials;
+    int     CurDictFunWithArgs;
+    int     CurDictNumberWarning;
+    int     gNumDictionaries;
     WORD    schemenum;             /* for feeding a Horner scheme to Optimize */
     WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
     WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
@@ -2187,9 +2218,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(24,6,19,17,1);
+	PADPOSITION(25,6,28,17,1);
 #else
-	PADPOSITION(24,4,19,17,1);
+	PADPOSITION(25,4,28,17,1);
 #endif
 };
 /*

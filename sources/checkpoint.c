@@ -2351,7 +2351,19 @@ int DoRecovery(int *moduletype)
 		R_COPY_B(A.O.OptimizeResult.code,A.O.OptimizeResult.codesize*sizeof(WORD),WORD *);
 	}
 	R_COPY_S(A.O.OptimizeResult.nameofexpr,UBYTE *);
-
+/*
+	And now the dictionaries. We know how many there are. We also know
+	how many elements the array AO.Dictionaries should have.
+*/
+	if ( AO.SizeDictionaries > 0 ) {
+		AO.Dictionaries = (DICTIONARY **)Malloc1(AO.SizeDictionaries*sizeof(DICTIONARY *),
+					"Dictionaries");
+		for ( i = 0; i < AO.NumDictionaries; i++ ) {
+			R_SET(l,LONG)
+			AO.Dictionaries[i] = DictFromBytes(p);
+			p += l;
+		}
+	}
 	/*#] AO :*/ 
 #ifdef WITHMPI
 	/*#[ PF : */
@@ -2924,6 +2936,16 @@ static int DoSnapshot(int moduletype)
 		S_WRITE_B(A.O.OptimizeResult.code,A.O.OptimizeResult.codesize*sizeof(WORD));
 	}
 	S_WRITE_S(A.O.OptimizeResult.nameofexpr);
+/*
+	And now the dictionaries.
+	We write each dictionary to a buffer and get the size of that buffer.
+	Then we write the size and the buffer.
+*/
+	for ( i = 0; i < AO.NumDictionaries; i++ ) {
+		l = DictToBytes(AO.Dictionaries[i],(UBYTE *)(AT.WorkPointer));
+		S_WRITE_B(&l,sizeof(LONG));
+		S_WRITE_B(AT.WorkPointer,l);
+	}
 
 	/*#] AO :*/ 
 	/*#[ PF :*/

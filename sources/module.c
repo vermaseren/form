@@ -322,6 +322,17 @@ VOID FullCleanUp()
 
 	CompactifyTree(AC.exprnames,EXPRNAMES);
 
+	for ( j = AO.NumDictionaries-1; j >= 0; j-- ) {
+		RemoveDictionary(AO.Dictionaries[j]);
+		M_free(AO.Dictionaries[j],"Dictionary");
+	}
+	AO.NumDictionaries = AO.gNumDictionaries = 0;
+	M_free(AO.Dictionaries,"Dictionaries");
+	AO.Dictionaries = 0;
+	AO.SizeDictionaries = 0;
+	AP.OpenDictionary = 0;
+	AO.CurrentDictionary = 0;
+
 	AP.ComChar = AP.cComChar;
 	if ( AP.procedureExtension ) M_free(AP.procedureExtension,"procedureextension");
 	AP.procedureExtension = strDup1(AP.cprocedureExtension,"procedureextension");

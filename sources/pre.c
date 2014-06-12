@@ -41,7 +41,8 @@ static UBYTE underscore[2] = {'_',0};
 static PREVAR *ThePreVar = 0;
 
 static KEYWORD precommands[] = {
-	 {"addseparator" , DoPreAddSeparator,0,0}
+	 {"add"          , DoPreAdd       , 0, 0}
+	,{"addseparator" , DoPreAddSeparator,0,0}
 	,{"append"       , DoPreAppend    , 0, 0}
 	,{"assign"       , DoPreAssign    , 0, 0}
 	,{"break"        , DoPreBreak     , 0, 0}
@@ -50,6 +51,7 @@ static KEYWORD precommands[] = {
 	,{"case"         , DoPreCase      , 0, 0}
 	,{"clearoptimize", DoClearOptimize, 0, 0}
 	,{"close"        , DoPreClose     , 0, 0}
+	,{"closedictionary", DoPreCloseDictionary,0,0}
 	,{"commentchar"  , DoCommentChar  , 0, 0}
 	,{"create"       , DoPreCreate    , 0, 0}
 	,{"debug"        , DoDebug        , 0, 0}
@@ -73,6 +75,7 @@ static KEYWORD precommands[] = {
 	,{"include"      , DoInclude      , 0, 0}
 	,{"inside"       , DoInside       , 0, 0}
 	,{"message"      , DoMessage      , 0, 0}
+	,{"opendictionary", DoPreOpenDictionary,0,0}
 	,{"optimize"     , DoOptimize     , 0, 0}
 	,{"pipe"         , DoPipe         , 0, 0}
 	,{"preout"       , DoPreOut       , 0, 0}
@@ -85,6 +88,7 @@ static KEYWORD precommands[] = {
 	,{"reverseinclude"   , DoReverseInclude   , 0, 0}
 	,{"rmexternal"   , DoRmExternal   , 0, 0}
 	,{"rmseparator"  , DoPreRmSeparator,0, 0}
+	,{"selectdictionary", DoPreSelectDictionary,0,0}
 	,{"setexternal"  , DoSetExternal  , 0, 0}
 	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
 	,{"setrandom"    , DoSetRandom    , 0, 0}

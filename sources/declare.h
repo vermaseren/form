@@ -1430,6 +1430,31 @@ extern void find_Horner_MCTS_expand_tree_threaded();
 extern void optimize_expression_given_Horner();
 extern void optimize_expression_given_Horner_threaded();
 #endif
+ 
+extern int DoPreAdd(UBYTE *s);
+extern int DoPreSelectDictionary(UBYTE *s);
+extern int DoPreCloseDictionary(UBYTE *s);
+extern int DoPreOpenDictionary(UBYTE *s);
+extern void RemoveDictionary(DICTIONARY *dict);
+extern void UnSetDictionary(VOID);
+extern int SetDictionaryOptions(UBYTE *options);
+extern int SelectDictionary(UBYTE *name,UBYTE *options);
+extern int AddToDictionary(DICTIONARY *dict,UBYTE *left,UBYTE *right);
+extern int AddDictionary(UBYTE *name);
+extern int FindDictionary(UBYTE *name);
+extern int IsExponentSign(VOID);
+extern int IsMultiplySign(VOID);
+extern VOID TransformRational(UWORD *a, WORD na);
+extern void WriteDictionary(DICTIONARY *);
+extern void ShrinkDictionary(DICTIONARY *);
+extern void MultiplyToLine(VOID);
+extern UBYTE *FindSymbol(WORD num);
+extern UBYTE *FindVector(WORD num);
+extern UBYTE *FindIndex(WORD num);
+extern UBYTE *FindFunction(WORD num);
+extern UBYTE *FindFunWithArgs(WORD *t);
+extern LONG DictToBytes(DICTIONARY *dict,UBYTE *buf);
+extern DICTIONARY *DictFromBytes(UBYTE *buf);
 
 /*
   	#] Declarations : 
