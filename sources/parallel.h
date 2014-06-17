@@ -77,6 +77,16 @@
 #if GNUC_PREREQ(4, 6, 0)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wpadded"
+#  pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+#if defined(__clang__) && defined(__has_warning)
+#  pragma clang diagnostic push
+#  if __has_warning("-Wpadded")
+#    pragma clang diagnostic ignored "-Wpadded"
+#  endif
+#  if __has_warning("-Wunused-parameter")
+#    pragma clang diagnostic ignored "-Wunused-parameter"
+#  endif
 #endif
 
 #  ifdef __cplusplus
@@ -103,6 +113,9 @@ extern "C" {
 /* Restore the warning settings. */
 #if GNUC_PREREQ(4, 6, 0)
 #  pragma GCC diagnostic pop
+#endif
+#if defined(__clang__) && defined(__has_warning)
+#  pragma clang diagnostic pop
 #endif
 
 #  define PF_ANY_SOURCE MPI_ANY_SOURCE
