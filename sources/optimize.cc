@@ -1603,8 +1603,11 @@ void simulated_annealing() {
 	for (int o = 0; o < AO.Optimize.saIter; o++) {
 		int inda = iranf(BHEAD state.size() - startindex) + startindex;
 		int indb = iranf(BHEAD state.size() - startindex) + startindex;
+		int indc = iranf(BHEAD state.size() - startindex) + startindex;
+		int indd = iranf(BHEAD state.size() - startindex) + startindex;
 
-		swap(state[inda], state[indb]); // swap works best for Horner
+		swap(state[inda], state[indb]); // 2 swap works best for Horner
+		swap(state[indc], state[indd]);
 
 		vector<WORD> tree = Horner_tree(optimize_expr, state);
 		int newscore = count_operators_cse_topdown(tree);
@@ -1617,6 +1620,7 @@ void simulated_annealing() {
 				best = state;
 			}
 		} else {
+			swap(state[indc], state[indd]);
 			swap(state[inda], state[indb]);
 		}
 
