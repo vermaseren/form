@@ -1818,6 +1818,16 @@ bucketstolen:;
 /*
 			#] OPTIMIZEEXPRESSION : 
 */
+
+/*
+			#[ OPTIMIZEEXPRESSIONSA :
+*/
+			case OPTIMIZEEXPRESSIONSA:
+				simulated_annealing();
+				break;
+/*
+			#] OPTIMIZEEXPRESSION : 
+*/
 			default:
 				MLOCK(ErrorMessageLock);
 				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
@@ -4850,6 +4860,18 @@ extern void optimize_expression_given_Horner_threaded() {
 
 /*
   	#] optimize_expression_given_Horner_threaded : 
+  	#[ optimize_expression_sa : 
+*/
+
+extern void optimize_expression_sa() {
+	int id;
+	while (( id = GetAvailableThread() ) < 0)
+		MasterWait();
+	WakeupThread(id,OPTIMIZEEXPRESSIONSA);
+}
+
+/*
+  	#] optimize_expression_sa : 
 */
 
 #endif

@@ -1429,6 +1429,8 @@ extern void find_Horner_MCTS_expand_tree();
 extern void find_Horner_MCTS_expand_tree_threaded();
 extern void optimize_expression_given_Horner();
 extern void optimize_expression_given_Horner_threaded();
+extern void optimize_expression_sa();
+void simulated_annealing();
 #endif
 
 /*

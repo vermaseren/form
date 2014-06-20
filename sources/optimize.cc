@@ -93,7 +93,7 @@ bool mcts_factorized, mcts_separated;
 vector<WORD> mcts_vars;
 tree_node mcts_root;
 int mcts_expr_score;
-set<pair<int,vector<WORD> > > mcts_best_schemes;
+set<pair<int,vector<WORD> > > best_scheme_set;
 
 #ifdef WITHPTHREADS
 pthread_mutex_t optimize_lock;
@@ -1576,9 +1576,11 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
   	#] count_operators_cse_topdown : 
   	#[ simulated_annealing :
 */
-vector<WORD> simulated_annealing() {
+void simulated_annealing() {
 	float minT = AO.Optimize.saMinT.fval;
+	if (minT < 0.01) minT = 0.01; // prevent division by 0
 	float maxT = AO.Optimize.saMaxT.fval;
+	if (maxT < minT) maxT = minT;
 	float T = maxT;
 	float coolrate = pow(minT / maxT, 1 / (float)AO.Optimize.saIter);
 
@@ -1628,7 +1630,15 @@ vector<WORD> simulated_annealing() {
 	MesPrint("Simulated annealing score: %d", bestscore);
 #endif
 
-	return best;
+	// update the (global) list of best Horner scheme
+	if ((int)best_scheme_set.size() < AO.Optimize.mctsnumkeep ||
+			(--best_scheme_set.end())->first > bestscore) {
+		LOCK(optimize_lock);
+		best_scheme_set.insert(make_pair(bestscore, best));
+		if ((int)best_scheme_set.size() > AO.Optimize.mctsnumkeep)
+			best_scheme_set.erase(--best_scheme_set.end());
+		UNLOCK(optimize_lock);
+	}
 }
 
 /*
@@ -1907,16 +1917,16 @@ inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme,
 	vector<tree_node *> &path = *ppath;
 
 	// update the (global) list of best Horner scheme
-	if ((int)mcts_best_schemes.size() < AO.Optimize.mctsnumkeep ||
-			(--mcts_best_schemes.end())->first > num_oper) {
+	if ((int)best_scheme_set.size() < AO.Optimize.mctsnumkeep ||
+			(--best_scheme_set.end())->first > num_oper) {
 		// here locking is necessary, for otherwise best_schemes may
 		// become corrupted; lock can be prevented if each thread keeps
 		// track of it's own list and those lists are merged in the end,
 		// but this seems not useful to implement
 		LOCK(optimize_lock);
-		mcts_best_schemes.insert(make_pair(num_oper,scheme));
-		if ((int)mcts_best_schemes.size() > AO.Optimize.mctsnumkeep)
-			mcts_best_schemes.erase(--mcts_best_schemes.end());
+		best_scheme_set.insert(make_pair(num_oper,scheme));
+		if ((int)best_scheme_set.size() > AO.Optimize.mctsnumkeep)
+			best_scheme_set.erase(--best_scheme_set.end());
 		UNLOCK(optimize_lock);
 	}
 
@@ -4567,10 +4577,27 @@ int Optimize (WORD exprnr, int do_print) {
 		}
 		else {
 			if (AO.Optimize.horner == O_SIMULATED_ANNEALING) {
-				optimize_best_Horner_schemes.push_back(simulated_annealing());
+				best_scheme_set.clear();
+
+				for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ ) {
+#if defined(WITHPTHREADS)
+					if (AM.totalnumberofthreads > 1)
+						// TODO: can this be simplified? We know the number of threads that have to be spawned
+						optimize_expression_sa();
+					else
+#endif
+						simulated_annealing();
+				}
+
+
+#ifdef WITHPTHREADS
+				MasterWaitAll();
+#endif
+				for (set<pair<int,vector<WORD> > >::iterator i=best_scheme_set.begin(); i!=best_scheme_set.end(); i++)
+					optimize_best_Horner_schemes.push_back(i->second);
 			}
 			else {
-				mcts_best_schemes.clear();
+				best_scheme_set.clear();
 				if ( AO.inscheme ) {
 					optimize_best_Horner_schemes.push_back(vector<WORD>(AO.schemenum));
 					for ( int i=0; i < AO.schemenum; i++ )
@@ -4580,7 +4607,7 @@ int Optimize (WORD exprnr, int do_print) {
 					for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
 						find_Horner_MCTS();
 					// generate results
-					for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
+					for (set<pair<int,vector<WORD> > >::iterator i=best_scheme_set.begin(); i!=best_scheme_set.end(); i++) {
 						optimize_best_Horner_schemes.push_back(i->second);
 #ifdef DEBUG_MCTS
 						MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
