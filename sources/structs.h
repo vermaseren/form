@@ -2227,6 +2227,9 @@ struct O_const {
     WORD    ErrorBlock;
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
+/*
+	For the padding, please count also the number of int's in the OPTIMIZE struct.
+*/
 #if defined(mBSD) && defined(MICROTIME)
 	PADPOSITION(25,6,34,17,1);
 #else
