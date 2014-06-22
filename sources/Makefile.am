@@ -7,6 +7,7 @@ SRCBASE = \
 	compress.c \
 	comtool.c \
 	declare.h \
+	dict.c \
 	dollar.c \
 	execute.c \
 	extcmd.c \
