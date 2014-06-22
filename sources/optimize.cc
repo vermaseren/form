@@ -1,6 +1,6 @@
 /** @file optimize.cc
  *
- *  experimental routines for the optimization of FORTRAN or C output.
+ *	experimental routines for the optimization of FORTRAN or C output.
  */
 
 /* #[ License : */
@@ -48,14 +48,16 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <tr1/unordered_set>
+#include <tr1/unordered_map>
 
 extern "C" {
 #include "form3.h"
 }
 
-#ifdef DEBUG
+//#ifdef DEBUG
 #include "mytime.h"
-#endif
+//#endif
 
 using namespace std;
 
@@ -73,7 +75,7 @@ public:
 	WORD var;
 	bool finished;
 	PADPOINTER(1,1,1,1);
-	
+
 	tree_node (int _var=0):
 		sum_results(0), num_visits(0), var(_var), finished(false) {}
 };
@@ -117,11 +119,11 @@ void print_instr (const vector<WORD> &instr, WORD num)
 */
 
 /**  Random shuffle
- * 
- *   Description
- *   ===========
- *   Randomly permutes elements in the range [fr,to). Functionality is
- *   the same as C++'s "random_shuffle", but it uses Form's "wranf".
+ *
+ *	 Description
+ *	 ===========
+ *	 Randomly permutes elements in the range [fr,to). Functionality is
+ *	 the same as C++'s "random_shuffle", but it uses Form's "wranf".
  */
 template <class RandomAccessIterator>
 void my_random_shuffle (PHEAD RandomAccessIterator fr, RandomAccessIterator to) {
@@ -138,15 +140,15 @@ static WORD comlist[3] = {TYPETOPOLYNOMIAL,3,DOALL};
 
 /**  Get expression
  *
- *   Description
- *   ===========
- *   Reads an expression from the input file into a buffer (called
- *   optimize_expr). This buffer is used during the optimization
- *   process. Non-symbols are removed by ConvertToPoly and are put in
- *   temporary symbols.
+ *	 Description
+ *	 ===========
+ *	 Reads an expression from the input file into a buffer (called
+ *	 optimize_expr). This buffer is used during the optimization
+ *	 process. Non-symbols are removed by ConvertToPoly and are put in
+ *	 temporary symbols.
  *
- *   The return value is the length of the expression in WORDs, or a
- *   negative number if it failed.
+ *	 The return value is the length of the expression in WORDs, or a
+ *	 negative number if it failed.
  */
 LONG get_expression (int exprnr) {
 
@@ -166,14 +168,14 @@ LONG get_expression (int exprnr) {
 
   // get terms
   while (GetTerm(BHEAD term) > 0) {
-    AT.WorkPointer = term + *term;
-    WORD *t1 = term;
-    WORD *t2 = term + *term;
-    if (ConvertToPoly(BHEAD t1,t2,comlist,1) < 0) return -1;
-    int n = *t2;
-    NCOPY(t1,t2,n);
-    AT.WorkPointer = term + *term;
-    if (StoreTerm(BHEAD term)) return -1;
+	AT.WorkPointer = term + *term;
+	WORD *t1 = term;
+	WORD *t2 = term + *term;
+	if (ConvertToPoly(BHEAD t1,t2,comlist,1) < 0) return -1;
+	int n = *t2;
+	NCOPY(t1,t2,n);
+	AT.WorkPointer = term + *term;
+	if (StoreTerm(BHEAD term)) return -1;
   }
 
   // sort and store in buffer
@@ -213,16 +215,16 @@ LONG PF_get_expression (int exprnr) {
 
 /**  Get brackets
  *
- *   Description
- *   ===========
- *   Checks whether the input expression (stored in optimize_expr)
- *   contains brackets. If so, this method replaces terms outside
- *   brackets by powers of SEPERATESYMBOL (equal brackets have equal
- *   powers) and the brackets are returned. If not, the result is
- *   empty.
+ *	 Description
+ *	 ===========
+ *	 Checks whether the input expression (stored in optimize_expr)
+ *	 contains brackets. If so, this method replaces terms outside
+ *	 brackets by powers of SEPERATESYMBOL (equal brackets have equal
+ *	 powers) and the brackets are returned. If not, the result is
+ *	 empty.
  *
- *   Brackets are used for simultaneous optimization. The symbol
- *   SEPARATESYMBOL is always the first one used in a Horner scheme.
+ *	 Brackets are used for simultaneous optimization. The symbol
+ *	 SEPARATESYMBOL is always the first one used in a Horner scheme.
  */
 
 vector<vector<WORD> > get_brackets () {
@@ -230,56 +232,56 @@ vector<vector<WORD> > get_brackets () {
   // check for brackets in expression
   bool has_brackets = false;
   for (WORD *t=optimize_expr; *t!=0; t+=*t) {
-    WORD *tend=t+*t; tend-=ABS(*(tend-1));
-    for (WORD *t1=t+1; t1<tend; t1+=*(t1+1))
-      if (*t1 == HAAKJE)
-        has_brackets=true;
+	WORD *tend=t+*t; tend-=ABS(*(tend-1));
+	for (WORD *t1=t+1; t1<tend; t1+=*(t1+1))
+	  if (*t1 == HAAKJE)
+		has_brackets=true;
   }
 
   // replace brackets by SEPARATESYMBOL
   vector<vector<WORD> > brackets;
 
   if (has_brackets) {
-		int exprlen=8;  // we need potential space for an empty bracket
+		int exprlen=8;	// we need potential space for an empty bracket
 		for (WORD *t=optimize_expr; *t!=0; t+=*t)
 			exprlen += *t;
-    WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
+	WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
 
-    int i=0;
-    int sep_power = 0;
+	int i=0;
+	int sep_power = 0;
 
-    for (WORD *t=optimize_expr; *t!=0; t+=*t) {
-      WORD *t1 = t+1;
+	for (WORD *t=optimize_expr; *t!=0; t+=*t) {
+	  WORD *t1 = t+1;
 
 			// scan for bracket
-      vector<WORD> bracket;
-      for (; *t1!=HAAKJE; t1+=*(t1+1))
-        bracket.insert(bracket.end(), t1, t1+*(t1+1));
+	  vector<WORD> bracket;
+	  for (; *t1!=HAAKJE; t1+=*(t1+1))
+		bracket.insert(bracket.end(), t1, t1+*(t1+1));
 
-      if (brackets.size()==0 || bracket!=brackets.back()) {
-        sep_power++;
-        brackets.push_back(bracket);
-      }
-      t1+=*(t1+1);
+	  if (brackets.size()==0 || bracket!=brackets.back()) {
+		sep_power++;
+		brackets.push_back(bracket);
+	  }
+	  t1+=*(t1+1);
 
-      WORD left = t + *t - t1;
-      bool more_symbols = (left != ABS(*(t+*t-1)));
+	  WORD left = t + *t - t1;
+	  bool more_symbols = (left != ABS(*(t+*t-1)));
 
 			// add power of SEPARATESYMBOL
-      newexpr[i++] = 1 + left + (more_symbols ? 2 : 4);
-      newexpr[i++] = SYMBOL;
-      newexpr[i++] = (more_symbols ? *(t1+1) + 2 : 4);
-      newexpr[i++] = SEPARATESYMBOL;
-      newexpr[i++] = sep_power;
+	  newexpr[i++] = 1 + left + (more_symbols ? 2 : 4);
+	  newexpr[i++] = SYMBOL;
+	  newexpr[i++] = (more_symbols ? *(t1+1) + 2 : 4);
+	  newexpr[i++] = SEPARATESYMBOL;
+	  newexpr[i++] = sep_power;
 
 			// add remaining terms
-      if (more_symbols) {
-        t1+=2;
-        left-=2;
-      }
-      while (left-->0)
-        newexpr[i++] = *(t1++);
-    }
+	  if (more_symbols) {
+		t1+=2;
+		left-=2;
+	  }
+	  while (left-->0)
+		newexpr[i++] = *(t1++);
+	}
 /*
 	We insert here an empty bracket that is zero.
 	It is used for the case that there is only a single bracket which is
@@ -291,33 +293,33 @@ vector<vector<WORD> > get_brackets () {
 	if ( sep_power == 1 )
 	{
 	  WORD *t;
-      vector<WORD> bracket;
-      bracket.push_back(0);
-      bracket.push_back(0);
-      bracket.push_back(0);
-      bracket.push_back(0);
-      sep_power++;
-      brackets.push_back(bracket);
+	  vector<WORD> bracket;
+	  bracket.push_back(0);
+	  bracket.push_back(0);
+	  bracket.push_back(0);
+	  bracket.push_back(0);
+	  sep_power++;
+	  brackets.push_back(bracket);
 	  newexpr[i++] = 8;
 	  newexpr[i++] = SYMBOL;
 	  newexpr[i++] = 4;
-      newexpr[i++] = SEPARATESYMBOL;
-      newexpr[i++] = sep_power;
+	  newexpr[i++] = SEPARATESYMBOL;
+	  newexpr[i++] = sep_power;
 	  newexpr[i++] = 1;
 	  newexpr[i++] = 1;
 	  newexpr[i++] = 3;
-      newexpr[i++] = 0;
+	  newexpr[i++] = 0;
 	  for (t=optimize_expr; *t!=0; t+=*t) {}
-      if ( t-optimize_expr+1 < i ) {  // We have to redo this
+	  if ( t-optimize_expr+1 < i ) {  // We have to redo this
 		M_free(optimize_expr,"$-sort space");
 		optimize_expr = (WORD *)Malloc1(i*sizeof(WORD),"$-sort space");
 	  }
 	}
 	else {
-	    newexpr[i++] = 0;
+		newexpr[i++] = 0;
 	}
-    memcpy(optimize_expr, newexpr, i*sizeof(WORD));
-    M_free(newexpr,"optimize newexpr");
+	memcpy(optimize_expr, newexpr, i*sizeof(WORD));
+	M_free(newexpr,"optimize newexpr");
 
 	// if factorized, replace SEP by FAC and remove brackets
 	if (brackets[0].size()>0 && brackets[0][2]==FACTORSYMBOL) {
@@ -330,7 +332,7 @@ vector<vector<WORD> > get_brackets () {
 		return vector<vector<WORD> >();
 	}
   }
-	
+
   return brackets;
 }
 
@@ -341,24 +343,24 @@ vector<vector<WORD> > get_brackets () {
 
 /**  Count operators
  *
- *   Description
- *   ===========
- *   Counts the number of operators in a Form-style expression.
+ *	 Description
+ *	 ===========
+ *	 Counts the number of operators in a Form-style expression.
  */
 int count_operators (const WORD *expr, bool print=false) {
 
 	int n=0;
 	while (*(expr+n)!=0) n+=*(expr+n);
-	
+
 	int cntpow=0, cntmul=0, cntadd=0, sumpow=0;
 	WORD maxpowfac=1, maxpowsep=1;
-	
+
 	for (const WORD *t=expr; *t!=0; t+=*t) {
-		if (t!=expr) cntadd++;              // new term
+		if (t!=expr) cntadd++;				// new term
 		if (*t==ABS(*(t+*t-1))+1) continue; // only coefficient
-				
+
 		int cntsym=0;
-		
+
 		if (t[1]==SYMBOL)
 			for (int i=3; i<t[2]; i+=2) {
 				if (t[i]==FACTORSYMBOL) {
@@ -368,8 +370,8 @@ int count_operators (const WORD *expr, bool print=false) {
 				if (t[i]==SEPARATESYMBOL) {
 					maxpowsep = max(maxpowsep, t[i+1]);
 					continue;
-				}				
-				if (t[i+1]>2) {          // (extra)symbol power>2
+				}
+				if (t[i+1]>2) { 		 // (extra)symbol power>2
 					cntpow++;
 					sumpow += (int)floor(log(t[i+1])/log(2.0)) + __builtin_popcount(t[i+1]) - 1;
 				}
@@ -386,18 +388,18 @@ int count_operators (const WORD *expr, bool print=false) {
 	cntmul += maxpowfac-1;
 
 	cntadd -= maxpowsep-1;
-		
+
 	if (print)
-		MesPrint ("*** STATS: original  %lP %lM %lA : %l", cntpow,cntmul,cntadd,sumpow+cntmul+cntadd);
+		MesPrint ("*** STATS: original	%lP %lM %lA : %l", cntpow,cntmul,cntadd,sumpow+cntmul+cntadd);
 
 	return sumpow+cntmul+cntadd;
 }
 
 /**  Count operators
  *
- *   Description
- *   ===========
- *   Counts the number of operators in a vector of instructions
+ *	 Description
+ *	 ===========
+ *	 Counts the number of operators in a vector of instructions
  */
 int count_operators (const vector<WORD> &instr, bool print=false) {
 
@@ -405,17 +407,17 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 
 	const WORD *ebegin = &*instr.begin();
 	const WORD *eend = ebegin+instr.size();
-	
+
 	for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 		for (const WORD *t=e+3; *t!=0; t+=*t) {
 			if (t!=e+3) {
-				if (*(e+1)==OPER_ADD) cntadd++;     // new term
-				if (*(e+1)==OPER_MUL) cntmul++;     // new term
+				if (*(e+1)==OPER_ADD) cntadd++; 	// new term
+				if (*(e+1)==OPER_MUL) cntmul++; 	// new term
 			}
 			if (*t == ABS(*(t+*t-1))+1) continue;	// only coefficient
 			if (*(t+1)==SYMBOL || *(t+1)==EXTRASYMBOL) {
-				if (*(t+4)==2) cntmul++;            // (extra)symbol squared
-				if (*(t+4)>2) {                     // (extra)symbol power>2
+				if (*(t+4)==2) cntmul++;			// (extra)symbol squared
+				if (*(t+4)>2) { 					// (extra)symbol power>2
 					cntpow++;
 					sumpow += (int)floor(log(*(t+4))/log(2.0)) + __builtin_popcount(*(t+4)) - 1;
 				}
@@ -437,18 +439,18 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 
 /**  Occurrence order
  *
- *   Description
- *   ===========
- *   Extracts all variables from an expression and sorts them with
- *   most occurring first (or last, with rev=true)
+ *	 Description
+ *	 ===========
+ *	 Extracts all variables from an expression and sorts them with
+ *	 most occurring first (or last, with rev=true)
  */
 vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 
 	// count the number of occurrences of variables
 	map<WORD,int> cnt;
-	for (const WORD *t=expr; *t!=0; t+=*t) 
+	for (const WORD *t=expr; *t!=0; t+=*t)
 		if (t[1] == SYMBOL)
-			for (int i=3; i<t[2]; i+=2) 
+			for (int i=3; i<t[2]; i+=2)
 				cnt[t[i]]++;
 
 	bool is_fac=false, is_sep=false;
@@ -460,7 +462,7 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 		is_sep=true;
 		cnt.erase(SEPARATESYMBOL);
 	}
-	
+
 	// determine the order of the variables
 	vector<pair<int,WORD> > cnt_order;
 	for (map<WORD,int>::iterator i=cnt.begin(); i!=cnt.end(); i++)
@@ -477,7 +479,7 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 	// add FACTORSYMBOL/SEPARATESYMBOL
 	if (is_fac) order.insert(order.begin(), FACTORSYMBOL);
 	if (is_sep) order.insert(order.begin(), SEPARATESYMBOL);
-	
+
 	return order;
 }
 
@@ -488,57 +490,57 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 
 /**  Horner tree building
  *
- *   Description
- *   ===========
- *   Given a Form-style expression (in a buffer in memory), this
- *   builds an expression tree. The tree is determined by a
- *   multivariate Horner scheme, i.e., something of the form:
+ *	 Description
+ *	 ===========
+ *	 Given a Form-style expression (in a buffer in memory), this
+ *	 builds an expression tree. The tree is determined by a
+ *	 multivariate Horner scheme, i.e., something of the form:
  *
- *      1+y+x*(2+y*(1+y)+x*(3-y*(...)))
+ *		1+y+x*(2+y*(1+y)+x*(3-y*(...)))
  *
- *   The order of the variables is given to the method "Horner_tree",
- *   which renumbers ad reorders the terms of the expression. Next,
- *   the recursive method "build_Horner_tree" does the actual tree
- *   construction.
+ *	 The order of the variables is given to the method "Horner_tree",
+ *	 which renumbers ad reorders the terms of the expression. Next,
+ *	 the recursive method "build_Horner_tree" does the actual tree
+ *	 construction.
  *
- *   The tree is represented in postfix notation. Tokens are of the
- *   following forms:
+ *	 The tree is represented in postfix notation. Tokens are of the
+ *	 following forms:
  *
- *   - SNUMBER tokenlength num den coefflength
- *   - SYMBOL tokenlength variable power
- *   - OPER_ADD or OPER_MUL
+ *	 - SNUMBER tokenlength num den coefflength
+ *	 - SYMBOL tokenlength variable power
+ *	 - OPER_ADD or OPER_MUL
  *
- *   Note
- *   ====
- *   Sets AN.poly_num_vars and allocates AN.poly_vars. The latter
- *   should be freed later.
+ *	 Note
+ *	 ====
+ *	 Sets AN.poly_num_vars and allocates AN.poly_vars. The latter
+ *	 should be freed later.
  */
 
 /**  Get power of variable (helper function for build_Horner_tree)
  *
- *   Description
- *   ===========
- *   Returns the power of the variable "var", which is at position
- *   "pos" in this term, if it is present.
+ *	 Description
+ *	 ===========
+ *	 Returns the power of the variable "var", which is at position
+ *	 "pos" in this term, if it is present.
  */
 WORD getpower (const WORD *term, int var, int pos) {
 	if (*term == ABS(*(term+*term-1))+1) return 0; // constant term
-	if (2*pos+2 >= term[2]) return 0;              // too few symbols
-	if (term[2*pos+3] != var) return 0;            // incorrect symbol
-	return term[2*pos+4];                          // return power
+	if (2*pos+2 >= term[2]) return 0;			   // too few symbols
+	if (term[2*pos+3] != var) return 0; 		   // incorrect symbol
+	return term[2*pos+4];						   // return power
 }
 
 /**  Call GcdLong/DivLong with leading zeroes
  *
- *   Description
- *   ===========
- *   These method remove leading zeroes, so that GcdLong and DivLong
- *   can safely be called.
+ *	 Description
+ *	 ===========
+ *	 These method remove leading zeroes, so that GcdLong and DivLong
+ *	 can safely be called.
  */
 void fixarg (UWORD *t, WORD &n) {
 	int an=ABS(n), sn=SGN(n);
 	while (*(t+an-1)==0) an--;
-	n=an*sn;												 
+	n=an*sn;
 }
 
 void GcdLong_fix_args (PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc) {
@@ -555,23 +557,23 @@ void DivLong_fix_args(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,	WORD *nc, 
 
 /**  Build the Horner tree
  *
- *   Description
- *   ===========
- *   Constructs the Horner tree. The method processes one variable and
- *   continues recursively until the Horner scheme is completed. 
+ *	 Description
+ *	 ===========
+ *	 Constructs the Horner tree. The method processes one variable and
+ *	 continues recursively until the Horner scheme is completed.
  *
- *   "terms" is a pointer to the starts of the terms. "numterms" is
- *   the number of terms to be processed. "var" is the next variable
- *   to be processed (index between 0 and #maxvar) and "maxvar" is the
- *   last variable to be processed, so that partial Horner trees can
- *   also be constructed. "pos" is the position that the power of
- *   "var" should be in (one level further in the recursion, "pos" has
- *   increased by 0 or 1 depending on whether the previous power was 0
- *   or not). The result is written at the pointer "res".
+ *	 "terms" is a pointer to the starts of the terms. "numterms" is
+ *	 the number of terms to be processed. "var" is the next variable
+ *	 to be processed (index between 0 and #maxvar) and "maxvar" is the
+ *	 last variable to be processed, so that partial Horner trees can
+ *	 also be constructed. "pos" is the position that the power of
+ *	 "var" should be in (one level further in the recursion, "pos" has
+ *	 increased by 0 or 1 depending on whether the previous power was 0
+ *	 or not). The result is written at the pointer "res".
  *
- *   This method also factors out gcds of the coefficients. The result
- *   should end with "gcd OPER_MUL" at all times, so that one level
- *   higher gcds can be extracted again.
+ *	 This method also factors out gcds of the coefficients. The result
+ *	 should end with "gcd OPER_MUL" at all times, so that one level
+ *	 higher gcds can be extracted again.
  */
 void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, int pos, vector<WORD> *res) {
 
@@ -580,9 +582,9 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 	if (var == maxvar) {
 		// Horner tree is finished, so add remaining terms unfactorized
 		// (note: since only complete Horner schemes seem to be useful, numterms=1 here
-		
+
 		for (int fr=0; fr<numterms; fr++) {
-			
+
 			bool empty = true;
 			const WORD *t = terms[fr];
 
@@ -631,7 +633,7 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 	}
 	else {
 		// extract variable "var" and the gcd and proceed recursively
-		
+
 		WORD nnum = 0, nden = 0, ntmp = 0, ndum = 0;
 		UWORD *num = NumberMalloc("build_Horner_tree");
 		UWORD *den = NumberMalloc("build_Horner_tree");
@@ -640,11 +642,11 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 
 		// previous coefficient for gcd extraction or coefficient multiplication
 		int prev_coeff_idx = -1;
-		
+
 		for (int fr=0; fr<numterms;) {
 
 			// find power of current term
-			WORD pow = getpower(terms[fr], var, pos); 
+			WORD pow = getpower(terms[fr], var, pos);
 
 			// find all terms with that power
 			int to=fr+1;
@@ -657,40 +659,40 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 				// if normal symbol, find gcd(numerators) and gcd(denominators)
 				WORD  n1 = res->at(res->size()-2) / 2;
 				WORD *t1 = &res->at(res->size()-2-2*ABS(n1));
-				
+
 				WORD *t2 = fr==0 ? t1 : &res->at(prev_coeff_idx);
 				WORD  n2 = fr==0 ? n1 : *(t2+*(t2+1)-1) / 2;
 				if (fr>0) t2+=2;
-				
+
 				GcdLong_fix_args(BHEAD (UWORD *)t1,n1,(UWORD *)t2,n2,num,&nnum);
 				GcdLong_fix_args(BHEAD (UWORD *)t1+ABS(n1),ABS(n1),(UWORD *)t2+ABS(n2),ABS(n2),den,&nden);
-				
+
 				// divide out gcds; note: leading zeroes can be added here
 				for (int i=0; i<2; i++) {
 					if (i==1 && fr==0) break;
-					
+
 					WORD *t = i==0 ? t1 : t2;
 					WORD n = i==0 ? n1 : n2;
-					
+
 					DivLong_fix_args((UWORD *)t, n, num, nnum, tmp, &ntmp, dum, &ndum);
 					for (int j=0; j<ABS(ntmp); j++) *t++ = tmp[j];
 					for (int j=0; j<ABS(n)-ABS(ntmp); j++) *t++ = 0;
-					
+
 					if (SGN(ntmp) != SGN(n)) n=-n;
-					
+
 					DivLong_fix_args((UWORD *)t, n, den, nden, tmp, &ntmp, dum, &ndum);
 					for (int j=0; j<ABS(ntmp); j++) *t++ = tmp[j];
 					for (int j=0; j<ABS(n)-ABS(ntmp); j++) *t++ = 0;
-					
+
 					*t++ = SGN(n) * (2*ABS(n)+1);
 				}
-				
+
 				// add the addition operator
 				if (fr>0) res->push_back(OPER_ADD);
 
 				// add the power of "var"
 				WORD nextpow = (to==numterms ? 0 : getpower(terms[to], var, pos));
-				
+
 				if (pow-nextpow > 0) {
 					res->push_back(SYMBOL);
 					res->push_back(4);
@@ -698,7 +700,7 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 					res->push_back(pow-nextpow);
 					res->push_back(OPER_MUL);
 				}
-				
+
 				// add the extracted gcd
 				res->push_back(SNUMBER);
 				WORD n = MaX(ABS(nnum),nden);
@@ -713,9 +715,9 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 				prev_coeff_idx = res->size() - ABS(res->at(res->size()-2)) - 3;
 			}
 			else if (AN.poly_vars[var]==FACTORSYMBOL) {
-				
+
 				// if factorsymbol, multiply overall integer contents
-				
+
 				if (fr>0) {
 					WORD  n1 = res->at(res->size()-2) / 2;
 					WORD *t1 = &res->at(res->size()-2-2*ABS(n1));
@@ -736,10 +738,10 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 						res->pop_back();
 
 					// add product
-					res->back() = 2*ABS(ntmp)+3;                   // adjust size of term
+					res->back() = 2*ABS(ntmp)+3;				   // adjust size of term
 					res->insert(res->end(), tmp, tmp+2*ABS(ntmp)); // num/den coefficient
-					res->push_back(SGN(ntmp)*(2*ABS(ntmp)+1));     // size of coefficient
-					res->push_back(OPER_MUL);                      // operator
+					res->push_back(SGN(ntmp)*(2*ABS(ntmp)+1));	   // size of coefficient
+					res->push_back(OPER_MUL);					   // operator
 				}
 
 				prev_coeff_idx = res->size() - ABS(res->at(res->size()-2)) - 3;
@@ -753,25 +755,25 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 					res->push_back(OPER_COMMA);
 				prev_coeff_idx = -1;
 			}
-				
+
 			fr=to;
 		}
 
 		// cleanup
-		NumberFree(dum,"build_Horner_tree");							 
-		NumberFree(tmp,"build_Horner_tree");							 
-		NumberFree(den,"build_Horner_tree");							 
-		NumberFree(num,"build_Horner_tree");							 
+		NumberFree(dum,"build_Horner_tree");
+		NumberFree(tmp,"build_Horner_tree");
+		NumberFree(den,"build_Horner_tree");
+		NumberFree(num,"build_Horner_tree");
 	}
 }
 
 /**  Term compare (helper function for Horner_tree)
  *
- *   Description
- *   ===========
- *   Compares two terms of the form "L SYM 4 x n coeff" or "L
- *   coeff". Lower powers of lower-indexed symbols come first. This is
- *   used to sort the terms in correct order.
+ *	 Description
+ *	 ===========
+ *	 Compares two terms of the form "L SYM 4 x n coeff" or "L
+ *	 coeff". Lower powers of lower-indexed symbols come first. This is
+ *	 used to sort the terms in correct order.
  */
 bool term_compare (const WORD *a, const WORD *b) {
 	if (a[1]!=SYMBOL) return true;
@@ -780,24 +782,23 @@ bool term_compare (const WORD *a, const WORD *b) {
 		if (a[i]  !=b[i]  ) return a[i]  >b[i];
 		if (a[i+1]!=b[i+1]) return a[i+1]<b[i+1];
 	}
-	return a[2]<b[2];	
+	return a[2]<b[2];
 }
 
 /**  Prepare Horner tree building
  *
- *   Description
- *   ===========
- *   This method renumbers the variables to 0...#vars-1 according to
- *   the specified order. Next, it stored pointer to individual terms
- *   and sorts the terms with higher power first. Then the sorted
- *   lists of power is used for the construction of the Horner tree.
+ *	 Description
+ *	 ===========
+ *	 This method renumbers the variables to 0...#vars-1 according to
+ *	 the specified order. Next, it stored pointer to individual terms
+ *	 and sorts the terms with higher power first. Then the sorted
+ *	 lists of power is used for the construction of the Horner tree.
  */
 vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
-
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
 #endif
-	
+
 	GETIDENTITY;
 
 	// find the renumbering scheme (new numbers are 0,1,...,#vars-1)
@@ -808,7 +809,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 		AN.poly_vars[i] = order[i];
 		renum[order[i]] = i;
 	}
-	
+
 	// sort variables in individual terms using bubble sort
 	WORD *sorted = AT.WorkPointer;
 
@@ -822,7 +823,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 			for (int i=3; i<sorted[2]; i+=2) {
 				if (!renum.count(sorted[i])) {
 					renum[sorted[i]] = AN.poly_num_vars;
-					
+
 					WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
 					memcpy(new_poly_vars, AN.poly_vars, AN.poly_num_vars*sizeof(WORD));
 					M_free(AN.poly_vars,"poly_vars");
@@ -836,20 +837,20 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 			for (int i=0; i<sorted[2]/2; i++)
 				for (int j=3; j+2<sorted[2]; j+=2)
 					if (sorted[j] > sorted[j+2]) {
-						swap(sorted[j]  , sorted[j+2]);
+						swap(sorted[j]	, sorted[j+2]);
 						swap(sorted[j+1], sorted[j+3]);
-					}			
+					}
 		}
 
 		sorted += *sorted;
 	}
-	
+
 	*sorted = 0;
 	sorted = AT.WorkPointer;
 
 	// find pointers to all terms and sort them efficiently
 	vector<const WORD *> terms;
-	for (const WORD *t=sorted; *t!=0; t+=*t) 
+	for (const WORD *t=sorted; *t!=0; t+=*t)
 		terms.push_back(t);
 	sort(terms.rbegin(),terms.rend(),term_compare);
 
@@ -882,11 +883,11 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 		}
 	}
 	res.resize(j);
-	
+
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
 #endif
-	
+
 	return res;
 }
 
@@ -925,7 +926,7 @@ void print_tree (const vector<WORD> &tree) {
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
- 			if (AN.poly_vars[tree[i+2]] < 10000) 
+			if (AN.poly_vars[tree[i+2]] < 10000)
 				MesPrint("%s^%d%", VARNAME(symbols,AN.poly_vars[tree[i+2]]), tree[i+3]);
 			else
 				MesPrint("Z%d^%d%", MAXVARIABLES-AN.poly_vars[tree[i+2]], tree[i+3]);
@@ -936,9 +937,9 @@ void print_tree (const vector<WORD> &tree) {
 			exit(1);
 		}
 
-		MesPrint(" %");		
+		MesPrint(" %");
 	}
-	
+
 	MesPrint("");
 }
 
@@ -947,64 +948,100 @@ void print_tree (const vector<WORD> &tree) {
   	#[ generate_instructions :
 */
 
+
+struct CSEHash {
+	size_t operator()(const vector<int>& n) const {
+		return n[0];
+	}
+};
+
+struct CSEEq {
+	bool operator()(const vector<int>& lhs, const vector<int>& rhs) const {
+			if (lhs.size() != rhs.size()) return false;
+			for (unsigned int i = 1; i < lhs.size(); i++) {
+				if (lhs[i] != rhs[i]) return false;
+			}
+			return true;
+	}
+};
+
+
+template<typename T> size_t hash_range(T* array, int size) {
+	size_t hash = 0;
+
+	for (int i = 0; i < size; i++) {
+		hash ^= array[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+	}
+
+	return hash;
+}
+
 /**  Generate instructions
  *
- *   Description
- *   ===========
- *   Converts the expression tree to a list of instructions that
- *   directly translate to code. Instructions are of the form:
+ *	 Description
+ *	 ===========
+ *	 Converts the expression tree to a list of instructions that
+ *	 directly translate to code. Instructions are of the form:
  *
- *      expr.nr operator length [operands]+ trailing.zero
+ *		expr.nr operator length [operands]+ trailing.zero
  *
- *   The operands are of the form:
+ *	 The operands are of the form:
  *
- *      length [(EXTRA)SYMBOL length variable power] coeff
+ *		length [(EXTRA)SYMBOL length variable power] coeff
  *
- *   This method only generates binary operators. Merging is done
- *   later. The method also checks for common subexpressions and
- *   eliminates them and the flag "do_CSE" is set.
+ *	 This method only generates binary operators. Merging is done
+ *	 later. The method also checks for common subexpressions and
+ *	 eliminates them and the flag "do_CSE" is set.
  *
- *   Implementation details
- *   ======================
- *   The map "ID" keeps track of which subexpressions already
- *   exist. The key is formatted as one of the following:
+ *	 Implementation details
+ *	 ======================
+ *	 The map "ID" keeps track of which subexpressions already
+ *	 exist. The key is formatted as one of the following:
  *
- *      SYMBOL x n
- *      SNUMBER coeff
- *      OPERATOR LHS RHS
+ *		SYMBOL x n
+ *		SNUMBER coeff
+ *		OPERATOR LHS RHS
  *
- *   with LHS/RHS formatted as one of the following:
+ *	 with LHS/RHS formatted as one of the following:
  *
- *      SNUMBER idx 0
- *      (EXTRA)SYMBOL x n
+ *		SNUMBER idx 0
+ *		(EXTRA)SYMBOL x n
  *
- *   ID[symbol] or ID[operator] equals a subexpression
- *   number. ID[coeff] equals the position of the number in the input.
+ *	 ID[symbol] or ID[operator] equals a subexpression
+ *	 number. ID[coeff] equals the position of the number in the input.
  *
- *   The stack s is used the process the postfix expression
- *   tree. Three-word tokens of the form:
+ *	 The stack s is used the process the postfix expression
+ *	 tree. Three-word tokens of the form:
  *
- *      SNUMBER idx.of.coeff 0
- *      SYMBOL x n
- *      EXTRASYMBOL x 1
+ *		SNUMBER idx.of.coeff 0
+ *		SYMBOL x n
+ *		EXTRASYMBOL x 1
  *
- *   are pushed onto it. Operators pop two operands and push the
- *   resulting expression.
+ *	 are pushed onto it. Operators pop two operands and push the
+ *	 resulting expression.
  *
- *   (Extra)symbols are 1-indexed, because -X is also needed to
- *   represent -1 times this term.
+ *	 (Extra)symbols are 1-indexed, because -X is also needed to
+ *	 represent -1 times this term.
  *
- *   There is currently a bug. The notation cannot tell if there is a single
- *   bracket and then ignores the bracket.
+ *	 There is currently a bug. The notation cannot tell if there is a single
+ *	 bracket and then ignores the bracket.
+ *
+ *	 TODO: check if this method performs properly if do_CSE=false
  */
 vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
-
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] CALL: generate_instructions(cse=%d)",
 						thetime_str().c_str(), do_CSE?1:0);
 #endif
-	
-	map<vector<int>,int> ID;
+
+	typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	csemap ID;
+
+	// reserve lots of space, to prevent later rehashes
+	// TODO: what if this is too large? make a parameter?
+	if (do_CSE) {
+			ID.rehash(mcts_expr_score * 2);
+	}
 
 	// s is a stack of operands to process when you encounter operators
 	// in the postfix expression tree. Operands consist of three WORDs,
@@ -1012,136 +1049,115 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	stack<int> s;
 	vector<WORD> instr;
 	WORD numinstr = 0;
- 
-	// To avoid frequent memory allocations, we recycle a vector of int.
-	vector<int> xtmp;
+	vector<int> x;
 
-	// calculate all necessary powers of variables if do_CSE is set
-	if (do_CSE) {
-		for (int i=0; i<(int)tree.size();)
-			if (tree[i] < 0)
-				i++;
-			else {
-				if (tree[i]==SYMBOL && tree[i+3]>1) { // symbol with power>1
-					vector<int> &x = xtmp; x.clear();
-//					vector<int> x;
-					x.push_back(SYMBOL);           // SYMBOL
-					x.push_back(tree[i+2]+1);      // variable (1-indexed)
-					x.push_back(tree[i+3]);        // power
-				
-					if (!ID.count(x)) {
-						if (numinstr == MAXPOSITIVE) {
-							MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
-							Terminate(-1);
-						}
-						// second time to encounter a power, so common subexpression
-						instr.push_back(numinstr);   // expr.nr
-						instr.push_back(OPER_MUL);   // operator
-						instr.push_back(9+OPTHEAD);  // length total
-						instr.push_back(8);          // length operand
-						instr.push_back(SYMBOL);     // SYMBOL
-						instr.push_back(4);          // length symbol
-						instr.push_back(tree[i+2]);  // variable
-						instr.push_back(tree[i+3]);  // power
-						instr.push_back(1);          // numerator
-						instr.push_back(1);          // denominator
-						instr.push_back(3);          // length coeff
-						instr.push_back(0);          // trailing 0
-						ID[x] = ++numinstr;
-					}
-				}
-				i+=tree[i+1];
-			}
-	}
-	
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
+		x.clear();
 
-//		vector<int> x;
-		vector<int> &x = xtmp; x.clear();
-		
 		if (tree[i]==SNUMBER) {
-			// for numbers, check whether it has been seen before for CSE
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
+			x.push_back(hash);
 			x.push_back(SNUMBER);
 			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
 			int sign = SGN(x.back());
 			x.back() *= sign;
-			if (!ID.count(x)) ID[x]=i+1; // new number: index in tree is 1-indexed
+
+			std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
 			s.push(0);
-			s.push(sign*ID[x]);
+			s.push(sign * suc.first->second);
 			s.push(SNUMBER);
+			s.push(hash);
 			i+=tree[i+1];
 		}
 		else if (tree[i]==SYMBOL) {
-			x.push_back(SYMBOL);
-			x.push_back(tree[i+2]+1); // variable (1-indexed)
-			x.push_back(tree[i+3]);   // power
-			if (ID.count(x)) {
-				// already-seen power of a symbol
-				s.push(1);
-				s.push(ID[x]);
-				s.push(EXTRASYMBOL);
-			}
-			else if (tree[i+3]>1) {
-				if (numinstr == MAXPOSITIVE) {
-					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
-					Terminate(-1);
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
+			if (tree[i+3]>1) {
+				x.push_back(hash);
+				x.push_back(SYMBOL);
+				x.push_back(tree[i+2]+1); // variable (1-indexed)
+				x.push_back(tree[i+3]);   // power
+
+				csemap::iterator it = ID.find(x);
+				if (do_CSE && it != ID.end()) {
+					// already-seen power of a symbol
+					s.push(1);
+					s.push(it->second);
+					s.push(EXTRASYMBOL);
+				} else {
+					//MesPrint("strange");
+					if (numinstr == MAXPOSITIVE) {
+						MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
+						Terminate(-1);
+					}
+
+					// new power greater than 1 of a symbol
+					instr.push_back(numinstr);	 // expr.nr
+					instr.push_back(OPER_MUL);	 // operator
+					instr.push_back(9+OPTHEAD);  // length total
+					instr.push_back(8); 		 // length operand
+					instr.push_back(SYMBOL);	 // SYMBOL
+					instr.push_back(4); 		 // length symbol
+					instr.push_back(tree[i+2]);  // variable
+					instr.push_back(tree[i+3]);  // power
+					instr.push_back(1); 		 // numerator
+					instr.push_back(1); 		 // denominator
+					instr.push_back(3); 		 // length coeff
+					instr.push_back(0); 		 // trailing 0
+
+					ID[x] = ++numinstr;
+					s.push(1);
+					s.push(numinstr);
+					s.push(EXTRASYMBOL);
 				}
-				// new power greater than 1 of a symbol
-				instr.push_back(numinstr);   // expr.nr
-				instr.push_back(OPER_MUL);   // operator
-				instr.push_back(9+OPTHEAD);  // length total
-				instr.push_back(8);          // length operand
-				instr.push_back(SYMBOL);     // SYMBOL
-				instr.push_back(4);          // length symbol
-				instr.push_back(tree[i+2]);  // variable
-				instr.push_back(tree[i+3]);  // power
-				instr.push_back(1);          // numerator
-				instr.push_back(1);          // denominator
-				instr.push_back(3);          // length coeff
-				instr.push_back(0);          // trailing 0
-				s.push(1);
-				s.push(++numinstr);
-				s.push(EXTRASYMBOL);
 			}
 			else {
 				// power of 1
-				s.push(tree[i+3]);   // power
+				s.push(tree[i+3]);	 // power
 				s.push(tree[i+2]+1); // variable (1-indexed)
 				s.push(SYMBOL);
 			}
+
+			s.push(hash); // push hash
 			i+=tree[i+1];
 		}
 		else { // tree[i]==OPERATOR
 			int oper = tree[i];
 			i++;
 
+			x.push_back(0); // placeholder for hash
 			x.push_back(oper);
-			
+			vector<WORD> hash;
+			hash.push_back(oper);
+
 			// get two operands from the stack
 			for (int operand=0; operand<2; operand++) {
+				hash.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 				x.push_back(s.top()); s.pop();
 			}
-			
+
+			x[0] = hash_range(&hash[0], 3);
+
 			// get rid of multiplications by +/-1
-			if (x[0]==OPER_MUL) {
+			if (oper==OPER_MUL) {
 				bool do_continue = false;
 
 				for (int operand=0; operand<2; operand++) {
-					int idx_oper1 = operand==0 ? 1 : 4;
-					int idx_oper2 = operand==0 ? 4 : 1;
-				
+					int idx_oper1 = operand==0 ? 2 : 5;
+					int idx_oper2 = operand==0 ? 5 : 2;
+
 					// check whether operand 1 equals +/-1
 					if (x[idx_oper1]==SNUMBER) {
-						
+
 						int idx = ABS(x[idx_oper1+1])-1;
 						if (tree[idx+2]==1 && tree[idx+3]==1 && ABS(tree[idx+4])==3) {
 							// push +/- other operand and continue
 							s.push(x[idx_oper2+2]);
 							s.push(x[idx_oper2+1]*SGN(x[idx_oper1+1]));
 							s.push(x[idx_oper2]);
+							s.push(hash[1 + (operand + 1) % 2]);
 							do_continue = true;
 							break;
 						}
@@ -1153,48 +1169,50 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 
 			// check whether this subexpression has been seen before
 			// if not, generate instruction to define it
-			if (!(do_CSE && ID.count(x))) {
+			csemap::iterator it = ID.find(x);
+			if (!do_CSE || it == ID.end()) {
 				if (numinstr == MAXPOSITIVE) {
 					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
 					Terminate(-1);
 				}
-				
+
 				instr.push_back(numinstr); // expr.nr.
-				instr.push_back(x[0]);     // operator
-				instr.push_back(3);        // length
+				instr.push_back(x[1]);	   // operator
+				instr.push_back(3); 	   // length
 
 				ID[x] = ++numinstr;
-				
+
 				int lenidx = instr.size()-1;
-				
-				for (int j=0; j<2; j++) 
-					if (x[3*j+1]==SYMBOL || x[3*j+1]==EXTRASYMBOL) {
-						instr.push_back(8);                        // length total
-						instr.push_back(x[3*j+1]);                 // (extra)symbol
-						instr.push_back(4);                        // length (extra)symbol
-						instr.push_back(ABS(x[3*j+2])-1);          // variable (0-indexed)
-						instr.push_back(x[3*j+3]);                 // power
-						instr.push_back(1);                        // numerator
-						instr.push_back(1);                        // denominator
-						instr.push_back(3*SGN(x[3*j+2]));          // length coeff
+
+				for (int j=0; j<2; j++)
+					if (x[3*j+2]==SYMBOL || x[3*j+2]==EXTRASYMBOL) {
+						instr.push_back(8); 					   // length total
+						instr.push_back(x[3*j+2]);				   // (extra)symbol
+						instr.push_back(4); 					   // length (extra)symbol
+						instr.push_back(ABS(x[3*j+3])-1);		   // variable (0-indexed)
+						instr.push_back(x[3*j+4]);				   // power
+						instr.push_back(1); 					   // numerator
+						instr.push_back(1); 					   // denominator
+						instr.push_back(3*SGN(x[3*j+3]));		   // length coeff
 						instr[lenidx] += 8;
 					}
 					else { // x[3*j+1]==SNUMBER
-						int t = ABS(x[3*j+2])-1;
-						instr.push_back(tree[t+1]-1);                              // length number
+						int t = ABS(x[3*j+3])-1;
+						instr.push_back(tree[t+1]-1);							   // length number
 						instr.insert(instr.end(), &tree[t+2], &tree[t]+tree[t+1]); // digits
-						instr.back() *= SGN(instr.back()) * SGN(x[3*j+2]);
+						instr.back() *= SGN(instr.back()) * SGN(x[3*j+3]);
 						instr[lenidx] += tree[t+1]-1;
 					}
-				
+
 				instr.push_back(0); // trailing 0
 				instr[lenidx]++;
 			}
-			
+
 			// push new expression on the stack
 			s.push(1);
 			s.push(ID[x]);
 			s.push(EXTRASYMBOL);
+			s.push(x[0]); // push hash
 		}
 	}
 
@@ -1202,19 +1220,426 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	MesPrint ("*** [%s, w=%w] DONE: generate_instructions(cse=%d) : numoper=%d",
 						thetime_str().c_str(), do_CSE?1:0, count_operators(instr));
 #endif
-	
+
 	return instr;
 }
 
 /*
   	#] generate_instructions : 
+  	#[ count_operators_cse :
+*/
+
+
+/**
+* Count number of operators in a binary tree, while removing CSEs on the fly.
+* The instruction set is not created, which makes this method slightly faster.
+*
+* A hash is created on the fly and is passed through the stack.
+* TODO: find better hash functions
+*/
+int count_operators_cse (const vector<WORD> &tree) {
+	//MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
+
+	typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	csemap ID;
+
+	// reserve lots of space, to prevent later rehashes
+	// TODO: what if this is too large? make a parameter?
+	ID.rehash(mcts_expr_score * 2);
+
+	// s is a stack of operands to process when you encounter operators
+	// in the postfix expression tree. Operands consist of three WORDs,
+	// formatted as the LHS/RHS of the keys in ID.
+	stack<int> s;
+	int numinstr = 0, numcommas = 0;
+	vector<int> x;
+
+	// process the expression tree
+	for (int i=0; i<(int)tree.size();) {
+		x.clear();
+
+		if (tree[i]==SNUMBER) {
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
+			x.push_back(hash);
+			x.push_back(SNUMBER);
+			x.insert(x.end(),&tree[i],&tree[i]+tree[i+1]);
+			int sign = SGN(x.back());
+			x.back() *= sign;
+
+			std::pair<csemap::iterator, bool> suc = ID.insert(csemap::value_type(x, i + 1));
+			s.push(0);
+			s.push(sign * suc.first->second);
+			s.push(SNUMBER);
+			s.push(hash);
+			i+=tree[i+1];
+		}
+		else if (tree[i]==SYMBOL) {
+			WORD hash = hash_range(&tree[i], tree[i + 1]);
+			if (tree[i+3]>1) {
+				x.push_back(hash);
+				x.push_back(SYMBOL);
+				x.push_back(tree[i+2]+1); // variable (1-indexed)
+				x.push_back(tree[i+3]);   // power
+
+				csemap::iterator it = ID.find(x);
+				if (it != ID.end()) {
+					// already-seen power of a symbol
+					s.push(1);
+					s.push(it->second);
+					s.push(EXTRASYMBOL);
+				} else {
+					if (tree[i + 3] == 2)
+						numinstr++;
+					else
+						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
+
+					ID[x] = numinstr;
+					s.push(1);
+					s.push(numinstr);
+					s.push(EXTRASYMBOL);
+				}
+			}
+			else {
+				// power of 1
+				s.push(tree[i+3]);	 // power
+				s.push(tree[i+2]+1); // variable (1-indexed)
+				s.push(SYMBOL);
+			}
+
+			s.push(hash); // push hash
+
+			i+=tree[i+1];
+		}
+		else { // tree[i]==OPERATOR
+			int oper = tree[i];
+			i++;
+
+			x.push_back(0); // placeholder for hash
+			x.push_back(oper);
+			vector<WORD> hash;
+			hash.push_back(oper);
+
+			// get two operands from the stack
+			for (int operand=0; operand<2; operand++) {
+				hash.push_back(s.top()); s.pop();
+				x.push_back(s.top()); s.pop();
+				x.push_back(s.top()); s.pop();
+				x.push_back(s.top()); s.pop();
+			}
+
+
+			x[0] = hash_range(&hash[0], 3);
+
+			// get rid of multiplications by +/-1
+			if (oper==OPER_MUL) {
+				bool do_continue = false;
+
+				for (int operand=0; operand<2; operand++) {
+					int idx_oper1 = operand==0 ? 2 : 5;
+					int idx_oper2 = operand==0 ? 5 : 2;
+
+					// check whether operand 1 equals +/-1
+					if (x[idx_oper1]==SNUMBER) {
+
+						int idx = ABS(x[idx_oper1+1])-1;
+						if (tree[idx+2]==1 && tree[idx+3]==1 && ABS(tree[idx+4])==3) {
+							// push +/- other operand and continue
+							s.push(x[idx_oper2+2]);
+							s.push(x[idx_oper2+1]*SGN(x[idx_oper1+1]));
+							s.push(x[idx_oper2]);
+							s.push(hash[1 + (operand + 1) % 2]);
+							do_continue = true;
+							break;
+						}
+					}
+				}
+
+				if (do_continue) continue;
+			}
+
+			// check whether this subexpression has been seen before
+			// if not, generate instruction to define it
+			csemap::iterator it = ID.find(x);
+			if (it == ID.end()) {
+				if (numinstr == MAXPOSITIVE) {
+					MesPrint((char *)"ERROR: too many temporary variables needed in optimization");
+					Terminate(-1);
+				}
+
+				if (oper == OPER_COMMA) numcommas++;
+				ID[x] = ++numinstr;
+				s.push(1);
+				s.push(numinstr);
+				s.push(EXTRASYMBOL);
+			} else {
+				// push new expression on the stack
+				s.push(1);
+				s.push(it->second);
+				s.push(EXTRASYMBOL);
+			}
+
+			s.push(x[0]); // push hash
+		}
+	}
+
+	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
+	return numinstr - numcommas;
+}
+
+/*
+  	#] count_operators_cse : 
+  	#[ count_operators_cse_topdown :
+*/
+
+typedef struct node {
+	const WORD* data;
+	struct node* l;
+	struct node* r; // TODO: add l,r to data?
+	WORD sign; // TODO: use data for this?
+	UWORD hash;
+
+	node() : l(NULL), r(NULL), sign(1), hash(0) {};
+	node(const WORD* data) : data(data), l(NULL), r(NULL), sign(1), hash(0) {};
+
+	// a minus sign in the tree should only count as a different entry if
+	// it is a compound expression: a = -a, but T+-V != T+V
+	int cmp(const struct node* rhs) const {
+		if (this == rhs) return 0;
+
+		if (data[0] != rhs->data[0]) return data[0] < rhs->data[0] ? -1 : 1;
+		int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
+		if (data[0] == SYMBOL || data[0] == SNUMBER) {
+			for (int i = 0; i < data[1] + mod; i++) {
+				if (data[i] != rhs->data[i]) return data[i] < rhs->data[i] ? -1 : 1;
+				}
+		} else {
+			int lv = l->cmp(rhs->l);
+			if (lv != 0) return lv;
+			int rv = r->cmp(rhs->r);
+			if (rv != 0) return rv;
+
+			// TODO: only for ADD operation
+			if (l->sign != rhs->l->sign) return l->sign < rhs->l->sign ? -1 : 1;
+			if (r->sign != rhs->r->sign) return r->sign < rhs->r->sign ? -1 : 1;
+		}
+
+		return 0;
+	}
+
+		// less than operator
+	bool operator() (const struct node* lhs, const struct node* rhs) const
+	{
+		return lhs->cmp(rhs) < 0;
+	}
+
+	void calcHash() {
+		int mod = data[0] == SNUMBER ? -1 : 0; // don't check sign, for numbers
+		if (data[0] == SYMBOL || data[0] == SNUMBER) {
+			hash = hash_range(data, data[1] + mod);
+		} else {
+			if (l->hash == 0) l->calcHash();
+			if (r->hash == 0) r->calcHash();
+
+			// signs only matter for compound expressions
+			size_t newr[] = {(size_t)data[0], l->hash, (size_t)l->sign, r->hash, (size_t)r->sign};
+			hash = hash_range(newr, 5);
+		}
+	}
+} NODE;
+
+struct NodeHash {
+	size_t operator()(const NODE* n) const {
+		return n->hash; // already computed
+	}
+};
+
+struct NodeEq {
+	bool operator()(const NODE* lhs, const NODE* rhs) const {
+		return lhs->cmp(rhs) == 0;
+	}
+};
+
+NODE* buildTree(vector<WORD> &tree) {
+	//MesPrint ("*** [%s] Starting CSEE topdown", thetime_str().c_str());
+
+	// allocate spaces for the tree, cannot be more nodes than tree size
+	NODE* ar = (NODE*)Malloc1(tree.size() * sizeof(NODE), "CSE tree");
+	NODE* c = 0;
+	unsigned int curIndex = 0;
+
+	stack<NODE*> st;
+	for (int i=0; i<(int)tree.size();) {
+		c = ar + curIndex;
+		new (c) NODE(&tree[i]); // placement new
+		curIndex++;
+
+		if (tree[i]==SYMBOL || tree[i] == SNUMBER) {
+			// extract the sign to a new class member
+			if (tree[i] == SNUMBER) {
+				c->sign = SGN(tree[i + tree[i + 1] -1]);
+			}
+
+			c->calcHash();
+			st.push(c);
+			i+=tree[i+1];
+		} else {
+			c->r = st.top(); st.pop();
+			c->l = st.top(); st.pop();
+
+			// filter *1 and *-1
+			// TODO: also multiply if there are two numbers?
+			if (c->data[0] == OPER_MUL) {
+				NODE* ch[] = {c->r, c->l};
+				for (int j = 0; j < 2; j++)
+					if (ch[j]->data[0] == SNUMBER && ch[j]->data[1] == 5 && ch[j]->data[2]==1 && ch[j]->data[3]==1) {
+							ch[(j+1)%2]->sign *= ch[j]->sign; // transfer sign
+							c = ch[(j+1)%2];
+							break;
+					}
+			}
+
+			c->calcHash();
+			st.push(c);
+			i++;
+		}
+	}
+
+	// TODO: reallocate to smaller size? Could save memory
+	//MesPrint("Memory difference: %d vs %d", curIndex, tree.size());
+
+	// we want to make the root of the tree the first element
+	// so that we can easily free the array.
+	// we swap the first element with the root
+	// we need to change the pointer in the operator node that has this element as a child
+	// TODO: check performance
+	for (unsigned int i = 0; i < curIndex; i++) {
+		if (ar[i].l == ar) ar[i].l = st.top();
+		if (ar[i].r == ar) ar[i].r = st.top();
+	}
+
+	swap(ar[0], *st.top());	
+	return ar;
+}
+
+int count_operators_cse_topdown (vector<WORD> &tree) {
+	typedef tr1::unordered_set<NODE*, NodeHash, NodeEq> nodeset;
+	nodeset ID;
+
+	// reserve lots of space, to prevent later rehashes
+	// TODO: what if this is too large? make a parameter?
+	ID.rehash(mcts_expr_score * 2);
+
+	int numinstr = 0;
+
+	NODE* root = buildTree(tree);
+
+	stack<NODE*> stack;
+	stack.push(root);
+	while (!stack.empty())
+	{
+		NODE* c = stack.top();
+		stack.pop();
+
+		if (c->data[0] == SYMBOL) {
+			if (c->data[3] > 1) {
+				std::pair<nodeset::iterator, bool> suc = ID.insert(c);
+				if (suc.second) { // new
+					if (c->data[3] == 2)
+						numinstr++;
+					else
+						numinstr += (int)floor(log(c->data[3])/log(2.0)) + __builtin_popcount(c->data[3]) - 1;
+				}
+			}
+		} else {
+			if (c->data[0] != SNUMBER) {
+				// operator
+				std::pair<nodeset::iterator, bool> suc = ID.insert(c);
+				if (suc.second) {
+					stack.push(c->r);
+					stack.push(c->l);
+
+					// ignore OPER_COMMA
+					if (c->data[0] == OPER_MUL || c->data[0] == OPER_ADD)
+						numinstr++;
+				}
+			}
+		}
+	}
+
+	//MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
+	M_free(root, "CSE tree");
+
+	return numinstr;
+}
+
+/*
+  	#] count_operators_cse_topdown : 
+  	#[ simulated_annealing :
+*/
+vector<WORD> simulated_annealing() {
+	float minT = AO.Optimize.saMinT.fval;
+	float maxT = AO.Optimize.saMaxT.fval;
+	float T = maxT;
+	float coolrate = pow(minT / maxT, 1 / (float)AO.Optimize.saIter);
+
+	GETIDENTITY;
+
+	// create a valid state where FACTORSYMBOL/SEPARATESYMBOL remains first
+	vector<WORD> state = occurrence_order(optimize_expr, false);
+	int startindex = 0;
+	if (state[0] == SEPARATESYMBOL || state[1] == FACTORSYMBOL) startindex++;
+	if (state[1] == FACTORSYMBOL) startindex++;
+
+	my_random_shuffle(BHEAD state.begin() + startindex, state.end()); // start from random scheme
+
+	vector<WORD> tree = Horner_tree(optimize_expr, state);
+	int curscore = count_operators_cse_topdown(tree);
+
+	std::vector<int> best = state; // best state
+	int bestscore = curscore;
+	
+	for (int o = 0; o < AO.Optimize.saIter; o++) {
+		int inda = iranf(BHEAD state.size() - startindex) + startindex;
+		int indb = iranf(BHEAD state.size() - startindex) + startindex;
+
+		swap(state[inda], state[indb]); // swap works best for Horner
+
+		vector<WORD> tree = Horner_tree(optimize_expr, state);
+		int newscore = count_operators_cse_topdown(tree);
+
+		if (newscore <= curscore || 2.0 * wranf(BHEAD0) / (float)(UWORD)(-1) < exp((curscore - newscore) / T)) {
+			curscore = newscore;
+
+			if (curscore < bestscore) {
+				bestscore = curscore;
+				best = state;
+			}
+		} else {
+			swap(state[inda], state[indb]);
+		}
+
+#ifdef DEBUG_SA
+	MesPrint("Score at step %d: %d", o, curscore);
+#endif
+		T *= coolrate;
+	}
+
+#ifdef DEBUG_SA
+	MesPrint("Simulated annealing score: %d", bestscore);
+#endif
+
+	return best;
+}
+
+/*
+  	#] simulated_annealing : 
   	#[ printpstree :
 */
 
 /*
 // print MCTS tree with LaTeX/pstricks (for analysis)
 void printpstree_rec (tree_node x, string pre="") {
-	
+
 	if (x.num_visits==1) {
 		MesPrint("%s\\TR{%d}",pre.c_str(),x.var);
 	}
@@ -1224,7 +1649,7 @@ void printpstree_rec (tree_node x, string pre="") {
 						 x.var);
 		for (int i=0; i<(int)x.childs.size(); i++)
 			if (x.childs[i].num_visits>0)
-				printpstree_rec(x.childs[i], pre+"  ");
+				printpstree_rec(x.childs[i], pre+"	");
 		MesPrint("%s}",pre.c_str());
 	}
 }
@@ -1237,7 +1662,7 @@ void printpstree () {
 	MesPrint ("\\scalebox{0.02}{");
 	printpstree_rec(mcts_root,"  ");
 	MesPrint ("}");
-	MesPrint ("\\end{document}");	
+	MesPrint ("\\end{document}");
 }
 */
 
@@ -1248,33 +1673,33 @@ void printpstree () {
 
 /**  Expand MCTS tree
  *
- *   Description
- *   ===========
- *   This method does one MCTS step: it selects the most-promising
- *   node, expands it, randomly completes the Horner scheme and
- *   backpropagates the results.
+ *	 Description
+ *	 ===========
+ *	 This method does one MCTS step: it selects the most-promising
+ *	 node, expands it, randomly completes the Horner scheme and
+ *	 backpropagates the results.
  *
- *   Selection is done according to the UCT formula:
+ *	 Selection is done according to the UCT formula:
  *
- *      UCT(i) = <x(i)> + C * sqrt(2*log(N)/n(i)),
+ *		UCT(i) = <x(i)> + C * sqrt(2*log(N)/n(i)),
  *
- *   where <x(i)> is the average result of child i, n(i) is the number
- *   of time child i is visited, N=SUM(n(i)) and C is a constant to be
- *   determined experimentally (can be set via mctsconstant).
+ *	 where <x(i)> is the average result of child i, n(i) is the number
+ *	 of time child i is visited, N=SUM(n(i)) and C is a constant to be
+ *	 determined experimentally (can be set via mctsconstant).
  *
- *   A "virtual loss" is added once a node is selected. This is
- *   relevant to avoid duplicate work in the parallel version.
+ *	 A "virtual loss" is added once a node is selected. This is
+ *	 relevant to avoid duplicate work in the parallel version.
  *
- *   Notes   
- *   =====
- *   - The method is called from "find_Horner_MCTS" in Form and from
- *     "RunThread" via "find_Horner_MCTS_expand_tree_threaded" in
- *     TForm.
- *   - The code is divided into three functions: "next_MCTS_scheme",
- *     "try_MCTS_scheme" and "update_MCTS_scheme". In this way, the
- *     source code is shared with ParForm; "try_MCTS_scheme" is
- *     assumed to run on workers, while the others are assumed to run
- *     on the master.
+ *	 Notes
+ *	 =====
+ *	 - The method is called from "find_Horner_MCTS" in Form and from
+ *	   "RunThread" via "find_Horner_MCTS_expand_tree_threaded" in
+ *	   TForm.
+ *	 - The code is divided into three functions: "next_MCTS_scheme",
+ *	   "try_MCTS_scheme" and "update_MCTS_scheme". In this way, the
+ *	   source code is shared with ParForm; "try_MCTS_scheme" is
+ *	   assumed to run on workers, while the others are assumed to run
+ *	   on the master.
  */
 
 /*
@@ -1325,7 +1750,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 						break;
 				}
 //-------------------------------------------------------------------
-		
+
 #ifdef DEBUG_MCTS
 		MesPrint("select %d",select->var);
 #endif
@@ -1343,7 +1768,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 					slide_down_factor *
 //-------------------------------------------------------------------------
 					2 * AO.Optimize.mctsconstant.fval * sqrt(2*log(select->num_visits) / p->num_visits);
-					
+
 #ifdef DEBUG_MCTS
 				printf("%d: %.2lf [x=%.2lf n=%d fin=%i]\n",p->var,score,mcts_expr_score / (p->sum_results/p->num_visits),
 							 p->num_visits,p->finished?1:0);
@@ -1351,9 +1776,9 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 #endif
 			}
 			else {
-       	// no results yet, so select this node by setting score=infinite
+		// no results yet, so select this node by setting score=infinite
 				score = 1e100;
-					
+
 #ifdef DEBUG_MCTS
 				printf("%d: inf\n",p->var); fflush(stdout);
 #endif
@@ -1387,33 +1812,32 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 
 	// variables used so far
 	set<WORD> var_used;
-	if ( (int)order.size() > 0 ) {
-		for (int i=0; i<(int)order.size(); i++) {
-			var_used.insert(ABS(order[i])-1);
-		}
-		// if this a new node, create node and add children
-		if (!select->finished && select->childs.size()==0) {
-			tree_node new_node(select->var);
-			int sign = SGN(order.back());
-			for (int i=0; i<(int)mcts_vars.size(); i++)
-				if (!var_used.count(mcts_vars[i])) {
-					new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
-					if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD) 
-						new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
-				}
-			my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
-			
-			// here locking is necessary, since operator=(tree_node) is a
-			// non-atomic operation (using pointers makes this lock obsolete)
-			LOCK(optimize_lock);
-			*select = new_node;
-			UNLOCK(optimize_lock);
-		}
+
+	for (int i=0; i<(int)order.size(); i++)
+		var_used.insert(ABS(order[i])-1);
+
+	// if this a new node, create node and add children
+	if (!select->finished && select->childs.size()==0) {
+		tree_node new_node(select->var);
+		int sign = SGN(order.back());
+		for (int i=0; i<(int)mcts_vars.size(); i++)
+			if (!var_used.count(mcts_vars[i])) {
+				new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
+				if (AO.Optimize.hornerdirection==O_FORWARDANDBACKWARD)
+					new_node.childs.push_back(tree_node(-sign*(mcts_vars[i]+1)));
+			}
+		my_random_shuffle(BHEAD new_node.childs.begin(), new_node.childs.end());
+
+		// here locking is necessary, since operator=(tree_node) is a
+		// non-atomic operation (using pointers makes this lock obsolete)
+		LOCK(optimize_lock);
+		*select = new_node;
+		UNLOCK(optimize_lock);
 	}
 	// set finished if necessary
-	if (select->childs.size()==0) 
+	if (select->childs.size()==0)
 		select->finished = true;
-	
+
 	// add virtual loss of number of operators in original expression
 	select->num_visits++;
 	select->sum_results+=mcts_expr_score;
@@ -1424,7 +1848,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	deque<WORD> scheme;
 
 	for (int i=0; i<(int)mcts_vars.size(); i++)
-		if (!var_used.count(mcts_vars[i])) 
+		if (!var_used.count(mcts_vars[i]))
 			scheme.push_back(mcts_vars[i]);
 	my_random_shuffle(BHEAD scheme.begin(), scheme.end());
 
@@ -1436,11 +1860,11 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	}
 
 	// add FACTORSYMBOL/SEPARATESYMBOL is necessary
-	if (mcts_factorized) 
+	if (mcts_factorized)
 		scheme.push_front(FACTORSYMBOL);
-	if (mcts_separated) 
+	if (mcts_separated)
 		scheme.push_front(SEPARATESYMBOL);
-	
+
 	// Horner scheme as a vector
 	schemev = vector<WORD>(scheme.begin(), scheme.end());
 
@@ -1456,13 +1880,18 @@ inline static void try_MCTS_scheme (PHEAD const vector<WORD> &scheme, int *pnum_
 
 	// do Horner, CSE and count the number of operators
 	vector<WORD> tree = Horner_tree(optimize_expr, scheme);
-	vector<WORD> instr = generate_instructions(tree, true);
-	int num_oper = count_operators(instr);
+	//vector<WORD> instr = generate_instructions(tree, true);
+	//int num_oper = count_operators(instr);
+	//int num_oper2 = count_operators_cse(tree);
+	//int num_oper2 = count_operators_cse_topdown(tree);
+	//MesPrint("%d %d", num_oper, num_oper2);
+
+	int num_oper = count_operators_cse_topdown(tree);
 
 	// clean poly_vars, that is allocated by Horner_tree
 	AN.poly_num_vars = 0;
 	M_free(AN.poly_vars,"poly_vars");
-	
+
 	*pnum_oper = num_oper;
 
 }
@@ -1490,12 +1919,12 @@ inline static void update_MCTS_scheme (int num_oper, const vector<WORD> &scheme,
 			mcts_best_schemes.erase(--mcts_best_schemes.end());
 		UNLOCK(optimize_lock);
 	}
-		
+
 	// MCTS step IV: backpropagate
 
 	// add number of operator and subtract mcts_expr_score, which
 	// behaves as a "virtual loss"
- 	for (vector<tree_node *>::iterator p=path.begin(); p<path.end(); p++) 
+	for (vector<tree_node *>::iterator p=path.begin(); p<path.end(); p++)
 		(*p)->sum_results += num_oper - mcts_expr_score;
 
 }
@@ -1536,7 +1965,7 @@ void find_Horner_MCTS_expand_tree () {
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: find_Horner_MCTS_expand_tree(%a-> %d)",
 						thetime_str().c_str(), scheme.size(), &scheme[0], num_oper);
-#endif	
+#endif
 
 }
 
@@ -1698,11 +2127,11 @@ void PF_find_Horner_MCTS_expand_tree_slave () {
 
 /**  Find best Horner schemes using MCTS
  *
- *   Description
- *   ===========
- *   The method governs the MCTS for the best Horner schemes. It does
- *   some pre-processing, calls "find_Horner_MCTS_expand_tree" a
- *   number of times and does some post-processing.
+ *	 Description
+ *	 ===========
+ *	 The method governs the MCTS for the best Horner schemes. It does
+ *	 some pre-processing, calls "find_Horner_MCTS_expand_tree" a
+ *	 number of times and does some post-processing.
  */
 //vector<vector<WORD> > find_Horner_MCTS () {
 void find_Horner_MCTS () {
@@ -1720,16 +2149,16 @@ void find_Horner_MCTS () {
 #endif
 
 	GETIDENTITY;
-	
+
 	LONG start_time = TimeWallClock(1);
-	
+
 	// initialize the used global variables
 	mcts_expr_score = count_operators(optimize_expr);
 	mcts_root = tree_node();
 
 	// extract all symbols from the expression
 	set<WORD> var_set;
-	for (WORD *t=optimize_expr; *t!=0; t+=*t) 
+	for (WORD *t=optimize_expr; *t!=0; t+=*t)
 		if (t[1] == SYMBOL)
 			for (int i=3; i<t[2]; i+=2)
 				var_set.insert(t[i]);
@@ -1740,7 +2169,7 @@ void find_Horner_MCTS () {
 	if (mcts_factorized) var_set.erase(FACTORSYMBOL);
 	mcts_separated = var_set.count(SEPARATESYMBOL);
 	if (mcts_separated) var_set.erase(SEPARATESYMBOL);
-	
+
 	mcts_vars = vector<WORD>(var_set.begin(), var_set.end());
 	optimize_num_vars = (int)mcts_vars.size();
 	// initialize MCTS tree root
@@ -1761,11 +2190,11 @@ void find_Horner_MCTS () {
 
 	// call expand_tree until it is called "mctsnumexpand" times, the
 	// time limit is reached or the tree is fully finished
-	for (int times=0; times<AO.Optimize.mctsnumexpand && !mcts_root.finished && 
+	for (int times=0; times<AO.Optimize.mctsnumexpand && !mcts_root.finished &&
 				 (AO.Optimize.mctstimelimit==0 ||	(TimeWallClock(1)-start_time)/100 < AO.Optimize.mctstimelimit);
 			 times++) {
 		AT.optimtimes = times;
-  	// call expand_tree routine depending on threading mode
+	// call expand_tree routine depending on threading mode
 #if defined(WITHPTHREADS)
 		if (AM.totalnumberofthreads > 1)
 			find_Horner_MCTS_expand_tree_threaded();
@@ -1798,67 +2227,67 @@ void find_Horner_MCTS () {
 
 /**  Merge operators
  *
- *   Description
- *   ===========
- *   The input instructions form a binary DAG. This method merges
- *   expressions like
+ *	 Description
+ *	 ===========
+ *	 The input instructions form a binary DAG. This method merges
+ *	 expressions like
  *
- *      Z1 = a+b; 
- *      Z2 = Z1+c;
+ *		Z1 = a+b;
+ *		Z2 = Z1+c;
  *
- *   into
+ *	 into
  *
- *      Z2 = a+b+c;
+ *		Z2 = a+b+c;
  *
- *   An instruction is merged iff it only has one parent and the
- *   operator equals its parent's operator.
+ *	 An instruction is merged iff it only has one parent and the
+ *	 operator equals its parent's operator.
  *
- *   This still leaves some freedom: where should the coefficients end
- *   up in cases as:
+ *	 This still leaves some freedom: where should the coefficients end
+ *	 up in cases as:
  *
- *      Z1 = Z2 + x    <=>   Z1 = 2*Z2 + x
- *      Z2 = 2*x*y           Z2 = x*y
+ *		Z1 = Z2 + x    <=>	 Z1 = 2*Z2 + x
+ *		Z2 = 2*x*y			 Z2 = x*y
  *
- *   Both are relevant, e.g. for CSE of the form "2*x" and "2*Z2". The
- *   flag "move_coeff" moves coefficients from LHS-like expressions to
- *   RHS-like expressions.
+ *	 Both are relevant, e.g. for CSE of the form "2*x" and "2*Z2". The
+ *	 flag "move_coeff" moves coefficients from LHS-like expressions to
+ *	 RHS-like expressions.
  *
- *   Furthermore, this method removes empty equation (Z1=0), that are
- *   introduced by some "optimize_greedy" substitutions.
+ *	 Furthermore, this method removes empty equation (Z1=0), that are
+ *	 introduced by some "optimize_greedy" substitutions.
  *
- *   Implementation details
- *   ======================
- *   Expressions are mostly traversed via a stack, so that parents are
- *   evaluated before their children.
+ *	 Implementation details
+ *	 ======================
+ *	 Expressions are mostly traversed via a stack, so that parents are
+ *	 evaluated before their children.
  *
- *   With "move_coeff" set coefficients are moved, but this leads to
- *   some tricky cases, e.g.
+ *	 With "move_coeff" set coefficients are moved, but this leads to
+ *	 some tricky cases, e.g.
  *
- *     Z1 = Z2 + x
- *     Z2 = 2*y
+ *	   Z1 = Z2 + x
+ *	   Z2 = 2*y
  *
- *   Here Z2 reduces to the trivial equation Z2=y, which should be
- *   eliminated. Here the array skip[i] comes in.
+ *	 Here Z2 reduces to the trivial equation Z2=y, which should be
+ *	 eliminated. Here the array skip[i] comes in.
  *
- *   Furthermore in the case
+ *	 Furthermore in the case
  *
- *     Z1 = Z2 + x
- *     Z2 = 2*Z3
- *     Z3 = x*Z4
- *     Z4 = y*z
+ *	   Z1 = Z2 + x
+ *	   Z2 = 2*Z3
+ *	   Z3 = x*Z4
+ *	   Z4 = y*z
  *
- *   after substituting Z1 = 2*Z3 + x, the parent expression for Z4
- *   becomes Z3 instead of Z2. This is where renum_par[i] comes in.
+ *	 after substituting Z1 = 2*Z3 + x, the parent expression for Z4
+ *	 becomes Z3 instead of Z2. This is where renum_par[i] comes in.
  *
- *   Finally, once a coefficient has been moved, skip_coeff[i] is set
- *   and this coefficient is copied into the new expression anymore.
+ *	 Finally, once a coefficient has been moved, skip_coeff[i] is set
+ *	 and this coefficient is copied into the new expression anymore.
  */
 vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 
 #ifdef DEBUG_MORE
 	MesPrint ("*** [%s, w=%w] CALL: merge_operators", thetime_str().c_str());
 #endif
-	
+
 	// get starting positions of instructions
 	vector<const WORD *> instr;
 	const WORD *tbegin = &*all_instr.begin();
@@ -1868,11 +2297,11 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 		instr.push_back(t);
 	}
 	int n = instr.size();
-	
+
 	// find parents and number of parents of instructions
 	vector<int> par(n), numpar(n,0);
 	for (int i=0; i<n; i++) par[i]=i;
-	
+
 	for (int i=0; i<n; i++) {
 		for (const WORD *t=instr[i]+OPTHEAD; *t!=0; t+=*t) {
 			if ( *(t+1)==EXTRASYMBOL && *t!=1+ABS(*(t+*t-1)) ) {
@@ -1897,9 +2326,9 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 		int i=s.top(); s.pop();
 		if (vis[i]) continue;
 		vis[i]=true;
-		
+
 		for (const WORD *t=instr[i]+OPTHEAD; *t!=0; t+=*t)
-			if ( *(t+1)==EXTRASYMBOL && *t!=1+ABS(*(t+*t-1)) ) 
+			if ( *(t+1)==EXTRASYMBOL && *t!=1+ABS(*(t+*t-1)) )
 				s.push(*(t+3));
 
 		// condition: one parent and equal operator as parent
@@ -1926,7 +2355,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 	vector<int> renum_par(n);
 	for (int i=0; i<n; i++)
 		renum_par[i]=i;
-	
+
 	while (!new_expr.empty()) {
 		int x = new_expr.top(); new_expr.pop();
 		if (vis[x]) continue;
@@ -1940,7 +2369,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 		// 1-indexed, since signs may occur
 		stack<WORD> this_expr;
 		this_expr.push(x+1);
-		
+
 		while (!this_expr.empty()) {
 			// pop from stack, determine expr.nr and sign
 			int i = this_expr.top(); this_expr.pop();
@@ -1955,14 +2384,14 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 				if (*t!=1+ABS(*(t+*t-1)) && *(t+1)==EXTRASYMBOL) {
 					if (par[*(t+3)] == x) {
 						// parent of term refers to x. we push it with its sign if no skip is true
-						// and the sign of the expr. 
+						// and the sign of the expr.
 						this_expr.push(sign * (skip[i]||skipcoeff[i] ? 1 : SGN(*(t+*t-1))) * (1+*(t+3)));
 						if (*(instr[i]+1) == OPER_MUL) sign=1;
 						copy=false;
 					}
 					else {
 						new_expr.push(*(t+3));
-					}						
+					}
 				}
 
 				if (*t == 1+ABS(*(t+*t-1)) && skipcoeff[i]) {
@@ -1974,7 +2403,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 					if (first_copy) {
 						newinstr.push_back(renum_par[x]);  // expr.nr.
 						newinstr.push_back(*(instr[x]+1)); // operator
-						newinstr.push_back(3);             // length   OPTHEAD?
+						newinstr.push_back(3);			   // length   OPTHEAD?
 						first_copy=false;
 					}
 
@@ -1987,7 +2416,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 
 					// check for moving coefficients up
 					// necessary condition: MUL-expression with 1 parent
-					if (move_coeff && *t!=1+ABS(*(t+*t-1)) && *(instr[i]+1)!=OPER_COMMA && 
+					if (move_coeff && *t!=1+ABS(*(t+*t-1)) && *(instr[i]+1)!=OPER_COMMA &&
 							*(t+1)==EXTRASYMBOL && numpar[*(t+3)]==1 && *(instr[*(t+3)]+1)==OPER_MUL) {
 
 						// coefficient is always the first term (that's how Horner+generate works)
@@ -1996,10 +2425,10 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 
 						if (*t1 == 1+ABS(*(t1+*t1-1))) {
 							// t1 pointer to a coefficient, so move it
-							
+
 							// remove old coefficient of 1
-							WORD *t3 = &*newinstr.end();                     //
-							int sign2 = SGN(t3[-1]);                          //
+							WORD *t3 = &*newinstr.end();					 //
+							int sign2 = SGN(t3[-1]);						  //
 							newinstr.erase(newinstr.end()-3, newinstr.end());
 							// count number of arguments; iff it is 2 move the (extra)symbol too
 							int numargs=0;
@@ -2012,18 +2441,18 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 								newinstr[newinstr.size()-3] = *(t2+2);
 								newinstr[newinstr.size()-2] = *(t2+3);
 								newinstr[newinstr.size()-1] = *(t2+4);
-								sign2 *= SGN(*(t2+*t2-1));          // was t2[7]
-								
+								sign2 *= SGN(*(t2+*t2-1));			// was t2[7]
+
 								// ignore this expression from now on
 								skip[*(t+3)]=true;
-								if (*(t2+1)==EXTRASYMBOL) 
+								if (*(t2+1)==EXTRASYMBOL)
 									renum_par[*(t+3)] = *(t2+3);
 							}
 							else {
 								// otherwise, ignore coefficient from now on
 								// we need to collect the signs of the terms
 								// first and set them to one. This was forgotten
-                                // before. Gave occasional errors.
+								// before. Gave occasional errors.
 								if ( numargs > 2 || ( numargs == 2 && t2[4] > 1 ) ) {
 									for (WORD *tt=(WORD *)t2; *tt!=0; tt+=*tt) {
 										if ( tt[*tt-1] < 0 ) {
@@ -2034,7 +2463,7 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 								}
 								skipcoeff[*(t+3)]=true;
 							}
-							
+
 							// add new coefficient
 							newinstr.insert(newinstr.end(), t1+1, t1+*t1);
 							newinstr.back() *= sign2;
@@ -2060,14 +2489,14 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 	// find renumber scheme
 	vector<int> renum(n,-1);
 	int next=0;
-	for (int i=0; i<n; i++) 
+	for (int i=0; i<n; i++)
 		if (!skip[i] && renum_par[par[i]]==i) renum[renum_par[i]]=next++;
 
 	// find new instruction index
 	tbegin = &*newinstr.begin();
 	tend = tbegin+newinstr.size();
-	for (const WORD *t=tbegin; t!=tend; t+=*(t+2)) 
-		instr[renum[*t]] = t;	
+	for (const WORD *t=tbegin; t!=tend; t+=*(t+2))
+		instr[renum[*t]] = t;
 
 	// renumbering expressions and sort them lexicographically (in
 	// new_instr they are in the preorder of the expression tree)
@@ -2075,20 +2504,20 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 	for (int i=0; i<next; i++) {
 		int idx = sortinstr.size();
 		sortinstr.insert(sortinstr.end(), instr[i], instr[i]+*(instr[i]+2));
-		
+
 		sortinstr[idx] = renum[sortinstr[idx]];
 
 		// renumber content of an expression
 		for (WORD *t2=&sortinstr[idx]+3; *t2!=0; t2+=*t2)
-			if (*t2!=1+ABS(*(t2+*t2-1)) && *(t2+1)==EXTRASYMBOL) 
+			if (*t2!=1+ABS(*(t2+*t2-1)) && *(t2+1)==EXTRASYMBOL)
 				*(t2+3) = renum[*(t2+3)];
 	}
 
 #ifdef DEBUG_MORE
 	MesPrint ("*** [%s, w=%w] DONE: merge_operators", thetime_str().c_str());
 #endif
-	
-	return sortinstr;	
+
+	return sortinstr;
 }
 
 /*
@@ -2098,27 +2527,27 @@ vector<WORD> merge_operators (const vector<WORD> &all_instr, bool move_coeff) {
 
 /**  class Optimization
  *
- *   Description
- *   ===========
- *   This object represents an optimization. Its type is a number in
- *   the range 0 to 5. Depending on this type, the variables arg1, arg2
- *   and coeff indicate:
+ *	 Description
+ *	 ===========
+ *	 This object represents an optimization. Its type is a number in
+ *	 the range 0 to 5. Depending on this type, the variables arg1, arg2
+ *	 and coeff indicate:
  *
- *   type==0 : optimization of the form x[arg1] ^ arg2 (coeff=empty)
- *   type==1 : optimization of the form x[arg1] * x[arg2] (coeff=empty)
- *   type==2 : optimization of the form x[arg1] * coeff (arg2=0)
- *   type==3 : optimization of the form x[arg1] + coeff (arg2=0)
- *   type==4 : optimization of the form x[arg1] + x[arg2] (coeff=empty)
- *   type==5 : optimization of the form x[arg1] - x[arg2] (coeff=empty)
+ *	 type==0 : optimization of the form x[arg1] ^ arg2 (coeff=empty)
+ *	 type==1 : optimization of the form x[arg1] * x[arg2] (coeff=empty)
+ *	 type==2 : optimization of the form x[arg1] * coeff (arg2=0)
+ *	 type==3 : optimization of the form x[arg1] + coeff (arg2=0)
+ *	 type==4 : optimization of the form x[arg1] + x[arg2] (coeff=empty)
+ *	 type==5 : optimization of the form x[arg1] - x[arg2] (coeff=empty)
  *
- *   Here, "x[arg]" represents a symbol (if positive) or an
- *   extrasymbol (if negative). The represented symbol's id is
- *   ABS(x[arg])-1.
- * 
- *   "eqns" is a list of equation, where this optimization can be
- *   performed.
- * 
- *   "improve" is the total improvement of this optimization.
+ *	 Here, "x[arg]" represents a symbol (if positive) or an
+ *	 extrasymbol (if negative). The represented symbol's id is
+ *	 ABS(x[arg])-1.
+ *
+ *	 "eqns" is a list of equation, where this optimization can be
+ *	 performed.
+ *
+ *	 "improve" is the total improvement of this optimization.
  */
 class optimization {
 public:
@@ -2130,7 +2559,7 @@ public:
 		if (arg1 != a.arg1) return arg1 < a.arg1;
 		if (arg2 != a.arg2) return arg2 < a.arg2;
 		if (type != a.type) return type < a.type;
-		return coeff < a.coeff;		
+		return coeff < a.coeff;
 	}
 };
 
@@ -2141,12 +2570,12 @@ public:
 
 /**  Find optimizations
  *
- *   Description
- *   ===========
- *   This method find all optimization of the form described in "class
- *   Optimization". It process every equation, looking for possible
- *   optimizations and stores them in a fast-access data structure to
- *   count the total improvement of an optimization.
+ *	 Description
+ *	 ===========
+ *	 This method find all optimization of the form described in "class
+ *	 Optimization". It process every equation, looking for possible
+ *	 optimizations and stores them in a fast-access data structure to
+ *	 count the total improvement of an optimization.
  */
 vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
@@ -2167,7 +2596,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
 	const WORD *ebegin = &*instr.begin();
 	const WORD *eend = ebegin+instr.size();
-	
+
 	for (int optim_type=0; optim_type<=4; optim_type++) {
 
 		cnt.clear();
@@ -2192,25 +2621,25 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 			}
 		}
 //	#] type 0 : 
-//	#[ type 1 :   find optimizations of the form z=x*y (optim.type==1)
+//	#[ type 1 :	 find optimizations of the form z=x*y (optim.type==1)
 		if (optim_type == 1) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 				if (*(e+1) != OPER_MUL) continue;
-				
+
 				for (const WORD *t1=e+3; *t1!=0; t1+=*t1) {
 					if (*t1 == ABS(*(t1+*t1-1))+1) continue;
 					int x1 = (*(t1+1)==SYMBOL ? 1 : -1) * (*(t1+3) + 1);
-					
+
 					for (const WORD *t2=t1+*t1; *t2!=0; t2+=*t2) {
 						if (*t2 == ABS(*(t2+*t2-1))+1) continue;
 						int x2 = (*(t2+1)==SYMBOL ? 1 : -1) * (*(t2+3) + 1);
-						
+
 						if (*(t1+4) == *(t2+4)) {
 							optim.arg1 = x1;
 							optim.arg2 = x2;
 							if (optim.arg1 > optim.arg2)
 								swap(optim.arg1, optim.arg2);
-							
+
 							if (*(t1+4) == 1)
 								cnt[optim].push_back(e-ebegin);
 							else {
@@ -2224,22 +2653,22 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 			}
 		}
 //	#] type 1 : 
-//	#[ type 2 :   find optimizations of the form z=c*x (optim.type==2)
+//	#[ type 2 :	 find optimizations of the form z=c*x (optim.type==2)
 		if (optim_type == 2) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 
 				if (*(e+1) == OPER_ADD) {
 					// in ADD-equation
-					
+
 					for (const WORD *t=e+3; *t!=0; t+=*t) {
 						if (*t == ABS(*(t+*t-1))+1) continue;
-						
+
 						if (*(t+4)==1) {
 							if (ABS(*(t+*t-1))==3 && *(t+*t-2)==1 && *(t+*t-3)==1) continue;
 
 							optim.coeff = vector<WORD>(t+*t-ABS(*(t+*t-1)), t+*t);
 							optim.coeff.back() = ABS(optim.coeff.back());
-							
+
 							optim.arg1 = (*(t+1)==SYMBOL ? 1 : -1) * (*(t+3) + 1);
 							optim.arg2 = 0;
 
@@ -2250,15 +2679,15 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 				else if (*(e+1) == OPER_MUL) {
 					// in MUL-equation
 					optim.coeff.clear();
-					
-					for (const WORD *t=e+3; *t!=0; t+=*t) 
+
+					for (const WORD *t=e+3; *t!=0; t+=*t)
 						if (*t == ABS(*(t+*t-1))+1) {
 							if (ABS(*(t+*t-1))==3 && *(t+*t-2)==1 && *(t+*t-3)==1) continue;
 							optim.coeff = vector<WORD>(t+*t-ABS(*(t+*t-1)), t+*t);
 							optim.coeff.back() = ABS(optim.coeff.back());
 						}
-					
-					if (!optim.coeff.empty()) 
+
+					if (!optim.coeff.empty())
 						for (const WORD *t=e+3; *t!=0; t+=*t) {
 							if (*t == ABS(*(t+*t-1))+1) continue;
 							if (*(t+4) != 1) continue;
@@ -2270,25 +2699,25 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 			}
 		}
 //	#] type 2 : 
-//	#[ type 3 :   find optimizations of the form z=x+c (optim.type==3)
+//	#[ type 3 :	 find optimizations of the form z=x+c (optim.type==3)
 		if (optim_type == 3) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
-				
+
 				if (*(e+1) != OPER_ADD) continue;
 
 				optim.coeff.clear();
-				
-				for (const WORD *t=e+3; *t!=0; t+=*t) 
+
+				for (const WORD *t=e+3; *t!=0; t+=*t)
 					if (*t == ABS(*(t+*t-1))+1) {
 						optim.coeff = vector<WORD>(t+*t-ABS(*(t+*t-1)), t+*t);
-					}						
-				
+					}
+
 				if (!optim.coeff.empty()) {
 					for (const WORD *t=e+3; *t!=0; t+=*t) {
 						if (*t == ABS(*(t+*t-1))+1) continue;
 						if (ABS(*(t+*t-1))!=3 || *(t+*t-2)!=1 || *(t+*t-3)!=1) continue;
 						if (*(t+*t-1)==-3) optim.coeff.back() *= -1;
-											
+
 						optim.arg1 = (*(t+1)==SYMBOL ? 1 : -1) * (*(t+3) + 1);
 						optim.arg2 = 0;
 						cnt[optim].push_back(e-ebegin);
@@ -2302,7 +2731,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 		if (optim_type == 4) {
 			for (const WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 				if (*(e+1) != OPER_ADD) continue;
-				
+
 				for (const WORD *t1=e+3; *t1!=0; t1+=*t1) {
 					if (*t1 == ABS(*(t1+*t1-1))+1) continue;
 					int x1 = (*(t1+1)==SYMBOL ? 1 : -1) * (*(t1+3) + 1);
@@ -2310,10 +2739,10 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 					for (const WORD *t2=t1+*t1; *t2!=0; t2+=*t2) {
 						if (*t2 == ABS(*(t2+*t2-1))+1) continue;
 						int x2 = (*(t2+1)==SYMBOL ? 1 : -1) * (*(t2+3) + 1);
-						
+
 						int sign1 = SGN(*(t1+*t1-1));
 						int sign2 = SGN(*(t2+*t2-1));
-						
+
 						if (BigLong((UWORD *)t1+5, ABS(*(t1+*t1-1))-1, (UWORD *)t2+5, ABS(*(t2+*t2-1))-1) == 0) {
 
 							optim.type = (sign1 * sign2 == 1 ? 4 : 5); // optimization type
@@ -2322,7 +2751,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 							if (optim.arg1 > optim.arg2) {
 								swap(optim.arg1, optim.arg2);
 							}
-							
+
 							if (ABS(*(t1+*t1-1))==3 && *(t1+*t1-2)==1 && *(t1+*t1-3)==1)
 								cnt[optim].push_back(e-ebegin);
 							else {
@@ -2356,7 +2785,7 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: find_optimizations",thetime_str().c_str());
 #endif
-	
+
 	return res;
 }
 
@@ -2367,43 +2796,43 @@ vector<optimization> find_optimizations (const vector<WORD> &instr) {
 
 /**  Do optimization
  *
- *   Description
- *   ===========
- *   This method performs an optimization. It scans through the
- *   equations of "optim.eqnidxs" and looks in which this optimization
- *   can still be performed (due to other performed optimizations this
- *   isn't always the case). If possible, it substitutes the common
- *   subexpression by a new extra symbol numbered "newid". Finally,
- *   the new extrasymbol is defined accordingly.
+ *	 Description
+ *	 ===========
+ *	 This method performs an optimization. It scans through the
+ *	 equations of "optim.eqnidxs" and looks in which this optimization
+ *	 can still be performed (due to other performed optimizations this
+ *	 isn't always the case). If possible, it substitutes the common
+ *	 subexpression by a new extra symbol numbered "newid". Finally,
+ *	 the new extrasymbol is defined accordingly.
  *
- *   Substitutions may lead to trivial equations of the form "Zi=Zj",
- *   but these are removed in the end of the method. The method returns
- *   whether the substitution has been done once or more (or not).
+ *	 Substitutions may lead to trivial equations of the form "Zi=Zj",
+ *	 but these are removed in the end of the method. The method returns
+ *	 whether the substitution has been done once or more (or not).
  */
 
 bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) {
 
 //	#[ Debug code :
 #ifdef DEBUG_GREEDY
-	if (optim.type==0) 
+	if (optim.type==0)
 		MesPrint ("*** [%s, w=%w] CALL: do_optimization(improve=%d, %c%d^%d)",
 		  thetime_str().c_str(), optim.improve,
-  		optim.arg1>0?'x':'Z', ABS(optim.arg1)-1, optim.arg2);
-	else if (optim.type==1 || optim.type>=4) 
+		optim.arg1>0?'x':'Z', ABS(optim.arg1)-1, optim.arg2);
+	else if (optim.type==1 || optim.type>=4)
 		MesPrint ("*** [%s, w=%w] CALL: do_optimization(improve=%d, %c%d%c%c%d)",
-  		thetime_str().c_str(), optim.improve,
-	  	optim.arg1>0?'x':'Z', ABS(optim.arg1)-1,
-  		optim.type==1 ? '*' : optim.type==4 ? '+' : '-',
-	  	optim.arg2>0?'x':'Z', ABS(optim.arg2)-1);
+		thetime_str().c_str(), optim.improve,
+		optim.arg1>0?'x':'Z', ABS(optim.arg1)-1,
+		optim.type==1 ? '*' : optim.type==4 ? '+' : '-',
+		optim.arg2>0?'x':'Z', ABS(optim.arg2)-1);
 	else {
-    WORD n = optim.coeff.back()/2;
-  	UBYTE num[BITSINWORD*ABS(n)], den[BITSINWORD*ABS(n)];
-    PrtLong((UWORD *)&optim.coeff[0], n, num);
-    PrtLong((UWORD *)&optim.coeff[ABS(n)], ABS(n), den);
+	WORD n = optim.coeff.back()/2;
+	UBYTE num[BITSINWORD*ABS(n)], den[BITSINWORD*ABS(n)];
+	PrtLong((UWORD *)&optim.coeff[0], n, num);
+	PrtLong((UWORD *)&optim.coeff[ABS(n)], ABS(n), den);
 		MesPrint ("*** [%s, w=%w] CALL: do_optimization(improve=%d, %c%d%c%s/%s)",
-  		thetime_str().c_str(), optim.improve,
-  		optim.arg1>0?'x':'Z', ABS(optim.arg1)-1,
-	  	optim.type==2 ? '*' : '+', num,den);
+		thetime_str().c_str(), optim.improve,
+		optim.arg1>0?'x':'Z', ABS(optim.arg1)-1,
+		optim.type==2 ? '*' : '+', num,den);
   }
 #endif
 //	#] Debug code : 
@@ -2445,20 +2874,20 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 #endif
 			return false;
 		}
-		
+
 		// add extra equation (Tnew = x^n)
 		instr.push_back(newid);    // eqn.nr
 		instr.push_back(OPER_MUL); // operator
-		instr.push_back(12);       // total length
-		instr.push_back(8);        // term length
+		instr.push_back(12);	   // total length
+		instr.push_back(8); 	   // term length
 		instr.push_back(vartypex); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumx);  // symbol id
-		instr.push_back(n);        // power
+		instr.push_back(n); 	   // power
 		instr.push_back(1);
-		instr.push_back(1);        // coeffient 1
+		instr.push_back(1); 	   // coeffient 1
 		instr.push_back(3);
-		instr.push_back(0);        // trailing 0
+		instr.push_back(0); 	   // trailing 0
 	}
 //	#] type 0 : 
 //	#[ type 1 : substitution of the form z=x*y (optim.type==1)
@@ -2468,7 +2897,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		int varnumx  = ABS(optim.arg1) - 1;
 		int vartypey = optim.arg2>0 ? SYMBOL : EXTRASYMBOL;
 		int varnumy  = ABS(optim.arg2) - 1;
-		
+
 		for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
 			WORD *e = ebegin + optim.eqnidxs[i];
 			if (*(e+1) != OPER_MUL) continue;
@@ -2480,16 +2909,16 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 				if (*(t+1)==vartypex && *(t+3)==varnumx) powx = *(t+4);
 				if (*(t+1)==vartypey && *(t+3)==varnumy) powy = *(t+4);
 			}
-			
+
 			// substitute if found
 			if (powx>0 && powy>0 && powx==powy) {
 
 				WORD sign = 1;
 				WORD *newt = e+3;
-				
+
 				for (WORD *t=e+3; *t!=0;) {
 					int dt=*t;
-					
+
 					if (*t == ABS(*(t+*t-1))+1 ||
 							(!(*(t+1)==vartypex && *(t+3)==varnumx) &&
 							 !(*(t+1)==vartypey && *(t+3)==varnumy))) {
@@ -2503,15 +2932,15 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 					t+=dt;
 				}
 
-				*newt++ = 8;           // term length
+				*newt++ = 8;		   // term length
 				*newt++ = EXTRASYMBOL; // extrasymbol
-				*newt++ = 4;           // symbol length
-				*newt++ = newid;       // symbol id
-				*newt++ = powx;        // power
-				*newt++ = 1; 
-				*newt++ = 1;           // coefficient +/-1
+				*newt++ = 4;		   // symbol length
+				*newt++ = newid;	   // symbol id
+				*newt++ = powx; 	   // power
+				*newt++ = 1;
+				*newt++ = 1;		   // coefficient +/-1
 				*newt++ = 3*sign;
-				*newt++ = 0;           // trailing 0
+				*newt++ = 0;		   // trailing 0
 
 				substituted = true;
 			}
@@ -2523,70 +2952,70 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 #endif
 			return false;
 		}
-		
+
 		// add extra equation (Tnew = x*y)
 		instr.push_back(newid);    // eqn.nr
 		instr.push_back(OPER_MUL); // operator
-		instr.push_back(20);       // total length
-		instr.push_back(8);        // LHS length
+		instr.push_back(20);	   // total length
+		instr.push_back(8); 	   // LHS length
 		instr.push_back(vartypex); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumx);  // symbol id
-		instr.push_back(1);        // power 1
+		instr.push_back(1); 	   // power 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient 1
+		instr.push_back(1); 	   // coefficient 1
 		instr.push_back(3);
-		instr.push_back(8);        // RHS length
+		instr.push_back(8); 	   // RHS length
 		instr.push_back(vartypey); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumy);  // symbol id
-		instr.push_back(1);        // power 1
+		instr.push_back(1); 	   // power 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient 1
+		instr.push_back(1); 	   // coefficient 1
 		instr.push_back(3);
-		instr.push_back(0);        // trailing 0
+		instr.push_back(0); 	   // trailing 0
 	}
 //	#] type 1 : 
 //	#[ type 2 : substitution of the form z=c*x (optim.type==2)
 
 	if (optim.type == 2) {
 		int vartype = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
-		int varnum  = ABS(optim.arg1) - 1;
+		int varnum	= ABS(optim.arg1) - 1;
 
 		WORD ncoeff = optim.coeff.back();
 
 		// scan through equations
 		for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
 			WORD *e = ebegin + optim.eqnidxs[i];
-			
+
 			if (*(e+1) == OPER_ADD) {
 				// scan through ADD-equation
 				for (WORD *t=e+3; *t!=0; t+=*t) {
-					
+
 					if (*t == ABS(*(t+*t-1))+1) continue;
-					
+
 					if (*(t+1)==vartype && ABS(*(t+3))==varnum && *(t+4)==1 &&
 							BigLong((UWORD *)&optim.coeff[0],ncoeff-1,
 											(UWORD *)t+*t-ABS(*(t+*t-1)),ABS(*(t+*t-1))-1) == 0) {
 						// substitute
-						
+
 						int sign = SGN(*(t+*t-1));
-												
+
 						WORD *tend = t;
 						while (*tend!=0) tend+=*tend;
 						WORD nmove = tend - t - *t;
 						memmove(t, t+*t, nmove*sizeof(WORD));
 						t += nmove;
 
-						*t++ = 8;           // term length
+						*t++ = 8;			// term length
 						*t++ = EXTRASYMBOL; // (extra)symbol
-						*t++ = 4;           // symbol length
-						*t++ = newid;       // symbol id
-						*t++ = 1;           // power of 1
+						*t++ = 4;			// symbol length
+						*t++ = newid;		// symbol id
+						*t++ = 1;			// power of 1
 						*t++ = 1;
-						*t++ = 1;           // coefficient of +/-1
+						*t++ = 1;			// coefficient of +/-1
 						*t++ = 3 * sign;
-						*t++ = 0;           // trailing 0
+						*t++ = 0;			// trailing 0
 
 						substituted = true;
 						break;
@@ -2613,13 +3042,13 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 
 				// substitute if found
 				if (coeff_match && var_match) {
-					
+
 					WORD *newt = e+3;
-				
+
 					for (WORD *t=e+3; *t!=0;) {
-						
+
 						int dt=*t;
-						
+
 						if (*t!=ABS(*(t+*t-1))+1 && !(*(t+1)==vartype && ABS(*(t+3))==varnum && *(t+4)==1)) {
 							memmove(newt, t, dt*sizeof(WORD));
 							newt += dt;
@@ -2628,15 +3057,15 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 						t+=dt;
 					}
 
-					*newt++ = 8;           // term length
+					*newt++ = 8;		   // term length
 					*newt++ = EXTRASYMBOL; // extrasymbol
-					*newt++ = 4;           // symbol length
-					*newt++ = newid;       // symbol id
-					*newt++ = 1;           // power of 1
+					*newt++ = 4;		   // symbol length
+					*newt++ = newid;	   // symbol id
+					*newt++ = 1;		   // power of 1
 					*newt++ = 1;
-					*newt++ = 1;           // coefficient of +/-1
+					*newt++ = 1;		   // coefficient of +/-1
 					*newt++ = 3 * sign;
-					*newt++ = 0;           // trailing 0
+					*newt++ = 0;		   // trailing 0
 
 					substituted = true;
 				}
@@ -2649,49 +3078,49 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 #endif
 			return false;
 		}
-		
+
 		// add extra equation (Tnew = c*y)
-		instr.push_back(newid);            // eqn.nr
-		instr.push_back(OPER_ADD);         // operator
+		instr.push_back(newid); 		   // eqn.nr
+		instr.push_back(OPER_ADD);		   // operator
 		instr.push_back(9+ABS(ncoeff));    // total length
 		instr.push_back(5+ABS(ncoeff));    // term length
-		instr.push_back(vartype);          // (extra)symbol
-		instr.push_back(4);                // symbol length
-		instr.push_back(varnum);           // symbol id
-		instr.push_back(1);                // power of 1
+		instr.push_back(vartype);		   // (extra)symbol
+		instr.push_back(4); 			   // symbol length
+		instr.push_back(varnum);		   // symbol id
+		instr.push_back(1); 			   // power of 1
 		for (int i=0; i<ABS(ncoeff); i++)  // coefficient
 			instr.push_back(optim.coeff[i]);
-		instr.push_back(0);                // trailing 0
+		instr.push_back(0); 			   // trailing 0
 	}
 //	#] type 2 : 
 //	#[ type 3 : substitution of the form z=x+c (optim.type==3)
 	if (optim.type == 3) {
 		int vartype = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
-		int varnum  = ABS(optim.arg1) - 1;
+		int varnum	= ABS(optim.arg1) - 1;
 
 		WORD ncoeff = optim.coeff.back();
 
 		// scan through equation
 		for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
 			WORD *e = ebegin + optim.eqnidxs[i];
-			
+
 			if (*(e+1) != OPER_ADD) continue;
 
 			int coeff_match=0, var_match=0;
-				
+
 			for (WORD *t=e+3; *t!=0; t+=*t) {
 				if (*t == ABS(*(t+*t-1))+1 && BigLong((UWORD *)&optim.coeff[0],ABS(ncoeff)-1,
-																							(UWORD *)t+*t-ABS(*(t+*t-1)),ABS(*(t+*t-1))-1) == 0) 
+																							(UWORD *)t+*t-ABS(*(t+*t-1)),ABS(*(t+*t-1))-1) == 0)
 					coeff_match = SGN(ncoeff) * SGN(*(t+*t-1));
 				else if (*(t+1)==vartype && ABS(*(t+3))==varnum && *(t+4)==1)
 					var_match = SGN(*(t+7));
-			} 
+			}
 
 			// substitute if found (x+c and -x-c and matches)
 			if (coeff_match * var_match == 1) {
-				
+
 				WORD *newt = e+3;
-				
+
 				for (WORD *t=e+3; *t!=0;) {
 					int dt=*t;
 					if (*t!=ABS(*(t+*t-1))+1 && !(*(t+1)==vartype && ABS(*(t+3))==varnum && *(t+4)==1)) {
@@ -2700,16 +3129,16 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 					}
 					t+=dt;
 				}
-				
-				*newt++ = 8;            // term length
-				*newt++ = EXTRASYMBOL;  // extrasymbol
-				*newt++ = 4;            // symbol length
-				*newt++ = newid;        // symbol id
-				*newt++ = 1;            // power of 1
+
+				*newt++ = 8;			// term length
+				*newt++ = EXTRASYMBOL;	// extrasymbol
+				*newt++ = 4;			// symbol length
+				*newt++ = newid;		// symbol id
+				*newt++ = 1;			// power of 1
 				*newt++ = 1;
-				*newt++ = 1;            // coefficient of +/-1
+				*newt++ = 1;			// coefficient of +/-1
 				*newt++ = 3*coeff_match;
-				*newt++ = 0;            // trailing zero
+				*newt++ = 0;			// trailing zero
 
 				substituted = true;
 			}
@@ -2721,27 +3150,27 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 #endif
 			return false;
 		}
-		
+
 		// add extra equation (Tnew = x+c)
-		instr.push_back(newid);           // eqn.nr
-		instr.push_back(OPER_ADD);        // operator
+		instr.push_back(newid); 		  // eqn.nr
+		instr.push_back(OPER_ADD);		  // operator
 		instr.push_back(13+ABS(ncoeff));  // total length
-		instr.push_back(8);               // x-term length
-		instr.push_back(vartype);         // (extra)symbol
-		instr.push_back(4);               // symbol length
-		instr.push_back(varnum);          // symbol id
-		instr.push_back(1);               // power of 1
+		instr.push_back(8); 			  // x-term length
+		instr.push_back(vartype);		  // (extra)symbol
+		instr.push_back(4); 			  // symbol length
+		instr.push_back(varnum);		  // symbol id
+		instr.push_back(1); 			  // power of 1
 		instr.push_back(1);
-		instr.push_back(1);               // coefficient of 1
+		instr.push_back(1); 			  // coefficient of 1
 		instr.push_back(3);
 		instr.push_back(ABS(ncoeff)+1);   // c-term length
 		for (int i=0; i<ABS(ncoeff); i++) // coefficient
 			instr.push_back(optim.coeff[i]);
-		instr.push_back(0);               // trailing zero
+		instr.push_back(0); 			  // trailing zero
 	}
 //	#] type 3 : 
 //	#[ type 4,5 : substitution of the form z=x+y or z=x-y (optim.type=4 or 5)
-	if (optim.type >= 4) { 
+	if (optim.type >= 4) {
 
 		int vartypex = optim.arg1>0 ? SYMBOL : EXTRASYMBOL;
 		int varnumx  = ABS(optim.arg1) - 1;
@@ -2751,8 +3180,8 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		// scan through equations
 		for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
 			WORD *e = ebegin + optim.eqnidxs[i];
-			
-			if (*(e+1) != OPER_ADD) continue; 
+
+			if (*(e+1) != OPER_ADD) continue;
 
 			const WORD *coeffx=NULL, *coeffy=NULL;
 			WORD ncoeffx=0,ncoeffy=0;
@@ -2768,7 +3197,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 					coeffy = t+5;
 					ncoeffy = *(t+*t-1);
 				}
-			} 
+			}
 
 			// check signs (type=4: x+y and -x-y, type=5: x-y and -x+y) ??????
 			// check signs (type=4: x+y, type=5: x-y) !!!!!!!!!!
@@ -2783,7 +3212,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 if ( optim.type == 5 ) {
 	while ( *newt ) newt+=*newt;
 	int i = (newt - e) - 3;
-	MesPrint("  < %a",i,e+3);
+	MesPrint("	< %a",i,e+3);
 	newt = e+3;
 }
 */
@@ -2798,19 +3227,19 @@ if ( optim.type == 5 ) {
 						t+=dt;
 					}
 
-					*newt++ = 5 + ABS(ncoeffx);       // term length
-					*newt++ = EXTRASYMBOL;            // extrasymbol
-					*newt++ = 4;                      // symbol length
-					*newt++ = newid;                  // symbol id
-					*newt++ = 1;                      // power of 1
+					*newt++ = 5 + ABS(ncoeffx); 	  // term length
+					*newt++ = EXTRASYMBOL;			  // extrasymbol
+					*newt++ = 4;					  // symbol length
+					*newt++ = newid;				  // symbol id
+					*newt++ = 1;					  // power of 1
 					for (int j=0; j<ABS(ncoeffx); j++)// coefficient
 						*newt++ = coeff[j];
-					*newt++ = 0;                      // trailing 0
+					*newt++ = 0;					  // trailing 0
 					substituted = true;
 /*
 if ( optim.type == 5 ) {
 	int i = (newt - e) - 4;
-	MesPrint("  > %a",i,e+3);
+	MesPrint("	> %a",i,e+3);
 }
 */
 				}
@@ -2829,28 +3258,28 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 	optim.arg1>0?'x':'Z', ABS(optim.arg1)-1,
 	optim.type==1 ? '*' : optim.type==4 ? '+' : '-',
 	optim.arg2>0?'x':'Z', ABS(optim.arg2)-1);
-*/		
+*/
 		// add extra equation (Tnew = x+/-y)
 		instr.push_back(newid);    // eqn.nr
 		instr.push_back(OPER_ADD); // operator
-		instr.push_back(20);       // total length
-		instr.push_back(8);        // term length
+		instr.push_back(20);	   // total length
+		instr.push_back(8); 	   // term length
 		instr.push_back(vartypex); // (extra)symbol
-		instr.push_back(4);        // symbol length
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumx);  // symbol id
-		instr.push_back(1);        // power of 1
+		instr.push_back(1); 	   // power of 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient of 1
+		instr.push_back(1); 	   // coefficient of 1
 		instr.push_back(3);
-		instr.push_back(8);        // term length
-		instr.push_back(vartypey); // (extra)symbol 
-		instr.push_back(4);        // symbol length
+		instr.push_back(8); 	   // term length
+		instr.push_back(vartypey); // (extra)symbol
+		instr.push_back(4); 	   // symbol length
 		instr.push_back(varnumy);  // symbol id
-		instr.push_back(1);        // power of 1
+		instr.push_back(1); 	   // power of 1
 		instr.push_back(1);
-		instr.push_back(1);        // coefficient of +/-1
+		instr.push_back(1); 	   // coefficient of +/-1
 		instr.push_back(3*(optim.type==4?1:-1));
-		instr.push_back(0);        // trailing 0
+		instr.push_back(0); 	   // trailing 0
 	}
 //	#] type 4,5 : 
 //	#[ trivial :  remove trivial equations of the form Zi = +/-Zj
@@ -2859,13 +3288,13 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 
 	// vector may be moved when it is extended
 	ebegin = &*instr.begin();
-	
+
 	for (int i=0; i<(int)optim.eqnidxs.size(); i++) {
 		WORD *e = ebegin + optim.eqnidxs[i];
 		WORD *t = e+3;
-		if (*t==0) continue;      // empty (removed) equation
+		if (*t==0) continue;	  // empty (removed) equation
 		if (*(t+*t)!=0) continue; // more than 1 term
-		if (*t!=8) continue;      // term not of correct form
+		if (*t!=8) continue;	  // term not of correct form
 		if (*(t+4)!=1) continue;  // power != 1
 		if (*(t+5)!=1 || *(t+6)!=1) continue; // coeff != +/-1
 
@@ -2876,13 +3305,13 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 		// remove equation
 		*t=0;
 	}
-//	#] trivial :	 
+//	#] trivial : 
 //	#[ renumbering :
 
 	// there are renumberings to be done, so loop through all equations
 	if (do_renum) {
 		WORD *eend = ebegin+instr.size();
-		
+
 		for (WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 			for (WORD *t=e+3; *t!=0; t+=*t) {
 				if (*t == ABS(*(t+*t-1))+1) continue;
@@ -2898,7 +3327,7 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] DONE: do_optimization : res=true", thetime_str().c_str(), optim.improve);
 #endif
-	
+
 	return true;
 }
 
@@ -2909,35 +3338,35 @@ MesPrint ("improve=%d, %c%d%c%c%d)", optim.improve,
 
 /**  Partial factorization of instructions
  *
- *   Description
- *   ===========
- *   This method performs partial factorization of instructions. In
- *   particular the following instructions
+ *	 Description
+ *	 ===========
+ *	 This method performs partial factorization of instructions. In
+ *	 particular the following instructions
  *
- *     Z1 = x*a*b
- *     Z2 = x*c*d*e
- *     Z3 = 2*x + Z1 + Z2 + more
+ *	   Z1 = x*a*b
+ *	   Z2 = x*c*d*e
+ *	   Z3 = 2*x + Z1 + Z2 + more
  *
- *   are replaced by
- *  
- *     Z1 = a*b
- *     Z2 = c*d*e
- *     Z3 = Zj + more
- *     Zi = 2 + Z1 + Z2
- *     Zj = x*Zi
+ *	 are replaced by
  *
- *   Here it is necessary that no other equations refer to Z1 and
- *   Z2. The generation of trivial instructions (Zi=Zj or Zi=x) is
- *   prevented.
+ *	   Z1 = a*b
+ *	   Z2 = c*d*e
+ *	   Z3 = Zj + more
+ *	   Zi = 2 + Z1 + Z2
+ *	   Zj = x*Zi
+ *
+ *	 Here it is necessary that no other equations refer to Z1 and
+ *	 Z2. The generation of trivial instructions (Zi=Zj or Zi=x) is
+ *	 prevented.
  */
 int partial_factorize (vector<WORD> &instr, int n, int improve) {
-	
+
 #ifdef DEBUG_GREEDY
 	MesPrint ("*** [%s, w=%w] CALL: partial_factorize (n=%d)", thetime_str().c_str(), n);
 #endif
 
 	GETIDENTITY;
-	
+
 	// get starting positions of instructions
 	vector<int> instr_idx(n);
 	WORD *ebegin = &*instr.begin();
@@ -2955,12 +3384,12 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 	WORD *numpar = (WORD *)Malloc1(nmax*sizeof(WORD),"numpar");
 	for ( int i = 0; i < nmax; i++ ) numpar[i] = 0;
 //	vector<WORD> numpar(n);
-	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) 
+	for (WORD *e=ebegin; e!=eend; e+=*(e+2))
 		for (WORD *t=e+3; *t!=0; t+=*t) {
 			if (*t == ABS(*(t+*t-1))+1) continue;
 			if (*(t+1) == EXTRASYMBOL) numpar[*(t+3)]++;
 		}
-	
+
 	// find factorizable expressions
 	for (int i=0; i<n; i++) {
 		WORD *e = &*instr.begin() + instr_idx[i];
@@ -2968,12 +3397,12 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 
 		// count symbol occurrences
 		map<WORD,WORD> cnt; // 1-indexed, <0:EXTRASYMBOL, >0:SYMBOL
-		
+
 		for (WORD *t=e+3; *t!=0; t+=*t) {
 			if (*t==ABS(*(t+*t-1))+1) continue;
 
 			// count symbols in t
-			if (*(t+4)==1) 
+			if (*(t+4)==1)
 				cnt[(*(t+1)==SYMBOL ? 1 : -1) * (*(t+3)+1)]++;
 
 			// count symbols in extrasymbols of t
@@ -2982,7 +3411,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 				if (*(t2+1) != OPER_MUL) continue;
 				for (t2+=3; *t2!=0; t2+=*t2) {
 					if (*t2 == ABS(*(t2+*t2-1))+1) continue;
-					if (*(t2+4)==1) 
+					if (*(t2+4)==1)
 						cnt[(*(t2+1)==SYMBOL ? 1 : -1) * (*(t2+3)+1)]++;
 				}
 			}
@@ -2990,7 +3419,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 
 		// find most-occurring symbol
 		WORD x=0, best=0;
-		for (map<WORD,WORD>::iterator it=cnt.begin(); it!=cnt.end(); it++) 
+		for (map<WORD,WORD>::iterator it=cnt.begin(); it!=cnt.end(); it++)
 			if (it->second > best) { x=it->first; best=it->second; }
 
 		// occurrence>=2 and occurrence>improve, so factorize
@@ -3001,13 +3430,13 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 			new_eqn.push_back(n);
 			new_eqn.push_back(OPER_ADD);
 			new_eqn.push_back(0); // length
-			
+
 			WORD dt;
 			WORD *newt=e+3;
 			for (WORD *t=e+3; *t!=0; t+=dt) {
 				dt = *t;
 				bool keep=true;
-				
+
 				if (*t!=ABS(*(t+*t-1))+1) {
 
 					// factorized symbol is in t itself
@@ -3062,7 +3491,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 										}
 										else {
 											// two non-trivial coefficients, so multiply them
-											// note: untested code (found no way to trigger it)											
+											// note: untested code (found no way to trigger it)
 											UWORD *tmp = NumberMalloc("partial_factorize");
 											WORD ntmp=0;
 											MulRat(BHEAD (UWORD *)t2+*t2-ABS(*(t2+*t2-1)), *(t2+*t2-1),
@@ -3070,11 +3499,11 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 														 tmp, &ntmp);
 											new_eqn.erase(new_eqn.begin()+thisidx, new_eqn.end());
 											new_eqn.push_back(ABS(ntmp)+1);
-											new_eqn.insert(new_eqn.end(), tmp, tmp+ABS(ntmp));											
+											new_eqn.insert(new_eqn.end(), tmp, tmp+ABS(ntmp));
 											NumberFree(tmp,"partial_factorize");
 											*t2 = 0;
 										}
-									}									
+									}
 									else if (*(t2+4)==1) {
 										// it's a variable
 										new_eqn.back() *= SGN(*(t2+*t2-1));
@@ -3124,7 +3553,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 				*newt++ = 1;
 				*newt++ = 1;
 				*newt++ = 1;
-				*newt++ = 3;			
+				*newt++ = 3;
 				*newt++ = 0;
 			}
 
@@ -3183,7 +3612,7 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 				n++;
 			}
 			else {
-				// replace e with Zj				
+				// replace e with Zj
 				e = &*instr.begin() + instr_idx[i];
 				e[1] = OPER_MUL;
 				memcpy(e+3, &new_eqn[3], (new_eqn.size()-3)*sizeof(WORD));
@@ -3208,21 +3637,21 @@ int partial_factorize (vector<WORD> &instr, int n, int improve) {
 
 /**  Optimize instructions greedily
  *
- *   Description
- *   ===========
- *   This method optimizes an expression greedily. It calls
- *   "find_optimizations" to obtain candidates and performs the best
- *   one(s) by calling "do_optimization".
+ *	 Description
+ *	 ===========
+ *	 This method optimizes an expression greedily. It calls
+ *	 "find_optimizations" to obtain candidates and performs the best
+ *	 one(s) by calling "do_optimization".
  *
- *   How many different optimization are done, before
- *   "find_optimization" is called again, is determined by the
- *   settings "greedyminnum" and "greedymaxperc".
+ *	 How many different optimization are done, before
+ *	 "find_optimization" is called again, is determined by the
+ *	 settings "greedyminnum" and "greedymaxperc".
  *
- *   During the optimization process, sequences of zeroes are
- *   introduced in the instructions, since moving all instructions
- *   when one gets optimized, is very costly. Therefore, in the end,
- *   the instructions are "compressed" again to remove these extra
- *   zeroes.
+ *	 During the optimization process, sequences of zeroes are
+ *	 introduced in the instructions, since moving all instructions
+ *	 when one gets optimized, is very costly. Therefore, in the end,
+ *	 the instructions are "compressed" again to remove these extra
+ *	 zeroes.
  */
 vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 
@@ -3231,16 +3660,16 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 	MesPrint ("*** [%s, w=%w] CALL: optimize_greedy(numoper=%d)",
 						thetime_str().c_str(), old_num_oper);
 #endif
-	
+
 	LONG start_time = TimeWallClock(1);
-	
+
 	WORD *ebegin = &*instr.begin();
 	WORD *eend = ebegin+instr.size();
-	
+
 	// store final equation, since it must be the last equation later
 	int final_eqn_idx = 0;
 	int next_eqn = 0;
-	
+
 	for (WORD *e=ebegin; e!=eend; e+=*(e+2)) {
 		next_eqn = *e + 1;
 		final_eqn_idx = e-ebegin;
@@ -3248,7 +3677,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 	// optimize instructions
 	while (TimeWallClock(1)-start_time < time_limit) {
 		int old_next_eqn = next_eqn;
-		
+
 		// find optimizations
 		vector<optimization> optim = find_optimizations(instr);
 
@@ -3286,7 +3715,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 				next_eqn++;
 				add_eqnidxs.push_back(next_idx);
 			}
-			
+
 			optim.erase(optim.begin()+best);
 		}
 
@@ -3296,7 +3725,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 		// check whether nothing has changed
 		if (next_eqn == old_next_eqn) break;
 	}
-	
+
 	// add final equation to the back (must be by definition)
 	instr.push_back(next_eqn);
 	instr.insert(instr.end(), instr.begin()+final_eqn_idx+1, instr.begin()+final_eqn_idx+instr[final_eqn_idx+2]);
@@ -3310,7 +3739,7 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 	ebegin = &*instr.begin();
 	eend = ebegin+instr.size();
 	int de=0;
-	
+
 	for (WORD *e=ebegin; e!=eend; e+=de) {
 		de = *(e+2);
 		int n=3;
@@ -3320,14 +3749,14 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 		*(t+2) = n;
 		t += n;
 	}
-		
+
 	instr.resize(t - &instr[0]);
 
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: optimize_greedy(numoper=%d) : numoper=%d",
 						thetime_str().c_str(), old_num_oper, count_operators(instr));
 #endif
-	
+
 	return instr;
 }
 
@@ -3338,38 +3767,38 @@ vector<WORD> optimize_greedy (vector<WORD> instr, LONG time_limit) {
 
 /**  Recycle variables
  *
- *   Description
- *   ===========
- *   The current input uses many temporary variables. Many of them
- *   become obsolete at some point during the evaluation of the code,
- *   so can be recycled. This method renumbers the temporary
- *   variables, so that they are recycled. Furthermore, the input is
- *   order in depth-first order, so that the instructions can be
- *   performed consecutively.
+ *	 Description
+ *	 ===========
+ *	 The current input uses many temporary variables. Many of them
+ *	 become obsolete at some point during the evaluation of the code,
+ *	 so can be recycled. This method renumbers the temporary
+ *	 variables, so that they are recycled. Furthermore, the input is
+ *	 order in depth-first order, so that the instructions can be
+ *	 performed consecutively.
  *
- *   Implementation details
- *   ======================
- *   First, for each subDAG, an estimate for the number of variables
- *   needed is made. This is done by the following recursive formula:
+ *	 Implementation details
+ *	 ======================
+ *	 First, for each subDAG, an estimate for the number of variables
+ *	 needed is made. This is done by the following recursive formula:
  *
- *      #vars(x) = max(#vars(ch_i(x)) + i),
+ *		#vars(x) = max(#vars(ch_i(x)) + i),
  *
- *   with ch_i(x) the i-th child of x, where the childs are ordered
- *   w.r.t. #vars(ch_i). This formula is exact if the input forms a
- *   tree, and otherwise gives a reasonable estimate.
- * 
- *   Then, the instructions are reordered in a depth-first order with
- *   childs ordered w.r.t. #vars. Next, the times that variables
- *   become obsolete are found. Each LHS of an instruction is
- *   renumbered to the lowest-numbered temporary variable that is
- *   available at that time.
+ *	 with ch_i(x) the i-th child of x, where the childs are ordered
+ *	 w.r.t. #vars(ch_i). This formula is exact if the input forms a
+ *	 tree, and otherwise gives a reasonable estimate.
+ *
+ *	 Then, the instructions are reordered in a depth-first order with
+ *	 childs ordered w.r.t. #vars. Next, the times that variables
+ *	 become obsolete are found. Each LHS of an instruction is
+ *	 renumbered to the lowest-numbered temporary variable that is
+ *	 available at that time.
  */
 vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 
 #ifdef DEBUG_MORE
 	MesPrint ("*** [%s, w=%w] CALL: recycle_variables", thetime_str().c_str());
 #endif
-	
+
 	// get starting positions of instructions
 	vector<const WORD *> instr;
 	const WORD *tbegin = &*all_instr.begin();
@@ -3387,7 +3816,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 
 	stack<int> s;
 	s.push(n);
-	
+
 	while (!s.empty()) {
 		int i=s.top(); s.pop();
 		if (i>0) {
@@ -3421,7 +3850,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 				vars_needed[i] = max(vars_needed[i], need[j].first+j);
 				conn[i][j] = need[j].second;
 			}
-		}		
+		}
 	}
 
 	// order the instructions in depth-first order and determine the first
@@ -3429,23 +3858,23 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 	vector<int> order, first(n,0), last(n,0);
 	vis = vector<bool>(n,false);
 	s.push(n);
-	
+
 	while (!s.empty()) {
-		
+
 		int i=s.top(); s.pop();
 
 		if (i>0) {
 			i--;
 			if (vis[i]) continue;
-			vis[i]=true;			
+			vis[i]=true;
 			s.push(-(i+1));
-			for (int j=(int)conn[i].size()-1; j>=0; j--) 
+			for (int j=(int)conn[i].size()-1; j>=0; j--)
 				s.push(conn[i][j]+1);
 		}
 		else {
 			i=-i-1;
 			first[i] = last[i] = order.size();
-			order.push_back(i);			
+			order.push_back(i);
 			for (int j=0; j<(int)conn[i].size(); j++) {
 				int k = conn[i][j];
 				last[k] = max(last[k], first[i]);
@@ -3458,7 +3887,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 	int numvar=0;
 	set<int> var;
 	vector<int> renum(n);
- 
+
 	for (int i=0; i<(int)order.size(); i++) {
 		for (int j=0; j<(int)conn[order[i]].size(); j++) {
 			int k = conn[order[i]][j];
@@ -3470,10 +3899,10 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 	}
 
 	// put the number of variables used in a preprocessor variable
-	
+
 	// generate new instructions with the renumbering
 	vector<WORD> newinstr;
-	
+
 	for (int i=0; i<(int)order.size(); i++) {
 		int x = order[i];
 		int j = newinstr.size();
@@ -3489,7 +3918,7 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 #ifdef DEBUG_MORE
 	MesPrint ("*** [%s, w=%w] DONE: recycle_variables", thetime_str().c_str());
 #endif
-	
+
 	return newinstr;
 }
 
@@ -3500,16 +3929,16 @@ vector<WORD> recycle_variables (const vector<WORD> &all_instr) {
 
 /**  Optimize expression given a Horner scheme
  *
- *   Description
- *   ===========
- *   This method picks one Horner scheme from the list of best Horner
- *   schemes, applies this scheme to the expression and then,
- *   depending on optimize.settings, does a common subexpression
- *   elimination (CSE) or performs greedy optimizations.
+ *	 Description
+ *	 ===========
+ *	 This method picks one Horner scheme from the list of best Horner
+ *	 schemes, applies this scheme to the expression and then,
+ *	 depending on optimize.settings, does a common subexpression
+ *	 elimination (CSE) or performs greedy optimizations.
  *
- *   CSE is fast, while greedy might be slow. CSE followed by greedy
- *   is faster than greedy alone, but typically results in slightly
- *   worse code (not proven; just observed).
+ *	 CSE is fast, while greedy might be slow. CSE followed by greedy
+ *	 is faster than greedy alone, but typically results in slightly
+ *	 worse code (not proven; just observed).
  */
 void optimize_expression_given_Horner () {
 
@@ -3533,14 +3962,14 @@ void optimize_expression_given_Horner () {
 //	if ( ( AO.Optimize.debugflags&2 ) == 2 ) {
 //		MesPrint ("Scheme: %a",Horner_scheme.size(),&(Horner_scheme[0]));
 //	}
-	
+
 	// apply Horner scheme
 	vector<WORD> tree = Horner_tree(optimize_expr, Horner_scheme);
 
 	// generate instructions, eventually with CSE
 	vector<WORD> instr;
 
-	if (AO.Optimize.method == O_CSE || AO.Optimize.method == O_CSEGREEDY) 
+	if (AO.Optimize.method == O_CSE || AO.Optimize.method == O_CSEGREEDY)
 		instr = generate_instructions(tree, true);
 	else
 		instr = generate_instructions(tree, false);
@@ -3558,7 +3987,7 @@ void optimize_expression_given_Horner () {
 
 	// determine the quality of the code and possibly update the best code
 	int num_oper = count_operators(instr);
-	
+
 	LOCK(optimize_lock);
 	if (num_oper < optimize_best_num_oper) {
 		optimize_num_vars = Horner_scheme.size();
@@ -3571,7 +4000,7 @@ void optimize_expression_given_Horner () {
   // clean poly_vars, that are allocated by Horner_tree
 	AN.poly_num_vars = 0;
 	M_free(AN.poly_vars,"poly_vars");
-	
+
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: optimize_expression_given_Horner", thetime_str().c_str());
 #endif
@@ -3663,7 +4092,7 @@ void PF_optimize_expression_given_Horner_master_wait () {
 		optimize_best_vars.resize(len);
 		PF_LongSingleUnpack(&optimize_best_vars[0], len, PF_WORD);
 
-		optimize_num_vars = optimize_best_vars.size();  // TODO
+		optimize_num_vars = optimize_best_vars.size();	// TODO
 	}
 
 #ifdef DEBUG
@@ -3735,12 +4164,12 @@ void PF_optimize_expression_given_Horner_slave () {
 
 /**  Generate output
  *
- *   Description
- *   ===========
- *   This method prepares the instructions for printing. They are
- *   stored in Form format, so that they can be printed by
- *   "PrintExtraSymbol". The results are stored in the buffer
- *   AO.OptimizeResult.
+ *	 Description
+ *	 ===========
+ *	 This method prepares the instructions for printing. They are
+ *	 stored in Form format, so that they can be printed by
+ *	 "PrintExtraSymbol". The results are stored in the buffer
+ *	 AO.OptimizeResult.
  */
 VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, const vector<vector<WORD> > &brackets) {
 
@@ -3750,7 +4179,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 
 	GETIDENTITY;
 	vector<WORD> output;
-	
+
 	// one-indexed instead of zero-indexed
 	extraoffset++;
 	int num = 0;
@@ -3816,9 +4245,9 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 				*now++=1;
 				*now++=3;
 			}
-			
+
 			*(now-1) *= coeff_sign;
-			
+
 			*AT.WorkPointer = now - AT.WorkPointer;
 			*now++ = 0;
 		}
@@ -3828,7 +4257,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 		if (instr[i+1]==OPER_COMMA) {
 			WORD *start = AT.WorkPointer + instr[i+2];
 			WORD *now = start;
-			int b=0;			
+			int b=0;
 			for (const WORD *t=AT.WorkPointer; *t!=0; t+=*t) {
 				if ( ( brackets[b].size() != 0 ) && ( brackets[b][0] == 0 ) ) break;
 				*now++ = *t + brackets[b].size();
@@ -3839,9 +4268,9 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 				b++;
 			}
 			*now++ = 0;
-			memmove(AT.WorkPointer, start, (now-start)*sizeof(WORD));			
+			memmove(AT.WorkPointer, start, (now-start)*sizeof(WORD));
 		}
-		
+
 		// add the number of the extra symbol; if it is the last one,
 		// replace the extra symbol number with the expression number
 		if (i+instr[i+2]<(int)instr.size())
@@ -3849,10 +4278,10 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 		else {
 			output.push_back(-(exprnr+1));
 		}
-		
+
 		// add code for this symbol
 		int n=0;
-		while (*(AT.WorkPointer+n)!=0) 
+		while (*(AT.WorkPointer+n)!=0)
 			n += *(AT.WorkPointer+n);
 		n++;
 		output.insert(output.end(), AT.WorkPointer, AT.WorkPointer+n);
@@ -3876,7 +4305,7 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 	MesPrint ("*** [%s, w=%w] DONE: generate_output", thetime_str().c_str());
 #endif
 }
-	
+
 /*
   	#] generate_output : 
   	#[ generate_expression :
@@ -3884,10 +4313,10 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 
 /**  Generate expression
  *
- *   Description
- *   ===========
- *   This method modifies the original optimized expression by an
- *   expression with extra symbols. This is used for "#Optimize".
+ *	 Description
+ *	 ===========
+ *	 This method modifies the original optimized expression by an
+ *	 expression with extra symbols. This is used for "#Optimize".
  */
 WORD generate_expression (WORD exprnr) {
 
@@ -3898,7 +4327,7 @@ WORD generate_expression (WORD exprnr) {
 	GETIDENTITY;
 
 	WORD *oldWorkPointer = AT.WorkPointer;
-	
+
 	CBUF *C = cbuf+AC.cbufnum;
 	WORD *term = AT.WorkPointer, oldcurexpr = AR.CurExpr;
 	POSITION position;
@@ -3944,11 +4373,11 @@ WORD generate_expression (WORD exprnr) {
 
 	AT.WorkPointer = oldWorkPointer;
 	AR.CurExpr = oldcurexpr;
-	
+
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: generate_expression", thetime_str().c_str());
 #endif
-	
+
 	return 0;
 }
 
@@ -3959,12 +4388,12 @@ WORD generate_expression (WORD exprnr) {
 
 /**  Print optimized code
  *
- *   Description
- *   ===========
- *   This method prints the optimized code via
- *   "PrintExtraSymbol". Depending on the flag, the original
- *   expression is printed (for "Print") or not (for "#Optimize /
- *   #write "%O").
+ *	 Description
+ *	 ===========
+ *	 This method prints the optimized code via
+ *	 "PrintExtraSymbol". Depending on the flag, the original
+ *	 expression is printed (for "Print") or not (for "#Optimize /
+ *	 #write "%O").
  */
 VOID optimize_print_code (int print_expr) {
 
@@ -3973,10 +4402,10 @@ VOID optimize_print_code (int print_expr) {
 #endif
 	if ( ( AO.Optimize.debugflags & 1 ) != 0 ) {
 /*
- * 		The next code is for debugging purposes. We may want the statements
+ *		The next code is for debugging purposes. We may want the statements
  *		in reverse order to substitute them all back.
  *		Jan used a Mathematica program to do this. Here we make that
- *	    	Format Ox,debugflag=1;
+ *			Format Ox,debugflag=1;
  *		Creates reverse order during printing.
  *		All we have to do is put id in front of the statements. This is done
  *		in PrintExtraSymbol.
@@ -4012,11 +4441,12 @@ VOID optimize_print_code (int print_expr) {
 		CBUF *C = cbuf + AM.sbufnum;
 		if (C->numrhs >= AO.OptimizeResult.minvar)
 			PrintSubtermList(AO.OptimizeResult.minvar, C->numrhs);
-	
+
 		WORD *t = AO.OptimizeResult.code;
 		while (*t!=0) {
-			if (*t > 0)
+			if (*t > 0) {
 				PrintExtraSymbol(*t, t+1, EXTRASYMBOL);
+			}
 			else if (print_expr)
 				PrintExtraSymbol(-*t-1, t+1, EXPRESSIONNUMBER);
 			t++;
@@ -4037,46 +4467,46 @@ VOID optimize_print_code (int print_expr) {
 
 /**  Optimization of expression
  *
- *   Description
- *   ===========
- *   This method takes an input expression and generates optimized
- *   code to calculate its value. The following methods are called to
- *   do so:
+ *	 Description
+ *	 ===========
+ *	 This method takes an input expression and generates optimized
+ *	 code to calculate its value. The following methods are called to
+ *	 do so:
  *
- *   (1) get_expression : to read to expression
+ *	 (1) get_expression : to read to expression
  *
- *   (2) get_brackets : find brackets for simultaneous optimization
+ *	 (2) get_brackets : find brackets for simultaneous optimization
  *
- *   (3) occurrence_order or find_Horner_MCTS : to determine (the)
- *   Horner scheme(s) to use; this depends on AO.optimize.horner
+ *	 (3) occurrence_order or find_Horner_MCTS : to determine (the)
+ *	 Horner scheme(s) to use; this depends on AO.optimize.horner
  *
- *   (4) optimize_expression_given_Horner : to do the optimizations
- *   for each Horner scheme; this method does either CSE or greedy
- *   optimizations dependings on AO.optimize.method
+ *	 (4) optimize_expression_given_Horner : to do the optimizations
+ *	 for each Horner scheme; this method does either CSE or greedy
+ *	 optimizations dependings on AO.optimize.method
  *
- *   (5) generate_output : to format the output in Form notation and
- *   store it in a buffer
+ *	 (5) generate_output : to format the output in Form notation and
+ *	 store it in a buffer
  *
- *   (6a) optimize_print_code : to print the expression (for "Print")
- *   or
- *   (6b) generate_expression : to modify the expression (for
- *   "#Optimize")
+ *	 (6a) optimize_print_code : to print the expression (for "Print")
+ *	 or
+ *	 (6b) generate_expression : to modify the expression (for
+ *	 "#Optimize")
  *
- *   On ParFORM, all the processes must call this function at the same
- *   time. Then
+ *	 On ParFORM, all the processes must call this function at the same
+ *	 time. Then
  *
- *   (1) Because only the master can access to the expression to be
- *   optimized, the master broadcast the expression to all the slaves
- *   after reading the expression (PF_get_expression).
+ *	 (1) Because only the master can access to the expression to be
+ *	 optimized, the master broadcast the expression to all the slaves
+ *	 after reading the expression (PF_get_expression).
  *
- *   (2) get_brackets reads optimize_expr as the input and it works
- *   also on the slaves. We leave it although the bracket information
- *   is not needed on the slaves (used in (5) on the master).
+ *	 (2) get_brackets reads optimize_expr as the input and it works
+ *	 also on the slaves. We leave it although the bracket information
+ *	 is not needed on the slaves (used in (5) on the master).
  *
- *   (3) and (4) find_Horner_MCTS and optimize_expression_given_Horner
- *   are parallelized.
+ *	 (3) and (4) find_Horner_MCTS and optimize_expression_given_Horner
+ *	 are parallelized.
  *
- *   (5), (6a) and (6b) are needed only on the master.
+ *	 (5), (6a) and (6b) are needed only on the master.
  */
 int Optimize (WORD exprnr, int do_print) {
 
@@ -4098,13 +4528,13 @@ int Optimize (WORD exprnr, int do_print) {
 	MesPrint ("*** [%s, w=%w] CALL: Optimize", thetime_str().c_str());
 	MesPrint ("*** %"); PrintRunningTime();
 #endif
-	
+
 #ifdef WITHPTHREADS
 	optimize_lock = dummylock;
 #endif
-	
+
 	AO.OptimizeResult.minvar = (cbuf + AM.sbufnum)->numrhs + 1;
-	
+
 	if (get_expression(exprnr) < 0) return -1;
 	vector<vector<WORD> > brackets = get_brackets();
 
@@ -4137,25 +4567,30 @@ int Optimize (WORD exprnr, int do_print) {
 				optimize_best_Horner_schemes.push_back(occurrence_order(optimize_expr, true));
 		}
 		else {
-			mcts_best_schemes.clear();
-			if ( AO.inscheme ) {
-				optimize_best_Horner_schemes.push_back(vector<WORD>(AO.schemenum));
-				for ( int i=0; i < AO.schemenum; i++ )
-					optimize_best_Horner_schemes[0][i] = AO.inscheme[i];
+			if (AO.Optimize.horner == O_SIMULATED_ANNEALING) {
+				optimize_best_Horner_schemes.push_back(simulated_annealing());
 			}
 			else {
-				for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
-					find_Horner_MCTS();
-				// generate results
-				for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
-					optimize_best_Horner_schemes.push_back(i->second);
-#ifdef DEBUG_MCTS
-					MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
-#endif
+				mcts_best_schemes.clear();
+				if ( AO.inscheme ) {
+					optimize_best_Horner_schemes.push_back(vector<WORD>(AO.schemenum));
+					for ( int i=0; i < AO.schemenum; i++ )
+						optimize_best_Horner_schemes[0][i] = AO.inscheme[i];
 				}
+				else {
+					for ( int i = 0; i < AO.Optimize.mctsnumrepeat; i++ )
+						find_Horner_MCTS();
+					// generate results
+					for (set<pair<int,vector<WORD> > >::iterator i=mcts_best_schemes.begin(); i!=mcts_best_schemes.end(); i++) {
+						optimize_best_Horner_schemes.push_back(i->second);
+#ifdef DEBUG_MCTS
+						MesPrint ("{%a} -> %d",i->second.size(), &i->second[0], i->first);
+#endif
+					}
+				}
+				// clear the tree by making a new empty one.
+				mcts_root = tree_node();
 			}
-			// clear the tree by making a new empty one.
-			mcts_root = tree_node();
 		}
 #ifdef DEBUG
 #ifdef WITHMPI
@@ -4265,7 +4700,7 @@ int Optimize (WORD exprnr, int do_print) {
 		sprintf(str,"%d",numop);
 		PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)str,0,1);
 	}
- 
+
 	if ( ( AO.Optimize.schemeflags&1 ) == 1 ) {
 		GETIDENTITY
 		UBYTE *OutScr, *Out, *old1 = AO.OutputLine, *old2 = AO.OutFill;
@@ -4299,7 +4734,7 @@ int Optimize (WORD exprnr, int do_print) {
 		AO.OutFill = old2;
 		AO.OutputLine = old1;
 	}
- 
+
 	{
 		GETIDENTITY
 		UBYTE *OutScr, *Out, *outstring = 0;
@@ -4333,7 +4768,7 @@ int Optimize (WORD exprnr, int do_print) {
 			M_free(outstring,"AddToString");
 		}
 	}
-	
+
 #ifdef WITHMPI
 	}
 
@@ -4393,20 +4828,21 @@ int Optimize (WORD exprnr, int do_print) {
 
 /**  Optimization of expression
  *
- *   Description
- *   ===========
- *   Clears the buffers that were used for optimization output.
- *   Clears the expression from the buffers (marks it to be dropped).
- *   Note: we need to use the expression by its name, because numbers
- *   may change if we drop other expressions between when we do the
- *   optimizations and clear the results (in execute.c). Also this is
- *   not 100% safe, because we could overwrite the optimized
- *   expression. But that can be done only in a Local or Global
- *   statement and hence we only have to test there that we might have
- *   to call ClearOptimize first. (in file comexpr.c)
+ *	 Description
+ *	 ===========
+ *	 Clears the buffers that were used for optimization output.
+ *	 Clears the expression from the buffers (marks it to be dropped).
+ *	 Note: we need to use the expression by its name, because numbers
+ *	 may change if we drop other expressions between when we do the
+ *	 optimizations and clear the results (in execute.c). Also this is
+ *	 not 100% safe, because we could overwrite the optimized
+ *	 expression. But that can be done only in a Local or Global
+ *	 statement and hence we only have to test there that we might have
+ *	 to call ClearOptimize first. (in file comexpr.c)
  */
 int ClearOptimize()
 {
+	char str[20];
 	WORD numexpr, *w;
 	int error = 0;
 	if ( AO.OptimizeResult.code != NULL ) {
@@ -4416,7 +4852,7 @@ int ClearOptimize()
 		PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)("0"),0,1);
 		PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)("0"),0,1);
 		PruneExtraSymbols(AO.OptimizeResult.minvar-1);
-//		cbuf[AM.sbufnum].numrhs = AO.OptimizeResult.minvar-1;
+		cbuf[AM.sbufnum].numrhs = AO.OptimizeResult.minvar-1;
 		AO.OptimizeResult.minvar = AO.OptimizeResult.maxvar = 0;
 	}
 	if ( AO.OptimizeResult.nameofexpr != NULL ) {
@@ -4436,7 +4872,8 @@ int ClearOptimize()
 		*w = SetExprCases(DROP,1,*w);
 		if ( *w < 0 ) error = 1;
 	}
-	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)("0"),0,1);
+	sprintf (str,"%d",cbuf[AM.sbufnum].numrhs);
+	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)str,0,1);
 	PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)("0"),0,1);
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,1);
 	return(error);

@@ -1363,6 +1363,7 @@ void WriteDictionary(DICTIONARY *dict)
 				Out = StrCopy(str,OutScr);
 				break;
 			default:
+				Out = OutScr; *Out = 0;
 				break;
 		}
 		Out = StrCopy((UBYTE *)": \"",Out);
@@ -1404,6 +1405,8 @@ VOID WriteArgument(WORD *t)
 	}
 	else if ( *t == -SYMBOL ) {
 		if ( t[1] >= MAXVARIABLES-cbuf[AM.sbufnum].numrhs ) {
+			Out = StrCopy(FindExtraSymbol(MAXVARIABLES-t[1]),Out);
+/*
 			Out = StrCopy((UBYTE *)AC.extrasym,Out);
 			if ( AC.extrasymbols == 0 ) {
 				Out = NumCopy((MAXVARIABLES-t[1]),Out);
@@ -1412,6 +1415,7 @@ VOID WriteArgument(WORD *t)
 			else if ( AC.extrasymbols == 1 ) {
 				Out = AddArrayIndex((MAXVARIABLES-t[1]),Out);
 			}
+*/
 /*
 			else if ( AC.extrasymbols == 2 ) {
 				Out = NumCopy((MAXVARIABLES-t[1]),Out);
@@ -1535,6 +1539,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 /*
 					see also routine PrintSubtermList.
 */
+					Out = StrCopy(FindExtraSymbol(MAXVARIABLES-*t),buffer);
+/*
 					Out = StrCopy((UBYTE *)AC.extrasym,buffer);
 					if ( AC.extrasymbols == 0 ) {
 						Out = NumCopy((MAXVARIABLES-*t),Out);
@@ -1543,6 +1549,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 					else if ( AC.extrasymbols == 1 ) {
 						Out = AddArrayIndex((MAXVARIABLES-*t),Out);
 					}
+*/
 /*
 					else if ( AC.extrasymbols == 2 ) {
 						Out = NumCopy((MAXVARIABLES-*t),Out);
@@ -1817,6 +1824,9 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			}
 			i = functions[*sterm - FUNCTION].spec;
 			if ( i >= TENSORFUNCTION ) {
+				int curdict = AO.CurrentDictionary;
+				if ( AO.CurrentDictionary && AO.CurDictNotInFunctions > 0 )
+					AO.CurrentDictionary = 0;
 				t = sterm + FUNHEAD;
 				while ( t < stopper ) {
 					if ( !first ) TokenToLine((UBYTE *)",");
@@ -1854,14 +1864,19 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 /*						TokenToLine(VARNAME(vectors,j - AM.OffsetVector)); */
 					}
 				}
+				AO.CurrentDictionary = curdict;
 			}
 			else {
+				int curdict = AO.CurrentDictionary;
+				if ( AO.CurrentDictionary && AO.CurDictNotInFunctions > 0 )
+					AO.CurrentDictionary = 0;
 				while ( t < stopper ) {
 					if ( !first ) TokenToLine((UBYTE *)",");
 					WriteArgument(t);
 					NEXTARG(t)
 					first = 0;
 				}
+				AO.CurrentDictionary = curdict;
 			}
 			TokenToLine(closepar);
 			closepar[0] = (UBYTE)')';

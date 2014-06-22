@@ -88,7 +88,6 @@ static KEYWORD precommands[] = {
 	,{"reverseinclude"   , DoReverseInclude   , 0, 0}
 	,{"rmexternal"   , DoRmExternal   , 0, 0}
 	,{"rmseparator"  , DoPreRmSeparator,0, 0}
-	,{"selectdictionary", DoPreSelectDictionary,0,0}
 	,{"setexternal"  , DoSetExternal  , 0, 0}
 	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
 	,{"setrandom"    , DoSetRandom    , 0, 0}
@@ -99,6 +98,7 @@ static KEYWORD precommands[] = {
 	,{"terminate"    , DoTerminate    , 0, 0}
 	,{"toexternal"   , DoToExternal   , 0, 0}
 	,{"undefine"     , DoUndefine     , 0, 0}
+	,{"usedictionary", DoPreUseDictionary,0,0}
 	,{"write"        , DoPreWrite     , 0, 0}
 };
 
@@ -6456,23 +6456,30 @@ int DoSkipExtraSymbols(UBYTE *s)
 	if ( AO.OptimizeResult.code == NULL ) return(0);
 	if ( AO.OptimizationLevel == 0 ) return(0);
 	while ( *s == ',' ) s++;
-	while ( *s <= '9' && *s >= '0' ) j = 10*j + *s++ - '0';
-	if ( *s ) {
-		MesPrint("@Illegal use of #SkipExtraSymbols instruction");
-		Terminate(-1);
+	if ( *s == 0 ) {
+		AO.OptimizeResult.minvar = AO.OptimizeResult.maxvar+1;
 	}
-	while ( j > 0 ) {
-		AddRHS(AM.sbufnum,1);
-		AddNtoC(AM.sbufnum,1,&tt);
-		AddToCB(C,0)
-		InsTree(AM.sbufnum,C->numrhs);
-		j--;
-	}
+	else {
+		while ( *s <= '9' && *s >= '0' ) j = 10*j + *s++ - '0';
+		if ( *s ) {
+			MesPrint("@Illegal use of #SkipExtraSymbols instruction");
+			Terminate(-1);
+		}
+		AO.OptimizeResult.minvar += j;
+		if ( AO.OptimizeResult.minvar > AO.OptimizeResult.maxvar )
+			AO.OptimizeResult.minvar = AO.OptimizeResult.maxvar+1;
+		while ( j > 0 ) {
+			AddRHS(AM.sbufnum,1);
+			AddNtoC(AM.sbufnum,1,&tt);
+			AddToCB(C,0)
+			InsTree(AM.sbufnum,C->numrhs);
+			j--;
+		}
 /*
-	The next statement is needed to avoid that #clearoptimize removes the
-	extra symbols in spite of our efforts.
+		The next statement is needed to avoid that #clearoptimize removes the
+		extra symbols in spite of our efforts.
 */
-	AO.OptimizeResult.minvar = C->numrhs + 1;
+	}
 	return(0);
 }
 

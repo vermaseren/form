@@ -1218,6 +1218,15 @@ typedef struct {
     int   debugflags;
     int   schemeflags;
     int   experiments;
+    int   saIter; /* Simulated annealing updates */
+    union {
+        float fval;
+        int ival[2];
+    } saMaxT; /* Maximum temperature of SA */
+    union {
+        float fval;
+        int ival[2];
+    } saMinT; /* Minimum temperature of SA */
 } OPTIMIZE;
 
 typedef struct {
@@ -1248,7 +1257,7 @@ typedef struct {
     int characters;     /* deal with special characters */
     int funwith;        /* deal with functions with arguments */
     int gnumelements;   /* if .global shrinks the dictionary */
-    int reserved;
+    int ranges;
 } DICTIONARY;
 
 /*
@@ -2186,7 +2195,7 @@ struct O_const {
     LONG    wrap;                  /* (O) For statistics time. wrap around */
     LONG    wrapnum;               /* (O) For statistics time. wrap around */
 #endif
-	OPTIMIZE Optimize;          
+    OPTIMIZE Optimize;          
     int     OutInBuffer;           /* (O) Which routine does the writing */
     int     NoSpacesInNumbers;     /*     For very long numbers */
     int     BlockSpaces;           /*     For very long numbers */
@@ -2198,6 +2207,7 @@ struct O_const {
     int     CurDictSpecials;
     int     CurDictFunWithArgs;
     int     CurDictNumberWarning;
+    int     CurDictNotInFunctions;
     int     gNumDictionaries;
     WORD    schemenum;             /* for feeding a Horner scheme to Optimize */
     WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
@@ -2218,9 +2228,9 @@ struct O_const {
     WORD    OptimizationLevel;     /* Level of optimization in the output */
     UBYTE   FortDotChar;           /* (O) */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(25,6,28,17,1);
+	PADPOSITION(25,6,34,17,1);
 #else
-	PADPOSITION(25,4,28,17,1);
+	PADPOSITION(25,4,34,17,1);
 #endif
 };
 /*

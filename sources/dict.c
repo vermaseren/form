@@ -201,9 +201,10 @@ Numeratoronly:;
 	}
 	return;
 NotFound:
+	if ( na != 1 || a[1] != 1 ) {
 	if ( AO.CurDictNumberWarning ) {
 		MesPrint(">>>>>>>>Could not translate coefficient with dictionary %s<<<<<<<<<<<<",dict->name);
-	}
+	} }
 NoAction:
 	RatToLine(a,na);
 	return;
@@ -363,6 +364,68 @@ UBYTE *FindFunWithArgs(WORD *t)
 
 /*
   	#] FindFunWithArgs : 
+  	#[ FindExtraSymbol :
+
+	The extra symbol is constructed in the WorkSpace. This way we do not
+	have to worry about Malloc and freeing the object later.
+	The input value num is already the number of the extra symbol.
+	We do NOT need num = MAXVARIABLES-num;
+*/
+
+UBYTE *FindExtraSymbol(WORD num)
+{
+	GETIDENTITY;
+	UBYTE *out = (UBYTE *)(AT.WorkPointer);
+	*out = 0;
+	if ( AO.CurrentDictionary > 0 ) {
+		DICTIONARY *dict = AO.Dictionaries[AO.CurrentDictionary-1];
+		int i;
+		if ( dict->ranges > 0 && AO.CurDictVariables == DICT_DOVARIABLES ) {
+			for ( i = dict->numelements-1; i >= 0; i-- ) {
+				if ( dict->elements[i]->type == DICT_RANGE
+					 && num >= dict->elements[i]->lhs[0]
+					 && num <= dict->elements[i]->lhs[1] ) {
+/*
+						Now we have to translate the rhs
+						%#  gives the number
+						%@  gives the number as its position in the range
+*/
+						UBYTE *r = (UBYTE *)(dict->elements[i]->rhs);
+						while ( *r ) {
+							if ( *r == (UBYTE)'%' && ( r[1] == (UBYTE)'#'
+							|| r[1] == (UBYTE)'@' ) ) {
+								if ( r[1] == (UBYTE)'#' ) {
+									out = NumCopy(num,out);
+								}
+								else {
+									out = NumCopy(num-dict->elements[i]->lhs[0]+1,out);
+								}
+								r += 2;
+							}
+							else {
+								*out++ = *r++;
+							}
+						}
+						*out = 0;
+						return((UBYTE *)(AT.WorkPointer));
+				}
+			}
+		}
+	}
+
+	out = StrCopy((UBYTE *)AC.extrasym,out);
+	if ( AC.extrasymbols == 0 ) {
+		out = NumCopy(num,out);
+		out = StrCopy((UBYTE *)"_",out);
+	}
+	else if ( AC.extrasymbols == 1 ) {
+		out = AddArrayIndex(num,out);
+	}
+	return((UBYTE *)(AT.WorkPointer));
+}
+
+/*
+  	#] FindExtraSymbol : 
   	#[ FindDictionary :
 */
 
@@ -411,7 +474,7 @@ int AddDictionary(UBYTE *name)
 	dict->characters = 0;
 	dict->funwith = 0;
 	dict->gnumelements = 0;
-	dict->reserved = 0;
+	dict->ranges = 0;
 
 	return(AO.NumDictionaries);
 }
@@ -430,7 +493,7 @@ int AddToDictionary(DICTIONARY *dict,UBYTE *left,UBYTE *right)
 	WORD *w = AT.WorkPointer;
 	WORD *OldWork = AT.WorkPointer;
 	WORD *s, oldnumrhs = C->numrhs, oldnumlhs = C->numlhs;
-	WORD *ow, *ww, *mm, oldEside, *where = 0, type, number;
+	WORD *ow, *ww, *mm, oldEside, *where = 0, type, number, range[3];
 	LONG oldcpointer;
 	int error = 0, sizelhs, sizerhs, i, retcode;
 	UBYTE *r;
@@ -447,6 +510,31 @@ int AddToDictionary(DICTIONARY *dict,UBYTE *left,UBYTE *right)
 		type = DICT_SPECIALCHARACTER;
 		number = 1;
 		where = &times;
+		goto TestDouble;
+	}
+	else if ( left[0] == '(' ) {  /* range of extra symbols */
+		WORD x1 = 0, x2 = 0;
+		r = left+1;
+		while ( FG.cTable[*r] == 1 ) x1 = 10*x1 + *r++ - '0';
+		if ( *r == ',' ) {
+			r++;
+			while ( FG.cTable[*r] == 1 ) x2 = 10*x2 + *r++ - '0';
+		}
+		else x2 = x1;
+		number = 2;
+		if ( *r != ')' ) {
+			MesPrint("&Illegal range specification in LHS of %#add instruction.");
+			return(1);
+		}
+		type = DICT_RANGE;
+		if ( x1 <= 0 || x2 <= 0 || x1 > x2 ) {
+			MesPrint("&Illegal range in LHS of %#add instruction.");
+			return(1);
+		}
+		range[0] = x1;
+		range[1] = x2;
+		range[2] = 0;
+		where = range;
 		goto TestDouble;
 	}
 /*
@@ -611,63 +699,6 @@ Compositeness:;
 		}
 	}
 TestDouble:;
-#ifdef WITHREPLACERATHERTHANPUTONTOP
-/*
-	Test whether we have this element already. If so, replace.
-*/
-	switch ( type ) {
-		case DICT_INTEGERNUMBER:
-		case DICT_RATIONALNUMBER:
-			if ( dict->numbers <= 0 ) { dict->numbers++; break; }
-			ww = &(dict->numbers);
-CheckArray:;
-			for ( i = 0; i < dict->numelements; i++ ) {
-				int j;
-				if ( dict->elements[i]->type == type
-					&& dict->elements[i]->lhs[0] == number ) {
-					for ( j = 0; j < number; j++ ) {
-						if ( dict->elements[i]->lhs[j+1] != where[j] ) break;
-					}
-					if ( j >= number ) {
-						M_free(dict->elements[i],"Dictionary element");
-						for ( i++; i < dict->numelements; i++ )
-							dict->elements[i-1] = dict->elements[i];
-						dict->numelements--;
-						break;
-					}
-				}
-			}
-			(*ww)++;
-			break;
-		case DICT_SYMBOL:
-		case DICT_VECTOR:
-		case DICT_INDEX:
-		case DICT_FUNCTION:
-  			if ( dict->variables <= 0 ) { dict->variables++; break; }
-			ww = &(dict->variables);
-CheckOne:;
-			for ( i = 0; i < dict->numelements; i++ ) {
-				if ( dict->elements[i]->type == type
-					&& dict->elements[i]->lhs[0] == where[0] ) {
-					M_free(dict->elements[i],"Dictionary element");
-					for ( i++; i < dict->numelements; i++ )
-						dict->elements[i-1] = dict->elements[i];
-					dict->numelements--;
-					break;
-				}
-			}
-			(*ww)++;
-  			break;
-		case DICT_FUNCTION_WITH_ARGUMENTS:
-  			if ( dict->funwith <= 0 ) { dict->funwith++; break; }
-			ww = &(dict->funwith);
-			goto CheckArray;
-		case DICT_SPECIALCHARACTER:
-  			if ( dict->characters <= 0 ) { dict->characters++; break; }
-			ww = &(dict->characters);
-			goto CheckOne;
-	}
-#endif
 /*
 	Create a new element
 */
@@ -712,6 +743,8 @@ CheckOne:;
   			dict->funwith++; break;
 		case DICT_SPECIALCHARACTER:
   			dict->characters++; break;
+		case DICT_RANGE:
+  			dict->ranges++; break;
 	}
 
 	AT.WorkPointer = OldWork;
@@ -720,10 +753,10 @@ CheckOne:;
 
 /*
   	#] AddToDictionary : 
-  	#[ SelectDictionary :
+  	#[ UseDictionary :
 */
 
-int SelectDictionary(UBYTE *name,UBYTE *options)
+int UseDictionary(UBYTE *name,UBYTE *options)
 {
 	DICTIONARY *dict;
 	int i;
@@ -745,7 +778,7 @@ int SelectDictionary(UBYTE *name,UBYTE *options)
 }
 
 /*
-  	#] SelectDictionary : 
+  	#] UseDictionary : 
   	#[ SetDictionaryOptions :
 */
 
@@ -759,6 +792,7 @@ int SetDictionaryOptions(UBYTE *options)
 	AO.CurDictSpecials = DICT_DOSPECIALS;
 	AO.CurDictFunWithArgs = DICT_DOFUNWITHARGS;
 	AO.CurDictNumberWarning = 0;
+	AO.CurDictNotInFunctions= 0;
 	while ( *s ) {
 		opt = s;
 		while ( *s && *s != ',' && *s != ' ' ) s++;
@@ -808,9 +842,19 @@ int SetDictionaryOptions(UBYTE *options)
 			AO.CurDictSpecials = DICT_NOSPECIALS;
 			AO.CurDictFunWithArgs = DICT_DOFUNWITHARGS;
 		}
-		else if ( StrICmp(opt,(UBYTE *)"numberwarning") == 0
+		else if ( StrICmp(opt,(UBYTE *)"warnings") == 0
 		       || StrICmp(opt,(UBYTE *)"warning") == 0 ) {
 			AO.CurDictNumberWarning = 1;
+		}
+		else if ( StrICmp(opt,(UBYTE *)"nowarnings") == 0
+		       || StrICmp(opt,(UBYTE *)"nowarning") == 0 ) {
+			AO.CurDictNumberWarning = 0;
+		}
+		else if ( StrICmp(opt,(UBYTE *)"infunctions") == 0 ) {
+			AO.CurDictNotInFunctions= 0;
+		}
+		else if ( StrICmp(opt,(UBYTE *)"notinfunctions") == 0 ) {
+			AO.CurDictNotInFunctions= 1;
 		}
 		else {
 			MesPrint("@ Unrecognized option in %#SetDictionary: %s",opt);
@@ -834,6 +878,9 @@ void UnSetDictionary(VOID)
 	AO.CurDictVariables = -1;
 	AO.CurDictSpecials = -1;
 	AO.CurDictFunWithArgs = -1;
+	AO.CurDictFunWithArgs = -1;
+	AO.CurDictNumberWarning = -1;
+	AO.CurDictNotInFunctions= -1;
 }
 
 /*
@@ -875,7 +922,7 @@ removeit:;
 	dict->characters = 0;
 	dict->funwith = 0;
 	dict->gnumelements = 0;
-	dict->reserved = 0;
+	dict->ranges = 0;
 }
 
 /*
@@ -954,15 +1001,17 @@ int DoPreCloseDictionary(UBYTE *s)
 	AP.OpenDictionary = 0;
 	AO.CurrentDictionary = 0;
 
+	AO.CurDictNotInFunctions = 0;
+
 	return(0);
 }
 
 /*
   	#] DoPreCloseDictionary : 
-  	#[ DoPreSelectDictionary :
+  	#[ DoPreUseDictionary :
 */
 
-int DoPreSelectDictionary(UBYTE *s)
+int DoPreUseDictionary(UBYTE *s)
 {
 	UBYTE *options, c, *ss, *sss, cc, *name;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -983,22 +1032,22 @@ int DoPreSelectDictionary(UBYTE *s)
 	else {
 		options = s+1; SKIPBRA3(s)
 		if ( *s != ')' ) {
-			MesPrint("@Irregular end of %#SelectDictionary instruction");
+			MesPrint("@Irregular end of %#UseDictionary instruction");
 			return(-1);
 		}
 		sss = s;
 		cc = *s++; while ( *s == ' ' || *s == '\t' || *s == ';' ) s++;
 		*sss = 0;
 		if ( *s ) {
-			MesPrint("@Irregular end of %#SelectDictionary instruction");
+			MesPrint("@Irregular end of %#UseDictionary instruction");
 			return(-1);
 		}
 	}
-	return(SelectDictionary(name,options));
+	return(UseDictionary(name,options));
 }
 
 /*
-  	#] DoPreSelectDictionary : 
+  	#] DoPreUseDictionary : 
   	#[ DoPreAdd :
 
 	Syntax:

@@ -975,6 +975,7 @@ typedef int (*TFUN1)();
 
 #define O_OCCURRENCE 0
 #define O_MCTS 1
+#define O_SIMULATED_ANNEALING 2
 
 #define O_FORWARD 0
 #define O_BACKWARD 1
@@ -1008,4 +1009,5 @@ typedef int (*TFUN1)();
 #define DICT_FUNCTION 6
 #define DICT_FUNCTION_WITH_ARGUMENTS 7
 #define DICT_SPECIALCHARACTER 8
+#define DICT_RANGE 9
 

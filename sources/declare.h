@@ -1432,7 +1432,7 @@ extern void optimize_expression_given_Horner_threaded();
 #endif
  
 extern int DoPreAdd(UBYTE *s);
-extern int DoPreSelectDictionary(UBYTE *s);
+extern int DoPreUseDictionary(UBYTE *s);
 extern int DoPreCloseDictionary(UBYTE *s);
 extern int DoPreOpenDictionary(UBYTE *s);
 extern void RemoveDictionary(DICTIONARY *dict);
@@ -1453,6 +1453,7 @@ extern UBYTE *FindVector(WORD num);
 extern UBYTE *FindIndex(WORD num);
 extern UBYTE *FindFunction(WORD num);
 extern UBYTE *FindFunWithArgs(WORD *t);
+extern UBYTE *FindExtraSymbol(WORD num);
 extern LONG DictToBytes(DICTIONARY *dict,UBYTE *buf);
 extern DICTIONARY *DictFromBytes(UBYTE *buf);
 

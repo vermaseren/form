@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 */
@@ -36,7 +36,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes :
+  	#] Includes : 
  		#[ NormPolyTerm :
 
 		Brings a term to normal form.
@@ -222,7 +222,7 @@ FromNorm:
 }
 
 /*
- 		#] NormPolyTerm :
+ 		#] NormPolyTerm : 
  		#[ ComparePoly :
 */
 /**
@@ -285,7 +285,7 @@ WORD ComparePoly(WORD *term1, WORD *term2, WORD level)
 #endif
 
 /*
- 		#] ComparePoly :
+ 		#] ComparePoly : 
  		#[ ConvertToPoly :
 */
 /**
@@ -488,7 +488,7 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD *comlist, WORD par)
 }
 
 /*
- 		#] ConvertToPoly :
+ 		#] ConvertToPoly : 
  		#[ LocalConvertToPoly :
 */
 /**
@@ -644,7 +644,7 @@ int LocalConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD startebuf, WORD par
 }
 
 /*
- 		#] LocalConvertToPoly :
+ 		#] LocalConvertToPoly : 
  		#[ ConvertFromPoly :
 
 		Converts a generic term from polynomial notation to the original
@@ -757,7 +757,7 @@ int ConvertFromPoly(PHEAD WORD *term, WORD *outterm, WORD from, WORD to, WORD of
 }
 
 /*
- 		#] ConvertFromPoly :
+ 		#] ConvertFromPoly : 
  		#[ FindSubterm :
 
 		In this routine we look up a variable.
@@ -826,7 +826,7 @@ WORD FindSubterm(WORD *subterm)
 }
 
 /*
- 		#] FindSubterm :
+ 		#] FindSubterm : 
  		#[ FindLocalSubterm :
 
 		In this routine we look up a variable.
@@ -881,7 +881,7 @@ wearehappy:
 }
 
 /*
- 		#] FindLocalSubterm :
+ 		#] FindLocalSubterm : 
  		#[ PrintSubtermList :
 
 		Prints all the expressions in the subterm compiler buffer.
@@ -989,7 +989,7 @@ void PrintSubtermList(int from,int to)
 }
 
 /*
- 		#] PrintSubtermList :
+ 		#] PrintSubtermList : 
  		#[ PrintExtraSymbol :
 
 		Prints the definition of extra symbol num as the contents
@@ -1035,6 +1035,8 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 				break;
 			}
 		case EXTRASYMBOL:
+			out = StrCopy(FindExtraSymbol(num),out);
+/*
 			out = StrCopy((UBYTE *)AC.extrasym,out);
 			if ( AC.extrasymbols == 0 ) {
 				out = NumCopy(num,out);
@@ -1043,6 +1045,7 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 			else if ( AC.extrasymbols == 1 ) {
 				out = AddArrayIndex(num,out);
 			}
+*/
 			break;
 		case EXPRESSIONNUMBER:
 			out = StrCopy(EXPRNAME(num),out);
@@ -1074,7 +1077,7 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 }
 
 /*
- 		#] PrintExtraSymbol :
+ 		#] PrintExtraSymbol : 
  		#[ FindSubexpression :
 
 		In this routine we look up a subexpression.
@@ -1131,7 +1134,7 @@ WORD FindSubexpression(WORD *subexpr)
 }
 
 /*
- 		#] FindSubexpression :
+ 		#] FindSubexpression : 
  		#[ ExtraSymFun :
 */
 
@@ -1199,7 +1202,7 @@ nocase:;
 }
 
 /*
- 		#] ExtraSymFun :
+ 		#] ExtraSymFun : 
  		#[ PruneExtraSymbols :
 */
 
@@ -1225,5 +1228,5 @@ int PruneExtraSymbols(WORD downto)
 }
 
 /*
- 		#] PruneExtraSymbols :
+ 		#] PruneExtraSymbols : 
 */
