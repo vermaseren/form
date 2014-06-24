@@ -5706,9 +5706,18 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 	}
 	while ( *fstring ) {
 		if ( to >= stopper ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				*to++ = '&';
+			}
 			num = to - Out;
 			WriteString(wtype,Out,num);
 			to = Out;
+			if ( AC.OutputMode == FORTRANMODE
+			 || AC.OutputMode == PFORTRANMODE ) {
+				number = 7;
+				for ( i = 0; i < number; i++ ) *to++ = ' ';
+				to[-2] = '&';
+			}
 		}
 		if ( *fstring == '\\' ) {
 			fstring++;
@@ -5729,6 +5738,10 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 dodollar:
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
 				number = AO.OutSkip;
+				if ( AC.OutputMode == FORTRANMODE
+				 || AC.OutputMode == PFORTRANMODE ) {
+					number = 7;
+				}
 				if ( *s != '$' ) {
 nodollar:			MesPrint("@$-variable expected in #write instruction");
 					AM.FileOnlyFlag = h->oldlogonly;
@@ -5799,10 +5812,15 @@ writealloc:
 					ss = dolalloc;
 					while ( *ss ) {
 						if ( to >= stopper ) {
+							if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+								*to++ = '&';
+							}
 							num = to - Out;
 							WriteString(wtype,Out,num);
 							to = Out;
 							for ( i = 0; i < number; i++ ) *to++ = ' ';
+							if ( AC.OutputMode == FORTRANMODE
+							 || AC.OutputMode == PFORTRANMODE ) to[-2] = '&';
 						}
 						if ( chartype[*ss] > 3 ) { *to++ = *ss++; }
 						else {
@@ -5810,27 +5828,46 @@ writealloc:
 							if ( ( to + (ss-sss) ) >= stopper ) {
 								if ( (ss-sss) >= (stopper-Out) ) {
 									if ( ( to - stopper ) < 10 ) {
+										if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+											*to++ = '&';
+										}
 										num = to - Out;
 										WriteString(wtype,Out,num);
 										to = Out;
 										for ( i = 0; i < number; i++ ) *to++ = ' ';
+										if ( AC.OutputMode == FORTRANMODE
+										 || AC.OutputMode == PFORTRANMODE ) to[-2] = '&';
 									}
 									while ( (ss-sss) >= (stopper-Out) ) {
 										while ( to < stopper-1 ) {
 											*to++ = *sss++;
 										}
-										*to++ = '\\';
+										if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+											*to++ = '&';
+										}
+										else {
+											*to++ = '\\';
+										}
 										num = to - Out;
 										WriteString(wtype,Out,num);
 										to = Out;
-										for ( i = 0; i < number; i++ ) *to++ = ' ';
+										if ( AC.OutputMode == FORTRANMODE
+										 || AC.OutputMode == PFORTRANMODE ) {
+											for ( i = 0; i < number; i++ ) *to++ = ' ';
+											to[-2] = '&';
+										}
 									}
 								}
 								else {
+									if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+										*to++ = '&';
+									}
 									num = to - Out;
 									WriteString(wtype,Out,num);
 									to = Out;
 									for ( i = 0; i < number; i++ ) *to++ = ' ';
+									if ( AC.OutputMode == FORTRANMODE
+									 || AC.OutputMode == PFORTRANMODE ) to[-2] = '&';
 								}
 							}
 							while ( sss < ss ) *to++ = *sss++;
