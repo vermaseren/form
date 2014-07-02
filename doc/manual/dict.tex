@@ -1,0 +1,353 @@
+
+\chapter{Dictionaries}
+\label{dictionaries}
+
+At times one would like to manipulate the output to facilitate further 
+processing. A standard example is that the output formula should be 
+included in a \LaTeX file. Another example is the representation of 
+fractions in a numerical program that works with floating point numbers. 
+Complete solutions for such problems are not included in \FORM, but with 
+the partial solution of `dictionaries'\index{dictionaries} one can do quite 
+a lot already.
+
+In \FORM a dictionary is a collection of `words'\index{word} together with 
+their translation\index{translation}. The word can be a number, a variable, 
+a function with its arguments or a special output token like a 
+multiplication sign or a power indicator. The translation can be any 
+string. Currently wildcarding is not implemented. That would be more like 
+grammar and involves special complications. As shown later, currently there 
+is one exception to this rule.
+
+A dictionary is defined with the preprocessor\index{\#opendictionary} 
+instruction
+\begin{verbatim}
+    #opendictionary name
+\end{verbatim}
+in which `name' is the name of the dictionary. There can be more 
+dictionaries, provided they have different names. It is allowed to open 
+already existing dictionaries. Only one dictionary can be open at a given 
+time. Dictionaries are closed with the instruction\index{\#closedictionary}
+\begin{verbatim}
+    #closedictionary
+\end{verbatim}
+and because there can be only one open dictionary, it is clear which 
+dictionary should be closed.
+
+A dictionary is opened to add words to it. This is done with the \#add 
+instruction\index{\#add} as in
+\begin{verbatim}
+    #add x1: "x_1"
+    #add *: "\ "
+    #add mu: "\mu"
+\end{verbatim}
+which would tell the system that when the dictionary is in use, the 
+variable \verb:x1: should be printed as the string \verb:x_1: and a 
+multiplication sign should become a backslash character followed by a 
+blank space. The (index) mu would be printed as the string \verb:\mu:.
+
+A dictionary can be used\index{\#usedictionary} with the
+\begin{verbatim}
+    #usedictionary name <(options)>
+\end{verbatim}
+instruction. At the moment a dictionary is being used there cannot be any 
+open dictionaries. Hence we can stop using a dictionary with the
+\begin{verbatim}
+    #closedictionary
+\end{verbatim}
+instruction\index{\#closedictionary} without running into inconsistencies. 
+The options control partial use of a dictionary, as for instance only for 
+individual variables, or only for numbers. They can also control whether 
+translations should be made inside function arguments.
+
+What words are allowed?
+\begin{description}
+\item[variable] This can be the name of a symbol, a vector, an index or a 
+function (this includes commuting functions, non-commuting functions, 
+tensors and tables).
+\item[number] This must be a positive integer number.
+\item[fraction] This must be a positive rational number.
+\item[special character] Currently this can be the multiplication sign 
+(\verb:*:), or the power sign (\verb:^: or \verb:**:).
+\item[a range] Indicated between parentheses, this is a range\index{range} 
+of extra symbols. There can be more than one range.
+\item[a function with arguments] This would be a complete function subterm. 
+\end{description}
+
+The options in the \#usedictionary should be enclosed between parentheses 
+and separated by comma's. They can be:
+\begin{description}
+\item[allnumbers]    All numbers will be looked up in the dictionary.
+\item[integersonly]  Only integer numbers will be looked up.
+\item[nonumbers]     Numbers will not be looked up.
+\item[numbersonly]   Only numbers will be looked up.
+\item[novariables]   Loose variables will not be looked up.
+\item[variablesonly] Only loose variables will be looked up.
+\item[nospecials]    Specials (multiplication signs and power signs) will 
+not be looked up.
+\item[specialsonly]  Only specials (multiplication signs and power signs) will 
+be looked up.
+\item[nofunwithargs] Functions with arguments will not be looked up.
+\item[funwithargsonly] Only functions with arguments will be looked up.
+\item[warnings]      Warnings\index{warnings} concern the look up of 
+numbers. If a fortran or C format is being used and the dictionary cannot 
+be used in such a way that floating point notation and/or decimal points 
+can be avoided, a warning will be given.
+\item[nowarnings]    No floating point warnings are given.
+\item[infunctions]   Substitutions are also made inside function arguments.
+\item[notinfunctions] No substitutions are made inside function arguments.
+\end{description}
+The defaults are that all potential objects are looked up (also inside 
+function arguments) and no warnings are given.
+
+The use is best illustrated with a few examples.
+\begin{verbatim}
+    Symbols x1,y2,z3,N;
+    Indices mu,nu,ro,si;
+    Tensor tens;
+    CFunction S,R,f;
+    ExtraSymbols array w;
+    #OpenDictionary test
+      #add x1: "x_1"
+      #add y2: "y^{(2)}"
+      #add z3: "{\cal Z}"
+      #add *: " "
+      #add S(R(1),N): "S_1(N)"
+      #add S(R(2),N): "S_2(N)"
+      #add S(R(1,1),N): "S_{1,1}(N)"
+      #add f: "\ln"
+      #add mu: "\mu"
+      #add nu: "\nu"
+      #add ro: "\rho"
+      #add si: "\sigma"
+      #add tens: "T"
+    #CloseDictionary
+    Local F = x1*y2*z3
+         + S(R(1),N) + S(R(1,1),N) + S(R(2),N)
+         + tens(mu,nu,ro,si) + f(x1+1);
+    #usedictionary test
+    Print +s;
+    .end
+\end{verbatim}
+This program gives for its output
+\begin{verbatim}
+       F =
+           + x_1 y^2 {\cal Z}
+           + T(\mu,\nu,\rho,\sigma)
+           + S_1(N)
+           + S_{1,1}(N)
+           + S_2(N)
+           + \ln(1 + x_1)
+          ;
+\end{verbatim}
+Of course, there is nothing here that could not have been done with a good 
+text editor, but having this inside the \FORM program makes that if there 
+are changes in the \FORM program, it will be less work to implement them in 
+the eventual \LaTeX files.
+
+Things become different when numerical\index{numerical output} output is 
+involved. Take for instance the fraction $1/3$ inside a 
+FORTRAN\index{fortran} program. 
+Using the option
+\begin{verbatim}
+    Format Fortran;
+\end{verbatim}
+one would obtain
+\begin{verbatim}
+    1./3.
+\end{verbatim}
+and with\index{doublefortran}
+\begin{verbatim}
+    Format DoubleFortran;
+\end{verbatim}
+one would obtain
+\begin{verbatim}
+    1.D0/3.D0
+\end{verbatim}
+while using\index{quadfortran}
+\begin{verbatim}
+    Format QuadFortran;
+\end{verbatim}
+one would obtain
+\begin{verbatim}
+    1.Q0/3.Q0
+\end{verbatim}
+which means that one might have three varieties of the same program, 
+depending on the precision in which one would like run it. It would be far 
+better to have a single version and only determine in the make file what 
+the precision should be. The FORTRAN code for such a program could look 
+like
+\begin{verbatim}
+      REAL one,three,third
+      PARAMETER (one=1,three=3,third=one/three)
+\end{verbatim}
+after which one should either use the name 'third' or a constuction like 
+'one/three'. Let us take a simple program like
+\begin{verbatim}
+    Symbol x,n;
+    Format DoubleFortran;
+    Local F = (1+x)^7/7;
+    id	x^n? = x*x^n/(n+1);
+    Print;
+    .end
+      F =
+     & 1.D0/7.D0*x + 1.D0/2.D0*x**2 + x**3 + 5.D0/4.D0*x**4 + x**5 + 1.D
+     & 0/2.D0*x**6 + 1.D0/7.D0*x**7 + 1.D0/56.D0*x**8
+\end{verbatim}
+If we define a dictionary we can make this into
+\begin{verbatim}
+    Symbol x,n;
+    Format DoubleFortran;
+    #OpenDictionary numbers
+      #add 2: "TWO"
+      #add 5: "FIVE"
+      #add 7: "SEVEN"
+    #CloseDictionary
+    Local F = (1+x)^7/7;
+    id	x^n? = x*x^n/(n+1);
+    #UseDictionary numbers
+    Print;
+    .end
+      F =
+     & 1/SEVEN*x + 1/TWO*x**2 + x**3 + FIVE/4*x**4 + x**5 + 1/TWO*x**6
+     &  + 1/SEVEN*x**7 + 1.D0/56.D0*x**8
+\end{verbatim}
+one can see that some of the numbers have been replaced by text strings. In 
+particular these are the numbers 2, 5 and 7. The output is now presented in 
+such a way that the compiler can do the rest, provided we do this with all 
+numbers that occur, and we feed the proper information to the compiler.
+
+One can also replace complete fractions as in
+\begin{verbatim}
+    Symbol x,n;
+    Format DoubleFortran;
+    #OpenDictionary numbers
+      #add 2: "TWO"
+      #add 5: "FIVE"
+      #add 7: "SEVEN"
+      #add 1/2: "HALF"
+    #CloseDictionary
+    Local F = (1+x)^7/7;
+    id	x^n? = x*x^n/(n+1);
+    #UseDictionary numbers
+    Print;
+    .end
+      F =
+     & 1/SEVEN*x + HALF*x**2 + x**3 + FIVE/4*x**4 + x**5 + HALF*x**6 + 
+     & 1/SEVEN*x**7 + 1.D0/56.D0*x**8
+\end{verbatim}
+because the fractions take precedence.
+
+The next question is how one makes sure to have all numbers that need 
+replacement? For that one can use the warnings option:
+\begin{verbatim}
+    Symbol x,n;
+    Format DoubleFortran;
+    #OpenDictionary numbers
+      #add 2: "TWO"
+      #add 5: "FIVE"
+      #add 7: "SEVEN"
+      #add 1/2: "HALF"
+    #CloseDictionary
+    Local F = (1+x)^7/7;
+    id	x^n? = x*x^n/(n+1);
+    #UseDictionary numbers (warnings)
+    Print;
+    .end
+
+Time =       0.00 sec    Generated terms =          8
+               F         Terms in output =          8
+                         Bytes used      =        204
+
+      F =
+     & 1/SEVEN*x + HALF*x**2 + x**3 + FIVE/4*x**4 + x**5 + HALF*x**6 + 
+>>>>>>>>Could not translate coefficient with dictionary numbers<<<<<<<<<
+<<<
+     & 1/SEVEN*x**7 + 1.D0/56.D0*x**8
+\end{verbatim}
+In this case the line after the warning contains a fraction that was not 
+substituted. This allows one to add either $56$ or $1/56$ to the 
+dictionary. This gives the program
+\begin{verbatim}
+    Symbol x,n;
+    Format DoubleFortran;
+    #OpenDictionary numbers
+      #add 2: "cd2"
+      #add 5: "cd5"
+      #add 7: "cd7"
+      #add 56: "cd56"
+      #add 1/2: "c1d2"
+      #add 5/4: "c5d4"
+    #CloseDictionary
+    Local F = (1+x)^7/7;
+    id	x^n? = x*x^n/(n+1);
+    #UseDictionary numbers (warnings)
+    Print;
+    .end
+      F =
+     & 1/cd7*x + c1d2*x**2 + x**3 + c5d4*x**4 + x**5 + c1d2*x**6 + 1/
+     & cd7*x**7 + 1/cd56*x**8
+\end{verbatim}
+Here we have selected a different notation that allows extension easily. 
+A good way to do this now is to put the dictionary in a file numbers.hh and 
+the corresponding FORTRAN definitions in a file numbers.h and then include 
+these files in the proper places. The numbers.hh file would be
+\begin{verbatim}
+#OpenDictionary numbers
+  #add 2: "cd2"
+  #add 5: "cd5"
+  #add 7: "cd7"
+  #add 56: "cd56"
+  #add 1/2: "c1d2"
+  #add 5/4: "c5d4"
+#CloseDictionary
+\end{verbatim}
+and the numbers.h file would be
+\begin{verbatim}
+      REAL cd2,cd5,cd7,cd56,c1d2,c5d4
+      PARAMETER (cd2=2,cd5=5,cd7=7,cd56=56,c1d2=1/cd2,c5d4=cd5/4)
+\end{verbatim}
+and when the dictionary file is updated one may update the FORTRAN file 
+simultaneously.
+
+Setting the precision of the declaration REAL\index{real} can be done by 
+compiler options. These may depend on the compiler. One should consult the 
+manpages.
+
+Printing the extra symbols\ref{substaextrasymbols}\index{extra symbols} 
+may be a bit trickier. A range\index{range} is indicated with 
+a pair of parentheses enclosing one or two (positive) numbers. If there are 
+two numbers, they should be separated by a comma. There can be more than 
+one range. In the substitution one can use the wildcards \verb:%#: and 
+\verb:\verb:%@: to indicate the number of the extra symbol. The first 
+wildcard indicates the number of the symbol and the second starts it 
+counting with 1 from the beginning of the range.
+\begin{verbatim}
+    Symbol x;
+    CFunction f;
+    #OpenDictionary ranges
+      #add (1,2): "w(%#)"
+      #add (3): "ww(%#)"
+      #add (4,6): "www(%@)"
+    #CloseDictionary
+    Local F = <f(1)*x^1>+...+<f(6)*x^6>;
+    ToPolynomial;
+    Print;
+    .sort
+
+   F =
+      x*Z1_ + x^2*Z2_ + x^3*Z3_ + x^4*Z4_ + x^5*Z5_ + x^6*Z6_;
+
+    #UseDictionary ranges
+    Print;
+    .end
+
+   F =
+      x*w(1) + x^2*w(2) + x^3*ww(3) + x^4*www(1) + x^5*www(2) + x^6*www(3);
+\end{verbatim}
+
+It should be clear from the above that the dictionaries are the beginning 
+of a new development. One shuld expect more capabilities in the future and 
+suggestions are highly appreciated, provided they lead to something that 
+can be implemented in a reasonable amount of time. Hence, for instance, 
+there will not be a complete \LaTeX output format that can take line length 
+into account.
