@@ -1634,7 +1634,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 					}
 					else {
 						i -= AM.OffsetIndex;
-						Out = StrCopy(FindIndex(i%WILDOFFSET),buffer);
+						Out = StrCopy(FindIndex(i%WILDOFFSET+AM.OffsetIndex),buffer);
 /*						Out = StrCopy(VARNAME(indices,i%WILDOFFSET),buffer); */
 						if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
 					}
@@ -1836,7 +1836,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 						if ( j < AM.OffsetIndex ) TalToLine((UWORD)(j));
 						else if ( j < AM.IndDum ) {
 							i = j - AM.OffsetIndex;
-							Out = StrCopy(FindIndex(i%WILDOFFSET),buffer);
+							Out = StrCopy(FindIndex(i%WILDOFFSET+AM.OffsetIndex),buffer);
 /*							Out = StrCopy(VARNAME(indices,i%WILDOFFSET),buffer); */
 							if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
 							TokenToLine(buffer);
