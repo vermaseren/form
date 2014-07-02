@@ -274,6 +274,20 @@ the above constructions, creating code that was very hard to read. The
 much.
 
 %--#] ... : 
+%--#[ add :
+ 
+\section{\#add}
+\label{preadd}
+
+\noindent Syntax:
+
+\#add object: "string"
+ 
+\noindent See chapter \ref{dictionaries} on dictionaries.
+
+\noindent Adds words to an open dictionary.
+
+%--#] add : 
 %--#[ addseparator :
  
 \section{\#addseparator}
@@ -515,6 +529,22 @@ remove the old contents and hence start basically a new file. There are
 times that this is useful.
 
 %--#] close : 
+%--#[ closedictionary :
+ 
+\section{\#closedictionary}
+\label{preclosedictionary}
+
+\noindent Syntax:
+
+\#closedictionary
+ 
+\noindent See chapter \ref{dictionaries} on dictionaries.
+
+\noindent Either closes an open dictionary (\ref{preopendictionary}) or stops 
+using the dictionary (\ref{preusedictionary}) that is currently used for output 
+translation.
+
+%--#] closedictionary : 
 %--#[ commentchar :
 
 \section{\#commentchar}
@@ -1297,6 +1327,21 @@ printed as well. If one needs messages without this clear marking, one
 should use the \#write\index{\#write} instruction.
  
 %--#] message : 
+%--#[ opendictionary :
+ 
+\section{\#opendictionary}
+\label{preopendictionary}
+
+\noindent Syntax:
+
+\#opendictionary name
+ 
+\noindent See chapter \ref{dictionaries} on dictionaries.
+
+\noindent Opens a dictionary and makes it ready for adding words to it. If 
+the dictionary does not exist yet, it will be created.
+
+%--#] opendictionary : 
 %--#[ optimize :
 
 \section{\#optimize}
@@ -1946,6 +1991,21 @@ defined inside this procedure. The same holds for the preprocessor variable
 that is used as a loop parameter in the \#do\index{\#do} instruction.
 
 %--#] undefine : 
+%--#[ usedictionary :
+ 
+\section{\#usedictionary}
+\label{preusedictionary}
+
+\noindent Syntax:
+
+\#usedictionary name
+\#usedictionary name (options)
+ 
+\noindent See chapter \ref{dictionaries} on dictionaries.
+
+\noindent Starts using a dictionary for output translation.
+
+%--#] usedictionary : 
 %--#[ write :
 
 \section{\#write}
