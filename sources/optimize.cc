@@ -4351,18 +4351,21 @@ WORD generate_expression (WORD exprnr) {
 	// scan for the original expression (marked by *t<0) and give the
 	// terms to Generator
 	WORD *t = AO.OptimizeResult.code;
-
-	while (*t!=0) {
-		bool is_expr = *t < 0;
-		t++;
+    {
+		WORD old = AR.Cnumlhs; AR.Cnumlhs = 0;
 		while (*t!=0) {
-			if (is_expr) {
-				memcpy(AT.WorkPointer, t, *t*sizeof(WORD));
-				Generator(BHEAD AT.WorkPointer, C->numlhs);
+			bool is_expr = *t < 0;
+			t++;
+			while (*t!=0) {
+				if (is_expr) {
+					memcpy(AT.WorkPointer, t, *t*sizeof(WORD));
+					Generator(BHEAD AT.WorkPointer, C->numlhs);
+				}
+				t+=*t;
 			}
-			t+=*t;
+			t++;
 		}
-		t++;
+		AR.Cnumlhs = old;
 	}
 
 	// final sorting

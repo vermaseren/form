@@ -6489,7 +6489,7 @@ int DoClearOptimize(UBYTE *s)
 int DoSkipExtraSymbols(UBYTE *s)
 {
 	CBUF *C = cbuf + AM.sbufnum;
-	WORD tt = 0, j = 0;
+	WORD tt = 0, j = 0, oldval = AO.OptimizeResult.minvar;
 	if ( AO.OptimizeResult.code == NULL ) return(0);
 	if ( AO.OptimizationLevel == 0 ) return(0);
 	while ( *s == ',' ) s++;
@@ -6505,17 +6505,14 @@ int DoSkipExtraSymbols(UBYTE *s)
 		AO.OptimizeResult.minvar += j;
 		if ( AO.OptimizeResult.minvar > AO.OptimizeResult.maxvar )
 			AO.OptimizeResult.minvar = AO.OptimizeResult.maxvar+1;
-		while ( j > 0 ) {
-			AddRHS(AM.sbufnum,1);
-			AddNtoC(AM.sbufnum,1,&tt);
-			AddToCB(C,0)
-			InsTree(AM.sbufnum,C->numrhs);
-			j--;
-		}
-/*
-		The next statement is needed to avoid that #clearoptimize removes the
-		extra symbols in spite of our efforts.
-*/
+	}
+	j = AO.OptimizeResult.minvar - oldval;
+	while ( j > 0 ) {
+		AddRHS(AM.sbufnum,1);
+		AddNtoC(AM.sbufnum,1,&tt);
+		AddToCB(C,0)
+		InsTree(AM.sbufnum,C->numrhs);
+		j--;
 	}
 	return(0);
 }
