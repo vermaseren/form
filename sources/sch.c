@@ -1453,7 +1453,7 @@ VOID WriteArgument(WORD *t)
 				}
 				else {
 					i -= AM.OffsetIndex;
-					Out = StrCopy(FindIndex(i%WILDOFFSET),Out);
+					Out = StrCopy(FindIndex(i%WILDOFFSET+AM.OffsetIndex),Out);
 /*					Out = StrCopy(VARNAME(indices,i%WILDOFFSET),Out); */
 					if ( i >= WILDOFFSET ) { *Out++ = '?'; *Out = 0; }
 				}
