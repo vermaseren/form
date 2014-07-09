@@ -4,13 +4,13 @@
 
 At times one would like to manipulate the output to facilitate further 
 processing. A standard example is that the output formula should be 
-included in a \LaTeX file. Another example is the representation of 
+included in a \LaTeX{} file. Another example is the representation of 
 fractions in a numerical program that works with floating point numbers. 
-Complete solutions for such problems are not included in \FORM, but with 
+Complete solutions for such problems are not included in \FORM{}, but with 
 the partial solution of `dictionaries'\index{dictionaries} one can do quite 
 a lot already.
 
-In \FORM a dictionary is a collection of `words'\index{word} together with 
+In \FORM{} a dictionary is a collection of `words'\index{word} together with 
 their translation\index{translation}. The word can be a number, a variable, 
 a function with its arguments or a special output token like a 
 multiplication sign or a power indicator. The translation can be any 
@@ -140,9 +140,9 @@ This program gives for its output
           ;
 \end{verbatim}
 Of course, there is nothing here that could not have been done with a good 
-text editor, but having this inside the \FORM program makes that if there 
-are changes in the \FORM program, it will be less work to implement them in 
-the eventual \LaTeX files.
+text editor, but having this inside the \FORM{} program makes that if there 
+are changes in the \FORM{} program, it will be less work to implement them in 
+the eventual \LaTeX{} files.
 
 Things become different when numerical\index{numerical output} output is 
 involved. Take for instance the fraction $1/3$ inside a 
@@ -180,7 +180,7 @@ like
       REAL one,three,third
       PARAMETER (one=1,three=3,third=one/three)
 \end{verbatim}
-after which one should either use the name 'third' or a constuction like 
+after which one should either use the name 'third' or a construction like 
 'one/three'. Let us take a simple program like
 \begin{verbatim}
     Symbol x,n;
@@ -346,8 +346,8 @@ counting with 1 from the beginning of the range.
 \end{verbatim}
 
 It should be clear from the above that the dictionaries are the beginning 
-of a new development. One shuld expect more capabilities in the future and 
+of a new development. One should expect more capabilities in the future and 
 suggestions are highly appreciated, provided they lead to something that 
 can be implemented in a reasonable amount of time. Hence, for instance, 
-there will not be a complete \LaTeX output format that can take line length 
+there will not be a complete \LaTeX{} output format that can take line length 
 into account.

@@ -98,6 +98,7 @@
 \input{@srcdir@/optim}
 \input{@srcdir@/polynomials}
 \input{@srcdir@/tablebas}
+\input{@srcdir@/dict}
 \input{@srcdir@/gamma}
 \input{@srcdir@/metric}
 \input{@srcdir@/sorting}

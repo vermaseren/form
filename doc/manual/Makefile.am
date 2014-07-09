@@ -1,6 +1,7 @@
 TEXSRC = \
 	bracket.tex \
 	calculus.tex \
+	dict.tex \
 	dollar.tex \
 	external.tex \
 	functions.tex \
