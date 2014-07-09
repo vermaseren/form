@@ -950,13 +950,13 @@ void print_tree (const vector<WORD> &tree) {
 
 
 struct CSEHash {
-	size_t operator()(const vector<int>& n) const {
+	size_t operator()(const vector<WORD>& n) const {
 		return n[0];
 	}
 };
 
 struct CSEEq {
-	bool operator()(const vector<int>& lhs, const vector<int>& rhs) const {
+	bool operator()(const vector<WORD>& lhs, const vector<WORD>& rhs) const {
 			if (lhs.size() != rhs.size()) return false;
 			for (unsigned int i = 1; i < lhs.size(); i++) {
 				if (lhs[i] != rhs[i]) return false;
@@ -1049,7 +1049,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 	stack<int> s;
 	vector<WORD> instr;
 	WORD numinstr = 0;
-	vector<int> x;
+	vector<WORD> x;
 
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
@@ -1252,7 +1252,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 	// formatted as the LHS/RHS of the keys in ID.
 	stack<int> s;
 	int numinstr = 0, numcommas = 0;
-	vector<int> x;
+	vector<WORD> x;
 
 	// process the expression tree
 	for (int i=0; i<(int)tree.size();) {
@@ -1595,7 +1595,7 @@ vector<WORD> simulated_annealing() {
 	vector<WORD> tree = Horner_tree(optimize_expr, state);
 	int curscore = count_operators_cse_topdown(tree);
 
-	std::vector<int> best = state; // best state
+	std::vector<WORD> best = state; // best state
 	int bestscore = curscore;
 	
 	for (int o = 0; o < AO.Optimize.saIter; o++) {
