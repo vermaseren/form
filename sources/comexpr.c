@@ -1368,6 +1368,20 @@ int CoFillExpression(UBYTE *inp)
 		goto noway;
 	}
 	EXCHINOUT
+#ifdef WITHMPI
+	/*
+	 * The workers can't access to the data of the input expression. We need to
+	 * broadcast it to all the workers.
+	 */
+	PF_BroadcastExpr(&Expressions[expnum], AR.infile);
+	if ( PF.me == MASTER ) {
+		/*
+		 * Restore the file position on the master.
+		 */
+		POSITION pos;
+		SetEndScratch(AR.infile, &pos);
+	}
+#endif
 	fi = AR.infile;
 	if ( fi->handle >= 0 ) {
 		PUTZERO(oldposition);
