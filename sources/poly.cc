@@ -254,8 +254,8 @@ void poly::coefficients_modulo (UWORD *a, WORD na, bool small) {
 
 // converts an integer to a string
 const string int_to_string (WORD x) {
-	char res[20];
-	sprintf (res,"%i",x);
+	char res[41];
+	snprintf (res, 41, "%i",x);
 	return res;
 }
 
@@ -380,7 +380,7 @@ const poly & poly::normalize() {
 	for (int i=1; i<terms[0]; i+=terms[i])
 		p[nterms++] = terms + i;
 
-	sort(&p[0], &p[nterms], monomial_larger(BHEAD0));
+	sort(p, p + nterms, monomial_larger(BHEAD0));
 
 	WORD *tmp;
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
