@@ -922,7 +922,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		if (gcdmodc.is_zero()) return poly(BHEAD 0);
 
 		// normalize
-		gcdmodc *= substitute_last(gcdconts,X,c);
+		gcdmodc = (gcdmodc * substitute_last(gcdlcoeffs,X,c)) / gcdmodc.integer_lcoeff();
 
 		// compare the new gcd with the old
 		int comp=0;
@@ -958,13 +958,14 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		}
 
 		// check whether this is the complete gcd
-		if (res==oldres && res.lcoeff_univar(x[0])==lc) {
-			if (poly::divides(res,a) && poly::divides(res,b)) {
+		if (res==oldres) {
+			poly nres = res / content_multivar(res, X);
+			if (poly::divides(nres,a) && poly::divides(nres,b)) {
 #ifdef DEBUG
 				cout << "*** [" << thetime() << "]  RES : gcd_modular_dense_interpolation(" << a << "," << b << ","
-						 << x << "," << lc << "," << s <<") = " << res << endl;
+						 << x << "," << lc << "," << s <<") = " << gcdconts * nres << endl;
 #endif
-				return res;
+				return gcdconts * nres;
 			}
 		}
 	}
