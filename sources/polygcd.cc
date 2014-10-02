@@ -903,6 +903,8 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	poly lcoeffb(ppb.lcoeff_multivar(X));
 	poly gcdlcoeffs(gcd_Euclidean(lcoeffa,lcoeffb));
 
+	int l = MiN(ppa.degree(x[0]), ppb.degree(x[0]));
+	poly oldres(BHEAD 0);
 	poly res(BHEAD 0);
 	poly newshape(BHEAD 0);
 	poly modpoly(BHEAD 1,a.modp);
@@ -924,29 +926,20 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		// normalize
 		gcdmodc = (gcdmodc * substitute_last(gcdlcoeffs,X,c)) / gcdmodc.integer_lcoeff();
 
-		// compare the new gcd with the old
-		int comp=0;
-		if (res.is_zero())
-			comp=-1;
-		else
-			for (int i=0; i<(int)x.size()-1; i++)
-				if (gcdmodc[2+x[i]] != res[2+x[i]]) {
-					comp = gcdmodc[2+x[i]] - res[2+x[i]];
-					break;
-				}
-		
-		poly oldres(res);
+		int m = gcdmodc.degree(x[0]);
 		poly simple(poly::simple_poly(BHEAD X,c,1,a.modp));
 
 		// if power is smaller, the old one was wrong
-		if (comp < 0) {
+		if (res.is_zero() || m < l) {
+			l = m;
+			oldres = res;
 			res = gcdmodc;
 			newshape = gcdmodc;
 			modpoly = simple;
 		}
-		else if (comp == 0) {
+		else if (m == l) {
+			oldres = res;
 			// equal powers, so interpolate results
-
 			poly coeff_poly(substitute_last(modpoly,X,c));
 			WORD coeff_word = coeff_poly[2+AN.poly_num_vars] * coeff_poly[3+AN.poly_num_vars];
 			if (coeff_word < 0) coeff_word += a.modp;
@@ -960,7 +953,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		// check whether this is the complete gcd
 		if (res==oldres) {
 			poly nres = res / content_multivar(res, X);
-			if (poly::divides(nres,a) && poly::divides(nres,b)) {
+			if (poly::divides(nres,ppa) && poly::divides(nres,ppb)) {
 #ifdef DEBUG
 				cout << "*** [" << thetime() << "]  RES : gcd_modular_dense_interpolation(" << a << "," << b << ","
 						 << x << "," << lc << "," << s <<") = " << gcdconts * nres << endl;
@@ -1023,8 +1016,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 	while (true) {
 		// choose a prime and solve modulo the prime
-		WORD p = a.modp;
-		if (p==0) p = NextPrime(BHEAD pnum++);
+		WORD p = NextPrime(BHEAD pnum++);
 		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
 		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
 
@@ -1045,7 +1037,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 		if (deg < mindeg) {
 			// small degree, so the old one is wrong
-    	d=c; 
+			d=c;
 			d.modp=a.modp;
 			d.modn=a.modn;
 			m1 = poly(BHEAD p);
