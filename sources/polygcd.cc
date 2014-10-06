@@ -1087,7 +1087,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 		}
 #ifdef DEBUG
 		MesPrint("*** [" << thetime() << "] Retrying modular_gcd with new prime");
-#ifdef
+#endif
 	}
 }
 
