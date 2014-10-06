@@ -999,14 +999,12 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 	POLY_GETIDENTITY(origa);
 
-	// multiply a and b with gcd(lcoeffs), so that a gcd with
-	// lc(gcd)=lcoeff exists
-	poly lcoeffa(origa.lcoeff_univar(x[0]));
-	poly lcoeffb(origb.lcoeff_univar(x[0]));
-	poly lcoeff(gcd(lcoeffa,lcoeffb));
-
-	poly a(lcoeff * origa);
-	poly b(lcoeff * origb);
+	poly ac = integer_content(origa);
+	poly bc = integer_content(origb);
+	poly a(origa / ac);
+	poly b(origb / bc);
+	poly ic = integer_gcd(ac, bc);
+	poly g = integer_gcd(a.integer_lcoeff(), b.integer_lcoeff());
 
 	int pnum=0;
  	
@@ -1020,7 +1018,8 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
 		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
 
-		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(lcoeff,p),poly(d,p)));
+		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(g,p),poly(d,p)));
+		c = (c * poly(g,p)) / c.integer_lcoeff(); // normalize so that lcoeff(c) = g mod p
 
 		if (c.is_zero()) {
 			// unlucky choices somewhere, so start all over again
@@ -1082,10 +1081,13 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 			ppd /= content_univar(ppd,x[0]);
 #ifdef DEBUG
 			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << origa << "," << origb << "," << x << ") = "
-					 << ppd << endl;
+					 << ic * ppd << endl;
 #endif
-			return ppd;
+			return ic * ppd;
 		}
+#ifdef DEBUG
+		MesPrint("*** [" << thetime() << "] Retrying modular_gcd with new prime");
+#ifdef
 	}
 }
 
