@@ -188,7 +188,8 @@ std::ostream& operator<< (std::ostream &, const poly &);
  */
 inline void poly::check_memory (int i) {
 	POLY_GETIDENTITY(*this);
-	if (i + 2 + AN.poly_num_vars + AM.MaxTal >= size_of_terms) expand_memory(i + AM.MaxTal);
+	if (i + 3 + AN.poly_num_vars + AM.MaxTal >= size_of_terms) expand_memory(i + AM.MaxTal);
+//  Used to be i+2 but there should also be space for a trailing zero
 }
 
 // indexing operators

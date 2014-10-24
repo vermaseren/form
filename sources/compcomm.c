@@ -757,7 +757,12 @@ int CoFormat(UBYTE *s)
 			x = 39;
 		}
 		AO.DoubleFlag = 0;
-		AC.OutputMode = 0;
+/*
+		The next line resets the mode to normal. Because the special modes
+		reset the line length we have a little problem with the special modes
+		and customized line length. We try to improve by removing the next line
+*/
+/*		AC.OutputMode = 0;  */
 		AC.LineLength = x;
 		if ( *s != 0 ) {
 			error = 1;

@@ -234,6 +234,7 @@ int FindVar(WORD *v, WORD *term)
 					a = f + ARGHEAD; astop = f + *f;
 					while ( a < astop ) {
 						if ( FindVar(v,a) == 1 ) return(1);
+						a += *a;
 					}
 					f = astop;
 				}
@@ -783,7 +784,7 @@ SkipCond:
 }
 
 /*
- 		#] DoIfStatement :
+ 		#] DoIfStatement : 
  		#[ HowMany :					WORD HowMany(ifcode,term)
 
 		Returns the number of times that the pattern in ifcode
@@ -1017,6 +1018,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement :
+  	#] If statement : 
 */
 

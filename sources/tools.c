@@ -110,7 +110,7 @@ UBYTE *LoadInputFile(UBYTE *filename, int type)
 	filesize = BASEPOSITION(scrpos);
 	PUTZERO(scrpos);
 	SeekFile(handle,&scrpos,SEEK_SET);
-	buffer = (UBYTE *)Malloc1(filesize+1,"LoadInputFile");
+	buffer = (UBYTE *)Malloc1(filesize+2,"LoadInputFile");
 	if ( ReadFile(handle,buffer,filesize) != filesize ) {
 		Error1("Read error for file ",name);
 		M_free(buffer,"LoadInputFile");
@@ -118,7 +118,13 @@ UBYTE *LoadInputFile(UBYTE *filename, int type)
 		return(0);
 	}
 	CloseFile(handle);
-	buffer[filesize] = 0;
+	if ( type == PROCEDUREFILE || type == SETUPFILE ) {
+		buffer[filesize] = '\n';
+		buffer[filesize+1] = 0;
+	}
+	else {
+		buffer[filesize] = 0;
+	}
 	return(buffer);
 }
 

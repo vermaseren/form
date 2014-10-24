@@ -528,6 +528,45 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 		}
 /*
  		#] islyndon/tolyndon : 
+ 		#[ addarg :
+*/
+		else if ( StrICmp(s,(UBYTE *)"addargs" ) == 0 ) {
+			type = ADDARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+ 		#] addarg : 
+ 		#[ mularg :
+
+		else if ( ( StrICmp(s,(UBYTE *)"mulargs" ) == 0 )
+			   || ( StrICmp(s,(UBYTE *)"multiplyargs" ) == 0 ) ) {
+			type = MULTIPLYARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+
+ 		#] mularg : 
 */
 		else {
 			MesPrint("&Unknown transformation inside a Transform statement: %s",s);
@@ -614,6 +653,16 @@ hit:;
 						if ( RunCycle(BHEAD fun,args,info) ) goto abo;
 						out = fun + fun[1];
 						break;
+					case ADDARG:
+						if ( RunAddArg(BHEAD fun,args) ) goto abo;
+						out = fun + fun[1];
+						break;
+/*
+					case MULTIPLYARG:
+						if ( RunMulArg(BHEAD fun,args) ) goto abo;
+						out = fun + fun[1];
+						break;
+*/
 					case ISLYNDON:
 						if ( ( retval = RunIsLyndon(BHEAD fun,args,1) ) < -1 ) goto abo;
 						goto returnvalues;
@@ -1911,7 +1960,7 @@ OverWork:;
 }
 
 /*
- 		#] RunExplode :
+ 		#] RunExplode : 
  		#[ RunPermute :
 */
 
@@ -2244,6 +2293,92 @@ OverWork:;
 
 /*
  		#] RunCycle : 
+ 		#[ RunAddArg :
+*/
+
+WORD RunAddArg(PHEAD WORD *fun, WORD *args)
+{
+	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2;
+	WORD scribble[10+ARGHEAD];
+	LONG space;
+	if ( *args != ARGRANGE ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal range encountered in RunAddArg");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( functions[fun[0]-FUNCTION].spec == TENSORFUNCTION ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal attempt to add arguments of a tensor in AddArg");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	arg1 = args[1];
+	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	arg2 = args[2];
+	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+/*
+	We need to:
+		1: establish that we actually need to add something
+		2: start a sort
+		3: if needed, convert arguments to long arguments
+		4: send (terms in) argument to StoreTerm
+		5: EndSort and copy the result back into the function
+	Note that the function is in the workspace, above the term and no
+	relevant information is trailing it.
+*/
+	if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	if ( arg2 > totarg ) return(0);
+	num = arg2-arg1+1;
+	if ( num == 1 ) return(0);
+	f = fun+FUNHEAD; n = 1; i = 0;
+	while ( n < arg1 ) { n++; NEXTARG(f) }
+	f1 = f;
+	NewSort(BHEAD0);
+	while ( n <= arg2 ) {
+		if ( *f > 0 ) {
+			f2 = f + *f; f += ARGHEAD;
+			while ( f < f2 ) { StoreTerm(BHEAD f); f += *f; }
+		}
+		else if ( *f == -SNUMBER && f[1] == 0 ) {
+			f+= 2;
+		}
+		else {
+			ToGeneral(f,scribble,1);
+			StoreTerm(BHEAD scribble);
+			NEXTARG(f);
+		}
+		n++;
+	}
+	if ( EndSort(BHEAD tstop+ARGHEAD,0) ) return(-1);
+	num = 0;
+	f2 = tstop+ARGHEAD;
+	while ( *f2 ) { f2 += *f2; num++; }
+	*tstop = f2-tstop;
+	for ( n = 1; n < ARGHEAD; n++ ) tstop[n] = 0;
+	if ( num == 1 && ToFast(tstop,tstop) == 1 ) {
+		f2 = tstop; NEXTARG(f2);
+	}
+/*
+	Copy the trailing arguments after the new argument, then copy the whole back.
+*/
+	while ( f < tstop ) *f2++ = *f++;
+	while ( f < f2 ) *f1++ = *f++;
+	space = f1 - fun;
+	if ( (space+8)*sizeof(WORD) > (UWORD)AM.MaxTer ) {
+		MLOCK(ErrorMessageLock);
+		MesWork();
+		MUNLOCK(ErrorMessageLock);
+		return(-1);
+	}
+	fun[1] = (WORD)space;
+	return(0);
+}
+
+/*
+ 		#] RunAddArg : 
  		#[ RunIsLyndon :
 
 		Determines whether the range constitutes a Lyndon word.

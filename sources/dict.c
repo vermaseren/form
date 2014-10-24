@@ -276,7 +276,6 @@ UBYTE *FindSymbol(WORD num)
 
 UBYTE *FindVector(WORD num)
 {
-	num -= AM.OffsetVector;
 	if ( AO.CurrentDictionary > 0 ) {
 		DICTIONARY *dict = AO.Dictionaries[AO.CurrentDictionary-1];
 		int i;
@@ -288,6 +287,7 @@ UBYTE *FindVector(WORD num)
 			}
 		}
 	}
+	num -= AM.OffsetVector;
 	return(VARNAME(vectors,num));
 }
 
@@ -298,7 +298,6 @@ UBYTE *FindVector(WORD num)
 
 UBYTE *FindIndex(WORD num)
 {
-	num -= AM.OffsetIndex;
 	if ( AO.CurrentDictionary > 0 ) {
 		DICTIONARY *dict = AO.Dictionaries[AO.CurrentDictionary-1];
 		int i;
@@ -310,6 +309,7 @@ UBYTE *FindIndex(WORD num)
 			}
 		}
 	}
+	num -= AM.OffsetIndex;
 	return(VARNAME(indices,num));
 }
 
@@ -320,7 +320,6 @@ UBYTE *FindIndex(WORD num)
 
 UBYTE *FindFunction(WORD num)
 {
-	num -= FUNCTION;
 	if ( AO.CurrentDictionary > 0 ) {
 		DICTIONARY *dict = AO.Dictionaries[AO.CurrentDictionary-1];
 		int i;
@@ -332,6 +331,7 @@ UBYTE *FindFunction(WORD num)
 			}
 		}
 	}
+	num -= FUNCTION;
 	return(VARNAME(functions,num));
 }
 
@@ -679,7 +679,7 @@ Compositeness:;
 				if ( s[2] < 0 ) type = DICT_VECTOR;
 				else            type = DICT_INDEX;
 				number = 1;
-				where = s;
+				where = s+2;
 				break;
 			default:
 				if ( *s < FUNCTION ) {
@@ -688,7 +688,9 @@ Compositeness:;
 				}
 				if ( s[1] == FUNHEAD ) {
 					type = DICT_FUNCTION;
-					number = s[0];
+					number = 1;
+					where = s;
+					break;
 				}
 				else {
 					type = DICT_FUNCTION_WITH_ARGUMENTS;

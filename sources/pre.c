@@ -5735,9 +5735,9 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 			fstring++;
 			if ( *fstring == '$' ) {
 				UBYTE *dolalloc;
+				number = AO.OutSkip;
 dodollar:
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
-				number = AO.OutSkip;
 				if ( AC.OutputMode == FORTRANMODE
 				 || AC.OutputMode == PFORTRANMODE ) {
 					number = 7;

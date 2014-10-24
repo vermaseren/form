@@ -1695,6 +1695,7 @@ bucketstolen:;
 				}
 				AB[0]->R.outfile = oldoutfile;
 				AB[0]->R.hidefile->POfull = AB[0]->R.hidefile->POfill;
+				AB[0]->R.expflags = AR.expflags;
 				UNLOCK(AS.outputslock);
 
 				if ( fout->handle >= 0 ) {	/* Now get rid of the file */

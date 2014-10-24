@@ -650,6 +650,7 @@ typedef int (*TFUN1)();
 #define UNHIDEGEXPRESSION 16
 #define INTOHIDELEXPRESSION 17
 #define INTOHIDEGEXPRESSION 18
+#define SPECTATOREXPRESSION 19
 
 #define PRINTOFF 0
 #define PRINTON 1
@@ -950,6 +951,8 @@ typedef int (*TFUN1)();
 #define ISLYNDONR   14
 #define TOLYNDON    15
 #define TOLYNDONR   16
+#define ADDARG      17
+#define MULTIPLYARG 18
 
 #define BASECODE 1
 #define YESLYNDON 1

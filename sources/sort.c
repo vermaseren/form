@@ -875,7 +875,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 					else if ( newout->handle >= 0 ) {	/* output too large */
 TooLarge:
 						MLOCK(ErrorMessageLock);
-						MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
+						MesPrint("(1)Output should fit inside a single term. Increase MaxTermSize?");
 						MesCall("EndSort");
 						MUNLOCK(ErrorMessageLock);
 						retval = -1; goto RetRetval;
@@ -1042,7 +1042,7 @@ RetRetval:
 		else if ( newout ) {
 		  if ( newout->handle >= 0 ) {
 			MLOCK(ErrorMessageLock);
-			MesPrint("Output should fit inside a single term. Increase MaxTermSize?");
+			MesPrint("(2)Output should fit inside a single term. Increase MaxTermSize?");
 			MesCall("EndSort");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);

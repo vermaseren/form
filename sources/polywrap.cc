@@ -550,14 +550,22 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	// Calculate result
 	if (den1 != den2) {
 		gcd = polygcd::gcd(den1,den2);
+#ifdef OLDADDITION
 		num = num1*(den2/gcd) + num2*(den1/gcd);
 		den = (den1/gcd)*den2;
+		gcd = polygcd::gcd(num,den);
+#else
+		den = den1/gcd;
+		num = num1*(den2/gcd) + num2*den;
+		den = den*den2;
+		gcd = polygcd::gcd(num,gcd);
+#endif
 	}
 	else {
 		num = num1 + num2;
 		den = den1;
+		gcd = polygcd::gcd(num,den);
 	}
-	gcd = polygcd::gcd(num,den);
 
 	num /= gcd;
 	den /= gcd;
@@ -569,6 +577,8 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	if (num.size_of_form_notation() + den.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
+		MesPrint ("(1) num size = %d, den size = %d,  MaxTer = %d",num.size_of_form_notation(),
+				den.size_of_form_notation(),AM.MaxTer);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -693,6 +703,8 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	if (num1.size_of_form_notation() + den1.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
+		MesPrint ("(2) num size = %d, den size = %d,  MaxTer = %d",num1.size_of_form_notation(),
+				den1.size_of_form_notation(),AM.MaxTer);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}

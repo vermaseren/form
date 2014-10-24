@@ -296,7 +296,7 @@ int CoSave(UBYTE *inp)
 #endif
 
 	if ( !*p ) return(MesPrint("No filename in save statement"));
-	if ( FG.cTable[*p] && ( *p != SEPARATOR ) && ( *p != ALTSEPARATOR ) )
+	if ( FG.cTable[*p] > 1 && ( *p != '.' ) && ( *p != SEPARATOR ) && ( *p != ALTSEPARATOR ) )
 				return(MesPrint("Illegal filename"));
 	while ( *++p && *p != ',' ) {}
 	c = *p;
@@ -490,7 +490,7 @@ int CoLoad(UBYTE *inp)
 		if ( *p == 's' || *p == 'S' ) {
 			silentload = 1;
 			while ( *p && ( *p != ',' && *p != '-' && *p != '+'
-			&& *p != SEPARATOR && *p != ALTSEPARATOR ) ) p++;
+			&& *p != SEPARATOR && *p != ALTSEPARATOR && *p != '.' ) ) p++;
 		}
 		else if ( *p != ',' ) {
 			return(MesPrint("Illegal option in Load statement"));
@@ -499,7 +499,7 @@ int CoLoad(UBYTE *inp)
 	}
 	inp = p;
 	if ( !*p ) return(MesPrint("No filename in load statement"));
-	if ( FG.cTable[*p] && ( *p != SEPARATOR ) && ( *p != ALTSEPARATOR ) )
+	if ( FG.cTable[*p] > 1 && ( *p != '.' ) && ( *p != SEPARATOR ) && ( *p != ALTSEPARATOR ) )
 				return(MesPrint("Illegal filename"));
 	while ( *++p && *p != ',' ) {}
 	c = *p;

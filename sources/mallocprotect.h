@@ -258,7 +258,7 @@ static void segv_handler(int sig, siginfo_t *sip, void *xxx) {
 		if(actionBeforeExit<0)/*After changing loopForever=0, unprotect the page to continue:*/
 			mprotect((char*)alignedAdr, pageSize, PROT_READ | PROT_WRITE);
 		if(actionBeforeExit>0)/*After changing loopForever=0, map the page to continue:*/
-			mmap((void*)alignedAdr,pageSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);			
+			mmap((void*)alignedAdr,pageSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);
 	}/*Block*/
 }/*segv_handler*/
 

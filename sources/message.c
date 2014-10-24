@@ -450,7 +450,8 @@ va_dcl
 					*t = 0;
 					AddToLine((UBYTE *)Out);
 					if ( d->nfactors >= 1 && AN.listinprint[2] == DOLLAREXPR2 ) {
-						if ( d->type == 0 || d->factors == 0 ) goto dollarzero;
+						if ( d->type == 0 ||
+						 ( d->factors == 0 && d->nfactors != 1 ) ) goto dollarzero;
 						num = EvalDoLoopArg(BHEAD AN.listinprint+2,-1);
 						if ( num == 0 ) {
 							value[0] = 4; value[1] = d->nfactors; value[2] = 1; value[3] = 3; value[4] = 0;
