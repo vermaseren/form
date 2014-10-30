@@ -727,7 +727,10 @@ TestDouble:;
 	for ( i = 0; i < number; i++ ) new->lhs[i] = where[i];
 	new->lhs[i] = 0;
 	r = (UBYTE *)(new->rhs);
-	while ( *right ) *r++ = *right++;
+	while ( *right ) {
+		if ( *right == '\\' && ( right[1] == '`' || right[1] == '\'' ) ) right++;
+		*r++ = *right++;
+	}
 	*r = 0;
 
 	dict->elements[dict->numelements++] = new;
