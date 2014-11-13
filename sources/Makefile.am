@@ -244,4 +244,4 @@ endif
 endif
 
 dist-hook:
-	$(SHELL) $(top_srcdir)/gendate.sh -c $(srcdir)/production-date.h $(distdir)/production-date.h "$(DATE)"
+	$(SHELL) $(top_srcdir)/scripts/gendate.sh -c $(srcdir)/production-date.h $(distdir)/production-date.h "$(DATE)"
