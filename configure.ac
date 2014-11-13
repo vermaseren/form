@@ -10,6 +10,7 @@ AC_PREREQ(2.59)
 AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR([build-aux])
 
 dnl Use the serial-tests option if automake >= 1.13.
 dnl Assume the automake command is ${AUTOMAKE:-automake} as autoreconf does.

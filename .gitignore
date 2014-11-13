@@ -6,18 +6,13 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
-compile
+build-aux/
 config.cache
-config.guess
 config.h
 config.h.in
 config.log
 config.status
-config.sub
 configure
-depcomp
-install-sh
-missing
 stamp-h1
 
 sources/form
