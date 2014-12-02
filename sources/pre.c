@@ -5733,7 +5733,53 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 		}
 		else if ( *fstring == '%' ) {
 			fstring++;
-			if ( *fstring == '$' ) {
+			if ( *fstring == 'd' ) {
+				int sign,dig;
+				LONG x;
+				number = -1;
+donumber:
+				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+				sign = 1;
+				while ( *s == '+' || *s == '-' ) {
+					if ( *s == '-' ) sign = -sign;
+					s++;
+				}
+				dig = 0; ss = s; if ( sign < 0 ) { ss--; *ss = '-'; dig++; }
+				while ( *s >= '0' && *s <= '9' ) { x = 10*x+(*s++-'0'); dig++; }
+				if ( number < 0 ) {
+					while ( ss < s ) {
+						if ( to >= stopper ) {
+							num = to - Out;
+							WriteString(wtype,Out,num);
+							to = Out;
+						}
+						if ( *ss == '\\' ) ss++;
+						*to++ = *ss++;
+					}
+				}
+				else {
+					if ( number < dig ) { dig = number; ss = s - dig; }
+					while ( number > dig ) {
+						if ( to >= stopper ) {
+							num = to - Out;
+							WriteString(wtype,Out,num);
+							to = Out;
+						}
+						*to++ = ' '; number--;
+					}
+					while ( ss < s ) {
+						if ( to >= stopper ) {
+							num = to - Out;
+							WriteString(wtype,Out,num);
+							to = Out;
+						}
+						if ( *ss == '\\' ) ss++;
+						*to++ = *ss++;
+					}
+				}
+				fstring++;
+			}
+			else if ( *fstring == '$' ) {
 				UBYTE *dolalloc;
 				number = AO.OutSkip;
 dodollar:
@@ -6053,6 +6099,7 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 					number = 10*number + *fstring++ - '0';
 				}
 				if ( *fstring == 'O' ) goto dooptim;
+				else if ( *fstring == 'd' ) goto donumber;
 				else if ( *fstring == '$' ) goto dodollar;
 				else if ( *fstring == 'X' || *fstring == 'x' ) {
 					if ( number > 0 && number <= cbuf[AM.sbufnum].numrhs ) {

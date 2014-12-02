@@ -222,6 +222,7 @@
 #define ISLESSPOS(pp1,pp2) ( (pp1).p1 < (pp2).p1 )
 #define ISGEPOS(pp1,pp2) ( (pp1).p1 >= (pp2).p1 )
 #define ISNOTZEROPOS(pp) ( (pp).p1 != 0 )
+#define ISZEROPOS(pp) ( (pp).p1 == 0 )
 #define ISPOSPOS(pp) ( (pp).p1 > 0 )
 #define ISNEGPOS(pp) ( (pp).p1 < 0 )
 extern VOID TELLFILE(int,POSITION *);
@@ -1127,7 +1128,7 @@ extern int    FindTableTree(TABLES,WORD *,int);
 extern void   finishcbuf(WORD);
 extern void   clearcbuf(WORD);
 extern void   CleanUpSort(int);
-extern FILEHANDLE *AllocFileHandle(VOID);
+extern FILEHANDLE *AllocFileHandle(WORD,char *);
 extern VOID   DeAllocFileHandle(FILEHANDLE *);
 extern VOID   LowerSortLevel(VOID);
 extern int    InsideDollar(PHEAD WORD *,WORD);
@@ -1234,7 +1235,7 @@ extern int    BalanceRunThread(PHEAD int,WORD *,WORD);
 extern void   WakeupThread(int,int);
 extern int    MasterWait(VOID);
 extern int    InParallelProcessor(VOID);
-extern int    ThreadsProcessor(EXPRESSIONS,WORD);
+extern int    ThreadsProcessor(EXPRESSIONS,WORD,WORD);
 extern int    MasterMerge(VOID);
 extern int    PutToMaster(PHEAD WORD *);
 extern void   SetWorkerFiles(VOID);
@@ -1458,6 +1459,15 @@ extern UBYTE *FindFunWithArgs(WORD *t);
 extern UBYTE *FindExtraSymbol(WORD num);
 extern LONG DictToBytes(DICTIONARY *dict,UBYTE *buf);
 extern DICTIONARY *DictFromBytes(UBYTE *buf);
+extern int CoCreateSpectator(UBYTE *inp);
+extern int CoToSpectator(UBYTE *inp);
+extern int CoRemoveSpectator(UBYTE *inp);
+extern int CoEmptySpectator(UBYTE *inp);
+extern int CoCopySpectator(UBYTE *inp);
+extern int PutInSpectator(WORD *,WORD);
+extern void ClearSpectators(WORD);
+extern WORD GetFromSpectator(WORD *,WORD);
+extern void FlushSpectators(VOID);
 
 /*
   	#] Declarations : 

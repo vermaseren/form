@@ -49,6 +49,7 @@ SRCBASE = \
 	setfile.c \
 	smart.c \
 	sort.c \
+	spectator.c \
 	startup.c \
 	store.c \
 	structs.h \

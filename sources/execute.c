@@ -70,6 +70,7 @@ WORD CleanExpr(WORD par)
 		if ( e_in->status == HIDDENLEXPRESSION
 		|| e_in->status == HIDDENGEXPRESSION ) numhid++;
 		switch ( e_in->status ) {
+			case SPECTATOREXPRESSION:
 			case LOCALEXPRESSION:
 			case HIDDENLEXPRESSION:
 				if ( par ) {
@@ -189,6 +190,7 @@ WORD CleanExpr(WORD par)
 		AR.hidefile->POfill = AR.hidefile->PObuffer;
 		PUTZERO(AR.hidefile->POposition);
 	}
+	FlushSpectators();
 	return(0);
 }
 
@@ -439,6 +441,12 @@ VOID MakeGlobal()
 	AO.gNumDictionaries = AO.NumDictionaries;
 	for ( i = 0; i < AO.NumDictionaries; i++ ) {
 		AO.Dictionaries[i]->gnumelements = AO.Dictionaries[i]->numelements;
+	}
+	if ( AM.NumSpectatorFiles > 0 ) {
+		for ( i = 0; i < AM.SizeForSpectatorFiles; i++ ) {
+			if ( AM.SpectatorFiles[i].name != 0 )
+					AM.SpectatorFiles[i].flags |= GLOBALSPECTATORFLAG;
+		}
 	}
 }
 
@@ -941,6 +949,7 @@ skipexec:
 			PruneExtraSymbols(AM.ggnumextrasym);
 			IniVars();
 		}
+		ClearSpectators(par);
 	}
 	else {
 		if ( CleanExpr(0) ) RetCode = -1;

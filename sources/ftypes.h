@@ -557,6 +557,7 @@ typedef int (*TFUN1)();
 #define TYPEENDDOLOOP 75
 #define TYPEDROPSYMBOLS 76
 #define TYPEPUTINSIDE 77
+#define TYPETOSPECTATOR 78
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
 */
@@ -1013,4 +1014,7 @@ typedef int (*TFUN1)();
 #define DICT_FUNCTION_WITH_ARGUMENTS 7
 #define DICT_SPECIALCHARACTER 8
 #define DICT_RANGE 9
+
+#define READSPECTATORFLAG 3
+#define GLOBALSPECTATORFLAG 1
 

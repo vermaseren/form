@@ -672,7 +672,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			ss[over] = 0;
 			sSpace = ComPress(ss,&spare);
 			S->TermsLeft -= over - spare;
-			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(); }
+			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 		}
 		else if ( S != AT.S0 ) {
 			ss[over] = 0;
@@ -762,7 +762,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			goto RetRetval;
 		}
 	}
-	else if ( par == 1 && newout == 0 ) { AR.outfile = newout = AllocFileHandle(); }
+	else if ( par == 1 && newout == 0 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 	sSpace++;
 	lSpace = sSpace + (S->lFill - S->lBuffer) - (LONG)S->lPatch*(AM.MaxTer/sizeof(WORD));
 /*         Note wrt MaxTer and lPatch: each patch starts with space for decompression */
@@ -779,7 +779,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		if ( S->lPatch > 0 || S->file.handle >= 0 ) { WriteStats(&pp,0); }
 		AC.LogHandle = oldLogHandle;
 	}
-	if ( par == 2 ) { AR.outfile = newout = AllocFileHandle(); }
+	if ( par == 2 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 	if ( S->lPatch > 0 ) {
 		if ( ( S->lPatch >= S->MaxPatches ) ||
 			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer) ) >= S->lTop ) ) {

@@ -3316,6 +3316,10 @@ NextI:;
 					}
 					else if ( t[1] == *u+FUNHEAD+2 ) goto NormZero;
 				}
+				else {
+					u = t+FUNHEAD; NEXTARG(u);
+					if ( *u == -SNUMBER && u[1] == 0 ) goto NormInf;
+				}
 				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
 				k = t[1];
 				NCOPY(m,t,k);
@@ -3924,19 +3928,19 @@ NormInf:
 	MLOCK(ErrorMessageLock);
 	MesPrint("Division by zero during normalization");
 	MUNLOCK(ErrorMessageLock);
-	goto NormMin;
+	Terminate(-1);
 
 NormZZ:
 	MLOCK(ErrorMessageLock);
 	MesPrint("0^0 during normalization of term");
 	MUNLOCK(ErrorMessageLock);
-	goto NormMin;
+	Terminate(-1);
 
 NormPRF:
 	MLOCK(ErrorMessageLock);
 	MesPrint("0/0 in polyratfun during normalization of term");
 	MUNLOCK(ErrorMessageLock);
-	goto NormMin;
+	Terminate(-1);
 
 NormZero:
 	*term = 0;

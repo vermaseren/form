@@ -698,6 +698,16 @@ typedef struct StreaM {
 	PADPOSITION(6,3,9,0,4);
 } STREAM;
 
+typedef struct SpecTatoR {
+	POSITION position;   /* The place where we will be writing */
+	POSITION readpos;    /* The place from which we read */
+	FILEHANDLE *fh;
+	char *name;          /* We identify the spectator by the name of the expression */
+	WORD exprnumber;     /* During running we use the number. */
+	WORD flags;          /* local, global? */
+	PADPOSITION(2,0,0,2,0);
+} SPECTATOR;
+
 /*
   	#] Files : 
   	#[ Traces :
@@ -1291,6 +1301,7 @@ struct M_const {
 	UBYTE   *gextrasym;
 	UBYTE   *ggextrasym;
     UBYTE   *oldnumextrasymbols;
+	SPECTATOR *SpectatorFiles;
 #ifdef WITHPTHREADS
     pthread_rwlock_t handlelock;   /* (M) */
     pthread_mutex_t storefilelock; /* (M) */
@@ -1320,6 +1331,7 @@ struct M_const {
     LONG    gThreadBucketSize;     /* (C) */
     LONG    ggThreadBucketSize;    /* (C) */
     LONG    SumTime;               /*     Used in .clear */
+    LONG    SpectatorSize;         /*     Size of the buffer in bytes */
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
     int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
@@ -1375,6 +1387,8 @@ struct M_const {
     int     ggOldFactArgFlag;
     int     gnumextrasym;
     int     ggnumextrasym;
+	int		NumSpectatorFiles;     /* Elements used in AM.spectatorfiles; */
+	int		SizeForSpectatorFiles; /* Size in AM.spectatorfiles; */
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1428,9 +1442,9 @@ struct M_const {
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,55,76,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,57,76,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,55,76,0);
+	PADPOSITION(17,23,57,76,0);
 #endif
 };
 /*
@@ -2347,12 +2361,14 @@ typedef struct FixedGlobals {
 	WCN		Operation[8];
 	WCN2	OperaFind[6];
 	char	*VarType[10];
-	char	*ExprStat[17];
+	char	*ExprStat[20];
 	char	*FunNam[2];
 	char	*swmes[3];
 	char	*fname;
 	char	*fname2;
 	UBYTE	*s_one;
+	WORD	fnamebase;
+	WORD	fname2base;
 	UINT	cTable[256];
 } FIXEDGLOBALS;
 
