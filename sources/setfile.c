@@ -92,7 +92,6 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"smallsize",             NUMERICALVALUE, 0, (LONG)SMALLBUFFER}
 	,{(UBYTE *)"sortiosize",            NUMERICALVALUE, 0, (LONG)SORTIOSIZE}
 	,{(UBYTE *)"sorttype",                 STRINGVALUE, 0, (LONG)lowfirst}
-	,{(UBYTE *)"spectatorsize",         NUMERICALVALUE, 0, (LONG)SPECTATORSIZE}
 	,{(UBYTE *)"subfilepatches",        NUMERICALVALUE, 0, (LONG)SMAXFPATCHES}
 	,{(UBYTE *)"sublargepatches",       NUMERICALVALUE, 0, (LONG)SMAXPATCHES}
 	,{(UBYTE *)"sublargesize",          NUMERICALVALUE, 0, (LONG)SLARGEBUFFER}
@@ -577,8 +576,6 @@ int AllocSetups()
 	AM.SMaxFpatches = sp->value;
 	sp = GetSetupPar((UBYTE *)"subsortiosize");
 	AM.SIOsize = sp->value;
-	sp = GetSetupPar((UBYTE *)"spectatorsize");
-	AM.SpectatorSize = sp->value;
 /*
 	The next code is just for the moment (26-jan-1997) because we have
 	the new parts combined with the old. Once the old parts are gone
@@ -961,33 +958,32 @@ VOID AllocSortFileName(SORTING *sort)
  		#[ AllocFileHandle :
 */
 
-FILEHANDLE *AllocFileHandle(WORD par,char *name)
+FILEHANDLE *AllocFileHandle()
 {
 	GETIDENTITY
-	LONG allocation, Ssize;
+	LONG allocation;
 	FILEHANDLE *fh;
 	int i = 0;
 	char *s, *t;
 
 	s = FG.fname2; i = 0;
 	while ( *s ) { s++; i++; }
-	if ( par == 0 ) { i += 16; Ssize = AM.SIOsize; }
-	else { s = name; while ( *s ) { i++; s++; } i+= 2; Ssize = AM.SpectatorSize; }
+	i += 16;
+/*	i += 11; */
 
-	allocation = sizeof(FILEHANDLE) + (Ssize+1)*sizeof(WORD) + i*sizeof(char);
+	allocation = sizeof(FILEHANDLE) + (AM.SIOsize+1)*sizeof(WORD) + i*sizeof(char);
 	fh = (FILEHANDLE *)Malloc1(allocation,"FileHandle");
 
 	fh->PObuffer = (WORD *)(fh+1);
-	fh->POstop = fh->PObuffer+Ssize;
-	fh->POsize = Ssize * sizeof(WORD);
+	fh->POstop = fh->PObuffer+AM.SIOsize;
+	fh->POsize = AM.SIOsize * sizeof(WORD);
 	fh->active = 0;
 	fh->handle = -1;
 	PUTZERO(fh->POposition);
 #ifdef WITHPTHREADS
 	fh->pthreadslock = dummylock;
 #endif
-	if ( par == 0 ) {	/* sort file */
-	  if ( AM.S0 != 0 ) {
+	if ( AM.S0 != 0 ) {
 		fh->name = (char *)(fh->POstop + 1);
 		s = FG.fname2; t = fh->name;
 		while ( *s ) *t++ = *s++;
@@ -999,17 +995,8 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 		sprintf(t-1,"%d",AN.filenum);
 #endif
 		AN.filenum++;
-	  }
-	  else fh->name = 0;
 	}
-	else {	/* Spectator file */
-		fh->name = (char *)(fh->POstop + 1);
-		s = FG.fname; t = fh->name;
-		for ( i  = 0; i < FG.fnamebase; i++ ) *t++ = *s++;
-		s = name;
-		while ( *s ) *t++ = *s++;
-		*t = 0;
-	}
+	else fh->name = 0;
 	fh->POfill = fh->POfull = fh->PObuffer;
 	return(fh);
 }
