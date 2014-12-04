@@ -1634,6 +1634,12 @@ WORD execterm(PHEAD WORD *term, WORD level)
 	do {
 		AR.Cnumlhs = C->lhs[level][3];
 		NewSort(BHEAD0);
+/*
+		Normally for function arguments we do not use PolyFun/PolyRatFun.
+		Hence NewSort sets the corresponding variables to zero.
+		Here we overwrite that.
+*/
+		AN.FunSorts[AR.sLevel]->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
 		if ( buffer1 ) {
 			term = buffer1;
 			while ( *term ) {

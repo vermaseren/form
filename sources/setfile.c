@@ -828,10 +828,12 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	longerp += sizeof(WORD*) - (longerp%sizeof(WORD *));
 	longer++;
 	longer += sizeof(WORD*) - (longer%sizeof(WORD *));
+	if ( SmallSize < 16*AM.MaxTer ) SmallSize = 16*AM.MaxTer+16;
 	TermsInSmall = (TermsInSmall+15) & (-16L);
 	terms2insmall = 2*TermsInSmall;  /* Used to be just + 100 rather than *2 */
 	if ( SmallEsize < (SmallSize*3)/2 ) SmallEsize = (SmallSize*3)/2;
-	if ( SmallEsize < 3*AM.MaxTer ) SmallEsize = 3*AM.MaxTer;
+	if ( LargeSize > 0 && LargeSize < 2*SmallSize ) LargeSize = 2*SmallSize;
+/*	if ( SmallEsize < 3*AM.MaxTer ) SmallEsize = 3*AM.MaxTer; */
 	SmallEsize = (SmallEsize+15) & (-16L);
 	if ( LargeSize < 0 ) LargeSize = 0;
 	sortsize = sizeof(SORTING);

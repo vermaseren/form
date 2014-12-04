@@ -578,6 +578,7 @@ WORD NewSort(PHEAD0)
 				AM.SLargeSize,AM.SSmallSize,AM.SSmallEsize,AM.STermsInSmall
 					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize);
 		}
+		AN.FunSorts[AR.sLevel]->PolyFlag = 0;
 	}
 	AT.SS = S = AN.FunSorts[AR.sLevel];
 	S->sFill = S->sBuffer;
@@ -653,6 +654,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	/* PF_EndSort returned 0: for S != AM.S0 and slaves still do the regular sort */
 #endif /* WITHMPI */
 	oldoutfile = AR.outfile;
+/*		PolyFlag repair action
 	if ( S == AT.S0 ) {
 		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
 		S->PolyWise = 0;
@@ -660,6 +662,8 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	else {
 		S->PolyFlag = S->PolyWise = 0;
 	}
+*/
+	S->PolyWise = 0;
 	*(S->PoinFill) = 0;
 
 	SplitMerge(BHEAD S->sPointer,S->sTerms);
@@ -792,6 +796,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 					,S->lPatch,S->MaxPatches,S->lFill,sSpace,AM.MaxTer/sizeof(WORD),S->lTop);
 			MUNLOCK(ErrorMessageLock);
 #endif
+
 			if ( MergePatches(1) ) {
 				MLOCK(ErrorMessageLock);
 				MesCall("EndSort");
@@ -2292,6 +2297,7 @@ s1only:
 		}
 	}
 	else {
+		int oldPolyFlag;
 		tstop1 = s1 + s1[1];
 		s1 += FUNHEAD+ARGHEAD;
 twogen:
@@ -2300,6 +2306,7 @@ twogen:
 /*
 		Now we should merge the expressions in s1 and s2 into m.
 */
+		oldPolyFlag = AT.SS->PolyFlag;
 		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
 			i1 = CompareTerms(BHEAD s1,s2,(WORD)(-1));
@@ -2361,7 +2368,8 @@ twogen:
 			else w[1] = FUNHEAD+2;
 			if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) w[1] = FUNHEAD;
 		}
-		AT.SS->PolyFlag = AR.PolyFunType;
+/*		AT.SS->PolyFlag = AR.PolyFunType;*/
+		AT.SS->PolyFlag = oldPolyFlag;
 	}
 }
 
@@ -3344,7 +3352,9 @@ WORD MergePatches(WORD par)
 #endif
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
+/*	PolyFlag repair action
 	S->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
+*/
 NewMerge:
 	coef = AN.SoScratC;
 	poin = S->poina; poin2 = S->poin2a;
@@ -4089,13 +4099,18 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 	The small buffer is full. It has to be sorted and written.
 */
+/*	PolyFlag repair action
 		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType:0;
+*/
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
 /*
 		PrintTime();
 */
+
+MesPrint("In StoreTerm: SplitMerge at AR.sLevel = %d",AR.sLevel);
+
 		SplitMerge(BHEAD ss,over);
 		sSpace = 0;
 		if ( over > 0 ) {
@@ -4123,6 +4138,8 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 			The large buffer is too full. Merge and write it
 */
+
+MesPrint("In StoreTerm: MergePatches at AR.sLevel = %d",AR.sLevel);
 			if ( MergePatches(1) ) goto StoreCall;
 /*
 			pp = S->SizeInFile[1];

@@ -2935,7 +2935,7 @@ SkipCount:	level++;
 					olddummies = DetCurDum(BHEAD term);
 					if ( olddummies > AR.MaxDum ) AR.MaxDum = olddummies;
 				}
-				if ( AR.PolyFun > 0 && AR.sLevel <= 0 ) {
+				if ( AR.PolyFun > 0 && ( AR.sLevel <= 0 || AN.FunSorts[AR.sLevel]->PolyFlag > 0 ) ) {
 					if ( PrepPoly(BHEAD term) != 0 ) goto Return0;
 				}
 				if ( AR.sLevel <= 0 && AR.BracketOn ) {
