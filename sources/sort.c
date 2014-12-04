@@ -4108,9 +4108,6 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 		PrintTime();
 */
-
-MesPrint("In StoreTerm: SplitMerge at AR.sLevel = %d",AR.sLevel);
-
 		SplitMerge(BHEAD ss,over);
 		sSpace = 0;
 		if ( over > 0 ) {
@@ -4194,7 +4191,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm : 
+ 		#] StoreTerm :
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**
