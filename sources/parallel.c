@@ -3626,16 +3626,24 @@ int PF_InParallelProcessor(void)
 	GETIDENTITY
 	int i, next,tag;
 	EXPRESSIONS e;
+	/*
+	 * Skip expressions with zero terms. All the master and slaves need to
+	 * change the "partodo" flag.
+	 */
+	if ( PF.numtasks >= 3 ) {
+		for ( i = 0; i < NumExpressions; i++ ) {
+			e = Expressions + i;
+			if ( e->partodo > 0 && e->counter == 0 ) {
+				e->partodo = 0;
+			}
+		}
+	}
 	if(PF.me == MASTER){
 		if ( PF.numtasks >= 3 ) {
 			partodoexr = (WORD*)Malloc1(sizeof(WORD)*(PF.numtasks+1),"PF_InParallelProcessor");
 			for ( i = 0; i < NumExpressions; i++ ) {
 				e = Expressions+i;
 				if ( e->partodo <= 0 ) continue;
-				if ( e->counter == 0 ) { /* Expression with zero terms */
-					e->partodo = 0;
-					continue;
-				}
 				switch(e->status){
 					case LOCALEXPRESSION:
 					case GLOBALEXPRESSION:
