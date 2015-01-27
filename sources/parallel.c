@@ -2512,7 +2512,7 @@ int PF_CollectModifiedDollars(void)
 	 * If the current module was executed in the sequential mode,
 	 * there are no modified module on the slaves.
 	 */
-	if ( AC.mparallelflag != PARALLELFLAG ) return 0;
+	if ( AC.mparallelflag != PARALLELFLAG && !AC.partodoflag ) return 0;
 	/*
 	 * Count the number of (potentially) modified dollar variables, which we need to collect.
 	 * Here we need to collect all max/min/sum variables.
