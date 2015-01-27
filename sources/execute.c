@@ -637,7 +637,7 @@ WORD DoExecute(WORD par, WORD skip)
 		  for ( j = 0; j < NumModOptdollars; j++ ) 
 			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
 		  if ( j >= NumModOptdollars ) {
-			AC.parallelflag |= NOPARALLEL_DOLLAR;
+			AC.mparallelflag |= NOPARALLEL_DOLLAR;
 			break;
 		  }
 		}
