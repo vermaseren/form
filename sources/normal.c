@@ -3074,6 +3074,7 @@ NextI:;
 					NCOPY(m,t,k);
 				}
 			}
+#ifdef WITHPOLYRATFUNINV
 			else if ( *t == AR.PolyFunInv && AR.PolyFunType == 2 ) {
 /*
 				If there are two arguments, exchange them, change the
@@ -3107,6 +3108,7 @@ NextI:;
 					goto regularratfun;
 				}
 			}
+#endif
 			else if ( *t == AR.PolyFun ) {
 			  if ( AR.PolyFunType == 1 ) { /* Regular PolyFun with one argument */
 				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
@@ -3116,7 +3118,9 @@ NextI:;
 				NCOPY(m,t,k);
 			  }
 			  else if ( AR.PolyFunType == 2 ) { /* PolyRatFun. Two arguments */
+#ifdef WITHPOLYRATFUNINV
 regularratfun:;
+#endif
 /*
 				First check for zeroes.
 */
