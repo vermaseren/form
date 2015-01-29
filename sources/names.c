@@ -1481,6 +1481,12 @@ retry:;
 			else {
 /*				FUNCTIONS fun = (FUNCTIONS)(AC.Functions->lijst) + numfunction-FUNCTION; */
 				FUNCTIONS fun = (FUNCTIONS)(AC.Functions->lijst) + numfunction;
+
+				if ( fun->tabl != 0 ) {
+					MesPrint("&Illegal attempt to change table into function");
+					error = 1;
+				}
+
 				fun->complex = cplx;
 				fun->commute = comm;
 				if ( istensor && fun->spec == 0 ) {
@@ -1628,6 +1634,10 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	}
 	if ( functions[funnum].spec > 0 ) {
 		MesPrint("&Tensors cannot become tables");
+		return(1);
+	}
+	if ( functions[funnum].symmetric > 0 ) {
+		MesPrint("&Functions with nontrivial symmetrization properties cannot become tables");
 		return(1);
 	}
 	if ( functions[funnum].tabl ) {

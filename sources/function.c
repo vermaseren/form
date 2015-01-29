@@ -1568,6 +1568,7 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 	CBUF *C = cbuf+AT.ebufnum;
 	int ntwa = AN.NumTotWildArgs;
 	LONG oldcpointer = C->Pointer - C->Buffer;
+	WORD oldSignCheck = AN.SignCheck;
 	instart = inter;
 /*
 	Only active for the last function in the pattern.
@@ -1639,7 +1640,7 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 				if ( i >= AN.RepFunNum ) break;
 				inter += inter[1];
 			}
-			if ( inter >= AN.terstop ) { AT.WorkPointer = OldWork; return(0); }
+			if ( inter >= AN.terstop ) goto Failure;
 trythis:;
 		}
 		else {
@@ -1658,7 +1659,7 @@ trythis:;
 			if ( i >= AN.RepFunNum ) break;
 			inter += inter[1];
 		} while ( inter < AN.terstop );
-		if ( inter >= AN.terstop ) { AT.WorkPointer = OldWork; return(0); }
+		if ( inter >= AN.terstop ) goto Failure;
 #endif
 		wilds = 0;
 		/* We found one */
@@ -1757,7 +1758,7 @@ rewild:
 			}
 			if ( *inter < FUNCTION || functions[*inter-FUNCTION].commute ) {
 				newter = inter + inter[1];
-				if ( newter >= AN.terstop ) { AT.WorkPointer = OldWork; return(0); }
+				if ( newter >= AN.terstop ) goto Failure;
 				if ( *inter == GAMMA && inpat[1] <
 				inter[1] - AN.RepFunList[AN.RepFunNum-1] ) {
 					if ( ScanFunctions(BHEAD newpat,newter,2) ) goto OnSuccess;
@@ -1834,10 +1835,13 @@ maybenext:
 		}}
 		inter += inter[1];
 	} while ( inter < AN.terstop );
+Failure:
+    AN.SignCheck = oldSignCheck;
 	AT.WorkPointer = OldWork;
 	return(0);
 OnSuccess:
 	AN.terfirstcomm = Oterfirstcomm;
+    AN.SignCheck = oldSignCheck;
 /*
 	Now the disorder test
 */

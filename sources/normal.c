@@ -209,7 +209,7 @@ WORD Normalize(PHEAD WORD *term)
 	WORD ncoef;							/* Accumulator for the coefficient */
 	WORD *lnum=AT.n_llnum+1,nnum;		/* Scratch for factorials */
 	WORD *termout, oldtoprhs = 0, subtype;
-	WORD ReplaceType, didcontr, regval = 0;
+	WORD ReplaceType, ReplaceVeto = 0, didcontr, regval = 0;
 	WORD *ReplaceSub;
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
@@ -2288,231 +2288,10 @@ defaultcase:;
 					MUNLOCK(ErrorMessageLock);
 					goto NormMin;
 				}
-				if ( *t == REPLACEMENT && ReplaceType == -1 ) {
-					ReplaceType = 0;
-					from = t;
-					if ( AN.RSsize < 2*t[1]+SUBEXPSIZE ) {
-						if ( AN.ReplaceScrat ) M_free(AN.ReplaceScrat,"AN.ReplaceScrat");
-						AN.RSsize = 2*t[1]+SUBEXPSIZE+40;
-						AN.ReplaceScrat = (WORD *)Malloc1((AN.RSsize+1)*sizeof(WORD),"AN.ReplaceScrat");
-					}
-					t += FUNHEAD;
-					ReplaceSub = AN.ReplaceScrat;
-					ReplaceSub += SUBEXPSIZE;
-					while ( t < r ) {
-						if ( *t > 0 ) goto NoRep;
-						if ( *t <= -FUNCTION ) {
-							*ReplaceSub++ = FUNTOFUN;
-							*ReplaceSub++ = 4;
-							*ReplaceSub++ = -*t++;
-							if ( *t > -FUNCTION ) goto NoRep;
-							*ReplaceSub++ = -*t++;
-						}
-						else if ( t+4 > r ) goto NoRep;
-						else {
-						if ( *t == -SYMBOL ) {
-							if ( t[2] == -SYMBOL && t+4 <= r )
-								*ReplaceSub++ = SYMTOSYM;
-							else if ( t[2] == -SNUMBER && t+4 <= r ) {
-								*ReplaceSub++ = SYMTONUM;
-								if ( ReplaceType == 0 ) {
-									oldtoprhs = C->numrhs;
-									oldcpointer = C->Pointer - C->Buffer;
-								}
-								ReplaceType = 1;
-							}
-							else if ( t[2] == ARGHEAD && t+2+ARGHEAD <= r ) {
-								*ReplaceSub++ = SYMTONUM;
-								*ReplaceSub++ = 4;
-								*ReplaceSub++ = t[1];
-								*ReplaceSub++ = 0;
-								t += 2+ARGHEAD;
-								continue;
-							}
-/*
-							Next is the subexpression. We have to test that
-							it isn't vector-like or index-like
-*/
-							else if ( t[2] > 0 ) {
-								WORD *sstop, *ttstop, n;
-								ss = t+2;
-								sstop = ss + *ss;
-								ss += ARGHEAD;
-								while ( ss < sstop ) {
-									tt = ss + *ss;
-									ttstop = tt - ABS(tt[-1]);
-									ss++;
-									while ( ss < ttstop ) {
-										if ( *ss == INDEX ) goto NoRep;
-										ss += ss[1];
-									}
-									ss = tt;
-								}
-								subtype = SYMTOSUB;
-								if ( ReplaceType == 0 ) {
-									oldtoprhs = C->numrhs;
-									oldcpointer = C->Pointer - C->Buffer;
-								}
-								ReplaceType = 1;
-								ss = AddRHS(AT.ebufnum,1);
-								tt = t+2;
-								n = *tt - ARGHEAD;
-								tt += ARGHEAD;
-								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
-								while ( --n >= 0 ) *ss++ = *tt++;
-								*ss++ = 0;
-								C->rhs[C->numrhs+1] = ss;
-								C->Pointer = ss;
-								*ReplaceSub++ = subtype;
-								*ReplaceSub++ = 4;
-								*ReplaceSub++ = t[1];
-								*ReplaceSub++ = C->numrhs;
-								t += 2 + t[2];
-								continue;
-							}
-							else goto NoRep;
-						}
-						else if ( *t == -VECTOR && t+4 <= r ) {
-							if ( t[2] == -VECTOR ) *ReplaceSub++ = VECTOVEC;
-							else if ( t[2] == -MINVECTOR )
-								*ReplaceSub++ = VECTOMIN;
-/*
-							Next is a vector-like subexpression
-							Search for vector nature first
-*/
-							else if ( t[2] > 0 ) {
-								WORD *sstop, *ttstop, *w, *mm, n, count;
-								WORD *v1, *v2 = 0;
-								ss = t+2;
-								sstop = ss + *ss;
-								ss += ARGHEAD;
-								while ( ss < sstop ) {
-									tt = ss + *ss;
-									ttstop = tt - ABS(tt[-1]);
-									ss++;
-									count = 0;
-									while ( ss < ttstop ) {
-										if ( *ss == INDEX ) {
-											n = ss[1] - 2; ss += 2;
-											while ( --n >= 0 ) {
-												if ( *ss < MINSPEC ) count++;
-												ss++;
-											}
-										}
-										else ss += ss[1];
-									}
-									if ( count != 1 ) goto NoRep;
-									ss = tt;
-								}
-								subtype = VECTOSUB;
-								if ( ReplaceType == 0 ) {
-									oldtoprhs = C->numrhs;
-									oldcpointer = C->Pointer - C->Buffer;
-								}
-								ReplaceType = 1;
-								mm = AddRHS(AT.ebufnum,1);
-								*ReplaceSub++ = subtype;
-								*ReplaceSub++ = 4;
-								*ReplaceSub++ = t[1];
-								*ReplaceSub++ = C->numrhs;
-								w = t+2;
-								n = *w - ARGHEAD;
-								w += ARGHEAD;
-								while ( (mm + n + 10) > C->Top )
-									mm = DoubleCbuffer(AT.ebufnum,mm);
-								while ( --n >= 0 ) *mm++ = *w++;
-								*mm++ = 0;
-								C->rhs[C->numrhs+1] = mm;
-								C->Pointer = mm;
-								mm = AddRHS(AT.ebufnum,1);
-								w = t+2;
-								n = *w - ARGHEAD;
-								w += ARGHEAD;
-								while ( (mm + n + 13) > C->Top )
-									mm = DoubleCbuffer(AT.ebufnum,mm);
-								sstop = w + n;
-								while ( w < sstop ) {
-									tt = w + *w; ttstop = tt - ABS(tt[-1]);
-									ss = mm; mm++; w++;
-									while ( w < ttstop ) {		/* Subterms */
-										if ( *w != INDEX ) {
-											n = w[1];
-											NCOPY(mm,w,n);
-										}
-										else {
-											v1 = mm;
-											*mm++ = *w++;
-											*mm++ = n = *w++;
-											n -= 2;
-											while ( --n >= 0 ) {
-												if ( *w >= MINSPEC ) *mm++ = *w++;
-												else v2 = w++;
-											}
-											n = WORDDIF(mm,v1);
-											if ( n != v1[1] ) {
-												if ( n <= 2 ) mm -= 2;
-												else v1[1] = n;
-												*mm++ = VECTOR;
-												*mm++ = 4;
-												*mm++ = *v2;
-												*mm++ = FUNNYVEC;
-											}
-										}
-									}
-									while ( w < tt ) *mm++ = *w++;
-									*ss = WORDDIF(mm,ss);
-								}
-								*mm++ = 0;
-								C->rhs[C->numrhs+1] = mm;
-								C->Pointer = mm;
-								if ( mm > C->Top ) {
-									MLOCK(ErrorMessageLock);
-									MesPrint("Internal error in Normalize with extra compiler buffer");
-									MUNLOCK(ErrorMessageLock);
-									Terminate(-1);
-								}
-								t += 2 + t[2];
-								continue;
-							}
-							else goto NoRep;
-						}
-						else if ( *t == -INDEX ) {
-							if ( ( t[2] == -INDEX || t[2] == -VECTOR )
-							&& t+4 <= r )
-								*ReplaceSub++ = INDTOIND;
-							else if ( t[1] >= AM.OffsetIndex ) {
-								if ( t[2] == -SNUMBER && t+4 <= r
-								&& t[3] >= 0 && t[3] < AM.OffsetIndex )
-									*ReplaceSub++ = INDTOIND;
-								else if ( t[2] == ARGHEAD && t+2+ARGHEAD <= r ) {
-									*ReplaceSub++ = INDTOIND;
-									*ReplaceSub++ = 4;
-									*ReplaceSub++ = t[1];
-									*ReplaceSub++ = 0;
-									t += 2+ARGHEAD;
-									continue;
-								}
-								else goto NoRep;
-							}
-							else goto NoRep;
-						}
-						else goto NoRep;
-						*ReplaceSub++ = 4;
-						*ReplaceSub++ = t[1];
-						*ReplaceSub++ = t[3];
-						t += 4;
-						}
-						
-					}
-					AN.ReplaceScrat[1] = ReplaceSub-AN.ReplaceScrat;
+				if ( *t == REPLACEMENT ) {
+					ReplaceVeto--;
+					pcom[ncom++] = t;
 					break;
-NoRep:
-					if ( ReplaceType > 0 ) {
-						C->numrhs = oldtoprhs;
-						C->Pointer = C->Buffer + oldcpointer;
-					}
-					ReplaceType = -1;
-					t = from;
 				}
 /*
 				if ( *t == AM.termfunnum && t[1] == FUNHEAD+2
@@ -3146,6 +2925,8 @@ onegammamatrix:
 				FILLFUN3(m)
 			}
 			else {
+				if ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG
+						&& *t != REPLACEMENT ) ReplaceVeto = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}
@@ -3293,6 +3074,39 @@ NextI:;
 					NCOPY(m,t,k);
 				}
 			}
+			else if ( *t == AR.PolyFunInv && AR.PolyFunType == 2 ) {
+/*
+				If there are two arguments, exchange them, change the
+				name of the function and go to dealing with PolyRatFun.
+*/
+				WORD *mm, *tt = t, numt = 0;
+				tt += FUNHEAD;
+				while ( tt < t+t[1] ) { numt++; NEXTARG(tt) }
+				if ( numt == 2 ) {
+					tt = t; mm = m; k = t[1];
+					NCOPY(mm,tt,k)
+					mm = m+FUNHEAD;
+					NEXTARG(mm);
+					tt = t+FUNHEAD;
+					if ( *mm < 0 ) {
+						if ( *mm <= -FUNCTION ) { *tt++ = *mm++; }
+						else { *tt++ = *mm++;  *tt++ = *mm++; }
+					}
+					else {
+						k = *mm; NCOPY(tt,mm,k)
+					}
+					mm = m+FUNHEAD;
+					if ( *mm < 0 ) {
+						if ( *mm <= -FUNCTION ) { *tt++ = *mm++; }
+						else { *tt++ = *mm++;  *tt++ = *mm++; }
+					}
+					else {
+						k = *mm; NCOPY(tt,mm,k)
+					}
+					*t = AR.PolyFun;
+					goto regularratfun;
+				}
+			}
 			else if ( *t == AR.PolyFun ) {
 			  if ( AR.PolyFunType == 1 ) { /* Regular PolyFun with one argument */
 				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
@@ -3302,6 +3116,7 @@ NextI:;
 				NCOPY(m,t,k);
 			  }
 			  else if ( AR.PolyFunType == 2 ) { /* PolyRatFun. Two arguments */
+regularratfun:;
 /*
 				First check for zeroes.
 */
@@ -3316,12 +3131,18 @@ NextI:;
 					}
 					else if ( t[1] == *u+FUNHEAD+2 ) goto NormZero;
 				}
+				else {
+					u = t+FUNHEAD; NEXTARG(u);
+					if ( *u == -SNUMBER && u[1] == 0 ) goto NormInf;
+				}
 				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			  }
 			}
 			else if ( *t > 0 ) {
+				if ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG
+					&& *t != REPLACEMENT ) ReplaceVeto = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}
@@ -3333,6 +3154,262 @@ NextI:;
 	}
 /*
   	#] Commuting Functions : 
+  	#[ Track Replace_ :
+*/
+	if ( ReplaceVeto < 0 ) {
+/*
+		We found one (or more) replace_ functions and all other
+		functions are 'clean' (no dirty flag).
+		Now we check whether one of these functions can be used.
+		Thus far the functions go from fillsetexp to m.
+		Somewhere in there there are -ReplaceVeto occurrences of REPLACEMENT.
+		Hunt for the first one that fits the bill.
+		Note that replace_ is a commuting function.
+*/
+		WORD *ma = fillsetexp, *mb, *mc;
+		while ( ma < m ) {
+			mb = ma + ma[1];
+			if ( *ma != REPLACEMENT ) {
+				ma = mb;
+				continue;
+			}
+			if ( *ma == REPLACEMENT && ReplaceType == -1 ) {
+				mc = ma;
+				ReplaceType = 0;
+				if ( AN.RSsize < 2*ma[1]+SUBEXPSIZE ) {
+					if ( AN.ReplaceScrat ) M_free(AN.ReplaceScrat,"AN.ReplaceScrat");
+					AN.RSsize = 2*ma[1]+SUBEXPSIZE+40;
+					AN.ReplaceScrat = (WORD *)Malloc1((AN.RSsize+1)*sizeof(WORD),"AN.ReplaceScrat");
+				}
+				ma += FUNHEAD;
+				ReplaceSub = AN.ReplaceScrat;
+				ReplaceSub += SUBEXPSIZE;
+				while ( ma < mb ) {
+					if ( *ma > 0 ) goto NoRep;
+					if ( *ma <= -FUNCTION ) {
+						*ReplaceSub++ = FUNTOFUN;
+						*ReplaceSub++ = 4;
+						*ReplaceSub++ = -*ma++;
+						if ( *ma > -FUNCTION ) goto NoRep;
+						*ReplaceSub++ = -*ma++;
+					}
+					else if ( ma+4 > mb ) goto NoRep;
+					else {
+						if ( *ma == -SYMBOL ) {
+							if ( ma[2] == -SYMBOL && ma+4 <= mb )
+								*ReplaceSub++ = SYMTOSYM;
+							else if ( ma[2] == -SNUMBER && ma+4 <= mb ) {
+								*ReplaceSub++ = SYMTONUM;
+								if ( ReplaceType == 0 ) {
+									oldtoprhs = C->numrhs;
+									oldcpointer = C->Pointer - C->Buffer;
+								}
+								ReplaceType = 1;
+							}
+							else if ( ma[2] == ARGHEAD && ma+2+ARGHEAD <= mb ) {
+								*ReplaceSub++ = SYMTONUM;
+								*ReplaceSub++ = 4;
+								*ReplaceSub++ = ma[1];
+								*ReplaceSub++ = 0;
+								ma += 2+ARGHEAD;
+								continue;
+							}
+/*
+							Next is the subexpression. We have to test that
+							it isn't vector-like or index-like
+*/
+							else if ( ma[2] > 0 ) {
+								WORD *sstop, *ttstop, n;
+								ss = ma+2;
+								sstop = ss + *ss;
+								ss += ARGHEAD;
+								while ( ss < sstop ) {
+									tt = ss + *ss;
+									ttstop = tt - ABS(tt[-1]);
+									ss++;
+									while ( ss < ttstop ) {
+										if ( *ss == INDEX ) goto NoRep;
+										ss += ss[1];
+									}
+									ss = tt;
+								}
+								subtype = SYMTOSUB;
+								if ( ReplaceType == 0 ) {
+									oldtoprhs = C->numrhs;
+									oldcpointer = C->Pointer - C->Buffer;
+								}
+								ReplaceType = 1;
+								ss = AddRHS(AT.ebufnum,1);
+								tt = ma+2;
+								n = *tt - ARGHEAD;
+								tt += ARGHEAD;
+								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
+								while ( --n >= 0 ) *ss++ = *tt++;
+								*ss++ = 0;
+								C->rhs[C->numrhs+1] = ss;
+								C->Pointer = ss;
+								*ReplaceSub++ = subtype;
+								*ReplaceSub++ = 4;
+								*ReplaceSub++ = ma[1];
+								*ReplaceSub++ = C->numrhs;
+								ma += 2 + ma[2];
+								continue;
+							}
+							else goto NoRep;
+						}
+						else if ( *ma == -VECTOR && ma+4 <= mb ) {
+							if ( ma[2] == -VECTOR ) *ReplaceSub++ = VECTOVEC;
+							else if ( ma[2] == -MINVECTOR )
+								*ReplaceSub++ = VECTOMIN;
+/*
+							Next is a vector-like subexpression
+							Search for vector nature first
+*/
+							else if ( ma[2] > 0 ) {
+								WORD *sstop, *ttstop, *w, *mm, n, count;
+								WORD *v1, *v2 = 0;
+								ss = ma+2;
+								sstop = ss + *ss;
+								ss += ARGHEAD;
+								while ( ss < sstop ) {
+									tt = ss + *ss;
+									ttstop = tt - ABS(tt[-1]);
+									ss++;
+									count = 0;
+									while ( ss < ttstop ) {
+										if ( *ss == INDEX ) {
+											n = ss[1] - 2; ss += 2;
+											while ( --n >= 0 ) {
+												if ( *ss < MINSPEC ) count++;
+												ss++;
+											}
+										}
+										else ss += ss[1];
+									}
+									if ( count != 1 ) goto NoRep;
+									ss = tt;
+								}
+								subtype = VECTOSUB;
+								if ( ReplaceType == 0 ) {
+									oldtoprhs = C->numrhs;
+									oldcpointer = C->Pointer - C->Buffer;
+								}
+								ReplaceType = 1;
+								mm = AddRHS(AT.ebufnum,1);
+								*ReplaceSub++ = subtype;
+								*ReplaceSub++ = 4;
+								*ReplaceSub++ = ma[1];
+								*ReplaceSub++ = C->numrhs;
+								w = ma+2;
+								n = *w - ARGHEAD;
+								w += ARGHEAD;
+								while ( (mm + n + 10) > C->Top )
+									mm = DoubleCbuffer(AT.ebufnum,mm);
+								while ( --n >= 0 ) *mm++ = *w++;
+								*mm++ = 0;
+								C->rhs[C->numrhs+1] = mm;
+								C->Pointer = mm;
+								mm = AddRHS(AT.ebufnum,1);
+								w = ma+2;
+								n = *w - ARGHEAD;
+								w += ARGHEAD;
+								while ( (mm + n + 13) > C->Top )
+									mm = DoubleCbuffer(AT.ebufnum,mm);
+								sstop = w + n;
+								while ( w < sstop ) {
+									tt = w + *w; ttstop = tt - ABS(tt[-1]);
+									ss = mm; mm++; w++;
+									while ( w < ttstop ) {		/* Subterms */
+										if ( *w != INDEX ) {
+											n = w[1];
+											NCOPY(mm,w,n);
+										}
+										else {
+											v1 = mm;
+											*mm++ = *w++;
+											*mm++ = n = *w++;
+											n -= 2;
+											while ( --n >= 0 ) {
+												if ( *w >= MINSPEC ) *mm++ = *w++;
+												else v2 = w++;
+											}
+											n = WORDDIF(mm,v1);
+											if ( n != v1[1] ) {
+												if ( n <= 2 ) mm -= 2;
+												else v1[1] = n;
+												*mm++ = VECTOR;
+												*mm++ = 4;
+												*mm++ = *v2;
+												*mm++ = FUNNYVEC;
+											}
+										}
+									}
+									while ( w < tt ) *mm++ = *w++;
+									*ss = WORDDIF(mm,ss);
+								}
+								*mm++ = 0;
+								C->rhs[C->numrhs+1] = mm;
+								C->Pointer = mm;
+								if ( mm > C->Top ) {
+									MLOCK(ErrorMessageLock);
+									MesPrint("Internal error in Normalize with extra compiler buffer");
+									MUNLOCK(ErrorMessageLock);
+									Terminate(-1);
+								}
+								ma += 2 + ma[2];
+								continue;
+							}
+							else goto NoRep;
+						}
+						else if ( *ma == -INDEX ) {
+							if ( ( ma[2] == -INDEX || ma[2] == -VECTOR )
+							&& ma+4 <= mb )
+								*ReplaceSub++ = INDTOIND;
+							else if ( ma[1] >= AM.OffsetIndex ) {
+								if ( ma[2] == -SNUMBER && ma+4 <= mb
+								&& ma[3] >= 0 && ma[3] < AM.OffsetIndex )
+									*ReplaceSub++ = INDTOIND;
+								else if ( ma[2] == ARGHEAD && ma+2+ARGHEAD <= mb ) {
+									*ReplaceSub++ = INDTOIND;
+									*ReplaceSub++ = 4;
+									*ReplaceSub++ = ma[1];
+									*ReplaceSub++ = 0;
+									ma += 2+ARGHEAD;
+									continue;
+								}
+								else goto NoRep;
+							}
+							else goto NoRep;
+						}
+						else goto NoRep;
+						*ReplaceSub++ = 4;
+						*ReplaceSub++ = ma[1];
+						*ReplaceSub++ = ma[3];
+						ma += 4;
+					}
+						
+				}
+				AN.ReplaceScrat[1] = ReplaceSub-AN.ReplaceScrat;
+/*
+				Success. This means that we have to remove the replace_
+				from the functions. It starts at mc and end at mb.
+*/
+				while ( mb < m ) *mc++ = *mb++;
+				m = mc;
+				break;
+NoRep:
+				if ( ReplaceType > 0 ) {
+					C->numrhs = oldtoprhs;
+					C->Pointer = C->Buffer + oldcpointer;
+				}
+				ReplaceType = -1;
+				if ( ++ReplaceVeto >= 0 ) break;
+			}
+			ma = mb;
+		}
+	}
+/*
+  	#] Track Replace_ : 
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -3630,7 +3707,7 @@ NextI:;
 	}
 /*
   	#] Symbols : 
-  	#[ Errors and Finish :
+  	#[ Do Replace_ :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
 	i = ABS(ncoef);
@@ -3726,6 +3803,7 @@ NextI:;
 								i = *m; tt = m; wt = oldwork;
 								NCOPY(wt,tt,i);
 								AT.WorkPointer = wt;
+MesPrint("Calling Generator from Normalize(1)");
 								if ( Generator(BHEAD oldwork,AR.Cnumlhs) ) {
 									LowerSortLevel(); goto FromNorm;
 								}
@@ -3870,6 +3948,7 @@ NextI:;
 			WORD olddefer = AR.DeferFlag;
 			AR.DeferFlag = 0;
 			NewSort(BHEAD0);
+MesPrint("Calling Generator from Normalize(2)");
 			if ( Generator(BHEAD term,AR.Cnumlhs) ) {
 				LowerSortLevel(); goto FromNorm;
 			}
@@ -3910,6 +3989,10 @@ NextI:;
 		NCOPY(m,t,i);
 		*m++ = ncoef;
 	}
+/*
+  	#] Do Replace_ : 
+  	#[ Errors and Finish :
+*/
 RegEnd:
 	AT.WorkPointer = termout;
 	if ( termout < term + *term && termout >= term ) AT.WorkPointer = term + *term;
@@ -3924,19 +4007,19 @@ NormInf:
 	MLOCK(ErrorMessageLock);
 	MesPrint("Division by zero during normalization");
 	MUNLOCK(ErrorMessageLock);
-	goto NormMin;
+	Terminate(-1);
 
 NormZZ:
 	MLOCK(ErrorMessageLock);
 	MesPrint("0^0 during normalization of term");
 	MUNLOCK(ErrorMessageLock);
-	goto NormMin;
+	Terminate(-1);
 
 NormPRF:
 	MLOCK(ErrorMessageLock);
 	MesPrint("0/0 in polyratfun during normalization of term");
 	MUNLOCK(ErrorMessageLock);
-	goto NormMin;
+	Terminate(-1);
 
 NormZero:
 	*term = 0;
