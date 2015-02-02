@@ -758,6 +758,7 @@ VOID IniModule(int type)
 	AC.SymChangeFlag = 0;
 	AP.lhdollarerror = 0;
 	AR.PolyFun = AC.lPolyFun;
+	AR.PolyFunInv = AC.lPolyFunInv;
 	AR.PolyFunType = AC.lPolyFunType;
 	AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	AC.inparallelflag = 0;

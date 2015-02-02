@@ -822,6 +822,7 @@ static void print_M()
 	MesPrint("%d", AM.matchfunnum);
 	MesPrint("%d", AM.countfunnum);
 	MesPrint("%d", AM.gPolyFun);
+	MesPrint("%d", AM.gPolyFunInv);
 	MesPrint("%d", AM.gPolyFunType);
 	MesPrint("--MARK 10");
 	MesPrint("%d", AM.dollarzero);
@@ -1116,6 +1117,7 @@ static void print_C()
 	MesPrint("%d", AC.StoreHandle);
 	MesPrint("%d", AC.HideLevel);
 	MesPrint("%d", AC.lPolyFun);
+	MesPrint("%d", AC.lPolyFunInv);
 	MesPrint("%d", AC.lPolyFunType);
 	MesPrint("%d", AC.SymChangeFlag);
 	MesPrint("%d", AC.CollectPercentage);
@@ -1173,6 +1175,7 @@ static void print_R()
 	MesPrint("%d", AR.Stage4Name);
 	MesPrint("%d", AR.GetOneFile);
 	MesPrint("%d", AR.PolyFun);
+	MesPrint("%d", AR.PolyFunInv);
 	MesPrint("%d", AR.PolyFunType);
 	MesPrint("%d", AR.Eside);
 	MesPrint("%d", AR.MaxDum);
@@ -1438,6 +1441,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.gOutNumberType, WORD);
 	R_SET(AM.gfunpowers, int);
 	R_SET(AM.gPolyFun, WORD);
+	R_SET(AM.gPolyFunInv, WORD);
 	R_SET(AM.gPolyFunType, WORD);
 	R_SET(AM.gProcessBucketSize, LONG);
 	R_SET(AM.OldChildTime, LONG);
@@ -2293,6 +2297,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AR.Stage4Name, WORD);
 	R_SET(AR.GetOneFile, WORD);
 	R_SET(AR.PolyFun, WORD);
+	R_SET(AR.PolyFunInv, WORD);
 	R_SET(AR.PolyFunType, WORD);
 	R_SET(AR.Eside, WORD);
 	R_SET(AR.MaxDum, WORD);
@@ -2487,6 +2492,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.gOutNumberType, sizeof(WORD));
 	S_WRITE_B(&AM.gfunpowers, sizeof(int));
 	S_WRITE_B(&AM.gPolyFun, sizeof(WORD));
+	S_WRITE_B(&AM.gPolyFunInv, sizeof(WORD));
 	S_WRITE_B(&AM.gPolyFunType, sizeof(WORD));
 	S_WRITE_B(&AM.gProcessBucketSize, sizeof(LONG));
 	S_WRITE_B(&AM.OldChildTime, sizeof(LONG));
@@ -2888,6 +2894,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AR.Stage4Name, sizeof(WORD));
 	S_WRITE_B(&AR.GetOneFile, sizeof(WORD));
 	S_WRITE_B(&AR.PolyFun, sizeof(WORD));
+	S_WRITE_B(&AR.PolyFunInv, sizeof(WORD));
 	S_WRITE_B(&AR.PolyFunType, sizeof(WORD));
 	S_WRITE_B(&AR.Eside, sizeof(WORD));
 	S_WRITE_B(&AR.MaxDum, sizeof(WORD));

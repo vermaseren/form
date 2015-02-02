@@ -83,7 +83,7 @@
 int CoCreateSpectator(UBYTE *inp)
 {
 	UBYTE *p, *q, *filename, c, cc;
-	WORD c1, c2, numexpr, specnum;
+	WORD c1, c2, numexpr = 0, specnum, HadOne = 0;
 	FILEHANDLE *fh;
 	while ( *inp == ',' ) inp++;
 	if ( ( q = SkipAName(inp) ) == 0 || q[-1] == '_' ) {
@@ -92,9 +92,17 @@ int CoCreateSpectator(UBYTE *inp)
 	}
 	c = *q; *q = 0;
 	if ( GetVar(inp,&c1,&c2,ALLVARIABLES,NOAUTO) != NAMENOTFOUND ) {
-		MesPrint("&The name %s has been used already.",inp);
-		*q = c;
-		return(1);
+		if ( c2 == CEXPRESSION && 
+				Expressions[c1].status == DROPSPECTATOREXPRESSION ) {
+			numexpr = c1;
+			Expressions[numexpr].status = SPECTATOREXPRESSION;
+			HadOne = 1;
+		}
+		else {
+			MesPrint("&The name %s has been used already.",inp);
+			*q = c;
+			return(1);
+		}
 	}
 	p = q+1;
 	while ( *p == ',' ) p++;
@@ -112,7 +120,8 @@ int CoCreateSpectator(UBYTE *inp)
 /*
 	Now we need to: create a struct for the spectator file.
 */
-	numexpr = EntVar(CEXPRESSION,inp,SPECTATOREXPRESSION,0,0,0);
+	if ( HadOne == 0 )
+		numexpr = EntVar(CEXPRESSION,inp,SPECTATOREXPRESSION,0,0,0);
 	fh = AllocFileHandle(1,(char *)filename);
 /*
 	Make sure there is space in the AM.spectatorfiles array
@@ -237,7 +246,7 @@ int CoRemoveSpectator(UBYTE *inp)
 		return(1);
 	}
 	sp = AM.SpectatorFiles+i;
-	Expressions[numexpr].status = DROPPEDEXPRESSION;
+	Expressions[numexpr].status = DROPSPECTATOREXPRESSION;
 	if ( sp->fh->handle != -1 ) {
 		CloseFile(sp->fh->handle);
 		sp->fh->handle = -1;

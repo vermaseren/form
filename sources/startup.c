@@ -1173,6 +1173,7 @@ WORD IniVars()
 	AC.halfmod = 0; AC.nhalfmod = 0;
 	AC.modinverses = 0;
 	AC.lPolyFun = AM.gPolyFun = 0;
+	AC.lPolyFunInv = AM.gPolyFunInv = 0;
 	AC.lPolyFunType = AM.gPolyFunType = 0;
 	AC.DirtPow = 0;
 	AC.lDefDim = AM.gDefDim = 4;

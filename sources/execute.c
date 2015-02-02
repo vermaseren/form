@@ -142,6 +142,7 @@ WORD CleanExpr(WORD par)
 			case DROPGEXPRESSION:
 			case DROPHGEXPRESSION:
 			case STOREDEXPRESSION:
+			case DROPSPECTATOREXPRESSION:
 				if ( e_out != e_in ) {
 					node = AC.exprnames->namenode + e_in->node;
 					node->number = e_out - Expressions;
@@ -268,6 +269,7 @@ WORD PopVariables()
 			MakeInverses();
 	AC.funpowers = AM.gfunpowers;
 	AC.lPolyFun = AM.gPolyFun;
+	AC.lPolyFunInv = AM.gPolyFunInv;
 	AC.lPolyFunType = AM.gPolyFunType;
 	AC.parallelflag = AM.gparallelflag;
 	AC.ProcessBucketSize = AC.mProcessBucketSize = AM.gProcessBucketSize;
@@ -395,6 +397,7 @@ VOID MakeGlobal()
 	AM.gOutNumberType = AC.OutNumberType;
 	AM.gfunpowers = AC.funpowers;
 	AM.gPolyFun = AC.lPolyFun;
+	AM.gPolyFunInv = AC.lPolyFunInv;
 	AM.gPolyFunType = AC.lPolyFunType;
 	AM.gparallelflag = AC.parallelflag;
 	AM.gProcessBucketSize = AC.ProcessBucketSize;
@@ -487,6 +490,7 @@ VOID TestDrop()
 			case DROPGEXPRESSION:
 			case DROPHLEXPRESSION:
 			case DROPHGEXPRESSION:
+			case DROPSPECTATOREXPRESSION:
 				e->status = DROPPEDEXPRESSION;
 				ClearBracketIndex(j);
 				e->bracketinfo = e->newbracketinfo; e->newbracketinfo = 0;
@@ -632,41 +636,7 @@ WORD DoExecute(WORD par, WORD skip)
 	AR.Cnumlhs = cbuf[AM.rbufnum].numlhs;
 
 	if ( ( AS.ExecMode = par ) == GLOBALMODULE ) AS.ExecMode = 0;
-/*
-	Now we compare whether all elements of PotModdollars are contained in
-	ModOptdollars. If not, we may not run parallel.
-*/
-#ifdef WITHMPI
-	if ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) {
-	  if ( NumPotModdollars > NumModOptdollars ) 
-		AC.mparallelflag |= NOPARALLEL_DOLLAR;
-	  else 
-		for ( i = 0; i < NumPotModdollars; i++ ) {
-		  for ( j = 0; j < NumModOptdollars; j++ ) 
-			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
-		  if ( j >= NumModOptdollars ) {
-			AC.parallelflag |= NOPARALLEL_DOLLAR;
-			break;
-		  }
-		}
-	}
-	/*
-	 * Set $-variables with MODSUM to zero on the slaves.
-	 */
-	if ( AC.mparallelflag == PARALLELFLAG && PF.me != MASTER ) {
-		for ( i = 0; i < NumModOptdollars; i++ ) {
-			if ( ModOptdollars[i].type == MODSUM ) {
-				DOLLARS d = Dollars + ModOptdollars[i].number;
-				d->type = DOLZERO;
-				if ( d->where && d->where != &AM.dollarzero ) M_free(d->where, "old content of dollar");
-				d->where = &AM.dollarzero;
-				d->size = 0;
-				CleanDollarFactors(d);
-			}
-		}
-	}
-#endif
-#ifdef WITHPTHREADS
+#ifdef PARALLELCODE
 /*
 		Now check whether we have either the regular parallel flag or the
 		mparallel flag set.
@@ -679,10 +649,17 @@ WORD DoExecute(WORD par, WORD skip)
 			if ( Expressions[i].partodo ) { AC.partodoflag = 1; break; }
 		}
 	}
+#ifdef WITHMPI
+	if ( AC.partodoflag > 0 && PF.numtasks < 3 ) {
+		AC.partodoflag = 0;
+	}
+#endif
 	if ( AC.partodoflag > 0 || ( NumPotModdollars > 0 && AC.mparallelflag == PARALLELFLAG ) ) {
 	  if ( NumPotModdollars > NumModOptdollars ) {
 		AC.mparallelflag |= NOPARALLEL_DOLLAR;
+#ifdef WITHPTHREADS
 		AS.MultiThreaded = 0;
+#endif
 		AC.partodoflag = 0;
 	  }
 	  else {
@@ -691,7 +668,9 @@ WORD DoExecute(WORD par, WORD skip)
 			if ( PotModdollars[i] == ModOptdollars[j].number ) break;
 		  if ( j >= NumModOptdollars ) {
 			AC.mparallelflag |= NOPARALLEL_DOLLAR;
+#ifdef WITHPTHREADS
 			AS.MultiThreaded = 0;
+#endif
 			AC.partodoflag = 0;
 			break;
 		  }
@@ -711,7 +690,9 @@ WORD DoExecute(WORD par, WORD skip)
 	  }
 	}
 	else if ( ( AC.mparallelflag & NOPARALLEL_USER ) != 0 ) {
+#ifdef WITHPTHREADS
 		AS.MultiThreaded = 0;
+#endif
 		AC.partodoflag = 0;
 	}
 	if ( AC.partodoflag == 0 ) {
@@ -724,8 +705,10 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 #endif
 #ifdef WITHMPI
-/*[20oct2009 mt]:*/
-	if ( AC.RhsExprInModuleFlag && AC.mparallelflag == PARALLELFLAG ) {
+	/*
+	 * Check RHS expressions.
+	 */
+	if ( AC.RhsExprInModuleFlag && (AC.mparallelflag == PARALLELFLAG || AC.partodoflag) ) {
 		if (PF.rhsInParallel) {
 			PF.mkSlaveInfile=1;
 			if(PF.me != MASTER){
@@ -738,9 +721,27 @@ WORD DoExecute(WORD par, WORD skip)
 		} 
 		else {
 			AC.mparallelflag |= NOPARALLEL_RHS;
+			AC.partodoflag = 0;
+			for ( i = 0; i < NumExpressions; i++ ) {
+				Expressions[i].partodo = 0;
+			}
 		}
 	}
-/*:[20oct2009 mt]*/
+	/*
+	 * Set $-variables with MODSUM to zero on the slaves.
+	 */
+	if ( (AC.mparallelflag == PARALLELFLAG || AC.partodoflag) && PF.me != MASTER ) {
+		for ( i = 0; i < NumModOptdollars; i++ ) {
+			if ( ModOptdollars[i].type == MODSUM ) {
+				DOLLARS d = Dollars + ModOptdollars[i].number;
+				d->type = DOLZERO;
+				if ( d->where && d->where != &AM.dollarzero ) M_free(d->where, "old content of dollar");
+				d->where = &AM.dollarzero;
+				d->size = 0;
+				CleanDollarFactors(d);
+			}
+		}
+	}
 #endif
 	AR.SortType = AC.SortType;
 #ifdef WITHMPI
@@ -752,20 +753,6 @@ WORD DoExecute(WORD par, WORD skip)
 	}
 	if ( par == GLOBALMODULE ) MakeGlobal();
 	if ( RevertScratch() ) return(-1);
-/*[20oct2009 mt]:*/
-#ifdef WITHMPI
-	AC.partodoflag = 0;
-	if ( PF.numtasks >= 3 ) {
-		for ( i = 0; i < NumExpressions; i++ ) {
-			if ( Expressions[i].partodo > 0 ) { AC.partodoflag = 1; break; }
-		}
-	}
-	else {
-		for ( i = 0; i < NumExpressions; i++ ) {
-			Expressions[i].partodo = 0;
-		}
-	}
-#endif
 	if ( AC.ncmod ) SetMods();
 /*
 	Warn if the module has to run in sequential mode due to some problems.
@@ -2323,3 +2310,4 @@ IllBraReq:;
  		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */
+

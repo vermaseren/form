@@ -1427,6 +1427,7 @@ struct M_const {
     WORD    matchfunnum;           /* (M) internal number of match_ function */
     WORD    countfunnum;           /* (M) internal number of count_ function */
     WORD    gPolyFun;              /* (M) global value of PolyFun */
+    WORD    gPolyFunInv;           /* (M) global value of Inverse of PolyFun */
     WORD    gPolyFunType;          /* (M) global value of PolyFun */
     WORD    dollarzero;            /* (M) for dollars with zero value */
     WORD    atstartup;             /* To protect against DATE_ ending in \n */
@@ -1442,9 +1443,9 @@ struct M_const {
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,57,76,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,57,77,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,57,76,0);
+	PADPOSITION(17,23,57,77,0);
 #endif
 };
 /*
@@ -1726,6 +1727,7 @@ struct C_const {
     WORD    StoreHandle;           /* (C) Handle of .str file */
     WORD    HideLevel;             /* (C) Hiding indicator */
     WORD    lPolyFun;              /* (C) local value of PolyFun */
+    WORD    lPolyFunInv;           /* (C) local value of Inverse of PolyFun */
     WORD    lPolyFunType;          /* (C) local value of PolyFunType */
     WORD    SymChangeFlag;         /* (C) */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
@@ -1739,11 +1741,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(46,8+3*MAXNEST,69,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(46,8+3*MAXNEST,69,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(46,8+3*MAXNEST,69,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(46,8+3*MAXNEST,69,42+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(44,8+3*MAXNEST,67,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(44,8+3*MAXNEST,67,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1854,6 +1856,7 @@ struct R_const {
     WORD    Stage4Name;            /* (R) Sorting only */
     WORD    GetOneFile;            /* (R) Getting from hide or regular */
     WORD    PolyFun;               /* (C) Number of the PolyFun function */
+    WORD    PolyFunInv;            /* (C) Number of the Inverse of the PolyFun function */
     WORD    PolyFunType;           /* () value of PolyFunType */
     WORD    Eside;                 /* () Tells which side of = sign */
     WORD    MaxDum;                /* Maximum dummy value in an expression */
@@ -1865,15 +1868,15 @@ struct R_const {
     WORD    ShortSortCount;        /* For On FewerStatistics 10; */
 #if ( BITSINWORD == 32 )
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,5022,0);
+	PADPOSITION(8,7,8,5023,0);
 #else
-	PADPOSITION(8,7,7,5022,0);
+	PADPOSITION(8,7,7,5023,0);
 #endif
 #else
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,20,0);
+	PADPOSITION(8,7,8,21,0);
 #else
-	PADPOSITION(8,7,7,20,0);
+	PADPOSITION(8,7,7,21,0);
 #endif
 #endif
 };

@@ -444,7 +444,7 @@ int DoPolyratfun(UBYTE *s)
 			return(0);
 		}
 		if ( *s != '=' ) {
-			MesPrint("@Proper use in point instructions is: PolyRatFun[=functionname]");
+			MesPrint("@Proper use in point instructions is: PolyRatFun[=functionname[+functionname]]");
 			return(-1);
 		}
 	}
@@ -454,7 +454,7 @@ int DoPolyratfun(UBYTE *s)
 			return(0);
 		}
 		if ( *s != '=' && *s != ',' ) {
-			MesPrint("@Proper use is: PolyRatFun[{ ,=}functionname]");
+			MesPrint("@Proper use is: PolyRatFun[{ ,=}functionname[+functionname]]");
 			return(-1);
 		}
 	}
@@ -464,18 +464,30 @@ int DoPolyratfun(UBYTE *s)
 	c = *t; *t = 0;
 
 	if ( GetName(AC.varnames,s,&funnum,WITHAUTO) != CFUNCTION ) {
+Error1:;
 		MesPrint("@ %s is not a properly declared function",s);
 		*t = c;
 		return(-1);
 	}
 	if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) {
+Error2:;
 		MesPrint("@The PolyRatFun must be a regular commuting function!");
 		*t = c;
 		return(-1);
 	}
 	AR.PolyFun = funnum+FUNCTION; AR.PolyFunType = 2;
+	AR.PolyFunInv = 0;
 	AC.PolyRatFunChanged = 1;
 	*t = c;
+	if ( *t == '+' ) {
+		t++; s = t;
+		t = EndOfToken(s);
+		c = *t; *t = 0;
+		if ( GetName(AC.varnames,s,&funnum,WITHAUTO) != CFUNCTION ) goto Error1;
+		if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) goto Error2;
+		AR.PolyFunInv = funnum+FUNCTION;
+		*t = c;
+	}
 	SKIPBLANKS(t)
 	if ( *t && *t != ',' && *t != ')' ) {
 		t++; c = *t; *t = 0;

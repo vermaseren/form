@@ -162,7 +162,7 @@ WORD Processor()
 	}
 #endif
 #ifdef WITHMPI
-	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && AC.mparallelflag == PARALLELFLAG ) {
+ 	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && (AC.mparallelflag == PARALLELFLAG || AC.partodoflag) ) {
 		if ( PF_BroadcastRHS() ) {
 			retval = -1;
 		}

@@ -4135,8 +4135,6 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 			The large buffer is too full. Merge and write it
 */
-
-MesPrint("In StoreTerm: MergePatches at AR.sLevel = %d",AR.sLevel);
 			if ( MergePatches(1) ) goto StoreCall;
 /*
 			pp = S->SizeInFile[1];
@@ -4191,7 +4189,7 @@ StoreCall:
 }
 
 /*
- 		#] StoreTerm :
+ 		#] StoreTerm : 
  		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
 */
 /**

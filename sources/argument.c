@@ -574,7 +574,7 @@ ScaledVariety:;
 						if ( MultDo(BHEAD m,AT.mulpat) ) goto execargerr;
 						AT.WorkPointer = m + *m;
 					}
-					if ( ( *m != 0 ) && Generator(BHEAD m,level) ) goto execargerr;
+					if ( (*m != 0 ) && Generator(BHEAD m,level) ) goto execargerr;
 					AT.WorkPointer = r1;
 				}
 				if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1) < 0 ) goto execargerr;
