@@ -14,11 +14,11 @@ EXTRA_DIST = $(TEXFILES)
 
 DATEFILE = devrefdate.tex
 $(DATEFILE): FORCE
-	$(SHELL) $(top_srcdir)/scripts/gendate.sh -t $(srcdir)/$(DATEFILE).in $(DATEFILE) "$(DATE)"
+	$(SHELL) $(top_srcdir)/scripts/gendate.sh -t -r $(srcdir) -i $(srcdir)/$(DATEFILE).in -o $(DATEFILE) "$(DATE)"
 FORCE:
 
 dist-hook:
-	$(SHELL) $(top_srcdir)/scripts/gendate.sh -t $(srcdir)/$(DATEFILE).in $(distdir)/$(DATEFILE).in "$(DATE)"
+	$(SHELL) $(top_srcdir)/scripts/gendate.sh -t -r $(srcdir) -i $(srcdir)/$(DATEFILE).in -o $(distdir)/$(DATEFILE).in "$(DATE)"
 
 CLEANFILES = \
 	$(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi \
