@@ -668,6 +668,20 @@ outputdir=$(eval "echo $bindir")
 outputdir=$(eval "echo $outputdir")
 echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
 echo
+echo "Optionally linked libraries:"
+atleastone=no
+if test "x$with_gmp" = xyes; then
+	echo "    gmp"
+	atleastone=yes
+fi
+if test "x$with_zlib" = xyes; then
+	echo "    zlib"
+	atleastone=yes
+fi
+if test $atleastone = no; then
+	echo "    <NONE>"
+fi
+echo
 echo "The following executables can be compiled:"
 atleastone=no
 if test "x$build_form" = xyes; then
