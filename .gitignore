@@ -60,3 +60,6 @@ doc/doxygen/latex/
 doc/doxygen/pdflatex/
 doc/manual/html/
 doc/manual/manualdate.tex
+
+doc/devref/devref/
+doc/manual/manual/

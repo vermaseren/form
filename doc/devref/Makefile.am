@@ -8,7 +8,7 @@ TEXFILES = \
 
 MAIN = devref
 
-EXTRA_DIST = $(TEXFILES)
+EXTRA_DIST = $(TEXFILES) .latex2html-init
 
 .PHONY: FORCE dvi html ps pdf clean-local
 
@@ -28,6 +28,13 @@ CLEANFILES = \
 
 clean-local:
 	rm -rf html
+
+latex2html: $(MAIN).dvi
+	latex2html -init_file $(srcdir)/.latex2html-init $(MAIN).tex
+	cat $(MAIN)/index.html | sed 's/$(MAIN).html#/#/g' >$(MAIN)/index.html.tmp
+	mv $(MAIN)/index.html.tmp $(MAIN)/index.html
+	cat $(MAIN)/$(MAIN).html | sed 's/$(MAIN).html#/#/g' >$(MAIN)/$(MAIN).html.tmp
+	mv $(MAIN)/$(MAIN).html.tmp $(MAIN)/$(MAIN).html
 
 #################### CONFIG_TEX
 if CONFIG_TEX

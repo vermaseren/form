@@ -1,11 +1,14 @@
 \documentclass[11pt,titlepage]{article}
+\usepackage{makeidx}
+
+%begin{latexonly}
 
 \makeatletter
 \renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
 \renewcommand*\l@subsection{\@dottedtocline{2}{1.5em}{3.0em}}
 \makeatother
 
-\usepackage{makeidx}
+%end{latexonly}
 
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
 \newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
@@ -22,12 +25,8 @@
 \begin{document}
 
 \thispagestyle{empty}
-\title{\Huge FORM \\ \Large version
-@VERSION@
-\\ \huge Developer's reference manual}
-\date{
-\input{devrefdate}
-}
+\title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Developer's reference manual}
+\date{\input{devrefdate}}
 \author{J.A.M.Vermaseren et al.}
 \maketitle
 

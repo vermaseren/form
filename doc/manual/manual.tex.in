@@ -1,11 +1,12 @@
 \documentclass[11pt]{report}
 %\usepackage{index}
+\usepackage{makeidx}
+
+%begin{latexonly}
 
 \makeatletter
 \renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
 \makeatother
-
-\usepackage{makeidx}
 
 % Use hyperref package (hyperlinks) with correct option for pdflatex/latex:
 \usepackage{ifpdf}
@@ -16,6 +17,8 @@
 \fi
 % and link indices back to text:
 \hypersetup{hyperindex,pagebackref,pdfpagemode={None},draft=false} 
+
+%end{latexonly}
 
 \newcommand{\pfill}{\hfill}
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
