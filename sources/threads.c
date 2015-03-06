@@ -1272,6 +1272,8 @@ void *RunThread(void *dummy)
 				AR.MaxDum = AM.IndDum;
 				AR.expchanged = AB[0]->R.expchanged;
 				AR.expflags = AB[0]->R.expflags;
+				AR.PolyFun = AB[0]->R.PolyFun;
+				AR.PolyFunType = AB[0]->R.PolyFunType;
 /*
 				Now fire up the sort buffer.
 */
