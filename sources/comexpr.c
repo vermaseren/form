@@ -250,7 +250,6 @@ int DoExpr(UBYTE *inp, int type, int par)
 		else if ( error == 0 ) {
 			AC.ProtoType[1] = osize;
 			AC.ProtoType[2] = i;
-/*			AR.outfile->POfill = AR.outfile->POfull; */
 			if ( PutOut(BHEAD OldWork+2,&pos,AR.outfile,0) < 0 ) {
 				MesPrint("&Cannot create expression");
 				error = -1;
@@ -268,14 +267,6 @@ int DoExpr(UBYTE *inp, int type, int par)
 					MesPrint("&Cannot create expression");
 					error = -1;
 				}
-/*
-				The next statement repairs a bug that occurs with
-				L  F2 = .....
-				#$d = F1[x];
-				in which the POfull was less than POfill and the setting
-				of the Scratch file in store.c goes wrong.
-				15-oct-2006 JV
-*/
 				AR.outfile->POfull = AR.outfile->POfill;
 			}
 			OldWork[2] = j;

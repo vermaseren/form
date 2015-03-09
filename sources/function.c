@@ -1262,6 +1262,13 @@ IndAll:				i = m[1] - WILDOFFSET;
 				if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) goto endofloop;
 				AddWild(BHEAD i,VECTOSUB,(WORD)0);
 			}
+			else if ( *m == -MINVECTOR && *t == -VECTOR &&
+			( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
+				AN.argaddress = AT.MinVecArg;
+				AT.MinVecArg[ARGHEAD+3] = t[1];
+				if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) goto endofloop;
+				AddWild(BHEAD i,VECTOSUB,(WORD)0);
+			}
 			else goto endofloop;
 		}
 		else if ( *t <= -FUNCTION && *m > 0 ) {

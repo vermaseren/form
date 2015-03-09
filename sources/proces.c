@@ -64,10 +64,10 @@ WORD printscratch[2];
 WORD Processor()
 {
 	GETIDENTITY
-	WORD *term, *t, i, retval = 0;
+	WORD *term, *t, i, retval = 0, size;
 	EXPRESSIONS e;
 	POSITION position;
-	WORD last, LastExpression;
+	WORD last, LastExpression, fromspectator;
 	LONG dd = 0;
 	CBUF *C = cbuf+AC.cbufnum;
 	int firstterm;
@@ -162,7 +162,7 @@ WORD Processor()
 	}
 #endif
 #ifdef WITHMPI
-	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && (AC.mparallelflag == PARALLELFLAG || AC.partodoflag) ) {
+ 	if ( AC.RhsExprInModuleFlag && PF.rhsInParallel && (AC.mparallelflag == PARALLELFLAG || AC.partodoflag) ) {
 		if ( PF_BroadcastRHS() ) {
 			retval = -1;
 		}
@@ -310,6 +310,12 @@ commonread:;
 					break;
 				}
 				term[3] = i;
+				if ( term[5] < 0 ) {	/* Fill with spectator */
+					fromspectator = -term[5];
+					PUTZERO(AM.SpectatorFiles[fromspectator-1].readpos);
+					term[5] = AC.cbufnum;
+				}
+				else fromspectator = 0;
 				if ( AR.outtohide ) {
 					SeekScratch(AR.hidefile,&position);
 					e->onfile = position;
@@ -330,7 +336,7 @@ commonread:;
 				if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
-					if ( ThreadsProcessor(e,LastExpression) ) {
+					if ( ThreadsProcessor(e,LastExpression,fromspectator) ) {
 						MesPrint("Error in ThreadsProcessor");
 						goto ProcErr;
 					}
@@ -345,7 +351,10 @@ commonread:;
 					NewSort(BHEAD0);
 					AR.MaxDum = AM.IndDum;
 					AN.ninterms = 0;
-					while ( GetTerm(BHEAD term) ) {
+					for(;;) {
+					 if ( fromspectator ) size = GetFromSpectator(term,fromspectator-1);
+					 else                 size = GetTerm(BHEAD term);
+					 if ( size <= 0 ) break;
 					 SeekScratch(curfile,&position);
 					 if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
 					  StoreTerm(BHEAD term);
@@ -604,6 +613,7 @@ commonread:;
 			case STOREDEXPRESSION:
 			case HIDDENLEXPRESSION:
 			case HIDDENGEXPRESSION:
+			case SPECTATOREXPRESSION:
 			default:
 				break;
 		}
@@ -2925,7 +2935,7 @@ SkipCount:	level++;
 					olddummies = DetCurDum(BHEAD term);
 					if ( olddummies > AR.MaxDum ) AR.MaxDum = olddummies;
 				}
-				if ( AR.PolyFun > 0 && AR.sLevel <= 0 ) {
+				if ( AR.PolyFun > 0 && ( AR.sLevel <= 0 || AN.FunSorts[AR.sLevel]->PolyFlag > 0 ) ) {
 					if ( PrepPoly(BHEAD term) != 0 ) goto Return0;
 				}
 				if ( AR.sLevel <= 0 && AR.BracketOn ) {
@@ -3453,6 +3463,9 @@ CommonEnd:
 					if ( PutInside(BHEAD term,C->lhs[level]) < 0 ) goto GenCall;
 					AT.WorkPointer = term + *term;
 					break;
+				  case TYPETOSPECTATOR:
+					if ( PutInSpectator(term,C->lhs[level][2]) < 0 ) goto GenCall;
+					goto Return0;
 				}
 				goto SkipCount;
 /*

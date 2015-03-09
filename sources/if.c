@@ -187,6 +187,7 @@ int FindVar(WORD *v, WORD *term)
 					break;
 				case INDEX:
 				case VECTOR:
+InVe:
 					m = t+2; mstop = t+t[1];
 					while ( m < mstop ) {
 						if ( *m == v[1] ) return(1);
@@ -203,6 +204,8 @@ int FindVar(WORD *v, WORD *term)
 					break;
 			}
 		}
+		else if ( *v == VECTOR && *t == INDEX ) goto InVe;
+		else if ( *v == INDEX && *t == VECTOR ) goto InVe;
 		else if ( *t >= FUNCTION ) {
 			if ( *v == FUNCTION && v[1] == *t ) return(1);
 			fstop = t + t[1]; f = t + FUNHEAD;
@@ -246,7 +249,7 @@ int FindVar(WORD *v, WORD *term)
 }
 
 /*
- 		#] FindVar : 
+ 		#] FindVar :
  		#[ DoIfStatement :				WORD DoIfStatement(PHEAD ifcode,term)
 
 		The execution time part of the if-statement.
@@ -1018,6 +1021,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement : 
+  	#] If statement :
 */
 

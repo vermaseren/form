@@ -3880,6 +3880,7 @@ the `polyfun'. \vspace{10mm}
 \noindent \begin{tabular}{ll}
 Type & Declaration statement\\
 Syntax & polyratfun {\tt<}name of function{\tt>}; \\
+       & polyratfun {\tt<}name of function{\tt>},{\tt<}name of function{\tt>}; \\
        & polyratfun;
 \\ See also & polyfun (\ref{substapolyfun}),
 			  moduleoption (\ref{substamoduleoption})
@@ -3920,10 +3921,18 @@ with the highest power first. In the polyfun the ordering is as with the
 regular terms. By default the lowest powers come first as one usually likes 
 for power series expansions.
 
-\noindent REMARK: In versions after 15-nov-2007 but before 1-apr-2011 
-(version 4.0 beta) not all facilities were operational. Among others only 
-rational polynomials in a single variable were supported. Starting with 
-version 4.0 the polyratfun is supposed to be fully operational.
+\noindent When two functions are specified, the first will be the 
+PolyRatFun, and the second will be its inverse as in
+\begin{verbatim}
+    PolyRatFun rat,RAT;
+\end{verbatim}
+in which case
+\begin{verbatim}
+        RAT(x1,x2) = rat(x2,x1)
+\end{verbatim}
+This can be handy when one needs to solve systems of equations by manual 
+interference. In that case exchanging numerators and denominators can be 
+rather messy, while just changing a name is far less error-prone.
 \vspace{10mm}
 
 %--#] polyratfun : 

@@ -5093,6 +5093,7 @@ int CoPolyFun(UBYTE *s)
 	UBYTE *t;
 	if ( *s == 0 ) {
 		AR.PolyFun = AC.lPolyFun = 0;
+		AR.PolyFunInv = AC.lPolyFunInv = 0;
 		AR.PolyFunType = AC.lPolyFunType = 0;
 		return(0);
 	}
@@ -5111,6 +5112,7 @@ int CoPolyFun(UBYTE *s)
 		return(1);
 	}
 	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
+	AR.PolyFunInv = AC.lPolyFunInv = 0;
 	AR.PolyFunType = AC.lPolyFunType = 1;
 	return(0);
 }
@@ -5119,7 +5121,7 @@ int CoPolyFun(UBYTE *s)
   	#] CoPolyFun : 
   	#[ CoPolyRatFun :
 
-	Collect,functionname
+	PolyRatFun [,functionname[,functionname](option)]
 */
 
 int CoPolyRatFun(UBYTE *s)
@@ -5127,17 +5129,17 @@ int CoPolyRatFun(UBYTE *s)
 	GETIDENTITY
 	WORD numfun;
 	int type;
-	UBYTE *t;
-	if ( *s == 0 ) {
-		AR.PolyFun = AC.lPolyFun = 0;
-		AR.PolyFunType = AC.lPolyFunType = 0;
-		return(0);
-	}
+	UBYTE *t, c;
+	AR.PolyFun = AC.lPolyFun = 0;
+	AR.PolyFunInv = AC.lPolyFunInv = 0;
+	AR.PolyFunType = AC.lPolyFunType = 0;
+	AR.PolyFunExp = AC.lPolyFunExp = 0;
+	AR.PolyFunVar = AC.lPolyFunVar = 0;
+	AR.PolyFunPow = AC.lPolyFunPow = 0;
+	if ( *s == 0 ) return(0);
 	t = SkipAName(s);
-	if ( t == 0 || *t != 0 ) {
-		MesPrint("&PolyRatFun statement needs a single commuting function for its argument");
-		return(1);
-	}
+	if ( t == 0 ) goto NumErr;
+	c = *t; *t = 0;
 	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
 	|| ( functions[numfun].spec != 0 ) || ( functions[numfun].commute != 0 ) ) {
 		MesPrint("&%s should be a regular commuting function",s);
@@ -5148,9 +5150,83 @@ int CoPolyRatFun(UBYTE *s)
 		return(1);
 	}
 	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
+	AR.PolyFunInv = AC.lPolyFunInv = 0;
 	AR.PolyFunType = AC.lPolyFunType = 2;
 	AC.PolyRatFunChanged = 1;
-	return(0);
+	if ( c == 0 ) return(0);
+	*t = c; while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+	if ( *t == 0 ) return(0);
+	if ( *t != '(' ) {
+		s = t;
+		t = SkipAName(s);
+		if ( t == 0 ) goto NumErr;
+		c = *t; *t = 0;
+		if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
+		|| ( functions[numfun].spec != 0 ) || ( functions[numfun].commute != 0 ) ) {
+			MesPrint("&%s should be a regular commuting function",s);
+			if ( type < 0 ) {
+				if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
+					AddFunction(s,0,0,0,0,0,-1,-1);
+			}
+			return(1);
+		}
+		AR.PolyFunInv = AC.lPolyFunInv = numfun+FUNCTION;
+		if ( c == 0 ) return(0);
+		*t = c; while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+		if ( *t == 0 ) return(0);
+	}
+	if ( *t == '(' ) {
+		t++;
+		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+/*
+		Next we need a keyword like
+			(divergence,ep)
+			(expand,ep,maxpow)
+*/
+		s = t;
+		t = SkipAName(s);
+		if ( t == 0 ) goto NumErr;
+		c = *t; *t = 0;
+		if ( ( StrICmp(s,(UBYTE *)"divergence") == 0 ) 
+		|| ( StrICmp(s,(UBYTE *)"finddivergence") == 0 ) ) {
+			if ( c != ',' ) {
+				MesPrint("&Illegal option field in PolyRatFun statement.");
+				return(1);
+			}
+			*t = c;
+			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+			s = t;
+			t = SkipAName(s);
+			if ( t == 0 ) goto NumErr;
+			c = *t; *t = 0;
+			if ( ( type = GetName(AC.varnames,s,&AC.lPolyFunVar,WITHAUTO) ) != CSYMBOL ) {
+				MesPrint("&Illegal symbol %s in option field in PolyRatFun statement.",s);
+				return(1);
+			}
+			*t = c;
+			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+			if ( *t != ')' ) {
+				MesPrint("&Illegal termination of option in PolyRatFun statement.");
+				return(1);
+			}
+			AR.PolyFunExp = AC.lPolyFunExp = 1;
+			AR.PolyFunVar = AC.lPolyFunVar;
+		}
+/*
+		else if ( StrICmp(s,"expand") == 0 ) {
+		}
+*/
+		else {
+			MesPrint("&Illegal option %s in PolyRatFun statement.",s);
+			return(1);
+		}
+		t++;
+		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+		if ( *t == 0 ) return(0);
+	}
+NumErr:;
+	MesPrint("&PolyRatFun statement needs one or two commuting function(s) for its argument(s)");
+	return(1);
 }
 
 /*

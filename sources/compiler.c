@@ -117,6 +117,8 @@ static KEYWORD com2commands[] = {
 	,{"collect",        (TFUN)CoCollect,          SPECIFICATION,PARTEST}
 	,{"commuteinset",   (TFUN)CoCommuteInSet,     DECLARATION,  PARTEST}
 	,{"contract",       (TFUN)CoContract,         STATEMENT,    PARTEST}
+	,{"copyspectator"  ,(TFUN)CoCopySpectator,    DEFINITION,   PARTEST}
+	,{"createspectator",(TFUN)CoCreateSpectator,  DECLARATION,  PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
 	,{"deallocatetable",(TFUN)CoDeallocateTable,  DECLARATION,  PARTEST}
 	,{"delete",         (TFUN)CoDelete,           SPECIFICATION,PARTEST}
@@ -128,6 +130,7 @@ static KEYWORD com2commands[] = {
 	,{"dropsymbols",    (TFUN)CoDropSymbols,      STATEMENT,    PARTEST}
 	,{"else",           (TFUN)CoElse,             STATEMENT,    PARTEST}
 	,{"elseif",         (TFUN)CoElseIf,           STATEMENT,    PARTEST}
+	,{"emptyspectator", (TFUN)CoEmptySpectator,   SPECIFICATION,PARTEST}
 	,{"endargument",    (TFUN)CoEndArgument,      STATEMENT,    PARTEST}
 	,{"enddo",          (TFUN)CoEndDo,            STATEMENT,    PARTEST}
 	,{"endif",          (TFUN)CoEndIf,            STATEMENT,    PARTEST}
@@ -186,6 +189,7 @@ static KEYWORD com2commands[] = {
 	,{"pushhide",       (TFUN)CoPushHide,         SPECIFICATION,PARTEST}
 	,{"putinside",      (TFUN)CoPutInside,        STATEMENT,    PARTEST}
 	,{"ratio",          (TFUN)CoRatio,            STATEMENT,    PARTEST}
+	,{"removespectator",(TFUN)CoRemoveSpectator,  SPECIFICATION,PARTEST}
 	,{"renumber",       (TFUN)CoRenumber,         STATEMENT,    PARTEST}
 	,{"repeat",         (TFUN)CoRepeat,           STATEMENT,    PARTEST}
 	,{"replaceloop",    (TFUN)CoReplaceLoop,      STATEMENT,    PARTEST}
@@ -207,6 +211,7 @@ static KEYWORD com2commands[] = {
 	,{"testuse",        (TFUN)CoTestUse,          STATEMENT,    PARTEST}
 	,{"threadbucketsize",(TFUN)CoThreadBucket,    DECLARATION,  PARTEST}
 	,{"topolynomial",   (TFUN)CoToPolynomial,     STATEMENT,    PARTEST}
+	,{"tospectator",    (TFUN)CoToSpectator,      STATEMENT,    PARTEST}
 	,{"totensor",       (TFUN)CoToTensor,         STATEMENT,    PARTEST}
 	,{"tovector",       (TFUN)CoToVector,         STATEMENT,    PARTEST}
 	,{"trace4",         (TFUN)CoTrace4,           STATEMENT,    PARTEST}

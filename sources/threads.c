@@ -1045,6 +1045,9 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 	AR.GetOneFile = AR0.GetOneFile;
 	AR.PolyFun = AR0.PolyFun;
 	AR.PolyFunType = AR0.PolyFunType;
+	AR.PolyFunExp = AR0.PolyFunExp;
+	AR.PolyFunVar = AR0.PolyFunVar;
+	AR.PolyFunPow = AR0.PolyFunPow;
 	AR.Eside = AR0.Eside;
 	AR.Cnumlhs = AR0.Cnumlhs;
 /*
@@ -1274,6 +1277,9 @@ void *RunThread(void *dummy)
 				AR.expflags = AB[0]->R.expflags;
 				AR.PolyFun = AB[0]->R.PolyFun;
 				AR.PolyFunType = AB[0]->R.PolyFunType;
+				AR.PolyFunExp = AB[0]->R.PolyFunExp;
+				AR.PolyFunVar = AB[0]->R.PolyFunVar;
+				AR.PolyFunPow = AB[0]->R.PolyFunPow;
 /*
 				Now fire up the sort buffer.
 */
@@ -1549,6 +1555,7 @@ bucketstolen:;
 				WORD oldBracketOn = AR.BracketOn;
 				WORD *oldBrackBuf = AT.BrackBuf;
 				WORD oldbracketindexflag = AT.bracketindexflag;
+				WORD fromspectator = 0;
 				e = Expressions + AR.exprtodo;
 				i = AR.exprtodo;
 				AR.CurExpr = i;
@@ -1586,6 +1593,11 @@ bucketstolen:;
 				}
 				if ( AT.bracketindexflag > 0 ) OpenBracketIndex(i);
 				term[3] = i;
+				if ( term[5] < 0 ) {
+					fromspectator = -term[5];
+					PUTZERO(AM.SpectatorFiles[fromspectator-1].readpos);
+					term[5] = AC.cbufnum;
+				}
 				PUTZERO(outposition);
 				fout = AR.outfile;
 				fout->POfill = fout->POfull = fout->PObuffer;
@@ -1612,7 +1624,28 @@ bucketstolen:;
 				NewSort(BHEAD0);
 				AR.MaxDum = AM.IndDum;
 				AN.ninterms = 0;
-				while ( GetTerm(BHEAD term) ) {
+				if ( fromspectator ) {
+				 while ( GetFromSpectator(term,fromspectator-1) ) {
+				  AT.WorkPointer = term + *term;
+				  AN.RepPoint = AT.RepCount + 1;
+				  AN.IndDum = AM.IndDum;
+				  AR.CurDum = ReNumber(BHEAD term);
+				  if ( AC.SymChangeFlag ) MarkDirty(term,DIRTYSYMFLAG);
+				  if ( AN.ncmod ) {
+					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
+					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
+				  }
+				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
+						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
+						PolyFunClean(BHEAD term);
+				  }
+				  if ( Generator(BHEAD term,0) ) {
+					LowerSortLevel(); goto ProcErr;
+				  }
+				 }
+				}
+				else {
+				 while ( GetTerm(BHEAD term) ) {
 				  SeekScratch(fi,&position);
 				  AN.ninterms++; dd = AN.deferskipped;
 				  if ( ( e->vflags & ISFACTORIZED ) != 0 && term[1] == HAAKJE ) {
@@ -1657,6 +1690,7 @@ bucketstolen:;
 					AR.InInBuf = (fi->POfull-fi->PObuffer)
 						-DIFBASE(position,fi->POposition)/sizeof(WORD);
 				  }
+				 }
 				}
 				AN.ninterms += dd;
 				if ( EndSort(BHEAD AT.S0->sBuffer,0) < 0 ) goto ProcErr;
@@ -1873,6 +1907,9 @@ void *RunSortBot(void *dummy)
 				AR.CurExpr = AB[0]->R.CurExpr;
 				AR.PolyFun = AB[0]->R.PolyFun;
 				AR.PolyFunType = AB[0]->R.PolyFunType;
+				AR.PolyFunExp = AB[0]->R.PolyFunExp;
+				AR.PolyFunVar = AB[0]->R.PolyFunVar;
+				AR.PolyFunPow = AB[0]->R.PolyFunPow;
 				AR.SortType = AC.SortType;
 				AT.SS->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
 				AT.SS->PolyWise = 0;
@@ -2477,7 +2514,7 @@ int InParallelProcessor()
  *	                      the output is written. This saves diskspace.
  */
 
-int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression)
+int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression, WORD fromspectator)
 {
 	ALLPRIVATES *B0 = AB[0], *B = B0;
 	int id, oldgzipCompress, endofinput = 0, j, still, k, defcount = 0, bra = 0, first = 1;
@@ -2684,7 +2721,15 @@ Found2:;
 
 	Now the loop to start a bucket
 */
-	while ( ( ter = GetTermP(B0,thr->threadbuffer) ) >= 0 ) {
+	for(;;) {
+		if ( fromspectator ) {
+			ter = GetFromSpectator(thr->threadbuffer,fromspectator-1);
+			if ( ter == 0 ) fromspectator = 0;
+		}
+		else {
+			ter = GetTermP(B0,thr->threadbuffer);
+		}
+		if ( ter < 0 ) break;
 		if ( ter == 0 ) { endofinput = 1; goto Finalize; }
 		dd = AN0.deferskipped;
 		if ( AR0.DeferFlag ) {

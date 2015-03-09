@@ -798,11 +798,15 @@ int SetDictionaryOptions(UBYTE *options)
 	AO.CurDictFunWithArgs = DICT_DOFUNWITHARGS;
 	AO.CurDictNumberWarning = 0;
 	AO.CurDictNotInFunctions= 0;
+	AO.CurDictInDollars = DICT_NOTINDOLLARS;
 	while ( *s ) {
 		opt = s;
 		while ( *s && *s != ',' && *s != ' ' ) s++;
 		c = *s; *s = 0;
-		if ( StrICmp(opt,(UBYTE *)"nonumbers") == 0 ) {
+		if ( opt[0] == '$' && opt[1] == 0 ) {
+			AO.CurDictInDollars = DICT_INDOLLARS;
+		}
+		else if ( StrICmp(opt,(UBYTE *)"nonumbers") == 0 ) {
 			AO.CurDictNumbers = DICT_NONUMBERS;
 		}
 		else if ( StrICmp(opt,(UBYTE *)"integersonly") == 0 ) {

@@ -507,6 +507,7 @@ VOID ReserveTempFiles(int par)
 		*t++ = SEPARATOR;
 	*t = 0;
 	tenddir = t;
+	FG.fnamebase = t-(UBYTE *)(FG.fname);
 
 	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
@@ -518,6 +519,7 @@ VOID ReserveTempFiles(int par)
 		*t++ = SEPARATOR;
 	*t = 0;
 	tenddir2 = t;
+	FG.fname2base = t-(UBYTE *)(FG.fname2);
 
 	t = tenddir;
 	s = defaulttempfilename;
@@ -535,6 +537,7 @@ VOID ReserveTempFiles(int par)
 		strcpy(FG.fname,"/formswap/xxxxxxxxxxxxxxxxxxxxx");
 		/*:[04nov2003 mt]*/
 		t = (UBYTE *)FG.fname + 10;
+		FG.fnamebase = t-FG.fname;
 	  }
 	  else{
 		/*[04nov2003 mt]:*/
@@ -544,6 +547,7 @@ VOID ReserveTempFiles(int par)
 		/*:[04nov2003 mt]*/
 		FG.fname[9] = '0' + PF.me;
 		t = (UBYTE *)FG.fname + 11;
+		FG.fnamebase = t-FG.fname;
 	  }
 #else
 	  iii = sprintf((char*)t,"%d",PF.me);
@@ -761,6 +765,9 @@ VOID StartVariables()
 	AM.resetTimeOnClear = 1;
 	AM.gnumextrasym = AM.ggnumextrasym = 0;
 	AM.havesortdir = 0;
+	AM.SpectatorFiles = 0;
+	AM.NumSpectatorFiles = 0;
+	AM.SizeForSpectatorFiles = 0;
 /*
 	Information for the lists of variables. Part of error message and size:
 */
@@ -1166,7 +1173,11 @@ WORD IniVars()
 	AC.halfmod = 0; AC.nhalfmod = 0;
 	AC.modinverses = 0;
 	AC.lPolyFun = AM.gPolyFun = 0;
+	AC.lPolyFunInv = AM.gPolyFunInv = 0;
 	AC.lPolyFunType = AM.gPolyFunType = 0;
+	AC.lPolyFunExp = AM.gPolyFunExp = 0;
+	AC.lPolyFunVar = AM.gPolyFunVar = 0;
+	AC.lPolyFunPow = AM.gPolyFunPow = 0;
 	AC.DirtPow = 0;
 	AC.lDefDim = AM.gDefDim = 4;
 	AC.lDefDim4 = AM.gDefDim4 = 0;
@@ -1559,6 +1570,7 @@ dontremove:;
 #endif
 	}
 	}
+	ClearSpectators(CLEARMODULE);
 /*
 	Remove recovery file on exit if everything went well
 */

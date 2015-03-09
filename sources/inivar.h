@@ -75,7 +75,10 @@ FIXEDGLOBALS FG = {
 		,"(global-hidden)"
 		,"(global-to be hidden)"
 		,"(global-hidden-dropped)"
-		,"(global-to be unhidden)"}
+		,"(global-to be unhidden)"
+		,"(into-hide-local)"
+		,"(into-hide-global)"
+		,"(spectator)"}
 
 		,{" Functions"
 		," Commuting Functions"}
@@ -87,6 +90,8 @@ FIXEDGLOBALS FG = {
 	,(char *)0
 	,(char *)0
 	,(UBYTE *)"1"
+	,(WORD)0
+	,(WORD)0
 
 /*  ASCII table of character types. Note that on some computers this
     table may be different from the ASCII table.

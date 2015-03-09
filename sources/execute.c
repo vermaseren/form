@@ -70,6 +70,7 @@ WORD CleanExpr(WORD par)
 		if ( e_in->status == HIDDENLEXPRESSION
 		|| e_in->status == HIDDENGEXPRESSION ) numhid++;
 		switch ( e_in->status ) {
+			case SPECTATOREXPRESSION:
 			case LOCALEXPRESSION:
 			case HIDDENLEXPRESSION:
 				if ( par ) {
@@ -141,6 +142,7 @@ WORD CleanExpr(WORD par)
 			case DROPGEXPRESSION:
 			case DROPHGEXPRESSION:
 			case STOREDEXPRESSION:
+			case DROPSPECTATOREXPRESSION:
 				if ( e_out != e_in ) {
 					node = AC.exprnames->namenode + e_in->node;
 					node->number = e_out - Expressions;
@@ -189,6 +191,7 @@ WORD CleanExpr(WORD par)
 		AR.hidefile->POfill = AR.hidefile->PObuffer;
 		PUTZERO(AR.hidefile->POposition);
 	}
+	FlushSpectators();
 	return(0);
 }
 
@@ -266,7 +269,11 @@ WORD PopVariables()
 			MakeInverses();
 	AC.funpowers = AM.gfunpowers;
 	AC.lPolyFun = AM.gPolyFun;
+	AC.lPolyFunInv = AM.gPolyFunInv;
 	AC.lPolyFunType = AM.gPolyFunType;
+	AC.lPolyFunExp = AM.gPolyFunExp;
+	AC.lPolyFunVar = AM.gPolyFunVar;
+	AC.lPolyFunPow = AM.gPolyFunPow;
 	AC.parallelflag = AM.gparallelflag;
 	AC.ProcessBucketSize = AC.mProcessBucketSize = AM.gProcessBucketSize;
 	AC.properorderflag = AM.gproperorderflag;
@@ -393,7 +400,11 @@ VOID MakeGlobal()
 	AM.gOutNumberType = AC.OutNumberType;
 	AM.gfunpowers = AC.funpowers;
 	AM.gPolyFun = AC.lPolyFun;
+	AM.gPolyFunInv = AC.lPolyFunInv;
 	AM.gPolyFunType = AC.lPolyFunType;
+	AM.gPolyFunExp = AC.lPolyFunExp;
+	AM.gPolyFunVar = AC.lPolyFunVar;
+	AM.gPolyFunPow = AC.lPolyFunPow;
 	AM.gparallelflag = AC.parallelflag;
 	AM.gProcessBucketSize = AC.ProcessBucketSize;
 	AM.gproperorderflag = AC.properorderflag;
@@ -440,6 +451,12 @@ VOID MakeGlobal()
 	for ( i = 0; i < AO.NumDictionaries; i++ ) {
 		AO.Dictionaries[i]->gnumelements = AO.Dictionaries[i]->numelements;
 	}
+	if ( AM.NumSpectatorFiles > 0 ) {
+		for ( i = 0; i < AM.SizeForSpectatorFiles; i++ ) {
+			if ( AM.SpectatorFiles[i].name != 0 )
+					AM.SpectatorFiles[i].flags |= GLOBALSPECTATORFLAG;
+		}
+	}
 }
 
 /*
@@ -479,6 +496,7 @@ VOID TestDrop()
 			case DROPGEXPRESSION:
 			case DROPHLEXPRESSION:
 			case DROPHGEXPRESSION:
+			case DROPSPECTATOREXPRESSION:
 				e->status = DROPPEDEXPRESSION;
 				ClearBracketIndex(j);
 				e->bracketinfo = e->newbracketinfo; e->newbracketinfo = 0;
@@ -924,6 +942,7 @@ skipexec:
 			PruneExtraSymbols(AM.ggnumextrasym);
 			IniVars();
 		}
+		ClearSpectators(par);
 	}
 	else {
 		if ( CleanExpr(0) ) RetCode = -1;
@@ -2297,3 +2316,4 @@ IllBraReq:;
  		#] TermsInBracket :		LONG TermsInBracket(term,level) 
 	#] Expressions :
 */
+

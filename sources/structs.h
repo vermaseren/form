@@ -698,6 +698,16 @@ typedef struct StreaM {
 	PADPOSITION(6,3,9,0,4);
 } STREAM;
 
+typedef struct SpecTatoR {
+	POSITION position;   /* The place where we will be writing */
+	POSITION readpos;    /* The place from which we read */
+	FILEHANDLE *fh;
+	char *name;          /* We identify the spectator by the name of the expression */
+	WORD exprnumber;     /* During running we use the number. */
+	WORD flags;          /* local, global? */
+	PADPOSITION(2,0,0,2,0);
+} SPECTATOR;
+
 /*
   	#] Files : 
   	#[ Traces :
@@ -1291,6 +1301,7 @@ struct M_const {
 	UBYTE   *gextrasym;
 	UBYTE   *ggextrasym;
     UBYTE   *oldnumextrasymbols;
+	SPECTATOR *SpectatorFiles;
 #ifdef WITHPTHREADS
     pthread_rwlock_t handlelock;   /* (M) */
     pthread_mutex_t storefilelock; /* (M) */
@@ -1320,6 +1331,7 @@ struct M_const {
     LONG    gThreadBucketSize;     /* (C) */
     LONG    ggThreadBucketSize;    /* (C) */
     LONG    SumTime;               /*     Used in .clear */
+    LONG    SpectatorSize;         /*     Size of the buffer in bytes */
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
     int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
@@ -1375,6 +1387,8 @@ struct M_const {
     int     ggOldFactArgFlag;
     int     gnumextrasym;
     int     ggnumextrasym;
+	int		NumSpectatorFiles;     /* Elements used in AM.spectatorfiles; */
+	int		SizeForSpectatorFiles; /* Size in AM.spectatorfiles; */
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1413,7 +1427,11 @@ struct M_const {
     WORD    matchfunnum;           /* (M) internal number of match_ function */
     WORD    countfunnum;           /* (M) internal number of count_ function */
     WORD    gPolyFun;              /* (M) global value of PolyFun */
+    WORD    gPolyFunInv;           /* (M) global value of Inverse of PolyFun */
     WORD    gPolyFunType;          /* (M) global value of PolyFun */
+    WORD    gPolyFunExp;
+    WORD    gPolyFunVar;
+    WORD    gPolyFunPow;
     WORD    dollarzero;            /* (M) for dollars with zero value */
     WORD    atstartup;             /* To protect against DATE_ ending in \n */
     WORD    exitflag;              /* (R) For the exit statement */
@@ -1428,9 +1446,9 @@ struct M_const {
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(15,24,55,76,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,57,80,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(15,22,55,76,0);
+	PADPOSITION(17,23,57,80,0);
 #endif
 };
 /*
@@ -1712,7 +1730,11 @@ struct C_const {
     WORD    StoreHandle;           /* (C) Handle of .str file */
     WORD    HideLevel;             /* (C) Hiding indicator */
     WORD    lPolyFun;              /* (C) local value of PolyFun */
+    WORD    lPolyFunInv;           /* (C) local value of Inverse of PolyFun */
     WORD    lPolyFunType;          /* (C) local value of PolyFunType */
+    WORD    lPolyFunExp;
+    WORD    lPolyFunVar;
+    WORD    lPolyFunPow;
     WORD    SymChangeFlag;         /* (C) */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
@@ -1725,11 +1747,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(46,8+3*MAXNEST,69,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(46,8+3*MAXNEST,69,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(46,8+3*MAXNEST,69,41+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(46,8+3*MAXNEST,69,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(44,8+3*MAXNEST,67,40+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(44,8+3*MAXNEST,67,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1840,7 +1862,11 @@ struct R_const {
     WORD    Stage4Name;            /* (R) Sorting only */
     WORD    GetOneFile;            /* (R) Getting from hide or regular */
     WORD    PolyFun;               /* (C) Number of the PolyFun function */
+    WORD    PolyFunInv;            /* (C) Number of the Inverse of the PolyFun function */
     WORD    PolyFunType;           /* () value of PolyFunType */
+    WORD    PolyFunExp;
+    WORD    PolyFunVar;
+    WORD    PolyFunPow;
     WORD    Eside;                 /* () Tells which side of = sign */
     WORD    MaxDum;                /* Maximum dummy value in an expression */
     WORD    level;                 /* Running level in Generator */
@@ -1851,15 +1877,15 @@ struct R_const {
     WORD    ShortSortCount;        /* For On FewerStatistics 10; */
 #if ( BITSINWORD == 32 )
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,5022,0);
+	PADPOSITION(8,7,8,5026,0);
 #else
-	PADPOSITION(8,7,7,5022,0);
+	PADPOSITION(8,7,7,5026,0);
 #endif
 #else
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,20,0);
+	PADPOSITION(8,7,8,24,0);
 #else
-	PADPOSITION(8,7,7,20,0);
+	PADPOSITION(8,7,7,24,0);
 #endif
 #endif
 };
@@ -2208,6 +2234,7 @@ struct O_const {
     int     CurDictFunWithArgs;
     int     CurDictNumberWarning;
     int     CurDictNotInFunctions;
+    int     CurDictInDollars;
     int     gNumDictionaries;
     WORD    schemenum;             /* for feeding a Horner scheme to Optimize */
     WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
@@ -2231,9 +2258,9 @@ struct O_const {
 	For the padding, please count also the number of int's in the OPTIMIZE struct.
 */
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(25,6,34,17,1);
+	PADPOSITION(25,6,35,17,1);
 #else
-	PADPOSITION(25,4,34,17,1);
+	PADPOSITION(25,4,35,17,1);
 #endif
 };
 /*
@@ -2347,12 +2374,14 @@ typedef struct FixedGlobals {
 	WCN		Operation[8];
 	WCN2	OperaFind[6];
 	char	*VarType[10];
-	char	*ExprStat[17];
+	char	*ExprStat[20];
 	char	*FunNam[2];
 	char	*swmes[3];
 	char	*fname;
 	char	*fname2;
 	UBYTE	*s_one;
+	WORD	fnamebase;
+	WORD	fname2base;
 	UINT	cTable[256];
 } FIXEDGLOBALS;
 

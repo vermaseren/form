@@ -578,6 +578,7 @@ WORD NewSort(PHEAD0)
 				AM.SLargeSize,AM.SSmallSize,AM.SSmallEsize,AM.STermsInSmall
 					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize);
 		}
+		AN.FunSorts[AR.sLevel]->PolyFlag = 0;
 	}
 	AT.SS = S = AN.FunSorts[AR.sLevel];
 	S->sFill = S->sBuffer;
@@ -653,6 +654,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	/* PF_EndSort returned 0: for S != AM.S0 and slaves still do the regular sort */
 #endif /* WITHMPI */
 	oldoutfile = AR.outfile;
+/*		PolyFlag repair action
 	if ( S == AT.S0 ) {
 		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
 		S->PolyWise = 0;
@@ -660,6 +662,8 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	else {
 		S->PolyFlag = S->PolyWise = 0;
 	}
+*/
+	S->PolyWise = 0;
 	*(S->PoinFill) = 0;
 
 	SplitMerge(BHEAD S->sPointer,S->sTerms);
@@ -672,7 +676,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			ss[over] = 0;
 			sSpace = ComPress(ss,&spare);
 			S->TermsLeft -= over - spare;
-			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(); }
+			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 		}
 		else if ( S != AT.S0 ) {
 			ss[over] = 0;
@@ -762,7 +766,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			goto RetRetval;
 		}
 	}
-	else if ( par == 1 && newout == 0 ) { AR.outfile = newout = AllocFileHandle(); }
+	else if ( par == 1 && newout == 0 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 	sSpace++;
 	lSpace = sSpace + (S->lFill - S->lBuffer) - (LONG)S->lPatch*(AM.MaxTer/sizeof(WORD));
 /*         Note wrt MaxTer and lPatch: each patch starts with space for decompression */
@@ -779,7 +783,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		if ( S->lPatch > 0 || S->file.handle >= 0 ) { WriteStats(&pp,0); }
 		AC.LogHandle = oldLogHandle;
 	}
-	if ( par == 2 ) { AR.outfile = newout = AllocFileHandle(); }
+	if ( par == 2 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 	if ( S->lPatch > 0 ) {
 		if ( ( S->lPatch >= S->MaxPatches ) ||
 			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer) ) >= S->lTop ) ) {
@@ -792,6 +796,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 					,S->lPatch,S->MaxPatches,S->lFill,sSpace,AM.MaxTer/sizeof(WORD),S->lTop);
 			MUNLOCK(ErrorMessageLock);
 #endif
+
 			if ( MergePatches(1) ) {
 				MLOCK(ErrorMessageLock);
 				MesCall("EndSort");
@@ -2292,6 +2297,7 @@ s1only:
 		}
 	}
 	else {
+		int oldPolyFlag;
 		tstop1 = s1 + s1[1];
 		s1 += FUNHEAD+ARGHEAD;
 twogen:
@@ -2300,6 +2306,7 @@ twogen:
 /*
 		Now we should merge the expressions in s1 and s2 into m.
 */
+		oldPolyFlag = AT.SS->PolyFlag;
 		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
 			i1 = CompareTerms(BHEAD s1,s2,(WORD)(-1));
@@ -2361,7 +2368,8 @@ twogen:
 			else w[1] = FUNHEAD+2;
 			if ( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) w[1] = FUNHEAD;
 		}
-		AT.SS->PolyFlag = AR.PolyFunType;
+/*		AT.SS->PolyFlag = AR.PolyFunType;*/
+		AT.SS->PolyFlag = oldPolyFlag;
 	}
 }
 
@@ -3344,7 +3352,9 @@ WORD MergePatches(WORD par)
 #endif
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
+/*	PolyFlag repair action
 	S->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
+*/
 NewMerge:
 	coef = AN.SoScratC;
 	poin = S->poina; poin2 = S->poin2a;
@@ -4089,7 +4099,9 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 	The small buffer is full. It has to be sorted and written.
 */
+/*	PolyFlag repair action
 		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType:0;
+*/
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
@@ -4443,5 +4455,96 @@ VOID LowerSortLevel()
 
 /*
  		#] LowerSortLevel : 
+ 		#[ PolyRatFunSpecial :
+
+		Keeps only the most divergent term in AR.PolyFunVar
+		We assume that the terms are already in that notation.
+*/
+
+WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
+{
+	WORD *oldworkpointer = AT.WorkPointer, *t, *r;
+	WORD exp1, exp2;
+	int i;
+	t = t1+FUNHEAD;
+	if ( *t == -SYMBOL ) {
+		if ( t[1] != AR.PolyFunVar ) goto Illegal;
+		exp1 = 1;
+		if ( t[2] != -SNUMBER || t[3] != 1 ) goto Illegal;
+	}
+	else if ( *t == -SNUMBER ) {
+		if ( t[1] != 1 ) goto Illegal;
+		t += 2;
+		if ( *t == -SYMBOL ) {
+			if ( t[1] != AR.PolyFunVar ) goto Illegal;
+			exp1 = -1;
+		}
+		else if ( *t == -SNUMBER ) {
+			if ( t[1] != 1 ) goto Illegal;
+			exp1 = 0;
+		}
+		else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
+			&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
+			&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+			exp1 = -t[ARGHEAD+4];
+		}
+		else goto Illegal;
+	}
+	else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
+		&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
+		&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+		exp1 = t[ARGHEAD+4];
+		t += *t;
+		if ( *t != -SNUMBER || t[1] != 1 ) goto Illegal;
+	}
+	else goto Illegal;
+
+	t = t2+FUNHEAD;
+	if ( *t == -SYMBOL ) {
+		if ( t[1] != AR.PolyFunVar ) goto Illegal;
+		exp2 = 1;
+		if ( t[2] != -SNUMBER || t[3] != 1 ) goto Illegal;
+	}
+	else if ( *t == -SNUMBER ) {
+		if ( t[1] != 1 ) goto Illegal;
+		t += 2;
+		if ( *t == -SYMBOL ) {
+			if ( t[1] != AR.PolyFunVar ) goto Illegal;
+			exp2 = -1;
+		}
+		else if ( *t == -SNUMBER ) {
+			if ( t[1] != 1 ) goto Illegal;
+			exp2 = 0;
+		}
+		else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
+			&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
+			&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+			exp2 = -t[ARGHEAD+4];
+		}
+		else goto Illegal;
+	}
+	else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
+		&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
+		&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+		exp2 = t[ARGHEAD+4];
+		t += *t;
+		if ( *t != -SNUMBER || t[1] != 1 ) goto Illegal;
+	}
+	else goto Illegal;
+
+	if ( exp1 <= exp2 ) { i = t1[1]; r = t1; }
+	else                { i = t1[1]; r = t2; }
+	t = oldworkpointer;
+	NCOPY(t,r,i)
+
+	return(oldworkpointer);
+Illegal:
+	MesPrint("Illegal occurrence of PolyRatFun with divergent option");
+	Terminate(-1);
+	return(0);
+}
+
+/*
+ 		#] PolyRatFunSpecial : 
 	#] SortUtilities :
 */

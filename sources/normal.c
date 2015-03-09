@@ -2926,7 +2926,7 @@ onegammamatrix:
 			}
 			else {
 				if ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG
-						&& *t != REPLACEMENT ) ReplaceVeto = 1;
+						&& *t != REPLACEMENT && TestFunFlag(BHEAD t) ) ReplaceVeto = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}
@@ -3074,7 +3074,6 @@ NextI:;
 					NCOPY(m,t,k);
 				}
 			}
-#ifdef WITHPOLYRATFUNINV
 			else if ( *t == AR.PolyFunInv && AR.PolyFunType == 2 ) {
 /*
 				If there are two arguments, exchange them, change the
@@ -3108,7 +3107,6 @@ NextI:;
 					goto regularratfun;
 				}
 			}
-#endif
 			else if ( *t == AR.PolyFun ) {
 			  if ( AR.PolyFunType == 1 ) { /* Regular PolyFun with one argument */
 				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
@@ -3118,9 +3116,7 @@ NextI:;
 				NCOPY(m,t,k);
 			  }
 			  else if ( AR.PolyFunType == 2 ) { /* PolyRatFun. Two arguments */
-#ifdef WITHPOLYRATFUNINV
 regularratfun:;
-#endif
 /*
 				First check for zeroes.
 */
@@ -3141,12 +3137,25 @@ regularratfun:;
 				}
 				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
 				k = t[1];
-				NCOPY(m,t,k);
+				if ( AR.PolyFunExp == 0 ) {
+					NCOPY(m,t,k);
+				}
+				else if ( AR.PolyFunExp == 1 ) { /* get highest divergence */
+					WORD *mmm = m;
+					NCOPY(m,t,k);
+					if ( TreatPolyRatFun(BHEAD mmm) != 0 )
+							goto FromNorm;
+					m = mmm+mmm[1];
+				}
+				else {
+					MesPrint("Error: PolyRatFun option %d not yet installed.",AR.PolyFunExp);
+					goto FromNorm;
+				}
 			  }
 			}
 			else if ( *t > 0 ) {
 				if ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG
-					&& *t != REPLACEMENT ) ReplaceVeto = 1;
+					&& *t != REPLACEMENT && TestFunFlag(BHEAD t) ) ReplaceVeto = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}
@@ -4813,6 +4822,147 @@ FromGCD:
 
 /*
   	#] EvaluateGcd : 
+  	#[ TreatPolyRatFun :
+
+	if ( AR.PolyFunExp == 1 ) we have to trim the contents of the polyratfun
+	down to its most divergent term and give it coefficient +1. This is done
+	by taking the terms with the least power in the variable in the numerator
+	and in the denominator and then combine them.
+	Answer is either PolyRatFun(ep^n,1) or PolyRatFun(1,1) or PolyRatFun(1,ep^n)
+*/
+
+int TreatPolyRatFun(PHEAD WORD *prf)
+{
+	WORD *t, *tstop, *r, *rstop, *m, *mstop;
+	WORD exp1 = MAXPOWER, exp2 = MAXPOWER;
+	t = prf+FUNHEAD;
+	if ( *t < 0 ) {
+		if ( *t == -SYMBOL && t[1] == AR.PolyFunVar ) {
+			if ( exp1 > 1 ) exp1 = 1;
+			t += 2;
+		}
+		else {
+			if ( exp1 > 0 ) exp1 = 0;
+			NEXTARG(t)
+		}
+	}
+	else {
+		tstop = t + *t;
+		t += ARGHEAD;
+		while ( t < tstop ) {
+/*
+			Now look for the minimum power of AR.PolyFunVar
+*/
+			r = t+1;
+			t += *t;
+			rstop = t - ABS(t[-1]);
+			while ( r < rstop ) {
+				if ( *r != SYMBOL ) { r += r[1]; continue; }
+				m = r;
+				mstop = m + m[1];
+				m += 2;
+				while ( m < mstop ) {
+					if ( *m == AR.PolyFunVar ) {
+						if ( m[1] < exp1 ) exp1 = m[1];
+						break;
+					}
+					m += 2;
+				}
+				if ( m == mstop ) {
+					if ( exp1 > 0 ) exp1 = 0;
+				}
+				break;
+			}
+			if ( r == rstop ) {
+				if ( exp1 > 0 ) exp1 = 0;
+			}
+		}
+		t = tstop;
+	}
+	if ( *t < 0 ) {
+		if ( *t == -SYMBOL && t[1] == AR.PolyFunVar ) {
+			if ( exp2 > 1 ) exp2 = 1;
+		}
+		else {
+			if ( exp2 > 0 ) exp2 = 0;
+		}
+	}
+	else {
+		tstop = t + *t;
+		t += ARGHEAD;
+		while ( t < tstop ) {
+/*
+			Now look for the minimum power of AR.PolyFunVar
+*/
+			r = t+1;
+			t += *t;
+			rstop = t - ABS(t[-1]);
+			while ( r < rstop ) {
+				if ( *r != SYMBOL ) { r += r[1]; continue; }
+				m = r;
+				mstop = m + m[1];
+				m += 2;
+				while ( m < mstop ) {
+					if ( *m == AR.PolyFunVar ) {
+						if ( m[1] < exp2 ) exp2 = m[1];
+						break;
+					}
+					m += 2;
+				}
+				if ( m == mstop ) {
+					if ( exp2 > 0 ) exp2 = 0;
+				}
+				break;
+			}
+			if ( r == rstop ) {
+				if ( exp2 > 0 ) exp2 = 0;
+			}
+		}
+	}
+/*
+	Now we can compose the output.
+	Notice that the output can never be longer than the input provided
+	we never can have arguments that consist of just a function.
+*/
+	exp1 = exp1-exp2;
+	t = prf+FUNHEAD;
+	if ( exp1 == 0 ) {
+		*t++ = -SNUMBER; *t++ = 1;
+		*t++ = -SNUMBER; *t++ = 1;
+	}
+	else if ( exp1 > 0 ) {
+		if ( exp1 == 1 ) {
+			*t++ = -SYMBOL; *t++ = AR.PolyFunVar;
+		}
+		else {
+			*t++ = 8+ARGHEAD;
+			*t++ = 0;
+			FILLARG(t);
+			*t++ = 8; *t++ = SYMBOL; *t++ = 4; *t++ = AR.PolyFunVar;
+			*t++ = exp1; *t++ = 1; *t++ = 1; *t++ = 3;
+		}
+		*t++ = -SNUMBER; *t++ = 1;
+	}
+	else {
+		*t++ = -SNUMBER; *t++ = 1;
+		if ( exp1 == -1 ) {
+			*t++ = -SYMBOL; *t++ = AR.PolyFunVar;
+		}
+		else {
+			*t++ = 8+ARGHEAD;
+			*t++ = 0;
+			FILLARG(t);
+			*t++ = 8; *t++ = SYMBOL; *t++ = 4; *t++ = AR.PolyFunVar;
+			*t++ = -exp1; *t++ = 1; *t++ = 1; *t++ = 3;
+		}
+	}
+	prf[2] = 0;  /* Clean */
+	prf[1] = t - prf;
+	return(0);
+}
+
+/*
+  	#] TreatPolyRatFun : 
   	#[ DropCoefficient :
 */
 
@@ -4951,4 +5101,38 @@ Nexti:;
 
 /*
   	#] SymbolNormalize : 
+  	#[ TestFunFlag :
+
+	Tests whether a function still has unsubstituted subexpressions
+	This function has its dirtyflag on!
+*/
+
+int TestFunFlag(PHEAD WORD *tfun)
+{
+	WORD *t, *tstop, *r, *rstop, *m, *mstop;
+	if ( functions[*tfun-FUNCTION].spec ) return(0);
+	tstop = tfun + tfun[1];
+	t = tfun + FUNHEAD;
+	while ( t < tstop ) {
+		if ( *t < 0 ) { NEXTARG(t); continue; }
+		rstop = t + *t;
+		if ( t[1] == 0 ) { t = rstop; continue; }
+		r = t + ARGHEAD;
+		while ( r < rstop ) { /* Here we loop over terms */
+			m = r+1; mstop = r+*r; mstop -= ABS(mstop[-1]);
+			while ( m < mstop ) {	/* Loop over the subterms */
+				if ( *m == SUBEXPRESSION || *m == EXPRESSION || *m == DOLLAREXPRESSION ) return(1);
+				if ( ( *m >= FUNCTION ) && ( ( m[2] & DIRTYFLAG ) == DIRTYFLAG )
+					&& ( *m != REPLACEMENT ) && TestFunFlag(BHEAD m) ) return(1);
+				m += m[1];
+			}
+			r += *r;
+		}
+		t += *t;
+	}
+	return(0);
+}
+
+/*
+  	#] TestFunFlag : 
 */

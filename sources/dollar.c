@@ -592,7 +592,7 @@ UBYTE *WriteDollarToBuffer(WORD numdollar, WORD par)
 	AO.InFbrack = 0;
 	s = AO.DollarOutBuffer;
 	*s = 0;
-	if ( par > 0 ) {
+	if ( par > 0 && AO.CurDictInDollars == 0 ) {
 		AC.OutputMode = NORMALFORMAT;
 		AO.CurrentDictionary = 0;
 	}

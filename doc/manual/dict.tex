@@ -4,7 +4,9 @@
 
 At times one would like to manipulate the output to facilitate further 
 processing. A standard example is that the output formula should be 
-included in a \LaTeX{} file. Another example is the representation of 
+included in a \LaTeX{} file. Also the use of terms in the output as 
+patterns with wildcards in the LHS of an id-statements needs textual 
+translation. Another example is the representation of 
 fractions in a numerical program that works with floating point numbers. 
 Complete solutions for such problems are not included in \FORM{}, but with 
 the partial solution of `dictionaries'\index{dictionaries} one can do quite 
@@ -14,7 +16,7 @@ In \FORM{} a dictionary is a collection of `words'\index{word} together with
 their translation\index{translation}. The word can be a number, a variable, 
 a function with its arguments or a special output token like a 
 multiplication sign or a power indicator. The translation can be any 
-string. Currently wildcarding is not implemented. That would be more like 
+string. Generic patterns have not been implemented. That would be more like 
 grammar and involves special complications. As shown later, currently there 
 is one exception to this rule.
 
@@ -57,7 +59,8 @@ open dictionaries. Hence we can stop using a dictionary with the
 instruction\index{\#closedictionary} without running into inconsistencies. 
 The options control partial use of a dictionary, as for instance only for 
 individual variables, or only for numbers. They can also control whether 
-translations should be made inside function arguments.
+translations should be made inside function arguments or inside dollar 
+variables (when used as preprocessor variables).
 
 What words are allowed?
 \begin{description}
@@ -95,6 +98,8 @@ can be avoided, a warning will be given.
 \item[nowarnings]    No floating point warnings are given.
 \item[infunctions]   Substitutions are also made inside function arguments.
 \item[notinfunctions] No substitutions are made inside function arguments.
+\item[\$] Substitutions are made also when dollar variables are expanded. 
+The default is that this is not done.
 \end{description}
 The defaults are that all potential objects are looked up (also inside 
 function arguments) and no warnings are given.
@@ -186,7 +191,7 @@ after which one should either use the name 'third' or a construction like
     Symbol x,n;
     Format DoubleFortran;
     Local F = (1+x)^7/7;
-    id	x^n? = x*x^n/(n+1);
+    id  x^n? = x*x^n/(n+1);
     Print;
     .end
       F =
@@ -203,7 +208,7 @@ If we define a dictionary we can make this into
       #add 7: "SEVEN"
     #CloseDictionary
     Local F = (1+x)^7/7;
-    id	x^n? = x*x^n/(n+1);
+    id  x^n? = x*x^n/(n+1);
     #UseDictionary numbers
     Print;
     .end
@@ -227,7 +232,7 @@ One can also replace complete fractions as in
       #add 1/2: "HALF"
     #CloseDictionary
     Local F = (1+x)^7/7;
-    id	x^n? = x*x^n/(n+1);
+    id  x^n? = x*x^n/(n+1);
     #UseDictionary numbers
     Print;
     .end
@@ -249,7 +254,7 @@ replacement? For that one can use the warnings option:
       #add 1/2: "HALF"
     #CloseDictionary
     Local F = (1+x)^7/7;
-    id	x^n? = x*x^n/(n+1);
+    id  x^n? = x*x^n/(n+1);
     #UseDictionary numbers (warnings)
     Print;
     .end
@@ -279,7 +284,7 @@ dictionary. This gives the program
       #add 5/4: "c5d4"
     #CloseDictionary
     Local F = (1+x)^7/7;
-    id	x^n? = x*x^n/(n+1);
+    id  x^n? = x*x^n/(n+1);
     #UseDictionary numbers (warnings)
     Print;
     .end
@@ -344,6 +349,75 @@ counting with 1 from the beginning of the range.
    F =
       x*w(1) + x^2*w(2) + x^3*ww(3) + x^4*www(1) + x^5*www(2) + x^6*www(3);
 \end{verbatim}
+
+The use of the dictionaries in dollar variables can best be shown with an 
+example that has much in common with graph theory. Assume we have an 
+expression that contains all topologies we are interested in, with a 
+notation for the momenta. The function vx represents a vertex and we use it 
+as a symmetric function. Here we show two topologies from massless two-loop 
+propagators:
+\begin{verbatim}
+        +vx(p0,p1,-p4)*vx(-p1,p2,p5)*vx(q0,-p2,-p3)*vx(p4,p3,-p5)*topo(1)
+        +vx(p0,p1,p2)*vx(-p1,p3,p4)*vx(q0,-p2,-p3,-p4)*topo(2)
+\end{verbatim}
+where the q0 momentum is taken to be -p0. The problem is what happens when 
+in a diagram of topology one, one of the lines is removed. If for instance 
+the p1 line is removed, we will end up with the second topology, but the 
+question is: how should we relabel the momenta to obtain the notation of 
+topology 2. Taking out p1 gives us:
+\begin{verbatim}
+        +vx(p0,-p4,p2,p5)*vx(q0,-p2,-p3)*vx(p4,p3,-p5)*topo(1)
+\end{verbatim}
+and to see what renaming we need is usually a major source of errors.
+We can do this automatically if we can substitute the second topology into 
+the remainder of the first using proper wildcards and storing the matches 
+in dollar variables. This can be done with a dictionary:
+\begin{verbatim}
+    #OpenDictionary match
+        #add p0: "p0?{p0,q0}$p0"
+        #add q0: "q0?{p0,q0}$q0"
+        #do i = 1,5
+            #add p`i': "p`i'?$p`i'"
+        #enddo
+    #CloseDictionary
+\end{verbatim}
+We put the various candidate topologies that could match, one by one, into 
+the variable \$child as in (after using brackets on the expression with the 
+topologies):
+\begin{verbatim}
+    #$child = Topologies[topo(2)];
+\end{verbatim}
+but generating an id-statement from it would be very laborious without the 
+dictionaries:
+\begin{verbatim}
+    id `$Orig' = 1;
+\end{verbatim}
+would result in:
+\begin{verbatim}
+    id vx(-p2,-p3,q0)*vx(-p4,p0,p2,p5)*vx(-p5,p3,p4) = 1;
+\end{verbatim}
+but with the dictionary activated as in
+\begin{verbatim}
+    #inside $child
+     #UseDictionary match($)
+      id `$Orig' = 1;
+     #CloseDictionary
+    #endinside
+\end{verbatim}
+the generated code is
+\begin{verbatim}
+    id vx(-p2?$p2,-p3?$p3,q0?{p0,q0}$q0)*vx(-p4?$p4,p0?{p0,q0}$p0,
+       p2?$p2,p5?$p5)*vx(-p5?$p5,p3?$p3,p4?$p4) = 1;
+\end{verbatim}
+and from the dollar variables we can generate a statement with the the 
+renumbering
+\begin{verbatim}
+    id topo(1) = topo(2)*replace_(p0,-p0,p1,q1,p2,-p2,p3,-p1,p4,p3,p5,-p4);
+\end{verbatim}
+We used $p_1\rightarrow q_1$ as initialization before the pattern matching 
+and $p_0 = q_0$ we can replace by $p_0 = p_0$. The $q_1$ should be replaced 
+by means of momentum conservation, but that goes beyond the scope of this 
+example.
 
 It should be clear from the above that the dictionaries are the beginning 
 of a new development. One should expect more capabilities in the future and 

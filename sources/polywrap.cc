@@ -515,11 +515,13 @@ void poly_sort(PHEAD WORD *a) {
  *   - Calls poly::operators and polygcd::gcd
  */
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
+ 
+	if ( AR.PolyFunExp == 1 ) return PolyRatFunSpecial(BHEAD t1, t2);
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_ratfun_add" << endl;
 #endif
-	
+
 	WORD *oldworkpointer = AT.WorkPointer;
 	
 	// Extract variables
