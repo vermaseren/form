@@ -8,7 +8,19 @@
 \renewcommand*\l@subsection{\@dottedtocline{2}{1.5em}{3.0em}}
 \makeatother
 
+% Use hyperref package (hyperlinks) with correct option for pdflatex/latex:
+\usepackage{ifpdf}
+\ifpdf
+\RequirePackage[pdftex]{hyperref}
+\else
+\RequirePackage[hypertex]{hyperref}
+\fi
+% and link indices back to text:
+\hypersetup{hyperindex,pagebackref,pdfpagemode={None},draft=false}
+
 %end{latexonly}
+
+\providecommand{\texorpdfstring}[2]{#1}% htmlonly
 
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
 \newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}

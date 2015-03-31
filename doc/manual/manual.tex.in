@@ -1,5 +1,4 @@
 \documentclass[11pt]{report}
-%\usepackage{index}
 \usepackage{makeidx}
 
 %begin{latexonly}
@@ -19,6 +18,8 @@
 \hypersetup{hyperindex,pagebackref,pdfpagemode={None},draft=false} 
 
 %end{latexonly}
+
+\providecommand{\texorpdfstring}[2]{#1}% htmlonly
 
 \newcommand{\pfill}{\hfill}
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
