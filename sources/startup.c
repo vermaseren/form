@@ -1165,7 +1165,7 @@ WORD IniVars()
 	UBYTE buf[32];
 
 	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
-	PutPreVar((UBYTE *)"NTHREADS_",buf,0,0);
+	PutPreVar((UBYTE *)"NTHREADS_",buf,0,1);
 
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
