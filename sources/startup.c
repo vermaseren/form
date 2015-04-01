@@ -558,7 +558,6 @@ VOID ReserveTempFiles(int par)
 #endif
 	while ( *s ) *t++ = *s++;
 	*t = 0;
-#ifdef UNIX
 /*
 		There are problems when running many FORM jobs at the same time
 		from make or minos. If they start up simultaneously, occasionally
@@ -569,8 +568,7 @@ VOID ReserveTempFiles(int par)
 		command tail.
 */
 	if ( AM.MultiRun ) {
-		pid_t pp = getpid();
-		int num = ((int)pp)%100000;
+		int num = ((int)GetPID())%100000;
 		t += 2;
 		*t = 0;
 		t[-1] = 'r';
@@ -588,11 +586,8 @@ VOID ReserveTempFiles(int par)
 		}
 	}
 	else
-#endif
 	{
-#ifdef UNIX
 classic:;
-#endif
 	  for(;;) {
 		if ( ( AC.StoreHandle = OpenFile((char *)FG.fname) ) < 0 ) {
 			if ( ( AC.StoreHandle = CreateFile((char *)FG.fname) ) >= 0 ) break;
@@ -979,6 +974,18 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,0);
 	PutPreVar((UBYTE *)"tolower_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"toupper_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	{
+		char buf[41];  /* up to 128-bit */
+		LONG pid;
+#ifndef WITHMPI
+		pid = GetPID();
+#else
+		pid = ( PF.me == MASTER ) ? GetPID() : (LONG)0;
+		pid = PF_BroadcastNumber(pid);
+#endif
+		LongCopy(pid,buf);
+		PutPreVar((UBYTE *)"PID_",(UBYTE *)buf,0,0);
+	}
 	AM.atstartup = 0;
 	AP.MaxPreTypes = 10;
 	AP.NumPreTypes = 0;

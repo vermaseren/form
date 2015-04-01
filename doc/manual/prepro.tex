@@ -74,6 +74,12 @@ any longer.
                for the current optimization (see chapter \ref{optimization}).
 \item[OPTIMMAXVAR\_]  The number of the last extra symbol\index{OPTIMMAXVAR\_} needed
                for the current optimization (see chapter \ref{optimization}).
+\item[PID\_]         The process identifier (PID) \index{PID} \index{PID\_} of
+               the running process. In \ParFORM{} (\ref{parform}), it represents
+               the PID of the master process in order to ensure that all the
+               processes in a job use the same number. A recovered session from
+               a checkpoint (\ref{checkpoints}) keeps using the PID of the
+               crushed session.
 \end{description}
 
 \noindent If \FORM\ cannot find a preprocessor variable, because it has 
@@ -91,7 +97,7 @@ during the definition. Hence proper use is
     #define EXCHANGE(x,y) "Multiply replace_(`~x',`~y',`~y',`~x');"
 \end{verbatim}
 
-\noindent \FORM has the following built in macro's:
+\noindent \FORM{} has the following built in macro's:
 \begin{description}
 \item[TOLOWER\_(string)] in which the character string in the argument is 
 converted to lower case. After this it will become input.

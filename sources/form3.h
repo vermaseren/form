@@ -401,7 +401,7 @@ template<typename T> struct calc {
 #include "variable.h"
 
 /*
- * The interface to file routines for UNIX or non-UNIX.
+ * The interface to file routines for UNIX or non-UNIX (Windows).
  */
 #ifdef UNIX
 
@@ -431,6 +431,7 @@ extern void   Usetbuf(FILES *,char *);
 }
 extern FILES *Ustdout;
 #define MAX_OPEN_FILES getdtablesize()
+#define GetPID() ((LONG)getpid())
 
 #else  /* UNIX */
 
@@ -450,6 +451,7 @@ extern FILES *Ustdout;
 #define Ustdout stdout
 #define MAX_OPEN_FILES FOPEN_MAX
 #define bzero(b,len) (memset((b), 0, (len)), (void)0)
+#define GetPID() ((LONG)GetCurrentProcessId())
 
 #endif  /* UNIX */
 
