@@ -489,6 +489,10 @@ const poly polygcd::substitute_last(const poly &a, int x, int c) {
 
 	poly b(BHEAD 0);
 
+	if (a.is_zero()) {
+		return b;
+	}
+
 	bool zero=true;
 	int bi=1;
 
