@@ -27,6 +27,7 @@
 /* #] License : */ 
 
 #include <vector>
+#include <map>
 
 class poly; // polynomial class
 class gcd_heuristic_failed {}; // class for throwing exceptions
@@ -71,5 +72,6 @@ namespace polygcd {
 	const poly sparse_interpolation_fix_poly (const poly &a, int x);
 	
 	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);
-	const poly substitute_last(const poly &a, int x, int c);
+	const poly substitute(const poly &a, int x, int c);
+	const std::map<std::vector<int>,poly> bracket(const poly &a, const std::vector<int>& filter);
 }
