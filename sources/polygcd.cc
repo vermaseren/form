@@ -1315,7 +1315,7 @@ const map<vector<int>,poly> polygcd::bracket(const poly &a, const vector<int>& f
 	return bracket;
 }
 
-bool poly_fewer_terms (poly& a, poly& b) { return a.number_of_terms() < b.number_of_terms(); }
+bool poly_fewer_terms (const poly& a, const poly& b) { return a.number_of_terms() < b.number_of_terms(); }
 
 /*
   	#] bracket :
