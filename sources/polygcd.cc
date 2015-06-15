@@ -1299,7 +1299,7 @@ const map<vector<int>,poly> polygcd::bracket(const poly &a, const vector<int>& f
 		mon.setmod(a.modp);
 		mon[0] = a[ai] + 1;
 		for (int i=0; i<a[ai]; i++)
-			if (i > 1 && i <= AN.poly_num_vars && varpattern[i - 1])
+			if (i > 0 && i <= AN.poly_num_vars && varpattern[i - 1])
 				mon[1+i] = 0;
 			else
 				mon[1+i] = a[ai+i];
@@ -1335,7 +1335,9 @@ const poly gcd_linear_helper (const poly &a, const poly &b) {
 
 			poly subgcd(BHEAD 1);
 			if (ba.size() == 2)
-				poly subgcd = polygcd::gcd_linear(ba.begin()->second, (ba.begin()++)->second);
+				subgcd = polygcd::gcd_linear(ba.begin()->second, (++ba.begin())->second);
+			else
+				subgcd = ba.begin()->second;
 
 			poly linfac = a / subgcd;
 			if (poly::divides(linfac,b))
