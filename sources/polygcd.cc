@@ -1319,7 +1319,72 @@ bool poly_fewer_terms (poly& a, poly& b) { return a.number_of_terms() < b.number
 
 /*
   	#] bracket :
-  	#[ gcd:
+  	#[ gcd_linear:
+*/
+
+const poly gcd_linear_helper (const poly &a, const poly &b) {
+	POLY_GETIDENTITY(a);
+
+	for (int i = 0; i < AN.poly_num_vars; i++)
+		if (a.degree(i) == 1) {
+			vector<int> filter(AN.poly_num_vars);
+			filter[i] = 1;
+
+			// bracket the linear variable
+			map<vector<int>,poly> ba = polygcd::bracket(a, filter);
+
+			poly subgcd(BHEAD 1);
+			if (ba.size() == 2)
+				poly subgcd = polygcd::gcd_linear(ba.begin()->second, (ba.begin()++)->second);
+
+			poly linfac = a / subgcd;
+			if (poly::divides(linfac,b))
+				return linfac * polygcd::gcd_linear(subgcd, b / linfac);
+
+			return polygcd::gcd_linear(subgcd, b);
+		}
+
+	return poly(BHEAD 0);
+}
+
+/**
+	Performs a faster, recursive gcd algorithm if one of the variables in one of the
+	polynomials is linear. If no terms are linear, fall back to Zippel's method.
+*/
+const poly polygcd::gcd_linear (const poly &a, const poly &b) {
+	POLY_GETIDENTITY(a);
+
+	if (a.is_zero()) return a.modp==0 ? b : b / b.integer_lcoeff();
+	if (b.is_zero()) return a.modp==0 ? a : a / a.integer_lcoeff();
+	if (a==b) return a.modp==0 ? a : a / a.integer_lcoeff();
+
+	if (a.is_integer() || b.is_integer()) {
+		if (a.modp > 0) return poly(BHEAD 1,a.modp,a.modn);
+		return poly(integer_gcd(integer_content(a),integer_content(b)),0,1);
+	}
+
+	poly h = gcd_linear_helper(a, b);
+	if (!h.is_zero()) return h;
+
+	h = gcd_linear_helper(b, a);
+	if (!h.is_zero()) return h;
+
+	vector<int> xa = a.all_variables();
+	vector<int> xb = b.all_variables();
+
+	vector<int> used(AN.poly_num_vars,0);
+	for (int i=0; i<(int)xa.size(); i++) used[xa[i]]++;
+	for (int i=0; i<(int)xb.size(); i++) used[xb[i]]++;
+	vector<int> x;
+	for (int i=0; i<AN.poly_num_vars; i++)
+		if (used[i]) x.push_back(i);
+
+	return gcd_modular(a,b,x);
+}
+
+/*
+		#] gcd_linear:
+		#[ gcd:
 */
 
 /**  Greatest common divisor (gcd) of multivariate polynomials
@@ -1412,7 +1477,8 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 	}
 #endif
 	
-	// If gcd==0, the heuristic algorithm failed, so try Zippel's GCD algorithm	
+	// If gcd==0, the heuristic algorithm failed, so we do more extensive checks.
+	// First, we filter out variables that appear in only one of the expressions.
 	if (res.is_zero()) {
 		x.clear();
 
@@ -1421,6 +1487,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 		// Substitute all the variables that do not appear in both terms with a
 		// numerical value, since these will never be part of the gcd.
 		// We can calculate the gcd on these smaller polynomials.
+		// TODO: do not make them modular?
 		poly na = poly(ppa, p);
 		poly nb = poly(ppb, p);
 
@@ -1432,11 +1499,11 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 				x.push_back(i);
 		}
 
+		// TODO: divide out an integer part that could have arisen?
 		na = na.normalize();
 		nb = nb.normalize();
 
-		// TODO: divide out an integer part that could have arisen?
-		res = gcd_modular(na,nb,x);
+		res = gcd_linear(na, nb);
 		res.setmod(0);
 
 		// if res is not the gcd, it is 0 or larger than the gcd.
