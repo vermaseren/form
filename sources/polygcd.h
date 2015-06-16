@@ -63,8 +63,8 @@ namespace polygcd {
 	const poly gcd_heuristic (const poly &a, const poly &b, const std::vector<int> &x, int max_tries=POLYGCD_HEURISTIC_MAX_TRIES);
 	const poly gcd_Euclidean (const poly &a, const poly &b);
 	const poly gcd_modular (const poly &a, const poly &b, const std::vector<int> &x);
-	const poly gcd_modular_dense_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &s);
-	const poly gcd_modular_sparse_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &lc, const poly &s);
+	const poly gcd_modular_dense_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &s);
+	const poly gcd_modular_sparse_interpolation (const poly &a, const poly &b, const std::vector<int> &x, const poly &s);
 
 	const std::vector<int> sparse_interpolation_get_mul_list (const poly &a, const std::vector<int> &x, const std::vector<int> &c);
 	void sparse_interpolation_mul_poly (poly &a, const std::vector<int> &m);

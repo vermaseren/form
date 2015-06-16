@@ -674,11 +674,11 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
  *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; and
  *    R.E. Zippel, "Probabilistic Algorithms for Sparse Polynomials", PhD thesis]
  */
-const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
+const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &s) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_sparse_interpolation("
-			 << a << "," << b << "," << x << "," << lc << "," << s <<")" << endl;
+			 << a << "," << b << "," << x << "," << "," << s <<")" << endl;
 #endif
 
 	POLY_GETIDENTITY(a);
@@ -686,7 +686,6 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 	// reduce polynomials
 	poly ared(sparse_interpolation_reduce_poly(a,x));
 	poly bred(sparse_interpolation_reduce_poly(b,x));
-	poly lcred(sparse_interpolation_reduce_poly(lc,x));
 	poly sred(sparse_interpolation_reduce_poly(s,x));
 
 	// set all coefficients to 1
@@ -725,7 +724,6 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 	// get the lists to multiply the polynomials with every iteration
 	vector<int> amul(sparse_interpolation_get_mul_list(a,x,c));
 	vector<int> bmul(sparse_interpolation_get_mul_list(b,x,c));
-	vector<int> lcmul(sparse_interpolation_get_mul_list(lc,x,c));
 
 	vector<vector<vector<LONG> > > M;
 	vector<vector<LONG> > V;
@@ -748,9 +746,8 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 
 		poly amodI(sparse_interpolation_fix_poly(ared,x[0]));
 		poly bmodI(sparse_interpolation_fix_poly(bred,x[0]));
-		poly lcmodI(sparse_interpolation_fix_poly(lcred,x[0]));
 
-		poly gcd(lcmodI * gcd_Euclidean(amodI,bmodI));
+		poly gcd = gcd_Euclidean(amodI,bmodI);
 
 		// if correct gcd
 		if (!gcd.is_zero() && gcd[2+x[0]]==sred[2+x[0]]) {
@@ -786,7 +783,6 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 		// multiply polynomials by the lists to obtain new ones
 		sparse_interpolation_mul_poly(ared,amul);
 		sparse_interpolation_mul_poly(bred,bmul);
-		sparse_interpolation_mul_poly(lcred,lcmul);
 		sparse_interpolation_mul_poly(sred,smul);
 	}
 
@@ -844,7 +840,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  RES : gcd_modular_sparse_interpolation("
-			 << a << "," << b << "," << x << "," << lc << "," << s <<") = " << res << endl;
+			 << a << "," << b << "," << x << "," << "," << s <<") = " << res << endl;
 #endif
 	
 	return res;
@@ -873,21 +869,20 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
  *   [for details, see "Algorithms for Computer Algebra", pp. 300-311]
  */
 
-const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &lc, const poly &s) {
+const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &s) {
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << lc << "," << s <<")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << "," << s <<")" << endl;
 #endif
 
 	// if univariate, then use Euclidean algorithm
 	if (x.size() == 1) {
-		poly res(lc * gcd_Euclidean(a,b));
-		return res;
+		return gcd_Euclidean(a,b);
 	}
 
 	// if shape is known, use sparse interpolation
 	if (!s.is_zero()) {
-		poly res = gcd_modular_sparse_interpolation (a,b,x,lc,s);
+		poly res = gcd_modular_sparse_interpolation (a,b,x,s);
 		if (!res.is_zero()) return res;
 		// apparently the shape was not correct. continue.
 	}
@@ -902,7 +897,6 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	poly gcdconts(gcd_Euclidean(conta,contb));
 	poly ppa(a/conta);
 	poly ppb(b/contb);
-	poly pplc(lc/gcdconts);
 
 	// gcd of leading coefficients
 	poly lcoeffa(ppa.lcoeff_multivar(X));
@@ -923,10 +917,9 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		
 		poly amodc(substitute(ppa,X,c));
 		poly bmodc(substitute(ppb,X,c));
-		poly lcmodc(substitute(pplc,X,c));
 
 		// calculate gcd recursively
-		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1),lcmodc,newshape));
+		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1),newshape));
 		if (gcdmodc.is_zero()) return poly(BHEAD 0);
 
 		// normalize
@@ -962,7 +955,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 			if (poly::divides(nres,ppa) && poly::divides(nres,ppb)) {
 #ifdef DEBUG
 				cout << "*** [" << thetime() << "]  RES : gcd_modular_dense_interpolation(" << a << "," << b << ","
-						 << x << "," << lc << "," << s <<") = " << gcdconts * nres << endl;
+						 << x << "," << "," << s <<") = " << gcdconts * nres << endl;
 #endif
 				return gcdconts * nres;
 			}
@@ -983,12 +976,6 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
  *   "gcd_modular_dense_interpolation" to calculate the gcd modulo
  *   this prime. It continues choosing more primes and constructs a
  *   final result with the Chinese Remainder Algorithm.
- *
- *   The leading coefficient problem is solved by multiplying both
- *   polynomials with lc=gcd(lcoeff(a),lcoeff(b)). A gcd with a
- *   leading coefficient lc can be constructed. This leading
- *   coefficient is passed to the other methods and reduced along the
- *   way.
  *
  *   Notes
  *   =====
@@ -1024,7 +1011,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 		if (poly(a.integer_lcoeff(),p).is_zero()) continue;
 		if (poly(b.integer_lcoeff(),p).is_zero()) continue;
 
-		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(g,p),poly(d,p)));
+		poly c(gcd_modular_dense_interpolation(poly(a,p),poly(b,p),x,poly(d,p)));
 		c = (c * poly(g,p)) / c.integer_lcoeff(); // normalize so that lcoeff(c) = g mod p
 
 		if (c.is_zero()) {
