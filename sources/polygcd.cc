@@ -1525,7 +1525,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 			}
 
 			for (unsigned int i = 0; i < bracketsorted.size(); i++) {
-				if (!poly::divides(res,bracketsorted[i])) {
+				if (res.is_zero() || !poly::divides(res,bracketsorted[i])) {
 					// if we can filter out more variables, call gcd again
 					if (bracketsorted[i].all_variables().size() < x.size())
 						res = gcd(bracketsorted[i],res);
@@ -1535,7 +1535,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 			}
 		}
 
-		if (!poly::divides(res,ppa) || !poly::divides(res,ppb)) {
+		if (res.is_zero() || !poly::divides(res,ppa) || !poly::divides(res,ppb)) {
 			MesPrint("Bad gcd found.");
 			std::cout << "Bad gcd:" << res << " for " << ppa << " " << ppb << std::endl;
 			Terminate(1);
