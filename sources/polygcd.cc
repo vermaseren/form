@@ -1469,6 +1469,9 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 	// If gcd==0, the heuristic algorithm failed, so we do more extensive checks.
 	// First, we filter out variables that appear in only one of the expressions.
 	if (res.is_zero()) {
+		// filling in variables can currently be done only using modulo. this could
+		// yield wrong results
+		/*
 		x.clear();
 
 		WORD p = NextPrime(BHEAD 0);
@@ -1488,12 +1491,12 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 				x.push_back(i);
 		}
 
-		// TODO: divide out an integer part that could have arisen?
 		na = na.normalize();
 		nb = nb.normalize();
 
 		res = gcd_linear(na, nb);
 		res.setmod(0);
+		*/
 
 		// if res is not the gcd, it is 0 or larger than the gcd.
 		// we bracket the expression in all the variables that appear only in one expr.
@@ -1523,7 +1526,11 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 
 			for (unsigned int i = 0; i < bracketsorted.size(); i++) {
 				if (!poly::divides(res,bracketsorted[i])) {
-					res = gcd(bracketsorted[i],res);
+					// if we can filter out more variables, call gcd again
+					if (bracketsorted[i].all_variables().size() < x.size())
+						res = gcd(bracketsorted[i],res);
+					else
+						res = gcd_linear(bracketsorted[i],res);
 				}
 			}
 		}
