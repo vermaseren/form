@@ -1279,10 +1279,10 @@ const map<vector<int>,poly> polygcd::bracket(const poly &a, const vector<int>& f
 		vector<int> varpattern(AN.poly_num_vars);
 		for (int i=0; i<AN.poly_num_vars; i++)
 			if (filter[i] == 1 && a[ai + i + 1] > 0)
-				varpattern[i] = 1;
+				varpattern[i] = a[ai + i + 1];
 
 		// create monomial
-		poly mon(BHEAD 0);
+		poly mon(BHEAD 1);
 		mon.setmod(a.modp);
 		mon[0] = a[ai] + 1;
 		for (int i=0; i<a[ai]; i++)
@@ -1525,7 +1525,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 			}
 
 			for (unsigned int i = 0; i < bracketsorted.size(); i++) {
-				if (res.is_zero() || !poly::divides(res,bracketsorted[i])) {
+				if (!poly::divides(res,bracketsorted[i])) {
 					// if we can filter out more variables, call gcd again
 					if (bracketsorted[i].all_variables().size() < x.size())
 						res = gcd(bracketsorted[i],res);
