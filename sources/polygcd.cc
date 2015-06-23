@@ -674,15 +674,22 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
  *   [for details, see "Algorithms for Computer Algebra", pp. 311-313; and
  *    R.E. Zippel, "Probabilistic Algorithms for Sparse Polynomials", PhD thesis]
  */
-const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &s) {
+const poly polygcd::gcd_modular_sparse_interpolation (const poly &origa, const poly &origb, const vector<int> &x, const poly &s) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_sparse_interpolation("
 			 << a << "," << b << "," << x << "," << "," << s <<")" << endl;
 #endif
 
-	POLY_GETIDENTITY(a);
-			
+	POLY_GETIDENTITY(origa);
+
+	// strip multivariate content
+	poly conta(content_multivar(origa,x.back()));
+	poly contb(content_multivar(origb,x.back()));
+	poly gcdconts(gcd_Euclidean(conta,contb));
+	poly a = origa/conta;
+	poly b = origb/contb;
+
 	// reduce polynomials
 	poly ared(sparse_interpolation_reduce_poly(a,x));
 	poly bred(sparse_interpolation_reduce_poly(b,x));
@@ -843,7 +850,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &a, const poly 
 			 << a << "," << b << "," << x << "," << "," << s <<") = " << res << endl;
 #endif
 	
-	return res;
+	return gcdconts * res;
 }
 
 /*
@@ -875,9 +882,13 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << "," << s <<")" << endl;
 #endif
 
+	POLY_GETIDENTITY(a);
+
 	// if univariate, then use Euclidean algorithm
 	if (x.size() == 1) {
-		return gcd_Euclidean(a,b);
+		poly gcd = gcd_Euclidean(a,b);
+		if (gcd.degree(x[0]) == 0) return poly(BHEAD 1);
+		else return gcd;
 	}
 
 	// if shape is known, use sparse interpolation
@@ -887,10 +898,8 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		// apparently the shape was not correct. continue.
 	}
 
-	POLY_GETIDENTITY(a);
-
 	// divide out multivariate content in last variable
-	int X = x[x.size()-1];
+	int X = x.back();
 
 	poly conta(content_multivar(a,X));
 	poly contb(content_multivar(b,X));
@@ -903,8 +912,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	poly lcoeffb(ppb.lcoeff_multivar(X));
 	poly gcdlcoeffs(gcd_Euclidean(lcoeffa,lcoeffb));
 
-	int l = MiN(ppa.degree(x[0]), ppb.degree(x[0]));
-	poly oldres(BHEAD 0);
+	int n = MiN(ppa.degree(X), ppb.degree(X));
 	poly res(BHEAD 0);
 	poly newshape(BHEAD 0);
 	poly modpoly(BHEAD 1,a.modp);
@@ -919,25 +927,21 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		poly bmodc(substitute(ppb,X,c));
 
 		// calculate gcd recursively
-		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1),newshape));
-		if (gcdmodc.is_zero()) return poly(BHEAD 0);
+		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1), newshape));
+		int m = gcdmodc.degree(x[x.size() - 2]);
 
 		// normalize
 		gcdmodc = (gcdmodc * substitute(gcdlcoeffs,X,c)) / gcdmodc.integer_lcoeff();
-
-		int m = gcdmodc.degree(x[0]);
-		poly simple(poly::simple_poly(BHEAD X,c,1,a.modp));
+		poly simple(poly::simple_poly(BHEAD X,c,1,a.modp)); // (X-c) mod p
 
 		// if power is smaller, the old one was wrong
-		if (res.is_zero() || m < l) {
-			l = m;
-			oldres = res;
+		if (res.is_zero() || m < n) {
+			n = m;
 			res = gcdmodc;
-			newshape = gcdmodc;
+			newshape = gcdmodc; // set a new shape
 			modpoly = simple;
 		}
-		else if (m == l) {
-			oldres = res;
+		else if (m == n) {
 			// equal powers, so interpolate results
 			poly coeff_poly(substitute(modpoly,X,c));
 			WORD coeff_word = coeff_poly[2+AN.poly_num_vars] * coeff_poly[3+AN.poly_num_vars];
@@ -945,12 +949,13 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 
 			GetModInverses(coeff_word, a.modp, &coeff_word, NULL);
 			
+			res.setmod(a.modp); // make sure the mod is set before substituting
 			res += poly(BHEAD coeff_word, a.modp, 1) * modpoly * (gcdmodc - substitute(res,X,c));
 			modpoly *= simple;
 		}
 
 		// check whether this is the complete gcd
-		if (res==oldres) {
+		if (res.lcoeff_multivar(X) == gcdlcoeffs) {
 			poly nres = res / content_multivar(res, X);
 			if (poly::divides(nres,ppa) && poly::divides(nres,ppb)) {
 #ifdef DEBUG
@@ -958,6 +963,8 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 						 << x << "," << "," << s <<") = " << gcdconts * nres << endl;
 #endif
 				return gcdconts * nres;
+			} else if (m == 0) {
+				return gcdconts;
 			}
 		}
 	}
@@ -991,6 +998,9 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 #endif
 
 	POLY_GETIDENTITY(origa);
+
+	if (origa.is_zero() || origb.is_zero())
+		return poly(BHEAD 0);
 
 	poly ac = integer_content(origa);
 	poly bc = integer_content(origb);
@@ -1497,6 +1507,18 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 		res = gcd_linear(na, nb);
 		res.setmod(0);
 		*/
+
+		bool unusedVars = false;
+		for (unsigned int i = 0; i < used.size(); i++) {
+			if (used[i] == 1) {
+				unusedVars = true;
+				break;
+			}
+		}
+
+		if (!unusedVars) {
+			res = gcd_modular(ppa,ppb,x);
+		}
 
 		// if res is not the gcd, it is 0 or larger than the gcd.
 		// we bracket the expression in all the variables that appear only in one expr.
