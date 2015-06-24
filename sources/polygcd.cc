@@ -913,6 +913,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	poly gcdlcoeffs(gcd_Euclidean(lcoeffa,lcoeffb));
 
 	int n = MiN(ppa.degree(X), ppb.degree(X));
+	poly oldres(BHEAD 0);
 	poly res(BHEAD 0);
 	poly newshape(BHEAD 0);
 	poly modpoly(BHEAD 1,a.modp);
@@ -937,12 +938,14 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		// if power is smaller, the old one was wrong
 		if (res.is_zero() || m < n) {
 			n = m;
+			oldres = res;
 			res = gcdmodc;
-			newshape = gcdmodc; // set a new shape
+			newshape = gcdmodc; // set a new shape (interpolation does not change it)
 			modpoly = simple;
 		}
 		else if (m == n) {
-			// equal powers, so interpolate results
+			oldres = res;
+			// equal powers, so interpolate results using Newton interpolation
 			poly coeff_poly(substitute(modpoly,X,c));
 			WORD coeff_word = coeff_poly[2+AN.poly_num_vars] * coeff_poly[3+AN.poly_num_vars];
 			if (coeff_word < 0) coeff_word += a.modp;
@@ -954,8 +957,8 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 			modpoly *= simple;
 		}
 
-		// check whether this is the complete gcd
-		if (res.lcoeff_multivar(X) == gcdlcoeffs) {
+		// check whether this is the complete gcd, i.e., interpolation is done
+		if (res == oldres) {
 			poly nres = res / content_multivar(res, X);
 			if (poly::divides(nres,ppa) && poly::divides(nres,ppb)) {
 #ifdef DEBUG
