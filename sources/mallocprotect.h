@@ -32,7 +32,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 /*
   	#[ Documentation :
@@ -99,7 +99,7 @@ reading over the allocated ares.
 The leftmost extra page is always allocated and mprotected. The size
 of the allocated chunk is stored in the beginning of this page.
 
-  	#] Documentation : 
+  	#] Documentation :
   	#[ Includes :
 */
 
@@ -116,7 +116,7 @@ of the allocated chunk is stored in the beginning of this page.
 #endif
 
 /*
-  	#] Includes : 
+  	#] Includes :
 */
 
 static int pageSize=4096;/*the default value*/
@@ -258,12 +258,13 @@ static void segv_handler(int sig, siginfo_t *sip, void *xxx) {
 		if(actionBeforeExit<0)/*After changing loopForever=0, unprotect the page to continue:*/
 			mprotect((char*)alignedAdr, pageSize, PROT_READ | PROT_WRITE);
 		if(actionBeforeExit>0)/*After changing loopForever=0, map the page to continue:*/
-			mmap((void*)alignedAdr,pageSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);
+/*			mmap((void*)alignedAdr,pageSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 0, 0); */
+			mmap((void*)alignedAdr,pageSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, 0, 0);
 	}/*Block*/
 }/*segv_handler*/
 
 /*
-  	#] segv_handler : 
+  	#] segv_handler :
 */
 
 /*
@@ -302,7 +303,7 @@ static FORM_INLINE int mprotectInit(void)
 }/*mprotectInit*/
 
 /*
-  	#] mprotectInit : 
+  	#] mprotectInit :
 */
 
 
@@ -334,7 +335,8 @@ static void *mprotectMalloc(size_t theSize)
 		nPages++;
 	theSize= (theSize/pageSize+nPages)*pageSize;
 
-	ret=(char*)mmap(0,theSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);
+/*	ret=(char*)mmap(0,theSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 0, 0); */
+	ret=(char*)mmap(0,theSize,PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, 0, 0);
 	if(ret == MAP_FAILED)
 	return NULL;
 	ptr=(size_t *)ret;
@@ -358,7 +360,7 @@ static void *mprotectMalloc(size_t theSize)
 #endif
 }/*mprotectMalloc*/
 /*
-  	#] mprotectMalloc : 
+  	#] mprotectMalloc :
 */
 
 /*
@@ -384,7 +386,7 @@ static void mprotectFree(char *ptr)
 }/*mprotectFree*/
 
 /*
-  	#] mprotectFree : 
+  	#] mprotectFree :
 */
 
 #endif

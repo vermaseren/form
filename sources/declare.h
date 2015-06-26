@@ -291,6 +291,9 @@ extern VOID TELLFILE(int,POSITION *);
 #define NestingChecksum() (AC.IfLevel + AC.RepLevel + AC.arglevel + AC.insidelevel + AC.termlevel + AC.inexprlevel + AC.dolooplevel)
 #define MesNesting() MesPrint("&Illegal nesting of if, repeat, argument, inside, term, inexpression and do")
 
+#define MarkPolyRatFunDirty(T) {if(*T&&AR.PolyFunType==2){WORD *TP,*TT;TT=T+*T;TT-=ABS(TT[-1]);\
+TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|CLEANPRF);}TP+=TP[1];}}}
+
 /*
   	#] Macro's : 
   	#[ Thread objects :
@@ -352,6 +355,10 @@ extern VOID TELLFILE(int,POSITION *);
   	#] Thread objects : 
   	#[ Declarations :
 */
+ 
+#ifdef TERMMALLOCDEBUG
+extern WORD **DebugHeap1, **DebugHeap2;
+#endif
 
 /**
  *	All functions (well, nearly all) are declared here.
@@ -831,6 +838,7 @@ extern VOID   PrintTerm(WORD *,char *);
 extern VOID   PrintTermC(WORD *,char *);
 extern VOID   PrintSubTerm(WORD *,char *);
 extern VOID   PrintWords(WORD *,LONG);
+extern void   PrintSeq(WORD *,char *);
 extern int    ExpandTripleDots(int);
 extern LONG   ComPress(WORD **,LONG *);
 extern VOID   StageSort(FILEHANDLE *);
@@ -1324,6 +1332,7 @@ extern int    ReleaseTB(VOID);
 extern int    SymbolNormalize(WORD *);
 extern int    TestFunFlag(PHEAD WORD *);
 extern int    CompareSymbols(PHEAD WORD *,WORD *,WORD);
+extern int    CompareHSymbols(PHEAD WORD *,WORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
 extern UWORD  wranf(PHEAD0);
 extern UWORD  iranf(PHEAD UWORD);
@@ -1404,16 +1413,30 @@ extern int IniFbuffer(WORD);
 extern void IniFbufs(VOID);
 extern int GCDfunction(PHEAD WORD *,WORD);
 extern WORD *GCDfunction3(PHEAD WORD *,WORD *);
+extern WORD *GCDfunction4(PHEAD WORD *,WORD *);
+extern int ReadPolyRatFun(PHEAD WORD *);
+extern int FromPolyRatFun(PHEAD WORD *, WORD **, WORD **);
+extern void PRFnormalize(PHEAD WORD *);
+extern WORD *PRFadd(PHEAD WORD *, WORD *);
+extern WORD *PolyDiv(PHEAD WORD *,WORD *,char *);
+extern WORD *PolyGCD(PHEAD WORD *,WORD *);
+extern WORD *PolyAdd(PHEAD WORD *,WORD *);
+extern void GCDclean(PHEAD WORD *, WORD *);
+extern int RatFunNormalize(PHEAD WORD *);
+extern WORD *TakeSymbolContent(PHEAD WORD *,WORD *);
 extern int GCDterms(PHEAD WORD *,WORD *,WORD *);
 extern WORD *PutExtraSymbols(PHEAD WORD *,WORD,int *);
 extern WORD *TakeExtraSymbols(PHEAD WORD *,WORD);
-extern WORD *MultiplyWithTerm(PHEAD WORD *, WORD *);
+extern WORD *MultiplyWithTerm(PHEAD WORD *, WORD *,WORD);
 extern WORD *TakeContent(PHEAD WORD *, WORD *);
 extern int MergeSymbolLists(PHEAD WORD *, WORD *, int);
 extern int MergeDotproductLists(PHEAD WORD *, WORD *, int);
 extern WORD *CreateExpression(PHEAD WORD);
 extern int DIVfunction(PHEAD WORD *,WORD,int);
+extern WORD *MULfunc(PHEAD WORD *, WORD *);
 extern WORD *ConvertArgument(PHEAD WORD *,int *);
+extern int ExpandRat(PHEAD WORD *);
+extern int InvPoly(PHEAD WORD *,WORD,WORD);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 
@@ -1472,7 +1495,13 @@ extern void ClearSpectators(WORD);
 extern WORD GetFromSpectator(WORD *,WORD);
 extern void FlushSpectators(VOID);
 
+extern WORD *PreGCD(PHEAD WORD *, WORD *,int);
+extern WORD *FindCommonVariables(PHEAD int,int);
+extern VOID AddToSymbolList(PHEAD WORD);
+extern int AddToListPoly(PHEAD0);
+extern int InvPoly(PHEAD WORD *,WORD,WORD);
+
 /*
-  	#] Declarations : 
+  	#] Declarations :
 */
 #endif

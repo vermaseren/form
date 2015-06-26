@@ -569,7 +569,12 @@ WORD NewSort(PHEAD0)
 	}
 	if ( AR.sLevel == 0 ) {
 		AN.FunSorts[0] = AT.S0;
-		AT.S0->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
+		if ( AR.PolyFun == 0 ) { AT.S0->PolyFlag = 0; }
+		else if ( AR.PolyFunType == 1 ) { AT.S0->PolyFlag = 1; }
+		else if ( AR.PolyFunType == 2 ) {
+			if ( AR.PolyFunExp == 2 ) AT.S0->PolyFlag = 1;
+			else                      AT.S0->PolyFlag = 2;
+		}
 		AR.ShortSortCount = 0;
 	}
 	else {
@@ -656,7 +661,12 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	oldoutfile = AR.outfile;
 /*		PolyFlag repair action
 	if ( S == AT.S0 ) {
-		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
+		if ( AR.PolyFun == 0 ) { S->PolyFlag = 0; }
+		else if ( AR.PolyFunType == 1 ) { S->PolyFlag = 1; }
+		else if ( AR.PolyFunType == 2 ) {
+			if ( AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+			else                      S->PolyFlag = 2;
+		}
 		S->PolyWise = 0;
 	}
 	else {
@@ -1422,9 +1432,14 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 				while ( polystop < sa && *polystop != AR.PolyFun ) {
 					polystop += polystop[1];
 				}
-				if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
-				while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
-					i--; j--; k--; p++; r++;
+				if ( polystop < sa ) {
+					if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
+					while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
+						i--; j--; k--; p++; r++;
+					}
+				}
+				else {
+					while ( i > 0 && j > 0 && *p == *r && p < sa ) { i--; j--; k--; p++; r++; }
 				}
 			}
 			else {
@@ -1476,9 +1491,14 @@ nocompress:
 				while ( polystop < sa && *polystop != AR.PolyFun ) {
 					polystop += polystop[1];
 				}
-				if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
-				while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
-					i--; j--; k--; p++; r++;
+				if ( polystop < sa ) {
+					if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
+					while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
+						i--; j--; k--; p++; r++;
+					}
+				}
+				else {
+					while ( i > 0 && j > 0 && *p == *r ) { i--; j--; k--; p++; r++; }
 				}
 			}
 			else {
@@ -1970,7 +1990,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 /*
 	Add here the two arguments. Is a straight merge.
 */
-	if ( S->PolyFlag == 2 ) {
+	if ( S->PolyFlag == 2 && AR.PolyFunExp != 2 ) {
 		WORD **oldSplitScratch = AN.SplitScratch;
 		LONG oldSplitScratchSize = AN.SplitScratchSize;
 		LONG oldInScratch = AN.InScratch;
@@ -2423,6 +2443,7 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 */
 		count = 0; localPoly = 1; S->PolyWise = polyhit = 0;
 		S->PolyFlag = AR.PolyFunType;
+		if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) S->PolyFlag = 1;
 	}
 	else { localPoly = 0; }
 	prevorder = 0;
@@ -2574,7 +2595,7 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 #endif
 			if ( localPoly && c1 == AR.PolyFun ) {
 				if ( count == 0 ) {
-				  if ( AR.PolyFunType == 1 ) {
+				  if ( S->PolyFlag == 1 ) {
 					WORD i1, i2;
 					if ( *s1 > 0 ) i1 = *s1;
 					else if ( *s1 <= -FUNCTION ) i1 = 1;
@@ -2827,23 +2848,70 @@ int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 {
 	int sum1, sum2;
 	WORD *t1, *t2, *tt1, *tt2;
+	int low, high;
 	DUMMYUSE(par);
+	if ( AR.SortType == SORTLOWFIRST ) { low = 1; high = -1; }
+	else { low = -1; high = 1; }
 	t1 = term1 + 1; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]); t1 += 2;
 	t2 = term2 + 1; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]); t2 += 2;
 	if ( AN.polysortflag > 0 ) {
 		sum1 = 0; sum2 = 0;
 		while ( t1 < tt1 ) { sum1 += t1[1]; t1 += 2; }
 		while ( t2 < tt2 ) { sum2 += t2[1]; t2 += 2; }
-		if ( sum1 < sum2 ) return(-1);
-		if ( sum1 > sum2 ) return(1);
+		if ( sum1 < sum2 ) return(low);
+		if ( sum1 > sum2 ) return(high);
 		t1 = term1+3; t2 = term2 + 3;
 	}
 	while ( t1 < tt1 && t2 < tt2 ) {
-		if ( *t1 > *t2 ) return(-1);
-		if ( *t1 < *t2 ) return(1);
-		if ( t1[1] < t2[1] ) return(-1);
-		if ( t1[1] > t2[1] ) return(1);
+		if ( *t1 > *t2 ) return(low);
+		if ( *t1 < *t2 ) return(high);
+		if ( t1[1] < t2[1] ) return(low);
+		if ( t1[1] > t2[1] ) return(high);
 		t1 += 2; t2 += 2;
+	}
+	if ( t1 < tt1 ) return(high);
+	if ( t2 < tt2 ) return(low);
+	return(0);
+}
+
+/*
+ 		#] CompareSymbols : 
+ 		#[ CompareHSymbols :		int CompareHSymbols(term1,term2,par)
+*/
+/**
+ *	Compares terms that can have only SYMBOL and HAAKJE subterms.
+ *	If term1 < term2 the return value is -1
+ *	If term1 > term2 the return value is  1
+ *	If term1 = term2 the return value is  0
+ *	par is a dummy parameter to make the parameter field identical
+ *	to that of Compare1 which is the regular compare routine in sort.c
+ */
+
+int CompareHSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
+{
+	WORD *t1, *t2, *tt1, *tt2, *ttt1, *ttt2;
+	DUMMYUSE(par);
+	DUMMYUSE(AT.WorkPointer);
+	t1 = term1 + 1; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]); t1 += 2;
+	t2 = term2 + 1; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]); t2 += 2;
+	while ( t1 < tt1 && t2 < tt2 ) {
+		if ( *t1 != *t2 ) {
+			if ( t1[0] < t2[0] ) return(-1);
+			return(1);
+		}
+		else if ( *t1 == HAAKJE ) {
+			t1 += 3; t2 += 3; continue;
+		}
+		ttt1 = t1+t1[1]; ttt2 = t2+t2[1];
+		while ( t1 < ttt1 && t2 < ttt2 ) {
+			if ( *t1 > *t2 ) return(-1);
+			if ( *t1 < *t2 ) return(1);
+			if ( t1[1] < t2[1] ) return(-1);
+			if ( t1[1] > t2[1] ) return(1);
+			t1 += 2; t2 += 2;
+		}
+		if ( t1 < ttt1 ) return(1);
+		if ( t2 < ttt2 ) return(-1);
 	}
 	if ( t1 < tt1 ) return(1);
 	if ( t2 < tt2 ) return(-1);
@@ -2851,7 +2919,7 @@ int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 }
 
 /*
- 		#] CompareSymbols : 
+ 		#] CompareHSymbols : 
  		#[ ComPress :				LONG ComPress(ss,n)
 */
 /**
@@ -3352,9 +3420,6 @@ WORD MergePatches(WORD par)
 #endif
 	fin = &S->file;
 	fout = &(AR.FoStage4[0]);
-/*	PolyFlag repair action
-	S->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
-*/
 NewMerge:
 	coef = AN.SoScratC;
 	poin = S->poina; poin2 = S->poin2a;
@@ -4099,9 +4164,6 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 	The small buffer is full. It has to be sorted and written.
 */
-/*	PolyFlag repair action
-		S->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType:0;
-*/
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
@@ -4470,32 +4532,42 @@ WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
 	if ( *t == -SYMBOL ) {
 		if ( t[1] != AR.PolyFunVar ) goto Illegal;
 		exp1 = 1;
-		if ( t[2] != -SNUMBER || t[3] != 1 ) goto Illegal;
+		if ( t[2] != -SNUMBER ) goto Illegal;
+/*		if ( t[3] != 1 ) goto Illegal; */
+			t[3] = 1;
 	}
 	else if ( *t == -SNUMBER ) {
-		if ( t[1] != 1 ) goto Illegal;
+/*		if ( t[1] != 1 ) goto Illegal; */
+			t[1] = 1;
 		t += 2;
 		if ( *t == -SYMBOL ) {
 			if ( t[1] != AR.PolyFunVar ) goto Illegal;
 			exp1 = -1;
 		}
 		else if ( *t == -SNUMBER ) {
-			if ( t[1] != 1 ) goto Illegal;
+/*			if ( t[1] != 1 ) goto Illegal; */
+				t[1] = 1;
 			exp1 = 0;
 		}
 		else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
-			&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
-			&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+			&& t[ARGHEAD+3] == AR.PolyFunVar ) {
+			t[ARGHEAD+5] = 1;
+			t[ARGHEAD+6] = 1;
+			t[ARGHEAD+7] = 3;
 			exp1 = -t[ARGHEAD+4];
 		}
 		else goto Illegal;
 	}
 	else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
-		&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
-		&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+		&& t[ARGHEAD+3] == AR.PolyFunVar ) {
+		t[ARGHEAD+5] = 1;
+		t[ARGHEAD+6] = 1;
+		t[ARGHEAD+7] = 3;
 		exp1 = t[ARGHEAD+4];
 		t += *t;
-		if ( *t != -SNUMBER || t[1] != 1 ) goto Illegal;
+		if ( *t != -SNUMBER ) goto Illegal;
+/*		if ( t[1] != 1 ) goto Illegal; */
+			t[1] = 1;
 	}
 	else goto Illegal;
 
@@ -4503,32 +4575,42 @@ WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
 	if ( *t == -SYMBOL ) {
 		if ( t[1] != AR.PolyFunVar ) goto Illegal;
 		exp2 = 1;
-		if ( t[2] != -SNUMBER || t[3] != 1 ) goto Illegal;
+		if ( t[2] != -SNUMBER ) goto Illegal;
+/*		if ( t[3] != 1 ) goto Illegal; */
+			t[3] = 1;
 	}
 	else if ( *t == -SNUMBER ) {
-		if ( t[1] != 1 ) goto Illegal;
+/*		if ( t[1] != 1 ) goto Illegal; */
+			t[1] = 1;
 		t += 2;
 		if ( *t == -SYMBOL ) {
 			if ( t[1] != AR.PolyFunVar ) goto Illegal;
 			exp2 = -1;
 		}
 		else if ( *t == -SNUMBER ) {
-			if ( t[1] != 1 ) goto Illegal;
+/*			if ( t[1] != 1 ) goto Illegal; */
+				t[1] = 1;
 			exp2 = 0;
 		}
 		else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
-			&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
-			&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+			&& t[ARGHEAD+3] == AR.PolyFunVar ) {
+			t[ARGHEAD+5] = 1;
+			t[ARGHEAD+6] = 1;
+			t[ARGHEAD+7] = 3;
 			exp2 = -t[ARGHEAD+4];
 		}
 		else goto Illegal;
 	}
 	else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
-		&& t[ARGHEAD+3] == AR.PolyFunVar && t[ARGHEAD+5] == 1
-		&& t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+		&& t[ARGHEAD+3] == AR.PolyFunVar ) {
+		t[ARGHEAD+5] = 1;
+		t[ARGHEAD+6] = 1;
+		t[ARGHEAD+7] = 3;
 		exp2 = t[ARGHEAD+4];
 		t += *t;
-		if ( *t != -SNUMBER || t[1] != 1 ) goto Illegal;
+		if ( *t != -SNUMBER ) goto Illegal;
+/*		if ( t[1] != 1 ) goto Illegal; */
+			t[1] = 1;
 	}
 	else goto Illegal;
 

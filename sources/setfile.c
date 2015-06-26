@@ -78,6 +78,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"nwritestatistics",          ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"nwritethreadstatistics",    ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"oldfactarg",                ONOFFVALUE, 0, (LONG)NEWFACTARG}
+	,{(UBYTE *)"oldgcd",                    ONOFFVALUE, 0, (LONG)1}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"oldparallelstatistics",     ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (LONG)MAXPARLEVEL}
@@ -463,15 +464,6 @@ int AllocSetups()
 
 	AM.MaxTal &= -sizeof(WORD)*2;
 	sp->value = AM.MaxTal;
-/*
-	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*size+2,(char *)(sp->parameter));
-	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
-*/
-#ifdef WITHPTHREADS
-#else
-	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*AM.MaxTal+2,(char *)(sp->parameter));
-	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
-#endif
 	AC.cmod = (UWORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
 	AM.gcmod = AC.cmod + AM.MaxTal;
 	AC.powmod = AM.gcmod + AM.MaxTal;
@@ -664,6 +656,8 @@ int AllocSetups()
 	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = sp->value;
 	sp = GetSetupPar((UBYTE *)"oldfactarg");
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = sp->value;
+	sp = GetSetupPar((UBYTE *)"oldgcd");
+	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;

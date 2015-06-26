@@ -1118,7 +1118,10 @@ doexpr:					s += 2;
 					*t++ = x1; *t++ = FUNHEAD; *t++ = 0;
 					FILLFUN3(t) sumlevel = 0; goto fin;
 				}
-				v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG; FILLFUN3(t)
+				v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG;
+				if ( x1 == AR.PolyFun && AR.PolyFunType == 2 )
+						t[-1] |= CLEANPRF;
+				FILLFUN3(t)
 				needarg = -1;
 				if ( !inset && functions[x3-FUNCTION].spec >= TENSORFUNCTION ) {
 dotensor:

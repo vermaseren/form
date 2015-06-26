@@ -383,11 +383,12 @@ const poly & poly::normalize() {
 	sort(p, p + nterms, monomial_larger(BHEAD0));
 
 	WORD *tmp;
-	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
+	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD)) {
 		tmp = (WORD *)TermMalloc("poly::normalize");
-	else
+	}
+	else {
 		tmp = (WORD *)Malloc1(size_of_terms * sizeof(WORD), "poly::normalize");
-		
+	}
 	int j=1;
 	int prevj=0;
 	tmp[0]=0;

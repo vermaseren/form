@@ -955,5 +955,19 @@ VOID PrintWords(WORD *buffer, LONG number)
 
 /*
  		#] PrintWords : 
+ 		#[ PrintSeq :
+*/
+ 
+void PrintSeq(WORD *a,char *text)
+{
+	MesPrint(" %s:",text);
+	while ( *a ) {
+		MesPrint("     %a",a[0],a);
+		a += *a;
+	}
+}
+
+/*
+ 		#] PrintSeq : 
 	#] exit :
 */

@@ -125,6 +125,7 @@ static KEYWORD onoffoptions[] = {
 	,{"flag",			(TFUN)&(AC.debugFlags),	1,	0}
 	,{"oldfactarg",		(TFUN)&(AC.OldFactArgFlag),	1,	0}
 	,{"memdebugflag",	(TFUN)&(AC.MemDebugFlag),	1,	0}
+	,{"oldgcd", 		(TFUN)&(AC.OldGCDflag),	1,	0}
 };
 
 static WORD one = 1;
@@ -5091,12 +5092,13 @@ int CoPolyFun(UBYTE *s)
 	WORD numfun;
 	int type;
 	UBYTE *t;
-	if ( *s == 0 ) {
-		AR.PolyFun = AC.lPolyFun = 0;
-		AR.PolyFunInv = AC.lPolyFunInv = 0;
-		AR.PolyFunType = AC.lPolyFunType = 0;
-		return(0);
-	}
+	AR.PolyFun = AC.lPolyFun = 0;
+	AR.PolyFunInv = AC.lPolyFunInv = 0;
+	AR.PolyFunType = AC.lPolyFunType = 0;
+	AR.PolyFunExp = AC.lPolyFunExp = 0;
+	AR.PolyFunVar = AC.lPolyFunVar = 0;
+	AR.PolyFunPow = AC.lPolyFunPow = 0;
+	if ( *s == 0 ) { return(0); }
 	t = SkipAName(s);
 	if ( t == 0 || *t != 0 ) {
 		MesPrint("&PolyFun statement needs a single commuting function for its argument");
@@ -5112,7 +5114,6 @@ int CoPolyFun(UBYTE *s)
 		return(1);
 	}
 	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
-	AR.PolyFunInv = AC.lPolyFunInv = 0;
 	AR.PolyFunType = AC.lPolyFunType = 1;
 	return(0);
 }
@@ -5212,10 +5213,38 @@ int CoPolyRatFun(UBYTE *s)
 			AR.PolyFunExp = AC.lPolyFunExp = 1;
 			AR.PolyFunVar = AC.lPolyFunVar;
 		}
-/*
-		else if ( StrICmp(s,"expand") == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"expand") == 0 ) {
+			WORD x = 0;
+			if ( c != ',' ) {
+				MesPrint("&Illegal option field in PolyRatFun statement.");
+				return(1);
+			}
+			*t = c;
+			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+			s = t;
+			t = SkipAName(s);
+			if ( t == 0 ) goto NumErr;
+			c = *t; *t = 0;
+			if ( ( type = GetName(AC.varnames,s,&AC.lPolyFunVar,WITHAUTO) ) != CSYMBOL ) {
+				MesPrint("&Illegal symbol %s in option field in PolyRatFun statement.",s);
+				return(1);
+			}
+			*t = c;
+			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+			if ( *t > '9' || *t < '0' ) {
+				MesPrint("&Illegal option field in PolyRatFun statement.");
+				return(1);
+			}
+			while ( *t <= '9' && *t >= '0' ) x = 10*x + *t++ - '0';
+			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+			if ( *t != ')' ) {
+				MesPrint("&Illegal termination of option in PolyRatFun statement.");
+				return(1);
+			}
+			AR.PolyFunExp = AC.lPolyFunExp = 2;
+			AR.PolyFunVar = AC.lPolyFunVar;
+			AR.PolyFunPow = AC.lPolyFunPow = x;
 		}
-*/
 		else {
 			MesPrint("&Illegal option %s in PolyRatFun statement.",s);
 			return(1);
@@ -5397,6 +5426,7 @@ int DoArgPlode(UBYTE *s, int par)
 {
 	GETIDENTITY
 	WORD numfunc, type, error = 0, *w, n;
+	UBYTE *t,c;
 	int i;
 	w = AT.WorkPointer;
 	*w++ = par;
@@ -5407,22 +5437,25 @@ int DoArgPlode(UBYTE *s, int par)
 			MesPrint("&We don't do dollar variables yet in ArgImplode/ArgExplode");
 			return(1);
 		}
-		if ( ( type = GetName(AC.varnames,s,&numfunc,WITHAUTO) ) == CFUNCTION ) {
+		t = s;
+		if ( ( s = SkipAName(s) ) == 0 ) return(1);
+		c = *s; *s = 0;
+		if ( ( type = GetName(AC.varnames,t,&numfunc,WITHAUTO) ) == CFUNCTION ) {
 			numfunc += FUNCTION;
 		}
 		else if ( type != -1 ) {
 			if ( type != CDUBIOUS ) {
-				NameConflict(type,s);
-				type = MakeDubious(AC.varnames,s,&numfunc);
+				NameConflict(type,t);
+				type = MakeDubious(AC.varnames,t,&numfunc);
 			}
 			error = 1;
 		}
 		else {
-			MesPrint("&%s is not a function",s);
+			MesPrint("&%s is not a function",t);
 			numfunc = AddFunction(s,0,0,0,0,0,-1,-1) + FUNCTION;
 			return(1);
 		}
-		s = SkipAName(s);
+		*s = c;
 		*w++ = numfunc;
 		*w++ = FUNHEAD;
 #if FUNHEAD > 2

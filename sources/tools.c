@@ -35,9 +35,14 @@
  */
 /* #] License : */ 
 /*
+  	#[ Includes :
+	Note: TERMMALLOCDEBUG tests part of the TermMalloc and NumberMalloc
+	      system. To work properly it needs MEMORYMACROS in declare.h
+	      not to be defined to make sure that all calls will be diverted
+	      to the routines here.
 #define MALLOCDEBUG 1
 #define MALLOCDEBUGOUTPUT
-  	#[ Includes :
+#define TERMMALLOCDEBUG
 */
 
 /*
@@ -88,6 +93,10 @@ LONG numfrees = 0;
     
 #define M_alloc mprotectMalloc
     
+#endif
+ 
+#ifdef TERMMALLOCDEBUG
+WORD **DebugHeap1, **DebugHeap2;
 #endif
 
 /*
@@ -2426,11 +2435,20 @@ VOID TermMallocAddMemory(PHEAD0)
 	for ( i = 0; i < extra; i++ ) {
 		AT.TermMemHeap[i] = newbufs + i*(AM.MaxTer/sizeof(WORD)+TERMEXTRAWORDS);
 	}
+#ifdef TERMMALLOCDEBUG
+	DebugHeap2 = (WORD **)Malloc1((extra+AT.TermMemMax)*sizeof(WORD *),"TermMalloc");
+	for ( i = 0; i < AT.TermMemMax; i++ ) { DebugHeap2[i] = DebugHeap1[i]; }
+	for ( i = 0; i < extra; i++ ) {
+		DebugHeap2[i+AT.TermMemMax] = newbufs + i*(AM.MaxTer/sizeof(WORD)+TERMEXTRAWORDS);
+	}
+	if ( DebugHeap1 ) M_free(DebugHeap1,"TermMalloc");
+	DebugHeap1 = DebugHeap2;
+#endif
 	AT.TermMemTop = extra;
 	AT.TermMemMax += extra;
-/*
-MesPrint("AT.TermMemMax is now %l",AT.TermMemMax);
-*/
+#ifdef TERMMALLOCDEBUG
+	MesPrint("AT.TermMemMax is now %l",AT.TermMemMax);
+#endif
 }
 
 #ifndef MEMORYMACROS
@@ -2439,17 +2457,38 @@ WORD *TermMalloc2(PHEAD char *text)
 {
 	if ( AT.TermMemTop <= 0 ) TermMallocAddMemory(BHEAD0);
 
+#ifdef TERMMALLOCDEBUG
+	MesPrint("TermMalloc: %s, %d",text,(AT.TermMemMax-AT.TermMemTop));
+#endif
+
 #ifdef MALLOCDEBUGOUTPUT
 	MesPrint("TermMalloc: %s, %l/%l (%x)",text,AT.TermMemTop,AT.TermMemMax,AT.TermMemHeap[AT.TermMemTop-1]);
 #endif
-	
+
+	DUMMYUSE(text);
 	return(AT.TermMemHeap[--AT.TermMemTop]);
 }
  
 VOID TermFree2(PHEAD WORD *TermMem, char *text)
 {
+#ifdef TERMMALLOCDEBUG
+
+	int i;
+
+	for ( i = 0; i < AT.TermMemMax; i++ ) {
+		if ( TermMem == DebugHeap1[i] ) break;
+	}
+	if ( i >= AT.TermMemMax ) {
+		MesPrint(" ERROR: TermFree called with an address not given by TermMalloc.");
+		Terminate(-1);
+	}
+#endif
+	DUMMYUSE(text);
 	AT.TermMemHeap[AT.TermMemTop++] = TermMem;
 	
+#ifdef TERMMALLOCDEBUG
+	MesPrint("TermFree: %s, %d",text,(AT.TermMemMax-AT.TermMemTop));
+#endif
 #ifdef MALLOCDEBUGOUTPUT
 	MesPrint("TermFree: %s, %l/%l (%x)",text,AT.TermMemTop,AT.TermMemMax,TermMem);
 #endif
@@ -2484,6 +2523,10 @@ VOID TermFree2(PHEAD WORD *TermMem, char *text)
 #define NUMBERMEMSTARTNUM 16
 #define NUMBEREXTRAWORDS 10L
 
+#ifdef TERMMALLOCDEBUG
+UWORD **DebugHeap3, **DebugHeap4;
+#endif
+
 VOID NumberMallocAddMemory(PHEAD0)
 {
 	UWORD *newbufs;
@@ -2497,6 +2540,15 @@ VOID NumberMallocAddMemory(PHEAD0)
 	for ( i = 0; i < extra; i++ ) {
 		AT.NumberMemHeap[i] = newbufs + i*(LONG)(AM.MaxTal+NUMBEREXTRAWORDS);
 	}
+#ifdef TERMMALLOCDEBUG
+	DebugHeap4 = (UWORD **)Malloc1((extra+AT.NumberMemMax)*sizeof(WORD *),"NumberMalloc");
+	for ( i = 0; i < AT.NumberMemMax; i++ ) { DebugHeap4[i] = DebugHeap3[i]; }
+	for ( i = 0; i < extra; i++ ) {
+		DebugHeap4[i+AT.NumberMemMax] = newbufs + i*(LONG)(AM.MaxTal+NUMBEREXTRAWORDS);
+	}
+	if ( DebugHeap3 ) M_free(DebugHeap3,"NumberMalloc");
+	DebugHeap3 = DebugHeap4;
+#endif
 	AT.NumberMemTop = extra;
 	AT.NumberMemMax += extra;
 /*
@@ -2514,11 +2566,23 @@ UWORD *NumberMalloc2(PHEAD char *text)
 	MesPrint("NumberMalloc: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,AT.NumberMemHeap[AT.NumberMemTop-1]);
 #endif
 
+	DUMMYUSE(text);
 	return(AT.NumberMemHeap[--AT.NumberMemTop]);
 }
  
 VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 {
+#ifdef TERMMALLOCDEBUG
+	int i;
+	for ( i = 0; i < AT.NumberMemMax; i++ ) {
+		if ( NumberMem == DebugHeap3[i] ) break;
+	}
+	if ( i >= AT.NumberMemMax ) {
+		MesPrint(" ERROR: NumberFree called with an address not given by NumberMalloc.");
+		Terminate(-1);
+	}
+#endif
+	DUMMYUSE(text);
 	AT.NumberMemHeap[AT.NumberMemTop++] = NumberMem;
 	
 #ifdef MALLOCDEBUGOUTPUT
@@ -2817,7 +2881,7 @@ void ToGeneral(WORD *r, WORD *m, WORD par)
 {
 	WORD *mm = m, j, k;
 	if ( par ) m++;
-	else m += ARGHEAD + 1;
+	else { m[1] = 0; m += ARGHEAD + 1; }
 	j = -*r++;
 	k = 3;
 	if ( j >= FUNCTION ) { *m++ = j; *m++ = 2; }

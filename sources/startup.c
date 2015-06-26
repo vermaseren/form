@@ -1024,6 +1024,7 @@ VOID StartVariables()
 	AC.ProcessStats = AM.gProcessStats = AM.ggProcessStats = 1;
 	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = 0;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = NEWFACTARG;
+	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = 1;
 	AM.gcNumDollars = AP.DollarList.num;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
 	AC.CommuteInSet = 0;
@@ -1338,6 +1339,7 @@ WORD IniVars()
 	AT.inprimelist = -1;
 	AT.sizeprimelist = 0;
 	AT.primelist = 0;
+	AT.TrimPower = 0;
 	AN.SplitScratch = 0;
 	AN.SplitScratchSize = AN.InScratch = 0;
 	AN.SplitScratch1 = 0;

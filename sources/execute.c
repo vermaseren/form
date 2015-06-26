@@ -272,7 +272,7 @@ WORD PopVariables()
 	AC.lPolyFunInv = AM.gPolyFunInv;
 	AC.lPolyFunType = AM.gPolyFunType;
 	AC.lPolyFunExp = AM.gPolyFunExp;
-	AC.lPolyFunVar = AM.gPolyFunVar;
+	AR.PolyFunVar = AC.lPolyFunVar = AM.gPolyFunVar;
 	AC.lPolyFunPow = AM.gPolyFunPow;
 	AC.parallelflag = AM.gparallelflag;
 	AC.ProcessBucketSize = AC.mProcessBucketSize = AM.gProcessBucketSize;
@@ -280,6 +280,7 @@ WORD PopVariables()
     AC.ThreadBucketSize = AM.gThreadBucketSize;
 	AC.ThreadStats = AM.gThreadStats;
 	AC.FinalStats = AM.gFinalStats;
+	AC.OldGCDflag = AM.gOldGCDflag;
 	AC.ThreadsFlag = AM.gThreadsFlag;
 	AC.ThreadBalancing = AM.gThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch;
@@ -411,6 +412,7 @@ VOID MakeGlobal()
     AM.gThreadBucketSize = AC.ThreadBucketSize;
 	AM.gThreadStats = AC.ThreadStats;
 	AM.gFinalStats = AC.FinalStats;
+	AM.gOldGCDflag = AC.OldGCDflag;
 	AM.gThreadsFlag = AC.ThreadsFlag;
 	AM.gThreadBalancing = AC.ThreadBalancing;
 	AM.gThreadSortFileSynch = AC.ThreadSortFileSynch;
