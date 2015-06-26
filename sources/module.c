@@ -346,6 +346,7 @@ VOID FullCleanUp()
 	AC.ThreadStats = AM.gThreadStats = AM.ggThreadStats;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag;
 	AC.FinalStats = AM.gFinalStats = AM.ggFinalStats;
+	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag;
 	AC.ThreadsFlag = AM.gThreadsFlag = AM.ggThreadsFlag;
 	if ( AC.ThreadsFlag && AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
 	AC.ThreadBucketSize = AM.gThreadBucketSize = AM.ggThreadBucketSize;
@@ -440,7 +441,7 @@ int DoPolyratfun(UBYTE *s)
 	WORD funnum;
 	if ( AC.origin == FROMPOINTINSTRUCTION ) {
 		if ( *s == 0 || *s == ',' || *s == ')' ) {
-			AR.PolyFun = 0; AR.PolyFunType = 0;
+			AR.PolyFun = 0; AR.PolyFunType = 0; AR.PolyFunInv = 0; AR.PolyFunExp = 0;
 			return(0);
 		}
 		if ( *s != '=' ) {
@@ -450,7 +451,7 @@ int DoPolyratfun(UBYTE *s)
 	}
 	else {
 		if ( *s == 0 ) {
-			AR.PolyFun = 0; AR.PolyFunType = 0;
+			AR.PolyFun = 0; AR.PolyFunType = 0; AR.PolyFunInv = 0; AR.PolyFunExp = 0;
 			return(0);
 		}
 		if ( *s != '=' && *s != ',' ) {
@@ -477,6 +478,7 @@ Error2:;
 	}
 	AR.PolyFun = funnum+FUNCTION; AR.PolyFunType = 2;
 	AR.PolyFunInv = 0;
+	AR.PolyFunExp = 0;
 	AC.PolyRatFunChanged = 1;
 	*t = c;
 	if ( *t == '+' ) {

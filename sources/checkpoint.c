@@ -1485,6 +1485,13 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.gOldFactArgFlag,int);
 	R_SET(AM.ggOldFactArgFlag,int);
 
+    R_SET(AM.gnumextrasym,int);
+    R_SET(AM.ggnumextrasym,int);
+	R_SET(AM.NumSpectatorFiles,int);
+	R_SET(AM.SizeForSpectatorFiles,int);
+    R_SET(AM.gOldGCDflag,int);
+    R_SET(AM.ggOldGCDflag,int);
+
 #ifdef PRINTDEBUG
 	print_M();
 #endif
@@ -2541,6 +2548,13 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.fbuffersize,sizeof(int));
 	S_WRITE_B(&AM.gOldFactArgFlag,sizeof(int));
 	S_WRITE_B(&AM.ggOldFactArgFlag,sizeof(int));
+
+    S_WRITE_B(&AM.gnumextrasym,sizeof(int));
+    S_WRITE_B(&AM.ggnumextrasym,sizeof(int));
+	S_WRITE_B(&AM.NumSpectatorFiles,sizeof(int));
+	S_WRITE_B(&AM.SizeForSpectatorFiles,sizeof(int));
+    S_WRITE_B(&AM.gOldGCDflag,sizeof(int));
+    S_WRITE_B(&AM.ggOldGCDflag,sizeof(int));
 
 	/*#] AM :*/ 
 	/*#[ AC :*/

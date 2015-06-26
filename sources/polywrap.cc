@@ -448,6 +448,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 
 		num *= den_den;
 		den *= den_num;
+
 		poly gcd = polygcd::gcd(num,den);
 		num /= gcd;
 		den /= gcd;
@@ -685,7 +686,6 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			poly den2(BHEAD 0,modp,1);
 			poly_ratfun_read(t,num2,den2);
 			t += t[1];
-
 			poly gcd1(polygcd::gcd(num1,den2));
 			poly gcd2(polygcd::gcd(num2,den1));
 

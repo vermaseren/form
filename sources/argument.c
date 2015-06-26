@@ -1640,6 +1640,12 @@ WORD execterm(PHEAD WORD *term, WORD level)
 		Here we overwrite that.
 */
 		AN.FunSorts[AR.sLevel]->PolyFlag = ( AR.PolyFun != 0 ) ? AR.PolyFunType: 0;
+		if ( AR.PolyFun == 0 ) { AN.FunSorts[AR.sLevel]->PolyFlag = 0; }
+		else if ( AR.PolyFunType == 1 ) { AN.FunSorts[AR.sLevel]->PolyFlag = 1; }
+		else if ( AR.PolyFunType == 2 ) {
+			if ( AR.PolyFunExp == 2 ) AN.FunSorts[AR.sLevel]->PolyFlag = 1;
+			else                      AN.FunSorts[AR.sLevel]->PolyFlag = 2;
+		}
 		if ( buffer1 ) {
 			term = buffer1;
 			while ( *term ) {

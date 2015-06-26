@@ -576,9 +576,6 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AT.WorkTop = AT.WorkSpace + AM.WorkSize;
 	AT.WorkPointer = AT.WorkSpace;
 
-	AT.n_coef = (WORD *)Malloc1(sizeof(WORD)*4*AM.MaxTal+2,"maxnumbersize");
-	AT.n_llnum = AT.n_coef + 2*AM.MaxTal;
-
 	AT.Nest = (NESTING)Malloc1((LONG)sizeof(struct NeStInG)*AM.maxFlevels,"functionlevels");
 	AT.NestStop = AT.Nest + AM.maxFlevels;
 	AT.NestPoin = AT.Nest;
@@ -609,7 +606,6 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	             the FoStage4[2]
 */
 	if ( AT.WorkSpace == 0 ||
-	     AT.n_coef == 0 ||
 	     AT.Nest == 0 ||
 	     AT.WildMask == 0 ||
 	     AT.RepCount == 0 ||
@@ -1359,6 +1355,7 @@ void *RunThread(void *dummy)
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  }
+				  else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 				  if ( ( AP.PreDebug & THREADSDEBUG ) != 0 ) {
 					MLOCK(ErrorMessageLock);
 					MesPrint("Thread %w executing term:");
@@ -1635,6 +1632,7 @@ bucketstolen:;
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  }
+				  else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 						PolyFunClean(BHEAD term);
@@ -1672,6 +1670,7 @@ bucketstolen:;
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  }
+				  else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 						PolyFunClean(BHEAD term);
@@ -1799,6 +1798,7 @@ bucketstolen:;
 						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 						else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 					}
+					else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 					if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 						PolyFunClean(BHEAD term);
@@ -1911,7 +1911,12 @@ void *RunSortBot(void *dummy)
 				AR.PolyFunVar = AB[0]->R.PolyFunVar;
 				AR.PolyFunPow = AB[0]->R.PolyFunPow;
 				AR.SortType = AC.SortType;
-				AT.SS->PolyFlag = AR.PolyFun ? AR.PolyFunType: 0;
+				if ( AR.PolyFun == 0 ) { AT.SS->PolyFlag = 0; }
+				else if ( AR.PolyFunType == 1 ) { AT.SS->PolyFlag = 1; }
+				else if ( AR.PolyFunType == 2 ) {
+					if ( AR.PolyFunExp == 2 ) AT.SS->PolyFlag = 1;
+					else                      AT.SS->PolyFlag = 2;
+				}
 				AT.SS->PolyWise = 0;
 				AN.ncmod = AC.ncmod;
 				LOCK(AT.SB.MasterBlockLock[1]);
@@ -3550,7 +3555,12 @@ int MasterMerge()
 	if ( numberofworkers > 2 ) return(SortBotMasterMerge());
 #endif
 	fin = &S->file;
-	S->PolyFlag = AR0.PolyFun ? AR0.PolyFunType: 0;
+	if ( AR0.PolyFun == 0 ) { S->PolyFlag = 0; }
+	else if ( AR0.PolyFunType == 1 ) { S->PolyFlag = 1; }
+	else if ( AR0.PolyFunType == 2 ) {
+		if ( AR0.PolyFunExp == 2 ) S->PolyFlag = 1;
+		else                      S->PolyFlag = 2;
+	}
 	S->TermsLeft = 0;
 	coef = AN0.SoScratC;
 	poin = S->poina; poin2 = S->poin2a;

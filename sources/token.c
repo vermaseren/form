@@ -212,7 +212,7 @@ donumber:		i = 0;
 					if ( leftright == LHSIDE ) {
 						if ( object == 1 ) {	/* follows a name */
 							in++; *out++ = TWILDCARD;
-							if ( FG.cTable[in[0]] == 0 || in[0] == '[' ) object = 0;
+							if ( FG.cTable[in[0]] == 0 || in[0] == '[' || in[0] == '{' ) object = 0;
 						}
 						else if ( object == -1 ) {	/* follows comma or ( */
 							in++; s = in;
@@ -229,6 +229,11 @@ donumber:		i = 0;
 								*out++ = (SBYTE)i;
 							}
 							object = 1;
+						}
+						else {
+							MesPrint("&Illegal position for ?");
+							error = 1;
+							in++;
 						}
 					}
 					else {
@@ -467,6 +472,10 @@ donumber:		i = 0;
 			case 7:		/* { | } */
 				CHECKPOLY
 				if ( *in == '{' ) {
+					if ( object > 0 ) {
+						MesPrint("&Illegal position for %s",in);
+						if ( !error ) error = 1;
+					}
 					s = in+1;
 					SKIPBRA2(in)
 					number = DoTempSet(s,in);

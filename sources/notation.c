@@ -55,7 +55,7 @@ int NormPolyTerm(PHEAD WORD *term)
 	WORD *tcoef, ncoef, *tstop, *tfill, *t, *tt;
 	int equal, i;
 	WORD *r1, *r2, *r3, *r4, *r5, *rfirst, rv;
-	WORD *lnum = AT.n_llnum+1, nnum;		/* Scratch, originally for factorials */
+	WORD *lnum, nnum;		/* Scratch, originally for factorials */
 /*
 	One: find the coefficient
 */
@@ -64,7 +64,7 @@ int NormPolyTerm(PHEAD WORD *term)
 	tstop = tcoef - ABS(tcoef[-1]);
 	tfill = t = term + 1;
 	rfirst = 0;
-	if ( t >= tstop ) return(*term);
+	if ( t >= tstop ) { return(*term); }
 	while ( t < tstop ) {
 		switch ( *t ) {
 			case SYMBOL:
@@ -146,6 +146,7 @@ int NormPolyTerm(PHEAD WORD *term)
 					if ( t[3] < 0 ) goto NormInf;
 					goto NormZero;
 				}
+				lnum = TermMalloc("lnum");
 				lnum[0] = t[2];
 				nnum = 1;
 				if ( t[3] && RaisPow(BHEAD (UWORD *)lnum,&nnum,(UWORD)(ABS(t[3]))) ) goto FromNorm;
@@ -160,6 +161,7 @@ int NormPolyTerm(PHEAD WORD *term)
 				}
 				ncoef = INCLENG(ncoef);
 				t += t[1];
+				TermFree(lnum,"lnum");
 				break;
 			case LNUMBER:
 				ncoef = REDLENG(ncoef);

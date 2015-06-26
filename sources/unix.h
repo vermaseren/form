@@ -44,6 +44,8 @@ the errno checkup*/
 
 /*[29apr2004 mt]:*/
 #define WITHEXTERNALCHANNEL
+/*
+*/
 #define TRAPSIGNALS
 /*:[29apr2004 mt]*/
 

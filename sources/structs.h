@@ -1389,6 +1389,8 @@ struct M_const {
     int     ggnumextrasym;
 	int		NumSpectatorFiles;     /* Elements used in AM.spectatorfiles; */
 	int		SizeForSpectatorFiles; /* Size in AM.spectatorfiles; */
+    int     gOldGCDflag;
+    int     ggOldGCDflag;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1446,9 +1448,9 @@ struct M_const {
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,57,80,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,59,80,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,57,80,0);
+	PADPOSITION(17,23,59,80,0);
 #endif
 };
 /*
@@ -1684,6 +1686,7 @@ struct C_const {
     int     ffbufnum;              /* Buffer number for user defined factorizations */
     int     OldFactArgFlag;
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
+    int     OldGCDflag;
 	int     doloopstacksize;
 	int     dolooplevel;
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
@@ -1747,11 +1750,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(46,8+3*MAXNEST,69,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(46,8+3*MAXNEST,70,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(46,8+3*MAXNEST,69,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(46,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(44,8+3*MAXNEST,67,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(44,8+3*MAXNEST,68,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1923,8 +1926,6 @@ struct T_const {
     int     *RepCount;             /* (M) Buffer for repeat nesting */
     int     *RepTop;               /* (M) Top of RepCount buffer */
     WORD    *WildArgTaken;         /* (N) Stack for wildcard pattern matching */
-    WORD    *n_coef;               /* (M) Used by normal. local. */
-    WORD    *n_llnum;              /* (M) Used by normal. local. */
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
   	WORD    *small_power_n;        /*     length of the number */
 	  UWORD  **small_power;          /*     the number*/	
@@ -1938,6 +1939,8 @@ struct T_const {
     WORD    **TermMemHeap;        /* For TermMalloc. Set zero in Checkpoint */
     UWORD    **NumberMemHeap;      /* For NumberMalloc. Set zero in Checkpoint */
 	BRACKETINFO *bracketinfo;
+    WORD    **ListPoly;
+    WORD    *ListSymbols;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
@@ -1961,6 +1964,11 @@ struct T_const {
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
     int     bracketindexflag;      /* Are brackets going to be indexed? */
     int     optimtimes;            /* Number of the evaluation of the MCTS tree */
+    int     ListSymbolsSize;
+    int     NumListSymbols;
+    int     numpoly;
+    int     ListPolySize;
+    int     TrimPower;             /* Indicates trimming in polyratfun expansion */
     WORD    small_power_maxx;      /*     size of the cache for small powers  */
     WORD    small_power_maxn;      /*     size of the cache for small powers */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
@@ -1988,12 +1996,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,15,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,20,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,13,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,18,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,11,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,16,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*

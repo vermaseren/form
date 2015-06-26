@@ -234,6 +234,7 @@ WORD Processor()
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				}
+			    else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 				if ( Generator(BHEAD term,0) ) {
 					LowerSortLevel(); goto ProcErr;
 				}
@@ -382,6 +383,7 @@ commonread:;
 						if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 						else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 					  }
+					  else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 					  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 						PolyFunClean(BHEAD term);
@@ -672,6 +674,7 @@ WORD TestSub(PHEAD WORD *term, WORD level)
 	LONG isp, i;
 	TABLES T;
 	VOID *oldcompareroutine = AR.CompareRoutine;
+	WORD oldsorttype = AR.SortType;
 ReStart:
 	tbufnum = 0; i = 0;
 	AT.TMbuff = AM.rbufnum;
@@ -1162,7 +1165,7 @@ Important: we may not have enough spots here
 				}
 			}
 			if ( functions[funnum-FUNCTION].spec == 0
-				|| ( t[2] & DIRTYFLAG ) != 0 ) funflag = 1;
+				|| ( t[2] & (DIRTYFLAG|CLEANPRF) ) != 0 ) { funflag = 1; }
 			if ( *t <= MAXBUILTINFUNCTION ) {
 			  if ( *t == THETA || *t == THETA2 ) {
 				WORD *tstop, *tt2, kk;
@@ -1439,6 +1442,8 @@ redosize:							i -= *t;
 								}
 								AN.subsubveto = 0;
 								t1[2] = 1;
+								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 )
+									t1[2] |= CLEANPRF;
 								AT.RecFlag--;
 								AT.NestPoin--;
 								AN.TeInFun++;
@@ -1466,6 +1471,7 @@ redosize:							i -= *t;
 						NewSort(BHEAD0);
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.CompareRoutine = &CompareSymbols;
+							AR.SortType = SORTHIGHFIRST;
 						}
 						if ( AT.WorkPointer < term + *term )
 							AT.WorkPointer = term + *term;
@@ -1477,6 +1483,12 @@ redosize:							i -= *t;
 							r = AT.WorkPointer;
 							AT.WorkPointer = r + *r;
 							if ( Normalize(BHEAD r) ) {
+								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
+									AR.SortType = oldsorttype;
+									AR.CompareRoutine = oldcompareroutine;
+/*									t1[2] &= CLEANPRF; */
+									t1[2] |= CLEANPRF;
+								}
 								LowerSortLevel(); goto EndTest;
 							}
 							if ( AN.ncmod != 0 ) {
@@ -1484,6 +1496,12 @@ redosize:							i -= *t;
 									if ( Modulus(r) ) {
 										LowerSortLevel();
 										AT.WorkPointer = r;
+										if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
+											AR.SortType = oldsorttype;
+											AR.CompareRoutine = oldcompareroutine;
+/*											t1[2] &= CLEANPRF; */
+											t1[2] |= CLEANPRF;
+										}
 										goto EndTest;
 									}
 								}
@@ -1494,7 +1512,10 @@ redosize:							i -= *t;
 						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
+							AR.SortType = oldsorttype;
 							AR.CompareRoutine = oldcompareroutine;
+/*							t1[2] &= CLEANPRF; */
+							t1[2] |= CLEANPRF;
 						}
 						while ( *m ) m += *m;
 						i = WORDDIF(m,AT.WorkPointer);
@@ -4221,6 +4242,8 @@ doterms:
 				}
 				if ( FiniTerm(BHEAD term,aa,termout,nexp,0) ) goto PowCall;
 				if ( *termout ) {
+					MarkPolyRatFunDirty(termout)
+/*					PolyFunDirty(BHEAD termout); */
 					AT.WorkPointer = termout + *termout;
 					*AN.RepPoint = 1;
 					AR.expchanged = 1;
@@ -4431,7 +4454,7 @@ WORD PrepPoly(PHEAD WORD *term)
 	But because this is an undocumented feature for very special
 	purposes, we don't do anything about it. (30-aug-2011)
 */
-	if ( AR.PolyFunType == 2 ) {
+	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
 		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1);
 		oldworkpointer = AT.WorkPointer;
 	}
@@ -4725,8 +4748,9 @@ WORD PrepPoly(PHEAD WORD *term)
 		i = v - m;
 		NCOPY(w,m,i);
 		*w++ = 1; *w++ = 1; *w++ = 3; *term = w - term;
+
 		poly_ratfun_normalize(BHEAD term);
-		return(0);
+		goto endofit;
 /*
  		#] Two arguments : 
 */
@@ -4744,6 +4768,7 @@ WORD PrepPoly(PHEAD WORD *term)
 	*poly++ = 1;
 	*poly++ = 3;
 	*term = WORDDIF(poly,term);
+endofit:;
 	return(0);
 }
 
@@ -4755,7 +4780,7 @@ WORD PrepPoly(PHEAD WORD *term)
  *		Multiplies the arguments of multiple occurrences of the polyfun.
  *		In this routine we do the original PolyFun with one argument only.
  *		The PolyRatFun (PolyFunType = 2) is done in a dedicated routine
- *		in the file polynito.c
+ *		in the file polywrap.cc
  *		The new result is written over the old result.
  *
  *		@param term It contains the input term and later the output.
@@ -4768,18 +4793,17 @@ WORD PolyFunMul(PHEAD WORD *term)
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *tt1, *tt2, *arg1, *arg2;
 	WORD *tstop;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
-	if ( AR.PolyFunType == 2 ) {
+	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
 		WORD retval, count1 = 0, count2 = 0;
-		t = term + 1; t1 = term + *term;; t1 -= ABS(t1[-1]);
+		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) { count1++; }
 			t += t[1];
 		}
 		if ( count1 <= 1 ) return(0);
-
 		retval = poly_ratfun_normalize(BHEAD term);
 	
-		t = term + 1; t1 = term + *term;; t1 -= ABS(t1[-1]);
+		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) count2++;
 			t += t[1];
@@ -4790,7 +4814,7 @@ WORD PolyFunMul(PHEAD WORD *term)
 				if ( *t == AR.PolyFun ) {
 					t2 = t;
 					t = t + t[1];
-					t2[2] |= DIRTYFLAG;
+					t2[2] |= (DIRTYFLAG|CLEANPRF);
 					t2 += FUNHEAD;
 					while ( t2 < t ) {
 						if ( *t2 > 0 ) t2[1] = DIRTYFLAG;
@@ -4883,6 +4907,7 @@ retry:
 */
 	w = AT.WorkPointer;
 	NewSort(BHEAD0);
+	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) AT.TrimPower = 1;
 	for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
 	for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
 		m = w;
@@ -4937,6 +4962,7 @@ retry:
 	}	
 	}	
 	if ( EndSort(BHEAD w,0) < 0 ) goto PolyCall;
+	AT.TrimPower = 0;
 	if ( *w == 0 ) {
 		*term = 0;
 		return(0);

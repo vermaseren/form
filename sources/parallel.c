@@ -916,7 +916,12 @@ int PF_EndSort(void)
 		work. The smallest term needs to be copied to the outbuf: use PutOut.
 */
 	PF_InitTree();
-	S->PolyFlag = AR.PolyFun ? AR.PolyFunType : 0;
+	if ( AR.PolyFun == 0 ) { S->PolyFlag = 0; }
+	else if ( AR.PolyFunType == 1 ) { S->PolyFlag = 1; }
+	else if ( AR.PolyFunType == 2 ) {
+		if ( AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+		else                      S->PolyFlag = 2;
+	}
 	*AR.CompressPointer = 0;
 	SeekScratch(fout, &position);
 	oldposition = position;
@@ -1850,6 +1855,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 				else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 			}
+			else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 			if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 				&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 				PolyFunClean(BHEAD term);
@@ -3871,6 +3877,7 @@ static int PF_DoOneExpr(void)/*the processor*/
 					if ( ( AC.modmode & ALSOFUNARGS ) != 0 ) MarkDirty(term,DIRTYFLAG);
 					else if ( AR.PolyFun ) PolyFunDirty(BHEAD term);
 				  }
+				  else if ( AC.PolyRatFunChanged ) PolyFunDirty(BHEAD term);
 				  if ( ( AR.PolyFunType == 2 ) && ( AC.PolyRatFunChanged == 0 )
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 						PolyFunClean(BHEAD term);

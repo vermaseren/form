@@ -1146,8 +1146,13 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	AR.SortType = SORTHIGHFIRST;
 	term1 = TermMalloc("GCDfunction3-a");
 	term2 = TermMalloc("GCDfunction3-b");
+
 	confree1 = TakeContent(BHEAD in1,term1);
 	confree2 = TakeContent(BHEAD in2,term2);
+/*
+	confree1 = TakeSymbolContent(BHEAD in1,term1);
+	confree2 = TakeSymbolContent(BHEAD in2,term2);
+*/
 	GCDterms(BHEAD term1,term2,term1);
 	TermFree(term2,"GCDfunction3-b");
 /*
@@ -1156,8 +1161,14 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 */
 	if ( ( proper1 = PutExtraSymbols(BHEAD confree1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
 	if ( confree1 != in1 ) M_free(confree1,"TakeContent");
+/*
+	TermFree(confree1,"TakeSymbolContent");
+*/
 	if ( ( proper2 = PutExtraSymbols(BHEAD confree2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
 	if ( confree2 != in2 ) M_free(confree2,"TakeContent");
+/*
+	TermFree(confree2,"TakeSymbolContent");
+*/
 /*
 	And now the real work:
 */
@@ -1179,7 +1190,7 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	Now multiply gcdout by term1
 */
 	if ( term1[0] != 4 || term1[3] != 3 || term1[1] != 1 || term1[2] != 1 ) {
-		if ( ( gcdout1 = MultiplyWithTerm(BHEAD gcdout,term1) ) == 0 ) goto CalledFrom;
+		if ( ( gcdout1 = MultiplyWithTerm(BHEAD gcdout,term1,0) ) == 0 ) goto CalledFrom;
 		M_free(gcdout,"gcdout");
 		gcdout = gcdout1;
 	}
@@ -1265,10 +1276,16 @@ CalledFrom:
  		#[ MultiplyWithTerm :
 */
 
-WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term)
+WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 {
 	WORD *termout, *t, *tt, *tstop, *ttstop;
 	WORD length, length1, length2;
+	WORD oldsorttype = AR.SortType;
+	void *oldcompareroutine = AR.CompareRoutine;
+	AR.CompareRoutine = (void *)&CompareSymbols;
+
+	if ( par == 0 ) AR.SortType = SORTHIGHFIRST;
+	else            AR.SortType = SORTLOWFIRST;
 	termout = AT.WorkPointer;
 	NewSort(BHEAD0);
 	while ( *in ) {
@@ -1283,11 +1300,15 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term)
 		length = INCLENG(length);
 		tt += ABS(length); tt[-1] = length;
 		*termout = tt - termout;
-		Normalize(BHEAD termout);
+		SymbolNormalize(termout);
 		StoreTerm(BHEAD termout);
 		in += *in;
 	}
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2) < 0 ) goto CalledFrom;
+	if ( EndSort(BHEAD termout,1) < 0 ) goto CalledFrom;
+
+	AR.CompareRoutine = oldcompareroutine;
+
+	AR.SortType = oldsorttype;
 	return(termout);
 
 CalledFrom:
@@ -1690,7 +1711,7 @@ nextr1:;
 	if ( action ) {
 		*tterm = tt - tterm;
 		AT.WorkPointer = tt;
-		inp = MultiplyWithTerm(BHEAD in,tterm);
+		inp = MultiplyWithTerm(BHEAD in,tterm,0);
 		AT.WorkPointer = tterm;
 		in = inp;
 	}
@@ -1725,7 +1746,7 @@ int MergeSymbolLists(PHEAD WORD *old, WORD *extra, int par)
 	WORD *new = TermMalloc("MergeSymbolLists");
 	WORD *t1, *t2, *fill;
 	int i1,i2;
-	fill = new + 2;
+	fill = new + 2; *new = SYMBOL;
 	i1 = old[1] - 2; i2 = extra[1] - 2;
 	t1 = old + 2; t2 = extra + 2;
 	switch ( par ) {
@@ -1734,17 +1755,29 @@ int MergeSymbolLists(PHEAD WORD *old, WORD *extra, int par)
 				if ( *t1 > *t2 ) {
 					if ( t2[1] < 0 ) { *fill++ = *t2++; *fill++ = *t2++; }
 					else t2 += 2;
+					i2 -= 2;
 				}
 				else if ( *t1 < *t2 ) {
 					if ( t1[1] < 0 ) { *fill++ = *t1++; *fill++ = *t1++; }
 					else t1 += 2;
+					i1 -= 2;
 				}
 				else if ( t1[1] < t2[1] ) {
 					*fill++ = *t1++; *fill++ = *t1++; t2 += 2;
+					i1 -= 2; i2 -=2;
 				}
 				else {
 					*fill++ = *t2++; *fill++ = *t2++; t1 += 2;
+					i1 -= 2; i2 -=2;
 				}
+			}
+			for ( ; i1 > 0; i1 -= 2 ) {
+				if ( t1[1] < 0 ) { *fill++ = *t1++; *fill++ = *t1++; }
+				else t1 += 2;
+			}
+			for ( ; i2 > 0; i2 -= 2 ) {
+				if ( t2[1] < 0 ) { *fill++ = *t2++; *fill++ = *t2++; }
+				else t2 += 2;
 			}
 			break;
 		case 1:
@@ -1752,46 +1785,60 @@ int MergeSymbolLists(PHEAD WORD *old, WORD *extra, int par)
 				if ( *t1 > *t2 ) {
 					if ( t2[1] > 0 ) { *fill++ = *t2++; *fill++ = *t2++; }
 					else t2 += 2;
+					i2 -=2;
 				}
 				else if ( *t1 < *t2 ) {
 					if ( t1[1] > 0 ) { *fill++ = *t1++; *fill++ = *t1++; }
 					else t1 += 2;
+					i1 -= 2;
 				}
 				else if ( t1[1] > t2[1] ) {
 					*fill++ = *t1++; *fill++ = *t1++; t2 += 2;
+					i1 -= 2; i2 -=2;
 				}
 				else {
 					*fill++ = *t2++; *fill++ = *t2++; t1 += 2;
+					i1 -= 2; i2 -=2;
 				}
+			}
+			for ( ; i1 > 0; i1 -= 2 ) {
+				if ( t1[1] > 0 ) { *fill++ = *t1++; *fill++ = *t1++; }
+				else t1 += 2;
+			}
+			for ( ; i2 > 0; i2 -= 2 ) {
+				if ( t2[1] > 0 ) { *fill++ = *t2++; *fill++ = *t2++; }
+				else t2 += 2;
 			}
 			break;
 		case 0:
 			while ( i1 > 0 && i2 > 0 ) {
 				if ( *t1 > *t2 ) {
-					t2 += 2;
+					t2 += 2; i2 -= 2;
 				}
 				else if ( *t1 < *t2 ) {
-					t1 += 2;
+					t1 += 2; i1 -= 2;
 				}
-				else if ( ( t1[1] > 0 ) && ( t2[1] < 0 ) ) { t1 += 2; t2 += 2; }
-				else if ( ( t1[1] < 0 ) && ( t2[1] > 0 ) ) { t1 += 2; t2 += 2; }
+				else if ( ( t1[1] > 0 ) && ( t2[1] < 0 ) ) { t1 += 2; t2 += 2; i1 -= 2; i2 -= 2; }
+				else if ( ( t1[1] < 0 ) && ( t2[1] > 0 ) ) { t1 += 2; t2 += 2; i1 -= 2; i2 -= 2; }
 				else if ( t1[1] > 0 ) {
 					if ( t1[1] < t2[1] ) {
-						*fill++ = *t1++; *fill++ = *t1++; t2 += 2;
+						*fill++ = *t1++; *fill++ = *t1++; t2 += 2; i2 -= 2;
 					}
 					else {
-						*fill++ = *t2++; *fill++ = *t2++; t1 += 2;
+						*fill++ = *t2++; *fill++ = *t2++; t1 += 2; i1 -= 2;
 					}
 				}
 				else {
 					if ( t2[1] < t1[1] ) {
-						*fill++ = *t2++; *fill++ = *t2++; t1 += 2;
+						*fill++ = *t2++; *fill++ = *t2++; t1 += 2; i1 -= 2; i2 -= 2;
 					}
 					else {
-						*fill++ = *t1++; *fill++ = *t1++; t2 += 2;
+						*fill++ = *t1++; *fill++ = *t1++; t2 += 2; i1 -= 2; i2 -= 2;
 					}
 				}
 			}
+			for ( ; i1 > 0; i1-- ) *fill++ = *t1++;
+			for ( ; i2 > 0; i2-- ) *fill++ = *t2++;
 			break;
 	}
 	i1 = new[1] = fill - new;
@@ -2140,12 +2187,223 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 	}
 	if ( sign < 0 && length1 > 0 ) length1 = -length1;
 	tout += ABS(length1); tout[-1] = length1;
-	*termout = tout - termout;
+	*termout = tout - termout; *tout = 0;
 	return(0);
 }
 
 /*
  		#] GCDterms : 
+ 		#[ TakeSymbolContent :
+*/
+/**
+ *	Implements part of the old ExecArg in which we take common factors
+ *	from arguments with more than one term.
+ *	We allow only symbols as this code is used for the polyratfun only.
+ *	We have a special routine, because the generic TakeContent does too
+ *	much work and speed is at a premium here.
+ *	Input: in   is the input expression as a sequence of terms.
+ *	Output: term: the content
+ *	        return value: the contentfree expression.
+ *	                      it is in new allocation, made by TermMalloc.
+ *	                      (should be in a TermMalloc space?)
+ */
+
+WORD *TakeSymbolContent(PHEAD WORD *in, WORD *term)
+{
+	GETBIDENTITY
+	WORD *t, *tstop, *tout, *tstore;
+	WORD *tnext, *tt, *tterm;
+	WORD *inp, a, *den, *oldworkpointer = AT.WorkPointer;
+	int i, action = 0, sign, first;
+	UWORD *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMbuffer2, *ap;
+	WORD GCDlen, GCDlen2, LCMlen, LCMlen2, length, redlength, len1, len2;
+	LONG j;
+	tout = tstore = term+1;
+/*
+  	#[ SYMBOL :
+
+	We make a list of symbols and their minimal powers.
+	This includes negative powers. In the end we have to multiply by the
+	inverse of this list. That takes out all negative powers and leaves
+	things ready for further processing.
+*/
+	tterm = AT.WorkPointer; tt = tterm+1;
+	tout[0] = SYMBOL; tout[1] = 2;
+	t = in; first = 1;
+	while ( *t ) {
+		tnext = t + *t; tstop = tnext - ABS(tnext[-1]); t++;
+		while ( t < tstop ) {
+			if ( first ) {
+				if ( *t == SYMBOL ) {
+					for ( i = 0; i < t[1]; i++ ) tout[i] = t[i];
+					goto didwork;
+				}
+			}
+			else if ( *t == SYMBOL ) {
+				MergeSymbolLists(BHEAD tout,t,-1);
+				goto didwork;
+			}
+			else {
+				t += t[1];
+			}
+		}
+/*
+		Here we come when there were no symbols. Only keep the negative ones.
+*/
+		if ( first == 0 ) {
+			int j = 2;
+			for ( i = 2; i < tout[1]; i += 2 ) {
+				if ( tout[i+1] < 0 ) {
+					if ( i == j ) { j += 2; }
+					else { tout[j] = tout[i]; tout[j+1] = tout[i+1]; j += 2; }
+				}
+			}
+			tout[1] = j;
+		}
+didwork:;
+		first = 0;
+		t = tnext;
+	}
+	if ( tout[1] > 2 ) {
+		t = tout;
+		tt[0] = t[0]; tt[1] = t[1];
+		for ( i = 2; i < t[1]; i += 2 ) {
+			tt[i] = t[i]; tt[i+1] = -t[i+1];
+		}
+		tt += tt[1];
+		tout += tout[1];
+		action++;
+	}
+/*
+  	#] SYMBOL : 
+  	#[ Coefficient :
+
+	Now we have to collect the GCD of the numerators
+	and the LCM of the denominators.
+*/
+	AT.WorkPointer = tt;
+	if ( AN.cmod != 0 ) {
+	  WORD x, ix, ip;
+	  t = in; tnext = t + *t; tstop = tnext - ABS(tnext[-1]);
+	  x = tstop[0];
+	  if ( tnext[-1] < 0 ) x += AC.cmod[0];
+	  if ( GetModInverses(x,(WORD)(AN.cmod[0]),&ix,&ip) ) goto CalledFrom;
+	  *tout++ = x; *tout++ = 1; *tout++ = 3;
+	  *tt++ = ix; *tt++ = 1; *tt++ = 3;
+	}
+	else {
+	  GCDbuffer  = NumberMalloc("MakeInteger");
+	  GCDbuffer2 = NumberMalloc("MakeInteger");
+	  LCMbuffer  = NumberMalloc("MakeInteger");
+	  LCMbuffer2 = NumberMalloc("MakeInteger");
+	  t = in;
+	  tnext = t + *t; length = tnext[-1];
+	  if ( length < 0 ) { sign = -1; length = -length; }
+	  else              { sign = 1; }
+	  tstop = tnext - length;
+	  redlength = (length-1)/2;
+	  for ( i = 0; i < redlength; i++ ) {
+		GCDbuffer[i] = (UWORD)(tstop[i]);
+		LCMbuffer[i] = (UWORD)(tstop[redlength+i]);
+	  }
+	  GCDlen = LCMlen = redlength;
+	  while ( GCDbuffer[GCDlen-1] == 0 ) GCDlen--;
+	  while ( LCMbuffer[LCMlen-1] == 0 ) LCMlen--;
+	  t = tnext;
+	  while ( *t ) {
+		tnext = t + *t; length = ABS(tnext[-1]);
+		tstop = tnext - length; redlength = (length-1)/2;
+		len1 = len2 = redlength;
+		den = tstop + redlength;
+		while ( tstop[len1-1] == 0 ) len1--;
+		while ( den[len2-1] == 0 ) len2--;
+		if ( GCDlen == 1 && GCDbuffer[0] == 1 ) {}
+		else {
+			GcdLong(BHEAD (UWORD *)tstop,len1,GCDbuffer,GCDlen,GCDbuffer2,&GCDlen2);
+			ap = GCDbuffer; GCDbuffer = GCDbuffer2; GCDbuffer2 = ap;
+			a = GCDlen; GCDlen = GCDlen2; GCDlen2 = a;
+		}
+		if ( len2 == 1 && den[0] == 1 ) {}
+		else {
+			GcdLong(BHEAD LCMbuffer,LCMlen,(UWORD *)den,len2,LCMbuffer2,&LCMlen2);
+			DivLong((UWORD *)den,len2,LCMbuffer2,LCMlen2,
+				GCDbuffer2,&GCDlen2,(UWORD *)AT.WorkPointer,&a);
+			MulLong(LCMbuffer,LCMlen,GCDbuffer2,GCDlen2,LCMbuffer2,&LCMlen2);
+			ap = LCMbuffer; LCMbuffer = LCMbuffer2; LCMbuffer2 = ap;
+			a = LCMlen; LCMlen = LCMlen2; LCMlen2 = a;
+		}
+		t = tnext;
+	  }
+	  if ( GCDlen != 1 || GCDbuffer[0] != 1 || LCMlen != 1 || LCMbuffer[0] != 1 ) {
+		redlength = GCDlen; if ( LCMlen > GCDlen ) redlength = LCMlen;
+		for ( i = 0; i < GCDlen; i++ ) *tout++ = (WORD)(GCDbuffer[i]);
+		for ( ; i < redlength; i++ ) *tout++ = 0;
+		for ( i = 0; i < LCMlen; i++ ) *tout++ = (WORD)(LCMbuffer[i]);
+		for ( ; i < redlength; i++ ) *tout++ = 0;
+		*tout++ = (2*redlength+1)*sign;
+		for ( i = 0; i < LCMlen; i++ ) *tt++ = (WORD)(LCMbuffer[i]);
+		for ( ; i < redlength; i++ ) *tt++ = 0;
+		for ( i = 0; i < GCDlen; i++ ) *tt++ = (WORD)(GCDbuffer[i]);
+		for ( ; i < redlength; i++ ) *tt++ = 0;
+		*tt++ = (2*redlength+1)*sign;
+		action++;
+	  }
+	  else {
+		*tout++ = 1; *tout++ = 1; *tout++ = 3*sign;
+		*tt++ = 1; *tt++ = 1; *tt++ = 3*sign;
+		if ( sign != 1 ) action++;
+	  }
+	  NumberFree(LCMbuffer2,"MakeInteger");
+	  NumberFree(LCMbuffer ,"MakeInteger");
+	  NumberFree(GCDbuffer2,"MakeInteger");
+	  NumberFree(GCDbuffer ,"MakeInteger");
+	}
+/*
+  	#] Coefficient : 
+  	#[ Multiply by the inverse content :
+*/
+	if ( action ) {
+		*term = tout - term; *tout = 0;
+		*tterm = tt - tterm; *tt = 0;
+		AT.WorkPointer = tt;
+		inp = MultiplyWithTerm(BHEAD in,tterm,0);
+		AT.WorkPointer = tterm;
+		t = inp; while ( *t ) t += *t;
+		j = (t-inp); t = inp;
+		if ( j*sizeof(WORD) > (size_t)(AM.MaxTer) ) goto OverWork;
+		in = tout = TermMalloc("TakeSymbolContent");
+		NCOPY(tout,t,j); *tout = 0;
+		M_free(inp,"MultiplyWithTerm");
+	}
+	else {
+		t = in; while ( *t ) t += *t;
+		j = (t-in); t = in;
+		if ( j*sizeof(WORD) > (size_t)(AM.MaxTer) ) goto OverWork;
+		in = tout = TermMalloc("TakeSymbolContent");
+		NCOPY(tout,t,j); *tout = 0;
+		term[0] = 4; term[1] = 1; term[2] = 1; term[3] = 3; term[4] = 0;
+	}
+/*
+  	#] Multiply by the inverse content : 
+	AT.WorkPointer = tterm + *tterm;
+*/
+	AT.WorkPointer = oldworkpointer;
+
+	return(in);
+OverWork:
+	MLOCK(ErrorMessageLock);
+	MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
+	MUNLOCK(ErrorMessageLock);
+CalledFrom:
+	MLOCK(ErrorMessageLock);
+	MesCall("TakeContent");
+	MUNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(0);
+}
+
+/*
+ 		#] TakeSymbolContent : 
   	#] GCDfunction : 
   	#[ DIVfunction :
 
@@ -2307,6 +2565,67 @@ CalledFrom:
 
 /*
   	#] DIVfunction : 
+  	#[ MULfunc :
+
+	Multiplies two polynomials and puts the results in TermMalloc space.
+*/
+
+WORD *MULfunc(PHEAD WORD *p1, WORD *p2)
+{
+	WORD *prod,size1,size2,size3,*t,*tfill,*ps1,*ps2,sign1,sign2, error, *p3;
+	UWORD *num1, *num2, *num3;
+	int i;
+	WORD oldsorttype = AR.SortType;
+	void *oldcompareroutine = AR.CompareRoutine;
+	AR.SortType = SORTHIGHFIRST;
+	AR.CompareRoutine = (void *)&CompareSymbols;
+	num3 = NumberMalloc("MULfunc");
+	prod = TermMalloc("MULfunc");
+	NewSort(BHEAD0);
+	while ( *p1 ) {
+		ps1 = p1+*p1; num1 = (UWORD *)(ps1 - ABS(ps1[-1])); size1 = ps1[-1];
+		if ( size1 < 0 ) { sign1 = -1; size1 = -size1; }
+		else               sign1 = 1;
+		size1 = (size1-1)/2;
+		p3 = p2;
+		while ( *p3 ) {
+			ps2 = p3+*p3; num2 = (UWORD *)(ps2 - ABS(ps2[-1])); size2 = ps2[-1];
+			if ( size2 < 0 ) { sign2 = -1; size2 = -size2; }
+			else               sign2 = 1;
+			size2 = (size2-1)/2;
+			if ( MulLong(num1,size1,num2,size2,num3,&size3) ) {
+				error = 1;
+CalledFrom:
+				MLOCK(ErrorMessageLock);
+				MesPrint(" Error %d",error);
+				MesCall("MulFunc");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			tfill = prod+1;
+			t = p1+1; while ( t < (WORD *)num1 ) *tfill++ = *t++;
+			t = p3+1; while ( t < (WORD *)num2 ) *tfill++ = *t++;
+			t = (WORD *)num3;
+			for ( i = 0; i < size3; i++ ) *tfill++ = *t++;
+			*tfill++ = 1;
+			for ( i = 1; i < size3; i++ ) *tfill++ = 0;
+			*tfill++ = (2*size3+1)*sign1*sign2;
+			prod[0] = tfill - prod;
+			if ( SymbolNormalize(prod) ) { error = 2; goto CalledFrom; }
+			if ( StoreTerm(BHEAD prod) ) { error = 3; goto CalledFrom; }
+			p3 += *p3;
+		}
+		p1 += *p1;
+	}
+	NumberFree(num3,"MULfunc");
+	EndSort(BHEAD prod,1);
+	AR.CompareRoutine = oldcompareroutine;
+	AR.SortType = oldsorttype;
+	return(prod);
+}
+
+/*
+  	#] MULfunc : 
   	#[ ConvertArgument :
 
 	Converts an argument to a general notation in allocated space.
@@ -2390,7 +2709,523 @@ WORD *ConvertArgument(PHEAD WORD *arg, int *type)
 
 /*
   	#] ConvertArgument : 
+  	#[ ExpandRat :
 
+	Expands the denominator of a PolyRatFun in the variable PolyFunVar.
+	The output is a polyratfun with a single argument.
+	In the case that there is a polyratfun with more than one argument
+	or the dirtyflag is on, the argument(s) is/are normalized.
+	The output overwrites the input.
+*/
+
+char *TheErrorMessage[] = {
+	 "PolyRatFun not of a type that FORM will expand: incorrect variable inside."
+	,"Division by zero in PolyRatFun encountered in ExpandRat."
+	,"Irregular code in PolyRatFun encountered in ExpandRat."
+	,"Called from ExpandRat."
+	,"WorkSpace overflow. Change parameter WorkSpace in setup file?"
+	};
+
+int ExpandRat(PHEAD WORD *fun)
+{
+	WORD *r, *rr, *rrr, *tt, *tnext, *arg1, *arg2, *rmin = 0, *rmininv;
+	WORD *rcoef, rsize, rcopy, *oldworkpointer, *ow = AT.WorkPointer;
+	WORD *numerator, *denominator, *rnext;
+	WORD *thecopy, *rc, ncoef, newcoef, *m, *mm, nco, *outarg = 0;
+	UWORD co[2], co1[2], co2[2];
+	int i, j, minpow = 0, eppow, first, error = 0, ipoly;
+	if ( fun[1] == FUNHEAD ) { return(0); }
+	tnext = fun + fun[1];
+	if ( fun[1] == fun[FUNHEAD]+FUNHEAD ) { /* Single argument */
+		if ( fun[2] == 0 ) { goto done; }
+/*
+		We have to normalize the argument. This could make it shorter.
+*/
+NormArg:;
+		if ( outarg == 0 ) outarg = TermMalloc("ExpandRat")+ARGHEAD;
+		NewSort(BHEAD0);
+		r = fun+FUNHEAD+ARGHEAD;
+		while ( r < tnext ) {
+			rr = r + *r;
+			i = *r; rrr = outarg; NCOPY(rrr,r,i);
+			Normalize(BHEAD outarg);
+			if ( *outarg > 0 ) StoreTerm(BHEAD outarg);
+		}
+		r = fun+FUNHEAD+ARGHEAD;
+		EndSort(BHEAD r,1);
+		if ( *r == 0 ) {
+			fun[FUNHEAD] = -SNUMBER; fun[FUNHEAD+1] = 0;
+			fun[1] = FUNHEAD+2;
+		}
+		else {
+			rr = fun+FUNHEAD;
+			if ( ToFast(rr,rr) ) {
+				NEXTARG(rr); fun[1] = rr - fun;
+			}
+			else {
+				while ( *r ) r += *r;
+				*rr = r-rr; rr[1] = CLEANFLAG;
+				fun[1] = r - fun;
+			}
+		}
+		fun[2] = CLEANFLAG;
+		goto done;
+	}
+/*
+	First test whether we have only AR.PolyFunVar in the denominator
+*/
+	tt = fun + FUNHEAD;
+	arg1 = arg2 = 0;
+	if ( tt < tnext ) {
+		arg1 = tt; NEXTARG(tt);
+		if ( tt < tnext ) {
+			arg2 = tt; NEXTARG(tt);
+			if ( tt != tnext ) { arg1 = arg2 = 0; } /* more than two arguments */
+		}
+	}
+	if ( arg2 == 0 ) {
+		if ( *arg1 < 0 ) { fun[2] = CLEANFLAG; goto done; }
+		if ( fun[2] == CLEANFLAG ) goto done;
+		goto NormArg;   /* Note: should not come here */
+	}
+/*
+	Produce the output argument in outarg
+*/
+	if ( outarg == 0 ) outarg = TermMalloc("ExpandRat")+ARGHEAD;
+
+	if ( *arg2 <= 0 ) {
+/*
+		These cases are trivial.
+		We try as much as possible to write the output directly into the
+		function. We just have to be extremely careful not to overwrite
+		relevant information before we are finished with it.
+*/
+		if ( *arg2 == -SYMBOL && arg2[1] == AR.PolyFunVar ) {
+			rr = r = fun+FUNHEAD+ARGHEAD;
+			if ( *arg1 < 0 ) {
+				if ( *arg1 == -SYMBOL ) {
+					if ( arg1[1] == AR.PolyFunVar ) {
+						*r++ = 4; *r++ = 1; *r++ = 1; *r++ = 3; *r++ = 0;
+					}
+					else {
+						*r++ = 10; *r++ = SYMBOL; *r++ = 6;
+						*r++ = arg1[1]; *r++ = 1;
+						*r++ = AR.PolyFunVar; *r++ = -1;
+						*r++ = 1; *r++ = 1; *r++ = 3; *r++ = 0;
+						Normalize(BHEAD rr);
+					}
+				}
+				else if ( *arg1 == -SNUMBER ) {
+					nco = arg1[1];
+					if ( nco == 0 ) { *r++ = 0; }
+					else {
+						*r++ = 8; *r++ = SYMBOL; *r++ = 4;
+						*r++ = AR.PolyFunVar; *r++ = -1;
+						*r++ = ABS(nco); *r++ = 1;
+						if ( nco < 0 ) *r++ = -3;
+						else *r++ = 3;
+						*r++ = 0;
+					}
+				}
+				else { error = 2; goto onerror; }  /* should not happen! */
+			}
+			else {	/* Multi-term numerator. */
+				m = arg1+ARGHEAD;
+				NewSort(BHEAD0);	/* Technically maybe not needed */
+				while ( m < arg2 ) {
+					r = outarg;
+					rrr = r++; mm = m + *m;
+					*r++ = SYMBOL; *r++ = 4; *r++ = AR.PolyFunVar; *r++ = -1;
+					m++; while ( m < mm ) *r++ = *m++;
+					*rrr = r-rrr;
+					Normalize(BHEAD rrr);
+					StoreTerm(BHEAD rrr);
+				}
+				EndSort(BHEAD rr,1);
+				r = rr; while ( *r ) r += *r;
+			}
+			if ( *rr == 0 ) {
+				fun[FUNHEAD] = -SNUMBER; fun[FUNHEAD+1] = CLEANFLAG;
+				fun[1] = FUNHEAD+2;
+			}
+			else {
+				rr = fun+FUNHEAD;
+				*rr = r-rr;
+				rr[1] = CLEANFLAG;
+				if ( ToFast(rr,rr) ) {
+					NEXTARG(rr);
+					fun[1] = rr - fun;
+				}
+				else { fun[1] = r - fun; }
+			}
+			fun[2] = CLEANFLAG;
+			goto done;
+		}
+		else if ( *arg2 == -SNUMBER ) {
+			rr = r = outarg;
+			if ( arg2[1] == 0 ) { error = 1; goto onerror; }
+			if ( *arg1  == -SNUMBER ) { /* Things may not be normalized */
+				if ( arg1[1] == 0 ) { *r++ = 0; }
+				else {
+					co1[0] = ABS(arg1[1]); co1[1] = 1;
+					co2[0] = 1; co2[1] = ABS(arg2[1]);
+					MulRat(BHEAD co1,1,co2,1,co,&nco);
+					*r++ = 4; *r++ = (WORD)(co[0]); *r++ = (WORD)(co[1]);
+					if ( ( arg1[1] < 0 && arg2[1] > 0 ) ||
+					     ( arg1[1] > 0 && arg2[1] < 0 ) ) *r++ = -3;
+					else *r++ = 3;
+					*r++ = 0;
+				}
+			}
+			else if ( *arg1 == -SYMBOL ) {
+				*r++ = 8; *r++ = SYMBOL; *r++ = 4;
+				*r++ = arg1[1]; *r++ = 1;
+				*r++ = 1; *r++ = ABS(arg2[1]);
+				if ( arg2[1] < 0 ) *r++ = -3;
+				else *r++ = 3;
+				*r++ = 0;
+			}
+			else if ( *arg1 < 0 ) { error = 2; goto onerror; }
+			else {	/* Multi-term numerator. */
+				m = arg1+ARGHEAD;
+				NewSort(BHEAD0);	/* Technically maybe not needed */
+				while ( m < arg2 ) {
+					r = rr;
+					rrr = r++; mm = m + *m;
+					*r++ = DENOMINATOR; *r++ = FUNHEAD + 2; *r++ = DIRTYFLAG;
+					FILLFUN3(r);
+					*r++ = arg2[0]; *r++ = arg2[1];
+					m++; while ( m < mm ) *r++ = *m++;
+					*rrr = r-rrr;
+					AT.WorkPointer = r;
+					Normalize(BHEAD rrr);
+					StoreTerm(BHEAD rrr);
+				}
+				EndSort(BHEAD rr,1);
+			}
+			r = rr; while ( *r ) r += *r;
+			i = r-rr;
+			r = fun + FUNHEAD + ARGHEAD;
+			NCOPY(r,rr,i);
+			rr = fun + FUNHEAD;
+			*rr = r - rr; rr[1] = CLEANFLAG;
+			if ( ToFast(rr,rr) ) {
+				NEXTARG(rr);
+				fun[1] = rr - fun;
+			}
+			else { fun[1] = r - fun; }
+			fun[2] = CLEANFLAG;
+			goto done;
+		}
+		else { error = 0; goto onerror; }
+	}
+	else {
+		r = arg2+ARGHEAD; /* The argument ends at tnext */
+		first = 1;
+		while ( r < tnext ) {
+			rr = r + *r; rr -= ABS(rr[-1]);
+			if ( r+1 == rr ) {
+				if ( first ) { minpow = 0; first = 0; rmin = r; }
+				else if ( minpow > 0 ) { minpow = 0; rmin = r; }
+			}
+			else if ( r[1] != SYMBOL || r[2] != 4 || r[3] != AR.PolyFunVar
+				|| r[4] > MAXPOWER ) { error = 0; goto onerror; }
+			else if ( first ) { minpow = r[4]; first = 0; rmin = r; }
+			else if ( r[4] < minpow ) { minpow = r[4]; rmin = r; }
+			r += *r;
+		}
+/*
+		We have now:
+		1: a numerator in arg1 which can contain several variables.
+		2: a denominator in arg2 with at most only AR.PolyFunVar (ep).
+		3: the minimum power in the denominator is minpow and the
+		   term with that minimum power is in rmin.
+		Divide numerator and denominator by this minimum power.
+		Determine the power range in the numerator.
+		Call InvPoly.
+		Multiply by the inverse in such a way that we never take more
+		powers of ep than necessary.
+*/
+/*
+		One: put 1/rmin in AT.WorkPointer -> rmininv
+*/
+		AT.WorkPointer += AM.MaxTer/sizeof(WORD);
+		if ( AT.WorkPointer + (AM.MaxTer/sizeof(WORD)) >= AT.WorkTop ) {
+			error = 4; goto onerror;
+		}
+		oldworkpointer = rmininv = r = AT.WorkPointer;
+		rr = rmin; i = *rmin; NCOPY(r,rr,i)
+		if ( minpow != 0 ) { rmininv[4] = -rmininv[4]; }
+		rsize = ABS(r[-1]);
+		rcoef = r - rsize;
+		rsize = (rsize-1)/2; rr = rcoef + rsize;
+		for ( i = 0; i < rsize; i++ ) {
+			rcopy = rcoef[i]; rcoef[i] = rr[i]; rr[i] = rcopy;
+		}
+		AT.WorkPointer = r;
+		if ( *arg1 < 0 ) {
+			ToGeneral(arg1,r,0);
+			arg1 = r; r += *r; *r++ = 0; rcopy = 0;
+			AT.WorkPointer = r;
+		}
+		else {
+			r = arg1 + *arg1;
+			rcopy = *r; *r++ = 0;
+		}
+/*
+		We can use MultiplyWithTerm.
+*/
+		numerator = MultiplyWithTerm(BHEAD arg1+ARGHEAD,rmininv,0);
+		r[-1] = rcopy;
+		r = numerator; while ( *r ) r += *r;
+		AT.WorkPointer = r+1;
+		rcopy = arg2[*arg2]; arg2[*arg2] = 0;
+		denominator = MultiplyWithTerm(BHEAD arg2+ARGHEAD,rmininv,1);
+		arg2[*arg2] = rcopy;
+		r = denominator; while ( *r ) r += *r;
+		AT.WorkPointer = r+1;
+/*
+		Now find the minimum power of ep in the numerator.
+*/
+		r = numerator;
+		first = 1;
+		while ( *r ) {
+			rr = r + *r; rr -= ABS(rr[-1]);
+			if ( r+1 == rr ) {
+				if ( first ) { minpow = 0; first = 0; }
+				else if ( minpow > 0 ) { minpow = 0; }
+			}
+			else if ( r[1] != SYMBOL ) { error = 0; goto onerror; }
+			else {
+				for ( i = 3; i < r[2]; i += 2 ) {
+					if ( r[i] == AR.PolyFunVar ) {
+						if ( first ) { minpow = r[i+1]; first = 0; }
+						else if ( r[i+1] < minpow ) minpow = r[i+1];
+						break;
+					}
+				}
+				if ( i >= r[2] ) {
+					if ( first ) { minpow = 0; first = 0; }
+					else if ( minpow > 0 ) minpow = 0;
+				}
+			}
+			r += *r;
+		}
+/*
+		We can invert the denominator.
+		Note that the return value is an offset in AT.pWorkSpace.
+		Hence there is no need to free memory afterwards.
+*/
+		ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow-minpow,AR.PolyFunVar);
+/*
+		Now we start the multiplying
+*/
+		NewSort(BHEAD0);
+		r = numerator;
+		while ( *r ) {
+/*
+			1: Find power of ep.
+*/
+			rnext = r + *r;
+			rrr = rnext - ABS(rnext[-1]);
+			rr = r+1;
+			eppow = 0;
+			if ( rr < rrr ) {
+				j = rr[1] - 2; rr += 2;
+				while ( j > 0 ) {
+					if ( *rr == AR.PolyFunVar ) { eppow = rr[1]; break; }
+					j -= 2; rr += 2;
+				}
+			}
+/*
+			2: Multiply by the proper terms in ipoly
+*/
+			for ( i = 0; i <= AR.PolyFunPow-eppow; i++ ) {
+				if ( AT.pWorkSpace[ipoly+i] == 0 ) continue;
+/*
+				Copy the term, add i to the power of ep and multiply coef.
+*/
+				rc = r;
+				rr = thecopy = AT.WorkPointer;
+				while ( rc < rrr ) *rr++ = *rc++;
+				if ( i != 0 ) {
+					*rr++ = SYMBOL; *rr++ = 4; *rr++ = AR.PolyFunVar; *rr++ = i;
+				}
+				ncoef = REDLENG(rnext[-1]);
+				MulRat(BHEAD (UWORD *)rrr,ncoef,
+					(UWORD *)(AT.pWorkSpace[ipoly+i])+1,AT.pWorkSpace[ipoly+i][0]
+					,(UWORD *)rr,&newcoef);
+				ncoef = ABS(newcoef); rr += 2*ncoef;
+				newcoef = INCLENG(newcoef);
+				*rr++ = newcoef;
+				*thecopy = rr - thecopy;
+				AT.WorkPointer = rr;
+				Normalize(BHEAD thecopy);
+				StoreTerm(BHEAD thecopy);
+				AT.WorkPointer = thecopy;
+			}
+			r = rnext;
+		}
+/*
+		Now we have all.
+*/
+		rr = fun + FUNHEAD; r = rr + ARGHEAD;
+		EndSort(BHEAD r,1);
+		if ( *r == 0 ) {
+			fun[1] = FUNHEAD+2; fun[2] = CLEANFLAG;
+			fun[FUNHEAD] = -SNUMBER; fun[FUNHEAD+1] = 0;
+		}
+		else {
+			while ( *r ) r += *r;
+			rr[0] = r-rr; rr[1] = CLEANFLAG;
+			if ( ToFast(rr,rr) ) { NEXTARG(rr); fun[1] = rr-fun; }
+			else { fun[1] = r-fun; }
+			fun[2] = CLEANFLAG;
+		}
+	}
+done:
+	if ( outarg ) TermFree(outarg-ARGHEAD,"ExpandRat");
+	AT.WorkPointer = ow;
+	AN.PolyNormFlag = 1;
+	return(0);
+onerror:
+	if ( outarg ) TermFree(outarg-ARGHEAD,"ExpandRat");
+	AT.WorkPointer = ow;
+	MLOCK(ErrorMessageLock);
+	MesPrint(TheErrorMessage[error]);
+	MUNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(-1);
+}
+
+/*
+  	#] ExpandRat : 
+  	#[ InvPoly :
+
+	The input polynomial is represented as a sequence of terms in ascending
+	power. The first coefficient is 1. If we call this 1-a and
+	a = sum_(j,1,n,x^j*a(j)), and b = 1/(1-a) we can find the coefficients
+	of b with the recursion
+		b(0) = 1, b(n) = sum_(j,1,n,a(j)*b(n-j))
+	The variable is the symbol sym and we need maxpow powers in the answer.
+	The answer is an array of pointers to the coefficients of the various
+	powers as rational numbers in the notation signedsize,numerator,denominator
+	We put these powers in the workspace and the answer is in AT.pWorkSpace.
+	Hence the return value is an offset in the pWorkSpace.
+	A zero pointer indicates that this coefficient is zero.
+*/
+
+int InvPoly(PHEAD WORD *inpoly, WORD maxpow, WORD sym)
+{
+	int needed, inpointers, outpointers, maxinput = 0, i, j;
+	WORD *t, *tt, *ttt, *w, *c, *cc, *ccc, lenc, lenc1, lenc2, rc, *c1, *c2;
+/*
+	Step 0: allocate the space
+*/
+	needed = (maxpow+1)*2;
+	WantAddPointers(needed);
+	inpointers = AT.pWorkPointer;
+	outpointers = AT.pWorkPointer+maxpow+1;
+	for ( i = 0; i < needed; i++ ) AT.pWorkSpace[inpointers+i] = 0;
+/*
+	Step 1: determine the coefficients in inpoly
+	        often there is a maximum power that is much smaller than maxpow.
+	        keeping track of this can speed up things.
+*/
+	t = inpoly;
+	w = AT.WorkPointer;
+	while ( *t ) {
+		if ( *t == 4 ) {
+			if ( t[1] != 1 || t[2] != 1 || t[3] != 3 ) goto onerror;
+			AT.pWorkSpace[inpointers] = 0;
+		}
+		else if ( t[1] != SYMBOL || t[2] != 4 || t[3] != sym || t[4] < 0 ) goto onerror;
+		else if ( t[4] > maxpow ) {} /* power outside useful range */
+		else {
+			if ( t[4] > maxinput ) maxinput = t[4];
+			AT.pWorkSpace[inpointers+t[4]] = w;
+			tt = t + *t; rc = -*--tt; /* we need - the coefficient! */
+			rc = REDLENG(rc); *w++ = rc;
+			ttt = t+5;
+			while ( ttt < tt ) *w++ = *ttt++;
+		}
+		t += *t;
+	}
+/*
+	Step 2: compute the output. b(0) = 1.
+	then the recursion starts.
+*/
+	AT.pWorkSpace[outpointers] = w;
+	*w++ = 1; *w++ = 1; *w++ = 1;
+	c  = TermMalloc("InvPoly");
+	c1 = TermMalloc("InvPoly");
+	c2 = TermMalloc("InvPoly");
+	for ( j = 1; j <= maxpow; j++ ) {
+/*
+		Start at c = a(j)*b(0) = a(j)
+*/
+		if ( ( cc = AT.pWorkSpace[inpointers+j] ) != 0 ) {
+			lenc = *cc++; /* reduced length */
+			i = 2*ABS(lenc); ccc = c;
+			NCOPY(ccc,cc,i);
+		}
+		else { lenc = 0; }
+		for ( i = MiN(j-1,maxinput); i > 0; i-- ) {
+/*
+			c -> c + a(i)*b(j-i)
+*/
+			if ( AT.pWorkSpace[inpointers+i] == 0
+				 || AT.pWorkSpace[outpointers+j-i] == 0 ) {
+			}
+			else {
+				if ( MulRat(BHEAD (UWORD *)(AT.pWorkSpace[inpointers+i]+1),AT.pWorkSpace[inpointers+i][0],
+				 (UWORD *)(AT.pWorkSpace[outpointers+j-i]+1),AT.pWorkSpace[outpointers+j-i][0],
+				 (UWORD *)c1,&lenc1) ) goto calcerror;
+				if ( lenc == 0 ) {
+					cc = c; c = c1; c1 = cc;
+					lenc = lenc1;
+				}
+				else {
+					if ( AddRat(BHEAD (UWORD *)c,lenc,(UWORD *)c1,lenc1,(UWORD *)c2,&lenc2) )
+						goto calcerror;
+					cc = c; c = c2; c2 = cc;
+					lenc = lenc2;
+				}
+			}
+		}
+/*
+		Copy c to the proper location
+*/
+		if ( lenc == 0 ) AT.pWorkSpace[outpointers+j] = 0;
+		else {
+			AT.pWorkSpace[outpointers+j] = w;
+			*w++ = lenc;
+			i = 2*ABS(lenc); ccc = c;
+			NCOPY(w,ccc,i);
+		}
+	}
+	AT.WorkPointer = w;
+	TermFree(c2,"InvPoly");
+	TermFree(c1,"InvPoly");
+	TermFree(c ,"InvPoly");
+
+	return(outpointers);
+onerror:
+	MLOCK(ErrorMessageLock);
+	MesPrint("Incorrect symbol field in InvPoly.");
+	MUNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(-1);
+calcerror:
+	MLOCK(ErrorMessageLock);
+	MesPrint("Called from InvPoly.");
+	MUNLOCK(ErrorMessageLock);
+	Terminate(-1);
+	return(-1);
+}
+
+/*
+  	#] InvPoly : 
 */
 
 

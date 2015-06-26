@@ -940,7 +940,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		if ((res.is_zero() && !degcomp) || degcomp < 0) {
 			degbound = gcdmodc.degree_vector();
 			res = gcdmodc;
-			newshape = gcdmodc; // set a new shape
+			newshape = gcdmodc; // set a new shape (interpolation does not change it)
 			modpoly = simple;
 		}
 		else if (!degcomp) {
