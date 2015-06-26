@@ -2924,6 +2924,13 @@ identical to the name of one of the options.}
 `polyfun'\index{polyfun}. Is similar to the polyfun statement (see 
 \ref{substapolyfun}) but only valid for the current module.}
 
+\leftvitem{3.5cm}{polyratfun\index{moduleoption!polyfun}}
+\rightvitem{13cm}{Possibly followed by the name of a 
+`polyratfun'\index{polyratfun}. Is similar to the polyfun statement (see 
+\ref{substapolyratfun}) but only valid for the current module. If there is 
+second name, it refers to the inverse polyratfun. More complicated options 
+of the polyratfun statement cannot be used here.}
+
 \leftvitem{3.5cm}{processbucketsize\index{moduleoption!processbucketsize}}
 \rightvitem{13cm}{Followed by a number. Similar to the 
 processbucketsize\index{processbucketsize} 
@@ -3933,9 +3940,44 @@ in which case
 This can be handy when one needs to solve systems of equations by manual 
 interference. In that case exchanging numerators and denominators can be 
 rather messy, while just changing a name is far less error-prone.
+
+\noindent In many cases it may be very wasteful to keep full track of the 
+complete rational polynomial. An example is the reduction of a complicated 
+4-loop massless propagator diagram for which the rational polynomials can 
+easily have hundreds of powers of the dimension parameter $D=4-2\epsilon$. 
+In the end one has to expand in terms of $\epsilon$ although it is not 
+known in advance to how many powers. For this there are two extra options 
+in the polyratfun statement. The first is
+\begin{verbatim}
+    PolyRatFun rat(divergence,x);
+\end{verbatim}
+in which x is the name of the symbol of interest. In this case the 
+polyratfun keeps only its most divergent term in this variable x and gives 
+it the coefficient one. The result is that terms will never cancel and at 
+the end of the calcuation one can see how many poles in x were maximally 
+present, and hence how far one has to expand in x. Because the contents of 
+the polyratfun are extremely simple, the expensive rational arithmetic is 
+completely absent and things should go rather fast.
+
+\noindent In the second option one can specify how far one should expand:
+\begin{verbatim}
+    PolyRatFun rat(expand,x,power);
+\end{verbatim}
+In this case the denomnator can only be a polynomial in the variable x. It 
+will be expanded and multiplied by the numerator and eventually all terms 
+with powers of x that are greater than 'power' will be discarded. The 
+remaining incidence of the function rat will then have only one argument, 
+like the polyfun (see \ref{substapolyfun}). The advantage is that now the 
+addition of two coefficients is a simple and straightforward operation that 
+does not need the expensive polynomial GCD computations.
+
+\noindent Of course one can program such expansions externally and maybe 
+better suited for the problem at hand, but using this option of the 
+polyratfun is much faster and gives fewer chances of mistakes.
+
 \vspace{10mm}
 
-%--#] polyratfun : 
+%--#] polyratfun :
 %--#[ pophide :
 
 \section{pophide}
