@@ -136,6 +136,9 @@ public:
 	static int monomial_compare (PHEAD const WORD *, const WORD *);
 	WORD last_monomial_index () const;
 	WORD* last_monomial () const;
+	int compare_degree_vector(const poly &) const;
+	std::vector<int> degree_vector() const;
+	int compare_degree_vector(const std::vector<int> &) const;
 
 	// (internal) mathematical operations
 	static void add (const poly &, const poly &, poly &);

@@ -455,8 +455,8 @@ WORD poly::last_monomial_index () const {
 }
 
 /*
-  	#] last_monomial_index : 
-  	#[ last_monomial :
+	#] last_monomial_index : 
+	#[ last_monomial :
 */
 
 // pointer to the last monomial (the constant term)
@@ -465,7 +465,63 @@ WORD * poly::last_monomial () const {
 }
 
 /*
-  	#] last_monomial : 
+		#] last_monomial_index : 
+		#[ compare_degree_vector :
+*/
+
+int poly::compare_degree_vector(const poly & b) const {
+	POLY_GETIDENTITY(*this);
+
+	// special cases if one or both are 0
+	if (terms[0] == 1 &&  b[0] == 1) return 0;
+	if (terms[0] == 1) return -1;
+	if (b[0] == 1) return 1;
+
+	for (int i = 0; i < AN.poly_num_vars; i++) {
+		int d1 = degree(i);
+		int d2 = b.degree(i);
+		if (d1 != d2) return d1 - d2;
+	}
+
+	return 0;
+}
+
+/*
+  	#] compare_degree_vector : 
+  	#[ degree_vector :
+*/
+
+std::vector<int> poly::degree_vector() const {
+	POLY_GETIDENTITY(*this);
+
+	std::vector<int> degrees(AN.poly_num_vars);
+	for (int i = 0; i < AN.poly_num_vars; i++) {
+		degrees[i] = degree(i);
+	}
+
+	return degrees;
+}
+
+/*
+  	#] degree_vector : 
+  	#[ compare_degree_vector :
+*/
+
+int poly::compare_degree_vector(const vector<int> & b) const {
+	POLY_GETIDENTITY(*this);
+
+	if (terms[0] == 1) return -1;
+
+	for (int i = 0; i < AN.poly_num_vars; i++) {
+		int d1 = degree(i);
+		if (d1 != b[i]) return d1 - b[i];
+	}
+
+	return 0;
+}
+
+/*
+  	#] compare_degree_vector : 
   	#[ add :
 */
 
